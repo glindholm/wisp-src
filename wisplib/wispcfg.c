@@ -118,7 +118,7 @@ const char* wisphomedir(char *dir)
 			strcpy(usersdir,"C:\\USERS");
 		}
 
-		buildfilepath( homedir, usersdir, cuserid(NULL) );
+		buildfilepath( homedir, usersdir, longuid() );
 		buildfilepath( homedir, homedir, "WISP" );
 		
 		the_dir = wstrdup(homedir);
@@ -1668,6 +1668,9 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
+**	Revision 1.24  2001-11-27 17:05:03-05  gsl
+**	Change to use longuid()
+**
 **	Revision 1.23  2001-11-08 11:47:58-05  gsl
 **	add missing include
 **

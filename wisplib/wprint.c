@@ -22,20 +22,8 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <errno.h>
 
-#ifdef VMS
-#include <ssdef.h>
-#include <rmsdef.h>
-#include <libdef.h>
-#endif
-
-#ifdef MSDOS
-#include <io.h>
-#include <process.h>
-#endif
-
 #include "idsistd.h"
 #include "idsisubs.h"
-#include "que_jobs.h"
 #include "wperson.h"
 #include "werrlog.h"
 #include "wglobals.h"
@@ -50,10 +38,6 @@ static char rcsid[]="$Id:$";
 **	Static Function Prototypes
 */
 
-#ifdef VMS
-static int vms_print( const char *file, int copies, int formnum, char lpclass, 
-		     int4 printer, const char *disposition, char mode );
-#endif
 
 #ifdef unix
 static int unique_print( const char *file, int copies, int formnum, char lpclass, 
@@ -221,23 +205,6 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 	}
 
 	/*
-	**	VMS and MSDOS are old and only support there native printing.
-	*/
-#ifdef VMS
-	*return_code = vms_print( native_fname, copies, prt_form, prt_class, printer, disposition, mode);
-	return;
-#endif
-
-#ifdef MSDOS
-	deleteit = 0;
-	if ( !disposition && mode == 'S' ) deleteit = 1;				/* If SPOOL and disp is NULL then delete.*/
-	if ( disposition && 0==memcmp(disposition,"DX",2)) deleteit = 1;		/* Disp is DX then delete.		*/
-
-	*return_code = dos_print( native_fname, copies, prt_form, prt_class, printer, deleteit, mode);
-	return
-#endif
-
-	/*
 	**	Call the platform/print queue specific routine to print.
 	*/
 
@@ -282,82 +249,6 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 
 
 }
-
-#ifdef VMS
-static int vms_print( const char *native_fname, int copies, int prt_form, char prt_class, 
-		     int4 printer, const char *disposition, char mode )
-{
-#undef		ROUTINE
-#define		ROUTINE		83500
-
-	char 	jname[8],qname[132];
-	int 	qflags;
-	prt_id 	*prt_ptr;								/* Pointer to the printer list.		*/
-	int	deleteit;
-	int	return_code;
-
-	deleteit = 0;
-	if ( !disposition && mode == 'S' ) deleteit = 1;				/* If SPOOL and disp is NULL then delete.*/
-	if ( disposition && 0==memcmp(disposition,"DX",2)) deleteit = 1;		/* Disp is DX then delete.		*/
-
-	if ( disposition && 0==memcmp(disposition,"RS",2))				/* Disp is RS, VMS does not have dup.	*/
-	{										/*  functionality so give warning and	*/
-		werrlog(ERRORCODE(3),native_fname,0,0,0,0,0,0,0);			/*  print as DS.			*/
-	}
-
-	prt_ptr = get_prt_list();							/* Get a pointer to the printer list	*/
-
-	do
-	{
-		if ((prt_ptr->class == prt_class) && (prt_ptr->prtnum == printer))
-			break;								/* look for the printer that matches	*/
-		prt_ptr = (prt_id *) prt_ptr->next;					/* next one				*/
-	} while (prt_ptr);
-
-	if (prt_ptr)
-	{
-		strcpy(qname,prt_ptr->qname);						/* Send the printout to the right queue.*/
-	}
-	else
-	{
-		qname[0] = '\0';							/* Or send it nowhere.			*/
-	}
-
-	qflags = 0;									/* Set up the flags.			*/
-
-	if (mode == 'H') qflags |= Q_HOLD_JOB;						/* Hold the job if requested.		*/
-
-	if (deleteit)    qflags |= Q_DELETE_FILE;					/* Delete the file as requested.	*/
-
-	jname[0] = '\0';								/* Send to the queue			*/
-	return_code = que_job(PRINT_QUEUE,qname,native_fname,jname,copies,prt_form,qflags);
-
-	if (return_code == SS$_NORMAL) return_code = 0;					/* Set to expected Wang Code.		*/
-	else
-	{		
-		int wang_retcod;							/* Set return code from queued job:	*/
-		int4 rc;
-
-		rc = return_code;
-		wang_retcod = 56;							/* Default return code.			*/
-		if (rc == RMS$_DNR || rc == RMS$_DPE) wang_retcod = 4;			/* Device not ready or			*/
-											/* Device positioning error.		*/
-		else if (rc == RMS$_WLK) wang_retcod = 8;				/* Device currently write locked when	*/
-											/* write access was attempted.		*/
-		else if (rc == RMS$_FLK) wang_retcod = 12;				/* File is locked by another user.	*/
-		else if (rc == RMS$_DNF || rc == RMS$_DEV) wang_retcod = 16;		/* Directory not found.			*/
-		else if (rc == RMS$_FNF) wang_retcod = 20; 				/* File not found.			*/
-		else if (rc == RMS$_PRV) wang_retcod = 28;				/* Insufficient priveledge or file prot.*/
-		else if (rc == LIB$_INVARG) wang_retcod = 40;				/* Invalid arguments.			*/
-		else if (rc == RMS$_SPL) wang_retcod = 44;				/* Submit command file option to a 	*/
-											/* Close service failed.		*/
-		else if (rc == SS$_ACCVIO) wang_retcod = 28; 				/* Access violation.			*/
-		return_code = wang_retcod;
-	}
-
-	return return_code;
-}
-#endif
 
 #ifdef unix
 static int unique_print( const char *file, int copies, int formnum, char lpclass, 
@@ -1052,6 +943,9 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 /*
 **	History:
 **	$Log: wprint.c,v $
+**	Revision 1.18  2001-11-27 15:49:06-05  gsl
+**	Remove VMS & MSDOS
+**
 **	Revision 1.17  2001-11-01 10:49:22-05  gsl
 **	Replace wsystem() with run_unixcommand_silent() for unix
 **

@@ -31,24 +31,19 @@ static char rcsid[]="$Id:$";
 
 #ifdef unix
 #include <unistd.h>
-#endif
-#ifdef WIN32
-#include <process.h>
-#endif
-
-#if defined (unix) && !defined(NCR32)
 #include <sys/times.h>
 #include <dirent.h>
 #include <termio.h>
 #endif	/* unix */
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "wsysconf.h"
-#endif	/* unix or MSDOS or WIN32 */
+#ifdef WIN32
+#include <process.h>
+#endif
 
+#include "wsysconf.h"
 #include "idsistd.h"
 #include "wdefines.h"
 #include "wperson.h"
@@ -188,11 +183,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			{
 				case 'F':						/* CF request, current program file	*/
 				{
-#ifdef VMS
-					memcpy(recvr,prid,8);				/* return the current program name	*/
-#else /* !VMS */
 					memcpy(recvr,WISPRUNNAME,8);
-#endif /* !VMS */
 					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keywrd, recvr);
 					break;
 				}
@@ -236,16 +227,12 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 				case '+':						/* D+ request				*/
 				case '-':						/* D- request				*/
 				case 'F':						/* DF request				*/
-#ifdef VMS
-				case 'L':						/* DL request				*/
-				case ' ':						/* D  request				*/
-#endif	/* VMS */
 				case 'P':						/* DP request				*/
 				case 'S':						/* DS request				*/
 				case 'V':						/* DV request				*/
 					NOT_YET
 					break;
-#ifndef VMS
+
 				case 'L':
 					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s", keywrd);
 					dev_list(recvr,rlen);
@@ -254,7 +241,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 					wtrace("EXTRACT", "KEYWORD", "Keyword=%2.2s", keywrd);
 					dev_info(recvr);
 					break;
-#endif /* !VMS */
+
 				default:
 					NOT_SUPP
 					break;
@@ -445,11 +432,8 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 			switch (keywrd[1])
 			{
 				case 'A':						/* NA request				*/
-#ifndef VMS	/* unix and MSDOS */
 					passwdname(tstr);
-#else		/* VMS */
-					authowner(tstr);				/* Get owner name from SYSUAF.DAT	*/
-#endif	/* unix and MSDOS */
+
 					memset(recvr, ' ', 24 );			/* Receiver expects 24 characters.	*/
 					if (strlen(tstr) < 24)
 					{
@@ -527,15 +511,6 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 				case ':':						/* P: request				*/
 				{
 					int4	numtics, numsecs100;
-#ifdef VMS
-					tbuffer_t tt;
-					times(&tt);
-					numtics = tt.proc_user_time + 
-						  tt.proc_system_time + 
-						  tt.child_user_time + 
-						  tt.child_system_time;
-					numsecs100 = numtics;
-#endif	/* VMS */
 #ifdef unix
 					struct tms tt;
 					times(&tt);
@@ -545,11 +520,7 @@ static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the a
 						  tt.tms_cstime;
 					numsecs100 = (numtics * 100) / 60;
 #endif	/* unix */
-#if defined(MSDOS)
-					numtics = clock();
-					numsecs100 = (numtics * 100)/CLK_TCK;
-#endif	/* MSDOS  */
-#if defined(WIN32)
+#ifdef WIN32
 					numtics = clock();
 					numsecs100 = (numtics * 100)/CLOCKS_PER_SEC;
 #endif	/* WIN32 */
@@ -774,7 +745,6 @@ int4 workstation(void)
 	return the_num;
 }
 
-#ifndef VMS	/* unix, WIN32, MSDOS */
 static void dev_list(char* where, int4 rlen)					/* generate a list of devs			*/
 { 
 	unsigned char list[256]; 						/* list can be 255 int4 (bytes)			*/
@@ -1095,10 +1065,13 @@ static	int4	device_num;
 	return 0;
 }
 
-#endif	/* !VMS  */
+
 /*
 **	History:
 **	$Log: extract.c,v $
+**	Revision 1.31  2001-11-27 16:18:30-05  gsl
+**	Remove VMS & MSDOS
+**
 **	Revision 1.30  1998-11-04 10:12:30-05  gsl
 **	Changed to use strarg.h vararg macros plus cleanup and doc.
 **

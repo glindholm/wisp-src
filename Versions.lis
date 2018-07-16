@@ -1,4 +1,4 @@
-# Versions for wisp4400q on  Mon Nov 26 18:29:28 EST 2001
+# Versions for wisp4401 on  Tue Nov 27 18:22:56 EST 2001
 No files found in project [video].
 video/cap	aix_xterm.vcap	1.6
 video/cap	aixterm.vcap	1.6
@@ -51,7 +51,7 @@ video/lib	sleepdos.c	1.8
 video/lib	strpos.c	1.9
 video/lib	valert.c	1.8
 video/lib	vbell.c	1.15
-video/lib	vcap.c	1.40
+video/lib	vcap.c	1.41
 video/lib	vcap.h	1.22
 video/lib	vcharset.c	1.10
 video/lib	vchinese.h	1.6
@@ -258,8 +258,8 @@ wisp/common	sysdev.h	1.5
 wisp/common	vssort.h	1.5
 wisp/common	vwang.h	1.41
 wisp/common	wangkeys.h	1.8
-wisp/common	wanguid.h	1.7
-wisp/common	wcommon.h	1.41
+wisp/common	wanguid.h	1.8
+wisp/common	wcommon.h	1.42
 wisp/common	wdefines.h	1.20
 wisp/common	werrlog.h	1.14
 wisp/common	wexit.h	1.6
@@ -273,7 +273,7 @@ wisp/common	wisp_pic.h	1.2
 wisp/common	wispcfg.h	1.11
 wisp/common	wispicon.ico	1.4
 wisp/common	wispicon.rc	1.1
-wisp/common	wisplib.h	1.37
+wisp/common	wisplib.h	1.38
 wisp/common	wispnt.h	1.10
 wisp/common	wispvers.h	1.2
 wisp/common	wlicense.h	1.13
@@ -400,7 +400,7 @@ wisp/doc	v40_relnotes.lis	1.5
 wisp/doc	v41_relnotes.lis	1.20
 wisp/doc	v42_relnotes.lis	1.20
 wisp/doc	v43_relnotes.lis	1.73
-wisp/doc	v44_relnotes.lis	1.28
+wisp/doc	v44_relnotes.lis	1.30
 wisp/doc	vax_class_discussions.lis	1.1
 wisp/doc	vcolors.txt	1.1
 wisp/doc	vms_shipkit.lis	1.1
@@ -843,7 +843,7 @@ wisp/lib	dbfile.c	1.5
 wisp/lib	delete.c	1.9
 wisp/lib	edestubs.c	1.12
 wisp/lib	errgparm.c	1.11
-wisp/lib	extract.c	1.30
+wisp/lib	extract.c	1.31
 wisp/lib	fcopy.c	1.8
 wisp/lib	fcopy.h	1.5
 wisp/lib	fexists.c	1.11
@@ -868,7 +868,7 @@ wisp/lib	isexec.c	1.15
 wisp/lib	juster.c	1.10
 wisp/lib	level.c	1.7
 wisp/lib	libwisp.mak	1.4
-wisp/lib	libwisp.umf	1.39
+wisp/lib	libwisp.umf	1.41
 wisp/lib	licwisp.c	1.8
 wisp/lib	link.c	1.61
 wisp/lib	linkproc.c	1.16
@@ -883,7 +883,7 @@ wisp/lib	menu.h	1.9
 wisp/lib	menu_go.c	1.10
 wisp/lib	menu_key.c	1.12
 wisp/lib	menuread.c	1.11
-wisp/lib	menuscan.c	1.13
+wisp/lib	menuscan.c	1.14
 wisp/lib	message.c	1.30
 wisp/lib	mfstubs.c	1.2
 wisp/lib	mngfile.c	1.35
@@ -908,12 +908,7 @@ wisp/lib	platsubs.c	1.11
 wisp/lib	print.c	1.12
 wisp/lib	protect.c	1.8
 wisp/lib	putparm.c	1.14
-wisp/lib	pwdname.c	1.13
-wisp/lib	que_jobs.c	1.10
-wisp/lib	que_jobs.h	1.8
-wisp/lib	quemgmt.c	1.16
-wisp/lib	quemgmt.h	1.10
-wisp/lib	quidef.h	1.5
+wisp/lib	pwdname.c	1.14
 wisp/lib	readacp.c	1.11
 wisp/lib	readfdr.c	1.22
 wisp/lib	readvtoc.c	1.14
@@ -930,7 +925,7 @@ wisp/lib	scratch.c	1.17
 wisp/lib	screen.c	1.21
 wisp/lib	screen.h	1.1
 wisp/lib	search.c	1.10
-wisp/lib	set.c	1.14
+wisp/lib	set.c	1.15
 wisp/lib	setenvst.c	1.12
 wisp/lib	setfile.c	1.13
 wisp/lib	setprgid.c	1.10
@@ -951,7 +946,7 @@ wisp/lib	sortx.c	1.5
 wisp/lib	spawn.c	1.10
 wisp/lib	spawn.h	1.5
 wisp/lib	string.c	1.13
-wisp/lib	submit.c	1.33
+wisp/lib	submit.c	1.34
 wisp/lib	submit.h	1.2
 wisp/lib	sysdev.c	1.5
 wisp/lib	sysinf.c	1.10
@@ -972,7 +967,7 @@ wisp/lib	vssort.c	1.7
 wisp/lib	vwang.c	1.102
 wisp/lib	waccept.c	1.8
 wisp/lib	wangmenu.c	1.9
-wisp/lib	wanguid.c	1.12
+wisp/lib	wanguid.c	1.13
 wisp/lib	wassert.c	1.2
 wisp/lib	wauthsub.c	1.12
 wisp/lib	wchain.c	1.15
@@ -986,7 +981,7 @@ wisp/lib	werrlog.c	1.18
 wisp/lib	werrpath.c	1.11
 wisp/lib	werrvre.c	1.23
 wisp/lib	wexit.c	1.15
-wisp/lib	wexith.c	1.21
+wisp/lib	wexith.c	1.22
 wisp/lib	wfaccess.c	1.15
 wisp/lib	wfaccess.h	1.10
 wisp/lib	wfcisam.c	1.21
@@ -1011,8 +1006,8 @@ wisp/lib	win32msg.h	1.1
 wisp/lib	win32prt.c	1.17
 wisp/lib	win32spn.c	1.29
 wisp/lib	win32spn.h	1.5
-wisp/lib	winnt.c	1.15
-wisp/lib	wispcfg.c	1.23
+wisp/lib	winnt.c	1.17
+wisp/lib	wispcfg.c	1.24
 wisp/lib	wispexit.c	1.12
 wisp/lib	wisplib.dsp	1.5
 wisp/lib	wisplibm.dsp	1.2
@@ -1025,7 +1020,7 @@ wisp/lib	wngdcmls.h	1.8
 wisp/lib	wpause.c	1.14
 wisp/lib	wperson.c	1.53
 wisp/lib	wplatdef.h	1.7
-wisp/lib	wprint.c	1.17
+wisp/lib	wprint.c	1.18
 wisp/lib	writeacp.c	1.10
 wisp/lib	wrunconf.c	1.13
 wisp/lib	wsb.c	1.8
@@ -1118,7 +1113,7 @@ wisp/port	untarz	1.2
 wisp/port	which.sh	1.4
 wisp/port	wisp.dsw	1.14
 wisp/port	wispkit.dsp	1.5
-wisp/port	wmkdep	1.1
+wisp/port	wmkdep	1.2
 wisp/port	wmklib	1.1
 wisp/proctran	pgcblsrc.h	1.11
 wisp/proctran	pgcommon.h	1.8

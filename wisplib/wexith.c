@@ -23,7 +23,6 @@ static char rcsid[]="$Id:$";
 #endif
 
 #include "idsistd.h"
-#include "que_jobs.h"
 #include "wperson.h"
 #include "wfiles.h"
 #include "wglobals.h"
@@ -41,10 +40,8 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-#if defined(unix) || defined(WIN32)
 extern int message_unlink();
 int delete_worklib(void);
-#endif
 
 /*
 **	Static data
@@ -127,22 +124,14 @@ void wexith(void)									/* This is the WISP exit handler.	*/
 	*/
 	restoreprogdefs();
 
-#ifdef VMS
-	setretcode(WISPRETURNCODE);
-#endif
-
 	if (LINKPARM)
 	{
 		/* 
 			If came in from a LINK then restore args		
 		*/
 
-#if defined(unix) || defined(WIN32)
 		LINKPARG();
-#endif
-#ifdef VMS
-		VMSPARGS();
-#endif
+
 		/* 
 			If came in from a LINK then don't clear	
 		*/
@@ -208,14 +197,6 @@ void wispexit_cleanup(void)
 		delete_retcode();
 	}
 #endif
-
-#ifdef VMS
-	/* 
-		Cleanup the Share mem file.		
-	*/
-	cleanup_shrfil();
-#endif
-
 }
 
 /*
@@ -265,6 +246,9 @@ int delete_worklib(void)
 /*
 **	History:
 **	$Log: wexith.c,v $
+**	Revision 1.22  2001-11-27 15:46:31-05  gsl
+**	Remove VMS
+**
 **	Revision 1.21  1999-01-29 19:06:32-05  gsl
 **	Change the logic that deletes IS_SCRATCH files to use SCRATCH instead
 **	of unlink() to ensure that two-part files are deleted (x.dat + x.idx).

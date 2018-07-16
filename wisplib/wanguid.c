@@ -22,6 +22,7 @@ static char rcsid[]="$Id:$";
 
 #ifdef unix
 #include <unistd.h>
+#include <pwd.h>
 #endif
 
 #include "idsistd.h"
@@ -30,6 +31,7 @@ static char rcsid[]="$Id:$";
 #include "wglobals.h"
 #include "idsisubs.h"
 #include "wisplib.h"
+#include "wmalloc.h"
 
 /*
 **	Structures and Defines
@@ -43,7 +45,6 @@ static char rcsid[]="$Id:$";
 **	Static data
 */
 static	int	first_wanguid3 = 1;
-static	int	first_longuid = 1;
 
 /*
 **	Static Function Prototypes
@@ -57,7 +58,7 @@ void reset_wanguid3(void)
 
 const char *wanguid3(void)								/* This routine returns the first 3 	*/
 {											/* characters in the user ID returned 	*/
-											/* by cuserid().  Used in EXTRACT when	*/
+											/* by longuid().  Used in EXTRACT when	*/
 											/* keyword is ID.			*/
 											/* If the IDFIVE option is set in the	*/
 											/* OPTIONS file	(opt_idfive = 1) then	*/
@@ -105,7 +106,7 @@ const char *wanguid3(void)								/* This routine returns the first 3 	*/
 		first_wanguid3 = 0;
 
 		uid3[0]=' '; uid3[1]=' '; uid3[2]=' ';
-		cuserid(tstr);								/* Ask the system for user id		*/
+		strcpy(tstr, longuid());
 		x = 0;                                          			/* Initial values.			*/
 
 		if ( opt_idfive )
@@ -158,28 +159,43 @@ const char *numuid3(void)								/* This routine returns the last 3 	*/
 	return numid3;
 }
 
-void reset_longuid(void)
-{
-	first_longuid = 1;
-}
-
+#ifdef unix
 const char *longuid(void)							/* This routine will return the long userid	*/
 {										/* It's lenght is system dependant so the	*/
 										/* receiver has to be long enough. It will be	*/
 										/* null terminated and case sensitive.		*/
-	static	char	uid[40];
+	static	char	*uid = NULL;
 
-	if ( first_longuid )
+	if ( NULL == uid )
 	{
-		first_longuid = 0;
-		cuserid( uid );							/* ask the system for user id			*/
+		struct  passwd *p;
+		uid_t   euid;
+		char	buf[80];
+	
+		euid = geteuid();
+		p = getpwuid(euid);
+
+		if (NULL != p)
+		{
+			strcpy(buf,p->pw_name);
+		}
+		else
+		{
+			sprintf(buf,"EUID=%d", (int)euid);
+		}
+		uid = wstrdup(buf);
 	}
-	return( uid );
+
+	return uid ;
 }
+#endif
 
 /*
 **	History:
 **	$Log: wanguid.c,v $
+**	Revision 1.13  2001-11-27 16:58:47-05  gsl
+**	Change longuid() to use geteuid()
+**
 **	Revision 1.12  1998-03-31 13:48:00-05  gsl
 **	Move NISEEAST patch from EXTRACT ID to here
 **

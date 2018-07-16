@@ -153,8 +153,6 @@ int mngfile(void);
 
 /* msdosfns.c */
 #if defined(MSDOS) || defined(WIN32)
-void set_cuserid(char* newid, int len);
-char *cuserid(char* cuid);
 int getuid(void);
 const char	*ttyname(int fd);
 void PARSECOM( char* com_line, char* com_link );
@@ -306,6 +304,9 @@ int va_count();
 /*
 **	History:
 **	$Log: wisplib.h,v $
+**	Revision 1.38  2001-11-27 16:34:46-05  gsl
+**	remove cuserid()
+**
 **	Revision 1.37  2001-10-26 15:38:51-04  gsl
 **	Add run_unixcommand_silent()
 **

@@ -8,9 +8,7 @@ static char rcsid[]="$Id:$";
 			/************************************************************************/
 
 #include <stdio.h>
-#ifndef VMS
 #include <sys/types.h>
-#endif
 #include <time.h>
 #include <string.h>
 
@@ -19,6 +17,7 @@ static char rcsid[]="$Id:$";
 #include "wperson.h"
 #include "wisplib.h"
 #include "vwang.h"
+#include "wanguid.h"
 
 #include "video.h"
 #include "vlocal.h"
@@ -52,7 +51,7 @@ int menu_scan(struct menu *themenu)
 	vmove(0,40-(strlen(themenu->menutitle) / 2));					/* Start with centered title.		*/
 	vprint("%s",themenu->menutitle);
 	vmove(2,0);
-	cuserid(username);								/* Get the user's ID. 			*/
+	strcpy(username, longuid());							/* Get the user's ID. 			*/
 	vprint(" Username : %s",username);						/* Put it up.				*/
 	vcurrtime(2,35);								/* Also the time.			*/
 	vmove(3,0);
@@ -370,6 +369,9 @@ static int vcurrtime(int irow, int icol)
 /*
 **	History:
 **	$Log: menuscan.c,v $
+**	Revision 1.14  2001-11-27 17:07:54-05  gsl
+**	Change to use longuid()
+**
 **	Revision 1.13  1997-10-03 13:36:07-04  gsl
 **	YEAR2000 fix
 **

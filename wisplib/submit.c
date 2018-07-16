@@ -17,7 +17,6 @@ static char rcsid[]="$Id:$";
 **
 */
 
-#if defined(unix) || defined(VMS) || defined(WIN32)
 
 /*
 **	Includes
@@ -39,17 +38,9 @@ static char rcsid[]="$Id:$";
 #include <process.h>
 #endif
 
-#ifdef VMS
-#include <ssdef.h>
-#include <rmsdef.h>
-#include <libdef.h>
-#include <descrip.h>
-#endif
-
 #include "submit.h"
 #include "idsistd.h"
 #include "idsisubs.h"
-#include "que_jobs.h"
 #include "wcommon.h"
 #include "wperson.h"
 #include "movebin.h"
@@ -72,12 +63,10 @@ static char rcsid[]="$Id:$";
 #include "win32std.h"
 #endif
 
-#if defined(unix) || defined(WIN32)
 #include <signal.h>
 #include "wrunconf.h"
 #include "runtype.h"
 #include "wispnt.h"
-#endif
 
 /*
 **	Structures and Defines
@@ -160,13 +149,6 @@ va_dcl											/* Define the list structure.		*/
 	int4 mode;
 	char jobname[9];
 	int4 wang_retcod;								/* Value expected from Wang COBOL.	*/
-#ifdef VMS
-	int flags;
-	char qname[40];
-	pq_id *pq_ptr;									/* Pointer to the proc queue list.	*/
-	char result[132], *context;							/* Vars to use with lib$find_file	*/
-#include "submit.d"
-#endif
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
@@ -314,9 +296,6 @@ va_dcl											/* Define the list structure.		*/
 		return;
 	}
 
-#ifdef VMS
-	loadpad(WISPFILEXT,"COM",sizeof(WISPFILEXT));					/* NOTE: can only submit .COM under VMS.*/
-#endif
 	mode = IS_SUBMIT;
 	end_name = wfname(&mode,l_vol,l_lib,l_file,name);				/* now make a name for ourselves...	*/
 	*end_name = '\0';								/* Null terminate properly.		*/
@@ -343,52 +322,6 @@ va_dcl											/* Define the list structure.		*/
 	{
 		cpulim = 0;
 	}
-
-#ifdef VMS
-	pq_ptr = get_pq_list();								/* Get a pointer to the queue list	*/
-
-	do
-	{
-		if (pq_ptr->class == l_job_class) break;				/* look for the queue that matches	*/
-		pq_ptr = (pq_id *) pq_ptr->next;					/* next one				*/
-	} while (pq_ptr);
-
-	if (pq_ptr)	strcpy(qname,pq_ptr->qname);					/* Send the printout to the right queue.*/
-	else		qname[0] = '\0';						/* Or send it nowhere.			*/
-	flags = 0;
-	if (l_status == 'H') flags |= Q_HOLD_JOB;					/* Hold the job if they want.		*/
-	context = 0;
-	f_desc.dsc$w_length = strlen(name);						/* Set the length of the descriptor.	*/
-	rc = lib$find_file(&f_desc,&r_desc,&context,0,0,0,0);				/* See if the file exists first.	*/
-	lib$find_file_end(&context);							/* End the FIND_FILE context.		*/
-	if (rc == SS$_NORMAL || rc == RMS$_NORMAL)					/* If LIB$FIND_FILE was successful	*/
-	{
-		rc = que_job(BATCH_QUEUE,qname,name,jobname,cpulim,0,flags);		/* so send to the queue.		*/
-	}
-
-	if (rc == SS$_NORMAL || rc == RMS$_NORMAL)					/* Queue of job was successful.		*/
-	{
-		rc = 0;
-	}
-	else
-	{										/* Set return code from queued job:	*/
-		wang_retcod = 56;							/* Default return code.			*/
-		if (rc == RMS$_DNR || rc == RMS$_DPE) wang_retcod = SUBMIT_ERR_NOVOL;	/* Device not ready or			*/
-											/* Device positioning error.		*/
-		else if (rc == RMS$_WLK) wang_retcod = SUBMIT_ERR_VOLLOCK;		/* Device currently write locked when	*/
-											/* write access was attempted.		*/
-		else if (rc == RMS$_FLK) wang_retcod = 12;				/* File is locked by another user.	*/
-		else if (rc == RMS$_DNF || rc == RMS$_DEV) wang_retcod = 16;		/* Directory not found.			*/
-		else if (rc == RMS$_FNF) wang_retcod = 20; 				/* File not found.			*/
-		else if (rc == RMS$_PRV) wang_retcod = 28;				/* Insufficient priveledge or file prot.*/
-		else if (rc == LIB$_INVARG) wang_retcod = 40;				/* Invalid arguments.			*/
-		else if (rc == RMS$_SPL) wang_retcod = 44;				/* Submit command file option to a 	*/
-											/* Close service failed.		*/
-		else if (rc == SS$_ACCVIO) wang_retcod = 52; 				/* Access violation.			*/
-
-		rc = wang_retcod;
-	}
-#endif	/* #ifdef VMS */
 
 #ifdef unix
 	wtrace("SUBMIT","UNIX","Filespec=[%s] PV=[%6.6s] PL=[%8.8s]", name, l_vol, l_lib);
@@ -1251,18 +1184,6 @@ win32_submit_return:
 }
 #endif
 
-#endif	/* #ifndef MSDOS */
-#ifdef MSDOS
-void SUBMIT()
-{
-	werrlog(102,"SUBMIT: Not Yet Implemented",0,0,0,0,0,0,0);
-}
-void SETSUBMIT()
-{
-	werrlog(102,"SETSUBMIT: Not Yet Implemented",0,0,0,0,0,0,0);
-}
-#endif /* MSDOS */
-
 
 /*
 **	ROUTINE:	subvar()
@@ -1355,6 +1276,9 @@ const char* submit_err(int error)
 /*
 **	History:
 **	$Log: submit.c,v $
+**	Revision 1.34  2001-11-27 15:43:41-05  gsl
+**	Remove VMS & MSDOS
+**
 **	Revision 1.33  1999-09-27 09:09:51-04  gsl
 **	FIx call to setpgrp() for OSF1 (Digital UNIX)
 **
