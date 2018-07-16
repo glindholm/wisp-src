@@ -35,6 +35,8 @@ LIBCURSES= -lcurses
 #LIBCURSES= /usr/5lib/libcurses.a
 # Uncomment the following for Solaris
 #LIBCURSES=-ltermlib
+# Uncomment the following for HP-UX 10.20
+#LIBCURSES= -lcur_colr
 # Other possibles
 #LIBCURSES=-lcurses -ltermlib
 #----------------------------------------------------------------

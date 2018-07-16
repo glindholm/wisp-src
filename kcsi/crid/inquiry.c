@@ -17,12 +17,20 @@ int argc;
 char *argv[];
 {
 	strcpy(inq_progname,argv[0]);
+
+#ifdef KCSI_MFX
+	cobinit();
+#endif
+
 	INQMAIN();
 }
 
 /*
 **	History:
 **	$Log: inquiry.c,v $
+**	Revision 1.3  1999-03-05 09:59:40-05  gsl
+**	Add cobinit() for MFX
+**
 **	Revision 1.2  1996-09-17 19:45:38-04  gsl
 **	drcs update
 **

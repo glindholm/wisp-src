@@ -8,7 +8,7 @@
 procedure tstglb2
 
 
-* declare &arg4 as global string(10)  --  Causes bug
+declare &arg4 as global string(10)
 declare &arg5           string(10)
 declare &arg6           string(10)
 

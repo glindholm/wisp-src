@@ -239,7 +239,7 @@ int	bklickey(
 **
 */
 
-void formatkey(char* lickey, char* formkey)
+void formatkey(const char* lickey, char* formkey)
 {
 	sprintf(formkey,"%4.4s-%4.4s-%4.4s-%4.4s",&lickey[0],&lickey[4],&lickey[8],&lickey[12]);
 }
@@ -267,7 +267,7 @@ void formatkey(char* lickey, char* formkey)
 **
 */
 
-void unformatkey(char* lickey, char* formkey)
+void unformatkey(char* lickey, const char* formkey)
 {
 	int	i1,i2;
 
@@ -357,6 +357,9 @@ int ckvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3])
 /*
 **	History:
 **	$Log: wlickey.c,v $
+**	Revision 1.8  1998-12-18 13:28:59-05  gsl
+**	fix templates
+**
 **	Revision 1.7  1996-08-19 18:33:18-04  gsl
 **	drcs update
 **

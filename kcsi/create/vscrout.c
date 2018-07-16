@@ -46,7 +46,7 @@ AKEY	blank_akey = { "     ", "   ", " "};
 /*
 **	Static data
 */
-static char app[]="CREATE Utility - Version %s.%s (c) 1993-97 KCSI/NEOM";
+static char app[]="CREATE Utility - Version %s.%s (c) 1993-98 KCSI/NEOM";
 static char logo[81], message_field[81], m1_field[31], m2_field[31];
 static char recsize[5], errlist[4], output_org[2], output_format[2];
 static int screen_error;
@@ -175,7 +175,12 @@ static void name_and_type_init(char *vers, char *platform)
 	memcpy(cr_out.ofile._library,create_outlib,8);
 	memcpy(cr_out.ofile._volume,create_outvol,8);
 	cr_out.ofile._org[0] = ' ';
+#ifdef KCSI_MF
 	cr_out.ofile._format = MF_FILE_DEFAULT_FORMAT;
+#endif
+#ifdef KCSI_ACU
+	cr_out.ofile._format = '0';
+#endif
 	strcpy(recsize,"    ");
 	strcpy(output_org," ");
 	strcpy(output_format," ");
@@ -236,6 +241,12 @@ static int name_and_type_screen(void)
 	GPCTEXT("3 = Format used by system, 4 = IDXFORMAT\"4\"",19,35);
 	GPKW("FORMAT  ",output_format,1,18,15,"N");
 #endif
+#ifdef KCSI_ACU
+	GPCTEXT("Format:",18,2);
+	GPCTEXT("Vision Version '2', '3', or '4',",18,35);
+	GPCTEXT("Default = '0'",19,35);
+	GPKW("FORMAT  ",output_format,1,18,15,"N");
+#endif
 	GPCTEXT("Or Select:",22,2);
 	GPCTEXT("(13) Help  (16) Exit ",23,45);
 	GPCTEXT(message_field,24,2);
@@ -251,9 +262,7 @@ static void val_name_and_type(void)
 	if(! screen_error) val_name();
 	if(! screen_error) val_type();
 	if(! screen_error) val_recsize();
-#ifdef KCSI_MF
 	if(! screen_error) val_format();
-#endif
 }
 
 
@@ -311,27 +320,40 @@ static void val_format(void)
 
 	format = output_format[0];
 
-	if( (format != '0') &&
-	    (format != ' ') &&
-	    (format != '1') &&
-	    (format != '2') &&
-	    (format != '3') &&
-	    (format != '4') )
-		{
-		strcpy(message_field,
-		"FORMAT must be ( 0 - 4 )");
-		screen_error = 1;
-		return;
-		}
-
+#ifdef KCSI_MF
 	if ( format == '1' )	cr_out.ofile._format = MF_CISAM_FORMAT;
 	else if ( format == '2' )	cr_out.ofile._format = MF_LEVEL2_FORMAT;
 	else if ( format == '3' )	cr_out.ofile._format = MF_NATIVE_FORMAT;
 	else if ( format == '4' )	cr_out.ofile._format = MF_IDX4_FORMAT;
-	else
+	else if ( format == '0' || format == ' ' )
 	{
 		cr_out.ofile._format = MF_FILE_DEFAULT_FORMAT;
 	}
+	else
+	{
+		strcpy(message_field,
+		"FORMAT must be ( 0 - 4 )");
+		screen_error = 1;
+		return;
+	}
+#endif
+#ifdef KCSI_ACU
+	if ( format == '2' )		cr_out.ofile._format = '2';
+	else if ( format == '3' )	cr_out.ofile._format = '3';
+	else if ( format == '4' )	cr_out.ofile._format = '4';
+	else if ( format == '0' || format == ' ' )
+	{
+		cr_out.ofile._format = '0';
+	}
+	else
+	{
+		strcpy(message_field,
+		"FORMAT must be ( 0,2,3,4 )");
+		screen_error = 1;
+		return;
+	}
+#endif
+	
 }
 
 
@@ -449,8 +471,8 @@ static int primary_key_screen(void)
 	GPCTEXT("Print key errors:",16,2);
 	GPKW("ERRLIST ",errlist,3,16,29,"U");
 	GPCTEXT("(YES / NO)",16,50);
-	GPCTEXT("Press (1) to respecify output parameters.", 22, 2);
-	GPCTEXT("(13) Help",22,40);
+	GPCTEXT("Press (1) to respecify output parameters", 22, 2);
+	GPCTEXT("(13) Help",22,45);
 	GPCTEXT(message_field,24,2);
 	GPPFS(&gppfkeys);
 	pf = display_and_read_gp();
@@ -1002,6 +1024,13 @@ static int isblank(char *str, int len)
 /*
 **	History:
 **	$Log: vscrout.c,v $
+**	Revision 1.10  1998-05-19 10:17:20-04  gsl
+**	Fix text that was overlayed
+**
+**	Revision 1.9  1998-05-18 16:43:23-04  gsl
+**	Add the FORMAT keyword to allow specifing a Vision Version number.
+**	FOR ACUCOBOL just like what was being done for MF
+**
 **	Revision 1.8  1997-08-15 10:37:37-04  scass
 **	Added NEOM to app string, fixed date.
 **

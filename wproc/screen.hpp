@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : screen.hpp
 // Author : George Soules
@@ -12,6 +19,7 @@
 class machine;
 #include "object.hpp"
 #include "symbols.hpp"
+#include "crt_io.hpp"
 
 // Definitions and subprograms
 #include "colors.hpp"
@@ -73,6 +81,7 @@ class screen_contents {
       usign_8  cursor_y;
       Boolean  the_ok;
       usign_8 *the_contents;
+      w4w_handler  saved_w4w_handler;	// Save the w4w handler because it has a map of the hotspots
 };
 
 
@@ -215,7 +224,7 @@ class screen : public object {
       void        wait_for_fkey();
       mod_field  *mod_field_closest_to_cursor();
       mod_field  *mod_field_at_cursor();
-      void        handle_key(int a_key);
+      Boolean     handle_key(int a_key);	// Returns true if a function key was pressed
       void        type_key(int a_key);
       void        tab_magic(int a_key, mod_field *a_field, Boolean first_action);
       void        move_cursor_to(mod_field *a_field);
@@ -268,3 +277,50 @@ class screen : public object {
 };
 
 #endif
+
+//
+//	History:
+//	$Log: screen.hpp,v $
+//	Revision 1.6  1998-10-02 15:26:12-04  gsl
+//	Add a saved_w4w_handler to the screen_contents class.
+//	Change screen::handle_key() to return true if a function key was press.
+//	This is needed because a mouse click (key) can simulate a pfkey.
+//
+//	Revision 1.5  1998-08-31 15:14:15-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/screen.hpp,v
+//	Working file: screen.hpp
+//	head: 1.4
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 4;	selected revisions: 4
+//	description:
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:23-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:38-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:23-05;  author: gsl;  state: V3_3x12;  lines: +48 -48
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:26-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

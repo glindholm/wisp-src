@@ -5,62 +5,86 @@
 	Title:		KCSI CRID PACKING LIST FOR UNIX
 	
 	Document:	packlist.lis
-	Last Updated:	10 July 97
-	Products:	CRID/ACU, CRID/MF, CRID/DOS, CRID/VAX
-	Versions:	2.77 (AND LATER)
+	Last Updated:	$Date:$
+	Products:	CRID
+	Versions:	2.93 (AND LATER)
 	
-	Summary:	Packing list for the CRID tools for unix.
+	Summary:	Packing list for the CRID utilities shipping kit.
 
 	====================================================================
 	
+
+	CRID for ACUCOBOL on UNIX:
+	==========================
+
 	This distribution should include:
  
 	packlist.lis		- This packing list
-	install_crid_xxx.lis	- Installation instructions
+	install_crid_acu.lis	- Installation instructions
 	release.lis		- Release notes for the latest version
-  
-	EXECUTABLES
-	===========
 
-	Micro Focus	AcuCOBOL & MS-DOS	VAX
-	-----------	-----------------	---
-	control		CONTROL			CONTROL.EXE
-	report		REPORT			REPORT.EXE
-	inquiry		INQUIRY			INQUIRY.EXE
-	datentry	DATENTRY		DATENTRY.EXE
+	CONTROL			- CONTROL  utility (ACUCOBOL object file)
+	REPORT			- REPORT   utility (ACUCOBOL object file)
+	INQUIRY			- INQUIRY  utility (ACUCOBOL object file)
+	DATENTRY		- DATENTRY utility (ACUCOBOL object file)
 
-	====================================================================
+	wruncblk.umf		- Makefile for building ACUCOBOL runtime
+	libcrid.a		- CRID library for building RTS
+	crid.h			- C header for building RTS
+	crid85.c 		- C source for building RTS
+	cridtbl.c		- C source for building RTS
 
-	If for some reason the executables do not run on the system, the
-	Micro Focus and VMS distribution contain the pieces to make the
-	executables on the current machine.
+	ctlcnvrt.wcb		- Source for control file conversion
+	rptcnvrt.wcb		- Source for report file conversion
 
-	The AcuCOBOL distribution contains file to make the new runtime
-	which include WISP and CRID.
 
-	Micro Focus	AcuCOBOL	MS-DOS		VMS
-	-----------	--------	------		---
-	libmfcrid.a	libcrid.a	crid.lib	CRID.OLB
-	libmfcridwcb.a					CRIDU.OLB
-	libmfisam.a
-			crid.h		crid.h
-			cridtbl.c	cridtbl.c
-			crid85.c	crid85.c
-	control.o					CONTROL.OBJ
-	report.o					REPORT.OBJ
-	inquiry.o					INQUIRY.OBJ
-	datentry.o					DATENTRY.OBJ
-	cridutil.umf					CTRLLINK.COM
-							RPTLINK.COM
-							INQLINK.COM
-							DTELINK.COM
-			wruncblk.umf	wruncblk.umf
-					wruncblk.exe
+	CRID for ACUCOBOL on Windows NT/95:
+	===================================
 
-	Utilities
-	=========
-	ctlcnvrt.wcb	- Source file for control file conversion.
-	rptcnvrt.wcb	- Source file for report file conversion.
+	This distribution should include:
  
+	packlist.lis		- This packing list
+	cridntsetup.txt		- Installation instructions
+	release.lis		- Release notes for the latest version
+
+	CONTROL			- CONTROL  utility (ACUCOBOL object file)
+	REPORT			- REPORT   utility (ACUCOBOL object file)
+	INQUIRY			- INQUIRY  utility (ACUCOBOL object file)
+	DATENTRY		- DATENTRY utility (ACUCOBOL object file)
+
+	wwruncbl.mak		- Makefile for building ACUCOBOL runtime
+	cridacu.lib		- CRID library for building RTS
+	crid.h			- C header for building RTS
+	crid85.c 		- C source for building RTS
+	cridtbl.c		- C source for building RTS
+
+	ctlcnvrt.wcb		- Source for control file conversion
+	rptcnvrt.wcb		- Source for report file conversion
+
+
+	CRID for MICRO FOCUS COBOL on UNIX:
+	===================================
+
+	This distribution should include:
+
+	packlist.lis		- This packing list
+	install_crid_mf.lis	- Installation instructions
+	release.lis		- Release notes for the latest version
+
+	control			- CONTROL  utility (executable file)
+	report			- REPORT   utility (executable file)
+	inquiry			- INQUIRY  utility (executable file)
+	datentry		- DATENTRY utility (executable file)
+
+	cridmfx.umf		- Makefile for rebuilding utilities
+	libmfxcrid.a		- CRID library for building utils
+	libmfxcridwcb.a		- CRID library for building utils
+	control.o		- Object for building CONTROL
+	report.o		- Object for building REPORT
+	inquiry.o		- Object for building INQUIRY
+	datentry.o		- Object for building DATENTRY
+
+	ctlcnvrt.wcb		- Source for control file conversion
+	rptcnvrt.wcb		- Source for report file conversion
 
        ========================= END OF DOCUMENT ==========================

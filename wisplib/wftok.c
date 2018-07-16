@@ -32,6 +32,10 @@ static char rcsid[]="$Id:$";
 #include <sys/shm.h>
 #include "idsistd.h"
 
+#ifdef AIX
+static key_t myftok(char *file, char x);
+#endif
+
 /*
 	wftok()		Wisp File TO Key: Create the key from the file inode.
 */
@@ -39,7 +43,6 @@ key_t wftok(file)									/* WISP ftok				*/
 char *file;
 {
 #ifdef AIX
-	static key_t myftok(char *file, char x);
 	return( myftok(file,0xd5) );
 #else
 #ifdef SCO
@@ -74,6 +77,12 @@ static key_t myftok(char *file,char x)							/* For IBM - generate unique number
 /*
 **	History:
 **	$Log: wftok.c,v $
+**	Revision 1.8  1999-01-19 11:13:37-05  gsl
+**	fix last fix
+**
+**	Revision 1.7  1999-01-19 10:51:03-05  gsl
+**	fix warnings for AIX
+**
 **	Revision 1.6  1996-08-19 18:33:16-04  gsl
 **	drcs update
 **

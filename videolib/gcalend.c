@@ -371,6 +371,12 @@ ra1:                            i = col;
 
 	if (newcal) fp = vopenf("cal","w");
 	else fp = vopenf("cal","w");
+
+	if (!fp)
+	{
+		return FAILURE;
+	}
+
 	time(&bintime);
 	getnow();
 	fprintf(fp, "%s\n", this_date);
@@ -746,6 +752,9 @@ static int in_use(wstr) char *wstr;
 /*
 **	History:
 **	$Log: gcalend.c,v $
+**	Revision 1.12  1998-05-21 11:44:14-04  gsl
+**	Don't use the fp file handle unless it is valid.
+**
 **	Revision 1.11  1997-07-08 16:16:21-04  gsl
 **	Change to use new video.h defines
 **

@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : e_run.cpp
 // Author : George Soules
@@ -101,11 +108,12 @@ void machine::exec_run() {
    const int    std_out          = 1;
    int          new_std_in       = -1;
    int          new_std_out      = -1;
+#if !WANG
    int          old_std_in;
    int          old_std_out      = false;
    Boolean      redirect_std_in  = false;
    Boolean      redirect_std_out = false;
-
+#endif /* !WANG */
    Boolean      cexit_handler    = false;
    Boolean      eexit_handler    = false;
    Boolean      cexit_taken      = false;
@@ -353,11 +361,13 @@ void machine::exec_run() {
 
    while (run_pending && ! in_error_state && ! exiting) {
 
+#if !WANG
       // Enable IO redirection
       if (redirect_std_in)
          dup2(new_std_in, std_in);
       if (redirect_std_out)
          dup2(new_std_out, std_out);
+#endif /* !WANG */
 
       save_process_state();
 
@@ -514,6 +524,7 @@ void machine::exec_run() {
    }
    delete using_args;
 
+#if (! WANG) && DOS
    // Undo IO redirection
    if (redirect_std_in) {
       dup2(old_std_in, std_in);
@@ -525,7 +536,7 @@ void machine::exec_run() {
       close(new_std_out);
       close(old_std_out);
    }
-#if (! WANG) && DOS
+
    if (type_ahead) {
       // Flush type-ahead buffer
       _AH = 0x0C;
@@ -578,3 +589,65 @@ void machine::exec_using() {
 
 
 
+
+//
+//	History:
+//	$Log: e_run.cpp,v $
+//	Revision 1.10  1998-08-31 15:13:43-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_run.cpp,v
+//	Working file: e_run.cpp
+//	head: 1.9
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 9;	selected revisions: 9
+//	description:
+//	----------------------------
+//	revision 1.9
+//	date: 1998-04-22 15:49:10-04;  author: gsl;  state: V4_3_00;  lines: +6 -2
+//	Fix warnings
+//	----------------------------
+//	revision 1.8
+//	date: 1996-07-25 19:45:54-04;  author: gsl;  state: V4_2_02;  lines: +10 -7
+//	NT
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 14:14:50-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from e_run.cc to e_run.cpp
+//	----------------------------
+//	revision 1.6
+//	date: 1995-06-10 13:59:27-04;  author: gsl;  state: V3_3_19;  lines: +0 -6
+//	move the dump_globals() and update_globals() to wang_os_link()
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 10:40:46-04;  author: gsl;  state: Exp;  lines: +2 -0
+//	fix warning
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:51-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:08-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:47-05;  author: gsl;  state: V3_3x12;  lines: +44 -18
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:05-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

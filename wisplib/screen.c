@@ -41,7 +41,7 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "wmalloc.h"
 #include "screen.h"
-
+#include "osddefs.h"
 
 #define ROUTINE		57000
 
@@ -321,7 +321,7 @@ int di_write_file(			/* Open up a printer output file.	*/
 		memcpy(l_filelibvol,volume, 6);						/* Copy 6 chars. of volume name.	*/
 	}
 
-	out_file = fopen(native_filename,"w");
+	out_file = fopen(native_filename,FOPEN_WRITE_TEXT);
 	if (!out_file)
 	{
 		werrlog(ERRORCODE(4),native_filename,errno,0,0,0,0,0,0);
@@ -560,6 +560,9 @@ void screen_print(void)
 /*
 **	History:
 **	$Log: screen.c,v $
+**	Revision 1.21  1998-12-09 09:39:57-05  gsl
+**	Use FOPEN mode defines
+**
 **	Revision 1.20  1998-01-09 16:01:58-05  gsl
 **	Fix screen print
 **

@@ -85,6 +85,9 @@ void ksam_open_output(KCSIO_BLOCK *kfb)
 	char k_param[512];
 	char w_param[512];
 	int ak,rc;
+	char *ptr;
+	extern char *Agetenv(const char* var);	/* Acucobol getenv() which reads A_CONFIG file */
+	extern short v_make_vers;		/* ACUCOBOL FILE SYSTEM VARIABLE TO DEFINE VISION LEVEL 2,3,4 */
 
 	sprintf(l_param,"%d,%d,%d",
 		kfb->_record_len,
@@ -103,6 +106,46 @@ void ksam_open_output(KCSIO_BLOCK *kfb)
 		strcat(k_param,w_param);
 		}
 	f_errno = 0;
+	
+	/*
+	**	Default to Vision 3 files.
+	**	This can be overridden by setting the V_VERSION envvar.
+	**	The A_CONFIG Agetenv() doesn't currently seem to work.
+	*/
+	v_make_vers = 3;
+	
+	if ((ptr = getenv("V_VERSION")) ||
+	    (ptr = Agetenv("V_VERSION"))   )
+	{
+		int vversion;
+
+		if (1 == sscanf(ptr,"%d",&vversion))
+		{
+			if (2 == vversion || 3 == vversion || 4 == vversion)
+			{
+				v_make_vers = vversion;
+			}
+		}
+	}
+
+	/*
+	**	The only valid values are '2','3', and '4'
+	*/
+	switch(kfb->_format)
+	{
+	case '2':
+		v_make_vers = 2;
+		break;
+		
+	case '3':
+		v_make_vers = 3;
+		break;
+		
+	case '4':
+		v_make_vers = 4;
+		break;
+	}
+
 	rc = i_make(kfb->_sys_name,"Control",NULL,l_param,k_param,NULL);
 	if(rc)
 		f_errno = 0;
@@ -393,6 +436,14 @@ static int v_trans(int code)
 /*
 **	History:
 **	$Log: kv3.c,v $
+**	Revision 1.6  1998-05-18 16:09:23-04  gsl
+**	Set the VISION VERSION number v_make_vers based on the _format field in kfb.
+**
+**	Revision 1.5  1998-04-17 09:57:05-04  gsl
+**	Changed to default to Vision 3 files.
+**	Was creating vision 4 files and was not obeying V-VERSION 3 in A_CONFIG.
+**	You can change to Vision 2 or 4 by setting envvar V_VERSION=4.
+**
 **	Revision 1.4  1996-09-17 19:34:12-04  gsl
 **	drcs update
 **

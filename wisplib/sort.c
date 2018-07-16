@@ -1,13 +1,5 @@
 static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /********************************************************************************************************************************
 *																*
@@ -94,6 +86,7 @@ va_dcl
 	l_sort_length = l_element_length;						/* Default key length is entire element	*/
 	l_sort_type = 'A';								/* Default sort order is ascending	*/
 	l_locator_flag = 'S';								/* Default is standard sort		*/
+	l_locator_length = 0;
 
 	/********************************************************
 	*	Following are optional arguments 4 through 9	*
@@ -166,7 +159,7 @@ va_dcl
 
 	}
 											/* now call func to do the work 	*/
-	local_sort(input_array, 								/* source array 			*/
+	local_sort(input_array, 							/* source array 			*/
 		output_array, 								/* dest array 				*/
 		l_element_count, 							/* number of elems in source array 	*/
 		l_element_length,							/* length of each elem in source 	*/
@@ -245,6 +238,9 @@ static int binncmp(		/* compare two areas of memory		*/
 /*
 **	History:
 **	$Log: sort.c,v $
+**	Revision 1.13  1998-07-10 11:02:58-04  gsl
+**	Initialized the l_locator_length variable
+**
 **	Revision 1.12  1997-03-12 13:12:54-05  gsl
 **	changes to use WIN32
 **

@@ -69,6 +69,8 @@ struct s_sortkeys
 #define KT_PACKED_UNSIGNED	9
 #define KT_BINARY_NORMAL	10
 #define KT_BINARY_2N2		11
+#define KT_YY_PIVOTYEAR		12		/* YY PIC 99 - based on YYPIVOTYEAR */
+#define KT_TYPE_COUNT		13		/* Insert new types before this one */
 };
 
 int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char filetype, int recsize, char *recend, 
@@ -79,6 +81,9 @@ int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char file
 /*
 **	History:
 **	$Log: sortseqf.h,v $
+**	Revision 1.12  1998-09-08 16:32:26-04  gsl
+**	Add new key value for a YY pivot year
+**
 **	Revision 1.11  1996-09-26 13:13:45-04  gsl
 **	Add defined SSF_MAX_NUMKEYS
 **

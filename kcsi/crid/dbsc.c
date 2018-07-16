@@ -259,7 +259,8 @@ for use in datentry or discarding it.
 ------*/
 void bsc_fld_load(char *hdr,FIELD *fld)
 {
-	int key,update,group,fidx,nflds,gnflds;
+	int key,update,group,fidx,gnflds;
+	int	change_fld_cnt;
 
 /* If it is relative file, then start with a record number field */
 	if(file_is_relative())			/*22-Mar-1990*/
@@ -268,43 +269,51 @@ void bsc_fld_load(char *hdr,FIELD *fld)
 	fidx = 0;
 
 	while(fidx < field_count)
-		{
-		nflds = 0;
+	{
+		change_fld_cnt = 0;
 		key = Is_a_key(fld);
 		update = Is_updateable(fld);
 		group = Is_a_group(fld);
-/* If it is none of the above, it is skipped */
-		if((!key) && (!update) && (!group))
-			{
-			kill_fld_hole(fld);
-			nflds = -1;
-			}
-		else
-/* If it is updateable the logic is simple */
-		if(update)
-			nflds = do_update(fld);
-		else
-/*
- * If it is a group then hold onto your hat (see do_group for more data).
- * After a group is formed, the field count must be incremented by
- * the number of additional fields created - 1 for the parent which
- * is removed. The field index (fidx) must be incremented by the above,
- * plus the count of fields in one parent.
- */
 
-		if(group)
-			{
-			nflds = do_group(fld,&gnflds);
+		/* If it is none of the above, it is skipped */
+		if((!key) && (!update) && (!group))
+		{
 			kill_fld_hole(fld);
-			nflds -= 1;
-			fidx += gnflds;
-			fld += gnflds;
-			}
-		field_count += nflds;
-		++nflds;
-		fidx += nflds;
-		fld += nflds;
+			change_fld_cnt = -1;
 		}
+		else
+		{
+			/* If it is updateable the logic is simple */
+			if(update)
+			{
+				change_fld_cnt = do_update(fld);
+			}
+			else
+			{
+				/*
+				 * If it is a group then hold onto your hat (see do_group for more data).
+				 * After a group is formed, the field count must be incremented by
+				 * the number of additional fields created - 1 for the parent which
+				 * is removed. The field index (fidx) must be incremented by the above,
+				 * plus the count of fields in one parent.
+				 */
+
+				if(group)
+				{
+					change_fld_cnt = do_group(fld,&gnflds);
+					kill_fld_hole(fld);
+					change_fld_cnt -= 1;
+					fidx += gnflds;
+					fld += gnflds;
+				}
+			}
+		}
+		
+		field_count += change_fld_cnt;
+		++change_fld_cnt;
+		fidx += change_fld_cnt;
+		fld += change_fld_cnt;
+	}
 }
 /*----
 An updateable field may be either a single or an occurs. Returns the
@@ -389,6 +398,19 @@ int do_group(FIELD *fld,int *gnflds)
 /*
  * Build a field for each child.
  */
+	if (0 == nflds)
+	{
+		/*
+		**	If nflds==0 then there are no children.
+		**	This case happens when a field in not-updatable and it has an occurs count.
+		**	This was added after the fact to correct an signal 11, the following
+		**	loop doesn't work if sfld and efld have not been set.
+		*/
+
+		*gnflds = 0;
+		return 0;	
+	}
+
 	count = 0;
 	while(1)
 		{
@@ -508,6 +530,7 @@ int set_a_key(char *hdr,FIELD *fld)
 			}
 		phdr += CA_ENTRY_LEN;
 		}
+	return 0;
 }
 
 /*----
@@ -587,6 +610,14 @@ int is_within(FIELD *outer,FIELD *inner)
 /*
 **	History:
 **	$Log: dbsc.c,v $
+**	Revision 1.6  1999-09-13 15:46:23-04  gsl
+**	fix missing return code
+**
+**	Revision 1.5  1998-03-25 13:52:05-05  gsl
+**	Fix DATENTRY bug processing non-updateable fields with occurs count,
+**	the do_group() logic failed if there was not any children.
+**	version 2.92
+**
 **	Revision 1.4  1996-09-17 19:45:33-04  gsl
 **	drcs update
 **

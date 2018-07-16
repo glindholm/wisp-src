@@ -1,4 +1,4 @@
-	Copyright (c) 1995-1997 by NeoMedia Technologies Inc. 
+	Copyright (c) 1995-1999 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	
 	====================================================================
@@ -8,7 +8,7 @@
 	Document:	WPROC.LIS
 	Last Updated:	$Date:$
 	Products:	WPROC
-	Versions:	1.08
+	Versions:	1.16
 	
 	Summary:	Usage notes for wproc.
 			Known limitations.
@@ -64,6 +64,7 @@
 		   -c = Compile
 		   -t = Trace execution
 		   -v = Show version numbers only
+		   -da = Debug log wprocdebug.log
 
 
 	Using WPROC with Wang VS Procedures
@@ -127,8 +128,13 @@
 		$WPROCDEBUG	This variable is used to pass flags
 				to the wproc.  By using this flag it
 				will also cause standard output (STDOUT)
-				to be redirected to the file "wproc.trace"
+				to be redirected to the file "wprocdebug.log"
 				in the current working directory.
+				The flag -da will turn on all debug
+				tracing. 
+
+		$WPROCDEBUGLOG	The name of the debug log file. The
+				default name is wprocdebug.log.
 
 
 	Current Limitations
@@ -205,13 +211,100 @@
 		library and volume names.
 	Fix:	None - use only Wang style names.
 
-0012	Key:	LOCAL VARIABLE WITH SAME NAME AS GLOBAL
-	Desc:	A local variable is declared with the same name a global
-		variable at higher level, problem if the INITAL value
-		clause is used on the local variable.
-	Fix:	Rename either the local or the global variable so that you
-		do not use the same name.  Or, replace the INITIAL clause
-		on the local variable with an ASSIGN statement.
+
+
+	Release 1.16
+	------------
+
+	The following items where fixed or added for release 1.16
+
+	Key:	Correct WORKLIB handling.
+	Desc:	Correct the WORKLIB handling as described in the WISP
+		release notes.
+
+
+	Release 1.15
+	------------
+
+	The following items where fixed or added for release 1.15
+
+	Key:	SCRATCH statement default library and volume.
+	Desc:	The SCRATCH statement has been correct to use OUTLIB
+		and OUTVOL as default values if the library or volume
+		are not specified.  This now matches the behaviour
+		specified in the Wang Procedure Language Reference
+		manual.
+
+
+	Release 1.14
+	------------
+
+	The following items where fixed or added for release 1.14
+
+	Key:	Co*STAR and Windows Mouse support.
+	Desc:	Support has been added for Co*STAR W4WMAP and mouse
+		support. 
+
+
+	Release 1.13
+	------------
+
+	The following items where fixed or added for release 1.13
+
+	Key:	Unable to redirect syntax check errors to a file.
+	Desc:	Syntax check and compile errors and warnings were being
+		written to the screen handler instead of to stdout.  This
+		meant that you were not able to redirect the messages to a
+		file. 
+	Fix:	This has been corrected.
+
+
+	Release 1.12
+	------------
+
+	The following items where fixed or added for release 1.12
+
+	Key:	END following a CALL <expression> failing
+	Desc:	A CALL statement where the label being called was an
+		expression, instead of a literal, was failing to properly
+		setup the return address for the END statement. When the
+		END statement was executed the logic would branch to an
+		invalid location in the procedure that would then abort.
+	Fix:	This has been corrected.
+
+
+	Release 1.11
+	------------
+
+	The following items where fixed or added for release 1.11
+
+	Key:	Debug logging
+	Desc:	The debug logging was going to stdout which was
+		interfering with screen io.  
+	Fix:	Debug logging now goes to file wprocdebug.log. The log
+		file can be changed by setting $WPROCDEBUGLOG to the
+		desired file name.
+
+	Release 1.10
+	------------
+
+	The following items where fixed or added for release 1.10
+
+	Key:	Errorcode SCREEN394 or coredump
+	Desc:	Typing outside the last field on a prompt screen would
+		cause the above error.
+	Fix:	Has been corrected.
+
+	Key:    Choppy slow screen I/O
+	Desc:	Screens were being repainted character by character, very
+		slow on a dial-up line.
+	Fix:	Error in the Video screen I/O optimization was corrected.
+
+
+	Release 1.09
+	------------
+
+	The following items where fixed or added for release 1.09
 
 0022	Key:	GLOBALS NOT FOUND
 	Desc:	Global variables are not found in the following sit:
@@ -222,6 +315,22 @@
 		lower levels.
 	Fix:	Declare all needed global variables in the highest level
 		procedure. 
+
+0012	Key:	LOCAL VARIABLE WITH SAME NAME AS GLOBAL
+	Desc:	A local variable is declared with the same name a global
+		variable at higher level, problem if the INITAL value
+		clause is used on the local variable.
+	Fix:	Rename either the local or the global variable so that you
+		do not use the same name.  Or, replace the INITIAL clause
+		on the local variable with an ASSIGN statement.
+
+0046	Key:	RE-DECLARED LOCAL VARIABLE WITH SAME NAME AS GLOBAL
+	Desc:	A local variable is re-declared in a loop with the same
+		name a global variable at higher level was causing an
+		abort error.
+
+0047	Key:	19th argument in a RUN statement corrupt.
+	Desc:	Arguments 16-18 were being repeated as 19-21.
 
 
 	Release 1.08

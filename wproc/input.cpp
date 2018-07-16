@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : input.cpp
 // Author : George Soules
@@ -481,3 +488,57 @@ int state_file_input::destroy() {
    return abs(unlink(the_name));
 }
 
+
+//
+//	History:
+//	$Log: input.cpp,v $
+//	Revision 1.8  1998-08-31 15:13:52-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/input.cpp,v
+//	Working file: input.cpp
+//	head: 1.7
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 7;	selected revisions: 7
+//	description:
+//	----------------------------
+//	revision 1.7
+//	date: 1997-05-13 10:44:24-04;  author: gsl;  state: V4_3_00;  lines: +5 -1
+//	Change the RUN command to not set CANCEL EXIT
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 19:46:46-04;  author: gsl;  state: V3_9_92;  lines: +3 -0
+//	NT
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:15:17-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from input.cc to input.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:00-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:18-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:56-05;  author: gsl;  state: V3_3x12;  lines: +54 -16
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:11-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

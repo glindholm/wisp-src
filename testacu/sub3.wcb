@@ -115,7 +115,7 @@
 
            03  FILLER PIC X(30) ROW 23 COL 20
                VALUE
-               "Press RETURN to TAKE OFF!".
+               "Press (ENTER) to TAKE OFF!".
 
        01 LINK-PRG PIC X(8)  VALUE "SAMPLE  ".
        01 LINK-TYPE PIC X    VALUE " ".

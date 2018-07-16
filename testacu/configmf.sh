@@ -1,11 +1,4 @@
 #!/bin/sh
-#/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993	 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
-#/************************************************************************/
 #
 #
 #	File:		configmf.sh
@@ -37,6 +30,22 @@ then
 	exit
 fi
 
+if [ x$WISPDIR = x ]
+then
+	echo
+	echo Variable \$WISPDIR is not set!
+	echo $SCRIPT ABORTING!
+	exit
+fi
+
+if [ ! -d $WISPDIR ]
+then
+	echo
+	echo Directory $WISPDIR does not exist!
+	echo $SCRIPT ABORTING!
+	exit
+fi
+
 TESTDIR=$WISP/src/testmf
 if [ ! -d $TESTDIR ]
 then
@@ -49,21 +58,6 @@ fi
 #
 #	Define some variables
 #
-SHIP=$WISP/src/ship
-WU=$WISP/src/wisputils
-PQ=$WISP/src/printq
-PT=$WISP/src/proctran
-VT=$WISP/src/videotest
-VC=$WISP/src/videocap
-WT=$WISP/src/wisptran
-WL=$WISP/src/wisplib
-VL=$WISP/src/videolib
-ETC=$WISP/src/etc
-PORT=$WISP/src/port
-WACU=$WISP/src/acu
-WMF=$WISP/src/mf
-EDE=$WISP/src/ede
-
 WISPCONFIG=$TESTDIR/config
 export WISPCONFIG
 
@@ -90,29 +84,24 @@ then
 fi
 
 echo Loading $WISPCONFIG
-cp $ETC/CHARMAP		$WISPCONFIG
-cp $ETC/FORMS		$WISPCONFIG
-cp $ETC/LPMAP		$WISPCONFIG
-cp $ETC/PRMAP		$WISPCONFIG
-cp $ETC/SCMAP		$WISPCONFIG
-cp $ETC/W4WMAP		$WISPCONFIG
-cp $ETC/wispmsg.dat	$WISPCONFIG
-cp $ETC/wispmsg.txt	$WISPCONFIG
-cp ../wproc/wproc.msg	$WISPCONFIG
+cp $WISPDIR/config/CHARMAP	$WISPCONFIG
+cp $WISPDIR/config/FORMS	$WISPCONFIG
+cp $WISPDIR/config/LPMAP	$WISPCONFIG
+cp $WISPDIR/config/PRMAP	$WISPCONFIG
+cp $WISPDIR/config/SCMAP	$WISPCONFIG
+cp $WISPDIR/config/W4WMAP	$WISPCONFIG
+cp $WISPDIR/config/wispmsg.dat	$WISPCONFIG
+cp $WISPDIR/config/wispmsg.txt	$WISPCONFIG
+cp $WISPDIR/config/wproc.msg	$WISPCONFIG
 
-cat $ETC/OPTIONS |sed "s|#PQUNIQUE|PQUNIQUE|"> $WISPCONFIG/OPTIONS
+cat $WISPDIR/config/OPTIONS |sed "s|#PQUNIQUE|PQUNIQUE|"> $WISPCONFIG/OPTIONS
 cat $TESTDIR/lgmap.mf | sed "s|_WISP_|$WISP|g" > $WISPCONFIG/LGMAP
 cp $TESTDIR/wrunconfig.mf $WISPCONFIG/wrunconfig
 
 echo Loading $WISPCONFIG/videocap
-for org in $VC/*.vcap
-do
-	new=`basename $org .vcap`
-	cp $org $WISPCONFIG/videocap/$new
-done
+cp $WISPDIR/config/videocap/* $WISPCONFIG/videocap
 
-
-$WU/wsysconf
+$WISPDIR/bin/wsysconf
 
 echo
 echo The '$WISPCONFIG' $WISPCONFIG directory has been built.

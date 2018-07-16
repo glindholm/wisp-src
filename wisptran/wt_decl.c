@@ -13,13 +13,22 @@ static char rcsid[]="$Id:$";
 #include "wisp.h"
 #include "crt.h"
 #include "cobfiles.h"
+#include "statment.h"
+#include "wt_procd.h"
+#include "reduce.h"
+
 
 static int decl_exnum = 0;								/* Used to remember which exit.		*/
 static int decl_parsing = 0;								/* Indicates currently parsing a decl.	*/
 static char decl_sname[40];								/* The SECTION name of this one.	*/
-int chk_dpar()										/* Check for DECLARATIVES para's.	*/
+
+NODE chk_dpar(NODE the_sentence)							/* Check for DECLARATIVES para's.	*/
 {
+	NODE para_node;
 	char tstr[40];
+
+	para_node = is_paragraph(the_sentence);
+	strcpy(tstr, token_data(para_node->token));
 
 	if (in_decl)
 	{
@@ -29,13 +38,12 @@ int chk_dpar()										/* Check for DECLARATIVES para's.	*/
 						"WISP internal error, Maximum number of paragraphs in DECLARATIVES exceeded.");
 			exit_wisp(EXIT_WITH_ERR);
 		}
-		strcpy(decl_paras[decl_paras_cnt],parms[0]);				/* in the table of paragraphs in the	*/
-		stredt(decl_paras[decl_paras_cnt++],".","");				/* declaratives.  edit out the period.	*/
+		strcpy(decl_paras[decl_paras_cnt],tstr);				/* Add para name to table		*/
+		decl_paras_cnt++;
 
 		if (proc_performs_cnt)							/* See if it is a paragraph referenced	*/
 		{									/* by the procdiv, and flag it for	*/
-			strcpy(tstr,parms[0]);						/* copying.				*/
-			stredt(tstr,".","");
+											/* copying.				*/
 
 			if (paracmp(tstr,proc_performs,proc_performs_cnt))		/* Found it?				*/
 			{
@@ -43,113 +51,165 @@ int chk_dpar()										/* Check for DECLARATIVES para's.	*/
 			}
 		}
 
-		if (!strncmp(parms[1],"SECTION",7))					/* See if it's a section.		*/
+		if (is_section(the_sentence))						/* See if it's a section.		*/
 		{
-			p_use();							/* Process the USE procedure.		*/
-			return(1);  /* input stream has changed. */
+			return parse_use(the_sentence);					/* Process the USE procedure.		*/
 		}
 	}
 	else										/* We are in the procedure division.	*/
 	{										/* If it is not in declaratives, see if	*/
 		if (proc_paras_cnt)							/* it is a paragraph which is referenced*/
 		{									/* by the declaratives, and flag it for	*/
-			strcpy(tstr,parms[0]);						/* copying.				*/
-			stredt(tstr,".","");
+
 			if (paracmp(tstr,proc_paras,proc_paras_cnt))			/* Found it?				*/
 			{
-				if (!strncmp(parms[1],"SECTION",7))			/* It's a SECTION.			*/
+				if (is_section(the_sentence))				/* It's a SECTION.			*/
+				{
 					copy_sect = 1;					/* Set first flag for section.		*/
+				}
+				
 				copy_to_dcl_file = 1;					/* Set the mode.			*/
 			}
 		}
 	}
-	return(0);
+
+	return the_sentence;
 }
-
-p_use()
+/*
+**	SECTION section-name.
+**
+**	    USE AFTER [STANDARD] {EXCEPTION|ERROR} PROCEDURE [ON] 
+**		{{file-name}...|INPUT|OUTPUT|I-O|SHARED|EXTEND|SPECIAL-INPUT}.
+**
+**
+**	Note: Keyword ERROR will break a fragment.
+*/
+NODE parse_use(NODE the_section)
 {
-	char tstr[40],rstr[40],fname[40],hline[128],fld[50];
-	int tnum,fnum,multi_file;
+	NODE	next_sentence;
+	NODE	curr_node;
+	char 	first_fname[40];
+	char 	next_fname[40];
+	
+	char	fld[50];
+	int 	tnum,fnum,multi_file;
 	int	first_is_crt;
-
-	sprintf(hline,"       %s SECTION.",parms[0]);					/* Build an "XXX SECTION." phrase.	*/
-
+	
 	gen_dexit();									/* If we were doing one, gen the end.	*/
 
-	skip_param(2);									/* Skip over SECTION info.		*/
+	next_sentence = get_sentence_tree();
+	curr_node = first_non_fluff_node(next_sentence);
 
-	ptype = get_param(tstr);							/* Get first word.			*/
-
-	if (strcmp(tstr,"USE"))								/* Not a USE phrase.			*/
+	if (curr_node && eq_token(curr_node->token, VERB, "USE"))
+	{
+		curr_node = curr_node->next;
+	}
+	else	/* Not a USE phrase.			*/
 	{
 		write_log("WISP",'F',"ERRINUSE","Error parsing USE statement. USE missing.");
-		write_log("",' ',"","%s\n",linein);
 		exit_wisp(EXIT_WITH_ERR);
 	}
 
-	ptype = get_param(tstr);							/* Get next word.			*/
-
-	if (!strcmp(tstr,"AFTER"))							/* Skip AFTER.				*/
+	if (eq_token(curr_node->token, KEYWORD, "AFTER"))
 	{
-		ptype = get_param(tstr);
+		curr_node = curr_node->next;
 	}
 
-	if (!strcmp(tstr,"DEADLOCK"))							/* If DEADLOCK, not valid, delete it.	*/
+
+	if (eq_token(curr_node->token, KEYWORD, "DEADLOCK"))				/* If DEADLOCK, not valid, delete it.	*/
 	{
 		write_log("WISP",'E',"DEADLOCK","USE AFTER DEADLOCK is not supported (DELETED).");
-		linein[0] = '\0';
+		the_section = free_statement(the_section);
+		next_sentence = free_statement(next_sentence);
 		del_use = 1;								/* Set a flag to make it delete it.	*/
-		return(0);
+
+		return NULL;
 	}
 
-	if (!strcmp(tstr,"STANDARD"))
+	if (eq_token(curr_node->token, KEYWORD, "STANDARD"))
 	{
-		ptype = get_param(tstr);						/* Skip over STANDARD.			*/
+		curr_node = curr_node->next;
 	}
 
-	strcpy(rstr,tstr);								/* Save the reason (EXCEPTION, ERROR).	*/
-
-	ptype = get_param(tstr);							/* Get next work (should be PROCEDURE)	*/
-
-	if (strcmp(tstr,"PROCEDURE"))
+	/* Keyword ERROR would break this sentence into fragments. */
+	if (NODE_END == curr_node->type)
 	{
-		write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, PROCEDURE missing.");
-		write_log("",' ',"","%s\n",linein);
+		/* 
+		**	Find the next node in the next fragment
+		**	(Sentence)
+		**	|	   |		|
+		**	(USE frag) (ERROR frag) (PERIOD frag)	
+		*/
+
+		curr_node = next_non_fluff_node_in_sentence(next_sentence, curr_node);
+		if (!curr_node)
+		{
+			write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, broken sentence tree.");
+			exit_wisp(EXIT_WITH_ERR);
+		}
+	}
+	
+	if (eq_token(curr_node->token, KEYWORD, "ERROR") ||
+	    eq_token(curr_node->token, KEYWORD, "EXCEPTION"))
+	{
+		curr_node = curr_node->next;	/* ERROR | EXCEPTION */
+	}
+	else
+	{
+		write_tlog(curr_node->token, "WISP",'F',"ERRINUSE","Error parsing USE statement, missing ERROR or EXCEPTION.");
+	}
+
+	if (!eq_token(curr_node->token, KEYWORD, "PROCEDURE"))
+	{
+		write_tlog(curr_node->token,"WISP",'F',"ERRINUSE","Error parsing USE statement, PROCEDURE missing.");
 		exit_wisp(EXIT_WITH_ERR);
 	}
 
-	ptype = get_param(tstr);							/* Get next word (may be ON)		*/
+	curr_node = curr_node->next;
 
-	if (!strcmp(tstr,"ON"))								/* Skip ON.				*/
+	if (eq_token(curr_node->token, KEYWORD, "ON"))
 	{
-		ptype = get_param(tstr);						/* Get next word.			*/
+		curr_node = curr_node->next;
 	}
 
-	if (!strcmp(tstr,"SHARED") || !strcmp(tstr,"SPECIAL-INPUT"))			/* If it's SHARED or SPECIAL-INPUT.	*/
+	if (eq_token(curr_node->token, KEYWORD, "SHARED") ||
+	    eq_token(curr_node->token, KEYWORD, "SPECIAL-INPUT"))			/* If it's SHARED or SPECIAL-INPUT.	*/
 	{										/* Then remove it.			*/
-		linein[0] = '\0';							/* Empty string.			*/
+		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s is Invalid (DELETED).",token_data(curr_node->token));
+		the_section = free_statement(the_section);
+		next_sentence = free_statement(next_sentence);
 		del_use = 1;								/* Set a flag to make it delete it.	*/
-		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s is Invalid (DELETED).",tstr);
-		return(0);
-	}
-	else if (!strcmp(tstr,"INPUT") || !strcmp(tstr,"OUTPUT") || !strcmp(tstr,"I-O") || !strcmp(tstr,"EXTEND"))
-	{										/* It's not a specific file.		*/
-		linein[0] = '\0';							/* Empty string.			*/
-		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s not supported, causes conflict.",tstr);
-		tput_line("%s", hline);							/* Write the SECTION name.		*/
-		gen_use(rstr,tstr);							/* Generate the USE procedure.		*/
-		return(0);								/* Let it go.				*/
+
+		return NULL;
 	}
 
-	tnum = file_index(tstr);							/* Find the file id.			*/
+	if (eq_token(curr_node->token, KEYWORD, "INPUT") ||
+	    eq_token(curr_node->token, KEYWORD, "OUTPUT") ||
+	    eq_token(curr_node->token, KEYWORD, "I-O") ||
+	    eq_token(curr_node->token, KEYWORD, "EXTEND"))
+	{										/* It's not a specific file.		*/
+		tput_statement(8, the_section);
+		the_section = free_statement(the_section);
+		
+		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s not supported, causes conflict.",
+			  token_data(curr_node->token));
+
+		tput_statement(12, next_sentence);
+		next_sentence = free_statement(next_sentence);
+
+		return NULL;
+	}
+
+	strcpy(first_fname,token_data(curr_node->token));
+	tnum = file_index(first_fname);							/* Find the file id.			*/
 	first_is_crt = 0;
 
 	if (tnum == -1)
 	{
-		tnum = crt_index(tstr);
+		tnum = crt_index(first_fname);
 		if ( tnum == -1 ) 
 		{
-			write_log("WISP",'E',"ERRINUSE","Error parsing USE statement, File \"%s\"not found.",tstr);
+			write_log("WISP",'E',"ERRINUSE","Error parsing USE statement, File \"%s\"not found.",first_fname);
 			exit_wisp(EXIT_WITH_ERR);
 		}
 		first_is_crt = 1;
@@ -161,88 +221,86 @@ p_use()
 
 	multi_file = 0;
 
-	while (ptype != -1)								/* If it wasn't alone on the line...	*/
+	while (NODE_END != curr_node->next->type)					/* If it wasn't alone on the line...	*/
 	{
 		int	iscrt;
 
+		curr_node = curr_node->next;
+
 		iscrt = 0;
-		ptype = get_param(fname);						/* Scan for other file names.		*/
-		fnum = file_index(fname);						/* Get file index.			*/
+		strcpy(next_fname, token_data(curr_node->token));			/* Scan for other file names.		*/
+		fnum = file_index(next_fname);						/* Get file index.			*/
 
 		if (fnum == -1)
 		{
-			fnum = crt_index(fname);
+			fnum = crt_index(next_fname);
 			if (fnum == -1)
 			{
-				write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, File \"%s\"not found.",fname);
+				write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, File \"%s\"not found.",next_fname);
 				exit_wisp(EXIT_WITH_ERR);
 			}
 			iscrt = 1;
 		}
 
 		
-		make_fld(fld,fname,"WSECT-");
+		make_fld(fld,next_fname,"WSECT-");
 		tput_line_at(8, "%s SECTION.",fld);					/* Make a section for it.		*/
-		gen_use(rstr,fname);							/* Give it a USE statement.		*/
-		make_fld(fld,fname,"WDCL-");
+		tput_line_at(12, "USE AFTER ERROR PROCEDURE %s.", next_fname);		/* Give it a USE statement.		*/
+		make_fld(fld,next_fname,"WDCL-");
 		tput_line_at(8, "%s.",fld);						/* Generate a starting paragraph.	*/
 
 		if (!iscrt)
 		{
 		        prog_ftypes[fnum] |= HAS_DECLARATIVES;				/* Flag it was there.			*/
-			g_wfilechk(fnum,".\n");						/* Generate a call to WFILECHK.		*/
+			g_wfilechk(fnum);						/* Generate a call to WFILECHK.		*/
 
 			tput_line_at(12, "IF WISP-DECLARATIVES-STATUS NOT = \"00\" THEN");	/* Do declaratives.		*/
 		}
 
-		make_fld(fld,tstr,"WDS-");
+		make_fld(fld,first_fname,"WDS-");
 		tput_line_at(16, "PERFORM %s THRU",fld);
-		make_fld(fld,tstr,"WDX-");
+		make_fld(fld,first_fname,"WDX-");
 		tput_clause (20, "%s.",fld);
-		make_fld(fld,fname,"WDX-");
+		make_fld(fld,next_fname,"WDX-");
 		tput_line_at(8,  "%s.",fld);					/* Generate an ending paragraph.	*/
 		tput_line_at(12, "EXIT.");
 		multi_file = 1;
 	}
 
 
-	tput_line("%s", hline);								/* Write the SECTION.	*/
-	gen_use(rstr,tstr);								/* Generate the USE phrase.		*/
-	make_fld(fld,tstr,"WDCL-");
+	tput_statement(8, the_section);
+	the_section = free_statement(the_section);
+	next_sentence = free_statement(next_sentence);
+
+	tput_line_at(12, "USE AFTER ERROR PROCEDURE %s.", first_fname);			/* Generate the USE phrase.		*/
+	make_fld(fld,first_fname,"WDCL-");
 	tput_line_at(8,  "%s.",fld);							/* Generate an initial paragraph.	*/
 	if (!first_is_crt)
 	{
-		g_wfilechk(tnum,".\n");							/* Generate a call to WFILECHK.		*/
+		g_wfilechk(tnum);							/* Generate a call to WFILECHK.		*/
 
 		tput_line_at(12, "IF WISP-DECLARATIVES-STATUS = \"00\" THEN");		/* Skip declare.			*/
-		make_fld(fld,tstr,"WDX-");
+		make_fld(fld,first_fname,"WDX-");
 		tput_line_at(16, "GO TO %s.",fld);
 	}
 
 	if (multi_file)
 	{										/* If this is used by more than one file*/
-		make_fld(fld,tstr,"WDS-");
+		make_fld(fld,first_fname,"WDS-");
 		tput_line_at(8,  "%s.",fld);						/* Generate a starting paragraph.	*/
 	}
 
-	strcpy(decl_sname,tstr);							/* Save this section name.		*/
+	strcpy(decl_sname,first_fname);							/* Save this section name.		*/
 	decl_parsing = 1;								/* Set a flag saying we did this.	*/
 
-	linein[0] = '\0';								/* Empty string.			*/
+	return NULL;
 }
 
-int gen_use(char *reason,char *filename)
-{
-	tput_line_at(12, "USE AFTER %s PROCEDURE ON",reason);
-	tput_clause (16, "%s.",filename);
-	return 0;
-}
-
-gen_dexit()										/* Generate the EXIT paragraph for decl.*/
+void gen_dexit(void)									/* Generate the EXIT paragraph for decl.*/
 {
 	char	fld[50];
 
-	if (!decl_parsing) return(0);							/* No need.				*/
+	if (!decl_parsing) return;							/* No need.				*/
 
 	make_fld(fld,decl_sname,"WDX-");
 	tput_line_at(8,  "%s.",fld);
@@ -252,6 +310,12 @@ gen_dexit()										/* Generate the EXIT paragraph for decl.*/
 /*
 **	History:
 **	$Log: wt_decl.c,v $
+**	Revision 1.12  1998-03-27 14:10:26-05  gsl
+**	Remove ref to linein in error
+**
+**	Revision 1.11  1998-03-03 15:49:11-05  gsl
+**	Rewrote for cobol-85 changes
+**
 **	Revision 1.10  1996-08-30 21:56:15-04  gsl
 **	drcs update
 **

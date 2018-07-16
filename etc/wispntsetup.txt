@@ -1,199 +1,214 @@
-	Copyright (c) 1997 by NeoMedia Migrations Inc. All Rights Reserved.
-	
-	====================================================================
-	
-	Title:		WISP for NT/95 Quick Set-Up Steps
-	
-	Document:	wispntsetup.txt
-	Last Updated:	17 June 1997
-	Products:	WISP/NT
-	Versions:	4.0.00
-	
-	Summary:	WISP for NT/95 installation and setup steps
+Copyright (c) 1999 by NeoMedia Migrations Inc. All Rights Reserved.
 
-	====================================================================
-	
+====================================================================
 
-	WISP for NT/95 Quick Set-Up Steps
-	=================================
-	
-	This document describes the step for installing and setting up
-	WISP for Windows NT/95.
+Title:          WISP for NT/9x Quick Set-Up Steps
 
-	See Appendix A and B of the WISP manual for complete installation
-	and configuration information.
+Document:       wispntsetup.txt
+Last Updated:   $Date:$
+Products:       WISP/NT
+Versions:       4.3.05
+
+Summary:        WISP for NT/9x installation and setup steps
+
+====================================================================
 
 
-	Overview
-	--------	
+WISP for NT/9x Quick Set-Up Steps
+=================================
 
-	0) Backup the WISPCONFIG directory.
-	1) Install WISP for NT/95 on the server machine
-	2) Share the WISP directory using a Share Name of "WISP".  
-	3) Run Wconfig.exe to configure the server machine.
-	4) Run Wlicense to install the WISP license.
-	5) Build the Acucobol Runtime System
-	6) Setup the WISPCONFIG files
-	7) Configure the client machines
+This document describes the step for installing and setting up WISP
+for Windows NT/9x.
+
+See Appendix A and B of the WISP manual for complete installation and
+configuration information.
 
 
-	The Steps
-	---------
+Overview
+--------        
 
-	0) Backup the WISPCONFIG directory.
+0) Backup the WISPCONFIG directory.
+1) Install WISP for NT/9x on the server machine
+2) Share the WISP directory using a Share Name of "WISP".  
+3) Run Wconfig.exe to configure the server machine.
+4) Run Wlicense to install the WISP license.
+5) Build the Acucobol Runtime System
+6) Setup the WISPCONFIG files
+7) Configure the client machines
 
-	    If you are upgrading to a new release of WISP and you already
-	    have WISP installed on this machine then be sure to backup the
-	    WISPCONFIG directory.
 
-	1) Install WISP for NT/95 on the server machine
+The Steps
+---------
 
-	    a) Insert Disk 1 into floppy drive A:
-	    b) Run A:SETUP
+0) Backup the WISPCONFIG directory.
 
-	    The following instructions assume you have installed WISP in
-	    directory C:\WISP .  If you have installed WISP into a
-	    different location the adjust the instructions accordingly.
+    If you are upgrading to a new release of WISP and you already have
+    WISP installed on this machine then be sure to backup the
+    WISPCONFIG directory.
 
-	2) Share the WISP directory using a Share Name of "WISP".  
+1) Install WISP for NT/9x on the server machine
 
-	    a) In Explorer or File Manager select C:\WISP
-	    b) Windows 95: From File menu select "Properties"
-	       NT 4.0:     From File menu select "Properties"
-	       NT 3.51:    From Disk menu select "Share As..."
-	    c) From the Sharing tab, select "Share As:" Share Name: WISP
-	    d) Click OK
+    a) Insert Disk 1 into floppy drive A:
+    b) Run A:SETUP
 
-	3) Run Wconfig.exe to configure the server machine.
+    The following instructions assume you have installed WISP in
+    directory C:\WISP4xxx .  If you have installed WISP into a
+    different location the adjust the instructions accordingly.
 
-	    a) Run C:\WISP\BIN\WCONFIG.EXE
-	    b) Answer the prompts.
+2) Share the WISP directory using a Share Name of "WISP".  
 
-	       "Would you like to import configuration information from a
-	       saved registry file?"
+    a) In Explorer or File Manager select C:\WISP
+    b) Windows 9x: From File menu select "Properties"
+       NT 4.0:     From File menu select "Properties"
+       NT 3.51:    From Disk menu select "Share As..."
+    c) From the Sharing tab, select "Share As:" Share Name: "WISP"
+    d) Click OK
 
-	       Click "NO" to configure manually.
+3) Run Wconfig.exe to configure the server machine.
 
-	       "Enter WISP server:" "SERVER01"
+    a) Run C:\WISP4xxx\BIN\WCONFIG.EXE
+    b) Answer the prompts.
 
-	       Enter the name of the server machine. It is very important
-	       that you enter the name of the server machine, it should be
-	       the name of the machine you installed WISP onto.
+       "Would you like to import configuration information from a
+       saved registry file?"
 
-	       If you do not enter the name correctly then the WISP
-	       network licensing will not work correctly.
+       Click "NO" to configure manually.
 
-	       If you are installing a single cpu license for a machine
-	       which is not on a network then you should enter "(LOCAL)".
+       "Enter WISP server:" "SERVER01"
 
-	       For the remaining instructions we choose the name
-	       "SERVER01" as our server name.  You will have to substitute
-	       your actual server name.
+       Enter the name of the server machine. It is very important that
+       you enter the name of the server machine, it should be the name
+       of the machine you installed WISP onto.
 
-	       "Enter WISP directory:" "\\SERVER01\wisp"
+       If you do not enter the name correctly then the WISP network
+       licensing will not work correctly.
 
-	       This is the location of your WISP directory using UNC
-	       naming syntax and the Share Name of WISP.
+       If you are installing a single cpu license for a machine which
+       is not on a network then you should enter "(LOCAL)".
 
-	       "Enter WISPCONFIG directory:" "\\SERVER01\wisp\config"
+       For the remaining instructions we choose the name "SERVER01" as
+       our server name.  You will have to substitute your actual
+       server name.
 
-	       This is the location of your WISPCONFIG directory. You can
-	       choose any location but it defaults to the sample
-	       WISPCONFIG directory that is installed with WISP.
+       "Enter WISP directory:" "\\SERVER01\wisp"
 
-	    c) Finish the configuration.
+       This is the location of your WISP directory using UNC naming
+       syntax and the Share Name of WISP.
 
-	       Any yellow highlighted fields are warnings and should be
-	       corrected by selecting a different file or directory.
+       "Enter WISPCONFIG directory:" "\\SERVER01\wisp\config"
 
-	       "USERDIR:"
+       This is the location of your WISPCONFIG directory. You can
+       choose any location but it defaults to the sample WISPCONFIG
+       directory that is installed with WISP.
 
-	       This is the directory where users "home" directories are
-	       located.  It is often named "USERS" and located on the
-	       server machine.  If it is shared with a Share Name of
-	       "USERS" then you can enter it as "\\SERVER01\users".
+    c) Finish the configuration.
 
-	       "TEMPDIR:"
+       Any yellow highlighted fields are warnings and should be
+       corrected by selecting a different file or directory.
 
-	       This is the directory where temporary files will be
-	       created. It should be located on a local drive like "C:"
-	       instead of a network drive.
+       "USERDIR:"
 
-	    d) Click the "OK" button to write the values to the registry
-	       and exit the program.
+       This is the directory where users "home" directories are
+       located.  It is often named "USERS" and located on the server
+       machine.  If it is shared with a Share Name of "USERS" then you
+       can enter it as "\\SERVER01\users".
 
-	4) Run Wlicense to install the WISP license.
+       "TEMPDIR:"
 
-	    a) Ensure you have a WISP license key. 
-	    b) Run C:\WISP\BIN\WLICENSE.EXE
-	    c) Write down the machine id that is reported by Wlicense.
-	    d) Call NeoMedia Technical support for a Validation Code.
-	    e) Enter the Valication Code to complete the license
-	       installation. 
+       This is the directory where temporary files will be created. It
+       should be located on a local drive like "C:" instead of a
+       network drive.
 
-	5) Build the Acucobol Runtime System
+    d) Click the "OK" button to write the values to the registry
+       and exit the program.
 
-	    a) Ensure ACUCOBOL-GT V3.1 is installed and the Acucobol BIN
-	       directory is on the PATH.
+4) Run Wlicense to install the WISP license.
 
-	          PATH %PATH%;C:\ACUCBL31\BIN
+    a) Ensure you have a WISP license key. 
+    b) Run C:\WISP4xxxx\BIN\WLICENSE.EXE
+    c) Write down the machine id that is reported by Wlicense.
+    d) Call NeoMedia Technical support for a Validation Code.
+    e) Enter the Valication Code to complete the license
+       installation. 
 
-	    b) Ensure MicroSoft Visual C++ 4 is installed.
-	    c) Edit the makefile WWRUNCBL.MAK in C:\WISP\ACU to change
-	       ACUDIR to the location where Acucobol was installed.
+5) Build the Acucobol Runtime System
 
-	           ACUDIR=C:\ACUCBL31
+    a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
+       Acucobol BIN directory is on the PATH.
 
-	    d) Create an MSDOS/COMMAND prompt window
-	    e) In the MSDOS/COMMAND prompt window run the bat file
-	       C:\Msdev\Bin\Vcvars32.bat. This bat file enables you to
-	       compile and link C programs from the command prompt.
-	       (Substitute "C:\Msdev" with the location of Visual C++)  
+          PATH %PATH%;C:\ACUCBL42\ACUGT\BIN
 
-	           C:> C:\MSDEV\BIN\VCVARS32.BAT x86
+    b) Ensure MicroSoft Visual C++ 5 or 6 is installed.
+    c) Edit the makefile WWRUNCBL.MAK in C:\WISP4xxx\ACU to
+       change ACUDIR to the location where Acucobol was
+       installed. 
 
-	    f) Change directory: cd C:\WISP\ACU
-	    g) Issue the commands to build the Runtime.
+           ACUDIR=C:\ACUCBL42\ACUGT
 
-	           C:> nmake /f wwruncbl.mak rts
+    d) Create an MSDOS/COMMAND prompt window
+    e) In the MSDOS/COMMAND prompt window run the bat file
+       Vcvars32.bat that came with MS Visual C++. This bat
+       file enables you to compile and link C programs from
+       the command prompt. 
+       (Substitute path to Vcvars32.bat with the location used by
+       Visual C++) 
 
-	    h) The Runtime System WWRUNCBL.EXE will have been created.
+       MSVC++ 4.x:
+          C:> C:\MSDEV\BIN\VCVARS32.BAT x86
 
-	6) Setup the WISPCONFIG files
+       MSVC++ 5.x:
+          C:> "C:\Program Files\DevStudio\VC\bin\Vcvars32.bat" x86  
 
-	   Follow the instructions in Appendix B of the WISP manual.
+       MSVC++ 6.x:
+          C:> "C:\Program Files\DevStudio\VC98\bin\Vcvars32.bat" x86  
 
-	7) Configure the client machines
+       NOTE: If you get an out-of-space message, click on the
+             properties button on the toolbar, go to the Memory tab,
+             set the Initial Environment size to 4096, click OK, close
+             the MSDOS/Command window, reopen and try again.
 
-	   Each of the client machines on the network will need to be
-	   configured by running the Wconfig.exe program.  
+    f) Change directory: cd C:\WISP4xxx\ACU
+    g) Issue the commands to build the Runtime.
 
-	   The process can be simplified by "Exporting" the configuration
-	   to a text file then "Importing" the configuration on each
-	   machine.
+           C:> nmake /f wwruncbl.mak rts
 
-	   a) On the server run C:\WISP\BIN\WCONFIG.EXE
-	   b) Click on the "Export" button and enter a file name.
+    h) The Runtime System WWRUNCBL.EXE will have been created.
 
-		   \\SERVER01\WISP\wisp.reg
+6) Setup the WISPCONFIG files
 
-	   c) This will write the WISP registry entries to the file.
-	   d) Click "Cancel" to exit Wconfig.exe
-	   
-	   The following steps will need to be repeated on each client
-	   machine. 
+   Follow the instructions in Appendix B of the WISP manual.
 
-	   e) On the client run Wconfig.exe using the "Run..." options off
-	      of the Start button.
+7) Configure the client machines
 
-	           Run: \\SERVER01\WISP\bin\wconfig
-		   
-	   f) Click on the "Import" button and enter the registry file
-	      name you created earlier.  Use the network UNC form of the
-	      file name and click the "Open" button.
+   Each of the client machines on the network will need to be
+   configured by running the Wconfig.exe program.
 
-		   \\SERVER01\WISP\wisp.reg
+   The process can be simplified by "Exporting" the configuration to a
+   text file then "Importing" the configuration on each machine.
 
-	   g) Click the "OK" button to exit Wconfig.
+   a) On the server run C:\WISP4xxx\BIN\WCONFIG.EXE
+   b) Click on the "Export" button and enter a file name.
 
-	========================= END OF DOCUMENT ==========================
+           \\SERVER01\WISP\wisp.reg
+
+
+   c) This will write the WISP registry entries to the file.
+   d) Click "Cancel" to exit Wconfig.exe
+
+   The following steps will need to be repeated on each client
+   machine.
+
+   e) On the client run Wconfig.exe using the "Run..." options off
+      of the Start button.
+
+           Run: \\SERVER01\WISP\bin\wconfig
+           
+   f) Click on the "Import" button and enter the registry file
+      name you created earlier.  Use the network UNC form of the
+      file name and click the "Open" button.
+
+           \\SERVER01\WISP\wisp.reg
+
+   g) Click the "OK" button to exit Wconfig.
+
+========================= END OF DOCUMENT ==========================

@@ -41,7 +41,7 @@ ACU_LIBS_LINK = $(LIBACU)
 
 ALL= 	bldmf display makemsg selectpg wcopy wdelay wdelwrk wexists wfind \
 	wputparm wrename wretcode wrun wscratch wsubmit wsysconf wsysinit wusage \
-	viewkey vsx wsort vcapkeys wlicense wdiag wshell wlictest
+	viewkey vsx wsort vcapkeys wlicense wdiag wshell wlictest qapic hexed
 
 all:	$(ALL)
 
@@ -166,3 +166,6 @@ hexed: hexed.c $(VC)/vlocal.h $(VC)/video.h $(VC)/vcap.h $(VC)/vdata.h $(WISP_LI
 
 wlictest: wlictest.c $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ $@.c $(UTILS_LIBS_LINK)
+
+qapic: qapic.c $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $@.c -I ../wisplib $(UTILS_LIBS_LINK)

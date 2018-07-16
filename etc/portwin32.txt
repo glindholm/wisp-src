@@ -1,13 +1,13 @@
-	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	Copyright (c) 1999 by NeoMedia Technologies Inc. All Rights Reserved.
 	
 	====================================================================
 	
-	Title:		PORTING WISP TO WIN32 (NT/95)
+	Title:		PORTING WISP TO WIN32 (NT/9x)
 	
 	Document:	portwin32.txt
 	Last Updated:	$Date:$
 	Products:	WISP/NT EDE KCSI
-	Versions:	4.2.00 and later
+	Versions:	4.3.05 and later
 	
 	Summary:	Instructions on re-porting WISP to NT
 
@@ -15,11 +15,11 @@
 	====================================================================
 	
 
-	PORTING WISP TO WIN32 (NT/95)
+	PORTING WISP TO WIN32 (NT/9x)
 	=============================
 	
 	This document describes the process of re-porting WISP to Windows
-	NT and Windows 95.
+	NT and Windows 9x.
 	
 
 	Transfering a WISP Source Kit
@@ -29,7 +29,7 @@
 
 	Create a CPIO version of the source kit.
 
-		wisp4200.src.cpio.Z 	 
+		wisp4305.src.cpio.Z 	 
 
 	FTP the kit to NT/95
 
@@ -39,59 +39,43 @@
 
 		C:\work> mkdir wisp
 		C:\work> cd wisp
-		C:\work\wisp> uncompress wisp4200.src.cpio.Z
-		C:\work\wisp> cpio -icdqv < wisp4200.src.cpio
+		C:\work\wisp> uncompress wisp4304.src.cpio.Z
+		C:\work\wisp> cpio -icdqv < wisp4304.src.cpio
 
 	This will create a standard wisp source kit directory layout.
 
 
 	Set Up The Project
 	------------------
-	Get the Microsoft Developer Studio project files and copy them to
-	the wisp\src directory.
+	Edit wwruncbl.mak and cridmake.mak and set the ACUDIR value to
+	point to the location of Acucobol directory. 
 
-		wisp\src\wisp.mdp	- project file
-		wisp\src\wisp.mak	- makefile
+	[_] acu\wwruncbl.mak
+		ACUDIR=C:\ACUCBL42\acugt
+		KCSIDIR=$(WISPDIR)\CRIDACU.297
+		CREATEDIR=$(WISPDIR)\CREATEACU.34
 
-	Create a couple of needed directories.
-
-		mkdir wisp\src\cridacu
-		mkdir wisp\src\createacu
-
-	Edit wisp\src\acu\wwruncbl.mak and set the ACUDIR value to point
-	to the location of Acucobol directory.
-
-		ACUDIR=C:\ACUCBL321
-
-	Copy the Acucobol CRID object files from a UNIX kit.  Currently
-	the instructions for building these on NT are not coded but
-	because the objects are platform independant you can use the UNIX
-	versions. 
-
-		FTP in binary mode CONTROL, DATENTRY, INQUIRY, REPORT
-
-		wisp\src\kcsi\crid\CONTROL
-		wisp\src\kcsi\crid\DATENTRY
-		wisp\src\kcsi\crid\INQUIRY
-		wisp\src\kcsi\crid\REPORT
+	[_] kcsi\crid\cridmake.mak
+		ACUDIR=C:\ACUCBL42\acugt
 
 
 	Build the Project
 	-----------------
-	Run the developer studio using the wisp project file
-	wisp\src\wisp.mdp . 
+	Run the MSVC++ 6 developer studio using the wisp project workspace
+	file "wisp\src\wisp.dsw" . 
 
-	Check the Build->Settings to ensure the VERSION numbers are
-	correct for needed components.
+	Check the Project->Settings to ensure the VERSION numbers are
+	correct for needed components. Be sure to use the "Settings for:"
+	"All Configurations" when changing these.
 
 		*** THESE NUMBERS ARE ONLY EXAMPLES ***
 		*** GET AND USE THE REAL NUMBERS    ***
 
-		WPROC	   WPROC_VERSION=108
-		CRID	   CRID_VERSION=291
-		CREATE	   CREATE_VERSION=31
+		WPROC		WPROC_VERSION=116   (wproc\wproc.umf)
+		CRIDLIB	   	CRID_VERSION=297    (kcsi\crid\cridmake.umf/mak)
+		CREATELIBACU	CREATE_VERSION=34   (kcsi\create\createunix.umf)
 
-	Select "WISP - Win32 Release" as the default project.
+	Select "SHIPKIT - Win32 Release" as the Active project. 
 
 	Start the build ...
 
@@ -130,10 +114,10 @@
 	Move the "wisp\src\kit" directory to "wisp\kit".  Copy the
 	InstallShield files to "wisp\kit".
 
-		wisp\kit\wisp4200.iwz
-		wisp\kit\ede4200.iwz
-		wisp\kit\crida291.iwz
-		wisp\kit\creata31.iwz
+		wisp\kit\wisp4304.iwz
+		wisp\kit\ede4304.iwz
+		wisp\kit\crida296.iwz
+		wisp\kit\creata34.iwz
 
 	Double click on the ".iwz" file to start InstallShield.  Follow
 	the instructions to build diskettes.
@@ -142,7 +126,7 @@
 	QA TEST WISP
 	------------
 
-	Install WISP in C:\wisp following the Quick Setup instructions.
+	Install WISP in C:\WISPxxxx following the Quick Setup instructions.
 
 	Follow QAWISP.LIS instructions.
 

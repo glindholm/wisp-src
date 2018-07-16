@@ -14,6 +14,7 @@ static char rcsid[]="$Id:$";
 #include "paths.h"
 #include "vwang.h"
 #include "wisplib.h"
+#include "wfiledis.h"
 
 #include "vseglb.h"
 #include "vsescr.h"
@@ -870,7 +871,7 @@ static int vse_compile_command(void)
 			return rc;
 		}
 	}
-	return 0;
+
 }
 
 /*
@@ -1101,6 +1102,12 @@ static int vse_display(char *filename)
 /*
 **	History:
 **	$Log: vsespmnu.c,v $
+**	Revision 1.16  1998-10-15 10:07:44-04  gsl
+**	fix warning
+**
+**	Revision 1.15  1998-05-21 09:39:36-04  gsl
+**	Fix warning
+**
 **	Revision 1.14  1997-10-23 14:02:38-04  gsl
 **	change to use link_display()
 **

@@ -1,13 +1,5 @@
 static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 #define EXT extern
 #include "wisp.h"
@@ -47,9 +39,16 @@ static int using_ufb_cmp(struct using_ufb_struct *p1, struct using_ufb_struct *p
 
 char *wfgets();
 
+
+static void p_optfile(void);							/* Read the option file.			*/
+static void p_keyfile(void);							/* Read the key file.				*/
+static void p_workfile(void);							/* Read the workfile.				*/
+static void set_rlist(const char *filename);					/* Add a copy file to the list of copy files 	*/
+
+
 open_io()									/* Parse and open the i/o files			*/
 {
-	FILE *par_file;								/* The file to hold paragraph names.	*/
+	FILE *par_file;								/* The file to hold paragraph names.		*/
 	int	i;
 #ifdef VMS
 	char inp_file[256];
@@ -354,13 +353,13 @@ char *the_file;
 	return 0;
 }
 
-p_optfile()									/* Read the option file.			*/
+static void p_optfile(void)							/* Read the option file.			*/
 {
 	int i,k,wisp_opt;
 	char tstr[133],*scn_ptr,*prm_ptr;
 	FILE *opt_file;								/* The option file.				*/
 
-	if (!do_optfile) return(1);
+	if (!do_optfile) return;
 
 	opt_file = fopen(opt_fname,"r");					/* Try the local option file.			*/
 
@@ -381,7 +380,7 @@ scan_opt:
 	wisp_opt = 0;
 
 
-	if (!opt_file) return(1);						/* No option file.				*/
+	if (!opt_file) return;							/* No option file.				*/
 
 	while (wfgets(tstr,132,opt_file))
 	{									/* Read the names of the paragraphs.		*/
@@ -430,7 +429,8 @@ scan_opt:
 		if (k == -1)
 		{		/*  7	      8		9	 100	   110	     120       130       140			*/
 /*				    01234567890123456789012345678901234567890123456789012345678901234567890			*/
-			k = strpos("#KEEP_STOP_RUN #DELETE_RECORD_CONTAINS #NO_WS_BLANK_WHEN_ZERO #TRAP_START_TIMEOUTS ",o_parms[0]);
+			k = strpos("#KEEP_STOP_RUN #DELETE_RECORD_CONTAINS #NO_WS_BLANK_WHEN_ZERO #TRAP_START_TIMEOUTS ",
+				   o_parms[0]);
 			if (k != -1) k += 70;
 		}
 
@@ -577,7 +577,8 @@ printf("USING_UFB=[%s]\n",using_ufb_item.name);
 
 				if (!using_ufb_ring)
 				{
-					if(rc=ring_open((char **)&using_ufb_ring,sizeof(struct using_ufb_struct),5,5,using_ufb_cmp,1))
+					if(rc=ring_open((char **)&using_ufb_ring,sizeof(struct using_ufb_struct),5,5,
+							using_ufb_cmp,1))
 					{
 						write_log("WISP",'F',"RINGOPEN",
 							"Unable to open ring [using_ufb_ring] rc=%d [%s]",rc,ring_error(rc));
@@ -616,7 +617,7 @@ printf("USING_UFB=[%s]\n",using_ufb_item.name);
 	}
 }
 
-p_keyfile()									/* Read the key file.				*/
+static void p_keyfile(void)							/* Read the key file.				*/
 {
 /*
 	The keyfile now has several different enteries.
@@ -632,7 +633,7 @@ p_keyfile()									/* Read the key file.				*/
 	FILE *key_file;
 	int use_wisp;
 
-	if (!do_keyfile) return(1);						/* Skip it.					*/
+	if (!do_keyfile) return;						/* Skip it.					*/
 
 	key_file = fopen(key_fname,"r");					/* Try the local key file.			*/
 
@@ -646,7 +647,7 @@ scan_key:
 
 	use_wisp = 0;
 
-	if (!key_file) return(1);						/* No key file.					*/
+	if (!key_file) return;							/* No key file.					*/
 
 	while (wfgets(tstr,132,key_file))
 	{									/* Read the names of the fields.		*/
@@ -737,7 +738,7 @@ scan_key:
 	}
 }
 
-p_workfile()										/* Read the workfile.			*/
+static void p_workfile(void)								/* Read the workfile.			*/
 {
 	int i;
 	char tstr[133],*scn_ptr,*prm_ptr;
@@ -747,7 +748,7 @@ p_workfile()										/* Read the workfile.			*/
 
 	wrk_file = fopen(work_fname,"r");						/* Try the work file.			*/
 
-	if (!wrk_file) return(0);							/* No work file, no problem.		*/
+	if (!wrk_file) return;								/* No work file, no problem.		*/
 
 	while (wfgets(tstr,132,wrk_file))
 	{										/* Read the names of the files.		*/
@@ -787,12 +788,12 @@ struct rcpy_struct *p1, *p2;
 	return(cmp);
 }
 
-chk_rlist()
+static void chk_rlist(void)
 {										/* Check the list of all copy files 		*/
 	int rc;									/* in them to see if this is a repeat.		*/
 
 	re_copy = 0;								/* Set it to false now.				*/
-	if (!rcpy_list_ring) return(0);						/* There is no list.				*/
+	if (!rcpy_list_ring) return;						/* There is no list.				*/
 
 	strcpy(rcpy_element.file,cpy_file);
 	strcpy(rcpy_element.lib ,cpy_lib );
@@ -801,13 +802,12 @@ chk_rlist()
 	if ( rc == 0 ) re_copy = 1;
 }
 
-set_rlist(filename)								/* Add a copy file to the list of copy files 	*/
-char *filename;
+static void set_rlist(const char *filename)					/* Add a copy file to the list of copy files 	*/
 {
 	int rc;
 
 	chk_rlist();
-	if (re_copy) return(0);							/* It was a re-copy, don't add it.		*/
+	if (re_copy) return;							/* It was a re-copy, don't add it.		*/
 
 	if (!rcpy_list_ring) 							/* There is no list.				*/
 	{
@@ -1075,6 +1075,9 @@ char	*select_name;
 /*
 **	History:
 **	$Log: wt_files.c,v $
+**	Revision 1.12  1999-09-07 10:40:39-04  gsl
+**	Make local routines static and fix prototypes
+**
 **	Revision 1.11  1996-08-30 21:56:18-04  gsl
 **	drcs update
 **

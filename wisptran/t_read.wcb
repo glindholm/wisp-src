@@ -1,0 +1,591 @@
+000100* Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+000200* $Id:$
+000300*
+000400* FILE:   T_READ.WCB
+000500*
+000600* RCS:    $Source:$
+000700*
+000800* FUNCTION: Test READ statements.
+000900*
+001000* DESCRIPTION:
+001100*
+001200*
+001300*
+001400
+001500/*****************************************************************
+001600*                                                                *
+001700*                       IDENTIFICATION DIVISION                  *
+001800*                                                                *
+001900******************************************************************
+002000*
+002100 IDENTIFICATION DIVISION.
+002200 PROGRAM-ID.
+002300     TREAD.
+002400 AUTHOR.
+002500     QA.
+002600/*****************************************************************
+002700*                                                                *
+002800*                         ENVIRONMENT DIVISION                   *
+002900*                                                                *
+003000******************************************************************
+003100*
+003200 ENVIRONMENT DIVISION.
+003300 CONFIGURATION SECTION.
+003400 SOURCE-COMPUTER.
+003500     WANG-VS.
+003600 OBJECT-COMPUTER.
+003700     WANG-VS.
+003800 FIGURATIVE-CONSTANTS.
+003900     BLINK-BIT IS "10"
+004000     PROTECT-BIT IS "04"
+004100     DIM-BIT IS "08"
+004200     TAB-STOP IS "86"
+004300     BLINKING-DISPLAY IS "94"
+004400     NO-ECHO IS "98".
+004500
+004600/*****************************************************************
+004700*                                                                *
+004800*                         INPUT-OUTPUT SECTION                   *
+004900*                                                                *
+005000******************************************************************
+005100*
+005200 INPUT-OUTPUT SECTION.
+005300 FILE-CONTROL.
+005400
+005500     SELECT CRT
+005600         ASSIGN TO "CRT",      "DISPLAY",
+005700         ORGANIZATION    IS SEQUENTIAL
+005800         ACCESS MODE     IS RANDOM
+005900         RELATIVE KEY    IS CRT-RELKEY
+006000         PFKEY           IS CRT-PFKEY
+006100         CURSOR POSITION IS CRT-CURSOR-POS
+006200         FILE STATUS     IS CRT-FILE-STATUS.
+006300
+006400     SELECT SEQ-SEQ-FILE
+006500         ASSIGN TO "SEQSEQ", "DISK", NODISPLAY.
+006600
+006700     SELECT IDX-SEQ-FILE
+006800         ASSIGN TO "IDXSEQ", "DISK", NODISPLAY,
+006900         ORGANIZATION    IS INDEXED
+007000         ACCESS          IS SEQUENTIAL
+007100         RECORD KEY      IS IDX-SEQ-KEY.
+007200
+007300     SELECT IDX-DYN-FILE
+007400         ASSIGN TO "IDXDYN", "DISK", NODISPLAY,
+007500         ORGANIZATION    IS INDEXED
+007600         ACCESS          IS DYNAMIC
+007700         RECORD KEY      IS IDX-DYN-KEY
+007800         ALTERNATE RECORD KEY IDX-DYN-ALT WITH DUPLICATES.
+007900
+008000     SELECT REL-SEQ-FILE
+008100         ASSIGN TO "RELSEQ", "DISK", NODISPLAY,
+008200         ORGANIZATION    IS RELATIVE
+008300         ACCESS          IS SEQENTIAL
+008400         RELATIVE KEY    IS REL-SEQ-KEY.
+008500
+008600     SELECT REL-DYN-FILE
+008700         ASSIGN TO "RELDYN", "DISK", NODISPLAY,
+008800         ORGANIZATION    IS RELATIVE
+008900         ACCESS          IS DYNAMIC
+009000         RELATIVE KEY    IS REL-DYN-KEY.
+009100
+009200     SELECT PRINTER-FILE
+009300         ASSIGN TO "PRT", "PRINTER", NODISPLAY.
+009400
+009500     SELECT TAPE-FILE
+009600         ASSIGN TO "TAPE", "TAPE", NODISPLAY.
+009700
+009800
+009900
+010000/*****************************************************************
+010100*                                                                *
+010200*                      DATA DIVISION - FILE SECTION              *
+010300*                                                                *
+010400******************************************************************
+010500*
+010600 DATA DIVISION.
+010700 FILE SECTION.
+010800
+010900 FD  CRT
+011000     LABEL RECORDS ARE OMITTED.
+011100 01  CRT-RECORD                         PIC X(1924).
+011200
+011300 FD  SEQ-SEQ-FILE.
+011400 01  SEQ-SEQ-RECORD              PIC X(80).
+011500
+011600 FD  IDX-SEQ-FILE.
+011700 01  IDX-SEQ-RECORD.
+011800     05  IDX-SEQ-KEY             PIC X(20).
+011900     05  IDX-SEQ-DATA            PIC X(60).
+012000
+012100 FD  IDX-DYN-FILE.
+012200 01  IDX-DYN-RECORD.
+012300     05  IDX-DYN-KEY             PIC X(20).
+012400     05  IDX-DYN-ALT             PIC X(20).
+012500     05  IDX-DYN-DATA            PIC X(40).
+012600
+012700 FD  REL-SEQ-FILE.
+012800 01  REL-SEQ-RECORD              PIC X(80).
+012900
+013000 FD  REL-DYN-FILE.
+013100 01  REL-DYN-RECORD              PIC X(80).
+013200
+013300 FD  PRINTER-FILE.
+013400 01  PRINTER-RECORD              PIC X(133).
+013500
+013600 FD  TAPE-FILE.
+013700 01  TAPE-RECORD                 PIC X(80).
+013800
+013900/*****************************************************************
+014000*                                                                *
+014100*                         WORKING STORAGE                        *
+014200*                                                                *
+014300******************************************************************
+014400*
+014500 WORKING-STORAGE SECTION.
+014600
+014700*
+014800*   CRT FILE VARIABLES
+014900*
+015000 77  CRT-RELKEY  PIC 9(02) VALUE 1.
+015100 77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+015200 01  CRT-CURSOR-POS.
+015300     03  CRT-CURSOR-POS-COL  BINARY.
+015400     03  CRT-CURSOR-POS-ROW  BINARY.
+015500 01  CRT-FILE-STATUS.
+015600     03  CRT-FILE-STATUS-ERR        PIC X(01).
+015700     03  CRT-FILE-STATUS-AID        PIC X(01).
+015800
+015900 01  SEQ-SEQ-INTO            PIC X(80).
+016000 01  IDX-SEQ-INTO            PIC X(80).
+016100 01  IDX-DYN-INTO            PIC X(80).
+016200 01  REL-SEQ-INTO            PIC X(80).
+016300 01  REL-DYN-INTO            PIC X(80).
+016400 01  CRT-INTO                PIC X(1924).
+016500
+016600 01  REL-SEQ-KEY             PIC 9(8).
+016700 01  REL-DYN-KEY             PIC 9(8).
+016800
+016810 01  N-IDX-SEQ-FILE          PIC X.  
+016820 01  F-IDX-SEQ-FILE          PIC X.  
+016830 01  L-IDX-SEQ-FILE          PIC X.  
+016840 01  V-IDX-SEQ-FILE          PIC X.  
+016850 01  PR-IDX-SEQ-FILE          PIC X.  
+016860 01  S-IDX-SEQ-FILE          PIC X.  
+016900
+017000 01  TIME-CNT                PIC 9999.
+017100 01  HID                     PIC X(40).
+017200
+017300******************************************************************
+017400
+017500
+017600/*****************************************************************
+017700*                                                                *
+017800*                         PROCEDURE DIVISION                     *
+017900*                                                                *
+018000******************************************************************
+018100*
+018200 PROCEDURE DIVISION.
+018300
+018400*
+018500*   COBOL-74 DISK FILE.
+018600*
+018700 P01-SEQ-SEQ-READ.
+018800
+018900*    READ SEQ-SEQ-FILE
+019000     READ SEQ-SEQ-FILE
+019100
+019200*    Read Seq-Seq-File Next
+019300     Read Seq-Seq-File Next
+019400
+019500*    READ SEQ-SEQ-FILE HOLD
+019600     READ SEQ-SEQ-FILE HOLD
+019700
+019800*    READ SEQ-SEQ-FILE INTO SEQ-SEQ-INTO
+019900     READ SEQ-SEQ-FILE INTO SEQ-SEQ-INTO
+020000
+020100*    READ SEQ-SEQ-FILE AT END DISPLAY "AT-END".
+020200     READ SEQ-SEQ-FILE AT END DISPLAY "AT-END".
+020300
+020400*    READ SEQ-SEQ-FILE
+020500*        NEXT RECORD
+020600*        WITH HOLD
+020700*        INTO SEQ-SEQ-INTO
+020800*        AT END DISPLAY "AT-END".
+020900     READ SEQ-SEQ-FILE
+021000         NEXT RECORD
+021100         WITH HOLD
+021200         INTO SEQ-SEQ-INTO
+021300         AT END DISPLAY "AT-END".
+021400
+021500 P02-CRT-READ.
+021600
+021700*    READ CRT
+021800     READ CRT
+021900
+022000*    READ CRT NEXT
+022100     READ CRT NEXT
+022200
+022300*    READ CRT WITH HOLD
+022400     READ CRT WITH HOLD
+022500
+022600*    READ CRT MODIFIABLE.
+022700     READ CRT MODIFIABLE.
+022800
+022900*    READ CRT ALTERED.
+023000     READ CRT ALTERED.
+023100
+023200*    READ CRT INTO CRT-INTO
+023300     READ CRT INTO CRT-INTO
+023400
+023500*    READ CRT INVALID KEY DISPLAY "INVALID-KEY".
+023600     READ CRT INVALID KEY DISPLAY "INVALID-KEY".
+023700
+023800*    READ CRT ALTERED END DISPLAY "AT-END".
+023900     READ CRT ALTERED END DISPLAY "AT-END".
+024000
+024100*    READ CRT
+024200*        NEXT RECORD
+024300*        MODIFIABLE
+024400*        INTO CRT-INTO
+024500*        INVALID KEY DISPLAY "INVALID-KEY".
+024600     READ CRT
+024700         NEXT RECORD
+024800         MODIFIABLE
+024900         INTO CRT-INTO
+025000         INVALID KEY DISPLAY "INVALID-KEY".
+025100
+025200*    READ CRT
+025300*        NEXT RECORD
+025400*        ALTERED
+025500*        INTO CRT-INTO
+025600*        AT END DISPLAY "AT-END".
+025700     READ CRT
+025800         NEXT RECORD
+025900         ALTERED
+026000         INTO CRT-INTO
+026100         AT END DISPLAY "AT-END".
+026200
+026300 P03-IDX-SEQ-READ.
+026400
+026500*    READ IDX-SEQ-FILE
+026600     READ IDX-SEQ-FILE
+026700
+026800*    READ IDX-SEQ-FILE NEXT
+026900     READ IDX-SEQ-FILE NEXT
+027000
+027100*    READ IDX-SEQ-FILE HOLD
+027200     READ IDX-SEQ-FILE HOLD
+027300
+027400*    READ IDX-SEQ-FILE INTO IDX-SEQ-INTO.
+027500     READ IDX-SEQ-FILE INTO IDX-SEQ-INTO.
+027600
+027700*    READ IDX-SEQ-FILE HOLD
+027800*        TIMEOUT 5 SECONDS NEXT SENTENCE
+027900     READ IDX-SEQ-FILE HOLD
+028000         TIMEOUT 5 SECONDS NEXT SENTENCE
+028100
+028200*    READ IDX-SEQ-FILE HOLD
+028300*        TIMEOUT TIME-CNT HOLDER-ID HID DISPLAY "TIMEOUT".
+028400     READ IDX-SEQ-FILE HOLD
+028500         TIMEOUT TIME-CNT HOLDER-ID HID DISPLAY "TIMEOUT".
+028600
+028700*    READ IDX-SEQ-FILE
+028800*        AT END DISPLAY "AT-END".
+028900     READ IDX-SEQ-FILE
+029000         AT END DISPLAY "AT-END".
+029100
+029200*    READ IDX-SEQ-FILE
+029300*        NEXT RECORD
+029400*        WITH HOLD
+029500*        INTO IDX-SEQ-INTO
+029600*        TIMEOUT OF 5 SECONDS
+029700*            HOLDER-ID IN HID
+029800*            DISPLAY "TIMEOUT"
+029900*        AT END DISPLAY "AT-END".
+030000     READ IDX-SEQ-FILE
+030100         NEXT RECORD
+030200         WITH HOLD
+030300         INTO IDX-SEQ-INTO
+030400         TIMEOUT OF 5 SECONDS
+030500             HOLDER-ID IN HID
+030600             DISPLAY "TIMEOUT"
+030700         AT END DISPLAY "AT-END".
+030800
+030900 P04-IDX-DYN-READ.
+031000
+031100*    READ IDX-DYN-FILE
+031200     READ IDX-DYN-FILE
+031300
+031310*    READ IDX-DYN-FILE PREVIOUS
+031320     READ IDX-DYN-FILE PREVIOUS
+031330
+031400*    READ IDX-DYN-FILE HOLD
+031500     READ IDX-DYN-FILE HOLD
+031600
+031700*    READ IDX-DYN-FILE INTO IDX-DYN-INTO.
+031800     READ IDX-DYN-FILE INTO IDX-DYN-INTO.
+031900
+032000*    READ IDX-DYN-FILE KEY IDX-DYN-ALT
+032100     READ IDX-DYN-FILE KEY IDX-DYN-ALT
+032200
+032300*    READ IDX-DYN-FILE HOLD TIMEOUT 5 SECONDS NEXT SENTENCE
+032400     READ IDX-DYN-FILE HOLD TIMEOUT 5 SECONDS NEXT SENTENCE
+032500
+032600*    READ IDX-DYN-FILE HOLD
+032700*        TIMEOUT TIME-CNT HOLDER-ID HID DISPLAY "TIMEOUT".
+032800     READ IDX-DYN-FILE HOLD
+032900         TIMEOUT TIME-CNT HOLDER-ID HID DISPLAY "TIMEOUT".
+033000
+033100*    READ IDX-DYN-FILE
+033200*        INVALID DISPLAY "INVALID-KEY".
+033300     READ IDX-DYN-FILE
+033400         INVALID DISPLAY "INVALID-KEY".
+033500
+033600*    READ IDX-DYN-FILE
+033700*        RECORD
+033800*        WITH HOLD
+033900*        INTO IDX-DYN-INTO
+034000*        KEY IS IDX-DYN-ALT
+034100*        TIMEOUT OF 5 SECONDS
+034200*            HOLDER-ID IN HID
+034300*            DISPLAY "TIMEOUT"
+034400*        INVALID KEY DISPLAY "INVALID-KEY".
+034500     READ IDX-DYN-FILE
+034600         RECORD
+034700         WITH HOLD
+034800         INTO IDX-DYN-INTO
+034900         KEY IS IDX-DYN-ALT
+035000         TIMEOUT OF 5 SECONDS
+035100             HOLDER-ID IN HID
+035200             DISPLAY "TIMEOUT"
+035300         INVALID KEY DISPLAY "INVALID-KEY".
+035400
+035500
+035600 P04-REL-SEQ-READ.
+035700
+035800*    READ REL-SEQ-FILE.
+035900     READ REL-SEQ-FILE.
+036000
+036100*    READ REL-SEQ-FILE NEXT.
+036200     READ REL-SEQ-FILE NEXT.
+036300
+036400*    READ REL-SEQ-FILE HOLD.
+036500     READ REL-SEQ-FILE HOLD.
+036600
+036700*    READ REL-SEQ-FILE INTO REL-SEQ-INTO.
+036800     READ REL-SEQ-FILE INTO REL-SEQ-INTO.
+036900
+037000*    READ REL-SEQ-FILE END DISPLAY "AT-END".
+037100     READ REL-SEQ-FILE END DISPLAY "AT-END".
+037200
+037300*    READ REL-SEQ-FILE
+037400*        NEXT RECORD
+037500*        WITH HOLD
+037600*        INTO REL-SEQ-INTO
+037700*        AT END DISPLAY "AT-END".
+037800     READ REL-SEQ-FILE
+037900         NEXT RECORD
+038000         WITH HOLD
+038100         INTO REL-SEQ-INTO
+038200         AT END DISPLAY "AT-END".
+038300
+038400 P05-REL-DYN-READ.
+038500
+038600*    READ REL-DYN-FILE.
+038700     READ REL-DYN-FILE.
+038800
+038900*    READ REL-DYN-FILE HOLD.
+039000     READ REL-DYN-FILE HOLD.
+039100
+039200*    READ REL-DYN-FILE INTO REL-DYN-INTO.
+039300     READ REL-DYN-FILE INTO REL-DYN-INTO.
+039400
+039500*    READ REL-DYN-FILE INVALID DISPLAY "INVALID KEY".
+039600     READ REL-DYN-FILE INVALID DISPLAY "INVALID KEY".
+039700
+039800*    READ REL-DYN-FILE
+039900*        RECORD
+040000*        WITH HOLD
+040100*        INTO REL-DYN-INTO
+040200*        INVALID KEY DISPLAY "INVALID KEY".
+040300     READ REL-DYN-FILE
+040400         RECORD
+040500         WITH HOLD
+040600         INTO REL-DYN-INTO
+040700         INVALID KEY DISPLAY "INVALID KEY".
+040800
+040900
+041000*
+041100*   COBOL-85 SYNTAX.
+041200*
+041300 P06-85-SEQ-SEQ.
+041400
+041500*    READ SEQ-SEQ-FILE
+041600*        NEXT RECORD
+041700*        INTO SEQ-SEQ-INTO
+041800*        AT END
+041900*            DISPLAY "AT-END"
+042000*        NOT AT END
+042100*            DISPLAY "NOT AT END"
+042200*    END-READ.
+042300     READ SEQ-SEQ-FILE
+042400         NEXT RECORD
+042500         INTO SEQ-SEQ-INTO
+042600         AT END
+042700             DISPLAY "AT-END"
+042800         NOT AT END
+042900             DISPLAY "NOT AT END"
+043000     END-READ.
+043100
+043200*    READ SEQ-SEQ-FILE
+043300*        NEXT RECORD
+043400*        WITH HOLD
+043500*        INTO SEQ-SEQ-INTO
+043600*        AT END
+043700*            DISPLAY "AT-END"
+043800*        NOT AT END
+043900*            DISPLAY "NOT AT END"
+044000*    END-READ.
+044100     READ SEQ-SEQ-FILE
+044200         NEXT RECORD
+044300         WITH HOLD
+044400         INTO SEQ-SEQ-INTO
+044500         AT END
+044600             DISPLAY "AT-END"
+044700         NOT AT END
+044800             DISPLAY "NOT AT END"
+044900     END-READ.
+045000
+045100*    READ SEQ-SEQ-FILE
+045200*        NEXT RECORD
+045300*        INTO SEQ-SEQ-INTO
+045400*        AT END
+045500*            DISPLAY "AT-END"
+045600*            READ SEQ-SEQ-FILE
+045700*                NEXT RECORD
+045800*                WITH HOLD
+045900*                INTO SEQ-SEQ-INTO
+046000*                AT END
+046100*                    DISPLAY "AT-END"
+046200*                NOT AT END
+046300*                    DISPLAY "NOT AT END"
+046400*            END-READ
+046500*        NOT AT END
+046600*            DISPLAY "NOT AT END"
+046700*            READ SEQ-SEQ-FILE
+046800*                NEXT RECORD
+046900*                INTO SEQ-SEQ-INTO
+047000*                AT END
+047100*                    DISPLAY "AT-END"
+047200*                NOT AT END
+047300*                    DISPLAY "NOT AT END"
+047400*            END-READ
+047500*    END-READ.
+047600     READ SEQ-SEQ-FILE
+047700         NEXT RECORD
+047800         INTO SEQ-SEQ-INTO
+047900         AT END
+048000             DISPLAY "AT-END"
+048100             READ SEQ-SEQ-FILE
+048200                 NEXT RECORD
+048300                 WITH HOLD
+048400                 INTO SEQ-SEQ-INTO
+048500                 AT END
+048600                     DISPLAY "AT-END"
+048700                 NOT AT END
+048800                     DISPLAY "NOT AT END"
+048900             END-READ
+049000         NOT AT END
+049100             DISPLAY "NOT AT END"
+049200             READ SEQ-SEQ-FILE
+049300                 NEXT RECORD
+049400                 INTO SEQ-SEQ-INTO
+049500                 AT END
+049600                     DISPLAY "AT-END"
+049700                 NOT AT END
+049800                     DISPLAY "NOT AT END"
+049900             END-READ
+050000     END-READ.
+050100
+050200 P07-85-CRT.
+050300
+050400*    read crt next record altered into crt-into
+050500*        not at end
+050600*            display "not at end"
+050700*    end-read
+050800     read crt next record altered into crt-into
+050900         not at end
+051000             display "not at end"
+051100     end-read
+051200
+051300*    read crt next record altered into crt-into
+051400*        at end
+051500*            display "at end"
+051600*        not at end
+051700*            display "not at end"
+051800*    end-read
+051900     read crt next record altered into crt-into
+052000         at end
+052100             display "at end"
+052200         not at end
+052300             display "not at end"
+052400     end-read
+052500
+052600*    read crt modifiable
+052700*        not invalid key
+052800*            display "not invalid key".
+052900     read crt modifiable
+053000         not invalid key
+053100             display "not invalid key".
+053200
+053300*    read crt
+053400*        invalid key
+053500*            display "invalid key"
+053600*        not invalid key
+053700*            display "not invalid key"
+053800*    end-read.
+053900     read crt
+054000         invalid key
+054100             display "invalid key"
+054200         not invalid key
+054300             display "not invalid key"
+054400     end-read.
+054500
+054600 P08-85-IDX-DYN.
+054700
+054800*    read idx-dyn-file hold key is idx-dyn-alt
+054900*        timeout 5 seconds
+055000*            display "timeout"
+055100*            read idx-dyn-file next hold
+055400*                not at end
+055500*                    display "not at end"
+055600*            end-read
+055700*        not invalid key
+055800*            display "not invalid key"
+055900*    end-read.
+056000     read idx-dyn-file hold key is idx-dyn-alt
+056100         timeout 5 seconds
+056200             display "timeout"
+056300             read idx-dyn-file next hold
+056600                 not at end
+056700                     display "not at end"
+056800             end-read
+056900         not invalid key
+057000             display "not invalid key"
+057100     end-read.
+057200
+057210 KEYWORD-TEST.
+057220     move "X" to N-IDX-SEQ-FILE, f-IDX-SEQ-FILE, l-IDX-SEQ-FILE
+057230	       v-IDX-SEQ-FILE, pr-IDX-SEQ-FILE, s-IDX-SEQ-FILE.
+057300
+057400
+057500******************************************************************
+057600* ALL DONE.
+057700******************************************************************
+057800
+057900 EXIT-PROGRAM.
+058000     EXIT PROGRAM.
+058100
+058200 STOP-RUN.
+058300     STOP RUN.

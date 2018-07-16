@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*	
 **	linksubs.c
@@ -67,12 +59,12 @@ static char rcsid[]="$Id:$";
 	They are global because used in vmspargs.c.
 */
 
-char	LINKPARMFILLER[8];							/* Filler to test bug */
-char	LINKPARMKEY[80];							/* The key to the temp file name.		*/
-char	LINKPARMPRG[80];							/* The PROGNAME to link to.			*/
-int4	LINKPARMCNT = 0;							/* The number of arguments passed (0-32)	*/
-char	*LINKPARMPTR[MAX_LINK_PARMS];						/* The passed arguments				*/
-int4	LINKPARMLEN[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*/
+char	g_link_pfiller[8];							/* Filler to test bug */
+char	g_link_parmfile[COB_FILEPATH_LEN + 1];					/* The key to the temp file name.		*/
+char	g_link_pname[80];							/* The PROGNAME to link to.			*/
+int4	g_link_parmcnt = 0;							/* The number of arguments passed (0-32)	*/
+char	*g_link_parmptr[MAX_LINK_PARMS];					/* The passed arguments				*/
+int4	g_link_parmlen[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*/
 
 #if defined(unix) || defined(WIN32)
 
@@ -157,7 +149,11 @@ void writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, s
 	fwrite( &CANEXITFLAG,	4, 1, fp );						/* Write the Cancel-Exit flag		*/
 	fwrite( &size,		4, 1, fp );						/* Write the LOGOFF flag		*/
 
+	fflush(fp);
 	fclose(fp);
+
+	wtrace("LINK","PARMFILE","Created PARMFILE [%s] pname=[%s] parmcnt=[%d]",
+	       linkkey, pname, parmcnt);
 }
 
 /*
@@ -201,6 +197,8 @@ void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_l
 	fp = fopen(linkkey,FOPEN_READ_BINARY);						/* Open the Parm file			*/
 	if ( !fp )
 	{
+		wtrace("LINK","PARMFILE","Remove: Unable to open PARMFILE [%s] for reading [errno=%d]", linkkey, errno);
+		
 		*compcode = 16;								/* File missing, program aborted.	*/
 		*returncode = 0;
 		LOGOFFFLAG = 0;
@@ -227,6 +225,9 @@ void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_l
 
 	unlink(linkkey);								/* delete the tmp file			*/
 
+	wtrace("LINK","PARMFILE","Removed PARMFILE [%s] compcode=[%d] retcode=[%d]",
+	       linkkey, *compcode, *returncode);
+
 	if ( *compcode == -1 ) 								/* Program didn't understand protocol.	*/
 	{
 		*compcode = -1;
@@ -251,20 +252,22 @@ int2	*pcount;								/* Number of parms.				*/
 char	*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11,*p12,*p13,*p14,*p15,*p16; /* Parms					*/
 char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 {
-	char	*linkkey;							/* Link parm area key				*/
+	char	linkkey[COB_FILEPATH_LEN];					/* Link parm area key				*/
+	const char *ptr;
 
-	linkkey = getenv(WISP_LINK_ENV);
-	if ( !linkkey )								/* If no linkkey then not coming from a link	*/
+	ptr = getenv(WISP_LINK_ENV);
+	if ( NULL == ptr )							/* If no linkkey then not coming from a link	*/
 	{
 		*pcount = 0;
 		*pname  = '\0';
 		return;
 	}
+	cstr2cobx(linkkey,ptr,COB_FILEPATH_LEN);
 
 	ACUGARGS(linkkey,pname, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p15,p16,
 				p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32);
 
-	*pcount = (short) LINKPARMCNT;
+	*pcount = (short) g_link_parmcnt;
 }
 
 void ISRUNUSING(void)
@@ -301,49 +304,49 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 {
 	FILE	*fp;
 	int4	size,i;
-	char	tempstr[80];
+	char	tempstr[COB_FILEPATH_LEN];
 
 	LINKPARM = 1;									/* We are inside an ACU link		*/
 
-	LINKPARMPTR[0] = p1;								/* Save all the ptrs into ACU_COBOL	*/
-	LINKPARMPTR[1] = p2;
-	LINKPARMPTR[2] = p3;
-	LINKPARMPTR[3] = p4;
-	LINKPARMPTR[4] = p5;
-	LINKPARMPTR[5] = p6;
-	LINKPARMPTR[6] = p7;
-	LINKPARMPTR[7] = p8;
-	LINKPARMPTR[8] = p9;
-	LINKPARMPTR[9] = p10;
-	LINKPARMPTR[10] = p11;
-	LINKPARMPTR[11] = p12;
-	LINKPARMPTR[12] = p13;
-	LINKPARMPTR[13] = p14;
-	LINKPARMPTR[14] = p15;
-	LINKPARMPTR[15] = p16;
-	LINKPARMPTR[16] = p17;
-	LINKPARMPTR[17] = p18;
-	LINKPARMPTR[18] = p19;
-	LINKPARMPTR[19] = p20;
-	LINKPARMPTR[20] = p21;
-	LINKPARMPTR[21] = p22;
-	LINKPARMPTR[22] = p23;
-	LINKPARMPTR[23] = p24;
-	LINKPARMPTR[24] = p25;
-	LINKPARMPTR[25] = p26;
-	LINKPARMPTR[26] = p27;
-	LINKPARMPTR[27] = p28;
-	LINKPARMPTR[28] = p29;
-	LINKPARMPTR[29] = p30;
-	LINKPARMPTR[30] = p31;
-	LINKPARMPTR[31] = p32;
+	g_link_parmptr[0] = p1;								/* Save all the ptrs into ACU_COBOL	*/
+	g_link_parmptr[1] = p2;
+	g_link_parmptr[2] = p3;
+	g_link_parmptr[3] = p4;
+	g_link_parmptr[4] = p5;
+	g_link_parmptr[5] = p6;
+	g_link_parmptr[6] = p7;
+	g_link_parmptr[7] = p8;
+	g_link_parmptr[8] = p9;
+	g_link_parmptr[9] = p10;
+	g_link_parmptr[10] = p11;
+	g_link_parmptr[11] = p12;
+	g_link_parmptr[12] = p13;
+	g_link_parmptr[13] = p14;
+	g_link_parmptr[14] = p15;
+	g_link_parmptr[15] = p16;
+	g_link_parmptr[16] = p17;
+	g_link_parmptr[17] = p18;
+	g_link_parmptr[18] = p19;
+	g_link_parmptr[19] = p20;
+	g_link_parmptr[20] = p21;
+	g_link_parmptr[21] = p22;
+	g_link_parmptr[22] = p23;
+	g_link_parmptr[23] = p24;
+	g_link_parmptr[24] = p25;
+	g_link_parmptr[25] = p26;
+	g_link_parmptr[26] = p27;
+	g_link_parmptr[27] = p28;
+	g_link_parmptr[28] = p29;
+	g_link_parmptr[29] = p30;
+	g_link_parmptr[30] = p31;
+	g_link_parmptr[31] = p32;
 
-	unloadpad(LINKPARMKEY,linkkey,80-1);
+	cobx2cstr(g_link_parmfile, linkkey, COB_FILEPATH_LEN);
 
-	fp = fopen(LINKPARMKEY,FOPEN_READ_BINARY);					/* Open the Parm file			*/
+	fp = fopen(g_link_parmfile,FOPEN_READ_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"LINKGARG",0,0,0,0,0);
+		werrlog(ERRORCODE(12),g_link_parmfile,errno,"LINKGARG",0,0,0,0,0);
 		wexit(ERRORCODE(12));
 	}
 
@@ -351,15 +354,15 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 	fread( &size, 4, 1, fp );							/* Read the program path		*/
 	fread( pname, size, 1, fp );
 
-	memcpy(LINKPARMPRG, pname, size );
-	LINKPARMPRG[size] = '\0';
+	memcpy(g_link_pname, pname, size );
+	g_link_pname[size] = '\0';
 
-	fread( &LINKPARMCNT, 4, 1, fp );						/* Read the parmcnt			*/
+	fread( &g_link_parmcnt, 4, 1, fp );						/* Read the parmcnt			*/
 
-	for ( i=0; i < LINKPARMCNT; i++ )						/* Read the parms			*/
+	for ( i=0; i < g_link_parmcnt; i++ )						/* Read the parms			*/
 	{
-		fread( &LINKPARMLEN[i], 4, 1, fp );
-		fread( LINKPARMPTR[i],LINKPARMLEN[i],1,fp);
+		fread( &g_link_parmlen[i], 4, 1, fp );
+		fread( g_link_parmptr[i],g_link_parmlen[i],1,fp);
 	}
 
 	fread( &size,	4, 1, fp );							/* Read the comp code			*/
@@ -369,7 +372,10 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 
 	fclose(fp);
 
-	unlink(LINKPARMKEY);								/* Delete the temp file			*/
+	unlink(g_link_parmfile);							/* Delete the temp file			*/
+
+	wtrace("LINK","PARMFILE","Consumed PARMFILE [%s] pname=[%s] parmcnt=[%d]",
+	       g_link_parmfile, g_link_pname, g_link_parmcnt);
 }
 
 void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
@@ -385,23 +391,23 @@ void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 	if (!first) return;
 	first = 0;
 
-	fp = fopen(LINKPARMKEY,FOPEN_WRITE_BINARY);					/* Open the Parm file			*/
+	fp = fopen(g_link_parmfile,FOPEN_WRITE_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"LINKPARG",0,0,0,0,0);
+		werrlog(ERRORCODE(12),g_link_parmfile,errno,"LINKPARG",0,0,0,0,0);
 		wexit(ERRORCODE(12));
 	}
 
-	size = strlen(LINKPARMPRG);
+	size = strlen(g_link_pname);
 	fwrite( &size, 4, 1, fp );							/* Write the program path		*/
-	fwrite( LINKPARMPRG, size, 1, fp );
+	fwrite( g_link_pname, size, 1, fp );
 
-	fwrite( &LINKPARMCNT, 4, 1, fp );						/* Write the parmcnt			*/
+	fwrite( &g_link_parmcnt, 4, 1, fp );						/* Write the parmcnt			*/
 
-	for ( i=0; i < LINKPARMCNT; i++ )						/* Write the parms			*/
+	for ( i=0; i < g_link_parmcnt; i++ )						/* Write the parms			*/
 	{
-		fwrite( &LINKPARMLEN[i], 4, 1, fp );
-		fwrite( LINKPARMPTR[i],LINKPARMLEN[i],1,fp);
+		fwrite( &g_link_parmlen[i], 4, 1, fp );
+		fwrite( g_link_parmptr[i],g_link_parmlen[i],1,fp);
 	}
 
 	size = -1;
@@ -411,6 +417,9 @@ void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 	fwrite( &LOGOFFFLAG,   4, 1, fp );						/* Write the LOGOFF flag		*/
 
 	fclose(fp);
+
+	wtrace("LINK","PARMFILE","Restored PARMFILE [%s] pname=[%s] parmcnt=[%d] compcode=[%d] retcode=[%d]",
+	       g_link_parmfile, g_link_pname, g_link_parmcnt, LINKCOMPCODE, LINKRETCODE);
 }
 
 
@@ -418,7 +427,7 @@ void ACUNARGS( short* argcount )							/* Return the number of ARGs passed	*/
 {
 	short i;
 
-	i = LINKPARMCNT;
+	i = g_link_parmcnt;
 	*argcount = i;
 }
 #endif /* unix || WIN32 */
@@ -553,82 +562,79 @@ char	*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 	FILE	*fp;
 	int4	size,i;
 	char	tempstr[80];
-	/*	char	*pname;	*/						/* Program to call; removed for VMS	*/
 
 	LINKPARM = 1;								/* We are inside an VMS link		*/
 
-	LINKPARMPTR[0] = p1;							/* Save all the ptrs into VMSCOBOL	*/
-	LINKPARMPTR[1] = p2;
-	LINKPARMPTR[2] = p3;
-	LINKPARMPTR[3] = p4;
-	LINKPARMPTR[4] = p5;
-	LINKPARMPTR[5] = p6;
-	LINKPARMPTR[6] = p7;
-	LINKPARMPTR[7] = p8;
-	LINKPARMPTR[8] = p9;
-	LINKPARMPTR[9] = p10;
-	LINKPARMPTR[10] = p11;
-	LINKPARMPTR[11] = p12;
-	LINKPARMPTR[12] = p13;
-	LINKPARMPTR[13] = p14;
-	LINKPARMPTR[14] = p15;
-	LINKPARMPTR[15] = p16;
+	g_link_parmptr[0] = p1;							/* Save all the ptrs into VMSCOBOL	*/
+	g_link_parmptr[1] = p2;
+	g_link_parmptr[2] = p3;
+	g_link_parmptr[3] = p4;
+	g_link_parmptr[4] = p5;
+	g_link_parmptr[5] = p6;
+	g_link_parmptr[6] = p7;
+	g_link_parmptr[7] = p8;
+	g_link_parmptr[8] = p9;
+	g_link_parmptr[9] = p10;
+	g_link_parmptr[10] = p11;
+	g_link_parmptr[11] = p12;
+	g_link_parmptr[12] = p13;
+	g_link_parmptr[13] = p14;
+	g_link_parmptr[14] = p15;
+	g_link_parmptr[15] = p16;
 
 	if ( MAX_LINK_PARMS > 16 )
 	{
-		LINKPARMPTR[16] = p17;
-		LINKPARMPTR[17] = p18;
-		LINKPARMPTR[18] = p19;
-		LINKPARMPTR[19] = p20;
-		LINKPARMPTR[20] = p21;
-		LINKPARMPTR[21] = p22;
-		LINKPARMPTR[22] = p23;
-		LINKPARMPTR[23] = p24;
-		LINKPARMPTR[24] = p25;
-		LINKPARMPTR[25] = p26;
-		LINKPARMPTR[26] = p27;
-		LINKPARMPTR[27] = p28;
-		LINKPARMPTR[28] = p29;
-		LINKPARMPTR[29] = p30;
-		LINKPARMPTR[30] = p31;
-		LINKPARMPTR[31] = p32;
+		g_link_parmptr[16] = p17;
+		g_link_parmptr[17] = p18;
+		g_link_parmptr[18] = p19;
+		g_link_parmptr[19] = p20;
+		g_link_parmptr[20] = p21;
+		g_link_parmptr[21] = p22;
+		g_link_parmptr[22] = p23;
+		g_link_parmptr[23] = p24;
+		g_link_parmptr[24] = p25;
+		g_link_parmptr[25] = p26;
+		g_link_parmptr[26] = p27;
+		g_link_parmptr[27] = p28;
+		g_link_parmptr[28] = p29;
+		g_link_parmptr[29] = p30;
+		g_link_parmptr[30] = p31;
+		g_link_parmptr[31] = p32;
 	}
 
 	for(i=0;i<80-1;i++)
 	{
 		if ( vmskey[i] == '\0' || vmskey[i] == ' ' ) 
 		{
-			LINKPARMKEY[i] = '\0';
+			g_link_parmfile[i] = '\0';
 			break;
 		}
-		LINKPARMKEY[i] = vmskey[i];
+		g_link_parmfile[i] = vmskey[i];
 	}
 
-	fp = fopen(LINKPARMKEY,FOPEN_READ_BINARY);					/* Open the Parm file			*/
+	fp = fopen(g_link_parmfile,FOPEN_READ_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"VMSGARGS",0,0,0,0,0);
+		werrlog(ERRORCODE(12),g_link_parmfile,errno,"VMSGARGS",0,0,0,0,0);
 		wexit(ERRORCODE(12));
 	}
 
-	memset( LINKPARMPRG,' ',80);
+	memset( g_link_pname,' ',80);
 	fread( &size, 4, 1, fp );							/* Read the program path		*/
-	fread( LINKPARMPRG, size, 1, fp );
-	LINKPARMPRG[size] = '\0';
+	fread( g_link_pname, size, 1, fp );
+	g_link_pname[size] = '\0';
 
-	/*	memcpy ( pname, LINKPARMPRG, (size + 1) );	*/			/* Removed for VMS version		*/
+	fread( &g_link_parmcnt, 4, 1, fp );						/* Read the parmcnt			*/
 
-	fread( &LINKPARMCNT, 4, 1, fp );						/* Read the parmcnt			*/
-
-	if ( LINKPARMCNT > MAX_LINK_PARMS )
+	if ( g_link_parmcnt > MAX_LINK_PARMS )
 	{
-		LINKPARMCNT = MAX_LINK_PARMS ;
+		g_link_parmcnt = MAX_LINK_PARMS ;
 	}
 
-	for ( i=0; i < LINKPARMCNT; i++ )						/* Read the parms			*/
+	for ( i=0; i < g_link_parmcnt; i++ )						/* Read the parms			*/
 	{
-		fread( &LINKPARMLEN[i], 4, 1, fp );
-		fread( LINKPARMPTR[i],LINKPARMLEN[i],1,fp);
+		fread( &g_link_parmlen[i], 4, 1, fp );
+		fread( g_link_parmptr[i],g_link_parmlen[i],1,fp);
 	}
 
 	fread( &size,	4, 1, fp );							/* Read the comp code			*/
@@ -638,16 +644,16 @@ char	*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 
 	fclose(fp);
 
-	delete ( LINKPARMKEY ) ;							/* We got it, delete it!	*/
+	delete ( g_link_parmfile ) ;							/* We got it, delete it!		*/
 
-	*argcount = LINKPARMCNT;
+	*argcount = g_link_parmcnt;
 }
 
 
 VMSNARGS( argcount )									/* Return the number of ARGs passed	*/
 short *argcount;
 {
-	*argcount = (short) LINKPARMCNT ;
+	*argcount = (short) g_link_parmcnt ;
 }
 
 #endif /* VMS */
@@ -859,6 +865,15 @@ void swap_put ( int4* destination, int4 new_value )
 /*
 **	History:
 **	$Log: linksubs.c,v $
+**	Revision 1.20  1998-12-09 10:55:57-05  gsl
+**	Add tracing and renamed globals
+**
+**	Revision 1.19  1998-10-09 15:04:25-04  gsl
+**	In LINKGARGS() fixed parameter to ACUGARGS which was too small.
+**
+**	Revision 1.18  1998-08-03 16:52:00-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks
+**
 **	Revision 1.17  1996-09-10 11:44:22-04  gsl
 **	Remove redefine of mkdir() - now in win32std.h from idsistd.h
 **

@@ -1,0 +1,118 @@
+# Videocap file for Reflections emulating a vt220-7
+# This uses ANSI sytle graphics.
+# The PF keys are a two key combo using the numeric key pad.
+# PF01-PF09	PF0 + 1-9 (PF0 = NumLock)
+# PF10-PF19	PF1 + 0-9 (PF1 = Numeric '/')
+# PF20-PF29	PF2 + 0-9 (PF2 = Numeric '*')
+# PF30-PF32	PF3 + 0-2 (PF3 = Numeric '-')
+#
+init_terminal       ="\E[1;24r\E[?7l\E[?20l\E<"
+# \E[1;24r	set top & bottom margins
+# \E[?7l	No autowrap
+# \E[?20l	Line feed mode
+# \E<		Exit VT52 mode (Enter VT100 mode)
+reset_terminal      ="\E>\E[?4l\E[?7h\E[?8h\E[?25h"
+# \E>		Exit alternate keypad mode
+# \E[?4l	Jump scroll
+# \E[?7h	Autowrap
+# \E[?8h	Autorepeat mode
+# \E[?25h	Cursor Visible
+change_scroll_region="\E[%i%d;%dr"
+scroll_reverse      ="\EM"
+clear_screen        ="\E[;H\E[2J"
+clear_eol           ="\E[K"
+clear_eos           ="\E[J"
+cursor_address      ="\E[%i%d;%dH"
+cursor_up           ="\E[A"
+cursor_down         ="^J"
+cursor_left         ="^H"
+cursor_right        ="\E[C"
+cursor_invisible    ="\E[?25l"
+cursor_visible      ="\E[?25h"
+enter_blink_mode    ="\E[5m"
+enter_bold_mode     ="\E[1m"
+enter_reverse_mode  ="\E[7m"
+enter_underline_mode="\E[4m"
+exit_attribute_mode ="\E[m"
+screen_132          ="\E[?3h"
+screen_80           ="\E[?3l"
+screen_normal       ="\E[?5l"
+screen_reverse      ="\E[?5h"
+#
+# Comment out the standard vt220 graphics items
+#
+#enter_graphics_mode ="\E(0"
+#exit_graphics_mode  ="\E(B"
+#pseudo_blanks       ="`f~a"
+#graphstr            ="xqlkmjwvtun\253\273"
+#
+# Replace with ANSI style graphics items
+#
+enter_graphics_mode =""
+exit_graphics_mode  =""
+pseudo_blanks       ="*.#~"
+graphstr            ="|-****--||+<>"
+#
+# Function Keys
+#
+generic_enter       ="^M"
+generic_pf1         ="\EOP1"
+generic_pf2         ="\EOP2"
+generic_pf3         ="\EOP3"
+generic_pf4         ="\EOP4"
+generic_pf5         ="\EOP5"
+generic_pf6         ="\EOP6"
+generic_pf7         ="\EOP7"
+generic_pf8         ="\EOP8"
+generic_pf9         ="\EOP9"
+generic_pf10        ="\EOQ0"
+generic_pf11        ="\EOQ1"
+generic_pf12        ="\EOQ2"
+generic_pf13        ="\EOQ3"
+generic_pf14        ="\EOQ4"
+generic_pf15        ="\EOQ5"
+generic_pf16        ="\EOQ6"
+generic_pf17        ="\EOQ7"
+generic_pf18        ="\EOQ8"
+generic_pf19        ="\EOQ9"
+generic_pf20        ="\EOR0"
+generic_pf21        ="\EOR1"
+generic_pf22        ="\EOR2"
+generic_pf23        ="\EOR3"
+generic_pf24        ="\EOR4"
+generic_pf25        ="\EOR5"
+generic_pf26        ="\EOR6"
+generic_pf27        ="\EOR7"
+generic_pf28        ="\EOR8"
+generic_pf29        ="\EOR9"
+generic_pf30        ="\EOS0"
+generic_pf31        ="\EOS1"
+generic_pf32        ="\EOS2"
+generic_help        ="\E[28~"|"\E[1~"
+#
+# Movement keys
+#
+generic_up          ="\E[A"|"\EOA"
+generic_down        ="\E[B"|"\EOB"
+generic_right       ="\E[C"|"\EOC"
+generic_left        ="\E[D"|"\EOD"
+generic_tab         ="^I"
+generic_backtab     ="\E[24~"
+generic_newline     ="\EOP\E[2~"
+#
+# Edit keys
+#
+generic_delete      ="\177"
+generic_remove      ="\E[3~"
+generic_insert      ="\E[2~"
+generic_clear_after ="\E\E[C"|"\E[34~"
+generic_clear_field ="\E\E[A"|"\E[25~"
+generic_clear_before="\E\E[D"|"\E[4~\E[1~"
+#
+# Null keys
+#
+generic_null        ="\E[4~\E[4~"
+generic_null        ="\EOP\EOP"
+generic_null        ="\EOQ\EOQ"
+generic_null        ="\EOR\EOR"
+generic_null        ="\EOS\EOS"

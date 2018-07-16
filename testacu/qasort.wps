@@ -1,0 +1,18 @@
+procedure qasort.wps
+
+
+run sort 
+	display input file=bfile, library=libout, volume=volout,
+			filetype=I
+	display keys 
+		keys=2,
+		post1=5, length1=4, type1=c, order1=d,
+		post2=1, length2=4, type2=c, order2=a
+
+sortout: display output
+		file=bfilex3, library=libout, volume=volout
+
+run display 
+	enter input (sortout)
+
+

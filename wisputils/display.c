@@ -14,6 +14,8 @@ static char rcsid[]="$Id:$";
 #include "werrlog.h"
 #include "vwang.h"
 #include "wisplib.h"
+#include "wfiledis.h"
+#include "wdefines.h"
 
 #define EXT_FILEXT
 #include "filext.h"
@@ -23,7 +25,6 @@ static char rcsid[]="$Id:$";
 int main(int argc, char *argv[])
 {
 #define		ROUTINE		14000
-	register int i;										/* Working integer.		*/
 
 #ifdef VMS
 	/*
@@ -43,19 +44,33 @@ int main(int argc, char *argv[])
 	vwang_title("WISP DISPLAY");
 
 	init_screen();										/* Initialize for Wang screen.	*/
+
 	if (argc > 1)										/* Did user give a filename?	*/
 	{
-		if ((i = greclen(argv[1])) >= 0) vdisplay(argv[1],i);				/* Get the record length.	*/
-		else if (i == -2) werrlog(ERRORCODE(2),argv[1],0,0,0,0,0,0,0);			/* Protection violation.	*/
-		else werrlog(ERRORCODE(4),argv[1],0,0,0,0,0,0,0);				/* Error on OPEN.		*/
+		internal_display(argv[1]);
 	}
-	else wfile_disp();									/* Else, put up a screen.	*/
+	else
+	{
+		char	filename[COB_FILEPATH_LEN + 1];
+
+		if (display_util_getparms(filename))
+		{
+			internal_display(filename);
+		}
+	}
+	
 	vwang_shut();										/* All done.			*/
 	return 0;
 }
 /*
 **	History:
 **	$Log: display.c,v $
+**	Revision 1.13  1998-08-03 17:26:07-04  jlima
+**	Support Logical Volume Translation to long file names containing embedded blanks.
+**
+**	Revision 1.12  1998-05-05 13:30:46-04  gsl
+**	Change to use new display frontend routines
+**
 **	Revision 1.11  1996-11-18 19:06:16-05  jockc
 **	added call to vwang_title to set screen title
 **

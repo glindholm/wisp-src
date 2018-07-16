@@ -1,7 +1,11 @@
-/* 
-	Copyright (c) 1995,1996 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : utility.cpp
@@ -904,3 +908,81 @@ int parse_time(
    }
    return 5;
 }
+
+//
+//	History:
+//	$Log: utility.cpp,v $
+//	Revision 1.14  1998-08-31 15:50:39-04  gsl
+//	drcs update
+//
+//	Revision 1.13  1998-08-31 15:14:26-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/utility.cpp,v
+//	Working file: utility.cpp
+//	head: 1.12
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 12;	selected revisions: 12
+//	description:
+//	----------------------------
+//	revision 1.12
+//	date: 1997-10-01 09:31:47-04;  author: gsl;  state: V4_3_00;  lines: +3 -3
+//	Fix warnings
+//	----------------------------
+//	revision 1.11
+//	date: 1997-06-09 17:29:27-04;  author: scass;  state: V4_1_02;  lines: +2 -2
+//	int4 -> int_32
+//	----------------------------
+//	revision 1.10
+//	date: 1997-06-09 16:51:20-04;  author: scass;  state: Exp;  lines: +2 -2
+//	Changed long to int4 for portability.
+//	----------------------------
+//	revision 1.9
+//	date: 1996-07-25 19:48:25-04;  author: gsl;  state: V3_3_93;  lines: +9 -5
+//	NT
+//	----------------------------
+//	revision 1.8
+//	date: 1996-07-25 14:16:37-04;  author: gsl;  state: Exp;  lines: +1 -1
+//	Renamed from utility.cc to utility.cpp
+//	----------------------------
+//	revision 1.7
+//	date: 1996-04-18 13:00:42-04;  author: jockc;  state: Exp;  lines: +6 -1
+//	moved declaration of for loop index from for loop to function
+//	 auto decl area
+//	----------------------------
+//	revision 1.6
+//	date: 1995-06-02 12:15:22-04;  author: gsl;  state: V3_3_19;  lines: +1 -1
+//	fix warning
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 10:16:57-04;  author: gsl;  state: Exp;  lines: +2 -1
+//	Ifdef out a DOS piece that didn't compile on sequent
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:33-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:47-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:33-05;  author: gsl;  state: V3_3x12;  lines: +26 -28
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:33-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

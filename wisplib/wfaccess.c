@@ -56,6 +56,7 @@ static char rcsid[]="$Id:$";
 #include "cobrun.h"
 #include "idsisubs.h"
 #include "wisplib.h"
+#include "werrlog.h"
 
 extern char wfilestat[2];								/* Last filestat form wfilechk		*/
 
@@ -252,6 +253,8 @@ report_in_access:
 #endif	/* VMS */
 
 #if defined(unix) || defined(MSDOS) || defined(WIN32)
+static int x_wfaccess(char* filename, int4* mode);
+
 /*
 **	Routine:	wfaccess()
 **
@@ -288,11 +291,40 @@ report_in_access:
 */
 int wfaccess(char* native_path, int4* mode)
 {
-	char 	filename[81];			 				/* The filename (null terminated string)	*/
+	char 	filename[COB_FILEPATH_LEN + 1];	 				/* The filename (null terminated string)	*/
+	int	rc;
+
+	cobx2cstr(filename,native_path,COB_FILEPATH_LEN);  			/* Move the filename in.			*/
+	rc = x_wfaccess(filename, mode);
+
+	if (wtracing())
+	{
+		char	*result;
+		
+		switch(rc)
+		{
+		case ACC_OUTEXISTS:	result = "ACC_OUTEXISTS";	break;
+		case ACC_ALLOWED:	result = "ACC_ALLOWED";		break;
+		case ACC_BADDIR:	result = "ACC_BADDIR";		break;
+		case ACC_NODIR:		result = "ACC_NODIR";		break;
+		case ACC_READONLY:	result = "ACC_READONLY";	break;
+		case ACC_EXISTS:	result = "ACC_EXISTS";		break;
+		case ACC_UNKNOWN:	result = "ACC_UNKNOWN";		break;
+		case ACC_MISSING:	result = "ACC_MISSING";		break;
+		default:		result = "ACC_????";		break;
+		}
+		
+		wtrace("WFACCESS","RESULT","File=[%s] Mode=[x0%08X] %s rc=%d ", filename, *mode, result, rc);
+	}
+
+	return rc;
+}
+
+static int x_wfaccess(char* filename, int4* mode)
+{
 	char	fileidx[81];							/* Filename with .idx extension			*/
 	int  	file_desc;
 
-	unloadpad(filename,native_path,80);  					/* Move the filename in.			*/
 	strcpy(fileidx,filename);						/* Construct fileidx				*/
 	strcat(fileidx,".idx");
 
@@ -356,6 +388,12 @@ int wfaccess(char* native_path, int4* mode)
 /*
 **	History:
 **	$Log: wfaccess.c,v $
+**	Revision 1.15  1998-08-03 17:15:25-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.14  1998-05-12 13:52:31-04  gsl
+**	Add wtrace() logig
+**
 **	Revision 1.13  1997-04-29 13:39:02-04  gsl
 **	Move acc_message() to wfopen.c
 **

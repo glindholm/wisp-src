@@ -1,7 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 
 // Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
@@ -583,6 +587,12 @@ void machine::resolve_partial_backref() {
 /*
 **	History:
 **	$Log: e_wang.cpp,v $
+**	Revision 1.9  1998-08-31 15:50:32-04  gsl
+**	drcs update
+**
+**	Revision 1.8  1998-08-31 15:13:45-04  gsl
+**	drcs update
+**
 **	Revision 1.7  1996-07-25 14:15:03-04  gsl
 **	Renamed from e_wang.cc to e_wang.cpp
 **
@@ -594,3 +604,62 @@ void machine::resolve_partial_backref() {
 **
 **
 */
+
+//
+//	History:
+//	$Log: e_wang.cpp,v $
+//	Revision 1.9  1998-08-31 15:50:32-04  gsl
+//	drcs update
+//
+//	Revision 1.8  1998-08-31 15:13:45-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_wang.cpp,v
+//	Working file: e_wang.cpp
+//	head: 1.7
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 7;	selected revisions: 7
+//	description:
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 14:15:03-04;  author: gsl;  state: V4_3_00;  lines: +7 -2
+//	Renamed from e_wang.cc to e_wang.cpp
+//	----------------------------
+//	revision 1.6
+//	date: 1995-10-17 13:31:43-04;  author: gsl;  state: V3_3_19;  lines: +16 -5
+//	Add a call to wang_os_access_to_machine() in exec_submit() so that
+//	the wang_os_submit() has access to this machine so it can get at
+//	the global symbols tables.
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 10:49:55-04;  author: gsl;  state: V3_3_18;  lines: +2 -2
+//	fix warning
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:53-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:11-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:49-05;  author: gsl;  state: V3_3x12;  lines: +60 -26
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:06-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

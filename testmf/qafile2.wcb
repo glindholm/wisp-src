@@ -330,8 +330,8 @@
                SOURCE LARGE-START. 
            03  FILLER PIC X(10) ROW 16 COL 30 VALUE "END".
            03  FILLER PIC ZZ,ZZ,ZZ,ZZ  ROW 16 COL 40 SOURCE LARGE-END. 
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  LARGE-MESSAGE   PIC X(40).
        01  LARGE-START     PIC 9(8).
@@ -341,22 +341,22 @@
            03  FILLER PIC X(40) ROW 8 COL 20 VALUE
            "SEQ/DYN LOG FILE    (OPEN)    FILSTAT".
            03  FILLER PIC X(2)  ROW 8 COL 60 SOURCE FILSTAT.
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  LOG-SCREEN-2 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 8 COL 20 VALUE
            "SEQ/DYN LOG FILE    (WRITE)   FILSTAT".
            03  FILLER PIC X(2)  ROW 8 COL 60 SOURCE FILSTAT.
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  LOG-SCREEN-3 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 8 COL 20 VALUE
            "SEQ/DYN LOG FILE    (CLOSE)   FILSTAT".
            03  FILLER PIC X(2)  ROW 8 COL 60 SOURCE FILSTAT.
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 5 COL 20
@@ -374,8 +374,8 @@
            03  FILLER PIC X(6) ROW 12 COL 55 
                SOURCE FLV-VOL OBJECT FLV-VOL.
 
-           03  FILLER PIC X(25) ROW 24 COL 10 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 10 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
            03  FILLER PIC X(40) ROW 24 COL 40 SOURCE FLV-FOOTER.
 
@@ -399,8 +399,8 @@
            03  FILLER PIC X(02) ROW 22 COL 47
                SOURCE FILE-C-STAT OBJECT FILE-C-STAT.
 
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  FILE-D-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 1 COL 20 VALUE
@@ -421,8 +421,8 @@
            03  FILLER PIC X(02) ROW 22 COL 47
                SOURCE FILE-D-STAT OBJECT FILE-D-STAT.
 
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  CMP-RECORD-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 1 COL 20 VALUE
@@ -439,8 +439,8 @@
            03  FILLER PIC X(02) ROW 22 COL 47
                SOURCE FILE-CMP-FSTAT.
 
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  FILE-SCREEN-2 USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(11) ROW  1 COL 20 VALUE
@@ -448,73 +448,73 @@
            03  FILLER  PIC X(11) ROW  1 COL 60 VALUE
                "FILE-SCREEN".
            03  FILLER  PIC X(35) ROW  3 COL  2 VALUE
-               "01) SEQ/DYN LOGGING.".
+               "(1) SEQ/DYN LOGGING.".
            03  FILLER  PIC X(35) ROW  4 COL  2 VALUE
-               "02) OPEN OUT PRINT, WRITE, CLOSE".
+               "(2) OPEN OUT PRINT, WRITE, CLOSE".
            03  FILLER  PIC X(35) ROW  5 COL  2 VALUE
-               "03) OPEN OUTPUT PRINT FILE".
+               "(3) OPEN OUTPUT PRINT FILE".
            03  FILLER  PIC X(35) ROW  6 COL  2 VALUE
-               "04) CLOSE PRINT FILE".
+               "(4) CLOSE PRINT FILE".
            03  FILLER  PIC X(35) ROW  7 COL  2 VALUE
-               "05) OPEN EXTEND PRINT FILE".
+               "(5) OPEN EXTEND PRINT FILE".
            03  FILLER  PIC X(35) ROW  8 COL  2 VALUE
-               "06) OPEN EXT PRINT, WRITE, CLOSE".
+               "(6) OPEN EXT PRINT, WRITE, CLOSE".
            03  FILLER  PIC X(35) ROW  9 COL  2 VALUE
-               "07) SUBS SCREEN/PRINT EXTEND".
+               "(7) SUBS SCREEN/PRINT EXTEND".
            03  FILLER  PIC X(33) ROW 10 COL  2 VALUE
-               "08) CREATE FILE-C (SEQ VARIABLE).".
+               "(8) CREATE FILE-C (SEQ VARIABLE).".
            03  FILLER  PIC X(38) ROW 11 COL  2 VALUE
-               "09) CREATE FILE-D (INDEXED VARIABLE).".
+               "(9) CREATE FILE-D (INDEXED VARIABLE).".
            03  FILLER  PIC X(35) ROW 12 COL  2 VALUE
-               "10) CREATE COMPRESSED PRINT FILE".
+               "(10) CREATE COMPRESSED PRINT FILE".
            03  FILLER  PIC X(35) ROW 13 COL  2 VALUE
-               "11) READ COMPRESSED PRINT FILE".
+               "(11) READ COMPRESSED PRINT FILE".
            03  FILLER  PIC X(35) ROW 14 COL  2 VALUE
-               "12) WRITE COMPRESSED PRINT RCORD".
+               "(12) WRITE COMPRESSED PRINT RCORD".
            03  FILLER  PIC X(35) ROW 15 COL  2 VALUE
-               "13) CREATE A LARGE FILE".
+               "(13) CREATE A LARGE FILE".
            03  FILLER  PIC X(35) ROW 16 COL  2 VALUE
-               "14) ".
+               "(14) ".
            03  FILLER  PIC X(35) ROW 17 COL  2 VALUE
-               "15) ".
+               "(15) ".
            03  FILLER  PIC X(35) ROW 20 COL  2 VALUE
-               "16) EXIT".
+               "(16) EXIT".
 
            03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
-               "17) ".
+               "(17) ".
            03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
-               "18) ".
+               "(18) ".
            03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
-               "19) ".
+               "(19) ".
            03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
-               "20) ".
+               "(20) ".
            03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
-               "21) ".
+               "(21) ".
            03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
-               "22) ".
+               "(22) ".
            03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
-               "23) ".
+               "(23) ".
            03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
-               "24) ".
+               "(24) ".
            03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
-               "25) ".
+               "(25) ".
            03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
-               "26) ".
+               "(26) ".
            03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
-               "27) ".
+               "(27) ".
            03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
-               "28) ".
+               "(28) ".
            03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
-               "29) ".
+               "(29) ".
            03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
-               "30) ".
+               "(30) ".
            03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
-               "31) ".
+               "(31) ".
            03  FILLER  PIC X(35) ROW 20 COL 40 VALUE
-               "32) NEXT SCREEN".
+               "(32) NEXT SCREEN".
 
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
       /*****************************************************************
       *                                                                *
@@ -625,7 +625,7 @@
 
        SEQ-DYN-LOGGING.
            MOVE "SEQ/DYN FILE LOGGING" TO FLV-TITLE.
-           MOVE "PF16-EXIT" TO FLV-FOOTER.
+           MOVE "(16) EXIT" TO FLV-FOOTER.
            MOVE LOG-FIL  TO FLV-FILE.
            MOVE LOG-LIB  TO FLV-LIB.
            MOVE LOG-VOL  TO FLV-VOL.
@@ -633,6 +633,7 @@
            DISPLAY AND READ FILE-LIB-VOL ON CRT PFKEY 16.
            MOVE SPACES TO FLV-FOOTER.
            IF PF-KEY = 16 THEN GO TO SEQ-DYN-LOGGING-EXIT.
+	       
 
            MOVE FLV-FILE TO LOG-FIL.
            MOVE FLV-LIB  TO LOG-LIB.
@@ -658,12 +659,15 @@
 
        OPEN-OUTPUT-PRINT.
            OPEN OUTPUT PRINT-FILE.
+	   DISPLAY "PRINT-FILE OPENED OUTPUT".
 
        OPEN-EXTEND-PRINT.
            OPEN EXTEND PRINT-FILE.
+	   DISPLAY "PRINT-FILE OPENED EXTEND".
 
        CLOSE-PRINT.
            CLOSE PRINT-FILE.
+	   DISPLAY "PRINT-FILE CLOSED".
 
        WRITE-EXTEND-PRINT.
            OPEN EXTEND PRINT-FILE.
@@ -683,6 +687,7 @@
            WRITE PRT-RECORD.
 
            CLOSE PRINT-FILE.
+	   DISPLAY "PRINT-FILE OPENED, WRITTEN, CLOSED".
 
        DO-PRINT-FILE.
 
@@ -762,6 +767,8 @@
 010500      MOVE W002-PRINT-MODE TO W003-PMH.
 010600      CALL "SET" USING W003-PM,
 010700                       W003-PMH.
+
+       	    DISPLAY "SCREEN, EXTEND, CLOSE, PRINT - DONE".			   
 
        A-START-PROGRAM-EXIT.
 

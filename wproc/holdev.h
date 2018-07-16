@@ -1,3 +1,11 @@
+/*
+**	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+**
+**	Project:	WPROC
+**	Id:		$Id:$
+**	RCS:		$Source:$
+**	
+*/
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,3 +62,28 @@ void setrestscr( int flag );
 }
 #endif
 
+
+/*
+**	History:
+**	$Log: holdev.h,v $
+**	Revision 1.5  1998-08-31 15:50:34-04  gsl
+**	drcs update
+**
+**	Revision 1.4  1998-08-31 15:13:51-04  gsl
+**	drcs update
+**
+**
+**	----------------------------
+**	revision 1.3
+**	date: 1995-04-25 06:00:00-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+**	drcs state V3_3_15
+**	----------------------------
+**	revision 1.2
+**	date: 1995-04-17 07:52:17-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+**	drcs state V3_3_14
+**	----------------------------
+**	revision 1.1
+**	date: 1995-01-27 16:51:10-05;  author: gsl;  state: V3_3c;
+**	drcs load
+**	=============================================================================
+*/

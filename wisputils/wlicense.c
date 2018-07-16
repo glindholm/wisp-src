@@ -33,6 +33,7 @@ static char rcsid[]="$Id:$";
 #include "prompt.h"
 #include "platsubs.h"
 #include "machid.h"
+#include "wispcfg.h"
 
 extern char	*sys_errlist[];
 static void get_validation();
@@ -218,7 +219,6 @@ char	*argv[];
 		*/
 	case LICENSE_CLUSTER:
 	case LICENSE_SINGLE:
-	case LICENSE_NETWORK:
 		if (rc = getmachineid(machineid))
 		{
 			printf("SORRY - Unable to get the MACHINE ID\n");
@@ -228,6 +228,27 @@ char	*argv[];
 		}
 		get_validation(licensekey,machineid,valcode);
 		break;
+#ifdef WIN32
+	case LICENSE_NETWORK:
+		/*
+		**	If running on a CLIENT then the machineid is 
+		**	generated from the SERVER name.
+		*/
+		if (0 != strcmp(wispserver(), computername(NULL)) &&
+		    0 != strcmp(wispserver(), DEF_WISPSERVER)        )
+		{
+			encodemachid(wispserver(), machineid);
+		}
+		else if (rc = getmachineid(machineid))
+		{
+			printf("SORRY - Unable to get the MACHINE ID\n");
+			assistance();
+			finish_ok();
+			exit_wlicense();
+		}
+		get_validation(licensekey,machineid,valcode);
+		break;
+#endif
 	case LICENSE_UNLIMITED:
 		break;
 	case LICENSE_TIMED:
@@ -468,11 +489,12 @@ static void assistance()
 
 static void putheader()
 {
+	/* CHANGE-COPYRIGHT-DATE */
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("\n");
 	printf("                   **** %s LICENSE INSTALLATION TOOL ****\n",product_name());
-	printf("         Copyright (c) 1992-1997 by NeoMedia Technologies Incorporated\n");
+	printf("         Copyright (c) 1992-1999 by NeoMedia Technologies Incorporated\n");
 	printf("                             (941) 337-3434\n");
 	printf("\n");
 	printf("\n");
@@ -531,6 +553,10 @@ void get_wisp_option()
 {
 }
 
+void wtrace()
+{
+}
+
 #ifdef OLD
 #include "wutils.h"
 
@@ -541,6 +567,16 @@ void get_wisp_option()
 /*
 **	History:
 **	$Log: wlicense.c,v $
+**	Revision 1.17  1999-09-23 13:36:29-04  gsl
+**	COPYRIGHT date
+**
+**	Revision 1.16  1999-02-24 09:37:26-05  gsl
+**	Add dummy wtrace
+**
+**	Revision 1.15  1998-08-21 10:44:27-04  gsl
+**	Enhance so that on WIN32 a NETWORK license server can be licensed
+**	by wlicense from a client.
+**
 **	Revision 1.14  1997-12-18 20:44:03-05  gsl
 **	Add DUMMY routines
 **

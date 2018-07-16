@@ -23,8 +23,24 @@ static char *name_and_type_help_text[]={
 "           I  = Indexed records",
 "           R  = Relative records",
 "           C  = Consecutive (Line Sequential) records",
+"           B  = Biniary Sequential records",
 " ",
 "RECSIZE  - Can be up to 2048 bytes",
+" ",
+#ifdef KCSI_ACU
+"FORMAT   - Vision Version for Indexed files:",
+"           0  = Default",
+"           2  = Vision 2",
+"           3  = Vision 3",
+"           4  = Vision 4",
+#endif
+#ifdef KCSI_MF
+"FORMAT   - Indexed file format: 0  = Default",
+"                                1  = C-ISAM",
+"                                2  = LEVEL II COBOL",
+"                                3  = Format used by system",
+"                                4  = IDXFORMAT 4",
+#endif
 NULL};
 
 static void cr_help(char **text);
@@ -126,6 +142,9 @@ static void cr_help(char **text)
 /*
 **	History:
 **	$Log: vscrhelp.c,v $
+**	Revision 1.5  1998-05-19 10:02:57-04  gsl
+**	Add the FORMAT field to the help text
+**
 **	Revision 1.4  1996-10-02 20:11:58-04  gsl
 **	fixed pfkey tags for w4w suport
 **

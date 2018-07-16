@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : p_exp.cpp
 // Author : George Soules
@@ -664,3 +671,53 @@ Boolean compiler::parse_filename() {
 
 
 
+
+//
+//	History:
+//	$Log: p_exp.cpp,v $
+//	Revision 1.7  1998-08-31 15:14:02-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_exp.cpp,v
+//	Working file: p_exp.cpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-10-01 18:43:25-04;  author: gsl;  state: V4_3_00;  lines: +2 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:15:43-04;  author: gsl;  state: V4_1_02;  lines: +0 -0
+//	Renamed from p_exp.cc to p_exp.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:11-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:27-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:08-05;  author: gsl;  state: V3_3x12;  lines: +45 -45
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:17-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

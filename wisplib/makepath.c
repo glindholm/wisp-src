@@ -25,6 +25,14 @@ static char rcsid[]="$Id:$";
 #include "paths.h"
 #include "wisplib.h"
 
+
+#if defined(unix) || defined(MSFS)
+#include "idsisubs.h"
+#include "wdefines.h"
+#include "assert.h"
+#endif
+
+
 #ifdef VMS
 
 /*
@@ -88,31 +96,34 @@ int	makepath(const char* fullpath )
 #endif
 
 /*
-	makepath	Makes the path upto but not including the filename.
-			Makepath is passed a full path and makes all the intermediate directories.
-			Makepath returns	0       if the path now exists.
-						errno   if it was not able to make the path.
+**	ROUTINE:	makepath( )
+**
+**	FUNCTION:	Makes the path up to but not including the filename.
+**
+**	DESCRIPTION:	Makepath is passed a full path and makes all the intermediate directories.
+**			The received path MUST be a cstr and can NEVER BE a COBOL PIC X.
+**
+**	ARGUMENTS:	(I)	fullpath
+**
+**	GLOBALS:	?
+**
+**	RETURN:		0       if the path now exists.
+**			errno   if it was not able to make the path.
+**
+**	WARNINGS:	There is no possible way to ASSERT that the received path is a cstr.
+**
 */
-
 int	makepath(const char* fullpath )
 {
-	char 	buff[256];
+	char 	buff[WISP_FILEPATH_LEN];
 	int	i,rc;
 	int	ps=PS;
 	char	*ptr;
 
-	/*
-	**	Get a local copy and null terminate at the first space.
-	*/
-	for( i=0; i< sizeof(buff)-1; i++)
-	{
-		buff[i] = fullpath[i];
-		if (' '==buff[i] && '\0'==buff[i])
-		{
-			break;
-		}
-	}
-	buff[i] = '\0';
+	ASSERT(WISP_FILEPATH_LEN > strlen(fullpath));					/* weak test for is it a c str		*/
+
+	strncpy(buff, fullpath, WISP_FILEPATH_LEN - 1 );				/* get a local copy of fullpath		*/
+	buff[WISP_FILEPATH_LEN - 1] = '\0';						/* prevent a loop if fullpath is bad	*/
 
 #ifdef WIN32
 	/*
@@ -207,6 +218,12 @@ int	makepath(const char* fullpath )
 /*
 **	History:
 **	$Log: makepath.c,v $
+**	Revision 1.15  1998-08-03 16:54:58-04  jlima
+**	Support Logical Volume Translations to long file names containing eventual embedded blanks.
+**
+**	Revision 1.14  1998-07-08 15:58:11-04  gsl
+**	Fix loading buff[] from fullpath[] loop termination condition.
+**
 **	Revision 1.13  1997-05-04 12:25:52-04  gsl
 **	Fix of WIN32 to properly handle UNC names and relative paths.
 **

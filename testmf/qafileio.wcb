@@ -53,6 +53,7 @@
                CURSOR POSITION IS CURSOR-POS
                FILE STATUS     IS FILSTAT.
 
+      *$COMPRESSFILE
            SELECT FILE-A
                ASSIGN TO "AFILE",    "DISK",     NODISPLAY,
                ORGANIZATION    IS INDEXED
@@ -61,7 +62,6 @@
                RESERVE         10 AREAS
                FILE STATUS     IS FILE-A-STAT.
 
-      *$COMPRESSFILE
            SELECT FILE-B
                ASSIGN TO "BFILE",    "DISK",     NODISPLAY,
                ORGANIZATION    IS INDEXED
@@ -75,6 +75,14 @@
            SELECT SEQUENTIAL-FILE
                ASSIGN TO "SEQFIL", "DISK",  NODISPLAY,
                FILE STATUS     IS FILSTAT.
+
+      *$SORTFILE
+           SELECT SORT-B-FILE
+               ASSIGN TO "SORTFILE" "DISK"
+               BUFFER SIZE IS 50 BLOCKS.
+
+           SELECT FILE-B-SEQ
+               ASSIGN TO "BFILESEQ",    "DISK",     NODISPLAY.
 
       /*****************************************************************
       *                                                                *
@@ -123,6 +131,26 @@
 
        01  SEQ-RECORD   PIC X(20).
 
+
+       SD  SORT-B-FILE.
+       01  SORT-REC.
+       	   05  SORT-B-KEY      	       	PIC X(4).
+       	   05  SORT-B-ALT-1    	       	PIC X(4).
+       	   05  SORT-B-ALT-2    	       	PIC X(4).
+	   05  FILLER  	       	        PIC X(80).
+
+       FD  FILE-B-SEQ
+           RECORD CONTAINS 92 COMPRESSED CHARACTERS
+           LABEL RECORDS ARE STANDARD
+           VALUE OF FILENAME IS "BFILESEQ".
+
+       01  FILE-B-RECORD-SEQ.
+           03  FILE-B-SEQ-KEY                    PIC X(4).
+           03  FILE-B-SEQ-ALTKEY-1               PIC X(4).
+           03  FILE-B-SEQ-ALTKEY-2               PIC X(4).
+           03  B-SEQ-VALUE-1                     PIC X(40).
+           03  B-SEQ-VALUE-2                     PIC X(40).
+	   
       /*****************************************************************
       *                                                                *
       *                         WORKING STORAGE                        *
@@ -152,8 +180,8 @@
        01  VOL-FOR-FILE-A                 PIC X(6) VALUE SPACES.
 
        01  FIL-FOR-FILE-B                 PIC X(8) VALUE "BFILE".
-       01  LIB-FOR-FILE-B                 PIC X(8) VALUE SPACES.
-       01  VOL-FOR-FILE-B                 PIC X(6) VALUE SPACES.
+       01  LIB-FOR-FILE-B                 PIC X(8) VALUE "LIBOUT".
+       01  VOL-FOR-FILE-B                 PIC X(6) VALUE "VOLOUT".
        01  B-SCREEN-TITLE                 pic X(40) VALUE SPACES.
 
        01  FLV-TITLE                      PIC X(40) VALUE SPACES.
@@ -353,7 +381,7 @@
            03  FILLER  PIC X(35) ROW  4 COL  2 VALUE
                "(2)  Auto test FILE-B.".
            03  FILLER  PIC X(36) ROW  5 COL  2 VALUE
-               "(3)  (unused)".
+               "(3)  SORT SORT-B-FILE".
            03  FILLER  PIC X(35) ROW  6 COL  2 VALUE
                "(4)  DELETE RECORDS FROM FILE-A.".
            03  FILLER  PIC X(36) ROW  7 COL  2 VALUE
@@ -417,6 +445,12 @@
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
                "PRESS (16) TO EXIT".
 
+      ******************************************************************
+      *$MF_CODE
+      *LOCAL-STORAGE SECTION.
+      *$MF_END
+      ******************************************************************
+
       /*****************************************************************
       *                                                                *
       *                         PROCEDURE DIVISION                     *
@@ -473,6 +507,7 @@
        	       	      AUTO-TEST-FILE-B-EXIT
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "03" THEN
+	      PERFORM SORT-B-FILE-PROC
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "04" THEN
               PERFORM DELETE-INDEXED-RECORDS
@@ -593,6 +628,8 @@
                    FROM 1 BY 1 UNTIL INDEX-COUNTER IS EQUAL TO 200.
            CLOSE FILE-A.
 
+	   DISPLAY "FILE-A CREATED".
+	   
        WRITE-INDEX-RECORDS.
            MOVE INDEX-COUNTER TO FILE-A-KEY.
            WRITE FILE-A-RECORD.
@@ -713,10 +750,10 @@
        AUTO-TEST-FILE-B.
            OPEN OUTPUT FILE-B.
            CLOSE FILE-B.
-	   DISPLAY "FILE-B CREATED".
+      *	   DISPLAY "FILE-B CREATED".
 
            OPEN I-O FILE-B.
-       	   DISPLAY "FILE-B OPENED I-O".
+      *	   DISPLAY "FILE-B OPENED I-O".
 
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
@@ -779,7 +816,7 @@
        	       "WRITE FILE-B ALT *** INVALID KEY *** RECNO=", 
        	       	       B-VALUE-1-ALT.
 
-       	   DISPLAY "FILE-B RECORDS WRITTEN".
+      *    DISPLAY "FILE-B RECORDS WRITTEN".
 
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
@@ -830,13 +867,13 @@
 	       DISPLAY "READ FILE-B *** ERROR *** Test 5 failed".
 
 
-	   DISPLAY "FILE-B FINISHED KEYED READ TESTS".
+      *	   DISPLAY "FILE-B FINISHED KEYED READ TESTS".
 
            CLOSE FILE-B.
-	   DISPLAY "FILE-B CLOSED".
+      *	   DISPLAY "FILE-B CLOSED".
 
            OPEN I-O FILE-B.
-       	   DISPLAY "FILE-B OPENED I-O".
+      *	   DISPLAY "FILE-B OPENED I-O".
 
            READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
                AT END
@@ -891,7 +928,7 @@
 	   IF FILE-B-STAT NOT = 10 THEN
 	       DISPLAY "READ FILE-B *** ERROR *** Test 14 failed".
 
-	   DISPLAY "FILE-B FINISHED SEQUENTIAL READ TESTS".
+      *	   DISPLAY "FILE-B FINISHED SEQUENTIAL READ TESTS".
 
 
            MOVE SPACES TO FILE-B-RECORD.
@@ -962,10 +999,10 @@
 	   IF FILE-B-STAT NOT = 10 THEN
 	       DISPLAY "READ FILE-B *** ERROR *** Test 25 failed".
 
-	   DISPLAY "FILE-B FINISHED START AND READ TESTS".
+      *	   DISPLAY "FILE-B FINISHED START AND READ TESTS".
 	   
            CLOSE FILE-B.
-       	   DISPLAY "FILE-B CLOSED".
+      *	   DISPLAY "FILE-B CLOSED".
 
 	   DISPLAY "FILE-B AUTO TESTS FINISHED".
 
@@ -1119,6 +1156,7 @@
 
        DO-FREE-ALL.
            FREE ALL.
+	   DISPLAY "FREE ALL HAS BEEN DONE".
 
        READ-FILE-B.
            MOVE SPACES TO FILE-B-RECORD.
@@ -1271,15 +1309,19 @@
 
        OPEN-EXTEND-SEQ.
            OPEN EXTEND SEQUENTIAL-FILE.
+	   DISPLAY "SEQUENTIAL-FILE OPENED EXTEND".
 
        OPEN-SHARED-SEQ.
            OPEN SHARED SEQUENTIAL-FILE.
+	   DISPLAY "SEQUENTIAL-FILE OPENED SHARED".
 
        OPEN-OUTPUT-SEQ.
            OPEN OUTPUT SEQUENTIAL-FILE.
+	   DISPLAY "SEQUENTIAL-FILE OPENED OUTPUT".
 
        CLOSE-SEQ.
            CLOSE SEQUENTIAL-FILE.
+	   DISPLAY "SEQUENTIAL-FILE CLOSED".
 
        WRITE-EXTEND-SEQ.
            MOVE SPACES TO SEQ-RECORD.
@@ -1294,7 +1336,18 @@
 
 
       ******************************************************************
+       SORT-B-FILE-PROC.
 
+       	   DISPLAY "BEFORE SORT SORT-B-FILE".
+       
+       	   SORT SORT-B-FILE
+	       ON DESCENDING KEY SORT-B-KEY
+	       USING FILE-B
+	       GIVING FILE-B-SEQ.
+
+	   DISPLAY "Check the file BFILESEQ for descending keys".
+
+      
 
       ******************************************************************
 

@@ -36,6 +36,7 @@ static char rcsid[]="$Id:$";
 #include "filext.h"
 #include "wperson.h"
 #include "wmalloc.h"
+#include "osddefs.h"
 
 /*
 **	Structures and Defines
@@ -68,7 +69,7 @@ void RETCODE(char code[3])
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
 	strcpy(rcbuff,"000");
-	if (fh = fopen(rcfilepath(),"r"))
+	if (fh = fopen(rcfilepath(),FOPEN_READ_TEXT))
 	{
 		if (1==fscanf(fh,"%d",&rc))
 		{
@@ -159,7 +160,7 @@ void setretcode(char* code)
 		chmod ( wisptmpdir(NULL),0777);
 	}
 
-	if (fh = fopen(rcfilepath(),"w"))
+	if (fh = fopen(rcfilepath(),FOPEN_WRITE_TEXT))
 	{
 		fprintf(fh,"%03d\n",rc);
 		fclose(fh);
@@ -257,6 +258,9 @@ void delete_retcode(void)
 /*
 **	History:
 **	$Log: retcode.c,v $
+**	Revision 1.15  1998-12-09 09:39:02-05  gsl
+**	Use FOPEN mode defines
+**
 **	Revision 1.14  1996-11-11 16:24:45-05  gsl
 **	Added standard headers/comments etc.
 **	Added delete_retcode() and combined duplicate code

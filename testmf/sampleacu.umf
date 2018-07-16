@@ -19,20 +19,20 @@
 #
 
 WISPTRAN=wisp
-WISPFLAGS= -I../wisputils
+VLANG=-VACU
+WISPFLAGS= $(VLANG) -I$(WISPDIR)/etc -M
 COBOL=ccbl
-COBFLAGS=-Zd -Da4
-LANG=-VACU
+COBFLAGS=-Zd -Da4 -Te 800
 
 OS=unix
 
 .SUFFIXES: .cob .wcb
 
 .wcb.cob:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN) $(WISPFLAGS) $*
 
 .wcb:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN) $(WISPFLAGS) $*
 	$(COBOL) $(COBFLAGS) -o `echo $*|tr '[a-z]' '[A-Z]'` $*.cob
 
 .cob:
@@ -44,7 +44,7 @@ ALL= 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 
 AUTOQA=	WL0000 WL0010 WL0011 WL0012 WL0013 WL0014 WL0015 WL0016 WL0017 \
 	WL0018 WL0019 WL0020 WL0021 WL0022 WL0023 WL0024 WL0025 WL0026 \
-	WL0018A WL0018B
+	WL0027 WL0018A WL0018B
 
 TEST_DIRS= volrun volin
 
@@ -54,7 +54,7 @@ all:	$(ALL) $(TEST_DIRS) $(AUTOQA)
 	@echo
 
 clean:
-	rm -f $(ALL)
+	rm -f $(ALL) $(AUTOQA)
 	rm -rf $(TEST_DIRS)
 	rm -f *.cob
 
@@ -136,28 +136,89 @@ sample.cob: sample.wcb
 acuusing.cob: ../acu/acuusing.cob
 	cp "../acu/acuusing.cob" .
 
+WL0000:    wl0000.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0000.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0000 wl0000.cob 
 
-WL0000: wl0000
-WL0010: wl0010
-WL0011: wl0011
-WL0012: wl0012
-WL0013: wl0013
-WL0014: wl0014
-WL0015: wl0015
-WL0016: wl0016
-WL0017: wl0017
-WL0018: wl0018
-WL0018A: wl0018a
-WL0018B: wl0018b
-WL0019: wl0019
-WL0020: wl0020
-WL0021: wl0021
-WL0022: wl0022
-WL0023: wl0023
-WL0024: wl0024
-WL0025: wl0025
-WL0026: wl0026
-WL0027: wl0027
+WL0010:    $(WISPDIR)/etc/wispplat.wcb  wl0010.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0010.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0010 wl0010.cob 
+
+WL0011:    wl0011.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0011.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0011 wl0011.cob 
+
+WL0012:    wl0012.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0012.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0012 wl0012.cob 
+
+WL0013:    wl0013.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0013.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0013 wl0013.cob 
+
+WL0014:    wl0014.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0014.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0014 wl0014.cob 
+
+WL0015:    wl0015.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0015.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0015 wl0015.cob 
+
+WL0016:    wl0016.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0016.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0016 wl0016.cob 
+
+WL0017:    wl0017.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0017.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0017 wl0017.cob 
+
+WL0018:    wl0018.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0018.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0018 wl0018.cob 
+
+WL0018A:    wl0018a.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0018a.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0018A wl0018a.cob 
+
+WL0018B:    wl0018b.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0018b.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0018B wl0018b.cob 
+
+WL0019:    wl0019.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0019.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0019 wl0019.cob 
+
+WL0020:    wl0020.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0020.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0020 wl0020.cob 
+
+WL0021:    wl0021.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0021.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0021 wl0021.cob 
+
+WL0022:    wl0022.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0022.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0022 wl0022.cob 
+
+WL0023:    wl0023.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0023.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0023 wl0023.cob 
+
+WL0024:    wl0024.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0024.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0024 wl0024.cob 
+
+WL0025:    wl0025.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0025.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0025 wl0025.cob 
+
+WL0026:    wl0026.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0026.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0026 wl0026.cob 
+
+WL0027:    wl0027.wcb
+	$(WISPTRAN) $(WISPFLAGS) wl0027.wcb 
+	$(COBOL) $(COBFLAGS) -o WL0027 wl0027.cob 
 
 volrun:
 	mkdir volrun
@@ -174,6 +235,28 @@ win32_stuff:	prtargs.exe
 #
 #	History:
 #	$Log: sampleacu.umf,v $
+#	Revision 1.19  1999-08-20 09:55:08-04  gsl
+#	Change the LANG macro to VLANG as it conflicted with the LANG environment
+#	variable when the -e option was used
+#
+#	Revision 1.18  1998-06-26 11:20:28-04  gsl
+#	Add WL0027 to build
+#
+#	Revision 1.17  1998-06-15 15:06:45-04  gsl
+#	Add manual locking l=flag
+#
+#	Revision 1.16  1998-04-03 16:28:22-05  gsl
+#	Fix the wispplat include dir
+#
+#	Revision 1.15  1998-04-03 16:22:55-05  gsl
+#	Fix the LANG flag for WISP
+#
+#	Revision 1.14  1998-03-27 15:45:07-05  gsl
+#	Update WL00xx stuff
+#
+#	Revision 1.13  1998-03-23 12:23:45-05  gsl
+#	Update
+#
 #	Revision 1.12  1997-08-28 14:37:49-04  gsl
 #	Fix and simplify so qabckgrd builds properly
 #

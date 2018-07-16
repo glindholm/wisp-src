@@ -24,12 +24,15 @@
 #			are added then this routine must be updated.
 #
 
+#ECHONONL="echo -n"
+ECHONONL=echo
+
 echo This script will build the WISP source kit.
 echo
 echo It creates all the directory needed and then uses DRCS to unload all the 
 echo source files from their DRCS directories on ZIGZAG.
 echo
-echo -n	'Do you wish to continue [y/n] ? ' 
+$ECHONONL	'Do you wish to continue [y/n] ? ' 
 read ANS
 if [ "y" != "${ANS}" ]
 then
@@ -45,10 +48,12 @@ fi
 #	RCS states and to create the Versions.lis file.
 #
 WISP_PROJ_LIST="
+video
 video/cap
 video/ivs
 video/lib
 video/test
+wisp
 wisp/acucobol
 wisp/amu
 wisp/common
@@ -57,6 +62,7 @@ wisp/doc
 wisp/ede
 wisp/etc
 wisp/ivs
+wisp/kcsi
 wisp/kcsi/create
 wisp/kcsi/crid
 wisp/kcsi/common
@@ -86,19 +92,20 @@ disam.34/tp.21
 disam.34/util
 disam.34/mfisam"
 
-PARENTDIR=`pwd`
+PARENTDIR=$HOME/work
 echo
-echo -n	"Enter parent directory [$PARENTDIR] ? "
+$ECHONONL	"Enter parent directory [$PARENTDIR] ? "
 read ANS
 if [ "$ANS" != "" ]
 then
 	cd $ANS
-	PARENTDIR=`pwd`
+	PARENTDIR=$ANS
 fi
+cd $PARENTDIR
 
 echo pwd = `pwd`
 echo
-echo -n	"Enter name of save dir (e.g. wisp3318) ? "
+$ECHONONL	"Enter name of save dir (e.g. wisp3318) ? "
 read ANS
 if [ "$ANS" = "" ]
 then
@@ -108,15 +115,16 @@ fi
 #
 #	Make all the directories needed
 #
+MKDIR="mkdir -p"
 
-echo mkdir $ANS
-test -d $ANS || mkdir $ANS
+echo $MKDIR $ANS
+test -d $ANS || $MKDIR $ANS
 
 echo cd $ANS
 cd $ANS
 
-echo mkdir src
-test -d src || mkdir src
+echo $MKDIR src
+test -d src || $MKDIR src
 
 echo cd src
 cd src
@@ -126,6 +134,7 @@ SOURCEDIR=`pwd`
 WISPDIRLIST="
 	acu \
 	amu \
+	costar \
 	ede \
 	etc \
 	ivslib \
@@ -163,11 +172,11 @@ do
 	then
 		echo Dir $i already exists
 	else
-		echo mkdir $i
-		mkdir $i
+		echo $MKDIR $i
+		$MKDIR $i
 		if [ ! -d $i ]
 		then
-			echo ERROR mkdir $i failed
+			echo ERROR $MKDIR $i failed
 			exit 1
 		fi
 	fi
@@ -181,7 +190,7 @@ echo
 echo "This script can set the RCS states of all the files in WISP to"
 echo "a new version number (e.g. V3_3_18)."
 echo
-echo -n	'Do you wish to set the RCS states [y/n] ? ' 
+$ECHONONL	'Do you wish to set the RCS states [y/n] ? ' 
 
 read ANS
 if [ "y" != "${ANS}" ]
@@ -193,7 +202,7 @@ else
 	#	Get the version number to use
 	#
 	echo
-	echo -n	"Enter the state to use (e.g. V3_3_18) ? "
+	$ECHONONL	"Enter the state to use (e.g. V3_3_18) ? "
 	read ANS
 	if [ "$ANS" = "" ]
 	then
@@ -239,7 +248,7 @@ cd $SOURCEDIR/videolib
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load VIDEO LIB [y/n/a/q] ? '
+	$ECHONONL	'Load VIDEO LIB [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -251,8 +260,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO LIB
 	drcs unload video/lib
-
-	cp libvideo.umf Makefile
 fi
 
 echo
@@ -264,7 +271,7 @@ cd $SOURCEDIR/videotest
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load VIDEO TEST [y/n/a/q] ? '
+	$ECHONONL	'Load VIDEO TEST [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -276,8 +283,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO TEST
 	drcs unload video/test
-
-	cp vtest.umf Makefile
 fi
 
 echo
@@ -289,7 +294,7 @@ cd $SOURCEDIR/videocap
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load VIDEO CAP [y/n/a/q] ? '
+	$ECHONONL	'Load VIDEO CAP [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -312,7 +317,7 @@ cd $SOURCEDIR/ivslib
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load VIDEO IVS LIB [y/n/a/q] ? '
+	$ECHONONL	'Load VIDEO IVS LIB [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -324,8 +329,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO IVS LIB
 	drcs unload video/ivs
-
-	cp libivs.umf Makefile
 fi
 
 
@@ -346,7 +349,7 @@ cd $SOURCEDIR/acu
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP ACUCOBOL [y/n/a/q] ? '
+	$ECHONONL	'Load WISP ACUCOBOL [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -358,9 +361,9 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP ACUCOBOL
 	drcs unload wisp/acucobol
+	drcs borrow wispicon.ico wisp/common
 
-	chmod +w wruncbl.umf
-	cp wruncbl.umf Makefile
+	chmod +w *.umf *.mak acucobol.include acu.rules
 fi
 
 echo
@@ -372,7 +375,7 @@ cd $SOURCEDIR/mf
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP MF [y/n/a/q] ? '
+	$ECHONONL	'Load WISP MF [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -386,7 +389,6 @@ echo	Loading WISP MF
 	drcs unload wisp/mf
 
 	chmod +w wrunmf.umf
-	cp wrunmf.umf Makefile
 fi
 
 echo
@@ -398,7 +400,7 @@ cd $SOURCEDIR/nt
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP NT [y/n/a/q] ? '
+	$ECHONONL	'Load WISP NT [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -422,7 +424,7 @@ cd $SOURCEDIR/port
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP PORT [y/n/a/q] ? '
+	$ECHONONL	'Load WISP PORT [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -437,6 +439,9 @@ echo	Loading WISP PORT
 
 	cp makewisp.umf Makefile
 	chmod +w make.include
+
+	cp wisp.dsw ..
+	chmod +w ../wisp.dsw
 fi
 
 echo
@@ -448,7 +453,7 @@ cd $SOURCEDIR/ede
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP EDE [y/n/a/q] ? '
+	$ECHONONL	'Load WISP EDE [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -461,8 +466,6 @@ then
 echo	Loading WISP EDE
 	drcs unload wisp/ede
 	drcs unload wisp/menudemo
-
-	cp libede.umf Makefile
 fi
 
 echo
@@ -474,7 +477,7 @@ cd $SOURCEDIR/etc
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP ETC [y/n/a/q] ? '
+	$ECHONONL	'Load WISP ETC [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -502,6 +505,7 @@ echo	Loading WISP ETC
 	drcs borrow aqmwisp.txt wisp/doc
 	drcs borrow nonascii.txt wisp/doc
 	drcs borrow vcolors.txt wisp/doc
+	drcs borrow nttelnet.txt wisp/doc
 
 	for i in v*_relnotes.lis
 	do
@@ -520,7 +524,7 @@ cd $SOURCEDIR/wisplib
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP LIB [y/n/a/q] ? '
+	$ECHONONL	'Load WISP LIB [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -532,8 +536,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP LIB
 	drcs unload wisp/lib
-
-	cp libwisp.umf Makefile
 fi
 
 echo
@@ -545,7 +547,7 @@ cd $SOURCEDIR/proctran
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP PROCTRAN [y/n/a/q] ? '
+	$ECHONONL	'Load WISP PROCTRAN [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -557,8 +559,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP PROCTRAN
 	drcs unload wisp/proctran
-
-	cp proctran.umf Makefile
 fi
 echo
 echo ================= WISP VSEDIT ========================================
@@ -569,7 +569,7 @@ cd $SOURCEDIR/vsedit
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP VSEDIT [y/n/a/q] ? '
+	$ECHONONL	'Load WISP VSEDIT [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -581,8 +581,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP VSEDIT
 	drcs unload wisp/vsedit
-
-	cp vsedit.umf Makefile
 fi
 
 echo
@@ -594,7 +592,7 @@ cd $SOURCEDIR/testacu
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP SAMPLE [y/n/a/q] ? '
+	$ECHONONL	'Load WISP SAMPLE [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -610,9 +608,6 @@ echo	Loading WISP SAMPLE
 	echo Duplicating testacu into testmf
 	cp * ../testmf
 
-	cp sampleacu.umf Makefile
-	cp ../testmf/samplemf.umf ../testmf/Makefile
-
 	echo Copying ACU files to testacu
 	cp $SOURCEDIR/acu/acu.rules    $SOURCEDIR/testacu
 	cp $SOURCEDIR/acu/aculink.wcb  $SOURCEDIR/testacu
@@ -621,6 +616,9 @@ echo	Loading WISP SAMPLE
 	echo Copying MF files to testmf
 	cp $SOURCEDIR/mf/mf.rules      $SOURCEDIR/testmf
 	cp $SOURCEDIR/mf/mflink.cob    $SOURCEDIR/testmf
+
+	echo Changing modes
+	chmod +w lgmap.nt sampleacu.mak
 fi
 
 echo
@@ -632,7 +630,7 @@ cd $SOURCEDIR/wisptran
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP TRAN [y/n/a/q] ? '
+	$ECHONONL	'Load WISP TRAN [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -644,8 +642,6 @@ if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP TRAN
 	drcs unload wisp/tran
-
-	cp wisp.umf Makefile
 fi
 
 echo
@@ -657,7 +653,7 @@ cd $SOURCEDIR/wisputils
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP UTILS [y/n/a/q] ? '
+	$ECHONONL	'Load WISP UTILS [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -670,7 +666,8 @@ then
 echo	Loading WISP UTILS
 	drcs unload wisp/utils
 
-	cp utils.umf Makefile
+	drcs borrow wispicon.ico wisp/common
+	cp wispicon.ico wrun.ico
 fi
 
 
@@ -683,7 +680,7 @@ cd $SOURCEDIR/msdos
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP MSDOS [y/n/a/q] ? '
+	$ECHONONL	'Load WISP MSDOS [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -711,7 +708,7 @@ cd $SOURCEDIR/wproc
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP WPROC [y/n/a/q] ? '
+	$ECHONONL	'Load WISP WPROC [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -724,8 +721,7 @@ then
 echo	Loading WISP WPROC
 	drcs unload wisp/wproc
 
-	chmod +w Makefile
-	cp wproc.umf Makefile
+	chmod +w wproc.umf
 
 	drcs borrow wproc.lis wisp/doc
 fi
@@ -739,7 +735,7 @@ cd $SOURCEDIR/amu
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load WISP AMU [y/n/a/q] ? '
+	$ECHONONL	'Load WISP AMU [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -754,6 +750,29 @@ echo	Loading WISP AMU
 fi
 
 echo
+echo =================== WISP COSTAR ===========================================
+echo
+echo cd $SOURCEDIR/costar
+cd $SOURCEDIR/costar
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	$ECHONONL	'Load WISP COSTAR [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading WISP COSTAR
+	drcs unload wisp/costar
+fi
+
+echo
 echo =================== KCSI ===========================================
 echo
 echo cd $SOURCEDIR/kcsi
@@ -762,7 +781,7 @@ cd $SOURCEDIR/kcsi
 echo pwd = `pwd`
 if [ "a" != "$ANS" ]
 then
-	echo -n	'Load KCSI [y/n/a/q] ? '
+	$ECHONONL	'Load KCSI [y/n/a/q] ? '
 	read ANS
 fi
 if [ "q" = "$ANS" ]
@@ -773,6 +792,9 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading KCSI
+	cd $SOURCEDIR/kcsi
+	drcs unload wisp/kcsi
+
 	cd $SOURCEDIR/kcsi/common
 	drcs unload wisp/kcsi/common
 
@@ -780,11 +802,13 @@ echo	Loading KCSI
 	drcs unload wisp/kcsi/create
 	drcs unload wisp/kcsi/common
 	drcs borrow createntsetup.txt wisp/kcsi/create
+	chmod +w *.umf *.mak
 
 	cd $SOURCEDIR/kcsi/crid
 	drcs unload wisp/kcsi/crid
 	drcs unload wisp/kcsi/common
 	drcs borrow cridntsetup.txt wisp/kcsi/crid
+	chmod +w *.umf *.mak
 
 #	cd $SOURCEDIR/kcsi/disam
 #	drcs unload disam.34/code
@@ -821,6 +845,7 @@ echo " "
 echo "Changing mode of all .sh files to ug+rx."
 find . -name '*.sh' -print | tee /dev/tty | xargs chmod ug+rx
 
+find . -name '*.dsp' -print | xargs chmod +w
 #
 #	Create a file version list
 #
@@ -844,6 +869,38 @@ exit
 #
 #	History:
 #	$Log: bldsrckit.sh,v $
+#	Revision 1.43  1999-09-15 09:31:17-04  gsl
+#	Add copy wispicon.ico to wrun.ico
+#
+#	Revision 1.42  1999-06-08 09:08:48-04  gsl
+#	Add wispicon.ico to wisp/acu
+#
+#	Revision 1.41  1999-03-03 18:14:01-05  gsl
+#	Remove cp xxx.umf to Makefile as Makefile is not used
+#	Added chmod +w to some of the umf files that need to change on HP
+#
+#	Revision 1.40  1999-03-01 18:37:41-05  gsl
+#	add nttelnet.txt to etc
+#
+#	Revision 1.39  1999-02-12 14:43:53-05  gsl
+#	fix the default for parentdir
+#
+#	Revision 1.38  1999-02-12 14:34:49-05  gsl
+#	Change the "echo -n" with $ECHONONL and add -p to mkdir commands
+#
+#	Revision 1.37  1999-01-12 12:15:38-05  gsl
+#	Make writable makefiles that need to be modified for curses
+#
+#	Revision 1.36  1998-06-19 10:00:04-04  gsl
+#	Add costar to source kit
+#	Make test makefiles writable
+#
+#	Revision 1.35  1998-04-24 15:48:50-04  gsl
+#	Update for MSVC++ 5 for NT
+#
+#	Revision 1.34  1998-04-23 17:09:01-04  gsl
+#	Update for MSVC++ 5
+#
 #	Revision 1.33  1998-01-08 11:30:08-05  gsl
 #	Add vcolors.txt
 #

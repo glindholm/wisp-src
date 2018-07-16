@@ -1,4 +1,4 @@
-	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	Copyright (c) 1998 by NeoMedia Technologies Inc. All Rights Reserved.
 	
 	====================================================================
 	
@@ -7,7 +7,7 @@
 	Document:	v42_relnotes.lis (RELNOTES)
 	Last Updated:	$Date:$
 	Products:	WISP for UNIX, WISP for Windows NT/95
-	Versions:	4.2.00
+	Versions:	4.2.03
 	
 	Summary:	Release notes for changes to WISP since version 3.3c.
 			Supplemental documents.
@@ -28,6 +28,329 @@
 		Web   www.neom.com
 		Email support@neom.com
 
+
+
+	CHANGES FROM 4.2.02 TO 4.2.03
+	=============================
+	The following items describe corrections and improvements that
+	have been made to the WISP toolkit from release 4.2.02 to 
+	release 4.2.03.
+
+	The version numbers of utilities that are released with this
+	version or WISP are:
+
+	    CRID v2.92
+	    CREATE v3.2
+
+	This release contains ACUCOBOL native screens support for Windows
+	NT/95.  See the document wispacn.txt in the wisp/acu directory for
+	a complete description of ACUCOBOL native screens support on
+	Windows NT/95.
+
+	Support has been added for ACUCOBOL Vision 4 files.  A Vision 4
+	file consists of two (or more) physical files that consists of a
+	data portion and an index portion.  The main data file by default
+	has no extension and the main index file has an extension of
+	".vix".  The WISP routine "wfname" (used by "wfopen3") will
+	generate the filename path (used in the ASSIGN TO clause) to the
+	main data file without any extension.  ACUCOBOL allows Vision 4
+	files to be separated so that the multiple physical files can
+	exist in different directories.  If a Vision 4 file consists of
+	more then the two main physical files or if the physical files do
+	not exist in the same directory then the routines "RENAME",
+	"SCRATCH", "FILECOPY" and the utility WCOPY will not work
+	correctly.
+
+	Support has been added for AcuServer on Windows NT using a WISP
+	for Windows NT/95 client.  This allows a WISP migrated application
+	running on Windows NT/95 to access files on a Windows NT server
+	using AcuServer.  To relink an AcuServer client enabled runtime
+	with WISP you will need a copy of ACUCOBOL-GT that is client
+	enabled plus the PC/TCP libraries (available from Acucorp).  The
+	command to relink a client enabled WISP runtime is:
+
+	    C:\WISP\ACU> NMAKE /F WWRUNCBL.MAK CLIENT= RTS
+
+	See the makefile WWRUNCBL.MAK for further information on building
+	an Acuserver client enabled version of the runtime.  
+	The WISP support for AcuServer on NT is the same as described in
+	the WISP manual for UNIX except that files must be accessible
+	using a Windows UNC name instead of NFS as used on UNIX.  As an
+	example let say your volumes are located on "SERVER" in directory
+	C:\VOLUMES which is shared with a share name of
+	"\\SERVER\VOLUMES".  The LGMAP would have UNC style entries:
+
+	    LGMAP:
+	        VOL100 \\SERVER\VOLUMES\VOL100
+	        VOL200 \\SERVER\VOLUMES\VOL200
+
+	You would then need an RVMAP which would translate the UNC style
+	file names into an AcuServer file name.
+
+	    RVMAP: 
+	        \\SERVER\VOLUMES\  @SERVER:C:\VOLUMES\
+
+	All of the AcuServer warnings and restrictions described in the
+	WISP manual also apply to the Windows NT version.  WISP does not
+	add any special support for "cross-platform" use of AcuServer for
+	use between Windows and UNIX. 
+
+	The runtime OPTIONS file option MOUSENONMOD has been added.  This
+	option instructs the runtime to allow you to mouse position to a
+	non-modifiable position on the screen.  Normally you can only
+	position into a modifiable field or a tab-stop.  This option is
+	only meaningful when used with Co*STAR or on Windows NT/95.
+
+	The record size limit for file sorting (WSORT,SORTCALL,WISPSORT)
+	has been increased from 2024 bytes to 9999 bytes.
+
+	The FORMS file on Windows NT/95 supports a new option "raw=1" that
+	allows printing of a file that contains raw (fully rendered) data.
+	This option is useful if your applications generate print files
+	that contain printer control codes for a specific printer such as
+	a postscript or PCL printer.  If this option is specified then the
+	file is sent to the printer without processing using the RAW print
+	driver.  If the "raw=1" options is used then all other FORMS
+	options will be ignored so none should be specified.
+
+	    Example FORMS file:
+
+	    012 pagelength=66 pagewidth=96 cpi=12 lpi=6 landscape=0
+	    017 cpi=16 lpi=8 lpp=88 pw=133 landscape=0
+	    200 raw=1
+
+	The runtime OPTIONS file option UTILSWINDOWS has been added.  The
+	UTILSWINDOWS option instructs the runtime to run utilities
+	(e.g. DISPLAY, VSEDIT, etc.) in separate windows.  This option is
+	currently only meaningful on Windows NT/95 and will be ignored on
+	other systems.
+
+	The runtime OPTIONS file options DISPLAYUTIL option allows you to
+	specify a substitute "DISPLAY" utility.  The substitute display
+	utility should be either on the PATH or it should be specified as
+	a fully qualified file path.  This utility must accept a single
+	command line argument which is the name of the file to display.
+	This utility will be used when a call "LINK" to "DISPLAY" is
+	performed or when a "Display" option is selected from "Manage
+	Files and Libraries".  The substitute display utility is expected
+	to not issue getparms, the getparms will be issued by the runtime
+	and translated into a filename before the utility is run.  On
+	Windows NT/95 the Notepad utility makes a good substitute.
+
+	    DISPLAYUTIL notepad.exe
+
+	The WISP translator has been enhanced with support for the
+	conditional code directives $ACN_CODE $ACN_ELSE and $ACN_END for
+	translating to ACUCOBOL native screens using the -VACN language
+	flag.
+
+	If a file is originally opened from COBOL as a "work" file,
+	meaning the file name starts with a '#' character or it is in the
+	WORKLIB on WORKVOL, then it was marked as a "work" file.  The
+	file, library, or volume names could later be changed so that it
+	was no longer a work file.  If it was re-opened WISP was
+	mistakenly thinking it was still a work file and it was adding
+	it's directory path to the WLIBLIST file.  This has been
+	corrected.
+
+	A bug was introduced in 4.1.03 which could cause files to be
+	incorrectly treated as "work" files and there directories added to
+	the WLIBLIST.  This would result in the PF3 GETPARM not being
+	displayed when the file was opened OUTPUT and already exists.
+
+	The non-ASCII character support introduced a problem when the
+	CHARMAP file was not being used.  Invalid input characters such as
+	the ESC character (27) were being treated as valid character data
+	and was entered into the field instead of ringing the bell.  This
+	has been corrected so that characters outside the normal ASCII
+	range (32-126, Space thru '~') are considered invalid unless they
+	are mapped in the CHARMAP file.
+
+	The CREATE utility does not obey the V-VERSION option in
+	the ACUCOBOL A_CONFIG file.  It was always creating Vision 4
+	files. It has been changed to default to creating Vision 3 files
+	unless the environment variable V_VERSION=4 is set.
+
+	A new Co*STAR for WISP attribute mapping mode has been added and
+	is referred to as "Version 2" mapping mode.  The runtime OPTIONS
+	file option COSTARV2 instructs the runtime to use version 2
+	attribute mapping when Co*STAR for WISP is used.  The version 2
+	attribute mapping perserves all of the Wang FAC atttributes
+	including the UNDERLINE attribute which is not available in the
+	original (version 1) attribute mapping.  With version 2 all
+	"special" fields have the REVERSE attribute, protected fields are
+	unchanged, and modifiable fields have the REVERSE attribute added.
+	Hotspots are REVERSE+BLINK+UNDERLINE, and tabstops are
+	REVERSE+BLINK.  Note that on the Wang, the BLINK attribute is
+	actually BLINK+BOLD so the hotspot and tabstop attributes will not
+	conflict with any Wang attributes.  If you use the COSTARV2 option
+	you will also need to use a Co*STAR color scheme which is
+	complatible (e.g. "w4w_v2").  You can also specify version 2
+	attribute mapping by setting the environment variable W4W=2.  The
+	following table shows how the Wang field attributes are mapped
+	into Co*STAR attributes for both Verison 1 and 2 attribute mapping
+	modes.  Use this table for customizing your color schemes.
+
+	  Wang   		Version 1	   Version 2
+	  ====			=========	   =========
+	  Prot+Dim		Normal		   Normal
+	  Prot+Bold		Bold		   Bold
+	  Prot+Blink+Bold	Blink+Bold	   Blink+Bold
+	  Prot+Line+Dim		Bold		   Line
+	  Prot+Line+Bold	Bold		   Line+Bold
+	  Prot+Line+Blink+Bold	Blink+Bold	   Line+Blink+Bold
+	  Mod+Dim		Line		   Rev
+	  Mod+Bold		Line+Bold	   Rev+Bold
+	  Mod+Blink+Bold	Line+Blink+Bold	   Rev+Blink+Bold
+	  Mod+Line+Dim		Line+Bold	   Rev+Line
+	  Mod+Line+Bold		Line+Bold	   Rev+Line+Bold
+	  Mod+Line+Blink+Bold	Line+Blink+Bold	   Rev+Line+Blink+Bold
+	  (Hotspot)		Rev		   Rev+Line+Blink
+	  (Tabstop)		Rev+Blink	   Rev+Blink
+
+	NOTE: Very old versions of Co*STAR do not allow you to map each
+	individual combination of attributes.  This capability is needed
+	for version 2 mapping but was not available when version 1 was
+	originally produced.
+
+	EDE on Windows NT/95 uses the environment variable VIDEOHOME to
+	find the directory for the calendar and notepad data files. If
+	VIDEOHOME is not defined it used "C:\".
+
+	The WISP translator by default generates code which uses automatic
+	record locking mode.  It has been found that there are two cases
+	where automatic record locking will release a record lock which on
+	the Wang would not release the record lock.  If you do a READ WITH
+	HOLD then either a READ (without hold) or a WRITE on the same file
+	the record lock will be released where on the Wang the lock will
+	kept.  If you have applications that do the above then you should
+	consider retranslating them with WISP using the new "-M" option
+	for manual record locking.
+
+	The WISP translator has a new option "-M" for using "manual"
+	record locking mode.  The WISP translator will by default use
+	"automatic" record locking mode which has the problem described
+	above.  If manual records locking mode is specified then the
+	record locking will behave the same as on the Wang.  With manual
+	record locking mode a READ (without HOLD) or a WRITE on the same
+	file will not release a locked record the application previously
+	aquired with a READ WITH HOLD.  The "-M" option may not be used
+	with the "-S" (NODMS) option.
+
+
+	CHANGES FROM 4.2.01 TO 4.2.02
+	=============================
+	The following items describe corrections and improvements that
+	have been made to the WISP toolkit from release 4.2.01 to 
+	release 4.2.02.
+
+	This release contains the second pre-release of ACUCOBOL native
+	screens support.  The WISP support for ACUCOBOL Native Screen is
+	described in the document wispacn.txt in the wisp/acu directory.
+
+	The VSX utility now has a "-v" option which will cause the VOLUME
+	name to be included as the first level of the output file path.
+	This is useful if the backup tape contains multiple volumes with
+	duplicate library and file names.
+
+	The WISP translator has been enhanced to better handle COBOL-85
+	reserved words which were not reserved in COBOL-74.  If a COBOL-85
+	reserved word is used as a data name in a data description entry
+	the WISP translator will automatically add it to the list of
+	reseverd words.  The WISP translator will rename the keyword with
+	a prefix of "KW-" (earlier versions of WISP used "W-" which
+	conflicted too often with other data names).  The reserved words
+	CLASS, DEFAULT, OTHER, SCREEN, WAIT, and TAB were removed from the
+	internal default list.
+
+	The makefile for the ACUCOBOL runtime system on UNIX, wruncbl.umf,
+	now also copies the ACUCOBOL license file (runcbl.alc) to match
+	the new runtime system (e.g. wruncbl.alc).  See the ACUCOBOL
+	installation instruction for further information on the ALC files. 
+
+	The WISP translator was not recognizing qualified key names which
+	used the keyword "IN" instead of "OF".
+
+	The special hook for Co*STAR customization "W4WPOSTWRITE" was not
+	being activated following a "screen pop" which occurs when
+	returning from the HELP screen and from a GETPARM screen. This has
+	been corrected.
+
+	A new special hook for Co*STAR customization "W4WSCREENNAME" has
+	been added.  When this environment variable is set the api string
+	will be transmitted before the DISPLAY and READ logic is
+	preformed.  The program name and the screen name separated by a
+	colon will be appended to the api string, the control character
+	(127) will be added to beginning and end of the string.
+
+	   <127><api string><program name>:<screen name><127>
+
+	The DATENTRY program, part of the CRID utilities, was not
+	correctly handling non-updateable fields that had occurs values.
+	This has been corrected in version 2.92 of CRID.
+
+	If the last statement in a COBOL program was a COPY statement and
+	copybook files was being generated (-C or -1 option) then the WISP
+	translator was generating it's ending logic into the copybook
+	file.  This has been corrected.
+
+
+	CHANGES FROM 4.2.00 TO 4.2.01
+	=============================
+	The following items describe corrections and improvements that
+	have been made to the WISP toolkit from release 4.2.00 to 
+	release 4.2.01.
+
+	The WISP translator has been enhanced to recognize full Wang VS
+	COBOL 85 syntax as defined in the Wang VS COBOL 85 Reference
+	manual.  Earlier versions did not fully handle scope delimited
+	statements like END-IF, END-READ etc. and did not handle "NOT"
+	clauses like NOT INVALID KEY and NOT AT END etc.  Certain
+	statements are still not supported (e.g. HOLD LIST, BEGIN
+	TRANSACTION, etc.) but proper warning messages are displayed.
+
+	Earlier versions of the WISP translator when generating .lib
+	copybook files (-C or -1 options) would occasionally mis-place
+	statements into following (wrong) file, this would usually only
+	happen when consecutive COPY statements were used.  This has been
+	corrected.
+
+	The WISP translator has been enhanced to better handle complex
+	READ statements.  Previously complex READ statements where split
+	into multiple components and portions of the logic was relocated
+	into a separate paragraph which was then PERFORM'ed.  The READ
+	logic has been simplified and is now all performed in-line.
+
+	The WISP translator now attempts to resolve file organization and
+	access mode conflicts automatically.  A SEQUENTIAL file with a
+	RELATIVE KEY is changed to have an organization of RELATIVE.  A
+	SEQUENTIAL file without a RELATIVE KEY will be changed to have
+	SEQUENTIAL access mode.  Although WISP makes these changes
+	automatically it is highly recommended the original source code be
+	changed to ensure it is correct.
+
+	The WISP translator now correctly handles MERGE statements and
+	SORT statements with multiple input and output files.  
+
+	The WISP translator now correctly handles EVALUATE statements.
+
+	The WPROC utility had several problems relating to global
+	variables not being found and local variable with the same name as
+	global variables causing aborts.  These have all been corrected in
+	WPROC version 1.09.  See wproc.lis for additional details.
+
+	The WPROC utility was corrupting arguments on RUN statement that
+	passed more the 18 arguments.
+
+	The WISP translator now correctly handles READ's of the
+	workstation then include the AT END or INVALID KEY clauses.
+
+	The keyword DAY-OF-WEEK was removed from the default reserved
+	words file.  If your applications use DAY-OF-WEEK as a data name
+	you will need to add it to your words file.
+
+	The WISP translator was failing to correct the UFB argument in a
+	CALL "SCREEN" statement, this has been corrected.
 
 
 	CHANGES FROM 4.1.03 TO 4.2.00
@@ -141,7 +464,7 @@
 
 	This release contains a pre-release version of ACUCOBOL native
 	screens support.  It is described in the document wispacn.txt in
-	the wisp/etc directory.
+	the wisp/acu directory.
 
 	The DATE2 vssub has been enhance with two new functions HG and HJ
 	which return the current date in modified Gregorian (YYYYMMDD) and
@@ -1014,14 +1337,16 @@
 	however this proved unworkable so it has been replaced with a 
 	three part version number.
 
-		+----- Major version number (3)
-		| +--- Minor version number (4)
+		+----- Major version number (4)
+		| +--- Minor version number (2)
 		| | +- Patch level number   (1)
 		| | |
-		3.4.1
+		4.2.01
 
 	    WISP VERSION      CUTOVER DATE
 	    ------------      ------------
+		4.2.02	        04/13/98	Native Screens 2nd release
+		4.2.01	        03/04/98	Full COBOL-85 syntax support
 	        4.2.00	        01/08/98	Y2K compliant
 		4.1.03	        10/03/97	Native Screens pre-release
 		4.1.02	        08/25/97	4.1 patch 2

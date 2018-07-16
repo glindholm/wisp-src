@@ -1,7 +1,10 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 static char rcs_revision[]="$Revision:$";
-static char rcs_state[]="$State: V4_2_00 $";
+static char rcs_state[]="$State: V4_3_05 $";
+
+static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
+
 /*
 **	File:		wsort.c
 **
@@ -89,7 +92,6 @@ static char rcs_state[]="$State: V4_2_00 $";
 **	Static data
 */
 
-static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.00.03";
 static	int4	N[255];
 static	int4 	two=2;
 
@@ -1984,7 +1986,7 @@ static int get_keys(struct key_info keyinfo[], int *keycnt)
 		GPCTEXT("Key 7:",18,2);
 		GPCTEXT("Key 8:",19,2);
 		GPCTEXT("* Key Type:   B=Binary, U=Unsigned Binary, C=Character, D=Decimal, F=Floating",21,2);
-		GPCTEXT("              Z=Zoned decimal, L=Zoned decimal sign leading, P=Packed",22,2);
+		GPCTEXT("              Z=Zoned decimal, L=Zoned decimal sign leading, P=Packed. Y=YY",22,2);
 		GPCTEXT("* Sort Order: A=Ascending, D=Descending",23,2);
                                                     
 		GPKW(x_post[0],"POST1   ",k[0].post_field,4,12,11,"N");
@@ -2089,9 +2091,9 @@ static int get_keys(struct key_info keyinfo[], int *keycnt)
 				goto key_respec;
 			}
 #else
-			if (!strchr("BCDFLPZN2TOU",k[chkidx].type_field[0]))
+			if (!strchr("BCDFLPZN2TOUY",k[chkidx].type_field[0]))
 			{
-				sprintf(errmsg,"\224SORRY\204- TYPE%d MUST BE ONE OF B,C,D,F,L,P,Z,N,2,T,O,U.",chkidx+1);
+				sprintf(errmsg,"\224SORRY\204- TYPE%d MUST BE ONE OF B,C,D,F,L,P,Z,N,2,T,O,U,Y.",chkidx+1);
 				mess1 = errmsg;
 				x_type[chkidx]="R";
 				goto key_respec;
@@ -2266,6 +2268,12 @@ static int get_lock(void)
 /*
 **	History:
 **	$Log: wsort.c,v $
+**	Revision 1.22  1998-09-09 16:20:28-04  gsl
+**	Update version
+**
+**	Revision 1.21  1998-09-08 16:33:04-04  gsl
+**	Add new key type Y=YY pic 99 DISPLAY based on YYPIVOTYEAR.
+**
 **	Revision 1.20  1997-09-24 17:38:01-04  gsl
 **	Add support for pfkeys12()
 **

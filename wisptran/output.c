@@ -150,6 +150,16 @@ int tput_fluff ( NODE tree )
 	return(0);
 }
 
+void tput_leading_fluff(NODE the_statement)
+{
+	if (the_statement->down)
+	{
+		tput_statement(12, the_statement->down);
+		free_statement(the_statement->down);
+		the_statement->down = NULL;
+	}
+}
+
 static void *the_tput_use_context = NULL;
 
 int tput_set_context ( void *the_context )
@@ -283,19 +293,19 @@ int tput_clause ( int col, char *clause, char *p0, char *p1, char *p2, char *p3,
 **	08/09/94	Written by GSL
 **
 */
-NODE offset_statement(int num, NODE curr)
+NODE offset_statement(int num, NODE curr, int nofixed)
 {
 	if (!curr) return NULL;
 
 	if (curr->token)
 	{		
-		if (!curr->token->column_fixed)
+		if (!curr->token->column_fixed || nofixed)
 		{
 			curr->token->column += num;
 		}
 	}
-	offset_statement(num, curr->down);
-	offset_statement(num, curr->next);
+	offset_statement(num, curr->down, nofixed);
+	offset_statement(num, curr->next, nofixed);
 	return curr;
 }
 
@@ -326,38 +336,46 @@ NODE offset_statement(int num, NODE curr)
 **	06/07/93	Written by GSL
 **
 */
-int tput_line_at ( int col, char *line, char *p0, char *p1, char *p2, char *p3, char *p4, char *p5, char *p6, char *p7, char *p8, char *p9, char *p10, char *p11 )
+int tput_line_at ( int col, char *line, char *p0, char *p1, char *p2, char *p3, char *p4, char *p5, 
+		  char *p6, char *p7, char *p8, char *p9, char *p10, char *p11 )
 {
 	NODE	the_statement, the_node;
 	char	the_line[256];
-
-	tput_flush();
+	int	len;
 
 	/*
 	**	Build the line at a known column position
 	*/
-	if (col <= 12)
+	memset(the_line,' ',col);
+	sprintf(&the_line[col-1],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
+
+	len = strlen(the_line);
+	if (len > 72)
 	{
-		memset(the_line,' ',col);
-		sprintf(&the_line[col-1],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
+		/*
+		**	We have a problem, the line overflowed.
+		**	Try the old way of writing into col 12 then shifting the 
+		**	tokens back.
+		*/
+
+		if (col > 12)
+		{
+			sprintf(&the_line[11],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
+		}
 	}
-	else
-	{
-		memset(the_line,' ',12);
-		sprintf(&the_line[11],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
-	}
+	
 
 	the_statement = make_statement(the_line,tput_use_context());
 
-	if (col > 12)
+	if (len > 72 && col > 12)
 	{
 		/*
 		**	Shift the tokens to there desired position
 		*/
-		offset_statement(col-12,the_statement);
+		offset_statement(col-12,the_statement,1);
 	}
 
-	if (the_node = (NODE)first_node_with_token(the_statement))
+	if (the_node = first_node_with_token(the_statement))
 	{
 		/*
 		**	Mark the first token with a fixed column
@@ -408,12 +426,11 @@ int tput_line ( char *line, char *p0, char *p1, char *p2, char *p3, char *p4, ch
 	NODE	the_statement, the_node;
 	char	the_line[256];
 
-	tput_flush();
 	sprintf(the_line,line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
 
 	the_statement = make_statement(the_line, tput_use_context());
 
-	if (the_node = (NODE)first_node_with_token(the_statement))
+	if (the_node = first_node_with_token(the_statement))
 	{
 		the_node->token->column_fixed = 1;
 		tput_statement(12, the_statement);
@@ -612,10 +629,16 @@ int tput_token_cache (void)
 **	06/07/93	Written by GSL
 **
 */
-static cob_file *the_override_cobfile;
+static cob_file *the_override_cobfile = NULL;
 
 int override_output_stream ( cob_file *cob_file_ptr )
 {
+	if (the_override_cobfile)
+	{
+		write_log("WISP",'F',"OVERRIDE","Output stream can not be re-overriden, possible recursive logic error.");
+		return 0;
+	}
+	
 	the_override_cobfile = cob_file_ptr;
 	tput_token(TPUT_OVERRIDE,NULL);
 	return(0);
@@ -1242,7 +1265,7 @@ int write_file ( A_file *the_file, char *buff )
 	return 0;
 }
 
-int split_token_to_dcl_file ( int mincol, TOKEN *tokptr )
+void split_token_to_dcl_file ( int mincol, TOKEN *tokptr )
 {
 	static	int		first = 1;
 	static	tput_context	split_ctx;
@@ -1279,10 +1302,10 @@ int split_token_to_dcl_file ( int mincol, TOKEN *tokptr )
 	if (!tokptr || mincol < 0) 
 	{
 		x_tput_token(&split_ctx, mincol, tokptr);
-		return(0);
+		return;
 	}
 
-	if (!tokptr || !tokptr->data) return(0);				/* Empty token.					*/
+	if (!tokptr || !tokptr->data) return;					/* Empty token.					*/
 
 	if (fluff_token(tokptr))
 	{
@@ -1359,7 +1382,7 @@ int split_token_to_dcl_file ( int mincol, TOKEN *tokptr )
 		if (eq_token(tokptr,KEYWORD,"SECTION"))
 		{
 			found_section = 1;
-			return(0);
+			return;
 		}
 	}
 
@@ -1436,7 +1459,7 @@ write_the_token:
 	}
 }
 
-int split_token_to_dtp_file ( int mincol, TOKEN *tokptr )
+void split_token_to_dtp_file ( int mincol, TOKEN *tokptr )
 {
 	static	int		first = 1;
 	static	tput_context	split_ctx;
@@ -1471,10 +1494,10 @@ int split_token_to_dtp_file ( int mincol, TOKEN *tokptr )
 	if (!tokptr || mincol < 0) 
 	{
 		x_tput_token(&split_ctx, mincol, tokptr);
-		return(0);
+		return;
 	}
 
-	if (!tokptr || !tokptr->data) return(0);				/* Empty token.					*/
+	if (!tokptr || !tokptr->data) return;					/* Empty token.					*/
 
 	if (fluff_token(tokptr))
 	{
@@ -1578,9 +1601,25 @@ write_the_token:
 	x_tput_token(&split_ctx, mincol, tokptr);
 
 }
+
 /*
 **	History:
 **	$Log: output.c,v $
+**	Revision 1.12  1999-09-07 10:36:27-04  gsl
+**	Fix prototypes and return types.
+**
+**	Revision 1.11  1998-11-19 14:34:40-05  gsl
+**	Fixed problem in tput_line_at() when the line contains fixed position token
+**	and the column is greater then 12. (Spliting a pfkeys list for DISPLAY
+**	AND READ).
+**
+**	Revision 1.10  1998-03-03 16:05:29-05  gsl
+**	Add tput_leading_fluff() and
+**	Fix tput_line() and tput_line_at() to not do the flush
+**
+**	Revision 1.9  1998-02-27 10:47:03-05  gsl
+**	Add error detection logic to override_output_stream()
+**
 **	Revision 1.8  1996-10-09 12:30:27-04  gsl
 **	fix warning
 **

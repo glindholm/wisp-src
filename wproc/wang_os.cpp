@@ -1,8 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
-
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Copyright, 1992.  All rights reserved.
 //
 // Module : wang_os.cpp
@@ -226,7 +229,6 @@ void wang_os_update_fetched_args() {
 
 void wang_os_init() {
    initglbs("WPROC   ");
-   vwang_title("WPROC - WISP Procedure Interpreter");
 }
 
 
@@ -365,20 +367,46 @@ int_32 wang_os_link(
    status = 0;
    argcount_is(fixed_args + userargs);
    LINK2(
-      ptrarg[0],lenarg[0],ptrarg[1],lenarg[1],ptrarg[2],lenarg[2],ptrarg[3],
-      lenarg[3],ptrarg[4],lenarg[4],ptrarg[5],lenarg[5],ptrarg[6],lenarg[6],
-      ptrarg[7],lenarg[7],ptrarg[8],lenarg[8],ptrarg[9],lenarg[9],
-      ptrarg[10],lenarg[10],ptrarg[11],lenarg[11],ptrarg[12],lenarg[12],
-      ptrarg[13],lenarg[13],ptrarg[14],lenarg[14],ptrarg[15],lenarg[15],
-      ptrarg[16],lenarg[16],ptrarg[17],lenarg[17],ptrarg[18],lenarg[18],
-      ptrarg[19],lenarg[19],ptrarg[20],lenarg[20],ptrarg[21],lenarg[21],
-      ptrarg[22],lenarg[19],ptrarg[20],lenarg[20],ptrarg[21],lenarg[21],
-      ptrarg[22],lenarg[22],ptrarg[23],lenarg[23],ptrarg[24],lenarg[24],
-      ptrarg[25],lenarg[25],ptrarg[26],lenarg[26],ptrarg[27],lenarg[27],
-      ptrarg[28],lenarg[28],ptrarg[29],lenarg[29],ptrarg[30],lenarg[30],
-      ptrarg[31],lenarg[31],ptrarg[32],lenarg[32],ptrarg[33],lenarg[33],
-      ptrarg[34],lenarg[34],ptrarg[35],lenarg[35],ptrarg[36],lenarg[36],
-      ptrarg[37],lenarg[37],ptrarg[38],lenarg[38],ptrarg[39],lenarg[39]
+      	ptrarg[0],lenarg[0],
+	ptrarg[1],lenarg[1],
+	ptrarg[2],lenarg[2],
+      	ptrarg[3],lenarg[3],
+	ptrarg[4],lenarg[4],
+	ptrarg[5],lenarg[5],
+      	ptrarg[6],lenarg[6],
+      	ptrarg[7],lenarg[7],
+	ptrarg[8],lenarg[8],
+	ptrarg[9],lenarg[9],
+      	ptrarg[10],lenarg[10],
+	ptrarg[11],lenarg[11],
+	ptrarg[12],lenarg[12],
+      	ptrarg[13],lenarg[13],
+	ptrarg[14],lenarg[14],
+	ptrarg[15],lenarg[15],
+      	ptrarg[16],lenarg[16],
+	ptrarg[17],lenarg[17],
+	ptrarg[18],lenarg[18],
+      	ptrarg[19],lenarg[19],
+	ptrarg[20],lenarg[20],
+	ptrarg[21],lenarg[21],
+      	ptrarg[22],lenarg[22],
+	ptrarg[23],lenarg[23],
+	ptrarg[24],lenarg[24],
+      	ptrarg[25],lenarg[25],
+	ptrarg[26],lenarg[26],
+	ptrarg[27],lenarg[27],
+      	ptrarg[28],lenarg[28],
+	ptrarg[29],lenarg[29],
+	ptrarg[30],lenarg[30],
+      	ptrarg[31],lenarg[31],
+	ptrarg[32],lenarg[32],
+	ptrarg[33],lenarg[33],
+      	ptrarg[34],lenarg[34],
+	ptrarg[35],lenarg[35],
+	ptrarg[36],lenarg[36],
+      	ptrarg[37],lenarg[37],
+	ptrarg[38],lenarg[38],
+	ptrarg[39],lenarg[39]
       );
 
    wswap(&retcode);
@@ -527,7 +555,15 @@ int_32 wang_os_putparm(
       keyval = keylist[k++].contents_address();
       // If 1st byte is 1, next 16 bytes are label/keyword of partial back ref
       pbr = BOOLEAN(keyval[0] == 0x01);
-      keylen[l] = pbr ? -1 : strlen(keyval); // -1 tells WISP this is pbr
+      if (pbr)
+      {
+	   keylen[l] = -1; // -1 tells WISP this is pbr
+      }
+      else
+      {
+	   keylen[l] = strlen(keyval); 
+      }
+      
       arg[offset + i++] = (void *) (keyval + (pbr ? 1 : 0));
       trace_ss(general, "Passed keyvalue : ", (char*) (arg[offset + i - 1]));
       wswap(&keylen[l]);
@@ -606,6 +642,20 @@ int_32 wang_os_scratch(
    char   *volume)
 {
    int_32 retcode = 0;
+   char   l_library[8], l_volume[6];
+
+   /* The SCRATCH statement defaults to OUTLIB and OUTVOL if not specified */
+
+   if (!is_library && 0==memcmp(library,"        ",8))
+   {
+	wang_os_extract_alpha("OL",l_library);
+	library = l_library;
+   }
+   if (0==memcmp(volume,"      ",6))
+   {
+	wang_os_extract_alpha("OV",l_volume);
+	volume = l_volume;
+   }
 
    argcount_is(5);
    SCRATCH(is_library ? "L" : "F", file, library, volume, &retcode);
@@ -942,6 +992,28 @@ void wang_os_first_procedure_name(char *a_name) {
 /*
 **	History:
 **	$Log: wang_os.cpp,v $
+**	Revision 1.26  1999-08-29 13:21:10-04  gsl
+**	Move the vwang_title() call to driver.cpp so it doesn't get called
+**	if just checking the version.
+**
+**	Revision 1.25  1999-01-19 11:16:31-05  gsl
+**	fix typo in last fix
+**
+**	Revision 1.24  1999-01-19 11:08:41-05  gsl
+**	Fix warning
+**
+**	Revision 1.23  1999-01-04 15:27:10-05  gsl
+**	Fix SCRATCH to default to OUTLIB and OUTVOL if not specfied
+**
+**	Revision 1.22  1998-08-31 15:50:40-04  gsl
+**	drcs update
+**
+**	Revision 1.21  1998-08-31 15:14:27-04  gsl
+**	drcs update
+**
+**	Revision 1.20  1998-02-11 14:21:44-05  gsl
+**	Fix bug is LINK, args 16-18 were repeated.
+**
 **	Revision 1.19  1997-10-01 18:15:48-04  gsl
 **	fix warnings
 **
@@ -988,3 +1060,137 @@ void wang_os_first_procedure_name(char *a_name) {
 **
 **
 */
+
+//
+//	History:
+//	$Log: wang_os.cpp,v $
+//	Revision 1.26  1999-08-29 13:21:10-04  gsl
+//	Move the vwang_title() call to driver.cpp so it doesn't get called
+//	if just checking the version.
+//
+//	Revision 1.25  1999-01-19 11:16:31-05  gsl
+//	fix typo in last fix
+//
+//	Revision 1.24  1999-01-19 11:08:41-05  gsl
+//	Fix warning
+//
+//	Revision 1.23  1999-01-04 15:27:10-05  gsl
+//	Fix SCRATCH to default to OUTLIB and OUTVOL if not specfied
+//
+//	Revision 1.22  1998-08-31 15:50:40-04  gsl
+//	drcs update
+//
+//	Revision 1.21  1998-08-31 15:14:27-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wang_os.cpp,v
+//	Working file: wang_os.cpp
+//	head: 1.20
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 20;	selected revisions: 20
+//	description:
+//	----------------------------
+//	revision 1.20
+//	date: 1998-02-11 14:21:44-05;  author: gsl;  state: V4_3_00;  lines: +44 -15
+//	Fix bug is LINK, args 16-18 were repeated.
+//	----------------------------
+//	revision 1.19
+//	date: 1997-10-01 18:15:48-04;  author: gsl;  state: V4_2_00;  lines: +4 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.18
+//	date: 1997-06-10 10:45:10-04;  author: scass;  state: V4_1_02;  lines: +5 -2
+//	Final for portability.
+//	----------------------------
+//	revision 1.17
+//	date: 1997-06-10 01:09:13-04;  author: scass;  state: Exp;  lines: +8 -2
+//	change int_32 to long
+//	----------------------------
+//	revision 1.16
+//	date: 1997-06-09 15:49:41-04;  author: scass;  state: Exp;  lines: +57 -48
+//	Changed type of length parameter from void * to
+//	int_32 because more correct and was causing problems on Alpha
+//	port.  Now has two arrays for ptr and len pair instead
+//	of one large array.
+//	----------------------------
+//	revision 1.15
+//	date: 1997-01-14 20:12:03-05;  author: gsl;  state: V3_3_93;  lines: +5 -1
+//	Add a call to vwang_title()
+//	----------------------------
+//	revision 1.14
+//	date: 1996-07-25 19:48:35-04;  author: gsl;  state: Exp;  lines: +4 -4
+//	NT
+//	----------------------------
+//	revision 1.13
+//	date: 1996-07-25 14:16:39-04;  author: gsl;  state: Exp;  lines: +6 -2
+//	Renamed from wang_os.cc to wang_os.cpp
+//	----------------------------
+//	revision 1.12
+//	date: 1996-04-18 13:01:11-04;  author: jockc;  state: Exp;  lines: +10 -5
+//	moved declaration of for loop index from for loop to function
+//	auto decl area
+//	----------------------------
+//	revision 1.11
+//	date: 1995-10-19 06:47:33-04;  author: gsl;  state: V3_3_19;  lines: +19 -2
+//	In a SUBMIT, if DISP=REQUEUE then don't destroy the generated procedure
+//	----------------------------
+//	revision 1.10
+//	date: 1995-10-18 13:16:05-04;  author: gsl;  state: Exp;  lines: +237 -69
+//	Extensive mods to the submit logic to add support for GLOBALS=YES
+//	and ENVIRONMENT=YES.
+//	If these are specified or args are passed with the USING clause
+//	then wproc will generate a new temp proc which will setup the
+//	globals or environment and then run the program.  This generated
+//	proc is then submitted.
+//	----------------------------
+//	revision 1.9
+//	date: 1995-10-16 10:06:55-04;  author: gsl;  state: Exp;  lines: +28 -7
+//	On a SUBMIT, pass thru the Disposition, Abort_action, and Limit_flag
+//	to the VSSUB SUBMIT for handling
+//	----------------------------
+//	revision 1.8
+//	date: 1995-07-17 10:02:46-04;  author: gsl;  state: V3_3_18;  lines: +1 -1
+//	fix sprintf() arg type mismatch warning
+//	----------------------------
+//	revision 1.7
+//	date: 1995-07-17 09:50:51-04;  author: gsl;  state: Exp;  lines: +6 -0
+//	On a SUBMIT USING change integer parameters into strings that
+//	can be passed on the command line.
+//	----------------------------
+//	revision 1.6
+//	date: 1995-06-10 13:48:17-04;  author: gsl;  state: V3_3_17;  lines: +8 -0
+//	Moved the dump_globals()/update_globals() to here from exec_run().
+//	----------------------------
+//	revision 1.5
+//	date: 1995-05-12 10:55:22-04;  author: gsl;  state: V3_3_16;  lines: +1 -1
+//	On the RENAME verb changed the type from "F" to "G" to accomadate
+//	renaming a file into a different directory.
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:34-04;  author: gsl;  state: V3_3_15;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:49-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:35-05;  author: gsl;  state: V3_3x12;  lines: +178 -65
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:34-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

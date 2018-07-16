@@ -26,7 +26,8 @@ extern	char	decimal_is;
 static int decl_pnum = 0;
 static int call_initwisp();
 
-check_decl()										/* Examine the tables of PERFORMs in	*/
+
+int check_decl(void)									/* Examine the tables of PERFORMs in	*/
 											/* the DECLARATIVES division against the*/
 {											/* Table of paragraph-names that were in*/
 	int i,j;									/* the DECLARATIVES. This way we can	*/
@@ -56,6 +57,7 @@ check_decl()										/* Examine the tables of PERFORMs in	*/
 	decl_performs_cnt = 0;								/* reset table for use in proc div.	*/
 	return 0;
 }
+
 
 new_para()										/* Generate a new .PAR file with a list	*/
 {											/* of screens and paragraph names which	*/
@@ -89,37 +91,6 @@ new_para()										/* Generate a new .PAR file with a list	*/
 }
 
 
-check_section()										/* Examine the current line, which should*/
-{											/* Be the first line in the PROCEDURE	*/
-	if (strcmp(parms[1],"SECTION."))						/* If this is not a section name, add it*/
-	{
-		tput_line_at(8, "WISP-MAIN SECTION.");
-		tput_line_at(8, "WISP-START-PROGRAM.");					/* Always start programs with our stuff.*/
-		call_initwisp();
-	}
-	else
-	{
-		tput_line("%s", linein);			       			/* Write out their section.		*/
-		tput_line_at(8, "WISP-START-PROGRAM.");					/* Always start programs with our stuff.*/
-		call_initwisp();
-		get_line();								/* And fetch a new one.			*/
-	}
-	return 0;
-}
-
-static call_initwisp()
-{
-
-	tput_line("           CALL \"initwisp2\" USING WISP-TRAN-VERSION,");
-	tput_line("                                  WISP-LIB-VERSION,");
-	tput_line("                                  WISP-COBOL-TYPE,");
-	tput_line("                                  WISP-APPLICATION-NAME,");
-	tput_line("                                  WISPRUNNAME,");
-	tput_line("                                  WISP-SWAP-ON,");
-	tput_line("                                  WISP-ERR-LOGGING.");
-	return 0;
-}
-
 
 /*
 **	ROUTINE:	g_wfilechk()
@@ -132,7 +103,6 @@ static call_initwisp()
 **
 **	ARGUMENTS:	
 **	i		The index for the file in the prog_xxx[i] tables.
-**	end_str		The string to use to terminate the CALL statement e.g ".\n"
 **
 **	GLOBALS:	?
 **
@@ -141,10 +111,8 @@ static call_initwisp()
 **	WARNINGS:	None
 **
 */
-int g_wfilechk(int i, char* end_str)
+int g_wfilechk(int i)
 {
-	char tstr[40];
-
 	tput_line_at(12, "MOVE \"%s\" TO",prog_files[i]);
 	tput_clause (16, "WISP-CURRENT-FILE-ID");
 
@@ -165,10 +133,9 @@ int g_wfilechk(int i, char* end_str)
 
 	if (prog_ftypes[i] & HAS_DECLARATIVES)						/* If it has a DECLARATIVE, set bit.	*/
 	{
-		make_fld(tstr,prog_files[i],"S-");					/* Make a Status Flag field.		*/
 		tput_line_at(12, "MOVE WISP-DECL TO WISP-LONGWORD");
 		tput_line_at(12, "CALL \"lbit_on\" USING WISP-LONGWORD,");
-		tput_clause (16, "%s,",tstr);
+		tput_clause (16, "%s,", get_prog_status(i));
 	}
 
 	/*
@@ -188,49 +155,18 @@ int g_wfilechk(int i, char* end_str)
 	tput_clause(16,		    "%s,",prog_fstats[i]);
 	tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS-1,");
 	tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS-2,");
-
-	make_fld(tstr,prog_files[i],"S-");						/* Generate the S- field.		*/
-	tput_clause(16,        "%s,",tstr);
-											/* Don't use a literal.			*/
-	if (!prog_vnames[i][0] || (prog_vnames[i][0] == '\"'))
-	{
-		make_fld(tstr,prog_files[i],"V-");					/* Generate the VOLUME field.		*/
-		tput_clause(16,"%s,",tstr);
-	}
-	else
-	{
-		tput_clause(16,"%s,",prog_vnames[i]);
-	}
-											/* Don't use a literal.			*/
-	if (!prog_lnames[i][0] || (prog_lnames[i][0] == '\"'))
-	{
-		make_fld(tstr,prog_files[i],"L-");
-		tput_clause(16,"%s,",tstr);
-	}
-	else
-	{
-		tput_clause(16,"%s,",prog_lnames[i]);
-	}
-
-	if (!prog_fnames[i][0] || (prog_fnames[i][0] == '\"'))	 			/* Don't use a literal.			*/
-	{
-		make_fld(tstr,prog_files[i],"F-");
-		tput_clause(16,"%s,",tstr);
-	}
-	else
-	{
-		tput_clause(16,"%s,",prog_fnames[i]);
-	}
-
-	make_fld(tstr,prog_files[i],"N-");
-	tput_clause(16,        "%s,",tstr);
-	tput_clause(16,        "WISP-CURRENT-FILE-ID,");
-	tput_clause(16,        "WISP-APPLICATION-NAME%s",end_str);
+	tput_clause(16,        	    "%s,", get_prog_status(i));				/* Generate the S- field.		*/
+	tput_clause(16,		    "%s,", get_prog_vname(i));				/* Generate the VOLUME field.		*/
+	tput_clause(16,		    "%s,", get_prog_lname(i));
+	tput_clause(16,		    "%s,", get_prog_fname(i));
+	tput_clause(16,		    "%s,", get_prog_nname(i));
+	tput_clause(16,             "WISP-CURRENT-FILE-ID,");
+	tput_clause(16,             "WISP-APPLICATION-NAME.");
 	return 0;
 }
 
 											/* Generate DECLARATIVES for files that	*/
-gen_defdecl()										/* don't have any.			*/
+int gen_defdecl(void)									/* don't have any.			*/
 {
 	int i;
 	char	fld[50];
@@ -247,7 +183,7 @@ gen_defdecl()										/* don't have any.			*/
 		tput_clause (16,"%s.",prog_files[i]);
 		make_fld(fld,prog_files[i],"WDCL-");
 		tput_line_at(8, "%s.",fld);
-		g_wfilechk(i,".\n");							/* Generate a wfilechk call.		*/
+		g_wfilechk(i);								/* Generate a wfilechk call.		*/
 		make_fld(fld,prog_files[i],"WDX-");
 		tput_line_at(8,  "%s.",fld);
  		tput_line_at(12, "EXIT.");
@@ -255,7 +191,7 @@ gen_defdecl()										/* don't have any.			*/
 	return 0;
 }
 
-fd_check()										/* Check for SELECT's with no FD's.	*/
+int fd_check(void)									/* Check for SELECT's with no FD's.	*/
 {											/* This is illegal, so if they exist, we*/
 	int i;										/* Generate a file with their names, and*/
 	FILE *the_file;									/* re-run WISP, who will then delete the*/
@@ -294,82 +230,19 @@ fd_check()										/* Check for SELECT's with no FD's.	*/
 	return(0);
 }
 
-nopunct(dst,src)
-char	*dst, *src;
-{
-	char	i,j;
-	for(i=0,j=0;src[i];i++)
-	{
-		if (src[i] != '.' && src[i] != ',' && src[i] != ';') dst[j++] = src[i];
-	}
-	dst[j] = '\0';
-	return 0;
-}
-
-
-int check_proc_div()
-{
-	/*
-	**	This was extracted out of check_div() for use in PROCEDURE DIVISION only.
-	*/
-
-	int i,j;
-	char	token[80];
-
-	if (!in_decl) return(0);						/* no divisions after proc. & declare.	*/
-
-										/* Must be in DECLARATIVES.		*/
-	nopunct(token,parms[1]);
-	if (!strcmp(parms[0],"END") && !strcmp(token,"DECLARATIVES"))		/* look for end of declaratives		*/
-	{									/* Found it, add our entries.		*/
-		gen_dexit();							/* First terminate any unfinished one.	*/
-
-		tput_line_at(8,  "WISP-DECLARATIVES-DISPLAY SECTION.");
-		tput_line_at(12, "USE AFTER STANDARD ERROR PROCEDURE ON WISP-DECLARATIVES-FILE.");
-
-		if (proc_paras_cnt)						/* Were there any paragraphs to copy?	*/
-		{								/* If there were, include a COPY state-	*/
-			tput_line_at(12, "COPY \"%s\".",dcl_fname);		/* ment for the wisp-generated LIB file.*/
-			decl_stop_exit = 1;					/* Just in case copybook has stop/exit	*/
-		}
-		gen_screen_paras();						/* Now generate the screens used in DECL*/
-		tput_line_at(8, "END-WISP-DECLARATIVES.");
-		if (decl_stop_exit) d_wisp_exit_para();
-										/* Now see if the paragraphs to be	*/
-		for (i=0; i<proc_performs_cnt; i++)				/* copied to the PROCEDURE DIVISION	*/
-		{								/* really exist (from .OPT file)	*/
-			for (j=0; j<decl_paras_cnt; j++)			/* These are paragraphs which exist in	*/
-			{							/* DECL, but are performed by proc div.	*/
-				if (!strcmp(proc_performs[i],decl_paras[j]))	/* See if they match. if they do, we	*/
-				{						/* can skip the loop.		 	*/
-					break;					/* and stop looking for this one.	*/
-				}
-			}
-			if (j == decl_paras_cnt) proc_performs[i][0] = '\0';	/* Wasn't in the list, delete it.	*/
-		}
-		if (decl_performs_cnt) check_decl();				/* If there are any unaccounted for	*/
-										/* performs, examine the declaratives	*/
-										/* table.				*/
-
-		if (prog_cnt -prog_sort)					/* If there were valid files...		*/
-		{
-			gen_defdecl();						/* Generate declaratives for files with	*/
-		}								/* no declaratives.			*/
-		tput_line("%s", linein);	       				/* Put the END DECLARATIVES out.	*/
-		get_line();							/* Get a new line.			*/
-		check_section();						/* See if it's in a section		*/
-		in_decl = 0;
-		return(1); /* input stream has changed */
-	}
-	else
-	{
-		return(0);
-	}
-}
-
 /*
 **	History:
 **	$Log: wt_divs.c,v $
+**	Revision 1.15  1998-03-27 13:37:57-05  gsl
+**	fix warning
+**
+**	Revision 1.14  1998-03-19 14:23:28-05  gsl
+**	Change to use get_prog_status().
+**	Move OLD to old.c
+**
+**	Revision 1.13  1998-03-03 15:42:12-05  gsl
+**	update as part of cobol-85 changes
+**
 **	Revision 1.12  1997-09-09 17:53:58-04  gsl
 **	Cange scrn_para() to gen_screen_paras() as part of ACN code
 **

@@ -43,6 +43,7 @@ static char rcsid[]="$Id:$";
 
 /* calling video func in vrawntcn.. should fix this */
 extern HWND vraw_get_console_hWnd(void);
+extern int wbackground(void);
 
 extern char *wforms(int formnum);
 extern char *getprmap(int num);
@@ -62,23 +63,28 @@ extern int filesize(char *file);
  * Module-specific global variables.
  */
 
-#define MAXPAGEWIDTH 2048
-#define MAXPAGEHEIGHT 200
+#define MAXPAGEWIDTH  500
+#define MAXPAGEHEIGHT 500
 
 static BOOL CALLBACK AbortProc( HDC hDC, int Error );
 static HDC GetDefPrinterDC(char szDefaultPrtName[]);
 static void InitDocStruct( DOCINFO* di, char* szDocname);
-static void DrawStuff( HDC hDC, char *page[], int nPageHeight, int nFontHeight, int nFontExt);
-static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth, int nLeftMargin,
-		    int nRightMargin, int nTopMargin, int nBottomMargin, BOOL *bSavedData, char szSavedLine[]);
-static void SetupForm(HDC hDC, int nReqCPI, int nReqLPI,
-		      int *lpnFontHeight, int *lpnFontWidth, int *lpnFontExt, HFONT *lpnTheFont);
+static void DrawStuff( HDC hDC, char *page[], int nPageHeight, int nTopMargin, int nFontHeight, int nFontSpace);
+
+static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth, 
+		    int nLeftMargin, BOOL *bSavedData, char szSavedLine[], BOOL bWrapText);
+
+static void SetupForm(HDC hDC,  int nReqCPI, int nReqLPI, LPCTSTR lpszFace, int nPoints,
+		      int *lpnFontHeight, int *lpnFontWidth, int *lpnFontSpace, HFONT *lpnTheFont);
 
 static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *lpnPageHeight,
-			 int *lpnReqCPI,int *lpnReqLPI,BOOL *lpbLandscape,int *lpnDuplex);
+			 int *lpnReqCPI,int *lpnReqLPI,BOOL *lpbLandscape,int *lpnDuplex, 
+			 BOOL *lpbRawPrintData, int *lpnTopMargin, int *lpnLeftMargin, 
+			 int *lpnPoints, char *lpszFace, BOOL *lpbWrapText);
 
 static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lpszKeyword, char **lpszValue);
-DEVMODE *GetDEVMODE(char *printername);
+static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter);
+static BOOL PrintRawFile(char* szPtrName, char* file);
 
 /*
 **	Routine:	win32_printfile()
@@ -122,24 +128,28 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 
 	HDC hDC = NULL;
 	HDC hDefaultDC = NULL;
-	HANDLE hPrinter = NULL;
+	HANDLE hPrinter = INVALID_HANDLE_VALUE;
 	DEVMODE *lpInitData = NULL;
 	HFONT hTheFont = NULL;
 	int nRC;
 	int nSize;
 	BOOL bDeleteAfter=0,bRespool=0;
 	char szDefaultPrtName[1024], szPrtName[1024];
-	int nPageHeight=66, nPageWidth=80;
-	int nFontHeight, nFontWidth, nFontExt;
+	int nFontHeight, nFontWidth, nFontSpace;
 
-	int nLeftMargin=0,		/* form data loaded from FORMS file */
-	   nRightMargin=0,
-	   nTopMargin=2,
-	   nBottomMargin=2,
-	   nReqCPI=10,
-	   nReqLPI=6,
-	   nDuplex=0;
-	BOOL bLandscape=0;
+
+	/* form data loaded from FORMS file */
+	int 	nReqCPI=10;
+	int 	nReqLPI=6;
+	int 	nPageHeight=60;			/* Number of lines of text on the page */
+	int 	nPageWidth=80;
+	BOOL 	bLandscape=FALSE;
+	int 	nDuplex=0;
+	BOOL 	bRawPrintData=FALSE;
+	int 	nTopMargin=2;
+	int 	nLeftMargin=0;
+	int	nPoints=0;
+	BOOL	bWrapText=FALSE;
 
 	char *szFormstr=NULL,          	/* actual text from $WISPCONFIG files */
 	     *szPrinterNum=NULL,
@@ -151,6 +161,8 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 	FILE *infile;
 	BOOL bSavedData=0;
 	char szSavedLine[MAXPAGEWIDTH];
+
+	char lpszFace[32] = "Courier New";
 
 	nRC  = 0;
 
@@ -215,10 +227,20 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 	if (szFormstr && strlen(szFormstr))
 	{
 		wtrace("WIN32PRT","FORMS","Formnum=[%d] Formstr=[%s]", formnum, szFormstr);
-		ParseFormstr(formnum, szFormstr,&nPageWidth,&nPageHeight,&nReqCPI,&nReqLPI,&bLandscape,&nDuplex);
+		ParseFormstr(formnum, szFormstr,&nPageWidth,&nPageHeight,&nReqCPI,&nReqLPI,
+			     &bLandscape,&nDuplex,&bRawPrintData,&nTopMargin, &nLeftMargin,
+			     &nPoints, lpszFace, &bWrapText);
 	}
-	wtrace("WIN32PRT","FORMDEF", "CPI=[%d] LPI=[%d] PW=[%d] PL=[%d] %s%s",
-	       nReqCPI, nReqLPI, nPageWidth, nPageHeight, (bLandscape)?"Landscape ":"", (nDuplex)?"Duplex":"");
+	if (bRawPrintData)
+	{
+		wtrace("WIN32PRT","FORMDEF", "Raw print mode");
+	}
+	else
+	{
+		wtrace("WIN32PRT","FORMDEF", "Face=[%s] CPI=[%d] LPI=[%d] PW=[%d] LPP=[%d] TM=[%d] LM=[%d] Points=[%d]%s%s%s",
+		       lpszFace, nReqCPI, nReqLPI, nPageWidth, nPageHeight, nTopMargin, nLeftMargin, nPoints,
+		       (bLandscape)?" Landscape":"", (nDuplex)?" Duplex":"", (bWrapText)?" Wrap":"");
+	}
 	
 	szPrinterNum = getprmap(printer);
 	szPrinterCls = wlpclass(lpclass);
@@ -250,7 +272,27 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		wtrace("WIN32PRT","PRTNAME", "DEFAULT NAME=[%s]", szPrtName);
 	}
 
-	lpInitData = GetDEVMODE(szPrtName);;
+	/*
+	**	Raw printing is done by the PrintRawFile() routine.
+	*/
+	if (bRawPrintData)
+	{
+		while (copies>0)
+		{
+			if (! PrintRawFile(szPrtName, file) )
+			{
+				nRC = 99;
+				goto cleanup;
+			}
+			
+			copies--;
+		}			
+
+		goto delete_after;
+	}
+
+
+	lpInitData = GetDEVMODE(szPrtName,&hPrinter);
 	if (lpInitData == NULL)
 	{
 		    nRC = 99;
@@ -294,7 +336,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		goto cleanup;
 	}
 
-	SetupForm(hDC, nReqCPI, nReqLPI, &nFontHeight, &nFontWidth, &nFontExt, &hTheFont);
+	SetupForm(hDC, nReqCPI, nReqLPI, lpszFace, nPoints, &nFontHeight, &nFontWidth, &nFontSpace, &hTheFont);
 
 	InitDocStruct(&di, file);
 	StartDoc(hDC, &di);
@@ -313,13 +355,12 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		fseek(infile,0,SEEK_SET);
 		
 		while (GetPage(infile,page,nPageHeight,nPageWidth,nLeftMargin,
-			       nRightMargin,nTopMargin,nBottomMargin, 
-			       &bSavedData, szSavedLine))
+			       &bSavedData, szSavedLine, bWrapText))
 		{
 			StartPage(hDC);
 			SelectObject(hDC, hTheFont);
 			SetBkMode(hDC,TRANSPARENT);
-			DrawStuff(hDC,page,nPageHeight,nFontHeight,nFontExt);
+			DrawStuff(hDC,page,nPageHeight,nTopMargin,nFontHeight,nFontSpace);
 			EndPage(hDC);
 		}
 		copies--;
@@ -345,7 +386,7 @@ delete_after:
 cleanup:
 	if (hDefaultDC) DeleteDC(hDefaultDC);
 	if (hDC)	DeleteDC(hDC);
-	if (hPrinter)	ClosePrinter(hPrinter);
+	if (INVALID_HANDLE_VALUE != hPrinter)	ClosePrinter(hPrinter);
 	if (hTheFont)	DeleteObject(hTheFont);
 	if (lpInitData)	free(lpInitData);
 
@@ -367,6 +408,12 @@ cleanup:
 **                      lpnReqLPI           receives user specified lines per inch
 **                      lpbLandscape        receives user specified orientation
 **                      lpnDuplex           receives user specified duplex mode
+**			lpbRawPrintData	    receives user specified "raw" flag
+**			lpnTopMargin	    Top margin in lines	
+**			lpnLeftMargin	    Left margin in columns
+**			lpnPoints	    Point size 
+**			lpszFace	    Face name
+**			lpbWrapText	    Wrap long text flag
 **
 **
 **	GLOBALS:	
@@ -377,7 +424,9 @@ cleanup:
 **
 */
 static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *lpnPageHeight,
-			 int *lpnReqCPI,int *lpnReqLPI,BOOL *lpbLandscape,int *lpnDuplex)
+			 int *lpnReqCPI,int *lpnReqLPI,BOOL *lpbLandscape,int *lpnDuplex, 
+			 BOOL *lpbRawPrintData, int *lpnTopMargin, int *lpnLeftMargin, 
+			 int *lpnPoints, char *lpszFace, BOOL *lpbWrapText)
 {
 	int nPosition, nVal;
 	char *lpszKeyword, *lpszValue;
@@ -472,6 +521,83 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			continue;
 		}
+		if (GOTKW("raw"))
+		{
+			nVal = atoi(lpszValue);
+			if (nVal == 0 || nVal == 1)
+			{
+				*lpbRawPrintData = nVal;
+			}
+			else
+			{
+				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+			}
+			continue;
+		}
+		if (GOTKW("tm"))
+		{
+			nVal = atoi(lpszValue);
+			if (nVal >= 0)
+			{
+				*lpnTopMargin = nVal;
+			}
+			else
+			{
+				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+			}
+			continue;
+		}
+		if (GOTKW("lm"))
+		{
+			nVal = atoi(lpszValue);
+			if (nVal >= 0)
+			{
+				*lpnLeftMargin = nVal;
+			}
+			else
+			{
+				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+			}
+			continue;
+		}
+		if (GOTKW("points"))
+		{
+			nVal = atoi(lpszValue);
+			if (nVal > 0)
+			{
+				*lpnPoints = nVal;
+			}
+			else
+			{
+				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+			}
+			continue;
+		}
+		if (GOTKW("face"))
+		{
+			if (lpszValue && *lpszValue && (strlen(lpszValue) <= 31) )
+			{
+				strcpy(lpszFace, lpszValue);
+			}
+			else
+			{
+				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+			}
+			continue;
+		}
+		if (GOTKW("wrap"))
+		{
+			nVal = atoi(lpszValue);
+			if (nVal == 0 || nVal == 1)
+			{
+				*lpbWrapText = nVal;
+			}
+			else
+			{
+				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+			}
+			continue;
+		}
 		werrlog(ERRORCODE(12),formnum,lpszKeyword,0,0,0,0,0,0);
 	}
 
@@ -537,19 +663,33 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 	NEXTCH;
 	SKIPWHITE;
 	nCopyIdx=0;
-	while (!isspace(CURCH) && CURCH!= '\0')
+
+	if ('"' == CURCH)
 	{
-		if (isalpha(CURCH))
-		{
-			lpszValueBuffer[nCopyIdx] = tolower(CURCH);
-		}
-		else
+		NEXTCH;
+		while (('"' != CURCH) && CURCH != '\0')
 		{
 			lpszValueBuffer[nCopyIdx] = CURCH;
+			
+			++nCopyIdx;
+			NEXTCH;
 		}
-		++nCopyIdx;
-		NEXTCH;
+		if ('"' == CURCH)
+		{
+			NEXTCH;
+		}
 	}
+	else
+	{
+		while (!isspace(CURCH) && CURCH!= '\0')
+		{
+			lpszValueBuffer[nCopyIdx] = CURCH;
+			
+			++nCopyIdx;
+			NEXTCH;
+		}
+	}
+	
 	lpszValueBuffer[nCopyIdx] = '\0';
 	if (strlen(lpszKeywordBuffer)==0 || strlen(lpszValueBuffer)==0)
 	{
@@ -572,8 +712,15 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 **                      these values should be configurable (as well as
 **                      font? , orientation)
 **
-**	ARGUMENTS:	int form          form number
-**                      HDC hDC           printer DC
+**	ARGUMENTS:	
+**      hDC           	printer DC
+**	nReqCPI		Requested CPI
+**	nReqLPI		Requested LPI
+**	lpszFace	Requested Face
+**	nPoints		Point size (if 0 then calculate from LPI & CPI)
+**	lpnFontHeight	The font size without inter-line space
+**	lpnFontSpace	The inter-line space
+**	lpnTheFont	The font
 **
 **	GLOBALS:	
 **
@@ -582,17 +729,18 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 **	WARNINGS:	
 **
 */
-static void SetupForm(HDC hDC,  int nReqCPI, int nReqLPI,
-		      int *lpnFontHeight, int *lpnFontWidth, int *lpnFontExt, HFONT *lpnTheFont)
+static void SetupForm(HDC hDC,  int nReqCPI, int nReqLPI, LPCTSTR lpszFace, int nPoints,
+		      int *lpnFontHeight, int *lpnFontWidth, int *lpnFontSpace, HFONT *lpnTheFont)
 {
 	TEXTMETRIC current;
 	BOOL bSuccess;
 	int nLogPelsX, nLogPelsY;
-	int nReqHeight, nReqWidth;
+	int nReqHeight, nReqWidth, nFullHeight;
 	HFONT hTheFont;
 	HGDIOBJ selobjret;
 
 	char errtxt1[1024], *errtxt2;
+	
 	
 	/*
 	** get device characteristics for current font, also
@@ -601,25 +749,47 @@ static void SetupForm(HDC hDC,  int nReqCPI, int nReqLPI,
 		
 	nLogPelsX = GetDeviceCaps(hDC, LOGPIXELSX);
 	nLogPelsY = GetDeviceCaps(hDC, LOGPIXELSY);
+
 	/*
-	** create a new font and select it; compute the size by dividing
-	** the device pixels per inch by the desired CPI and LPI
+	** 	Create a new font and select it; compute the size by dividing
+	** 	the device pixels per inch by the desired CPI and LPI
+	**
+	**	When calculating the font height you must account for the space between lines.
+	**	The value passed to CreateFont() is the height of the characters not counting the space.
+	**
+	**	nFullHeight  - the font height plus the line spacing
+	**	nReqHeight   - the font height which is 88/100th of nFullHeight 
+	**		       this is the average ratio found in test fonts.
+	**		       Pass a negative value for better matching.
+	**	nReqWidth    - the average width of a character
 	**
 	*/
+	nFullHeight = nLogPelsY / nReqLPI;
 
-	nReqHeight = nLogPelsY / nReqLPI;
+	if (nPoints > 0)
+	{
+		/*
+		**	Points are messured in 72nth of an inch.
+		*/
+		nReqHeight = (nLogPelsY * nPoints) / 72;
+	}
+	else
+	{
+		nReqHeight = (nLogPelsY * 88) / (nReqLPI * 100);
+	}
+	
 	nReqWidth  = nLogPelsX / nReqCPI;
 
 	wtrace("WIN32PRT","CREATEFONT", 
-	       "nHeight=[%d] (LOGPIXELSY[%d] / LPI[%d]), nWidth=[%d] (LOGPIXELSX[%d] / CPI[%d]), ",
-	       nReqHeight, nLogPelsY, nReqLPI, nReqWidth,  nLogPelsX, nReqCPI);
+	       "nFullHeight=[%d] nReqHeight=[%d] (LOGPIXELSY[%d] / LPI[%d]), nReqWidth=[%d] (LOGPIXELSX[%d] / CPI[%d]), ",
+	       nFullHeight, nReqHeight, nLogPelsY, nReqLPI, nReqWidth,  nLogPelsX, nReqCPI);
 
-	hTheFont = CreateFont(nReqHeight, nReqWidth, 0, 0, FW_MEDIUM, 0,0,0, DEFAULT_CHARSET,
+	hTheFont = CreateFont(-nReqHeight, nReqWidth, 0, 0, FW_DONTCARE, 0,0,0, DEFAULT_CHARSET,
 			     OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-			     DEFAULT_PITCH, "Courier New");
+			     FF_MODERN|FIXED_PITCH, lpszFace);
 	if (hTheFont == NULL)
 	{
-		sprintf(errtxt1,"Error creating font \"Courier New\" [h:%d,w:%d]",nReqHeight,nReqWidth);
+		sprintf(errtxt1,"Error creating font \"%s\" [h:%d,w:%d]",lpszFace,nReqHeight,nReqWidth);
 		errtxt2 = GetWin32Error(errtxt1);
 		
 		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
@@ -633,21 +803,32 @@ static void SetupForm(HDC hDC,  int nReqCPI, int nReqLPI,
 		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
 	}
 	
-	
 	bSuccess = GetTextMetrics(hDC, &current);
 	if (bSuccess==0)
 	{
 		errtxt2 =  GetWin32Error("GetTextMetrics");
 		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
 	}
-	*lpnFontHeight = current.tmHeight;
+
+	wtrace("WIN32PRT","FONT", "TEXTMETRICS tmHeight=[%d] tmAveCharWidth=[%d] tmInternalLeading=[%d] tmExternalLeading=[%d]",
+	       current.tmHeight, current.tmAveCharWidth, current.tmInternalLeading, current.tmExternalLeading);
+
+	/*
+	**	There is two ways of the space between lines being identified: internal or external.
+	**	Internal space is counted as part of tmHeight where external space is the "recommended" space to use.
+	**	From experience it has been found that of tnInternalLeading and tmExternalLeading one will
+	**	be 0 and one will be set.
+	**	Calculate the height of the font (without space) by subtracting the internal space (may be zero).
+	**	Calculate the space by subtracting the font height  (without space) from the desired full height.
+	*/
+
+	*lpnFontHeight = current.tmHeight - current.tmInternalLeading;
 	*lpnFontWidth = current.tmAveCharWidth;
-	*lpnFontExt = current.tmExternalLeading;
+	*lpnFontSpace = nFullHeight - *lpnFontHeight;
 	*lpnTheFont = hTheFont;
 
-	wtrace("WIN32PRT","FONT", "TEXTMETRICS Height=[%d] AveCharWidth=[%d] ExternalLeading=[%d]",
-	       *lpnFontHeight, *lpnFontWidth, *lpnFontExt);
-	
+	wtrace("WIN32PRT","SETUPFORM", "FontHeight=[%d] FontWidth=[%d] FontSpace=[%d]",
+	       *lpnFontHeight, *lpnFontWidth, *lpnFontSpace);	
 }
 
 /*
@@ -749,8 +930,13 @@ static void InitDocStruct( DOCINFO *lpDI, char* lpszDocName)
 **
 **	DESCRIPTION:	copy the page from the page array to the printer DC
 **
-**	ARGUMENTS:	hDC           the printer DC
-**                      page          array of char containing current page
+**	ARGUMENTS:	
+**	hDC           	the printer DC
+**      page          	array of char containing current page
+**	nPageHeigth	The number of lines
+**	nTopMargin	Top margin
+**	nFontHeight	The size of the font without interline space
+**	nFontSpace 	The size of the interline space.
 **
 **	GLOBALS:	
 **
@@ -759,34 +945,50 @@ static void InitDocStruct( DOCINFO *lpDI, char* lpszDocName)
 **	WARNINGS:	
 **
 */
-static void DrawStuff( HDC hDC, char *page[], int nPageHeight, int nFontHeight, int nFontExt)
+static void DrawStuff( HDC hDC, char *page[], int nPageHeight, int nTopMargin, int nFontHeight, int nFontSpace)
 {
-	int nIdx, nNoAdvanceOffs;
-	char *cr, *lpPage;
+	int 	nIdx;			/* Index into page[] */
+	int	nLine;			/* Line number (differs from nIdx because of overstrikes) */
+	int	nOS;			/* Overstrike offset */
+	int	nLen;			/* Lenght of the line */
+	char	*pCR;
 	
-	for (nIdx=0; nIdx < nPageHeight ; ++nIdx)
+	nOS = 0;
+	
+	for (nLine=0, nIdx=0; (nLine < nPageHeight) && (nIdx < MAXPAGEHEIGHT) ; ++nIdx)
 	{
-		cr = strchr(page[nIdx],(int)'\r');
-		if (!cr)
+		nLen = strlen(page[nIdx]);
+		
+		pCR = strchr(page[nIdx],'\r');
+		if (NULL != pCR)
 		{
-			TextOut(hDC, 0, (nFontHeight + nFontExt) * nIdx ,page[nIdx], strlen(page[nIdx]));
+			/*
+			**	Remove the trailing CR
+			*/
+			*pCR = '\0';
+			nLen--;
+		}
+			
+		if (nLen > 0)
+		{
+			TextOut(hDC, nOS, nOS+((nFontHeight+nFontSpace) * (nLine+nTopMargin)) ,page[nIdx], nLen);
+		}
+		
+
+		if (NULL == pCR)
+		{
+			/*
+			**	This was a regular line so increment the line number
+			*/
+			nLine++;
+			nOS = 0;
 		}
 		else
 		{
-			lpPage = page[nIdx];
-			nNoAdvanceOffs = 0;
-			do
-			{
-				*cr='\0';
-				TextOut(hDC, nNoAdvanceOffs, (nFontHeight + nFontExt) * nIdx + nNoAdvanceOffs,lpPage, strlen(lpPage));
-				lpPage = ++cr;
-				cr = strchr(lpPage,(int)'\r');
-				nNoAdvanceOffs += 2;
-			} while (cr);
-			if (*lpPage)
-			{
-				TextOut(hDC, nNoAdvanceOffs, (nFontHeight + nFontExt) * nIdx  + nNoAdvanceOffs ,lpPage, strlen(lpPage));
-			}
+			/*
+			**	This line ended with a CR so the next line will overstrike
+			*/
+			nOS += 2;
 		}
 	}
 	
@@ -796,7 +998,11 @@ static void DrawStuff( HDC hDC, char *page[], int nPageHeight, int nFontHeight, 
 **
 **	FUNCTION:	load the page array with the next page from the file
 **
-**	DESCRIPTION:	load a page, process tabs, ff, and lf
+**	DESCRIPTION:	Load a page, process tabs, ff, and lf
+**			An input "line" is terminated by either a CR,  LF or CR+LF.
+**			The page[line] field will be NULL terminated.
+**			Overstrikes (AFTER ADVANCING 0 LINES) will have a CR as 
+**			the last character in the line.
 **
 **	ARGUMENTS:	infile    input FILE*
 **                      page      array of char* to receive page text
@@ -809,32 +1015,30 @@ static void DrawStuff( HDC hDC, char *page[], int nPageHeight, int nFontHeight, 
 **	WARNINGS:	
 **
 */
-static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth, int nLeftMargin,
-		    int nRightMargin, int nTopMargin, int nBottomMargin, BOOL *bSavedData, char szSavedLine[])
+static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth, 
+		    int nLeftMargin, BOOL *bSavedData, char szSavedLine[], BOOL bWrapText)
 {
-        char szLine[MAXPAGEWIDTH];
-	int nIdx;
-	register int nSrcIdx, nDestIdx, nDestActualPos;
-	BOOL bFormfeed;
+        char	szLine[MAXPAGEWIDTH];
+	int	nLine;		/* The line number */
+	int 	nIdx;		/* Index into page[] - differs from nLine because of overstrikes */
+	int 	nSrcIdx;	/* Index into szLine */
+	int	nDestIdx;	/* Index into page[nIdx] */
+	int	nDestActualPos; /* Actual column number */
+	int	nLen;
 	
 	/*
 	** erase last page 
 	*/
 	for (nIdx=0; nIdx<nPageHeight; ++nIdx)
 	{
-		memset(page[nIdx],' ', nPageWidth);
-		*(page[nIdx]+nPageWidth)='\0';
+		page[nIdx][0]='\0';
 	}
+
 	/*
-	** load page data
-	** (margins hard coded at 2 lines)
-	*/
-	
-
-	for (bFormfeed=0, nIdx=nTopMargin; !bFormfeed && nIdx < (nPageHeight - nBottomMargin); ++nIdx)
+	**	Loop for each line in the page.
+	*/	
+	for (nLine=0, nIdx=0; (nLine < nPageHeight) && (nIdx < MAXPAGEHEIGHT) ; ++nIdx)
 	{
-		memset(szLine,' ',sizeof(szLine)-1);
-
 		if (*bSavedData)
 		{
 			strcpy(szLine,szSavedLine);
@@ -842,56 +1046,175 @@ static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth,
 		}	
 		else
 		{
-			if (fgets(szLine,MAXPAGEWIDTH-1,infile)==NULL) 
+			if (feof(infile))
+			{
 				break;
+			}
+
+			if (fgets(szLine,sizeof(szLine),infile)==NULL) 
+			{
+				break;
+			}
+		}
+		nLen = strlen(szLine);
+		
+		/*
+		**	Add in the left margin
+		*/
+		nDestIdx = nLeftMargin;
+		if (nLeftMargin)
+		{
+			memset(page[nIdx],' ',nLeftMargin);
 		}
 		
-		for (nSrcIdx=0, nDestActualPos = nDestIdx = nLeftMargin;;)
+		nSrcIdx=0; 
+		nDestActualPos = 0;
+
+		for (;;)
 		{
-			if (szLine[nSrcIdx]=='\n') 
-				break;
-			if (szLine[nSrcIdx]=='\0') 
-				break;
-			if (szLine[nSrcIdx]=='\r')
+			/*
+			**	First check conditions that will end this line
+			*/
+			if (szLine[nSrcIdx]=='\0') 		/* Null */
 			{
-				nDestActualPos=0;
+				/*
+				**	We should never end a line with NULL unless the line
+				**	was too big for fgets() or EOF.
+				*/
+
+				if (0 == feof(infile) &&
+				    NULL != fgets(szLine,sizeof(szLine),infile))
+				{
+					/*
+					**	We got more of the line so keep going
+					*/
+					nLen = strlen(szLine);
+					nSrcIdx = 0;
+				}
+				else
+				{
+					if (nSrcIdx > 0)
+					{
+						nLine++;
+					}
+					break;
+				}
+
 			}
-			if (szLine[nSrcIdx]==0x0c) 
+
+			if (szLine[nSrcIdx]   == '\r' &&	
+			    szLine[nSrcIdx+1] == '\n'    ) /* CR LF  Carrage return Line feed */
+			{
+				nLine++;
+				break;
+			}
+			else if (szLine[nSrcIdx]=='\n') 	/* LF Linefeed */
+			{
+				nLine++;
+				break;
+			}
+			else if (szLine[nSrcIdx]=='\r')		/* CR carrage return */
+			{
+				/* 
+				**	You can not overstrike and wrap, so if wrap is set then
+				**	overstrike is disabled.
+				*/
+				if (bWrapText)
+				{
+					nLine++;
+				}
+				else
+				{
+					/*
+					**	Add the CR to the end of the line.
+					**	Terminate the line.
+					**	Don't increment nLine
+					*/
+					*(page[nIdx]+nDestIdx) = '\r';
+					++nDestIdx;
+				}
+				
+				++nSrcIdx;
+
+				*bSavedData = TRUE;
+				strcpy(szSavedLine,&szLine[nSrcIdx]);
+
+				break;
+			}
+			else if (szLine[nSrcIdx]==0x0c) 	/* FF formfeed */
 			{
 				if (szLine[nSrcIdx+1]) 
 				{
 					*bSavedData = TRUE;
 					strcpy(szSavedLine,&szLine[++nSrcIdx]);
 				}
-			        bFormfeed=TRUE;
+
+			        nLine=nPageHeight;		/* Force end of page */
 				break;
 			}
-			if (szLine[nSrcIdx]==0x09)
+
+			if ( nDestActualPos >= nPageWidth )
+			{
+				if (bWrapText)
+				{
+					*bSavedData = TRUE;
+					strcpy(szSavedLine,&szLine[nSrcIdx]);
+					nLine++;
+					break;
+				}
+				else
+				{
+					++nSrcIdx;
+					continue;
+				}
+			}
+
+
+			/*
+			**	Non-terminating conditions
+			*/
+
+			if (szLine[nSrcIdx]==0x09)		/* HT Tab */
 			{
 				*(page[nIdx]+nDestIdx++) = ' ';
 				++nDestActualPos;
 				
-				while (nDestIdx%8 != 0 && nDestIdx < (nPageWidth - nRightMargin))
+				while (nDestActualPos%8 != 0 && nDestActualPos < nPageWidth)
 				{
 					*(page[nIdx]+nDestIdx) = ' ';
 					++nDestIdx;
 					++nDestActualPos;
 				}
 				++nSrcIdx;
-				continue;
 			}
-			*(page[nIdx]+nDestIdx) = szLine[nSrcIdx];
-			++nDestIdx;
-			++nSrcIdx;
-			++nDestActualPos;
-		} 
+			else
+			{
+				*(page[nIdx]+nDestIdx) = szLine[nSrcIdx];
+				++nDestIdx;
+				++nSrcIdx;
+				++nDestActualPos;
+			}
+		}
+
+		/*
+		**	NULL terminate this line
+		*/
+		*(page[nIdx]+nDestIdx) = '\0';
 		
 	}
+
 	/*
-	** nIdx=2 here if got EOF 
+	** 	If 0 lines then got EOF 
 	*/
-	if (nIdx==nTopMargin) return FALSE; 
-	else return TRUE;
+	if (0 == nLine && 0 == nIdx) 
+	{
+		return FALSE; 
+	}
+	else 
+	{
+		return TRUE;
+	}
+	
 }
 /*
 **	ROUTINE:	GetDEVMODE()
@@ -912,7 +1235,7 @@ static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth,
 **	WARNINGS:	pointer returned must be free()'d later
 **
 */
-DEVMODE *GetDEVMODE(char *printername)
+static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 {
 	BOOL bSuccess, bFound;
 	char *lpPrtEnumData=NULL, *lpEnumName=NULL;
@@ -921,7 +1244,6 @@ DEVMODE *GetDEVMODE(char *printername)
 	PRINTER_INFO_1 *pi1;
 	int idx;
 	DEVMODE *retbuf=NULL;
-	HANDLE hPrinter;
 	HWND hWndParent;
 	int nStructSize;
 	OSVERSIONINFO ovi;
@@ -1036,7 +1358,7 @@ DEVMODE *GetDEVMODE(char *printername)
 
 	if (bFound)
 	{
-	    bSuccess=OpenPrinter(lpEnumName,&hPrinter,NULL);
+	    bSuccess=OpenPrinter(lpEnumName,phPrinter,NULL);
 	    if (!bSuccess)
 	    {
 		char errtxt1[1024], *errtxt2;
@@ -1046,8 +1368,17 @@ DEVMODE *GetDEVMODE(char *printername)
 		
 		goto gdm_cleanup;
 	    }
-	    hWndParent = vraw_get_console_hWnd();
-	    nStructSize = DocumentProperties(hWndParent,hPrinter,lpEnumName,NULL,NULL,0);
+
+	    if (wbackground())
+	    {
+		    hWndParent = NULL;
+	    }
+	    else
+	    {
+		    hWndParent = vraw_get_console_hWnd();
+	    }
+	    
+	    nStructSize = DocumentProperties(hWndParent,*phPrinter,lpEnumName,NULL,NULL,0);
 	    if (nStructSize < 0)
 	    {
 		char errtxt1[1024],*errtxt2;
@@ -1058,7 +1389,7 @@ DEVMODE *GetDEVMODE(char *printername)
 		goto gdm_cleanup;
 	    }
 	    retbuf = (DEVMODE *) wmalloc(nStructSize);
-	    bSuccess = DocumentProperties(hWndParent,hPrinter,lpEnumName,retbuf,NULL,DM_OUT_BUFFER);
+	    bSuccess = DocumentProperties(hWndParent,*phPrinter,lpEnumName,retbuf,NULL,DM_OUT_BUFFER);
 	    if (bSuccess < 0)
 	    {
 		char errtxt1[1024],*errtxt2;
@@ -1084,11 +1415,174 @@ DEVMODE *GetDEVMODE(char *printername)
 	return retbuf;
 }
 
+/*
+**	ROUTINE:	PrintRawFile()
+**
+**	FUNCTION:	Print a "raw" (fully rendered) file. 
+**
+**	DESCRIPTION:	Send a fully rendered data file to a printer.
+**			This uses the mechanism described in PSS ID # Q138594
+**			of the Win32 Knowledge base.
+**
+**			The file may contains PCL code or maybe postscript or something else.
+**
+**	ARGUMENTS:	
+**	szPrtName	The printer name
+**	file		The file to print
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	TRUE		Successfully printed file
+**	FALSE		Failed
+**
+**	WARNINGS:	Unknown.
+**
+*/
+static BOOL PrintRawFile(char* szPtrName, char* file)
+{
+	BOOL bSuccess;
+	HANDLE hPrinter = INVALID_HANDLE_VALUE;
+	char errtxt1[1024];
+	DWORD	dwJob = 0;
+	DOC_INFO_1  DocInfo1;
+	FILE *infile = NULL;
+	
+	
+	/*
+	**	Open the Printer to get a handle hPrinter.
+	*/
+	bSuccess=OpenPrinter(szPtrName,&hPrinter,NULL);
+	if (!bSuccess || INVALID_HANDLE_VALUE==hPrinter)
+	{
+		sprintf(errtxt1,"OpenPrinter(%s)", szPtrName);
+		werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+		return FALSE;
+	}
+
+	/*
+	**	Load up the DOC_INFO_1 struct with a datatype of "RAW"
+	**	and start the printer document
+	*/
+	DocInfo1.pDocName = file;
+	DocInfo1.pOutputFile = NULL;
+	DocInfo1.pDatatype = "RAW";
+	dwJob = StartDocPrinter(hPrinter, 1, (LPSTR)&DocInfo1);
+	if (0 == dwJob)
+	{
+		sprintf(errtxt1,"StartDocPrinter(%s,1,\"RAW\")", szPtrName);
+		werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+
+		ClosePrinter(hPrinter);	
+		return FALSE;
+	}
+
+	/*
+	**	Start the page
+	*/
+	if ( ! StartPagePrinter( hPrinter ))
+	{
+		sprintf(errtxt1,"StartPagePrinter(%s)", szPtrName);
+		werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+
+		EndDocPrinter( hPrinter );
+		ClosePrinter(hPrinter);	
+		return FALSE;
+	}
+
+	/*
+	**	Open up the file
+	*/
+	infile = fopen(file,"rb");
+	if (!infile)
+	{
+		sprintf(errtxt1,"fopen(\"%s\",\"rb\") fialed errno=%d",file,errno);
+		werrlog(ERRORCODE(16),errtxt1,0,0,0,0,0,0,0);
+		
+		EndDocPrinter( hPrinter );
+		ClosePrinter(hPrinter);	
+		return FALSE;
+	}
+
+	/*
+	**	Loop while reading thru the file until EOF
+	*/
+	while (!feof(infile))
+	{
+		char	buff[1024];
+		size_t	cnt;
+		DWORD	dwBytesWritten;
+		size_t	offset;
+		
+		/*
+		**	Read a block from the file and check for errors
+		*/
+		cnt = fread(buff,1,sizeof(buff),infile);
+		if (ferror(infile))
+		{
+			sprintf(errtxt1,"fread(\"%s\") fialed errno=%d",file,errno);
+			werrlog(ERRORCODE(16),errtxt1,0,0,0,0,0,0,0);
+
+			fclose(infile);
+			EndDocPrinter( hPrinter );
+			ClosePrinter(hPrinter);	
+			return FALSE;
+		}
+
+		/*
+		**	Write the block to the printer.  
+		**     	May need to loop if the bytes written is less then the cnt
+		*/
+		offset = 0;
+		while(cnt > 0)
+		{
+			if (! WritePrinter( hPrinter, &buff[offset], cnt, &dwBytesWritten))
+			{
+				sprintf(errtxt1,"WritePrinter(\"%s\",cnt=%d)", szPtrName, cnt);
+				werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+
+				fclose(infile);
+				EndDocPrinter( hPrinter );
+				ClosePrinter(hPrinter);	
+				return FALSE;
+			}
+			cnt -= dwBytesWritten;
+			offset += dwBytesWritten;
+		}
+	}
+
+	/*
+	**	Done, cleanup everything.
+	*/
+	fclose(infile);
+
+	EndPagePrinter( hPrinter );
+	EndDocPrinter( hPrinter );
+	ClosePrinter(hPrinter);	
+
+	return TRUE;
+}
+
+
 #endif  /* WIN32 */
 
 /*
 **	History:
 **	$Log: win32prt.c,v $
+**	Revision 1.16  1998-08-28 15:55:39-04  gsl
+**	Fix the way top margins are handled and overstrikes.
+**
+**	Revision 1.15  1998-08-25 10:56:24-04  gsl
+**	Big enhancements: Fix LPI & CPI so acurate.
+**	Add FORMS fields tm,lm,face,points,wrap
+**
+**	Revision 1.14  1998-04-21 11:39:47-04  gsl
+**	Added support for "RAW" printing on NT/95.
+**	In the FORMS file you would specify "raw=1" as the only option.
+**
+**	Revision 1.13  1998-01-22 10:22:37-05  gsl
+**	If in background then don't call vraw_get_console_hWnd()
+**
 **	Revision 1.12  1998-01-06 09:48:14-05  gsl
 **	Add trace statements
 **
@@ -1116,6 +1610,20 @@ DEVMODE *GetDEVMODE(char *printername)
 **
 **	Revision 1.7  1996-12-11 18:44:51-05  jockc
 **	added missing history (forgot to add $Log: win32prt.c,v $
+**	added missing history (forgot to add Revision 1.16  1998-08-28 15:55:39-04  gsl
+**	added missing history (forgot to add Fix the way top margins are handled and overstrikes.
+**	added missing history (forgot to add
+**	added missing history (forgot to add Revision 1.15  1998-08-25 10:56:24-04  gsl
+**	added missing history (forgot to add Big enhancements: Fix LPI & CPI so acurate.
+**	added missing history (forgot to add Add FORMS fields tm,lm,face,points,wrap
+**	added missing history (forgot to add
+**	added missing history (forgot to add Revision 1.14  1998-04-21 11:39:47-04  gsl
+**	added missing history (forgot to add Added support for "RAW" printing on NT/95.
+**	added missing history (forgot to add In the FORMS file you would specify "raw=1" as the only option.
+**	added missing history (forgot to add
+**	added missing history (forgot to add Revision 1.13  1998-01-22 10:22:37-05  gsl
+**	added missing history (forgot to add If in background then don't call vraw_get_console_hWnd()
+**	added missing history (forgot to add
 **	added missing history (forgot to add Revision 1.12  1998-01-06 09:48:14-05  gsl
 **	added missing history (forgot to add Add trace statements
 **	added missing history (forgot to add

@@ -16,6 +16,7 @@ static char rcsid[]="$Id:$";
 #include "node.h"
 #include "statment.h"
 #include "reduce.h"
+#include "wt_procd.h"
 
 /*
 	IF condition [THEN] { statmemt-1    }
@@ -60,35 +61,48 @@ static char rcsid[]="$Id:$";
 
 */
 
-parse_if(the_statement)
-NODE the_statement;
+NODE parse_if(NODE the_statement, NODE the_sentence)
 {
-	NODE	curr_node, if_node, temp_node, id_node, save_node;
+	NODE	curr_node, temp_node, id_node, save_node, verb_node;
 	int	col;
 	int 	bytenum, negate, flag_on;
 	char	buff[256];
+	int	next_sentence_found;
 
-	curr_node = the_statement->next;
+	verb_node = first_token_node(the_statement);
+	curr_node = verb_node;
 
 	if (!eq_token(curr_node->token,VERB,"IF"))
 	{
-		tput_statement(12,the_statement);
-		return(0);
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected IF found [%s].", token_data(verb_node->token));
+		return(the_statement);
 	}
 
+	write_tlog(verb_node->token,"WISP",'I',"VERB","Processing %s Statement.", token_data(verb_node->token));
+
 	bytenum = 1;
+	next_sentence_found = 0;
 
-	write_log("WISP",'I',"PROCIF","Processing IF statement.");
-
-	if_node = curr_node;
-
-	col = if_node->token->column;
+	col = verb_node->token->column;
 	if (col < 12) col = 12;
 	else if (col > 24) col = 24;
 
-	for(curr_node=if_node->next; NODE_END != curr_node->type; curr_node=curr_node->next)
+	tput_leading_fluff(the_statement);
+
+	for(curr_node=verb_node->next; NODE_END != curr_node->type; curr_node=curr_node->next)
 	{
-		if (IDENTIFIER==curr_node->token->type)
+		if (eq_token(curr_node->token,KEYWORD,"NEXT"))
+		{
+			curr_node = curr_node->next;
+			if ( curr_node && eq_token(curr_node->token,KEYWORD,"SENTENCE"))
+			{
+				next_sentence_found = 1;
+				curr_node = curr_node->next;
+				break;
+			}
+		}
+
+		if (curr_node->token && IDENTIFIER==curr_node->token->type)
 		{
 			temp_node = curr_node->next;
 
@@ -325,13 +339,80 @@ NODE the_statement;
 		} /* End of if (IDENTIFIER) */
 	} /* End of for loop */
 
-	tput_statement(12,the_statement);
-	return(0);
+	tput_statement(col,the_statement);
+	the_statement = free_statement(the_statement);
+
+	if (!next_sentence_found)
+	{
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+	}
+
+	if (!the_statement)
+	{
+		the_statement = get_statement_from_sentence(the_sentence);
+	}
+
+	/*
+	**	ELSE [statement]
+	**	ELSE NEXT SENTENCE
+	*/
+	curr_node = first_non_fluff_node(the_statement);
+	if (curr_node && eq_token(curr_node->token, KEYWORD, "ELSE"))
+	{
+		/* ELSE is a single token fragment */
+		curr_node->token->column_fixed = 1;
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
+
+		the_statement = get_statement_from_sentence(the_sentence);
+		curr_node = first_non_fluff_node(the_statement);
+		if (curr_node && eq_token(curr_node->token, KEYWORD, "NEXT"))
+		{
+			/*
+			**	ELSE NEXT SENTENCE
+			*/
+
+			curr_node->token->column_fixed = 1;
+			tput_statement(col+4,the_statement);
+			the_statement = free_statement(the_statement);
+		}
+		else
+		{
+			/*
+			**	ELSE imperative-statement
+			*/
+
+			the_statement = parse_imperative_statements(the_statement, the_sentence);
+		}
+		
+	}
+	
+	if (!the_statement)
+	{
+		the_statement = get_statement_from_sentence(the_sentence);
+	}
+
+	curr_node = first_non_fluff_node(the_statement);
+	if (eq_token(curr_node->token, KEYWORD, "END-IF"))
+	{
+		curr_node->token->column_fixed = 1;
+		tput_statement(col, the_statement);
+		the_statement =  free_statement(the_statement);
+	}
+
+	return the_statement;
 }
 
 /*
 **	History:
 **	$Log: wt_if.c,v $
+**	Revision 1.14  1998-03-03 13:03:18-05  gsl
+**	change flush into fixed
+**
+**	Revision 1.13  1998-02-25 09:57:01-05  gsl
+**	Update for cobol-85 and to fully handle the statement
+**
 **	Revision 1.12  1997-09-12 16:50:59-04  gsl
 **	Add error for SCRATCH-BYTE overflow
 **

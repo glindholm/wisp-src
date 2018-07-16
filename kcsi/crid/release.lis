@@ -1,4 +1,4 @@
-	Copyright (c) 1995-1997 by NeoMedia Technologies Inc. 
+	Copyright (c) 1995-1999 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	
 	====================================================================
@@ -6,9 +6,9 @@
 	Title:		RELEASE NOTES FOR KCSI CRID UTILITIES
 	
 	Document:	relnotes.lis (RELNOTES)
-	Last Updated:	14 August 1997
+	Last Updated:	$Date:$
 	Products:	CONTROL, REPORT, INQUIRY, DATENTRY
-	Versions:	2.90
+	Versions:	2.97
 	
 	Summary:	Release notes for changes to CONTROL, REPORT,
 			INQUIRY, DATENTRY utilities since initial release.
@@ -16,78 +16,88 @@
 
 	====================================================================
 
-	DevTech Migrations has merged with it's parent company DevTech
-        Assosciates and has changed their company name to NeoMedia
-        Technologies Inc.  The main office has been relocated to Florida.
+        NeoMedia Technologies Inc.
+        2201 2nd Street Suite 600
+        Fort Myers FL, 33901
+        USA
 
-                NeoMedia Technologies Inc.
-                2201 2nd Street Suite 600
-                Fort Myers FL, 33901
-                USA
+        Voice (941) 337-3434
+        Fax   (941) 337-1605
+        Web   www.neom.com
+        Email support@neom.com
+        Ftp   ftp://support.neom.com/public/wisp
 
-                Voice (941) 337-3434
-                Fax   (941) 337-3668
-                Web   www.neomedia-tech.com
-
-
-	HIGHLIGHTS
-	==========
-
-	CONTROL and REPORT previously were limited to 300 fields, this has
-	been increased in 2.79 to allow up to 500 fields.
-
-	Corrected installation procedures and packing list are now included.
-
-	Support for use with Acu4GL interface.
-
-	File I/O is now processed through the use of ExtFH() rather than
-	using DISAM.
-
-	--------------------------------------------------------------------
-	The following supplemental documents describe specialized aspects
-	of KCSI-CRID and are included in hardcopy format.
+	
+	CHANGES FROM 2.96 TO 2.97
+	=========================
+	The REPORT utility was unable to properly handle duplicate
+	field names when multiple control files were used.  This has
+	been corrected.
 
 
-
-	--------------------------------------------------------------------
-	The following items may alter the behavior of already converted
-	software.  Please check these over carefully.
-
-
-
-	--------------------------------------------------------------------
-	The following items are not yet available.
-
-	DEC Alpha running Digital Unix 4.0 requires Micro Focus COBL v4.1
-	for use of the extended file handler ExtFH().  This will be
-	available as soon as the port is completed and tested with the
-	proper version of Micro Focus COBOL.
+	CHANGES FROM 2.95 TO 2.96
+	=========================
+	The REPORT utility function "Print a Report" would garble the
+	screen when Output DEVICE = DISPLAY was set.  The DISPLAY utility
+	would run and when finished the REPORT screens would have parts of
+	the display visable on the screen.  This problem has been
+	corrected when linked with version 4.3.04 of the WISP library.
 
 
+	CHANGES FROM 2.94 TO 2.95
+	=========================
+	For the ACUCOBOL version of CRID the cobol sources were compiled
+	with the -C32 and -Z32 flags to allow CRID to be used with a
+	version 3.2 of ACUCOBOL runtime system.
 
-	--------------------------------------------------------------------
-	The following items describe changes to the KCSI-CRID distribution kit
-	that have been made since the initial release.
-
-	- The following are the changes to the KCSI-CRID distribution kit.
-
-		ADDITIONS
-		=========
-
-		DELETIONS
-		=========
+	CRID for Micro Focus was failing to properly mark a relative
+	record deleted. This has been corrected.
 
 
-	--------------------------------------------------------------------
-	The following items describe new features of KCSI-CRID that have been
-	added since the initial release.  None of these items should alter the
-	behavior of existing software.
+	CHANGES FROM 2.93 TO 2.94
+	=========================
+	An error was introduced in 2.93 that caused data files with
+	non-duplicate alternate keys to be flagged as duplicate alternate
+	keys.  This could cause a data file to appear to not match it's
+	control file.  This only effects CRID for Micro Focus version 2.93
+	and has been corrected in this release.
 
 
+	CHANGES FROM 2.92 TO 2.93
+	=========================
+	DATENTRY for Micro Focus COBOL: was failing on DIGITAL UNIX,
+	SOLARIS and SCO when used with CISAM files. This has been
+	corrected.
 
-	--------------------------------------------------------------------
-	The following items describe corrections and improvements that have 
-	been made to the KCSI-CRID runtime system since the initial release.
+	DATENTRY for Micro Foucs COBOL: The create file option was not
+	adding the duplicate flag for duplicate alternate keys. This has
+	been corrected.
+
+	DATENTRY for Micro Focus COBOL: On exit a Signal 11 would
+	sometimes occur. This has been corrected.
+
+
+	CHANGES FROM 2.91 TO 2.92
+	=========================
+	DATENTRY was not correctly handling non-updateable fields with an
+	occurs value.
+
+	DATENTRY was sometimes failing when displaying numeric fields with
+	no decimal positions before the decimal point. (e.g. PIC .999)
+
+
+	CHANGES FROM 2.90 TO 2.91
+	=========================
+	Upgrade to WISP 4.2.00
+
+
+	CHANGES FROM 2.84 TO 2.90
+	=========================
+	Micro Focus COBOL:  The file I/O is now processed through the
+	use of the extended file handler ExtFH().  DISAM is no longer a
+	requirement for building the tools.  The ability to now process
+	the extended file formats IDXFORMAT"3" and IDXFORMAT"4" files
+	is now available.
 
 
 	CHANGES FROM 2.83 TO 2.84
@@ -105,14 +115,8 @@
 
 	- XFD file name must match the Wang style file name.
 
-
-	CHANGES FROM 2.84 TO 2.90
-	=========================
-	Micro Focus COBOL:  The file I/O is now processed through the
-	use of the extended file handler ExtFH().  DISAM is no longer a
-	requirement for building the tools.  The ability to now process
-	the extended file formats IDXFORMAT"3" and IDXFORMAT"4" files
-	is now available.
+	CONTROL and REPORT previously were limited to 300 fields, this has
+	been increased in 2.79 to allow up to 500 fields.
 	
 
         --------------------------------------------------------------------
@@ -126,8 +130,13 @@
 
             CRID VERSION      CUTOVER DATE
             ------------      ------------
-                2.84.ua          07/10/97        Support for Acu4GL
-		2.90.ua		 08/14/97	 Uses ExtFH() for file I/O
+	        2.97	         09/23/99
+		2.96		 03/03/99
+		2.95		 10/29/98
+		2.94		 08/10/98
+	        2.91	         01/08/98	 WISP 4.2 release
+		2.90   		 08/14/97	 Uses ExtFH() for file I/O
+                2.84             07/10/97        Support for Acu4GL
 
 
 	========================= END OF DOCUMENT ==========================

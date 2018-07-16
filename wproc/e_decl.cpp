@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : e_decl.cpp
 // Author : George Soules
@@ -151,8 +158,10 @@ void machine::exec_declare(Boolean formal_parameter) {
 	 symbol		*global_symbol = NULL;
 	 symbol_table	*global_table = the_symbol_table->global_symbol_table();
 
-         if (global_table)
+	 if (the_symbol->is.global && global_table)
+	 {
 		global_symbol = global_table->global_lookup(the_symbol->name());
+	 }
 
 	 if (global_symbol) {
 		// We've encountered a locally declared global symbol with the same
@@ -178,7 +187,7 @@ void machine::exec_declare(Boolean formal_parameter) {
 				enter_cancel_state();
 				return;
 			}
-			the_symbol->is.not_local = true;
+			the_symbol->is.not_local = true; // This is a reference to a global defined elsewhere 
 			the_data = global_symbol->data_address();
 		}
 		else {
@@ -190,6 +199,7 @@ void machine::exec_declare(Boolean formal_parameter) {
       }
   
       if (!the_symbol->is.not_local) {
+            // This is a local variable so allocate the data area for it.
 	    if (is.integer) {
                if (is.array)
                   the_data = new integer_array_data(array_size, init_integer);
@@ -205,15 +215,17 @@ void machine::exec_declare(Boolean formal_parameter) {
                   else
                      the_data = new fixed_string_data(string_size, init_string);
             }
+
+            if (the_symbol->is.allocated)
+            {
+                // Declare statement being executed again
+		// This is a local variable so delete the old data before setting the new
+                the_symbol->delete_data();
+            }
       }
 
-      if (the_symbol->is.allocated)
-         // Declare statement being executed again
-         the_symbol->delete_data();
-      else
-         the_symbol->is.allocated = true;
-
       the_symbol->set_data(the_data);
+      the_symbol->is.allocated = true; // Symbol data has been allocated 
       the_symbol_table->activate(the_symbol); // FIX001 - Activate the symbol
 
       // Check the the_data after assigning to symbol so that
@@ -231,3 +243,82 @@ void machine::exec_declare(Boolean formal_parameter) {
       }
    }
 }
+
+//
+//	History:
+//	$Log: e_decl.cpp,v $
+//	Revision 1.13  1998-08-31 15:13:41-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_decl.cpp,v
+//	Working file: e_decl.cpp
+//	head: 1.12
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 12;	selected revisions: 12
+//	description:
+//	----------------------------
+//	revision 1.12
+//	date: 1998-01-30 16:52:48-05;  author: gsl;  state: V4_3_00;  lines: +13 -8
+//	Fix global/local symbols with same name bug
+//	----------------------------
+//	revision 1.11
+//	date: 1997-10-01 18:12:51-04;  author: gsl;  state: V4_2_00;  lines: +2 -2
+//	fix warnings
+//	----------------------------
+//	revision 1.10
+//	date: 1997-10-01 09:24:25-04;  author: gsl;  state: Exp;  lines: +1 -1
+//	fix warnings
+//	----------------------------
+//	revision 1.9
+//	date: 1997-06-09 17:42:02-04;  author: scass;  state: V4_1_02;  lines: +1 -1
+//	int4 -> int_32
+//	----------------------------
+//	revision 1.8
+//	date: 1997-06-09 16:46:33-04;  author: scass;  state: Exp;  lines: +1 -1
+//	Change long to int4 for portability
+//	/
+//	----------------------------
+//	revision 1.7
+//	date: 1997-04-17 17:51:55-04;  author: gsl;  state: V3_3_93;  lines: +2 -2
+//	Changed fetched_args to if nesting_level==1 && fetched_args because
+//	the fetched_args flag is only significant if this is the first proc in
+//	this process.
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:14:43-04;  author: gsl;  state: V3_9_91;  lines: +0 -0
+//	Renamed from e_decl.cc to e_decl.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1995-07-17 06:38:45-04;  author: gsl;  state: V3_3_19;  lines: +11 -1
+//	Fix to correctly allow command line arguments.
+//	This correct the problem of SUBMIT USING a proc was not getting the
+//	arguments.
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:49-04;  author: gsl;  state: V3_3_17;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:07-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:45-05;  author: gsl;  state: V3_3x12;  lines: +60 -22
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:04-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

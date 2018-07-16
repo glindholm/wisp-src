@@ -32,7 +32,7 @@ void READVTOC(char *option, char *lib, char *vol, int4 *start, int4 *count, char
 	int  i, j, k, c;
 	char *context;
 	int4 mode;
-	char template[NAME_LENGTH], result[256];
+	char template[COB_FILEPATH_LEN], result[256];
 #include "readvtoc.d"
 
 	werrlog(ERRORCODE(1),*option,lib,vol,0,0,0,0,0);				/* Say we are here.			*/
@@ -196,6 +196,9 @@ static int4 do_vtoc_find( char *lib, char *vol, int4 *start, int4 *count, char *
 /*
 **	History:
 **	$Log: readvtoc.c,v $
+**	Revision 1.14  1998-07-31 15:43:37-04  gsl
+**	Changed NAME_LENGTH to COB_FILEPATH_LEN
+**
 **	Revision 1.13  1997-05-01 16:38:49-04  gsl
 **	Remove unneeded buff
 **

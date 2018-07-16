@@ -1,12 +1,18 @@
-010 pw=80 pl=66 cpi=10 lpi=6 landscape=0
-012 pagelength=66 pagewidth=96 cpi=12 lpi=6 landscape=0
-017 cpi=16 lpi=8 lpp=88 pw=133 landscape=0
-110 pagewidth=127 pagelength=45 cpi=10 lpi=6 landscape=1
-112 pagewidth=152 pagelength=45 cpi=12 lpi=6 landscape=1
-117 pagewidth=170 pagelength=60 cpi=16 lpi=8 landscape=1
-210 pw=80 pl=66 cpi=10 lpi=6 landscape=0 duplex=1
-212 pagelength=66 pagewidth=96 cpi=12 lpi= landscape=0 duplex=1
-217 cpi=16 lpi=8 lpp=88 pw=133 landscape=0 duplex=1
-310 pagewidth=127 pagelength=45 cpi=10 lpi=6 landscape=1 duplex=1
-312 pagewidth=152 pagelength=45 cpi=12 lpi=6 landscape=1 duplex=1
-317 pagewidth=170 pagelength=60 cpi=16 lpi=8 landscape=1 duplex=1
+010 pw=80 lpp=60 cpi=10 lpi=6 landscape=0 tm=2 lm=0 points=10 face="Courier New" duplex=0 raw=0 wrap=0
+011 pw=75 lm=2 wrap=1 points=10
+012 pagewidth=96 cpi=12 wrap=1
+016 cpi=16 lpi=8 lpp=78 pw=120 tm=3 lm=6 points=9
+017 cpi=17 lpi=8 lpp=80 pw=132 lm=4 points=9
+020 cpi=17 lpi=10 lpp=100 pw=132 lm=4 points=8 face="Letter Gothic" wrap=1
+110 landscape=1 pagewidth=105 pagelength=45 
+112 landscape=1 pagewidth=126 pagelength=45 cpi=12 
+132 landscape=1 pw=132 lpp=60 cpi=13 lpi=8 lm=4 tm=3 points=9
+210 duplex=2
+212 duplex=2 pagewidth=96 cpi=12
+217 duplex=2 cpi=17 lpi=8 lpp=80 pw=132 lm=4 points=9
+310 landscape=1 duplex=1 pw=105 lpp=45
+312 landscape=1 duplex=1 pw=126 lpp=45 cpi=12
+313 landscape=1 duplex=1 pw=132 lpp=60 cpi=13 lpi=8 lm=4 tm=3 points=9
+410 lpp=78
+417 lpi=8 cpi=17 lpp=104 pw=132 lm=4 points=9
+900 raw=1

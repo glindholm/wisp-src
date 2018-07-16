@@ -244,9 +244,46 @@ NODE unhook_sub_tree(NODE parent_tree, NODE sub_tree)
 
 	return unhook_sub_tree(parent_tree->next,sub_tree);
 }
+
+/*
+**	ROUTINE:	shiftinsert_clause_before_node()
+**
+**	FUNCTION:	Insert a node tree before given node.
+**
+**	DESCRIPTION:	The given node is copied after itself then the original is
+**			changed into a STATEMENT with the new clause tied down.
+**
+**	ARGUMENTS:	
+**	curr_node	The node to insert before
+**	clause_node	The clause to insert.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		The new curr_node.
+**
+**	WARNINGS:	None
+**
+*/
+NODE shiftinsert_clause_before_node(NODE curr_node, NODE clause_node)
+{
+	/*
+	**	Create a new node after curr_node with all the values from curr_node.
+	*/
+	curr_node->next = makenode(curr_node->type, curr_node->down, curr_node->next, curr_node->token);
+	curr_node->down = clause_node;
+	curr_node->token = NULL;
+	curr_node->type = NODE_STATEMENT;
+
+	return curr_node->next;
+}
+
+
 /*
 **	History:
 **	$Log: node.c,v $
+**	Revision 1.8  1998-02-10 15:05:28-05  gsl
+**	Added shiftinsert_clause_before_node()
+**
 **	Revision 1.7  1996-08-30 21:56:06-04  gsl
 **	drcs update
 **

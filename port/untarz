@@ -1,3 +1,9 @@
-SOURCE=`echo $1|sed 's/\.tar\.Z//'`
-SOURCE=$SOURCE.tar.Z
-uncompress -c $SOURCE|tar -xvpf -
+#!/bin/sh
+for f in $*
+do
+echo 
+echo Unloading $f
+uncompress -c $f|tar -xvpf -
+echo
+echo Finished $f
+done

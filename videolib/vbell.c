@@ -17,6 +17,7 @@ static char rcsid[]="$Id:$";
 #include "vintdef.h"
 #include "vdata.h"
 #include "vmodules.h"
+#include "vraw.h"
 
 /*						Subroutine entry point.								*/
 
@@ -33,7 +34,15 @@ vbell()
 	fflush( stdout );
 #endif
 #ifdef WIN32
-	MessageBeep(0xFFFFFFFF);
+	if (vrawdirectio())
+	{
+		MessageBeep(MB_ICONASTERISK);
+	}
+	else
+	{
+		vcontrol("\007");							/* Output a bell character.		*/
+		vcontrol_flush();							/* Dump the buffer.			*/
+	}
 #endif
 #if defined(VMS) || defined(unix)
 	vcontrol("\007");								/* Output a bell character.		*/
@@ -46,6 +55,13 @@ vbell()
 /*
 **	History:
 **	$Log: vbell.c,v $
+**	Revision 1.15  1999-05-26 10:56:45-04  gsl
+**	add vraw.h
+**
+**	Revision 1.14  1999-03-03 15:28:35-05  gsl
+**	Fix to use windows bell
+**	Fix to send ^G when using costar
+**
 **	Revision 1.13  1997-07-08 16:26:19-04  gsl
 **	Change to use new video.h interfaces
 **

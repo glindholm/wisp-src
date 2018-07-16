@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : builtin.cpp
 // Author : George Soules
@@ -1214,3 +1221,79 @@ void machine::exec_builtin() {
    stmt_return_code =
       exp[1].kind() == expression::integer_kind ? exp[1].integer() : 0;
 }
+
+//
+//	History:
+//	$Log: builtin.cpp,v $
+//	Revision 1.13  1998-08-31 15:13:33-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/builtin.cpp,v
+//	Working file: builtin.cpp
+//	head: 1.12
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 12;	selected revisions: 12
+//	description:
+//	----------------------------
+//	revision 1.12
+//	date: 1997-10-01 18:26:15-04;  author: gsl;  state: V4_3_00;  lines: +4 -4
+//	fixed warnings
+//	----------------------------
+//	revision 1.11
+//	date: 1997-06-09 17:36:52-04;  author: scass;  state: V4_1_02;  lines: +3 -3
+//	int4 -> int_32
+//	----------------------------
+//	revision 1.10
+//	date: 1997-06-09 16:41:53-04;  author: scass;  state: Exp;  lines: +3 -3
+//	Changed long to int4 for portability.
+//	----------------------------
+//	revision 1.9
+//	date: 1996-09-10 11:39:15-04;  author: gsl;  state: V3_3_93;  lines: +1 -1
+//	Change to use WIN32 style _mkdir()
+//	----------------------------
+//	revision 1.8
+//	date: 1996-07-25 19:44:19-04;  author: gsl;  state: Exp;  lines: +33 -18
+//	Fix for NT
+//	----------------------------
+//	revision 1.7
+//	date: 1996-07-25 14:14:20-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from builtin.cc to builtin.cpp
+//	----------------------------
+//	revision 1.6
+//	date: 1995-06-02 11:26:36-04;  author: gsl;  state: V3_3_19;  lines: +19 -19
+//	fixed a bunch of type mis-match warnings
+//	----------------------------
+//	revision 1.5
+//	date: 1995-05-03 04:40:25-04;  author: gsl;  state: V3_3_16;  lines: +1 -1
+//	changed to ifdef NOCTYPE for systems whose C++ does not
+//	supply the C ctype.h routines.
+//	These currently are SCO, SUNOS, and PYRAMID.
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:40-04;  author: gsl;  state: V3_3_15;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:51:57-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:35-05;  author: gsl;  state: V3_3x12;  lines: +20 -20
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:50:57-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

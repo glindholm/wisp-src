@@ -1,3 +1,15 @@
+###############################################
+#  wrunconfig: COBOL runtime command options
+# 
+# 
+###############################################
+
+### Sample ACUCOBOL
 cobol=ACU
-options=-b
-runcbl=wruncbl
+options=-b +e acuerr.log
+runcbl=/usr/local/wisp/acu/wruncbl
+
+### Sample Micro Focus
+#cobol=MF
+#options=
+#runcbl=/usr/local/wisp/mf/wrunmf

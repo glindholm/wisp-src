@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 
@@ -79,11 +79,8 @@ EXTERN_DEF int			create_gbl	INIT_DEF_ZERO;				/* Flag to decide if need to reall
 EXTERN_DEF char 		wisp_progname[9];					/* Define the program name field.	*/
 EXTERN_DEF char 		wisp_screen[33];					/* Define the screen name field.	*/
 
-EXTERN_DEF fstruct 		*flist		INIT_DEF_NULL;				/* the pointer to the list of files	*/
-EXTERN_DEF fstruct 		*flptr		INIT_DEF_NULL;				/* the pointer to the current entry	*/
-
-EXTERN_DEF pstruct 		*plist 		INIT_DEF_NULL;				/* pointer to printer files		*/
-EXTERN_DEF pstruct 		*plptr		INIT_DEF_NULL;
+EXTERN_DEF fstruct 		*g_temp_file_list INIT_DEF_NULL;			/* The list of temp files		*/
+EXTERN_DEF pstruct 		*g_print_file_list INIT_DEF_NULL;			/* The list of print files		*/
 
 EXTERN_DEF int		opt_errflag_found	INIT_DEF_ZERO;				/* Found ERRFLAG in OPTIONS file	*/
 EXTERN_DEF int		opt_errflag		INIT_DEF_ZERO;				/* The value of ERRFLAG from OPTIONS	*/
@@ -91,18 +88,28 @@ EXTERN_DEF int		opt_signalsoff		INIT_DEF_ZERO;				/* Turn signal trapping off		*
 EXTERN_DEF int		opt_nulldisplay		INIT_DEF_ZERO;				/* Display NULLs as a space.		*/
 EXTERN_DEF int		opt_outputverifyoff	INIT_DEF_ZERO;				/* Suppress PF3 to continue screens	*/
 EXTERN_DEF int		opt_createvolumeon	INIT_DEF_ZERO;				/* Auto create volume if not found	*/
-EXTERN_DEF int		opt_idsiprint		INIT_DEF_ONE;				/* Use the IDSI print spooler		*/
-EXTERN_DEF int		opt_pqilp		INIT_DEF_ZERO;				/* Use ILP				*/
-EXTERN_DEF int		opt_pqunique		INIT_DEF_ONE;				/* Use UNIQUE (default)			*/
+
+enum e_printqueue
+{
+	PQ_DEFAULT = 0,
+	PQ_UNIQUE,
+	PQ_LP,
+	PQ_ILP,
+	PQ_NP,
+	PQ_GENERIC
+};
+EXTERN_DEF enum e_printqueue opt_printqueue;						/* Which Print Queue mechanism?		*/
+EXTERN_DEF char *opt_printqueue_manager;						/* Print Queue Manager command or NULL	*/
+
 EXTERN_DEF int		opt_idnumeric		INIT_DEF_ZERO;				/* Return numeric user ID from EXTRACT.	*/
 EXTERN_DEF int		opt_idfive		INIT_DEF_ZERO;				/* Return char 5-7 user ID from EXTRACT.*/
 EXTERN_DEF int		opt_allstatuskeys	INIT_DEF_ZERO;				/* Pass all status keys thru to declr	*/
 EXTERN_DEF int		opt_helpstyle		INIT_DEF_ONE;				/* 1=Wang HELP style 2=non-Wang style	*/
 
 EXTERN_DEF int		opt_batchqueue		INIT_DEF_ZERO;				/* Use a batch queue product		*/
-EXTERN_DEF char		batchqueue_name[255];
+EXTERN_DEF char		*batchqueue_name;
 EXTERN_DEF int		opt_batchman		INIT_DEF_ZERO;				/* Use a batch queue manage product	*/
-EXTERN_DEF char		batchman_name[255];
+EXTERN_DEF char		*batchman_name;
 
 
 EXTERN_DEF int		ede_synch		INIT_DEF_ZERO;				/* Synchronization flag for EDE.	*/
@@ -117,6 +124,12 @@ void wglobals();
 /*
 **	History:
 **	$Log: wglobals.h,v $
+**	Revision 1.16  1998-10-22 14:06:30-04  gsl
+**	Change the flist and plist to g_temp_file_list and g_print_file_list.
+**
+**	Revision 1.15  1998-10-21 10:10:44-04  gsl
+**	change print queue options
+**
 **	Revision 1.14  1997-10-21 09:50:16-04  gsl
 **	remove WISPPROGID
 **

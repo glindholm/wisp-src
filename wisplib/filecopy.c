@@ -19,6 +19,7 @@ static char rcsid[]="$Id:$";
 **	Includes
 */
 
+#include <stdio.h>
 #ifdef VMS
 #include <rmsdef.h>
 #include <descrip.h>
@@ -45,6 +46,7 @@ static char rcsid[]="$Id:$";
 #include "wfname.h"
 #include "idsisubs.h"
 #include "wisplib.h"
+#include "wdefines.h"
 
 /*
 	FILECOPY( infile, inlib, invol, outfile, [outlib, [outvol]], retcode )
@@ -58,13 +60,16 @@ va_dcl
 	int arg_count;
 	int4 *return_code;
 	int4 filecopy_status;								/* Status from the lib call.		*/
-	char  *ptr;							/* Pointers to passed arguments.	*/
+	char  *ptr;									/* Pointers to passed arguments.	*/
 	char file[9],lib[9],vol[7],new_file[9],new_lib[9],new_vol[7];
-	char old_filename[256], new_filename[256];					/* Strings to contain the filenames.	*/
+	char old_filename[WISP_FILEPATH_LEN];
+	char old_filename_idx[WISP_FILEPATH_LEN];
+	char new_filename[WISP_FILEPATH_LEN];
+	char new_filename_idx[WISP_FILEPATH_LEN];
 	int4 mode;
 	char *name_end;									/* build filename from wang parts	*/
 	int nvalid;									/* Not Valid call flag.			*/
-	int dat_done, has_ext;
+	int has_ext;
 
 #ifdef VMS
 #include "filecopy.d"
@@ -74,7 +79,6 @@ va_dcl
 	uint4 vms_status;
 #endif
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 	filecopy_status = 0;
 	nvalid = 0;
 
@@ -155,6 +159,9 @@ va_dcl
 		if (!filecopy_status) filecopy_status = 44;
 		goto filecopy_return;
 	}
+
+	wtrace("FILECOPY","ARGS","Oldfile=[%8.8s %8.8s %6.6s] Newfile=[%8.8s %8.8s %6.6s]",
+	       file, lib, vol, new_file, new_lib, new_vol);
 
 	mode = 0;
 
@@ -276,7 +283,7 @@ va_dcl
 	}
 
 	/*
-	**	Have to handle 3 cases
+	**	Have to handle these cases
 	**
 	**	1) Vision files	
 	**		foo
@@ -288,80 +295,115 @@ va_dcl
 	**	3) CISAM (with .dat)
 	**		foo.dat
 	**		foo.idx
+	**
+	**	4) Vision4
+	**		foo [.dat]
+	**		foo.vix
 	*/
 
-	dat_done = 0;
 	has_ext = hasext(old_filename);
 
-	if (fexists(old_filename))							/* file exist in this form		*/
+	/*
+	**	Check if there is an index portion and setup paths to copy it.
+	*/
+	strcpy(old_filename_idx, old_filename);
+	strcpy(new_filename_idx, new_filename);
+	if (has_ext)
 	{
-		if (fexists(new_filename))						/* Does new file already exists?	*/
-		{
-			filecopy_status = 52;
-			goto filecopy_return;
-		}
-
-		if (fcopy(old_filename,new_filename))
-		{
-			filecopy_status=24;
-			goto filecopy_return;
-		}
-
-		dat_done = 1;
+		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
+		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
 	}
-	else if (has_ext) 								/* does it already have extension?	*/
+	strcat(old_filename_idx,".idx");
+	strcat(new_filename_idx,".idx");
+	if (!fexists(old_filename_idx))						/* See if there is a .idx index portion		*/
 	{
-		filecopy_status=20;							/* yes, so return file not found	*/
+		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
+		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+
+		strcat(old_filename_idx,".vix");
+		strcat(new_filename_idx,".vix");
+		if (!fexists(old_filename_idx))					/* See if there is a .vix index portion		*/
+		{
+			/* No index portion */
+			*old_filename_idx = '\0';
+			*new_filename_idx = '\0';
+		}
+	}
+
+	/*
+	**	Check if file exists
+	*/
+	if (!fexists(old_filename))
+	{
+		if (has_ext)
+		{
+			/*
+			**	File doesn't exist and it has an extension so nothing else to try.
+			*/
+			filecopy_status=20;
+			goto filecopy_return;
+		}
+
+		/*
+		**	Try a .dat extension
+		*/
+		strcat(old_filename,".dat");
+		strcat(new_filename,".dat");
+		
+		if (!fexists(old_filename))
+		{
+			/*
+			**	File doesn't exist
+			*/
+			filecopy_status=20;
+			goto filecopy_return;
+		}
+	}
+	
+	/*
+	**	The old file exists.
+	**	Ensure the new file doesn't already exist.
+	*/
+	if (fexists(new_filename))
+	{
+		filecopy_status = 52;
+		goto filecopy_return;
+	}
+	if (*new_filename_idx && fexists(new_filename_idx))
+	{
+		filecopy_status = 52;
 		goto filecopy_return;
 	}
 
-
-	if (!has_ext)									/* May be CISAM files.			*/
+	/*
+	**	Do the copy
+	*/
+	if (fcopy(old_filename,new_filename))
 	{
-		strcat(old_filename,".idx");						/* else try it with a .dat extension	*/
-		strcat(new_filename,".idx");
-		if (!fexists(old_filename))						/* still not found			*/
+		filecopy_status=24;
+		goto filecopy_return;
+	}
+	if (*old_filename_idx)
+	{
+		if (fcopy(old_filename_idx,new_filename_idx))
 		{
-			if (dat_done) filecopy_status = 0;				/* It was just a seq file.		*/
-			else	      filecopy_status = 20;				/* Really not found.			*/
-			goto filecopy_return;
-		}
-
-		if (fexists(new_filename))						/* Does new file already exists?	*/
-		{
-			filecopy_status = 52;
-			goto filecopy_return;
-		}
-
-		if (fcopy(old_filename,new_filename))
-		{
+			/*
+			**	The idx copy failed, try to undo the data portion copy before returning
+			*/
+			unlink(new_filename);
+			
 			filecopy_status=24;
 			goto filecopy_return;
 		}
-
-		if (!dat_done)							/* May be CISAM with .dat			*/
-		{
-			strcpy(strrchr(old_filename,'.'),".dat");			/* replace the '.dat' with a '.idx'	*/
-			strcpy(strrchr(new_filename,'.'),".dat");
-
-			if (fcopy(old_filename,new_filename))
-			{
-				filecopy_status=48;					/* Serious error if only half worked.	*/
-				goto filecopy_return;
-			}
-			dat_done = 1;
-		}
 	}
-
-	if ( !dat_done )
-	{
-		filecopy_status=20;							/* yes, so return file not found	*/
-		goto filecopy_return;
-	}
+	
 
 #endif /* unix || MSDOS || WIN32 */
                                
 filecopy_return:
+
+	wtrace("FILECOPY","RETURN","Return Code = [%d]", filecopy_status);
+	
 	wswap(&filecopy_status);
 	PUTBIN(return_code,&filecopy_status,sizeof(int4));
 }                                                         
@@ -370,6 +412,12 @@ filecopy_return:
 /*
 **	History:
 **	$Log: filecopy.c,v $
+**	Revision 1.13  1998-05-19 17:57:26-04  gsl
+**	fix warning on WIN32
+**
+**	Revision 1.12  1998-05-15 17:20:09-04  gsl
+**	Add support for vision4 plus trace logic
+**
 **	Revision 1.11  1997-03-12 12:55:00-05  gsl
 **	Changed define to WIN32
 **

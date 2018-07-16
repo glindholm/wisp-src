@@ -173,11 +173,11 @@ void wfilechk2(char   decl_stat[2],
 	       char   vol[6],
 	       char   lib[8],
 	       char   fil[8],
-	       char   fname[80],
+	       char   fname[COB_FILEPATH_LEN],
 	       char   f_id[40],
 	       char   appl[8])
 {
-	char tstr1[120];
+	char tstr1[COB_FILEPATH_LEN + 40];
 	short	wang_filestatus, open_error, reportit, force_error;
 	int	temp_errno;
 	char	msg1[80],msg2[80],msg3[80],msg4[80],msg5[80],msg6[80],msg7[80],msg8[80];
@@ -464,7 +464,8 @@ void wfilechk2(char   decl_stat[2],
 		msg7[0] = '\0';
 		msg8[0] = '\0';
 
-		unloadpad(tstr1,fname,80);
+
+		cobx2cstr(tstr1,fname,COB_FILEPATH_LEN);
 
 		sprintf(msg7,"File [%8.8s] Lib [%8.8s] Vol [%6.6s]",fil,lib,vol);
 		sprintf(msg8,"File [%s]",tstr1);					/* Display native file name in message.	*/
@@ -744,6 +745,9 @@ void lastacufilestat(char *buff)
 /*
 **	History:
 **	$Log: wfilechk.c,v $
+**	Revision 1.13  1998-08-03 17:18:28-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.12  1997-10-21 10:18:06-04  gsl
 **	removed WISPPROGID
 **

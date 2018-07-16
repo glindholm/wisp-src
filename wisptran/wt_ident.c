@@ -31,11 +31,6 @@ struct	figcon1_struct
 
 static int figcon1_compare(struct figcon1_struct *p1, struct figcon1_struct *p2);
 
-NODE get_statement();
-
-NODE identification_division();
-NODE environment_division();
-NODE configuration_section();
 
 /*
 **	Routine:	identification_division()
@@ -60,8 +55,7 @@ NODE configuration_section();
 **	06/01/93	Written by GSL
 **
 */
-NODE identification_division(the_statement)
-NODE	the_statement;
+NODE identification_division(NODE the_statement)
 {
 	NODE	next_statement;
 	NODE	curr_node, temp_node;
@@ -106,7 +100,13 @@ NODE	the_statement;
 			the_statement = get_statement();			/* Get the program name.			*/
 			curr_node = the_statement->next;
 			strcpy(prog_id,token_data(curr_node->token));
-			write_log("WISP",'I',"PROGRAMID", "Found PROGRAM-ID %s.",prog_id);
+			write_tlog(curr_node->token, "WISP",'I',"PROGRAMID", "Found PROGRAM-ID %s.",prog_id);
+			if (strlen(prog_id) > 8)
+			{
+				write_tlog(curr_node->token, "WISP",'W',"PROGRAMID", 
+					   "Ensure PROGRAM-ID %s is unique in first 8 characters.",prog_id);
+			}
+			
 			if (init_data)
 			{
 				tie_down(curr_node,make_clause(12, "IS INITIAL PROGRAM", NULL));
@@ -208,8 +208,7 @@ NODE	the_statement;
 **	06/01/93	Written by GSL
 **
 */
-NODE environment_division(the_statement)
-NODE the_statement;
+NODE environment_division(NODE the_statement)
 {
 	if (eq_token(the_statement->next->token,KEYWORD,"ENVIRONMENT"))
 	{
@@ -283,8 +282,7 @@ NODE the_statement;
 **	06/01/93	Written by GSL
 **
 */
-NODE configuration_section(the_statement)
-NODE the_statement;
+NODE configuration_section(NODE the_statement)
 {
 	NODE	curr_node, temp_node;
 	NODE	next_statement;
@@ -440,7 +438,7 @@ NODE the_statement;
 		else if (eq_token(the_statement->next->token,KEYWORD,"FIGURATIVE-CONSTANTS"))
 		{
 			write_log("WISP",'I',"BEGINFIGCON","Begin FIGURATIVE-CONSTANTS Analysis.");
-			tput_fluff(the_statement);
+			tput_leading_fluff(the_statement);
 			free_statement(the_statement);
 
 			init_figcons();
@@ -453,6 +451,8 @@ NODE the_statement;
 				continue;
 			}
 
+			tput_leading_fluff(the_statement);
+
 			while (PERIOD != curr_node->token->type)
 			{
 				int	figvalue;
@@ -461,9 +461,12 @@ NODE the_statement;
 				{
 					if (KEYWORD == curr_node->token->type)
 					{
-						write_tlog(curr_node->token,"WISP",'W',"FIGCONS",
-							"Reserved word [%s] found parsing FIGURATIVE CONSTANTS",
+						write_tlog(curr_node->token,"WISP",'W',"KEYWORD",
+							"Keyword [%s] being used as a FIGURATIVE CONSTANT, adding to keyword list",
 							token_data(curr_node->token));
+
+						add_change_word(token_data(curr_node->token));
+						do_change_word_token(curr_node->token);
 					}
 					else
 					{
@@ -474,6 +477,8 @@ NODE the_statement;
 					}
 				}
 				temp_node = curr_node;
+
+				add_user_symbol(token_data(curr_node->token));
 
 				tput_fluff(curr_node->down);
 				curr_node = curr_node->next;
@@ -538,9 +543,9 @@ NODE the_statement;
 					}
 				
 					if (!symbzero) figvalue++;		/* Add 1 to correct collating sequence	*/
-					tput_line_at(12, "SYMBOLIC %s IS %d\n",token_data(temp_node->token),figvalue);
+					tput_line_at(12, "SYMBOLIC %s IS %d",token_data(temp_node->token),figvalue);
 				}
-				tput_fluff(curr_node->down);
+				tput_statement(8,curr_node->down);
 				curr_node = curr_node->next;
 			}
 
@@ -589,12 +594,12 @@ NODE the_statement;
 }
 
 static int flag_is_dpcomma = 0;
-set_dpcomma()
+int set_dpcomma(void)
 {
 	flag_is_dpcomma = 1;
 	return 0;
 }
-int is_dpcomma()
+int is_dpcomma(void)
 {
 	return(flag_is_dpcomma);
 }
@@ -608,19 +613,18 @@ static int figcon1_compare(struct figcon1_struct *p1, struct figcon1_struct *p2)
 	return(cmp);
 }
 
-int isafigcon1(item)
-char	*item;
+int isafigcon1(const char* item)
 {
 	int	rc;
 	if (!figcon1_ring) return(0);
-	if (strlen(item) > 39) return(0);					/* Item is too big to be a figcon		*/
+	if (strlen(item) > sizeof(figcon1_item.name)-1) return(0);		/* Item is too big to be a figcon		*/
 
 	strcpy(figcon1_item.name,item);
 	rc = ring_find(figcon1_ring,&figcon1_item,0,0);
 	return(!rc);
 }
 
-init_figcons()
+void init_figcons(void)
 {
 	static int first = 1;
 
@@ -629,14 +633,14 @@ init_figcons()
 	char	COPY_SYMBOLICS[40];
 	cob_file	*cob_file_ptr;
 
-	if (!first) return(0);
+	if (!first) return;
 	first = 0;
 
 	use_copy = 0;									/* Use a "COPY" statement		*/
 	output_copy = 0;								/* Write the copy code.			*/
 
-	if (symbzero) 	strcpy(COPY_SYMBOLICS,"wc001x04.cpy");
-	else    	strcpy(COPY_SYMBOLICS,"wc001004.cpy");
+	if (symbzero) 	strcpy(COPY_SYMBOLICS,"wc001x05.cpy");
+	else    	strcpy(COPY_SYMBOLICS,"wc001005.cpy");
 
 	write_log("WISP",'I',"INITFIGCON","Creating default FIGURATIVE-CONSTANTS.");
 
@@ -681,15 +685,15 @@ init_figcons()
 		if (symbzero)	offset=0;
 		else		offset=1;
 
-		tput_line_at(12, "SYMBOLIC WISP-SCWCC   IS %d",(160+offset));
-		tput_line_at(12, "SYMBOLIC WFAC-MODIFY  IS %d",(129+offset));
-		tput_line_at(12, "SYMBOLIC WFAC-PROTECT IS %d",(140+offset));
+		tput_line_at(12, "SYMBOLIC WISP-SCWCC    IS %d",(160+offset));
+		tput_line_at(12, "SYMBOLIC WISP-FAC-MOD  IS %d",(129+offset));
+		tput_line_at(12, "SYMBOLIC WISP-FAC-PROT IS %d",(140+offset));
 		tput_line_at(12, "SYMBOLIC");
 
 		for (i=0; i<256; i += 2)
 		{
-			tput_line_at(12, "DEC-BYTE-%d IS %d", i,   i+offset   );
-			tput_line_at(40, "DEC-BYTE-%d IS %d", i+1, i+offset+1 );
+			tput_line_at(12, "WISP-SYMB-%d IS %d", i,   i+offset   );
+			tput_line_at(40, "WISP-SYMB-%d IS %d", i+1, i+offset+1 );
 		}
 	}
 
@@ -701,12 +705,12 @@ init_figcons()
 
 }
 
-finish_figcons()
+void finish_figcons(void)
 {
 	static	int	first = 1;
 	int	offset;
 
-	if (!first) return(0);
+	if (!first) return;
 	first = 0;
 
 	if (symbzero)	offset=0;
@@ -719,6 +723,21 @@ finish_figcons()
 /*
 **	History:
 **	$Log: wt_ident.c,v $
+**	Revision 1.16  1998-03-27 13:29:27-05  gsl
+**	Fix bug with generated FIGCON copybook
+**
+**	Revision 1.15  1998-03-27 10:36:28-05  gsl
+**	change_words
+**
+**	Revision 1.14  1998-03-26 14:25:37-05  gsl
+**	Change to generate WISP-SYMB-xx
+**
+**	Revision 1.13  1998-03-23 13:05:37-05  gsl
+**	Add user defiend figurative constants to the list of symbols
+**
+**	Revision 1.12  1998-03-04 15:56:05-05  gsl
+**	Warn if PROGRAM-ID greater then 8 characters
+**
 **	Revision 1.11  1997-09-09 17:56:41-04  gsl
 **	Add ACUCOBOL Native Screens Special-Names clauses
 **

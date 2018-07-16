@@ -1,3 +1,3 @@
 cobol=ACU
-options=-b
-runcbl=wruncbl
+options=-b +e acuerr.log
+runcbl=wruncblk

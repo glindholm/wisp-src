@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : p_ttyio.cpp
 // Author : George Soules
@@ -129,3 +136,49 @@ void compiler::write_stmt() {
 #endif
 
 
+
+//
+//	History:
+//	$Log: p_ttyio.cpp,v $
+//	Revision 1.6  1998-08-31 15:14:04-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_ttyio.cpp,v
+//	Working file: p_ttyio.cpp
+//	head: 1.5
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 5;	selected revisions: 5
+//	description:
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:15:51-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	Renamed from p_ttyio.cc to p_ttyio.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:12-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:29-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:11-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:19-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

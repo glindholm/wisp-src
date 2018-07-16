@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : e_assign.cpp
 // Author : George Soules
@@ -114,3 +121,53 @@ void machine::assign(expression *a_variable, expression *a_value) {
    exec_assign();
 }
 
+
+//
+//	History:
+//	$Log: e_assign.cpp,v $
+//	Revision 1.7  1998-08-31 15:13:41-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_assign.cpp,v
+//	Working file: e_assign.cpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-10-01 13:49:49-04;  author: gsl;  state: V4_3_00;  lines: +3 -3
+//	fix warnings
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:14:40-04;  author: gsl;  state: V4_1_02;  lines: +0 -0
+//	Renamed from e_assign.cc to e_assign.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:49-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:06-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:45-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:03-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

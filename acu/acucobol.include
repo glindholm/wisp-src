@@ -1,3 +1,5 @@
+#============================================================================
+#
 #	Copyright (c) 1988-1998 NeoMedia Technologies, Inc. All rights reserved.
 #	$Id:$
 #
@@ -6,18 +8,27 @@
 #
 #	Function:	Standard make include file when using ACUCOBOL.
 #
-#	Description:
-#			This file is included into all ACUCOBOL makefiles.
+#	Description:	This file is included into all ACUCOBOL makefiles.
 #			It defines all version specific options.
 #			Uncomment the version defines for this system.
 #
+#	Instructions:	There are two sections in this file that you may
+#			have to modifiy.  The modifications you will need
+#			to make is to simply uncomment the correct lines.
+#			Makefile comments begin each line with a '#' character.
+#			To uncomment a line remove the leading '#'.
+#
+#			To find the sections that need to be modified scroll 
+#			down to the sections these these tags:
+# 			  "****  CHANGE PLATFORM SETTINGS HERE ****"
+# 			  "****  CHANGE ACUCOBOL VERSION SETTINGS HERE ****"
+#
+#	The latest version of this file can be download by ftp.
+#	ftp://support.neom.com/public/wisp/patches/latest/acucobol.include
+#
 #============================================================================
 #
-# ACULIBS is the list of ACUCOBOL libraries
-# ACUSUBS is the list of ACUCOBOL subroutines
-# ACUTEST a test file used to determine version of ACUCOBOL
-# ACUOTHER is the list of unix libraries required for resolution of
-#	   ACUCOBOL undefines depending on version and platform. 
+#	ACUCOBOL VERSIONS SUPPORTED
 #
 # Different versions of ACUCOBOL use different sets of
 # libraries and subroutines.
@@ -26,7 +37,53 @@
 # 2	ACUCOBOL Version 2.0 - 2.3.2
 # 3	ACUCOBOL Version 2.3.3
 # 4	ACUCOBOL Version 2.4 +
-# 5	ACUCOBOL Version 3.1 - 3.2
+# 5	ACUCOBOL Version 3.1 - 3.2.1 + 3.2.2 (except SCO UNIX) 
+# 6	ACUCOBOL Version 3.2.2 for SCO UNIX
+# 7	ACUCOBOL Version 4.0.0 - 4.2.0
+#
+#
+#
+#============================================================================
+#
+#	DESCRIPTION OF MAKEFILE MACROS
+#
+# The following makefile macros are defined based on the version of Acucobol.
+#
+# ACULIBS 	the list of ACUCOBOL libraries
+# ACUSUBS 	the list of ACUCOBOL subroutines
+# ACUTEST 	a test file used to determine version of ACUCOBOL
+# ACUSRCDIR 	the directory of the Acucobol source files
+# COBOL 	the path to the Acucobol compiler (ccbl)
+# CBLUTIL 	the path to the Acucobol object utility (cblutil)
+# ACUOTHER 	the list of unix libraries required for resolution
+#	   	of ACUCOBOL undefines depending on version and platform
+#
+#
+#============================================================================
+#
+# ****  CHANGE PLATFORM SETTINGS HERE ****
+#
+# The following lines are used to change the ACUCOBOL platform 
+# settings.  Uncomment the macro lines which match the
+# platform that you are porting.
+#
+ACUOTHER=
+#
+#	ACUCOBOL Version 3.1.1 (and greater) on Solaris and DG-UX Intel
+#
+#ACUOTHER_SYS= -lnsl -lsocket
+#ACUOTHER=$(ACUOTHER_SYS)
+#
+#	ACUCOBOL Version 3.1.1 (and greater) on SCO Unix
+#
+#ACUOTHER_SCO= -lsocket
+#ACUOTHER=$(ACUOTHER_SCO)
+#
+#============================================================================
+#
+# 	****  DON'T CHANGE SETTINGS IN THIS SECTION ****
+#
+#	DEFINE MACROS FOR EACH VERSION OF ACUCOBOL
 #
 ACULIBS1=$(ACUDIR)/runcbl.a
 ACULIBS2=$(ACUDIR)/runcbl.a
@@ -44,58 +101,64 @@ ACULIBS5=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libmessage.a \
 	$(ACU_LIBDIR)/libmemory.a \
 	$(ACU_LIBDIR)/libstdlib.a
+ACULIBS6=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libclient.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libstdlib.a \
+	$(ACU_LIBDIR)/libconnectc.a
+ACULIBS7=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libconnectc.a \
+	$(ACU_LIBDIR)/libclnt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libstdlib.a 
 
 ACUSUBS1=sub.o
 ACUSUBS2=sub.o filetbl.o
 ACUSUBS3=sub.o filetbl.o $(ACUDIR)/clntstub.o
 ACUSUBS4=sub.o filetbl.o $(ACU_LIBDIR)/clntstub.o
 ACUSUBS5=sub.o filetbl.o 
+ACUSUBS6=sub.o filetbl.o 
+ACUSUBS7=sub.o filetbl.o 
 
 ACUTEST1=$(ACUDIR)/runcbl.a
 ACUTEST2=$(ACUDIR)/runcbl.a
 ACUTEST3=$(ACUDIR)/libruncbl.a
 ACUTEST4=$(ACU_LIBDIR)/libruncbl.a
 ACUTEST5=$(ACU_LIBDIR)/libstdlib.a
+ACUTEST6=$(ACU_LIBDIR)/libconnectc.a
+ACUTEST7=$(ACU_LIBDIR)/liblib.a
 
 COBOL1=$(ACUDIR)/ccbl
 COBOL2=$(ACUDIR)/ccbl
 COBOL3=$(ACUDIR)/ccbl
 COBOL4=$(ACUDIR)/bin/ccbl
 COBOL5=$(ACUDIR)/bin/ccbl
+COBOL6=$(ACUDIR)/bin/ccbl
+COBOL7=$(ACUDIR)/bin/ccbl
 
 CBLUTIL1=$(ACUDIR)/ccbl
 CBLUTIL2=$(ACUDIR)/ccbl
 CBLUTIL3=$(ACUDIR)/ccbl
 CBLUTIL4=$(ACUDIR)/bin/ccbl
 CBLUTIL5=$(ACUDIR)/bin/cblutil
-
-ACUOTHER=
-
-#============================================================================
-#
-# ****  CHANGE PLATFORM SETTINGS HERE ****
-#
-# The following lines are used to change the ACUCOBOL platform 
-# settings.  Uncomment the macro lines which match the
-# platform that you are porting.
-#
-#
-#	ACUCOBOL Version 3.1.1 on Solaris and DG-UX Intel
-#
-#ACUOTHER_SYS= -lnsl -lsocket
-#ACUOTHER=$(ACUOTHER_SYS)
-#
-#	ACUCOBOL Version 3.1.1 on SCO Unix
-#
-#ACUOTHER_SCO= -lsocket
-#ACUOTHER=$(ACUOTHER_SCO)
+CBLUTIL6=$(ACUDIR)/bin/cblutil
+CBLUTIL7=$(ACUDIR)/bin/cblutil
 
 #============================================================================
 #
-# ****  CHANGE VERSION SETTINGS HERE ****
+# ****  CHANGE ACUCOBOL VERSION SETTINGS HERE ****
 #
 # The following lines are used to change the ACUCOBOL version 
-# settings.  Uncomment the 5 macro lines which match the
+# settings.  Uncomment the 6 macro lines which match the
 # version of ACUCOBOL you are using.
 #
 #	
@@ -135,11 +198,34 @@ ACUOTHER=
 # COBOL=$(COBOL4)
 # CBLUTIL=$(CBLUTIL4)
 #
-# 5	ACUCOBOL Version 3.1 - 3.2
+# 5	ACUCOBOL Version 3.1 - 3.2.1 + 3.2.2 (except SCO UNIX) 
 #
-ACULIBS=$(ACULIBS5) $(ACUOTHER)
-ACUSUBS=$(ACUSUBS5)
-ACUTEST=$(ACUTEST5)
+# ACULIBS=$(ACULIBS5) $(ACUOTHER)
+# ACUSUBS=$(ACUSUBS5)
+# ACUTEST=$(ACUTEST5)
+# ACUSRCDIR=$(ACU_LIBDIR)
+# COBOL=$(COBOL5)
+# CBLUTIL=$(CBLUTIL5)
+#
+# 6	ACUCOBOL Version 3.2.2 for SCO UNIX
+#
+#ACULIBS=$(ACULIBS6) $(ACUOTHER)
+#ACUSUBS=$(ACUSUBS6)
+#ACUTEST=$(ACUTEST6)
+#ACUSRCDIR=$(ACU_LIBDIR)
+#COBOL=$(COBOL6)
+#CBLUTIL=$(CBLUTIL6)
+#
+# 7	ACUCOBOL Version 4.0.0 - 4.2.0
+#
+ACULIBS=$(ACULIBS7) $(ACUOTHER)
+ACUSUBS=$(ACUSUBS7)
+ACUTEST=$(ACUTEST7)
 ACUSRCDIR=$(ACU_LIBDIR)
-COBOL=$(COBOL5)
-CBLUTIL=$(CBLUTIL5)
+COBOL=$(COBOL7)
+CBLUTIL=$(CBLUTIL7)
+
+#
+#============================================================================
+#
+#	END OF acucobol.include

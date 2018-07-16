@@ -49,8 +49,10 @@ static int get_eoj();
 static int get_dummy();
 
 
+#ifdef unix
 static void badusage();
 static void copy();
+#endif
 
 static	char 	*COPY_VERSION = "WISP Copy Program - Version 1.01.00";
 static	int4	N[255];
@@ -130,16 +132,16 @@ char	*argv[];
 		terminate_key = 16;
 	}
 
+
+#ifndef unix
+
+	wexit(vscopy());
+
+#else /* unix */
 	if (argc == 1)
 	{
 		wexit(vscopy());
 	}
-
-#ifndef unix
-
-	badusage();
-
-#else /* unix */
 	if (argc != 1 && argc != 6 && argc != 7) badusage();
 
 	strcpy( key, argv[1] );
@@ -320,17 +322,17 @@ int	*status;
 }
 #endif /* unix */
 
+#ifdef unix
 static void badusage()
 {
 	printf("\n");
 	printf("Usage: wcopy\n");
-#ifdef unix
 	printf("       wcopy         oldfile oldlib oldvol newfile newlib newvol\n");
 	printf("       wcopy LIBRARY         oldlib oldvol         newlib newvol\n");
-#endif
 	printf("\n");
 	exit(0);
 }
+#endif
 
 /*
 **	Routine:	vscopy()
@@ -1329,6 +1331,9 @@ int4 retcode;
 /*
 **	History:
 **	$Log: wcopy.c,v $
+**	Revision 1.17  1998-06-18 10:26:35-04  gsl
+**	Trk 542 - For NT/95 change to ignore arguments.
+**
 **	Revision 1.16  1997-09-24 17:56:12-04  gsl
 **	Add support for pfkeys12()
 **

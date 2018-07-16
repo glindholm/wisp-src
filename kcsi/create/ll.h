@@ -10,7 +10,7 @@ typedef struct _ll{
     struct _ll *next;
     }LL;
 
-/* #define	SUPERSAFE	1	/* How safe do ya wanna be*/
+/* #define	SUPERSAFE	1	*/	/* How safe do ya wanna be*/
 #ifdef	SUPERSAFE 				/*Awesomely safe*/
 typedef struct _lls{
 	LL	ll;
@@ -83,6 +83,9 @@ void	*ll_bubble_sort(),
 /*
 **	History:
 **	$Log: ll.h,v $
+**	Revision 1.7  1999-01-19 11:11:42-05  gsl
+**	fix warning
+**
 **	Revision 1.6  1997-10-02 10:44:06-04  gsl
 **	FIx warnings
 **

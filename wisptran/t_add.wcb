@@ -1,0 +1,100 @@
+000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       T-ADD.wcb
+000500**
+000600**   Project:    WISP/TRAN
+000700**
+000800**   Purpose:
+000900**
+001000**   Example:
+001100**
+001200 IDENTIFICATION DIVISION.
+001300 PROGRAM-ID. TADD.
+001400
+001500 ENVIRONMENT DIVISION.
+001600 CONFIGURATION SECTION.
+001700 INPUT-OUTPUT SECTION.
+001800 FILE-CONTROL.
+001900
+002000 DATA DIVISION.
+002100 FILE SECTION.
+002200
+002300
+002400
+002500 WORKING-STORAGE SECTION.
+002600
+002700
+002800 01  NUM1    PIC 9(10).
+002900 01  NUM2    PIC 9(10).
+003000 01  NUM3    PIC 9(10).
+003100 01  NUM4    PIC 9(10).
+003200 01  NUM5    PIC 9(10).
+003300
+003400
+003500
+003600 PROCEDURE DIVISION.
+003700
+003800 0000-MAIN SECTION.
+003900
+004000
+004100
+004200 P01-ADD.
+004300
+004400
+004500*    add num1 to num2
+004600     add num1 to num2
+004700
+004800*    add num1 to num2 rounded
+004900     add num1 to num2 rounded
+005000
+005100*    add num1 to num2
+005200*        size error
+005300*            display "size error"
+005400*    end-add
+005500     add num1 to num2
+005600         size error
+005700             display "size error"
+005800     end-add
+005900
+006000*    add num1 to num2
+006100*        on size error
+006200*            display "size error"
+006300*        not on size error
+006400*            display "not size error"
+006500*    end-add
+006600     add num1 to num2
+006700         on size error
+006800             display "size error"
+006900         not on size error
+007000             display "not size error"
+007100     end-add
+007200
+007300*    add num1 to num2
+007400*        not size error
+007500*            display "not size error".
+007600     add num1 to num2
+007700         not size error
+007800             display "not size error".
+007900
+008000*    add num1 num2 to num3
+008100     add num1 num2 to num3
+008200
+008300*    add num1 num2 to num3 giving num4
+008400     add num1 num2 to num3 giving num4
+008500
+008600*    add num1 num2 to num3 giving num4 rounded
+008700*    end-add.
+008800     add num1 num2 to num3 giving num4 rounded
+008900     end-add.
+009000
+009100
+009200
+009300 9999-END SECTION.
+009400 9999-EXIT.
+009500     EXIT PROGRAM.
+009600 9999-STOP.
+009700     STOP RUN.
+009800**
+009900**   End of T-ADD
+010000**

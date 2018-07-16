@@ -1,0 +1,65 @@
+;=========================================================================
+;                     Co*STAR for WISP Configuration File
+;
+;
+;=========================================================================
+[Configuration]
+DEBUG=OFF
+UpdateMode=3
+ScrollMode=0
+Macro_file=W4W\W4W.KEY
+Hotspot_File=W4W\W4W.HSF
+ToolFile=W4W\W4W.TBF
+TITLE=Co*STAR for WISP
+BAUD_RATE=9600
+BYTE_SIZE=8
+PARITY=None
+STOP_BITS=1
+MAGIC=127
+AUTO_WRAP=OFF
+Image_Path=
+Flow_Control=None
+TermID=Co*Star
+Col_Row=N              ;set image api to col,row order -- YES or NO ( default NO )
+Emulation=VT220
+Strip_8=OFF
+FastPaste=ON
+ScrollSize=4
+Rows=24
+Columns=80
+;Port=
+
+;The LOGON keyword specifies what commands or key sequences to perform at
+;communications startup. A script file may also be specified.  Refer to the
+;Commands and Keystrokes in the User guide for information on valid entries.
+
+;LOGON=
+;VOICE=OFF         :Flag for voice recognition values may be ON or OFF
+;IMAGE=            :program to use when the IMAGE menu item
+;IMAGENAME=        :Name of registered window class
+;SAMPLERATE=155    :voice samplerate 10 -> 250, default 100
+;COVOX=1           :Covox Voice Master Key using LPT1 (Default) values 1,2,3,4
+;COVOX=0x22F       :Covox Speech Thing using IRQ 22f (Default) values 0x24f, 0x28f, 0x2cf
+
+NL=#100:            XON Limit    
+FL=#100:            XOFF Limit   
+IQ=#8000:           Input Queue Size
+OQ=#4000:           Output Queue Size
+
+NCR=0
+Beep=ON
+;Window=0,-4,-4,648,488
+Buttons=1
+ToolBar=0
+ScrollBuffer=0
+
+[NetworkInfo]
+Host=localhost
+IP_Address=0.0.0.0
+
+[FILTERS]
+;Filter1=VBCOSTAR.VBX
+
+[Display]
+Default=w4w_v2
+

@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -154,7 +154,7 @@ LIBCURSES= -lcurses
 #LIBCURSES= /usr/5lib/libcurses.a
 # Uncomment the following for SunOS 5.5.1
 #LIBCURSES= /usr/ccs/lib/libcurses.a
-# Uncomment the following for HP-UX 10.20
+# Uncomment the following for HP-UX 10.10
 #LIBCURSES= -lcur_colr
 
 #============================================================================
@@ -221,6 +221,179 @@ WISPFILES=$(WISPLIBSDIR)/$(LIBWISP) \
 	$(WISPDIR)/mf/wrunmf.c
 
 #============================================================================
+# 
+# Need to list all the COBOL entry points.
+#
+VSSUB_ENTRY = \
+	-I BELL \
+	-I BITPACK \
+	-I BITUNPK \
+	-I CANCEL \
+	-I CEXIT \
+	-I COBLINK \
+	-I DATE \
+	-I DATE2 \
+	-I DATE4 \
+	-I DAY \
+	-I EXTRACT \
+	-I FIND \
+	-I GETPARM \
+	-I HEXPACK \
+	-I HEXUNPK \
+	-I LINK \
+	-I LOGOFF \
+	-I MESSAGE \
+	-I wpause \
+	-I PRINT \
+	-I PUTPARM \
+	-I READFDR \
+	-I READFDR4 \
+	-I READVTOC \
+	-I wrename \
+	-I SCRATCH \
+	-I SCREEN \
+	-I SEARCH \
+	-I SET \
+	-I SETFILE \
+	-I SORT \
+	-I SORTCALL \
+	-I SORTINFO \
+	-I SORTLINK \
+	-I STRING \
+	-I SUBMIT \
+	-I UPDATFDR \
+	-I WISPSORT \
+	-I WSXIO
+
+WISPSUB_ENTRY = \
+	-I ACUGARGS \
+	-I ACUNARGS \
+	-I ACUPARGS \
+	-I bit_off \
+	-I lbit_off \
+	-I bit_on \
+	-I lbit_on \
+	-I bit_test \
+	-I lbit_test \
+	-I FILECOPY \
+	-I FXZONE \
+	-I getparmbuild \
+	-I getwfilext \
+	-I initwisp \
+	-I initwisp2 \
+	-I ISRUNUSING \
+	-I LINKGARG \
+	-I LINKMF \
+	-I LINKPARG \
+	-I LINKPROC \
+	-I mwconv \
+	-I NOHELP \
+	-I ONHELP \
+	-I RETCODE \
+	-I SET8BIT \
+	-I setprogid \
+	-I setretcode \
+	-I SETSUBMIT \
+	-I SETTRIGPROG \
+	-I setwfilext \
+	-I setwispfilext \
+	-I UPPER \
+	-I USEHARDLINK \
+	-I USESOFTLINK \
+	-I vwang \
+	-I w2rowcol \
+	-I W4WAPI \
+	-I WACCEPT \
+	-I WANSI2WANG \
+	-I WWANG2ANSI \
+	-I WCHAIN \
+	-I WDISPLAY \
+	-I wexith \
+	-I wfclose \
+	-I wfilechk \
+	-I wfilechk2 \
+	-I wfname \
+	-I wfopen \
+	-I wfopen2 \
+	-I wfopen3 \
+	-I wfswait \
+	-I wfwait \
+	-I WISPEXIT \
+	-I WISPPLAT \
+	-I WISPSHUT \
+	-I WISPSYNC \
+	-I wmemcpy \
+	-I wscreen \
+	-I wsetstat \
+	-I WSTOP \
+	-I WTITLE \
+	-I wvaset \
+	-I xx2byte
+
+ACP_ENTRY = \
+	-I BREAKACP \
+	-I CHECKACP \
+	-I CLOSEACP \
+	-I GETACP \
+	-I OPENACP \
+	-I READACP \
+	-I SETACP \
+	-I WRITEACP
+
+NETCAP_ENTRY = \
+	-I WSCLOSE \
+	-I WSFNM \
+	-I WSFNS
+
+WISP_ENTRY= $(VSSUB_ENTRY) $(WISPSUB_ENTRY) $(ACP_ENTRY) $(NETCAP_ENTRY)
+
+EDE_ENTRY = \
+	-I DYLINK \
+	-I DYUNLINK \
+	-I EDCLRSCR \
+	-I EDDRKSCR \
+	-I EDEXIT \
+	-I EDLOAD \
+	-I EDLTESCR \
+	-I EDNARSCR \
+	-I EDWIDSCR \
+	-I GENVEC \
+	-I MENUCONT \
+	-I MENUEXIT \
+	-I MENUGO \
+	-I MENUINFO \
+	-I MENUITEM \
+	-I MENUKILL \
+	-I MENULOAD \
+	-I MENUMODE \
+	-I MENUREST \
+	-I MENUSAVE \
+	-I NOPFKEYS \
+	-I PFKEYSON \
+	-I POPAREA \
+	-I PUSHAREA \
+	-I PUSHSCRN \
+	-I RETRACE \
+	-I TRACEEND \
+	-I TRACEGO \
+	-I VIDLINE \
+	-I VIDMODE \
+	-I VIDMOVE \
+	-I VIDTEXT \
+	-I gcalc \
+	-I gcalend \
+	-I gclock \
+	-I gen_ncpfkey \
+	-I gnotepad \
+	-I gpuzzle \
+	-I nc_pop_menu \
+	-I vpopscr \
+	-I vpushscr \
+	-I ws_bar_menu
+
+WISPEDE_ENTRY = $(WISP_ENTRY) $(EDE_ENTRY)
+
+#============================================================================
 #
 #	TARGETS:
 #
@@ -282,10 +455,10 @@ $(WISPFILES):
 	@exit 1
 
 $(RTS): header $(WISPSUBS) $(WISP_LIBS_PATHS)
-	$(COBOL) -xe "" -o $@ $(WISPSUBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+	$(COBOL) -xe "" -g -o $@ $(WISP_ENTRY) $(WISPSUBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
 
 $(RTSE): header $(WISPSUBS) $(WISPEDE_LIBS_PATHS)
-	$(COBOL) -xe "" -o $@ $(WISPSUBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
+	$(COBOL) -xe "" -g -o $@ $(WISPEDE_ENTRY) $(WISPSUBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 
 subsonly:	$(WISPSUBS)
 

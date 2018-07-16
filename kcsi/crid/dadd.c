@@ -85,6 +85,7 @@ static int add_records_entry()
 				}
 			}
 		}
+	return 0;
 }
 
 /*----
@@ -252,6 +253,9 @@ int file_is_indexed()
 /*
 **	History:
 **	$Log: dadd.c,v $
+**	Revision 1.4  1999-09-13 15:45:48-04  gsl
+**	Fix missing return code
+**
 **	Revision 1.3  1996-09-17 19:45:31-04  gsl
 **	drcs update
 **

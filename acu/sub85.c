@@ -29,7 +29,7 @@
 /* CANCELLED since its last CALL.  Otherwise this parameter is zero.	*/
 
 #ifdef WISP
-static char wisp_copyright[]="Copyright (c) 1989-1997 NeoMedia Technologies, All rights reserved.";
+static char wisp_copyright[]="Copyright (c) 1989-1998 NeoMedia Technologies, All rights reserved.";
 static char wisp_rcsid[]="$Id:$";
 /*
 	To reduce the size of the RTS you can remove any of the following
@@ -115,6 +115,7 @@ struct	PROCTABLE WNEAR LIBTABLE[] = {
 	{ "COBLINK",	wfrontend },
 	{ "DATE",	wfrontend },
 	{ "DATE2",	wfrontend },
+	{ "DATE4",	wfrontend },
 	{ "DAY",	wfrontend },
 	{ "EXTRACT",	wfrontend },
 	{ "FILECOPY",	wfrontend },
@@ -140,6 +141,7 @@ struct	PROCTABLE WNEAR LIBTABLE[] = {
 	{ "PRINT",	wfrontend },
 	{ "PUTPARM",	wfrontend },
 	{ "READFDR",	wfrontend },
+	{ "READFDR4",	wfrontend },
 	{ "READVTOC",	wfrontend },
 	{ "RETCODE",	wfrontend },
 	{ "SCRATCH",	wfrontend },
@@ -314,6 +316,7 @@ extern CANCEL();
 extern CEXIT();
 extern WISPDATE();
 extern DATE2();
+extern DATE4();
 extern DAY();
 extern EXTRACT();
 extern FILECOPY();
@@ -333,6 +336,7 @@ extern ONHELP();
 extern PRINT();
 extern RETCODE();
 extern READFDR();
+extern READFDR4();
 extern READVTOC();
 extern SCRATCH();
 extern SCREEN();
@@ -510,6 +514,7 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "COBLINK",	COBLINK },	
 	{ "DATE",	WISPDATE },
 	{ "DATE2",	DATE2 },
+	{ "DATE4",	DATE4 },
 	{ "DAY",	DAY },
 	{ "EXTRACT",	EXTRACT },	
 	{ "FILECOPY",	FILECOPY },
@@ -529,6 +534,7 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "PRINT",	PRINT },
 	{ "PUTPARM",	PUTPARM },
 	{ "READFDR",	READFDR },
+	{ "READFDR4",	READFDR4 },
 	{ "READVTOC",	READVTOC },
 	{ "RETCODE",	RETCODE },
 	{ "SCRATCH",	SCRATCH },
@@ -1092,8 +1098,33 @@ int exit_code;
 {
 	extern int stop_runtime();
 	
+	/*
+	**	If already processing WISP exit logic then just return.
+	*/
+	if (wisp_wexit)
+	{
+		return;
+	}
+
+	/*
+	**	This prevents an COBOL and WISP exit loop.
+	*/
 	wisp_wexit = 1;
+
+	/*
+	**	Call stop_runtime() to have cobol stop the runtime.
+	*/
 	stop_runtime(exit_code,0,0,0,0,0);			/* Acucobol routine to shutdown */
+}
+
+void start_cobol_screen_handler()
+{
+	w_set_term();
+}
+
+void shutdown_cobol_screen_handler()
+{
+	w_reset_term();
 }
 
 /*
@@ -1106,7 +1137,20 @@ void
 AShutdown( error_halt )
 int	error_halt;
 {
-	if (error_halt && !wisp_wexit)
+	/*
+	**	If a normal exit from the runtime then just return.
+	*/
+	if (0==error_halt)
+	{
+		return;
+	}
+	
+	/*
+	**	This is an abnormal exit (0 != error_halt).
+	**
+	**	If we are not already processing wexit() then go thur the WISP exit logic.
+	*/
+	if (0 == wisp_wexit)
 	{
 		if (!nativescreens())
 		{
@@ -1116,9 +1160,10 @@ int	error_halt;
 #endif
 		}
 		
+		wisp_wexit = 1;
+
 		wexit(error_halt);
 	}
-	return;
 }
 void Shutdown(error_halt)
 int error_halt;

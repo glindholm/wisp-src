@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Design, 1991
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Design, 1991
 //
 // Module : token.cpp
 // Author : George Soules
@@ -114,24 +121,72 @@ char *kind_string(token_kind the_kind) {
 }
 
 void token::dump() const {
-   print_trace_id("scanner");
-#ifdef EXT_COUT
-   cout << "row " << the_row << ", col " << (int) the_column
-        << ", size " << the_lexeme_size
-        << ", " << kind_string(the_kind);
-   if (the_kind == tk_string)
-      cout << " \"" << the_lexeme << "\"\n";
-   else
-      cout << " " << the_lexeme << "\n";
-   cout.flush();
-#else
-	printf("row %d, col %d, size %d, %s", the_row, (int) the_column, the_lexeme_size, kind_string(the_kind));
-   	if (the_kind == tk_string)
-		printf(" \"%s\"\n", the_lexeme);
-	else
-		printf(" %s\n", the_lexeme);
-	fflush(stdout);
-#endif
+	char mess[256];
+   
+	if (user_options.debug_trace_scanner())
+	{
+		if (the_kind == tk_string)
+		{
+			sprintf(mess, "row %d, col %d, size %d, %s \"%s\"", 
+				the_row, (int) the_column, the_lexeme_size, kind_string(the_kind),the_lexeme);
+		}
+   		else
+		{
+			sprintf(mess, "row %d, col %d, size %d, %s %s", 
+				the_row, (int) the_column, the_lexeme_size, kind_string(the_kind),the_lexeme);
+		}
+
+   		trace(scanner,mess);
+	}
 }
 
 #endif
+
+//
+//	History:
+//	$Log: token.cpp,v $
+//	Revision 1.7  1998-09-02 17:28:21-04  gsl
+//	Changed to use trace() instead of printf()
+//
+//	Revision 1.6  1998-08-31 15:14:22-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/token.cpp,v
+//	Working file: token.cpp
+//	head: 1.5
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 5;	selected revisions: 5
+//	description:
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:16:30-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	Renamed from token.cc to token.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:30-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:45-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:30-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:31-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

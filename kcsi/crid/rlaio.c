@@ -433,7 +433,8 @@ KCSIO_BLOCK *kfb;
 	memset(kfb->_record,0,RECORD_LEN);
 	rlen[0] = 0;
 	write(kfb->_io_channel, kfb->_record, RECORD_LEN);
-	write(rlen, rlen, 1);
+	/* write(rlen, rlen, 1);  - this is clearly incorrect, assume the following was what was meant. */
+	write(kfb->_io_channel, rlen, 1);	/* Write a trailing NULL to indicate a deleted record. (I think.) */ 
 /*
  * Re-seek to where we were
  */
@@ -491,6 +492,9 @@ int code;
 /*
 **	History:
 **	$Log: rlaio.c,v $
+**	Revision 1.5  1998-10-13 15:15:41-04  gsl
+**	Fix logic that deletes a releative record.
+**
 **	Revision 1.4  1997-10-02 15:45:59-04  gsl
 **	fix warnings
 **

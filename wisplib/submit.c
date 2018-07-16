@@ -399,6 +399,8 @@ va_dcl											/* Define the list structure.		*/
 	rc = win32_submit(name,jobname,l_job_class,l_status,l_disposition,l_vol,l_lib);
 #endif
 
+	wtrace("SUBMIT","RETURN","Return code = %d", rc);
+
 	wswap(&rc);
 	PUTBIN(l_return_code,&rc,sizeof(int4));
 }
@@ -536,6 +538,7 @@ static int unix_submit(
 
 				if (0 == getscmapnice(jobclass,&nice_value))
 				{
+					wtrace("SUBMIT","UNIX","Nice value = %d",nice_value);
 					nice(nice_value);
 				}
 
@@ -594,10 +597,10 @@ static int unix_submit(
 						wexit(ERRORCODE(4));
 					}
 				}
-#ifdef __STDC__ 
-				setpgrp(); 						/* Set the PROCESS GROUP ID		*/
-#else
+#if defined(BSD) || defined(_BSD)
 				setpgrp(pid,pid); 					/* Set the PROCESS GROUP ID		*/
+#else
+				setpgrp(); 						/* Set the PROCESS GROUP ID		*/
 #endif
 
 				freopen("/dev/null","r",stdin);				/* close these files			*/
@@ -677,6 +680,8 @@ static int unix_submit(
 					for (ii=0, shell_cmd_len=1; sh_parm[ii]; ++ii)
 					{
 						shell_cmd_len += strlen(sh_parm[ii]) + 1;
+						if ( strchr(sh_parm[ii], ' ') )		/* Is there any embedded blank?		*/
+							shell_cmd_len += 2;		/* Account for double quote wrapping	*/
 					}
 					shell_cmd = malloc(shell_cmd_len);
 					
@@ -685,7 +690,7 @@ static int unix_submit(
 					*/
 					for (ii=0, shell_cmd[0]='\0'; sh_parm[ii]; ++ii)
 					{
-						strcat(shell_cmd,sh_parm[ii]);
+						dqw_strcat(shell_cmd,sh_parm[ii]);	/* double quote wrap if needed		*/
 						strcat(shell_cmd," ");					
 					}
 					if (jobclass)
@@ -731,6 +736,12 @@ static int unix_submit(
 					{	
 						jclassp=NULL;
 					}
+
+					wtrace("SUBMIT","EXECLP","%s -c %s -T %s %s",
+					       batchqueue_name, shell_cmd, jobname, 
+					       (jclassp?jclassp:"(NULL)"), 
+					       (jmodep?jmodep:"(NULL)"));
+					
 					execlp( batchqueue_name, batchqueue_name, 
 						"-c", shell_cmd, "-T", jobname, jclassp, jmodep, NULL);
 					retcode=fixerr(errno);
@@ -739,6 +750,21 @@ static int unix_submit(
 				}
 				else
 				{
+					if (wtracing())
+					{
+						char	tbuff[1024], pbuff[256];
+						int i;
+						
+						tbuff[0] = '\0';
+						
+						for(i=0; sh_parm[i]; i++)
+						{
+							sprintf(pbuff,"P%d[%s] ",i,sh_parm[i]);
+							strcat(tbuff,pbuff);
+						}
+						wtrace("SUBMIT","EXECVP","%s",tbuff);
+					}
+					
 					execvp( sh_parm[0], sh_parm );
 					retcode=fixerr(errno);
 					werrlog(ERRORCODE(6),sh_parm[0],errno,retcode,0,0,0,0,0);
@@ -1009,6 +1035,10 @@ static int win32_submit(
 				*++trunc_idx = '\0';
 				
 				subparams_len += strlen(sh_parm[ii]) + 1;
+
+				if ( strchr(sh_parm[ii], ' ')  )			/* Is there any embedded blank?		*/
+					subparams_len += 2;				/* Account for double quote wrapping	*/
+
 			}
 			subparams = wmalloc(subparams_len);
 			
@@ -1017,7 +1047,7 @@ static int win32_submit(
 			*/
 			for (ii=1, subparams[0]='\0'; sh_parm[ii]; ++ii)
 			{
-				strcat(subparams,sh_parm[ii]);
+				dqw_strcat(subparams,sh_parm[ii]);			/* double quote wrap if needed		*/
 				strcat(subparams," ");					
 			}
 			ASSERT((int)strlen(subparams) < subparams_len);
@@ -1151,7 +1181,7 @@ static int win32_submit(
 			**	This will but the job into the queue and return so we
 			**	will wait for it to complete and hide the child window.
 			*/ 
-			system_ret = win32spawnlp( NULL , cmd_string, SPN_WAIT_FOR_CHILD|SPN_HIDE_CHILD);
+			system_ret = win32spawnlp( NULL , cmd_string, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_CAPTURE_OUTPUT);
 
 
 			/*
@@ -1179,6 +1209,8 @@ static int win32_submit(
 			for (ii=0, shell_cmd_len=1; sh_parm[ii]; ++ii)
 			{
 				shell_cmd_len += strlen(sh_parm[ii]) + 1;
+				if ( strchr(sh_parm[ii], ' ')  )			/* Is there any embedded blank		*/
+					shell_cmd_len += 2;				/* Account for double quote wrapping	*/
 			}
 			shell_cmd = malloc(shell_cmd_len);
 			
@@ -1188,14 +1220,14 @@ static int win32_submit(
 			strcpy(shell_cmd,sh_parm[0]);
 			for (ii=1; sh_parm[ii]; ++ii)
 			{
-				strcat(shell_cmd," ");					
-				strcat(shell_cmd,sh_parm[ii]);
+				strcat(shell_cmd," ");
+				dqw_strcat(shell_cmd,sh_parm[ii]);			/* double quote wrap if needed		*/
 			}
 
 			/*
 			**  CHILD will be DETACHED
 			*/
-			system_ret = win32spawnlp( NULL , shell_cmd , SPN_DETACH_CHILD );
+			system_ret = win32spawnlp( NULL , shell_cmd , SPN_SUBMIT_CHILD );
 
 			free(shell_cmd);
 
@@ -1321,6 +1353,24 @@ const char* submit_err(int error)
 /*
 **	History:
 **	$Log: submit.c,v $
+**	Revision 1.32  1999-01-19 17:06:25-05  gsl
+**	For BSD check add defines BSD and _BSD
+**
+**	Revision 1.31  1999-01-19 10:27:31-05  gsl
+**	Fix the ifdef around setpgrp() to BSD
+**
+**	Revision 1.30  1998-08-03 17:14:22-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.29  1998-07-07 17:48:40-04  gsl
+**	Add unix tracing of the exec calls
+**
+**	Revision 1.28  1998-05-05 17:35:38-04  gsl
+**	WIN32 change spawn mode to new flags
+**
+**	Revision 1.27  1998-05-05 13:21:25-04  gsl
+**	Update spawn flags for WIN32
+**
 **	Revision 1.26  1997-12-04 18:12:43-05  gsl
 **	changed to wispnt.h
 **

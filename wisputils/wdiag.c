@@ -51,9 +51,12 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/types.h>
+#include <time.h>
 
 #ifdef unix
 #include <sys/utsname.h>
+#include <unistd.h>
 #endif
 
 #if defined(MSDOS) || defined(WIN32)
@@ -73,6 +76,7 @@ static char rcsid[]="$Id:$";
 #include "wrunconf.h"
 #include "idsisubs.h"
 #include "wispcfg.h"
+#include "wisplib.h"
 #include "wlicense.h"
 #include "wsysconf.h"
 #include "wrunconf.h"
@@ -81,35 +85,155 @@ static char rcsid[]="$Id:$";
 #include "wperson.h"
 #include "wispvers.h"
 #include "wispnt.h"
+#include "wglobals.h"
+#include "wfiledis.h"
 
 #ifndef false
 #define false 0;
 #define true !false;
 #endif
 
+#define ACC_EXECUTE	01
+#define ACC_READ	04
+#define ACC_RX		05
+#define ACC_FULL	07
+
 /*
 **	Define  called routines
 */
-int check_access(const char *ptr, int mode);
+int check_access(int* pnError, const char *ptr, int mode);
 int     define_os();
 int	define_videocap();
 int run_command(char *command);
 int define_acu(const char* rts);
-void checkexe(const char *tag, const char *exe);
+void checkexe(const char *tag, const char *exe, int* pError);
 void checklinkexe(const char *tag, const char *exe);
-void print_options_file(const char* options_path);
-
+void print_config_file(const char* options_path);
+static void cat_file(const char* file_path);
+static void check_path(const char* path);
+static void test_int_sizes(void);
 
 /*
 **	Global defines and data
 */
-#define mfcobol 98
-#define acucobol 99
 
-int     comp,
-	errsw,
-	erracu,
-	errmf;
+#define UNKNOWNCOBOL 0
+#define MFCOBOL 98
+#define ACUCOBOL 99
+
+static int	nCobol = UNKNOWNCOBOL;
+
+static int	errsw = 0;	/* Error count (non-cobol) */
+static int	erracu = 0;	/* Error count for Acucobol */
+static int	errmf = 0;	/* Error count for MicroFocus */
+
+static struct wruncfg wrun_cfg;
+
+#ifdef unix
+static int bBourneShell = 1; /* Assume using bourne shell */
+#endif
+
+
+static void print_nl(void)
+{
+	printf("\n");
+}
+
+static void print_mess_nl(const char* mess)
+{
+	printf(" %s\n",mess);
+}
+
+static void print_inset(const char* value)
+{
+	printf(" > %-52s", value);
+}
+
+static void print_pair(const char* lhs, const char *rhs)
+{
+	printf("%-12s = %-40s", lhs, rhs);
+}
+
+static void print_err_mess(const char* pszSeverity, const char *pszType)
+{
+	printf(" *** %s %s ***\n", pszSeverity, pszType);
+}
+
+static void print_pair_err_mess(const char* lhs, const char *rhs, const char* pszSeverity, const char *pszType)
+{
+	print_pair(lhs,rhs);
+	print_err_mess(pszSeverity, pszType);
+}
+
+static void print_inset_nl(const char* value)
+{
+	print_inset(value);
+	print_nl();
+}
+
+static void print_pair_nl(const char* lhs, const char *rhs)
+{
+	print_pair(lhs, rhs);
+	print_nl();
+}
+
+static void print_pair_mess(const char* lhs, const char *rhs, const char* mess)
+{
+	print_pair(lhs, rhs);
+	print_mess_nl(mess);
+}
+
+static int print_access(const char* pszLabel, const char* pszPath, int nAccess, int* pnError)
+{
+        if (NULL == pszPath)
+	{
+	        pszPath = "";
+        }
+       
+	print_pair(pszLabel, pszPath);
+
+	return check_access(pnError, pszPath,nAccess);
+}
+
+static int print_envvar(const char* pszVar, int* pnError)
+{
+	const char* cptr;
+	int     rc = 0;
+	int	nErrorLocal;
+	char* 	pszSeverity;
+  
+	if (NULL == pnError)
+	{
+		pszSeverity = "WARNING";
+		pnError = &nErrorLocal;	/* Fake it */
+	}
+	else
+	{
+		pszSeverity = "ERROR";
+	}
+	
+	if (cptr = getenv(pszVar))
+	{
+		if (cptr[0] == '\0')
+		{
+			rc = 1;
+			(*pnError)++;
+			print_pair_err_mess(pszVar, "(NULL)",pszSeverity,"NULL VARIABLE");
+		}
+		else
+		{
+			print_pair_nl(pszVar, cptr);
+		}
+	}
+	else
+	{
+		print_pair_nl(pszVar, "(not defined)");
+	}
+
+	return rc;
+}
+
+
 
 
 /*
@@ -134,18 +258,18 @@ int     comp,
 **
 */
 
-main()
+int main(int argc, char* argv[], char* envp[])
 {
+	time_t now;
 	char    buff[256];
 
 	const char *cptr;
-	const char *wc;
-	const char *vcf;
 	
 	char     ut[256];
 
-	struct wruncfg wrun_cfg;
+	test_int_sizes();
 
+	load_options();
 
 	printf("**********************************************************************\n");
 	printf("*                            WISP - WDIAG                            *\n");
@@ -155,14 +279,8 @@ main()
 	printf("*                          Version %s                           *\n", wisp_version());
 	printf("**********************************************************************\n");
 
-
-	/*
-	**	Set flags false
-	*/
-	erracu = false;
-	errmf  = false;
-	errsw  = false;
-	comp   = false;
+	now = time(NULL);
+	printf("\n%s\n", ctime(&now));
 
 	/*
 	**	Check operating system
@@ -177,105 +295,47 @@ main()
 	printf("WISP Environment\n");
 	printf("================\n");
 
-	if (wc = wispconfigdir())
-	{
-		printf("WISPCONFIG  = %s",wc);
-		if (check_access(wc,05) != 0)
-		{
-			errsw = true;
-		}
-	}
-	else
-	{
-		errsw = true;
-		printf("WISPCONFIG  = *** NOT DEFINED ***\n\n");
-	}
-
-	cptr = wispdir();
-	printf("WISPDIR     = %s",cptr);
-	if (check_access(cptr,05) != 0)
-	{
-		errsw = true;
-	}
+	print_access("WISPCONFIG", 	wispconfigdir(), 	ACC_RX, &errsw);
+	print_access("WISPDIR", 	wispdir(), 		ACC_RX, &errsw);
 
 	/*
 	**	Videocap file
 	*/
 #ifdef unix
-	if (cptr = getenv("WISPTERM"))
-	{
-		if (cptr[0] == '\0')
-		{
-			errsw = true;
-			printf("WISPTERM    = (NULL) *** ERROR\n",cptr);
-		}
-		else
-		{
-			printf("WISPTERM    = %s\n",cptr);
-		}
-	}
-	else
-	{
-		printf("WISPTERM    = *** NOT DEFINED\n");
-	}
-
-	printf("VIDEOCAP    = %s\n", (cptr = getenv("VIDEOCAP"))? cptr: "*** NOT DEFINED");
-
+	print_envvar("WISPTERM", &errsw);
+	print_envvar("VIDEOCAP", NULL);
 #endif
 
 	/*
 	**	Check for the videocap files
 	*/
-	vcf = wisptermfilepath(NULL);
-	
-	printf("videocapfile= %s",vcf);
-	if (check_access(vcf,04) != 0)
-	{
-		errsw = true;
-		printf("*** NO VIDEOCAP FILE FOUND ***\n\n");
-	}
-
-	cptr = wisptmpbasedir(NULL);
-	printf("wisptmpbase = %s", cptr);
-	if (check_access(cptr,07) != 0)
-	{
-		errsw = true;
-	}
-
-	cptr = wtmpdir(NULL);
-	printf("wtmpdir     = %s", cptr);
-	if (check_access(cptr,07) != 0)
-	{
-		errsw = true;
-	}
+	print_access("videocapfile", wisptermfilepath(NULL), ACC_READ, &errsw);
+	print_access("wisptmpbase",  wisptmpbasedir(NULL),   ACC_FULL, &errsw);
+	print_access("wtmpdir",      wtmpdir(NULL),          ACC_FULL, &errsw);
 
 	cptr = license_filepath(NULL);
-	printf("licensefile = %s", cptr);
-	if (check_access(cptr,04) != 0)
+	if (print_access("licensefile", cptr, ACC_READ, &errsw) == 0)
 	{
-		errsw = true;
+		cat_file(cptr);
 	}
 	
-	printf("sortmem     = %d(K)\n", wispsortmemk());
+	sprintf(buff,"%d(K)",wispsortmemk());
+	print_pair_nl("sortmem",buff);
 
 
 #ifdef unix
-	if (cptr = getenv("WISPGID"))
+	if (getenv("WISPGID"))
 	{
-		if (cptr[0] == '\0')
-		{
-			errsw = true;
-			printf("WISPGID     = (NULL) *** ERROR\n");
-		}
-		else
-		{
-			printf("WISPGID     = %s\n",cptr);
-		}
-	}	
-	else	
+		print_envvar("WISPGID", &errsw);
+	}
+	else if (bBourneShell)
 	{
-		printf("WISPGID     = *** NOT DEFINED\n");
-		errsw = true;
+		print_pair_nl("WISPGID","(not defined)");
+	}
+	else
+	{
+		errsw++;
+		print_pair_err_mess("WISPGID","(not defined)","ERROR","NOT DEFINED");
 	}
 #endif
 
@@ -284,100 +344,191 @@ main()
 	**       Check the wisp runtime control files and data files
 	**       Use WISPCONFIG to find these file, wc points to WISPCONFIG
 	*/
-	printf("\n");
+	print_nl();
 
 	buildfilepath(buff,wispconfigdir(),"LGMAP");
-	printf("LGMAP       = %s",buff);
-	if (check_access(buff,04) != 0)
+	if (print_access("LGMAP",buff,ACC_READ,&errsw) == 0)
 	{
-		errsw = true;
+		logical_id	*logical_ptr;
+		logical_ptr = get_logical_list();
+
+		while(logical_ptr)
+		{
+			if (0 != strcmp(logical_ptr->logical,"."))
+			{
+				char lgbuff[256];
+				
+				sprintf(lgbuff, "%-6.6s %s", logical_ptr->logical, logical_ptr->translate);
+				print_inset(lgbuff);
+				check_access(NULL,logical_ptr->translate,ACC_RX);
+			}
+
+			logical_ptr = (logical_id *)logical_ptr->next;
+		}
+		print_nl();
 	}
 
-	buildfilepath(buff,wispconfigdir(),CFGFNAME);
-	printf("WSYSCONF    = %s",buff);
-	if (check_access(buff,04) != 0)
+	buildfilepath(buff,wispconfigdir(),"RVMAP");
+	if (0==access(buff,ACC_READ))
 	{
-		errsw = true;
-	}
-
-	buildfilepath(buff,wispconfigdir(),"wispmsg.dat");
-	printf("WISPMSG     = %s",buff);
-	if (check_access(buff,04) != 0)
-	{
-		errsw = true;
-	}
-
-	buildfilepath(buff,wispconfigdir(),"OPTIONS");
-	printf("OPTIONS     = %s",buff);
-	if (check_access(buff,04) != 0)
-	{
-		errsw = true;
+		print_access("RVMAP",buff,ACC_READ,NULL);
+		print_config_file(buff);
 	}
 	else
 	{
-		print_options_file(buff);
+		print_pair_nl("RVMAP","(Not used)");
+	}
+	
+
+	buildfilepath(buff,wispconfigdir(),CFGFNAME);
+	print_access("WSYSCONF", buff, ACC_READ, &errsw);
+
+	buildfilepath(buff,wispconfigdir(),"wispmsg.dat");
+	print_access("WISPMSG", buff, ACC_READ, &errsw);
+
+	buildfilepath(buff,wispconfigdir(),"OPTIONS");
+	if (print_access("OPTIONS",buff,ACC_READ,&errsw) == 0)
+	{
+		print_config_file(buff);
 	}
 
 	buildfilepath(buff,wispconfigdir(),"wproc.msg");
-	printf("WPROCMSG    = %s",buff);
-	if (check_access(buff,04) != 0)
-	{
-		errsw = true;
-	}
+	print_access("WPROCMSG", buff, ACC_READ, &errsw);
 
 	buildfilepath(buff,wispconfigdir(),WRUNCONFIG);
-	printf("WRUNCONFIG  = %s",buff);
-	if (check_access(buff,04) != 0)
-	{
-		errsw = true;
-	}
+	print_access("WRUNCONFIG", buff, ACC_READ, &errsw);
 
 	/*
 	**	Check on wrun
 	*/
-	wrunconfig(&wrun_cfg);					/* Load wrunconfig options file		*/
+	wrunconfig(&wrun_cfg);				/* Load wrunconfig options file		*/
 
-	printf("WRUN COBOL   = %s\n", wrun_cfg.wrun_cobtype);
-	printf("WRUN RUNCBL  = %s\n", wrun_cfg.wrun_runcbl);
-	printf("WRUN OPTIONS = %s\n", wrun_cfg.wrun_options);
+	print_pair_nl("WRUN COBOL",   wrun_cfg.wrun_cobtype);
+	print_pair_nl("WRUN RUNCBL",  wrun_cfg.wrun_runcbl);
+	print_pair_nl("WRUN OPTIONS", wrun_cfg.wrun_options);
 
 	if (0 == strcmp("ACU",wrun_cfg.wrun_cobtype))
 	{
-		comp = acucobol;
-		printf("COBOL       = ACUCOBOL\n");
+		nCobol = ACUCOBOL;
+		print_pair_nl("COBOL", "ACUCOBOL");
 	} 
 	else if (0 == strcmp("MF",wrun_cfg.wrun_cobtype))
 	{
-		comp = mfcobol;
-		printf("COBOL       = MICRO FOCUS\n");
+		nCobol = MFCOBOL;
+		print_pair_nl("COBOL", "MICRO FOCUS");
 	}
 	else
 	{
-		errsw = true;
-		printf("COBOL       = *** NOT DEFINED\n");
+		errsw++;
+		nCobol = UNKNOWNCOBOL;
+		print_pair_err_mess("COBOL",wrun_cfg.wrun_cobtype,"ERROR", "UNKNOWN COBOL TYPE");
 	}
 
-	checkexe("RTS", wrun_cfg.wrun_runcbl);
+	checkexe("RTS", wrun_cfg.wrun_runcbl, &errsw);
 
-	printf("LINKPATH    = %s\n", wisplinkpath());
-	
+	print_pair_nl("LINKPATH", wisplinkpath());
+#ifdef WIN32
+	check_path(wisplinkpath());
+#endif
 
 	/*
 	**	Check for WISP utilitys
 	*/
-	printf("\n");
+	print_nl();
 
 	checklinkexe("WSHELL",  "wshell");
 	checklinkexe("PROC",     wprocexe());
 	checklinkexe("COPY",    "wcopy");
 	checklinkexe("SORT",    "wsort");
 	checklinkexe("EDITOR",   weditorexe());
-	checklinkexe("DISPLAY", "display");
+	if (custom_display_utility())
+	{
+		checklinkexe("DISPLAY", custom_display_utility());
+	}
+	else
+	{
+		checklinkexe("DISPLAY", "display");
+	}
+
+	
+#ifdef unix
+	cptr = NULL;
+	
+	switch(opt_printqueue)
+	{
+	case PQ_UNIQUE:
+	case PQ_ILP:
+		if (cptr = getenv("UNIQUE_PRINT"))
+		{
+		}
+		else if (PQ_ILP == opt_printqueue)
+		{
+			cptr = "ilp";
+		}
+		else
+		{
+			cptr = "ulp";
+		}
+		break;
+
+	case PQ_LP:
+		cptr = "lp";
+		break;
+		
+	case PQ_NP:
+		cptr = "np";
+		break;
+
+	case PQ_GENERIC:
+		cptr = get_wisp_option("PQCMD");
+		break;
+		
+	case PQ_DEFAULT:
+		break;
+	}
+
+	if (cptr)
+	{
+		checklinkexe("PRINT",  cptr);
+	}
+	else
+	{
+		errsw++;
+		print_pair_err_mess("PRINT","","ERROR", "NOT DEFINED");
+	}
+
+	if (opt_printqueue_manager)
+	{
+		checklinkexe("PQMANAGER", opt_printqueue_manager);
+	}
+	else
+	{
+		print_pair_nl("PQMANAGER", "(none)");
+	}
+	
+	if (opt_batchqueue)
+	{
+		checklinkexe("BATCH",  batchqueue_name);
+	}
+	else
+	{
+		print_pair_nl("BATCH", "(none)");
+	}
+	
+	if (opt_batchman)
+	{
+		checklinkexe("BATCHMAN",  batchman_name);
+	}
+	else
+	{
+		print_pair_nl("BATCHMAN", "(none)");
+	}
+#endif	
 
 	/*
 	**	Check the ACUCOBOL environment
 	*/
-	if (comp == acucobol)
+	if (ACUCOBOL == nCobol || MFCOBOL != nCobol)
 	{
 		define_acu(wrun_cfg.wrun_runcbl);
 	}
@@ -386,44 +537,64 @@ main()
 	/*
 	**	Check the Micro Focus environment
 	*/
-	define_mf();
-#endif
-
-
-	printf("\n");
-	if ((erracu != 0) && (comp == acucobol))
+	if (MFCOBOL == nCobol || ACUCOBOL != nCobol)
 	{
-		printf("\n");
-		printf(">>>>>>> ACUCOBOL SETUP ERRORS FOUND <<<<<<<\n\n");
-		errsw = true;
-	}
-
-#ifdef unix
-	if ((errmf != 0) && (comp == mfcobol))
-	{
-		printf("\n");
-		printf(">>>>>>> MICRO FOCUS SETUP ERRORS FOUND <<<<<<<\n\n");
-		errsw = true;
+		define_mf();
 	}
 #endif
 
-	if (errsw == 0)
+	print_nl();
+	printf("MISC Environment\n");
+	printf("================\n");
+	printf("env:\n");
+	for(;*envp;envp++)
 	{
-		if (comp == mfcobol)
-		{
-			printf(">>>>>>> MICRO FOCUS SETUP FOUND\n");
-		}
-		if (comp == acucobol)
-		{
-			printf(">>>>>>> ACUCOBOL SETUP FOUND\n");
-		}
-		printf(">>>>>>> WISP ENVIRONMENT OK <<<<<<<\n\n");
+		print_inset_nl(*envp);
 	}
+
+	print_nl();
+	
+	
+
+	print_nl();
+	printf("================\n\n");
 
 	if (errsw != 0)
 	{
-		printf(">>>>>>> ENVIRONMENT SETUP ERRORS FOUND <<<<<<<\n\n");
+		printf("*** %d ENVIRONMENT SETUP ERRORS FOUND ***\n", errsw);
 	}	
+
+	if (erracu != 0)
+	{
+		printf("*** %d ACUCOBOL SETUP ERRORS FOUND ***\n", erracu);
+	}
+	if (nCobol == ACUCOBOL && 0 == erracu)
+	{
+		printf("--- ACUCOBOL SETUP OK ---\n");
+	}
+
+#ifdef unix
+	if (errmf != 0)
+	{
+		printf("*** %d MICRO FOCUS SETUP ERRORS FOUND ***\n", errmf);
+	}
+	if (nCobol == MFCOBOL && 0 == errmf)
+	{
+		printf("--- MICRO FOCUS SETUP OK ---\n");
+	}
+#endif
+
+	if (0==errsw && 0==erracu && 0==errmf)
+	{
+		printf("--- WISP ENVIRONMENT OK ---\n");
+	}
+	else
+	{
+		print_nl();
+		printf("*** %d TOTAL ERRORS DETECTED ***\n", errsw+erracu+errmf);
+	}
+	
+	print_nl();
 	return 0;
 }
 
@@ -447,27 +618,28 @@ main()
 **
 */
 
-int define_os(ut)
-char	*ut;
+int define_os(char* ut)
 {
 
 #ifdef unix
 	struct utsname unix_name;
-	char	buff[256];
+#endif
+#ifdef WIN32
+	const char* pVersion;
 #endif
 
+	char	buff[256];
 	char	temp[80];
 	
 	char	*ptr;
-	const char *cptr;
 
-	int	errsw=false;
+	/*	int	errsw=0; */
 
 #ifdef unix
 	/*
 	**       Check the basic unix shell environment
 	*/
-	printf("\n");
+	print_nl();
 	printf("UNIX Environment\n");
 	printf("================\n");
 	if (uname(&unix_name) != -1)
@@ -477,174 +649,112 @@ char	*ut;
 						unix_name.release,
 						unix_name.version,
 						unix_name.machine);
-		printf("UNIX        = %s\n",temp);
 	}
 	else
 	{
-		printf("UNIX        = *** TYPE NOT DEFINED\n");
+		strcpy(temp, "(SYSTEM TYPE NOT DEFINED)");
 	}
+	print_pair_nl("UNIX", temp);
 #endif
 
-#ifdef MSDOS
-	/*
-	**       Check the basic DOS shell environment
-	*/
-	printf("\n");
-	printf("     DOS Environment\n");
-	if (_osmajor > 0)
-	{
-		sprintf(temp, "%d.%d", _osmajor,
-				       _osminor);
-		printf("DOS         = %s\n",temp);
-	}
-	else
-	{
-		printf("DOS         = *** TYPE NOT DEFINED\n");
-	}
-#endif
 
 #ifdef WIN32
 	/*
 	**       Check the basic DOS shell environment
 	*/
-	printf("\n");
+	print_nl();
 	printf("WIN32 Environment\n");
 	printf("=================\n");
 	if (win32_nt())
 	{
-		printf("WINDOWS     = NT\n");
+		pVersion = "NT";
+	}
+	else if (win32_98())
+	{
+		pVersion = "98";
 	}
 	else if (win32_95())
 	{
-		printf("WINDOWS     = 95 (Not NT)\n");
+		pVersion = "95";
 	}
 	else
 	{
-		printf("WINDOWS     = Unknown (Not NT)\n");
+		pVersion = "Unknown";
 	}
+	sprintf(buff, "%s %s", pVersion, win32_version());
+	print_pair_nl("WINDOWS", buff);
 #endif
 
-	if (cptr = wisphomedir(NULL))
-	{
-		printf("HOME        = %s",cptr);
-		if (check_access(cptr,07) != 0)
-		{
-			errsw = true;
-		}
-	}
-	else
-	{
-		errsw = true;
-		printf("HOME        = *** NOT DEFINED\n");
-	}
+	print_access("HOME", wisphomedir(NULL), ACC_FULL, &errsw);
 
 	if (ptr = getenv("PATH"))
 	{
-		printf("PATH        = %s\n",ptr);
+		print_pair_nl("PATH",ptr);
+		check_path(ptr);
 	}
 	else
 	{
-		errsw = true;
-		printf("PATH        = *** NOT DEFINED\n");
+		errsw++;
+		print_pair_err_mess("PATH","","ERROR", "NOT DEFINED");
 	}
 
 #ifdef unix
 	if (ptr = getenv("SHELL") )
 	{
-		printf("SHELL       = %s",ptr);
+		print_pair("SHELL",ptr);
 		if (ptr[0] == '/')
 		{
 			/*
 			**	Only check access if a full path given
 			*/
-			if (check_access(ptr,01) != 0)
+			check_access(&errsw,ptr,ACC_EXECUTE);
+
+			if (0!=strcmp(ptr,"/bin/sh"))
 			{
-				errsw = true;
+				bBourneShell = 0;
 			}
+		}
+		else
+		{
+			print_err_mess("WARNING","ACCESS UNKNOWN");
 		}
 	}
 	else
 	{
-		printf("SHELL       = Assuming shell /bin/sh\n");
+		print_pair_nl("SHELL", "Assuming shell /bin/sh");
 	}
 
 	/*
 	**       Check the terminal definition variables for unix and wisp
 	*/
-	printf("\n");
-	if (ut = getenv("TERM"))
-	{
-		if (ut[0] == '\0')
-		{
-			errsw = true;
-			printf("TERM        = (NULL) *** ERROR\n");
-		}
-		else
-		{
-			printf("TERM        = %s\n",ut);
-		}
-	}
-	else
-	{
-		errsw = true;
-		printf("TERM        = *** NOT DEFINED\n");
-	}
+	print_nl();
+	print_envvar("TERM",&errsw);
 
-	printf("\n");
+	print_nl();
 
-	printf("TEMP        = /usr/tmp");
-	if (check_access("/usr/tmp",07) != 0)
-	{
-		   errsw = true;
-	}
-
-	printf("TEMP        = /tmp");
-	if (check_access("/tmp",07) != 0)
-	{
-		   errsw = true;
-	}
+	print_access("TEMP","/usr/tmp",ACC_FULL,&errsw);
+	print_access("TEMP","/tmp",    ACC_FULL,&errsw);
 
 	if (ptr = getenv("TMPDIR"))
 	{
-		printf("TMPDIR      = %s",ptr);
-		if (check_access(ptr,07) != 0)
-		{
-			errsw = true;
-		}
+		print_access("TMPDIR", ptr, ACC_FULL, &errsw);
 	}
 	else
 	{
-		printf("TMPDIR      = (Not defined)\n");
+		print_pair_nl("TMPDIR", "(Not defined)");
 	}
 #endif
 
-#ifdef MSDOS
+	print_pair_nl("MACHID", (0==getmachineid(temp)) ? temp : "(unknown)");
 
-	/*
-	**       Check for the temporary work file directories
-	*/
+	print_pair_nl("COMPNAME", computername(NULL));
 
-	if (ptr = getenv("TMP"))
-	{
-		printf("\n");
-		printf("TMP         = %s",ptr);
-		if (check_access(ptr,07) != 0)
-		{
-			errsw = true;
-		}
-	}
-#endif
+	print_pair_nl("SERVER", wispserver());
 
-	printf("MACHID      = %s\n", (0==getmachineid(temp)) ? temp : "(unknown)");
-
-	printf("COMPNAME    = %s\n", computername(NULL));
-
-	printf("SERVER      = %s\n", wispserver());
-
-	printf("ttyname     = %s\n", ttyname(0));
+	print_pair_nl("ttyname", ttyname(0));
 
 	ttyid5(temp);
-	printf("ttyid5      = %s\n", temp);
+	print_pair_nl("ttyid5", temp);
 	
 
 	return (0);
@@ -674,6 +784,7 @@ int define_acu(const char* rts)
 {
 	char    *acu;
 	char	*ptr;
+	char	a_config[256] = "";
 #ifdef unix
 	char	command[256];
 #endif
@@ -686,36 +797,121 @@ int define_acu(const char* rts)
 	printf("ACUCOBOL Environment\n");
 	printf("====================\n");
 
-	if (acu = getenv("A_CONFIG"))
+	if ((ptr = strstr(wrun_cfg.wrun_options, "-c")) ||
+	    (ptr = strstr(wrun_cfg.wrun_options, "-C"))	)
 	{
-		printf("A_CONFIG    = %s",acu);
-		if (check_access(acu,04) != 0)
+		ptr += 2;
+		sscanf(ptr,"%s",a_config);
+
+		if (print_access("-C A_CONFIG",a_config,ACC_READ,&erracu) != 0)
 		{
-			erracu = true;
+			a_config[0] = '\0';
 		}	
+	}
+	else if (acu = getenv("A_CONFIG"))
+	{
+		if (print_access("A_CONFIG",acu,ACC_READ,&erracu) == 0)
+		{
+			strcpy(a_config,acu);
+		}
 	}
 	else
 	{
-		printf("A_CONFIG    = *** NOT DEFINED\n");
+		erracu++;
+		print_pair_err_mess("A_CONFIG","","ERROR", "NOT DEFINED");
 	}
 
+	if ('\0' != a_config[0])
+	{
+		char 	aculink[256];
+		int	aculink_found = 0;
+		FILE 	*the_file;
+		char	inlin[512], keyword[80];
+		int	cnt,len;
+		char	*pszCodePrefix = NULL;
+
+		print_config_file(a_config);
+
+
+		/*
+		 * Get CODE-PREFIX and search for ACULINK
+		 */
+
+		the_file = fopen(a_config,"r");
+		if (the_file)
+		{
+			while(fgets(inlin,sizeof(inlin)-1,the_file))
+			{
+				len=strlen(inlin);
+				if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char	*/
+				cnt = sscanf(inlin,"%s",keyword);
+				if ( cnt < 1 ) continue;
+
+
+				if (0==strcmp(keyword,"CODE-PREFIX"))
+				{
+					pszCodePrefix = inlin;
+					break;
+				}
+			}
+			fclose(the_file);
+
+			if (NULL != pszCodePrefix)
+			{
+				char* token;
+					
+				print_pair_nl("CODE-PREFIX",&pszCodePrefix[11]);
+				for(token = strtok(&pszCodePrefix[11]," \t"); 
+				    token!=NULL;
+				    token = strtok(NULL," \t"))
+				{
+					print_inset(token);
+					check_access(NULL,token,ACC_RX);
+
+					if (!aculink_found)
+					{
+						buildfilepath(aculink,token,"ACULINK");
+						if (0==access(aculink,ACC_READ))
+						{
+							aculink_found = 1;
+						}
+					}
+				}
+
+				if (aculink_found)
+				{
+					print_access("ACULINK",aculink,ACC_READ,&erracu);
+				}
+				else
+				{
+					erracu++;
+					print_pair_err_mess("ACULINK","","ERROR","NOT FOUND");
+				}
+			}
+			else
+			{
+				erracu++;
+				print_pair_err_mess("CODE-PREFIX","","ERROR","NOT FOUND");
+				print_pair_nl("ACULINK","(Unknown)");
+			}
+		}
+	}
+	else
+	{
+		print_pair_nl("CODE-PREFIX","(Unknown)");
+		print_pair_nl("ACULINK","(Unknown)");
+	}
+	
+
+	
 #ifdef unix
 	if (acu = getenv("A_TERMCAP"))
 	{
-		printf("A_TERMCAP   = %s",acu);
-		if (check_access(acu,04) != 0)
-		{
-			erracu = true;
-		}
+		print_access("A_TERMCAP",acu,ACC_READ,&erracu);
 	}
 	else
 	{
-		ptr = "/etc/a_termcap";
-		printf("a_termcap   = %s",ptr);
-		if (check_access(ptr,04) != 0)
-		{
-			erracu = true;
-		}
+		print_access("a_termcap","/etc/a_termcap",ACC_READ,&erracu);
 	}
 #endif
 
@@ -725,11 +921,10 @@ int define_acu(const char* rts)
 #ifdef MSFS
 	ptr = "\\ETC\\CBLHELP";
 #endif
-	printf("cblhelp     = %s", ptr);
-	check_access(ptr,04);
+	print_access("cblhelp",ptr,ACC_READ,NULL);
 
 
-	checkexe("VUTIL", acu_vutil_exe());
+	checkexe("VUTIL", acu_vutil_exe(), &erracu);
 
 #ifdef unix	
 	sprintf(command,"%s -V", rts);
@@ -767,64 +962,52 @@ int define_mf()
 
 	char    file_path[256];
 
-	 /*
-	 **       Get the Micro Focus Cobol environment data
-	 */
-	 printf("\n\n");
-	 printf("Micro Focus Environment\n");
-	 printf("=======================\n");
+	/*
+	**       Get the Micro Focus Cobol environment data
+	*/
+	printf("\n\n");
+	printf("Micro Focus Environment\n");
+	printf("=======================\n");
 
-	 if (mf = getenv("COBDIR"))
-	 {
-		printf("COBDIR      = %s",mf);
-		if (check_access(mf, 04) != 0)
-		{
-			errmf = true;
-		}
-	 }
-	 else
-	 {
-		  errmf = true;
-		  printf("COBDIR      = *** NOT DEFINED\n");
-	 }
+	if (print_access("COBDIR", mf=getenv("COBDIR"), ACC_READ,&errmf) == 0)
+	{
+		sprintf(file_path,"%s/cobver",mf);
+		cat_file(file_path);
+	}
 
-	 if (mf = getenv("COBSW"))
-	 {
-		  printf("COBSW       = %s\n",mf);
-	 }
-	 else
-	 {
-		  printf("COBSW       = *** NOT DEFINED\n");
-	 }
+	print_envvar("COBSW",NULL);
+	print_envvar("COBOPT",NULL);
 
-	 if (mf = getenv("COBOPT"))
-	 {
-		  printf("COBOPT      = %s\n",mf);
-	 }
-	 else
-	 {
-		  printf("COBOPT      = *** NOT DEFINED\n");
-	 }
+	if (mf = getenv("COBPATH"))
+	{
+		print_pair_nl("COBPATH",mf);
+		check_path(mf);
+	}
+	else
+	{
+		print_pair_err_mess("COBPATH","","WARNING", "NOT DEFINED");
+	}
 
-	 if (mf = getenv("COBPATH"))
-	 {
-		  printf("COBPATH     = %s\n",mf);
-	 }
-	 else
-	 {
-		  printf("COBPATH     = *** NOT DEFINED\n");
-	 }
+	if (mf = getenv("LIBPATH"))
+	{
+		print_pair_nl("LIBPATH",mf);
+		check_path(mf);
+	}
+	else
+	{
+		print_pair_err_mess("LIBPATH","","WARNING", "NOT DEFINED");
+	}
 
 	ptr = "fhconvert";
 
 	if (0 == whichenvpath(ptr,file_path))
 	{
-		printf("fhconvert   = %s   [FOUND]\n",file_path);
+		print_pair_mess("fhconvert",file_path,"[FOUND]");
 	}
 	else
 	{
-		printf("fhconvert   = %s   *** NOT FOUND ***\n",ptr);
-		errmf = true;
+		print_pair_err_mess("fhconvert",ptr,"ERROR", "NOT FOUND");
+		errmf++;
 	}
 
 
@@ -832,17 +1015,17 @@ int define_mf()
 
 	if (0 == whichenvpath(ptr,file_path))
 	{
-		printf("cob         = %s   [FOUND]\n",file_path);
+		print_pair_mess("cob",file_path,"[FOUND]");
 
 		if (0 != run_command("cob -V"))
 		{
-			errmf = true;
+			errmf++;
 		}
 	}
 	else
 	{
-		printf("cob         = %s   *** NOT FOUND ***\n",ptr);
-		errmf = true;
+		print_pair_err_mess("cob",ptr,"ERROR", "NOT FOUND");
+		errmf++;
 	}
 
 	return(0);
@@ -871,32 +1054,59 @@ int define_mf()
 **
 */
 
-int check_access(const char *ptr, int mode)
+int check_access(int* pnError, const char *ptr, int mode)
 {
-		int     rc;
+	int     rc;
+	int	nErrorLocal;
+	char* 	pszSeverity;
+  
+	if (NULL == pnError)
+	{
+		pszSeverity = "WARNING";
+		pnError = &nErrorLocal;	/* Fake it */
+	}
+	else
+	{
+		pszSeverity = "ERROR";
+	}
 
-		if (rc = access(ptr, mode))
+	if (NULL==ptr || '\0' == *ptr)
+	{
+		print_err_mess(pszSeverity, "NOT DEFINED");
+		(*pnError)++;
+		return 1;
+	}
+  
+
+	if (rc = access(ptr, mode))
+	{
+		switch(errno)
 		{
-			switch(errno)
-			{
-				case ENOENT:    printf("   *** NOT FOUND ***\n");
-						break;
-				case EACCES:    printf("   *** ACCESS DENIED ***\n");
-						break;
-#ifndef WATCOM
-				case ENOTDIR:   printf("   *** INVALID DIRECTORY ***\n");
-						break;
-#endif
-				default:        printf("   *** UNABLE TO ACCESS ***\n");
-						break;
-			}
+		case ENOENT:    
+			print_err_mess(pszSeverity, "NOT FOUND");
+			break;
+		case EACCES:    
+			print_err_mess(pszSeverity, "ACCESS DENIED");
+			break;
+		case ENOTDIR:   
+			print_err_mess(pszSeverity, "INVALID DIRECTORY");
+			break;
+		default:        
+			print_err_mess(pszSeverity, "UNABLE TO ACCESS");
+			break;
 		}
-		else
-		{
-				rc = false;
-				printf("   [FOUND]\n");
-		}
-		return(rc);
+	}
+	else
+	{
+		print_mess_nl("[FOUND]");
+	}
+
+	if (rc)
+	{
+		(*pnError)++;
+	}
+  
+	return(rc);
 }
 
 int run_command(char *command)
@@ -907,7 +1117,7 @@ int run_command(char *command)
 	char	unixcommand[1024];
 #endif
 
-	printf("\n");
+	print_nl();
 	printf("$ %s\n",command);
 #ifdef unix
 	sprintf(unixcommand, "%s 2>&1", command);
@@ -916,10 +1126,17 @@ int run_command(char *command)
 	{
 		while (fgets(buff, sizeof(buff), file) != NULL)
 		{
-			printf(" > %s", buff);
+			char	*ptr;
+
+			if (ptr=strchr(buff,'\n'))
+			{
+				*ptr = '\0';
+			}
+			
+			print_inset_nl(buff);
 		}
 		pclose(file);
-		printf("\n");
+		print_nl();
 	}
 	else
 	{
@@ -933,7 +1150,7 @@ int run_command(char *command)
 	return 0;
 }
 
-void checkexe(const char *tag, const char *exe)
+void checkexe(const char *tag, const char *exe, int* pnError)
 {
 	char	buff[256];
 	char	file_path[256];
@@ -949,15 +1166,11 @@ void checkexe(const char *tag, const char *exe)
 #endif
 	if (0 == whichenvpath(buff,file_path))
 	{
-		printf("%-10.10s  = %s  [FOUND]\n", tag, file_path);
+		print_pair_mess(tag,file_path,"[FOUND]");
 	}
 	else
 	{
-		printf("%-10.10s  = %s", tag, buff);
-		if (check_access(buff,05) != 0)
-		{
-			errsw = true;
-		}
+		print_access(tag,buff,ACC_RX,pnError);
 	}
 }
 
@@ -965,8 +1178,18 @@ void checklinkexe(const char *tag, const char *exe)
 {
 	char	buff[256];
 	char	file_path[256];
+	char	*ptr;
 	
 	strcpy(buff, exe);
+
+	/*
+	**	The exe sometimes includes arguments so terminate at the first space.
+	*/
+	if (ptr = strchr(buff,' '))
+	{
+		*ptr = '\0';
+	}
+	
 	
 #ifdef MSFS
 	upper_string(buff);
@@ -977,23 +1200,56 @@ void checklinkexe(const char *tag, const char *exe)
 #endif
 	if (0 == whichlinkpath(buff,file_path))
 	{
-		printf("%-10.10s  = %s  [FOUND]\n", tag, file_path);
+		print_pair_mess(tag, file_path,"[FOUND]");
+		return;
+	}
+#ifdef WIN32
+	if (0 == whichenvpath(buff,file_path))
+	{
+		print_pair_mess(tag, file_path,"[FOUND]");
+		return;
+	}
+#endif
+
+	print_access(tag,buff,ACC_RX,&errsw);
+}
+
+static void cat_file(const char* file_path)
+{
+	FILE 	*the_file;
+	char	inlin[512];
+
+	the_file = fopen(file_path,"r");
+	if (the_file)
+	{
+		printf("%s:\n",file_path);
+		while(fgets(inlin,sizeof(inlin)-1,the_file))
+		{
+			char *ptr;
+			
+			if (ptr=strchr(inlin,'\n'))
+			{
+				*ptr = '\0';
+			}
+			
+			print_inset_nl(inlin);
+		}
+		fclose(the_file);
 	}
 	else
 	{
-		printf("%-10.10s  = %s", tag, buff);
-		if (check_access(buff,05) != 0)
-		{
-			errsw = true;
-		}
+		printf(">>>>>> Unable to open file [%s]\n",file_path);
 	}
+
 }
 
-void print_options_file(const char* options_path)
+void print_config_file(const char* options_path)
 {
 	FILE 	*the_file;
-	char	inlin[512], keyword[80], value[80];
-	int	cnt,len;
+	char	inlin[2048];
+	int	len;
+	int	bContinued = 0;
+	int	bComment = 0;
 
 	the_file = fopen(options_path,"r");
 	if (the_file)
@@ -1001,28 +1257,201 @@ void print_options_file(const char* options_path)
 		while(fgets(inlin,sizeof(inlin)-1,the_file))
 		{
 			len=strlen(inlin);
-			if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char		*/
-			cnt = sscanf(inlin,"%s %s",keyword,value);
-			if ( cnt < 1 ) continue;
-			if (keyword[0] == '#') continue;
+			if (len>0 && inlin[len-1] == '\n') 
+			{
+				inlin[--len] = '\0';	/* Null out the newline char	*/
+			}
 
-			printf(" > %s\n",inlin);
+			/*
+			 *	If not continued (a new line) then set the comment flag
+			 */
+			if (!bContinued)
+			{
+				char	keyword[256];
+				int	cnt;
+				
+				/*
+				 *	Start of a new line so check if a comment or blank line.
+				 */
+				bComment = 0;
+				cnt = sscanf(inlin,"%s",keyword);
+				
+				if (cnt < 1 || '#'==keyword[0]) 
+				{
+					bComment = 1;
+				}
+			}
+
+			/*
+			 *	If not a comment print it
+			 */
+			if (!bComment)
+			{
+				print_inset_nl(inlin);
+			}
+			
+			/*
+			 *	Check if this line is continued.
+			 */
+			bContinued = 0;
+			if (len>0 && '\\'==inlin[len-1])
+			{
+				bContinued = 1;
+			}
 		}
 		fclose(the_file);
 	}
 	else
 	{
-		printf(">>>>>> Unable to open OPTIONS file [%s]\n",options_path);
+		printf(">>>>>> Unable to open file [%s]\n",options_path);
 	}
 
 }
 
+static void check_path(const char* path)
+{
+	char	lpath[1024];
+	char	*nextdir;
+	char	ps[2];
+	
+	if (NULL==path || '\0'==*path)
+	{
+		return;
+	}
+	strcpy(lpath,path);
+
+	ps[0] = PATH_SEPARATOR;
+	ps[1] = '\0';
+	
+	nextdir = strtok(lpath,ps);
+	while(nextdir)
+	{
+		print_inset(nextdir);
+		check_access(NULL,nextdir,ACC_RX);
+		nextdir = strtok(NULL,ps);
+	}
+}
+
+static void test_int_sizes(void)
+{
+	int2	t_int2;
+	uint2	t_uint2;
+	int4	t_int4;
+	uint4	t_uint4;
+	int	rc = 0;
+
+	/*
+	**	Check the sizes.
+	*/
+	if (sizeof(t_int2) != 2)
+	{
+		printf("********************************* Size error int2 = %d\n", sizeof(t_int2));
+		rc = 1;
+	}
+	if (sizeof(t_uint2) != 2)
+	{
+		printf("********************************* Size error uint2 = %d\n", sizeof(t_uint2));
+		rc = 1;
+	}
+	if (sizeof(t_int4) != 4)
+	{
+		printf("********************************* Size error int4 = %d\n", sizeof(t_int4));
+		rc = 1;
+	}
+	if (sizeof(t_uint4) != 4)
+	{
+		printf("********************************* Size error uint4 = %d\n", sizeof(t_uint4));
+		rc = 1;
+	}
+
+	/*
+	**	Check the signs
+	*/
+
+	t_int2 = 0;
+	t_uint2 = 0;
+	t_int4 = 0;
+	t_uint4 = 0;
+	
+	t_int2--;
+	t_uint2--;
+	t_int4--;
+	t_uint4--;
+
+	if ( !(t_int2 < 0 && -1 == t_int2) )
+	{
+		printf("********************************* Sign error on int2\n");
+		rc = 1;
+	}
+	if ( !(t_int4 < 0 && -1 == t_int4) )
+	{
+		printf("********************************* Sign error on int4\n");
+		rc = 1;
+	}
+	if ( !(t_uint2 > 0 && (unsigned)(65535) == t_uint2) )
+	{
+		printf("********************************* Sign error on uint2\n");
+		rc = 1;
+	}
+	if ( !(t_uint4 > 0 && (unsigned)(4294967295) == t_uint4) )
+	{
+		printf("********************************* Sign error on uint4\n");
+		rc = 1;
+	}
+
+	if (rc)
+	{
+		printf("\n\n\n\n*****    Integer sign errors    ****\n\n\n");
+	}
+}
 
 
-#include "wutils.h"
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.24  1999-09-15 09:17:17-04  gsl
+**	Update to understand backslash continued long lines.
+**	Fix A_CONFIG logic to understand both "-c" and "-C" on the command line.
+**
+**	Revision 1.23  1999-06-30 10:17:02-04  gsl
+**	Enhance the ACULINK ligic
+**
+**	Revision 1.22  1999-06-29 19:23:45-04  gsl
+**	Add RVMAP, CODE-PREFIX, and ACULINK tests
+**
+**	Revision 1.21  1999-06-18 09:00:10-04  gsl
+**	Massive re-work.
+**	Changed to clearly distingush between errors and warnings.
+**	Add an error count.
+**	Align the error messages so they are clearly visable.
+**
+**	Revision 1.20  1998-12-15 17:15:25-05  gsl
+**	Add tests for integer sizes
+**
+**	Revision 1.19  1998-12-04 13:07:57-05  gsl
+**	Add windows 98 test and win32 version
+**
+**	Revision 1.18  1998-10-26 09:17:16-05  gsl
+**	Add a timestamp
+**
+**	Revision 1.17  1998-10-23 17:25:56-04  gsl
+**	Enhance the PRINT and BATCH queue checking
+**
+**	Revision 1.16  1998-10-08 13:19:49-04  gsl
+**	Add printing of the license file
+**
+**	Revision 1.15  1998-08-21 10:02:53-04  gsl
+**	Enhanced wdiag to:
+**	print and check LGMAP directories
+**	on unix check for ulp and usubmit
+**	print the environment
+**	for acucobol check for A_CONFIG pass as a -c option in wrun
+**	and print the A_CONFIG file
+**	for MF print cobver file
+**	Check and print PATH
+**	Check anf print LIBPATH
+**	check and print COBPATH
+**
 **	Revision 1.14  1998-01-09 08:48:12-05  gsl
 **	Remove non-error conditions from microfocus
 **

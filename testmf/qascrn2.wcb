@@ -260,10 +260,12 @@
                SOURCE IS YES-NO OBJECT IS YES-NO
       *$RANGE_COUNT 2
                RANGE IS YN-TABLE.
-           03  FILLER PIC X(30) ROW 23 COL 25 
-               VALUE "ONLY PFKEY 1, 2, 3, FLOAT-KEY".
-           03  FILLER PIC X(30) ROW 24 COL 25 
-               VALUE "ON   PFKEY       3, FLOAT-KEY".
+           03  FILLER PIC X(50) ROW 22 COL 25 
+               VALUE "ONLY PFKEY (1), (2), (3), FLOAT-KEY, (16)".
+           03  FILLER PIC X(50) ROW 23 COL 25 
+               VALUE "ON   PFKEY       (3), FLOAT-KEY".
+	   03  FILLER PIC X(50) ROW 24 COL 25
+	       VALUE "Press (16) to exit loop".
 
        01  FLOAT-KEY PIC 99 VALUE 4.
        01  YES-NO    PIC XXX VALUE "YES".
@@ -400,6 +402,148 @@
                       ROW 24 COL 27
                       VALUE "PRESS (ENTER) TO CONTINUE.".
 
+       01  TAB-STOP-1.
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK x86x0B".
+       01  TAB-STOP-2.
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK x86x05".
+       01  TAB-STOP-3.
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"3E".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK x86x3E".
+
+       01  TAB-STOP-4.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK x8Ex0B".
+       01  TAB-STOP-5.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK x8Ex05".
+       01  TAB-STOP-6.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"3E".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK x8Ex3E".
+
+       01  TAB-STOP-7.
+           03  FILLER   PIC X VALUE X"AE".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK xAEx0B".
+       01  TAB-STOP-8.
+           03  FILLER   PIC X VALUE X"AE".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK xAEx05".
+       01  TAB-STOP-9.
+           03  FILLER   PIC X VALUE X"AE".
+           03  FILLER   PIC X VALUE X"3E".
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "MENUPICK xAEx3E".
+
+       01  TAB-STOP-10.
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP x86x0B".
+       01  TAB-STOP-11.
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP x86x05".
+       01  TAB-STOP-12.
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"3E".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP x86x3E".
+
+       01  TAB-STOP-13.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP x8Ex0B".
+       01  TAB-STOP-14.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP x8Ex05".
+       01  TAB-STOP-15.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"3E".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP x8Ex3E".
+
+       01  TAB-STOP-16.
+           03  FILLER   PIC X VALUE X"AE".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP xAEx0B".
+       01  TAB-STOP-17.
+           03  FILLER   PIC X VALUE X"AE".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP xAEx05".
+       01  TAB-STOP-18.
+           03  FILLER   PIC X VALUE X"AE".
+           03  FILLER   PIC X VALUE X"3E".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X(16) VALUE
+               "TAB STOP xAEx3E".
+
+       01  TEST-STOP-1.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE X"05".
+           03  FILLER   PIC X VALUE SPACE.
+           03  FILLER   PIC X(20) VALUE
+               "TEST x8Ex05x05x05".
+       01  TEST-STOP-2.
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE X"0B".
+           03  FILLER   PIC X VALUE SPACE.
+           03  FILLER   PIC X(20) VALUE
+               "TEST x8Ex0Bx0Bx0B".
+       01  TEST-STOP-3.
+           03  FILLER   PIC X VALUE "-".
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"8C".
+           03  FILLER   PIC X VALUE X"86".
+           03  FILLER   PIC X VALUE X"8E".
+           03  FILLER   PIC X VALUE SPACE.
+           03  FILLER   PIC X(25) VALUE
+               "TEST -x8Ex8Cx86x8Cx86x8E".
+
 
        01  MONKEYBAR-MENU-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(27) ROW 1 COL 20 VALUE
@@ -427,7 +571,57 @@
            03  MOD-ITEM-3 PIC 9(3) ROW 7 COL 60
                SOURCE MB-MOD3.
 
-           03  MB-MESG PIC X(43) ROW 10 COL 5
+       	   03  FILLER PIC X(20) ROW 12 COLUMN 2
+	       SOURCE TAB-STOP-1.
+       	   03  FILLER PIC X(20) ROW 13 COLUMN 2
+	       SOURCE TAB-STOP-2.
+       	   03  FILLER PIC X(20) ROW 14 COLUMN 2
+	       SOURCE TAB-STOP-3.
+
+       	   03  FILLER PIC X(20) ROW 12 COLUMN 25
+	       SOURCE TAB-STOP-4.
+       	   03  FILLER PIC X(20) ROW 13 COLUMN 25
+	       SOURCE TAB-STOP-5.
+       	   03  FILLER PIC X(20) ROW 14 COLUMN 25
+	       SOURCE TAB-STOP-6.
+
+       	   03  FILLER PIC X(20) ROW 12 COLUMN 50
+	       SOURCE TAB-STOP-7.
+       	   03  FILLER PIC X(20) ROW 13 COLUMN 50
+	       SOURCE TAB-STOP-8.
+       	   03  FILLER PIC X(20) ROW 14 COLUMN 50
+	       SOURCE TAB-STOP-9.
+
+       	   03  FILLER PIC X(20) ROW 16 COLUMN 2
+	       SOURCE TAB-STOP-10.
+       	   03  FILLER PIC X(20) ROW 17 COLUMN 2
+	       SOURCE TAB-STOP-11.
+       	   03  FILLER PIC X(20) ROW 18 COLUMN 2
+	       SOURCE TAB-STOP-12.
+
+       	   03  FILLER PIC X(20) ROW 16 COLUMN 25
+	       SOURCE TAB-STOP-13.
+       	   03  FILLER PIC X(20) ROW 17 COLUMN 25
+	       SOURCE TAB-STOP-14.
+       	   03  FILLER PIC X(20) ROW 18 COLUMN 25
+	       SOURCE TAB-STOP-15.
+
+       	   03  FILLER PIC X(20) ROW 16 COLUMN 50
+	       SOURCE TAB-STOP-16.
+       	   03  FILLER PIC X(20) ROW 17 COLUMN 50
+	       SOURCE TAB-STOP-17.
+       	   03  FILLER PIC X(20) ROW 18 COLUMN 50
+	       SOURCE TAB-STOP-18.
+
+       	   03  FILLER PIC X(30) ROW 20 COLUMN 2
+	       SOURCE TEST-STOP-1.
+       	   03  FILLER PIC X(30) ROW 21 COLUMN 2
+	       SOURCE TEST-STOP-2.
+
+       	   03  FILLER PIC X(35) ROW 20 COLUMN 40
+	       SOURCE TEST-STOP-3.
+	       
+           03  MB-MESG PIC X(43) ROW 23 COL 5
                SOURCE MB-MESG-TEXT.
 
            03  MB-END-SCREEN-MESG PIC X(40) ROW 24 COL 10
@@ -670,7 +864,7 @@
 
            IF PF-KEY = "11" THEN
               PERFORM DO-MONKEYBAR-SCREEN
-              PERFORM DO-MONKEYBAR-OPT-SCREEN
+      *       PERFORM DO-MONKEYBAR-OPT-SCREEN
 
            ELSE IF PF-KEY = "12" THEN
               PERFORM DISPLAY-MISC-2
@@ -697,15 +891,15 @@
       ******************************************************************
 
        DISPLAY-MISC-2.
-           MOVE 1 TO SC1-COL-QTY(1).
-           MOVE 2 TO SC1-COL-QTY(2).
-           MOVE 3 TO SC1-COL-QTY(3).
-           MOVE 4 TO SC1-COL-QTY(4).
-           MOVE 5 TO SC1-COL-QTY(5).
-           MOVE 6 TO SC1-COL-QTY(6).
-           MOVE 7 TO SC1-COL-QTY(7).
-           MOVE 8 TO SC1-COL-QTY(8).
-           MOVE 9 TO SC1-COL-QTY(9).
+           MOVE 0 TO SC1-COL-QTY(1).
+           MOVE 0 TO SC1-COL-QTY(2).
+           MOVE 0 TO SC1-COL-QTY(3).
+           MOVE 0 TO SC1-COL-QTY(4).
+           MOVE 0 TO SC1-COL-QTY(5).
+           MOVE 0 TO SC1-COL-QTY(6).
+           MOVE 0 TO SC1-COL-QTY(7).
+           MOVE 0 TO SC1-COL-QTY(8).
+           MOVE 0 TO SC1-COL-QTY(9).
 
            DISPLAY AND READ MISC-SCREEN-2 ON CRT.
 
@@ -778,15 +972,20 @@
 
        DISPLAY-TOTAL.
 
+       	   DISPLAY "DISPLAY AND READ TOTAL TEST LOOP".
+		   
            MOVE 4 TO FLOAT-KEY.
 
            DISPLAY AND READ ALTERED SCREEN-TOTAL ON CRT
-           ONLY PFKEY 1, 2, 3, FLOAT-KEY
+           ONLY PFKEY 1, 2, 3, FLOAT-KEY, 16
            ON PFKEY FLOAT-KEY, 3
                 PERFORM ON-PFKEY-PARA
            NO-MOD 
                 PERFORM NO-MOD-PARA.
 
+       	   IF PF-KEY NOT = 16 THEN
+	       GO DISPLAY-TOTAL.
+		
        ON-PFKEY-PARA.
            DISPLAY "ON-PFKEY: PFKEY " PF-KEY " WAS PRESSED".
        NO-MOD-PARA.
@@ -974,11 +1173,11 @@
            REWRITE CRT-ROW-REC.
 
            MOVE 11 TO LINENUM.
-           MOVE "     XXXXX BRITE MOD ALL NOLINE XXXXXXX" 
+           MOVE "++++ XXXXX BRITE MOD ALL NOLINE XXXXXXX ++++"
                TO CRT-ROW-REC-MAP.
            MOVE HEX-80 TO CRT-ROW-X (5).
            MOVE HEX-8C TO CRT-ROW-X (40).
-           REWRITE CRT-ROW-REC.
+           REWRITE CRT-ROW-REC ALARM.
 
            READ CRT-ROW.
 
@@ -989,9 +1188,9 @@
            READ CRT-ROW.
 
            MOVE 16 TO LINENUM.
-           MOVE "         ALARM & CENTER CURSOR" TO CRT-ROW-REC-MAP.
+           MOVE "              CENTER CURSOR" TO CRT-ROW-REC-MAP.
            MOVE HEX-94 TO CRT-ROW-X (1).
-           REWRITE CRT-ROW-REC AFTER ALARM CURSOR COLUMN 40 ROW 12.
+           REWRITE CRT-ROW-REC AFTER CURSOR COLUMN 40 ROW 12.
 
            READ CRT-ROW.
 

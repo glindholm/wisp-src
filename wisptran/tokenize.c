@@ -723,15 +723,14 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 				tmptoken.data = (char *)wdupstr(tmptoken.indata);
 				uppercase(tmptoken.data);
 
-				if (do_reswords && reserved_keyword(tmptoken.data))
+				if (do_reswords && is_change_word(tmptoken.data))
 				{
 					/* Change words */
-					char	*tmpdata;
+					char	changed_word[80];
 
-					tmpdata = wmalloc(size+3);
-					sprintf(tmpdata,"W-%s",tmptoken.data);
+					get_change_word(changed_word, tmptoken.data);
 					wfree(tmptoken.data);
-					tmptoken.data = tmpdata;
+					tmptoken.data = (char*)wdupstr(changed_word);
 				}
 				else if (verb_keyword(tmptoken.data))
 				{
@@ -1132,44 +1131,6 @@ int unget_token(TOKEN *tokptr)
 	return rc;
 }
 
-int hold_token_cache(void)
-{
-	int	i;
-	int	count;
-	TOKEN	tmptok;
-	char	the_line[128];
-
-	count = token_cache_count();
-	if (count)
-	{
-		memset(the_line,' ',80);
-		for(i=0; i<count; i++)
-		{
-			token_cache_unque(&tmptok);
-			if (tmptok.indata)
-				memcpy(&the_line[tmptok.column-1],tmptok.indata,strlen(tmptok.indata));
-			else
-				memcpy(&the_line[tmptok.column-1],tmptok.data,strlen(tmptok.data));
-
-			if (i == count-1)
-			{
-				the_line[tmptok.column+strlen(tmptok.data)-1] = (char)0;
-				the_line[80] = (char)0;
-				strcat(the_line,"\n");
-			}
-			clean_token(&tmptok);
-		}
-	}
-	else
-	{
-		the_line[0] = (char)0;
-	}
-	
-	hold_this_line(the_line);
-	invalidate_parms();
-	return 0;
-}
-
 /*
 **	Routine:	init_token()
 **
@@ -1202,7 +1163,7 @@ static void init_token(TOKEN *tokptr, int the_absline, int the_line, void *the_c
 	tokptr->data 		= NULL;
 }
 
-TOKEN *make_token(int the_type, char *the_data)
+TOKEN *make_token(int the_type, const char *the_data)
 {
 	TOKEN	*tokptr;
 
@@ -1274,7 +1235,7 @@ void free_token(TOKEN *tokptr)
 	}
 }
 
-int eq_token(TOKEN *tokptr, int the_type, char *the_data)
+int eq_token(TOKEN *tokptr, int the_type, const char *the_data)
 {
 	if (!tokptr) return(0);
 
@@ -1283,7 +1244,7 @@ int eq_token(TOKEN *tokptr, int the_type, char *the_data)
  	return( 0 == strcmp(tokptr->data, the_data) );
 }
 
-TOKEN *edit_token(TOKEN *tokptr, char *the_data)
+TOKEN *edit_token(TOKEN *tokptr, const char *the_data)
 {
 	if (tokptr->data) wfree(tokptr->data);
 	tokptr->data = wmalloc(strlen(the_data)+1);
@@ -1423,6 +1384,15 @@ char *token_type_mess(TOKEN *tokptr)
 /*
 **	History:
 **	$Log: tokenize.c,v $
+**	Revision 1.10  1998-03-27 10:40:13-05  gsl
+**	change_words
+**
+**	Revision 1.9  1998-03-20 17:35:59-05  gsl
+**	Change to use change_reserved_word() and make args const.
+**
+**	Revision 1.8  1998-03-17 16:58:31-05  gsl
+**	Removed get_line() support logic
+**
 **	Revision 1.7  1996-06-24 14:10:03-04  gsl
 **	fix warnings for NT
 **

@@ -1,8 +1,17 @@
-// Copyright (c) Lexical Software, 1992.  All rights reserved.
-//
-// Module : wisp_rts.h
-// Author : George Soules
-// Date   : 17 March 1992
+/*
+**	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+**
+**	Project:	WPROC
+**	Id:		$Id:$
+**	RCS:		$Source:$
+**	
+**
+** Copyright (c) Lexical Software, 1992.  All rights reserved.
+**
+** Module : wisp_rts.h
+** Author : George Soules
+** Date   : 17 March 1992
+*/
 
 #ifndef WISP_RTS__H
 #define WISP_RTS__H
@@ -230,4 +239,62 @@ void wispexit_cleanup(void);
 #endif
 
 #endif
+
+
+/*
+**	History:
+**	$Log: wisp_rts.h,v $
+**	Revision 1.13  1998-08-31 15:50:42-04  gsl
+**	drcs update
+**
+**	Revision 1.12  1998-08-31 15:14:30-04  gsl
+**	drcs update
+**
+**	----------------------------
+**	revision 1.11
+**	date: 1997-06-10 10:45:44-04;  author: scass;  state: V4_3_00;  lines: +1 -0
+**	Final for portability.
+**	----------------------------
+**	revision 1.10
+**	date: 1997-06-10 01:43:35-04;  author: scass;  state: Exp;  lines: +0 -2
+**	Removed prototype for wvaset becasue already defined in
+**	onother header wisplib.h
+**	----------------------------
+**	revision 1.9
+**	date: 1997-06-10 00:58:35-04;  author: scass;  state: Exp;  lines: +1 -1
+**	corrected wvaset to be long
+**	----------------------------
+**	revision 1.8
+**	date: 1997-06-09 15:51:39-04;  author: scass;  state: Exp;  lines: +40 -48
+**	Corrected prototype for LINK2 to match type change.
+**	----------------------------
+**	revision 1.7
+**	date: 1997-01-14 20:12:34-05;  author: gsl;  state: V3_3_93;  lines: +1 -0
+**	Add prototype for vwang_title()
+**	----------------------------
+**	revision 1.6
+**	date: 1996-11-11 20:13:38-05;  author: gsl;  state: Exp;  lines: +2 -0
+**	Prototype wispexit_cleanup()
+**	----------------------------
+**	revision 1.5
+**	date: 1996-10-09 12:41:58-04;  author: gsl;  state: Exp;  lines: +3 -0
+**	add prototypes
+**	----------------------------
+**	revision 1.4
+**	date: 1995-04-25 06:00:36-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+**	drcs state V3_3_15
+**	----------------------------
+**	revision 1.3
+**	date: 1995-04-17 07:52:51-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+**	drcs state V3_3_14
+**	----------------------------
+**	revision 1.2
+**	date: 1995-01-27 18:33:38-05;  author: gsl;  state: V3_3x12;  lines: +47 -27
+**	drcs load
+**	----------------------------
+**	revision 1.1
+**	date: 1995-01-27 16:51:35-05;  author: gsl;  state: V3_3c;
+**	drcs load
+**	=============================================================================
+*/
 

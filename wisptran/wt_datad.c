@@ -254,6 +254,7 @@ get_next_statement:
 #define FD_DATA		5
 #define FD_CODESET	6
 #define FD_EXTERNAL	7
+#define FD_LINAGE	8
 
 		g_curr_file_num = file_index(the_file);
 
@@ -281,9 +282,6 @@ get_next_statement:
 			**	VAX:	VALUE OF ID IS N-filename
 			**	LPI:	VALUE OF FILE-ID IS N-filename
 			*/
-			char	temp[40];
-
-			make_fld(temp,prog_files[g_curr_file_num],"N-");	/* start the value statement			*/
 			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"VALUE")));
 			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"OF")));
 			if (lpi_cobol)
@@ -291,7 +289,7 @@ get_next_statement:
 			if (vax_cobol)
 				tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"ID")));
 			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"IS")));
-			tie_bottom(file_name_node, maketoknode(make_token(IDENTIFIER,temp)));
+			tie_bottom(file_name_node, maketoknode(make_token(IDENTIFIER,get_prog_nname(g_curr_file_num))));
 		}
 
 		curr_node = curr_node->next;					/* Advance past the filename node		*/
@@ -363,6 +361,12 @@ get_next_statement:
 			else if ( eq_token(curr_node->token, KEYWORD, "CODE-SET") )
 			{
 				fd_parse_mode = FD_CODESET;
+				curr_node->token->column_fixed = 1;
+				curr_node->token->line   = 0;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "LINAGE") )
+			{
+				fd_parse_mode = FD_LINAGE;
 				curr_node->token->column_fixed = 1;
 				curr_node->token->line   = 0;
 			}
@@ -853,6 +857,12 @@ NODE the_statement;
 /*
 **	History:
 **	$Log: wt_datad.c,v $
+**	Revision 1.12  1998-12-15 14:26:22-05  gsl
+**	Add recognition of the LINAGE clause in an FD
+**
+**	Revision 1.11  1998-03-19 14:18:23-05  gsl
+**	Change to use get_prog_nname()
+**
 **	Revision 1.10  1997-08-28 17:46:23-04  gsl
 **	Add SCREEN SECTION
 **

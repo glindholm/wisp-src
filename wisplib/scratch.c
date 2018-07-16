@@ -1,13 +1,15 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+**	File:		scratch.c
+**
+**	Project:	WISPLIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	VSSUB SCRATCH
+**
+*/
 
 /* Scratch a file or a library													*/
 
@@ -52,6 +54,7 @@ static char rcsid[]="$Id:$";
 #include "wfname.h"
 #include "filext.h"
 #include "wispcfg.h"
+#include "werrlog.h"
 
 #ifndef ETXTBSY
 #define ETXTBSY 26
@@ -64,7 +67,26 @@ static int4 chkrms(int status, int lib_fl);
 static int do_delete(char* file, int lib_flag, int* err_type);
 static int del_dir(char* file_spec);
 
+int wisp_unlink(const char *filename)
+{
+	int rc;
+	rc = unlink(filename);
+	wtrace("WISP","UNLINK","File=[%s] Rc=[%d] errno=[%d]", filename, rc, ((0 != rc) ? errno: 0));
+	return rc;
+}
 
+/*
+**   	SCRATCH(Type, File, Lib, Vol, [Exp_flag, [Limit_flag,]] Retcode)
+**
+**	Type	Alpha(1) 	'F' = File, 'L' = Library
+**	File	Alpha(8)	The File
+**	Lib	Alpha(8)	The library
+**	Vol	Alpha(6)
+**	Exp	Alpha(1)	Not supported (optional)
+**	Limit	Alpha(1) 	Not supported (optional)
+**	Retcode	Int(4)		Return code
+**				
+*/
 
 void SCRATCH(va_alist)
 va_dcl
@@ -112,6 +134,9 @@ va_dcl
 		lflag = va_arg(the_args,char*);
 	retcod = va_arg(the_args,int4*);
 
+	wtrace("SCRATCH","ARGS","Type=[%c] File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s]",
+	       *tflag, fname, lib, vol);
+
 	if ( (*tflag == 'L') || (*tflag =='l') )
 	{
 		mode |= IS_LIB;									/* this is a library		*/
@@ -126,9 +151,7 @@ va_dcl
 		if (!l_file[0] || ' ' == l_file[0])
 		{
 			ret = 20;
-			wswap(&ret);
-			PUTBIN(retcod,&ret,sizeof(int4));
-			return;
+			goto scratch_return;
 		}
 	}
 
@@ -155,9 +178,7 @@ va_dcl
 	if ( (!l_lib[0] || ' ' == l_lib[0]) && !scratch_mode_32 )
 	{
 		ret = 16;
-		wswap(&ret);
-		PUTBIN(retcod,&ret,sizeof(int4));
-		return;
+		goto scratch_return;
 	}
 
 	memcpy(l_vol,vol,6);
@@ -166,9 +187,7 @@ va_dcl
 	if ( (!l_vol[0] || ' ' == l_vol[0]) && !scratch_mode_32 )
 	{
 		ret = 4;
-		wswap(&ret);
-		PUTBIN(retcod,&ret,sizeof(int4));
-		return;
+		goto scratch_return;
 	}
 
 #ifdef VMS
@@ -247,12 +266,16 @@ va_dcl
 			default:      ret=errno; break;						/* default: errno		*/
 		}
 	}
+
+scratch_return:
+	wtrace("SCRATCH","RETURN", "Return Code=[%d]", ret);
+	
 	wswap(&ret);
 	PUTBIN(retcod,&ret,sizeof(int4));
 }
 
 #ifdef VMS
-static int4 chkrms(int status, int lib_fl)								/* Check RMS error code.	*/
+static int4 chkrms(int status, int lib_fl)							/* Check RMS error code.	*/
 {
 	int4 wrc;										/* Wang style return code.	*/
 	switch (status)
@@ -335,7 +358,7 @@ static int do_delete(char* file, int lib_flag, int* err_type)
 		{
 			p = strchr(fnam,' ');
 			if (p) *p = '\0';						/* Null terminate returned file name.	*/
-			if (unlink(fnam) < 0)						/* Try to delete file.			*/
+			if (wisp_unlink(fnam) < 0)					/* Try to delete file.			*/
 			{
 				rc = errno;						/* Return error - FAILURE.		*/
 				goto return_point;
@@ -383,12 +406,13 @@ static int do_delete(char* file, int lib_flag, int* err_type)
 	char fpat[128];								/* pattern incl. wildcards			*/
 	char *filename;
 	int	first;
+	char	*ptr;
 
 	strcpy(fpat,file);							/* copy to our descriptor			*/
 
 	if (lib_flag && strchr(fpat,'*'))
 	{
-		char	delspec[128];
+		char	delspec[WISP_FILEPATH_LEN];
 		int	save_rc;
 
 		first = 1;
@@ -399,7 +423,7 @@ static int do_delete(char* file, int lib_flag, int* err_type)
 		while (filename=s_nextfile(fpat,&first))
 		{
 			buildfilepath(delspec,fpat,filename);
-			if (unlink(delspec)<0) 
+			if (wisp_unlink(delspec)<0) 
 			{
 				save_rc = errno;
 				if ( save_rc != EACCES ) return save_rc;
@@ -411,11 +435,13 @@ static int do_delete(char* file, int lib_flag, int* err_type)
 	}
 	else if ( ! lib_flag )
 	{
-		char tempfile[80];
-		int found, has_ext, dat_done;
+		char tempfile[WISP_FILEPATH_LEN];
+		int has_ext;
+		int	deleted_data = 0;
+		int	deleted_idx = 0;
 
 		/*
-		**	Have to handle 3 cases
+		**	Have to handle these cases
 		**
 		**	1) Vision files	
 		**		foo
@@ -427,47 +453,88 @@ static int do_delete(char* file, int lib_flag, int* err_type)
 		**	3) CISAM (with .dat)
 		**		foo.dat
 		**		foo.idx
+		**
+		**	4) Vision4
+		**		foo [.dat]
+		**		foo.vix
+		**
+		**	5) Corrupt file - data portion missing
+		**		foo.idx
 		*/
 
-		found = 0;
-		dat_done = 0;
 		has_ext = hasext(fpat);
 
+		/*
+		 *	First delete the data portion
+		 */
 		if ( fexists(fpat) )
 		{
-			found = 1;
-			if (unlink(fpat)<0) return errno;
-			dat_done = 1;
+			if (wisp_unlink(fpat)<0) 
+			{
+				return errno;
+			}
+			deleted_data = 1;
 		}
-		else if (has_ext) 
+		else if (!has_ext)
 		{
-			return ENOENT;						/* If it has ext then thats all we do		*/
-		}
-
-		if (!has_ext)							/* May be CISAM files				*/
-		{
+			/*
+			 *	If no extension then try .dat
+			 */
 			strcpy(tempfile,fpat);
-			strcat(tempfile,".idx");
+			strcat(tempfile,".dat");
 			if ( fexists(tempfile) )
 			{
-				found = 1;
-				if (unlink(tempfile)<0) return errno;
-			}
-
-			if (!dat_done)						/* May be CISAM with .dat			*/
-			{
-				strcpy(tempfile,fpat);
-				strcat(tempfile,".dat");
-				if ( fexists(tempfile) )
+				if (wisp_unlink(tempfile)<0) 
 				{
-					found = 1;
-					if (unlink(tempfile)<0) return errno;
-					dat_done=1;
+					return errno;
 				}
+				deleted_data = 1;
 			}
 		}
 
-		if (!found) return ENOENT;
+		/*
+		**	The data portion has been deleted.
+		**
+		**	Check if there is an index portion to delete
+		*/
+		strcpy(tempfile,fpat);
+		if (has_ext)
+		{
+			if (ptr = strrchr(tempfile,'.'))       			/* cut off the extension			*/
+			{
+				*ptr = '\0';
+			}
+		}
+
+		strcat(tempfile,".idx");					/* Try CISAM .idx file				*/
+		if ( fexists(tempfile) )
+		{
+			if (wisp_unlink(tempfile)<0) 
+			{
+				return errno;
+			}
+			deleted_idx = 1;
+		}
+		else
+		{
+			if (ptr = strrchr(tempfile,'.')) *ptr = '\0';		/* cut off the extension			*/
+
+			strcat(tempfile,".vix");				/* Try Vision4 .vix file			*/
+			if ( fexists(tempfile) )
+			{
+				if (wisp_unlink(tempfile)<0) 
+				{
+					return errno;
+				}
+				deleted_idx = 1;
+			}
+		}
+
+		if (!deleted_data && !deleted_idx)
+		{
+			return ENOENT;	/* nothing was found */
+		}
+		
 
 		/*
 		**	Try to remove the directory.  If empty it will be removed otherwise the rmdir will fail.
@@ -549,6 +616,18 @@ static int del_dir(char* file_spec)						/* Attempt to delete the directory.		*/
 /*
 **	History:
 **	$Log: scratch.c,v $
+**	Revision 1.17  1999-08-20 13:05:58-04  gsl
+**	Found and fixed the real problem with SCRATCH. It was failing to delete the
+**	idx file portion if the filepath contained '.' characters. It was mistaking
+**	where the extension was so it was mis-forming the file.idx path.
+**
+**	Revision 1.16  1999-08-20 10:20:01-04  gsl
+**	Fix problem where SCRATCH would not delete the idx portion of a file
+**	if it couldn't find a data portion.
+**
+**	Revision 1.15  1998-05-15 15:16:00-04  gsl
+**	Add support for Vision4 plus tracing
+**
 **	Revision 1.14  1996-10-08 20:24:47-04  gsl
 **	replace getenv() with wispscratchmode() call
 **

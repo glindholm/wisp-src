@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : sysenv.cpp
 // Author : George Soules
@@ -176,3 +183,53 @@ int system_environment::set(const char* a_name, const char* a_value) {
 void system_environment::restore() {
    os_environ = the_vector ? the_vector : saved_environ;
 }
+
+//
+//	History:
+//	$Log: sysenv.cpp,v $
+//	Revision 1.7  1998-08-31 15:14:20-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/sysenv.cpp,v
+//	Working file: sysenv.cpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 19:48:12-04;  author: gsl;  state: V4_3_00;  lines: +1 -3
+//	NT
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:16:26-04;  author: gsl;  state: Exp;  lines: +0 -0
+//	Renamed from sysenv.cc to sysenv.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:28-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:43-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:29-05;  author: gsl;  state: V3_3x12;  lines: +3 -3
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:30-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

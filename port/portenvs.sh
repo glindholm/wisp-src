@@ -1,4 +1,4 @@
-#!/bin/ksh
+#
 #	FILE:	portenvs.sh
 #
 #	USAGE:	$ cd ../wisp/src/port
@@ -9,9 +9,11 @@
 #
 SAVEPWD=`pwd`
 cd ..
-export WISPDIR=`pwd`
+WISPDIR=`pwd`
+export WISPDIR
 cd ..
-export WISP=`pwd`
+WISP=`pwd`
+export WISP
 cd $WISPDIR/port
 if [ $SAVEPWD != $WISPDIR/port ]
 then
@@ -19,23 +21,33 @@ then
 	exit 1
 fi
 
+if [ "$ACUDIR" = "" ]
+then
+	ACUDIR=/usr/local/acucobol
+	export ACUDIR
+fi
+if [ "$COBDIR" = "" ]
+then
+	COBDIR=/usr/lib/cobol
+	export COBDIR
+fi
+
 echo WISP=$WISP
 echo WISPDIR=$WISPDIR
 echo ACUDIR=$ACUDIR
 if [ ! -d $ACUDIR ]
 then
-	echo ACUDIR not found
-	exit 1
+	echo '**** ACUDIR not found ****'
 fi
 echo COBDIR=$COBDIR
 if [ ! -d $COBDIR ]
 then
-	echo COBDIR not found
-	exit 1
+	echo '**** COBDIR not found ****'
 fi
 echo SHELL=$SHELL
 echo
 echo Switching to new shell for WISP PORT
 echo
-export PS1="WISP PORT `hostname` $ "
+PS1="WISP PORT `hostname` $ "
+export PS1
 $SHELL

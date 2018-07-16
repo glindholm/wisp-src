@@ -33,7 +33,8 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wisplib.h"
 #include "wispcfg.h"
-
+#include "wperson.h"
+#include "werrlog.h"
 
 
 #ifndef O_BINARY
@@ -100,6 +101,7 @@ static char rcsid[]="$Id:$";
 			KT_PACKED_UNSIGNED	9	Packed unsigned.
 			KT_BINARY_NORMAL	10	Binary in byte normal order.
 			KT_BINARY_2N2		11	Binary (4 byte) with half-words swapped.
+			KT_YY_PIVOTYEAR		12	YY PIC 99 - value based on pivot year.
 
 	errlevel	The level of error messages to report: 0 = report all errors, 1 = don't report warnings.
 
@@ -200,6 +202,7 @@ static int cmp_zoneright(struct s_recindex *index1, struct s_recindex *index2, i
 static int cmp_zoneleft(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
 static int cmp_packed(struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int issigned);
 static int cmp_decimal(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_yy(struct s_recindex *index1, struct s_recindex *index2, int offset);
 
 static void load_decimal(double *d, char *p, int len);
 static int writemem(char *filename, int f_file);
@@ -255,9 +258,6 @@ static int ssbytenormal(void);
 **	Return:		None
 **
 **	Warnings:	None
-**
-**	History:	
-**	mm/dd/yy	Written by xxx
 **
 */
 
@@ -444,6 +444,13 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 		case KT_ZONED_TRAIL:
 		case KT_ZONED_RIGHT:
 		case KT_ZONED_LEFT:
+			break;
+		case KT_YY_PIVOTYEAR:
+			if ((sortkeys)[i].length != 2)
+			{
+				sprintf(messstr,"[key = %d, length = %d]", i+1, (sortkeys)[i].length);
+				return(reporterr(ERR_BADLENGTH,messstr));
+			}
 			break;
 		default:
 			sprintf(messstr,"[key = %d, type = %d]", i+1, (sortkeys)[i].type);
@@ -1058,6 +1065,9 @@ printf("compare(%d,%d) ",(*p1-g_recindex), (*p2-g_recindex));
 			break;
 		case KT_DECIMAL:
 			rc = cmp_decimal(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
+			break;
+		case KT_YY_PIVOTYEAR:
+			rc = cmp_yy(*p1,*p2,(g_sortkeys)[key].offset);
 			break;
 		default:
 			sprintf(messstr,"[key = %d, type = %d]", key+1, (g_sortkeys)[key].type);
@@ -1708,6 +1718,7 @@ static int cmp_decimal(struct s_recindex *index1, struct s_recindex *index2, int
 	return( rc );
 }
 
+
 static void load_decimal(double *d, char *p, int len)
 {
 	double	digit,lfact,rfact;
@@ -1792,6 +1803,141 @@ static void load_decimal(double *d, char *p, int len)
 	}
 }
 
+/*
+**	ROUTINE:	loadyy()
+**
+**	FUNCTION:	Load a YY year based on pivot year.
+**
+**	DESCRIPTION:	YY is a PIC 99 DISPLAY.
+**			If YY > pivot year then add 1900
+**			else add 2000.
+**			EG. For pivotyear 30, YY has a range of 1931-2030
+**
+**	ARGUMENTS:	
+**	ptr		Start of YY
+**	len		Length of YY. Must be 2 or error.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		The full 4 digit year.
+**			0 if the YY was invalid.
+**
+**	WARNINGS:	An invalid YY returns 0.
+**
+*/
+
+static int loadyy(const char* ptr, int len)
+{
+	static int first = 1;
+	static int pivotyear;
+	int    yyyy = 0;
+	
+	if (first)
+	{
+		const char *ptr;
+		
+		first = 0;
+		pivotyear = -1;		/* Default to no pivot year */
+
+		if ((ptr = get_wisp_option("YYPIVOTYEAR")) && *ptr)
+		{
+			sscanf(ptr, "%d", &pivotyear);
+		}
+		wtrace("SORT","PIVOT", "Using YY pivot year [%d]", pivotyear);
+	}
+
+	if (len != 2)
+	{
+		return 0;	/* Low value */
+	}
+	
+	if ( *ptr >= '0' && *ptr <= '9' )
+	{
+		yyyy = (*ptr - '0') * 10;
+	}
+	else if (' ' != *ptr)
+	{
+		return 0;	/* low value */
+	}
+
+	ptr++;
+
+	if ( *ptr >= '0' && *ptr <= '9' )
+	{
+		yyyy += (*ptr - '0');
+	}
+	else if (' ' != *ptr)
+	{
+		return 0;	/* low value */
+	}
+	
+	if (yyyy > pivotyear)
+	{
+		yyyy += 1900;
+	}
+	else
+	{
+		yyyy += 2000;
+	}
+	
+	return yyyy;	
+}
+
+
+/*
+	cmp_yy:		Compare YY pic 99 based on pivot year
+
+*/
+static int cmp_yy(struct s_recindex *index1, struct s_recindex *index2, int offset)
+{
+	int 	rc;
+	int	y1, y2;
+	char	*p1, *p2;
+	int	len1, len2;
+
+	len1 = 2;
+	len2 = 2;
+
+	if ( g_filetype != 'F' )
+	{
+		int 	end;
+
+		end = offset+2;
+
+		if ( end > index1->size )
+		{
+			len1 = index1->size - offset;
+		}
+		if ( end > index2->size )
+		{
+			len2 = index2->size - offset;
+		}
+	}
+
+	p1 = index1->rec;
+	p2 = index2->rec;
+
+	p1 += offset;
+	p2 += offset;
+
+	y1 = loadyy(p1,len1);
+	y2 = loadyy(p2,len2);
+
+	if ( y1 == y2 )
+	{
+		rc = 0;
+	}
+	else if ( y1 < y2 )
+	{
+		rc = -1;
+	}
+	else
+	{
+		rc = 1;
+	}
+	return( rc );
+}
+
 
 /*
 	writemem:	This routine writes the contents of memblock (sorted) out to a file.
@@ -1831,7 +1977,6 @@ static int mergemem(char *inname, int f_in, char *outname, int f_out)
 {
 	int	i,rc;
 	char	messstr[80];
-	int	readcnt;							/* Number bytes read.				*/
 	char	*tmprec;							/* Temporary record buff.			*/
 	char	*writerec;							/* Buffer to write.				*/
 	int	eof_in, eof_mem;						/* End of input flags.				*/
@@ -1891,15 +2036,18 @@ static int mergemem(char *inname, int f_in, char *outname, int f_out)
 				for(i=size; i<gotcnt; i++) *ptr1++ = *ptr2++;
 
 				size = sizerec(tmprec,tmprec+leftover); /* See if we have a full record already loaded.	*/
+				gotcnt = leftover;
 			}
 			else
 			{
 				size = 0;
+				gotcnt = 0;
 			}
-			gotcnt = leftover;
 
 			if ( !size )						/* If a full record not loaded then read.	*/
 			{
+				int	readcnt;				/* Number bytes read.				*/
+
 				readcnt = read(f_in, &tmprec[leftover], g_maxrecsize);	/* Read in at least 1 record.		*/
 
 				if (readcnt == -1)				/* Error on READ				*/
@@ -1922,12 +2070,9 @@ static int mergemem(char *inname, int f_in, char *outname, int f_out)
 					rc = reporterr(ERR_TEXT,messstr);
 					break;
 				}
-				leftover = gotcnt - size;
 			}
-			else
-			{
-				readcnt = 0;
-			}
+
+			leftover = gotcnt - size;
 
 			file_used = 0;
 		}
@@ -2184,6 +2329,20 @@ static int ssbytenormal(void)
 /*
 **	History:
 **	$Log: sortseqf.c,v $
+**	Revision 1.18  1999-03-24 13:12:53-05  gsl
+**	Fixed a problem in mergemem() where leftover was not being properly
+**	calculated.  This could result in an infinite loop where it is creating
+**	the merged file, it would run until the size of the file grew until
+**	it exceeded system resources.  This bug only effected variable length
+**	record files that are too big to sort in memory.  It also requires short
+**	records in the file that are less then half the length of the largest
+**	record and the short records had to sort together so the tmprec buffer
+**	would contain 3 or more complete records.  The logic had a flaw that
+**	assumed there was never more the 2 complete records in the buffer.
+**
+**	Revision 1.17  1998-09-08 16:40:54-04  gsl
+**	Add support for key YY based on YYPIVOTYEAR
+**
 **	Revision 1.16  1996-10-10 12:26:06-04  gsl
 **	Free ptr after call to tempnam()
 **

@@ -36,7 +36,7 @@ static char rcsid[]="$Id:$";
 #ifdef unix
 #include <signal.h>
 
-int wsystem(char* cmd)
+int wsystem(const char* cmd)
 {
 	int 	rc;
 	void	(*save_sig)();
@@ -51,7 +51,7 @@ int wsystem(char* cmd)
 #endif /* unix */
 
 #if defined(MSDOS)
-int wsystem(char* cmd)
+int wsystem(const char* cmd)
 {
 	wtrace("WSYSTEM","COMMAND","%s", cmd);
 
@@ -82,14 +82,25 @@ int wsystem(char* cmd)
 #include <stdio.h>
 #include "win32spn.h"
 
-int wsystem(char* cmd)
+int wsystem(const char* cmd)
 {
 	return win32spawnlp(NULL, cmd, SPN_WAIT_FOR_CHILD);
+}
+
+int wsystem_standalone(const char* cmd)
+{
+	return win32spawnlp(NULL, cmd, SPN_STANDALONE_CHILD);
 }
 #endif /* WIN32 */
 /*
 **	History:
 **	$Log: wsystem.c,v $
+**	Revision 1.16  1998-05-05 13:15:54-04  gsl
+**	add wsystem_standalone() to support UTILSWINDOWS
+**
+**	Revision 1.15  1998-03-13 17:59:20-05  gsl
+**	Make const
+**
 **	Revision 1.14  1997-07-29 15:40:31-04  gsl
 **	Add a wtrace()
 **

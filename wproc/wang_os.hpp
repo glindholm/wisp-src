@@ -1,8 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
-
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1992.  All rights reserved.
 //
 // Module : wang_os.hpp
@@ -130,6 +133,12 @@ void wang_os_first_procedure_name(char *a_name);
 /*
 **	History:
 **	$Log: wang_os.hpp,v $
+**	Revision 1.8  1998-08-31 15:50:41-04  gsl
+**	drcs update
+**
+**	Revision 1.7  1998-08-31 15:14:28-04  gsl
+**	drcs update
+**
 **	Revision 1.6  1996-08-12 19:42:23-04  gsl
 **	Increased the MAX_SUBMIT_PARAMETERS to 32 from 8 which was needed when
 **	we used SETSUBMIT() which is no longer used.
@@ -140,3 +149,57 @@ void wang_os_first_procedure_name(char *a_name);
 **
 **
 */
+
+//
+//	History:
+//	$Log: wang_os.hpp,v $
+//	Revision 1.8  1998-08-31 15:50:41-04  gsl
+//	drcs update
+//
+//	Revision 1.7  1998-08-31 15:14:28-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wang_os.hpp,v
+//	Working file: wang_os.hpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1996-08-12 19:42:23-04;  author: gsl;  state: V4_3_00;  lines: +6 -3
+//	Increased the MAX_SUBMIT_PARAMETERS to 32 from 8 which was needed when
+//	we used SETSUBMIT() which is no longer used.
+//	----------------------------
+//	revision 1.5
+//	date: 1995-10-18 09:42:55-04;  author: gsl;  state: V3_3_19;  lines: +13 -0
+//	updated prototypes
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:35-04;  author: gsl;  state: V3_3_18;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:49-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:36-05;  author: gsl;  state: V3_3x12;  lines: +26 -11
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:34-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

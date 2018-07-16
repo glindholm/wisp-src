@@ -1,4 +1,11 @@
-
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 #ifndef WANGFILE__HPP
 #define WANGFILE__HPP
 
@@ -19,3 +26,41 @@ class wang_filename : public object {
 #endif
 
 #endif
+
+//
+//	History:
+//	$Log: wangfile.hpp,v $
+//	Revision 1.4  1998-08-31 15:14:29-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wangfile.hpp,v
+//	Working file: wangfile.hpp
+//	head: 1.3
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 3;	selected revisions: 3
+//	description:
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-25 06:00:36-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.2
+//	date: 1995-04-17 07:52:50-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 18:33:37-05;  author: gsl;  state: V3_3x12;
+//	drcs load
+//	=============================================================================

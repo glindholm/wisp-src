@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : txt.cpp
 // Author : George Soules
@@ -52,3 +59,49 @@ char *const txt_trace_level         = "trace level";
 
 
 
+
+//
+//	History:
+//	$Log: txt.cpp,v $
+//	Revision 1.6  1998-08-31 15:14:25-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/txt.cpp,v
+//	Working file: txt.cpp
+//	head: 1.5
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 5;	selected revisions: 5
+//	description:
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:16:34-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	Renamed from txt.cc to txt.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:32-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:46-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:33-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:32-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

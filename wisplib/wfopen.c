@@ -202,7 +202,8 @@ char *prname;										/* The PRNAME (optional).		*/
 	char *msg1,*msg2;
 	char intv_type;									/* Intervention type E or R (rename)	*/
 
-	werrlog(ERRORCODE(1),file,lib,vol,appl,0,0,0,0);				/* Say we are here.			*/
+	wtrace("WFOPEN","ENTRY","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Mode=[0x%08X] App=[%8.8s] Prname=[%8.8s]",
+	       file, lib, vol, *mode, appl, prname);
 
 	setprogid(appl);								/* Set the global var program id.	*/
 
@@ -230,6 +231,7 @@ char *prname;										/* The PRNAME (optional).		*/
 	l_lib = lib;
 	l_file = file;                                                                                                            
 	l_name = cob_name;
+	memset(l_name, ' ', COB_FILEPATH_LEN);						/* Clear out the 80 character filename.	*/
 
 	if (*mode & IS_PRNAME)								/* If PRNAME is passed then		*/
 		l_prname = prname;							/* Use the passed PRNAME		*/
@@ -243,27 +245,30 @@ char *prname;										/* The PRNAME (optional).		*/
 	copies=1;
 
 	/* 
-	**	Perform the Initial "Hidden" getparm 
+	**	Perform the Initial "Hidden" getparm (Once only)
+	**	The IS_GETPARM logic to ensure the "ID" getparm occurs only once
+	**	was removed in version 3.1 (don't know why).  The functionality
+	**	was tested on the Wang and is now reinstated.
 	*/
-
-	strcpy(getparm_type,"ID");							/* "ID" is for hidden getparms		*/
-
-	memset(l_name, ' ', COB_FILEPATH_LEN);						/* Clear out the 80 character filename.	*/
-	msg1="OVERRIDE FILE SPECIFICATIONS.";
-	msg2="PLEASE RESPECIFY FILENAME.";
-                                       
-	file_getparm2(*mode,l_file,l_lib,l_vol,l_prname,"WFOPEN",
-		&native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,'E',orig_file,prtclass,&form,&copies);
-
-	if (pf_rcvr[0] == PFKEY_16_PRESSED)
+	if ( !(*mode & IS_GETPARM) )							/* If not yet called.			*/
 	{
-		LINKCOMPCODE = 16;
-		wexit(16L);								/* Exit The program.			*/
+		*mode |= IS_GETPARM;							/* Set the IS_GETPARM flag.		*/
+
+		strcpy(getparm_type,"ID");						/* "ID" is for hidden getparms		*/
+		msg1="OVERRIDE FILE SPECIFICATIONS.";
+		msg2="PLEASE RESPECIFY FILENAME.";
+                                       
+		file_getparm2(*mode,l_file,l_lib,l_vol,l_prname,"WFOPEN",
+			      &native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,'E',orig_file,prtclass,&form,&copies);
+
+		if (pf_rcvr[0] == PFKEY_16_PRESSED)
+		{
+			LINKCOMPCODE = 16;
+			wexit(16L);							/* Exit The program.			*/
+		}
 	}
 
-	getparm_type[0] = 'I';								/* Start off as an initial getparm.	*/
-	getparm_type[1] = ' ';
-	getparm_type[2] = '\0';
+	strcpy(getparm_type,"I ");							/* Start off as an initial getparm.	*/
 
                                        
 translate_name:
@@ -299,6 +304,7 @@ translate_name:
 		SAVE_WISPFILEXT;							/* Save the special file extension.	*/
 
 		wfname(mode,l_vol,l_lib,l_file,l_name);					/* generate a native file name		*/
+
 	}
 
 	/*
@@ -314,7 +320,7 @@ translate_name:
 		get_defs(DEFAULTS_PM,&printmode);
 		if ('O' == printmode)							/* If VAX ON-LINE printing assume OK	*/
 		{
-			return;
+			goto wfopen_return;
 		}
 	}
 #endif /* VMS */
@@ -373,7 +379,11 @@ openerror:
 	       access_status == ACC_UNKNOWN   ) &&					/* The directoy path may not be created */
 	     ( *mode & IS_OUTPUT              )    )
 	{
-		if ( makepath( l_name ) )						/* Try to make the dir path		*/
+		char cstr_l_name[COB_FILEPATH_LEN + 1];
+
+		cobx2cstr(cstr_l_name, l_name, COB_FILEPATH_LEN);
+
+		if ( makepath( cstr_l_name) )						/* Try to make the dir path		*/
 		{
 			access_status = ACC_NODIR;
 		}
@@ -390,10 +400,9 @@ openerror:
 											/* exist (ACC_ALLOWED means it doesn't  */
 											/* exist) then create the file (empty).	*/
 		int	fdesc;
-		char	xname[COB_FILEPATH_LEN];
+		char	xname[COB_FILEPATH_LEN + 1];
 
-		for(i=0; l_name[i] != ' '; i++) xname[i] = l_name[i];
-		xname[i] = '\0';
+		cobx2cstr(xname, l_name, COB_FILEPATH_LEN); 
 
 		fdesc = creat( xname, 0666 );
 		if ( fdesc != -1 )
@@ -428,7 +437,7 @@ respecify:
 
 		if (*mode & IS_NORESPECIFY)
 		{
-			return;								/* NO_RESPECIFY file ?	If so, return.	*/
+			goto wfopen_return;						/* NO_RESPECIFY file ?	If so, return.	*/
 		}
 
 		acc_message( access_status, msgbuf );					/* get the access message		*/
@@ -476,51 +485,35 @@ respecify:
 		**	This only really needs to be done if we are creating a CISAM file
 		**	but no safe way of telling since acucobol can use cisam.
 		*/
-		unloadpad(temp,l_name,COB_FILEPATH_LEN);
+		cobx2cstr(temp,l_name,COB_FILEPATH_LEN);
 		unlink(temp);								/* The delete the lockfile		*/
 	}
 
 	if ((*mode & IS_PRINTFILE) && (*mode & IS_OUTPUT))				/* Is this a print file open for output	*/
 	{       
-		if (!plist)								/* haven't saved any yet		*/
-		{
-			plist = (pstruct *) wmalloc(sizeof(pstruct));			/* get some memory to start the list	*/
-			plptr = plist;							/* set the current file ptr to it	*/
-			plptr->nextfile = 0;						/* null ptr				*/
-		}
-		else           
-		{
-			plptr->nextfile = (struct pstruct *) wmalloc(sizeof(pstruct));	/* get some memory for the next item	*/
-			plptr = (pstruct *) plptr->nextfile;				/* update the list			*/
-			plptr->nextfile = 0;						/* set null ptr				*/
-		}
+		pstruct	*plptr;
 
-		memset(plptr->name,'\0',sizeof(plptr->name));
-		for(i=0; i<COB_FILEPATH_LEN && l_name[i] != ' ' && l_name[i] != '\0'; i++)
-			plptr->name[i] = l_name[i];					/* Save the name			*/
-		plptr->form = form;							/* Set the current form.		*/
-		plptr->class = prtclass[0];						/* Set the current class.		*/
-		plptr->numcopies = copies;						/* Default to spool one copy.		*/
+		plptr = (pstruct *) wmalloc(sizeof(pstruct));				/* Make a new item			*/
+		plptr->nextfile = g_print_file_list;					/* Link the existing list to the end	*/
+		g_print_file_list = plptr;						/* New item is the head of the list	*/
+
+		cobx2cstr(g_print_file_list->name, l_name, COB_FILEPATH_LEN);
+		g_print_file_list->form = form;						/* Set the current form.		*/
+		g_print_file_list->class = prtclass[0];					/* Set the current class.		*/
+		g_print_file_list->numcopies = copies;					/* Default to spool one copy.		*/
 	}
 	else if (*mode & IS_SCRATCH)							/* Otherwise save the temp file name	*/
 	{
-		if (!flist)								/* haven't saved any yet		*/
-		{
-			flist = (fstruct *) wmalloc(sizeof(fstruct));			/* get some memory to start the list	*/
-			flptr = flist;							/* set the current file ptr to it	*/
-			flptr->nextfile = 0;						/* null ptr				*/
-		}
-		else
-		{
-			flptr->nextfile = (struct fstruct *) wmalloc(sizeof(fstruct));	/* get some memory for the next item	*/
-			flptr = (fstruct *) flptr->nextfile;				/* update the list			*/
-			flptr->nextfile = 0;						/* set null ptr				*/
-		}
+		fstruct *new_fstruct;
 
-		memcpy(flptr->vol,l_vol,SIZEOF_VOL);					/* Save the volume			*/
-		memcpy(flptr->lib,l_lib,SIZEOF_LIB);					/* Save the library			*/
-		memcpy(flptr->file,l_file,SIZEOF_FILE);					/* Save the file name			*/
-		memcpy(flptr->name,l_name,COB_FILEPATH_LEN);				/* Save the name			*/
+		new_fstruct = (fstruct *) wmalloc(sizeof(fstruct));			/* get some memory to start the list	*/
+		new_fstruct->nextfile = g_temp_file_list;				/* Link the existing list to the end	*/
+		g_temp_file_list = new_fstruct;
+
+		memcpy(g_temp_file_list->vol,l_vol,SIZEOF_VOL);				/* Save the volume			*/
+		memcpy(g_temp_file_list->lib,l_lib,SIZEOF_LIB);				/* Save the library			*/
+		memcpy(g_temp_file_list->file,l_file,SIZEOF_FILE);			/* Save the file name			*/
+		memcpy(g_temp_file_list->name,l_name,COB_FILEPATH_LEN);			/* Save the name			*/
 
 		if ((*mode & IS_OUTPUT) && !(*mode & IS_SORT) && !(*mode & IS_EXTEND))	/* if the file was open for output only	*/
 		{									/* but was not a SORT or EXTEND file.	*/
@@ -545,7 +538,7 @@ respecify:
 		use_last_prb();								/* Use the last PRB found for GETPARM	*/
 		strcpy(getparm_type,"RD");						/* Issue an RESPECIFY_DEFAULT getparm.	*/
 		file_getparm2(*mode,l_file,l_lib,l_vol,l_prname,"WFOPEN",
-				&native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,intv_type,orig_file,prtclass,&form,&copies);
+				&native_mode,getparm_type,l_name,"","",pf_rcvr,'E',orig_file,prtclass,&form,&copies);
 	}
 
 	if (remote_flag) 
@@ -556,9 +549,14 @@ respecify:
 		**	use the remote name to open the file.
 		*/
 		memcpy(l_name, remote_filepath, COB_FILEPATH_LEN);
+		wtrace("WFOPEN","REMOTE","Remote filepath=[%80.80s]", l_name);
 	}
 	
-	return;
+wfopen_return:
+	
+	wtrace("WFOPEN","RETURN","Cobpath=[%80.80s] File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Mode=[0x%08X]",
+	       cob_name, file, lib, vol, *mode);
+
 }
 
 static void acc_message(int access_status, char* msgbuf)
@@ -668,6 +666,27 @@ static void acc_message(int access_status, char* msgbuf)
 /*
 **	History:
 **	$Log: wfopen.c,v $
+**	Revision 1.22  1999-01-05 10:08:11-05  gsl
+**	Fix sig11 bug.
+**	The msg1 and msg2 fields were uninitialized the second time in because
+**	of the earlier change that prevents the hidden getparm the second time in.
+**
+**	Revision 1.21  1998-11-17 15:46:05-05  gsl
+**	Reinstate the IS_GETPARM logic to ensure that the initial hidden
+**	getparm is only done the first time a file is opened.
+**
+**	Revision 1.20  1998-10-22 14:09:26-04  gsl
+**	Simplify the g_temp_file_list and g_print_file_list processing.
+**
+**	Revision 1.19  1998-08-03 17:20:47-04  jlima
+**	Support Logical Volume Translation with long file names containing eventual embedded blanks.
+**
+**	Revision 1.18  1998-07-10 10:21:53-04  gsl
+**	Fixed RD call to file_getparm() to use 'E' for intv_type.
+**
+**	Revision 1.17  1998-05-27 10:17:49-04  gsl
+**	Add better wtrace logic
+**
 **	Revision 1.16  1997-04-29 13:39:46-04  gsl
 **	Moved acc_message() from wfaccess.c
 **	Changed to understand the long file status codes from acucobol

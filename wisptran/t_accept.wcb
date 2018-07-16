@@ -1,0 +1,165 @@
+000100* Copyright (c) 1995 DevTech Migrations, All rights reserved.
+000200* $Id:$
+000300*
+000400* FILE:   T_ACCEPT.WCB
+000500*
+000600* RCS:    $Source:$
+000700*
+000800* FUNCTION: Test ACCEPT statements.
+000900*
+001000* DESCRIPTION:
+001100*
+001200*
+001300*
+001400
+001500/*****************************************************************
+001600*                                                                *
+001700*                       IDENTIFICATION DIVISION                  *
+001800*                                                                *
+001900******************************************************************
+002000*
+002100 IDENTIFICATION DIVISION.
+002200 PROGRAM-ID.
+002300     T-ACCEPT.
+002400 AUTHOR.
+002500     QA.
+002600/*****************************************************************
+002700*                                                                *
+002800*                         ENVIRONMENT DIVISION                   *
+002900*                                                                *
+003000******************************************************************
+003100*
+003200 ENVIRONMENT DIVISION.
+003300 CONFIGURATION SECTION.
+003400 SOURCE-COMPUTER.
+003500     WANG-VS.
+003600 OBJECT-COMPUTER.
+003700     WANG-VS.
+004000 FIGURATIVE-CONSTANTS.
+004100     BLINK-BIT IS "10"
+004200     PROTECT-BIT IS "04"
+004300     DIM-BIT IS "08"
+004400     TAB-STOP IS "86"
+004500     BLINKING-DISPLAY IS "94"
+004600     NO-ECHO IS "98".
+004700
+004800/*****************************************************************
+004900*                                                                *
+005000*                         INPUT-OUTPUT SECTION                   *
+005100*                                                                *
+005200******************************************************************
+005300*
+005400 INPUT-OUTPUT SECTION.
+005500 FILE-CONTROL.
+005600
+005700     SELECT CRT
+005800         ASSIGN TO "CRT",      "DISPLAY",
+005900         ORGANIZATION    IS SEQUENTIAL
+006000         ACCESS MODE     IS RANDOM
+006100         RELATIVE KEY    IS CRT-RELKEY
+006200         PFKEY           IS CRT-PFKEY
+006300         CURSOR POSITION IS CRT-CURSOR-POS
+006400         FILE STATUS     IS CRT-FILE-STATUS.
+006500
+006600
+006700
+006800/*****************************************************************
+006900*                                                                *
+007000*                      DATA DIVISION - FILE SECTION              *
+007100*                                                                *
+007200******************************************************************
+007300*
+007400 DATA DIVISION.
+007500 FILE SECTION.
+007600
+007700 FD  CRT
+007800     LABEL RECORDS ARE OMITTED.
+007900 01  CRT-RECORD                         PIC X(1924).
+008000
+008100
+008200/*****************************************************************
+008300*                                                                *
+008400*                         WORKING STORAGE                        *
+008500*                                                                *
+008600******************************************************************
+008700*
+008800 WORKING-STORAGE SECTION.
+008900
+009000*
+009100*   CRT FILE VARIABLES
+009200*
+009300 77  CRT-RELKEY  PIC 9(02) VALUE 1.
+009400 77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+009500 01  CRT-CURSOR-POS.
+009600     03  CRT-CURSOR-POS-COL  BINARY.
+009700     03  CRT-CURSOR-POS-ROW  BINARY.
+009800 01  CRT-FILE-STATUS.
+009900     03  CRT-FILE-STATUS-ERR        PIC X(01).
+010000     03  CRT-FILE-STATUS-AID        PIC X(01).
+010100
+010200 01  YYMMDD      PIC 9(6).
+010300 01  YYDDD       PIC 9(5).
+010400 01  YYYYMMDD    PIC 9(8).
+010500 01  DOW         PIC 9.
+010600 01  HHMMSSXX    PIC 9(8).
+010700 01  MY-ARRAY    PIC X(5) OCCURS 5.
+010710 01  A-VERY-LONG-DATA-NAME PIC X(20).
+010720 01  MY-RECORD.
+010730 	   05 MY-SUB-FIELD PIC X(20).
+010800
+010900
+011000******************************************************************
+011100
+011200
+011300/*****************************************************************
+011400*                                                                *
+011500*                         PROCEDURE DIVISION                     *
+011600*                                                                *
+011700******************************************************************
+011800*
+011900 PROCEDURE DIVISION.
+012000
+012100 P01.
+012200
+012300*    ACCEPT YYMMDD   FROM DATE
+012400     ACCEPT YYMMDD   FROM DATE
+012500
+012600*    ACCEPT YYDDD    FROM DAY
+012700     ACCEPT YYDDD    FROM DAY
+012800
+012900*    ACCEPT YYYYMMDD FROM DATE4.
+013000     ACCEPT YYYYMMDD FROM DATE4.
+013100
+013200*    ACCEPT DOW      FROM DAY-OF-WEEK.
+013300     ACCEPT DOW      FROM DAY-OF-WEEK.
+013400
+013500*    ACCEPT HHMMSSXX FROM TIME.
+013600     ACCEPT HHMMSSXX FROM TIME.
+013700
+013800 P02.
+013900*    ACCEPT YYMMDD
+014000     ACCEPT YYMMDD
+014100
+014200*    ACCEPT YYMMDD FROM THE-WORKSTATION.
+014300     ACCEPT YYMMDD FROM THE-WORKSTATION.
+014400
+014500 P03.
+014600*    ACCEPT YYMMDD, YYDDD, YYYYMMDD, MY-ARRAY(1), MY-SUB-FIELD
+014610*	       OF MY-RECORD, A-VERY-LONG-DATA-NAME, DOW,
+014700*        MY-ARRAY(2), HHMMSSXX
+014900     ACCEPT YYMMDD, YYDDD, YYYYMMDD, MY-ARRAY(1), MY-SUB-FIELD
+014910	       OF MY-RECORD, A-VERY-LONG-DATA-NAME, DOW,
+015000         MY-ARRAY(2), HHMMSSXX
+015010*    DISPLAY "ACCEPT".
+015100     DISPLAY "ACCEPT".
+015200
+015300
+015400******************************************************************
+015500* ALL DONE.
+015600******************************************************************
+015700
+015800 EXIT-PROGRAM.
+015900     EXIT PROGRAM.
+016000
+016100 STOP-RUN.
+016200     STOP RUN.

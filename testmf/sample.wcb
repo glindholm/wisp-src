@@ -185,6 +185,7 @@
            05  SOURCE COND-LINE-8   PIC X(40) ROW 12  COL 20.
            05  SOURCE COND-LINE-9   PIC X(40) ROW 13  COL 20.
            05  SOURCE COND-LINE-10  PIC X(40) ROW 14  COL 20.
+           05  SOURCE COND-LINE-11  PIC X(40) ROW 15  COL 20.
 
        01  filler.	   
            05  COND-LINE-1   PIC X(40).
@@ -197,6 +198,7 @@
            05  COND-LINE-8   PIC X(40).
            05  COND-LINE-9   PIC X(40).
            05  COND-LINE-10  PIC X(40).
+           05  COND-LINE-11  PIC X(40).
 
        01  COBOL-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
@@ -287,6 +289,8 @@
        01  YEARCODE    PIC 9(4).
        01  ACCESSCODE  PIC X.
 
+       01  SAMPLE-TITLE PIC X(80) VALUE "WISP Sample QA Programs".
+
       /*****************************************************************
       *                                                                *
       *                         PROCEDURE DIVISION                     *
@@ -294,6 +298,15 @@
       ******************************************************************
       *
        PROCEDURE DIVISION.
+
+      *$ACN_CODE
+      *    DISPLAY INITIAL WINDOW 
+      *	        SYSTEM MENU, AUTO-MINIMIZE,
+      *	        TITLE IS SAMPLE-TITLE.
+      *$ACN_END
+
+       	   CALL "WTITLE" USING SAMPLE-TITLE.
+      
        LOOP-DISPLAY.
            DISPLAY AND READ MAIN-SCREEN ON CRT
            PFKEYS 3, 4, 5, 6, 7, 8, 16.
@@ -572,6 +585,13 @@
       *$COPY_CODE
       *    MOVE "    COPY_CODE" TO COND-LINE-10. 
       *$COPY_END
+
+      *$ACN_CODE
+      *    MOVE "    ACN_CODE" TO COND-LINE-11. 
+      *$ACN_ELSE
+           MOVE "NOT ACN_CODE" TO COND-LINE-11. 
+      *$ACN_END
+
 
            DISPLAY AND READ CONDITIONAL-SCREEN ON CRT.
 

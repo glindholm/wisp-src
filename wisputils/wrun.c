@@ -9,6 +9,14 @@ static char rcsid[]="$Id:$";
 **
 **	Purpose:	Frontend to COBOL runtime system
 **
+**	On WIN32 two versions can be built; a windows version and a console version.
+**	The windows version is the default and is used so that an unwanted console
+**	windows isn't displayed before the acucobol runtime starts. Windows apps
+**	can not inherit consoles from console apps so normally we want this to be
+**	a windows application.  However, if using the NT telnet support with a
+**	console version of the Acucobol runtime then you need to use WRUNT.EXE 
+**	the console version of wrun.  To build WRUNT.EXE define WRUNT and don't
+**	include win32wrn.c in the build.
 */
 
 /*
@@ -97,12 +105,16 @@ void wrun_message_box(char *line1, char *line2);
 
 void msgprintf(const char* format, ...);
 
-
 #ifdef WIN32
-wrunmain	(int argc, char *argv[])
+#ifndef WRUNT
+#define WRUNMAIN
 #endif
-#if defined(unix) || defined(VMS) || defined(MSDOS)
-main	(int argc, char *argv[])
+#endif
+
+#ifdef WRUNMAIN
+int wrunmain	(int argc, char *argv[])
+#else
+int main	(int argc, char *argv[])
 #endif
 {
 	char	program[80];
@@ -129,6 +141,18 @@ main	(int argc, char *argv[])
 	struct 	str_len len_list;
 	char	linkkey[80];								/* Key to link parm area		*/
 	char	buff[128];
+
+#ifdef WIN32
+#ifndef WRUNT
+	if (wisptelnet())
+	{
+		printf("\nThis is the Windows version of WRUN.\n"
+		       "It can not be run within a telnet session.\n"
+		       "Use the console version WRUNT.EXE when in telnet.\n");
+		return 1;
+	}
+#endif
+#endif
 
 	if (0!=access(wispconfigdir(),00))
 	{
@@ -489,8 +513,11 @@ main	(int argc, char *argv[])
 	{
 		char line2[1024], tmp[256];
 
+#ifdef WRUNT
+		sprintf(line2,"WRUNT \t\t= WISP Version %s\n",wisp_version());
+#else
 		sprintf(line2,"WRUN \t\t= WISP Version %s\n",wisp_version());
-
+#endif
 		sprintf(tmp,"WISPCONFIG \t= %s\n", wispconfigdir());
 		strcat(line2, tmp);
 
@@ -515,15 +542,6 @@ main	(int argc, char *argv[])
 		}
 		msgprintf("%s\n", line2);
 		
-#ifdef OLD
-		printf("wrun: Version=[%s]\n",wisp_version());
-		printf("[%s] ",cfg.wrun_cobtype);
-		for(i=0; parm[i]; i++)
-		{
-			printf("%s ",parm[i]);
-		}
-		printf("\n");
-#endif
 		rc = 0;
 	}
 
@@ -542,14 +560,20 @@ main	(int argc, char *argv[])
 void msgprintf(const char* format, ...)
 {
 	va_list args;
-	char	buff[1024];
 
 	va_start(args,format);
 
 #ifdef WIN32
+#ifdef WRUNT
+	vprintf(format,args);
+#else
+	{
+		char	buff[1024];
+		vsprintf(buff,format,args);
+		wrun_message_box("WRUN",buff);
+	}
 	
-	vsprintf(buff,format,args);
-	wrun_message_box("WRUN",buff);
+#endif
 #else
 	vprintf(format,args);
 #endif
@@ -562,6 +586,23 @@ void msgprintf(const char* format, ...)
 /*
 **	History:
 **	$Log: wrun.c,v $
+**	Revision 1.19  1999-05-26 11:21:48-04  gsl
+**	fix warning on WIN32 with WRUNT
+**
+**	Revision 1.18  1999-03-01 17:37:17-05  gsl
+**	Make changes on WIN32 so that WRUNT the console version of WRUN can
+**	be built by defining WRUNT.
+**
+**	Revision 1.17  1999-03-01 17:05:45-05  gsl
+**	Change so that on Windows wrun can be built as WRUNT a telent (console)
+**	version of WRUN.  This is based on the define WRUNT.
+**
+**	Revision 1.16  1999-02-24 19:12:25-05  gsl
+**	For WIN32, changed to use the wisptelnet() routine
+**
+**	Revision 1.15  1999-02-23 17:08:15-05  gsl
+**	For telnet on NT do a regular print instead of a message box
+**
 **	Revision 1.14  1997-02-25 09:37:42-05  gsl
 **	Correct size of options
 **

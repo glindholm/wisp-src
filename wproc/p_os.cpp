@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : p_os.cpp
 // Author : George Soules
@@ -230,3 +237,49 @@ void compiler::p_os_cleanup() {
 #endif
 
 
+
+//
+//	History:
+//	$Log: p_os.cpp,v $
+//	Revision 1.6  1998-08-31 15:14:03-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/p_os.cpp,v
+//	Working file: p_os.cpp
+//	head: 1.5
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 5;	selected revisions: 5
+//	description:
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:15:45-04;  author: gsl;  state: V4_3_00;  lines: +0 -0
+//	Renamed from p_os.cc to p_os.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:11-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:28-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:09-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:18-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

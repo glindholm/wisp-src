@@ -53,7 +53,7 @@
 #define EXIT_FAST		2
 #define EXIT_AND_RUN		-2							/* Exit WISP and re run it.		*/
 
-EXT char prog_id[16];								/* the program id of this program		*/
+EXT char prog_id[40];								/* the program id of this program		*/
 
 EXT char linein[256];								/* The current input line.			*/
 EXT char templine[256];
@@ -188,6 +188,7 @@ EXT int fdfiller   INIT_TRUE;								/* allow fillers in fd's		*/
 EXT int wsfiller   INIT_TRUE;								/* allow fillers in working-storage	*/
 EXT int do_keyfile INIT_FALSE;								/* Don't look for key files.		*/
 EXT int proc_display INIT_TRUE;								/* Process DISPLAY statements.		*/
+EXT int manual_locking INIT_FALSE;							/* LOCK mode is MANUAL			*/
 
 EXT int lock_clear_para INIT_FALSE;							/* Gen WISP-RECORD-LOCK-CLEAR para	*/
 
@@ -208,6 +209,12 @@ EXT int  wrote_special_names INIT_FALSE;						/* Was SPECIAL-NAMES written		*/
 /*
 **	History:
 **	$Log: wisp.h,v $
+**	Revision 1.14  1998-06-06 14:57:39-04  gsl
+**	Add manual_locking flag
+**
+**	Revision 1.13  1998-03-04 15:58:15-05  gsl
+**	Enlarge prog_id to 40 characters for cobol-85
+**
 **	Revision 1.12  1997-08-28 17:11:08-04  gsl
 **	Add flags for native screens with acucobol
 **

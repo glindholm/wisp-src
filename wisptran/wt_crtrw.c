@@ -9,131 +9,171 @@ static char rcsid[]="$Id:$";
 			/*									*/
 			/************************************************************************/
 
+#include <ctype.h>
+
 #define EXT extern
 #include "wisp.h"
 #include "crt.h"
+#include "scrn.h"
+#include "cobfiles.h"
+#include "statment.h"
+#include "wt_procd.h"
+#include "reduce.h"
 
-#include <ctype.h>
 
-/*						Process REWRITE CRT-FILE statements						*/
-#define PROC_ALARM	0
-#define	PROC_SETTING	6
-#define	PROC_CURSOR	14
-#define	PROC_COLUMN	21
-#define	PROC_ROW	28
-#define	PROC_LINE	32
-#define PROC_ROLL	37
-#define	PROC_ERASE	42
-#define PROC_FROM	48
-#define PROC_AFTER	53
-
-crt_rewrite(crt_num)
-int crt_num;										/* the crt-file number being rewritten	*/
+/*
+**	REWRITE crt-record 
+**		[FROM identifier-1]
+**		[after_clause]
+**		[END-REWRITE]
+**
+**	after_clause:
+**		[AFTER] 
+**			ALARM
+**			[SETTING] CURSOR [COLUMN] col-num [ROW|LINE] row-num
+**			ROLL DOWN
+**			ROLL UP
+**			ERASE PROTECT
+**			ERASE MODIFY
+*/
+NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 {
-	int kword,j;
-	int wcc_byte;
-	char from_item[40],row_field[40],col_field[40];
+	NODE	curr_node, verb_node;
+	NODE	record_node;
+	NODE	from_node = NULL;
+	NODE	column_node = NULL;
+	NODE	row_node = NULL;
+	NODE	trailing_fluff_node = NULL;
+	int	col;
+	int	wcc_byte = 0;
 
-	row_field[0] = 0;
-	col_field[0] = 0;
-	kword = 0;
-	wcc_byte = 0;
-	from_item[0] = '\0';
+	verb_node = first_token_node(the_statement);
 
-	write_log("WISP",'I',"REWRITECRT","Rewrite of a crt file record.");
-	if (ptype != -1)								/* could have parameters		*/
+	if (!eq_token(verb_node->token,VERB,"REWRITE"))
 	{
-		do									/* scan for them...			*/
-		{
-			if (ptype != -1)						/* not the end yet			*/
-			{
-				ptype = get_param(templine);				/* get a new parm			*/
-
-	 	                        /*  0123456789012345678901234567890123456789012345678901234567890			*/
-				kword = strpos("ALARM SETTING CURSOR COLUMN ROW LINE ROLL ERASE FROM AFTER",templine);
-
-				if (kword != -1) stredt(linein,templine,"");		/* Remove it from the input.		*/
-
-				switch (kword)						/* do the appropriate thing		*/
-				{
-					case PROC_ALARM:				/* process ALARM			*/
-					{
-						wcc_byte |= 0x0C0;			/* Set ALARM bit to WCC.		*/
-						write_log("WISP",'I',"ALARM","ALARM found.");
-						break;
-					}
-
-					case PROC_AFTER:
-					{
-						break;
-					}
-
-					case PROC_SETTING:
-					{
-						break;
-					}
-
-					case PROC_CURSOR:
-					{
-						wcc_byte |= 0x0A0;			/* Set CURSOR-POS bit.			*/
-						break;
-					}
-
-					case PROC_COLUMN:				/* Process "COLUMN"			*/
-					{
-						ptype = get_param(col_field);		/* Actually read in the COLUMN value	*/
-						stredt(linein,col_field,"");		/* Remove it.				*/
-						stredt(col_field,".","");
-						write_log("WISP",'I',"COLUMN","COLUMN found.");
-						break;
-					}
-
-					case PROC_FROM:					/* Process "FROM"			*/
-					{
-						ptype = get_param(from_item);		/* Actually read in the FROM item	*/
-						stredt(linein,templine,"");		/* Remove it.				*/
-
-						write_log("WISP",'I',"FROMITM","FROM item found, %s.",from_item);
-						break;
-					}
-
-					case PROC_ROW:					/* Process "ROW"			*/
-					case PROC_LINE:					/* or "LINE"				*/
-					{
-						ptype = get_param(row_field);		/* Actually read in a ROW value		*/
-						stredt(linein,row_field,"");		/* Remove it.				*/
-						stredt(row_field,".","");		/* Fixup possible period.		*/
-						write_log("WISP",'I',"ROW","ROW found.");
-						break;
-					}
-
-					case PROC_ROLL:					/* Process "ROLL"			*/
-					{
-						ptype = get_param(templine);		/* Actually read in the UP/DOWN value	*/
-						stredt(linein,templine,"");		/* Remove it.				*/
-						write_log("WISP",'I',"ROLL","ROLL found.");
-						break;
-					}
-
-					case PROC_ERASE:				/* Process "ERASE"			*/
-					{
-						ptype = get_param(templine);		/* Actually read in PROTECT/MODIFY	*/
-						stredt(linein,templine,"");		/* Remove it.				*/
-						write_log("WISP",'I',"ERASE","ERASE found.");
-						break;
-					}
-				}
-			}								/* end of if ptype == -1		*/
-		} while ((kword != -1) && (ptype != -1));				/* quit when no matches			*/
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected REWITE found [%s].", token_data(verb_node->token));
+		return(the_statement);
 	}
-
-
-	write_log("WISP",'I',"CRTREWRITE","REWRITE of %s repaired.",crt_record[crt_num]); 	/* now fix it			*/
 
 	if (acn_cobol)
 	{
 		write_log("WISP",'W',"NATIVE","Workstation REWRITE %s uses WISP Screens",crt_record[crt_num]);
 	}
+
+	record_node = verb_node->next;
+
+	tput_leading_fluff(the_statement);
+	trailing_fluff_node = unhook_trailing_fluff(the_statement);
+
+	col = verb_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	delint_statement(the_statement);
+	decontext_statement(the_statement);
+	
+	curr_node = record_node->next;
+	if (eq_token(curr_node->token,KEYWORD,"FROM"))
+	{
+		curr_node = curr_node->next;
+		from_node = reduce_data_item(curr_node);
+		if (!from_node)
+		{
+			write_tlog(curr_node->token,"WISP",'E',"REWRITE",
+				   "Unable to reduce FROM clause, clause will be ignored");
+		}
+		curr_node = curr_node->next;
+	}
+
+	if (eq_token(curr_node->token,KEYWORD,"AFTER"))
+	{
+		curr_node = curr_node->next;
+	}
+	if (eq_token(curr_node->token,KEYWORD,"SETTING"))
+	{
+		curr_node = curr_node->next;
+	}
+
+	if (eq_token(curr_node->token,KEYWORD,"ALARM"))
+	{
+		wcc_byte = 0xC0;						/* Set ALARM bit to WCC.		*/
+		curr_node = curr_node->next;
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"CURSOR"))
+	{
+		wcc_byte = 0xA0;						/* Set CURSOR-POS bit.			*/
+		curr_node = curr_node->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"COLUMN"))
+		{
+			curr_node = curr_node->next;
+		}
+
+		column_node = reduce_data_item(curr_node);
+		if (!column_node)
+		{
+			write_tlog(curr_node->token,"WISP",'E',"REWRITE",
+				   "Unable to reduce CURSOR COLUMN clause, clause will be ignored");
+		}
+		curr_node = curr_node->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"ROW") ||
+		    eq_token(curr_node->token,KEYWORD,"LINE"))
+		{
+			curr_node = curr_node->next;
+		}
+
+		row_node = reduce_data_item(curr_node);
+		if (!row_node)
+		{
+			write_tlog(curr_node->token,"WISP",'E',"REWRITE",
+				   "Unable to reduce CURSOR ROW clause, clause will be ignored");
+		}
+		curr_node = curr_node->next;
+
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"ROLL"))
+	{
+		curr_node = curr_node->next;
+		if (eq_token(curr_node->token,KEYWORD,"DOWN"))
+		{
+			wcc_byte = 0x90;						/* Set ROLL DOWN bit.			*/
+			write_tlog(curr_node->token,"WISP",'W',"REWRITE",
+				   "ROLL DOWN clause not supported at runtime");
+		}
+		else if (eq_token(curr_node->token,KEYWORD,"UP"))
+		{
+			wcc_byte = 0x88;						/* Set ROLL UP bit.			*/
+			write_tlog(curr_node->token,"WISP",'W',"REWRITE",
+				   "ROLL UP clause not supported at runtime");
+		}
+		else
+		{
+			write_tlog(curr_node->token,"WISP",'E',"REWRITE",
+				   "ROLL clause expecting UP or DOWN found [%s]", token_data(curr_node->token));
+		}
+		curr_node = curr_node->next;
+	}
+	else if (eq_token(curr_node->token,KEYWORD,"ERASE"))
+	{
+		curr_node = curr_node->next;
+		if (eq_token(curr_node->token,KEYWORD,"PROTECT"))
+		{
+			wcc_byte = 0x82;						/* Set ERASE PROTECT bit.		*/
+		}
+		else if (eq_token(curr_node->token,KEYWORD,"MODIFY"))
+		{
+			wcc_byte = 0x84;						/* Set ERASE MODIFY bit.		*/
+		}
+		else
+		{
+			write_tlog(curr_node->token,"WISP",'E',"REWRITE",
+				   "ERASE clause expecting PROTECT or MODIFY found [%s]", token_data(curr_node->token));
+		}
+		curr_node = curr_node->next;
+	}
+
+
 
 											/* Go till we go beyond it.		*/
 	for ( cur_crt=0; cur_crt<crt_fcount; cur_crt++) 
@@ -147,87 +187,102 @@ int crt_num;										/* the crt-file number being rewritten	*/
 
 	if (cur_crt == crt_fcount) cur_crt--;
 
-	if (from_item[0])								/* Handle the REWRITE FROM phrase.	*/
+	if (from_node)
 	{
-		tput_line_at(12, "MOVE %s TO",from_item);
-		tput_clause (16, "%s,",crt_record[crt_num]);
+		tput_line_at(col, "MOVE");
+		tput_statement(col+4, from_node);
+		tput_clause (col+4, "TO %s,",crt_record[crt_num]);
 	}
-
+	
 	if (crt_relative[cur_crt][0])
-	{										/* write what line to start at		*/
-		tput_line_at(12, "CALL \"xx2byte\" USING %s,",crt_relative[cur_crt]);
-		tput_clause (16, "%s",crt_record[crt_num]);
-	}
-
-	tput_line_at(12, "MOVE %s TO WISP-CRT-RECORD,",crt_record[crt_num]);
-
-	if (wcc_byte)									/* Do a special WCC function?		*/
 	{
-		tput_line_at(12, "MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-2,",wcc_byte);
+		tput_line_at(col, "CALL \"xx2byte\" USING %s,",crt_relative[cur_crt]);
+		tput_clause (col+4, "%s",crt_record[crt_num]);
 	}
 
-	if (row_field[0])								/* Set the row byte			*/
+	tput_line_at(col, "MOVE %s TO WISP-CRT-RECORD,",crt_record[crt_num]);
+
+	if (wcc_byte)
 	{
-		if (isdigit(row_field[0]))						/* If it's numeric, move the DEC-BYTE.	*/
-		{
-			j = row_field[0] - '0';
-			if (row_field[1]) j = (j * 10) + (row_field[1] - '0');		/* Scan out the digits.			*/
-			tput_line_at(12, "MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-4",j);
-		}
-		else									/* Must be a field name.		*/
-		{
-			tput_line_at(12, "MOVE %s TO WISP-DFIELD-0",row_field);
-			tput_line_at(12, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-4");
-		}
+		tput_line_at(col, "MOVE WISP-SYMB-%d TO WISP-CRT-ORDER-AREA-2,",wcc_byte);
 	}
-
-	if (col_field[0])								/* Set the col byte.			*/
+	if (row_node)
 	{
-
-		if (isdigit(col_field[0]))						/* If it's numeric, move the DEC-BYTE.	*/
-		{
-			j = col_field[0] - '0';
-			if (col_field[1]) j = (j * 10) + (col_field[1] - '0');		/* Scan out the digits.			*/
-			tput_line_at(12, "MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-3",j);
-		}
-		else									/* Must be a field name.		*/
-		{
-			tput_line_at(12, "MOVE %s TO WISP-DFIELD-0",col_field);
-			tput_line_at(12, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-3");
-		}
+		tput_line_at(col, "MOVE");
+		tput_statement(col+4, row_node);
+		tput_clause(col+4, "TO WISP-DFIELD-0");
+		tput_line_at(col, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-4");
 	}
-
-	if (wcc_byte || row_field[0] || col_field[0])
+	if (column_node)
 	{
-		tput_line_at	(12, "MOVE 4 TO WISP-LONGWORD");
-		tput_line_at	(12, "CALL \"wmemcpy\" USING %s,",crt_record[crt_num]);
-		tput_clause	(16, "WISP-CRT-O-A, WISP-LONGWORD");
+		tput_line_at(col, "MOVE");
+		tput_statement(col+4, column_node);
+		tput_clause(col+4, "TO WISP-DFIELD-0");
+		tput_line_at(col, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-3");
 	}
 
-	tput_line_at(12, "MOVE DEC-BYTE-%d TO VWANG-LINES,\n",(crt_record_size[crt_num]-4)/80);
-	tput_line_at(12, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);
-	tput_line_at(12, "MOVE \"X\" TO WISP-ALLOWABLE-PF-KEYS,\n");
-	tput_line_at(12, "CALL \"vwang\" USING VWANG-WRITE-ALL,");
-	tput_clause (16, "WISP-CRT-RECORD,");
-	tput_clause (16, "VWANG-LINES,");				/* Write full screen for now	*/
-	tput_clause (16, "WISP-ALLOWABLE-PF-KEYS,");
-	tput_clause (16, "%s,",crt_pfkey[cur_crt]);
-	tput_clause (16, "%s",crt_status[cur_crt]);
-
-
-	if (ptype == -1)									/* has a period in it...	*/
+	if (wcc_byte || row_node || column_node)
 	{
-		tput_clause(12, ".");
+		tput_line_at	(col, "MOVE 4 TO WISP-LONGWORD");
+		tput_line_at	(col, "CALL \"wmemcpy\" USING %s,",crt_record[crt_num]);
+		tput_clause	(col+4, "WISP-CRT-O-A, WISP-LONGWORD");
 	}
 
-	if ((ptype == 1) || (kword == -1)) hold_line();						/* Ended on a new line		*/
-	return 0;
+	tput_line_at(col, "MOVE WISP-SYMB-%d TO VWANG-LINES,\n",(crt_record_size[crt_num]-4)/80);
+	tput_line_at(col, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);
+	tput_line_at(col, "MOVE \"X\" TO WISP-ALLOWABLE-PF-KEYS,\n");
+	tput_line_at(col, "CALL \"vwang\" USING VWANG-WRITE-ALL,");
+	tput_clause (col+4, "WISP-CRT-RECORD,");
+	tput_clause (col+4, "VWANG-LINES,");				/* Write full screen for now	*/
+	tput_clause (col+4, "WISP-ALLOWABLE-PF-KEYS,");
+	tput_clause (col+4, "%s,",crt_pfkey[cur_crt]);
+	tput_clause (col+4, "%s",crt_status[cur_crt]);
+	tput_clause (col, "END-CALL");
+
+	tput_statement(col, trailing_fluff_node);
+	trailing_fluff_node = free_statement(trailing_fluff_node);
+	
+	/*
+	**	Anything else should be in the next fragment
+	*/
+	if (NODE_END != curr_node->type)
+	{
+		write_tlog(curr_node->token,"WISP",'E',"REWRITE",
+			   "Error parsing REWRITE, found token [%s]", token_data(curr_node->token));
+	}
+
+	the_statement =  free_statement(the_statement);
+	the_statement = get_statement_from_sentence(the_sentence);
+	
+	curr_node = the_statement->next;
+	if (eq_token(curr_node->token,KEYWORD,"END-REWRITE"))
+	{
+		the_statement =  free_statement(the_statement);
+	}
+	
+	return the_statement;
 }
 
 
 /*
 **	History:
 **	$Log: wt_crtrw.c,v $
+**	Revision 1.18  1998-03-26 14:24:21-05  gsl
+**	Change to use WISP-SYMB-xx
+**	Moved OLD to old.c
+**
+**	Revision 1.17  1998-03-04 15:23:05-05  gsl
+**	set write control byte per the wang manual
+**
+**	Revision 1.16  1998-03-04 12:58:08-05  gsl
+**	Add END-CALL
+**
+**	Revision 1.15  1998-03-03 14:56:44-05  gsl
+**	Add fluff logic
+**
+**	Revision 1.14  1998-02-27 16:48:26-05  gsl
+**	Rewrote for cobol-85
+**
 **	Revision 1.13  1997-09-15 13:57:38-04  gsl
 **	fix warning
 **

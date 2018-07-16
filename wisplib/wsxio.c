@@ -78,6 +78,8 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 	
 	werrlog(ERRORCODE(1),*arg1,0,0,0,0,0,0,0);
 
+	vw_no_mod[0] = ' ';
+	
 	function   = arg1;
 
 	switch (function[0])								/* Select the workstation function.	*/
@@ -257,6 +259,9 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 /*
 **	History:
 **	$Log: wsxio.c,v $
+**	Revision 1.14  1998-07-10 11:31:10-04  gsl
+**	Initialize the no_mod field to vwang()
+**
 **	Revision 1.13  1996-07-15 13:25:11-04  gsl
 **	Fix for NT
 **

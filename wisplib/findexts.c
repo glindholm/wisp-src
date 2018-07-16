@@ -51,6 +51,8 @@ static char rcsid[]="$Id:$";
 **				Check first for ".idx" before ".dat"  and if found then DON'T return it.
 **				This means that READFDR, RENAME, SCRATCH, FILECOPY etc still have to deal with ".idx" extension.
 **
+**			VISION4: Files have 2 or more "segments" the 1st index has a ".vix" extension.
+**
 **			Library, file, and ext must be large enough to hold any result.
 **
 **	History:	07/16/92	Written by GSL
@@ -59,13 +61,13 @@ static char rcsid[]="$Id:$";
 */
 static char* g_exts[] = 
 #ifdef unix
-	{ "",".idx",".dat",".lis",".txt",".doc",".gnt",".int",".sh", ".com",".exe",".wps",".wpr",".seq",".cbx",".acu",".cob",".wcb",NULL };
+	{ "",".idx",".dat",".vix",".lis",".txt",".doc",".gnt",".int",".sh", ".com",".exe",".wps",".wpr",".seq",".cbx",".acu",".cob",".wcb",NULL };
 #endif
 #ifdef VMS
 	{           ".DAT",".LIS",".TXT",".DOC",                     ".COM",".EXE",              ".SEQ",              ".COB",".WCB",NULL };
 #endif
 #ifdef MSFS
-	{ "",".IDX",".DAT",".LIS",".TXT",".DOC",".GNT",".INT",".BAT",".COM",".EXE",".WPS",".WPR",".SEQ",".cbx",".acu",".COB",".WCB",NULL };
+	{ "",".IDX",".DAT",".VIX",".LIS",".TXT",".DOC",".GNT",".INT",".BAT",".COM",".EXE",".WPS",".WPR",".SEQ",".CBX",".ACU",".COB",".WCB",NULL };
 #endif
 
 int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file, char *native_ext, int nomodext )
@@ -139,6 +141,10 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 			{
 				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
 			}
+			else if (0 == strcmp(g_exts[i],".vix"))	/* Vision 4 */
+			{
+				native_ext[0] = '\0';					/* If ".vix" then return NULL		*/
+			}
 			else
 			{
 				strcpy(native_ext,g_exts[i]);
@@ -153,6 +159,10 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 			if (0 == strcmp(g_exts[i],".idx"))
 			{
 				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
+			}
+			else if (0 == strcmp(g_exts[i],".vix"))	/* Vision 4 */
+			{
+				native_ext[0] = '\0';					/* If ".vix" then return NULL		*/
 			}
 			else
 			{
@@ -176,6 +186,10 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 			{
 				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
 			}
+			else if (0 == strcmp(g_exts[i],".VIX"))	/* Vision 4 */
+			{
+				native_ext[0] = '\0';					/* If ".VIX" then return NULL		*/
+			}
 			else
 			{
 				strcpy(native_ext,g_exts[i]);
@@ -187,27 +201,40 @@ int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file
 	return 0;									/* not found				*/
 }
 
-
-
 /*
-	findexts:	This routine takes a file basename and trys to find the complete filename by adding extensions.
-			It returns 0 if the file was found and 1 if not found.  If the file was found it loads the found
-			filename with possible extension into base_ext.
+**	ROUTINE:	findexts()
+**
+**	FUNCTION:	Attempts to find a file name by adding known extensions before searching
+**
+**	DESCRIPTION:	This routine takes a file basename and trys to find the complete filename by adding extensions.
+**			It returns 0 if the file was found and 1 if not found.  If the file was found it loads the found
+**			filename with possible extension into base_ext.
+**
+**	ARGUMENTS:	(I)	basename	The base file name that findext( ) is suppose to encounter.
+**			(O)	base_ext	If return was 0, then it should contain the basename without extension or
+**						the basename concatenated with the first extention from g_ext that caused
+**						a match to be found.
+**	GLOBALS:	g_exts[i]	holds a list of possible file extentions used at the native platform.
+**
+**	RETURN:		0	if basename or basename concatenated with any extension mapped by g_ext was found.
+**			1	if basename nor basename concatenated with any extension mapped by g_ext could not be found.
+**
+**	WARNINGS:	
+**
 */
-
 #if defined(unix) || defined(MSFS)
 
 int findexts(char* basename, char* base_ext)
 {
 	int 	i;
-	char	base[100];
-	char 	tmp[100];
+	char	base[WISP_FILEPATH_LEN];
+	char 	tmp[WISP_FILEPATH_LEN];
 	char	*ptr;
 	int	not_found;
 
-	not_found = 1;
-	unloadpad(base,basename,80);
-	strcpy(tmp,splitext(base));
+	not_found = 1;									/* prepare for the worse		*/
+	cobx2cstr(base, basename, COB_FILEPATH_LEN);					/* convert basename to a cstr into base */
+	strcpy(tmp, splitext(base));							/* strip EXT off if present		*/
 	if (*tmp)									/* If there is an extension remove it	*/
 	{
 		ptr = strrchr(base,'.');
@@ -216,17 +243,17 @@ int findexts(char* basename, char* base_ext)
 
 	if ( fexists(base) )								/* Look for basename with no extension.	*/
 	{
-		strcpy(base_ext,base);
+		strcpy(base_ext, base);
 		not_found = 0;
 	}
 	else
 	{
 		for (i=0; g_exts[i] != NULL ; ++i)					/* For each extension.			*/
 		{
-			sprintf(tmp,"%s%s",base,g_exts[i]);				/* Put basename and extension into tmp.	*/
+			sprintf(tmp, "%s%s", base,g_exts[i]);				/* Put basename and extension into tmp.	*/
 			if ( fexists(tmp) )						/* Does tmp file exist?			*/
 			{								/* If it does,				*/
-				strcpy(base_ext,tmp);					/* Move the path (tmp) to base_ext.	*/
+				strcpy(base_ext, tmp);					/* Move the path (tmp) to base_ext.	*/
 				not_found = 0;
 				break;							/* Break out of this "for" loop.	*/
 			}
@@ -240,6 +267,12 @@ int findexts(char* basename, char* base_ext)
 /*
 **	History:
 **	$Log: findexts.c,v $
+**	Revision 1.13  1998-08-03 16:46:32-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.12  1998-05-14 17:02:50-04  gsl
+**	Add support for Vision4 .vix files
+**
 **	Revision 1.11  1996-09-16 17:33:21-04  gsl
 **	Move matchnative() from wfname.c to here so we can localize g_ext[] the
 **	list of valid extensions

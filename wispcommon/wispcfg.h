@@ -56,12 +56,20 @@ const char* wispmsgsharedir(char *the_dir);
 #endif
 const char* acu_vutil_exe(void);
 const char* wispdir(void);
+int no_windows(void);
+int wisptelnet(void);
 
 #endif /* wispcfg_H */
 
 /*
 **	History:
 **	$Log: wispcfg.h,v $
+**	Revision 1.10  1999-02-24 13:22:37-05  gsl
+**	Add wisptelnet()
+**
+**	Revision 1.9  1999-02-23 16:57:00-05  gsl
+**	Moved no_windows() to wispcfg.h
+**
 **	Revision 1.8  1997-12-04 15:18:22-05  gsl
 **	add wisplinkpath()
 **

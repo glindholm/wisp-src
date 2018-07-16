@@ -45,7 +45,9 @@ void wsb_delete(HWSB hWsb);
 void wsb_add_text(HWSB hWsb, int row, int col, const char *text);
 void wsb_add_field(HWSB hWsb, int row, int col, fac_t fac, const char *field, int len);
 void wsb_add_menu_item(HWSB hWsb, int row, int col, int pfkey, const char *text);
+void wsb_add_tabstop(HWSB hWsb, int row, int col);
 void wsb_get_field(HWSB hWsb, int row, int col, char *field, int len);
+void wsb_set_alarm(HWSB hWsb);
 void wsb_display_and_read(HWSB hWsb, const char* keylist, int *piPfkey, int *piCurrow, int *piCurcol);
 
 #endif /* wsb_H */
@@ -53,6 +55,10 @@ void wsb_display_and_read(HWSB hWsb, const char* keylist, int *piPfkey, int *piC
 /*
 **	History:
 **	$Log: wsb.h,v $
+**	Revision 1.3  1998-03-13 18:02:23-05  gsl
+**	Add wsb_set_alarm()
+**	and wsb_add_tabstop()
+**
 **	Revision 1.2  1997-10-29 12:00:44-05  gsl
 **	write
 **

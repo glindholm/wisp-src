@@ -1,27 +1,18 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995- 1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		rename.c
 **
 **	Purpose:	To hold RENAME vssub.
 **
+**	RCS:		$Source:$
+**
 **	Routines:	
 **		wrename()		The emulation of vssub RENAME (translation done by WISP).
 **		check_existence()	VMS: See if a file exists.
 **		create_dir()		VMS: Creates a directory.
 **
-**	History:
-**			mm/dd/yy	Written by OLD
-**			08/04/92	Updated for wfname changes and headers added. GSL
 **
 */
 
@@ -48,8 +39,24 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wisplib.h"
 #include "filext.h"
+#include "wdefines.h"
 
-
+/*
+**	CALL "RENAME" USING 'G', FILE, LIBRARY, VOLUME, NEWFILE [,NEWLIB [,BYPASS [,ACCESS [,OPEN]]]] RETCODE
+**	CALL "RENAME" USING 'F', FILE, LIBRARY, VOLUME, NEWFILE          [,BYPASS [,ACCESS [,OPEN]]]  RETCODE
+**	CALL "RENAME" USING 'L', xxxx, LIBRARY, VOLUME,           NEWLIB [,BYPASS [,ACCESS [,OPEN]]]  RETCODE
+**
+**		(1) TYPE 	Alpha(1) 'G', 'L', 'F'
+**		(2) FILE	Alpha(8)
+**		(3) LIBRARY	Alpha(8)
+**		(4) VOLUME	Alpha(6)
+**		(5) NEWFILE	Alpha(8)
+**		(6) NEWLIB	Alpha(8) (Optional)
+**		(7) BYPASS	Alpha(1) N/A (Optional)
+**		(8) ACCESS	Alpha(1) N/A (Optional)
+**		(9) OPEN	Alpha(1) N/A (Optional)
+**		(10) RETCODE	Int(4)
+*/
 void wrename(va_alist)
 va_dcl
 {
@@ -58,7 +65,10 @@ va_dcl
 	int arg_count, *return_code;							/* A variable and a pointer.		*/
 	int4 rename_status;								/* Status from the lib call.		*/
 	char *rtype,*the_item, *file, *lib, *vol, *new_file, *new_lib;			/* Pointers to passed arguments.	*/
-	char old_filename[132], new_filename[132];					/* Strings to contain the filenames.	*/
+	char old_filename[WISP_FILEPATH_LEN];
+	char old_filename_idx[WISP_FILEPATH_LEN];
+	char new_filename[WISP_FILEPATH_LEN];
+	char new_filename_idx[WISP_FILEPATH_LEN];
 	int4 mode;
 	char *name_end;									/* build filename from wang parts	*/
 	int nvalid;									/* Not Valid call flag.			*/
@@ -82,7 +92,18 @@ va_dcl
 	arg_count = va_count(the_args);							/* How many args are there ?		*/
 	va_start(the_args);								/* Go back to the top of the stack.	*/
 
+	if (arg_count < 6 || arg_count > 10)
+	{
+		char msg[256];
+		sprintf(msg,"%%RENAME-E-ARGS Invalid number of arguments [%d], valid range is 6 to 10.", arg_count);
+		werrlog(104, msg, 0,0,0,0,0,0,0,0);
+		
+		return;
+	}
+
 	nvalid = 0;
+	
+	/* ARG1 - TYPE */
 	rtype = va_arg(the_args, char*);						/* Get the rename type code.		*/
 	arg_count--;									/* One less argument.			*/
 
@@ -92,6 +113,7 @@ va_dcl
 		rename_status = 44;							/* Invalid func type.			*/
 	}
 
+	/* ARG2 - FILE */
 	file = va_arg(the_args, char*);							/* Get addr. of the file.		*/
 	arg_count--;									/* One less argument.			*/
 
@@ -101,6 +123,7 @@ va_dcl
 		rename_status = 20;
 	}
 
+	/* ARG3 - LIBRARY */
 	lib = va_arg(the_args, char*);							/* Get addr. of the lib.		*/
 	arg_count--;									/* One less argument.			*/
 
@@ -109,6 +132,7 @@ va_dcl
 		get_defs(DEFAULTS_IL,lib);
 	}
 
+	/* ARG4 - VOLUME */
 	vol = va_arg(the_args, char*);	   						/* Get addr. of the vol.		*/
  	arg_count--;									/* One less argument.			*/
 
@@ -122,6 +146,7 @@ va_dcl
 		}         
 	}
 
+	/* ARG5 - NEWFILE  (omitted for TYPE='L') */
 	if (*rtype != 'L')								/* If not doing a library rename.	*/
 	{
 		new_file = va_arg(the_args, char*);					/* Get addr. of the new file name.	*/
@@ -139,6 +164,7 @@ va_dcl
 	}
 	else	new_file = file;							/* Use old file.			*/
 
+	/* ARG6 - NEWLIB  (omitted for TYPE='F') */
 	if ((arg_count > 1) && (*rtype != 'F'))						/* Get the new lib name if needed.	*/
 	{
 		new_lib = va_arg(the_args, char*);					/* Get addr. of the new library name.	*/
@@ -161,13 +187,43 @@ va_dcl
 	}
 	else	new_lib = lib;								/* Use old library name.		*/
 
-	while (arg_count > 1)								/* Pop args till the last one.		*/
-	{										/* Bypass, Access, Open flags not used.	*/
-		the_item = va_arg(the_args, char*);					/* Trash an argument.			*/
-		arg_count -= 1;								/* One less arg.			*/
+	/* ARG7 - BYPASS  (Optional) */
+	if (arg_count > 1)
+	{
+		the_item = va_arg(the_args, char*);
+		arg_count -= 1;
 	}
 
-	return_code = va_arg(the_args, int*);						/* Get the addr. of the return code.	*/
+	/* ARG8 - ACCESS  (Optional) */
+	if (arg_count > 1)
+	{
+		the_item = va_arg(the_args, char*);
+		arg_count -= 1;
+	}
+
+	/* ARG9 - OPEN  (Optional) */
+	if (arg_count > 1)
+	{
+		the_item = va_arg(the_args, char*);
+		arg_count -= 1;
+	}
+
+	/* ARG10 - RETCODE */
+	if (1 == arg_count)
+	{
+		return_code = va_arg(the_args, int*);					/* Get the addr. of the return code.	*/
+		arg_count -= 1;
+	}
+	else if (arg_count < 1)
+	{
+		werrlog(104, "%RENAME-E-ARGS Invalid argument list, missing argument RETCODE.", 0,0,0,0,0,0,0,0);
+		return;
+	}
+	else
+	{
+		werrlog(104, "%RENAME-E-ARGS Invalid argument list, extra arguments found.", 0,0,0,0,0,0,0,0);
+		return;
+	}
 
 	wtrace("RENAME", "ARGS", "(resolved) Type=[%c] File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] NFile=[%8.8s] NLib=[%8.8s]",
 				*rtype, file, lib, vol, new_file, new_lib);
@@ -239,7 +295,7 @@ va_dcl
 	{
 		ptr = splitext(old_filename);
 		if (*ptr == '.') ptr++;							/* Point past the '.'			*/
-		loadpad(WISPFILEXT,ptr,sizeof(WISPFILEXT));				/* Reset EXT for new_filename		*/
+		cstr2cobx(WISPFILEXT,ptr,sizeof(WISPFILEXT));				/* Reset EXT for new_filename		*/
 	}
 
 	name_end = wfname(&mode, vol, new_lib, new_file, new_filename);			/* Construct the new native filename.	*/
@@ -344,11 +400,115 @@ va_dcl
 		**	3) CISAM (with .dat)
 		**		foo.dat
 		**		foo.idx
+		**
+		**	4) Vision 4 files
+		**		foo
+		**		foo.vix
 		*/
 
-	dat_done = 0;
 	has_ext = hasext(old_filename);						/* does it already have extension?		*/
 
+	/*
+	**	Check if there is an index portion and setup paths to rename it.
+	*/
+	strcpy(old_filename_idx, old_filename);
+	strcpy(new_filename_idx, new_filename);
+	if (has_ext)
+	{
+		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
+		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+	}
+	strcat(old_filename_idx,".idx");
+	strcat(new_filename_idx,".idx");
+	if (!fexists(old_filename_idx))						/* See if there is a .idx index portion		*/
+	{
+		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
+		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+
+		strcat(old_filename_idx,".vix");
+		strcat(new_filename_idx,".vix");
+		if (!fexists(old_filename_idx))					/* See if there is a .vix index portion		*/
+		{
+			/* No index portion */
+			*old_filename_idx = '\0';
+			*new_filename_idx = '\0';
+		}
+	}
+	
+	/*
+	**	Check if file exists
+	*/
+	if (!fexists(old_filename))
+	{
+		if (has_ext)
+		{
+			/*
+			**	File doesn't exist and it has an extension so nothing else to try.
+			*/
+			rename_status=20;					/* yes, so return file not found		*/
+			goto rename_return;
+		}
+
+		/*
+		**	Try a .dat extension
+		*/
+		strcat(old_filename,".dat");
+		strcat(new_filename,".dat");
+		
+		if (!fexists(old_filename))
+		{
+			/*
+			**	File doesn't exist
+			*/
+			rename_status=20;
+			goto rename_return;
+		}
+	}
+	
+	/*
+	**	The old file exists.
+	**	Ensure the new file doesn't already exist.
+	*/
+	if (fexists(new_filename))
+	{
+		rename_status = 52;
+		goto rename_return;
+	}
+	if (*new_filename_idx && fexists(new_filename_idx))
+	{
+		rename_status = 52;
+		goto rename_return;
+	}
+
+	/*
+	**	Do the rename
+	*/
+	if (file_rename(old_filename,new_filename))
+	{
+		rename_status=24;
+		goto rename_return;
+	}
+	if (*old_filename_idx)
+	{
+		if (file_rename(old_filename_idx,new_filename_idx))
+		{
+			/*
+			**	The idx rename failed, try to undo the data portion rename before returning
+			*/
+			if (file_rename(new_filename,old_filename))
+			{
+				rename_status=48;	/* Serious error, half the file was renamed */
+				goto rename_return;
+			}
+			
+			rename_status=24;
+			goto rename_return;
+		}
+	}
+	
+	dat_done = 0;
+
+#ifdef OLD	
 	if (fexists(old_filename))						/* file exist in this form			*/
 	{
 		if (fexists(new_filename))					/* New file already exists.			*/
@@ -412,32 +572,37 @@ va_dcl
 		rename_status=20;						/* yes, so return file not found		*/
 		goto rename_return;
 	}
-
+#endif /* OLD */
 #endif /* !VMS */
                                
 rename_return:
-	wtrace("RENAME", "RETURN", "Return code = %ld", (long)rename_status);
+	wtrace("RENAME", "RETURN", "Return code = %ld errno=[%d]", (long)rename_status, errno);
 	
 	wswap(&rename_status);
 	PUTBIN(return_code,&rename_status,sizeof(int4));
 }                                                         
 
-#ifdef unix
-int file_rename(char* old_filename, char* new_filename)
+#if defined(unix) && defined(NORENAME)
+static int unix_shell_move(const char* old_filename, const char* new_filename)
 {
 	char	cmd[256];
 
-	sprintf(cmd,"mv %s %s >/dev/null 2>&1",old_filename,new_filename);
+	sprintf(cmd,"mv \"%s\" \"%s\" >/dev/null 2>&1",old_filename,new_filename);
 	return (wsystem(cmd));
 }
 #endif /* unix */
 
-#if defined(MSDOS) || defined(WIN32)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 int file_rename(char* old_filename, char* new_filename)
 {
-	return (rename(old_filename,new_filename));
+#if defined(unix) && defined(NORENAME)
+	return unix_shell_move(old_filename,new_filename);
+#else	
+	errno = 0;
+	return rename(old_filename,new_filename);
+#endif
 }
-#endif /* MSDOS || WIN32 */
+#endif /* unix || MSDOS || WIN32 */
 
 #ifdef VMS
 check_existence(filename)								/* Check to see if a file exists.	*/
@@ -481,6 +646,17 @@ char *nlib, *vol;
 /*
 **	History:
 **	$Log: rename.c,v $
+**	Revision 1.18  1998-11-30 12:24:43-05  gsl
+**	Add beter error checked to detect missing arguments and document args
+**
+**	Revision 1.17  1998-08-03 17:10:18-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.16  1998-05-15 14:15:58-04  gsl
+**	Add support for vision4 files and changed unix to use rename() routine.
+**	I reworked the way 2 part files (cisam, vision4) are handled and left
+**	the old code ifdef'ed for reference
+**
 **	Revision 1.15  1997-05-01 16:39:50-04  gsl
 **	Remove unneeded errbuff
 **

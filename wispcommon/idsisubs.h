@@ -51,11 +51,18 @@ extern int hasext(char *filepath);
 extern char *buildfilepath(char *dest, const char *path, const char *file);
 extern int numeric2int4(int4 *result, char *source, int sourcelen);
 extern int field2int4(char *str, int len, int4 *num);
+extern void cstr2cobx(char *dest, const char *src, int size);				/* honor embedded spaces		*/
+extern void cobx2cstr(char *dest, const char *src, int size);
+extern void dqw_strcpy(char *dest, const char *src);
+extern void dqw_strcat(char *dest, const char *src);
 
 #endif /* idsisubs_H */
 /*
 **	History:
 **	$Log: idsisubs.h,v $
+**	Revision 1.10  1998-08-03 16:26:53-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.9  1997-08-18 15:59:27-04  gsl
 **	Add const to prototypes where needed
 **

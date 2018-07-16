@@ -1,7 +1,11 @@
-/* 
-	Copyright (c) 1995,1996 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : pcode.cpp
@@ -368,3 +372,61 @@ void pcode_emitter::resume_emission() {
 #endif
 
 #endif
+
+//
+//	History:
+//	$Log: pcode.cpp,v $
+//	Revision 1.9  1998-08-31 15:50:35-04  gsl
+//	drcs update
+//
+//	Revision 1.8  1998-08-31 15:14:06-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/pcode.cpp,v
+//	Working file: pcode.cpp
+//	head: 1.7
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 7;	selected revisions: 7
+//	description:
+//	----------------------------
+//	revision 1.7
+//	date: 1997-10-01 13:33:01-04;  author: gsl;  state: V4_3_00;  lines: +7 -5
+//	Fix warnings
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:15:57-04;  author: gsl;  state: V4_1_02;  lines: +1 -1
+//	Renamed from pcode.cc to pcode.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1996-04-18 13:00:30-04;  author: jockc;  state: Exp;  lines: +6 -1
+//	moved declaration of for loop index from for loop to function
+//	auto decl area
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:14-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:30-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:13-05;  author: gsl;  state: V3_3x12;  lines: +2 -2
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:20-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

@@ -20,23 +20,31 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "idsisubs.h"
 
-extern pstruct *plist;									/* pointer to printer files		*/
+#include "wdefines.h"
+#include "wglobals.h"
+
 
 void wfclose(char* fname)								/* This routine is called after COBOL*/
 {											/* closes the file.			*/
-	int spos, retcd;
+
+	int retcd;
+	
 	pstruct *lptr;									/* A local pointer into the structure.	*/
 	char	def_prt_mode;
 
-	if (plist)									/* if any files opened print/hold	*/
+	if (g_print_file_list)								/* if any files opened print/hold	*/
 	{
 		wpload();
 		get_defs(DEFAULTS_PM,&def_prt_mode);
 		if (fname[0] == '*')							/* '*' means dump them all.		*/
 		{
-			lptr = plist;
-			do
+			/*
+			**	Print everything in the list and free the list.
+			**	This is called from wexith.
+			*/
+			while(g_print_file_list)
 			{
+				lptr = g_print_file_list;
 				if (lptr->name[0])
 				{
 					wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
@@ -44,22 +52,24 @@ void wfclose(char* fname)								/* This routine is called after COBOL*/
 
 					lptr->name[0] = '\0';				/* Say we have already processed it.	*/
 				}
-				lptr = (pstruct *)lptr->nextfile;
-			} while (lptr);
-
+				g_print_file_list = lptr->nextfile;
+				free(lptr);
+			}
 		}
 		else
 		{
-			spos = strpos(fname," ");
-			fname[spos] = '\0';						/* Put a null at the first space.	*/
-			lptr = plist;
+			char trim_fname[COB_FILEPATH_LEN + 1];
+
+			cobx2cstr(trim_fname, fname, COB_FILEPATH_LEN);
+			
+			lptr = g_print_file_list;
 			do
 			{
-				if (!strcmp(lptr->name,fname))				/* Is the name the same?		*/
+				if (!strcmp(lptr->name,trim_fname))			/* Is the name the same?		*/
 				{
 					break;						/* Found a match.			*/
 				}
-				lptr = (pstruct *)lptr->nextfile;
+				lptr = lptr->nextfile;
 			} while (lptr);
 
 			if (lptr)							/* If there was a match, spool it.	*/
@@ -68,13 +78,20 @@ void wfclose(char* fname)								/* This routine is called after COBOL*/
 						lptr->class,lptr->form,&retcd);
 				lptr->name[0] = '\0';					/* Say we have already processed it.	*/
 			}
-			fname[spos] = ' ';						/* put the space back in the name.	*/
+
 		}
 	}
 }
 /*
 **	History:
 **	$Log: wfclose.c,v $
+**	Revision 1.12  1998-10-22 14:12:42-04  gsl
+**	change to use g_print_file_list
+**	Fix "*" processing to free and null the list
+**
+**	Revision 1.11  1998-08-03 17:16:49-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
 **	Revision 1.10  1996-08-19 18:33:14-04  gsl
 **	drcs update
 **

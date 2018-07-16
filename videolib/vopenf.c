@@ -41,8 +41,17 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 	strcat(filename,ext);								/* Add the extension.			*/
 #endif
 
-#ifdef MSFS
+#ifdef MSDOS
 	if (!(ptr=getenv("HOME")))							/* Get the HOME dir.			*/
+	{
+		ptr = "C:";								/* If home not found use "C:"		*/
+	}
+	strcpy(filename,ptr);
+	strcat(filename,"\\video.");							/* Store in the root.			*/
+	strcat(filename,ext);
+#endif
+#ifdef WIN32
+	if (!(ptr=getenv("VIDEOHOME")))							/* Get the HOME dir.			*/
 	{
 		ptr = "C:";								/* If home not found use "C:"		*/
 	}
@@ -146,6 +155,9 @@ char *name;
 /*
 **	History:
 **	$Log: vopenf.c,v $
+**	Revision 1.12  1998-05-21 11:44:58-04  gsl
+**	For WIN32 use the env VIDEOHOME for directory of ede files or default to C:
+**
 **	Revision 1.11  1996-10-11 18:16:14-04  gsl
 **	drcs update
 **

@@ -13,6 +13,13 @@ static char rcsid[]="$Id:$";
 **	backgrnd.c
 */
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifdef unix
+#include <unistd.h>
+#endif
+
 #include "idsistd.h"
 #include "wperson.h"								/* get the structure definitions		*/
 #include "werrlog.h"
@@ -40,30 +47,51 @@ int wbackground()									/* Return true if in background.	*/
 int wbackground()									/* Return true if in background.	*/
 {
 	static	int	first = 1;
-	static	int	rc;
+	static	int	rc = FALSE;
 
 	if (first)
 	{
+		const char *ptr=NULL;
+		char szMessBuff[256];
+		char *pszMess = "Default to foreground.";
+		
 		first = 0;
+
+		if (ptr=getenv( WISP_BACKGROUND_ENV ))
+		{
+			if ('t'==*ptr || 'T'==*ptr) /* WISPBACKGRD=true or TRUE */
+			{
+				rc = TRUE;
+			}
+			sprintf(szMessBuff,"Detected variable %s=%s",WISP_BACKGROUND_ENV,ptr);
+			pszMess = szMessBuff;
+		}
 #ifdef unix		
-		rc = (getenv( WISP_BACKGROUND_ENV )) ? TRUE : FALSE;
+		else if (0==isatty(fileno(stdin)))
+		{
+			/*
+			 * Stdin is not a tty so assume we are in background.
+			 */
+			rc = TRUE;
+			pszMess = "Special file (stdin) is not a tty.";
+		}
 #endif
 #ifdef WIN32
-		if (getenv( WISP_BACKGROUND_ENV ) ||
-		    getenv( AQM_COMPUTER_NAME ) ||
-		    getenv( AQM_JOB_FILE ) ||
-		    getenv( AQM_JOB_NAME ) ||
-		    getenv( AQM_JOB_NUMBER) ||
-		    getenv( AQM_LOG_FILE ) ||
-		    getenv( AQM_QUEUE ) )
+		else if (getenv( ptr=AQM_COMPUTER_NAME ) ||
+			 getenv( ptr=AQM_JOB_FILE ) ||
+			 getenv( ptr=AQM_JOB_NAME ) ||
+			 getenv( ptr=AQM_JOB_NUMBER) ||
+			 getenv( ptr=AQM_LOG_FILE ) ||
+			 getenv( ptr=AQM_QUEUE ) )
 		{
 			rc = TRUE;
+			sprintf(szMessBuff,"Detected AQM variable %s",ptr);
+			pszMess = szMessBuff;
 		}	
-		else
-		{
-			rc = FALSE;
-		}
 #endif		
+
+		wtrace("WBACKGROUND",(rc)?"TRUE":"FALSE","%s",pszMess);
+		
 	}
 	return(rc);
 }
@@ -82,6 +110,14 @@ int wbackground()
 /*
 **	History:
 **	$Log: backgrnd.c,v $
+**	Revision 1.12  1999-05-26 10:59:47-04  gsl
+**	fix const warning
+**
+**	Revision 1.11  1999-05-20 15:08:20-04  gsl
+**	Enhanced the detection of background.
+**	On unix if stdin is not a tty then assume background.
+**	Add a trace to tell how result was determined.
+**
 **	Revision 1.10  1996-12-06 18:41:13-05  jockc
 **	separated unix and win32 code.. win32 also checks for
 **	AQM (argent queue manager) variables

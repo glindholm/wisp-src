@@ -45,6 +45,8 @@ int get_pic_len(char* dest,int type,int len,int dec,int bin)
 {
 	int x_len;
 
+	dest[0] = '\0';
+
 	x_len = 0;
 	switch(type)
 		{
@@ -93,6 +95,9 @@ int get_pic_len(char* dest,int type,int len,int dec,int bin)
 /*
 **	History:
 **	$Log: piclen.c,v $
+**	Revision 1.3  1998-04-08 11:44:53-04  gsl
+**	Init the dest to null.
+**
 **	Revision 1.2  1996-09-17 19:45:43-04  gsl
 **	drcs update
 **

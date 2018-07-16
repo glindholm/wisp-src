@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : machine.hpp
 // Author : George Soules
@@ -177,7 +184,7 @@ class machine : public object {
 
       class call_state : public object {
          public:
-             offset current_offset;
+             offset return_offset;
              int    for_loop_depth;
       };
 
@@ -205,3 +212,54 @@ class machine : public object {
 };
 
 #endif
+
+//
+//	History:
+//	$Log: machine.hpp,v $
+//	Revision 1.7  1998-09-08 14:05:32-04  gsl
+//	Rename the stack_state return offset
+//
+//	Revision 1.6  1998-08-31 15:13:55-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/machine.hpp,v
+//	Working file: machine.hpp
+//	head: 1.5
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 5;	selected revisions: 5
+//	description:
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-10 13:56:58-04;  author: gsl;  state: V4_3_00;  lines: +2 -0
+//	Added public function symbol_table_ptr() which returns a pointer
+//	to the_symbol_table for that machine.  Needed to fix the globals
+//	problem and used in wang_os_link()
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:03-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:20-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:00-05;  author: gsl;  state: V3_3x12;  lines: +16 -15
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:13-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

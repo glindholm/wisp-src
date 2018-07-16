@@ -1,16 +1,8 @@
 /* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 19951998 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /* Header file used to define useful file information.										*/
 
@@ -19,24 +11,25 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "wdefines.h"
 
-#define NAME_LENGTH	80
-
-typedef struct	{									/* The structure for scratch files.	*/
-			char vol[6];							/* the local volume name of the file	*/
-			char lib[8];							/* the library name of the file		*/
-			char file[8];							/* the file name			*/
-			char name[NAME_LENGTH];						/* the generated name of the file	*/
+struct fstruct	{									/* The structure for scratch files.	*/
+			char vol[SIZEOF_VOL];						/* the local volume name of the file	*/
+			char lib[SIZEOF_LIB];						/* the library name of the file		*/
+			char file[SIZEOF_FILE];						/* the file name			*/
+			char name[COB_FILEPATH_LEN + 1];				/* the generated name of the file	*/
 			struct fstruct *nextfile;					/* pointer to the next file		*/
-		} fstruct;
+		};
+typedef struct fstruct fstruct;
 
-typedef struct	{									/* The structure for PRINT files.	*/
-			char name[NAME_LENGTH];						/* the name of the file to print	*/
+struct pstruct	{									/* The structure for PRINT files.	*/
+			char name[COB_FILEPATH_LEN + 1];				/* the name of the file to print	*/
 			int  form;							/* The form to use.			*/
 			char class;							/* The printer class.			*/
 			int numcopies;							/* The number of copies to spool.	*/
 			struct pstruct *nextfile;					/* pointer to the next one		*/
-		} pstruct;
+		};
+typedef struct pstruct pstruct;
 
 static char X_twfxt[39];
 
@@ -48,6 +41,12 @@ static char X_twfxt[39];
 /*
 **	History:
 **	$Log: wfiles.h,v $
+**	Revision 1.11  1998-10-22 14:05:48-04  gsl
+**	Fix the fstruct and pstruct typedefs
+**
+**	Revision 1.10  1998-08-03 16:40:26-04  jlima
+**	Support Logical Volume Translations to long file names containing eventual embedded blanks.
+**
 **	Revision 1.9  1996-07-23 14:17:57-04  gsl
 **	drcs update
 **

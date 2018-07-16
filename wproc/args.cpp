@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : args.cpp
 // Author : George Soules
@@ -179,3 +186,53 @@ int arguments::count() {
 
 
 
+
+//
+//	History:
+//	$Log: args.cpp,v $
+//	Revision 1.7  1998-08-31 15:12:08-04  gsl
+//	Add log
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/args.cpp,v
+//	Working file: args.cpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-10-01 08:14:56-04;  author: gsl;  state: V4_3_00;  lines: +2 -2
+//	Fix warnings
+//	----------------------------
+//	revision 1.5
+//	date: 1996-07-25 14:14:17-04;  author: gsl;  state: V4_1_02;  lines: +0 -0
+//	Renamed from args.cc to args.cpp
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:38-04;  author: gsl;  state: V3_3_19;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:51:55-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:32-05;  author: gsl;  state: V3_3x12;  lines: +0 -0
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:50:55-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

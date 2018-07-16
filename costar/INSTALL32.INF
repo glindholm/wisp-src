@@ -1,0 +1,199 @@
+;=========================================================================
+;
+;                             Co*STAR for WISP
+;
+;                       Installation Information File
+; 
+;                  Copyright 1996, Clearview Software Inc.
+;
+;=========================================================================
+
+[dialog]
+  caption = "Install"
+  blue = 1
+  
+[version]
+  version = "2.0"
+  title   = "Co*STAR 32 for WISP"
+
+[data]
+  defdir = C:\W4W
+
+[disks]
+  1 =.,"Co*STAR for WISP Disk 1"
+  2 =.,"Co*STAR for WISP Disk 2"
+  
+[needed.space]
+  minspace = 1000000
+
+[app.copy.appstuff]
+  #app.user,    0:
+  #app.sdk,     0:sdk
+  #app.bbasic,  0:sdk\bbasic
+  #app.bp    ,  0:sdk\bp       
+  #app.vsl,     0:
+  #app.vb   ,   0:
+  #app.filter , 0:
+  #app.ftp  ,   0:
+  #w4w.main,    0:
+  #w4w.w4w,     0:w4w
+  #w4w.icons,   0:w4w\icons
+  
+;====================================================================================
+;            File   file not        Copy                  Destination  Network
+; disk:file, desc., found error   , Method              , directory    Client/Server
+; -----------------------------------------------------------------------------------
+;                 0 = show error, 0 = always overwrite, 0 = default, 0=don't copy
+;                 1 = ignore    , 1 = don't overwrite , 1 = windows, 1=client copy
+;                 2 = splash    , 2 = check dates     , 2 = system,  2=server only
+;                     image     , 3 = Update iff exist,              3=server copy
+;                                     and out of date                  using dest dir
+;                                 4 = CoSTAR exe
+;                                 5 = VBCOSTAR.OCX
+;====================================================================================
+
+[app.user]     
+  1:costar.ex_   ,"Co*STAR for WISP Program"     , 0 , 4 , 0  
+  1:costar.cnf   ,"Configuration File"  , 0 , 1 , 0 , 1 
+  1:cofont.fo_   ,"Font File"           , 0 , 0 , 0
+  1:color.ini    ,"Color File"          , 0 , 1 , 0 , 1
+  1:co_priv.dll  ,"Resource Dialog"     , 1 , 2 , 0
+  1:w4w.cnf      ,"W4W Config"          , 1 , 1 , 0 , 1
+  
+  1:release.wr_  ,"Release Notes"       , 0 , 0 , 0
+  1:costar.hl_   ,"Help File"           , 0 , 0 , 0
+  1:coimage.dl_  ,"Image Processor"     , 0 , 0 , 0
+  1:coscript.dl_ ,"Script Processor"    , 0 , 0 , 0
+  1:co_xfer.dl_  ,"File Transfer DLL"   , 0 , 0 , 0  
+  1:co_util.dl_  ,"Script DLL"          , 0 , 0 , 0 
+     
+  1:d200.kbd     ,"Keyboard Files"      , 0 , 1 , 0    ;dont overwrite
+  1:ibm3151.kbd  ,"Keyboard Files"      , 0 , 1 , 0    ;    
+; 1:vt220.kbd    ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:vt220_7.kbd  ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:vt220_8.kbd  ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:vt100.kbd    ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:adds.kbd     ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:tvi.kbd      ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:wyse.kbd     ,"Keyboard Files"      , 0 , 1 , 0    ;
+  1:p9.kbd       ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  1:p9_ansi.kbd  ,"Keyboard Files"      , 0 , 1 , 0    ;    
+  
+;  1:costar.bm_   ,"Co*STAR Logo"        , 0 , 0 , 0
+;  1:costar16.bm_ ,"Co*STAR Logo"        , 0 , 0 , 0
+  1:co_netwk.dl_ ,"Network DLL"         , 1 , 0 , 0
+  1:cosetup.dl_  ,"Setup DLL"           , 0 , 0 , 0
+  1:co_tab.dl_   ,"Dialog DLL"          , 0 , 0 , 0
+;  1:co_beta.wr_  ,"Beta Release Notes"   , 1 ,0 ,0
+  1:coprog.hl_   ,"Programmer's Guide"   , 0, 0, 0
+  1:install.exe  ,"Installation Program" , 0, 0, 0, 2   
+  1:install.inf  ,"Installation Setup"   , 0, 0, 0, 2
+  1:regocx.exe   ,"OLE Registration Utility", 0,0,0,2
+
+[app.sdk]
+  1:sdk/EMPDATA.DA_    ,"SDK Files" ,1
+  1:sdk/EMPLIST.DA_    ,"SDK Files" ,1
+  1:sdk/GLOBALS.IN_    ,"SDK Files" ,1
+  1:sdk/LISTBOX.SC_    ,"SDK Files" ,1
+  1:sdk/menu.sc_       ,"SDK Files" ,1
+  1:sdk/sendkey.sc_    ,"SDK Files" ,1       
+  1:sdk/mouse.sc_      ,"SDK Files" ,1
+  1:sdk/ADDMENU.SC_    ,"SDK Files" ,1
+  1:sdk/DELMENU.SC_    ,"SDK Files" ,1
+  1:sdk/imagehs.sc_    ,"SDK Files" ,1
+  1:sdk/10.bm_         ,"SDK Files" ,1
+  1:sdk/file.bm_       ,"SDK Files" ,1
+  1:sdk/report.bm_     ,"SDK Files" ,1
+  1:sdk/mbox.sc_       ,"SDK Files" ,1
+  1:sdk/winhelp.sc_    ,"SDK Files" ,1
+  1:sdk/settitle.sc_   ,"SDK Files" ,1
+  1:sdk/fexist.sc_     ,"SDK Files" ,1
+  1:sdk/fdelete.sc_    ,"SDK Files" ,1
+  1:vbtest32.fr_        ,"Visual Basic Sample"  , 1 , 2 , 0
+  1:vbtest32.ma_        ,"Visual Basic Sample"  , 1 , 2 , 0
+  1:costar32.ba_	,"Visual Basic Include" , 1 , 2 , 0
+
+[app.vb]
+;1:cowizard.ex_ ,"Wizard Program" ,1
+;1:cowizard.hl_ ,"Wizard Help"    ,1
+;1:vbrun300.dl_ ,"Visual Basic Files"   ,1,2,2
+;1:vsvbx.vb_    ,"Visual Basic Files"   ,1,2,2
+;1:cmdialog.vb_ ,"Visual Basic Files"   ,1,2,2
+;1:spin.vb_     ,"Visual Basic Files"   ,1,2,2
+;1:threed.vb_   ,"Visual Basic Files"   ,1,2,2
+
+
+[app.filter]
+1:vbcostar.oc_ ,"Visual Basic OCX" , 0 , 5 , 2
+1:vbcostar.oc_ ,"Visual Basic OCX" , 0 , 2 , 2 , 3
+1:costar32.hl_ ,"Visual Basic Help", 0 , 0 , 2
+  
+
+[app.bbasic]  
+  1:sdk/bbasic/LISTBOX.ba_    ,"SDK Files" ,1
+  1:sdk/bbasic/LISTDATA.ba_   ,"SDK Files" ,1
+  1:sdk/bbasic/LISTHDAT.ba_   ,"SDK Files" ,1
+  1:sdk/bbasic/LISTHOST.ba_   ,"SDK Files" ,1
+  1:sdk/bbasic/sendkey.ba_    ,"SDK Files" ,1 
+  1:sdk/bbasic/menu.ba_       ,"SDK Files" ,1
+
+[app.bp]
+  1:sdk/bp/LISTBOX    ,"SDK Files" ,1
+  1:sdk/bp/LISTDATA   ,"SDK Files" ,1
+  1:sdk/bp/LISTHDAT   ,"SDK Files" ,1
+  1:sdk/bp/LISTHOST   ,"SDK Files" ,1
+  1:sdk/bp/sendkey    ,"SDK Files" ,1 
+  1:sdk/bp/menu       ,"SDK Files" ,1 
+  1:sdk/bp/mouse      ,"SDK Files" ,1
+  1:sdk/bp/upload     ,"SDK Files" ,1
+  1:sdk/bp/download   ,"SDK Files" ,1
+  1:sdk/bp/msgbox     ,"SDK Files" ,1
+  1:sdk/bp/addmenu    ,"SDK Files" ,1
+  1:sdk/bp/iconmenu   ,"SDK Files" ,1  
+
+
+[app.ftp]
+  1:co_ftp.ex_ ,"FTP Setup Utility"   , 1 , 1 , 0  
+  1:ftp.wr_    ,"FTP Release Notes"   , 1 , 1 , 0
+
+
+[w4w.main]
+   2:w4w.cnf            ,"W4W Config"     , 0 , 0 , 0
+   2:o4w.cnf            ,"O4W Config"     , 0 , 0 , 0
+   2:color.ini          ,"W4W Colors"     , 0 , 0 , 0
+   2:costar.bmp         ,"Co*STAR for WISP Logo", 0 , 0 , 0
+   2:costar16.bmp       ,"Co*STAR for WISP Logo", 0 , 0 , 0
+   2:vt220.kbd          ,"Keyboard Files"       , 0 , 2 , 0 
+   2:w4w.lis		,"W4W Doc"	  , 0 , 0 , 0
+
+[w4w.w4w]
+   2:w4w\mouse.scr          ,"W4W Mouse"      , 0 , 0 , 0
+   2:w4w\w4w.hsf            ,"W4W Hotspots"   , 0 , 0 , 0
+   2:w4w\w4w.key            ,"W4W Button bar" , 0 , 0 , 0
+   2:w4w\w4w.tbf            ,"W4W Toolbar"    , 0 , 0 , 0
+   2:w4w\o4w.hsf            ,"O4W Hotspots"   , 0 , 0 , 0
+   2:w4w\o4w.key            ,"O4W Button bar" , 0 , 0 , 0
+   2:w4w\o4w.tbf            ,"O4W Toolbar"    , 0 , 0 , 0
+
+[w4w.icons]
+   2:w4w\icons\arwdn.ico    ,"W4W Icons"    , 0 , 0 , 0
+   2:w4w\icons\arwlt.ico    ,"W4W Icons"    , 0 , 0 , 0
+   2:w4w\icons\arwrt.ico    ,"W4W Icons"    , 0 , 0 , 0
+   2:w4w\icons\arwup.ico    ,"W4W Icons"    , 0 , 0 , 0
+   2:w4w\icons\enter.ico    ,"W4W Icons"    , 0 , 0 , 0
+   2:w4w\icons\help.ico     ,"W4W Icons"    , 0 , 0 , 0
+
+[progman.groups]
+  "CoSTAR 32 for WISP",W4W.GRP
+
+["CoSTAR 32 for WISP"]
+"CoSTAR 32 for WISP"     , costar.exe,  -w4w.cnf
+"CoSTAR for WISP Doc"    , notepad.exe, w4w.lis
+"Help File"              , winhlp32.exe, costar.hlp
+"Release Notes"          , write.exe, release.wri
+;"Beta Release Notes"    , write.exe, co_beta.wri
+;"Network Release Notes" , notepad.exe, co_netwk.txt
+"Programmer's Guide"     , winhlp32.exe, coprog.hlp
+"Custom Control Guide"   , winhlp32.exe, costar32.hlp
+
+;"FTP Release Notes"     , write.exe, ftp.wri

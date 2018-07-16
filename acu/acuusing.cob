@@ -1,3 +1,10 @@
+000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       acuusing.cob
+000500**
+000600**   Project:    WISP for ACUCOBOL
+000700**
       ******************************************************************
       *
       *  ACUUSING	- WISP ACUCOBOL RUN USING INTERFACE
@@ -22,9 +29,7 @@
        PROGRAM-ID.
            ACUUSING.
        AUTHOR.
-           Greg Lindholm @ IDSI.
-       DATE-WRITTEN.
-           03/06/91.
+           NeoMedia Technologies Inc.
 
        ENVIRONMENT DIVISION.
        CONFIGURATION SECTION.

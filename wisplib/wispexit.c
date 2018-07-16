@@ -1,15 +1,18 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+**	File:		wispexit.c
+**
+**	Project:	WISP/LIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	WISPEXIT()
+*/
+
 
 #include "wisplib.h"
+#include "werrlog.h"
 
 /*
 **	ROUTINE:	WISPEXIT()
@@ -30,6 +33,7 @@ static char rcsid[]="$Id:$";
 */
 void WISPEXIT(void)
 {
+	wtrace_timestamp("WISPEXIT");
 	wexith();							/* Do Exit handler stuff.				*/
 }
 
@@ -37,6 +41,9 @@ void WISPEXIT(void)
 /*
 **	History:
 **	$Log: wispexit.c,v $
+**	Revision 1.12  1998-05-18 14:43:32-04  gsl
+**	Add trace
+**
 **	Revision 1.11  1996-08-26 20:09:42-04  gsl
 **	Documented and moved pre-exit logic to wexith()
 **

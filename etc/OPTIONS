@@ -1,11 +1,15 @@
 #######################################################################
-# Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+# Copyright (c) 1999 by NeoMedia Technologies Inc. All Rights Reserved.
 #######################################################################
 #
 # OPTIONS:	The WISP runtime options file.
 #
 #          	All of the following lines with leading '#' characters
-#		are comments.  To uncomment remove the leading '#'.
+#		are comments.  To uncomment remove the leading '#' and
+#		start the line in column 1. Long lines can be continued
+#		by adding a backslash ('\') as the last character on 
+#		the line.
+#
 #		The default settings are marked.
 #
 #		Not all options are meaningful to all environments, see
@@ -14,11 +18,15 @@
 #
 #######################################################################
 
-# Set the error reporting level	
+# Set the error reporting level. This effects what messages get 
+# reported and get logged to the wisperr.log file.
+#    15 - Report and log exceptions only, this is the default.
+#    27 - Log everything, equivalent to WISPDEBUG=FULL.
 #ERRFLAG 15
+#ERRFLAG 27		
 
 # Turning signals off will cause a core file to be created on a
-# signal 10 or 11. (UNIX only)
+# signal 10 or 11.
 #SIGNALSON		(default)
 #SIGNALSOFF
 
@@ -34,16 +42,84 @@
 #OUTPUTVERIFYOFF
 
 # If you want WISP to automatically "create" a volume when not
-# found in LGMAP then set CREATEVOLUMEON. (UNIX only)
+# found in LGMAP then set CREATEVOLUMEON.
 #CREATEVOLUMEOFF	(default)
 #CREATEVOLUMEON
 
-# WISP can use either the ILP of UNIQUE versions of the Print Queue.
-# To changed the default use one of the following options.
+# Select print mechanism WISP is to use.  These options select a
+# pre-defined print mechanism.  To define a fully customized
+# print mechanism use the PQCMD options below. 
 #PQLP			(Use LP)
 #PQILP			(Use ILP)
 #PQUNIQUE		(Use UNIQUE - default)
 #PQNP			(Use NP the HP/UX network print)
+
+# The PQCMD option is used to define a template for the generic print 
+# queue command.  The template should consist of the print program 
+# (lp, ulp, etc.) followed by static text and macros.  The macros will
+# be substituted with the actual runtime values.  See the WISP release 
+# notes for a complete list and description of the macros.
+#
+#PQCMD /usr/bin/lp -c -s %FILE%
+#
+# These PQxxxOPT options are used with the PQCMD option to define 
+# optional macros that are substituted in the print command template.  
+#
+#PQCLASSOPT      %CLASSOPT% macro when class is not " " (blank)
+#PQCOPIESOPT     %COPIESOPT% macro when copies not 1
+#PQPRTNUMOPT     %PRTNUMOPT% macro when printer number not 000
+#PQFORMOPT       %FORMOPT% macro when form number not 000
+#PQHOLDOPT       %HOLDOPT% macro when mode is 'H' (hold)
+#PQDELOPT        %DELOPT% macro when disp is "DX" (delete)
+#PQREQOPT        %REQOPT% macro when disp is "RS" (requeue)
+#
+# The PQDELETELOCAL option is used when the PQCMD print queue command 
+# does not support an option to delete the file after printing. This 
+# causes the WISP runtime to delete the file after the print queue 
+# command has been issued if the disposition is "DX" and the mode is 
+# not "H".
+#
+#PQDELETELOCAL
+#
+# The PQNOHOLD options instructs the PQCMD generic print queue command 
+# handler that this print queue does not support a HOLD option. If a 
+# the HOLD option is specified then the print command is not issued.
+#
+#PQNOHOLD
+#
+# Example 1) Implementation for UniQue Print Queue on UNIX
+#
+#PQCMD ulp -q %CLASSOPT% -f%FORM% -n%COPIES% %PRTNUMOPT% %HOLDOPT% \
+ %DELOPT% %REQOPT% %FILE%
+#PQCLASSOPT  -C%CLASS%
+#PQPRTNUMOPT -P%PRTNUM%
+#PQHOLDOPT   -M hold
+#PQDELOPT    -M del
+#PQREQOPT    -M re
+#
+# Example 2) Implementation for LP on UNIX
+#
+#PQCMD lp -c -s -n%COPIES% %FORMMAP% %LPMAP% %PRMAP% %FILE% 
+#PQNOHOLD
+#PQDELETELOCAL
+#
+# Example 3) Implementation for UniQue Print Queue on NT/95
+#
+#PQCMD C:\uniquent\ulpr.exe -Huniquehost -p515 -q %CLASSOPT% -f%FORM% \
+ -n%COPIES% %PRTNUMOPT% %HOLDOPT% %REQOPT% %FILE% 
+#PQCLASSOPT  -C%CLASS%
+#PQPRTNUMOPT -P%PRTNUM%
+#PQHOLDOPT   -M hold
+#PQREQOPT    -M re
+#PQDELETELOCAL
+
+# The PQMANAGER option allows you to specify the command that gets 
+# run when the "Manage Print Queue" option is selected from the WISP 
+# Command Processor.
+# This example shows the UniQue print queue manager.
+#
+#PQMANAGER /usr/spool/uprint/unique -q -w
+#
 
 # WISP can use either the UNIQUE Batch Queue, another batch queue
 # product, or no batch queue product.
@@ -59,8 +135,11 @@
 ## Argent Queue Manager on Windows NT Options
 #BATCHQUEUE  AQM
 #BATCMAN     none
-#BATCHCMD    QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME% /PARAMS="%SUBPARAMS%" /LOG_FILE=%BATCHLOG% /USER=%BATCHUSER% /PASSWORD=%BATCHPASS% %SUBSTAT% /NONOTIFY
-#BATCHCMD95  REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% %BATCHCMD%
+#BATCHCMD    QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME% \
+ /PARAMS="%SUBPARAMS%" /LOG_FILE=%BATCHLOG% /USER=%BATCHUSER% \
+ /PASSWORD=%BATCHPASS% %SUBSTAT% /NONOTIFY
+#BATCHCMD95  REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% \
+ %BATCHCMD%
 #BATCHUSER   user
 #BATCHPASS   password
 #BATCHSERVER server
@@ -154,3 +233,87 @@
 #	AND READ" screens.
 #
 #NATIVECHARMAP
+
+# The MOUSENONMOD option instructs the runtime to allow you to 
+# mouse position to a non-modifiable position on the screen.  
+# Normally you can only position into a modifiable field or a tab-
+# stop.  This option is only meaningful when used with Co*STAR or
+# on Windows NT/95.
+#
+#MOUSENONMOD
+
+# The UTILSWINDOWS option instructs the runtime to run utilities 
+# (e.g. DISPLAY, VSEDIT, etc.) in separate windows.  This option is 
+# currently only meaningful on Windows NT/95 and will be ignored on
+# other systems.
+#
+UTILSWINDOWS
+
+# The DISPLAYUTIL option allows you to specify a substitute "DISPLAY"
+# utility.  The substitute display utility should be either on the
+# PATH or it should be specified as a fully qualified file path.  
+# This utility must accept a single command line argument which is
+# the name of the file to display.  This utility will be used when
+# a call "LINK" to "DISPLAY" is performed or when a "Display" option
+# is selected from "Manage Files and Libraries".  The substitute
+# display utility is expected to not issue getparms, the getparms 
+# will be issued by the runtime and translated into a filename 
+# before the utility is run.
+# On Windows NT/95 the Notepad utility makes a good substitute.
+#
+#DISPLAYUTIL notepad.exe
+
+# The COSTARV2 option instructs the runtime to use "Version 2" 
+# attribute mapping when Co*STAR for WISP is used.  The version 2 
+# attribute mapping perserves all of the Wang FAC atttributes 
+# including the UNDERLINE attribute which is not available in 
+# the original (version 1) attribute mapping.  With version 2
+# all "special" fields have the REVERSE attribute.  Protected 
+# fields are unchanged, and modifable fields have the REVERSE 
+# attribute added.  Hotspots are REVERSE+BLINK+UNDERLINE, and 
+# tabstops are REVERSE+BLINK.  Note that on the Wang, the BLINK 
+# attribute is actually BLINK+BOLD so the hotspot and tabstop
+# attributes will not conflict with any Wang attributes.
+# If you use the COSTARV2 option you will also need to use a
+# Co*STAR color scheme which is complatible (e.g. "w4w_v2").
+#
+#COSTARV2
+
+# The YYPIVOTYEAR options sets the pivot year for file sort 
+# keys of type "Y". These represent a two digit year (YY PIC 99) 
+# whose sort value is calculated based on YYPIVOTYEAR. 
+# As a example, if pivot year is 30 then YY has a value range
+# of 1931-2030. 
+#
+#YYPIVOTYEAR -1		(Default 1900 - 1999)
+#YYPIVOTYEAR 30		(1931 - 2030)
+
+# The DEBUGNOHIDE option is used on Windows NT/95 to tell the
+# CreateProcess logic (used by LINK and SUBMIT) to not HIDE 
+# any windows.  This is used only for DEBUG processing to see
+# what windows are being hidden.
+#
+#DEBUGNOHIDE
+
+# The KEEPWORKLIB option instructs the runtime to not delete
+# the WORKLIB directory as it normally does when exiting the 
+# highest link level. Use this option if you want to control 
+# when WORKLIB is deleted and do not want the runtime to do 
+# it automatically.
+#
+#KEEPWORKLIB
+
+# The CONSOLEACU option is used on WIN32 when using NT telnet support 
+# to instruct the runtime that the Acucobol RTS is a "Console" 
+# application instead of the default "Windows" application.  This will 
+# prevent window flashing on the CALL "LINK" when using the console 
+# runtime outside of telnet and without Co*STAR.
+#
+#CONSOLEACU
+
+# The VUTIL option allows you to specify a full path to the Acucobol
+# vutil utility. The runtime will first check the $VUTIL environment
+# variable.
+#
+#VUTIL /usr/local/acucobol/bin/vutil
+#VUTIL \\server\share\acucobol\bin\vutil32.exe

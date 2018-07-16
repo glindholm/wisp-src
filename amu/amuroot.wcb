@@ -117,12 +117,15 @@
 000001     03  ERR-FLAG                   PIC X(01).
 000001     03  PFK-BYTE                   PIC X(01).
 
-028400 01  WSA-DATE-AREA.
-028500     03  WSA-NDATE                  PIC 9(06).
-028600     03  WSA-ADATE REDEFINES WSA-NDATE.
+028400*01  WSA-DATE-AREA.
+028500*    03  WSA-NDATE.
+       01  DATE-CCYYMMDD.
+               05  DATE-CC                PIC X(02).
                05  DATE-YY                PIC X(02).
                05  DATE-MM                PIC X(02).
                05  DATE-DD                PIC X(02).
+       01  HG PIC XX VALUE "HG".
+       01  GD PIC XX VALUE "GD".
        01  FORMAT-DATE.
            03  FORMAT-DATE-1              PIC X(02).
            03  DATE-SEPARATOR-1           PIC X(01) VALUE "/".
@@ -130,10 +133,10 @@
            03  DATE-SEPARATOR-2           PIC X(01) VALUE "/".
            03  FORMAT-DATE-3              PIC X(02).
 
-       01  DATE-FUNC                      PIC X(02) VALUE "GD".
+      *01  DATE-GD                        PIC X(02) VALUE "GD".
        01  DAY-TEXT.
-           03  DAY-LEFT                   PIC X(09) VALUE SPACES.
-           03  DAY-RIGHT                  PIC X(09) VALUE SPACES.
+           03  DAY-LEFT                   PIC X(11) VALUE SPACES.
+           03  DAY-RIGHT                  PIC X(11) VALUE SPACES.
        01  DATE-RETURN-CODE.
            03  FILLER                     BINARY  VALUE 0.
            03  DATE-RC-2                  BINARY  VALUE 0.
@@ -521,7 +524,8 @@
 
        INITIALIZATION.
            ACCEPT WSA-NTIME FROM TIME. 
-           ACCEPT WSA-NDATE FROM DATE.
+      *    ACCEPT WSA-NDATE FROM DATE.
+           CALL "DATE2" USING HG, DATE-CCYYMMDD.
            MOVE "ID" TO EXT-FUNC-TYPE.
            CALL "EXTRACT" USING EXT-FUNC-TYPE, EXT-USER-ID.
            MOVE "NA" TO EXT-FUNC-TYPE.
@@ -532,7 +536,9 @@
            MOVE " Digital OpenVMS" TO SYSTEM-NAME.
            MOVE "Digital OpenVMS " TO SYSTEM-NAME-LEFT.
            MOVE " Digital OpenVMS" TO SYSTEM-NAME-RIGHT.
-           CALL "DATE" USING DATE-FUNC, WSA-NDATE, DAY-LEFT,
+      *    CALL "DATE" USING DATE-GD, WSA-NDATE, DAY-LEFT,
+      *                      DATE-RETURN-CODE.
+           CALL "DATE2" USING GD, DATE-CCYYMMDD, DAY-LEFT,
                              DATE-RETURN-CODE.
 
            MOVE TITLE-TOK-DEFINES TO TITLE-TOKEN-TABLE.
@@ -856,7 +862,8 @@
 
        PROCESS-MENU-OPTS-DEFINITION.
            ACCEPT WSA-NTIME FROM TIME.
-           ACCEPT WSA-NDATE FROM DATE.
+      *    ACCEPT WSA-NDATE FROM DATE.
+           CALL "DATE2" USING HG, DATE-CCYYMMDD.
            IF DATE-FORMAT = "MDY" THEN
                MOVE "-" TO DATE-SEPARATOR-1, DATE-SEPARATOR-2
                MOVE DATE-MM TO FORMAT-DATE-1

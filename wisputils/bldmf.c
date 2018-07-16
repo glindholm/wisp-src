@@ -53,7 +53,7 @@ static char rcsid[]="$Id:$";
 
 static char rcs_date[]		="$Date:$";
 static char rcs_revision[]	="$Revision:$";
-static char rcs_state[]		="$State: V4_2_00 $";
+static char rcs_state[]		="$State: V4_3_05 $";
 static char bldmf_version[80];
 
 /**************************************************************
@@ -82,8 +82,8 @@ char *my_strdup(char* str );
 int srch_fixed(char* string, char* substr );
 char *gmem(int size, int cnt);
 void add_node( LIST** listp, void* node );
-void sort_list( LIST* listp, int (*sortroutine)( void* s1, void* s2 ) );
-int compare_strs( void *s1, void *s2 );
+void sort_list( LIST* listp, int (*sortroutine)( const void* s1, const void* s2 ) );
+int compare_strs( const void *s1, const void *s2 );
 int list_size( LIST* listp );
 
 extern char *nextfile( char* path, char** context );
@@ -1349,7 +1349,7 @@ void *node;   /* data for new node */
 **      History:        06/11/92        Written by JEC
 **
 */
-void sort_list( LIST* listp, int (*sortroutine)( void* s1, void* s2 ) )
+void sort_list( LIST* listp, int (*sortroutine)( const void* s1, const void* s2 ) )
 {
   void **ptrs;
   char *gmem();
@@ -1412,7 +1412,7 @@ LIST *listp;
 **      History:        06/11/92        Written by JEC
 **
 */
-int compare_strs(void *s1, void *s2)
+int compare_strs(const void *s1, const void *s2)
 {
 	/*
 	**	s1 and s2 are actually (char **)
@@ -1443,6 +1443,9 @@ make_version()
 /*
 **	History:
 **	$Log: bldmf.c,v $
+**	Revision 1.15  1998-10-13 15:05:08-04  gsl
+**	Fix sub arg to qsort)
+**
 **	Revision 1.14  1997-06-02 09:18:27-04  gsl
 **	Fix usage message
 **

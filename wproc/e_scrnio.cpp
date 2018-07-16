@@ -1,4 +1,11 @@
-// Copyright (c) Lexical Software, 1991.  All rights reserved.
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//// Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : e_scrnio.cpp
 // Author : George Soules
@@ -763,3 +770,57 @@ void machine::exec_screen() {
          assert(UNREACHABLE);
    }
 }
+
+//
+//	History:
+//	$Log: e_scrnio.cpp,v $
+//	Revision 1.8  1998-08-31 15:13:43-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/e_scrnio.cpp,v
+//	Working file: e_scrnio.cpp
+//	head: 1.7
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 7;	selected revisions: 7
+//	description:
+//	----------------------------
+//	revision 1.7
+//	date: 1997-05-08 14:59:55-04;  author: gsl;  state: V4_3_00;  lines: +11 -2
+//	FIxed MESSAGE so that if in background it does not attempt to display
+//	----------------------------
+//	revision 1.6
+//	date: 1996-07-25 14:14:52-04;  author: gsl;  state: V3_9_92;  lines: +0 -0
+//	Renamed from e_scrnio.cc to e_scrnio.cpp
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 10:47:44-04;  author: gsl;  state: V3_3_19;  lines: +2 -2
+//	fix warning
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 05:59:51-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:09-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:32:47-05;  author: gsl;  state: V3_3x12;  lines: +26 -29
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:05-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

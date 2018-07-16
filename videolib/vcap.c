@@ -1,11 +1,6 @@
 static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	     VIDEO - Video Interactive Development Environment		*/
-			/*			Copyright (c) 1987-1993				*/
-			/*	An unpublished work by International Digital Scientific Inc.	*/
-			/*			  All rights reserved.				*/
-			/************************************************************************/
+
 /*
 **	File:		vcap.c
 **
@@ -37,7 +32,6 @@ static char rcsid[]="$Id:$";
 
 #ifdef unix
 #include <signal.h>
-#define vline vline_curses
 #include <curses.h>
 #undef vline
 #include <term.h>
@@ -1536,7 +1530,7 @@ VC_META_NODE
 	VC_META_NODE **next;
 };
 
-int vgetmeta(VC_META_NODE **node, int size);
+static int vgetmeta(VC_META_NODE **node, int size);
 
 
 #define HASHPOINT 5
@@ -1642,8 +1636,8 @@ char *regcmp();
 #endif
 #endif
 
-static int pop();
-static int push();
+static int pop(void);
+static int push(int ch);
 static char *gmem();
 static void vc_add_key();
 static int nextfield();
@@ -2800,7 +2794,7 @@ int vgetm()											/* get a key, meta or normal */
 }
 
 /* recursively called func to traverse the vc_meta tree starting point for current level */
-int vgetmeta(VC_META_NODE **node, int size)
+static int vgetmeta(VC_META_NODE **node, int size)
 {
         char vgetc();
 	int ch,ret;
@@ -2850,7 +2844,7 @@ int vgetmeta(VC_META_NODE **node, int size)
 		push(ch);
 	return ret;
 }
-static int pop()
+static int pop(void)
 {
 	if (cstackp>=0)
 	{
@@ -3304,13 +3298,6 @@ static int vcloadterminfo()
 	}
 }
 
-
-/*  Need to prototype tgetstr() because not prototyped in curses.h for AIX */
-
-#ifdef AIX
-extern char * tgetstr(char *ID, char **Area);
-#endif
-
 static void set_terminfo_key(char *id, int index, char *value)
 {
 	char *ptr;
@@ -3664,6 +3651,12 @@ getch()
 /*
 **	History:
 **	$Log: vcap.c,v $
+**	Revision 1.36  1999-02-17 15:56:36-05  gsl
+**	make vgetmeta() a static routine.
+**
+**	Revision 1.35  1999-01-19 10:25:33-05  gsl
+**	Fix the curses vline problem for AIX
+**
 **	Revision 1.34  1997-09-25 10:31:52-04  scass
 **	Added fix for vline defined in curses conflicting with
 **	video's vline().  Needed for DG-UX Intel port.

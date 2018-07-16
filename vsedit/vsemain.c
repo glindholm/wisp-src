@@ -221,7 +221,7 @@ static char applname[9]="VSEDIT  ";
 main(int argc,char **argv)
 {
 			   /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
-	strcpy(VSE_COPYRIGHT,"(c) 1994-1997 NeoMedia - VSEDIT Integrated Program Development Editor - v 2.13");
+	strcpy(VSE_COPYRIGHT,"(c) 1994-1998 NeoMedia - VSEDIT Integrated Program Development Editor - v 2.13");
 
 	wpload();
 	vsedit_globals();
@@ -494,6 +494,10 @@ int is_read_only(void)
 /*
 **	History:
 **	$Log: vsemain.c,v $
+**	Revision 1.22  1998-09-09 11:38:16-04  gsl
+**	fix the copyright
+**	,'
+**
 **	Revision 1.21  1997-12-19 15:36:49-05  gsl
 **	Fix copyright
 **	change version to 2.13

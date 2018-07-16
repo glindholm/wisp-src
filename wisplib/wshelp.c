@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wshelp.c
@@ -34,6 +34,7 @@ static char rcsid[]="$Id:$";
 #ifdef unix
 #include <signal.h>
 #include <unistd.h>
+#include <sys/wait.h>
 static int wsh_prtque();
 #endif
 
@@ -50,7 +51,6 @@ static int wsh_prtque();
 #include "vlocal.h"									/* Include video definitions.		*/
 #include "vdata.h"
 #include "vcap.h"									/* Include video key definitions.	*/
-#include "vchinese.h"
 
 #include "idsistd.h"
 #include "wcommon.h"									/* Include COMMON defines		*/
@@ -77,12 +77,21 @@ static int wsh_prtque();
 #include "submit.h"
 #include "wsb.h"
 #include "screen.h"
+#include "cobscrn.h"
+#include "wfiledis.h"
 
 /*
 **	Structures and Defines
 */
 
 #define ROUTINE		86000
+
+#ifndef WEXITSTATUS
+#define WIFEXITED(x)    ( !((x) & 0xff) )
+/* evaluates to the low-order 8 bits of the child exit status   */
+#define WEXITSTATUS(x)  (int)(WIFEXITED(x) ? (((x) >> 8) & 0xff) : -1)
+/* evaluates to a non-zero value if status returned for abnormal termination */
+#endif
 
 /*
 **	Globals and Externals
@@ -97,13 +106,14 @@ int noprogscrn = 0;									/* No program screen flag.		*/
 */
 
 static int	wang_style=1;
-static int	g_prog_running;
+static int	g_prog_running=0;
 static int	g_savelevel;
 static char	run_complete_message[80];
 
 /*
 **	Function Prototypes
 */
+extern int wsystem_interactive(const char *cmd);
 
 static void wsh_terminal(void); 							/* Get a terminal menu selection.	*/
 static void wsh_setpsb(void);								/* Change pseudo blank characteristics.	*/
@@ -117,7 +127,8 @@ static void wsh_show_charset(void);
 static void wsh_queuemgmnt(void);
 static void wsh_submit(void);
 static void wsh_usewrite(void);
-static void wsh_devices(void);
+static const char* sysadmin_cmd(void);
+static void wsh_sysadmin(void);
 static void wsh_run_program(char *program);						/* Run a program.			*/
 static void wsh_utils(void); 								/* Select utilities.			*/
 static void wsh_extras(void);
@@ -168,23 +179,8 @@ static void wsh_command(void)
 }
 
 static void wsh_manage_files(void)	
-{ 
-#ifdef unix
-	/* This is temporary until mngfile() is converted to nativescreens() */
-	if (nativescreens())
-	{
-		vwang_stty_save();
-	}
-#endif
-	
+{ 	
 	mngfile(); 
-
-#ifdef unix
-	if (nativescreens())
-	{
-		vwang_stty_restore();
-	}
-#endif
 }
 
 /*
@@ -192,6 +188,9 @@ static void wsh_manage_files(void)
 */
 void WISPHELP(void)
 {
+	wisp_progname[0] = '\0';
+	wisp_screen[0] = '\0';
+	
 	wsh_help(1);
 }
 
@@ -211,60 +210,6 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 	int	i;
 #define HELP_UTILS	(HELP_EDIT|HELP_DISPRINT|HELP_CRID)
 
-#ifdef NOT_YET
-	struct 
-	{
-		int	col;	/* Relative column 0-1 */
-		int	row;	/* Relative rows   1-8 */
-		int	pfkey;  /* Pfkey number 1-32 */
-		int	dflag;
-		char	*str1;
-		char	*str2;
-		void	(*func)(void);
-	} help_func_table[] = 
-	{
-		0, 1, 1,  -1, 			"RUN program or procedure",	"Run a program",	wsh_run_prog_prompt,
-		0, 1, 1,  -1, 			"CONTINUE Processing",		"Resume Processing",	NULL,
-		0, 2, 2,  HELP_SET_FILES,	"SET File Usage Constants",	"Volume and Library Defaults", wsh_usage_file,
-		0, 3, 3,  HELP_SET_PRINTER,	"SET Print Mode Defaults",	"Print parameter Defaults",    wsh_usage_print,
-		0, 4, 4,  HELP_SET_PROC,	"SET Submit Procedure Defaults","Submit parameter Defaults",   wsh_usage_submit,
-#ifndef VMS
-		0, 5, 5,  HELP_MANAGE_FILES_LIBS,"Manage FILES/LIBRARIES",	"Manage Files",		wsh_manage_files,
-#endif
-#ifdef AIX
-		0, 6, 6,  HELP_MANAGE_SYSTEM,	"Manage SYSTEM",		"SMIT",			wsh_devices,
-#endif
-#ifdef VMS
-		0, 7, 7,  HELP_QUEUE_MNGMNT,	"Manage QUEUES",		"Queue Management",	wsh_queuemgmnt,
-#endif
-#ifdef unix
-		0, 7, 7,  HELP_QUEUE_MNGMNT,	"Manage QUEUES",		"Queues",	wsh_queuemgmnt,
-		0, 7, 7,  HELP_QUEUE_MNGMNT,	"Manage PRINT QUEUE",		"Print Queue",	wsh_queue_print,
-		0, 7, 7,  HELP_QUEUE_MNGMNT,	"Manage BATCH QUEUE",		"Batch Queue",	wsh_queue_batch,
-#endif
-		0, 8, 8,  -1,			"Display Error Log",		"Display Error Log",	wsh_display_errlog,
-		1, 1, 9,  HELP_UTILS,		"Use UTILITIES",		"Utilities",		wsh_utils,
-		1, 1, 9,  HELP_DISPLAY,		"Use DISPLAY",			"DISPLAY utility",	wsh_utils,
-		1, 2, 10, HELP_TERMINAL,	"Configure TERMINAL",		"Terminal characteristics",	wsh_terminal,
-#ifdef VMS
-		1, 3, 11, HELP_COMMANDS,	"Enter COMMANDS",		"Enter DCL commands",	wsh_dcl,	
-#endif
-#ifdef unix
-		1, 3, 11, HELP_COMMANDS,	"Enter COMMANDS",		"Enter UNIX commands",	wsh_shell,
-#endif
-#ifdef MSDOS
-		1, 3, 11, HELP_COMMANDS,	"Enter COMMANDS",		"Enter MS-DOS commands",wsh_dos,	
-#endif
-		1, 4, 12, HELP_SUBMIT,		"SUBMIT procedure",		"SUBMIT procedure",	wsh_submit,
-		1, 5, 13, HELP_USAGE_WRITE,	"SAVE environment",		"Write usage constants",wsh_usewrite,
-		1, 6, 14, HELP_PRINT_SCREEN,	"PRINT PROGRAM screen",		"Print program screen",	wsh_print_prog_screen,
-		1, 7, 15, HELP_PRINT_SCREEN,	"PRINT COMMAND screen",		"Print command screen",	wsh_print_cmd_screen,
-		1, 8, 16, -1,			"EXIT program",			"Exit HELP processor",	NULL,
-		1, 8, 16, -1,  			"CANCEL Processing",		"CANCEL Processing",	NULL,
-
-		-1, -1, -1, -1, NULL, NULL, NULL
-	};
-#endif /* NOT_YET */
 	
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -364,27 +309,18 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			{
 				if (wisp_screen[0] && wisp_screen[0] != ' ')		/* We also know the screen name		*/
 				{
-					if (outctx)
-					  sprintf(temp, " Active program: %s    Screen: %s ", wisp_progname, wisp_screen);
-					else
-					  sprintf(temp, "[Active program: %s    Screen: %s]", wisp_progname, wisp_screen);
+					sprintf(temp, "[Active program: %s    Screen: %s]", wisp_progname, wisp_screen);
 				}
 				else
 				{
-					if (outctx)
-					  sprintf(temp, " Active program: %s ", wisp_progname);
-					else
-					  sprintf(temp, "[Active program: %s]", wisp_progname);
+					sprintf(temp, "[Active program: %s]", wisp_progname);
 				}
 			}
 			else
 			{
 				if (WISPRUNNAME[0] != ' ')
 				{
-					if (outctx)
-					  sprintf(temp," Active program: %8.8s ",WISPRUNNAME);
-					else
-					  sprintf(temp,"[Active program: %8.8s]",WISPRUNNAME);
+					sprintf(temp,"[Active program: %8.8s]",WISPRUNNAME);
 				}
 				else
 				{
@@ -415,8 +351,8 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 	else
 	{
 		row = 12;
-		col1 = 10;
-		col2 = 50;
+		col1 = 5;
+		col2 = 45;
 	}
 
 	for(i=0; i<=33; i++)
@@ -462,10 +398,13 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 
 		if (dflags & HELP_QUEUE_MNGMNT)
 		{
-#if defined(unix) || defined(VMS)
-#ifdef unix
-			if (opt_idsiprint || opt_batchman)
+#ifdef VMS
+			wsb_add_text(hWsb, row+3,  col1, "(4) Manage QUEUES");
+			strcat(allowed_pfkeys,"04");
+			func_vector[4] = wsh_queuemgmnt;
 #endif
+#ifdef unix
+			if (opt_printqueue_manager || opt_batchman)
 			{
 				wsb_add_text(hWsb, row+3,  col1, "(4) Manage QUEUES");
 				strcat(allowed_pfkeys,"04");
@@ -484,11 +423,12 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		}
 		if (dflags & HELP_MANAGE_SYSTEM)
 		{
-#ifdef AIX
-			wsb_add_text(hWsb, row+5, col1, "(6) Manage SYSTEM");
-			strcat(allowed_pfkeys, "06");
-			func_vector[6] = wsh_devices;
-#endif
+			if (sysadmin_cmd())
+			{
+				wsb_add_text(hWsb, row+5, col1, "(6) Manage SYSTEM");
+				strcat(allowed_pfkeys, "06");
+				func_vector[6] = wsh_sysadmin;
+			}
 		}
 
 		if ((dflags & HELP_EDIT) || (dflags & HELP_DISPRINT) || (dflags & HELP_CRID) || (dflags & HELP_DISPLAY))
@@ -571,11 +511,12 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		}
 		if (dflags & HELP_MANAGE_SYSTEM)
 		{
-#ifdef AIX
-			wsb_add_text(hWsb, row+5, col1, "(6) Manage SYSTEM");
-			strcat(allowed_pfkeys, "06");
-			func_vector[6] = wsh_devices;
-#endif
+			if (sysadmin_cmd())
+			{
+				wsb_add_text(hWsb, row+5, col1, "(6) Manage SYSTEM");
+				strcat(allowed_pfkeys, "06");
+				func_vector[6] = wsh_sysadmin;
+			}
 		}
 
 		if (dflags & HELP_QUEUE_MNGMNT)
@@ -586,13 +527,13 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[7] = wsh_queuemgmnt;
 #endif
 #ifdef unix
-			if (opt_idsiprint && opt_batchman)
+			if (opt_printqueue_manager && opt_batchman)
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage QUEUES");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queuemgmnt;
 			}
-			else if (opt_idsiprint)
+			else if (opt_printqueue_manager)
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage PRINT QUEUE");
 				strcat(allowed_pfkeys,"07");
@@ -710,11 +651,12 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 
 		if (dflags & HELP_MANAGE_SYSTEM)
 		{
-#ifdef AIX
-			wsb_add_menu_item(hWsb, row+5, col1, 6, "SMIT");
-			strcat(allowed_pfkeys, "06");
-			func_vector[6] = wsh_devices;
-#endif
+			if (sysadmin_cmd())
+			{
+				wsb_add_menu_item(hWsb, row+5, col1, 6, "System Admin");
+				strcat(allowed_pfkeys, "06");
+				func_vector[6] = wsh_sysadmin;
+			}
 		}
 
 		if (dflags & HELP_QUEUE_MNGMNT)
@@ -725,13 +667,13 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[7] = wsh_queuemgmnt;
 #endif
 #ifdef unix
-			if (opt_idsiprint && opt_batchman)
+			if (opt_printqueue_manager && opt_batchman)
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Queues");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queuemgmnt;
 			}
-			else if (opt_idsiprint)
+			else if (opt_printqueue_manager)
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Print Queue");
 				strcat(allowed_pfkeys,"07");
@@ -857,6 +799,7 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 
 			vwang_timeout(30);						/* Set the timer (30 secs).		*/
 
+			no_mod[0] = no_mod[1] = ' ';
 			lines = WSB_ROWS;						/* Use full screen.			*/
 			function = DISPLAY_AND_READ;					/* Use DISPLAY_AND_READ.		*/
 			vwang(&function,scrn,&lines,allowed_pfkeys,term,no_mod);	/* Call Wang emulation to fill screen.	*/
@@ -951,7 +894,7 @@ static void wsh_terminal(void) 								/* Get a terminal menu selection.	*/
 	}
 	else
 	{
-		col = 8;
+		col = 5;
 
 		wsb_build_non_wang_base(hWsb);
 		wsb_add_menu_item(hWsb, 11, col, 1, "Return to MAIN HELP menu");
@@ -1122,6 +1065,7 @@ static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 	wput(screen,5,40,FAC_DEFAULT_FIELD,pb_select);					/* Print correct char set from choices.	*/
 	wput(screen, 6,40,FAC_DEFAULT_FIELD,pb_rend);					/* Print correct rendition from choices.*/
 
+	no_mod[0] = no_mod[1] = ' ';
 	function = WRITE_ALL;								/* Use display full screen function.	*/
 	lines = WSB_ROWS;
 	vwang(&function,screen,&lines,"0001X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
@@ -1145,6 +1089,7 @@ static void wsh_setpsb(void)								/* Change pseudo blank characteristics.	*/
 
 	for(;;)										/* Repeat until data input is valid.	*/
 	{
+		no_mod[0] = no_mod[1] = ' ';
 		vwang(&function,screen,&lines,"000115X",term,no_mod);			/* Call Wang emulation to fill screen.	*/
 		function = DISPLAY_AND_READ_ALTERED;					/* Set up for second time thru loop	*/
 
@@ -1642,19 +1587,13 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	curcol = 0;
 	hWsb = wsb_new();
 
+	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
-	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1988-1997  NeoMedia Technologies Incorporated");
+	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-1999  NeoMedia Technologies Incorporated");
 	wsb_add_text(hWsb, 6, 0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
-	if (outctx)
-	{
-		sprintf(buff,"Version=%s  Library=%d  Screen=%d  ",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
-	}
-	else
-	{
-		sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
-	}
+	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
 	wsb_add_text(hWsb, 22, 0,buff);
 
 	whatplat(platname,platcode);
@@ -2311,6 +2250,7 @@ static void wsh_queuemgmnt(void)
 	HWSB	hWsb;
 	int	pfkey, currow, curcol;
 	char 	okkeys[81];
+	int	col;
 
 	currow = 0;
 	curcol = 0;
@@ -2320,31 +2260,35 @@ static void wsh_queuemgmnt(void)
 	
 	if (wang_style)
 	{
+		col = 21;
+		
 		wsb_add_text(hWsb,  1,  0, "***  Manage Queues  ***");
 		wsb_add_text(hWsb, 24,  0, "Press (HELP) to return to the command processor, (1) to exit.");
 		strcat(okkeys,"01");
 	}
 	else
 	{
+		col = 5;
+
 		wsb_build_non_wang_base(hWsb);
-		wsb_add_menu_item(hWsb, 12, 10, 1, "Return to MAIN HELP menu");
+		wsb_add_menu_item(hWsb, 12, col, 1, "Return to MAIN HELP menu");
 	}
 
-	if (opt_idsiprint)
+	if (opt_printqueue_manager)
 	{
 		if (wang_style)
-			wsb_add_text(hWsb,  9, 21, "(2) Manage Print Queue.");
+			wsb_add_text(hWsb,  9, col, "(2) Manage Print Queue.");
 		else
-			wsb_add_menu_item(hWsb, 13, 10, 2, "Manage Print Queue");
+			wsb_add_menu_item(hWsb, 13, col, 2, "Manage Print Queue");
 		strcat(okkeys,"02");
 	}
 	
 	if (opt_batchman)
 	{
 		if (wang_style)
-			wsb_add_text(hWsb, 11, 21, "(3) Manage Batch Queue.");
+			wsb_add_text(hWsb, 11, col, "(3) Manage Batch Queue.");
 		else
-			wsb_add_menu_item(hWsb, 14, 10, 3, "Manage Batch Queue");
+			wsb_add_menu_item(hWsb, 14, col, 3, "Manage Batch Queue");
 		strcat(okkeys,"03");
 	}
 
@@ -2386,93 +2330,55 @@ static void wsh_queuemgmnt(void)
 #ifdef unix
 static void wsh_uqueue(int type)
 {
-	int	pid, rc;
-	char	*sh_ptr, *qtype;
-	char 	*queue_cmd;
-	int 	st;
+	int	rc;
+	const char *qtype;
+	const char *queue_cmd;
 	char	errbuff[1024];
+	int 	st, pid;
+
+	errno = 0;
 	
-	sh_ptr = wispshellexe();
-
-	wpushscr();
-	vwang_shut();
-	signal(SIGCLD,  SIG_DFL);						/* Use Default DEATH-OF-CHILD signal	*/
-
 	if (type==1)
 	{
-		queue_cmd = getenv("UNIQUE_MAN");
-		qtype="Print Queue Daemon";
-		if (queue_cmd==NULL)
+		queue_cmd = opt_printqueue_manager;
+		qtype="Print Queue Manager";
+
+		if (NULL == queue_cmd)
 		{
-			if (opt_pqunique)
-			{
-				queue_cmd="unique";
-				qtype = "UniQue Print Queue Daemon";
-			}
-			else
-			{
-				queue_cmd="ilpman";
-				qtype = "IDSI Print Queue Daemon  ";
-			}
+			werr_message_box("Print Queue Manager program has not been defined.");
+			return;
 		}
-		switch(pid=fork())
-		{
-			case 0:
-			{	
-				st = execlp(queue_cmd,queue_cmd,"-q","-w",(char *)0);
-				exit(9);
-				break;
-			}
-			default:
-			{
-				wwaitpid(pid,&rc);
-				break;
-			}
-		}
+
+		rc = wsystem_interactive(queue_cmd);
+		
 	}
 	else 
 	{
-		qtype = "UniQue Batch Queue Daemon";
-		queue_cmd= getenv("BATCH_MAN");
-		if (queue_cmd==NULL)
+		qtype = "Batch Queue Manager";
+		queue_cmd = batchman_name;
+
+		if (NULL == queue_cmd)
 		{
-			queue_cmd = batchman_name;
+			werr_message_box("Batch Queue Manager program has not been defined.");
+			return;
 		}
-		switch(pid=fork())
-		{
-			case 0:
-			{	
-				st = execlp(queue_cmd,queue_cmd,(char *)0);
-				exit(9);
-				break;
-			}
-			default:
-			{
-				wwaitpid(pid,&rc);
-				break;
-			}
-		}
-		
+
+		rc = wsystem_interactive(queue_cmd);
+
 	}
-	signal(SIGCLD,  SIG_IGN);					/* Ignore DEATH-OF-CHILD signal			*/
-	vwang_init_term();						/* Initialize the terminal			*/
-	wpopscr();
 
 	if (rc)
 	{
-		switch(rc)
+		switch(WEXITSTATUS(rc))
 		{	
 		      case 1:
-			sprintf(errbuff,"%s not running.\nContact system administrator",qtype);
-			werr_message_box(errbuff);
-			break;
-		      case 9:
-			sprintf(errbuff,"Cannot find the queue management program \"%s\".\nContact system administrator",
-				queue_cmd);
+			sprintf(errbuff,"%s could not be run. [cmd=\"%s\", exit=%d, rc=%d]",qtype, queue_cmd, 
+				WEXITSTATUS(rc), rc);
 			werr_message_box(errbuff);
 			break;
 		      default:
-			sprintf(errbuff,"Error code %d when trying to run \"%s\".\nContact system administrator",rc,queue_cmd);
+			sprintf(errbuff,"%s command \"%s\" exited with exit code=%d, rc=%d, errno=%d",
+				qtype, queue_cmd, WEXITSTATUS(rc), rc, errno);
 			werr_message_box(errbuff);
 			break;
 		}
@@ -2482,37 +2388,8 @@ static void wsh_uqueue(int type)
 #ifdef unix
 static void wsh_shell(void)								/* Issue unix shell commands.		*/
 {
-	int	pid, rc;
-	char	*sh_ptr;
+	wsystem_interactive(wispshellexe());
 
-	if (g_prog_running) newlevel();							/* Extra link-level			*/
-
-	sh_ptr = wispshellexe();
-
-	wpushscr();
-	vwang_shut();
-	signal(SIGCLD,  SIG_DFL);							/* Use Default DEATH-OF-CHILD signal	*/
-
-	switch(pid=fork())
-	{
-		case 0:
-		{	
-			newlevel();							/* Increment the link-level for shell	*/
-			execlp(sh_ptr,sh_ptr,(char *)0);
-			break;
-		}
-		default:
-		{
-			wwaitpid(pid,&rc);
-			break;
-		}
-	}
-
-	signal(SIGCLD,  SIG_IGN);							/* Ignore DEATH-OF-CHILD signal		*/
-	vwang_init_term();								/* Initialize the terminal		*/
-	wpopscr();
-
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
 	setlevel(g_savelevel);								/* Restore the link-level		*/
 }
 #endif	/* unix */
@@ -2916,7 +2793,7 @@ static void wsh_usewrite(void)
 	hWsb = wsb_new();
 											/* Init destination file name to spaces.*/
 	wisp_defaults_path(buff);
-	loadpad(dst,buff,sizeof(dst)-1);
+	cstr2cobx(dst,buff,sizeof(dst)-1);
 	dst[sizeof(dst)-1] = '\0';
 
 	wsb_add_text(hWsb, 1, 0, "*** Write Usage Constants ***");
@@ -3003,19 +2880,45 @@ int wget(char *screen, int row, int col, char *text)					/* Retreive text from s
 	return(SUCCESS);								/* Tout finis.				*/
 }
 
-static void wsh_devices(void)
+static const char* sysadmin_cmd(void)
 {
+	static char cmd[80];
+	static const char *rc = NULL;
+       	static int first = 1;
+	
+	if (first)
+	{
+		first = 0;
+
+		rc = getenv("WISPSYSADMIN");
+		if (!rc || '\0' == *rc || ' ' == *rc)
+		{
+			rc = NULL;
 #ifdef AIX
-	wpushscr();
-	vwang_shut();
-
-	wsystem("smit -C");
-
-	vwang_init_term();								/* Initialize the terminal		*/
-	wpopscr();
-#else
-	werr_message_box("Sorry, this feature is not available on the system on which you are running.");
+			rc = "smit -C";
 #endif
+		}
+		else
+		{
+			strcpy(cmd,rc);
+			rc = cmd;
+		}
+	}
+	return rc;
+}
+
+static void wsh_sysadmin(void)
+{
+	const char *cmd;
+
+	if (cmd = sysadmin_cmd())
+	{
+		wsystem_interactive(cmd);
+	}
+	else
+	{
+		werr_message_box("Sorry, this feature is not available.");
+	}
 }
 
 static void wsh_run_program(char *program)						/* Run a program.			*/
@@ -3289,7 +3192,8 @@ static void wsh_submit(void)
 
 		if (memcmp(l_file,"        ",SIZEOF_FILE) == 0)
 		{
-			wsb_add_field(hWsb, 2,  2, FAC_PROT_BLINK, errptr="FILE MUST BE SPECIFIED" , strlen(errptr));
+			errptr="FILE MUST BE SPECIFIED";
+			wsb_add_field(hWsb, 2,  2, FAC_PROT_BLINK, errptr , strlen(errptr));
 			currow = 7;
 			curcol = 20;
 		}
@@ -3314,7 +3218,8 @@ static void wsh_submit(void)
 				sprintf(errmess,"RC = %ld %s", (long)retcode, submit_err(retcode));
 
 				/* If still looping then Write out error message */
-				wsb_add_field(hWsb, 2,  2, FAC_PROT_BLINK, errptr="SUBMIT FAILED -",strlen(errptr));
+				errptr="SUBMIT FAILED -";
+				wsb_add_field(hWsb, 2,  2, FAC_PROT_BLINK, errptr,strlen(errptr));
 				wsb_add_field(hWsb, 3,  5, FAC_PROT_BLINK, errmess, strlen(errmess));
 
 				currow = 0;
@@ -3351,7 +3256,7 @@ static void wsh_utils(void) 								/* Select utilities.			*/
 	}
 	else
 	{
-		col = 10;
+		col = 5;
 		
 		wsb_build_non_wang_base(hWsb);
 		wsb_add_menu_item(hWsb, 12, col, 1, "Return to MAIN HELP menu");
@@ -3490,7 +3395,7 @@ static void wsh_extras(void)
 	else
 	{
 		row = 12;
-		col = 8;
+		col = 5;
 	}
 	
 	if (!wang_style)
@@ -3880,8 +3785,155 @@ int sethelpactive(int flag)
 }
 
 /*
+**	ROUTINE:	wsystem_interactive()
+**
+**	FUNCTION:	Issue an interactive "system()" and handle screen setup.
+**
+**	DESCRIPTION:	For native screens we clear the screen and shutdown the
+**			screen handler.
+**			For WISP screens we push the screen then shutdown vwang.
+**
+**	ARGUMENTS:	The shell command to run.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		The "wstat" return code for the system() routine.
+**
+**	WARNINGS:	This is only meant to be called from HELP screen.
+**
+*/
+int wsystem_interactive(const char *cmd)
+{
+	int	rc;
+	int	old_stderr = -1;
+
+#ifdef WIN32
+	if (utils_in_windows())
+	{
+		extern int wsystem_standalone(const char* cmd);
+		
+		return wsystem_standalone(cmd);
+	}
+#endif
+
+	if (g_prog_running) newlevel();							/* Extra link-level			*/
+	newlevel();
+	
+	if (nativescreens())
+	{
+		HWSB hWsb;
+		int	pfkey ;
+		int 	currow = 0;
+		int	curcol = 0;
+		
+		/*
+		**	Clear the screen
+		*/
+		hWsb = wsb_new();
+		wsb_display_and_read(hWsb, NULL, &pfkey, &currow, &curcol);
+		wsb_delete(hWsb);
+		
+		shutdown_cobol_screen_handler();
+	}
+	else
+	{
+		wpushscr();
+		
+		vwang_shut();
+
+#ifdef unix
+		vwang_stty_sane();
+#endif
+	}
+	
+#ifdef unix
+	/*
+	 * If stderr is redirected to a file then a spawned shell doesn't display prompts.
+	 */
+	if (0==isatty(fileno(stderr)) && 1==isatty(fileno(stdout)))
+	{
+		/*
+		 * If stderr is not a tty but stdout is then dup stderr and reassign
+		 * the stderr to stdout.
+		 */
+		old_stderr = dup(fileno(stderr));
+		if (-1 != old_stderr)
+		{
+			dup2(fileno(stdout),fileno(stderr));
+		}
+	}
+#endif
+
+	rc = wsystem(cmd);
+	
+#ifdef unix
+	if (-1 != old_stderr)
+	{
+		dup2(old_stderr,fileno(stderr)); /* put stderr back */
+	}
+#endif
+
+	if (nativescreens())
+	{
+		start_cobol_screen_handler();
+	}
+	else
+	{
+		vwang_synch();
+		vwang_set_reinitialize(TRUE);
+
+		vwang_init_term();
+		wpopscr();
+	}
+
+	oldlevel();
+	ppunlink(linklevel());
+	if (g_prog_running) oldlevel();							/* Restore the extra link-level		*/
+
+	return rc;
+}
+
+
+/*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.72  1999-09-13 15:56:53-04  gsl
+**	update copyrights
+**
+**	Revision 1.71  1999-05-20 14:23:03-04  gsl
+**	On unix, in wsystem_interactive() if stderr is not a tty and stdout is
+**	then stderr gets reassigned to be stdout.
+**	This is needed because acucobol +e option redirects stderr to a file
+**	and when you spawn a shell the shell checks if stderr is a tty and if
+**	not it doesn't display the prompts.
+**	So, it doing an interactive wsystem() we attempt to make stderr a tty.
+**
+**	Revision 1.70  1998-10-22 17:16:35-04  gsl
+**	Clean up the print and batch queue manager program logic
+**
+**	Revision 1.69  1998-08-03 17:24:38-04  jlima
+**	Support Logical Volume Translation to long file names containing eventual embedded blanks.
+**
+**	Revision 1.68  1998-07-09 16:21:51-04  gsl
+**	initialize the no_mod arg to vwang()
+**
+**	Revision 1.67  1998-05-05 13:20:45-04  gsl
+**	Add utils_in_windows() support for WIN32
+**
+**	Revision 1.66  1998-04-22 15:51:53-04  gsl
+**	fix warndings
+**
+**	Revision 1.65  1998-04-03 13:51:10-05  gsl
+**	CLear the programa and screen name in WISPHELP.
+**
+**	Revision 1.64  1998-03-16 14:32:30-05  gsl
+**	Fix for NT
+**
+**	Revision 1.63  1998-03-16 13:57:13-05  gsl
+**	Finish Native Screen handling.
+**	Add wsystem_interactive() for running the shell, and unique etc.
+**	Add WISPSYSADMIN for the Manage SYSTEM selection
+**
 **	Revision 1.62  1998-01-14 09:26:27-05  gsl
 **	Remove the "PROCESSING" message in the run_program routine,
 **	it was not needed and caused the screen to flash.

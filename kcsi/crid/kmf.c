@@ -41,7 +41,7 @@ extern void wargs(int4 count);
 **      Function Prototypes
 */
 static FCD* set_mfio(KFB* kfb);
-static void call_ixfile(int io, KFB* kfb);
+static void call_ixfile(int io_op_type, int io, KFB* kfb);
 static void do_open(KFB* kfb, int mode);
 static FCD* fcd_new();
 static char* mfkblock_new();
@@ -66,6 +66,7 @@ static void do_start(KFB* kfb, int mode);
 **      Description:
 **
 **      Arguments:
+**      io_op_type      Indicates the IO type - normal or special
 **      io		Operation code to direct ExtFH to perform
 **	kfb		Current file KCSIO_BLOCK
 **
@@ -79,19 +80,26 @@ static void do_start(KFB* kfb, int mode);
 **      08/01/97        Written by MoB
 **
 */
-static void call_ixfile(int io, KFB* kfb)
+static void call_ixfile(int io_op_type, int io, KFB* kfb)
 {
 	FCD* user_fcd;
 	char op_code[2];
 	char*   parms[5];
-
+	static int first = 1;
+	
+	if (first)
+	{
+		cobinit();
+		first = 0;
+	}
+	
 	kcsitrace(1, "call_ixfile()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	op_code[0] = NORMAL_COBOL_IO;
+	op_code[0] = io_op_type;
 	op_code[1] = io;
 	kcsitrace(2, "call_ixfile()", "info", "Call ExtFH: op code = [%x], filename = [%s]", io,kfb->_sys_name);
-	COBEXTFH( op_code, user_fcd, kfb->_record, kfb->_sys_name, kfb->_mfkblock );
+	KCSEXTFH( op_code, user_fcd, kfb->_record, kfb->_sys_name, kfb->_mfkblock );
 	if ( strncmp(user_fcd->status,"00",2) )
 	{
 		kcsitrace(2, "call_ixfile()", "info", "File Status set: status key1 = [%x], key2 = [%x]",
@@ -378,7 +386,7 @@ static void do_open(KFB* kfb, int mode)
 	user_fcd = (FCD*) kfb->_fcd;
 	user_fcd->access_mode |= MF_DYNAMIC_ACCESS;
 
-	call_ixfile(mode, kfb);
+	call_ixfile(NORMAL_COBOL_IO, mode, kfb);
 	kfb->_open_status = 1;
 }
 
@@ -569,7 +577,7 @@ ksam_open_output(KFB* kfb)
 
 	init_for_open_output( kfb );
 	set_local_key_info( kfb );
-	call_ixfile(MFIO_OPEN_OUTPUT, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_OPEN_OUTPUT, kfb);
 	kfb->_open_status = 1;
 }
 
@@ -598,7 +606,15 @@ ksam_close(KFB* kfb)
 {
 	kcsitrace(1, "ksam_close()", "enter", "Entering subroutine ...");
 
-	call_ixfile(MFIO_CLOSE, kfb);
+	/*
+	 *  If the file is already closed, then just return.
+	 */
+	if( kfb->_open_status == 0 )
+	{
+		return;
+	}
+
+	call_ixfile(NORMAL_COBOL_IO, MFIO_CLOSE, kfb);
 	kfb->_open_status = 0;
 	release_fcd( kfb );
 }
@@ -738,7 +754,7 @@ ksam_read_next(KFB* kfb)
 	kcsitrace(1, "ksam_read_next()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(MFIO_SEQ_READ_NO_LOCK, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_SEQ_READ_NO_LOCK, kfb);
 }
 
 /*
@@ -769,7 +785,7 @@ ksam_read_previous(KFB* kfb)
 	kcsitrace(1, "ksam_read_previous()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(MFIO_READ_PREV_NO_LOCK, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_READ_PREV_NO_LOCK, kfb);
 }
 
 /*
@@ -799,7 +815,7 @@ ksam_hold_next(KFB* kfb)
 	kcsitrace(1, "ksam_hold_next()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(MFIO_SEQ_READ_LOCK, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_SEQ_READ_LOCK, kfb);
 }
 
 /*
@@ -830,7 +846,7 @@ ksam_read_keyed(KFB* kfb)
 
 	user_fcd = set_mfio( kfb );
 	store_number(user_fcd->keynum, &kfb->_io_key, 2);	/* Set so specifies prime key */
-	call_ixfile(MFIO_RNDM_READ, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_RNDM_READ, kfb);
 }
 
 /*
@@ -862,7 +878,7 @@ ksam_hold_keyed(KFB* kfb)
 
 	user_fcd = set_mfio( kfb );
 	store_number(user_fcd->keynum, &kfb->_io_key, 2);
-	call_ixfile(MFIO_RNDM_READ_LOCK, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_RNDM_READ_LOCK, kfb);
 }
 
 /*
@@ -1086,7 +1102,7 @@ static void do_start(KFB* kfb, int mode)
 	kcsitrace(1, "do_start()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(mode, kfb);
+	call_ixfile(NORMAL_COBOL_IO, mode, kfb);
 }
 
 /*----
@@ -1124,7 +1140,7 @@ ksam_write(KFB* kfb)
 	kcsitrace(1, "ksam_write()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(MFIO_WRITE, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_WRITE, kfb);
 }
 
 /*
@@ -1154,7 +1170,7 @@ ksam_rewrite(KFB* kfb)
 	kcsitrace(1, "ksam_rewrite()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(MFIO_REWRITE, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_REWRITE, kfb);
 }
 
 /*
@@ -1184,7 +1200,7 @@ ksam_delete(KFB* kfb)
 	kcsitrace(1, "ksam_delete()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	call_ixfile(MFIO_DELETE, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_DELETE, kfb);
 }
 
 /*
@@ -1278,28 +1294,33 @@ static int local_file_info(KFB* kfb)
 	FCD*	user_fcd;
 	int2	l_nkeys;
 	char*   parms[5];
+	unsigned char hold_open_mode;
 
 	kcsitrace(1, "local_file_info()", "enter", "Entering subroutine ...");
 
 	user_fcd = set_mfio( kfb );
-	COBEXTFH( info_code, user_fcd, kfb->_record, kfb->_sys_name, kfb->_mfkblock );
-	if ( user_fcd->status[0] == 9 && user_fcd->status[1] == 161 )
+
+	/*
+         *  Change in functionality from MF COBOL 3.2 to 4.1
+	 *  The user_fcd->open_mode gets changed to MF_CLOSED when the
+	 *  information on the file is retrieved.  This is not a documented
+	 *  action.  To work around this change in behavior, I save the mode
+	 *  prior to the call and then set it back to what it was.
+         */
+	hold_open_mode = user_fcd->open_mode;
+
+	call_ixfile(info_code[0], info_code[1], kfb);
+	user_fcd->open_mode = hold_open_mode;
+	
+	if ( user_fcd->status[0] == 9 && (unsigned char)(user_fcd->status[1]) == (unsigned char)161 )
 	{
 		kcsitrace(2, "local_file_info()", "info", "Found a fixed-length sequential file");
 		user_fcd->org = MF_SEQUENTIAL;
-		COBEXTFH( info_code, user_fcd, kfb->_record, kfb->_sys_name, kfb->_mfkblock );
-	}
+		call_ixfile(info_code[0], info_code[1], kfb);
+      	}
 #ifdef DEBUG
 	ASSERTVALIDFCD( user_fcd );
 #endif
-	if ( strncmp(user_fcd->status,"00",2) )
-	{
-		kcsitrace(2, "local_file_info()", "info", "Have I/O file status key1 = [%x], key2 = [%x]",
-			user_fcd->status[0], user_fcd->status[1]);
-	}
-
-	kfb->_status = mf_trans( user_fcd );
-	mf_x_status(kfb, user_fcd);
 
 	switch( user_fcd->org )
 	{
@@ -1440,8 +1461,15 @@ static void set_local_key_info(KFB* kfb)
 		l_numparts = kfb->_key[idx].k_nparts;
 		store_number(mkey->comp_cnt, &l_numparts, 2);
 		store_number(mkey->offset, &l_offset, 2);
-		if ( kfb->_key[idx].k_flags == ISDUPS )	mkey->dup_flags &= MF_DUPS_ALLOWED;
-		if ( idx == 0 )	mkey->dup_flags &= MF_IS_PRIMARY;
+		if ( kfb->_key[idx].k_flags == ISDUPS )
+		{
+			mkey->dup_flags |= MF_DUPS_ALLOWED;
+		}
+
+		if ( idx == 0 )
+		{
+			mkey->dup_flags |= MF_IS_PRIMARY;
+		}
 
 		for ( jdx = 0; jdx < l_numparts; jdx++ )
 		{
@@ -1608,7 +1636,7 @@ static void mf_x_status(KFB* kfb, FCD* user_fcd)
 **			Little-endian storage architecture and store into
 **			a character string of specified length.
 **
-**      Description:
+**      Description:    This will store the number in Big-endian format.
 **
 **      Arguments:
 **      src		The integer data item to copy from
@@ -1731,6 +1759,23 @@ static int test_open_mode(int mode )
 /*
 **	History:
 **	$Log: kmf.c,v $
+**	Revision 1.21  1999-03-04 19:17:53-05  gsl
+**	Fix to call cobinit() before first call to a cobol module.
+**	Micro Focus requires this (get an error on AIX but not on HP)
+**
+**	Revision 1.20  1998-10-13 15:10:00-04  gsl
+**	fix signed to unsigned comparison
+**
+**	Revision 1.19  1998-07-29 18:13:30-04  scass
+**	Corrected bub where was not setting the duplicates
+**	flag correctly.
+**	for DANZAS - Unit4
+**
+**	Revision 1.18  1998-07-29 11:03:07-04  scass
+**	Added logic to test if file is already closed
+**	If is then returns otherwise does the close.
+**	Was causing a seg. viol. on Digital Unix
+**
 **	Revision 1.15  1997-10-30 14:37:09-05  scass
 **	Made changes to accomodate a 64-bit machine.
 **

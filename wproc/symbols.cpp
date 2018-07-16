@@ -1,8 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
-
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : symbols.cpp
@@ -383,7 +386,7 @@ symbol_table::symbol_table() {
       if (access(globals_file, 0) == 0) {
 	      assert(!global_table);
 	      global_table = new symbol_table(globals_file);
-	      the_process->global_symbol_table = global_table;
+	      the_process->global_symbol_table = this;
       }
    }
    trace_end(object);
@@ -501,7 +504,14 @@ void symbol_table::insert(symbol *a_symbol) {
       last_entry = new_entry;
       new_entry->next = NULL;
    }
-   trace_si(symbols, a_symbol->the_name, a_symbol->the_id);
+#ifdef DEBUG
+   if (user_options.debug_trace_symbols())
+   {
+	char message[80];
+	sprintf(message,"insert name=\"%s\" id=%d", a_symbol->the_name, a_symbol->the_id);
+   	trace(symbols, message);
+   }
+#endif
 }
 
 
@@ -825,6 +835,21 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 /*
 **	History:
 **	$Log: symbols.cpp,v $
+**	Revision 1.17  1998-10-02 15:37:39-04  gsl
+**	Fix a debug trace of symbols flag
+**
+**	Revision 1.16  1998-09-08 14:06:13-04  gsl
+**	Fixed the debug trace message for insert
+**
+**	Revision 1.15  1998-08-31 15:50:37-04  gsl
+**	drcs update
+**
+**	Revision 1.14  1998-08-31 15:14:19-04  gsl
+**	drcs update
+**
+**	Revision 1.13  1998-02-02 11:09:03-05  gsl
+**	Fix bug0022
+**
 **	Revision 1.12  1997-04-17 18:07:50-04  gsl
 **	Fix the null padding of the fetched arg.
 **	ALL THIS FETCHED_ARG STUFF WAS TO FIX A BUG
@@ -850,3 +875,100 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 **
 **
 */
+
+//
+//	History:
+//	$Log: symbols.cpp,v $
+//	Revision 1.17  1998-10-02 15:37:39-04  gsl
+//	Fix a debug trace of symbols flag
+//
+//	Revision 1.16  1998-09-08 14:06:13-04  gsl
+//	Fixed the debug trace message for insert
+//
+//	Revision 1.15  1998-08-31 15:50:37-04  gsl
+//	drcs update
+//
+//	Revision 1.14  1998-08-31 15:14:19-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/symbols.cpp,v
+//	Working file: symbols.cpp
+//	head: 1.13
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 13;	selected revisions: 13
+//	description:
+//	----------------------------
+//	revision 1.13
+//	date: 1998-02-02 11:09:03-05;  author: gsl;  state: V4_3_00;  lines: +9 -2
+//	Fix bug0022
+//	----------------------------
+//	revision 1.12
+//	date: 1997-04-17 18:07:50-04;  author: gsl;  state: V4_2_00;  lines: +6 -1
+//	Fix the null padding of the fetched arg.
+//	ALL THIS FETCHED_ARG STUFF WAS TO FIX A BUG
+//	where nexting_level > 1 was treating its args as if they were fetched
+//	and the ~symbol() routines was padding all "fetched_args" to there
+//	max size which was overriding memory and sometimes crashing.
+//	----------------------------
+//	revision 1.11
+//	date: 1997-04-17 17:55:07-04;  author: gsl;  state: Exp;  lines: +9 -5
+//	In symbol::~symbol() removed logic that null padded fetched symbols
+//	data areas as this is not required.
+//	----------------------------
+//	revision 1.10
+//	date: 1996-07-25 19:48:07-04;  author: gsl;  state: V3_9_91;  lines: +23 -15
+//	NT
+//	----------------------------
+//	revision 1.9
+//	date: 1996-07-25 14:16:24-04;  author: gsl;  state: Exp;  lines: +7 -2
+//	Renamed from symbols.cc to symbols.cpp
+//	----------------------------
+//	revision 1.8
+//	date: 1995-10-18 04:58:23-04;  author: gsl;  state: V3_3_19;  lines: +89 -4
+//	Add routines to write out DECLARE statements for global variables
+//	These are used by SUBMIT to write out a new proc that will setup
+//	the globals to handle the GLOBALS=YES option.
+//	----------------------------
+//	revision 1.7
+//	date: 1995-08-29 10:35:28-04;  author: gsl;  state: Exp;  lines: +18 -6
+//	Fixed the "unable to read work file" bug that occurs when globals
+//	are redeclared at a lower link level.
+//	Fixed the logic that calculated global_count so that it counts
+//	only the globals that will be written to the dump file.
+//	----------------------------
+//	revision 1.6
+//	date: 1995-06-10 13:55:59-04;  author: gsl;  state: V3_3_18;  lines: +18 -4
+//	commented initial_attributes
+//	----------------------------
+//	revision 1.5
+//	date: 1995-06-02 12:13:28-04;  author: gsl;  state: Exp;  lines: +4 -4
+//	fix warnings
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:27-04;  author: gsl;  state: V3_3_16;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:42-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:27-05;  author: gsl;  state: V3_3x12;  lines: +218 -18
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:29-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

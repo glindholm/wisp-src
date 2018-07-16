@@ -25,7 +25,7 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include "idsistd.h"
 #include "wcommon.h"
 #include "movebin.h"
@@ -35,6 +35,8 @@ static char rcsid[]="$Id:$";
 #include "wfname.h"
 #include "idsisubs.h"
 #include "filext.h"
+#include "wfvision.h"
+#include "wdefines.h"
 
 #ifdef VMS
 #define	FILE_TYPE	001
@@ -44,17 +46,57 @@ static char rcsid[]="$Id:$";
 
 
 #define		ROUTINE		51000
-void READFDR(va_alist)	  								/* Function uses variable arguments.	*/
-va_dcl
+
+static int bFromReadfdr4 = 0;
+static char *pReadfdr;
+
+static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, va_list the_args);
+
+
+/*
+ *	READFDR4	This routine is the same as READFDR except CD, ED, and MD all
+ *			return dates in YYYYMMDD format.
+ */
+void READFDR4(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...)
 {
 	va_list the_args;
+
+	pReadfdr = "READFDR4";
+	bFromReadfdr4 = 1;
+	
+	va_start(the_args, mode);
+	READFDRX( cpFile, cpLib, cpVol, mode, the_args);
+	va_end(the_args);
+	
+	bFromReadfdr4 = 0;
+}
+
+void READFDR(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...)
+{
+	va_list the_args;
+
+	pReadfdr = "READFDR";
+	bFromReadfdr4 = 0;
+	
+	va_start(the_args, mode);
+	READFDRX( cpFile, cpLib, cpVol, mode, the_args);
+	va_end(the_args);
+
+	bFromReadfdr4 = 0;
+}
+
+static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, va_list the_args)
+{
+	char	l_file[SIZEOF_FILE+1];
+	char	l_lib[SIZEOF_LIB+1];
+	char	l_vol[SIZEOF_VOL+1];
+	
 	int 	arg_count;
-	int4	l_long, access_code, *temp_long_ptr, l_mode;
+	int4	l_long, access_code, l_mode;
 	char 	*end_name, *temp_ptr;
-	char 	*l_vol,*l_lib,*l_file, *l_field;
+	char 	*l_field;
 	char 	filespec[132], filespec_idx[132], filespec_noext[132];
 	int4 	wfname_mode;
-	int	default_case;
 	int	rc;
 	struct stat sbuf;
 	struct tm *tm_ptr;
@@ -62,23 +104,23 @@ va_dcl
 	char 	tmp_bs[19];
 	int	is_cisam;
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say hello.				*/
+	wtrace(pReadfdr, "ENTRY", "File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s]", cpFile, cpLib, cpVol);
 
-	va_start(the_args);								/* Set pointer to the top of the stack.	*/
-	arg_count = va_count(the_args);
-	va_start(the_args);								/* Set pointer to the top of the stack.	*/
-
-	l_file = va_arg(the_args, char*);						/* Get addr. of the filename argument.	*/
-	l_lib  = va_arg(the_args, char*);						/* Get addr. of the library argument.	*/
-	l_vol  = va_arg(the_args, char*);						/* Get addr. of the volume argument.	*/
-	temp_long_ptr = va_arg(the_args, int4*);					/* Get addr. of the call mode argument.	*/
-	arg_count -= 4;
-	GETBIN(&l_mode, temp_long_ptr, sizeof(l_mode) );				/* Move to local var.			*/
+	GETBIN(&l_mode, mode, sizeof(l_mode) );						/* Move to local var.			*/
 	if (l_mode != 0 )
 	{
 		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
 		return;
 	}
+
+	memcpy(l_file, cpFile, SIZEOF_FILE);
+	memcpy(l_lib, cpLib, SIZEOF_LIB);
+	memcpy(l_vol, cpVol, SIZEOF_VOL);
+	
+/*	va_start(the_args, mode); */
+	arg_count = va_count(the_args);
+
+	arg_count -= 4;
 	wfname_mode = 0;
 
 #ifdef VMS
@@ -135,316 +177,273 @@ va_dcl
 		temp_ptr = va_arg(the_args, char*);					/* Get the receiver.			*/
 		arg_count -= 2;
 
-		if (access_code != 0 ) continue;
-
-		default_case = 0;
-		switch( l_field[0] )							/* Determine what the next arg type is.	*/
+		if (access_code != 0 ) 
 		{
-			case 'B':
-			{
-				switch( l_field[1] )
-				{
-					case 'S':					/* Byte size.				*/
-					{
-						rc=stat(filespec,&sbuf);
+			wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Unable to access file.", l_field);
+			continue;
+		}
+		
 
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						l_long = sbuf.st_size;
-						memset(tmp_bs,0,sizeof(tmp_bs));
-						sprintf(tmp_bs,"%018d",l_long);
-						strncpy(temp_ptr,tmp_bs,18);
-						break;
-					}
-				}
-				break;
-			}
-			case 'C':
+		if (0==memcmp(l_field,"BS",2))				/* Byte size PIC 9(18) */
+		{
+			rc=stat(filespec,&sbuf);
+
+			if ( rc )
 			{
-				switch ( l_field[1] )
-				{
-				case 'D':						/* Creation date.	    YYMMDD	*/
-				case 'X':						/* Creation date extended.  YYYYMMDD	*/
+				access_code = rc;
+			}
+			else
+			{
+				l_long = sbuf.st_size;
+				memset(tmp_bs,0,sizeof(tmp_bs));
+				sprintf(tmp_bs,"%018d",l_long);
+				strncpy(temp_ptr,tmp_bs,18);
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%18.18s]", l_field, temp_ptr);
+			}
+		}
+		else if (0==memcmp(l_field,"CD",2) ||			/* Creation date.	    YYMMDD	*/
+			 0==memcmp(l_field,"CX",2)   )			/* Creation date extended.  YYYYMMDD	*/
+		{
 #ifdef VMS
-					strcat(filespec,";-0");				/* we want the earliest version		*/
+			strcat(filespec,";-0");				/* we want the earliest version		*/
 #endif
 
-					if (is_cisam)
-					{
-						rc=stat(filespec_idx,&sbuf);
-					}
-					else
-					{
-						rc=stat(filespec,&sbuf);
-					}
-					if ( rc < 0 )
-					{
-						access_code = 32;
-						break;
-					}
-
-					tm_ptr=localtime(&(sbuf.st_ctime));
-
-					if ('D' == l_field[1])
-					{
-						sprintf(tmp,"%02d%02d%02d",
-							tm_ptr->tm_year % 100,
-							tm_ptr->tm_mon + 1,
-							tm_ptr->tm_mday);
-
-						memcpy(temp_ptr,tmp,6);
-					}
-					else /* "CX" */
-					{
-						sprintf(tmp,"%04d%02d%02d",
-							tm_ptr->tm_year + 1900,
-							tm_ptr->tm_mon + 1,
-							tm_ptr->tm_mday);
-
-						memcpy(temp_ptr,tmp,8);
-					}
-					
-					break;
-
-				default:
-					default_case = 1;
-					break;
-				}
-				break;
-			}
-			case 'D':
+			if (is_cisam)
 			{
-				switch( l_field[1] )
-				{
-				case 'P':
-					memset(temp_ptr,0,4);
-					break;
-					
-				case 'T':
-					*temp_ptr = 'D';
-					break;
-
-				default:
-					default_case = 1;
-					break;
-				}
-				break;
+				rc=stat(filespec_idx,&sbuf);
 			}
-			case 'E':
+			else
 			{
-				switch( l_field[1] )
-				{
-				case 'A':
-					l_long = 1;
-					wswap(&l_long);					/* swap the words			*/
-					PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-					break;
-					
-				case 'D':
-					memcpy(temp_ptr,"991231",6);
-					break;
-
-				default:
-					default_case = 1;
-					break;
-				}
-				break;
+				rc=stat(filespec,&sbuf);
 			}
-			case 'F':
+
+			if ( rc < 0 )
 			{
-				switch( l_field[1] )
+				access_code = 32;
+			}
+			else
+			{
+				
+				tm_ptr=localtime(&(sbuf.st_ctime));
+
+				if ('D' == l_field[1] && !bFromReadfdr4)
 				{
-				case 'T':					    /* File type.			*/
+					sprintf(tmp,"%02d%02d%02d",
+						tm_ptr->tm_year % 100,
+						tm_ptr->tm_mon + 1,
+						tm_ptr->tm_mday);
+
+					memcpy(temp_ptr,tmp,6);
+					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%6.6s]", l_field, temp_ptr);
+				}
+				else /* "CX" */
+				{
+					sprintf(tmp,"%04d%02d%02d",
+						tm_ptr->tm_year + 1900,
+						tm_ptr->tm_mon + 1,
+						tm_ptr->tm_mday);
+
+					memcpy(temp_ptr,tmp,8);
+					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%8.8s]", l_field, temp_ptr);
+				}
+			}
+		}
+		
+		else if (0==memcmp(l_field,"DP",2))			/* Date packing int(4) always 0		*/
+		{
+			memset(temp_ptr,0,4);
+		}
+		else if (0==memcmp(l_field,"DT",2))			/* DMS type Alpha(1) always 'D'		*/
+		{
+			*temp_ptr = 'D';
+		}
+		else if (0==memcmp(l_field,"EA",2))			/* Number of extents Int(4) always 1	*/
+		{
+			l_long = 1;
+			wswap(&l_long);					/* swap the words			*/
+			PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+		}
+		else if (0==memcmp(l_field,"ED",2))			/* Expiration date Alpha(6) always 991231	*/
+		{
+			if (bFromReadfdr4)
+			{
+				memcpy(temp_ptr,"99991231",8);
+			}
+			else
+			{
+				memcpy(temp_ptr,"991231",6);
+			}
+		}
+		else if (0==memcmp(l_field,"FT",2))			/* File Type Alpha(1)			*/
+		{
 #ifdef VMS
-					read_fab(&l_long, filespec, FILE_TYPE);	    /* Get the file organization.	*/
-					*temp_ptr=l_long;			    /* FILE_TYPE returns a character.	*/
-					if (wfname_mode == IS_PRINTFILE) *temp_ptr='P';	    /* Redundancy, just in case.*/
-					break;
+			read_fab(&l_long, filespec, FILE_TYPE);	    	/* Get the file organization.		*/
+			*temp_ptr=l_long;			    	/* FILE_TYPE returns a character.	*/
+			if (wfname_mode == IS_PRINTFILE) *temp_ptr='P';	/* Redundancy, just in case.		*/
 #else /* !VMS */
-					if (is_cisam)
-					{
-						rc = cisaminfo( filespec_noext, "FT", temp_ptr );
-						access_code = rc;
-					}
-					else
-					{
-
-						rc = acuvision( filespec, "FT", temp_ptr );
-						access_code = rc;
-					}
-					break;
-#endif /* !VMS */
-				default:
-					default_case = 1;
-					break;
-				}
-				break;
-			}
-			case 'M':
+			if (is_cisam)
 			{
-				switch ( l_field[1] )
-				{
-				case 'D':						/* Mod date.		YYMMDD		*/
-				case 'X':						/* Mod date Extended.	YYYYMMDD	*/
+				rc = cisaminfo( filespec_noext, "FT", temp_ptr );
+				access_code = rc;
+			}
+			else
+			{
+
+				rc = acuvision( filespec, "FT", temp_ptr );
+				access_code = rc;
+			}
+#endif /* !VMS */
+			if (0==access_code)
+			{
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
+			}
+		}
+		else if (0==memcmp(l_field,"MD",2) ||			/* Mod date YYMMDD 			*/
+			 0==memcmp(l_field,"MX",2))			/* Mod date YYYYMMDD 			*/
+		{
 #ifdef VMS
-					strcat(filespec,";");				/* we want the latest version		*/
+			strcat(filespec,";");				/* we want the latest version		*/
 #endif
 
-					if (is_cisam)
-					{
-						rc=stat(filespec_idx,&sbuf);
-					}
-					else
-					{
-						rc=stat(filespec,&sbuf);
-					}
-					if ( rc < 0 )
-					{
-						access_code = 32;
-						break;
-					}
-
-					tm_ptr=localtime(&(sbuf.st_mtime));
-
-					if ('D' == l_field[1])
-					{
-						sprintf(tmp,"%02d%02d%02d",
-							tm_ptr->tm_year % 100,
-							tm_ptr->tm_mon + 1,
-							tm_ptr->tm_mday);
-
-						memcpy(temp_ptr,tmp,6);
-					}
-					else /* "MX" */
-					{
-						sprintf(tmp,"%04d%02d%02d",
-							tm_ptr->tm_year + 1900,
-							tm_ptr->tm_mon + 1,
-							tm_ptr->tm_mday);
-
-						memcpy(temp_ptr,tmp,8);
-					}
-
-					break;
-
-				default:
-					default_case = 1;
-					break;
-				}
-				break;
-			}
-			case 'R':
+			if (is_cisam)
 			{
-				switch( l_field[1] )
+				rc=stat(filespec_idx,&sbuf);
+			}
+			else
+			{
+				rc=stat(filespec,&sbuf);
+			}
+			if ( rc < 0 )
+			{
+				access_code = 32;
+			}
+			else
+			{
+				tm_ptr=localtime(&(sbuf.st_mtime));
+
+				if ('D' == l_field[1] && !bFromReadfdr4)
 				{
-#ifdef VMS
-					case 'C':					    /* Record count.			*/
-					{
-						read_fab(&l_long, filespec, RECORD_COUNT);    /* Get the record count.		*/
-						wswap(&l_long);				    /* swap the words			*/
-						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-						break;
-					}
-					case 'L':					    /* Record length.			*/
-					case 'S':					    /* Record size.			*/
-					{
-						read_fab(&l_long, filespec, RECORD_SIZE);	/* Get the record size.		*/
-						wswap(&l_long);				/* swap the words			*/
-						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-						break;
-					}
-#else /* !VMS */
-					case 'C':					    /* Record count.			*/
-					{
-						if (is_cisam)
-						{
-							rc = cisaminfo( filespec_noext, "RC", (char*)&l_long );
-						}
-						else
-						{
-							rc = acuvision( filespec, "RC", (char*) &l_long );
-						}
+					sprintf(tmp,"%02d%02d%02d",
+						tm_ptr->tm_year % 100,
+						tm_ptr->tm_mon + 1,
+						tm_ptr->tm_mday);
 
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						wswap(&l_long);				/* swap the words			*/
-						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-						break;
-					}
-					case 'L':					    /* Record length.			*/
-					case 'S':					    /* Record size.			*/
-					{
-						if (is_cisam)
-						{
-							rc = cisaminfo( filespec_noext, "RS", (char*)&l_long );
-						}
-						else
-						{
-							rc = acuvision( filespec, "RS", (char*)&l_long );
-						}
-
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						wswap(&l_long);			/* swap the words			*/
-						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-						break;
-					}
-					case 'T':					    /* Record type.			*/
-					{
-						if (is_cisam)
-						{
-							rc = cisaminfo( filespec_noext, "RT", temp_ptr );
-						}
-						else
-						{
-							rc = acuvision( filespec, "RT", temp_ptr );
-						}
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						break;
-					}
-#endif /* !VMS */
-					default:
-					{
-						default_case = 1;
-						break;
-					}
+					memcpy(temp_ptr,tmp,6);
+					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%6.6s]", l_field, temp_ptr);
 				}
-				break;
-			}
-			default:
-			{
-				default_case = 1;
-				break;
-			}
-		}  /* End of Case */
+				else /* "MX" */
+				{
+					sprintf(tmp,"%04d%02d%02d",
+						tm_ptr->tm_year + 1900,
+						tm_ptr->tm_mon + 1,
+						tm_ptr->tm_mday);
 
-		if (default_case)
+					memcpy(temp_ptr,tmp,8);
+					wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%8.8s]", l_field, temp_ptr);
+				}
+			}
+		}
+		else if (0==memcmp(l_field,"RC",2))			/* Record count Int(4) 			*/
+		{
+#ifdef VMS
+			read_fab(&l_long, filespec, RECORD_COUNT);      /* Get the record count.		*/
+			wswap(&l_long);				    	/* swap the words			*/
+			PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+#else
+			if (is_cisam)
+			{
+				rc = cisaminfo( filespec_noext, "RC", (char*)&l_long );
+			}
+			else
+			{
+				rc = acuvision( filespec, "RC", (char*) &l_long );
+			}
+
+			if ( rc )
+			{
+				access_code = rc;
+			}
+			else
+			{
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
+				wswap(&l_long);				/* swap the words			*/
+				PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+			}
+			
+#endif
+		}
+		else if (0==memcmp(l_field,"RL",2) ||			/* Record Len/Size Int(4)		*/
+			 0==memcmp(l_field,"RS",2))
+		{
+#ifdef VMS
+			read_fab(&l_long, filespec, RECORD_SIZE);	/* Get the record size.			*/
+			wswap(&l_long);					/* swap the words			*/
+			PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+#else
+			if (is_cisam)
+			{
+				rc = cisaminfo( filespec_noext, "RS", (char*)&l_long );
+			}
+			else
+			{
+				rc = acuvision( filespec, "RS", (char*)&l_long );
+			}
+
+			if ( rc )
+			{
+				access_code = rc;
+			}
+			else
+			{
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
+				wswap(&l_long);				/* swap the words			*/
+				PUTBIN(temp_ptr, &l_long, sizeof(l_long));
+			}
+#endif
+		}
+#ifndef VMS
+		else if (0==memcmp(l_field,"RT",2))			/* Record type Alpha(1) 		*/
+		{
+			if (is_cisam)
+			{
+				rc = cisaminfo( filespec_noext, "RT", temp_ptr );
+			}
+			else
+			{
+				rc = acuvision( filespec, "RT", temp_ptr );
+			}
+
+			if ( rc )
+			{
+				access_code = rc;
+			}
+			else
+			{
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
+			}
+			
+		}
+#endif
+		else
 		{
 			werrlog(ERRORCODE(4),l_field,0,0,0,0,0,0,0);
 			access_code = 40;
 		}
 
-	}       
+		if (0 != access_code)
+		{
+			wtrace(pReadfdr, "FIELD", "Field=[%2.2s] failed with access_code=[%ld]", l_field, access_code);
+		}
+	}
+       
+	wtrace(pReadfdr, "RETURN", "Retcode=[%ld]", access_code);
 	if ( arg_count == 1 )
 	{
 		temp_ptr = va_arg(the_args, char *);					/* Get the return code pointer.		*/
 		wswap(&access_code);							/* swap the words			*/
 		PUTBIN(temp_ptr, &access_code, sizeof(access_code) );
 	}
-
+/*	va_end(the_args); */
 }
                                                                                        
 #ifdef VMS
@@ -548,6 +547,16 @@ short action;
 /*
 **	History:
 **	$Log: readfdr.c,v $
+**	Revision 1.15  1999-09-13 15:52:05-04  gsl
+**	removed unused local vars
+**
+**	Revision 1.14  1999-09-08 19:41:33-04  gsl
+**	Added READFDR4 plus reorged from nexted switched to if-elseif-else.
+**	Added wtrace() throughout
+**
+**	Revision 1.13  1998-05-14 17:12:58-04  gsl
+**	Add header
+**
 **	Revision 1.12  1997-10-03 12:14:45-04  gsl
 **	YEAR2000 support:
 **	Changed CD and MD to do a mod 100 on the year so these will

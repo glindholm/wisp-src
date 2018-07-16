@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-/************************************************************************/
-/*									*/
-/*	        WISP - Wang Interchange Source Pre-processor		*/
-/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-/*	 An unpublished work of International Digital Scientific Inc.	*/
-/*			    All rights reserved.			*/
-/*									*/
-/************************************************************************/
 
 /*
 	vcapkeys:	Utility that prompts user to press PFKEYs and 
@@ -17,30 +9,21 @@ static char rcsid[]="$Id:$";
 #define NAME	"vcapkeys"
 
 #include <stdio.h>
-#include <sys/types.h>
+#include <stdlib.h>
 #include <termio.h>
 #include <signal.h>
-
-
-#if defined(_AIX)
-#include <sys/select.h>
 #include <time.h>
-#endif
-#if defined(SEQUENT)
-#include <sys/select.h>
+
 #include <sys/time.h>
+#include <sys/types.h>
+
+#ifndef HPUX
+#include <sys/select.h>
 #endif
 
-
-#if defined(SCO) && !defined(__GNU_LIBRARY__)		/* SCO unix only; this used to be i386, but conflicted with NCR.	*/
-#include <sys/select.h>
-#include <sys/times.h>
+#ifndef bzero
 #define bzero(x,y) memset(x,0,y) 
-#else
-#include <sys/time.h>
 #endif
-
-char *getenv();
 
 static char *makeprintable();
 
@@ -462,7 +445,7 @@ int *len;
 	to.tv_usec = TOUSEC;
 	pos=0;
 	read(fd,string+(pos++),1);
-	while (cnt=select(20,(int*)&rfds,NULL,NULL,&to))
+	while (cnt=select(20,&rfds,NULL,NULL,&to))
 	{
 		read(fd,string+pos,1);
 		FD_ZERO(&rfds);
@@ -570,6 +553,12 @@ static init_table()
 /*
 **	History:
 **	$Log: vcapkeys.c,v $
+**	Revision 1.12  1999-03-04 15:03:23-05  gsl
+**	Ifdef out the include <sys/select.h> for HPUX
+**
+**	Revision 1.11  1999-01-19 10:58:48-05  gsl
+**	Fix select() warning and includes
+**
 **	Revision 1.10  1997-02-17 11:02:43-05  gsl
 **	Fixed warnings in call to select()
 **

@@ -1279,7 +1279,7 @@ void dbltob(char *dest,double dbl,int len,int type)
 			destinc = 1;
 			break;
 		}
-	hex = dbl;
+	hex = (long)dbl;
 	for( ;len;--len, dest += destinc)
 		{
 		byte = hex & 0x000000ff;
@@ -2938,6 +2938,9 @@ static int get_zoned_sign(int ch)
 /*
 **	History:
 **	$Log: rcvt.c,v $
+**	Revision 1.6  1999-09-13 15:51:47-04  gsl
+**	fix double to long conversion
+**
 **	Revision 1.5  1997-06-05 12:57:15-04  scass
 **	Changed subroutine name from dtob to dbltob.
 **	Was getting a conflict.

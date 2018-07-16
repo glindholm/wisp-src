@@ -292,6 +292,12 @@ static void init_for_oo(char *kio,KCSIO_BLOCK *kfb)
 {
 	kfb->_altkey_count = atointlen(&kio[ALTKEY_COUNT_POS],ALTKEY_COUNT_LEN);
 	kfb->_space = atollen(&kio[SPACE_POS],SPACE_LEN);
+
+	/*
+	**	This is the default format for MF and ACU
+	*/
+	kfb->_format = '\0';
+
 	init_rel_key(kio,kfb);
 	init_keys(kio,kfb);
 }
@@ -500,7 +506,7 @@ static void cvt_altkeys(char *kio,KCSIO_BLOCK *kfb)
 		else
 			{
 			kflag = kfb->_key[i].k_flags;
-			kflag &= ISDUPS;
+			kflag &= ISDUPS;		/* ISDUPS is a mask to test if the flag is set. */
 			kstart = kfb->_key[i].k_part[0].kp_start + 1;
 			klen = kfb->_key[i].k_part[0].kp_leng;
 			keynum = i;
@@ -571,6 +577,20 @@ static void ltoalen(char *dest,long value,int len)
 /*
 **	History:
 **	$Log: kcsio.c,v $
+**	Revision 1.13  1998-08-03 15:48:27-04  gsl
+**	The logic which tests is the data file has duplicate alternate keys
+**	was broken in CRID 2.93.  It was incorrectly reporting that all alternate
+**	keys allow duplicates.  This would cause the CONTROL file to not match
+**	the data file if the CONTROL file specifed that duplicates are not
+**	allowed on an alternate key.
+**
+**	Revision 1.12  1998-07-29 18:15:36-04  scass
+**	Corrected bit manipulation.
+**	Was & when should be |  for duplicate flags
+**
+**	Revision 1.11  1998-05-18 17:37:34-04  gsl
+**	Explicetly initialize _format on an open output
+**
 **	Revision 1.10  1997-07-18 15:14:09-04  gsl
 **	Add proto for x4dbfile()
 **

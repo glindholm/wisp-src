@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1996-1999 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		vrawntcn.c
@@ -10,7 +10,17 @@ static char rcsid[]="$Id:$";
 ** 	Purpose:     	This is the implementation file for the vraw package
 **			for Wisp for Windows NT using Console mode I/O
 **
-**	Routines:	
+**	Overview:	
+**
+**	There are three console configurations:
+**	1) Direct IO with a WIN32 console.
+**	2) Stream IO with named pipes (Local Costar).
+**	3) Stream IO with a telnet session.
+**
+**	There are three mode of input:
+**	1) Read without waiting.  	vcheck() -> vrawcheck() -> xgetc_nw()
+**	2) Read with wait.		vgetm() -> vgetc() -> vrawinput() -> xgetc_w()
+**	3) Read with wait and timeout.	vgetm_timed() -> vrawtimeout()/vgetc() -> vrawinput() -> xgetc_w()/xgetc_nw()
 */
 
 #ifdef  WIN32
@@ -50,7 +60,6 @@ static char rcsid[]="$Id:$";
 #define LOGICAL_COLS	80			/* The logical size of the screen */
 #define LOGICAL_ROWS	24
 
-enum e_wait { E_NOWAIT, E_WAIT };
 enum e_event { E_KEYPRESS, E_MOUSELCLICK, E_MOUSERCLICK };
 
 struct my_event
@@ -112,7 +121,9 @@ static HWND hwndConsole = NULL; 				/* Handle to the console window */
 static int nOrigRows = 25;					/* Original console size */
 static int nOrigCols = 80;
 
-static BOOL bRedirected=0;					/* Flag if redirected IO is used with COSTAR */
+static BOOL bStreamIO=0;					/* Flag if stream IO is used with COSTAR and telnet */
+static BOOL bPipeIO = 0;					/* Is IO to a PIPE? */
+static BOOL bTelnet = 0;
 
 #define FG FOREGROUND_GREEN
 #define FR FOREGROUND_RED
@@ -152,7 +163,7 @@ static WORD attributes[NUMATTR]=		/* Map attributes to colors */
 };
 
 static int vraw_init_flag = 0;					/* Flag if vrawinit() has been called - reset by vrawexit() */
-static char *vraw_contitle_def = "WISP for Windows NT/95";	/* Default console title - used if vraw_contitle not set. */
+static char *vraw_contitle_def = "WISP for Windows NT/9x";	/* Default console title - used if vraw_contitle not set. */
 static char vraw_contitle[80] = "";				/* Console title set by vrawtitle() */
 
 static int vread_timed_out_flag = FALSE;			/* Flag if last read timed out */
@@ -179,7 +190,6 @@ static int xd_not_available();
 static int xd_invalid();
 static void xd_clr_menu();
 static void perr(PCHAR szFileName, int line, PCHAR szApiName, DWORD dwError);
-static unsigned char vrawgetc(enum e_wait wait_flag);
 static void queue_event(enum e_event type, int keyval, int mousex, int mousey);
 static struct my_event * get_queued_event(void);
 static int local_event_count(void);
@@ -218,7 +228,7 @@ static DWORD vrawAllocConsole(void)
 	BOOL bSuccess = FALSE;
 	DWORD rc = 0;
 	
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 
 	FreeConsole();
 	hConsole	= INVALID_HANDLE_VALUE;
@@ -257,7 +267,7 @@ static int vrawinit(void)
 	DWORD rc = 0;
 	RECT rectWin;
 	DWORD modeout, modein;
-
+	static BOOL bFirstTimeMoveWindow = TRUE;
 	
 	if (vraw_init_flag)
 	{
@@ -274,10 +284,10 @@ static int vrawinit(void)
 		if (osVer.dwPlatformId == VER_PLATFORM_WIN32s) 
 		{
 			localMessageBox(NULL, 
-				"This application cannot run on Windows 3.1.\n"
-				"This application will now terminate.",
-				"Error: Windows NT or Windows 95 Required to Run",  
-				MB_OK );
+					"This application cannot run on Windows 3.1.\n"
+					"This application will now terminate.",
+					"Error: Windows NT or Windows 95 Required to Run",  
+					MB_OK );
 			exit(0);
 			return FAILURE;
 		}
@@ -287,12 +297,12 @@ static int vrawinit(void)
 
 	initcolors();
 	
-	// Test if using redirected screen handling (Co*STAR)
-	bRedirected = !(vrawdirectio());
+	// Test if using stream IO screen handling (Co*STAR & telnet)
+	bStreamIO = !(vrawdirectio());
 
-	//if redirected then just clear the screen,
+	//if using stream IO then just clear the screen,
 	//the rest is handled by Co*STAR, Telnet, or whatever at task level
-	if( bRedirected )
+	if( bStreamIO )
 	{
 		hConsole     = GetStdHandle(STD_OUTPUT_HANDLE);
 		hConsoleSave = GetStdHandle(STD_OUTPUT_HANDLE); 
@@ -300,6 +310,11 @@ static int vrawinit(void)
 		
 		//Disable buffered output
 		setvbuf( stdout, NULL, _IONBF, 0 );
+
+		// Set for character at a time input
+		// CoStar sets this up OK but it is needed for Telnet
+		setvbuf( stdin, NULL, _IONBF, 0 );
+		bSuccess = SetConsoleMode(hConsoleIn,0);  // Do not process input.
 
 		/*
 		**	Were done
@@ -337,6 +352,35 @@ static int vrawinit(void)
 	*/
 	vraw_get_console_hWnd();
 
+
+	/*
+	 *	Set the Icon in the console window
+	 */
+	{
+		HICON hWispIcon = NULL;
+		HMODULE hModule = NULL;
+
+		hModule = GetModuleHandle(NULL);
+		if (NULL != hModule)
+		{
+			/*
+			 *	Note: LoadIcon() really wants an HINSTANCE but a console app doesn't 
+			 *	have one, however the module handle works the same in this instance.
+			 */
+			hWispIcon = LoadIcon(hModule,"WISPICON");
+		}
+		if (NULL == hWispIcon)
+		{
+			hWispIcon = LoadIcon(NULL,IDI_WINLOGO);
+		}
+		if (NULL != hWispIcon)
+		{
+			SendMessage(vraw_get_console_hWnd(),
+				    WM_SETICON,(WPARAM)ICON_SMALL, (LPARAM)hWispIcon);
+		}
+	}
+
+
 	/*
 	**	If this process was created with the "hide parent" option
 	**	then this ShowWindow() will hide the window as the SHOWDEFAULT
@@ -352,11 +396,11 @@ static int vrawinit(void)
 	**	buffer and make it the active buffer.
 	*/
 	hConsole = CreateConsoleScreenBuffer( 
-			GENERIC_READ|GENERIC_WRITE,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			NULL,
-			CONSOLE_TEXTMODE_BUFFER,
-			NULL);
+		GENERIC_READ|GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL,
+		CONSOLE_TEXTMODE_BUFFER,
+		NULL);
 	PERR((hConsole != INVALID_HANDLE_VALUE), "CreateConsoleScreenBuffer");
 
 	vrawFillDefaultAttribute(hConsole);
@@ -376,7 +420,7 @@ static int vrawinit(void)
 	PERR(bSuccess, "GetConsoleMode");
 
 	/*
-	modein = (dwOriginalInMode & ~(ENABLE_LINE_INPUT|ENABLE_ECHO_INPUT)) | ENABLE_MOUSE_INPUT;
+	  modein = (dwOriginalInMode & ~(ENABLE_LINE_INPUT|ENABLE_ECHO_INPUT)) | ENABLE_MOUSE_INPUT;
 	*/
 	SetLastError(0);
 	modein = ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
@@ -426,9 +470,20 @@ static int vrawinit(void)
 
 
 	/*
-	**	Move the console window to the same location as it's parents
+	**	Move the console window to the same location as it's parents.
+	**	Only do this the first time in to avoid interferring with
+	**	other maintainence of the window location.
+	**	(E.g. After a LINK the window will be correctly already positioned.)
 	*/
-	bSuccess = GetWindowRect(vraw_get_console_hWnd(), &rectWin);
+	if (bFirstTimeMoveWindow)
+	{
+		bSuccess = GetWindowRect(vraw_get_console_hWnd(), &rectWin);
+		bFirstTimeMoveWindow = FALSE;
+	}
+	else
+	{
+		bSuccess = FALSE;
+	}
 	if (bSuccess)
 	{
 		char* ptr;
@@ -454,7 +509,7 @@ static int vrawinit(void)
 		if (nLeft != rectWin.left || nTop != rectWin.top)
 		{
 			bSuccess = MoveWindow(vraw_get_console_hWnd(),
-					nLeft, nTop, nWidth, nHeight, TRUE);
+					      nLeft, nTop, nWidth, nHeight, TRUE);
 		}
 	}
 
@@ -518,7 +573,7 @@ static BOOL vrawSetWindowSize(HANDLE hConsole, int nrows, int ncols)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	int i;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 
 	/* get the largest size we can size the console window to */
 	coordLargest = GetLargestConsoleWindowSize(hConsole);
@@ -588,7 +643,7 @@ static BOOL vrawSetBufferSize(HANDLE hConsole, int nrows, int ncols)
 	int i;
 	int	cxmin, cymin;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 	
 	cxmin = GetSystemMetrics(SM_CXMIN);
 	cymin = GetSystemMetrics(SM_CYMIN);
@@ -646,7 +701,7 @@ static BOOL vrawConsoleResize(HANDLE hConsole, int rows, int cols)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	BOOL bSuccess = FALSE;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 
 	/* Get info on console buff */
 	bSuccess = GetConsoleScreenBufferInfo(hConsole, &csbi);
@@ -712,7 +767,7 @@ static void vrawSetConsoleSize(HANDLE hConsole)
 {
 	BOOL bSuccess = FALSE;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 
 	bSuccess = vrawConsoleResize(hConsole, LOGICAL_ROWS, LOGICAL_COLS);
 	if (bSuccess) return;
@@ -789,7 +844,7 @@ static BOOL vrawWriteConsole(HANDLE hConsole, char *buff, int len)
 
 	_ASSERT(vraw_init_flag);
 
-	if( bRedirected )
+	if( bStreamIO )
 	{
 		if (buff && len > 0)
 		{
@@ -821,7 +876,7 @@ static BOOL vrawWriteConsole(HANDLE hConsole, char *buff, int len)
 **
 **	FUNCTION:	Read the next input character, wait if none available. (Blocking read)
 **
-**	DESCRIPTION:	Init if needed then call vrawgetc() with WAIT.
+**	DESCRIPTION:	Init if needed then call xgetc_w to WAIT.
 **
 **	ARGUMENTS:	none
 **
@@ -836,7 +891,7 @@ char vrawinput()
 {
 	if (!vraw_init_flag) vrawinit();
 
-	return (vrawgetc(E_WAIT));
+	return xgetc_w(); 
 }
 
 /*
@@ -876,53 +931,7 @@ char vrawinput()
 char vrawcheck()
 {
 	if (!vraw_init_flag) vrawinit();
-	return (vrawgetc(E_NOWAIT));       /* Check for a char, don't wait */
-}
-
-/*
- * Routine:     vrawgetc()              (Module-private routine)
- *
- * Purpose:     To return the next character available from the input buffer.
- *
- * Invocation:  ch_read - vrawgetc(wait);
- *
- * Inputs:
- *
- *      Explicit:       wait            -- TRUE if routine should block if no
- *                                         character is available.
- *
- * Outputs:
- *
- *      Explicit:       None.
- *
- *
- * Returns:             The character read from the input, NULL if no 
- *                      character was available in non-blocking mode or 
- *                      if an error occurred.
- *
- */
-static  unsigned        char    vrawgetc(enum e_wait wait_flag)
-{
-
-	unsigned        char    ch_read = 0;            /* Character we read */
-
-	_ASSERT(vraw_init_flag);
-
-	/*
-	 * If the caller does not wish to wait for a character to appear,
-	 * then return immediately, even if no characater is available.
-	 */
-
-	if (E_NOWAIT == wait_flag)      /* Do not wait for a character to be typed.     */
-	{
-		ch_read = xgetc_nw() ;  /* No Wait         */
-	}
-	else
-	{
-		ch_read = xgetc_w() ;   /* Wait for a character */
-	}
-
-	return (ch_read);
+	return xgetc_nw();			/* Check for a char, don't wait */
 }
 
 int vrawprint(char* buf)			/* Do raw output.       */
@@ -951,17 +960,72 @@ int vrawputc(char ch)				/* Output single char.  */
 	return(SUCCESS);
 }
 
+/*
+**	Reposition the parents console window so that it is the same as 
+**	the current window.  This is called from vrawexit() to fix the 
+**	parents position before an exit so that the windows will not
+**	jump when the child exits.
+*/
+static int repositionParentConsole(void)
+{
+	HWND hwndParent;
+	const char *env;
+	BOOL bSuccess = FALSE;
+	RECT rectWin;
+
+	if (NULL == hwndConsole)
+	{
+		return 0;
+	}
+
+	hwndParent = NULL;
+	env = getenv("WISPHCONSOLE");
+	if (NULL==env)
+	{
+		return 0;
+	}
+	sscanf(env,"%d",&hwndParent);
+	if (NULL == hwndParent)
+	{
+		return 0;
+	}
+	if (hwndConsole == hwndParent)
+	{
+		return 0;
+	}
+
+	/*
+	**	Get the position of this window an move the parent window to the same location
+	*/
+	bSuccess = GetWindowRect(hwndConsole, &rectWin);
+	if (bSuccess)
+	{
+		LONG	nWidth, nHeight, nLeft, nTop;
+
+		nTop	= rectWin.top;
+		nLeft	= rectWin.left;
+		nWidth  = rectWin.right  - rectWin.left;
+		nHeight = rectWin.bottom - rectWin.top;
+
+		bSuccess = MoveWindow(hwndParent, nLeft, nTop, nWidth, nHeight, FALSE);
+	}
+
+	return 0;
+}
+
 int vrawexit()
 {
 	if (vraw_init_flag)		/* Init if done.    */
 	{
 		BOOL bSuccess = FALSE;
 
-		if( bRedirected )
+		if( bStreamIO )
 		{
 			vraw_init_flag = 0;   /* No longer initialized.               */
 			return SUCCESS;
 		}
+
+		repositionParentConsole();
 
 		vrawcursor(1); /* restore the cursor */
 //		bSuccess = vrawConsoleResize(hConsole, nOrigRows, nOrigCols);
@@ -1049,9 +1113,9 @@ static unsigned char xgetc_nw(void)
 }
 
 /*
-**	ROUTINE:	readCostarConsole()
+**	ROUTINE:	readStreamConsole()
 **
-**	FUNCTION:	Read one character from the costar console.
+**	FUNCTION:	Read one character from the console in stream IO mode (for Costar and telnet).
 **
 **	DESCRIPTION:	Use ReadFile() to do a blocking read of one character.
 **
@@ -1062,11 +1126,13 @@ static unsigned char xgetc_nw(void)
 **	WARNINGS:	None
 **
 */
-static char readCostarConsole(void)
+static char readStreamConsole(void)
 {
 	BOOL bSuccess;
 	char the_char;
 	DWORD dwInputEvents=0;
+
+	_ASSERT(bStreamIO);
 	
 	bSuccess = ReadFile( hConsoleIn, &the_char, 1, &dwInputEvents, NULL );
 	PERR(bSuccess,"ReadFile");
@@ -1110,7 +1176,7 @@ static unsigned char xgetc_w(void)
 	
 	_ASSERT(vraw_init_flag);
 
-	if (bRedirected)
+	if (bStreamIO)
 	{
 		/*
 		**	Check if there is a char already in the queue.
@@ -1126,7 +1192,7 @@ static unsigned char xgetc_w(void)
 		*/
 		if (!vtimeout_tick_value)
 		{
-			return (unsigned char) readCostarConsole();
+			return (unsigned char) readStreamConsole();
 		}
 
 		/*
@@ -1247,14 +1313,19 @@ static BOOL check_event(void)
 	KEY_EVENT_RECORD *keyp;
 	MOUSE_EVENT_RECORD *mousep;
 	int idx;
-	char szBuf[1];		//for bRedirected
+	char szBuf[1];		//for bStreamIO
 	
 	_ASSERT(vraw_init_flag);
 
-	if( bRedirected )
+	if( bStreamIO )
 	{
 		/* Peek at the input stream, dwInputEvents will be zero if empty */
-		bSuccess = PeekNamedPipe(
+		if (bPipeIO && !bTelnet)
+		{
+			/* 
+			**	This is used by Costar as it attaches a pipe to stdin.
+			*/
+			bSuccess = PeekNamedPipe(
 					hConsoleIn,				// handle to pipe to copy from 
 					szBuf,				       	// pointer to data buffer 
 					sizeof( szBuf ),			// size, in bytes, of data buffer 
@@ -1262,14 +1333,53 @@ static BOOL check_event(void)
 					NULL,					// pointer to total number of bytes available  
 					NULL ); 				// pointer to unread bytes in this message 
 
-		PERR(bSuccess,"PeekNamedPipe");
+			PERR(bSuccess,"PeekNamedPipe");
+		}
+		else
+		{
+			/*
+			 *	This is used by telnet.
+			 *	This was based on ATAMAN sample code for ALTRS.
+			 */
+			INPUT_RECORD ir;
+			for(;;)
+			{
+				/*
+				 *	Check if something is available
+				 */
+				bSuccess = PeekConsoleInput(
+					hConsoleIn,				// handle to pipe to copy from 
+					&ir,				       	// pointer to input record 
+					1,					// number of records 
+					&dwInputEvents);			// pointer to number of bytes read 
+				PERR(bSuccess,"PeekConsoleInput");
+				/*
+				 *	If there was a keyboard event but not a key-down
+				 *	then read it and discard it because not intrested 
+				 *	in key-up events. Go back and ppe again.
+				 *	Note: Mouse, menu, focus, and window events have not been enabled
+				 *		so the only events we should get are KEY_EVENT's.
+				 */
+				if (dwInputEvents > 0 &&
+				    ir.EventType == KEY_EVENT && 
+				    !ir.Event.KeyEvent.bKeyDown) 
+				{
+					bSuccess = ReadConsoleInput(hConsoleIn, &ir, 1, &dwInputEvents);
+					PERR(bSuccess,"ReadConsoleInput");
+					continue;  // Go back and peek again
+				}
+
+				break;  // We are done.
+			}
+		}
+		
 		if( dwInputEvents == 0 )
 		{
 			return FALSE;
 		}
 
 		/* Read one character */
-		szBuf[0] = readCostarConsole();
+		szBuf[0] = readStreamConsole();
 		
 		if (szBuf[0])
 		{
@@ -1279,7 +1389,7 @@ static BOOL check_event(void)
 		}
 		return FALSE;
 		 
-	} /* bRedirected */
+	} /* bStreamIO */
 	
 
 	bSuccess=GetNumberOfConsoleInputEvents(hConsoleIn, &dwNumEvents);
@@ -1327,69 +1437,6 @@ static BOOL check_event(void)
 				break;
 			}
 
-#ifdef OLD
-			/*
-			 * handle shifted function keys
-			 *
-			 *	Key	Scan	Shift	Control	Alt
-			 *	===	===	===	===	===
-			 *	F1	59	84	94	104
-			 *	F2	60	85	95	105
-			 *	F3	61	86	96	106
-			 *	F4	62	87	97	107
-			 *	F5	63	88	98	108
-			 *	F6	64	89	99	109
-			 *	F7	65	90	100	110
-			 *	F8	66	91	101	111
-			 *	F9	67	92	102	112
-			 *	F10	68	93	103	113
-			 *
-			 *	F11	133	135	137	139
-			 *	F12	134	136	138	140
-			 */
-			if (vscancode >= 59 && vscancode <= 68)  /* F1 - F10 (contiguous) */
-			{
-				if (keyp->dwControlKeyState & SHIFT_PRESSED)
-				{
-					vscancode += 25;	/* Shift +25 */
-				}
-				else if (   (keyp->dwControlKeyState & RIGHT_CTRL_PRESSED) 
-					 || (keyp->dwControlKeyState & LEFT_CTRL_PRESSED) )
-				{
-					vscancode += 35;	/* Control +35 */
-				}
-				else if (   (keyp->dwControlKeyState & RIGHT_ALT_PRESSED) 
-					 || (keyp->dwControlKeyState & LEFT_ALT_PRESSED) )
-				{
-					vscancode += 45;	/* Alt +45 */
-				}
-
-				AsciiChar = 0;	/* Not an Ascii character */
-			}
-			else if (vscancode == 87 || vscancode == 88)  /* F11, F12 */
-			{
-				if (keyp->dwControlKeyState & SHIFT_PRESSED)
-				{
-					vscancode += 48;	/* Shift */
-				}
-				else if (   (keyp->dwControlKeyState & RIGHT_CTRL_PRESSED) 
-					 || (keyp->dwControlKeyState & LEFT_CTRL_PRESSED) )
-				{
-					vscancode += 50;	/* Control */
-				}
-				else if (   (keyp->dwControlKeyState & RIGHT_ALT_PRESSED) 
-					 || (keyp->dwControlKeyState & LEFT_ALT_PRESSED) )
-				{
-					vscancode += 52;	/* Alt */
-				}
-				else
-				{
-					vscancode += 46;
-				}
-
-				AsciiChar = 0;	/* Not an Ascii character */
-			}
-#endif /* OLD */
 			if (1 == vscancode) /* Escape Key */
 			{
 				/*
@@ -1643,7 +1690,7 @@ WORD vrawgetattribute(int attr)
 
 void vrawattribute(int atr)
 {
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 	_ASSERT(atr >= 0 && atr < NUMATTR);
 
 	if (!vraw_init_flag) vrawinit();
@@ -1655,7 +1702,7 @@ void vrawmove(int row, int col)
 {
 	int new_row, new_col;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 
 	if (!vraw_init_flag) vrawinit();
 
@@ -1669,7 +1716,7 @@ static BOOL vrawSetCursorPosition(int row, int col)
 {
 	BOOL bSuccess = FALSE;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 	_ASSERT(vraw_init_flag);
 
 	if ( INVALID_HANDLE_VALUE != hConsole )
@@ -1695,7 +1742,7 @@ static BOOL vrawGetCursorPosition(int *row, int *col)
 {
 	BOOL bSuccess = FALSE;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 	_ASSERT(vraw_init_flag);
 
 	if ( INVALID_HANDLE_VALUE != hConsole )
@@ -1722,7 +1769,7 @@ void vrawerase(int fr, int fc, int tr, int tc) 			/* from/to row/column   */
 	int save_row, save_col;
 	static char *spaces = NULL;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 	if (!vraw_init_flag) vrawinit();
 
 	if (spaces==NULL)
@@ -1801,7 +1848,7 @@ int vrawcursor( int state )
 	BOOL bSuccess = FALSE;
 	int rc = FAILURE;
 
-	_ASSERT(!bRedirected);
+	_ASSERT(!bStreamIO);
 
 	cinfo.dwSize=100;
 
@@ -1819,6 +1866,7 @@ int vrawcursor( int state )
 		SetLastError(0);
 		bSuccess = SetConsoleCursorInfo(hConsole,&cinfo);
 		Sleep(60);
+
 		if (!bSuccess)
 		{
 			PERR(bSuccess, "SetConsoleCursorInfo");
@@ -2056,6 +2104,7 @@ static void perr(PCHAR szFileName, int line, PCHAR szApiName, DWORD dwError)
 HWND vraw_get_console_hWnd(void)
 {
 #define MY_BUFSIZE 1024 
+	BOOL bSuccess;
 
 	if (!vrawdirectio())
 	{
@@ -2067,16 +2116,21 @@ HWND vraw_get_console_hWnd(void)
 		char pszNewWindowTitle[MY_BUFSIZE]; 
 		char pszOldWindowTitle[MY_BUFSIZE]; 
 
-		GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
-		wsprintf(pszNewWindowTitle,"%d/%d",GetTickCount(), GetCurrentProcessId());
+		bSuccess = GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
+		if (bSuccess)
+		{
+			wsprintf(pszNewWindowTitle,"%d/%d",GetTickCount(), GetCurrentProcessId());
+			bSuccess = SetConsoleTitle(pszNewWindowTitle);
  
-		SetConsoleTitle(pszNewWindowTitle);
+			if (bSuccess)
+			{
+				Sleep(40);
  
-		Sleep(40);
+				hwndConsole=FindWindow(NULL, pszNewWindowTitle);
  
-		hwndConsole=FindWindow(NULL, pszNewWindowTitle);
- 
-		SetConsoleTitle(pszOldWindowTitle);
+				SetConsoleTitle(pszOldWindowTitle);
+			}
+		}
 	}
  
 	return(hwndConsole);
@@ -2102,6 +2156,11 @@ void vrawtitle(const char *title)
 {
 	BOOL bSuccess;
 
+	if (bStreamIO)
+	{
+		return;
+	}
+	
 	if (title==NULL)
 	{
 		return;
@@ -2114,8 +2173,12 @@ void vrawtitle(const char *title)
 
 	if (hConsole != INVALID_HANDLE_VALUE)
 	{
-		bSuccess = SetConsoleTitle(vraw_contitle);		
-		PERR(bSuccess, "SetConsoleTitle");
+		bSuccess = SetConsoleTitle(vraw_contitle);
+		if (!bSuccess)
+		{
+			/* PERR(bSuccess, "SetConsoleTitle"); */
+			return;  /* No point reporting an error */
+		}
 	}
 }
 
@@ -2188,9 +2251,10 @@ void vrawerror(const char* message)
 **
 **	FUNCTION:	Check if using "direct" I/O
 **
-**	DESCRIPTION:	WIN32 will normally use direct I/O unless COSTAR is used.
-**			If stdout is a pipe then assume COSTAR and stream I/O.
-**			Override by setting W4W=1 if costar present.
+**	DESCRIPTION:	WIN32 will normally use direct I/O unless COSTAR (or telnet) is used.
+**			If stdout is a pipe then assume stream I/O.
+**			Override by setting W4W=1 or 2  if costar present.
+**			Or setting WISPTELNET=1.
 **
 **	ARGUMENTS:	None
 **
@@ -2198,7 +2262,7 @@ void vrawerror(const char* message)
 **
 **	RETURN:		
 **	1		Direct I/O
-**	0		Stream I/O (Costar)
+**	0		Stream I/O (Costar or telnet)
 **
 **	WARNINGS:	None
 **
@@ -2211,16 +2275,53 @@ int vrawdirectio(void)
 	{
 		char* ptr;
 		
-		directio = (GetFileType( GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_PIPE) ? 0 : 1;
+		bPipeIO = (GetFileType( GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_PIPE) ? 1 : 0;
+		directio = (bPipeIO) ? 0: 1;
 
 		if (ptr = getenv("W4W"))
 		{
 			/*
-			Setting the W4W environment variable will override 
-			the directio value.
+			**	Setting the W4W environment variable will force directio off.
 			*/
-			directio = ('1' == *ptr) ? 0 : 1;
+			if ('1' == *ptr || '2' == *ptr)
+			{
+				directio = 0;
+			}
 		}
+
+		/*
+		**	Check if this is a telnet session. If it is then turn off direct io
+		*/
+
+		/*
+		**	If REMOTEADDRESS is set then assume this is a telnet session.
+		**	REMOTEADDRESS is auto set by ATRLS.
+		*/
+		if (getenv("REMOTEADDRESS"))
+		{
+			bTelnet = 1;
+		}
+		
+		if (ptr = getenv("WISPTELNET"))
+		{
+			/*
+			**	Setting WISPTELNET=1 will force directio off (without turning Costar on).
+			*/
+			if ('1' == *ptr)
+			{
+				bTelnet = 1;
+			}
+			else
+			{
+				bTelnet = 0;
+			}
+		}
+
+		if (bTelnet)
+		{
+			directio = 0;
+		}
+		
 	}
 
 	return directio;
@@ -2324,6 +2425,51 @@ static void writelog(char *fmt,...)
 /*
 **	History:
 **	$Log: vrawntcn.c,v $
+**	Revision 1.59  1999-09-15 09:16:16-04  gsl
+**	CHange the default console title from NT/95 to NT/9x
+**
+**	Revision 1.58  1999-06-18 09:03:37-04  gsl
+**	Move the logic that loads the icon up so that it occurs as soon as we
+**	have the console window handle.
+**	THis is to minimize the amount of time the MSDOS icon is visible.
+**
+**	Revision 1.57  1999-05-27 16:23:56-04  gsl
+**	Add logic to set the console icon.
+**
+**	Revision 1.56  1999-04-30 09:30:35-04  gsl
+**	Fix vrawtitle to not abort when costar is used.
+**
+**	Revision 1.55  1999-02-24 19:02:58-05  gsl
+**	Fix the bPipeIO logic - it was reversed.
+**	Add bTelnet logic and test REMOTEADDRESS and WISPTELNET
+**
+**	Revision 1.54  1999-02-17 16:39:18-05  gsl
+**	Changes to support Telnet an an NT server.
+**	Convert costar code to the generic streamIO logic for both costar and telnet.
+**	Mod check_event() to handle telnet using peekConsoleInput() instead
+**	of peekNamedPipe() used by costar.
+**	Removed old vrawgetc() routine and have vrawinput() and vrawcheck() call
+**	the xgetc_xx() functions directly.
+**	The NT telnet logic was tested with ATRLS by ATAMAN.
+**
+**	Revision 1.53  1998-11-19 10:15:01-05  gsl
+**	vrawdirectio() will return false if either W4W or WISPTELNET are set.
+**
+**	Revision 1.52  1998-11-19 09:56:11-05  gsl
+**	If using redirected IO then setup input for character at a time.
+**	This is needed for telnet access.
+**
+**	Revision 1.51  1998-08-27 16:57:03-04  gsl
+**	Add logic so that the windows don't jump around when a child process ends.
+**	The parents window will be move to the same location as the childs.
+**
+**	Revision 1.50  1998-05-20 16:55:04-04  gsl
+**	Add W4W=2 support
+**
+**	Revision 1.49  1998-04-30 14:37:47-04  gsl
+**	Fixed vraw_get_console_hWnd() so it will not do the FindWindow() or the
+**	SetConsoleTitle() if there is no console.
+**
 **	Revision 1.48  1997-07-23 15:20:13-04  gsl
 **	Re-do and document the way key scan-codes are handled.
 **	For non-ascii key use the true scan-code preceeded by optional
@@ -2345,7 +2491,7 @@ static void writelog(char *fmt,...)
 **	Revision 1.44  1997-07-09 11:59:00-04  gsl
 **	Changes for COSTAR and WIN32.
 **	Add vrawdirectio() which detects if COSTAR present.
-**	Removed much of the bRedirected logic which was the first pass
+**	Removed much of the bStreamIO logic which was the first pass
 **	at the COSTAR stuff.
 **	Fix the console window handle logic to return NULL when COSTAR present
 **

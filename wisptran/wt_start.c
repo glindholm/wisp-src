@@ -18,6 +18,7 @@ static char rcsid[]="$Id:$";
 #include "node.h"
 #include "reduce.h"
 #include "statment.h"
+#include "wt_procd.h"
 
 
 /*
@@ -54,31 +55,29 @@ static char rcsid[]="$Id:$";
 **	09/20/93	Written by GSL
 **
 */
-parse_start(the_statement)
-NODE the_statement;
+NODE parse_start(NODE the_statement, NODE the_sentence)
 {
-	NODE	curr_node, start_node, file_node, data_name_1_node, invalid_node;
+	NODE	curr_node, verb_node, file_node;
 	int	col,fnum;
+	NODE 	data_name_1_node = NULL;
+	NODE 	data_name_2_node = NULL;
 
-	write_log("WISP",'I',"PROCSTART","Processing START Statement.");
+	verb_node = first_token_node(the_statement);
 
-	data_name_1_node = NULL;
-	invalid_node = NULL;
-
-	curr_node = the_statement->next;
-
-	if (!eq_token(curr_node->token,VERB,"START"))
+	if (!eq_token(verb_node->token,VERB,"START"))
 	{
-		write_log("WISP",'W',"NOTSTART","NOT A START Statement. STATEMENT NOT PROCESSED");
-		tput_statement(12,the_statement);
-		return(0);
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected START found [%s].", token_data(verb_node->token));
+		return(the_statement);
 	}
 
-	start_node = curr_node;
-	col = start_node->token->column;
+	write_tlog(verb_node->token,"WISP",'I',"VERB","Processing START Statement.");
 
-	curr_node = curr_node->next;
-	file_node = curr_node;
+	tput_leading_fluff(the_statement);
+
+	col = verb_node->token->column;
+
+	file_node = verb_node->next;
+	curr_node = file_node->next;
 
 	if (crt_index(token_data(file_node->token)) != -1)
 	{
@@ -94,147 +93,163 @@ NODE the_statement;
 			tput_scomment("*    START %s",token_data(file_node->token));
 		}
 
-		write_log("WISP",'I',"STARTCRT","START crt-file replaced with CONTINUE.");
-		edit_token(start_node->token,"CONTINUE");
+		edit_token(verb_node->token,"CONTINUE");
 		edit_token(file_node->token,"");
-		tput_statement(12,the_statement);
-		return(0);
+		tput_statement(col,the_statement);
+		return free_statement(the_statement);
 	}
 
-	fnum = file_index(token_data(file_node->token));
-
-	if (fnum == -1)								/* no file matched, error		*/
+	if (vax_cobol)
 	{
-		write_log("WISP",'F',"STARTFNF",
-			"Error -- File %s, referenced by START statement but not Declared.",token_data(file_node->token));
-		exit_wisp(EXIT_WITH_ERR);
+		fnum = file_index(token_data(file_node->token));
+
+		if (fnum == -1)								/* no file matched, error		*/
+		{
+			write_log("WISP",'F',"STARTFNF",
+				  "Error -- File %s, referenced by START statement but not Declared.",
+				  token_data(file_node->token));
+			exit_wisp(EXIT_WITH_ERR);
+		}
 	}
 
-	write_log("WISP",'I',"HANDLESTART","Handling START of %s.",prog_files[fnum]);
-
-	if (trap_start)
-	{
-		tput_line_at(col, "MOVE \"%s\" TO",token_data(file_node->token));
-		tput_clause (col+4, "WISP-CURRENT-FILE-ID");
-	}
-
-	if (copy_to_dcl_file || in_decl)
-	{
-		write_log("WISP",'W',"STARTINDECL","START statement in DECLARATIVES, record locking not applied.");
-	}
-
-	tput_line_at(col,"MOVE \"ST\" TO WISP-DECLARATIVES-STATUS");
-	tput_flush();
-
-	if (eq_token(curr_node->next->token,KEYWORD,"KEY"))
+	if (eq_token(curr_node->token,KEYWORD,"KEY"))
 	{
 		/*
 		**	START file-name KEY data-name-1 IS = data-name-2 
 		**	START file-name KEY IS = data-name-2
 		*/
 		curr_node = curr_node->next;
-		if (curr_node->next->token && IDENTIFIER == curr_node->next->token->type)
+		if (curr_node->token && IDENTIFIER == curr_node->token->type)
 		{
-			curr_node = curr_node->next;
-			data_name_1_node = curr_node;
-			reduce_data_item(data_name_1_node);
-		}
-
-		if (data_name_1_node)
-		{
-			write_log("WISP",'I',"STARTFLDDEL","Field name %s removed from START.",
-				token_data(data_name_1_node->down->token));
-			free_statement(data_name_1_node->down);
+			data_name_1_node = reduce_data_item(curr_node);
 			curr_node->down = NULL;
+			curr_node = curr_node->next;
 		}
 	}
 
 	/*
-	**	Now look for the place to add the "REGARDLESS OF LOCK" clause, it goes after the KEY clause
-	**	and before the INVALID clause.  Also find INVALID clause.
 	**	
 	**	START file-name [KEY clause] [INVALID ...] [END-START]
 	**	START file-name [KEY clause] [NOT INVALID ...] [END-START]
 	*/
-	while( curr_node->next && NODE_END != curr_node->next->type )
+	while( curr_node && NODE_END != curr_node->type )
 	{
-		if (IDENTIFIER == curr_node->next->token->type)
+		if (curr_node->token && IDENTIFIER == curr_node->token->type)
 		{
 			char	buff[80];
 
-			strcpy(buff,token_data(curr_node->next->token));
-			key_name(buff,0);					/* Do key name translation		*/
-			if (0 != strcmp(buff,token_data(curr_node->next->token)))
+			data_name_2_node = reduce_data_item(curr_node);
+			if (!data_name_2_node)
 			{
-				edit_token(curr_node->next->token,buff);
+				write_tlog(curr_node->token, "WISP",'E',"START","Unable to reduce data-name-2 [%s]",
+					   token_data(curr_node->token));
 			}
-		}
-
-		if (PERIOD == curr_node->next->token->type)
-		{
-			break;
-		}
-
-		if ( eq_token(curr_node->next->token,KEYWORD,"END-START") )
-		{
-			break;
-		}
-
-		if ( eq_token(curr_node->next->token,KEYWORD,"INVALID") )
-		{
-			invalid_node = curr_node->next;
-			break;
-		}
-
-		if ( eq_token(curr_node->next->token,KEYWORD,"NOT") &&
-		     eq_token(curr_node->next->next->token,KEYWORD,"INVALID") )
-		{
-			invalid_node = curr_node->next->next;
-			break;
+			else
+			{
+				if (data_name_1_node)
+				{
+					if (0!=strcmp(token_data(data_name_1_node->token),token_data(data_name_2_node->token)))
+					{
+						write_tlog(data_name_2_node->token,"WISP",'E',"START",
+							   "Possible error translating KEY clause:" 
+							   "data-name-1 [%s] is NOT data-name-2 [%s] using data-name-2",
+							   token_data(data_name_1_node->token),
+							   token_data(data_name_2_node->token));
+					}
+				}
+				
+				strcpy(buff,token_data(data_name_2_node->token));
+				key_name(buff,0);					/* Do key name translation		*/
+				if (0 != strcmp(buff,token_data(data_name_2_node->token)))
+				{
+					edit_token(data_name_2_node->token,buff);
+				}
+			}
 		}
 
 		curr_node = curr_node->next;
 	}
 
+	if (data_name_1_node)
+	{
+		write_log("WISP",'I',"STARTFLDDEL","Field name %s removed from START.",
+			  token_data(data_name_1_node->token));
+		data_name_1_node = free_statement(data_name_1_node);
+	}
+
+	tput_line_at(col,"MOVE \"ST\" TO WISP-DECLARATIVES-STATUS");
+	tput_flush();
+
+	tput_statement(col,the_statement);
+	the_statement = free_statement(the_statement);
+
 	if (vax_cobol && !(prog_ftypes[fnum] & AUTOLOCK))
 	{
-		/*
-		**	add REGARDLESS OF LOCK clause (tie down in reverse order)
-		*/
-		tie_down(curr_node,maketoknode(make_token(KEYWORD,"LOCK")));
-		tie_down(curr_node,maketoknode(make_token(KEYWORD,"OF")));
-		tie_down(curr_node,maketoknode(make_token(KEYWORD,"REGARDLESS")));
+		tput_clause(col+4, "REGARDLESS OF LOCK");
 	}
 
-	if (invalid_node)
+
+	/*
+	**	Check for INVALID KEY clause.
+	*/
+
+	the_statement = get_statement_from_sentence(the_sentence);
+
+	curr_node = the_statement->next;
+	
+	if (eq_token(curr_node->token, KEYWORD, "INVALID"))
 	{
-		/*
-		**	... INVALID.
-		**	... INVALID KEY.
-		*/
-		if ( eq_token(invalid_node->next->token,KEYWORD,"KEY") )
-		{
-			invalid_node = invalid_node->next;
-		}
+		curr_node->token->column_fixed = 1;
+		tput_statement(col, the_statement);
+		the_statement =  free_statement(the_statement);
 
-		if (invalid_node->next && invalid_node->next->token && 
-		    PERIOD == invalid_node->next->token->type)
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+		if (!the_statement)
 		{
-			write_log("WISP",'I',"BADINVKEY","Bad START syntax, INVALID KEY followed by a period.");
-			tie_next(invalid_node,maketoknode(make_token(VERB,"CONTINUE")));
+			the_statement = get_statement_from_sentence(the_sentence);
 		}
+		curr_node = the_statement->next;
 	}
 
-	tput_statement(col+4,the_statement);
+	/*
+	**	Check for NOT INVALID KEY clause.
+	*/
 
-	write_log("WISP",'I',"STARTDONE","Completed START statement.");
+	if (eq_token(curr_node->token, KEYWORD, "NOT"))
+	{
+		curr_node->token->column_fixed = 1;
+		tput_statement(col, the_statement);
+		the_statement =  free_statement(the_statement);
 
-	return(0);
+		the_statement = parse_imperative_statements(the_statement, the_sentence);
+
+		if (!the_statement)
+		{
+			the_statement = get_statement_from_sentence(the_sentence);
+		}
+		curr_node = the_statement->next;
+	}
+
+	if (eq_token(curr_node->token, KEYWORD, "END-START"))
+	{
+		curr_node->token->column_fixed = 1;
+		tput_statement(col, the_statement);
+		the_statement =  free_statement(the_statement);
+	}
+
+	return the_statement;
 }
 
 /*
 **	History:
 **	$Log: wt_start.c,v $
+**	Revision 1.15  1998-03-03 15:16:06-05  gsl
+**	Changed flush to fixed
+**
+**	Revision 1.14  1998-03-02 13:21:24-05  gsl
+**	Update for cobol-85
+**
 **	Revision 1.13  1997-09-15 13:56:51-04  gsl
 **	Fix warning
 **

@@ -1,0 +1,488 @@
+#-----------------------------------------------------------------------
+#	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+#	$Id:$
+#
+#	File:		cridmake.umf
+#
+#	Project:	CRID
+#
+#	RCS:		$Source:$
+#
+#	Purpose:	Build CRID on unix
+#
+#-----------------------------------------------------------------------
+#
+#	Targets:	
+#
+#	all		All shipkits (default)
+#	crid_acu	The Acucobol CRID shipkit
+#	crid_mf		The Micro Focus CRID shipkit
+#	clean		Remove all built pieces
+#
+#-----------------------------------------------------------------------
+#
+#	This makefile assumes that the environment is setup for porting
+#	the WISP kit.
+#
+#	Usage:
+#
+#	$ make -f cridmake.umf WISP=xxx WISPDIR=xxx {target}
+#	or
+#	$ make -e -f cridmake.umf {target}
+#
+#-----------------------------------------------------------------------
+
+MAKEFILE=cridmake.umf
+
+#-----------------------------------------------------------------------
+#
+# To change the version for CRID, change it here. 
+# Change copyright date in "cridvers.c"
+#
+CRID_VERSION=297
+
+#-----------------------------------------------------------------------
+#
+# Standard WISP stuff
+#
+WISPDIR=../..
+WISP=../../..
+
+CDEBUG= -DNDEBUG
+#CDEBUG= -g -DDEBUG
+
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+
+include $(WISP)/src/port/make.include
+
+WISPTRAN=$(WISP)/src/wisptran/wisp
+WISPFLAGS =
+
+#-----------------------------------------------------------------------
+#
+# 	ACUCOBOL
+#
+include $(WISP)/src/acu/acucobol.include
+
+ACU_COBOL = ccbl
+ACU_FLAGS = -Da4 -C32 -Z32
+
+#-----------------------------------------------------------------------
+#
+# 	MICRO FOUCS
+#
+MF_COBOL = cob
+MF_FLAGS = -C warnings=2 -C LINKCOUNT=5000
+
+#-----------------------------------------------------------------------
+#
+#	Distribution lists
+#
+STDDIST=ctlcnvrt.wcb rptcnvrt.wcb packlist.lis release.lis
+
+ACUDIST=libcrid.a crid.h cridtbl.c crid85.c wruncblk.umf \
+	CONTROL REPORT INQUIRY DATENTRY \
+	install_crid_acu.lis $(STDDIST)
+
+MFXDIST=control report inquiry datentry \
+	control.o report.o inquiry.o datentry.o \
+	cridmfx.umf libmfxcrid.a libmfxcridwcb.a \
+	install_crid_mf.lis $(STDDIST)
+
+#-----------------------------------------------------------------------
+#
+#	Component lists
+#
+CONTROL_WCB= ctrlmain.wcb ctrlary.wcb   ctrlfld.wcb   ctrlio.wcb \
+  ctrlgrp.wcb   ctrllst.wcb   ctrlrng.wcb   ctrloptl.wcb  listmopt.wcb \
+  ctrlerr.wcb   ctrlhdi.wcb   ctrlmap.wcb   ctrlseq.wcb   tableio.wcb \
+  ctrlext.wcb   ctrlhdl.wcb   ctrload.wcb   ctrltbl.wcb   ctrlprt.wcb \
+  ctrlfil.wcb   ctrlhdr.wcb   ctrlopt.wcb   ctrlval.wcb   ctrldif.wcb \
+  ctrldepp.wcb	kcsextfh.wcb
+
+REPORT_WCB = rptmain.wcb  \
+ rptctlh.wcb  rptedt.wcb   rptmor.wcb   rptseq.wcb   \
+ rptctll.wcb  rptedth.wcb  rptnew.wcb   rptsfl.wcb   rptxcl.wcb \
+ rptaka.wcb   rptctlm.wcb  rptfil.wcb   rptnfl.wcb   rptsiz.wcb   rptxdt.wcb \
+ rptckfl.wcb  rptctlp.wcb  rptlim.wcb   rptopt.wcb   rptsor.wcb   rptxfl.wcb \
+ rptcln.wcb   rptdef.wcb   rptlod.wcb   rptpdt.wcb   rptspc.wcb   rptxln.wcb \
+ rptcol.wcb   rptdnw.wcb   rptmdt.wcb   rptpfl.wcb   rptsum.wcb \
+ rptcon.wcb   rptdup.wcb   rptmnu.wcb   rpttit.wcb \
+ rptctl.wcb   rptedo.wcb   rptmod.wcb   rptsdt.wcb   rptwmn.wcb \
+ blnksc.wcb   kcsextfh.wcb plswait.wcb  ctrldif.wcb  \
+ rptcld.wcb   rptio.wcb    rptmak.wcb \
+ ctrlary.wcb  ctrldio.wcb  ctrlhdi.wcb  ctrlhdl.wcb  ctrlio.wcb \
+ ctrlmap.wcb  ctrlval.wcb  
+
+INQUIRY_WCB = inqmain.wcb inqctl.wcb   inqent.wcb   inqhlp.wcb  \
+ inqnam.wcb   inqrpt.wcb   inqxtr.wcb \
+ inqdat.wcb   inqget.wcb   inqmak.wcb   inqopt.wcb   inqxst.wcb \
+ dteload.wcb  ctrldif.wcb \
+ blnksc.wcb   kcsextfh.wcb plswait.wcb \
+ rptmak.wcb   rptcld.wcb   rptio.wcb \
+ ctrlary.wcb  ctrlio.wcb   ctrlhdl.wcb  ctrlhdi.wcb  ctrlmap.wcb \
+ ctrlval.wcb  ctrldio.wcb
+
+DATENTRY_WCB=dtemain.wcb \
+ dtectl.wcb   dtefac.wcb   dtemnu.wcb   dtespc.wcb   dteuph.wcb   \
+ dteoop.wcb   dteupd.wcb   dtexst.wcb   dteinqpp.wcb \
+ blnksc.wcb   kcsextfh.wcb ctrldif.wcb \
+ dteload.wcb  ctrldio.wcb  ctrlval.wcb \
+ ctrlio.wcb   ctrlhdl.wcb  ctrlhdi.wcb  \
+ ctrlary.wcb  ctrlmap.wcb  
+
+CONTROL_CBX=$(CONTROL_WCB:.wcb=.cbx)
+REPORT_CBX=$(REPORT_WCB:.wcb=.cbx)
+INQUIRY_CBX=$(INQUIRY_WCB:.wcb=.cbx)
+DATENTRY_CBX=$(DATENTRY_WCB:.wcb=.cbx)
+
+LIBC_MFX_A = libmfxcrid.a
+LIBC_ACU_A = libcrid.a
+
+LIBC_ALL_A=libc_all.a
+LIBC_ALL_O= \
+	$(LIBC_ALL_A)(kcsio.o) \
+	$(LIBC_ALL_A)(ccsioerr.o) \
+	$(LIBC_ALL_A)(vcsio.o) \
+	$(LIBC_ALL_A)(inidio.o) \
+	$(LIBC_ALL_A)(cridvers.o) \
+	$(LIBC_ALL_A)(kdisp.o) \
+	$(LIBC_ALL_A)(cridebug.o) \
+	$(LIBC_ALL_A)(valflv.o) \
+	$(LIBC_ALL_A)(kexists.o) \
+	$(LIBC_ALL_A)(rcvt.o) \
+	$(LIBC_ALL_A)(rcvp.o) \
+	$(LIBC_ALL_A)(rcvs.o) \
+	$(LIBC_ALL_A)(rcmp.o) \
+	$(LIBC_ALL_A)(rsel.o) \
+	$(LIBC_ALL_A)(rfmt.o) \
+	$(LIBC_ALL_A)(rsrt.o) \
+	$(LIBC_ALL_A)(rbld.o) \
+	$(LIBC_ALL_A)(rglb.o) \
+	$(LIBC_ALL_A)(rtie.o) \
+	$(LIBC_ALL_A)(rcal.o) \
+	$(LIBC_ALL_A)(rpln.o) \
+	$(LIBC_ALL_A)(rwrt.o) \
+	$(LIBC_ALL_A)(rwsrt.o) \
+	$(LIBC_ALL_A)(iprs.o) \
+	$(LIBC_ALL_A)(itkn.o) \
+	$(LIBC_ALL_A)(igen.o) \
+	$(LIBC_ALL_A)(iwrt.o) \
+	$(LIBC_ALL_A)(iglb.o) \
+	$(LIBC_ALL_A)(strtkn.o) \
+	$(LIBC_ALL_A)(dbsc.o) \
+	$(LIBC_ALL_A)(dmnt.o) \
+	$(LIBC_ALL_A)(dadd.o) \
+	$(LIBC_ALL_A)(daux.o) \
+	$(LIBC_ALL_A)(dchg.o) \
+	$(LIBC_ALL_A)(ddel.o) \
+	$(LIBC_ALL_A)(dglb.o) \
+	$(LIBC_ALL_A)(dkey.o) \
+	$(LIBC_ALL_A)(dval.o) \
+	$(LIBC_ALL_A)(dtekey.o) \
+	$(LIBC_ALL_A)(dtedat.o) \
+	$(LIBC_ALL_A)(piclen.o) \
+	$(LIBC_ALL_A)(gp.o) \
+	$(LIBC_ALL_A)(rwop.o) \
+	$(LIBC_ALL_A)(rwhlp.o) \
+	$(LIBC_ALL_A)(bub.o) \
+	$(LIBC_ALL_A)(assert.o) \
+	$(LIBC_ALL_A)(kcsimem.o) \
+	$(LIBC_ALL_A)(kcsit.o)
+
+
+#-----------------------------------------------------------------------
+#
+#	Rules
+#
+
+CFLAGS_CRID= $(CFLAGS) -DCRID -DCRID_VERSION=$(CRID_VERSION) -DKCSI_UNIX
+
+
+.SUFFIXES: .o .cbx .wcb
+
+.wcb.cbx:
+	$(WISPTRAN) -VACU $(WISPFLAGS) $*.wcb
+	$(ACU_COBOL) $(ACU_FLAGS) -o $*.cbx $*.cob
+
+.wcb.o:
+	$(WISPTRAN) -VMF $(WISPFLAGS) $*.wcb
+	$(MF_COBOL) -xc $(MF_FLAGS) $*.cob
+
+.wcb.a:
+	$(WISPTRAN) -VMF $(WISPFLAGS) $<
+	$(MF_COBOL) -xc $(MF_FLAGS) $*.cob
+	ar rv $@ $*.o
+	rm -f $*.o $*.int
+
+
+#-----------------------------------------------------------------------
+#
+#	Targets
+#
+default:	all
+
+all:	crid_acu crid_mf
+	@echo CRID $(CRID_VERSION) for all is UP-TO-DATE.
+
+clean:
+	rm -f *.o *.a *.int *.idy *.cbx *.cob *.cpy *~ core
+	rm -f CRID.$(CRID_VERSION)
+	rm -f control report inquiry datentry
+	rm -f CONTROL REPORT INQUIRY DATENTRY
+	rm -f wruncblk wruncblke wruncblk_oracle7 wruncblke_oracle7
+	rm -r -f crid*.ship
+
+header_acu:
+	@echo "=="
+	@echo "== Building CRID $(CRID_VERSION) for ACUCOBOL"
+	@echo "== WISP=$(WISP)"
+	@echo "== WISPDIR=$(WISPDIR)"
+	@echo "== PWD=`pwd`"
+	@echo "=="
+
+header_mf: 
+	@echo "=="
+	@echo "== Building CRID $(CRID_VERSION) for MICRO FOCUS"
+	@echo "== WISP=$(WISP)"
+	@echo "== WISPDIR=$(WISPDIR)"
+	@echo "== PWD=`pwd`"
+	@echo "=="
+
+crid_mfx \
+crid_mf: 
+	$(MAKE) -f $(MAKEFILE) CFLAGS="$(CFLAGS_CRID) -DKCSI_MFX" LIBC_ALL_A=$(LIBC_MFX_A) \
+		WISP=$(WISP) WISPDIR=$(WISPDIR) crid_mf_go
+
+crid_acu:
+	$(MAKE) -f $(MAKEFILE) CFLAGS="$(CFLAGS_CRID) -DKCSI_ACU" LIBC_ALL_A=$(LIBC_ACU_A) \
+		WISP=$(WISP) WISPDIR=$(WISPDIR) crid_acu_go
+
+crid_mf_go: header_mf required crid_mfx_shipkit 
+	@echo CRID $(CRID_VERSION) for MICRO FOCUS is UP-TO-DATE.
+
+crid_acu_go: header_acu required crid_acu_shipkit wruncblk
+	@echo CRID $(CRID_VERSION) for ACUCOBOL is UP-TO-DATE.
+
+ACUSHIPDIR=cridacu$(CRID_VERSION).ship
+ACUDISTDIR=cridacu.$(CRID_VERSION)
+
+MFXSHIPDIR=cridmfx$(CRID_VERSION).ship
+MFXDISTDIR=cridmfx.$(CRID_VERSION)
+
+
+crid_acu_shipkit: $(ACUSHIPDIR)
+
+$(ACUSHIPDIR): $(ACUDIST)
+	@echo "== Building SHIPPING KIT $@"
+	rm -f -r $(ACUSHIPDIR)
+	mkdir $(ACUSHIPDIR)
+	mkdir $(ACUSHIPDIR)/$(ACUDISTDIR)
+	chmod a+rwx $(ACUSHIPDIR)/$(ACUDISTDIR)
+	cp $(ACUDIST) $(ACUSHIPDIR)/$(ACUDISTDIR)
+	chmod 444 $(ACUSHIPDIR)/$(ACUDISTDIR)/*
+	(cd $(ACUSHIPDIR); tar -cvf - $(ACUDISTDIR)|compress>$(ACUDISTDIR).tar.Z)
+	@echo "== SHIPPING KIT $@ HAS BEEN BUILT"
+
+crid_mfx_shipkit: $(MFXSHIPDIR)
+
+$(MFXSHIPDIR): $(MFXDIST)
+	@echo "== Building SHIPPING KIT $@"
+	rm -f -r $(MFXSHIPDIR)
+	mkdir $(MFXSHIPDIR)
+	mkdir $(MFXSHIPDIR)/$(MFXDISTDIR)
+	chmod a+rwx $(MFXSHIPDIR)/$(MFXDISTDIR)
+	cp $(MFXDIST) $(MFXSHIPDIR)/$(MFXDISTDIR)
+	(cd $(MFXSHIPDIR)/$(MFXDISTDIR); $(STRIP) control report inquiry datentry)
+	chmod 444 $(MFXSHIPDIR)/$(MFXDISTDIR)/*
+	(cd $(MFXSHIPDIR)/$(MFXDISTDIR); chmod 555 control report inquiry datentry)
+	(cd $(MFXSHIPDIR); tar -cvf - $(MFXDISTDIR)|compress>$(MFXDISTDIR).tar.Z)
+	@echo "== SHIPPING KIT $@ HAS BEEN BUILT"
+
+
+required: $(WISPTRAN) $(WISP_LIBS_PATHS)
+
+$(WISPTRAN) $(WISP_LIBS_PATHS):
+	@echo "=="
+	@echo "== ERROR: Required file $@ was not found"
+	@echo "=="
+	@exit 1
+
+#
+#	These will ensure that cridvers.o gets rebuilt if the version changes
+#
+CRID.$(CRID_VERSION):
+	echo $(CRID_VERSION)>$@
+
+$(LIBC_ALL_A)(cridvers.o): cridvers.c CRID.$(CRID_VERSION)
+
+#-----------------------------------------------------------------------
+#
+#	ACUCOBOL Targets
+#
+
+.PRECIOUS: $(LIBC_ACU_A)
+
+CONTROL:	$(CONTROL_CBX)
+	$(CBLUTIL) -lib -o $@ $(CONTROL_CBX)
+	@echo $@ is UP-TO-DATE
+
+REPORT:		$(REPORT_CBX)
+	$(CBLUTIL) -lib -o $@ $(REPORT_CBX)
+	@echo $@ is UP-TO-DATE
+
+INQUIRY:	$(INQUIRY_CBX)
+	$(CBLUTIL) -lib -o $@ $(INQUIRY_CBX)
+	@echo $@ is UP-TO-DATE
+
+DATENTRY:	$(DATENTRY_CBX)
+	$(CBLUTIL) -lib -o $@ $(DATENTRY_CBX)
+	@echo $@ is UP-TO-DATE
+
+LIBC_ACU_ONLY_O= \
+	$(LIBC_ACU_A)(kv3.o) \
+	$(LIBC_ACU_A)(brlio.o) \
+	$(LIBC_ACU_A)(seqio.o)
+
+$(LIBC_ACU_A): $(LIBC_ALL_O) $(LIBC_ACU_ONLY_O)
+	$(RANLIB) $@
+	@echo $@ is UP-TO-DATE
+
+wruncblk: $(LIBC_ACU_A)
+	$(MAKE) -e -f wruncblk.umf
+
+#-----------------------------------------------------------------------
+#
+#	Micro Focus Targets
+#
+LIBWCB_MFX_A = libmfxcridwcb.a
+
+.PRECIOUS:	$(LIBWCB_MFX_A) $(LIBC_MFX_A)
+
+control \
+report \
+inquiry \
+datentry: control.o report.o inquiry.o datentry.o  $(LIBWCB_MFX_A) $(LIBC_MFX_A) $(WISPDIR)/etc/make.include
+	$(MAKE) -f cridmfx.umf WISPDIR=$(WISPDIR) $@
+
+$(WISPDIR)/etc/make.include: $(WISP)/src/port/make.include
+	cp $(WISP)/src/port/make.include $@
+
+LIBC_MFX_ONLY_O= \
+	$(LIBC_MFX_A)(kmf.o) \
+	$(LIBC_MFX_A)(rlaio.o) \
+	$(LIBC_MFX_A)(seqio.o) \
+	$(LIBC_MFX_A)(brlio.o) \
+	$(LIBC_MFX_A)(mfstub.o)
+
+
+$(LIBC_MFX_A): $(LIBC_ALL_O) $(LIBC_MFX_ONLY_O)
+	$(RANLIB) $@
+	@echo $@ is UP-TO-DATE
+
+$(LIBWCB_MFX_A): $(LIBWCB_MFX_A)(blnksc.o) \
+	$(LIBWCB_MFX_A)(kcsextfh.o) \
+	$(LIBWCB_MFX_A)(ctrlary.o) \
+	$(LIBWCB_MFX_A)(ctrldepp.o) \
+	$(LIBWCB_MFX_A)(ctrldif.o) \
+	$(LIBWCB_MFX_A)(ctrldio.o) \
+	$(LIBWCB_MFX_A)(ctrlerr.o) \
+	$(LIBWCB_MFX_A)(ctrlext.o) \
+	$(LIBWCB_MFX_A)(ctrlfil.o) \
+	$(LIBWCB_MFX_A)(ctrlfld.o) \
+	$(LIBWCB_MFX_A)(ctrlgrp.o) \
+	$(LIBWCB_MFX_A)(ctrlhdi.o) \
+	$(LIBWCB_MFX_A)(ctrlhdl.o) \
+	$(LIBWCB_MFX_A)(ctrlhdr.o) \
+	$(LIBWCB_MFX_A)(ctrlio.o) \
+	$(LIBWCB_MFX_A)(ctrllst.o) \
+	$(LIBWCB_MFX_A)(ctrlmain.o) \
+	$(LIBWCB_MFX_A)(ctrlmap.o) \
+	$(LIBWCB_MFX_A)(ctrload.o) \
+	$(LIBWCB_MFX_A)(ctrlopt.o) \
+	$(LIBWCB_MFX_A)(ctrloptl.o) \
+	$(LIBWCB_MFX_A)(ctrlprt.o) \
+	$(LIBWCB_MFX_A)(ctrlrng.o) \
+	$(LIBWCB_MFX_A)(ctrlseq.o) \
+	$(LIBWCB_MFX_A)(ctrltbl.o) \
+	$(LIBWCB_MFX_A)(ctrlval.o) \
+	$(LIBWCB_MFX_A)(dtectl.o) \
+	$(LIBWCB_MFX_A)(dtefac.o) \
+	$(LIBWCB_MFX_A)(dteinqpp.o) \
+	$(LIBWCB_MFX_A)(dteload.o) \
+	$(LIBWCB_MFX_A)(dtemain.o) \
+	$(LIBWCB_MFX_A)(dtemnu.o) \
+	$(LIBWCB_MFX_A)(dteoop.o) \
+	$(LIBWCB_MFX_A)(dtespc.o) \
+	$(LIBWCB_MFX_A)(dteupd.o) \
+	$(LIBWCB_MFX_A)(dteuph.o) \
+	$(LIBWCB_MFX_A)(dtexst.o) \
+	$(LIBWCB_MFX_A)(inqctl.o) \
+	$(LIBWCB_MFX_A)(inqdat.o) \
+	$(LIBWCB_MFX_A)(inqent.o) \
+	$(LIBWCB_MFX_A)(inqget.o) \
+	$(LIBWCB_MFX_A)(inqhlp.o) \
+	$(LIBWCB_MFX_A)(inqmain.o) \
+	$(LIBWCB_MFX_A)(inqmak.o) \
+	$(LIBWCB_MFX_A)(inqnam.o) \
+	$(LIBWCB_MFX_A)(inqopt.o) \
+	$(LIBWCB_MFX_A)(inqrpt.o) \
+	$(LIBWCB_MFX_A)(inqxst.o) \
+	$(LIBWCB_MFX_A)(inqxtr.o) \
+	$(LIBWCB_MFX_A)(listmopt.o) \
+	$(LIBWCB_MFX_A)(plswait.o) \
+	$(LIBWCB_MFX_A)(rptaka.o) \
+	$(LIBWCB_MFX_A)(rptckfl.o) \
+	$(LIBWCB_MFX_A)(rptcld.o) \
+	$(LIBWCB_MFX_A)(rptcln.o) \
+	$(LIBWCB_MFX_A)(rptcol.o) \
+	$(LIBWCB_MFX_A)(rptcon.o) \
+	$(LIBWCB_MFX_A)(rptctl.o) \
+	$(LIBWCB_MFX_A)(rptctlh.o) \
+	$(LIBWCB_MFX_A)(rptctll.o) \
+	$(LIBWCB_MFX_A)(rptctlm.o) \
+	$(LIBWCB_MFX_A)(rptctlp.o) \
+	$(LIBWCB_MFX_A)(rptdef.o) \
+	$(LIBWCB_MFX_A)(rptdnw.o) \
+	$(LIBWCB_MFX_A)(rptdup.o) \
+	$(LIBWCB_MFX_A)(rptedo.o) \
+	$(LIBWCB_MFX_A)(rptedt.o) \
+	$(LIBWCB_MFX_A)(rptedth.o) \
+	$(LIBWCB_MFX_A)(rptfil.o) \
+	$(LIBWCB_MFX_A)(rptio.o) \
+	$(LIBWCB_MFX_A)(rptlim.o) \
+	$(LIBWCB_MFX_A)(rptlod.o) \
+	$(LIBWCB_MFX_A)(rptmak.o) \
+	$(LIBWCB_MFX_A)(rptmain.o) \
+	$(LIBWCB_MFX_A)(rptmdt.o) \
+	$(LIBWCB_MFX_A)(rptmnu.o) \
+	$(LIBWCB_MFX_A)(rptmod.o) \
+	$(LIBWCB_MFX_A)(rptmor.o) \
+	$(LIBWCB_MFX_A)(rptnew.o) \
+	$(LIBWCB_MFX_A)(rptnfl.o) \
+	$(LIBWCB_MFX_A)(rptopt.o) \
+	$(LIBWCB_MFX_A)(rptpdt.o) \
+	$(LIBWCB_MFX_A)(rptpfl.o) \
+	$(LIBWCB_MFX_A)(rptsdt.o) \
+	$(LIBWCB_MFX_A)(rptseq.o) \
+	$(LIBWCB_MFX_A)(rptsfl.o) \
+	$(LIBWCB_MFX_A)(rptsiz.o) \
+	$(LIBWCB_MFX_A)(rptsor.o) \
+	$(LIBWCB_MFX_A)(rptspc.o) \
+	$(LIBWCB_MFX_A)(rptsum.o) \
+	$(LIBWCB_MFX_A)(rpttit.o) \
+	$(LIBWCB_MFX_A)(rptwmain.o) \
+	$(LIBWCB_MFX_A)(rptwmn.o) \
+	$(LIBWCB_MFX_A)(rptxcl.o) \
+	$(LIBWCB_MFX_A)(rptxdt.o) \
+	$(LIBWCB_MFX_A)(rptxfl.o) \
+	$(LIBWCB_MFX_A)(rptxln.o) \
+	$(LIBWCB_MFX_A)(tableio.o)
+	$(RANLIB) $(LIBWCB_MFX_A)
+	@echo LIBRARY $(LIBWCB_MFX_A) is now UP-TO-DATE
+
+#-----------------------------------------------------------------------
+#	End
+#-----------------------------------------------------------------------

@@ -1,8 +1,11 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
-*/
-
+//
+//	Copyright (c) 1996-1998 NeoMedia Technologies Inc. All rights reserved.
+//
+//	Project:	WPROC
+//	Id:		$Id:$
+//	RCS:		$Source:$
+//	
+//
 // Copyright (c) Lexical Software, 1991.  All rights reserved.
 //
 // Module : symbols.hpp
@@ -163,6 +166,12 @@ class symbol_table : public state_object {
 /*
 **	History:
 **	$Log: symbols.hpp,v $
+**	Revision 1.8  1998-08-31 15:50:38-04  gsl
+**	drcs update
+**
+**	Revision 1.7  1998-08-31 15:14:20-04  gsl
+**	drcs update
+**
 **	Revision 1.6  1997-04-17 17:57:03-04  gsl
 **	Comment the meaning of a fetched symbol
 **
@@ -172,3 +181,56 @@ class symbol_table : public state_object {
 **
 **
 */
+
+//
+//	History:
+//	$Log: symbols.hpp,v $
+//	Revision 1.8  1998-08-31 15:50:38-04  gsl
+//	drcs update
+//
+//	Revision 1.7  1998-08-31 15:14:20-04  gsl
+//	drcs update
+//
+//
+
+//	
+//	RCS file: /disk1/neomedia/RCS/wisp/wproc/symbols.hpp,v
+//	Working file: symbols.hpp
+//	head: 1.6
+//	branch:
+//	locks: strict
+//	access list:
+//		gsl
+//		scass
+//		ljn
+//		jockc
+//		jlima
+//	symbolic names:
+//	keyword substitution: kv
+//	total revisions: 6;	selected revisions: 6
+//	description:
+//	----------------------------
+//	revision 1.6
+//	date: 1997-04-17 17:57:03-04;  author: gsl;  state: V4_3_00;  lines: +6 -3
+//	Comment the meaning of a fetched symbol
+//	----------------------------
+//	revision 1.5
+//	date: 1995-10-18 05:00:57-04;  author: gsl;  state: V3_9_91;  lines: +15 -0
+//	add write_declare_globals() routines
+//	----------------------------
+//	revision 1.4
+//	date: 1995-04-25 06:00:27-04;  author: gsl;  state: V3_3_18;  lines: +0 -0
+//	drcs state V3_3_15
+//	----------------------------
+//	revision 1.3
+//	date: 1995-04-17 07:52:43-04;  author: gsl;  state: V3_3_14;  lines: +0 -0
+//	drcs state V3_3_14
+//	----------------------------
+//	revision 1.2
+//	date: 1995-01-27 18:33:28-05;  author: gsl;  state: V3_3x12;  lines: +26 -15
+//	drcs load
+//	----------------------------
+//	revision 1.1
+//	date: 1995-01-27 16:51:29-05;  author: gsl;  state: V3_3c;
+//	drcs load
+//	=============================================================================

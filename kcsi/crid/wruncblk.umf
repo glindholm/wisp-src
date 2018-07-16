@@ -202,6 +202,8 @@ LIBCURSES= -lcurses
 #LIBCURSES= -lcursesX
 # Uncomment the following for SunOS 4.1.3
 #LIBCURSES= /usr/5lib/libcurses.a
+# Uncomment the following for HP-UX 10.20
+#LIBCURSES= -lcur_colr
 
 #============================================================================
 #
@@ -209,6 +211,12 @@ LIBCURSES= -lcurses
 #
 CDEBUG=-g
 CFLAGS= $(CDEBUG) -Dunix
+#
+# **** CHANGE CC HERE ****
+#
+#	SOLARIS 2 requires an ANSI C compiler (c89).
+#CC=c89
+#
 
 #=================================================================
 # Standard WISP libraries
@@ -539,6 +547,8 @@ header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
 	@echo ">>>>"
 	@echo ">>>> WISPDIR = " $(WISPDIR)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>> PWD     = " `pwd`
+	@echo ">>>> CC      = " `which $(CC)`
 	@echo ">>>>"
 
 $(WISPDIR):

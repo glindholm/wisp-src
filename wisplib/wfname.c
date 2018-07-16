@@ -113,7 +113,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	**	INITIALIZE
 	*/
 
-	werrlog(ERRORCODE(1),p_vol,p_lib,p_file,0,0,0,0,0);
+	wtrace("WFNAME","ENTRY", "vol=[%6.6s] lib=[%8.8s] file=[%8.8s] mode=[0x%08X]", p_vol, p_lib, p_file, *mode);
 
       	wpload();		 							/* load the usage constants		*/
 
@@ -233,10 +233,14 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	get_defs(DEFAULTS_WV,work_vol);
 	get_defs(DEFAULTS_WL,work_lib);
 
-	if ( memcmp(wang_lib,work_lib,SIZEOF_LIB) == 0 ||
+	if ( memcmp(wang_lib,work_lib,SIZEOF_LIB) == 0 &&
 	     memcmp(wang_vol,work_vol,SIZEOF_VOL) == 0    )
 	{
 		*mode |= IS_WORK;
+	}
+	else
+	{
+		*mode &= ~IS_WORK;	/* Clear the IS_WORK flag */
 	}
 
 	if ( wang_file[0] == '#' || wang_file[0] == '%' )				/* If tempfile				*/
@@ -247,12 +251,21 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 
 			memcpy(wang_vol,work_vol,SIZEOF_VOL);				/* It is forced into work		*/
 			memcpy(wang_lib,work_lib,SIZEOF_LIB);
-		}
-	}
 
-	if (*mode & IS_WORK)
-	{
-		*mode |= IS_SCRATCH;
+			/*
+			**	#xxxx	Work files are scratched when the link level ends.  (IS_SCRTACH)
+			**	##xxxx	Temp files are scratched when the worklib is deleted when highest link level ends.
+			*/
+
+			if ( wang_file[1] == '#' || wang_file[1] == '%' )
+			{
+				*mode &= ~IS_SCRATCH;	/* Temp file - clear IS_SCRATCH */
+		        }
+		        else
+			{
+				*mode |= IS_SCRATCH;	/* Work file - set IS_SCRATCH */
+		        }
+		}
 	}
 
 	/*
@@ -389,12 +402,6 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	sprintf(native_path,"%s%s%s%s", native_vol, native_lib, native_file, native_ext );
 
 
-	wtrace("WFNAME","RETURN", "Native_path=%s", native_path);
-
-	len = strlen(native_path);
-	native_path[len] = ' ';								/* Remove null-termination		*/
-	
-
 	/*
 	**	LOGGING OF WORK LIBRARIES
 	*/
@@ -402,11 +409,14 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	if ( (*mode & IS_WORK) && (*mode & IS_OUTPUT) )
 	{
 		char native_worklib[80];
-		static	char	work_vol[SIZEOF_VOL] = {0};
+		static	char	last_work_vol[SIZEOF_VOL] = {0};
+		static	char	last_work_lib[SIZEOF_LIB] = {0};
 
-		if ( memcmp(wang_vol, work_vol, SIZEOF_VOL) != 0 )
+		if ( memcmp(wang_vol, last_work_vol, SIZEOF_VOL) != 0 ||
+		     memcmp(wang_lib, last_work_lib, SIZEOF_LIB) != 0   )
 		{
-			memcpy(work_vol, wang_vol, SIZEOF_VOL);
+			memcpy(last_work_vol, wang_vol, SIZEOF_VOL);
+			memcpy(last_work_lib, wang_lib, SIZEOF_LIB);
 			sprintf(native_worklib, "%s%s", native_vol, native_lib );
 
 			logworklib( native_worklib );
@@ -426,6 +436,12 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 		memcpy(p_lib,wang_lib,SIZEOF_LIB);
 		memcpy(p_file,wang_file,SIZEOF_FILE);
 	}
+
+	wtrace("WFNAME","RETURN", "Path=[%s] vol=[%6.6s] lib=[%8.8s] file=[%8.8s] mode=[0x%08X]", 
+	       native_path, p_vol, p_lib, p_file, *mode);
+
+	len = strlen(native_path);
+	native_path[len] = ' ';								/* Remove null-termination		*/
 
 	return(&native_path[len]);							/* return next available char pos	*/
 }
@@ -764,6 +780,24 @@ int wfexists(char *file, char *lib, char *vol)
 /*
 **	History:
 **	$Log: wfname.c,v $
+**	Revision 1.22  1999-01-29 19:02:06-05  gsl
+**	Fix the handling of work files to make a distiction between # and ## work
+**	files.  Only the single # files get the IS_SCRATCH flag and will be deleted
+**	when the link-level terminates. ## files will be deleted when the worklib
+**	is deleted when the highest link-level terminates.
+**
+**	Revision 1.21  1998-05-15 09:23:18-04  gsl
+**	Fixed bug 518.  When checking if a work file it incorrect was checking
+**	if the lib or the vol was equal to the work lib and vol. It should have
+**	been checking if the lib AND the vol were equal.
+**
+**	Revision 1.20  1998-05-14 16:44:26-04  gsl
+**	fix the trace logic
+**
+**	Revision 1.19  1998-05-12 15:01:38-04  gsl
+**	Fixed problem 524 where non-work directories were being added to WLIBLIST.
+**	The IS_WORK flag was being set and not cleared.
+**
 **	Revision 1.18  1998-01-13 10:13:19-05  gsl
 **	Change WIN32 default file extension to be "" (none), it was .DAT
 **	but is documented in WISP manual to be none.

@@ -2,26 +2,14 @@
 #	Copyright (c) 1995 DevTech Migrations, All rights reserved.
 #	$Id:$
 #
-#	/************************************************************************/
-#	/*									*/
-#	/*	        WISP - Wang Interchange Source Pre-processor		*/
-#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
-#	/*	 An unpublished work of International Digital Scientific Inc.	*/
-#	/*			    All rights reserved.			*/
-#	/*									*/
-#	/************************************************************************/
-#
-#
 #	File:		wisp.umf
 #
 #	Function:	Generic makefile for the WISP translator on all unix platforms.
 #
-# 	History:	09/26/89	Written by GSL
-#			06/04/92	Changed to use make.include GSL
-#			06/09/92	Removed copy to $(STDBIN). GSL
 #
 
-CDEBUG = 
+CDEBUG = -DNODEBUG
+CDEBUG_D = -g -DDEBUG
 
 WC=../wispcommon
 
@@ -30,21 +18,36 @@ include $(WISP)/src/port/make.include
 CFLAGS  = $(CFLAGS0) -I $(WC)
 
 WISP_EXE = wisp
+WISP_EXE_D = wispd
 
 THE_LIB = wisptran.a
+THE_LIB_D = wisptrand.a
 
 .PRECIOUS:	$(THE_LIB) 
+
+.SUFFIXES: .cob .wcb
+
+.wcb.cob:
+	$(WISPTRAN) $(WISPFLAGS) $*
+
+
+WISPTRAN = $(WISP_EXE)
+WISPFLAGS = 
+ACU_COB = ccbl
+ACU_COBFLAGS = -da4 -zd -te 800 
+MF_COB = cob
+MF_COBFLAGS = 
 
 all: 	$(WISP_EXE)
 
 debug:
-	$(MAKE) WISP_EXE=wispd THE_LIB=wisptrand.a CDEBUG=-g
+	$(MAKE) WISP_EXE=$(WISP_EXE_D) THE_LIB=$(THE_LIB_D) CDEBUG="$(CDEBUG_D)"
 
 $(WISP_EXE): $(THE_LIB)
 	$(CC) $(CFLAGS) -o $@ $(THE_LIB)
 
 clean:
-	rm -f $(WISP_EXE) wispd $(THE_LIB) wisptrand.a *~ core *.o
+	rm -f $(WISP_EXE) $(WISP_EXE_D) $(THE_LIB) $(THE_LIB_D) *~ core *.o
 
 $(THE_LIB):	$(THE_LIB)(wisp.o) \
 	$(THE_LIB)(dataconv.o) \
@@ -90,6 +93,7 @@ $(THE_LIB):	$(THE_LIB)(wisp.o) \
 	$(RANLIB) $(THE_LIB)
 	@echo THE_LIB $(THE_LIB) is now up-to-date
 
+
 $(THE_LIB)(dataconv.o): dataconv.c wisp.h proto.h
 $(THE_LIB)(dataconv.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(dataconv.o): token.h tokenize.h node.h wispfile.h wmalloc.h
@@ -99,9 +103,10 @@ $(THE_LIB)(input.o): input.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(input.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(input.o): wispfile.h wmalloc.h output.h keywords.h
 $(THE_LIB)(input.o): directiv.h lines.h input.h
-$(THE_LIB)(keywords.o): keywords.c wmalloc.h keywords.h proto.h
+$(THE_LIB)(keywords.o): keywords.c wisp.h proto.h
 $(THE_LIB)(keywords.o): $(WC)/idsistd.h $(WC)/intdef.h
-$(THE_LIB)(keywords.o): token.h tokenize.h node.h wispfile.h
+$(THE_LIB)(keywords.o): token.h tokenize.h node.h wispfile.h wmalloc.h
+$(THE_LIB)(keywords.o): output.h keywords.h
 $(THE_LIB)(node.o): node.c proto.h $(WC)/idsistd.h
 $(THE_LIB)(node.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(node.o): wispfile.h wmalloc.h
@@ -125,18 +130,21 @@ $(THE_LIB)(wisp.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wisp.o): wispfile.h wmalloc.h output.h keywords.h scrn.h
 $(THE_LIB)(wisp.o): crt.h cobfiles.h keylist.h directiv.h input.h
 $(THE_LIB)(wisp.o): $(WC)/ring.h statment.h wt_procd.h
-$(THE_LIB)(wisp.o): $(WC)/wcommon.h $(WC)/wispcfg.h
+$(THE_LIB)(wisp.o): wt_datad.h wt_locks.h $(WC)/wcommon.h
+$(THE_LIB)(wisp.o): $(WC)/wispcfg.h
 $(THE_LIB)(wmalloc.o): wmalloc.c wmalloc.h output.h token.h tokenize.h
 $(THE_LIB)(wmalloc.o): node.h wispfile.h proto.h
 $(THE_LIB)(wmalloc.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_acept.o): wt_acept.c wisp.h proto.h
 $(THE_LIB)(wt_acept.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_acept.o): token.h tokenize.h node.h wispfile.h wmalloc.h
-$(THE_LIB)(wt_acept.o): output.h keywords.h
+$(THE_LIB)(wt_acept.o): output.h keywords.h statment.h reduce.h
+$(THE_LIB)(wt_acept.o): wt_procd.h
 $(THE_LIB)(wt_call.o): wt_call.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_call.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_call.o): wispfile.h wmalloc.h output.h keywords.h
-$(THE_LIB)(wt_call.o): cobfiles.h
+$(THE_LIB)(wt_call.o): cobfiles.h reduce.h statment.h input.h
+$(THE_LIB)(wt_call.o): wt_procd.h
 $(THE_LIB)(wt_cli.o): wt_cli.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_cli.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_cli.o): wispfile.h wmalloc.h output.h keywords.h
@@ -144,7 +152,8 @@ $(THE_LIB)(wt_cli.o): $(WC)/wcommon.h $(WC)/getopt.h
 $(THE_LIB)(wt_crtrw.o): wt_crtrw.c wisp.h proto.h
 $(THE_LIB)(wt_crtrw.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_crtrw.o): token.h tokenize.h node.h wispfile.h wmalloc.h
-$(THE_LIB)(wt_crtrw.o): output.h keywords.h crt.h
+$(THE_LIB)(wt_crtrw.o): output.h keywords.h crt.h scrn.h cobfiles.h
+$(THE_LIB)(wt_crtrw.o): statment.h wt_procd.h reduce.h
 $(THE_LIB)(wt_datad.o): wt_datad.c wisp.h proto.h
 $(THE_LIB)(wt_datad.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_datad.o): token.h tokenize.h node.h wispfile.h wmalloc.h
@@ -157,11 +166,12 @@ $(THE_LIB)(wt_debug.o): keywords.h
 $(THE_LIB)(wt_decl.o): wt_decl.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_decl.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_decl.o): wispfile.h wmalloc.h output.h keywords.h crt.h
-$(THE_LIB)(wt_decl.o): cobfiles.h
+$(THE_LIB)(wt_decl.o): cobfiles.h statment.h wt_procd.h reduce.h
 $(THE_LIB)(wt_delet.o): wt_delet.c wisp.h proto.h
 $(THE_LIB)(wt_delet.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_delet.o): token.h tokenize.h node.h wispfile.h wmalloc.h
-$(THE_LIB)(wt_delet.o): output.h keywords.h cobfiles.h
+$(THE_LIB)(wt_delet.o): output.h keywords.h cobfiles.h statment.h
+$(THE_LIB)(wt_delet.o): reduce.h wt_procd.h wt_locks.h wt_datad.h crt.h
 $(THE_LIB)(wt_disp.o): wt_disp.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_disp.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_disp.o): wispfile.h wmalloc.h output.h keywords.h scrn.h
@@ -178,6 +188,7 @@ $(THE_LIB)(wt_files.o): input.h $(WC)/ring.h
 $(THE_LIB)(wt_free.o): wt_free.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_free.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_free.o): wispfile.h wmalloc.h output.h keywords.h
+$(THE_LIB)(wt_free.o): cobfiles.h statment.h reduce.h wt_procd.h
 $(THE_LIB)(wt_ident.o): wt_ident.c wisp.h proto.h
 $(THE_LIB)(wt_ident.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_ident.o): token.h tokenize.h node.h wispfile.h wmalloc.h
@@ -186,7 +197,7 @@ $(THE_LIB)(wt_ident.o): $(WC)/ring.h
 $(THE_LIB)(wt_if.o): wt_if.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_if.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_if.o): wispfile.h wmalloc.h output.h keywords.h
-$(THE_LIB)(wt_if.o): statment.h reduce.h
+$(THE_LIB)(wt_if.o): statment.h reduce.h wt_procd.h
 $(THE_LIB)(wt_input.o): wt_input.c wisp.h proto.h
 $(THE_LIB)(wt_input.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_input.o): token.h tokenize.h node.h wispfile.h wmalloc.h
@@ -199,21 +210,24 @@ $(THE_LIB)(wt_io.o): input.h
 $(THE_LIB)(wt_locks.o): wt_locks.c wisp.h proto.h
 $(THE_LIB)(wt_locks.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_locks.o): token.h tokenize.h node.h wispfile.h wmalloc.h
-$(THE_LIB)(wt_locks.o): output.h keywords.h cobfiles.h
+$(THE_LIB)(wt_locks.o): output.h keywords.h cobfiles.h wt_locks.h
 $(THE_LIB)(wt_opcls.o): wt_opcls.c wisp.h proto.h
 $(THE_LIB)(wt_opcls.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_opcls.o): token.h tokenize.h node.h wispfile.h wmalloc.h
 $(THE_LIB)(wt_opcls.o): output.h keywords.h crt.h cobfiles.h directiv.h
-$(THE_LIB)(wt_opcls.o): $(WC)/wcommon.h
+$(THE_LIB)(wt_opcls.o): $(WC)/wcommon.h statment.h reduce.h
+$(THE_LIB)(wt_opcls.o): wt_procd.h wt_locks.h
 $(THE_LIB)(wt_procd.o): wt_procd.c wisp.h proto.h
 $(THE_LIB)(wt_procd.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_procd.o): token.h tokenize.h node.h wispfile.h wmalloc.h
 $(THE_LIB)(wt_procd.o): output.h keywords.h scrn.h crt.h cobfiles.h
-$(THE_LIB)(wt_procd.o): statment.h wt_disp.h wt_procd.h reduce.h
+$(THE_LIB)(wt_procd.o): statment.h wt_disp.h wt_procd.h wt_locks.h
+$(THE_LIB)(wt_procd.o): reduce.h
 $(THE_LIB)(wt_read.o): wt_read.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_read.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_read.o): wispfile.h wmalloc.h output.h keywords.h crt.h
-$(THE_LIB)(wt_read.o): cobfiles.h
+$(THE_LIB)(wt_read.o): cobfiles.h statment.h reduce.h wt_procd.h
+$(THE_LIB)(wt_read.o): wt_locks.h
 $(THE_LIB)(wt_scrn.o): wt_scrn.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_scrn.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_scrn.o): wispfile.h wmalloc.h output.h keywords.h scrn.h
@@ -222,20 +236,21 @@ $(THE_LIB)(wt_scrn.o): reduce.h $(WC)/ring.h statment.h
 $(THE_LIB)(wt_sort.o): wt_sort.c wisp.h proto.h $(WC)/idsistd.h
 $(THE_LIB)(wt_sort.o): $(WC)/intdef.h token.h tokenize.h node.h
 $(THE_LIB)(wt_sort.o): wispfile.h wmalloc.h output.h keywords.h
-$(THE_LIB)(wt_sort.o): cobfiles.h
+$(THE_LIB)(wt_sort.o): cobfiles.h statment.h reduce.h wt_procd.h
 $(THE_LIB)(wt_start.o): wt_start.c wisp.h proto.h
 $(THE_LIB)(wt_start.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_start.o): token.h tokenize.h node.h wispfile.h wmalloc.h
 $(THE_LIB)(wt_start.o): output.h keywords.h cobfiles.h reduce.h
-$(THE_LIB)(wt_start.o): statment.h
+$(THE_LIB)(wt_start.o): statment.h wt_procd.h
 $(THE_LIB)(wt_utils.o): wt_utils.c wisp.h proto.h
 $(THE_LIB)(wt_utils.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_utils.o): token.h tokenize.h node.h wispfile.h wmalloc.h
-$(THE_LIB)(wt_utils.o): output.h keywords.h
+$(THE_LIB)(wt_utils.o): output.h keywords.h cobfiles.h
 $(THE_LIB)(wt_write.o): wt_write.c wisp.h proto.h
 $(THE_LIB)(wt_write.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_write.o): token.h tokenize.h node.h wispfile.h wmalloc.h
-$(THE_LIB)(wt_write.o): output.h keywords.h cobfiles.h
+$(THE_LIB)(wt_write.o): output.h keywords.h cobfiles.h statment.h
+$(THE_LIB)(wt_write.o): reduce.h wt_procd.h
 $(THE_LIB)(wt_wsdat.o): wt_wsdat.c wisp.h proto.h
 $(THE_LIB)(wt_wsdat.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_wsdat.o): token.h tokenize.h node.h wispfile.h wmalloc.h
@@ -245,6 +260,8 @@ $(THE_LIB)(wt_wsdiv.o): wt_wsdiv.c wisp.h proto.h
 $(THE_LIB)(wt_wsdiv.o): $(WC)/idsistd.h $(WC)/intdef.h
 $(THE_LIB)(wt_wsdiv.o): token.h tokenize.h node.h wispfile.h wmalloc.h
 $(THE_LIB)(wt_wsdiv.o): output.h keywords.h keylist.h statment.h
+$(THE_LIB)(wt_wsdiv.o): wt_datad.h
+
 
 #
 #	WISPCOMMON
@@ -270,13 +287,72 @@ $(THE_LIB)(wisp_pic.o): $(WC)/wisp_pic.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wi
 	ar rv $@ $%
 	rm -f $%
 
+#
+#	Testing
+#
+
 testacu:
-	@for testwcb in test0???.wcb ; do \
+	@for testwcb in test0???.wcb t_*.wcb; do \
+		echo ; \
+		echo ---------------------------------------- ; \
 		echo Testing file $$testwcb ; \
-		grep 'FUNCTION:' $$testwcb ; \
 		noext=`echo $$testwcb | cut -f 1 -d .` ; \
 		NOEXT=`echo $$noext | tr '[a-z]' '[A-Z]'` ; \
-		$(WISP_EXE) $$testwcb ; \
-		ccbl -Zd -Da4 -o $$NOEXT $$noext.cob ; \
+		CMD="$(WISP_EXE) $(WISPFLAGS) $$testwcb" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+		CMD="$(ACU_COB) $(ACU_COBFLAGS) -o $$NOEXT $$noext.cob" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
 	done ;
+
+testacn:
+	@for testwcb in test0???.wcb t_*.wcb; do \
+		echo ; \
+		echo ---------------------------------------- ; \
+		echo Testing file $$testwcb ; \
+		noext=`echo $$testwcb | cut -f 1 -d .` ; \
+		NOEXT=`echo $$noext | tr '[a-z]' '[A-Z]'` ; \
+		CMD="$(WISP_EXE) -VACN -1 $(WISPFLAGS) $$testwcb" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+		CMD="$(ACU_COB) $(ACU_COBFLAGS) -o $$NOEXT $$noext.cob" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+	done ;
+
+testmf:
+	@for testwcb in test0???.wcb t_*.wcb; do \
+		echo ; \
+		echo ---------------------------------------- ; \
+		echo Testing file $$testwcb ; \
+		noext=`echo $$testwcb | cut -f 1 -d .` ; \
+		NOEXT=`echo $$noext | tr '[a-z]' '[A-Z]'` ; \
+		CMD="$(WISP_EXE) -VMF $(WISPFLAGS) $$testwcb" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+		CMD="$(MF_COB) $(MF_COBFLAGS) $$noext.cob" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+	done ;
+
+
+#
+#	$Log: wisp.umf,v $
+#	Revision 1.15  1998-06-09 13:51:29-04  gsl
+#	Redid the dependencies
+#	added testmf
+#
+#	Revision 1.14  1998-04-03 14:42:51-05  gsl
+#	fix the rules for test routines
+#
+#	Revision 1.13  1998-03-25 16:00:45-05  gsl
+#	fix end-of-line
+#
+#	Revision 1.12  1998-03-25 16:00:00-05  gsl
+#	Fix debug, fix copyright
+#
+#
+#
+#
 

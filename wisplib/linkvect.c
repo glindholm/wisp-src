@@ -37,15 +37,14 @@ void BELL();
 /* void BITUNPK(); 	*/
 /* void DATE(); 	*/
 /* void DAY();		*/
-void EXTRACT();
-void FIND();
+/* void EXTRACT();	*/
+/* void FIND();		*/
 void HEXPACK();
 void HEXUNPK();
 void LOGOFF();
 void MESSAGE();
 void wpause();
 void PRINT();
-void READFDR();
 void READVTOC();
 void wrename();
 void SCRATCH();
@@ -66,6 +65,7 @@ static struct
 	"BITUNPK ",	(void (*)()) BITUNPK,
 	"DATE    ",	(void (*)()) DATE,
 	"DATE2   ",	(void (*)()) DATE2,
+	"DATE4   ",	(void (*)()) DATE4,
 	"DAY     ",	(void (*)()) DAY,
 	"EXTRACT ",	(void (*)()) EXTRACT,
 	"FIND    ",	(void (*)()) FIND,
@@ -76,6 +76,7 @@ static struct
 	"PAUSE   ",	(void (*)()) wpause,
 	"PRINT   ",	(void (*)()) PRINT,
 	"READFDR ",	(void (*)()) READFDR,
+	"READFDR4",	(void (*)()) READFDR4,
 	"READVTOC",	(void (*)()) READVTOC,
 	"RENAME  ",	(void (*)()) wrename,
 	"SCRATCH ",	(void (*)()) SCRATCH,
@@ -356,6 +357,15 @@ struct str_parm *parm_list;
 /*
 **	History:
 **	$Log: linkvect.c,v $
+**	Revision 1.11  1999-09-08 19:42:53-04  gsl
+**	Add READFDR4
+**
+**	Revision 1.10  1999-09-08 15:39:36-04  gsl
+**	Add DATE4
+**
+**	Revision 1.9  1999-01-04 17:47:13-05  gsl
+**	fix warning
+**
 **	Revision 1.8  1997-05-13 16:15:52-04  scass
 **	Added DATE2
 **

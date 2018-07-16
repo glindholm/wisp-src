@@ -1,0 +1,82 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>WISP Licensing - Generate Key</title>
+<meta name="GENERATOR" content="Microsoft FrontPage 3.0">
+
+
+<meta name="Microsoft Theme" content="none"><meta name="Microsoft Border" content="tl, default"></head>
+
+<body><!--msnavigation--><table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td><font face="arial, helvetica" mstheme>
+
+<p align="center"><font size="6"><strong></strong></font><br>
+</p>
+
+<p align="center">&nbsp;</p>
+</font mstheme></td></tr><!--msnavigation--></table><!--msnavigation--><table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td valign="top" width="1%"><font face="arial, helvetica" mstheme>
+
+</font mstheme></td><td valign="top" width="24"></td><!--msnavigation--><td valign="top">
+
+<p>&nbsp;</p>
+
+<hr width="80%" size="10" color="#0000FF" noshade>
+
+<h2 align="center">Generate a WISP License Key </h2>
+
+<hr width="80%" size="10" color="#0000FF" noshade>
+
+<form method="GET" action="http://cyclone/cgi-bin/wauthorize.exe">
+  <input type="hidden" name="CMD" value="GENKEY"><div align="center"><center><table border="0" width="80%" cellspacing="5" cellpadding="5">
+    <tr>
+      <td width="50%" align="right"><div align="right"><p>Customer Name</td>
+      <td width="50%"><div align="left"><p><input type="text" name="cname" size="21" tabindex="1"></td>
+    </tr>
+    <tr>
+      <td width="50%" align="right">Customer Number</td>
+      <td width="50%"><input type="text" name="cnum" size="21" tabindex="2"></td>
+    </tr>
+    <tr>
+      <td width="50%" align="right">License Type</td>
+      <td width="50%"><select name="lictype" size="1">
+        <option value="s">Single</option>
+        <option value="n">Network (Windows)</option>
+        <option value="c">Cluster</option>
+        <option value="d14">Demo (14 days)</option>
+        <option value="d30">Demo (30 days)</option>
+        <option value="d60">Demo (60 days)</option>
+        <option value="d90">Demo (90 days)</option>
+        <option value="d180">Demo (180 days)</option>
+      </select></td>
+    </tr>
+    <tr>
+      <td width="50%" align="right">Platform</td>
+      <td width="50%"><select name="platform" size="1">
+        <option value="WN">WN - NT/98/95</option>
+        <option value="AX">AX - AIX RISC</option>
+        <option value="A1">A1 - Alpha Digital Unix (OSF/1)</option>
+        <option value="HP">HP - HP/UX 9000 RISC</option>
+        <option value="SO">SO - Sun Solaris 2 (Sparc)</option>
+        <option value="SC">SC - SCO Unix (Intel)</option>
+        <option value="DG">DG - DG/UX Aviion</option>
+        <option value="DI">DI - DG/UX Intel</option>
+        <option value="DS">DS - MS-DOS</option>
+        <option value="SQ">SQ - Sequent </option>
+        <option value="NC">NC - NCR (Intel)</option>
+        <option value="PY">PY - PYRAMID</option>
+        <option value="SU">SU - SunOS (Sparc)</option>
+        <option value="UL">UL - Ultrix (DEC RISC)</option>
+        <option value="US">US - Unisys 6000 SVR4</option>
+        <option value="UW">UW - UNIXWARE</option>
+      </select></td>
+    </tr>
+  </table>
+  </center></div><div align="center"><center><p><input type="submit" value="Generate Key" name="submit"></p>
+  </center></div>
+</form>
+
+<hr width="80%" size="10" color="#0000FF" noshade>
+
+<p align="center"><a href="wl_main.htm">Return to Main</a> 
+<!--msnavigation--></td></tr><!--msnavigation--></table></body>
+</html>

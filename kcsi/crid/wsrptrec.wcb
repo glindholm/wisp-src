@@ -157,6 +157,38 @@
 014700         10  NF-LEN                     PIC 999 COMP.
 014800         10  NF-DEC                     PIC 9.
 014900
+      *---------------------------------------------------------------
+      * Duplicate fields translation table.
+      * The AKA name is know to the user as the Temporary field name.
+      * In the file this is stored as a sparse table with only used
+      * records written to the file.
+      * The duplicate RFL-NAME is changed to the AKA name for storage 
+      * into the file and restore useing this table when read from the
+      * file.
+      *
+      * CTL-FIELDS-AKA:The unique AKA field name.
+      * R-AKA-NAME:    The duplicate name used to correct the RFL-NAME
+      *		       in the RFL-RECORD when read from the file.
+      *
+      * The R-AKA-NAME field is only used in RPTMAK and RPTLOD for
+      * writing and loading the report file. It is used to fix up the
+      * RFL-NAME after it is written and after it is loaded from the
+      * report file.
+      *---------------------------------------------------------------
+	   05  R-AKA-SECTION.
+	     07 R-AKA-RECORD PIC X(87).
+	     07 FILLER REDEFINES R-AKA-RECORD.
+	       10  R-AKA-KEY.
+		   15  R-AKA-KEY-TYPE   PIC X(01).
+		   15  R-AKA-DUP-NAME   PIC X(08).
+		   15  FILLER	        PIC X(04).
+	       10  R-AKA-DATA.
+		   15  R-AKA-ORIGIN     PIC 9.
+	           15  R-AKA-TMP-NAME   PIC X(08).
+		   15  FILLER           PIC X(65).
+	     07 R-AKA-TABLE  OCCURS 80 TIMES.
+		10  CTL-FIELDS-AKA      PIC X(08).
+		10  R-AKA-NAME          PIC X(08).
 015000*---------------------------------------------------------------
 015100* FIELD DESCRIPTOR RECORDS ARE THE FIELDS AS THEY WILL APPEAR
 015200* ON THE REPORT AND AS MENTIONED THERE CAN BE 80 OF THESE.
@@ -165,12 +197,18 @@
 015300* THE LAST TWO BYTE FILLER IS SUPPOSEDLY ZEROES BUT IS UNUSED
 015400*---------------------------------------------------------------
 015500     05  RFL-IDX                    BINARY.
+      *	   The records on disk are 87 bytes.	   
+      *		       81 records * 87 bytes  = 7047	   
+      *    05  RFL-RECORDS                PIC X(7047).
+      *	   The internal processing "PARSEINQ" uses 85 bytes.
+      *		       81 records * 85 bytes  = 6885	   
 015600     05  RFL-RECORDS                PIC X(6885).
 000000     05  FILLER REDEFINES RFL-RECORDS.
 015700      07  RFL-RECORD OCCURS 81 TIMES.
 015800         10  RFL-KEY.
 015900             15  RFL-LINE-CODE      PIC X.
 016000             15  RFL-SEQ            PIC 99.
+		   15  RFL-SEQ-A REDEFINES RFL-SEQ PIC XX.
 016100             15  RFL-NAME           PIC X(8).
 016200             15  RFL-OCCURRENCE     PIC 99.
 016300             15  RFL-OCCURRENCE-A REDEFINES
@@ -192,4 +230,7 @@
 017900         10  RFL-MINIMUM-CODE       PIC X.
 018000         10  RFL-AVERAGE-CODE       PIC X.
 018100         10  RFL-ORIGIN             PIC 9.
+      *	   The records on disk are actually 87 bytes which includes
+      *	   this 2 byte filler. However the internal processing uses
+      *	   only 85 bytes (RFL_ENTRY_LEN) to step through the records.	       
 018200*        10  FILLER                 PIC 99.

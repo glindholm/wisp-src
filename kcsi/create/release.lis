@@ -1,22 +1,20 @@
-	Copyright (c) 1997 by NeoMedia Technologies, Inc. All Rights Reserved.
+	Copyright (c) 1997-1999 by NeoMedia Technologies, Inc. 
+	All Rights Reserved.
 	
 	====================================================================
 	
 	Title:		RELEASE NOTES FOR KCSI CREATE UTILITY
 	
 	Document:	relnotes.lis (RELNOTES)
-	Last Updated:	14 August 1997
-	Products:	WISP/KCSI-CREATE
-	Versions:	3.0 (and later)
+	Last Updated:	$Date:$
+	Products:	KCSI CREATE
+	Versions:	3.4 (and later)
 	
 	Summary:	Release notes for changes to KCSI - CREATE utility
 			since initial release.
 
 	====================================================================
 
-        DevTech Migrations has merged with it's parent company DevTech
-        Assosciates and has changed their company name to NeoMedia
-        Technologies Inc.  The main office has been relocated to Florida.
 
                 NeoMedia Technologies Inc.
                 2201 2nd Street Suite 600
@@ -25,68 +23,49 @@
 
                 Voice (941) 337-3434
                 Fax   (941) 337-3668
-                Web   www.neomedia-tech.com
-
-
-	HIGHLIGHTS
-	==========
-
-	Corrected installation procedures and packing list are now included.
-
-	File I/O is now processed through the use of ExtFH() rather than
-        using DISAM.
-
-
-	--------------------------------------------------------------------
-	The following supplemental documents describe specialized aspects
-	of KCSI-CREATE and are included in hardcopy format.
+                Web   www.neom.com
+		Email support@neom.com
 
 
 
-	--------------------------------------------------------------------
-	The following items may alter the behavior of already converted
-	software.  Please check these over carefully.
+	CHANGES FROM 3.3 TO 3.4
+	=======================
+	The following items describe corrections and improvements that
+	have been made from release 3.3 to release 3.4.
+
+	CREATE has been updated to the latest version of the WISP
+	libraries, currently WISP 4.3.04.
 
 
+	CHANGES FROM 3.2 TO 3.3
+	=======================
+	The following items describe corrections and improvements that
+	have been made from release 3.2 to release 3.3.
 
-	--------------------------------------------------------------------
-	The following items are not yet available.
-
-        DEC Alpha running Digital Unix 4.0 requires Micro Focus COBL v4.1
-        for use of the extended file handler ExtFH().  This will be
-        available as soon as the port is completed and tested with the
-        proper version of Micro Focus COBOL.
-
+	CREATE for Micro Focus COBOL was failing to add the duplicate flag
+	for duplicate alternate keys.  This has been corrected.
 
 
-	--------------------------------------------------------------------
-	The following items describe changes to the KCSI-CREATE distribution
-	kit that have been made since the initial release.
+	CHANGES FROM 3.1 TO 3.2
+	=======================
+	The following items describe corrections and improvements that
+	have been made from release 3.1 to release 3.2.
 
-	- The following are the changes to the KCSI-CREATE distribution kit.
+	ACUCOBOL: The CREATE utility does not obey the V-VERSION option in
+	the Acucobol A_CONFIG file.  It was always creating Vision 4
+	files. It has been changed to default to creating Vision 3 files
+	unless the environment variable V_VERSION=4 is set.
 
-		ADDITIONS
-		=========
-
-		DELETIONS
-		=========
-
-
-	--------------------------------------------------------------------
-	The following items describe new features of KCSI-CREATE that have been
-	added since the initial release.  None of these items should alter the
-	behavior of existing software.
-
-
-
-
-	--------------------------------------------------------------------
-	The following items describe corrections and improvements that have 
-	been made to the KCSI-CREATE runtime system since the initial release.
+	ACUCOBOL: A FORMAT keyword has been added to the OUTPUT GETPARM
+	screen which allows you to specify the Vision Version for Indexed
+	files.
 
 
 	CHANGES FROM 2.0 TO 3.0
 	=======================
+	The following items describe corrections and improvements that
+	have been made from release 2.0 to release 3.0.
+
 	Micro Focus COBOL:  The file I/O is now processed through the
         use of the extended file handler ExtFH().  DISAM is no longer a
         requirement for building the tools.  The ability to now process

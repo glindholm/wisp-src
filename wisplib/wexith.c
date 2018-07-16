@@ -32,6 +32,7 @@ static char rcsid[]="$Id:$";
 #include "vwang.h"
 #include "sharemem.h"
 #include "wisplib.h"
+#include "idsisubs.h"
 
 /*
 **	Structures and Defines
@@ -84,35 +85,39 @@ int delete_worklib(void);
 void wexith(void)									/* This is the WISP exit handler.	*/
 {											/* It is installed by WFOPEN, and refed	*/
 	static int already = 0;								/* Already done?			*/
-	int i;										/* vuserexit.				*/
-	char fname[NAME_LENGTH+10];
+	fstruct *temp_file;
 
 	if (already) return;								/* Already been here.			*/
 	else	already = 1;
 
 	/*
-	**	Delete all scratch files
+	**	Delete all IS_SCRATCH files
 	*/
-	if (flist)									/* if any files were opened for scratch	*/
+	while(g_temp_file_list)
 	{
-		flptr = flist;
-		do
-		{
-			i = 0;
-			do
-			{
-				fname[i] = flptr->name[i];				/* copy the file name			*/
-				i++;
-			} while ((flptr->name[i] != ' ') && (i < NAME_LENGTH));
-			fname[i] = '\0';
-			strcat(fname,";");						/* add a semicolon			*/
-			unlink(fname);							/* try to delete it			*/
-			flptr = (fstruct *)flptr->nextfile;
-		} while (flptr);
+		int4 	rc;
+		int4	args;
+	
+		/*
+		**	Take this item of the list first before processing because
+		**	SCRATCH calls wfname() which can alter the list.
+		*/
+		temp_file = g_temp_file_list;
+		g_temp_file_list = g_temp_file_list->nextfile;
+
+		args=5;
+		wvaset(&args);
+		SCRATCH("F", temp_file->file, temp_file->lib, temp_file->vol, &rc);
+		free(temp_file);
 	}
 
 	wfclose("*");									/* Ask close routine to spool everything.*/
 
+
+	/*
+	**	This changes the link-level so place logic before or after this
+	**	point if it needs to know link-level.
+	*/
 	oldlevel();									/* Decrement the link-level		*/
 	ppunlink(linklevel());								/* Putparm UNLINK			*/
 
@@ -161,25 +166,36 @@ void wexith(void)									/* This is the WISP exit handler.	*/
 **	FUNCTION:	Normal exiting cleanup code (Safe to call directly)
 **
 **	DESCRIPTION:	Called before process exits to cleanup.
+**			MUST DECREMENT LINK-LEVEL BEFORE CALLING.
 **
 **	ARGUMENTS:	None
 **
-**	GLOBALS:	None
+**	GLOBALS:	The link level
 **
 **	RETURN:		None
 **
-**	WARNINGS:	None
+**	WARNINGS:	MUST DECREMENT LINK-LEVEL BEFORE CALLING.
 **
 */
 void wispexit_cleanup(void)
 {
 
-#if defined(unix) || defined(WIN32)
 	/* 
-		Delete message ports	
+	**	Delete message ports	
 	*/
 	message_unlink();
-#endif
+
+	/*
+	**	When exiting the highest link level then delete the worklib
+	**	(unless the KEEPWORKLIB option is set).
+	*/
+	if (linklevel() < 1)
+	{
+		if (!get_wisp_option("KEEPWORKLIB"))
+		{
+			delete_worklib();
+		}
+	}
 
 #ifdef WIN32
 	/*
@@ -190,7 +206,6 @@ void wispexit_cleanup(void)
 	{
 		delete_defaults_temp();
 		delete_retcode();
-		delete_worklib();
 	}
 #endif
 
@@ -228,7 +243,7 @@ int delete_worklib(void)
 	char	workvol[7], worklib[9], workfile[9];
 	int4	retcode;
 	int4	args;
-	
+
 	get_defs(DEFAULTS_WV,workvol);
 	get_defs(DEFAULTS_WL,worklib);
 
@@ -250,6 +265,18 @@ int delete_worklib(void)
 /*
 **	History:
 **	$Log: wexith.c,v $
+**	Revision 1.21  1999-01-29 19:06:32-05  gsl
+**	Change the logic that deletes IS_SCRATCH files to use SCRATCH instead
+**	of unlink() to ensure that two-part files are deleted (x.dat + x.idx).
+**	Add logic to wispext_cleanup() to delete the WORKLIB when exiting the
+**	highest link-level unless the KEEPWORKLIB option is set.
+**
+**	Revision 1.20  1998-10-22 14:08:17-04  gsl
+**	Fix the g_temp_file_list processing so the list gets freed and nulled.
+**
+**	Revision 1.19  1998-07-31 15:50:06-04  gsl
+**	Change NAME_LENGTH to COB_FILEPATH_LEN
+**
 **	Revision 1.18  1996-12-11 16:26:18-05  gsl
 **	Add delete_worklib() routine which automatically gets called
 **	on an exit from WIN32

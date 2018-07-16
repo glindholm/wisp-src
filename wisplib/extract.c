@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 
 /*
@@ -25,7 +25,7 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <varargs.h>
+#include <stdarg.h>
 #include <time.h>
 #include <string.h>
 
@@ -66,7 +66,7 @@ static char rcsid[]="$Id:$";
 static char prid[8];
 
 static char *configfile();
-static void do_extract();
+static void do_extract(const char* keywrd, char* recvr, int4 rlen);
 static int gettype();
 static int findtty();
 static void dev_list(char* where, int4 rlen);					/* generate a list of devs			*/
@@ -79,35 +79,52 @@ static void osd_jname(char* name);
 #define NOT_SUPP 	{if ( full_err_mess ) werrlog(ERRORCODE(2),prid,keywrd,0,0,0,0,0,0);}
 #define NOT_YET		{if ( full_err_mess ) werrlog(ERRORCODE(4),prid,keywrd,0,0,0,0,0,0);}
 
-void EXTRACT(va_alist)									/* Variable number of arguments.	*/
-va_dcl											/* Set up call to do extract.		*/
+/*
+**	Call "EXTRACT" using Keyword, Reciever [,length] ...
+**
+**	Old translation of EXTRACT call put the PROGID as the 3rd parameter and
+**	split multiple keywords into multiple calls.  It 3 args and 3rd arg is 
+**	character data then assume old style translation.  This is save because
+**	with new translation a 3 arg call would have the length as the 3rd arg
+**	and this would not be character data.
+*/
+
+void EXTRACT(const char* first, ...)
 {
 #define		ROUTINE		17000
-	va_list	the_args;								/* Define a pointer to the list.	*/
+	va_list	the_args;
 	int	arg_count, ac;								/* Number of arguments.			*/
-	char	*keywrd, *recvr;							/* Address of call and return params.	*/
-	char	ckw[3], *temp;								/* Holding var to determine what it is.	*/
-	int	i, gotk, poldw;								/* Flag to indicate key has been rec'd. */
-	int4	*plong;
+	const	char *next_arg;
+	char	*recvr;
+	char	ckw[3];
+	int	gotk, poldw;								/* Flag to indicate key has been rec'd. */
 	int4	rlen;
 
 	memcpy(prid, getprogid(),8);							/* Copy prog id from global to local.	*/
-	va_start(the_args);								/* Set pointer to top of stack.		*/
+	va_start(the_args, first);							/* Set pointer to top of stack.		*/
 	arg_count = va_count(the_args);							/* Determine the number of arguments.	*/
-	gotk = 0;
 	ac = arg_count;									/* Set a var to manipulate.		*/
-	va_start(the_args);								/* Set pointer to top of stack.		*/
+
 	if (ac == 3) poldw = 1;								/* Test if possibly generated call from */
         else poldw = 0;									/*  previous version of translation.	*/
+
+	next_arg = first;
+	ac--;
+	gotk = 1;
+	
 	while (ac > 0)									/* Required: keyword, receiver field,	*/
 	{										/*  Optional: receiver length.		*/
 		if (!gotk)								/* Do we have the keyword param?	*/
 		{									/* No, so...				*/
-			keywrd = va_arg(the_args, char*);				/* Get the extract keyword requested.	*/
-			ac--;								/* Decrement the argument count.	*/
-			for (i = 0; i < 2; i++)  ckw[i] = *keywrd++;			
+			next_arg = va_arg(the_args, char*);				/* Get the extract keyword requested.	*/
+			ac--;
+			gotk = 0;
 		}
-		else for (i = 0; i < 2; i++)  ckw[i] = *temp++;				/* Get the keyword from the temp var.	*/
+
+		ckw[0] = next_arg[0];
+		ckw[1] = next_arg[1];
+		ckw[2] = '\0';
+		
 		if (ac > 0)								/* There are more params.		*/
 		{
 			recvr = va_arg(the_args, char*);				/* Get the returned receiver field.	*/
@@ -115,35 +132,40 @@ va_dcl											/* Set up call to do extract.		*/
 		}
 		else									/* Error: need receiver field.		*/
 		{
-			werrlog(ERRORCODE(8),prid,keywrd,0,0,0,0,0,0);
+			werrlog(ERRORCODE(8),prid,next_arg,0,0,0,0,0,0);
+			va_end(the_args);
 			return;								/* Return back to caller.		*/
 		}
+
 		rlen = 0L;								/* Set to use the default length.	*/
 		if (ac > 0)
 		{
-			temp = va_arg(the_args, char*);					/* Get the next parameter.		*/
+			next_arg = va_arg(the_args, char*);				/* Get the next parameter.		*/
 			ac--;								/* Decrement the argument count.	*/
-			if ( isprint(temp[0]) && isprint(temp[1]) ) 			/* if 1st 2 chars are printable, 	*/
+			if ( isprint(next_arg[0]) && isprint(next_arg[1]) )		/* if 1st 2 chars are printable, 	*/
 			   								/*  is next  keyword or the prog id.	*/
 			{
 				if (poldw)						/* Is the old wisp call so is the ID.	*/
 				{
-					memcpy(prid,temp,8);				/* Copy prog id from parameter to local.*/
+					memcpy(prid,next_arg,8);			/* Copy prog id from parameter to local.*/
 				}
 				else gotk = 1;						/* Set so don't screw up stack postn.	*/
 			}								/* and will use temp value as keyword.	*/
 			else
 			{
+				const int4 *plong;
 				gotk = 0;
-				plong = (int4 *)temp;					/* Set to point to a int4eger.	*/
+				plong = (const int4 *)next_arg;					/* Set to point to a int4eger.	*/
 				rlen = get_swap(plong);
 			}
 		}
 		do_extract(ckw,recvr,rlen);						/* Call extract for each set of params.	*/
 	}
+
+	va_end(the_args);
 }
 
-static void do_extract(char* keywrd, char* recvr, int4 rlen)				/* Do the actual extract.		*/
+static void do_extract(const char* keywrd, char* recvr, int4 rlen)			/* Do the actual extract.		*/
 {
 	char	tstr[80];								/* a temp string			*/
 	int4	tlong;
@@ -1077,6 +1099,15 @@ static	int4	device_num;
 /*
 **	History:
 **	$Log: extract.c,v $
+**	Revision 1.30  1998-11-04 10:12:30-05  gsl
+**	Changed to use strarg.h vararg macros plus cleanup and doc.
+**
+**	Revision 1.29  1998-03-31 13:49:18-05  gsl
+**	Move NISEEAST patch to wanguid.c
+**
+**	Revision 1.28  1998-03-31 11:12:13-05  gsl
+**	Add the custom NISEEAST stuff in ifdef's
+**
 **	Revision 1.27  1997-10-21 10:06:12-04  gsl
 **	Change WISPPROGID to getprogid()
 **	Change GETBIN/PUTBIN to get_swap() put_swap()

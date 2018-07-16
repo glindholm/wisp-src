@@ -11,19 +11,15 @@ static char rcsid[]="$Id:$";
 
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 
 #define EXT extern
 #include "wisp.h"
+#include "cobfiles.h"
 
-#define	ALPHA_FAC	129
-#define NUM_FAC		130
-#define PROT_FAC	140
-
-int strpos(src,srch)
-char	*src;
-char	*srch;
+int strpos(const char* src, const char* srch)
 {
-	char	*ptr;
+	const char* ptr;
 	int	len;
 
 	ptr = src;
@@ -40,9 +36,8 @@ char	*srch;
 }
 
 	
-
-int stredt(src,srch,repl)								/* Edit a source line, find the search	*/
-char *src,*srch,*repl;									/* string and replace it with *repl	*/
+/* Edit a source line, find the search string and replace it with *repl	*/
+int stredt(char* src, const char* srch, const char* repl)
 {
 	int i;
 	char tstring[512];
@@ -61,24 +56,24 @@ char *src,*srch,*repl;									/* string and replace it with *repl	*/
 	return(i);									/* return the value 0 or -1		*/
 }
 
-make_fac(fac,src)				/* take a source variable name and make a FAC variable name			*/
-char *fac,*src;
+char* make_fac(char* fac, const char* src)		/* take a source variable name and make a FAC variable name		*/
 {
-	make_fld(fac,src,"F-");						/* do it						*/
-	return 0;
+	return gen_data_name(fac, "F-", src, NULL);
 }
 
-make_oa(oa,src)					/* take a source variable name and make an ORDER-AREA variable name.		*/
-char *oa,*src;
+char*  make_oa(char* oa, const char* src)		/* take a source variable name and make an ORDER-AREA variable name.	*/
 {
-	make_fld(oa,src,"O-A-");					/* do it!						*/
-	return 0;
+	return gen_data_name(oa, "O-A-", src, NULL);
 }
 
+#define MAX_COBOL_WORD_LEN	30
 
-make_fld(dst,src,prfx)				/* take a source variable name and prefix and make a new variable name.		*/
-char *dst,*src,*prfx;
+/* take a source variable name and prefix and make a new variable name.		*/
+char* make_fld(char *dst, const char* src, const char* prfx)	
 {
+	return gen_data_name(dst, prfx, src, NULL);
+	
+#ifdef OLD
 	int i;
 	char	*ptr;
 
@@ -92,7 +87,7 @@ char *dst,*src,*prfx;
 
 	ptr = dst;
 	ptr += strlen(prfx);						/* move ptr to character after prefix			*/
-	for( i = i-30; i > 0;)
+	for( i = i-MAX_COBOL_WORD_LEN; i > 0;)
 	{
 		if( 0 == stredt(ptr,"-",""))				/* remove dashes till right size			*/
 			i--;
@@ -105,86 +100,124 @@ char *dst,*src,*prfx;
 		i = strlen(dst);					/* count length of the variable name			*/
 	}
 
-	while( i > 30 )
+	while( i > MAX_COBOL_WORD_LEN )
 	{
 		dst[--i] = ' ';
 		stredt(dst," ","");
 	}
-	return 0;
+	return dst;
+#endif /* OLD */
 }
 
-#define HT '\t'										/* Define horizontal tab.		*/
-#define SP ' '										/* Define space character.		*/
-#ifdef NULL
-#undef NULL
-#endif
-#define NULL '\0'
-
-
-int trim(string) char string[];								/* Trim a string of trailing blanks.	*/
-
+char* gen_data_name(char* dest, const char* prefix, const char* base, const char* suffix)
 {
-    register int i;									/* Working register storage.		*/
+	const char* l_prefix = "";
+	const char* l_suffix = "";
+	char	temp[80];
+	
+	if (prefix)
+	{
+		l_prefix = prefix;
+	}
+	if (suffix)
+	{
+		l_suffix = suffix;
+	}
 
-    for (i = strlen(string)-1; (i >= 0) && ((string[i] == SP) || (string[i] == HT) || (string[i] == NULL)); i--) string[i] = NULL;
+	sprintf(temp,"%s%s%s", l_prefix, base, l_suffix);
 
-    return(i+1);									/* Return the string length.		*/
+	if (strlen(temp) > MAX_COBOL_WORD_LEN)
+	{
+		int	max_base_len;
+		int	len;
+		int	i;
+		char	l_base[MAX_COBOL_WORD_LEN+1];
+
+		strncpy(l_base,base,MAX_COBOL_WORD_LEN);
+		l_base[MAX_COBOL_WORD_LEN] = '\0';
+		
+		max_base_len = MAX_COBOL_WORD_LEN - strlen(l_prefix) - strlen(l_suffix);
+
+		/*
+		**	Start by removing hyphens (from the end)
+		*/
+		len = strlen(l_base);
+		for(i=len-1; len > max_base_len && i >= 0; i--)
+		{
+			if ( '-' == l_base[i] )
+			{
+				stredt(&l_base[i],"-","");
+				len--;
+			}
+		}
+
+		/*
+		**	Next remove vowels (from the end)
+		*/
+		for(i=len-1; len > max_base_len && i >= 0; i--)
+		{
+			if (strchr("AEIOU",l_base[i]))
+			{
+				l_base[i] = '*';
+				len--;
+			}
+		}
+		while(0 == stredt(l_base,"*",""))
+		{
+			/* loop removing "*" */
+		}
+
+		/*
+		**	Next truncate
+		*/
+		if ((int)strlen(l_base) > max_base_len)
+		{
+			l_base[max_base_len] = '\0';
+		}
+		
+		sprintf(temp, "%s%s%s", l_prefix, l_base, l_suffix);
+
+		assert(strlen(temp) <= MAX_COBOL_WORD_LEN);
+
+		write_log("WISP",'I',"GENNAME", "Generated data name [%s] has been compress from [%s%s%s]",
+			  temp, l_prefix, base, l_suffix);
+	}
+
+	/*
+	**	Ensure generated name doesn't conflict with a user symbol.
+	*/
+	if (is_symbol(temp))
+	{
+		/*
+		**	Make Unique with "-Q"
+		*/
+		gen_data_name(temp, l_prefix, &temp[strlen(l_prefix)], "-Q");
+
+		write_log("WISP",'I',"GENNAME", "Generated data name [%s] has been munged to not conflict with symbol [%s%s%s]",
+			  temp, l_prefix, base, l_suffix);
+	}
+
+	strcpy(dest,temp);
+	
+	return dest;
 }
 
-int strlast(char *string, char srch)							/* determine if the srch char is the	*/
-											/* last non-whitespace			*/
-{
-	register int i;									/* Working register storage.		*/
-	for 	(i = strlen(string)-1;
-		(i >= 0) && ((string[i] == SP) || (string[i] == HT) || (string[i] == NULL) || (string[i] == '\n'));
-		(i--));
-	if (string[i] == srch)	return(1);						/* it is the last char			*/
-	else			return(0);						/* not found				*/
-}
 
-
-sp_trunc(text)									/* Truncate a string at the first space		*/
-char *text;
+char* sp_trunc(char* text)							/* Truncate a string at the first space		*/
 {
 	int i;
 	i = strpos(text," ");							/* find the space				*/
 	if ( i != -1 ) text[i] = '\0';						/* replace with a null				*/
-	return 0;
+	return text;
 }
 
-
-/*				Squeeze a line until it is equal to the_length							*/
-
-int wsqueeze(the_line,length)
-char *the_line;
-int  length;
-{
-	int i,j;
-
-	i = strlen(the_line);							/* First examine the line.			*/
-
-	if (the_line[i-1] == '\n') i--;						/* Ignore the newline.				*/
-
-	if (i <= length) return(0);						/* no need to squeeze the line			*/
-
-	do
-	{
-		j = stredt(&the_line[12],"  "," ");				/* change 2 spaces to 1 space after col 12	*/
-	} while ((j != -1) && (--i > length));					/* till no more or length is ok			*/
-
-	if (i > length) return(-1);						/* Couldn't do it.				*/
-	else return(1);								/* say we did it				*/
-}
-
-uppercase(str)										/* Shift string to uppercase		*/
-char *str;
+int uppercase(char* str)								/* Shift string to uppercase		*/
 {
 	for(;*str;str++)  *str = toupper(*str);
 	return 0;
 }
 
-lowercase(str)										/* Shift string to uppercase		*/
-char *str;
+int lowercase(char* str)								/* Shift string to uppercase		*/
 {
 	for(;*str;str++)  *str = tolower(*str);
 	return 0;
@@ -203,8 +236,7 @@ int	tabcnt;
 	return(0);
 }
 
-int noncase_eq(str1,str2)
-char	*str1, *str2;
+int noncase_eq(const char* str1, const char *str2)
 {
 	while(*str1 && *str2 && toupper(*str1)==toupper(*str2))
 	{
@@ -225,10 +257,115 @@ int strchrcnt(char *string,char chr)
 	return( cnt );
 }
 
+/*
+**	Use make_prog_name() for all the get_prog_xxx() routines.
+**	This will truncate the results required length.
+**	Don't use gen_data_name() because these are required 
+**	before working-storage and the value gen_data_name() generates
+**	may be different after working-storage is loaded into symbol table.
+*/
+static char *make_prog_name(char *new, int fnum, const char* prefix)
+{
+	char buff[80];
+	
+	strcpy(buff,prefix);
+	strcat(buff,prog_files[fnum]);
+	buff[MAX_COBOL_WORD_LEN] = '\0';
+	strcpy(new,buff);
+
+	return new;
+}
+
+const char *get_prog_vname(int fnum)
+{
+	static char the_name[40];
+	
+	if ((prog_vnames[fnum][0] == '\"') || (!prog_vnames[fnum][0]))
+	{
+		return make_prog_name(the_name, fnum, "V-");
+	}
+	else
+	{
+		return prog_vnames[fnum];
+	}
+
+}
+
+const char *get_prog_lname(int fnum)
+{
+	static char the_name[40];
+	
+	if ((prog_lnames[fnum][0] == '\"') || (!prog_lnames[fnum][0]))
+	{
+		return make_prog_name(the_name, fnum, "L-");
+	}
+	else
+	{
+		return prog_lnames[fnum];
+	}
+
+}
+
+const char *get_prog_fname(int fnum)
+{
+	static char the_name[40];
+	
+	if ((prog_fnames[fnum][0] == '\"') || (!prog_fnames[fnum][0]))
+	{
+		return make_prog_name(the_name, fnum, "F-");
+	}
+	else
+	{
+		return prog_fnames[fnum];
+	}
+
+}
+
+const char *get_prog_nname(int fnum)
+{
+	static char the_name[40];
+
+	return make_prog_name(the_name, fnum, "N-");
+}
+
+const char *get_prog_prname(int fnum)
+{
+	static char the_name[40];
+
+	return make_prog_name(the_name, fnum, "PR-");
+}
+
+const char *get_prog_status(int fnum)
+{
+	static char the_name[40];
+
+	return make_prog_name(the_name, fnum, "S-");
+}
 
 /*
 **	History:
 **	$Log: wt_utils.c,v $
+**	Revision 1.16  1998-03-27 13:38:17-05  gsl
+**	fix warnings
+**
+**	Revision 1.15  1998-03-26 09:25:17-05  gsl
+**	Changed the get_prog_xxx() routines to not use the gen_data_name()
+**	because these need to word before working-storage is processed.
+**
+**	Revision 1.14  1998-03-25 16:41:25-05  gsl
+**	Fix typo
+**
+**	Revision 1.13  1998-03-25 16:29:01-05  gsl
+**	Finish the gen_data_name() routines to remove from the end and to
+**	preserve the prefix when munged.
+**
+**	Revision 1.12  1998-03-23 13:39:37-05  gsl
+**	Add gen_data_name() as a replacement for make_fld().
+**	Move OLD to old.c
+**
+**	Revision 1.11  1998-02-10 15:09:51-05  gsl
+**	Added get_prog_xxxx() for fname, vname, lname, nname, prname, status.
+**
 **	Revision 1.10  1996-08-30 21:56:26-04  gsl
 **	drcs update
 **

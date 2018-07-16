@@ -1,153 +1,167 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-1999 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 #define EXT extern
 #include "wisp.h"
 #include "cobfiles.h"
+#include "statment.h"
+#include "reduce.h"
+#include "wt_procd.h"
+static void tput_sort_fwopen(NODE curr_node, int col, const char *openmode);
 
-p_sort()
+/*
+**	SORT file-name-1 {ON {ASCENDING|DESCENDING} KEY {data-name-1}...}...
+**	    [WITH DUPLICATES IN ORDER]
+**	    [COLLATING SEQUENCE IS alphabet-1]
+**	     {INPUT PROCEDURE IS proc-name-1 [THROUGH proc-name-2] }
+**	     {USING file-name-2...                                 }
+**
+**	     {OUTPUT PROCEDURE IS proc-name-3 [THROUGH proc-name-4] }
+**	     {GIVING file-name-3...                                 }
+**
+**
+**
+*/
+NODE parse_sort(NODE the_statement, NODE the_sentence)
 {
-	char sortbuf[2048];
-	char file1[40], file2[40];
-	int fnum;
+	NODE	curr_node, verb_node;
+	int	col;
+#define MAX_USING_FILES	255
+	char	*using_files[MAX_USING_FILES];
+	int	using_files_cnt = 0;
+	int	idx;
 
-	strcpy(sortbuf,linein);							/* Put the line into the sort buffer.		*/
+	verb_node = first_token_node(the_statement);
 
-	ptype = get_param(o_parms[0]);						/* get the SORT verb.				*/
-	ptype = get_param(file1);						/* Now the first files name.			*/
-
-	if (ptype == 1) strcat(sortbuf,linein);					/* if a new line, add it on.			*/
-
-	fnum = file_index(file1);
-
-	if (fnum == -1) 
+	if (!eq_token(verb_node->token,VERB,"SORT") &&
+	    !eq_token(verb_node->token,VERB,"MERGE"))
 	{
-		write_log("WISP",'F',"SORTNOTFND","SORT file %s not found.",file1);
-		fnum = prog_cnt;
+		write_tlog(verb_node->token,"WISP",'E',"VERB","Expected SORT/MERGE found [%s].", token_data(verb_node->token));
+		return(the_statement);
 	}
 
-	s_wfopen(fnum,1);							/* Generate a WFOPEN call.	(output)	*/
+	write_tlog(verb_node->token,"WISP",'I',"VERB","Processing %s Statement.", token_data(verb_node->token));
 
-	do
+	col = verb_node->token->column;
+	if (col > 36) col = 36;
+	if (col < 12) col = 12;
+
+	tput_leading_fluff(the_statement);
+
+	curr_node = verb_node->next;
+
+	tput_sort_fwopen(curr_node, col, "WFOPEN-SORT");
+	
+	/*
+	**	Scan for a "USING" and "GIVING" clauses
+	*/
+	curr_node = curr_node->next;
+	while (curr_node && NODE_END != curr_node->type)
 	{
-		ptype = get_param(o_parms[0]);					/* Next word to parse.				*/
-		if (g_newline)
+		if (eq_token(curr_node->token,KEYWORD,"USING"))
 		{
-			if (proc_keyword(o_parms[0]))				/* If new line and a keyword.			*/
+			for (curr_node = curr_node->next; 
+			     curr_node->token && IDENTIFIER == curr_node->token->type;
+			     curr_node = curr_node->next)
 			{
-				hold_line();					/* Hold for the keyword.			*/
-				break;						/* Keyword means break.				*/
-			}
-			else
-			{
-				strcat(sortbuf,linein);				/* Add to the buffer.				*/
+				tput_sort_fwopen(curr_node, col, "WFOPEN-INPUT");
+
+				using_files[using_files_cnt] = wdupstr(token_data(curr_node->token));
+				using_files_cnt++;
 			}
 		}
-
-		if (!strcmp(o_parms[0],"USING"))				/* Is it a USING word?				*/
+		else if (eq_token(curr_node->token,KEYWORD,"GIVING"))
 		{
-			ptype = get_param(file1);				/* Get the file name.				*/
-			if (ptype == 1) strcat(sortbuf,linein);
-			fnum = file_index(file1);
-			if (fnum == -1) 
+			for (curr_node = curr_node->next; 
+			     curr_node->token && IDENTIFIER == curr_node->token->type;
+			     curr_node = curr_node->next)
 			{
-				write_log("WISP",'F',"SORTNOTFND","SORT file %s not found.",file1);
-				fnum = prog_cnt;
+				/*
+				**	Check if this GIVING file was also a USING file
+				*/
+				for(idx=0; idx<using_files_cnt; idx++)
+				{
+					if (0==strcmp(using_files[idx], token_data(curr_node->token)))
+					{
+						idx = -1;	/* Yes is was a USING file */
+						break;
+					}
+				}
+				
+				/*
+				**	If this GIVING file was also a USING file then don't 
+				**	generate a fopen() call for it.
+				*/
+				if (idx != -1)
+				{
+					tput_sort_fwopen(curr_node, col, "WFOPEN-SORT");
+				}
 			}
-			s_wfopen(fnum,0);					/* Generate a WFOPEN call.	(input)		*/			
 		}
-		else if (!strcmp(o_parms[0],"GIVING"))				/* Is it a GIVING word?				*/
+		else
 		{
-			ptype = get_param(file2);				/* Get the file name.				*/
-			if (ptype == 1) strcat(sortbuf,linein);
-			for (fnum=0; fnum<prog_cnt; fnum++)			/* look for the file spec			*/
-			{
-				if (!strcmp(prog_files[fnum],file2)) break;	/* found it					*/
-			}
-			if (fnum == prog_cnt) write_log("WISP",'F',"SORTNOTFND","SORT file %s not found.",file2);
-			if ( 0 != strcmp(file1,file2) )
-			{
-				s_wfopen(fnum,1);				/* Generate a WFOPEN call.	(output)	*/
-			}
+			curr_node = curr_node->next;
 		}
-										/* do till we hit a LAST parm or keyword	*/
-	} while (ptype != -1);							/* (Keyword test is earlier)			*/
+	}
+	
+	tput_line_at(col,"MOVE \"SO\" TO WISP-DECLARATIVES-STATUS");
+	tput_flush();
+	tput_statement(col,the_statement);
+	the_statement = free_statement(the_statement);
 
-
-	tput_line("           MOVE \"SO\" TO WISP-DECLARATIVES-STATUS");
-	tput_block(sortbuf);
-	return 0;
+	/*
+	**	Cleanup the using_files list.
+	*/
+	for(idx=0; idx<using_files_cnt; idx++)
+	{
+		free(using_files[idx]);
+	}
+	
+	return the_statement;
 }
 
-
-s_wfopen(fnum,fmode)
-int fnum;
-int fmode;
+static void tput_sort_fwopen(NODE curr_node, int col, const char *openmode)
 {
-	make_fld(o_parms[9],prog_files[fnum],"S-");				/* create the status byte			*/
-
-	tput_line_at(12, "CALL \"wfopen3\" USING");
-	tput_clause (16, "%s,",o_parms[9]);					/* start with the status byte			*/
-
-										/* literal or null vol, pass the created field */
-	if ((prog_vnames[fnum][0] == '\"') || (!prog_vnames[fnum][0]))
+	int	fnum;
+	char	file_name[40];
+	
+	strcpy(file_name,token_data(curr_node->token));
+	
+	fnum = file_index(file_name);
+	if (-1 == fnum)
 	{
-		make_fld(o_parms[9],prog_files[fnum],"V-");
-		tput_clause(16, "%s,",o_parms[9]);
+		write_tlog(curr_node->token,"WISP",'E',"FILE", "SORT/MERGE file not found [%s].", file_name);
+		return;
 	}
-	else
-	{									/* use the programs own field			*/
-		tput_clause(16, "%s,",prog_vnames[fnum]);
-	}
-
-										/* literal or null lib, pass the created field 	*/
-	if ((prog_lnames[fnum][0] == '\"') || (!prog_lnames[fnum][0]))
-	{
-		make_fld(o_parms[9],prog_files[fnum],"L-");
-		tput_clause(16, "%s,",o_parms[9]);
-	}
-	else
-	{									/* use the programs own field			*/
-		tput_clause(16, "%s,",prog_lnames[fnum]);
-	}
-
-										/* literal or null name, pass the created field */
-	if ((prog_fnames[fnum][0] == '\"') || (!prog_fnames[fnum][0]))
-	{
-		make_fld(o_parms[9],prog_files[fnum],"F-");
-		tput_clause(16, "%s,",o_parms[9]);
-	}
-	else
-	{									/* use the programs own field			*/
-		tput_clause(16, "%s,",prog_fnames[fnum]);
-	}
-
-										/* always pass the created name			*/
-	make_fld(o_parms[9],prog_files[fnum],"N-");
-	tput_clause(16, "%s,",o_parms[9]);
-
-	tput_clause(16, "WISP-APPLICATION-NAME,");
-
-	make_fld(o_parms[9],prog_files[fnum],"PR-");
-	tput_clause(16, "%s,",o_parms[9]);		/* And the prname.				*/
-	tput_clause(16, "%s", (fmode==1) ? "WFOPEN-SORT" : "WFOPEN-INPUT");
-	return 0;
+	
+	tput_line_at(col, "CALL \"wfopen3\" USING");
+	tput_clause(col+4,  "%s,", get_prog_status(fnum));	/* STATUS	*/
+	tput_clause(col+4,  "%s,", get_prog_vname(fnum));	/* VOLUME	*/
+	tput_clause(col+4,  "%s,", get_prog_lname(fnum));	/* LIBRARY	*/
+	tput_clause(col+4,  "%s,", get_prog_fname(fnum));	/* FILE		*/
+	tput_clause(col+4,  "%s,", get_prog_nname(fnum));	/* NATIVE	*/
+	tput_clause(col+4,  "WISP-APPLICATION-NAME,");		/* Application	*/
+	tput_clause(col+4,  "%s,", get_prog_prname(fnum));	/* PRNAME	*/
+	tput_clause(col+4,  "%s", openmode);			/* open mode	*/
 }
-
-
 
 
 /*
 **	History:
 **	$Log: wt_sort.c,v $
+**	Revision 1.14  1999-01-05 14:55:11-05  gsl
+**	Fix so if USING and GIVING files are the same then don't generate wfopen() fo
+**	for the GIVING, this prevents PF3 screen.
+**
+**	Revision 1.13  1998-03-20 17:38:36-05  gsl
+**	moved OLD to old.c
+**
+**	Revision 1.12  1998-03-04 14:53:41-05  gsl
+**	Change parse_sort() to also handle MERGE verb
+**
+**	Revision 1.11  1998-03-02 11:13:36-05  gsl
+**	Finish cobol-85 logic
+**
 **	Revision 1.10  1996-08-30 21:56:25-04  gsl
 **	drcs update
 **

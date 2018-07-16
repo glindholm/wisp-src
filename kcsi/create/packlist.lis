@@ -1,44 +1,66 @@
- 	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+ 	Copyright (c) 1998 by NeoMedia Technologies Inc. All Rights Reserved.
 	
 	====================================================================
 	
-	Title:		KCSI CREATE PACKING LIST FOR UNIX
+	Title:		KCSI CREATE PACKING LIST
 	
 	Document:	packlist.lis
-	Last Updated:	31 OCTOBER 95
+	Last Updated:	$Date:$
 	Products:	CREATE/ACU, CREATE/MF
-	Versions:	1.8 (AND LATER)
+	Versions:	3.3 (AND LATER)
 	
-	Summary:	Packing list for the CREATE tool for unix.
+	Summary:	Packing list for the CREATE utility.
 
 	==================================================================== 
  
+	CREATE for ACUCOBOL on UNIX:
+	============================
+
 	This distribution should include:
  
 	packlist.lis		- This packing list
-	install_create.lis	- Instructions for building kcsi create and
-				  installation notes.
-	release.lis		- Release notes for the latest version if any.
+	install_create.lis	- Installation instructions
+	release.lis		- Release notes for the latest version
 
-	EXECUTABLES
-	===========
-	Micro Focus		AcuCOBOL
-	-----------		--------
-	create			CREATE		- The CREATE utility
+	create			- The CREATE utility
 
-	====================================================================
+	create.umf		- Makefile for rebuilding CREATE
+	create.a		- Library for rebuilding CREATE
+	acuio.a			- Library for rebuilding CREATE
+	vscracu.o		- Object for rebuilding CREATE
 
-	If for some reason the executable does not run on the system, or you
-	want to build it with your version of COBOL, the distribution contains
-	the pieces to make the executable on the current machine.
 
-	Micro Focus		AcuCOBOL
-	-----------		--------
-	mfcreate.a		create.a	- library of support routines
-	mfio.a			acuio.a		- library of I/O routines
-	libmfisam.a				- ISAM library
-				vscracu.o	- Needed for AcuCOBOL
-	create.umf		create.umf	- Make file for create utility
+	CREATE for MICRO FOCUS COBOL on UNIX:
+	=====================================
+
+	This distribution should include:
+ 
+	packlist.lis		- This packing list
+	install_create.lis	- Installation instructions
+	release.lis		- Release notes for the latest version
+
+	create			- The CREATE utility
+
+	create.umf		- Makefile for rebuilding CREATE
+	mfxcreate.a		- Library for rebuilding CREATE
+	mfxio.a			- Library for rebuilding CREATE
+	vscrmain.o		- Object for rebuilding CREATE
+
+
+	CREATE for ACUCOBOL on Windows NT/95:
+	=====================================
+
+	This distribution should include:
+ 
+	packlist.lis		- This packing list
+	createntsetup.txt	- Installation instructions
+	release.lis		- Release notes for the latest version
+
+	create.exe		- The CREATE utility
+
+	wwruncbl.mak		- Makefile for rebuilding CREATE
+	createacu.lib		- Library for rebuilding CREATE
+	vscracu.obj		- Object for rebuilding CREATE
 
 
        ========================= END OF DOCUMENT ==========================
