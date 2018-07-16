@@ -164,12 +164,18 @@ char *WL_nextfile(char* path, char** context)
 
 			}
 
-			/* Copy the filename, truncate if needed */
-			strncpy(ptr, dp->d_name, FILENAMESIZE);
-			ptr[FILENAMESIZE-1] = (char)0;
+			/* 
+			** Only add the file name if it fits.
+			** (Previously truncated file names)
+			*/
+			if (strlen(dp->d_name) < FILENAMESIZE)
+			{
+				strncpy(ptr, dp->d_name, FILENAMESIZE);
+				ptr[FILENAMESIZE-1] = (char)0;
 
-			ptr += FILENAMESIZE;
-			CT->slots_used += 1;
+				ptr += FILENAMESIZE;
+				CT->slots_used += 1;
+			}
 		}
 										/* Sort the table of dir entries		*/
 		qsort(CT->slots, CT->slots_used, FILENAMESIZE, WL_nexfile_q_strcmp);
@@ -333,12 +339,18 @@ char *WL_nextfile(char* path, char** context)
 
 			}
 
-			/* Copy the filename, truncate if needed */
-			strncpy(ptr, fi.cFileName, FILENAMESIZE);
-			ptr[FILENAMESIZE-1] = (char)0;
+			/* 
+			** Only add the file name if it fits.
+			** (Previously truncated file names)
+			*/
+			if (strlen(fi.cFileName) < FILENAMESIZE)
+			{
+				strncpy(ptr, fi.cFileName, FILENAMESIZE);
+				ptr[FILENAMESIZE-1] = (char)0;
 
-			ptr += FILENAMESIZE;
-			CT->slots_used += 1;
+				ptr += FILENAMESIZE;
+				CT->slots_used += 1;
+			}
 
 			/* Read the next directory entry. */
 			if (FALSE == FindNextFile(fh, &fi))
@@ -373,8 +385,7 @@ char *WL_nextfile(char* path, char** context)
 
 char *WL_s_nextfile(const char* path, int* first)
 {
-	char	wildpath[128];
-	static	char	file_name[32];
+	char	wildpath[MAX_PATH];
 	static	WIN32_FIND_DATA fileinfo;
 	static	HANDLE fh;
 
@@ -383,6 +394,11 @@ getnextfile:
 	if ( *first )
 	{
 		*first = 0;
+
+		if (strlen(path) > sizeof(wildpath)-4)
+		{
+			return(NULL);
+		}
 
 		strcpy( wildpath, path );
 		strcat( wildpath, "\\*" );
@@ -402,11 +418,8 @@ getnextfile:
 		}
 	}
 
-	strncpy( file_name, fileinfo.cFileName, sizeof(file_name) );
-	file_name[sizeof(file_name)-1] = '\0';
-
-	if (0==strcmp(file_name,".") || 
-	    0==strcmp(file_name,"..")   )
+	if (0==strcmp(fileinfo.cFileName,".") || 
+	    0==strcmp(fileinfo.cFileName,"..")   )
 	{
 		/*
 		**	Skip "." and ".."
@@ -414,12 +427,19 @@ getnextfile:
 		goto getnextfile;
 	}
 
-	return( file_name );
+	return( fileinfo.cFileName );
 }
 #endif	/* WIN32 */
 /*
 **	History:
 **	$Log: nextfile.c,v $
+**	Revision 1.24  2003/08/04 15:10:16  gsl
+**	Filenames that are too long are not return.
+**	previously they were truncated.
+**	
+**	Revision 1.23  2003/08/01 20:43:04  gsl
+**	fixed so doesn't truncate the file name, either returns full name or ignores it
+**	
 **	Revision 1.22  2003/01/31 17:33:55  gsl
 **	Fix  copyright header
 **	

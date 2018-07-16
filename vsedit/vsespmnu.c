@@ -127,16 +127,20 @@ static int vse_renumber(void);
 static void vse_print(void);
 static int vse_utilities(void);
 static int vse_run_program(char file[8], char lib[8], char vol[6], char *message);
+
+#ifdef unix
+static int vse_compile_and_run(void);
 static int vse_compile(void);
 static int vse_compile_command(void);
 static int vse_run_command_with_log(char *cmd, char *logfile);
+static int vse_errors(void);
+static int vse_listing(void);
+static int vse_display(char *filename);
+#endif
+
 static int vse_build_errfile(char *sysname);
 static char *vse_errfile(void);
 static int is_errfile_active(void);
-static int vse_errors(void);
-static int vse_compile_and_run(void);
-static int vse_listing(void);
-static int vse_display(char *filename);
 
 
 void vse_special_menu(void)
@@ -176,6 +180,8 @@ static void init_special_menu(void)
 		vsescr(spc_renumber_flds,spc_scr);
 		strcat(spc_pfs,"07");
 	}
+
+#ifdef unix
 	if (text_first)
 	{
 		if (0==strcmp(lang_ext(),"wcb"))
@@ -204,6 +210,7 @@ static void init_special_menu(void)
 		vsescr(spc_listing_flds,spc_scr);
 		strcat(spc_pfs,"12");
 	}
+#endif /* unix */
 
 	strcat(spc_pfs,"16X");
 }
@@ -271,6 +278,8 @@ static void vse_special_dispatch(void)
 		case 8:
 			vse_xcopy();
 			break;
+
+#ifdef unix
 		case 9:
 			vse_compile_and_run();
 			break;
@@ -283,6 +292,8 @@ static void vse_special_dispatch(void)
 		case 12:
 			vse_listing();
 			break;
+#endif /* unix */
+
 		case 13:
 			vse_utilities();
 			break;
@@ -689,6 +700,7 @@ static int vse_run_program(char file[8], char lib[8], char vol[6], char *message
 **	03/25/94	Written by GSL
 **
 */
+#ifdef unix
 static int vse_compile(void)
 {
 	return vse_compile_command();
@@ -744,7 +756,7 @@ static int vse_compile_command(void)
 	CLEAR_STRING(line2_field);
 	memcpy(line2_field,vse_sysname,strlen(vse_sysname));
 
-#ifdef WIN32 
+#ifdef MSDOS 
 	{
 		char	*ext_ptr;
 
@@ -779,7 +791,7 @@ static int vse_compile_command(void)
 			memcpy(line1_field,"wac.sh",6);
 			memcpy(line3_field,"../obj",6);
 #endif
-#ifdef WIN32
+#ifdef MSDOS
 			memcpy(line1_field,"WAC.BAT",7);
 			memcpy(line3_field,"..\\obj",6);
 #endif
@@ -830,7 +842,8 @@ static int vse_compile_command(void)
 			strcat(cmd,line3_field);
 			strcat(cmd,line4_field);
 			trunc(cmd);
-#else
+#endif
+#ifdef MSDOS
 			strcpy(cmd,line1_field);
 			trunc(cmd);
 			strcat(cmd," ");
@@ -859,6 +872,7 @@ static int vse_compile_command(void)
 	}
 
 }
+#endif /* unix */
 
 /*
 **	Routine:	vse_run_command_with_log()
@@ -893,20 +907,6 @@ static int vse_run_command_with_log(char *cmd, char *logfile)
 	rc = WL_wsystem(fullcmd);
 	WISPSYNC();
 	vwang_stty_sync();
-	return rc;
-}
-#endif
-#if defined(WIN32)
-static int vse_run_command_with_log(char *cmd, char *logfile)
-{
-	int	rc;
-	char	fullcmd[1024];
-
-	rc = 0;
-
-	sprintf(fullcmd,"%s >%s",cmd,logfile);
-	rc = WL_wsystem(fullcmd);
-	WISPSYNC();
 	return rc;
 }
 #endif
@@ -965,6 +965,7 @@ int set_errfile_active(int active)
 	return g_errfile_active = active;
 }
 
+#ifdef unix
 /*
 **	Routine:	vse_errors()
 **
@@ -1000,11 +1001,14 @@ static int vse_errors(void)
 	}
 	return 0;
 }
+#endif /* unix */
 
+#ifdef unix
 static int vse_compile_and_run(void)
 {
 	return 0;
 }
+#endif /* unix */
 
 /*
 **	Routine:	vse_listing()
@@ -1026,6 +1030,7 @@ static int vse_compile_and_run(void)
 **	03/28/94	Written by GSL
 **
 */
+#ifdef unix
 static int vse_listing(void)
 {
 	char	listfile[256];
@@ -1056,9 +1061,16 @@ static int vse_display(char *filename)
 	/*	LINK to the DISPLAY utility to display the file */
 	return WL_link_display(filename);
 }
+#endif /* unix */
+
 /*
 **	History:
 **	$Log: vsespmnu.c,v $
+**	Revision 1.27  2003/08/04 14:43:04  gsl
+**	Cleanup WAC compile stuff.
+**	MSDOS code had been incorrectly changed to WIN32 code. - fixed
+**	Some non-working WIN32 code was removed.
+**	
 **	Revision 1.26  2003/02/17 22:07:18  gsl
 **	move VSSUB prototypes to vssubs.h
 **	
