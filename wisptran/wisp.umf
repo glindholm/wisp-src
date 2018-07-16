@@ -1,5 +1,5 @@
 # 
-#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #	File:		wisp.umf
@@ -32,7 +32,7 @@ THE_LIB_D = wisptrand.a
 
 
 WISPTRAN = $(WISP_EXE)
-WISPFLAGS = 
+WISPFLAGS = -X
 ACU_COB = ccbl
 ACU_COBFLAGS = -da4 -zd -te 800 
 MF_COB = cob
@@ -46,8 +46,8 @@ debug:
 $(WISP_EXE): $(THE_LIB)
 	$(CC) $(CFLAGS) -o $@ $(THE_LIB)
 
-clean:
-	rm -f $(WISP_EXE) $(WISP_EXE_D) $(THE_LIB) $(THE_LIB_D) *~ core *.o
+clean: 	cleantest
+	rm -f $(WISP_EXE) $(WISP_EXE_D) $(THE_LIB) $(THE_LIB_D) *~ core *.o 
 
 $(THE_LIB):	$(THE_LIB)(wisp.o) \
 	$(THE_LIB)(dataconv.o) \
@@ -290,6 +290,11 @@ $(THE_LIB)(wisp_pic.o): $(WC)/wisp_pic.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wi
 #
 #	Testing
 #
+cleantest:
+	rm -f *.xrf *.tab wc*.cpy *.dcl *.int *.gnt
+	rm -f test0???.cob t_*.cob 
+	rm -f TEST0???     T_*
+
 
 testacu:
 	@for testwcb in test0???.wcb t_*.wcb; do \
@@ -339,6 +344,9 @@ testmf:
 
 #
 #	$Log: wisp.umf,v $
+#	Revision 1.16  2001-09-13 15:17:21-04  gsl
+#	Add cleantest target that cleans all the test files.
+#
 #	Revision 1.15  1998-06-09 13:51:29-04  gsl
 #	Redid the dependencies
 #	added testmf

@@ -58,12 +58,16 @@ const char* acu_vutil_exe(void);
 const char* wispdir(void);
 int no_windows(void);
 int wisptelnet(void);
+const char* wisprcfilepath(void);
 
 #endif /* wispcfg_H */
 
 /*
 **	History:
 **	$Log: wispcfg.h,v $
+**	Revision 1.11  2001-10-31 15:27:39-05  gsl
+**	Add wisprcfilepath()
+**
 **	Revision 1.10  1999-02-24 13:22:37-05  gsl
 **	Add wisptelnet()
 **

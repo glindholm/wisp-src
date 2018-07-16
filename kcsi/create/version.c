@@ -43,7 +43,7 @@ char *create_platform(void);
 **
 **	FUNCTION:	Return the create version string
 **
-**	DESCRIPTION:	Form a version string from CREATE_VERSION of the form "9.9" and return it.
+**	DESCRIPTION:	Form a version string from CREATE_VERSION of the form "9.9.99" and return it.
 **
 **	ARGUMENTS:	None
 **
@@ -61,7 +61,9 @@ char *create_version(void)
 
 	if (first)
 	{
-		sprintf(the_version,"%d.%d%s",(int)(CREATE_VERSION / 10), (int)(CREATE_VERSION % 10),DEBUG_STR);
+		char buf[10];
+		sprintf(buf,"%04d", (int)(CREATE_VERSION));
+		sprintf(the_version,"%c.%c.%c%c%s",buf[0],buf[1],buf[2],buf[3],DEBUG_STR);
 		first = 0;
 	}
 
@@ -92,6 +94,9 @@ char *create_platform(void)
 /*
 **	History:
 **	$Log: version.c,v $
+**	Revision 1.3  2001-09-06 11:25:17-04  gsl
+**	Change to 9.9.99 format version
+**
 **	Revision 1.2  1997-12-19 16:59:27-05  gsl
 **	Add include
 **

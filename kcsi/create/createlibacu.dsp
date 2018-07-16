@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\..\..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "KCSI_ACU" /D "KCSI_WIN32" /D CREATE_VERSION=34 /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\..\..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "KCSI_ACU" /D "KCSI_WIN32" /D CREATE_VERSION=3500 /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir ".\Debug"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /MDd /W3 /GX /Z7 /Od /I "..\..\..\wispcommon" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "KCSI_ACU" /D "KCSI_WIN32" /D CREATE_VERSION=34 /YX /FD /c
+# ADD CPP /nologo /W3 /GX /Z7 /Od /I "..\..\..\wispcommon" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /D "KCSI_ACU" /D "KCSI_WIN32" /D CREATE_VERSION=3500 /FR /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -72,7 +72,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"createacu.lib"
+# ADD LIB32 /nologo /out:"createacud.lib"
 
 !ENDIF 
 
@@ -195,10 +195,6 @@ SOURCE=ll.h
 
 SOURCE=vscrglb.h
 # End Source File
-# End Group
-# Begin Group "Resource Files"
-
-# PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # End Group
 # End Target
 # End Project

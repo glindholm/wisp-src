@@ -21,10 +21,8 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <time.h>
 
-#if defined(unix) || defined(WIN32)
 #include <signal.h>
 #include <sys/types.h>
-#endif
 
 #include "idsistd.h"
 #include "wglobals.h"
@@ -58,11 +56,7 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 											/* Call this routine from NON-COBOL	*/
 											/* utilities that use WISPLIB.		*/
 {
-	vwang_set_videocap();
-	
-#ifdef WATCOM
-	init_watcom();
-#endif
+	vwang_init_video();
 
 	werrset();									/* get runtime w_err_flag override.	*/
 
@@ -93,25 +87,6 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 	return 0;
 }
 
-
-#ifdef WATCOM
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-int init_watcom(void)
-{
-#ifdef HOLD_FOR_HOW
-	/*
-	**	For WATCOM set the default mode for open() and fopen() to be BINARY
-	*/
-	_fmode = O_BINARY;
-#endif
-	return 0;
-}
-#endif
-
-#if defined(unix) || defined(WIN32)
 
 /*
 ** WINDOWS/NT Doesn't really handle signals well so we have to fake 
@@ -206,11 +181,14 @@ void wisp_signal_handler(void)
 	}
 }
 
-#endif
 
 /*
 **	History:
 **	$Log: initglbs.c,v $
+**	Revision 1.21  2001-10-15 09:52:44-04  gsl
+**	Change vwang_set_videocap() to vwang_init_video()
+**	Remove WATCOM
+**
 **	Revision 1.20  1998-05-14 15:04:36-04  gsl
 **	Add version to trace
 **

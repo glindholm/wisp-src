@@ -27,7 +27,6 @@ static char rcsid[]="$Id:$";
 **                              $A_CONFIG
 **                              $A_TERMCAP
 **                              a_termcap
-**                              cblhelp
 **                              $COBDIR
 **                              $COBSW
 **                              $COBPATH
@@ -282,6 +281,9 @@ int main(int argc, char* argv[], char* envp[])
 	now = time(NULL);
 	printf("\n%s\n", ctime(&now));
 
+#ifdef unix
+	run_command("id");
+#endif
 	/*
 	**	Check operating system
 	*/
@@ -915,6 +917,7 @@ int define_acu(const char* rts)
 	}
 #endif
 
+#ifdef OLD
 #ifdef unix
 	ptr = "/etc/cblhelp";
 #endif
@@ -922,7 +925,7 @@ int define_acu(const char* rts)
 	ptr = "\\ETC\\CBLHELP";
 #endif
 	print_access("cblhelp",ptr,ACC_READ,NULL);
-
+#endif /* OLD */
 
 	checkexe("VUTIL", acu_vutil_exe(), &erracu);
 
@@ -971,7 +974,11 @@ int define_mf()
 
 	if (print_access("COBDIR", mf=getenv("COBDIR"), ACC_READ,&errmf) == 0)
 	{
-		sprintf(file_path,"%s/cobver",mf);
+		sprintf(file_path,"%s/etc/cobver",mf);		/* Server Express style */
+		if (0!=access(file_path,ACC_READ))
+		{
+			sprintf(file_path,"%s/cobver",mf); 	/* MF 4.1 style */
+		}
 		cat_file(file_path);
 	}
 
@@ -998,16 +1005,29 @@ int define_mf()
 		print_pair_err_mess("LIBPATH","","WARNING", "NOT DEFINED");
 	}
 
+	/*
+	*	Micro Focus 4.1 - Use fhconvert. (has a rebuild that doesn't work)
+	*	Server Express  - Use rebuild.   (fhconvert doesn't exist)
+	*/
 	ptr = "fhconvert";
-
 	if (0 == whichenvpath(ptr,file_path))
 	{
-		print_pair_mess("fhconvert",file_path,"[FOUND]");
+		print_pair_mess(ptr,file_path,"[FOUND]");
 	}
 	else
 	{
-		print_pair_err_mess("fhconvert",ptr,"ERROR", "NOT FOUND");
-		errmf++;
+		ptr = "rebuild";
+		if (0 == whichenvpath(ptr,file_path))
+		{
+			print_pair_mess(ptr,file_path,"[FOUND]");
+		}
+		else
+		{
+			/* Didn't find either so issue one error and one warning */
+			print_pair_err_mess("fhconvert","fhconvert","ERROR", "NOT FOUND");
+			print_pair_err_mess("rebuild",  "rebuild",  "WARNING", "NOT FOUND");
+			errmf++;
+		}
 	}
 
 
@@ -1388,12 +1408,12 @@ static void test_int_sizes(void)
 		printf("********************************* Sign error on int4\n");
 		rc = 1;
 	}
-	if ( !(t_uint2 > 0 && (unsigned)(65535) == t_uint2) )
+	if ( !(t_uint2 > 0 && (unsigned)(65535u) == t_uint2) )
 	{
 		printf("********************************* Sign error on uint2\n");
 		rc = 1;
 	}
-	if ( !(t_uint4 > 0 && (unsigned)(4294967295) == t_uint4) )
+	if ( !(t_uint4 > 0 && (unsigned)(4294967295u) == t_uint4) )
 	{
 		printf("********************************* Sign error on uint4\n");
 		rc = 1;
@@ -1409,6 +1429,17 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.27  2001-11-12 14:55:26-05  gsl
+**	Remove check for cblhelp
+**
+**	Revision 1.26  2001-11-07 14:56:32-05  gsl
+**	fix unsigned warning
+**
+**	Revision 1.25  2001-10-26 14:14:42-04  gsl
+**	Add user id.
+**	Fix COBVER for Server Express
+**	If fhconvert not found check rebuild
+**
 **	Revision 1.24  1999-09-15 09:17:17-04  gsl
 **	Update to understand backslash continued long lines.
 **	Fix A_CONFIG logic to understand both "-c" and "-C" on the command line.

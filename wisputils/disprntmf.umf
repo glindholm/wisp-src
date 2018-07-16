@@ -1,7 +1,0 @@
-#
-# make file for WISP utilities DISPRINT.
-#
-include mf.rules
-
-all:	disprint.int
-

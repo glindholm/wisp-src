@@ -94,9 +94,13 @@ cp $WISPDIR/config/wispmsg.dat	$WISPCONFIG
 cp $WISPDIR/config/wispmsg.txt	$WISPCONFIG
 cp $WISPDIR/config/wproc.msg	$WISPCONFIG
 
-cat $WISPDIR/config/OPTIONS |sed "s|#PQUNIQUE|PQUNIQUE|"> $WISPCONFIG/OPTIONS
+cat $WISPDIR/config/OPTIONS |sed "s|#PQLP|PQLP|"> $WISPCONFIG/OPTIONS
 cat $TESTDIR/lgmap.mf | sed "s|_WISP_|$WISP|g" > $WISPCONFIG/LGMAP
-cp $TESTDIR/wrunconfig.mf $WISPCONFIG/wrunconfig
+
+# Create wrunconfig
+echo "cobol=MF"				>  $WISPCONFIG/wrunconfig
+echo "options="				>> $WISPCONFIG/wrunconfig
+echo "runcbl=$WISPDIR/bin/wrunmf"	>> $WISPCONFIG/wrunconfig
 
 echo Loading $WISPCONFIG/videocap
 cp $WISPDIR/config/videocap/* $WISPCONFIG/videocap

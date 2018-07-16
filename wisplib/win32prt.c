@@ -1029,7 +1029,7 @@ static BOOL GetPage(FILE *infile, char *page[], int nPageHeight, int nPageWidth,
 	/*
 	** erase last page 
 	*/
-	for (nIdx=0; nIdx<nPageHeight; ++nIdx)
+	for (nIdx=0; nIdx<MAXPAGEHEIGHT; ++nIdx)
 	{
 		page[nIdx][0]='\0';
 	}
@@ -1569,6 +1569,13 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 /*
 **	History:
 **	$Log: win32prt.c,v $
+**	Revision 1.17  2001-11-09 15:41:17-05  gsl
+**	Fix trk# 507
+**	In GetPage() the "erase last page" logic only erased the nPageHeight
+**	number of lines. If previous page has overstrikes then nPageHeight may
+**	be exceeded and lines are left uncleared.
+**	Change to erase MAXPAGEHEIGHT
+**
 **	Revision 1.16  1998-08-28 15:55:39-04  gsl
 **	Fix the way top margins are handled and overstrikes.
 **
@@ -1610,6 +1617,13 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 **
 **	Revision 1.7  1996-12-11 18:44:51-05  jockc
 **	added missing history (forgot to add $Log: win32prt.c,v $
+**	added missing history (forgot to add Revision 1.17  2001-11-09 15:41:17-05  gsl
+**	added missing history (forgot to add Fix trk# 507
+**	added missing history (forgot to add In GetPage() the "erase last page" logic only erased the nPageHeight
+**	added missing history (forgot to add number of lines. If previous page has overstrikes then nPageHeight may
+**	added missing history (forgot to add be exceeded and lines are left uncleared.
+**	added missing history (forgot to add Change to erase MAXPAGEHEIGHT
+**	added missing history (forgot to add
 **	added missing history (forgot to add Revision 1.16  1998-08-28 15:55:39-04  gsl
 **	added missing history (forgot to add Fix the way top margins are handled and overstrikes.
 **	added missing history (forgot to add

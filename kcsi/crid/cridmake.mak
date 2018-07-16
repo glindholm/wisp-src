@@ -40,7 +40,7 @@ MAKEFILE=cridmake.mak
 # To change the version for CRID, change it here. 
 # Change copyright date in "cridvers.c"
 #
-CRID_VERSION=298
+CRID_VERSION=3000
 
 #-----------------------------------------------------------------------
 #
@@ -49,9 +49,9 @@ WISPTRAN=..\..\bin\wisp.exe
 #
 # 	ACUCOBOL
 #
-ACUDIR= C:\ACUCBL43\acugt
+ACUDIR= C:\acucorp\ACUCBL510\acugt
 ACU_COBOL = $(ACUDIR)\bin\ccbl32.exe
-ACU_FLAGS = -Da4 -C32 -Z32
+ACU_FLAGS = -Da4 -C32 -Z32 -Za
 CBLUTIL= $(ACUDIR)\bin\cblutl32.exe
 
 

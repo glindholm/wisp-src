@@ -80,30 +80,14 @@ July 21, 91 mjb
 
 static char sccsid[]="@(#)igen.c	1.10 9/2/94";
 
-#ifdef KCSI_VAX
-#define	COMMAND     "$ "
-#define COMMENT     "! "
-#define CONTINUE    " -"
-#endif
-#ifdef KCSI_UNIX
-#define COMMAND     ""
-#define COMMENT     "# "
-#define CONTINUE    " \\"
-#endif
-#ifdef KCSI_WIN32
-#define COMMAND     ""
-#define COMMENT     "* "
-#define CONTINUE    ""
-#endif
+#define COMMAND     ""				/* Obsolete remnant */
+#define COMMENT	   ( (gen_wproc) ? "* ":"# " ) 	/* PROC vs Shell comment chars */
 
 static char inq_sys_name[81];
 
 char inq_progname[81]
 #ifdef KCSI_ACU
 ="wrun INQUIRY"
-#endif
-#ifdef KCSI_VAXCOBOL
-="INQUIRY"
 #endif
 #ifdef KCSI_MF
 ="wrun inquiry"
@@ -116,7 +100,7 @@ char inq_progname[81]
 #endif
 ;
 
-static int gen_wproc = 0;	/* Generate WPROC procedures */
+static int gen_wproc = 1;	/* Generate WPROC procedures */
 
 static void prologue(FILE *qf,char *fname);
 static void input_putparm(FILE *qf,char *dio,char *change,char *option);
@@ -139,12 +123,9 @@ void GENINQ(char *gio,char *display,char *endrun,char *dio,char *change,
 	FILE *qfile;
 	char	*ptr;
 
-#if defined(KCSI_WIN32)
-	gen_wproc = 1;
-#endif
-	if ((ptr = getenv("KCSIGENWPROC")) && 0==strcmp(ptr,"YES"))
+	if ((ptr = getenv("KCSIGENWPROC")) && 0==strcmp(ptr,"NO"))
 	{
-		gen_wproc = 1;
+		gen_wproc = 0;
 	}
 	
 	/* Create the file for the inquiry */
@@ -157,9 +138,6 @@ void GENINQ(char *gio,char *display,char *endrun,char *dio,char *change,
         {
 #ifdef KCSI_UNIX
 		setwispfilext("sh");
-#endif
-#ifdef KCSI_VAX
-		setwispfilext("com");
 #endif
         }
 	
@@ -268,9 +246,7 @@ static void input_putparm(FILE *qf,char *dio,char *change,char *option)
 	sscanf(option,"%7s",wrk_buf);
 	enter_keyword(qf,"OPTION",wrk_buf);	/*14 bytes*/
 	end_line(qf);
-#ifndef KCSI_VAX
 	end_line(qf);
-#endif
 }
 
 /*----
@@ -286,9 +262,7 @@ static void control_putparm(FILE *qf,char *cio)
 	enter_putparm(qf,"CONTROL");		/*23 bytes */
 	enter_file(qf,cio);			/*44 bytes */
 	end_line(qf);
-#ifndef KCSI_VAX
 	end_line(qf);
-#endif
 }
 
 /*----
@@ -358,9 +332,7 @@ static void query_putparm(FILE *qf,char *disp,char *title,char *lines)
 		lines += 39;
 	}
 	end_line(qf);
-#ifndef KCSI_VAX
 	end_line(qf);
-#endif
 }
 
 /*----
@@ -390,9 +362,7 @@ static void output_putparm(FILE *qf,char *eio)
 		break;
 	}
 	end_line(qf);
-#ifndef KCSI_VAX
 	end_line(qf);
-#endif
 }
 
 /*----
@@ -404,9 +374,7 @@ static void eoj_putparm(FILE *qf)
 	fprintf(qf,"%s%sAnd finally set up to exit INQUIRY\n",COMMAND,COMMENT);
 	enter_putparm(qf,"EOJ");		/*23 bytes */
 	end_line(qf);
-#ifndef KCSI_VAX
 	end_line(qf);
-#endif
 }
 
 /*----
@@ -485,7 +453,7 @@ static void continue_line(FILE *qf)
 {
 	if (!gen_wproc)
 	{
-		fprintf(qf,"%s\n",CONTINUE);
+		fprintf(qf," \\\n");	/* Shell continue line */
 	}
 }
 
@@ -508,6 +476,13 @@ int isnblank(char *mem,int len)
 /*
 **	History:
 **	$Log: igen.c,v $
+**	Revision 1.8  2001-11-02 18:13:33-05  gsl
+**	Fixed WPROC comment characters
+**	Removed VMS
+**
+**	Revision 1.7  2001-09-04 16:55:49-04  gsl
+**	Change default to save INQUIRY's as wproc .wps files instead of shell scripts.
+**
 **	Revision 1.6  1998-01-20 11:54:59-05  gsl
 **	Fix time references to be type time_t
 **

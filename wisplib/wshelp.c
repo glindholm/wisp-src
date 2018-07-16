@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wshelp.c
@@ -161,20 +161,11 @@ static void wsh_run_prog_prompt(void)	{ wsh_run_program("        "); }
 #ifdef unix
 static void wsh_shell(void);
 #endif
-#ifdef MSDOS
-static void wsh_dos(void);
-#endif
 
 static void wsh_command(void)
 {
-#ifdef VMS
-	wsh_dcl();
-#endif
 #ifdef unix
 	wsh_shell();
-#endif
-#ifdef MSDOS
-	wsh_dos();
 #endif
 }
 
@@ -389,37 +380,29 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[2] = wsh_usage_file;
 		}
 
-		if (1)
+		if (dflags & HELP_ERROR_LOG)
 		{
 			wsb_add_text(hWsb, row+2, col1, "(3) SHOW Error Log");
 			strcat(allowed_pfkeys, "03");
 			func_vector[3] = wsh_display_errlog;
 		}
 
-		if (dflags & HELP_QUEUE_MNGMNT)
+#ifdef unix
+		if ( ((dflags & HELP_PRINT_QUEUE) && opt_printqueue_manager) ||
+		     ((dflags & HELP_BATCH_QUEUE) && opt_batchman) )
 		{
-#ifdef VMS
 			wsb_add_text(hWsb, row+3,  col1, "(4) Manage QUEUES");
 			strcat(allowed_pfkeys,"04");
 			func_vector[4] = wsh_queuemgmnt;
-#endif
-#ifdef unix
-			if (opt_printqueue_manager || opt_batchman)
-			{
-				wsb_add_text(hWsb, row+3,  col1, "(4) Manage QUEUES");
-				strcat(allowed_pfkeys,"04");
-				func_vector[4] = wsh_queuemgmnt;
-			}
-#endif
+
 		}
+#endif
 
 		if (dflags & HELP_MANAGE_FILES_LIBS)
 		{
-#ifndef VMS
 			wsb_add_text(hWsb, row+4, col1, "(5) Manage FILES/LIBRARIES");
 			strcat(allowed_pfkeys, "05");
 			func_vector[5] = wsh_manage_files;
-#endif
 		}
 		if (dflags & HELP_MANAGE_SYSTEM)
 		{
@@ -503,11 +486,9 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 
 		if (dflags & HELP_MANAGE_FILES_LIBS)
 		{
-#ifndef VMS
 			wsb_add_text(hWsb, row+4, col1, "(5) Manage FILES/LIBRARIES");
 			strcat(allowed_pfkeys, "05");
 			func_vector[5] = wsh_manage_files;
-#endif
 		}
 		if (dflags & HELP_MANAGE_SYSTEM)
 		{
@@ -519,36 +500,33 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			}
 		}
 
-		if (dflags & HELP_QUEUE_MNGMNT)
-		{
-#ifdef VMS
-			wsb_add_text(hWsb, row+6,  col1, "(7) Manage QUEUES");
-			strcat(allowed_pfkeys,"07");
-			func_vector[7] = wsh_queuemgmnt;
-#endif
 #ifdef unix
-			if (opt_printqueue_manager && opt_batchman)
+		if ((dflags & HELP_PRINT_QUEUE) || 
+		    (dflags & HELP_BATCH_QUEUE) )
+		{
+			if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) && 
+			    opt_batchman && (dflags & HELP_BATCH_QUEUE) )
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage QUEUES");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queuemgmnt;
 			}
-			else if (opt_printqueue_manager)
+			else if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE))
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage PRINT QUEUE");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queue_print;
 			}
-			else if (opt_batchman)
+			else if (opt_batchman && (dflags & HELP_BATCH_QUEUE))
 			{
 				wsb_add_text(hWsb, row+6,  col1, "(7) Manage BATCH QUEUE");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queue_batch;
 			}
-#endif
 		}
+#endif
 
-		if (1)
+		if (dflags & HELP_ERROR_LOG)
 		{
 			wsb_add_text(hWsb, row+7, col1, "(8) SHOW Error Log");
 			strcat(allowed_pfkeys, "08");
@@ -569,14 +547,14 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[10] = wsh_terminal;
 		}
 
-#if defined(unix) || defined(VMS) || defined(MSDOS)
+#ifdef unix
 		if (dflags & HELP_COMMANDS)
 		{
 			wsb_add_text(hWsb, row+2, col2, "(11) Enter COMMANDS");
 			strcat(allowed_pfkeys,"11");
 			func_vector[11] = wsh_command;
 		}
-#endif /* unix || VMS || MSDOS */
+#endif
 
 		if (dflags & HELP_SUBMIT)
 		{
@@ -642,11 +620,9 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 	
 		if (dflags & HELP_MANAGE_FILES_LIBS)
 		{
-#ifndef VMS
 			wsb_add_menu_item(hWsb, row+4, col1, 5, "Manage Files");
 			strcat(allowed_pfkeys, "05");
 			func_vector[5] = wsh_manage_files;
-#endif
 		}
 
 		if (dflags & HELP_MANAGE_SYSTEM)
@@ -659,36 +635,33 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			}
 		}
 
-		if (dflags & HELP_QUEUE_MNGMNT)
-		{
-#ifdef VMS
-			wsb_add_menu_item(hWsb, row+6, col1, 7, "Queue Management");
-			strcat(allowed_pfkeys,"07");
-			func_vector[7] = wsh_queuemgmnt;
-#endif
 #ifdef unix
-			if (opt_printqueue_manager && opt_batchman)
+		if ((dflags & HELP_PRINT_QUEUE) || 
+		    (dflags & HELP_BATCH_QUEUE) )
+		{
+			if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) && 
+			    opt_batchman && (dflags & HELP_BATCH_QUEUE) )
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Queues");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queuemgmnt;
 			}
-			else if (opt_printqueue_manager)
+			else if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE))
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Print Queue");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queue_print;
 			}
-			else if (opt_batchman)
+			else if (opt_batchman && (dflags & HELP_BATCH_QUEUE))
 			{
 				wsb_add_menu_item(hWsb, row+6, col1, 7, "Batch Queue");
 				strcat(allowed_pfkeys,"07");
 				func_vector[7] = wsh_queue_batch;
 			}
-#endif
 		}
+#endif
 
-		if (1)
+		if (dflags & HELP_ERROR_LOG)
 		{
 			wsb_add_menu_item(hWsb, row+7, col1, 8, "SHOW Error Log");
 			strcat(allowed_pfkeys, "08");
@@ -709,22 +682,14 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 			func_vector[10] = wsh_terminal;
 		}
 
-#if defined(unix) || defined(VMS) || defined(MSDOS)
+#ifdef unix
 		if (dflags & HELP_COMMANDS)
 		{
-#ifdef VMS
-			wsb_add_menu_item(hWsb, row+2, col2, 11, "Enter DCL commands");
-#endif
-#ifdef unix
 			wsb_add_menu_item(hWsb, row+2, col2, 11, "Enter UNIX commands");
-#endif
-#ifdef MSDOS
-			wsb_add_menu_item(hWsb, row+2, col2, 11, "Enter MS-DOS commands");
-#endif	
 			strcat(allowed_pfkeys,"11");
 			func_vector[11] = wsh_command;
 		}
-#endif /* unix || VMS || MSDOS */
+#endif
 
 		if (dflags & HELP_SUBMIT)
 		{
@@ -786,32 +751,6 @@ int wsh_help(int prog_running)								/* Put up the shell screen.		*/
 		wsb_add_text(hWsb, time_row, time_col, formated_time(time_temp) );
 		wsb_display_and_read(hWsb, allowed_pfkeys, &pfval, &currow, &curcol);
 		
-#ifdef OLD
-		do
-		{
-			char function,lines,term[2],no_mod[2];
-
-			/*
-			**	This loop updates the clock until a pfkey gets pressed
-			*/
-
-			wsb_add_text(hWsb, time_row, time_col, formated_time(time_temp) );
-
-			vwang_timeout(30);						/* Set the timer (30 secs).		*/
-
-			no_mod[0] = no_mod[1] = ' ';
-			lines = WSB_ROWS;						/* Use full screen.			*/
-			function = DISPLAY_AND_READ;					/* Use DISPLAY_AND_READ.		*/
-			vwang(&function,scrn,&lines,allowed_pfkeys,term,no_mod);	/* Call Wang emulation to fill screen.	*/
-
-			vwang_timeout(0);						/* Cancel timer				*/
-
-			pfval = (term[0] - '0')*10 + (term[1] - '0');
-			
-		} while ( AID_UNLOCKED == vwang_aid());
-
-#endif /* OLD */
-
 		if (pfval >= 1 && pfval <= 32)
 		{
 			if (func_vector[pfval])
@@ -1590,7 +1529,7 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
-	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-2000  NeoMedia Technologies Incorporated");
+	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-2001  NeoMedia Technologies Incorporated");
 	wsb_add_text(hWsb, 6, 0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
 	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
@@ -2040,12 +1979,24 @@ static void wsh_env_info(void)
 	sprintf(buff,"WISPLINK      = %s", (ptr=getenv("WISPLINK")) ? ptr : "(nil)");
 	wsb_add_text(hWsb, row++, col,buff);
 
-	
+	row++;
+
+	sprintf(buff,"RCFILE        = %s", wisprcfilepath());
+	wsb_add_text(hWsb, row++, col,buff);
+
+	sprintf(buff,"TEMPDEFAULTS  = %s", wisp_temp_defaults_path(NULL));
+	wsb_add_text(hWsb, row++, col,buff);
+
+	sprintf(buff,"SHAREDMEMCTL  = %s", wisp_sm_ctlfile());
+	wsb_add_text(hWsb, row++, col,buff);
+
+	row++;
+
 	/*
 	**	Bottom of screen
 	*/
 	sprintf(buff,"PATH (env)    = %s", (ptr=getenv("PATH")) ? ptr : "(nil)");
-	wsb_add_text(hWsb, 18, 2,buff);
+	wsb_add_text(hWsb, row++, 2,buff);
 	
 
 	wsb_add_text(hWsb, 24, 25,"(ENTER) Return");
@@ -2224,26 +2175,6 @@ static void wsh_info(void)
 	}
 }
 
-#ifdef VMS
-static void wsh_dcl(void)								/* Issue DCL commands.			*/
-{
-	uint4	vms_status;
-
-	if (g_prog_running) newlevel();							/* Extra link-level			*/
-	newlevel();									/* Increment the link-level		*/
-	spawn2 (0,"","Type LOGOFF followed by (ENTER) to continue.",&vms_status);	/* Now Spawn a sub process.		*/
-	oldlevel();
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
-	setlevel(g_savelevel);								/* Restore the link-level		*/
-}
-#endif	/* VMS */
-
-#ifdef VMS
-static void wsh_queuemgmnt(void)
-{
-	setup_qm();									/* Setup routine for queue management	*/
-}
-#endif
 #ifdef unix
 static void wsh_queuemgmnt(void)
 {
@@ -2251,6 +2182,9 @@ static void wsh_queuemgmnt(void)
 	int	pfkey, currow, curcol;
 	char 	okkeys[81];
 	int	col;
+	uint4   dflags;
+	
+	get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
 
 	currow = 0;
 	curcol = 0;
@@ -2274,7 +2208,7 @@ static void wsh_queuemgmnt(void)
 		wsb_add_menu_item(hWsb, 12, col, 1, "Return to MAIN HELP menu");
 	}
 
-	if (opt_printqueue_manager)
+	if (opt_printqueue_manager && (dflags & HELP_PRINT_QUEUE) )
 	{
 		if (wang_style)
 			wsb_add_text(hWsb,  9, col, "(2) Manage Print Queue.");
@@ -2283,7 +2217,7 @@ static void wsh_queuemgmnt(void)
 		strcat(okkeys,"02");
 	}
 	
-	if (opt_batchman)
+	if (opt_batchman && (dflags & HELP_BATCH_QUEUE))
 	{
 		if (wang_style)
 			wsb_add_text(hWsb, 11, col, "(3) Manage Batch Queue.");
@@ -2394,25 +2328,6 @@ static void wsh_shell(void)								/* Issue unix shell commands.		*/
 }
 #endif	/* unix */
 
-#ifdef MSDOS
-static void wsh_dos(void)								/* Issue dos shell commands.		*/
-{
-	wpushscr();
-	vwang_shut();
-
-	if (g_prog_running) newlevel();							/* Extra link-level			*/
-	newlevel();									/* Increment the link-level for shell	*/
-	system("COMMAND");
-	oldlevel();
-
-	vwang_init_term();								/* Initialize the terminal		*/
-	wpopscr();
-
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
-	setlevel(g_savelevel);								/* Restore the link-level		*/
-}
-#endif	/* MSDOS */
-
 static int wsh_uc_print(void)								/* Set the usage constants.		*/
 {
 	HWSB	hWsb;
@@ -2437,16 +2352,9 @@ static int wsh_uc_print(void)								/* Set the usage constants.		*/
 	wsb_add_text(hWsb, 7, 6,    "P - Print and keep. Spool printer files, do not delete.");
 	wsb_add_text(hWsb, 8, 6,    "H - Hold printer files. Spool for hold.");
 	wsb_add_text(hWsb, 9, 6,    "K - Keep printer files, do not print.");
-#ifdef VMS
-	wsb_add_text(hWsb,10, 6,    "O - Online printing directly to device LPn:");
-#endif
 	wsb_add_text(hWsb,12, 2,"Default spooled print file print class.      ('A' thru 'Z'):  PRTCLASS =");
 	wsb_add_text(hWsb,14, 2,"Default form number.                         (000 thru 254):  FORM_NUM =");
-#ifdef VMS
-	wsb_add_text(hWsb,16, 2,"Default print device number.   (0 for LP0:, 1 for LP1 etc.):  PRINTER  =");
-#else
 	wsb_add_text(hWsb,16, 2,"Default printer number:                                       PRINTER  =");
-#endif
 	wsb_add_text(hWsb,18, 2,"Default Lines per Page                       (000 thru 255):  LINES    =");
 
 	wsb_add_text(hWsb,20,8,"Change the information as appropriate and press (ENTER)");
@@ -3413,7 +3321,7 @@ static void wsh_extras(void)
 	}
 	row++;
 
-#if defined(unix) || defined(VMS) || defined(MSDOS)
+#ifdef unix
 	if (dflags & HELP_COMMANDS)
 	{
 		if (wang_style)
@@ -3422,18 +3330,10 @@ static void wsh_extras(void)
 		}
 		else
 		{
-#ifdef VMS
-			wsb_add_menu_item(hWsb, row, col, 3, "Enter DCL commands");
-#endif
-#ifdef unix
 			wsb_add_menu_item(hWsb, row, col, 3, "Enter UNIX commands");
-#endif
-#ifdef MSDOS
-			wsb_add_menu_item(hWsb, row, col, 3, "Enter MS-DOS commands");
-#endif
 		}
 	}
-#endif /* unix || VMS || MSDOS */
+#endif
 	row++;
 
 	if (dflags & HELP_USAGE_WRITE)
@@ -3495,7 +3395,7 @@ static void wsh_extras(void)
 			break;
 			
 		case 3:
-#if defined(unix) || defined(VMS) || defined(MSDOS)
+#ifdef unix
 			if (dflags & HELP_COMMANDS)
 			{
 				wsh_command();
@@ -3612,12 +3512,6 @@ static void wsb_build_non_wang_base(HWSB hWsb)
 	if (!temp[0])
 	{
 		strcpy(temp,"System:    UNKNOWN");
-#ifdef VMS
-		strcpy(temp,"System:    VMS");
-#endif
-#ifdef MSDOS
-		strcpy(temp,"System:    MS-DOS");
-#endif
 #ifdef unix
 		strcpy(temp,"System:    UNIX");
 #endif
@@ -3897,6 +3791,19 @@ int wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.77  2001-10-31 15:44:06-05  gsl
+**	Change the (29) env screen to include the RETCODE file path, the temp defaults
+**	path and the sharedmem control path
+**
+**	Revision 1.76  2001-09-07 16:00:34-04  gsl
+**	Add support for FLAGS ERRLOG, SUBMIT and BATCHQ
+**
+**	Revision 1.75  2001-09-07 09:06:26-04  gsl
+**	Remove VMS and MSDOS ifdefs
+**
+**	Revision 1.74  2001-09-05 14:41:24-04  gsl
+**	Change copyright date to 2001
+**
 **	Revision 1.73  2000-03-16 10:26:15-05  gsl
 **	2000
 **

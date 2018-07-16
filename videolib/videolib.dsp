@@ -277,14 +277,6 @@ SOURCE=.\vrawunix.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vrawvms1.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vrawvms2.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\vrefresh.c
 # End Source File
 # Begin Source File

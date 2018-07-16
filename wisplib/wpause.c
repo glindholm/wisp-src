@@ -14,17 +14,52 @@ void wpause(int4* hsec)								/* Pause program for hsec (1/100) seconds.	*/
 
 	int4	ltime;
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);					/* Log the entry.				*/
-
 	GETBIN(&ltime,hsec,4);							/* Align and put into local copy.		*/
-	wswap(&ltime);								/* Swap the word order for VMS.			*/
+	wswap(&ltime);								/* Swap the word order.				*/
+
+	wtrace("WPAUSE","PAUSE", "HSEC=[%d]", ltime);
 	hpause(ltime);
 }
 
-#ifdef VMS
-#include <descrip.h>
+#ifdef WIN32
+void hpause(int4 hundredths)
+{
+	if (hundredths > 0)
+	{
+		hsleep(hundredths);
+	}
+}
 #endif
 
+#ifdef unix
+#include <unistd.h>
+
+void hpause(int4 hundredths)
+{
+	if (hundredths >= 100) /* Greater then one second */
+	{
+		/*
+		 *	If greater then a second then use sleep()
+		 */
+		sleep((unsigned int)(hundredths / 100));
+
+		/*
+		 *	Calc remaining hunderdths
+		 */
+		hundredths = hundredths % 100;
+	}
+
+	if (hundredths > 0)
+	{
+		/*
+		 *	Sleep for remaining microseconds (1/1000000).
+		 */
+		usleep((unsigned int)hundredths * 10000U);
+	}	
+}
+#endif
+
+#ifdef OLD_UNIX
 void hpause(int4 hundredths)
 {
 	unsigned hsec, ticks;
@@ -34,11 +69,6 @@ void hpause(int4 hundredths)
 	hsec = hundredths/100;								/* Convert large hundredths.		*/
 	ticks = hundredths - (hsec*100);						/* Get the remainder.			*/
 
-#ifdef WIN32
-	hsleep(hundredths);
-#endif
-
-#if defined(unix) || defined(VMS) || defined(MSDOS)
 	if (hsec > 0) 
 	{
 		sleep(hsec);
@@ -46,23 +76,26 @@ void hpause(int4 hundredths)
 
 	if (ticks > 0)									/* Any fractions to sleep?		*/
 	{
-#ifdef VMS
-		long int binary_time[2];							/* Binary value for VMS timed waits.	*/
-		binary_time[0] = ticks * (-100000);		 			/* Multiply by 1/100 to get total wait.	*/
-		binary_time[1] = 0xffffffff;						/* Fill in the high order bits.		*/
-		sys$schdwk(0,0,binary_time,0);						/* Schedule a wakeup.			*/
-		sys$hiber();								/* Hibernate if we will wake up.	*/
-#else
 		if (ticks >= 50) sleep(1);						/* Sleep to the rounded up amount.	*/
 		else sleep(0);								/* If small, use the overhead.		*/
-#endif
+
 	}
-#endif /* unix || VMS || MSDOS */
 
 }
+#endif
+
 /*
 **	History:
 **	$Log: wpause.c,v $
+**	Revision 1.14  2001-10-03 15:01:48-04  gsl
+**	SOlaris 2.5.1 doesn't define useconds_t so cast to unsigned
+**
+**	Revision 1.13  2001-09-27 14:12:01-04  gsl
+**	Add wtrace
+**
+**	Revision 1.12  2001-09-27 14:06:03-04  gsl
+**	ON unix use usleep() to support sleeping in 1/100 second increments
+**
 **	Revision 1.11  1997-12-04 18:14:02-05  gsl
 **	changed to wispnt.h
 **

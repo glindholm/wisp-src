@@ -28,11 +28,11 @@
 /*
 **	COSTAR	- this define is used strictly with the Co*STAR product.
 **	W4W	- this define is more generic mouse support.
+**
+**	These are now supported for all versions of WISP.
 */
-#if defined(unix) || defined(VMS) || defined(WIN32)
 #define COSTAR
 #define W4W
-#endif
 
 /*
 **	Function Prototypes
@@ -65,6 +65,9 @@ int w4w_hotspot_vmode(void);
 /*
 **	History:
 **	$Log: costar.h,v $
+**	Revision 1.21  2001-09-25 11:00:02-04  gsl
+**	Remove unneeded ifdefs
+**
 **	Revision 1.20  1999-05-11 12:48:49-04  gsl
 **	Add costar_title()
 **

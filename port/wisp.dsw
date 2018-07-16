@@ -327,6 +327,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "shipkitcreateacu"=.\port\shipkitcreateacu.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name createacu
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "shipkitcridacu"=.\PORT\shipkitcridacu.dsp - Package Owner=<4>
 
 Package=<5>

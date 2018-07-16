@@ -48,11 +48,6 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef VMS
-#include <descrip.h>									/* Include descriptor layout for VMS.	*/
-#include <ssdef.h>									/* Include VMS system messages.		*/
-#endif
-
 #ifdef unix
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -300,12 +295,10 @@ static char *function_name[] = {
 		"TAB_MODE_OFF",
 		NULL	};
 
-#ifdef COSTAR
 static char	*costar_before_read_api = NULL;
 static char	*costar_after_read_api = NULL;
 static char	*costar_before_write_api = NULL;
 static char	*costar_after_write_api = NULL;
-#endif /* COSTAR */
 
 static int	w4w_tabstop_vmode = W4W_TABSTOP_VMODE;
 
@@ -339,7 +332,6 @@ static int sub_char(unsigned char c,unsigned char *xc,int *char_set);			/* Get t
 static void wsdmp_scrn(unsigned char *wsb, int type_d);
 static void ws_putbuff(unsigned char c, int row, int col, int rendition, int font);	/* Put char. in line buf. accumulator.	*/
 static void ws_dumpbuff(int row,int eol);						/* Dump the current buffer.		*/
-static void set_cl_fl(void);								/* Set console logging flag.		*/
 static int check_mp(int line,int col,int rend,int do_pseudo);				/* See if it is a menu pick item.	*/
 static void rewrite_mp(int line, int col, int rend, int do_pseudo);			/* Rewrite line or until next FAC.	*/
 static unsigned char *data_map_ptr(int row, int col);
@@ -384,9 +376,7 @@ static void edit_cut_data(int start_row, int start_col, int end_row, int end_col
 static int wsmode(int control);								/* Select character rendition.		*/
 static int wscset(int char_set);							/* Switch to requested character set.	*/
 
-#ifdef W4W
 static void mark_hotspots(int row_x, int numcols);
-#endif
 static void copy_clean_row(int row_x, int numcols, char *the_row);
 
 static int meta_pfkey(int pfkey);
@@ -416,14 +406,12 @@ unsigned char *no_mod;
 	char	def_psb_select;
 	char	psb_select;
 	int	i;
-	static int vcapset = 0;
 	static int first = 1;
 	
 	if (first)
 	{
 		vwang_load_charmap(0);							/* Load the translation tables		*/
 		
-#ifdef COSTAR
 		if (use_costar())
 		{
 			char *ptr;
@@ -435,15 +423,11 @@ unsigned char *no_mod;
 
 			w4w_tabstop_vmode = costar_tabstop_vmode();
 		}
-#endif
+
 		first = 0;
 	}
 	
-	if (!vcapset)
-	{
-		vwang_set_videocap();
-		vcapset = 1;
-	}
+	vwang_init_video();
 	
 	if (use_custom_vwang())
 	{
@@ -515,7 +499,6 @@ unsigned char *no_mod;
 			}
 		}
 		else terminal_error = TRUE;
-		set_cl_fl();								/* Set the console logging flag.	*/
 	}
 	else if (check_scrn() == 0) terminal_error = TRUE;				/* Catch errors.			*/
 	else if (synch_required) ws_erap(FULL_SCREEN);					/* Somebody did something behind us.	*/
@@ -772,9 +755,8 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 		do_pseudo = 0;								/* NetronCap screen do not have pseudos.*/
 	}
 
-#ifdef W4W
 	use_w4w_flag = use_w4w();
-#ifdef COSTAR
+
 	if (use_costar_flag = use_costar())
 	{
 		/*
@@ -788,9 +770,6 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 			costar_ctrl_api(costar_before_write_api);
 		}
 	}
-#endif /* COSTAR */
-#endif /* W4W */
-
 
 	if (wcc & UNLOCK_KEYBOARD) 
 	{
@@ -938,7 +917,6 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 			*/
 			c_mapfac = fac(c_orig);						/* map it using fac table.  all FAC ops */
 											/* must be done to c_mapfac, not c_orig */
-#ifdef COSTAR
 			if (use_costar_flag && new_row)
 			{
 				/*
@@ -949,7 +927,6 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 					c_mapfac = costar_fac(c_mapfac);
 				}
 			}
-#endif
 											/* Don't do anything if already in	*/
 											/* map unless modified pseudo blank.	*/
 			if (new_row && ((c_orig != *dm) || (last_atr != *am) || mod_pb(c_orig,last_atr,do_pseudo)))
@@ -1175,12 +1152,10 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 			am++;
 		}
 
-#ifdef W4W
 		if (use_w4w_flag && new_row)
 		{
 			mark_hotspots(row_x, wcurwidth);				/* Mark the hotspots on this row	*/
 		}
-#endif
 
 		ws_dumpbuff(row_x,TRUE);						/* Dump the accumulated buffer.		*/
 	}
@@ -1206,7 +1181,6 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 	if (wcc & SOUND_ALARM) vbell();							/* Did he want the bell?		*/
 	vbuffering(VBUFF_END);							/* Dump the buffer to show the screen.	*/
 
-#ifdef COSTAR
 	if (use_costar_flag)
 	{
 		if (costar_after_write_api)
@@ -1214,7 +1188,6 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 			costar_ctrl_api(costar_after_write_api);
 		}
 	}
-#endif /* COSTAR */
 
 	return(SUCCESS);								/* Return to the caller.		*/
 }
@@ -1270,9 +1243,8 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 	wsb = wsb + 3;									/* Move to the data area.		*/
 	if (alt_read == 1) *no_mod = 'N';						/* Assume no modifications.		*/
 
-#ifdef W4W
 	use_w4w_flag = use_w4w();
-#ifdef COSTAR
+
 	if (use_costar_flag = use_costar())
 	{
 		/*
@@ -1288,8 +1260,6 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			costar_ctrl_api(costar_before_read_api);
 		}
 	}
-#endif /* COSTAR */
-#endif /* W4W */
 
 	menu_fl = check_mp(old_line,old_column,VMODE_BOLD,do_pseudo);			/* If a menu pick then BOLD it.		*/
 	if (mp_cursor)									/* If usage constant is set to display. */
@@ -1506,11 +1476,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 					else
 					{
 						if (at_edge) ws_posit( 0, 1,do_pseudo);
-#ifdef OLD
-						if (!at_edge) ws_posit(0,-1,do_pseudo);				/* No, stay.	*/
-#endif
 					}
-
 				}
 			}
 			else if (the_meta_char == newline_key)					/* Hi the Wang EXECUTE key.	*/
@@ -1571,9 +1537,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 				}
 				else 
 				{
-#ifdef COSTAR
 					if (use_costar_flag) costar_enable_mouse(0);		/* Disable the mouse		*/
-#endif
 
 					ws_bar_menu(ON,vcur_lin,vcur_col,0,alt_read,no_mod,do_pseudo);
 
@@ -1582,13 +1546,11 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 					 */
 					menu_fl = check_mp(vcur_lin,vcur_col,VMODE_BOLD,do_pseudo); 
 
-#ifdef COSTAR
 					if (use_costar_flag)
 					{
 						costar_enable_mouse(1);				/* Enable the mouse		*/
 						costar_errtext("");
 					}
-#endif
 				}
 			}
 			else if (the_meta_char == clear_field_key)
@@ -1624,7 +1586,6 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			{
 				nc_pop_menu(&filling,terminate_list,no_mod,pfkey);	/* Pop up window and get pfkey.		*/
 			}
-#ifdef W4W
 			else if (v_mouse_click == the_meta_char && use_w4w_flag)
 			{
 				int	m_row, m_col, got_mouse_position;
@@ -1634,12 +1595,10 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 				*/
 				got_mouse_position = 0;
 				
-#ifdef COSTAR
 				if (use_costar_flag && 0==costar_get_mouse_position(&m_row, &m_col))
 				{
 					got_mouse_position = 1;
 				}
-#endif
 
 #ifdef WIN32
 				if (!use_costar_flag && 0==vrawntcn_get_mouse_position(&m_row, &m_col))
@@ -1700,7 +1659,6 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 					ws_bad_char();
 				}
 			}
-#endif /* W4W */
 			else 
 			{
 				ws_bad_char();						/* Else beep.				*/
@@ -1774,7 +1732,6 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 	}
 	vwang_timeout((int4)0);								/* Cancel any timeout			*/
 
-#ifdef COSTAR
 	if (use_costar_flag)
 	{
 		/*
@@ -1787,7 +1744,6 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			costar_ctrl_api(costar_after_read_api);
 		}
 	}
-#endif
 
 	return(SUCCESS);								/* Return to the caller.		*/
 }
@@ -2729,12 +2685,10 @@ static int ws_trans_atr(fac_t the_fac)							/* Translate from Wang to VIDEO		*/
 	static int use_costar_flag = -1;
 	int v_mode;
 
-#ifdef COSTAR
 	if (-1 == use_costar_flag)
 	{
 		use_costar_flag = use_costar();
 	}
-#endif /* COSTAR */
 	
 	v_mode = 0;
 
@@ -2751,7 +2705,6 @@ static int ws_trans_atr(fac_t the_fac)							/* Translate from Wang to VIDEO		*/
 		v_mode |= VMODE_UNDERSCORE;					/* Or in underscore.			*/
 	}
 
-#ifdef COSTAR
 	if (2==use_costar_flag)
 	{
 		/*
@@ -2762,7 +2715,6 @@ static int ws_trans_atr(fac_t the_fac)							/* Translate from Wang to VIDEO		*/
 			v_mode |= VMODE_REVERSE;
 		}
 	}
-#endif /* COSTAR */
 	
 	return(v_mode);									/* Send back the VIDEO attributes.	*/
 }
@@ -3061,7 +3013,7 @@ int ws_help(int curset)									/* Simulate Wang help function.		*/
 	int old_menu_exit_key;								/* Orig. menu exit key.			*/
 	enum e_vop optsave;
 
-	vwang_set_videocap();
+	vwang_init_video();
 	
 	optsave=voptlevel();								/* need to save this.			*/
 
@@ -3204,7 +3156,6 @@ int wpopscr(void)									/* A function to restore the screen and */
 	vpopscr();									/* Get the video structs.		*/
 	vwang_set_synch(FALSE);								/* Synch is not required now.		*/
 
-#ifdef COSTAR
 	if (use_costar())
 	{
 		if (costar_after_write_api)
@@ -3212,7 +3163,6 @@ int wpopscr(void)									/* A function to restore the screen and */
 			costar_ctrl_api(costar_after_write_api);
 		}
 	}
-#endif /* COSTAR */
 
 	return(SUCCESS);
 }
@@ -3324,20 +3274,6 @@ static void ws_dumpbuff(int row,int eol)						/* Dump the current buffer.		*/
 		
 		lbdangle = 0;								/* Reset the dangle counter.		*/
 	}
-}
-
-static void set_cl_fl(void)								/* Set console logging flag.		*/
-{
-#ifdef VMS
-	unsigned long stat;								/* Status returned form SYS$TRNLNM.	*/
-#include "vwang.d"
-
-	if ((stat = SYS$TRNLNM(0,&t_desc,&l_desc,0,0)) == SS$_NORMAL)			/* Verify if logical exists.		*/
-	{										/* Found.				*/
-		do_console_log = TRUE;							/* Set to do console logging.		*/
-	}
-	else do_console_log = FALSE;							/* Not found so no console logging.	*/
-#endif
 }
 
 static int check_mp(int row,int col,int rend,int do_pseudo)				/* See if it is a menu pick item.	*/
@@ -6104,10 +6040,7 @@ void vwang_shut(void)
 {
 	if (!wbackground())
 	{
-		
-#ifdef COSTAR
 		costar_errtext("");
-#endif
 
 		vexit();
 	}
@@ -6165,7 +6098,7 @@ void vwang_pre_init(void)
 		This is called the first time into initwisp() 
 		when not in background.
 	*/
-	vwang_set_videocap();
+	vwang_init_video();
 	set_isdebug();
 }
 
@@ -6211,11 +6144,12 @@ int vwang_keypressed(int discard)
 }
 
 /*
-**	ROUTINE:	vwang_set_videocap()
+**	ROUTINE:	vwang_init_video()
 **
-**	FUNCTION:	Tell VIDEO what videocap file to use.
+**	FUNCTION:	Tell VIDEO what videocap & error log files to use.
 **
 **	DESCRIPTION:	Get the wispterm and tell video.
+**			Also set the error log file for video to use.
 **
 **	ARGUMENTS:	None
 **
@@ -6227,18 +6161,22 @@ int vwang_keypressed(int discard)
 **			video library routines get called.
 **
 */
-void vwang_set_videocap(void)
+void vwang_init_video(void)
 {
 	static int first = 1;
 	
-	if (first && !wbackground())
+	if (first)
 	{
-		vcap_set_vcapfile(wisptermfilepath(NULL), wispterm(NULL));
+		vre_set_logfile(werrpath());	/* Set video to log errors to the wisperr.log file */
+		
+		if (!wbackground())
+		{
+			vcap_set_vcapfile(wisptermfilepath(NULL), wispterm(NULL));
+		}
 		first = 0;
 	}
 }
 
-#ifdef W4W
 /*
 **	ROUTINE:	mark_hotspots()
 **
@@ -6310,7 +6248,6 @@ static void mark_hotspots(int row_x, int numcols)
 		}
 	}
 }
-#endif /* W4W */
 
 /*
 **	ROUTINE:	copy_clean_row()
@@ -6449,7 +6386,7 @@ int init_screen(void)
 		return(0);									/* In background, no terminal.	*/
 	}
 
-	vwang_set_videocap();
+	vwang_init_video();
 
 	retcod = 1;										/* Assume success.		*/
 	if (rts_first)										/* Is this the first time?	*/
@@ -6826,6 +6763,13 @@ static int mousenonmod(void)
 /*
 **	History:
 **	$Log: vwang.c,v $
+**	Revision 1.102  2001-10-15 09:56:34-04  gsl
+**	Change vwang_set_videocap() to vwang_init_video()
+**	Add setting the video error log file.
+**
+**	Revision 1.101  2001-09-25 11:08:05-04  gsl
+**	Remove unneeded ifdefs
+**
 **	Revision 1.100  1999-09-13 15:55:19-04  gsl
 **	Fix return codes from the edit_xxx() routines
 **
@@ -6987,7 +6931,7 @@ static int mousenonmod(void)
 **	Add include of wispcfg.h
 **
 **	Revision 1.60  1996-11-04 15:48:17-08  gsl
-**	Add vwang_set_videocap() routine which is called to tell video which
+**	Add vwang_init_video() routine which is called to tell video which
 **	videocap file to use.
 **	It is then called from vwang_pre_init(), vwang(), and init_screen(), it
 **	must be called before any video routines are called.

@@ -37,9 +37,15 @@ static void do_open(kfb,mode)
 char *mode;
 KCSIO_BLOCK *kfb;
 {
-	errno = 0;
 	kfb->_io_vector = (char *) fopen(kfb->_sys_name,mode);
-	kfb->_status = e_trans(errno);
+	if (NULL == kfb->_io_vector)
+	{
+		kfb->_status = EBADF;
+	}
+	else
+	{
+		kfb->_status = 0;
+	}
 	kfb->_last_io_key = 0;
 	kfb->_open_status = 1;
 	kfb->_pos = ftell((FILE*)kfb->_io_vector);
@@ -51,11 +57,14 @@ A sequential open output.
 ------*/
 void seq_open_output(KCSIO_BLOCK *kfb)
 {
-	errno = 0;
 	kfb->_io_vector = (char *) fopen(kfb->_sys_name,"w");
-	kfb->_status = e_trans(errno);
-	if(errno)
+	if (NULL == kfb->_io_vector)
+	{
+		kfb->_status = EBADF;
 		return;
+	}
+	kfb->_status = 0;
+
 	kfb->_last_io_key = 0;
 	kfb->_open_status = 1;
 	kfb->_pos = fseek((FILE*)kfb->_io_vector,0L,0);
@@ -66,11 +75,13 @@ void seq_open_output(KCSIO_BLOCK *kfb)
 void seq_close(KCSIO_BLOCK *kfb)
 {
 
-	kfb->_status = errno = 0;
+	kfb->_status = 0;
 	if(kfb->_open_status == 0)
 		return;
-	fclose((FILE *) kfb->_io_vector);
-	kfb->_status = e_trans(errno);
+	if (EOF == fclose((FILE *) kfb->_io_vector))
+	{
+		kfb->_status = EBADF;
+	}
 	kfb->_open_status = 0;
 	seq_file_space(kfb);
 }
@@ -97,7 +108,6 @@ void seq_read_next(KCSIO_BLOCK *kfb)
 {
 	int len;
 
-	errno = 0;
 	if(!(fgets(kfb->_record,kfb->_record_len + 3,(FILE *) kfb->_io_vector)))
 		{
 		kfb->_status = EENDFILE;
@@ -212,18 +222,23 @@ void seq_write(KCSIO_BLOCK *kfb)
  * of the "a+" or "w" open mode.
  */
 
-	errno = 0;
 /*
  * Because of ambiguity in whether fputs attaches a \n or not,
  * we use fprintf here to write
  */
-	fprintf((FILE*)kfb->_io_vector,"%s\n",kfb->_record);
+	if (0 > fprintf((FILE*)kfb->_io_vector,"%s\n",kfb->_record) )
+	{
+		kfb->_status = EBADF;
+	}
+	else
+	{
+		kfb->_status = 0;
+	}
 
 /* fputs() attaches a new line
 	fputs(kfb->_record,(FILE *)kfb->_io_vector);
 	fputs("\n",(FILE *)kfb->_io_vector);
 */
-	kfb->_status = e_trans(errno);
 /*
  * Then let us reposition.
 	fseek((FILE*)kfb->_io_vector,pos,0);
@@ -285,6 +300,9 @@ void seq_open_shared(KCSIO_BLOCK *kfb)
 /*
 **	History:
 **	$Log: seqio.c,v $
+**	Revision 1.7  2001-11-15 15:10:14-05  gsl
+**	Replace the errno checking with testing the return codes.
+**
 **	Revision 1.6  1996-09-17 19:34:18-04  gsl
 **	drcs update
 **

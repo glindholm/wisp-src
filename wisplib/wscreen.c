@@ -163,28 +163,26 @@ void wscreen(
 
 	if (first)
 	{
-#ifdef COSTAR
 		if (use_costar_flag = use_costar())
 		{
 			char *ptr;
 			
 			costar_screenname_api  = (ptr = getenv("W4WSCREENNAME"))   ? wstrdup(ptr) : NULL;
 		}
-#endif
 		first = 0;
 	}
 	
 
 											/* We will continue to support screen	*/
 											/* version 20 & 21.			*/
-											/* Except on MSDOS; support starts at	*/
+											/* Except on WIN32; support starts at	*/
 											/* version 22.				*/
 	ver20 = (*screen == 20);		/* DISP-ITEM-LENGTH  COMP PIC 9999 						*/
 	ver21 = (*screen == 21);		/* DISP-ITEM-LENGTH  PIC X							*/
 	ver22 = (*screen == 22);		/* New Method  "L5R1C1O2P{X(20)};"						*/
 	ver90 = (*screen == 90);		/* Custom 5-BYTE FACs								*/
 
-#if defined(unix) || defined(VMS)
+#if defined(unix)
 	if ( !ver20 && !ver21 && !ver22 && !ver90 )					/* Is there a version match?		*/
 #else
 	if ( !ver22 && !ver90 )								/* Is there a version match?		*/
@@ -202,7 +200,6 @@ void wscreen(
 
 		load_item_table22(screen);
 
-#ifdef COSTAR
 		if (use_costar_flag)
 		{
 			if (costar_screenname_api)
@@ -213,8 +210,6 @@ void wscreen(
 				costar_ctrl_api(buff);
 			}
 		}
-#endif /* COSTAR */
-
 	}
 	else
 	{
@@ -226,7 +221,7 @@ void wscreen(
 	{
 		wputscr22(block);
 	}
-#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
+#if defined(unix)									/* WIN32 only supports ver22.		*/
 	else
 	{
 		wputscr(screen,block);							/* Move structure into the block.	*/
@@ -263,7 +258,7 @@ void wscreen(
 			{
 				s_err = wgetscr22(block);				/* Copy screen into the structure.	*/
 			}
-#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
+#if defined(unix)									/* WIN32 only supports ver22.		*/
 			else
 			{
 				s_err = wgetscr(block,screen);				/* Copy screen into the structure.	*/
@@ -282,7 +277,7 @@ void wscreen(
 			{
 				wgetfac22(block);					/* Tailor the FAC's			*/
 			}
-#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
+#if defined(unix)									/* WIN32 only supports ver22.		*/
 			else
 			{
 				wgetfac(block,screen);					/* Tailor the FAC's			*/
@@ -586,7 +581,7 @@ static void calcdata(int item, int xv1, int xv2, int xh,
 }
 
 /********************************************************************************************************************************/
-#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
+#if defined(unix) 
 /********************************************************************************************************************************/
 
 static void wputscr(screen,block)						/* Copy a screen structure into a block		*/
@@ -632,10 +627,7 @@ struct	screen_block	*block;							/* Screen structure block.			*/
 	for (;;)								/* repeat this part				*/
 	{
 		if (*screen == 255) break;
-#ifdef OLD
-		if ( lpi_cobol && ((int4)screen & 1)) screen++;			/* Be sure it is an even address		*/
-										/* For LPI COBOL on UNIX ugh!			*/
-#endif
+
 		cur_v1 = ( *screen++);						/* get the occurs for this item			*/
 
 		cur_v1 = cur_v1 ? cur_v1 : 1;					/* at least 1					*/
@@ -749,9 +741,7 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 	for (;;)								/* repeat this part				*/
 	{
 		if (*screen == 255) break;
-#ifdef OLD
-		if (lpi_cobol && ((int4)screen & 1)) screen++;			/* Need even address on LPI/AT&T/UNIX		*/
-#endif
+
 		cur_v1 = ( *screen++);						/* get the occurs for this item			*/
 
 		cur_v1 = cur_v1 ? cur_v1 : 1;					/* at least 1					*/
@@ -876,9 +866,7 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 	for (;;)								/* repeat this part				*/
 	{
 		if (*screen == 255) break;
-#ifdef OLD
-		if (lpi_cobol && ((int4)screen & 1)) screen++;			/* Need even address on LPI/AT&T/UNIX		*/
-#endif
+
 		cur_v1 = ( *screen++);						/* get the occurs for this item			*/
 
 		cur_v1 = cur_v1 ? cur_v1 : 1;					/* at least 1					*/
@@ -984,7 +972,7 @@ static loadbytes_long( void *vdst, const void *vsrc )
 
 
 /********************************************************************************************************************************/
-#endif		/* Above section is only for unix || VMS systems.	*/
+#endif		/* Above section is only for unix	*/
 /********************************************************************************************************************************/
 /* Load in an integer number starting at ptr. Return after ptr */
 static unsigned char *getnumber(unsigned char *ptr, int *num)	
@@ -1269,6 +1257,9 @@ static void close_open_occurs( int this_level, struct v_struct *v1, struct v_str
 /*
 **	History:
 **	$Log: wscreen.c,v $
+**	Revision 1.21  2001-09-25 11:01:59-04  gsl
+**	Remove unnneded ifdefs
+**
 **	Revision 1.20  1999-09-13 15:56:27-04  gsl
 **	Fix return codes from load_item_table22()
 **

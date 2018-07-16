@@ -220,7 +220,7 @@ void vwang_init_term(void);
 int vwang_wcurwidth(void);
 void vwang_bell(int cnt);
 int vwang_keypressed(int discard);
-void vwang_set_videocap(void);
+void vwang_init_video(void);
 void vwang_title(const char *the_title);
 void vwang_load_charmap(int force);
 void vwang_ansi2wang(unsigned char *buff, int len);
@@ -243,6 +243,9 @@ extern int custom_vwang(unsigned char *function,unsigned char *wsb,unsigned char
 /*
 **	History:
 **	$Log: vwang.h,v $
+**	Revision 1.41  2001-10-15 09:48:40-04  gsl
+**	Change vwang_set_videocap() to vwang_init_video()
+**
 **	Revision 1.40  1997-12-19 10:00:57-05  gsl
 **	Add terminal_control_character
 **

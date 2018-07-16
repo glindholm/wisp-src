@@ -96,9 +96,13 @@ cp $WISPDIR/config/wispmsg.dat	$WISPCONFIG
 cp $WISPDIR/config/wispmsg.txt	$WISPCONFIG
 cp $WISPDIR/config/wproc.msg	$WISPCONFIG
 
-cat $WISPDIR/config/OPTIONS |sed "s|#PQUNIQUE|PQUNIQUE|"> $WISPCONFIG/OPTIONS
+cat $WISPDIR/config/OPTIONS |sed "s|#PQLP|PQLP|"> $WISPCONFIG/OPTIONS
 cat $TESTDIR/lgmap.acu |sed "s|_WISP_|$WISP|g"> $WISPCONFIG/LGMAP
-cp $TESTDIR/wrunconfig.acu 	$WISPCONFIG/wrunconfig
+
+# Create wrunconfig
+echo "cobol=ACU"			>  $WISPCONFIG/wrunconfig
+echo "options=-b +e acuerr.log"		>> $WISPCONFIG/wrunconfig
+echo "runcbl=$WISPDIR/bin/wruncblk"	>> $WISPCONFIG/wrunconfig
 
 echo Loading $WISPCONFIG/videocap
 cp $WISPDIR/config/videocap/* $WISPCONFIG/videocap
@@ -106,9 +110,11 @@ cp $WISPDIR/config/videocap/* $WISPCONFIG/videocap
 $WISPDIR/bin/wsysconf
 
 
-echo FILE-STATUS-CODE 74 		           >  $WISPCONFIG/ACUCONFIG
+echo FILE-STATUS-CODE 74 		                            > $WISPCONFIG/ACUCONFIG
 echo CODE-PREFIX $WISP/src/testacu $WISPDIR/acu $WISPDIR/cridacu . >> $WISPCONFIG/ACUCONFIG
-echo "#V-VERSION 3"			           >> $WISPCONFIG/ACUCONFIG
+echo "#V-VERSION 3"			                           >> $WISPCONFIG/ACUCONFIG
+echo ALTVARV3-VERSION 3			                           >> $WISPCONFIG/ACUCONFIG
+echo ALTVARV2-VERSION 2			                           >> $WISPCONFIG/ACUCONFIG
 echo KEYSTROKE EXCEPTION=33 5		         >> $WISPCONFIG/ACUCONFIG
 echo KEYSTROKE EXCEPTION=34 6		         >> $WISPCONFIG/ACUCONFIG
 echo KEYSTROKE EXCEPTION=34 27		         >> $WISPCONFIG/ACUCONFIG

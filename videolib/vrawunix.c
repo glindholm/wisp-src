@@ -1516,13 +1516,21 @@ void vrawtitle(const char *title)
 */
 void vrawerror(const char* message)
 {
-	printf("\007\r\n%s\r\n",message);
-	printf("Press Enter to continue...\r\n");
-	vrawinput(); /* <<<<<< This is dangerous as it can result in recursive calls to vre() */
+	fprintf(stdout,"\007\r\n%s\r\n",message);
+	fflush(stdout);
+
+	if (vraw_init_flag)
+	{
+		fprintf(stdout, "Press Enter to continue...\r\n");
+		fflush(stdout);
+		vrawinput(); /* <<<<<< This is dangerous as it can result in recursive calls to vre() */
+	}
+	else
+	{
+		vwait(4,0);
+	}	
 }
 
-
-
 
 #ifdef TEST
 
@@ -1703,6 +1711,10 @@ char *callerbuf;
 /*
 **	History:
 **	$Log: vrawunix.c,v $
+**	Revision 1.26  2001-10-12 16:04:26-04  gsl
+**	Changed vrawerror() to only ask to press "ENTER" if initialized
+**	otherwise wait 4 seconds
+**
 **	Revision 1.25  1999-02-10 11:02:28-05  gsl
 **	Change vrawinit() to preserve IXON, IXOFF, IXANY, and IMAXBEL
 **

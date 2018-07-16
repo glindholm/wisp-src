@@ -7,11 +7,16 @@
 
 /* sub85.c - RM/COBOL-85 compatible 'C' routine interface */
 
-/* Copyright (c) 1995 by Acucobol, Inc.  All rights reserved. */
-/* Users of the ACUCOBOL-85 runtime may freely modify and distribute */
-/* this file as they see fit in order to support an ACUCOBOL-85 based */
+/* Copyright (c) 1995-2000 by Acucorp, Inc.  All rights reserved.	*/
+/* Users of the ACUCOBOL-GT runtime may freely modify and distribute	*/
+/* this file as they see fit in order to support an ACUCOBOL-GT based	*/
 /* application.  */
 
+
+/* THIS FILE IS #INCLUDED FROM sub.c.  BECAUSE SYSTEM HEADER FILES	*/
+/* SHOULD BE INCLUDED BEFORE sub.h, AND BECAUSE THIS FILE IS INCLUDED	*/
+/* AFTER sub.h, YOU REALLY SHOULDN'T INCLUDE ANY SYSTEM HEADER FILES	*/
+/* FROM THIS FILE.  */
 
 /* The following LIBTABLE should be modified to contain the names and	*/
 /* function addresses of 'C' routines you wish to link into the runtime	*/
@@ -91,9 +96,14 @@ int	wfrontend2();
 
 #endif /* WISP */
 
-int	call_system();
+/* int	call_system P_((char *, int, Argument[], int)); */
+/* void	wstoasc P_((Argument *, char *)); */
 
-struct	PROCTABLE WNEAR LIBTABLE[] = {
+int	call_system();
+void	wstoasc();
+
+
+struct	PROCTABLE LIBTABLE[] = {
 	{ "SYSTEM", 	call_system },
 #ifdef WISP
 /*
@@ -1065,7 +1075,11 @@ extern	int cobol();
 #endif /* A_COBOL_DECLARED */
 
 #ifdef WIN32
+#ifdef ACUCANCEL42
+extern void acu_cancel(char *);
+#else
 extern void PASCAL acu_cancel(char *);
+#endif
 #else
 extern void acu_cancel();
 #endif
@@ -1355,6 +1369,14 @@ int4 l2;
 */
 #ifdef CRID
 #include "crid85.c"
+
+/*
+ *	Acucobol 5.0 does not have v_make_vers which is needed for
+ *	older CRID.
+ */
+#ifdef CRID_V_MAKE_VERS
+short v_make_vers;
+#endif /* CRID_V_MAKE_VERS */
 #endif /* CRID */
 
 #endif /* WISP */

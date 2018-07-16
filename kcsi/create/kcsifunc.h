@@ -68,6 +68,33 @@ void brel_delete(KCSIO_BLOCK *kfb);
 void brel_unlock(KCSIO_BLOCK *kfb);
 void brel_file_info(KCSIO_BLOCK *kfb);
 
+int  rel_file_space(KCSIO_BLOCK *kfb);
+void rel_open_shared(KCSIO_BLOCK *kfb);
+void rel_open_input(KCSIO_BLOCK *kfb);
+void rel_open_io(KCSIO_BLOCK *kfb);
+void rel_open_output(KCSIO_BLOCK *kfb);
+void rel_close(KCSIO_BLOCK *kfb);
+void rel_read(KCSIO_BLOCK *kfb);
+void rel_hold(KCSIO_BLOCK *kfb);
+void rel_read_next(KCSIO_BLOCK *kfb);
+void rel_read_previous(KCSIO_BLOCK *kfb);
+void rel_hold_next(KCSIO_BLOCK *kfb);
+void rel_read_keyed(KCSIO_BLOCK *kfb);
+void rel_hold_keyed(KCSIO_BLOCK *kfb);
+void rel_start_eq(KCSIO_BLOCK *kfb);
+void rel_start_nlt(KCSIO_BLOCK *kfb);
+void rel_start_gt(KCSIO_BLOCK *kfb);
+void rel_start_eq_keyed(KCSIO_BLOCK *kfb);
+void rel_start_nlt_keyed(KCSIO_BLOCK *kfb);
+void rel_start_gt_keyed(KCSIO_BLOCK *kfb);
+void rel_start_last(KCSIO_BLOCK *kfb);
+void rel_write(KCSIO_BLOCK *kfb);
+void rel_rewrite(KCSIO_BLOCK *kfb);
+void rel_delete(KCSIO_BLOCK *kfb);
+void rel_unlock(KCSIO_BLOCK *kfb);
+void rel_file_info(KCSIO_BLOCK *kfb);
+
+
 void bub_sort(char *base,int nel,int len,int (*comp)(),int (*swap)());
 void kfberr(KFB *kfb);
 void init_crid_debug(void);
@@ -319,6 +346,9 @@ void setwispfilext(char* wispfilext);
 /*
 **	History:
 **	$Log: kcsifunc.h,v $
+**	Revision 1.11  2001-11-20 12:20:08-05  gsl
+**	Add rel_xxx() routines
+**
 **	Revision 1.10  2000-03-13 14:13:33-05  gsl
 **	Change strupr() to kstrupr()
 **

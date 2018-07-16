@@ -36,10 +36,15 @@ MAKEFILE=cridmake.umf
 
 #-----------------------------------------------------------------------
 #
-# To change the version for CRID, change it here. 
 # Change copyright date in "cridvers.c"
 #
-CRID_VERSION=297
+# To change the version for CRID, change it here. 
+#	wisp/kcsi/crid/cridmake.umf
+#	wisp/kcsi/crid/release.txt
+#	wisp/doc/v44_relnotes.lis
+#	wisp/acucobol/wruncbl.umf
+#
+CRID_VERSION=3000
 
 #-----------------------------------------------------------------------
 #
@@ -67,7 +72,7 @@ WISPFLAGS =
 include $(WISP)/src/acu/acucobol.include
 
 ACU_COBOL = ccbl
-ACU_FLAGS = -Da4 -C32 -Z32
+ACU_FLAGS = -Da4 -C32 -Z32 -Za
 
 #-----------------------------------------------------------------------
 #
@@ -80,16 +85,16 @@ MF_FLAGS = -C warnings=2 -C LINKCOUNT=5000
 #
 #	Distribution lists
 #
-STDDIST=ctlcnvrt.wcb rptcnvrt.wcb packlist.lis release.lis
+STDDIST=ctlcnvrt.wcb rptcnvrt.wcb packlist.txt release.txt
 
-ACUDIST=libcrid.a crid.h cridtbl.c crid85.c wruncblk.umf \
+ACUDIST=libcrid.a crid.h cridtbl.c crid85.c wruncbl.umf \
 	CONTROL REPORT INQUIRY DATENTRY \
-	install_crid_acu.lis $(STDDIST)
+	install_crid_acu.txt $(STDDIST)
 
 MFXDIST=control report inquiry datentry \
 	control.o report.o inquiry.o datentry.o \
 	cridmfx.umf libmfxcrid.a libmfxcridwcb.a \
-	install_crid_mf.lis $(STDDIST)
+	install_crid_mf.txt $(STDDIST)
 
 #-----------------------------------------------------------------------
 #
@@ -228,27 +233,32 @@ all:	crid_acu crid_mf
 	@echo CRID $(CRID_VERSION) for all is UP-TO-DATE.
 
 clean:
-	rm -f *.o *.a *.int *.idy *.cbx *.cob *.cpy *~ core
+	rm -f *.o *.a *.int *.idy *.cbx *.cob *.cpy *.err *~ core
 	rm -f CRID.$(CRID_VERSION)
 	rm -f control report inquiry datentry
 	rm -f CONTROL REPORT INQUIRY DATENTRY
-	rm -f wruncblk wruncblke wruncblk_oracle7 wruncblke_oracle7
+	rm -f wruncblk wruncblke wruncblk_oracle7 wruncblke_oracle7 
+	rm -f wruncbl.umf *.alc sub.c sub85.c filetbl.c
 	rm -r -f crid*.ship
 
 header_acu:
 	@echo "=="
 	@echo "== Building CRID $(CRID_VERSION) for ACUCOBOL"
+	@echo "== PWD=`pwd`"
 	@echo "== WISP=$(WISP)"
 	@echo "== WISPDIR=$(WISPDIR)"
-	@echo "== PWD=`pwd`"
+	@echo "== ACUDIR=$(ACUDIR)"
+	@echo "== COBOL=$(ACU_COBOL) $(ACU_FLAGS)"
 	@echo "=="
 
 header_mf: 
 	@echo "=="
 	@echo "== Building CRID $(CRID_VERSION) for MICRO FOCUS"
+	@echo "== PWD=`pwd`"
 	@echo "== WISP=$(WISP)"
 	@echo "== WISPDIR=$(WISPDIR)"
-	@echo "== PWD=`pwd`"
+	@echo "== COBDIR=$(COBDIR)"
+	@echo "== COBOL=$(MF_COBOL) $(MF_FLAGS)"
 	@echo "=="
 
 crid_mfx \
@@ -276,6 +286,7 @@ MFXDISTDIR=cridmfx.$(CRID_VERSION)
 crid_acu_shipkit: $(ACUSHIPDIR)
 
 $(ACUSHIPDIR): $(ACUDIST)
+	@echo
 	@echo "== Building SHIPPING KIT $@"
 	rm -f -r $(ACUSHIPDIR)
 	mkdir $(ACUSHIPDIR)
@@ -289,6 +300,7 @@ $(ACUSHIPDIR): $(ACUDIST)
 crid_mfx_shipkit: $(MFXSHIPDIR)
 
 $(MFXSHIPDIR): $(MFXDIST)
+	@echo
 	@echo "== Building SHIPPING KIT $@"
 	rm -f -r $(MFXSHIPDIR)
 	mkdir $(MFXSHIPDIR)
@@ -322,24 +334,40 @@ $(LIBC_ALL_A)(cridvers.o): cridvers.c CRID.$(CRID_VERSION)
 #
 #	ACUCOBOL Targets
 #
+#	If you don't have an Acucobol compiler then copy 
+#	in the files from an another system.
+#
 
 .PRECIOUS: $(LIBC_ACU_A)
 
-CONTROL:	$(CONTROL_CBX)
-	$(CBLUTIL) -lib -o $@ $(CONTROL_CBX)
+CONTROL:	$(CONTROL_WCB)
+	$(MAKE) -f $(MAKEFILE) WISPDIR=$(WISPDIR) control_cbx
 	@echo $@ is UP-TO-DATE
 
-REPORT:		$(REPORT_CBX)
-	$(CBLUTIL) -lib -o $@ $(REPORT_CBX)
+REPORT:		$(REPORT_WCB)
+	$(MAKE) -f $(MAKEFILE) WISPDIR=$(WISPDIR) report_cbx
 	@echo $@ is UP-TO-DATE
 
-INQUIRY:	$(INQUIRY_CBX)
-	$(CBLUTIL) -lib -o $@ $(INQUIRY_CBX)
+INQUIRY:	$(INQUIRY_WCB)
+	$(MAKE) -f $(MAKEFILE) WISPDIR=$(WISPDIR) inquiry_cbx
 	@echo $@ is UP-TO-DATE
 
-DATENTRY:	$(DATENTRY_CBX)
-	$(CBLUTIL) -lib -o $@ $(DATENTRY_CBX)
+DATENTRY:	$(DATENTRY_WCB)
+	$(MAKE) -f $(MAKEFILE) WISPDIR=$(WISPDIR) datentry_cbx
 	@echo $@ is UP-TO-DATE
+
+control_cbx:	header_acu $(CONTROL_CBX)
+	$(CBLUTIL) -lib -o CONTROL $(CONTROL_CBX)
+
+report_cbx:	header_acu $(REPORT_CBX)
+	$(CBLUTIL) -lib -o REPORT $(REPORT_CBX)
+
+inquiry_cbx:	header_acu $(INQUIRY_CBX)
+	$(CBLUTIL) -lib -o INQUIRY $(INQUIRY_CBX)
+
+datentry_cbx:	header_acu $(DATENTRY_CBX)
+	$(CBLUTIL) -lib -o DATENTRY $(DATENTRY_CBX)
+
 
 LIBC_ACU_ONLY_O= \
 	$(LIBC_ACU_A)(kv3.o) \
@@ -350,8 +378,11 @@ $(LIBC_ACU_A): $(LIBC_ALL_O) $(LIBC_ACU_ONLY_O)
 	$(RANLIB) $@
 	@echo $@ is UP-TO-DATE
 
-wruncblk: $(LIBC_ACU_A)
-	$(MAKE) -e -f wruncblk.umf
+wruncblk: $(LIBC_ACU_A) wruncbl.umf
+	$(MAKE) -f wruncbl.umf WISPDIR=$(WISPDIR) ACUDIR=$(ACUDIR) CRIDDIR=. crid
+
+wruncbl.umf: $(WISP)/src/acu/wruncbl.umf
+	cp $(WISP)/src/acu/wruncbl.umf $@
 
 #-----------------------------------------------------------------------
 #

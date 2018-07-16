@@ -182,6 +182,17 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 
 		/* Track it for the cross reference table */
 		track_call(program_name,xref_ptr);
+
+		if (do_xtab)
+		{
+			char pname[40];
+			strcpy(pname,program_name);
+			stredt(pname,"\"","");	/* Remove the quotes.			*/
+			stredt(pname,"\"","");
+
+			xtab_log(context_infile_name(verb_node->token->context), 
+				verb_node->token->line, "CALL", pname);
+		}
 	}
 	
 	/*
@@ -771,6 +782,9 @@ static void track_call(const char *pname, c_list *tptr)					/* Keep track of the
 /*
 **	History:
 **	$Log: wt_call.c,v $
+**	Revision 1.26  2001-09-13 10:08:23-04  gsl
+**	Add xtab_log tracking of CALL statements
+**
 **	Revision 1.25  1999-09-08 19:59:36-04  gsl
 **	Add READFDR4 to vararg list
 **

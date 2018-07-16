@@ -171,6 +171,16 @@ void passwdname(char *name);
 void READFDR(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...);
 void READFDR4(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, ...);
 
+#define READFDR_RC_0_SUCCESS			0
+#define READFDR_RC_4_VOLUME_NOT_FOUND		4
+#define READFDR_RC_16_LIBRARY_NOT_FOUND		16
+#define READFDR_RC_20_FILE_NOT_FOUND		20
+#define READFDR_RC_24_NO_FILE_HEADER		24
+#define READFDR_RC_32_STAT_ERROR		32
+#define READFDR_RC_40_INVALID_INPUT_PARAM	40
+#define READFDR_RC_44_IO_ERROR			44
+#define READFDR_RC_68_UNKNOWN_FILE_FORMAT	68
+
 /* rename.c */
 void wrename();
 int file_rename(char* old_filename, char* new_filename);
@@ -223,10 +233,6 @@ int vdisplay(const char *file_name,int record_size);			/* VIDEO file display sub
 
 /* wcmatch.c */
 int wcmatch(char* pat, char* str, int sex, char	MATCHONE, char MATCHMANY);
-
-/* wfcisam.c */
-
-int4 cisaminfo( char* path, char* code, void* field );
 
 /* werrpath.c */
 char* werrpath(void);
@@ -288,6 +294,7 @@ void put_swap(int4 *dest, int4 value);
 
 /* wsystem.c */
 int wsystem(const char* cmd);
+int run_unixcommand_silent(const char* command);
 
 /* wvaset.c */
 void wvaset(int4 *x);
@@ -299,6 +306,18 @@ int va_count();
 /*
 **	History:
 **	$Log: wisplib.h,v $
+**	Revision 1.37  2001-10-26 15:38:51-04  gsl
+**	Add run_unixcommand_silent()
+**
+**	Revision 1.36  2001-10-23 14:45:17-04  gsl
+**	Add READFDR RC codes
+**
+**	Revision 1.35  2001-10-22 10:47:27-04  gsl
+**	Remove wfcisam.c proto
+**
+**	Revision 1.34  2001-10-22 10:13:12-04  gsl
+**	Add READFDR return codes
+**
 **	Revision 1.33  1999-09-08 19:43:20-04  gsl
 **	Add READFDR4() and update READFDR()
 **

@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		link.c
@@ -11,7 +11,6 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	
 **	LINK()		Generic LINK entry point
-**	LINKDESC()	VMS for args passed by descriptor (/DLINK)
 **	LINKAIX()	AIX arg/length paired arguments
 **	LINKMF()	Micro Focus (unix) arg/length paired arguments
 **	LINK2()		Generic arg/length paired arguments
@@ -20,7 +19,7 @@ static char rcsid[]="$Id:$";
 **	findrun()	To find the file to run.
 **	firstproc()	To record the filepath of the first proc run.
 **
-**	Warnings:	*** LINK must be reenterent for VMS and MSDOS ***
+**	Warnings:	*** LINK must be reenterent for softlinks ***
 **			It will be called recursively so don't use any static variables.
 **
 */
@@ -35,21 +34,11 @@ static char rcsid[]="$Id:$";
 #include <varargs.h>									/* Function uses variable params.	*/
 #include <errno.h>
 
-#if defined(unix) || defined(_MSC_VER)
 #include <ctype.h>
 #include <sys/types.h>
 #include <signal.h>
-#endif
 
-#ifdef VMS
-#include <ssdef.h>
-#include <libdef.h>
-#include <rmsdef.h>
-#include <descrip.h>
-#include <climsgdef.h>
-#endif
-
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 #include <process.h>
 #endif
 
@@ -218,37 +207,6 @@ va_dcl											/* variable argument list		*/
 }
 
 
-#ifdef	VMS		/* Start VMS only block of code	*/				/* only if in vms			*/
-int LINKDESC ( va_alist )								/* LINK with vms descriptors		*/
-va_dcl											/* variable argument list		*/
-{
-	int	i ;
-	va_list	desc_args ;								/* descriptor arguments			*/
-	int	varg_count;								/* Total arg count			*/
-	char	*varg_pointer[MAX_VARGS] ;						/* pointers to variable param list	*/
-	int4	varg_length[MAX_VARGS] ;						/* length of each parameter in list	*/
-	struct  dsc$descriptor  *va_dsc ;						/* Descriptor pointer from va list      */
-
-
-	va_start ( desc_args ) ;							/* start the walk down the parameters	*/
-	varg_count = va_count ( desc_args ) ;						/* Find out how many args in the stack.	*/
-	va_start( desc_args ) ;								/* restart the argument list		*/
-
-	for ( i = 0 ; i < varg_count ; ++i )						/* for each argument in va_alist	*/
-	{
-		va_dsc = va_arg( desc_args, struct dsc$descriptor*);			/* Get the next descriptor		*/
-		varg_pointer[i] = va_dsc->dsc$a_pointer ;				/* Get the argument pointer		*/
-		varg_length[i] = va_dsc->dsc$w_length ;					/* Get the argument length		*/
-	}
-
-	va_end ( desc_args ) ;								/* end the parameter walk		*/
-
-	do_link(varg_count, varg_pointer, varg_length, LENGTH_KNOWN);			/* Do the link				*/
-
-	return(0);
-}
-#endif /* VMS */
-
 #ifdef unix
 int LINKAIX ( va_alist )								/* LINK for AIX VS COBOL		*/
 va_dcl											/* variable argument list		*/
@@ -277,7 +235,6 @@ va_dcl											/* variable argument list		*/
 }
 #endif	/* unix */
 
-#ifndef VMS
 int LINKMF ( va_alist )									/* LINK for Micro Focus COBOL/2		*/
 va_dcl											/* variable argument list		*/
 {
@@ -303,7 +260,6 @@ va_dcl											/* variable argument list		*/
 
 	return(0);
 }
-#endif	/* !VMS */
 
 /*
 **	Routine:	LINK2()
@@ -338,9 +294,6 @@ va_dcl											/* variable argument list		*/
 
 	va_start ( link_args ) ;							/* start the walk down the parameters	*/
 	varg_count = va_count ( link_args ) ;						/* Find out how many args in the stack.	*/
-#ifdef VMS
-	varg_count = (varg_count) ? varg_count / 2: 0;					/* For VMS half the arg count		*/
-#endif
 	va_start ( link_args ) ;							/* restart the walk down the parameters	*/
 
 	for ( i = 0 ; i < varg_count ; ++i )
@@ -383,7 +336,6 @@ va_dcl											/* variable argument list		*/
 **
 **	History:	
 **	12/23/92	Modified for MSDOS/ACUCOBOL. GSL
-**	10/20/93	Modified for VMS style return status and completion status on spawn.  SMC
 **
 */
 static	void do_link(
@@ -434,13 +386,6 @@ static	void do_link(
 	int4	wang_compcode;								/* Temp compcode			*/
 	int4	wang_retcode;								/* Value expected from Wang COBOL.	*/
 
-#ifdef VMS
-	uint4	vms_return;								/* VMS return status.			*/
-	uint4	vms_status;								/* VMS completion status.		*/
-	int	spawn_action;								/* Action to call spawn flag.		*/
-	int	vmstry;									/* Flag to indicate search tries.	*/
-	char	vmskey[80];								/* Key to link parm area		*/
-#endif
 #ifdef unix
 	int	pid;
 
@@ -451,12 +396,12 @@ static	void do_link(
 #ifdef WIN32
 	int     save_errno;
 #endif
-#if defined(unix) || defined(VMS)
+#ifdef unix
 	char	**tmp;
 
 	int	num;
 	char	temp_retval[4];								/* Temp string to hold return value.	*/
-#endif /* unix || VMS */
+#endif
 
 	char	*sh_parm[64];
 	char	linkkey[80];								/* Key to link parm area		*/
@@ -902,6 +847,8 @@ ARGEND:	/* END OF ARGUMENTS */
 
 	unloadpad( progname_str, l_file, SIZEOF_FILE );					/* make progname a string		*/
 
+#ifdef OLD
+	/* Because of GETPARM processing you don't want to do VSEDIT in separate window */
 	if (0==memcmp(l_file,"VSEDIT  ",SIZEOF_FILE))
 	{
 		if (utils_in_windows())
@@ -909,6 +856,7 @@ ARGEND:	/* END OF ARGUMENTS */
 			link_separate_window = 1;
 		}
 	}
+#endif /* OLD */
 
 	if (0==memcmp(l_file,"DISPLAY ",SIZEOF_FILE))
 	{
@@ -1034,330 +982,6 @@ ARGEND:	/* END OF ARGUMENTS */
 	}
 
 
-#ifdef VMS
-/*************************************************  Start of VMS section  *******************************************************/
-
-	/*
-	**	We first try an internal "soft link" via a COBOL call.
-	**
-	**	NOTE:	This section of code is recursive.  
-	**		Wclink() can start a routine which calls LINK.
-	*/
-	if ( *can_exit != ' ' )	CANEXITFLAG++;
-	savelevel = linklevel();						/* Save the link-level.			*/
-	newlevel();									/* Increment the link-level		*/
-	wclink ( l_file, &parm_list, &retval ) ;					/* Call the COBOL link. (in LINKSUBS.C)	*/
-	setlevel(savelevel);								/* Restore the link-level		*/
-
-	if ( *can_exit != ' ' )	CANEXITFLAG--;
-
-	if (retval == 1)								/* Static link was a success.		*/
-	{
-		retval = atol(WISPRETURNCODE);
-
-/*		setretcode(WISPRETURNCODE); */
-
-		swap_put ( comcode, (int4)0 ) ;						/* Successful link.			*/
-		swap_put ( retcod, retval ) ;						/* Return code from link program.	*/
-
-		ppunlink(linklevel());							/* Putparm UNLINK			*/
-		return;
-	}
-
-	vmstry = 0;
-	spawn_action = 1;								/* Initialize to .EXE			*/
-
-vmsagain:
-	if (*ltype == 'S')								/* Look in system area.			*/
-	{
-		switch ( vmstry )
-		{
-			case 0:
-			{
-				strcpy ( link_filespec, "SYS$SYSTEM:" ) ;
-				strcat ( link_filespec, progname_str ) ;
-				strcat ( link_filespec, ".COM" ) ;
-				spawn_action = 3 ;					/* to start a .COM file			*/
-				break ;
-			}
-			case 1:
-			{
-				strcpy ( link_filespec, "SYS$SYSTEM:" ) ;
-				strcat ( link_filespec, progname_str ) ;
-				strcat ( link_filespec, ".EXE" ) ;
-				spawn_action = 1 ;					/* to start a .EXE file			*/
-				break ;
-			}
-			case 2:
-			{
-				strcpy ( link_filespec, "WISP$ROOT:[COM]" ) ;		/*  then look in WISP$ROOT:[COM].	*/
-				strcat ( link_filespec, progname_str ) ;
-				strcat ( link_filespec, ".COM" ) ;
-				spawn_action = 3 ;					/* to start a .COM file			*/
-				break ;
-			}
-			case 3:
-			{
-				strcpy ( link_filespec, "WISP$ROOT:[EXE]" ) ;		/*  then look in WISP$ROOT:[EXE],	*/
-				strcat ( link_filespec, progname_str ) ;
-				strcat ( link_filespec, ".EXE" ) ;
-				spawn_action = 1 ;					/* to start a .EXE file			*/
-				break ;
-			}
-		}
-		vmstry++;								/* Increment the number of tries.	*/
-	}
-	else if (*ltype == 'P')
-	{
-		char *ptr;
-		mode = IS_SUBMIT;
-		ptr = wfname(&mode,l_vol,l_lib,l_file,link_filespec);			/* This will check .COM then .EXE	*/
-		*ptr = '\0' ;								/* null terminate link_filespec.	*/
-		vmstry++;
-	}
-	else
-	{
-		switch ( vmstry )
-		{
-			case 0:								/* First look in PRGVOL:[PRGLIB]	*/
-			{
-				char *ptr;
-				mode = IS_SUBMIT;
-				ptr = wfname(&mode,l_vol,l_lib,l_file,link_filespec);	/* This will check .COM and .EXE	*/
-				*ptr = '\0' ;						/* null terminate link_filespec.	*/
-				break ;
-			}
-			case 1:								/* Next look in current directory.	*/
-			{
-				strcpy ( link_filespec, progname_str ) ;
-				strcat ( link_filespec, ".COM" ) ;
-				spawn_action = 3;
-				break ;
-			}
-			case 2:								/* try for .COM				*/
-			{
-				strcpy ( link_filespec, progname_str ) ;
-				strcat ( link_filespec, ".EXE" ) ;
-				spawn_action = 1;
-				break ;
-			}
-		}
-		vmstry++;
-	}
-	vms_return = (0==isafile( link_filespec )) ? 1:0;				/* Check file; does it exist?		*/
-
-	if (vms_return != 0 )
-	{
-		if (*ltype == 'S' && vmstry < 4) goto vmsagain;				/* Try with next specification.		*/
-		if (*ltype == ' ' && vmstry < 3) goto vmsagain;				/* Try with next specification.		*/
-
-		/*
-		**	FILE NOT FOUND
-		*/
-		swap_put ( comcode, (int4)8 ) ;						/* Unsuccessful link.			*/
-		wang_retcode = 20;							/* File not found			*/
-
-		sprintf(temp_retval,"%03d",wang_retcode);				/* Put wang_retval into string format.	*/
-/*		setretcode(temp_retval); */
-		
-		swap_put ( retcod, wang_retcode );
-		return;
-	}
-
-	wang_retcode = 0;								/* Default to success			*/
-	wang_compcode = 0;
-
-	if ( 0==strcmp(splitext(link_filespec),".EXE") ) spawn_action = 1;
-	if ( 0==strcmp(splitext(link_filespec),".COM") ) spawn_action = 3;
-
-	if ( arg_length_known && ( spawn_action == 1 ) )				/* /DLINK to an EXE			*/
-	{
-		/*
-		**	Perform a dynamic LINK (/DLINK) with parameter passing.
-		*/
-
-		if ( *can_exit != ' ' )	CANEXITFLAG++;
-
-		if ( parmcnt > 0 ) 							/* if there are any parameters;		*/
-		{
-			writevmslink( link_filespec, parmcnt, &parm_list, &len_list, vmskey);
-		}
-		else
-		{
-			strcpy ( vmskey, NULL_FILE_NAME ) ;				/* VMSLINKSUB won't try to read args.	*/
-		}
-		vwang_noclear_on_shut();						/* don't clear src			*/
-		vwang_shut();								/* Reset the terminal.			*/
-
-							/* build spawn name starting with "@WISP$ROOT:[COM]VMS$START$LINK $"    */
-
-		strcpy ( link_callspec, "@WISP$ROOT:[COM]VMS$START$LINK $" ) ;  	/* Start with .COM file			*/
-		strcat ( link_callspec, link_filespec ) ;				/* cat program name			*/
-		strcat ( link_callspec, " " ) ;						/* cat space				*/
-		strcat ( link_callspec, vmskey ) ;					/* cat parameter file name      	*/
-
-		savelevel = linklevel();						/* Save the link-level.			*/
-		/* It is up to the spawned program to do a newlevel().	*/
-		vms_return = spawn2( 3, link_callspec, "", &vms_status ) ;		/* Spawn the command; the 3 means .COM  */
-
-		setlevel(savelevel);							/* Restore the link-level		*/
-
-		/*
-		**	After spawn, figure out what to do about return codes, etc.		
-		*/
-
-		if (vms_return == SS$_NORMAL || vms_return == CLI$_NORMAL)		/* Spawn was successful.		*/
-		{
-			ppunlink(savelevel);						/* Putparm UNLINK			*/
-
-			if ( parmcnt > 0 ) 						/* if there are any parameters;		*/
-			{
-				if ( !isafile(vmskey) )					/* if parameter file does NOT exist;	*/
-				{							/* subroutine terminated abnormally.	*/
-					wang_compcode = 16;				/* Subroutine exited abnormally		*/
-					wang_retcode = 0;				/* Reset return code to zero.		*/
-				}
-				else							/* ELSE, parameter file DOES exist	*/
-				{							/* SO, read parameters into memory	*/
-					readvmslink(link_filespec, parmcnt, &parm_list, &len_list, vmskey, 
-							&wang_compcode, &wang_retcode);
-				}
-			}
-			else
-			{
-				if (1 == vms_status)
-				{
-					/* 
-					**	VMS normal status.
-					*/
-					wang_retcode = 0;
-				}
-				else if (1 == vms_status % 10000 )
-				{
-					/*
-					**	WISP coded return codes == (RC * 10000 + 1)
-					**	the "+ 1" is to make them VMS warnings/informational codes
-					*/
-					wang_retcode = (vms_status - 1) / 10000;
-				}
-				else
-				{
-					/*
-					**	This is not a WISP coded return code.
-					*/
-					wang_retcode = vms_status;
-				}
-			}
-		}
-		else
-		{
-			wang_compcode = 8;						/* Unsuccessful link.			*/
-			wang_retcode = vms_to_wang_codes ( vms_return ) ;		/* convert VMS code to WANG code.	*/
-		}
-
-
-		if ( *can_exit == ' ' )							/* Cancel-Exit not at this level	*/
-		{
-			if ( LOGOFFFLAG )						/* A lower level called logoff		*/
-			{
-				wexit(32);						/* Terminate this level			*/
-			}
-		}
-		else
-		{
-			CANEXITFLAG--;							/* We've just come thru a Cancel-Exit   */
-			LOGOFFFLAG = 0;							/* Cancel the logoff			*/
-		}
-
-		vwang_synch() ;
-		vwang_set_reinitialize(TRUE);						/* Return from link re-inits screen	*/
-
-		vwang_clear_on_shut();							/* Reset onexit status			*/
-
-	}
-	else
-	{
-		/*
-		**	(ELSE) is not an EXE or not a LINKDESC (/DLINK).
-		**
-		**	Handles .COM files and .EXE without LINKDESC
-		*/
-
-		if ( *can_exit != ' ' )	CANEXITFLAG++;
-
-		savelevel = linklevel();						/* Save the link-level.			*/
-		if ( spawn_action == 3 )						/* if file is a .COM file;		*/
-		{
-			strcpy ( link_callspec, "@" ) ;					/* @ means run .COM file for VMS	*/
-			strcat ( link_callspec, link_filespec ) ;			/* Add .COM file to execute.		*/
-			newlevel();							/* Increment the link-level		*/
-		}
-		else
-		{
-			strcpy ( link_callspec, link_filespec ) ;			/* .EXE file				*/
-			/* For EXE files it is up to the spawned program to do a newlevel() call.				*/
-		}
-		vms_return = spawn2 ( spawn_action , link_callspec, "", &vms_status ) ; /* Spawn the command.			*/
-
-		setlevel(savelevel);							/* Restore the link-level		*/
-
-		if ( *can_exit != ' ' )	CANEXITFLAG++;
-
-		if (vms_return == SS$_NORMAL || vms_return == CLI$_NORMAL)		/* Spawn was successful.		*/
-		{
-			ppunlink(savelevel);						/* Putparm UNLINK			*/
-			wang_compcode = 0;						/* Successful link.			*/
-
-			if (1 == vms_status)
-			{
-				/* 
-				**	VMS normal status.
-				*/
-				wang_retcode = 0;
-			}
-			else if (1 == vms_status % 10000 )
-			{
-				/*
-				**	WISP coded return codes == (RC * 10000 + 1)
-				**	the "+ 1" is to make them VMS warnings/informational codes
-				*/
-				wang_retcode = (vms_status - 1) / 10000;
-			}
-			else
-			{
-				/*
-				**	This is not a WISP coded return code.
-				*/
-				wang_retcode = vms_status;
-			}
-
-		}
-		else
-		{
-			wang_compcode = 8;						/* Unsuccessful link.			*/
-											/* Set return code from spawned program:*/
-			wang_retcode = vms_to_wang_codes ( vms_return ) ;		/* convert VMS code to WANG code.	*/
-		}
-
-	}
-
-	if (0 == wang_compcode)
-	{
-		load_defaults();
-	}
-
-	sprintf(temp_retval,"%03d",wang_retcode);					/* Put wang_retcode into string format.  */
-/*	setretcode(temp_retval); */
-
-	swap_put ( comcode, wang_compcode );
-	swap_put ( retcod, wang_retcode );
-
-	return;
-/*************************************************  End of VMS section  *********************************************************/
-#endif /* VMS */
-
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
-
 	/*
 	**	ltype   - link type
 	**	-------------------
@@ -1411,9 +1035,9 @@ vmsagain:
 		}
 	}
 
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 	/*
-	**	Note: On MSDOS the current directory is ALWAYS checked first before the PATH.
+	**	Note: On WIN32 the current directory is ALWAYS checked first before the PATH.
 	*/
 	if (not_found && (*ltype == ' ' || *ltype == 'S' ))
 #else
@@ -1468,9 +1092,6 @@ vmsagain:
 	/*
 	**	We've found the full file spec.  Find out what run type it is.
 	*/
-#ifdef MSDOS
-	upper_string(link_filespec);
-#endif
 
 	/*
 	**	Get the run type then check if we can handle it.
@@ -1507,12 +1128,11 @@ vmsagain:
 		cobol_frontend = NULL;
 		break;
 
-#if defined(unix) || defined(WIN32)
 	case RUN_PROC:
 	case RUN_PROCOBJ:
 		cobol_frontend = NULL;
 		break;
-#endif
+
 	}
 
 	/*
@@ -1539,7 +1159,6 @@ vmsagain:
 		CANEXITFLAG++;
 	}
 
-#endif /* unix || MSDOS || WIN32 */
 
 
 
@@ -1616,7 +1235,7 @@ vmsagain:
 		goto done_soft_link;
 	}
 
-	if ( arg_length_known || 0 == parmcnt )
+	if ( (arg_length_known || 0 == parmcnt ) && (RUN_SHELL != ftyp))
 	{
 		/*
 		**	Write out the params file
@@ -1718,7 +1337,7 @@ vmsagain:
 			sh_parm[0]=wispshellexe();					/* argv[0] is the shell (i.e /bin/sh)	*/
 			sh_parm[1]=link_filespec;					/* argv[1] in the filespec	 	*/
 
-			if (parm_file_written)
+			if (arg_length_known || 0 == parmcnt)
 			{
 				/*
 				**	Load the argument list so it can be used by SHELL SCRIPTS.  This is the same
@@ -1997,7 +1616,7 @@ done_soft_link:
 /*************************************************  End of UNIX section  ********************************************************/
 #endif	/* unix */							
 
-#if defined(WIN32)
+#ifdef WIN32
 /******************************************  Start of WIN32 section  *****************************************************/
 
 	/*
@@ -2068,7 +1687,7 @@ done_soft_link:
 		**	and setting up context via environment variables.
 		*/
 
-		if ( arg_length_known || 0 == parmcnt )
+		if ( (arg_length_known || 0 == parmcnt) &&  (RUN_SHELL != ftyp))
 		{
 			/*
 			**	Write out the params file
@@ -2526,207 +2145,8 @@ done_soft_link:
 /******************************************  End of WIN32 section  *******************************************************/
 #endif	/* WIN32 */
 
-#if defined(MSDOS)
-/******************************************  Start of MSDOS section  *****************************************************/
-
-
-	if (ftyp == RUN_SHELL || ftyp == RUN_EXEC)
-	{
-		char	command[256];
-		int4	rc;
-
-		savelevel = linklevel();					/* Save the link-level				*/
-		if (ftyp == RUN_SHELL)						/* If a BAT file the increment the link-level	*/
-		{								/* (else its up to the program to newlevel())	*/
-			newlevel();
-		}
-
-		strcpy(command,link_filespec);					/* Now add the name of the procedure.	*/
-		if (arg_length_known)
-		{
-			int	cpos;
-			cpos = strlen(command);					/* Find out the end of the string.	*/
-			for(i=0; i<parmcnt; i++)
-			{
-				if ((cpos + len_list.len[i] + 3) > 128)
-				{
-					swap_put ( comcode, (int4)8 ) ;		/* Unsuccessful link				*/
-					swap_put ( retcod, (int4)60 ) ;		/* Command too big				*/
-					werrlog(ERRORCODE(20),"Command is greater then 128 bytes",0,0,0,0,0,0,0);
-					if ( *can_exit != ' ' )
-					{
-						CANEXITFLAG--;
-					}
-					return;
-				}
-				command[cpos++] = ' ';				/* Insert a space.			*/
-				command[cpos++] = '\"';				/* And Quotes.				*/
-				memcpy(&command[cpos], parm_list.parm[i], (size_t)len_list.len[i]);
-				cpos += len_list.len[i];
-				command[cpos++] = '\"';				/* Close Quotes.			*/
-				command[cpos] = (char)0;			/* NULL terminate command		*/
-			}
-		}
-		
-		vwang_shut();							/* Clear video for a system call.		*/
-		rc = system( command );						/* Execute with a command processor.		*/
-
-		setlevel(savelevel);						/* Restore the link-level			*/
-		ppunlink(savelevel);						/* Putparm UNLINK				*/
-
-		vwang_synch();							/* Synchronize video after a system call.	*/
-		load_defaults();
-		vwang_set_reinitialize(TRUE);					/* Return from link re-inits screen		*/
-
-		if (rc == -1)
-		{
-			swap_put ( comcode, (int4)8 ) ;
-			swap_put ( retcod,  (int4)0 );
-		}
-		else
-		{
-			swap_put ( comcode, (int4)0 ) ;
-			swap_put ( retcod,  rc );
-		}
-	}
-#ifdef DMF
-	else if ( ftyp == RUN_MFINT || ftyp == RUN_MFGNT )			/* .GNT or .INT Micro Focus COBOL/2 file.	*/
-	{
-		/*
-		**	We first try an internal "soft link" via a COBOL call.
-		**
-		**	NOTE:	We use newlevel()/oldlevel() around the wclink() instead of a save & restore because this section
-		**		of code is recursive.  Wclink() can start a routine which calls LINK.
-		*/
-		newlevel();							/* Increment the link-level			*/
-		wclink( link_filespec, &parm_list, &retval );			/* Call subroutine through wclink module.	*/
-		oldlevel();							/* Decrement the link-level			*/
-
-		if( retval == 1 )						/* Successful call.				*/
-		{
-			ppunlink(linklevel());					/* Putparm UNLINK			*/
-			wang_retcode = atol ( WISPRETURNCODE );
-
-			swap_put ( comcode, (int4)0 ) ;
-			swap_put ( retcod, wang_retcode );
-		}
-		else
-		{
-			swap_put( comcode, (int4)8 );				/* Unsuccessful link.				*/
-			swap_put( retcod, (int4)20 );				/* File not found.				*/
-
-			werrlog( ERRORCODE(7), link_filespec,0,0,0,0,0,0,0);
-		}
-	}
-#endif /* DMF */
-#if defined(DACU)
-	else if ( ftyp == RUN_ACUCOBOL )					/* ACUCOBOL					*/
-	{
-		/*
-		**	If we are already in an ACUCOBOL runtime then we do a
-		**	"soft" link using call_acucobol().
-		*/
-		if (acu_cobol)
-		{
-			int	rc;
-
-			newlevel();
-			call_acucobol( link_filespec, parmcnt, parm_list.parm, len_list.len, &rc );
-			oldlevel();
-
-			if (0==rc)
-			{
-				/*
-				**	If successful then do a putparm UNLINK
-				*/
-				ppunlink(linklevel());
-			}
-			
-			call_acucobol_error(rc, &wang_retcode, &wang_compcode, link_filespec)
-
-			swap_put ( comcode, wang_compcode ) ;
-			swap_put ( retcod, wang_retcode );
-
-		}
-		else	/* Not in runtime */
-		{
-			/*
-			**	Not in an ACUCOBOL runtime so must start one to LINK to a COBOL program.
-			*/
-			struct wruncfg cfg;
-			char	command[1024];	/* This exceeds the MSDOS command line limit */
-			int	rc;
-
-			wrunconfig(&cfg);					/* Load wrunconfig options file			*/
-			sprintf(command,"%s %s %s", cfg.wrun_runcbl, cfg.wrun_options, link_filespec);
-			if (strlen(command) > 128)
-			{
-				werrlog(ERRORCODE(20),"system(command) too int4",0,0,0,0,0,0,0);
-			}
-			else
-			{
-				/*
-				**	Normally we would do a vwang_shut() next except on DOS this causes a lowlevel
-				**	clear screen in vrawexit().  On DOS this vrawexit() changes the blue background
-				**	to black which is exactly what we are trying to avoid with the vwang_noclear_on_shut()
-				**	calls.  On DOS we don't actually change the input-mode so we can live without
-				**	a vwang_shut() to restore it. So we will just drop this logic until we can figure
-				**	out what is the proper behaviour and fix it.
-				*/
-				/* vwang_noclear_on_shut(); */			/* don't clear sreen.				*/
-				/* vwang_shut(); */				/* Shutdown video				*/
-
-				savelevel = linklevel();			/* Save the link-level				*/
-
-				rc = system(command);				/* Execute the command				*/
-
-				setlevel(savelevel);				/* Restore the link-level			*/
-
-				vwang_synch();					/* Resynch video				*/
-				vwang_set_reinitialize(TRUE);			/* Return from link re-inits screen		*/
-				/* vwang_clear_on_shut(); */			/* Reset onexit status to clear screen		*/
-
-				if (rc == 0)					/* If system(command) successful		*/
-				{
-					ppunlink(savelevel);			/* Putparm UNLINK				*/
-					swap_put ( comcode, (int4)0 ) ;		/* Successful link				*/
-					swap_put ( retcod, (int4)0 ) ;
-					load_defaults();			/* Reload defaults: may have changed		*/
-				}
-				else						/* system(command) failed			*/
-				{
-					sprintf(buff,"system(command) failed [errno=%d]",errno);
-					werrlog(ERRORCODE(20),buff,0,0,0,0,0,0,0);
-					werrlog(102,command,0,0,0,0,0,0,0);
-
-					swap_put ( comcode, (int4)8 ) ;		/* Unsuccessful link				*/
-					swap_put ( retcod, (int4)60 ) ;
-				}
-			}
-
-		}
-	}
-#endif /* DACU */
-	else									/* Invalid type					*/
-	{
-		swap_put ( comcode, (int4)8 ) ;					/* Unsuccessful link				*/
-		swap_put ( retcod, (int4)52 ) ;					/* NOT a runable file				*/
-		werrlog(ERRORCODE(11),link_filespec,0,0,0,0,0,0,0);
-	}
-
-	if ( *can_exit != ' ' )
-	{
-		CANEXITFLAG--;
-	}
-
-	return;									/* Exit LINK now.				*/
-
-/******************************************  End of MSDOS section  *******************************************************/
-#endif	/* MSDOS */
-
 }
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 
 void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec)
 {
@@ -2773,9 +2193,8 @@ void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *
 		break;
 	}
 }
-#endif
 
-#if defined(unix) || defined(MSFS)
+
 /*
 **	Routine:	searchpath()
 **
@@ -2885,9 +2304,8 @@ static int searchnative(const char* nativename, char* filespec)
 	
 	return 1;
 }
-#endif /* unix || MSFS */
 
-#if defined(unix) || defined(WIN32)
+
 /*
 **	Routine:	findrun()
 **
@@ -3024,7 +2442,6 @@ int firstproc(char* filepath)
 	return(0);
 }
 
-#endif /* unix || WIN32 */
 
 
 /*	End of	link.c	*/
@@ -3032,6 +2449,15 @@ int firstproc(char* filepath)
 /*
 **	History:
 **	$Log: link.c,v $
+**	Revision 1.61  2001-11-16 10:45:18-05  gsl
+**	Change so VSEDIT is not linked in a separate window UTILSWINDOWS
+**
+**	Revision 1.60  2001-10-18 16:25:27-04  gsl
+**	Don't write the LINKxxx parameter files for SHELL scripts
+**
+**	Revision 1.59  2001-10-18 15:45:29-04  gsl
+**	Remove VMS and MSDOS
+**
 **	Revision 1.58  1999-03-04 09:41:46-05  gsl
 **	fix warning
 **

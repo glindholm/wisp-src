@@ -107,8 +107,8 @@ DEV_ENTRY *devhead, *devp;
 #endif
 
 #ifdef HPUX
-#define WSNAME2 "tty..*"
-#define WSPATH2 "/dev/pty"
+#define WSNAME2 "t.*"
+#define WSPATH2 "/dev/pts"
 #endif
 
 #ifdef MSDOS
@@ -251,7 +251,7 @@ char *argv[];
 	/* CHANGE-COPYRIGHT-DATE */
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992-2000 NeoMedia Technologies Incorporated\n\n");
+	printf("Copyright (c) 1992-2001 NeoMedia Technologies Incorporated\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -790,6 +790,12 @@ increment_devnum()
 /*
 **	History:
 **	$Log: wsysconf.c,v $
+**	Revision 1.18  2001-11-06 11:31:30-05  gsl
+**	Fix tty for HPUX
+**
+**	Revision 1.17  2001-09-05 14:48:02-04  gsl
+**	Change copyright date.
+**
 **	Revision 1.16  2000-03-16 10:29:37-05  gsl
 **	2000
 **

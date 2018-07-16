@@ -1,6 +1,6 @@
 #!/bin/ksh
 #
-#	Copyright (c) 1995-1997 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -69,7 +69,6 @@ wisp/kcsi/common
 wisp/lib
 wisp/menudemo
 wisp/mf
-wisp/msdos
 wisp/nt
 wisp/port
 wisp/proctran
@@ -79,18 +78,6 @@ wisp/utils
 wisp/vms
 wisp/vsedit
 wisp/wproc"
-
-DISAM_PROJ_LIST="
-disam.34/code
-disam.34/decs
-disam.34/docs
-disam.34/head
-disam.34/make
-disam.34/port
-disam.34/test
-disam.34/tp.21
-disam.34/util
-disam.34/mfisam"
 
 PARENTDIR=$HOME/work
 echo
@@ -105,23 +92,25 @@ cd $PARENTDIR
 
 echo pwd = `pwd`
 echo
-$ECHONONL	"Enter name of save dir (e.g. wisp3318) ? "
+$ECHONONL	"Enter name of save dir (e.g. wisp4400) ? "
 read ANS
 if [ "$ANS" = "" ]
 then
 	ANS=srcXXX
 fi
 
+WISPXXXX=$ANS
+
 #
 #	Make all the directories needed
 #
 MKDIR="mkdir -p"
 
-echo $MKDIR $ANS
-test -d $ANS || $MKDIR $ANS
+echo $MKDIR $WISPXXXX
+test -d $WISPXXXX || $MKDIR $WISPXXXX
 
-echo cd $ANS
-cd $ANS
+echo cd $WISPXXXX
+cd $WISPXXXX
 
 echo $MKDIR src
 test -d src || $MKDIR src
@@ -139,12 +128,10 @@ WISPDIRLIST="
 	etc \
 	ivslib \
 	kcsi \
-	kcsi/common \
 	kcsi/create \
 	kcsi/crid \
 	lib \
 	mf \
-	msdos \
 	nt \
 	port \
 	proctran \
@@ -159,10 +146,6 @@ WISPDIRLIST="
 	wisptran \
 	wisputils \
 	wproc \
-	"
-
-DISAMDIRLIST="
-	kcsi/disam \
 	"
 
 echo Creating directories ...
@@ -188,7 +171,7 @@ done
 
 echo
 echo "This script can set the RCS states of all the files in WISP to"
-echo "a new version number (e.g. V3_3_18)."
+echo "a new version number (e.g. V4_4_00)."
 echo
 $ECHONONL	'Do you wish to set the RCS states [y/n] ? ' 
 
@@ -230,7 +213,7 @@ fi
 
 
 #
-#	Down load all the SCS files into the source kit.
+#	Down load all the RCS files into the source kit.
 #
 
 #echo ' '
@@ -506,6 +489,7 @@ echo	Loading WISP ETC
 	drcs borrow nonascii.txt wisp/doc
 	drcs borrow vcolors.txt wisp/doc
 	drcs borrow nttelnet.txt wisp/doc
+	drcs borrow wisp_install_unix.txt wisp/doc
 
 	for i in v*_relnotes.lis
 	do
@@ -672,34 +656,6 @@ fi
 
 
 echo
-echo ================== WISP MSDOS ===========================================
-echo
-echo cd $SOURCEDIR/msdos
-cd $SOURCEDIR/msdos
-
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP MSDOS [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
-echo	Loading WISP MSDOS
-	drcs unload wisp/msdos
-
-	drcs borrow autoexec.wsp wisp/doc
-	drcs borrow config.wsp wisp/doc
-	drcs borrow doswisp.lis wisp/doc
-	drcs borrow readme.dos wisp/doc
-fi
-
-echo
 echo =================== WISP WPROC ===========================================
 echo
 echo cd $SOURCEDIR/wproc
@@ -723,7 +679,7 @@ echo	Loading WISP WPROC
 
 	chmod +w wproc.umf
 
-	drcs borrow wproc.lis wisp/doc
+	drcs borrow wproc.txt wisp/doc
 fi
 
 echo
@@ -795,9 +751,6 @@ echo	Loading KCSI
 	cd $SOURCEDIR/kcsi
 	drcs unload wisp/kcsi
 
-	cd $SOURCEDIR/kcsi/common
-	drcs unload wisp/kcsi/common
-
 	cd $SOURCEDIR/kcsi/create
 	drcs unload wisp/kcsi/create
 	drcs unload wisp/kcsi/common
@@ -810,17 +763,6 @@ echo	Loading KCSI
 	drcs borrow cridntsetup.txt wisp/kcsi/crid
 	chmod +w *.umf *.mak
 
-#	cd $SOURCEDIR/kcsi/disam
-#	drcs unload disam.34/code
-#	drcs unload disam.34/decs
-#	drcs unload disam.34/docs
-#	drcs unload disam.34/head
-#	drcs unload disam.34/make
-#	drcs unload disam.34/port
-#	drcs unload disam.34/test
-#	drcs unload disam.34/tp.21
-#	drcs unload disam.34/util
-#	drcs unload disam.34/mfisam
 fi
 
 echo
@@ -851,11 +793,14 @@ find . -name '*.dsp' -print | xargs chmod +w
 #
 echo cd $SOURCEDIR
 cd $SOURCEDIR
+VERSIONS=Versions.lis
+
+echo "# Versions for $WISPXXXX on " `date` > $VERSIONS
 
 for i in $WISP_PROJ_LIST
 do
 	echo Versions for $i
-	drcs vers $i >>Versions.lis
+	drcs vers $i >>$VERSIONS
 done
 
 echo 
@@ -869,6 +814,19 @@ exit
 #
 #	History:
 #	$Log: bldsrckit.sh,v $
+#	Revision 1.47  2001-10-09 16:24:24-04  gsl
+#	wproc.lis -> wproc.txt
+#	Remove MSDOS
+#
+#	Revision 1.46  2001-10-09 16:15:04-04  gsl
+#	Add wisp_install_unix.txt
+#
+#	Revision 1.45  2001-09-24 12:45:43-04  gsl
+#	Remove kcsi/common dir
+#
+#	Revision 1.44  2001-09-21 09:25:14-04  gsl
+#	Put $WISPXXXX and date into Versions.lis file
+#
 #	Revision 1.43  1999-09-15 09:31:17-04  gsl
 #	Add copy wispicon.ico to wrun.ico
 #

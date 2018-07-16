@@ -17,7 +17,7 @@
 
 include $(WISP)/src/port/make.include
 
-all:		wisp ede kcsi amu
+all:		wisp ede kcsi
 		@echo ALL is up-to-date.
 
 #
@@ -143,6 +143,9 @@ clean:
 #
 # 	History:
 #	$Log: makewisp.umf,v $
+#	Revision 1.21  2001-09-10 15:00:34-04  gsl
+#	Removed AMU target from ALL
+#
 #	Revision 1.20  1998-07-31 10:01:26-04  gsl
 #	Add dependencies for CRID and CREATE
 #

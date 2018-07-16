@@ -1,0 +1,135 @@
+        Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
+        
+        ====================================================================
+        
+        Title:          WISP/UNIX INSTALLATION NOTES
+        
+        Document:       wisp_install_unix.txt
+        Last Updated:   $Date:$
+        Products:       WISP/UNIX
+        Versions:       4.3.05 and later
+        
+        Summary:        How to install WISP from the distribution media.
+
+        ====================================================================
+        
+
+        The complete installation instructions are in Appendix A of
+        the WISP Manual.
+
+
+        WISP/UNIX INSTALLATION NOTES
+        ============================
+
+        WISP is normally distributed on tape, CD or floppy diskettes.
+        Follow these instructions to unload the WISP kit from the
+        distribution media.
+
+        1)  Change directory where you want to install WISP. The install
+            process will create the WISP directory under the current
+            working directory.
+
+            Ex.
+                $ cd /usr/local
+
+            Substitute the desired directory for "/usr/local" in the above
+            example.  In this example WISP will be installed in directory
+            "/usr/local/wisp.XXXX" where "XXXX" is the WISP version number.
+
+
+        2)  Unload the distribution files from the tape or floppies
+            using the unix tar command.
+
+                $ tar -xvf /dev/rmt0
+
+            If your device is different then /dev/rmt0 substitute the 
+            correct value.
+
+            For CD media, mount the CD and copy the tar files to
+            /usr/local. 
+
+
+        3)  If the above command creates a compressed distribution file
+            then that file will need to be unloaded, this step is normally
+            done for floppy disk distributions.  A compressed file has an
+            extension of ".Z".
+
+            The compressed distribution file will be named:
+
+                wisp.XXXX.tar.Z       - Compressed tar file
+
+            Use the following command to unload the distribution files.
+
+            For wisp.4306.tar.Z use:
+
+                $ uncompress -c wisp.4306.tar.Z | tar -xvf -
+
+            Or, to unload a tar file that is not compressed use:
+
+                $ tar -xvf wisp.XXXX.tar
+
+            You can then delete the distribution file.
+
+
+        4)  The directory /usr/local/wisp.XXXX will be created and the 
+            following directories will have been created under
+            wisp.XXXX. 
+
+                acu        ACUCOBOL specific files
+                bin        The executable programs
+                config     Sample configuration files
+                etc        Miscellaneous files
+                lib        The link libraries
+                mf         Micro Focus specific files
+
+            The file wisp.XXXX/etc/RELNOTES contains the release notes.
+
+
+        5)  This machine will need to be license for WISP. If you are
+            upgrading from a previous release the machine will already
+            be licensed and you can skip this step. 
+
+            NOTE: You must be logged on as ROOT user to run wlicense.
+
+            % /usr/local/wisp.XXXX/bin/wlicense
+
+
+        6)  Next you will need to build a new COBOL runtime system.
+
+            The procedure for building a COBOL runtime is fully documented
+            in the unix makefiles for each COBOL.  Please READ the
+            instructions at the beginning of the makefile before
+            proceeding.
+
+            For ACUCOBOL the instructions are in acu/wruncbl.umf.
+
+            Ex.
+                $ WISPDIR=/usr/local/wisp.XXXX
+                $ ACUDIR=/usr/local/acucobol
+                $ export WISPDIR ACUDIR
+                $ cd $WISPDIR/acu
+                $ make -e -f wruncbl.umf
+
+            For Micro Focus the instructions are in wisp/mf/wrunmf.umf.
+
+            Ex.
+                $ WISPDIR=/usr/local/wisp.XXXX
+                $ export WISPDIR
+                $ cd $WISPDIR/mf
+                $ make -e -f wrunmf.umf
+
+
+        7)  Setup the UNIX runtime environment.
+
+            See Appendix B "Setting Up The Runtime Environment" of the
+            WISP manual for a complete description. 
+
+
+        8)  Check the environment setup by running the wdiag utility.
+
+                $ /usr/local/wisp.XXXX/bin/wdiag
+
+            This utility will detect and report problems with the setup.
+
+
+        ========================= END OF DOCUMENT ==========================

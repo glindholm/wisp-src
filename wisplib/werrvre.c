@@ -152,7 +152,7 @@ void werr_message_box(char *instr)
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row + 78], " *", 2);
 	row++;
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row +  0], "\204* ", 3);
-	strcpy(&wsb[OA_LENGTH + WSB_COLS * row + 25],"**** Press ENTER to continue. ****");
+	strcpy(&wsb[OA_LENGTH + WSB_COLS * row + 23],"**** Press (ENTER) to continue ****");
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row + 78], " *", 2);
 	row++;
 	memcpy(&wsb[OA_LENGTH + WSB_COLS * row +  0], "\204*", 2);
@@ -171,6 +171,9 @@ void werr_message_box(char *instr)
 /*
 **	History:
 **	$Log: werrvre.c,v $
+**	Revision 1.23  2001-11-02 09:28:08-05  gsl
+**	Changed to (ENTER)
+**
 **	Revision 1.22  1998-12-15 09:49:17-05  gsl
 **	Fix win32 logic to not use message box if telneting
 **

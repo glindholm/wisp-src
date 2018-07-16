@@ -21,7 +21,6 @@ static char rcsid[]="$Id:$";
 **	costar_errtext()		Set the COSTAR status error text box message.
 */
 
-#if defined(unix) || defined(VMS) || defined(WIN32)
 
 /*
 **	Includes
@@ -121,13 +120,10 @@ static int attr_mode = ATTR_MODE_V1;
 /*
 **	Function Prototypes
 */
-#ifdef COSTAR
 static void costar_raw_api(const char *buff);
-#endif /* COSTAR */
 
 static w4w_pfkey_map_s *load_w4wmap(void);
 
-#ifdef COSTAR
 /*
 **	ROUTINE:	use_costar()
 **
@@ -592,10 +588,6 @@ int costar_high_message_vmode(void)
 }
 
 
-#endif /* COSTAR */
-
-
-#ifdef W4W
 /*
 **	ROUTINE:	load_hotspots()
 **
@@ -614,7 +606,6 @@ int costar_high_message_vmode(void)
 */
 static char **load_hotspots(void)
 {
-#ifdef COSTAR
 #define MAX_HOTSPOTS	100
 	static char *hotspots[MAX_HOTSPOTS+1];
 	static int first=1;
@@ -657,9 +648,6 @@ static char **load_hotspots(void)
 	}
 	
 	return hotspots;
-#else
-	return NULL;
-#endif
 }
 
 /*
@@ -682,9 +670,7 @@ static char **load_hotspots(void)
 */
 void W4WAPI(char *buff)
 {
-#ifdef COSTAR
 	costar_raw_api(buff);
-#endif /* COSTAR */
 }
 
 
@@ -998,7 +984,6 @@ int w4w_click_row(int click_offset, const char *the_row)
 
 	return rc;
 }
-#endif /* W4W */
 
 
 /*
@@ -1077,11 +1062,13 @@ int w4w_hotspot_vmode(void)
 	}
 }
 
-#endif /* unix || VMS || WIN32 */
 
 /*
 **	History:
 **	$Log: costar.c,v $
+**	Revision 1.31  2001-09-25 11:11:15-04  gsl
+**	Remove unneeded ifdefs
+**
 **	Revision 1.30  1999-08-30 12:48:13-04  gsl
 **	Add checks in costar_title() to not run in background or native screens.
 **

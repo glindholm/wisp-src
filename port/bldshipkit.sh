@@ -41,7 +41,7 @@ then
 fi
 
 echo
-echo "Enter the WISP version number (e.g. 3319) ?"
+echo "Enter the WISP version number (e.g. 4400) ?"
 read ANS
 if [ "$ANS" = "" ]
 then
@@ -142,6 +142,7 @@ cp $WU/wsysconf		$SHIPWISP/bin
 cp $WU/wsysinit		$SHIPWISP/bin
 cp $WU/wusage		$SHIPWISP/bin
 cp $WU/wlicense		$SHIPWISP/bin
+cp $WU/hexed		$SHIPWISP/bin
 chmod 555 $SHIPWISP/bin/*
 
 echo Loading $SHIPWISP/lib
@@ -158,8 +159,9 @@ cp $WT/words.def	$SHIPWISP/etc
 cp $PORT/make.include	$SHIPWISP/etc
 cp $WU/wispplat.wcb	$SHIPWISP/etc
 cp $WU/softlink.wcb	$SHIPWISP/etc
-cp $WPROC/wproc.lis	$SHIPWISP/etc
+cp $WPROC/wproc.txt	$SHIPWISP/etc
 cp $ETC/nonascii.txt	$SHIPWISP/etc
+cp $ETC/wisp_install_unix.txt	$SHIPWISP/etc
 
 cd $ETC
 $WU/makemsg
@@ -181,11 +183,13 @@ cp $ETC/W4WMAP		$SHIPWISP/config
 cp $WPROC/wproc.msg	$SHIPWISP/config
 
 echo Loading $SHIPWISP/config/videocap
-for org in $VC/*.vcap
-do
-	new=`basename $org .vcap`
-	cp $org $SHIPWISP/config/videocap/$new
-done
+cp $VC/*.vcap 		$SHIPWISP/config/videocap
+# Used to strip off the .vcap extensions
+#for org in $VC/*.vcap
+#do
+#	new=`basename $org .vcap`
+#	cp $org $SHIPWISP/config/videocap/$new
+#done
 chmod 444 $SHIPWISP/config/videocap/*
 chmod 444 $SHIPWISP/config/*
 chmod 755 $SHIPWISP/config/videocap
@@ -290,6 +294,16 @@ echo
 
 #	History:
 #	$Log: bldshipkit.sh,v $
+#	Revision 1.28  2001-10-16 11:30:25-04  gsl
+#	Add hexed
+#
+#	Revision 1.27  2001-10-11 13:45:10-04  gsl
+#	Leave the .vcap extensions on the videocap files
+#
+#	Revision 1.26  2001-10-09 16:21:14-04  gsl
+#	wproc.lis -> wproc.txt
+#	Add wisp_install_unix.txt
+#
 #	Revision 1.25  1998-04-03 13:53:46-05  gsl
 #	Add wacudisplay.cob
 #

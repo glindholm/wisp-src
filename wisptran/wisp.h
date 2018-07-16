@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 			/************************************************************************/
@@ -95,6 +95,7 @@ EXT int  fig_count INIT_FALSE;								/* the counter				*/
 EXT int  dump_ifbuff	INIT_FALSE;							/* Currently dumping the IF buffer.	*/
 EXT int  delrecon	INIT_FALSE;							/* Should we just delete RECORD CONTAINS*/
 EXT int  do_xref	INIT_FALSE;							/* Keep cross ref information.		*/
+EXT int  do_xtab	INIT_FALSE;							/* Keep cross ref tab file.		*/
 EXT int  do_dlink	INIT_FALSE;							/* Do VMS dynamic link.			*/
 EXT int  nowarnings	INIT_FALSE;							/* Don't show WARNINGS messages.	*/
 EXT int  swap_words	INIT_TRUE;							/* We have to swap words when asked.	*/
@@ -209,6 +210,9 @@ EXT int  wrote_special_names INIT_FALSE;						/* Was SPECIAL-NAMES written		*/
 /*
 **	History:
 **	$Log: wisp.h,v $
+**	Revision 1.15  2001-09-13 09:58:49-04  gsl
+**	Add do_xtab -X flag
+**
 **	Revision 1.14  1998-06-06 14:57:39-04  gsl
 **	Add manual_locking flag
 **

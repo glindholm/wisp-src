@@ -28,16 +28,8 @@ void wfwait(char* stat, int4* timer)					/* Wait for locks to clear.				*/
 	if (stat[0] == hardlock[0] && 
 	    stat[1] == hardlock[1]    ) 				/* A hard lock record lock				*/
 	{
-#if defined(VMS) || defined(MSDOS) || defined(WIN32)
-		delay = 20;						/* Yes, then delay for 1/5 of a second.			*/
-		wswap(&delay);						/* Pre-swap because wpause() will swap back.		*/
-		wpause(&delay);						/* Now do the wait.					*/
-		wswap(&delay);						/* Un-swap 						*/
-#endif
-#ifdef unix
-		sleep(1);						/* zzzzzzzzzzz.						*/
-		delay = 100;						/* Return delay in 1/100ths of a sec.			*/
-#endif
+		delay = 10;						/* Yes, then delay for 1/10 of a second.		*/
+		hpause(delay);
 	}
 	else
 	{
@@ -60,16 +52,8 @@ void wfswait(char* stat, int4* timer)
 	if ( (stat[0] == hardlock[0] && stat[1] == hardlock[1]) ||	/* A hard lock record lock or				*/
 	     (stat[0] == softlock[0] && stat[1] == softlock[1])    )	/* a soft lock record lock				*/
 	{
-#if defined(VMS) || defined(MSDOS) || defined(WIN32)
-		delay = 20;						/* Yes, then delay for 1/5 of a second.			*/
-		wswap(&delay);						/* Pre-swap because wpause() will swap back.		*/
-		wpause(&delay);						/* Now do the wait.					*/
-		wswap(&delay);						/* Un-swap 						*/
-#endif
-#ifdef unix
-		sleep(1);						/* zzzzzzzzzzz.						*/
-		delay = 100;						/* Return delay in 1/100ths of a sec.			*/
-#endif
+		delay = 10;						/* Yes, then delay for 1/10 of a second.		*/
+		hpause(delay);
 	}
 	else
 	{
@@ -85,6 +69,10 @@ void wfswait(char* stat, int4* timer)
 /*
 **	History:
 **	$Log: wfwait.c,v $
+**	Revision 1.11  2001-09-27 15:31:56-04  gsl
+**	Change to use hpause(10)
+**	for 1/10 second delay
+**
 **	Revision 1.10  1997-03-12 13:25:47-05  gsl
 **	changed to use WIN32 define
 **

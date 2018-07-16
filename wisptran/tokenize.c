@@ -298,6 +298,22 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 	}
 
 	/*
+	**	Handle blanklines (treat as a comment line)
+	*/
+	if (strlen(temp) == strspn(temp," "))
+	{
+		tokcnt++;
+		init_token(&tmptoken,the_absline,the_line,the_context);
+		tmptoken.column_fixed = 1;
+		tmptoken.column = col;
+		tmptoken.indata = (char *)wdupstr(ptr);
+		tmptoken.type = COMMENT;
+		got_token(the_cache,&tmptoken);
+		return tokcnt;
+	}
+	
+
+	/*
 	**	Get LINECODE
 	*/
 	if (!EQ("      ",ptr))
@@ -1384,6 +1400,9 @@ char *token_type_mess(TOKEN *tokptr)
 /*
 **	History:
 **	$Log: tokenize.c,v $
+**	Revision 1.11  2001-10-18 11:12:51-04  gsl
+**	Change to treat a blank line as a COMMENT token
+**
 **	Revision 1.10  1998-03-27 10:40:13-05  gsl
 **	change_words
 **

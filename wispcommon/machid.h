@@ -27,6 +27,8 @@
 #define MAX_COMPUTERNAME_LENGTH         32
 #endif
 
+#define MAX_MACHINEID_LENGTH		256
+
 /*
 **	Function Prototypes
 */
@@ -39,6 +41,9 @@ void encodemachid(const char *source, char *target);
 /*
 **	History:
 **	$Log: machid.h,v $
+**	Revision 1.2  2001-09-27 09:45:28-04  gsl
+**	Add define for machineid length
+**
 **	Revision 1.1  1997-03-06 16:22:04-05  gsl
 **	Initial revision
 **

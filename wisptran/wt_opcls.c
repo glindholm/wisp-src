@@ -172,7 +172,18 @@ NODE parse_open(NODE the_statement)
 
 			file_node = curr_node;
 			is_crt = 0;
-		
+
+			if (do_xtab)
+			{
+				char tabData[80];	/* FILE \t ACCESS */
+				sprintf(tabData,"%s\t%s", 
+					token_data(file_node->token),
+					token_data(access_node->token));
+
+				xtab_log(context_infile_name(file_node->token->context), 
+					file_node->token->line, "OPEN", tabData);
+			}
+
 			if (-1 != crt_index(token_data(file_node->token)))
 			{
 				is_crt = 1;
@@ -692,6 +703,9 @@ NODE parse_close(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
+**	Revision 1.22  2001-09-13 10:14:04-04  gsl
+**	Add xtab_log of OPEN statements
+**
 **	Revision 1.21  1998-06-09 13:10:20-04  gsl
 **	Fix header and rename record locking function for manual locking
 **

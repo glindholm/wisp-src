@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\wispcommon" /I "..\videolib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "..\wispcommon" /I "..\videolib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -174,10 +174,6 @@ SOURCE=.\dbfile.c
 # Begin Source File
 
 SOURCE=.\delete.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\dosprint.c
 # End Source File
 # Begin Source File
 
@@ -342,10 +338,6 @@ SOURCE=.\mngfile.c
 # Begin Source File
 
 SOURCE=.\mount.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\msdosfns.c
 # End Source File
 # Begin Source File
 
@@ -518,10 +510,6 @@ SOURCE=.\shellvar.c
 # Begin Source File
 
 SOURCE=.\shutexit.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\wispcommon\sleepdos.c
 # End Source File
 # Begin Source File
 

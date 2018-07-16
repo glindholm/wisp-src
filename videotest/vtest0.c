@@ -75,6 +75,7 @@ start:	vbuffering_start();
         vtext(0,i++,6,"U -                                  V - ");
 	vtext(0,i++,6,"W - Windowing tests.                 X - Terminal ID response.");
 	vtext(0,i++,6,"Y -                                  ^B, ^E & ^G macro control.");
+	vtext(0,i++,6,"0 - EXIT (zero)");
 	vtext(BOLD,21,20,"Please select? ");
 	vmode(0);
 	vbuffering_end();

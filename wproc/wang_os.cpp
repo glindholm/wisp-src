@@ -159,7 +159,7 @@ void wang_os_extract_int(char *keyword, int_32 &receiver) {
    receiver = temp;
 }
 
-extern "C" READFDR(
+extern "C" void READFDR(
 	const char *file, 
 	const char *lib, 
 	const char *vol, 
@@ -537,7 +537,7 @@ int_32 wang_os_putparm(
    int_32 keycnt_swapped = keycnt;
    wswap(&keycnt_swapped);
 
-   arg[0] = (void *) is_enter ? "E" : "D";
+   arg[0] = (void *) is_enter ? (char*)"E" : (char*)"D";
    arg[1] = (void *) &usagecnt;
    arg[2] = (void *) prname;
    arg[3] = (void *) &keycnt_swapped;
@@ -785,7 +785,7 @@ int_32 wang_os_submit(
 		wang_os_extract_alpha("JC", jclass);
 
 	char *disposition;	
-	disposition = (requeue) ? "R" : "D";
+	disposition = (requeue) ? (char*)"R" : (char*)"D";
 		
 	char *abort_action = "R";
 	if      ('Y' == *dump) abort_action = "D";
@@ -992,6 +992,9 @@ void wang_os_first_procedure_name(char *a_name) {
 /*
 **	History:
 **	$Log: wang_os.cpp,v $
+**	Revision 1.27  2001-08-22 16:42:14-04  gsl
+**	fix gnu errors
+**
 **	Revision 1.26  1999-08-29 13:21:10-04  gsl
 **	Move the vwang_title() call to driver.cpp so it doesn't get called
 **	if just checking the version.
@@ -1064,6 +1067,9 @@ void wang_os_first_procedure_name(char *a_name) {
 //
 //	History:
 //	$Log: wang_os.cpp,v $
+//	Revision 1.27  2001-08-22 16:42:14-04  gsl
+//	fix gnu errors
+//
 //	Revision 1.26  1999-08-29 13:21:10-04  gsl
 //	Move the vwang_title() call to driver.cpp so it doesn't get called
 //	if just checking the version.

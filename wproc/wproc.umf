@@ -21,11 +21,11 @@ include $(WISP)/src/port/make.include
 
 WPROC_EXE=wproc
 
-WPROC_VERSION=116
+WPROC_VERSION=2000
 
 WPROC_SHIP_DIR=wproc$(WPROC_VERSION).ship
 WPROC_DISTRIB_DIR=wproc.$(WPROC_VERSION)
-WPROC_DIST=$(WPROC_EXE) wproc.lis wproc.msg
+WPROC_DIST=$(WPROC_EXE) wproc.txt wproc.msg
 WPROC_DEMOSTUFF=cursor.wps demo.wps dr.wps ed.wps environ.wps putparm.wps screen.wps test.wps video.wps
 
 WPROC_STD_FLAGS = -DWANG -DUNIX -DDEBUG -I$(WC) -I$(VC) -DWPROC_VERSION=$(WPROC_VERSION)
@@ -47,6 +47,8 @@ CCC_EXT=cpp
 #CCC_EXT=cc
 #CCC_EXT=C
 
+default: header $(WPROC_EXE)
+
 .SUFFIXES: .$(CCC_EXT) .hpp .cpp
 
 .cpp.cc:
@@ -61,8 +63,6 @@ CCC_EXT=cpp
 .$(CCC_EXT).o:
 	$(CCC) $(CCFLAGS) -c $<
 
-
-default: header $(WPROC_EXE)
 
 header:
 	@echo
@@ -190,12 +190,10 @@ isspace.o
 
 WPROC_OBJECTS = $(WPROC_DEBUG_OBJECTS) $(WPROC_COMPILER_OBJECTS) $(WPROC_RUNTIME_OBJECTS)
 
-RING_BELL=
-
 $(WPROC_EXE): $(WPROC_OBJECTS) $(WISP_LIBS_PATHS)
 	@echo Linking $(WPROC_EXE)
 	$(CCC) -o $@ $(CCFLAGS) $(WPROC_OBJECTS) $(WISP_LIBS_LINK) $(CURSES_LINK) $(CCC_SYS_LINK)
-	@echo ">>>Done" $(RING_BELL) $(RING_BELL)
+	@echo ">>>Done"
 
 
 args.o : args.$(CCC_EXT) args.hpp exp.hpp object.hpp symbols.hpp data.hpp pcode.hpp \

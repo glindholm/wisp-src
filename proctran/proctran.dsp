@@ -194,10 +194,6 @@ SOURCE=..\wispcommon\ring.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\wispcommon\sleepdos.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\wispcommon\wisp_pic.c
 # End Source File
 # End Group

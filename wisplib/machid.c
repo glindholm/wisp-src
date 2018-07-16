@@ -52,6 +52,10 @@ static char rcsid[]="$Id:$";
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
+#if defined(SOLARIS) || defined(UNIXWARE)
+#include <sys/systeminfo.h>
+#endif
+
 int getmachineid(char* machineid)
 {
 	struct stat 	stat_buf;
@@ -68,6 +72,7 @@ int getmachineid(char* machineid)
 
 	strcpy(machineid,uname_s.machine);
 #endif
+
 #ifdef HPUX
 	if (uname(&uname_s))
 	{
@@ -75,6 +80,32 @@ int getmachineid(char* machineid)
 	}
 
 	strcpy(machineid,uname_s.__idnumber);
+#endif
+
+#ifdef SCO
+	{
+		struct scoutsname sco_buff;
+		if (-1 == __scoinfo(&sco_buff, sizeof(sco_buff)))
+		{
+			return(1);
+		}
+		memcpy(machineid, sco_buff.sysserial, sizeof(sco_buff.sysserial));
+		machineid[sizeof(sco_buff.sysserial)] = '\0';
+	}
+	
+#endif
+
+#if defined(SI_HW_SERIAL)
+	/*
+	 *	This is used on SOLARIS and looks like it is also available on UNIXWARE
+	 */
+	if (! *machineid)
+	{
+		if ( -1 == sysinfo(SI_HW_SERIAL, machineid, MAX_MACHINEID_LENGTH))
+		{
+			return(1);
+		}
+	}	
 #endif
 
 	/*
@@ -569,6 +600,9 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
+**	Revision 1.15  2001-09-27 10:13:06-04  gsl
+**	Add hardware machine id support for SOLARIS, SCO, and UNIXWARE
+**
 **	Revision 1.14  1998-07-08 09:26:37-04  gsl
 **	Fix computername() to truncate the name at the first period.
 **

@@ -27,6 +27,9 @@
 /*
 **	Function Prototypes
 */
+void vre_set_logfile(const char* filepath);
+void vre_write_logfile(const char* buff);
+
 int vre(char *text, ...);
 int vre_window(char *text, ...);
 int vml(int y);										/* Calculate the virtual map line no.	*/
@@ -38,6 +41,7 @@ int vmaskm(int mode);									/* Mask all but rendition bits.		*/
 unsigned char *vsss(int row, int col, int rows, int cols);				/* Save a screen segment.		*/
 int vrss(unsigned char *loc);								/* Restore a screen segment.		*/
 void varb(int row, int col, int rows, int cols);					/* Invalidate map section.		*/
+void vtitle(const char *titlestr);
 
 
 #endif /* vutil_H */
@@ -45,6 +49,9 @@ void varb(int row, int col, int rows, int cols);					/* Invalidate map section.	
 /*
 **	History:
 **	$Log: vutil.h,v $
+**	Revision 1.4  2001-10-15 09:12:55-04  gsl
+**	Add proto's
+**
 **	Revision 1.3  1997-07-09 12:38:37-04  gsl
 **	Removed obsolete routines
 **

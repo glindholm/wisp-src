@@ -1,4 +1,4 @@
-	Copyright (c) 1989-1998 by NeoMedia Technologies Inc. 
+	Copyright (c) 1989-2001 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	
 	====================================================================
@@ -87,19 +87,15 @@
 	
 	___	Login to 2 windows/terminals as 2 DIFFERENT userids.
 		One should be a COSTAR window with 
+
 			$ export WISPTERM=w4w_vt220
 			$ export W4W=2
 
 	___	Set the needed environment variables
 
-			$ WISP=/disk1/devtech/wisp 
-			$ WISPGID=$$
-			$ ACUDIR=/disk1/acucobol
-			$ COBDIR=/disk1/mfcobol
-			$ export WISP WISPGID ACUDIR COBDIR
-
-		NOTE:	The $WISP variable must be set for the whole
-			testing procedure.
+			$ export WISPGID=$$
+			$ export ACUDIR=/disk1/acucobol
+			$ export COBDIR=/disk1/mfcobol
 
 	___	Change directory to your "test" dir based on the COBOL you
 		are using.
@@ -143,16 +139,9 @@
 
 
 	___	Build the SAMPLE programs.  
-		(May need the -k flag if make is stopping on warnings.)
 
 		ACU	$ make -f sampleacu.umf
 		MF	$ make -f samplemf.umf
-
-	___	Build DISPRINT.
-
-		$ cp $WISPDIR/etc/disprint.* .
-		$ make -f disprint.umf {acu|mf}
-
 
 	WISP TRANSLATOR TESTS
 
@@ -168,7 +157,6 @@
 		compilers.
 
 		Cobol should complain about the HOLD verb.
-		MF Cobol will also complain about the ACCEPT for DATE4.
 
 
 	VIDEOCAP FILE
@@ -195,34 +183,43 @@
 		WISP manual Appendix A.
 
 		___  Install WISP
+		___  Install EDE
+		___  Install CRID
+		___  Install CREATE
+
+		___  Build a COBOL Runtime system with WISP
+		     ___  Follow wrun32wisp.mak instructions.
+		___  Build a COBOL Runtime system with WISP & EDE
+		     ___  Follow wrun32wisp_ede.mak instructions.
+		___  Build a COBOL Runtime system with WISP & CRID
+		     ___  Follow wrun32wisp_crid.mak instructions.
+
 		___  Share C:\WISPxxxx as share name "WISP"
+		___  Share C:\CRIDxxx as share name "CRID"
+		___  Share C:\CREATExxx as share name "CREATE"
+
 		___  Run WCONFIG.EXE
+		     ___  (RESET) if already configured
+		     ___  WISP Server: (name of test machine)
+		     ___  Accept defaults...
+
 		___  Run WLICENSE.EXE
-		___  Build a COBOL Runtime system
-		     ___  Edit ACU\WWRUNCBL.MAK
-			  Set 
-			      ___ ACUDIR
-			      ___ WISPDIR
-			      ___ CRIDDIR
-			  ___ Set the Acucobol version stuff so correct
-		     ___  Open MSDOS box
-		     ___  cd C:>WISPxxxx\ACU
-		     ___  nmake /f wwruncbl.mak crid
 
 +	SETUP $WISPCONFIG DIRECTORY
 
 	___	Share these directories: 
-		C:\DEV\WISP\SRC\TESTACU as TESTACU
-		C:\DEV\WISP	        as WISPDEV
+		C:\DEV\WISP\SRC\TESTACU      as TESTACU
+		C:\DEV\WISP	             as WISPDEV
+                C:\Acucorp\Acucbl510\AcuGT   as ACUCOBOL
 
 	___   	Edit ...\TESTACU\SAMPLEACU.MAK
 
-		___ Set WISPDIR=\\SERVER\WISP
-		___ Set COBOL=\\SERVER\ACUCOBOL\BIN\CCBL32.EXE
+		___ Set WISPDIR=C:\WISP44xx
+		___ Set COBOL=C:\Acucorp\Acucbl510\Acugt\BIN\CCBL32.EXE
 
 	Copy the config files.
 	___	Run CONFIGACU.BAT
-		 (nmake -f sampleacu.mak wispconfigsetup)
+		 (nmake -f sampleacu.mak wispconfigsetup testdirs)
 
 	___	LGMAP:	Edit it to ensure it is correct.
 
@@ -240,27 +237,27 @@
 				  \\SERVER\CRID
 
 	___	WRUN.CFG: Edit CONFIG\WRUN.CFG and correct the locations
-		of ACUCONFIG and WWRUNCBLK.EXE. (Use KCSI version.)
+		of ACUCONFIG and WRUN32WISPC.EXE (CRID Version).
 
-		    option=-b -c \\SERVER\TESTACU\CONFIG\ACUCONFIG
-		    runcbl=\\SERVER\WISP\ACU\WWRUNCBLK.EXE
+		    option=-b +e \\SERVER\TESTACU\acuerr.log -c \\SERVER\TESTACU\CONFIG\ACUCONFIG
+		    runcbl=\\SERVER\ACUCOBOL\BIN\WRUN32WISPC.EXE
 
 	___	WSYSCONF.CFG: Edit CONFIG\WSYSCONF.CFG and add the machine
 		name as workstation 100.
 
 		    100  ws   WINDOWS  CYCLONE
 
-	___	WISPCONFIG: run WCONFIG and point WISPCONFIG to this
-		location. ("\\SERVER\TESTACU\CONFIG")
-
 	___	Run WCONFIG 
 		- GENERAL (TAB)
+		WISPCONFIG =\\SERVER\TESTACU\CONFIG 
 		PATH = \\SERVER\WISP\BIN;
 		       \\SERVER\WISP\ACU;
 		       \\SERVER\TESTACU;
 		       \\SERVER\TESTACU\VOLRUN\ONPATH;
 		       \\SERVER\CRID;
+		       \\SERVER\CREATE;
 		       C:\WIN
+
 		- MESSAGE (TAB)
 		SHAREDIR = \\SERVER\TESTACU\MESSAGE
 
@@ -280,7 +277,7 @@
 
 		___ Edit \\SERVER\WISP\ETC\DISPRINT.MAK
 
-		    ___ SET WISPTRAN=..\BIN\WISP.EXT
+		    ___ SET WISPTRAN=..\BIN\WISP.EXE
 		    ___ SET CCBL=\\SERVER\ACUCOBOL\BIN\CCBL32.EXE
 
 		___ Run NMAKE to build DISPRINT
@@ -312,6 +309,11 @@
 			SPOOLLIB= #(uid)PRT	SPOOLVOL= VOLSPL
 			WORKLIB	= WKxxxxxx	WORKVOL = VOLWRK
 
+		Verify that they are set as entered above.
+		SPOOLLIB and WORKLIB should have been generated.
+
+	___	Change SPOOLLIB = "LIBSPOOL" for rest of testing.
+
 		Setup test programs
 	___	(1) RUN Program or Procedure
 			PROGRAM = QA0001
@@ -322,8 +324,7 @@
 
 	___	(16) Exit
 
-	___	Mostof the LGMAP directories should now be setup so a
-		wdiag should not report any serious errors.  If there
+	___	There should not be any WDIAG errors. If there
 		are serious errors they must be fixed here.
 
 		UNIX:  $ wdiag
@@ -353,15 +354,12 @@
 		(30) Usage Constants
 		(29) Environment info
 
-	___	(2) SET File Usage Constants.
-		Verify that they are set as entered above.
-		SPOOLLIB and WORKLIB should have been generated.
-
-	___	Change SPOOLLIB = "LIBSPOOL" for rest of testing.
-
 	___	(3) SET Print Mode
-		Set PRTCLASS=____ and FORM_NUM=____ to be valid.
-		(On WIN32 use FORM=016) 
+		    PRNTMODE = P
+		    PRTCLASS = A
+		    FORM_NUM = 016
+		    PRINTER  = 000
+		    LINES    = 055
 
 	___	(5) Manage FILES/LIBRARIES
 
@@ -528,15 +526,11 @@
 				Check FILE-B-STAT field after each operation.
 
 	___	(2) Auto Test FILE-B
-
-		This replaces a large number on manual tests.
-		It creates and loads FILE-B.
-
-		Take note of any ERRORS.
+		    (1) Create and Auto Test FILE-B
+		    (16) Exit
 
 	___	(3) SORT SORT-B-FILE
 
-		(^E) Help (9) Utilities (2) DISPLAY
 	___	Display BFILESEQ in LIBOUT on VOLOUT with (11) record width=92
 		and ensure it is in descending order. (7,8,3,2,4,5,6,1)
 
@@ -545,8 +539,13 @@
 								(74) [90][01]
 				File status WRITE NOT ALLOWED
 				File OPEN in wrong mode.
-		(16) to EXIT program.
 
+	___	(16) to EXIT program.
+		Program ABORTED or was CANCELLED
+
+
+	___	wshell
+		(1) Run SAMPLE in TESTxxx on SOURCE
 
 	Run SAMPLE and (3) FILE I/O TESTS
 
@@ -554,47 +553,59 @@
 	___	(15) OPEN FILE-B INPUT  Error-getparm  	(85) [41]
 					Already open	(74) [92][00]
 
-		(16) to EXIT program.
+	___	(16) to EXIT program.
+		Program ABORTED or was CANCELLED
 
 
-	Run SAMPLE and (3) FILE I/O TESTS  (wproc qastart)
+	___	wshell
+		(1) Run SAMPLE in TESTxxx on SOURCE
+
+
+	Run SAMPLE and (3) FILE I/O TESTS
 
 		RECORD & FILE LOCKING TESTS
 	
 		FILE-B record and file locking tests. Start two windows
-		running QAFILEIO. These will be referred to a <W1> & <W2>.
+		running QAFILEIO. In Window-1 run the Window-1 Tests
+		and in Window-2 run the Window-2 Tests.
 
 		**** NOTE **** If you don't have 2 windows for this
-		test then only do the items marked with 3 asterisks (***).
+		test then only run the Window-1 tests.
 
-	___	<W1> (8) OPEN FILE-B I-O  
-	___	<W2> (8) OPEN FILE-B I-O  File-getparm FILE LOCKED
+	___	(2) Auto Test FILE-B
+		    (2) Run Window-1 Tests
+		    (3) Run Window-2 Tests
 
-	___	<W1> (10) CLOSE FILE-B
-	___	<W2> (ENTER) to retry OPEN I-O
-	___***	<W1> (9) OPEN FILE-B SHARED file-getparm FILE LOCKED
+	STEP 01	<W1> OPEN FILE-B I-O  
+	STEP 02	<W2> OPEN FILE-B I-O  File-getparm FILE LOCKED
 
-	___	<W2> (10) CLOSE FILE-B
-	___	<W1> (ENTER) to retry OPEN SHARED
-	___	<W2> (9) OPEN FILE-B SHARED  (success both have it opened)
+	STEP 03	<W1> CLOSE FILE-B
+	STEP 04	<W2> (ENTER) to retry OPEN I-O
+	STEP 05	<W1> OPEN FILE-B SHARED file-getparm FILE LOCKED
 
-	___***	<W2> (20) READ HOLD & REWRITE key=AAAA (Record is now locked)
-	___	<W1> (12) READ                key=AAAA (should succeed)
-	___	<W1> (19) READ HOLD           key=BBBB (should succeed)
+	STEP 06	<W2> CLOSE FILE-B
+	STEP 07	<W1> (ENTER) to retry OPEN SHARED
+	STEP 08	<W2> OPEN FILE-B SHARED  (success both have it opened)
 
-	___***	<W1> (21) READ HOLD & DELETE  key=AAAA (should wait)
-	___	<W2> Modify B-VALUE-2="NEW TEXT HERE"
-		     (ENTER) to rewrite	  <W1> 	Should get modified record
-	___	<W2> (19) READ HOLD           key=AAAA (should wait)
-	___	<W1> (ENTER) to delete    <W2> 	file-status 23 NOT FOUND
+	STEP 09	<W2> READ HOLD (for REWRITE) key=AAAA (Record is now locked)
+	STEP 10	<W1> READ                    key=AAAA (should succeed)
+	STEP 11	<W1> READ HOLD               key=BBBB (should succeed)
 
-	___	<W1> (19) READ HOLD	      key=BBBB (should succeed)
-	___	<W2> (19) READ HOLD	      key=BBBB (should wait)
-	___***	<W1> (29) FREE ALL        <W2> 	Should now get record
-	___	<W2> (29) FREE ALL		No message
+	STEP 12	<W1> READ HOLD (for DELETE)  key=AAAA (should wait)
+	STEP 13	<W2> REWRITE  key=AAAA       B-VALUE-2="NEW TEXT HERE"
+		              	  <W1> 	Should get modified record
 
-	___	<W1> (19) READ HOLD           key=BBBB	(should succeed)
-	___***	<W2> (27) READ TIMEOUT        key=BBBB 
+	STEP 14	<W2> READ HOLD               key=AAAA (should wait)
+	STEP 15	<W1> DELETE   key=AAAA	     <W2> file-status 23 NOT FOUND
+
+	STEP 16	<W1> READ HOLD		     key=BBBB (should succeed)
+	STEP 17	<W2> READ HOLD		     key=BBBB (should wait)
+
+	STEP 18	<W1> FREE ALL		     <W2> Should now get record
+	STEP 19	<W2> FREE ALL		     No message
+
+	STEP 20	<W1> READ HOLD		     key=BBBB	(should succeed)
+	STEP 21	<W2> READ TIMEOUT	     key=BBBB 
 					Should wait 5 secs then come back
 					with **** TIMEOUT **** filestatus 
 					REC LOCKED (92 or 99 or 9D)
@@ -604,17 +615,18 @@
 		to read and lock BBBB, <W1> will read and lock CCCC
 		this will free BBBB and allow <W2> to lock it.
 
-	___	<W2> (27) READ TIMEOUT key=BBBB *** don't press (ENTER) ***
-	___	<W1> (19) READ HOLD    key=CCCC *** don't press (ENTER) ***
-	___	<W2> press (ENTER) quickly <W1> press (ENTER)
+	STEP 22	<W2> READ TIMEOUT key=BBBB
+	STEP 23	<W1> READ HOLD    key=CCCC *** QUICKLY ***
+
 		Window <W1> should get CCCC then a moment later <W2> should
 		get BBBB without a TIMEOUT.
 
-	___***	<W1> (19) READ HOLD   key=AAAA INVALID KEY 23 (was deleted)
+	STEP 24	<W1> READ HOLD   key=AAAA INVALID KEY 23 (was deleted)
 		This should unlock CCCC.
-	___	<W2> (19) READ HOLD   key=CCCC 	(should succeed)
-	___***	<W2> (10) CLOSE FILE-B   	(should unlock CCCC)
-	___	<W1> (10) CLOSE FILE-B
+	STEP 25	<W2> READ HOLD   key=CCCC 	(should succeed)
+
+	STEP 26	<W2> (10) CLOSE FILE-B   	(should unlock CCCC)
+	STEP 27	<W1> (10) CLOSE FILE-B
 
 		For manual record locking ensure that READ and WRITE don't
 		release the record lock.  (QA testing ACU only)
@@ -646,17 +658,15 @@
 					Run three times waiting a minute
 					between each one. This will write
 					three timestamps out to the file.
-	___	Look at file created (^E) HELP (9) Utilities (2) DISPLAY 
-		file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
+	___	DISPLAY file (1) file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
 
 	___	(Set PRINTMODE = Keep) -- (^E) HELP (3) SET PRINT Defaults
+
 	___	(2) OPEN OUT PRINT WRITE CLOSE
 					Leave lib & vol blank, it should
 					use LIBSPOOL and VOLSPL.
-	___	Look at file created (^E) HELP (9) Utilities (4) DISPRINT
+	___	DISPLAY file (1) file=PRTFILE lib=LIBSPOOL vol=VOLSPL  
 		It was written with AFTER ADVANCING PAGE and 5 LINES.
-		file=PRTFILE lib=LIBSPOOL vol=VOLSPL  
-
 
 	___	(2) OPEN OUT PRINT WRITE CLOSE (again)
 		    At the PF3 screen change FILE=PRTFILE2.
@@ -676,6 +686,12 @@
 			it that has a name and timestamp.
 
 	___	(13) CREATE A LARGE FILE (Takes a couple seconds)
+
+	___	(14) CREATE EMPTY Files
+
+	___	(15) CREATE LIBSAM Files
+
+	___	(26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
 
 		(16) to EXIT FILE I/O TESTS
 
@@ -837,8 +853,6 @@
 	___	Press (8) to run the autotests.
 		You'll be asked to check the creation date of BFILE.
 		All the rest of the tests are automatic.
-		MF will fail the RC test on BFILE (expected).
-
 
 	___	(2) FIND - Press (8) to run the AUTOTESTS.
 
@@ -855,7 +869,7 @@
 			(MF)	FILE=QABCKGRD  in TESTMF    on SOURCE
 
 			Creates	BACK#### in LIBSPOOL on VOLSPL.
-			(^E) HELP (9) Utilties (4) DISPRINT
+			(1) DISPRINT
 +	___		Check:  TASKTYPE=B  (in file created)
 				TERMNUM=-1
 
@@ -864,7 +878,7 @@
 		(6) SUBMIT (proc)
 			        FILE=QABCKPRC   in TESTxxx   on SOURCE
 
-				(^E) HELP (9) Utilties (4) DISPRINT
+				(1) DISPRINT
 	___			This will submit qabckprc.wps which will
 				set
 					INLIB  = QABCKPRC
@@ -896,7 +910,7 @@
 		second parameter. It will then run QABCKGRD and create
 			BCKP#### in LIBSPOOL on VOLSPL.
 
-		(^E) HELP (9) Utilties (4) DISPRINT
+			(1) DISPRINT
 		___	See printout of BCKP#### LIBSPOOL VOLSPL and 
 			verify that the	INVOL=NEWIN and OUTVOL=NEWOUT.
 
@@ -905,7 +919,7 @@
 
 
 		(8) LINK	This will test LINK without parameters.
-				(UNIX: set WISPGID=$$ if not bourne shell.)
+
 		Link testing each LINK-TYPE
 
 		FILE	 LIB	 VOL	 	TYPE
@@ -930,7 +944,7 @@
 
 		Link with Cancel-Exit
 	___	SAMPLE2  LIBRUN   VOLRUN    TYPE=P CANCEL=C
-		Now go to  (5) WANG USERSUBS TEST  (17) LOGOFF
+		Now go to  (5) WANG VSSUBS TEST  (17) LOGOFF
 		this should take you to the LINK IS COMPLETE screen 
 		COMP=16 
 
@@ -1076,11 +1090,6 @@
 	___	L-Lib		    LIBSPOOL on VOLSPL     RC=16
 
 
-		(18) PUTPARM 
-
-		All the putparm tests have been moved to WL0027 (Hurray).
-
-
 		(19) GETPARM
 	___	Press (1) to SETUP for the tests.
 	___	Type="I " FORM=A PRNAME=XX1	(no display PF-KEY=A)
@@ -1088,29 +1097,11 @@
 	___	Type="I " FORM=A PRNAME=XX3	(no display PF-KEY=B)
 		Press (16) to exit
 
-		(24) SORTCALL/WISPSORT	This tests SORTCALL for VAX_CODE and
-						  WISPSORT on ACU_CODE.
-	___		input	BFILE   LIBOUT  VOLOUT
-			output  BFILEX  LIBOUT  VOLOUT
-			key1    1   1   C   A
-			key2    2   1   C   D
-			filetype I
-
+		(24) SORTCALL/WISPSORT
+	___	     (8) AUTOTEST
+		     MF 4.1 will **FAIL** on IDXFIXC and ALTVAR8
 	___	On WIN32 REPEAT with and without COSTAR
 
-	___	Press (1) to Display BFILEX  -  use (11) (record size=92)
-			Order should be 4, (5 or 6), 2, 3, 8, 7
-
-	___		input	BFILEX  LIBOUT  VOLOUT
-			output  BFILEX2 LIBOUT  VOLOUT
-			key1    5   4   C   D
-			key2    1   4   C   A
-			filetype F reclen 92
-
-	___	Press (1) to display BFILEX2; 
-		        Order should be 3, 8, 2, 7, 6, 5, 4
-
-		(16) Exit
 
 		WSORT utility (Do this now while fresh in your mind)
 	___	(8) LINK to QASORT to create BFILEX3
@@ -1155,8 +1146,6 @@
 	___	Log back on and resetup you environment.
 
 		UNIX
-		$ cd wisp/src/port
-		$ portenvs.sh
 		$ cd ../testxx
 		$ . startup.xxx
 		$ wrun SAMPLE
@@ -1213,20 +1202,10 @@
 		(2) Set Usage Constants
 	___	    Values should be restored
 
-	___	wusage flags		Set the following to "N"
-						SET File Usage Constants
-						Enter COMMANDS
-						SAVE environment
-	___	wshell			The above should be missing.
-	___	wusage flags set help=n
-	___	run SAMPLE and try to entry HELP (^e) should beep
-	___	wusage flags [verify:	Help Screen			N
-					SET File Usage Constants	N
-					Enter COMMANDS			N
-					SAVE environment		N
-		Set all flags to Y
+		wusage flags
+	___	UNIX: qaflags.sh
 
-+	___	wshell		        All options should be back
+	___	WIN32: wshell (1) Run QAFLAGS
 
 
 	DISPLAY utility
@@ -1277,15 +1256,15 @@
 		PATH2	 = AKEY2    DUPS2  = YES
 		(ENTER)
 
-	___	Name    Start  Format  IntLen Decimal Occur
-		PKEY	1      C       10     0	      1
-		AKEY1	11     C       10     0	      1
-		AKEY2	21     C       10     0	      1
-		ZONE	31     Z       10     4	      1
-		USIGN	41     U       10     4	      1
-		PACK	51     P        8     2	      1
-		BIN	59     B	4     0	      1  Bin Edit=1
-		X	63     C        3     0	      6
+	___	Name    Start  Format  IntLen Decimal
+		PKEY	1      C       10     
+		AKEY1	11     C       10     
+		AKEY2	21     C       10     
+		ZONE	31     Z       10     4
+		USIGN	41     U       10     4
+		PACK	51     P        8     2
+		BIN	59     B	4          Bin Edit = 1
+		X	63     C        3          Occurs   = 6
 		(ENTER)(ENTER) after each line
 		(16) exit
 
@@ -1300,8 +1279,8 @@
 		AAA  AAA   AAA	 100  100   100  100 100 100
 		BBB  BBB   AAA	 200  200   200  200 200 200
 		CCC  AAA   BBB   300  300   300  300 300 300  
-		- ERROR - change AKEY1
-		     AA2
+		** ERROR ** Record already on file
+		- Change AKEY1=AA2
 		(16) exit
 
 	___	(4) Modify Records
@@ -1314,9 +1293,16 @@
 		(ENTER)
 
 		LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
+                WHEN PKEY < 'CCA'
 
 		(ENTER)
 	___	(16) Continue query
+
+	___	(2) Save Query 
+		    FILE=Q1  LIBRARY=INQUIRY VOLUME=VOLOUT
+
+	___	(3) Create REPORT definition 
+		    FILE=R1  LIBRARY=REPORT VOLUME=VOLOUT
 
 	___	(16) Exit INQUIRY
 
@@ -1332,7 +1318,7 @@
 		(ENTER)
 		Control  FILE= I1     LIBRARY= CONTROL VOLUME= VOLIN
 		(ENTER)
-		Place a 'X' on AKEY1, AKEY2, PKEY, USIGN, ZONE, BIN
+		Place a 'X' on AKEY1, AKEY2, BIN, PKEY, USIGN, ZONE
 		(ENTER)
 		(ENTER)
 		(16) Exit report definition phase
@@ -1342,9 +1328,18 @@
 		DEVICE=DISPLAY
 		(ENTER)
 
+	___	(3) Modify a report
+		    FILE=R1  LIBRARY=REPORT VOLUME=VOLOUT
+
 	___	(16) Exit REPORT
 
 	___	(32) Exit CONTROL
+
+	___	wshell	  Run saved Query
+
+		(1) RUN FILE=Q1  LIBRARY=INQUIRY VOLUME=VOLOUT
+
+		(16) EXIT
 
 
 	KCSI CREATE
@@ -1395,7 +1390,7 @@
 		
 	wrun
 	___	wrun				should give runcbl & options
-		RUNCBL=xyz export RUNCBL
+		export RUNCBL=xyz
 	___	wrun -b -w -?			should "xyz -b -w"
 		unset RUNCBL 			set RUNCBL back
 

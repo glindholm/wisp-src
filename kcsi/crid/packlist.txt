@@ -1,0 +1,93 @@
+        Copyright (c) 1997-2001 by NeoMedia Technologies Inc. 
+        All Rights Reserved.
+        
+        ====================================================================
+        
+        Title:          KCSI CRID PACKING LIST FOR UNIX
+        
+        Document:       packlist.lis
+        Last Updated:   $Date:$
+        Products:       CRID
+        Versions:       3.0.00 (AND LATER)
+        
+        Summary:        Packing list for the CRID utilities shipping kit.
+
+        ====================================================================
+        
+
+        CRID for ACUCOBOL on UNIX:
+        ==========================
+
+        This distribution should include:
+ 
+        packlist.txt            - This packing list
+        install_crid_acu.txt    - Installation instructions
+        release.txt             - Release notes for the latest version
+
+        CONTROL                 - CONTROL  utility (ACUCOBOL object file)
+        REPORT                  - REPORT   utility (ACUCOBOL object file)
+        INQUIRY                 - INQUIRY  utility (ACUCOBOL object file)
+        DATENTRY                - DATENTRY utility (ACUCOBOL object file)
+
+        wruncbl.umf             - Makefile for building ACUCOBOL runtimes
+        libcrid.a               - CRID library for building RTS
+        crid.h                  - C header for building RTS
+        crid85.c                - C source for building RTS
+        cridtbl.c               - C source for building RTS
+
+        ctlcnvrt.wcb            - Source for control file conversion
+        rptcnvrt.wcb            - Source for report file conversion
+
+
+        CRID for ACUCOBOL on Windows (WIN32):
+        =====================================
+
+        This distribution should include:
+ 
+        packlist.txt            - This packing list
+        cridntsetup.txt         - Installation instructions
+        release.txt             - Release notes for the latest version
+
+        CONTROL                 - CONTROL  utility (ACUCOBOL object file)
+        REPORT                  - REPORT   utility (ACUCOBOL object file)
+        INQUIRY                 - INQUIRY  utility (ACUCOBOL object file)
+        DATENTRY                - DATENTRY utility (ACUCOBOL object file)
+
+        wrun32wisp_crid.mak     - Makefile for building ACUCOBOL 5.x runtime
+        wwruncbl.mak            - Makefile for building (old) ACUCOBOL runtime
+        cridacu.lib             - CRID library for building RTS
+        cridacum.lib            - CRID multi-threaded library for building RTS
+        crid.h                  - C header for building RTS
+        crid85.c                - C source for building RTS
+        cridtbl.c               - C source for building RTS
+
+        ctlcnvrt.wcb            - Source for control file conversion
+        rptcnvrt.wcb            - Source for report file conversion
+
+
+        CRID for MICRO FOCUS COBOL on UNIX:
+        ===================================
+
+        This distribution should include:
+
+        packlist.txt            - This packing list
+        install_crid_mf.txt     - Installation instructions
+        release.txt             - Release notes for the latest version
+
+        control                 - CONTROL  utility (executable file)
+        report                  - REPORT   utility (executable file)
+        inquiry                 - INQUIRY  utility (executable file)
+        datentry                - DATENTRY utility (executable file)
+
+        cridmfx.umf             - Makefile for rebuilding utilities
+        libmfxcrid.a            - CRID library for building utils
+        libmfxcridwcb.a         - CRID library for building utils
+        control.o               - Object for building CONTROL
+        report.o                - Object for building REPORT
+        inquiry.o               - Object for building INQUIRY
+        datentry.o              - Object for building DATENTRY
+
+        ctlcnvrt.wcb            - Source for control file conversion
+        rptcnvrt.wcb            - Source for report file conversion
+
+       ========================= END OF DOCUMENT ==========================

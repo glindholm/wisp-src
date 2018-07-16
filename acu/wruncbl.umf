@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -16,9 +16,9 @@
 #
 #		wruncble	The EDE version of the runtime.
 #
-#		wruncbl1	The ACUCOBOL version 1.5 runtime.
-#				(Only used if running an old version
-#				of ACUCOBOL.)
+#		wruncblk	The CRID version of the runtime.
+#
+#		wruncblke	The CRID + EDE version of the runtime.
 #
 #		wruncbl_oracle7	The ACUCOBOL runtime with Acu4GL
 #				for Oracle 7.
@@ -102,11 +102,15 @@
 #				Runtime = wruncble
 #				Macro   = RTSE
 #
-#		both		Create both rts and ede targets.
+#		crid		The CRID runtime.
+#				Runtime = wruncblk
+#				Macro   = RTSK
 #
-#		rts1		The version 1.5 ACUCOBOL runtime
-#				Runtime = wruncbl1
-#				Macro   = RTS1
+#		cride		The CRID + EDE runtime.
+#				Runtime = wruncblke
+#				Macro   = RTSKE
+#
+#		both		Create both rts and ede targets.
 #
 #		oracle7		The Acu4GL for ORACLE runtime.
 #				The environment variable $ORACLE_HOME must
@@ -155,15 +159,22 @@
 #
 # WISPDIR	The installed WISP directory
 # ACUDIR	The ACUCOBOL directory
+# ACU_LIBDIR	The ACOCOBOL lib directory
 # ACU4GLDIR	The Acu4GL directory (optional)
 # ORACLE_HOME	The ORACLE home directory (optional)
 #
 WISPDIR=/usr/local/wisp
 ACUDIR=/usr/local/ACUCOBOL
+ACU_LIBDIR=$(ACUDIR)/lib
 ACU4GLDIR=/usr/local/acu4gl
 ORACLE_HOME=/usr/local/ORACLE
 
-ACU_LIBDIR=$(ACUDIR)/lib
+#
+# EDEDIR	The EDE lib directory
+# CRIDDIR	The CRID directory
+# 
+EDEDIR=$(WISPDIR)/lib
+CRIDDIR=$(WISPDIR)/CRIDACU.3000
 
 #============================================================================
 #
@@ -183,7 +194,7 @@ WISP_LIBDIR=$(WISPDIR)/lib
 #
 LIBCURSES= -lcurses
 #
-# Uncomment the following for HP-UX 10.20
+# Uncomment the following for HP-UX 10.10 and 10.20 
 #LIBCURSES= -lcur_colr
 #
 # You may need to uncomment the following for Solaris 2.6
@@ -193,6 +204,8 @@ LIBCURSES= -lcurses
 #
 # Standard CC flags
 #
+#    HP-UX may need "-Ae +DAportable" added to the CFLAGS
+#
 CFLAGS= -g -Dunix
 #
 # **** CHANGE CC HERE ****
@@ -200,6 +213,7 @@ CFLAGS= -g -Dunix
 #	SOLARIS 2 requires an ANSI C compiler (c89).
 #CC=c89
 #
+
 
 #============================================================================
 #
@@ -214,7 +228,7 @@ LIBEDE=lib$(L_EDE).a
 
 WISP_LIB_PATH  		= $(WISP_LIBDIR)/$(LIBWISP)
 VIDEO_LIB_PATH 		= $(WISP_LIBDIR)/$(LIBVIDEO)
-EDE_LIB_PATH   		= $(WISP_LIBDIR)/$(LIBEDE)
+EDE_LIB_PATH   		= $(EDEDIR)/$(LIBEDE)
 
 WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
@@ -227,7 +241,8 @@ OTHER_LINK		= -lm $(LIBCURSES)
 #
 RTS=wruncbl
 RTSE=wruncble
-RTS1=wruncbl1
+RTSK=wruncblk
+RTSKE=wruncblke
 
 #============================================================================
 # ACUCOBOL version information
@@ -236,6 +251,8 @@ RTS1=wruncbl1
 #         the version of ACUCOBOL that is installed on your system.
 
 include $(WISPDIR)/acu/acucobol.include
+
+RTS_CFLAGS= -I$(ACUSRCDIR) $(ACUCCFLAGS)
 
 #============================================================================
 #
@@ -247,8 +264,8 @@ RTSALC = $(ACUDIR)/bin/runcbl.alc
 
 ACUFILES=$(ACUSRCDIR)/sub.c \
 	$(ACUSRCDIR)/filetbl.c \
-	$(ACUSRCDIR)/clntstub.o \
-	$(RTSALC)
+	$(ACUSRCDIR)/clntstub.o
+
 
 #============================================================================
 #
@@ -259,7 +276,28 @@ ACUFILES=$(ACUSRCDIR)/sub.c \
 WISPFILES=$(WISP_LIBDIR)/$(LIBWISP) \
 	$(WISP_LIBDIR)/$(LIBVIDEO) \
 	$(WISP_LIBDIR)/$(LIBEDE) \
-	$(WISPDIR)/acu/sub85.c
+	$(WISPDIR)/acu/sub85.c 
+
+#============================================================================
+#
+# CRIDFILES is a list of CRID files used in building the runtime.
+#
+CRID_LIB_PATH=$(CRIDDIR)/libcrid.a
+CRIDFILES=$(CRIDDIR)/crid.h \
+	$(CRIDDIR)/cridtbl.c \
+	$(CRIDDIR)/crid85.c \
+	$(CRID_LIB_PATH) \
+	$(CRIDDIR)
+
+CRID_DEP = crid.h crid85.c cridtbl.c
+
+CRID_CFLAGS=-DCRID -I$(CRIDDIR)
+
+# **** CHANGE CRID_CFLAGS HERE ****
+# 
+# If you get an undefined "v_make_vers" then uncomment this.
+#
+#CRID_CFLAGS=-DCRID -I$(CRIDDIR) -DCRID_V_MAKE_VERS
 
 #============================================================================
 #
@@ -314,25 +352,53 @@ INFORMIX_LINK=
 
 #============================================================================
 #
-# CLEANUP is a list of files that are created by this
-# makefile and can be deleted.
-#
-CLEANUP=$(RTS) $(RTSE) $(RTSORA7) $(RTSINFORMIX) sub.o filetbl.o
-
-#============================================================================
-#
 # TARGETS:
 #
 
 default: rts
 
 header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
-	@echo ">>>> BUILDING ACUCOBOL RUNTIME"
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP"
 	@echo ">>>>"
 	@echo ">>>> WISPDIR = " $(WISPDIR)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
 	@echo ">>>> PWD     = " `pwd`
 	@echo ">>>> CC      = " `which $(CC)`
+	@echo ">>>> CFLAGS  = " $(CFLAGS)
+	@echo ">>>>"
+
+header_crid: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(CRIDDIR)
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+CRID"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> CRIDDIR = " $(CRIDDIR)
+	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>> PWD     = " `pwd`
+	@echo ">>>> CC      = " `which $(CC)`
+	@echo ">>>> CFLAGS  = " $(CFLAGS)
+	@echo ">>>>"
+
+header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDEDIR)
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+EDE"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> EDEDIR  = " $(EDEDIR)
+	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>> PWD     = " `pwd`
+	@echo ">>>> CC      = " `which $(CC)`
+	@echo ">>>> CFLAGS  = " $(CFLAGS)
+	@echo ">>>>"
+
+header_crid_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(CRIDDIR) $(EDEDIR)
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+CRID+EDE"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> CRIDDIR = " $(CRIDDIR)
+	@echo ">>>> EDEDIR  = " $(EDEDIR)
+	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>> PWD     = " `pwd`
+	@echo ">>>> CC      = " `which $(CC)`
+	@echo ">>>> CFLAGS  = " $(CFLAGS)
 	@echo ">>>>"
 
 $(WISPDIR):
@@ -400,6 +466,15 @@ $(WISPFILES):
 	@echo ">>>>"
 	@exit 1
 
+$(CRIDFILES):
+	@echo ">>>> ERROR: A CRID configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The CRID file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using CRIDDIR = $(CRIDDIR)"
+	@echo ">>>>"
+	@exit 1
+
 $(ORA7LIBS):
 	@echo ">>>> ERROR: An ORACLE configuration error was detected!"
 	@echo ">>>>"
@@ -422,58 +497,72 @@ $(ORA7ACUSUBS) $(INFORMIXACUSUBS):
 	@echo ">>>>"
 	@exit 1
 
-rts:	$(RTS) $(RTS).alc
+rts:	header $(RTS) $(RTS).alc
+	@echo
+	@echo ">>>> The WISP runtime RTS=" $(RTS) is up to date.
+	@echo
 
-ede:	$(RTSE) $(RTSE).alc
+ede:	header_ede $(RTSE) $(RTSE).alc
+	@echo
+	@echo ">>>> The WISP + EDE runtime RTSE=" $(RTSE) is up to date.
+	@echo
+
+rtsk:	header_crid $(RTSK) $(RTSK).alc
+	@echo
+	@echo ">>>> The WISP + CRID runtime RTSK=" $(RTSK) is up to date.
+	@echo
+
+rtske:	header_crid_ede $(RTSKE) $(RTSKE).alc
+	@echo
+	@echo ">>>> The WISP + CRID + EDE runtime RTSKE=" $(RTSKE) is up to date.
+	@echo
 
 both:	rts ede
 
-rts1:	$(RTS1)
+crid:	rtsk
+
+cride:	rtske
 
 oracle7:  $(RTSORA7) $(RTSORA7).alc
 
 informix: $(RTSINFORMIX) $(RTSINFORMIX).alc
 
-clean:	
-	rm -f $(CLEANUP) core
+$(RTS): $(ACUSUBS:.o=.c) $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+		$(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTS): header $(ACUSUBS) $(WISP_LIBS_PATHS)
-	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
-	@echo
-	@echo ">>>> RTS     = " $@ is up to date.
-	@echo
+$(RTSE): $(ACUSUBS:.o=.c) $(WISPEDE_LIBS_PATHS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+		$(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
+	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSE): header $(ACUSUBS) $(WISPEDE_LIBS_PATHS)
-	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
-	@echo
-	@echo ">>>> RTS     = " $@ is up to date.
-	@echo
+$(RTSK): $(ACUSUBS:.o=.c) $(WISP_LIBS_PATHS) $(CRID_LIB_PATH)
+	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+		$(CRID_LIB_PATH) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSORA7): header $(ACUSUBS) $(ORA7ACUSUBS) $(WISP_LIBS_PATHS) $(ORA7LIBS)
-	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(ORA7ACUSUBS) $(ACULIBS) $(ORA7LIBS) \
-				$(WISP_LIBS_PATHS) $(OTHER_LINK) $(ORA7_LINK) \
-				$(MILI)
-	@echo
-	@echo ">>>> RTS     = " $@ is up to date.
-	@echo
+$(RTSKE): $(ACUSUBS:.o=.c) $(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH)
+	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+		$(CRID_LIB_PATH) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
+	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSINFORMIX): header $(ACUSUBS) $(INFORMIXACUSUBS) $(WISP_LIBS_PATHS) $(INFORMIXLIBS)
-	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(INFORMIXACUSUBS) $(ACULIBS) $(INFORMIXLIBS) \
-				$(WISP_LIBS_PATHS) $(OTHER_LINK) $(INFORMIX_LINK)
-	@echo
-	@echo ">>>> RTS     = " $@ is up to date.
-	@echo
+$(RTSORA7): header $(ACUSUBS:.o=.c) $(ORA7ACUSUBS) $(WISP_LIBS_PATHS) $(ORA7LIBS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) $(ORA7ACUSUBS) \
+		$(ACULIBS) $(ORA7LIBS) \
+		$(WISP_LIBS_PATHS) $(OTHER_LINK) $(ORA7_LINK) $(MILI)
+	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTS1): header $(ACUSUBS1) $(WISP_LIBS_PATHS)
-	$(CC) $(CFLAGS) -o $@ $(ACUSUBS1) $(ACULIBS1) $(WISP_LIBS_PATHS) $(OTHER_LINK)
-	@echo
-	@echo ">>>> RTS     = " $@ is up to date.
-	@echo
+$(RTSINFORMIX): header $(ACUSUBS:.o=.c) $(INFORMIXACUSUBS) $(WISP_LIBS_PATHS) $(INFORMIXLIBS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) $(INFORMIXACUSUBS) \
+		$(ACULIBS) $(INFORMIXLIBS) \
+		$(WISP_LIBS_PATHS) $(OTHER_LINK) $(INFORMIX_LINK)
+	@echo ">>>> RTS     = " $@ has been built.
 
-sub.o: sub.c sub85.c $(ACUSRCDIR)/config85.c $(ACUSRCDIR)/direct.c
-	$(CC) $(CFLAGS) -c -I$(ACUSRCDIR) sub.c
+#sub.o: sub.c sub85.c $(ACUSRCDIR)/config85.c $(ACUSRCDIR)/direct.c
+#	$(CC) $(CFLAGS) -c sub.c
 
-sub.c: $(ACUSRCDIR)/sub.c
+sub.c: $(ACUSRCDIR)/sub.c sub85.c
 	cmp -s $(ACUSRCDIR)/sub.c $@ || cp $(ACUSRCDIR)/sub.c $@
 
 filetbl.c: $(ACUSRCDIR)/filetbl.c
@@ -482,8 +571,16 @@ filetbl.c: $(ACUSRCDIR)/filetbl.c
 sub85.c: $(WISPDIR)/acu/sub85.c
 	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp $(WISPDIR)/acu/sub85.c $@
 
-$(RTS).alc $(RTSE).alc $(RTSORA7).alc $(RTSINFORMIX).alc: $(RTSALC)
-	cmp -s $(RTSALC) $@ || cp $(RTSALC) $@
+$(RTSALC):
+	@echo WARNING $(RTSALC) NOT FOUND
+
+$(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc $(RTSORA7).alc $(RTSINFORMIX).alc: $(RTSALC)
+	@if [ -f $(RTSALC) ] ; then \
+		cmp -s $(RTSALC) $@ || cp $(RTSALC) $@ ; \
+	else \
+		echo WARNING $@ NOT CREATED ; \
+	fi
+
 
 #============================================================================
 #
@@ -534,3 +631,19 @@ WACUHELP: wacuhelp.cob
 WACUWSB: wacuwsb.cob
 	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
 
+
+#============================================================================
+#
+#	Clean up
+#
+
+#
+# CLEANUP is a list of files that are created by this
+# makefile and can be deleted.
+#
+CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) $(RTSORA7) $(RTSINFORMIX) \
+	$(ACN_OBJS) *.alc \
+	sub.o sub.c filetbl.o filetbl.c
+
+clean:	
+	rm -f $(CLEANUP) core *~

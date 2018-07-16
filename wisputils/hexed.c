@@ -988,8 +988,9 @@ hexed_status(void)
 	sprintf(tmpbuf,"%8.8d 0x%08X",filepos+scry*16+scrx,filepos+scry*16+scrx);
 	vprint(tmpbuf);
 	vmove(D_LINES+1,38);
-	memrcpy((char*)&tmpshort,&filebuf[scry*16+scrx],2);
-	memrcpy((char*)&tmpint,&filebuf[scry*16+scrx],4);
+	/* These were memrcpy() ? */
+	memcpy((char*)&tmpshort,&filebuf[scry*16+scrx],2);
+	memcpy((char*)&tmpint,&filebuf[scry*16+scrx],4);
 	sprintf(tmpbuf,"% 4d % 6d % 11d ",filebuf[scry*16+scrx],tmpshort,tmpint);
 	vprint(tmpbuf);
 	vmode(CLEAR);
@@ -1026,6 +1027,9 @@ int getsize(char *p)
  **  Module: $RCSfile: hexed.c,v $
  ** 
  ** $Log: hexed.c,v $
+ ** Revision 1.19  2001-10-16 11:25:55-04  gsl
+ ** Fixed the Value: display. It was reversing the bytes?
+ **
  ** Revision 1.18  1999-09-13 15:47:24-04  gsl
  ** fix modbuffer() return type
  **

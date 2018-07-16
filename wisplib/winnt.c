@@ -372,22 +372,28 @@ int get_remote_registry_value(const char* machine, const char *key, const char *
 **
 **	RETURN:		Pointer to the result or NULL
 **
-**	WARNINGS:	Works like getenv(), max size is 128.
+**	WARNINGS:	Works like getenv(), max size is 512.
 **
 */
 char *wgetreg(const char *key, const char *value)
 {
-	static char buff[128];
+	static char buff[512];
 	int	rc;
 
 	rc = get_registry_value(key, value, sizeof(buff), buff);
-	if (rc)
+	if (0 == rc)
 	{
-		return NULL;
+		return buff;
+	}
+	else if ( 2 == rc ) /* TOO BIG */
+	{
+		sprintf(buff, "REGISTRY KEY=[%s\\%s] DATA IS LONGER THEN BUFFER [%d]",
+			key, value, sizeof(buff));
+		return buff;
 	}
 	else
 	{
-		return buff;
+		return NULL;
 	}
 }
 
@@ -568,6 +574,9 @@ const char* win32_version(void)
 /*
 **	History:
 **	$Log: winnt.c,v $
+**	Revision 1.15  2001-11-20 15:40:05-05  gsl
+**	Increase buff size for registry keys
+**
 **	Revision 1.14  1998-12-04 13:08:31-05  gsl
 **	Add win32_98() and win32_version()
 **

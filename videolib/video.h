@@ -385,6 +385,12 @@ int vonexit(int newvalue);
 
 int vmacro(int action);
 
+/* vutil */
+void vre_set_logfile(const char* filepath);
+unsigned char *vsss(int row, int col, int rows, int cols);				/* Save a screen segment.		*/
+int vrss(unsigned char *loc);								/* Restore a screen segment.		*/
+void vtitle(const char *titlestr);
+
 /*
 **	MISC Function Prototypes
 */
@@ -458,8 +464,6 @@ extern int vrelease (void);
 extern int vroll (int top, int bottom);
 extern int vscroll_frwd_avail(void);
 extern int vscroll_rvrs_avail(void);
-extern int vrss (unsigned char *loc);
-extern unsigned char *vsss (int row, int col, int rows, int cols);
 extern int vscreen (int state);
 extern int vset (int item, int state);
 extern void vseterr (int error);
@@ -472,7 +476,6 @@ extern int vrawntcn_get_mouse_position( int *row, int *col );
 extern void* vtty_alloc (void);
 extern int vtty_set (void* tt);
 extern int vtty_get (void* tt);
-extern void vtitle(const char *title);
 extern void vcap_set_vcapfile(const char *vcappath, const char* termtype);
 extern char GetASCIIGraphicsChar(unsigned char graph_char);
 extern void vwait(int seconds, int hundredths);
@@ -829,6 +832,9 @@ extern void vwait(int seconds, int hundredths);
 /*
 **	History:
 **	$Log: video.h,v $
+**	Revision 1.32  2001-10-15 09:27:08-04  gsl
+**	vutil proto
+**
 **	Revision 1.31  1997-09-22 12:23:15-04  gsl
 **	Change the set_debug_ routines to set_isdebug_
 **	Change the VSTATE_RESTORE/SAVE_DEBUG to _STTY

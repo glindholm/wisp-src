@@ -127,10 +127,11 @@ NODE parse_accept(NODE the_statement)
 						   "ACCEPT FROM DATE4 translated to CENTURY-DATE");
 					edit_token(curr_node->token,"CENTURY-DATE");
 				}
-				else
+				else /* mf_cobol - note this is also valid for Acucobol 5.x */
 				{
-					write_tlog(curr_node->token,"WISP",'E',"ACCEPT", 
-						   "ACCEPT FROM DATE4 is not supported");
+					write_tlog(curr_node->token, "WISP",'I',"ACCEPT",
+						   "ACCEPT FROM DATE4 translated to ACCEPT FROM DATE YYYYMMDD");
+					edit_token(curr_node->token,"DATE YYYYMMDD");
 				}
 			}
 
@@ -219,6 +220,9 @@ NODE parse_accept(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_acept.c,v $
+**	Revision 1.18  2001-09-13 14:40:16-04  gsl
+**	For MF ACCEPT FROM DATE4 now translated to ACCEPT FROM DATE YYYYMMDD
+**
 **	Revision 1.17  1998-03-26 14:23:30-05  gsl
 **	Change to use WISP-SYMB-xx
 **

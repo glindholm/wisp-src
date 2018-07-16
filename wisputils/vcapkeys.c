@@ -41,7 +41,8 @@ static char *makeprintable();
 #define GEN_NEWLINE		43
 #define GEN_CLEAR_AFTER		44
 #define GEN_CLEAR_FIELD		45
-#define TABLE_SIZE		46
+#define GEN_EXTRA_PF16		46
+#define TABLE_SIZE		47
 
 #define MAX_ESC_LEN		50
 
@@ -522,7 +523,7 @@ static init_table()
 	strcpy(et[GEN_TAB].seq_dvalue, "\"^I\"");
 	strcpy(et[GEN_TAB].seq_name, "generic_tab");
 
-	strcpy(et[GEN_BACKTAB].seq_mess, "BACKTAB");
+	strcpy(et[GEN_BACKTAB].seq_mess, "BACKTAB (PageUp)");
 	strcpy(et[GEN_BACKTAB].seq_dvalue, "\"^F^I\"");
 	strcpy(et[GEN_BACKTAB].seq_name, "generic_backtab");
 
@@ -538,7 +539,7 @@ static init_table()
 	strcpy(et[GEN_INSERT].seq_dvalue, "\"^Fi\"");
 	strcpy(et[GEN_INSERT].seq_name, "generic_insert");
 
-	strcpy(et[GEN_NEWLINE].seq_mess, "NEWLINE");
+	strcpy(et[GEN_NEWLINE].seq_mess, "NEWLINE (PageDn)");
 	strcpy(et[GEN_NEWLINE].seq_dvalue, "\"^Fn\"");
 	strcpy(et[GEN_NEWLINE].seq_name, "generic_newline");
 
@@ -549,10 +550,18 @@ static init_table()
 	strcpy(et[GEN_CLEAR_FIELD].seq_mess, "CLEAR-FIELD");
 	strcpy(et[GEN_CLEAR_FIELD].seq_dvalue, "\"\\E\\E[A\"");
 	strcpy(et[GEN_CLEAR_FIELD].seq_name, "generic_clear_field");
+
+	strcpy(et[GEN_EXTRA_PF16].seq_mess, "Extra PF16 (End)");
+	strcpy(et[GEN_EXTRA_PF16].seq_dvalue, "\"^F16\"");
+	strcpy(et[GEN_EXTRA_PF16].seq_name, "generic_pf16");
 }
 /*
 **	History:
 **	$Log: vcapkeys.c,v $
+**	Revision 1.13  2001-11-01 11:11:30-05  gsl
+**	Add Extra PF16
+**	Comments on BACKTAB and NEWLINE to suggest PageUp and PageDn
+**
 **	Revision 1.12  1999-03-04 15:03:23-05  gsl
 **	Ifdef out the include <sys/select.h> for HPUX
 **

@@ -9,9 +9,12 @@ static char rcsid[]="$Id:$";
 			/*									*/
 			/************************************************************************/
 
-
+#include <stdio.h>
 #include "wisplib.h"
 #include "werrlog.h"
+
+#ifdef unix
+#include <signal.h>
 
 /*
 **	Routine:	wsystem()
@@ -33,9 +36,6 @@ static char rcsid[]="$Id:$";
 **
 */
 
-#ifdef unix
-#include <signal.h>
-
 int wsystem(const char* cmd)
 {
 	int 	rc;
@@ -48,18 +48,65 @@ int wsystem(const char* cmd)
 	signal(SIGCLD,save_sig);
 	return rc;
 }
+
+
+/*
+**	Routine:	run_unixcommand_silent()
+**
+**	Function:	Run a unix command silently.
+**
+**	Description:	Run a unix command thru a pipe and trace the output.
+**
+**	Arguments:
+**	command		The unix command string. (without output redirection)
+**
+**	Return:		Exit status from the command or -1 if the command fails.
+**
+**
+*/
+int run_unixcommand_silent(const char* command)
+{
+	int 	rc;
+	void	(*save_sig)();
+	FILE    *pipe;
+	char	unixcommand[1024];
+
+	sprintf(unixcommand, "%s 2>&1", command);
+	
+	wtrace("UNIXCOMMAND","RUN","%s",unixcommand);
+
+	save_sig = signal(SIGCLD,SIG_DFL);
+
+	if ((pipe = popen(unixcommand,"r")) != NULL)
+	{
+		char	buff[1024];
+		while (fgets(buff, sizeof(buff), pipe) != NULL)
+		{
+			int i;
+			i = strlen(buff);
+			if (i > 0 && '\n' == buff[i-1]) 
+			{
+				buff[i-1] = '\0'; /* Remove trailing newline */
+			}
+			
+			wtrace("UNIXCOMMAND","OUTPUT","%s",buff);
+		}
+
+		rc =  pclose(pipe);
+	}
+	else
+	{
+		rc = -1;
+	}
+
+	signal(SIGCLD,save_sig);
+
+	return rc;
+}
+
 #endif /* unix */
 
-#if defined(MSDOS)
-int wsystem(const char* cmd)
-{
-	wtrace("WSYSTEM","COMMAND","%s", cmd);
-
-	return system(cmd);
-}
-#endif /* MSDOS */
-
-#if defined(WIN32)
+#ifdef WIN32
 /*
 **	ROUTINE:	wsystem()
 **
@@ -95,6 +142,16 @@ int wsystem_standalone(const char* cmd)
 /*
 **	History:
 **	$Log: wsystem.c,v $
+**	Revision 1.19  2001-11-01 10:43:05-05  gsl
+**	In run_unixcommand_silent() remove the trailing NL
+**
+**	Revision 1.18  2001-10-29 10:37:04-05  gsl
+**	Add include stdio.h
+**
+**	Revision 1.17  2001-10-26 15:43:15-04  gsl
+**	Add run_unixcommand_silent()
+**	Remove MSDOS
+**
 **	Revision 1.16  1998-05-05 13:15:54-04  gsl
 **	add wsystem_standalone() to support UTILSWINDOWS
 **

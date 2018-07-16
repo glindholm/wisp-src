@@ -37,7 +37,7 @@
 003502     FAC-LINE IS "AD"
 003600     PFK-NOT-SET IS "00"
 003700     PFK-SET IS "01"
-003800     HEX-00 IS "00", HEX-01 IS "01",
+003800     HEX-00 IS "00", HEX-01 IS "01", HEX-20 IS "20",
 003900     HEX-40 IS "40", HEX-80 IS "80", HEX-A0 IS "A0".
 004000
 004100/*****************************************************************
@@ -67,6 +67,29 @@
 006500         CURSOR POSITION IS CURSOR-POS
 006600         FILE STATUS     IS FILSTAT.
 006700
+	   SELECT SORTCALL-REC45
+               ASSIGN TO "REC45",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS SC-FILESTAT.
+
+	   SELECT SORTCALL-REC55
+               ASSIGN TO "REC55",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS SC-FILESTAT.
+
+	   SELECT SORTCALL-REC80
+               ASSIGN TO "REC80",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS SC-FILESTAT.
+
+	   SELECT SORTCALL-REC90
+               ASSIGN TO "REC90",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS SC-FILESTAT.
 006800
 006900/*****************************************************************
 007000*                                                                *
@@ -76,15 +99,65 @@
 007400*
 007500 DATA DIVISION.
 007600 FILE SECTION.
-007700*
-007800 FD  CRT
-007900     LABEL RECORDS ARE OMITTED.
-008000 01  CRTREC                         PIC X(1924).
-008100
+       
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+      
 008200 FD  CRT-OA-ONLY
 008300     LABEL RECORDS ARE OMITTED.
 008400 01  CRT-OA-ONLY-REC                PIC X(4).
 008500
+      
+       FD  SORTCALL-REC45
+           VALUE OF FILENAME IS SC-OUTFILE
+                    LIBRARY  IS SC-OUTLIB
+                    VOLUME   IS SC-OUTVOL.
+
+       01  SC-REC45.
+           03  SC-REC45-KEY                 PIC 9(10).
+           03  SC-REC45-F1                  PIC X(35).
+      
+       FD  SORTCALL-REC55
+           VALUE OF FILENAME IS SC-OUTFILE
+                    LIBRARY  IS SC-OUTLIB
+                    VOLUME   IS SC-OUTVOL.
+
+       01  SC-REC55.
+           03  SC-REC55-KEY                 PIC 9(10).
+           03  SC-REC55-ALT1                PIC 9(5).
+           03  SC-REC55-ALT2                PIC 9(5).
+           03  SC-REC55-F1                  PIC X(35).
+      
+       FD  SORTCALL-REC80
+           VALUE OF FILENAME IS SC-OUTFILE
+                    LIBRARY  IS SC-OUTLIB
+                    VOLUME   IS SC-OUTVOL.
+
+       01  SC-REC80.
+           03  SC-REC80-KEY                 PIC 9(10).
+           03  SC-REC80-F1                  PIC X(35).
+           03  SC-REC80-F2                  PIC X(35).
+      
+       FD  SORTCALL-REC90
+           VALUE OF FILENAME IS SC-OUTFILE
+                    LIBRARY  IS SC-OUTLIB
+                    VOLUME   IS SC-OUTVOL.
+
+       01  SC-REC90.
+           03  SC-REC90-KEY                 PIC 9(10).
+           03  SC-REC90-ALT1                PIC 9(5).
+           03  SC-REC90-ALT2                PIC 9(5).
+           03  SC-REC90-F1                  PIC X(35).
+           03  SC-REC90-F2                  PIC X(35).
 008600
 008700*
 008800/*****************************************************************
@@ -116,6 +189,9 @@
 011100     03  FILLER                     PIC X(01).
 011200     03  CURS-ROW                   PIC X(01).
 011300
+       01  CRT-ROW-NUM			  PIC 99.
+       01  NEXT-CRT-ROW		          PIC X(80).
+       
 011400******************************************************************
 011500
 011600 01  FIL-GEN-FILE                   PIC X(8) VALUE "BFILE".
@@ -1545,10 +1621,10 @@
                                           VALUE "(3) (6) NUM(18)".
 152400     03  FILLER PIC 9(18) ROW 16 COLUMN 28
 152500         SOURCE READFDR-NUM18.
-	   03  FILLER PIC X(60) ROW 18 COLUMN 8 VALUE
-	       "Pfkeys (1) (2) (3) call READFDR".
-	   03  FILLER PIC X(60) ROW 19 COLUMN 8 VALUE
-	       "Pfkeys (4) (5) (6) call READFDR4".
+           03  FILLER PIC X(60) ROW 18 COLUMN 8 VALUE
+               "Pfkeys (1) (2) (3) call READFDR".
+           03  FILLER PIC X(60) ROW 19 COLUMN 8 VALUE
+               "Pfkeys (4) (5) (6) call READFDR4".
 152600
 152700     03  FILLER PIC X(11) ROW 22 COLUMN 35 VALUE "RETURN-CODE".
 152800     03  FILLER PIC ----9 ROW 22 COLUMN 47
@@ -1563,6 +1639,8 @@
 153700 01  READFDR-VOL         PIC X(6) VALUE SPACES.
 153800 01  READFDR-FUNCTION    PIC X(2) VALUE "RC".
 153900 01  READFDR-CHAR50      PIC X(50) VALUE SPACES.
+       01  READFDR-CHAR1       PIC X     VALUE SPACES.
+       01  READFDR-CHAR8       PIC X(8)  VALUE SPACES.
 154000 01  READFDR-NUM18       PIC 9(18) VALUE ZERO.
 154100 01  READFDR-MODE.
 154200     03  READFDR-MODE-B1   BINARY   VALUE ZERO.
@@ -1576,6 +1654,22 @@
 155000     03  READFDR-RC-B1   BINARY   VALUE ZERO.
 155100     03  READFDR-RC-B2   BINARY   VALUE ZERO.
 155101 01  READFDR-FAILED  PIC 9999 VALUE ZERO.
+       01  READFDR-TESTED  PIC 9999 VALUE ZERO.
+       01  READFDR-EXPECT.
+           03  READFDR-TEST-ID            PIC 9999.
+           03  READFDR-EXPECT-CHAR1       PIC X.
+           03  READFDR-EXPECT-CHAR8       PIC X(8).
+           03  READFDR-EXPECT-NUM18       PIC 9(18).
+           03  READFDR-EXPECT-INT4-X      PIC S9(4).
+           03  READFDR-EXPECT-RC-X        PIC S9(4).
+
+       01  READFDR-IX      PIC X.
+           88  READFDR-IX-CISAM   VALUE "C".
+           88  READFDR-IX-VISION  VALUE "V".
+           88  READFDR-IX-MFFH    VALUE "M".
+           88  READFDR-IX-UNKNOWN VALUE "U".
+           88  READFDR-IX-HAS-RC  VALUE "C", "V".
+           
 155200
 155300******************************************************************
 155400
@@ -1709,8 +1803,8 @@
 170100 01  SUBMIT-TITLE       PIC X(40) VALUE SPACES.
 170200 01  SUBMIT-FOOTER      PIC X(60) VALUE SPACES.
 170300 01  SUBMIT-FILE        PIC X(8) VALUE "QABCKGRD".
-170400 01  SUBMIT-LIB         PIC X(8) VALUE SPACES.
-170500 01  SUBMIT-VOL         PIC X(6) VALUE SPACES.
+170400 01  SUBMIT-LIB         PIC X(8) VALUE "TESTxxx".
+170500 01  SUBMIT-VOL         PIC X(6) VALUE "SOURCE".
 170600 01  SUBMIT-NAME        PIC X(8) VALUE "TESTSBMT".
 170700 01  SUBMIT-STATUS      PIC X(1) VALUE "R".
 170800 01  SUBMIT-DISP        PIC X(1) VALUE "D".
@@ -2035,17 +2129,34 @@
 202700        SOURCE SC-FILETYPE    OBJECT SC-FILETYPE.
 202800     03 FILLER PIC X(7)  ROW 18 COLUMN 32 VALUE "RECSIZE".
 202900     03 FILLER PIC ZZZZ9 ROW 18 COLUMN 40
-203000        SOURCE SC-RECSIZE-Z    OBJECT SC-RECSIZE-Z.
+203000        SOURCE SC-RECSIZE-N    OBJECT SC-RECSIZE-N.
 203100     03 FILLER PIC X(8)  ROW 18 COLUMN 47 VALUE "SORTCODE".
 203200     03 FILLER PIC ZZZZ9 ROW 18 COLUMN 56
 203300        SOURCE SC-SORTCODE-Z.
 203400     03 FILLER PIC X(10) ROW 20 COLUMN 20 VALUE "RETURNCODE".
 203500     03 SORTCALL-RC-S PIC ZZZZ9 ROW 20 COLUMN 31
-203600        SOURCE SC-RETURNCODE-Z.
+203600        SOURCE SC-RETURNCODE-N.
 203700
-203800     03 FILLER PIC X(50) ROW 24 COLUMN 17 VALUE
-203900        "(ENTER) continue  (1) DISPLAY-out (16) to EXIT".
+203750     03 FILLER PIC X(50) ROW 23 COLUMN 25 VALUE
+203770        "(1) DISPLAY-out (8) Auto-Test".
+203800     03 FILLER PIC X(50) ROW 24 COLUMN 25 VALUE
+203900        "(ENTER) continue (16) to EXIT".
 204000
+       01  SC-FILESTAT		       PIC XX.
+       
+       01  SORTCALL-TEST-DATA.
+	   03  SORTCALL-TEST-STATUS    PIC X.
+	       88 SORTCALL-TEST-FAILED VALUE "F".
+	       88 SORTCALL-TEST-OK     VALUE "P".
+	   03  SORTCALL-TEST-ID	       PIC 9(4) VALUE ZERO.
+	   03  SORTCALL-TESTED	       PIC 9(4) VALUE ZERO.
+	   03  SORTCALL-FAILED	       PIC 9(4) VALUE ZERO.
+	   
+	   03  SORTCALL-INFILE	       PIC X(8).
+	   03  SORTCALL-RECCNT	       PIC 9(5).
+	   03  SORTCALL-LAST-KEY       PIC 9(10).
+	   03  SORTCALL-MAX-KEY	       PIC 9(10).
+	   
 204100 01  SC-PARMS.
 204200     03  SC-INFILE              PIC X(8) VALUE "BFILE".
 204300     03  SC-INLIB               PIC X(8) VALUE "LIBOUT".
@@ -2091,7 +2202,7 @@
 208300 01  SC-RECSIZE.
 208400     03  SC-RECSIZE-B1  BINARY VALUE 0.
 208500     03  SC-RECSIZE-B2  BINARY VALUE 0.
-208600 01  SC-RECSIZE-Z               PIC Z(5).
+208600 01  SC-RECSIZE-N               PIC 9999.
 208700
 208800 01  SC-SORTCODE.
 208900     03  SC-SORTCODE-B1  BINARY VALUE 0.
@@ -2101,7 +2212,7 @@
 209300 01  SC-RETURNCODE.
 209400     03  SC-RETURNCODE-B1  BINARY VALUE 0.
 209500     03  SC-RETURNCODE-B2  BINARY VALUE 0.
-209600 01  SC-RETURNCODE-Z            PIC Z(5).
+209600 01  SC-RETURNCODE-N            PIC 9999.
 209700
 209800******************************************************************
 209900
@@ -2164,6 +2275,8 @@
 215600        "PRESS (ENTER) TO CALL SCRATCH, (16) TO EXIT".
 215700
 215800 01  SCRATCH-TYPE               PIC X(01) VALUE "F".
+215810 01  SCRATCH-TYPE-FILE          PIC X(01) VALUE "F".
+215820 01  SCRATCH-TYPE-LIBRARY       PIC X(01) VALUE "L".
 215900 01  SCRATCH-FNAME              PIC X(08) VALUE SPACES.
 216000 01  SCRATCH-EXT                PIC X(39) VALUE SPACES.
 216100 01  SCRATCH-LIBNAME            PIC X(08) VALUE "LIBSPOOL".
@@ -2871,7 +2984,7 @@
 285800
 285900******************************************************************
 286000 LOGOFF-TEST.
-	   DISPLAY "Press (ENTER) to all LOGOFF VSSUB.".
+           DISPLAY "Press (ENTER) to all LOGOFF VSSUB.".
 286100     CALL "LOGOFF".
 286200
 286300
@@ -2946,7 +3059,7 @@
 289100                          READFDR-FUNCTION,
 289200                          READFDR-CHAR50
 289300                          READFDR-RC.
-289301     MOVE READFDR-RC-B2   TO READFDR-RC-X.
+289301     MOVE READFDR-RC-B2   TO READFDR-RC-X.           
 288302
 288303 CALL-READFDR-CHAR.
 288600        MOVE SPACES TO READFDR-CHAR50
@@ -2981,224 +3094,1349 @@
 290201                          READFDR-RC.
 290202     MOVE READFDR-RC-B2   TO READFDR-RC-X.
 290203
-290204 READFDR-AUTOTEST.
-290205
-290206*    These tests follow the QAWISP.LIS document
-290207     MOVE 0 TO READFDR-FAILED.
-290208
-290209     MOVE "BFILE"  TO READFDR-FILE.
-290210     MOVE "LIBOUT" TO READFDR-LIB.
-290211     MOVE "VOLOUT" TO READFDR-VOL.
-290212
-290213     MOVE "CD"       TO READFDR-FUNCTION.
-290214     PERFORM CALL-READFDR4-CHAR.
-290215     IF READFDR-RC-X NOT = 0 THEN
-290216         ADD 1 TO READFDR-FAILED.
-290217         DISPLAY "1 READFDR4 "
-290218         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290219         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290220         READFDR-CHAR50 "** CHECK DATE **".
-290221
-290222     MOVE "FT"       TO READFDR-FUNCTION.
-290223     PERFORM CALL-READFDR4-CHAR.
-290224     IF READFDR-CHAR50 NOT = "I" THEN
-290225         ADD 1 TO READFDR-FAILED
-290226         DISPLAY "2 READFDR4 "
-290227         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290228         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290229         READFDR-CHAR50 " NOT=I"
-290230         " *** FAILED ***".
-290231
-290232     MOVE "RC"       TO READFDR-FUNCTION.
-290233     PERFORM CALL-READFDR4-INT.
-290234     IF READFDR-INT4-X NOT = 7 THEN
-290235         ADD 1 TO READFDR-FAILED
-290236         DISPLAY "3 READFDR4 "
-290237         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290238         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290239         READFDR-INT4-X " NOT=7"
-290240         " *** FAILED ***".
-290241
-290242     MOVE "RL"       TO READFDR-FUNCTION.
-290243     PERFORM CALL-READFDR4-INT.
-290244     IF READFDR-INT4-X NOT = 92 THEN
-290245         ADD 1 TO READFDR-FAILED
-290246         DISPLAY "4 READFDR4 "
-290247         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290248         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290249         READFDR-INT4-X " NOT=92"
-290250         " *** FAILED ***".
-290251
-290252     MOVE "RT"       TO READFDR-FUNCTION.
-290253     PERFORM CALL-READFDR4-CHAR.
-290254     IF READFDR-CHAR50 NOT = "F" THEN
-290255         ADD 1 TO READFDR-FAILED
-290256         DISPLAY "5 READFDR4 "
-290257         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290258         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290259         READFDR-CHAR50 " NOT=F"
-290260         " *** FAILED ***".
-290261
-290262     MOVE "AAA"    TO READFDR-FILE.
-290263     MOVE "LIBOUT" TO READFDR-LIB.
-290264     MOVE "VOLOUT" TO READFDR-VOL.
-290265*$ACU_CODE PROCESS
-290266*     MOVE "RC"       TO READFDR-FUNCTION.
-290267*     PERFORM CALL-READFDR4-INT.
-290268*     IF READFDR-INT4-X NOT = 199 THEN
-290269*         ADD 1 TO READFDR-FAILED
-290270*         DISPLAY "6 READFDR4 "
-290271*         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290272*         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290273*         READFDR-INT4-X " NOT=199"
-290274*         " *** FAILED ***".
-290275*$ACU_END
-290276     MOVE "RL"       TO READFDR-FUNCTION.
-290277     PERFORM CALL-READFDR4-INT.
-290278     IF READFDR-INT4-X NOT = 84 THEN
-290279         ADD 1 TO READFDR-FAILED
-290280         DISPLAY "7 READFDR4 "
-290281         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290282         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290283         READFDR-INT4-X " NOT=84"
-290284         " *** FAILED ***".
-290285
-290286     MOVE "AFILE"    TO READFDR-FILE.
-290287     MOVE "LIBOUT" TO READFDR-LIB.
-290288     MOVE "VOLOUT" TO READFDR-VOL.
-290289*$ACU_CODE
-290290*     MOVE "RC"       TO READFDR-FUNCTION.
-290291*     PERFORM CALL-READFDR4-INT.
-290292*     IF READFDR-INT4-X NOT = 0 THEN
-290293*         ADD 1 TO READFDR-FAILED
-290294*         DISPLAY "8 READFDR4 "
-290295*         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290296*         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290297*         READFDR-INT4-X " NOT=0"
-290298*         " *** FAILED ***".
-290299*$ACU_END
-290300     MOVE "RT"       TO READFDR-FUNCTION.
-290301     PERFORM CALL-READFDR4-CHAR.
-290302     IF READFDR-CHAR50 NOT = "C" THEN
-290303         ADD 1 TO READFDR-FAILED
-290304         DISPLAY "9 READFDR4 "
-290305         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290306         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290307         READFDR-CHAR50 " NOT=C"
-290308         " *** FAILED ***".
-290309
-290310     MOVE "SEQFILE1"    TO READFDR-FILE.
-290311     MOVE "LIBOUT" TO READFDR-LIB.
-290312     MOVE "VOLOUT" TO READFDR-VOL.
-290313
-290314     MOVE "FT"       TO READFDR-FUNCTION.
-290315     PERFORM CALL-READFDR4-CHAR.
-290316     IF READFDR-CHAR50 NOT = "C" THEN
-290317         ADD 1 TO READFDR-FAILED
-290318         DISPLAY "10 READFDR4 "
-290319         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290320         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290321         READFDR-CHAR50 " NOT=C"
-290322         " *** FAILED ***".
-290323
-290324     MOVE "RC"       TO READFDR-FUNCTION.
-290325     PERFORM CALL-READFDR4-INT.
-290326     IF READFDR-INT4-X NOT = 1 THEN
-290327         ADD 1 TO READFDR-FAILED
-290328         DISPLAY "11 READFDR4 "
-290329         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290330         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290331         READFDR-INT4-X " NOT=1"
-290332         " *** FAILED ***".
-290333
-290334     MOVE "RL"       TO READFDR-FUNCTION.
-290335     PERFORM CALL-READFDR4-INT.
-290336     IF READFDR-INT4-X NOT = 256 THEN
-290337         ADD 1 TO READFDR-FAILED
-290338         DISPLAY "12 READFDR4 "
-290339         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290340         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290341         READFDR-INT4-X " NOT=256"
-290342         " *** FAILED ***".
-290343
-290344     MOVE "BS"       TO READFDR-FUNCTION.
-290345     PERFORM CALL-READFDR4-NUM.
-290346     IF READFDR-NUM18 NOT = 120 THEN
-290347         ADD 1 TO READFDR-FAILED
-290348         DISPLAY "13 READFDR4 "
-290349         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290350         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290351         READFDR-NUM18 " NOT=120"
-290352         " *** FAILED ***".
-290353
-290354     MOVE "RT"       TO READFDR-FUNCTION.
-290355     PERFORM CALL-READFDR4-CHAR.
-290356     IF READFDR-CHAR50 NOT = "V" THEN
-290357         ADD 1 TO READFDR-FAILED
-290358         DISPLAY "14 READFDR4 "
-290359         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290360         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290361         READFDR-CHAR50 " NOT=V"
-290362         " *** FAILED ***".
-290363
-290364     MOVE "SEQFILE"    TO READFDR-FILE.
-290365     MOVE "LIBOUT" TO READFDR-LIB.
-290366     MOVE "VOLOUT" TO READFDR-VOL.
-290367
-290368     MOVE "RC"       TO READFDR-FUNCTION.
-290369     PERFORM CALL-READFDR4-INT.
-290370     IF READFDR-INT4-X NOT = 0 THEN
-290371         ADD 1 TO READFDR-FAILED
-290372         DISPLAY "15 READFDR4 "
-290373         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290374         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290375         READFDR-INT4-X " NOT=0"
-290376         " *** FAILED ***".
-290377
-290378     MOVE "XEQFILE"    TO READFDR-FILE.
-290379     MOVE "LIBOUT" TO READFDR-LIB.
-290380     MOVE "VOLOUT" TO READFDR-VOL.
-290381
-290382     MOVE "RC"       TO READFDR-FUNCTION.
-290383     PERFORM CALL-READFDR4-INT.
-290384     IF READFDR-RC-X NOT = 20 THEN
-290385         ADD 1 TO READFDR-FAILED
-290386         DISPLAY "16 READFDR4 "
-290387         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290388         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290389         READFDR-INT4-X " NOT=20"
-290390         " *** FAILED ***".
-290391
-290392     MOVE "XX"       TO READFDR-FUNCTION.
-290393     PERFORM CALL-READFDR4-INT.
-290394     IF READFDR-RC-X NOT = 20 THEN
-290395         ADD 1 TO READFDR-FAILED
-290396         DISPLAY "17 READFDR4 "
-290397         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290398         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290399         READFDR-INT4-X " NOT=20"
-290400         " *** FAILED ***".
-290401
-290402     MOVE "SAMPLE2"  TO READFDR-FILE.
-290403     MOVE "LIBRUN" TO READFDR-LIB.
-290404     MOVE "VOLRUN" TO READFDR-VOL.
-290405
-290406     MOVE "CX"       TO READFDR-FUNCTION.
-290407     PERFORM CALL-READFDR4-CHAR.
-290408     IF READFDR-RC-X NOT = 0 THEN
-290409         ADD 1 TO READFDR-FAILED
-290410         DISPLAY "18 READFDR4 "
-290411         READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
-290412         READFDR-FUNCTION " RC= " READFDR-RC-X " "
-290413         READFDR-CHAR50 " NOT=0"
-290414         " *** FAILED ***".
-290415
-290416     IF READFDR-FAILED = 0 THEN
-290417         DISPLAY "READFDR *** PASSED *** THE 18 AUTOTESTS"
-290418     ELSE
-290419         DISPLAY "READFDR *** FAILED *** "
-290420             READFDR-FAILED " of 18 TESTS".
-290421
+
+      ************************************
+       GET-READFDR4-IX.
+           MOVE SPACES TO READFDR-IX.
+           MOVE "IX" TO READFDR-FUNCTION.
+           CALL "READFDR4" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-IX
+                                READFDR-RC.
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+           ADD 1 TO READFDR-TESTED.
+           IF READFDR-RC-X   NOT = 0
+           THEN
+               ADD 1 TO READFDR-FAILED
+               DISPLAY 
+                   "*** FAILED *** READFDR4 TEST IX"
+                   " FILE [" READFDR-FILE 
+                   "][" READFDR-LIB 
+                   "][" READFDR-VOL 
+                   "] FUNC=" READFDR-FUNCTION 
+                   " RC= " READFDR-RC-X.
+
+      ************************************
+       TEST-READFDR4-CHAR1.
+           MOVE SPACES TO READFDR-CHAR1
+           CALL "READFDR4" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-CHAR1
+                                READFDR-RC.
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+
+           ADD 1 TO READFDR-TESTED.
+           IF READFDR-RC-X   NOT = READFDR-EXPECT-RC-X OR
+              READFDR-CHAR1  NOT = READFDR-EXPECT-CHAR1 
+           THEN
+               ADD 1 TO READFDR-FAILED
+               DISPLAY 
+                   "*** FAILED *** READFDR4 TEST " READFDR-TEST-ID
+                   " FILE [" READFDR-FILE 
+                   "][" READFDR-LIB 
+                   "][" READFDR-VOL 
+                   "] FUNC=" READFDR-FUNCTION 
+                   " RC= " READFDR-RC-X 
+                   " Expect [" READFDR-EXPECT-CHAR1
+                   "] NOT EQUAL [" READFDR-CHAR1
+                   "]".
+
+      ************************************
+       TEST-READFDR4-CHAR8.
+           MOVE SPACES TO READFDR-CHAR8
+           CALL "READFDR4" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-CHAR8
+                                READFDR-RC.
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+
+           ADD 1 TO READFDR-TESTED.
+           IF READFDR-RC-X   NOT = READFDR-EXPECT-RC-X OR
+              READFDR-CHAR8  NOT = READFDR-EXPECT-CHAR8 
+           THEN
+               ADD 1 TO READFDR-FAILED
+               DISPLAY 
+                   "*** FAILED *** READFDR4 TEST " READFDR-TEST-ID
+                   " FILE [" READFDR-FILE 
+                   "][" READFDR-LIB 
+                   "][" READFDR-VOL 
+                   "] FUNC=" READFDR-FUNCTION 
+                   " RC= " READFDR-RC-X 
+                   " Expect [" READFDR-EXPECT-CHAR8
+                   "] NOT EQUAL [" READFDR-CHAR8
+                   "]".
+
+      ************************************
+       TEST-READFDR4-INT4.
+           MOVE 0  TO READFDR-INT4-B1
+           MOVE 0  TO READFDR-INT4-B2
+           CALL "READFDR4" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-INT4
+                                READFDR-RC.
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+           MOVE READFDR-INT4-B2 TO READFDR-INT4-X.
+
+           ADD 1 TO READFDR-TESTED.
+           IF READFDR-RC-X   NOT = READFDR-EXPECT-RC-X OR
+              READFDR-INT4-X NOT = READFDR-EXPECT-INT4-X 
+           THEN
+               ADD 1 TO READFDR-FAILED
+               DISPLAY 
+                   "*** FAILED *** READFDR4 TEST " READFDR-TEST-ID
+                   " FILE [" READFDR-FILE 
+                   "][" READFDR-LIB 
+                   "][" READFDR-VOL 
+                   "] FUNC=" READFDR-FUNCTION 
+                   " RC= " READFDR-RC-X 
+                   " Expect [" READFDR-EXPECT-INT4-X
+                   "] NOT EQUAL [" READFDR-INT4-X
+                   "]".
+
+      ************************************
+       TEST-READFDR4-NUM18.
+           MOVE ZEROES TO READFDR-NUM18
+           CALL "READFDR4" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-NUM18
+                                READFDR-RC.
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+
+           ADD 1 TO READFDR-TESTED.
+           IF READFDR-RC-X   NOT = READFDR-EXPECT-RC-X OR
+              READFDR-NUM18  NOT = READFDR-EXPECT-NUM18 
+           THEN
+               ADD 1 TO READFDR-FAILED
+               DISPLAY 
+                   "*** FAILED *** READFDR4 TEST " READFDR-TEST-ID
+                   " FILE [" READFDR-FILE 
+                   "][" READFDR-LIB 
+                   "][" READFDR-VOL 
+                   "] FUNC=" READFDR-FUNCTION 
+                   " RC= " READFDR-RC-X 
+                   " Expect [" READFDR-EXPECT-NUM18
+                   "] NOT EQUAL [" READFDR-NUM18
+                   "]".
+      
+      ************************************             
+       READFDR-AUTOTEST.
+      ************************************             
+      
+           MOVE 0 TO READFDR-FAILED.
+           MOVE 0 TO READFDR-TESTED.
+
+      ************************************
+      *    View Create date
+
+           MOVE "IDXFIX"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+
+           MOVE "CD"       TO READFDR-FUNCTION.
+           PERFORM CALL-READFDR4-CHAR.
+           ADD 1 TO READFDR-TESTED.
+           IF READFDR-RC-X NOT = 0 THEN
+               ADD 1 TO READFDR-FAILED.
+           DISPLAY "T1 READFDR4 "
+               READFDR-FILE " " READFDR-LIB " " READFDR-VOL " "
+               READFDR-FUNCTION " RC= " READFDR-RC-X " "
+               READFDR-CHAR50 "** CHECK DATE **".
+
+               
+      ************************************             
+      *    Canned responses
+      *
+      *    "DP"    Int4    0
+      *    "DT"    Char1   D
+      *    "EA"    Int4    1
+
+           MOVE "IDXFIX"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+           
+           MOVE 11     TO READFDR-TEST-ID.
+           MOVE "DP"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 12     TO READFDR-TEST-ID.
+           MOVE "DT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "D"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+           
+           MOVE 13     TO READFDR-TEST-ID.
+           MOVE "EA"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 1      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+
+      *    These files are created in LIBSAM and in EMPTY on VOLOUT
+      *    The values listed are "actual", READFDR may not be able to
+      *    determine these for all types.
+      *    The RC listed is for LIBSAM, the RC for the files in 
+      *    EMPTY are all 0.
+      *
+      *                                      FT  RT  RS  RC                  
+      *    IDXFIX  Indexed Fixed              I   F  45  1334
+      *    IDXFIXC Indexed Fixed Compressed   I   C  45  1334
+      *    IDXVAR  Indexed Varying            I   V  80  1334
+      *    ALTFIX  Alternate-index Fixed      A   F  55  1334
+      *    ALTVAR  Alternate-index Varying    A   V  90  1334
+      *    SEQFIX  Sequential Fixed           C   F  45  2000
+      *    RELFIX  Relative Fixed             R   F  45  1334
+      *    SEQVAR  Sequential Varying         C   V  80  2000
+      *    RELVAR  Relative Varying           R   V  80  1334
+      *
+      *    Acucobol
+      *    ALTVARV2 VISION 2                  A   V  90  1334
+      *    ALTVARV3 VISION 3                  A   V  90  1334
+      *
+      *    Micro Focus
+      *    ALTVAR4 IDXFORMAT"4"               A   V  90  1334
+      *    ALTVAR8 IDXFORMAT"8"               A   V  90  1334  (May not be present)
+
+
+      ************************************             
+           MOVE "IDXFIX" TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 101    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 102    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "F"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+
+           MOVE 103    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 45     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 104    TO READFDR-TEST-ID
+           MOVE "RC"   TO READFDR-FUNCTION
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 1334   TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 105    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "C"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+
+           MOVE 106    TO READFDR-TEST-ID.
+           MOVE "IV"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V4"    TO READFDR-EXPECT-CHAR8.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "C0"    TO READFDR-EXPECT-CHAR8.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR8.
+
+      ************************************             
+           MOVE "IDXFIX" TO READFDR-FILE.
+           MOVE "EMPTY"  TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 1101    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1102    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "F"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+
+           MOVE 1103    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 45     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1104    TO READFDR-TEST-ID
+           MOVE "RC"   TO READFDR-FUNCTION
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$ACU_CODE PROCESS
+      *    MOVE 1105    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$ACU_END
+
+      ************************************             
+           MOVE "IDXFIXC" TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 3101    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 3102    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "C"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+
+           MOVE 3103    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 45     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 3104    TO READFDR-TEST-ID
+           MOVE "RC"   TO READFDR-FUNCTION
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 1334   TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 3105    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+
+      ************************************             
+           MOVE "IDXFIXC" TO READFDR-FILE.
+           MOVE "EMPTY"  TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 3201    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 3202    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "C"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+
+           MOVE 3203    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 45     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 3204    TO READFDR-TEST-ID
+           MOVE "RC"   TO READFDR-FUNCTION
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 3205    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+      
+      ************************************             
+           MOVE "IDXVAR"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 201    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 202    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "V"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 203    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 80     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 204    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 1334   TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 205    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+
+           MOVE 206    TO READFDR-TEST-ID.
+           MOVE "IV"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V4"    TO READFDR-EXPECT-CHAR8.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "I3"    TO READFDR-EXPECT-CHAR8.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR8.
+      
+      ************************************             
+           MOVE "IDXVAR"  TO READFDR-FILE.
+           MOVE "EMPTY"  TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 1201    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1202    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "V"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1203    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 80     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1204    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1205    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+
+      ************************************             
+           MOVE "ALTFIX"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 301    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "A"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 302    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "F"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 303    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 55     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 304    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 1334   TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$ACU_CODE PROCESS
+      *    MOVE 305    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$ACU_END
+
+      ************************************             
+           MOVE "ALTFIX"  TO READFDR-FILE.
+           MOVE "EMPTY" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 1301    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "A"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1302    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "F"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1303    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 55     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1304    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$ACU_CODE PROCESS
+      *    MOVE 1305    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$ACU_END
+      
+      ************************************             
+           MOVE "ALTVAR"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 401    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "A"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 402    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "V"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 403    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 90     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 404    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 1334   TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 405    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+      
+      ************************************             
+           MOVE "ALTVAR"  TO READFDR-FILE.
+           MOVE "EMPTY" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 1401    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "A"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1402    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "V"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1403    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 90     TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1404    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-HAS-RC THEN
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1405    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+      *$ACU_CODE PROCESS
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *$ACU_END
+      *$MF_CODE PROCESS
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *$MF_END
+           PERFORM TEST-READFDR4-CHAR1.
+      
+      ************************************             
+           MOVE "SEQFIX"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 501    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 502    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 503    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 504    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 505    TO READFDR-TEST-ID.
+           MOVE "BS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 90000  TO READFDR-EXPECT-NUM18.
+           PERFORM TEST-READFDR4-NUM18.
+      
+           MOVE 506    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "U"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 507    TO READFDR-TEST-ID.
+           MOVE "IV"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "U0"   TO READFDR-EXPECT-CHAR8.
+           PERFORM TEST-READFDR4-CHAR8.
+
+      ************************************             
+           MOVE "SEQFIX"  TO READFDR-FILE.
+           MOVE "EMPTY" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+           MOVE 1501    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1502    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1503    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 1504    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+
+           MOVE 1505    TO READFDR-TEST-ID.
+           MOVE "BS"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-NUM18.
+           PERFORM TEST-READFDR4-NUM18.
+      
+           MOVE 1506    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "U"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+      ************************************             
+           MOVE "RELFIX"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 601    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 602    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 603    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 604    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           MOVE 24     TO READFDR-EXPECT-RC-X.
+           MOVE 0      TO READFDR-EXPECT-INT4-X.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 605    TO READFDR-TEST-ID.
+           MOVE "IX"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "U"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 606    TO READFDR-TEST-ID.
+           MOVE "IV"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "U0"   TO READFDR-EXPECT-CHAR8.
+           PERFORM TEST-READFDR4-CHAR8.
+      
+      ************************************             
+           MOVE "SEQVAR"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 701    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "C"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 702    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "V"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 703    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 80     TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 704    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$MF_CODE PROCESS
+      *    MOVE 705    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$MF_END
+
+      *$MF_CODE PROCESS
+      *    MOVE 708    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "S0"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$MF_END
+      
+      ************************************             
+           MOVE "SEQVAR"  TO READFDR-FILE.
+           MOVE "EMPTY"  TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 1701    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "C"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1702    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "V"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1703    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 80     TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 1704    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$MF_CODE PROCESS
+      *    MOVE 1705    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$MF_END
+      
+      ************************************             
+           MOVE "RELVAR"  TO READFDR-FILE.
+           MOVE "LIBSAM" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 801    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "R"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 802    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "V"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 803    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 80     TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 804    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$MF_CODE PROCESS
+      *    MOVE 805    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$MF_END
+
+      *$MF_CODE PROCESS
+      *    MOVE 806    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "R0"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$MF_END
+      
+      ************************************             
+           MOVE "RELVAR"  TO READFDR-FILE.
+           MOVE "EMPTY" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+      
+           PERFORM GET-READFDR4-IX.
+
+           MOVE 1801    TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "R"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1802    TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE " "    TO READFDR-EXPECT-CHAR1
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE "V"    TO READFDR-EXPECT-CHAR1
+           END-IF.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 1803    TO READFDR-TEST-ID.
+           MOVE "RS"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 0      TO READFDR-EXPECT-RC-X
+               MOVE 80     TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+      
+           MOVE 1804    TO READFDR-TEST-ID.
+           MOVE "RC"   TO READFDR-FUNCTION.
+           IF READFDR-IX-UNKNOWN THEN
+               MOVE 24     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           ELSE
+               MOVE 40     TO READFDR-EXPECT-RC-X
+               MOVE 0      TO READFDR-EXPECT-INT4-X
+           END-IF.
+           PERFORM TEST-READFDR4-INT4.
+
+      *$MF_CODE PROCESS
+      *    MOVE 1805    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *$MF_END
+
+      *$MF_CODE PROCESS
+      *    MOVE 1806    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "R0"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$MF_END
+
+      
+      ************************************          
+      *	   VISION 2 file
+      *$ACU_CODE PROCESS
+      *    MOVE "ALTVARV2"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      *    PERFORM GET-READFDR4-IX.
+      *
+      *    MOVE 2201    TO READFDR-TEST-ID.
+      *    MOVE "FT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2202    TO READFDR-TEST-ID.
+      *    MOVE "RT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2203    TO READFDR-TEST-ID.
+      *    MOVE "RS"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X.
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2204    TO READFDR-TEST-ID.
+      *    MOVE "RC"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE 1334   TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2205    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2206    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V2"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$ACU_END
+      
+
+      ************************************          
+      *	   VISION 3 file
+      *$ACU_CODE PROCESS
+      *    MOVE "ALTVARV3"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      *    MOVE 2301    TO READFDR-TEST-ID.
+      *    MOVE "FT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2302    TO READFDR-TEST-ID.
+      *    MOVE "RT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2303    TO READFDR-TEST-ID.
+      *    MOVE "RS"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X.
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2304    TO READFDR-TEST-ID.
+      *    MOVE "RC"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE 1334   TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2305    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2306    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V3"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$ACU_END
+
+      ************************************          
+      *	   IDX 4 file
+      *$MF_CODE PROCESS
+      *    MOVE "ALTVAR4"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      *    MOVE 2401    TO READFDR-TEST-ID.
+      *    MOVE "FT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2402    TO READFDR-TEST-ID.
+      *    MOVE "RT"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2403    TO READFDR-TEST-ID.
+      *    MOVE "RS"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X.
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2404    TO READFDR-TEST-ID.
+      *    MOVE "RC"   TO READFDR-FUNCTION.
+      *    MOVE 40     TO READFDR-EXPECT-RC-X
+      *    MOVE 0      TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4.
+      *
+      *    MOVE 2405    TO READFDR-TEST-ID.
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1.
+      *    PERFORM TEST-READFDR4-CHAR1.
+      *
+      *    MOVE 2406    TO READFDR-TEST-ID.
+      *    MOVE "IV"   TO READFDR-FUNCTION.
+      *    MOVE 0      TO READFDR-EXPECT-RC-X.
+      *    MOVE "I4"    TO READFDR-EXPECT-CHAR8.
+      *    PERFORM TEST-READFDR4-CHAR8.
+      *$MF_END
+
+      ************************************          
+      *	   IDX 8 file
+      *$MF_CODE PROCESS
+      *    MOVE "ALTVAR8"  TO READFDR-FILE.
+      *    MOVE "LIBSAM" TO READFDR-LIB.
+      *    MOVE "VOLOUT" TO READFDR-VOL.
+      *
+      **   Check if it exists
+      *    MOVE "IX"   TO READFDR-FUNCTION.
+      *	   PERFORM CALL-READFDR4-CHAR.
+      *    IF READFDR-RC-X = 0 THEN
+      *
+      *    MOVE 2801    TO READFDR-TEST-ID
+      *    MOVE "FT"   TO READFDR-FUNCTION
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE "A"    TO READFDR-EXPECT-CHAR1
+      *    PERFORM TEST-READFDR4-CHAR1
+      *
+      *    MOVE 2802    TO READFDR-TEST-ID
+      *    MOVE "RT"   TO READFDR-FUNCTION
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE "V"    TO READFDR-EXPECT-CHAR1
+      *    PERFORM TEST-READFDR4-CHAR1
+      *
+      *    MOVE 2803    TO READFDR-TEST-ID
+      *    MOVE "RS"   TO READFDR-FUNCTION
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE 90     TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4
+      *
+      *    MOVE 2804    TO READFDR-TEST-ID
+      *    MOVE "RC"   TO READFDR-FUNCTION
+      *    MOVE 40     TO READFDR-EXPECT-RC-X
+      *    MOVE 0      TO READFDR-EXPECT-INT4-X
+      *    PERFORM TEST-READFDR4-INT4
+      *
+      *    MOVE 2805    TO READFDR-TEST-ID
+      *    MOVE "IX"   TO READFDR-FUNCTION
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE "M"    TO READFDR-EXPECT-CHAR1
+      *    PERFORM TEST-READFDR4-CHAR1
+      *
+      *    MOVE 2806    TO READFDR-TEST-ID 
+      *    MOVE "IV"   TO READFDR-FUNCTION
+      *    MOVE 0      TO READFDR-EXPECT-RC-X
+      *    MOVE "I8"    TO READFDR-EXPECT-CHAR8
+      *    PERFORM TEST-READFDR4-CHAR8
+      *
+      *    ELSE
+      *        DISPLAY READFDR-FILE " NOT FOUND"
+      *    END-IF.
+      *$MF_END
+
+      
+      
+      ************************************             
+      *    Compressed file
+      
+           MOVE "AFILE"  TO READFDR-FILE.
+           MOVE "LIBOUT" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+
+           MOVE 9001   TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "I"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 9002   TO READFDR-TEST-ID.
+           MOVE "RT"   TO READFDR-FUNCTION.
+           MOVE 0      TO READFDR-EXPECT-RC-X.
+           MOVE "C"    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 9003   TO READFDR-TEST-ID.
+           MOVE "XX"   TO READFDR-FUNCTION.
+           MOVE 40     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+      ************************************             
+      *    File does not exist
+      
+           MOVE "NOFILE" TO READFDR-FILE.
+           MOVE "LIBOUT" TO READFDR-LIB.
+           MOVE "VOLOUT" TO READFDR-VOL.
+
+           MOVE 9011   TO READFDR-TEST-ID.
+           MOVE "FT"   TO READFDR-FUNCTION.
+           MOVE 20     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+           MOVE 9012   TO READFDR-TEST-ID.
+           MOVE "XX"   TO READFDR-FUNCTION.
+           MOVE 20     TO READFDR-EXPECT-RC-X.
+           MOVE " "    TO READFDR-EXPECT-CHAR1.
+           PERFORM TEST-READFDR4-CHAR1.
+      
+      ************************************             
+      
+      
+           IF READFDR-FAILED = 0 THEN
+               DISPLAY "READFDR *** PASSED *** ALL " 
+                   READFDR-TESTED " TESTS"
+           ELSE
+               DISPLAY "READFDR *** FAILED *** "
+                   READFDR-FAILED " of " 
+                   READFDR-TESTED " TESTS".
+      
 290422******************************************************************
 290423
 291000 DO-FIND.
@@ -3274,7 +4512,7 @@
 294918             " EXPECT 7".
 294919
 294920     MOVE "A?"       TO FIND-FILE.
-294921     MOVE "LIB?"     TO FIND-LIB.
+294921     MOVE "LIBO?"    TO FIND-LIB.
 294922     MOVE "VOLOUT"   TO FIND-VOL.
 294923     MOVE  1 TO FIND-STARTER-X.
 294924     MOVE 10 TO FIND-COUNTER-X.
@@ -3762,7 +5000,7 @@
 320000     GP-T GP-TEXT GP-LENGTH GP-A GP-N20 GP-A GP-N05
 320100     GP-T GP-TEXT GP-LENGTH GP-A GP-N20 GP-A GP-N40.
 320200
-320300     DISPLAY AND READ GETPARM-DONE-SCREEN ON CRT.
+320300     DISPLAY "THE GETPARM HAS FINISHED. ".
 320400
 320500******************************************************************
 320600
@@ -3811,9 +5049,10 @@
 324900     MOVE "SUBMIT IS COMPLETE" TO SUBMIT-TITLE.
 325000     MOVE SUBMIT-RC-B2   TO SUBMIT-RC-X.
 325100
-325200     MOVE "        (ENTER) to submit another file. (16) EXIT"
+325200     MOVE "        (ENTER) submit again (1) DISPRINT (16) EXIT"
 325300         TO SUBMIT-FOOTER.
 325400     DISPLAY AND READ SUBMIT-SCREEN ON CRT PFKEY 1, 16.
+325450     IF PF-KEY = "01" THEN CALL "DISPRINT".
 325500     IF PF-KEY NOT = "16" THEN GO TO SUBMIT-CALL.
 325600 SUBMIT-CALL-EXIT.
 325700     EXIT.
@@ -4455,16 +5694,16 @@
 385200 SORTCALL-TEST.
 385300
 385400*    MOVE SPACES TO SC-PARMS SC-FILETYPE.
-385500     MOVE ZERO TO SC-RECSIZE-Z SC-SORTCODE-Z SC-RETURNCODE-Z.
+385500     MOVE ZERO TO SC-RECSIZE-N SC-SORTCODE-Z SC-RETURNCODE-N.
 385501     MOVE BRITE TO FAC OF SORTCALL-RC-S.
 385600
 385700 SORTCALL-DISPLAY.
 385800     DISPLAY AND READ SORTCALL-SCREEN ON CRT
-385900     PFKEYS  1 16.
+385900     PFKEYS  1 8 16.
 386000
 386100     IF PF-KEY = "00" THEN
 386200        MOVE ZERO         TO SC-RECSIZE-B1
-386300        MOVE SC-RECSIZE-Z TO SC-RECSIZE-B2
+386300        MOVE SC-RECSIZE-N TO SC-RECSIZE-B2
 386400
 386500*$VAX_CODE PROCESS
 386600*       CALL "SORTCALL" USING SC-PARMS SC-RETURNCODE
@@ -4474,7 +5713,7 @@
 387000*$VAX_END
 387100
 387200        MOVE SC-SORTCODE-B2 TO SC-SORTCODE-Z
-387300        MOVE SC-RETURNCODE-B2 TO SC-RETURNCODE-Z
+387300        MOVE SC-RETURNCODE-B2 TO SC-RETURNCODE-N
 387400        GO TO SORTCALL-DISPLAY.
 387401     IF PF-KEY = "01" THEN
 387402
@@ -4491,9 +5730,394 @@
 387413
 387414        GO TO SORTCALL-DISPLAY.
 387415
+	   IF PF-KEY = "08" THEN
+	       PERFORM SORTCALL-AUTOTEST.
 387500
 387600 SORTCALL-END.
 387700     EXIT.
+
+      ************************************             
+       SORTCALL-AUTOTEST.
+      ************************************
+
+           MOVE ZERO       TO SORTCALL-TESTED.
+           MOVE ZERO       TO SORTCALL-FAILED.
+           MOVE 2000       TO SORTCALL-MAX-KEY.
+	   PERFORM CLEAR-SCREEN.
+	   MOVE " --- SORTCALL AUTOTEST ---" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+	   ADD 2 TO CRT-ROW-NUM.
+
+      ************************************
+           MOVE 101        TO SORTCALL-TEST-ID.
+           MOVE "IDXFIX"   TO SORTCALL-INFILE.
+           MOVE "I"        TO SC-FILETYPE
+           MOVE 45         TO SC-RECSIZE-N.
+           MOVE 1334       TO SORTCALL-RECCNT.
+           PERFORM CALL-SORTCALL-AND-VERIFY.
+
+      ************************************
+           MOVE 102        TO SORTCALL-TEST-ID.
+           MOVE "IDXFIXC"  TO SORTCALL-INFILE.
+           MOVE "I"        TO SC-FILETYPE
+           MOVE 45         TO SC-RECSIZE-N.
+           MOVE 1334       TO SORTCALL-RECCNT.
+           PERFORM CALL-SORTCALL-AND-VERIFY.
+
+      ************************************
+           MOVE 103        TO SORTCALL-TEST-ID.
+           MOVE "IDXVAR"   TO SORTCALL-INFILE.
+           MOVE "I"        TO SC-FILETYPE
+           MOVE 80         TO SC-RECSIZE-N.
+           MOVE 1334       TO SORTCALL-RECCNT.
+           PERFORM CALL-SORTCALL-AND-VERIFY.
+
+      ************************************
+           MOVE 104        TO SORTCALL-TEST-ID.
+           MOVE "ALTFIX"   TO SORTCALL-INFILE.
+           MOVE "I"        TO SC-FILETYPE
+           MOVE 55         TO SC-RECSIZE-N.
+           MOVE 1334       TO SORTCALL-RECCNT.
+           PERFORM CALL-SORTCALL-AND-VERIFY.
+
+      ************************************
+           MOVE 105        TO SORTCALL-TEST-ID.
+           MOVE "ALTVAR"   TO SORTCALL-INFILE.
+           MOVE "I"        TO SC-FILETYPE
+           MOVE 90         TO SC-RECSIZE-N.
+           MOVE 1334       TO SORTCALL-RECCNT.
+           PERFORM CALL-SORTCALL-AND-VERIFY.
+
+      ************************************
+           MOVE 106        TO SORTCALL-TEST-ID.
+           MOVE "SEQFIX"   TO SORTCALL-INFILE.
+           MOVE "F"        TO SC-FILETYPE
+           MOVE 45         TO SC-RECSIZE-N.
+           MOVE 2000       TO SORTCALL-RECCNT.
+           PERFORM CALL-SORTCALL-AND-VERIFY.
+
+      ************************************
+      *$ACU_CODE PROCESS
+      *    MOVE 107        TO SORTCALL-TEST-ID.
+      *    MOVE "ALTVARV2" TO SORTCALL-INFILE.
+      *    MOVE "I"        TO SC-FILETYPE
+      *    MOVE 90         TO SC-RECSIZE-N.
+      *    MOVE 1334       TO SORTCALL-RECCNT.
+      *    PERFORM CALL-SORTCALL-AND-VERIFY.
+      *$ACU_END
+
+      ************************************
+      *$ACU_CODE PROCESS
+      *    MOVE 108        TO SORTCALL-TEST-ID.
+      *    MOVE "ALTVARV3" TO SORTCALL-INFILE.
+      *    MOVE "I"        TO SC-FILETYPE
+      *    MOVE 90         TO SC-RECSIZE-N.
+      *    MOVE 1334       TO SORTCALL-RECCNT.
+      *    PERFORM CALL-SORTCALL-AND-VERIFY.
+      *$ACU_END
+
+      ************************************
+      *$MF_CODE PROCESS
+      *    MOVE 109        TO SORTCALL-TEST-ID.
+      *    MOVE "ALTVAR4"  TO SORTCALL-INFILE.
+      *    MOVE "I"        TO SC-FILETYPE
+      *    MOVE 90         TO SC-RECSIZE-N.
+      *    MOVE 1334       TO SORTCALL-RECCNT.
+      *    PERFORM CALL-SORTCALL-AND-VERIFY.
+      *$MF_END
+
+      ************************************
+      *$MF_CODE PROCESS
+      *    MOVE 110        TO SORTCALL-TEST-ID.
+      *    MOVE "ALTVAR8"  TO SORTCALL-INFILE.
+      *    MOVE "I"        TO SC-FILETYPE
+      *    MOVE 90         TO SC-RECSIZE-N.
+      *    MOVE 1334       TO SORTCALL-RECCNT.
+      *    PERFORM CALL-SORTCALL-AND-VERIFY.
+      *$MF_END
+           
+      ************************************
+
+	   ADD 1 TO CRT-ROW-NUM.
+	   MOVE " Press (ENTER) to continue" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+	   PERFORM UNLOCK-AND-READ-SCREEN.	   
+
+           IF SORTCALL-FAILED = 0 THEN
+               DISPLAY "SORTCALL *** PASSED *** ALL " 
+                   SORTCALL-TESTED " TESTS"
+           ELSE
+               DISPLAY "SORTCALL *** FAILED *** "
+                   SORTCALL-FAILED " of " 
+                   SORTCALL-TESTED " TESTS".
+           
+      
+
+      ************************************
+       CALL-SORTCALL-AND-VERIFY.
+
+	   STRING " TESTING " DELIMITED BY SIZE
+               SORTCALL-INFILE DELIMITED BY SIZE
+	       INTO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+           ADD 1 TO SORTCALL-TESTED.
+           SET SORTCALL-TEST-OK TO TRUE.
+           PERFORM SORTCALL-STD-PARMS.
+           PERFORM SCRATCH-SORTCALL-OUTFILE.
+           PERFORM CALL-SORTCALL.
+           IF SORTCALL-TEST-OK THEN
+               PERFORM CHECK-SORTCALL-OUTFILE-SIZE.
+           IF SORTCALL-TEST-OK THEN
+               IF SC-RECSIZE-N = 45 THEN
+                   PERFORM VERIFY-SORTCALL-OUTFILE-REC45
+               ELSE IF SC-RECSIZE-N = 55 THEN
+                   PERFORM VERIFY-SORTCALL-OUTFILE-REC55
+               ELSE IF SC-RECSIZE-N = 80 THEN
+                   PERFORM VERIFY-SORTCALL-OUTFILE-REC80
+               ELSE IF SC-RECSIZE-N = 90 THEN
+                   PERFORM VERIFY-SORTCALL-OUTFILE-REC90
+               ELSE
+                   DISPLAY "SORTCALL - UNKNOWN REC SIZE "
+                       SC-RECSIZE-N
+               END-IF
+           END-IF.
+	   
+           IF SORTCALL-TEST-FAILED THEN
+               ADD 1 TO SORTCALL-FAILED
+	       STRING " TESTING "    DELIMITED BY SIZE
+		   SORTCALL-INFILE   DELIMITED BY SIZE
+		   " *** FAILED ***" DELIMITED BY SIZE
+		   INTO NEXT-CRT-ROW
+	   ELSE
+	       STRING " TESTING "  DELIMITED BY SIZE
+		   SORTCALL-INFILE DELIMITED BY SIZE
+		   " PASSED"	   DELIMITED BY SIZE
+		   INTO NEXT-CRT-ROW
+	   END-IF.
+
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+       VERIFY-SORTCALL-OUTFILE-REC45.
+
+           COMPUTE SORTCALL-LAST-KEY = SORTCALL-MAX-KEY + 1.
+           OPEN INPUT SORTCALL-REC45.
+           PERFORM TEST AFTER UNTIL SC-FILESTAT NOT = "00"
+               READ SORTCALL-REC45 NEXT RECORD
+               AT END
+                   CONTINUE
+               NOT AT END
+                   IF SC-REC45-KEY >= SORTCALL-LAST-KEY
+                       SET SORTCALL-TEST-FAILED TO TRUE
+                       MOVE "XX" TO SC-FILESTAT
+                       DISPLAY 
+                       "*** OUT OF ORDER *** SORTCALL TEST " 
+                       SORTCALL-TEST-ID
+                       " FILE [" SC-OUTFILE 
+                       "][" SC-OUTLIB 
+                       "][" SC-OUTVOL 
+                       "] KEY=[" SC-REC45-KEY
+                       "]"
+                   END-IF
+                   MOVE SC-REC45-KEY TO  SORTCALL-LAST-KEY
+               END-READ
+           END-PERFORM.
+           CLOSE SORTCALL-REC45.
+
+       VERIFY-SORTCALL-OUTFILE-REC55.
+
+           COMPUTE SORTCALL-LAST-KEY = SORTCALL-MAX-KEY + 1.
+           OPEN INPUT SORTCALL-REC55.
+           PERFORM TEST AFTER UNTIL SC-FILESTAT NOT = "00"
+               READ SORTCALL-REC55 NEXT RECORD
+               AT END
+                   CONTINUE
+               NOT AT END
+                   IF SC-REC55-KEY >= SORTCALL-LAST-KEY
+                       SET SORTCALL-TEST-FAILED TO TRUE
+                       MOVE "XX" TO SC-FILESTAT
+                       DISPLAY 
+                       "*** OUT OF ORDER *** SORTCALL TEST " 
+                       SORTCALL-TEST-ID
+                       " FILE [" SC-OUTFILE 
+                       "][" SC-OUTLIB 
+                       "][" SC-OUTVOL 
+                       "] KEY=[" SC-REC55-KEY
+                       "]"
+                   END-IF
+                   MOVE SC-REC55-KEY TO  SORTCALL-LAST-KEY
+               END-READ
+           END-PERFORM.
+           CLOSE SORTCALL-REC55.
+
+       VERIFY-SORTCALL-OUTFILE-REC80.
+
+           COMPUTE SORTCALL-LAST-KEY = SORTCALL-MAX-KEY + 1.
+           OPEN INPUT SORTCALL-REC80.
+           PERFORM TEST AFTER UNTIL SC-FILESTAT NOT = "00"
+               READ SORTCALL-REC80 NEXT RECORD
+               AT END
+                   CONTINUE
+               NOT AT END
+                   IF SC-REC80-KEY >= SORTCALL-LAST-KEY
+                       SET SORTCALL-TEST-FAILED TO TRUE
+                       MOVE "XX" TO SC-FILESTAT
+                       DISPLAY 
+                       "*** OUT OF ORDER *** SORTCALL TEST " 
+                       SORTCALL-TEST-ID
+                       " FILE [" SC-OUTFILE 
+                       "][" SC-OUTLIB 
+                       "][" SC-OUTVOL 
+                       "] KEY=[" SC-REC80-KEY
+                       "]"
+                   END-IF
+                   MOVE SC-REC80-KEY TO  SORTCALL-LAST-KEY
+               END-READ
+           END-PERFORM.
+           CLOSE SORTCALL-REC80.
+
+       VERIFY-SORTCALL-OUTFILE-REC90.
+
+           COMPUTE SORTCALL-LAST-KEY = SORTCALL-MAX-KEY + 1.
+           OPEN INPUT SORTCALL-REC90.
+           PERFORM TEST AFTER UNTIL SC-FILESTAT NOT = "00"
+               READ SORTCALL-REC90 NEXT RECORD
+               AT END
+                   CONTINUE
+               NOT AT END
+                   IF SC-REC90-KEY >= SORTCALL-LAST-KEY
+                       SET SORTCALL-TEST-FAILED TO TRUE
+                       MOVE "XX" TO SC-FILESTAT
+                       DISPLAY 
+                       "*** OUT OF ORDER *** SORTCALL TEST " 
+                       SORTCALL-TEST-ID
+                       " FILE [" SC-OUTFILE 
+                       "][" SC-OUTLIB 
+                       "][" SC-OUTVOL 
+                       "] KEY=[" SC-REC90-KEY
+                       "]"
+                   END-IF
+                   MOVE SC-REC90-KEY TO  SORTCALL-LAST-KEY
+               END-READ
+           END-PERFORM.
+           CLOSE SORTCALL-REC90.
+           
+       CHECK-SORTCALL-OUTFILE-SIZE.
+           COMPUTE READFDR-EXPECT-NUM18 = 
+               SORTCALL-RECCNT * SC-RECSIZE-N.
+           MOVE ZEROES TO READFDR-NUM18
+           MOVE "BS"   TO READFDR-FUNCTION.
+           CALL "READFDR4" USING SC-OUTFILE
+                                 SC-OUTLIB
+                                 SC-OUTVOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-NUM18
+                                READFDR-RC.
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+
+           IF READFDR-RC-X   NOT = 0 OR
+              READFDR-NUM18  NOT = READFDR-EXPECT-NUM18 
+           THEN
+               SET SORTCALL-TEST-FAILED TO TRUE
+               DISPLAY 
+                   "*** FAILED *** SORTCALL TEST " SORTCALL-TEST-ID
+                   " FILE [" SC-OUTFILE 
+                   "][" SC-OUTLIB 
+                   "][" SC-OUTVOL 
+                   "] FUNC=" READFDR-FUNCTION 
+                   " RC= " READFDR-RC-X 
+                   " Expect [" READFDR-EXPECT-NUM18
+                   "] NOT EQUAL [" READFDR-NUM18
+                   "]".
+           
+       SCRATCH-SORTCALL-OUTFILE.
+           CALL "SCRATCH" USING
+                   SCRATCH-TYPE-FILE,
+                   SC-OUTFILE, SC-OUTLIB, SC-OUTVOL,
+                   SCRATCH-RETURN-CODE.
+
+       CALL-SORTCALL.
+           MOVE ZERO         TO SC-RECSIZE-B1.
+           MOVE SC-RECSIZE-N TO SC-RECSIZE-B2.
+
+           IF SC-FILETYPE = "I" THEN
+               CALL "SORTCALL" USING SC-PARMS 
+                                     SC-RETURNCODE
+           ELSE
+               CALL "WISPSORT" USING SC-PARMS 
+                                     SC-FILETYPE 
+                                     SC-RECSIZE
+                                     SC-SORTCODE 
+                                     SC-RETURNCODE
+           END-IF.                                   
+
+           MOVE SC-SORTCODE-B2 TO SC-SORTCODE-Z.
+           MOVE SC-RETURNCODE-B2 TO SC-RETURNCODE-N.
+
+           IF SC-RETURNCODE-B2 NOT = 0 THEN
+               SET SORTCALL-TEST-FAILED TO TRUE
+               DISPLAY 
+                   "*** FAILED *** SORTCALL TEST " SORTCALL-TEST-ID
+                   " FILE [" SC-OUTFILE 
+                   "][" SC-OUTLIB 
+                   "][" SC-OUTVOL 
+                   "] SORTCALL RC= " SC-RETURNCODE-N
+           END-IF.
+
+
+       SORTCALL-STD-PARMS.
+           MOVE SPACES     TO SC-PARMS.
+           MOVE SORTCALL-INFILE   TO SC-INFILE.
+           MOVE "LIBSAM"   TO SC-INLIB.
+           MOVE "VOLOUT"   TO SC-INVOL.
+           MOVE SC-INFILE  TO SC-OUTFILE.
+           MOVE "SORTED"   TO SC-OUTLIB.
+           MOVE SC-INVOL   TO SC-OUTVOL.
+           MOVE 1          TO SC-POS1.
+           MOVE 10         TO SC-LEN1.
+           MOVE "C"        TO SC-TYPE1.
+           MOVE "D"        TO SC-ORDER1.
+       
+      ************************************             
+       SORTCALL-AUTOTEST-END.
+      ************************************             
+           EXIT.
+
+       CLEAR-SCREEN.
+
+           MOVE HEX-01 TO CRTREC-OA-1
+           MOVE HEX-20 TO CRTREC-OA-2
+           MOVE HEX-01 TO CRTREC-OA-3
+           MOVE HEX-01 TO CRTREC-OA-4
+	   MOVE SPACES TO CRTREC-MAPPING-AREA.
+	   REWRITE CRTREC.
+
+	   MOVE 1 TO CRT-ROW-NUM.
+
+       WRITE-NEXT-CRT-ROW.
+
+           MOVE NEXT-CRT-ROW TO CRTREC-ROW (CRT-ROW-NUM).
+
+           MOVE HEX-01 TO CRTREC-OA-1
+           MOVE HEX-20 TO CRTREC-OA-2
+           MOVE HEX-01 TO CRTREC-OA-3
+           MOVE HEX-01 TO CRTREC-OA-4
+	   REWRITE CRTREC.
+	   
+	   ADD 1 TO CRT-ROW-NUM.
+	   MOVE SPACES TO NEXT-CRT-ROW.
+
+       UNLOCK-AND-READ-SCREEN.
+           MOVE HEX-01 TO CRTREC-OA-1
+           MOVE HEX-80 TO CRTREC-OA-2
+           MOVE HEX-01 TO CRTREC-OA-3
+           MOVE HEX-01 TO CRTREC-OA-4
+	   REWRITE CRTREC.
+	   READ CRT.
+	   
+           
 387800
 387900******************************************************************
 388000 DO-SET-TEST.
@@ -4696,7 +6320,7 @@
 394934             " RC=" RENAME-RETURN-X
 394935             " *** FAILED ***".
 394936
-394937     MOVE "BFILEX"    TO RENAME-FILE.
+394937     MOVE "BFILEX3"    TO RENAME-FILE.
 394938     MOVE "LIBOUT"   TO RENAME-LIB.
 394939     MOVE "VOLOUT"   TO RENAME-VOL.
 394940     MOVE "XFILE"    TO RENAME-NEW-FILE.

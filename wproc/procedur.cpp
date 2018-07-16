@@ -96,7 +96,7 @@ void compilable_procedure::compile() {
 
    int errors   = the_compiler->errors();
    int warnings = the_compiler->warnings();
-   char *action = user_options.syntax_check() ? "Syntax check" : "Compilation";
+   const char *action = user_options.syntax_check() ? "Syntax check" : "Compilation";
 
    if (errors || warnings) {
       report_status("");
@@ -202,6 +202,9 @@ void executable_procedure::interpret() {
 //
 //	History:
 //	$Log: procedur.cpp,v $
+//	Revision 1.7  2001-08-22 16:21:50-04  gsl
+//	fixed const error
+//
 //	Revision 1.6  1998-08-31 15:14:07-04  gsl
 //	drcs update
 //
