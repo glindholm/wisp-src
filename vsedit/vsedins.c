@@ -371,9 +371,9 @@ static void vse_ed_ins_col(void)
 /*
 **	History:
 **	$Log: vsedins.c,v $
-**	Revision 1.11  1996-09-03 18:24:01-04  gsl
+**	Revision 1.11  1996/09/03 22:24:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -75,9 +75,9 @@ extern item_record *find_item(char *the_name);
 /*
 **	History:
 **	$Log: scrn.h,v $
-**	Revision 1.8  1997-09-09 17:55:04-04  gsl
+**	Revision 1.8  1997/09/09 21:55:04  gsl
 **	Change needed for ACN code
-**
+**	
 **	Revision 1.7  1996-08-30 21:56:09-04  gsl
 **	drcs update
 **

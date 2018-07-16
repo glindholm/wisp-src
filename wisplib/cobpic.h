@@ -67,9 +67,9 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 /*
 **	History:
 **	$Log: cobpic.h,v $
-**	Revision 1.4  2001-09-25 16:38:24-04  gsl
+**	Revision 1.4  2001/09/25 20:38:24  gsl
 **	Add defines
-**
+**	
 **	Revision 1.3  1997-12-17 15:32:01-05  gsl
 **	fix prototypes for const
 **

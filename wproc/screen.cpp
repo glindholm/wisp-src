@@ -1326,9 +1326,9 @@ void screen::init_fkey_map() {
 //
 //	History:
 //	$Log: screen.cpp,v $
-//	Revision 1.13  1998-10-12 12:11:27-04  gsl
+//	Revision 1.13  1998/10/12 16:11:27  gsl
 //	moved costar version assignment out of condition
-//
+//	
 //	Revision 1.12  1998-10-02 16:24:49-04  gsl
 //	Add W4W mouse support.
 //	This is all done thru a global w4w_handler object.

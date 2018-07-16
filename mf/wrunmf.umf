@@ -316,7 +316,7 @@ WISPSUB_ENTRY = \
 	-I WISPPLAT \
 	-I WISPSHUT \
 	-I WISPSYNC \
-	-I wmemcpy \
+	-I WMEMCPY \
 	-I wscreen \
 	-I wsetstat \
 	-I WSTOP \

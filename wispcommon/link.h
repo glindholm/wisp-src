@@ -36,9 +36,9 @@ void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_l
 /*
 **	History:
 **	$Log: link.h,v $
-**	Revision 1.8  1996-09-04 20:20:22-04  gsl
+**	Revision 1.8  1996/09/05 00:20:22  gsl
 **	moved softlink prototypes to wperson.h
-**
+**	
 **	Revision 1.7  1996-09-03 14:42:25-07  gsl
 **	Add prototypes for USESOFTLINK() and USEHARDLINK()
 **

@@ -40,9 +40,9 @@ void vmssort(char flist[][9], char llist[][9], char vlist[][7], char infilename[
 /*
 **	History:
 **	$Log: vmssort.h,v $
-**	Revision 1.5  1996-08-19 18:33:06-04  gsl
+**	Revision 1.5  1996/08/19 22:33:06  gsl
 **	drcs update
-**
+**	
 **
 **
 */

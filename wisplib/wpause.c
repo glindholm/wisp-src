@@ -95,10 +95,10 @@ void hpause(int4 hundredths)
 /*
 **	History:
 **	$Log: wpause.c,v $
-**	Revision 1.15  2002-02-14 10:42:33-05  gsl
+**	Revision 1.15  2002/02/14 15:42:33  gsl
 **	Merge in the SCO use of old code without usleep()
 **	Part of 4.4.01 on SCO
-**
+**	
 **	Revision 1.14  2001-10-03 15:01:48-04  gsl
 **	SOlaris 2.5.1 doesn't define useconds_t so cast to unsigned
 **

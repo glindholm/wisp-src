@@ -77,9 +77,9 @@ static key_t myftok(char *file,char x)							/* For IBM - generate unique number
 /*
 **	History:
 **	$Log: wftok.c,v $
-**	Revision 1.8  1999-01-19 11:13:37-05  gsl
+**	Revision 1.8  1999/01/19 16:13:37  gsl
 **	fix last fix
-**
+**	
 **	Revision 1.7  1999-01-19 10:51:03-05  gsl
 **	fix warnings for AIX
 **

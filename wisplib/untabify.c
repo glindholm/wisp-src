@@ -61,9 +61,9 @@ int untabify(char* str, int size)
 /*
 **	History:
 **	$Log: untabify.c,v $
-**	Revision 1.6  1996-08-19 18:33:01-04  gsl
+**	Revision 1.6  1996/08/19 22:33:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

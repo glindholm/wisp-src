@@ -1,0 +1,538 @@
+							     v20d_errata.lis
+
+	WISP VERSION V2.0 USERS GUIDE ERRATA
+	====================================
+
+	2.4.6 The UNIX bldmf Procedure
+
+		The second paragraph should read "PERL" not "pearl".
+
+	2.5.10 WISP Control Statements
+
+		WISP will also accept $WANG-CODE / $WANG-END with dashes
+		as well as $WANG_CODE / $WANG_END with underscores. These
+		are treated identically for all CODE / END control 
+		statements.
+
+		WISP now supports $COPY-CODE / $COPY-END which will copy
+		code into the output file without processing it. Column 7
+		astrisks will be changed to spaces, but, you do not have
+		to have astrisks in column 7. (Except on the $COPY-CODE /
+		$COPY-END statements themselves.)
+
+		NOTE: You can not embed comments between $VAX_CODE / $VAX_END
+		as all the astrisks get stripped off. (This applies to
+		ACU and LPI, CODE/END statements as well.)
+
+	2.5.11 VMS AUTOMATIC RECORD LOCKING DIRECTIVES
+
+		There are two directives that tell WISP to generate code
+		to use VMS AUTOMATIC RECORD LOCKING. These may only be used
+		on SEQ/SEQ files that are never opened shared and do not
+		perform any READ WITH HOLD statements. These are provided
+		because you may achieve a significant performance
+		improvement on files that are mostly written to, such as
+		print files and temporary work files you are creating to
+		be read later by another program. Do not use these if the
+		file is mostly READ as this will slow down performance.
+
+		The directives are *$AUTOLOCKPRINT and *$AUTOLOCKFILE,
+		and are inserted as comments into your Wang COBOL program.
+
+		The *$AUTOLOCKPRINT directive tells WISP to use AUTOMATIC
+		RECORD LOCKING on ALL printer files, it must be inserted
+		before the first SELECT statement.
+
+		The *$AUTOLOCKFILE directive tells WISP to use AUTOMATIC
+		RECORD LOCKING for the file immediately following, it
+		must be inserted immediately before each SELECT statement
+		for each file you want it applied to.
+
+	2.6 CURRENT LIMITATIONS
+
+		- A START on an alternate key where data-name-2 is not the
+		  alternate key is not supported.
+
+		- On UNIX the usersub SORTCALL is not supported.
+
+		- ROW I/O of the workstation where the FD has multiple 01's
+		  of different sizes, A READ will always read the number of
+		  rows specified in the first 01.
+
+	3.5 VSX  VS-EXCHANGE
+
+		On UNIX systems with a 9-track cartridge tape drive you
+		may use the VSX utility to read tapes written on the 
+		Wang in BACKUP format. This utility can read both source
+		and data in compressed or non-compressed format. It will
+		do filename translation, create the directories, allow
+		interactive selection of libraries and trim source files.
+
+	4.2 WISP SWITCHES
+
+		The NOLOCK_PROCESSING switch is no longer supported.
+
+	4.2.15 /OPTION [=file-name] (-o -O file)
+
+		UNIX EXAMPLE:
+
+		wisp -o sample.wcb		Option file= sample.opt.
+
+		wisp -O optfile.dat sample.wcb	Option file= optfile.dat.
+		
+	4.3.1 OPTION FILE
+
+		TRAP_START_TIMEOUTS is not supported. With MANUAL RECORD
+		LOCKING this condition will never occur.
+
+	5.1.6 COBLINK
+
+		This routine is now supported under UNIX.
+		A COBLINK is treated as a LINK of type "S" with no parameters.
+
+		On the VAX if the program is not found in the current image
+		it will first look for a .EXE then a .COM if not found. 
+
+	5.1.9 EXTRACT
+
+		On VMS the 'CF' keyword returns the current program name.
+		On UNIX the 'CF' keyword returns the name of the first 
+		program entered at this link-level.
+
+		The 'CL' and 'CV' keywords returns the RUNLIB RUNVOL.
+
+		On UNIX the 'NA' keyword returns the comment field from
+		the password file. This is usually the users full name.
+
+		The 'WL' keyword always returns the WORKLIB. It never
+		returns "$SCRATCH".
+
+	5.1.10 FIND
+
+		COUNT	Is the max number of entries to be returned.
+		F_COUNT	Is the actial number of entries found.
+
+	5.1.11 GETPARM
+
+		A new NON-COBOL calling interface has been added. This will
+		allow greater than 255 parameters on VMS.
+
+		Usage:		GETPARM(arglist,count)
+
+		ARGLIST		char *arglist[];
+				This is a pointer to an array of pointers that
+				point to the argumnets to GETPARM.
+
+		COUNT		int   count;
+				This is the number of arguments.
+
+	5.1.14 LINK
+
+		A LINK_TYPE of ' ' (blank) under UNIX will first look
+		at the RUNLIB/RUNVOL and if the program is not found
+		will then look in the current directory.
+
+		The PARAMETER_COUNT for ACUCOBOL is now 32.
+
+		The COMPLETION_CODE & RETURN_CODE now return meaningful
+		values on VMS.
+
+		On VMS if the program is not found in the currect image
+		it will look first for a .EXE and if not found it will
+		look for a .COM.
+
+	5.1.15 LOGOFF
+
+		NOTE: This routine will fail on UNIX if you are running
+		the csh or ksh shells.
+
+	5.1.20 PUTPARM
+
+		Functions 'E' and 'D'.
+
+			REFERENCE_LABEL		This is now supported.
+			CLEANUP_OPTION		This is now supported.
+
+		Functions 'C', 'R' and 'M'.
+
+			These functions are now supported.
+
+		Restrictions
+
+			Currently the only restiction is that link levels
+			are not tracked or understood. PUTPARM and GETPARM
+			behave as if all actions are occuring at the same
+			link level.
+
+	5.1.X SEARCH
+
+		Usage:		SEARCH(table,tsize,tlen,item,slen,retcode)
+		Description:	This routine performs an in-memory binary
+				search of a table. By including SLEN you
+				may search for a partial match.
+				The table must be in ascending or descending
+				sequence. 
+
+		Parameters:
+		TABLE		Alpha(var). 	Table to be searched.
+		TSIZE		Int(4).		Number of items in table.
+		TLEN		Int(4).		Length of each table item.
+		ITEM		Alpha(var).	Item to search table for.
+		SLEN		Int(4) opt.	Search item length.
+		RETCODE		Int(4).		Return Code, this is the
+						index into the table.
+
+	5.1.32 SUBMIT
+
+		Now returns a valid return code for VMS.
+
+	5.2.1 ACUGARGS
+
+		Now supports 32 args.
+
+	5.2.X ACUNARGS
+
+		Usage:		ACUNARGS(COUNT)
+		Description:	This routine returns the number of arguments
+				that were passed thru LINK.
+				(ACUCOBOL only)
+		Parameters:
+		COUNT		Int(2) (BINARY) The number are args.
+
+	5.2.X SETTRIGPROG
+
+		Usage:		SETTRIGPROG(VOL,LIB,FILE)
+		Description:	This routine identifies the program to be
+				run when the TRIGGER KEY is pressed.
+				The default definition for the TRIGGER KEY
+				is ^N (Ctrl+N).
+		Parameters:
+		VOL		Alpha(6) The volume of the program to run.
+		LIB		Alpha(8) The library
+		FILE		Alpha(8) The file
+
+	5.2.22 wdfinish
+	5.2.23 wdinit
+
+		These two routines show the "old" way that WISP handled
+		DISPLAY statements. These are now only valid if the
+		#NO_DISPLAY_PROCESSING option is used in an option file.
+
+	5.2.28 WFNAME
+
+		The usage should read:
+
+		Usage:		wfname(mode,vol,lib,file,name)
+
+	5.2.29 WFOPEN
+		
+		Add
+				wfopen2(mode,vol,lib,file,name,appl,prname)
+
+				WISP now generates calls to wfopen2 instead
+				of wfopen. The field "appl" is the wisp
+				application name which is the program name
+				and is passed in so file getparms will show
+				the program name.
+
+	5.2.X WMEMCPY
+
+		Usage:		wmemcpy(dest,source,len)
+
+		Description:	This is a COBOL interface to the C routine 
+				memcpy.
+
+		Parameters:
+		DEST		Alpha(*) The destination.
+		SOURCE		Alpha(*) The source.
+		LEN		Int(2) (BINARY) The length to copy.
+
+	6.2.1 THE VT200/VT300 KEYBOARD
+		
+		The default definition for "Prev Screen" key and
+		"Next Screen" key is now the functions "BackTab" 
+		and "NewLine".
+
+	7.2.6 SPECIAL CHARACTERS IN FILE NAMES ON VMS
+
+		NOTE:	##files will generate 2 versions; the first is the
+			"lock file" to lock the name on the disk, the second
+			is the actual data/print file. The "lock file"
+			will always be empty and is created to prevent
+			another program from using the same file name.
+
+	7.5.X WORK LIBRARIES ON VMS
+
+		WISP mimics the way Wang creates temporary work libraries
+		based on the master process ID. It generates a unique work
+		library name every time the user logs on. The format of the
+		name is different then the Wang. It starts with "WK" followed
+		by a a six character number which is the last 6 hex digits of
+		the process ID.
+
+			Example:   WK003B62
+
+	8.2.6 BINARY and COMPUTATIONAL
+
+		ACUCOBOL now uses COMP-4 not COMP-5.
+
+	8.2.7 DISPLAY-WS Records - An Overview
+
+		The record element DISP-ITEM-LENGTH is now a PIC X.
+
+	8.2.9 DECLARATIVES
+
+		The statements "USE AFTER ERROR ON" INPUT, OUTPUT, I-O,
+		SHARED, EXTEND are not supported as they cause conflicts
+		with WISP declaratives of the form 
+			"USE AFTER ERROR ON filename".
+
+	8.2.23 OPEN
+
+		WISP now generates calls to wfopen2 instead of wfopen.
+
+	8.3.1 RECORD LOCKING - VAX/VMS
+
+		WISP now uses MANUAL RECORD LOCKING for all file I/O.
+		The problems described in this section no longer exist.
+
+	8.5 GENERATED COPYBOOKS
+
+		WISP will generate copybooks that contain common code.
+		These will be created in the current directory by WISP
+		if they don't exist.
+
+		wc001000.cpy	The common symbolics code.
+		wc002x00.cpy	The common working-storage code.
+
+	9 The Menuing Package
+
+		Now available under UNIX.
+
+	9.3 MENU FILES
+
+		On UNIX if the menu file is not found in the current
+		directory it will look in the directory pointed to
+		by shell variable WISPMENU.
+
+	10.X MAKEMSG
+
+		This utility compiles the WISP runtime message file
+		from its text form "wispmsg.txt" to its compiled
+		form "wispmsg.dat".
+
+	10.X VIEWKEY
+
+		UNIX ONLY
+
+		This utility will print the escape sequence generated
+		when any key is pressed on the terminal. This is used to
+		assist you in writing videocap files.
+
+	10.X  VSX  VS-EXCHANGE
+
+		UNIX ONLY
+
+		This utility will read 9-track cartridge tapes in Wang
+		BACKUP format.
+
+	$ vsx -h
+	usage:
+	vsx [-f <device or file>] [-e.ext] [-i] [-lnu] [-fnu]
+	   -f <archive> specify device or file (default: /dev/rmt0)
+	   -es.ext      append .ext to all source files (normally .wcb)
+	   -en.ext      append .ext to all normal files (normally .seq)
+	   -i           generate list of files in archive (do not extract)
+	   -lnu         generate uppercase directory names
+	   -fnu         generate uppercase file names
+	   -tl          query for filetype (source vs. nonsource) per library
+	   -rn          assume normal records (not compressed)
+	   -q           query before restoring each library
+
+
+	10.10 WPUTPARM
+
+		-c count	Specifies the usage count for the putparm.
+				A count of zero (0) means no limit.
+
+		The SHOW and CLEAR commands are now implemented.
+
+		wputparm clear -l label		Will remove just the
+						labeled PRB.
+
+		wputparm clear			Will remove all PRB's.
+
+		On UNIX wputparm will report an error message if not run
+		from the Bourne shell.
+
+	10.13 WRUN
+
+		When no arguments are supplied wrun will print the runcbl
+		and options that it is currently set to use.
+
+		New options:
+
+			-?	Print the full command that would have
+				been executed. Do not execute.
+
+			--	Execute the runcbl with no options.
+
+	10.18 WUSAGE
+
+		WUSAGE VERSION The current screen version number is 21.
+
+	A.1.1 CONTENTS OF THE VMS DISTRIBUTION KIT
+
+		*.VCAP		The videocap files.
+		WISP$LINK.OPT	The options file used when generating a
+				shared library.
+		WISP_SHARE.COM	The DCL that will generate a shared library.
+				(Note: The shared library will need to be
+				       installed before becoming active.)
+
+	A.2.1 CONTENTS OF THE UNIX DISTRIBUTION KIT
+
+		./wisp/bin/bldmf	The build makefile utility.
+
+		./wisp/bin/linecount	is not yet available on UNIX.
+
+		./wisp/bin/perl		The perl interpeter (for bldmf).
+
+		./wisp/bin/vsload	is only distributed on selected
+					ports such as AT&T 3b2.
+
+		./wisp/bin/vtest	Routine to test VIDEO functionality.
+
+		./wisp/bin/vsx		VS-Exchange utility.
+
+		./wisp/bin/viewkey	The VIEWKEY utility.
+
+		./wisp/bin/wruncbl	The runcbl executable with the
+					WISP routines linked in.
+
+		./wisp/bin/runcbl	Replaced by wruncbl.
+
+		./wisp/config/videocap/aixterm  AIXTERM definition file
+		./wisp/config/videocap/sco386   SCO XTERM on 386 pc.
+
+		./wisp/acucobol/sub.c	is not distributed this comes with
+					your ACUCOBOL.
+
+	A.2.2 INSTALLING WISP ON A UNIX SYSTEM
+
+		(ADD THE FOLLOWING)
+
+		WISP is sometimes distributed as a single compressed cpio 
+		file named "wisp.cpio.Z". If your media has this file on the
+		label then load it as follows:
+
+		- cd to the directory where you want the wisp dir created.
+
+		- load the file from the diskette or tape using cpio or tar
+		  as specified on the label. E.g.
+
+			$ cpio -icvB </dev/rfd0
+	
+		- You will now have file "wisp.cpio.Z" in your current dir.
+
+		- Uncompress the file.
+
+			$ uncompress wisp.cpio.Z
+
+		- You will now have file "wisp.cpio".
+
+		- Now un-cpio the file
+
+			$ cpio -icvBd <wisp.cpio
+
+		- this will create directory "wisp" and under that will
+		  be directories "bin", "lib", "acucobol", "config" 
+
+	A.2.3 BUILDING AN ACUCOBOL runcbl
+
+		(ADD THE FOLLOWING)
+
+		First copy the wisp library files to /usr/lib.
+
+			$ cd (prefix)/wisp/lib
+			$ cp * /usr/lib			(you may need to be su)
+
+		Copy the wisp acucobol files into your acucobol directory
+
+			$ cd (your acucobol dir)
+			$ cp (prefix)/wisp/acucobol .
+
+		Edit runcbl.umf (the makefile) to copy the new runcbl
+		to your bin directory. You may also need to add "-lPW"
+		to the library list, depending on your system. You may
+		also wish to change the name of the runcbl executable
+		that runcbl.umf creates.
+
+		Now make runcbl.
+
+			$ make -f runcbl.umf
+
+	A.2.4 Additional WISP files
+
+		/usr/tmp/aculink/*	Temporary files used during a call
+					to usersub LINK from an ACUCOBOL
+					program.
+
+		./wc001000.cpy		Copybook for common symbolics.
+		./wc002x00.cpy		Copybook for common working-storage.
+
+	B.2.2 Set Shell to be Bourne Shell
+
+		If you are are running programs from a script you can
+		include "#!/bin/sh" as the first line of the script. This
+		will force the script to be run with the Bourne shell
+		while allowing you to use csh or ksh.
+
+	B.2.5 LGMAP
+
+		If your system does an EXTRACT of "XV" or "PV" then be sure
+		to setup the volumes "IPLVOL" and "PGMVOL" as these are the
+		values returned.
+
+	B.2.7.4 ACUCONFIG FILE
+
+		The default maxium number of files allowed open is 32. On
+		large applications this is often not enough. The following
+		can optionally be added to ACUCONFIG to increase this 
+		number to 64.
+
+			MAXFILES 64
+
+		The problem ACUCOBOL was having with COMPRESSED files
+		has been fixed in there release 1.5.4 so you can allow
+		compressed file if you are using that release or later.
+
+	B.2.7.5 wrunconfig File
+
+		The default value for runcbl should be as follows:
+
+			runcbl=wruncbl
+	
+	B.2.10 Building ACULINK
+
+		This should say 32 parameters.
+
+	D.4.3 FUNCTION KEYS
+
+		(ADD THE FOLLOWING)
+
+		trigger1		Activate the program specified by
+		 ...			routine "settrigprog".	
+		trigger8
+
+		generic_newline		The NEWLINE key.
+
+	D.6 STANDARD VIDEOCAP GENERIC KEY DEFINITIONS
+
+		Generic next scr	^f^n
+		Generic prev scr	^f^p
+
+		Generic Newline		^fn or ^fN
+
+
+

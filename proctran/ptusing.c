@@ -221,9 +221,9 @@ void save_using_item(int* num_asn,int* num_var,int* filler_num,int* current_row,
 /*
 **	History:
 **	$Log: ptusing.c,v $
-**	Revision 1.5  1997-04-21 11:23:51-04  scass
+**	Revision 1.5  1997/04/21 15:23:51  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.4  1996-09-12 19:18:14-04  gsl
 **	Fix prototypes
 **

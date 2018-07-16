@@ -344,9 +344,9 @@ int password_getparm(int initial, char* uservalue, int userlen, char* passvalue,
 /*
 **	History:
 **	$Log: filgparm.c,v $
-**	Revision 1.14  1997-10-20 17:16:46-04  gsl
+**	Revision 1.14  1997/10/20 21:16:46  gsl
 **	Add tracing
-**
+**	
 **	Revision 1.13  1997-09-24 17:12:02-04  gsl
 **	Add support for pfkeys12()
 **

@@ -161,9 +161,9 @@ badusage()
 /*
 **	History:
 **	$Log: wsubmit.c,v $
-**	Revision 1.10  1997-06-10 15:48:54-04  scass
+**	Revision 1.10  1997/06/10 19:48:54  scass
 **	Changed long to int4 for portability.
-**
+**	
 **	Revision 1.9  1996-01-02 11:33:57-05  gsl
 **	Changed ifdef DEBUG to TESTING
 **

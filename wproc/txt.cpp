@@ -63,9 +63,9 @@ char *const txt_trace_level         = "trace level";
 //
 //	History:
 //	$Log: txt.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:25-04  gsl
+//	Revision 1.6  1998/08/31 19:14:25  gsl
 //	drcs update
-//
+//	
 //
 
 //	

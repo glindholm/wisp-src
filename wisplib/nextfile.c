@@ -595,9 +595,9 @@ getnextfile:
 /*
 **	History:
 **	$Log: nextfile.c,v $
-**	Revision 1.15  1996-09-03 17:43:32-04  gsl
+**	Revision 1.15  1996/09/03 21:43:32  gsl
 **	For NT don't return files "." or ".." (just like on unix)
-**
+**	
 **	Revision 1.14  1996-08-19 15:32:35-07  gsl
 **	drcs update
 **

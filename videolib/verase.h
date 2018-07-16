@@ -36,8 +36,8 @@ int verase_menu(int control, struct video_menu *md);					/* Erase all, top or bo
 /*
 **	History:
 **	$Log: verase.h,v $
-**	Revision 1.1  1996-03-28 16:32:35-05  gsl
+**	Revision 1.1  1996/03/28 21:32:35  gsl
 **	Initial revision
-**
+**	
 **
 */

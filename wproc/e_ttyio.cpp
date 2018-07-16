@@ -138,9 +138,9 @@ void machine::exec_write() {
 //
 //	History:
 //	$Log: e_ttyio.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:44-04  gsl
+//	Revision 1.6  1998/08/31 19:13:44  gsl
 //	drcs update
-//
+//	
 //
 
 //	

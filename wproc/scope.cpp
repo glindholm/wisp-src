@@ -102,9 +102,9 @@ Boolean scope::can_go_to(block a_block) {
 //
 //	History:
 //	$Log: scope.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:13-04  gsl
+//	Revision 1.6  1998/08/31 19:14:13  gsl
 //	drcs update
-//
+//	
 //
 
 //	

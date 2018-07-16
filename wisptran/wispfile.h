@@ -126,9 +126,9 @@ cob_file_context *open_cob_context();
 /*
 **	History:
 **	$Log: wispfile.h,v $
-**	Revision 1.7  2001-09-13 10:00:37-04  gsl
+**	Revision 1.7  2001/09/13 14:00:37  gsl
 **	Add support for xtab -X file
-**
+**	
 **	Revision 1.6  1996-06-24 14:23:13-04  gsl
 **	fic MSDOS for MSDOS and WINNT
 **

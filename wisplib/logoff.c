@@ -130,10 +130,10 @@ void LOGOFF(void)
 /*
 **	History:
 **	$Log: logoff.c,v $
-**	Revision 1.13  1996-08-28 22:38:25-04  gsl
+**	Revision 1.13  1996/08/29 02:38:25  gsl
 **	Fix check of CANCEL-EXIT to not count if value is ")'
 **	thats "0".
-**
+**	
 **	Revision 1.12  1996-08-22 14:40:55-07  gsl
 **	For NT remove call to ExitWindows() - it doesn't do what's needed
 **

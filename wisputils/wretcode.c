@@ -47,9 +47,9 @@ main()
 /*
 **	History:
 **	$Log: wretcode.c,v $
-**	Revision 1.9  1996-07-26 13:49:37-04  gsl
+**	Revision 1.9  1996/07/26 17:49:37  gsl
 **	Fix undefined
-**
+**	
 **	Revision 1.8  1995-04-25 02:58:58-07  gsl
 **	drcs state V3_3_15
 **

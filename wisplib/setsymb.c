@@ -102,9 +102,9 @@ int4	*len;									/* Length of Value (optional)			*/
 /*
 **	History:
 **	$Log: setsymb.c,v $
-**	Revision 1.8  1996-08-19 18:32:55-04  gsl
+**	Revision 1.8  1996/08/19 22:32:55  gsl
 **	drcs update
-**
+**	
 **
 **
 */

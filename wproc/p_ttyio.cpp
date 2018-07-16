@@ -140,9 +140,9 @@ void compiler::write_stmt() {
 //
 //	History:
 //	$Log: p_ttyio.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:04-04  gsl
+//	Revision 1.6  1998/08/31 19:14:04  gsl
 //	drcs update
-//
+//	
 //
 
 //	

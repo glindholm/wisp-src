@@ -86,9 +86,9 @@ void show_memory(char *kind, void* ptr, size_t size) {
 //
 //	History:
 //	$Log: memory.cpp,v $
-//	Revision 1.9  1998-09-02 17:27:35-04  gsl
+//	Revision 1.9  1998/09/02 21:27:35  gsl
 //	Changed to use debug_trace instead of printf()
-//
+//	
 //	Revision 1.8  1998-08-31 15:13:56-04  gsl
 //	drcs update
 //

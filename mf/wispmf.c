@@ -9,16 +9,18 @@
 */
 
 extern int cobfunc();
+extern int cobtidy();
+extern void exit();
 
 char	WISPFILEXT[39];		/* Define the file extension variable.	*/
 char	WISPRETURNCODE[3];	/* Define the return code field.	*/
 
-wispmf()
+int wispmf()
 {
 	return 0;
 }
 
-shutexitcobol(exit_code)
+void shutexitcobol(exit_code)
 int exit_code;
 {
 	cobtidy();
@@ -63,4 +65,23 @@ int *rc;
 
 	*rc = cobfunc( filespec, parmcnt, parms );
 }
+
+/*
+**	Uncomment the define of OLD_WMEMCPY to translate
+**	the old wmemcpy into WMEMCPY.
+*/
+
+/* 
+#define OLD_WMEMCPY 
+*/
+#ifdef OLD_WMEMCPY
+void wmemcpy(dst, src, len)
+char *dst;
+char *src;
+short *len;
+{
+	extern void WMEMCPY();
+	WMEMCPY(dst,src,len);
+}
+#endif
 

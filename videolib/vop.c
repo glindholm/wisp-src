@@ -7,9 +7,9 @@ static char rcsid[]="$Id:$";
 /*
 **	History:
 **	$Log: vop.c,v $
-**	Revision 1.10  1997-07-08 16:33:14-04  gsl
+**	Revision 1.10  1997/07/08 20:33:14  gsl
 **	Moved the optimization logic to vdefer.c
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:14-04  gsl
 **	drcs update
 **

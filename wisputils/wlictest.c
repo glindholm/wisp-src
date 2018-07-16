@@ -476,9 +476,9 @@ int main(int argc, char *argv[])
 /*
 **	History:
 **	$Log: wlictest.c,v $
-**	Revision 1.1  1997-10-14 10:34:55-04  gsl
+**	Revision 1.1  1997/10/14 14:34:55  gsl
 **	Initial revision
-**
+**	
 **	Revision 1.9  1997-01-09 14:46:28-05  gsl
 **	Changed copyright date 1996 -> 1997
 **

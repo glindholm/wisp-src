@@ -1,0 +1,29 @@
+							wispitem.lis
+							07/20/92
+
+	WISP KIT ITEMS
+	==============
+
+	This lists the items that go out with a WISP kit.
+
+
+	[ ]	Cover letter		Always include a cover letter that
+					states what it is that they are
+					getting.
+
+	[ ] 	Manual			[OPTIONAL]
+
+	[ ] 	Media			This contains the software.
+					UNIX:	wisp.cpio.Z
+					VMS:	WISPKIT.BCK
+
+		[ ]  diskettes 		or
+		[ ]  cartridge tape 	or
+		[ ]  8mm tape 		or
+		[ ]  4mm tape
+
+	[ ]	Pre-built RunTimeSystem
+					[Only if requested]
+
+	[ ]	LICENSE KEY		[Only if needed]
+

@@ -242,9 +242,9 @@ char *vssort_sortcode(int4 sortcode)
 /*
 **	History:
 **	$Log: vssort.c,v $
-**	Revision 1.7  1998-04-17 14:53:41-04  gsl
+**	Revision 1.7  1998/04/17 18:53:41  gsl
 **	Change max recsize to 9999 from 2024
-**
+**	
 **	Revision 1.6  1996-07-10 19:52:36-04  gsl
 **	fix missing includes and fix prototype warning
 **

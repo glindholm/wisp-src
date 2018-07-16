@@ -36,9 +36,9 @@
 /*
 **	History:
 **	$Log: pgdefeqn.h,v $
-**	Revision 1.8  1997-04-21 10:52:04-04  scass
+**	Revision 1.8  1997/04/21 14:52:04  scass
 **	Corrected copyright
-**
+**	
 **	Revision 1.7  1996-09-12 19:22:06-04  gsl
 **	Add drcs headers
 **

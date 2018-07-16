@@ -40,9 +40,9 @@ const char* custom_display_utility(void);
 /*
 **	History:
 **	$Log: wfiledis.h,v $
-**	Revision 1.4  1999-02-23 16:57:26-05  gsl
+**	Revision 1.4  1999/02/23 21:57:26  gsl
 **	Move no_windows() to wispcfg.h
-**
+**	
 **	Revision 1.3  1999-02-23 15:24:40-05  gsl
 **	Add no_windows() routine.
 **

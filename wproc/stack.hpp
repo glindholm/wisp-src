@@ -54,9 +54,9 @@ class stack : public object {
 //
 //	History:
 //	$Log: stack.hpp,v $
-//	Revision 1.6  1998-09-03 08:21:12-04  gsl
+//	Revision 1.6  1998/09/03 12:21:12  gsl
 //	Add an "id" field to stack and stack_entry
-//
+//	
 //	Revision 1.5  1998-08-31 15:14:16-04  gsl
 //	drcs update
 //

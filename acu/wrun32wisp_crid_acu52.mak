@@ -34,7 +34,7 @@
 #
 # 3) Edit this file and set WISPDIR and CRIDDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4402
+#       WISPDIR=C:\WISP44xx
 #       CRIDDIR=C:\CRIDACU3004
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command.
@@ -76,7 +76,7 @@
 ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP and CRID directory here.
-WISPDIR=C:\WISP4402
+WISPDIR=C:\WISP4405
 CRIDDIR=C:\CRIDACU3004
 
 #  Set the runtime name here. (Do not include a file extension.)

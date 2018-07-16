@@ -76,9 +76,9 @@
 /*
 **	History:
 **	$Log: wangkeys.h,v $
-**	Revision 1.8  1996-07-23 14:17:54-04  gsl
+**	Revision 1.8  1996/07/23 18:17:54  gsl
 **	drcs update
-**
+**	
 **
 **
 */

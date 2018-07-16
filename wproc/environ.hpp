@@ -88,9 +88,9 @@ typedef          long  int_32;
 //
 //	History:
 //	$Log: environ.hpp,v $
-//	Revision 1.10  1998-08-31 15:13:46-04  gsl
+//	Revision 1.10  1998/08/31 19:13:46  gsl
 //	drcs update
-//
+//	
 //
 
 //	

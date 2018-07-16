@@ -1,0 +1,453 @@
+	Copyright (c) 1995-1998 by NeoMedia Technologies Inc. 
+	All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		Co*STAR for WISP
+	
+	Document:	W4W.LIS
+	Last Updated:	$Date:$
+	Products:	Co*STAR for WISP
+	Versions:	2.1
+	
+	Summary:	This document contains Co*STAR for WISP
+			description, components, and configuration.
+
+	====================================================================
+	
+
+	Co*STAR for WISP Overview
+	=========================
+
+	Co*STAR for WISP is a graphical frontend which runs on Microsoft
+	Windows (95, 98, NT) on the PC to give your UNIX or Windows
+	Console applications a Windows look and feel.  No changes to your
+	existing applications are required, thus allowing the same code to
+	run in a graphical environment or on a traditional character-based
+	terminal.
+
+	Functionality of Co*STAR for WISP:
+
+	*  Open multiple simultaneous host sessions
+
+	*  Microsoft Windows look and feel
+
+	*  Modifiable fields appear as Windows style sunken data wells
+
+	*  Pfkey tags appear as raised buttons that can be clicked with
+	   the mouse
+
+	*  The mouse is enabled to allow you to position the cursor in a
+	   modifiable field or a tab stop
+
+	*  Customizable button bar
+
+	*  Customizable icon bar
+
+	*  Customizable on-screen mouse clickable pfkey tags
+
+	*  Customizable on-screen hotspots
+
+	*  Microsoft Windows print screen for hard copy or faxes
+
+	More advanced GUI customization is available through a
+	programmable API, which give you access to the following:
+
+	*  Display graphical images 
+	   (BMP, TIF, GIF, ICO, PCX, RLE, DIB, WMF) 
+
+	*  Play sound and video files (WAV, MID, AVI, RMI)
+
+	*  Execute DOS and Windows programs
+
+	*  Dynamically load button and icon bars
+
+	*  Dynamically program Windows menu bar
+
+	*  Dynamically change color schemes
+
+	*  Create listboxes
+
+	*  Transfer files between host and PC
+
+	*  Create Windows Dialog boxes
+
+	*  Visual Basic Custom Controls
+
+
+	Installation and Configuration
+	==============================
+
+	To use Co*STAR for WISP you must install and configure both your
+	host system (UNIX or NT/98/95) and your PC.
+
+
+	Software Requirements
+	---------------------
+
+	For UNIX hosts:
+
+	     WISP for UNIX version 3.3.17 or later.
+	     Co*STAR for WISP version 1.3 or later.
+	     Windows 3.1 or later.
+
+	For Windows NT/95 hosts:
+
+	     WISP for NT/95 version 4.1.00 or later.
+	     Co*STAR 32 for WISP version 2.0a or later.
+	     Windows 95/98/NT (WIN32) or later.
+
+	Co*STAR for WISP version 2.1 requires Windows 95/98/NT (WIN32) or
+	later.
+
+
+	HOST Installation
+	-----------------
+
+	Install WISP on your host system (UNIX or WIN32) following the
+	regular installation and configuration instructions.
+	     
+
+	PC Installation
+	---------------
+
+	1)  Load the Co*STAR for WISP disk and run the SETUP.EXE program.
+
+	    This will create the C:\W4W directory, then load the Co*STAR
+	    for WISP files.  It will also create a Co*STAR for WISP
+	    program group.
+
+	2)  Run Co*STAR for WISP by double clicking the W4W program icon
+	    in the Co*STAR for WISP program group.  This will run Co*STAR
+	    for WISP using the W4W.CNF configuration file.  (See "Running
+	    Co*STAR for WISP" below.)  The first time you run it you will
+	    get the "Configuration" panel which will prompt you to finish
+	    the communication configuration.
+
+	    The following settings should be used.
+
+	    	Communication:
+		   Emulation	= VT220
+		   Byte Size	= 8
+
+		Settings>>:
+		   Strip bit 8	= OFF
+		   Backspace	= 127
+		   Rows		= 24
+		   Columns	= 80
+
+	    The VT220 terminal emulation mode has been found to work well.
+	    It is recommended you use VT220 but this is not required.  
+
+	    For WIN32 hosts select "Network or Port:" to be "Program".
+	    Then press the "Program" button and select the program to run
+	    including any command line arguments.
+
+	       Ex: Console Program: 
+		   C:\WISP\BIN\WRUN.EXE D:\PROJECT\OBJ\MAINMENU
+
+	3)  Disable the "Numeric Hotspots" option by selecting 
+	    "Edit Hotspots..." from the "Commands" menu.
+
+		  Enable Numeric Hotspots    = OFF
+		  Append CR to Non-Numerics  = OFF
+
+
+	See the Co*STAR User's Guide for a complete description of the
+	installation and configuration options including network and
+	terminal support.
+
+
+	HOST Configuration
+	------------------
+
+	1)  On UNIX you must inform WISP that you are using Co*STAR for
+	    WISP by setting the W4W environment variable. The W4W
+	    variable can be set to either "1" or "2" depending on the
+	    attribute mapping mode you choose to use.
+
+		$ W4W=2
+		$ export W4W
+
+	    WISP for WIN32 can detect Co*STAR automatically.
+
+	2)  Setup your terminal type.
+
+	    For UNIX hosts it is recommended you use the videocap file
+	    w4w_vt220 that is provided.
+
+		$ TERM=vt220
+		$ WISPTERM=w4w_vt220
+		$ export TERM WISPTERM
+
+	    For WIN32 hosts the default WINCON videocap file provides both
+	    console and Co*STAR support.
+
+	    If you choose to use a terminal emulation mode other then
+	    vt220 you may have to create a custom videocap file.
+
+	3)  Setup a W4WMAP
+
+	    Modify W4WMAP in the WISPCONFIG directory to meet the needs of
+	    your software. See the description of W4WMAP below.
+
+	4)  Setup a HOTSPOTS file (Optional)
+
+	    If you use the Co*STAR hotspot facility you may also wish to
+	    setup a HOTSPOTS file in the WISPCONFIG directory.  See the
+	    description of HOTSPOTS file below.
+
+
+	W4WMAP - Co*STAR for WISP Screen Item MAP
+	----------------------------------------- 
+
+	This file defines screen items that will receive special treatment
+	by Co*STAR for WISP.  It allows you to define specific text
+	strings that appear on the screen, mapping them to raised boxes
+	that can be mouse clicked to send a pfkey.
+
+	It is very common in Wang application to have a "menu" area at the
+	bottom of a screen that displays which pfkeys are active and what
+	each does.
+
+	Example:
+	Row 24 :(1) New (2) First (3) last (4) Next (5) Prev (16) Exit
+
+	The W4WMAP can be used to map these on screen pfkey "tags" into
+	mouse clickable buttons.  For the above example you would need
+	entries in W4WMAP like the following:
+
+		PF-1   "(1)"
+		PF-2   "(2)"
+		PF-3   "(3)"
+		PF-4   "(4)"
+		PF-5   "(5)"
+		PF-16  "(16)"
+
+	The first token on each line is a keyword representing which pfkey
+	to send when the button is clicked.  The quoted string is the text
+	to change into a raised clickable button.  The text must appear in
+	a non-modifiable area of the screen and must be preceded by a
+	space character or beginning of line.
+
+	The W4WMAP keywords are	"PF-1" thru "PF-32", "ENTER", and "HELP".
+	The sample W4WMAP that is distributed with WISP defines the pfkey
+	tags which WISP uses in the Command Processor, getparms, and
+	utilities.  It is recommended that you add any additional tags you
+	use to the W4WMAP file (don't remove the standard ones.)  You may
+	use the same keyword multiple times for as many variations as your
+	applications require.
+
+		PF-16	"(16)"
+		PF-16	"PF-16"
+		PF-16	"PF16"
+
+	If one text string forms a leading sub-string of another then
+	ensure that the shorter one is defined prior to the longer one in
+	the W4WMAP file.  The string "PF1" is a leading sub-string of
+	"PF12" so must be placed first in the file.
+
+	        PF-1	"PF1"
+		PF-12	"PF12"
+
+	If one text string forms an internal sub-string of another then
+	ensure that it is placed first in the W4WMAP file.
+
+	        PF-1	      "PF1"
+		PF-16	"Press PF16 to Exit"
+
+
+	HOTSPOTS - Co*STAR for WISP Hotspots MAP
+	----------------------------------------
+
+	The Co*STAR product allows you to define "hotspots" which are
+	areas of the screen that can be mouse clicked to activate a
+	"Keystrokes & Commands" stored function.  These hotspots can be
+	used like the text strings in W4WMAP to simply return a pfkey
+	escape sequence, or they can be used to activate any of the
+	Co*STAR commands.
+
+	If you want WISP to display these hotspots as raised boxes you can
+	create a file HOTSPOTS in the WISPCONFIG directory, which contains
+	the text strings as white-space separated fields (do not enclose
+	in quotes).
+
+	HOTSPOTS example:
+
+		(1) (2) (3) (4) (5) (16) (ENTER)
+
+	It is recommended that you use the W4WMAP file for pfkey
+	processing and only use the HOTSPOTS file/facility for more
+	advanced Co*STAR commands.
+
+	See the Co*STAR User's Guide for a complete description of the
+	hotspots facility.
+
+
+	Running Co*STAR for WISP
+	------------------------
+
+	To run Co*STAR for WISP, double click the W4W program icon in the
+	Co*STAR for WISP program group.  This icon is set up to run
+	Co*STAR for WISP using the W4W.CNF configuration file.  You can
+	also run Co*STAR for WISP from the RUN command by typing the
+	following command.
+
+	    Command line: C:\W4W\COSTAR.EXE W4W.CNF
+			  -------------------------
+
+	NOTE:	Do not run Co*STAR for WISP by double clicking the
+		COSTAR.EXE directly as this will not use the W4W.CNF
+		configuration file.
+
+			 	
+	See the Co*STAR User's Guide for a complete description.
+
+
+
+	Co*STAR for WISP Technical Reference
+	====================================
+
+	This section describes various technical aspects of Co*STAR for
+	WISP including the low-level API.
+
+
+	Co*STAR for WISP COBOL API
+	--------------------------
+
+	Routine:	W4WAPI
+
+	Usage:		CALL "W4WAPI" USING API-BUFF.
+
+	Description:	This subroutine provides low level access to the
+			Co*STAR for WISP API.
+
+			Calling this routine in a non-Co*STAR for WISP
+			environment has no effect, it simply returns.
+			This allows you to maintain a single copy of your
+			code.
+
+			See the Co*STAR Programmer's Guide for a complete
+			description of the API commands.
+
+	Parameters:	
+
+	API-BUFF	ALPHA(var).  
+
+				This is the low level command which gets
+				sent to the Co*STAR program. It must be
+				null terminated.  The 127 (hex 7F) control
+				characters must also be included.
+
+	Example:
+			01  API-BUFF		PIC X(255).
+
+			STRING X"7F", 
+			       "UWHOTSPOT.\myhotspt.hsf", 
+			       X"7F", X"00"
+			       DELIMITED BY SIZE INTO API-BUFF.
+			CALL "W4WAPI" USING API-BUFF.
+
+
+	Videocap Mouse Support
+	----------------------
+
+	A new videocap entry has been added for mouse support. The
+	"generic_mouse" entry is used to specify the escape sequence that
+	will identify a mouse click. For Co*STAR for WISP this value
+	defaults to "\376@" (decimal 254, '@') which works correctly for
+	vt220 terminal emulation.
+
+		generic_mouse="\376@"
+
+	NOTE:   Earlier version of WISP (below 3.3.17) defaulted to
+		"\200@" which does not work with the lastest version of
+		Co*STAR using vt220 emulation.  If you are using an
+		earlier verion of WISP you MUST include the above line in
+		your videocap file.
+
+
+	Co*STAR for WISP Attribute Mapping Color Schemes
+	------------------------------------------------
+
+	Co*STAR for WISP supports two attribute mapping mode known as
+	version 1 and version 2.  Version 1 is the original and is the
+	default unless you set W4W=2 or set the COSTARV2 option in the
+	runtime OPTIONS file.
+
+	Version 1
+	---------
+	In order to produce a Windows look and feel, Co*STAR for WISP
+	reserves the two screen display attributes, underline and
+	reversed.  It uses these attributes to identify edit fields and
+	mouse clickable locations on the screen.  If you modify the
+	Co*STAR for WISP color schemes or create your own you should
+	consider making underline (and only underline) a recessed box and
+	making reversed (and only reversed) a raised box.
+
+		UNDERLINE   = edit fields (recessed box)
+		REVERSED    = mouse clickable spots (raised box)
+
+	There is no need to modify your existing applications to not use
+	underline and reversed.  Co*STAR for WISP will automatically and
+	correctly translate the Wang Field Attribute Characters (FAC's).
+
+	Version 2
+	---------
+	The version 2 attribute mapping preserves all of the Wang FAC
+	attributes including the UNDERLINE attribute which is not
+	available in the original (version 1) attribute mapping.  With
+	version 2 all "special" fields have the REVERSE attribute,
+	protected fields are unchanged, and modifiable fields have the
+	REVERSE attribute added.  Hotspots are
+	REVERSE+BLINK+UNDERLINE, and tabstops are REVERSE+BLINK.  Note
+	that on the Wang, the BLINK attribute is actually BLINK+BOLD
+	so the hotspot and tabstop attributes will not conflict with
+	any Wang attributes.  If you use the COSTARV2 option you will
+	also need to use a Co*STAR color scheme which is compatible
+	(e.g. "w4w_v2").  You can also specify version 2 attribute
+	mapping by setting the environment variable W4W=2.  
+
+	The following table shows how the Wang field attributes are
+	mapped into Co*STAR attributes for both Version 1 and 2
+	attribute mapping modes.  Use this table for customizing your
+	color schemes.
+
+	Wang                  Version 1          Version 2
+	====                  =========          =========
+	Prot+Dim              Normal             Normal
+	Prot+Bold             Bold               Bold
+	Prot+Blink+Bold       Blink+Bold         Blink+Bold
+	Prot+Line+Dim         Bold               Line
+	Prot+Line+Bold        Bold               Line+Bold
+	Prot+Line+Blink+Bold  Blink+Bold         Line+Blink+Bold
+	Mod+Dim               Line               Rev
+	Mod+Bold              Line+Bold          Rev+Bold
+	Mod+Blink+Bold        Line+Blink+Bold    Rev+Blink+Bold
+	Mod+Line+Dim          Line+Bold          Rev+Line
+	Mod+Line+Bold         Line+Bold          Rev+Line+Bold
+	Mod+Line+Blink+Bold   Line+Blink+Bold    Rev+Line+Blink+Bold
+	(Hotspot)             Rev                Rev+Line+Blink
+	(Tabstop)             Rev+Blink          Rev+Blink
+
+	NOTE: Very old versions of Co*STAR do not allow you to map
+	each individual combination of attributes.  This capability is
+	needed for version 2 mapping but was not available when
+	version 1 was originally produced.
+
+
+	Co*STAR for WISP PC Files
+	-------------------------
+
+	C:\W4W\W4W.CNF			- Custom config file
+	C:\W4W\W4W.LIS			- This document
+	C:\W4W\COLOR.INI		- Custom color schemes
+
+	C:\W4W\W4W\MOUSE.SCR		- Custom mouse handling script
+	C:\W4W\W4W\W4W.HSF		- Hotspots config file
+	C:\W4W\W4W\W4W.KEY		- Button bar config file
+	C:\W4W\W4W\W4W.TBF		- Toolbar config file
+
+	C:\W4W\W4W\ICONS\*.ICO		- Sample icons used in toolbar
+
+	========================= END OF DOCUMENT ==========================

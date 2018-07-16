@@ -91,23 +91,11 @@ SOURCE=.\vsebasic.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsebasic.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vsedel.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsedel.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vsedfnd.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vsedfnd.h
 # End Source File
 # Begin Source File
 
@@ -119,15 +107,7 @@ SOURCE=.\vsedit.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsedit.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vsedmod.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vsedmod.h
 # End Source File
 # Begin Source File
 
@@ -135,15 +115,7 @@ SOURCE=.\vsedscr.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsedscr.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vseglb.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vseglb.h
 # End Source File
 # Begin Source File
 
@@ -151,15 +123,7 @@ SOURCE=.\vsegp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsegp.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vsegps.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vsegps.h
 # End Source File
 # Begin Source File
 
@@ -175,19 +139,11 @@ SOURCE=.\vsemov.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsemov.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vsenaf.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\vsescr.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vsescr.h
 # End Source File
 # Begin Source File
 
@@ -203,15 +159,7 @@ SOURCE=.\vsetxt.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vsetxt.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vseutl.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vseutl.h
 # End Source File
 # Begin Source File
 
@@ -221,6 +169,58 @@ SOURCE=..\wispcommon\wispicon.rc
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
+# Begin Source File
+
+SOURCE=.\vsebasic.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsedel.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsedfnd.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsedit.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsedmod.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsedscr.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vseglb.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsegp.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsegps.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsemov.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsescr.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vsetxt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vseutl.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

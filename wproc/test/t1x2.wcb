@@ -1,0 +1,62 @@
+000100**   Copyright (c) 1997 NeoMedia Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       t1x2.wcb
+000500**
+000600**   Project:    WISP/SAMPLE
+000700**
+000800**   Purpose:    
+000900**
+001000**   Example:
+001100**
+001200 IDENTIFICATION DIVISION.
+001300 PROGRAM-ID. t1x2.
+001400 
+001500 ENVIRONMENT DIVISION.
+001600 CONFIGURATION SECTION.
+001700 INPUT-OUTPUT SECTION.
+001800
+001900 DATA DIVISION.
+002000 FILE SECTION.
+002100 WORKING-STORAGE SECTION.
+       01  PRG-NAME    	       PIC X(8) VALUE "T1X3".
+       01  PRG-LIB     	       PIC X(8) VALUE SPACES.
+       01  PRG-VOL     	       PIC X(6) VALUE SPACES.
+       01  LINK-TYPE   	       PIC X    VALUE "S".
+       01  LINK-SPECIAL	       PIC X    VALUE " ".
+       01  LINK-EXTOPT 	       PIC X    VALUE " ".
+       01  LINK-PARMCNT.
+       	   05  LINK-PARMCNT-1  BINARY   VALUE 0.
+	   05  LINK-PARMCNT-2  BINARY   VALUE 1.
+       01  LINK-COMPCODE.
+       	   05  LINK-COMPCODE-1 BINARY   VALUE 0.   
+       	   05  LINK-COMPCODE-2 BINARY   VALUE 0.
+       01  LINK-RETCODE.
+       	   05  LINK-RETCODE-1  BINARY   VALUE 0.
+       	   05  LINK-RETCODE-2  BINARY   VALUE 0.
+       01  DISP-CC     	       PIC ZZZ9.
+       01  DISP-RC     	       PIC ZZZ9.
+       
+002200 LINKAGE SECTION.
+       01  ARG1	       	       PIC X(8).
+       01  ARG2	       	       PIC X(8).
+002300 PROCEDURE DIVISION USING ARG1, ARG2.
+002400 0000-MAIN SECTION.
+       	   display "Beginning of T1X2".
+       	   CALL "LINK" USING PRG-NAME, LINK-TYPE, PRG-LIB, PRG-VOL,
+	       	       LINK-SPECIAL, LINK-EXTOPT, 
+       	       	       LINK-PARMCNT, ARG2,
+		       LINK-COMPCODE, LINK-RETCODE.
+       	   MOVE LINK-COMPCODE-2 TO DISP-CC.
+	   MOVE LINK-RETCODE-2  TO DISP-RC.
+       	   display "Link to ", PRG-NAME, " from T1X2 finished CC=", 
+       	       	   DISP-CC, " RC=", DISP-RC.
+002500
+002600 9999-END SECTION.
+002700 9999-EXIT.
+002800     EXIT PROGRAM.
+002900 9999-STOP.
+003000     STOP RUN.
+006500**
+006600**   End of XXX.wcb
+006700**

@@ -80,9 +80,9 @@ int ckvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3]);
 /*
 **	History:
 **	$Log: wlicense.h,v $
-**	Revision 1.13  1998-12-18 13:28:41-05  gsl
+**	Revision 1.13  1998/12/18 18:28:41  gsl
 **	fix templates
-**
+**	
 **	Revision 1.12  1997-03-17 08:21:20-05  gsl
 **	Change SERVER to NETWORK
 **

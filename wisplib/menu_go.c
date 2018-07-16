@@ -133,9 +133,9 @@ int menu_go(char* menuname, char* menuvalue)
 /*
 **	History:
 **	$Log: menu_go.c,v $
-**	Revision 1.10  1996-08-19 18:32:29-04  gsl
+**	Revision 1.10  1996/08/19 22:32:29  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -318,9 +318,9 @@ void string_array_data::sort() {
 //
 //	History:
 //	$Log: data.cpp,v $
-//	Revision 1.7  1998-08-31 15:13:39-04  gsl
+//	Revision 1.7  1998/08/31 19:13:39  gsl
 //	drcs update
-//
+//	
 //
 
 //	

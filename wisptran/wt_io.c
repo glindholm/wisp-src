@@ -110,9 +110,9 @@ int iscomment(const char* the_line)
 /*
 **	History:
 **	$Log: wt_io.c,v $
-**	Revision 1.16  1999-09-07 10:41:32-04  gsl
+**	Revision 1.16  1999/09/07 14:41:32  gsl
 **	fix return types
-**
+**	
 **	Revision 1.15  1998-03-27 13:37:07-05  gsl
 **	fix warnings
 **

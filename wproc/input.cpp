@@ -492,9 +492,9 @@ int state_file_input::destroy() {
 //
 //	History:
 //	$Log: input.cpp,v $
-//	Revision 1.8  1998-08-31 15:13:52-04  gsl
+//	Revision 1.8  1998/08/31 19:13:52  gsl
 //	drcs update
-//
+//	
 //
 
 //	

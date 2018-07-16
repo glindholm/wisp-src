@@ -82,9 +82,9 @@ extern char *vssort_retcode(int4 retcode);
 /*
 **	History:
 **	$Log: vssort.h,v $
-**	Revision 1.5  1996-07-23 14:17:53-04  gsl
+**	Revision 1.5  1996/07/23 18:17:53  gsl
 **	drcs update
-**
+**	
 **
 **
 */

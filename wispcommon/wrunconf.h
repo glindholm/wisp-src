@@ -39,9 +39,9 @@ int wrunconfig(struct wruncfg *cfg);
 /*
 **	History:
 **	$Log: wrunconf.h,v $
-**	Revision 1.12  1997-02-20 15:44:01-05  gsl
+**	Revision 1.12  1997/02/20 20:44:01  gsl
 **	Increase the sizes for run options and rts path name
-**
+**	
 **	Revision 1.11  1996-10-08 20:32:18-04  gsl
 **	move prototypes to wispcfg.h
 **

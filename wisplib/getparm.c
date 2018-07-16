@@ -1956,10 +1956,10 @@ static void gdisp_get(int row, int col, char *val, int4 len)
 /*
 **	History:
 **	$Log: getparm.c,v $
-**	Revision 1.25  1999-05-21 10:49:29-04  gsl
+**	Revision 1.25  1999/05/21 14:49:29  gsl
 **	Change getprogid() to WISPRUNNAME as the program name shown on the
 **	getparm screen.
-**
+**	
 **	Revision 1.24  1998-10-13 14:55:59-04  gsl
 **	Fix test of term_key since it is unsigned it can't be neg.
 **

@@ -246,9 +246,9 @@ int delete_worklib(void)
 /*
 **	History:
 **	$Log: wexith.c,v $
-**	Revision 1.22  2001-11-27 15:46:31-05  gsl
+**	Revision 1.22  2001/11/27 20:46:31  gsl
 **	Remove VMS
-**
+**	
 **	Revision 1.21  1999-01-29 19:06:32-05  gsl
 **	Change the logic that deletes IS_SCRATCH files to use SCRATCH instead
 **	of unlink() to ensure that two-part files are deleted (x.dat + x.idx).

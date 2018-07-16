@@ -1382,9 +1382,9 @@ static void check_write_string()							/* Check if need to write the STRING 	*/
 /*
 **	History:
 **	$Log: ptdoit.c,v $
-**	Revision 1.9  1997-04-21 11:06:17-04  scass
+**	Revision 1.9  1997/04/21 15:06:17  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.8  1996-12-12 13:36:36-05  gsl
 **	\]devtech -. NeoMedia
 **

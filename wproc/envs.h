@@ -39,9 +39,9 @@
 /*
 **	History:
 **	$Log: envs.h,v $
-**	Revision 1.5  1998-08-31 15:50:33-04  gsl
+**	Revision 1.5  1998/08/31 19:50:33  gsl
 **	drcs update
-**
+**	
 **	Revision 1.4  1998-08-31 15:13:46-04  gsl
 **	drcs update
 **

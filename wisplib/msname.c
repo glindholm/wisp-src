@@ -11,9 +11,9 @@ void msname(void)
 /*
 **	History:
 **	$Log: msname.c,v $
-**	Revision 1.10  1996-08-19 18:32:33-04  gsl
+**	Revision 1.10  1996/08/19 22:32:33  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1,0 +1,57 @@
+							v30notice.lis
+
+
+	WISP VERSION 3.0 DISTRIBUTION NOTICE
+	====================================
+
+	The enclosed media contain your WISP Version 3.0 distribution.
+
+	The distribution contains the release notes and the IDSI print
+	queue documentation.
+		wisp/etc/RELNOTES	- release notes
+		wisp/etc/PRINTQDOC	- IDSI Print Queue doc
+
+	If you receive your distribution on floppy disks then you will
+	need to follow these instructions to unload the WISP kit.
+
+	- cd to where you want the wisp directory created.
+
+	- Load the file wisp.cpio.Z from diskette using cpio. The kit
+	  takes 3 floppies so cpio will require you to change floppies.
+	  When cpio reaches the end of a diskette it will state 
+	  that it "Can't read input" or that "The end of media was reached"
+	  and ask you to type device/file to continue.  At this point
+	  insert the next floppy and type /dev/rfd0 (or your floppy device).
+
+		$ cpio -icvB </dev/rfd0
+
+	- You will now have file "wisp.cpio.Z"
+
+	- Uncompress the file.
+
+		$ uncompress wisp.cpio.Z
+
+	- You will now have file "wisp.cpio"
+
+	- Now un-cpio the file.
+
+		$ cpio -icvd <wisp.cpio
+
+	- This will create the following directories:
+
+		wisp/acu	- ACUCOBOL files
+		wisp/aix	- AIX VS COBOL files
+		wisp/bin	- programs
+		wisp/etc	- Misc. files
+		wisp/config	- Sample config plus videocap files
+
+
+	If you require any assistance please call:
+
+		International Digital Scientific Inc.
+	 	   25050 Avenue Kearny, Suite 203,
+		        Valencia CA 91355
+
+		Phone:	(805) 295-1155
+		Fax:	(805) 295-8755
+

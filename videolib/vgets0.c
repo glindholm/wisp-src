@@ -57,9 +57,9 @@ int vgets0(char* string, int count)
 /*
 **	History:
 **	$Log: vgets0.c,v $
-**	Revision 1.10  1997-07-08 16:59:48-04  gsl
+**	Revision 1.10  1997/07/08 20:59:48  gsl
 **	rewrite
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:05-04  gsl
 **	drcs update
 **

@@ -174,9 +174,9 @@ int4	*retcode;
 /*
 **	History:
 **	$Log: sortcall.c,v $
-**	Revision 1.10  1996-08-19 18:32:57-04  gsl
+**	Revision 1.10  1996/08/19 22:32:57  gsl
 **	drcs update
-**
+**	
 **
 **
 */

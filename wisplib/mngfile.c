@@ -16,6 +16,10 @@ static char rcsid[]="$Id:$";
 /*
 **	Includes
 */
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -30,10 +34,6 @@ static char rcsid[]="$Id:$";
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
-#ifndef LINUX
-extern char *sys_errlist[];
-extern int   sys_nerr;
-#endif
 #endif
 
 #ifdef WIN32
@@ -46,6 +46,10 @@ extern int   sys_nerr;
 #endif
 #ifndef O_TEXT
 #define O_TEXT 0
+#endif
+
+#if defined(WIN32)
+#define O_LARGEFILE 0
 #endif
 
 #include "idsistd.h"
@@ -149,7 +153,6 @@ static int	sound_alarm;								/* Sound the alarm 			*/
 static int	g_protect;								/* Show PROTECT screen in file_screen	*/
 
 static int	first_entry;								/* First ENTRY screen flag		*/
-static int	first_dir_load;								/* First time dir load called		*/
 
 #define ENTRY_SCREEN	1
 #define DIR_SCREEN	2
@@ -252,12 +255,12 @@ static int file_screen(void);
 static int get_vol_choice(HWSB hWsb, int row, int col, int item_cnt, int start_item, int end_item, int* option);
 static int get_dir_choice(int row, int col, int item_cnt, int start_item, int end_item, int* p_option, char* filename);
 static int vol_add(void);
-static int load_dir_ring(int force_load);
+static int load_dir_ring(void);
 static int stattype(const char* path);
 static int typefile(const char* file);
 static void addpath(char* newpath, const char* oldpath, const char* file);
 #ifdef unix
-static modestring(struct stat *filestat, char *mode);
+static void modestring(mode_t st_mode, char *protection);
 #endif
 static void putmessage(const char* message);
 static void set_native_path(const char* new_path);
@@ -276,7 +279,7 @@ static int build_rename_screen(HWSB hWsb,
 			       char dfilepath[COB_FILEPATH_LEN]);
 static int return_file_screen(void);
 static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype);
-static change_protection(HWSB hWsb);
+static int change_protection(HWSB hWsb);
 static void wsb_get_filespec(HWSB hWsb,
 			     char vol[SIZEOF_VOL],
 			     char lib[SIZEOF_LIB],
@@ -321,7 +324,6 @@ int mngfile(void)
 	g_protect = 0;
 
 	first_entry = 1;								/* This is first ENTRY SCREEN		*/
-	first_dir_load = 1;
 
 	wpload();									/* Load the DEFAULTS struct		*/
 
@@ -828,9 +830,6 @@ static int dir_screen(void)
 	char	filepath[255];
 	char	fullpath[255];
 	int	i;
-	int	force_load;
-
-	force_load = 0;
 
 	if (file_style == STYLE_FILE)							/* If FILE then goto FILE_SCREEN	*/
 	{
@@ -910,12 +909,11 @@ static int dir_screen(void)
 
 	while(next_screen == DIR_SCREEN)
 	{
-		if (rc = load_dir_ring(force_load)) 
+		if (rc = load_dir_ring()) 
 		{
 			return(rc);
 		}
 		
-		force_load = 0;
 		ring_count(dir_ring,&item_cnt);
 
 		if (item_cnt == 0)
@@ -1010,10 +1008,7 @@ static int dir_screen(void)
 				}
 				else if (option == DIR_OPTION_FILE)
 				{
-					if ( 0 == select_scratch(fullpath, hWsb, currow, curcol))
-					{
-						force_load = 1;
-					}
+					select_scratch(fullpath, hWsb, currow, curcol);
 				}
 				else	/* Scratch this DIRECTORY */
 				{
@@ -1035,10 +1030,7 @@ static int dir_screen(void)
 					switch(pfkey)
 					{
 					case 0:
-						if (0 == scratch_dir(fullpath))
-						{
-							force_load = 1;
-						}
+						scratch_dir(fullpath);
 						break;
 					case 1:
 						break;
@@ -1395,7 +1387,7 @@ static int select_dir_entry(int option, const char* filepath)
 		{
 			putmessage("Directory Not Found");
 		}
-		else if (!fcanread(buff))
+		else if (!WL_fcanread(buff))
 		{
 			putmessage("Unable to read Directory");
 		}
@@ -1486,7 +1478,7 @@ static void select_display(const char* file)
 	{
 		putmessage("File Not Found");
 	}
-	else if (!fcanread(file))
+	else if (!WL_fcanread(file))
 	{
 		putmessage("Read Access Denied");
 	}
@@ -1527,7 +1519,7 @@ static void select_edit(const char* file)
 	{
 		putmessage("File Not Found");
 	}
-	else if (!fcanread(file))
+	else if (!WL_fcanread(file))
 	{
 		putmessage("Read Access Denied");
 	}
@@ -1618,16 +1610,7 @@ static int scratch_dir(const char* file)
 		case ENOENT:	putmessage("Directory not found");			break;
 		case EACCES:	putmessage("Access Denied");				break;
 		case EBUSY:	putmessage("Directory is busy");			break;
-		default:
-			if (errno < sys_nerr)
-			{
-				putmessage(sys_errlist[errno]);
-			}
-			else
-			{
-				putmessage("Unable to SCRATCH the directory");
-			}
-			break;
+		default:	putmessage(WL_strerror(errno));				break;
 		}
 		return(1);
 	}
@@ -2129,10 +2112,11 @@ static int file_screen(void)
 
 		hWsb = wsb_new();
 
-		if (rc = build_file_screen(hWsb,pf_list,protect,filetype)) 
+		if (0 != build_file_screen(hWsb,pf_list,protect,filetype)) 
 		{
 			wsb_delete(hWsb);
-			return(rc);
+			return_file_screen();
+			return 0;
 		}
 		
 		if (sound_alarm)
@@ -2260,7 +2244,6 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 	char	vol[SIZEOF_VOL], lib[SIZEOF_LIB], file[SIZEOF_FILE], filepath[COB_FILEPATH_LEN];
 	char	buff[80];
 	char	type[80];
-	struct	stat	filestat;
 	char	*msg;
 #ifdef unix
 	fac_t	the_fac;
@@ -2268,6 +2251,11 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 	struct	passwd	*pw;
 	struct	group	*gr;
 	char	owner[80], group[80], protection[20];
+#endif
+#ifdef USE_FILE64
+	struct	stat64	filestat;
+#else
+	struct	stat	filestat;
 #endif
 
 	memcpy(vol,wang_vol,SIZEOF_VOL);
@@ -2457,37 +2445,44 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 		break;
 	}
 
-	memset(&filestat,0,sizeof(filestat));
-
 	wsb_add_text(hWsb, 8,2,"File type is");
 	wsb_add_field(hWsb,8,20,FAC_PROT_BOLD, type, strlen(type));
 
+	memset(&filestat,0,sizeof(filestat));
+#ifdef USE_FILE64
+	if (0 != stat64(native_path,&filestat))
+#else
+	if (0 != stat(native_path,&filestat))
+#endif
 	{
-		if (stat(native_path,&filestat))
+		switch(errno)
 		{
-			switch(errno)
-			{
-			case ENOENT:
-				putmessage("File Not Found");
-				break;
-			case EACCES:
-				putmessage("Access denied");
-				break;
-			default:
-				putmessage("Error attempting to STAT the file");
-				break;
-			}
+		case ENOENT:
+			putmessage("File Not Found");
+			break;
+		case EACCES:
+			putmessage("Access denied");
+			break;
+		default:
+			putmessage("Error attempting to STAT the file");
+			break;
 		}
 
-		sprintf(buff,"%ld",filestat.st_size);
-		wsb_add_text(hWsb, 9,2,"Size in bytes is");
-		wsb_add_field(hWsb,9,20,FAC_PROT_BOLD, buff, strlen(buff));
-
-		strcpy(buff,ctime(&filestat.st_mtime));
-		buff[strlen(buff)-1] = '\0';
-		wsb_add_text(hWsb,11,2,"Last Modified");
-		wsb_add_field(hWsb,11,20,FAC_PROT_BOLD, buff, strlen(buff));
+		return 1; /* Error stat() failed */
 	}
+
+#ifdef USE_FILE64
+	sprintf(buff,"%lld",filestat.st_size);
+#else
+	sprintf(buff,"%ld",filestat.st_size);
+#endif
+	wsb_add_text(hWsb, 9,2,"Size in bytes is");
+	wsb_add_field(hWsb,9,20,FAC_PROT_BOLD, buff, strlen(buff));
+
+	strcpy(buff,ctime(&filestat.st_mtime));
+	buff[strlen(buff)-1] = '\0';
+	wsb_add_text(hWsb,11,2,"Last Modified");
+	wsb_add_field(hWsb,11,20,FAC_PROT_BOLD, buff, strlen(buff));
 
 #ifdef unix
 	if (pw = getpwuid(filestat.st_uid))
@@ -2508,7 +2503,7 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 		strcpy(group,"(unknown)");
 	}
 
-	modestring(&filestat,protection);
+	modestring(filestat.st_mode, protection);
 
 	sprintf(buff,"%s %s (%d) %s (%d)",protection,owner,filestat.st_uid,group,filestat.st_gid);
 	wsb_add_text(hWsb,13,2,"Protection is");
@@ -2553,7 +2548,7 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 }
 
 #ifdef unix
-static change_protection(HWSB hWsb)
+static int change_protection(HWSB hWsb)
 {
 	int	col,row;
 	mode_t	mode;
@@ -2585,7 +2580,7 @@ static change_protection(HWSB hWsb)
 	if (ow != ' ') mode += 0002;
 	if (ox != ' ') mode += 0001;
 
-	if (chmod(native_path,mode))
+	if (0 != chmod(native_path,mode))
 	{
 		switch(errno)
 		{
@@ -2594,7 +2589,9 @@ static change_protection(HWSB hWsb)
 		case EPERM:	putmessage("Not Owner of File");	break;
 		default:	putmessage("Unable to change protections of file");
 		}
+		return 1; /* error */
 	}
+	return 0; /* success */
 }
 #endif /* unix */
 
@@ -2775,7 +2772,7 @@ struct	vol_struct *i1, *i2;
 /*
 	load_dir_ring	Load the dir_ring with the list of files and directories
 */
-static int load_dir_ring(int force_load)
+static int load_dir_ring()
 {
 	int	rc;
 	int	len;
@@ -2783,38 +2780,6 @@ static int load_dir_ring(int force_load)
 	char	*ptr;
 	char	*context;
 	int	cnt;
-
-#ifdef unix
-	/*
-	**	This code only works on unix because only there is stat() fully implemented.
-	**	Also stat.st_ino is not reliable on WIN32 or DOS for a directory.
-	*/
-
-	static struct	stat	old_stat, new_stat;
-
-	if (first_dir_load)
-	{
-		memset(&old_stat,0,sizeof(old_stat));
-		first_dir_load = 0;
-	}
-
-	if (stat(native_path,&new_stat))
-	{
-		putmessage("Unable to STAT the Directory");
-		return(0);
-	}
-
-	if ( !force_load &&
-	    old_stat.st_ino   == new_stat.st_ino &&				/* if directory is already loaded and 		*/
-	    old_stat.st_dev   == new_stat.st_dev    )				/* has not been modified then don't reload	*/
-	{
-		if (old_stat.st_mtime == new_stat.st_mtime)
-		{
-			return(0);
-		}
-	}
-	memcpy(&old_stat,&new_stat,sizeof(old_stat));
-#endif /* unix */
 
 	if (dir_ring)
 	{
@@ -2960,9 +2925,9 @@ static void libpath(char vol[SIZEOF_VOL], char lib[SIZEOF_LIB], char path[COB_FI
 static int stattype(const char* path)
 {
 	int	rc;
-	struct stat buf;
+	mode_t	mode;
 
-	if ( stat(path,&buf) )
+	if ( 0 != WL_stat_mode(path, &mode) )
 	{
 		switch(errno)
 		{
@@ -2979,14 +2944,14 @@ static int stattype(const char* path)
 		return(rc);
 	}
 
-	if      (S_ISDIR (buf.st_mode))  rc = TYPE_DIR;
-	else if (S_ISREG (buf.st_mode))  rc = TYPE_REG;
-	else if (S_ISFIFO(buf.st_mode))  rc = TYPE_FIFO;
-	else if (S_ISCHR (buf.st_mode))  rc = TYPE_CHR;
+	if      (S_ISDIR (mode))  rc = TYPE_DIR;
+	else if (S_ISREG (mode))  rc = TYPE_REG;
+	else if (S_ISFIFO(mode))  rc = TYPE_FIFO;
+	else if (S_ISCHR (mode))  rc = TYPE_CHR;
 #ifdef unix
-	else if (S_ISBLK (buf.st_mode))  rc = TYPE_BLK;
+	else if (S_ISBLK (mode))  rc = TYPE_BLK;
 #endif
-	else			  	 rc = TYPE_UNKNOWN;
+	else			  rc = TYPE_UNKNOWN;
 
 	return(rc);
 }
@@ -3001,7 +2966,7 @@ static int typefile(const char* file)
 	int	header_len;
 	int	i;
 
-	fh = open(file,O_RDONLY|O_BINARY,0);
+	fh = open(file,O_RDONLY | O_BINARY | O_LARGEFILE,0);
 	if ( fh == -1 )
 	{
 		return(FILE_UNKNOWN);
@@ -3156,28 +3121,28 @@ static void addpath(char* newpath, const char* oldpath, const char* file)
 
 #ifdef unix
 /*
-	modestring	This routine is given a stat struct and returns a "ls" style string i.e.  "-rwxr-x---"
+	modestring	This routine is given a st_mode and returns a "ls" style string i.e.  "-rwxr-x---"
 */
-static modestring(struct stat *filestat, char *mode)
+static void modestring(mode_t st_mode, char *protection)
 {
-	strcpy(mode,"----------");
+	strcpy(protection,"----------");
 
-	if      ( S_ISDIR (filestat->st_mode) ) mode[0] = 'd';
-	else if ( S_ISCHR (filestat->st_mode) ) mode[0] = 'c';
-	else if ( S_ISBLK (filestat->st_mode) ) mode[0] = 'b';
-	else if ( S_ISFIFO(filestat->st_mode) ) mode[0] = 'p';
+	if      ( S_ISDIR (st_mode) ) protection[0] = 'd';
+	else if ( S_ISCHR (st_mode) ) protection[0] = 'c';
+	else if ( S_ISBLK (st_mode) ) protection[0] = 'b';
+	else if ( S_ISFIFO(st_mode) ) protection[0] = 'p';
 
-	if (filestat->st_mode & S_IRUSR) mode[1] = 'r';
-	if (filestat->st_mode & S_IWUSR) mode[2] = 'w';
-	if (filestat->st_mode & S_IXUSR) mode[3] = 'x';
+	if (st_mode & S_IRUSR) protection[1] = 'r';
+	if (st_mode & S_IWUSR) protection[2] = 'w';
+	if (st_mode & S_IXUSR) protection[3] = 'x';
 
-	if (filestat->st_mode & S_IRGRP) mode[4] = 'r';
-	if (filestat->st_mode & S_IWGRP) mode[5] = 'w';
-	if (filestat->st_mode & S_IXGRP) mode[6] = 'x';
+	if (st_mode & S_IRGRP) protection[4] = 'r';
+	if (st_mode & S_IWGRP) protection[5] = 'w';
+	if (st_mode & S_IXGRP) protection[6] = 'x';
 
-	if (filestat->st_mode & S_IROTH) mode[7] = 'r';
-	if (filestat->st_mode & S_IWOTH) mode[8] = 'w';
-	if (filestat->st_mode & S_IXOTH) mode[9] = 'x';
+	if (st_mode & S_IROTH) protection[7] = 'r';
+	if (st_mode & S_IWOTH) protection[8] = 'w';
+	if (st_mode & S_IXOTH) protection[9] = 'x';
 }
 #endif /* unix */
 
@@ -3377,6 +3342,13 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.35.2.2.2.3  2002/10/09 21:03:01  gsl
+**	Huge file support
+**	
+**	Revision 1.35.2.2.2.2  2002/10/09 19:20:32  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
 **	Revision 1.35.2.2.2.1  2002/09/05 19:22:29  gsl
 **	LINUX
 **	

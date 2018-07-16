@@ -474,9 +474,9 @@ static void process_back_ref(int* num_asn,int* num_var,int* num_val)			/* Proces
 /*
 **	History:
 **	$Log: ptequatn.c,v $
-**	Revision 1.6  1997-04-21 11:07:59-04  scass
+**	Revision 1.6  1997/04/21 15:07:59  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.5  1996-09-12 19:16:41-04  gsl
 **	fix prototypes
 **

@@ -118,7 +118,7 @@ extern HWND vraw_get_console_hWnd(void);
 extern WORD vrawgetattribute(int attr);
 extern int wbackground(void);
 extern int use_costar(void);
-extern int filesize(char* name);
+extern long WL_filesize(const char* path);
 HANDLE opentempfile(char *path);
 
 
@@ -662,7 +662,7 @@ int win32spawnlp(const char *cmd, const char *args, int Mode)
 			**	Some processes (line QSUBMIT) fail without an exit code 
 			**	so also check if the captured output files are not empty.
 			*/
-			if (dwRetcode || filesize(tempout) > 0 || filesize(temperr) > 0) 
+			if (dwRetcode || WL_filesize(tempout) > 0 || WL_filesize(temperr) > 0) 
 			{
 				FILE 	*fh;
 				char	the_line[256];
@@ -977,10 +977,13 @@ HANDLE opentempfile(char *path)
 /*
 **	History:
 **	$Log: win32spn.c,v $
-**	Revision 1.29  1998-12-09 15:03:58-05  gsl
+**	Revision 1.29.2.1  2002/10/09 21:17:34  gsl
+**	Huge file support
+**	
+**	Revision 1.29  1998/12/09 20:03:58  gsl
 **	Fix for WIN98 to force window to foreground on return.
 **	Change test for win32_95() to !win_nt()
-**
+**	
 **	Revision 1.28  1998-11-02 11:20:21-05  gsl
 **	Fixed the CAPTURE OUTPUT logic
 **

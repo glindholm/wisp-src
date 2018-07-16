@@ -281,9 +281,9 @@ NODE shiftinsert_clause_before_node(NODE curr_node, NODE clause_node)
 /*
 **	History:
 **	$Log: node.c,v $
-**	Revision 1.8  1998-02-10 15:05:28-05  gsl
+**	Revision 1.8  1998/02/10 20:05:28  gsl
 **	Added shiftinsert_clause_before_node()
-**
+**	
 **	Revision 1.7  1996-08-30 21:56:06-04  gsl
 **	drcs update
 **

@@ -284,9 +284,9 @@ NODE reduce_one(NODE start)
 /*
 **	History:
 **	$Log: reduce.c,v $
-**	Revision 1.6  1996-08-30 21:56:08-04  gsl
+**	Revision 1.6  1996/08/31 01:56:08  gsl
 **	drcs update
-**
+**	
 **
 **
 */

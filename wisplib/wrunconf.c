@@ -166,9 +166,9 @@ int wrunconfig(struct wruncfg *cfg)
 /*
 **	History:
 **	$Log: wrunconf.c,v $
-**	Revision 1.13  1997-02-25 09:51:18-05  gsl
+**	Revision 1.13  1997/02/25 14:51:18  gsl
 **	Add error checking to handle too long of fields
-**
+**	
 **	Revision 1.12  1996-10-08 20:31:55-04  gsl
 **	move wispconfigdir() to wispcfg.h
 **

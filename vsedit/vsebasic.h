@@ -39,9 +39,9 @@ void free_linenum(void);
 /*
 **	History:
 **	$Log: vsebasic.h,v $
-**	Revision 1.5  1996-09-03 18:24:00-04  gsl
+**	Revision 1.5  1996/09/03 22:24:00  gsl
 **	drcs update
-**
+**	
 **
 **
 */

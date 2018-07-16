@@ -38,9 +38,9 @@ int get_line_and_index(int row, int4 *line);
 /*
 **	History:
 **	$Log: vsedfnd.h,v $
-**	Revision 1.5  1996-09-03 18:24:01-04  gsl
+**	Revision 1.5  1996/09/03 22:24:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

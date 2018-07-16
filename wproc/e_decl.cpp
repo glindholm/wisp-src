@@ -247,9 +247,9 @@ void machine::exec_declare(Boolean formal_parameter) {
 //
 //	History:
 //	$Log: e_decl.cpp,v $
-//	Revision 1.13  1998-08-31 15:13:41-04  gsl
+//	Revision 1.13  1998/08/31 19:13:41  gsl
 //	drcs update
-//
+//	
 //
 
 //	

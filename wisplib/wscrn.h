@@ -28,9 +28,9 @@ struct wscrn_struct
 /*
 **	History:
 **	$Log: wscrn.h,v $
-**	Revision 1.8  1996-08-19 18:33:23-04  gsl
+**	Revision 1.8  1996/08/19 22:33:23  gsl
 **	drcs update
-**
+**	
 **
 **
 */

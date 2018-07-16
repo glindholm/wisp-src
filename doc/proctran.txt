@@ -1,0 +1,447 @@
+
+
+
+PROCTRAN Utility
+User's Guide
+
+
+
+October 1992
+
+
+
+This manual describes the Proctran Utility , a software product
+designed to provide Wang Procedure Language translation to Wang VS COBOL
+in the VAX/VMS and Unix environments.
+
+Software Version:  Proctran V2.1
+
+Associated Software: VAX/VMS 5.3, Ultrix 4.2, AIX 3.1, DG/UX, HP/UX,
+		     SCO Unix,Unix System V
+
+
+
+
+
+IDSI (International Digital Scientific Incorporated)
+28460 Avenue Stanford, Suite 100
+Valencia, California  91355
+
+Phone: (805) 295-1155, FAX (805) 295-8755
+
+
+October 1992
+ 			COPYRIGHT Notice.
+
+The information in this document is subject to change without
+notice and should not be construed as a commitment by International
+Digital Scientific Incorporated.  IDSI assumes no responsibility
+for any errors that might appear in this manual.
+
+The software described herein is furnished under license and may only
+be used or copied in accordance with the terms of that license.
+
+
+
+Copyright (c) 1992 by International Digital Scientific Inc., Valencia, CA.
+
+			All rights reserved.
+
+
+Under international copyright laws, you may not copy this manual or
+the software it describes, in whole or in part, without permission in
+writing from International Digital Scientific Incorporated.  Under the
+law, these restrictions apply to translation into other languages or
+formats.
+
+
+
+0  PREFACE 
+
+	 
+0.1  Release
+     This manual refers to version 2.1 of the Proctran Utility.  See the
+     Proctran Release Notes for information on subsequent versions.
+
+
+0.2  Intended Audience
+     This manual is intended for system managers, programmers and software 
+     developers who are using the Proctran utility.  It provides the information
+     necessary to install and use the Proctran Utility.
+
+     Some basic experience with the following is assumed:
+	 - general aspects of the VAX filesystem, including directories
+	   and file protection
+	 - general aspects of the Unix filesystem, including directories
+	   and file permissions/modes
+
+
+0.3  Scope of Document
+     This manual is divided into three chapters and two appendices.
+
+	Chapter 1 Introduction to the Proctran Utility.
+
+	Chapter 2 Describes how to use the Proctran Utility.
+
+	Chapter 3 Describes the installation and setup procedure.
+
+	Appendix A Provides troubleshooting information for some common 
+		   problems.
+
+	Appendix B Describes a sample Wang procedure and it's translation.
+
+
+0.4 Terms and Definitions
+    The names of programs in this document are in upper case.
+
+    statement -
+
+
+1   INTRODUCTION
+    This chapter introduces the Proctran Utility
+
+	   
+1.1 Background
+
+	The Wang VS operationg system provides a procedure language to
+	allow the programmer to interface with the operating system more
+	easily.  When researching the process of converting Wang Procedure
+	files, IDSI concluded that data processing programmers use the
+	procedure language to facilitate two major areas.  First is operation
+	requirements which include TAPECOPY, MOUNT, DISMOUNT, TCCOPY, and
+	other various interface utilities.  The second area, and the one that
+	IDSI has addressed, is the additions and enhancements to data
+	processing applications.  Programmers use Wang Procedure Language for
+	menus, printing files, submitting programs, controlling user
+	interactions, and other application functions.  
+
+	On the target platform there is a similar command orientated language.
+Instead of converting the Wang Procedure files into the target platform
+procedure language, IDSI has ellected to write a conversion utility that will
+convert the Wang Procedures to Wang COBOL.  The converted Wang COBOL files
+will then be run through the WISP translator.  There are two basic reasons
+for this solution.  First, in doing this the Wang Procedures will then be as
+portable as the Wang COBOL applications.  Second, it will elliminate the use
+of an interpreted language with the use of an object orientated language.
+This will aid in increasing performance on the target platform.
+
+1.2 Overview
+1.3 Components
+1.4 Features
+    This section gives an overview of the functionality provided
+    by the IDSI Print Queue.
+
+1.4.1 General features
+2   USAGE
+    This section describes how to use the IDSI Print Queue.
+
+
+2.1 Printing files
+2.1.2 Using ilp.
+    The ilp program is available from the Unix command line for printing
+    files.  Its command syntax is as follows:
+
+	     ilp [options] <files>
+
+    You can specify any number of filenames in the command.  If you do
+    not specify any filenames, ilp will attempt to capture <stdin> and
+    print it.  The options supported are as follows:
+
+	   -d <printer>	    Used to specify job destination. <printer>
+	      		    is the name of the desired printer.
+       
+	   -r start:end	    Used to specify range of pages to print.  If
+	      		    omitted, the entire file will be printed.
+       
+	   -f form	    Used to specify which form to use.
+       
+	   -C class	    Used to specify which printer class to use.
+	      		    The job may be printed on any printer having
+	      		    a matching class.
+       
+	   -n copies	    Used to specify number of copies desired.
+   
+	   -M <mode>        Used to specify the print job's mode.  <mode>
+	                    is one or more of the following (separated by
+	                    commas if necessary):
+		            hold - queue the file in hold mode.
+	                    del  - delete the file after it is printed.
+	                    re   - respool and hold the file after it
+	                           is printed.
+
+
+2.2 Fullscreen Print Queue Management.
+  
+3  INSTALLATION
+   This section describes how to setup and configure the IDSI Print Queue.
+   Please read the entire section before attempting to setup and use
+   the Print Queue.
+
+
+3.1 Distribution
+    The Print Queue distribution consists of the following files:
+
+	wisp/bin/idaemon	  Background spooler daemon.
+
+3.2 Overview
+    This section describes the configuration and work files used 
+    by the Print Queue.
+
+3.2.1 Print Queue Work Directory
+3.3 Installation steps.
+    You should be logged in as "root" to perform the installation.
+
+3.3.1 Create the directory /usr/spool/iprint.  
+APPENDICES
+
+A  Troubleshooting
+
+1.2 Summary.
+
+	The procedure language conversion tool will be resident on the target
+platform.  The tool is to be used in conjuction with the WISP tool.  After
+the Wang procedures are converted to Wang VS COBOL using the PROCTRAN utility
+(on the target system) they will then be converted to the appropriate COBOL
+environment by WISPing.
+
+1.3 Componants.
+
+	The tool consists of one executable:
+
+	o PROCTRAN - procedure conversion utility.  It converts 
+	  	Wang Procedure Language to Wang VS COBOL.
+
+
+
+
+2.0  T R A N S L A T I O N   P R O C E S S
+
+
+2.1  Translation Steps.
+
+	The translation process involves the following steps:
+
+	a. Transferring the Wang Procedures to the target environment.
+	b. Running the procedures through the PROCTRAN tool.
+	c. Running the converted code through the WISP tool.
+	d. Compile the converted COBOL on the target system.
+
+2.1a  Transferring source to the target machine.
+
+	Writing tapes on the Wang is accomplished via the standard Wang VS
+	utilities TAPEINIT and TAPECOPY plus the LIBCOPY or DECCOPY utilities
+	supplied by IDSI.  It is assumed that the reader is familiar with the
+	standard Wang utilities.  If not, please consult the "Wang VS
+	User's Manual".
+
+	To load the VS tapes onto the target machine, use the VSLOAD
+	utility supplied with the WISP kit.  PROCTRAN will use .WPS as the
+	default file type,however, any type can be used except WCB.  PROCTRAN
+	will generate a .WCB so this type CANNOT be used in the original
+	specification.
+
+2.1b  Running the Converter.
+
+	Converting the Wang procedures is very simple.  Under VMS, first
+	make sure that a logical WISP$PROCTRAN is pointing to PROCTRAN.EXE.
+
+	$ DEFINE/NOLOG WISP$PROCTRAN WISP$ROOT:[EXE]PROCTRAN.EXE
+
+	Also under VMS be sure to do a SET COMMAND PROCTRAN.  This will
+	define the proctran command to VMS which will do some error checking
+	when the utility is used.
+
+	$ SET DEFAULT WISP$ROOT:[EXE]
+	$ SET COMMAND PROCTRAN
+
+	There are no special instructions for the UNIX platforms.
+
+	After the tool has been installed on the target system, simply type
+	PROCTRAN at the command line with the procedure name following.  In
+	general, it is prefered that when the original Wang procedure is
+	transfered to the target system it is given a .WPS extension for the
+	file name.  Then, after the conversion completes, a .WCB will reside
+	in the current directory.
+	
+	A VMS Example:
+	
+	$ PROCTRAN PROGRAM1.WPS
+	$ DIR PROGRAM1.*
+	
+		PROGRAM1.WPS
+		PROGRAM1.WCB
+
+	$ WISP/INIT=(NOMOVE,NOWS) PROGRAM1
+	$ COBOL/ANSI/FIPS=74 PROGRAM1
+	$ LINK PROGRAM1,WISPLIB/LIB,SYS$INPUT:/OPT
+	SYS$SHARE:VAXCRTL.EXE/SHARE
+	$ RUN PROGRAM1
+
+	There is one flag that can be added to the command line: /LIST
+	(-L under the UNIX operating system).  This will display all of
+	the informational messages during the generation process.  If
+	the flag is not added then only the higher error messages will
+	be displayed.  This can be used in the debugging process to
+	pinpoint where problems occur.
+
+
+
+2.1b  Running the Converter. (cont'd)
+
+	Typing proctran without a file name will give further help.
+
+	The conversion process will first parse each line in the procedure
+	and build linked lists with the information needed to write the
+	COBOL equivelance.  When the procedure has been parsed completely,
+	the COBOL code is then written out to the .WCB file. 
+
+2.1c  WISP Requirements.
+	
+	After generating the Wang COBOL file from the Wang procedure, you
+	need to then WISP the generated Wang COBOL file.  When WISPing a
+	generated file, two WISP switches must be used.  When on the VMS
+	platform, specify /INIT=(NOMOVE,NOWS).  These switches control
+	how fields and filler are initialized.  They are required and
+	should NOT be excluded.  You may encounter data exceptions at run
+	time if these switches are not used.
+
+
+
+
+3.0  C O N V E R T E D   C O D E
+
+
+3.1  The converted code.
+
+	The Wang COBOL file that is generated will perform, in most cases,
+	all of the functions that the native Wang Procedure Language handles.
+
+	The following procedure language statements are handled either
+	completely or partially.
+
+	o ASSIGN, CALL, DECLARE, EXTRACT, GOTO, IF, LOGOFF, MESSAGE,
+	  PRINT, PROCEDURE, PROMPT, RENAME, RETURN, RUN, RUN USING, 
+	  SCRATCH, SET, SUBMIT, USING.
+
+	o Most statements will be converted into the appropriate call
+	  to a USERSUB. 
+
+	o IF statements will be parsed and indentation will be
+	  implimented. 
+
+	o RETURN will be converted to EXIT PROGRAM or STOP RUN depending
+	  on the using clause in the procedure statement. 
+
+	o RUN will be converted to CALL LINK.
+
+	o ASSIGN will be parsed to create a STRING, CALL STRING, MOVE,
+	  or COMPUTE statement.
+
+	o MESSAGE and PROMPT will be converted to a DISPLAY-WS and
+	  a DISPLAY AND READ statement.  PROMPT will use a write
+	  control character to position the keyboard.  MESSAGE 
+	  will use a write control character to lock the keyboard.
+	  PFKEY, CURROW, AND CURCOL will be emulated. 
+
+	o UPPER, UPLOW, LINE and the other attributes will be 
+	  converted to the appropriate FAC byte for the field.
+
+	o END is converted to current paragraph name -EXIT
+	  with an EXIT statement. 
+	
+	o GOTO will be parsed into the COBOL equivalent.
+
+	o LABELS will be converted to paragraph names.
+
+
+
+
+4.0  E R R O R S
+
+
+4.1 PROCTRAN Errors.
+
+	Due to the complexity of the Wang Procedure Language, some 
+	complex statements may cause PROCTRAN errors or run time
+	errors, even if the code compiles cleanly.
+
+	PROCTRAN will supply errors if it can't parse a complex
+	statement.
+
+	Examples:
+	
+	o Complex IF statements will cause an error. 
+
+		before IF &VAR(7,3) = '123'
+		after  01 WISP-LITERAL-1 PIC X(3) VALUE "123".
+			* Invalid index in if (7,3)
+	 		IF AVAR = WISP-LITERAL-1
+
+	o Complex screen variables will cause errors.
+
+		before Prompt upper &var(7,7)
+		after	05 ROW01-COL2   PIC X(7) ROW 1 COLUMN 2
+			SOURCE WISP-AVAR OBJECT WISP-AVAR.
+
+	  This syntax will compile but at run time the first 7 bytes
+	  of &VAR will be displayed, not the second 7 bytes.
+
+	o CALL statements will be converted to PERFORM.  You may have to
+	  add a THRU paragraph where the the END statement gets translated.
+
+		before  LABEL1:
+				call LABEL2
+				goto EOJ
+			LABEL2:
+			LABEL3:
+			LABEL4:
+			LABEL5:
+				END
+			EOJ:
+				RETURN
+
+		after LABEL1.
+			PERFORM LABEL2.
+			GO TO EOJ.
+		      LABEL2.
+		      LABEL3.
+		      LABEL4.
+		      LABEL5.
+		      LABEL5-EXIT.
+			EXIT.
+
+	  NOTE:  You will want to change the PERFORM LABLE2.  The new line
+		 should read PERFORM LABLE2 THRU LABLE5-EXIT.
+
+
+
+
+4.1 PROCTRAN Errors (cont).
+
+	o Extremly complex ASSIGN statements that combine combinations 
+	  of strings and integers may not work at run time.
+
+	o Boolean expresions to integer and string will not be handled.
+	    	Example.
+			ASSIGN &INT = 1 > 2   [assigns 0]
+			ASSIGN &VAR = 1 < 2   [assigns "1        "]
+ 
+	o Conditionals using EQ,LT,GT,LTE etc will have to be changed to
+	  the appropriate symbols.
+
+	o External utilities such as MOUNT, TRANSL, CREATE, SORT, etc 
+	  are not converted.
+
+	o Remove all TRACE statements and associated GETPARMS.
+
+
+
+
+
+
+5.1 PROCTRAN Limitations
+
+	o When assigning a value to the RETURN-CODE, the maximum value
+	  must be less then 1000 (3 digits) for the COBOL to execute
+	  properly.
+

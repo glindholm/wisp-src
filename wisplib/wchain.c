@@ -12,6 +12,7 @@ static char rcsid[]="$Id:$";
 #include "wfname.h"
 #include "filext.h"
 #include "runtype.h"
+#include "wisplib.h"
 
 #ifdef unix
 #include "wrunconf.h"
@@ -172,9 +173,13 @@ char	*volname, *libname, *filename;
 /*
 **	History:
 **	$Log: wchain.c,v $
-**	Revision 1.15  1998-10-14 14:02:42-04  gsl
+**	Revision 1.15.2.1  2002/10/09 19:20:35  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
+**	Revision 1.15  1998/10/14 18:02:42  gsl
 **	Add include of runtype.h
-**
+**	
 **	Revision 1.14  1997-03-12 13:18:04-05  gsl
 **	CHange to use a standard not-defined routine if WCHAIN_DEFINED is not defined
 **

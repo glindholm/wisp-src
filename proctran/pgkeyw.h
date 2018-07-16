@@ -203,9 +203,9 @@ EXT char *trace_keywords[];
 /*
 **	History:
 **	$Log: pgkeyw.h,v $
-**	Revision 1.8  1997-04-21 10:56:51-04  scass
+**	Revision 1.8  1997/04/21 14:56:51  scass
 **	Corected copyright.
-**
+**	
 **	Revision 1.7  1996-09-12 19:22:42-04  gsl
 **	Add drcs headers
 **

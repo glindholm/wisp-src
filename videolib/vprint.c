@@ -288,11 +288,11 @@ static int vpr_true(void)
 /*
 **	History:
 **	$Log: vprint.c,v $
-**	Revision 1.20  1998-04-16 12:06:13-04  gsl
+**	Revision 1.20  1998/04/16 16:06:13  gsl
 **	Only do the vdefer_restore if op level doesn't defer motion.
 **	This is to fix problem Harte reported trk#403 where screens
 **	were being restored char-by-char no optimization.
-**
+**	
 **	Revision 1.19  1997-07-12 17:43:14-04  gsl
 **	Major changes in how optimization is done (or not done)
 **	Now hold regular characters into a hold buffer (holdbuf) and only

@@ -115,9 +115,9 @@ expression *stack::top(int offset) {
 //
 //	History:
 //	$Log: stack.cpp,v $
-//	Revision 1.7  1998-09-03 08:28:11-04  gsl
+//	Revision 1.7  1998/09/03 12:28:11  gsl
 //	Enhanced the stack trace logic to print the id's
-//
+//	
 //	Revision 1.6  1998-08-31 15:14:16-04  gsl
 //	drcs update
 //

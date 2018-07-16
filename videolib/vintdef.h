@@ -60,9 +60,9 @@ typedef  unsigned int      uint4;
 /*
 **	History:
 **	$Log: vintdef.h,v $
-**	Revision 1.6  1996-10-11 18:16:06-04  gsl
+**	Revision 1.6  1996/10/11 22:16:06  gsl
 **	drcs update
-**
+**	
 **
 **
 */

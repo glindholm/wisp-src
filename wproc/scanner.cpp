@@ -555,9 +555,9 @@ void scanner::ignore_rest_of_line()
 //
 //	History:
 //	$Log: scanner.cpp,v $
-//	Revision 1.7  1998-08-31 15:14:13-04  gsl
+//	Revision 1.7  1998/08/31 19:14:13  gsl
 //	drcs update
-//
+//	
 //
 
 //	

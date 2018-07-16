@@ -271,7 +271,7 @@ $(WISPKIT)\bin\vsedit.exe:	$(BASEDIR)\bin\$(@F)
 $(WISPKIT)\bin\vtest.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\bin\wconfig.exe:	$(BASEDIR)\bin\$(@F)
+$(WISPKIT)\bin\wconfig.exe:	$(BASEDIR)\nt\wconfig\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\bin\wcopy.exe:	$(BASEDIR)\bin\$(@F)
@@ -289,7 +289,7 @@ $(WISPKIT)\bin\wdiag.exe:	$(BASEDIR)\bin\$(@F)
 $(WISPKIT)\bin\wisp.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\bin\wisptran.exe:	$(BASEDIR)\bin\$(@F)
+$(WISPKIT)\bin\wisptran.exe:	$(BASEDIR)\nt\wisptran\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\bin\wlicense.exe:	$(BASEDIR)\bin\$(@F)
@@ -343,22 +343,22 @@ $(WISPKIT)\etc\wispplat.wcb:	$(BASEDIR)\wisputils\$(@F)
 $(WISPKIT)\etc\softlink.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\wproc.txt:	$(BASEDIR)\wproc\$(@F)
+$(WISPKIT)\etc\wproc.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\wisp_relnotes.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\etc\wisp_relnotes.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\aqmwisp.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\etc\aqmwisp.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\nonascii.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\etc\nonascii.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\vcolors.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\etc\vcolors.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\nttelnet.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\etc\nttelnet.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\config\ACUCONFIG:	$(BASEDIR)\config\$(@F)
@@ -457,7 +457,7 @@ $(WISPKIT)\acu\wacuhelp.cob:		$(BASEDIR)\acu\$(@F)
 $(WISPKIT)\acu\wacuwsb.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wispacn.txt:		$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\acu\wispacn.txt:		$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\acu\wispicon.ico:		$(BASEDIR)\acu\$(@F)
@@ -496,13 +496,13 @@ $(WISPKIT)\demo\test.wps:	$(BASEDIR)\wproc\$(@F)
 $(WISPKIT)\demo\video.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\demo\qabckgrd.wcb:	$(BASEDIR)\testacu\$(@F)
+$(WISPKIT)\demo\qabckgrd.wcb:	$(BASEDIR)\test\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\wispntdoc.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\wispntdoc.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\wispntsetup.txt:	$(BASEDIR)\etc\$(@F)
+$(WISPKIT)\wispntsetup.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 #
@@ -530,82 +530,82 @@ $(EDEKIT)\wrun32wisp_ede_acu51.mak:	$(BASEDIR)\acu\$(@F)
 $(EDEKIT)\wrun32wisp_ede_acu52.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\helpmap.dat:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\helpmap.dat:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbbld.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbbld.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbcpy1.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbcpy1.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbcpy2.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbcpy2.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbcpy3.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbcpy3.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbedit.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbedit.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menudefs.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menudefs.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menudemo.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menudemo.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menudisp.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menudisp.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menulogo.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menulogo.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menumcbs.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menumcbs.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menuvect.wcb:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menuvect.wcb:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbcode.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbcode.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbcol.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbcol.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbdisp.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbdisp.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbedit.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbedit.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbicnt.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbicnt.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbname.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbname.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbopts.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbopts.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbrow.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbrow.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbtext.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbtext.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbtype.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbtype.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbvalue.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbvalue.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\mcbwidth.hlp:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\mcbwidth.hlp:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menudemo.opt:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menudemo.opt:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\demo\menudemo.mak:	$(BASEDIR)\ede\$(@F)
+$(EDEKIT)\demo\menudemo.mak:	$(BASEDIR)\ede\demo\$(@F)
 	$(COPY) $** $@
 
 
@@ -613,37 +613,37 @@ $(EDEKIT)\demo\menudemo.mak:	$(BASEDIR)\ede\$(@F)
 #	cridacu
 #
 
-$(CRIDACUKIT)\CONTROL:		$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\CONTROL:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\DATENTRY:		$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\DATENTRY:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\INQUIRY:		$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\INQUIRY:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\REPORT:		$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\REPORT:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridacu.lib:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\cridacu.lib:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridacum.lib:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\cridacum.lib:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\crid.h:		$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\crid.h:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\crid85.c:		$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\crid85.c:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridtbl.c:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\cridtbl.c:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
 $(CRIDACUKIT)\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
@@ -655,13 +655,13 @@ $(CRIDACUKIT)\wrun32wisp_crid_acu51.mak:	$(BASEDIR)\acu\$(@F)
 $(CRIDACUKIT)\wrun32wisp_crid_acu52.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridntsetup.txt:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\cridntsetup.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\crid_relnotes.txt:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\crid_relnotes.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\crid_packlist.txt:	$(BASEDIR)\kcsi\crid\$(@F)
+$(CRIDACUKIT)\crid_packlist.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
 
@@ -669,25 +669,25 @@ $(CRIDACUKIT)\crid_packlist.txt:	$(BASEDIR)\kcsi\crid\$(@F)
 #	createacu
 #
 
-$(CREATEACUKIT)\create.exe:	$(BASEDIR)\kcsi\create\$(@F)
+$(CREATEACUKIT)\create.exe:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\createacu.lib:	$(BASEDIR)\kcsi\create\$(@F)
+$(CREATEACUKIT)\createacu.lib:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\vscrmain.obj:	$(BASEDIR)\kcsi\create\$(@F)
+$(CREATEACUKIT)\vscrmain.obj:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
 $(CREATEACUKIT)\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\create_relnotes.txt:	$(BASEDIR)\kcsi\create\$(@F)
+$(CREATEACUKIT)\create_relnotes.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\createntsetup.txt:	$(BASEDIR)\kcsi\create\$(@F)
+$(CREATEACUKIT)\createntsetup.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\create_packlist.txt:	$(BASEDIR)\kcsi\create\$(@F)
+$(CREATEACUKIT)\create_packlist.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
 #

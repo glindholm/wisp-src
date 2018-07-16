@@ -202,9 +202,9 @@ void executable_procedure::interpret() {
 //
 //	History:
 //	$Log: procedur.cpp,v $
-//	Revision 1.7  2001-08-22 16:21:50-04  gsl
+//	Revision 1.7  2001/08/22 20:21:50  gsl
 //	fixed const error
-//
+//	
 //	Revision 1.6  1998-08-31 15:14:07-04  gsl
 //	drcs update
 //

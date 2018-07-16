@@ -56,9 +56,9 @@ typedef unsigned int size_t;
 /*
 **	History:
 **	$Log: idsistd.h,v $
-**	Revision 1.7  1996-09-10 11:43:49-04  gsl
+**	Revision 1.7  1996/09/10 15:43:49  gsl
 **	Add include of wisp32std.h in ifdef WIN32 code
-**
+**	
 **	Revision 1.6  1996-07-23 11:17:47-07  gsl
 **	drcs update
 **

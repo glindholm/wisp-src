@@ -93,9 +93,9 @@ void packed_to_binary(unsigned char *src, int4 *dest)
 /*
 **	History:
 **	$Log: packer.c,v $
-**	Revision 1.9  1996-08-19 18:32:38-04  gsl
+**	Revision 1.9  1996/08/19 22:32:38  gsl
 **	drcs update
-**
+**	
 **
 **
 */

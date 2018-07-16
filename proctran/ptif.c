@@ -644,9 +644,9 @@ static void process_complex_sub(char type,
 /*
 **	History:
 **	$Log: ptif.c,v $
-**	Revision 1.8  1997-04-21 11:10:54-04  scass
+**	Revision 1.8  1997/04/21 15:10:54  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.7  1996-12-12 13:37:44-05  gsl
 **	DevTech -> NeoMedia
 **

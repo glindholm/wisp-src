@@ -31,9 +31,9 @@ int linkvector();
 /*
 **	History:
 **	$Log: linkvect.h,v $
-**	Revision 1.5  1996-08-19 18:32:27-04  gsl
+**	Revision 1.5  1996/08/19 22:32:27  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1355,9 +1355,9 @@ static int padout3(char *text, int width, int graphics_1st)				/* Output padded 
 /*
 **	History:
 **	$Log: vmenu.c,v $
-**	Revision 1.13  1997-07-08 17:18:16-04  gsl
+**	Revision 1.13  1997/07/08 21:18:16  gsl
 **	change to use newe interface
-**
+**	
 **	Revision 1.12  1996-10-11 18:16:11-04  gsl
 **	drcs update
 **

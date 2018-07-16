@@ -53,7 +53,7 @@ typedef struct win32msg_s {
 **	Globals and Externals
 */
 const char *wispprbdir(char *dir);
-BOOL fexists(const char *path);
+BOOL WL_fexists(const char *path);
 static long nReadTimeoutMsecs=0;
 #define INC_READ_TIMEOUT_MSEC 100
 
@@ -125,7 +125,7 @@ int win32msgget(key_t nTheKey, int nFlag)
 		/*
 		**	The data file should already exist, if it doesn't then it's an error.
 		*/
-		if (!fexists(szFilePath))
+		if (!WL_fexists(szFilePath))
 		{
 			char errtxt[256];
 			
@@ -164,7 +164,7 @@ static HANDLE OpenMsgFile(char* szFilePath)
 	HANDLE hTheFile;
 	int	millsecs;
 
-	if (!fexists(szFilePath))
+	if (!WL_fexists(szFilePath))
 	{
 		return INVALID_HANDLE_VALUE;
 	}
@@ -610,7 +610,7 @@ static void makemsgdatafile(key_t keyval, char *szPath)
 
 	sprintf(szPath,"%s\\M_%08X.mdat",msgdir,keyval);
 
-	if (!fexists(msgdir))
+	if (!WL_fexists(msgdir))
 	{
 		/* 
 		**	If the MESSAGE directory doesn't exist then create it here.
@@ -648,14 +648,18 @@ int win32move(char *src, char *dest)
 /*
 **	History:
 **	$Log: win32msg.c,v $
-**	Revision 1.4  1997-05-19 14:00:26-04  gsl
+**	Revision 1.4.2.1  2002/10/09 19:20:35  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
+**	Revision 1.4  1997/05/19 18:00:26  gsl
 **	Fix the handling of message data files so MESSAGE works for WIN32.
 **	Handle problem of exclusive opening of the data file. If file exists but
 **	the open fails them assume it is because someone else has the file open.
 **	In this case retry the open for a second until we get it.
 **	Fix where the data file gets created, it should be created in the
 **	same place as the key file which is in the shared message directory.
-**
+**	
 **	Revision 1.3  1996-12-06 18:36:25-05  jockc
 **	include win32err.h for proto for GetWin32Error
 **

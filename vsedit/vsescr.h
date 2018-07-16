@@ -65,9 +65,9 @@ void vseunfld(VSEFLD *fld, char *scr);
 /*
 **	History:
 **	$Log: vsescr.h,v $
-**	Revision 1.10  1996-09-03 18:24:10-04  gsl
+**	Revision 1.10  1996/09/03 22:24:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

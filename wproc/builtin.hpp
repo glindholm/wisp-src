@@ -156,9 +156,9 @@ enum builtin_kind {
 //
 //	History:
 //	$Log: builtin.hpp,v $
-//	Revision 1.6  1998-08-31 15:13:34-04  gsl
+//	Revision 1.6  1998/08/31 19:13:34  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -256,9 +256,9 @@ static struct rvmap_struct *rvmap(void)
 /*
 **	History:
 **	$Log: rvmap.c,v $
-**	Revision 1.8  1998-05-22 14:49:47-04  gsl
+**	Revision 1.8  1998/05/22 18:49:47  gsl
 **	Change to use wtrace()
-**
+**	
 **	Revision 1.7  1997-06-05 12:49:29-04  scass
 **	Added #ifdef #undef for MAX to resolve warning.
 **

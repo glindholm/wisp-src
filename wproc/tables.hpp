@@ -111,9 +111,9 @@ class table : public object {
 //
 //	History:
 //	$Log: tables.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:22-04  gsl
+//	Revision 1.5  1998/08/31 19:14:22  gsl
 //	drcs update
-//
+//	
 //
 
 //	

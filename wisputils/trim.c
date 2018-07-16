@@ -178,9 +178,9 @@ static wflush()										/* flush WISP output buffer		*/
 /*
 **	History:
 **	$Log: trim.c,v $
-**	Revision 1.8  1996-07-23 14:13:01-04  gsl
+**	Revision 1.8  1996/07/23 18:13:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

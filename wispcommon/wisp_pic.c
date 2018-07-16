@@ -227,10 +227,10 @@ uint4 pic_zmask(const char* the_pic)							/* Generate a 32 bit field Z edit mas
 /*
 **	History:
 **	$Log: wisp_pic.c,v $
-**	Revision 1.11  1999-09-07 10:30:06-04  gsl
+**	Revision 1.11  1999/09/07 14:30:06  gsl
 **	Fix pic_edit() if statement that preserved comments to us '||' where it
 **	was incorrectly using '|'.
-**
+**	
 **	Revision 1.10  1997-12-17 15:30:01-05  gsl
 **	Fix prototypes to be const
 **

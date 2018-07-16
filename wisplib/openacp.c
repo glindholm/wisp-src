@@ -619,9 +619,9 @@ char *p;
 /*
 **	History:
 **	$Log: openacp.c,v $
-**	Revision 1.14  1996-10-10 12:07:01-04  gsl
+**	Revision 1.14  1996/10/10 16:07:01  gsl
 **	fix prototype errors
-**
+**	
 **	Revision 1.13  1996-10-08 17:23:20-07  gsl
 **	replace getenv() with acpconfigdir() and acpmapfile() calls
 **

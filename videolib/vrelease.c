@@ -25,9 +25,9 @@ int vrelease(void)									/* Release from optimization.		*/
 /*
 **	History:
 **	$Log: vrelease.c,v $
-**	Revision 1.10  1997-07-09 12:09:23-04  gsl
+**	Revision 1.10  1997/07/09 16:09:23  gsl
 **	Removed the BLOCK_MODE support so now is the same as vdefer_restore()
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:19-04  gsl
 **	drcs update
 **

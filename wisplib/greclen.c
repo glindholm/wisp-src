@@ -47,9 +47,9 @@ int greclen(char* file_name)							/* Get record length of fixed_size record fil
 /*
 **	History:
 **	$Log: greclen.c,v $
-**	Revision 1.10  1996-09-04 20:02:09-04  gsl
+**	Revision 1.10  1996/09/05 00:02:09  gsl
 **	fix def of stat()
-**
+**	
 **	Revision 1.9  1996-08-19 15:32:23-07  gsl
 **	drcs update
 **

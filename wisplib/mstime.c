@@ -8,9 +8,9 @@ mstime()
 /*
 **	History:
 **	$Log: mstime.c,v $
-**	Revision 1.8  1996-08-19 18:32:34-04  gsl
+**	Revision 1.8  1996/08/19 22:32:34  gsl
 **	drcs update
-**
+**	
 **
 **
 */

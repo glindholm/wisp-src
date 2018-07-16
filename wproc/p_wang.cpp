@@ -1338,9 +1338,9 @@ void compiler::p_wang_cleanup() {
 //
 //	History:
 //	$Log: p_wang.cpp,v $
-//	Revision 1.8  1998-10-13 15:39:44-04  gsl
+//	Revision 1.8  1998/10/13 19:39:44  gsl
 //	Fix type mismatch warning
-//
+//	
 //	Revision 1.7  1998-08-31 15:14:05-04  gsl
 //	drcs update
 //

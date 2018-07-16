@@ -180,9 +180,9 @@ va_dcl											/* Define the list structure.		*/
 /*
 **	History:
 **	$Log: print.c,v $
-**	Revision 1.12  1996-08-19 18:32:39-04  gsl
+**	Revision 1.12  1996/08/19 22:32:39  gsl
 **	drcs update
-**
+**	
 **
 **
 */

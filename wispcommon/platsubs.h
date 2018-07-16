@@ -42,9 +42,9 @@ void 	putplattab(void);
 /*
 **	History:
 **	$Log: platsubs.h,v $
-**	Revision 1.2  1996-07-24 18:57:53-04  gsl
+**	Revision 1.2  1996/07/24 22:57:53  gsl
 **	Move from wisp/lib to wisp/common
-**
+**	
 **	Revision 1.1  1996-06-28 14:45:26-07  gsl
 **	Initial revision
 **

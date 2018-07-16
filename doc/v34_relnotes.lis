@@ -1,0 +1,2187 @@
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		RELEASE NOTES FOR WISP VERSION 3.3.19
+	
+	Document:	v34_relnotes.lis (RELNOTES)
+	Last Updated:	5 JAN 1996
+	Products:	WISP/UNIX, WISP/VMS, WISP/MSDOS
+	Versions:	3.3.19
+	
+	Summary:	Release notes for changes to WISP since version 3.3c.
+			Supplemental documents.
+
+	====================================================================
+	
+
+	HIGHLIGHTS
+	==========
+
+	- This release contains support for the initial release of
+	  "WISP for Windows".  WISP for Windows is a supplimental product
+	  which runs on Microsoft Windows 3.1 and provides a graphical
+	  frontend to your WISP converted programs running on UNIX or VMS.
+	  WISP for Windows provides a MS-Windows look and feel which includes
+	  sunken data well entry fields, raised button function key hotspots,
+	  mouse enabled, optional function key icons, and customizable 
+	  button bars.  You can connect your PC's to your application server
+	  using TCP/IP, or most other standard PC networks, or with serial
+	  data lines.
+
+	- WISP has been enhanced to support AcuServer.  AcuServer is an
+	  add-on product available from Acucobol which gives your COBOL
+	  applications network file access without the performance
+	  degradation which can occur when using NFS.  See the attached
+	  document "acuserver.lis" for complete details.
+
+	- The VSEDIT utility has been vastly improved to include most of 
+	  the Wang Editor functionality including the ability to translate
+	  with WISP and compile off of the Special Commands Menu.
+
+	- The WISP support for Acu4GL has been enhanced to include runtime
+	  identification of database files and support for ORACLE.
+
+	- The WSORT utility has been given a new user interface which more
+	  closely emulates the Wang SORT look and behavior including better
+	  detection and correction of error conditions.  The VMS version
+	  has also been enhanced to support SELECT and multiple input files
+	  using the underlying VMS SORT services.
+
+
+	--------------------------------------------------------------------
+	The following supplemental documents describe specialized aspects
+	of WISP and are included at the end of this document.
+
+	vsedit.lis	Describes the VSEDIT program including translating
+			with WISP and compiling from it. *NEW*
+
+	acu4gl.lis	Describes the use of Acu4GL with WISP converted 
+			programs. *UPDATED*
+
+	acuserver.lis	Describes WISP support for AcuServer.
+
+	dataconv.lis	Describes the *NEW* WISP facility for creating
+			data conversion routines for your Indexed and
+			Relative files.
+
+	docsort.lis	Describes SORTINFO and SORTLINK.
+
+	wsort.lis	Expanded notes on the WSORT utility.
+
+	mflink.lis	Describes LINK vssub for Micro Focus COBOL.
+
+	acp.lis		Describes the setup and use of ACP routines
+			on UNIX and VMS.
+
+
+	--------------------------------------------------------------------
+	The following items may alter the behavior of already converted
+	software.  Please check these over carefully.
+
+	- VMS: The WISP command definition (WISP.CLD) and help (WISP.HLP)
+	  have changed and need to be re-installed.
+
+	- VMS: A help file for the PROCTRAN utility (PROCTRAN.HLP) is now 
+	  available and must be installed.
+
+	- UNIX: The IDSI Print Queue (now call UniQue) has been logically 
+	  separated from the WISP library and runtime.  It will continue
+	  to behave the same, however there are no version dependencies
+	  so updates to WISP and UniQue can be made independently.  A new
+	  release of the print queue can be installed without having to
+	  rebuild your runtime system.
+
+	- UNIX: The OPTIONS file option for selecting which print queue
+	  to use now defaults to PQUNIQUE to select UniQue.  If you are
+	  still using ILP you will need to set the PQILP option.
+
+	- EDE: Older versions of the EDE library are not compatible with 
+	  this version of the WISP library, you must also upgrade your EDE 
+	  to the latest version.  If you attempt to build an executable
+	  using an older EDE library and this WISP library you get 
+	  unresolved symbols.
+
+	- WPUTPARM utility was incorrectly shifting all values to uppercase.
+	  This was making it impossible to pass a lowercase string into
+	  a GETPARM.  If your scripts were relying on WPUTPARM to shift
+	  these values to uppercase they will need to be corrected.
+
+	- UNIX: The old menu-ing package described in Chapter 9 of the WISP
+	  manual is no longer supported.  The routines are still available
+	  in the WISP object libraries but the makefiles to build the COBOL
+	  runtime systems no longer pull in these routines.
+
+	- The WSORT utility now reports errors when unsupported options are
+	  requested, it does this by issuing a respecify GETPARM and forcing
+	  unsupported options to be respecified.  In previous version, 
+	  unsupported options were just ignored without warning.
+
+
+	--------------------------------------------------------------------
+	The following items are not yet available.
+
+	- UNIX: Micro Focus 3.0 feature IDXFORMAT-4 files.
+
+	- UNIX: Micro Focus 3.0 feature SPARCE KEYS.
+
+
+	--------------------------------------------------------------------
+	The following items describe changes to the WISP distribution kit
+	that have been made since Version 3.3c.
+
+	- UNIX: The following are the changes to the WISP distribution kit.
+
+		ADDITIONS
+		=========
+		wisp/bin/wac.sh			- WISP and compile script
+		wisp/config/videocap/uw_xterm	- xterm on Unixware
+		wisp/config/videocap/vt510	- Digital VT510
+		wisp/config/videocap/w4w_vt220	- WISP for Windows VT220
+		wisp/config/W4WMAP		- WISP for Windows MAP
+
+		DELETIONS
+		=========
+		wisp/bin/idaemon		- Replaced by UniQue
+		wisp/bin/ilp			- Replaced by UniQue
+		wisp/bin/ilpman			- Replaced by UniQue
+		wisp/bin/ishu			- Replaced by UniQue
+		wisp/etc/PRINTQ.DOC		- Replaced by UniQue
+		wisp/etc/classdef.sam		- Replaced by UniQue
+		wisp/etc/ilpdef.sam		- Replaced by UniQue
+		wisp/etc/ilpremote.sam		- Replaced by UniQue
+		wisp/etc/ilpsrv.sam		- Replaced by UniQue
+		wisp/etc/prtdef.sam		- Replaced by UniQue
+
+	- VMS: The following are the changes to the WISP distribution kit.
+
+		ADDITIONS
+		=========
+		UX_XTERM.VCAP		- xterm on Unixware videocap
+		VT510.VCAP		- Digital VT510 videocap
+		W4W_VT220.VCAP		- WISP for Windows VT220
+	  	PROCTRAN.HLP		- Help file for PROCTRAN
+		WAC.COM			- WISP and compile script
+
+		DELETIONS
+		=========
+		(none)
+
+
+	--------------------------------------------------------------------
+	The following items describe new features of WISP that have been
+	added since Version 3.3c.  None of these items should alter the
+	behavior of existing software.
+
+
+	- WISP has been ported to PYRAMID DC-OSx operating system.
+
+	- UNIX: The videocap routines now first read the Terminfo database
+	  before they load the videocap files.  This allows you to create a
+	  videocap file that consists of only the custom keyboard mapping
+	  and options you require.
+
+	  The videocap routines can be instructed to not read the terminfo
+	  database by setting the environment variable $VNOTERMINFO.  This
+	  option is provided in case there is a conflict between the
+	  terminfo definitions and the videocap definitions.
+
+		$ VNOTERMINFO=1 export VNOTERMINFO
+
+	- The EXTRACT vssub now supports the keyword "W$" and returns
+	  the value it finds in the environment variable "WISPNETID".
+
+		'W$'	Alpha(8) 	Return the value of environment 
+					variable WISPNETID.
+
+	- VMS: The QUEUE MANAGEMENT utility added PF14 to allow REQUEUE of 
+	  executing job and allow changing of the START and END page.
+
+	- VMS: The QUEUE MANAGEMENT utility can now move a job from one queue
+	  to another by changing the print class.
+ 
+	- VMS: The QUEUE MANAGEMENT utility added PF11 to run the DISPLAY
+	  utility to display a queued print job.
+
+	- UNIX: The LINK vssub now reports an error if the ACULINK or MFLINK
+	  file is not found. It will also set the return code to 80.
+
+	- The LINK vssub now supports linking to other vssubs.  The vssubs
+	  that can be linked to are:
+
+		BELL, BITPACK, BITUNPK, DATE, DAY, EXTRACT, FIND, HEXPACK,
+		HEXUNPK, LOGOFF, MESSAGE, PAUSE, PRINT, READFDR, READVTOC,
+		RENAME, SCRATCH, SCREEN, SEARCH, SET, STRING, WSXIO
+
+	  Add OPTIONS file option LINKVECTOROFF to disable the linkvector()
+	  routines which vector calls "LINK"s to VSSUBS into direct calls.
+	
+	- ACUCOBOL: Native file paths with leading '@' are now recognized as
+	  being AcuServer file names, this causes the WISP name resolution 
+	  logic to bypass the access checking and go directly to the
+	  COBOL OPEN statement.
+
+	- The VSX utility on SOLARIS now supports the option -3480 for the
+	  3480 tape drive.
+
+	- The WSORT utility has been given a new user interface which more
+	  closely resembles the Wang utility.  It also now accepts all the
+	  hidden getparms and reports errors when options have been selected
+	  which are not supported.
+
+	- VMS: The WSORT utility has been enhanced to support the SELECT 
+	  functionality and to allow multiple files as input.
+
+	- VMS: The WSORT utility OPTIONS getparm has a new option "LOWSPACE"
+	  which if set to "YES" will check the disk to determine if there
+	  is enough space before it attempts the sort.
+
+	- The VSEDIT utility has been rewritten with extension changes.
+	  See the document "vsedit.lis" for full details.
+
+	- The VSEDIT utility now defaults the LANGUAGE based on the file
+	  extension when given a native filepath on the command line.
+
+	- ACUCOBOL: The makefile wruncbl.umf has been enhanced to support
+	  the new distribution files in ACUCOBOL-85 version 2.3.3 and
+	  version 2.4.  The documentation in wruncbl.umf has also been
+	  enhanced. 
+
+	- The hidden (HELP)->(32) screen now displays platform information.
+
+	- UNIX: Added support for printing with NP the HP/UX Network
+	  Printing facility. This option is activated by including the
+	  option "PQNP" in the OPTIONS file.
+
+	- A new configuration file RVMAP (Remote Volume MAP) has been
+	  added to the $WISPCONFIG directory to add support for remote
+	  volumes (i.e. AcuServer from Acucobol and FileShare from Micro
+	  Focus.)  See the attached document "acuserver.lis" for full
+	  details. 
+
+	- The DISPLAY utility can now be instructed to display 8-bit
+	  "foreign" characters by setting the environment variable
+	  WISP_DISPLAY_8BIT=YES.
+
+
+	--------------------------------------------------------------------
+	The following items describe corrections and improvements that have 
+	been made to the WISP runtime system since Version 3.3c.
+
+
+	- UNIX: The interaction between video and the COBOL debuggers has
+	  be improved to give better screen sharing.
+
+	- UNIX: Signal handling has been improved to avoid conflicts between
+	  WISP and COBOL signal handlers.
+
+	- UNIX: The video routines were not correctly handling padding on
+	  certain terminals, notably IBM3151, which caused cursor positioning
+	  to be incorrect.
+
+	- UNIX: Certain error conditions on the tty such as a modem 
+	  disconnect or other loss of connection could cause low-level
+	  error reporting routines to recursively call their selves. 
+	  This resulted in an orphaned process that would consume CPU
+	  and stack space.  This condition has been corrected.
+
+	- UNIX: Support for Acu4GL has been enhanced to provide runtime 
+	  checking for database files with the "-4" option.  Support for
+	  ORACLE has also been added.  See the document "acu4gl.lis" for
+	  full details.
+
+	- UNIX: The wruncbl.umf makefile for building the ACUCOBOL runtime
+	  now contains instructions for building the Acu4GL runtime for
+	  ORACLE and INFORMIX.  See the file wruncbl.umf for details.
+
+	- UNIX: New options for the OPTIONS file.
+
+		PQUNIQUE	- Use UniQue print queue (default)
+		PQILP		- Use ILP print queue
+		PQNP		- Use HP/UX Network Printing facility
+		BATCHQUEUE	- The batch queue submit utility
+		BATCHMAN	- The batch queue manager utility
+	  	LINKVECTOROFF	- Turn off internal LINK vectoring
+
+	- VMS: Correct the handling of RETURN CODE from utilities such as
+	  WSORT and VSEDIT.
+
+	- An OPEN SHARED on a SEQUENTIAL file was causing subsequent
+	  OPEN SHARED statements to behave like OPEN EXTEND.
+
+	- WISP now correctly handles an OPEN of a PRINTER file when a blank 
+	  FILENAME was specified via a PUTPARM.  Previously an invalid file 
+	  name was sometimes generated and an extra GETPARM was issued.
+
+	- UNIX: On occasion when you went from the Command Processor to the 
+	  shell the terminal was left in an unusable state.
+
+	- Returning from a "(11) Enter COMMANDS" off the command processor
+	  would sometimes result in a corrupted screen or a video error
+	  message.
+
+	- UNIX: Function "NA" (User Name) of the EXTRACT vssub now blank pads
+	  the name to 24 characters.
+
+	- UNIX: The MESSAGE vssub has been rewritten to provide the following
+	  functionality:
+
+		automatic port deletion, 
+		proper interaction with workstation I/O, 
+		check with no wait ,
+		KEEP
+		binary port names
+		better return codes
+
+	- VMS: The QUEUE MANAGEMENT utility was occasionally displaying 
+	  garbage on the screen and getting memory errors.
+
+	- VMS: The QUEUE MANAGEMENT utility will now delete a print job if
+	  submitted with disposition of delete after.
+
+	- VMS: The QUEUE MANAGEMENT utility now prevents other users from
+	  deleting your jobs.
+ 
+	- The SEARCH vssub now works with binary data.
+
+	- The SCRATCH vssub now ensure that a FILE, LIBRARY, and VOLUME
+	  name were passed to it before it attempts to perform the scratch.
+
+	- The GETPARM vssub, when it receives a value from a PUTPARM into an
+	  uppercase field will shift the value to uppercase.
+
+	- The GETPARM vssub now correctly supports the Spec_type="U".
+
+	- UNIX: The LINK vssub now better handles the return-code when 
+	  linking to shell scripts and native unix utilities.  It will set 
+	  the return-code to the exit-code for these processes.
+
+	- VMS: The LINK vssub was incorrectly moving the return-code after
+	  a link into the global RETURN-CODE register.
+
+	- Changed numeric FAC handling to allow commas to support the
+	  DECIMAL IS COMMA clause.
+
+	- VMS: FILECOPY routines was getting an access conflict and was also
+	  not correctly reporting when a copy was failing.
+
+	- The READVTOC vssub was sometimes failing when called from Micro 
+	  Focus COBOL because of an incorrect argument count.
+
+	- The READVTOC vssub was failing on little-endian machines when 
+	  the "Start" parameter was not equal to zero.
+
+	- VMS: The DISPLAY utility was sometimes displaying extra blank 
+	  lines on VFC type files.
+
+	- The FXZONE wispsub now recognizes 0xC0 thru 0xC9 as positive
+	  zoned numeric values.
+
+	- VMS: PRINT with a disposition of "RS" now issues an informational
+	  message that "RS" is not supported and uses "DS" instead.
+
+	- When not in "AUTO TAB" mode the cursor will now step out of the
+	  field after the last character in the field is filled.
+
+	- The RENAME vssub was incorrectly reporting RC=52 when the
+	  when the new and old filename where the same.
+
+	- The VSX utility sometimes failed on DG/UX with a 9-track tape
+	  drive.
+
+	- UNIX: The WDIAG utility has been enhanced to better detect and
+	  report problems.
+
+	- ACUCOBOL: The makefile wruncbl.umf has been greatly enhanced to 
+	  provide a much easier facility for creating runtime systems.
+	  See the documentation at the beginning of "wruncbl.umf" for
+	  a complete description.
+
+	- Micro Focus: The makefile wrunmf.umf has been greatly enhanced to 
+	  provide a much easier facility for creating runtime systems.
+	  See the documentation at the beginning of "wrunmf.umf" for
+	  a complete description.
+
+	- The WISP runtime error reporting system (werrlog) has been 
+	  changed to use the Wang screen emulation routines (vwang).
+
+	- The FILECOPY wispsub was sometimes not checking if the file
+	  already exists and setting the return code to 52 if it does.
+
+	- WISP utilities (WSORT, WCOPY, etc) were ignoring the OPTIONS
+	  file option ERRFLAG and the environment variable WISPDEBUG.
+
+	- Putparms with duplicate labels at the same linklevel were not
+	  being erased.  This was causing backwards references to a
+	  labeled putparm to always pickup the very first putparm with
+	  that label at that linklevel.
+
+	- VMS: Displaying a file from the QUEUE MANAGEMENT utility would
+	  sometimes set the wrong record length.
+
+	- MSDOS: Sorting of files which contained binary data would 
+	  sometimes fail and result in a corrupted output file.
+
+	- The STRING vssub EBCDIC to ASCII translation was failing on
+	  SCO unix (and others that defaulted to signed characters.)
+
+	- The DISPLAY utility would not properly update the row and
+	  column position following a search.
+
+	- The LGMAP logic would fail if it contained blank lines and
+	  comments.
+
+	- The NetronCap screen emulation routines would sometimes get
+	  a segmentation violation when used without EDE.
+
+	- The NetronCap long screens would incorrectly scroll if the
+	  message line was set to greater the 24.
+
+	- AIX: Manage SYSTEM from the Command Processor now runs
+	  smit with the "-C" options.
+
+	- MSDOS: The documentation file "DOSWISP.LIS" was missing from
+	  the WISP\ETC directory.
+
+	- The VSX utility versions 1.65 - 1.77 which were distributed with
+	  WISP versions 3.3.13 - 3.3.15 fail on Little-Endian machines
+	  on COMPRESSED files.  Little-Endian machines are SCO, Ultrix, 
+	  Sequent, any Intel based computers.
+
+	- The VSX utility now performs extension error checking and 
+	  reporting. Previous version may have failed without reporting an 
+	  error.
+
+	- The logic which loads the videocap files would abort if it found
+	  a unrecognized keyword, it has been changed to report an error
+	  and continue.
+
+	- A new videocap function key GENERIC_MOUSE has been added which
+	  defines a mouse escape sequence prefix.
+
+	- The vt220 videocap file has been enhanced to recognize the
+	  alternate arrow escape sequences.
+
+	- Function key tags on WISP screens, such as the Command Processor
+	  screens, have all been standardized to use the "(xx)" format.
+
+		PF1, <PF01>, PF-1		-----> (1)
+		PF16, <PF16>, PF-16             -----> (16)
+		RETURN, ENTER, <RETURN> <ENTER> -----> (ENTER)
+
+	- The declarative error detection logic now recognizes file status 96
+	  as a valid Wang file status.
+
+	- MSDOS: The clock has been removed from line 25.
+
+	- The IDNUMERIC option on BSD machines would sometimes cause a
+	  signal 11.
+
+	- The WSORT and WCOPY utility would under some conditions delete 
+	  labeled putparms making backwards reference fail.
+
+	- UNIX: The bldmf utility was not correctly handling the special
+	  characters '@', '#', and '$' in un-quoted file names in COPY
+	  statements.
+
+	- UNIX: Errors that occurred while printing with UniQue were being
+	  reported as ILP errors.
+
+	- UNIX: The SUBMIT vssub was failing if the total length of the
+	  generated shell command was greater the 255 bytes, this would
+	  normally only occur if the SETSUBMIT wispsub was used.
+
+	- The WSFNM subroutine would fail with a Signal 11 on some
+	  platforms when displaying a long screen and you pressed enter to
+	  go to scroll to the next screen.
+
+	- The VSEDIT utility has been enhanced automatically handle
+	  missing line numbers without having to renumber the entire file.
+
+	- The VSEDIT utility would loose changes made when in MODIFY mode
+	  and you pressed (2) or (15).
+
+	- The VSEDIT utility would incorrectly reset the start and end
+	  line numbers after each COPY command.
+
+	- UNIX: The mechanisam used to process RETURN-CODE was generating
+	  a lot of unneeded stat() calls.
+
+	- UNIX: A GETPARM would sometimes fail with a SIGNAL 10 if it was
+	  satisfied by a PUTPARM that was generated from WPROC and
+	  contained multiple backwards references to individual keywords.
+
+	- UNIX: The WSORT utility now uses the same signal handler that
+	  the runtime uses.
+
+
+	--------------------------------------------------------------------
+	The following items describe corrections and improvements that have 
+	been made to the WISP translator since Version 3.3c.
+
+	- Add support for FAC OF XXX [IS] [NOT] ALTERED construct where
+	  the [IS] and [NOT] are both optional.
+
+	- Add support for hex and non-numeric literals that use a single
+	  quote as well as a double quote.
+
+	- WISP now handles a maximum of 250 files and 200 DISPLAY-WS screens
+	  in a single COBOL program.
+
+	- VMS: The AUTOLOCKFILE directive can now be used with indexed 
+	  files.
+
+	- VMS: Changed the UNLOCK ALL that follows a WRITE, REWRITE, and
+	  DELETE into a simple UNLOCK to improve performance.
+
+	- Micro Focus: Add the IGNORE LOCK clause for READ (without HOLD)
+	  statements for indexed and relative files.  This is a feature of
+	  Micro Focus 3.0 so WISP will no longer work with pre 3.0 versions 
+	  of Micro Focus COBOL.
+
+	- When WISP needed to expand a token and the expanded token no
+	  longer fit on the line, WISP would on occasion shift the token
+	  to start in column 8.
+
+	- WISP would sometime confuse a data element that began with "CL" 
+	  as being a "CLOSE" verb.
+
+	- On systems where STOP RUN is getting changed into EXIT PROGRAM,
+	  WISP now adds a real STOP RUN following the EXIT PROGRAM in case 
+	  the EXIT PROGRAM falls thru.
+
+	- Added two new directives to force OPEN I-O statements to be 
+	  exclusive (not allow readers).  This is only meaningful with VMS 
+	  COBOL	and ACUCOBOL which default to ALLOWING READERS.
+
+		$OPENIOEXCLUSIVEFILE	This directive is placed before
+					the SELECT for the file.
+
+		$OPENIOEXCLUSIVEALL	Applies to all files.
+
+
+	- UNIX & MSDOS: Add copy library prefix path option (-Pprefixpath) 
+	  which specifies a list of directories of where to find copy 
+	  libraries.
+
+	  This option changes the way WISP processes COPY statements which
+	  include the "IN library" clause.  If the "IN library" clause is
+	  not used then this option has no effect.
+
+	  The prefix path (-P) option allows you to specify a path which
+	  is to be searched for copy library/file combination.  This is 
+	  different then the (-I) option which is only used when the 
+	  "IN library" clause is not specified.
+
+	  The prefixpath is a list of one or more directories separated by 
+	  colons (:) for UNIX and semicolons (;) for MSDOS.
+
+	  Example:
+
+		$ wisp -P/home/testlib:/disk1/qalib:/disk1/mastlib sample
+
+	  If sample contains a copy statement of the form:
+
+		COPY FDPAYNOW IN ACCTCOPY.
+
+	  WISP will look in order until it finds one of the following:
+
+		/home/testlib/acctcopy/fdpaynow.wcb
+		/disk1/qalib/acctcopy/fdpaynow.wcb
+		/disk1/mastlib/acctcopy/fdpaynow.wcb
+
+	  In CONVERT mode wisp will generate the following for the above.
+
+		COPY "acctcopy/fdpaynow.cob"
+
+	- When translating a MOVE WITH CONVERSION that was nested in an IF
+	  statement WISP was on occasion generating an unterminated IF 
+	  statement.
+
+	- The -S (/NODMS) option now causes the FREE ALL statement to be
+	  translated to a PERFORM WISP-FREE-ALL.
+
+	- DISPLAY AND READ statement with an ON PFKEY clause, where no
+	  pfkeys were specified, was not working.
+
+	- DISPLAY AND READ statement will now translate most statements
+	  within the ON PFKEY and NO-MOD clauses.
+
+	- If DISPLAY AND READ ALTERED is specified then RANGE clauses are 
+	  only checked if the field was altered, otherwise all non-protected 
+	  fields are checked.
+
+	- The ALLOWING clause on a READ statement was sometimes overflowing
+	  past column 72.
+
+	- WISP now defaults to include comments and blank lines in the
+	  generated COBOL.  (On VMS you can reverse this with /NOCOMMENTS.)
+
+	- The keywords TRUE and FALSE have been removed from the internal
+	  reserved words list.
+
+	- WISP was not correctly handling the "SET condition TO TRUE" 
+	  statement when condition was qualified.
+
+	- WISP was not correctly handling the special characters '@', '#',
+	  and '$' in un-quoted file names in COPY statements.
+
+	- A CALL with greater the 500 arguments would fail with an
+	  internal limit exceeded.
+
+	- The SET FAC OF XXX statement would not be correctly translated
+	  if the tokens FAC OF occured on a separate line then the XXX.
+
+	- Logic has been added to detect and report unexpected EOF in
+	  WORKING-STORAGE DIVISION.  Previously WISP would hang.
+
+
+	--------------------------------------------------------------------
+	The following table shows the WISP release history.  Many of these
+	represent internal patch releases which were never distributed or
+	only distributed on very limited basis.  The "x" versions numbers
+	(3.3x1, 3.3x2 etc.) were originally intended for internal use only,
+	however this proved unworkable so it has been replaced with a 
+	three part version number.
+
+		+----- Major version number (3)
+		| +--- Minor version number (4)
+		| | +- Patch level number   (1)
+		| | |
+		3.4.1
+
+	    WISP VERSION      CUTOVER DATE
+	    ------------      ------------
+		3.3.19	        01/05/96	Support for AcuServer
+		3.3.18	        08/07/95
+		3.3.17	      	07/07/95	WISP for Windows Version 1.0      	    
+		3.3.16		05/31/95
+		3.3.15		04/25/95
+		3.3.14		04/07/95	WISP for Windows pre-release
+		3.3.13		02/06/95
+		3.3x12		11/21/94
+		3.3x11		10/27/94
+		3.3x10		09/12/94
+		3.3x9		08/03/94
+		3.3x8		07/07/94
+		3.3x7		06/29/94
+		3.3x6		06/08/94
+		3.3x5		05/20/94
+		3.3x4		05/05/94
+		3.3x3		01/21/94
+		3.3x2		01/07/94	Enhanced Acu4GL support
+		3.3x1		01/03/94
+		3.3c		11/17/93	Last major release
+		3.3b		11/05/93	Support for Acu4GL
+		3.3a		10/12/93	
+	   (pre-version 3.3 releases)
+		3.2x11		07/29/93
+		3.2x8		04/27/93	First AcuCOBOL/MS-DOS version
+		3.2b		08/07/92
+		3.1c		03/12/92
+		3.0b		01/08/92
+		3.0a		11/15/91	First release of EDE
+		3.0		10/02/91	First Micro Focus version
+		2.0f		04/01/91
+		2.0d		11/14/90
+		2.0		04/09/90	First AcuCOBOL version
+		1.5		12/01/89	First UNIX version (LPI COBOL)
+		1.4		08/01/89
+		1.0		09/01/88	First VMS commercial release
+		0.9		11/01/87	First internal release
+
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		VSEDIT - INTEGRATED PROGRAM DEVELOPMENT EDITOR
+	
+	Document:	VSEDIT.LIS
+	Last Updated:	5 APR 94
+	Products:	WISP, VSEDIT
+	Versions:	3.3x4 and later of WISP
+	
+	Summary:	Using VSEDIT.
+			How VSEDIT differs from Wang VS EDITOR program.
+			WAC - WISP And Compile script.
+
+	====================================================================
+	
+
+	VSEDIT - INTEGRATED PROGRAM DEVELOPMENT EDITOR
+	==============================================
+	
+	This document describe the VSEDIT Integrated Program Development
+	Editor.  The VSEDIT editor was modelled after the Wang VS EDITOR
+	program and should be immediately usable by anyone who is familiar
+	with the Wang editor.  This document focuses mainly on the 
+	differences between VSEDIT and the Wang VS EDITOR.  If you are not
+	familiar with the Wang editor it is recommended that you first study
+	the "Wang VS Program Development Tools Reference".
+
+
+	Using VSEDIT
+	------------
+	To start VSEDIT you enter "vsedit" at the command line, you can
+	optionally include a file name.
+
+		$ vsedit
+
+		or
+
+		$ vsedit myfile.wcb
+
+	If you specified a file name on the command line then VSEDIT will
+	start in native mode.  See below.
+
+	VSEDIT can also be RUN from the Command Processor or invoked from
+	the UTILITIES menu or the "Manage Files And Libraries" edit option.
+	VSEDIT accepts the mostly the same PUTPARM's as the Wang editor so it
+	can be run under program control with a CALL "LINK".
+
+
+	Installing VSEDIT
+	-----------------
+	VSEDIT utilizes the WISP environment so a standard WISP configuration
+	must first be in place.
+
+	VSEDIT is a stand-alone executable program so installation simply
+	requires it be moved into a directory which gets searched for
+	executables.
+
+	While running VSEDIT it is possible to invoke other utilities such
+	as WCOPY, WSORT, DISPLAY, etc.  These, if invoked, need to be 
+	installed in the standard locations.
+
+	Additionally, VSEDIT comes with a template "WISP and Compile" script
+	that needs to be placed with the executables after it has been
+	customized for your specific needs.  See below.
+
+	For VMS see "VMS Notes" below.
+
+
+	Language
+	--------
+	The VSEDIT program uses the LANGUAGE parameter from the INPUT getparm
+	to specify both the file extension and the format of file. 
+
+		LANGUAGE	Extension	Format
+		--------	---------	------
+		COBOL		.wcb		COBOL	(Wang VS)
+		WCB		.wcb		COBOL	(Wang VS)
+		COB		.cob		COBOL
+		CBL		.cbl		COBOL
+		PROCEDURE	.wps		PROCEDURE
+		PROC		.wps		PROCEDURE
+		WPS		.wps		PROCEDURE
+		BASIC		.bas		BASIC
+		BAS		.bas		BASIC
+		SHELL		.sh		TEXT
+		SH		.sh		TEXT
+		COM		.com		TEXT
+		BATCH		.bat		TEXT
+		BAT		.bat		TEXT
+		TEXT		(none)		TEXT
+		NONE		(none)		TEXT
+		(none)		(none)		TEXT
+
+	For langauge types COBOL and WCB the source is assumed to be
+	Wang VS COBOL.  When these types are specified the Special Command
+	Menu lists PF10 as "WISP and Compile" and PF12 allows you to
+	display the ".cob" file produced by WISP.
+
+	There are currently four file formats supported.  This table shows
+	the column positions for each format.
+
+		Format		LineNums	ModCodes	Text
+		------		--------	--------	----
+		COBOL		01 - 06		73 - 80		07 - 72
+		PROCEDURE	75 - 80		72 - 74		01 - 71
+		BASIC		01 - 06		73 - 80		07 - 72
+		TEXT		(none)		(none)		01 - 72
+
+	The text format can be used for editing any "unformated" files.
+	A text format file has no line numbers or modcodes, when it is 
+	loaded it is given "relative" line numbers starting at one 
+	incrementing by one.  When it is written to disk the line numbers
+	are not saved.
+
+
+	Long Lines
+	----------
+	If you attempt to edit a file that has lines that are longer then
+	what is expected for the language specified a LONGLINE getparm will
+	be issued.  This warns you that the long lines will be split into
+	multiple lines.  This operation of spliting lines is not "safe" for
+	many file types.  If you get this getparm you should consider using
+	a different editor for that file.
+
+
+	Native Mode
+	-----------
+	The VSEDIT program supports "Native" mode file names.  This can be
+	used to edit files that reside in locations that can't be accessed
+	with the Wang style FILE, LIBRARY, VOLUME file specification.  It
+	can also be used to edit files that use different file extensions 
+	then the ones shown in the Language table.
+
+	To switch into "Native" mode press PF5 at either the INPUT or
+	OUTPUT getparm screens.   When in native mode, the LANGUAGE is used
+	only to specify the file format not the file extension.
+
+	If you specified a file name on the command line then VSEDIT will
+	start in native mode.
+
+		
+	Read Only Files
+	---------------
+	If you attempt to edit a file for which you have Read but not Write 
+	access,	VSEDIT will warn you the file is "READ ONLY".  You can then 
+	continue with the file however the "Replace" command from the Special
+	Command Menu will be disabled.   You will not be able to save any 
+	changes you make to the file but you could use the "Create" command 
+	to create a new file.
+
+
+	Compiling From VSEDIT
+	---------------------
+	The Special Command Menu has a PF10 option "Compile" that allows you
+	to compile or WISP and compile your program.  This option looks and
+	behaves substantially different then the Wang VS EDITOR.
+
+	It asks you to provide a command and options to run that will perform
+	the compile.  A template WISP and Compile script is included with
+	VSEDIT that takes as arguments the file name and the directory where
+	the object files are to be created.
+
+	The way you customize the Compile command is by creating a custom
+	script which uses the options that you require.  You then specify
+	the script name as the command to use.
+
+	The WISP and Compile script will act on the file as it exists on disk,
+	not on the VSEDIT working buffer.  If you have modified the file you 
+	should save it before you compile.
+
+
+	WAC - WISP and Compile Script
+	-----------------------------
+	VSEDIT comes with a WAC (WISP and Compile) script.  This script can
+	be used by the PF10 Compile option to WISP and compile a program.
+	
+	The WAC script accepts two arguments, the filename and the object
+	directory.
+
+		$ wac.sh
+		Usage: wac.sh filepath objectdir
+
+	       	filepath        The file path of the file to be translated
+	               	        by WISP.  It can be an absolute or relative
+	               	        path. It can include an extension, if no
+	               	        extension then ".wcb" is assumed by WISP.
+
+	       	objectdir       The directory to place the final COBOL object
+	               	        files. If a relative path is given it is 
+				taken relative to $filepath.
+
+	This script should be used as a template for making your own 
+	customized versions.  Copy the wac script to a new name and edit it.
+	The script contains its own instructions on how to customize it.
+
+		$ cp wac.sh mywac.sh		Make a copy of wac
+		$ vsedit mywac.sh		Edit wac (LANGUAGE=SHELL)
+
+	You may need to make several customized versions of WAC: one for
+	production, one for debugging, different projects may need different
+	options etc.
+
+	You may also write your own version of WAC.  The only restrictions
+	are; the first argument be the filepath, and the script should not
+	redirect the output or errors as this is being done by VSEDIT.
+
+
+	Displaying Modcodes
+	-------------------
+	To display the modcodes of a file set SHOWMODS=YES on the DEFAULTS
+	getparm.  To get the DEFAULTS getparm, select SET PF2 from the
+	special command menu, then PF2 from the Set Command menu.
+
+
+	VMS Notes
+	---------
+	On VMS you will need to define VSEDIT as a foreign command.
+
+		$ VSEDIT == "$WISP$ROOT:[EXE]VSEDIT.EXE"
+
+	The WISP and Compile script is a DCL file named WAC.COM.
+
+		$ @WAC
+		USAGE: @WAC filepath objectdir
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP SUPPORT FOR ACU4GL
+	
+	Document:	acu4gl.lis
+	Last Updated:	18 MAY 95
+	Products:	WISP/UNIX
+	Versions:	3.3x2 and later
+	
+	Summary:	WISP support for Acu4GL
+
+	====================================================================
+	
+
+	WISP Support for Acu4GL
+	=======================
+
+	This document describes the process of using WISP to convert Wang
+	COBOL programs to AcuCOBOL/Acu4GL.  It describes the enhancements 
+	made to WISP to support	the Acu4GL interface to database management 
+	systems (DBMS's).
+
+
+	Terminology
+	===========
+
+	The following table shows corresponding terminology between COBOL
+	and DBMS's.
+
+		COBOL		DATABASE
+		=====		========
+		Directory	Database	- contains files/tables
+		File		Table		- contains records/rows
+		Record		Row		- contains fields/columns
+		Field		Column		- contains a data element
+
+
+	Acu4GL
+	======
+
+	"The essence of the Acu4GL interface is that standard
+	 COBOL I/O statements are used to access databases."
+
+					- Acu4GL User's Guide
+
+	Acu4GL is a product written by AcuCOBOL to allow standard COBOL
+	programs to use databases for their indexed file system instead
+	of Vision (AcuCOBOL's standard indexed file system.)
+
+	To use Acu4GL you compile your COBOL program with the "-Zx" option
+	to generates a ".xfd" (Extended FD) file.  The XFD file is used
+	to map each indexed file's FD to a database table.  You then
+	identify which index files are to be database tables and which
+	are to remain Vision files, this is done in the AcuCOBOL config
+	file (ACUCONFIG) with the "xxx-HOST" option.  Identify which
+	database to use with the "DATABASE" option.  You then run your
+	COBOL programs using a runtime system which was built with the 
+	Acu4GL interface.
+
+		- Create the XFD files.
+		- Identify which files are database tables.
+		- Identify the database to use.
+		- Build a runtime with the Acu4GL interface.
+
+
+	NOTE:	See the Acu4GL User's Guide for a full desrciption
+		of the process.
+
+
+	Converting Wang COBOL to AcuCOBOL/Acu4GL
+	========================================
+
+	Using WISP to convert Wang COBOL to AcuCOBOL/Acu4GL there
+	are a couple of issues that need to be addressed.  These issues
+	fall into two main catagories.  The first is the generation of
+	the XFD files, the second concerns routines that expect to find
+	a physical file e.g. FIND, READFDR.
+
+		- Generating XFD files.
+		- Wang style OPEN logic.
+		- File handling VSSUBS.
+		- File location via GETPARM/PUTPARM.
+
+
+	NOTE:	The issues discussed here are specific to using Wang
+		COBOL code converted by WISP.  There are a number of
+		general issues/considerations in using Acu4GL that are
+		discussed in the Acu4GL User's Guide.  These general
+		Acu4GL issues are not discussed in this document.
+
+
+	Generating XFD Files
+	====================
+
+	In order to successfully generate the XFD files you need to 
+	identify to WISP which files are database tables.  WISP will then
+	insert the proper AcuCOBOL XFD NAME directive before the FD 
+	statement.
+
+		$XFD NAME=table-name
+		 FD select-name...
+
+	The XFD NAME directive tells AcuCOBOL what to name the XFD file
+	which is used as the database table name.
+
+	(See "Identifing Database Files to WISP" below.)
+
+
+	Wang Style OPEN Logic
+	=====================
+
+	WISP inserts logic around an OPEN statement in order to emulate
+	the behavour of the Wang.  This logic would normally generate a
+	native file path, test for the existence of the file, and check 
+	access privledges.  These actions are not applicable to a 
+	database table.
+
+	The Acu4GL interface doesn't use a native file path to locate
+	the table.  It uses the database identified by the "DATABASE"
+	option in the config file (ACUCONFIG) and the table name from
+	the XFD file.  Also the existence of the table and the access
+	to it is only available from the DBMS.
+
+	The files you identify to WISP as database tables are tagged in the
+	generated COBOL with a bit in the status word.  This tag causes
+	the call to "wfopen3" to bypass the file access checking logic.
+	The "wfopen3" routine will still perform the normal file name 
+	generation logic including the OPEN hidden GETPARM but the name
+	that is generated will be ignored (see above.)
+
+	Many software systems allow the user to select the "data set" they
+	will be using, this could be the year, or company, or division etc.
+	This is commonly done by issuing PUTPARM's which set the LIBRARY and
+	VOLUME where the files reside.  Since Acu4GL does not use the
+	native file path to locate the database tables this code will not
+	work.  Under Acu4GL each "data set" would be equivalent to a
+	database and you would have to code AcuCOBOL specific logic to
+	set your DATABASE option to point to a different database.
+
+		*$ACU_CODE
+		*   SET ENVIRONMENT "DATABASE" TO NEW-DATABASE-NAME.
+		*$ACU_END
+
+	If the COBOL OPEN statement fails you will get a GETPARM with
+	the file status codes as supplied by AcuCOBOL.  However changing
+	the values on the GETPARM will NOT correct the problem as the
+	native file path is not used by the COBOL.
+
+	Doing an OPEN OUPUT will not give you a PF3 GETPARM warning you
+	the file already exists.  If the database table exists it will
+	be deleted without warning.
+
+
+	File Operations With VSSUBS
+	===========================
+
+	When using Acu4GL your data is stored in tables within a database.
+	There is not a physical file on the disk like there is when using
+	the Vision file system.  Since there isn't a file on disk your
+	software can not use any VSSUBS to manipulate indexed files.
+
+	The following VSSUBS are commonly used to manipulate indexed files:
+
+		FIND
+		RENAME
+		SCRATCH
+		READFDR
+		READVTOC
+		SORTCALL/WISPSORT/WSORT
+		WCOPY
+
+	The portion of the logic that uses these VSSUBS must be rewritten
+	to behave properly in a database environment.
+
+
+	Identifing Database Files to WISP
+	=================================
+
+	WISP has been enhanced to allow you to identify which of the
+	indexed files are database tables.  There are two ways
+	to identify the files, with the "#DBFILE" options file option or 
+	the "*$DBFILE" directive.
+
+	The "#DBFILE" options file option allows you to specify database
+	tables by the COBOL select name and assign an optional database
+	table name.  If a table name is not specified it will use the
+	select name as the table name.
+
+	Options file:	#DBFILE Select-name [Table-name]
+
+			Select-name	The COBOL select name
+			Table-name	Database table name (optional)
+
+	Example:	#DBFILE MASTER-CUST-FILE customer_master
+			#DBFILE BILLING-MASTER
+			#DBFILE ACCT-INVOICE-DAILY daily_invoice
+
+	The "*$DBFILE" directive allows you to specify database tables
+	by placing this directive immediately before a SELECT statement.
+
+	Directive:	*$DBFILE [Table-name]
+
+	Example:	*$DBFILE customer_master
+			 SELECT MASTER-CUST-FILE ...
+
+			*$DBFILE 
+			 SELECT BILLING-MASTER ...
+
+
+	AcuCOBOL Istructions
+	====================
+
+	To generate the XFD file you compile the COBOL program with
+	the "-Zx" option.
+
+	You must identify to AcuCOBOL which files are database files.
+	This is done with the "xxx-HOST" options in the configuration
+	file (ACUCONFIG).  You need to set a default host (DEFAULT-HOST)
+	for indexed and relative files.  The default host is normally
+	"vision".  If you want all or the majority of your indexed files
+	to be Informix then set the DEFAULT-HOST to be informix and 
+	individually list the rest.
+
+		DEFAULT-HOST 	informix
+		DAILY-LOG-HOST 	vision
+		MYFILE-HOST 	vision
+
+	The database name is also identified in the configuration file.
+
+		DATABASE	acme_ca_1993
+
+	The database must be created before tables can be added to it.
+	This is done through the DBMS (e.g. ISQL with Informix) or with
+	the AcuCOBOL supplied program "sql.acu".
+
+	NOTE:	The Acu4GL instructions here are condensed and are only
+		meant as an outline.  You absolutely must read the Acu4GL
+		manuals in order to be successful.
+
+			"Acu4GL User's Guide"
+			"Acu4GL Interface to Informix-xxx"
+
+
+	Checklist For Converting To Acu4GL
+	==================================
+
+	- Identify to WISP which files are database files. (DBFILE option.)
+	- Correct any "file manipulation" logic, i.e. calls to "FIND" etc.
+	- Translate the COBOL with WISP.
+	- Compile with "-Zx" to create the XFD files.
+	- Identify to AcuCOBOL which files are database files. (xxx-HOST)
+	- Identify the database to use. (DATABASE)
+	- Create the database.
+	- Create an Acu4GL runtime.
+	- Run your programs.
+
+
+	Lost Wang Functionality
+	=======================
+
+	- PF3 to delete on OPEN output.
+	- READFDR for record count.
+	- Redirecting files with PUTPARM's.
+	- File SORT's
+
+	---------------------------------------------------------------------
+
+	ADDENDUM:
+
+	Runtime Checking for Database Files
+	===================================
+
+	In order to support a single source set for applications that want
+	the option of using Acu4GL or VISION files WISP has been enhanced
+	to perform runtime checking of the files "HOST" (i.e. VISION or
+	INFORMIX).  This allows you to create applications that can be
+	configured at runtime to use either Acu4GL or VISION or both.
+
+	To have the runtime checking for database files logic added to your
+	programs you must translate them with WISP using the "-4" option
+	(/X4DBFILE on VMS).  This option causes WISP to add a call to the
+	routine "x4dbfile" before every OPEN statement for an indexed file.
+	The routine "x4dbfile" checks the AcuCOBOL configuration file
+	(ACUCONFIG) for the "xxx-HOST" entry and sets the tag in the status 
+	word that indicates to "wfopen3" whether this is a database file.  
+	If there is no host specified for the file it uses the "DEFAULT-HOST" 
+	entry.
+
+		$ wisp -4 myprog
+
+	A new routine "ISDBFILE" is provided that allows the developer to
+	test if a given file is a database file.  This allows the developer
+	to code logic that is conditional based on whether a file is a
+	regular VISION file or a database file.  This is useful for VSSUBS 
+	like "FIND", "RENAME", "SCRATCH" etc. that are only valid on regular
+	files.
+
+	ISDBFILE
+	========
+
+	Usage		CALL "ISDBFILE" USING FILE-NAME FILE-STATUS.
+
+	Description	This routine test if a file is database file or 
+			a regular file by examining the "xxx-HOST" fields
+			in the AcuCOBOL configuration file.
+	Parameters
+
+	FILE-NAME	Alpha(var)	The name of the file from the SELECT
+					statement. The field should be blank
+					padded.
+
+	FILE-STATUS	Alpha(1)	The result.
+					"Y"	- a database file
+					"N"	- a regular file
+
+	Example
+
+		CALL "ISDBFILE" USING "CUSTOMER-MASTER", CHECK-FILE.
+		IF CHECK-FILE = "Y" THEN
+			... database file logic ...
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1996 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP SUPPORT FOR ACUSERVER
+	
+	Document:	acuserver.lis
+	Last Updated:	4 Jan 1996
+	Products:	AcuServer, WISP/UNIX
+	Versions:	3.3.19 of WISP
+			1.1.1 of AcuServer
+	
+	Summary:	Description of WISP support for the Acucobol
+			product AcuServer.
+
+	====================================================================
+
+
+	OVERVIEW
+	========
+
+	This document describes WISP support for the AcuServer.  AcuServer
+	is an add-on product available from Acucobol which gives your
+	COBOL applications network file access without the performance
+	degradation which can occur when using NFS.
+
+		"AcuServer gives COBOL applications remote file access
+		 support in client/server environments."
+
+			-- AcuServer Product Brief --
+
+	When you use AcuServer to access remote data files all your COBOL
+	applications file I/O goes through the AcuServer mechanism
+	(instead of NFS.)  This can significantly improve you file I/O
+	performance over that of NFS.
+
+
+	WISP SUPPORT FOR ACUSERVER
+	==========================
+
+	This section describes the issues related to using AcuServer with
+	WISP and describes how the WISP support for AcuServer addresses
+	these issues.
+
+
+	Important Note
+	--------------
+	It is very important that you read the AcuServer User's Guide for
+	a full understanding of how to install and configure AcuServer.
+
+	The issues discussed in this document are specific to using
+	AcuServer with WISP converted applications.  There are a number of
+	general issues/considerations in using AcuServer that are
+	discussed in the AcuServer User's Guide.
+
+
+	Issues Related to AcuServer
+	---------------------------
+	There are two main areas that need to be addressed in order to use
+	AcuServer with WISP converted software.
+
+	1)	AcuServer uses a custom syntax for fully specifying the 
+		location of a file which includes a node/machine name.
+		This syntax is NOT compatible with normal "C" or UNIX
+		file specifications.
+
+		Syntax:		@server-name:path-name
+
+		Example:	@central:/disk1/myvol/mylib/myfile
+
+			In this example the file is "myfile" in directory
+			"/disk1/myvol/mylib" which resides on machine
+			"central" specified as "@central:".
+
+	2)	There will not be a physical file that is locally
+		accessible (local or NFS) through normal "C" or UNIX
+		routines.  There are numerous places in the WISP
+		environment that attempt to access files.  Most
+		importantly these occur in the pre-open logic (wfopen)
+		and in the VSSUBS routines.
+
+	Addressing the first issue, custom file path syntax, by itself is
+	trivial, one would simply include the server name prefix in the
+	LGMAP for the remote files.  This however would fail because of
+	the second issue.  Without a locally accessible file (local or
+	NFS) many areas of logic would fail, e.g. on an OPEN I-O, WISP
+	checks for the existence of the file and if not found issues a
+	GETPARM.  Other examples include READFDR, SCRATCH, FIND, RENAME,
+	SORTCALL, COPY, etc. all of these expect to find a file and will
+	fail if the file is not found.
+
+	It is possible to modify your applications so they simply avoid
+	the second issue and WISP can be instructed to bypass normal file
+	opening procedures (this is currently done when the OPEN logic
+	sees an '@' as the first character of the unix filepath), thus
+	leaving only the first issue which is easily solved.  However,
+	because we are converting large existing application which are
+	peppered with VSSUBS and file references this approach would
+	require a huge manual recoding effort.  This approach is thus
+	considered impractical.
+
+
+	AcuServer Support
+	-----------------
+
+	The rest of this document describes the method WISP uses to
+	provide support for AcuServer which addresses the above issues.
+
+	The essence of the implementation is that two file paths will be
+	generated, one for AcuServer which includes the server prefix, and
+	a standard unix one for the other routines using the NFS file
+	path.
+
+		AcuServer:	@central:/disk1/myvol/mylib/myfile
+		Standard:	/central/disk1/myvol/mylib/myfile
+
+	This implementation REQUIRES the use of NFS (or equivalent).  It
+	also requires that you be able to distinguish a file that is on an
+	NFS mounted file system from a file that is on a local file system
+	by a distinct prefix in the file path.  In the example above, the
+	prefix "/central/" can be used to indicate that this is an NFS
+	file system and the disks belong to machine "central".
+
+
+	Configuration: LGMAP and RVMAP
+	------------------------------
+
+	To configure your WISP converted program to use AcuServer you will
+	need to use both the LGMAP (Logical Volume Map) and a new map file
+	RVMAP (Remote Volume Map).
+
+	Within the LGMAP you need to define the volumes with NFS style
+	names.  This is done exactly the same as you would if you were
+	just using NFS without AcuServer.
+
+	LGMAP example:
+		VOL200 /central/disk1/myvol	- NFS from "central"
+		VOL300 /mnt/dp001/usr/vol300	- NFS from "dp001"
+		VOL100 /disk2/vol100		- Local file system
+
+	The RVMAP (Remote Volume Map) is used to create the special
+	AcuServer syntax file path from a regular unix file path.  RVMAP
+	is a translation table with each line containing two entries:
+
+		Local-file-path-prefix  Remote-substitution-prefix
+
+	The Local-file-path-prefix is the portion of the file path that
+	will be replaced with the Remote-substitution-prefix when the
+	AcuServer syntax file path is created.
+
+	RVMAP example:
+		/central/   @central:/
+		/mnt/dp001/ @dp001:/
+
+	The following table demonstrates some file translations to both
+	the unix file path and the AcuServer style file path using the
+	above example LGMAP and RVMAP.
+
+	VOLUME LIBRARY FILE	Standard UNIX file path
+				AcuServer file path
+	------ ------- ------   -----------------------------------
+	VOL200 MYLIB   MYFILE	/central/disk1/myvol/mylib/myfile
+				@central:/disk1/myvol/mylib/myfile
+
+	VOL300 MYLIB   MYFILE	/mnt/dp001/usr/vol300/mylib/myfile
+				@dp001:/usr/vol300/mylib/myfile
+
+	VOL100 MYLIB   MYFILE	/disk2/vol100/mylib/myfile
+				/disk2/vol100/mylib/myfile
+
+
+	TECHNICAL NOTES
+	===============
+
+	NFS and Locking
+	---------------
+	The portion of NFS which causes the most significant performance
+	problems is file and record locking.  The NFS locking daemon can
+	be very slow.  Accessing a shared indexed file over NFS can cause
+	many requests to the locking daemon.
+
+	NOTE:	The WISP file open logic and the VSSUBS perform NO record 
+		locking or file locking.  Thus using NFS for these functions
+		in conjunction with AcuServer for COBOL I/O should not
+		cause any performance problems.
+
+
+	RVMAP Translation
+	-----------------
+	The RVMAP is used in the COBOL pre-open logic to generate the
+	AcuServer file path.  After the unix file path is generated it is
+	then checked against the prefixes in the RVMAP and if a match is
+	found, a AcuServer file path is created by substituting the
+	prefix.  The RVMAP translation is simply an exact text
+	replacement, no syntax or validity checking is performed.  If the
+	file prefixes are not unique it will use the first matching one it
+	finds.  If no match is found then the AcuServer path will be the
+	same as the unix path which is correct for local files.
+
+
+	AcuServer with a Local file
+	---------------------------
+	It may happen that you need to be able to use AcuServer on a local
+	file.  This presents a small challenge because the RVMAP will not
+	know how to distinguish a AcuServer file from a local file since
+	they are both local.  Here is one possible way of dealing with
+	this scenario; create a symbolic link to the local file system
+	thus giving it a prefix which you can use in RVMAP.
+
+		$ mkdir /local			- machine name is "local"
+		$ ln -s /disk1 /local/disk1
+
+		LGMAP:
+			VOL100 /disk1/vol100
+			NEW100 /local/disk1/vol100
+
+		RVMAP:
+			/local/  @local:/ 
+
+	VOLUME LIBRARY FILE	Standard UNIX file path
+				AcuServer file path
+	------ ------- ------   -----------------------------------
+	VOL100 MYLIB   MYFILE	/disk1/vol100/mylib/myfile
+				/disk1/vol100/mylib/myfile
+				
+	NEW100 MYLIB   MYFILE	/local/disk1/vol100/mylib/myfile
+				@local:/disk1/vol100/mylib/myfile
+
+	In the above example VOL100 and NEW100 actually point to the same
+	location however NEW100 can be treated as a AcuServer volume.
+
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP DATA CONVERSION
+	
+	Document:	dataconv.lis
+	Last Updated:	25 JUNE 93
+	Products:	WISP
+	Versions:	3.2x11 and later
+	
+	Summary:	The WISP data conversion facilities.
+
+	====================================================================
+	
+
+	WISP DATA CONVERSION
+	====================
+
+	A new feature has been added to WISP to generate a data conversion
+	program.  When you WISP with the /DATACONV "-q" option it will
+	create a Wang COBOL program with a ".wdc" (Wang Data Conversion)
+	file extension.  This program contains routines to convert 
+	all the INDEXED and RELATIVE files that were in the original 
+	program.  The ".wdc" program is a Wang COBOL program that can 
+	then be translated by WISP like any other Wang COBOL program.
+
+	For each file found a corresponding SEQUENTIAL file is added
+	with a SELECT and FD that matches the INDEXED file.  The sequential
+	file's name and data records are the same as the indexed ones but
+	are prefixed with "SEQ-".  In the PROCEDURE DIVISION the SEQENTIAL 
+	file is opened for INPUT and the INDEXED file is opened for OUTPUT.
+	The logic then reads a records from the	sequential file, moves 
+	it to the indexed file's record then write the record.  This
+	is repeated until the sequential file gets an EOF.  The number 
+	of records read, written and number of invalid keys are then
+	displayed.
+
+	If you need to do "data correction" you can edit the ".wdc" file
+	and add in your own correction logic.  This is best done in
+	the "move" paragraph.  Data correction may consist of fixing
+	the "zoned data" fields with a call to "FXZONE" or the changing
+	of spaces to zeroes in numeric fields.
+
+	When the data conversion program is run it will prompt you with
+	the name of each file and ask if you want that file converted.  
+	It also displays the current values of INLIB, INVOL, OUTLIB, 
+	and OUTVOL and allows you to change them.
+
+
+	ACUCOBOL example:
+
+		$ wisp -q -I../copylib sample		Creates sample.wdc
+		$ wisp -VACU sample.wdc			Creates sample.cob
+		$ ccbl -da4 -o SAMPLE sample.cob
+		$ wrun SAMPLE
+
+	VAX/VMS example:
+
+		$ WISP/INLIB=COPYLIB/DATACONV SAMPLE
+		$ WISP SAMPLE.WDC
+		$ COBOL/ANSI/FIPS=74 SAMPLE
+		$ LINK SAMPLE,WISPLIB/LIB,SYS$INPUT:/OPT
+			SYS$SHARE:VAXCRTL.EXE/SHARE
+			^z
+		$ RUN SAMPLE
+
+
+	NOTE:	When you use the /DATACONV "-q" option all the copybooks
+		are included into the ".wdc" file so you also need to
+		use the /INLIB "-I" option.
+
+
+	***         ***
+	*** WARNING ***
+	***         ***
+
+	Running WISP on SAMPLE.WDC will create a SAMPLE.COB
+	just as running WISP on SAMPLE.WCB creates SAMPLE.COB.
+	To avoid confusion as to what is SAMPLE.COB it is
+	recommended that after creating SAMPLE.WDC you move 
+	it to a different "data conversion" directory.
+
+		$ wisp -q sample
+		$ mv sample.wdc ../dataconv
+		$ cd ../dataconv
+		$ wisp sample.wdc
+		$ ccbl -da4 -o SAMPLE sample.cob
+
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		SORTINFO and SORTLINK manual pages
+	
+	Document:	docsort.lis
+	Last Updated:	18 MAY 95
+	Products:	WISP
+	Versions:	3.1 
+	
+	Summary:	Documentation for SORTINFO and SORTLINK
+
+	====================================================================
+	
+
+
+	SORTINFO
+	========
+
+	Usage:		SORTINFO( Filetype, Recsize, Sortcode )
+
+	Description:	This routine is used before SORTCALL or SORTLINK
+			to provide the additional parameters that are needed
+			for the call to WISPSORT.
+
+			If SORTCALL or SORTLINK is called without first
+			calling SORTINFO then they default to INDEXED.
+
+	Parameters:	All three parameters are required although RECSIZE
+			is only used if FILETYPE is FIXED.  These parameters
+			are identical to the parameters as described 
+			under WISPSORT.
+
+	Filetype	Alpha(1)	The type of file being sorted.
+					I	INDEXED ('A' or 'C')
+					A	ACUCOBOL VISION file
+					C	CISAM indexed file
+					F	FIXED length file
+					N	Newline terminated file
+
+	Recsize		Int(4)		The record size for FIXED files.
+
+	Sortcode	Int(4)		The return code from sortseqf().
+					See WISPSORT for description.
+
+
+
+	SORTLINK
+	========
+
+	Usage		SORTLINK( Option sequence
+				  Input file sequence
+				  Selection sequence
+				  Sort keys sequence
+				  Ouput file sequence
+				  Retcode )
+
+	Description	This routine provides an interface to SORTCALL.
+
+			On the Wang this routine provides an interface to
+			the VS SORT utility with much greater functionality
+			then that provided by SORTCALL.  With WISP only the
+			SORTCALL functionality is provided.
+
+	Parameters	The parameters are broken into sequences.  The 
+			sequences must appear in the above order and at
+			least one from each sequence must be present.
+
+			Only the supported parameters are describe.  The use
+			of any unsupported parameter will cause an error.
+
+	*** Option sequence ***
+
+	Function	Alpha(1)	The function requested
+					S=SORT
+
+	Sortoption	Alpha(1)	Indicates the option
+					0=No special options
+					3=Stable sort
+
+	*** Input file sequence ***
+
+	Informat	Alpha(1)	File media	[OPTIONAL]
+					D=DISK
+
+	Filecount	Int(4)		Number of input files
+					1=Only one file allowed
+
+	Infile		Alpha(8)	Input file
+
+	Inlib		Alpha(8)	Input library
+
+	Invol		Alpha(6)	Input volume
+
+	*** Selection sequence ***
+
+	Selcount	Int(4)		Number of selection criteria
+					0=None allowed
+
+	*** Sort key sequence ***
+
+	keycount	Int(4)		Number of key fields.  The next
+					four fields are repeated this many
+					times. Maximum 8 keys.
+
+	Position	Int(4)		Starting position of key field.
+
+	Length		Int(4)		Length of key field.
+
+	Type		Alpha(1)	Data type. See SORTCALL.
+
+	Order		Alpha(1)	Sort order. See SORTCALL.
+
+	*** Output file sequence ***
+
+	Outfile		Alpha(8)	Output file
+
+	Outlib		Alpha(8)	Output library
+
+	Outvol		Alpha(6)	Output volume
+
+	Outformat	Alpha(1)	File media	[OPTIONAL]
+					D=DISK
+
+	*** Return code sequence ***
+
+	Retcode		Int(4)		The return code.  See SORTCALL.
+					Additional codes:
+					51	Unable to decode arguments
+					52	Invalid argument count
+					54	Function not supported
+						(only 'S=SORT' is supported)
+					56	Option not supported
+
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		ADDITIONAL NOTES ON THE WSORT UTILITY
+	
+	Document:	WSORT.LIS
+	Last Updated:	10 MAY 93
+	Products:	WISP/UNIX, WISP/MSDOS
+	Versions:	3.2 AND LATER
+	
+	Summary:	Differences between Wang VS SORT and WSORT.
+			The FILETYPE and RECSIZE parameters.
+			Use of vutil and fhconvert to unload indexed files.
+			Temporary disk space usage, $TMPDIR.
+
+	====================================================================
+	
+
+	ADDITIONAL NOTES ON THE WSORT UTILITY
+	=====================================
+	
+	This document provides additional information on using the wsort 
+	utility, it is meant to be used in conjunction with the WISP manual.
+	See chapter 10 of the WISP manual for a description of WSORT, and
+	chapter 5 for a description of WISPSORT.
+
+	The wsort utility is a replacement for the Wang VS SORT utility,
+	it is not an exact duplicate of SORT.  
+
+	When wsort is used from UNIX or MS-DOS it is very important that
+	you add the FILETYPE= parameter to the INPUT putparm.  This is
+	used to identify what type of file is being sorted.  If you are
+	sorting a sequential file with fixed length records (FILETYPE=F)
+	then you MUST also supply the RECSIZE= parameter.  The RECSIZE=
+	parameter tells wsort the size of each record.
+
+
+	FILETYPE: The type of file to be sorted:
+	----------------------------------------
+
+	The FILETYPE= parameter tells wsort what type of file is to be
+	sorted.	 This is required because under UNIX and MS-DOS there
+	is no reliable way of determining this.
+
+		I	Indexed file 
+		F	Fixed length records, sequential file
+		N	Newline terminated, sequential file (Text file)
+	
+	Earlier versions of wsort supported A=ACUCOBOL and C=CISAM, this
+	has been replaced by I=INDEXED.
+
+
+	PROCTRAN: Translation of RUN SORT statements:
+	---------------------------------------------
+
+	The proctran utility does not have enough information to fully
+	translate the RUN SORT statements. After translation you must
+	edit the COBOL and add the FILETYPE= and RECSIZE= parameters
+	to the INPUT putparm.
+
+
+	UNLOADING AN INDEXED FILE:
+	--------------------------
+
+	Before wsort can sort an indexed file it must be unloaded into a
+	temporary sequential file.  This is done by calling a utility.
+	For ACUCOBOL vision files wsort uses the vutil utility supplied by
+	ACUCOBOL.  For Micro Focus ISAM files wsort uses the fhconvert
+	utility supplied by Micro Focus.  For C-ISAM files wsort knows
+	how to do the unload internally.
+
+	These utilites "vutil" for ACUCOBOL and "fhconvert" for Micro Focus 
+	must be on the users $PATH and the user must have execute access 
+	of them.
+
+	The temporary sequential file used is ##SORT in WORKLIB on WORKVOL.
+
+
+	TEMPORARY DISK SPACE:
+	---------------------
+
+	The wsort utility requires temporary disk space to perform the
+	sort.  If sorting an indexed file it requires enough space to hold 
+	the temporary sequential on the WORKVOL.  It requires enough space
+	to hold the output file, even if the output file is being written
+	over top of the input file.  It also requires twice the file size
+	in the /tmp file system (or $TMPDIR if using a different temporary
+	directory.)
+
+	Example: If sorting a 25 meg indexed file you need the following
+		 free space.
+
+		25 meg free on WORKVOL
+		25 meg free on the output volume
+		50 meg free on /tmp (or $TMPDIR)
+
+	All temporary files will be deleted when wsort completes, even if
+	wsort terminates because of an error.
+
+
+	DEBUGGING WSORT:
+	----------------
+
+	The wsort utility normally does not display any error messages, it
+	sets the exit code to indicate an error.  To have it display any
+	error messages run it from the shell and give it the "-v" option.
+
+		$ wsort -v
+
+	This will cause it to display any error messages.
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		LINK vssub with Micro Focus COBOL
+	
+	Document:	mflink.doc
+	Last Updated:	17 FEB 92
+	Products:	WISP/UNIX for Micro Focus COBOL
+	Versions:	3.1
+	
+	Summary:	* * * *  IMPORTANT NOTICE  * * * *
+			The procedure for using the LINK vssub from as
+			described in the WISP 3.0 manual has been replaced
+			by this document.
+
+	====================================================================
+	
+
+	USING THE LINK VSSUB WITH MICRO FOCUS COBOL
+	===========================================
+
+
+		* * * *  IMPORTANT NOTICE  * * * *
+		* * * *  IMPORTANT NOTICE  * * * *
+		* * * *  IMPORTANT NOTICE  * * * *
+
+		
+	To all WISP users of:	Micro Focus COBOL/2 on UNIX
+				AIX VS COBOL/6000
+				Sun COBOL
+				HP COBOL/HP-UX
+
+	It was recently discovered that the current versions (1.2) of the
+	Micro Focus COBOL compilers experience addressing problems in
+	nested programs.   Specifically the SEARCH and IF verbs were
+	occasionally failing to perform correctly when contained within
+	a nested program.  (Additionally the Sun COBOL compiler would
+	incorrectly shift all CALL routine names to uppercase when
+	contained in a nested program.)
+
+	The nested program feature was being used by WISP 3.0 to accomplish
+	dynamic linking with parameter passing via the LINK VSSUB routine.
+	Any program that contained the $LINKMAIN directive was being 
+	converted into a nested program.
+
+	To provide a solution to this problem IDSI has re-worked the 
+	LINK mechanism WISP uses for Micro Focus COBOL so that it does
+	not use the nested program feature.  The solution used now
+	exactly parallels the ACUCOBOL solution as described in the WISP
+	manual chapter 7 when using ".int" and ".gnt" files.  If you
+	wish to use the native code feature of Micro Focus see the 
+	description below.
+
+	The $LINKMAIN directive is no longer supported by WISP and is
+	treated as a comment.  The copybook "wisplink.cpy" is no longer
+	used.  Instead the program "mflink.cob" is provided as the 
+	frontend for LINK.  
+
+
+	STEPS REQUIRED TO USE NEW LINK MECHANISM (.int and .gnt files)
+	==============================================================
+
+	1)	Install WISP version 3.1 following the instructions
+		in Appendix A of the WISP manual.
+
+	2)	Create file "MFLINK.int" and move it into a directory
+		on the $COBPATH path.
+
+			$ cd wisp/mf
+			$ cob mflink.cob
+			$ mv mflink.int MFLINK.int
+
+	3)	Re-WISP and compile your entire system.  (It is not
+		neccessary to remove $LINKMAIN from you programs as
+		it is now treated as a comment.)
+
+	4)	Run your software.
+
+	If you experience any problems with LINK then ensure that
+	your $COBPATH variable is set correctly and MFLINK.int is
+	on the path.  Also ensure you are using verison 3.1 or later
+	of WISP.
+
+
+	COMPILING TO NATIVE CODE WITH MICRO FOCUS
+	=========================================
+
+	There are special considerations needed if the programs you are
+	compiling to native code are started with a CALL "LINK" and they
+	accept parameters with a "USING" phrase on the PROCEDURE DIVISION
+	statement.  In order for this to work correctly the LINK frontend
+	routine "mflink.cob" must be included as the first routine in
+	the program.
+
+	Example:  Program "MAINPROG" does a CALL "LINK" to program
+	"SUBPROG" passing it parameters.  The program "SUBPROG" must
+	have routine "mflink.cob" as the first routine.  To WISP and
+	compile these two programs into two native code program perform
+	the following:
+
+	$ wisp -VMF mainprog.wcb	- create mainprog.cob
+	$ wisp -VMF subprog.wcb		- create subprog.cob
+	$ cob -x -o MAINPROG mainprog.cob wispmf.o -lwisp -lvideo -lm
+	$ cob -x -o SUBPROG mflink.cob subprog.cob wispmf.o -lwisp  \
+        >           -lvideo -lm
+
+	NOTE:  The routine "mflink.cob" is only included for SUBPROG it is
+	not needed for MAINPROG and should not be included.
+
+	The items "wispmf.o" and "-lwisp -lvideo -lm" are required
+	on every compile to include the WISP routines.  The file "wispmf.o"
+	contains Micro Focus specific routines and global variables.  The
+	"-l" items are libraries that contain the WISP routines.
+
+	The above is a very simple example.  If MAINPROG or SUBPROG call
+	any other routines then they would have to be added to the cob
+	command following "mainprog.cob" or "subprog.cob".
+
+	When using native code, programs are started by entering their 
+	name at the command line, you can not use "wrun".  Programs
+	which include "mflink.cob" can not be run directly from the 
+	command line.  They can only be started by a CALL "LINK".
+
+	A ".int" or ".gnt" program can not CALL a native code program.
+	The only way to start a native code program from a ".int" or 
+	".gnt" program is by a CALL "LINK".
+
+	IMPORTANT:  If MAINPROG or SUBPROG are going to call any ".int"
+	or ".gnt" files then the item "wrunmf.o" must also be included
+	on the cob command after "wispmf.o".  The item "wrunmf.o" will 
+	cause the entire WISP library to be included as if building
+	an RTS (i.e. wrunmf).  These is required because the called
+	programs may reference WISP routines that are not referenced
+	by MAINPROG or SUBPROG.
+
+
+	Please contact us for assistance if you experience any problems
+	with these changes.
+
+
+	========================= END OF DOCUMENT ==========================
+
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP ACP ROUTINES
+	
+	Document:	acp.lis
+	Last Updated:	21 JUNE 93
+	Products:	WISP and ACP routines
+	Versions:	3.3 
+	
+	Summary:	Description of the WISP ACP routines .
+
+	====================================================================
+	
+
+	Brief description of WISP ACP Routines
+	======================================
+
+	This document is meant as a suppliment to the Wang VS ACP routines
+	document.  The reader of this document is assumed familiar with
+	the Wang VS ACP routines.
+
+
+	1.0 Usage
+	=========
+
+	The WISP ACP routines are designed to be functionally identical to
+	the Wang VS ACP routines.  The calling sequence and usage of the 
+	functions OPENACP, CLOSEACP, READACP, WRITEACP, BREAKACP, and 
+	CHECKACP is the same as on the Wang.
+
+	The main difference between the Wang VS and the WISP implementation
+	of the ACP routines is the way an I/O port (NODE) is configured.  On
+	the Wang you use the CONFIGTC program to configure a port.  On Unix
+	there are two routines called GETACP and SETACP are provided in 
+	place of CONFIGTC.  For VAX/VMS you create a text file that contains
+	the configuration information.
+
+
+	1.1 Configuration on UNIX
+	=========================
+
+	The node configuration information is stored in an ACPMAP file. Each
+	line in the file contains the configuration information for one node.
+	The OPENACP routine uses this file to lookup the node configuration.
+	There are two routines GETACP and SETACP that are used to maintain
+	the node configuration information in the ACPMAP file.  GETACP will
+	retreive the current configuration for a node and SETACP is used to
+	configure a new node or update the configuration of an existing node.
+
+
+	1.1.1 The ACPMAP on UNIX
+	========================
+
+	The ACPMAP file contains the node configuration information.  The
+	pathname of this file is specified by two shell variables, $ACPCONFIG
+	and $ACPMAP.  $ACPCONFIG contains the name of the directory which 
+	contains the file.  If $ACPCONFIG is not defined, the current 
+	directory is used.  $ACPMAP contains the name of the file.  If 
+	$ACPMAP is not defined, "ACPMAP" is used as the filename.  
+
+	Example:
+		$ ACPCONFIG=/usr2/project/config
+		$ ACPMAP=ACPMAP
+		$ export ACPCONFIG ACPMAP
+
+	Each line in the ACPMAP file contains the configuration information
+	for a given node.  The fields on a line must be separated by spaces
+	or tabs.  The line format is as follows:
+
+		Name Device Weor Reor1 Reor2 Reor3 Baud Parity Databits
+			Stopbits Duplex Flowcontrol
+
+		Name		NODE name
+		Device		Unix device file
+		Weor		Write End Of Record sequence
+		Reor1		Read End Of Record sequence (hex)
+		Reor2		Alternate Read End Of Record sequence (hex)
+		Reor3		Alternate Read End Of Record sequence (hex)
+		Baud		Baud rate; 50,75,110, 150, 200, 300, 600,
+					1200, 1800, 2400, 4800, 9600,
+					19200, or 38400
+		Parity		E=even, O=odd, N=no parity
+		Databits	Data bits; 5, 6, 7, or 8
+		Stopbits	Stop bits; 1, or 2
+		Duplex		(UNUSED)
+		Flowcontrol	X=XON/XOFF, N=no XON/XOFF, U=unchanged
+	
+
+	For example:
+
+		PORT1 /dev/tty01 0a 0a - - 19200 e 7 1 - X
+		PORT2 /dev/tty02 0a 0d0a 0a - 9600 o 8 2 - N
+
+	Notice that unused fields must have a hyphen.  
+
+	The ACPMAP file can be maintained with either GETACP and SETACP or
+	with a text editor.  However, it is recommended that you use GETACP
+	and SETACP to access this file, since its format may change in a
+	future release.
+
+
+	1.1.2 GETACP and SETACP
+	=======================
+
+	The GETACP and SETACP routines are used to maintain and update the
+	ACPMAP file.  The GETACP routine will retieve the ACP-RECORD for
+	a given node.  The SETACP routine will write the ACP-RECORD to the
+	ACPMAP file to create a new node or update an existing node.
+	The ACP record consists of several PIC X items, as shown in the code 
+	fragment below.  To retrieve the configuration for a particular node,
+	move the node name to the NAME field of the record, and call GETACP.
+	GETACP will locate the information for that node, and store it in 
+	the record.  The program can then make changes to the record and 
+	call SETACP to update the configuration for that node.  If a node 
+	has not yet been configured, you must call SETACP to configure it 
+	before using it in an OPENACP or calling GETACP.  
+
+	NOTE:	The ACPMAP file must exist before calling GETACP. GETACP 
+                will return a 14 in RETCODE if the file does not exist.
+                The SETACP routine will create the file if it does not exist.
+
+	GETACP:
+		Usage:		CALL "GETACP" USING ACP-RECORD, RETCODE.
+
+		Parameters:
+		ACP-RECORD	Alpha(114)	The ACP record. (see below)
+		RETCODE		Int(4)		The return code
+					0	Success
+					4	Node not found
+					14	Unable to open ACPMAP
+
+	SETACP:
+		Usage:		CALL "SETACP" USING ACP-RECORD, RETCODE.
+
+		Parameters:
+		ACP-RECORD	Alpha(114)	The ACP record. (see below)
+		RETCODE		Int(4)		The return code
+					0	Success
+					1	Unable to create temp file
+					14	Unable to open/create ACPMAP
+
+
+	The following code fragment illustrates the use of GETACP and SETACP.
+
+	    WORKING-STORAGE SECTION.
+    
+	    01  ACP-RECORD.
+		03  NAME	 PIC X(16).       ie, NODE0
+		03  DEV	         PIC X(64).       ie, /dev/tty01
+		03  WEOR	 PIC X(6).        in hex, ie, 0d0a
+		03  REOR1	 PIC X(6).        in hex, ie, 0d
+		03  REOR2	 PIC X(6).           "
+		03  REOR3	 PIC X(6).           "
+		03  BAUD         PIC X(5).        ie, 9600
+		03  PARITY       PIC X.           E, O, or N
+		03  SIZE         PIC X.           5, 6, 7, or 8
+		03  STOP         PIC X.           1 or 2
+		03  DUPLEX       PIC X.           (UNUSED)
+		03  FLOW         PIC X.           X, N, or U
+	    01  RETCODE.
+		03  RC-1         BINARY.
+		03  RC-2         BINARY.
+    
+	    PROCEDURE DIVISION.
+    
+	    MAIN-SECTION.
+
+	   *  Load the confguration for PORT2.
+		MOVE "PORT2" TO NAME.
+		CALL "GETACP" USING ACP-RECORD, RETCODE.
+
+	   *  Change the baud rate to 19200.
+		MOVE "19200" TO BAUD.
+
+	   *  Save the new configuration of PORT2.
+		CALL "SETACP" USING ACP-RECORD, RETCODE.
+
+	   *  Open node PORT2.
+		MOVE "PORT2" TO DEST-NODE.
+		CALL "OPENACP" USING DEST-NODE, REL-LINE, RETCODE.
+
+
+	1.2 Configuration for VAX/VMS
+	=============================
+
+	The configuration of the ACP ports are defined in a data file called
+	ACPMAP.DAT.  This file should be located in the WISP$CONFIG 
+	directory. If one is not there then use any editor to create it.  
+	Each line of the file contains the information for a given node.  
+	The fields on a line must be separated by white space.  The line 
+	format is as follows:
+
+	Name   VAX ID   Weor   Reor1   Reor2   Reor3
+
+	for example:
+
+	TESTPORT   LP01   0D   0D0A   0A
+
+	What this says is that TESTPORT will be assigned to device LP01 with
+	WEOR equal to <CR>, REOR1 equal to <CR><LF>, and REOR2 equal to <LF>.
+	So, every write operation will end with a carriage return and every 
+	read operation will end with the carriage return linefeed sequence 
+	or just a linefeed.
+
+	The WEOR and REOR sequences are 2 digit hex values.
+
+	WEOR = write end of record sequence
+	REOR = read end of record sequence
+
+	NOTE:  If weor is a "+" then there is no end of record sequence and
+	       the length of the sequence calculates to zero.
+
+
+	========================= END OF DOCUMENT ==========================
+

@@ -62,9 +62,9 @@ struct save_screen
 /*
 **	History:
 **	$Log: vlocal.h,v $
-**	Revision 1.13  1997-07-08 17:15:01-04  gsl
+**	Revision 1.13  1997/07/08 21:15:01  gsl
 **	removed unused items
-**
+**	
 **	Revision 1.12  1997-05-21 13:52:27-04  gsl
 **	Removed a lot of old obsolete defines plus move some to vdata.h
 **

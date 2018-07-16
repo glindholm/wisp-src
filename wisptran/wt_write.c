@@ -276,9 +276,9 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_write.c,v $
-**	Revision 1.15  1998-12-15 14:44:52-05  gsl
+**	Revision 1.15  1998/12/15 19:44:52  gsl
 **	Add support for the END-OF-PAGE clauses
-**
+**	
 **	Revision 1.14  1998-10-13 09:37:29-04  gsl
 **	Add missing include file
 **

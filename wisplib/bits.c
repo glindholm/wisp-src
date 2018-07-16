@@ -98,9 +98,9 @@ void BITUNPK(unsigned char *in_ptr, unsigned char *out_ptr, int4 *in_len)
 /*
 **	History:
 **	$Log: bits.c,v $
-**	Revision 1.10  1996-08-19 18:32:10-04  gsl
+**	Revision 1.10  1996/08/19 22:32:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

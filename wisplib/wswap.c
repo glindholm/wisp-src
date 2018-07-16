@@ -142,9 +142,9 @@ void WBB2B4(char* bb)
 /*
 **	History:
 **	$Log: wswap.c,v $
-**	Revision 1.15  2002-03-28 15:43:14-05  gsl
+**	Revision 1.15  2002/03/28 20:43:14  gsl
 **	Add WBB2B4 to do a wswap() from cobol
-**
+**	
 **	Revision 1.14  1998-11-04 10:04:49-05  gsl
 **	change get_swap() arg to const
 **

@@ -42,9 +42,9 @@ extern char *ring_error(int rc);
 /*
 **	History:
 **	$Log: ring.h,v $
-**	Revision 1.7  1996-07-09 19:41:49-04  gsl
+**	Revision 1.7  1996/07/09 23:41:49  gsl
 **	fix newline
-**
+**	
 **	Revision 1.6  1996-07-09 16:41:06-07  gsl
 **	fix headrs
 **

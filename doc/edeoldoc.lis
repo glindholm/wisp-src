@@ -1,0 +1,241 @@
+	Copyright (c) 1994 by International Digital Scientific Incorporated.  
+	All Rights Reserved.
+	
+	====================================================================
+	
+	Title:          EDE Custom USER On-line Documentation Interface
+	
+	Document:       EDEOLDOC.LIS
+	Last Updated:   17 05 94
+	Products:       EDE & WISP 
+	Versions:       3.0 AND LATER, 3.3 AND LATER
+	
+	Summary:        EDE Custom Documentation Overview.
+			Implementation example at Sterling.
+			COBOL Interface Defintions.
+			KIT - Files
+
+	====================================================================
+	
+
+
+	EDE CUSTOM ON-LINE DOCUMENTATION
+	================================
+
+	This document describes how to hook a custom user on-line documentation 
+	program into EDE.  This facility is for use with VAX COBOL or Unix 
+	using ACUCOBOL or Micro Focus COBOLs.
+
+	EDEOLDOC is a generic front-end "C" routine that can be setup to call a 
+	user provided on-line documentation program.  If no user program is 
+	supplied, then EDEOLDOC will simply exist as a STUB that issues a 
+	warning message when called.
+
+	The EDE help system will interface as follows with calls to EDEOLDOC: 
+
+
+	 1. Each USER PROGRAM run, must load EDE with the information
+	    necessary to find and call the USER documentation program.
+
+	    Example:
+
+		 CALL "A_WSLINK" USING ETS-LINK-PROGRAM-DEFINITION
+				       ON-LINE-DOC-PASSING-VALUES.
+	   
+	    Where, A_WSLINK is a "C" routine found in the EDEHELP routine.
+	    A_WSLINK will accept parameters that define the USER help
+	    documentation program (see COBOL interfaces below).
+
+	 2. Each time EDE receives a request to display HELP documentation
+	    it calls the USER program with the information supplied above
+	    and passes the current cursor/row location and screen 
+	    identification number to the USER documentation program.
+
+	 3. The USER program finds the help documentation to display and
+	    does:
+
+	    a. passes up to ten (10) lines of the documentation back to EDE.
+	    b. displays the documentation and returns to EDE.
+
+	 4. What EDE does:
+
+	    a. If it received the documentation, formats it in a BOX and 
+	       then displays it.
+	    b. If the user program displayed the documentation, EDE
+	       restores the screen.
+	
+
+
+	Setting Up the EDEOLDOC "C" routine
+	-----------------------------------
+	
+	To hook in a custom on-line documentation program, you must edit the
+	edeoldoc.c file so that it calls your program.  Then compile it and
+	replace it in the EDE library (ie. libede.a).  Then rebuild your 
+	executables and/or runtime with the new version of the library.
+
+
+
+
+	STERLING SOFTWARE (Implementation example)
+	------------------------------------------
+
+	After the changes have been made to edeoldoc.c to use Sterlings' 
+	documentation program SFREU041.  The file edeoldoc.c will now need 
+	to be compiled and re-linked specifically for the COBOL you are using.
+	Note that the code changes are enclosed in "C" language condition 
+	codes (ifdef's) so that multiple programs can be used for various 
+	help systems. 
+
+	Examples of the compiling and re-linking for various COBOLs follows:
+
+	1. VAX
+	   
+	   Compile EDEOLDOC.C with "STERLING" defined, replace the object into
+	   WISPLIB.OLB then rebuild you EXE's using the new WISPLIB and include
+	   the SFREU041 object file in the link.
+
+		CC/DEFINE=STERLING EDEOLDOC.C
+		LIBRARY/REPLACE WISPLIB.OLB EDEOLDOC.OBJ
+		
+
+	2. ACUCOBOL
+
+	   Compile edeoldoc.c with "STERLING" and "ACU" defined, replace the
+	   object into libede.a then rebuild the ACUCOBOL runtime (wruncble).
+	   (You will need to use the latest sub85.c file when rebuilding the
+	   runtime.)
+
+		cc -DSTERLING -DACU -c edeoldoc.c
+		ar -rvs libede.a edeoldoc.o
+
+	3. Micro Focus
+	
+	   Compile edeoldoc.c with "STERLING" and "MF" defined, then replace
+	   the object into libede.a .  You will have to compile your SFREU041
+	   routine to native object file (sfreu041.o) and include it into
+	   your Micro Focus runtime (wrunmfe) along with the new libede.a .
+	   This is done by editing the file wrunmf.umf file and adding
+	   the file "sfreu041.o" to the end of the "SUBS=" list then remaking
+	   the runtime.  (SUBS=wrunmf.o wispmf.o sfreu041.o)
+	   (At present there is no support for having SFREU041 be a ".int"
+	   or ".gnt" file.)
+
+		cc -DSTERLING -DMF -c edeoldoc.c
+		ar -rvs libede.a edeoldoc.o
+		cob -c sfreu041.cob
+
+
+
+
+
+	COBOL Program Interfaces and Examples
+	-------------------------------------
+
+	The following COBOL layout provides the interface definitions and 
+	fields used by both the user COBOL program (user program started up),
+	EDE and the users HELP program (the program that supplies EDE with
+	the help message to display):
+
+	Col 7 <--------------------------------------------------->Col 72
+	*****************************************************************
+	*                    EDE ON-LINE USER HELP
+	*
+	*  THE EDE USER HELP SYSTEM USES THE EDEOLDOC.C ROUTINE TO STORE
+	*  VALUES SET UP BY THE USERS PROGRAMS.  THIS IS DONE VIA A
+	*  SUB-ROUTINE CALLED "A_WSLINK". IT THEN PASSES THESE AND OTHER
+	*  VALUES BACK AND FORTH BETWEEN EDE AND THE USERS HELP INTERFACE
+	*  PROGRAM WHICH SUPPLIES THE ACTUAL HELP MESSAGE DATA.
+	*
+	*  THE ON-LINE DOCUMENT VALUES BELOW ARE PASSED TO THE EDE
+	*  SYSTEM  WHEN THE FIRST USER PROGRAM STARTS UP, THEY ARE
+	*  THEN PASSED BY EDE TO THE USER HELP PROGRAM DEFINED IN
+	*  THE ETS-LINKS AREA BELOW.
+	*
+	*****************************************************************
+	 01 ON-LINE-DOC-PASSING-VALUES.
+	    03 WS-DOC-APPLICATION-NAME       PIC X(79) VALUE SPACES.
+	    03 WS-DOC-COMPUTER               PIC X(01) VALUE SPACES.
+	    03 WS-DOC-COMPANY-NAME           PIC X(30) VALUE SPACES.
+	    03 WS-DOC-ON-LINE-DOC-LIBRARY    PIC X(08) VALUE SPACES.
+	    03 WS-DOC-ON-LINE-DOC-VOLUME     PIC X(06) VALUE SPACES.
+	    03 WS-DOC-SECURITY-CLASSES       PIC X(27) VALUE SPACES.
+	    03 WS-DOC-PROGRAM-NAME           PIC X(08) VALUE SPACES.
+	    03 WS-DOC-CRT-SCREEN-NUMBER      PIC 9(03) VALUE SPACES.
+	    03 WS-DOC-SCREEN-PHASE           PIC X(05) VALUE SPACES.
+	
+	*****************************************************************
+	*  ETS-LINKS DEFINES THE HELP REQUEST PK-KEY, THE USER  HELP
+	*  INTERFACE PROGRAM NAME, LIBRARY AND VOLUME (IE. WHERE
+	*  TO FIND THE HELP PROGRAM).   THIS INFORMATION IS PASSED
+	*  TO EDE AT THE BEGINNING OF THE USER PROGRAM.
+	*
+	*  EXAMPLE:
+	*            CALL "A_WSLINK" USING ETS-LINK-PROGRAM-DEFINITION
+	*                                  ON-LINE-DOC-PASSING-VALUES.
+	*
+	*****************************************************************
+	 01 ETS-LINK-PROGRAM-DEFINITION.
+	    03 ETS-LINK-PROGRAM-PFKEY        PIC S9(03) COMP VALUE +13.
+	    03 ETS-LINK-PROGRAM-NAME         PIC X(08) VALUE "SFREU041".
+	    03 FILLER                        PIC X(02) VALUE SPACES.
+	    03 ETS-LINK-PROGRAM-LIBRARY      PIC X(08) VALUE SPACES.
+	    03 FILLER                        PIC X(02) VALUE SPACES.
+	    03 ETS-LINK-PROGRAM-VOLUME       PIC X(06) VALUE SPACES.
+	    03 FILLER                        PIC X(04) VALUE SPACES.
+
+
+
+	*****************************************************************
+	*  THE FOLLOWING ARE ADDITIONAL ITEMS PASSED TO THE USER HELP
+	*  PROGRAM BY EDE AND RETURNED BY THE USER HELP PROGRAM THROUGH
+	*  THE CALLS MADE TO EDEOLDOC.C
+	*****************************************************************
+	 01 LINK-CURSOR.
+	    03 LINK-CURSOR-COL               PIC BINARY VALUE 0.
+	    03 LINK-CURSOR-ROW               PIC BINARY VALUE 0.
+	
+	 01 LINK-HELP-SCRN-BOX.
+	    03 LINK-HELP-LINE  OCCURS 10 TIMES   PIC X(64).
+	 
+	******** LINK-HELP-OP-CODE MUST BE ZERO *********
+	 01 LINK-HELP-OP-CODE.
+	    03 FILLER                        PIC BINARY VALUE 0.
+	    03 LINK-HELP-OP-VALUE            PIC BINARY VALUE 0.
+	
+	******** LINK-HELP-RTN-CODE SET TO ZERO BY EDEHELP, 
+	******** USER PROGRAM RETURNS ACTIVITY STATUS
+	 01 LINK-HELP-RTN-CODE.
+	    03 FILLER                        PIC BINARY VALUE 0.
+	    03 LINK-HELP-RTN-VALUE           PIC BINARY VALUE 0.
+		88 LINK-HELP-OK             VALUE 0.
+		88 LINK-HELP-NONE           VALUE 1.
+		88 LINK-HELP-USER-PROG-SCRN VALUE 2.
+
+
+
+
+
+	KITS
+	----
+
+	1. UNIX
+	
+	   The following files are being sent as part of the custom modifcations
+	   done for unix.
+
+	   edeoldoc.c      - interface to custom on-line doc routine (SFREU041)
+	   sub85.c         - updated Acucobol interface
+	   libede.a        - updated EDE library (with generic edeoldoc.o)
+
+
+	2. VAX 
+	
+	   The following files are being sent as part of the custom modifcations
+	   done for VAX.
+
+	   edeoldoc.c      - interface to custom on-line doc routine (SFREU041)
+
+
+	========================= END OF DOCUMENT ==========================
+

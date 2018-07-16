@@ -19,9 +19,9 @@ void WSCLOSE(void)
 /*
 **	History:
 **	$Log: wsclose.c,v $
-**	Revision 1.9  1996-08-19 18:33:21-04  gsl
+**	Revision 1.9  1996/08/19 22:33:21  gsl
 **	drcs update
-**
+**	
 **
 **
 */

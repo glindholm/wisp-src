@@ -354,9 +354,9 @@ static int nextcol()
 /*
 **	History:
 **	$Log: gnotepad.c,v $
-**	Revision 1.10  1997-07-08 16:18:14-04  gsl
+**	Revision 1.10  1997/07/08 20:18:14  gsl
 **	Change to use new video.h interface
-**
+**	
 **	Revision 1.9  1996-10-11 18:15:55-04  gsl
 **	drcs update
 **

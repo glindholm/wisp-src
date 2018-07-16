@@ -34,9 +34,9 @@ extern int set_end_of_input(void);
 /*
 **	History:
 **	$Log: input.h,v $
-**	Revision 1.5  1996-08-30 21:56:04-04  gsl
+**	Revision 1.5  1996/08/31 01:56:04  gsl
 **	drcs update
-**
+**	
 **
 **
 */

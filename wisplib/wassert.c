@@ -71,9 +71,9 @@ void wisp_assert(char *cond, char *file, int line)
 /*
 **	History:
 **	$Log: wassert.c,v $
-**	Revision 1.2  1996-07-10 19:55:08-04  gsl
+**	Revision 1.2  1996/07/10 23:55:08  gsl
 **	change to use include assert.h
-**
+**	
 **	Revision 1.1  1996-01-02 08:23:38-08  gsl
 **	Initial revision
 **

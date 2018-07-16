@@ -38,9 +38,9 @@ char *demo_notice();
 /*
 **	History:
 **	$Log: product.hpp,v $
-**	Revision 1.7  1998-08-31 15:50:36-04  gsl
+**	Revision 1.7  1998/08/31 19:50:36  gsl
 **	drcs update
-**
+**	
 **	Revision 1.6  1998-08-31 15:14:09-04  gsl
 **	drcs update
 **
@@ -53,9 +53,9 @@ char *demo_notice();
 //
 //	History:
 //	$Log: product.hpp,v $
-//	Revision 1.7  1998-08-31 15:50:36-04  gsl
+//	Revision 1.7  1998/08/31 19:50:36  gsl
 //	drcs update
-//
+//	
 //	Revision 1.6  1998-08-31 15:14:09-04  gsl
 //	drcs update
 //

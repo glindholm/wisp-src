@@ -60,9 +60,9 @@ void menu(char *name,	/* The name of the menu file			*/
 /*
 **	History:
 **	$Log: menu.h,v $
-**	Revision 1.9  1996-07-17 12:19:50-04  gsl
+**	Revision 1.9  1996/07/17 16:19:50  gsl
 **	Fix missing newline
-**
+**	
 **	Revision 1.8  1996-07-17 09:19:11-07  gsl
 **	Add headers and prototypes for NT
 **

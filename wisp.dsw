@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "CRID"=.\kcsi\crid\CRID.DSP - Package Owner=<4>
+Project: "CRID"=.\kcsi\crid.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -45,6 +45,60 @@ Package=<4>
 
 ###############################################################################
 
+Project: "acurts"=.\acurts\acurts.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name videolibm
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wisplibm
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "acurts_crid"=.\acurts_crid\acurts_crid.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name shipkitcridacu
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name shipkitwisp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "acurts_ede"=.\acurts_ede\acurts_ede.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name shipkitede
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name shipkitwisp
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "all"=.\port\all.dsp - Package Owner=<4>
 
 Package=<5>
@@ -66,7 +120,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "createacu"=.\kcsi\create\createacu.dsp - Package Owner=<4>
+Project: "createacu"=.\kcsi\createacu.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -87,7 +141,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "createlibacu"=.\kcsi\create\createlibacu.dsp - Package Owner=<4>
+Project: "createlibacu"=.\kcsi\createlibacu.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -99,7 +153,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cridacu"=.\kcsi\crid\cridacu.dsp - Package Owner=<4>
+Project: "cridacu"=.\kcsi\cridacu.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -120,7 +174,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cridlib"=.\kcsi\crid\cridlib.dsp - Package Owner=<4>
+Project: "cridlib"=.\kcsi\cridlib.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -132,7 +186,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "cridlibm"=.\KCSI\CRID\cridlibm.dsp - Package Owner=<4>
+Project: "cridlibm"=.\kcsi\cridlibm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -270,6 +324,42 @@ Package=<4>
 
 ###############################################################################
 
+Project: "mfsubs"=.\MF\mfsubs.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "nt_wconfig"=.\nt\wconfig\nt_wconfig.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "nt_wisptran"=.\nt\wisptran\nt_wisptran.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "proctran"=.\proctran\proctran.dsp - Package Owner=<4>
 
 Package=<5>
@@ -382,6 +472,27 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name wispkit
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "testacu"=.\test\testacu.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name acurts
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wispkit
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wisptran_test
     End Project Dependency
 }}}
 
@@ -542,6 +653,15 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name acu
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name nt_wconfig
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name nt_wisptran
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name mfsubs
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -578,6 +698,21 @@ Package=<5>
 
 Package=<4>
 {{{
+}}}
+
+###############################################################################
+
+Project: "wisptran_test"=.\wisptran\wisptran_test.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wisptran
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -775,102 +910,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name wisplibm
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "wwruncbl"=.\acu\wwruncbl.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name videolib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisplib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisptran
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "wwruncble"=.\acu\wwruncble.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name edelib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name videolib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisplib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisptran
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "wwruncblk"=.\acu\wwruncblk.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name videolib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisplib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name cridlib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisptran
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "wwruncblke"=.\acu\wwruncblke.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name edelib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name videolib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisplib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name cridlib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisptran
     End Project Dependency
 }}}
 

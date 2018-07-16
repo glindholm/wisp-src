@@ -270,9 +270,9 @@ static void showflags()
 /*
 **	History:
 **	$Log: ptcli.c,v $
-**	Revision 1.7  1997-04-21 11:03:54-04  scass
+**	Revision 1.7  1997/04/21 15:03:54  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.6  1996-09-12 19:14:51-04  gsl
 **	Fix prototypes
 **

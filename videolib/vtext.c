@@ -52,9 +52,9 @@ int vtext(int display,int row,int column,char *text,...)
 /*
 **	History:
 **	$Log: vtext.c,v $
-**	Revision 1.12  1997-07-09 12:31:49-04  gsl
+**	Revision 1.12  1997/07/09 16:31:49  gsl
 **	Removed support for double height text
-**
+**	
 **	Revision 1.11  1996-10-11 18:16:22-04  gsl
 **	drcs update
 **

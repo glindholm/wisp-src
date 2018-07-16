@@ -7,9 +7,9 @@ int gzones()
 /*
 **	History:
 **	$Log: gzones.c,v $
-**	Revision 1.9  1996-10-11 18:15:56-04  gsl
+**	Revision 1.9  1996/10/11 22:15:56  gsl
 **	drcs update
-**
+**	
 **
 **
 */

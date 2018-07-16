@@ -41,9 +41,9 @@ static char X_twfxt[39];
 /*
 **	History:
 **	$Log: wfiles.h,v $
-**	Revision 1.11  1998-10-22 14:05:48-04  gsl
+**	Revision 1.11  1998/10/22 18:05:48  gsl
 **	Fix the fstruct and pstruct typedefs
-**
+**	
 **	Revision 1.10  1998-08-03 16:40:26-04  jlima
 **	Support Logical Volume Translations to long file names containing eventual embedded blanks.
 **

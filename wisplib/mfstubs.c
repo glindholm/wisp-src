@@ -25,9 +25,9 @@ void call_mfcobol()
 /*
 **	History:
 **	$Log: mfstubs.c,v $
-**	Revision 1.2  1998-12-14 11:42:15-05  gsl
+**	Revision 1.2  1998/12/14 16:42:15  gsl
 **	Fix history
-**
+**	
 **
 **
 */

@@ -25,7 +25,7 @@ WPROC_VERSION=2000
 
 WPROC_SHIP_DIR=wproc$(WPROC_VERSION).ship
 WPROC_DISTRIB_DIR=wproc.$(WPROC_VERSION)
-WPROC_DIST=$(WPROC_EXE) wproc.txt wproc.msg
+WPROC_DIST=$(WPROC_EXE) ../doc/wproc.txt wproc.msg
 WPROC_DEMOSTUFF=cursor.wps demo.wps dr.wps ed.wps environ.wps putparm.wps screen.wps test.wps video.wps
 
 WPROC_STD_FLAGS = -DWANG -DUNIX -DDEBUG -I$(WC) -I$(VC) -DWPROC_VERSION=$(WPROC_VERSION)

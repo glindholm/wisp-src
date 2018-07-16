@@ -251,9 +251,9 @@ int	depth;
 /*
 **	History:
 **	$Log: wt_debug.c,v $
-**	Revision 1.7  1996-10-09 12:31:19-04  gsl
+**	Revision 1.7  1996/10/09 16:31:19  gsl
 **	Fix warnings
-**
+**	
 **	Revision 1.6  1996-08-30 18:56:15-07  gsl
 **	drcs update
 **

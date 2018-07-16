@@ -91,9 +91,9 @@ The functions
 /*
 **	History:
 **	$Log: vsegp.h,v $
-**	Revision 1.9  1996-09-03 18:24:06-04  gsl
+**	Revision 1.9  1996/09/03 22:24:06  gsl
 **	drcs update
-**
+**	
 **
 **
 */

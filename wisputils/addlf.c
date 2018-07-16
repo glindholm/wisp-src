@@ -76,9 +76,9 @@ int ifd,ofd;
 /*
 **	History:
 **	$Log: addlf.c,v $
-**	Revision 1.4  1996-07-23 14:12:46-04  gsl
+**	Revision 1.4  1996/07/23 18:12:46  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -267,10 +267,10 @@ static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char
 /*
 **	History:
 **	$Log: wt_delet.c,v $
-**	Revision 1.15  1998-06-09 13:14:28-04  gsl
+**	Revision 1.15  1998/06/09 17:14:28  gsl
 **	Combined DELETE and REWRITE logic into a common routine.
 **	Added support for manual record locking
-**
+**	
 **	Revision 1.14  1998-03-27 14:10:56-05  gsl
 **	Move OLD to old.c
 **

@@ -75,14 +75,18 @@ void werr_write(char* buff);								/* Write out a buffer to the error log.	*/
 void wtrace(const char* routine, const char* code, const char* format, ... /* args */);
 int wtracing(void);
 void wtrace_timestamp(const char *routine);
+const char* WL_strerror(int errnum);
 
 #endif /* WERRLOG_H */
 /*
 **	History:
 **	$Log: werrlog.h,v $
-**	Revision 1.14  1998-05-12 10:54:02-04  gsl
+**	Revision 1.14.2.1  2002/10/09 19:48:08  gsl
+**	Added WL_strerror()
+**	
+**	Revision 1.14  1998/05/12 14:54:02  gsl
 **	Add wtrace_timestamp() and wtracing()
-**
+**	
 **	Revision 1.13  1997-04-15 16:23:25-04  gsl
 **	Add wtrace()
 **

@@ -1617,9 +1617,9 @@ write_the_token:
 /*
 **	History:
 **	$Log: output.c,v $
-**	Revision 1.13  2001-10-18 11:13:52-04  gsl
+**	Revision 1.13  2001/10/18 15:13:52  gsl
 **	Change to treat a COMMENT token of zero lenght as a blank line
-**
+**	
 **	Revision 1.12  1999-09-07 10:36:27-04  gsl
 **	Fix prototypes and return types.
 **

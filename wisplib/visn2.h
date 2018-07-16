@@ -159,9 +159,9 @@ extern	int		s_close(), s_read(), s_write(), s_rewrite();
 /*
 **	History:
 **	$Log: visn2.h,v $
-**	Revision 1.8  1996-08-19 18:33:04-04  gsl
+**	Revision 1.8  1996/08/19 22:33:04  gsl
 **	drcs update
-**
+**	
 **
 **
 */

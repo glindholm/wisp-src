@@ -414,9 +414,9 @@ void swap_put ( int4* destination, int4 new_value )
 /*
 **	History:
 **	$Log: linksubs.c,v $
-**	Revision 1.24  2001-11-08 11:47:32-05  gsl
+**	Revision 1.24  2001/11/08 16:47:32  gsl
 **	Add missing include
-**
+**	
 **	Revision 1.23  2001-10-31 15:33:52-05  gsl
 **	replace mkdir() with makepath()
 **

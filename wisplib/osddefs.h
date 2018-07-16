@@ -38,9 +38,9 @@
 /*
 **	History:
 **	$Log: osddefs.h,v $
-**	Revision 1.2  1996-07-11 19:20:55-04  gsl
+**	Revision 1.2  1996/07/11 23:20:55  gsl
 **	Share code with msdos for NT
-**
+**	
 **	Revision 1.1  1995-09-25 10:06:29-07  gsl
 **	Initial revision
 **

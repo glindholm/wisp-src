@@ -183,10 +183,10 @@ int vgeterr(void)								/* Get the error number flag			*/
 /*
 **	History:
 **	$Log: vinput.c,v $
-**	Revision 1.13  1997-07-08 17:01:32-04  gsl
+**	Revision 1.13  1997/07/08 21:01:32  gsl
 **	Change to use vwait()
 **	Change to use new video.h interfaces
-**
+**	
 **	Revision 1.12  1996-11-13 20:30:24-05  gsl
 **	Use vcontrol_flush()
 **

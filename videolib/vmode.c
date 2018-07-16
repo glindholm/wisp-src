@@ -80,10 +80,10 @@ static int vmod_do(int control)								/* Do the requested action.		*/
 /*
 **	History:
 **	$Log: vmode.c,v $
-**	Revision 1.12  1997-07-08 17:19:17-04  gsl
+**	Revision 1.12  1997/07/08 21:19:17  gsl
 **	Add COSTAR for WIN32 directio logic
 **	Change to use new video.h interfaces
-**
+**	
 **	Revision 1.11  1996-10-11 18:16:13-04  gsl
 **	drcs update
 **

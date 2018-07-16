@@ -88,9 +88,9 @@ char	*fname;
 /*
 **	History:
 **	$Log: wdecrypt.c,v $
-**	Revision 1.7  1996-07-23 14:13:06-04  gsl
+**	Revision 1.7  1996/07/23 18:13:06  gsl
 **	drcs update
-**
+**	
 **
 **
 */

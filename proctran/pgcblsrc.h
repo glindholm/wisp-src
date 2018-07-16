@@ -782,9 +782,9 @@ EXT char *call_readfdr[];
 /*
 **	History:
 **	$Log: pgcblsrc.h,v $
-**	Revision 1.11  1997-04-21 10:50:29-04  scass
+**	Revision 1.11  1997/04/21 14:50:29  scass
 **	Corrected copyright
-**
+**	
 **	Revision 1.10  1997-02-18 10:32:14-05  gsl
 **	Changed AUTHOR name
 **

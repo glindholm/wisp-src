@@ -38,9 +38,9 @@ void unlock_record(int col);
 /*
 **	History:
 **	$Log: wt_locks.h,v $
-**	Revision 1.1  1998-06-09 10:06:06-04  gsl
+**	Revision 1.1  1998/06/09 14:06:06  gsl
 **	Initial revision
-**
+**	
 **
 **
 **

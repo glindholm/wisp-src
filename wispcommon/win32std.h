@@ -54,9 +54,9 @@
 /*
 **	History:
 **	$Log: win32std.h,v $
-**	Revision 1.2  1996-09-10 11:50:36-04  gsl
+**	Revision 1.2  1996/09/10 15:50:36  gsl
 **	Fix mkdir() and stat()
-**
+**	
 **	Revision 1.1  1996-09-09 13:02:59-07  gsl
 **	Initial revision
 **

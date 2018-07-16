@@ -5,7 +5,7 @@ static char rcsid[]="$Id:$";
  *  Module: $RCSfile: hexv.c,v $
  * 
  * $Log: hexv.c,v $
- * Revision 1.7  1995-04-25 05:58:21-04  gsl
+ * Revision 1.7  1995/04/25 09:58:21  gsl
  * drcs state V3_3_15
  *
  * Revision 1.6  1995/04/17  11:50:46  gsl

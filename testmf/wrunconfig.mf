@@ -1,3 +1,0 @@
-cobol=MF
-options=
-runcbl=wrunmf

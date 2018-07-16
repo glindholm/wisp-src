@@ -52,9 +52,9 @@ extern process *the_process;
 //
 //	History:
 //	$Log: process.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:08-04  gsl
+//	Revision 1.5  1998/08/31 19:14:08  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -137,9 +137,9 @@ int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 /*
 **	History:
 **	$Log: wcmatch.c,v $
-**	Revision 1.8  1996-08-19 18:33:08-04  gsl
+**	Revision 1.8  1996/08/19 22:33:08  gsl
 **	drcs update
-**
+**	
 **
 **
 */

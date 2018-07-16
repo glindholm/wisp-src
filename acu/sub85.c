@@ -913,7 +913,7 @@ extern wfopen2();
 extern wfopen3();
 extern wfswait();
 extern wfwait();
-extern wmemcpy();
+extern WMEMCPY();
 extern wpause();
 extern wrename();
 extern ws132();
@@ -1094,7 +1094,7 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "WISPSHUT",	WISPSHUT },
 	{ "WISPSORT",	WISPSORT },
 	{ "WISPSYNC",	WISPSYNC },
-	{ "WMEMCPY",    wmemcpy },
+	{ "WMEMCPY",    WMEMCPY },
 	{ "WPAUSE",     wpause },
 	{ "WRENAME",	wrename },
 	{ "WS132",	ws132 },

@@ -35,9 +35,9 @@ void vse_untabify(char *str, int size);
 /*
 **	History:
 **	$Log: vseutl.h,v $
-**	Revision 1.5  1996-09-03 18:24:13-04  gsl
+**	Revision 1.5  1996/09/03 22:24:13  gsl
 **	drcs update
-**
+**	
 **
 **
 */

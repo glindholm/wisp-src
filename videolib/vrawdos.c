@@ -1255,9 +1255,9 @@ void vraw_stty_sync()
 /*
 **	History:
 **	$Log: vrawdos.c,v $
-**	Revision 1.12  1997-07-09 11:57:16-04  gsl
+**	Revision 1.12  1997/07/09 15:57:16  gsl
 **	Remove unsupported erase codes
-**
+**	
 **	Revision 1.11  1996-11-14 11:44:00-05  jockc
 **	changed vtimeout* to vrawtimeout*
 **

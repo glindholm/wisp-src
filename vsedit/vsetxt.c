@@ -150,9 +150,9 @@ void free_one_text(TEXT *txt)
 /*
 **	History:
 **	$Log: vsetxt.c,v $
-**	Revision 1.10  1996-09-03 18:24:12-04  gsl
+**	Revision 1.10  1996/09/03 22:24:12  gsl
 **	drcs update
-**
+**	
 **
 **
 */

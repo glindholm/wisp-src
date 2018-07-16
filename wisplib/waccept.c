@@ -119,9 +119,9 @@ static void nullterm(char* str, int len)
 /*
 **	History:
 **	$Log: waccept.c,v $
-**	Revision 1.8  1996-08-19 18:33:06-04  gsl
+**	Revision 1.8  1996/08/19 22:33:06  gsl
 **	drcs update
-**
+**	
 **
 **
 */

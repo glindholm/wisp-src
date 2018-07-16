@@ -153,9 +153,9 @@ extern int chtab_init;
 /*
 **	History:
 **	$Log: vchinese.h,v $
-**	Revision 1.6  1995-04-25 05:50:24-04  gsl
+**	Revision 1.6  1995/04/25 09:50:24  gsl
 **	drcs state V3_3_15
-**
+**	
  * Revision 1.5  1995/04/17  11:44:02  gsl
  * drcs state V3_3_14
  *

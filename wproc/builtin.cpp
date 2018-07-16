@@ -1225,9 +1225,9 @@ void machine::exec_builtin() {
 //
 //	History:
 //	$Log: builtin.cpp,v $
-//	Revision 1.13  1998-08-31 15:13:33-04  gsl
+//	Revision 1.13  1998/08/31 19:13:33  gsl
 //	drcs update
-//
+//	
 //
 
 //	

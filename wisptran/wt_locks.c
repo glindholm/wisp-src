@@ -226,10 +226,10 @@ void unlock_record(int col)
 /*
 **	History:
 **	$Log: wt_locks.c,v $
-**	Revision 1.15  1998-12-03 15:32:41-05  gsl
+**	Revision 1.15  1998/12/03 20:32:41  gsl
 **	Change the WISP-LOCK-START logic to use COMMIT instead of UNLOCK ALL if
 **	translating for ACU4GL.
-**
+**	
 **	Revision 1.14  1998-06-09 13:13:31-04  gsl
 **	Rewrote most of this.
 **	Fixed headers

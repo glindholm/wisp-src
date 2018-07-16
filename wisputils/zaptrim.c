@@ -96,9 +96,9 @@ int zap,trim;
 /*
 **	History:
 **	$Log: zaptrim.c,v $
-**	Revision 1.8  1996-07-23 14:08:35-04  gsl
+**	Revision 1.8  1996/07/23 18:08:35  gsl
 **	Add standard Id and log
-**
+**	
 **
 **
 */

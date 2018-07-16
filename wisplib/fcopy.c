@@ -23,7 +23,10 @@ static char rcsid[]="$Id:$";
 **
 */
 
-#define _POSIX_SOURCE 1
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -31,7 +34,7 @@ static char rcsid[]="$Id:$";
 #include <sys/stat.h>
 #include <errno.h>
 
-#if defined(MSDOS) || defined(_MSC_VER)
+#if defined(WIN32)
 #include <io.h>
 #endif
 
@@ -40,8 +43,16 @@ static char rcsid[]="$Id:$";
 #include "fcopy.h"
 #include "werrlog.h"
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+#if defined(WIN32)
+#define O_LARGEFILE 0
+#endif
+
 /*
-**	Routine:	fcopy()
+**	Routine:	wisp_fcopy()
 **
 **	Function:	To copy a file.
 **
@@ -69,20 +80,15 @@ static char rcsid[]="$Id:$";
 **	02/15/93	Written by GSL
 **
 */
-int fcopy(char* srcfile, char* dstfile)
+int wisp_fcopy(const char* srcfile, const char* dstfile)
 {
 	int	src,dst;
 	char	buff[1024];
 	int	rc,cnt;
-	struct stat statbuf;
 	int	dstexists;
 	int	retcode = 0;
 
-#ifdef O_BINARY
-	src = open(srcfile, O_RDONLY | O_BINARY);				/* Open the source file				*/
-#else
-	src = open(srcfile, O_RDONLY);						/* Open the source file				*/
-#endif
+	src = open(srcfile, O_RDONLY | O_BINARY |O_LARGEFILE);			/* Open the source file				*/
 	if (src == -1)
 	{
 		retcode = errno;
@@ -91,11 +97,7 @@ int fcopy(char* srcfile, char* dstfile)
 
 	dstexists = fexists(dstfile);						/* Check if dstfile exists			*/
 
-#ifdef O_BINARY
-	dst = open(dstfile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);	/* Open the destination file			*/
-#else
-	dst = open(dstfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);		/* Open the destination file			*/
-#endif
+	dst = open(dstfile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY | O_LARGEFILE, 0666);	/* Open the destination file			*/
 	if (dst == -1)
 	{
 		retcode = errno;
@@ -133,9 +135,13 @@ int fcopy(char* srcfile, char* dstfile)
 		goto fcopy_return;
 	}
 
-	if (!dstexists && 0 == stat(srcfile,&statbuf))				/* If dstfile didn't exist then			*/
+	if (!dstexists)
 	{
-		chmod(dstfile,statbuf.st_mode);					/* change the mode to match srcfile		*/
+		mode_t mode;
+		if (0 == WL_stat_mode(srcfile, &mode))				/* If dstfile didn't exist then			*/
+		{
+			chmod(dstfile, mode);					/* change the mode to match srcfile		*/
+		}
 	}
 
 fcopy_return:
@@ -157,11 +163,8 @@ char *argv[];
 		exit(0);
 	}
 
-#ifdef __STDC__
-	printf("__STDC__ defined\n");
-#endif
 	printf("fcopy %s %s\n",argv[1],argv[2]);
-	rc = fcopy(argv[1],argv[2]);
+	rc = wisp_fcopy(argv[1],argv[2]);
 	printf("rc = %d\n",rc);
 	exit(0);
 }
@@ -169,9 +172,36 @@ char *argv[];
 /*
 **	History:
 **	$Log: fcopy.c,v $
-**	Revision 1.8  1998-05-15 17:41:21-04  gsl
+**	Revision 1.8.2.1  2002/10/09 21:03:00  gsl
+**	Huge file support
+**	
+**	Revision 1.16  2002/10/07 21:08:00  gsl
+**	Huge file support
+**	
+**	Revision 1.15  2002/10/07 20:54:48  gsl
+**	Huge file support
+**	
+**	Revision 1.14  2002/10/07 19:27:58  gsl
+**	Add O_LARGEFILE to open() options
+**	
+**	Revision 1.13  2002/10/04 21:00:55  gsl
+**	Change to use WL_stat_xxx() routines
+**	
+**	Revision 1.12  2002/10/03 21:28:53  gsl
+**	Start the Huge file support
+**	
+**	Revision 1.11  2002/10/01 18:54:01  gsl
+**	Define O_BINARY for windows to simplify
+**	
+**	Revision 1.10  2002/06/26 01:41:12  gsl
+**	Change fcopy() to wisp_fcopy()
+**	
+**	Revision 1.9  2002/06/21 03:10:35  gsl
+**	Remove VMS & MSDOS
+**	
+**	Revision 1.8  1998/05/15 21:41:21  gsl
 **	Add trace logic
-**
+**	
 **	Revision 1.7  1996-08-19 18:32:19-04  gsl
 **	drcs update
 **

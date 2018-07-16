@@ -67,9 +67,9 @@ int vputlen(char *outstr, char *instr, int length)					/* Opposite of vtrimlen.	
 /*
 **	History:
 **	$Log: vtrim.c,v $
-**	Revision 1.10  1996-10-11 18:16:23-04  gsl
+**	Revision 1.10  1996/10/11 22:16:23  gsl
 **	drcs update
-**
+**	
 **
 **
 */

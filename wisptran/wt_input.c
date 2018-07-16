@@ -1391,9 +1391,9 @@ static int add2buff(
 /*
 **	History:
 **	$Log: wt_input.c,v $
-**	Revision 1.19  2002-03-21 18:27:08-05  gsl
+**	Revision 1.19  2002/03/21 23:27:08  gsl
 **	Remove the simple SELECT short-cut to avoid duplicating code
-**
+**	
 **	Revision 1.18  2002-03-21 17:06:55-05  gsl
 **	For MFSE add LOCK MODE clause to sequential files.
 **

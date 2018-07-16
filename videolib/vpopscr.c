@@ -65,10 +65,10 @@ vpopscr()										/* A function to restore the screen and	*/
 /*
 **	History:
 **	$Log: vpopscr.c,v $
-**	Revision 1.10  1997-07-09 11:49:25-04  gsl
+**	Revision 1.10  1997/07/09 15:49:25  gsl
 **	remove extern references.
 **	remove the line attribute stuff as not used
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:15-04  gsl
 **	drcs update
 **

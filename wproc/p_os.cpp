@@ -241,9 +241,9 @@ void compiler::p_os_cleanup() {
 //
 //	History:
 //	$Log: p_os.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:03-04  gsl
+//	Revision 1.6  1998/08/31 19:14:03  gsl
 //	drcs update
-//
+//	
 //
 
 //	

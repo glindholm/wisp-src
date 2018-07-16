@@ -37,9 +37,9 @@ vonexit(new) int new;									/* Change the exit defaults.		*/
 /*
 **	History:
 **	$Log: vonexit.c,v $
-**	Revision 1.9  1996-10-11 18:16:13-04  gsl
+**	Revision 1.9  1996/10/11 22:16:13  gsl
 **	drcs update
-**
+**	
 **
 **
 */

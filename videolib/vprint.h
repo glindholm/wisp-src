@@ -35,9 +35,9 @@ extern int vprint (char *format, ...);
 /*
 **	History:
 **	$Log: vprint.h,v $
-**	Revision 1.3  1997-01-09 19:58:04-05  gsl
+**	Revision 1.3  1997/01/10 00:58:04  gsl
 **	Removed static routines
-**
+**	
 **	Revision 1.2  1996-07-17 14:24:53-07  gsl
 **	fix prototypes
 **

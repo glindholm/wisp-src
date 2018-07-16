@@ -815,10 +815,10 @@ int check_timeout(char lowdate[8], char highdate[8])
 /*
 **	History:
 **	$Log: wauthsub.c,v $
-**	Revision 1.12  1997-03-21 10:29:55-05  gsl
+**	Revision 1.12  1997/03/21 15:29:55  gsl
 **	Split the retrieval of the LICENSE_KEY and VALICATION_CODE into a separate
 **	routine in preparation of storing the info in the registry for WIN32
-**
+**	
 **	Revision 1.11  1997-03-17 11:58:29-05  gsl
 **	Add logic for NETWORK license
 **

@@ -1,0 +1,421 @@
+								stdidsi.doc
+								08/13/93
+	STANDARDS IDSI
+
+	This document describes C coding standards to be used by
+	by all IDSI programmers.
+
+
+GENERAL:
+	Usually one entry point (global routine) per file which is 
+	the same name as the filename and is the first routine in
+	the file.  Multiple entry points are allowed ONLY if they
+	form a tightly coupled sub-system; in this case the filename
+	should name the sub-system not the first entry point.
+	(Examples of a tightly coupled sub-system: sharemem, linksubs)
+
+	Include copyright info as the first thing in every file.
+
+		header.x	- Copyright template
+		cfile.x		- C file comment header template
+		hfile.x		- C include file commetn header template
+		routine.x	- C routine comment header template
+
+	FILE LAYOUT TEMPLATE:
+
+	|	/*
+	|		copyright info
+	|	*/
+	|
+	|	/*
+	|		general comments
+	|	*/
+	|
+	|	#include <system headers>
+	|	#include "local headers"
+	|
+	|	#define CONSTANTS
+	|
+	|	long	global-variable;
+	|
+	|	extern	external-globals;
+	|
+	|	static	file-scoped-statics;
+	|
+	|	/*
+	|		global routine comments
+	|	*/
+	|	char *myroutine();
+	|	{
+	|		....
+	|	}
+	|
+	|	/*
+	|		static routine comments
+	|	*/
+	|	static long myfunc()
+	|	{
+	|		...
+	|	}
+
+
+INDENTATION:
+
+	Always indent by tabstops.
+	Always align braces {} in the same column.
+	Labels are "out"-dented to match with the braces of there scope.
+	Only one statement per line.
+
+
+	CORRECT	
+
+		if ( condition )
+		{
+			stmts;
+		}
+		else
+		{
+			stmts;
+		}
+
+	INCORRECT
+
+		if ( condition ) stmt;		- in debugger can't tell if
+						  stmt is executed.
+
+
+	CORRECT
+
+		switch( condition )
+		{
+		case x:				- labels are at scope
+			stmts;
+			break;
+		default:
+			stmts;
+			break;
+		}
+
+
+DEFINES:
+
+	Always start in col 0.
+	If nested or spans a page then comment the endif.
+
+		#ifdef abc
+			code...
+		#ifdef xyz
+			code...
+		#else  /* NOT xyz */
+			code ...
+		#endif /* xyz */
+		#endif /* abc */
+
+
+ASSIGN VS EQUATE:
+
+	Always put a constant on the left in an equate.
+
+	CORRECT:	if ( 0 == a )
+
+	INCORRECT:	if ( a == 0 )		- too easy to say (a=0)
+
+
+VARIABLE NAMING:
+
+	Always use MEANINGFULL names.
+
+	Never "RE-USE" a varible for a different purpose then it's
+	name implies.
+
+	Temp counters (i.e. i,j,k etc.) are allowed ONLY in tight loops,
+	if there scope is greater then a couple of line you must use
+	a meaningful name.
+
+	Constants (#define) should be in UPPERCASE. All other variable
+	should be lowercase only. NEVER mix upper and lowercase.
+
+	Global variables should be identified with a prefix that 
+	identifies the "sub-system" it applies to, or with a "g_"
+	if a system wide global variable.  This should ensure 
+	uniqueness and help identify it's source.
+	Example:
+		long shm_itemcount;	- belongs to shm (shared memory)
+		long g_usertotal;	- is a system wide global.
+
+
+	CORRECT:
+
+			#define MAX_TABLE_SIZE 200
+
+			char	mytable[20];
+
+	INCORRECT:
+
+			#define max_count 20
+
+			char	Top_pointer;
+			int	ii2;		- meaningless
+
+
+
+TYPES:
+
+	INT vs LONG vs "int4":
+
+	INT is not the same as LONG.  On some systems INT is 2-bytes.
+	On some systems a LONG is 8-bytes.
+	If you want a 4-byte integer use "int4".
+
+		#include "intdef.h"
+
+		int4	- 4 byte integer
+		int2	- 2 byte integer
+		uint4	- unsigned int4
+		uint2	- unsigned int2
+
+	Never assume the size of INT, always use sizeof().
+
+	For a small integer counter that is only used internal to a 
+	routine you should use INT (as long as < 32k).
+
+	For all integers that are passed to or from routines you
+	must always use "int4".
+
+	System calls are picky about INT and LONG and you must
+	use the correct type.
+
+	Printf(), if you are printing a LONG use "%ld" not "%d" which
+	is used only for an INT.
+
+	IMPORTANT NOTE: Integer constants default to type INT; if
+			you want a LONG constant you must add the "L".
+
+
+
+	INCORRECT:
+			x = myfunc(0);   - 0 is an INT and only 2 bytes
+					   will be loaded onto stack.
+
+
+			int   table[20];
+			memcpy(table,xxx,4*20);
+
+	CORRECT:
+
+			x = myfunc(0L);
+
+			memcpy(table,xxx,20*sizeof(int));	- OK
+			memcpy(table,xxx,sizeof(table));	- Better
+
+
+
+	UNSIGNED CHAR vs CHAR:
+
+	On some systems CHAR is signed and on others it is UNSIGNED.
+	If you are using a CHAR as a small unsigned integer you need
+	to always say UNSIGNED CHAR.
+
+		char (signed)	-127 to 128
+		unsigned char	   0 to 255
+
+
+
+	POINTERS vs LONG:
+
+	Pointers are not always 4 bytes long, and you can not assume
+	they will fit into an INT or a LONG.  
+
+	INCORRECT:
+
+		long	temp;
+		char	*buff;
+
+		temp = (long) buff;
+
+
+CONSTANTS:
+
+	Always use #define for ALL constants (except 0 zero).
+	Never hardcode numeric constants in the code.
+
+	INCORRECT:
+			int	table[20];
+			for (i=0; i<20; i++)
+			{
+				if ( table[i] == x ) ....
+			}
+
+	CORRECT:
+			#define MAX_TABLE_ITEMS 20
+			int	table[MAX_TABLE_ITEMS];	
+			for (i=0; i<MAX_TABLE_ITEMS; i++)
+			{
+				if ( table[i] == x ) ....
+			}
+
+
+COMMENTS:
+
+	Always comment!!!
+
+	Two types of comments:	
+
+		LINE COMMENTS		/*  comment 		 */
+		COMMENT BLOCKS		/*
+						comments ....
+					*/
+
+	Before each routine write a comment block that describes the
+	function of the routine, the parameters and the return values.
+	Use the "routine.x" template.
+
+	The comment marks (/* and */) should be lined-up in the same 
+	column for a comment block.
+
+	Line comments should line-up with other line comment at the
+	right hand side of the screen.
+
+	ALWAYS ALWAYS ALWAYS heavily comment esoteric code that other
+	less brilliant programmers may not immediately grasp.
+
+	The RULE is: if it is not absolutely obvious what the code is
+	doing then comment it to make it so.
+
+
+	CORRECT:
+
+		/*
+			memcpy(dest,src,cnt)	Memory Copy
+				This routine copies CNT bytes of memory
+				from SRC to DEST and returns SRC.
+		*/
+		char *memcpy(dest,src,cnt)
+		char 	*dest;		/* pointer to destination	*/
+		char 	*src;		/* pointer to source		*/
+		int	cnt;		/* byte count to copy		*/
+		{
+			...
+		}
+
+
+	INCORRECT:
+
+		/*	memcpy(dest,src,cnt)	Memory Copy		*/
+		/*		This routine copies CNT bytes of memory */
+		/*		from SRC to DEST and returns SRC.	*/
+
+		This makes it too hard to modify the comment text.
+
+
+KOSHER C:
+
+	This section describes general C guidelines that are used at IDSI.
+
+	Don't re-invent the wheel!  There are many many useful routines
+	that have already been written -- use them.  If you don't know
+	what to use then ask.
+
+
+	DO {....} WHILE(cond);
+	Avoid use of the DO {} WHILE(); statement. It is too hard to 
+	follow the logic especially if the loop covers more then a page
+	of text.
+
+	UNIONS
+	Only use UNIONS if absolutely necessary. They are commonly
+	misunderstood by programmers.  
+
+	BIT FIELDS
+	The C facility for BIT FIELDS is very rarely used and thus it is
+	often completely unknown, so don't use it.  Also how it is 
+	implemented is system dependent, so you don't know it's external
+	representation.
+
+	STRUCT
+	Passing a STRUCT as a parameter: On some system it does a pass
+	by value on others it passes a pointer.  Always pass the pointer
+	to the STRUCT never the STRUCT itself.
+
+	GO TO
+	Don't abuse the GO TO statement! (Don't be a lazy programmer.)
+	The only commonly acceptable uses of GO TO should be:
+
+		1) Branching to a section of common exit code for the
+		   routine.
+
+		2) Branching back to the beginning of the routine
+		   in order to restart.
+
+	FOR(;;) {}
+	If you need a loop forever use FOR(;;) {}.
+
+	Filenames must be limited to 8 chars plus a 3 char extension,
+	because we now go to MSDOS.  If the file will ONLY be used on
+	Unix then it can be a total of 12 characters (14 char System V
+	limit minus 2 for a suffix when encrypted).  Don't mix upper
+	and lowercase in the filename and the only special character
+	that can be used is underscore ("_").
+
+	Keep your routines short! (Around 100 lines.)  Use many small
+	routines instead of a long routine.
+
+	Always check return codes from system routines! ALWAYS ALWAYS ALWAYS!
+
+	If it is possible for a routine to fail then ALWAYS return a 
+	return code -- and then check the return code.
+
+	Don't duplicate code EVER -- place into common routines.
+
+	Global varibles that are used in multiple files should be placed
+	into header include files.  The following shows an example of
+	how to write your headers so the same header can be used to 
+	define variables (reserve storage) or only declare them (no storage).
+
+	EXAMPLE:
+
+		gbl.h
+		|	/*
+		|		gbl.h: Global variables
+		|	*/
+		|
+		|	#ifndef GBL_INCLUDED
+		|	#define GBL_INCLUDED
+		|
+		|	#ifdef EXT_GBL
+		|	#define EXTERN_DEF
+		|	#define INIT_ZERO  =0
+		|	#define INIT_ONE   =1
+		|	#else
+		|	#define EXTERN_DEF extern
+		|	#define INIT_ZERO
+		|	#define INIT_ONE
+		|	#endif
+		|
+		|	EXTERN_DEF long g_tablesize INIT_ZERO;
+		|	EXTERN_DEF long g_firsttime INIT_ONE;
+		|
+		|	#undef EXTERN_DEF
+		|	#endif /* GBL_INCLUDED */
+
+		first.c
+		|	/*
+		|		first.c  First routine (main)
+		|			 Define globals (reserve storage)
+		|	*/
+		|
+		|	#define EXT_GBL
+		|	#include "gbl.h"
+		|	....
+
+		second.c
+		|	/*
+		|		second.c  Second routine
+		|			  Declare globals (no storage)
+		|	*/
+		|
+		|	#include "gbl.h"
+		|	....
+		
+	
+*** END ***

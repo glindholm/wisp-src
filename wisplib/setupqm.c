@@ -8,9 +8,9 @@ static int dummy_setupqm;
 /*
 **	History:
 **	$Log: setupqm.c,v $
-**	Revision 1.11  2001-09-07 15:26:53-04  gsl
+**	Revision 1.11  2001/09/07 19:26:53  gsl
 **	Remove all the VMS code (only a dummy file now)
-**
+**	
 **	Revision 1.10  1997-07-01 13:14:15-04  gsl
 **	Make change to allow more then 100 queues on VMS (now 200)
 **

@@ -1,0 +1,90 @@
+								vmsfast.lis
+								01/20/94
+	WISP/VMS IMPROVING I/O PERFORMANCE
+	==================================
+
+	This document applies to VMS only.
+
+	Many WISP/VMS customers have experienced performance issues with
+	RMS files.  This document describes steps that can be taken to 
+	improve performance.
+
+
+	Use Automatic Record Locking For Non-shared Files
+	=================================================
+
+	WISP normally uses Manual record locking to allow proper control
+	of record locks on a shared file.  Manual record locking can be
+	much slower then automatic record locking.  Files that are never
+	opened SHARED should be changed to use automatic record locking.
+	This is done with the $AUTOLOCKFILE directive placed before the
+	SELECT statement for the file.  Starting with WISP version 3.3c
+	automatic record locking is the default for print and sort files
+	(earlier versions of WISP needed the $AUTOLOCKFILE and $AUTOLOCKPRINT
+	directives.)  Version 3.3x3 and later allow the $AUTOLOCKFILE
+	directive to be used on indexed files.  See the WISP manual,
+	chapter 2 "WISP In-Line DIRECTIVES", and the document "autolock.lis" 
+	for further details.
+
+
+	The I-O-CONTROL Paragraph
+	=========================
+
+	Code an I-O-CONTROL paragraph in $VAX_CODE/$VAX_END which has an
+	entry that is optimized for each "problem" file.  The I-O-CONTROL
+	paragraph is placed immediately before the DATA DIVISION.
+
+	The following is a list of I-O-CONTROL options that can effect
+	performance and when they should be used:
+
+	DEFERRED-WRITE	Reduces the number of physical writes.
+		Use this with non-shared indexed or relative files.
+
+	PREALLOCATION	Reduces the amount of file fragmentation.
+		Use this for large temporary work files and where files
+		are created.  Also specify the CONTIGUOUS-BEST-TRY clause.
+
+	EXTENSION	Reduces the amount of file fragmentation.
+		Use this for large temporary work files and where files
+		are extended by WRITE operations.
+
+	The following example is for a large temporary indexed work file.
+	This assumes the file will be between 10 and 20 megs (20000 - 40000
+	blocks).  It preallocates 20,000 blocks and will extend the file
+	in 5,000 block increments.  The file is not shared so it uses
+	automatic record locking and deferred-write.
+
+		000600 FILE-CONTROL.
+	>>	000700*$AUTOLOCKFILE
+		000800     SELECT MY-TEMP-INDEXED-FILE ASSIGN "MYTEMP" "DISK"
+		000900            ORGANIZATION INDEXED
+		       ....
+		001000
+	>>	001100*$VAX-CODE PROCESS
+	>>	001200*I-O-CONTROL.
+	>>	001300*    APPLY DEFERRED-WRITE
+	>>	001400*          PREALLOCATION 20000 CONTIGUOUS-BEST-TRY
+	>>	001500*          EXTENSION     5000
+	>>	001600*          ON MY-TEMP-INDEXED-FILE.
+	>>	001700*$VAX-END
+		001800
+		001900 DATA DIVISION.
+
+
+	Use I/O Express
+	===============
+
+	It is highly recommended that you use I/O Express.  This product
+	improves all disk I/O performance.  It is used at IDSI and makes
+	a notable difference in system performance.
+
+
+	Use RMS Expert
+	==============
+
+	RMS Expert optimizes RMS indexed files and tunes the RMS I/O 
+	sub-system which can result in dramatic performance improvements 
+	for large indexed files.
+
+
+*** END OF DOCUMENT ***

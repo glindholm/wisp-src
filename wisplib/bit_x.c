@@ -14,6 +14,7 @@ static char rcsid[]="$Id:$";
 */
 
 #include <string.h>
+#include <memory.h>
 
 #include "idsistd.h"
 #include "cobrun.h"
@@ -114,17 +115,24 @@ void w2rowcol(unsigned char mybytes[],short int mywords[])
 	}
 }
 
-void wmemcpy(char *dst,char *src,short *len)							/* COBOL call able memcpy				*/
+void WMEMCPY(char *dst,char *src, short *len)							/* COBOL call able memcpy				*/
 {
-	memcpy(dst,src,*len);
+	size_t llen = *len;
+	memcpy(dst, src, llen);
 }
 
 /*
 **	History:
 **	$Log: bit_x.c,v $
-**	Revision 1.10  1996-08-19 18:32:09-04  gsl
+**	Revision 1.10.2.2  2002/10/03 14:11:38  gsl
+**	add missing include
+**	
+**	Revision 1.10.2.1  2002/10/03 13:49:53  gsl
+**	Change wmemcpy to WMEMCPY
+**	
+**	Revision 1.10  1996/08/19 22:32:09  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -45,9 +45,9 @@ class state : public state_object {
 //
 //	History:
 //	$Log: state.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:17-04  gsl
+//	Revision 1.5  1998/08/31 19:14:17  gsl
 //	drcs update
-//
+//	
 //
 
 //	

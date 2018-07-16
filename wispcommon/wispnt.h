@@ -48,9 +48,9 @@ const char* win32_version(void);
 /*
 **	History:
 **	$Log: wispnt.h,v $
-**	Revision 1.10  1998-12-04 12:59:14-05  gsl
+**	Revision 1.10  1998/12/04 17:59:14  gsl
 **	Add win32_89() and win32_version()
-**
+**	
 **	Revision 1.9  1997-12-04 15:58:49-05  gsl
 **	Renamed from winnt.h to wispnt.h
 **

@@ -1027,7 +1027,7 @@ int getsize(char *p)
  **  Module: $RCSfile: hexed.c,v $
  ** 
  ** $Log: hexed.c,v $
- ** Revision 1.19  2001-10-16 11:25:55-04  gsl
+ ** Revision 1.19  2001/10/16 15:25:55  gsl
  ** Fixed the Value: display. It was reversing the bytes?
  **
  ** Revision 1.18  1999-09-13 15:47:24-04  gsl

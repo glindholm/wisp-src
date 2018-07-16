@@ -1,0 +1,242 @@
+Copyright (c) 2002 by NeoMedia Migrations Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          WISP for Windows (WIN32) Quick Set-Up Steps
+
+Document:       wispntsetup.txt
+Last Updated:   $Date:$
+Products:       WISP/WIN32
+Versions:       4.4.05
+
+Summary:        WISP for WIN32 installation and setup steps
+
+====================================================================
+
+
+WISP for WIN32 Quick Set-Up Steps
+=================================
+
+This document describes the step for installing and setting up WISP
+for Windows (WIN32).
+
+See Appendix A and B of the WISP manual for complete installation and
+configuration information.
+
+
+Overview
+--------        
+
+0) Backup the WISPCONFIG directory.
+1) Install WISP/WIN32 on the server machine
+2) Share the WISP directory using a Share Name of "WISP".  
+3) Run Wconfig.exe to configure the server machine.
+4) Run Wlicense to install the WISP license.
+5) Build the Acucobol Runtime System
+6) Setup the WISPCONFIG files
+7) Configure the client machines
+8) Command Prompt Properties (Windows 2000)
+
+
+The Steps
+---------
+
+0) Backup the WISPCONFIG directory.
+
+    If you are upgrading to a new release of WISP and you already have
+    WISP installed on this machine then be sure to backup the
+    WISPCONFIG directory.
+
+1) Install WISP/WIN32 on the server machine
+
+    a) Insert CD into drive D:
+    b) Run D:\INSTALL\SETUP.EXE
+
+    The following instructions assume you have installed WISP in
+    directory C:\WISP44xx .  If you have installed WISP into a
+    different location the adjust the instructions accordingly.
+
+2) Share the WISP directory using a Share Name of "WISP".  
+
+    a) In Explorer or File Manager select C:\WISP44xx
+    b) From File menu select "Properties"
+    c) From the Sharing tab, select "Share As:" Share Name: "WISP"
+    d) Click OK
+
+3) Run Wconfig.exe to configure the server machine.
+
+    a) Run C:\WISP44xx\BIN\WCONFIG.EXE
+    b) Answer the prompts.
+
+       "Would you like to import configuration information from a
+       saved registry file?"
+
+       Click "NO" to configure manually.
+
+       "Enter WISP server:" "SERVER01"
+
+       Enter the name of the server machine. It is very important that
+       you enter the name of the server machine, it should be the name
+       of the machine you installed WISP onto.
+
+       If you do not enter the name correctly then the WISP network
+       licensing will not work correctly.
+
+       If you are installing a single cpu license for a machine which
+       is not on a network then you should enter "(LOCAL)".
+
+       For the remaining instructions we choose the name "SERVER01" as
+       our server name.  You will have to substitute your actual
+       server name.
+
+       "Enter WISP directory:" "\\SERVER01\wisp"
+
+       This is the location of your WISP directory using UNC naming
+       syntax and the Share Name of WISP.
+
+       "Enter WISPCONFIG directory:" "\\SERVER01\wisp\config"
+
+       This is the location of your WISPCONFIG directory. You can
+       choose any location but it defaults to the sample WISPCONFIG
+       directory that is installed with WISP.
+
+    c) Finish the configuration.
+
+       Any yellow highlighted fields are warnings and should be
+       corrected by selecting a different file or directory.
+
+       "USERDIR:"
+
+       This is the directory where users "home" directories are
+       located.  It is often named "USERS" and located on the server
+       machine.  If it is shared with a Share Name of "USERS" then you
+       can enter it as "\\SERVER01\users".
+
+       "TEMPDIR:"
+
+       This is the directory where temporary files will be created. It
+       should be located on a local drive like "C:" instead of a
+       network drive.
+
+    d) Click the "OK" button to write the values to the registry
+       and exit the program.
+
+4) Run Wlicense to install the WISP license.
+
+    a) Ensure you have a WISP license key. 
+    b) Run C:\WISP44xx\BIN\WLICENSE.EXE
+    c) Write down the machine id that is reported by Wlicense.
+    d) Call NeoMedia Technical support for a Validation Code.
+       (mailto:support@neom.com)
+    e) Enter the Valication Code to complete the license
+       installation. 
+
+5) Build the Acucobol Runtime System
+
+    a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
+       Acucobol BIN directory is on the PATH.
+
+          PATH %PATH%;C:\Acucorp\Acucbl520\Acugt\bin
+
+    b) Ensure MicroSoft Visual C++ 6 or later is installed.
+
+    c) Create an MSDOS/COMMAND prompt window
+
+    d) In the MSDOS/COMMAND prompt window run the bat file
+       Vcvars32.bat that came with MS Visual C++. This bat
+       file enables you to compile and link C programs from
+       the command prompt. 
+       (Substitute path to Vcvars32.bat with the location used by
+       Visual C++) 
+
+       MSVC++ 6.x:
+          C:> "C:\Program Files\Microsoft Visual Studio\VC98\bin\
+	      Vcvars32.bat"
+
+       NOTE: If you get an out-of-space message, click on the
+             properties button on the toolbar, go to the Memory tab,
+             set the Initial Environment size to 4096, click OK, close
+             the MSDOS/Command window, reopen and try again.
+
+    e) Build the Acucobol runtime by following the instructions in
+       the makefile.
+
+       If you are using ACUCOBOL-GT 5.2 then follow the
+       instructions in file C:\WISP44xx\ACU\WRUN32WISP_ACU52.MAK.
+
+       If you are using ACUCOBOL-GT 5.1 then follow the
+       instructions in file C:\WISP44xx\ACU\WRUN32WISP_ACU51.MAK.
+
+       If you are using ACUCOBOL-GT 4.2 or ealier then follow the
+       instructions in C:\WISP44xx\ACU\WWRUNCBL.MAK.
+
+6) Setup the WISPCONFIG files
+
+   Follow the instructions in Appendix B of the WISP manual.
+
+   Share the Acucobol installation directory. (E.g. Share
+   "C:\Acucorp\acucbl520" as "ACUCOBOL".)  
+
+   Edit the WRUN.CFG configuration file in the WISPCONFIG
+   directory and change the RUNCBL= option to point to the new
+   runtime system.
+
+          RUNCBL=\\SERVER01\ACUCOBOL\ACUGT\BIN\WRUN32WISP.EXE
+
+   Substitute the actual server and share name inplace of 
+   "\\SERVER01\ACUCOBOL" in the above example.
+
+7) Configure the client machines
+
+   Each of the client machines on the network will need to be
+   configured by running the Wconfig.exe program.
+
+   The process can be simplified by "Exporting" the configuration to a
+   text file then "Importing" the configuration on each machine.
+
+   a) On the server run C:\WISP44xx\BIN\WCONFIG.EXE
+   b) Click on the "Export" button and enter a file name.
+
+           \\SERVER01\WISP\wisp.reg
+
+
+   c) This will write the WISP registry entries to the file.
+   d) Click "Cancel" to exit Wconfig.exe
+
+   The following steps will need to be repeated on each client
+   machine.
+
+   e) On the client run Wconfig.exe using the "Run..." options off
+      of the Start button.
+
+           Run: \\SERVER01\WISP\bin\wconfig
+           
+   f) Click on the "Import" button and enter the registry file
+      name you created earlier.  Use the network UNC form of the
+      file name and click the "Open" button.
+
+           \\SERVER01\WISP\wisp.reg
+
+   g) Click the "OK" button to exit Wconfig.
+
+
+8) Command Prompt Properties (Windows 2000)
+
+   On Windows 2000 if using WISP in console mode (without CoStar) you
+   will need to set the Command Prompt Properties to disable the Edit
+   Options "QuickEdit Mode" and "Insert Mode" as these interfere with
+   mouse click processing.
+
+   a) Open a Command Prompt console.
+
+   b) Click on the Title Bar icon in the upper left corner of the 
+      window and select "Properties".
+
+   c) Uncheck the Edit Options "QuickEdit Mode" and "Insert Mode".
+
+   d) Click "OK" then in the "Apply Properties" dialog select the 
+      option to save the properties and apply to all future windows
+      (do not choose the "current window only" option).
+
+
+========================= END OF DOCUMENT ==========================

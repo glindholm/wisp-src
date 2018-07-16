@@ -172,7 +172,7 @@ ORACLE_HOME=/usr/local/ORACLE
 # EDEDIR	The EDE lib directory
 # CRIDDIR	The CRID directory
 # 
-EDEDIR=$(WISPDIR)/ede_4402
+EDEDIR=$(WISPDIR)/ede_4405
 CRIDDIR=$(WISPDIR)/crid_acu_3004
 
 #============================================================================

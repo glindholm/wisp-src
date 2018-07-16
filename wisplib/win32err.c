@@ -94,9 +94,9 @@ int win32_message_box(char *instr)
 /*
 **	History:
 **	$Log: win32err.c,v $
-**	Revision 1.4  1997-07-14 08:31:27-04  gsl
+**	Revision 1.4  1997/07/14 12:31:27  gsl
 **	Move win32_message_box() from werrvre.c
-**
+**	
 **	Revision 1.3  1997-05-16 16:12:38-04  gsl
 **	Fix formating of message
 **

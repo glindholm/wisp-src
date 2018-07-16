@@ -488,9 +488,9 @@ int is_read_only(void)
 /*
 **	History:
 **	$Log: vsemain.c,v $
-**	Revision 1.25  2002-03-28 10:17:33-05  gsl
+**	Revision 1.25  2002/03/28 15:17:33  gsl
 **	used define for copyright year
-**
+**	
 **	Revision 1.24  2002-03-26 16:27:48-05  gsl
 **	(C) 2002
 **

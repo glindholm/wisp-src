@@ -55,10 +55,10 @@ void wsb_display_and_read(HWSB hWsb, const char* keylist, int *piPfkey, int *piC
 /*
 **	History:
 **	$Log: wsb.h,v $
-**	Revision 1.3  1998-03-13 18:02:23-05  gsl
+**	Revision 1.3  1998/03/13 23:02:23  gsl
 **	Add wsb_set_alarm()
 **	and wsb_add_tabstop()
-**
+**	
 **	Revision 1.2  1997-10-29 12:00:44-05  gsl
 **	write
 **

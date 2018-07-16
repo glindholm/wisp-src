@@ -444,10 +444,8 @@ try_again:
 
 #ifdef unix			
 			char	newbuf[80];
-			struct	stat sbuf;
 
-			stat(keyfilepath,&sbuf);
-			sprintf(newbuf,"%s/i%d",wispprbdir(NULL),sbuf.st_ino);
+			sprintf(newbuf,"%s/i%ld", wispprbdir(NULL), WL_inode(keyfilepath));
 			if (-1 == link(keyfilepath,newbuf))
 			{
 				return CR_PORT_BUSY;
@@ -556,7 +554,7 @@ static int destroy_message_port(char port_name[PORTNAME_SIZE])
 		return FAILURE;								/* queue not exist			*/
 	}
 
-	if (msgctl(msqid,IPC_STAT,&mctlbuf) == -1)					/* cannot stat, not owner		*/
+	if (msgctl(msqid,IPC_STAT,&mctlbuf) == -1)					/* cannot status, not owner		*/
 	{
 		/*
 		**	There is a problem, but if we can delete the keyfile
@@ -570,15 +568,13 @@ static int destroy_message_port(char port_name[PORTNAME_SIZE])
 	{
 #ifdef unix		
 		char	newbuf[80];
-		struct	stat sbuf;
 
 		/*
 		**	We couldn't remove the message queue so we will 
 		**	rename the keyfile (same inode) so no one else
 		**	will run into a dangling message queue.
 		*/
-		stat(keyfilepath,&sbuf);
-		sprintf(newbuf,"%s/i%d",wispprbdir(NULL),sbuf.st_ino);
+		sprintf(newbuf,"%s/i%ld", wispprbdir(NULL), WL_inode(keyfilepath));
 		link(keyfilepath,newbuf);
 #endif
 	}
@@ -1105,9 +1101,12 @@ static int functype(char* func)
 /*
 **	History:
 **	$Log: message.c,v $
-**	Revision 1.30  2001-10-31 15:31:19-05  gsl
+**	Revision 1.30.2.1  2002/10/09 21:43:02  gsl
+**	Huge file support
+**	
+**	Revision 1.30  2001/10/31 20:31:19  gsl
 **	replace mkdir() with makepath()
-**
+**	
 **	Revision 1.29  2001-10-02 13:13:42-04  gsl
 **	NOTE: Message still checks by the second.
 **	Does a one second WSXIO() for a timed check.

@@ -26,9 +26,9 @@ int vcut(char* string)									/* Cut a string to the video.cut file.	*/
 /*
 **	History:
 **	$Log: vcut.c,v $
-**	Revision 1.10  1996-10-11 18:16:02-04  gsl
+**	Revision 1.10  1996/10/11 22:16:02  gsl
 **	drcs update
-**
+**	
 **
 **
 */

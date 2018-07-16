@@ -44,9 +44,9 @@ Boolean runtime_demo_ok(const char *source_name);
 //
 //	History:
 //	$Log: install.hpp,v $
-//	Revision 1.6  1998-08-31 15:13:53-04  gsl
+//	Revision 1.6  1998/08/31 19:13:53  gsl
 //	drcs update
-//
+//	
 //
 
 //	

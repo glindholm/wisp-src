@@ -39,9 +39,9 @@ void wglobals()
 /*
 **	History:
 **	$Log: wglobals.c,v $
-**	Revision 1.9  1996-08-19 18:33:17-04  gsl
+**	Revision 1.9  1996/08/19 22:33:17  gsl
 **	drcs update
-**
+**	
 **
 **
 */

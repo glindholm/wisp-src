@@ -86,9 +86,9 @@ char	*fname;
 /*
 **	History:
 **	$Log: wencrypt.c,v $
-**	Revision 1.7  1996-07-23 14:13:08-04  gsl
+**	Revision 1.7  1996/07/23 18:13:08  gsl
 **	drcs update
-**
+**	
 **
 **
 */

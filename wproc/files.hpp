@@ -54,9 +54,9 @@ void files_cleanup(int nesting_level);
 //
 //	History:
 //	$Log: files.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:50-04  gsl
+//	Revision 1.5  1998/08/31 19:13:50  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -58,9 +58,9 @@ Boolean machine::valid_substring(
 //
 //	History:
 //	$Log: e_substr.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:44-04  gsl
+//	Revision 1.6  1998/08/31 19:13:44  gsl
 //	drcs update
-//
+//	
 //
 
 //	

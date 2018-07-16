@@ -357,9 +357,9 @@ int ckvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3])
 /*
 **	History:
 **	$Log: wlickey.c,v $
-**	Revision 1.8  1998-12-18 13:28:59-05  gsl
+**	Revision 1.8  1998/12/18 18:28:59  gsl
 **	fix templates
-**
+**	
 **	Revision 1.7  1996-08-19 18:33:18-04  gsl
 **	drcs update
 **

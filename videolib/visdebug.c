@@ -109,10 +109,10 @@ void set_vsharedscreen_true(void)
 /*
 **	History:
 **	$Log: visdebug.c,v $
-**	Revision 1.9  1997-09-22 12:28:16-04  gsl
+**	Revision 1.9  1997/09/22 16:28:16  gsl
 **	Change the set_debug routines to set_isdebug for consistent naming.
 **	Add vsharedscreen() routines
-**
+**	
 **	Revision 1.8  1997-07-08 17:02:51-04  gsl
 **	Generalize so works on WIN32
 **

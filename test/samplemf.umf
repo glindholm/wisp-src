@@ -1,0 +1,115 @@
+########################################################################################
+#	File:		samplemf.umf
+#
+#	Function:	The UNIX makefile for SAMPLE/MF
+#
+#	Desciption:	This makefile will build SAMPLE for MF
+#
+#			To build int files:
+#				make -f samplemf.umf
+#			
+#
+########################################################################################
+
+CDEBUG=-g
+
+# Need make.include to build executable "prtargs"
+include $(WISP)/src/port/make.include
+
+
+WISPTRAN=wisp
+WISPFLAGS= -I $(WISPDIR)/etc
+#WISPLANG=MFSE
+WISPLANG=MF
+
+COBOL=cob
+COBFLAGS= -i -a
+
+########################################################################################
+# Rules to build cobol object
+
+.SUFFIXES: .int .cob .wcb
+
+.wcb.cob:
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
+
+.wcb.int:
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
+	$(COBOL) $(COBFLAGS)  $*.cob
+
+.cob.int:
+	$(COBOL) $(COBFLAGS) $*.cob
+
+########################################################################################
+
+
+TEST_DIRS= volrun volin volout volspl volwrk
+
+all:	int prtargs $(TEST_DIRS) DISPRINT.int
+
+int: 	SAMPLE.int QAFILEIO.int QAFILE2.int QANETCAP.int QAPRINT.int \
+	QASCREEN.int QASCRN2.int QASUBS.int QAWSUBS.int \
+	QAWSFNM.int QAWSFNS.int QASY000M.int QASYS99.int \
+	SUB1.int SUB3.int XLINK.int XLINK1.int TRIGGER.int \
+	QABCKGRD.int QADPCOMA.int QAWSXIO.int MFLINK.int DISPFILE.int LESWAP.int \
+	WL0000.int WL0010.int WL0011.int WL0012.int WL0013.int WL0014.int \
+	WL0015.int WL0016.int WL0017.int WL0018.int WL0018A.int WL0018B.int WL0019.int WL0020.int \
+	WL0021.int WL0022.int WL0023.int WL0024.int WL0025.int WL0026.int WL0027.int
+	@echo
+	@echo 'All sample (int) are up-to-date'
+	@echo
+
+
+SAMPLE.cob: SAMPLE.wcb
+	$(WISPTRAN) -V $(WISPLANG) $(WISPFLAGS) -O samopt.opt $*.wcb
+
+MFLINK.cob: $(WISPDIR)/mf/mflink.cob
+	rm -f $@
+	cp $(WISPDIR)/mf/mflink.cob $@
+	chmod +w $@
+
+MFLINK.int: MFLINK.cob
+	$(COBOL) $(COBFLAGS) $*.cob
+
+########################################################################################
+# Build dirs needed for QA
+
+volrun:
+	mkdir volrun
+	mkdir volrun/librun
+	mkdir volrun/libexe
+volin:
+	mkdir volin
+	mkdir volin/libin
+
+volout:
+	mkdir volout
+
+volspl:
+	mkdir volspl
+
+volwrk:
+	mkdir volwrk
+
+########################################################################################
+# Build DISPRINT
+
+DISPRINT_SRC=DISPRINT.wcb disprint.umf
+
+DISPRINT.int: $(DISPRINT_SRC)
+	$(MAKE) -f disprint.umf $(WISPLANG)
+
+$(DISPRINT_SRC):
+	rm -f $@
+	cp $(WISPDIR)/etc/$@ $@ 
+	chmod +w $@
+
+########################################################################################
+clean:
+	rm -f *.int *.gnt *.o *.idy sample $(EXES) prtargs $(DISPRINT_SRC)
+	rm -fr $(TEST_DIRS)
+	rm -f *.cob wc*.cpy *~ core *.log *.err
+
+########################################################################################
+# End of file
+########################################################################################

@@ -201,10 +201,10 @@ int main(int argc, char *argv[]) {
 //
 //	History:
 //	$Log: driver.cpp,v $
-//	Revision 1.13  1999-08-29 13:19:37-04  gsl
+//	Revision 1.13  1999/08/29 17:19:37  gsl
 //	Move the vwang_title() call out of wang_os_init() so it doesn't get
 //	called while in CoSTAR if just checking the version.
-//
+//	
 //	Revision 1.12  1999-01-29 18:58:33-05  gsl
 //	Add decrement link level before call to wispexit_cleanup().
 //

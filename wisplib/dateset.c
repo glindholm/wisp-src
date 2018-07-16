@@ -8,9 +8,9 @@ datetest()
 /*
 **	History:
 **	$Log: dateset.c,v $
-**	Revision 1.8  1996-08-19 18:32:15-04  gsl
+**	Revision 1.8  1996/08/19 22:32:15  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1747,9 +1747,9 @@ error (string)
 /*
 **	History:
 **	$Log: regex.c,v $
-**	Revision 1.6  1996-07-23 14:12:59-04  gsl
+**	Revision 1.6  1996/07/23 18:12:59  gsl
 **	drcs update
-**
+**	
 **
 **
 */

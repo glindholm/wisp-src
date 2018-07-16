@@ -832,9 +832,9 @@ extern void vwait(int seconds, int hundredths);
 /*
 **	History:
 **	$Log: video.h,v $
-**	Revision 1.32  2001-10-15 09:27:08-04  gsl
+**	Revision 1.32  2001/10/15 13:27:08  gsl
 **	vutil proto
-**
+**	
 **	Revision 1.31  1997-09-22 12:23:15-04  gsl
 **	Change the set_debug_ routines to set_isdebug_
 **	Change the VSTATE_RESTORE/SAVE_DEBUG to _STTY

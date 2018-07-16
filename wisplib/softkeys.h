@@ -21,9 +21,9 @@ struct soft_keys
 /*
 **	History:
 **	$Log: softkeys.h,v $
-**	Revision 1.8  1996-08-19 18:32:57-04  gsl
+**	Revision 1.8  1996/08/19 22:32:57  gsl
 **	drcs update
-**
+**	
 **
 **
 */

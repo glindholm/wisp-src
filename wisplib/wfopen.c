@@ -644,10 +644,10 @@ static void acc_message(int access_status, char* msgbuf)
 /*
 **	History:
 **	$Log: wfopen.c,v $
-**	Revision 1.23  2001-11-02 10:09:20-05  gsl
+**	Revision 1.23  2001/11/02 15:09:20  gsl
 **	Tweak PF3 message
 **	Remove VMS code
-**
+**	
 **	Revision 1.22  1999-01-05 10:08:11-05  gsl
 **	Fix sig11 bug.
 **	The msg1 and msg2 fields were uninitialized the second time in because

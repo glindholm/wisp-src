@@ -344,9 +344,9 @@ symbol *machine::locate_label_symbol(const char *name, offset label_table) {
 //
 //	History:
 //	$Log: machine.cpp,v $
-//	Revision 1.7  1998-08-31 15:13:54-04  gsl
+//	Revision 1.7  1998/08/31 19:13:54  gsl
 //	drcs update
-//
+//	
 //
 
 //	

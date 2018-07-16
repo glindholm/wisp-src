@@ -18,8 +18,7 @@ static int demovalidate()							/* 1-Success 0-Failure				*/
 	char	keyfile[80];
 	char	*ptr;
 	int	fh;
-	time_t	now, then, demotime;
-	struct stat statbuf;
+	time_t	now, then, demotime, mod_time;
 
 	time(&now);
 
@@ -39,8 +38,8 @@ static int demovalidate()							/* 1-Success 0-Failure				*/
 		return(1);							/* Success - First time 			*/
 	}
 	
-	stat(keyfile,&statbuf);
-	then = statbuf.st_mtime;						/* Then is the mod-time				*/
+	WL_stat_mtime(keyfile,&mod_time);
+	then = mod_time;						/* Then is the mod-time				*/
 
 	demotime = DEMODAYS * 24 * 60 * 60;					/* Alive time in seconds			*/
 
@@ -67,11 +66,10 @@ static demoexit()
 {
 		printf("Your EVALUATION copy of WISP has timed out.\n\n");
 		printf("For assistance contact:\n\n");
-		printf("                       NeoMedia Migrations Incorporated\n");
+		printf("                       NeoMedia Technologies Incorporated\n");
 		printf("                          2201 2nd Street, Suite 600,\n");
 		printf("                              Fort Myers FL 33901\n");
-		printf("                            Phone: (941) 337-3434\n");
-		printf("                            Fax:   (941) 337-3668\n\n");
+		printf("                            Phone: %s\n", WISP_PHONE_NUMBER);
 
 		exit(0);
 }
@@ -81,9 +79,18 @@ static demoexit()
 /*
 **	History:
 **	$Log: demovali.h,v $
-**	Revision 1.11  1997-02-18 08:46:13-05  gsl
+**	Revision 1.11.2.1  2002/10/10 12:56:44  gsl
+**	Huge file support
+**	
+**	Revision 1.13  2002/10/04 21:00:56  gsl
+**	Change to use WL_stat_xxx() routines
+**	
+**	Revision 1.12  2002/06/26 20:52:17  gsl
+**	Fix phone number
+**	
+**	Revision 1.11  1997/02/18 13:46:13  gsl
 **	Change address
-**
+**	
 **	Revision 1.10  1996-10-09 12:29:01-04  gsl
 **	replace getenv() with wisphomedir()
 **

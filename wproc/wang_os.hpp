@@ -133,9 +133,9 @@ void wang_os_first_procedure_name(char *a_name);
 /*
 **	History:
 **	$Log: wang_os.hpp,v $
-**	Revision 1.8  1998-08-31 15:50:41-04  gsl
+**	Revision 1.8  1998/08/31 19:50:41  gsl
 **	drcs update
-**
+**	
 **	Revision 1.7  1998-08-31 15:14:28-04  gsl
 **	drcs update
 **
@@ -153,9 +153,9 @@ void wang_os_first_procedure_name(char *a_name);
 //
 //	History:
 //	$Log: wang_os.hpp,v $
-//	Revision 1.8  1998-08-31 15:50:41-04  gsl
+//	Revision 1.8  1998/08/31 19:50:41  gsl
 //	drcs update
-//
+//	
 //	Revision 1.7  1998-08-31 15:14:28-04  gsl
 //	drcs update
 //

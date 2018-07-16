@@ -153,9 +153,9 @@ void delete_retcode(void)
 /*
 **	History:
 **	$Log: retcode.c,v $
-**	Revision 1.18  2001-10-31 15:30:44-05  gsl
+**	Revision 1.18  2001/10/31 20:30:44  gsl
 **	moved wisprcfilepath() to wispcfg.c
-**
+**	
 **	Revision 1.17  2001-10-10 15:00:00-04  gsl
 **	Changed wisprcfilepath() to be RC_userid_pgid
 **

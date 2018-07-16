@@ -84,10 +84,10 @@ const char* batchrun(void);
 /*
 **	History:
 **	$Log: submit.h,v $
-**	Revision 1.2  1997-08-23 17:14:33-04  gsl
+**	Revision 1.2  1997/08/23 21:14:33  gsl
 **	Add all the new prototypes plus defines for all
 **	the SUBMIT return codes
-**
+**	
 **	Revision 1.1  1997-08-18 11:10:27-04  gsl
 **	Initial revision
 **

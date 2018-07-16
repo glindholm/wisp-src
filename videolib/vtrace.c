@@ -91,9 +91,9 @@ void vtrace(info) char *info;								/* Set up to trace.			*/
 /*
 **	History:
 **	$Log: vtrace.c,v $
-**	Revision 1.9  1996-10-11 18:16:22-04  gsl
+**	Revision 1.9  1996/10/11 22:16:22  gsl
 **	drcs update
-**
+**	
 **
 **
 */

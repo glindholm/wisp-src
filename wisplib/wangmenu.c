@@ -30,9 +30,9 @@ void menu(char *name,	/* The name of the menu file			*/
 /*
 **	History:
 **	$Log: wangmenu.c,v $
-**	Revision 1.9  1996-08-19 18:33:07-04  gsl
+**	Revision 1.9  1996/08/19 22:33:07  gsl
 **	drcs update
-**
+**	
 **
 **
 */

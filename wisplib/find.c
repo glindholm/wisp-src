@@ -252,6 +252,9 @@ static void build_list(char* vspec, char* lspec, char* fspec)				/* the VOLUMES.
 	logical_id *p;
 	char	*vol, *vol_path;
 
+	wtrace("FIND","BUILD_LIST","vspec=[%s] lspec=[%s] fspec=[%s]",
+	       vspec, lspec, fspec);
+
 	if ( haswc(vspec) )
 	{
 											/* MATCH THE VOLUME			*/
@@ -307,7 +310,9 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 	char	*vol_context = NULL;
 	char	*libname;
 	char 	tmpbuf[200];
-	struct stat statbuf;
+
+	wtrace("FIND","BUILD_LIB_LIST","vol=[%s] vol_path=[%s] lspec=[%s] fspec=[%s]",
+	       vol, vol_path, lspec, fspec);
 
 	vol_context = NULL;
 
@@ -325,25 +330,17 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 
 		buildfilepath(tmpbuf,vol_path,lib_buf);					/* Concat the vol and lib		*/
 
-		if ( fexists(tmpbuf) )							/* See if it exists			*/
+		if ( WL_isadir(tmpbuf) )						/* See if it is a directory		*/
 		{
-			if ( stat(tmpbuf,&statbuf)==0 )					/* make sure we can access it 		*/
+			if (search_mode==LISTLIBS)					/* If were looking for libs		*/
 			{
-				 if (statbuf.st_mode & S_IFDIR)				/* is it a dir? 			*/
-				{
-
-					if (search_mode==LISTLIBS)			/* If were looking for libs		*/
-					{
-						++found_count;				/* Count number matches found.		*/
-						pass_back(vol,lib_buf,BLANKNAME);	/* Load into receiver			*/
-					}
-					else						/* If not LISTLIB then  build filelist */
-					{
-						build_file_list(vol,vol_path,lib_buf,fspec);
-					}
-				}
+				++found_count;						/* Count number matches found.		*/
+				pass_back(vol,lib_buf,BLANKNAME);			/* Load into receiver			*/
 			}
-
+			else								/* If not LISTLIB then  build filelist */
+			{
+				build_file_list(vol,vol_path,lib_buf,fspec);
+			}
 		}
 	}
 	else while ((libname = nextfile(vol_path,&vol_context)) != NULL)
@@ -358,22 +355,18 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 		       wcmatch(lspec,libname,FALSE,'*','?') )               )
 		{
 			buildfilepath(tmpbuf,vol_path,libname);				/* Make path to call stat		*/
-			if ( stat(tmpbuf,&statbuf)==0 )					/* make sure we can access it 		*/
+			if ( WL_isadir(tmpbuf) )					/* Check if a directory			*/
 			{
-				 if (statbuf.st_mode & S_IFDIR)				/* is it a dir? 			*/
+				if (search_mode==LISTLIBS)				/* If were looking for libs		*/
 				{
-
-					if (search_mode==LISTLIBS)			/* If were looking for libs		*/
-					{
-						++found_count;				/* Count number matches found.		*/
-						pass_back(vol,libname,BLANKNAME);	/* Load into receiver			*/
-					}
-					else						/* If not LISTLIB then  build filelist */
-					{
-						build_file_list(vol,vol_path,libname,fspec);
-					}
-					if (stop_count && found_count >= stop_count ) break; /* If we found enough then stop.	*/
+					++found_count;					/* Count number matches found.		*/
+					pass_back(vol,libname,BLANKNAME);		/* Load into receiver			*/
 				}
+				else							/* If not LISTLIB then  build filelist */
+				{
+					build_file_list(vol,vol_path,libname,fspec);
+				}
+				if (stop_count && found_count >= stop_count ) break;	/* If we found enough then stop.	*/
 			}
 		}
 
@@ -392,6 +385,9 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 	char	*ptr;
 	char 	tmpbuf[200];
 	char	lastfile[9];
+
+	wtrace("FIND","BUILD_FILE_LIST","vol=[%s] vol_path=[%s] lib=[%s] fspec=[%s]",
+	       vol, vol_path, lib, fspec);
 
 	lib_context = NULL;
 
@@ -435,19 +431,14 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 
 		if ( wcmatch(fspec,cmp_file,FALSE,'*','?') )
 		{
-			struct 	stat statbuf;
-
-			buildfilepath(tmpbuf,dirpath,filename);				/* Make path to call stat		*/
-			if ( stat(tmpbuf,&statbuf)==0 )				    	/* make sure we can access it 		*/
+			buildfilepath(tmpbuf,dirpath,filename);				/* Make path 				*/
+			if ( WL_isafile(tmpbuf) )			    		/* Check if a file			*/
 			{
-				 if (!(statbuf.st_mode & S_IFDIR))			/* make sure it's not a dir 		*/
-				{
-					 ++found_count;
+				++found_count;
 
-					pass_back(vol,lib,file_noext);
+				pass_back(vol,lib,file_noext);
 
-					if (stop_count && found_count >= stop_count ) break;
-				}
+				if (stop_count && found_count >= stop_count ) break;
 			}
 		}
 	}
@@ -462,6 +453,8 @@ struct receiver_struct {
 	char library[8];
 	char file[8];
 	};
+
+	wtrace("FIND","FOUND","vol=[%6.6s] lib=[%8.8s] fil=[%8.8s]", vol, lib, fil);
 
 	item_count += 1;
 	if ( item_count >= item_start && returned_count < requested_count )
@@ -486,95 +479,19 @@ static int haswc(char* p)
 	else return(0);
 }
 
-#ifdef OLD_unix
-/*
-	find a set of files in a directory.
-*/
 
-findlong( dir, wildcard, start, max, table, size, total )
-char	*dir;										/* 80 byte path to search directory.	*/
-char	*wildcard;									/* 32 byte name with unix wildcards.	*/
-int4	*start;										/* Start table at this ordinal file.	*/
-int4	*max;										/* Maximum and actual count of names.	*/
-char	*table;										/* Table to hold found file names.	*/
-int4	*size;										/* Size in bytes of each table entry.	*/
-int4	*total;										/* Total number of wildcard matches.	*/
-{
-	int	istart, iend, imax, isize;						/* Local integer copies of variables.	*/
-	char	*element;								/* Pointer into "table" for each name.	*/
-	int	caps_found;								/* Flag set if any chars are uppercase.	*/
-	char	wildlow[33];								/* Lower case version of wildcard.	*/
-	char	cmd[256];								/* Unix command started with popen().	*/
-	FILE	*pfb;									/* Pointer to FILE block from popen().	*/
-	int	i;									/* Used to count found file names.	*/
-	char	cmdline[256];								/* Holds single lines from cmd output.	*/
-	int	linlen;									/* Length of cmdline as returned.	*/
-
-	istart	= *start - 1;								/* Convert ordinal start to "0" index.	*/
-	iend	= *max + istart;							/* Calculate last name wanted.		*/
-	imax	= 0;									/* Set count of names returned to 0.	*/
-	isize	= *size;								/* Size of each element in the table.	*/
-	element	= table;								/* Start first element in the table.	*/
-
-	caps_found = 0;									/* Set flag for no uppercase found.	*/
-	for( i = 0 ;  i < 32 && wildcard[i] ; ++i )					/* For each character in wildcard,	*/
-	{
-		if( isupper( wildcard[i] ) )						/* If character is uppercase,		*/
-		{
-											/* _tolower() not available on SUN.	*/
-											/* 0x20 | is the same as _tolower().	*/
-			wildlow[i] = 0x20 | wildcard[i] ;				/* Move lowercase version to wildlow.	*/
-			caps_found = 1;							/* Set flag for char is uppercase.	*/
-		}
-		else									/* If character is not uppercase,	*/
-		{
-			wildlow[i] = wildcard[i];					/* Then move it to wildlow.		*/
-		}
-	}
-
-	if( caps_found )								/* If there were any uppercase chars,	*/
-	{
-		sprintf( cmd, "cd %80.80s ; ls %32.32s %32.32s 2> /dev/null", 		/* Build unix double search command.	*/
-			dir, wildcard, wildlow );
-	}
-	else										/* If there were no uppercase chars,	*/
-	{
-		sprintf( cmd, "cd %80.80s ; ls %32.32s 2> /dev/null", 			/* Build unix single search command.	*/
-			dir, wildcard );
-	}
-
-	pfb = popen( cmd, "r" );							/* Execute command and pipe output.	*/
-
-	for( i = 0 ; fgets( cmdline, 256, pfb ) ; ++i )					/* Get each line of output from cmd.	*/
-	{
-		if( ( i >= istart ) && ( i < iend ) )					/* If from istart to iend, store it.	*/
-		{
-			strncpy( element, cmdline, isize );				/* Put cmdline into table.		*/
-			linlen = strlen( cmdline ) - 1;					/* cmdline ends with newline+null.	*/
-			if( linlen < isize )						/* Pad with spaces, no null.		*/
-			{
-				memset( ( element + linlen ), ' ', ( isize - linlen ) );
-			}
-			element += isize;						/* Advance to next element in table.	*/
-			++imax;								/* Increment actual count of names.	*/
-		}
-	}
-	*total = i;									/* Set total number of names found.	*/
-
-	pclose ( pfb );									/* Close command pipe.			*/
-	*max = imax;									/* Set actual count of names in table.	*/
-}
-
-#endif	/* unix */
 
 
 /*
 **	History:
 **	$Log: find.c,v $
-**	Revision 1.18  2001-11-07 16:30:31-05  gsl
+**	Revision 1.18.2.1  2002/10/09 21:03:00  gsl
+**	Huge file support
+**	
+**	Revision 1.18  2001/11/07 21:30:31  gsl
 **	Remove VMS * MSDOS code
 **	ifdef'ed obsolete findlong()
-**
+**	
 **	Revision 1.17  1999-08-20 12:37:33-04  gsl
 **	Removed the logic that was ignoring .idx and .vix files. This was done
 **	in a attempt to stop duplicate file names from being returned. However

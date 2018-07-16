@@ -103,9 +103,9 @@ int *btransl(char *in_string,short *len_flds,char *eb_as)
 /*
 **	History:
 **	$Log: btransl.c,v $
-**	Revision 1.12  1996-08-19 18:32:10-04  gsl
+**	Revision 1.12  1996/08/19 22:32:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

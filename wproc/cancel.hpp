@@ -33,9 +33,9 @@ Boolean cancel_requested();
 //
 //	History:
 //	$Log: cancel.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:34-04  gsl
+//	Revision 1.5  1998/08/31 19:13:34  gsl
 //	drcs update
-//
+//	
 //
 
 //	

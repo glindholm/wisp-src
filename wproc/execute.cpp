@@ -755,11 +755,11 @@ opcode machine::execute() {
 //
 //	History:
 //	$Log: execute.cpp,v $
-//	Revision 1.11  1998-09-08 14:08:30-04  gsl
+//	Revision 1.11  1998/09/08 18:08:30  gsl
 //	For call_exp_op had to save the current offset then calculate the
 //	return offset.
 //	CALL <exp> was failing to correctly set the return offset
-//
+//	
 //	Revision 1.10  1998-09-04 13:16:17-04  gsl
 //	Add debug tracing to the call_op and call_return_op, also print the line
 //	number on a statement_op

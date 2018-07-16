@@ -75,9 +75,9 @@ extern options user_options;
 //
 //	History:
 //	$Log: options.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:00-04  gsl
+//	Revision 1.5  1998/08/31 19:14:00  gsl
 //	drcs update
-//
+//	
 //
 
 //	

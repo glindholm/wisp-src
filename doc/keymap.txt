@@ -1,0 +1,384 @@
+
+
+
+
+
+X.0	VIDEO Keyboard Mapping
+	----------------------
+
+X.1	Introduction
+	------------
+	Video uses a soft-defined logical key, meta-character approach to
+	keyboard mapping. This is a big advantage because the programmer
+	need not be concerned with "escape sequence decoding" or have to know
+	anything about the physical keyboard being used. In fact, it is
+	best if the programmer be totally ignorant of the physical keyboard
+	and write all software in terms of the logical keys only.
+
+X.2	Meta-characters
+	---------------
+	For simple keyboard input, the vcheck() and/or vgetc() functions
+	can be utilized to input single characters. However, for
+	complicated keyboards, ones with numerous function keys that
+	generate escape-sequence input, it is better to use the vgetm()
+	routine.  (Escape sequences are special character strings that start
+	with an "escape" character (decimal 27). A key that generates an
+	escape sequence generates just such a string unlike most other keys
+	which produce only a single value).
+
+	vgetm() returns an integer value, known as a meta-character which is
+	a super-set of the ASCII character set. I.e. vgetm() will return
+	either a standard ANSCII character or an escape sequence decoded
+	into a single integer meta-character value. For example, the
+	following is valid:
+
+		char string[10];	/* Allocate a string.		*/
+		int key, vgetm();	/* Allocate meta-characters. 	*/
+		int i;			/* Working integer.		*/
+		extern int home_key;	/* Reference logical home key.	*/
+
+		i = 0;			/* Initialize string index.	*/
+		key = vgetm();		/* Get a character.		*/
+		if ((key >= 'A') && (key <= 'Z')) /* Treat as ASCII?	*/
+		{
+		  string[i++] = key;	/* Yes, then store the char.	*/
+		}
+		else if (key == home_key)	/* Treat as meta-char?	*/
+		{
+		  vmove(0,0);		/* Go home.			*/
+		}
+
+
+
+				- 2 -
+
+
+X.3	Logical Keys
+	------------
+	In addition to the ASCII character set, a number of soft-defined
+	logical keys have been provided. For the most part, these logical
+	keys correspond to typical keys on most modern keyboards or match
+	the kind of functions a program is likely to require. Logical keys
+	are divided into four loose categories: cursor positioning keys,
+	text editing keys, terminator keys and numbered function keys.
+	The keys currently defined are:
+
+	Cursor Positioning Keys:
+
+		Normal			Shifted
+		------			-------
+		home_key		sh_home_key
+		find_key		sh_find_key
+		up_arrow_key		sh_up_arrow_key
+		down_arrow_key		sh_down_arrow_key
+		left_arrow_key		sh_left_arrow_key
+		right_arrow_key		sh_right_arrow_key
+		last_screen_key		sh_last_screen_key
+		next_screen_key		sh_next_screen_key
+		select_key		sh_select_key
+		tab_key			sh_tab_key
+		backtab_key		sh_backtab_key
+
+	Text Editing Keys:
+
+		Normal			Shifted
+		------			-------
+		delete_key		sh_delete_key
+		insert_key		sh_insert_key
+		remove_key		sh_remove_key
+
+	Terminator Keys:
+
+		Normal			Shifted
+		------			-------
+		end_key			sh_end_key
+		enter_key		sh_enter_key
+		return_key		sh_return_key
+		help_key		sh_help_key
+
+	Numbered Function Keys:
+
+		fn1_key
+		fn2_key
+		.
+		.
+		.
+		fn31_key
+		fn32_key
+
+
+				- 3 -
+
+X.4	Using Logical Keys
+
+	Note that not all logical keys need be utilized. Use only those
+	that are required or make sense for the application. No matter
+	what keyboard is actually being used, each logical key will be
+	discrete and unique (no overlap).
+
+	To incorporate a particular logical key, simply define it as
+	an external integer. For example:
+
+		extern int up_arrow_key;
+
+	The logical key will have been previously loaded with a meta-
+	character value appropriate for the specific keyboard in use
+	so you can just go ahead and use it. For example:
+
+		if (key == up_arrow_key);
+
+	Be careful not accidently change the value of a logical key.
+	Logical keys should be considered read-only.
+
+
+X.5	Gold, Blue, Grey and Pink Keys
+	------------------------------
+
+	On some keyboards, there are true shifted functions for most
+	of the logical keys. On others such as the DEC VT100, VT200
+	and VT300 terminals, the shifting function must be emulated
+	using a colored key preamble. That is, a special key that is
+	depressed before the key to be shifted. VIDEO provides for
+	four colored keys. Like logical keys themselves, the enabling
+	of a colored key is usually defined externally to the program.
+	I.e. for keyboard independent software, the use of true shift
+	or color key modifiers should be handled via the logical keys
+	and not directly by the program. For example:
+
+		extern int sh_delete;	/* The shift delete key.   */
+
+		if (key == sh_delete)	/* Is it a shifted delete? */
+
+	Whether or not true shift or a color key modifier is used is
+	encoded into the sh_delete logical key.
+
+	Note that if a key is allocated as a colored key modifier, it
+	cannot be used by itself. I.e. it is not returned to the program
+	but rather, modifies a subsequent key. For example, on VT200/VT300
+	terminals, the DEC_VT_SELECT_KEY is by default the "blue" key.
+	Hence the key stroke sequence SELECT DELETE would be returned
+	as a single logical value sh_delete. Consider the following:
+
+		extern int sh_delete, select_key   /* Get logical keys */
+
+		key = vgetm();			   /* Get a key.       */
+		if (key == select_key)		   /* Select key?      */
+
+
+				- 4 -
+
+	In this example, the if statement would never be true because
+	the value of DEC_VT_SELECT_KEY will never be returned from vgetm().
+
+	To enable/disable a key as a colored key, simply move a key value
+	or clear the appropriate color key. For example, to use the fn1_key
+	as a color key, the code would be:
+
+		extern int gold_key, fn1_key;
+
+		gold_key = fn1_key;
+
+	From this point forward, fn1_key will be encoded into a subsequent
+	character. I.e. to test for gold use something like:
+
+		if (key == (delete_key | GOLD_BIT))	/* A gold delete? */
+
+			or even
+
+		if (key == ('A' | GOLD_BIT))		/* A gold A?	  */
+
+
+	Note that colored key modifiers are considered to be a "system"
+	feature. I.e. for keyboard independent software, they should not
+	be used directly by the program, and in any event, must not be
+	used unless a full keyboard map is defined for the particular
+	keyboard.
+	
+
+X.6	Default Keyboard Mapping
+
+	Like most VIDEO functions, keyboard mapping is enabled
+	automatically, without specific action by the programmer.
+	The default keyboard mapping is for a DEC VT200/VT300 terminal
+	with the mapping used with the WISP product's Wang workstation
+	emulation. However, since the select_key is used as a colored
+	key modifier, it cannot be used itself.
+
+	The default mapping is given below.
+
+
+X.7	Changing the Keyboard Map
+
+	For portable, keyboard independent software, the keyboard mapping
+	can be changed by using the vkbmap() function. The most common use
+	is to simply call it to load the proper map for the specific
+	terminal in use.
+
+		vkbmap(INITIALIZE);
+		vkbmap(LOAD_FROM_FILE,filename);
+
+	vkbmap(INITIALIZE) will load the keyboard map by querrying the
+	terminal or the operating system for its type and loading a
+	map based on that type.
+
+
+				- 5 -
+
+
+	vkbmap(LOAD_FROM_FILE,filename) will load a keyboard map from
+	the specified file.
+
+	Again, for keyboard indepenent software, only vkbmap(INITIALIZE)
+	should be used. vkbmap(LOAD_FROM_FILE,filename) is usually used
+	only internally in the video package.
+
+	For example, the following would be fully portable.
+
+		extern int fn1_key, fn2_key, delete_key;
+
+		vkbmap(INITIALIZE)	/* Load the KB map based on type. */
+
+		key = vgetm();		/* Get a key. */
+
+		if (key == fn1_key) do_this();	/* Etc.	*/
+
+	The vkbmap() function has a first time control flag that once a
+	map has been loaded, it is "locked". Subsequent calls to vkbmap()
+	will not change the mapping. This is only significant if working
+	with a subroutine that is called by a higher layer and either the
+	subroutine or the higher layer utilize some special non-standard
+	keyboard mapping. I.e. if all software is written using only the
+	logical keys, there will be no confusion as to the mapping
+
+	Note that a call to vstate(DEFAULT) will call vkbmap(INITIALIZE).
+	Calling vstate(DEFAULT) is the prefered method.
+
+X.8	Hardware-level Character Substitution
+	-------------------------------------
+
+	There is a secondary level of keyboard mapping that can be used.
+	This is known as the meta-substitution layer and should only
+	be used to substitute hardware specific keys. For example, suppose
+	at one particular point in a program, some user wants the return
+	key to behave like the tab key and the do_key to behave like
+	the return key. Rather than change overall keyboard mapping, which
+	would effect all programs in the module, a simple substitution
+	can be performed. For example:
+
+		extern int meta_substitute[SUBSTITUTION_TABLE_SIZE][2];
+		int *save, *malloc(), i;
+
+		i = sizeof(meta_substitute);	/* Get size of table.	*/
+		save = malloc(i);		/* Get storage.		*/
+		memcpy(save,meta_substitute,i);	/* Store the old table.	*/
+
+		meta_substitute[0][0] = return_key;	/* For return...*/
+		   meta_substitute[0][1] = tab_key;	/*   sub tab.	*/
+
+		meta_substitute[1][0] = DEC_VT_DO_KEY;	/* For do...	*/
+		   meta_substitute[1][1] = return_key;	/*   sub return.*/
+
+
+				- 6 -
+
+		meta_substitute[2][0] = 0;	/* Terminate the table.	*/
+		   meta_substitute[2][1] = 0;
+
+
+		if (key = return_key)		/* Note this will be do. */
+		if (key = tab_key)		/* This will be return.	 */
+
+
+		memcpy(meta_substitute,save,i);	/* Restore old table.	*/
+
+	Use of the meta-character substitution table is not generally
+	recommended!
+
+
+				- 7 -
+
+Annex A.
+Default Keyboard Mapping (VT200/VT300 LK201 keyboard)
+-----------------------------------------------------
+
+	home_key		=	DEC_VT_FIND_KEY;
+	up_arrow_key		=	ANSI_UP_ARROW_KEY;
+	down_arrow_key		=	ANSI_DOWN_ARROW_KEY;
+	left_arrow_key		=	ANSI_LEFT_ARROW_KEY;
+	right_arrow_key		=	ANSI_RIGHT_ARROW_KEY;
+	tab_key			=	011;
+	last_screen_key		=	DEC_VT_LAST_SCREEN_KEY;
+	next_screen_key		=	DEC_VT_NEXT_SCREEN_KEY;
+
+	sh_home_key		=	DEC_VT_FIND_KEY | GOLD_BIT;
+	sh_find_key		= 	DEC_VT_FIND_KEY | GOLD_BIT;
+	sh_up_arrow_key		=	ANSI_UP_ARROW_KEY | GOLD_BIT;
+	sh_down_arrow_key	=	ANSI_DOWN_ARROW_KEY | GOLD_BIT;
+	sh_left_arrow_key	=	ANSI_LEFT_ARROW_KEY | GOLD_BIT;
+	sh_right_arrow_key	=	ANSI_RIGHT_ARROW_KEY | GOLD_BIT;
+	sh_tab_key		=	010;
+	sh_last_screen_key	=	DEC_VT_LAST_SCREEN_KEY | GOLD_BIT;
+	sh_next_screen_key	=	DEC_VT_NEXT_SCREEN_KEY | GOLD_BIT;
+
+	delete_key		=	0177;
+	insert_key		=	DEC_VT_INSERT_KEY;
+	remove_key		=	DEC_VT_REMOVE_KEY;
+
+	sh_delete_key		=	0177 | GOLD_BIT;
+	sh_insert_key		=	DEC_VT_INSERT_KEY | GOLD_BIT;
+	sh_remove_key		=	DEC_VT_REMOVE_KEY | GOLD_BIT;
+
+	end_key			=	DEC_VT_DO_KEY;
+	enter_key		=	DEC_VT_KP_ENTER_KEY;
+	return_key		=	015;
+	help_key		=	DEC_VT_HELP_KEY;
+
+	sh_end_key		=	DEC_VT_DO_KEY | GOLD_BIT;
+	sh_enter_key		=	DEC_VT_KP_ENTER_KEY | GOLD_BIT;
+	sh_return_key		=	015 | GOLD_BIT;
+	sh_help_key		=	DEC_VT_HELP_KEY | GOLD_BIT;
+
+	fn1_key			=	ANSI_PF1_KEY;
+	fn2_key			=	ANSI_PF2_KEY;
+	fn3_key			=	ANSI_PF3_KEY;
+	fn4_key			=	ANSI_PF4_KEY;
+	fn5_key			=	ANSI_F7_KEY;
+	fn6_key			=	ANSI_F8_KEY;
+	fn7_key			=	ANSI_F9_KEY;
+	fn8_key			=	ANSI_F10_KEY;
+	fn9_key			=	ANSI_F11_KEY;
+	fn10_key		=	ANSI_F12_KEY;
+	fn11_key		=	ANSI_F13_KEY;
+	fn12_key		=	ANSI_F14_KEY;
+	fn13_key		= 	ANSI_F17_KEY;
+	fn14_key		= 	ANSI_F18_KEY;
+	fn15_key		= 	ANSI_F19_KEY;
+	fn16_key		=	ANSI_F20_KEY;
+	fn17_key		=	ANSI_PF1_KEY | GOLD_BIT;
+	fn18_key		=	ANSI_PF2_KEY | GOLD_BIT;
+	fn19_key		=	ANSI_PF3_KEY | GOLD_BIT;
+	fn20_key		=	ANSI_PF4_KEY | GOLD_BIT;
+	fn21_key		=	ANSI_F7_KEY | GOLD_BIT;
+	fn22_key		=	ANSI_F8_KEY | GOLD_BIT;
+	fn23_key		=	ANSI_F9_KEY | GOLD_BIT;
+	fn24_key		=	ANSI_F10_KEY | GOLD_BIT;
+	fn25_key		=	ANSI_F11_KEY | GOLD_BIT;
+	fn26_key		=	ANSI_F12_KEY | GOLD_BIT;
+	fn27_key		=	ANSI_F13_KEY | GOLD_BIT;
+	fn28_key		=	ANSI_F14_KEY | GOLD_BIT;
+	fn29_key		= 	ANSI_F17_KEY | GOLD_BIT;
+	fn30_key		= 	ANSI_F18_KEY | GOLD_BIT;
+	fn31_key		= 	ANSI_F19_KEY | GOLD_BIT;
+	fn32_key		=	ANSI_F20_KEY | GOLD_BIT;
+
+	gold_key = 0;
+	blue_key = 0;
+	grey_key = 0;
+	pink_key = 0;
+
+	def_gold_key = ANSI_PF1_KEY;
+	def_blue_key = ANSI_PF2_KEY;
+	def_grey_key = DEC_VT_FIND_KEY;
+	def_pink_key = DEC_VT_SELECT_KEY;
+
+

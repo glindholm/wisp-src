@@ -1,0 +1,356 @@
+	Copyright (c) 1994 by International Digital Scientific Incorporated.
+	All Rights Reserved.
+	
+	==================================================================
+	
+	Title:           USING MODEMS ON UNIX MACHINES
+	
+	Document:        UNIXMODM.LIS
+	Last Updated:    20 JUN 94
+	Products:        UNIX, CKERMIT, RZ/SZ
+	Versions:        ALL
+	
+	Summary:         This file contains instructions for using
+			 modems from Unix machines.  Currently the
+			 only Unix machine with a modem is raptor.
+			 Instructions for new configurations may be
+			 added in the future.
+	
+	==================================================================
+
+
+
+
+	USING RAPTOR'S MODEM
+	====================
+
+	A modem on a unix box usually looks much like a regular login
+	terminal.  A getty program runs on the tty port waiting for
+	connections.  Some unix systems have a program called uugetty
+	which allows both incoming and outgoing connections.  Raptor
+	does have this program but it does not seem to function properly.  
+        This makes using raptor's modem slightly more complicated.
+
+	To manipulate  raptor's modem, you must be logged in as root.  	
+
+        If you wish to turn on raptor's getty so that you may dial into
+        raptor, you must turn on the getty program.  You may use
+	the following commands:
+
+		$ /usr/local/bin/modem       - will tell you the current
+						state of the modem
+
+		$ /usr/local/bin/modem on    - turn the getty back on,
+						allowing logins.
+
+		$ /usr/local/bin/modem off   - turn the getty off, allowing
+						use by the kermit program
+
+       
+	If you wish to dial out from raptor, there are two commands provided.
+	The first command is simply 'kermit'.  Kermit is a script
+	located in /usr/local/bin.  If the getty is running on the port
+	kermit will turn it off. Kermit will then ask for your initials. 
+	If someone else tries to use the modem they will be informed
+	that you are using it.  
+
+	Once inside kermit you will see the following:
+
+		C-Kermit 5A(179) BETA, 8 Feb 92, POSIX
+                Type ? or HELP for help
+		C-Kermit>
+
+	The modem speed is set for 19200 (14400 BPS).  If you need to override
+	this setting use the 'set speed' command, as shown below:
+
+		C-Kermit>set speed 2400
+
+	Now the modem is ready.  Type the following:
+
+		C-Kermit>connect
+
+	or simply
+
+		C-Kermit>c
+		Connecting to /dev/tty00, speed 19200.
+		The escape character is ^\ (ASCII 28).
+		Type the escape character followed by C to get back,
+		or followed by ? to see other options.
+
+	At this point you will be connected with the modem.  There is 
+	no prompt.  To dial a number, use normal Hayes commands.  For 
+	example:
+
+		AT   		     <-- you type
+		OK   		     <-- Modem responds
+		ATDT 1 818 886 8424  <-- you type
+		CONNECT	             <-- modem may eventually respond
+
+	If you get a connect, you are ready to log on.
+
+	The second command to use when dialing out is 'internet'.  
+	Internet is also a script located in /usr/local/bin.  Internet
+	is the same as 'kermit' except that it automatically dials
+	netcom and logs you into IDSI's login account.
+
+
+	FILE TRANSFER
+	=============
+
+	You may transfer files using kermit, xmodem, ymodem, or zmodem.
+	Zmodem is the best protocol to use.  
+
+	Note: You may not transfer directories or directory hierarchies.
+	      If you wish to send a directory full of files, you should
+	      create a compressed tar archive and transfer it
+
+	SENDING A FILE FROM RAPTOR TO A REMOTE SYSTEM
+	---------------------------------------------
+
+	To send a file from raptor to a remote system, enter the commands
+	ON THE REMOTE SYSTEM to initiate a file receive.  This will vary
+	from system to system.  If you are talking to a BBS you will need
+	use the menus to request file "upload".  For Unix and VAX systems
+	there are usually no menus for this.  You must run a program on
+	the remote system to handle the transfer. Some common situations
+	are described below.
+
+	      o	Send using xmodem to AIX.
+
+		$ xmodem -r <filename>       <-- type this on the remote
+						 system
+
+	      o Send using xmodem to other Unix systems.
+
+		$ rx <filename>
+
+	      o Send using ymodem to other Unix systems.  (You do not
+		need to specify filename)
+
+		$ rb
+
+	      o Send using zmodem to other Unix systems.  (You do not
+		need to specify filename)
+
+		$ rz
+
+	      o	Send using kermit to Unix or VAX systems.  (Command
+		and kermit version may vary from system to system)
+
+		$ kermit     (or ckermit or cker)
+
+		C-Kermit ??(???) 8 May 92, POSIX
+                Type ? or HELP for help
+		C-Kermit>set file type binary     
+		C-Kermit>set window 10           
+		C-Kermit>server                   
+
+                The command "set file type binary" should be self
+		explanitory.  The command "set window 10" should improve
+		transfer performance if the remote kermit supports it.
+		If it does not, you will get an error message when entering
+		this command, but you will still be able to transfer files.
+		The command "server" tells the remote kermit to prepare
+		for file transfer operations.  At this point the remote
+		kermit program will no longer accept any ordinary commands.
+
+	At this point the remote system should be ready to receive. Now
+	you must tell the raptor to transmit the file.  If you are sending
+	using kermit protocol, do the following:
+
+	     1. Type ^\ followed by the 'c' key. This should return
+		you to the "C-Kermit>" prompt.  Now execute the following
+		commands on the local kermit:
+
+		
+		   (Back at local UNIX System)  <-- message from kermit
+		   C-Kermit>set file type binary
+		   C-Kermit>set window 10
+		   C-Kermit>send <filename[s]>
+		
+		You may execute the send command as many times as you
+		want.  When you are finished transferring files, enter
+		the following commands:
+
+		   C-Kermit>finish
+		   C-Kermit>connect
+		   Connecting to /dev/tty00, speed 19200.
+		   The escape character is ^\ (ASCII 28).
+		   Type the escape character followed by C to get back,
+		   or followed by ? to see other options.
+	
+		At this point you will be returned to a C-Kermit prompt.
+		Do not be alarmed, you are talking to the remote C-Kermit.
+		You may execute the following command to return to the 
+		remote system's prompt:
+
+		   C-Kermit>quit
+			
+	If you are sending using xmodem, ymodem, or zmodem, do the following:
+
+	     1. Type ^\ followed by the 'c' key. This should return
+		you to the "C-Kermit>" prompt.  Now execute the following
+		commands on the local kermit:
+
+		
+		   (Back at local UNIX System)  <-- message from kermit
+		   C-Kermit>!                   <-- type ! key followed by
+						    return
+
+		Now you will be at raptor's prompt.  The modem is still
+		connected, and the local kermit is still running.  You
+		may now run the local file transfer program.
+
+		To send using xmodem (no wildcards allowed in filename):
+
+		# sendx <filename> 
+
+	        To send using ymodem (you may use wildcards):
+
+		# sendb <filename[s]> 
+
+	      o Send using zmodem (you may use wildcards):
+
+		# sendz <filename[s]> 
+
+
+	After the transfer has finished, type ^D or exit to return to
+	kermit.  Then type the following:
+
+		C-Kermit>connect
+		Connecting to /dev/tty00, speed 19200.
+		The escape character is ^\ (ASCII 28).
+		Type the escape character followed by C to get back,
+		or followed by ? to see other options.
+	
+	At this point you will back at the remote system's prompt.
+
+
+	RECEIVING A FILE FROM A REMOTE SYSTEM TO RAPTOR
+	-----------------------------------------------
+
+	To receive a file from a remote system to raptor, enter the commands
+	ON THE REMOTE SYSTEM to initiate a file transmit.  This will vary
+	from system to system.  If you are talking to a BBS you will need
+	use the menus to request file "download".  For Unix and VAX systems
+	there are usually no menus for this.  You must run a program on
+	the remote system to handle the transfer. Some common situations
+	are described below.
+
+	      o	Receive from AIX machine using xmodem.
+
+		$ xmodem -s <filename>       <-- type this on the remote
+						 system
+
+	      o Receive using xmodem from other Unix systems. (No wildcards
+		allowed)
+
+		$ sx <filename>
+
+	      o Receive using ymodem from other Unix systems.  (Wildcards
+		are allowed)
+
+		$ sb <filename[s]>
+
+	      o Receive using zmodem from other Unix systems.  (Wildcards
+		are allowed)
+
+		$ sz <filename[s]>
+
+	      o	Receive using kermit from Unix or VAX systems.  (Command
+		and kermit version may vary from system to system)
+
+		$ kermit     (or ckermit or cker)
+
+		C-Kermit ??(???) 8 May 92, POSIX
+                Type ? or HELP for help
+		C-Kermit>set file type binary     
+		C-Kermit>set window 10           
+		C-Kermit>server                   
+
+                The command "set file type binary" should be self
+		explanitory.  The command "set window 10" should improve
+		transfer performance if the remote kermit supports it.
+		If it does not, you will get an error message when entering
+		this command, but you will still be able to transfer files.
+		The command "server" tells the remote kermit to prepare
+		for file transfer operations.  At this point the remote
+		kermit program will no longer accept any ordinary commands.
+
+	At this point the remote system should be ready to transmit. Now
+	you must tell the raptor to receive the file.  If you are receiving
+	using kermit protocol, do the following:
+
+	     1. Type ^\ followed by the 'c' key. This should return
+		you to the "C-Kermit>" prompt.  Now execute the following
+		commands on the local kermit:
+
+		
+		   (Back at local UNIX System)  <-- message from kermit
+		   C-Kermit>set file type binary
+		   C-Kermit>set window 10
+		   C-Kermit>get <filename[s]>
+		
+		You may execute the get (or send) command as many times as you
+		want.  When you are finished transferring files, enter
+		the following commands:
+
+		   C-Kermit>finish
+		   C-Kermit>connect
+		   Connecting to /dev/tty00, speed 19200.
+		   The escape character is ^\ (ASCII 28).
+		   Type the escape character followed by C to get back,
+		   or followed by ? to see other options.
+	
+		At this point you will be returned to a C-Kermit prompt.
+		Do not be alarmed, you are talking to the remote C-Kermit.
+		You may execute the following command to return to the 
+		remote system's prompt:
+
+		   C-Kermit>quit
+			
+	If you are receiving using xmodem, ymodem, or zmodem, do the following:
+
+	     1. Type ^\ followed by the 'c' key. This should return
+		you to the "C-Kermit>" prompt.  Now execute the following
+		commands on the local kermit:
+
+		
+		   (Back at local UNIX System)  <-- message from kermit
+		   C-Kermit>!                   <-- type ! key followed by
+						    return
+
+		Now you will be at raptor's prompt.  The modem is still
+		connected, and the local kermit is still running.  You
+		may now run the local file transfer program.
+
+		To receive one file using xmodem (filename is required):
+
+		# getx <filename> 
+
+	        To receive using ymodem (do not specify filenames):
+
+		# getb
+
+	      o Receive using zmodem (do not specify filenames):
+
+		# getz
+
+
+	After the transfer has finished, type ^D or exit to return to
+	kermit.  Then type the following:
+
+		C-Kermit>connect
+		Connecting to /dev/tty00, speed 19200.
+		The escape character is ^\ (ASCII 28).
+		Type the escape character followed by C to get back,
+		or followed by ? to see other options.
+	
+	At this point you will back at the remote system's prompt.
+
+        ==== End Of Document ====
+
+
+
+
+

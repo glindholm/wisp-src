@@ -155,9 +155,9 @@ char	*option_16;
 /*
 **	History:
 **	$Log: valert.c,v $
-**	Revision 1.8  1997-07-08 16:24:53-04  gsl
+**	Revision 1.8  1997/07/08 20:24:53  gsl
 **	Change to use new video.h interfaces
-**
+**	
 **	Revision 1.7  1996-10-11 18:15:57-04  gsl
 **	drcs update
 **

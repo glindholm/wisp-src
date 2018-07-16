@@ -378,14 +378,14 @@ va_dcl
 	/*
 	**	Do the copy
 	*/
-	if (fcopy(old_filename,new_filename))
+	if (wisp_fcopy(old_filename,new_filename))
 	{
 		filecopy_status=24;
 		goto filecopy_return;
 	}
 	if (*old_filename_idx)
 	{
-		if (fcopy(old_filename_idx,new_filename_idx))
+		if (wisp_fcopy(old_filename_idx,new_filename_idx))
 		{
 			/*
 			**	The idx copy failed, try to undo the data portion copy before returning
@@ -412,9 +412,12 @@ filecopy_return:
 /*
 **	History:
 **	$Log: filecopy.c,v $
-**	Revision 1.13  1998-05-19 17:57:26-04  gsl
+**	Revision 1.13.2.1  2002/10/09 21:03:00  gsl
+**	Huge file support
+**	
+**	Revision 1.13  1998/05/19 21:57:26  gsl
 **	fix warning on WIN32
-**
+**	
 **	Revision 1.12  1998-05-15 17:20:09-04  gsl
 **	Add support for vision4 plus trace logic
 **

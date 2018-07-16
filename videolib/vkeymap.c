@@ -371,9 +371,9 @@ char	*argv[];
 /*
 **	History:
 **	$Log: vkeymap.c,v $
-**	Revision 1.7  1996-10-11 18:16:07-04  gsl
+**	Revision 1.7  1996/10/11 22:16:07  gsl
 **	drcs update
-**
+**	
 **
 **
 */

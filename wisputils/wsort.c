@@ -1,7 +1,7 @@
 static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 static char rcs_revision[]="$Revision:$";
-static char rcs_state[]="$State: V4_4_02f $";
+static char rcs_state[]="$State: Exp $";
 
 static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 
@@ -304,7 +304,7 @@ static int wsort(void)
 				fdr_rc = 0;
 				fdr_argcnt = 7;
 				wvaset(&fdr_argcnt);
-				READFDR(ifile, ilib, ivol, &fdr_mode, "BS", fdr_bs, &fdr_rc);
+				READFDR4(ifile, ilib, ivol, &fdr_mode, "BS", fdr_bs, &fdr_rc);
 				wswap(&fdr_rc);
 				if (0 == fdr_rc)
 				{
@@ -757,10 +757,14 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			fdr_retcode = 0;
 			fdr_argcnt = 7;
 			wvaset(&fdr_argcnt);			
-			READFDR(ifile,ilib,ivol,&fdr_mode,"FT",&fdr_filetype,&fdr_retcode);
+			READFDR4(ifile,ilib,ivol,&fdr_mode,"FT",&fdr_filetype,&fdr_retcode);
 
 			wswap(&fdr_retcode);
-			if (0 != fdr_retcode)
+			if (READFDR_RC_24_NO_FILE_HEADER == fdr_retcode)
+			{
+				fdr_filetype = 'C'; /* No file header so it's consecutive */
+			}
+			else if (0 != fdr_retcode)
 			{
 				messid = "R014";
 				mess1 = "\224SORRY\204- Unable to access input file, please respecify.";
@@ -822,7 +826,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			wswap(&fdr_recsize);
 			fdr_argcnt = 7;
 			wvaset(&fdr_argcnt);			
-			READFDR(ifile,ilib,ivol,&fdr_mode,"RS",&fdr_recsize,&fdr_retcode);
+			READFDR4(ifile,ilib,ivol,&fdr_mode,"RS",&fdr_recsize,&fdr_retcode);
 
 			wswap(&fdr_retcode);
 			if (0 != fdr_retcode)
@@ -2063,9 +2067,12 @@ static int get_lock(void)
 /*
 **	History:
 **	$Log: wsort.c,v $
-**	Revision 1.24  2001-10-26 15:41:07-04  gsl
+**	Revision 1.24.2.1  2002/10/08 17:42:33  gsl
+**	Fix READFDR4 call to account for READFDRV1 behaviour differences
+**	
+**	Revision 1.24  2001/10/26 19:41:07  gsl
 **	READFDR FT now returns A for alt-indexed so accept 'A' as being Indexed.
-**
+**	
 **	Revision 1.23  2001-10-26 14:56:06-04  gsl
 **	Remove VMS code
 **

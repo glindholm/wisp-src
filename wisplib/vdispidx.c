@@ -1575,9 +1575,9 @@ static int dummy_vdispidx;
 /*
 **	History:
 **	$Log: vdispidx.c,v $
-**	Revision 1.8  1997-03-12 13:14:28-05  gsl
+**	Revision 1.8  1997/03/12 18:14:28  gsl
 **	Change to use WIN32
-**
+**	
 **	Revision 1.7  1996-08-19 18:33:03-04  gsl
 **	drcs update
 **

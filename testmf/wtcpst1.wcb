@@ -1,5 +1,0 @@
-000100 P04-START-INVALID-PERIOD.
-000200*   This is a comment in a copybook in acu code
-000300     START FILE-A 
-000400           INVALID.
-000500

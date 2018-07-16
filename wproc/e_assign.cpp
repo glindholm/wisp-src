@@ -125,9 +125,9 @@ void machine::assign(expression *a_variable, expression *a_value) {
 //
 //	History:
 //	$Log: e_assign.cpp,v $
-//	Revision 1.7  1998-08-31 15:13:41-04  gsl
+//	Revision 1.7  1998/08/31 19:13:41  gsl
 //	drcs update
-//
+//	
 //
 
 //	

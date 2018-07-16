@@ -32,9 +32,9 @@
 /*
 **	History:
 **	$Log: wsysconf.h,v $
-**	Revision 1.9  1996-07-23 14:18:01-04  gsl
+**	Revision 1.9  1996/07/23 18:18:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

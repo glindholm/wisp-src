@@ -238,9 +238,9 @@ static int binncmp(		/* compare two areas of memory		*/
 /*
 **	History:
 **	$Log: sort.c,v $
-**	Revision 1.13  1998-07-10 11:02:58-04  gsl
+**	Revision 1.13  1998/07/10 15:02:58  gsl
 **	Initialized the l_locator_length variable
-**
+**	
 **	Revision 1.12  1997-03-12 13:12:54-05  gsl
 **	changes to use WIN32
 **

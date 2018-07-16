@@ -216,13 +216,19 @@ SYSDEF = "Error SYSDEF not defined"
 #	HP-UX 11.00
 #
 #SYSDEF = -DHPUX
-#
-#CC_STD  = c89
-#CC_ANSI = c89
-#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -lcurses
+#CC_STD  = cc
+#CC_ANSI = cc
+#CC_SYS_FLAGS = +z +DAportable -lcurses
 #CCC = gcc
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
 #CCC_SYS_LINK =  /usr/local/lib/libstdc++.a
+#
+#	c89 is the ANSI compiler
+#	  - Needs -D_HPUX_SOURCE to allow HP extensions
+#	  - Does not allow 64 bit file routines
+#CC_STD  = c89
+#CC_ANSI = c89
+#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -lcurses
 #
 #	HP-UX 10.20 & 10.10
 #

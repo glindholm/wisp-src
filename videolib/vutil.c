@@ -376,9 +376,9 @@ void vtitle(const char *titlestr)
 /*
 **	History:
 **	$Log: vutil.c,v $
-**	Revision 1.15  2001-10-12 16:06:53-04  gsl
+**	Revision 1.15  2001/10/12 20:06:53  gsl
 **	Add logging of vre() messages
-**
+**	
 **	Revision 1.14  1997-07-09 12:37:52-04  gsl
 **	Change to use new interface
 **	Remove obsolete routines.

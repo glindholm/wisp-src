@@ -15,24 +15,36 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To hold routines that test the existence of files.
 **
 **	Routines:	
-**	fexists()	Test if a file exists
-**	fcanread()	Test for read access to a file.
-**
-**
-**	History:
-**	04/26/93	Written by GSL
+**	WL_fexists()	Test if a file exists
+**	WL_fcanread()	Test for read access to a file.
 **
 */
 
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
+
 #include <stdio.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #ifdef WIN32
 #include <io.h>
 #endif
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
+#if defined(WIN32)
+#define O_LARGEFILE 0
+#endif
+
 #include "idsistd.h"
+#include "wisplib.h"
 
 #ifndef S_ISDIR
 #define S_ISFIFO(m)	(((m)&(_S_IFMT)) == (_S_IFIFO))
@@ -63,12 +75,40 @@ static char rcsid[]="$Id:$";
 **
 */
 
-int fexists(const char* name)
+int WL_fexists(const char* name)
 {
 #ifdef unix
+#ifdef USE_FILE64
+	struct stat64 buf;
+
+	if (0==stat64(name,&buf))
+	{
+		return 1;		/* File exists */
+	}
+
+	if (EOVERFLOW == errno)		/* Error but file does exist */
+	{
+		return 1;
+	}
+
+	return 0;
+#else
 	struct stat buf;
 
-	return((0==stat(name,&buf)) ? 1:0);
+	if (0==stat(name,&buf))
+	{
+		return 1;		/* File exists */
+	}
+
+#ifdef EOVERFLOW
+	if (EOVERFLOW == errno)		/* Large file exists */
+	{
+		return 1;
+	}
+#endif
+
+	return 0;
+#endif
 #endif
 
 #ifdef WIN32
@@ -81,7 +121,7 @@ int fexists(const char* name)
 }
 
 /*
-**	ROUTINE:	isafile()
+**	ROUTINE:	WL_isafile()
 **
 **	FUNCTION:	Checks if a file exists (and is a regular file)
 **
@@ -100,14 +140,21 @@ int fexists(const char* name)
 **	WARNINGS:	None
 **
 */
-int isafile(const char* name)
+int WL_isafile(const char* name)
 {
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return 0;
+	}
+#else
 	struct stat buf;
-
 	if ( 0 != stat(name,&buf) )
 	{
 		return 0;
 	}
+#endif
 
 	if (S_ISREG(buf.st_mode))
 	{
@@ -120,7 +167,7 @@ int isafile(const char* name)
 }
 
 /*
-**	ROUTINE:	isadir()
+**	ROUTINE:	WL_isadir()
 **
 **	FUNCTION:	Checks if a directory exists
 **
@@ -139,14 +186,21 @@ int isafile(const char* name)
 **	WARNINGS:	None
 **
 */
-int isadir(const char* name)
+int WL_isadir(const char* name)
 {
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return 0;
+	}
+#else
 	struct stat buf;
-
 	if ( 0 != stat(name,&buf) )
 	{
 		return 0;
 	}
+#endif
 
 	if (S_ISDIR(buf.st_mode))
 	{
@@ -160,7 +214,229 @@ int isadir(const char* name)
 
 
 /*
-**	Routine:	fcanread()
+**	ROUTINE:	WL_inode()
+**
+**	FUNCTION:	Get the file inode number
+**
+**	DESCRIPTION:	Use stat() or stat64()
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**
+**
+**	RETURN:		The inode or 0 if error
+**
+**	WARNINGS:	None
+**
+*/
+#ifdef unix
+long WL_inode(const char* name)
+{
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return 0;
+	}
+#else
+	struct stat buf;
+	if ( 0 != stat(name,&buf) )
+	{
+		return 0;
+	}
+#endif
+
+	return buf.st_ino;
+}
+#endif
+
+/*
+**	ROUTINE:	WL_stat_ctime()
+**
+**	FUNCTION:	Get the file create timestamp
+**
+**	DESCRIPTION:	Use stat() or stat64()
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**	create_time	The create time
+**
+**	RETURN:		
+**	0		Sucess
+**	-1		stat failed
+**
+**	WARNINGS:	None
+**
+*/
+int WL_stat_ctime(const char* name, time_t *create_time)
+{
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return -1;
+	}
+#else
+	struct stat buf;
+	if ( 0 != stat(name,&buf) )
+	{
+		return -1;
+	}
+#endif
+
+	*create_time = buf.st_ctime;
+	return 0;
+}
+
+/*
+**	ROUTINE:	WL_stat_mtime()
+**
+**	FUNCTION:	Get the file modify timestamp
+**
+**	DESCRIPTION:	Use stat() or stat64()
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**	mod_time	The modify time
+**
+**	RETURN:		
+**	0		Sucess
+**	-1		stat failed
+**
+**	WARNINGS:	None
+**
+*/
+int WL_stat_mtime(const char* name, time_t *mod_time)
+{
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return -1;
+	}
+#else
+	struct stat buf;
+	if ( 0 != stat(name,&buf) )
+	{
+		return -1;
+	}
+#endif
+
+	*mod_time = buf.st_mtime;
+	return 0;
+}
+
+
+/*
+**	ROUTINE:	WL_stat_mode()
+**
+**	FUNCTION:	Get the file modify timestamp
+**
+**	DESCRIPTION:	Use stat() or stat64()
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**	mode		The returned mode
+**
+**	RETURN:		
+**	0		Sucess
+**	-1		stat failed
+**
+**	WARNINGS:	None
+**
+*/
+int WL_stat_mode(const char* name, mode_t *mode)
+{
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return -1;
+	}
+#else
+	struct stat buf;
+	if ( 0 != stat(name,&buf) )
+	{
+		return -1;
+	}
+#endif
+
+	*mode = buf.st_mode;
+	return 0;
+}
+
+#ifdef INT8_DEFINED
+/*
+**	ROUTINE:	WL_stat_size_int8()
+**
+**	FUNCTION:	Get the file size as an INT8 (64-bit)
+**
+**	DESCRIPTION:	Use stat() or stat64()
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**	size		The returned size
+**
+**	RETURN:		
+**	0		Sucess
+**	-1		stat failed
+**
+**	WARNINGS:	None
+**
+*/
+int WL_stat_size_int8(const char* name, INT8 *size)
+{
+#ifdef USE_FILE64
+	struct stat64 buf;
+	if ( 0 != stat64(name,&buf) )
+	{
+		return -1;
+	}
+#else
+	struct stat buf;
+	if ( 0 != stat(name,&buf) )
+	{
+		return -1;
+	}
+#endif
+
+	*size = buf.st_size;
+	return 0;
+}
+#endif
+
+/*
+**	ROUTINE:	WL_stat_size_long()
+**
+**	FUNCTION:	Get the file size as a long
+**
+**	DESCRIPTION:	Use stat() 
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**	size		The returned size
+**
+**	RETURN:		
+**	0		Sucess
+**	-1		stat failed
+**
+**	WARNINGS:	None
+**
+*/
+int WL_stat_size_long(const char* name, long *size)
+{
+	struct stat buf;
+	if ( 0 != stat(name,&buf) )
+	{
+		return -1;
+	}
+
+	*size = buf.st_size;
+	return 0;
+}
+
+/*
+**	Routine:	WL_fcanread()
 **
 **	Function:	To check if we have read access to this file or directory.
 **
@@ -184,18 +460,18 @@ int isadir(const char* name)
 **
 */
 
-int fcanread(const char* name)
+int WL_fcanread(const char* name)
 {
 #ifdef unix
-	FILE 	*fh;
-	int	rc;
+	int 	fh;
 
-	if (fh = fopen(name,"r"))
+	fh = open( name, O_RDONLY | O_BINARY | O_LARGEFILE );
+	if ( -1 == fh)
 	{
-		fclose(fh);
-		return 1;
+		return 0;
 	}
-	return 0;
+	close(fh);
+	return 1;
 #endif /* unix */
 
 #ifdef WIN32
@@ -205,9 +481,37 @@ int fcanread(const char* name)
 /*
 **	History:
 **	$Log: fexists.c,v $
-**	Revision 1.11  2001-11-13 15:46:30-05  gsl
+**	Revision 1.11.2.1  2002/10/09 19:20:29  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
+**	Revision 1.19  2002/10/08 15:44:39  gsl
+**	Change int8 to INT8 to avoid conficts
+**	
+**	Revision 1.18  2002/10/07 21:08:00  gsl
+**	Huge file support
+**	
+**	Revision 1.17  2002/10/07 20:59:08  gsl
+**	Huge file support
+**	
+**	Revision 1.16  2002/10/07 20:54:48  gsl
+**	Huge file support
+**	
+**	Revision 1.15  2002/10/04 21:00:55  gsl
+**	Change to use WL_stat_xxx() routines
+**	
+**	Revision 1.14  2002/10/03 21:14:07  gsl
+**	Change to use stat64() to support Hugh files.
+**	
+**	Revision 1.13  2002/10/01 19:10:34  gsl
+**	in fexists() check for EOVERFLOW on stat()
+**	
+**	Revision 1.12  2002/07/10 04:27:38  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.11  2001/11/13 20:46:30  gsl
 **	On WIN32 use access() instead of stat()
-**
+**	
 **	Revision 1.10  1996-12-11 16:31:10-05  gsl
 **	Added isafile() and isadir()
 **

@@ -126,7 +126,7 @@ wrunmf()
 	wfclose();
 	wfwait();
 	wfswait();
-	wmemcpy();
+	WMEMCPY();
 	wvaset();
 	setwfilext();
 	getwfilext();

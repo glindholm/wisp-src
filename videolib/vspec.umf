@@ -1,0 +1,31 @@
+#	/************************************************************************/
+#	/*		 	    Copyright (c) 1993.				*/
+#	/*	 An unpublished work of International Digital Scientific Inc.	*/
+#	/*			    All rights reserved.			*/
+#	/************************************************************************/
+#
+#
+#	File:		vspec.umf
+#
+#	Function:	Generic makefile for vspec on all unix platforms.
+#
+
+CDEBUG = -g
+#CDEBUG = -O
+
+include $(WISP)/src/port/make.include
+
+OBJS = 	vspec.o vfcon.o vview.o
+
+LIBPATHS= $(STDLIB)/libvideo.a
+LIBS= $(LIBCFLAGS) -lvideo -lm $(LIBCURSES)
+
+vspec : $(OBJS) $(LIBPATHS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+
+vspec.o:  vspec.c
+
+vview.o:  vview.c  $(V)/video.h  $(V)/vintdef.h  $(V)/vplus.h \
+                   $(V)/vform.h  $(V)/vlocal.h   $(V)/vdata.h
+
+vfcon.o:  vfcon.c  $(V)/video.h

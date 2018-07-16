@@ -49,9 +49,9 @@ int c;
 /*
 **	History:
 **	$Log: dumphdr.c,v $
-**	Revision 1.5  1996-07-23 14:12:51-04  gsl
+**	Revision 1.5  1996/07/23 18:12:51  gsl
 **	drcs update
-**
+**	
 **
 **
 */

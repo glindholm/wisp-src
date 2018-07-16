@@ -430,9 +430,9 @@ static fixerr(int code)
 /*
 **	History:
 **	$Log: linkproc.c,v $
-**	Revision 1.16  1998-07-31 15:41:48-04  gsl
+**	Revision 1.16  1998/07/31 19:41:48  gsl
 **	change NAME_LENGTH to COB_FILEPATH_LEN.
-**
+**	
 **	Revision 1.15  1997-11-21 16:36:19-05  gsl
 **	Fixed the vsharedscreen() logic to work from help and add the sync logic.
 **

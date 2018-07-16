@@ -1581,9 +1581,9 @@ static void helptext()
 /*
 **	History:
 **	$Log: wusage.c,v $
-**	Revision 1.20  2002-04-03 17:03:03-05  gsl
+**	Revision 1.20  2002/04/03 22:03:03  gsl
 **	Remove the Library and Screen versions
-**
+**	
 **	Revision 1.19  2001-11-16 16:01:56-05  gsl
 **	fix can_access logic for WIN32
 **

@@ -27,9 +27,9 @@ void shutexitcobol(int exit_code)
 /*
 **	History:
 **	$Log: shutexit.c,v $
-**	Revision 1.9  1996-08-19 18:32:56-04  gsl
+**	Revision 1.9  1996/08/19 22:32:56  gsl
 **	drcs update
-**
+**	
 **
 **
 */

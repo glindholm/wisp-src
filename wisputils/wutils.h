@@ -80,9 +80,9 @@ void set_vsharedscreen_true(void)
 /*
 **	History:
 **	$Log: wutils.h,v $
-**	Revision 1.12  2001-10-15 10:21:16-04  gsl
+**	Revision 1.12  2001/10/15 14:21:16  gsl
 **	Change vwang_set_videocap() to vwang_init_video()
-**
+**	
 **	Revision 1.11  1997-09-30 14:04:30-04  gsl
 **	Add set_vsharedscreen_true()
 **

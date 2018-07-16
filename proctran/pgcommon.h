@@ -270,9 +270,9 @@ void init_ppkw(void);									/* Standard init of putparm keyword.	*/
 /*
 **	History:
 **	$Log: pgcommon.h,v $
-**	Revision 1.8  1997-04-21 10:49:03-04  scass
+**	Revision 1.8  1997/04/21 14:49:03  scass
 **	Corrected copyright
-**
+**	
 **	Revision 1.7  1996-09-12 19:12:57-04  gsl
 **	Add prototypes for everything
 **	Include pgstruct.h as is needed for some of the prototypes.

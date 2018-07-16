@@ -43,9 +43,9 @@ void setwfilext(char* ptr)
 /*
 **	History:
 **	$Log: wfileext.c,v $
-**	Revision 1.9  1996-08-19 18:33:15-04  gsl
+**	Revision 1.9  1996/08/19 22:33:15  gsl
 **	drcs update
-**
+**	
 **
 **
 */

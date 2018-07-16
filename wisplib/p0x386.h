@@ -9,9 +9,9 @@
 /*
 **	History:
 **	$Log: p0x386.h,v $
-**	Revision 1.8  1996-08-19 18:32:37-04  gsl
+**	Revision 1.8  1996/08/19 22:32:37  gsl
 **	drcs update
-**
+**	
 **
 **
 */

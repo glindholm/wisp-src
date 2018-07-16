@@ -38,9 +38,9 @@ const char* werrpath(void)
 /*
 **	History:
 **	$Log: werrpath.c,v $
-**	Revision 1.11  1996-10-08 20:28:18-04  gsl
+**	Revision 1.11  1996/10/09 00:28:18  gsl
 **	Add include wispcfg.h
-**
+**	
 **	Revision 1.10  1996-08-23 14:06:19-07  gsl
 **	Changed to use wisphomedir()
 **

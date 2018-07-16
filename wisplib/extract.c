@@ -1069,9 +1069,9 @@ static	int4	device_num;
 /*
 **	History:
 **	$Log: extract.c,v $
-**	Revision 1.31  2001-11-27 16:18:30-05  gsl
+**	Revision 1.31  2001/11/27 21:18:30  gsl
 **	Remove VMS & MSDOS
-**
+**	
 **	Revision 1.30  1998-11-04 10:12:30-05  gsl
 **	Changed to use strarg.h vararg macros plus cleanup and doc.
 **

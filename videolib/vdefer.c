@@ -212,9 +212,9 @@ enum e_vop voptlevel(void)
 /*
 **	History:
 **	$Log: vdefer.c,v $
-**	Revision 1.12  1997-07-12 17:32:57-04  gsl
+**	Revision 1.12  1997/07/12 21:32:57  gsl
 **	Make deferred variable local
-**
+**	
 **	Revision 1.11  1997-07-08 16:34:22-04  gsl
 **	Removed the BLOCK_MODE deferred and optimization.
 **	Localized all the optimization and deferred variables.

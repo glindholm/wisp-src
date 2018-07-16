@@ -1,0 +1,48 @@
+								retcode.lis
+
+	RETURN-CODE Message Queue Errors
+	================================
+
+	This document is for use with version 3.2 of WISP and earlier.
+	Version 3.3 of WISP does not use message queues to pass
+	return codes, so this problem does not occur.
+
+	A number of users of WISP converted software have recieved the
+	following error message:
+
+
+	59002 SETRETCODE-E-QUEUE [NO more processes]
+
+
+	Version 3.2 of WISP and earlier use a message queue to pass the
+	return code (RETURN-CODE) between processes.  If the return code
+	is never read (via wretcode) then the queue can fill up and you
+	will get the [NO more processes] message.
+
+	To prevent this from happening ensure the following is done:
+
+		1) Run "wsysinit" every night.  This will cleanup all unread
+		   messages. (See WISP manual page 10-37.)
+
+		2) Read the return code messages by running "wretcode"
+		   after returning to a main menu in your application.
+		   Issue a "wretcode" before you logoff.  This should
+		   be added to the scripts that are used to run your
+		   applications so they are done automatically.
+		   (See WISP manual page 10-28.)
+
+
+
+	If you are doing the above and you are still consistently getting
+	an error it is possible that your system has been configured with
+	too small a message queue.  The system parameter MSGTQL sets the 
+	number of message that you can put into all queues on the system.
+	This should be configured by your system administrator to be 100
+	or at least equal to the maximum number of users.
+
+
+
+	Greg Lindholm
+	Principal Software Engineer
+	IDSI
+

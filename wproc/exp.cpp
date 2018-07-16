@@ -357,9 +357,9 @@ expression *expression_array::remove_exp(int an_index) {
 //
 //	History:
 //	$Log: exp.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:47-04  gsl
+//	Revision 1.6  1998/08/31 19:13:47  gsl
 //	drcs update
-//
+//	
 //
 
 //	

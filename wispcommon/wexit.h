@@ -35,9 +35,9 @@ void wexit(int4 num);
 /*
 **	History:
 **	$Log: wexit.h,v $
-**	Revision 1.6  1996-07-23 14:17:56-04  gsl
+**	Revision 1.6  1996/07/23 18:17:56  gsl
 **	drcs update
-**
+**	
 **
 **
 */

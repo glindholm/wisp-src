@@ -1,0 +1,52 @@
+							sourcekit.lis
+							07/20/92
+
+	HOW TO BUILD A WISP SOURCE KIT ON UNIX
+	======================================
+
+	A WISP source kit is a directory tree that contains all the source
+	files needed to do a complete port of WISP and build a WISP
+	shipping kit.  It is often loaded into one file by CPIO.
+
+
+	****
+	****	THIS STEP IS ONLY DONE ONCE, BY THE PERSON IN CHARGE OF
+	****	THE WISP RELEASE -- THAT'S GSL FOR NOW.   IF YOU NEED A
+	****	SOURCE KIT ASK HIM.
+	****
+
+
+	STEPS
+	=====
+	1) Do a WISP cutover first!  A source kit is usually only built
+	   after a cutover.  See instructions in "cutover.lis".
+
+	2) Download all relevent files from SCS on SCALOS to HAMMER using
+	   the shell script "bldsrckit.sh".   This script can only be run
+	   on HAMMER by a user who has privileges to dcp to SCALOS without
+	   having to supply a password (i.e. has the correct proxy's on
+	   SCALOS.)  The user must also have privileges to read the SCS
+	   directories for WISP, VIDEO and PRINTQ.   The script 
+	   "bldsrckit.sh" can be found in SCS WISP PORT.
+
+		$ bldsrckit.sh
+
+	   It will prompt you for all needed info and will build the "src"
+	   directory tree as described in "wispdirs.lis".
+
+	3) Finalize the kit by doing the following:
+
+		a) Ensure src/port/make.include is in a generic state. I.e.
+		   all system dependent info should be in comments.
+
+		b) Download the current release notes into the file
+		   src/etc/RELNOTES.
+
+	4) Create a compressed CPIO file.
+
+		$ find src -print | cpio -ocv >src32.cpio
+		$ compress src32.cpio
+
+	5) ***OPTIONAL*** build an encrypted source kit
+
+		T.B.A

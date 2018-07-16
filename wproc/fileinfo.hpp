@@ -75,9 +75,9 @@ char *pcode_filename(const char *a_path);
 //
 //	History:
 //	$Log: fileinfo.hpp,v $
-//	Revision 1.6  1998-08-31 15:13:49-04  gsl
+//	Revision 1.6  1998/08/31 19:13:49  gsl
 //	drcs update
-//
+//	
 //
 
 //	

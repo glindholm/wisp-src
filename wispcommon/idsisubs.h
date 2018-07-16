@@ -60,9 +60,9 @@ extern void dqw_strcat(char *dest, const char *src);
 /*
 **	History:
 **	$Log: idsisubs.h,v $
-**	Revision 1.10  1998-08-03 16:26:53-04  jlima
+**	Revision 1.10  1998/08/03 20:26:53  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
-**
+**	
 **	Revision 1.9  1997-08-18 15:59:27-04  gsl
 **	Add const to prototypes where needed
 **

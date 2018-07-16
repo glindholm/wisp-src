@@ -616,11 +616,11 @@ static int del_dir(char* file_spec)						/* Attempt to delete the directory.		*/
 /*
 **	History:
 **	$Log: scratch.c,v $
-**	Revision 1.17  1999-08-20 13:05:58-04  gsl
+**	Revision 1.17  1999/08/20 17:05:58  gsl
 **	Found and fixed the real problem with SCRATCH. It was failing to delete the
 **	idx file portion if the filepath contained '.' characters. It was mistaking
 **	where the extension was so it was mis-forming the file.idx path.
-**
+**	
 **	Revision 1.16  1999-08-20 10:20:01-04  gsl
 **	Fix problem where SCRATCH would not delete the idx portion of a file
 **	if it couldn't find a data portion.

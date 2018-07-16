@@ -295,9 +295,9 @@ EXT return_item *cur_rtrn;								/* Allocate return code information.	*/
 /*
 **	History:
 **	$Log: pgstruct.h,v $
-**	Revision 1.8  1997-04-21 10:58:05-04  scass
+**	Revision 1.8  1997/04/21 14:58:05  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.7  1996-09-12 19:14:01-04  gsl
 **	Add standard headers to allow multiple includes
 **

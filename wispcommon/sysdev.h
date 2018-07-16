@@ -40,9 +40,9 @@ extern uint4 osd_freeblocks(char *cur_dev);						/* Return the free blocks on de
 /*
 **	History:
 **	$Log: sysdev.h,v $
-**	Revision 1.5  1996-07-23 14:17:52-04  gsl
+**	Revision 1.5  1996/07/23 18:17:52  gsl
 **	drcs update
-**
+**	
 **
 **
 */

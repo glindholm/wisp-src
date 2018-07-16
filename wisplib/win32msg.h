@@ -54,8 +54,8 @@ int win32move(char *src, char *dest);
 /*
 **	History:
 **	$Log: win32msg.h,v $
-**	Revision 1.1  1996-10-15 19:09:12-04  jockc
+**	Revision 1.1  1996/10/15 23:09:12  jockc
 **	Initial revision
-**
+**	
 **
 */

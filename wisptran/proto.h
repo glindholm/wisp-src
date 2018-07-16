@@ -173,9 +173,9 @@ extern void gen_data_conv(void);
 /*
 **	History:
 **	$Log: proto.h,v $
-**	Revision 1.14  2001-09-13 09:57:20-04  gsl
+**	Revision 1.14  2001/09/13 13:57:20  gsl
 **	xtab_log()
-**
+**	
 **	Revision 1.13  1999-09-07 10:33:17-04  gsl
 **	Remove unneeded prototypes and fix.
 **

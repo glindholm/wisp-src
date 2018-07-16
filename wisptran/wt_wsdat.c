@@ -559,9 +559,9 @@ int ws_init(void)
 /*
 **	History:
 **	$Log: wt_wsdat.c,v $
-**	Revision 1.17  1998-04-03 14:17:48-05  gsl
+**	Revision 1.17  1998/04/03 19:17:48  gsl
 **	Add Id info to copybook
-**
+**	
 **	Revision 1.16  1998-03-26 14:26:41-05  gsl
 **	Change to use WISP-SYMB-xx
 **	Change to use WISP-CLR-xx

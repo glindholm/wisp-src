@@ -87,9 +87,9 @@ debug_trace_level_restore()
 //
 //	History:
 //	$Log: debugaid.hpp,v $
-//	Revision 1.7  1998-08-31 15:13:40-04  gsl
+//	Revision 1.7  1998/08/31 19:13:40  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -153,9 +153,9 @@ unsigned char *screen;
 /*
 **	History:
 **	$Log: wdisplay.c,v $
-**	Revision 1.13  1997-05-08 16:17:16-04  gsl
+**	Revision 1.13  1997/05/08 20:17:16  gsl
 **	Add WSTOP and traceing
-**
+**	
 **	Revision 1.12  1997-05-01 21:02:49-04  gsl
 **	Add include <string.h>
 **

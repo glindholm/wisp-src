@@ -1022,9 +1022,9 @@ void wsb_display_and_read(HWSB hWsb, const char* pKeylist, int *piPfkey, int *pi
 /*
 **	History:
 **	$Log: wsb.c,v $
-**	Revision 1.8  1998-10-13 14:57:46-04  gsl
+**	Revision 1.8  1998/10/13 18:57:46  gsl
 **	hWsb is unsigned so can't be < 0
-**
+**	
 **	Revision 1.7  1998-07-09 16:16:56-04  gsl
 **	Initialize the no_mod arg to vwang()
 **

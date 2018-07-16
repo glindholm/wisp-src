@@ -208,9 +208,9 @@ int vtty_get(void* tt)
 /*
 **	History:
 **	$Log: vstate.c,v $
-**	Revision 1.14  1997-09-22 12:24:55-04  gsl
+**	Revision 1.14  1997/09/22 16:24:55  gsl
 **	Change the VSTATE_ DEBUG to STTY
-**
+**	
 **	Revision 1.13  1997-07-09 12:29:17-04  gsl
 **	Change to use new video.h interfaces
 **

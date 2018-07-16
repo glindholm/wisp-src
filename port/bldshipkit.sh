@@ -67,6 +67,7 @@ VC=${WISP}/src/videocap
 WT=${WISP}/src/wisptran
 WL=${WISP}/src/wisplib
 VL=${WISP}/src/videolib
+DOC=${WISP}/src/doc
 ETC=${WISP}/src/etc
 PORT=${WISP}/src/port
 WACU=${WISP}/src/acu
@@ -149,17 +150,16 @@ cp ${VL}/libvideo.a	${SHIPWISP}/lib
 cp ${WL}/libwisp.a	${SHIPWISP}/lib
 
 echo Loading ${SHIPWISP}/etc
-cp ${ETC}/wisp_relnotes.txt	${SHIPWISP}/etc
-cp ${WU}/disprint.wcb		${SHIPWISP}/etc
+cp ${DOC}/wisp_relnotes.txt	${SHIPWISP}/etc
+cp ${WU}/DISPRINT.wcb		${SHIPWISP}/etc
 cp ${WU}/disprint.umf		${SHIPWISP}/etc
-cp ${PORT}/which.sh		${SHIPWISP}/etc/which
 cp ${WT}/words.def		${SHIPWISP}/etc
 cp ${PORT}/make.include		${SHIPWISP}/etc
-cp ${WU}/wispplat.wcb		${SHIPWISP}/etc
-cp ${WU}/softlink.wcb		${SHIPWISP}/etc
-cp ${WPROC}/wproc.txt		${SHIPWISP}/etc
-cp ${ETC}/nonascii.txt		${SHIPWISP}/etc
-cp ${ETC}/wisp_install_unix.txt	${SHIPWISP}/etc
+cp ${WU}/WISPPLAT.wcb		${SHIPWISP}/etc
+cp ${WU}/SOFTLINK.wcb		${SHIPWISP}/etc
+cp ${DOC}/wproc.txt		${SHIPWISP}/etc
+cp ${DOC}/nonascii.txt		${SHIPWISP}/etc
+cp ${DOC}/wisp_install_unix.txt	${SHIPWISP}/etc
 
 cd ${ETC}
 ${WU}/makemsg
@@ -183,8 +183,8 @@ cp ${VC}/*.vcap 	${SHIPWISP}/config/videocap
 
 echo Loading ${SHIPWISP}/acu
 cp ${WACU}/acu.rules		${SHIPWISP}/acu
-cp ${WACU}/aculink.wcb		${SHIPWISP}/acu
-cp ${WACU}/acuusing.cob		${SHIPWISP}/acu
+cp ${WACU}/ACULINK.wcb		${SHIPWISP}/acu
+cp ${WACU}/ACUUSING.cob		${SHIPWISP}/acu
 cp ${WACU}/sub85.c		${SHIPWISP}/acu
 cp ${WACU}/sub85_acu51.c	${SHIPWISP}/acu
 cp ${WACU}/wruncbl.umf		${SHIPWISP}/acu
@@ -198,11 +198,11 @@ cp ${WACU}/wacugetpfkey.cob	${SHIPWISP}/acu
 cp ${WACU}/wacuhelp.cob		${SHIPWISP}/acu
 cp ${WACU}/wacuwsb.cob		${SHIPWISP}/acu
 cp ${WACU}/acucobol.include 	${SHIPWISP}/acu
-cp ${ETC}/wispacn.txt		${SHIPWISP}/acu
+cp ${DOC}/wispacn.txt		${SHIPWISP}/acu
 
 echo Loading ${SHIPWISP}/mf
 cp ${WMF}/mf.rules	${SHIPWISP}/mf
-cp ${WMF}/mflink.cob	${SHIPWISP}/mf
+cp ${WMF}/MFLINK.cob	${SHIPWISP}/mf
 cp ${WMF}/wispmf.c	${SHIPWISP}/mf
 cp ${WMF}/wispmf.o	${SHIPWISP}/mf
 cp ${WMF}/wrunmf.c	${SHIPWISP}/mf
@@ -219,12 +219,12 @@ done
 echo Loading ${SHIPEDE}
 cp ${EDE}/good			${SHIPEDE}
 cp ${EDE}/libede.a		${SHIPEDE}
-cp ${EDE}/helpmap.unix		${SHIPEDE}/demo/HELPMAP
-cp ${EDE}/*.wcb			${SHIPEDE}/demo
-cp ${EDE}/*.hlp			${SHIPEDE}/demo
-cp ${EDE}/menudemo.opt		${SHIPEDE}/demo
-cp ${EDE}/menudemo.umf		${SHIPEDE}/demo
-cp ${EDE}/menudemomf.umf	${SHIPEDE}/demo
+cp ${EDE}/demo/helpmap.unix	${SHIPEDE}/demo/HELPMAP
+cp ${EDE}/demo/*.wcb		${SHIPEDE}/demo
+cp ${EDE}/demo/*.hlp		${SHIPEDE}/demo
+cp ${EDE}/demo/menudemo.opt	${SHIPEDE}/demo
+cp ${EDE}/demo/menudemo.umf	${SHIPEDE}/demo
+cp ${EDE}/demo/menudemomf.umf	${SHIPEDE}/demo
 
 #echo Loading ${SHIP}/ivs
 #cp ${WISP}/src/ivslib/libivs.a	${SHIP}/ivs
@@ -236,8 +236,8 @@ uname -s -r -v					>>${INFO}
 ${SHIPWISP}/bin/wisp|grep Version=		>>${INFO}
 ${SHIPWISP}/bin/wproc -v|grep '[Vv]ersion'	>>${INFO}
 
-cp ${ETC}/wisp_relnotes.txt		${SHIP}
-cp ${ETC}/wisp_install_unix.txt		${SHIP}
+cp ${DOC}/wisp_relnotes.txt		${SHIP}
+cp ${DOC}/wisp_install_unix.txt		${SHIP}
 
 echo 
 echo Setting all the file modes
@@ -248,7 +248,6 @@ find ${SHIP} -type f -print | xargs chmod a=r
 find ${SHIP} -type d -print | xargs chmod u=rwx,go=rx
 
 chmod a+x ${SHIPWISP}/bin/*
-chmod a+x ${SHIPWISP}/etc/which
 chmod a+w ${SHIPWISP}/acu/acucobol.include
 chmod a+w ${SHIPWISP}/*/*.umf
 chmod a+w ${SHIPWISP}/*/*.rules
@@ -278,9 +277,22 @@ echo
 
 #	History:
 #	$Log: bldshipkit.sh,v $
-#	Revision 1.31  2002-04-10 16:10:33-04  gsl
+#	Revision 1.31.2.1  2002/10/08 18:06:54  gsl
+#	Updated from HEAD
+#	
+#	Revision 1.34  2002/06/05 14:37:23  gsl
+#	removed which script
+#	
+#	Revision 1.33  2002/06/04 21:00:49  gsl
+#	Uppercase cobol files
+#	
+#	Revision 1.32  2002/06/04 14:10:26  gsl
+#	Changes to structure from switch to CVS from RSC
+#	Mostly ETC -> DOC and EDE/demo
+#	
+#	Revision 1.31  2002/04/10 20:10:33  gsl
 #	Change to wisp_XXXX.tar
-#
+#	
 #	Revision 1.30  2002-04-10 12:46:24-04  gsl
 #	Big rework to fix permissions plus setup for CDROM kits
 #

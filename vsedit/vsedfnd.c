@@ -1096,9 +1096,9 @@ static int case_exact(void)
 /*
 **	History:
 **	$Log: vsedfnd.c,v $
-**	Revision 1.11  1996-07-18 16:48:44-04  gsl
+**	Revision 1.11  1996/07/18 20:48:44  gsl
 **	fix for NT
-**
+**	
 **	Revision 1.10  1995-04-25 02:59:18-07  gsl
 **	drcs state V3_3_15
 **

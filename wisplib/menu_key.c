@@ -59,9 +59,9 @@ int menu_set_key(int key_num, int value)					/* Passed interger values.		*/
 /*
 **	History:
 **	$Log: menu_key.c,v $
-**	Revision 1.12  1997-05-21 11:43:43-04  gsl
+**	Revision 1.12  1997/05/21 15:43:43  gsl
 **	Replace extern with include video.h
-**
+**	
 **	Revision 1.11  1996-08-19 18:32:30-04  gsl
 **	drcs update
 **

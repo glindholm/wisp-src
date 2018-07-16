@@ -100,9 +100,9 @@ class token : public object {
 //
 //	History:
 //	$Log: token.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:23-04  gsl
+//	Revision 1.5  1998/08/31 19:14:23  gsl
 //	drcs update
-//
+//	
 //
 
 //	

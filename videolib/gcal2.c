@@ -345,9 +345,9 @@ static int home()
 /*
 **	History:
 **	$Log: gcal2.c,v $
-**	Revision 1.10  1997-07-08 16:13:58-04  gsl
+**	Revision 1.10  1997/07/08 20:13:58  gsl
 **	Change to use new video.h defines
-**
+**	
 **	Revision 1.9  1996-10-11 18:15:53-04  gsl
 **	drcs update
 **

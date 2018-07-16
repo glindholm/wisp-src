@@ -188,9 +188,9 @@ extern char *re_syntax_table;
 /*
 **	History:
 **	$Log: regex.h,v $
-**	Revision 1.6  1996-07-23 14:13:00-04  gsl
+**	Revision 1.6  1996/07/23 18:13:00  gsl
 **	drcs update
-**
+**	
 **
 **
 */

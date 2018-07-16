@@ -19,9 +19,9 @@ void wdinit(void )
 /*
 **	History:
 **	$Log: wdinit.c,v $
-**	Revision 1.9  1997-07-09 12:42:46-04  gsl
+**	Revision 1.9  1997/07/09 16:42:46  gsl
 **	Change to use new video.h intefaces.
-**
+**	
 **	Revision 1.8  1996-08-19 18:33:10-04  gsl
 **	drcs update
 **

@@ -74,9 +74,9 @@ int vtext(int display, int row, int column, char *text, ...);
 /*
 **	History:
 **	$Log: video_rt.h,v $
-**	Revision 1.9  1998-08-31 15:50:40-04  gsl
+**	Revision 1.9  1998/08/31 19:50:40  gsl
 **	drcs update
-**
+**	
 **	Revision 1.8  1998-08-31 15:14:27-04  gsl
 **	drcs update
 **

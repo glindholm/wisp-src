@@ -1196,9 +1196,9 @@ static int vse_xcopy_copy(char *sysname, int4 start_line, int4 end_line, int4 ta
 /*
 **	History:
 **	$Log: vsemov.c,v $
-**	Revision 1.9  1996-09-03 18:24:08-04  gsl
+**	Revision 1.9  1996/09/03 22:24:08  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -355,9 +355,9 @@ int use_netroncap(void)
 /*
 **	History:
 **	$Log: wsfns.c,v $
-**	Revision 1.16  1996-08-19 18:33:23-04  gsl
+**	Revision 1.16  1996/08/19 22:33:23  gsl
 **	drcs update
-**
+**	
 **
 **
 */

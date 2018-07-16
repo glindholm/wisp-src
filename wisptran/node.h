@@ -66,9 +66,9 @@ extern NODE shiftinsert_clause_before_node(NODE curr_node, NODE clause_node);
 /*
 **	History:
 **	$Log: node.h,v $
-**	Revision 1.7  1998-02-10 15:05:53-05  gsl
+**	Revision 1.7  1998/02/10 20:05:53  gsl
 **	Added shiftinsert_clause_before_node()
-**
+**	
 **	Revision 1.6  1996-08-30 21:56:06-04  gsl
 **	drcs update
 **

@@ -302,9 +302,9 @@ va_dcl
 /*
 **	History:
 **	$Log: set.c,v $
-**	Revision 1.15  2001-11-27 15:54:29-05  gsl
+**	Revision 1.15  2001/11/27 20:54:29  gsl
 **	Removed MSDOS code
-**
+**	
 **	Revision 1.14  1998-08-26 17:25:41-04  gsl
 **	Add support for SET JC,JL,JS
 **

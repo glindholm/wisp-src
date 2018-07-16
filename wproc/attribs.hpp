@@ -48,9 +48,9 @@ enum field_attr {
 //
 //	History:
 //	$Log: attribs.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:32-04  gsl
+//	Revision 1.5  1998/08/31 19:13:32  gsl
 //	drcs update
-//
+//	
 //
 
 //	

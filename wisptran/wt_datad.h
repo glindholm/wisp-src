@@ -27,9 +27,9 @@ extern NODE delete_fd(NODE the_statement);
 /*
 **	History:
 **	$Log: wt_datad.h,v $
-**	Revision 1.5  1996-08-30 21:56:15-04  gsl
+**	Revision 1.5  1996/08/31 01:56:15  gsl
 **	drcs update
-**
+**	
 **
 **
 */

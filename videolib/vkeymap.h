@@ -63,9 +63,9 @@ char *vkeymap_path();
 /*
 **	History:
 **	$Log: vkeymap.h,v $
-**	Revision 1.6  1996-10-11 18:16:07-04  gsl
+**	Revision 1.6  1996/10/11 22:16:07  gsl
 **	drcs update
-**
+**	
 **
 **
 */

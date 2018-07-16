@@ -67,9 +67,9 @@ EXT char *search_numbers[];
 /*
 **	History:
 **	$Log: pgeqtns.h,v $
-**	Revision 1.8  1997-04-21 10:53:09-04  scass
+**	Revision 1.8  1997/04/21 14:53:09  scass
 **	Corr4ected copyright.
-**
+**	
 **	Revision 1.7  1996-09-12 19:22:12-04  gsl
 **	Add drcs headers
 **

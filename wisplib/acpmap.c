@@ -246,9 +246,9 @@ char *name;
 /*
 **	History:
 **	$Log: acpmap.c,v $
-**	Revision 1.11  1996-10-08 20:18:49-04  gsl
+**	Revision 1.11  1996/10/09 00:18:49  gsl
 **	Replace ACPMAP_FILE define with real value for VMS
-**
+**	
 **	Revision 1.10  1996-08-19 15:32:08-07  gsl
 **	drcs update
 **

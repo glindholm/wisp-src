@@ -716,9 +716,9 @@ void finish_figcons(void)
 /*
 **	History:
 **	$Log: wt_ident.c,v $
-**	Revision 1.18  2001-09-13 14:12:23-04  gsl
+**	Revision 1.18  2001/09/13 18:12:23  gsl
 **	2001
-**
+**	
 **	Revision 1.17  2001-09-13 10:37:52-04  gsl
 **	Add xtab_log of the PROGRAMID
 **

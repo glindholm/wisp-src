@@ -66,9 +66,9 @@ class arguments : public object {
 //
 //	History:
 //	$Log: args.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:31-04  gsl
+//	Revision 1.5  1998/08/31 19:13:31  gsl
 //	drcs update
-//
+//	
 //
 
 //	

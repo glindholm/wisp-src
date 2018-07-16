@@ -19,6 +19,7 @@
 /*
 **	Includes
 */
+#include <sys/types.h>
 #include "intdef.h"
 
 /*
@@ -40,7 +41,7 @@ void wsetstat(uint4 *smask, uint4 *cmask, uint4 *src);			/* Used to set/clear bi
 void bit_off(unsigned char *mask, unsigned char *src);
 void lbit_off(uint4 *mask, uint4 *src);
 void xx2byte(char *src,char *dst);
-void wmemcpy(char *dst,char *src,short *len);				/* COBOL call able memcpy			*/
+void WMEMCPY(char *dst,char *src,short *len);				/* COBOL call able memcpy			*/
 
 /* bits.c */
 void BITPACK(unsigned char *in_ptr,unsigned char *out_ptr, int4 *in_len);
@@ -78,10 +79,24 @@ void EXTRACT(const char* first, ...);
 int4 workstation(void);
 
 /* fexists.c */
-int fexists(const char* name);
-int fcanread(const char* name);
-int isafile(const char* name);
-int isadir(const char* name);
+#define fexists		WL_fexists
+int WL_fexists(const char* name);
+int WL_fcanread(const char* name);
+int WL_isafile(const char* name);
+int WL_isadir(const char* name);
+long WL_inode(const char* name);
+
+#ifdef WIN32
+typedef unsigned short mode_t;
+#endif
+int WL_stat_mode(const char* name, mode_t *mode);
+int WL_stat_ctime(const char* name, time_t *create_time);
+int WL_stat_mtime(const char* name, time_t *mod_time);
+int WL_stat_size_long(const char* name, long *size);
+
+#ifdef INT8_DEFINED
+int WL_stat_size_int8(const char* name, INT8 *size);
+#endif
 
 /* filecopy.c */
 void FILECOPY();
@@ -98,6 +113,8 @@ void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *cou
 /* findexts.c */
 int findexts(char* basename, char* base_ext);
 
+/* filesize.c */
+long WL_filesize(const char* path);
 
 /* getparm.c */
 void GETPARM();
@@ -304,9 +321,19 @@ int va_count();
 /*
 **	History:
 **	$Log: wisplib.h,v $
-**	Revision 1.38  2001-11-27 16:34:46-05  gsl
+**	Revision 1.38.2.3  2002/10/09 21:17:35  gsl
+**	Huge file support
+**	
+**	Revision 1.38.2.2  2002/10/09 19:20:37  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
+**	Revision 1.38.2.1  2002/10/03 13:49:50  gsl
+**	Change wmemcpy to WMEMCPY
+**	
+**	Revision 1.38  2001/11/27 21:34:46  gsl
 **	remove cuserid()
-**
+**	
 **	Revision 1.37  2001-10-26 15:38:51-04  gsl
 **	Add run_unixcommand_silent()
 **

@@ -47,9 +47,9 @@ EXT_COBRUN_DEF int	run_cobol	INIT_ZERO;
 /*
 **	History:
 **	$Log: cobrun.h,v $
-**	Revision 1.8  1996-08-19 18:32:14-04  gsl
+**	Revision 1.8  1996/08/19 22:32:14  gsl
 **	drcs update
-**
+**	
 **
 **
 */

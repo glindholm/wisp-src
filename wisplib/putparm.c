@@ -1144,9 +1144,9 @@ int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 /*
 **	History:
 **	$Log: putparm.c,v $
-**	Revision 1.14  1998-08-03 17:09:20-04  jlima
+**	Revision 1.14  1998/08/03 21:09:20  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
-**
+**	
 **	Revision 1.13  1998-07-10 11:15:43-04  gsl
 **	Make a local variable "p" static so it retains it's value between
 **	iterations of the for loop.

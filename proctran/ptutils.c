@@ -808,9 +808,9 @@ int is_backref(void)									/* Determine if field is backwards	*/
 /*
 **	History:
 **	$Log: ptutils.c,v $
-**	Revision 1.7  1999-09-13 15:50:41-04  gsl
+**	Revision 1.7  1999/09/13 19:50:41  gsl
 **	fix "==" vs. "="
-**
+**	
 **	Revision 1.6  1997-04-21 11:24:50-04  scass
 **	Corrected copyright.
 **

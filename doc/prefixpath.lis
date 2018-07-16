@@ -1,0 +1,81 @@
+	Copyright (c) 1994 by International Digital Scientific Incorporated.
+	All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		THE COPY STATEMENT PREFIX PATH (-P OPTION)
+	
+	Document:	PREFIXPATH.LIS
+	Last Updated:	17 MAY 94
+	Products:	WISP/UNIX, WISP/MSDOS
+	Versions:	3.3x5 (AND LATER)
+	
+	Summary:	The WISP translator -P option.
+			Use of a prefix path with the COPY statement.
+
+	====================================================================
+	
+
+	THE COPY STATEMENT PREFIX PATH (-P OPTION)
+	==========================================
+
+	This document describes the prefix path (-P) option of the WISP
+	translator.  This option is currently available for UNIX and MSDOS
+	only.
+
+	This options changes the way the WISP translator processes COPY 
+	statements which include the "IN library" clause.  If the "IN library"
+	clause is not used with a COPY statement then this option has no
+	effect and that COPY statement is processed in the normal manner.
+
+	The prefix path (-P) option allows you to specify a path which is
+	to be searched for the copy library/file combination.  The normal
+	behavior of WISP without the prefix path option would be to look
+	only for "../library/file.wcb".  This is different then the inlib
+	(-I) option which is only used when the "IN library" clause is
+	not specified.
+
+	Usage:
+		$ wisp -P prefixpath file
+
+		Prefixpath is a list of one or more directories separated
+		by colons (:) for UNIX and semicolons (;) for MSDOS.
+
+	Example:
+
+		$ wisp -P/home/me/testlib:/disk1/qalib:/disk1/mastlib sample
+
+		If SAMPLE contains a copy statement of the form:
+
+		COPY FDPAYNOW IN ACCTCOPY.
+
+		WISP will look in sequence until it finds one of the 
+		following:
+
+		/home/me/testlib/acctcopy/fdpaynow.wcb
+		/disk1/qalib/acctcopy/fdpaynow.wcb
+		/disk1/mastlib/acctcopy/fdpaynow.wcb
+
+
+	Using Prefix Path In Convert Mode
+	---------------------------------
+
+	When used in CONVERT mode WISP will generate the following COPY
+	statement for the example above:
+
+		COPY "acctcopy/fdpaynow.wcb"
+
+	To compile the COBOL after translating in CONVERT mode it will be
+	necessary to inform the compiler about the prefix path.  The following
+	examples show how to do this for MicroFocus COBOL and AcuCOBOL on
+	UNIX.
+
+	MicroFocus:	
+		$ COBCPY="/home/me/testlib:/disk1/qalib:/disk1/mastlib"
+		$ export COBCPY
+
+	AcuCOBOL:
+		$ COPYPATH="/home/me/testlib:/disk1/qalib:/disk1/mastlib"
+		$ export COPYPATH
+
+	========================= END OF DOCUMENT ==========================

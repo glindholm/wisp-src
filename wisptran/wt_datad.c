@@ -857,9 +857,9 @@ NODE the_statement;
 /*
 **	History:
 **	$Log: wt_datad.c,v $
-**	Revision 1.12  1998-12-15 14:26:22-05  gsl
+**	Revision 1.12  1998/12/15 19:26:22  gsl
 **	Add recognition of the LINAGE clause in an FD
-**
+**	
 **	Revision 1.11  1998-03-19 14:18:23-05  gsl
 **	Change to use get_prog_nname()
 **

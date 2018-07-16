@@ -237,9 +237,9 @@ void p_rs_kw(int  tndx,
 /*
 **	History:
 **	$Log: ptrens.c,v $
-**	Revision 1.5  1997-04-21 11:18:57-04  scass
+**	Revision 1.5  1997/04/21 15:18:57  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.4  1996-09-12 19:17:44-04  gsl
 **	Fix prototypes
 **

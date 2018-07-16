@@ -189,9 +189,9 @@ alloca (size)			/* returns pointer to storage */
 /*
 **	History:
 **	$Log: alloca.c,v $
-**	Revision 1.7  1996-07-23 14:12:48-04  gsl
+**	Revision 1.7  1996/07/23 18:12:48  gsl
 **	drcs update
-**
+**	
 **
 **
 */

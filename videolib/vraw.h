@@ -71,9 +71,9 @@ extern void* vrawttyalloc(void);
 /*
 **	History:
 **	$Log: vraw.h,v $
-**	Revision 1.2  1997-07-15 22:00:53-04  gsl
+**	Revision 1.2  1997/07/16 02:00:53  gsl
 **	Added vrawDebugBreak() for WIN32
-**
+**	
 **	Revision 1.1  1997-06-24 10:56:47-04  gsl
 **	Initial revision
 **

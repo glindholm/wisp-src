@@ -305,9 +305,9 @@ void MOUNT()
 /*
 **	History:
 **	$Log: mount.c,v $
-**	Revision 1.11  1996-08-19 18:32:32-04  gsl
+**	Revision 1.11  1996/08/19 22:32:32  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1,0 +1,91 @@
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP DATA CONVERSION
+	
+	Document:	dataconv.lis
+	Last Updated:	25 JUNE 93
+	Products:	WISP
+	Versions:	3.2x11 and later
+	
+	Summary:	The WISP data conversion facilities.
+
+	====================================================================
+	
+
+	WISP DATA CONVERSION
+	====================
+
+	A new feature has been added to WISP to generate a data conversion
+	program.  When you WISP with the /DATACONV "-q" option it will
+	create a Wang COBOL program with a ".wdc" (Wang Data Conversion)
+	file extension.  This program contains routines to convert 
+	all the INDEXED and RELATIVE files that were in the original 
+	program.  The ".wdc" program is a Wang COBOL program that can 
+	then be translated by WISP like any other Wang COBOL program.
+
+	For each file found a corresponding SEQUENTIAL file is added
+	with a SELECT and FD that matches the INDEXED file.  The sequential
+	file's name and data records are the same as the indexed ones but
+	are prefixed with "SEQ-".  In the PROCEDURE DIVISION the SEQENTIAL 
+	file is opened for INPUT and the INDEXED file is opened for OUTPUT.
+	The logic then reads a records from the	sequential file, moves 
+	it to the indexed file's record then write the record.  This
+	is repeated until the sequential file gets an EOF.  The number 
+	of records read, written and number of invalid keys are then
+	displayed.
+
+	If you need to do "data correction" you can edit the ".wdc" file
+	and add in your own correction logic.  This is best done in
+	the "move" paragraph.  Data correction may consist of fixing
+	the "zoned data" fields with a call to "FXZONE" or the changing
+	of spaces to zeroes in numeric fields.
+
+	When the data conversion program is run it will prompt you with
+	the name of each file and ask if you want that file converted.  
+	It also displays the current values of INLIB, INVOL, OUTLIB, 
+	and OUTVOL and allows you to change them.
+
+
+	ACUCOBOL example:
+
+		$ wisp -q -I../copylib sample		Creates sample.wdc
+		$ wisp -VACU sample.wdc			Creates sample.cob
+		$ ccbl -da4 -o SAMPLE sample.cob
+		$ wrun SAMPLE
+
+	VAX/VMS example:
+
+		$ WISP/INLIB=COPYLIB/DATACONV SAMPLE
+		$ WISP SAMPLE.WDC
+		$ COBOL/ANSI/FIPS=74 SAMPLE
+		$ LINK SAMPLE,WISPLIB/LIB,SYS$INPUT:/OPT
+			SYS$SHARE:VAXCRTL.EXE/SHARE
+			^z
+		$ RUN SAMPLE
+
+
+	NOTE:	When you use the /DATACONV "-q" option all the copybooks
+		are included into the ".wdc" file so you also need to
+		use the /INLIB "-I" option.
+
+
+	***         ***
+	*** WARNING ***
+	***         ***
+
+	Running WISP on SAMPLE.WDC will create a SAMPLE.COB
+	just as running WISP on SAMPLE.WCB creates SAMPLE.COB.
+	To avoid confusion as to what is SAMPLE.COB it is
+	recommended that after creating SAMPLE.WDC you move 
+	it to a different "data conversion" directory.
+
+		$ wisp -q sample
+		$ mv sample.wdc ../dataconv
+		$ cd ../dataconv
+		$ wisp sample.wdc
+		$ ccbl -da4 -o SAMPLE sample.cob
+
+
+	========================= END OF DOCUMENT ==========================

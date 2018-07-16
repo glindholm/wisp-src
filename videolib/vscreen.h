@@ -34,8 +34,8 @@ int vscreen(int state);									/* Set screen to a given state.		*/
 /*
 **	History:
 **	$Log: vscreen.h,v $
-**	Revision 1.1  1996-03-28 17:04:38-05  gsl
+**	Revision 1.1  1996/03/28 22:04:38  gsl
 **	Initial revision
-**
+**	
 **
 */

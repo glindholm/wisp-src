@@ -97,9 +97,9 @@ char *demo_notice() {
 //
 //	History:
 //	$Log: product.cpp,v $
-//	Revision 1.17  2002-04-03 17:00:38-05  gsl
+//	Revision 1.17  2002/04/03 22:00:38  gsl
 //	2002
-//
+//	
 //	Revision 1.16  2001-09-13 16:20:24-04  gsl
 //	Change version to 3 part 4 digits 9.9.99 format
 //

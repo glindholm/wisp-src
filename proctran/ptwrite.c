@@ -2867,9 +2867,9 @@ static void process_br_parms(void)							/* Check if any backwards ref.parms.	*/
 /*
 **	History:
 **	$Log: ptwrite.c,v $
-**	Revision 1.9  1997-04-21 11:25:54-04  scass
+**	Revision 1.9  1997/04/21 15:25:54  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.8  1996-12-12 13:32:48-05  gsl
 **	DevTech -> NeoMedia
 **

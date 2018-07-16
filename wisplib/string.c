@@ -434,9 +434,9 @@ void str_xlat(char func, char *in_string, char *out_string, int4 len, char *tabl
 /*
 **	History:
 **	$Log: string.c,v $
-**	Revision 1.13  1998-10-20 10:27:12-04  gsl
+**	Revision 1.13  1998/10/20 14:27:12  gsl
 **	Add tracing
-**
+**	
 **	Revision 1.12  1996-08-19 18:33:00-04  gsl
 **	drcs update
 **

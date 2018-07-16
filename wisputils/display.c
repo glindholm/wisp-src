@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
 /*
 **	History:
 **	$Log: display.c,v $
-**	Revision 1.13  1998-08-03 17:26:07-04  jlima
+**	Revision 1.13  1998/08/03 21:26:07  jlima
 **	Support Logical Volume Translation to long file names containing embedded blanks.
-**
+**	
 **	Revision 1.12  1998-05-05 13:30:46-04  gsl
 **	Change to use new display frontend routines
 **

@@ -117,10 +117,6 @@ SOURCE=.\sleepdos.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\strpos.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\valert.c
 # End Source File
 # Begin Source File
@@ -138,10 +134,6 @@ SOURCE=.\vcharset.c
 # Begin Source File
 
 SOURCE=.\vchstubs.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vcommand.c
 # End Source File
 # Begin Source File
 
@@ -322,10 +314,6 @@ SOURCE=.\vsystem.c
 # Begin Source File
 
 SOURCE=.\vtext.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vtrace.c
 # End Source File
 # Begin Source File
 

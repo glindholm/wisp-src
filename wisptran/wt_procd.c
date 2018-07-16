@@ -1918,9 +1918,9 @@ NODE parse_hold(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_procd.c,v $
-**	Revision 1.22  1998-06-09 13:11:23-04  gsl
+**	Revision 1.22  1998/06/09 17:11:23  gsl
 **	Move the parse_rewrite() routine to wt_delet.c
-**
+**	
 **	Revision 1.21  1998-03-26 15:38:17-05  gsl
 **	If last statement in a program is a COPY statement then the
 **	end stuff was being generated into the copybook file.

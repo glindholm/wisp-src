@@ -1066,9 +1066,9 @@ int w4w_hotspot_vmode(void)
 /*
 **	History:
 **	$Log: costar.c,v $
-**	Revision 1.31  2001-09-25 11:11:15-04  gsl
+**	Revision 1.31  2001/09/25 15:11:15  gsl
 **	Remove unneeded ifdefs
-**
+**	
 **	Revision 1.30  1999-08-30 12:48:13-04  gsl
 **	Add checks in costar_title() to not run in background or native screens.
 **

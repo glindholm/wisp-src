@@ -2506,10 +2506,10 @@ static	char	*the_name = NULL;
 /*
 **	History:
 **	$Log: sharemem.c,v $
-**	Revision 1.26  2001-10-31 15:42:49-05  gsl
+**	Revision 1.26  2001/10/31 20:42:49  gsl
 **	Rename ctlfile() to wisp_sm_ctlfile() and make global.
 **	replace mkdir() with makepath()
-**
+**	
 **	Revision 1.25  2001-10-10 15:45:15-04  gsl
 **	Change the sharemem key file to include both userid and pgid
 **

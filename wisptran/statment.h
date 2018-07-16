@@ -47,9 +47,9 @@ extern NODE unhook_trailing_fluff(NODE the_tree);
 /*
 **	History:
 **	$Log: statment.h,v $
-**	Revision 1.7  1998-03-03 16:08:18-05  gsl
+**	Revision 1.7  1998/03/03 21:08:18  gsl
 **	updated
-**
+**	
 **	Revision 1.6  1998-02-10 15:08:54-05  gsl
 **	update with new routines
 **

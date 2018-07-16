@@ -81,9 +81,9 @@ int display_scan();
 /*
 **	History:
 **	$Log: vlist.h,v $
-**	Revision 1.10  1997-06-24 17:18:18-04  gsl
+**	Revision 1.10  1997/06/24 21:18:18  gsl
 **	remove unneeded ifdefs
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:09-04  gsl
 **	drcs update
 **

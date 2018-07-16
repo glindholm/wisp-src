@@ -61,9 +61,9 @@ int woperator()
 /*
 **	History:
 **	$Log: operator.c,v $
-**	Revision 1.5  1996-08-19 18:32:37-04  gsl
+**	Revision 1.5  1996/08/19 22:32:37  gsl
 **	drcs update
-**
+**	
 **
 **
 */

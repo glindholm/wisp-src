@@ -123,9 +123,9 @@ char *opcode_name(opcode an_opcode) {
 //
 //	History:
 //	$Log: opcodes.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:59-04  gsl
+//	Revision 1.6  1998/08/31 19:13:59  gsl
 //	drcs update
-//
+//	
 //
 
 //	

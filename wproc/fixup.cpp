@@ -195,9 +195,9 @@ Boolean fixup::fixups_pending() {
 //
 //	History:
 //	$Log: fixup.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:50-04  gsl
+//	Revision 1.6  1998/08/31 19:13:50  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -32,9 +32,9 @@ extern void add_user_symbol(const char* name);
 /*
 **	History:
 **	$Log: keywords.h,v $
-**	Revision 1.9  1999-09-07 10:34:07-04  gsl
+**	Revision 1.9  1999/09/07 14:34:07  gsl
 **	Fix prototype of load_change_words)(
-**
+**	
 **	Revision 1.8  1998-03-27 10:35:39-05  gsl
 **	Change the reserved_keywords routines to change_word
 **

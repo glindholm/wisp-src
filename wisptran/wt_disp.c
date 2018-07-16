@@ -829,9 +829,9 @@ static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_
 /*
 **	History:
 **	$Log: wt_disp.c,v $
-**	Revision 1.23  1998-04-03 14:38:45-05  gsl
+**	Revision 1.23  1998/04/03 19:38:45  gsl
 **	Changed DISPLAY for ACN to call WACUDISPLAY routines
-**
+**	
 **	Revision 1.22  1998-03-23 12:53:22-05  gsl
 **	Change ACN DISPLAY to a PERFORM WISP-DISPLAY-PARA
 **

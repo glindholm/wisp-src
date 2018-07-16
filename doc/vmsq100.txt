@@ -1,0 +1,53 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP 100 Queue Limit On VMS Patch
+	
+	Document:	vmsq100.txt
+	Last Updated:	5 AUG 1997
+	Products:	WISP/VMS
+	Versions:	3.3x12
+	
+	Summary:	Instructions for installing VMS patch.
+
+
+	====================================================================
+	
+	Introduction
+	------------
+	The last release of WISP on VMS has a limit of 100 total job and
+	print queues.  This patch allows you to change that limit.  This
+	document contains instructions for installing the patch.
+
+
+	Instructions for fixing the WISP 100 queues limit on VMS
+	========================================================
+
+	Load the patch source kit onto your VMS system. The patch kit
+	consists of the C source file SETUPQM.C plus 13 header files. 
+
+	Edit the file SETUPQM.C and change the MAX_TOTAL_QUEUES define
+	to be the maximum number of queues (print and job queues) that
+	your system needs.  It is currently set at 200, it previously was
+	set at 100 in the last release of WISP on VMS.  
+
+	Look for the following line in the file SETUPQM.C:
+
+	    #define MAX_TOTAL_QUEUES  200
+
+	Next you need to compile SETUPQM.C with the C compiler to
+	generate the object file SETUPQM.OBJ.  Then replace this object
+	file into the WISP library.  When you compile you need to use the
+	/DEFINE=VMS switch.
+
+	    CC/DEFINE=VMS SETUPQM.C
+	    LIBRARY/REPLACE WISPLIB.OLB SETUPQM.OBJ
+
+	Finally you need to re-link your executable programs using the
+	version of WISPLIB you just modified.  To re-link the WISP
+	executable use the UPDATE.COM script that came with WISP.  Use
+	your own link scripts to re-link your programs.
+
+
+	========================= END OF DOCUMENT ==========================

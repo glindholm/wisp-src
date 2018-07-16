@@ -752,9 +752,9 @@ static int in_use(wstr) char *wstr;
 /*
 **	History:
 **	$Log: gcalend.c,v $
-**	Revision 1.12  1998-05-21 11:44:14-04  gsl
+**	Revision 1.12  1998/05/21 15:44:14  gsl
 **	Don't use the fp file handle unless it is valid.
-**
+**	
 **	Revision 1.11  1997-07-08 16:16:21-04  gsl
 **	Change to use new video.h defines
 **

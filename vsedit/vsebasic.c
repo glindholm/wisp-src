@@ -898,9 +898,9 @@ void free_linenum(void)
 /*
 **	History:
 **	$Log: vsebasic.c,v $
-**	Revision 1.7  1996-09-03 18:23:59-04  gsl
+**	Revision 1.7  1996/09/03 22:23:59  gsl
 **	drcs update
-**
+**	
 **
 **
 */

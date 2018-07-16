@@ -299,9 +299,9 @@ void machine::exec_set() {
 //
 //	History:
 //	$Log: e_os.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:42-04  gsl
+//	Revision 1.6  1998/08/31 19:13:42  gsl
 //	drcs update
-//
+//	
 //
 
 //	

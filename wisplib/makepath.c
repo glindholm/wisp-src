@@ -166,10 +166,10 @@ int	makepath(const char* fullpath )
 /*
 **	History:
 **	$Log: makepath.c,v $
-**	Revision 1.16  2001-10-31 15:37:44-05  gsl
+**	Revision 1.16  2001/10/31 20:37:44  gsl
 **	Removed VMS
 **	Added chmod(0777) after a mkdir()
-**
+**	
 **	Revision 1.15  1998-08-03 16:54:58-04  jlima
 **	Support Logical Volume Translations to long file names containing eventual embedded blanks.
 **

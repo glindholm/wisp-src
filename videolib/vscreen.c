@@ -180,10 +180,10 @@ static int vscr_valid(int state)
 /*
 **	History:
 **	$Log: vscreen.c,v $
-**	Revision 1.12  1997-07-09 12:14:49-04  gsl
+**	Revision 1.12  1997/07/09 16:14:49  gsl
 **	Add support for direct IO
 **	Change to use new video.h interfaces
-**
+**	
 **	Revision 1.11  1997-01-11 15:44:23-05  gsl
 **	changed vscreen() so that it only resets and erases the screen
 **	if the specified option is valid for this terminal (esc string > 0)

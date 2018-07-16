@@ -182,9 +182,9 @@ static void vmp_express()
 /*
 **	History:
 **	$Log: vmap.c,v $
-**	Revision 1.11  1998-10-13 14:51:14-04  gsl
+**	Revision 1.11  1998/10/13 18:51:14  gsl
 **	Change to use VMAP_CNG_OLDDATA
-**
+**	
 **	Revision 1.10  1997-07-08 17:16:11-04  gsl
 **	Removed the line attribure logic as double width never used
 **	and not supported on must terminals.

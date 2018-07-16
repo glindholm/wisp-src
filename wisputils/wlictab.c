@@ -234,9 +234,9 @@ int main(int argc, char* argv[])
 /*
 **	History:
 **	$Log: wlictab.c,v $
-**	Revision 1.1  1998-12-18 12:59:50-05  gsl
+**	Revision 1.1  1998/12/18 17:59:50  gsl
 **	Initial revision
-**
+**	
 **
 **
 **

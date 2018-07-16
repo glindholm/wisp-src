@@ -143,9 +143,9 @@ int vscroll_rvrs_avail(void)
 /*
 **	History:
 **	$Log: vroll.c,v $
-**	Revision 1.12  1997-07-12 17:48:56-04  gsl
+**	Revision 1.12  1997/07/12 21:48:56  gsl
 **	fix prototype
-**
+**	
 **	Revision 1.11  1997-07-09 12:11:42-04  gsl
 **	Change to use new video.h interfaces
 **	Fix the directio logic

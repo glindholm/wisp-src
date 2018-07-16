@@ -154,9 +154,9 @@ void HEXPACK(  char* source,  char* target, int4* tlen )
 /*
 **	History:
 **	$Log: hexunpk.c,v $
-**	Revision 1.10  1997-02-20 09:39:20-05  gsl
+**	Revision 1.10  1997/02/20 14:39:20  gsl
 **	Document and add header file
-**
+**	
 **	Revision 1.9  1996-08-19 18:32:23-04  gsl
 **	drcs update
 **

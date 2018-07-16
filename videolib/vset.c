@@ -147,12 +147,12 @@ static int vs(int vs_item, int vs_state, char *string)					/* vset output.				*/
 /*
 **	History:
 **	$Log: vset.c,v $
-**	Revision 1.12  1997-07-09 12:23:52-04  gsl
+**	Revision 1.12  1997/07/09 16:23:52  gsl
 **	Add support for direct IO
 **	Add support for COSTAR on WIN32
 **	Removed 13 out of 16 set options which were unused and unavailable on
 **	must terminals, simplified must of the logic.
-**
+**	
 **	Revision 1.11  1996-08-02 16:30:35-04  jockc
 **	changed ifdef MSDOS to ifdef DIRECTVID
 **

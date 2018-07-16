@@ -187,9 +187,9 @@ void wrun_message_box(char *line1, char *line2)
 /*
 **	History:
 **	$Log: win32wrn.c,v $
-**	Revision 1.4  1999-09-13 15:55:43-04  gsl
+**	Revision 1.4  1999/09/13 19:55:43  gsl
 **	fix main() prototype
-**
+**	
 **	Revision 1.3  1997-01-06 17:35:54-05  jockc
 **	forgot to null terminate the argv strings (ahem)
 **
