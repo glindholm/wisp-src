@@ -1,0 +1,6 @@
+SOURCE [WISP]/src
+VOLIN  [WISP]/src/testmf/volin
+VOLOUT [WISP]/src/testmf/volout
+VOLRUN [WISP]/src/testmf/volrun
+VOLSPL [WISP]/src/testmf/volspl
+VOLWRK [WISP]/src/testmf/volwrk

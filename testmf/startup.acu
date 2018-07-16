@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+#	File:		startup.acu
+#
+#	Usage:		$ . startup.acu
+#
+#	Function:	To setup env variables needed to QA WISP
+#			using ACUCOBOL.
+#
+QA=$WISP/src/testacu
+WISPCONFIG=$QA/config
+export QA WISPCONFIG
+
+A_CONFIG=$WISPCONFIG/ACUCONFIG
+export A_CONFIG

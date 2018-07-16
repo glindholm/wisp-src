@@ -1,0 +1,630 @@
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+      *$LINKMAIN
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           SAMPLE.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           03/13/89.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           NO-ECHO IS "98".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT SORT-FILE
+               ASSIGN TO "SORTFILE" "DISK"
+               BUFFER SIZE IS 50 BLOCKS.
+
+           SELECT UNSORTED-FILE
+               ASSIGN TO "UNSORTED" "DISK".
+
+           SELECT SORTED-FILE
+               ASSIGN TO "SORTED" "DISK".
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+       SD  SORT-FILE.
+       01  SORT-REC.
+           05  SORT-DATE          PIC 9(6).
+           05  SORT-NAME          PIC X(20).
+           05  SORT-TYPE          PIC X.
+
+       FD  UNSORTED-FILE
+           VALUE OF FILENAME IS "##USRT".
+       01  UNSORTED-REC           PIC X(27).
+
+       FD  SORTED-FILE
+           VALUE OF FILENAME IS "##SORT".
+       01  SORTED-REC           PIC X(27).
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+      ******************************************************************
+
+       01  FIL-GEN-FILE                   PIC X(8) VALUE "TESTFILE".
+       01  LIB-GEN-FILE                   PIC X(8) VALUE SPACES.
+       01  VOL-GEN-FILE                   PIC X(6) VALUE SPACES.
+
+       01  FLV-TITLE                      PIC X(40) VALUE SPACES.
+       01  FLV-FILE                       PIC X(8) VALUE SPACES.
+       01  FLV-LIB                        PIC X(8) VALUE SPACES.
+       01  FLV-VOL                        PIC X(6) VALUE SPACES.
+
+       01  SAMPLE-PROG                    PIC X(8) VALUE "SAMPLE  ".
+       01  DISPLAY-PROG                   PIC X(8) VALUE "DISPLAY ".
+
+       01  CODE-ELSE-TEST                 PIC x(80) VALUE SPACES.
+
+       01  VOL-TRIGGER-PROG               PIC X(6) VALUE SPACES.
+       01  LIB-TRIGGER-PROG               PIC X(8) VALUE SPACES.
+       01  FILE-TRIGGER-PROG              PIC X(8) VALUE SPACES.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+       01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 5 COL 20
+               SOURCE FLV-TITLE.
+
+           03  FILLER PIC X(4) ROW 12 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 12 COL 20 
+               SOURCE FLV-FILE OBJECT FLV-FILE.
+
+           03  FILLER PIC X(7) ROW 12 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 12 COL 38 
+               SOURCE FLV-LIB OBJECT FLV-LIB.
+
+           03  FILLER PIC X(6) ROW 12 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 12 COL 55 
+               SOURCE FLV-VOL OBJECT FLV-VOL.
+
+       01  MAIN-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(11) ROW 1 COL 60 VALUE
+               "MAIN-SCREEN".
+           03  FILLER  PIC X(40) ROW 3 COL 20 VALUE
+               "1) COBLINK".
+           03  FILLER  PIC X(37) ROW 5 COL 20 VALUE
+               "2) TRY [MOVE WITH CONVERSION] FIELDS.".
+           03  FILLER  PIC X(18) ROW 7 COL 20 VALUE
+               "3) FILE I/O TESTS.".
+           03  FILLER  PIC X(20) ROW 9 COL 20 VALUE
+               "4) SCREEN I/O TESTS.".
+           03  FILLER  PIC X(30) ROW 11 COL 20 VALUE
+               "5) WANG USERSUBS TESTS.".
+           03  FILLER  PIC X(15) ROW 13 COL 20 VALUE
+               "6) COBOL TESTS.".
+           03  FILLER  PIC X(18) ROW 15 COL 20 VALUE
+               "7) PRINTING TESTS.".
+           03  FILLER  PIC X(30) ROW 17 COL 20 VALUE
+               "8) WISP SUBROUTINE TESTS.".
+           03  FILLER  PIC X(37) ROW 19 COL 20 VALUE
+               "9) SET TRIGGER PROGRAM (ONLINE HELP).".
+           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+       01  CONDITIONAL-SCREEN USAGE IS DISPLAY-WS.
+           05  COND-LINE-1   PIC X(40) ROW 5   COL 20.
+           05  COND-LINE-2   PIC X(40) ROW 6   COL 20.
+           05  COND-LINE-3   PIC X(40) ROW 7   COL 20.
+           05  COND-LINE-4   PIC X(40) ROW 8   COL 20.
+           05  COND-LINE-5   PIC X(40) ROW 9   COL 20.
+           05  COND-LINE-6   PIC X(40) ROW 10  COL 20.
+           05  COND-LINE-7   PIC X(40) ROW 11  COL 20.
+           05  COND-LINE-8   PIC X(40) ROW 12  COL 20.
+           05  COND-LINE-9   PIC X(40) ROW 13  COL 20.
+           05  COND-LINE-10  PIC X(40) ROW 14  COL 20.
+
+       01  COBOL-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(12) ROW 1 COL 60 VALUE
+               "COBOL-SCREEN".
+           03  FILLER  PIC X(16) ROW 3 COL 20 VALUE
+               "1) DISPLAY VERB.".
+           03  FILLER  PIC X(35) ROW 5 COL 20 VALUE
+               "2) RETURN-CODE.".
+           03  FILLER  PIC X(35) ROW 7 COL 20 VALUE
+               "3) SORT VERB.".
+           03  FILLER  PIC X(35) ROW 9 COL 20 VALUE
+               "4) CONDITIONAL TEST.".
+           03  FILLER  PIC X(35) ROW 11 COL 20 VALUE
+               "5) ACCEPT VERB.".
+           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+       01  SORT-INX        PIC 99.
+       01  SORT-SCREEN USAGE IS DISPLAY-WS.
+           05  FILLER PIC X(11) ROW 1 COL 60 VALUE "SORT-SCREEN".
+           05  FILLER PIC X(40) ROW 3 COL 20 VALUE
+               "SORT ASCENDING KEY SORT-TYPE SORT-DATE".
+           05  FILLER PIC X(15) ROW 5 COL 2  VALUE "UNSORTED FILE".
+           05  FILLER PIC X(30) ROW 6 COL 2 VALUE 
+000000*         123456789012345678901234567890
+               "DATE  NAME                TYPE".
+           05  FILLER PIC X(15) ROW 5 COL 40  VALUE "SORTED FILE".
+           05  FILLER PIC X(30) ROW 6 COL 40 VALUE 
+               "DATE  NAME                TYPE".
+           05  FILLER OCCURS 10 TIMES ROW 8.
+               10  FILLER PIC X(27) ROW 8 COL 2 
+                   SOURCE SCN-UNSORTED-REC.
+           05  FILLER OCCURS 10 TIMES ROW 8.
+               10  FILLER PIC X(27) ROW 8 COL 40 
+                   SOURCE SCN-SORTED-REC.
+           05  FILLER PIC X(60) ROW 24 COL 10
+               VALUE "Verify the above are correct; ENTER to continue.".
+       01  FILLER.
+           05  FILLER OCCURS 10 TIMES.
+               10  SCN-UNSORTED-REC  PIC X(27).
+       01  FILLER.
+           05  FILLER OCCURS 10 TIMES.
+               10  SCN-SORTED-REC  PIC X(27).
+
+
+       01  MY-RETURN-CODE  PIC 9(3) VALUE ZERO.
+
+       01  RETURN-CODE-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(18) ROW 1 COL 60 VALUE
+               "RETURN-CODE-SCREEN".
+           03  FILLER  PIC X(30) ROW 10 COL 20 VALUE
+               "ENTER VALUE FOR RETURN-CODE".
+           03  FILLER  PIC 9(3)  ROW 10 COL 51
+               SOURCE MY-RETURN-CODE OBJECT MY-RETURN-CODE.
+           03  FILLER  PIC X(35) ROW 24 COL 10 VALUE
+               "PRESS RETURN TO CONTINUE".
+
+       01  MWCONV-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(28) VALUE
+               "TRY OUT MOVE WITH CONVERSION"
+               ROW 1 COL 26.
+           03  FILLER PIC X(13) VALUE "MWCONV-SCREEN" ROW 1 COL 60.
+           03  FILLER PIC X(60) ROW 4 COL 10
+               VALUE "Enter a character number to convert to numeric".
+           03  MWC-FIELD PIC X(18) ROW 10 COL 20
+               SOURCE MWC-TXT
+               OBJECT MWC-TXT.
+           03  MWC-NUMERIC PIC 9(12).9(5)- ROW 12 COL 20
+               SOURCE MWC-NUM.
+           03  FILLER  PIC X(40) ROW 24 COL 10 VALUE
+               "ENTER TO CONTINUE; PF16-EXIT".
+
+       01  COBLINK-SCREEN USAGE IS DISPLAY-WS.
+           05  FILLER PIC X(30) VALUE
+               "CALL COBLINK USING PROGNAME"
+               ROW 1 COL 25.
+           05  COBLINK-TITLE PIC X(60) VALUE SPACES ROW 4 COL 10.
+           05  FILLER PIC X(8) VALUE "PROGNAME" ROW 12 COL 20.
+           05  FILLER PIC X(8) SOURCE SAMPLE-PROG
+                               OBJECT SAMPLE-PROG
+               ROW 12 COL 30.
+           05  FILLER PIC X(40) VALUE "ENTER TO CONTINUE; PF16-EXIT"
+               ROW 24 COL 20.
+
+       01  COMPANY     PIC X(20).
+       01  YEARCODE    PIC 9(4).
+       01  ACCESSCODE  PIC X.
+
+       01  MWC-TXT PIC X(18) VALUE SPACES.
+       01  MWC-NUM PIC S9(12)V9(5).
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+       LOOP-DISPLAY.
+           DISPLAY AND READ MAIN-SCREEN ON CRT
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 8, 9, 16.
+
+           IF PF-KEY = "01" THEN
+              PERFORM DO-COBLINK
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM DO-MOVE-WITH-CONVERSION
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM FILE-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM SCREEN-TESTS
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "06" THEN
+              PERFORM COBOL-TESTS
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM PRINTING-TESTS
+           ELSE IF PF-KEY = "08" THEN
+              PERFORM WISPSUBS-TESTS
+           ELSE IF PF-KEY = "09" THEN
+              PERFORM SET-TRIGGER-PROGRAM
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO LOOP-DISPLAY.
+
+       SCREEN-TESTS.
+           CALL "QASCREEN".
+
+       FILE-TESTS.
+           CALL "QAFILEIO".
+
+       PRINTING-TESTS.
+           CALL "QAPRINT".
+
+       SUBROUTINE-TESTS.
+           CALL "QASUBS".
+
+       WISPSUBS-TESTS.
+           CALL "QAWSUBS".
+
+       COBOL-TESTS.
+
+           DISPLAY AND READ COBOL-SCREEN ON CRT
+           PFKEYS 1, 2, 3, 4, 5, 16.
+
+           IF PF-KEY = "01" THEN
+123456*78901234567890123456789012345678901234567890123456789012345678901
+              DISPLAY 
+           "123456789012345678901234567890123456789012345678901234567890
+      -    "12345678901234567890"
+           "(2)         *** THIS IS A TEST OF THE DISPLAY VERB ***       
+      -    "                    "
+           "(3)
+      -    "                    "
+           "(4)  Four lines item are sent to the screen. "
+              GO TO COBOL-TESTS
+           ELSE IF PF-KEY = "02" THEN
+              MOVE RETURN-CODE TO MY-RETURN-CODE
+              DISPLAY AND READ RETURN-CODE-SCREEN ON CRT
+              MOVE MY-RETURN-CODE TO RETURN-CODE
+              GO TO COBOL-TESTS
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM SORT-VERB-TEST THRU SORT-VERB-EXIT
+              GO TO COBOL-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM CONDITIONAL-TEST
+              GO TO COBOL-TESTS
+           ELSE IF PF-KEY = "05" THEN
+              ACCEPT COMPANY YEARCODE ACCESSCODE
+              DISPLAY "COMPANY=" COMPANY
+              DISPLAY "YEARCODE=" YEARCODE
+              DISPLAY "ACCESSCODE=" ACCESSCODE
+              GO TO COBOL-TESTS
+           ELSE IF PF-KEY NOT = "16" THEN
+              GO TO COBOL-TESTS.
+
+      ******************************************************************
+       SORT-VERB-TEST.
+
+       SORT-FILE-FILE.
+           OPEN OUTPUT UNSORTED-FILE.
+
+           MOVE "900101" TO SORT-DATE.
+           MOVE "FIRST678901234567890"  TO SORT-NAME.
+           MOVE "A"      TO SORT-TYPE.
+           WRITE UNSORTED-REC FROM SORT-REC.
+
+           MOVE "880501" TO SORT-DATE.
+           MOVE "SECOND"  TO SORT-NAME.
+           MOVE "B"      TO SORT-TYPE.
+           WRITE UNSORTED-REC FROM SORT-REC.
+
+           MOVE "900501" TO SORT-DATE.
+           MOVE "THIRD"  TO SORT-NAME.
+           MOVE "A"      TO SORT-TYPE.
+           WRITE UNSORTED-REC FROM SORT-REC.
+
+           MOVE "890701" TO SORT-DATE.
+           MOVE "FORTH"  TO SORT-NAME.
+           MOVE "B"      TO SORT-TYPE.
+           WRITE UNSORTED-REC FROM SORT-REC.
+
+           MOVE "870101" TO SORT-DATE.
+           MOVE "FIFTH"  TO SORT-NAME.
+           MOVE "A"      TO SORT-TYPE.
+           WRITE UNSORTED-REC FROM SORT-REC.
+
+           CLOSE UNSORTED-FILE.
+
+           SORT SORT-FILE ON ASCENDING KEY SORT-TYPE SORT-DATE
+                USING UNSORTED-FILE
+                GIVING SORTED-FILE.
+
+           OPEN INPUT UNSORTED-FILE, SORTED-FILE.
+           MOVE 1 TO SORT-INX.
+       SORT-FILES-READ.
+           READ SORTED-FILE NEXT AT END GO TO SORT-FILES-CLOSE.
+           READ UNSORTED-FILE NEXT.
+           MOVE SORTED-REC TO SCN-SORTED-REC (SORT-INX).
+           MOVE UNSORTED-REC TO SCN-UNSORTED-REC (SORT-INX).
+           ADD 1 TO SORT-INX.
+           GO TO SORT-FILES-READ.
+       SORT-FILES-CLOSE.
+           CLOSE      UNSORTED-FILE, SORTED-FILE.
+
+           DISPLAY AND READ SORT-SCREEN ON CRT.
+
+       SORT-VERB-EXIT.
+           EXIT.
+
+      ******************************************************************
+
+       DO-COBLINK.
+           DISPLAY AND READ COBLINK-SCREEN ON CRT PFKEYS 16.
+           IF PF-KEY NOT = "16"
+               CALL "COBLINK" USING SAMPLE-PROG
+               GO TO DO-COBLINK.
+
+      ******************************************************************
+
+       DO-MOVE-WITH-CONVERSION.
+           DISPLAY AND READ MWCONV-SCREEN ON CRT
+           PFKEYS 16.
+
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+
+           IF PF-KEY NOT = "16"
+              GO TO DO-MOVE-WITH-CONVERSION.              
+
+      ******************************************************************
+
+       TRY-DISPLAY-UTILITY.
+           CALL "LINK" USING DISPLAY-PROG.
+
+      ******************************************************************
+       CONDITIONAL-TEST.
+
+      *$WANG_CODE
+           MOVE "    WANG_CODE" TO COND-LINE-1. 
+      *$WANG_ELSE
+      *    MOVE "NOT WANG_CODE" TO COND-LINE-1. 
+      *$WANG_END
+
+      *$VAX_CODE
+      *    MOVE "    VAX_CODE" TO COND-LINE-2. 
+      *$VAX_ELSE
+           MOVE "NOT VAX_CODE" TO COND-LINE-2. 
+      *$VAX_END
+
+      *$ACU_CODE
+      *    MOVE "    ACU_CODE" TO COND-LINE-3. 
+      *$ACU_ELSE
+           MOVE "NOT ACU_CODE" TO COND-LINE-3. 
+      *$ACU_END
+
+      *$AIX_CODE
+      *    MOVE "    AIX_CODE" TO COND-LINE-4. 
+      *$AIX_ELSE
+           MOVE "NOT AIX_CODE" TO COND-LINE-4. 
+      *$AIX_END
+
+      *$LPI_CODE
+      *    MOVE "    LPI_CODE" TO COND-LINE-5. 
+      *$LPI_ELSE
+           MOVE "NOT LPI_CODE" TO COND-LINE-5. 
+      *$LPI_END
+
+      *$MF_CODE
+      *    MOVE "    MF_CODE" TO COND-LINE-6. 
+      *$MF_ELSE
+           MOVE "NOT MF_CODE" TO COND-LINE-6. 
+      *$MF_END
+
+      *$UNIX_CODE
+      *    MOVE "    UNIX_CODE" TO COND-LINE-7. 
+      *$UNIX_ELSE
+           MOVE "NOT UNIX_CODE" TO COND-LINE-7. 
+      *$UNIX_END
+
+      *$DMF_CODE
+      *    MOVE "    DMF_CODE" TO COND-LINE-8. 
+      *$DMF_ELSE
+           MOVE "NOT DMF_CODE" TO COND-LINE-8. 
+      *$DMF_END
+
+      *$DOS_CODE
+      *    MOVE "    DOS_CODE" TO COND-LINE-9. 
+      *$DOS_ELSE
+           MOVE "NOT DOS_CODE" TO COND-LINE-9. 
+      *$DOS_END
+
+      *$COPY_CODE
+      *    MOVE "    COPY_CODE" TO COND-LINE-10. 
+      *$COPY_END
+
+           DISPLAY AND READ CONDITIONAL-SCREEN ON CRT.
+
+      ******************************************************************
+       CONDITIONAL-TEST2.
+
+      *$WANG-CODE
+           THIS IS BAD STUFF
+      *$WANG-END
+
+      *$WANG-CODE
+           THIS IS BAD STUFF
+      *$WANG-ELSE
+      *    MOVE "WANG_ELSE" TO CODE-ELSE-TEST.
+      *$WANG-END
+
+      *$WANG-CODE
+           THIS IS BAD STUFF
+      *$WANG-ELSE PROCESS
+      *    MOVE "WANG_ELSE PROCESS" TO CODE-ELSE-TEST.
+      *    DISPLAY AND READ COBOL-SCREEN ON CRT.
+      *$WANG-END
+
+      *$VAX-CODE
+      *    MOVE "VAX SIMPLE" TO CODE-ELSE-TEST.
+      *$VAX-END
+
+      *$VAX-CODE PROCESS
+      *    MOVE "VAX PROCESS" TO CODE-ELSE-TEST.
+      *    DISPLAY AND READ COBOL-SCREEN ON CRT.
+      *$VAX-END
+
+      *$VAX-CODE
+      *    MOVE "VAX" TO CODE-ELSE-TEST.
+      *$VAX-ELSE
+           MOVE "VAX_ELSE" TO CODE-ELSE-TEST.
+      *$VAX-END
+
+      *$LPI-CODE
+      *    MOVE "LPI SIMPLE" TO CODE-ELSE-TEST.
+      *$LPI-END
+
+      *$LPI-CODE PROCESS
+      *    MOVE "LPI PROCESS" TO CODE-ELSE-TEST.
+      *    DISPLAY AND READ COBOL-SCREEN ON CRT.
+      *$LPI-END
+
+      *$LPI-CODE
+      *    MOVE "LPI" TO CODE-ELSE-TEST.
+      *$LPI-ELSE
+           MOVE "LPI_ELSE" TO CODE-ELSE-TEST.
+      *$LPI-END
+
+      *$ACU-CODE
+      *    MOVE "ACU SIMPLE" TO CODE-ELSE-TEST.
+      *$ACU-END
+
+      *$ACU-CODE PROCESS
+      *    MOVE "ACU PROCESS" TO CODE-ELSE-TEST.
+      *    DISPLAY AND READ COBOL-SCREEN ON CRT.
+      *$ACU-END
+
+      *$ACU-CODE
+      *    MOVE "ACU" TO CODE-ELSE-TEST.
+      *$ACU-ELSE
+           MOVE "ACU_ELSE" TO CODE-ELSE-TEST.
+      *$ACU-END
+
+      *$MF-CODE
+      *    MOVE "MF SIMPLE" TO CODE-ELSE-TEST.
+      *$MF-END
+
+      *$MF-CODE PROCESS
+      *    MOVE "MF PROCESS" TO CODE-ELSE-TEST.
+      *    DISPLAY AND READ COBOL-SCREEN ON CRT.
+      *$MF-END
+
+      *$MF-CODE
+      *    MOVE "MF" TO CODE-ELSE-TEST.
+      *$MF-ELSE
+           MOVE "MF_ELSE" TO CODE-ELSE-TEST.
+      *$MF-END
+
+      ******************************************************************
+       SET-TRIGGER-PROGRAM.
+
+           MOVE "SET TRIGGER PROGRAM FILE NAME" TO FLV-TITLE.
+           MOVE FILE-TRIGGER-PROG               TO FLV-FILE.
+           MOVE LIB-TRIGGER-PROG                TO FLV-LIB.
+           MOVE VOL-TRIGGER-PROG                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEYS 16.
+
+           MOVE FLV-FILE  TO FILE-TRIGGER-PROG.
+           MOVE FLV-LIB   TO LIB-TRIGGER-PROG.
+           MOVE FLV-VOL   TO VOL-TRIGGER-PROG.
+
+           CALL "settrigprog" USING VOL-TRIGGER-PROG,
+                                    LIB-TRIGGER-PROG,
+                                    FILE-TRIGGER-PROG.
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           IF PF-KEY NOT = "16" THEN
+               STOP RUN
+           ELSE
+               STOP RUN.
+

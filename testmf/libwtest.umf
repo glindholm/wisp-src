@@ -1,0 +1,26 @@
+# build the VIDEO library
+#
+# Uncomment for ULTRIX
+CFLAGS = -O
+#
+# Uncomment for RS6000 & u3b2
+#CFLAGS = -O
+
+LIB = 	libwtest.a
+.PRECIOUS:	$(LIB)
+
+/usr/lib/$(LIB): $(LIB)
+	ar ts $(LIB)
+	cp $(LIB) /usr/lib
+
+$(LIB): $(LIB)(qamisc.o) \
+	$(LIB)(qascroll.o) \
+	$(LIB)(qatstlst.o) \
+	$(LIB)(qagp255.o)
+
+
+$(LIB)(qamisc.o):	 qamisc.c
+$(LIB)(qascroll.o):	 qascroll.c /usr/include/v/video.h
+$(LIB)(qatstlst.o):	 qatstlst.c /usr/include/v/video.h /usr/include/v/vlocal.h
+$(LIB)(qatstlst.o):	 /usr/include/v/vdata.h /usr/include/ctype.h
+$(LIB)(qagp255.o):	qagp255.c

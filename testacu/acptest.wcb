@@ -1,0 +1,370 @@
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           ACPTEST.
+       AUTHOR.
+           Jock Cooper.
+       DATE-WRITTEN.
+           01/21/92.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           LOWER-FAC IS "80"
+           BRITE IS "84"
+           NO-ECHO IS "98"
+           PFK-NOT-SET IS "00"
+           PFK-SET IS "01".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+           03  CURS-ROW                   PIC X(01).
+
+      ******************************************************************
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+       01  ACP-CONFIG-THING.
+           03  CFG-NAME  PIC X(16).     
+           03  CFG-DEV   PIC X(64).     
+           03  CFG-WEOR  PIC X(6).      
+           03  CFG-REOR1         PIC X(6).      
+           03  CFG-REOR2         PIC X(6).      
+           03  CFG-REOR3         PIC X(6).      
+           03  CFG-BAUD PIC X(5).       
+           03  CFG-PARITY       PIC X.          
+           03  CFG-SIZE PIC X.          
+           03  CFG-STOP PIC X.          
+           03  CFG-DUPLEX       PIC X.          
+           03  CFG-FILLER       PIC X.               
+
+       01  ACP-PORT PIC X(16) VALUE SPACES.
+       01  ACP-DEVICE PIC X(64) VALUE SPACES.
+       01  ACP-WEOR PIC X(6) VALUE SPACES.
+       01  ACP-REOR1 PIC X(6) VALUE SPACES.
+       01  ACP-REOR2 PIC X(6) VALUE SPACES.
+       01  ACP-REOR3 PIC X(6) VALUE SPACES.
+       01  ACP-BAUD PIC 9(5) VALUE ZERO.
+       01  ACP-PARITY PIC X(1) VALUE SPACES.
+       01  ACP-DATA-BITS PIC 9(1) VALUE ZERO.
+       01  ACP-STOP-BITS PIC 9(1) VALUE ZERO.
+       01  ACP-WRITE-DATA PIC X(64) VALUE SPACES.
+       01  ACP-READ-DATA PIC X(64) VALUE SPACES.
+       01  ACP-RETCODE.
+           03  ACP-RETCODE-1 BINARY VALUE ZERO.
+           03  ACP-RETCODE-2 BINARY VALUE ZERO.
+       01  ACP-RETCODE-X  PIC 9(5) VALUE ZERO.
+       01  REL-LINE.
+           03  REL-LINE-1 BINARY VALUE ZERO.
+           03  REL-LINE-2 BINARY VALUE ZERO.
+
+       01  BIG-BUFFER PIC X(4096).
+       01  LENGTH-X PIC 9(5) VALUE ZERO.
+       01  LENGTH.
+           03  LENGTH-1 BINARY VALUE ZERO.
+           03  LENGTH-2 BINARY VALUE ZERO.
+
+       01  ACP-WAIT.
+           03  ACP-WAIT-1 BINARY VALUE ZERO.
+           03  ACP-WAIT-2 BINARY VALUE ZERO.
+
+       01  ACP-TEST-SCREEN USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(32) ROW 1 COL 24
+               VALUE "*** TESTING THE ACP ROUTINES ***".
+
+           03  FILLER PIC X(10) ROW 3 COL 2
+               VALUE "PORT NAME ".
+
+           03  FILLER PIC X(16) ROW 3 COL 12
+               SOURCE ACP-PORT OBJECT ACP-PORT.
+
+           03  FILLER PIC X(7) ROW 4 COL 5
+               VALUE "DEVICE ".
+
+           03  ACP-DEVICE-FIELD PIC X(64) ROW 4 COL 12
+               SOURCE ACP-DEVICE OBJECT ACP-DEVICE.
+
+           03  FILLER PIC X(5) ROW 5 COL 7
+               VALUE "WEOR ".
+
+           03  FILLER PIC X(6) ROW 5 COL 12
+               SOURCE ACP-WEOR OBJECT ACP-WEOR.
+
+           03  FILLER PIC X(5) ROW 6 COL 7
+               VALUE "REOR ".
+
+           03  FILLER PIC X(6) ROW 6 COL 12
+               SOURCE ACP-REOR1 OBJECT ACP-REOR1.
+
+           03  FILLER PIC X(6) ROW 6 COL 19
+               SOURCE ACP-REOR2 OBJECT ACP-REOR2.
+
+           03  FILLER PIC X(6) ROW 6 COL 26
+               SOURCE ACP-REOR3 OBJECT ACP-REOR3.
+
+           03  FILLER PIC X(5) ROW 7 COL 7
+               VALUE "BAUD ".
+
+           03  FILLER PIC 9(5) ROW 7 COL 12
+               SOURCE ACP-BAUD OBJECT ACP-BAUD.
+
+           03  FILLER PIC X(7) ROW 8 COL 5
+               VALUE "PARITY ".
+
+           03  FILLER PIC X(1) ROW 8 COL 12
+               SOURCE ACP-PARITY OBJECT ACP-PARITY.
+
+           03  FILLER PIC X(10) ROW 9 COL 2
+               VALUE "DATA BITS ".
+
+           03  FILLER PIC 9(1) ROW 9 COL 12
+               SOURCE ACP-DATA-BITS OBJECT ACP-DATA-BITS.
+
+           03  FILLER PIC X(10) ROW 10 COL 2
+               VALUE "STOP BITS ".
+
+           03  FILLER PIC 9(1) ROW 10 COL 12
+               SOURCE ACP-STOP-BITS OBJECT ACP-STOP-BITS.
+
+           03  FILLER PIC X(6) ROW 12 COL 6
+               VALUE "WRITE ".
+
+           03  FILLER PIC X(64) ROW 12 COL 12
+               SOURCE ACP-WRITE-DATA OBJECT ACP-WRITE-DATA.
+
+           03  FILLER PIC X(5) ROW 13 COL 7
+               VALUE "READ ".
+
+           03  FILLER PIC X(64) ROW 13 COL 12
+               SOURCE ACP-READ-DATA OBJECT ACP-READ-DATA.
+
+           03  FILLER PIC X(8) ROW 15 COL 4
+               VALUE "RETCODE ".
+
+           03  FILLER PIC 9(5) ROW 15 COL 12
+               SOURCE ACP-RETCODE-X.
+
+           03  FILLER PIC X(9) ROW 15 COL 21
+               VALUE "WRITELEN ".
+
+           03  FILLER PIC 9(5) ROW 15 COL 30
+               SOURCE LENGTH-X OBJECT LENGTH-X.
+
+           03  FILLER PIC X(12) ROW 18 COL 2
+               VALUE "(PF1) GETACP".
+
+           03  FILLER PIC X(14) ROW 18 COL 22
+               VALUE "(PF4) CLOSEACP".
+
+           03  FILLER PIC X(12) ROW 19 COL 2
+               VALUE "(PF2) SETACP".
+
+           03  FILLER PIC X(13) ROW 19 COL 22
+               VALUE "(PF5) READACP".
+
+           03  FILLER PIC X(26) ROW 19 COL 43
+               VALUE "(PF7) READACP WITH TIMEOUT".
+
+           03  FILLER PIC X(13) ROW 20 COL 2
+               VALUE "(PF3) OPENACP".
+
+           03  FILLER PIC X(14) ROW 20 COL 22
+               VALUE "(PF6) WRITEACP".
+
+           03  FILLER PIC X(11) ROW 22 COL 2
+               VALUE "(PF16) EXIT".
+
+           03  FILLER PIC X(20) ROW 24 COL 29
+               VALUE "PRESS A FUNCTION KEY".
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+       LOOP-DISPLAY.
+           MOVE LOWER-FAC TO FAC OF ACP-DEVICE-FIELD.
+           DISPLAY AND READ ACP-TEST-SCREEN ON CRT
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 16.
+
+           MOVE LENGTH-X TO LENGTH-2.
+
+           IF PF-KEY = "01" THEN
+              PERFORM DO-GETACP
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM DO-SETACP
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM DO-OPENACP
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM DO-CLOSEACP
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM DO-READ
+           ELSE IF PF-KEY = "06" THEN
+              PERFORM DO-WRITE
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM DO-READ-TO
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO LOOP-DISPLAY.
+
+       DO-GETACP.
+           MOVE ACP-PORT TO CFG-NAME.
+           CALL "GETACP" USING ACP-CONFIG-THING, ACP-RETCODE.
+           MOVE CFG-DEV    TO ACP-DEVICE.
+           MOVE CFG-WEOR   TO ACP-WEOR.
+           MOVE CFG-REOR1  TO ACP-REOR1.
+           MOVE CFG-REOR2  TO ACP-REOR2.
+           MOVE CFG-REOR3  TO ACP-REOR3.
+           MOVE CFG-BAUD   TO ACP-BAUD.
+           MOVE CFG-PARITY TO ACP-PARITY.
+           MOVE CFG-SIZE   TO ACP-DATA-BITS.
+           MOVE CFG-STOP   TO ACP-STOP-BITS.
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+       DO-SETACP.
+           MOVE ACP-PORT TO CFG-NAME.
+           MOVE ACP-DEVICE    TO CFG-DEV.
+           MOVE ACP-WEOR      TO CFG-WEOR.
+           MOVE ACP-REOR1     TO CFG-REOR1.
+           MOVE ACP-REOR2     TO CFG-REOR2.
+           MOVE ACP-REOR3     TO CFG-REOR3. 
+           MOVE ACP-BAUD      TO CFG-BAUD. 
+           MOVE ACP-PARITY    TO CFG-PARITY.
+           MOVE ACP-DATA-BITS TO CFG-SIZE.
+           MOVE ACP-STOP-BITS TO CFG-STOP.  
+           CALL "SETACP" USING ACP-CONFIG-THING, ACP-RETCODE.
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+       DO-OPENACP.
+           CALL "OPENACP" USING ACP-PORT REL-LINE ACP-RETCODE.
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+       DO-CLOSEACP.
+           CALL "CLOSEACP" USING REL-LINE ACP-RETCODE.
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+       DO-READ.
+           MOVE 64 TO LENGTH-2.
+           CALL "READACP" USING REL-LINE LENGTH ACP-READ-DATA 
+              ACP-RETCODE.
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+       DO-READ-TO.
+           MOVE 64 TO LENGTH-2.
+           MOVE 255 TO ACP-WAIT-2.
+           CALL "READACP" USING REL-LINE LENGTH ACP-READ-DATA 
+              ACP-WAIT ACP-RETCODE.
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+       DO-WRITE.
+           IF LENGTH-2 = ZERO THEN 
+              MOVE 64 TO LENGTH-2
+              CALL "WRITEACP" USING REL-LINE LENGTH ACP-WRITE-DATA 
+                 ACP-RETCODE
+           ELSE
+              MOVE ACP-WRITE-DATA TO BIG-BUFFER
+              CALL "WRITEACP" USING REL-LINE LENGTH BIG-BUFFER 
+                 ACP-RETCODE.
+          
+           MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           IF PF-KEY NOT = "16" THEN
+               STOP RUN
+           ELSE
+               STOP RUN.
+

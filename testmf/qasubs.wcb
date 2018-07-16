@@ -1,0 +1,3724 @@
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QASUBS.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           12/08/89.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           LOWER-FAC IS "80"
+           BRITE IS "84"
+           NO-ECHO IS "98"
+           PFK-NOT-SET IS "00"
+           PFK-SET IS "01".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  INDEX-COUNTER                  PIC 9(5).
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+      ******************************************************************
+
+       01  FIL-GEN-FILE                   PIC X(8) VALUE "BFILE".
+       01  LIB-GEN-FILE                   PIC X(8) VALUE SPACES.
+       01  VOL-GEN-FILE                   PIC X(6) VALUE SPACES.
+
+      ******************************************************************
+
+       01  DISPLAY-PROG                   PIC X(8) VALUE "DISPLAY ".
+
+      ******************************************************************
+
+
+       01  RCOUNT PIC 9(10).
+       01  RNUM   PIC 9(10).
+
+      ******************************************************************
+
+       01  MY-EXT                     PIC X(39) VALUE SPACES.
+
+       01  FIND-FILE                  PIC X(8) VALUE SPACES.
+       01  FIND-LIB                   PIC X(8) VALUE SPACES.
+       01  FIND-VOL                   PIC X(6) VALUE SPACES.
+
+       01  FIND-STARTER.
+           03 FIND-STARTER-1 BINARY    VALUE ZERO.
+           03 FIND-STARTER-2 BINARY    VALUE ZERO.
+       01  FIND-STARTER-X    PIC S9999 VALUE ZERO.
+
+       01  FIND-COUNTER.
+           03 FIND-COUNTER-1 BINARY    VALUE ZERO.
+           03 FIND-COUNTER-2 BINARY    VALUE ZERO.
+       01  FIND-COUNTER-X    PIC S9999 VALUE ZERO.
+
+       01  FIND-FILE-COUNT.
+           03 FIND-FILE-COUNT-1 BINARY    VALUE ZERO.
+           03 FIND-FILE-COUNT-2 BINARY    VALUE ZERO.
+       01  FIND-FILE-COUNT-X    PIC S9999 VALUE ZERO.
+
+       01  FIND-RECEIVER.
+           03  FILLER OCCURS 10 TIMES.
+               05  FIND-ELEMENT   PIC X(22).
+
+       01  FIND-RECV-TYPE PIC X VALUE "A".
+
+       01  FIND-TITLE PIC X(40) VALUE SPACES.
+
+       01  FIND-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE FIND USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE FIND-TITLE.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE FIND-FILE OBJECT FIND-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE FIND-LIB OBJECT FIND-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE FIND-VOL OBJECT FIND-VOL.
+
+           03  FILLER PIC X(10) ROW 7 COL 15 VALUE "WISPFILEXT".
+           03  FIND-EXT PIC X(39) ROW 7 COL 26 
+               SOURCE MY-EXT OBJECT MY-EXT.
+
+           03  FILLER PIC X(07) ROW 8 COL 10 VALUE "STARTER".
+           03  FILLER PIC Z9    ROW 8 COL 20 
+               SOURCE FIND-STARTER-X OBJECT FIND-STARTER-X.
+
+           03  FILLER PIC X(07) ROW 8 COL 30 VALUE "COUNTER".
+           03  FILLER PIC Z9    ROW 8 COL 40 
+               SOURCE FIND-COUNTER-X OBJECT FIND-COUNTER-X.
+           03  FILLER PIC X(08) ROW 8 COL 43 VALUE "(MAX 10)".
+
+           03  FILLER PIC X(10) ROW 8 COL 55 VALUE "FILE COUNT".
+           03  FILLER PIC ZZZ9    ROW 8 COL 66 
+               SOURCE FIND-FILE-COUNT-X.
+
+           03  FILLER OCCURS 10 TIMES ROW 10.
+               05  FILLER  PIC X(22) ROW 10 COL 20
+                   SOURCE FIND-ELEMENT.
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 TO EXIT".
+
+      ******************************************************************
+
+       01  READVTOC-OPTION            PIC X(1) VALUE SPACE.
+
+      *01  FIND-LIB                   PIC X(8) VALUE SPACES.
+      *01  FIND-VOL                   PIC X(6) VALUE SPACES.
+
+      *01  FIND-STARTER.
+      *    03 FIND-STARTER-1 BINARY    VALUE ZERO.
+      *    03 FIND-STARTER-2 BINARY    VALUE ZERO.
+      *01  FIND-STARTER-X    PIC S9999 VALUE ZERO.
+
+      *01  FIND-COUNTER.
+      *    03 FIND-COUNTER-1 BINARY    VALUE ZERO.
+      *    03 FIND-COUNTER-2 BINARY    VALUE ZERO.
+      *01  FIND-COUNTER-X    PIC S9999 VALUE ZERO.
+
+      *01  FIND-FILE-COUNT.
+      *    03 FIND-FILE-COUNT-1 BINARY    VALUE ZERO.
+      *    03 FIND-FILE-COUNT-2 BINARY    VALUE ZERO.
+      *01  FIND-FILE-COUNT-X    PIC S9999 VALUE ZERO.
+
+       01  READVTOC-RECEIVER.
+           03  FILLER OCCURS 10 TIMES.
+               05  READVTOC-ELEMENT   PIC X(8).
+
+       01  READVTOC-RC-X       PIC S9999 VALUE ZERO.
+       01  READVTOC-RC.
+           03  READVTOC-RC-1   BINARY   VALUE ZERO.
+           03  READVTOC-RC-2   BINARY   VALUE ZERO.
+
+      *01  FIND-TITLE PIC X(40) VALUE SPACES.
+
+       01  READVTOC-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "    *** TESTING THE READVTOC USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE FIND-TITLE.
+
+           03  FILLER PIC X(6) ROW 6 COL 13 VALUE "OPTION".
+           03  FILLER PIC X(1) ROW 6 COL 20 
+               SOURCE READVTOC-OPTION OBJECT READVTOC-OPTION.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE FIND-LIB OBJECT FIND-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE FIND-VOL OBJECT FIND-VOL.
+
+           03  FILLER PIC X(07) ROW 8 COL 10 VALUE "STARTER".
+           03  FILLER PIC Z9    ROW 8 COL 20 
+               SOURCE FIND-STARTER-X OBJECT FIND-STARTER-X.
+
+           03  FILLER PIC X(07) ROW 8 COL 30 VALUE "COUNTER".
+           03  FILLER PIC Z9    ROW 8 COL 40 
+               SOURCE FIND-COUNTER-X OBJECT FIND-COUNTER-X.
+           03  FILLER PIC X(08) ROW 8 COL 43 VALUE "(MAX 10)".
+
+           03  FILLER PIC X(10) ROW 8 COL 55 VALUE "FILE COUNT".
+           03  FILLER PIC ZZZ9    ROW 8 COL 66 
+               SOURCE FIND-FILE-COUNT-X.
+
+           03  FILLER OCCURS 10 TIMES ROW 10.
+               05  FILLER  PIC X(8) ROW 10 COL 20
+                   SOURCE READVTOC-ELEMENT.
+
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "RETURN CODE".
+           03  FILLER PIC ----9 ROW 22 COL 47 
+               SOURCE READVTOC-RC-X.
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 TO EXIT".
+
+      ******************************************************************
+
+       01  RETCOD.
+           05  B4          BINARY VALUE 0.
+           05  RET-CODE BINARY VALUE 0.
+
+      ******************************************************************
+
+       01  FLV-TITLE                      PIC X(40) VALUE SPACES.
+       01  FLV-FILE                       PIC X(8) VALUE SPACES.
+       01  FLV-LIB                        PIC X(8) VALUE SPACES.
+       01  FLV-VOL                        PIC X(6) VALUE SPACES.
+
+      ******************************************************************
+
+
+       01  LINKNAME PIC X(8) VALUE SPACES.
+       01  LINKARG1 PIC X(10) VALUE SPACES.
+       01  LINKARG2 PIC X(10) VALUE SPACES.
+       01  LINKARG3 PIC X(10) VALUE SPACES.
+
+      ******************************************************************
+      * DATA FOR GETPARM CALL TO TEST PARAMETERS
+
+       01  GP-TYPE               PIC X(2)  VALUE "I ".
+       01  GP-FORM               PIC X(1)  VALUE "R".
+       01  GP-PRNAME             PIC X(8)  VALUE "GETPARMX".
+       01  GP-PFKEY              PIC X(1)  VALUE " ".
+       01  GP-MESSAGE-ID         PIC X(4)  VALUE "0001".
+       01  GP-MESSAGE-ISSUER     PIC X(6)  VALUE "SAMPLE".
+       01  GP-MESSAGE-COUNT.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 2.
+       01  GP-MESSAGE-TEXT-1     PIC X(28)
+           VALUE "The first message text line.".
+       01  GP-MESSAGE-TEXT-2     PIC X(16)
+           VALUE "The second line.".
+       01  GP-MESSAGE-LEN-1.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 28.
+       01  GP-MESSAGE-LEN-2.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 16.
+
+       01  GP-T                  PIC X(1)  VALUE "T".
+       01  GP-A                  PIC X(1)  VALUE "A".
+       01  GP-TEXT               PIC X(32)
+           VALUE "Please only correct information!".
+       01  GP-LENGTH.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 32.
+       01  GP-N05.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 5.
+       01  GP-N40.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 40.
+       01  GP-N09.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 9.
+       01  GP-N10.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 10.
+       01  GP-N11.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 11.
+       01  GP-N12.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 12.
+       01  GP-N13.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 13.
+       01  GP-N14.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 14.
+       01  GP-N15.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 15.
+       01  GP-N16.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 16.
+       01  GP-N17.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 17.
+       01  GP-N18.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 18.
+       01  GP-N19.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 19.
+       01  GP-N20.
+           03  FILLER            BINARY    VALUE 0.
+           03  FILLER            BINARY    VALUE 20.
+
+      ******************************************************************
+      * DATA FOR PUTPARM CALL AND THEN LINK TO DISPLAY
+
+       01  PP-DISPLAY   PIC X(8) VALUE "DISPLAY ".
+       01  PP-FUNCTION PIC X VALUE "E".
+       01  PP-PRNAME PIC X(8) VALUE "INPUT   ".
+       01  PP-KWCOUNT.
+           03  PP-KW1 BINARY VALUE 0.
+           03  PP-KW2 BINARY VALUE 3.
+
+       01  PP-FILE-KW PIC X(8) VALUE "FILE    ".
+       01  PP-LIB-KW PIC X(8) VALUE "LIBRARY ".
+       01  PP-VOL-KW PIC X(8) VALUE "VOLUME  ".
+
+       01  PP-LEN-6.
+           03 PP-L6-KW1 BINARY VALUE 0.
+           03 PP-L6-KW2 BINARY VALUE 6.
+
+       01  PP-LEN-8.
+           03 PP-L8-KW1 BINARY VALUE 0.
+           03 PP-L8-KW2 BINARY VALUE 8.
+
+       01  PP-RCODE.
+           03  PP-RCODE-1 BINARY VALUE 0.
+           03  PP-RCODE-2 BINARY VALUE 0.
+
+       01  PP-FILE PIC X(8) VALUE SPACES.
+       01  PP-LIB  PIC X(8) VALUE SPACES.
+       01  PP-VOL  PIC X(6) VALUE SPACES.
+
+       01  PP-LINK-TYPE PIC X(1) VALUE "S".
+
+       01  PP-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "      *** PUTPARM & LINK TO DISPLAY ***".
+
+           03  FILLER PIC X(14) ROW 4 COL 20 VALUE "FUNCTION (D,E)".
+           03  FILLER PIC X(1)  ROW 4 COL 36
+               SOURCE PP-FUNCTION OBJECT PP-FUNCTION.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE PP-FILE OBJECT PP-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE PP-LIB OBJECT PP-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE PP-VOL OBJECT PP-VOL.
+
+           03  FILLER PIC X(24) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE".
+
+      ******************************************************************
+      * DATA FOR PF18 PUTPARM CALL
+
+       01  PUTP-FUNCTION      PIC X          VALUE "E".
+       01  PUTP-USAGECNT.
+           03  PUTP-UC1       BINARY         VALUE 0.
+           03  PUTP-UC2       BINARY         VALUE 1.
+       01  PUTP-USAGE-CNT     PIC 9999       VALUE 1.
+       01  PUTP-PRNAME        PIC X(8)       VALUE "INPUT   ".
+       01  PUTP-KWCOUNT.
+           03  PUTP-KW1       BINARY         VALUE 0.
+           03  PUTP-KW2       BINARY         VALUE 3.
+      *  KEYWORD INFORMATION:
+       01  PUTP-FILE-KW       PIC X(8)       VALUE "FILE    ".
+       01  PUTP-FILE          PIC X(8)       VALUE SPACES.
+       01  PUTP-LIB-KW        PIC X(8)       VALUE "LIBRARY ".
+       01  PUTP-LIB           PIC X(8)       VALUE SPACES.
+       01  PUTP-VOL-KW        PIC X(8)       VALUE "VOLUME  ".
+       01  PUTP-VOL           PIC X(6)       VALUE SPACES.
+       01  PUTP-LEN-6.
+           03 PUTP-L6-KW1     BINARY         VALUE 0.
+           03 PUTP-L6-KW2     BINARY         VALUE 6.
+       01  PUTP-LEN-8.
+           03 PUTP-L8-KW1     BINARY         VALUE 0.
+           03 PUTP-L8-KW2     BINARY         VALUE 8.
+
+       01  PUTP-PFKEY-VALUE   PIC X          VALUE "@".
+       01  PUTP-LABEL         PIC X(8)       VALUE SPACES.
+       01  PUTP-REFLABEL      PIC X(8)       VALUE SPACES.
+       01  PUTP-CLEANUP       PIC X          VALUE SPACES.
+       01  PUTP-RCODE.
+           03  PUTP-RCODE-1   BINARY         VALUE 0.
+           03  PUTP-RCODE-2   BINARY         VALUE 0.
+
+       01  PUTP-RECEIVER.
+           03 PP-R1-KW        PIC X(8)      VALUE SPACES.
+           03 PP-R1-KWFL.
+              05 PPR1-L1      BINARY        VALUE 0.
+              05 PPR1-L2      BINARY        VALUE 8.
+           03 PP-R1-KWVAL     PIC X(8)      VALUE SPACES.
+           03 PP-R2-KW        PIC X(8)      VALUE SPACES.
+           03 PP-R2-KWFL.
+              05 PPR2-L1      BINARY        VALUE 0.
+              05 PPR2-L2      BINARY        VALUE 8.
+           03 PP-R2-KWVAL     PIC X(8)      VALUE SPACES.
+           03 PP-R3-KW        PIC X(8)      VALUE SPACES.
+           03 PP-R3-KWFL.
+              05 PPR3-L1      BINARY        VALUE 0.
+              05 PPR3-L2      BINARY        VALUE 6.
+           03 PP-R3-KWVAL     PIC X(6)      VALUE SPACES.
+       01  PUTP-RECVR-LEN.
+           03 PUTP-RL1        BINARY         VALUE 0.
+           03 PUTP-RL2        BINARY         VALUE 58.
+       01  PUTP-TOTAL-LEN.
+           03 PUTP-TL1        BINARY         VALUE 0.
+           03 PUTP-TL2        BINARY         VALUE 58.
+       01  PUTP-RECVR-FILE          PIC X(8) VALUE SPACES.
+       01  PUTP-RECVR-LENF.
+           03 PUTP-RECVR-LEN-FILE1  BINARY   VALUE 0.
+           03 PUTP-RECVR-LEN-FILE2  BINARY   VALUE 8.
+       01  PUTP-RECVR-LIB           PIC X(8) VALUE SPACES.
+       01  PUTP-RECVR-LENL.
+           03 PUTP-RECVR-LEN-LIB1   BINARY   VALUE 0.
+           03 PUTP-RECVR-LEN-LIB2   BINARY   VALUE 8.
+       01  PUTP-RECVR-VOL           PIC X(6) VALUE SPACES.
+       01  PUTP-RECVR-LENV.
+           03 PUTP-RECVR-LEN-VOL1   BINARY   VALUE 0.
+           03 PUTP-RECVR-LEN-VOL2   BINARY   VALUE 6.
+
+       01  PUTP-STATUS-TEXT        PIC X(40) VALUE SPACES.
+
+      ******************************************************************
+      * DATA FOR PF19 GETPARM CALL
+
+       01  GETP-TYPE               PIC X(2)  VALUE SPACES.
+       01  GETP-FORM               PIC X     VALUE "A".
+       01  GETP-PRNAME             PIC X(8)  VALUE SPACES.
+       01  GETP-PFKEY              PIC X(1)  VALUE " ".
+       01  GETP-MESSAGE-ID         PIC X(4)  VALUE SPACES.
+       01  GETP-MESSAGE-ISSUER     PIC X(6)  VALUE "SAMPLE".
+       01  GETP-MESSAGE-COUNT.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 2.
+       01  GETP-MESSAGE-TEXT-1     PIC X(28)
+           VALUE "MESSAGE TEXT 1".
+       01  GETP-MESSAGE-LEN-1.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 28.
+       01  GETP-MESSAGE-TEXT-2     PIC X(16) 
+           VALUE "MESSAGE TEXT 2".
+       01  GETP-MESSAGE-LEN-2.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 16.
+
+       01  GETP-TXT1-TYPE          PIC X     VALUE "U".
+       01  GETP-TXT1-VAL           PIC X(45)
+           VALUE "This is a test for underline text on GETPARM.".
+       01  GETP-TXT1-LEN.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 45.
+       01  GETP-TXT1-FLROW         PIC X     VALUE "A".
+       01  GETP-TXT1-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 9.
+       01  GETP-TXT1-FLCOL         PIC X     VALUE "A".
+       01  GETP-TXT1-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 2.
+
+       01  GETP-TXT2-TYPE          PIC X     VALUE "T".
+       01  GETP-TXT2-VAL           PIC X(46)
+           VALUE "This is a test for plain text of a text field.".
+       01  GETP-TXT2-LEN.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 46.
+       01  GETP-TXT2-FLROW         PIC X     VALUE "A".
+       01  GETP-TXT2-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 11.
+       01  GETP-TXT2-FLCOL         PIC X     VALUE "A".
+       01  GETP-TXT2-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 2.
+
+       01  GETP-TXT3-TYPE          PIC X     VALUE "T".
+       01  GETP-TXT3-VAL          PIC X(49)
+           VALUE "YOU CAN ENTER THE FIELDS BUT NOTHING WILL HAPPEN:".
+       01  GETP-TXT3-LEN.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 49.
+       01  GETP-TXT3-FLROW         PIC X     VALUE "A".
+       01  GETP-TXT3-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 13.
+       01  GETP-TXT3-FLCOL        PIC X     VALUE "A".
+       01  GETP-TXT3-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 2.
+
+       01  GETP-TXT4-TYPE          PIC X     VALUE "T".
+       01  GETP-TXT4-VAL           PIC X(47)
+           VALUE "             (Press <RETURN> to call GETPATM.)".
+       01  GETP-TXT4-LEN.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 47.
+       01  GETP-TXT4-FLROW         PIC X     VALUE "A".
+       01  GETP-TXT4-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 24.
+       01  GETP-TXT4-FLCOL         PIC X     VALUE "A".
+       01  GETP-TXT4-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 10.
+
+       01  GETP-KW1-TYPE           PIC X     VALUE "K".
+       01  GETP-FILE-KW            PIC X(8)  VALUE "FILE    ".
+       01  GETP-FILE               PIC X(8)  VALUE SPACES.
+       01  GETP-KW1-FLROW          PIC X     VALUE "A".
+       01  GETP-KW1-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 15.
+       01  GETP-KW1-FLCOL         PIC X     VALUE "A".
+       01  GETP-KW1-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 5.
+       01  GETP-KW1-DATAT          PIC X     VALUE "C".
+
+       01  GETP-KW2-TYPE           PIC X     VALUE "K".
+       01  GETP-LIB-KW             PIC X(8)  VALUE "LIBRARY ".
+       01  GETP-LIB                PIC X(8)  VALUE SPACES.
+       01  GETP-KW2-FLROW          PIC X     VALUE "A".
+       01  GETP-KW2-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 15.
+       01  GETP-KW2-FLCOL          PIC X     VALUE "A".
+       01  GETP-KW2-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 28.
+       01  GETP-KW2-DATAT          PIC X     VALUE "C".
+
+       01  GETP-KW3-TYPE           PIC X     VALUE "K".
+       01  GETP-VOL-KW             PIC X(8)  VALUE "VOLUME  ".
+       01  GETP-VOL                PIC X(6)  VALUE SPACES.
+       01  GETP-KW3-FLROW          PIC X     VALUE "A".
+       01  GETP-KW3-ROW.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 15.
+       01  GETP-KW3-FLCOL          PIC X     VALUE "A".
+       01  GETP-KW3-COL.
+           03  FILLER              BINARY    VALUE 0.
+           03  FILLER              BINARY    VALUE 52.
+       01  GETP-KW3-DATAT          PIC X     VALUE "C".
+
+       01  GETP-LEN-6.
+           03 GETP-L6-KW1          BINARY    VALUE 0.
+           03 GETP-L6-KW2          BINARY    VALUE 6.
+       01  GETP-LEN-8.
+           03 GETP-L8-KW1          BINARY    VALUE 0.
+           03 GETP-L8-KW2          BINARY    VALUE 8.
+
+       01  GETP-PFKEY-TYPE        PIC X      VALUE "P".
+       01  GETP-PFKEY-MASK.
+           03 BYTE-1              PIC X      VALUE PFK-NOT-SET.
+           03 BYTE-2              PIC X      VALUE PFK-SET.
+           03 BYTE-3              PIC X      VALUE PFK-NOT-SET.
+           03 BYTE-4              PIC X      VALUE PFK-NOT-SET.
+
+       01  GETP-ENABLE-ENTER     PIC X       VALUE "E".
+
+       01  GETP-STATUS-TEXT        PIC X(40) VALUE SPACES.
+
+      ******************************************************************
+
+       01  PUTP-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE PUTPARM USERSUB ***".
+
+           03  FILLER PIC X(20) ROW 4 COL 05
+               VALUE "FUNCTION (D,E,R,M,C)".
+           03  FILLER PIC X(1)  ROW 4 COL 27
+               SOURCE PUTP-FUNCTION OBJECT PUTP-FUNCTION.
+
+           03  FILLER PIC X(11) ROW 4 COL 30 VALUE "USAGE COUNT".
+           03  PUTP-USAGECNT-FIELD PIC 9(4) ROW 4 COL 45
+               SOURCE PUTP-USAGE-CNT OBJECT PUTP-USAGE-CNT.
+
+           03  FILLER PIC X(6) ROW 4 COL 55 VALUE "PRNAME".
+           03  FILLER PIC X(8) ROW 4 COL 62
+               SOURCE PUTP-PRNAME OBJECT PUTP-PRNAME.
+
+           03  FILLER PIC X(6) ROW 6 COL 2 VALUE "KW CNT".
+           03  PUTP-KWCNT-FIELD PIC 9(4) ROW 6 COL 10 
+               SOURCE PUTP-KW2 OBJECT PUTP-KW2.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE PUTP-FILE OBJECT PUTP-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE PUTP-LIB OBJECT PUTP-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE PUTP-VOL OBJECT PUTP-VOL.
+
+           03  FILLER PIC X(13) ROW 8 COL 15 VALUE "PUTPARM LABEL".
+           03  FILLER PIC X(8) ROW 8 COL 30
+               SOURCE PUTP-LABEL OBJECT PUTP-LABEL.
+
+           03  FILLER PIC X(15) ROW 8 COL 40 VALUE "REFERENCE LABEL".
+           03  FILLER PIC X(8) ROW 8 COL 57
+               SOURCE PUTP-REFLABEL OBJECT PUTP-REFLABEL.
+
+           03  FILLER PIC X(6) ROW 10 COL 15 VALUE "PF-KEY".
+           03  FILLER PIC X(1) ROW 10 COL 30
+               SOURCE PUTP-PFKEY-VALUE OBJECT PUTP-PFKEY-VALUE.
+
+           03  FILLER PIC X(07) ROW 10 COL 40 VALUE "CLEANUP".
+           03  FILLER PIC X ROW 10 COL 57
+               SOURCE PUTP-CLEANUP OBJECT PUTP-CLEANUP.
+
+           03  FILLER PIC X(11) ROW 12 COL 15 VALUE "RETURN CODE".
+           03  PUTP-RCODE-FIELD PIC 9(4) ROW 12 COL 30
+               SOURCE PUTP-RCODE-2.
+
+           03  FILLER PIC X(40) ROW 12 COL 40 
+               SOURCE PUTP-STATUS-TEXT.
+
+           03  FILLER PIC X(33) ROW 14 COL 25
+               VALUE "Arguments returned for function R".
+
+           03  FILLER PIC X(06) ROW 16 COL 1 VALUE "LENGTH".
+           03  PUTP-ADJLEN-FIELD PIC 9(4) ROW 16 COL 11
+               SOURCE PUTP-RL2.
+           03  FILLER PIC X(9) ROW 17 COL 1 VALUE "RECEIVER:".
+           03  FILLER PIC X(8) ROW 17 COL 11
+               SOURCE PP-R1-KW.
+           03  FILLER PIC 9(4) ROW 17 COL 20
+               SOURCE PPR1-L2.
+           03  FILLER PIC X(8) ROW 17 COL 25
+               SOURCE PP-R1-KWVAL.
+           03  FILLER PIC X(8) ROW 17 COL 34
+               SOURCE PP-R2-KW.
+           03  FILLER PIC 9(4) ROW 17 COL 43
+               SOURCE PPR2-L2.
+           03  FILLER PIC X(8) ROW 17 COL 48
+               SOURCE PP-R2-KWVAL.
+           03  FILLER PIC X(6) ROW 17 COL 57
+               SOURCE PP-R3-KW.
+           03  FILLER PIC 9(4) ROW 17 COL 66
+               SOURCE PPR3-L2.
+           03  FILLER PIC X(6) ROW 17 COL 71
+               SOURCE PP-R3-KWVAL.
+
+           03  FILLER PIC X(33) ROW 19 COL 25
+                VALUE "Arguments returned for function M".
+
+           03  FILLER PIC X(4) ROW 21 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 21 COL 20 
+               SOURCE PUTP-RECVR-FILE.
+
+           03  FILLER PIC X(7) ROW 21 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 21 COL 38
+               SOURCE PUTP-RECVR-LIB.
+
+           03  FILLER PIC X(6) ROW 21 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 21 COL 55 
+               SOURCE PUTP-RECVR-VOL.
+
+           03  PUTP-RECVR-LENF-FIELD PIC 9(4) ROW 22 COL 20 
+               SOURCE PUTP-RECVR-LEN-FILE2.
+           03  PUTP-RECVR-LENL-FILED PIC 9(4) ROW 22 COL 38 
+               SOURCE PUTP-RECVR-LEN-LIB2.
+           03  PUTP-RECVR-LENV-FILED PIC 9(4) ROW 22 COL 55 
+               SOURCE PUTP-RECVR-LEN-VOL2.
+
+           03  FILLER PIC X(42) ROW 24 COL 19 VALUE 
+               "ENTER-do PUTPARM; PF1-DISPLAY; PF16-EXIT".
+
+      ******************************************************************
+
+       01  GETP-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE GETPARM USERSUB ***".
+
+           03  FILLER PIC X(23) ROW 4 COL 02
+               VALUE "TYPE (I,O,R,S,ID,OD,RD)".
+           03  FILLER PIC X(2)  ROW 4 COL 27
+               SOURCE GETP-TYPE OBJECT GETP-TYPE.
+
+           03  FILLER PIC X(12) ROW 4 COL 31 VALUE "FORM (A,R,S)".
+           03  FILLER PIC X ROW 4 COL 44
+               SOURCE GETP-FORM OBJECT GETP-FORM.
+
+           03  FILLER PIC X(6) ROW 4 COL 55 VALUE "PRNAME".
+           03  FILLER PIC X(8) ROW 4 COL 62
+               SOURCE GETP-PRNAME OBJECT GETP-PRNAME.
+
+           03  FILLER PIC X(10) ROW 6 COL 15 VALUE "MESSAGE ID".
+           03  FILLER PIC X(4) ROW 6 COL 28
+               SOURCE GETP-MESSAGE-ID OBJECT GETP-MESSAGE-ID.
+
+           03  FILLER PIC X(14) ROW 6 COL 35 VALUE "MESSAGE ISSUER".
+           03  FILLER PIC X(6) ROW 6 COL 52
+               SOURCE GETP-MESSAGE-ISSUER OBJECT GETP-MESSAGE-ISSUER.
+
+           03  FILLER PIC X(14) ROW 8 COL 15 VALUE "MESSAGE TEXT 1".
+           03  FILLER PIC X(28) ROW 8 COL 31
+               SOURCE GETP-MESSAGE-TEXT-1 OBJECT GETP-MESSAGE-TEXT-1.
+
+           03  FILLER PIC X(14) ROW 9 COL 15 VALUE "MESSAGE TEXT 2".
+           03  FILLER PIC X(16) ROW 9 COL 31
+               SOURCE GETP-MESSAGE-TEXT-2 OBJECT GETP-MESSAGE-TEXT-2.
+
+           03  FILLER PIC X(10) ROW 11 COL 5 VALUE "TYPE (T,U)".
+           03  FILLER PIC X ROW 11 COL 21 
+               SOURCE GETP-TXT1-TYPE OBJECT GETP-TXT1-TYPE.
+
+           03  FILLER PIC X(12) ROW 11 COL 25 VALUE "TEXT FIELD 1".
+           03  FILLER PIC X(45) ROW 12 COL 25
+               SOURCE GETP-TXT1-VAL OBJECT GETP-TXT1-VAL.
+
+           03  FILLER PIC X ROW 13 COL 21 
+               SOURCE GETP-TXT2-TYPE OBJECT GETP-TXT2-TYPE.
+
+           03  FILLER PIC X(12) ROW 13 COL 25 VALUE "TEXT FIELD 2".
+           03  FILLER PIC X(46) ROW 14 COL 25
+               SOURCE GETP-TXT2-VAL OBJECT GETP-TXT2-VAL.
+
+           03  FILLER PIC X ROW 15 COL 21 
+               SOURCE GETP-TXT3-TYPE OBJECT GETP-TXT3-TYPE.
+
+           03  FILLER PIC X(12) ROW 15 COL 25 VALUE "TEXT FIELD 3".
+           03  FILLER PIC X(49) ROW 16 COL 25
+               SOURCE GETP-TXT3-VAL OBJECT GETP-TXT3-VAL.
+
+           03  FILLER PIC X ROW 17 COL 21 
+               SOURCE GETP-TXT4-TYPE OBJECT GETP-TXT4-TYPE.
+
+           03  FILLER PIC X(12) ROW 17 COL 25 VALUE "TEXT FIELD 4".
+           03  FILLER PIC X(47) ROW 18 COL 25
+               SOURCE GETP-TXT4-VAL OBJECT GETP-TXT4-VAL.
+
+           03  FILLER PIC X(14) ROW 19 COL 5
+               VALUE "TYPE (K,H,R,I)".
+           03  FILLER PIC X(3) ROW 19 COL 33 VALUE "KW1".
+           03  FILLER PIC X ROW 19 COL 38
+               SOURCE GETP-KW1-TYPE OBJECT GETP-KW1-TYPE.
+           03  FILLER PIC X(3) ROW 19 COL 43 VALUE "KW2".
+           03  FILLER PIC X ROW 19 COL 48
+               SOURCE GETP-KW2-TYPE OBJECT GETP-KW2-TYPE.
+           03  FILLER PIC X(3) ROW 19 COL 53 VALUE "KW3".
+           03  FILLER PIC X ROW 19 COL 58
+               SOURCE GETP-KW1-TYPE OBJECT GETP-KW1-TYPE.
+
+           03  FILLER PIC X(25) ROW 20 COL 5 
+               VALUE "DATA TYPE (A,C,I,N,L,U,H)".
+           03  FILLER PIC X ROW 20 COL 38
+               SOURCE GETP-KW1-DATAT OBJECT GETP-KW1-DATAT.
+           03  FILLER PIC X ROW 20 COL 48
+               SOURCE GETP-KW2-DATAT OBJECT GETP-KW2-DATAT.
+           03  FILLER PIC X ROW 20 COL 58
+               SOURCE GETP-KW3-DATAT OBJECT GETP-KW3-DATAT.
+
+           03  FILLER PIC X(6) ROW 22 COL 15 VALUE "PF-KEY".
+           03  FILLER PIC X(1) ROW 22 COL 30
+               SOURCE GETP-PFKEY.
+
+           03  FILLER PIC X(40) ROW 21 COL 40 
+               SOURCE GETP-STATUS-TEXT.
+
+           03  FILLER PIC X(42) ROW 24 COL 19 VALUE 
+               "PRESS RETURN TO DO GETPARM OR PF16 TO EXIT".
+
+      ******************************************************************
+
+       01  DATE-TITLE       PIC X(40) VALUE SPACES.
+       01  DATE-FUNCTION    PIC X(02) VALUE SPACES.
+
+       01  DATE-J1          PIC X(05) VALUE SPACES.
+       01  DATE-J2          PIC X(05) VALUE SPACES.
+       01  DATE-J3          PIC X(05) VALUE SPACES.
+       01  DATE-J4          PIC X(05) VALUE SPACES.
+       01  DATE-J5          PIC X(05) VALUE SPACES.
+       01  DATE-J6          PIC X(05) VALUE SPACES.
+       01  DATE-J7          PIC X(05) VALUE SPACES.
+
+       01  DATE-G1          PIC X(06) VALUE SPACES.
+       01  DATE-G2          PIC X(06) VALUE SPACES.
+       01  DATE-G3          PIC X(06) VALUE SPACES.
+       01  DATE-G4          PIC X(06) VALUE SPACES.
+       01  DATE-G5          PIC X(06) VALUE SPACES.
+       01  DATE-G6          PIC X(06) VALUE SPACES.
+       01  DATE-G7          PIC X(06) VALUE SPACES.
+
+       01  DATE-RC1         PIC S9999 VALUE ZERO.
+       01  DATE-RC2         PIC S9999 VALUE ZERO.
+       01  DATE-RC3         PIC S9999 VALUE ZERO.
+       01  DATE-RC4         PIC S9999 VALUE ZERO.
+       01  DATE-RC5         PIC S9999 VALUE ZERO.
+       01  DATE-RC6         PIC S9999 VALUE ZERO.
+       01  DATE-RC7         PIC S9999 VALUE ZERO.
+       01  DATE-RC8         PIC S9999 VALUE ZERO.
+
+       01  DATE-DIFF1       PIC S9999 VALUE ZERO.
+       01  DATE-DIFF2       PIC S9999 VALUE ZERO.
+
+       01  DATE-ADD1        PIC S99999 VALUE ZERO.
+       01  DATE-ADD2        PIC S99999 VALUE ZERO.
+
+       01  DATE-DT1         PIC X(45) VALUE SPACES.
+       01  DATE-DT2         PIC X(45) VALUE SPACES.
+
+       01  DATE-DAY1        PIC X(09) VALUE SPACES.
+       01  DATE-DAY2        PIC X(09) VALUE SPACES.
+
+       01  DATE-DIFF.
+           03 DATE-DIFF-B1  BINARY VALUE ZERO.
+           03 DATE-DIFF-B2  BINARY VALUE ZERO.
+
+       01  DATE-ADD.
+           03 DATE-ADD-B1  BINARY VALUE ZERO.
+           03 DATE-ADD-B2  BINARY VALUE ZERO.
+
+       01  DATE-RC.
+           03 DATE-RC-B1 BINARY VALUE ZERO.
+           03 DATE-RC-B2 BINARY VALUE ZERO.
+
+       01  DATE-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 1 COL 20 VALUE
+              "     *** TESTING THE DATE USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 3 COL 20 SOURCE DATE-TITLE.
+
+           03  FILLER PIC X(09) ROW  6 COL  2 VALUE "(01) <HD>".
+           03  FILLER PIC X(09) ROW  6 COL 15 VALUE "DATE/TIME".
+           03  FILLER PIC X(45) ROW  6 COL 25
+               SOURCE DATE-DT1.
+
+           03  FILLER PIC X(09) ROW  7 COL  2 VALUE "(02) <HL>".
+           03  FILLER PIC X(09) ROW  7 COL 15 VALUE "DATE/TIME".
+           03  FILLER PIC X(45) ROW  7 COL 25
+               SOURCE DATE-DT2.
+
+           03  FILLER PIC X(09) ROW  8 COL  2 VALUE "(03) <GJ>".
+           03  FILLER PIC X(06) ROW  8 COL 15
+               SOURCE DATE-G1 OBJECT DATE-G1.
+           03  FILLER PIC X(05) ROW  8 COL 25
+               SOURCE DATE-J1.
+           03  FILLER PIC ----9 ROW  8 COL 50
+               SOURCE DATE-RC1.
+
+           03  FILLER PIC X(09) ROW  9 COL  2 VALUE "(04) <JG>".
+           03  FILLER PIC X(05) ROW  9 COL 15
+               SOURCE DATE-J2 OBJECT DATE-J2.
+           03  FILLER PIC X(06) ROW  9 COL 25
+               SOURCE DATE-G2.
+           03  FILLER PIC ----9 ROW  9 COL 50
+               SOURCE DATE-RC2.
+
+           03  FILLER PIC X(09) ROW 10 COL  2 VALUE "(05) <G->".
+           03  FILLER PIC X(06) ROW 10 COL 15
+               SOURCE DATE-G3 OBJECT DATE-G3.
+           03  FILLER PIC X(06) ROW 10 COL 25
+               SOURCE DATE-G4 OBJECT DATE-G4.
+           03  FILLER PIC ----9 ROW 10 COL 35
+               SOURCE DATE-DIFF1.
+           03  FILLER PIC ----9 ROW 10 COL 50
+               SOURCE DATE-RC3.
+
+           03  FILLER PIC X(09) ROW 11 COL  2 VALUE "(06) <J->".
+           03  FILLER PIC X(05) ROW 11 COL 15
+               SOURCE DATE-J3 OBJECT DATE-J3.
+           03  FILLER PIC X(05) ROW 11 COL 25
+               SOURCE DATE-J4 OBJECT DATE-J4.
+           03  FILLER PIC ----9 ROW 11 COL 35
+               SOURCE DATE-DIFF2.
+           03  FILLER PIC ----9 ROW 11 COL 50
+               SOURCE DATE-RC4.
+
+           03  FILLER PIC X(09) ROW 12 COL  2 VALUE "(07) <G+>".
+           03  FILLER PIC X(06) ROW 12 COL 15
+               SOURCE DATE-G5 OBJECT DATE-G5.
+           03  FILLER PIC -----9 ROW 12 COL 25
+               SOURCE DATE-ADD1 OBJECT DATE-ADD1.
+           03  FILLER PIC X(06) ROW 12 COL 35
+               SOURCE DATE-G6.
+           03  FILLER PIC -----9 ROW 12 COL 50
+               SOURCE DATE-RC5.
+
+           03  FILLER PIC X(09) ROW 13 COL  2 VALUE "(08) <J+>".
+           03  FILLER PIC X(05) ROW 13 COL 15
+               SOURCE DATE-J5 OBJECT DATE-J5.
+           03  FILLER PIC -----9 ROW 13 COL 25
+               SOURCE DATE-ADD2 OBJECT DATE-ADD2.
+           03  FILLER PIC X(05) ROW 13 COL 35
+               SOURCE DATE-J6.
+           03  FILLER PIC -----9 ROW 13 COL 50
+               SOURCE DATE-RC6.
+
+           03  FILLER PIC X(09) ROW 14 COL  2 VALUE "(09) <GD>".
+           03  FILLER PIC X(06) ROW 14 COL 15
+               SOURCE DATE-G7 OBJECT DATE-G7.
+           03  FILLER PIC X(09) ROW 14 COL 25
+               SOURCE DATE-DAY1.
+           03  FILLER PIC ----9 ROW 14 COL 50
+               SOURCE DATE-RC7.
+
+           03  FILLER PIC X(09) ROW 15 COL  2 VALUE "(10) <JD>".
+           03  FILLER PIC X(05) ROW 15 COL 15
+               SOURCE DATE-J7 OBJECT DATE-J7.
+           03  FILLER PIC X(09) ROW 15 COL 25
+               SOURCE DATE-DAY2.
+           03  FILLER PIC ----9 ROW 15 COL 50
+               SOURCE DATE-RC8.
+
+           03  FILLER PIC X(09) ROW 17 COL  2 VALUE "(16) EXIT".
+
+           03  FILLER PIC X(30) ROW 21 COL  2 VALUE
+               "THE LAST FUNCTION EXECUTED WAS".
+           03  FILLER PIC X(02) ROW 21 COL 35
+               SOURCE DATE-FUNCTION.
+
+           03  FILLER PIC X(35) ROW 24 COL 28 VALUE 
+               "PRESS A PFKEY TO CONTINUE".
+
+
+      ******************************************************************
+
+       01  DAY-DATE      PIC 9(6) VALUE ZEROS.
+       01  DAY-DOW.
+           03 FILLER     BINARY VALUE ZERO.
+           03 DAY-DOW-B  BINARY VALUE ZERO.
+
+       01  DAY-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 1 COL 20 VALUE
+              "     *** TESTING THE DAY USERSUB ***".
+
+           03  FILLER PIC X(60) ROW 3 COL 10 VALUE
+              "Specify a date in YYMMDD format and DAY will ".
+           03  FILLER PIC X(60) ROW 4 COL 10 VALUE
+              "return the day of the week 1 (Sunday) 7 (Saturday).".
+
+           03  FILLER PIC X(06) ROW  12 COL 10 VALUE "YYMMDD".
+           03  FILLER PIC X(06) ROW  12 COL 18
+               SOURCE DAY-DATE OBJECT DAY-DATE.
+
+           03  FILLER PIC X(03) ROW  14 COL 10 VALUE "DAY".
+           03  FILLER PIC ZZ    ROW  14 COL 18 SOURCE DAY-DOW-B.
+
+           03  FILLER PIC X(20) ROW  24 COL 30 VALUE "PF16 to EXIT".
+
+      ******************************************************************
+
+       01  ASCII-STRING       PIC X(4) VALUE SPACES.
+       01  ASCII-STRING2      PIC X(4) VALUE SPACES.
+       01  ASCII-LEN.
+           03 FILLER     BINARY VALUE ZERO.
+           03 FILLER     BINARY VALUE 4.
+       01  BIT-STRING         PIC X(32) VALUE SPACES.
+       01  BIT-LEN.
+           03 FILLER     BINARY VALUE ZERO.
+           03 FILLER     BINARY VALUE 32.
+
+       01  BITPACK-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(60) ROW 1 COL 10 VALUE
+              "*** TESTING THE BITPACK/BITUNPK USERSUB ***".
+
+           03  FILLER PIC X(60) ROW 3 COL 10 VALUE
+              "Enter a 4 char string, BITUNPK will unpack it".
+           03  FILLER PIC X(60) ROW 4 COL 10 VALUE
+              "into a bit string, BITPACK will then pack it back".
+           03  FILLER PIC X(60) ROW 5 COL 10 VALUE
+              "into a 4 char string.".
+
+           03  FILLER PIC    X(06) ROW  12 COL 2 VALUE "STRING".
+           03  BP-STRING PIC X(04) ROW  12 COL 10
+               SOURCE ASCII-STRING OBJECT ASCII-STRING.
+
+           03  FILLER PIC X(09) ROW  12 COL 15 VALUE "(BITUNPK)".
+           03  FILLER PIC X(8)BX(8)BX(8)BX(8) ROW  12 COL 25
+               SOURCE BIT-STRING.
+
+           03  FILLER PIC X(07) ROW  14 COL  2 VALUE "CONTROL".
+           03  FILLER PIC X(04) ROW  14 COL 10 VALUE "1?a~".
+           03  FILLER PIC X(35) ROW  14 COL 25 VALUE
+               "00110001 00111111 01100001 01111110".
+
+           03  FILLER PIC X(09) ROW  12 COL 62 VALUE "(BITPACK)".
+           03  FILLER PIC X(04) ROW  12 COL 72
+               SOURCE ASCII-STRING2.
+
+           03  FILLER PIC X(20) ROW  24 COL 30 VALUE "PF16 to EXIT".
+
+       01  AHEX-STRING       PIC X(10) VALUE SPACES.
+       01  AHEX-STRING2      PIC X(10) VALUE SPACES.
+       01  AHEX-LEN.
+           03 FILLER     BINARY VALUE ZERO.
+           03 FILLER     BINARY VALUE 10.
+       01  HEX-STRING      PIC X(20) VALUE SPACES.
+       01  HEX-LEN.
+           03 FILLER     BINARY VALUE ZERO.
+           03 FILLER     BINARY VALUE 20.
+
+
+       01  HEXPACK-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(60) ROW 1 COL 10 VALUE
+              "*** TESTING THE HEXPACK/HEXUNPK USERSUB ***".
+
+           03  FILLER PIC X(60) ROW 3 COL 10 VALUE
+              "Enter a 10 char string, HEXUNPK will unpack it".
+           03  FILLER PIC X(60) ROW 4 COL 10 VALUE
+              "into a hex string, HEXPACK will then pack it back".
+           03  FILLER PIC X(60) ROW 5 COL 10 VALUE
+              "into a 10 char string.".
+
+           03  FILLER PIC X(06) ROW  12 COL 2 VALUE "STRING".
+           03  HP-STRING PIC X(10) ROW  12 COL 13
+               SOURCE AHEX-STRING OBJECT AHEX-STRING.
+
+           03  FILLER PIC X(09) ROW  12 COL 25 VALUE "(HEXUNPK)".
+           03  FILLER PIC X(20) ROW  12 COL 35
+               SOURCE HEX-STRING.
+
+           03  FILLER PIC X(09) ROW  12 COL 59 VALUE "(HEXPACK)".
+           03  FILLER PIC X(10) ROW  12 COL 69
+               SOURCE AHEX-STRING2.
+
+           03  FILLER PIC X(07) ROW  14 COL 2 VALUE "CONTROL".
+           03  FILLER PIC X(10) ROW  14 COL 13 VALUE "09?AZaz~] ".
+           03  FILLER PIC X(20) ROW  14 COL 35
+               VALUE "30393F415A617A7E5D20".
+
+           03  FILLER PIC X(20) ROW  24 COL 30 VALUE "PF16 to EXIT".
+
+      ******************************************************************
+
+       01  LINKPROC-TITLE       PIC X(40) VALUE SPACES.
+
+       01  LINKPROC-FILE        PIC X(08) VALUE SPACES.
+       01  LINKPROC-LIB         PIC X(08) VALUE SPACES.
+       01  LINKPROC-VOL         PIC X(06) VALUE SPACES.
+
+       01  LINKPROC-RETURN.
+           03 LINKPROC-RETURN-1 BINARY    VALUE ZERO.
+           03 LINKPROC-RETURN-2 BINARY    VALUE ZERO.
+       01  LINKPROC-RETURN-X    PIC S99999 VALUE ZERO.
+
+       01  LINKPROC-COMP.
+           03 LINKPROC-COMP-1 BINARY    VALUE ZERO.
+           03 LINKPROC-COMP-2 BINARY    VALUE ZERO.
+       01  LINKPROC-COMP-X    PIC S99999 VALUE ZERO.
+
+       01  LINKPROC-PCNT        BINARY    VALUE 8.
+       01  LINKPROC-PCNT-X      PIC S9999 VALUE 8.
+
+       01  LINKPROC-PLEN1       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN2       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN3       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN4       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN5       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN6       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN7       BINARY    VALUE ZERO.
+       01  LINKPROC-PLEN8       BINARY    VALUE ZERO.
+
+       01  LINKPROC-PLEN1-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN2-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN3-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN4-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN5-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN6-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN7-X     PIC S9999 VALUE ZERO.
+       01  LINKPROC-PLEN8-X     PIC S9999 VALUE ZERO.
+
+       01  LINKPROC-PTXT1       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT2       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT3       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT4       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT5       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT6       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT7       PIC X(60) VALUE SPACES.
+       01  LINKPROC-PTXT8       PIC X(60) VALUE SPACES.
+
+
+       01  LINKPROC-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              " *** TESTING THE LINKPROC USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20
+               SOURCE LINKPROC-TITLE.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE LINKPROC-FILE OBJECT LINKPROC-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE LINKPROC-LIB OBJECT LINKPROC-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE LINKPROC-VOL OBJECT LINKPROC-VOL.
+
+           03  FILLER PIC X(07) ROW  8 COL  5 
+               VALUE "PARMCNT".
+           03  FILLER PIC ----9 ROW  8 COL 20 
+               SOURCE LINKPROC-PCNT-X.
+
+           03  FILLER PIC X(03) ROW 9 COL  6 VALUE "LEN".
+           03  FILLER PIC X(04) ROW 9 COL 15 VALUE "TEXT".
+
+           03  FILLER PIC X(02) ROW 10 COL  2 VALUE "P1".
+           03  FILLER PIC ----9 ROW 10 COL  5 
+               SOURCE LINKPROC-PLEN1-X
+               OBJECT LINKPROC-PLEN1-X.
+           03  FILLER PIC X(60) ROW 10 COL  15 
+               SOURCE LINKPROC-PTXT1
+               OBJECT LINKPROC-PTXT1.
+
+           03  FILLER PIC X(02) ROW 11 COL  2 VALUE "P2".
+           03  FILLER PIC ----9 ROW 11 COL  5 
+               SOURCE LINKPROC-PLEN2-X
+               OBJECT LINKPROC-PLEN2-X.
+           03  FILLER PIC X(60) ROW 11 COL  15 
+               SOURCE LINKPROC-PTXT2
+               OBJECT LINKPROC-PTXT2.
+
+           03  FILLER PIC X(02) ROW 12 COL  2 VALUE "P3".
+           03  FILLER PIC ----9 ROW 12 COL  5 
+               SOURCE LINKPROC-PLEN3-X
+               OBJECT LINKPROC-PLEN3-X.
+           03  FILLER PIC X(60) ROW 12 COL  15 
+               SOURCE LINKPROC-PTXT3
+               OBJECT LINKPROC-PTXT3.
+
+           03  FILLER PIC X(02) ROW 13 COL  2 VALUE "P4".
+           03  FILLER PIC ----9 ROW 13 COL  5 
+               SOURCE LINKPROC-PLEN4-X
+               OBJECT LINKPROC-PLEN4-X.
+           03  FILLER PIC X(60) ROW 13 COL  15 
+               SOURCE LINKPROC-PTXT4
+               OBJECT LINKPROC-PTXT4.
+
+           03  FILLER PIC X(02) ROW 14 COL  2 VALUE "P5".
+           03  FILLER PIC ----9 ROW 14 COL  5 
+               SOURCE LINKPROC-PLEN5-X
+               OBJECT LINKPROC-PLEN5-X.
+           03  FILLER PIC X(60) ROW 14 COL  15 
+               SOURCE LINKPROC-PTXT5
+               OBJECT LINKPROC-PTXT5.
+
+           03  FILLER PIC X(02) ROW 15 COL  2 VALUE "P6".
+           03  FILLER PIC ----9 ROW 15 COL  5 
+               SOURCE LINKPROC-PLEN6-X
+               OBJECT LINKPROC-PLEN6-X.
+           03  FILLER PIC X(60) ROW 15 COL  15 
+               SOURCE LINKPROC-PTXT6
+               OBJECT LINKPROC-PTXT6.
+
+           03  FILLER PIC X(02) ROW 16 COL  2 VALUE "P7".
+           03  FILLER PIC ----9 ROW 16 COL  5 
+               SOURCE LINKPROC-PLEN7-X
+               OBJECT LINKPROC-PLEN7-X.
+           03  FILLER PIC X(60) ROW 16 COL  15 
+               SOURCE LINKPROC-PTXT7
+               OBJECT LINKPROC-PTXT7.
+
+           03  FILLER PIC X(02) ROW 17 COL  2 VALUE "P8".
+           03  FILLER PIC ----9 ROW 17 COL  5 
+               SOURCE LINKPROC-PLEN8-X
+               OBJECT LINKPROC-PLEN8-X.
+           03  FILLER PIC X(60) ROW 17 COL  15 
+               SOURCE LINKPROC-PTXT8
+               OBJECT LINKPROC-PTXT8.
+
+           03  FILLER PIC X(11) ROW 20 COL 40 VALUE "RETURN CODE".
+           03  FILLER PIC -----9 ROW 20 COL 55 
+               SOURCE LINKPROC-RETURN-X.
+
+           03  FILLER PIC X(11) ROW 21 COL 40 VALUE "COMP CODE".
+           03  FILLER PIC -----9 ROW 21 COL 55 
+               SOURCE LINKPROC-COMP-X.
+
+           03  FILLER PIC X(24) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE".
+
+      ******************************************************************
+
+       01  LINK-TITLE       PIC X(40) VALUE SPACES.
+
+       01  LINK-FILE        PIC X(08) VALUE SPACES.
+       01  LINK-LIB         PIC X(08) VALUE SPACES.
+       01  LINK-VOL         PIC X(06) VALUE SPACES.
+       01  LINK-EXT         PIC X(03) VALUE SPACES.
+       01  LINK-EXT-FULL    PIC X(39) VALUE SPACES.
+
+       01  LINK-TYPE        PIC X(01) VALUE SPACES.
+       01  LINK-SPECIAL     PIC X(01) VALUE SPACES.
+       01  LINK-EXT-OPT     PIC X(02) VALUE SPACES.
+       01  LINK-PARM-CNT.
+           03 LINK-PARM-CNT-1 BINARY  VALUE ZERO.
+           03 LINK-PARM-CNT-2 BINARY  VALUE ZERO.
+       01  LINK-PARM-CNT-X  PIC 99    VALUE ZERO.
+       01  LINK-CANCEL-FLAG PIC X(01) VALUE SPACES.
+       01  LINK-MESSAGE     PIC X(27) VALUE SPACES.
+       01  LINK-MESS-LEN.
+           03 LINK-MESS-LEN-1 BINARY  VALUE ZERO.
+           03 LINK-MESS-LEN-2 BINARY  VALUE ZERO.
+       01  LINK-MESS-LEN-X  PIC 99    VALUE ZERO.
+       01  LINK-HELP        PIC X(01) VALUE SPACES.
+       01  LINK-RESERVED    PIC X(02) VALUE SPACES.
+       01  LINK-COMP-CODE.
+           03 LINK-COMP-CODE-1 BINARY VALUE ZERO.
+           03 LINK-COMP-CODE-2 BINARY VALUE ZERO.
+       01  LINK-COMP-CODE-X PIC 9999  VALUE ZERO.     
+       01  LINK-RETURN.
+           03 LINK-RETURN-1 BINARY    VALUE ZERO.
+           03 LINK-RETURN-2 BINARY    VALUE ZERO.
+       01  LINK-RETURN-X    PIC S9999 VALUE ZERO.
+
+       01  LINK-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE LINK USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE LINK-TITLE.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE LINK-FILE OBJECT LINK-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE LINK-LIB OBJECT LINK-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE LINK-VOL OBJECT LINK-VOL.
+
+           03  FILLER PIC X(10) ROW 6 COL 63 VALUE "WISPFILEXT".
+           03  FILLER PIC X(3) ROW 6 COL 75 
+               SOURCE LINK-EXT OBJECT LINK-EXT.
+
+           03  FILLER PIC X(04) ROW  8 COL  5 VALUE "TYPE".
+           03  FILLER PIC X(01) ROW  8 COL 20 
+               SOURCE LINK-TYPE OBJECT LINK-TYPE.
+
+           03  FILLER PIC X(07) ROW  8 COL 40 VALUE "SPECIAL".
+           03  FILLER PIC X(01) ROW  8 COL 55 
+               SOURCE LINK-SPECIAL OBJECT LINK-SPECIAL.
+
+           03  FILLER PIC X(07) ROW 10 COL  5 VALUE "EXT-OPT".
+           03  FILLER PIC X(02) ROW 10 COL 20 
+               SOURCE LINK-EXT-OPT OBJECT LINK-EXT-OPT.
+
+           03  FILLER PIC X(10) ROW 10 COL 40 VALUE "PARM-CNT".
+           03  FILLER PIC Z9    ROW 10 COL 55 
+               SOURCE LINK-PARM-CNT-X.
+
+           03  FILLER PIC X(11) ROW 12 COL  5 VALUE "CANCEL-FLAG".
+           03  FILLER PIC X(01) ROW 12 COL 20 
+               SOURCE LINK-CANCEL-FLAG OBJECT LINK-CANCEL-FLAG.
+
+           03  FILLER PIC X(07) ROW 14 COL  5 VALUE "MESSAGE".
+           03  FILLER PIC X(27) ROW 14 COL 20 
+               SOURCE LINK-MESSAGE OBJECT LINK-MESSAGE.
+
+           03  FILLER PIC X(08) ROW 14 COL 50 VALUE "MESS-LEN".
+           03  FILLER PIC Z9    ROW 14 COL 60 
+               SOURCE LINK-MESS-LEN-X OBJECT LINK-MESS-LEN-X.
+
+           03  FILLER PIC X(04) ROW 16 COL  5 VALUE "HELP".
+           03  FILLER PIC X(01) ROW 16 COL 20 
+               SOURCE LINK-HELP OBJECT LINK-HELP.
+
+           03  FILLER PIC X(09) ROW 20 COL  5 VALUE "COMP-CODE".
+           03  FILLER PIC ----9 ROW 20 COL 20 
+               SOURCE LINK-COMP-CODE-X OBJECT LINK-COMP-CODE-X.
+
+           03  FILLER PIC X(11) ROW 20 COL 40 VALUE "RETURN CODE".
+           03  FILLER PIC ----9 ROW 20 COL 55 
+               SOURCE LINK-RETURN-X OBJECT LINK-RETURN-X.
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE; PF16-EXIT".
+
+      ******************************************************************
+
+       01  WCHAIN-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE WCHAIN USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE WCHAIN-ERROR.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE WCHAIN-FILE OBJECT WCHAIN-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE WCHAIN-LIB OBJECT WCHAIN-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE WCHAIN-VOL OBJECT WCHAIN-VOL.
+
+           03  FILLER PIC X(24) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE".
+
+       01  WCHAIN-VOL   PIC X(6) VALUE SPACES.
+       01  WCHAIN-LIB   PIC X(8) VALUE SPACES.
+       01  WCHAIN-FILE  PIC X(8) VALUE SPACES.
+       01  WCHAIN-ERROR PIC X(40) VALUE SPACES.
+
+      ******************************************************************
+
+       01  READFDR-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 2 COL 20 VALUE
+               " *** TESTING THE READFDR ROUTINE *** ".
+
+           03  FILLER PIC X(60) ROW 4 COL 10 VALUE 
+               "This tests the Field Request Mode of READFDR usersub.".
+           03  FILLER PIC X(60) ROW 5 COL 10 VALUE 
+               "Enter the file/lib/vol and the FUNCTION to test then".
+           03  FILLER PIC X(60) ROW 6 COL 10 VALUE 
+               "press PF1 if the receiver is an INT(4) or PF2 if CHAR.".
+
+           03  FILLER PIC X(8) ROW 8 COL 15 VALUE "FUNCTION".
+           03  FILLER PIC X(2) ROW 8 COL 25 
+               SOURCE READFDR-FUNCTION OBJECT READFDR-FUNCTION.
+
+           03  FILLER PIC X(8) ROW 8 COL 40 VALUE "MODE".
+           03  FILLER PIC X(1) ROW 8 COL 50 VALUE "0".
+
+           03  FILLER PIC X(4) ROW 10 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 10 COL 20 
+               SOURCE READFDR-FILE OBJECT READFDR-FILE.
+
+           03  FILLER PIC X(7) ROW 10 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 10 COL 38 
+               SOURCE READFDR-LIB OBJECT READFDR-LIB.
+
+           03  FILLER PIC X(6) ROW 10 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 10 COL 55 
+               SOURCE READFDR-VOL OBJECT READFDR-VOL.
+
+           03  FILLER PIC X(12) ROW 12 COL 10 VALUE "(PF1) INT(4)".
+           03  FILLER PIC ----9 ROW 12 COL 28 
+               SOURCE READFDR-INT4-X.
+
+           03  FILLER PIC X(14) ROW 14 COL 10 VALUE "(PF2) CHAR(50)".
+           03  FILLER PIC X(50) ROW 14 COL 28 
+               SOURCE READFDR-CHAR50.
+
+           03  FILLER PIC X(13) ROW 16 COL 10 VALUE "(PF3) NUM(18)".
+           03  FILLER PIC 9(18) ROW 16 COL 28 
+               SOURCE READFDR-NUM18.
+
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "RETURN CODE".
+           03  FILLER PIC ----9 ROW 22 COL 47 
+               SOURCE READFDR-RC-X.
+
+           03  FILLER PIC X(35) ROW 24 COL 28 VALUE 
+               "SELECT FUNCTION, PF16-EXIT".
+
+       01  READFDR-TITLE       PIC X(40) VALUE SPACES.
+       01  READFDR-FILE        PIC X(8) VALUE SPACES.
+       01  READFDR-LIB         PIC X(8) VALUE SPACES.
+       01  READFDR-VOL         PIC X(6) VALUE SPACES.
+       01  READFDR-FUNCTION    PIC X(2) VALUE "RC".
+       01  READFDR-CHAR50      PIC X(50) VALUE SPACES.
+       01  READFDR-NUM18       PIC 9(18) VALUE ZERO.
+       01  READFDR-MODE.
+           03  READFDR-MODE-B1   BINARY   VALUE ZERO.
+           03  READFDR-MODE-B2   BINARY   VALUE ZERO.
+       01  READFDR-INT4-X        PIC S9999 VALUE ZERO.
+       01  READFDR-INT4.
+           03  READFDR-INT4-B1   BINARY   VALUE ZERO.
+           03  READFDR-INT4-B2   BINARY   VALUE ZERO.
+       01  READFDR-RC-X        PIC S9999 VALUE ZERO.
+       01  READFDR-RC.
+           03  READFDR-RC-B1   BINARY   VALUE ZERO.
+           03  READFDR-RC-B2   BINARY   VALUE ZERO.
+
+      ******************************************************************
+
+       01  MOUNT-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE MOUNT USERSUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE MOUNT-ERROR.
+
+           03  FILLER PIC X(6) ROW 6 COL 15 VALUE "DEVICE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE MOUNT-DEVICE OBJECT MOUNT-DEVICE.
+
+           03  FILLER PIC X(6) ROW 6 COL 30 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 38 
+               SOURCE MOUNT-VOL OBJECT MOUNT-VOL.
+
+           03  FILLER PIC X(6) ROW 6 COL 45 VALUE "SET ID".
+           03  FILLER PIC X(8) ROW 6 COL 53 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(13) ROW 8 COL 15 VALUE "LABEL (S,N,I)".
+           03  FILLER PIC X(1) ROW 8 COL 30 
+               SOURCE MOUNT-LABEL OBJECT MOUNT-LABEL.
+
+           03  FILLER PIC X(15) ROW 8 COL 33 VALUE "USAGE (S,E,P,R)".
+           03  FILLER PIC X(1)  ROW 8 COL 50 
+               SOURCE MOUNT-USAGE OBJECT MOUNT-USAGE.
+
+           03  FILLER PIC X(16) ROW 8 COL 55 VALUE "DRIVE TYPE (F,R)".
+           03  FILLER PIC X(1) ROW 8 COL 75 
+               SOURCE MOUNT-DEVICE-TYPE OBJECT MOUNT-DEVICE-TYPE.
+
+           03  FILLER PIC X(18) ROW 10 COL 15
+                 VALUE "SYSTEM  USE (0-15)".
+           03  FILLER PIC X(8) ROW 10 COL 35 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(6) ROW 6 COL 45 VALUE "SET ID".
+           03  FILLER PIC X(8) ROW 6 COL 53 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(6) ROW 6 COL 45 VALUE "SET ID".
+           03  FILLER PIC X(8) ROW 6 COL 53 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(6) ROW 6 COL 45 VALUE "SET ID".
+           03  FILLER PIC X(8) ROW 6 COL 53 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(6) ROW 6 COL 45 VALUE "SET ID".
+           03  FILLER PIC X(8) ROW 6 COL 53 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(6) ROW 6 COL 45 VALUE "SET ID".
+           03  FILLER PIC X(8) ROW 6 COL 53 
+               SOURCE MOUNT-SETID OBJECT MOUNT-SETID.
+
+           03  FILLER PIC X(24) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE".
+
+       01  MOUNT-DEVICE.
+           05  FILLER            BINARY   VALUE 0.
+           05  MOUNT-DEVICE-R-2  BINARY   VALUE -1.
+       01  MOUNT-VOL             PIC X(6) VALUE SPACES.
+       01  MOUNT-SETID.
+           05  FILLER            BINARY   VALUE 0.
+           05  MOUNT-SETID-R-2   BINARY   VALUE 0.
+       01  MOUNT-LABEL           PIC X(1) VALUE "S".
+       01  MOUNT-USAGE           PIC X(1) VALUE "S".
+       01  MOUNT-DRIVE-TYPE      PIC X(1) VALUE "R".  
+       01  MOUNT-SYS-USE-OPT.
+           05  FILLER              BINARY   VALUE 0.
+           05  MNT-SYS-USE-OPT-R-2 BINARY   VALUE 0.
+       01  MOUNT-BYPASS-OPT      PIC X(1) VALUE "S".
+       01  MOUNT-MESSAGE-OPT     PIC X(1) VALUE "M".
+       01  MOUNT-DISPLAY-OPT     PIC X(1) VALUE "D".
+       01  MOUNT-ADDRESS         PIC X(1) VALUE "S".
+       01  MOUNT-RC.
+           03  MOUNT-RC-B1   BINARY   VALUE ZERO.
+           03  MOUNT-RC-B2   BINARY   VALUE ZERO.
+       01  MOUNT-ERROR           PIC X(40) VALUE SPACES.
+
+      ******************************************************************
+
+       01  SUBMIT-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 3 COL 20 VALUE
+               "   *** TESTING THE SUBMIT ROUTINE ***   ".
+
+           03  FILLER PIC X(40) ROW 5 COL 20
+               SOURCE SUBMIT-TITLE.
+
+           03  FILLER PIC X(4) ROW 10 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 10 COL 20 
+               SOURCE SUBMIT-FILE OBJECT SUBMIT-FILE.
+
+           03  FILLER PIC X(7) ROW 10 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 10 COL 38 
+               SOURCE SUBMIT-LIB OBJECT SUBMIT-LIB.
+
+           03  FILLER PIC X(6) ROW 10 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 10 COL 55 
+               SOURCE SUBMIT-VOL OBJECT SUBMIT-VOL.
+
+           03  FILLER PIC X(8) ROW 14 COL  5 VALUE "JOB NAME".
+           03  FILLER PIC X(8) ROW 14 COL 25 
+               SOURCE SUBMIT-NAME OBJECT SUBMIT-NAME.
+
+           03  FILLER PIC X(14) ROW 14 COL 40 VALUE "STATUS (R,H, )".   34567890
+           03  FILLER PIC X(1)  ROW 14 COL 60 
+               SOURCE SUBMIT-STATUS OBJECT SUBMIT-STATUS.
+
+           03  FILLER PIC X(18) ROW 16 COL  5 VALUE 
+               "JOB DISP (D,R,P,O)".
+           03  FILLER PIC X(1)  ROW 16 COL 25 
+               SOURCE SUBMIT-DISP OBJECT SUBMIT-DISP.
+
+           03  FILLER PIC X(9)  ROW 16 COL 40 VALUE "JOB CLASS".
+           03  FILLER PIC X(1)  ROW 16 COL 60 
+               SOURCE SUBMIT-CLASS OBJECT SUBMIT-CLASS.
+
+           03  FILLER PIC X(12) ROW 18 COL  5 VALUE "ABORT ACTION".
+           03  FILLER PIC X(1)  ROW 18 COL 25 
+               SOURCE SUBMIT-ABORT OBJECT SUBMIT-ABORT.
+
+           03  FILLER PIC X(14) ROW 18 COL 40 VALUE "CPU TIME LIMIT".
+           03  FILLER PIC ----9 ROW 18 COL 60 
+               SOURCE SUBMIT-TIME-X OBJECT SUBMIT-TIME-X.
+
+           03  FILLER PIC X(18) ROW 20 COL  5 VALUE 
+               "LIMIT FLAG (C,P,W)".                                    34567890
+           03  FILLER PIC X(1)  ROW 20 COL 25 
+               SOURCE SUBMIT-LIMIT OBJECT SUBMIT-LIMIT.
+
+           03  FILLER PIC X(16) ROW 22 COL  5 VALUE "SHORT SUBMIT (X)".
+           03  FILLER PIC X(1)  ROW 22 COL 22
+               SOURCE SUBMIT-SHORT OBJECT SUBMIT-SHORT.
+
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "RETURN CODE".
+           03  FILLER PIC ----9 ROW 22 COL 47 
+               SOURCE SUBMIT-RC-X.
+
+           03  FILLER PIC X(60) ROW 24 COL 10 SOURCE SUBMIT-FOOTER.
+
+       01  SUBMIT-TITLE       PIC X(40) VALUE SPACES.
+       01  SUBMIT-FOOTER      PIC X(60) VALUE SPACES.
+       01  SUBMIT-FILE        PIC X(8) VALUE "QABCKGRD".
+       01  SUBMIT-LIB         PIC X(8) VALUE SPACES.
+       01  SUBMIT-VOL         PIC X(6) VALUE SPACES.
+       01  SUBMIT-NAME        PIC X(8) VALUE "TESTSBMT".
+       01  SUBMIT-STATUS      PIC X(1) VALUE "R".
+       01  SUBMIT-DISP        PIC X(1) VALUE "D".
+       01  SUBMIT-CLASS       PIC X(1) VALUE " ".
+       01  SUBMIT-ABORT       PIC X(1) VALUE "N".
+       01  SUBMIT-TIME-X      PIC S9999 VALUE ZERO.
+       01  SUBMIT-TIME.
+           03  SUBMIT-TIME-B1 BINARY   VALUE ZERO.
+           03  SUBMIT-TIME-B2 BINARY   VALUE ZERO.
+       01  SUBMIT-LIMIT       PIC X(1) VALUE "C".
+       01  SUBMIT-RC-X        PIC S9999 VALUE ZERO.
+       01  SUBMIT-RC.
+           03  SUBMIT-RC-B1   BINARY   VALUE ZERO.
+           03  SUBMIT-RC-B2   BINARY   VALUE ZERO.
+       01  SUBMIT-SHORT       PIC X(1) VALUE SPACE.
+           88 USE-SHORT-SUBMIT         VALUE "X".
+
+      ******************************************************************
+       01  SUBMIT-PARAMETER-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(37) ROW 1 COL 20 VALUE
+               "   *** ENTER SUBMIT PARAMETERS ***   ".
+
+           03  FILLER OCCURS 8 TIMES.
+             05  SUB-SCRN-ITEM PIC X(76) ROW 6 COL 2
+                 SOURCE SUBMIT-PARMS OBJECT SUBMIT-PARMS.
+             05  FILLER PIC X(76) SOURCE SUBMIT-BLANK-LINE
+                        ROW 7 COL 2.
+
+           03  FILLER PIC X(24) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE".
+
+       01  SUBMIT-PARMS-ARRAY.
+           03  SUBMIT-PARMS PIC X(76) OCCURS 8 TIMES VALUE SPACES.
+           03  SUBMIT-BLANK-LINE PIC X(76) OCCURS 8 TIMES VALUE SPACES.
+
+       01  SUBMIT-PARMS-LENGTH BINARY VALUE 76.
+       01  SUBMIT-PARMS-COUNT  BINARY VALUE 8.
+
+      ******************************************************************
+
+       01  EXTRACT-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(35) ROW 1 COL 20 VALUE
+              "*** TESTING THE EXTRACT USERSUB ***".
+
+           03 FILLER PIC X(50) ROW 3 COL 25 VALUE
+              "Possible call combinations:".
+           03 FILLER PIC X(50) ROW 4 COL 25 VALUE
+              "1 - KW1, FLD1, ID   (OLD WISP CALL)".
+           03 FILLER PIC X(50) ROW 5 COL 25 VALUE
+              "2 - KW1, FLD1, LEN1".
+           03 FILLER PIC X(50) ROW 6 COL 25 VALUE
+              "3 - KW1, FLD1".
+           03 FILLER PIC X(50) ROW 7 COL 25 VALUE
+              "4 - KW1, FLD1, KW2, FLD2".
+           03 FILLER PIC X(50) ROW 8 COL 25 VALUE
+              "5 - KW1, FLD1, LEN1, KW2, FLD2".
+           03 FILLER PIC X(50) ROW 9 COL 25 VALUE
+              "6 - KW3, FLD3-int(4)".
+           03 FILLER PIC X(21) ROW 11 COL 15 VALUE
+              "AVAILABLE PARAMETERS:".
+           03  FILLER PIC X(7) ROW 12 COL 40 VALUE "PROG ID".
+           03  FILLER PIC X(8) ROW 12 COL 50 
+               SOURCE WISP-APPLICATION-NAME.
+
+           03  FILLER PIC X(9) ROW 13 COL 1 VALUE "Keyword 1".
+           03  FILLER PIC X(2) ROW 13 COL 11 
+               SOURCE EXT-KW-1 OBJECT EXT-KW-1.
+
+           03  FILLER PIC X(9) ROW 14 COL 1 VALUE "PIC X(59)".
+           03  FILLER PIC X(59) ROW 14 COL 11 
+               SOURCE EXT-RECVR-1.
+
+           03  FILLER PIC X(9) ROW 15 COL 1 VALUE "Length  1".
+           03  FILLER PIC 9(02) ROW 15 COL 11
+               SOURCE EXT-RLEN-1 OBJECT EXT-RLEN-1.
+
+           03  FILLER PIC X(9) ROW 16 COL 1 VALUE "Keyword 2".
+           03  FILLER PIC X(2) ROW 16 COL 11 
+               SOURCE EXT-KW-2 OBJECT EXT-KW-2.
+
+           03  FILLER PIC X(9) ROW 17 COL 1 VALUE "PIC X(59)".
+           03  FILLER PIC X(59) ROW 17 COL 11 
+               SOURCE EXT-RECVR-2.
+
+           03  FILLER PIC X(9) ROW 18 COL 1 VALUE "Length  2".
+           03  FILLER PIC 9(02) ROW 18 COL 11
+               SOURCE EXT-RLEN-2 OBJECT EXT-RLEN-2.
+
+           03  FILLER PIC X(9) ROW 19 COL 1 VALUE "Keyword 3".
+           03  FILLER PIC X(2) ROW 19 COL 11 
+               SOURCE EXT-KW-3 OBJECT EXT-KW-3.
+
+           03  FILLER PIC X(9) ROW 20 COL 1 VALUE "S9(4)    ".
+           03  FILLER PIC ----9 ROW 20 COL 11 
+               SOURCE EXT-RECVR-3.
+
+           03 FILLER PIC X(53) ROW 23 COL 05 VALUE
+              "SEE CALL OPTIONS ABOVE - PUSH PFKEY FOR DESIRED CALL,".
+
+           03 FILLER PIC X(15) ROW 23 COL 60 VALUE
+              "<PF16> TO EXIT.".
+
+       01  EXT-KW-1        PIC X(02) VALUE SPACES.
+       01  EXT-RECVR-1     PIC X(59) VALUE SPACES.
+       01  EXT-LENGTH-1.
+           03  FILLER            BINARY    VALUE 0.
+           03  EXT-RLEN-1        BINARY    VALUE 0.
+       01  EXT-KW-2        PIC X(02) VALUE SPACES.
+       01  EXT-RECVR-2     PIC X(59) VALUE SPACES.
+       01  EXT-LENGTH-2.
+           03  FILLER            BINARY    VALUE 0.
+           03  EXT-RLEN-2        BINARY    VALUE 0.
+       01  EXT-KW-3        PIC X(02) VALUE SPACES.
+       01  EXT-RECVR-3-X.
+           03  FILLER             BINARY    VALUE 0.
+           03  EXT-RECVR-3        BINARY    VALUE 0.
+
+      ******************************************************************
+
+       01  PRINT-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(33) ROW 1 COL 25 VALUE
+              "*** TESTING THE PRINT USERSUB ***".
+
+           03 FILLER PIC X(52) ROW 4 COL 1 VALUE
+              "NOTE: parameters 'LIBRARY' through 'FORM NUMBER' are".
+           03 FILLER PIC X(25) ROW 4 COL 54 VALUE
+              "optional, however, if any".
+           03 FILLER PIC X(55) ROW 5 COL 7 VALUE
+              "are present, all preceeding parameters must be present.".
+           03 FILLER PIC X(21) ROW 7 COL 25 VALUE
+              "AVAILABLE PARAMETERS:".
+           03  FILLER PIC X(04) ROW 9 COL 5 VALUE "FILE".
+           03  FILLER PIC X(08) ROW 9 COL 20 
+               SOURCE PRINT-FILE OBJECT PRINT-FILE.
+
+           03  FILLER PIC X(07) ROW 10 COL 5 VALUE "LIBRARY".
+           03  FILLER PIC X(08) ROW 10 COL 20 
+               SOURCE PRINT-LIB OBJECT PRINT-LIB.
+
+           03  FILLER PIC X(06) ROW 11 COL 5 VALUE "VOLUME".
+           03  FILLER PIC X(06) ROW 11 COL 20
+               SOURCE PRINT-VOL OBJECT PRINT-VOL.
+
+           03  FILLER PIC X(10) ROW 12 COL 5 VALUE "PRINT_MODE".
+           03  FILLER PIC X(01) ROW 12 COL 20 
+               SOURCE PRINT-MODE OBJECT PRINT-MODE.
+
+           03  FILLER PIC X(11) ROW 13 COL 5 VALUE "DISPOSITION".
+           03  FILLER PIC X(02) ROW 13 COL 20 
+               SOURCE PRINT-DISP OBJECT PRINT-DISP.
+
+           03  FILLER PIC X(10) ROW 14 COL 5 VALUE "COPY_COUNT".
+           03  FILLER PIC 9(03) ROW 14 COL 20
+               SOURCE PRINT-COPY-CNT OBJECT PRINT-COPY-CNT.
+
+           03  FILLER PIC X(11) ROW 15 COL 5 VALUE "PRINT_CLASS".
+           03  FILLER PIC X(01) ROW 15 COL 20 
+               SOURCE PRINT-CLASS OBJECT PRINT-CLASS.
+
+           03  FILLER PIC X(11) ROW 16 COL 5 VALUE "FORM_NUMBER".
+           03  FILLER PIC 9(03) ROW 16 COL 20 
+               SOURCE PRINT-FORM-NUM OBJECT PRINT-FORM-NUM.
+
+           03  FILLER PIC X(54) ROW 18 COL 1 VALUE
+               "RETURN_CODE -           Not valid/meaningful for PRINT".
+           03  FILLER PIC 9(04) ROW 18 COL 15
+               SOURCE PRINT-RET-CODE.
+
+           03 FILLER PIC X(40) ROW 20 COL 5
+              SOURCE PRINT-MESG.
+
+           03 FILLER PIC X(43) ROW 23 COL 10 VALUE
+              "HIT <RETURN> TO CALL PRINT, <PF16> TO EXIT.".
+
+       01  PRINT-FILE      PIC X(08) VALUE SPACES.
+       01  PRINT-LIB       PIC X(08) VALUE SPACES.
+       01  PRINT-VOL       PIC X(06) VALUE SPACES.
+       01  PRINT-MODE      PIC X(01) VALUE SPACES.
+       01  PRINT-DISP      PIC X(02) VALUE SPACES.
+       01  PRINT-COPY-COUNT.
+           03  FILLER            BINARY    VALUE 0.
+           03  PRINT-COPY-CNT    BINARY    VALUE 0.
+       01  PRINT-CLASS     PIC X(01) VALUE SPACES.
+       01  PRINT-FORM-NUMBER.
+           03  FILLER            BINARY    VALUE 0.
+           03  PRINT-FORM-NUM    BINARY    VALUE 0.
+       01  PRINT-RETURN-CODE.
+           03  FILLER            BINARY    VALUE 0.
+           03  PRINT-RET-CODE    BINARY    VALUE 0.
+       01  PRINT-MESG      PIC X(40) VALUE SPACES.
+
+      ******************************************************************
+
+       01  BELL-PAUSE-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(39) ROW 1 COL 20 VALUE
+              "*** TESTING THE BELL/PAUSE USERSUBS ***".
+
+           03 FILLER PIC X(36) ROW 4 COL 25 VALUE
+              "PF1 = Call BELL     PF2 = Call PAUSE".
+           03 FILLER PIC X(25) ROW 7 COL 05 VALUE
+              "Enter the period of time:".
+           03  FILLER PIC 9(03) ROW 7 COL 46
+               SOURCE BELL-PAUSE-TIME OBJECT BELL-PAUSE-TIME.
+           03 FILLER PIC X(40) ROW 20 COL 5
+              SOURCE BELL-PAUSE-MESG.
+           03 FILLER PIC X(39) ROW 23 COL 10 VALUE
+              "HIT APPROPRIATE PF KEY, <PF16> TO EXIT.".
+
+       01  BELL-PAUSE-TIME-LEN.
+           03  FILLER            BINARY    VALUE 0.
+           03  BELL-PAUSE-TIME   BINARY    VALUE 0.
+       01  BELL-PAUSE-MESG      PIC X(40) VALUE SPACES.
+
+
+      ******************************************************************
+
+       01  SORTCALL-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(46) ROW 1 COL 17 VALUE
+              "*** TESTING THE SORTCALL/WISPSORT USERSUBS ***".
+
+           03 FILLER PIC X(24) ROW 4 COL 27 VALUE
+              "FILE     LIBRARY  VOLUME".
+
+           03 FILLER PIC X(6) ROW 5 COL 20 VALUE "INPUT ".
+           03 FILLER PIC X(8) ROW 5 COL 27 
+              SOURCE SC-INFILE   OBJECT SC-INFILE. 
+           03 FILLER PIC X(8) ROW 5 COL 36 
+              SOURCE SC-INLIB    OBJECT SC-INLIB. 
+           03 FILLER PIC X(6) ROW 5 COL 45 
+              SOURCE SC-INVOL    OBJECT SC-INVOL. 
+
+           03 FILLER PIC X(6) ROW 6 COL 20 VALUE "OUTPUT".
+           03 FILLER PIC X(8) ROW 6 COL 27 
+              SOURCE SC-OUTFILE   OBJECT SC-OUTFILE. 
+           03 FILLER PIC X(8) ROW 6 COL 36 
+              SOURCE SC-OUTLIB    OBJECT SC-OUTLIB. 
+           03 FILLER PIC X(6) ROW 6 COL 45 
+              SOURCE SC-OUTVOL    OBJECT SC-OUTVOL. 
+
+           03 FILLER PIC X(26) ROW 8 COL 27 VALUE
+              "POSITION LENGTH TYPE ORDER".
+
+           03 FILLER PIC X(4) ROW  9 COL 20 VALUE "KEY1".
+           03 FILLER PIC X(4) ROW 10 COL 20 VALUE "KEY2".
+           03 FILLER PIC X(4) ROW 11 COL 20 VALUE "KEY3".
+           03 FILLER PIC X(4) ROW 12 COL 20 VALUE "KEY4".
+           03 FILLER PIC X(4) ROW 13 COL 20 VALUE "KEY5".
+           03 FILLER PIC X(4) ROW 14 COL 20 VALUE "KEY6".
+           03 FILLER PIC X(4) ROW 15 COL 20 VALUE "KEY7".
+           03 FILLER PIC X(4) ROW 16 COL 20 VALUE "KEY8".
+           03 FILLER PIC ZZZZ ROW  9 COL 27 
+              SOURCE SC-POS1      OBJECT SC-POS1.
+           03 FILLER PIC ZZZZ ROW 10 COL 27 
+              SOURCE SC-POS2      OBJECT SC-POS2.
+           03 FILLER PIC ZZZZ ROW 11 COL 27 
+              SOURCE SC-POS3      OBJECT SC-POS3.
+           03 FILLER PIC ZZZZ ROW 12 COL 27 
+              SOURCE SC-POS4      OBJECT SC-POS4.
+           03 FILLER PIC ZZZZ ROW 13 COL 27 
+              SOURCE SC-POS5      OBJECT SC-POS5.
+           03 FILLER PIC ZZZZ ROW 14 COL 27 
+              SOURCE SC-POS6      OBJECT SC-POS6.
+           03 FILLER PIC ZZZZ ROW 15 COL 27 
+              SOURCE SC-POS7      OBJECT SC-POS7.
+           03 FILLER PIC ZZZZ ROW 16 COL 27 
+              SOURCE SC-POS8      OBJECT SC-POS8.
+
+           03 FILLER PIC ZZZ  ROW  9 COL 36 
+              SOURCE SC-LEN1      OBJECT SC-LEN1.
+           03 FILLER PIC ZZZ  ROW 10 COL 36 
+              SOURCE SC-LEN2      OBJECT SC-LEN2.
+           03 FILLER PIC ZZZ  ROW 11 COL 36 
+              SOURCE SC-LEN3      OBJECT SC-LEN3.
+           03 FILLER PIC ZZZ  ROW 12 COL 36 
+              SOURCE SC-LEN4      OBJECT SC-LEN4.
+           03 FILLER PIC ZZZ  ROW 13 COL 36 
+              SOURCE SC-LEN5      OBJECT SC-LEN5.
+           03 FILLER PIC ZZZ  ROW 14 COL 36 
+              SOURCE SC-LEN6      OBJECT SC-LEN6.
+           03 FILLER PIC ZZZ  ROW 15 COL 36 
+              SOURCE SC-LEN7      OBJECT SC-LEN7.
+           03 FILLER PIC ZZZ  ROW 16 COL 36 
+              SOURCE SC-LEN8      OBJECT SC-LEN8.
+
+           03 FILLER PIC X    ROW  9 COL 43 
+              SOURCE SC-TYPE1     OBJECT SC-TYPE1.
+           03 FILLER PIC X    ROW 10 COL 43 
+              SOURCE SC-TYPE2     OBJECT SC-TYPE2.
+           03 FILLER PIC X    ROW 11 COL 43 
+              SOURCE SC-TYPE3     OBJECT SC-TYPE3.
+           03 FILLER PIC X    ROW 12 COL 43 
+              SOURCE SC-TYPE4     OBJECT SC-TYPE4.
+           03 FILLER PIC X    ROW 13 COL 43 
+              SOURCE SC-TYPE5     OBJECT SC-TYPE5.
+           03 FILLER PIC X    ROW 14 COL 43 
+              SOURCE SC-TYPE6     OBJECT SC-TYPE6.
+           03 FILLER PIC X    ROW 15 COL 43 
+              SOURCE SC-TYPE7     OBJECT SC-TYPE7.
+           03 FILLER PIC X    ROW 16 COL 43 
+              SOURCE SC-TYPE8     OBJECT SC-TYPE8.
+
+           03 FILLER PIC X    ROW  9 COL 48 
+              SOURCE SC-ORDER1    OBJECT SC-ORDER1.
+           03 FILLER PIC X    ROW 10 COL 48 
+              SOURCE SC-ORDER2    OBJECT SC-ORDER2.
+           03 FILLER PIC X    ROW 11 COL 48 
+              SOURCE SC-ORDER3    OBJECT SC-ORDER3.
+           03 FILLER PIC X    ROW 12 COL 48 
+              SOURCE SC-ORDER4    OBJECT SC-ORDER4.
+           03 FILLER PIC X    ROW 13 COL 48 
+              SOURCE SC-ORDER5    OBJECT SC-ORDER5.
+           03 FILLER PIC X    ROW 14 COL 48 
+              SOURCE SC-ORDER6    OBJECT SC-ORDER6.
+           03 FILLER PIC X    ROW 15 COL 48 
+              SOURCE SC-ORDER7    OBJECT SC-ORDER7.
+           03 FILLER PIC X    ROW 16 COL 48 
+              SOURCE SC-ORDER8    OBJECT SC-ORDER8.
+
+           03 FILLER PIC X(15) ROW 18 COL 3 VALUE "(WISPSORT ONLY)".
+           03 FILLER PIC X(8)  ROW 18 COL 20 VALUE "FILETYPE".
+           03 FILLER PIC X     ROW 18 COL 29 
+              SOURCE SC-FILETYPE    OBJECT SC-FILETYPE.
+           03 FILLER PIC X(7)  ROW 18 COL 32 VALUE "RECSIZE".
+           03 FILLER PIC ZZZZ9 ROW 18 COL 40 
+              SOURCE SC-RECSIZE-Z    OBJECT SC-RECSIZE-Z.
+           03 FILLER PIC X(8)  ROW 18 COL 47 VALUE "SORTCODE".
+           03 FILLER PIC ZZZZ9 ROW 18 COL 56 
+              SOURCE SC-SORTCODE-Z.
+           03 FILLER PIC X(10) ROW 20 COL 20 VALUE "RETURNCODE".
+           03 FILLER PIC ZZZZ9 ROW 20 COL 31 
+              SOURCE SC-RETURNCODE-Z.
+
+           03 FILLER PIC X(45) ROW 24 COL 17 VALUE
+              "Press <RETURN> to continue; <PF16> to exit.".
+
+       01  SC-PARMS.
+           03  SC-INFILE              PIC X(8).
+           03  SC-INLIB               PIC X(8).
+           03  SC-INVOL               PIC X(6).
+           03  SC-OUTFILE             PIC X(8).
+           03  SC-OUTLIB              PIC X(8).
+           03  SC-OUTVOL              PIC X(6).
+           03  SC-POS1                PIC Z(4).
+           03  SC-LEN1                PIC Z(3).
+           03  SC-TYPE1               PIC X.
+           03  SC-ORDER1              PIC X.
+           03  SC-POS2                PIC Z(4).
+           03  SC-LEN2                PIC Z(3).
+           03  SC-TYPE2               PIC X.
+           03  SC-ORDER2              PIC X.
+           03  SC-POS3                PIC Z(4).
+           03  SC-LEN3                PIC Z(3).
+           03  SC-TYPE3               PIC X.
+           03  SC-ORDER3              PIC X.
+           03  SC-POS4                PIC Z(4).
+           03  SC-LEN4                PIC Z(3).
+           03  SC-TYPE4               PIC X.
+           03  SC-ORDER4              PIC X.
+           03  SC-POS5                PIC Z(4).
+           03  SC-LEN5                PIC Z(3).
+           03  SC-TYPE5               PIC X.
+           03  SC-ORDER5              PIC X.
+           03  SC-POS6                PIC Z(4).
+           03  SC-LEN6                PIC Z(3).
+           03  SC-TYPE6               PIC X.
+           03  SC-ORDER6              PIC X.
+           03  SC-POS7                PIC Z(4).
+           03  SC-LEN7                PIC Z(3).
+           03  SC-TYPE7               PIC X.
+           03  SC-ORDER7              PIC X.
+           03  SC-POS8                PIC Z(4).
+           03  SC-LEN8                PIC Z(3).
+           03  SC-TYPE8               PIC X.
+           03  SC-ORDER8              PIC X.
+
+       01  SC-FILETYPE                PIC X.
+
+       01  SC-RECSIZE.
+           03  SC-RECSIZE-B1  BINARY VALUE 0.
+           03  SC-RECSIZE-B2  BINARY VALUE 0.
+       01  SC-RECSIZE-Z               PIC Z(5).
+
+       01  SC-SORTCODE.
+           03  SC-SORTCODE-B1  BINARY VALUE 0.
+           03  SC-SORTCODE-B2  BINARY VALUE 0.
+       01  SC-SORTCODE-Z              PIC Z(5).
+
+       01  SC-RETURNCODE.
+           03  SC-RETURNCODE-B1  BINARY VALUE 0.
+           03  SC-RETURNCODE-B2  BINARY VALUE 0.
+       01  SC-RETURNCODE-Z            PIC Z(5).
+
+      ******************************************************************
+
+       01  SCRATCH-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(35) ROW 1 COL 20 VALUE
+              "*** TESTING THE SCRATCH USERSUB ***".
+
+           03  FILLER PIC X(04) ROW 4 COL  1 VALUE "TYPE".
+           03  FILLER PIC X(01) ROW 4 COL 17 
+               SOURCE SCRATCH-TYPE OBJECT SCRATCH-TYPE.
+           03  FILLER PIC X(16) ROW 4 COL 40 VALUE "F = File Scratch".
+           03  FILLER PIC X(19) ROW 5 COL 40 VALUE
+               "L = Library Scratch".
+
+           03  FILLER PIC X(09) ROW 7 COL  1 VALUE "FILE NAME".
+           03  FILLER PIC X(08) ROW 7 COL 17 
+               SOURCE SCRATCH-FNAME OBJECT SCRATCH-FNAME.
+           03  FILLER PIC X(36) ROW 7 COL 40 VALUE
+               "Must be included, ignored if TYPE L.".
+
+           03  FILLER PIC X(10) ROW 8 COL 1 VALUE "WISPFILEXT".
+           03  SCRATCH-EXT-TEXT PIC X(39) ROW 8 COL 17
+               SOURCE SCRATCH-EXT OBJECT SCRATCH-EXT.
+
+           03  FILLER PIC X(7) ROW 9 COL  1 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 9 COL 17
+               SOURCE SCRATCH-LIBNAME OBJECT SCRATCH-LIBNAME.
+
+           03  FILLER PIC X(6) ROW 10 COL  1 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 10 COL 17
+               SOURCE SCRATCH-VOL OBJECT SCRATCH-VOL.
+
+           03  FILLER PIC X(15) ROW 12 COL  1 VALUE
+               "EXP. DATE CHECK".
+           03  FILLER PIC X(01) ROW 12 COL 17
+               SOURCE SCRATCH-EXP-DATE-CHECK
+               OBJECT SCRATCH-EXP-DATE-CHECK.
+           03  FILLER PIC X(22) ROW 12 COL 40 VALUE
+               "B = Bypass date check.".
+           03  FILLER PIC X(17) ROW 13 COL 40 VALUE "blank = No bypass".
+           03  FILLER PIC X(40) ROW 14 COL 40 VALUE
+               "(optional unless ACCESS flag is present)".
+
+           03  FILLER PIC X(11) ROW 16 COL  1 VALUE "ACCESS FLAG".
+           03  FILLER PIC X(01) ROW 16 COL 17
+               SOURCE SCRATCH-ACCESS-LIMITS-FLAG
+               OBJECT SCRATCH-ACCESS-LIMITS-FLAG.
+           03  FILLER PIC X(18) ROW 16 COL 40 VALUE
+               "L = Limit to users".
+           03  FILLER PIC X(39) ROW 17 COL 40 VALUE
+               "blank = programs full access (optional)".
+
+           03  FILLER PIC X(11) ROW 20 COL  1 VALUE "RETURN-CODE".
+           03  FILLER PIC 9(04) ROW 20 COL 17
+               SOURCE SCRATCH-RET-CODE.
+
+           03 FILLER PIC X(44) ROW 23 COL 05 VALUE
+              "PUSH RETURN TO CALL SCRATCH, <PF16> TO EXIT.".
+
+       01  SCRATCH-TYPE               PIC X(01) VALUE SPACES.
+       01  SCRATCH-FNAME              PIC X(59) VALUE SPACES.
+       01  SCRATCH-EXT                PIC X(39) VALUE SPACES.
+       01  SCRATCH-LIBNAME            PIC X(08) VALUE SPACES.
+       01  SCRATCH-VOL                PIC X(06) VALUE SPACES.
+       01  SCRATCH-EXP-DATE-CHECK     PIC X(01) VALUE SPACES.
+       01  SCRATCH-ACCESS-LIMITS-FLAG PIC X(01) VALUE SPACES.
+       01  SCRATCH-RETURN-CODE.
+           03  FILLER                 BINARY    VALUE 0.
+           03  SCRATCH-RET-CODE       BINARY    VALUE 0.
+
+      ******************************************************************
+       01  SET-KW                     PIC X(02)  VALUE SPACES.
+       01  SET-VALX                   PIC X(20)  VALUE SPACES.
+       01  SET-VALB.
+           03  SET-VALB-1                BINARY  VALUE 0.
+           03  SET-VALB-2                BINARY  VALUE 0.
+       01  SET-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING the SET usersub ***".
+
+           03 FILLER PIC X(11) ROW 5 COL 5 VALUE "    KEYWORD".
+           03 FILLER PIC X(02) ROW 5 COL 22 
+              SOURCE SET-KW OBJECT SET-KW.
+           03 FILLER PIC X(15) ROW 7 COL 5 VALUE "(1) VALUE X(20)".
+           03 FILLER PIC X(20) ROW 7 COL 22  OBJECT SET-VALX.
+           03 FILLER PIC X(15) ROW 8 COL 5 VALUE "(2) VALUE 9(05)".
+           03 FILLER PIC 9(05) ROW 8 COL 22  OBJECT SET-VALB-2.
+
+           03  FILLER PIC X(29) ROW 21 COL 25 VALUE
+               "Enter the appropriate PF key:".
+
+           03  FILLER PIC X(27) ROW 22 COL 25 VALUE
+               "PF1 = Alpha   PF2 = Int".
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 TO EXIT".
+
+      ******************************************************************
+
+       01  RENAME-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING the RENAME usersub ***".
+
+           03  FILLER PIC X(30) ROW 4 COL 28
+               SOURCE RENAME-TITLE.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE RENAME-FILE OBJECT RENAME-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE RENAME-LIB OBJECT RENAME-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE RENAME-VOL OBJECT RENAME-VOL.
+
+           03  FILLER PIC X(10) ROW 7 COL 15 VALUE "WISPFILEXT".
+           03  RENAME-EXTENTION PIC X(3) ROW 7 COL 26 
+               SOURCE RENAME-EXT OBJECT RENAME-EXT.
+
+           03  FILLER PIC X(8) ROW 9 COL 11 VALUE "NEW FILE".
+           03  FILLER PIC X(8) ROW 9 COL 20 
+               SOURCE RENAME-NEW-FILE OBJECT RENAME-NEW-FILE.
+
+           03  FILLER PIC X(11) ROW 9 COL 30 VALUE "NEW LIBRARY".
+           03  FILLER PIC X(8) ROW 9 COL 42 
+               SOURCE RENAME-NEW-LIB OBJECT RENAME-NEW-LIB.
+
+           03  FILLER PIC X(6) ROW 11 COL 15 VALUE "BYPASS".
+           03  FILLER PIC X(1) ROW 11 COL 22
+               SOURCE RENAME-BYPASS OBJECT RENAME-BYPASS.
+
+           03  FILLER PIC X(6) ROW 11 COL 30 VALUE "ACCESS".
+           03  FILLER PIC X(1) ROW 11 COL 38
+               SOURCE RENAME-ACCESS OBJECT RENAME-ACCESS.
+
+           03  FILLER PIC X(4) ROW 11 COL 48 VALUE "OPEN".
+           03  FILLER PIC X(1) ROW 11 COL 53
+               SOURCE RENAME-OPEN OBJECT RENAME-OPEN.
+
+           03  FILLER PIC X(11) ROW 14 COL 15 VALUE "RETURN CODE".
+           03  FILLER PIC -----9 ROW 14 COL 27 
+               SOURCE RENAME-RETURN-X.
+
+           03  FILLER PIC X(29) ROW 21 COL 25 VALUE
+               "Enter the appropriate PF key:".
+
+           03  FILLER PIC X(27) ROW 22 COL 25 VALUE
+               "PF1 = F   PF2 = L   PF3 = G".
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 TO EXIT".
+
+       01  RENAME-TITLE                 PIC X(40) VALUE SPACES.
+       01  RENAME-TYPE                  PIC X(1) VALUE SPACES.
+       01  RENAME-FILE                  PIC X(8) VALUE SPACES.
+       01  RENAME-EXT                   PIC X(3) VALUE SPACES.
+       01  RENAME-EXT-FULL              PIC X(39) VALUE SPACES.
+       01  RENAME-LIB                   PIC X(8) VALUE SPACES.
+       01  RENAME-VOL                   PIC X(6) VALUE SPACES.
+       01  RENAME-NEW-FILE              PIC X(8) VALUE SPACES.
+       01  RENAME-NEW-LIB               PIC X(8) VALUE SPACES.
+       01  RENAME-BYPASS                PIC X(1) VALUE SPACES.
+       01  RENAME-ACCESS                PIC X(1) VALUE SPACES.
+       01  RENAME-OPEN                  PIC X(1) VALUE SPACES.
+       01  RENAME-RETURN.
+           03 RENAME-RETURN-1           BINARY    VALUE ZERO.
+           03 RENAME-RETURN-2           BINARY    VALUE ZERO.
+       01  RENAME-RETURN-X              PIC S99999 VALUE ZERO.
+
+      ******************************************************************
+
+       01  FILECOPY-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "*** TESTING the FILECOPY usersub ***".
+
+           03  FILLER PIC X(30) ROW 4 COL 28
+               SOURCE FILECOPY-TITLE.
+
+           03  FILLER PIC X(3) ROW 6 COL 5 VALUE "OLD".
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE FILECOPY-OFILE OBJECT FILECOPY-OFILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38 
+               SOURCE FILECOPY-OLIB OBJECT FILECOPY-OLIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE FILECOPY-OVOL OBJECT FILECOPY-OVOL.
+
+           03  FILLER PIC X(3) ROW 8 COL 5 VALUE "NEW".
+           03  FILLER PIC X(4) ROW 8 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 8 COL 20 
+               SOURCE FILECOPY-NFILE OBJECT FILECOPY-NFILE.
+
+           03  FILLER PIC X(7) ROW 8 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 8 COL 38 
+               SOURCE FILECOPY-NLIB OBJECT FILECOPY-NLIB.
+
+           03  FILLER PIC X(6) ROW 8 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 8 COL 55 
+               SOURCE FILECOPY-NVOL OBJECT FILECOPY-NVOL.
+
+           03  FILLER PIC X(11) ROW 14 COL 15 VALUE "RETURN CODE".
+           03  FILLER PIC -----9 ROW 14 COL 27 
+               SOURCE FILECOPY-RETURN-X.
+
+           03  FILLER PIC X(40) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 TO EXIT".
+
+       01  FILECOPY-TITLE                 PIC X(40) VALUE SPACES.
+       01  FILECOPY-OFILE                 PIC X(8) VALUE SPACES.
+       01  FILECOPY-OLIB                  PIC X(8) VALUE SPACES.
+       01  FILECOPY-OVOL                  PIC X(6) VALUE SPACES.
+       01  FILECOPY-NFILE                 PIC X(8) VALUE SPACES.
+       01  FILECOPY-NLIB                  PIC X(8) VALUE SPACES.
+       01  FILECOPY-NVOL                  PIC X(6) VALUE SPACES.
+       01  FILECOPY-RETURN.
+           03 FILECOPY-RETURN-1           BINARY    VALUE ZERO.
+           03 FILECOPY-RETURN-2           BINARY    VALUE ZERO.
+       01  FILECOPY-RETURN-X              PIC S99999 VALUE ZERO.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+       01  LINK-FAILED-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(29) ROW 5 COL 20
+               VALUE 
+               "THE DYNAMIC LINK/CALL FAILED!".
+
+      ******************************************************************
+
+       01  GETPARM-DONE-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(29) ROW 5 COL 20
+               VALUE 
+               "THE GETPARM HAS FINISHED.    ".
+
+      ******************************************************************
+
+       01  LINK-PARAMETER-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 5 COL 20
+               VALUE 
+               "THE PARAMETERS TO THE DYNAMIC LINK.     ".
+
+           03  FILLER PIC X(8)  ROW 10 COL 30 VALUE "LINKARG1".
+           03  FILLER PIC X(10) ROW 10 COL 40 
+               SOURCE LINKARG1 OBJECT LINKARG1.
+
+           03  FILLER PIC X(8)  ROW 12 COL 30 VALUE "LINKARG2".
+           03  FILLER PIC X(10) ROW 12 COL 40 
+               SOURCE LINKARG2 OBJECT LINKARG2.
+
+           03  FILLER PIC X(8)  ROW 14 COL 30 VALUE "LINKARG3".
+           03  FILLER PIC X(10) ROW 14 COL 40 
+               SOURCE LINKARG3 OBJECT LINKARG3.
+
+      ******************************************************************
+
+       01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 5 COL 20
+               SOURCE FLV-TITLE.
+
+           03  FILLER PIC X(4) ROW 12 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 12 COL 20 
+               SOURCE FLV-FILE OBJECT FLV-FILE.
+
+           03  FILLER PIC X(7) ROW 12 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 12 COL 38 
+               SOURCE FLV-LIB OBJECT FLV-LIB.
+
+           03  FILLER PIC X(6) ROW 12 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 12 COL 55 
+               SOURCE FLV-VOL OBJECT FLV-VOL.
+
+      ******************************************************************
+
+       01  SUBROUTINE-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(15) ROW 1 COL 60 VALUE
+               "USERSUBS-SCREEN".
+           03  FILLER  PIC X(16) ROW 3 COL 2 VALUE
+               " 1) READFDR.".
+           03  FILLER  PIC X(13) ROW 4 COL 2 VALUE
+               " 2) FIND.".
+           03  FILLER  PIC X(35) ROW 5 COL 2 VALUE
+               " 3) PUTPARM & LINK TO DISPLAY".
+           03  FILLER  PIC X(35) ROW 6 COL 2 VALUE
+               " 4) DAY".
+           03  FILLER  PIC X(37) ROW 7 COL 2 VALUE
+               " 5) GETPARM (UNIX test # parameters).".
+           03  FILLER  PIC X(10) ROW 8 COL 2 VALUE
+               " 6) SUBMIT".
+           03  FILLER  PIC X(08) ROW 9 COL 2 VALUE
+               " 7) DATE".
+           03  FILLER  PIC X(08) ROW 10 COL 2 VALUE
+               " 8) LINK".
+           03  FILLER  PIC X(11) ROW 11 COL 2 VALUE
+               " 9) MESSAGE".
+           03  FILLER  PIC X(20) ROW 12 COL 2 VALUE
+               "10) WCHAIN".
+           03  FILLER  PIC X(11) ROW 13 COL 2 VALUE
+               "11) EXTRACT".
+           03  FILLER  PIC X(09) ROW 14 COL 2 VALUE
+               "12) PRINT".
+           03  FILLER  PIC X(35) ROW 15 COL 2 VALUE
+               "13) LINKPROC".
+           03  FILLER  PIC X(14) ROW 16 COL 2 VALUE
+               "14) BELL/PAUSE".
+           03  FILLER  PIC X(11) ROW 17 COL 2 VALUE
+               "15) SCRATCH".
+           03  FILLER  PIC X(08) ROW 19 COL 2 VALUE
+               "16) EXIT".
+           03  FILLER  PIC X(30) ROW 3 COL 40 VALUE
+               "17) LOGOFF".
+           03  FILLER  PIC X(11) ROW 4 COL 40 VALUE
+               "18) PUTPARM".
+           03  FILLER  PIC X(11) ROW 5 COL 40 VALUE
+               "19) GETPARM".
+           03  FILLER  PIC X(35) ROW 6 COL 40 VALUE
+               "20) GETPARM 2 parms (DISABLED)".
+           03  FILLER  PIC X(35) ROW 7 COL 40 VALUE
+               "21) BITPACK/BITUNPK".
+           03  FILLER  PIC X(35) ROW 8 COL 40 VALUE
+               "22) HEXPACK/HEXUNPK".
+           03  FILLER  PIC X(35) ROW 9 COL 40 VALUE
+               "23) SEARCH".
+           03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
+               "24) SORTCALL/WISPSORT".
+           03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+               "25) RENAME".
+           03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+               "26) SET".
+           03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
+               "27) READVTOC".
+           03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
+               "28) FILECOPY".
+           03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
+               "29) ".
+           03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
+               "30) ".
+           03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
+               "31) ".
+           03  FILLER  PIC X(35) ROW 19 COL 40 VALUE
+               "32) ".
+           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+      ******************************************************************
+
+       01  MSG-FN PIC XX VALUE SPACES.
+       01  MSG-PORT PIC X(4) VALUE SPACES.
+       01  MSG-SND PIC X(55) VALUE SPACES.
+       01  MSG-RCV PIC X(55) VALUE SPACES.
+       01  MSG-RET PIC 9(4) VALUE ZERO.
+       01  MSG-RET-X.
+           03  FILLER BINARY VALUE ZERO.
+           03  MSG-RET-X-0 BINARY VALUE ZERO.    
+       01  MSG-TYPE PIC X(1) VALUE SPACES.
+       01  MSG-TIME PIC 9(4) VALUE ZERO.
+       01  MSG-BUF-SIZE.
+           03  FILLER BINARY VALUE ZERO.
+           03  FILLER BINARY VALUE 2014.
+       01  MSG-KEEP PIC X VALUE "Y".
+       01  MSG-TIME-X.
+           03  FILLER BINARY VALUE ZERO.
+           03  MSG-TIME-X-0 BINARY VALUE ZERO.
+       01  MSG-LEN-X.
+           03  FILLER BINARY VALUE ZERO.
+           03  FILLER BINARY VALUE 55.    
+       01  MSG-LEN-X2.
+           03  FILLER BINARY VALUE ZERO.
+           03  FILLER BINARY VALUE 55.
+       01  MSG-DUMMY PIC X VALUE SPACES.
+   
+       01  MESSAGE-SCR USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(35) ROW 1 COL 21
+               VALUE "*** TESTING THE MESSAGE USERSUB ***".
+
+           03  FILLER PIC X(30) ROW 3 COL 23
+               VALUE "SPECIFY PARAMETERS FOR MESSAGE".
+
+           03  FILLER PIC X(5) ROW 5 COL 14
+               VALUE "PORT ".
+
+           03  FILLER PIC X(4) ROW 5 COL 19
+               SOURCE MSG-PORT OBJECT MSG-PORT.
+
+           03  FILLER PIC X(13) ROW 7 COL 6
+               VALUE "SEND MESSAGE ".
+
+           03  FILLER PIC X(55) ROW 7 COL 19
+               SOURCE MSG-SND OBJECT MSG-SND.
+
+           03  FILLER PIC X(16) ROW 8 COL 3
+               VALUE "RECEIVE MESSAGE ".
+
+           03  FILLER PIC X(55) ROW 8 COL 19
+               SOURCE MSG-RCV.
+
+           03  FILLER PIC X(12) ROW 10 COL 7
+               VALUE "RETURN CODE ".
+
+           03  FILLER PIC 9(4) ROW 10 COL 19
+               SOURCE MSG-RET.
+
+           03  FILLER PIC X(13) ROW 12 COL 2
+               VALUE "(PF01) CREATE".
+
+           03  FILLER PIC X(13) ROW 13 COL 2
+               VALUE "(PF02) DELETE".
+
+           03  FILLER PIC X(11) ROW 14 COL 2
+               VALUE "(PF03) XMIT".
+
+           03  FILLER PIC X(16) ROW 15 COL 2
+               VALUE "(PF04) XMIT/WAIT".
+
+           03  FILLER PIC X(17) ROW 16 COL 2
+               VALUE "(PF05) CHECK PORT".
+
+           03  FILLER PIC X(15) ROW 17 COL 9
+               VALUE "TYPE (W,T,K,B) ".
+
+           03  FILLER PIC X(1) ROW 17 COL 24
+               SOURCE MSG-TYPE OBJECT MSG-TYPE.
+
+           03  FILLER PIC X(5) ROW 17 COL 33
+               VALUE "TIME ".
+
+           03  FILLER PIC 9(4) ROW 17 COL 38
+               SOURCE MSG-TIME OBJECT MSG-TIME.
+
+           03  FILLER PIC X(11) ROW 19 COL 2
+               VALUE "(PF16) EXIT".
+
+           03  FILLER PIC X(25) ROW 24 COL 26
+               VALUE "PRESS A PFKEY TO CONTINUE".
+
+      ******************************************************************
+
+       01  SEARCH-ITEM PIC X(14) VALUE SPACES.
+       01  SEARCH-LEN PIC 9(2) VALUE ZERO.
+       01  SEARCH-RETURN PIC 9(5) VALUE ZERO.
+
+       01  SEARCH-LIST.
+           03 FILLER  PIC X(14) VALUE "Australia     ".
+           03 FILLER  PIC X(14) VALUE "Austria       ".
+	   03 FILLER  PIC X(14) VALUE "Belgium       ".
+	   03 FILLER  PIC X(14) VALUE "Canada        ".
+           03 FILLER  PIC X(14) VALUE "Finland       ".
+	   03 FILLER  PIC X(14) VALUE "France        ".
+	   03 FILLER  PIC X(14) VALUE "Germany       ".
+           03 FILLER  PIC X(14) VALUE "Hong Kong     ".
+	   03 FILLER  PIC X(14) VALUE "Ireland       ".
+	   03 FILLER  PIC X(14) VALUE "Italy         ".
+           03 FILLER  PIC X(14) VALUE "Japan         ".
+	   03 FILLER  PIC X(14) VALUE "Mexico        ".
+	   03 FILLER  PIC X(14) VALUE "Netherlands   ".
+           03 FILLER  PIC X(14) VALUE "Scotland      ".
+	   03 FILLER  PIC X(14) VALUE "United States ".
+	   03 FILLER  PIC X(14) VALUE "United Kingdom".
+
+       01  SEARCH-TABLE REDEFINES SEARCH-LIST.
+           03 COUNTRY-ITEM PIC X(14) OCCURS 16 TIMES.
+
+       01  SEARCH-LIST-REVERSE.
+	   03 FILLER  PIC X(14) VALUE "United Kingdom".
+	   03 FILLER  PIC X(14) VALUE "United States ".
+           03 FILLER  PIC X(14) VALUE "Scotland      ".
+	   03 FILLER  PIC X(14) VALUE "Netherlands   ".
+	   03 FILLER  PIC X(14) VALUE "Mexico        ".
+           03 FILLER  PIC X(14) VALUE "Japan         ".
+	   03 FILLER  PIC X(14) VALUE "Italy         ".
+	   03 FILLER  PIC X(14) VALUE "Ireland       ".
+           03 FILLER  PIC X(14) VALUE "Hong Kong     ".
+	   03 FILLER  PIC X(14) VALUE "Germany       ".
+	   03 FILLER  PIC X(14) VALUE "France        ".
+           03 FILLER  PIC X(14) VALUE "Finland       ".
+	   03 FILLER  PIC X(14) VALUE "Canada        ".
+	   03 FILLER  PIC X(14) VALUE "Belgium       ".
+           03 FILLER  PIC X(14) VALUE "Austria       ".
+           03 FILLER  PIC X(14) VALUE "Australia     ".
+
+       01  SEARCH-TABLE-REVERSE REDEFINES SEARCH-LIST-REVERSE.
+           03 COUNTRY-ITEM-REVERSE PIC X(14) OCCURS 16 TIMES.
+
+       01  FOUND-ITEM PIC X(14) VALUE SPACES.
+
+       01  SEARCH-LEN-P.
+           03 FILLER BINARY VALUE 0.
+           03 SEARCH-LEN-X BINARY VALUE 14.
+
+       01  SEARCH-ITEM-LEN-P.
+           03 FILLER BINARY VALUE 0.
+           03 FILLER BINARY VALUE 14.
+
+       01  SEARCH-TABLE-SIZE-P.
+           03 FILLER BINARY VALUE 0.
+           03 FILLER BINARY VALUE 16.
+
+       01  SEARCH-RETURN-P.
+           03 FILLER BINARY VALUE 0.
+           03 SEARCH-RETURN-X BINARY VALUE 16.
+
+       01  SEARCH-SCR USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(34) ROW 1 COL 20
+               VALUE "*** TESTING THE SEARCH USERSUB ***".
+
+           03  FILLER PIC X(29) ROW 3 COL 22
+               VALUE "SPECIFY PARAMETERS FOR SEARCH".
+
+           03  FILLER PIC X(11) ROW 5 COL 1
+               VALUE "SEARCH ITEM".
+
+           03  SEARCH-ITEM-FIELD PIC X(14) ROW 5 COL 17
+               SOURCE SEARCH-ITEM OBJECT SEARCH-ITEM.
+
+           03  FILLER PIC X(27) ROW 5 COL 40
+               VALUE "SEARCH ARRAY-> 1: Australia".
+
+           03  FILLER PIC X(13) ROW 6 COL 1
+               VALUE "SEARCH LENGTH".
+
+           03  FILLER PIC 9(2) ROW 6 COL 17
+               SOURCE SEARCH-LEN OBJECT SEARCH-LEN.
+
+           03  FILLER PIC X(10) ROW 6 COL 55
+               VALUE "2: Austria".
+
+           03  FILLER PIC X(10) ROW 7 COL 55
+               VALUE "3: Belgium".
+
+           03  FILLER PIC X(11) ROW 8 COL 1
+               VALUE "RETURN CODE".
+
+           03  FILLER PIC 9(5) ROW 8 COL 17
+               SOURCE SEARCH-RETURN.
+
+           03  FILLER PIC X(9) ROW 8 COL 55
+               VALUE "4: Canada".
+
+           03  FILLER PIC X(10) ROW 9 COL 1
+               VALUE "FOUND ITEM".
+
+           03  FILLER PIC X(14) ROW 9 COL 17
+               SOURCE FOUND-ITEM.
+
+           03  FILLER PIC X(10) ROW 9 COL 55
+               VALUE "5: Finland".
+
+           03  FILLER PIC X(9) ROW 10 COL 55
+               VALUE "6: France".
+
+           03  FILLER PIC X(10) ROW 11 COL 55
+               VALUE "7: Germany".
+
+           03  FILLER PIC X(12) ROW 12 COL 55
+               VALUE "8: Hong Kong".
+
+           03  FILLER PIC X(10) ROW 13 COL 55
+               VALUE "9: Ireland".
+
+           03  FILLER PIC X(9) ROW 14 COL 54
+               VALUE "10: Italy".
+
+           03  FILLER PIC X(9) ROW 15 COL 54
+               VALUE "11: Japan".
+
+           03  FILLER PIC X(10) ROW 16 COL 54
+               VALUE "12: Mexico".
+
+           03  FILLER PIC X(19) ROW 13 COL 1
+               VALUE "CALL SEARCH ROUTINE".
+
+           03  FILLER PIC X(30) ROW 14 COL 1
+               VALUE "(PF1) INCLUDE ARG5 (ASCENDING)".
+
+           03  FILLER PIC X(27) ROW 15 COL 1
+               VALUE "(PF2) OMIT ARG5 (ASCENDING)".
+
+           03  FILLER PIC X(31) ROW 16 COL 1
+               VALUE "(PF3) INCLUDE ARG5 (DESCENDING)".
+
+           03  FILLER PIC X(28) ROW 17 COL 1
+               VALUE "(PF4) OMIT ARG5 (DESCENDING)".
+
+           03  FILLER PIC X(15) ROW 17 COL 54
+               VALUE "13: Netherlands".
+
+           03  FILLER PIC X(12) ROW 18 COL 54
+               VALUE "14: Scotland".
+
+           03  FILLER PIC X(11) ROW 19 COL 1
+               VALUE "(PF16) EXIT".
+
+           03  FILLER PIC X(17) ROW 19 COL 54
+               VALUE "15: United States".
+
+           03  FILLER PIC X(18) ROW 20 COL 54
+               VALUE "16: United Kingdom".
+
+           03  FILLER PIC X(25) ROW 24 COL 25
+               VALUE "PRESS A PFKEY TO CONTINUE".
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       SUBROUTINE-TESTS.
+
+           DISPLAY AND READ SUBROUTINE-SCREEN ON CRT
+           PFKEYS  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+                  11, 12, 13, 14, 15, 16, 17, 18, 19, 
+                  21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                  31, 32.
+
+           IF PF-KEY = "01" THEN
+              PERFORM DO-READFDR
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM DO-FIND THRU DO-FIND-EXIT
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM PUT-LINK-DISPLAY
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM DAY-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM GETPARM-CALL-TST-PARAM
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "06" THEN
+              PERFORM SUBMIT-CALL THRU SUBMIT-CALL-EXIT
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM DATE-CALL
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "08" THEN
+              PERFORM LINK-CALL THRU LINK-CALL-EXIT
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "09" THEN
+              PERFORM MESSAGE-CALL
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "10" THEN
+              PERFORM WCHAIN-CALL
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "11" THEN
+              PERFORM EXTRACT-CALL UNTIL PF-KEY = "16"
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "12" THEN
+              PERFORM PRINT-CALL UNTIL PF-KEY = "16"
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "13" THEN
+              PERFORM LINKPROC-CALL
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "14" THEN
+              PERFORM BELL-PAUSE-CALL UNTIL PF-KEY = "16"
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "15" THEN
+              PERFORM SCRATCH-CALL UNTIL PF-KEY = "16"
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "17" THEN
+              PERFORM LOGOFF-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "18" THEN
+              PERFORM PUTPARM-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "19" THEN
+              PERFORM GETPARM-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "20" THEN
+              PERFORM GETPARM-2-PARAMETERS-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "21" THEN
+              PERFORM DO-BITPACK
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "22" THEN
+              PERFORM DO-HEXPACK
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "23" THEN
+              PERFORM DO-SEARCH-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "24" THEN
+              PERFORM SORTCALL-TEST THRU SORTCALL-END
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "25" THEN
+              PERFORM DO-RENAME-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "26" THEN
+              PERFORM DO-SET-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "27" THEN
+              PERFORM DO-READVTOC THRU DO-READVTOC-EXIT
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "28" THEN
+              PERFORM DO-FILECOPY-TEST
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "29" THEN
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "30" THEN
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "31" THEN
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "32" THEN
+              GO TO SUBROUTINE-TESTS
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO SUBROUTINE-TESTS.
+
+      ******************************************************************
+       LOGOFF-TEST.
+           CALL "LOGOFF".
+
+
+      ******************************************************************
+
+       DO-READFDR.
+
+           MOVE READFDR-RC-B2   TO READFDR-RC-X.
+           MOVE "SPECIFIY PARAMETERS FOR READFDR" TO READFDR-TITLE.
+
+           DISPLAY AND READ READFDR-SCREEN ON CRT ONLY PFKEYS 1 2 3 16.
+
+           IF PF-KEY = "01" THEN
+              MOVE ZERO            TO READFDR-INT4-B1
+              MOVE READFDR-INT4-X  TO READFDR-INT4-B2
+              CALL "READFDR" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-INT4
+                                READFDR-RC
+              MOVE READFDR-INT4-B2 TO READFDR-INT4-X
+              GO TO DO-READFDR
+           ELSE IF PF-KEY = "02" THEN
+              MOVE SPACES TO READFDR-CHAR50
+              CALL "READFDR" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-CHAR50
+                                READFDR-RC
+              GO TO DO-READFDR
+           ELSE IF PF-KEY = "03" THEN
+              MOVE ZEROES TO READFDR-NUM18
+              CALL "READFDR" USING READFDR-FILE
+                                READFDR-LIB
+                                READFDR-VOL
+                                READFDR-MODE,
+                                READFDR-FUNCTION,
+                                READFDR-NUM18
+                                READFDR-RC
+              GO TO DO-READFDR
+           ELSE IF PF-KEY NOT = "16" THEN
+              GO TO DO-READFDR.
+
+      ******************************************************************
+
+       DO-FIND.
+
+           MOVE LOWER-FAC TO FAC OF FIND-EXT.
+
+           MOVE "SPECIFIY PARAMETERS FOR FIND" TO FIND-TITLE.
+
+           MOVE 1      TO FIND-STARTER-X.
+           MOVE 10     TO FIND-COUNTER-X.
+           MOVE ZERO   TO FIND-FILE-COUNT-X.
+           MOVE SPACES TO FIND-RECEIVER.
+
+       DO-FIND-LOOP.
+
+           DISPLAY AND READ FIND-SCREEN ON CRT PFKEYS 16.
+
+           IF PF-KEY = "16" THEN
+              GO TO DO-FIND-EXIT.
+
+           MOVE ZERO TO FIND-STARTER-1.
+           MOVE ZERO TO FIND-COUNTER-1.
+           MOVE ZERO TO FIND-FILE-COUNT-1.
+
+           MOVE SPACES         TO FIND-RECEIVER.
+           MOVE FIND-STARTER-X TO FIND-STARTER-2.
+           MOVE FIND-COUNTER-X TO FIND-COUNTER-2.
+           MOVE ZERO           TO FIND-FILE-COUNT-2.
+
+           CALL "setwispfilext" USING MY-EXT.
+
+           CALL "FIND" USING    FIND-FILE,
+                                FIND-LIB,
+                                FIND-VOL,
+                                FIND-STARTER,
+                                FIND-COUNTER,
+                                FIND-RECEIVER,
+                                FIND-FILE-COUNT,
+                                FIND-RECV-TYPE.
+
+           MOVE FIND-COUNTER-2    TO FIND-COUNTER-X.
+           MOVE FIND-FILE-COUNT-2 TO FIND-FILE-COUNT-X.
+
+           GO TO DO-FIND-LOOP.
+
+       DO-FIND-EXIT.
+           EXIT.
+
+      ******************************************************************
+
+       DO-READVTOC.
+
+           MOVE "SPECIFIY PARAMETERS FOR READVTOC" TO FIND-TITLE.
+
+           MOVE "F"    TO READVTOC-OPTION.
+           MOVE 1      TO FIND-STARTER-X.
+           MOVE 10     TO FIND-COUNTER-X.
+           MOVE ZERO   TO FIND-FILE-COUNT-X.
+           MOVE SPACES TO READVTOC-RECEIVER.
+
+       DO-READVTOC-LOOP.
+
+           DISPLAY AND READ READVTOC-SCREEN ON CRT PFKEYS 16.
+
+           IF PF-KEY = "16" THEN
+              GO TO DO-READVTOC-EXIT.
+
+           MOVE ZERO TO FIND-STARTER-1.
+           MOVE ZERO TO FIND-COUNTER-1.
+           MOVE ZERO TO FIND-FILE-COUNT-1.
+
+           MOVE SPACES         TO READVTOC-RECEIVER.
+           MOVE FIND-STARTER-X TO FIND-STARTER-2.
+           MOVE FIND-COUNTER-X TO FIND-COUNTER-2.
+           MOVE ZERO           TO FIND-FILE-COUNT-2.
+           MOVE ZERO           TO READVTOC-RC-2.
+
+           CALL "READVTOC" USING READVTOC-OPTION,
+                                 FIND-LIB,
+                                 FIND-VOL,
+                                 FIND-STARTER,
+                                 FIND-COUNTER,
+                                 READVTOC-RECEIVER,
+                                 READVTOC-RC,
+                                 FIND-FILE-COUNT.
+
+           MOVE FIND-COUNTER-2    TO FIND-COUNTER-X.
+           MOVE FIND-FILE-COUNT-2 TO FIND-FILE-COUNT-X.
+           MOVE READVTOC-RC-2     TO READVTOC-RC-X.
+
+           GO TO DO-READVTOC-LOOP.
+
+       DO-READVTOC-EXIT.
+           EXIT.
+
+      ******************************************************************
+
+       PUT-LINK-DISPLAY.
+
+           DISPLAY AND READ PP-SCREEN ON CRT.
+
+           CALL "PUTPARM" USING PP-FUNCTION, PP-PRNAME, PP-KWCOUNT,
+                                PP-FILE-KW, PP-FILE, PP-LEN-8,
+                                PP-LIB-KW, PP-LIB, PP-LEN-8,
+                                PP-VOL-KW, PP-VOL, PP-LEN-6,
+                                PP-RCODE.
+
+           CALL "LINK" USING DISPLAY-PROG, PP-LINK-TYPE, LINK-COMP-CODE,
+                             LINK-RETURN.  
+
+      ******************************************************************
+
+       PUTPARM-TEST.
+
+           DISPLAY AND READ PUTP-SCREEN ON CRT PFKEYS 1, 16.
+
+           MOVE SPACES TO PUTP-STATUS-TEXT.
+           MOVE PUTP-USAGE-CNT TO PUTP-UC2.
+
+           IF PF-KEY = "01" THEN
+                CALL "COBLINK" USING PP-DISPLAY
+                GO TO PUTPARM-TEST.
+
+           IF PF-KEY NOT = "16" THEN
+             IF PUTP-FUNCTION = "D" OR PUTP-FUNCTION = "E" THEN        
+               IF PUTP-KW2 = 0 THEN
+                 CALL "PUTPARM" USING PUTP-FUNCTION, PUTP-USAGECNT,
+                                PUTP-PRNAME, PUTP-KWCOUNT,
+                                PUTP-PFKEY-VALUE, PUTP-LABEL,
+                                PUTP-REFLABEL, PUTP-CLEANUP,
+                                PUTP-RCODE
+                 MOVE "FUNCTION CALL COMPLETE" TO PUTP-STATUS-TEXT
+               ELSE
+                 CALL "PUTPARM" USING PUTP-FUNCTION, PUTP-USAGECNT,
+                                PUTP-PRNAME, PUTP-KWCOUNT,
+                                PUTP-FILE-KW, PUTP-FILE, PUTP-LEN-8,
+                                PUTP-LIB-KW, PUTP-LIB, PUTP-LEN-8,
+                                PUTP-VOL-KW, PUTP-VOL, PUTP-LEN-6,
+                                PUTP-PFKEY-VALUE, PUTP-LABEL,
+                                PUTP-REFLABEL, PUTP-CLEANUP,
+                                PUTP-RCODE
+                 MOVE "FUNCTION CALL COMPLETE" TO PUTP-STATUS-TEXT
+             ELSE IF PUTP-FUNCTION = "R" THEN
+                 CALL "PUTPARM" USING PUTP-FUNCTION, PUTP-LABEL,
+                                PUTP-RECEIVER, PUTP-RECVR-LEN,
+                                PUTP-TOTAL-LEN,
+                                PUTP-PFKEY-VALUE, PUTP-CLEANUP,
+                                PUTP-RCODE
+                 MOVE "FUNCTION CALL COMPLETE" TO PUTP-STATUS-TEXT
+             ELSE IF PUTP-FUNCTION = "M" THEN
+                 CALL "PUTPARM" USING PUTP-FUNCTION, PUTP-LABEL,
+                                PUTP-KWCOUNT,
+                                PUTP-FILE-KW, PUTP-RECVR-FILE,
+                                PUTP-RECVR-LENF,
+                                PUTP-LIB-KW, PUTP-RECVR-LIB,
+                                PUTP-RECVR-LENL,
+                                PUTP-VOL-KW, PUTP-RECVR-VOL,
+                                PUTP-RECVR-LENV,
+                                PUTP-PFKEY-VALUE, PUTP-CLEANUP,
+                                PUTP-RCODE
+                 MOVE "FUNCTION CALL COMPLETE" TO PUTP-STATUS-TEXT
+             ELSE IF PUTP-FUNCTION = "C" THEN
+                 CALL "PUTPARM" USING PUTP-FUNCTION, PUTP-LABEL,
+                                PUTP-RCODE
+                 MOVE "FUNCTION CALL COMPLETE" TO PUTP-STATUS-TEXT
+
+             ELSE MOVE "INVALID FUNCTION FOR PUTPARM" TO
+                  PUTP-STATUS-TEXT.
+
+           IF PF-KEY NOT = "16" THEN
+              GO TO PUTPARM-TEST.
+
+      ******************************************************************
+       GETPARM-TEST.
+
+           DISPLAY AND READ GETP-SCREEN ON CRT PFKEYS 16.
+
+           MOVE SPACES TO GETP-STATUS-TEXT.
+
+           IF PF-KEY NOT = "16" THEN
+                 CALL "GETPARM" USING GETP-TYPE, GETP-FORM,
+                                GETP-PRNAME, GETP-PFKEY,
+                                GETP-MESSAGE-ID,
+                                GETP-MESSAGE-ISSUER,
+                                GETP-MESSAGE-COUNT,
+
+                                GETP-MESSAGE-TEXT-1, GETP-MESSAGE-LEN-1,
+
+                                GETP-MESSAGE-TEXT-2, GETP-MESSAGE-LEN-2,
+
+                                GETP-TXT1-TYPE,
+                                GETP-TXT1-VAL, GETP-TXT1-LEN,
+                                GETP-TXT1-FLROW, GETP-TXT1-ROW,
+                                GETP-TXT1-FLCOL, GETP-TXT1-COL,
+
+                                GETP-TXT2-TYPE,
+                                GETP-TXT2-VAL, GETP-TXT2-LEN,
+                                GETP-TXT2-FLROW, GETP-TXT2-ROW,
+                                GETP-TXT2-FLCOL, GETP-TXT2-COL,
+
+                                GETP-TXT3-TYPE,
+                                GETP-TXT3-VAL, GETP-TXT3-LEN,
+                                GETP-TXT3-FLROW, GETP-TXT3-ROW,
+                                GETP-TXT3-FLCOL, GETP-TXT3-COL,
+
+                                GETP-TXT4-TYPE,
+                                GETP-TXT4-VAL, GETP-TXT4-LEN,
+                                GETP-TXT4-FLROW, GETP-TXT4-ROW,
+                                GETP-TXT4-FLCOL, GETP-TXT4-COL,
+
+                                GETP-KW1-TYPE, GETP-FILE-KW,
+                                GETP-FILE, GETP-LEN-8,
+                                GETP-KW1-FLROW, GETP-KW1-ROW,
+                                GETP-KW1-FLCOL, GETP-KW1-COL,
+                                GETP-KW1-DATAT,
+
+                                GETP-KW2-TYPE, GETP-LIB-KW,
+                                GETP-LIB, GETP-LEN-8,
+                                GETP-KW2-FLROW, GETP-KW2-ROW,
+                                GETP-KW2-FLCOL, GETP-KW2-COL,
+                                GETP-KW2-DATAT,
+
+                                GETP-KW3-TYPE, GETP-VOL-KW,
+                                GETP-VOL, GETP-LEN-6,
+                                GETP-KW3-FLROW, GETP-KW3-ROW,
+                                GETP-KW3-FLCOL, GETP-KW3-COL,
+                                GETP-KW3-DATAT,
+
+                                GETP-PFKEY-TYPE, GETP-PFKEY-MASK,
+                                GETP-ENABLE-ENTER.
+
+           MOVE "FUNCTION CALL COMPLETE" TO GETP-STATUS-TEXT.
+
+           IF PF-KEY NOT = "16" THEN
+              GO TO GETPARM-TEST.
+
+      ******************************************************************
+       GETPARM-2-PARAMETERS-TEST.
+000000*$WANG_CODE
+           CALL "QAGP255".
+000000*$WANG_END
+
+      ******************************************************************
+       DAY-TEST.
+           DISPLAY AND READ DAY-SCREEN ON CRT PFKEYS 16.
+
+           IF PF-KEY NOT = "16" THEN
+              CALL "DAY" USING DAY-DATE DAY-DOW
+              GO TO DAY-TEST.
+      ******************************************************************
+
+       DYNAMIC-LINK-CALL.
+           DISPLAY AND READ LINK-PARAMETER-SCREEN ON CRT.
+           MOVE "SUB1" TO LINKNAME.
+           CALL LINKNAME USING LINKARG1 LINKARG2 LINKARG3
+           ON EXCEPTION PERFORM LINK-FAILED.
+           DISPLAY AND READ LINK-PARAMETER-SCREEN ON CRT.
+
+       LINK-FAILED.
+           DISPLAY AND READ LINK-FAILED-SCREEN ON CRT.
+
+      ******************************************************************
+
+       GETPARM-CALL-TST-PARAM.
+
+           CALL "GETPARM" USING
+           GP-TYPE GP-FORM GP-PRNAME GP-PFKEY
+           GP-MESSAGE-ID GP-MESSAGE-ISSUER GP-MESSAGE-COUNT
+           GP-MESSAGE-TEXT-1 GP-MESSAGE-LEN-1
+           GP-MESSAGE-TEXT-2 GP-MESSAGE-LEN-2
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N09 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N09 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N10 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N10 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N11 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N11 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N12 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N12 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N13 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N13 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N14 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N14 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N15 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N15 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N16 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N16 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N17 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N17 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N18 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N18 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N19 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N19 GP-A GP-N40
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N20 GP-A GP-N05
+           GP-T GP-TEXT GP-LENGTH GP-A GP-N20 GP-A GP-N40.
+
+           DISPLAY AND READ GETPARM-DONE-SCREEN ON CRT.
+
+      ******************************************************************
+
+       SUBMIT-CALL.
+
+           MOVE ZERO TO SUBMIT-RC-B2.
+           MOVE SUBMIT-TIME-B2 TO SUBMIT-TIME-X.
+           MOVE SUBMIT-RC-B2   TO SUBMIT-RC-X.
+           MOVE "SPECIFIY PARAMETERS FOR SUBMIT" TO SUBMIT-TITLE.
+
+           MOVE SPACES TO SUBMIT-PARMS-ARRAY.
+           MOVE ZERO TO SUBMIT-PARMS-COUNT.
+
+           PERFORM GET-SUBMIT-ITEMS.
+           IF PF-KEY = "16" THEN GO TO SUBMIT-CALL-EXIT.
+
+           MOVE SUBMIT-TIME-X TO SUBMIT-TIME-B2.
+
+           IF SUBMIT-PARMS-COUNT NOT = ZERO THEN
+              CALL "SETSUBMIT" USING SUBMIT-PARMS-COUNT,
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(1),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(2),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(3),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(4),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(5),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(6),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(7),
+                                     SUBMIT-PARMS-LENGTH,
+                                     SUBMIT-PARMS(8).
+
+           IF USE-SHORT-SUBMIT THEN
+              CALL "SUBMIT" USING SUBMIT-FILE SUBMIT-LIB SUBMIT-VOL
+                 SUBMIT-RC
+           ELSE
+              CALL "SUBMIT" USING SUBMIT-FILE SUBMIT-LIB SUBMIT-VOL
+                 SUBMIT-NAME SUBMIT-STATUS SUBMIT-DISP SUBMIT-CLASS
+                 SUBMIT-ABORT SUBMIT-TIME SUBMIT-LIMIT SUBMIT-RC.
+
+           MOVE "SUBMIT IS COMPLETE" TO SUBMIT-TITLE.
+           MOVE SUBMIT-RC-B2   TO SUBMIT-RC-X.
+
+           MOVE "          ENTER to submit another file. PF16-EXIT"
+               TO SUBMIT-FOOTER.
+           DISPLAY AND READ SUBMIT-SCREEN ON CRT PFKEY 1, 16.
+           IF PF-KEY NOT = "16" THEN GO TO SUBMIT-CALL.
+       SUBMIT-CALL-EXIT.
+           EXIT.
+
+       GET-SUBMIT-ITEMS.
+
+           MOVE "PF1-SETSUBMIT parms. ENTER to continue. PF16-EXIT"
+               TO SUBMIT-FOOTER.
+           DISPLAY AND READ SUBMIT-SCREEN ON CRT
+           PFKEY 1, 16.
+
+           IF PF-KEY = "01" THEN
+              PERFORM GET-SUBMIT-PARMS
+              GO TO GET-SUBMIT-ITEMS.
+
+       GET-SUBMIT-PARMS.
+
+           DISPLAY AND READ SUBMIT-PARAMETER-SCREEN ON CRT
+
+           IF SUBMIT-PARMS(8) NOT = SPACES THEN
+              MOVE 8 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(7) NOT = SPACES THEN
+              MOVE 7 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(6) NOT = SPACES THEN
+              MOVE 6 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(5) NOT = SPACES THEN
+              MOVE 5 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(4) NOT = SPACES THEN
+              MOVE 4 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(3) NOT = SPACES THEN
+              MOVE 3 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(2) NOT = SPACES THEN
+              MOVE 2 TO SUBMIT-PARMS-COUNT
+           ELSE IF SUBMIT-PARMS(1) NOT = SPACES THEN
+              MOVE 1 TO SUBMIT-PARMS-COUNT
+           ELSE MOVE 0 TO SUBMIT-PARMS-COUNT.
+
+      ******************************************************************
+
+       DATE-CALL.
+
+           MOVE "SPECIFIY PARAMETERS FOR DATE" TO DATE-TITLE.
+
+           DISPLAY AND READ DATE-SCREEN ON CRT
+           PFKEYS  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 16.
+
+           IF PF-KEY = "01" THEN
+              MOVE "HD" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION DATE-DT1
+           ELSE IF PF-KEY = "02" THEN
+              MOVE "HL" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION DATE-DT2
+           ELSE IF PF-KEY = "03" THEN
+              MOVE "GJ" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-G1 DATE-J1 DATE-RC
+              MOVE DATE-RC-B2 TO DATE-RC1
+           ELSE IF PF-KEY = "04" THEN
+              MOVE "JG" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-J2 DATE-G2 DATE-RC
+              MOVE DATE-RC-B2 TO DATE-RC2
+           ELSE IF PF-KEY = "05" THEN
+              MOVE "G-" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-G3 DATE-G4 DATE-DIFF DATE-RC
+              MOVE DATE-DIFF-B2 TO DATE-DIFF1
+              MOVE DATE-RC-B2 TO DATE-RC3
+           ELSE IF PF-KEY = "06" THEN
+              MOVE "J-" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-J3 DATE-J4 DATE-DIFF DATE-RC
+              MOVE DATE-DIFF-B2 TO DATE-DIFF2
+              MOVE DATE-RC-B2 TO DATE-RC4
+           ELSE IF PF-KEY = "07" THEN
+              MOVE "G+" TO DATE-FUNCTION
+              MOVE DATE-ADD1 TO DATE-ADD-B2
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-G5 DATE-ADD DATE-G6 DATE-RC
+              MOVE DATE-RC-B2 TO DATE-RC5
+           ELSE IF PF-KEY = "08" THEN
+              MOVE "J+" TO DATE-FUNCTION
+              MOVE DATE-ADD2 TO DATE-ADD-B2
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-J5 DATE-ADD DATE-J6 DATE-RC
+              MOVE DATE-RC-B2 TO DATE-RC6
+           ELSE IF PF-KEY = "09" THEN
+              MOVE "GD" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-G7 DATE-DAY1 DATE-RC
+              MOVE DATE-RC-B2 TO DATE-RC7
+           ELSE IF PF-KEY = "10" THEN
+              MOVE "JD" TO DATE-FUNCTION
+              CALL "DATE" USING DATE-FUNCTION 
+                    DATE-J7 DATE-DAY2 DATE-RC
+              MOVE DATE-RC-B2 TO DATE-RC8.
+
+           IF PF-KEY NOT = "16" THEN
+              GO TO DATE-CALL.
+
+           MOVE "  " TO DATE-FUNCTION.
+
+      ******************************************************************
+
+       LINK-CALL.
+
+           MOVE "SPECIFIY PARAMETERS FOR LINK" TO LINK-TITLE.
+
+           MOVE ZERO TO LINK-RETURN-1.
+           MOVE ZERO TO LINK-RETURN-2.
+           MOVE ZERO TO LINK-RETURN-X.
+
+           MOVE ZERO TO LINK-COMP-CODE-1.
+           MOVE ZERO TO LINK-COMP-CODE-2.
+           MOVE ZERO TO LINK-COMP-CODE-X.
+
+           DISPLAY AND READ LINK-SCREEN ON CRT PFKEY 16.
+           IF PF-KEY = "16" THEN GO TO LINK-CALL-EXIT.
+
+           MOVE LINK-MESS-LEN-X TO LINK-MESS-LEN-2.
+           MOVE LINK-EXT TO LINK-EXT-FULL.
+           CALL "setwispfilext" USING LINK-EXT-FULL.
+
+           CALL "LINK" USING LINK-FILE LINK-TYPE LINK-LIB LINK-VOL
+               LINK-SPECIAL LINK-EXT-OPT LINK-PARM-CNT
+               LINK-CANCEL-FLAG LINK-MESSAGE LINK-MESS-LEN
+               LINK-HELP LINK-COMP-CODE LINK-RETURN.
+
+           MOVE "LINK IS COMPLETE" TO LINK-TITLE.
+           MOVE LINK-COMP-CODE-2   TO LINK-COMP-CODE-X
+           MOVE LINK-RETURN-2      TO LINK-RETURN-X.
+
+           DISPLAY AND READ LINK-SCREEN ON CRT PFKEY 16.
+           IF PF-KEY NOT = "16" THEN GO TO LINK-CALL.
+       LINK-CALL-EXIT.
+           EXIT.
+ 
+      ******************************************************************
+
+       LINKPROC-CALL.
+
+           MOVE "SPECIFIY PARAMETERS FOR LINKPROC" TO LINKPROC-TITLE.
+
+           MOVE ZERO TO LINKPROC-RETURN-1.
+           MOVE ZERO TO LINKPROC-RETURN-2.
+           MOVE ZERO TO LINKPROC-RETURN-X.
+           MOVE ZERO TO LINKPROC-COMP-1.
+           MOVE ZERO TO LINKPROC-COMP-2.
+           MOVE ZERO TO LINKPROC-COMP-X.
+
+           DISPLAY AND READ LINKPROC-SCREEN ON CRT.
+
+           MOVE LINKPROC-PLEN1-X TO LINKPROC-PLEN1.
+           MOVE LINKPROC-PLEN2-X TO LINKPROC-PLEN2.
+           MOVE LINKPROC-PLEN3-X TO LINKPROC-PLEN3.
+           MOVE LINKPROC-PLEN4-X TO LINKPROC-PLEN4.
+           MOVE LINKPROC-PLEN5-X TO LINKPROC-PLEN5.
+           MOVE LINKPROC-PLEN6-X TO LINKPROC-PLEN6.
+           MOVE LINKPROC-PLEN7-X TO LINKPROC-PLEN7.
+           MOVE LINKPROC-PLEN8-X TO LINKPROC-PLEN8.
+
+           CALL "LINKPROC" USING LINKPROC-FILE LINKPROC-LIB LINKPROC-VOL
+               LINKPROC-PCNT
+               LINKPROC-PLEN1 LINKPROC-PTXT1
+               LINKPROC-PLEN2 LINKPROC-PTXT2
+               LINKPROC-PLEN3 LINKPROC-PTXT3
+               LINKPROC-PLEN4 LINKPROC-PTXT4
+               LINKPROC-PLEN5 LINKPROC-PTXT5
+               LINKPROC-PLEN6 LINKPROC-PTXT6
+               LINKPROC-PLEN7 LINKPROC-PTXT7
+               LINKPROC-PLEN8 LINKPROC-PTXT8
+               LINKPROC-RETURN
+               LINKPROC-COMP.
+
+           MOVE "LINKPROC IS COMPLETE" TO LINKPROC-TITLE.
+           MOVE LINKPROC-RETURN-2      TO LINKPROC-RETURN-X.
+           MOVE LINKPROC-COMP-2        TO LINKPROC-COMP-X.
+
+           DISPLAY AND READ LINKPROC-SCREEN ON CRT.
+ 
+
+      ******************************************************************
+
+       MESSAGE-CALL.
+
+           DISPLAY AND READ MESSAGE-SCR ON CRT
+           PFKEYS 1, 2, 3, 4, 5, 16.
+
+           IF PF-KEY = "01" THEN
+                MOVE "CR" TO MSG-FN
+                CALL "MESSAGE" USING MSG-FN
+                                     MSG-PORT
+                                     MSG-BUF-SIZE
+                                     MSG-KEEP
+                                     MSG-RET-X
+           ELSE IF PF-KEY = "02" THEN
+                MOVE "DE" TO MSG-FN
+                CALL "MESSAGE" USING MSG-FN
+                                     MSG-PORT
+                                     MSG-RET-X
+           ELSE IF PF-KEY = "03" THEN
+                MOVE "XM" TO MSG-FN
+                CALL "MESSAGE" USING MSG-FN
+                                     MSG-PORT
+                                     MSG-SND
+                                     MSG-LEN-X
+                                     MSG-RET-X
+           ELSE IF PF-KEY = "04" THEN
+                MOVE "XW" TO MSG-FN
+                CALL "MESSAGE" USING MSG-FN
+                                     MSG-PORT
+                                     MSG-SND
+                                     MSG-LEN-X
+                                     MSG-RET-X
+           ELSE IF PF-KEY = "05" THEN
+                MOVE "CH" TO MSG-FN
+                MOVE MSG-TIME TO MSG-TIME-X-0
+                CALL "MESSAGE" USING MSG-FN
+                                     MSG-PORT
+                                     MSG-TYPE
+                                     MSG-TIME-X
+                                     MSG-RCV
+                                     MSG-LEN-X2
+                                     MSG-DUMMY
+                                     MSG-RET-X.
+           MOVE MSG-RET-X-0 TO MSG-RET.
+           IF PF-KEY NOT = "16" THEN
+            GO TO MESSAGE-CALL.
+
+      ******************************************************************
+
+       DO-SEARCH-TEST.
+
+           MOVE LOWER-FAC TO FAC OF SEARCH-ITEM-FIELD.
+           DISPLAY AND READ SEARCH-SCR ON CRT PFKEYS 16, 1, 2, 3, 4.
+           MOVE SEARCH-LEN TO SEARCH-LEN-X.
+           
+           MOVE ZERO TO SEARCH-RETURN.
+
+           IF PF-KEY = "01" THEN PERFORM DO-SEARCH-TEST-0
+           ELSE IF PF-KEY = "02" THEN PERFORM DO-SEARCH-TEST-1
+           ELSE IF PF-KEY = "03" THEN PERFORM DO-SEARCH-TEST-2
+           ELSE IF PF-KEY = "04" THEN PERFORM DO-SEARCH-TEST-3.
+
+           MOVE SEARCH-RETURN-X TO SEARCH-RETURN.
+           IF PF-KEY = "01" OR PF-KEY = "02"
+           THEN
+                 IF SEARCH-RETURN NOT = 0 THEN
+                 MOVE COUNTRY-ITEM (SEARCH-RETURN) TO FOUND-ITEM
+                 ELSE MOVE SPACES TO FOUND-ITEM
+           ELSE 
+                 IF SEARCH-RETURN NOT = 0 THEN
+                 MOVE COUNTRY-ITEM-REVERSE (SEARCH-RETURN) 
+                      TO FOUND-ITEM
+                 ELSE MOVE SPACES TO FOUND-ITEM.
+           
+
+           IF PF-KEY NOT = "16" THEN GO TO DO-SEARCH-TEST.
+
+       DO-SEARCH-TEST-0.
+
+           CALL "SEARCH" USING SEARCH-TABLE, SEARCH-TABLE-SIZE-P,
+                               SEARCH-ITEM-LEN-P, SEARCH-ITEM,
+                               SEARCH-LEN-P, SEARCH-RETURN-P.
+
+       DO-SEARCH-TEST-1.
+
+           CALL "SEARCH" USING SEARCH-TABLE, SEARCH-TABLE-SIZE-P,
+                               SEARCH-ITEM-LEN-P, SEARCH-ITEM,
+                               SEARCH-RETURN-P.
+
+       DO-SEARCH-TEST-2.
+
+           CALL "SEARCH" USING SEARCH-TABLE-REVERSE, 
+                               SEARCH-TABLE-SIZE-P,
+                               SEARCH-ITEM-LEN-P, SEARCH-ITEM,
+                               SEARCH-LEN-P, SEARCH-RETURN-P.
+
+       DO-SEARCH-TEST-3.
+
+           CALL "SEARCH" USING SEARCH-TABLE-REVERSE, 
+                               SEARCH-TABLE-SIZE-P,
+                               SEARCH-ITEM-LEN-P, SEARCH-ITEM,
+                               SEARCH-RETURN-P.
+
+
+      ******************************************************************
+
+       WCHAIN-CALL.
+
+           MOVE SPACES TO WCHAIN-ERROR.
+           DISPLAY AND READ WCHAIN-SCREEN ON CRT.
+
+           CALL "WCHAIN" USING WCHAIN-VOL WCHAIN-LIB WCHAIN-FILE.
+
+           MOVE "WCHAIN HAS FAILED" TO WCHAIN-ERROR.
+           DISPLAY AND READ WCHAIN-SCREEN ON CRT.
+
+      ******************************************************************
+
+       EXTRACT-CALL.
+
+           DISPLAY AND READ EXTRACT-SCREEN ON CRT
+           PFKEYS  1, 2, 3, 4, 5, 6, 16.
+
+           MOVE SPACES TO EXT-RECVR-1.
+           MOVE SPACES TO EXT-RECVR-2.
+           MOVE ZERO TO EXT-RECVR-3.
+
+           IF PF-KEY = "01" THEN
+      *$WANG_CODE
+      *$WANG_ELSE
+      *       MOVE 3 TO WISP-LONGWORD
+      *       CALL "wvaset" USING WISP-LONGWORD
+      *       CALL "EXTRACT" USING EXT-KW-1
+      *                            EXT-RECVR-1
+      *                            WISP-APPLICATION-NAME
+      *$WANG_END
+           ELSE IF PF-KEY = "02" THEN
+             CALL "EXTRACT" USING EXT-KW-1
+                                  EXT-RECVR-1
+                                  EXT-LENGTH-1
+           ELSE IF PF-KEY = "03" THEN
+             CALL "EXTRACT" USING EXT-KW-1
+                                  EXT-RECVR-1
+           ELSE IF PF-KEY = "04" THEN
+             CALL "EXTRACT" USING EXT-KW-1
+                                  EXT-RECVR-1
+                                  EXT-KW-2
+                                  EXT-RECVR-2
+           ELSE IF PF-KEY = "05" THEN
+             CALL "EXTRACT" USING EXT-KW-1
+                                  EXT-RECVR-1
+                                  EXT-LENGTH-1
+                                  EXT-KW-2
+                                  EXT-RECVR-2
+           ELSE IF PF-KEY = "06" THEN
+             CALL "EXTRACT" USING EXT-KW-3
+                                  EXT-RECVR-3-X.
+
+      ******************************************************************
+
+       PRINT-CALL.
+
+           DISPLAY AND READ PRINT-SCREEN ON CRT
+           PFKEYS  16.
+
+           IF PF-KEY = "00" THEN
+             IF PRINT-FILE = "        " THEN
+               MOVE 999 TO PRINT-RET-CODE
+             ELSE IF PRINT-LIB = "        " THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-RETURN-CODE
+             ELSE IF PRINT-VOL = "      " THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-RETURN-CODE
+             ELSE IF PRINT-MODE = " " THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-VOL,
+                                  PRINT-RETURN-CODE
+             ELSE IF PRINT-DISP = " " THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-VOL,
+                                  PRINT-MODE,
+                                  PRINT-RETURN-CODE
+             ELSE IF PRINT-COPY-CNT = 0 THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-VOL,
+                                  PRINT-MODE,
+                                  PRINT-DISP,
+                                  PRINT-RETURN-CODE
+             ELSE IF PRINT-CLASS  = " " THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-VOL,
+                                  PRINT-MODE,
+                                  PRINT-DISP,
+                                  PRINT-COPY-COUNT,
+                                  PRINT-RETURN-CODE
+             ELSE IF PRINT-FORM-NUM = 0 THEN
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-VOL,
+                                  PRINT-MODE,
+                                  PRINT-DISP,
+                                  PRINT-COPY-COUNT,
+                                  PRINT-CLASS,
+                                  PRINT-RETURN-CODE
+             ELSE
+               CALL "PRINT" USING PRINT-FILE,
+                                  PRINT-LIB,
+                                  PRINT-VOL,
+                                  PRINT-MODE,
+                                  PRINT-DISP,
+                                  PRINT-COPY-COUNT,
+                                  PRINT-CLASS,
+                                  PRINT-FORM-NUMBER,
+                                  PRINT-RETURN-CODE.
+            IF PRINT-RET-CODE = 999 THEN
+              MOVE "INVALID 'PRINT' CALL.  CHECK PARAMETERS"
+                TO PRINT-MESG
+            ELSE
+              MOVE "'PRINT' CALL COMPLETE" TO PRINT-MESG.
+
+      ******************************************************************
+
+       BELL-PAUSE-CALL.
+
+           DISPLAY AND READ BELL-PAUSE-SCREEN ON CRT
+           PFKEYS 1, 2, 16.
+
+           IF PF-KEY = "01" THEN
+             CALL "BELL" USING BELL-PAUSE-TIME-LEN
+             MOVE "'BELL' CALL COMPLETE" TO BELL-PAUSE-MESG.
+           IF PF-KEY = "02" THEN
+             CALL "PAUSE" USING BELL-PAUSE-TIME-LEN
+             MOVE "'PAUSE' CALL COMPLETE" TO BELL-PAUSE-MESG.
+
+      ******************************************************************
+       DO-BITPACK.
+           MOVE LOWER-FAC TO FAC OF BP-STRING.
+           DISPLAY AND READ BITPACK-SCREEN ON CRT PFKEYS 16.
+
+           IF PF-KEY NOT = "16" THEN 
+               CALL "BITUNPK" USING ASCII-STRING BIT-STRING ASCII-LEN
+               CALL "BITPACK" USING BIT-STRING ASCII-STRING2 BIT-LEN
+               GO TO DO-BITPACK.
+      ******************************************************************
+       DO-HEXPACK.
+           MOVE LOWER-FAC TO FAC OF HP-STRING.
+           DISPLAY AND READ HEXPACK-SCREEN ON CRT PFKEYS 16.
+
+           IF PF-KEY NOT = "16" THEN 
+               CALL "HEXUNPK" USING AHEX-STRING HEX-STRING AHEX-LEN
+               CALL "HEXPACK" USING HEX-STRING AHEX-STRING2 HEX-LEN
+               GO TO DO-HEXPACK.
+      ******************************************************************
+
+       SCRATCH-CALL.
+
+           MOVE LOWER-FAC TO FAC OF SCRATCH-EXT-TEXT.
+           DISPLAY AND READ SCRATCH-SCREEN ON CRT
+           PFKEYS  16.
+
+           IF PF-KEY NOT = "16" THEN
+             MOVE ZERO TO SCRATCH-RET-CODE
+
+             CALL "setwispfilext" USING SCRATCH-EXT
+
+             IF SCRATCH-EXP-DATE-CHECK = " "  THEN
+               CALL "SCRATCH" USING SCRATCH-TYPE,
+                                    SCRATCH-FNAME,
+                                    SCRATCH-LIBNAME,
+                                    SCRATCH-VOL,
+                                    SCRATCH-RETURN-CODE
+             ELSE IF SCRATCH-ACCESS-LIMITS-FLAG = " " THEN
+               CALL "SCRATCH" USING SCRATCH-TYPE,
+                                    SCRATCH-FNAME,
+                                    SCRATCH-LIBNAME,
+                                    SCRATCH-VOL,
+                                    SCRATCH-EXP-DATE-CHECK,
+                                    SCRATCH-RETURN-CODE
+             ELSE
+               CALL "SCRATCH" USING SCRATCH-TYPE,
+                                    SCRATCH-FNAME,
+                                    SCRATCH-LIBNAME,
+                                    SCRATCH-VOL,
+                                    SCRATCH-EXP-DATE-CHECK,
+                                    SCRATCH-ACCESS-LIMITS-FLAG,
+                                    SCRATCH-RETURN-CODE.
+      ******************************************************************
+
+       SORTCALL-TEST.
+
+           MOVE SPACES TO SC-PARMS SC-FILETYPE.
+           MOVE ZERO TO SC-RECSIZE-Z SC-SORTCODE-Z SC-RETURNCODE-Z.
+
+       SORTCALL-DISPLAY.
+           DISPLAY AND READ SORTCALL-SCREEN ON CRT
+           PFKEYS  16.
+
+           IF PF-KEY NOT = "16" THEN
+              MOVE ZERO         TO SC-RECSIZE-B1
+              MOVE SC-RECSIZE-Z TO SC-RECSIZE-B2
+
+123456*$VAX_CODE PROCESS
+      *       CALL "SORTCALL" USING SC-PARMS SC-RETURNCODE
+      *$VAX_ELSE PROCESS
+              CALL "WISPSORT" USING SC-PARMS SC-FILETYPE SC-RECSIZE
+                                    SC-SORTCODE SC-RETURNCODE
+      *$VAX_END
+
+              MOVE SC-SORTCODE-B2 TO SC-SORTCODE-Z
+              MOVE SC-RETURNCODE-B2 TO SC-RETURNCODE-Z
+              GO TO SORTCALL-DISPLAY.
+
+       SORTCALL-END.
+           EXIT.
+
+      ******************************************************************
+       DO-SET-TEST.
+           DISPLAY AND READ SET-SCREEN ON CRT ONLY PFKEYS 16, 1, 2.
+
+           IF      PF-KEY = "01" THEN PERFORM DO-SET-TEST-1
+           ELSE IF PF-KEY = "02" THEN PERFORM DO-SET-TEST-2.
+
+           IF PF-KEY NOT = "16" THEN GO TO DO-SET-TEST.
+
+       DO-SET-TEST-1.
+           CALL "SET" USING SET-KW, SET-VALX.
+
+       DO-SET-TEST-2.
+           CALL "SET" USING SET-KW, SET-VALB.
+
+
+      ******************************************************************
+
+       DO-RENAME-TEST.
+
+           MOVE "SPECIFIY PARAMETERS FOR RENAME" TO RENAME-TITLE.
+           MOVE LOWER-FAC TO FAC OF RENAME-EXTENTION.
+           DISPLAY AND READ RENAME-SCREEN ON CRT 
+               ONLY PFKEYS 16, 1, 2, 3.
+
+           MOVE RENAME-RETURN-X TO RENAME-RETURN.
+           MOVE RENAME-EXT TO RENAME-EXT-FULL.
+           CALL "setwispfilext" USING RENAME-EXT-FULL.
+
+           IF PF-KEY = "01" THEN
+               PERFORM DO-RENAME-TEST-0
+           ELSE IF PF-KEY = "02" THEN
+               PERFORM DO-RENAME-TEST-1
+           ELSE IF PF-KEY = "03" THEN
+               PERFORM DO-RENAME-TEST-2
+           ELSE IF PF-KEY NOT = "16" THEN
+               MOVE 1 TO BELL-PAUSE-TIME
+               CALL "BELL" USING BELL-PAUSE-TIME-LEN
+               MOVE 44 TO RENAME-RETURN-2.
+
+           MOVE "RENAME IS COMPLETE" TO RENAME-TITLE.
+           MOVE RENAME-RETURN-2 TO RENAME-RETURN-X.
+           IF PF-KEY NOT = "16" THEN GO TO DO-RENAME-TEST.
+
+       DO-RENAME-TEST-0.
+
+           MOVE "F" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE,RENAME-BYPASS,
+                               RENAME-ACCESS, RENAME-OPEN,
+                               RENAME-RETURN.
+
+       DO-RENAME-TEST-1.
+
+           MOVE "L" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-LIB,RENAME-BYPASS,
+                               RENAME-ACCESS, RENAME-OPEN,
+                               RENAME-RETURN.
+
+       DO-RENAME-TEST-2.
+
+           MOVE "G" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE, RENAME-NEW-LIB,
+                               RENAME-BYPASS, RENAME-ACCESS,
+                               RENAME-OPEN, RENAME-RETURN.
+      ******************************************************************
+
+       DO-FILECOPY-TEST.
+
+           MOVE "SPECIFIY PARAMETERS FOR FILECOPY" TO RENAME-TITLE.
+           DISPLAY AND READ FILECOPY-SCREEN ON CRT PFKEYS 16.
+
+           MOVE FILECOPY-RETURN-X TO FILECOPY-RETURN.
+
+           IF PF-KEY = "00" THEN
+               PERFORM DO-FILECOPY-TEST-0
+               MOVE "FILECOPY IS COMPLETE" TO FILECOPY-TITLE
+               MOVE FILECOPY-RETURN-2 TO FILECOPY-RETURN-X
+               IF PF-KEY NOT = "16" THEN GO TO DO-FILECOPY-TEST.
+
+       DO-FILECOPY-TEST-0.
+
+           IF FILECOPY-NVOL = "      " AND
+              FILECOPY-NLIB = "        " THEN
+              PERFORM DO-FILECOPY-1
+           ELSE IF FILECOPY-NVOL = "      " THEN
+              PERFORM DO-FILECOPY-2
+           ELSE 
+              PERFORM DO-FILECOPY-3.
+
+       DO-FILECOPY-1.
+
+           CALL "FILECOPY" USING 
+                 FILECOPY-OFILE, FILECOPY-OLIB, FILECOPY-OVOL,
+                 FILECOPY-NFILE,
+                 FILECOPY-RETURN.
+
+       DO-FILECOPY-2.
+
+           CALL "FILECOPY" USING 
+                 FILECOPY-OFILE, FILECOPY-OLIB, FILECOPY-OVOL,
+                 FILECOPY-NFILE, FILECOPY-NLIB,
+                 FILECOPY-RETURN.
+
+       DO-FILECOPY-3.
+
+           CALL "FILECOPY" USING 
+                 FILECOPY-OFILE, FILECOPY-OLIB, FILECOPY-OVOL,
+                 FILECOPY-NFILE, FILECOPY-NLIB, FILECOPY-NVOL,
+                 FILECOPY-RETURN.
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.
