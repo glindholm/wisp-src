@@ -1,4 +1,4 @@
-	Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
+	Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
 	
 	====================================================================
 	
@@ -7,7 +7,7 @@
 	Document:	portwin32.txt
 	Last Updated:	$Date:$
 	Products:	WISP/WIN32 EDE KCSI
-	Versions:	4.4.00 and later
+	Versions:	4.4.02 and later
 	
 	Summary:	Instructions on re-porting WISP to WIN32
 
@@ -28,7 +28,7 @@
 
 	Create a CPIO version of the source kit.
 
-		wisp4400.src.cpio.Z 	 
+		wisp4402.src.cpio.Z 	 
 
 	FTP the kit to Windows
 
@@ -38,8 +38,8 @@
 
 		C:\work> mkdir wisp
 		C:\work> cd wisp
-		C:\work\wisp> uncompress wisp4400.src.cpio.Z
-		C:\work\wisp> cpio -icdqv < wisp4400.src.cpio
+		C:\work\wisp> uncompress wisp4402.src.cpio.Z
+		C:\work\wisp> cpio -icdqv < wisp4402.src.cpio
 
 	This will create a standard wisp source kit directory layout.
 
@@ -50,18 +50,18 @@
 	point to the location of Acucobol directory. 
 
 	[_] acu\wwruncbl.mak
-		ACUDIR=C:\acucorp\ACUCBL510\acugt
+		ACUDIR=C:\acucorp\ACUCBL41  *** USED TO BUILD CREATE ***
 
-		EDEDIR=C:\EDE4400
-		CRIDDIR=C:\CRIDACU3000
-		CREATEDIR=C:\CREATEACU3500
+		EDEDIR=C:\EDE4402
+		CRIDDIR=C:\CRIDACU3003
+		CREATEDIR=C:\CREATEACU3501
 
 	[_] kcsi\crid\cridmake.mak
-		ACUDIR=C:\acucorp\ACUCBL510\acugt
+		ACUDIR=C:\acucorp\ACUCBL520\acugt
 
-	[_] acu\wrun32wisp.mak
-	[_] acu\wrun32wisp_crid.mak
-	[_] acu\wrun32wisp_ede.mak
+	[_] acu\wrun32wisp_acu52.mak
+	[_] acu\wrun32wisp_crid_acu52.mak
+	[_] acu\wrun32wisp_ede_acu52.mak
 
 	Build the Project
 	-----------------
@@ -76,9 +76,9 @@
 		*** GET AND USE THE REAL NUMBERS    ***
 
 		WPROC		WPROC_VERSION=2000   (wproc\wproc.umf)
-		CRIDLIB	   	CRID_VERSION=3000    (kcsi\crid\cridmake.umf/mak)
-		CRIDLIBM	CRID_VERSION=3000    (kcsi\crid\cridmake.umf/mak)
-		CREATELIBACU	CREATE_VERSION=3500  (kcsi\create\createunix.umf)
+		CRIDLIB	   	CRID_VERSION=3003    (kcsi\crid\cridmake.umf/mak)
+		CRIDLIBM	CRID_VERSION=3003    (kcsi\crid\cridmake.umf/mak)
+		CREATELIBACU	CREATE_VERSION=3501  (kcsi\create\createunix.umf)
 
 	[_] Select "SHIPKITWISP - Win32 Release" as the Active project. 
 
@@ -123,10 +123,10 @@
 
 	Copy the InstallShield files to "c:\dev\wisp".
 
-		wisp\wisp4400.iwz
-		wisp\ede4400.iwz
-		wisp\crida3000.iwz
-		wisp\creata3500.iwz
+		wisp\wisp4402.iwz
+		wisp\ede4402.iwz
+		wisp\crida3003.iwz
+		wisp\creata3501.iwz
 
 	Double click on the ".iwz" file to start InstallShield.  Follow
 	the instructions to build diskettes.

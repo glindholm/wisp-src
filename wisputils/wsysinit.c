@@ -228,10 +228,13 @@ char	*a1, *a2, *a3, *a4, *a5, *a6, *a7, *a8;
 /*
 **	History:
 **	$Log: wsysinit.c,v $
+**	Revision 1.12  2002-04-12 10:54:08-04  gsl
+**	fix nexted comment warning
+**
 **	Revision 1.11  2001-10-31 15:28:48-05  gsl
 **	Removed the deleting temp person files
 **	Added rm -f wisptmpdir()
-**	/usr/tmp/wisptmp/*
+**	/usr/tmp/wisptmp/ *
 **
 **	Revision 1.10  1996-08-23 17:25:54-04  gsl
 **	Change to use wispxxxdir() routines

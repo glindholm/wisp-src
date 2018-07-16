@@ -1,6 +1,6 @@
 #!/bin/ksh
 #
-#	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1995-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -15,9 +15,7 @@
 #			- build the directories
 #			- unload each component
 #			- copy the ".umf" files to "Makefile"
-#			- sample config files have ".unix" extension removed
 #			- all ".obj" and ".com" files are deleted
-#			- all long files (15+ chars are removed)
 #			- all ".sh" files have x bit set (chmod +x)
 #
 #	Warning:	If the DRCS directory structures change or new ones
@@ -54,7 +52,7 @@ video/ivs
 video/lib
 video/test
 wisp
-wisp/acucobol
+wisp/acu
 wisp/amu
 wisp/common
 wisp/costar
@@ -216,10 +214,6 @@ fi
 #	Down load all the RCS files into the source kit.
 #
 
-#echo ' '
-#echo 'Your choices for each project/component are y=yes, n=no, a=all or q=quit'
-#echo ' '
-
 ANS=a
 
 echo
@@ -228,22 +222,8 @@ echo
 echo cd $SOURCEDIR/videolib
 cd $SOURCEDIR/videolib
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load VIDEO LIB [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading VIDEO LIB
-	drcs unload video/lib
-fi
+drcs unload video/lib
 
 echo
 echo =================== VIDEO TEST ===========================================
@@ -251,22 +231,9 @@ echo
 echo cd $SOURCEDIR/videotest
 cd $SOURCEDIR/videotest
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load VIDEO TEST [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading VIDEO TEST
-	drcs unload video/test
-fi
+drcs unload video/test
+
 
 echo
 echo =================== VIDEO CAP ===========================================
@@ -274,22 +241,9 @@ echo
 echo cd $SOURCEDIR/videocap
 cd $SOURCEDIR/videocap
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load VIDEO CAP [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading VIDEO CAP
-	drcs unload video/cap
-fi
+drcs unload video/cap
+
 
 echo
 echo =================== VIDEO IVS LIB ========================================
@@ -297,22 +251,8 @@ echo
 echo cd $SOURCEDIR/ivslib
 cd $SOURCEDIR/ivslib
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load VIDEO IVS LIB [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading VIDEO IVS LIB
-	drcs unload video/ivs
-fi
+drcs unload video/ivs
 
 
 echo
@@ -320,6 +260,7 @@ echo ==================== WISP COMMON =====================================
 echo
 echo cd $SOURCEDIR/wispcommon
 cd $SOURCEDIR/wispcommon
+
 echo Loading WISP COMMON
 drcs unload wisp/common
 
@@ -329,25 +270,9 @@ echo
 echo cd $SOURCEDIR/acu
 cd $SOURCEDIR/acu
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP ACUCOBOL [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP ACUCOBOL
-	drcs unload wisp/acucobol
-	drcs borrow wispicon.ico wisp/common
-
-	chmod +w *.umf *.mak acucobol.include acu.rules
-fi
+drcs unload wisp/acu
+drcs borrow wispicon.ico wisp/common
 
 echo
 echo ==================== WISP MF ===========================================
@@ -355,24 +280,8 @@ echo
 echo cd $SOURCEDIR/mf
 cd $SOURCEDIR/mf
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP MF [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP MF
-	drcs unload wisp/mf
-
-	chmod +w wrunmf.umf
-fi
+drcs unload wisp/mf
 
 echo
 echo ==================== WISP NT ===========================================
@@ -380,23 +289,8 @@ echo
 echo cd $SOURCEDIR/nt
 cd $SOURCEDIR/nt
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP NT [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP NT
-	drcs unload wisp/nt
-
-fi
+drcs unload wisp/nt
 
 echo
 echo ================== WISP PORT ===========================================
@@ -404,28 +298,13 @@ echo
 echo cd $SOURCEDIR/port
 cd $SOURCEDIR/port
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP PORT [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP PORT
-	drcs unload wisp/port
+drcs unload wisp/port
 
-	cp makewisp.umf Makefile
-	chmod +w make.include
+cp makewisp.umf Makefile
 
-	cp wisp.dsw ..
-	chmod +w ../wisp.dsw
-fi
+cp wisp.dsw ..
+chmod a+w ../wisp.dsw
 
 echo
 echo =================== WISP EDE ===========================================
@@ -433,23 +312,10 @@ echo
 echo cd $SOURCEDIR/ede
 cd $SOURCEDIR/ede
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP EDE [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP EDE
-	drcs unload wisp/ede
-	drcs unload wisp/menudemo
-fi
+drcs unload wisp/ede
+drcs unload wisp/menudemo
+
 
 echo
 echo ==================== WISP ETC ===========================================
@@ -457,47 +323,25 @@ echo
 echo cd $SOURCEDIR/etc
 cd $SOURCEDIR/etc
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP ETC [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP ETC
-	drcs unload wisp/etc
+drcs unload wisp/etc
 
-	for i in `drcs dir wisp/doc | sed -n '/relnotes/p'`
-	do
-		drcs borrow $i wisp/doc
-	done
+drcs borrow wisp_relnotes.txt wisp/doc
+drcs borrow qawisp.lis wisp/doc
+drcs borrow qaede.doc wisp/doc
+drcs borrow portunix.lis wisp/doc
+drcs borrow portwin32.txt wisp/doc
+drcs borrow wispntdoc.txt wisp/doc
+drcs borrow wispntsetup.txt wisp/doc
+drcs borrow wispacn.txt wisp/doc
+drcs borrow aqmwisp.txt wisp/doc
+drcs borrow nonascii.txt wisp/doc
+drcs borrow vcolors.txt wisp/doc
+drcs borrow nttelnet.txt wisp/doc
+drcs borrow wisp_install_unix.txt wisp/doc
 
-	drcs borrow qawisp.lis wisp/doc
-	drcs borrow qaede.doc wisp/doc
-	drcs borrow portunix.lis wisp/doc
-	drcs borrow portwin32.txt wisp/doc
-	drcs borrow wispntdoc.txt wisp/doc
-	drcs borrow wispntsetup.txt wisp/doc
-	drcs borrow wispacn.txt wisp/doc
-	drcs borrow aqmwisp.txt wisp/doc
-	drcs borrow nonascii.txt wisp/doc
-	drcs borrow vcolors.txt wisp/doc
-	drcs borrow nttelnet.txt wisp/doc
-	drcs borrow wisp_install_unix.txt wisp/doc
+cp wisp_relnotes.txt RELNOTES
 
-	for i in v*_relnotes.lis
-	do
-		latest_relnotes=$i
-	done
-	echo "cp $latest_relnotes RELNOTES"
-	cp $latest_relnotes RELNOTES
-fi
 
 echo
 echo =================== WISP LIB ===========================================
@@ -505,22 +349,9 @@ echo
 echo cd $SOURCEDIR/wisplib
 cd $SOURCEDIR/wisplib
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP LIB [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP LIB
-	drcs unload wisp/lib
-fi
+drcs unload wisp/lib
+
 
 echo
 echo ================= WISP PROCTRAN ========================================
@@ -528,44 +359,18 @@ echo
 echo cd $SOURCEDIR/proctran
 cd $SOURCEDIR/proctran
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP PROCTRAN [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP PROCTRAN
-	drcs unload wisp/proctran
-fi
+drcs unload wisp/proctran
+
 echo
 echo ================= WISP VSEDIT ========================================
 echo
 echo cd $SOURCEDIR/vsedit
 cd $SOURCEDIR/vsedit
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP VSEDIT [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP VSEDIT
-	drcs unload wisp/vsedit
-fi
+drcs unload wisp/vsedit
+
 
 echo
 echo =================== WISP TEST ===========================================
@@ -573,37 +378,24 @@ echo
 echo cd $SOURCEDIR/testacu
 cd $SOURCEDIR/testacu
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP SAMPLE [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP SAMPLE
-	drcs unload wisp/sample
+drcs unload wisp/sample
 
-	echo Duplicating testacu into testmf
-	cp * ../testmf
+echo Duplicating testacu into testmf
+cp * ../testmf
 
-	echo Copying ACU files to testacu
-	cp $SOURCEDIR/acu/acu.rules    $SOURCEDIR/testacu
-	cp $SOURCEDIR/acu/aculink.wcb  $SOURCEDIR/testacu
-	cp $SOURCEDIR/acu/acuusing.cob $SOURCEDIR/testacu
+echo Copying ACU files to testacu
+cp $SOURCEDIR/acu/acu.rules    $SOURCEDIR/testacu
+cp $SOURCEDIR/acu/aculink.wcb  $SOURCEDIR/testacu
+cp $SOURCEDIR/acu/acuusing.cob $SOURCEDIR/testacu
 
-	echo Copying MF files to testmf
-	cp $SOURCEDIR/mf/mf.rules      $SOURCEDIR/testmf
-	cp $SOURCEDIR/mf/mflink.cob    $SOURCEDIR/testmf
+echo Copying MF files to testmf
+cp $SOURCEDIR/mf/mf.rules      $SOURCEDIR/testmf
+cp $SOURCEDIR/mf/mflink.cob    $SOURCEDIR/testmf
 
-	echo Changing modes
-	chmod +w lgmap.nt sampleacu.mak
-fi
+echo Changing modes
+chmod a+w lgmap.nt
+
 
 echo
 echo =================== WISP TRAN ===========================================
@@ -611,22 +403,9 @@ echo
 echo cd $SOURCEDIR/wisptran
 cd $SOURCEDIR/wisptran
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP TRAN [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP TRAN
-	drcs unload wisp/tran
-fi
+drcs unload wisp/tran
+
 
 echo
 echo ================= WISP UTILS ===========================================
@@ -634,25 +413,11 @@ echo
 echo cd $SOURCEDIR/wisputils
 cd $SOURCEDIR/wisputils
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP UTILS [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP UTILS
-	drcs unload wisp/utils
+drcs unload wisp/utils
 
-	drcs borrow wispicon.ico wisp/common
-	cp wispicon.ico wrun.ico
-fi
+drcs borrow wispicon.ico wisp/common
+cp wispicon.ico wrun.ico
 
 
 echo
@@ -661,26 +426,11 @@ echo
 echo cd $SOURCEDIR/wproc
 cd $SOURCEDIR/wproc
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP WPROC [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP WPROC
-	drcs unload wisp/wproc
+drcs unload wisp/wproc
 
-	chmod +w wproc.umf
+drcs borrow wproc.txt wisp/doc
 
-	drcs borrow wproc.txt wisp/doc
-fi
 
 echo
 echo =================== WISP AMU ===========================================
@@ -688,22 +438,8 @@ echo
 echo cd $SOURCEDIR/amu
 cd $SOURCEDIR/amu
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP AMU [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP AMU
-	drcs unload wisp/amu
-fi
+drcs unload wisp/amu
 
 echo
 echo =================== WISP COSTAR ===========================================
@@ -711,22 +447,9 @@ echo
 echo cd $SOURCEDIR/costar
 cd $SOURCEDIR/costar
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load WISP COSTAR [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading WISP COSTAR
-	drcs unload wisp/costar
-fi
+drcs unload wisp/costar
+
 
 echo
 echo =================== KCSI ===========================================
@@ -734,36 +457,18 @@ echo
 echo cd $SOURCEDIR/kcsi
 cd $SOURCEDIR/kcsi
 
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	$ECHONONL	'Load KCSI [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
 echo	Loading KCSI
-	cd $SOURCEDIR/kcsi
-	drcs unload wisp/kcsi
+cd $SOURCEDIR/kcsi
+drcs unload wisp/kcsi
 
-	cd $SOURCEDIR/kcsi/create
-	drcs unload wisp/kcsi/create
-	drcs unload wisp/kcsi/common
-	drcs borrow createntsetup.txt wisp/kcsi/create
-	chmod +w *.umf *.mak
+cd $SOURCEDIR/kcsi/create
+drcs unload wisp/kcsi/create
+drcs unload wisp/kcsi/common
 
-	cd $SOURCEDIR/kcsi/crid
-	drcs unload wisp/kcsi/crid
-	drcs unload wisp/kcsi/common
-	drcs borrow cridntsetup.txt wisp/kcsi/crid
-	chmod +w *.umf *.mak
+cd $SOURCEDIR/kcsi/crid
+drcs unload wisp/kcsi/crid
+drcs unload wisp/kcsi/common
 
-fi
 
 echo
 echo ================== Down Loading Complete ===============================
@@ -774,20 +479,19 @@ cd $SOURCEDIR
 
 echo pwd = `pwd`
 echo
-echo 'Deleting all *.com and *.obj files'
-echo 'find . -name "*.com" -print | xargs rm'
-find . -name "*.com" -print | xargs rm
-echo 'find . -name "*.obj" -print | xargs rm'
-find . -name "*.obj" -print | xargs rm
 
 #
 #	File name cleanup
 #
 echo " "
-echo "Changing mode of all .sh files to ug+rx."
-find . -name '*.sh' -print | tee /dev/tty | xargs chmod ug+rx
+echo "Changing modes"
+find . -name '*.sh' -print | xargs chmod a+rx
 
-find . -name '*.dsp' -print | xargs chmod +w
+find . -name '*.umf' -print | xargs chmod a+w
+find . -name '*.mak' -print | xargs chmod a+w
+find . -name '*.dsp' -print | xargs chmod a+w
+find . -name '*.include' -print | xargs chmod a+w
+find . -name '*.rules' -print | xargs chmod a+w
 #
 #	Create a file version list
 #
@@ -804,16 +508,21 @@ do
 done
 
 echo 
-echo "The latest release notes [" $latest_relnotes "] have"
-echo "been copied to etc/RELNOTES"
-echo 
-echo 
 echo DONE.
 echo 
 exit
 #
 #	History:
 #	$Log: bldsrckit.sh,v $
+#	Revision 1.50  2002-04-10 10:47:32-04  gsl
+#	Change wisp/acucobol to wisp/acu
+#
+#	Revision 1.49  2002-04-09 17:01:48-04  gsl
+#	Stream line
+#
+#	Revision 1.48  2002-04-09 16:23:03-04  gsl
+#	Remove all the Q and A stuff
+#
 #	Revision 1.47  2001-10-09 16:24:24-04  gsl
 #	wproc.lis -> wproc.txt
 #	Remove MSDOS

@@ -1,6 +1,6 @@
 #============================================================================
 #
-#	Copyright (c) 1988-2001 NeoMedia Technologies, Inc. All rights reserved.
+#	Copyright (c) 1988-2002 NeoMedia Technologies, Inc. All rights reserved.
 #	$Id:$
 #
 #
@@ -33,11 +33,11 @@
 # Different versions of ACUCOBOL use different sets of
 # libraries and subroutines.
 #
-# 4	ACUCOBOL Version 2.4 +
 # 5	ACUCOBOL Version 3.1 - 3.2.1 + 3.2.2 (except SCO UNIX) 
 # 6	ACUCOBOL Version 3.2.2 for SCO UNIX
 # 7	ACUCOBOL Version 4.0.0 - 4.3
 # 8	ACUCOBOL Version 5.0, 5.1
+# 9	ACUCOBOL Version 5.2
 #
 #============================================================================
 #
@@ -46,6 +46,7 @@
 # The following makefile macros are defined based on the version of Acucobol.
 #
 # ACULIBS 	the list of ACUCOBOL libraries
+# ACUMAIN	the Acucobol amain.o file
 # ACUSUBS 	the list of ACUCOBOL subroutines
 # ACUTEST 	a test file used to determine version of ACUCOBOL
 # ACUSRCDIR 	the directory of the Acucobol source files
@@ -65,13 +66,18 @@
 # platform that you are porting.
 #
 ACUOTHER=
+
 #
 #	ACUCOBOL Version 4.1.0.1 (and greater) on HP-UX 11
 #
 #ACUOTHER= -lnsl
 #
 #
-#	ACUCOBOL Version 3.1.1 (and greater) on Solaris and DG-UX Intel
+#	ACUCOBOL Version 5.2 on Solaris
+#
+#ACUOTHER= -lnsl -lsocket -ldl
+#
+#	ACUCOBOL Version 3.1.1 - 5.1 on Solaris
 #
 #ACUOTHER= -lnsl -lsocket
 #
@@ -85,9 +91,6 @@ ACUOTHER=
 #
 #	DEFINE MACROS FOR EACH VERSION OF ACUCOBOL
 #
-ACULIBS4=$(ACU_LIBDIR)/libruncbl.a \
-	$(ACU_LIBDIR)/libvision.a \
-	$(ACU_LIBDIR)/libacuterm.a
 ACULIBS5=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libfsi.a \
 	$(ACU_LIBDIR)/libacuterm.a \
@@ -127,65 +130,78 @@ ACULIBS8=$(ACU_LIBDIR)/libruncbl.a \
 	$(ACU_LIBDIR)/libmessage.a \
 	$(ACU_LIBDIR)/libmemory.a \
 	$(ACU_LIBDIR)/libstdlib.a 
+ACULIBS9=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libconnectc.a \
+	$(ACU_LIBDIR)/libclnt.a \
+	$(ACU_LIBDIR)/libacvt.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/liblib.a \
+	$(ACU_LIBDIR)/libcfg.a \
+	$(ACU_LIBDIR)/libsocks.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libstdlib.a 
 
-ACUSUBS4=sub.o filetbl.o $(ACU_LIBDIR)/clntstub.o
 ACUSUBS5=sub.o filetbl.o 
 ACUSUBS6=sub.o filetbl.o 
 ACUSUBS7=sub.o filetbl.o 
 ACUSUBS8=sub.o filetbl.o 
+ACUSUBS9=sub.o filetbl.o
 
-ACUTEST4=$(ACU_LIBDIR)/libruncbl.a
+ACUMAIN5=
+ACUMAIN6=
+ACUMAIN7=
+ACUMAIN8=
+ACUMAIN9=$(ACU_LIBDIR)/amain.o
+
 ACUTEST5=$(ACU_LIBDIR)/libstdlib.a
 ACUTEST6=$(ACU_LIBDIR)/libconnectc.a
 ACUTEST7=$(ACU_LIBDIR)/liblib.a
 ACUTEST8=$(ACU_LIBDIR)/libcfg.a
+ACUTEST9=$(ACU_LIBDIR)/libacvt.a
 
-COBOL4=$(ACUDIR)/bin/ccbl
 COBOL5=$(ACUDIR)/bin/ccbl
 COBOL6=$(ACUDIR)/bin/ccbl
 COBOL7=$(ACUDIR)/bin/ccbl
 COBOL8=$(ACUDIR)/bin/ccbl
+COBOL9=$(ACUDIR)/bin/ccbl
 
-CBLUTIL4=$(ACUDIR)/bin/ccbl
 CBLUTIL5=$(ACUDIR)/bin/cblutil
 CBLUTIL6=$(ACUDIR)/bin/cblutil
 CBLUTIL7=$(ACUDIR)/bin/cblutil
 CBLUTIL8=$(ACUDIR)/bin/cblutil
+CBLUTIL9=$(ACUDIR)/bin/cblutil
 
 ACUCCFLAGS6=
 ACUCCFLAGS7=
 ACUCCFLAGS8= -DNO_ACUSQL=1
+ACUCCFLAGS9= -DNO_ACUSQL=1
 
 #============================================================================
 #
 # ****  CHANGE ACUCOBOL VERSION SETTINGS HERE ****
 #
 # The following lines are used to change the ACUCOBOL version 
-# settings.  Uncomment the 6 macro lines which match the
+# settings.  Uncomment the macro lines which match the
 # version of ACUCOBOL you are using.
 #
 #
-# 4	ACUCOBOL Version 2.4 +
-#
-# ACULIBS=$(ACULIBS4)
-# ACUSUBS=$(ACUSUBS4)
-# ACUTEST=$(ACUTEST4)
-# ACUSRCDIR=$(ACU_LIBDIR)
-# COBOL=$(COBOL4)
-# CBLUTIL=$(CBLUTIL4)
-#
 # 5	ACUCOBOL Version 3.1 - 3.2.1 + 3.2.2 (except SCO UNIX) 
 #
-# ACULIBS=$(ACULIBS5) $(ACUOTHER)
-# ACUSUBS=$(ACUSUBS5)
-# ACUTEST=$(ACUTEST5)
-# ACUSRCDIR=$(ACU_LIBDIR)
-# COBOL=$(COBOL5)
-# CBLUTIL=$(CBLUTIL5)
+#ACULIBS=$(ACULIBS5) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN5)
+#ACUSUBS=$(ACUSUBS5)
+#ACUTEST=$(ACUTEST5)
+#ACUSRCDIR=$(ACU_LIBDIR)
+#COBOL=$(COBOL5)
+#CBLUTIL=$(CBLUTIL5)
 #
 # 6	ACUCOBOL Version 3.2.2 for SCO UNIX
 #
 #ACULIBS=$(ACULIBS6) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN6)
 #ACUSUBS=$(ACUSUBS6)
 #ACUTEST=$(ACUTEST6)
 #ACUSRCDIR=$(ACU_LIBDIR)
@@ -195,6 +211,7 @@ ACUCCFLAGS8= -DNO_ACUSQL=1
 # 7	ACUCOBOL Version 4.0.0 - 4.3
 #
 #ACULIBS=$(ACULIBS7) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN7)
 #ACUSUBS=$(ACUSUBS7)
 #ACUTEST=$(ACUTEST7)
 #ACUSRCDIR=$(ACU_LIBDIR)
@@ -203,13 +220,25 @@ ACUCCFLAGS8= -DNO_ACUSQL=1
 #
 # 8	ACUCOBOL Version 5.0, 5.1
 #
-ACULIBS=$(ACULIBS8) $(ACUOTHER)
-ACUSUBS=$(ACUSUBS8)
-ACUTEST=$(ACUTEST8)
+#ACULIBS=$(ACULIBS8) $(ACUOTHER)
+#ACUMAIN=$(ACUMAIN8)
+#ACUSUBS=$(ACUSUBS8)
+#ACUTEST=$(ACUTEST8)
+#ACUSRCDIR=$(ACU_LIBDIR)
+#COBOL=$(COBOL8)
+#CBLUTIL=$(CBLUTIL8)
+#ACUCCFLAGS=$(ACUCCFLAGS8)
+#
+# 9	ACUCOBOL Version 5.2
+#
+ACULIBS=$(ACULIBS9) $(ACUOTHER)
+ACUMAIN=$(ACUMAIN9)
+ACUSUBS=$(ACUSUBS9)
+ACUTEST=$(ACUTEST9)
 ACUSRCDIR=$(ACU_LIBDIR)
-COBOL=$(COBOL8)
-CBLUTIL=$(CBLUTIL8)
-ACUCCFLAGS=$(ACUCCFLAGS8)
+COBOL=$(COBOL9)
+CBLUTIL=$(CBLUTIL9)
+ACUCCFLAGS=$(ACUCCFLAGS9)
 
 #
 #============================================================================

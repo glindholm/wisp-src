@@ -149,7 +149,7 @@ linked into report functions.
 
 static void lmg_dummy_output(char *io,char *rec)
 {
-	crid_error_trace("Attempted LISTMGMT output when not set");
+	kcsitrace(4,"LISTMGMT","OUTPUT", "Attempted LISTMGMT output when not set");
 }
 
 static void (*lmg_output)(char *,char *) = lmg_dummy_output;
@@ -1036,7 +1036,7 @@ void set_lmg_output_func(void (*func)(char*,char*))
 
 static void lmg_dummy_count(long count)
 {
-	crid_error_trace("Attempted to log LISTMGMT count when not set.");
+	kcsitrace(4,"LISTMGMT","COUNT", "Attempted to log LISTMGMT count when not set.");
 }
 
 static void (*lmg_log_count)(long) = lmg_dummy_count;
@@ -1367,6 +1367,9 @@ void rpt_write(int code)
 /*
 **	History:
 **	$Log: rwrt.c,v $
+**	Revision 1.5  2002-04-22 11:53:10-04  gsl
+**	Change crid_error_trace() toe kcsitrace()
+**
 **	Revision 1.4  1997-10-02 15:38:15-04  gsl
 **	fix warnings
 **

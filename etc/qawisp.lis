@@ -140,17 +140,19 @@
 
 	___	Build the SAMPLE programs.  
 
-		ACU	$ make -f sampleacu.umf
-		MF	$ make -f samplemf.umf
+		ACU	$ make -f sample.umf ACU
+		MF	$ make -f sample.umf MF
+		MFSE	$ make -f sample.umf MFSE
 
 	WISP TRANSLATOR TESTS
 
 	___	Run the WISP translator against the t_xxx.wcb test files.
 
 		$ cd $WISP/src/wisptran
-		$ make -f wisp.umf testacu 2>&1 |more
-		$ make -f wisp.umf testmf  2>&1 |more
-		$ make -f wisp.umf testacn 2>&1 |more
+		$ make -f wisp.umf testacu  2>&1 |more
+		$ make -f wisp.umf testmf   2>&1 |more
+		$ make -f wisp.umf testmfse 2>&1 |more
+		$ make -f wisp.umf testacn  2>&1 |more
 
 		These will generate multiple WISP warnings and errors,
 		this is expected.  Look for errors coming from the COBOL
@@ -300,20 +302,6 @@
 			LIBRARY = TESTxxx	(ACU/MF)
 			VOLUME  = SOURCE
 
-	___	(2) SET File Usasge Constants
-		        The USAGE CONSTANTS should be set as follows:
-
-			INLIB	= LIBIN		INVOL	= VOLIN	
-			OUTLIB	= LIBOUT	OUTVOL	= VOLOUT
-			RUNLIB  = LIBRUN	RUNVOL	= VOLRUN
-			SPOOLLIB= #(uid)PRT	SPOOLVOL= VOLSPL
-			WORKLIB	= WKxxxxxx	WORKVOL = VOLWRK
-
-		Verify that they are set as entered above.
-		SPOOLLIB and WORKLIB should have been generated.
-
-	___	Change SPOOLLIB = "LIBSPOOL" for rest of testing.
-
 		Setup test programs
 	___	(1) RUN Program or Procedure
 			PROGRAM = QA0001
@@ -337,7 +325,6 @@
 		ACU:	(1) Run QASTART in TESTACU on SOURCE
 		MF:	(1) Run QASTART in TESTMF  on SOURCE
 
-	___	REFRESH (^w)
 	___	HELP-KEY (^e)
 			Look for the following info:
 			__  Workstation number
@@ -347,19 +334,10 @@
 			__  Progam: SAMPLE
 			__  Screen: MAIN-SCREEN
 
-	___	(32) Copyright Screen.
-		Verify the Release version number.
-
-	___	(31) Internal info
+	___	(32) Copyright Screen.	(Verify the Version number)
+		(31) Internal info
 		(30) Usage Constants
 		(29) Environment info
-
-	___	(3) SET Print Mode
-		    PRNTMODE = P
-		    PRTCLASS = A
-		    FORM_NUM = 016
-		    PRINTER  = 000
-		    LINES    = 055
 
 	___	(5) Manage FILES/LIBRARIES
 
@@ -390,6 +368,8 @@
  
 		(10) Configure TERMINAL.		
 	___	(2)  PSEUDO Blank Characteristics.
+		     Character=[4] 
+		     Rendition=[N]
 
 	___	(11) Enter COMMANDS  (UNIX only)
 
@@ -1330,6 +1310,18 @@
 
 	___	(3) Modify a report
 		    FILE=R1  LIBRARY=REPORT VOLUME=VOLOUT
+		(ENTER)
+		(9) Sort Fields
+		    Field ID: AKEY1
+                    Level:    1
+		    Asc/Dsc:  D
+
+	___	(4) Print a report
+
+		DEVICE=DISPLAY
+		(ENTER)
+		*** Check AKEY1 is descending ***
+
 
 	___	(16) Exit REPORT
 

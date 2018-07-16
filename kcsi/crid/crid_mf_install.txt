@@ -1,0 +1,58 @@
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          Installation of CRID for Micro Focus COBOL on UNIX
+
+Document:       crid_mf_install.txt
+Last Updated:   $Date:$
+Products:       KCSI CRID Utilities
+Versions:       3.0.03 (AND LATER)
+
+Summary:        Installation instructions for the CRID Utilities
+                using the Micro Focus COBOL compiler.
+
+====================================================================
+
+
+INSTALLATION
+============
+
+First install WISP and setup the WISP runtime environment.  This
+must be in place before CRID can be used.
+
+CRID will normally be distributed on CDROM as a tar file named
+"crid_mf_XXXX.tar".  It is recommended that you install CRID
+in your WISP directory ($WISPDIR). 
+
+Extract the distribution files from "crid_mf_XXXX.tar" using the
+following tar command:
+
+        $ cd $WISPDIR
+        $ tar -xvf crid_mf_XXXX.tar
+
+This will create a directory "crid_mf_XXXX" where XXXX is a version
+number.  Refer to crid_packlist.txt in the distribution for a listing
+of expected files.
+
+
+Configuration
+-------------
+
+The utilities control/report/inquiry/datentry need to be on your
+$PATH. 
+
+Add the CRID installaton directory to your $PATH:
+
+   $ PATH=$PATH:/usr/local/wisp_XXXX/crid_mf_XXXX
+
+
+Test your installation by running the utilites:
+
+        $ control
+        $ report
+        $ inquiry
+        $ datentry
+
+========================= END OF DOCUMENT ==========================
+

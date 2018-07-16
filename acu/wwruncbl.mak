@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -8,9 +8,17 @@
 #		The WIN32 makefile for building the ACUCOBOL-GT runtime
 #		systems that include the WISP runtime routines.
 #
-#		For ACUCOBOL-GT 2.4 through 4.2.
+#		This file supports ACUCOBOL-GT 2.4 through 4.2.
 #
-#		NOTE: Use wrun32wisp.mak for ACUCOBOL-GT 4.3 & 5.x
+#		For ACUCOBOL-GT 5.2 use:
+#			wrun32wisp_acu52.mak
+#			wrun32wisp_crid_acu52.mak
+#			wrun32wisp_ede_acu52.mak
+#
+#		For ACUCOBOL-GT 4.3 and 5.1 use:
+#			wrun32wisp_acu51.mak
+#			wrun32wisp_crid_acu51.mak
+#			wrun32wisp_ede_acu51.mak
 #
 #	Description:
 #		This makefile can generate the following versions
@@ -18,9 +26,9 @@
 #
 #		wwruncbl.exe	The standard runtime for ACUCOBOL.
 #
-#		wwruncble.exe	The EDE version of the runtime.
-#
 #		wwruncblk.exe	The CRID version of the runtime.
+#
+#		wwruncble.exe	The EDE version of the runtime.
 #
 #		wwruncblke.exe	The CRID + EDE runtime.
 #
@@ -47,19 +55,19 @@
 #		Edit this file and change WISPDIR and ACUDIR to 
 #		point to the correct locations.
 #
-#			WISPDIR=C:\WISP4400
+#			WISPDIR=C:\WISP4402
 #			ACUDIR=C:\ACUCBL42\ACUGT
-#			EDEDIR=C:\EDE4400
-#			CRIDDIR=C:\CRIDACU3000
+#			EDEDIR=C:\EDE4402
+#			CRIDDIR=C:\CRIDACU3003
 #
 #		To build a standard runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak
 #
-#		To build a EDE runtime:
-#			C:\WISP\ACU> nmake /f wwruncbl.mak ede
-#
 #		To build a CRID runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak crid
+#
+#		To build a EDE runtime:
+#			C:\WISP\ACU> nmake /f wwruncbl.mak ede
 #
 #		To build a CRID+EDE runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak cridede
@@ -86,13 +94,13 @@
 #				Runtime = wwruncbl.exe
 #				Macro   = RTS
 #
-#		ede		The EDE runtime.
-#				Runtime = wwruncble.exe
-#				Macro   = RTSE
-#
 #		crid		The CRID runtime.
 #				Runtime = wwruncblk.exe
 #				Macro   = RTSK
+#
+#		ede		The EDE runtime.
+#				Runtime = wwruncble.exe
+#				Macro   = RTSE
 #
 #		cridede		The CRID + EDE  runtime.
 #				Runtime = wwruncblke.exe
@@ -115,9 +123,9 @@
 #
 #		Examples:
 #
-#		(1) Build the EDE runtime using the name "wrunede.exe".
+#		(1) Build the CRID runtime using the name "wruncrid.exe".
 #
-#		   C:\WISP\ACU> nmake /f wwruncbl.mak RTSE=wrunede.exe ede
+#		   C:\WISP\ACU> nmake /f wwruncbl.mak RTSK=wruncrid.exe crid
 #
 #
 #	NOTE:	This makefile supports different versions of ACUCOBOL.
@@ -147,7 +155,7 @@
 #ACUDIR=C:\ACUCBL40\ACUGT
 ACUDIR=C:\Acucorp\ACUCBL41
 #ACUDIR=C:\Acucorp\ACUCBL42\ACUGT
-#ACUDIR=C:\Acucorp\ACUCBL510\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL520\ACUGT
 
 
 ACURPCDIR=C:\ACUFTP
@@ -155,9 +163,9 @@ ACURPCDIR=C:\ACUFTP
 # Uncomment for Acuserver client enabled runtime.
 #CLIENT=1
 
-WISPDIR=C:\WISP4400
-EDEDIR=C:\EDE4400
-CRIDDIR=C:\CRIDACU3000
+WISPDIR=C:\WISP4402
+EDEDIR=C:\EDE4402
+CRIDDIR=C:\CRIDACU3003
 
 OUTDIR=.
 
@@ -407,41 +415,6 @@ ACUVISN8=$(ACULIBSDIR)\wfsi32.lib \
 ACUTEST8=$(ACULIBSDIR)\wlib32.lib
 ACUBLD8 = $(guilibs) wsock32.lib netapi32.lib comctl32.lib winmm.lib
 
-#####################################################
-## 510 Acucobol 5.1.0 (Not Working)
-ACUSUBS510= \
-	filetbl.obj \
-	mswinsub.obj
-
-!ifdef CLIENT
-ACUCLIENT_LIBS510= \
-	$(ACULIBSDIR)\wclnt32.lib
-ACUCFLAGS510=-DNO_CLIENT=0
-!else
-ACUCLIENT_LIBS510=
-ACUCFLAGS510=-DNO_CLIENT=1
-!endif
-
-ACULIBS510= \
-	$(ACUCLIENT_LIBS510) \
-	$(ACULIBSDIR)\wrun32.lib \
-	$(ACULIBSDIR)\wcpp32.lib \
-	$(ACULIBSDIR)\wfsi32.lib \
-	$(ACULIBSDIR)\wvis32.lib \
-	$(ACULIBSDIR)\acme.lib \
-	$(ACULIBSDIR)\plugin32.lib
-
-ACUWLIBS510= $(ACULIBSDIR)\wterm32.lib
-ACUTLIBS510= $(ACULIBSDIR)\term32.lib
-
-ACUVISN510= \
-	$(ACULIBSDIR)\wrun32.lib \
-	$(ACULIBSDIR)\wfsi32.lib \
-	$(ACULIBSDIR)\wvis32.lib
-
-ACUTEST510=$(ACULIBSDIR)\wcpp32.lib
-ACUBLD510 = $(guilibs) wsock32.lib netapi32.lib comctl32.lib winmm.lib
-
 
 #============================================================================
 #
@@ -585,7 +558,7 @@ CRID_DEP = crid.h crid85.c cridtbl.c
 # Used to relink the CREATE utility (with Acucobol 4.1)
 #
 CREATE	=$(OUTDIR)\create.exe
-CREATEDIR=C:\CREATEACU3500
+CREATEDIR=C:\CREATEACU3501
 CREATEACUSUB=$(CREATEDIR)\vscrmain.obj
 CREATESUBS=$(CREATEACUSUB) filetbl.obj
 CREATELIBS=$(ACUVISN) $(CREATEDIR)\createacu.lib $(WISP_LIBS_PATHS)

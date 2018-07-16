@@ -1,6 +1,6 @@
 #************************************************************************
 #
-# Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved. 
+# Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved. 
 # $Id:$
 #
 #************************************************************************
@@ -55,7 +55,7 @@ COBOL=cob
 COBFLAGS=
 # LN=ln
 LN=cp
-LANG=-VMF
+WISPLANG=MF
 INT=-i
 GNT=-u
 OBJ=-xc
@@ -66,24 +66,24 @@ LIB=-lwisp -lvideo
 .SUFFIXES: .o .gnt .int .cob .wcb
 
 .wcb.cob:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
 
 .wcb.int:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
 	$(COBOL) $(INT) $(COBFLAGS)  $*.cob
 	$(LN) $*.int `echo $* | tr '[a-z]' '[A-Z]'`.int
 
 .wcb.gnt:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
 	$(COBOL) $(GNT) $(COBFLAGS)  $*.cob
 	$(LN) $*.gnt `echo $* | tr '[a-z]' '[A-Z]'`.gnt
 
 .wcb.o:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
 	$(COBOL) $(OBJ) $(COBFLAGS)  $*.cob
 
 .wcb:
-	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(WISPTRAN)  -V $(WISPLANG) $(WISPFLAGS) $*
 	$(COBOL) $(EXE) $(COBFLAGS) $*.cob $(LDFILES) $(LIB)
 
 .cob.int:

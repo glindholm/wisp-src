@@ -30,6 +30,7 @@
 #include "intdef.h"
 #include "kcsio.h"
 #include "dbsc.h"
+#include "kcsit.h"
 
 /*
 **	Structures and Defines
@@ -98,11 +99,7 @@ void rel_file_info(KCSIO_BLOCK *kfb);
 void bub_sort(char *base,int nel,int len,int (*comp)(),int (*swap)());
 void kfberr(KFB *kfb);
 void init_crid_debug(void);
-void crid_func_trace(char *func,int level);
-void crid_str_trace(char *str);
 void KTRACE(char *str);
-void crid_str(char *str);
-void crid_error_trace(char *str);
 void crid_func_trace_in(char *func);
 void crid_func_trace_out(char *func);
 void CTRLVERS(char *wvers,char *bin);
@@ -346,6 +343,15 @@ void setwispfilext(char* wispfilext);
 /*
 **	History:
 **	$Log: kcsifunc.h,v $
+**	Revision 1.14  2002-05-14 17:39:53-04  gsl
+**	include kcsit.h
+**
+**	Revision 1.13  2002-04-22 14:27:59-04  gsl
+**	Remove unused
+**
+**	Revision 1.12  2002-04-19 16:58:39-04  gsl
+**	remove crid_str
+**
 **	Revision 1.11  2001-11-20 12:20:08-05  gsl
 **	Add rel_xxx() routines
 **

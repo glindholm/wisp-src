@@ -53,7 +53,7 @@ static char rcsid[]="$Id:$";
 
 static char rcs_date[]		="$Date:$";
 static char rcs_revision[]	="$Revision:$";
-static char rcs_state[]		="$State: V4_4_01 $";
+static char rcs_state[]		="$State: V4_4_02f $";
 static char bldmf_version[80];
 
 /**************************************************************

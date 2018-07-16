@@ -120,15 +120,35 @@ int rl;
 /*----
 Create a sort file
 ------*/
-static sort_file_create(sf,ky)
+static int sort_file_create(sf,ky)
 KCSIO_BLOCK *sf;
 struct keydesc *ky;
 {
 	strcpy(sf->_org,"I");
-	strcpy(sf->_io,OPEN_OUTPUT);
+
+	strcpy(sf->_io, OPEN_OUTPUT);
 	ccsio(sf,work_rec);
-	return(sf->_status);
+	if (sf->_status != 0)
+	{
+		return(sf->_status);
+	}
+
+	strcpy(sf->_io, CLOSE_FILE);
+	ccsio(sf,work_rec);
+	if (sf->_status != 0)
+	{
+		return(sf->_status);
+	}
+
+	strcpy(sf->_io, OPEN_IO);
+	ccsio(sf,work_rec);
+	if (sf->_status != 0)
+	{
+		return(sf->_status);
+	}
 	
+	
+	return(sf->_status);
 }
 
 /*----
@@ -206,7 +226,11 @@ char *work;
 	memcpy(work,buf,UNIQUE_LEN);
 }
 
-static sort_rel(sf,s,r)
+/*
+  Write out the next sort file record.
+  If the write results in a duplicate key, add the unique component and try again.
+ */
+static int sort_rel(sf,s,r)
 KCSIO_BLOCK *sf;
 SORT *s;
 char *r;
@@ -215,18 +239,39 @@ char *r;
 
 	temp = FULL_KEY_LEN(sf);
 	memcpy(bld_key(s,work_rec,r),r,(sf->_record_len - temp));
-	while(1)
-		{
-		strcpy(sf->_io,WRITE_RECORD);
-		ccsio(sf,work_rec);
-		if(sf->_status == 0)
-			break;
-		temp = DATA_KEY_LEN(sf);
-		add_unique(++unique,&work_rec[temp]);
-		if(unique > 999999999)
-			break;
+
+	strcpy(sf->_io,WRITE_RECORD);
+	ccsio(sf,work_rec);
+
+	if (sf->_status == 0)
+	{
+		return 0; /* Success */
+	}
+
+	if (EDUPL != sf->_status)
+	{
+		/* 
+		   The only error we are prepared to handle is a duplicate key.
+		*/
+		return sf->_status;
+	}
+	
+	
+	/* 
+	   Write failed -- key is not unique, so add unique component and try again.
+	*/
+	if(unique > 999999999)
+	{
+		/* Exceeded allowed number of non-unique keys */
+		return(sf->_status);
+	}
 		
-		}
+	temp = DATA_KEY_LEN(sf);
+	add_unique(++unique,&work_rec[temp]);
+
+	strcpy(sf->_io,WRITE_RECORD);
+	ccsio(sf,work_rec);
+
 	return(sf->_status);
 }
 
@@ -346,6 +391,12 @@ static void clean_up(KCSIO_BLOCK *sf)
 /*
 **	History:
 **	$Log: rsrt.c,v $
+**	Revision 1.5  2002-03-18 17:53:27-05  gsl
+**	fix REPORT SORT problem with Micro Focus Server Express.
+**	in sort_file_create() OPEN_OUTPUT to create then CLOSE_FILE then OPEN_IO
+**	in sort_rel() remove the loop and only try adding a unique component if
+**	the write failed with a duplicate key
+**
 **	Revision 1.4  1997-10-02 15:36:13-04  gsl
 **	Fix warnings
 **

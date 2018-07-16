@@ -6,9 +6,17 @@
 #--------------------------------------------------------------------
 
 #
-# To change the version for CREATE, change it here"
+# Change copyright date in "vscrout.c"
 #
-CREATE_VERSION=3500
+# To change the version for CREATE, change it here. 
+#	wisp/kcsi/create/createunix.umf
+#	wisp/kcsi/create/create_relnotes.txt
+#	wisp/kcsi/create/createntsetup.txt
+#	wisp/kcsi/create/create_install.txt
+#	wisp/kcsi/create/create_packlist.txt
+#	wisp/doc/v44_relnotes.lis
+#
+CREATE_VERSION=3501
 
 CDEBUG=-DNODEBUG
 #CDEBUG= -g -DDEBUG
@@ -37,7 +45,7 @@ MFXIOL=mfxio.a
 L=create.a
 MFXL=mfxcreate.a
 
-RELEASEDIST=install_create.txt packlist.txt release.txt create.umf
+RELEASEDIST=create_install.txt create_packlist.txt create_relnotes.txt create.umf
 ACUDIST=create $(L) vscracu.o $(IOL) $(RELEASEDIST)
 MFXDIST=create.mfx vscrmain.o $(MFXL) $(MFXIOL) $(RELEASEDIST)
 
@@ -92,22 +100,23 @@ mfxdist: $(MFXDIST)
 	fi
 
 mfxcrt$(CREATE_VERSION): 
-	-@distdir=createmfx.$(CREATE_VERSION) ; \
-	shipdir=createmfx$(CREATE_VERSION).ship ; \
+	-@distdir=create_mf_$(CREATE_VERSION) ; \
+	shipdir=create_mf_$(CREATE_VERSION).ship ; \
 	rm -rf $$shipdir ; \
 	echo ; \
 	echo "Creating Micro Focus CREATE distribution $$shipdir - Please wait ..." ; \
 	echo ; \
 	mkdir $$shipdir $$shipdir/$$distdir ; \
 	cp $(MFXDIST) $$shipdir/$$distdir ; \
+	cp create_relnotes.txt create_install.txt $$shipdir ; \
 	cd $$shipdir ; \
 	mv $$distdir/create.mfx $$distdir/create ; \
-	find . -type d -exec chmod 755 {} \; ; \
-	find . -type f -exec chmod 444 {} \; ; \
-	chmod 555 $$distdir/create ; \
+	find . -type d -exec chmod a+rx {} \; ; \
+	find . -type f -exec chmod a=r {} \; ; \
+	chmod a=rx $$distdir/create ; \
 	echo "     Creating compressed tar file ..." ; \
 	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
-	chmod 644 $$distdir.tar.Z
+	chmod a+r *
 
 acudist: $(ACUDIST)
 	@if [ $(CREATE_VERSION) ] ; then \
@@ -117,21 +126,22 @@ acudist: $(ACUDIST)
 	fi
 
 acrt.$(CREATE_VERSION): 
-	-@distdir=createacu.$(CREATE_VERSION) ; \
-	shipdir=createacu$(CREATE_VERSION).ship ; \
+	-@distdir=create_acu_$(CREATE_VERSION) ; \
+	shipdir=create_acu_$(CREATE_VERSION).ship ; \
 	rm -rf $$shipdir ; \
 	echo ; \
-	echo "Creating AcuCOBOL CREATE distribution $$shipdir - Please wait ..." ; \
+	echo "Creating ACUCOBOL CREATE distribution $$shipdir - Please wait ..." ; \
 	echo ; \
 	mkdir $$shipdir $$shipdir/$$distdir ; \
 	cp $(ACUDIST) $$shipdir/$$distdir ; \
+	cp create_relnotes.txt create_install.txt $$shipdir ; \
 	cd $$shipdir ; \
-	find . -type d -exec chmod 755 {} \; ; \
-	find . -type f -exec chmod 444 {} \; ; \
-	chmod 555 $$distdir/create ; \
+	find . -type d -exec chmod a+rx {} \; ; \
+	find . -type f -exec chmod a=r {} \; ; \
+	chmod a=rx $$distdir/create ; \
 	echo "     Creating compressed tar file ..." ; \
 	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
-	chmod 644 $$distdir.tar.Z
+	chmod a+r *
 
 
 $(L):	$(L)(vscrglb.o) $(L)(version.o) $(L)(vscrhelp.o) $(L)(vscrout.o) \

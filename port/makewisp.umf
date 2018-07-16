@@ -18,16 +18,27 @@
 include $(WISP)/src/port/make.include
 
 all:		wisp ede kcsi
-		@echo ALL is up-to-date.
+		@echo "ALL is up-to-date."
+
+all_acu:	wisp_base rts_acu ede_base rts_acu_ede kcsi_acu
+		@echo "ALL (ACU) is up-to-date."
+
+all_mf:		wisp_base rts_mf ede_base rts_mf_ede kcsi_mf
+		@echo "ALL (MF) is up-to-date."
+
 
 #
 #	Products
 #
 
-wisp:		video wisplib wisptran wisputils proctran mfsubs vsedit ivslib wproc rts
+wisp:		wisp_base rts
+
+wisp_base:	video wisplib wisptran wisputils proctran mfsubs vsedit ivslib wproc
 		@echo WISP is up-to-date.
 
-ede:		edelib good
+ede:		ede_base rts_ede
+
+ede_base:	edelib good
 		@echo EDE is up-to-date.
 
 kcsi:		kcsi_acu kcsi_mf
@@ -109,14 +120,24 @@ mfsubs:
 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. subsonly)
 		@echo MFSUBS is up-to-date.
 
-rts:		acu mf
+rts:		rts_acu rts_mf
 
-acu:		wisplib videolib edelib
-		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. ACUDIR=$(ACUDIR) both)
+rts_acu:	wisplib videolib
+		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. ACUDIR=$(ACUDIR))
 		@echo ACUCOBOL RTS is up-to-date.
 
-mf:		wisplib videolib edelib
-		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. COBDIR=$(COBDIR) both)
+rts_mf:		wisplib videolib
+		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. COBDIR=$(COBDIR))
+		@echo MICRO FOCUS RTS is up-to-date.
+
+rts_ede:	rts_acu_ede rts_mf_ede
+
+rts_acu_ede:	wisplib videolib edelib
+		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. ACUDIR=$(ACUDIR) ede)
+		@echo ACUCOBOL RTS is up-to-date.
+
+rts_mf_ede:	wisplib videolib edelib
+		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. COBDIR=$(COBDIR) ede)
 		@echo MICRO FOCUS RTS is up-to-date.
 
 clean:
@@ -143,6 +164,12 @@ clean:
 #
 # 	History:
 #	$Log: makewisp.umf,v $
+#	Revision 1.23  2002-04-01 14:27:23-05  gsl
+#	change to add targets "all_acu" and "all_mf"
+#
+#	Revision 1.22  2002-03-19 16:10:13-05  gsl
+#	Split the rts target into rts and rts_ede
+#
 #	Revision 1.21  2001-09-10 15:00:34-04  gsl
 #	Removed AMU target from ALL
 #

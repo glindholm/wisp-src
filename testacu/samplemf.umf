@@ -1,11 +1,3 @@
-#/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
-#/************************************************************************/
-#
 #
 #	File:		samplemf.umf
 #
@@ -30,8 +22,12 @@ include $(WISP)/src/port/make.include
 
 include mf.rules
 
-## Uncomment next line for HP-COBOL
-#LANG=-VMF0
+## Uncomment next line for Micro Focus Server Express
+#WISPLANG=MFSE
+
+## Uncomment to specify location of wisp
+#WISPTRAN=$(WISP)/src/wisptran/wisp
+
 WISPFLAGS= -I ../wisputils
 COBFLAGS= -a
 
@@ -43,7 +39,7 @@ int: 	sample.int qafileio.int qafile2.int qanetcap.int qaprint.int \
 	qascreen.int qascrn2.int qasubs.int qawsubs.int \
 	qawsfnm.int qawsfns.int qasy000m.int qasys99.int \
 	sub1.int sub3.int xlink.int xlink1.int trigger.int \
-	qabckgrd.int qadpcoma.int qawsxio.int mflink.int dispfile.int \
+	qabckgrd.int qadpcoma.int qawsxio.int mflink.int dispfile.int leswap.int \
 	wl0000.int wl0010.int wl0011.int wl0012.int wl0013.int wl0014.int \
 	wl0015.int wl0016.int wl0017.int wl0018.int wl0018a.int wl0018b.int wl0019.int wl0020.int \
 	wl0021.int wl0022.int wl0023.int wl0024.int wl0025.int wl0026.int wl0027.int
@@ -67,7 +63,7 @@ exe:	$(EXES)
 	@echo
 
 sample.cob: sample.wcb
-	$(WISPTRAN) $(LANG) $(WISPFLAGS) -O samopt.opt sample
+	$(WISPTRAN) -V $(WISPLANG) $(WISPFLAGS) -O samopt.opt sample
 
 
 LIBPATHS=$(STDLIB)/libwisp.a $(STDLIB)/libvideo.a
@@ -102,7 +98,7 @@ volwrk:
 DISPRINT_SRC=disprint.wcb disprint.umf
 
 DISPRINT.int: $(DISPRINT_SRC)
-	$(MAKE) -f disprint.umf mf
+	$(MAKE) -f disprint.umf $(WISPLANG)
 
 $(DISPRINT_SRC):
 	rm -f $@

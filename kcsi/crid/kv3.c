@@ -21,12 +21,17 @@ static int v_trans(int code);
 static int v_trans2(int code);
 static int kptoi(char **str);
 
+static void zero_acu_errno(void);
+static short get_acu_errno(void);
+
 /*----
 Extract the root file data and move in the space.
 ------*/
 void ksam_file_space(KCSIO_BLOCK *kfb)
 {
 	char result[11];
+
+	kcsitrace(1, "kv3:ksam_file_space()", "enter", "%s", kfb->_sys_name);
 
 /* doesn't work on AIX
 	i_info(kfb->_io_vector,-4,result);
@@ -47,14 +52,17 @@ does not.
 ------*/
 void ksam_open_shared(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_open_shared()", "enter", "%s", kfb->_sys_name);
 	ksam_open_io(kfb);
 }
 void ksam_open_input(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_open_input()", "enter", "%s", kfb->_sys_name);
 	do_open(kfb,Finput);
 }
 void ksam_open_io(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_open_io()", "enter", "%s", kfb->_sys_name);
 	do_open(kfb,Fio);
 }
 /*----
@@ -63,13 +71,15 @@ Doopen should not be used for open output
 static void do_open(KCSIO_BLOCK *kfb, int mode)
 {
 	char l_param[512];
+	kcsitrace(1, "kv3:do_open()", "enter", "mode=%d %s", mode, kfb->_sys_name);
+
 	sprintf(l_param,"%d,%d,%d",
 		kfb->_record_len,
 		kfb->_record_len,
 		kfb->_altkey_count +1);
-	f_errno = 0;
+	zero_acu_errno();
 	kfb->_io_vector = (char *) i_open(kfb->_sys_name,mode,l_param);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 	kfb->_last_io_key = 0;
 	kfb->_io_key = 0;
 	kfb->_open_status = 1;
@@ -90,6 +100,8 @@ void ksam_open_output(KCSIO_BLOCK *kfb)
 	/* extern short v_make_vers;	*/	/* ACUCOBOL FILE SYSTEM VARIABLE TO DEFINE VISION LEVEL 2,3,4 */
 	int vision_version;
 
+	kcsitrace(1, "kv3:ksam_open_output()", "enter", "%s", kfb->_sys_name);
+
 	sprintf(l_param,"%d,%d,%d",
 		kfb->_record_len,
 		kfb->_record_len,
@@ -106,7 +118,7 @@ void ksam_open_output(KCSIO_BLOCK *kfb)
 			kfb->_key[ak+1].k_part[0].kp_start);
 		strcat(k_param,w_param);
 		}
-	f_errno = 0;
+	zero_acu_errno();
 	
 	/*
 	**	Default to Vision 3 files.
@@ -150,14 +162,14 @@ void ksam_open_output(KCSIO_BLOCK *kfb)
 	/* v_make_vers = vision_version */
 	rc = i_make(kfb->_sys_name,"Control",NULL,l_param,k_param,NULL);
 	if(rc)
-		f_errno = 0;
-	kfb->_status = v_trans(f_errno);
-	if(f_errno)
+		zero_acu_errno();
+	kfb->_status = v_trans(get_acu_errno());
+	if(get_acu_errno())
 		return;
 
 	kfb->_io_vector = (char *) i_open(kfb->_sys_name,Foutput,l_param);
-	kfb->_status = v_trans(f_errno);
-	if(f_errno)
+	kfb->_status = v_trans(get_acu_errno());
+	if(get_acu_errno())
 		return;
 	kfb->_last_io_key = 0;
 	kfb->_open_status = 1;
@@ -166,12 +178,14 @@ void ksam_open_output(KCSIO_BLOCK *kfb)
 
 void ksam_close(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_close()", "enter", "%s", kfb->_sys_name);
 
-	kfb->_status = f_errno = 0;
+	zero_acu_errno();
+	kfb->_status = 0;
 	if(kfb->_open_status == 0)
 		return;
 	i_close(kfb->_io_vector);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 	kfb->_open_status = 0;
 	ksam_file_space(kfb);
 }
@@ -183,50 +197,57 @@ A read record request assumes the primary key.
 ------*/
 void ksam_read(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_read()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	ksam_read_keyed(kfb);
 }
 
 void ksam_hold(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_hold()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	ksam_hold_keyed(kfb);
 }
 
 void ksam_read_next(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_read_next()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_next(kfb->_io_vector,kfb->_record);
-	kfb->_status = v_trans2(f_errno);
+	kfb->_status = v_trans2(get_acu_errno());
 }
 
 void ksam_read_previous(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_read_previous()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_previous(kfb->_io_vector,kfb->_record);
-	kfb->_status = v_trans2(f_errno);
+	kfb->_status = v_trans2(get_acu_errno());
 }
 
 
 void ksam_hold_next(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_hold_next()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_next(kfb->_io_vector,kfb->_record);
-	kfb->_status = v_trans2(f_errno);
+	kfb->_status = v_trans2(get_acu_errno());
 }
 
 void ksam_read_keyed(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_read_keyed()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_read(kfb->_io_vector,kfb->_record,kfb->_io_key);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 }
 
 void ksam_hold_keyed(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_hold_kyed()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_read(kfb->_io_vector,kfb->_record,kfb->_io_key);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 }
 
 /*----
@@ -237,38 +258,45 @@ Starts are vanilla, but see notes on read and hold next.
 ------*/
 void ksam_start_eq(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_eq()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	do_start(kfb,F_EQUALS);
 }
 
 void ksam_start_nlt(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_nlt()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	do_start(kfb,F_NOT_LESS);
 }
 
 void ksam_start_gt(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_gt()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	do_start(kfb,F_GREATER);
 }
 void ksam_start_eq_keyed(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_eq_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb,F_EQUALS);
 }
 
 void ksam_start_nlt_keyed(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_nlt_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb,F_NOT_LESS);
 }
 
 void ksam_start_gt_keyed(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_gt_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb,F_GREATER);
 }
 
 void ksam_start_last(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_start_last()", "enter", "%s", kfb->_sys_name);
 	kfb->_status = EBADARG;
 }
 
@@ -277,9 +305,10 @@ Executes a start and sets up a new _last_io_key.
 ------*/
 static void do_start(KCSIO_BLOCK *kfb, int mode)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:do_start()", "enter", "%s mode=%d", kfb->_sys_name, mode);
+	zero_acu_errno();
 	i_start(kfb->_io_vector,kfb->_record,kfb->_io_key,0,mode);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 	kfb->_last_io_key = kfb->_io_key;
 }
 
@@ -292,32 +321,36 @@ been issued before the rewrite or delete so these are released.
 ------*/
 void ksam_write(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_write()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_write(kfb->_io_vector,kfb->_record,kfb->_record_len);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 	ksam_file_space(kfb);
 }
 
 void ksam_rewrite(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_rewrite()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_rewrite(kfb->_io_vector, kfb->_record, kfb->_record_len);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 }
 
 void ksam_delete(KCSIO_BLOCK *kfb)
 {
-	f_errno = 0;
+	kcsitrace(1, "kv3:ksam_delete()", "enter", "%s", kfb->_sys_name);
+	zero_acu_errno();
 	i_delete(kfb->_io_vector,kfb->_record);
-	kfb->_status = v_trans(f_errno);
+	kfb->_status = v_trans(get_acu_errno());
 	ksam_file_space(kfb);
 }
 
 void ksam_unlock(KCSIO_BLOCK *kfb)
 {
-/* 	f_errno = 0; */
+	kcsitrace(1, "kv3:ksam_unlock()", "enter", "%s", kfb->_sys_name);
+/* 	zero_acu_errno(); */
 	i_unlock(kfb->_io_vector);
-/*	kfb->_status = v_trans(f_errno); */
+/*	kfb->_status = v_trans(get_acu_errno()); */
 }
 
 /*----
@@ -325,6 +358,7 @@ Get table_info (same as file_info under vision 3)
 ------*/
 void ksam_table_info(KCSIO_BLOCK *kfb)
 {
+	kcsitrace(1, "kv3:ksam_table_info()", "enter", "%s", kfb->_sys_name);
 	ksam_file_info(kfb);
 }
 
@@ -338,6 +372,7 @@ void ksam_file_info(KCSIO_BLOCK *kfb)
 	char *lp;
 	int ak,rc;
 	
+	kcsitrace(1, "kv3:ksam_file_info()", "enter", "%s", kfb->_sys_name);
 	rc = i_info(kfb->_io_vector,-1,params);
 	lp = params;
 
@@ -396,48 +431,154 @@ static int kptoi(char **str)
 
 static int v_trans2(int code)
 {
+	int rc;
+	
+
 	if(	(code == E_NOT_FOUND)	||
 		(code == E_UNDEF_RECORD)	)
-		return(EENDFILE);
+		rc = EENDFILE;
 	else
-		return(v_trans(code));
+		rc = v_trans(code);
+
+	kcsitrace(1, "kv3:v_trans2()", "translated", "%d --> %d", code, rc);
+
+	return rc;
 }
 
 static int v_trans(int code)
 {
+	int rc;
+	char *msg = "";
+
 	switch(code)
 		{
 		case 0:
-			return(0);
+			rc = 0;
+			msg = "OK";
+			break;
+
 		case W_DUP_OK:
-			return(0);
+			rc = 0;
+			msg = "Duplicate OK";
+			break;
+
 		case E_REC_LOCKED:
-			return(ELOCKED);
+			rc = ELOCKED;
+			msg = "Locked";
+			break;			
+
 		case E_SYS_ERR:
 		case E_DISK_FULL:
-			return(f_errno);
+			rc = get_acu_errno();
+			msg = "System error/Disk full";
+			break;
+			
 		case E_PARAM_ERR:
-			return(EBADARG);
+			rc = EBADARG;
+			msg = "Param error";
+			break;
+			
 		case E_TOO_MANY_FILES:
-			return(EBADFILE);
+			rc = EBADFILE;
+			msg = "Too many files";
+			break;
+			
 		case E_MODE_CLASH:
-			return(ENOTEXCL);
+			rc = ENOTEXCL;
+			msg = "Mode clash";
+			break;
+			
 		case E_BROKEN:
-			return(EBADFILE);
+			rc = EBADFILE;
+			msg = "Broken file";
+			break;
+			
 		case E_DUPLICATE:
-			return(EDUPL);
+			rc = EDUPL;
+			msg = "Duplicate";
+			break;
+			
 		case E_NOT_FOUND:
-			return(ENOREC);
+			rc = ENOREC;
+			msg = "Not found";
+			break;
+			
 		case E_NO_MEMORY:
-			return(EBADMEM);
+			rc = EBADMEM;
+			msg = "No memory";
+			break;
+			
 		default:
-			return(EBADFILE);
+			rc = EBADFILE;
+			msg = "Unknown";
+			break;
 		}
+
+	kcsitrace(1, "kv3:v_trans()", "translated", "%d --> %d %s", code, rc, msg);
+
+	return rc;
 }
+
+/*
+**	Older versions of Acucobol (5.1 and earlier) exposed
+**	the f_errno variable as extern short.
+**	
+**	In 5.2  f_errno is replaced by (*Astdlib_f_errno())  
+**	which is defined int sub.h.
+*/
+
+#if defined(CREATE_VERSION) && defined(WIN32)
+/* For CREATE on Windows we are using Acucobol 4.1 so use old version */
+#define OLD_F_ERROR
+#endif
+
+#ifdef f_errno
+#undef f_errno
+#endif
+#ifdef OLD_F_ERROR
+extern  short		f_errno;
+#else
+extern	short		*Astdlib_f_errno(); /* From ACU 5.2 sub.h */
+#endif	
+
+static void zero_acu_errno(void)
+{
+#ifdef OLD_F_ERROR
+	f_errno = 0;
+#else
+        (*Astdlib_f_errno()) = 0;
+#endif	
+}
+
+static short get_acu_errno(void)
+{
+	short rc;
+	
+#ifdef OLD_F_ERROR
+	rc = f_errno;
+#else
+	rc = (*Astdlib_f_errno());
+#endif	
+	kcsitrace(1, "kv3:get_acu_errno()", "errno", "f_errno=%d", (int)rc);
+	return rc;
+}
+
 
 /*
 **	History:
 **	$Log: kv3.c,v $
+**	Revision 1.12  2002-05-14 17:14:29-04  gsl
+**	Fixed f_error -> f_errno
+**
+**	Revision 1.11  2002-05-14 16:22:10-04  gsl
+**	Use old f_errno for CREATE on Windows
+**
+**	Revision 1.10  2002-04-24 11:35:26-04  gsl
+**	tracing
+**
+**	Revision 1.9  2002-03-27 15:21:16-05  gsl
+**	Fix f_errno for Acucobol 5.2 to use *Astdlib_f_errno()
+**
 **	Revision 1.8  2001-10-25 09:50:02-04  gsl
 **	fix comment
 **

@@ -497,7 +497,7 @@ get_next_statement:
 		}
 		if ( seqbinary )
 		{
-			if (mf_aix) 	strcpy(seqtype,"RECORD ");
+			if (mf_cobol) 	strcpy(seqtype,"RECORD ");
 			else 		strcpy(seqtype,"BINARY ");
 		}
 		seqline = 0;
@@ -667,7 +667,7 @@ get_next_statement:
 		
 		strcpy(prog_prname[this_file],buff);				/* Save the prname.			*/
 
-
+#ifdef OLD_SHORT_CUT
 		if (PERIOD == curr_node->token->type )				/* end it now				*/
 		{
 			if (data_conv)
@@ -724,6 +724,7 @@ get_next_statement:
 			}
 		}
 		else								/* Find out more about it.		*/
+#endif /* OLD-SORT-CUT */
 		{
 			reckey[0] = '\0';					/* Doesn't have a record key.		*/
 			reckeyq[0] = '\0';					/* Doesn't have a record key.		*/
@@ -961,7 +962,7 @@ get_next_statement:
 			else if (accmod == DYNAMIC)
 				tput_line_at(16, "ACCESS MODE  IS DYNAMIC");
 
-			if (mf_aix)
+			if (mf_cobol)
 			{
 				/*
 				**	MF: The LOCK clause comes before the KEY clauses.
@@ -974,8 +975,11 @@ get_next_statement:
 				{
 					tput_line_at(16, "LOCK MODE AUTOMATIC WITH LOCK ON MULTIPLE RECORDS");
 				}
-				else if (org == INDEX || was_seq_dyn)
+				else if (org == INDEX || was_seq_dyn || mfse_cobol)
 				{
+					/* 
+					 * MF SE allows sharing of seq files so always need the LOCK clause.
+					 */
 					tput_line_at(16, "LOCK MODE AUTOMATIC");
 				}
 				multiplelock = 0;
@@ -1092,7 +1096,7 @@ static write_sel(int printer, int this_file, int org, int accmod, int optional_f
 	if (!comments) tput_blank();
 
 	mf_compress = 0;
-	if ( compressfile && mf_aix )							/* Turn on MF file compression		*/
+	if ( compressfile && mf_cobol )							/* Turn on MF file compression		*/
 	{
 		tput_noprocess("      $SET DATACOMPRESS\"1\"");
 		mf_compress = 1;							/* We are in a MF compress		*/
@@ -1114,7 +1118,7 @@ static write_sel(int printer, int this_file, int org, int accmod, int optional_f
 
 	nooptional = 0;									/* Reset the nooptional flag		*/
 
-	if (acu_cobol || mf_aix)
+	if (acu_cobol || mf_cobol)
 	{										/* If it's acucobol, write the gen name.*/
 		tput_line_at(16, "ASSIGN TO %s", get_prog_nname(this_file));
 		if ( compressfile && acu_cobol )
@@ -1387,6 +1391,12 @@ static int add2buff(
 /*
 **	History:
 **	$Log: wt_input.c,v $
+**	Revision 1.19  2002-03-21 18:27:08-05  gsl
+**	Remove the simple SELECT short-cut to avoid duplicating code
+**
+**	Revision 1.18  2002-03-21 17:06:55-05  gsl
+**	For MFSE add LOCK MODE clause to sequential files.
+**
 **	Revision 1.17  1998-07-07 09:40:29-04  gsl
 **	Fix typo in warning message
 **

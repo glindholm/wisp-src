@@ -102,7 +102,7 @@ cat $TESTDIR/lgmap.acu |sed "s|_WISP_|$WISP|g"> $WISPCONFIG/LGMAP
 # Create wrunconfig
 echo "cobol=ACU"			>  $WISPCONFIG/wrunconfig
 echo "options=-b +e acuerr.log"		>> $WISPCONFIG/wrunconfig
-echo "runcbl=$WISPDIR/bin/wruncblk"	>> $WISPCONFIG/wrunconfig
+echo "runcbl=$WISPDIR/cridacu/wruncblk"	>> $WISPCONFIG/wrunconfig
 
 echo Loading $WISPCONFIG/videocap
 cp $WISPDIR/config/videocap/* $WISPCONFIG/videocap

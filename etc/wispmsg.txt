@@ -77,7 +77,7 @@
 28016	%%LINK-E-RECURSIVE Recursive LINK to file %.60s
 28018	%%LINK-E-FORK Fork failed [errno=%d]
 28020	%%LINK-E-ERROR %s
-28022	%%LINK-E-FRONTEND COBOL frontend %s to LINK failed
+28022	%%LINK-E-FRONTEND %s failed to run. Check for COBOL RTS error.
 28501	%%LINKPROC-I-ENTRY Entry into LINK
 28502	%%LINKPROC-F-PARMCNT Invalid parmcnt %d
 28503	%%LINKPROC-I-NOTFOUND File not found %.60s

@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
 static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
@@ -19,6 +19,7 @@ static char rcsid[]="$Id:$";
 #include <termio.h>
 #include <fcntl.h>
 
+#include "wcommon.h"
 #include "wperson.h"
 #define EXT_FILEXT
 #include "filext.h"
@@ -248,10 +249,9 @@ char *argv[];
 	process_args(argc,argv);
 	init_stuff();
 
-	/* CHANGE-COPYRIGHT-DATE */
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992-2001 NeoMedia Technologies Incorporated\n\n");
+	printf("Copyright (c) 1992-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Incorporated\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -790,6 +790,12 @@ increment_devnum()
 /*
 **	History:
 **	$Log: wsysconf.c,v $
+**	Revision 1.20  2002-03-28 10:12:04-05  gsl
+**	use define for copyright yaer
+**
+**	Revision 1.19  2002-03-26 16:51:27-05  gsl
+**	(C) 2002
+**
 **	Revision 1.18  2001-11-06 11:31:30-05  gsl
 **	Fix tty for HPUX
 **

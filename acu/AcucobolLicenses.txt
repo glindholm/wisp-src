@@ -1,3 +1,52 @@
+----------------------------------------------------------------------------
+5.2.0.1
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v5.2.0.1 for Solaris 8.0 (SPARC)32-bit / Sun SPARC
+Users/Devs        1 Developer
+Serial #          345135
+Product Code      TAKH U6S7 2GEH LBBS
+Product Key       UX7Y S4S7 2CB2
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v5.2.0.1 for Solaris 8.0 (SPARC)32-bit / Sun SPARC
+Users/Devs        2 User
+Serial #          118947
+Product Code      VTKD CSSK 2GWB 4BTS
+Product Key       SN7U AYSK 2FR6
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime Ver: 5.2.0.1 for HP/UX 11.0 (32-bit) / HP 9000
+Users/Devs        2 User
+Serial #          392652
+Product Code      JSAA 42LC 4G4L U3UQ
+Product Key       HNMT 28LC 4CTE
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v5.2.0.1 for AIX 4.3 (32-bit) / IBM RS/6000
+Users/Devs        1 USER
+Serial #          333725
+Product Code      JAAS 42L2 26US C4DQ
+Product Key       GE5B 28L2 23XE
+----------------------------------------------------------------------------
+5.2.0
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys Ver: 5.2.0 for MS Win NT (Intel) / NTServer
+Users/Devs        1 Developer
+Serial #          333724
+Product Code      JAAW UWCA AW4A ULVG
+Product Key       QN9F SUCA AZTL
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v5.2.0 for SCO UNIX OpenServer 5.00 / x86 PC
+Users/Devs        1 Developer
+Serial #          369570
+Product Code      3DKC DSAB P4LA ELCN
+Product Key       9HDV BYAB P38U
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v5.2.0 for SCO UNIX OpenServer 5.00 / x86 PC
+Users/Devs        16 User
+Serial #          88446
+Product Code      JSSS 22UJ LEDL A2U6
+Product Key       H6UB 48UJ LHZP
+----------------------------------------------------------------------------
+5.1
+----------------------------------------------------------------------------
 Product Detail    ACUCOBOL-GT Dev Sys Ver: 5.1.0.4 for MS Win NT (Intel) / NTServer
 Users/Devs        1
 Serial #          333724

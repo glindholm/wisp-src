@@ -1,11 +1,12 @@
-# wrun32wisp_ede.mak
+# wrun32wisp_ede_acu52.mak
 #
 # THIS FILE HAS BEEN MODIFIED TO ADD THE WISP AND EDE ROUTINES TO  
 # THE ACUCOBOL RUNTIME.
 #
 #################################################################
 #
-# Creating an Acucobol 5.1 runtime requires WISP and EDE 4.4.00.
+# Creating an Acucobol 5.2 runtime requires WISP and EDE 4.4.02
+# or later.
 #
 # Follow these instructions carefully to build a custom Acucobol 
 # runtime that includes the WISP and EDE runtime routines.  You are
@@ -19,24 +20,23 @@
 #    Windows Explorer to do this by opening $(ACUDIR)\acugt and
 #    selecting the lib folder then doing a Copy then Paste command.
 #
-# 2) Copy the needed WISPand EDE  files to the bldwispe folder. (You 
+# 2) Copy the needed WISP and EDE  files to the bldwispe folder. (You 
 #    will be replacing the sub85.c file with the one supplied by WISP.)
-#       Copy $(EDEDIR)\wrun32wisp_ede.mak 
+#       Copy $(EDEDIR)\wrun32wisp_ede_acu52.mak 
 #            $(WISPDIR)\acu\sub85.c
 #            $(WISPDIR)\acu\wisprts.rc
 #            $(WISPDIR)\acu\wispicon.ico
 #
 #       to   $(ACUDIR)\acugt\bldwispe
 #
-# 3) Edit this file $(ACUDIR)\acugt\bldwispe\wrun32wisp_ede.mak and set 
-#    WISPDIR and EDEDIR to the correct directory.
+# 3) Edit this file and set WISPDIR and EDEDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4400
-#       EDEDIR=C:\EDE4400
+#       WISPDIR=C:\WISP4402
+#       EDEDIR=C:\EDE4402
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command.
 #       $ cd $(ACUDIR)\acugt\bldwispe
-#       $ NMAKE /f wrun32wisp_ede.mak
+#       $ NMAKE /f wrun32wisp_ede_acu52.mak
 #
 # 5) Copy the runtime files (wrun32wispe.exe and wrun32wispe.dll) to
 #    their run location.
@@ -56,15 +56,16 @@
 #   For AcuServer clients add : CLIENT=
 # Make sure your path for wsock32.lib is set to the correct location
 
-# Distributed with ACUCOBOL-GT version 5.1.0.2
+# Distributed with ACUCOBOL-GT version 5.2.0
 # PMK: 0, 1
+#################################################################
 
 # Set the Acucobol directory here
-ACUDIR=C:\acucorp\acucbl510
+ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP and EDE directory here.
-WISPDIR=C:\WISP4400
-EDEDIR=C:\EDE4400
+WISPDIR=C:\WISP4402
+EDEDIR=C:\EDE4402
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispe
@@ -75,6 +76,8 @@ WISP_LIBS=     $(EDEDIR)\edem.lib \
                $(WISPDIR)\lib\videom.lib
 
 WISP_CFLAGS=
+
+#################################################################
 
 !include <ntwin32.mak>
 
@@ -100,14 +103,6 @@ DLLRCFILE=wrundll.rc
 
 EXTRA_CFLAGS=-DNO_CLIENT=1
 
-CLIENT_LIBS=
-
-!ifdef  CLIENT
-# AcuServer client version
-EXTRA_CFLAGS=-DNO_CLIENT=0 
-CLIENT_LIBS=wclnt32.lib $(CLIENT_LIBS)
-!endif  # CLIENT #
-
 ACUCONNECT_C = conc32.lib
 ACUCONNECT_S = cons32.lib
 
@@ -116,11 +111,10 @@ SUBS=   \
 	mswinsub.obj
 
 LIBS=   \
-	$(CLIENT_LIBS) \
 	wrun32.lib \
-	wcpp32.lib \
+	wcvt32.lib \
 	wfsi32.lib \
-	wvis32.lib \
+	avision4.lib \
 	acme.lib \
 	plugin32.lib
 
@@ -136,7 +130,7 @@ PLUGINRCFILE=plugin32.rc
 #  For building the Windowing version
 WSUBS=sub.obj $(SUBS)
 ## Added WISP libraries
-WLIBS=wterm32.lib $(LIBS) $(WISP_LIBS)
+WLIBS=atermmgr.lib thin.obj thinapp.obj wininit.obj $(LIBS) $(WISP_LIBS)
 
 # MFC application class
 MFCAPP =	\
@@ -151,6 +145,7 @@ MFCNPDLL =	\
 MFCSTAT = \
 	wcpp32.lib \
 	wstatapp.obj
+
 
 ## Added WISP CFLAGS
 CLFLAGS=$(cflags) $(cvars) $(DEBUG_CFLAGS) -nologo -D_WINDOWS -DWINNT \
@@ -177,8 +172,7 @@ $(WRUN32).dll: $(MFCDLL) $(WSUBS) $(DLLRBJFILE) $(WLIBS) $(ACUCONNECT_C)
 
 
 $(WRUN32).exe: $(MFCAPP) $(WRUN32).dll wcpp32.lib $(RBJFILE)
-	$(link) $(LDFLAGS) /out:$@ $(MFCAPP) wcpp32.lib \
-		$(WRUNDLL_LIB) $(RBJFILE)
+	$(link) $(LDFLAGS) /out:$@ $(MFCAPP) $(WRUNDLL_LIB) $(RBJFILE)
 
 acuthread.exe: $(MFCSTAT) $(WSUBS) $(RBJFILE) $(WLIBS)
 	$(cc) $(CLFLAGS) -DACUCONNECT_SRV sub.c

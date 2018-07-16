@@ -1,0 +1,87 @@
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          Installation of CRID for ACUCOBOL on UNIX
+
+Document:       crid_acu_install.txt
+Last Updated:   $Date:$
+Products:       KCSI CRID Utilities
+Versions:       3.0.03 (AND LATER)
+
+Summary:        Installation instructions for the CRID Utilities
+                using the ACUCOBOL compiler.
+
+====================================================================
+
+
+INSTALLATION
+============
+
+First install WISP and setup the WISP runtime environment.  This
+must be in place before CRID can be used.  Create a standard 
+ACUCOBOL WISP runtime by following the instructions supplied
+with your WISP distribution. This will ensure that all current
+pieces are up to date for WISP.
+
+CRID will normally be distributed on CDROM as a tar file named
+"crid_acu_XXXX.tar".  It is recommended that you install CRID in your 
+WISP directory ($WISPDIR). 
+
+Extract the distribution files from "crid_acu_XXXX.tar" using the
+following command:
+
+        $ cd $WISPDIR
+        $ tar -xvpf crid_acu_XXXX.tar
+
+This will create a directory "crid_acu_XXXX" where XXXX is a version
+number.  Refer to crid_packlist.txt in the distribution for a listing 
+of expected files.
+
+
+Configuration
+-------------
+
+1. Build an extended wisp runtime for the CRID utilities:
+
+   Read the wruncbl.umf file to determine the method for building
+   the needed runtime.  The resulting output will be a file named
+   wruncblk or wruncblke for an EDE version of the runtime.
+
+        $ make -f wruncbl.umf crid
+   or
+        $ make -f wruncbl.umf cride
+
+2. Point to the new runtime by editing $WISPCONFIG/wrunconfig and
+   setting "runcbl" to the location of the wruncblk.
+
+   Edit $WISPCONFIG/wrunconfig to read:
+
+        runcbl=/usr/local/wisp_XXXX/crid_acu_XXXX/wruncblk
+
+   Use the file path to wruncblk that is correct for your
+   installation. 
+
+3. The files CONTROL/REPORT/INQUIRY/DATENTRY should be on your $PATH
+   and on the Acucobol CODE-PREFIX. 
+
+   Add the CRID installaton directory to your $PATH:
+
+       $ PATH=$PATH:/usr/local/wisp_XXXX/crid_acu_XXXX
+
+   Add the CRID installation directory to the Acucobol CODE-PREFIX in
+   the Acucobol config file $A_CONFIG (usually $WISPCONFIG/ACUCONFIG).
+
+   E.g. Edit $WISPCONFIG/ACUCONFIG:
+
+       CODE-PREFIX /usr/local/wisp_XXXX/crid_acu_XXXX ...
+
+
+Test your installation by running the utilites:
+
+        $ wrun CONTROL
+        $ wrun REPORT
+        $ wrun INQUIRY
+        $ wrun DATENTRY
+
+========================= END OF DOCUMENT ==========================

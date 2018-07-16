@@ -1,4 +1,4 @@
-	Copyright (c) 1995-2001 by NeoMedia Technologies Inc. 
+	Copyright (c) 1995-2002 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	====================================================================
 	
@@ -27,7 +27,7 @@
 
 	The following components are required to port WISP.
 
-	[ ]	WISP source kit  e.g.  wisp4300.src.tar.Z
+	[ ]	WISP source kit  e.g.  wisp4400.src.cpio.Z
 
 	[ ] 	Acucobol COBOL compiler
 
@@ -61,7 +61,7 @@
 		If a previous port of WISP exists on this machine then
 		rename or delete the old source directory.
 
-			$ mv src src.v3990
+			$ mv src src.old
 
 	[ ]	LOAD THE NEW SOURCE KIT
 
@@ -135,6 +135,29 @@
 
 	[ ]	$WISP/src/wisputils/wsysconf.c		** NEW PORT **
 		Add system configuration device info.
+
+
+	IF MISSING ACUCOBOL COMPILER
+	============================
+
+	If you are on a system with only an Acucobol runtime and no
+	compiler then:
+
+	[ ]	 Copy Acucobol CRID objects 
+		 CONTROL REPORT INQUIRY DATENTRY 
+		 from $WISP/src/kcsi/crid/ on a system that has them.
+
+	[ ]	 Copy the $WISP/src/testacu Acucobol object files
+		 acuqa.tar.Z from a system that has them.
+
+
+	IF MISSING MICRO FOCUS COBOL
+	============================
+
+	[ ]	In the next section run this command instead.
+
+		$ make all_acu >>make.err 2>&1 & # make and log errors
+		$ tail -f make.err		 # show progress on screen
 
 
 	BUILD ALL WISP COMPONENTS
@@ -214,9 +237,9 @@
 	Install the new fully QA'ed version of WISP.
 	Write protect everything.
 
-	[ ]	$ cd $WISP
-		$ mv wisp.QA /usr/local/wisp.XXXX
-		$ ln -s /usr/local/wisp.XXXX /usr/local/wisp
+	[ ]	$ cd $WISP/QA
+		$ mv wisp_XXXX /usr/local/wisp_XXXX
+		$ ln -s /usr/local/wisp_XXXX /usr/local/wisp
 
 
 	MOVE SHIPPING KITS
@@ -225,10 +248,18 @@
 	Move the shipping kits into the shipping area on zigzag.
 	There are 5 ship kits:
 
-	[ ]	 $WISP/src/wispXXXX.ship
-	[ ]	 $WISP/src/kcsi/create/createacuXXXX.ship
-	[ ]	 $WISP/src/kcsi/create/createmfxXXXX.ship
-	[ ]	 $WISP/src/kcsi/crid/cridacuXXXX.ship
-	[ ]	 $WISP/src/kcsi/crid/cridmfxXXXX.ship
+	[ ]	 $WISP/src/wisp_XXXX.ship
+	[ ]	 $WISP/src/kcsi/create/create_acu_XXXX.ship
+	[ ]	 $WISP/src/kcsi/create/create_mf_XXXX.ship
+	[ ]	 $WISP/src/kcsi/crid/crid_acu_XXXX.ship
+	[ ]	 $WISP/src/kcsi/crid/crid_mf_XXXX.ship
+
+	From a local networked machine:
+
+	$ cd $WISP/src
+	$ cp -r -p *.ship $SHIPPING/os_X.X.X
+	$ cp -r -p kcsi/*/*.ship $SHIPPING/os_X.X.X
+
+
 
 	========================= END OF DOCUMENT ==========================

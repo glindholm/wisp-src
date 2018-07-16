@@ -1,0 +1,41 @@
+crid_debug_notes.txt
+====================
+
+
+NEW KCSI TRACING
+================
+- Route all tracing and errors thru kcsitrace()
+- For tracing use werr_write() to write to $HOME/wisperr.log
+- For Errors use werrlog(104,msg);
+- Enable KCSI tracing with KCSITRACE=1
+- Enable REPORT def dump with CRID_DEBUG_REPORT_DEF=1 into crid_debug_print.log
+
+
+
+OLD DEBUG TRACING
+=================
+These apply to CRID 3.0.02 and CREATE 3.5.01 and earlier.
+
+Found all the flags with:  "grep getenv *.c"
+
+Files:
+------
+cridebug.c	- crid_trace() kcsierr.log
+kcsit.c		- kcsitrace() $HOME/kcsitrace.log
+rcal.c		- crid_debug_print() crid_debug_print.log
+
+Environment variables:
+----------------------
+export KCSITRACE=1		-- Trace C routines into $HOME/kcsitrace.log
+export CRIDDEBUG=cobol		-- Trace COBOL routines into kcsierr.log
+export CRIDTRACE=9		-- Trace C routines into kcsierr.log
+export CRID_DEBUG_REPORT_DEF=1	-- Trace REPORT definition into crid_debug_print.log
+
+
+Log Files:
+----------
+$HOME/kcsitrace.log
+kcsierr.log
+crid_debug_print.log
+
+

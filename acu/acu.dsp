@@ -94,15 +94,27 @@ SOURCE=.\sub85.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wrun32wisp.mak
+SOURCE=.\wrun32wisp_acu51.mak
 # End Source File
 # Begin Source File
 
-SOURCE=.\wrun32wisp_crid.mak
+SOURCE=.\wrun32wisp_acu52.mak
 # End Source File
 # Begin Source File
 
-SOURCE=.\wrun32wisp_ede.mak
+SOURCE=.\wrun32wisp_crid_acu51.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrun32wisp_crid_acu52.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrun32wisp_ede_acu51.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrun32wisp_ede_acu52.mak
 # End Source File
 # Begin Source File
 

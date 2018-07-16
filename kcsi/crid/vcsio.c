@@ -351,6 +351,8 @@ Extract the root file data and move in the space.
 ------*/
 static void get_file_space(KFB *kfb)
 {
+	kcsitrace(1, "get_file_space()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -389,6 +391,8 @@ does not.
 ------*/
 static void open_shared(KFB *kfb)
 {
+	kcsitrace(1, "open_shared()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -413,6 +417,8 @@ static void open_shared(KFB *kfb)
 }
 static void open_input(KFB *kfb)
 {
+	kcsitrace(1, "open_input()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -437,6 +443,8 @@ static void open_input(KFB *kfb)
 }
 static void open_io(KFB *kfb)
 {
+	kcsitrace(1, "open_io()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -464,6 +472,8 @@ A vision open consists of building a file with all keys.
 ------*/
 static void open_output(KFB *kfb)
 {
+	kcsitrace(1, "open_output()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -489,6 +499,8 @@ static void open_output(KFB *kfb)
 
 static void close_file(KFB *kfb)
 {
+	kcsitrace(1, "close_file()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -519,6 +531,8 @@ A read record request assumes the primary key.
 ------*/
 static void read_record(KFB *kfb)
 {
+	kcsitrace(1, "read_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -544,6 +558,8 @@ static void read_record(KFB *kfb)
 
 static void read_keyed(KFB *kfb)
 {
+	kcsitrace(1, "read_keyed()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -569,6 +585,8 @@ static void read_keyed(KFB *kfb)
 
 static void hold_record(KFB *kfb)
 {
+	kcsitrace(1, "hold_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -594,6 +612,8 @@ static void hold_record(KFB *kfb)
 
 static void hold_keyed(KFB *kfb)
 {
+	kcsitrace(1, "hold_keyed()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -622,6 +642,8 @@ Starts are vanilla, but see notes on read and hold next.
 ------*/
 static void start_eq(KFB *kfb)
 {
+	kcsitrace(1, "start_eq()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -647,6 +669,8 @@ static void start_eq(KFB *kfb)
 
 static void start_nlt(KFB *kfb)
 {
+	kcsitrace(1, "start_nlt()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -672,6 +696,8 @@ static void start_nlt(KFB *kfb)
 
 static void start_gt(KFB *kfb)
 {
+	kcsitrace(1, "start_gt()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -696,6 +722,8 @@ static void start_gt(KFB *kfb)
 }
 static void start_eq_keyed(KFB *kfb)
 {
+	kcsitrace(1, "start_eq_keyed()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -721,6 +749,8 @@ static void start_eq_keyed(KFB *kfb)
 
 static void start_nlt_keyed(KFB *kfb)
 {
+	kcsitrace(1, "start_nlt_keyed()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -746,6 +776,8 @@ static void start_nlt_keyed(KFB *kfb)
 
 static void start_gt_keyed(KFB *kfb)
 {
+	kcsitrace(1, "start_gt_keyed()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -770,6 +802,8 @@ static void start_gt_keyed(KFB *kfb)
 }
 static void start_last(KFB *kfb)
 {
+	kcsitrace(1, "start_last()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -799,6 +833,8 @@ For read next and hold next, vision presents no problem.
 ------*/
 static void read_next_record(KFB *kfb)
 {
+	kcsitrace(1, "read_next_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+	
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -824,6 +860,8 @@ static void read_next_record(KFB *kfb)
 
 static void read_previous_record(KFB *kfb)
 {
+	kcsitrace(1, "read_previous_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -849,6 +887,8 @@ static void read_previous_record(KFB *kfb)
 
 static void hold_next_record(KFB *kfb)
 {
+	kcsitrace(1, "hold_next_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -880,6 +920,8 @@ been issued before the rewrite or delete so these are released.
 ------*/
 static void write_record(KFB *kfb)
 {
+	kcsitrace(1, "write_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -905,6 +947,8 @@ static void write_record(KFB *kfb)
 
 static void rewrite_record(KFB *kfb)
 {
+	kcsitrace(1, "rewrite_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -935,6 +979,8 @@ static void rewrite_record(KFB *kfb)
 
 static void delete_record(KFB *kfb)
 {
+	kcsitrace(1, "delete_record()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -1020,6 +1066,8 @@ sets up the c structure.
 ------*/
 static void get_file_info(KFB *kfb)
 {
+	kcsitrace(1, "get_file_info()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -1051,6 +1099,8 @@ It should only be used for keyed table files.
 ------*/
 static void get_table_info(KFB *kfb)
 {
+	kcsitrace(1, "get_table_info()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
+
 	switch(kfb->_org[0])
 		{
 		case 'I':
@@ -1131,9 +1181,7 @@ static void logit(KFB *kfb)
 {
 	if(kfb->_status == 0)
 		return;
-/*
-	ccsioerr(kfb->_status,kfb->_io,kfb->_sys_name);
-*/
+
 	kfberr(kfb);
 }
 
@@ -1158,6 +1206,12 @@ int e_trans(int code)
 /*
 **	History:
 **	$Log: vcsio.c,v $
+**	Revision 1.14  2002-04-23 16:49:56-04  gsl
+**	add trace
+**
+**	Revision 1.13  2002-04-22 16:57:14-04  gsl
+**	Add kcsitrace
+**
 **	Revision 1.12  2001-11-15 19:16:21-05  gsl
 **	Ifdef out old routine
 **

@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
+	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 
@@ -21,9 +21,14 @@
 	WCOMMON.H		Define common defines for WISP and WISPLIB
 */
 
-#define WISP_VERSION "V4.4.01"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.4.02"			 					/* WISPTRAN version (char[20])		*/
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
+
+/* CHANGE-COPYRIGHT-DATE */
+#define WISP_COPYRIGHT_YEAR_STR	"2002"
+#define WISP_COPYRIGHT_YEAR_INT	2002
+
 
 /* 
 **	NOTE: Screen version 20 and 21 are still supported.
@@ -72,6 +77,12 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.44  2002-03-28 09:40:30-05  gsl
+**	Add defines for COPYRIGHT year
+**
+**	Revision 1.43  2002-03-21 17:01:54-05  gsl
+**	4.4.02
+**
 **	Revision 1.42  2001-11-27 18:10:03-05  gsl
 **	V4.4.01
 **

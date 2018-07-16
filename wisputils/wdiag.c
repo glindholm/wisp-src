@@ -105,7 +105,7 @@ int     define_os();
 int	define_videocap();
 int run_command(char *command);
 int define_acu(const char* rts);
-void checkexe(const char *tag, const char *exe, int* pError);
+int checkexe(const char *tag, const char *exe, int* pError);
 void checklinkexe(const char *tag, const char *exe);
 void print_config_file(const char* options_path);
 static void cat_file(const char* file_path);
@@ -917,17 +917,17 @@ int define_acu(const char* rts)
 	}
 #endif
 
-#ifdef OLD
+	if (0 == checkexe("VUTIL", acu_vutil_exe(), &erracu))
+	{
 #ifdef unix
-	ptr = "/etc/cblhelp";
+		sprintf(command, "%s -V", acu_vutil_exe());
+		if (0 != run_command(command))
+		{
+			errmf++;
+		}
 #endif
-#ifdef MSFS
-	ptr = "\\ETC\\CBLHELP";
-#endif
-	print_access("cblhelp",ptr,ACC_READ,NULL);
-#endif /* OLD */
+	}
 
-	checkexe("VUTIL", acu_vutil_exe(), &erracu);
 
 #ifdef unix	
 	sprintf(command,"%s -V", rts);
@@ -994,16 +994,30 @@ int define_mf()
 	{
 		print_pair_err_mess("COBPATH","","WARNING", "NOT DEFINED");
 	}
+	
+	{
+		char* shared_lib_path_var = "LD_LIBRARY_PATH";
+		
+#ifdef AIX
+		shared_lib_path_var = "LIBPATH";
+#endif
+#ifdef HPUX
+		shared_lib_path_var = "SHLIB_PATH";
+#endif
 
-	if (mf = getenv("LIBPATH"))
-	{
-		print_pair_nl("LIBPATH",mf);
-		check_path(mf);
+		if (mf = getenv(shared_lib_path_var))
+		{
+			print_pair_nl(shared_lib_path_var,mf);
+			check_path(mf);
+		}
+		else
+		{
+			print_pair_err_mess(shared_lib_path_var,"","WARNING", "NOT DEFINED");
+		}
 	}
-	else
-	{
-		print_pair_err_mess("LIBPATH","","WARNING", "NOT DEFINED");
-	}
+	
+
+
 
 	/*
 	*	Micro Focus 4.1 - Use fhconvert. (has a rebuild that doesn't work)
@@ -1044,8 +1058,7 @@ int define_mf()
 	}
 	else
 	{
-		print_pair_err_mess("cob",ptr,"ERROR", "NOT FOUND");
-		errmf++;
+		print_pair_err_mess("cob",ptr,"WARNING", "NOT FOUND");
 	}
 
 	return(0);
@@ -1170,7 +1183,7 @@ int run_command(char *command)
 	return 0;
 }
 
-void checkexe(const char *tag, const char *exe, int* pnError)
+int checkexe(const char *tag, const char *exe, int* pnError)
 {
 	char	buff[256];
 	char	file_path[256];
@@ -1187,10 +1200,11 @@ void checkexe(const char *tag, const char *exe, int* pnError)
 	if (0 == whichenvpath(buff,file_path))
 	{
 		print_pair_mess(tag,file_path,"[FOUND]");
+		return 0;
 	}
 	else
 	{
-		print_access(tag,buff,ACC_RX,pnError);
+		return print_access(tag,buff,ACC_RX,pnError);
 	}
 }
 
@@ -1429,6 +1443,13 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.29  2002-03-27 11:20:24-05  gsl
+**	If found run VUTIL -V to get Acucobol Version number
+**	Missing cob is only a warning
+**
+**	Revision 1.28  2002-03-27 10:10:47-05  gsl
+**	FIxed MF shared library path
+**
 **	Revision 1.27  2001-11-12 14:55:26-05  gsl
 **	Remove check for cblhelp
 **

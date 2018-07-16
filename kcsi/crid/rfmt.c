@@ -307,7 +307,7 @@ static void lmg_dummy_edit_case(start,rfl)
 char *start;
 RPT_RFL *rfl;
 {
-	crid_error_trace("LISTMGMT case editing requested");
+	kcsitrace(4,"LISTMGMT","EDITCASE", "Case editing requested -- NOT IMPLEMENTED");
 }
 
 static void (*lmg_edit_case)() = lmg_dummy_edit_case;
@@ -321,7 +321,7 @@ void set_lmg_edit_case(void (*func)())
 
 static void  lmg_dummy_edit_spaces(char *start,RPT_RFL *rfl)
 {
-	crid_error_trace("LISTMGMT space editing requested");
+	kcsitrace(4,"LISTMGMT","EDITSPACES", "Space editing requested -- NOT IMPLEMENTED");
 }
 
 static void (*lmg_edit_spaces)(char *,RPT_RFL *) = lmg_dummy_edit_spaces;
@@ -942,6 +942,9 @@ char *str;
 /*
 **	History:
 **	$Log: rfmt.c,v $
+**	Revision 1.6  2002-04-22 11:40:21-04  gsl
+**	Change crid_error_trace to kcsitrace
+**
 **	Revision 1.5  1997-10-02 15:34:09-04  gsl
 **	fix warnings
 **

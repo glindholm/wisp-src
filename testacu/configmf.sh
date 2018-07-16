@@ -100,7 +100,7 @@ cat $TESTDIR/lgmap.mf | sed "s|_WISP_|$WISP|g" > $WISPCONFIG/LGMAP
 # Create wrunconfig
 echo "cobol=MF"				>  $WISPCONFIG/wrunconfig
 echo "options="				>> $WISPCONFIG/wrunconfig
-echo "runcbl=$WISPDIR/bin/wrunmf"	>> $WISPCONFIG/wrunconfig
+echo "runcbl=$WISPDIR/mf/wrunmf"	>> $WISPCONFIG/wrunconfig
 
 echo Loading $WISPCONFIG/videocap
 cp $WISPDIR/config/videocap/* $WISPCONFIG/videocap

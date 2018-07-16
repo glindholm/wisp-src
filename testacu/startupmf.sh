@@ -9,7 +9,7 @@
 #			using Micro Focus .
 #
 QA=`pwd`
-WISPDIR=../../wisp.QA
+WISPDIR=../../QA/wisp
 if [ ! -d $WISPDIR ]
 then
 	echo "**** WISPDIR=$WISPDIR NOT FOUND"

@@ -1,5 +1,5 @@
 #######################################################################
-# Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
+# Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
 #######################################################################
 #
 # OPTIONS:	The WISP runtime options file.
@@ -90,7 +90,7 @@
 # Example 1) Implementation for UniQue Print Queue on UNIX
 #
 #PQCMD ulp -q %CLASSOPT% -f%FORM% -n%COPIES% %PRTNUMOPT% %HOLDOPT% \
- %DELOPT% %REQOPT% %FILE%
+#  %DELOPT% %REQOPT% %FILE%
 #PQCLASSOPT  -C%CLASS%
 #PQPRTNUMOPT -P%PRTNUM%
 #PQHOLDOPT   -M hold
@@ -106,7 +106,7 @@
 # Example 3) Implementation for UniQue Print Queue on NT/95
 #
 #PQCMD C:\uniquent\ulpr.exe -Huniquehost -p515 -q %CLASSOPT% -f%FORM% \
- -n%COPIES% %PRTNUMOPT% %HOLDOPT% %REQOPT% %FILE% 
+#  -n%COPIES% %PRTNUMOPT% %HOLDOPT% %REQOPT% %FILE% 
 #PQCLASSOPT  -C%CLASS%
 #PQPRTNUMOPT -P%PRTNUM%
 #PQHOLDOPT   -M hold
@@ -136,10 +136,10 @@
 #BATCHQUEUE  AQM
 #BATCMAN     none
 #BATCHCMD    QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME% \
- /PARAMS="%SUBPARAMS%" /LOG_FILE=%BATCHLOG% /USER=%BATCHUSER% \
- /PASSWORD=%BATCHPASS% %SUBSTAT% /NONOTIFY
+#  /PARAMS="%SUBPARAMS%" /LOG_FILE=%BATCHLOG% /USER=%BATCHUSER% \
+#  /PASSWORD=%BATCHPASS% %SUBSTAT% /NONOTIFY
 #BATCHCMD95  REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% \
- %BATCHCMD%
+#  %BATCHCMD%
 #BATCHUSER   user
 #BATCHPASS   password
 #BATCHSERVER server

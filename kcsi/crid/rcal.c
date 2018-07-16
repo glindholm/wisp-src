@@ -537,13 +537,13 @@ char 	*cob_rpt_opt,
 void crid_debug_print(const char* format, ...)
 {
 	va_list ap;
-    FILE *logfile = fopen("crid_debug_print.log","a");
+	FILE *logfile = fopen("crid_debug_print.log","a");
 
 	va_start(ap, format);
 	vfprintf(logfile, format, ap);
-    va_end(ap);
+	va_end(ap);
 
-    fclose(logfile);
+	fclose(logfile);
 }
 
 void crid_debug_print_DTYPE(const char* name, DTYPE* dtype)
@@ -902,6 +902,9 @@ void debug_report_def(void)
 /*
 **	History:
 **	$Log: rcal.c,v $
+**	Revision 1.4  2002-04-22 14:25:58-04  gsl
+**	formating
+**
 **	Revision 1.3  2000-06-13 18:02:23-04  gsl
 **	add debug logging of the report definition.
 **

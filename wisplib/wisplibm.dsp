@@ -409,14 +409,6 @@ SOURCE=.\pwdname.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\que_jobs.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\quemgmt.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\readacp.c
 # End Source File
 # Begin Source File

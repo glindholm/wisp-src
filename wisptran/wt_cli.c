@@ -1,5 +1,4 @@
-/* CHANGE-COPYRIGHT-DATE */
-static char copyright[]="Copyright (c) 1989-2001 NeoMedia Technologies Inc., All rights reserved.";
+static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wt_cli.c
@@ -21,6 +20,7 @@ static char rcsid[]="$Id:$";
 #include "wispfile.h"
 #include "getopt.h"
 #include "keywords.h"
+
 
 int	symbzero = 0;
 
@@ -66,12 +66,15 @@ int get_cli(int argc, char *argv[])
 	lpi_cobol = 0;									/* Not LPI				*/
 	acu_cobol = 0;									/* Not ACUCOBOL				*/
  	vax_cobol = 0;									/* Not VAX				*/
- 	aix_cobol = 0;									/* Not AIX				*/
  	mf_cobol = 0;									/* Not MF				*/
- 	dmf_cobol = 0;									/* Not MF for MS-DOS			*/
+ 	mfoc_cobol = 0;									/* Not MF Object Cobol			*/
+ 	mfse_cobol = 0;									/* Not MF Server Express		*/
  	unix_cobol = 0;									/* Not UNIX				*/
  	dos_cobol = 0;									/* Not MS-DOS				*/
-	mf_aix = 0;									/* Not MF or AIX			*/
+
+ 	aix_cobol = 0;									/* Obsolete				*/
+ 	dmf_cobol = 0;									/* Obsolete				*/
+
 	x4dbfile = 0;
 
 #ifdef unix
@@ -235,52 +238,42 @@ int get_cli(int argc, char *argv[])
 				lpi_cobol = 0;						/* First Clear the default		*/
 				acu_cobol = 0;
 			 	vax_cobol = 0;
-			 	aix_cobol = 0;
 			 	mf_cobol = 0;
-			 	dmf_cobol = 0;
+			 	mfoc_cobol = 0;
+			 	mfse_cobol = 0;
 			 	dos_cobol = 0;
-				mf_aix = 0;
-				if ( 0 == memcmp( optarg, "LPI", 3 ) )
+
+				if ( 0 == strcmp( optarg, "LPI") )
 				{
 					lpi_cobol = 1;
-					unix_cobol = 1;
 				}
-				else if ( 0 == memcmp( optarg, "ACU", 3 ) )
+				else if ( 0 == strcmp( optarg, "ACU") )
 				{
 					acu_cobol = 1;
 				}
-				else if ( 0 == memcmp( optarg, "ACN", 3 ) )	/* Acucobol with native screens */
+				else if ( 0 == strcmp( optarg, "ACN") )	/* Acucobol with native screens */
 				{
 					acu_cobol = 1;
 					acn_cobol = 1;
-					native_cobol = 1;
 				}
-				else if ( 0 == memcmp( optarg, "VAX", 3 ) )
+				else if ( 0 == strcmp( optarg, "VAX") )
 				{
 					vax_cobol = 1;
-					unix_cobol = 0;
 				}
-				else if ( 0 == memcmp( optarg, "AIX", 3 ) )
+				else if ( 0 == strcmp( optarg, "MF0") )
 				{
-					aix_cobol = 1; mf_aix = 1;
-					unix_cobol = 1;
+					mf_cobol = 1; 
 					symbzero = 1;
 				}
-				else if ( 0 == memcmp( optarg, "DMF", 3 ) )
+				else if ( 0 == strcmp( optarg, "MF") )		/* Micro Focus Object Cobol */
 				{
-					dmf_cobol = 1; mf_aix = 1; 
-					dos_cobol = 1;
+					mf_cobol = 1; 
+					mfoc_cobol = 1;		
 				}
-				else if ( 0 == memcmp( optarg, "MF0", 3 ) )
+				else if ( 0 == strcmp( optarg, "MFSE") )	/* Micro Focus Server Express */
 				{
-					mf_cobol = 1; mf_aix = 1;
-					unix_cobol = 1;
-					symbzero = 1;
-				}
-				else if ( 0 == memcmp( optarg, "MF", 2 ) )
-				{
-					mf_cobol = 1; mf_aix = 1;
-					unix_cobol = 1;
+					mf_cobol = 1; 
+					mfse_cobol = 1;
 				}
 				else
 				{
@@ -373,11 +366,15 @@ int get_cli(int argc, char *argv[])
 	return 0;
 }
 
+static char *copyright_display_str = 
+"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Inc., All rights reserved.";
+
 static void whodunit(void)
 {
               /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
 	printf("\n\n\n");
-	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n\n\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION);
+/*	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n\n\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION); */
+	printf("WISP: Version=[%s]\n\n\n",WISP_VERSION);
 	printf("  Translator written by Greg Lindholm.\n");
 	printf("  Library and utilities written by Greg Lindholm, Frank Dziuba, David Young,\n");
 	printf("  Jock Cooper, Suzette Cass, and Gregory Adams.\n");
@@ -389,18 +386,19 @@ static void whodunit(void)
 	printf("  Many thanks to our clients for their assistance and patience, without which\n");
 	printf("  this product would not exist.\n");
 	printf("\n");
-	printf("  %s\n\n\n",copyright);
+	printf("  %s\n\n\n",copyright_display_str);
 }
 
 static void printusage(void)
 {
-	printf("%s\n",copyright);
+	printf("%s\n",copyright_display_str);
 	printf("\n");
-	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION);
+/*	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION); */
+	printf("WISP: Version=[%s]\n",WISP_VERSION);
 	printf("\n");
 	printf("USAGE: wisp [-flags] filename\n\n");
         printf("       FLAG      DESCRIPTION\n");
-        printf("        -Vxxx    COBOL: ACU,ACN,MF,VAX\n");
+        printf("        -Vxxx    COBOL: ACU,ACN,MF,MFSE\n");
         printf("        -Idir    Input copy directory.\n");
         printf("        -T       No Process. Create only a .txt file.\n");
         printf("        -x       Produce a cross reference.\n");
@@ -415,9 +413,10 @@ static void printusage(void)
 }
 static void fullusage(void)
 {
-	printf("%s\n",copyright);
+	printf("%s\n",copyright_display_str);
 	printf("\n");
-	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION);
+/*	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION); */
+	printf("WISP: Version=[%s]\n",WISP_VERSION);
 	printf("\n");
 	printf("USAGE: wisp [-flags] filename\n\n");
         printf("       FLAG          DESCRIPTION\n");
@@ -440,7 +439,7 @@ static void fullusage(void)
         printf("        -R           Do not do keyword processing.\n");
         printf("        -S           Do not add DMS locking.\n");
         printf("        -1           One way conversion (-csC).\n");
-        printf("        -Vxxx        COBOL: ACU,ACN,MF,VAX\n");
+        printf("        -Vxxx        COBOL: ACU,ACN,MF,MFSE\n");
         printf("        -n           Use VMS dynamic LINK.\n");
         printf("        -d           Don't init data areas.\n");
         printf("        -D           Do init data areas.\n");
@@ -525,12 +524,10 @@ static void showflags(void)
                 printf("        -VACU        Generate ACUCOBOL COBOL.\n");
         if ( vax_cobol )                                             
                 printf("        -VVAX        Generate VAX COBOL.\n");
-        if ( aix_cobol )                                             
-                printf("        -VAIX        Generate AIX VS COBOL.\n");
-        if ( mf_cobol && !symbzero )                                         
-                printf("        -VMF         Generate MICRO FOCUS COBOL.\n");
-        if ( dmf_cobol )                                             
-                printf("        -VDMF        Generate MICRO FOCUS MS-DOS COBOL.\n");
+        if ( mfoc_cobol )
+                printf("        -VMF         Generate MICRO FOCUS OBJECT COBOL.\n");
+        if ( mfse_cobol)                                         
+                printf("        -VMFSE       Generate MICRO FOCUS Server Express COBOL.\n");
         if ( mf_cobol && symbzero)                                           
                 printf("        -VMF0        Generate MICRO FOCUS COBOL. (SYMBOLIC 0=0)\n");
         if ( do_keyfile )		
@@ -554,6 +551,19 @@ static void showflags(void)
 /*
 **	History:
 **	$Log: wt_cli.c,v $
+**	Revision 1.25  2002-03-28 10:04:27-05  gsl
+**	Use define for copyright year
+**
+**	Revision 1.24  2002-03-26 16:13:15-05  gsl
+**	Stop displaying Library and Screen versions
+**
+**	Revision 1.23  2002-03-21 17:12:01-05  gsl
+**	Copyright 2002
+**
+**	Revision 1.22  2002-03-21 17:03:58-05  gsl
+**	Add -V MFSE as a langauge option
+**	remove AIX and DMF
+**
 **	Revision 1.21  2001-09-13 10:03:53-04  gsl
 **	Remove VMS ifdef's
 **	Add -X xtab flag
