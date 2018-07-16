@@ -1,0 +1,108 @@
+#################################################################
+$Id:$
+linux_port.txt		Sept 4, 2002
+
+Redhat 7.3
+glibc 2.2
+Acucobol 5.2.1
+
+#################################################################
+Issues:
+
+- Define LINUX platform variables
+  #ifdef LINUX
+  #define	PLATFORM_LINUX		1041
+  PLATFORM CODE "LX"
+
+  port/make.include		1.43.2.1.2.1
+  wisplib/platsubs.c		1.11.2.1
+  wisplib/wplatdef.h		1.7.2.1
+  wisputils/WISPPLAT.wcb	1.7.2.1
+  test/WL0010.wcb		1.2.2.1
+
+- SIGEMT is not defined. Put the code into #ifdef SIGEMT
+
+  wisplib/initglbs.c
+  wisputils/vsx.c
+  wisputils/wrun.c
+  proctran/ptmain.c
+
+- Define EXECMAGIC for LINUX
+
+  #ifdef LINUX
+  #include <elf.h>
+  #endif
+
+  wisplib/isexec.c
+
+- sys_errlist
+
+  conflicting types for `sys_errlist'
+  /usr/include/stdio.h:554: previous declaration of `sys_errlist'
+  extern __const char *__const sys_errlist[];
+
+  ivslib/vchinese.c
+  kcsi/ccsioerr.c
+  wisplib/mngfile.c
+  wisptran/input.c
+  wisputils/bldmf.c
+  wisputils/vsx.c
+  wisputils/wauthorize.c
+  wisputils/wlicense.c
+
+- Specify Acucobol dynamic link library -ldl
+
+  acu/acucobol.include
+
+- Need #include <unistd.h> for getcwd()
+
+  wisptran/wt_files.c
+
+- Remove lpstat
+
+  fatal error: reading lpstat output
+  Doing an lpstat -c
+
+  wisputils/wsysconf.c
+
+- LINUX style terminal device files, get created dynamically.
+
+  Generate a sequential list of /dev/pts/nnn workstation devices.
+
+  wisputils/wsysconf.c
+
+- Change gets(buff) -> fgets(buff, sizeof(buff), stdin)
+
+  Also need to manually strip the trailing NL (and CR)
+
+  wisputils/prompt.c
+  wisputils/vcapkeys.c
+  wisputils/wsysconf.c
+
+- LINUX complains about the use for tempnam() and suggests using
+  mkstemp() instead, however, mkstemp() is funamentally different and
+  it is not supported on Windows. So far now, will continue to use the
+  tempnam() routine.
+
+  sharemem.c
+  sortseqf.c
+  builtin.cpp
+
+- Conflict with vline() in curses and vcap.c
+
+  vcap.c
+
+- Change phone numbers (941) -> (239)
+
+  initwisp.c
+  wshelp.c
+  wlicense.c
+  wauthorize.c
+  crid_relnotes.txt
+
+- VISION2 files have the same "Odd" alignment as on SCO and WIN32
+
+  wisplib/visint.h
+
+*** END ***
+
