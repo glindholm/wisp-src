@@ -120,24 +120,23 @@ char *computername(char *cname)
 }
 
 /*
-**	ROUTINE:	cuserid()
+**	ROUTINE:	longuid()
 **
 **	FUNCTION:	Get the current user id (using GetuserName)
 **
-**	DESCRIPTION:	This routine emulates the unix routine.
+**	DESCRIPTION:	(The unix version is in wanguid.c)
 **			If GetUsername fails the "USER" is returned.
 **
-**	ARGUMENTS:	
-**	cuid		Location to store the name or NULL
+**	ARGUMENTS:	None
 **
 **	GLOBALS:	none
 **
-**	RETURN:		cuid or if null a pointer to an internal static area which contains the name.
+**	RETURN:		a pointer to an internal static area which contains the name.
 **
 **	WARNINGS:	None
 **
 */
-char *cuserid(char* cuid)
+const char *longuid(void)
 {
 	static char *the_userid = NULL;
 
@@ -156,15 +155,7 @@ char *cuserid(char* cuid)
 		the_userid = _strdup(tmp_name);
 	}
 
-	if (NULL == cuid)
-	{
-		return the_userid;
-	}
-	else
-	{
-		strcpy(cuid, the_userid);
-		return cuid;
-	}
+	return the_userid;
 }
 
 /*
@@ -574,6 +565,12 @@ const char* win32_version(void)
 /*
 **	History:
 **	$Log: winnt.c,v $
+**	Revision 1.17  2001-11-27 16:46:07-05  gsl
+**	Replace cuserid() with longuid()
+**
+**	Revision 1.16  2001-11-27 16:29:16-05  gsl
+**	Add wispusername()
+**
 **	Revision 1.15  2001-11-20 15:40:05-05  gsl
 **	Increase buff size for registry keys
 **

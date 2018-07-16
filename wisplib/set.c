@@ -110,14 +110,6 @@ va_dcl
 			case 'I':
 				switch(keyword[1])
 				{
-#if defined(MSDOS)
-					case 'D':					/* MSDOS Set the users ID (3 chars)	*/
-						set_cuserid(value,3);
-						break;
-					case '8':					/* MSDOS Set the users ID (8 chars)	*/
-						set_cuserid(value,8);
-						break;
-#endif /* MSDOS */
 					case 'L':					/* IL INLIB.				*/
 						set_defs(DEFAULTS_IL,value);
 						break;
@@ -310,6 +302,9 @@ va_dcl
 /*
 **	History:
 **	$Log: set.c,v $
+**	Revision 1.15  2001-11-27 15:54:29-05  gsl
+**	Removed MSDOS code
+**
 **	Revision 1.14  1998-08-26 17:25:41-04  gsl
 **	Add support for SET JC,JL,JS
 **

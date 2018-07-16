@@ -1,5 +1,7 @@
 #!/bin/sh -
 #
+# Usage: wmkdep *.c
+#
 # Copyright (c) 1987 Regents of the University of California.
 # All rights reserved.
 #
@@ -46,7 +48,8 @@ while :
 done
 
 if [ $# = 0 ] ; then
-	echo 'usage: mkdep [-p] [-f depend_file] [cc_flags] file ...'
+#	echo 'usage: mkdep [-p] [-f depend_file] [cc_flags] file ...'
+	echo 'usage: mkdep [-f depend_file] *.c'
 	exit 1
 fi
 
@@ -58,34 +61,46 @@ MYCFLAGS="-I ../wispcommon -I ../videolib -DAIX -Dunix  -qlanglvl=ansi"
 
 rm -f *.u
 
+#
+#  CC creates *.u files that look like this:
+#
+#	vwang.o: vwang.c
+#	vwang.o: /usr/include/stdio.h
+#	vwang.o: /usr/include/sys/wait.h
+#	vwang.o: ../videolib/video.h
+#	vwang.o: ../videolib/vlocal.h
+#	vwang.o: ../wispcommon/setenvst.h
+#	vwang.o: ../wispcommon/wexit.h
+#	vwang.o: assert.h
+#	vwang.o: wsfns.h
+#
+#  Sed then to:
+#	- Remove system "/usr/include" lines
+#	- Change "../videolib" to "$(VC)"
+#	- Change "../wispcommon" to "$(WC)"
+#	- Make the objects part of a lib "$(THE_LIB)(xxx.o)"
+#
+#  Result looks like:
+#
+#	$(THE_LIB)(vwang.o): vwang.c
+#	$(THE_LIB)(vwang.o): $(VC)/video.h
+#	$(THE_LIB)(vwang.o): $(VC)/vlocal.h
+#	$(THE_LIB)(vwang.o): $(WC)/setenvst.h
+#	$(THE_LIB)(vwang.o): $(WC)/wexit.h
+#	$(THE_LIB)(vwang.o): assert.h
+#	$(THE_LIB)(vwang.o): wsfns.h
+#
+
 cc $MYCFLAGS -ME $* >/dev/null; cat *.u |
 sed "
 	s; \./; ;g
 	/\.c:$/d
-	s;/.*/v/;$(V)/;g
+	s;\.\./videolib/;\$(VC)/;g
+	s;\.\./wispcommon/;\$(WC)/;g
 	/\/usr\/include\//d
-	s;^;$(THE_LIB)(;
+	s;^;\$(THE_LIB)(;
 	s;\.o:;.o):;
-	$SED" |
-awk '{
-	if ($1 != prev) {
-		if (rec != "")
-			print rec;
-		rec = $0;
-		prev = $1;
-	}
-	else {
-		if (length(rec $2) > 70) {
-			print rec;
-			rec = $0;
-		}
-		else
-			rec = rec " " $2
-	}
-}
-END {
-	print rec
-}' > $TMP
+	$SED" > $TMP
 
 if [ $append = 1 ]; then
 	cat $TMP >> $D

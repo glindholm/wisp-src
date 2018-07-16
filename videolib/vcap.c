@@ -1220,18 +1220,6 @@ static char *vcap_termtype = NULL;
 **	Static Function Prototypes
 */
 
-#ifdef AIX
-#undef regcmp
-#define regcmp(x,y) re_comp(x)
-#undef regex
-#define regex(x,y) re_exec(y)
-char *re_comp();
-int re_exec();
-#else
-char *regex();
-char *regcmp();
-#endif
-
 static int pop(void);
 static int push(int ch);
 static char *gmem();
@@ -3052,6 +3040,9 @@ int vexists(const char* name)
 /*
 **	History:
 **	$Log: vcap.c,v $
+**	Revision 1.41  2001-11-27 17:58:54-05  gsl
+**	Remove regular express defines (obsolete)
+**
 **	Revision 1.40  2001-10-12 16:08:03-04  gsl
 **	Change writeing errors to stderr into calls to vre() that now get logged.
 **
