@@ -9,6 +9,8 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "crt.h"
+#include "cobfiles.h"
 
 static int decl_exnum = 0;								/* Used to remember which exit.		*/
 static int decl_parsing = 0;								/* Indicates currently parsing a decl.	*/
@@ -22,28 +24,23 @@ chk_dpar()										/* Check for DECLARATIVES para's.	*/
 
 	if (in_decl)
 	{
-		if (pd_count >= MAX_PARAGRAPHS)
+		if (decl_paras_cnt >= MAX_PARAGRAPHS)
 		{
 			write_log("WISP",'F',"MAXPAREXC",
 						"WISP internal error, Maximum number of paragraphs in DECLARATIVES exceeded.");
-			exit_wisp(-1);
+			exit_wisp(EXIT_WITH_ERR);
 		}
-		strcpy(par_decl[pd_count],parms[0]);					/* in the table of paragraphs in the	*/
-		stredt(par_decl[pd_count++],".","");					/* declaratives.  edit out the period.	*/
+		strcpy(decl_paras[decl_paras_cnt],parms[0]);				/* in the table of paragraphs in the	*/
+		stredt(decl_paras[decl_paras_cnt++],".","");				/* declaratives.  edit out the period.	*/
 
-		if (ppdiv_count)							/* See if it is a paragraph referenced	*/
+		if (proc_performs_cnt)							/* See if it is a paragraph referenced	*/
 		{									/* by the procdiv, and flag it for	*/
 			strcpy(tstr,parms[0]);						/* copying.				*/
 			stredt(tstr,".","");
 
-			for (i=0; i<ppdiv_count; i++)
+			if (paracmp(tstr,proc_performs,proc_performs_cnt))		/* Found it?				*/
 			{
-				if (!strcmp(tstr,perf_pdiv[i])) break;			/* Found it?				*/
-			}
-
-			if (i < ppdiv_count)						/* Yes we did.				*/
-			{
-				copy_decl = 1;						/* Set the mode.			*/
+				copy_to_dtp_file = 1;					/* Set the mode.			*/
 			}
 		}
 
@@ -54,19 +51,15 @@ chk_dpar()										/* Check for DECLARATIVES para's.	*/
 	}
 	else										/* We are in the procedure division.	*/
 	{										/* If it is not in declaratives, see if	*/
-		if (par_count)								/* it is a paragraph which is referenced*/
+		if (proc_paras_cnt)							/* it is a paragraph which is referenced*/
 		{									/* by the declaratives, and flag it for	*/
 			strcpy(tstr,parms[0]);						/* copying.				*/
 			stredt(tstr,".","");
-			for (i=0; i<par_count; i++)
-			{
-				if (!strcmp(tstr,par_name[i])) break;			/* Found it?				*/
-			}
-			if (i < par_count)						/* Yes we did.				*/
+			if (paracmp(tstr,proc_paras,proc_paras_cnt))			/* Found it?				*/
 			{
 				if (!strncmp(parms[1],"SECTION",7))			/* It's a SECTION.			*/
 					copy_sect = 1;					/* Set first flag for section.		*/
-				copy_para = 1;						/* Set the mode.			*/
+				copy_to_dcl_file = 1;					/* Set the mode.			*/
 			}
 		}
 	}
@@ -78,9 +71,7 @@ p_use()
 	int tnum,fnum,multi_file;
 	int	first_is_crt;
 
-	strcpy(hline,"       ");							/* Build an "XXX SECTION." phrase.	*/
-	strcat(hline,parms[0]);								/* Section name.			*/
-	strcat(hline," SECTION.\n");
+	sprintf(hline,"       %s SECTION.",parms[0]);					/* Build an "XXX SECTION." phrase.	*/
 
 	gen_dexit();									/* If we were doing one, gen the end.	*/
 
@@ -92,7 +83,7 @@ p_use()
 	{
 		write_log("WISP",'F',"ERRINUSE","Error parsing USE statement. USE missing.");
 		write_log("",' ',"","%s\n",inline);
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 
 	ptype = get_param(tstr);							/* Get next word.			*/
@@ -123,7 +114,7 @@ p_use()
 	{
 		write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, PROCEDURE missing.");
 		write_log("",' ',"","%s\n",inline);
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 
 	ptype = get_param(tstr);							/* Get next word (may be ON)		*/
@@ -144,7 +135,7 @@ p_use()
 	{										/* It's not a specific file.		*/
 		inline[0] = '\0';							/* Empty string.			*/
 		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s not supported, causes conflict.",tstr);
-		put_line(hline);							/* Write the SECTION name.		*/
+		tput_line("%s", hline);							/* Write the SECTION name.		*/
 		gen_use(rstr,tstr);							/* Generate the USE procedure.		*/
 		return(0);								/* Let it go.				*/
 	}
@@ -154,11 +145,11 @@ p_use()
 
 	if (tnum == -1)
 	{
-		tnum = crt_file_index(tstr);
+		tnum = crt_index(tstr);
 		if ( tnum == -1 ) 
 		{
 			write_log("WISP",'E',"ERRINUSE","Error parsing USE statement, File \"%s\"not found.",tstr);
-			exit_wisp(-1);
+			exit_wisp(EXIT_WITH_ERR);
 		}
 		first_is_crt = 1;
 	}
@@ -179,59 +170,58 @@ p_use()
 
 		if (fnum == -1)
 		{
-			fnum = crt_file_index(fname);
+			fnum = crt_index(fname);
 			if (fnum == -1)
 			{
 				write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, File \"%s\"not found.",fname);
-				exit_wisp(-1);
+				exit_wisp(EXIT_WITH_ERR);
 			}
 			iscrt = 1;
 		}
 
 		
 		make_fld(fld,fname,"WSECT-");
-		write_line("\n       %s SECTION.\n",fld);				/* Make a section for it.		*/
+		tput_line_at(8, "%s SECTION.",fld);					/* Make a section for it.		*/
 		gen_use(rstr,fname);							/* Give it a USE statement.		*/
 		make_fld(fld,fname,"WDCL-");
-		write_line("       %s.\n",fld);						/* Generate a starting paragraph.	*/
+		tput_line_at(8, "%s.",fld);						/* Generate a starting paragraph.	*/
 
 		if (!iscrt)
 		{
 		        prog_ftypes[fnum] |= HAS_DECLARATIVES;				/* Flag it was there.			*/
 			g_wfilechk(fnum,".\n");						/* Generate a call to WFILECHK.		*/
 
-			put_line("           IF WISP-DECLARATIVES-STATUS NOT = \"00\" THEN\n");	/* Do declaratives.		*/
+			tput_line_at(12, "IF WISP-DECLARATIVES-STATUS NOT = \"00\" THEN");	/* Do declaratives.		*/
 		}
 
 		make_fld(fld,tstr,"WDS-");
-		write_line("              PERFORM %s THRU\n",fld);
+		tput_line_at(16, "PERFORM %s THRU",fld);
 		make_fld(fld,tstr,"WDX-");
-		write_line("              %s.\n",fld);
+		tput_clause (20, "%s.",fld);
 		make_fld(fld,fname,"WDX-");
-		write_line("       %s.\n",fld);					/* Generate an ending paragraph.	*/
-		put_line  ("           EXIT.\n");
+		tput_line_at(8,  "%s.",fld);					/* Generate an ending paragraph.	*/
+		tput_line_at(12, "EXIT.");
 		multi_file = 1;
 	}
 
-	put_line("\n");
 
-	put_line(hline);								/* Write the SECTION.	*/
+	tput_line("%s", hline);								/* Write the SECTION.	*/
 	gen_use(rstr,tstr);								/* Generate the USE phrase.		*/
 	make_fld(fld,tstr,"WDCL-");
-	write_line("       %s.\n",fld);							/* Generate an initial paragraph.	*/
+	tput_line_at(8,  "%s.",fld);							/* Generate an initial paragraph.	*/
 	if (!first_is_crt)
 	{
 		g_wfilechk(tnum,".\n");							/* Generate a call to WFILECHK.		*/
 
-		put_line("           IF WISP-DECLARATIVES-STATUS = \"00\" THEN\n");	/* Skip declare.			*/
+		tput_line_at(12, "IF WISP-DECLARATIVES-STATUS = \"00\" THEN");		/* Skip declare.			*/
 		make_fld(fld,tstr,"WDX-");
-		write_line("              GO TO %s.\n",fld);
+		tput_line_at(16, "GO TO %s.",fld);
 	}
 
 	if (multi_file)
 	{										/* If this is used by more than one file*/
 		make_fld(fld,tstr,"WDS-");
-		write_line("       %s.\n",fld);						/* Generate a starting paragraph.	*/
+		tput_line_at(8,  "%s.",fld);						/* Generate a starting paragraph.	*/
 	}
 
 	strcpy(decl_sname,tstr);							/* Save this section name.		*/
@@ -243,8 +233,8 @@ p_use()
 gen_use(reason,filename)
 char *reason,*filename;
 {
-	write_line("           USE AFTER STANDARD %s PROCEDURE\n",reason);
-	write_line("               ON %s.\n",filename);
+	tput_line_at(12, "USE AFTER %s PROCEDURE ON",reason);
+	tput_clause (16, "%s.",filename);
 }
 
 gen_dexit()										/* Generate the EXIT paragraph for decl.*/
@@ -254,6 +244,7 @@ gen_dexit()										/* Generate the EXIT paragraph for decl.*/
 	if (!decl_parsing) return(0);							/* No need.				*/
 
 	make_fld(fld,decl_sname,"WDX-");
-	write_line("\n       %s.\n           EXIT.\n",fld);				/* Write the para.			*/
+	tput_line_at(8,  "%s.",fld);
+	tput_line_at(12, "EXIT.");
 	decl_parsing = 0;								/* Clear the flag.			*/
 }

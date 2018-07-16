@@ -1,6 +1,6 @@
 			/************************************************************************/
 			/*           VIDEO - Video Interactive Development Environment          */
-			/*                      Copyright (c) 1987-1991                         */
+			/*                      Copyright (c) 1987-1993                         */
 			/*      An unpublished work by International Digital Scientific Inc.    */
 			/*                        All rights reserved.                          */
 			/************************************************************************/
@@ -13,6 +13,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -29,7 +30,12 @@
 #define EXT_VRAWDOS
 #include "vrawdos.h"
 
+static void vtimeout_set();
+
 #define EXT_PREFIX ((unsigned char)29)          /* Extended character set prefix        */
+
+#define DOS_COLS	80
+#define DOS_ROWS	25
 
 /*
  * Globals whose storage is defined in other compilation units:
@@ -91,7 +97,7 @@ extern  int     errno ;
  */
 
 static unsigned char vrawgetc(int);
-static void xputc(char);
+static void xputc();
 
 /*
  * vraw_init_flag:      This flag is non-zero after the routine "vrawinit()" has
@@ -113,10 +119,11 @@ static int vraw_init_flag = 0;                                                  
 static int vraw_errno = 0;              /* Module-specific error flag */
 
 /*
- * vtimer:      Holds timeout value for nonblocking char input
+ * vtimeout_value:      Holds timeout value for nonblocking char input
  *
  */
-static long vtimer = 0;
+static int vread_timed_out_flag = FALSE;
+static int vtimeout_value = 0;
 
 /*
  * vraw_signal: This variable holds the action of the SIGINT (interrupt)
@@ -159,9 +166,11 @@ static int vrawinit()
 											/* the fileno for the stdout file and   */
 	vb_count = 0;                                                                   /* At start of local buffer.            */
 
+	initcolors();
+
 	if( ! screen_memory )                                                           /* If screen_memory not initialized.    */
 	{
-		screen_memory = SM_SO;                                                  /* Set it to Segment:>Offset pointer.   */
+		screen_memory = BASE_VIDEO_ADDR;                 			/* Set it to the base video address.    */
 	}
 
 	vrawerasetype( FULL_SCREEN );                                                   /* Erase the full screen to defaults.   */
@@ -169,7 +178,7 @@ static int vrawinit()
 											/* Erase bottom line of screen:         */
 	out_row = 24;
 	out_atr = BACK_BLACK | FORE_WHITE;
-	for( out_col = 0 ; out_col < 80 ; ++out_col )
+	for( out_col = 0 ; out_col < DOS_COLS ; ++out_col )
 	{
 		SET_CVT( ' ' );
 	}
@@ -383,6 +392,11 @@ int vrawexit()
 {
 	int error = 0;
 
+#ifdef _INTELC32_
+	_clearscreen(_GCLEARSCREEN);
+#endif
+	vrawcursor(1);
+
 	vrawsetcursor();                                                                /* Move cursor to out_row, out_col      */
 
 	vraw_init_flag = 0;                                                             /* No longer initialized.               */
@@ -431,11 +445,6 @@ vshut()
 {
 }
 
-vkbtimer(cnt)
-long	cnt;
-{
-	vtimer=cnt;
-}
 
 /*      MS-DOS low-level SECTION:       */
 
@@ -495,7 +504,33 @@ static  unsigned        char    xgetc_w()
 
 	while( 0 == ch )                                /* Repeat after xdebug. */
 	{
-		while( ! xchin() );                     /* Wait for char input. */
+		if (vtimeout_value < 1) 		/* Read without TIMEOUT */
+		{
+			while( ! xchin() );             /* Wait for char input. */
+		}
+		else 					/* Read with TIMEOUT 	*/
+		{
+			time_t	stop_time;
+
+			stop_time = time(NULL) + vtimeout_value;
+			while( ! xchin() )		/* Loop until char ready*/
+			{
+				/*
+				**	Check if we've reached the stop time.
+				**	If so then indicate a timeout.
+				*/
+				if ( time(NULL) >= stop_time )
+				{
+					vtimeout_set();
+					/*
+					**	Return a NULL char to indicate
+					**	a timeout.  Any real NULLs will
+					**	be converted before returned.
+					*/
+					return(0);
+				}
+			}
+		}
 
 		ch = getch();                           /* Get the character.   */
 
@@ -557,7 +592,7 @@ xclock()                                /* Display a clock on the screen. */
 	out_row = 24;
 	out_atr = BACK_BLACK | FORE_WHITE;
 #if     0
-	for( out_col = 0 ; out_col < 80 ; ++out_col )
+	for( out_col = 0 ; out_col < DOS_COLS ; ++out_col )
 	{
 		SET_CVT( ' ' );
 	}
@@ -597,6 +632,99 @@ char ch;
 	}
 }
 
+/*
+**	Routine:	initcolors()
+**
+**	Function:	To initialize colors from environment variable
+**
+**	Description:	This routine reads in the colors from the variable VCOLORS.
+**			It then shifts them to be in the second byte and assigns
+**			them to attributes.
+**
+**	Arguments:	None
+**
+**	Globals:	
+**	attribute	The attribute table.
+**
+**	Return:		None
+**
+**	Warnings:	If the VCOLORS var is badly formed no error message will
+**			be reported.
+**
+**	History:	
+**	01/26/93	Written by GSL
+**
+*/
+static initcolors()
+{
+	char	*ptr, buff[3];
+	int	i,j;
+	long	attr;
+
+	if (ptr = getenv("VCOLORS"))
+	{
+		for(i=0; i<16 && *ptr && *(ptr+1); i++)
+		{
+			buff[0] = *ptr++;
+			buff[1] = *ptr++;
+			buff[2] = (char)0;
+			if (1==sscanf(buff,"%2x",&j))
+			{
+				attr = j;
+				attr <<= 8;
+				attributes[i] = attr;
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+}
+
+/*
+**	Routine:	vrawsetattributes()
+**
+**	Function:	To change the color attributes.
+**
+**	Description:	Load the passed in attribute table overtop of
+**			the default attribute table.
+**			If a passed in attribute is zero then don't replace it.
+**			And it with 0xff00 to ensure nothing sneaks into the
+**			character position.
+**
+**	Arguments:
+**	attr		The new attribute table. 
+**			Each element is of the form 0xff00 and is a "raw" MSDOS 
+**			attribute.
+**
+**	Globals:
+**	attribute	The attribute table.
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	01/25/93	Written by GSL
+**
+*/
+vrawsetattributes(attrs)
+long	attrs[];
+{
+	int	i;
+	long	temp;
+
+	for(i=0;i<16;i++)
+	{
+		temp = attrs[i] & 0xff00;
+		if (temp)
+		{
+			attributes[i] = temp;
+		}
+	}
+}
+
 vrawattribute( atr )
 int     atr;
 {
@@ -606,8 +734,8 @@ int     atr;
 vrawmove( row, col )
 int     row, col;
 {
-	out_row = row % 25;
-	out_col = col % 80;
+	out_row = row % DOS_ROWS;
+	out_col = col % DOS_COLS;
 }
 
 vrawsetcursor()
@@ -669,9 +797,9 @@ int     fr, fc, tr, tc;                         /* from/to row/column   */
 {
 	int     save_row, save_col;
 
-	if( tc > 80 )
+	if( !(tc < DOS_COLS) )
 	{
-		tc = 80;
+		tc = DOS_COLS-1;
 	}
 	save_row = out_row;
 	save_col = out_col;
@@ -679,7 +807,7 @@ int     fr, fc, tr, tc;                         /* from/to row/column   */
 	{
 		for( out_col=fc ; out_col <= tc ; ++out_col )
 		{
-			SET_CVT( ' ' );
+			SET_VT( out_row, out_col, ' ', attributes[0]);		/* Always erase with default attribute		*/
 		}
 	}
 	out_row = save_row;
@@ -761,7 +889,7 @@ int     dir;
 		fill_top = top;                                                                 /* Space fill from the top.     */
 	}
 												/* Move the video memory.       */
-	memmove( (screen_memory + (move_to * 80)), (screen_memory + (move_from * 80)), (count * 160) );
+	memmove( (screen_memory + (move_to * DOS_COLS)), (screen_memory + (move_from * DOS_COLS)), (count * 160) );
 
 	out_row = fill_top;
 	while( out_row < (fill_top + lines))  							/* For each row to be filled.   */
@@ -1054,6 +1182,87 @@ int     bg, fg, ch;
 	{
 		SET_VT( 24, 0, ch, ((bg << 12) | (fg << 8)));
 	}
+}
+
+put_lastline( str )
+char    str[];
+{
+	int     ch, i;
+
+	if( strlen( str ) > 66 )                /* Set maximum length   */
+	{
+		str[66] = '\0';
+	}
+
+	for( i = 0 ; str[i] ; ++i )             /* Remove newlines */
+	{
+		if ( '\n' == str[i] )
+		{
+			str[i] = ' ';
+		}
+	}
+
+	_settextposition( 25, 3 );
+	printf( "%s", str );
+	return(0);
+}
+
+clear_lastline()
+{
+	int     i;
+	_settextposition( 25, 3 );
+
+	for( i = 0 ; i < 66; ++i )  /* Clear bottom line    */
+	{
+		putch( ' ' );
+	}
+
+	return( 0 );
+}
+
+/*
+ * vtimeout:  set the timeout value (if any) for normal "blocked" reads
+ *
+ */
+vtimeout(seconds)
+int seconds;
+{
+	vtimeout_value = seconds;
+	vtimeout_clear();
+}
+/*
+ * vtimeout_clear:  clear the "timed out" status
+ *
+ */
+vtimeout_clear()
+{
+	vread_timed_out_flag = FALSE;
+}
+/*
+ * vtimeout_check: return TRUE if time out occured on last read
+ *                 FALSE otherwise
+ *
+ */
+vtimeout_check()
+{
+	return vread_timed_out_flag;
+}
+
+static void vtimeout_set()
+{
+	vread_timed_out_flag = TRUE;
+}
+
+vraw_stty_save()
+{
+}
+
+vraw_stty_restore()
+{
+}
+
+vraw_stty_sync()
+{
 }
 
 #endif  /* MS-DOS */

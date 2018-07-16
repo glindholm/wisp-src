@@ -1,15 +1,28 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
+			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
-/* sub: date -- various date functions												*/
+
 /*
- * code revamp on 11/24/89 by Jock Cooper
- *
- */
+**	File:		date.c
+**
+**	Purpose:	To hold DATE vssub routine
+**
+**	Routines:	DATE		The DATE entry point
+**
+**
+**	History:
+**	mm/dd/yy	Written by ...
+**	11/24/89	revamped by Jock Cooper
+**	09/22/92	Totaly rewritten by Greg Lindholm
+**
+*/
+
 #include <stdio.h>
 #include <math.h>
 
@@ -24,608 +37,596 @@
 #include <ctype.h>
 #include <time.h>
 
+
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 
-long	dates_calc();
-/* External variables for holding results of parsing of date values */
-int month_1, day_1, year_1, month_2, day_2, year_2;
-int new_century;
+static int4 diff_dates();
+static int load_date();
+static int unload_date();
+static int adjust_date();
+
+struct date_struct
+{
+	int4	year;
+	int4    days;
+};
+typedef struct date_struct date_struct;
 
 /* no_days[0] is for reg yrs, no_days[1] is for leap yrs */
-int no_days[2][12] = 
+static int no_days[2][12] = 
 		{
-		{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
-		{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+		{  31,  28,  31,  30,  31,  30,  31,  31,  30,  31,  30,  31 },
+		{  31,  29,  31,  30,  31,  30,  31,  31,  30,  31,  30,  31 }
+		};
+static int off_days[2][13] =
+		{
+		{   0,  31,  59,  90, 120, 151, 181, 212, 243, 273, 304, 334, 365 },
+		{   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335, 366 }
 		};
 
-/* 			Do date/time conversion functions for WANG cobol							*/
 
+/*
+**	Routine:	DATE()
+**
+**	Function:	To emulate the vssub DATE (with extensions)
+**
+**	Description:	This routine does various date calculations based on a function code.
+**			On Wang it accepts dates in two formats
+**				Gregorian	YYMMDD
+**				Julian		YYDDD
+**				X		YYYYMMDD
+**				R		YYYYDDD
+**
+**			"HD"	Return date as UPPERCASE formatted string
+**			"HL"	Return date as UP/low formatted string
+**			"G-"	Find difference in days between two dates
+**			"J-"	Find difference in days between two dates
+**			"X-"	Find difference in days between two dates
+**			"G+"	Calc new date by adding count number of days
+**			"J+"	Calc new date by adding count number of days
+**			"X+"	Calc new date by adding count number of days
+**			"GD"	Return day of week
+**			"JD"	Return day of week
+**			"XD"	Return day of week
+**			"GJ"	Convert Gregorian date to Julian date
+**			"JG"	Convert Julian date to Gregorian date
+**
+**	Arguments:
+**	"HD",receiver
+**	"HL",receiver
+**	"G-",G1,G2,diff,retcode
+**	"J-",J1,J2,diff,retcode
+**	"X-",X1,X2,diff,retcode
+**	"G+",G1,count,G2,retcode
+**	"J+",J1,count,J2,retcode
+**	"X+",X1,count,X2,retcode
+**	"GD",G1,day,retcode
+**	"JD",J1,day,retcode
+**	"XD",X1,day,retcode
+**	"GJ",G1,J1,retcode
+**	"JG",J1,G1,retcode
+**	"XR",J1,G1,retcode
+**	"RX",J1,G1,retcode
+**	"XG",J1,G1,retcode
+**	"GX",J1,G1,retcode
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/22/92	Written by GSL
+**
+*/
 DATE(func,arg1,arg2,arg3,arg4)
 char *func;
 char *arg1,*arg2,*arg3,*arg4;
 {
 #define		ROUTINE		11000
+	static char *weekday_string[7] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
 
-	struct tm *time_struct;
-	int i,j,mn1,dy1,yr1,mn2,dy2,yr2;
-	time_t time_val;
-	char temp[20];
-	long int tlong1,tlong2;
-	char *off_calc();
+	static char *dow_string[7] = { "SUNDAY   ","MONDAY   ","TUESDAY  ","WEDNESDAY","THURSDAY ","FRIDAY   ","SATURDAY " };
 
-	static char *weekday[7] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
+	static char *month_string[12] = { "January","February","March","April","May","June","July",
+					  "August","September","October","November","December" };
 
-	static char *the_day[7] = { "SUNDAY   ","MONDAY   ","TUESDAY  ","WEDNESDAY","THURSDAY ","FRIDAY   ","SATURDAY " };
+	static char *am_pm_string[2] = { "AM","PM" };
 
-	static char *month[12] = { "January","February","March","April","May","June","July",
-				   "August","September","October","November","December" };
-
-	static char *hour[2] = { "A","P" };
+	int i,j;
+	char temp[80], temp2[80];
+	int4 	rc, tlong1, tlong2;
+	date_struct	date1, date2;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);					/* Say we're here				*/
 
-	if (func[0] == 'H' && (func[1] == 'L' || func[1] == 'D'))		/* HL -- upper/lower case header, HD -- upper	*/
+	if (0==memcmp(func,"HL",2) ||
+	    0==memcmp(func,"HD",2)   )						/* HL -- upper/lower case header, HD -- upper	*/
 	{
+		/*
+		**	Display the current date/time in the following format.
+		**
+		**	AAAAAAAAA   BBBBBBBBBBBBBBBBBB       CCCCCCCC
+		**	Wednesday   December 30, 1987         2:30 PM
+		*/
+		struct tm *time_struct;
+		time_t 	time_val;
+		int	am_pm;
+
 		time(&time_val);						/* get current time 				*/
 		time_struct = localtime(&time_val);				/* break it down into parts			*/
 
 		if (time_struct->tm_hour == 12)					/* If the hour is 12 o'clock			*/
 		{
-			i = 1;							/* use 'PM'					*/
+			am_pm = 1;						/* use 'PM'					*/
 		}
 		else if (time_struct->tm_hour > 12)
 		{
 			time_struct->tm_hour -= 12;				/* convert to 12 hour clock			*/
-			i = 1;							/* use 'PM'					*/
+			am_pm = 1;						/* use 'PM'					*/
 		}
 		else if (time_struct->tm_hour == 0)				/* If hour is zero, it's 12 AM			*/
 		{
 			time_struct->tm_hour = 12;				/* convert to 12 hour clock			*/
-			i = 0;							/* use 'AM'					*/
+			am_pm = 0;						/* use 'AM'					*/
 		}
 		else
 		{
-			i = 0;							/* use 'AM'					*/
+			am_pm = 0;						/* use 'AM'					*/
 		}
 										/* build the day of the month string		*/
-		sprintf(temp,"%s %d, 19%02d",month[time_struct->tm_mon],time_struct->tm_mday,time_struct->tm_year);
+		sprintf(temp,"%s %d, %d",month_string[time_struct->tm_mon],time_struct->tm_mday,1900+time_struct->tm_year);
 										/* write the actual time string			*/
 
-		sprintf(arg1,"%9s   %-18s       %2d:%02d %s",weekday[time_struct->tm_wday],temp,
-								time_struct->tm_hour,time_struct->tm_min,hour[i]);
-		arg1[44] = 'M';							/* add on the 'M'				*/
+		sprintf(temp2,"%9s   %-18s       %2d:%02d %2s",weekday_string[time_struct->tm_wday],temp,
+								time_struct->tm_hour,time_struct->tm_min,am_pm_string[am_pm]);
+
+		memcpy(arg1,temp2,45);
 
 		if (func[1] == 'D') for (j=0;j<24;j++) arg1[j]=toupper(arg1[j]);    /* If they want upper case.			*/
 
 	}
-	else if (func[0] == 'G')						/* Gregorian date functions			*/
+	else if (0==memcmp(func,"G-",2) ||
+		 0==memcmp(func,"J-",2) ||
+		 0==memcmp(func,"X-",2)   )
 	{
-		if (func[1] == '-')						/* find difference between 2 dates		*/
+		if (rc = load_date(func[0],arg1,&date1))
 		{
-			if (valid_date(arg1,1)<0) 
-			{
-				tlong1 = 8;
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,(sizeof(long)));
-				return(0);
-			}
-			if (valid_date(arg2,2)<0)
-			{
-				tlong1 = 8;
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,(sizeof(long)));
-				return(0);
-			}
-			tlong1 = dates_calc();
-
-			wswap(&tlong1);						/* swap the order of the words			*/
-
-			PUTBIN(arg3,&tlong1,sizeof(long));
-
-			memset(arg4,(char)0,sizeof(long));
+			wswap(&rc);
+			PUTBIN(arg4,&rc,4);
 			return(0);
 		}
-		else if (func[1] == '+')					/* add number of days and find date		*/
+		if (rc = load_date(func[0],arg2,&date2))
 		{
-			if (valid_date(arg1,1)<0) 
-			{
-				tlong1 = 8;
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,(sizeof(long)));
-				return(0);
-			}
-
-			GETBIN(&tlong1,arg2,sizeof(long));
-			wswap(&tlong1);			 			/* swap the words				*/
-			sprintf(temp,"%d",tlong1);
-			new_century=0;
-			strncpy(arg3,off_calc(temp),6);
-
-			if (!new_century)
-				memset(arg4,0,sizeof(long));
-			else
-			{
-				tlong1 = 4;
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,sizeof(long));
-			}
+			wswap(&rc);
+			PUTBIN(arg4,&rc,4);
 			return(0);
 		}
-		else if (func[1] == 'D')					/* Gregorian day of the week.			*/
-		{
-			valid_date("010106",1);					/* Jan 06, 1901 is a Sunday			*/
-			if (valid_date(arg1,2)<0) 
-			{
-				tlong1 = 8;
-				wswap(&tlong1);
-				PUTBIN(arg3,&tlong1,(sizeof(long)));
-				return(0);
-			}
-			tlong1 = dates_calc() % 7;
-			memcpy(arg2,the_day[tlong1],9);				/* Copy the DOW string.				*/
-			memset(arg3,0,sizeof(long));
-			return(0);
-		}
-		else if (func[1] == 'J')					/* Convert Gregorian to Julian.			*/
-		{
-			FILE *tmpf;
+		tlong1 = diff_dates(&date1,&date2);
+		wswap(&tlong1);
+		PUTBIN(arg3,&tlong1,4);
 
-			if (valid_date(arg1,1)<0) 
-			{
-				tlong1 = 8;
-				wswap(&tlong1);
-				PUTBIN(arg3,&tlong1,(sizeof(long)));
-				return(0);
-			}
-
-			for (tlong1=0, tlong2=0; tlong2 < month_1-1; ++tlong2)
-				tlong1 += no_days[!((year_1%4)!=0)][tlong2];
-
-			sprintf(temp,"%02d%03d",year_1,tlong1+day_1);
-
-			memcpy(arg2,temp,5);					/* copy it to the output stream			*/
-
-			memset(arg3,0,sizeof(long));				/* return code					*/
-			return(0);
-		}
+		PUTBIN(arg4,&rc,4);
+		return(0);
 	}
-	else if (func[0] == 'J')						/* Julian day functions				*/
+	else if (0==memcmp(func,"G+",2) ||
+		 0==memcmp(func,"J+",2) ||
+		 0==memcmp(func,"X+",2)   )
 	{
-		if (func[1] == 'G')						/* convert Julian to Gregorian			*/
+		if (rc = load_date(func[0],arg1,&date1))
 		{
-			tlong1 = jul2greg(arg1,arg2);
-			wswap(&tlong1);
-			PUTBIN(arg3,&tlong1,sizeof(long));			/* return code					*/
+			wswap(&rc);
+			PUTBIN(arg4,&rc,4);
 			return(0);
 		}
-		else if (func[1] == '-')					/* Subtract Julian dates			*/
+		GETBIN(&tlong1,arg2,4);
+		wswap(&tlong1);
+
+		adjust_date(&date1,tlong1);
+		rc = unload_date(func[0],arg3,&date1);
+		wswap(&rc);
+
+		PUTBIN(arg4,&rc,4);
+		return(0);
+	}
+	else if (0==memcmp(func,"GD",2) ||
+		 0==memcmp(func,"JD",2) ||
+		 0==memcmp(func,"XD",2)   )
+	{
+		if (rc = load_date(func[0],arg1,&date1))
 		{
-			char greg1[10], greg2[10];
-
-			if (tlong1 = jul2greg(arg1,greg1))
-			{
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,sizeof(long));		/* return code					*/
-				return(0);
-			}
-			if (tlong1 = jul2greg(arg2,greg2))
-			{
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,sizeof(long));		/* return code					*/
-				return(0);
-			}
-
-			valid_date(greg1,1);
-			valid_date(greg2,2);			
-
-			tlong1 = dates_calc();					/* Get the diff.				*/
-
-			wswap(&tlong1);
-
-			PUTBIN(arg3,&tlong1,sizeof(long));
-
-			memset(arg4,(char)0,sizeof(long));
+			wswap(&rc);
+			PUTBIN(arg3,&rc,4);
 			return(0);
 		}
-		else if (func[1] == '+')					/* Add Julian dates			*/
+		load_date('G',"010106",&date2);					/* Jan 06, 1901 is a Sunday			*/
+		tlong1 = diff_dates(&date1,&date2) % 7;
+		if (tlong1 < 0) tlong1 = -tlong1;
+		memcpy(arg2,dow_string[tlong1],9);				/* Copy the DOW string.				*/
+
+		PUTBIN(arg3,&rc,4);
+		return(0);
+	}
+	else if (0==memcmp(func,"GJ",2) ||
+		 0==memcmp(func,"GX",2) ||
+		 0==memcmp(func,"GR",2) ||
+		 0==memcmp(func,"JG",2) ||
+		 0==memcmp(func,"JX",2) ||
+		 0==memcmp(func,"JR",2) ||
+		 0==memcmp(func,"XG",2) ||
+		 0==memcmp(func,"XJ",2) ||
+		 0==memcmp(func,"XR",2) ||
+		 0==memcmp(func,"RG",2) ||
+		 0==memcmp(func,"RJ",2) ||
+		 0==memcmp(func,"RX",2)   )
+	{
+		if (rc = load_date(func[0],arg1,&date1))
 		{
-			char greg1[10], greg2[10];
-
-			memset(greg1,0,sizeof(greg1));
-			memset(greg2,0,sizeof(greg2));
-			if (tlong1=jul2greg(arg1,greg1))			/* convert starting date to Gregorian		*/
-			{
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,sizeof(long));
-				return(0);
-			}
-			valid_date(greg1,1);					/* and digest it				*/
-
-			GETBIN(&tlong1,arg2,sizeof(long));			/* get days to add parm				*/
-			wswap(&tlong1);
-			sprintf(temp,"%d",tlong1);				/* make it an ascii string			*/
-			strncpy(greg2,off_calc(temp),6);			/* add the dates				*/
-			valid_date(greg2,2);					/* process the resulting date			*/
-			sprintf(greg1,"%02d%02d%02d",year_2,1,1);		/* change date1 to be Jan 1 of resulting year	*/
-			valid_date(greg1,1);				
-			new_century=0;
-			tlong1=dates_calc()+1;					/* to find julian days figure in resulting date	*/
-			sprintf(temp,"%02d%03d",year_2,tlong1);			/* rebuild julian date				*/
-			strncpy(arg3,temp,5);			
-
-			if (!new_century)
-				memset(arg4,(char)0,sizeof(long));
-			else
-			{
-				tlong1 = 4;
-				wswap(&tlong1);
-				PUTBIN(arg4,&tlong1,sizeof(long));
-			}
+			wswap(&rc);
+			PUTBIN(arg3,&rc,4);
 			return(0);
 		}
-		else if (func[1] == 'D')					/* Gregorian day of the week.			*/
-		{
-			char greg1[10], greg2[10];
+		rc = unload_date(func[1],arg2,&date1);
+		wswap(&rc);
 
-			if (tlong1=jul2greg(arg1,greg1))			/* convert starting date to Gregorian		*/
-			{
-				wswap(&tlong1);
-				PUTBIN(arg3,&tlong1,sizeof(long));
-				return(0);
-			}
-			valid_date("010106",1);					/* Jan 06, 1901 is a Sunday			*/
-			if (valid_date(greg1,2)<0) 
-			{
-				tlong1 = 8;
-				wswap(&tlong1);
-				PUTBIN(arg3,&tlong1,(sizeof(long)));
-				return(0);
-			}
-			tlong1 = dates_calc() % 7;
-			memcpy(arg2,the_day[tlong1],9);				/* Copy the DOW string.				*/
-			memset(arg3,0,sizeof(long));
-			return(0);
-		}
+		PUTBIN(arg3,&rc,4);
+		return(0);
 	}
 	else
 	{
 		werrlog(ERRORCODE(2),func[0],func[1],0,0,0,0,0,0);		/* Say not implemented.				*/
 	}
 }
-int jul2greg(jul,greg)
-char *jul,*greg;
-{
-	int dy,i;
-	char temp[10], *off_calc();
-	char julian[6];
-	char tgreg[10];
-	
-	memset(julian,0,sizeof(julian));
-	memcpy(julian,jul,5);
 
-	for(i=0; i<5; i++)
+/*
+**	Routine:	leap_year()
+**
+**	Function:	To test if a given year is a leap year.
+**
+**	Description:	A leap year is divisable by 4 except century years unless divisable by 400.
+**			The return value is meant to be used in no_days[][] and off_days[][].
+**
+**	Arguments:
+**	year		The year to test
+**
+**	Globals:	None
+**
+**	Return:
+**	0		Not a leap year
+**	1		A leap year
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/22/92	Written by GSL
+**
+*/
+static int leap_year(year)
+int4	year;
+{
+	if (0 == year % 400) 	return 1;
+	if (0 == year % 100) 	return 0;
+	if (0 == year % 4)	return 1;
+	return 0;
+}
+
+/*
+**	Routine:	load_date()
+**
+**	Function:	To load a character string date into the date_struct.
+**
+**	Description:	This routine loads and validates the dates.
+**
+**	Arguments:
+**	type		The type of date "G", "J", "X", "R"
+**				"G"	YYMMDD
+**				"J"	YYDDD
+**				"X"	YYYYMMDD
+**				"R"	YYYYDDD
+**	string		The character string get the date from
+**	date		The date_struct to be loaded
+**
+**	Globals:
+**	no_days		Array of number of days in each month
+**	off_days	Array of offset number of days in each month
+**
+**	Return:
+**	0		Success
+**	8		Invalid date
+**	16		Invalid type
+**
+**	Warnings:	ON error the date field may have been modified.
+**
+**	History:	
+**	09/22/92	Written by GSL
+**
+*/
+
+static int load_date(type,string,date)
+char	type;
+char	*string;
+date_struct *date;
+{
+	int	i, len, leap;
+	int	month, day;
+
+	switch(type)
 	{
-		if ( jul[i] < '0' || jul[i] > '9' ) return(8);
+	case 'G': len=6; break;
+	case 'J': len=5; break;
+	case 'X': len=8; break;
+	case 'R': len=7; break;
+	default: return(16);
 	}
 
-	year_1 = (julian[0]-0x30)*10 + (julian[1]-0x30);
-	dy = (julian[2]-0x30)*100 + (julian[3]-0x30)*10 + (julian[4]-0x30);
-
-	if (dy < 1 || dy > 366) return(8);
-
-	month_1 = 1; day_1 = 1;
-	sprintf(temp,"%d",dy-1);
-	strncpy(tgreg,off_calc(temp),6);
-
-	if ( jul[0] != tgreg[0] || jul[1] != tgreg[1] ) return(8);
-
-	memcpy(greg,tgreg,6);
-	return(0);
-}
-/**
- ** The following code has been borrowed from:
- ** Author:		Gordon A. Runkle				ORI/Calculon
- **		...uunet!men2a!1solaria!gordon
- **
- ** (actual source: usenet archives -- site: uunet    [comp.sources.misc, volume 3, calcdate]
- **                 uunet!/usr/spool/ftp/comp.sources.misc/volume3/calcdate.Z
- ** )
- **/
-
-/** var declarations moved to top of file 		**/
-
-#define REG	0
-#define LEAP	1
-#define NEG	0
-#define POS	1
-
-
-/***************************************/
-char *off_calc(offset)
-char offset[];
-{
-extern int no_days[2][12];
-extern int month_1, day_1, year_1;
-extern char *prog;
-
-int atoi();
-int i_offset, n_month, n_day, n_year, month_bal;
-int i, leap_flag;
-
-static char newdate[7];
-
-
-/* This checks for a valid offset value.  Negative values are allowed
-   and checked for.  It stops at the first null. */
-for (i = 0; i < 4; i++)
+	/*
+	**	Check that each char is a digit
+	*/
+	for (i = 0; i < len; i++)
 	{
-	if (offset[i] == '\0')
+		if (string[i] < '0' || string[i] > '9')
+		{
+			return(8);
+		}
+	}
+
+	/*
+	**	get the year
+	*/
+	switch(type)
+	{
+	case 'G':
+	case 'J':
+		date->year=	1900 + (string[0]-'0')*10 + (string[1]-'0');
 		break;
 
-	if (i == 0 && offset[i] == '-')
-		continue;
-
-	if (offset[i] < '0' || offset[i] > '9')
-		{
-		return((char *) -1);
-		}
+	case 'X':	
+	case 'R':
+		date->year=	(string[0]-'0')*1000 + (string[1]-'0')*100 + (string[2]-'0')*10 + (string[3]-'0');
+		break;
 	}
 
-i_offset = atoi(offset);
+	leap = leap_year(date->year);
 
-/* This is the beginning of the neat stuff.  I hope it works! */
-/* leap year is when =>>  year % 4 == 0  */
-
-n_year = year_1;	/* the *_1 is used, as this is the value of the */
-n_month = month_1;	/* first date entered */
-n_day = day_1;
-
-if (i_offset >= 0)
+	/*
+	**	get the number of days
+	*/
+	switch(type)
 	{
-	while (i_offset > 0)
-		{
-		if (n_year % 4 == 0)
-			leap_flag = LEAP;
-		  else
-			leap_flag = REG;
+	case 'G':
+	case 'X':	
+		month=	(string[len-4]-'0')*10+(string[len-3]-'0');
+		day=	(string[len-2]-'0')*10+(string[len-1]-'0');
 
-		month_bal = no_days[leap_flag][n_month - 1] - n_day;
+		if (month < 1 || month > 12) 			return(8);
+		if (day < 1 || day > no_days[leap][month-1]) 	return(8);
 
-		if (i_offset > month_bal)
-			{
-			i_offset -= month_bal;
-			n_month++;
+		date->days = off_days[leap][month-1] + day;
+		break;
 
-			if (n_month > 12)
-				{
-				n_month = 1;
-				n_year++;
-
-				if (n_year > 99)
-				  {
-					n_year = 0;
-					++new_century;
-				  }
-				}
-
-			n_day = 0;
-			}
-		  else
-			{
-			n_day += i_offset;
-			i_offset = 0;
-			}
-		}
-	}
-else
-	{
-	while (i_offset < 0)		/* this loop processes neg offsets */
-		{
-		if (n_year % 4 == 0)
-			leap_flag = LEAP;
-		  else
-			leap_flag = REG;
-
-		month_bal = n_day - 1;
-
-		if (abs(i_offset) > month_bal)
-			{
-			i_offset += month_bal;
-			n_month--;
-
-			if (n_month < 1)
-				{
-				n_month = 12;
-				n_year--;
-
-				if (n_year < 0)
-				  {
-					n_year = 99;
-					++new_century;
-				  }
-				}
-
-			n_day = no_days[leap_flag][n_month - 1] + 1;
-			}
-		  else
-			{
-			n_day += i_offset;
-			i_offset = 0;
-			}
-		}
+	case 'J':
+	case 'R':
+		date->days = 	(string[len-3]-'0')*100 + (string[len-2]-'0')*10 + (string[len-1]-'0');
+		if (date->days < 1 || date->days > off_days[leap][12]) return(8);
+		break;
 	}
 
-sprintf(newdate, "%02d%02d%02d", n_year, n_month, n_day);
-return newdate;
+	return(0);
 }
 
+/*
+**	Routine:	unload_date()
+**
+**	Function:	To unload a date_struct into character string date.
+**
+**	Description:	This routine unloads and validates the dates.
+**
+**	Arguments:
+**	type		The type of date "G", "J", "X", "R"
+**				"G"	YYMMDD
+**				"J"	YYDDD
+**				"X"	YYYYMMDD
+**				"R"	YYYYDDD
+**	string		The character string to load the date into.
+**	date		The date_struct to get the date from.
+**
+**	Globals:
+**	no_days		Array of number of days in each month
+**	off_days	Array of offset number of days in each month
+**
+**	Return:
+**	0		Success
+**	4		Year not 1900 for "G" and "J". For "X" and "R" not 0 - 9999
+**	8		Invalid date
+**	16		Invalid type
+**
+**	Warnings:	ON error the date field may have been modified.
+**
+**	History:	
+**	09/22/92	Written by GSL
+**
+*/
 
-/***************************************/
-long	dates_calc()
+static int unload_date(type,string,date)
+char	type;
+char	*string;
+date_struct *date;
 {
-extern int no_days[2][12];
-extern int month_1, day_1, year_1, month_2, day_2, year_2;
+	char	buff[80];
+	int	i, len, leap;
+	int	month, day;
 
-int first_rec = 0;
-long	curr_offset = 0;
-int leap_flag, sign_flag;
-int start_day, start_month, start_year, end_day, end_month, end_year;
-
-
-/****
-	This section determines which date is later, so that the program
-	may evaluate the earlier one first.  There is a flag set to indicate
-	what sign the end result should have based on whether the first date
-	entered is earlier or later than the second.
-****/
-
-/* set the default sign */
-sign_flag = NEG;
-
-if (year_1 < year_2)
-	sign_flag = POS;
-  else
-	if (year_1 == year_2 && month_1 < month_2)
-		sign_flag = POS;
-	  else
-		if (year_1 == year_2 && month_1 == month_2 && day_1 < day_2)
-			sign_flag = POS;
-
-/* This makes the earlier date be set to start_* */
-if (sign_flag == POS)
+	switch(type)
 	{
-	start_day = day_1;
-	start_month = month_1;
-	start_year = year_1;
-	end_day = day_2;
-	end_month = month_2;
-	end_year = year_2;
-	}
-  else
-	{
-	start_day = day_2;
-	start_month = month_2;
-	start_year = year_2;
-	end_day = day_1;
-	end_month = month_1;
-	end_year = year_1;
+	case 'G': len=6; break;
+	case 'J': len=5; break;
+	case 'X': len=8; break;
+	case 'R': len=7; break;
+	default: return(16);
 	}
 
-/* The calculations below keep incrementing curr_offset and start_* until
-   start_* == end_*  */
+	memset(string,' ',len);
+	leap = leap_year(date->year);
 
-for (;;)
+	if (date->days < 1 || date->days > off_days[leap][12]) return(8);
+
+	/*
+	**	unload the year
+	*/
+	switch(type)
 	{
-	if (start_year % 4 == 0)
-		leap_flag = LEAP;
-	  else
-		leap_flag = REG;
+	case 'G':
+	case 'J':
+		if (date->year < 1900 || date->year > 1999) return(4);
+		sprintf(buff,"%02d", date->year - 1900);
+		string[0] = buff[0];
+		string[1] = buff[1];
+		break;
 
-	if (first_rec == 0)
-		{
-		/* This is for when the month and year start out the same, and 
-		   the user just wants the days (ie.  051688 052688 */
-		if (start_month == end_month && start_year == end_year)
-			{
-			curr_offset = end_day - start_day;
-			break;
-			}
-
-		curr_offset = no_days[leap_flag][start_month - 1] - start_day;
-		first_rec = 1;
-		}
-	  else if (start_month == end_month && start_year == end_year)
-		{
-		curr_offset += end_day;
-		break;			/* This is the end of it */
-		}
-	  else
-		curr_offset += no_days[leap_flag][start_month - 1];
-
-
-	start_month++;
-
-	if (start_month > 12)
-		{
-		start_month = 1;
-		start_year++;
-
-		if (start_year > 99)
-			start_year = 0;
-		}
+	case 'X':	
+	case 'R':
+		if (date->year < 0 || date->year > 9999) return(4);
+		sprintf(buff,"%04d", date->year);
+		string[0] = buff[0];
+		string[1] = buff[1];
+		string[2] = buff[2];
+		string[3] = buff[3];
+		break;
 	}
 
-if (sign_flag == NEG)
-	curr_offset = -curr_offset;
 
-return curr_offset;
+	/*
+	**	unload the number of days
+	*/
+	switch(type)
+	{
+	case 'G':
+	case 'X':
+		for(i=11; i>=0; i--)
+		{
+			if (date->days > off_days[leap][i]) break;
+		}
+		month = i+1;
+		day = date->days - off_days[leap][i];
+
+		sprintf(buff,"%02d%02d",month,day);
+		string[len-4] = buff[0];
+		string[len-3] = buff[1];
+		string[len-2] = buff[2];
+		string[len-1] = buff[3];
+		break;
+
+	case 'J':
+	case 'R':
+		sprintf(buff,"%03d", date->days);
+		string[len-3] = buff[0];
+		string[len-2] = buff[1];
+		string[len-1] = buff[2];
+		break;
+	}
+
+	return(0);
 }
 
-/***************************************/
-valid_date(t_date, date_flag)
-char t_date[];
-int date_flag;
+
+/*
+**	Routine:	diff_dates()
+**
+**	Function:	To find the difference between two dates in days.
+**
+**	Description:	The difference is the number of days you must add to date1 to get date2. 
+**			This number may be negative.
+**
+**	Arguments:
+**	date1		The starting date
+**	date2		The ending date
+**
+**	Globals:
+**	off_days	Array of offset number of days in each month
+**
+**	Return:		The difference in days
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/22/92	Written by GSL
+**
+*/
+static int4 diff_dates(date1,date2)
+date_struct	*date1, *date2;
 {
-extern int month_1, day_1, year_1;
-extern int month_2, day_2, year_2;
-extern char *prog;
+	int4	diff;
+	date_struct	datex;
 
-int i, leap_flag, month, day, year;
-char tst_date[7];
+	memcpy((char *)&datex, (char *)date1, sizeof(datex));				/* Make working copy of starting date	*/
 
-memset(tst_date,0,sizeof(tst_date));
-memcpy(tst_date,t_date,6);
-
-for (i = 0; i < 6; i++)
-	if (tst_date[i] < '0' || tst_date[i] > '9')
+	/*
+	**	Loop until the years match.   Keep a running total of diff.
+	*/
+	for(diff=0; datex.year != date2->year; )
+	{
+		if (datex.year < date2->year)		/* Diff is positive */
 		{
-		return(-1);
+			diff += off_days[leap_year(datex.year)][12];
+			datex.year += 1;
 		}
-
-#if 0
-sscanf(tst_date, "%2d%2d%2d", &year, &month, &day);
-#endif
-year=(tst_date[0]-0x30)*10+(tst_date[1]-0x30);
-month=(tst_date[2]-0x30)*10+(tst_date[3]-0x30);
-day=(tst_date[4]-0x30)*10+(tst_date[5]-0x30);
-
-if (!month || !day) return -1;
-
-if (month > 12)
-	{
-	return(-1);
+		else					/* Diff is negative */
+		{
+			datex.year -= 1;
+			diff -= off_days[leap_year(datex.year)][12];
+		}
 	}
 
-if (year % 4 == 0)
-	leap_flag = LEAP;
-  else
-	leap_flag = REG;
-
-if (day > no_days[leap_flag][month - 1])
-	{
-	return(-1);
-	}
-
-/* This determines where our carefully-checked values are stored */
-if (date_flag == 1)
-	{
-	day_1 = day;
-	month_1 = month;
-	year_1 = year;
-	}
-else if (date_flag == 2)
-	{
-	day_2 = day;
-	month_2 = month;
-	year_2 = year;
-	}
-else
-	{
-	return(-1);
-	}
-
-return(0);
+	diff += (date2->days - datex.days);						/* Calc the diff in days		*/
+	return(diff);									/* Return the diff			*/
 }
 
-/* end of calcdate.c  -=gordon=- */
+/*
+**	Routine:	adjust_date()
+**
+**	Function:	To adjust date by count number of days
+**
+**	Description:	This routine adds count number of days to date. Count may be negative.
+**
+**	Arguments:
+**	date		The date to adjust
+**	count		The number of days to add
+**
+**	Globals:
+**	off_days	Array of offset number of days in each month
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/22/92	Written by GSL
+**
+*/
+static int adjust_date(date,count)
+date_struct	*date;
+int4		count;
+{
+	date->days += count;
+
+	for(;;)
+	{
+		if (date->days < 1)
+		{
+			date->year -= 1;
+			date->days += off_days[leap_year(date->year)][12];
+		}
+		else if (date->days > off_days[leap_year(date->year)][12])
+		{
+			date->days -= off_days[leap_year(date->year)][12];
+			date->year += 1;
+		}
+		else
+		{
+			return(0);
+		}
+	}
+}

@@ -23,7 +23,7 @@ static int demovalidate()							/* 1-Success 0-Failure				*/
 	char	keyfile[80];
 	char	*ptr;
 	int	fh;
-	long	now, then, demotime;
+	time_t	now, then, demotime;
 	struct stat statbuf;
 
 	time(&now);
@@ -38,7 +38,7 @@ static int demovalidate()							/* 1-Success 0-Failure				*/
 	{
 		fh = open(keyfile, O_WRONLY | O_CREAT, 0444);
 		if ( fh == -1 ) return(1);
-		write(fh,&now,4);
+		write(fh,&now,sizeof(now));
 		close(fh);
 		chmod(keyfile, 0444);
 		return(1);							/* Success - First time 			*/
@@ -55,7 +55,7 @@ static int demovalidate()							/* 1-Success 0-Failure				*/
 	{
 		fh = open(DEMOSYSLOCK, O_WRONLY | O_CREAT, 0444);		/* Write system lock				*/
 		if ( fh == -1 ) return(0);
-		write(fh,&now,4);
+		write(fh,&now,sizeof(now));
 		close(fh);
 		chmod(keyfile, 0444);
 		return(0); 							/* Failure - Demo has timed out 		*/

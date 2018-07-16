@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "idsistd.h"
+
 #ifndef FALSE
 #define FALSE 0
 #define TRUE !FALSE
@@ -163,9 +165,22 @@ int	cnt;
 
 safemove(dest,src,len)								/* safemove (memcpy) handles overlapping move	*/
 char	*dest, *src;
-long	len;
+int4	len;
 {
-	for(;len>0;len--) *dest++ = *src++;
+	if (dest > src)								/* will overlap so copy backwards from end      */
+	{
+		for(;len>0;--len)
+		{
+			dest[len-1] = src[len-1];				/* copy bytes offset len-1 through zero         */
+		}
+	}
+	else
+	{
+		for(;len>0;--len)						/* copy "frontwards" since no overlap will occur*/
+		{
+			*dest++ = *src++;
+		}
+	}
 }
 
 
@@ -185,7 +200,7 @@ int	size;
 
 /*
 	unloadpad	Load dest with src and null terminate.
-			Src is at most size bytes long, it can be null terminated or space padded.
+			Src is at most size bytes int4, it can be null terminated or space padded.
 */
 unloadpad(dest,src,size)
 char	*dest;
@@ -492,4 +507,70 @@ char *filepath;
 #endif
 
 	return(0);
+}
+
+
+/*
+**	Routine:	buildfilepath()
+**
+**	Function:	To build a filepath from a file and path.
+**
+**	Description:	This routine concatenates the file and path together to form
+**			a full filepath.  It handles O/S specific dir separators.
+**			Dest and path can be the same.
+**
+**	Arguments:
+**	dest		The destination to put the filepath. Must be large enough to hold result.
+**	path		The path with out a file and without trailing separator.
+**	file		The filename.
+**
+**	Globals:	None
+**
+**	Return:		Dest.
+**
+**	Warnings:	None
+**
+**	History:	
+**	12/28/92	Written by GSL
+**
+*/
+char *buildfilepath(dest,path,file)
+char *dest;
+char *path;
+char *file;
+{
+	/*
+	**	If dest and path are the same then we are concatinating to path so don't copy.
+	*/
+	if (dest != path)
+	{
+		/*
+		**	If a path then copy it otherwise make dest a null string.
+		*/
+		if (path)
+		{
+			strcpy(dest,path);
+		}
+		else
+		{
+			dest[0] = (char)0;
+		}
+	}
+
+	/*
+	**	If dest is a null string then don't need a leading separator
+	*/
+	if (dest[0])
+	{
+#ifdef unix
+		strcat(dest,"/");
+#endif /* unix */
+#ifdef MSDOS
+		strcat(dest,"\\");
+#endif /* MSDOS */
+	}
+
+	strcat(dest,file);
+
+	return dest;
 }

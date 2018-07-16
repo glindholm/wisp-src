@@ -11,18 +11,20 @@
 	WACCEPT		This routine builds an ACCEPT getparm.
 */
 
+#include "idsistd.h"
+
 WACCEPT(argcnt,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
-long	*argcnt;
+int4	*argcnt;
 char	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*item11,*item12,*item13,*item14,*item15,*item16;
 {
 	struct argst { char *ptrs[500]; } args;
-	long 	cnt;
+	int4 	cnt;
 	char	tags[16][8];
 	char	*items[16];
 	int	i;
 	char	pfkeyrecvr[1];
-	long 	N[256];
-	long	pfkey, two;
+	int4 	N[256];
+	int4	pfkey, two;
 
 	for (i=0; i<256; ++i) 
 	{
@@ -96,7 +98,7 @@ char	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*ite
 /*
 	nullterm	Scan from the end of a string and insert a NULL after the last non-space.
 */
-nullterm(str,len)
+int nullterm(str,len)
 char	*str;
 int	len;
 {
@@ -108,6 +110,6 @@ int	len;
 		}
 	}
 	str[len+1] = '\0';
-	return;
+	return(0);
 }
 

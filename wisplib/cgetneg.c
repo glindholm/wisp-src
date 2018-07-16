@@ -5,10 +5,12 @@
 #include <memory.h>
 #endif
 
+#include "idsistd.h"
+
 cgetneg(value)
-long *value;
+int4 *value;
 {
-	long tmp1,tmp2;
+	int4 tmp1,tmp2;
 
 	memcpy(&tmp1,value,4);
 	tmp2 = -tmp1;

@@ -10,10 +10,18 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "wcommon.h"
+#include "wispfile.h"
 
 int	symbzero = 0;
 
 static int show_flags;
+static char word_fname[MAX_FNAME];						/* The name of the WORD file used.		*/
+
+static char cli_infile[MAX_FNAME];						/* The initial input file name			*/
+static char cli_listfile[MAX_FNAME];						/* The file for conversion information listing	*/
+
+static int concat;
 
 #ifdef VMS
 #include <descrip.h>
@@ -59,6 +67,7 @@ $DESCRIPTOR(cli_dms,"DMS");
 $DESCRIPTOR(cli_xref,"CROSS_REFERENCE");
 $DESCRIPTOR(cli_nowarn,"WARNINGS");
 $DESCRIPTOR(cli_dlink,"DLINK");
+$DESCRIPTOR(cli_dataconv,"DATACONV");
 #endif	/* VMS */
 
 get_cli(argc,argv)
@@ -96,7 +105,7 @@ char	*argv[];
 			{
 				printf("%WISP-F-NOLOGFILE Unable to open log file.\n");
 				perror(0);
-				exit(1);
+				exit_wisp(EXIT_WITH_ERR);
 			}
 		}
 	}
@@ -188,6 +197,16 @@ char	*argv[];
 		do_dlink = 1;
 	}
 
+	status = cli$present(&cli_dataconv);
+	if (status == CLI$_PRESENT)							/* Generate data conversion program	*/
+	{
+		data_conv = 1;
+	}
+	else
+	{
+		data_conv = 0;
+	}
+
 	status = cli$present(&cli_proc);
 	if (status == CLI$_NEGATED)
 	{										/*  /NOPROCESSING switch is set		*/
@@ -206,6 +225,7 @@ char	*argv[];
 	{
 		status = cli$get_value(&cli_inlib,&cli_ilname);				/* Get the directory name		*/
 		cli_ildir[strpos(cli_ildir," ")] = '\0';				/* Null terminate.			*/
+		sp_trunc(cli_ildir);							/* truncate at first space		*/
 		write_log("WISP",'I',"INLIBVAL","INLIB is <%s>.",cli_ildir);
 	}
 
@@ -243,8 +263,8 @@ char	*argv[];
 		}
 		else
 		{
-			printf("Error in word file specification,/WORD_FILE=\n");
-			exit_wisp(-1);
+			write_log("WISP",'F',"WORDFILE","Error in word file specification,/WORD_FILE=\n");
+			exit_wisp(EXIT_WITH_ERR);
 		}
 	}
 	else
@@ -354,8 +374,8 @@ char	*argv[];
 		status = cli$get_value(&cli_lang,&cli_tmp);				/* now get the compiler name		*/
 		if (status != SS$_NORMAL)
 		{
-			printf("Error in compiler specification, %s\n",cli_tline);
-			exit_wisp(-1);
+			write_log("WISP",'F',"LANG","Error in compiler specification, %s\n",cli_tline);
+			exit_wisp(EXIT_WITH_ERR);
 		}
 		i = strpos(cli_tline," ");
 		cli_tline[i] = '\0';
@@ -425,16 +445,16 @@ char	*argv[];
 
 			default:
 			{
-				printf("Error in compiler specification, %s\n",cli_tline);
-				exit_wisp(-1);
+				write_log("WISP",'F',"LANG","Error in compiler specification, %s\n",cli_tline);
+				exit_wisp(EXIT_WITH_ERR);
 			}
 		}
-		printf("Compiler selected is %s\n",cli_tline);
+		write_log("WISP",'I',"LANG","Compiler selected is %s\n",cli_tline);
 	}
 
 	status = cli$get_value(&cli_file,&cli_name);					/* now get the input file name		*/
 
-	strcpy(fname,cli_infile);
+	strcpy(in_fname,cli_infile);
 
 	i = strpos(cli_infile," ");
 	if (i != -1) cli_infile[i] = '\0';						/* NUll terminate			*/
@@ -480,9 +500,14 @@ char	*argv[];
 
 #ifdef MSDOS
 	dos_cobol = 1;
+#ifdef DMF
 	dmf_cobol = 1;									/* MS-DOS default to Micro Focus	*/
 	mf_aix = 1;
 #endif
+#ifdef DACU
+	acu_cobol = 1;
+#endif
+#endif /* MSDOS */
 
 	do_keyfile = 0;
 	do_optfile = 0;
@@ -493,10 +518,10 @@ char	*argv[];
 	if (argc == 1)
 	{
 		printusage();
-		exit(1);
+		exit_wisp(EXIT_FAST);
 	}
 
-	while ( (c = getopt( argc, argv, "LlzZcsCxneTRS1dDFmfwI:kK:oO:V:W:U?")) != -1 )
+	while ( (c = getopt( argc, argv, "LlzZcsCxneTRS1dDFmfwI:G:qkK:oO:V:W:U?")) != -1 )
 	{
 		switch( c )
 		{
@@ -542,6 +567,10 @@ char	*argv[];
 				break;
 			case 'I':							/* /INLIB=				*/
 				strcpy(cli_ildir,optarg);
+				sp_trunc(cli_ildir);					/* truncate at first space		*/
+				break;
+			case 'G':							/* /DEBUG= 0 1 2 3			*/
+				debug_set_level(optarg);
 				break;
 			case 'k':
 				do_keyfile = USE_GENERAL_FILE;
@@ -663,47 +692,75 @@ char	*argv[];
 				{
 					printf("%WISP-F-BADCOMPILER Invalid compiler flag (-V %s).\n",optarg);
 					perror(0);
-					exit(1);
+					exit_wisp(EXIT_FAST);
 				}						
 				break;
 			}
+			case 'q':
+				data_conv = 1;
+				break;
 			case 'U':
 				fullusage();
-				exit(1);
+				exit_wisp(EXIT_FAST);
 				break;
 			case '?':
-				printusage();
-				exit(1);
-				break;
 			default:
-				printf("%WISP-F-BADFLAG Invalid command line flag (-%c).\n",c);
-				perror(0);
-				exit(1);
+				printusage();
+				exit_wisp(EXIT_FAST);
 				break;
 		}
 	}
 
-	strcpy( fname, argv[argc-1] );							/* Get the filename to convert.		*/
-	strcpy( cli_infile, fname );
+	if (optind >= argc)
+	{
+		printf("%%WISP-F-NOFILE No filename.\n");
+		exit_wisp(EXIT_FAST);
+	}
+
+	if (optind < argc-1)
+	{
+		printf("%%WISP-F-BADARG Invalid command line argument %s \n",argv[optind]);
+		exit_wisp(EXIT_FAST);
+	}
+
+	strcpy( in_fname, argv[argc-1] );						/* Get the filename to convert.		*/
+	strcpy( cli_infile, in_fname );
 
 	if (show_flags)
 	{
 		showflags();
 	}
 
-	if ( fname[0] == '-' )
-	{
-		printf("%WISP-F-NOFILE No filename.\n");
-		perror(0);
-		exit(1);
-	}
 #endif
 
 	if (!strncmp(cli_infile,"WHODUNIT",8) || !strncmp(cli_infile,"whodunit",8))	/* Tell them who!			*/
 	{
 		whodunit();
-		exit_wisp(-1);							/* Generate error exit.				*/
+		exit_wisp(EXIT_FAST);						/* Generate error exit.				*/
 	}
+
+	/*
+	**	The concat switch is being eliminated, there is now only 2 modes:
+	**		1) Concatinate and don't generate copybooks	(!copylib) Default
+	**		2) Don't concat and generate copybooks		(copylib)
+	*/
+
+	if (copylib && concat)
+	{
+		write_log("WISP",'F',"OPTIONS","Error can not generate copybooks AND concatenate source.");
+		exit_with_err();
+	}
+
+	if (!copylib && !concat)
+	{
+		write_log("WISP",'F',"OPTIONS",
+			"Unsupported combination of options, MUST generate copybooks OR concatenate source.");
+		exit_with_err();
+	}
+
+	if (copylib || !concat) { copylib = 1; concat = 0; }
+	else			{ copylib = 0; concat = 1; }
+
 
 #ifdef VMS
 	write_log("WISP",'I',"DCLSWITCHES","Comments  = %d\nCopy Only = %d\nConcat    = %d\nCopy Lib  = %d",
@@ -711,56 +768,14 @@ char	*argv[];
 
 	write_log("WISP",'I',"DCLSWITCHES","Data = %d, Move = %d.\n",init_data,init_move);
 #else
-	write_log("WISP",'I',"UNIXFLAGS","Comments  = %d\nCopy Only = %d\nConcat    = %d\nCopy Lib  = %d",
+	write_log("WISP",'I',"FLAGS","Comments  = %d\nCopy Only = %d\nConcat    = %d\nCopy Lib  = %d",
 		comments,copy_only,concat,copylib);
 
-	write_log("WISP",'I',"UNIXFLAGS","Data = %d, Move = %d.\n",init_data,init_move);
+	write_log("WISP",'I',"FLAGS","Data = %d, Move = %d.\n",init_data,init_move);
 #endif
 
-	load_reswords(word_fname);
+	load_res_keywords(word_fname);
 
-}
-
-#define MAX_RESWORDS 100
-
-static load_reswords(filename)
-char	*filename;
-{
-	FILE	*fd;
-	char	*ptr;
-	char	buf[256];
-	int	rc,i,j;
-
-	if ( !filename || !filename[0] )
-	{
-		res_keywords = (char **)res_defaults;
-		return(0);
-	}
-
-	fd = fopen(filename, "r");		
-	if (!fd)
-	{
-		printf("Unable to open WORD FILE %s\n",filename);
-		exit_wisp(-1);		
-	}
-
-	res_keywords = (char **)calloc(MAX_RESWORDS,sizeof(char *));
-	if (!res_keywords)
-	{
-		printf("Unable to alloc Reserved WORD list\n");
-		exit_wisp(-1);
-	}
-
-	for(i=0;i<MAX_RESWORDS;i++)
-	{
-		rc = fscanf(fd,"%s",buf);
-		if ( rc != 1 ) break;
-		for(j=0;buf[j];j++) buf[j] = toupper(buf[j]);
-		res_keywords[i] = malloc(strlen(buf)+1);
-		strcpy(res_keywords[i],buf);
-	}
-	fclose(fd);
-	res_keywords[i] = "";	
 }
 
 whodunit()
@@ -773,12 +788,12 @@ whodunit()
 	printf("  Jock Cooper, Suzette Boron, and Gregory Adams.\n");
 	printf("  Screen management and Wang workstation emulation written by Gregory Adams.\n");
 	printf("  Unix implementation written by Greg Lindholm and Jock Cooper.\n");
-	printf("  MS-DOS implementation written by Dev Bradley and Greg Lindholm.\n");
+	printf("  MS-DOS implementation written by Greg Lindholm.\n");
 	printf("\n");
 	printf("  Many thanks to our clients for their assistance and patience, without which\n");
 	printf("  this product would not exist.\n");
 	printf("\n");
-	printf("  Copyright (c) 1987, 1988, 1989, 1990, 1991 an unpublished work by\n");
+	printf("  Copyright (c) 1987,1988,1989,1990,1991,1992,1993 an unpublished work by\n");
 	printf("  International Digital Scientific Incorporated of Valencia California.\n");
 	printf("  All rights reserved.\n\n\n\n\n");
 }
@@ -798,6 +813,7 @@ printusage()
 	printf("	-k	/KEY_FILE		Use standard Key file.\n");
 	printf("	-o 	/OPTION_FILE		Use standard Option file.\n");
 	printf("	-e 	/NOWARNINGS		Don't show warning messages.\n");
+	printf("	-Wfile	/WORD_FILE=file		Use specified Word file.\n");
 	printf("	-U				SHOW ALL USAGE FLAGS.\n");
 	printf("	-F				SHOW FLAGS IN USE.\n");
 	printf("\n");
@@ -834,6 +850,7 @@ fullusage()
 	printf("	-m	/INIT=(NOMOVE)		Change MOVE SPACES to INITIALIZE.\n");
 	printf("	-f	/INIT=(NOFD_FILLER)	Change FD FILLERs to fields.\n");
 	printf("	-w	/INIT=(NOWS_FILLER)	Change WS FILLERS to fields.\n");
+	printf("	-q	/DATACONV		Generate data conversion program.\n");
 }
 showflags()
 {
@@ -877,6 +894,8 @@ showflags()
 		printf("	-n	/DLINK			Use VMS dynamic LINK.\n");
 	else
 		printf("     no -n	/NODLINK		Use VMS pseudo-LINK not dynamic LINK.\n");
+	if ( data_conv )
+		printf("	-q	/DATACONV		Generate data conversion program.\n");
 	if ( init_data )								/* Init data areas			*/
 		printf("	-D	/INIT=(DATA)		Do init data areas.\n");
 	else

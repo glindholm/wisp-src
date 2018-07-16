@@ -13,6 +13,8 @@
 
 #include <ctype.h>
 
+#include "idsistd.h"
+
 char *strchr();
 char *strrchr();
 char *strpbrk();
@@ -139,10 +141,10 @@ This is not correct. The Wang always uses a '81' fac even for a "PIC 99999".
 #endif
 }
 
-unsigned long pic_edit(the_pic)								/* Generate a 32 bit field edit mask.	*/
+uint4 pic_edit(the_pic)									/* Generate a 32 bit field edit mask.	*/
 char *the_pic;
 {
-	unsigned long the_mask,the_bit;
+	uint4 the_mask,the_bit;
 	int i;
 
 	if (!*the_pic || pic_fac(the_pic) != NUM_FAC) return(0);			/* Blank or non numeric.		*/
@@ -176,10 +178,10 @@ char *the_pic;
 	return(the_mask);
 }
 
-unsigned long pic_zmask(the_pic)							/* Generate a 32 bit field Z edit mask.	*/
+uint4 pic_zmask(the_pic)								/* Generate a 32 bit field Z edit mask.	*/
 char *the_pic;
 {
-	unsigned long the_mask,the_bit;
+	uint4 the_mask,the_bit;
 	int i,zflag;
 
 	the_mask = 0;

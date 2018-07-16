@@ -35,9 +35,6 @@
 #define 	WISP_ERROR_FILE			"wisperr.log"
 #define 	WISP_MESSAGE_FILE		"wispmsg.dat"
 
-#define 	MAX_LINK_PARMS		32						/* Maximum number of parameters to LINK	*/
-#define 	NULL_FILE_NAME		"*NULL*"					/* No LINK arg file, See VMSLINKSUB.WCB	*/
-
 /* Operating System Specific Filename definitions. */
 
 #ifdef VMS
@@ -50,8 +47,6 @@
 #define		WISP_OPTIONS_FILE		"WISP$CONFIG:OPTIONS.DAT"
 #endif	/* VMS */
 
-#ifndef VMS	/* unix and MSDOS */
-
 #ifdef unix
 #define		TMP_DIR		"/usr/tmp"		/* Temporary diretory path.	*/
 #define		DSS		"/"			/* Directory Separator String.	*/
@@ -62,7 +57,7 @@
 #define		WISP_TEMP_PERSUB_PREFIX		"PERSUB"
 #define 	WISP_PRB_DIR 			"/usr/tmp/wpparms"
 #define 	WISP_LINK_DIR 			"/usr/tmp/wisplink"
-#define		WISP_RETCOD_FILE		"/usr/tmp/RETCOD"
+#define		WISP_TEMP_DIR			"/usr/tmp/wisptmp"
 #endif	/* #ifdef unix */
 
 #ifdef MSDOS
@@ -73,11 +68,12 @@
 #define 	WISP_USER_PERSON_FILE		"DEFAULTS.USR"
 #define		WISP_TEMP_PERSON_PREFIX		"DFTS-"
 #define		WISP_TEMP_PERSON_SUFFIX		".TMP"
-#define 	WISP_PRB_DIR 			"C:\\TMP\\WPPARMS.TMP"
-#define 	WISP_LINK_DIR 			"C:\\TMP\\WISPLINK.TMP"
-#define		WISP_RETCOD_FILE		"C:\\TMP\\RETCOD.TMP"
+#define 	WISP_PRB_DIR 			"C:\\TMP\\WPPARMS"
+#define 	WISP_LINK_DIR 			"C:\\TMP\\WISPLINK"
+#define		WISP_RETCOD_FILE		"C:\\TMP\\RETCOD"
 #endif	/* #ifdef MSDOS */
 
+#ifndef VMS	/* unix and MSDOS */
 #define		WISP_CONFIG_ENV			"WISPCONFIG"
 #define		WISP_HOME_ENV			"HOME"
 #define		WISP_TTY_ENV			"WISPTTY"
@@ -96,8 +92,6 @@
 #define		WISP_FORMS_FILE			"FORMS"
 #define		WISP_PRMAP_FILE			"PRMAP"
 #define		WISP_OPTIONS_FILE		"OPTIONS"
-
-
 #endif	/* unix and MSDOS	*/
 
 #define NOTFOUND	-1

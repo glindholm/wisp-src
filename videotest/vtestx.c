@@ -58,8 +58,8 @@ again:	vcontrol(chterm_esc);								/* What type of terminal are you?	*/
 	count = 0;
 more:	i = vgetm();
 	vprint("Metacharacter value = %d decimal, %o octal.\n",i,i);
-	if (i == 220) count++;
+	if (i == return_key) count++;
 	else count = 0;
-	if ((i != 220) || (count < 2)) goto more;
+	if ((i != return_key) || (count < 2)) goto more;
 	return(i);									/* No, then assume it is a VT100.	*/
 }

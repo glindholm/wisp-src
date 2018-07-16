@@ -19,6 +19,8 @@
 #define DISPLAY_AND_READ_ALTERED   7							/* Write then read altered.		*/
 #define LOAD_SUB_TABLE		   8							/* Load user defined substitution table.*/
 #define INIT_DEFAULT_TABLE	   9							/* Init the sub table to default values.*/
+#define SET_TABS                  13 
+#define TAB_MODE_OFF              14
 /*					WCC (Write Control Character) definitions						*/
 #define UNLOCK_KEYBOARD		0x80 							/* Unlock the keyboard.			*/
 #define SOUND_ALARM		0x40							/* Ring the bell.			*/
@@ -44,6 +46,18 @@
 #define FAC_NUMERIC_ONLY	0x02 							/* Numeric only bit.			*/
 #define FAC_UPPERCASE_ONLY	0x01 							/* Uppercase only bit.			*/
 
+#define AID_LOCKED		0x21							/* AID char for locked keyboard		*/
+#define AID_UNLOCKED		0x20							/* AID char for unlocked keyboard	*/
+#define AID_HELP		0x30							/* AID char for HELP			*/
+#define AID_ENTER		0x40							/* AID char for ENTER			*/
+
+/********************************************************************************************************************************/
+
+char vwang_aid();
+void vwang_timeout();
+void set_aid();
+char meta_aid();
+
 /********************************************************************************************************************************/
 /*					DEC substitution characters.								*/
 /********************************************************************************************************************************/
@@ -52,7 +66,13 @@
 #define SPACE_BAR		0x20							/* Space bar input from keyboard.	*/
 #define DEC_MENU_PICK		0x5F							/* Underscore for menu pick.		*/
 
-#define MAX_DISP_RANGE	0x7F								/* All displayable chars < this value.	*/
+#ifdef OLD
+/* this has been replaced with a variable which can be adjusted */
+#define MAX_DISP_RANGE	0xFF								/* All displayable chars < this value.	*/
+#endif
+
+#define EIGHT_BIT_DATA 0xFF
+#define SEVEN_BIT_DATA 0x7F
 
 #ifdef VMS 
 #define CURRENT_MENU_PICK	0xBB							/* Double right arrow.			*/

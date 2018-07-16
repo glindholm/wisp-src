@@ -14,6 +14,7 @@
 *																*
 ********************************************************************************************************************************/
 #include <varargs.h>							/* Allow variable number of arguments.			*/
+#include "idsistd.h"
 #include "werrlog.h"
 
 checkacp(va_alist)

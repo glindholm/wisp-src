@@ -31,6 +31,8 @@
 #			06/30/92	Add wdiag. GSL
 #			07/08/92	Add info messages. GSL
 #			07/08/92	Add the loading of $SHIP/rts. GSL
+#			03/11/93	Add VSEDIT. GSL
+#			07/23/93	Removed CRID and added IVS. GSL
 #
 
 if [ x$WISP = x ]
@@ -97,7 +99,7 @@ mkdir $SHIP/wisp/config/videocap
 mkdir $SHIP/ede
 mkdir $SHIP/ede/demo
 mkdir $SHIP/rts
-mkdir $SHIP/crid
+mkdir $SHIP/ivs
 
 #
 #	Copy all the files into the ship kit
@@ -115,6 +117,7 @@ cp $PT/proctran		$SHIP/wisp/bin
 cp $WU/selectpg		$SHIP/wisp/bin
 cp $WU/vcapkeys		$SHIP/wisp/bin
 cp $WU/viewkey		$SHIP/wisp/bin
+cp $WISP/src/vsedit/vsedit $SHIP/wisp/bin
 cp $WU/vsx		$SHIP/wisp/bin
 cp $VT/vtest		$SHIP/wisp/bin
 cp $WU/wcopy		$SHIP/wisp/bin
@@ -138,7 +141,6 @@ cp $WU/wusage		$SHIP/wisp/bin
 cp $WU/wlicense		$SHIP/wisp/bin
 
 echo Loading $SHIP/wisp/lib
-cp $PQ/libilp.a		$SHIP/wisp/lib
 cp $VL/libvideo.a	$SHIP/wisp/lib
 cp $WL/libwisp.a	$SHIP/wisp/lib
 
@@ -209,6 +211,9 @@ cp $EDE/menudemomf.umf	$SHIP/ede/demo
 echo Loading $SHIP/rts
 cp $WACU/wruncbl	$SHIP/rts
 cp $WACU/wruncble	$SHIP/rts
+
+echo Loading $SHIP/ivs
+cp $WISP/src/ivslib/libivs.a	$SHIP/ivs
 
 echo
 echo The SHIP KIT has been built.

@@ -11,6 +11,7 @@
 **	backgrnd.c
 */
 
+#include "idsistd.h"
 #include "wperson.h"								/* get the structure definitions		*/
 #include "werrlog.h"
 #include "wdefines.h"

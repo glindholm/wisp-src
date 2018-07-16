@@ -20,25 +20,27 @@
 #include <errno.h>
 #endif
 
+#include "idsistd.h"
 #include "wglobals.h"
 #include "wdefines.h"
 #include "werrlog.h"
+#include "link.h"
 
 #define ROUTINE		28000
 
 extern	char	LINKPARMFILLER[8];						/* Filler to test bug */
 extern	char	LINKPARMKEY[80];						/* The key to the temp file name.		*/
 extern	char	LINKPARMPRG[80];						/* The PROGNAME to link to.			*/
-extern	long	LINKPARMCNT;							/* The number of arguments passed (0-32)	*/
+extern	int4	LINKPARMCNT;							/* The number of arguments passed (0-32)	*/
 extern	char	*LINKPARMPTR[MAX_LINK_PARMS];					/* The passed arguments				*/
-extern	long	LINKPARMLEN[MAX_LINK_PARMS];					/* The lengths of the passed arguments		*/
+extern	int4	LINKPARMLEN[MAX_LINK_PARMS];					/* The lengths of the passed arguments		*/
 
 VMSPARGS()								/* This routine is call on the way back from a LINK 	*/
 									/* with VMSCOBOL. It writes the LINKAGE parameters	*/
 									/* from the linked program to the tmp file.		*/
 {
 	FILE	*fp;
-	long	size,i;
+	int4	size,i;
 	char	tempstr[80];
 	static	int	first=1;
 

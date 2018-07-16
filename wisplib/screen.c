@@ -29,6 +29,9 @@
 #include <io.h>
 #endif
 
+#include <varargs.h>
+
+#include "idsistd.h"
 #include "vwang.h"
 #include "wcommon.h"
 #include "vwang.h"									/* Include file for wisp screen defs.	*/
@@ -36,25 +39,28 @@
 #include "wperson.h"
 #include "wdefines.h"
 #include "movebin.h"
+#include "wanguid.h"
+
+char	*wfname();
 											
 #define USF_BIT	0x80								        /* Underscore FAC bit set.		*/
-
-char *wanguid3();
 
 #define ROUTINE		57000
 
 struct CPOS_STRUCT
 {
-	int row;
-	int col;
+	int4 row;
+	int4 col;
 };
 
-
-SCREEN(status, ufb_addr, func_type, output_rcvr, cpos)
-char *status, *func_type, *output_rcvr;							/* Declare pointers to char args.	*/
-long *ufb_addr;										/* Declare pointers to long args.	*/
-struct CPOS_STRUCT *cpos;
+void SCREEN(va_alist)
+va_dcl
 {
+	va_list	the_args;	
+	/* SCREEN(status, ufb_addr, func_type, output_rcvr, cpos) */
+	char 	*status, *ufb_addr, *func_type, *output_rcvr;
+	struct CPOS_STRUCT *cpos;
+
 	struct	CRT_STRUCT                                                              /* Screen structure definition.		*/
 	{
 		char order_area[4];							/* First 4 bytes are the order area.	*/
@@ -63,7 +69,7 @@ struct CPOS_STRUCT *cpos;
 	int file_stat;									/* Value returned by UNIX OPEN func.	*/
 	unsigned char vwfunc;								/* Funxtion performed by VWANG.		*/
 	unsigned char nlines;
-	long screen_size;
+	int4 screen_size;
 	char filename[81],								/* Local storage for VAX filename.	*/
 	     pfkey[2],									/* Receive the PFKEY value from VWANG.	*/
 	     vwang_status[2],								/* Returned status from VWANG.		*/
@@ -73,11 +79,23 @@ struct CPOS_STRUCT *cpos;
 	int s_arg_cnt=0;
 	int retcd;
 	
-	werrlog(ERRORCODE(1),*func_type,0,0,0,0,0,0,0);
+	werrlog(ERRORCODE(1),'?',0,0,0,0,0,0,0);
 
-#ifdef unix
-	s_arg_cnt = va_count (  );
-#endif
+	va_start(the_args);
+	s_arg_cnt = va_count(the_args);
+	va_start(the_args);
+
+	status = va_arg(the_args, char*);
+	ufb_addr = va_arg(the_args, char*);
+	func_type = va_arg(the_args, char*);
+	output_rcvr = va_arg(the_args, char*);
+	if (s_arg_cnt == 5)
+	{
+		cpos = va_arg(the_args, struct CPOS_STRUCT *);
+	}
+	va_end(the_args);
+
+	werrlog(ERRORCODE(1),*func_type,0,0,0,0,0,0,0);
 	
 	vwfunc = READ_ALL;								/* Cause VWANG to return entire screen.	*/
 	nlines = 24;									/* Tell VWANG to return 24 lines.	*/
@@ -135,8 +153,8 @@ struct CPOS_STRUCT *cpos;
 		
 		lin=vcur_lin+1;
 		col=vcur_col+1;
-		PUTBIN(&(cpos->row),&lin,sizeof(long));
-		PUTBIN(&(cpos->col),&col,sizeof(long));
+		PUTBIN(&(cpos->row),&lin,sizeof(int4));
+		PUTBIN(&(cpos->col),&col,sizeof(int4));
 	}
 }                                                     
 
@@ -149,15 +167,17 @@ struct CPOS_STRUCT *cpos;
 											/* Remove all FAC characters, replacing	*/
 strip_facs(string_addr, string_len,type)						/*  with a space.			*/
 char *string_addr;						                        /* Address of string to be stripped.	*/
-long string_len;									/* Length of that string.		*/
+int4 string_len;									/* Length of that string.		*/
 int type;		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
 {
 	unsigned char *l_string_addr, *pos;						/* Local copy of the string address.	*/
-	long i, usfl, blfl, pbfl;							/* Keeps the count.			*/
+	int4 i, usfl, blfl, pbfl;							/* Keeps the count.			*/
 	unsigned char psb_char, psb_select;						/* Pseudo blank character.		*/
+	char	def_psb_select;
 
 	wpload();
-	get_psb_char(defaults.psb_select,&psb_char,&psb_select);
+	get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
+	get_psb_char(def_psb_select,&psb_char,&psb_select);
 
 	l_string_addr = (unsigned char *)string_addr;					/* Get the passed value.		*/
 	i = string_len;		     							/* Ditto.				*/
@@ -236,22 +256,24 @@ int  text_len, rec_len;									/* Length values.			*/
 	char *l_filelibvol;    	     							/* Local copy of the filename pointer.	*/
 	char *l_text;									/* Local copy of the text pointer.	*/
 	int x;                                                                          /* Just a working variable.		*/
-	int out_file_stat;								/* Keeps track of the output file.	*/
+/*	int out_file_stat;	*/							/* Keeps track of the output file.	*/
+	FILE	*out_file;
+	char	out_buf[256];
 	int write_stat;	   								/* Status from the write function.	*/
-      	long mode;									/* Argument for the wfopen macro.	*/
+      	int4 mode;									/* Argument for the wfopen macro.	*/
 	char native_filename[81];						       	/* Constructed VAX filename.		*/
 	char alq_text[11], mrs_text[11];						/* Arguments for dynamic setting.	*/
 	int retcd, i, us_fl;
-	char *cpos, us_buf[255];							/* Buffer for Underscore characters.	*/
+	char us_buf[255];								/* Buffer for Underscore characters.	*/
 	char *longuid(), id[32], tty_str[5];						/* Vars for extract.			*/
-	long tty_num, argcnt;
+	int4 tty_num, argcnt;
         char *ctime();                                                                  /* Time request data.                   */
         time_t time_data;
         char *hpos, head_line_1[80], head_line_2[80];                                   /* Header lines work area.              */
-#ifdef unix
-	char *strchr();
 	char *scratchp;
-#endif
+	char	def_prt_mode;
+	char	def_prt_class;
+	int4	def_prt_form;
 
 	strcpy(file,"        ");
 	strcpy(library,"        ");
@@ -289,11 +311,12 @@ int  text_len, rec_len;									/* Length values.			*/
 	mode = 0;									/* Initial mode value.  All bits off.	*/
 	mode |= IS_OUTPUT;								/* Set the output bit on.		*/
 	mode |= IS_PRINTFILE;                                                          	/* Set the print file bit on.		*/
-	mode |= IS_BACKFILL;                                                          	/* Set so will return temp fil, vol, lib.*/
+	mode |= IS_BACKFILL;                                                          	/* Set so will return temp fil, vol,lib.*/
 
-	memset(native_filename, ' ', 81);					        /* Initialize vax filename to spaces.	*/
-	wfname(&mode, volume, library, file, native_filename);				/* Construct the VAX filename.		*/
-	native_filename[80] = '\0';							/* Null terminate the vax filename.	*/
+	scratchp = wfname(&mode, volume, library, file, native_filename);		/* Construct the native filename.	*/
+	*scratchp = (char)0;
+
+	makepath(native_filename);							/* Ensure the path exists		*/
 
 	if (mode & IS_BACKFILL)								/* Set to return default names used.	*/
 	{
@@ -305,84 +328,74 @@ int  text_len, rec_len;									/* Length values.			*/
 		memcpy(l_filelibvol,volume, 6);						/* Copy 6 chars. of volume name.	*/
 	}
 
-#ifdef VMS
-
-	x = text_len / 512;								/* Figure out number of blocks req.	*/
-	x++;										/* Add one for a margin of safety.	*/
-	memset(alq_text, ' ', 11);							/* Initialize alloc. quantity string.	*/
-	sprintf(alq_text, "alq=%d", x);							/* Convert from dec. to char.		*/
-	alq_text[10] = '\0';								/* Null terminate the string.		*/
-
-	memset(mrs_text, ' ', 11);							/* Initialize max. rec. len. string.	*/
-	sprintf(mrs_text, "mrs=%d", rec_len);						/* Convert from dec. to char.		*/
-	mrs_text[10] = '\0';								/* Null terminate the string.		*/
-											/* Create the output file.		*/
-	out_file_stat = creat(native_filename, 0, alq_text, "dna=unnamed.lis;0", mrs_text, "rat=cr,blk", "rfm=var", "shr=nil");
-#endif
-#ifdef unix
-	scratchp=strchr(native_filename,' ');
-	if (scratchp) *scratchp=(char)0;
-	out_file_stat = creat(native_filename, 0666);
-#endif          
-                                                                                                                        
-	if (out_file_stat != -1)
-	{                                       
-#ifdef unix
-		write_stat = write(out_file_stat, "\n", 1);				/* Write Newline.			*/
-#endif
-		write_stat = write(out_file_stat, "\r", 1);				/* Write Carriage Return.		*/
-		write_stat = write(out_file_stat, head_line_1, strlen(head_line_1));	/* Write the record.			*/
-#ifdef unix
-		write_stat = write(out_file_stat, "\n", 1);				/* Write Newline.			*/
-		write_stat = write(out_file_stat, "\n", 1);				/* Write Newline.			*/
-#endif
-		write_stat = write(out_file_stat, "\r", 1);				/* Write Carriage Return.		*/
-		write_stat = write(out_file_stat, head_line_2, strlen(head_line_2));	/* Write the record.			*/
-#ifdef unix
-		write_stat = write(out_file_stat, "\n", 1);				/* Write Newline.			*/
-#endif
-		write_stat = write(out_file_stat, "\r", 1);				/* Write Carriage Return.		*/
-		x = text_len / rec_len;							/* Number of records to print.		*/
-		while (x)
-		{
-			cpos = l_text;							/* Point to current record.		*/
-			us_fl = FALSE;							/* Assume no underscores in record.	*/
-			for (i = 0; i < rec_len; i++)					/* Setup underscore buffer, if needed.	*/
-			{
-				if (*cpos & USF_BIT)					/* If the high bit is set then set to	*/
-				{							/* display an underscore.		*/
-					us_buf[i] = DEC_MENU_PICK;
-					us_fl = TRUE;					/* Set so will write print buffer.	*/
-					*cpos -= USF_BIT;				/* Turn the high bit off for display.	*/
-				}
-				else	us_buf[i] = ' ';				/* Otherwise set to a space.		*/
-				cpos++;							/* Step to next char in record.		*/
-			}
-			write_stat = write(out_file_stat, l_text, rec_len);		/* Write the record.			*/
-			if (us_fl)
-			{
-				write_stat = write(out_file_stat, "\r", 1);		/* Write Carriage Return.		*/
-				write_stat = write(out_file_stat, us_buf, rec_len);	/* Write the underscores.		*/
-			}
-#ifdef unix
-			write_stat = write(out_file_stat, "\n", 1);			/* Write Newline.			*/
-#endif
-			l_text += rec_len;						/* Update pointer to start of next rec.	*/
-	       		x--;								/* One less record to print.		*/
-		}
-		out_file_stat = close(out_file_stat); 					/* Close the file.			*/
-		wfclose(native_filename);						/* Spool it to the printer.		*/
-		wprint(native_filename,defaults.prt_mode,0,1,defaults.prt_class,defaults.prt_form,&retcd);
-#ifdef VMS
-		wdellock(&mode,native_filename);
-#endif
-	}
-	else
+	out_file = fopen(native_filename,"w");
+	if (!out_file)
 	{
 		werrlog(ERRORCODE(4),native_filename,errno,0,0,0,0,0,0);
+		return(0);
 	}
+
+	fprintf(out_file,"\n%s\n\n%s\n",head_line_1,head_line_2);
+
+	x = text_len / rec_len;								/* Number of records to print.		*/
+	while (x)
+	{
+		us_fl = FALSE;								/* Assume no underscores in record.	*/
+		for (i = 0; i < rec_len; i++)						/* Setup underscore buffer, if needed.	*/
+		{
+			out_buf[i] = l_text[i];
+			us_buf[i] = ' ';						/* Otherwise set to a space.		*/
+			if (out_buf[i] & USF_BIT)					/* If the high bit is set then set to	*/
+			{								/* display an underscore.		*/
+				us_buf[i] = DEC_MENU_PICK;
+				us_fl = TRUE;						/* Set so will write print buffer.	*/
+				out_buf[i] -= USF_BIT;					/* Turn the high bit off for display.	*/
+			}
+			else if (!out_buf[i])						/* CHange NULL into space		*/
+			{
+				out_buf[i] = ' ';
+			}
+		}
+		out_buf[rec_len] = (char)0;						/* NULL terminate print line		*/
+		us_buf[rec_len] = (char)0;
+
+		if (us_fl)
+		{
+			fprintf(out_file,"%s\r%s\n",out_buf,us_buf);			/* Write record and underscores		*/
+		}
+		else
+		{
+			fprintf(out_file,"%s\n",out_buf);				/* Write the record.			*/
+		}
+		l_text += rec_len;							/* Update pointer to start of next rec.	*/
+       		x--;									/* One less record to print.		*/
+	}
+	fclose(out_file);		 						/* Close the file.			*/
+
+	get_defs(DEFAULTS_PM,&def_prt_mode);
+	get_defs(DEFAULTS_PC,&def_prt_class);
+	get_defs(DEFAULTS_FN,&def_prt_form);
+
+#ifdef VMS
+	if ('O'==def_prt_mode)
+	{
+		/*
+		**	If ON-LINE printing then the printing has already happened.
+		**	No need to call wprint() to spool the file.
+		*/
+		return(retcd);
+	}
+#endif /* VMS */
+
+	wprint(native_filename,def_prt_mode,0,1,def_prt_class,def_prt_form,&retcd);
+
+#ifdef VMS
+	wdellock(&mode,native_filename);
+#endif
 	return(retcd);
-}                                             						/* BORDER_SCREEN.C ... 			*/
+}
+
+                                             						/* BORDER_SCREEN.C ... 			*/
 											/* Take a screen and create borders.	*/
 border_screen(work_area, screen_image, image_rec_size, screen_rec_size, screen_rec_count)
 char *work_area,   									/* Address of destination.		*/

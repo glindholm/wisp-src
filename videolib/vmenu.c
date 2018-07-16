@@ -14,6 +14,7 @@
 #include "vlocal.h"									/* Include local definitions.		*/
 #include "vdata.h"									/* Include video database.		*/
 #include "vcap.h"									/* Include video key definitions.	*/
+#include "vintdef.h"
 #include "vmenu.h"									/* Include menu definitions.		*/
 
 /*						Static and global data.								*/
@@ -24,6 +25,22 @@ static int base_lin = -1;								/* Base cursor position.		*/
 static int base_col = -1;
 static int pfkeys = FALSE;								/* Are PF keys active?			*/
 static FILE *restore = NULL;								/* No restore in progress.		*/
+
+static int vmcont();
+static int disconnect();
+static int vmenuvector();
+static int tx();
+static int lx();
+static int adj();
+static int detpos();
+static int givehelp();
+static int vmrest();
+static int padout2();
+static int vbar();
+static int vmx();
+static int vlff();
+static int vdo();
+static int padout3();
 
 /*						Subroutine entry point.								*/
 

@@ -1,14 +1,15 @@
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 
 HEXUNPK( source, target, tlen )							/* WANG HEXUNPK routine.			*/
 char	*source;
 char	*target;
-long	*tlen;
+int4	*tlen;
 {
 #define		ROUTINE		23500
 
-	long	len;
+	int4	len;
 	char	mask[17];
 	char	*src, *trg;
 
@@ -32,12 +33,12 @@ long	*tlen;
 HEXPACK( source, target, tlen )							/* WANG HEXPACK routine.			*/
 char	*source;
 char	*target;
-long	*tlen;
+int4	*tlen;
 {
 #undef		ROUTINE
 #define		ROUTINE		23000
 
-	long	len, p1, p2;
+	int4	len, p1, p2;
 	char	mask[17], mask2[17];
 	char	s[2], *src, *trg;
 

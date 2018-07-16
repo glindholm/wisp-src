@@ -1,3 +1,4 @@
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 
@@ -6,11 +7,11 @@
 #endif
 
 BELL(bell_count)								/* WANG BELL function				*/
-long	*bell_count;
+int4	*bell_count;
 {
 #define		ROUTINE		2000
 
-	long	l_times;
+	int4	l_times;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);					/* Log the entry.				*/
 

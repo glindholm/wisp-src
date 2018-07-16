@@ -8,7 +8,11 @@
 **
 **      RCS change log:
 **
-**      $Log$
+**      $Log: bldmf.h,v $
+ * Revision 1.2  1992/12/23  19:49:37  jockc
+ * added lines flag for headcnt and new state for state machine to handle
+ * quoted copy name
+ *
 */
 
 #ifndef BLDMF_H
@@ -108,6 +112,10 @@ EXT char *current_prog;
 
 EXT int column;
 
+#define MAX_LINES_STR 5
+EXT char lines_str[MAX_LINES_STR+1];
+EXT int lines;
+
 #define TYPE_ACU 1
 #define TYPE_MF 2
 
@@ -135,6 +143,7 @@ struct optstruct optlist[]=
         { "-I",    OPT_STRING,         include_dirs,    MAX_INC_DIRS,       0 },
         { "-o",    OPT_STRING,         output_name,     MAX_OUTPUT_NAME,    0 },
         { "-t",    OPT_STRING,         cobol_type,      MAX_COBOL_TYPE,     0 },
+        { "-l",    OPT_STRING,         lines_str,       MAX_LINES_STR,      0 },
         { "-wp",   OPT_STRING,         wisp_path,       MAX_WISP_PATH,      0 },
         { "-warn", OPT_INT,    (char*)&warn_missing,    0,               TRUE },
         { "-dc",   OPT_INT,    (char*)&delete_cobs,     0,               TRUE },
@@ -154,7 +163,7 @@ EXT struct optstruct optlist[];
 #define MAX_DEP_WIDTH 60
 
 /* lines to search into a .wcb file for IDENTIFICATION... */
-#define HEADCNT 100
+#define HEADCNT 500
 #define COBLEN 80
 #define COB_IDENT_PAT "IDENTIFICATION +DIVISION"
 
@@ -172,6 +181,7 @@ PROGNODE
 #define T_COPY 1
 #define T_INOF 2
 #define T_VALUE 3
+#define T_QUOTED 4
 
 #define S_NORMAL 0
 #define S_COPYSTMT 1
@@ -181,12 +191,13 @@ PROGNODE
 #define S_DONE 5
 #define S_EXIT 6
 #ifdef MAIN
-int stab[4][7] =
+int stab[5][7] =
 {         /* S_NORMAL        S_COPYSTMT         S_COPYNAME   S_INOF,    S_COPYLIB       S_DONE */
 /*(eof)*/   { S_EXIT,          S_EXIT,           S_DONE,      S_EXIT,      S_DONE,         S_EXIT,     0,   },
 /*T_COPY*/  { S_COPYSTMT,     S_COPYNAME,       S_DONE,      S_COPYLIB,   S_DONE,         S_NORMAL,    0,  },
 /*T_INOF*/  { S_NORMAL,       S_COPYNAME,       S_INOF,      S_COPYLIB,   S_DONE,         S_NORMAL,    0,  },
-/*T_VALUE*/ { S_NORMAL,       S_COPYNAME,       S_DONE,      S_COPYLIB,   S_DONE,         S_NORMAL,    0,  }
+/*T_VALUE*/ { S_NORMAL,       S_COPYNAME,       S_DONE,      S_COPYLIB,   S_DONE,         S_NORMAL,    0,  },
+/*T_QUOTED*/{ S_NORMAL,       S_COPYNAME,       S_DONE,      S_COPYLIB,   S_DONE,         S_NORMAL,    0,  }
 };
 #endif
 

@@ -13,6 +13,7 @@
 			Do the exit handler stuff.
 */
 
+#include "idsistd.h"
 #include "cobrun.h"
 
 WISPEXIT()

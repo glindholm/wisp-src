@@ -1,5 +1,6 @@
 /* MENU  interface for WANG vs programs to the VAX menu system									*/
 
+#include "idsistd.h"
 menu(name,rval)
 char *name;									/* The name of the menu file			*/
 char *rval;									/* The return value				*/

@@ -1,14 +1,14 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
-#include <signal.h>
 
+#include "idsistd.h"
 /*
 **	Routine:	wsystem()
 **
@@ -29,6 +29,9 @@
 **
 */
 
+#ifdef unix
+#include <signal.h>
+
 int wsystem(cmd)
 char *cmd;
 {
@@ -40,3 +43,12 @@ char *cmd;
 	signal(SIGCLD,save_sig);
 	return rc;
 }
+#endif /* unix */
+
+#ifdef MSDOS
+int wsystem(cmd)
+char *cmd;
+{
+	return system(cmd);
+}
+#endif /* MSDOS */

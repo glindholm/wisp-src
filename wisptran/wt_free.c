@@ -29,17 +29,15 @@ p_free()
 	else
 		is_comit = 1;								/* Assume it's a COMMIT statement.	*/
 
-	set_lock(-1,11);
+	set_lock(-1,12);
 
-	put_line("           CONTINUE");
+	tput_line("           CONTINUE");
 
 	if (ptype == -1)								/* Had a period, all done!		*/
 	{
-		put_line(".\n");
+		tput_clause(12, ".");
 		return(0);
 	}
-	else
-		put_line("\n");								/* Terminate the line.			*/
 
 	if (is_comit)
 	{
@@ -57,9 +55,10 @@ p_free()
 	{
 		write_log("WISP",'I',"ONERR","ON ERROR phrase found.");
 		ptype = get_param(o_parms[0]);						/* Get ERROR phrase.			*/
-		put_line("                   MOVE \"000\" TO WISPRETURNCODE\n");
-		put_line("                   IF WISPRETURNCODE = \"000\" THEN\n                      CONTINUE\n");
-		put_line("                   ELSE\n");
+		tput_line("                   MOVE \"000\" TO WISPRETURNCODE\n");
+		tput_line("                   IF WISPRETURNCODE = \"000\" THEN\n");
+		tput_line("                       CONTINUE\n");
+		tput_line("                   ELSE\n");
 		stredt(inline," ON "," ");						/* Remove ON				*/
 		stredt(inline," ERROR"," ");						/* Remove ERROR				*/
 	}

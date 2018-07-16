@@ -4,6 +4,15 @@ xterm|XTERM|dg_xterm|sco_xterm|aix_xterm|Generic xterm:\
 	:k1=\E[11~:k2=\E[12~:k3=\E[13~:k4=\E[14~:k5=\E15~:k6=\E16~:\
 	:k7=\E[17~:k8=\E[18~:\
 	:ku=\E[A:kd=\E[B:kr=\E[C:kl=\E[D:\
+	:is=\E[1;24r\E[?7l\E<:\
+	:cl=\E[;H\E[J:cm=\E[%i%d;%dH:ce=\E[K:cd=\E[J:DL:nd=\E[C:\
+	:RV=\E[7m:HI=\E[0;1m:LO=\E[m:BL=\E[7m:UL=\E[4m:RB=\E[5;7m:RU=\E[4;7m:\
+	:EP=\E[5i:DP=\E[4i:
+# aixterm
+aixterm|AIXTERM|IBM aixterm:\
+	:k1=\E[001q:k2=\E[002q:k3=\E[003q:k4=\E[004q:k5=\E[005q:k6=\E[006q:\
+	:k7=\E[007q:k8=\E[008q:\
+	:ku=\E[A:kd=\E[B:kr=\E[C:kl=\E[D:\
 	:is=\E>:cl=\E[;H\E[J:cm=\E[%i%d;%dH:ce=\E[K:cd=\E[J:DL:nd=\E[C:\
 	:RV=\E[7m:HI=\E[0;1m:LO=\E[m:BL=\E[7m:UL=\E[4m:RB=\E[5;7m:RU=\E[4;7m:\
 	:EP=\E[5i:DP=\E[4i:

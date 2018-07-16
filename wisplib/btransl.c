@@ -1,3 +1,5 @@
+
+#include "idsistd.h"
 #ifdef VMS
 #include <stdio.h>
 #include <descrip.h>
@@ -17,9 +19,8 @@ int *btransl(in_string,len_flds,eb_as)
 	
 	int w, sz_of, i, tmp_sz, k, l;						/* Indexes for working string area.		*/
 	char tmp_fld;								/* Temporary type of field being checked.	*/
-	char *malloc();								/* Redefines malloc to char pointer.		*/
-	long mode;								/* Mode for wfname.				*/
-	long ez;
+	int4 mode;								/* Mode for wfname.				*/
+	int4 ez;
 	char *in_line, *hld_out, *hld_in, *out_line, *in_fld, *out_fld, *hld_fld;	/* Hold address for repointing address.	*/
 	char *inn_hld;
 

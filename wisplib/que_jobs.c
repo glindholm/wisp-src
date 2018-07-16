@@ -1,3 +1,5 @@
+#include "idsistd.h"
+
 #ifdef VMS
 #include <descrip.h>
 #include <sjcdef.h>
@@ -34,7 +36,7 @@ int  qflags;										/* Flags to control the job.		*/
 	long 		outbuf;
 	short		mlen;
 	char msgstr[256];
-$DESCRIPTOR(msg_desc,msgstr);
+#include "que_jobs.d"
 
 	struct	{									/* The io status block			*/
 			long	sts;

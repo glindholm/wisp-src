@@ -127,11 +127,15 @@
 					48	Unable to unload FH ISAM file (check for fhconvert)
 */
 
-#ifdef unix
 
 #include <stdio.h>
 #include <fcntl.h>
 
+#ifdef MSDOS
+#include <io.h>
+#endif
+
+#include "idsistd.h"
 #include "wcommon.h"
 #include "sortseqf.h"
 #include "movebin.h"
@@ -139,6 +143,14 @@
 #define		ROUTINE		80500
 
 char *wfname();
+
+static int unloadacu();
+static int unloadcisam();
+static int unloadfhisam();
+static int isvision();
+static int addseqnum();
+static int delseqnum();
+static int copyfile();
 
 WISPSORT(sortparms,filetype,recsize,sortcode,returncode)
 char	*sortparms;
@@ -149,6 +161,7 @@ int	*returncode;
 {
 	wangsort(sortparms,filetype,recsize,0,sortcode,returncode);
 }
+
 
 wangsort(sortparms,filetype,recsize,dupinorder,sortcode,returncode)
 char	*sortparms;
@@ -164,7 +177,7 @@ int	*returncode;
 	int	numkeys;
 	char	infile[80], outfile[80], unloadfile[80], inseqfile[80], outseqfile[80];
 	char	*ptr, *inptr, *outptr;
-	long	mode;
+	int4	mode;
 	char	errbuff[256];
 	char	messstr[80];
 	char	buff[80];
@@ -184,6 +197,9 @@ int	*returncode;
 
 	/* 
 	**	Validate the filetype.
+	**
+	**	NOTE:	If filetype is C,A, or I it will be treated only as generic "indexed" and the file
+	**		will be read to determine what type of file it really is.
 	*/
 
 	l_filetype = *filetype;
@@ -240,7 +256,7 @@ int	*returncode;
 
 	if ( l_filetype == 'F' || l_filetype == 'N' )				/* Don't check ISAM here as may have .dat	*/
 	{
-		if (0 != access(infile,04))
+		if (!fexists(infile))
 		{
 			l_returncode = 41;
 			goto return_label;
@@ -256,12 +272,9 @@ int	*returncode;
 		**	For all Indexed files test against the actual file for the type.
 		*/
 
-		if ( 0 == access(infile,04) )
+		if ( 0 == isvision(infile) )
 		{
-			if ( 0 == isvision(infile) )
-			{
-				v_filetype = 'A';
-			}
+			v_filetype = 'A';
 		}
 
 		if (v_filetype == '?')
@@ -269,7 +282,7 @@ int	*returncode;
 			strcpy(buff,infile);
 			strcat(buff,".idx");
 
-			if (0 == access(buff,04))				/* CISAM or FH-ISAM				*/
+			if (fexists(buff))					/* CISAM or FH-ISAM				*/
 			{
 				int	fh, i1;
 				unsigned char	magicnum[2];
@@ -282,7 +295,7 @@ int	*returncode;
 					goto return_label;
 				}
 
-				i1 = read( fh, magicnum, 2 );			/* read the magic number			*/
+				i1 = read( fh, (char *)magicnum, 2 );		/* read the magic number			*/
 				close(fh);
 
 				if ( i1 == -1 )
@@ -316,6 +329,15 @@ int	*returncode;
 
 		l_filetype = v_filetype;
 	} /* indexed file */
+
+	/*
+	**	NOTE:	At this point the filetype has been validated as one of the following.
+	**			F	fixed
+	**			N	Newline
+	**			A	Acucobol
+	**			C	Cisam
+	**			3	FH-Isam
+	*/
 
 	/*
 	**	Unload ACUCOBOL indexed file
@@ -548,12 +570,12 @@ int	*returncode;
 		}
 
 		sortkeys[numkeys].offset = l_recsize;					/* Add seq num as a sort key		*/
-		sortkeys[numkeys].length = sizeof(long);
+		sortkeys[numkeys].length = sizeof(int4);
 		sortkeys[numkeys].type = KT_BINARY;
 		sortkeys[numkeys].direction = KD_ASCENDING;
 		numkeys += 1;
 		
-		l_recsize += sizeof(long);						/* adjust recsize to include seq num	*/
+		l_recsize += sizeof(int4);						/* adjust recsize to include seq num	*/
 
 		if (unloadfile[0])							/* If temp file already active then	*/
 		{
@@ -667,7 +689,7 @@ printf("wispsort:memsizek = %d\n",memsizek);
 		unlink(inseqfile);							/* Delete inseqfile first (make space)	*/
 		inseqfile[0] = '\0';
 
-		l_recsize -= sizeof(long);
+		l_recsize -= sizeof(int4);
 		if (l_returncode = delseqnum(outseqfile,outfile,l_recsize))		/* Copy to outfile deleting seq num	*/
 		{
 			goto return_label;
@@ -697,7 +719,7 @@ return_label:
 	PUTBIN(returncode,&l_returncode,sizeof(int));
 }
 
-
+#ifdef unix
 static int unloadacu(inname,outname)					/* Unload the ACUCOBOL file to a tempfile		*/
 char	*inname, *outname;
 {
@@ -709,10 +731,74 @@ char	*inname, *outname;
 
 	return( rc );
 }
+#endif /* unix */
+
+#ifdef MSDOS
+#include <sys\types.h>
+#include <sys\stat.h>
+#include <process.h>
+static int unloadacu(inname,outname)					/* Unload the ACUCOBOL file to a tempfile		*/
+char	*inname, *outname;
+{
+	char	buff[256];
+	char	cmd[256];
+	int	rc;
+#define	STD_OUT	1
+	int	old_std_out, new_std_out;
+
+	/*
+	**	To unload the acucobol file we spawn a VUTIL to do it.
+	**	However VUTIL writes some informational messages to stdout that
+	**	we don't want to see so we must redirect stdout to NUL.
+	*/
+
+	if ((old_std_out = dup(STD_OUT)) == -1)
+	{
+		sprintf(buff,"Error on dup() of std_out [errno=%d]",errno);
+		werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
+	}
+	if ((new_std_out = open("NUL", O_WRONLY | O_CREAT | O_TRUNC | O_TEXT, S_IWRITE)) == -1)
+	{
+		sprintf(buff,"Error on open() of new_std_out [errno=%d]",errno);
+		werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
+	}
+
+	if (dup2(new_std_out, STD_OUT) == -1)
+	{
+		sprintf(buff,"Error on dup2() of new_std_out [errno=%d]",errno);
+		werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
+	}
+
+	/*
+	** "vutil -unload <inname> <outname>"
+	*/
+
+	rc = spawnlp(P_WAIT, "vutil", "vutil", "-unload", inname, outname, NULL);
+
+	if (rc == -1)
+	{
+		if (errno == ENOENT)
+		{
+			werrlog(ERRORCODE(2),"VUTIL not found",0,0,0,0,0,0,0);
+		}
+		else
+		{
+			sprintf(buff,"Error on spawn of VUTIL [errno=%d]",errno);
+			werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
+		}
+	}
+
+	dup2(old_std_out,STD_OUT);
+	close(new_std_out);
+	close(old_std_out);
+
+	return( rc );
+}
+#endif /* MSDOS */
 
 static int unloadcisam(inname,outname,recsize)
 char	*inname, *outname;
-long	recsize;
+int4	recsize;
 {
 	FILE	*fpin, *fpout;
 	unsigned char	*buff;
@@ -720,7 +806,7 @@ long	recsize;
 	char	t_inname[132];
 
 	strcpy(t_inname,inname);
-	if (0 == access(t_inname,0))
+	if (fexists(t_inname))
 	{
 		fpin = fopen(t_inname,"r");
 		if ( !fpin ) return(-1);
@@ -728,7 +814,7 @@ long	recsize;
 	else
 	{
 		strcat(t_inname,".dat");
-		if (0 == access(t_inname,0))
+		if (fexists(t_inname))
 		{
 			fpin = fopen(t_inname,"r");
 			if ( !fpin ) return(-1);
@@ -743,7 +829,7 @@ long	recsize;
 		return(-1);
 	}
 
-	buff = (unsigned char *)malloc(recsize+2);
+	buff = (unsigned char *)malloc((size_t)recsize+2);
 	if ( !buff )
 	{
 		fclose(fpin);
@@ -752,7 +838,7 @@ long	recsize;
 		
 	for(;;)
 	{
-		rc = fread(buff,recsize+1,1,fpin);
+		rc = fread(buff,(size_t)recsize+1,1,fpin);
 		if ( rc != 1 )
 		{
 			if (feof(fpin)) break;
@@ -764,7 +850,7 @@ long	recsize;
 
 		if ( buff[recsize] == 0x0A )
 		{
-			rc = fwrite(buff, recsize, 1, fpout);
+			rc = fwrite(buff, (size_t)recsize, 1, fpout);
 			if ( rc != 1 )
 			{
 				fclose(fpin);
@@ -788,15 +874,26 @@ long	recsize;
 	return(0);
 }
 
+#ifdef MSDOS
 static int unloadfhisam(inname,outname,recsize)
 char	*inname, *outname;
-long	recsize;
+int4	recsize;
+{
+	werrlog(102, "(unloadfhism) Not Implemented",0,0,0,0,0,0,0);
+	return 1;
+}
+#endif /* MSDOS */
+
+#ifdef unix
+static int unloadfhisam(inname,outname,recsize)
+char	*inname, *outname;
+int4	recsize;
 {
 	char	parms[512];
 	char	cmd[512];
 	char	buff[80];
 
-	if (0==access(inname,00))
+	if (fexists(inname))
 	{
 		/*
 		**	No .dat extension
@@ -821,7 +918,7 @@ long	recsize;
 	strcat(buff,".con");
 	unlink(buff);
 
-	if (0==access(outname,00))
+	if (fexists(outname))
 	{
 		return 0;
 	}
@@ -830,6 +927,7 @@ long	recsize;
 		return 1;
 	}
 }
+#endif /* unix */
 
 static int isvision(filename)						/* Test if file is an ACUCOBOL Vision file.		*/
 									/* 	ReturnCode:	 0	Vision file		*/
@@ -840,7 +938,7 @@ char	*filename;
 {
 	int	fh;
 	char	buff[20];
-	long	lg;
+	int4	lg;
 	int	rc;
 
 	fh = open(filename,O_RDONLY,0);
@@ -864,7 +962,7 @@ char	*filename;
 		return(rc);
 	}
 
-	memcpy(&lg,buff,sizeof(long));
+	memcpy(&lg,buff,sizeof(int4));
 
 	if ( 0x10121416 == lg || 0x16141210 == lg )
 	{
@@ -886,7 +984,7 @@ int	recsize;
 {
 	FILE	*i_fp, *o_fp;
 	char	*buff;
-	long	seq;
+	int4	seq;
 	char	messstr[80];
 
 	if (!(i_fp = fopen(infile,"r")))
@@ -916,8 +1014,8 @@ int	recsize;
 	while( fread(buff, recsize, 1, i_fp) )
 	{
 		seq++;
-		memcpy(&buff[recsize],&seq,sizeof(long));
-		if (!fwrite(buff, recsize+sizeof(long), 1, o_fp))
+		memcpy(&buff[recsize],&seq,sizeof(int4));
+		if (!fwrite(buff, recsize+sizeof(int4), 1, o_fp))
 		{
 			sprintf(messstr,"Write failed file=%s [errno=%d]",outfile,errno);
 			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -971,7 +1069,7 @@ int	recsize;
 		return(8);
 	}
 
-	while( fread(buff, recsize+sizeof(long), 1, i_fp) )
+	while( fread(buff, recsize+sizeof(int4), 1, i_fp) )
 	{
 		if (!fwrite(buff, recsize, 1, o_fp))
 		{
@@ -1036,4 +1134,4 @@ char	*infile, *outfile;
 
 	return(0);
 }
-#endif 
+

@@ -8,12 +8,13 @@
 *																*
 ********************************************************************************************************************************/
 
+#include "idsistd.h"
 #include "werrlog.h"
 
 breakacp(rel_line,ret_code)
 
-long	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
-long	*ret_code;							/* WANG ACP return code.				*/
+int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
+int4	*ret_code;							/* WANG ACP return code.				*/
 
 {
 #define		ROUTINE		5000

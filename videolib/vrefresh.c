@@ -16,7 +16,7 @@
 /*						Static data definitions.							*/
 
 static int save_lin, save_col, save_atr, save_chs;					/* Save locations.			*/
-
+static int state();
 
 /*						Subroutine entry point.								*/
 
@@ -294,7 +294,13 @@ vre_erase(what) int what;								/* Erase all or part of screen.		*/
 vre_move(i, j, k, x0, y0, m0) register int i, j, k, m0; int *x0, *y0;			/* Move to a location.			*/
 {
 	char string[12];		
+#ifdef unix
+	char *tparm();
+#define PARMFUNC tparm
+#else
 	char *vcparm();
+#define PARMFUNC vcparm
+#endif
 
 	if ((i == *x0) && (j == *y0)) return(OPTIMIZED);				/* Don't move if already there.		*/
 	else if ((i == (*x0)+1) && (j == 0)) vcontrol("\n");				/* Use a new-line to get to next line.	*/
@@ -305,7 +311,7 @@ vre_move(i, j, k, x0, y0, m0) register int i, j, k, m0; int *x0, *y0;			/* Move 
 #ifdef MSDOS
 		vrawmove(i,j);
 #else	/* VMS or unix */
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],i,j));
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],i,j));
 #endif	/* VMS or unix */
 #if 0
 		if (!vmovebias) sprintf(string,mvrowcol_esc,i+1,j+1);			/* Convert to a string.			*/
@@ -318,7 +324,7 @@ vre_move(i, j, k, x0, y0, m0) register int i, j, k, m0; int *x0, *y0;			/* Move 
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-static state(action) int action;							/* Perform specified action.		*/
+static int state(action) int action;							/* Perform specified action.		*/
 {
 	switch(action)									/* Select the action.			*/
 	{

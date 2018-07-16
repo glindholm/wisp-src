@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <time.h>
 
+#include "idsistd.h"
 #include "wperson.h"
 #include "werrlog.h"
 #include "wdefines.h"
@@ -40,12 +41,16 @@ char *getenv();
 
 static char emsg[512] = { 0 };								/* The error message.			*/
 static char eform[256] = { 0 };						       		/* The formatting string.		*/
-static unsigned long last_dbid = 0;							/* The last message from the database.	*/
+static uint4 last_dbid = 0;							/* The last message from the database.	*/
+static int write_err();
+static int print_err();
+static int form_error();
+static int find_msg();
 
 extern char WISPRUNNAME[8];
 
 void werrlog(id,p1,p2,p3,p4,p5,p6,p7,p8)
-unsigned long id;                                                 
+uint4 id;                                                 
 char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
 {
 	int log_it;
@@ -107,7 +112,11 @@ char *buff;
 	efile = fopen(werrlog_path,"a");						/* First try to append.			*/
 	if (!efile) efile = fopen(werrlog_path,"w");					/* Doesn't exist, create it.		*/
 
-	if (!efile) return;								/* Bad news, can't do it.		*/ 
+	if (!efile)									/* If can't open then use stderr	*/
+	{
+		fprintf(stderr,"%s",buff);
+		return;
+	}
 
 	fprintf(efile,"%s",buff);							/* dump it out as-is.			*/
 
@@ -151,7 +160,7 @@ static int print_err()									/* Write error to stdout		*/
 }
 
 static int form_error(id,p1,p2,p3,p4,p5,p6,p7,p8)					/* Format the error message.		*/
-unsigned long id;
+uint4 id;
 char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
 {
 	int i;
@@ -169,38 +178,37 @@ char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
 static char msgfname[256] = { 0 };
 
 static int find_msg(id)									/* Find the message in the message db.	*/
-unsigned long id;
+uint4 id;
 {
+static	int	msgfile_not_found = 0;
 	FILE *msgfile, *fopen();
 	char *ptr;
-	unsigned long lo_id, hi_id, cur_id, lo_idx, hi_idx, cur_idx, msg_idx, num_msgs, idx_diff;
+	uint4 lo_id, hi_id, cur_id, lo_idx, hi_idx, cur_idx, msg_idx, num_msgs, idx_diff;
 
+	if (msgfile_not_found) return(0);
 	if (last_dbid == id) return(1);							/* already got it in buffer.		*/
 
 	if (!msgfname[0])								/* Need to get the name of the msg file	*/
 	{
+		char	*path;
+
 #ifdef VMS
-		strcpy(msgfname,"wisp$config:");
-		strcat(msgfname,WISP_MESSAGE_FILE);
-#endif	/* VMS */
-#ifdef unix
-		if ( ptr = getenv( WISP_CONFIG_ENV ) )					/* Find out the path to wisp$config.	*/
-		{									/* Unix version, of course.		*/
-			strcpy( msgfname, ptr );
-			strcat( msgfname, "/" );
-			strcat( msgfname, WISP_MESSAGE_FILE);
+		path = "WISP$CONFIG:";
+#else	/* !VMS */
+		path = getenv( WISP_CONFIG_ENV );
+		if (!path)
+		{
+			/*
+			**	WISPCONFIG is not set.
+			*/
+			msgfile_not_found = 1;
+			sprintf(emsg,"%%WERRLOG-E-WISPCONFIG %s is undefined",WISP_CONFIG_ENV);
+			print_err();
+			return(0);
 		}
-		else no_wispconfig();
-#endif	/* unix */
-#ifdef MSDOS
-		if ( ptr = getenv( WISP_CONFIG_ENV ) )					/* Find out the path to wisp$config.	*/
-		{									/* MSDOS version, of course.		*/
-			strcpy( msgfname, ptr );
-			strcat( msgfname, "\\" );
-			strcat( msgfname, WISP_MESSAGE_FILE);
-		}
-		else no_wispconfig();
-#endif	/* MSDOS */
+#endif	/* !VMS */
+
+		buildfilepath(msgfname, path, WISP_MESSAGE_FILE);
 	}
 
 #ifndef ultrix
@@ -211,6 +219,7 @@ unsigned long id;
 
 	if (!msgfile)									/* Unable to open message file		*/
 	{
+		msgfile_not_found = 1;
 		sprintf(emsg,"%%WERRLOG-E-OPEN Unable to open message file %s",msgfname);
 		print_err();
 		return(0);
@@ -287,13 +296,12 @@ unsigned long id;
 
 	return(1);									/* All done.				*/
 }
+
 #ifdef VMS
 void werrset()
 {
 }
-#endif	/* VMS */
-
-#ifdef unix
+#else /* !VMS */
 void werrset()
 {
 	char	*ptr;
@@ -318,31 +326,5 @@ void werrset()
 		return;
 	}	
 }
-#endif	/* unix */
+#endif	/* !VMS */
 
-#ifdef MSDOS
-void werrset()
-{
-	char	*ptr;
-	char	buff[50];
-
-	ptr = getenv("WISPDEBUG");
-
-	if (! ptr) return;
-
-	strcpy(buff,ptr);
-	upper_string(buff);
-
-	if ( strcmp(buff,"FULL") == 0 )
-	{
-		w_err_flag = 19;
-		return;
-	}	
-
-	if ( strcmp(buff,"ENTRY") == 0 )
-	{
-		w_err_flag = 27;
-		return;
-	}	
-}
-#endif	/* MSDOS */

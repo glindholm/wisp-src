@@ -38,6 +38,10 @@
 */
 
 static char copyright[] = "Copyright 1992 International Digital Scientific, Inc. All Rights Reserved.";
+static char rcsid[] = "$Id:$";
+
+char VERSION[5];
+static char MODDATE[20];
 
 #include <stdio.h>
 #include <errno.h>
@@ -157,6 +161,7 @@ char* argv[];
 {
         LIST *proglist = NULL;
 
+	make_vers_date(rcsid,VERSION,MODDATE);
         parse_args(argc, argv);
         
         if (show_help)
@@ -308,7 +313,7 @@ char *name;
         re_compile_fastmap(&the_pat);
 
         /* now look HEADCNT lines into the file */
-        for (found=FALSE, lcnt=0; lcnt < HEADCNT; ++lcnt)
+        for (found=FALSE, lcnt=0; lcnt < lines; ++lcnt)
         {
                 int re_found;
                 
@@ -444,7 +449,10 @@ char* path;
                         break;
                         
                       case S_COPYNAME:
-                        strcpy(name,yytext);
+			if (token == T_QUOTED)
+			  strcpy(name,yytext+1);
+			else
+			  strcpy(name,yytext);
                         break;
 
                       case S_INOF:
@@ -819,6 +827,10 @@ char* argv[];
                 fprintf(stderr,"         are mutually exclusive.  Using \"-dc\"...\n\n");
                 compress_cobs = 0;
         }
+
+	lines = atoi(lines_str);
+	if (!lines) 
+	  lines=HEADCNT;
 }
 /*
 **      Routine:        matchopt()
@@ -1072,6 +1084,7 @@ void init_globals()
         memset(cobol_switches,0, sizeof(cobol_switches));
         memset(cobol_command, 0, sizeof(cobol_command)  );
         memset(output_name, 0, sizeof(output_name));
+        memset(lines_str, 0, sizeof(lines_str));
 }
 /*
 **      Routine:        process_globals()
@@ -1096,7 +1109,7 @@ void init_globals()
 void process_globals()
 {
         if (!quiet_mode)
-          fprintf(stderr,"bldmf: Build makefiles for COBOL projects\n");
+          fprintf(stderr,"bldmf %s %s: Build makefiles for COBOL projects\n",VERSION,MODDATE);
         
         upstring(cobol_type);
         
@@ -1216,7 +1229,6 @@ char *string, *substr;
 */
 void usage()
 {
-        fprintf(stderr,"bldmf: Build makefile for COBOL projects\n\n");
         fprintf(stderr,"usage: bldmf [args]\n\n");
         fprintf(stderr,"Possible args:\n");
         fprintf(stderr,"     -t <type>               Specify COBOL type: ACU (default) or MF\n");
@@ -1227,6 +1239,7 @@ void usage()
         fprintf(stderr,"     -cs <cob switches>      Additional switches for COBOL compile command\n");
         fprintf(stderr,"     -cm <cobol name>        Command to use to compile .cob files\n");
         fprintf(stderr,"     -I <include dir(s)>     Directory(s) containing copy books\n");
+        fprintf(stderr,"     -l <line count>         Specify number of lines to search for \"ENVIRONMENT DIVISION\"\n");
         fprintf(stderr,"     -dc                     Delete .cob files after successful compilation\n");
         fprintf(stderr,"     -cc                     Compress .cob files after compilation\n");
         fprintf(stderr,"     -e                      Log errors to error.log during make\n");
@@ -1382,4 +1395,57 @@ void** s1;
 void** s2;
 {
         return strcmp( *s1, *s2 );
+}
+#define VLEN 5
+#define MDLEN 20
+/*
+**      Routine:        make_vers_date()
+**
+**      Function:       create a version and date string
+**
+**      Description:    using rcsid (passed in), create a version string
+**                      and a date stamp string that can be used to 
+**                      print the version for the user's information
+**
+**      Input:          recieves rcsid string and version and date
+**                      reciever areas
+**
+**      Output:         version and date are created
+**
+**      Return:         None
+**
+**      Warnings:       None
+**
+**      History:        12/23/92     borrowed from print queue utils.c by JEC
+**
+*/
+make_vers_date(idstr,version,moddate)
+char *idstr, *version, *moddate;
+{
+	char *p,*e,*strchr();
+	extern long version_num, revision_num;
+	
+	memset(version,0,VLEN);
+	p=strchr(idstr,'V');
+	if (p)
+	{
+		e=strchr(++p,' ');
+		memcpy(version,p,e-p);
+		p=strchr(version,'_');
+		if (p) *p='.';
+	}
+	else
+	{
+		p=strchr(idstr,' ');
+		p=strchr(++p,' ');
+		e=strchr(++p,' ');
+		version[0]='~';
+		memcpy(version+1,p,e-p);
+	}
+	memset(moddate,0,MDLEN);
+	p=strchr(idstr,' ');
+	p=strchr(++p,' ');
+	p=strchr(++p,' ');
+	e=strchr(++p,' ');
+	memcpy(moddate,p,e-p);
 }

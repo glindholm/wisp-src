@@ -8,6 +8,7 @@
 *																*
 ********************************************************************************************************************************/
 #include <stdio.h>
+#include "idsistd.h"
 #include "acp.h"
 #include "werrlog.h"
 #ifdef VMS
@@ -28,7 +29,6 @@ bldacp()
 	int		i, eor_index;						/* Indeces.					*/
 	int		n;							/* Temporary storage of EOR hex value.		*/
 	int 		flag;							/* Flag to indicate parameter being processed.	*/
-	char		*malloc();
 	
 	if (acp_term_list) return;						/* List already constructed.			*/
 
@@ -39,7 +39,7 @@ bldacp()
 	if (!acp_file)								/* Error opening file.				*/
 	{
 		werrlog(ERRORCODE(10),0,0,0,0,0,0,0,0);
-		exit();
+		exit(0);
 	}
 
 	if (fgets(inline,132,acp_file))   do					/* If there's data, then start processing it.	*/

@@ -1,9 +1,10 @@
 			/************************************************************************/
-			/*	        Wisp - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990, 1991,1992	*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/************************************************************************/
+
 
 /* program wputparm.c														*/
 /* shell/DCL callable putparm													*/
@@ -33,8 +34,13 @@ static int usage_cnt;									/* usage count for PUTPARN.		*/
 
 #ifdef SCO				/* This must be defined in the .umf file on the SCO/unix machine with CFLAGS = -DSCO	*/
 #define PARMCNT 130
-#else
+#endif
+#ifdef MSDOS
+#define PARMCNT 130
+#endif
+#ifndef PARMCNT
 #define PARMCNT 250
+#define PARMCNT250
 #endif
 
 /*
@@ -92,20 +98,34 @@ struct aidstruct aidlist[] =
 	{ "", (char)0 }
 };      
 
+static int usage();
+static int capitalize();
+static int getopts();
+static int response_file();
+static int cutarg();
+static int getaid();
+
 #ifdef unix
 extern int PGRPID;
 #endif
 
-main(argc,argv)
-int argc;
-char *argv[];
+
+
+main(o_argc,o_argv)
+int 	o_argc;										/* Original argc & argv			*/
+char 	*o_argv[];
 {
+	int	argc;									/* Adjusted argc & argv			*/
+	char	*argv[256];
+
 	char *calloc();
 	long *keyw_len;
 	char *p,*strchr();
 	int pargc, retcode, i, j, kw_cnt_pos, pid;
 
-	if (argc < 2) usage();								/* Need 2 args for this stuff.		*/
+	if (o_argc < 2) usage();							/* Need 2 args for this stuff.		*/
+
+	response_file(o_argc, o_argv, &argc, argv);					/* Process any response file.		*/
 
 	initglbs("WPUTPARM");								/* Init WISP parameters because not	*/
 	aidchar='@';									/* called from COBOL.			*/
@@ -270,9 +290,10 @@ char *argv[];
 
 	if (argc < 3) usage();								/* Need 3 args for this stuff.		*/
 
-	for (i = 1; i < argc; ++i) capitalize(argv[i]);
+/*	for (i = 1; i < argc; ++i) capitalize(argv[i]); */
 
 	strcpy(prname,argv[2]);								/* third parm is prname.		*/
+	capitalize(prname);
 	if (strchr(prname,'=') != '\0')							/* Is missing the prname parameter.	*/
 	{
 		fprintf(stderr,"*** missing prname\n");
@@ -303,6 +324,7 @@ char *argv[];
 		*keyw_len = strlen(p);							/* store the keyword len there		*/
 		wswap(keyw_len);
 		pstruct.pargv[j] = (char *)malloc(9);					/* malloc space for keyword		*/
+		capitalize(argv[i]);
 		strncpy(pstruct.pargv[j],argv[i],8);					/* copy in keyword			*/
 		pstruct.pargv[j+1] = p;							/* value pointer			*/
 		pstruct.pargv[j+2] = (char *)keyw_len;					/* length				*/
@@ -314,7 +336,7 @@ char *argv[];
 			fprintf(stderr,"Too many arguments\n");
 			wexit(1);
 		}
-	}	
+	}
 	pstruct.pargv[j++] = &aidchar;
 	pstruct.pargv[j++] = plabel;
 	pstruct.pargv[j++] = rlabel;
@@ -354,7 +376,7 @@ char *argv[];
 		pstruct.pargv[115],pstruct.pargv[116],pstruct.pargv[117],pstruct.pargv[118],pstruct.pargv[119],
 		pstruct.pargv[120],pstruct.pargv[121],pstruct.pargv[122],pstruct.pargv[123],pstruct.pargv[124],
 		pstruct.pargv[125],pstruct.pargv[126],pstruct.pargv[127],pstruct.pargv[128],pstruct.pargv[129]
-#ifndef SCO
+#ifdef PARMCNT250
 		,pstruct.pargv[130],pstruct.pargv[131],pstruct.pargv[132],pstruct.pargv[133],pstruct.pargv[134],
 		pstruct.pargv[135],pstruct.pargv[136],pstruct.pargv[137],pstruct.pargv[138],pstruct.pargv[139],
 		pstruct.pargv[140],pstruct.pargv[141],pstruct.pargv[142],pstruct.pargv[143],pstruct.pargv[144],
@@ -379,7 +401,7 @@ char *argv[];
 		pstruct.pargv[235],pstruct.pargv[236],pstruct.pargv[237],pstruct.pargv[238],pstruct.pargv[239],
 		pstruct.pargv[240],pstruct.pargv[241],pstruct.pargv[242],pstruct.pargv[243],pstruct.pargv[244],
 		pstruct.pargv[245],pstruct.pargv[246],pstruct.pargv[247],pstruct.pargv[248],pstruct.pargv[249]
-#endif /* SCO */
+#endif /* PARMCNT250 */
 		);  /* NOTE  on VMS there is a 253 parameter limit */
 
 	if (keyw_cnt) free(keyw_len);							/* Free up memory allocated.		*/
@@ -523,7 +545,7 @@ char *str;
 	char ustr[20];
 	
 	strcpy(ustr,str);
-	upper(ustr);
+	capitalize(ustr);
 	for (i = 0; aidlist[i].pfstr[0]; ++i)
 	{
 		if (!strcmp(ustr,aidlist[i].pfstr))
@@ -535,17 +557,80 @@ char *str;
 	aidchar='@';
 }
 
-static upper(str)										/* Convert string to upper case.*/
-char *str;
+/*
+**	Routine:	response_file()
+**
+**	Function:	To handle a response file in the arg list.
+**
+**	Description:	This routine loads n_argc and n_argv from the original arg list plus any response file.
+**			If an argument has the form "@filename" then the file is read for additional arguments.
+**			This are inserted into targv in the order found.
+**
+**			This was done to handle MSDOS limit of 128 characters on a command line. 
+**
+**	Arguments:
+**	o_argc		The original arg count
+**	o_argv		The original arg list.
+**	n_argc_ptr	The adjusted arg count. (pointer to it)
+**	n_argv		The adjusted arg list.
+**
+**	Globals:
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	02/03/93	Written by GSL
+**
+*/
+static response_file(o_argc,o_argv,n_argc_ptr,n_argv)
+int	o_argc;
+char	*o_argv[];
+int	*n_argc_ptr;
+char	*n_argv[];
 {
-	while (*str)
+	int	i;
+
+	*n_argc_ptr = 0;
+	for(i=0; i<o_argc; i++)								/* Loop thru each arg in list		*/
 	{
-		*str = toupper(*str);
-		++str;
+		if (o_argv[i] && o_argv[i][0] == '@')					/* If a response file then process	*/
+		{
+			FILE	*fh;
+			if (fh = fopen(&o_argv[i][1],"r"))				/* Open the response file.		*/
+			{
+				char	buff[256];
+				while(1 == fscanf(fh,"%s",buff) )			/* Read next token			*/
+				{
+					n_argv[*n_argc_ptr] = (char *)malloc(strlen(buff)+1);	/* Malloc space for token	*/
+					strcpy(n_argv[*n_argc_ptr],buff);			/* Copy token to arg list.	*/
+					(*n_argc_ptr)++;
+				}
+				fclose(fh);
+			}
+			else								/* Unable to open response file		*/
+			{
+				fprintf(stderr,"%%WPUTPARM-F-RESPONSE Unable to open response file %s.\n",o_argv[i]);
+				wexit(1);
+			}
+		}
+		else									/* A regular argument.			*/
+		{
+			n_argv[(*n_argc_ptr)++] = o_argv[i];				/* Regular arg so just assign		*/
+		}
 	}
+	n_argv[*n_argc_ptr] = NULL;							/* Add a null to the end of the list	*/
+
+#ifdef DEBUG
+	for(i=0; i<*n_argc_ptr; i++)
+	{
+		printf("n_argv[%d] = [%s]\n",i,n_argv[i]);
+	}
+#endif /* DEBUG */
 }
 
-#ifdef unix
+#ifndef VMS
 #include "wutils.h"
-#endif
+#endif /* !VMS */
 

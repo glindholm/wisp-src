@@ -15,11 +15,12 @@
 /*	timer is a 32 bit binary value and contains the time-out counter in 1/100ths of a second.				*/
 /*		If 0, time-out is not requested and no value is returned.							*/
 
+#include "idsistd.h"
 #include "wglobals.h"
 
-void wfwait(stat,timer) char *stat; long int *timer;				/* Wait for locks to clear.				*/
+void wfwait(stat,timer) char *stat; int4 *timer;				/* Wait for locks to clear.				*/
 {
-	unsigned long delay, delaysec;					/* Delay period.					*/
+	uint4 delay, delaysec;					/* Delay period.					*/
 
 	if (stat[0] == hardlock[0] && 
 	    stat[1] == hardlock[1]    ) 				/* A hard lock record lock				*/
@@ -56,9 +57,9 @@ void wfwait(stat,timer) char *stat; long int *timer;				/* Wait for locks to cle
 
 /* wfswait - Wait for a soft or hard lock to clear. The caller is interested in applying a lock, and needs the record free.	*/
 
-void wfswait(stat, timer) char *stat; long int *timer;
+void wfswait(stat, timer) char *stat; int4 *timer;
 {
-	unsigned long delay, delaysec;					/* Delay period.					*/
+	uint4 delay, delaysec;					/* Delay period.					*/
 
 	if ( (stat[0] == hardlock[0] && stat[1] == hardlock[1]) ||	/* A hard lock record lock or				*/
 	     (stat[0] == softlock[0] && stat[1] == softlock[1])    )	/* a soft lock record lock				*/

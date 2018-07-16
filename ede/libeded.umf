@@ -36,7 +36,7 @@ $(LIB):	$(LIB)(edehelp.o) \
 	$(LIB)(edehli.o) \
 	$(LIB)(edenetc.o) \
 	$(LIB)(genvec.o) \
-	$(LIB)(sfreu041.o)
+	$(LIB)(edeoldoc.o)
 	$(RANLIB) $(LIB)
 	@echo lib $(LIB) is now up-to-date
 
@@ -47,7 +47,7 @@ $(LIB)(edehli.o): $(V)/vdata.h wglobals.h wfiles.h
 $(LIB)(edenetc.o): edenetc.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
 $(LIB)(edenetc.o): $(V)/vmenu.h vwang.h wglobals.h wfiles.h
 $(LIB)(genvec.o): genvec.c
-$(LIB)(sfreu041.o): sfreu041.c
+$(LIB)(edeoldoc.o): edeoldoc.c
 
 
 

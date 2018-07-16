@@ -16,11 +16,12 @@
 #include <errno.h>
 #endif
 
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"
 
-long	bsrch();
+int4	bsrch();
 
 void SEARCH( va_alist )
 va_dcl
@@ -28,10 +29,10 @@ va_dcl
 	va_list arg_list;
 
 	int	arg_count;
-	long	*long_item;
+	int4	*long_item;
 	char	*table,*search_item;
-	long	table_size,item_length,search_len;
-	long	*ret_code,local_ret;
+	int4	table_size,item_length,search_len;
+	int4	*ret_code,local_ret;
 
 	va_start(arg_list);
 	arg_count = va_count(arg_list);
@@ -39,11 +40,11 @@ va_dcl
 
 	table=va_arg(arg_list,char*);                                                   /* get table address */
 
-	long_item=va_arg(arg_list,long*);
+	long_item=va_arg(arg_list,int4*);
 	GETBIN(&table_size,long_item,4);						/* get table size (number of elems) */
 	wswap(&table_size);
 
-	long_item=va_arg(arg_list,long*);
+	long_item=va_arg(arg_list,int4*);
 	GETBIN(&item_length,long_item,4);						/* get item length */
 	wswap(&item_length);
 	
@@ -51,7 +52,7 @@ va_dcl
 
 	if(arg_count==6)
 	{
-		long_item=va_arg(arg_list,long*);
+		long_item=va_arg(arg_list,int4*);
 		GETBIN(&search_len,long_item,4);						/* get search length */
 		wswap(&search_len);
 	}
@@ -60,7 +61,7 @@ va_dcl
 		search_len=item_length;
 	}
 
-	ret_code=va_arg(arg_list,long*);							/* get pointer to return code */
+	ret_code=va_arg(arg_list,int4*);							/* get pointer to return code */
 	
 	local_ret=bsrch(table,table_size,item_length,search_item,search_len);
 	PUTBIN(ret_code,&local_ret,4);
@@ -70,12 +71,12 @@ va_dcl
 #define ASCENDING 1
 #define DESCENDING -1
 
-long	bsrch(table,n_elem,e_len,s_item,s_len)
+int4	bsrch(table,n_elem,e_len,s_item,s_len)
 char	*table,*s_item;
-long	n_elem,e_len,s_len;
+int4	n_elem,e_len,s_len;
 {
 	int	order;
-	long	top,bottom,middle;
+	int4	top,bottom,middle;
 
 	char foo[15],bar[15],baz[15];
 	

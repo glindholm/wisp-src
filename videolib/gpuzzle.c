@@ -16,6 +16,7 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vintdef.h"
 #include "vmenu.h"
 
 static unsigned char *save;								/* Save location.			*/
@@ -32,6 +33,16 @@ static int row = 10;									/* Define puzzle default location.	*/
 static int col = 24;
 static int rows = 11;
 static int cols = 17;
+
+static int display_grid();
+static int scramble();
+static int solved();
+static int mb();
+static int givehelp();
+static int random();
+static int button();
+static int move_button();
+static int move();
 
 /*						Subroutine Entry Point								*/
 

@@ -24,7 +24,8 @@ COBFLAGS=-Zd -Da4
 
 all: 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
-	TRIGGER XLINK XLINK1 QADPCOMA prtargs
+	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING prtargs \
+	test_dirs
 	@echo
 	@echo SAMPLE is up-to-date
 	@echo
@@ -89,6 +90,14 @@ XLINK1: xlink1.cob
 QADPCOMA: qadpcoma.cob
 	$(COBOL) $(COBFLAGS) -o $@ qadpcoma.cob
 
+QAWSXIO: qawsxio.cob
+	$(COBOL) $(COBFLAGS) -o $@ qawsxio.cob
+
+ACULINK: aculink.cob
+	$(COBOL) $(COBFLAGS) -o $@ aculink.cob
+
+ACUUSING: acuusing.cob
+	$(COBOL) $(COBFLAGS) -o $@ acuusing.cob
 #
 #==============================================================
 #
@@ -153,9 +162,19 @@ xlink1.cob: xlink1.wcb
 qadpcoma.cob: qadpcoma.wcb
 	$(WISPTRAN) qadpcoma
 
+qawsxio.cob: qawsxio.wcb
+	$(WISPTRAN) qawsxio
 
+aculink.cob: aculink.wcb
+	$(WISPTRAN) aculink
 
+test_dirs: volrun volin
 
-
-
+volrun:
+	mkdir volrun
+	mkdir volrun/librun
+	mkdir volrun/libexe
+volin:
+	mkdir volin
+	mkdir volin/libin
 

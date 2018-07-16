@@ -6,6 +6,33 @@
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
+/*
+**	File:		wt_scrn.c
+**
+**	Purpose:	DISPLAY-WS screen handling routines
+**
+**	Routines:	
+**	parse_display_ws_record()
+**	gen_screens()
+**	gen_screens22()
+**	item_fac()
+**	gen_mwconv()
+**	scrn_para()
+**	move_source()
+**	move_object()
+**	gen_move()
+**	chk_range()
+**	gen_range()
+**	p_occurs()
+**	item_blank()
+**	clear_item()
+**	gen_label()
+**	find_item()
+**
+**
+**	History:
+**
+*/
 
 /*
 **	wisp_scrn.c
@@ -15,419 +42,509 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "scrn.h"
+#include "crt.h"
+#include "token.h"
+#include "node.h"
+#include "directiv.h"
+#include "wmalloc.h"
 
-#define PROC_PICTURE		0
-#define PROC_ROW		8
-#define PROC_LINE		12
-#define PROC_COLUMN		17
-#define PROC_RANGE		24
-#define PROC_SOURCE		30
-#define PROC_VALUE		37
-#define PROC_OBJECT		43
-#define PROC_OCCURS		50
+#include "wcommon.h"
+
+NODE get_statement();
 
 char	decimal_is = '.';
 
-extern long pic_edit();
-extern int mwconv_flag;
+static item_record *occurs_item = { 0 };						/* A ptr to the first item in a group	*/
 
-static int mem_cnt = OUTPUT_BUFFER_SIZE;						/* keep track of all malloc's		*/
+static int cur_v1 = 0;									/* the current vertical 1 occurs count	*/
+static int cur_v2 = 0;									/* the current vertical 2 occurs count	*/
+static int cur_h  = 0;									/* the current horizontal occurs count	*/
 
-p_item()										/* parse out parms in a screen item.	*/
+static int gen_screens22();
+static int move_source();
+static int move_object();
+static int chk_range();
+static int p_occurs();
+static int item_blank();
+static int clear_item();
+static int item_fac();
+static int gen_move();
+static int gen_range();
+
+/*
+**	Routine:	parse_display_ws_record()
+**
+**	Function:	To parse a USAGE IS DISPLAY-WS record.
+**
+**	Description:	To ...
+**
+**	Arguments:
+**	next_statement	The next statement to use (already loaded).
+**
+**	Globals:
+**
+**	Return:		The next statement after the DISPLAY-WS record.
+**
+**	Warnings:	None
+**
+**	History:	
+**	05/24/93	Re-written to use tokenize. GSL
+**
+*/
+NODE parse_display_ws_record(next_statement)
+NODE next_statement;
 {
-	int i,j,ii,num;
-	int occurs_val;
-	item_record *temp_ptr;
-	unsigned m_size;
-	static	int	cur_v1_level;
-	static  int	cur_v2_level;
-	static	int	cur_level;
+	static  int 	fillernum = 0;							/* Current number to append to FILLER	*/
 
-	occurs_val = 0;									/* No OCCURS value found yet		*/
+	int	curr_level;
+	int	cur_v1_level;
+	int	cur_v2_level;
+	int 	highest_sub_level;							/* the level number of screen items	*/
 
-	if (!pmode)
+	NODE	the_statement;
+	NODE	curr_node, temp_node;
+	NODE	level_node, data_name_node, column_node, row_node, pic_node, picture_node, range_node;
+	NODE	object_node, value_node, source_node, occurs_node, period_node;
+
+	int	first_time;
+
+	first_time = 1;
+
+	for(;;)
 	{
-		write_log("WISP",'I',"PROCSCREEN","Processing screen %s",parms[1]);
+		range_count = 0;						/* set current range count to 0.		*/
 
-		if (parms[1][strlen(parms[1])-1] == '.')
+		if (next_statement)
 		{
-			parms[1][strlen(parms[1])-1] = 0;				/* erase period				*/
-		}
-
-		if (num_screens > MAX_SCREENS)						/* do we have room for more?		*/
-		{
-			write_log("WISP",'F',"NOSCRNROOM","Fatal Error -- maximum number of screens exceeded.");
-			exit_wisp(-1);
-		}
-
-		strcpy(scrn_name[num_screens],parms[1]);				/* Save the name for this screen	*/
-											/* Get mem for first record		*/
-		m_size = sizeof(item_record);
-		temp_ptr = (item_record *) malloc(m_size);
-		if (temp_ptr == 0)
-		{
-			printf("%WISP-F-ERRORALLOC  Error allocating %d bytes of memory for first screen item.\n",m_size);
-			printf("                    Actual allocated so far = %d.\n",mem_cnt);
-			exit(0);
-		}
-		clear_item(temp_ptr);							/* Init the fields in the item		*/
-		mem_cnt += m_size;
-		screen_item[num_screens] = temp_ptr;
-		this_item = screen_item[num_screens];					/* Pointer to current item to fill	*/
-		last_item = this_item;
-		num_screens++;								/* Count this screen			*/
-		pmode = WS_SCREEN;							/* Set the mode so we can be re-called 	*/
-		
-		cur_row = 1;
-		cur_col = 1;
-
-		get_line();								/* read in a new line			*/
-		sscanf(&inline[7],"%d",&item_level);					/* this is the level number of an item	*/
-	}
-	else
-	{										/* Get a ptr to a new item record	*/
-		m_size = sizeof(item_record);
-		temp_ptr = (item_record *) malloc(m_size);
-		if (temp_ptr == 0)
-		{
-			printf("%WISP-F-ERRORALLOC  Error allocating %d bytes of memory for screen item.\n",m_size);
-			printf("                    Actual allocated so far = %d.\n",mem_cnt);
-			exit(0);
-		}
-		clear_item(temp_ptr);							/* Init the fields in the item		*/
-		mem_cnt += m_size;
-		this_item->next_item = temp_ptr;
-		last_item = this_item;							/* Save this item ptr			*/
-		this_item = this_item->next_item;					/* and point to it !!			*/
-	}
-
-	sscanf(&inline[7],"%d",&i);							/* get the level number of this item	*/
-
-	if (item_level == i)								/* It's a new item, reset OCCURS	*/
-	{
-											/* See if there was a group OCCURS.	*/
-		if (occurs_item) p_occurs(last_item);					/* If there was, process it up to the	*/
-											/* Last item.				*/
-		cur_v1 = 0;
-		cur_v2 = 0;
-		cur_h  = 0;
-		cur_v1_level = 0;
-		cur_v2_level = 0;
-	}
-	else
-	{
-		if (cur_v1_level >= i)
-		{
-			cur_v1 = 0;
-			cur_v2 = 0;
-			cur_v1_level = 0;
-			cur_v2_level = 0;
-		}
-		if (cur_v2_level >= i)
-		{
-			cur_v2 = 0;
-			cur_v2_level = 0;
-		}
-	}
-
-	clear_item(this_item);								/* Init the fields in the item		*/
-	r_count = 0;									/* set current range count to 0.	*/
-
-	get_param(this_item->item_num);							/* Parse out the item_number		*/
-	ptype = get_param(this_item->name);						/* get the variable name		*/
-	sscanf(this_item->item_num,"%d",&cur_level);					/* get the level number of this item	*/
-	this_item->x_level = cur_level;
-
-	if (ptype == -1)								/* this is the start of a record, for	*/
-	{										/* now we will discard it		*/
-		get_line();								/* get a new line			*/
-		get_param(this_item->item_num);						/* Parse out the item_number		*/
-		ptype = get_param(this_item->name);					/* get the variable name		*/
-		sscanf(this_item->item_num,"%d",&cur_level);				/* get the level number of this item	*/
-	}
-
-	this_item->col = last_item->col  + pic_size(last_item->pic) + 1;		/* initially set the column to 1 + size	*/
-	this_item->row = last_item->row;						/* initially set the row to last row	*/
-	ptype = get_param(templine);							/* get the first keyword		*/
-
-	do
-	{
-			 /*           1         2         3         4         5         6	*/
-                         /* 0123456789012345678901234567890123456789012345678901234567890	*/
-		i = strpos("PICTURE ROW LINE COLUMN RANGE SOURCE VALUE OBJECT OCCURS",templine);
-
-		switch (i)								/* do the appropriate thing		*/
-		{
-			case PROC_PICTURE:						/* process "PICTURE			*/
-			{
-				ptype = get_param(this_item->pic);			/* Get actual PIC parameter		*/
-				if (!strcmp(this_item->pic,"IS")) ptype = get_param(this_item->pic);	/* skip over IS		*/
-
-								/* this section of code will extract a PIC from an input line	*/
-				i = get_ppos();						/* find out where the PIC is		*/
-				j = 0;							/* index into pic string		*/
-				while (inline[i] && (inline[i] != '\n') && (inline[i] != ' '))	/* scan till newline or space	*/
-				{
-					if (inline[i] == ',') ptype = get_param(templine);	/* if a comma, get next parm	*/
-					this_item->pic[j++] = inline[i++];		/* copy the PIC				*/
-				}
-				this_item->pic[j] = 0;					/* null terminate			*/
-								/* end of PIC extraction code					*/
-
-				if (ptype != -1) ptype = get_param(templine);		/* and get a new parm			*/
-				break;
-			}
-
-			case PROC_ROW:							/* Process "ROW"			*/
-			case PROC_LINE:							/* or "LINE"				*/
-			{
-				ptype = get_param(templine);				/* Actually read in a ROW value		*/
-				sscanf(templine,"%d",&num);
-				this_item->row   = num;
-				this_item->x_row = num;
-				if (ptype != -1) ptype = get_param(templine);		/* and get a new parm			*/
-				break;
-			}
-
-			case PROC_COLUMN:						/* Process "COLUMN"			*/
-			{
-				ptype = get_param(templine);				/* Actually read in the COLUMN value	*/
-				sscanf(templine,"%d",&num);
-				this_item->col   = num;
-				this_item->x_col = num;
-				if (ptype != -1) ptype = get_param(templine);		/* and get a new parm			*/
-				break;
-			}
-
-			case PROC_RANGE:						/* process RANGE			*/
-			{
-				this_item->num_range = r_count;				/* use current range count		*/
-
-				ptype = get_param(templine);				/* Get a parameter			*/
-
-				if (!strcmp(templine,"IS"))				/* skip over IS				*/
-					ptype = get_param(templine);
-
-				if (!strcmp(templine,"FROM"))				/* skip over FROM			*/
-				{
-					ptype = get_param(templine);		
-				}
-
-				strcpy(this_item->lo_range,templine);			/* this must be the low range now..	*/
-
-				if (templine[0] == '\"' && (strpos(&templine[1],"\"") == -1))	/* Is it an open literal?	*/
-				{
-					do						/* Get strings till we see the end.	*/
-					{
-						ptype = get_param(templine);
-						strcat(this_item->lo_range,templine);	/* Add it on...				*/
-					} while(strpos(templine,"\"") == -1);
-				}
-
-				if (ptype != -1) ptype = get_param(templine);		/* and get a new parm			*/
-
-				if (!strcmp(templine,"TO"))				/* If TO, skip it, get hi range		*/
-				{
-					ptype = get_param(this_item->hi_range);
-
-											/* Is it an open literal?		*/
-					if (this_item->hi_range[0] == '\"' && (strpos(&this_item->hi_range[1],"\"") == -1))
-					{
-						do					/* Get strings till we see the end*/
-						{
-							ptype = get_param(templine);
-							strcat(this_item->hi_range,templine);	/* Add it on...			*/
-						} while(strpos(templine,"\"") == -1);
-					}
-					if (ptype != -1) ptype = get_param(templine);	/* and get a new parm			*/
-				}
-
-				write_log("WISP",'I',"RANGEVALLOW",
-						"RANGE for item %s, Low value is %s.",this_item->name,this_item->lo_range);
-				write_log("WISP",'I',"RANGEVALHI","High value is %s.",this_item->hi_range);
-				break;
-			}
-
-			case PROC_SOURCE:						/* Do SOURCE or VALUE			*/
-			case PROC_VALUE:
-			{
-				int	len_source, max_source, tmp_len;
-
-				max_source = sizeof(this_item->source) - 1;
-				len_source = 0;
-
-				ptype = get_param(templine);				/* First parm is first word in constant	*/
-											/* or actual variable name		*/
-				if (!strcmp(templine,"IS"))				/* look for IS and discard it.		*/
-				{
-					ptype = get_param(templine);
-				}
-
-				strcpy(this_item->source,templine);			/* Copy it into source string		*/
-				i = strlen(templine);					/* Get length of parm.			*/
-				if (templine[0] == QUOTE_CHAR)				/* It is a literal.			*/
-				{
-					ptype = 0;
-					i = strpos(inline,templine);			/* look for param in inline		*/
-					j = i;						/* Start of active line			*/
-					memset(this_item->source,' ',i);		/* set up spaces			*/
-					strcpy(&this_item->source[i],&inline[i]);
-					len_source = strlen(this_item->source);
-
-					for(ii=1;;ii++)
-					{
-						if (!this_item->source[i+ii])		/* End of line QUOTE not found		*/
-						{
-							get_line();			/* read in next line			*/
-
-							tmp_len = strlen(inline);
-							if (len_source+tmp_len > max_source)
-							{
-								inline[max_source - len_source] = '\0';
-							}
-							strcat(this_item->source,inline);	/* get the rest			*/
-							len_source += strlen(inline);
-							j = strpos(inline,QUOTE_STR);		/* look for the open quote	*/
-							i += j+ii;			/* Offset into source			*/
-							ii = 1;				/* Offset from j in active line		*/
-						}
-
-						if (this_item->source[i+ii] == QUOTE_CHAR)
-						{
-							if (this_item->source[i+ii+1] == QUOTE_CHAR)    /* Embedded quote	*/
-							{
-								ii += 1;
-							}
-							else						/* Ending quote		*/
-							{
-								this_item->source[i+ii+1] = 0;
-								len_source = strlen(this_item->source);
-								memset(inline,' ',j+ii+1);	/* Now clear from the inline.	*/
-								hold_line();			/* Hold line in case more data.	*/
-								break;
-							}
-						}
-					}
-
-					i = strlen(this_item->source)-1;		/* pointer to last char position	*/
-											/* remove newline			*/
-					if (this_item->source[i] == '\n') this_item->source[i--]= '\0';
-
-					if (this_item->source[i] == '.')
-					{
-						ptype = -1;				/* flag last parm, remove the period.	*/
-						this_item->source[i--] = '\0';
-					}
-					else						/* No period? must not be last parm	*/
-					{						/* get another line			*/
-						get_line();
-					}
-
-					if (this_item->source[i] == ',')
-					{
-						this_item->source[i--] = '\0';
-					}
-				}
-				if (ptype != -1) ptype = get_param(templine);		/* and get a new parm		*/
-				break;
-			}
-
-			case PROC_OBJECT:						/* do OBJECT				*/
-			{
-				ptype = get_param(this_item->object);
-				if (!strcmp(this_item->object,"IS"))
-				{
-					ptype = get_param(this_item->object);
-				}
-				if (ptype != -1) ptype = get_param(templine);		/* and get a new parm		*/
-				break;
-			}
-
-			case PROC_OCCURS:						/* do OCCURS				*/
-			{
-				ptype = get_param(o_parms[0]);				/* get the count as a string		*/
-				sscanf(o_parms[0],"%d",&occurs_val);			/* convert it to an integer		*/
-				this_item->x_occurs = occurs_val;
-				if (ptype != -1)
-				{
-					ptype = get_param(templine);			/* and get the TIMES keyword		*/
-					if ( !(strcmp(templine,"TIMES") && strcmp(templine,"TIME")))	/* It was there.	*/
-					{
-						if (ptype != -1) ptype = get_param(templine);	/* so get a new parm		*/
-					}
-				}
-				if (!occurs_item) occurs_item = this_item;		/* Save ptr to this item if first.	*/
-				break;
-			}
-
-			default:							/* some kind of error			*/
-			{
-				if (templine[0])					/* be sure it wasn't a null string	*/
-				{
-					write_log("WISP",'F',"ERRINITEM","Error in screen item, <%s>, line is\n%s",
-									templine,inline);
-					exit_wisp(-1);
-				}
-			}
-		}
-	} while (ptype != -1);								/* quit when no matches			*/
-
-	if (occurs_val)
-	{
-		if (this_item->pic[0])							/* there was a PIC, horizontal OCCURS	*/
-		{
-			this_item->horiz = occurs_val;					/* save it				*/
-		}
-		else if (cur_v1)							/* already a vertical value		*/
-		{
-			cur_v2 = occurs_val;						/* must be the second one		*/
-			cur_v2_level = cur_level;
-			this_item->vert_1 = -1;						/* This is really a group item, not used*/
+			the_statement = next_statement;				/* Use the already loaded next statement	*/
+			next_statement = NULL;
 		}
 		else
-		{									/* it's the first vertical value	*/
-			cur_v1 = occurs_val;
-			cur_v1_level = cur_level;
-			this_item->vert_1 = -1;						/* This is really a group item, not used*/
+		{
+			the_statement = get_statement();			/* Load the statement				*/
 		}
-	}
-	else if (!this_item->pic[0])
-	{
-		this_item->vert_1 = -1;							/* No OCCURS and no PIC means group item.*/
-	}
+
+		level_node = data_name_node = column_node = row_node = pic_node = picture_node = range_node = NULL;
+		object_node = value_node = source_node = occurs_node = period_node = NULL;
+
+		curr_node = the_statement->next;				/* Point to first significant token		*/
+
+		if ( NUMBER == curr_node->token->type )
+		{
+			level_node = curr_node;
+			curr_level = 0;
+			sscanf(level_node->token->data,"%d",&curr_level);
+
+			curr_node = curr_node->next;
+			if ( eq_token(curr_node->token, KEYWORD, "FILLER") ||
+			     IDENTIFIER == curr_node->token->type 		)
+			{
+				data_name_node = curr_node;
+				curr_node = curr_node->next;
+			}
+		}
+		else
+		{
+			curr_level = 0;
+		}
+
+		if (first_time && 1 != curr_level)
+		{
+			write_log("WISP",'F',"DISPLAY-WS","Unable to parse DISPLAY-WS record, expecting level 01 got %02d",
+				curr_level);
+			exit_with_err();
+		}
+
+
+		if (0==curr_level || 1==curr_level || curr_level>49)
+		{
+			if (!first_time)
+			{
+				/*
+				**	Finished parsing a DISPLAY-WS record.
+				*/
+											/* See if there was a group OCCURS.	*/
+				if (occurs_item) p_occurs(this_item);			/* If there was, process it up to the	*/
+											/* Last item.				*/
+
+				return(the_statement);
+			}
+			first_time = 0;
+
+			tput_fluff(the_statement->down);
+
+			write_log("WISP",'I',"PROCSCREEN","Processing screen %s",data_name_node->token->data);
+
+			if (num_screens > MAX_SCREENS)				/* do we have room for more?		*/
+			{
+				write_log("WISP",'F',"NOSCRNROOM","Fatal Error -- maximum number of screens exceeded.");
+				exit_wisp(EXIT_WITH_ERR);
+			}
+
+			strcpy(scrn_name[num_screens],data_name_node->token->data);	/* Save the name for this screen	*/
+			screen_item[num_screens] = NULL;
+			num_screens++;							/* Count this screen			*/
+
+			highest_sub_level = 0;
+		}
+		else
+		{
+			item_record 	*temp_ptr;
+
+			/*
+			**	This section is done for all sub levels (not for 01 level)
+			*/
+
+			temp_ptr = (item_record *) wmalloc(sizeof(item_record));	/* Get a ptr to a new item record	*/
+			clear_item(temp_ptr);						/* Init the fields in the item		*/
+
+			if (0==highest_sub_level)
+			{
+				/* 
+				**	First time into sub-levels
+				*/
+				highest_sub_level = curr_level;				/* Mark the highest sub level		*/
+
+				screen_item[num_screens-1] = temp_ptr;			/* Add first item to chain		*/
+				last_item = temp_ptr;
+
+			}
+			else
+			{
+				last_item = this_item;					/* Save this item ptr			*/
+				this_item->next_item = temp_ptr;			/* Chain another item on.		*/
+			}
+
+			this_item = temp_ptr;						/* Point to new item.			*/
+
+			if (curr_level < highest_sub_level)
+			{
+				/*
+				**	This is to catch mis-matched level numbers
+				**
+				**		01  aaa DISPLAY-WS.
+				**		    05 ....		<- highest_sub_level
+				**		    03 ....
+				*/
+				write_log("WISP",'E',"SUBLEVEL","Error parsing DISPLAY-WS LEVEL number %02d less then %02d",
+						curr_level,highest_sub_level);
+				highest_sub_level = curr_level;
+			}
+
+			if (curr_level == highest_sub_level)
+			{
+											/* See if there was a group OCCURS.	*/
+				if (occurs_item) p_occurs(last_item);			/* If there was, process it up to the	*/
+											/* Last item.				*/
+				cur_v1 = 0;
+				cur_v2 = 0;
+				cur_h  = 0;
+				cur_v1_level = 0;
+				cur_v2_level = 0;
+			}
+			else
+			{
+				if (curr_level <= cur_v1_level)
+				{
+					cur_v1 = 0;
+					cur_v2 = 0;
+					cur_v1_level = 0;
+					cur_v2_level = 0;
+				}
+				if (curr_level <= cur_v2_level)
+				{
+					cur_v2 = 0;
+					cur_v2_level = 0;
+				}
+			}
+
+			clear_item(this_item);						/* Init the fields in the item		*/
+
+			strcpy(this_item->item_num,level_node->token->data);		/* Parse out the item_number		*/
+			if (data_name_node)
+			{
+				strcpy(this_item->name,data_name_node->token->data);	/* get the variable name		*/
+			}
+			else
+			{
+				strcpy(this_item->name,"FILLER");			/* If no data name use FILLER		*/
+			}
+			this_item->x_level = curr_level;				/* get the level number of this item	*/
+
+			this_item->col = last_item->col  + pic_size(last_item->pic) + 1;/* initially set the column to 1 + size	*/
+			this_item->row = last_item->row;				/* initially set the row to last row	*/
+
+
+			while (NODE_END != curr_node->type)			/* Loop until end of statement.			*/
+			{
+				if (      eq_token(curr_node->token, KEYWORD, "COL") ||
+				          eq_token(curr_node->token, KEYWORD, "COLUMN") )
+				{
+					column_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "ROW") ||
+				          eq_token(curr_node->token, KEYWORD, "LINE") )
+				{
+					row_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "PIC") ||
+				          eq_token(curr_node->token, KEYWORD, "PICTURE") )
+				{
+					pic_node = curr_node;
+				}
+				else if ( PICTURE == curr_node->token->type )
+				{
+					picture_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "RANGE") )
+				{
+					range_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "OBJECT") )
+				{
+					object_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "VALUE") )
+				{
+					value_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "SOURCE") )
+				{
+					source_node = curr_node;
+				}
+				else if ( eq_token(curr_node->token, KEYWORD, "OCCURS") )
+				{
+					occurs_node = curr_node;
+				}
+				else if ( PERIOD == curr_node->token->type )
+				{
+					period_node = curr_node;
+				}
+
+				curr_node = curr_node->next;
+			}
+
+			if (picture_node)
+			{
+				strcpy(this_item->pic,picture_node->token->data);
+			}
+
+			if (row_node)						/* "ROW/LINE [NUMBER IS] number"		*/
+			{
+				temp_node = row_node->next;
+				if ( NUMBER != temp_node->token->type)
+					temp_node = temp_node->next;
+				if ( NUMBER != temp_node->token->type)
+					temp_node = temp_node->next;
+				if ( NUMBER == temp_node->token->type)
+				{
+					int	num;
+					sscanf(temp_node->token->data,"%d",&num);
+					this_item->row   = num;
+					this_item->x_row = num;
+				}
+				else
+				{
+					write_log("WISP",'E',"Error parsing ROW number, using previous value");
+				}
+			}
+
+			if (column_node)					/* "COLUMN [NUMBER IS] number"			*/
+			{
+				temp_node = column_node->next;
+				if ( NUMBER != temp_node->token->type)
+					temp_node = temp_node->next;
+				if ( NUMBER != temp_node->token->type)
+					temp_node = temp_node->next;
+				if ( NUMBER == temp_node->token->type)
+				{
+					int	num;
+					sscanf(temp_node->token->data,"%d",&num);
+					this_item->col   = num;
+					this_item->x_col = num;
+				}
+				else
+				{
+					write_log("WISP",'E',"Error parsing COLUMN number, using previous value");
+				}
+			}
+
+			if (range_node && !object_node)
+			{
+				write_log("WISP",'W',"RANGE","RANGE clause found with no OBJECT clause. RANGE ignored. [%s]",
+					this_item->name);
+				range_node = NULL;
+			}
+
+			if (range_node)
+			{
+				/*
+				**	RANGE is NEGATIVE		|
+				**	RANGE is POSITIVE		|	Store in the low range data area
+				**	RANGE is Table-name		|
+				**	RANGE is from Low to High
+				*/
+
+				this_item->num_range = range_count;			/* use current range count		*/
+
+				temp_node = range_node->next;
+				if ( eq_token(temp_node->token,KEYWORD,"IS"))		/* skip over IS				*/
+					temp_node = temp_node->next;
+
+				if ( eq_token(temp_node->token,KEYWORD,"FROM"))		/* skip over FROM			*/
+					temp_node = temp_node->next;
+
+				if (!reduce_data_item(temp_node))			/* Reduce the low range data item	*/
+				{
+					write_log("WISP",'E',"RANGE","Error parsing RANGE clause, unrecognized data item.[%s]",
+							token_data(temp_node->token));
+					reduce_one(temp_node);
+				}
+				strip_statement(temp_node->down);
+				this_item->lo_range_clause = temp_node->down;		/* Get the lo range			*/
+				temp_node->down = NULL;
+
+				write_log("WISP",'I',"RANGEVALLOW", "RANGE for item %s, Low value is %s.",
+						this_item->name,token_data(this_item->lo_range_clause->token));
+
+				temp_node = temp_node->next;
+				if ( eq_token(temp_node->token,KEYWORD,"TO"))		/* If TO, skip it, get hi range		*/
+				{
+					temp_node = temp_node->next;
+
+					if (!reduce_data_item(temp_node))		/* Reduce the low range data item	*/
+					{
+						write_log("WISP",'E',"RANGE",
+								"Error parsing RANGE clause, unrecognized data item.[%s]",
+								token_data(temp_node->token));
+						reduce_one(temp_node);
+					}
+					strip_statement(temp_node->down);
+					this_item->hi_range_clause = temp_node->down;	/* Get the hi range			*/
+					temp_node->down = NULL;
+
+					write_log("WISP",'I',"RANGEVALHI","High value is %s.",
+						token_data(this_item->hi_range_clause->token));
+				}
+			}
+
+			if (source_node || value_node)
+			{
+				if (source_node && value_node)
+				{
+					write_log("WISP",'E',"SOURCE","Both SOURCE and VALUE specified for %s, using SOURCE",
+						this_item->name);
+				}
+
+				temp_node = (source_node) ? source_node : value_node;
+				temp_node = temp_node->next;
+				if ( eq_token(temp_node->token,KEYWORD,"IS"))		/* skip over IS				*/
+					temp_node = temp_node->next;
+
+				if (!reduce_data_item(temp_node))			/* Reduce the source data item		*/
+				{
+					write_log("WISP",'E',"SOURCE","Error parsing SOURCE clause, unrecognized data item.[%s]",
+							token_data(temp_node->token));
+					reduce_one(temp_node);
+				}
+				strip_statement(temp_node->down);
+				this_item->source_clause = temp_node->down;
+				temp_node->down = NULL;
+			}
+
 									/* If it is a filler  convert it into a variable of the	*/
 									/* form SCREEN-FILLER-NNNN if the following is true:	*/
 									/* It has an OBJECT, or it has a non-literal source	*/
 
-	if ( !strcmp(this_item->name,"FILLER") &&
-	     (this_item->object[0] || 
-	     ( this_item->source[0] && (strpos(this_item->source,"\042") == -1))))
-	{
-		sprintf(this_item->name,"SCREEN-FILLER-%d",fillernum++);
-		write_log("WISP",'I',"CONVFILLER","Converted FILLER to %s.",this_item->name);
-	}
+			if ( 0==strcmp(this_item->name,"FILLER") &&
+			     ( object_node || (this_item->source_clause && LITERAL != this_item->source_clause->token->type)))
+			{
+				sprintf(this_item->name,"SCREEN-FILLER-%d",fillernum++);
+				write_log("WISP",'I',"CONVFILLER","Converted FILLER to %s.",this_item->name);
+			}
 
+			if (object_node)
+			{
+				temp_node = object_node->next;
+				if ( eq_token(temp_node->token,KEYWORD,"IS"))		/* skip over IS				*/
+					temp_node = temp_node->next;
+
+				if (!reduce_data_item(temp_node))			/* Reduce the object data item		*/
+				{
+					write_log("WISP",'E',"OBJECT","Error parsing OBJECT clause, unrecognized data item.[%s]",
+							token_data(temp_node->token));
+					reduce_one(temp_node);
+				}
+				strip_statement(temp_node->down);
+				this_item->object_clause = temp_node->down;
+				temp_node->down = NULL;
+			}
+
+			if (occurs_node)
+			{
+				int 	occurs_val;
+
+				sscanf(occurs_node->next->token->data,"%d",&occurs_val);
+				this_item->x_occurs = occurs_val;
+				if (!occurs_item) occurs_item = this_item;		/* Save ptr to this item if first.	*/
+
+				if (this_item->pic[0])					/* there was a PIC, horizontal OCCURS	*/
+				{
+					this_item->horiz = occurs_val;			/* save it				*/
+				}
+				else if (cur_v1)					/* already a vertical value		*/
+				{
+					cur_v2 = occurs_val;				/* must be the second one		*/
+					cur_v2_level = curr_level;
+					this_item->vert_1 = -1;				/* This is really a group item, not used*/
+				}
+				else
+				{							/* it's the first vertical value	*/
+					cur_v1 = occurs_val;
+					cur_v1_level = curr_level;
+					this_item->vert_1 = -1;				/* This is really a group item, not used*/
+				}
+			}
+			else if (!this_item->pic[0])
+			{
+				this_item->vert_1 = -1;					/* No OCCURS and no PIC means group item.*/
+			}
+
+			if (!picture_node && !occurs_node && !row_node && !column_node && 
+			    !object_node && !source_node && !value_node)
+			{
+				/*
+				**	This item has only a LEVEL and a NAME.
+				**	Previously we would delete this item from the chain (re-use the item).
+				*/
+			}
+
+		} 	/* Process a sub-level */
+
+		tput_fluff(the_statement->next);
+		free_statement(the_statement);
+
+	}
 }
+
+
 
 /* 		Generate the WORKING STORAGE entrys for all the screens.  Called when PROCEDURE DIVISION is detected		*/
 
 static int scrns_done = 0;								/* flag to say we did it		*/
 
-gen_screens()
+int gen_screens()
 {
-	if ( SCREEN_VERSION == 21 )
-	{
-		gen_screens21();
-	}
-	else
-	{
-		gen_screens22();
-	}
+	if (data_conv) return(0);
+	
+	gen_screens22();
+	return(0);
 }
 
-gen_screens22()
+static gen_screens22()
 {
-	int 	i, value_len;
+	int 	i;
 	char	s_level[5], s_occurs[5], s_row[5], s_col[5], s_pic[50], s_value[80]; 
 
 
@@ -441,34 +558,36 @@ gen_screens22()
 	{										/* Output a corrected screen record	*/
 		write_log("WISP",'I',"DOSCREEN","Generating screen number %d.",i);
 											/* First output an order area for it.	*/
-		write_line("\n\n******* Definition of screen %s *******\n", scrn_name[i]);
+		tput_blank();
+		tput_scomment("******* Definition of screen %s *******", scrn_name[i]);
 
 		make_oa(templine,scrn_name[i]);
-		write_line("       01  %s.\n",templine);
-		put_line  ("           05  FILLER         PIC X(1) VALUE DEC-BYTE-1.\n");
-		put_line  ("           05  FILLER         PIC X(1) VALUE WISP-SCWCC.\n");
-		put_line  ("           05  FILLER         PIC X(1) VALUE DEC-BYTE-0.\n");
-		put_line  ("           05  FILLER         PIC X(1) VALUE DEC-BYTE-0.\n\n");
+		tput_line_at(8,  "01  %s.",templine);
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE DEC-BYTE-1.");
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE WISP-SCWCC.");
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE DEC-BYTE-0.");
+		tput_line_at(12, "05  FILLER         PIC X(1) VALUE DEC-BYTE-0.");
 
 											/* Now the structure describing it	*/
-		write_line("       01  %s.\n",scrn_name[i]);				/* output the screen name		*/
+		tput_line_at(8,  "01  %s.",scrn_name[i]);				/* output the screen name		*/
 
 
 		this_item = screen_item[i];						/* Get ptr to first item		*/
 		last_item = this_item;
 
-		write_line("           05  WISP-SCREEN-VERSION PIC X VALUE DEC-BYTE-%d.\n",SCREEN_VERSION);
-		write_line("           05  FILLER PIC X(8)  VALUE \"%-8s\".\n",prog_id);
-		write_line("           05  FILLER PIC X(32) VALUE\n                                \"%-32s\".\n",scrn_name[i]);
-		write_line("           05  STATIC-DYNAMIC PIC X     VALUE \"S\".\n");
-		write_line("           05  DECIMAL-IS     PIC X     VALUE \"%c\".\n",decimal_is);
-		write_line("           05  RESERVED-SPACE PIC X(9)  VALUE SPACES.\n\n");
+		tput_line_at(12,"05  WISP-SCREEN-VERSION PIC X VALUE DEC-BYTE-%d.",SCREEN_VERSION);
+		tput_line_at(12,"05  FILLER PIC X(8)  VALUE \"%-8s\".",prog_id);
+		tput_line_at(12,"05  FILLER PIC X(32) VALUE");
+		tput_line_at(33,"\"%-32s\".",scrn_name[i]);
+		tput_line_at(12,"05  STATIC-DYNAMIC PIC X     VALUE \"S\".");
+		tput_line_at(12,"05  DECIMAL-IS     PIC X     VALUE \"%c\".",decimal_is);
+		tput_line_at(12,"05  RESERVED-SPACE PIC X(9)  VALUE SPACES.");
 
 		do									/* loop for each item in the screen	*/
 		{
 			if (!compress)
 			{
-				write_line("\n      *** Field %s of %s ***\n",this_item->name, scrn_name[i]);
+				tput_scomment("*** Field %s of %s ***",this_item->name, scrn_name[i]);
 			}
 
 			s_level[0] 	= '\0';
@@ -486,42 +605,26 @@ gen_screens22()
 			if (compress)							/* Compress the output if they ask.	*/
 			{
 				sprintf(s_value,"\"%s%s%s%s%s;\"",s_level,s_row,s_col,s_occurs,s_pic);
-				value_len = strlen(s_value) - 2;
 
-				if ( value_len < 32 )
-				{
-					write_line("           05  FILLER PIC X(%d) VALUE %s.\n",value_len, s_value);
-				}
-				else
-				{
-					write_line("           05  FILLER PIC X(%d) VALUE\n",value_len);
-					write_line("               %s.\n", s_value);
-				}
+				tput_line_at(12, "05  FILLER PIC X(%d) VALUE",strlen(s_value)-2);
+				tput_clause (16, "%s.", s_value);
 			}
 			else								/* Otherwise, be verbose.		*/
 			{
-				put_line  ("           05  FILLER.\n");
-				write_line("               10  DISP-LEVEL  PIC X(%d) VALUE \"%s\".\n",strlen(s_level),s_level);
+				tput_line_at        (12, "05  FILLER.");
+				tput_line_at        (16, "10  DISP-LEVEL  PIC X(%d) VALUE \"%s\".",strlen(s_level),s_level);
 				if ( this_item->x_row    )
-					write_line("               10  DISP-ROW    PIC X(%d) VALUE \"%s\".\n",strlen(s_row),s_row);
+					tput_line_at(16, "10  DISP-ROW    PIC X(%d) VALUE \"%s\".",strlen(s_row),s_row);
 				if ( this_item->x_col    )
-					write_line("               10  DISP-COL    PIC X(%d) VALUE \"%s\".\n",strlen(s_col),s_col);
+					tput_line_at(16, "10  DISP-COL    PIC X(%d) VALUE \"%s\".",strlen(s_col),s_col);
 				if ( this_item->x_occurs )
-					write_line("               10  DISP-OCCURS PIC X(%d) VALUE \"%s\".\n",
-													strlen(s_occurs),s_occurs);
+					tput_line_at(16, "10  DISP-OCCURS PIC X(%d) VALUE \"%s\".",strlen(s_occurs),s_occurs);
 				if ( this_item->pic[0]   )
 				{
-				    if ((int)strlen(s_pic) < 20)
-				    {
-					write_line("               10  DISP-PIC    PIC X(%d) VALUE \"%s\".\n",strlen(s_pic),s_pic);
-				    }
-				    else
-				    {
-					write_line("               10  DISP-PIC    PIC X(%d) VALUE\n",strlen(s_pic));
-					write_line("                   \"%s\".\n",s_pic);
-				    }
+					tput_line_at(16, "10  DISP-PIC    PIC X(%d)",strlen(s_pic));
+					tput_clause (20, "VALUE \"%s\".",s_pic);
 				}
-				put_line  ("               10  DISP-END    PIC X    VALUE \";\".\n"); 
+				tput_line_at        (16, "10  DISP-END    PIC X    VALUE \";\"."); 
 
 			}
 
@@ -531,186 +634,12 @@ gen_screens22()
 			last_item = this_item;
 			this_item = this_item->next_item;				/* And point to the next item		*/
 
-		}
-		while (this_item);							/* 'till there are no more...		*/
+		} while (this_item);							/* 'till there are no more...		*/
 
 
 /* -----------------------------	Write a hex FF to signal this is the last item		------------------------------	*/
 
-		put_line  ("\n           05  DISP-END-SCREEN PIC X VALUE \".\".\n\n");
-	}
-	write_log("WISP",'I',"SCREENDONE","Finished generating screen records.");
-}
-
-gen_screens21()
-{
-	int i;
-
-        unsigned char	  edit_mask_item[4];
-	unsigned long int  temp_mask;
-
-	if (scrns_done) return(0);							/* already did it			*/
-	scrns_done = 1;
-	if (!num_screens) return(0);							/* no screens.				*/
-
-	write_log("WISP",'I',"BEGINSCRN","Begin generation of screen records.");
-
-	for (i=0; i<num_screens; i++)					
-	{										/* Output a corrected screen record	*/
-		write_log("WISP",'I',"DOSCREEN","Generating screen number %d.",i);
-											/* First output an order area for it.	*/
-		make_oa(templine,scrn_name[i]);
-		write_line("       01  %s.\n",templine);
-		put_line  ("           05  FILLER         PIC X(1) VALUE DEC-BYTE-1.\n");
-		put_line  ("           05  FILLER         PIC X(1) VALUE WISP-SCWCC.\n");
-		put_line  ("           05  FILLER         PIC X(1) VALUE DEC-BYTE-0.\n");
-		put_line  ("           05  FILLER         PIC X(1) VALUE DEC-BYTE-0.\n\n");
-
-											/* Now the structure describing it	*/
-		write_line("       01  %s.\n",scrn_name[i]);				/* output the screen name		*/
-
-
-		this_item = screen_item[i];						/* Get ptr to first item		*/
-		last_item = this_item;
-
-		write_line("           05  WISP-SCREEN-VERSION PIC X VALUE DEC-BYTE-%d.\n",SCREEN_VERSION);
-		write_line("           05  FILLER PIC X(8) VALUE \"%-8s\".\n",prog_id);
-		write_line("           05  FILLER PIC X(32) VALUE\n                                \"%-32s\".\n",scrn_name[i]);
-
-		do									/* loop for each item in the screen	*/
-		{
-			if (this_item->vert_1 == -1) 					/* skip group items			*/
-			{
-				last_item = this_item;
-				this_item = this_item->next_item;			/* And point to the next item		*/
-				continue;
-			}
-
-			write_line("\n******* Field %s of %s\n",this_item->name, scrn_name[i]);
-
-			if (compress)							/* Compress the output if they ask.	*/
-			{
-				put_line  ("           05  FILLER.\n");
-				write_line("               10  FILLER PIC X(8) VALUE X\"%02X%02X%02X%02X%02X%02X%02X%02X\".\n",
-						this_item->vert_1,
-						this_item->vert_2,
-						this_item->vert_off,
-						this_item->horiz,
-						this_item->row,
-						this_item->col,
-					   	pic_size(this_item->pic),
-						pic_dp(this_item->pic)
-					);
-
-				temp_mask = pic_edit(this_item->pic);
-				edit_mask_item[0] = (temp_mask      ) & 0xFF;
-				edit_mask_item[1] = (temp_mask >>  8) & 0xFF;
-				edit_mask_item[2] = (temp_mask >> 16) & 0xFF;
-				edit_mask_item[3] = (temp_mask >> 24) & 0xFF;
-				
-
-				if (strpos(this_item->pic,"Z") != -1)			/* If it has a z-field, set the bit	*/
-				{
-					edit_mask_item[0] |= 1;				/* Set the low order bit on.		*/
-				}
-
-				write_line("               10  FILLER PIC X(4) VALUE X\"%02X%02X%02X%02X\".\n",
-								edit_mask_item[0],
-								edit_mask_item[1],
-								edit_mask_item[2],
-								edit_mask_item[3]
-					);
-
-				if (edit_mask_item[0] & 1)				/* If bit is set, need the z mask too.	*/
-				{
-					temp_mask = pic_zmask(this_item->pic);
-					edit_mask_item[0] = (temp_mask      ) & 0xFF;
-					edit_mask_item[1] = (temp_mask >>  8) & 0xFF;
-					edit_mask_item[2] = (temp_mask >> 16) & 0xFF;
-					edit_mask_item[3] = (temp_mask >> 24) & 0xFF;
-
-
-					write_line("               10  FILLER PIC X(4) VALUE X\"%02X%02X%02X%02X\".\n",
-								edit_mask_item[0],
-								edit_mask_item[1],
-								edit_mask_item[2],
-								edit_mask_item[3]
-						);
-				}
-
-			}
-			else								/* Otherwise, be verbose.		*/
-			{
-				put_line  ("           05  FILLER.\n");
-				write_line("               10  DISP-OCCURS-VERTICAL-1     PIC X VALUE DEC-BYTE-%d.\n",
-													this_item->vert_1);
-				write_line("               10  DISP-OCCURS-VERTICAL-2     PIC X VALUE DEC-BYTE-%d.\n",
-													this_item->vert_2);
-				write_line("               10  DISP-VERTICAL-OFFSET       PIC X VALUE DEC-BYTE-%d.\n",
-													this_item->vert_off);
-				write_line("               10  DISP-OCCURS-HORIZONTAL     PIC X VALUE DEC-BYTE-%d.\n",
-													this_item->horiz);
-				write_line("               10  DISP-ROW-POSITION          PIC X VALUE DEC-BYTE-%d.\n",
-													this_item->row);
-				write_line("               10  DISP-COLUMN-POSITION       PIC X VALUE DEC-BYTE-%d.\n",
-													this_item->col);
-				write_line("               10  DISP-ITEM-LENGTH           PIC X VALUE DEC-BYTE-%d.\n",
-													pic_size(this_item->pic));
-				write_line("               10  DISP-ITEM-DECIMAL-POINT    PIC X VALUE DEC-BYTE-%d.\n",
-													pic_dp(this_item->pic));
-				put_line  ("               10  DISP-ITEM-EDIT-MASK.\n");
-
-				temp_mask = pic_edit(this_item->pic);
-				edit_mask_item[0] = (temp_mask      ) & 0xFF;
-				edit_mask_item[1] = (temp_mask >>  8) & 0xFF;
-				edit_mask_item[2] = (temp_mask >> 16) & 0xFF;
-				edit_mask_item[3] = (temp_mask >> 24) & 0xFF;
-
-				if (strpos(this_item->pic,"Z") != -1)			/* If it has a z-field, set the bit	*/
-				{
-					edit_mask_item[0] |= 1;				/* Set the low order bit on.		*/
-				}
-
-				write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[0]);
-				write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[1]);
-				write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[2]);
-				write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[3]);
-
-				if (edit_mask_item[0] & 1)				/* If bit is set, need the z mask too.	*/
-				{
-					put_line  ("               10  DISP-ITEM-Z-EDIT-MASK.\n");
-
-					temp_mask = pic_zmask(this_item->pic);
-					edit_mask_item[0] = (temp_mask      ) & 0xFF;
-					edit_mask_item[1] = (temp_mask >>  8) & 0xFF;
-					edit_mask_item[2] = (temp_mask >> 16) & 0xFF;
-					edit_mask_item[3] = (temp_mask >> 24) & 0xFF;
-					write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[0]);
-					write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[1]);
-					write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[2]);
-					write_line("                   15  FILLER                 PIC X VALUE DEC-BYTE-%d.\n",
-													edit_mask_item[3]);
-				}
-			}
-			item_fac();							/* generate the FAC information		*/
-
-			last_item = this_item;
-			this_item = this_item->next_item;				/* And point to the next item		*/
-
-		}
-		while (this_item);							/* 'till there are no more...		*/
-
-
-/* -----------------------------	Write a hex FF to signal this is the last item		------------------------------	*/
-
-		put_line  ("\n           05  FILLER PIC X VALUE DEC-BYTE-255.\n\n");
+		tput_line_at  (12, "05  DISP-END-SCREEN PIC X VALUE \".\".");
 	}
 	write_log("WISP",'I',"SCREENDONE","Finished generating screen records.");
 }
@@ -720,12 +649,14 @@ gen_screens21()
 
 static char *fac_name[] = { 	"WFAC-PROTECT",
 				"WFAC-MODIFY"   };
-item_fac()
+static item_fac()
 {
 	int i,j,k,m;
 	int	fac_idx;
 	char the_level[32];
 	char item_str[256];
+
+	static int facnum = 0;								/* the number of the last fac done	*/
 
 /* 				Initialize the FAC's according to their field types						*/
 
@@ -736,7 +667,7 @@ item_fac()
 
 		item_str[0] = '\0';							/* init item string			*/
 
-		if (this_item->object[0])					/* if the object is null, protect the field	*/
+		if (this_item->object_clause)					/* if the object is null, protect the field	*/
 		{
 			k = pic_fac(this_item->pic);				/* not null, generate a fac			*/
 			if ( 0x81 == k ) fac_idx = 1;
@@ -748,35 +679,35 @@ item_fac()
 			fac_idx = 0;
 		}
 
-		m = (this_item->vert_1 == 0) ? 1 : this_item->vert_1;		/* get vert count				*/
-		m *= this_item->vert_2 == 0 ? 1 : this_item->vert_2;		/* times the vert 2 count			*/
-		m *= this_item->horiz == 0 ? 1 : this_item->horiz;		/* times the horizontal count			*/
+		m  = (this_item->vert_1 == 0) ? 1 : this_item->vert_1;		/* get vert count				*/
+		m *= (this_item->vert_2 == 0) ? 1 : this_item->vert_2;		/* times the vert 2 count			*/
+		m *= (this_item->horiz  == 0) ? 1 : this_item->horiz;		/* times the horizontal count			*/
 
 										/* now write the fac memory and the item memory	*/
-		write_line("           05  FAC-NUMBER-%d.\n",facnum);
+		tput_line_at(12, "05  FAC-NUMBER-%d.",facnum);
 
-		write_line("               10  FILLER PIC X(%d) VALUE ALL %s.\n",m,fac_name[fac_idx]);
-		write_line("               10  FILLER PIC X(%d).\n",m * pic_size(this_item->pic));
+		tput_line_at(16, "10  FILLER PIC X(%d) VALUE ALL %s.",m,fac_name[fac_idx]);
+		tput_line_at(16, "10  FILLER PIC X(%d).",m * pic_size(this_item->pic));
 										/* compute the dimensions			*/
 		if (this_item->vert_1)						/* has a vertical dimension			*/
 		{
 
-			write_line                      ("           05  FILLER REDEFINES FAC-NUMBER-%d.\n",facnum);
+			tput_line                       ("           05  FILLER REDEFINES FAC-NUMBER-%d.\n",facnum);
 											/* write the first vertical dimension	*/
 			sprintf(templine,                "             07  FILLER OCCURS %d TIMES.\n", this_item->vert_1);
-			put_line(templine);
+			tput_line("%s", templine);
 			strcat(item_str,templine);					/* build up the info for the item too	*/
 
 			if (this_item->vert_2)
 			{								/* write the second vertical dimension	*/
 				sprintf(templine,        "               10  FILLER OCCURS %d TIMES.\n",this_item->vert_2);
-				put_line(templine);
+				tput_line("%s", templine);
 				strcat(item_str,templine);				/* build up the info for the item too	*/
 
 				if (this_item->horiz)					/* and the horizontal count (3D)	*/
 				{
 					sprintf(templine,"                 15  FILLER OCCURS %d TIMES.\n",this_item->horiz);
-					put_line(templine);
+					tput_line("%s", templine);
 					strcat(item_str,templine);			/* build up the info for the item too	*/
 					strcpy(the_level,"        20");
 				}
@@ -788,7 +719,7 @@ item_fac()
 			else if (this_item->horiz)
 			{								/* write horizontal dimension		*/
 				sprintf(templine,        "               10  FILLER OCCURS %d TIMES.\n",this_item->horiz);
-				put_line(templine);
+				tput_line("%s", templine);
 				strcat(item_str,templine);				/* build up the info for the item too	*/
 				strcpy(the_level,        "      15");
 			}
@@ -800,44 +731,31 @@ item_fac()
 		else
 		{									/* horizontal dimension only		*/
 
-			write_line("           05  FILLER REDEFINES FAC-NUMBER-%d.\n",facnum);
+			tput_line(       "           05  FILLER REDEFINES FAC-NUMBER-%d.\n",facnum);
 											/* write the horizontal dimension	*/
 			sprintf(templine,"           07  FILLER OCCURS %d TIMES.\n", this_item->horiz);
-			put_line(templine);
+			tput_line("%s", templine);
 			strcat(item_str,templine);					/* build up the info for the item too	*/
 			strcpy(the_level,"    10");					/* 10 is the level of the item		*/
 		}
 
 		make_fac(templine,this_item->name);					/* make a FAC				*/
-		write_line("           %s  %s PIC X.\n",the_level,templine);		/* write it out				*/
-		put_line(item_str);							/* set up nesting of the item too	*/
+		tput_line("           %s  %s PIC X.\n",the_level,templine);		/* write it out				*/
+		tput_block(item_str);							/* set up nesting of the item too	*/
 
+		tput_line_at(12, "%s  %s",the_level,this_item->name);
 		if (item_blank(this_item->name))
 		{
-			if ((int)(strlen(this_item->pic)+strlen(this_item->name)) < 50)
-			{
-				write_line("           %s  %s PIC %s\n",the_level,this_item->name,this_item->pic);
-				put_line  ("               BLANK WHEN ZERO.\n");
-			}
-			else
-			{
-				write_line("           %s  %s\n",the_level,this_item->name);
-				write_line("               PIC %s BLANK WHEN ZERO.\n",this_item->pic);
-			}
+			tput_clause (16, "PIC %s BLANK WHEN ZERO.",this_item->pic);
 		}
-		else if ((int)(strlen(the_level) + strlen(this_item->name) + strlen(this_item->pic)) < 50)	
-											/* see if it fits on one line		*/
+		else									/* see if it fits on one line		*/
 		{
-			write_line("           %s  %s PIC %s.\n",the_level,this_item->name,this_item->pic);
-		}
-		else
-		{
-			write_line("           %s  %s PIC\n                 %s.\n",the_level,this_item->name,this_item->pic);
+			tput_clause (16, "PIC %s.",this_item->pic);
 		}
 	}
 	else										/* the item is singular			*/
 	{
-		if (this_item->object[0])						/* has an object			*/
+		if (this_item->object_clause)						/* has an object			*/
 		{
 			k = pic_fac(this_item->pic);					/* generate a fac value			*/
 			if ( 0x81 == k ) fac_idx = 1;
@@ -858,78 +776,51 @@ item_fac()
 			make_fac(templine,this_item->name);				/* make a FAC				*/
 		}
 
-		if ( (int)strlen(templine) < 28 )
-		{
-			write_line("           05  %s PIC X VALUE %s.\n",templine,fac_name[fac_idx]);
-		}
-		else
-		{
-			write_line("           05  %s PIC X\n",templine);
-			write_line("               VALUE %s.\n",fac_name[fac_idx]);
-		}
+		tput_line_at(12, "05  %s PIC X",templine);
+		tput_clause (16, "VALUE %s.",fac_name[fac_idx]);
 
 		if ( !strcmp(this_item->name,"FILLER"))					/* process fillers special		*/
 		{
-			if (this_item->source[0])					/* if it has a source, use it		*/
+			if (this_item->source_clause)					/* if it has a source, use it		*/
 			{
-				if (strpos(this_item->source,"\"") != -1)		/* a literal source			*/
+				if (LITERAL != this_item->source_clause->token->type)	/* a literal source			*/
 				{
-					write_line("           05  %s PIC %s VALUE\n%s",
-										this_item->name,this_item->pic,this_item->source);
-					if ((int)strlen(this_item->source) > 71)	/* multi line?				*/
-					{
-						put_line("\n                   .\n");	/* yes, put period on next line		*/
-					}
-					else
-					{
-						put_line(".\n");			/* single line, put preiod here		*/
-					}
+					/*
+					**	This case must never happen because a non-literal value will
+					**	be used in a MOVE statement so the target has to be a unique
+					**	name not FILLER.
+					*/
+					write_log("WISP",'E',"SCRNFILL","Internal error, non-literal value on FILLER.");
 				}
+				tput_line_at  (12, "05  %s PIC %s VALUE", this_item->name,this_item->pic);
+				tput_statement(16,this_item->source_clause);
+				tput_clause   (16,".");
 			}
 			else
 			{									/* otherwise use spaces		*/
-				write_line("           05  %s PIC %s VALUE SPACES.\n",
-												this_item->name,this_item->pic);
+				tput_line_at(12, "05  %s PIC %s VALUE SPACES.", this_item->name, this_item->pic);
 			}
 		}										/* not a filler, but has a lit-	*/
 												/* eral as a source. & no object*/
-		else if ( (strpos(this_item->source,"\"") != -1) && (!this_item->object[0]))
+		else if ( this_item->source_clause && LITERAL == this_item->source_clause->token->type && 
+			  !this_item->object_clause  )
 		{										
 			write_log("WISP",'I',"LITERALSRC",
 							"Processing Field %s with Literal source and no object.",this_item->name);
-			write_line("           05  %s PIC %s VALUE\n%s",this_item->name,this_item->pic,this_item->source);
-
-			if (whatcol(this_item->source) < 73)
-			{
-				write_line(".\n");
-			}
-			else
-			{
-				write_line("\n           .\n");
-			}
+			tput_line_at  (12, "05  %s PIC %s VALUE",this_item->name,this_item->pic);
+			tput_statement(16,this_item->source_clause);
+			tput_clause   (16,".");
 		}
 		else									/* not a filler, use the item	*/
 		{
+			tput_line_at(12, "05  %s",this_item->name);
 			if (item_blank(this_item->name))
 			{
-				if ((int)(strlen(this_item->pic)+strlen(this_item->name)) < 50)
-				{
-					write_line("           05  %s PIC %s\n",this_item->name,this_item->pic);
-					put_line  ("               BLANK WHEN ZERO.\n");
-				}
-				else
-				{
-					write_line("           05  %s\n",this_item->name);
-					write_line("               PIC %s BLANK WHEN ZERO.\n",this_item->pic);
-				}
-			}
-			else if ((int)(strlen(this_item->pic)+strlen(this_item->name)) < 50)
-			{
-				write_line("           05  %s PIC %s.\n",this_item->name,this_item->pic);
+				tput_clause (16, "PIC %s BLANK WHEN ZERO.",this_item->pic);
 			}
 			else
 			{
-				write_line("           05  %s PIC\n                    %s.\n",this_item->name,this_item->pic);
+				tput_clause (16, "PIC %s.",this_item->pic);
 			}
 		}
 	}
@@ -937,32 +828,40 @@ item_fac()
 
 static gen_mwconv()
 {
-		put_line("       CONVERT-ALPHA-VALUE-TO-NUMERIC.\n\n");			/* procedure to do MOVE WITH CONVERSION	*/
-		put_line("           CALL \"mwconv\" USING\n");				/* first let mwconv do it		*/
-		put_line("               WISP-ALPHA-CONVERSION-FIELD,\n");
-		put_line("               WISP-CONVERTED-INTEGER-FIELD,\n");
-		put_line("               WISP-CONVERTED-FRACTION-FIELD,\n");
-		put_line("               WISP-CONVERSION-LENGTH,\n");
-		put_line("               WISP-CONVERSION-ERROR-FIELD.\n\n");
+extern int mwconv_flag;
 
-		put_line("           IF WISP-CONVERSION-ERROR-FIELD IS = ZERO\n");
-		put_line("               MOVE \"N\" TO WISP-NUMERIC-CONVERSION-FLAG,\n");
-		put_line("           ELSE\n");
-		put_line("               MOVE \"Y\" TO WISP-NUMERIC-CONVERSION-FLAG.\n\n");	/* that's it!			*/
+	if (mwconv_flag) 
+	{
+		tput_blank();
+		tput_line_at( 8, "CONVERT-ALPHA-VALUE-TO-NUMERIC.");			/* procedure to do MOVE WITH CONVERSION	*/
+		tput_line_at(12, "CALL \"mwconv\" USING");				/* first let mwconv do it		*/
+		tput_line_at(16, "WISP-ALPHA-CONVERSION-FIELD,");
+		tput_line_at(16, "WISP-CONVERTED-INTEGER-FIELD,");
+		tput_line_at(16, "WISP-CONVERTED-FRACTION-FIELD,");
+		tput_line_at(16, "WISP-CONVERSION-LENGTH,");
+		tput_line_at(16, "WISP-CONVERSION-ERROR-FIELD.");
+
+		tput_line_at(12, "IF WISP-CONVERSION-ERROR-FIELD IS = ZERO");
+		tput_line_at(12, "    MOVE \"N\" TO WISP-NUMERIC-CONVERSION-FLAG,");
+		tput_line_at(12, "ELSE");
+		tput_line_at(12, "    MOVE \"Y\" TO WISP-NUMERIC-CONVERSION-FLAG.");
+	}
 }
 
 scrn_para()									/* write the screen paragraphs for all screens	*/
 {
 	int scrnum;
-	char wdr[48],wgs[48],wpd[48],wdc[48],wrc[48];
+	char wdr[48],wgs[48],wpd[48],wdc[48],wrc[48],wrx[48];
 
 	write_log("WISP",'I',"GENWISPSCRN","Begin generation of WISP screen and support procedures.");
 
 	if (!in_decl)									/* be sure we aren't in the declaratives*/
 	{
-		put_line("       WISP-PROCEDURES SECTION.\n\n");			/* start the procedure section		*/
-		if (mwconv_flag) 
-			gen_mwconv();
+		tput_blank();
+		tput_scomment("****** The following paragraphs were insert by WISP ******");
+		tput_blank();
+		tput_line_at(8, "WISP-PROCEDURES SECTION.\n\n");			/* start the procedure section		*/
+		gen_mwconv();
 	}
 
 	for (scrnum=0; scrnum<num_screens; scrnum++)					/* now write the procs for each screen	*/
@@ -979,6 +878,7 @@ scrn_para()									/* write the screen paragraphs for all screens	*/
 			make_fld(wpd,scrn_name[scrnum],"DWPD-");
 			make_fld(wdc,scrn_name[scrnum],"DWDC-");
 			make_fld(wrc,scrn_name[scrnum],"DWRC-");
+			make_fld(wrx,scrn_name[scrnum],"DWRX-");
 		}
 		else
 		{
@@ -987,73 +887,78 @@ scrn_para()									/* write the screen paragraphs for all screens	*/
 			make_fld(wpd,scrn_name[scrnum],"WPD-");
 			make_fld(wdc,scrn_name[scrnum],"WDC-");
 			make_fld(wrc,scrn_name[scrnum],"WRC-");
+			make_fld(wrx,scrn_name[scrnum],"WRX-");
 		}
 
-		write_line("\n      ***** PROCEDURES FOR SCREEN %s\n\n",scrn_name[scrnum]);
-		write_line("       %s.\n",wdr);						/* Gen DISPLAY AND READ paragraph.	*/
-		write_line("           PERFORM %s.\n",wpd);				/* Perform Put Screen Data.		*/
-		write_line("           MOVE SPACE TO %s.\n",crt_status[cur_crt]);
-		write_line("           PERFORM %s\n",wdc);				/* Perform Display and check.		*/
-		put_line  ("                   UNTIL WISP-ON-PF-KEYS IS EQUAL TO \042*\042\n");
-		write_line("                   AND   %s IS NOT EQUAL TO SPACE\n",crt_status[cur_crt]);
-		write_line("                   AND   %s IS NOT EQUAL TO \042E\042.\n\n",crt_status[cur_crt]);
+		tput_blank();
+		tput_scomment("***** PROCEDURES FOR SCREEN %s",scrn_name[scrnum]);
+		tput_line_at(8,  "%s.",wdr);						/* Gen DISPLAY AND READ paragraph.	*/
+		tput_line_at(12, "PERFORM %s.",wpd);					/* Perform Put Screen Data.		*/
+		tput_line_at(12, "MOVE SPACE TO %s.",crt_status[cur_crt]);
+		tput_line_at(12, "PERFORM %s",wdc);					/* Perform Display and check.		*/
+		tput_line_at(20, "UNTIL WISP-ON-PF-KEYS IS EQUAL TO \"*\"");
+		tput_line_at(20, "AND   %s IS NOT EQUAL TO SPACE",crt_status[cur_crt]);
+		tput_line_at(20, "AND   %s IS NOT EQUAL TO \"E\".",crt_status[cur_crt]);
 		if (crt_cursor[cur_crt][0])						/* if there is a cursor			*/
 		{
-			put_line  ("           CALL \042w2rowcol\042 USING WISP-CRT-ORDER-AREA-3,\n");
-			write_line("                          %s.\n",crt_cursor[cur_crt]);
+			tput_line_at  (12, "CALL \"w2rowcol\" USING WISP-CRT-ORDER-AREA-3,");
+			tput_clause   (16, "%s.",crt_cursor[cur_crt]);
 		}
 
-		write_line("       %s.\n",wdc);						/* Wisp display and check.		*/
-		write_line("           CALL \042wscreen\042 USING %s,\n",scrn_name[scrnum]);
-		put_line  ("                                VWANG-DISP-AND-READ-ALT,\n");
-		put_line  ("                                WISP-CRT-RECORD,\n");
-		put_line  ("                                VWANG-FULL-SCREEN,\n");
-		put_line  ("                                WISP-ALLOWABLE-PF-KEYS,\n");
-		put_line  ("                                WISP-ON-PF-KEYS,\n");
-		write_line("                                %s,\n",crt_pfkey[cur_crt]);	/* output the PFKEY variable name 	*/
-		write_line("                                %s.\n\n",crt_status[cur_crt]);/* output the STATUS variable name	*/
-		put_line  ("           IF WISP-ON-PF-KEYS IS NOT = \042*\042\n");
-		write_line("              PERFORM %s.\n\n",wrc);			/* Perform wisp range check.		*/
-		write_line("       %s.\n",wrc);						/* Gen range check para.		*/
+		tput_line("       %s.\n",wdc);						/* Wisp display and check.		*/
+		tput_line("           CALL \"wscreen\" USING %s,\n",scrn_name[scrnum]);
+		tput_line("                                VWANG-DISP-AND-READ-ALT,\n");
+		tput_line("                                WISP-CRT-RECORD,\n");
+		tput_line("                                VWANG-FULL-SCREEN,\n");
+		tput_line("                                WISP-ALLOWABLE-PF-KEYS,\n");
+		tput_line("                                WISP-ON-PF-KEYS,\n");
+		tput_line("                                %s,\n",crt_pfkey[cur_crt]);	/* output the PFKEY variable name 	*/
+		tput_line("                                %s.\n\n",crt_status[cur_crt]);/* output the STATUS variable name	*/
+		tput_line_at(12, "IF WISP-ON-PF-KEYS IS NOT = \"*\" THEN");
+		tput_line_at(16, "PERFORM %s THRU",wrc);			/* Perform wisp range check.			*/
+		tput_clause (20, "%s.",wrx);
 
-		this_item = screen_item[scrnum];				/* pointer to first item in the current screen	*/
+		tput_line_at(8,  "%s.",wrc);					/* Gen range check para.			*/
 
-		chk_range();							/* generate the range checking code		*/
+		chk_range(screen_item[scrnum]);					/* generate the range checking code		*/
 
+		tput_line_at(8,  "%s.",wrx);					/* Gen range check exit para 			*/
+		tput_line_at(12, "EXIT.");
 
-		write_line("\n      ***** PUT PROCEDURE - SCREEN %s\n\n",scrn_name[scrnum]);
-		write_line("       %s.\n",wpd);						/* Put screen data.			*/
-		this_item = screen_item[scrnum];				/* pointer to first item in the current screen	*/
-		move_source();							/* move the source fields			*/
+		tput_scomment("***** PUT PROCEDURE - SCREEN %s",scrn_name[scrnum]);
+		tput_line_at(8,  "%s.",wpd);						/* Put screen data.			*/
+
+		move_source(screen_item[scrnum]);				/* move the source fields			*/
 										/* move the screen order area			*/
 		make_oa(templine,scrn_name[scrnum]);				/* create one					*/
-		write_line("           MOVE %s TO WISP-CRT-ORDER-AREA.\n",templine);
-		write_line("\n      ***** GET PROCEDURE - SCREEN %s\n\n",scrn_name[scrnum]);
-		write_line("       %s.\n",wgs);					/* Get screen data.				*/
-		this_item = screen_item[scrnum];
-		if (0==move_object())						/* Move all the screen fields into their objects*/
+		tput_line_at(12, "MOVE %s TO WISP-CRT-ORDER-AREA.",templine);
+
+		tput_scomment("***** GET PROCEDURE - SCREEN %s",scrn_name[scrnum]);
+		tput_line_at(8,  "%s.",wgs);					/* Get screen data.				*/
+
+		if (0==move_object(screen_item[scrnum]))			/* Move all the screen fields into their objects*/
 		{
-			put_line("           CONTINUE.\n");
+			tput_line_at(12, "CONTINUE.");
 		}
 	}
 
 	write_log("WISP",'I',"ENDSCRNGEN","Finish generation of screen and support procedures.");
 }
 
-move_source()									/* move sources to their objects		*/
+static move_source(the_item)							/* move sources to their objects		*/
+item_record *the_item;
 {
 	int i,a,b,c,i1,i2,i3;
 	int dim;
 
-
-	do
+	while (the_item)							/* till there are no more...			*/
 	{									/* if there is a source, do it			*/
 										/* if it has a source and it's not a FILLER...	*/
-		if ((this_item->vert_1 != -1) && this_item->source[0] && strcmp(this_item->name,"FILLER"))
+		if ((the_item->vert_1 != -1) && the_item->source_clause && strcmp(the_item->name,"FILLER"))
 		{
-			dim = this_item->vert_1 ? 1 : 0;
-			dim += this_item->vert_2 ? 1 : 0;
-			dim += this_item->horiz ? 1 : 0;
+			dim = the_item->vert_1 ? 1 : 0;
+			dim += the_item->vert_2 ? 1 : 0;
+			dim += the_item->horiz ? 1 : 0;
 
 			if (dim == 0)							/* no repeats				*/
 			{
@@ -1061,423 +966,426 @@ move_source()									/* move sources to their objects		*/
 			}
 			else if (dim == 1)						/* one dimension			*/
 			{
-				a = this_item->vert_1 ? this_item->vert_1 : this_item->horiz;	/* vertical or horizontal	*/
+				a = the_item->vert_1 ? the_item->vert_1 : the_item->horiz;	/* vertical or horizontal	*/
 				b = 0; c = 0;
 			}
 			else if (dim == 2)						/* two dimensions			*/
 			{
-				a = this_item->vert_1;					/* vertical plus one other		*/
-				b = this_item->vert_2 ? this_item->vert_2 : this_item->horiz;	/* second vertical or horizontal*/
+				a = the_item->vert_1;					/* vertical plus one other		*/
+				b = the_item->vert_2 ? the_item->vert_2 : the_item->horiz;	/* second vertical or horizontal*/
 				c = 0;
 			}
 			else								/* three dimensions			*/
 			{
-				a = this_item->vert_1;					/* first vertical			*/
-				b = this_item->vert_2;					/* second vertical			*/
-				c = this_item->horiz;					/* and the horizontal			*/
+				a = the_item->vert_1;					/* first vertical			*/
+				b = the_item->vert_2;					/* second vertical			*/
+				c = the_item->horiz;					/* and the horizontal			*/
 			}
 
-			if (dim)						/* it is a multi-dimensional item		*/
+			if (LITERAL != the_item->source_clause->token->type || the_item->object_clause)
 			{
-				i1 = a;
-				do						/* do the indexed moves				*/
-				{
-					if (b)					/* if it has 2 dimensions...			*/
-					{
-						i2 = b;
-						do
-						{
-							if (c)
-							{
-								i3 = c;
-								do
-								{			/* three dimensions.			*/
-											/* write the move statement		*/
-									d_move(this_item->name,this_item->source,3,i1,i2,i3);
-								} while (--i3);
-							}
-							else
-							{				/* only 2 dimensions			*/
-								d_move(this_item->name,this_item->source,2,i1,i2,0);
-							}
-						} while (--i2);
-					}
-					else
-					{						/* only one dimension			*/
-						d_move(this_item->name,this_item->source,1,i1,0,0);
-					}
-				} while (--i1);					/* decrement outer dimension			*/
-			}
-			else
-			{
-				if (strpos(this_item->source,"\042") != -1)	/* A literal source				*/
-				{
-					if (this_item->object[0])		/* if it has an object, do the move		*/
-					{
-						write_line("           MOVE \n%s\n              TO %s.\n",
-							this_item->source,this_item->name);
-					}
-				}
-				else if ((int)(strlen(this_item->source) + strlen(this_item->name)) > 45)
-				{						/* Can't fit on one line			*/
-					write_line("           MOVE %s\n              TO %s.\n",
-						this_item->source,this_item->name);
-				}
-				else						/* It fits on one line				*/
-				{
-					write_line("           MOVE %s TO",this_item->source);
-					write_line(" %s.\n",this_item->name);
-				}
-
+				/*
+				**	Generate MOVE source-field TO screen-field 
+				**	for everything except a literal with no object clause.
+				*/
+				gen_move(maketoknode(make_token(IDENTIFIER,the_item->name)),the_item->source_clause,dim,a,b,c);
 			}
 		}
-		last_item = this_item;
-		this_item = this_item->next_item;			/* point to the next item...			*/
-	}
-	while (this_item);							/* till there are no more...			*/
+		last_item = the_item;
+		the_item = the_item->next_item;					/* point to the next item...			*/
+	} 
 }
 
-									/* write the source move statement for dimensioned items */
 
-int d_move(dest,src,num,i1,i2,i3)
-int 	num,i1,i2,i3;
-char	*src, *dest;
-{
-	char	*brk;
-
-	brk = " ";
-
-	switch(num)
-	{
-		case 1:								/* one dimensional item				*/
-		{
-			if ((int)(strlen(src) + strlen(dest)) > 40) brk = "\n             ";
-
-			write_line("           MOVE %s (%d)%sTO %s (%d).\n",src,i1,brk,dest,i1);
-
-			break;
-		}
-
-		case 2:								/* two dimensional item				*/
-		{
-			if ((int)(strlen(src) + strlen(dest)) > 34) brk = "\n             ";
-
-			write_line("           MOVE %s (%d %d)%sTO %s (%d %d).\n",src,i1,i2,brk,dest,i1,i2);
-
-			break;
-		}
-
-		case 3:								/* three dimensional item			*/
-		{
-			if ((int)(strlen(src) + strlen(dest)) > 28) brk = "\n             ";
-
-			write_line("           MOVE %s (%d %d %d)%sTO %s (%d %d %d).\n",src,i1,i2,i3,brk,dest,i1,i2,i3);
-
-			break;
-		}
-	}
-}
-
-int move_object()
+static int move_object(the_item)
+item_record *the_item;
 {
 	int num_moved,i;
-	register int i1,i2,i3,a,b,c,dim;
+	int i1,i2,i3,dim;
 
 	num_moved = 0;
 
-	do
+	while (the_item)							/* till there are no more...			*/
 	{										/* if there is a object, do it		*/
-		if ((this_item->vert_1 != -1) && this_item->object[0])			/* skip over group items		*/
+		if ((the_item->vert_1 != -1) && the_item->object_clause) 		/* skip over group items		*/
 		{
-			dim = this_item->vert_1 ? 1 : 0;
-			dim += this_item->vert_2 ? 1 : 0;
-			dim += this_item->horiz ? 1 : 0;
+			dim = the_item->vert_1 ? 1 : 0;
+			dim += the_item->vert_2 ? 1 : 0;
+			dim += the_item->horiz ? 1 : 0;
 
+			i1 = i2 = i3 = 0;
 			if (dim == 1)							/* one dimension			*/
 			{
-				a = this_item->vert_1 ? this_item->vert_1 : this_item->horiz;	/* vertical or horizontal	*/
-				b = 0; c = 0;
+				i1 = the_item->vert_1 ? the_item->vert_1 : the_item->horiz;	/* vertical or horizontal	*/
+				i2 = 0; 
+				i3 = 0;
 			}
 			else if (dim == 2)						/* two dimensions			*/
 			{
-				a = this_item->vert_1;					/* vertical plus one other		*/
-				b = this_item->vert_2 ? this_item->vert_2 : this_item->horiz;	/* second vertical or horiz	*/
-				c = 0;
+				i1 = the_item->vert_1;					/* vertical plus one other		*/
+				i2 = the_item->vert_2 ? the_item->vert_2 : the_item->horiz;	/* second vertical or horiz	*/
+				i3 = 0;
 			}
 			else								/* three dimensions			*/
 			{
-				a = this_item->vert_1;					/* first vertical 			*/
-				b = this_item->vert_2;					/* second vertical			*/
-				c = this_item->horiz;					/* and the horizontal			*/
+				i1 = the_item->vert_1;					/* first vertical 			*/
+				i2 = the_item->vert_2;					/* second vertical			*/
+				i3 = the_item->horiz;					/* and the horizontal			*/
 			}
 
-			if (dim)							/* it is a multi-dimensional item	*/
-			{
-				i1 = a;
-				do							/* do the indexed moves			*/
-				{
-					if (b)						/* if it has 2 dimensions...		*/
-					{
-						i2 = b;
-						do
-						{
-							if (c)
-							{
-								i3 = c;
-								do
-								{			/* three dimensions.			*/
-									d_move(this_item->object,this_item->name,3,i1,i2,i3);
-								} while (--i3);
-							}
-							else
-							{				/* only 2 dimensions			*/
-								d_move(this_item->object,this_item->name,2,i1,i2,0);
-							}
-						} while (--i2);
-					}
-					else
-					{						/* only one dimension			*/
-						d_move(this_item->object,this_item->name,1,i1,0,0);
-					}
-				} while (--i1);					/* decrement outer dimension			*/
-			}
-			else							/* singular item				*/
-			{
-				if ((int)(strlen(this_item->name) + strlen(this_item->object)) > 45)	
-				{						/* Can't fit on one line			*/
-					write_line("           MOVE %s\n              TO %s.\n",
-						this_item->name,this_item->object);
-				}
-				else						/* It fits on one line				*/
-				{
-					write_line("           MOVE %s TO",this_item->name);
-					write_line(" %s.\n",this_item->object);
-				}
-					num_moved++;				/* count it					*/
-			}
+			num_moved += gen_move(the_item->object_clause,maketoknode(make_token(IDENTIFIER,the_item->name)),
+						dim,i1,i2,i3);
+
 		}
-		last_item = this_item;
-		this_item = this_item->next_item;				/* point to the next item...			*/
-	}
-	while (this_item);							/* till there are no more...			*/
+		last_item = the_item;
+		the_item = the_item->next_item;					/* point to the next item...			*/
+	} 
 
 	return(num_moved);							/* tell them how many				*/
 }
 
-
-int chk_range()									/* scan a screen record and create range checks	*/
+static int gen_move(dest_node,src_node,num,i1,i2,i3)
+NODE	dest_node, src_node;
+int	num,i1,i2,i3;
 {
-	register int i,i1,i2,i3,a,b,c,dim;
+	char	index[40];
+	int	movecnt;
 
-	do
-	{										/* if there is a range, do it		*/
-		if ((this_item->vert_1 != -1) && this_item->lo_range[0])		/* skip over group items		*/
+	movecnt = 0;
+
+	switch(num)
+	{
+	default:
+		movecnt = 1;
+		break;
+	case 1:
+		movecnt = i1;
+		break;
+	case 2:
+		movecnt = i1 * i2;
+		break;
+	case 3:
+		movecnt = i1 * i2 * i3;
+		break;
+	}
+
+	if (num==0)
+	{
+		tput_line_at  (12, "MOVE");
+		tput_statement(16, src_node);
+		tput_clause   (16, "TO");
+		tput_statement(16, dest_node);
+		tput_clause   (16, ".");
+	}
+	else
+	{
+		if (i3) 
 		{
-			dim = this_item->vert_1 ? 1 : 0;
-			dim += this_item->vert_2 ? 1 : 0;
-			dim += this_item->horiz ? 1 : 0;
+			strcpy(index,"(WIDX-1 WIDX-2 WIDX-3)");
+		}
+		else if (i2) 
+		{
+			strcpy(index,"(WIDX-1 WIDX-2)");
+		}
+		else if (i1) 
+		{
+			strcpy(index,"(WIDX-1)");
+		}
 
-			if (dim == 1)							/* one dimension			*/
+		tput_line_at(12, "PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WIDX-1 > %d",i1);
+		if (i2)
+		{
+			tput_line_at(13, "PERFORM VARYING WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > %d",i2);
+			if (i3)
 			{
-				a = this_item->vert_1 ? this_item->vert_1 : this_item->horiz;	/* vertical or horizontal	*/
-				b = 0; c = 0;
-			}
-			else if (dim == 2)						/* two dimensions			*/
-			{
-				a = this_item->vert_1;					/* vertical plus one other		*/
-				b = this_item->vert_2 ? this_item->vert_2 : this_item->horiz;	/* second vertical or horiz	*/
-				c = 0;
-			}
-			else								/* three dimensions			*/
-			{
-				a = this_item->vert_1;					/* first vertical 			*/
-				b = this_item->vert_2;					/* second vertical			*/
-				c = this_item->horiz;					/* and the horizontal			*/
-			}
-
-			if (dim)							/* it is a multi-dimensional item	*/
-			{
-				i1 = a;
-				do							/* do the indexed moves			*/
-				{
-					if (b)						/* if it has 2 dimensions...		*/
-					{
-						i2 = b;
-						do
-						{
-							if (c)
-							{
-								i3 = c;
-								do
-								{			/* three dimensions.			*/
-									d_range(3,i1,i2,i3);   /* write the needed statements	*/
-								} while (--i3);
-							}
-							else
-							{				/* only 2 dimensions			*/
-								d_range(2,i1,i2,0);	/* write the needed statements		*/
-							}
-						} while (--i2);
-					}
-					else
-					{						/* only one dimension			*/
-						d_range(1,i1,0,0);			/* write the needed statements		*/
-					}
-				} while (--i1);					/* decrement outer dimension			*/
-			}
-			else							/* singular item				*/
-			{
-				if (this_item->hi_range[0])			/* Type 1, lo and hi ranges provided		*/
-				{
-					r_fac(this_item->name,0,0,0);		/* see if modified field			*/
-					write_line("           MOVE %s TO %s\n",this_item->name,this_item->object);
-					write_line("           IF %s IS <\n              %s\n",
-						this_item->object,this_item->lo_range);
-					write_line("           OR %s IS >\n              %s\n",
-						this_item->object,this_item->hi_range);
-					write_line("              MOVE %s TO %s\n",this_item->lo_range,this_item->object);
-					r_err(this_item->name,0,0,0);		/* write the error lines			*/
-				}							/* type 2, constant phrase		*/
-				else if (!strcmp(this_item->lo_range,"POSITIVE") || !strcmp(this_item->lo_range,"NEGATIVE"))
-				{
-					this_item->lo_range[0] = '\0';			/* Juster will handle this		*/
-				}
-				else if (!this_item->num_range)				/* type 3 but no range count		*/
-				{
-					write_log("WISP",'E',"NORANGECNT","Range specified for field %s but no count found.\n",
-														this_item->name);
-				}
-				else							/* has to be type 3, array check	*/
-				{
-					r_fac(this_item->name,0,0,0);			/* see if modified field		*/
-					write_line("           IF %s IS NOT =\n              %s(1)\n",
-						this_item->name,this_item->lo_range);
-
-					for (i=1; i < this_item->num_range; i++)
-					{
-						write_line("           AND %s IS NOT =\n              %s(%d)\n",
-							this_item->name,this_item->lo_range,i+1);
-					}
-					r_err(this_item->name,0,0,0);		/* write the error lines			*/
-
-				}
+				tput_line_at(14, "PERFORM VARYING WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > %d",i3);
 			}
 		}
-		last_item = this_item;
-		this_item = this_item->next_item;				/* point to the next item...			*/
+#ifdef OLD1
+		if (i2)
+		{
+			tput_line_at(20, "AFTER   WIDX-2 FROM 1 BY 1 UNTIL WIDX-2 > %d",i2);
+		}
+		if (i3)
+		{
+			tput_line_at(20, "AFTER   WIDX-3 FROM 1 BY 1 UNTIL WIDX-3 > %d",i3);
+		}
+#endif
+		tput_line_at  (16, "MOVE");
+		tput_token    (20, src_node->token);
+		tput_clause   (20, index);
+		tput_statement(20, src_node->next);
+		tput_line_at  (18, "TO");
+		tput_token    (20, dest_node->token);
+		tput_clause   (20, index);
+		tput_statement(20, dest_node->next);
+		if (i2)
+		{
+			if (i3)
+			{
+				tput_line_at  (14, "END-PERFORM");
+			}
+			tput_line_at  (13, "END-PERFORM");
+		}
+		tput_line_at  (12, "END-PERFORM.");
 	}
-	while (this_item);							/* till there are no more...			*/
 
-	write_line("           IF %s IS NOT = \042E\042\n",crt_status[cur_crt]);
-	put_line  ("              MOVE \042*\042 TO WISP-ON-PF-KEYS.\n");
+	return movecnt;
 }
 
-									/* write the range statements for dimensioned items 	*/
-
-int d_range(num,i1,i2,i3)
-int num,i1,i2,i3;
+static int chk_range(the_item)							/* scan a screen record and create range checks	*/
+item_record *the_item;
 {
-	int i,j;
-	char itemname[60];
-	char itemobject[60];
+	int i,i1,i2,i3,dim;
+
+	while (the_item)							/* till there are no more...			*/
+	{										/* if there is a range, do it		*/
+		if ((the_item->vert_1 != -1) && the_item->lo_range_clause)		/* skip over group items		*/
+		{
+			dim = the_item->vert_1 ? 1 : 0;
+			dim += the_item->vert_2 ? 1 : 0;
+			dim += the_item->horiz ? 1 : 0;
+
+			switch (dim)
+			{
+			default:
+				i1 = 0;
+				i2 = 0;
+				i3 = 0;
+				break;
+			case 1:								/* one dimension			*/
+				i1 = the_item->vert_1 ? the_item->vert_1 : the_item->horiz;	/* vertical or horizontal	*/
+				i2 = 0; 
+				i3 = 0;
+				break;
+			case 2:								/* two dimensions			*/
+				i1 = the_item->vert_1;					/* vertical plus one other		*/
+				i2 = the_item->vert_2 ? the_item->vert_2 : the_item->horiz;	/* second vertical or horiz	*/
+				i3 = 0;
+				break;
+			case 3:								/* three dimensions			*/
+				i1 = the_item->vert_1;					/* first vertical 			*/
+				i2 = the_item->vert_2;					/* second vertical			*/
+				i3 = the_item->horiz;					/* and the horizontal			*/
+				break;
+			}
+
+			gen_range(the_item,i1,i2,i3);
+		}
+		last_item = the_item;
+		the_item = the_item->next_item;					/* point to the next item...			*/
+	} 
+
+	tput_line_at(12, "IF %s IS NOT = \"E\"",crt_status[cur_crt]);
+	tput_line_at(16, "MOVE \"*\" TO WISP-ON-PF-KEYS.");
+}
+
+static int gen_range(the_item,i1,i2,i3)
+int i1,i2,i3;
+item_record *the_item;
+{
+	char	label1[40], label2[40], label3[40], label4[40], label5[40];
+	char	index[40];
+	char	the_fac[80];
 
 	if (i3) 
 	{
-		sprintf(itemname,"%s(%d,%d,%d)",this_item->name,i1,i2,i3);
-		sprintf(itemobject,"%s(%d,%d,%d)",this_item->object,i1,i2,i3);
+		strcpy(index,"(WIDX-1 WIDX-2 WIDX-3)");
 	}
 	else if (i2) 
 	{
-		sprintf(itemname,"%s(%d,%d)",this_item->name,i1,i2);
-		sprintf(itemobject,"%s(%d,%d)",this_item->object,i1,i2);
+		strcpy(index,"(WIDX-1 WIDX-2)");
 	}
 	else if (i1) 
 	{
-		sprintf(itemname,"%s(%d)",this_item->name,i1);
-		sprintf(itemobject,"%s(%d)",this_item->object,i1);
+		strcpy(index,"(WIDX-1)");
 	}
 	else 
 	{
-		strcpy(itemname,this_item->name);
-		strcpy(itemobject,this_item->object);
+		index[0] = (char)0;
 	}
 
-	if (this_item->hi_range[0])							/* Type 1, lo and hi ranges provided	*/
+	if (the_item->hi_range_clause)							/* Type 1, lo and hi ranges provided	*/
 	{
-		r_fac(this_item->name,i1,i2,i3);					/* see if modified field		*/
-		write_line("           MOVE %s TO %s\n",itemname,itemobject);
-		write_line("           IF %s IS <\n              %s\n",itemobject,this_item->lo_range);
-		write_line("           OR %s IS >\n              %s\n",itemobject,this_item->hi_range);
-		write_line("              MOVE %s TO %s\n",this_item->lo_range,itemobject);
-		r_err(this_item->name,i1,i2,i3);					/* write the error lines		*/
+		tput_scomment("* OBJECT %s RANGE %s TO %s", token_data(the_item->object_clause->token), 
+			token_data(the_item->lo_range_clause->token), token_data(the_item->hi_range_clause->token));
+
+		if (i1)
+		{
+			tput_line_at(12, "MOVE 1 TO WIDX-1.");
+			gen_label(label1);
+			tput_line_at(8,  "%s.",label1);
+		}
+		if (i2)
+		{
+			tput_line_at(12, "MOVE 1 TO WIDX-2.");
+			gen_label(label2);
+			tput_line_at(8,  "%s.",label2);
+		}
+		if (i3)
+		{
+			tput_line_at(12, "MOVE 1 TO WIDX-3.");
+			gen_label(label3);
+			tput_line_at(8,  "%s.",label3);
+		}
+
+		make_fac(the_fac,the_item->name);
+
+		tput_line_at  (12, "MOVE WISP-MOD-BIT TO WISP-SET-BYTE.");
+		tput_line_at  (12, "CALL \"bit_test\" USING WISP-SET-BYTE,");
+		tput_clause   (16, "%s%s,", the_fac,index);
+		tput_clause   (16, "WISP-TEST-BYTE.");
+
+		tput_line_at  (12, "IF WISP-TEST-BYTE = \"Y\" THEN");
+		tput_line_at  (16, "MOVE %s%s TO",	the_item->name,index);
+		tput_clause   (20, "%s%s", token_data(the_item->object_clause->token), index);
+		tput_statement(20, the_item->object_clause->next);
+
+		tput_line_at  (16, "IF %s", token_data(the_item->object_clause->token));
+		tput_clause   (20, index);
+		tput_statement(20, the_item->object_clause->next);
+		tput_clause   (20, "IS < ");
+		tput_statement(20, the_item->lo_range_clause);
+		tput_clause   (20, "OR IS > ");
+		tput_statement(20, the_item->hi_range_clause);
+		tput_clause   (20, "THEN");
+
+		tput_line_at  (20, "MOVE");
+		tput_statement(24, the_item->lo_range_clause);
+		tput_clause   (24, "TO %s", token_data(the_item->object_clause->token));
+		tput_clause   (24, index);
+		tput_statement(24, the_item->object_clause->next);
+
+		tput_line_at  (20, "MOVE \"E\" TO %s,\n",crt_status[cur_crt]);
+		tput_line_at  (20, "MOVE WISP-ERROR-BIT TO WISP-SET-BYTE,");
+		tput_line_at  (20, "CALL \"bit_on\" USING WISP-SET-BYTE,");
+		tput_clause   (24, "%s%s.", the_fac,index);
+
+		if (i3)
+		{
+			tput_line_at(12, "ADD 1 TO WIDX-3.");
+			tput_line_at(12, "IF WIDX-3 <= %d THEN",i3);
+			tput_clause (16, "GO TO %s.",label3);
+		}
+		if (i2)
+		{
+			tput_line_at(12, "ADD 1 TO WIDX-2.");
+			tput_line_at(12, "IF WIDX-2 <= %d THEN",i2);
+			tput_clause (16, "GO TO %s.",label2);
+		}
+		if (i1)
+		{
+			tput_line_at(12, "ADD 1 TO WIDX-1.");
+			tput_line_at(12, "IF WIDX-1 <= %d THEN",i1);
+			tput_clause (16, "GO TO %s.",label1);
+		}
 	}										/* type 2, constant phrase		*/
-	else if (!strcmp(this_item->lo_range,"POSITIVE") || !strcmp(this_item->lo_range,"NEGATIVE"))
+	else if (eq_token(the_item->lo_range_clause->token,KEYWORD,"POSITIVE") ||
+	         eq_token(the_item->lo_range_clause->token,KEYWORD,"NEGATIVE")   )
 	{
-		this_item->lo_range[0] = '\0';						/* Juster will handle this		*/
-	}
-	else if (!this_item->num_range)							/* type 3 but no range count		*/
-	{
-		write_log("WISP",'E',"NORANGECNT","Range specified for field %s but no count found.",this_item->name);
+		free_statement(the_item->lo_range_clause);				/* Juster will handle this		*/
+		the_item->lo_range_clause = NULL;
 	}
 	else										/* has to be type 3, array check	*/
 	{
-		r_fac(this_item->name,i1,i2,i3);					/* see if modified field		*/
-		write_line("           IF %s IS NOT =\n              %s(1)\n",itemname,this_item->lo_range);
+		char	table_occurs_count[80];
 
-		for (j=1; j < this_item->num_range; j++)
+		if (the_item->num_range)
 		{
-			write_line("           AND %s IS NOT =\n              %s(%d)\n",
-											itemname,this_item->lo_range,j+1);
+			sprintf(table_occurs_count,"%d",the_item->num_range);
 		}
-		r_err(this_item->name,i1,i2,i3);					/* write the error lines		*/
+		else if (get_occurs(token_data(the_item->lo_range_clause->token),table_occurs_count))
+		{
+			write_log("WISP",'E',"RANGEOCCURS", "Unable to find OCCURS for RANGE table %s.",
+					token_data(the_item->object_clause->token));
+			strcpy(table_occurs_count,"(UNKNOWN)");
+		}
+
+		tput_scomment("* OBJECT %s RANGE TABLE %s OCCURS %s TIMES", 
+					token_data(the_item->object_clause->token), 
+					token_data(the_item->lo_range_clause->token),
+					table_occurs_count);
+
+		if (i1)
+		{
+			tput_line_at(12, "MOVE 1 TO WIDX-1.");
+			gen_label(label1);
+			tput_line_at(8,  "%s.",label1);
+		}
+		if (i2)
+		{
+			tput_line_at(12, "MOVE 1 TO WIDX-2.");
+			gen_label(label2);
+			tput_line_at(8,  "%s.",label2);
+		}
+		if (i3)
+		{
+			tput_line_at(12, "MOVE 1 TO WIDX-3.");
+			gen_label(label3);
+			tput_line_at(8,  "%s.",label3);
+		}
+
+		gen_label(label4);
+		gen_label(label5);
+		make_fac(the_fac,the_item->name);
+
+		tput_line_at  (12, "MOVE WISP-MOD-BIT TO WISP-SET-BYTE.");
+		tput_line_at  (12, "CALL \"bit_test\" USING WISP-SET-BYTE,");
+		tput_clause   (16, "%s%s,", the_fac,index);
+		tput_clause   (16, "WISP-TEST-BYTE.");
+
+		tput_line_at  (12, "IF WISP-TEST-BYTE NOT = \"Y\" THEN");
+		tput_clause   (16, "GO TO %s.",label5);
+
+		tput_line_at  (12, "MOVE %s%s", the_item->name,index);
+		tput_clause   (16, "TO %s", token_data(the_item->object_clause->token));
+		tput_clause   (20, index);
+		tput_statement(20, the_item->object_clause->next);
+		tput_clause   (20, ".");
+
+		tput_line_at  (12, "MOVE 1 TO WIDX-4.");
+                tput_line_at  (8,  "%s.", label4);
+
+		tput_line_at  (12, "IF %s", token_data(the_item->object_clause->token));
+		tput_clause   (16, index);
+		tput_statement(16, the_item->object_clause->next);
+		tput_clause   (16, "IS = %s(WIDX-4)", token_data(the_item->lo_range_clause->token));
+		tput_clause   (16, "THEN");
+		tput_clause   (16, "GO TO %s.", label5);
+
+		tput_line_at  (12, "ADD 1 TO WIDX-4.");
+		tput_line_at  (12, "IF WIDX-4 <= %s THEN",table_occurs_count);
+		tput_clause   (16, "GO TO %s.",label4);
+
+		tput_line_at  (12, "MOVE \"E\" TO %s.",crt_status[cur_crt]);
+		tput_line_at  (12, "MOVE WISP-ERROR-BIT TO WISP-SET-BYTE.");
+		tput_line_at  (12, "CALL \"bit_on\" USING WISP-SET-BYTE,");
+		tput_clause   (16, "%s%s.",the_fac,index);
+		tput_line_at  (8,  "%s.",label5);
+
+		if (i3)
+		{
+			tput_line_at(12, "ADD 1 TO WIDX-3.\n");
+			tput_line_at(12, "IF WIDX-3 <= %d THEN",i3);
+			tput_clause (16, "GO TO %s.\n",label3);
+		}
+		if (i2)
+		{
+			tput_line_at(12, "ADD 1 TO WIDX-2.\n");
+			tput_line_at(12, "IF WIDX-2 <= %d THEN",i2);
+			tput_clause (16, "GO TO %s.\n",label2);
+		}
+		if (i1)
+		{
+			tput_line_at(12, "ADD 1 TO WIDX-1.\n");
+			tput_line_at(12, "IF WIDX-1 <= %d THEN",i1);
+			tput_clause (16, "GO TO %s.\n",label1);
+		}
 	}
+
 }
 
-
-
-
-r_fac(the_name,i1,i2,i3)							/* write the FAC test for ranges		*/
-char *the_name;
-int  i1,i2,i3;
-{
-	char tfac[34];
-	char ltemp[80];
-
-	make_fac(tfac,the_name);						/* need a FAC					*/
-	if (i3) 	sprintf(ltemp,"%s(%d,%d,%d)",tfac,i1,i2,i3);		/* put in the index if need be			*/
-	else if (i2) 	sprintf(ltemp,"%s(%d,%d)",tfac,i1,i2);			/* put in the index if need be			*/
-	else if (i1) 	sprintf(ltemp,"%s(%d)",tfac,i1);			/* put in the index if need be			*/
-	else		strcpy(ltemp,tfac);
-
-	put_line  ("           MOVE WISP-MOD-BIT TO WISP-SET-BYTE.\n");
-	put_line  ("           CALL \042bit_test\042 USING WISP-SET-BYTE,\n");
-	write_line("                               %s\n",ltemp);
-	put_line  ("                               WISP-TEST-BYTE.\n\n");
-	put_line  ("           IF WISP-TEST-BYTE = \042Y\042\n");
-}
-
-r_err(the_name,i1,i2,i3)							/* write the error lines for ranges		*/
-char *the_name;
-int  i1,i2,i3;
-{
-	char tfac[34];
-	char ltemp[80];
-
-	make_fac(tfac,the_name);						/* need a FAC					*/
-	if (i3) 	sprintf(ltemp,"%s(%d,%d,%d)",tfac,i1,i2,i3);		/* put in the index if need be			*/
-	else if (i2) 	sprintf(ltemp,"%s(%d,%d)",tfac,i1,i2);			/* put in the index if need be			*/
-	else if (i1) 	sprintf(ltemp,"%s(%d)",tfac,i1);			/* put in the index if need be			*/
-	else		strcpy(ltemp,tfac);
-
-	write_line("              MOVE \042E\042 TO %s,\n",crt_status[cur_crt]);
-	put_line  ("              MOVE WISP-ERROR-BIT TO WISP-SET-BYTE,\n");
-	put_line  ("              CALL \042bit_on\042 USING WISP-SET-BYTE,\n");
-	write_line("                                  %s.\n\n",ltemp);
-}
-
-
-
-p_occurs(exit_item)									/* Process the end of a group of occurs.*/
+static p_occurs(exit_item)								/* Process the end of a group of occurs.*/
 item_record *exit_item;									/* Up to the item pointed to.		*/
 {
 	item_record *temp_ptr;
@@ -1492,7 +1400,7 @@ item_record *exit_item;									/* Up to the item pointed to.		*/
 
 	temp_ptr = occurs_item;								/* Point to first occurs item.		*/
 
-	do
+	for(;;)										/* Do all till we process the exit item	*/
 	{
 		if (temp_ptr->vert_1 != -1) 						/* Skip over junk.			*/
 		{
@@ -1501,7 +1409,7 @@ item_record *exit_item;									/* Up to the item pointed to.		*/
 		}
 		if (temp_ptr == exit_item) break;
 		temp_ptr = temp_ptr->next_item;
-	} while (1);									/* Do all till we process the exit item	*/
+	}
 
 	i = hi_row - low_row + 1;							/* Actual vertical increment value.	*/
 
@@ -1517,73 +1425,28 @@ item_record *exit_item;									/* Up to the item pointed to.		*/
 }
 
 
-exit_pmode()										/* Finish a parsing mode		*/
-{
-	int i;
-
-	if (pmode == FIG_CONS)								/* see if exiting FIGURATIVE CONSTANTS	*/
-	{
-		put_line("            .\n");						/* yes, make sure a period goes in.	*/
-		pmode = 0;								/* Pmode is now finished		*/
-	}
-	else if (pmode == WS_SCREEN)							/* see if trying to exit a screen	*/
-	{
-		if ((strcmp(area_a,"    ") && (area_a_num == 0)) || (area_a_num == 1))	/* only exit if area a is not a space	*/
-		{									/* or area a is equal to 1.		*/
-			if (occurs_item) p_occurs(this_item);				/* Check Occurs items before exit.	*/
-			pmode = 0;
-		}
-	}
-	else if (copy_sect)								/* Have we been copying a SECTION?	*/
-	{
-		if (!strncmp(parms[1],"SECTION",7))					/* Is this a section?			*/
-		{
-			copy_sect = 0;							/* Only stop on a new section.		*/
-			copy_para = 0;
-			fprintf(par_file,"       WISP-SECTION-%d-END.\n",sect_num++);	/* Put in the ending paragraph.		*/
-		}
-	}
-	else if (copy_para)								/* Have we been copying paragraphs?	*/
-	{
-		copy_para = 0;								/* reset the mode.			*/
-	}
-	else if (copy_decl)								/* Have we been copying paragraphs?	*/
-	{
-		copy_decl = 0;								/* reset the mode.			*/
-	}
-
-	if (division == PROCEDURE_DIVISION)						/* If in the procedure division, when	*/
-	{										/* something is in area a, it has to	*/
-		chk_dpar();								/* be a paragraph, or declarative sect.	*/
-	}
-}
-
-int item_blank(the_name)								/* See if this item is in the blank list*/
+static int item_blank(the_name)								/* See if this item is in the blank list*/
 char *the_name;
 {
 	int i;
 
-	if (!blank_count) return(0);							/* None on the list.			*/
-
-	i = 0;
-
-	do
+	for(i=0; i < blank_count; i++)
 	{
 		if (!strcmp(blank_item[i],the_name)) return(1);				/* Found it!!				*/
-	} while (i++ < blank_count);
+	}
 	return(0);									/* Didn't find it.			*/
 }
 
-clear_item(the_item)
+static clear_item(the_item)
 item_record *the_item;
 {
 	strcpy(the_item->item_num,"05  ");						/* default item num is 05		*/
 	the_item->name[0] = 0;								/* Clear the variable name		*/
 	the_item->pic[0] = 0;								/* The pic definition for the var	*/
-	the_item->source[0] = 0;							/* The var that is the source for output*/
-	the_item->object[0] = 0;							/* The var that is the target for input */
-	the_item->lo_range[0] = 0;							/* The low end of the RANGE		*/
-	the_item->hi_range[0] = 0;							/* The high end of the RANGE		*/
+	the_item->source_clause = NULL;							/* The var that is the source for output*/
+	the_item->object_clause = NULL;							/* The var that is the target for input */
+	the_item->lo_range_clause = NULL;						/* The low end of the RANGE		*/
+	the_item->hi_range_clause = NULL;						/* The high end of the RANGE		*/
 	the_item->num_range = 0;							/* no OCCURing range items		*/
 	the_item->row = 0;
 	the_item->col = 0;								/* the row and collumn of the display	*/
@@ -1599,20 +1462,106 @@ item_record *the_item;
 	the_item->vert_off2 = 1;
 }
 
-/*
-	whatcol		Return the column number we will be in if this string was written.
-*/
-int whatcol(str)
-char	*str;
+int gen_label(newlabel)
+char *newlabel;
 {
-	char	*ptr;
+	static cnt;
 
-	if ( ptr=(char *)strrchr(str,'\n') )				/* Find the last newline in the string			*/
-	{
-		str = ptr;						/* point to last newline				*/
-		str++;							/* point past the newline				*/
-	}
-
-	return(strlen(str)+1);						/* Return length plus one.				*/
+	cnt++;
+	sprintf(newlabel,"WLABEL-%04d",cnt);
+	return 0;
 }
 
+
+
+/* 	Search through the various field lists until you find the given field, then return it's pointer.			*/
+
+item_record *find_item(the_name)
+char *the_name;
+{
+	int i;
+	item_record *the_item;
+
+	for (i=0; i<num_screens; i++)							/* first search each screen...		*/
+	{
+		the_item = screen_item[i];						/* Get ptr to first field		*/
+		do
+		{
+			if (!strcmp(the_name,the_item->name))				/* found it!				*/
+			{
+				return(the_item);					/* Return the pointer.			*/
+			}
+			the_item = the_item->next_item;					/* check next item			*/
+		} while (the_item);							/* until no more items			*/
+	}
+	return(0);									/* Not found.				*/
+}
+
+
+static char *occurs_cache = NULL;						/* Cache or items with OCCURS clauses		*/
+
+struct occurs_s
+{
+	char	name[40];
+	char	count[40];
+};
+
+static int occurs_cmp(p1,p2)							/* Compare routine for occurs_cache ring.	*/
+struct occurs_s *p1, *p2;
+{
+	return(strcmp(p1->name, p2->name));
+}
+
+got_occurs(data_name,count)
+char	*data_name;
+char	*count;
+{
+	static int first=1;
+	struct occurs_s tmpocc;
+	int	rc;
+
+	if (first)
+	{
+		first = 0;
+		if (rc = ring_open(&occurs_cache, sizeof(struct occurs_s), 50, 50, occurs_cmp, 0))
+		{
+			write_log("WISP",'F',"RINGOPEN","Unable to open ring [occurs_cache] rc=%d [%s]",rc,ring_error(rc));
+			exit_with_err();
+		}
+	}
+
+	strcpy(tmpocc.name,data_name);
+	strcpy(tmpocc.count,count);
+
+	rc = ring_add(occurs_cache,0,&tmpocc);
+	if (rc < 0)
+	{
+		write_log("WISP",'F',"RINGADD","Unable to add to ring [occurs_cache] rc=%d [%s]",rc,ring_error(rc));
+		exit_with_err();
+	}
+}
+
+int get_occurs(data_name,count)
+char	*data_name;
+char	*count;
+{
+	struct occurs_s tmpocc,matchocc;
+	int	rc;
+
+	if (!occurs_cache) return(1);
+
+	strcpy(matchocc.name,data_name);
+
+	rc = ring_find(occurs_cache,&matchocc,NULL,&tmpocc);
+	if (rc < 0)
+	{
+		write_log("WISP",'F',"RINGFIND","Unable to find ring [occurs_cache] rc=%d [%s]",rc,ring_error(rc));
+		exit_with_err();
+	}
+	if (0==rc)
+	{
+		strcpy(count,tmpocc.count);
+	}
+
+	return(rc);
+}

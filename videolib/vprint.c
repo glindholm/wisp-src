@@ -25,6 +25,7 @@
 int dangled = TRUE;									/* Flag to indicate output left over.	*/
 char last_chr = 0;									/* Remember the last character.		*/
 
+static int tab_stop();
 
 /*					Subroutine entry point.									*/
 
@@ -336,7 +337,7 @@ int vpr_goto(cl,cc,tl,tc) int cl, cc, tl, tc;						/* Go to (sl,sc) from (el,ec)
 		}
 	}
 
-	if ((cl == tl+1) && (cc = 0)) 							/* A new line?				*/
+	if ((cl == tl+1) && (cc == 0)) 							/* A new line?				*/
 	{
 		vrawputc('\n');								/* Yes, so put one out.			*/
 		return(SUCCESS);							/* And we're all done.			*/

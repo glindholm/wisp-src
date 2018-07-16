@@ -8,9 +8,10 @@
 			/************************************************************************/
 
 /*
-**	passwdname.c
+**	pwdname.c
 */
 
+#include "idsistd.h"
 #ifdef MSDOS
 #include <stdio.h>
 
@@ -30,7 +31,10 @@ char *name;
 {
 	struct  passwd *p;
 	char    *id;
-
+#ifdef OSF1_ALPHA
+	char *cuserid();
+#endif
+	
 	id = cuserid(NULL);
 	p = getpwnam(id);
 	if (p)
@@ -44,47 +48,49 @@ char *name;
 }
 #endif	/* unix */
 
+#ifdef VMS
+#include <stdio.h>
+#include <descrip.h>
+#include <uaidef.h>
+#include <ssdef.h>
 
-#ifdef OLD
-passwdname(name)
+authowner(name)										/* Use SYSUAF.DAT for VMS.		*/
 char *name;
 {
-	char	*id;
-	FILE	*fp;
-	char	inline[256], *inptr, src[80];
-	int	srclen;
+	long	stat_ss;
+	short	retlen;
+	register int i;
+	char	usrnam[12], ret_owner[32], *cptr, *nptr;
+	struct	{
+		short	buflen;								/* the length of the buffer		*/
+		short 	item_code;							/* the code for the request to GETUAI	*/
+		char 	*bufptr;							/* a pointer to the buffer		*/
+		short	*bretlen;							/* the return length of the buffer	*/
+		long	endbuf;								/* the end of the buffer		*/
+	} uidbuf;
+#include "pwdname.d"
 
-	id = cuserid(0);
-	fp = fopen("/etc/passwd","r");
+	uidbuf.item_code = UAI$_OWNER;
+	uidbuf.buflen = 32;
+	uidbuf.bufptr = ret_owner;
+	uidbuf.bretlen = &retlen;
+	uidbuf.endbuf = 0;
 
-	if (!fp)
+	strncpy(usrnam,longuid(),12);							/* First get the username.		*/
+	aname_desc.dsc$w_length = strlen(usrnam);					/* Set the length of desriptor.		*/
+
+	stat_ss = sys$getuai((long) 0, (long) 0, &aname_desc, &uidbuf, (long) 0, (long) 0, (long) 0);
+
+	if (stat_ss != SS$_NORMAL) return(stat_ss);					/* Some error.				*/
+
+	cptr = ret_owner;
+	cptr++;										/* Step over the size byte prefix.	*/
+	nptr = name;
+	for (i = 0; i < retlen-1; i++)							/* Maximum length is 31.		*/
 	{
-		strcpy(name,id);
-		return;
-	}
+		*nptr++ = *cptr++;							/* Copy the returned account owner	*/
+	}										/*  to the passed in variable.		*/
 
-	strcpy(src,id);
-	strcat(src, ":");
-	srclen = strlen(src);
-
-	while(fgets(inline,255,fp))
-	{
-
-		if (0 == memcmp(inline,src,srclen))
-		{
-			if (!(inptr = strtok(inline,":"))) break;
-			if (!(inptr = strtok(0,":"))) break;
-			if (!(inptr = strtok(0,":"))) break;
-			if (!(inptr = strtok(0,":"))) break;
-			if (!(inptr = strtok(0,":"))) break;
-			strcpy(name,inptr);
-			return;
-		}
-	}
-
-	fclose(fp);
-	strcpy(name,id);
-	return;
+	*nptr = '\0';									/* Null terminate the string.		*/
 }
-#endif	/* OLD */
-
+#endif	/* VMS */

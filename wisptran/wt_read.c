@@ -11,8 +11,19 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "wispfile.h"
+#include "crt.h"
+#include "cobfiles.h"
+
+#define READ_FILE "$WRXXXXXX"
 
 int	unterminated_if = 0;
+
+static char rd_str[STRING_BUFFER_SIZE];							/* Buffer for READ statements.		*/
+static char tm_str[STRING_BUFFER_SIZE];							/* Buffer for TIMEOUT statements.	*/
+static int adjcol();
+static int vaxlock();
+static int addnolock();
 
 p_read()
 {
@@ -21,9 +32,12 @@ p_read()
 	char  	tstr[132],into_rec[40];
 	char 	t_mktemp[40];
 	int	rd_cnt, tm_cnt, col, savecol, maincol, addnl, savenl;
+	static  int readnum = 0;							/* current paragraph number for READ's	*/
 
 	char hstr[40];									/* Holder-ID string.			*/
 	char timstr[40];								/* TIMEOUT value string.		*/
+
+	static FILE	*read_temp_file;
 
 	write_log("WISP",'I',"PROCREAD","Processing Read Statement.");
 
@@ -32,7 +46,7 @@ p_read()
 	maincol = col;
 	j = peek_param(o_parms[1]);							/* peek at the file name		*/
 
-	cur_crt = findcrt(o_parms[1]);
+	cur_crt = crt_index(o_parms[1]);
 	is_crt = (-1 != cur_crt);
 
 	if (is_crt)									/* is it a crt record?			*/
@@ -81,54 +95,50 @@ p_read()
 		}
 
 					/*123456789012345678901234567890123456789012345678901234567890123456789012*/
-		put_line		("\n");
+		tput_blank();
 
 		if (crt_relative[cur_crt][0])						/* Load relative key into order-area	*/
 		{
-			write_line	("           CALL \"xx2byte\" USING %s,\n",crt_relative[cur_crt]);
-			write_line  	("                                %s\n",crt_record[crt_prec[cur_crt]]);
+			tput_line_at	(12, "CALL \"xx2byte\" USING %s,",crt_relative[cur_crt]);
+			tput_clause  	(16, "%s",crt_record[crt_prime_rec[cur_crt]]);
 		}
 											/* Copy the Order-Area for the read	*/
-		write_line		("           MOVE %s TO WISP-CRT-ORDER-AREA\n",crt_record[crt_prec[cur_crt]]);
+		tput_line_at		(12, "MOVE %s TO WISP-CRT-ORDER-AREA\n",crt_record[crt_prime_rec[cur_crt]]);
 											/* Load number of lines			*/
-		write_line		("           MOVE DEC-BYTE-%d TO VWANG-LINES,\n",(crt_size[crt_prec[cur_crt]]-4)/80);
-		write_line		("           MOVE SPACES TO %s,\n",crt_status[cur_crt]);/* Must clear status field	*/
-		put_line  		("           MOVE \"A\" TO WISP-ALLOWABLE-PF-KEYS\n");
-		write_line		("           CALL \"vwang\" USING %s,\n",crt_type);
-		put_line  		("                                WISP-CRT-RECORD,\n");
-		put_line  		("                                VWANG-LINES,\n");
-		put_line  		("                                WISP-ALLOWABLE-PF-KEYS\n");
-		write_line		("                                %s,\n",crt_pfkey[cur_crt]);
-		write_line		("                                %s\n",crt_status[cur_crt]);
-		write_line		("           MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prec[cur_crt]]);
+		tput_line_at		(12, "MOVE DEC-BYTE-%d TO VWANG-LINES,\n",
+									(crt_record_size[crt_prime_rec[cur_crt]]-4)/80);
+		tput_line_at		(12, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);/* Must clear status field	*/
+		tput_line_at  		(12, "MOVE \"A\" TO WISP-ALLOWABLE-PF-KEYS\n");
+		tput_line_at		(12, "CALL \"vwang\" USING %s,",crt_type);
+		tput_clause		(16, "WISP-CRT-RECORD,");
+		tput_clause		(16, "VWANG-LINES,");
+		tput_clause		(16, "WISP-ALLOWABLE-PF-KEYS,");
+		tput_clause		(16, "%s,",crt_pfkey[cur_crt]);
+		tput_clause		(16, "%s",crt_status[cur_crt]);
+		tput_line_at		(12, "MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prime_rec[cur_crt]]);
 
 		if (into_rec[0])							/* Had an INTO phrase.			*/
 		{
-			put_line	("\n");
-			write_line	("           MOVE %s TO\n",crt_record[crt_prec[cur_crt]]);
-			write_line	("                %s",into_rec);
+			tput_line_at	(12, "MOVE %s TO",crt_record[crt_prime_rec[cur_crt]]);
+			tput_clause	(16, "%s",into_rec);
 		}
 
 		if (crt_cursor[cur_crt][0])						/* if there is a cursor			*/
 		{
-			put_line	("\n");
-			put_line  	("           CALL \"w2rowcol\" USING WISP-CRT-ORDER-AREA-3,\n");
-			write_line	("                           %s",crt_cursor[cur_crt]);
+			tput_line_at  	(12, "CALL \"w2rowcol\" USING WISP-CRT-ORDER-AREA-3,");
+			tput_clause	(16, "%s",crt_cursor[cur_crt]);
 		}
 
 		if (j == -1)								/* has a period in it...		*/
 		{
-			put_line(".\n");
+			tput_clause(12,".");
 		}
-		else
-		{
-			put_char('\n');
-		}
+
+		tput_flush();
 		return(0);								/* exit the FOR loop			*/
 	}
 	else /* Not a CRT read */
 	{
-		had_read = 1;								/* Flag it.				*/
 		hstr[0] = '\0';
 		strcpy(timstr,"9999");							/* Default timeout.			*/
 
@@ -141,7 +151,7 @@ p_read()
 		{
 			write_log("WISP",'F',"READFNF",
 			"Error -- File %s, referenced by READ statement but not Declared.",o_parms[1]);
-			exit_wisp(-1);
+			exit_wisp(EXIT_WITH_ERR);
 		}
 		else
 		{
@@ -153,17 +163,13 @@ p_read()
 
 		strcpy(rd_str,"");							/* start a new line			*/
 
-		if (!read_name[0])							/* if there has not yet been a file made*/
+		if (!read_file_ptr)							/* if there has not yet been a file made*/
 		{
-			strcpy(t_mktemp,READ_FILE);
-			strcpy(read_name,mktemp(t_mktemp));				/* make a scratch file name 		*/
-#ifdef VMS
-			strcat(read_name,".SCR;");					/* add .SCR; extension			*/
-#else
-			strcat(read_name,".scr");					/* add .scr extension			*/
-#endif
-			read_temp_file = fopen(read_name,"w");				/* open for write			*/
+			read_file_ptr = open_cob_file(read_fname,FOR_OUTPUT,1);		/* open for write			*/
+			if (!read_file_ptr) exit_with_err();
+			read_temp_file = read_file_ptr->a_file->file;
 			fprintf(read_temp_file,"***********  READ STATEMENTS\n");
+			read_file_ptr->line_count++;
 											/* put a line in it			*/
 		}
 
@@ -190,7 +196,7 @@ p_read()
 			}
 			else 								/* Put it in temp string		*/
 			{
-				add2buff(rd_str,o_parms[0],col,addnl);
+				add2buff(rd_str,o_parms[0],col+4,addnl);
 			}
 
 			if (o_parms[0][0]) stredt(inline,o_parms[0],"");		/* Remove it from the input line	*/
@@ -261,14 +267,14 @@ p_read()
 			{								/* it signals a NO LOCK for LPI		*/
 				if ((lpi_cobol || acu_cobol) && !hold && !did_nolock)
 				{							/* NO LOCK must precede INTO.		*/
-					add2buff(rd_str,"NO LOCK",col+4,0);
+					add2buff(rd_str,"NO LOCK",col+8,0);
 					did_nolock = 1;
 				}
 			}
 			else if (!strcmp(o_parms[0],"INVALID"))				/* INVALID KEY phrase?			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,savecol+4);
-				vaxlock(&did_man_lock,hold,rd_str,savecol+4);
+				addnolock(&did_nolock,hold,rd_str,savecol+8);
+				vaxlock(&did_man_lock,hold,rd_str,savecol+8);
 
 				stredt(inline," INVALID"," ");				/* remove INVALID			*/
 				if (ptype != -1)
@@ -285,7 +291,7 @@ p_read()
 
 				if (ptype == -1)					/* Premature period!			*/
 				{
-					write_log("WISP",'W',"BADINVKEY",
+					write_log("WISP",'I',"BADINVKEY",
 					"Bad READ syntax, INVALID KEY followed by a period.");
 					o_parms[0][0] = '\0';
 				}
@@ -295,17 +301,17 @@ p_read()
 					adjcol(ptype,&col,&addnl);
 				}
 
-				add2buff(rd_str,"INVALID KEY",savecol,savenl);		/* write it out				*/
+				add2buff(rd_str,"INVALID KEY",savecol+4,savenl);	/* write it out				*/
 
-				if (hold) add2buff(rd_str,"MOVE \"Y\" TO WISP-TEST-BYTE.",maincol,1);
+				if (hold) add2buff(rd_str,"MOVE \"Y\" TO WISP-TEST-BYTE.",maincol+8,1);
 
 				t_out = 0;						/* Clear any TIMEOUT flag.		*/
 				invkey_clause = 1;					/* flag it				*/
 			}
 			else if (!strcmp(o_parms[0],"AT") || !strcmp(o_parms[0],"END")) /* AT END phrase?			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,savecol+4);
-				vaxlock(&did_man_lock,hold,rd_str,savecol+4);
+				addnolock(&did_nolock,hold,rd_str,savecol+8);
+				vaxlock(&did_man_lock,hold,rd_str,savecol+8);
 
 				if (o_parms[0][0] == 'A')
 				{
@@ -317,7 +323,7 @@ p_read()
 				stredt(inline," END"," ");				/* remove END				*/
 				if (ptype == -1)					/* Prematur period.			*/
 				{
-					write_log("WISP",'W',"BADATEND",
+					write_log("WISP",'I',"BADATEND",
 					"Bad READ syntax, AT END followed by a period.");
 					o_parms[0][0] = '\0';
 				}
@@ -327,17 +333,17 @@ p_read()
 					adjcol(ptype,&col,&addnl);
 				}
 
-				add2buff(rd_str,"AT END",savecol,savenl);		/* write it out				*/
+				add2buff(rd_str,"AT END",savecol+4,savenl);		/* write it out				*/
 
-				if (hold) add2buff(rd_str,"MOVE \"Y\" TO WISP-TEST-BYTE.",maincol,1);
+				if (hold) add2buff(rd_str,"MOVE \"Y\" TO WISP-TEST-BYTE.",maincol+8,1);
 
 				t_out = 0;						/* Clear any TIMEOUT flag.		*/
 				atend_clause = 1;					/* flag it				*/
 			}
 			else if (!strcmp(o_parms[0],"TIMEOUT"))				/* TIMEOUT phrase?			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,savecol+4);
-				vaxlock(&did_man_lock,hold,rd_str,savecol+4);
+				addnolock(&did_nolock,hold,rd_str,savecol+8);
+				vaxlock(&did_man_lock,hold,rd_str,savecol+8);
 
 				write_log("WISP",'I',"READWTIME","READ with TIMEOUT modified.");
 				stredt(inline," TIMEOUT"," ");				/* remove TIMEOUT			*/
@@ -375,8 +381,8 @@ p_read()
 			}
 			else if (!strcmp(o_parms[0],"KEY"))				/* Handle KEY phrase.			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,col+4);
-				vaxlock(&did_man_lock,hold,rd_str,col+4);
+				addnolock(&did_nolock,hold,rd_str,col+8);
+				vaxlock(&did_man_lock,hold,rd_str,col+8);
 
 				stredt(inline,o_parms[0],"");				/* Remove "KEY" from line		*/
 				ptype = get_param(o_parms[0]);
@@ -389,12 +395,12 @@ p_read()
 					adjcol(ptype,&col,&addnl);
 				}
 
-				add2buff(rd_str,"KEY IS",savecol,savenl);
+				add2buff(rd_str,"KEY IS",savecol+4,savenl);
 
 				key_name(o_parms[0],0);					/* Key name conversion			*/
 
 			}
-		} while ((ptype != -1) && (!keyword(o_parms[0],proc_keywords) || t_out));
+		} while ((ptype != -1) && (!proc_keyword(o_parms[0]) || t_out));
 											/* do till we hit a LAST parm or keyword*/
 
 		if (ptype == -1)							/* a LAST parm				*/
@@ -412,19 +418,19 @@ p_read()
 		}
 		else
 		{	
-			add2buff(rd_str,tstr,col,addnl);				/* Put out the last parameter		*/
+			add2buff(rd_str,tstr,col+4,addnl);				/* Put out the last parameter		*/
 
-			addnolock(&did_nolock,hold,rd_str,col+4);
+			addnolock(&did_nolock,hold,rd_str,col+8);
 
-			vaxlock(&did_man_lock,hold,rd_str,col+4);
+			vaxlock(&did_man_lock,hold,rd_str,col+8);
 
 		}
 
 		if (hold)								/* If going to hold the record,		*/
 		{									/* Wait till no soft/hard lock		*/
 			sprintf(tstr, "CALL \"wfwait\" USING %s",o_parms[5]);
-			add2buff(rd_str,tstr,maincol,1);
-			add2buff(rd_str,"WISP-FILE-TIMEOUT",maincol+4,0);
+			add2buff(rd_str,tstr,maincol+4,1);
+			add2buff(rd_str,"WISP-FILE-TIMEOUT",maincol+8,0);
 		}
 
 		strcat(rd_str,"\n");							/* finish this line			*/
@@ -432,21 +438,21 @@ p_read()
 
 										 	/* Now write everything out to the file.*/
 
-		put_line          ("           MOVE \"RD\" TO WISP-DECLARATIVES-STATUS\n");
+		tput_line          ("           MOVE \"RD\" TO WISP-DECLARATIVES-STATUS\n");
 
 		if ( hold && (invkey_clause || atend_clause) )
 		{
-			put_line  ("           MOVE \"N\" TO WISP-TEST-BYTE\n"); 	/* Set up the INVALID KEY flag.		*/
+			tput_line  ("           MOVE \"N\" TO WISP-TEST-BYTE\n"); 	/* Set up the INVALID KEY flag.		*/
 		}
 
 		if (t_flag)
 		{
-			write_line("           MOVE %s TO WISP-FILE-TIMEOUT\n",timstr); /* Store the TIMEOUT value.		*/
-			write_line("           MULTIPLY WISP-FILE-TIMEOUT BY 100 GIVING WISP-FILE-TIMEOUT\n");
+			tput_line("           MOVE %s TO WISP-FILE-TIMEOUT\n",timstr); /* Store the TIMEOUT value.		*/
+			tput_line("           MULTIPLY WISP-FILE-TIMEOUT BY 100 GIVING WISP-FILE-TIMEOUT\n");
 		}
 		else if (hold)
 		{
-			write_line("           MOVE 0 TO WISP-FILE-TIMEOUT\n"); 	/* Store the TIMEOUT value.		*/
+			tput_line("           MOVE 0 TO WISP-FILE-TIMEOUT\n"); 	/* Store the TIMEOUT value.		*/
 		}
 
 
@@ -459,82 +465,88 @@ p_read()
 						/*    - add UNLOCK logic						*/
 
 		{								/* Gonna do a hold, free last file.	*/
-			set_lock(fnum,11);					/* Set new lock.			*/
+			set_lock(fnum,12);					/* Set new lock.			*/
 
 			if (invkey_clause || atend_clause)			/* If HOLD and INVALID KEY or AT END use*/
 			{							/* Paragraph performs.			*/
-				if (copylib && open_files > 1)			/* Are we in a copy lib?		*/
+				if (copylib && writing_copybook())		/* Are we in a copy lib?		*/
 				{
-					write_line("           PERFORM WISP-READ-%s-%d",cpy_file,cpy_seq);
+					tput_line("           PERFORM WISP-READ-%s-%d",cpy_file,cpy_seq);
 					if (!re_copy)				/* Is this a second time?		*/
 					{
 						fprintf(read_temp_file,"\n       WISP-READ-%s-%d.\n",cpy_file,cpy_seq);
+						read_file_ptr->line_count += 2;
 						fprintf(read_temp_file,"%s",rd_str); /* Now write out the whole thing.	*/
+						read_file_ptr->line_count += strchrcnt(rd_str,'\n');
 						fprintf(read_temp_file,"           CONTINUE.\n");
+						read_file_ptr->line_count++;
 					}
 					cpy_seq++;
 				}
 				else
 				{
-					write_line("           PERFORM WISP-READ-NUMBER-%d",readnum);
+					tput_line("           PERFORM WISP-READ-NUMBER-%d",readnum);
 										/* write the paragraph name to the file	*/
 					fprintf(read_temp_file,"\n       WISP-READ-NUMBER-%d.\n",readnum);
+					read_file_ptr->line_count += 2;
 					fprintf(read_temp_file,"%s",rd_str);	/* Now write out the whole thing.	*/
+					read_file_ptr->line_count += strchrcnt(rd_str,'\n');
 					fprintf(read_temp_file,"           CONTINUE.\n");
+					read_file_ptr->line_count++;
 					readnum++;				/* increment the counter		*/
 				}
 			}
 			else							/* No INVALID KEY, use inline PERFORM.	*/
 			{
-				put_line  	("           PERFORM WITH");
+				tput_line  	("           PERFORM WITH");
 			}
 
-			put_line		(" TEST AFTER\n");			/* Wait for hard locks.			*/
+			tput_clause		(16, "TEST AFTER");			/* Wait for hard locks.			*/
 
-			write_line		("                   UNTIL (%s IS NOT = \"%s\")\n",o_parms[5],hard_lock);
+			tput_line		("                   UNTIL (%s IS NOT = \"%s\")\n",o_parms[5],hard_lock);
 
-			if (t_flag) put_line  	("                   OR (WISP-FILE-TIMEOUT IS < 1)\n");
+			if (t_flag) tput_line  	("                   OR (WISP-FILE-TIMEOUT IS < 1)\n");
 
 			if (!(invkey_clause || atend_clause))
 			{
-				put_line(rd_str);					/* Now write out the whole thing.	*/
-				put_line	("           END-PERFORM\n");
+				tput_block(rd_str);					/* Now write out the whole thing.	*/
+				tput_line	("           END-PERFORM\n");
 			}
 		}
 		else /* no WITH HOLD */
 		{
-			put_line		(rd_str);				/* Now write out the whole thing.	*/
+			tput_block(rd_str);						/* Now write out the whole thing.	*/
 		}
 
 		if (t_flag)
 		{
-			write_line		("           IF ( %s = \"%s\" AND\n",o_parms[5],hard_lock);
-			put_line		("                WISP-FILE-TIMEOUT < 1)\n");
+			tput_line		("           IF ( %s = \"%s\" AND\n",o_parms[5],hard_lock);
+			tput_clause		(16,"WISP-FILE-TIMEOUT < 1)");
 			clear_locking();						/* Add locking logic			*/
 
-			put_line		(tm_str);
-			put_line		("\n");
+			tput_block(tm_str);
+			tput_flush();
 		}
 
 		if (ptype == -1)
 		{
 			if (t_flag)
 			{
-				put_line  	("           END-IF.\n");
+				tput_line  	("           END-IF.\n");
 			}
 			else
-				write_line	("           CONTINUE.\n");
+				tput_line	("           CONTINUE.\n");
 		}
 		else
 		{                                                                            
 			if (t_flag)
 			{
-				put_line  	("           ELSE\n");
+				tput_line  	("           ELSE\n");
 			}
 
 			if ( hold && (invkey_clause || atend_clause) ) 
 			{
-				put_line  	("           IF WISP-TEST-BYTE = \"Y\" THEN\n");
+				tput_line  	("           IF WISP-TEST-BYTE = \"Y\" THEN\n");
 				clear_locking();					/* Add locking logic			*/
 				unterminated_if = 1;					/* Weve added an IF statement		*/
 			}

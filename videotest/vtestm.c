@@ -8,6 +8,7 @@
 #include <v/video.h>
 #include <v/vlocal.h>
 #include <v/vdata.h>
+#include <v/vintdef.h>
 #include <v/vmenu.h>
 
 #define CANCEL_CODE -1

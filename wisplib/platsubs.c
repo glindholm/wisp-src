@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 
+#include "idsistd.h"
 #include "wplatdef.h"
 
 struct platform_struct
@@ -44,7 +45,10 @@ static struct platform_struct	platform_table[] =
 	PLATFORM_AIX,		"AX",	"AIX RISC",
 	PLATFORM_ULTRIX,	"UL",	"Ultrix (DEC RISC)",
 	PLATFORM_HPUX,		"HP",	"HP/UX 9000 RISC",
-	PLATFORM_SUNOS,		"SU",	"SunOS",
+	PLATFORM_SUNOS,		"SU",	"SunOS (Sparc)",
+	PLATFORM_SUN_3,		"S3",	"Sun 3 (68020)",
+	PLATFORM_SOLARIS,       "SO",   "Sun Solaris",
+	PLATFORM_SOLARIS_PC,	"SI",	"Solaris (Intel)",
 	PLATFORM_DGUX,		"DG",	"DG/UX Aviion",
 	PLATFORM_SCO,		"SC",	"SCO UNIX 386/486",
 	PLATFORM_NCR486,	"NC",	"NCR 386/486",
@@ -56,8 +60,10 @@ static struct platform_struct	platform_table[] =
 	PLATFORM_UNISYS,	"US",	"Unisys 6000 SVR4",
 	PLATFORM_SEQUENT,	"SQ",	"Sequent",
 	PLATFORM_AIX_PS2,	"AP",	"AIX PS/2",
-	PLATFORM_ULTRIX_VAX,	"UV",	"Ultrix (VAX)",
-	PLATFORM_ULTRIX_ALPHA,	"UA",	"Ultrix (ALPHA)",
+/*	PLATFORM_ULTRIX_VAX,	"UV",	"Ultrix (VAX)",		*/
+/*	PLATFORM_ULTRIX_ALPHA,	"UA",	"Ultrix (ALPHA)", 	*/
+	PLATFORM_OSF1_ALPHA,	"A1",	"OSF/1 (ALPHA)",
+	PLATFORM_OSF1_DEC,	"D1",	"OSF/1 (DEC RISC)",
 	PLATFORM_AIX_3090,	"A3",	"AIX 3090",
 	PLATFORM_NEXT,		"NX",	"NeXT 68040",
 	PLATFORM_MPEIX,		"HI",	"HP MPE/iX",
@@ -74,11 +80,13 @@ static struct platform_struct	platform_table[] =
 	PLATFORM_PYRAMID,	"PY",	"PYRAMID",
 	PLATFORM_SONY,		"SY",	"SONY NEWS",
 	PLATFORM_WYSE,		"WY",	"WYSE",
+	PLATFORM_UNIXWARE,	"UW",	"UNIXWARE",
 
 	PLATFORM_VMS,		"VM",	"VAX/VMS",
-	PLATFORM_MSDOS,		"DS",	"MS-DOS 386/484",
+	PLATFORM_MSDOS,		"DS",	"MS-DOS",
 	PLATFORM_HPMPE,		"HM",	"HP MPE",
 	PLATFORM_VMS_ALPHA,	"VA",	"VMS (ALPHA)",
+	PLATFORM_WINDOWS_NT,	"WN",	"WINDOWS NT",
 
 	-1,			(char *)0, (char *)0,
 };
@@ -251,6 +259,25 @@ char	code[2];
 #ifdef WYSE
 	p = PLATFORM_WYSE;
 #endif
+#ifdef SOLARIS
+	p = PLATFORM_SOLARIS;
+#endif
+#ifdef SOLARIS_PC
+	p = PLATFORM_SOLARIS_PC;
+#endif
+#ifdef OSF1_ALPHA
+	p = PLATFORM_OSF1_ALPHA;
+#endif
+#ifdef OSF1_DEC
+	p = PLATFORM_OSF1_DEC;
+#endif
+#ifdef SUN_3
+	p = PLATFORM_SUN_3;
+#endif
+#ifdef UNIXWARE
+	p = PLATFORM_UNIXWARE;
+#endif
+
 
 /*
 **	NON-UNIX PLATFORMS
@@ -266,6 +293,9 @@ char	code[2];
 #endif
 #ifdef VMS_ALPHA
 	p = PLATFORM_VMS_ALPHA;
+#endif
+#ifdef WINDOWS_NT
+	p = PLATFORM_WINDOWS_NT;
 #endif
 
 	if (plat_num(p, name_p, code_p))

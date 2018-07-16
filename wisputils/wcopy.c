@@ -1,27 +1,84 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
-/*	Copy a file from the unix shell					*/
-/*									*/
-/*      wcopy oldfile oldlib oldvol newfile newlib newvol		*/
-/*	wcopy LIBRARY oldlib oldvol newlib newvol			*/
+/*
+**	File:		wcopy.c
+**
+**	Purpose:	To hold WCOPY utility source file.
+**
+**	Routines:	
+**	main()		The WCOPY main routine.
+**
+**	History:
+**	03/01/93	Changed to use GETPARMS like the Wang COPY utility. GSL
+**	03/05/93	Fix to also work on VMS. GSL
+*/
 
-#ifdef unix
 
 #include <stdio.h>
+#include <string.h>
 
 #define EXT_FILEXT
 #include "filext.h"
 #include "wcommon.h"
+#include "wperson.h"
+#include "wangkeys.h"
 
 char *wfname();
+static int vscopy();
+static int get_options();
+static int get_failed();
+static int library_copy();
+static int get_input();
+static int get_output();
+static int get_eoj();
+static int get_dummy();
 
+int wfexists();
+
+static void badusage();
+static void copy();
+
+static	char 	*COPY_VERSION = "WISP Copy Program - Version 1.00.00";
+static	long	N[255];
+static	long 	two=2;
+
+#define GP	gp_args.ptrs[gp_cnt++] = (char *)
+static struct { char *ptrs[160]; } gp_args;
+static int gp_cnt;
+
+/*
+**	Routine:	main()
+**
+**	Function:	Main routine for WCOPY utility
+**
+**	Description:	This routine emulates the Wang COPY utility when no args are passed.
+**			If arguments are passed it uses the earlier command line syntax. (unix only)
+**
+**				wcopy
+**				wcopy oldfile oldlib oldvol newfile newlib newvol
+**				wcopy LIBRARY oldlib oldvol newlib newvol
+**
+**	Arguments:	If argc==1 then use GETPARM interface.
+**			If argc==7 then use old command line file copy. 	(unix only)
+**			If argc==6 then use old command line library copy. 	(unix only)
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/01/93	Add support for GETPARM. GSL
+**
+*/
 main(argc,argv)
 int	argc;
 char	*argv[];
@@ -33,7 +90,17 @@ char	*argv[];
 
 	initglbs("WCOPY   ");
 
-	if (argc < 6) badusage();
+	if (argc == 1)
+	{
+		wexit(vscopy());
+	}
+
+#ifndef unix
+
+	badusage();
+
+#else /* unix */
+	if (argc != 1 && argc != 6 && argc != 7) badusage();
 
 	strcpy( key, argv[1] );
 	upper_string( key );
@@ -74,9 +141,11 @@ char	*argv[];
                    newfile, newlib, newvol, &retcode);
 
 	exit(retcode);
+#endif /* unix */
 }
 
-copy(type,oldfile,oldlib,oldvol,newfile,newlib,newvol,status)
+#ifdef unix
+static void copy(type,oldfile,oldlib,oldvol,newfile,newlib,newvol,status)
 char	*type;
 char	*oldfile, *oldlib, *oldvol, *newfile, *newlib, *newvol;
 int	*status;
@@ -87,7 +156,7 @@ int	*status;
 	char *name_end;
 	char *strchr();									/* return pointer to char in string	*/
 	char cmd[100];									/* buffer to hold cmd string 		*/
-	int found;
+	int found, has_ext;
 
 	*status = 0;
 
@@ -117,7 +186,7 @@ int	*status;
 
 
 
-	if ( 0!=access(libpath,0) )							/* If new_lib doesn't exist.		*/
+	if ( !fexists(libpath) )							/* If new_lib doesn't exist.		*/
 	{
 		if(mkdir(libpath,0777))							/* Create the new lib.			*/
 		{
@@ -137,10 +206,11 @@ int	*status;
 	}
 
 	found = 0;
+	has_ext = hasext(old_filename);
 
-	if (0==access(old_filename,0))							/* file does exist in this form	*/
+	if (fexists(old_filename))							/* file does exist in this form	*/
 	{
-		if (0==access(new_filename,0))						/* New file already exists.		*/
+		if (fexists(new_filename))						/* New file already exists.		*/
 		{
 			*status = 52;
 			return;
@@ -154,21 +224,19 @@ int	*status;
 		}
 		found = 1;
 	}
-	else
+
+	if (!found && has_ext)								/* does it already have extension?	*/
 	{
-		if (strchr(old_filename,'.')) 						/* does it already have extension?	*/
-		{
-			*status=20;							/* yes, so return file not found	*/
-			return;
-		}
+		*status=20;								/* yes, so return file not found	*/
+		return;
 	}
 
 	strcat(old_filename,".idx");							/* else try it with a .idx extension	*/
 	strcat(new_filename,".idx");
-	if (0 == access(old_filename,0))						/* idx found				*/
+	if (fexists(old_filename))							/* idx found				*/
 	{
 
-		if (0==access(new_filename,0))						/* Does new file already exists?	*/
+		if (fexists(new_filename))						/* Does new file already exists?	*/
 		{
 			*status = 52;
 			return;
@@ -183,11 +251,11 @@ int	*status;
 		found = 1;
 	}
 
-	strcpy(strchr(old_filename,'.'),".dat");					/* replace the '.idx' with a '.dat'	*/
-	strcpy(strchr(new_filename,'.'),".dat");
-	if (0 == access(old_filename,0))						/* dat found				*/
+	strcpy(strrchr(old_filename,'.'),".dat");					/* replace the '.idx' with a '.dat'	*/
+	strcpy(strrchr(new_filename,'.'),".dat");
+	if (fexists(old_filename))							/* dat found				*/
 	{
-		if (0==access(new_filename,0))						/* Does new file already exists?	*/
+		if (fexists(new_filename))						/* Does new file already exists?	*/
 		{
 			*status = 52;
 			return;
@@ -209,20 +277,979 @@ int	*status;
 	}
 
 }
+#endif /* unix */
 
-badusage()
+static void badusage()
 {
 	printf("\n");
-	printf("Usage: wcopy         oldfile oldlib oldvol newfile newlib newvol\n");
+	printf("Usage: wcopy\n");
+#ifdef unix
+	printf("       wcopy         oldfile oldlib oldvol newfile newlib newvol\n");
 	printf("       wcopy LIBRARY         oldlib oldvol         newlib newvol\n");
+#endif
 	printf("\n");
-	exit(-1);
+	exit(0);
 }
 
+/*
+**	Routine:	vscopy()
+**
+**	Function:	To provide a GETPARM interface like the Wang COPY utility.
+**
+**	Description:	To emulate the Wang COPY utility.
+**
+**	Arguments:	None
+**
+**	Globals:
+**	N		The wswaped numbers array.
+**
+**	Return:
+**	0		success
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/01/93	Written by GSL
+**
+*/
+static int vscopy()
+{
+	char	ifile[9], ilib[9], ivol[7];
+	char	ofile[9], olib[9], ovol[7];
+	char	copy[8];
+	char	message[80];
+	char	*messid;
+	int	pfkey;
+	long	i;
+	int	savelevel;
+	long	vacnt;
+	long	retcode;
 
-#ifdef unix
-#include "wutils.h"
+	savelevel = linklevel();						/* Save the link-level				*/
+	newlevel();								/* Increment the link-level			*/
+
+	for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 				/* Initialize a swapped numbers array		*/
+	{
+		N[i]=i; 
+		wswap(&N[i]);
+	}
+
+	memcpy(copy,"FILE   ",7);
+
+	for(;;)
+	{
+		pfkey = get_input(ifile,ilib,ivol,copy);			/* Getparm INPUT info				*/
+		if (pfkey == 16) break;
+
+		get_dummy();							/* Getparm misc dummy info.			*/
+
+		pfkey = get_output(ofile,olib,ovol,ifile,ilib,ivol,copy);	/* Getparm OUTPUT info				*/
+		if (pfkey != 16)
+		{
+			if (copy[0] == 'F')					/* Do a file copy				*/
+			{
+				vacnt = 7;
+				wvaset(&vacnt);
+				FILECOPY(ifile,ilib,ivol,ofile,olib,ovol,&retcode);
+				wswap(&retcode);
+				if (retcode == 0)
+				{
+					sprintf(message,"File %8.8s in Library %8.8s on Volume %6.6s was created",ofile,olib,ovol);
+					messid = "0028";
+				}
+				else
+				{
+					sprintf(message,"COPY failed return code = %04d",retcode);
+					messid = "F001";
+				}
+			}
+			else
+			{
+				int	copycnt;
+
+				copycnt = library_copy(ilib,ivol,olib,ovol);	/* Do the library copy				*/
+
+				sprintf(message,"%04d Files have been created in Library %8.8s on Volume %6.6s",copycnt,olib,ovol);
+				messid = "0029";
+			}
+		}
+		else
+		{
+			strcpy(message,"No file copied");
+			messid = "0045";
+		}
+
+		pfkey = get_eoj(message, messid);				/* Getparm EOJ info				*/
+		if (pfkey != 1)							/* If not PF1 then exit				*/
+		{
+			break;
+		}
+	}
+
+	setlevel(savelevel);							/* Restore the link-level			*/
+	ppunlink(savelevel);							/* Putparm UNLINK				*/
+	
+	return(0);
+}
+
+/*
+**	Routine:	library_copy()
+**
+**	Function:	To copy a library one file at a time.
+**
+**	Description:	This routine copies a whole library one file at a time.
+**			If the file exists in the target library it issues a getparm
+**			to let user decide how to handle conflict.
+**
+**	Arguments:
+**	ilib		Input library
+**	ivol		Input volume
+**	olib		Output library
+**	ovol		Output volume
+**
+**	Globals:	None
+**
+**	Return:		Number of files copied.
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/03/93	Written by GSL
+**
+*/
+static int library_copy(ilib,ivol,olib,ovol)
+char	*ilib, *ivol, *olib, *ovol;
+{
+	int	copycnt;
+	int	remaining;
+	long	start;
+	long	count;
+	long	vacnt;
+	long	retcode;
+	char	reciever[2200];
+	char	ifile[9], ofile[9];
+	char	*fileptr;
+	int	pfkey;
+
+#define RSIZE	100
+
+	start = 1;
+
+	copycnt = 0;
+	remaining = 0;
+
+	for(;;)
+	{
+		if (remaining < 1)
+		{
+			count = RSIZE;
+			wswap(&count);
+			wswap(&start);
+			vacnt = 6;
+			wvaset(&vacnt);
+			FIND("?       ",ilib,ivol,&start,&count,reciever);
+			wswap(&count);
+			if (count == 0) break;					/* Nothing found so break out			*/
+
+			remaining = count;					/* How many were returned			*/
+
+			wswap(&start);						/* Setup start for next time			*/
+			start += RSIZE;
+
+			fileptr = reciever + 14;				/* Point to the first file in reciever		*/
+		}
+		else
+		{
+			fileptr += 22;						/* Point to next file				*/
+		}
+
+		memcpy(ifile,fileptr,8);					/* Load the file name				*/
+		memcpy(ofile,ifile,8);
+		remaining -= 1;							/* Using up one of the remaining		*/
+
+		if (wfexists(ifile,ilib,ivol))					/* Check if Input file exists			*/
+		{
+			int	copyit;
+
+			copyit = 0;
+			if (wfexists(ofile,olib,ovol))				/* Check if Output file exists			*/
+			{
+				char	option[2];
+
+				option[0] = 'N';
+				pfkey = get_options(ifile,ilib,ivol,ofile,olib,ovol,option);
+				if (pfkey == 16) break;				/* Exit						*/
+
+				if (option[0] != 'N')
+				{
+					copyit = 1;
+				}
+			}
+			else
+			{
+				copyit = 1;
+			}
+
+			if (copyit)						/* Do the copy					*/
+			{
+				vacnt = 7;
+				wvaset(&vacnt);
+				FILECOPY(ifile,ilib,ivol,ofile,olib,ovol,&retcode);
+				wswap(&retcode);
+				if (retcode == 0)
+				{
+					copycnt += 1;				/* Copy succeeded				*/
+				}
+				else						/* FILECOPY failed				*/
+				{
+					pfkey = get_failed(ifile,ilib,ivol,ofile,olib,ovol,retcode);
+					if (pfkey == 16) break;			/* Exit						*/
+				}
+			}
+		}
+	}
+	return copycnt;
+}
+
+/*
+**	Routine:	get_input()
+**
+**	Function:	To get the input file specs for COPY.
+**
+**	Description:	Put up the INPUT getparm for COPY and validate all fields.
+**
+**	Arguments:
+**	ifile		The input file 		(returned)	
+**	ilib		The input library 	(returned)
+**	ivol		The input volume 	(returned)
+**	copy		The copy option		(returned)
+**
+**	Globals:
+**	gp_cnt,gp_args	The Getparm macro and variables for GP.
+**	N		The wswaped numbers array.
+**	two		Number two.
+**
+**	Return:		Pfkey number
+**	0		Continue
+**	16		Exit
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/02/93	Written by GSL
+**
+*/
+static int get_input(ifile,ilib,ivol,copy)
+char *ifile, *ilib, *ivol, *copy;
+{
+	long	pfkey_mask;
+	char	*gptype;
+	char	*message;
+	char	*messid;
+	char	*xf,*xl,*xv,*xc;
+
+	xf = xl = xv = xc = "K";
+
+	memset(ifile,' ',8);
+	get_defs(DEFAULTS_IL,ilib);
+	get_defs(DEFAULTS_IV,ivol);
+
+	pfkey_mask = PFKEY_16_ENABLED;
+	wswap(&pfkey_mask);
+	gptype = "I ";
+	message = COPY_VERSION;
+	messid = "0001";
+
+	for(;;)
+	{
+		long	len;
+		char	pfkey_recv[1];
+		char	copyx[8];
+
+		pfkey_recv[0] = '@';
+
+		gp_cnt = 0;
+		GP gptype; GP "R"; GP "INPUT   "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
+			GP message; GP &N[strlen(message)];
+		GP "U"; GP "Specify the file, library, and volume information:X"; GP &N[50]; GP "A"; GP &N[10]; GP "A"; GP &N[3];
+		GP xf;  GP "FILE    ";	GP ifile;	GP &N[8];	GP "A";	GP &N[12];	GP "A"; GP &N[6]; GP "L";
+		GP "T";	GP "in";	GP &N[2];			        GP &N[0];	GP &N[1];
+		GP xl;  GP "LIBRARY ";	GP ilib;	GP &N[8];	        GP &N[0];	GP &N[1]; GP "L";
+		GP "T";	GP "on";	GP &N[2];			        GP &N[0];	GP &N[1];
+		GP xv;  GP "VOLUME  ";	GP ivol;	GP &N[6];	        GP &N[0];	GP &N[1]; GP "L";
+		GP "U"; GP "Specify the desired copy option:X"; GP &N[32]; GP "A"; GP &N[14]; GP "A"; GP &N[3];
+		GP xc;  GP "COPY    ";	GP copy;	GP &N[7];	   GP "A"; GP &N[16]; GP "A"; GP &N[6]; GP "L";
+		GP "T"; GP "(Options = FILE, or LIBRARY)X"; GP &N[28];     GP "A"; GP &N[16]; GP "A"; GP &N[33];
+		GP "T"; GP "Press PF16 to end COPY processing"; GP &N[33]; GP "A"; GP &N[22]; GP "C"; GP &N[0]; 
+		GP "E";
+		GP "P";	GP &pfkey_mask;
+
+		wvaset(&two);
+		GETPARM(&gp_args,&gp_cnt);
+
+		if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+
+		gptype = "R ";
+		xf = xl = xv = xc = "K";
+
+		leftjust(copy,7);
+		unloadpad(copyx,copy,7);
+		len = strlen(copyx);
+		if ( len == 0 || (0 != memcmp(copyx,"LIBRARY",len) && 0 != memcmp(copyx,"FILE   ",len)) )
+		{
+			messid = "0007";
+			message = "COPY option must be FILE, or LIBRARY";
+			xc = "R";
+			continue;
+		}
+
+		leftjust(ivol,6);
+		if (' '==ivol[0])
+		{
+			messid = "0004";
+			message = "Specify VOLUME name";
+			xv = "R";
+			continue;
+		}
+
+		leftjust(ilib,8);
+		if (' '==ilib[0])
+		{
+			messid = "0005";
+			message = "Specify LIBRARY name";
+			xl = "R";
+			continue;
+		}
+
+		if (copy[0] == 'F')
+		{
+			leftjust(ifile,8);
+			if (' '==ifile[0])
+			{
+				messid = "0006";
+				message = "Specify FILE name";
+				xf = "R";
+				continue;
+			}
+		}
+
+		/*
+		**	Check if voloume and library exists
+		*/
+		{
+			long	vacnt, start, count;
+			char	recvr[22];
+			char	buff[80];
+
+#if defined(unix) || defined(MSDOS)
+			if (0==wlgtrans(ivol,buff))
+			{
+				messid = "0010";
+				message = "VOLUME not found, please respecify";
+				xv = "R";
+				continue;
+			}
+#endif
+			vacnt = 6;
+			start = 1;
+			wswap(&start);
+			count = 1;
+			wswap(&count);
+
+			wvaset(&vacnt);
+			FIND("        ", ilib, ivol, &start, &count, recvr);
+			wswap(&count);
+			if (count == 0)
+			{
+				messid = "0011";
+#if defined(unix) || defined(MSDOS)
+				message = "LIBRARY not found, please respecify";
+				xl = "R";
+#else
+				message = "LIBRARY or VOLUME not found, please respecify";
+				xl = "R";
+				xv = "R";
+#endif
+				continue;
+			}
+		}
+
+		if (copy[0] == 'L')						/* Library was found				*/
+		{
+			return 0;
+		}
+		
+		if (wfexists(ifile,ilib,ivol)) return 0;			/* File exists so return			*/
+
+		messid = "R014";
+		message = "FILE not found, please respecify";
+		xf = "R";
+	}
+}
+
+/*
+**	Routine:	get_output()
+**
+**	Function:	To get the output file specs for COPY.
+**
+**	Description:	Put up the OUTPUT getparm for COPY and validate all fields.
+**
+**	Arguments:
+**	ofile		The output file 	(returned)	
+**	olib		The output library 	(returned)
+**	ovol		The output volume 	(returned)
+**	ifile		The input file
+**	ilib		The input library
+**	ivol		The input volume
+**	copy		The copy option
+**
+**	Globals:
+**	gp_cnt,gp_args	The Getparm macro and variables for GP.
+**	N		The wswaped numbers array.
+**	two		Number two.
+**
+**	Return:		Pfkey number
+**	0		Continue
+**	16		Exit
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/03/93	Written by GSL
+**
+*/
+static int get_output(ofile,olib,ovol,ifile,ilib,ivol,copy)
+char *ofile, *olib, *ovol;
+char *ifile, *ilib, *ivol, *copy;
+{
+	long	pfkey_mask;
+	char	*gptype;
+	char	*message;
+	char	*messid;
+	char	*xf,*xl,*xv;
+	long	vacnt;
+	long	retcode;
+	char	buff[80];
+
+	xf = xl = xv = "K";
+
+	memset(ofile,' ',8);
+	get_defs(DEFAULTS_OL,olib);
+	get_defs(DEFAULTS_OV,ovol);
+
+	pfkey_mask = PFKEY_16_ENABLED;
+	wswap(&pfkey_mask);
+	gptype = "I ";
+	message = COPY_VERSION;
+
+	if (copy[0] == 'F')	messid = "OUT1";
+	else			messid = "0003";
+
+	for(;;)
+	{
+		char	pfkey_recv[1];
+
+		pfkey_recv[0] = '@';
+
+		if (copy[0] == 'F')
+		{
+			gp_cnt = 0;
+			GP gptype; GP "R"; GP "OUTPUT  "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
+				GP message; GP &N[strlen(message)];
+			GP "U"; GP "Please enter the parameters necessary to define the output file:X"; GP &N[64]; 
+				GP "A"; GP &N[9]; GP "C"; GP &N[0];
+			GP xf;  GP "FILE    ";	GP ofile;	GP &N[8];	GP "A";	GP &N[11];	GP "A"; GP &N[6]; GP "L";
+			GP "T";	GP "in";	GP &N[2];			        GP &N[0];	GP &N[1];
+			GP xl;  GP "LIBRARY ";	GP olib;	GP &N[8];	        GP &N[0];	GP &N[1]; GP "L";
+			GP "T";	GP "on";	GP &N[2];			        GP &N[0];	GP &N[1];
+			GP xv;  GP "VOLUME  ";	GP ovol;	GP &N[6];	        GP &N[0];	GP &N[1]; GP "L";
+			GP "U"; GP "Press:"; GP &N[6]; 					GP "A"; GP &N[20]; GP "A"; GP &N[6];
+			GP "T"; GP "   (ENTER)   To create the output file"; GP &N[38]; GP "A"; GP &N[21]; GP "A"; GP &N[6];
+			GP "T"; GP "    (16)     Exit                     "; GP &N[38]; GP "A"; GP &N[22]; GP "A"; GP &N[6];
+			GP "E";
+			GP "P";	GP &pfkey_mask;
+		}
+		else
+		{
+			gp_cnt = 0;
+			GP gptype; GP "R"; GP "OUTPUT  "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
+				GP message; GP &N[strlen(message)];
+			GP "U"; GP "Specify the Output Library and Volume names and press (ENTER):X"; GP &N[62]; 
+				GP "A"; GP &N[11]; GP "C"; GP &N[0];
+			GP xl;  GP "LIBRARY ";	GP olib;	GP &N[8];	GP "A";	GP &N[13];	GP "A"; GP &N[16]; GP "L";
+			GP "T";	GP "on";	GP &N[2];			        GP &N[0];	GP &N[1];
+			GP xv;  GP "VOLUME  ";	GP ovol;	GP &N[6];	        GP &N[0];	GP &N[1]; GP "L";
+			GP "T"; GP "Press PF16 to end COPY processing"; GP &N[33]; GP "A"; GP &N[22]; GP "C"; GP &N[0]; 
+			GP "E";
+			GP "P";	GP &pfkey_mask;
+		}
+
+		wvaset(&two);
+		GETPARM(&gp_args,&gp_cnt);
+
+		if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+
+		gptype = "R ";
+		xf = xl = xv = "K";
+		pfkey_mask = PFKEY_16_ENABLED;
+		wswap(&pfkey_mask);
+
+		leftjust(ovol,6);
+		if (' '==ovol[0])
+		{
+			messid = "0004";
+			message = "Specify VOLUME name";
+			xv = "R";
+			continue;
+		}
+
+		leftjust(olib,8);
+		if (' '==olib[0])
+		{
+			messid = "0005";
+			message = "Specify LIBRARY name";
+			xl = "R";
+			continue;
+		}
+
+		if (copy[0] == 'F')
+		{
+			leftjust(ofile,8);
+			if (' '==ofile[0])
+			{
+				messid = "0006";
+				message = "Specify FILE name";
+				xf = "R";
+				continue;
+			}
+		}
+
+#if defined(unix) || defined(MSDOS)
+		/*
+		**	Check if volume exists
+		*/
+		{
+			char	buff[80];
+
+			if (0==wlgtrans(ovol,buff))
+			{
+				messid = "0010";
+				message = "VOLUME not found, please respecify";
+				xv = "R";
+				continue;
+			}
+		}
 #endif
 
+		if ( 0==memcmp(ivol,ovol,6) && 0==memcmp(ilib,olib,8) )
+		{
+			if (copy[0] == 'L' || 0==memcmp(ifile,ofile,8))
+			{
+				messid = "0027";
+				message = "Output parameters are same as Input, Respecify";
+				continue;
+			}
+		}
 
-#endif
+		if (copy[0] == 'F')
+		{
+			if (wfexists(ofile,olib,ovol))				/* Check if file exists				*/
+			{
+				if (pfkey_recv[0] == PFKEY_3_PRESSED) 		/* If second time thru & PF3 was pressed	*/
+				{
+					vacnt = 5;
+					wvaset(&vacnt);
+					SCRATCH("F",ofile,olib,ovol,&retcode);	/* Scratch the target file			*/
+					wswap(&retcode);
+					if (retcode == 0) return 0;		/* Scratch suceeded.				*/
+
+					messid = "F002";			/* Scratch failed				*/
+					sprintf(buff,"\204Scratch failed return code = %04d",retcode);
+					message = buff;
+					xf = "R";
+					continue;
+				}
+
+				messid = "A004";
+				message = "\204File already exists.  Respecify or press (3) to scratch it.";
+				xf = "R";
+				pfkey_mask = PFKEY_3_ENABLED | PFKEY_16_ENABLED;
+				wswap(&pfkey_mask);
+				continue;
+			}
+		}
+
+		return 0;
+	}
+}
+
+/*
+**	Routine:	get_eoj()
+**
+**	Function:	To
+**
+**	Description:	Put up the EOJ getparm for COPY
+**
+**	Arguments:
+**	message		The EOJ message.
+**	messid		The EOJ message id.
+**
+**	Globals:
+**	gp_cnt,gp_args	The Getparm macro and variables for GP.
+**	N		The wswaped numbers array.
+**	two		Number two.
+**
+**	Return:		Pfkey number
+**	0,16		Exit
+**	1		Copy another
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/03/93	Written by GSL
+**
+*/
+static int get_eoj(message,messid)
+char *message;
+char *messid;
+{
+	long	pfkey_mask;
+	char	*gptype;
+	char	pfkey_recv[1];
+
+	pfkey_mask = PFKEY_1_ENABLED | PFKEY_16_ENABLED;
+	wswap(&pfkey_mask);
+	gptype = "I ";
+
+	pfkey_recv[0] = '@';
+
+	gp_cnt = 0;
+	GP gptype; GP "R"; GP "EOJ     "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
+		GP message; GP &N[strlen(message)];
+	GP "T"; GP "Select ENTER or PF16 to End   the program "; GP &N[42]; GP "A"; GP &N[9]; GP "A"; GP &N[2];
+	GP "T"; GP "             or PF1  to rerun the program."; GP &N[42]; GP "A"; GP &N[10]; GP "A"; GP &N[2];
+	GP "E";
+	GP "P";	GP &pfkey_mask;
+
+	wvaset(&two);
+	GETPARM(&gp_args,&gp_cnt);
+
+	if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+	if (pfkey_recv[0] == PFKEY_1_PRESSED) return 1;
+	return 0;
+}
+
+/*
+**	Routine:	get_dummy()
+**
+**	Function:	To issue dummy getparms not used in WCOPY.
+**
+**	Description:	There are hidden getparms used on Wang COPY that we don't care about, however
+**			we want any putparms cleaned up so we issue hidden dummy getparms to handle.
+**
+**	Arguments:	None
+**
+**	Globals:
+**	gp_cnt,gp_args	The Getparm macro and variables for GP.
+**	N		The wswaped numbers array.
+**	two		Number two.
+**
+**	Return:		None.
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/03/93	Written by GSL
+**
+*/
+static int get_dummy()
+{
+	char	pfkey_recv[1];
+	char	*message;
+
+	pfkey_recv[0] = '@';
+	message = "NOT IMPLEMENTED";
+
+	gp_cnt = 0;
+	GP "ID"; GP "R"; GP "OPTIONS  "; GP pfkey_recv; GP "DUM1"; GP "WCOPY "; GP &N[1]; 
+		GP message; GP &N[strlen(message)];
+	GP "E";
+
+	wvaset(&two);
+	GETPARM(&gp_args,&gp_cnt);
+
+	gp_cnt = 0;
+	GP "ID"; GP "R"; GP "LOCK    "; GP pfkey_recv; GP "DUM2"; GP "WCOPY "; GP &N[1]; 
+		GP message; GP &N[strlen(message)];
+	GP "E";
+
+	wvaset(&two);
+	GETPARM(&gp_args,&gp_cnt);
+
+	return 0;
+}
+
+/*
+**	Routine:	get_options()
+**
+**	Function:	To get the output OPTIONS for COPY.
+**
+**	Description:	Put up the OPTIONS getparm for COPY and validate all fields.
+**			It also does any possible Rename or Scratch.
+**
+**	Arguments:
+**	ifile		The input file
+**	ilib		The input library
+**	ivol		The input volume
+**	ofile		The output file 	(returned)	
+**	olib		The output library 
+**	ovol		The output volume 
+**	option		The option		(returned)
+**
+**	Globals:
+**	gp_cnt,gp_args	The Getparm macro and variables for GP.
+**	N		The wswaped numbers array.
+**	two		Number two.
+**
+**	Return:		Pfkey number
+**	0		Continue
+**	16		Exit
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/04/93	Written by GSL
+**
+*/
+
+static int get_options(ifile,ilib,ivol,ofile,olib,ovol,option)
+char *ifile, *ilib, *ivol;
+char *ofile, *olib, *ovol;
+char *option;
+{
+	long	pfkey_mask;
+	char	*gptype;
+	char	*message;
+	char	*messid;
+	char	*xo, *xn;
+	long	vacnt;
+	long	retcode;
+	char	buff[80];
+	char	newname[9];
+
+	xn = xo = "K";
+
+	pfkey_mask = PFKEY_16_ENABLED;
+	wswap(&pfkey_mask);
+	gptype = "I ";
+	message = COPY_VERSION;
+	messid = "0018";
+
+	memset(newname,' ',8);
+
+	for(;;)
+	{
+		char	pfkey_recv[1];
+
+		pfkey_recv[0] = '@';
+
+		gp_cnt = 0;
+		GP gptype; GP "R"; GP "OPTIONS "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
+				GP message; GP &N[strlen(message)];
+
+		GP "T"; GP "File"; GP &N[4]; GP "A"; GP &N[10]; GP "A"; GP &N[2];
+		GP "T"; GP ifile; GP &N[8]; 					GP &N[0]; GP &N[0];
+		GP "T"; GP "is listed in both the input Library"; GP &N[35];	GP &N[0]; GP &N[0];
+		GP "T"; GP ilib; GP &N[8]; 					GP &N[0]; GP &N[0];
+		GP "T"; GP "on Volume"; GP &N[9]; 				GP &N[0]; GP &N[0];
+		GP "T"; GP ivol; GP &N[6]; 					GP &N[0]; GP &N[0];
+		GP "T"; GP "and the output Library"; GP &N[22]; GP "A"; GP &N[11]; GP "A"; GP &N[29];
+		GP "T"; GP olib; GP &N[8]; 					GP &N[0]; GP &N[0];
+		GP "T"; GP "on Volume"; GP &N[9]; 				GP &N[0]; GP &N[0];
+		GP "T"; GP ovol; GP &N[6]; 					GP &N[0]; GP &N[0];
+
+		GP "U"; GP "Specify an option to resolve the file conflict:"; GP &N[47]; GP "A"; GP &N[13]; GP "A"; GP &N[2];
+
+		GP xo;  GP "OPTION  ";	GP option;	GP &N[1];	GP "A";	GP &N[15];	GP "A"; GP &N[6]; GP "L";
+
+		GP "T"; GP "N - No copy will take place for this file  "; GP &N[43]; GP "A"; GP &N[15]; GP "A"; GP &N[30];
+		GP "T"; GP "S - Scratch the output file before copying "; GP &N[43]; GP "A"; GP &N[16]; GP "A"; GP &N[30];
+		GP "T"; GP "R - Rename the file that is already in the "; GP &N[43]; GP "A"; GP &N[17]; GP "A"; GP &N[30];
+		GP "T"; GP "    output library                         "; GP &N[43]; GP "A"; GP &N[18]; GP "A"; GP &N[30];
+		GP "T"; GP "C - Copy the file using a new file name    "; GP &N[43]; GP "A"; GP &N[19]; GP "A"; GP &N[30];
+
+		GP xn;  GP "NEWNAME";	GP newname;	GP &N[8];	GP "A";	GP &N[21];	GP "A"; GP &N[6]; GP "L";
+
+		GP "T"; GP "(for option R and C)"; GP &N[20]; GP "A"; GP &N[21]; GP "A"; GP &N[30];
+
+		GP "T"; GP "Press PF16 to end COPY processing"; GP &N[33]; GP "A"; GP &N[24]; GP "C"; GP &N[0]; 
+		GP "E";
+		GP "P";	GP &pfkey_mask;
+
+
+		wvaset(&two);
+		GETPARM(&gp_args,&gp_cnt);
+
+		if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+
+		gptype = "R ";
+		xo = xn = "K";
+		pfkey_mask = PFKEY_16_ENABLED;
+		wswap(&pfkey_mask);
+
+		/*
+		**	Validate the OPTION field
+		*/
+
+		switch (option[0])
+		{
+		case 'N':
+			return 0;
+		case 'S':
+		case 'R':
+		case 'C':
+			break;
+		default:
+			messid = "0019";
+			message = "Invalid option. Please respecify";
+			xo = "R";
+			continue;
+		}
+
+		if (option[0] == 'S')						/* Scratch the output file first		*/
+		{
+			vacnt = 5;
+			wvaset(&vacnt);
+			SCRATCH("F",ofile,olib,ovol,&retcode);			/* Scratch the target file			*/
+			wswap(&retcode);
+			if (retcode == 0) return 0;				/* Scratch suceeded.				*/
+
+			messid = "F002";					/* Scratch failed				*/
+			sprintf(buff,"\204Scratch failed return code = %04d",retcode);
+			message = buff;
+			xo = "R";
+			continue;
+		}
+
+		leftjust(newname,8);
+		if (' '==newname[0])
+		{
+			messid = "0024";
+			message = "A new file name must be specified";
+			xn = "R";
+			continue;
+		}
+
+		if (wfexists(newname,olib,ovol))
+		{
+			messid = "0022";
+			message = "The new file name specified already exists";
+			xn = "R";
+			continue;
+		}
+
+		if (option[0] == 'R')
+		{
+			vacnt = 6;
+			wvaset(&vacnt);
+			wrename("F",ofile,olib,ovol,newname,&retcode);
+			wswap(&retcode);
+			if (retcode == 0) return 0;				/* Rename suceeded.				*/
+
+			messid = "F003";					/* Rename failed				*/
+			sprintf(buff,"\204Rename failed return code = %04d",retcode);
+			message = buff;
+			xo = "R";
+			continue;
+		}
+
+		memcpy(ofile,newname,8);					/* Copy with new name				*/
+
+		return 0;
+	}
+}
+
+/*
+**	Routine:	get_failed()
+**
+**	Function:	To nofify user that COPY failed.
+**
+**	Description:	Put up the FAILED getparm for COPY.
+**
+**	Arguments:
+**	ifile		The input file
+**	ilib		The input library
+**	ivol		The input volume
+**	ofile		The output file
+**	olib		The output library 
+**	ovol		The output volume 
+**	retcode		The error code from COPY
+**
+**	Globals:
+**	gp_cnt,gp_args	The Getparm macro and variables for GP.
+**	N		The wswaped numbers array.
+**	two		Number two.
+**
+**	Return:		Pfkey number
+**	0		Continue
+**	16		Exit
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/04/93	Written by GSL
+**
+*/
+
+static int get_failed(ifile,ilib,ivol,ofile,olib,ovol,retcode)
+char *ifile, *ilib, *ivol;
+char *ofile, *olib, *ovol;
+long retcode;
+{
+	long	pfkey_mask;
+	char	*gptype;
+	char	message[80];
+	char	*messid;
+	char	pfkey_recv[1];
+
+	pfkey_mask = PFKEY_16_ENABLED;
+	wswap(&pfkey_mask);
+	gptype = "I ";
+	messid = "F001";
+	sprintf(message,"\204Copy failed with return code = %04d",retcode);
+
+	pfkey_recv[0] = '@';
+
+	gp_cnt = 0;
+	GP gptype; GP "R"; GP "FAILED  "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
+				GP message; GP &N[strlen(message)];
+
+	GP "T"; GP "INPUT  File"; GP &N[11]; GP "A"; GP &N[10]; GP "A"; GP &N[2];
+	GP "T"; GP ifile; GP &N[8]; 					GP &N[0]; GP &N[0];
+	GP "T"; GP "in Library"; GP &N[10];				GP &N[0]; GP &N[0];
+	GP "T"; GP ilib; GP &N[8]; 					GP &N[0]; GP &N[0];
+	GP "T"; GP "on Volume"; GP &N[9]; 				GP &N[0]; GP &N[0];
+	GP "T"; GP ivol; GP &N[6]; 					GP &N[0]; GP &N[0];
+
+	GP "T"; GP "OUTPUT File"; GP &N[11]; GP "A"; GP &N[12]; GP "A"; GP &N[2];
+	GP "T"; GP ofile; GP &N[8]; 					GP &N[0]; GP &N[0];
+	GP "T"; GP "in Library"; GP &N[10];				GP &N[0]; GP &N[0];
+	GP "T"; GP olib; GP &N[8]; 					GP &N[0]; GP &N[0];
+	GP "T"; GP "on Volume"; GP &N[9]; 				GP &N[0]; GP &N[0];
+	GP "T"; GP ovol; GP &N[6]; 					GP &N[0]; GP &N[0];
+
+	GP "U"; GP "Press:"; GP &N[6]; 					GP "A"; GP &N[20]; GP "A"; GP &N[6];
+	GP "T"; GP "   (ENTER)   Continue"; GP &N[21]; 			GP "A"; GP &N[21]; GP "A"; GP &N[6];
+	GP "T"; GP "    (16)     Exit    "; GP &N[21]; 			GP "A"; GP &N[22]; GP "A"; GP &N[6];
+
+	GP "E";
+	GP "P";	GP &pfkey_mask;
+
+	wvaset(&two);
+	GETPARM(&gp_args,&gp_cnt);
+
+	if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+
+	return 0;
+}
+

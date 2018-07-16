@@ -1,0 +1,205 @@
+# $Id:$
+#
+#	/************************************************************************/
+#	/*									*/
+#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+#	/*	 An unpublished work of International Digital Scientific Inc.	*/
+#	/*			    All rights reserved.			*/
+#	/*									*/
+#	/************************************************************************/
+#
+#
+#	File:		printq.umf
+#
+#	Function:	Generic makefile for the ilp library on all unix platforms.
+#
+# 	History:	
+#                       01/14/93        Added cli_misc and d_dump new modules
+#			06/04/92	Changed to use make.include GSL
+#                       09/13/93        Changes for UniQue
+#
+
+CDEBUG = -g
+#CDEBUG = -O
+
+include $(WISP)/src/port/make.include
+
+#
+#	$(PQFLAG)
+#
+# -DSOCKCODE to include socket code;	Do not use for SCO.
+# -DMQCODE to include message q code;	Use this one for SCO.
+#
+#   If a system complains that it can't resolve select(),
+#   add -DNO_SELECT to $(PQFLAG).  This is done in make.include.
+#
+#
+# use C89 on OSF1, HP/UX and AIX.  CCPRINTQ defined in make.include
+# 
+CC=$(CCPRINTQ)
+DUNIQUE=-DUNIQUE
+#DUNIQUE=
+CFLAGS = $(DUNIQUE) $(CFLAGS0) $(PQFLAG)
+
+LIBS = $(LIBCFLAGS) -lvideo $(LIBSOC) $(LIBCURSES)
+LIBPATHS= $(STDLIB)/libvideo.a 
+
+YFLAGS=-d
+
+DAEMONOBJS = d_main.o d_comm.o d_misc.o d_unspool.o utils.o  iprintcap_y.o iprintcap_l.o formdef_y.o formdef_l.o \
+classdef_y.o classdef_l.o decode.o jlist.o qconfig_y.o qconfig_l.o qpaths.o d_dump.o licunique.o ring.o \
+uauthsub.o platsubs.o idsisubs.o wlickey.o fexists.o
+ILPMANOBJS = man_main.o man_scr.o c_comm.o utils.o c2vwrap.o man_misc.o qpaths.o cli_misc.o licunique.o ring.o \
+uauthsub.o platsubs.o idsisubs.o wlickey.o fexists.o
+ILPOBJS = ipr_main.o c_comm.o utils.o c2vwrap.o qpaths.o cli_misc.o licunique.o ring.o uauthsub.o \
+platsubs.o idsisubs.o wlickey.o fexists.o
+
+#IDAEMON=idaemon
+#ILPMAN=ilpman
+#ISHUT=ishut
+#ILP=ilp
+
+IDAEMON=udaemon
+ILPMAN=unique
+ISHUT=ushut
+ILP=ulp
+
+all: 	$(IDAEMON) $(ILPMAN) $(ILP) $(ISHUT) ulicense
+
+$(ILPMAN): $(ILPMANOBJS) $(LIBPATHS)
+	$(CC) $(CFLAGS) -o $(ILPMAN) $(ILPMANOBJS) $(LIBS)
+
+$(ILP): 	$(ILPOBJS) $(LIBPATHS)
+	$(CC) $(CFLAGS) -o $(ILP) $(ILPOBJS) $(LIBS)
+
+ulicense: ulicense.c prompt.o licunique.o uauthsub.o platsubs.o idsisubs.o wlickey.o fexists.o
+	$(CC) $(CFLAGS) -o $@ ulicense.c prompt.o licunique.o uauthsub.o platsubs.o idsisubs.o wlickey.o fexists.o
+
+
+man_main.o: man_main.c manage.h c_comm.h defs.h qpaths.h
+man_misc.o: man_misc.c manage.h c_comm.h defs.h qpaths.h
+cli_misc.o: cli_misc.c qpaths.h defs.h qpaths.h
+ilp_wisp.o: ilp_wisp.c c_comm.h defs.h qpaths.h
+man_scr.o: man_scr.c manage.h defs.h qpaths.h
+c_comm.o: c_comm.c  defs.h c_comm.h qpaths.h
+utils.o: utils.c  defs.h  qpaths.h
+qpaths.o: qpaths.c defs.h qpaths.h
+
+$(IDAEMON): $(DAEMONOBJS) $(LIBPATHS)
+	$(CC) $(CFLAGS) -o $(IDAEMON) $(DAEMONOBJS) $(LIBS)
+
+jlist.o: jlist.c jlist.h
+d_main.o: d_main.c daemon.h defs.h qpaths.h
+d_dump.o: d_dump.c daemon.h defs.h qpaths.h
+d_misc.o: d_misc.c daemon.h defs.h qpaths.h 
+d_comm.o: d_comm.c daemon.h defs.h qpaths.h
+d_unspool.o: d_unspool.c daemon.h defs.h qpaths.h
+decode.o: decode.c
+c2vwrap.o: c2vwrap.c
+
+y.tab.h: iprintcap.y
+	yacc -d iprintcap.y
+
+iprintcap_y.o: iprintcap.y
+	yacc -d iprintcap.y
+	sed 's/yy/ipcyy/g' <y.tab.c >iprintcap_y.c
+	sed 's/yy/ipcyy/g' <y.tab.h >iprintcap_y.h
+	cc $(CFLAGS) -c iprintcap_y.c
+	rm iprintcap_y.c y.tab.c 
+	
+iprintcap_l.o: iprintcap.l 
+	lex iprintcap.l
+	sed 's/yy/ipcyy/g' <lex.yy.c >iprintcap_l.c
+	cc $(CFLAGS) -c iprintcap_l.c
+	rm lex.yy.c iprintcap_l.c y.tab.h
+
+formdef_y.o: formdef.y
+	yacc -d formdef.y
+	sed 's/yy/formyy/g' <y.tab.c >formdef_y.c
+	sed 's/yy/formyy/g' <y.tab.h >formdef_y.h
+	cc $(CFLAGS) -c formdef_y.c
+	rm formdef_y.c y.tab.c 
+
+formdef_l.o: formdef.l
+	lex formdef.l
+	sed 's/yy/formyy/g' <lex.yy.c >formdef_l.c
+	cc $(CFLAGS) -c formdef_l.c
+	rm lex.yy.c formdef_l.c 
+
+classdef_y.o: classdef.y
+	yacc -d classdef.y
+	sed 's/yy/clsyy/g' <y.tab.c >classdef_y.c
+	sed 's/yy/clsyy/g' <y.tab.h >classdef_y.h
+	cc $(CFLAGS) -c classdef_y.c
+	rm classdef_y.c y.tab.c 
+
+classdef_l.o: classdef.l
+	lex classdef.l
+	sed 's/yy/clsyy/g' <lex.yy.c >classdef_l.c
+	cc $(CFLAGS) -c classdef_l.c
+	rm lex.yy.c classdef_l.c 
+
+qconfig_y.o: qconfig.y
+	@echo
+	@echo expect \"1 rules never reduced\" and \"conflicts: 2 shift/reduce\"
+	@echo
+	yacc -d qconfig.y
+	sed 's/yy/qcfyy/g' <y.tab.c >qconfig_y.c
+	sed 's/yy/qcfyy/g' <y.tab.h >qconfig_y.h
+	cc $(CFLAGS) -c qconfig_y.c
+	rm qconfig_y.c y.tab.c 
+
+qconfig_l.o: qconfig.l
+	lex qconfig.l
+	sed 's/yy/qcfyy/g' <lex.yy.c >qconfig_l.c
+	cc $(CFLAGS) -c qconfig_l.c
+	rm lex.yy.c qconfig_l.c 
+
+clean:
+	rm -f core *.o *.~ daemon ipman
+
+cnt:	
+	rm -f y.tab.*
+	wc *.c *.h *.l *.y makefile
+
+cntd:
+	rm -f y.tab.*
+	wc d_main.c d_comm.c d_misc.c d_unspool.c utils.c  iprintcap.y iprintcap.l daemon.h defs.h
+
+
+cntm:	
+	wc man_main.c man_scr.c c_comm.c utils.c c2vwrap.c ipr_main.c c_comm.c manage.h c_comm.h  defs.h
+
+$(ISHUT): 	shut.c utils.o
+	$(CC) $(CFLAGS) -o $(ISHUT) shut.c utils.o qpaths.o
+
+install: 
+	cp $(IDAEMON) $(ISHUT)  $(WISP)/wisp/bin
+	cp $(ILP) $(ILPMAN)     $(WISP)/wisp/bin
+	chown root  $(WISP)/wisp/bin/$(IDAEMON)
+	chgrp 0     $(WISP)/wisp/bin/$(IDAEMON)
+	chmod u+s   $(WISP)/wisp/bin/$(IDAEMON)
+	chmod a-w   $(WISP)/wisp/bin/$(IDAEMON)
+	chown root  $(WISP)/wisp/bin/$(ISHUT)
+	chgrp 0     $(WISP)/wisp/bin/$(ISHUT)
+	chmod u+s   $(WISP)/wisp/bin/$(ISHUT)
+	chmod a-w   $(WISP)/wisp/bin/$(ISHUT)
+
+SHIP = $(UNIQUE)/uniVERSION.ship
+ship:
+	test -d $(SHIP) || mkdir $(SHIP)
+	cp $(IDAEMON) $(ISHUT)  $(SHIP)
+	cp $(ILP) $(ILPMAN)     $(SHIP)
+	chown root  $(SHIP)/$(IDAEMON)
+	chgrp 0     $(SHIP)/$(IDAEMON)
+	chmod u+s   $(SHIP)/$(IDAEMON)
+	chmod a-w   $(SHIP)/$(IDAEMON)
+	chown root  $(SHIP)/$(ISHUT)
+	chgrp 0     $(SHIP)/$(ISHUT)
+	chmod u+s   $(SHIP)/$(ISHUT)
+	chmod a-w   $(SHIP)/$(ISHUT)
+	cp ulicense 	$(SHIP)
+	cp *.sam        $(SHIP)
+	cp uniVERSION.rel   $(SHIP)
+	cp ulpremote.sh $(SHIP)
+

@@ -1,8 +1,10 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
 #ifdef VMS
@@ -12,6 +14,7 @@
 #include <ssdef.h>
 #include <libdef.h>
 
+#include "idsistd.h"
 #include "wperson.h"
 
 extern char WISPFILEXT[39];
@@ -36,6 +39,7 @@ wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rt
  
 	char *l_infile, *l_inlib, *l_invol, *l_outfile, *l_outlib, *l_outvol, *l_ebas;
 										 /* Create local values.			*/
+	char	def_invol[6], def_inlib[8], def_outvol[6], def_outlib[8];
 	short l_numflds;
 	short l_rtn;
 	
@@ -43,13 +47,12 @@ wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rt
 	char *r, *end_name, *end_name1;						/* Pointers for wfname.				*/
 	int w, sz_of, i, tmp_sz, k, l;						/* Indexes for working string area.		*/
 	int tmp_sz_of;
-	char *malloc();								/* Change malloc to pointer to character.	*/
 	char *wfname();								/* Change Wfname to pointer to character.	*/
 	char *b_string;								/* String pointer to character for btransl.	*/
 	short b_length;
 	char tmp_fld;								/* Temporary type of field being checked.	*/
-	long mode;								/* Mode for wfname.				*/
-	long ez;
+	int4 mode;								/* Mode for wfname.				*/
+	int4 ez;
 	char *in_line, *hld_out, *hld_in, *out_line, *in_fld, *out_fld, *hld_fld;
 										/* Hold address for repointing address.		*/
 	char n_name[80];
@@ -103,22 +106,26 @@ wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rt
 
 	if (*in_vol == ' ') 
 	{
-		l_invol = &defaults.invol[0];					/* Point to the invol.				*/
+		get_defs(DEFAULTS_IV,def_invol);
+		l_invol = def_invol;						/* Point to the invol.				*/
 	}
 
 	if (*in_lib == ' ')							/* Only if no lib or volume defined		*/
 	{
-		l_inlib = &defaults.inlib[0];					/* and the inlib.				*/
+		get_defs(DEFAULTS_IL,def_inlib);
+		l_inlib = def_inlib;						/* and the inlib.				*/
 	}
 										
 	if (*out_vol == ' ') 
 	{
-		l_outvol = &defaults.outvol[0];					/* Point to the outvol.				*/
+		get_defs(DEFAULTS_OV,def_outvol);
+		l_outvol = def_outvol;						/* Point to the outvol.				*/
 	}
 
 	if (*out_lib == ' ')							/* Only if no lib or volume defined		*/
 	{
-		l_outlib = &defaults.outlib[0];					/* and the outlib.				*/
+		get_defs(DEFAULTS_OL,def_outlib);
+		l_outlib = def_outlib;						/* and the outlib.				*/
 	}
 
 	if (WISPFILEXT[0] == ' ' || WISPFILEXT[0] == 0)				/* Need to use our file extension.		*/
@@ -304,7 +311,7 @@ wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rt
 #ifdef unix
 wtransl()
 {
-	vre("wtransl: Not Supported");
+	werrlog(102,"wtransl: Not Supported",0,0,0,0,0,0,0);
 }
 #endif
 

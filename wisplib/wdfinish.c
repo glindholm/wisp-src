@@ -2,6 +2,7 @@
 
 #include <v/video.h>
 
+#include "idsistd.h"
 wdfinish()
 {
 	vmove(23,0);

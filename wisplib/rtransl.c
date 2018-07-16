@@ -1,3 +1,4 @@
+#include "idsistd.h"
 #ifdef VMS
 #include <stdio.h>
 #include <descrip.h>
@@ -27,9 +28,8 @@ rtransl(in_string,lay_out,num_flds,eb_as,rtn)
 	short *b_length;
 	short  tmp_call;
 	char tmp_fld;								/* Temporary type of field being checked.	*/
-	char *malloc();
-	long mode;								/* Mode for wfname.				*/
-	long ez;
+	int4 mode;								/* Mode for wfname.				*/
+	int4 ez;
 	char *in_line, *hld_out, *hld_in, *out_line, *in_fld, *out_fld, *hld_fld;	/* Hold address for repointing address.	*/
 
 	in_line		= in_string;						/* Points to input file/lib/vol.		*/

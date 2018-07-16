@@ -7,6 +7,7 @@
 			/*									*/
 			/************************************************************************/
 
+#include "idsistd.h"
 #include "werrlog.h"
 
 #define		ROUTINE		52000
@@ -20,21 +21,16 @@
 char *wfname();
 
 readvtoc(option, lib, vol, start, end, rcvr, rtrn_code, count)
-
 char *option, *lib, *vol, *rcvr;
-long  *start, *end, *count, *rtrn_code;
-
+int4  *start, *end, *count, *rtrn_code;
 {											
  	char *l_rcvr, *ptr;                                        
-	long l_start, l_end, find_status, l_rtrn_code;
+	int4 l_start, l_end, find_status, l_rtrn_code;
 	int  i, j, k, c;
 	char *context;
-	long mode;
-
+	int4 mode;
 	char template[NAME_LENGTH], result[256];
-
-$DESCRIPTOR(t_desc, template);
-$DESCRIPTOR(r_desc, result);
+#include "readvtoc.d"
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -116,9 +112,11 @@ $DESCRIPTOR(r_desc, result);
 #include <string.h>
 #include <memory.h>
 
+static int do_vtoc_find();
+
 READVTOC(option, lib, vol, start, end, rcvr, rtrn_code, count)
 char *option, *lib, *vol, *rcvr;
-long  *start, *end, *count, *rtrn_code;
+int4  *start, *end, *count, *rtrn_code;
 {
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -128,8 +126,8 @@ long  *start, *end, *count, *rtrn_code;
 		{
 			do_vtoc_find( lib, vol, start, end, rcvr, count );
 
-			rtrn_code = 0L;
-			wswap( &rtrn_code );
+			*rtrn_code = 0;
+			wswap( rtrn_code );
 
 			return( 0 );
 			break;
@@ -152,16 +150,16 @@ long  *start, *end, *count, *rtrn_code;
 
 static	do_vtoc_find( lib, vol, start, end, rcvr, count)
 char *lib, *vol, *rcvr;
-long  *start, *end, *count;
+int4  *start, *end, *count;
 {
 	char *big_rcvr;								/* Pointer to malloc reciever area for FIND().	*/
 	char *br, *dr;								/* Pointers to big_rcvr and destination rcvr.	*/
 	int	i;
-	long	l_end;								/* Local copy of "end" variable.		*/
+	int4	l_end;								/* Local copy of "end" variable.		*/
 
 	l_end = *end;								/* Get maximum number of file names to recieve.	*/
 	wswap( &l_end );							/* Swap bytes so l_end is correct for C.	*/
-	big_rcvr = malloc( 22 * l_end );					/* Allocate memory for FIND() results.		*/
+	big_rcvr = malloc( (int)(22 * l_end) );					/* Allocate memory for FIND() results.		*/
 
 	FIND( "?       ", lib, vol, start, end, big_rcvr, count, "A" );		/* Get "end" number of file names from FIND().	*/
 
@@ -172,7 +170,7 @@ long  *start, *end, *count;
 	for( i = 0 ; i < l_end ; ++i )						/* For each file name returned from FIND().	*/
 	{
 		memcpy( dr, br, 8 );						/* Copy 8 character file name to rcvr.		*/
-		br += 22;							/* FIND() rcvr is 22 bytes long (vol,lib,name).	*/
+		br += 22;							/* FIND() rcvr is 22 bytes int4 (vol,lib,name).	*/
 		dr += 8;							/* Next destination is after 8 byte file name.	*/
 	}
 

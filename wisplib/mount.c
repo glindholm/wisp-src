@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include <ssdef.h>
 #include <mntdef.h>
+#include "idsistd.h"
 #include "wdefines.h"
 #include <varargs.h>                                                                    /* Allow variable number of arguments	*/
 
@@ -38,8 +39,8 @@ va_dcl
 {
 	va_list	the_args;								/* A pointer to traverse the stack.	*/
 	int	arg_count,i;
-	long	status;
-	long	device,vsid,sysuse,*retcod;
+	int4	status;
+	int4	device,vsid,sysuse,*retcod;
 	char	*volume,*label,*usage,*dtype,*bypass,*msg,*disp,*addr,dname[MAX_DEVICE_NAME_LENGTH];
 	char 	volnam[7];
 	/********************************************************

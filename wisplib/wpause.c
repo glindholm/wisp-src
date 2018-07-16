@@ -1,14 +1,15 @@
 /* Simulate the Wang PAUSE routine.												*/
 
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 
 wpause(hsec)									/* Pause program for hsec (1/100) seconds.	*/
-long *hsec;
+int4 *hsec;
 {
 #define		ROUTINE		82000
 
-	long	ltime;
+	int4	ltime;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);					/* Log the entry.				*/
 

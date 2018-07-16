@@ -33,6 +33,7 @@
 #include <ctype.h> 
 #include <varargs.h>
 
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "cobrun.h"
@@ -42,22 +43,22 @@ va_dcl											/* Parameter declaration.     		*/
 {
 #define		ROUTINE		61500
 	va_list the_args;								/* Declare variable to traverse list.	*/
-	long	total_arg_count;							/* Total number of arguments		*/
-	long	arg_count;								/* Number of arguments			*/
+	int4	total_arg_count;							/* Total number of arguments		*/
+	int4	arg_count;								/* Number of arguments			*/
 	char	*ptr;									/* Misc char pointer.			*/
-	long	return_code;								/* The return code			*/
+	int4	return_code;								/* The return code			*/
 	char	*return_ptr;								/* Ptr to return code			*/
-	long	tlong;									/* Temp long				*/
+	int4	tlong;									/* Temp int4				*/
 	char	sortparms[116];								/* SORTCALL parameter			*/
-	long	keycount;								/* Number of sort keys			*/
-	long	i;									/* temp counter				*/
+	int4	keycount;								/* Number of sort keys			*/
+	int4	i;									/* temp counter				*/
 	char	buff[20];								/* temp buffer				*/
-	long	offset;									/* Offset into sortparms		*/
+	int4	offset;									/* Offset into sortparms		*/
 	int	dupinorder;								/* Duplicates are to be in order	*/
 
 	char	filetype;								/* The file type (from SORTINFO)	*/
-	long	recsize;								/* The record size (from SORTINFO)	*/
-	long	*sortcode_ptr;								/* The sortcode pointer (from SORTINFO)	*/
+	int4	recsize;								/* The record size (from SORTINFO)	*/
+	int4	*sortcode_ptr;								/* The sortcode pointer (from SORTINFO)	*/
 
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
@@ -111,7 +112,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count < 10)
 	{
-		werrlog(ERRORCODE(10),"INPUT seq",(long)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(ERRORCODE(10),"INPUT seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -156,7 +157,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count < 6)
 	{
-		werrlog(ERRORCODE(10),"SELECTION seq",(long)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(ERRORCODE(10),"SELECTION seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -198,7 +199,7 @@ va_dcl											/* Parameter declaration.     		*/
 	{
 		if ( arg_count < ((keycount-i)*4 + 4) )
 		{
-			werrlog(ERRORCODE(10),"KEY seq",(long)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+			werrlog(ERRORCODE(10),"KEY seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 			return_code = 51;
 			goto return_label;
 		}
@@ -236,7 +237,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count < 4)
 	{
-		werrlog(ERRORCODE(10),"OUTPUT seq",(long)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(ERRORCODE(10),"OUTPUT seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -277,7 +278,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count != 1)
 	{
-		werrlog(ERRORCODE(10),"RETCODE",(long)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(ERRORCODE(10),"RETCODE",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -301,49 +302,56 @@ return_label:
 
 	getsortinfo(&filetype, &recsize, &sortcode_ptr);
 
-	wangsort(sortparms,&filetype,&recsize,dupinorder,sortcode_ptr,return_ptr);
+	wangsort(sortparms,&filetype,&recsize,dupinorder,sortcode_ptr,(int4 *)return_ptr);
 	return;
 }
 
 static char	sort_filetype = ' ';						/* The sort filetype 	(SORTLINK,SORTCALL)	*/
-static long	sort_recsize = 0;						/* The sort record size	(SORTLINK,SORTCALL)	*/
-static long	*sort_sortcode_ptr;						/* The sort sortcode	(SORTLINK,SORTCALL)	*/
-					     						
+static int4	sort_recsize = 0;						/* The sort record size	(SORTLINK,SORTCALL)	*/
+static int4	*sort_sortcode_ptr;						/* The sort sortcode	(SORTLINK,SORTCALL)	*/
+static int4	sort_dummy;							/* Dummy sortcode				*/
+
 /*
 	SORTINFO	This routine is used to pass extra info to the routines SORTLINK and SORTCALL.
-			If not called they will default to VISION for ACUCOBOL and CISAM for Micro Focus.
+			If not called they will default to filetype="I" (INDEXED).
 */
 void SORTINFO(filetype,recsize,sortcode)
 char	*filetype;
-long	*recsize;
-long	*sortcode;
+int4	*recsize;
+int4	*sortcode;
 {
-	static long	dummy;
-
 	sort_filetype = *filetype;
 
 	if (recsize) sort_recsize = *recsize;
 	else	     sort_recsize = 0;
 
 	if (sortcode) sort_sortcode_ptr = sortcode;
-	else	      sort_sortcode_ptr = &dummy;
+	else	      sort_sortcode_ptr = &sort_dummy;
 }
 
+/*
+	getsortinfo	This routine is call by SORTCALL and SORTLINK to get the extra info supplied by SORTINFO.
+			It can only be called once, then it will reset the variable to an uninitialized state.
+*/
 getsortinfo(filetype,recsize,sortcode_ptr)
 char	*filetype;
-long	*recsize;
-long	**sortcode_ptr;
+int4	*recsize;
+int4	**sortcode_ptr;
 {
 	if (' ' == sort_filetype)
 	{
-		if      (vision_files) *filetype = 'A';
-		else if (cisam_files ) *filetype = 'C';
+		*filetype = 'I';
+		*recsize = 0;
+		*sortcode_ptr = &sort_dummy;
 	}
-	else *filetype = sort_filetype;
+	else 
+	{
+		*filetype = sort_filetype;
+		*recsize = sort_recsize;
+		*sortcode_ptr = sort_sortcode_ptr;
+	}
+
 	sort_filetype = ' ';
-
-	*recsize = sort_recsize;
 	sort_recsize = 0;
-
-	*sortcode_ptr = sort_sortcode_ptr;
+	sort_sortcode_ptr = &sort_dummy;
 }

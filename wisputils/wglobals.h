@@ -20,11 +20,15 @@
 #ifndef WGLOBALS_DEF
 #define WGLOBALS_DEF
 
+#include <stdio.h>
 #include <time.h>
 #ifdef unix
 #include <sys/types.h>
 #endif
+
+#include "idsistd.h"
 #include "wfiles.h"
+
 
 /*
 **	VMS is completely brain dead when it comes to initialization of extern variables; it reserves space and initializes
@@ -45,18 +49,17 @@
 #define INIT_DEF_NULL
 #endif
 
-EXTERN_DEF long			LINKPARM 	INIT_DEF_ZERO;				/* Were we started by a LINK		*/
+EXTERN_DEF int4			LINKPARM 	INIT_DEF_ZERO;				/* Were we started by a LINK		*/
 
 #ifdef VMS
-EXTERN_DEF long			tabtype 	INIT_DEF_ZERO;
+EXTERN_DEF int4			tabtype 	INIT_DEF_ZERO;
 #endif
 
 
-EXTERN_DEF long			LINKCOMPCODE 	INIT_DEF_ZERO;
-EXTERN_DEF long			LINKRETCODE  	INIT_DEF_ZERO;
-EXTERN_DEF long			LOGOFFFLAG   	INIT_DEF_ZERO;
-EXTERN_DEF long			CANEXITFLAG  	INIT_DEF_ZERO;
-EXTERN_DEF int 			retstat      	INIT_DEF_ZERO;				/* Global used by isexec		*/
+EXTERN_DEF int4			LINKCOMPCODE 	INIT_DEF_ZERO;
+EXTERN_DEF int4			LINKRETCODE  	INIT_DEF_ZERO;
+EXTERN_DEF int4			LOGOFFFLAG   	INIT_DEF_ZERO;
+EXTERN_DEF int4			CANEXITFLAG  	INIT_DEF_ZERO;
 EXTERN_DEF int  		lnk_depth    	INIT_DEF_ZERO;				/* Call stack depth on VMS		*/
 
 EXTERN_DEF time_t		WSTARTTIME	INIT_DEF_ZERO;				/* The start time of the process	*/
@@ -64,8 +67,8 @@ EXTERN_DEF int 			swap_words 	INIT_DEF_ONE;				/* Define the word swap flag.		*/
 EXTERN_DEF int 			noswap_words 	INIT_DEF_ZERO;				/* Opposite of swap_words		*/
 EXTERN_DEF int			werrno 		INIT_DEF_ZERO;				/* Wisp errno				*/
 
-EXTERN_DEF unsigned long	wextstat1 	INIT_DEF_ZERO;				/* Wisp extended error number.		*/
-EXTERN_DEF unsigned long	wextstat2 	INIT_DEF_ZERO;
+EXTERN_DEF uint4        	wextstat1 	INIT_DEF_ZERO;				/* Wisp extended error number.		*/
+EXTERN_DEF uint4        	wextstat2 	INIT_DEF_ZERO;
 EXTERN_DEF char			ACUFILESTAT[4];						/* Acucobol extended file status	*/
 EXTERN_DEF char			wfilestat[2];						/* Wisp file status of last wfilechk	*/
 EXTERN_DEF char			filelock[2];						/* Locked file - file I/O status	*/
@@ -93,7 +96,10 @@ EXTERN_DEF int		opt_nulldisplay		INIT_DEF_ZERO;				/* Display NULLs as a space.	
 EXTERN_DEF int		opt_outputverifyoff	INIT_DEF_ZERO;				/* Suppress PF3 to continue screens	*/
 EXTERN_DEF int		opt_createvolumeon	INIT_DEF_ZERO;				/* Auto create volume if not found	*/
 EXTERN_DEF int		opt_idsiprint		INIT_DEF_ZERO;				/* Use the IDSI print spooler		*/
+EXTERN_DEF int		opt_pqilp		INIT_DEF_ONE;				/* Use ILP				*/
+EXTERN_DEF int		opt_pqunique		INIT_DEF_ZERO;				/* Use UNIQUE				*/
 EXTERN_DEF int		opt_idnumeric		INIT_DEF_ZERO;				/* Return numeric user ID from EXTRACT.	*/
+EXTERN_DEF int		opt_idfive		INIT_DEF_ZERO;				/* Return char 5-7 user ID from EXTRACT.*/
 EXTERN_DEF int		opt_allstatuskeys	INIT_DEF_ZERO;				/* Pass all status keys thru to declr	*/
 EXTERN_DEF int		opt_helpstyle		INIT_DEF_ONE;				/* 1=Wang HELP style 2=non-Wang style	*/
 

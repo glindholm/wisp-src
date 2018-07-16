@@ -11,6 +11,9 @@
 #include <sys/types.h>
 #include <time.h>
 #include <stdio.h>
+static int getnowtime();
+static int wakeup();
+static int badusage();
 
 main(argc,argv)
 int	argc;

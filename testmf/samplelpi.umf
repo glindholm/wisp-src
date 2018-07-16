@@ -31,9 +31,9 @@ LIBPATHS=$(STDLIB)/libwisp.a $(STDLIB)/libvideo.a $(STDLIB)/libilp.a
 LIBS= $(LIBCFLAGS) -lwtest -lwisp -lilp -lvideo -lPW
 OBJS= 	sample.o qafileio.o qafile2.o qanetcap.o qaprint.o qascreen.o \
 	qascrn2.o qasubs.o qawsubs.o qawsfnm.o qawsfns.o qasy000m.o \
-	qasys99.o 
+	qasys99.o qawsxio.o
 
-all: 	sample trigger qabckgrd qadpcoma prtargs
+all: 	sample trigger qabckgrd qadpcoma prtargs test_dirs
 	@echo
 	@echo sample is up-to-date
 	@echo
@@ -90,6 +90,9 @@ qasubs.o: qasubs.cob
 qawsubs.o: qawsubs.cob
 	$(COBOL) $(COBFLAGS) qawsubs.cob
 
+qawsxio.o qawsxio.cob
+	$(COBOL) $(COBFLAGS) qawsxio.cob
+
 #
 #================================================
 #
@@ -130,3 +133,15 @@ qasubs.cob: qasubs.wcb
 qawsubs.cob: qawsubs.wcb
 	$(WISPTRAN) $(WISPFLAGS) qawsubs
 
+qawsxio.cob: qawsxio.wcb
+	$(WISPTRAN) $(WISPFLAGS) qawsxio
+
+test_dirs: volrun volin
+
+volrun:
+	mkdir volrun
+	mkdir volrun/librun
+	mkdir volrun/libexe
+volin:
+	mkdir volin
+	mkdir volin/libin

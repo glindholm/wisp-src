@@ -52,6 +52,7 @@
                CURSOR POSITION IS CURSOR-POS
                FILE STATUS     IS FILSTAT.
 
+000000*$SORTFILE
            SELECT SORT-FILE
                ASSIGN TO "SORTFILE" "DISK"
                BUFFER SIZE IS 50 BLOCKS.
@@ -212,6 +213,8 @@
                "4) CONDITIONAL TEST.".
            03  FILLER  PIC X(35) ROW 11 COL 20 VALUE
                "5) ACCEPT VERB.".
+           03  FILLER  PIC X(35) ROW 13 COL 20 VALUE
+               "6) STOP VERB.".
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
                "PRESS PF KEY 16 TO EXIT".
 
@@ -341,7 +344,7 @@
        COBOL-TESTS.
 
            DISPLAY AND READ COBOL-SCREEN ON CRT
-           PFKEYS 1, 2, 3, 4, 5, 16.
+           PFKEYS 1, 2, 3, 4, 5, 6, 16.
 
            IF PF-KEY = "01" THEN
 123456*78901234567890123456789012345678901234567890123456789012345678901
@@ -370,6 +373,10 @@
               DISPLAY "COMPANY=" COMPANY
               DISPLAY "YEARCODE=" YEARCODE
               DISPLAY "ACCESSCODE=" ACCESSCODE
+              GO TO COBOL-TESTS
+           ELSE IF PF-KEY = "06" THEN
+              STOP "TEST OF STOP VERB"
+              STOP 3
               GO TO COBOL-TESTS
            ELSE IF PF-KEY NOT = "16" THEN
               GO TO COBOL-TESTS.
@@ -628,3 +635,5 @@
            ELSE
                STOP RUN.
 
+       STOP-VERB.
+           STOP 123.

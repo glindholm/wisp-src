@@ -7,6 +7,7 @@
 
 /*						Include files and definitions.							*/
 										/* This is a sample.				*/
+#include "idsistd.h"
 #ifdef VMS
 #include <stdio.h>
 #include <rms.h>
@@ -33,9 +34,8 @@ int greclen(file_name) unsigned char *file_name;				/* Get record length of fixe
 	}
 	return(reclen);
 }
-#endif		
+#else /* unix and MSDOS */
 
-#ifdef unix
 int greclen(file_name) unsigned char *file_name;				/* Get record length of fixed_size record file. */
 {
 	int tmp=0;

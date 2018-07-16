@@ -1,27 +1,15 @@
-ANIM
-SYMBSTART "0"
-BELL
+&
+&       COBOL.DIR       - Micro Focus COBOL Directives File
+&
+&       - don't convert symbols to uppercase
 CASE
-DATE
-DYNAM
-FLAG "MF"
-FLAGAS "I"
-FLAG-CHIP
-LINKCHECK
-LINKCOUNT "5000"
-MODEL "HUGE"
-NESTCALL
-NOOBJ
-OMF "GNT"
-OPT "0"
-OPTSIZE
+&       - don't create object files
+NOGNT
+&       - default of 64 is not enough
+LINKCOUNT "1024"
+&       - use extension of COB for cobol files
 OSEXT "COB"
-NOPARAMCOUNTCHECK
-SEGSIZE "65536"
-NOSMALLDD
-SOURCE-EXT "COB"
+&       - treat spaces in numeric fields as zeros
 SPZERO
-STATS
-TARGET "386-16"
-TRACE
-WARNING "2"
+&       - start symbolics at 0 so 0==0
+SYMBSTART "0"

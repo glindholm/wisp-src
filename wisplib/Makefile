@@ -1,7 +1,7 @@
 #	/************************************************************************/
 #	/*									*/
 #	/*	        WISP - Wang Interchange Source Pre-processor		*/
-#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993	*/
 #	/*	 An unpublished work of International Digital Scientific Inc.	*/
 #	/*			    All rights reserved.			*/
 #	/*									*/
@@ -15,387 +15,502 @@
 # 	History:	03/18/90	Written by GSL
 #			04/14/92	Moved system specific variables to $(PORT)/include.cfl, devo
 #			06/04/92	Changed to use make.include GSL
+#			01/26/93	Added level.c. GSL
+#			04/21/93	Added isdebug.c  GSL
+#			04/27/93	Added wftok.c GSL
+#			07/20/93	Changed $(LIB) to $(THE_LIB) for MSDOS compatiblity. GSL
 #
 
 #CDEBUG = -g
 CDEBUG = -O
 
-#LIB = libwispd.a
-LIB = libwisp.a
+#THE_LIB = libwispd.a
+THE_LIB = libwisp.a
 
 include $(WISP)/src/port/make.include
 
-.PRECIOUS:	$(LIB) 
+.PRECIOUS:	$(THE_LIB) 
 
-all:	$(STDLIB)/$(LIB)
+all:	$(STDLIB)/$(THE_LIB)
 
-$(STDLIB)/$(LIB): $(LIB)
-	cp $(LIB) $@
+$(STDLIB)/$(THE_LIB): $(THE_LIB)
+	cp $(THE_LIB) $@
 
-$(LIB): $(LIB)(acpmap.o) \
-	$(LIB)(backgrnd.o) \
-	$(LIB)(bell.o) \
-	$(LIB)(bit_x.o) \
-	$(LIB)(bits.o) \
-	$(LIB)(breakacp.o) \
-	$(LIB)(btransl.o) \
-	$(LIB)(cancel.o) \
-	$(LIB)(cexit.o) \
-	$(LIB)(cgetneg.o) \
-	$(LIB)(checkacp.o) \
-	$(LIB)(closeacp.o) \
-	$(LIB)(coblink.o) \
-	$(LIB)(cobpic.o) \
-	$(LIB)(date.o) \
-	$(LIB)(dateset.o) \
-	$(LIB)(day.o) \
-	$(LIB)(delete.o) \
-	$(LIB)(dummy.o) \
-	$(LIB)(edestubs.o) \
-	$(LIB)(errgparm.o) \
-	$(LIB)(extract.o) \
-	$(LIB)(filecopy.o) \
-	$(LIB)(filesize.o) \
-	$(LIB)(filgparm.o) \
-	$(LIB)(find.o) \
-	$(LIB)(findcase.o) \
-	$(LIB)(findexts.o) \
-	$(LIB)(fixerr.o) \
-	$(LIB)(getparm.o) \
-	$(LIB)(gparmbld.o) \
-	$(LIB)(greclen.o) \
-	$(LIB)(hexunpk.o) \
-	$(LIB)(idsisubs.o) \
-	$(LIB)(initglbs.o) \
-	$(LIB)(initscrn.o) \
-	$(LIB)(initwisp.o) \
-	$(LIB)(isexec.o) \
-	$(LIB)(juster.o) \
-	$(LIB)(link.o) \
-	$(LIB)(linkproc.o) \
-	$(LIB)(linksubs.o) \
-	$(LIB)(logoff.o) \
-	$(LIB)(longarg.o) \
-	$(LIB)(makepath.o) \
-	$(LIB)(menu_go.o) \
-	$(LIB)(menu_key.o) \
-	$(LIB)(menuread.o) \
-	$(LIB)(menuscan.o) \
-	$(LIB)(message.o) \
-	$(LIB)(mngfile.o) \
-	$(LIB)(mount.o) \
-	$(LIB)(msname.o) \
-	$(LIB)(mstime.o) \
-	$(LIB)(msvalue.o) \
-	$(LIB)(mvspaces.o) \
-	$(LIB)(mwconv.o) \
-	$(LIB)(nextfile.o) \
-	$(LIB)(noconfig.o) \
-	$(LIB)(onhelp.o) \
-	$(LIB)(openacp.o) \
-	$(LIB)(packer.o) \
-	$(LIB)(pbset.o) \
-	$(LIB)(platsubs.o) \
-	$(LIB)(print.o) \
-	$(LIB)(protect.o) \
-	$(LIB)(putparm.o) \
-	$(LIB)(pwdname.o) \
-	$(LIB)(que_jobs.o) \
-	$(LIB)(quemgmt.o) \
-	$(LIB)(readacp.o) \
-	$(LIB)(readfdr.o) \
-	$(LIB)(readvtoc.o) \
-	$(LIB)(regexpr.o) \
-	$(LIB)(rename.o) \
-	$(LIB)(retcode.o) \
-	$(LIB)(ring.o) \
-	$(LIB)(rtransl.o) \
-	$(LIB)(scratch.o) \
-	$(LIB)(screen.o) \
-	$(LIB)(search.o) \
-	$(LIB)(set.o) \
-	$(LIB)(setenvst.o) \
-	$(LIB)(setfile.o) \
-	$(LIB)(setprgid.o) \
-	$(LIB)(setrcode.o) \
-	$(LIB)(setsymb.o) \
-	$(LIB)(settrigp.o) \
-	$(LIB)(setupqm.o) \
-	$(LIB)(sharemem.o) \
-	$(LIB)(shellvar.o) \
-	$(LIB)(shutexit.o) \
-	$(LIB)(sort.o) \
-	$(LIB)(sortcall.o) \
-	$(LIB)(sortlink.o) \
-	$(LIB)(sortseqf.o) \
-	$(LIB)(spawn.o) \
-	$(LIB)(string.o) \
-	$(LIB)(submit.o) \
-	$(LIB)(sysinf.o) \
-	$(LIB)(updatfdr.o) \
-	$(LIB)(upper.o) \
-	$(LIB)(vdisplay.o) \
-	$(LIB)(vmspargs.o) \
-	$(LIB)(vwang.o) \
-	$(LIB)(waccept.o) \
-	$(LIB)(wangmenu.o) \
-	$(LIB)(wanguid.o) \
-	$(LIB)(wauthsub.o) \
-	$(LIB)(wchain.o) \
-	$(LIB)(wchkstrt.o) \
-	$(LIB)(wcmatch.o) \
-	$(LIB)(wdelfile.o) \
-	$(LIB)(wdellock.o) \
-	$(LIB)(wdfinish.o) \
-	$(LIB)(wdinit.o) \
-	$(LIB)(wdisplay.o) \
-	$(LIB)(werrlog.o) \
-	$(LIB)(werrpath.o) \
-	$(LIB)(werrvre.o) \
-	$(LIB)(wexit.o) \
-	$(LIB)(wexith.o) \
-	$(LIB)(wfaccess.o) \
-	$(LIB)(wfcisam.o) \
-	$(LIB)(wfclose.o) \
-	$(LIB)(wfilechk.o) \
-	$(LIB)(wfiledis.o) \
-	$(LIB)(wfileext.o) \
-	$(LIB)(wfname.o) \
-	$(LIB)(wfopen.o) \
-	$(LIB)(wfstatus.o) \
-	$(LIB)(wfvision.o) \
-	$(LIB)(wfwait.o) \
-	$(LIB)(wgetpgrp.o) \
-	$(LIB)(wglobals.o) \
-	$(LIB)(wisp_pic.o) \
-	$(LIB)(wispexit.o) \
-	$(LIB)(wispsort.o) \
-	$(LIB)(wispsync.o) \
-	$(LIB)(wlickey.o) \
-	$(LIB)(wpause.o) \
-	$(LIB)(wperson.o) \
-	$(LIB)(wprint.o) \
-	$(LIB)(writeacp.o) \
-	$(LIB)(wrunconf.o) \
-	$(LIB)(wsclose.o) \
-	$(LIB)(wscreen.o) \
-	$(LIB)(wscset.o) \
-	$(LIB)(wsfnm.o) \
-	$(LIB)(wsfns.o) \
-	$(LIB)(wshelp.o) \
-	$(LIB)(wsmode.o) \
-	$(LIB)(wsmove.o) \
-	$(LIB)(wspawn.o) \
-	$(LIB)(wswap.o) \
-	$(LIB)(wsxio.o) \
-	$(LIB)(wsystem.o) \
-	$(LIB)(wtransl.o) \
-	$(LIB)(wvaset.o) \
-	$(LIB)(wwaitpid.o)
-	$(RANLIB) $(LIB)
-	@echo lib $(LIB) is now up-to-date
+$(THE_LIB): $(THE_LIB)(acpmap.o) \
+	$(THE_LIB)(acustubs.o) \
+	$(THE_LIB)(backgrnd.o) \
+	$(THE_LIB)(bell.o) \
+	$(THE_LIB)(bit_x.o) \
+	$(THE_LIB)(bits.o) \
+	$(THE_LIB)(breakacp.o) \
+	$(THE_LIB)(btransl.o) \
+	$(THE_LIB)(cancel.o) \
+	$(THE_LIB)(cexit.o) \
+	$(THE_LIB)(cgetneg.o) \
+	$(THE_LIB)(checkacp.o) \
+	$(THE_LIB)(closeacp.o) \
+	$(THE_LIB)(coblink.o) \
+	$(THE_LIB)(cobpic.o) \
+	$(THE_LIB)(date.o) \
+	$(THE_LIB)(dateset.o) \
+	$(THE_LIB)(day.o) \
+	$(THE_LIB)(delete.o) \
+	$(THE_LIB)(dosprint.o) \
+	$(THE_LIB)(dummy.o) \
+	$(THE_LIB)(edestubs.o) \
+	$(THE_LIB)(errgparm.o) \
+	$(THE_LIB)(extract.o) \
+	$(THE_LIB)(fcopy.o) \
+	$(THE_LIB)(fexists.o) \
+	$(THE_LIB)(filecopy.o) \
+	$(THE_LIB)(filesize.o) \
+	$(THE_LIB)(filgparm.o) \
+	$(THE_LIB)(find.o) \
+	$(THE_LIB)(findcase.o) \
+	$(THE_LIB)(findexts.o) \
+	$(THE_LIB)(fixerr.o) \
+	$(THE_LIB)(fxzone.o) \
+	$(THE_LIB)(getopt.o) \
+	$(THE_LIB)(getparm.o) \
+	$(THE_LIB)(gparmbld.o) \
+	$(THE_LIB)(greclen.o) \
+	$(THE_LIB)(hexunpk.o) \
+	$(THE_LIB)(idsisubs.o) \
+	$(THE_LIB)(initglbs.o) \
+	$(THE_LIB)(initscrn.o) \
+	$(THE_LIB)(initwisp.o) \
+	$(THE_LIB)(isdebug.o) \
+	$(THE_LIB)(isexec.o) \
+	$(THE_LIB)(juster.o) \
+	$(THE_LIB)(level.o) \
+	$(THE_LIB)(licwisp.o) \
+	$(THE_LIB)(link.o) \
+	$(THE_LIB)(linkproc.o) \
+	$(THE_LIB)(linksubs.o) \
+	$(THE_LIB)(logoff.o) \
+	$(THE_LIB)(longarg.o) \
+	$(THE_LIB)(machid.o) \
+	$(THE_LIB)(makepath.o) \
+	$(THE_LIB)(menu_go.o) \
+	$(THE_LIB)(menu_key.o) \
+	$(THE_LIB)(menuread.o) \
+	$(THE_LIB)(menuscan.o) \
+	$(THE_LIB)(message.o) \
+	$(THE_LIB)(mngfile.o) \
+	$(THE_LIB)(mount.o) \
+	$(THE_LIB)(msdosfns.o) \
+	$(THE_LIB)(msname.o) \
+	$(THE_LIB)(mstime.o) \
+	$(THE_LIB)(msvalue.o) \
+	$(THE_LIB)(mvspaces.o) \
+	$(THE_LIB)(mwconv.o) \
+	$(THE_LIB)(nextfile.o) \
+	$(THE_LIB)(noconfig.o) \
+	$(THE_LIB)(onhelp.o) \
+	$(THE_LIB)(openacp.o) \
+	$(THE_LIB)(packer.o) \
+	$(THE_LIB)(pbset.o) \
+	$(THE_LIB)(platsubs.o) \
+	$(THE_LIB)(print.o) \
+	$(THE_LIB)(protect.o) \
+	$(THE_LIB)(putparm.o) \
+	$(THE_LIB)(pwdname.o) \
+	$(THE_LIB)(que_jobs.o) \
+	$(THE_LIB)(quemgmt.o) \
+	$(THE_LIB)(readacp.o) \
+	$(THE_LIB)(readfdr.o) \
+	$(THE_LIB)(readvtoc.o) \
+	$(THE_LIB)(regexpr.o) \
+	$(THE_LIB)(rename.o) \
+	$(THE_LIB)(retcode.o) \
+	$(THE_LIB)(ring.o) \
+	$(THE_LIB)(rtransl.o) \
+	$(THE_LIB)(runtype.o) \
+	$(THE_LIB)(scratch.o) \
+	$(THE_LIB)(screen.o) \
+	$(THE_LIB)(search.o) \
+	$(THE_LIB)(set.o) \
+	$(THE_LIB)(setenvst.o) \
+	$(THE_LIB)(setfile.o) \
+	$(THE_LIB)(setprgid.o) \
+	$(THE_LIB)(setrcode.o) \
+	$(THE_LIB)(setsymb.o) \
+	$(THE_LIB)(settrigp.o) \
+	$(THE_LIB)(setupqm.o) \
+	$(THE_LIB)(sharemem.o) \
+	$(THE_LIB)(shellvar.o) \
+	$(THE_LIB)(shutexit.o) \
+	$(THE_LIB)(sleepdos.o) \
+	$(THE_LIB)(sort.o) \
+	$(THE_LIB)(sortcall.o) \
+	$(THE_LIB)(sortlink.o) \
+	$(THE_LIB)(sortseqf.o) \
+	$(THE_LIB)(sortx.o) \
+	$(THE_LIB)(spawn.o) \
+	$(THE_LIB)(string.o) \
+	$(THE_LIB)(submit.o) \
+	$(THE_LIB)(sysinf.o) \
+	$(THE_LIB)(untabify.o) \
+	$(THE_LIB)(updatfdr.o) \
+	$(THE_LIB)(upper.o) \
+	$(THE_LIB)(vdispidx.o) \
+	$(THE_LIB)(vdisplay.o) \
+	$(THE_LIB)(vmspargs.o) \
+	$(THE_LIB)(vwang.o) \
+	$(THE_LIB)(waccept.o) \
+	$(THE_LIB)(wangmenu.o) \
+	$(THE_LIB)(wanguid.o) \
+	$(THE_LIB)(wauthsub.o) \
+	$(THE_LIB)(wchain.o) \
+	$(THE_LIB)(wchkstrt.o) \
+	$(THE_LIB)(wcmatch.o) \
+	$(THE_LIB)(wdelfile.o) \
+	$(THE_LIB)(wdellock.o) \
+	$(THE_LIB)(wdfinish.o) \
+	$(THE_LIB)(wdinit.o) \
+	$(THE_LIB)(wdisplay.o) \
+	$(THE_LIB)(werrlog.o) \
+	$(THE_LIB)(werrpath.o) \
+	$(THE_LIB)(werrvre.o) \
+	$(THE_LIB)(wexit.o) \
+	$(THE_LIB)(wexith.o) \
+	$(THE_LIB)(wfaccess.o) \
+	$(THE_LIB)(wfcisam.o) \
+	$(THE_LIB)(wfclose.o) \
+	$(THE_LIB)(wfilechk.o) \
+	$(THE_LIB)(wfiledis.o) \
+	$(THE_LIB)(wfileext.o) \
+	$(THE_LIB)(wfname.o) \
+	$(THE_LIB)(wfopen.o) \
+	$(THE_LIB)(wfstatus.o) \
+	$(THE_LIB)(wftok.o) \
+	$(THE_LIB)(wfvision.o) \
+	$(THE_LIB)(wfwait.o) \
+	$(THE_LIB)(wgetpgrp.o) \
+	$(THE_LIB)(wglobals.o) \
+	$(THE_LIB)(wisp_pic.o) \
+	$(THE_LIB)(wispexit.o) \
+	$(THE_LIB)(wispsort.o) \
+	$(THE_LIB)(wispsync.o) \
+	$(THE_LIB)(wlickey.o) \
+	$(THE_LIB)(wpause.o) \
+	$(THE_LIB)(wperson.o) \
+	$(THE_LIB)(wprint.o) \
+	$(THE_LIB)(writeacp.o) \
+	$(THE_LIB)(wrunconf.o) \
+	$(THE_LIB)(wsclose.o) \
+	$(THE_LIB)(wscreen.o) \
+	$(THE_LIB)(wscset.o) \
+	$(THE_LIB)(wsfnm.o) \
+	$(THE_LIB)(wsfns.o) \
+	$(THE_LIB)(wshelp.o) \
+	$(THE_LIB)(wsmode.o) \
+	$(THE_LIB)(wsmove.o) \
+	$(THE_LIB)(wspawn.o) \
+	$(THE_LIB)(wswap.o) \
+	$(THE_LIB)(wsxio.o) \
+	$(THE_LIB)(wsystem.o) \
+	$(THE_LIB)(wtransl.o) \
+	$(THE_LIB)(wvaset.o) \
+	$(THE_LIB)(wwaitpid.o)
+	$(RANLIB) $(THE_LIB)
+	@echo lib $(THE_LIB) is now up-to-date
 
-
-$(LIB)(acpmap.o): acpmap.c acp.h werrlog.h
-$(LIB)(backgrnd.o): backgrnd.c wperson.h werrlog.h wdefines.h
-$(LIB)(bell.o): bell.c movebin.h werrlog.h
-$(LIB)(bit_x.o): bit_x.c cobrun.h
-$(LIB)(bits.o): bits.c werrlog.h
-$(LIB)(breakacp.o): breakacp.c
-$(LIB)(btransl.o): btransl.c
-$(LIB)(cancel.o): cancel.c werrlog.h
-$(LIB)(cexit.o): cexit.c werrlog.h
-$(LIB)(cgetneg.o): cgetneg.c
-$(LIB)(checkacp.o): checkacp.c
-$(LIB)(closeacp.o): closeacp.c acp.h werrlog.h
-$(LIB)(coblink.o): coblink.c cobrun.h
-$(LIB)(cobpic.o): cobpic.c cobrun.h
-$(LIB)(date.o): date.c movebin.h werrlog.h
-$(LIB)(dateset.o): dateset.c
-$(LIB)(day.o): day.c movebin.h werrlog.h
-$(LIB)(delete.o): delete.c
-$(LIB)(dummy.o): dummy.c
-$(LIB)(edestubs.o): edestubs.c
-$(LIB)(errgparm.o): errgparm.c wangkeys.h wperson.h movebin.h werrlog.h
-$(LIB)(errgparm.o): wdefines.h
-$(LIB)(extract.o): extract.c wsysconf.h wdefines.h wperson.h movebin.h
-$(LIB)(extract.o): werrlog.h wglobals.h wfiles.h
-$(LIB)(filecopy.o): filecopy.c wfiles.h wcommon.h movebin.h wperson.h
-$(LIB)(filecopy.o): werrlog.h cobrun.h
-$(LIB)(filesize.o): filesize.c werrlog.h
-$(LIB)(filgparm.o): filgparm.c wcommon.h wangkeys.h wperson.h movebin.h
-$(LIB)(filgparm.o): werrlog.h wdefines.h
-$(LIB)(find.o): find.c wfiles.h movebin.h werrlog.h wdefines.h
-$(LIB)(find.o): wperson.h wdefines.h
-$(LIB)(findcase.o): findcase.c
-$(LIB)(findexts.o): findexts.c wdefines.h
-$(LIB)(fixerr.o): fixerr.c
-$(LIB)(getparm.o): getparm.c movebin.h werrlog.h wangkeys.h wcommon.h
-$(LIB)(getparm.o): scnfacs.h wshmem.h wglobals.h wfiles.h $(V)/video.h
-$(LIB)(getparm.o): $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(gparmbld.o): gparmbld.c werrlog.h wdefines.h
-$(LIB)(greclen.o): greclen.c
-$(LIB)(hexunpk.o): hexunpk.c movebin.h werrlog.h
-$(LIB)(idsisubs.o): idsisubs.c wdefines.h
-$(LIB)(initglbs.o): initglbs.c wglobals.h wfiles.h filext.h cobrun.h
-$(LIB)(initscrn.o): initscrn.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(initscrn.o): wperson.h
-$(LIB)(initwisp.o): initwisp.c werrlog.h wdefines.h wcommon.h cobrun.h
-$(LIB)(initwisp.o): wglobals.h wfiles.h filext.h wperson.h wlicense.h
-$(LIB)(isexec.o): isexec.c wdefines.h
-$(LIB)(juster.o): juster.c werrlog.h
-$(LIB)(link.o): link.c wrunconf.h wglobals.h wfiles.h wdefines.h
-$(LIB)(link.o): movebin.h werrlog.h wperson.h wfiles.h wcommon.h
-$(LIB)(link.o): cobrun.h $(V)/video.h
-$(LIB)(linkproc.o): linkproc.c $(V)/video.h wdefines.h movebin.h
-$(LIB)(linkproc.o): werrlog.h wperson.h wfiles.h wcommon.h
-$(LIB)(linksubs.o): linksubs.c wglobals.h wfiles.h wdefines.h werrlog.h
-$(LIB)(linksubs.o): movebin.h
-$(LIB)(logoff.o): logoff.c wdefines.h
-$(LIB)(longarg.o): longarg.c wglobals.h wfiles.h
-$(LIB)(makepath.o): makepath.c
-$(LIB)(menu_go.o): menu_go.c menu.h $(V)/video.h $(V)/vlocal.h
-$(LIB)(menu_key.o): menu_key.c
-$(LIB)(menuread.o): menuread.c menu.h
-$(LIB)(menuscan.o): menuscan.c menu.h wperson.h $(V)/video.h
-$(LIB)(menuscan.o): $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(message.o): message.c werrlog.h wdefines.h movebin.h
-$(LIB)(mngfile.o): mngfile.c wcommon.h vwang.h scnfacs.h wperson.h
-$(LIB)(mngfile.o): wdefines.h werrlog.h
-$(LIB)(mount.o): mount.c
-$(LIB)(msname.o): msname.c
-$(LIB)(mstime.o): mstime.c
-$(LIB)(msvalue.o): msvalue.c
-$(LIB)(mvspaces.o): mvspaces.c
-$(LIB)(mwconv.o): mwconv.c cobrun.h
-$(LIB)(nextfile.o): nextfile.c wdefines.h
-$(LIB)(noconfig.o): noconfig.c
-$(LIB)(onhelp.o): onhelp.c wperson.h
-$(LIB)(openacp.o): openacp.c acp.h
-$(LIB)(packer.o): packer.c
-$(LIB)(pbset.o): pbset.c
-$(LIB)(platsubs.o): platsubs.c wplatdef.h
-$(LIB)(print.o): print.c wcommon.h wperson.h movebin.h werrlog.h
-$(LIB)(protect.o): protect.c
-$(LIB)(putparm.o): putparm.c movebin.h werrlog.h wshmem.h wdefines.h
-$(LIB)(putparm.o): wglobals.h wfiles.h
-$(LIB)(pwdname.o): pwdname.c
-$(LIB)(que_jobs.o): que_jobs.c werrlog.h
-$(LIB)(quemgmt.o): quemgmt.c werrlog.h
-$(LIB)(readacp.o): readacp.c acp.h movebin.h
-$(LIB)(readfdr.o): readfdr.c wcommon.h movebin.h cobrun.h werrlog.h
-$(LIB)(readvtoc.o): readvtoc.c werrlog.h
-$(LIB)(regexpr.o): regexpr.c regexpr.h
-$(LIB)(rename.o): rename.c wfiles.h wcommon.h movebin.h wperson.h
-$(LIB)(rename.o): werrlog.h cobrun.h
-$(LIB)(retcode.o): retcode.c werrlog.h wdefines.h
-$(LIB)(ring.o): ring.c
-$(LIB)(rtransl.o): rtransl.c
-$(LIB)(scratch.o): scratch.c $(V)/video.h wcommon.h wdefines.h
-$(LIB)(scratch.o): movebin.h cobrun.h
-$(LIB)(screen.o): screen.c vwang.h wcommon.h vwang.h werrlog.h
-$(LIB)(screen.o): wperson.h wdefines.h movebin.h
-$(LIB)(search.o): search.c movebin.h werrlog.h wdefines.h
-$(LIB)(set.o): set.c wperson.h werrlog.h wglobals.h wfiles.h
-$(LIB)(setenvst.o): setenvst.c
-$(LIB)(setfile.o): setfile.c wfiles.h
-$(LIB)(setprgid.o): setprgid.c wglobals.h wfiles.h
-$(LIB)(setrcode.o): setrcode.c werrlog.h wdefines.h
-$(LIB)(setsymb.o): setsymb.c
-$(LIB)(settrigp.o): settrigp.c wfiles.h wcommon.h werrlog.h
-$(LIB)(setupqm.o): setupqm.c
-$(LIB)(sharemem.o): sharemem.c werrlog.h wshmem.h wdefines.h
-$(LIB)(shellvar.o): shellvar.c
-$(LIB)(shutexit.o): shutexit.c
-$(LIB)(sort.o): sort.c werrlog.h
-$(LIB)(sortcall.o): sortcall.c werrlog.h
-$(LIB)(sortlink.o): sortlink.c movebin.h werrlog.h cobrun.h
-$(LIB)(sortseqf.o): sortseqf.c sortseqf.h
-$(LIB)(spawn.o): spawn.c
-$(LIB)(string.o): string.c movebin.h werrlog.h
-$(LIB)(submit.o): submit.c que_jobs.h wcommon.h wperson.h movebin.h
-$(LIB)(submit.o): werrlog.h wdefines.h wrunconf.h
-$(LIB)(sysinf.o): sysinf.c wglobals.h wfiles.h werrlog.h
-$(LIB)(updatfdr.o): updatfdr.c werrlog.h
-$(LIB)(upper.o): upper.c
-$(LIB)(vdisplay.o): vdisplay.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(vdisplay.o): $(V)/vcap.h werrlog.h wperson.h scnfacs.h
-$(LIB)(vmspargs.o): vmspargs.c wglobals.h wfiles.h wdefines.h werrlog.h
-$(LIB)(vwang.o): vwang.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(vwang.o): cobrun.h sub_char.h wperson.h wscrn.h werrlog.h
-$(LIB)(vwang.o): vwang.h wglobals.h wfiles.h scnfacs.h
-$(LIB)(waccept.o): waccept.c
-$(LIB)(wangmenu.o): wangmenu.c
-$(LIB)(wanguid.o): wanguid.c wdefines.h
-$(LIB)(wauthsub.o): wauthsub.c wlicense.h
-$(LIB)(wchain.o): wchain.c $(V)/video.h werrlog.h wcommon.h wrunconf.h
-$(LIB)(wchkstrt.o): wchkstrt.c $(V)/video.h werrlog.h
-$(LIB)(wcmatch.o): wcmatch.c wdefines.h
-$(LIB)(wdelfile.o): wdelfile.c
-$(LIB)(wdellock.o): wdellock.c
-$(LIB)(wdfinish.o): wdfinish.c $(V)/video.h
-$(LIB)(wdinit.o): wdinit.c $(V)/video.h
-$(LIB)(wdisplay.o): wdisplay.c $(V)/video.h vwang.h
-$(LIB)(werrlog.o): werrlog.c wperson.h werrlog.h wdefines.h wglobals.h
-$(LIB)(werrlog.o): wfiles.h
-$(LIB)(werrpath.o): werrpath.c wdefines.h wglobals.h wfiles.h
-$(LIB)(werrvre.o): werrvre.c
-$(LIB)(wexit.o): wexit.c werrlog.h wglobals.h wfiles.h
-$(LIB)(wexith.o): wexith.c que_jobs.h wperson.h wfiles.h wglobals.h
-$(LIB)(wexith.o): wfiles.h filext.h $(V)/video.h
-$(LIB)(wfaccess.o): wfaccess.c wdefines.h wcommon.h wfaccess.h cobrun.h
-$(LIB)(wfcisam.o): wfcisam.c
-$(LIB)(wfclose.o): wfclose.c wperson.h wfiles.h
-$(LIB)(wfilechk.o): wfilechk.c werrlog.h wcommon.h cobrun.h wdefines.h
-$(LIB)(wfilechk.o): wglobals.h wfiles.h
-$(LIB)(wfiledis.o): wfiledis.c wperson.h $(V)/video.h wfiles.h
-$(LIB)(wfiledis.o): wcommon.h wangkeys.h wfaccess.h werrlog.h
-$(LIB)(wfileext.o): wfileext.c filext.h
-$(LIB)(wfname.o): wfname.c wperson.h wfiles.h wcommon.h werrlog.h
-$(LIB)(wfname.o): cobrun.h
-$(LIB)(wfopen.o): wfopen.c wperson.h wangkeys.h wcommon.h wfaccess.h
-$(LIB)(wfopen.o): cobrun.h wglobals.h wfiles.h filext.h
-$(LIB)(wfstatus.o): wfstatus.c
-$(LIB)(wfvision.o): wfvision.c visint.h visn2.h
-$(LIB)(wfwait.o): wfwait.c wglobals.h wfiles.h
-$(LIB)(wgetpgrp.o): wgetpgrp.c wdefines.h
-$(LIB)(wglobals.o): wglobals.c wglobals.h wfiles.h cobrun.h
-$(LIB)(wisp_pic.o): wisp_pic.c
-$(LIB)(wispexit.o): wispexit.c cobrun.h
-$(LIB)(wispsort.o): wispsort.c wcommon.h sortseqf.h movebin.h werrlog.h
-$(LIB)(wispsync.o): wispsync.c
-$(LIB)(wlickey.o): wlickey.c wlicense.h
-$(LIB)(wpause.o): wpause.c movebin.h werrlog.h
-$(LIB)(wperson.o): wperson.c $(V)/video.h wperson.h werrlog.h
-$(LIB)(wperson.o): wdefines.h wglobals.h wfiles.h
-$(LIB)(wprint.o): wprint.c que_jobs.h wperson.h werrlog.h wglobals.h
-$(LIB)(wprint.o): wfiles.h
-$(LIB)(writeacp.o): writeacp.c acp.h
-$(LIB)(wrunconf.o): wrunconf.c wrunconf.h wdefines.h
-$(LIB)(wsclose.o): wsclose.c
-$(LIB)(wscreen.o): wscreen.c $(V)/video.h wcommon.h movebin.h cobrun.h
-$(LIB)(wscreen.o): werrlog.h
-$(LIB)(wscset.o): wscset.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(wscset.o): $(V)/vcap.h
-$(LIB)(wsfnm.o): wsfnm.c $(V)/video.h vwang.h werrlog.h wglobals.h
-$(LIB)(wsfnm.o): wfiles.h
-$(LIB)(wsfns.o): wsfns.c $(V)/video.h vwang.h werrlog.h wglobals.h
-$(LIB)(wsfns.o): wfiles.h
-$(LIB)(wshelp.o): wshelp.c $(V)/video.h $(V)/vlocal.h $(V)/vcap.h
-$(LIB)(wshelp.o): wcommon.h wperson.h vwang.h wscrn.h scnfacs.h
-$(LIB)(wshelp.o): wglobals.h wfiles.h werrlog.h wdefines.h cobrun.h
-$(LIB)(wshelp.o): license.h
-$(LIB)(wsmode.o): wsmode.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(wsmode.o): $(V)/vcap.h
-$(LIB)(wsmove.o): wsmove.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(wsmove.o): $(V)/vcap.h
-$(LIB)(wspawn.o): wspawn.c
-$(LIB)(wswap.o): wswap.c cobrun.h wglobals.h wfiles.h
-$(LIB)(wsxio.o): wsxio.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(wsxio.o): vwang.h
-$(LIB)(wsystem.o): wsystem.c
-$(LIB)(wtransl.o): wtransl.c
-$(LIB)(wvaset.o): wvaset.c
-$(LIB)(wwaitpid.o): wwaitpid.c
-
+$(THE_LIB)(acpmap.o): acpmap.c idsistd.h intdef.h acp.h werrlog.h
+$(THE_LIB)(acustubs.o): acustubs.c
+$(THE_LIB)(backgrnd.o): backgrnd.c idsistd.h intdef.h wperson.h
+$(THE_LIB)(backgrnd.o): werrlog.h wdefines.h
+$(THE_LIB)(bell.o): bell.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(bit_x.o): bit_x.c idsistd.h intdef.h cobrun.h
+$(THE_LIB)(bits.o): bits.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(breakacp.o): breakacp.c
+$(THE_LIB)(btransl.o): btransl.c idsistd.h intdef.h
+$(THE_LIB)(cancel.o): cancel.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(cexit.o): cexit.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(cgetneg.o): cgetneg.c idsistd.h intdef.h
+$(THE_LIB)(checkacp.o): checkacp.c
+$(THE_LIB)(closeacp.o): closeacp.c idsistd.h intdef.h acp.h werrlog.h
+$(THE_LIB)(coblink.o): coblink.c idsistd.h intdef.h cobrun.h
+$(THE_LIB)(cobpic.o): cobpic.c idsistd.h intdef.h cobrun.h
+$(THE_LIB)(date.o): date.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(dateset.o): dateset.c idsistd.h intdef.h
+$(THE_LIB)(day.o): day.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(delete.o): delete.c idsistd.h intdef.h
+$(THE_LIB)(dosprint.o): dosprint.c
+$(THE_LIB)(dummy.o): dummy.c idsistd.h intdef.h
+$(THE_LIB)(edestubs.o): edestubs.c idsistd.h intdef.h
+$(THE_LIB)(errgparm.o): errgparm.c idsistd.h intdef.h wangkeys.h
+$(THE_LIB)(errgparm.o): wperson.h movebin.h werrlog.h wdefines.h
+$(THE_LIB)(extract.o): extract.c idsistd.h intdef.h wsysconf.h
+$(THE_LIB)(extract.o): wdefines.h wperson.h movebin.h werrlog.h
+$(THE_LIB)(extract.o): wglobals.h wfiles.h wanguid.h
+$(THE_LIB)(fcopy.o): fcopy.c idsistd.h intdef.h fcopy.h
+$(THE_LIB)(fexists.o): fexists.c idsistd.h intdef.h
+$(THE_LIB)(filecopy.o): filecopy.c idsistd.h intdef.h fcopy.h wfiles.h
+$(THE_LIB)(filecopy.o): wcommon.h movebin.h wperson.h werrlog.h
+$(THE_LIB)(filecopy.o): cobrun.h filext.h
+$(THE_LIB)(filesize.o): filesize.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(filgparm.o): filgparm.c idsistd.h intdef.h wcommon.h
+$(THE_LIB)(filgparm.o): wangkeys.h wperson.h movebin.h werrlog.h
+$(THE_LIB)(filgparm.o): wdefines.h
+$(THE_LIB)(find.o): find.c idsistd.h intdef.h wfiles.h movebin.h
+$(THE_LIB)(find.o): werrlog.h wdefines.h wperson.h
+$(THE_LIB)(findcase.o): findcase.c idsistd.h intdef.h
+$(THE_LIB)(findexts.o): findexts.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(findexts.o): idsisubs.h
+$(THE_LIB)(fixerr.o): fixerr.c idsistd.h intdef.h
+$(THE_LIB)(fxzone.o): fxzone.c idsistd.h intdef.h
+$(THE_LIB)(getopt.o): getopt.c
+$(THE_LIB)(getparm.o): getparm.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(getparm.o): wangkeys.h wcommon.h scnfacs.h wshmem.h
+$(THE_LIB)(getparm.o): putparm.h wglobals.h wfiles.h
+$(THE_LIB)(getparm.o): $(V)/video.h
+$(THE_LIB)(getparm.o): $(V)/vlocal.h
+$(THE_LIB)(getparm.o): $(V)/vdata.h
+$(THE_LIB)(gparmbld.o): gparmbld.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(gparmbld.o): wdefines.h
+$(THE_LIB)(greclen.o): greclen.c idsistd.h intdef.h
+$(THE_LIB)(hexunpk.o): hexunpk.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(idsisubs.o): idsisubs.c idsistd.h intdef.h
+$(THE_LIB)(initglbs.o): initglbs.c idsistd.h intdef.h wglobals.h
+$(THE_LIB)(initglbs.o): wfiles.h filext.h cobrun.h
+$(THE_LIB)(initscrn.o): initscrn.c $(V)/video.h
+$(THE_LIB)(initscrn.o): $(V)/vlocal.h
+$(THE_LIB)(initscrn.o): $(V)/vdata.h idsistd.h
+$(THE_LIB)(initscrn.o): intdef.h wperson.h
+$(THE_LIB)(initwisp.o): initwisp.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(initwisp.o): wdefines.h wcommon.h cobrun.h wglobals.h
+$(THE_LIB)(initwisp.o): wfiles.h filext.h wperson.h wlicense.h
+$(THE_LIB)(isdebug.o): isdebug.c idsistd.h intdef.h cobrun.h
+$(THE_LIB)(isexec.o): isexec.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(juster.o): juster.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(level.o): level.c idsistd.h intdef.h
+$(THE_LIB)(licwisp.o): licwisp.c wlicense.h
+$(THE_LIB)(link.o): link.c idsistd.h intdef.h link.h wglobals.h
+$(THE_LIB)(link.o): wfiles.h wdefines.h movebin.h wperson.h wcommon.h
+$(THE_LIB)(link.o): cobrun.h $(V)/video.h runtype.h
+$(THE_LIB)(link.o): wrunconf.h idsisubs.h werrlog.h
+$(THE_LIB)(linkproc.o): linkproc.c $(V)/video.h
+$(THE_LIB)(linkproc.o): idsistd.h intdef.h wdefines.h movebin.h
+$(THE_LIB)(linkproc.o): werrlog.h wperson.h wfiles.h wcommon.h
+$(THE_LIB)(linkproc.o): runtype.h
+$(THE_LIB)(linksubs.o): linksubs.c idsistd.h intdef.h link.h wglobals.h
+$(THE_LIB)(linksubs.o): wfiles.h wdefines.h movebin.h werrlog.h
+$(THE_LIB)(logoff.o): logoff.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(longarg.o): longarg.c idsistd.h intdef.h wglobals.h wfiles.h
+$(THE_LIB)(machid.o): machid.c
+$(THE_LIB)(makepath.o): makepath.c idsistd.h intdef.h
+$(THE_LIB)(menu_go.o): menu_go.c idsistd.h intdef.h menu.h
+$(THE_LIB)(menu_go.o): $(V)/video.h
+$(THE_LIB)(menu_go.o): $(V)/vlocal.h
+$(THE_LIB)(menu_key.o): menu_key.c idsistd.h intdef.h
+$(THE_LIB)(menuread.o): menuread.c idsistd.h intdef.h menu.h
+$(THE_LIB)(menuscan.o): menuscan.c idsistd.h intdef.h menu.h wperson.h
+$(THE_LIB)(menuscan.o): $(V)/video.h
+$(THE_LIB)(menuscan.o): $(V)/vlocal.h
+$(THE_LIB)(menuscan.o): $(V)/vdata.h
+$(THE_LIB)(message.o): message.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(message.o): wdefines.h vwang.h movebin.h
+$(THE_LIB)(mngfile.o): mngfile.c idsistd.h intdef.h runtype.h wcommon.h
+$(THE_LIB)(mngfile.o): vwang.h scnfacs.h wperson.h wdefines.h werrlog.h
+$(THE_LIB)(mount.o): mount.c
+$(THE_LIB)(msdosfns.o): msdosfns.c
+$(THE_LIB)(msname.o): msname.c idsistd.h intdef.h
+$(THE_LIB)(mstime.o): mstime.c idsistd.h intdef.h
+$(THE_LIB)(msvalue.o): msvalue.c idsistd.h intdef.h
+$(THE_LIB)(mvspaces.o): mvspaces.c idsistd.h intdef.h
+$(THE_LIB)(mwconv.o): mwconv.c idsistd.h intdef.h cobrun.h
+$(THE_LIB)(nextfile.o): nextfile.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(noconfig.o): noconfig.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(onhelp.o): onhelp.c idsistd.h intdef.h wperson.h
+$(THE_LIB)(openacp.o): openacp.c idsistd.h intdef.h acp.h
+$(THE_LIB)(packer.o): packer.c idsistd.h intdef.h
+$(THE_LIB)(pbset.o): pbset.c idsistd.h intdef.h
+$(THE_LIB)(platsubs.o): platsubs.c idsistd.h intdef.h wplatdef.h
+$(THE_LIB)(print.o): print.c idsistd.h intdef.h wcommon.h wperson.h
+$(THE_LIB)(print.o): movebin.h werrlog.h
+$(THE_LIB)(protect.o): protect.c idsistd.h intdef.h
+$(THE_LIB)(putparm.o): putparm.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(putparm.o): wshmem.h putparm.h wdefines.h wglobals.h
+$(THE_LIB)(putparm.o): wfiles.h
+$(THE_LIB)(pwdname.o): pwdname.c idsistd.h intdef.h
+$(THE_LIB)(que_jobs.o): que_jobs.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(quemgmt.o): quemgmt.c werrlog.h idsistd.h intdef.h
+$(THE_LIB)(readacp.o): readacp.c idsistd.h intdef.h acp.h movebin.h
+$(THE_LIB)(readfdr.o): readfdr.c idsistd.h intdef.h wcommon.h movebin.h
+$(THE_LIB)(readfdr.o): cobrun.h werrlog.h
+$(THE_LIB)(readvtoc.o): readvtoc.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(regexpr.o): regexpr.c idsistd.h intdef.h regexpr.h
+$(THE_LIB)(rename.o): rename.c idsistd.h intdef.h wfiles.h wcommon.h
+$(THE_LIB)(rename.o): movebin.h wperson.h werrlog.h cobrun.h idsisubs.h
+$(THE_LIB)(retcode.o): retcode.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(retcode.o): wdefines.h
+$(THE_LIB)(ring.o): ring.c
+$(THE_LIB)(rtransl.o): rtransl.c idsistd.h intdef.h
+$(THE_LIB)(runtype.o): runtype.c idsistd.h intdef.h runtype.h
+$(THE_LIB)(runtype.o): wdefines.h idsisubs.h
+$(THE_LIB)(scratch.o): scratch.c $(V)/video.h
+$(THE_LIB)(scratch.o): idsistd.h intdef.h wcommon.h wdefines.h
+$(THE_LIB)(scratch.o): movebin.h cobrun.h idsisubs.h
+$(THE_LIB)(screen.o): screen.c idsistd.h intdef.h vwang.h wcommon.h
+$(THE_LIB)(screen.o): werrlog.h wperson.h wdefines.h movebin.h
+$(THE_LIB)(screen.o): wanguid.h
+$(THE_LIB)(search.o): search.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(search.o): wdefines.h
+$(THE_LIB)(set.o): set.c idsistd.h intdef.h wperson.h werrlog.h
+$(THE_LIB)(set.o): wglobals.h wfiles.h
+$(THE_LIB)(setenvst.o): setenvst.c idsistd.h intdef.h
+$(THE_LIB)(setfile.o): setfile.c idsistd.h intdef.h wfiles.h
+$(THE_LIB)(setprgid.o): setprgid.c idsistd.h intdef.h wglobals.h
+$(THE_LIB)(setprgid.o): wfiles.h
+$(THE_LIB)(setrcode.o): setrcode.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(setrcode.o): wdefines.h
+$(THE_LIB)(setsymb.o): setsymb.c idsistd.h intdef.h
+$(THE_LIB)(settrigp.o): settrigp.c idsistd.h intdef.h wfiles.h
+$(THE_LIB)(settrigp.o): wcommon.h werrlog.h
+$(THE_LIB)(setupqm.o): setupqm.c
+$(THE_LIB)(sharemem.o): sharemem.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(sharemem.o): wshmem.h putparm.h wdefines.h wanguid.h
+$(THE_LIB)(shellvar.o): shellvar.c idsistd.h intdef.h
+$(THE_LIB)(shutexit.o): shutexit.c idsistd.h intdef.h
+$(THE_LIB)(sleepdos.o): sleepdos.c
+$(THE_LIB)(sort.o): sort.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(sortcall.o): sortcall.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(sortlink.o): sortlink.c idsistd.h intdef.h movebin.h
+$(THE_LIB)(sortlink.o): werrlog.h cobrun.h
+$(THE_LIB)(sortseqf.o): sortseqf.c idsistd.h intdef.h sortseqf.h
+$(THE_LIB)(sortx.o): sortx.c
+$(THE_LIB)(spawn.o): spawn.c
+$(THE_LIB)(string.o): string.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(submit.o): submit.c idsistd.h intdef.h que_jobs.h wcommon.h
+$(THE_LIB)(submit.o): wperson.h movebin.h werrlog.h wdefines.h filext.h
+$(THE_LIB)(submit.o): wrunconf.h runtype.h
+$(THE_LIB)(sysinf.o): sysinf.c idsistd.h intdef.h wglobals.h wfiles.h
+$(THE_LIB)(sysinf.o): werrlog.h
+$(THE_LIB)(untabify.o): untabify.c idsistd.h intdef.h
+$(THE_LIB)(updatfdr.o): updatfdr.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(upper.o): upper.c idsistd.h intdef.h
+$(THE_LIB)(vdispidx.o): vdispidx.c
+$(THE_LIB)(vdisplay.o): vdisplay.c $(V)/video.h
+$(THE_LIB)(vdisplay.o): $(V)/vlocal.h
+$(THE_LIB)(vdisplay.o): $(V)/vdata.h
+$(THE_LIB)(vdisplay.o): $(V)/vcap.h idsistd.h
+$(THE_LIB)(vdisplay.o): intdef.h werrlog.h wperson.h scnfacs.h
+$(THE_LIB)(vdisplay.o): wanguid.h
+$(THE_LIB)(vmspargs.o): vmspargs.c idsistd.h intdef.h wglobals.h
+$(THE_LIB)(vmspargs.o): wfiles.h wdefines.h werrlog.h link.h
+$(THE_LIB)(vwang.o): vwang.c $(V)/video.h
+$(THE_LIB)(vwang.o): $(V)/vlocal.h
+$(THE_LIB)(vwang.o): $(V)/vdata.h idsistd.h
+$(THE_LIB)(vwang.o): intdef.h cobrun.h sub_char.h wperson.h werrlog.h
+$(THE_LIB)(vwang.o): vwang.h wglobals.h wfiles.h scnfacs.h
+$(THE_LIB)(vwang.o): $(V)/vchinese.h
+$(THE_LIB)(waccept.o): waccept.c idsistd.h intdef.h
+$(THE_LIB)(wangmenu.o): wangmenu.c idsistd.h intdef.h
+$(THE_LIB)(wanguid.o): wanguid.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(wanguid.o): wanguid.h wglobals.h wfiles.h
+$(THE_LIB)(wauthsub.o): wauthsub.c idsistd.h intdef.h wlicense.h
+$(THE_LIB)(wchain.o): wchain.c $(V)/video.h
+$(THE_LIB)(wchain.o): idsistd.h intdef.h werrlog.h wcommon.h wdefines.h
+$(THE_LIB)(wchain.o): wrunconf.h
+$(THE_LIB)(wchkstrt.o): wchkstrt.c $(V)/video.h
+$(THE_LIB)(wchkstrt.o): idsistd.h intdef.h werrlog.h
+$(THE_LIB)(wcmatch.o): wcmatch.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(wdelfile.o): wdelfile.c idsistd.h intdef.h
+$(THE_LIB)(wdellock.o): wdellock.c
+$(THE_LIB)(wdfinish.o): wdfinish.c $(V)/video.h
+$(THE_LIB)(wdfinish.o): idsistd.h intdef.h
+$(THE_LIB)(wdinit.o): wdinit.c $(V)/video.h
+$(THE_LIB)(wdinit.o): idsistd.h intdef.h
+$(THE_LIB)(wdisplay.o): wdisplay.c $(V)/video.h
+$(THE_LIB)(wdisplay.o): idsistd.h intdef.h vwang.h
+$(THE_LIB)(werrlog.o): werrlog.c idsistd.h intdef.h wperson.h werrlog.h
+$(THE_LIB)(werrlog.o): wdefines.h wglobals.h wfiles.h
+$(THE_LIB)(werrpath.o): werrpath.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(werrpath.o): wglobals.h wfiles.h
+$(THE_LIB)(werrvre.o): werrvre.c idsistd.h intdef.h
+$(THE_LIB)(wexit.o): wexit.c idsistd.h intdef.h werrlog.h wglobals.h
+$(THE_LIB)(wexit.o): wfiles.h
+$(THE_LIB)(wexith.o): wexith.c idsistd.h intdef.h que_jobs.h wperson.h
+$(THE_LIB)(wexith.o): wfiles.h wglobals.h filext.h
+$(THE_LIB)(wexith.o): $(V)/video.h
+$(THE_LIB)(wfaccess.o): wfaccess.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(wfaccess.o): wcommon.h wfaccess.h cobrun.h
+$(THE_LIB)(wfcisam.o): wfcisam.c idsistd.h intdef.h
+$(THE_LIB)(wfclose.o): wfclose.c idsistd.h intdef.h wperson.h wfiles.h
+$(THE_LIB)(wfilechk.o): wfilechk.c idsistd.h intdef.h werrlog.h
+$(THE_LIB)(wfilechk.o): wcommon.h cobrun.h wdefines.h wglobals.h
+$(THE_LIB)(wfilechk.o): wfiles.h
+$(THE_LIB)(wfiledis.o): wfiledis.c idsistd.h intdef.h wperson.h
+$(THE_LIB)(wfiledis.o): $(V)/video.h wfiles.h
+$(THE_LIB)(wfiledis.o): wcommon.h wangkeys.h werrlog.h
+$(THE_LIB)(wfileext.o): wfileext.c idsistd.h intdef.h filext.h
+$(THE_LIB)(wfname.o): wfname.c idsistd.h intdef.h wperson.h wfiles.h
+$(THE_LIB)(wfname.o): wcommon.h werrlog.h cobrun.h
+$(THE_LIB)(wfopen.o): wfopen.c idsistd.h intdef.h wperson.h wangkeys.h
+$(THE_LIB)(wfopen.o): wcommon.h wfaccess.h cobrun.h wglobals.h wfiles.h
+$(THE_LIB)(wfopen.o): filext.h werrlog.h
+$(THE_LIB)(wfstatus.o): wfstatus.c idsistd.h intdef.h
+$(THE_LIB)(wftok.o): wftok.c idsistd.h intdef.h
+$(THE_LIB)(wfvision.o): wfvision.c idsistd.h intdef.h visint.h visn2.h
+$(THE_LIB)(wfwait.o): wfwait.c idsistd.h intdef.h wglobals.h wfiles.h
+$(THE_LIB)(wgetpgrp.o): wgetpgrp.c idsistd.h intdef.h wdefines.h
+$(THE_LIB)(wglobals.o): wglobals.c idsistd.h intdef.h wglobals.h
+$(THE_LIB)(wglobals.o): wfiles.h cobrun.h
+$(THE_LIB)(wisp_pic.o): wisp_pic.c idsistd.h intdef.h
+$(THE_LIB)(wispexit.o): wispexit.c idsistd.h intdef.h cobrun.h
+$(THE_LIB)(wispsort.o): wispsort.c idsistd.h intdef.h wcommon.h
+$(THE_LIB)(wispsort.o): sortseqf.h movebin.h werrlog.h
+$(THE_LIB)(wispsync.o): wispsync.c idsistd.h intdef.h
+$(THE_LIB)(wlickey.o): wlickey.c idsistd.h intdef.h wlicense.h
+$(THE_LIB)(wpause.o): wpause.c idsistd.h intdef.h movebin.h werrlog.h
+$(THE_LIB)(wperson.o): wperson.c $(V)/video.h
+$(THE_LIB)(wperson.o): idsistd.h intdef.h wperson.h werrlog.h
+$(THE_LIB)(wperson.o): wdefines.h wglobals.h wfiles.h wanguid.h
+$(THE_LIB)(wprint.o): wprint.c idsistd.h intdef.h que_jobs.h wperson.h
+$(THE_LIB)(wprint.o): werrlog.h wglobals.h wfiles.h
+$(THE_LIB)(writeacp.o): writeacp.c idsistd.h intdef.h acp.h
+$(THE_LIB)(wrunconf.o): wrunconf.c idsistd.h intdef.h wrunconf.h
+$(THE_LIB)(wrunconf.o): wdefines.h
+$(THE_LIB)(wsclose.o): wsclose.c idsistd.h intdef.h
+$(THE_LIB)(wscreen.o): wscreen.c $(V)/video.h
+$(THE_LIB)(wscreen.o): idsistd.h intdef.h wcommon.h movebin.h cobrun.h
+$(THE_LIB)(wscreen.o): werrlog.h
+$(THE_LIB)(wscset.o): wscset.c $(V)/video.h
+$(THE_LIB)(wscset.o): $(V)/vlocal.h
+$(THE_LIB)(wscset.o): $(V)/vdata.h
+$(THE_LIB)(wscset.o): $(V)/vcap.h idsistd.h
+$(THE_LIB)(wscset.o): intdef.h
+$(THE_LIB)(wsfnm.o): wsfnm.c $(V)/video.h idsistd.h
+$(THE_LIB)(wsfnm.o): intdef.h vwang.h werrlog.h wglobals.h wfiles.h
+$(THE_LIB)(wsfns.o): wsfns.c $(V)/video.h idsistd.h
+$(THE_LIB)(wsfns.o): intdef.h vwang.h werrlog.h wglobals.h wfiles.h
+$(THE_LIB)(wshelp.o): wshelp.c $(V)/video.h
+$(THE_LIB)(wshelp.o): $(V)/vlocal.h
+$(THE_LIB)(wshelp.o): $(V)/vcap.h
+$(THE_LIB)(wshelp.o): $(V)/vchinese.h idsistd.h
+$(THE_LIB)(wshelp.o): intdef.h wcommon.h wperson.h vwang.h scnfacs.h
+$(THE_LIB)(wshelp.o): wglobals.h wfiles.h werrlog.h wdefines.h cobrun.h
+$(THE_LIB)(wshelp.o): wanguid.h license.h
+$(THE_LIB)(wsmode.o): wsmode.c $(V)/video.h
+$(THE_LIB)(wsmode.o): $(V)/vlocal.h
+$(THE_LIB)(wsmode.o): $(V)/vdata.h
+$(THE_LIB)(wsmode.o): $(V)/vcap.h idsistd.h
+$(THE_LIB)(wsmode.o): intdef.h
+$(THE_LIB)(wsmove.o): wsmove.c $(V)/video.h
+$(THE_LIB)(wsmove.o): $(V)/vlocal.h
+$(THE_LIB)(wsmove.o): $(V)/vdata.h
+$(THE_LIB)(wsmove.o): $(V)/vcap.h idsistd.h
+$(THE_LIB)(wsmove.o): intdef.h
+$(THE_LIB)(wspawn.o): wspawn.c idsistd.h intdef.h
+$(THE_LIB)(wswap.o): wswap.c idsistd.h intdef.h cobrun.h wglobals.h
+$(THE_LIB)(wswap.o): wfiles.h
+$(THE_LIB)(wsxio.o): wsxio.c $(V)/video.h
+$(THE_LIB)(wsxio.o): $(V)/vlocal.h
+$(THE_LIB)(wsxio.o): $(V)/vdata.h idsistd.h
+$(THE_LIB)(wsxio.o): intdef.h vwang.h werrlog.h
+$(THE_LIB)(wsystem.o): wsystem.c idsistd.h intdef.h
+$(THE_LIB)(wtransl.o): wtransl.c
+$(THE_LIB)(wvaset.o): wvaset.c idsistd.h intdef.h
+$(THE_LIB)(wwaitpid.o): wwaitpid.c idsistd.h intdef.h
 

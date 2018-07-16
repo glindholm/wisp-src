@@ -9,7 +9,14 @@
 #
 QA=$WISP/src/testacu
 WISPCONFIG=$QA/config
-export QA WISPCONFIG
-
 A_CONFIG=$WISPCONFIG/ACUCONFIG
-export A_CONFIG
+PATH=$WISP/wisp.QA/bin:.:/usr/local/bin:/bin:/usr/bin:/etc:/usr/ucb:$HOME/bin
+export QA WISPCONFIG A_CONFIG PATH
+echo
+echo "**** SETTING UP FOR ACUCOBOL ****"
+echo "PATH         = $PATH"
+echo "QA           = $QA"
+echo "WISPCONFIG   = $WISPCONFIG"
+echo "A_CONFIG     = $A_CONFIG"
+ccbl -v
+wisp|grep Version

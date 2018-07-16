@@ -1,0 +1,73 @@
+#/************************************************************************/
+#/*									 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*	 An unpublished work of International Digital Scientific Inc.	 */
+#/*			    All rights reserved.			 */
+#/*									 */
+#/************************************************************************/
+#
+#
+#	File:		wruncblc.umf
+#
+#			**** This is an IDSI only version ****
+#
+#	Function:	The UNIX makefile for building the Acucobol runtime
+#			systems that include the WISP runtime routines and
+#			the CISAM file system.
+#
+#	Description:	This makefile can generate the following versions
+#			of the Acucobol runtime system.
+#
+#			wruncblc	Runtime with CISAM(DISAM)
+#
+#	Instructions:	To create an Acucobol runtime system follow the
+#			instructions in Appendix A of the WISP Manual
+#			"Building an ACUCOBOL runtime system".
+#
+#			To build wruncblc:
+#				$ make -f wruncblc.umf
+#
+#
+# ****	LIBPATH:	If your libraries reside in a directory other then
+#			/usr/lib then change LIBPATH to there correct
+#			location.
+#
+# ****	CISAM NOTES:	The only difference is the file "cisam.o" which
+#			comes from Acucobol and "libdisam.a" or "libcisam.a"
+#			which comes from CISAM/DISAM.
+#
+#			The file "filetbl.c" has been changed to include the
+#			line:
+#				#define USE_CISAM	1
+#
+#			When running you need to change ACUCONFIG (cblconfig)
+#			to include the line:
+#
+#				DEFAULT-HOST C-ISAM
+#
+
+#
+#	Leave CDEBUG blank - it will be filled in manually on the build
+#
+CDEBUG=
+
+#include $(WISP)/src/port/make.include
+
+SUBS1=sub.o
+SUBS2=sub.o filetbl.o cisam.o
+
+LIBPATH=/usr2/wisp/src/lib
+
+LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideo.a
+LIBPATHDS=$(LIBPATH)/libwispd.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideod.a
+LIBS=-lwisp -lilp -lvideo -lm
+LIBDS=-lwispd -lilp -lvideod -lm
+
+all:	wruncblc
+
+wruncblc: $(SUBS2) $(LIBPATHS)
+	$(CC) -O $(CFLAGS) -o $@ $(SUBS2) runcbl.a libdisam.a -L$(LIBPATH) $(LIBS)
+
+
+sub.o: sub.c sub85.c
+

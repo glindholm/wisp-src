@@ -5,8 +5,8 @@
 #define JOBLMT	5
 #define LINES	7
 #define PRNTER	11
-#define SPLSRR	21
-#define WS	27
+#define SPLSRR	22
+#define WS	30
 
 #ifdef INIT_COMMON
 
@@ -30,9 +30,12 @@ EXT char *search_set_extract[] = {	"FILECLAS",
 					"RUNLIB",
 					"RUNVOL",
 					"SPOOLLIB",
+					"SPOOLIB",
 					"SPOOLSYS",
 					"SPOOLSYSRC",
 					"SPOOLVOL",
+					"SYSLIB",
+					"SYSVOL",
 					"TASKTYPE",
 					"USERID",
 					"USERNAME",
@@ -53,18 +56,21 @@ EXT char *keyword_set_extract[] = {	"FC",
 					"OM",
 					"OL",
 					"OV",
-					"P#",
+					"PN",
 					"PM",
 					"PL",
 					"PV",
 					"PC",
-					"PF",
+					"PK",
 					"RL",
 					"RV",
+					"SL",
 					"SL",
 					"RS",
 					"RR",
 					"SV",
+					"XL",
+					"XV",
 					"TT",
 					"ID",
 					"NA",

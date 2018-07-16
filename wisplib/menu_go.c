@@ -5,6 +5,7 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
+#include "idsistd.h"
 #include "menu.h"
 #include <v/video.h>
 #include <v/vlocal.h>
@@ -22,6 +23,7 @@ int menu_go(menuname,menuvalue) char *menuname,*menuvalue;
 	char progname[80];
 	char retval[81];
 	struct menu *themenu;
+	uint4 vms_status;
 
 #ifdef VMS
 	static $DESCRIPTOR(icom,command);							/* For DCL commands.		*/
@@ -78,7 +80,7 @@ int menu_go(menuname,menuvalue) char *menuname,*menuvalue;
 			{
 				strcpy(menuvalue,themenu->menulist[result].message);		/* Copy the result string.	*/
 				strcpy(progname,&(themenu->menulist[result].filename[0]));	/* Get the command string.	*/
-				spawn(action,progname,"Please wait...");			/* Spawn to do the command.	*/
+				spawn2 (action,progname,"Please wait...",&vms_status);		/* Spawn to do the command.	*/
 				themenu->menustat = 0;						/* Menu is not on the screen.	*/
 				break;
 			}

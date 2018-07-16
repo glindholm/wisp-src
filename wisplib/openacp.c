@@ -13,6 +13,8 @@
 
 #ifndef MSDOS								/* Defined for unix and VMS only.			*/
 
+#include "idsistd.h"
+
 #define INIT_ACP							/* Declare global variable definitions from this module.*/
 #define __OPENACP
 #include "acp.h"							/* Header file containing global variable definitions.	*/
@@ -27,7 +29,10 @@
 #include <fcntl.h>
 struct termio otermacp,ntermacp;
 char the_ttyname[32];
-char *mystrdup();
+static char *mystrdup();
+static int loadcfg();
+static char **splitstr();
+static int match();
 char *getenv();
 #endif	/* unix */
 
@@ -35,8 +40,8 @@ char *getenv();
 OPENACP(destination,rel_line,ret_code)
 
 char	*destination;							/* WANG terminal name, up to 16 chars.			*/
-int	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
-int	*ret_code;							/* WANG ACP return code.				*/
+int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
+int4	*ret_code;							/* WANG ACP return code.				*/
 
 {
 	acp_term_id	*term_ptr,*getterm();				/* Pointer to the linked list.				*/
@@ -44,14 +49,14 @@ int	*ret_code;							/* WANG ACP return code.				*/
 	char 		device_name[64];				/* VAX terminal line to be opened for descriptor.	*/
 	short		acp_channel;					/* I/O channel returned from SYS$ASSIGN.		*/
 	int		i,j,k;						/* Array indeces.					*/
-	long		status;						/* Return status from SYS$ASSIGN			*/
+	int4		status;						/* Return status from SYS$ASSIGN			*/
 #ifdef unix
 	int fd,cfgstatus;
 	
 #endif	
 
 #ifdef VMS
-$DESCRIPTOR(d_desc,device_name);					/* Descriptor for SYS$ASSIGN.				*/
+#include "openacp.d"
 #endif
 	*rel_line = 0;							/* Initialize the return values.			*/
 	*ret_code = 0;
@@ -123,7 +128,19 @@ $DESCRIPTOR(d_desc,device_name);					/* Descriptor for SYS$ASSIGN.				*/
 		{
 			ioctl(fd,TCGETA,&otermacp);					/* save settings for restore at close */
 			ioctl(fd,TCGETA,&ntermacp);					/* make a copy to play with  */
-			ntermacp.c_iflag = IGNBRK|IXON|IXOFF;				/*  */
+			switch (flowval[flow].val)
+			{
+			default:
+			case 'x':
+				ntermacp.c_iflag = IGNBRK|IXON|IXOFF;			/* Use XON/XOFF				*/
+				break;
+			case 'n':
+				ntermacp.c_iflag = IGNBRK;				/* Don't use XON/XOFF			*/
+				break;
+			case 'u':							/* Don't change config			*/
+				/* Don't change input config */
+				break;
+			}
 			ntermacp.c_oflag = 0;
 			ntermacp.c_cflag = baudval[baud].val|sizeval[size].val|stopbval[stop].val|parval[parity].val|CLOCAL|CREAD;
 			ntermacp.c_lflag = 0 /* dupval[duplex].val */ ;
@@ -228,10 +245,12 @@ char *pname;
 	tmp=strchr(name,' ');
 	if (tmp) *tmp=(char)0;
 	len=strlen(name);
+
 	tmp=getenv(ACPMAP_PATH);					/* get path */
-	strcpy(cfgpath,tmp?tmp:"./");
+	strcpy(cfgpath,tmp?tmp:".");
 	strcat(cfgpath,"/");
-	strcat(cfgpath,ACPMAP_FILE);					/* add file name */
+	tmp=getenv(ACPMAP_FILE);	
+	strcat(cfgpath,tmp?tmp:ACPMAP_FILE);					/* add file name */
 	if ((cfg=fopen(cfgpath,"r"))==NULL)
 	{
 		return -14;						/* no config file */
@@ -254,6 +273,7 @@ char *pname;
 	stop=match(fields[STOPB_FIELD],stopbval);
 	size=match(fields[SIZE_FIELD],sizeval);
 	duplex=match(fields[DUPLEX_FIELD],dupval);
+	flow=match(fields[FLOW_FIELD],flowval);
 	
 	strcpy(acp_term_struct.acp_termname,name);
 	strcpy(acp_term_struct.acp_termnum,the_ttyname);
@@ -311,17 +331,22 @@ char ch;
 static char **splitstr(string)
 char *string;
 {
-	static char *ptr[13],linebuf[200];
+	static char *ptr[NUMFIELDS],linebuf[200];
 	char *p;
 	int i;
 
-	strcpy(linebuf,string);						/* make local copy */
-	for (i=0,p=linebuf; *p && i<11; )				/* build list of pointers */
+	for(i=0; i<NUMFIELDS;i++)
 	{
-		if (*p != ' ' && *p != '\t') ptr[i++]=p;		/* if at field start, save pointer */
-		while (*p != ' ' && *p!='\t') ++p;			/* now skip field, look for white space */
-		*p++ =(char)0;						/* null term the field  */
-		while (*p == ' ' || *p=='\t') ++p;			/* skip over white space to next field */
+		ptr[i] = (char *)0;
+	}
+
+	strcpy(linebuf,string);							/* make local copy */
+	for (i=0,p=linebuf; *p && i<NUMFIELDS; )				/* build list of pointers */
+	{
+		while (*p == ' ' || *p=='\t') ++p;				/* skip over white space to next field */
+		if (*p) ptr[i++]=p;						/* if at field start, save pointer */
+		while (*p && *p != ' ' && *p != '\t' && *p != '\n') ++p;	/* now skip field, look for white space */
+		*p++ =(char)0;							/* null term the field  */
 	}
 	
 	return ptr;
@@ -330,8 +355,13 @@ static int match(str,list)
 char *str;
 struct matchstruc *list;
 {
-	int foundit=0,i;
-	char tmp[20],*p,*strchr();
+	int 	i;
+	char 	tmp[20],*p,*strchr();
+
+	/*
+	**	On error or no match return 0 index as a default.
+	*/
+	if (!str) return 0;							/* Null string					*/
 
 	p=str;
 	while (*p == '0') ++p;
@@ -341,12 +371,14 @@ struct matchstruc *list;
 	
 	for (i=0;list->string;++list,++i)				/* loop thru struct array, looking for matching value */
 	{
-		if (strcmp(list->string,tmp))continue;
-		else { ++foundit; break; }
+		if (0==strcmp(list->string,tmp))
+		{
+			return i;						/* Found it 					*/
+		}
 	}
-	if (!foundit)return -1;
-	else return i;
+	return 0;								/* No match.					*/
 }
+
 SETACP(info,ret)
 struct acpinfo_cbl *info;
 int *ret;
@@ -355,6 +387,8 @@ int *ret;
 	char tmppath[64],*tmp,linebuf[200],*strchr();
 	int len,notfound;
 	int intbaud;
+	int	rc;
+	int fd;
 	
 	memset(lname,0,sizeof(lname));
 	memset(ldevice,0,sizeof(ldevice));
@@ -367,7 +401,7 @@ int *ret;
 	lbits=(char)0;      
 	lstop=(char)0;      
 	lduplex=(char)0;    
-	lfoo=(char)0;     
+	lflow=(char)0;     
 	strncpy(lname,   info->name,   sizeof(info->name));
 	strncpy(ldevice, info->device, sizeof(info->device));
 	strncpy(lweor,   info->weor,   sizeof(info->weor));
@@ -383,6 +417,7 @@ int *ret;
 	lbits=info->bits;
 	lstop=info->stop;
 	lduplex=info->duplex;
+	lflow=info->flow;
 	
 	chopspace(lname);
 	chopspace(ldevice);
@@ -393,23 +428,42 @@ int *ret;
 	chopspace(lbaud);
 	
 	tmp=getenv(ACPMAP_PATH);					/* get path */
-	strcpy(cfgpath,tmp?tmp:"./");
+	strcpy(cfgpath,tmp?tmp:".");
+	sprintf(tmppath,"%s/acp%d",cfgpath,getpid());
 	strcat(cfgpath,"/");
-	strcat(cfgpath,ACPMAP_FILE);					/* add file name */
+	tmp=getenv(ACPMAP_FILE);	
+	strcat(cfgpath,tmp?tmp:ACPMAP_FILE);					/* add file name */
+
+	if ((fd=open(cfgpath,O_RDONLY))<0)    /* create the ACPMAP file if it doesn't exist */
+	{
+		if (errno==ENOENT)
+		{
+			fd=creat(cfgpath,0666);
+			if (fd<0)
+			{
+				rc = 14;
+				memcpy(ret,&rc,4);					/* no config file */
+				wswap(ret);
+				return;
+			}
+			close(fd);
+		}
+	}
+	else
+	{
+		close(fd);
+	}
 	if ((acpmap=fopen(cfgpath,"r"))==NULL)
 	{
-		int tmp=14;
-		
-		memcpy(ret,&tmp,4);					/* no config file */
+		rc = 14;
+		memcpy(ret,&rc,4);					/* no config file */
 		wswap(ret);
 		return;
-	}
-	sprintf(tmppath,"acp%d",getpid());
+	}  
 	if ((tmpfile=fopen(tmppath,"w"))==NULL)
 	{
-		int tmp=1;
-		
-		memcpy(ret,&tmp,4);					/* can't create tmp file */
+		rc = 1;
+		memcpy(ret,&rc,4);					/* can't create tmp file */
 		wswap(ret);
 		return;
 	}
@@ -428,17 +482,17 @@ int *ret;
 		{
 			notfound=0;
 			fprintf(tmpfile,
-				"%s %s %s %s %s %s %s %c %c %c %c -\n",
+				"%s %s %s %s %s %s %s %c %c %c %c %c\n",
 				lname,ldevice,lweor,lreor1,lreor2,lreor3,lbaud,
-				lparity,lbits,lstop,lduplex);
+				lparity,lbits,lstop,lduplex,lflow);
 		}
 	}
 	if (notfound)
 	{
 		fprintf(tmpfile,
-			"%s %s %s %s %s %s %s %c %c %c %c -\n",
+			"%s %s %s %s %s %s %s %c %c %c %c %c\n",
 			lname,ldevice,lweor,lreor1,lreor2,lreor3,lbaud,
-			lparity,lbits,lstop,lduplex);
+			lparity,lbits,lstop,lduplex,lflow);
 	}
 	fclose(acpmap);
 	fclose(tmpfile);
@@ -446,6 +500,11 @@ int *ret;
 	unlink(cfgpath);
 	link(tmppath,cfgpath);
 	unlink(tmppath);
+
+	rc = 0;
+	memcpy(ret,&rc,4);
+	wswap(ret);
+	return;
 }
 GETACP(info,ret)
 struct acpinfo_cbl *info;
@@ -455,6 +514,7 @@ int *ret;
 	char *tmp,**fields,**splitstr(),name[17],*strchr(),linebuf[200];
 	int foundit,len;
 	int intbaud;
+	int	rc;
 	
 	memset(name,0,sizeof(name));
 	memcpy(name,info->name,16);
@@ -463,14 +523,14 @@ int *ret;
 	len=strlen(name);
 
 	tmp=getenv(ACPMAP_PATH);					/* get path */
-	strcpy(cfgpath,tmp?tmp:"./");
+	strcpy(cfgpath,tmp?tmp:".");
 	strcat(cfgpath,"/");
-	strcat(cfgpath,ACPMAP_FILE);					/* add file name */
+	tmp=getenv(ACPMAP_FILE);	
+	strcat(cfgpath,tmp?tmp:ACPMAP_FILE);					/* add file name */
 	if ((acpmap=fopen(cfgpath,"r"))==NULL)
 	{
-		int tmp=14;
-		
-		memcpy(ret,&tmp,4);					/* no config file */
+		rc = 14;
+		memcpy(ret,&rc,4);					/* no config file */
 		wswap(ret);
 		return;
 	}
@@ -488,7 +548,13 @@ int *ret;
 		}
 	}
 	fclose(acpmap);
-	if (!foundit) return;
+	if (!foundit) 
+	{
+		rc = 4;
+		memcpy(ret,&rc,4);					/* NODE not found	*/
+		wswap(ret);
+		return;
+	}
 
 	fields=splitstr(linebuf);
 
@@ -511,7 +577,12 @@ int *ret;
 	info->bits   = *fields[SIZE_FIELD  ];
 	info->stop   = *fields[STOPB_FIELD ];
 	info->duplex = *fields[DUPLEX_FIELD];
+	info->flow   = *fields[FLOW_FIELD];
 
+	rc = 0;
+	memcpy(ret,&rc,4);
+	wswap(ret);
+	return;
 }
 chopspace(p)
 char *p;
@@ -542,7 +613,7 @@ static char *
 mystrdup(p)
 char *p;
 {
-	char *malloc(),*tmp;
+	char *tmp;
 	
 	tmp=malloc(strlen(p)+1);
 	strcpy(tmp,p);

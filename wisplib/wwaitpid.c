@@ -18,6 +18,7 @@
 #if !defined(u3b2) && !defined(NCR32)
 #include <sys/wait.h>
 #endif
+#include "idsistd.h"
 
 #ifndef WEXITSTATUS
 #define WIFEXITED(x)    ( !((x) & 0xff) )

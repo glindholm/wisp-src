@@ -1,20 +1,19 @@
 /*
 **	Routine:	foo()
 **
-**	Function:	To ...
+**	Function:	{One line statement of function}...
 **
-**	Description:	To ...
+**	Description:	{Full detailed description}...
 **
-**	Input:		None
-**			
+**	Arguments:	None
 **
-**	Output:		None
-**			
+**	Globals:	None
 **
 **	Return:		None
 **
 **	Warnings:	None
 **
-**	History:	mm/dd/yy	Written by xxx
+**	History:	
+**	mm/dd/yy	Written by xxx
 **
 */

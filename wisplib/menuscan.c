@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #endif
 #include <time.h>
+#include "idsistd.h"
 #include "menu.h"
 #include "wperson.h"
 #include <v/video.h>
@@ -328,7 +329,7 @@ int irow,icol;
 {
 	struct tm *time_structure;
 	time_t time_val;
-	long i;
+	int4 i;
 	char timestring[80];
 
 	static char *weekday[7] = {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};

@@ -44,7 +44,7 @@ vscreen(state) int state;								/* Set screen to a given state.		*/
 
 	if (WANT_WIDE) 									/* Find out if we were correct.		*/
 	{
-		if (width_first || !HAVE_WIDE)						/* Force if first width change or	*/
+		if (width_first || !HAVE_WIDE || (optimization == OFF))			/* Force if first width change or	*/
 		{									/* want to change to WIDE.		*/
 			changed_width = TRUE;
 			atr = (atr | WIDE) & ~NARROW;					/* Flag screen now as wide.		*/
@@ -56,7 +56,7 @@ vscreen(state) int state;								/* Set screen to a given state.		*/
 
 	if (WANT_NARROW)								/* Want narrow screen.			*/
 	{
-		if (width_first || HAVE_WIDE)						/* Force if first width change or	*/
+		if (width_first || HAVE_WIDE || (optimization == OFF))			/* Force if first width change or	*/
 		{									/* want to change to NARROW.		*/
 			changed_width = TRUE;						/* Flag if it is a change.		*/
 			atr = (atr | NARROW) & ~WIDE;					/* Flag now as narrow.			*/
@@ -68,7 +68,7 @@ vscreen(state) int state;								/* Set screen to a given state.		*/
 
 	if (WANT_LIGHT)									/* Want light screen.			*/
 	{
-		if (color_first || !HAVE_LIGHT)						/* First color change? or		*/
+		if (color_first || !HAVE_LIGHT || (optimization == OFF))		/* First color change? or		*/
 		{									/* want to change to LIGHT.		*/
 			changed_color = TRUE;						/* Flag the change.			*/
 			atr = (atr | LIGHT) & ~DARK;					/* Flag now as light.			*/
@@ -80,7 +80,7 @@ vscreen(state) int state;								/* Set screen to a given state.		*/
 
 	if (WANT_DARK)									/* Want dark screen.			*/
 	{
-		if (color_first || HAVE_LIGHT)						/* First color change? or		*/
+		if (color_first || HAVE_LIGHT || (optimization == OFF))			/* First color change? or		*/
 		{									/* want to change to DARK.		*/
 			changed_color = TRUE;						/* Flag change.				*/
 			atr = (atr | DARK) & ~LIGHT;					/* Flag now as dark.			*/
@@ -97,7 +97,11 @@ vscreen(state) int state;								/* Set screen to a given state.		*/
 	if ((!vscr_op) || (optimization <= DATA_ONLY))					/* Should we optimize?			*/
         {
 		ret = vscr_do(string);							/* Do data string or other change.      */
-#ifdef unix
+#ifdef OLD_unix
+		/*
+		**	This was causing pointless delays in many cases.
+		**	The sleep(1) logic has been moved into vdisplay() where actual screen width changes occur.
+		*/
 		if (changed_width)
 			sleep(1);							/* Wait for some terminals to do it.    */
 #endif

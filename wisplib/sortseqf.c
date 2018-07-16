@@ -7,14 +7,16 @@
 			/*									*/
 			/************************************************************************/
 
-#ifdef unix
 
 #include <stdio.h>
+#ifdef unix
 #include <fcntl.h>
+#endif
 #include <errno.h>
 #include <memory.h>
 #include <malloc.h>
 
+#include "idsistd.h"
 #include "sortseqf.h"
 
 
@@ -103,10 +105,21 @@
 #define DEF_SMALL_REC	50
 #define MAX_NUMKEYS	16
 #define MAX_ERRSIZE	256
-#define MAX_MEMSIZEK	8192
+#define MAX_MEMSIZEK	65535
 #define MIN_MEMSIZEK	16
+#ifdef unix
 #define DEF_MEMSIZEK	512
 #define DEF_TMPDIR	"/tmp"
+#endif /* unix */
+#ifdef MSDOS
+#ifdef _INTELC32_
+#define DEF_MEMSIZEK	256
+#endif
+#ifdef _MSC_VER
+#define DEF_MEMSIZEK	64
+#endif
+#define DEF_TMPDIR	"C:\\TMP"
+#endif /* MSDOS */
 #define DEF_TMPPREFIX	"sort"
 #define DEF_ONE_K	1024
 #define DEF_READSIZE	1024
@@ -116,16 +129,12 @@
 #define BIN_NORMAL	1
 #define BIN_2N2		2
 
-typedef short 	INT2;
-typedef long  	INT4;
 typedef float 	FLOAT4;
 typedef double 	FLOAT8;
 
-int compare();
-
 struct s_recindex
 {
-	long	size;
+	int4	size;
 	char	*rec;
 };
 
@@ -145,13 +154,33 @@ static int	g_errlevel;							/* Global errlevel				*/
 static FILE 	*g_errfile;							/* Global errfile				*/
 static char	*g_errbuff;							/* Global errbuff				*/
 static int	g_cmp_rc;							/* Global error code from cmp routines		*/
-static long	g_numelements;							/* Number of records in memblock		*/
-static long	g_total_rec;							/* Total number of records in infile.		*/
+static int4	g_numelements;							/* Number of records in memblock		*/
+static int4	g_total_rec;							/* Total number of records in infile.		*/
 static int	g_infileopen;							/* Flag if infile is open.			*/
 static int	g_outfileopen;							/* Flag if outfile is open.			*/
-static long	g_sortindex_size;						/* Local size of sort index table.		*/
-static long	g_sortindex_bytes;						/* Byte size of g_sortindex			*/
-static long	g_recindex_bytes;						/* Byte size of g_recindex			*/
+static int4	g_sortindex_size;						/* Local size of sort index table.		*/
+static int4	g_sortindex_bytes;						/* Byte size of g_sortindex			*/
+static int4	g_recindex_bytes;						/* Byte size of g_recindex			*/
+
+static int loadmem();
+static int compare();
+static int load_decimal();
+static int writemem();
+static int mergemem();
+static int reporterr();
+static int reversebytes();
+static int ssbytenormal();
+static int sizerec();
+
+static int cmp_ascii();
+static int cmp_binary();
+static int cmp_float();
+static int cmp_zonelead();
+static int cmp_zonetrail();
+static int cmp_zoneright();
+static int cmp_zoneleft();
+static int cmp_packed();
+static int cmp_decimal();
 
 /*
 	The g_sortindex is a table of pointers, each pointer points to an entry in g_recindex which is a table
@@ -203,13 +232,14 @@ char	*errbuff;								/* Store last error here  (Min 256 bytes)	*/
 	int	f_tmpfile;							/* File ptr for tmpfile.			*/
 	int	f_mrgfile;							/* File ptr for mrgfile.			*/
 	int	f_swapfile;							/* File ptr used to swap the tmp & mrg files	*/
-	long	memsize;							/* Size of memory block allocated.		*/
+	int4	memsize;							/* Size of memory block allocated.		*/
 	char	*memblock;							/* Large memblock for sort.			*/
 	int	eof_infile;							/* Have we reached EOF for infile.		*/
 	int	tmpfile_active;							/* Is there data in the tmpfile.		*/
 	int	mrgfile_active;							/* Is there data in the mrgfile.		*/
 	int	fully_loaded;							/* Flag if all records have been loaded & sorted*/ 
 	char	*tdptr;								/* Pointer to TMPDIR definition.		*/
+	char	buff[256];							/* Working buffer				*/
 
 	pid = getpid();								/* Get the PID					*/
 
@@ -397,9 +427,12 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	g_infileopen = 1;
 	g_total_rec = 0;
 
-	sprintf(tmpfile,"%s/%s%06d.1",l_tmpdir,DEF_TMPPREFIX,pid);		/* Build temp file filename			*/
-	sprintf(mrgfile,"%s/%s%06d.2",l_tmpdir,DEF_TMPPREFIX,pid);		/* Build merge file filename			*/
+	sprintf(buff,"%s%06d.1",DEF_TMPPREFIX,pid);				/* Build temp file filename			*/
+	buildfilepath(tmpfile, l_tmpdir, buff);
+	sprintf(buff,"%s%06d.2",DEF_TMPPREFIX,pid);				/* Build merge file filename			*/
+	buildfilepath(mrgfile, l_tmpdir, buff);
 
+	makepath(tmpfile);							/* Ensure the directory path exists		*/
 
 	/*
 	**	Allocate large memory block
@@ -410,7 +443,7 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	for(;;)									/* Loop until malloc succeeds.			*/
 	{
 
-		memblock = (char *)malloc(memsize);
+		memblock = (char *)malloc((size_t)memsize);
 		if ( memblock )
 		{
 #ifdef DEBUG
@@ -457,7 +490,7 @@ printf("sortseqf:g_sortindex_size=%d\n",g_sortindex_size);
 printf("sortseqf:g_sortindex_bytes=%d\n",g_sortindex_bytes);
 #endif
 
-	g_sortindex = (struct s_recindex **)malloc(g_sortindex_bytes); 			/* Ptr to Index to recindex 		*/
+	g_sortindex = (struct s_recindex **)malloc((size_t)g_sortindex_bytes); 		/* Ptr to Index to recindex 		*/
 	if (!g_sortindex)								/* If malloc failed.			*/
 	{
 		sprintf(messstr,"[g_sortindex size = %d]",g_sortindex_size);
@@ -471,7 +504,7 @@ printf("sortseqf:g_sortindex_bytes=%d\n",g_sortindex_bytes);
 printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 #endif
 
-	g_recindex  = (struct s_recindex *)malloc(g_recindex_bytes);			/* Array of struct that point		*/
+	g_recindex  = (struct s_recindex *)malloc((size_t)g_recindex_bytes);		/* Array of struct that point		*/
 											/*  to records in memblock		*/
 	if (!g_recindex)								/* If malloc failed.			*/
 	{
@@ -533,7 +566,7 @@ printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 printf("qsort: %d items\n",g_numelements);
 #endif
 
-		qsort( (char *)g_sortindex, g_numelements, sizeof(struct s_recindex *), compare);
+		qsort( (char *)g_sortindex, (size_t)g_numelements, sizeof(struct s_recindex *), compare);
 
 		if ( g_cmp_rc > WARNING )
 		{
@@ -680,13 +713,13 @@ printf("qsort: %d items\n",g_numelements);
 
 static int loadmem( memblock, memsize, infile, f_infile, p_eof_infile, p_fully_loaded )
 char	*memblock;
-long	memsize;
+int4	memsize;
 char	*infile;
 int	f_infile;
 int	*p_eof_infile;
 int	*p_fully_loaded;
 {
-	static long	memused;
+	static int4	memused;
 	static char	*memptr;
 	static char	*usedptr;
 	char	messstr[80];
@@ -694,7 +727,7 @@ int	*p_fully_loaded;
 	int	readcnt;
 	int	i;
 	char	*ptr;
-	long	leftover;
+	int4	leftover;
 	
 
 	if (g_init_load)
@@ -1076,25 +1109,25 @@ int	offset, length, bintype;
 	static int bad = 0;
 	char	*p1, *p2;
 	int 	rc;
-	INT2	short1, short2;
-	INT4	long1, long2;
+	int2	short1, short2;
+	int4	long1, long2;
 	char	messstr[80];
 	char	buff[80];
 
 	if (first)
 	{
 		first = 0;
-		if ( sizeof(INT2) != 2 )
+		if ( sizeof(int2) != 2 )
 		{
 			bad = 1;
-			sprintf(messstr,"[sizeof(INT2) = %d]",sizeof(INT2));
+			sprintf(messstr,"[sizeof(int2) = %d]",sizeof(int2));
 			g_cmp_rc = reporterr(ERR_SIZEINT,messstr);
 			
 		}
-		if ( sizeof(INT4) != 4 )
+		if ( sizeof(int4) != 4 )
 		{
 			bad = 1;
-			sprintf(messstr,"[sizeof(INT4) = %d]",sizeof(INT4));
+			sprintf(messstr,"[sizeof(int4) = %d]",sizeof(int4));
 			g_cmp_rc = reporterr(ERR_SIZEINT,messstr);
 		}
 	}
@@ -1115,15 +1148,15 @@ int	offset, length, bintype;
 		}
 	}
 
-	if ( length == sizeof(INT2) )
+	if ( length == sizeof(int2) )
 	{
-		memcpy(&short1,p1+offset,sizeof(INT2));
-		memcpy(&short2,p2+offset,sizeof(INT2));
+		memcpy(&short1,p1+offset,sizeof(int2));
+		memcpy(&short2,p2+offset,sizeof(int2));
 
 		if ( !ssbytenormal() && bintype != BIN_NATURAL )
 		{
-			reversebytes(&short1,sizeof(INT2));
-			reversebytes(&short2,sizeof(INT2));
+			reversebytes((char*)&short1,sizeof(int2));
+			reversebytes((char*)&short2,sizeof(int2));
 		}
 
 		if (short1 != short2)
@@ -1135,17 +1168,17 @@ int	offset, length, bintype;
 			rc = 0;
 		}
 	}	
-	else if ( length == sizeof(INT4) )
+	else if ( length == sizeof(int4) )
 	{
-		memcpy(&long1,p1+offset,sizeof(INT4));
-		memcpy(&long2,p2+offset,sizeof(INT4));
+		memcpy(&long1,p1+offset,sizeof(int4));
+		memcpy(&long2,p2+offset,sizeof(int4));
 
 		if ( !ssbytenormal() && bintype != BIN_NATURAL )
 		{
 			if ( bintype == BIN_NORMAL )
 			{
-				reversebytes(&long1,sizeof(INT4));
-				reversebytes(&long2,sizeof(INT4));
+				reversebytes((char*)&long1,sizeof(int4));
+				reversebytes((char*)&long2,sizeof(int4));
 			}
 			if ( bintype == BIN_2N2 )
 			{
@@ -1153,13 +1186,13 @@ int	offset, length, bintype;
 				buff[1] = ((char *)&long1)[3];
 				buff[2] = ((char *)&long1)[0];
 				buff[3] = ((char *)&long1)[1];
-				memcpy((char *)&long1,buff,sizeof(INT4));
+				memcpy((char *)&long1,buff,sizeof(int4));
 
 				buff[0] = ((char *)&long2)[2];
 				buff[1] = ((char *)&long2)[3];
 				buff[2] = ((char *)&long2)[0];
 				buff[3] = ((char *)&long2)[1];
-				memcpy((char *)&long2,buff,sizeof(INT4));
+				memcpy((char *)&long2,buff,sizeof(int4));
 			}
 		}
 
@@ -1794,7 +1827,7 @@ int	f_out;
 	int	file_used_cnt, mem_used_cnt;					/* Count of how many records from each		*/
 	int	cmp;								/* Result of compare()				*/
 	int	pos;								/* Position in sortindex.			*/
-	long	leftover;							/* Number bytes leftover in tmprec.		*/
+	int4	leftover;							/* Number bytes leftover in tmprec.		*/
 	int	size;								/* Size of record in tmprec.			*/
 	int	gotcnt;								/* Number bytes in tmprec.			*/
 	int	writesize;							/* Number of bytes to write from writerec.	*/
@@ -2112,14 +2145,14 @@ static int ssbytenormal()
 {
 	static int first = 1;
 	static int normal;
-	long	l;
+	int4	l;
 	char	*p;
 	char	messstr[80];
 
 	if (first)
 	{
 		first = 0;
-		l = (long) 0x01020304;
+		l = (int4) 0x01020304;
 		p = (char *)&l;
 		if      ( *p == (char) 0x01 )
 		{
@@ -2141,4 +2174,3 @@ static int ssbytenormal()
 }
 
 
-#endif

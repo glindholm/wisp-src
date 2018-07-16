@@ -18,11 +18,13 @@
 **			isexec() <sun>
 **			isexec() <NCR32>
 **			isexec() 
+**			runtype()		Returns the run type; first check extensions then call isexec().
 **
 **
 **	History:
 **			mm/dd/yy	OLD
 **			06/04/92	Standardized with new defines.		GSL
+**			07/22/92	Add runtype. GSL
 **
 */
 
@@ -31,7 +33,9 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <fcntl.h>
 
+#include "idsistd.h"
 #include "wdefines.h"
 
 #define ACUMAGIC_U 0x1012									/* U = Bytes are Unswapped.	*/
@@ -40,6 +44,17 @@
 #define MFINT	0x4D69										/* The chars "Mi" (defunct).	*/
 #define MFINT_STR	"Micro Focus COBOL"							/* String to verify.		*/
 #define MFINT_SIZE	4									/* 4 to 17 byte verify.		*/
+
+#ifdef DGUX
+error Edit __FILE__ and choose DGUX_ELF or DGUX_NONELF
+
+/* #define DGUX_ELF */
+/* #define DGUX_NONELF */
+#endif
+
+#if defined(SOLARIS) || defined(DGUX_ELF)
+# define ELF_FORMAT
+#endif
 
 #ifdef ULTRIX
 #include <filehdr.h>
@@ -50,6 +65,11 @@
 #include <filehdr.h>
 #define EXECMAGIC MIPSEBMAGIC
 #endif	/* MIPS */
+
+#ifdef OSF1_ALPHA
+#include <filehdr.h>
+#define EXECMAGIC ALPHAMAGIC
+#endif
 
 #ifdef AIX
 #include <filehdr.h>
@@ -63,6 +83,11 @@
 
 #ifdef NCR486
 #include <filehdr.h>
+#define EXECMAGIC 0x457f
+#endif
+
+#ifdef ICL
+#include <filehdr.h>
 #define EXECMAGIC 0x7f45
 #endif
 
@@ -71,9 +96,18 @@
 #define EXECMAGIC 0x457f
 #endif
 
-#ifdef DGUX
+#ifdef ELF_FORMAT
+#include <sys/elf.h>
+#endif
+
+#if defined(DGUX_NONELF)
 #include <filehdr.h>
 #define EXECMAGIC MC88DGMAGIC
+#endif
+
+#ifdef SEQUENT
+#include <filehdr.h>
+#define EXECMAGIC 0x0154
 #endif
 
 #ifdef BULL
@@ -95,13 +129,11 @@ char *name;
 {
 	FILE *f;
 	struct filehdr fhdr;		
-	extern int retstat;
 	struct aouthdr ahdr;
 
 	f = fopen(name,"rb");
 	if (	!f )
 	{
-		retstat = fixerr(errno);							/* save errno for parent */
 		return ACCERR;
 	}
 	
@@ -116,7 +148,7 @@ char *name;
 }
 #endif	/* u3b2 */
 
-#ifdef hpux
+#ifdef HPUX
 #include <magic.h>
 
 #define ISEXEC_DEFINED
@@ -125,12 +157,10 @@ char *name;
 {
 	FILE *f;
 	MAGIC m;
-	extern int retstat;
 	
 	f=fopen(name,"r");
 	if (	!f )
 	{
-		retstat = fixerr(errno);							/* save errno for parent */
 		return ACCERR;
 	}
 	fread(&m,sizeof(MAGIC),1,f);
@@ -144,7 +174,7 @@ char *name;
 }
 #endif	/* hpux */
 
-#ifdef sun
+#ifdef SUNOS
 #include <a.out.h>
 
 #define ISEXEC_DEFINED
@@ -181,15 +211,13 @@ char *name;
 {
 	FILE *f;
 	struct filehdr fhdr;
-	extern int retstat;
 
 	f = fopen(name,"r");
 	if (!f)
 	{
-		retstat = fixerr(errno);
 		return ACCERR;
 	}
-	fread(&fhdr, sizeof(struct filehdr), 1 f);
+	fread(&fhdr, sizeof(struct filehdr), 1, f);
 	fclose(f);
 	if      (fhdr.f_magic == NCR32200MAGIC) return ISEXEC;
 	else if (fhdr.f_magic == NCR32600MAGIC) return ISEXEC;
@@ -197,6 +225,45 @@ char *name;
 	else if (fhdr.f_magic == ACUMAGIC_U) return ISACU;
 	else if (fhdr.f_magic == ACUMAGIC_S) return ISACU;
 	else if (fhdr.f_magic == MFINT) return ISMFINT;
+	else return NOTEXEC;
+}
+#endif
+
+#ifdef ELF_FORMAT
+# define ISEXEC_DEFINED
+int isexec(name)
+char *name;
+{
+	FILE *f;
+	Elf32_Ehdr ehdr;
+	unsigned short other_magic;           /* magic number for non ELF files */
+	
+	f = fopen(name,"r");
+	if (!f)
+	{
+		return ACCERR;
+	}
+	fread(&ehdr, sizeof(Elf32_Ehdr), 1, f);
+	fseek(f,0L,SEEK_SET);
+	fread(&other_magic, sizeof(other_magic), 1,f);
+	fclose(f);
+	if (memcmp(ehdr.e_ident,ELFMAG,4)==0 
+	    && ehdr.e_type == ET_EXEC
+# ifdef SOLARIS		 
+#  define ELF_MACHINE_TYPE_DEFINED
+	    && ehdr.e_machine == EM_SPARC
+# endif
+# ifdef DGUX_ELF		 
+#  define ELF_MACHINE_TYPE_DEFINED
+	    && ehdr.e_machine == EM_88K
+# endif
+# ifndef ELF_MACHINE_TYPE_DEFINED
+MUST DEFINE ELF MACHINE TYPE		 
+# endif
+	    ) return ISEXEC;
+	else if (other_magic == ACUMAGIC_U) return ISACU;
+	else if (other_magic == ACUMAGIC_S) return ISACU;
+	else if (other_magic == MFINT) return ISMFINT;
 	else return NOTEXEC;
 }
 #endif
@@ -212,12 +279,10 @@ char *name;
 {
 	FILE *f;
 	struct filehdr fhdr;		
-	extern int retstat;
 
 	f = fopen(name,"r");
 	if (	!f )
 	{
-		retstat = fixerr(errno);							/* save errno for parent */
 		return ACCERR;
 	}
 	

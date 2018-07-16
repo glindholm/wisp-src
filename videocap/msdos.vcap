@@ -1,0 +1,153 @@
+# videocap desc file for terminal type MSDOS
+#
+init_terminal       =""
+reset_terminal      =""
+change_scroll_region=""
+clear_screen        =""
+clear_eol           =""
+clear_eos           =""
+cursor_address      =""
+cursor_down         =""
+cursor_invisible    =""
+cursor_visible      =""
+cursor_left         =""
+cursor_right        =""
+cursor_up           =""
+enter_blink_mode    =""
+enter_bold_mode     =""
+enter_reverse_mode  =""
+enter_underline_mode=""
+exit_attribute_mode =""
+scroll_reverse      =""
+enter_graphics_mode =""
+exit_graphics_mode  =""
+pseudo_blanks       ="\004\370\026\260"
+screen_132          =""
+screen_80           =""
+screen_normal       =""
+screen_reverse      =""
+#
+#	graphstr must contain 13 characters:
+#
+graphstr            ="\263\304\332\277\300\331\302\301\303\264\305\021\020"
+#
+#	Function Keys and other non-graphic keys on the DOS keyboard
+#	All start with a NULL (char)0 followed by a scan code.
+#	Because VIDEO uses the NULL character as a flag for timeout
+#	and other purposes, the DOS generated null is changed to a
+#	leading special character \035 which can be represented as "\X".
+#
+#	F1-F10:
+key_f1              ="\X\073"
+key_f2              ="\X\074"
+key_f3              ="\X\075"
+key_f4              ="\X\076"
+key_f5              ="\X\077"
+key_f6              ="\X\100"
+key_f7              ="\X\101"
+key_f8              ="\X\102"
+key_f9              ="\X\103"
+key_f10             ="\X\104"
+key_f11             ="\X\005"
+key_f12             ="\X\006"
+#
+#	Shift + keys
+#
+shift_F1	="\X\124"
+shift_F2	="\X\125"
+shift_F3	="\X\126"
+shift_F4	="\X\127"
+shift_F5	="\X\130"
+shift_F6	="\X\131"
+shift_F7	="\X\132"
+shift_F8	="\X\133"
+shift_F9	="\X\134"
+shift_F10	="\X\135"
+shift_F11	="\X\007"
+shift_F12	="\X\010"
+#
+#	Ctrl + keys
+ctrl_F1		="\X\136"
+ctrl_F2		="\X\137"
+ctrl_F3		="\X\140"
+ctrl_F4		="\X\141"
+ctrl_F5		="\X\142"
+ctrl_F6		="\X\143"
+ctrl_F7		="\X\144"
+ctrl_F8		="\X\145"
+ctrl_F9		="\X\146"
+ctrl_F10	="\X\147"
+ctrl_F11	="\X\011"
+ctrl_F12	="\X\012"
+#
+#	Alt + Keys
+alt_F1		="\X\150"
+alt_F2		="\X\151"
+#
+key_home            	="\X\107"
+key_backspace       	="\010"
+key_down_arrow      	="\X\120"
+key_left_arrow      	="\X\113"
+key_right_arrow     	="\X\115"
+key_up_arrow        	="\X\110"
+key_delete          	="\X\123"
+key_insert          	="\X\122"
+key_next_scr        	="\X\121"
+key_prev_scr        	="\X\111"
+key_tab             	="^I"
+key_do              	="\X\117"
+key_find		="\X\017"
+key_help		="\E"
+#
+#
+generic_pf1            =key_f1
+generic_pf2            =key_f2
+generic_pf3            =key_f3
+generic_pf4            =key_f4
+generic_pf5            =key_f5
+generic_pf6            =key_f6
+generic_pf7            =key_f7
+generic_pf8            =key_f8
+generic_pf9            =key_f9
+generic_pf10           =key_f10
+#
+generic_pf11           =shift_F1|key_f11
+generic_pf12           =shift_F2|key_f12
+generic_pf13           =shift_F3
+generic_pf14           =shift_F4
+generic_pf15           =shift_F5
+generic_pf16           =shift_F6|key_do
+generic_pf17           =shift_F7
+generic_pf18           =shift_F8
+generic_pf19           =shift_F9
+generic_pf20           =shift_F10
+#
+generic_pf21           =ctrl_F1|shift_F11
+generic_pf22           =ctrl_F2|shift_F12
+generic_pf23           =ctrl_F3
+generic_pf24           =ctrl_F4
+generic_pf25           =ctrl_F5
+generic_pf26           =ctrl_F6
+generic_pf27           =ctrl_F7
+generic_pf28           =ctrl_F8
+generic_pf29           =ctrl_F9
+generic_pf30           =ctrl_F10
+#
+generic_pf31           =ctrl_F11|alt_F1
+generic_pf32           =ctrl_F12|alt_F2
+#
+generic_help           =key_help|key_home
+generic_up             =key_up_arrow
+generic_down           =key_down_arrow
+generic_left           =key_left_arrow
+generic_right          =key_right_arrow
+generic_tab            =key_tab
+generic_delete         =key_backspace
+generic_remove         =key_delete
+generic_insert         =key_insert
+generic_newline        =key_next_scr
+generic_backtab        =key_prev_scr|key_find
+generic_clear_field    ="\X\023"
+generic_clear_after    ="\X\022"
+#
+# End of MS-DOS video cap file.

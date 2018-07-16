@@ -25,7 +25,7 @@
 
 include $(WISP)/src/port/make.include
 
-all:		ede printq proctran videolib videotest wisplib wisptran wisputils mfsubs
+all:		ede printq proctran videolib videotest wisplib wisptran wisputils mfsubs vsedit ivslib
 		@echo ALL is up-to-date.
 
 ede:		edelib good
@@ -46,6 +46,14 @@ ilplib:		printq
 proctran:
 		(cd $(WISP)/src/proctran;	$(MAKE))
 		@echo PROCTRAN is up-to-date.
+
+ivslib:
+		(cd $(WISP)/src/ivslib;		$(MAKE))
+		@echo IVSLIB is up-to-date.
+
+vsedit:
+		(cd $(WISP)/src/vsedit;		$(MAKE))
+		@echo VSEDIT is up-to-date.
 
 videolib:	
 		(cd $(WISP)/src/videolib;	$(MAKE))

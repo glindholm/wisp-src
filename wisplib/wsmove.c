@@ -10,6 +10,7 @@
 #include <v/vlocal.h>									/* Include local definitions.		*/
 #include <v/vdata.h>									/* Include video data base.		*/
 #include <v/vcap.h>
+#include "idsistd.h"
 
 /*						Subroutine entry point.								*/
 
@@ -22,11 +23,18 @@ int wsmove(line,column) int line, column;						/* Move to a location on the scre
 	unsigned char *am;								/* Pointer to the attribute map.	*/
 	register int i,k,m,ok;								/* Working parameters.			*/
 	unsigned char temp[MAX_ESC];							/* Temporary working string.		*/
-	unsigned char *vcparm();
+#ifdef unix
+	char *tparm();
+#define PARMFUNC tparm
+#else
+	char *vcparm();
+#define PARMFUNC vcparm
+#endif
+	int control=FALSE;
 	
 	if (!vmov_op)
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],line,column));			/* Move to the position.		*/
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],line,column));		/* Move to the position.		*/
 		vmov_op = TRUE;								/* Now we can optimize.			*/
 	}
 
@@ -47,11 +55,8 @@ int wsmove(line,column) int line, column;						/* Move to a location on the scre
 				}
 				if (!ok)						/* Do we have to do a real slew?	*/
 				{
-					strcpy(temp,vcparm(vcapdef[CURSOR_ADDRESS],vcur_lin,vcur_col+m));
-#if 0
-					if (!vmovebias) sprintf(temp,mvright_esc,m);	/* Yes do a real slew.			*/
-					else sprintf(temp,mvrowcol_esc,vcur_lin+vmovebias,vcur_col+m+vmovebias);
-#endif
+					strcpy(temp,PARMFUNC(vcapdef[CURSOR_ADDRESS],vcur_lin,vcur_col+m));
+					control=TRUE;
 				}
 				else
 				{
@@ -60,22 +65,18 @@ int wsmove(line,column) int line, column;						/* Move to a location on the scre
 				}
 			}
 			else
-			  strcpy(temp,vcparm(vcapdef[CURSOR_ADDRESS],vcur_lin,vcur_col+m));
-#if 0
-			  if (!vmovebias) sprintf(temp,mvright_esc,m);		/* Slew to the right.			*/
-			  else sprintf(temp,mvrowcol_esc,vcur_lin+vmovebias,vcur_col+m+vmovebias);
-#endif
+			{
+				strcpy(temp,PARMFUNC(vcapdef[CURSOR_ADDRESS],vcur_lin,vcur_col+m));
+				control=TRUE;
+			}
 		}
 		else									/* Going left?				*/
 		{
 			m = -m;								/* Make positive.			*/
 			if (m > 3) 							/* Large distance?			*/
 			{
-				strcpy(temp,vcparm(vcapdef[CURSOR_ADDRESS],vcur_lin,vcur_col-m));
-#if 0			       
-				if (!vmovebias) sprintf(temp,mvleft_esc,m);		/* Slew to the left.			*/
-				else sprintf(temp,mvrowcol_esc,vcur_lin+vmovebias,vcur_col-m+vmovebias);
-#endif
+				strcpy(temp,PARMFUNC(vcapdef[CURSOR_ADDRESS],vcur_lin,vcur_col-m));
+				control=TRUE;
 			}
 			else
 			{
@@ -83,7 +84,10 @@ int wsmove(line,column) int line, column;						/* Move to a location on the scre
 				temp[i] = '\000';					/* Store a null.			*/
 			}
 		}
-		vcontrol(temp);								/* Output it.				*/
+		if (control)
+		  vcontrol(temp);
+		else
+		  vrawprint(temp);							/* Output it.				*/
 	}
 
 	else if ((column == 0) && (line >= vcur_lin))					/* Go to the start of a line?		*/
@@ -94,12 +98,7 @@ int wsmove(line,column) int line, column;						/* Move to a location on the scre
 
 	else										/* Just do a pure ANSI move.		*/
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],line,column));
-#if 0
-		if (!vmovebias) sprintf(temp,mvrowcol_esc,line+1,column+1);		/* Move to the position.		*/
-		else sprintf(temp,mvrowcol_esc,line+vmovebias,column+vmovebias);	/* Move to the position.		*/
-		vcontrol(temp);								/* Output the data.			*/
-#endif
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],line,column));
 	}
 
 #endif	/* VMS or unix */

@@ -26,7 +26,7 @@ screen_132          =""
 screen_80           =""
 screen_normal       =""
 screen_reverse      =""
-graphstr            ="\263\304\332\277\300\331\302\301\303\264\305"
+graphstr            ="\263\304\332\277\300\331\302\301\303\264\305\021\020"
 #
 #	Function Keys and other non-graphic keys on the DOS keyboard
 #	All start with a NULL (char)0 followed by a scan code.

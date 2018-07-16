@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <varargs.h>
 
+#include "idsistd.h"
 #include "wcommon.h"
 #include "wangkeys.h"
 #include "wperson.h"
@@ -28,9 +29,9 @@
 
 static char rval[4];									/* The place to put the return code.	*/
 
-static	long	N[255];
-static	int	Ni=0;
-static	long 	two=2;
+static	int4	N[255];
+static	int4	Ni=0;
+static	int4 	two=2;
 
 static char *inf_msg[] = 
 {
@@ -43,25 +44,25 @@ static char *inf_msg[] =
 
 file_getparm2(f_mode,file,lib,vol,prname,issuer,entry_mode,getparm_type,native_path,msg1,msg2,pfkey_rcvr,intv_type,orig_file,
 		prtclass, form, copies)
-long f_mode;
+int4 f_mode;
 char *file, *lib, *vol, *prname, *issuer, *orig_file;
-long *entry_mode;
+int4 *entry_mode;
 char *getparm_type;
 char *native_path;
 char *msg1,*msg2;
 char *pfkey_rcvr;
 char intv_type;							/* 'E' Error  'R' Rename (open output, file exists)		*/
 char	*prtclass;
-long	*form;
-long	*copies;
+int4	*form;
+int4	*copies;
 {                                                  
 #define		ROUTINE		18000
 
-	long	pfkey;
+	int4	pfkey;
 	int	i,inf;
 	char	*error_msg;
-	long	va_cnt;
-	long	*long_ptr;
+	int4	va_cnt;
+	int4	*long_ptr;
 	char	pf_footer[100];
 	char	temp[100];
 	char	temp2[10];
@@ -70,11 +71,13 @@ long	*copies;
 	char	prtform[10], prtcopies[10];
 
 	struct argst { char *ptrs[160]; } args;
-	long	cnt;
+	int4	cnt;
 #define GP	args.ptrs[cnt++] = (char *)
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
+	*pfkey_rcvr = ENTER_KEY_PRESSED;					/* Default the reciever to '@'			*/
+	
 	dispchars(file,8);							/* Remove all non-display characters		*/
 	dispchars(lib,8);
 	dispchars(vol,6);
@@ -92,7 +95,7 @@ long	*copies;
 	{
 		for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 
 		{
-			N[i]=(long)i; 
+			N[i]=(int4)i; 
 			wswap(&N[i]);
 		}
 		++Ni;

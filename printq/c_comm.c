@@ -3,7 +3,285 @@
  * Program: IDSIprint
  * Purpose: handle communication between scheduler daemon and client progs
  * 
+ */
+static char copyright[] = "Copyright 1991,1992,1993 International Digital Scientific, Inc. All Rights Reserved.";
+static char rcsid[] = "$Id:$";
+
+#if 0
+#define DO_ACKS
+#endif
+#define EXT extern 
+#include "c_comm.h"
+#include "qpaths.h"
+
+int broken_pipe = FALSE;
+
+
+int init_comm (void);
+int write_d (int descriptor, char *buf, int size);
+extern int issocket (void);
+
+send_daemon(int type, int what, char *ptr, int size, time_t time_stamp)							/* send message to daemon */
+         
+         
+          
+         
+                  
+{
+	int len,wrtcnt,to;
+	int total_sent;
+	time_t time(time_t *);
+	
+	char *gmem(int cnt, int sz);
+	
+	if (messbuf==NULL)
+	{
+		messbuf=gmem(1,PACKET_SIZE);
+		packet = (PACKET *)messbuf;
+	}
+	if (daemon_d == -1)
+	{
+		init_comm();
+	}		     
+
+	packet->magic = (int4)PACKETMAGIC;
+	packet->version = (int4)PACKETVERSION;
+
+	packet->functype   = type;
+	packet->sender_pid = mypid;
+	packet->sender_uid = myuid;
+	packet->data.q.time_stamp = time_stamp;
+	packet->aux = what;
+	len=PACKET_SIZE;
+	if (ptr) 
+	{
+		memcpy(&(packet->data),ptr,(size_t)size);
+		len = PACKET_SIZE;
+	}
+	to=0;
+	total_sent=0;
+	for (total_sent=0;  total_sent<len; total_sent += wrtcnt)
+	{
+		wrtcnt=write_d(daemon_d,messbuf+total_sent,len-total_sent);
+		if (wrtcnt<0) return;
+	}
+
+}
+init_comm(void)				/* initialize ipc connection to */
+{					/* host contained in daemon_host[] */
+	int status;
+
+#ifdef MQCODE
+	key_t msgkey, myftok();
+#endif
+
+#ifdef SOCKCODE
+	int retry_cnt, connect_status;
+	extern struct sockaddr_un daemon_addr_u;
+	extern struct sockaddr_in daemon_addr_i,cli_addr_i;
+#endif
+
+#ifdef SOCKCODE
+	if (!issocket())
+	  return IERR_INCOMPATDS;
+#endif	
+#ifdef MQCODE
+	if (!ismqcode())
+	  return IERR_INCOMPATDM;
+#endif
+
+	if (daemon_d>=0) return INIT_OK;
+	if (mypid == -1) mypid = getpid();
+	if (myuid == -1) myuid = getuid();
+
+#ifdef SOCKCODE
+	if (qconfig.inet_address==0)
+	{
+		if ((daemon_d=socket(AF_UNIX,SOCK_STREAM,0))== -1)
+		{
+			return IERR_SOCKET | errno<<8;
+		}
+		daemon_addr_u.sun_family = AF_UNIX;
+		strcpy(daemon_addr_u.sun_path,socketpath);
+
+		for (retry_cnt=RETRIES, connect_status= -1; retry_cnt && connect_status== -1; )
+		{
+			connect_status = connect(daemon_d,(struct sockaddr *)&daemon_addr_u,
+						 SUN_LEN(&daemon_addr_u));
+			if (connect_status == -1 && errno != ECONNREFUSED)
+			{
+				close(daemon_d);
+				return IERR_BIND | errno<<8;
+			}
+			else if (connect_status == -1 && errno == ECONNREFUSED)
+			{
+				--retry_cnt;
+				sleep(SLEEP_INTERVAL);
+			}
+		}
+		if (connect_status == -1)
+		{
+			close(daemon_d);
+			return IERR_BIND | ECONNREFUSED<<8;
+		}
+	}
+	else
+	{
+		if ((daemon_d=socket(AF_INET,SOCK_STREAM,0))== -1)
+		{
+			return IERR_SOCKET | errno<<8;
+		}
+		memset(&daemon_addr_i,0,sizeof(daemon_addr_i));
+		daemon_addr_i.sin_family      = AF_INET;
+		daemon_addr_i.sin_port        = htons(qconfig.inet_address);
+		daemon_addr_i.sin_addr.s_addr = htonl(INADDR_ANY);
+		cli_addr_i.sin_family      = AF_INET;
+		cli_addr_i.sin_port        = htons(0);
+		cli_addr_i.sin_addr.s_addr = htonl(INADDR_ANY);
+
+		for (retry_cnt=RETRIES, connect_status= -1; retry_cnt && connect_status== -1; )
+		{
+			connect_status = connect(daemon_d,(struct sockaddr *)&daemon_addr_i,
+						 sizeof(daemon_addr_i));
+			if (connect_status == -1 && errno != ECONNREFUSED)
+			{
+				close(daemon_d);
+				return IERR_BIND | errno<<8;
+			}
+			else if (connect_status == -1 && errno == ECONNREFUSED)
+			{
+				--retry_cnt;
+				sleep(SLEEP_INTERVAL);
+			}
+		}
+		if (connect_status == -1)
+		{
+			close(daemon_d);
+			return IERR_BIND | ECONNREFUSED<<8;
+		}
+#ifdef OLD
+		if (bind(daemon_d,(struct sockaddr *)&cli_addr_i,sizeof(cli_addr_i))<0)
+		{
+			return IERR_BIND | errno<<8;
+		}				
+#endif
+	}
+	broken_pipe = FALSE;
+	comm_status = 0;
+	return INIT_OK;
+#endif /*SOCKCODE*/
+#ifdef MQCODE
+
+	msgkey=myftok(mqpath,KEYMOD);
+	
+	if ((daemon_d = msgget(msgkey,0))<0)
+	{
+		perror("msgget");
+		
+		return errno;
+	}
+	else return INIT_OK;
+#endif
+}
+shut_comm(void)
+{
+#ifdef SOCKCODE
+	close(daemon_d);
+	daemon_d = -1;
+#endif
+#ifdef MQCODE
+	/* probably nothing needed here */
+#endif
+}
+write_d(int descriptor, char *buf, int size)
+{
+#ifdef SOCKCODE
+	int cnt,tot;
+
+	tot=cnt=0;
+	while (tot < size)
+	{
+		cnt = write(descriptor, buf+tot, size-tot);
+		if (cnt== -1)
+		{
+			comm_status=errno;
+			return cnt;
+		}
+		tot+=cnt;
+	}
+	comm_status=0;
+	return tot;
+#endif
+#ifdef MQCODE
+	extern struct msgstruct msgbuff;
+	int cnt;
+	
+	memcpy(msgbuff.data,buf,size);
+	msgbuff.type = 1;
+	cnt=msgsnd(descriptor,&msgbuff,size,0);
+	if (cnt<0)
+	  comm_status=errno;
+	else
+	  comm_status=COMM_OK;
+	return cnt==0? size: 0;
+#endif
+}
+void link_shutdown(int dummy)
+{
+	broken_pipe=TRUE;
+}
+#if 0
+ck_daemon_pid()
+{
+	FILE *pid;
+	int stat,ipid;
+	char buf[20];
+	
+	pid=fopen(DAEMONPID,"r");
+	if (!pid) return 0;
+	fgets(buf,9,pid);
+	ipid=atoi(buf);
+	if (!ipid) return 0;
+	stat=kill(ipid,0);
+	if (stat == -1) return 0;
+	else return 1;
+}
+#endif
+/*
  * $Log: c_comm.c,v $
+ * Revision 1.28  1993/09/13  15:28:10  jockc
+ * 499
+ * 503
+ *
+ * Revision 1.28  1993/09/10  18:44:12  jockc
+ * clear of comm_status
+ *
+ * Revision 1.27  1993/08/13  18:32:25  jockc
+ * protoize and start to improve comm handling.. still need to relink
+ * if daemon stops and starts
+ *
+ * Revision 1.26  1993/05/28  21:41:45  jockc
+ * need to change gmem args slightly
+ *
+ * Revision 1.25  1993/03/26  06:34:37  jockc
+ * implement retry mechanism for "connection refused" on connect()
+ * which is caused by too many pending connect requests.. which is
+ * caused (hopefully) by the system being too busy.
+ *
+ * Revision 1.24  1993/01/12  02:01:32  jockc
+ * went back to connection oriented comm.  needed the flow
+ * control; using connectionless, packets were sometimes lost.
+ * also using the new semaphore instead of the old lockfile
+ *
+ * Revision 1.23  1992/12/31  23:35:50  jockc
+ * changed to support new qpath scheme
+ *
+ * Revision 1.22  1992/10/27  23:26:16  jockc
+ * added support for internet addressing
+ *
+ * Revision 1.21  1992/10/09  18:22:25  jockc
+ * changed the names of the locking #defines
+ *
  * Revision 1.20  1992/05/20  23:13:40  jockc
  * set magic num and version on packet send
  *
@@ -72,166 +350,3 @@
  *
  *
  */
-static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-static char rcsid[] = "$Id:$";
-
-#if 0
-#define DO_ACKS
-#endif
-#define EXT extern 
-#include "c_comm.h"
-
-send_daemon(type,what,ptr,size)								/* send message to daemon */
-int type;
-int what;
-char *ptr;
-int size;
-{
-	int len,wrtcnt,to;
-	int total_sent;
-	
-	char *gmem();
-	
-	if (messbuf==NULL)
-	{
-		messbuf=gmem(PACKET_SIZE);
-		packet = (PACKET *)messbuf;
-	}
-	if (daemon_d == -1)
-	{
-		init_comm();
-	}		     
-
-	packet->magic = PACKETMAGIC;
-	packet->version = PACKETVERSION;
-
-	packet->functype   = type;
-	packet->sender_pid = mypid;
-	packet->sender_uid = myuid;
-	packet->sender_station = ttyslot();
-	packet->aux = what;
-	len=PACKET_SIZE;
-	if (ptr) 
-	{
-		memcpy(&(packet->data),ptr,size);
-		len = PACKET_SIZE;
-	}
-	to=0;
-	total_sent=0;
-	for (total_sent=0;  total_sent<len; total_sent += wrtcnt)
-	{
-		wrtcnt=write_d(daemon_d,messbuf+total_sent,len-total_sent);
-		if (wrtcnt<0) return;
-	}
-
-}
-init_comm()				/* initialize ipc connection to */
-{					/* host contained in daemon_host[] */
-#ifdef MQCODE
-	key_t msgkey, myftok();
-#endif
-#ifdef SOCKCODE
-	extern struct sockaddr_un daemon_addr;
-#endif
-
-	if (!lockfile(LK_STAT,DAEMON_RUNNING))
-	  return IERR_NODAEMON;
-#if 0
-	if (!ck_daemon_pid()) 
-	  return IERR_NODAEMON;
-#endif
-#ifdef SOCKCODE
-	if (!lockfile(LK_STAT,SOCKVERSION))
-	  return IERR_INCOMPATDS;
-#endif	
-#ifdef MQCODE
-	if (!lockfile(LK_STAT,MQVERSION))
-	  return IERR_INCOMPATDM;
-#endif
-
-	if (daemon_d>=0) return INIT_OK;
-	if (mypid == -1) mypid = getpid();
-	if (myuid == -1) myuid = getuid();
-
-#ifdef SOCKCODE
-	if ((daemon_d=socket(AF_UNIX,SOCK_DGRAM,0))== -1)
-	{
-		return IERR_SOCKET | errno<<8;
-	}
-	daemon_addr.sun_family = AF_UNIX;
-	strcpy(daemon_addr.sun_path,SOCKETPATH);
-
-	return INIT_OK;
-#endif /*SOCKCODE*/
-#ifdef MQCODE
-
-	msgkey=myftok(MQPATH,KEYMOD);
-	
-	if ((daemon_d = msgget(msgkey,0))<0)
-	{
-		perror("msgget");
-		
-		return errno;
-	}
-	else return INIT_OK;
-#endif
-}
-shut_comm()
-{
-#ifdef SOCKCODE
-	close(daemon_d);
-	daemon_d = -1;
-#endif
-#ifdef MQCODE
-	/* probably nothing needed here */
-#endif
-}
-write_d(descriptor,buf,size)
-int descriptor,size;
-char *buf;
-{
-#ifdef SOCKCODE
-	int st;
-	extern struct sockaddr_un daemon_addr;
-	
-	st = sendto(descriptor,buf,size,0, 
-		      (struct sockaddr*)&daemon_addr,
-		      sizeof(daemon_addr.sun_family)+strlen(SOCKETPATH));
-	if (st<0) 
-	  comm_status=errno;
-	else
-	  comm_status=COMM_OK;
-	return st;
-	
-#endif
-#ifdef MQCODE
-	extern struct msgstruct msgbuff;
-	int cnt;
-	
-	memcpy(msgbuff.data,buf,size);
-	msgbuff.type = 1;
-	cnt=msgsnd(descriptor,&msgbuff,size,0);
-	if (cnt<0)
-	  comm_status=errno;
-	else
-	  comm_status=COMM_OK;
-	return cnt==0? size: 0;
-#endif
-}
-#if 0
-ck_daemon_pid()
-{
-	FILE *pid;
-	int stat,ipid;
-	char buf[20];
-	
-	pid=fopen(DAEMONPID,"r");
-	if (!pid) return 0;
-	fgets(buf,9,pid);
-	ipid=atoi(buf);
-	if (!ipid) return 0;
-	stat=kill(ipid,0);
-	if (stat == -1) return 0;
-	else return 1;
-}
-#endif

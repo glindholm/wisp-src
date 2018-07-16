@@ -1,3 +1,4 @@
+#include "idsistd.h"
 
 msvalue()
 {

@@ -1,0 +1,19 @@
+202 The required field is empty.
+203 Invalid field type.
+204 The field can only contain digits.
+205 The field can only contain a number.
+208 The field must be a valid date, in YMD order.
+209 The field must ba a valid date, in MDY order.
+210 The field must be a valid date, in DMY order.
+222 An edit test failed.
+328 The field cannot contain a negative number (Dtype DIG).
+230 The field can only contain a number with no decimal places.
+231 The field can only contain a number with a maximum of 1 decimal place.
+232 The field can only contain a number with a maximum of 2 decimal place.
+233 The field can only contain a number with a maximum of 3 decimal place.
+234 The field can only contain a number with a maximum of 4 decimal place.
+235 The field can only contain a number with a maximum of 5 decimal place.
+236 The field can only contain a number with a maximum of 6 decimal place.
+237 The field can only contain a number with a maximum of 7 decimal place.
+238 The field can only contain a number with a maximum of 8 decimal place.
+239 The field can only contain a number with a maximum of 9 decimal place.

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #endif
 
+#include "idsistd.h"
 #include "menu.h"
 
 /* This procedure locates a menu file and loads it into a menu structure to be used by the menu system to display the menu	*/

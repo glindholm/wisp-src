@@ -66,8 +66,13 @@
 28008	%%LINK-F-MAXPARMS Maximum %d parms. Called with %d parms.
 28009	%%LINK-I-NOACCESS Access denied to %.60s
 28010	%%LINK-F-MKDIR Unable to mkdir %s [errno=%d]
+28011	%%LINK-I-NOTRUN Not a runnable file %.60s
 28012	%%LINK-F-FOPEN Unable to fopen %s [errno=%d] in %s
+28013	%%LINK-I-NOMEMORY Not enough memory to load %.60s
 28014   %%LINK-F-EXECVP Exec of %.60s failed while linking to %8.8s [errno=%d]
+28016	%%LINK-E-RECURSIVE Recursive LINK to file %.60s
+28018	%%LINK-E-FORK Fork failed [errno=%d]
+28020	%%LINK-E-ERROR %s
 28501	%%LINKPROC-I-ENTRY Entry into LINK
 28502	%%LINKPROC-F-PARMCNT Invalid parmcnt %d
 28503	%%LINKPROC-I-NOTFOUND File not found %.60s
@@ -103,10 +108,18 @@
 46001	%%PRINT-I-ENTRY Entry into PRINT
 46003	%%PRINT-I-MODE Mode (%c) Not Supported
 46005	%%PRINT-I-DISP Dispostion (%2.2s) Not Supported
+46401	%%UNIX_PRINT-I-ENTRY-ILP File=%s copies=%d form=%d
+46402	%%UNIX_PRINT-E-ILP System call failed to ILP %s rc=%d errno=%d
 46501	%%UNIX_PRINT-I-ENTRY File=%s copies=%d form=%d
 46502	%%UNIX_PRINT-E-LP System call failed to LP %s rc=%d errno=%d
 46503	%%UNIX_PRINT-W-UNLINK Unable to delete %s errno=%d
 46505	%%UNIX_PRINT-W-SIZE Zero lenght file not printed %s
+46601	%%DOS_PRINT-I-ENTRY File=%s copies=%d form=%d printer=%d
+46602	%%DOS_PRINT-E-FAILED Print of file %s failed [errno=%d]
+46603	%%DOS_PRINT-W-UNLINK Unable to delete %s errno=%d
+46604	%%DOS_PRINT %s
+46605	%%DOS_PRINT-W-SIZE Zero lenght file not printed %s
+46606	%%DOS_PRINT-E-FAILED Print of file %s failed %s
 47001	Entry into PROTECT
 48001	%%PUTPARM-I-ENTRY Entry into PUTPARM                
 48002	%%PUTPARM-F-CREATEMTMP Unable to create master temp file %s               
@@ -186,6 +199,7 @@
 59001	%%SETRETCODE-I-ENTRY Entry into SETRETCODE wispreturncode = %3.3s
 59002	%%SETRETCODE-E-QUEUE %s [%s]
 59003	%%SETRETCODE-W-QUEUE %s [%s]
+59004	%%SETRETCODE-E-CREATE Unable to create %s [errno=%d]
 59301	%%SETTRIGPROG-I-ENTRY Entry into SETTRIGPROG Set trigger program name
 59501	%%SETUPQM-I-ENTRY Entry into SETUP_QM  Setup queue management
 59502	%%SETUPQM-F-NOMEM Unable to allocate memory for queue array. Need %d
@@ -214,6 +228,7 @@
 59840	%%SHAREMEM-F-SYS$CREATE Error creating PUTPARM shared memory area. Status=%x (hex)
 59842	%%SHAREMEM-E-UPDATE Failed to update PRB prname=%s label=%s
 59844	%%SHAREMEM-E-UPDATE Memory calc size error PRB prname=%s label=%s
+59846	%%SHAREMEM-F-BACKREF Backwards reference failed [%s]
 60001	%%SORT-I-ENTRY Entry into SORT
 60002	%%SORT-E-NOLOCAT Locator type sort not implemented
 60004	%%SORT-E-SIZERR Specified element size [%d] too large
@@ -240,17 +255,17 @@
 65101	%%FINDTTY-I-ENTRY Entry into findtty
 65110	%%FINDTTY-E-CFGFILE Can't open config file: %s [errno=%d]. Run wsysconf.
 65112   %%FINDTTY-E-CFGFILE Invalid device number = %d tty = %s
-65201	%%USAGE-I-ENTRY Entry into USAGE
-65202	%%USAGE-E-ERROR Error parsing command
-65204	%%USAGE-E-MISSRC Missing Source item
-65206	%%USAGE-E-MISOBJ Missing Object
-65208	%%USAGE-E-INVSRC Invalid Source item
-65210	%%USAGE-E-INVOBJ Invalid Object item
-65212	%%USAGE-E-EXARGS Extra Arguments
-65214	%%USAGE-E-FILENOTFOUND Specified file not found - Used defaults
-65216	%%USAGE-E-INVFLAGOBJ Invalid flag object item 
-65218	%%USAGE-E-INVFLAG Invalid flag item
-65220	%%USAGE-E-INVFLAGLOG Invalid flag logical item
+65201	%%WUSAGE-I-ENTRY Entry into WUSAGE
+65202	%%WUSAGE-E-ERROR Error parsing command
+65204	%%WUSAGE-E-MISSRC Missing Source item
+65206	%%WUSAGE-E-MISOBJ Missing Object
+65208	%%WUSAGE-E-INVSRC Invalid Source item
+65210	%%WUSAGE-E-INVOBJ Invalid Object item
+65212	%%WUSAGE-E-EXARGS Extra Arguments
+65214	%%WUSAGE-E-FILENOTFOUND Specified file not found - Used defaults
+65216	%%WUSAGE-E-INVFLAGOBJ Invalid flag object item 
+65218	%%WUSAGE-E-INVFLAG Invalid flag item
+65220	%%WUSAGE-E-INVFLAGLOG Invalid flag logical item
 65301	%%FILESIZE-I-ENTRY Entry into FILESIZE path=%s
 65302	%%FILESIZE-E-STAT Stat failed errno=%d path=%s
 65401	%%WEXIT-I-ENTRY Entry into WEXIT
@@ -270,6 +285,9 @@
 66504	%%VDISPLAY-F-Invalid buffer size (%d) (rec size - %d), file not displayed
 66506	%%VDISPLAY-F-Error opening file %s, action aborted
 66508	%%VDISPLAY-F-Run-time error, unable to allocate memory
+66510	%%VDISPLAY-F-Error reading file %s, action aborted
+66512	%%VDISPLAY-E-Empty file %s, action aborted
+66514	%%VDISPLAY-E-Invalid record size (%s), action aborted
 67001	%%WVIDEO-I-ENTRY Entry into WVIDEO function = %d
 67002	%%WVIDEO-E-FUNCTION Invalid function (%d)
 67004	%%WVIDEO-E-WRITE Invalid Row (%d) or Row+Lines (%d)
@@ -307,7 +325,7 @@
 77501	%%WFNAME-I-ENTRY Entry into WFNAME vol(%6.6s) lib(%8.8s) file(%8.8s)
 77502	%%WFNAME-E-WILDCARD Wildcard in Vol(%6.6s) Volume ignored
 77504	%%WFNAME-E-LOGWORKLIB Unable to open %s errno=%d
-78001	Entry into WFOPEN                                                
+78001   %%WFOPEN-I-ENTRY Entry into wfopen file(%8.8s) lib(%8.8s) vol(%6.6s) appl(%8.8s)
 78601   %%WFORMMNT-I-ENTRY Entry into WFORMMNT printer %s form %03d
 78603	%%WFORMMNT-I-MOUNT Failed to mount %s with form %03d rc=%d
 79001	Entry into WFSTATUS
@@ -318,7 +336,7 @@
 80504	%%WISPSORT-E-WARNING %s
 81001	Entry into WISP_VUSERX
 82001	%%WPAUSE-I-ENTRY Entry into WPAUSE
-83001	%%WPERSON-I-ENTRY Entry into WPLOAD
+83001	%%WPERSON-I-ENTRY Entry into %s
 83002	%%WPERSON-F-PID Missing WISP_PID_ENV
 83003	%%WPERSON-I-LOADING Loading the personality
 83004	%%WPERSON-F-TTY Missing WISP_TTY_ENV
@@ -329,6 +347,9 @@
 83014	%%WPERSON-F-FORMS Line too long
 83016	%%WPERSON-F-LPMAP Line too long
 83018	%%WPERSON-E-OPTIONS %s: [%s]
+83020	%%WPERSON-E-FOPEN %s unable to open %s [errno=%d]
+83022	%%WPERSON-E-FWRITE %s unable to write to %s [errno=%d]
+83024	%%WPERSON-F-LOAD %s Line too long
 83501	%%WPRINT-I-ENTRY Entry into WPRINT
 84001	Entry into WRITEACP
 85001	%%WSCREEN-I-ENTRY Entry into WSCREEN
@@ -350,7 +371,11 @@
 85710	%%WSFNS-F-MALLOC Malloc of %d bytes failed for save screen
 86001	%%WSHELP-I-ENTRY Entry into WSHELP
 86002	%%WSHELP-E-PRNTING Error (%d) when printing screen
-88001	Entry into WSXIO
+88001	%%WSXIO-I-ENTRY Entry into WSXIO [%c]
+88002	%%WSXIO-E-NOTSUPP Unsupported XIO operation [%d]
+88004	%%WSXIO-E-NOTSUPP Unsupported function [%c]
+88006	%%WSXIO-E-BADLEN Invalid mapping area length [%d]
+88008	%%WSXIO-E-NOTSUPP Feature not supported [%s]
 89001	Entry into WTRANSL
 90001	Entry into WVASET
 91001	%%MANAGEFILES-I-ENTRY Entry into Manage Files

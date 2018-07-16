@@ -69,12 +69,12 @@ cd $WISP/src/ship/wisp
 echo pwd=`pwd`
 
 echo 'Copying $WISP/src/ship/wisp to $WISP/wisp.QA'
-find . -print | cpio -pcvdum $WISP/wisp.QA
+find . -print | cpio -pvdum $WISP/wisp.QA
 
 echo
 echo 'Adding EDE to $WISP/wisp.QA'
 cd $WISP/src/ship
-find ede -print | cpio -pcvdum $WISP/wisp.QA
+find ede -print | cpio -pvdum $WISP/wisp.QA
 cp $WISP/src/ship/ede/good     $WISP/wisp.QA/bin
 cp $WISP/src/ship/ede/libede.a $WISP/wisp.QA/lib
 

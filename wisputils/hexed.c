@@ -166,11 +166,19 @@ char **v;
 	p=strchr(++e,' ');
 	memcpy(MODDATE,e,p-e);
 
-	if (c==1) exit(0);
+	if (c==1) 
+	{
+		printf("Usage:    hexed {filename}\n");
+		exit(0);
+	}
 	
 	strcpy(curfile,v[1]);
-	fil=fopen(v[1],"r+");
-	if (!fil) exit(0);
+	fil=fopen(v[1],"rb+");
+	if (!fil) 
+	{
+		printf("hexed: Unable to open %s for update\n",v[1]);
+		exit(1);
+	}
 	filesize=getsize(curfile);
 	
 	vstate(0);
@@ -204,6 +212,8 @@ char **v;
 	}
 	vexit(0);
 	fclose(fil);
+
+	exit(0);
 }
 write_buf()
 {
@@ -254,7 +264,7 @@ doedit()
 	data=1;
 	for (cmdptr=cmds; cmdptr->ch; ++cmdptr)
 	{
-		if (tolower(key)==cmdptr->ch) 
+		if (key==cmdptr->ch) 
 		{
 			(*(cmdptr->fn))();
 			data=0;
@@ -295,7 +305,7 @@ print_screen()
 #if 0	
 	if (fname[strlen(fname)-1]=='+') ++skip;
 #endif
-	out=fopen(fname,"w");
+	out=fopen(fname,"wb");
 	for (x=0;x<24;++x)
 	{
 		for (i=0;i<80;++i) if (!vchr_map[x][i]) vchr_map[x][i]=' ';
@@ -429,8 +439,10 @@ char *pattern;
 			read_buf();
 			dopage();
 			errstatus("pattern not found");
+#ifdef unix
 			signal(SIGALRM,clear_errstatus);
 			alarm(3);
+#endif /* unix */
 			
 			return;
 		}
@@ -492,8 +504,10 @@ int clear_errstatus();
 	if (bad==TRUE)
 	{
 		errstatus("bad hex data");
+#ifdef unix
 		signal(SIGALRM,clear_errstatus);
 		alarm(3);
+#endif /* unix */
 		*patsav=0;
 	}
 	else *pat=0;
@@ -588,13 +602,15 @@ new_file()
 	verase(TO_EOL);
 	show_cmds();
 	close(fil);
-	if ((fil=fopen(curfile,"r+"))==NULL)
+	if ((fil=fopen(curfile,"rb+"))==NULL)
 	{
 		errstatus("can't open file");
+#ifdef unix
 		signal(SIGALRM,clear_errstatus);
 		alarm(3);
+#endif /* unix */
 		strcpy(curfile,save);
-		fil=fopen(curfile,"r+");
+		fil=fopen(curfile,"rb+");
 		return;
 	}
 	filesize=getsize(curfile);
@@ -752,8 +768,10 @@ noimp()
 	int clear_errstatus();
 	
 	errstatus("Not implemented yet");
+#ifdef unix
 	signal(SIGALRM,clear_errstatus);
 	alarm(3);
+#endif /* unix */
 }	
 errstatus(str)
 char *str;

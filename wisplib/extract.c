@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993	*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -26,6 +26,7 @@
 **	History:
 **			mm/dd/yy	Written by OLD
 **			05/28/92	Added "C#" function GSL
+**			08/12/93	Added "NA" function for VMS  SMC
 **
 */
 
@@ -35,6 +36,7 @@
 
 /* 				get information from the operating system							*/
 
+#include <stdio.h>
 #include <ctype.h>
 #include <varargs.h>
 #include <time.h>
@@ -45,12 +47,9 @@
 #include <termio.h>
 #endif	/* unix */
 
-#ifdef MSDOS
-#include <stdlib.h>
-#endif
+#include "idsistd.h"
 
 #ifndef VMS	/* unix or MSDOS */
-#include <stdio.h>
 #include <string.h>
 #include <memory.h>
 #include <sys/types.h>
@@ -65,19 +64,27 @@
 #include "movebin.h"
 #include "werrlog.h"
 #include "wglobals.h"
+#include "wanguid.h"
 
 static char prid[8];
 
 #ifndef VMS	/* unix and MSDOS */
 char 	*cuserid();
-char 	*configfile();
+static char *configfile();
 #endif	/* unix and MSDOS */
 
-
-char *wanguid3();
-char *numuid3();
-char *longuid();
 char *getenv();
+
+static int do_extract();
+static int gettype();
+static int findtty();
+static int dev_list();
+static int dev_info();
+#ifdef unix
+static int osd_mode();
+static int osd_jname();
+static int osd_term();
+#endif
 
 #define NOT_SUPP 	{if ( full_err_mess ) werrlog(ERRORCODE(2),prid,keywrd,0,0,0,0,0,0);}
 #define NOT_YET		{if ( full_err_mess ) werrlog(ERRORCODE(4),prid,keywrd,0,0,0,0,0,0);}
@@ -91,8 +98,8 @@ va_dcl											/* Set up call to do extract.		*/
 	char	*keywrd, *recvr;							/* Address of call and return params.	*/
 	char	ckw[3], *temp;								/* Holding var to determine what it is.	*/
 	int	i, gotk, poldw;								/* Flag to indicate key has been rec'd. */
-	long	*plong;
-	long	rlen;
+	int4	*plong;
+	int4	rlen;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 	memcpy(prid,WISPPROGID,8);							/* Copy prog id from global to local.	*/
@@ -139,7 +146,7 @@ va_dcl											/* Set up call to do extract.		*/
 			else
 			{
 				gotk = 0;
-				plong = (long *)temp;					/* Set to point to a long integer.	*/
+				plong = (int4 *)temp;					/* Set to point to a int4eger.	*/
 				GETBIN(&rlen,plong,4);					/* Put aligned value into local var.	*/
 				wswap(&rlen);						/* swap the work order.			*/
 			}
@@ -148,14 +155,14 @@ va_dcl											/* Set up call to do extract.		*/
 	}
 }
 
-static do_extract(keywrd,recvr,rlen)							/* Do the actual extract.		*/
+static int do_extract(keywrd,recvr,rlen)						/* Do the actual extract.		*/
 char *keywrd, *recvr;
-long rlen;
+int4 rlen;
 {
 	char	tstr[80];								/* a temp string			*/
 	char	*tptr;									/* a temp pointer			*/
-	long	tlong;
-	long	i;									/* Character count and index variables.	*/
+	int4	tlong;
+	int4	i;									/* Character count and index variables.	*/
 	int	full_err_mess=0;							/* Report errors ?			*/
 
 	full_err_mess = 1;
@@ -176,9 +183,9 @@ long rlen;
 				{
 #ifdef VMS
 					memcpy(recvr,prid,8);				/* return the current program name	*/
-#else	/* end VMS start unix and MSDOS */
+#else /* !VMS */
 					memcpy(recvr,WISPRUNNAME,8);
-#endif	/* unix and MSDOS */
+#endif /* !VMS */
 					break;						/* end of case 'D'			*/
 				}
 				case 'L':						/* default proglib			*/
@@ -227,14 +234,14 @@ long rlen;
 				case 'V':						/* DV request				*/
 					NOT_YET
 					break;
-#ifndef VMS	/* unix and MSDOS */
+#ifndef VMS
 				case 'L':
-					dev_list(recvr);
+					dev_list(recvr,rlen);
 					break;
 				case ' ':
 					dev_info(recvr);
 					break;
-#endif	/* unix and MSDOS */
+#endif /* !VMS */
 				default:
 					NOT_SUPP
 					break;
@@ -248,7 +255,7 @@ long rlen;
 			{
 				case ':':						/* E: request				*/
 				{
-					long numsecs, numsecs100;
+					int4 numsecs, numsecs100;
 					time_t nowtime;
 
 					time(&nowtime);
@@ -256,7 +263,7 @@ long rlen;
 					numsecs100 = numsecs * 100;
 
 					PUTBIN(recvr,&numsecs100,4);
-					wswap((long *)recvr);
+					wswap((int4 *)recvr);
 					break;
 				}
 				case '?':						/* E? request				*/
@@ -276,7 +283,7 @@ long rlen;
 				case 'N':						/* FN request				*/
 				{
 					get_defs(DEFAULTS_FN,recvr);
-					wswap((long *)recvr);
+					wswap((int4 *)recvr);
 					break;
 				}
 				default:
@@ -284,6 +291,23 @@ long rlen;
 					break;
 			}
 			break;								/* end of case 'E'			*/
+		}
+		case 'G':
+		{
+			switch (keywrd[1])
+			{
+#ifdef unix
+				case '#':
+					tlong = PGRPID;
+					PUTBIN(recvr,&tlong,4);
+					wswap( (int4 *)recvr );
+					break;
+#endif
+				default:
+					NOT_SUPP
+					break;
+			}
+			break;								/* end of case 'G'			*/
 		}
 		case 'I':								/* 'I' type requests			*/
 		{
@@ -379,7 +403,7 @@ long rlen;
 				case 'I':						/* LI request				*/
 				{
 					get_defs(DEFAULTS_LI,recvr);
-					wswap((long *)recvr);
+					wswap((int4 *)recvr);
 					break;
 				}
 				case 'U':						/* LU LONG USERID request		*/
@@ -398,9 +422,11 @@ long rlen;
 				case 'A':						/* NA request				*/
 #ifndef VMS	/* unix and MSDOS */
 					passwdname(tstr);
+#else		/* VMS */
+					authowner(tstr);				/* Get owner name from SYSUAF.DAT	*/
+#endif	/* unix and MSDOS */
 					memcpy(recvr,tstr,strlen(tstr));
 					break;
-#endif	/* unix and MSDOS */
 				case 'C':						/* NC request				*/
 				case 'S':						/* NS request				*/
 					NOT_YET
@@ -458,50 +484,43 @@ long rlen;
 				case '#':						/* 'P#' and 'PR' both return prt_num	*/
 				case 'R':
 					get_defs(DEFAULTS_PR,recvr);
-					wswap((long *)recvr);
+					wswap((int4 *)recvr);
 					break;
 				case ':':						/* P: request				*/
 				{
+					int4	numtics, numsecs100;
 #ifdef VMS
 					tbuffer_t tt;
-#endif	/* VMS */
-#ifdef unix
-					struct tms tt;
-#endif	/* unix */
-#ifdef MSDOS
-					struct						/* the times struct created own because */
-					{						/* names differ between systems		*/
-						long pu_time;
-						long ps_time;
-						long cu_time;
-						long cs_time;
-					} tt;
-#endif	/* MSDOS */
-					long	numtics, numsecs100;
-#ifdef MSDOS
-					numtics = clock();
-					numsecs100 = (numtics * 100)/CLK_TCK;
-#else	/* end MSDOS start VMS and unix */
 					times(&tt);
-#ifdef unix
-					numtics = tt.tms_utime + 
-						  tt.tms_stime + 
-						  tt.tms_cutime + 
-						  tt.tms_cstime;
-					numsecs100 = (numtics * 100) / 60;
-#endif	/* unix */
-
-#ifdef VMS
 					numtics = tt.proc_user_time + 
 						  tt.proc_system_time + 
 						  tt.child_user_time + 
 						  tt.child_system_time;
 					numsecs100 = numtics;
 #endif	/* VMS */
-#endif	/* VMS and unix */
+#ifdef unix
+					struct tms tt;
+					times(&tt);
+					numtics = tt.tms_utime + 
+						  tt.tms_stime + 
+						  tt.tms_cutime + 
+						  tt.tms_cstime;
+					numsecs100 = (numtics * 100) / 60;
+#endif	/* unix */
+#ifdef MSDOS
+					struct						/* the times struct created own because */
+					{						/* names differ between systems		*/
+						int4 pu_time;
+						int4 ps_time;
+						int4 cu_time;
+						int4 cs_time;
+					} tt;
+					numtics = clock();
+					numsecs100 = (numtics * 100)/CLK_TCK;
+#endif	/* MSDOS */
 
 					PUTBIN(recvr,&numsecs100,4);
-					wswap((long *)recvr);
+					wswap((int4 *)recvr);
 					break;
 				}
 				case 'F':
@@ -569,13 +588,27 @@ long rlen;
 					osd_mode(recvr);				/* ask for the mode			*/
 					break;						/* end of case 'T'			*/
 				}
+#ifdef unix
 				case '#':
-#ifndef VMS	/* unix and MSDOS */
-					tlong = PGRPID;
+					tlong = (int4) getpid();
 					PUTBIN(recvr,&tlong,4);
-					wswap( (long *)recvr );
+					wswap( (int4 *)recvr );
 					break;
-#endif	/* unix and MSDOS */
+				case 'E':
+					GETBIN(&tlong,recvr,4);
+					wswap( &tlong );
+					if (kill(tlong,0) == 0)
+					{
+						/* Process is running */
+						recvr[4] = 'R';
+					}
+					else
+					{
+						/* Process NOT running */
+						recvr[4] = 'N';
+					}
+					break;					
+#endif /* unix */
 				case '$':
 				case 'C':
 				case 'V':
@@ -641,17 +674,23 @@ long rlen;
 }
 
 #ifndef VMS	/* unix and MSDOS */
-static dev_list(where)								/* generate a list of devs			*/
+static dev_list(where,rlen)							/* generate a list of devs			*/
 char *where;
+int4 rlen;
 { 
-	unsigned char list[256]; 						/* list can be 255 long (bytes)			*/
-	int devtype, devcnt, listind; 						/* working vars for relevant passed info	*/
-	char cnfname[100];
-	FILE *cnf;
-	char inbuf[100];
+	unsigned char list[256]; 						/* list can be 255 int4 (bytes)			*/
+	char 	devtype;
+	int 	listind;
+	char 	cnfname[100];
+	FILE 	*cnf;
+	char 	inbuf[256];
 
-	devtype = (int) *where;							/* type to find					*/
-	devcnt  = (int) *(where+1);						/* number to return				*/ 
+	devtype = *where;							/* type to find					*/
+	if (rlen == 0)
+	{
+		rlen  = (int4) *(where+1);					/* number to return				*/ 
+	}
+
 	strcpy(cnfname,configfile());
 	if ((cnf=fopen(cnfname,"r"))==NULL)
 	{
@@ -660,20 +699,51 @@ char *where;
 		*(where+1) = (char)0;
 		return(0);
 	}
+
 	listind=0;
-	while (fgets(inbuf,80,cnf))						/* find all of the matching files		*/
+	while (fgets(inbuf,sizeof(inbuf),cnf) && listind < 256-2)		/* find all of the matching files		*/
 	{
-		char tmp[4];
+		char	testtype;
+		int	rc;
+		int	dev_num;
+		char	dev_class[10];
+		char	dev_type[20];
+		char	dev_name[80];
 
 		if (!isdigit(inbuf[0])) continue;				/* skip dev type lines */
-		
-		memset(tmp,(char)0,sizeof(tmp));
-		strncpy(tmp,inbuf,3);						/* copy the number part				*/
-		list[listind++] = (unsigned char) atoi(tmp);			/* change to int, cast to char, store in array	*/
+		rc = sscanf(inbuf,"%d %2s %20s %80s",&dev_num, dev_class, dev_type, dev_name);
+		if (rc < 4) dev_name[0] = (char)0;
+		if (rc < 3) dev_type[0] = (char)0;
+		if (rc < 2) continue;						/* Badly formed line.				*/
+
+		switch (toupper(dev_class[0]))					/* Check the class				*/
+		{
+		case 'W': /* ws - workstation */
+			testtype = (char)1;
+			break;
+		case 'M': /* mt - magtape */
+			testtype = (char)2;
+			break;
+		case 'D': /* dv - disk volume */
+			testtype = (char)3;
+			break;
+		case 'L': /* lp - lineprinter */
+			testtype = (char)4;
+			break;
+		default:
+			testtype = (char)0;
+			break;
+		}
+
+		if (!devtype || (testtype == devtype))
+		{
+			list[listind++] = (unsigned char) dev_num;
+		}
 	}
 	*where = (char) listind;						/* return count					*/
-	*(where+1) = (char) devcnt;						/* and number returned				*/
-	memcpy(where+2,list,devcnt);						/* and actual list				*/
+	if (rlen > listind) rlen = listind;
+	*(where+1) = (char) rlen;						/* and number returned				*/
+	memcpy(where+2,list,(int)rlen);						/* and actual list				*/
 	fclose(cnf);
 }
 /*	#ifdef unix and MSDOS */
@@ -683,37 +753,64 @@ char *where;									/* return area					*/
 	int devnum; 								/* device number var				*/
 	char cnfname[100];
 	FILE *cnf;
-	char inbuf[100];
+	char inbuf[256];
 
 	devnum = (int) *where;							/* init the dev number				*/
+	where[0] = (char)0;
+	where[1] = (char)0;
+
 	strcpy(cnfname,configfile());
 	if ((cnf=fopen(cnfname,"r"))==NULL)
 	{
 		werrlog(ERRORCODE(10),cnfname,errno,0,0,0,0,0,0);
+		return(1);
+	}
+
+	while (fgets(inbuf,sizeof(inbuf),cnf))					/* will only match one file			*/
+	{
+		int	rc;
+		int	dev_num;
+		char	dev_class[10];
+		char	dev_type[20];
+		char	dev_name[80];
+
+		if (!isdigit(inbuf[0])) continue;				/* Not a device line.				*/
+
+		rc = sscanf(inbuf,"%d %2s %20s %80s",&dev_num, dev_class, dev_type, dev_name);
+		if (rc < 4) dev_name[0] = (char)0;
+		if (rc < 3) dev_type[0] = (char)0;
+		if (rc < 2) continue;						/* Badly formed line.				*/
+
+		if (dev_num != devnum) continue;				/* Device numbers don't match, try next device	*/
+
+		/*
+		**	We have matched device numbers.
+		*/
+
+		switch (toupper(dev_class[0]))					/* Check the class				*/
+		{
+		case 'W': /* ws - workstation */
+			*where = (char)1;
+			break;
+		case 'M': /* mt - magtape */
+			*where = (char)2;
+			break;
+		case 'D': /* dv - disk volume */
+			*where = (char)3;
+			break;
+		case 'L': /* lp - lineprinter */
+			*where = (char)4;
+			break;
+		default:
+			*where = (char)0;
+			break;
+		}
+		fclose(cnf);							/* Close the file before gettype()		*/
+		*(where+1) = (char) gettype(dev_type);				/* and type byte				*/
 		return(0);
 	}
-	while (fgets(inbuf,80,cnf))						/* will only match one file			*/
-	{
-		if (!isdigit(inbuf[0])) continue;
-		
-		switch (*(inbuf+WCLASS))					/* now return the appropriate code		*/
-		{
-			case 'w':
-				*where = (char)1;
-				break;
-			case 'm':
-				*where = (char)2;
-				break;
-			case 'd':
-				*where = (char)3;
-				break;
-			case 'l':
-				*where = (char)4;
-				break;
-		}
-		*(where+1) = (char) gettype(inbuf+WTYPE);			/* and type byte				*/
-	}
 	fclose(cnf);
+	return(1);
 }
 /*	#ifdef unix and MSDOS */
 static int gettype(name)							/* return type number for a kind of device	*/
@@ -721,15 +818,18 @@ char *name;									/* device type name				*/
 {
 	FILE *types;
 	char *p, *strchr();
-	char inbuf[80];
+	char inbuf[256];
 
 	types = fopen(configfile(),"r");					/* typefile setup by wispdev			*/
-	if (types==NULL)							/* oops, file isn't there			*/
+	if (!types)								/* oops, file isn't there			*/
 	{
+		/*
+		**	This should never happen as we just managed to open the file.
+		*/
 		werrlog(ERRORCODE(6),0,0,0,0,0,0,0,0);				/* Error accessing device types.		*/
 		return(255);
 	}
-	while (fgets(inbuf,80,types))						/* read the records in. record format is:	*/
+	while (fgets(inbuf,sizeof(inbuf),types))				/* read the records in. record format is:	*/
 	{									/* <devtype>=<integer>				*/
 		if (inbuf[0]=='#' || !strchr(inbuf,'=')) continue;		/* skip #comment lines and non xxx=yyy lines    */
 		
@@ -748,16 +848,23 @@ char *name;									/* device type name				*/
 /*	#ifdef unix and MSDOS */
 static char *configfile()
 {
-	static int notcalled=1;
+	static int first=1;
 	static char cfgpath[128];
-	char *getenv();
+	char	*ptr;
 	
-	if (notcalled)
+	if (first)
 	{
-		if (getenv(WISP_CONFIG_ENV)) 
-			sprintf(cfgpath,"%s/%s",getenv(WISP_CONFIG_ENV),CFGFNAME);
-		else no_wispconfig();
-		notcalled=0;
+		if (!(ptr=getenv(WISP_CONFIG_ENV))) 
+		{
+			/*
+			**	WISPCONFIG was not set so use a dummy value to generate the names.
+			**	This will cause an error when a config file is trying to open, but if not
+			**	used then no error message needed.
+			*/
+			ptr = "$WISPCONFIG";
+		}
+		buildfilepath(cfgpath,ptr,CFGFNAME);
+		first = 0;
 	}
 	return( cfgpath );
 }
@@ -797,14 +904,14 @@ char *name;
 	osd_term	This routine returns the Wang style workstation device number or -1 if in background.
 			On any error 255 is returned as the device number.
 */
-static osd_term(tnum,tflags)
-long *tnum;
+static int osd_term(tnum,tflags)
+int4 *tnum;
 int *tflags;
 {
 #undef          ROUTINE
 #define		ROUTINE		65500
 static	int	first=1;
-static	long	device_num;
+static	int4	device_num;
 	char	*p;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
@@ -813,7 +920,7 @@ static	long	device_num;
 	{
 		*tnum = device_num;
 		*tflags = 0;
-		return;
+		return(0);
 	}
 	first = 0;
 
@@ -833,7 +940,7 @@ static	long	device_num;
 
 	*tnum = device_num;
 	*tflags = 0;									/* Hardwire flag values. (not used)	*/
-	return;
+	return(0);
 }
 
 /*	#ifdef unix and MSDOS */
@@ -842,17 +949,16 @@ static	long	device_num;
 			If unable to find the tty for any reason it will return -1.
 			A valid value is 0 - 254.
 */
-static findtty(where)
-long *where;
+static int findtty(where)
+int4 *where;
 {
 #undef          ROUTINE
 #define		ROUTINE		65100
 
 static	int 	first=1;
-static	long	device_num;
+static	int4	device_num;
 
 	char *ttyname(), *tty;
-	char *configfile();
 	char cnfname[100];
 	FILE *cnf;
 	char inbuf[256];
@@ -860,7 +966,7 @@ static	long	device_num;
 	if (!first) 
 	{
 		*where = device_num;						/* Return stored value			*/
-		return;
+		return(0);
 	}
 	first = 0;
 	
@@ -868,16 +974,23 @@ static	long	device_num;
 	{
 		device_num= -1;
 		*where = device_num;
-		return;
+		return(0);
 	}
  
 	strcpy(cnfname,configfile());
 	if ((cnf=fopen(cnfname,"r"))==NULL)					/* If unable to open wsysconfig			*/
 	{
-		werrlog(ERRORCODE(10),cnfname,errno,0,0,0,0,0,0);
+	/*
+	** 	For findtty() only lets not complain if wsysconfig not found, let the return code indicate the problem.
+	**	This routine findtty() thru osd_term() is call from HELP.
+	**	We don't want to be complaining about files missing if the user never actually try to use the info
+	**	in them.
+	** 
+	** 	werrlog(ERRORCODE(10),cnfname,errno,0,0,0,0,0,0);
+	*/
 		device_num = -1;
 		*where = device_num;
-		return;
+		return(0);
 	}
 
 	device_num = -1;							/* Assume not found 				*/
@@ -903,7 +1016,7 @@ static	long	device_num;
 	}
 	fclose(cnf);
 	*where = device_num;
-	return;
+	return(0);
 }
 
 #endif	/* unix and MSDOS */

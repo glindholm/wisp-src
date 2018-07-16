@@ -1,5 +1,6 @@
 #ifdef unix
 #include <varargs.h>
+#include "idsistd.h"
 #include "werrlog.h"
 #include "wdefines.h"
 
@@ -14,7 +15,7 @@ va_dcl
 
 	va_list arg_list;
 	int arg_count;
-	long two=2L;
+	int4 two=2;
 	static int cnt=0, i=0;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say hi.				*/
@@ -62,7 +63,7 @@ va_dcl
 
 	va_list arg_list;
 	int arg_count;
-	long two=2L;
+	int4 two=2;
 	static int cnt=0, i=0;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say hi.				*/

@@ -28,7 +28,7 @@ OBJS = 	vtest0.o vtesta.o vtestb.o vtestc.o vtestd.o vteste.o \
 	vtestt.o vtestu.o vtestv.o vtestw.o vtestx.o vtesty.o vtestz.o
 
 LIBPATHS= $(STDLIB)/libvideo.a
-LIBS= $(LIBCFLAGS) -lvideo
+LIBS= $(LIBCFLAGS) -lvideo -lm $(LIBCURSES)
 
 vtest : $(OBJS) $(LIBPATHS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)

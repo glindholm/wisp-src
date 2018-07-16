@@ -52,14 +52,22 @@ include $(WISP)/src/port/make.include
 SUBS=wrunmf.o wispmf.o
 
 LIBPATH=$(STDLIB)
-LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideo.a
-LIBPATHDS=$(LIBPATH)/libwispd.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideod.a
-LIBS=-lwisp -lilp -lvideo -lm
-LIBDS=-lwispd -lilp -lvideod -lm
+LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libvideo.a
+LIBPATHDS=$(LIBPATH)/libwispd.a $(LIBPATH)/libvideod.a
+LIBS=-lwisp -lvideo -lm $(LIBCURSES)
+LIBDS=-lwispd -lvideod -lm $(LIBCURSES)
 
-all:		wrunmf
+all:	setup wrunmf
+	@echo ">>> wrunmf  is up to date <<<"
 
-both:		wrunmf wrunmfe
+both:	setup wrunmf wrunmfe
+	@echo ">>> wrunmf  is up to date <<<"
+	@echo ">>> wrunmfe is up to date <<<"
+
+setup:
+	@echo ">>> BUILDING MICRO FOCUS RUNTIME <<<"
+	@echo "WISP    = " $(WISP)
+	@echo "COBDIR  = " $(COBDIR)
 
 subsonly:	$(SUBS)
 
@@ -67,7 +75,7 @@ wrunmf: $(SUBS) $(LIBPATHS)
 	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) $(LIBS)
 
 wrunmfd: $(SUBS) $(LIBPATHDS)
-	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) $(LIBDS)
+	cob -g -xe "" -o $@ $(SUBS) -L $(LIBPATH) $(LIBDS)
 
 wrunmfe: $(SUBS) $(LIBPATHS) $(LIBPATH)/libede.a
 	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) -lede $(LIBS)

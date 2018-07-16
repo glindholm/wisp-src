@@ -3,6 +3,7 @@
 *	pbset		Pseudo blank rendition set program									*
 *																*
 ********************************************************************************************************************************/
+#include "idsistd.h"
 pbset(pbrend)
 short	*pbrend;									/* Accept as VAX COBOL COMP PIC S9(04).	*/
 {

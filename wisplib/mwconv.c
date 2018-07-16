@@ -13,18 +13,20 @@
 #endif
 
 #include <ctype.h>
+#include "idsistd.h"
 #include "cobrun.h"
 
 /* Do a WANG style MOVE WITH CONVERSION.											*/
 
 static char *signch;
+static int c_just();
 
 void mwconv(src,idst,fdst,len,retval)
 char *src;									/* the source string				*/
 char *idst;									/* the integer destination string.		*/
 char *fdst;									/* The fractional destination string.		*/
 char *len;									/* the length of the string			*/
-long *retval;									/* The field for the return value.		*/
+int4 *retval;									/* The field for the return value.		*/
 {
 
 	int l_len;

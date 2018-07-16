@@ -13,6 +13,11 @@
 *																*
 ********************************************************************************************************************************/
 
+#if defined(unix) || defined(VMS) || defined(MSDOS_SORTX)
+/*
+	For MSDOS this whole module gets included into sortx.c which defined MSDOS_SORTX.
+*/
+
 #ifndef unix	/* VMS or MSDOS */
 #include <stdlib.h>
 #endif
@@ -26,6 +31,7 @@
 #endif
 
 #include <varargs.h>                                                                    /* Allow variable number of arguments	*/
+#include "idsistd.h"
 #include "werrlog.h"
 
 #define		ROUTINE		60000
@@ -43,7 +49,11 @@
 #include <memory.h>
 #endif
 
-long keypos, keylen, elemsz;
+int4 keypos, keylen, elemsz;
+static int _sort();
+static int binncmp();
+static int ourcmp();
+static int ourrcmp();
 
 SORT(va_alist)
 
@@ -53,11 +63,11 @@ va_dcl
 	int	arg_count;
 	char	*input_array, *output_array, *sort_type, *locator_flag;			/* Pointers to passed arguments.	*/
 	char	l_sort_type, l_locator_flag;
-	long	*element_count,  *element_length,  *sort_start,  *sort_length,  *locator_length;
-	long	l_element_count, l_element_length, l_sort_start, l_sort_length, l_locator_length;	/* Local copies - wswap	*/
+	int4	*element_count,  *element_length,  *sort_start,  *sort_length,  *locator_length;
+	int4	l_element_count, l_element_length, l_sort_start, l_sort_length, l_locator_length;	/* Local copies - wswap	*/
 	int	return_length;
-	long	i;
-	long	context, status;
+	int4	i;
+	int4	context, status;
 
 #if 0
 #ifdef VMS
@@ -89,13 +99,13 @@ va_dcl
 	output_array = input_array;							/* Default output array is input array	*/
 	arg_count -= 1;									/* One less argument.			*/
 
-	element_count = va_arg(the_args, long*);						/* Get # of elements in input array	*/
+	element_count = va_arg(the_args, int4*);					/* Get # of elements in input array	*/
 	arg_count -= 1;									/* One less argument.			*/
 	i = *element_count;
 	wswap(&i);
 	l_element_count = i;
 
-	element_length = va_arg(the_args, long*);					/* Length of each input element		*/
+	element_length = va_arg(the_args, int4*);					/* Length of each input element		*/
 	arg_count -= 1;									/* One less argument.			*/
 	i = *element_length;
 	wswap(&i);
@@ -118,7 +128,7 @@ va_dcl
 
 	if (arg_count > 0)
 	{
-		sort_start = va_arg(the_args, long*);					/* Starting position of sort field (1+)	*/
+		sort_start = va_arg(the_args, int4*);					/* Starting position of sort field (1+)	*/
 	 	arg_count -= 1;								/* One less argument.			*/
 		i = *sort_start;
 		wswap(&i);
@@ -127,7 +137,7 @@ va_dcl
 
 	if (arg_count > 0)
 	{
-		sort_length = va_arg(the_args, long*);					/* Length of the sort field		*/
+		sort_length = va_arg(the_args, int4*);					/* Length of the sort field		*/
 	 	arg_count -= 1;								/* One less argument.			*/
 		i = *sort_length;
 		wswap(&i);
@@ -150,7 +160,7 @@ va_dcl
 
 	if (arg_count > 0)
 	{
-		locator_length = va_arg(the_args, long*);				/* Desired size of each locator element	*/
+		locator_length = va_arg(the_args, int4*);				/* Desired size of each locator element	*/
 	 	arg_count -= 1;								/* One less argument.			*/
 		i = *locator_length;
 		wswap(&i);
@@ -238,7 +248,7 @@ va_dcl
 }
 static	_sort(in, out, e_cnt, e_len, s_start, s_len, s_type, loc, loc_sz)		/* general purpose sort 		*/
 char	*in, *out;									/* see above for formal parm desc's 	*/
-long	e_cnt, e_len, s_start, s_len, loc_sz;
+int4	e_cnt, e_len, s_start, s_len, loc_sz;
 int	s_type, loc;
 {
 	int (*comp)();									/* pointer to compare fn for qsort()	*/
@@ -288,7 +298,7 @@ char **p1, **p2;									/* see above				*/
 static int binncmp(s1,s2,len)								/* compare two areas of memory		*/
 unsigned char *s1;									/* area one				*/
 unsigned char *s2;									/* area two				*/
-long len;										/* number of bytes to compare		*/
+int4 len;										/* number of bytes to compare		*/
 {
 	while (len)								
 	{
@@ -297,3 +307,5 @@ long len;										/* number of bytes to compare		*/
 	}
 	return 0;									/* areas are the same			*/
 }
+
+#endif /* unix || VMS || MSDOS_SORTX */

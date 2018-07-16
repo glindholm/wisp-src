@@ -257,9 +257,9 @@ void init_fkeys()								/* Assign values and functions to 	*/
 	fn_keys[0].meta_key = fn1_key;							/* Assign PF1.				*/
 	fn_keys[1].list_function = DESELECT_ROW;					/* Deselect this row.			*/
 	fn_keys[1].meta_key = fn1_key;							/* Assign PF1.				*/
-	fn_keys[2].list_function = TOP;							/* Go to top of list.			*/
+	fn_keys[2].list_function = VLIST_TOP;						/* Go to top of list.			*/
 	fn_keys[2].meta_key = fn2_key;							/* Assign PF2.				*/
-	fn_keys[3].list_function = BOTTOM;						/* Go to bottom of list.		*/
+	fn_keys[3].list_function = VLIST_BOTTOM;					/* Go to bottom of list.		*/
 	fn_keys[3].meta_key = fn3_key;							/* Assign PF3.				*/
 	fn_keys[4].list_function = UP_PAGE;						/* Scroll up a complete page.		*/
 	fn_keys[4].meta_key = fn4_key;							/* Assign PF4.				*/

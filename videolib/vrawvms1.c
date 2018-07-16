@@ -101,6 +101,49 @@ unsigned long wait_time;
 {
 	input_itemlist.mod2 = wait_time;						/* Set the timer wait period.		*/
 }
+
+/*
+ * vtimeout_value:      Holds timeout value for nonblocking char input
+ *
+ */
+static int vread_timed_out_flag = FALSE;
+static int vtimeout_value = 0;
+/*
+ * vtimeout:  set the timeout value (if any) for normal "blocked" reads
+ *
+ */
+vtimeout(seconds)
+int seconds;
+{
+	input_itemlist.mod2=vtimeout_value = seconds;
+	vtimeout_clear();
+}
+/*
+ * vtimeout_clear:  clear the "timed out" status
+ *
+ */
+vtimeout_clear()
+{
+	vread_timed_out_flag = FALSE;
+}
+/*
+ * vtimeout_check: return TRUE if time out occured on last read
+ *                 FALSE otherwise
+ *
+ */
+vtimeout_check()
+{
+	return vread_timed_out_flag;
+}
+/*
+** Routine: vtimeout_set()
+**
+** Purpose:	To set a flag that says the ALARM signal was recieved.
+*/
+static void vtimeout_set()
+{
+	vread_timed_out_flag = TRUE;
+}
 
 unsigned char vrawinput()								/* Get a character. wait if needed.	*/
 {
@@ -317,7 +360,10 @@ static int get_vbuf()									/* Get a buffer.			*/
 	if (vinput_iosb.status == SS$_TIMEOUT)						/* The timer ran out.			*/
 	{
 		if (itemlist_len == 36)							/* It was the users timer, signal them.	*/
+		{
 			vinput_buf[vinput_iosb.len++] = 0;				/* Add a zero to the buffer.		*/
+			vtimeout_set();
+		}
 	}										/* Otherwise, just proceed.		*/
 	else if (vinput_iosb.status == SS$_PARTESCAPE)					/* Allowed errors, just return to callr	*/
 	{
@@ -445,5 +491,18 @@ unsigned long osd_ttype()								/* Return terminal type -- VMS.		*/
 
 	return(dtype);
 }
+
+vraw_stty_sync()
+{
+}
+
+vraw_stty_save()
+{
+}
+
+vraw_stty_restore()
+{
+}
+
 #endif
 

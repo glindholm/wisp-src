@@ -13,13 +13,14 @@
 				All it does is set WVACOUNT which is returned on the next va_count() call.
 
 */
+#include "idsistd.h"
 
 static int WVACOUNT;
 
 int wvaset(x)
-long *x;
+int4 *x;
 {
-	WVACOUNT = (int)*x;
+	WVACOUNT = (int4)*x;
 }
 
 #ifndef VMS

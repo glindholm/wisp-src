@@ -17,6 +17,8 @@
 /*						Data declarations.								*/
 
 static char char_pushed = 0;								/* Push-back character.			*/
+static char vgc();
+static int vgc_control();
 
 /*						Get a single character (wait for it).						*/
 

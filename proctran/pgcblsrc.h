@@ -15,7 +15,6 @@ EXT char *ident_div[] = {
 			"001000 AUTHOR.\n",
 			"001100     IDSI CONVERSION TEAM.\n",
 			"001200 DATE-WRITTEN.\n",                                                            
-			"001300     01/01/92.\n",
 			""
 			};
 
@@ -178,7 +177,7 @@ EXT char *work_stg_sec[] = {
 			"016920     03  WSA-LINE-AREA OCCURS 24 TIMES.\n",
 			"016930         05  WSA-80-LINE            PIC X(80) VALUE SPACES.\n",
 			"016940 01  WSA-KEYWORD                    PIC X(2) VALUE SPACES.\n",
-			"016950 01  WSA-VARIABLE                   PIC X(10) VALUE SPACES.\n",
+			"016950 01  WSA-VARIABLE                   PIC X(24) VALUE SPACES.\n",
 			"016960 01  WSA-NUMERAL.\n",
 			"016300     03  WSA-NUM-1                  BINARY VALUE 0.\n",
 			"016400     03  WSA-NUM-2                  BINARY VALUE 0.\n",
@@ -189,12 +188,11 @@ EXT char *work_stg_sec[] = {
 			"028380 01  WSA-LIB-NAME                   PIC X(8)  VALUE SPACES.\n",
 			"028390 01  WSA-VOL-NAME                   PIC X(6)  VALUE SPACES.\n",
 			"028400 01  WSA-DATE-AREA.\n",
-			"028500     05  PL-NDATE                     PIC 9(6).\n",
-			"028600     05  PL-ADATE REDEFINES PL-NDATE  PIC X(6).\n",
+			"028500     05  WSA-NDATE                      PIC 9(6).\n",
+			"028600     05  WSA-ADATE REDEFINES WSA-NDATE  PIC X(6).\n",
 			"028400 01  WSA-TIME-AREA.\n",
-			"028500     05  PL-NTIME                     PIC 9(8).\n",
-			"028600     05  PL-ATIME REDEFINES PL-NTIME  PIC X(8).\n",
-			"028610 01  COPY-BUFFER                      PIC X(256).\n",
+			"028500     05  WSA-NTIME                      PIC 9(8).\n",
+			"028600     05  WSA-ATIME REDEFINES WSA-NTIME  PIC X(8).\n",
 			"028650\n",
 			""
 			};
@@ -440,30 +438,38 @@ EXT char *set_extct[] = {
 			"035891******************************************************************\n",
 			"035300 \n",
 			"030301 01  FC                             PIC X(2) VALUE \"FC\".\n",
+			"030302 01  FH                             PIC X(2) VALUE \"FH\".\n",
 			"030302 01  FN                             PIC X(2) VALUE \"FN\".\n",
-			"030303 01  IL                             PIC X(2) VALUE \"IL\".\n",
-			"030304 01  IV                             PIC X(2) VALUE \"IV\".\n",
-			"030305 01  JC                             PIC X(2) VALUE \"JC\".\n",
-			"030306 01  JL                             PIC X(2) VALUE \"JL\".\n",
-			"030307 01  JQ                             PIC X(2) VALUE \"JQ\".\n",
-			"030308 01  LI                             PIC X(2) VALUE \"LI\".\n",
-			"030309 01  OL                             PIC X(2) VALUE \"OL\".\n",
-			"030310 01  OV                             PIC X(2) VALUE \"OV\".\n",
-			"030311 01  PR                             PIC X(2) VALUE \"PR\".\n",
-			"030312 01  PL                             PIC X(2) VALUE \"PL\".\n",
-			"030313 01  PV                             PIC X(2) VALUE \"PV\".\n",
-			"030314 01  PM                             PIC X(2) VALUE \"PM\".\n",
-			"030315 01  PC                             PIC X(2) VALUE \"PC\".\n",
-			"030316 01  RL                             PIC X(2) VALUE \"RL\".\n",
-			"030317 01  RV                             PIC X(2) VALUE \"RV\".\n",
-			"030318 01  SL                             PIC X(2) VALUE \"SL\".\n",
-			"030319 01  SV                             PIC X(2) VALUE \"SV\".\n",
-			"030320 01  TT                             PIC X(2) VALUE \"TT\".\n",
-			"030321 01  ID                             PIC X(2) VALUE \"ID\".\n",
-			"030322 01  NA                             PIC X(2) VALUE \"NA\".\n",
-			"030323 01  WV                             PIC X(2) VALUE \"WV\".\n",
-			"030324 01  WN                             PIC X(2) VALUE \"W#\".\n",
-			"030325 01  RC                             PIC X(2) VALUE \"RC\".\n",
+			"030303 01  ID                             PIC X(2) VALUE \"ID\".\n",
+			"030304 01  IL                             PIC X(2) VALUE \"IL\".\n",
+			"030305 01  IV                             PIC X(2) VALUE \"IV\".\n",
+			"030306 01  JC                             PIC X(2) VALUE \"JC\".\n",
+			"030307 01  JL                             PIC X(2) VALUE \"JL\".\n",
+			"030308 01  JQ                             PIC X(2) VALUE \"JQ\".\n",
+			"030308 01  JS                             PIC X(2) VALUE \"JS\".\n",
+			"030309 01  LI                             PIC X(2) VALUE \"LI\".\n",
+			"030310 01  NA                             PIC X(2) VALUE \"NA\".\n",
+			"030311 01  OL                             PIC X(2) VALUE \"OL\".\n",
+			"030312 01  OV                             PIC X(2) VALUE \"OV\".\n",
+			"030313 01  PC                             PIC X(2) VALUE \"PC\".\n",
+			"030314 01  PK                             PIC X(2) VALUE \"PF\".\n",
+			"030314 01  PL                             PIC X(2) VALUE \"PL\".\n",
+			"030315 01  PM                             PIC X(2) VALUE \"PM\".\n",
+			"030316 01  PN                             PIC X(2) VALUE \"P#\".\n",
+			"030317 01  PR                             PIC X(2) VALUE \"PR\".\n",
+			"030318 01  PV                             PIC X(2) VALUE \"PV\".\n",
+			"030319 01  RC                             PIC X(2) VALUE \"RC\".\n",
+			"030320 01  RL                             PIC X(2) VALUE \"RL\".\n",
+			"030321 01  RR                             PIC X(2) VALUE \"RR\".\n",
+			"030321 01  RS                             PIC X(2) VALUE \"RS\".\n",
+			"030321 01  RV                             PIC X(2) VALUE \"RV\".\n",
+			"030322 01  SL                             PIC X(2) VALUE \"SL\".\n",
+			"030323 01  SV                             PIC X(2) VALUE \"SV\".\n",
+			"030323 01  XL                             PIC X(2) VALUE \"XL\".\n",
+			"030323 01  XV                             PIC X(2) VALUE \"XV\".\n",
+			"030324 01  TT                             PIC X(2) VALUE \"TT\".\n",
+			"030325 01  WN                             PIC X(2) VALUE \"W#\".\n",
+			"030326 01  WV                             PIC X(2) VALUE \"WV\".\n",
 			""
 		};
 
@@ -487,25 +493,6 @@ EXT char *cobol_string[] = {
 			"017600 01  STR-OUTPUT-LENGTH.\n",
 			"017600     05  STR-OUT-LEN-R-1            BINARY VALUE 0.\n",
 			"017600     05  STR-OUT-LEN-R-2            BINARY VALUE 0.\n",
-			""
-			};
-
-EXT char *cobol_filecopy[] = {
-			"017000/*****************************************************************\n",
-			"017100*                                                                *\n",
-			"017200*                 FILECOPY SUBROUTINE DEFINITIONS                *\n",
-			"017300*                                                                *\n",
-			"017400******************************************************************\n",
-			"*23456*89012345678901234567890123456789012345678901234567890123456789012\n",
-			"       01  IN-FILECOPY-FILE               PIC X(8) VALUE SPACES.\n",
-			"       01  IN-FILECOPY-LIB                PIC X(8) VALUE SPACES.\n",
-			"       01  IN-FILECOPY-VOL                PIC X(6) VALUE SPACES.\n",
-			"       01  OUT-FILECOPY-FILE              PIC X(8) VALUE SPACES.\n",
-			"       01  OUT-FILECOPY-LIB               PIC X(8) VALUE SPACES.\n",
-			"       01  OUT-FILECOPY-VOL               PIC X(6) VALUE SPACES.\n",
-			"       01  FILECOPY-RETURN-CODE.\n",
-			"           05  FILECOPY-R-1               BINARY   VALUE 0.\n",
-			"           05  FILECOPY-R-2               BINARY   VALUE 0.\n",
 			""
 			};
 
@@ -538,8 +525,8 @@ EXT char *init_src[] = {
 			"036900******************************************************************\n",
 			"037000*\n",
 			"037100 INITIALIZATION. \n",
-			"037200     ACCEPT PL-NTIME FROM TIME. \n",
-			"037200     ACCEPT PL-NDATE FROM DATE. \n",
+			"037200     ACCEPT WSA-NTIME FROM TIME. \n",
+			"037200     ACCEPT WSA-NDATE FROM DATE. \n",
 			"037800\n",
 			"",
 		};
@@ -620,12 +607,13 @@ EXT char *call_rename[] = {
 			"053600                       RENAME-FILE, RENAME-LIB,\n",
 			"053700                       RENAME-BYPASS-FLAG, RENAME-ACCESS-FLAG,\n",
 			"053950                       RENAME-OPEN, RENAME-RETURN-CODE.\n",
-			"053950*\n",
-			"054000     IF RENAME-R-2 IS GREATER THAN ZERO\n",                            
-			"054005        MOVE RENAME-R-2 TO ERROR-RC\n",
-			"054100        DISPLAY \"ERROR CALL RENAME \", WSA-FILE-NAME,\n",
-			"054110                \" RETURN CODE = \", ERROR-RC.\n",
 			"054115     MOVE RENAME-R-2     TO RETURN-CODE.\n",
+			"",
+/*10*/			"053950*\n",
+			"054000     IF RENAME-R-2 IS GREATER THAN ZERO\n",                            
+			"054005        MOVE RENAME-R-2 TO ERROR-RC.\n",
+			"054100        DISPLAY \"ERROR CALL RENAME \", WSA-FILE-NAME,\n",
+			"054105                \" RETURN CODE = \", ERROR-RC.\n",
 			""
 			};
 
@@ -647,12 +635,13 @@ EXT char *call_scratch[] = {
 			"053550                       WSA-LIB-NAME, WSA-VOL-NAME,\n",
 			"053600                       SCRATCH-BYPASS-FLAG,\n",
 			"053950                       SCRATCH-ACCESS-FLAG, SCRATCH-RETURN-CODE.\n",
-			"053950*\n",
+			"054110     MOVE SCRATCH-R-2     TO RETURN-CODE.\n",
+			"",
+/*10*/			"053950*\n",
 			"054000     IF SCRATCH-R-2 IS GREATER THAN ZERO\n",                            
-			"054010        MOVE SCRATCH-R-2 TO ERROR-RC\n",
+			"054010        MOVE SCRATCH-R-2 TO ERROR-RC.\n",
 			"054100        DISPLAY \"ERROR CALL SCRATCH \", WSA-FILE-NAME,\n",
 			"054105                \" RETURN CODE = \", ERROR-RC.\n",
-			"054110     MOVE SCRATCH-R-2     TO RETURN-CODE.\n",
 			""
 			};
 
@@ -666,12 +655,13 @@ EXT char *call_print[] = {
 			"053700                       PRINT-DISPOSITION, PRINT-NUMBER-COPIES,\n",
 			"053900                       PRINT-CLASS, PRINT-FORM-NUMBER,\n",
 			"053950                       PRINT-RETURN-CODE.\n",
+			"054110     MOVE PRINT-R-2     TO RETURN-CODE.\n",
+			"",
 			"053950*\n",
 			"054000     IF PRINT-R-2 IS GREATER THAN ZERO\n",                            
-			"054010        MOVE PRINT-R-2 TO ERROR-RC\n",
+			"054010        MOVE PRINT-R-2 TO ERROR-RC.\n",
 			"054100        DISPLAY \"ERROR CALL PRINT \", WSA-FILE-NAME,\n",
 			"054105                \" RETURN CODE = \", ERROR-RC.\n",
-			"054110     MOVE PRINT-R-2     TO RETURN-CODE.\n",
 			""
 			};
 
@@ -686,12 +676,13 @@ EXT char *call_submit[] = {
 			"053700                       SUBMIT-DISPOSITION, SUBMIT-JOB-CLASS,\n",
 			"053900                       SUBMIT-ABORT-ACTION, SUBMIT-CPU-TIME,\n",
 			"053950                       SUBMIT-LIMIT-FLAG, SUBMIT-RETURN-CODE.\n",
-			"053950*\n",
+			"054110     MOVE SUBMIT-R-2     TO RETURN-CODE.\n",
+			"",
+/*12*/			"053950*\n",
 			"054000     IF SUBMIT-R-2 IS GREATER THAN ZERO\n",                            
 			"054010        MOVE SUBMIT-R-2 TO ERROR-RC\n",
 			"054100        DISPLAY \"ERROR CALL SUBMIT \", WSA-FILE-NAME,\n",
 			"054105                \" RETURN CODE = \", ERROR-RC.\n",
-			"054110     MOVE SUBMIT-R-2     TO RETURN-CODE.\n",
 			""
 			};
 
@@ -737,25 +728,6 @@ EXT char *call_putparm[] = {
 			""
 			};
 
-EXT char *call_filecopy[] = {
-			"037900******************************************************************\n",
-			"038000*                       PERFORM CALL FILECOPY                    *\n",
-			"038100******************************************************************\n",
-			"039300 FILECOPY-SUB.\n",
-			"053500     CALL \"FILECOPY\" USING IN-FILECOPY-FILE,\n",
-			"053550                       IN-FILECOPY-LIB, IN-FILECOPY-VOL,\n",
-			"053600                       OUT-FILECOPY-FILE,\n",
-			"053700                       OUT-FILECOPY-LIB, OUT-FILECOPY-VOL,\n",
-			"053950                       FILECOPY-RETURN-CODE.\n",
-			"053950*\n",
-			"054000     IF FILECOPY-R-2 IS GREATER THAN ZERO\n",                            
-			"054010        MOVE FILECOPY-R-2  TO ERROR-RC\n",
-			"054100        DISPLAY \"ERROR CALL FILECOPY \", IN-FILECOPY-FILE,\n",
-			"054105                \" RETURN CODE = \", ERROR-RC.\n",
-			"054110     MOVE FILECOPY-R-2     TO RETURN-CODE.\n",
-			""
-			};
-
 EXT char *call_readfdr[] = {
 			"037900******************************************************************\n",
 			"038000*                      PERFORM CALL READFDR                      *\n",
@@ -764,11 +736,13 @@ EXT char *call_readfdr[] = {
 			"038400     CALL \"READFDR\" USING READFDR-FILE, READFDR-LIB, READFDR-VOL,\n",
 			"038500                     READFDR-MODE, READFDR-FLD-ID, READFDR-RECVR,\n",
 			"038500                     READFDR-RETURN-CODE.\n",
+			"038500     MOVE RFDR-RC-R-2     TO RETURN-CODE.\n",
+			"",
+/*9*/			"053950*\n",
 			"038500     IF RFDR-RC-R-2 IS GREATER THAN ZERO\n",                            
-			"038500        MOVE RFDR-RC-2  TO ERROR-RC\n",
+			"038500        MOVE RFDR-RC-R-2  TO ERROR-RC\n",
 			"038500        DISPLAY \"ERROR CALL READFDR \", READFDR-FILE,\n",
 			"038500                \" RETURN CODE = \", ERROR-RC.\n",
-			"038500     MOVE RFDR-RC-R-2     TO RETURN-CODE.\n",
 			""
 		};
 
@@ -785,7 +759,6 @@ EXT char *cobol_scratch[];
 EXT char *cobol_print[];
 EXT char *cobol_submit[];
 EXT char *cobol_string[];
-EXT char *cobol_filecopy[];
 EXT char *cobol_readfdr[];
 EXT char *link_parms[];
 EXT char *cobol_find[];
@@ -807,7 +780,6 @@ EXT char *call_print[];
 EXT char *call_submit[];
 EXT char *call_find[];
 EXT char *call_putparm[];
-EXT char *call_filecopy[];
 EXT char *call_readfdr[];
 
 #endif

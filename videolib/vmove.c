@@ -126,12 +126,18 @@ vgoto(nl,nc,ol,oc,dis,op) int nl, nc, ol, oc, dis, op;					/* Got to (nl,nc) fro
 
 vmv_move(line,column,from_l) int line, column, from_l;					/* Do normal move.			*/
 {
+#ifdef unix
+	char *tparm();
+#define PARMFUNC tparm
+#else
 	char *vcparm();
+#define PARMFUNC vcparm
+#endif
 	
-	vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],line,column));				/* Move to the position.		*/
+	vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],line,column));			/* Move to the position.		*/
 	if (!vmv_compatible(from_l,line))						/* Moving from double wide line?	*/
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],line,column));			/* Yes so move again (VT100 bug).	*/
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],line,column));		/* Yes so move again (VT100 bug).	*/
 	}
 	out_flag=TRUE;
 	return(SUCCESS);								/* Hopefully nothing went wrong.	*/
@@ -144,7 +150,13 @@ vmv_slew(nl, ol, nc, oc) int nl, ol, nc, oc;						/* Slew by n rows and n cols.	
 {
 	register int nrows, ncols, temp;						/* Temporary storage.			*/
 	unsigned char *cm;								/* Pointer to character map element.	*/
+#ifdef unix
+	char *tparm();
+#define PARMFUNC tparm
+#else
 	char *vcparm();
+#define PARMFUNC vcparm
+#endif
 
 	nrows = nl - ol;								/* Compute delta position to slew.	*/
 	ncols = nc - oc;
@@ -156,7 +168,7 @@ vmv_slew(nl, ol, nc, oc) int nl, ol, nc, oc;						/* Slew by n rows and n cols.	
 	else if (ncols == -3) vmv_out(JUST_TEXT,"\b\b\b");				/* Going left 3 positions?		*/
 	else if (ncols <   0) 
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],nl,nc));			/* more than 3 positions.	*/
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],nl,nc));			/* more than 3 positions.	*/
 		out_flag=TRUE;
 		return(SUCCESS);
 	}
@@ -165,7 +177,7 @@ vmv_slew(nl, ol, nc, oc) int nl, ol, nc, oc;						/* Slew by n rows and n cols.	
 	else if ((ncols == 3) && vmv_same(ol,oc,3)) vmv_out(JUST_TEXT,"%c%c%c", *cm, *(cm+1), *(cm+2));	  /* Three positions?	*/
 	else if (ncols >   0) 
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],nl,nc));			/*  more than 1 position.	*/
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],nl,nc));			/*  more than 1 position.	*/
 		out_flag=TRUE;
 		return(SUCCESS);
 	}
@@ -176,7 +188,7 @@ vmv_slew(nl, ol, nc, oc) int nl, ol, nc, oc;						/* Slew by n rows and n cols.	
 	if      (nrows == -1) { vcontrol(vcapdef[CURSOR_UP]); out_flag=TRUE; }		/* Going up 1 position.			*/
 	else if (nrows <   0)
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],nl,nc));				/*  more than 1 position?	*/
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],nl,nc));			/*  more than 1 position?	*/
 		out_flag=TRUE;
 	}
 	else if (nrows ==  1) vmv_out(JUST_TEXT,"\n");					/* Going down 1 position.		*/
@@ -184,7 +196,7 @@ vmv_slew(nl, ol, nc, oc) int nl, ol, nc, oc;						/* Slew by n rows and n cols.	
 	else if (nrows ==  3) vmv_out(JUST_TEXT,"\n\n\n");				/* Going down 3 positions.		*/
 	else if (nrows >   0) 
 	{
-		vcontrol(vcparm(vcapdef[CURSOR_ADDRESS],nl,nc));			/*  more than 1 position.	*/
+		vcontrol(PARMFUNC(vcapdef[CURSOR_ADDRESS],nl,nc));			/*  more than 1 position.	*/
 		out_flag=TRUE;
 	}
 	vb_pure = temp;									/* Now restore pureness state.		*/

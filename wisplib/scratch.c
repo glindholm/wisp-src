@@ -1,8 +1,10 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
 /* Scratch a file or a library													*/
@@ -16,8 +18,11 @@
 #endif
 
 #ifdef unix
+#include <stdio.h>
 #include <sys/types.h>
 #include <dirent.h>
+static char *s_nextfile();
+static int do_delete();
 #endif
 
 #ifdef MSDOS
@@ -30,10 +35,12 @@
 #include <varargs.h>
 #include <v/video.h>
 
+#include "idsistd.h"
 #include "wcommon.h"
 #include "wdefines.h"
 #include "movebin.h"
 #include "cobrun.h"
+#include "idsisubs.h"
 
 extern char WISPFILEXT[39];
 extern char *wfname();
@@ -49,18 +56,17 @@ va_dcl
 	char *vol;							/* volume, alpha(6)					*/
 	char *eflag;							/* expiration flag. B=bypass checking, " "=no bypass	*/
 	char *lflag;							/* limitation flag.  L=restrict access rights.		*/
-	long int  *retcod;						/* return code						*/
-	long mode;							/* the mode for wfname					*/
+	int4 *retcod;							/* return code						*/
+	int4 mode;							/* the mode for wfname					*/
 	char the_file[132];						/* actual file name					*/
 	int  	j;
 	char	*ptr;
 	int	lib_flag, vmstry;
-	long	ret, rc, status;
+	int4	ret, rc, status;
 #ifdef VMS
 	char result[256], *context, *statval;						/* Vars to use with lib$find_file	*/
+#include "scratch1.d"
 
-$DESCRIPTOR(n_desc,the_file);
-$DESCRIPTOR(r_desc,result);
 #endif	/* VMS */
 
 	ret = 0;
@@ -81,7 +87,7 @@ $DESCRIPTOR(r_desc,result);
 		eflag = va_arg(the_args,char*);
 	if (arg_count > 6)
 		lflag = va_arg(the_args,char*);
-	retcod = va_arg(the_args,long*);
+	retcod = va_arg(the_args,int4*);
 
 	if ( (*tflag == 'L') || (*tflag =='l') )
 	{
@@ -89,12 +95,10 @@ $DESCRIPTOR(r_desc,result);
 		lib_flag = TRUE;
 	}
 
-vmstryagain:
-	if (!memcmp(WISPFILEXT,"LIS ",4))
-	{
-		mode |= IS_PRINTFILE;
-		vmstry++;
-	} 
+#ifdef VMS
+	if (0==memcmp(WISPFILEXT,"LIS",3)) mode |= IS_PRINTFILE;
+#endif
+
 	ptr = wfname( &mode, vol, lib, fname, the_file );					/* create native filename	*/
 	*ptr = (char)0;
 #ifdef VMS
@@ -107,53 +111,32 @@ vmstryagain:
 	lib$find_file_end(&context);							/* End the FIND_FILE context		*/
 	if (status != SS$_NORMAL && status != RMS$_NORMAL)
 	{
-		if (vmstry < 1)								/* Try with next specification.		*/
-		{
-			vmstry++;
-			setwispfilext("LIS");						/* Set file extension.			*/
-			goto vmstryagain;
-		}
+		if (lib_flag) 	ret = 16;
+		else		ret = 20;
 	}
-#endif	/* VMS */
+#else /* !VMS */
 
-#ifdef unix
-	if ( lib_flag )										/* scratch the library		*/
+	if ( lib_flag )								/* scratch the library				*/
 	{
 		char libstr[80];
 		strcpy( libstr, the_file );
-		if ( libstr[ strlen(libstr)-1 ] == '/' )
+		libstr[ strlen(libstr)-1 ] = '\0';				/* Remove the trailing separator '/' or '\'	*/
+
+		rc = 0;
+		if ( !fexists(libstr) ) 					/* Check if library exists			*/
 		{
-			libstr[ strlen(libstr)-1 ] = '\0';
+			rc = 1;
+			ret = 16;
 		}
 
-		if ( rc = access( libstr, 00 ) ) ret = 16;
-
-		strcpy( the_file, libstr );
-		strcat( the_file, "/*" );							/* file name is *		*/
+		buildfilepath(the_file, libstr, "*");				/* Use wildcard for filename			*/
 	}
-#endif	/* unix */
-
-#ifdef MSDOS
-	if ( lib_flag )										/* scratch the library		*/
-	{
-		char libstr[80];
-		strcpy( libstr, the_file );
-		if ( libstr[ strlen(libstr)-1 ] == '\\' )
-		{
-			libstr[ strlen(libstr)-1 ] = '\0';
-		}
-
-		if ( rc = access( libstr, 00 ) ) ret = 16;
-
-		strcpy( the_file, libstr );
-		strcat( the_file, "\\*.*" );							/* file name is *		*/
-	}
-#endif	/* MSDOS */
+#endif /* !VMS */
 
 	if ( ret == 0 )
 	{											/* Do all versions.		*/
 		int st_err;									/* Flag to decide which error	*/
-		long stat;									/* value to use.		*/
+		int4 stat;									/* value to use.		*/
 
 		st_err = 0;									/* Set to use errno values.	*/
 		rc = do_delete(the_file,lib_flag,&st_err);					/* now delete it		*/
@@ -185,14 +168,14 @@ vmstryagain:
 		}
 	}
 	wswap(&ret);
-	PUTBIN(retcod,&ret,sizeof(long));
+	PUTBIN(retcod,&ret,sizeof(int4));
 }
 
 #ifdef VMS
-static long chkrms(status,lib_fl)								/* Check RMS error code.	*/
+static int4 chkrms(status,lib_fl)								/* Check RMS error code.	*/
 int status, lib_fl;
 {
-	long wrc;										/* Wang style return code.	*/
+	int4 wrc;										/* Wang style return code.	*/
 	switch (status)
 	{
 		case RMS$_DNR:
@@ -258,8 +241,7 @@ int	lib_flag, *err_type;
 	char fnam[128];								/* filename returned by system 			*/
 	char *context, *pos;
 	int first, err_fl;
-$DESCRIPTOR(f_desc, fnam);
-$DESCRIPTOR(p_desc, fpat);
+#include "scratch2.d"
 
 	rc = 0;									/* Init the return code.			*/
 	strcpy(fpat,file);							/* copy to our descriptor			*/
@@ -316,19 +298,18 @@ return_point:
 	lib$find_file_end(&context);							/* End the FIND_FILE context		*/
 	return( rc );
 }
-#endif /* VMS */
 
-#ifdef unix
+#else /* !VMS */
+
 static int do_delete(file, lib_flag, err_type)
 char	*file;
 int	lib_flag, *err_type;
 {
 	char *p, *strchr(), *strrchr();
 	char fpat[128];								/* pattern incl. wildcards			*/
-	char *s_nextfile();							/* function to read directories			*/
-	DIR *cur;								/* dir pointer for dirent routines		*/
 	char *filename;
 	char	*ptr;
+	int	first;
 
 	strcpy(fpat,file);							/* copy to our descriptor			*/
 
@@ -337,19 +318,18 @@ int	lib_flag, *err_type;
 		char	delspec[128];
 		int	save_rc;
 
-		cur = NULL;
+		first = 1;
+
 		save_rc = 0;
 
-		p = strrchr(fpat,'/');
-		*p = (char)0;
-		while (filename=s_nextfile(fpat,&cur)) 
+		strcpy(fpat,splitpath(fpat));					/* Remove the file from the path		*/
+		while (filename=s_nextfile(fpat,&first))
 		{
-			sprintf(delspec,"%s/%s",fpat,filename);
+			buildfilepath(delspec,fpat,filename);
 			if (unlink(delspec)<0) 
 			{
 				save_rc = errno;
 				if ( save_rc != EACCES ) return save_rc;
-
 			}
 		}
 		if ( save_rc ) return( 52 );
@@ -359,38 +339,59 @@ int	lib_flag, *err_type;
 	else if ( ! lib_flag )
 	{
 		char tempfile[80];
-		int found;
+		int found, has_ext, dat_done;
+
+		/*
+		**	Have to handle 3 cases
+		**
+		**	1) Vision files	
+		**		foo
+		**
+		**	2) CISAM 
+		**		foo 
+		**		foo.idx
+		**
+		**	3) CISAM (with .dat)
+		**		foo.dat
+		**		foo.idx
+		*/
 
 		found = 0;
+		dat_done = 0;
+		has_ext = hasext(fpat);
 
-		if ( 0 == access(fpat,00) )
+		if ( fexists(fpat) )
 		{
 			found = 1;
 			if (unlink(fpat)<0) return errno;
+			dat_done = 1;
 		}
-		else
+		else if (has_ext) 
 		{
-			if (strchr(fpat,'.')) return ENOENT;				/* If it has ext then thats all we do	*/
+			return ENOENT;						/* If it has ext then thats all we do		*/
 		}
 
-		if (cisam_files || run_files == FILES_OTHER)
+		if (!has_ext)							/* May be CISAM files				*/
 		{
 			strcpy(tempfile,fpat);
 			strcat(tempfile,".idx");
-			if ( 0 == access(tempfile,00) )
+			if ( fexists(tempfile) )
 			{
 				found = 1;
 				if (unlink(tempfile)<0) return errno;
 			}
 
-			strcpy(tempfile,fpat);
-			strcat(tempfile,".dat");
-			if ( 0 == access(tempfile,00) )
+			if (!dat_done)						/* May be CISAM with .dat			*/
 			{
-				found = 1;
-				if (unlink(tempfile)<0) return errno;
+				strcpy(tempfile,fpat);
+				strcat(tempfile,".dat");
+				if ( fexists(tempfile) )
+				{
+					found = 1;
+					if (unlink(tempfile)<0) return errno;
+					dat_done=1;
+				}
 			}
-
 		}
 
 		if (!found) return ENOENT;
@@ -398,116 +399,31 @@ int	lib_flag, *err_type;
 		/*
 		**	Try to remove the directory.  If empty it will be removed otherwise the rmdir will fail.
 		*/
-		strcpy(tempfile,fpat);
-		if ( ptr = strrchr(&tempfile[1],'/') )				/* Find the last '/' in the path		*/
-		{
-			*ptr = '\0';						/* Remove the file part of the name.		*/
-			rmdir(tempfile);					/* Attempt to remove the directory		*/
-		}
+		strcpy(tempfile,splitpath(fpat));
+		rmdir(tempfile);						/* Attempt to remove the directory		*/
 	}
 	else
 	{
-		return 44;								/* Lib flag with no '*' ?		*/
+		return 44;							/* Lib flag with no '*' ?			*/
 	}
 
 	return( 0 );
 }
-#endif /* unix */
-
-#ifdef MSDOS
-static int do_delete(file, lib_flag, err_type)
-char	*file;
-int	lib_flag, *err_type;
-{
-	char *p, *strchr(), *strrchr();
-	char fpat[128];								/* pattern incl. wildcards			*/
-	static char *s_nextfile(char *, int *);					/* function to read directories			*/
-	int doing_wild;								/* directory flag for readnext routines		*/
-	char *filename;
-
-	strcpy(fpat,file);							/* copy to our descriptor			*/
-
-	if (lib_flag && strchr(fpat,'*'))						/* Actually, "*.*" will be in fpat.	*/
-	{
-		char	delspec[128];
-		int	save_rc;
-
-		doing_wild = 0;
-		save_rc = 0;
-
-		p = strrchr(fpat,'\\');
-		*p = (char)0;
-		while (filename=s_nextfile(fpat,&doing_wild)) 
-		{
-			sprintf(delspec,"%s\\%s",fpat,filename);
-			if (unlink(delspec)<0) 
-			{
-				save_rc = errno;
-				if ( save_rc != EACCES ) return save_rc;
-			}
-		}
-		if ( save_rc ) return( 52 );
-		if ( rmdir(fpat) ) return( 52 );
-		return( 0 );
-	}
-	else if ( ! lib_flag )
-	{
-		char tempfile[80];
-		int found;
-
-		found = 0;
-
-		if ( 0 == access(fpat,00) )
-		{
-			found = 1;
-			if (unlink(fpat)<0) return errno;
-		}
-		else
-		{
-			if (strchr(fpat,'.')) return ENOENT;				/* If it has ext then thats all we do	*/
-		}
-
-		if (cisam_files || run_files == FILES_OTHER)
-		{
-			strcpy(tempfile,fpat);
-			strcat(tempfile,".idx");
-			if ( 0 == access(tempfile,00) )
-			{
-				found = 1;
-				if (unlink(tempfile)<0) return errno;
-			}
-
-			strcpy(tempfile,fpat);
-			strcat(tempfile,".dat");
-			if ( 0 == access(tempfile,00) )
-			{
-				found = 1;
-				if (unlink(tempfile)<0) return errno;
-			}
-
-		}
-
-		if (!found) return ENOENT;
-	}
-	else
-	{
-		return 44;								/* Lib flag with no '*' ?		*/
-	}
-
-	return( 0 );
-}
-#endif	/* MSDOS */
+#endif /* !VMS */
 
 #ifdef unix
-static char *s_nextfile(path,curdir)
-char *path;
-DIR **curdir;
+static char *s_nextfile(path,first)
+char 	*path;
+int	*first;
 {
-	struct dirent *dp;
+	static DIR *curdir;
+	static struct dirent *dp;
 
-	if ( ! *curdir )
+	if ( *first )
 	{
-		if (!(*curdir = opendir(path))) 
+		*first = 0;
+
+		if (!(curdir = opendir(path))) 
 		{
 			return(NULL);
 		}
@@ -515,9 +431,9 @@ DIR **curdir;
 
 	for (;;)
 	{
-		if ((dp=readdir(*curdir))==NULL)
+		if ((dp=readdir(curdir))==NULL)
 		{
-			closedir(*curdir);
+			closedir(curdir);
 			return(NULL);
 		}
 
@@ -531,16 +447,18 @@ DIR **curdir;
 #endif	/* unix */
 
 #ifdef MSDOS
-static char *s_nextfile(path,curdir)
-char *path;
-int *curdir;
+static char *s_nextfile(path,first)
+char 	*path;
+int	*first;
 {
 	char	wildpath[128];
 	static	char	file_name[13];
 	static	struct	find_t	fileinfo;
 
-	if ( ! *curdir )
+	if ( *first )
 	{
+		*first = 0;
+
 		strcpy( wildpath, path );
 		strcat( wildpath, "\\*.*" );
 
@@ -550,13 +468,13 @@ int *curdir;
 		{
 			return(NULL);
 		}
-		*curdir = 1;
+
 		strcpy( file_name, fileinfo.name );
 		return( file_name );
 	}
+
 	if ( 0 != _dos_findnext( &fileinfo ) )
 	{
-		*curdir = 0;
 		return(NULL);
 	}	
 	strcpy( file_name, fileinfo.name );

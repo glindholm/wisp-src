@@ -28,7 +28,7 @@ all: 	$(GOOD)
 
 OBJS=good.o
 LIBPATHS=$(STDLIB)/libvideo.a $(STDLIB)/libede.a
-LIBS= $(LIBCFLAGS) -lvideo -lede -lm
+LIBS= $(LIBCFLAGS) -lvideo -lede -lm $(LIBCURSES)
 
 $(GOOD): $(OBJS) $(LIBPATHS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)

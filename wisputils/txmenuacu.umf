@@ -1,0 +1,15 @@
+#  Makefile to create new ACUCOBOL version of TEXTMENU
+
+SHELL = /bin/sh
+COBOLTYPE = ACU
+WISPTRAN  = wisp
+WISPFLAGS =  -V$(COBOLTYPE)
+COBOL     = ccbl
+COBFLAGS  =  -da4 -Zd
+RUNDIR    = ..
+
+all:	$(RUNDIR)/TEXTMENU
+
+$(RUNDIR)/TEXTMENU:    textmenu.wcb
+	$(WISPTRAN) $(WISPFLAGS) textmenu.wcb 
+	$(COBOL) $(COBFLAGS) -o $(RUNDIR)/TEXTMENU textmenu.cob 

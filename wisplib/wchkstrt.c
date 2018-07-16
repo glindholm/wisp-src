@@ -6,6 +6,7 @@
 			/************************************************************************/
 
 #include <v/video.h>
+#include "idsistd.h"
 #include "werrlog.h"
 
 wchkstrt(timeval,stat,fname)						/* Wait for a START stetement to time out.		*/

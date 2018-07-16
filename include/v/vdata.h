@@ -100,7 +100,6 @@ int tscr_atr = NARROW|DARK;							/* Assumed screen attributes.			*/
 int trol_top = 0;								/* Top of current scrolling area.		*/
 int trol_bot = MAX_LINES_PER_SCREEN-1;						/* Bottom of current scrolling area.		*/
 
-
 /*	Optimization control flags (all optimization is initially off to allow the first action to actually go through).	*/
 
 int optimization = DEFER_MODE;							/* Master optimization starts in defered mode.	*/
@@ -133,6 +132,7 @@ int holding_output = FALSE;							/* Start in automatic buffering mode.		*/
 int vb_count = 0;								/* Characters in output buffer.			*/
 int vb_pure = FALSE;								/* Output line feeds as new lines (aka C).	*/
 int video_inited = FALSE;							/* Video initialization control flag.		*/
+int state_active = FALSE;							/* State 0 active control flag.			*/
 
 /*					Paste buffer control information.							*/
 
@@ -224,7 +224,27 @@ int trigger5 		= 	TRIGGER5+VMBIAS;
 int trigger6 		= 	TRIGGER6+VMBIAS;
 int trigger7 		= 	TRIGGER7+VMBIAS;
 int trigger8 		= 	TRIGGER8+VMBIAS;
-int key_user1 		= 	KEY_USER1+VMBIAS;
+int key_user1 		= 	VKEY_USER1+VMBIAS;
+
+int key_paste    =       GENERIC_PASTE+VMBIAS;
+int key_cut      =       GENERIC_CUT+VMBIAS;
+int key_copy     =       GENERIC_COPY+VMBIAS;
+int key_mark     =       GENERIC_MARK+VMBIAS;
+
+/*					Data involved in forms processing.							*/
+
+int form_count;										/* Number of valid forms in table.	*/
+int current_form;									/* Number of the current form.		*/
+int vp_term_key;									/* Forms termination key.		*/
+int highest_line_written;								/* Highest form line written.		*/
+int freeze_top;										/* Top of freeze area.			*/
+char window_message[82];								/* Message line.			*/
+char vform_data_buffer[1920];								/* Data buffer area for forms.		*/
+char head_form_name[HP_FORM_NAME_SIZE+1];						/* Name of head form.			*/
+struct video_form *vformdata;								/* Pointer to the video form data.	*/
+struct video_form *vformcurrent;							/* Pointer to the current data.		*/
+char *vformproc;									/* Pointer to the processing data.	*/
+char *vinitdata;									/* Pointer to the initialization data.	*/
 
 #else	/* #ifdef VIDEO_DATA_ROOT */
 
@@ -322,6 +342,7 @@ extern int holding_output;
 extern int vb_count;
 extern int vb_pure;
 extern int video_inited;
+extern int state_active;
 
 /*					Cut/Paste control									*/
 
@@ -416,6 +437,26 @@ extern int trigger8;
 
 extern int key_user1;
 
+extern int key_paste;
+extern int key_cut;
+extern int key_copy;
+extern int key_mark;
+
+/*					Data involved in forms processing.							*/
+
+extern int form_count;									/* Number of valid forms in table.	*/
+extern int current_form;								/* Number of the current form.		*/
+extern int vp_term_key;									/* Forms termination key.		*/
+extern int highest_line_written;							/* Highest form line written.		*/
+extern int freeze_top;									/* Top of frozen area.			*/
+extern char window_message[82];								/* Message line.			*/
+extern char vform_data_buffer[1920];							/* Data buffer area for forms.		*/
+extern char head_form_name[HP_FORM_NAME_SIZE+1];					/* Name of head form.			*/
+extern struct video_form *vformdata;							/* Pointer to the video form data.	*/
+extern struct video_form *vformcurrent;							/* Pointer to the current data.		*/
+extern char *vformproc;									/* Pointer to the processing data.	*/
+extern char *vinitdata;									/* Pointer to initialization data.	*/
+
 #endif	/* #else	#ifdef VIDEO_DATA_ROOT */
 
 /*					Terminal control sequence definitions.						*/
@@ -490,4 +531,3 @@ extern int key_user1;
 #define cursroff_esc	vcapdef[CURSOR_INVISIBLE]				/* Turn text cursor off.		*/
 
 #endif	/* #ifndef ESC_COMPAT */
-

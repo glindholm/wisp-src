@@ -3,8 +3,22 @@
  * program: vsx
  *
  * $Log: vsx.h,v $
+ * Revision 1.51  1993/10/14  17:24:37  jockc
+ * added new flag to specify no rewind tape
+ *
+ * Revision 1.50  1992/12/01  22:52:11  jockc
+ * added new option -9 for debug purposes.. works like -8
+ * but attempts to read file1 - fileNN instead of a tape
+ *
+ * Revision 1.49  1992/08/20  21:00:27  jockc
+ * added decl of sys_errlist, #defines for
+ * readtape codes, renamed tape_rq_bytes to tape_blocksz
+ *
+ * Revision 1.48  1992/08/17  20:43:08  jockc
+ * first pass at multi-tape archives
+ *
  * Revision 1.47  1992/06/09  23:46:01  jockc
- * some changes to remove warnings from gcc and ansi C[4~
+ * some changes to remove warnings from gcc and ansi C
  *
  * Revision 1.46  1992/06/04  22:32:49  jockc
  * changed NCR to NCR486
@@ -114,7 +128,7 @@
  * 
  */
 
-static char headerid[] = "$Id:$";
+static unsigned char headerid[] = "$Id:$";
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -160,6 +174,7 @@ unsigned char workbuf[TAPE_BUFSZ];
 
 char dest_dir[100];
 char arch_file[100];
+char norwd_file[100]={0};
 
 #define FT_SRC 0
 #define FT_DAT 1
@@ -242,7 +257,7 @@ int debug_level=0, debug_start=0, debug_end=0;
 #define OPT_STRING 2
 #define OPT_BAD -1
 
-int eightmil=0;
+int eightmil=0, eightmilx=0;
 
 #define ADDLF 1
 #define NOLF 2
@@ -251,18 +266,25 @@ int add_lf=GUESSLF;
 int check_nulls=0;
 int process_tmps=0;
 
+int new_vol = TRUE;
+char expected_vol[6] = { 0 };
+short expected_seq=1;
+int eoarchive=FALSE;
+int eotape=FALSE;
+int file_continued=FALSE;
+	
 char tape_rq_str[200] = {0};
-int tape_rq_bytes=TAPE_BUFSZ;
+int tape_blocksz=TAPE_BUFSZ;
 
 char **arg_list;
 
 struct optstruct optlist[]=
 {
-	{ "-d", OPT_STRING, dest_dir, 0},
+	{ "-d", OPT_STRING, dest_dir, 0 },
 	{ "-lnu", OPT_INT, (char *)&lname_case, CASE_UPPER },
 	{ "-fnu", OPT_INT, (char *)&fname_case, CASE_UPPER },
-	{ "-es", OPT_STRING, src_ext, 0},
-	{ "-en", OPT_STRING, norm_ext, 0},
+	{ "-es", OPT_STRING, src_ext, 0 },
+	{ "-en", OPT_STRING, norm_ext, 0 },
 	{ "-El", OPT_INT, (char *)&src_ext_flag, EXT_ASK_L },
 	{ "-Ef", OPT_INT, (char *)&src_ext_flag, EXT_ASK_F },
 	{ "-ts", OPT_INT, (char *)&file_type, FT_SRC },
@@ -275,49 +297,71 @@ struct optstruct optlist[]=
 	{ "-i", OPT_INT, (char *)&action, ACT_INDEX },
 	{ "-q", OPT_INT, (char *)&interactive, TRUE },
 	{ "-8", OPT_INT, (char *)&eightmil, TRUE },
-	{ "-f", OPT_STRING, arch_file, 0},
-	{ "-xl", OPT_STRING, debug_level_str, 0},
-	{ "-xr", OPT_STRING, debug_range, 0},
-	{ "-lf", OPT_INT, (char*)&add_lf, ADDLF},
-	{ "-nolf", OPT_INT, (char*)&add_lf, NOLF},
-	{ "-null", OPT_INT, (char*)&check_nulls, TRUE},
-	{ "-tmp", OPT_INT, (char*)&process_tmps, TRUE},
-	{ "-bs", OPT_STRING, tape_rq_str, 0},
+	{ "-9", OPT_INT, (char *)&eightmilx, TRUE },
+	{ "-f", OPT_STRING, arch_file, 0 },
+	{ "-xl", OPT_STRING, debug_level_str, 0 },
+	{ "-xr", OPT_STRING, debug_range, 0 },
+	{ "-lf", OPT_INT, (char*)&add_lf, ADDLF },
+	{ "-nolf", OPT_INT, (char*)&add_lf, NOLF },
+	{ "-null", OPT_INT, (char*)&check_nulls, TRUE },
+	{ "-tmp", OPT_INT, (char*)&process_tmps, TRUE },
+	{ "-bs", OPT_STRING, tape_rq_str, 0 },
+	{ "-nrw", OPT_STRING, norwd_file, 0 },
 	{ NULL, 0, NULL, 0 }
 };
 
 
 struct tapeheader {
-	char encfhdr[4];
-	char vol1[6];
-	char userid1[3];
-	char filler1[4];
-	char version[3];
-	char filler2[3];
-	char budate[3];
-	char srcvol[6];
-	char srclib[8];
-	char seqnum[2];
-	char filler4a[8];
+	unsigned char encfhdr[4];
+	unsigned char vol1[6];
+	unsigned char userid1[3];
+	unsigned char filler1[4];
+	unsigned char sysversion[3];
+	unsigned char backupversion[3];
+	unsigned char budate[3];
+	unsigned char srcvol[6];
+	unsigned char srclib[8];
+	unsigned char seqnum[2];
+	unsigned char backsection[1];
+	unsigned char volseq[1];
+	unsigned char filler4a[6];
 /*	unsigned char foo[2]; */
 	unsigned char filler4b;
 	unsigned char rectype; /* swapped next two */
-	char filler4c[2];
-	char filename[8];	
-	char filler5[1];
-	char date1[3];
-	char date2[3];
-	char date3[3];
-	char filler6[1];
-	char userid2[3];
-	char filler7[24];
-	char reccnt[4];
-	char recsz[2];
-	char filler8[27];
-	char tapevol[6];
-	char trailer[5];
+	unsigned char filler4c[2];
+	unsigned char filename[8];	
+	unsigned char filler5[1];
+	unsigned char date1[3];
+	unsigned char date2[3];
+	unsigned char date3[3];
+	unsigned char filler6[1];
+	unsigned char userid2[3];
+	unsigned char filler7[24];
+	unsigned char reccnt[4];
+	unsigned char recsz[2];
+	unsigned char filler8[27];
+	unsigned char tapevol[6];
+	unsigned char trailer[5];
 };
 #define BLANKSPACE 1908
+
+struct tapetrailer 
+{
+	unsigned char beot[4];
+	unsigned char tapevol[6];
+	unsigned char userid[3];
+	unsigned char filler1[1];
+	unsigned char sysversion[3];
+	unsigned char backupversion[3];
+	unsigned char time[3];
+	unsigned char date[3];
+	unsigned char origvol[6];
+	unsigned char nextvol[6];
+	unsigned char fileseq[2];
+	unsigned char flag[1];
+	unsigned char filler2[5];
+
+};
 
 struct my_header
 {
@@ -330,13 +374,12 @@ struct my_header
 struct stack_node
 {
 	struct stack_node *prev;
-	char *name;
+	unsigned char *name;
 };
 struct stack_node *head=NULL, *stackp;
 
 struct tapeheader *tapehdr;
 
-int eoarchive;
 
 #define ST_START 0
 #define ST_NORMAL 1
@@ -357,7 +400,13 @@ char oldlib[9];
 
 struct termio old,new;
 
-#define D if(debug_level==1)
+#define D if(debug_level==1 && ((seq_num>=(unsigned short)debug_start) && (seq_num<=(unsigned short)debug_end)))
 #define DD if(debug_level==2 && ((seq_num>=(unsigned short)debug_start) && (seq_num<=(unsigned short)debug_end)))
 #define DDD if(debug_level==3 && ((seq_num>=(unsigned short)debug_start) && (seq_num<=(unsigned short)debug_end)))
 
+#define RT_SKIPTOEND 1
+#define RT_GETBLOCK 2
+#define RT_GETBYTES 3
+#define RT_SKIPBYTES 4
+
+extern char *sys_errlist[];

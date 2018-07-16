@@ -33,10 +33,10 @@
 #ifdef MSDOS
 #include <math.h>
 #include <stdlib.h>
-int	strpos(unsigned char *, unsigned char *);
 #endif
 
 #include <varargs.h>
+#include "idsistd.h"
 #include "wfiles.h"
 #define	KEYLIMIT    16									/* Maximum number of key values.	*/
 #define FILENAMELEN  8									/* Length of WANG file name.		*/
@@ -59,7 +59,7 @@ va_dcl
 	char *keyword;									/* Keyword arguments passed from COBOL.	*/
 	char fname[80];									/* wfname constructed print file name.	*/
 	int  spos;									/* To indicate position of space char.	*/
-	long mode=0;									/* wfname mode				*/
+	int4 mode=0;									/* wfname mode				*/
 	char string[8];									/* Used for atoi conversion.		*/
 	pstruct *lptr;									/* A local pointer into the structure.	*/
 

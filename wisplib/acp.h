@@ -4,6 +4,8 @@
  **
  ** 																*
  **/
+#ifndef ACP_H
+#define ACP_H
 static char *ident="@(#)acp 1.0   [Asynch Comm Prog]   IDSI Unix/VMS xx/xx/90";
 #ifdef VMS
 #define	ACPMAP_FILE "ACP$CONFIG:ACPMAP.DAT"		
@@ -35,7 +37,7 @@ INIT_ACP	char		acp_weor[ACPMAXDEV][4] = {0};		/* Static array to contain write E
 INIT_ACP	char		acp_reor[ACPMAXDEV][3][4] = {0};	/* Static array to contain read EOR sequences.		*/
 INIT_ACP	short		acp_ch[ACPMAXDEV] = {0};		/* Static array to contain I/O channels.		*/
 INIT_ACP	short		acp_iosb[ACPMAXDEV][4] = {0};		/* Static array to contain I/O status blocks.		*/
-INIT_ACP	long		acp_ef[ACPMAXDEV] = {0};		/* Static array to contain event flags.			*/
+INIT_ACP	int4		acp_ef[ACPMAXDEV] = {0};		/* Static array to contain event flags.			*/
 INIT_ACP	int		acp_allocated = 0;			/* Number of lines allocated.				*/
 #ifdef unix
 INIT_ACP	int		acp_blockmode[ACPMAXDEV] = {0};		/* Mode of line : blocking vs. nonblocking		*/
@@ -49,7 +51,7 @@ INIT_ACP	char		acp_weor[ACPMAXDEV][4];			/* Static array to contain write EOR se
 INIT_ACP	char		acp_reor[ACPMAXDEV][3][4];		/* Static array to contain read EOR sequences.		*/
 INIT_ACP	short		acp_ch[ACPMAXDEV];			/* Static array to contain I/O channels.		*/
 INIT_ACP	short		acp_iosb[ACPMAXDEV][4];			/* Static array to contain I/O status blocks.		*/
-INIT_ACP	long		acp_ef[ACPMAXDEV];			/* Static array to contain event flags.			*/
+INIT_ACP	int4		acp_ef[ACPMAXDEV];			/* Static array to contain event flags.			*/
 INIT_ACP	int		acp_allocated;				/* Number of lines allocated.				*/
 #ifdef unix
 INIT_ACP	int		acp_blockmode[ACPMAXDEV];		/* Mode of line : blocking vs. nonblocking		*/
@@ -88,7 +90,7 @@ struct acpinfo_cbl
 	  bits,
 	  stop,
 	  duplex,
-	  foo;       
+	  flow;
 };
 char lname[17];
 char ldevice[65];
@@ -101,8 +103,9 @@ char lparity;
 char lbits;      
 char lstop;      
 char lduplex;    
-char lfoo;     
+char lflow;     
      
+#define NAME_FIELD    0
 #define TTYNAME_FIELD 1
 #define WEOR_FIELD   2
 #define EOR1_FIELD   3
@@ -113,8 +116,11 @@ char lfoo;
 #define SIZE_FIELD   8
 #define STOPB_FIELD  9
 #define DUPLEX_FIELD 10
+#define FLOW_FIELD   11
+#define NUMFIELDS    12
+
 #ifdef __OPENACP
-int parity,baud,stop,size,duplex;
+int parity,baud,stop,size,duplex,flow;
 int eor_timeout;
 struct matchstruc parval[]=
 {
@@ -133,6 +139,17 @@ struct matchstruc dupval[]=
 	{ "h", 0 },
 	{ "F", ECHO },
 	{ "H", 0 },
+        { 0, 0 }
+};        
+struct matchstruc flowval[]=
+{
+	{ "X", 'x' },	/* Use XON/XOFF */
+	{ "x", 'x' },
+	{ "-", 'x' },
+	{ "N", 'n' },	/* Don't use XON/XOFF */
+	{ "n", 'n' },
+	{ "U", 'u' },	/* Don't change XON/XOFF */
+	{ "u", 'u' },
         { 0, 0 }
 };        
 struct matchstruc  baudval[]=
@@ -178,3 +195,4 @@ extern struct matchstruc  stopbval[];
 #endif
 #endif
 
+#endif /*ACP_H*/

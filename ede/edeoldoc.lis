@@ -1,0 +1,79 @@
+								edeoldoc.lis
+
+	EDE ON-LINE DOC
+	===============
+
+	This document describes how to hook in a custom on-line	doc routine
+	into EDE for use on VAX, or unix using ACUCOBOL or Micro Focus.
+
+	The scheme used is slightly different then earlier versions.
+	The EDE help system now calls a routine EDEOLDOC to provide the
+	on-line doc services.  EDEOLDOC is a generic frontend that can be
+	setup to call the actual on-line doc routine supplied by the user.
+	If no special action is taken then EDEOLDOC will simply exist as
+	a stub routine which will issue a warning message when called.
+
+	To hook in a custom on-line doc routine you must edit the edeoldoc.c
+	file so that it calls your routine, then compile it and replace
+	it into the library.  Then rebuild your executables/runtime with
+	the new version of the library.
+
+
+	STERLING
+	========
+
+	The changes have been made to edeoldoc.c to use SFREU041, they are
+	however enclosed in condition code (ifdef's).  The file edeoldoc.c
+	will still need to be compiled specifically for the COBOL you are
+	using.
+
+
+
+	VAX
+	===
+	Compile EDEOLDOC.C with "STERLING" defined, replace the object into
+	WISPLIB.OLB then rebuild you EXE's using the new WISPLIB and include
+	the SFREU041 object file in the link.
+
+		CC/DEFINE=STERLING EDEOLDOC.C
+		LIBRARY/REPLACE WISPLIB.OLB EDEOLDOC.OBJ
+		
+
+	ACUCOBOL
+	========
+	Compile edeoldoc.c with "STERLING" and "ACU" defined, replace the
+	object into libede.a then rebuild the ACUCOBOL runtime (wruncble).
+	(You will need to use the latest sub85.c file when rebuilding the
+	runtime.)
+
+		cc -DSTERLING -DACU -c edeoldoc.c
+		ar -rvs libede.a edeoldoc.o
+
+	Micro Focus
+	===========
+	Compile edeoldoc.c with "STERLING" and "MF" defined, then replace
+	the object into libede.a .  You will have to compile your SFREU041
+	routine to native object file (sfreu041.o) and include it into
+	your Micro Focus runtime (wrunmfe) along with the new libede.a .
+	This is done by editing the file wrunmf.umf file and adding
+	the file "sfreu041.o" to the end of the "SUBS=" list then remaking
+	the runtime.  (SUBS=wrunmf.o wispmf.o sfreu041.o)
+	(At present there is no support for having SFREU041 be a ".int"
+	or ".gnt" file.)
+
+		cc -DSTERLING -DMF -c edeoldoc.c
+		ar -rvs libede.a edeoldoc.o
+		cob -c sfreu041.cob
+
+
+	UNIX KIT
+	========
+
+	The following files are being sent as part of the custom modifcations
+	done for unix.
+
+	edeoldoc.c	- interface to custom on-line doc routine (SFREU041)
+	sub85.c		- updated Acucobol interface
+	libede.a	- updated EDE library (with generic edeoldoc.o)
+
+

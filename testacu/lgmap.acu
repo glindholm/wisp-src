@@ -1,6 +1,6 @@
-SOURCE [WISP]/src
-VOLIN  [WISP]/src/testacu/volin
-VOLOUT [WISP]/src/testacu/volout
-VOLRUN [WISP]/src/testacu/volrun
-VOLSPL [WISP]/src/testacu/volspl
-VOLWRK [WISP]/src/testacu/volwrk
+SOURCE _WISP_/src
+VOLIN  _WISP_/src/testacu/volin
+VOLOUT _WISP_/src/testacu/volout
+VOLRUN _WISP_/src/testacu/volrun
+VOLSPL _WISP_/src/testacu/volspl
+VOLWRK _WISP_/src/testacu/volwrk

@@ -1,0 +1,542 @@
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QAWSXIO.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           12/14/92.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           AID-UNLOCKED IS "20"
+           A-0-BYTE IS "00"
+           A-1-BYTE IS "01"
+           A-160-BYTE IS "A0"
+           HEXFF IS "FF"
+           HEX-00 IS "00"
+           HEX-01 IS "01"
+           HEX-02 IS "02"
+           HEX-0A IS "0A"
+           HEX-0B IS "0B"
+           HEX-10 IS "10"
+           HEX-28 IS "28"
+           HEX-80 IS "80"
+           HEX-84 IS "84"
+           HEX-88 IS "88"
+           HEX-8C IS "8C"
+           HEX-90 IS "90"
+           HEX-94 IS "94"
+           HEX-98 IS "98"
+           HEX-9C IS "9C"
+           HEX-A0 IS "A0"
+           HEX-A4 IS "A4"
+           HEX-A8 IS "A8"
+           HEX-AC IS "AC"
+           HEX-B0 IS "B0"
+           HEX-B4 IS "B4"
+           HEX-B8 IS "B8"
+           HEX-BC IS "BC"
+           WSXIO-READ IS "40"
+           WSXIO-WRITE IS "80"
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           BRITE-MOD-ALL IS "80"
+           DIM-PROT-ALL IS "8C"
+           NO-ECHO IS "98"
+           MENU-PICK IS "8E".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA                    PIC X(4).
+           03  CRTREC-MAPPING-AREA          PIC X(1920).
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+      ******************************************************************
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+
+       01  WSXIO-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(13) ROW 1 COL 60 VALUE
+               "WSXIO-SCREEN".
+           03  FILLER  PIC X(35) ROW  3 COL 02 VALUE
+               " 1) WSXIO WRITE READ.".
+           03  FILLER  PIC X(35) ROW  4 COL 02 VALUE
+               " 2) WSXIO AID.".
+           03  FILLER  PIC X(35) ROW  5 COL 02 VALUE
+               " 3) WSXIO WRITE READ AID".
+           03  FILLER  PIC X(35) ROW  6 COL 02 VALUE
+               " 4) IOSW[3]".
+           03  FILLER  PIC X(35) ROW  7 COL 02 VALUE
+               " 5) WRITE READ TIMED(10)".
+           03  FILLER  PIC X(35) ROW  8 COL 02 VALUE
+               " 6) WRITE READ TIMED(10) AID".
+           03  FILLER  PIC X(35) ROW  9 COL 02 VALUE
+               " 7) DISPLAY AID".
+           03  FILLER  PIC X(35) ROW 10 COL 02 VALUE
+               " 8) WSXIO WRITE WAIT READ AID".
+           03  FILLER  PIC X(35) ROW 11 COL 02 VALUE
+               " 9) WSXIO UPDATE".
+           03  FILLER  PIC X(35) ROW 12 COL 02 VALUE
+               "10) ".
+           03  FILLER  PIC X(35) ROW 13 COL 02 VALUE
+               "11) ".
+           03  FILLER  PIC X(35) ROW 14 COL 02 VALUE
+               "12) ".
+           03  FILLER  PIC X(35) ROW 15 COL 02 VALUE
+               "13) ".
+           03  FILLER  PIC X(35) ROW 16 COL 02 VALUE
+               "14) ".
+           03  FILLER  PIC X(35) ROW 17 COL 02 VALUE
+               "15) ".
+           03  FILLER  PIC X(35) ROW 19 COL 02 VALUE
+               "16) EXIT".
+           03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
+               "17) ".
+           03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
+               "18) ".
+           03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
+               "19) ".
+           03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
+               "20) ".
+           03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
+               "21) ".
+           03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
+               "22) ".
+           03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
+               "23) ".
+           03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
+               "24) ".
+           03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+               "25) ".
+           03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+               "26) ".
+           03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
+               "27) ".
+           03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
+               "28) ".
+           03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
+               "29) ".
+           03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
+               "30) ".
+           03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
+               "31) ".
+           03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+
+       01  WSXIO-COMMAND PIC X VALUE "T".
+       01  WSXIO-CODE PIC X.
+       01  WSXIO-IOSW-REC.
+           05  IOSW-1  PIC X.
+           05  IOSW-2  PIC X.
+           05  IOSW-3  PIC X.
+           05  IOSW-4  PIC X.
+           05  IOSW-5  PIC X.
+           05  IOSW-6  PIC X.
+           05  IOSW-7  PIC X.
+           05  IOSW-8  PIC X.
+       01  WSXIO-TIMER.
+           05  T1-VAL BINARY.
+           05  T2-VAL BINARY.
+           05  FILLER PIC X(4).
+
+       01  WSXIO-ORDER-AREA.
+           03  WSXIO-O-A-1 PIC X VALUE A-1-BYTE.
+           03  WSXIO-O-A-2 PIC X VALUE A-160-BYTE.
+           03  WSXIO-O-A-3 PIC X VALUE A-0-BYTE.
+           03  WSXIO-O-A-4 PIC X VALUE A-0-BYTE.
+
+       01  WSXIO-OA-SAVE PIC X(4).
+
+       01  WSXIO-O-A-LENGTH.
+           05  O-A-L1 BINARY VALUE 0.
+           05  O-A-L2 BINARY VALUE 4.
+
+       01  WSXIO-MAP-LENGTH.
+           05  S1-LEN BINARY VALUE 0.
+           05  S2-LEN BINARY VALUE 1920.
+
+       01  WSXIO-COUNTER PIC 9 VALUE 0.
+
+       01  WSXIO-MAP.
+           05 WSXIO-MSG PIC X(22) VALUE "THIS IS THE FIRST LINE".
+           05 FILLER PIC X(218) VALUE SPACES.
+           05 FILLER PIC X(18) VALUE "3 LINES OR SO DOWN".
+           05 FILLER PIC X(1) VALUE BRITE-MOD-ALL.
+           05 FILLER PIC X(20) VALUE SPACES.
+           05 FILLER PIC X(1) VALUE DIM-PROT-ALL.
+           05 FILLER PIC X(1640) VALUE SPACES.
+
+       01  WSXIO-UPDATE-MAP.
+           05 FILLER PIC X(11) VALUE "WAIT-CNT = ".
+           05 WAIT-CNT-SCREEN PIC 9999 VALUE 0.
+           05 FILLER PIC X(65) VALUE SPACES.
+
+       01  WSXIO-UPDATE-LENGTH.
+           05  S1-LEN BINARY VALUE 0.
+           05  S2-LEN BINARY VALUE 80.
+
+
+       01  WAIT-CNT PIC 9999 VALUE 0.
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       SCREEN-TESTS.
+      
+           DISPLAY AND READ WSXIO-SCREEN ON CRT
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 8, 9, 16.
+
+           IF PF-KEY = "01" THEN
+              PERFORM WSXIO-WRITE-READ
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM WSXIO-AID
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM WSXIO-WRITE-READ
+              PERFORM WSXIO-AID
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM WSXIO-IOSW3
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM WSXIO-WRITE-READ-TIMED
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "06" THEN
+              PERFORM WSXIO-WRITE-READ-TIMED
+              PERFORM WSXIO-AID
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "07" THEN
+              DISPLAY "Test of DISPLAY followed by WSXIO AID"
+              PERFORM WSXIO-AID
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "08" THEN
+              PERFORM WSXIO-WRITE-WAIT-READ
+              PERFORM WSXIO-AID
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "09" THEN
+              PERFORM WSXIO-UPDATE
+              PERFORM WSXIO-AID
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO SCREEN-TESTS.
+
+
+      ******************************************************************
+
+      ******************************************************************
+       WSXIO-WRITE-READ.
+
+      **** This test will do a normal write followed by a read.
+
+           MOVE "X"         TO WSXIO-COMMAND.
+           MOVE WSXIO-WRITE TO WSXIO-CODE.
+           MOVE HEX-01      TO WSXIO-O-A-1.
+           MOVE HEX-A0      TO WSXIO-O-A-2.
+           MOVE HEX-00      TO WSXIO-O-A-3.
+           MOVE HEX-00      TO WSXIO-O-A-4.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+           MOVE WSXIO-READ TO WSXIO-CODE.
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+      ******************************************************************
+       WSXIO-IOSW3.
+           DISPLAY "IOSW[3] = " IOSW-3.
+
+      ******************************************************************
+       WSXIO-AID.
+           MOVE "A" TO WSXIO-COMMAND.
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE.
+
+           DISPLAY "AID = " WSXIO-CODE.
+
+      ******************************************************************
+       WSXIO-WRITE-READ-TIMED.
+
+           MOVE "T"         TO WSXIO-COMMAND.
+           MOVE WSXIO-WRITE TO WSXIO-CODE.
+           MOVE HEX-01      TO WSXIO-O-A-1.
+           MOVE HEX-A0      TO WSXIO-O-A-2.
+           MOVE HEX-00      TO WSXIO-O-A-3.
+           MOVE HEX-00      TO WSXIO-O-A-4.
+
+      **** Set the TIMEOUT to 10 seconds.
+           MOVE  0 TO T1-VAL.
+           MOVE 10 TO T2-VAL.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WSXIO-TIMER.
+
+           MOVE WSXIO-READ TO WSXIO-CODE.
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WSXIO-TIMER.
+
+      ******************************************************************
+       WSXIO-WRITE-WAIT-READ.
+
+      **** This test will do a normal write followed by a read.
+
+           MOVE "X"         TO WSXIO-COMMAND.
+           MOVE WSXIO-WRITE TO WSXIO-CODE.
+           MOVE HEX-01      TO WSXIO-O-A-1.
+           MOVE HEX-A0      TO WSXIO-O-A-2.
+           MOVE HEX-00      TO WSXIO-O-A-3.
+           MOVE HEX-00      TO WSXIO-O-A-4.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+           MOVE 0 TO WAIT-CNT.
+           PERFORM WSXIO-WAIT-5 
+                 UNTIL IOSW-3 NOT = AID-UNLOCKED.
+
+           MOVE "X"         TO WSXIO-COMMAND.
+           MOVE WSXIO-READ TO WSXIO-CODE.
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+           DISPLAY "WAIT-CNT = " WAIT-CNT.
+
+      ******************************************************************
+       WSXIO-WAIT-5.
+           ADD 1 TO WAIT-CNT.
+           MOVE "W" TO WSXIO-COMMAND.
+
+      **** Set the TIMEOUT to 5 seconds.
+           MOVE   0 TO T1-VAL.
+           MOVE 500 TO T2-VAL.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-TIMER
+                              WSXIO-IOSW-REC.
+
+
+      ******************************************************************
+       WSXIO-UPDATE.
+
+           MOVE "X"         TO WSXIO-COMMAND.
+           MOVE WSXIO-WRITE TO WSXIO-CODE.
+           MOVE HEX-01      TO WSXIO-O-A-1.
+           MOVE HEX-A0      TO WSXIO-O-A-2.
+           MOVE HEX-00      TO WSXIO-O-A-3.
+           MOVE HEX-00      TO WSXIO-O-A-4.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+           MOVE 0 TO WAIT-CNT.
+           PERFORM WSXIO-UPDATE-WAIT 
+                 UNTIL IOSW-3 NOT = AID-UNLOCKED.
+
+           MOVE "X"         TO WSXIO-COMMAND.
+           MOVE HEX-01      TO WSXIO-O-A-1.
+           MOVE WSXIO-READ TO WSXIO-CODE.
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-MAP
+                              WSXIO-MAP-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+      ******************************************************************
+       WSXIO-UPDATE-WAIT.
+
+           ADD 1 TO WAIT-CNT.
+           MOVE WAIT-CNT TO WAIT-CNT-SCREEN.
+
+
+           MOVE "X"         TO WSXIO-COMMAND.
+           MOVE WSXIO-WRITE TO WSXIO-CODE.
+           MOVE HEX-10      TO WSXIO-O-A-1.
+           MOVE HEX-80      TO WSXIO-O-A-2.
+           MOVE HEX-00      TO WSXIO-O-A-3.
+           MOVE HEX-00      TO WSXIO-O-A-4.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-CODE
+                              WSXIO-ORDER-AREA
+                              WSXIO-O-A-LENGTH
+                              WSXIO-UPDATE-MAP
+                              WSXIO-UPDATE-LENGTH
+                              WSXIO-IOSW-REC
+                              WISP-SCRATCH-BYTE-1
+                              WISP-SCRATCH-BYTE-2
+                              WISP-SCRATCH-BYTE-3.
+
+           MOVE "W" TO WSXIO-COMMAND.
+
+      **** Set the TIMEOUT to 2 seconds.
+           MOVE   0 TO T1-VAL.
+           MOVE 200 TO T2-VAL.
+
+           CALL "WSXIO" USING WSXIO-COMMAND
+                              CRT
+                              WSXIO-TIMER
+                              WSXIO-IOSW-REC.
+
+      ******************************************************************
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

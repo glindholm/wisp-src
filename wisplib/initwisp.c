@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -19,21 +19,26 @@
 #ifdef unix
 #include <signal.h>
 #include <sys/types.h>
+void wexitsig();
 void wexitint();
 void wexitbug();
+static int license_checked();
 #endif
 
 #ifdef MSDOS
 #include <process.h>
 #include <stdlib.h>
 #include <DOS.H>
-#define EXT_FILEXT					/* From sub85.c for filext.h	*/
-#endif
+#ifdef DMF
+#define EXT_FILEXT
+#endif /* DMF */
+#endif /* MSDOS */
 
 #include <stdio.h>
 #include <time.h>
 #include <varargs.h>
 
+#include "idsistd.h"
 #include "werrlog.h"
 #include "wdefines.h"
 #include "wcommon.h"
@@ -43,39 +48,23 @@ void wexitbug();
 #include "filext.h"
 #include "wperson.h"
 
+static void license_warning();
+static int centload();
+
 #ifdef VMS
 #include <ssdef.h>
 int wexith();										/* Declare the exit handler routine.	*/
 
 static struct {
-		long int flink;								/* The forward link (VMS only)		*/
+		int4 flink;								/* The forward link (VMS only)		*/
 		char *exproc;								/* The pointer to the proc.		*/
-		long int argcnt;							/* The arg count (0)			*/
-		long int *condit;							/* Pointer to the condition value.	*/
+		int4 argcnt;								/* The arg count (0)			*/
+		int4 *condit;								/* Pointer to the condition value.	*/
 	      } exit_handler;
 
-static long int conval;									/* A place to hold the condition value	*/
-static unsigned long status;
+static int4 conval;									/* A place to hold the condition value	*/
+static uint4 status;
 #endif	/* VMS */
-
-#ifdef MSDOS
-
-static	union	REGS	inregs, outregs;
-
-#define AH inregs.h.ah
-#define AL inregs.h.al
-#define BH inregs.h.bh
-#define BL inregs.h.bl
-#define CH inregs.h.ch
-#define CL inregs.h.cl
-#define DH inregs.h.dh
-#define DL inregs.h.dl
-#define AX inregs.x.ax
-#define BX inregs.x.bx
-#define CX inregs.x.cx
-#define DX inregs.x.dx
-
-#endif
 
 /*
 	INITWISP is OLD and has been replaced by initwisp2()
@@ -110,18 +99,14 @@ char	wisp_lib_version[1];								/* The LIBRARY version			*/
 char	cobol_type[3];									/* The type of COBOL			*/
 char	wisp_application_name[8];							/* The name of the program		*/
 char	wisprunname[8];									/* The first appl name this run unit	*/
-long	*swap_on;									/* Swap_on == 0 forces swaping off	*/
-long	*err_flag;									/* Err_flag != 0 Changes error logging	*/
+int4	*swap_on;									/* Swap_on == 0 forces swaping off	*/
+int4	*err_flag;									/* Err_flag != 0 Changes error logging	*/
 {
 #define		ROUTINE		24000
 
 static  int 	already = 0;								/* Have we already done it?		*/
 	int 	i;
 	time_t	clock;
-
-#ifdef	MSDOS										/* Debug hook for MS-DOS		*/
-	v_modeflag( 1, 15, 'I' );							/* Blue box with white "I".		*/
-#endif
 
 	werrset();									/* get runtime w_err_flag override.	*/
 
@@ -149,26 +134,18 @@ static  int 	already = 0;								/* Have we already done it?		*/
 		memcpy(wisprunname,WISPRUNNAME,8);					/* Set the COBOL wisprunname		*/
 		setprogid(wisp_application_name);					/* Set the program id in C.		*/
 
-#ifdef	MSDOS										/* Debug hook for MS-DOS		*/
-	v_modeflag( 6, 12, 'C' );							/* Gold box with red "C".		*/
-#endif
 		return;
 	}
 
 	/*=========================================================================*/
-
-#ifdef NOT_YET_MSDOS									/* Set up memory mgmt for best fit.	*/
-	AH=0x58;									/* Memory allocation function.		*/
-	AL=0x01;									/* Change allocation method.		*/
-	BX=0x01;									/* Set to best fit allocation.		*/
-	intdos(&inregs,&outregs);							/* Invoke MSDOS interrupt 0x21.		*/
-#endif
 
 	already = 1;
 
 	time(&WSTARTTIME);
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say hello.				*/
+
+	newlevel();									/* Increment the link-level		*/
 
 	memcpy(WISPTRANVER,wisp_tran_version,20);					/* Get the translator version		*/
 	WISPTRANVER[20] = NULL_CHAR;
@@ -182,8 +159,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		vax_cobol = TRUE;
 		run_cobol = COBOL_VAX;
-		rms_files = TRUE;
-		run_files = FILES_RMS;
 		memcpy(filelock,"91",2);
 		memcpy(hardlock,"92",2);
 		memcpy(softlock,"90",2);
@@ -192,8 +167,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		lpi_cobol = TRUE;
 		run_cobol = COBOL_LPI;
-		cisam_files = TRUE;
-		run_files = FILES_CISAM;
 		memcpy(filelock,"93",2);
 		memcpy(hardlock,"99",2);
 		memcpy(softlock,"99",2);
@@ -202,13 +175,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		acu_cobol = TRUE;
 		run_cobol = COBOL_ACU;
-#ifdef VMS
-		rms_files = TRUE;
-		run_files = FILES_RMS;
-#else
-		vision_files = TRUE;
-		run_files = FILES_VISION;
-#endif
 		memcpy(filelock,"93",2);
 		memcpy(hardlock,"99",2);
 		memcpy(softlock,"99",2);
@@ -217,8 +183,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		aix_cobol = TRUE;
 		run_cobol = COBOL_AIX;
-		cisam_files = TRUE;
-		run_files = FILES_CISAM;
 		memcpy(filelock,"9A",2);
 		memcpy(hardlock,"9D",2);
 		memcpy(softlock,"9D",2);
@@ -227,8 +191,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		mf_cobol  = TRUE;
 		run_cobol = COBOL_MF;
-		cisam_files = TRUE;
-		run_files = FILES_CISAM;
 		memcpy(filelock,"9A",2);
 		memcpy(hardlock,"9D",2);
 		memcpy(softlock,"9D",2);
@@ -237,8 +199,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		mf_cobol  = TRUE;
 		run_cobol = COBOL_MF;
-		cisam_files = TRUE;
-		run_files = FILES_CISAM;
 		memcpy(filelock,"9A",2);
 		memcpy(hardlock,"9D",2);
 		memcpy(softlock,"9D",2);
@@ -246,7 +206,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	else
 	{
 		run_cobol = COBOL_OTHER;
-		run_files = FILES_OTHER;
 		memcpy(filelock,"93",2);
 		memcpy(hardlock,"99",2);
 		memcpy(softlock,"99",2);
@@ -267,13 +226,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	{
 		w_err_flag = *err_flag;							/* Get the flag.			*/
 	}
-	else
-	{
-#ifdef unix
-		if (wbackground()) w_err_flag = 1+2+8;					/* enable file        exceptions	*/
-		else              w_err_flag = 1+2+4+8;					/* enable file screen exceptions	*/
-#endif                                                          
-	}
 
 	wpload();
 
@@ -291,7 +243,16 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	if (status != SS$_NORMAL) werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);		/* Error installing exit handler (VMS)	*/
 #endif
 
+#ifdef MSDOS
+	license_warning();
+#endif
+
 #ifdef unix
+	if (!wbackground())
+	{
+		set_isdebug();								/* Determine if COBOL debugger running	*/
+	}
+
 	PGRPID = wgetpgrp();								/* Set the Process Group ID.		*/
 
 	license_warning();								/* Check the WISP license		*/
@@ -323,10 +284,19 @@ static  int 	already = 0;								/* Have we already done it?		*/
 		signal( SIGBUS,  wexitbug );
 		signal( SIGSEGV, wexitbug );
 	}
-#endif
 
-#ifdef	MSDOS										/* Debug hook for MS-DOS		*/
-	v_modeflag( 6, 14, 'C' );							/* Gold box with yellow "C".		*/
+	if (!wbackground())
+	{
+		/*
+		**	We need to catch SIGHUP because it does not properly kill the process.
+		**	It the user closes a window the process was being sent a SIGHUP but this
+		**	was NOT killing the process, it only terminated the terminal-read with
+		**	an error.  The process then tried to report the error with a werrlog()
+		**	"Press and key to continue." box which hung the process waiting for
+		**	a response that would never come.
+		*/
+		signal( SIGHUP,  wexitsig );
+	}
 #endif
 
 }
@@ -353,9 +323,22 @@ int sig;
 	werrlog(ERRORCODE(2),sig,0,0,0,0,0,0,0);					/* Fatal signalled interrupt.		*/
 	wexit(ERRORCODE(2));
 }
+void wexitsig(sig)
+int sig;
+{
+#undef		ROUTINE
+#define		ROUTINE		74400
+	/*
+	**	This routine is only called when we want to terminate without further user interaction.
+	**	We do however what to log the signal error so we change the w_err_flag to only write to wisperr.log
+	*/
+	w_err_flag = ENABLE_LOGGING + LOG_LOGFILE;
+	werrlog(ERRORCODE(2),sig,0,0,0,0,0,0,0);					/* User signalled interrupt.		*/
+	wexit(ERRORCODE(2));
+}
 #endif
 
-#ifdef unix
+#if defined(unix) || defined(MSDOS)
 /*
 **	Routine:	license_warning()
 **
@@ -383,7 +366,7 @@ int sig;
 
 #include "wlicense.h"
 
-static license_warning()
+static void license_warning()
 {
 	int	code;
 	char	sbuff[1924];
@@ -411,7 +394,7 @@ static license_warning()
 	sbuff[3] = 1;
 
 	centload(sbuff,1,"****  WISP License Information  ****");
-	centload(sbuff,3,"Copyright (c) 1988,89,90,91,92 International Digital Scientific Inc.");
+	centload(sbuff,3,"Copyright (c) 1988,89,90,91,92,93 International Digital Scientific Inc.");
 	centload(sbuff,4,"28460 Avenue Stanford Suite 100, Valencia CA 91355  (805) 295-1155");
 
 	switch (code)
@@ -456,13 +439,15 @@ static license_warning()
 /*
 **	Routine:	license_checked()
 **
-**	Function:	1 - To mark that the license has been checked.
-**			2 - To test if the license has been checked.
+**	Function:	To mark that the license has been checked.
+**			To test if the license has been checked.
 **
 **	Description:	If "set" is true then this routine will set a shell variable WISPLICENSE equal to the Group Id.  This
 **			indicates that the license has been checked.
 **			If "set" is false then it will check if the license has been checked by examining the shell var and
 **			seeing if the group id matches.
+**
+**			The MSDOS version uses the Machine Id instead of the GID.
 **
 **	Input:		set		flag to set the shell variable
 **			
@@ -476,10 +461,13 @@ static license_warning()
 **	Warnings:	If the user is not using the Bourne Shell and doesn't have WISPGID set then this will not work and 
 **			the WISP license file will be read and checked at every link level.
 **
-**	History:	05/28/92	Written by GSL
+**	History:	
+**	05/28/92	Written by GSL
+**	07/07/93	Added MSDOS version. GSL
 **
 */
 
+#ifdef unix
 static int license_checked(set)
 int	set;
 {
@@ -497,7 +485,7 @@ int	set;
 	}
 	else
 	{
-		if (ptr = (char *)getenv("WISPLICENSE"))			/* see if license already checked 		*/
+		if (ptr = getenv("WISPLICENSE"))				/* see if license already checked 		*/
 		{
 			sscanf(ptr,"%d",&gid_x);				/* If WISPLICENSE env var is equal to the GID	*/
 			if (gid_x == gid) return(1);				/* then license has already been checked	*/
@@ -505,6 +493,44 @@ int	set;
 		return(0);							/* License has not been checked			*/
 	}
 }
+#endif /* unix */
+
+#ifdef MSDOS
+static int license_checked(set)
+int	set;
+{
+	char	*ptr;
+	char	mid[80];
+	char	buff[128];
+	int	i, len;
+
+	getmachineid(mid);							/* Get the machine id				*/
+
+	/*
+	**	Mung the machine id so can't be easily figured out by a hacker.
+	*/
+	len = strlen(mid);
+	for(i=0; i<len; i++)
+	{
+		mid[i] += 96;
+	}
+
+	if (set)
+	{
+		sprintf(buff,"WISPLICENSE=%s",mid);				/* set env variable - message was displayed	*/
+		setenvstr(buff);
+		return(1);
+	}
+	else
+	{
+		if (ptr = getenv("WISPLICENSE"))				/* see if license already checked 		*/
+		{
+			if (0==strcmp(ptr,mid)) return(1);			/* If WISPLICENSE is equal to machine id - OK	*/
+		}
+		return(0);							/* License has not been checked			*/
+	}
+}
+#endif /* MSDOS */
 
 /*
 **	Routine:	centload()
@@ -540,4 +566,4 @@ char	*mess;
 
 	memcpy(&buff[4+(row-1)*80+col],mess,len);
 }
-#endif /* unix */
+#endif /* unix || MSDOS */

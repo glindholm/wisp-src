@@ -10,6 +10,10 @@ static char rcsid[] = "$Id:$";
 #include "formdef_y.h"
 char *yystrdup();
 
+char yylbuf[1024] = {0};
+int yylpos=0;
+int yynewln=FALSE;
+
 int yyfd= -1;
 int yyupchar= -1;
 #undef input
@@ -26,9 +30,25 @@ static int input()
 		yyupchar = -1;
 		return tmp;
 	}
-	if (yyfd==-1) yyfd=open(fileread=FORMDEF,O_RDONLY);
+	if (yyfd==-1) yyfd=open(fileread=formdef,O_RDONLY);
 	if (yyfd==-1) { perror("Warning: could not open formdef file"); return 0; }
-	if (read(yyfd,buf,1)==1) { return buf[0]; }
+	if (read(yyfd,buf,1)==1) 
+        { 
+		if (yynewln)
+		{
+			yylpos=0;
+			yynewln=FALSE;
+		}
+		if (buf[0]=='\n')
+		{
+			++yynewln;
+		}
+		else
+		{
+			yylbuf[yylpos++]=buf[0];
+		}
+                return buf[0]; 
+        }
 	else { close(yyfd); yyfd= -1; yyupchar= -1; return 0; }
 }
 static int unput(ch)
@@ -54,7 +74,13 @@ comment #.*
                   return MODEL;
                 }
 {whitesp}	;
-{number}	{ sscanf(yytext,"%d",&yylval.num); return NUMBER; }
+{number}	{ 
+#ifdef __STDC__
+	sscanf((CONST char *)yytext,"%d",&yylval.num); return NUMBER; 
+#else
+	sscanf(yytext,"%d",&yylval.num); return NUMBER; 
+#endif
+	}
 {eq}		{ return EQUAL; }
 {colon}		{ return COLON; }
 {ident}		{ 

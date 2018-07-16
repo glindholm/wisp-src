@@ -35,6 +35,28 @@ static int st_foot_scr = MAX_LINES_PER_SCREEN;
 static struct active_list *headal = NULL;						/* Pointer to head of active lists.	*/
 static struct active_list *currlist = NULL;						/* Pointer to traverse active lists.	*/
 
+static int init_list();
+static int free_list_memory();
+static int add_head_foot();
+static int add_col();
+static int delete_col();
+static int resize_struct();
+static int define_func_keys();
+static int disp_one_item();
+static int display_header_footer();
+static int display_row();
+static int set_select_remove();
+static int up_list();
+static int down_list();
+static int verify_columns();
+static int calc_col();
+static int get_function();
+static int generate_display();
+
+#ifdef OSF1_ALPHA
+void *malloc();
+#endif
+
 int vlist(function,list_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
 unsigned char *function,*list_id,
 	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*item11,*item12,*item13,*item14,*item15,*item16;
@@ -800,7 +822,7 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 					*retcd = 0L;					/* Set to 0 for success.		*/
 					break;
 				}
-				case TOP:						/* Go to top of list.			*/
+				case VLIST_TOP:						/* Go to top of list.			*/
 				{
 					if (!(*rst_row))				/* Already at top.			*/
 					{
@@ -822,7 +844,7 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 					*retcd = 0L;					/* Set to 0 for success.		*/
 					break;
 				}
-				case BOTTOM:						/* Go to bottom of list.		*/
+				case VLIST_BOTTOM:					/* Go to bottom of list.		*/
 				{
 					if (*rst_row + num_scr >= ril) 			/* Already at bottom.			*/
 					{

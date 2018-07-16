@@ -10,6 +10,7 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "cobfiles.h"
 
 gen_unlocks()										/* Generate UNLOCK logic for reads.	*/
 {
@@ -17,37 +18,40 @@ gen_unlocks()										/* Generate UNLOCK logic for reads.	*/
 
 	if (!do_locking) return;
 
-	put_line				("\n      ***** LOCK PROCESSING PARAGRAPHS\n\n");
-	put_line				("       WISP-LOCK-START.\n");
+	tput_blank();
+	tput_scomment				("****** LOCK PROCESSING PARAGRAPHS ******");
+	tput_line				("       WISP-LOCK-START.");
 	
 	if (acu_cobol)
 	{
-		put_line			("           UNLOCK ALL RECORDS.\n"); 	/* Unlock all locks.			*/
+		tput_line			("           UNLOCK ALL RECORDS."); 	/* Unlock all locks.			*/
 	}
 	else
 	{
-		put_line			("           IF WISP-LOCK-ID = SPACES THEN\n");
-		put_line			("               GO TO WISP-RECORD-LOCK-CLEANUP.\n\n");
+		tput_line			("           IF WISP-LOCK-ID = SPACES THEN");
+		tput_line			("               GO TO WISP-RECORD-LOCK-CLEANUP.");
+		tput_blank();
 		for (i=0; i<prog_cnt; i++)						/* Generate the GOTO DEPENDING stuff.	*/
 		{									/* Skip if It's a print/sort file.	*/
 											/* Or an ACUCOBOL SEQ file.		*/
-			write_line		("           IF WISP-LOCK-ID = \"%s\" THEN\n",prog_files[i]);
+			tput_line		("           IF WISP-LOCK-ID = \"%s\" THEN",prog_files[i]);
 			if ((prog_ftypes[i] & (PRINTER_FILE + SORT_FILE)) ||
 			    (acu_cobol && (prog_ftypes[i] & SEQ_FILE)))
 			{
-				write_line	("               GO TO WISP-LOCK-END.\n\n"); /* Do nothing.			*/
+				tput_line	("               GO TO WISP-LOCK-END."); /* Do nothing.			*/
 			}
 			else
 			{
-				write_line	("               GO TO WISP-RECORD-UNLOCK-%d.\n\n",i+1); 
+				tput_line	("               GO TO WISP-RECORD-UNLOCK-%d.",i+1); 
 			}
+			tput_blank();
 		}
 	}
 
-	put_line	  			("       WISP-RECORD-LOCK-CLEANUP.\n");
-	put_line	  			("           MOVE WISP-NEW-LOCK-ID TO WISP-LOCK-ID.\n");
-	put_line	  			("       WISP-LOCK-END.\n");
-	put_line	  			("           EXIT.\n\n");
+	tput_line	  			("       WISP-RECORD-LOCK-CLEANUP.");
+	tput_line	  			("           MOVE WISP-NEW-LOCK-ID TO WISP-LOCK-ID.");
+	tput_line	  			("       WISP-LOCK-END.");
+	tput_line	  			("           EXIT.");
 
 	if (!acu_cobol)
 	{
@@ -56,13 +60,14 @@ gen_unlocks()										/* Generate UNLOCK logic for reads.	*/
 			if ((prog_ftypes[i] & (PRINTER_FILE + SORT_FILE)) ||		/* Skip it if it's printer/sort file.	*/
 			    (acu_cobol && (prog_ftypes[i] & SEQ_FILE)))			/* Or if it's ACUCOBOL & seq file.	*/
 				continue;
-			write_line		("       WISP-RECORD-UNLOCK-%d.\n",i+1);
-			write_line		("           MOVE %s TO WISP-SAVE-FILE-STATUS.\n",prog_fstats[i]);
+			tput_blank();
+			tput_line		("       WISP-RECORD-UNLOCK-%d.\n",i+1);
+			tput_line		("           MOVE %s TO WISP-SAVE-FILE-STATUS.\n",prog_fstats[i]);
 			if (vax_cobol)	
-				write_line	("           UNLOCK %s ALL.\n",prog_files[i]);
-			else	write_line	("           UNLOCK %s.\n",prog_files[i]);
-			write_line		("           MOVE WISP-SAVE-FILE-STATUS TO %s.\n",prog_fstats[i]);
-			put_line		("           GO TO WISP-RECORD-LOCK-CLEANUP.\n");
+				tput_line	("           UNLOCK %s ALL.\n",prog_files[i]);
+			else	tput_line	("           UNLOCK %s.\n",prog_files[i]);
+			tput_line		("           MOVE WISP-SAVE-FILE-STATUS TO %s.\n",prog_fstats[i]);
+			tput_line		("           GO TO WISP-RECORD-LOCK-CLEANUP.\n");
 		}
 	}
 
@@ -72,24 +77,19 @@ set_lock(fnum,indent)
 int fnum;
 int indent;
 {
-	char	col[80];
-
 	if (!do_locking) return;
 
-	memset(col,' ',80);
-	col[indent] = 0;
-
-	if (in_decl || copy_para) 							/* Don't check if in DECLARATIVES!!	*/
+	if (in_decl || copy_to_dcl_file) 						/* Don't check if in DECLARATIVES!!	*/
 	{
-		write_line("%sCONTINUE\n",col);
+		tput_line_at(indent,"CONTINUE");
 	}
 
 	if ( fnum >= 0 )
-		write_line("%sMOVE \"%s\" TO WISP-NEW-LOCK-ID\n",col,prog_files[fnum]);
+		tput_line_at(indent, "MOVE \"%s\" TO WISP-NEW-LOCK-ID",prog_files[fnum]);
 	else
-		write_line("%sMOVE SPACES TO WISP-NEW-LOCK-ID\n",col,prog_files[fnum]);
+		tput_line_at(indent, "MOVE SPACES TO WISP-NEW-LOCK-ID",prog_files[fnum]);
 											/* Store the ID of the file who will do	*/
-	write_line	  ("%sPERFORM WISP-LOCK-START THRU WISP-LOCK-END\n",col);	/* The current lock, then check to see	*/
+	tput_line_at	    (indent, "PERFORM WISP-LOCK-START THRU WISP-LOCK-END");	/* The current lock, then check to see	*/
 											/* That whoever has the last lock is	*/
 											/* Told to release it.			*/
 	lock_clear_para = 1;
@@ -105,10 +105,9 @@ int filenum;
 
 	if ( !(prog_ftypes[filenum] & (PRINTER_FILE + SORT_FILE)))			/* If not a printer file clear locks 	*/
 	{
-		write_line("           IF \"%s\" = WISP-LOCK-ID THEN\n",prog_files[filenum]);
-											/* The current lock is on. If so, clear	*/
-		put_line  ("               MOVE SPACES TO WISP-LOCK-ID\n");
-		put_line  ("           END-IF\n");
+		tput_line("           IF \"%s\" = WISP-LOCK-ID THEN",prog_files[filenum]);
+		tput_line("               MOVE SPACES TO WISP-LOCK-ID");		/* The current lock is on. If so, clear	*/
+		tput_line("           END-IF");
 	}
 }
 
@@ -119,7 +118,7 @@ predelete_locking()
 {
 	if (!do_locking) return;
 
-	put_line("           MOVE SPACES TO WISP-LOCK-ID\n");				/* Clear the lock.			*/
+	tput_line_at(12, "MOVE SPACES TO WISP-LOCK-ID");				/* Clear the lock.			*/
 }
 
 /*
@@ -128,7 +127,7 @@ predelete_locking()
 prerewrite_locking()
 {
 	if (!do_locking) return;
-	put_line("           MOVE SPACES TO WISP-LOCK-ID\n");				/* Clear the lock.			*/
+	tput_line_at(12,"MOVE SPACES TO WISP-LOCK-ID");					/* Clear the lock.			*/
 }
 
 /*
@@ -137,6 +136,6 @@ prerewrite_locking()
 clear_locking()
 {
 	if (!do_locking) return;
-	put_line  		("                MOVE SPACES TO WISP-LOCK-ID\n");
+	tput_line_at(16, "MOVE SPACES TO WISP-LOCK-ID");
 }
 

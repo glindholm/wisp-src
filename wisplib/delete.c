@@ -1,3 +1,4 @@
+#include "idsistd.h"
 #ifndef VMS	/* unix or MSDOS */
 
 #include <stdio.h>

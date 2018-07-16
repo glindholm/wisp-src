@@ -11,6 +11,7 @@
 #include <v/vlocal.h>
 #include <v/vdata.h>
 #include <v/vcap.h>
+#include "idsistd.h"
 
 /*						Subroutine entry point.								*/
 

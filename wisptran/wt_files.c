@@ -9,6 +9,12 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "scrn.h"
+#include "wispfile.h"
+#include "cobfiles.h"
+#include "keylist.h"
+#include "wmalloc.h"
+
 #include <stdio.h>
 
 #ifdef VMS
@@ -17,6 +23,14 @@
 #else
 #include <sys/types.h>
 #include <fcntl.h>
+#endif
+
+#ifdef VMS
+#define WISP_OPTION_FILE	"WISP.OPT"
+#define WISP_KEY_FILE		"WISP.KEY"
+#else
+#define WISP_OPTION_FILE	"wisp.opt"
+#define WISP_KEY_FILE		"wisp.key"
 #endif
 
 char	*using_ufb_ring = 0;
@@ -30,6 +44,7 @@ char *wfgets();
 
 open_io()									/* Parse and open the i/o files			*/
 {
+	FILE *par_file;								/* The file to hold paragraph names.	*/
 	int	i;
 #ifdef VMS
 	char inp_file[256];
@@ -41,7 +56,7 @@ open_io()									/* Parse and open the i/o files			*/
 	$DESCRIPTOR(si_file,s_inp_file);
 	$DESCRIPTOR(d_file,"*.wcb");
 
-	strcpy(inp_file,fname);							/* Copy the name gotten from the cli.		*/
+	strcpy(inp_file,in_fname);						/* Copy the name gotten from the cli.		*/
 
 	for (i = strlen(inp_file); i<256; i++)					/* Pad with spaces.				*/
 		inp_file[i] = ' ';
@@ -54,16 +69,16 @@ open_io()									/* Parse and open the i/o files			*/
 
 	write_log("WISP",'I',"FILENAME","parsed file is %s",s_inp_file);
 
-	strcpy(fname,s_inp_file);						/* Copy the name back to the global.		*/
+	strcpy(in_fname,s_inp_file);						/* Copy the name back to the global.		*/
 
-	i = strpos(fname,"]");							/* Get the NAME portion.			*/
+	i = strpos(in_fname,"]");						/* Get the NAME portion.			*/
 	if (i == -1)								/* Name didn't translate			*/
 #else
-	if ( strpos( fname, "." ) == -1 )					/* If no extension then add .wcb		*/
+	if ( strpos( in_fname, "." ) == -1 )					/* If no extension then add .wcb		*/
 	{
-		strcat( fname, ".wcb" );
+		strcat( in_fname, ".wcb" );
 	}
-	if ( access( fname, 0 ) == -1 )						/* If file doesn't exist.			*/
+	if ( access( in_fname, 0 ) == -1 )					/* If file doesn't exist.			*/
 #endif
 	{
 		out_fname[0] = '\0';
@@ -71,16 +86,18 @@ open_io()									/* Parse and open the i/o files			*/
 	else
 	{
 #ifdef VMS
-		strcpy(out_fname,&fname[i+1]);					/* Assemble the output file name.		*/
+		strcpy(out_fname,&in_fname[i+1]);				/* Assemble the output file name.		*/
 #else
-		strcpy(out_fname,fname);					/* Assemble the output file name.		*/
+		strcpy(out_fname,in_fname);					/* Assemble the output file name.		*/
 #endif
 		out_fname[strpos(out_fname,".")] = '\0';
 		strcpy(par_fname,out_fname);					/* and the paragraph file name.			*/
-		strcpy(lib_file,out_fname);					/* and the paragraph lib name.			*/
-		strcpy(decl_fname,out_fname);					/* The declaratives lib file name.		*/
+		strcpy(dcl_fname,out_fname);					/* and the paragraph lib name.			*/
+		strcpy(dtp_fname,out_fname);					/* The declaratives lib file name.		*/
 		strcpy(xref_fname,out_fname);					/* The cross ref file.				*/
 		strcpy(work_fname,out_fname);					/* The work file.				*/
+		strcpy(crt_fname,out_fname);
+		strcpy(read_fname,out_fname);
 
 		if (do_keyfile == USE_GENERAL_FILE)
 			strcpy(key_fname,out_fname);				/* The key list file.				*/
@@ -88,12 +105,12 @@ open_io()									/* Parse and open the i/o files			*/
 		if (do_optfile == USE_GENERAL_FILE)
 			strcpy(opt_fname,out_fname);				/* The options file.				*/
 
-#ifdef VMS
+#ifdef OLD_VMS
 		if (copy_only)  strcat(out_fname,".TXT;");			/* Create .TXT if only copying.			*/
 		else		strcat(out_fname,".COB;");			/* or .COB if really translating.		*/
 		strcat(par_fname,".PAR;");
-		strcat(lib_file,".DCL;");
-		strcat(decl_fname,".DTP;");
+		strcat(dcl_fname,".DCL;");
+		strcat(dtp_fname,".DTP;");
 		strcat(xref_fname,".XRF;");
 		strcat(work_fname,".WRK;");
 
@@ -101,234 +118,229 @@ open_io()									/* Parse and open the i/o files			*/
 			strcat(key_fname,".KEY;");
 		if (do_optfile == USE_GENERAL_FILE)
 			strcat(opt_fname,".OPT;");
-#else
-		if (copy_only)  strcat(out_fname,".txt");			/* Create .TXT if only copying.			*/
-		else		strcat(out_fname,".cob");			/* or .COB if really translating.		*/
+#endif
+		if (copy_only)  	strcat(out_fname,".txt");		/* Create .TXT if only copying.			*/
+		else if (data_conv)	strcat(out_fname,".wdc");		/* od .WDC data conversion routine.		*/
+		else			strcat(out_fname,".cob");		/* or .COB if really translating.		*/
 		strcat(par_fname,".par");
-		strcat(lib_file,".dcl");					/* Declaratives copybook of non-decl		*/
-		strcat(decl_fname,".dtp");					/* Decl temp file.				*/
+		strcat(dcl_fname,".dcl");					/* Declaratives copybook of non-decl		*/
 		strcat(xref_fname,".xrf");
 		strcat(work_fname,".wrk");
+		strcat(dtp_fname,".dtp");					/* Decl temp file.				*/
+		strcat(crt_fname,".ctp");
+		strcat(read_fname,".rtp");
 
 		if (do_keyfile == USE_GENERAL_FILE)
 			strcat(key_fname,".key");
 		if (do_optfile == USE_GENERAL_FILE)
 			strcat(opt_fname,".opt");
-#endif
 	}
 
 	write_log("WISP",'I',"OUTFILE","output file is %s",out_fname);
 
-	open_input(fname);							/* Open the first file for access.		*/
+	main_cob_context = open_cob_context(in_fname,out_fname);		/* Open the COBOL file context			*/
+	curr_cob_context = main_cob_context;					/* Current context is the MAIN context		*/
 
 	par_file = fopen(par_fname,"r");					/* try to open the paragraph file		*/
 	if (par_file)
 	{
-		while (wfgets(par_name[par_count],sizeof(par_name[par_count]),par_file))
+		while (wfgets(proc_paras[proc_paras_cnt],sizeof(proc_paras[proc_paras_cnt]),par_file))
 		{								/* Read the names of the paragraphs.		*/
-			i = strpos(par_name[par_count],"\n");
-			if (i) par_name[par_count][i] = '\0';			/* remove newlines.				*/
+			i = strpos(proc_paras[proc_paras_cnt],"\n");
+			if (i) proc_paras[proc_paras_cnt][i] = '\0';		/* remove newlines.				*/
 
-			if (isdigit(par_name[par_count][0]))			/* Is it a number?				*/
+			if (isdigit(proc_paras[proc_paras_cnt][0]))		/* Is it a number?				*/
 			{
-				if ( (isdigit(par_name[par_count][1]) && !par_name[par_count][2]) || !par_name[par_count][1])
+				if ( (isdigit(proc_paras[proc_paras_cnt][1]) && !proc_paras[proc_paras_cnt][2]) || 
+					!proc_paras[proc_paras_cnt][1] )
 				{
-					sscanf(par_name[par_count],"%d",&i);
+					sscanf(proc_paras[proc_paras_cnt],"%d",&i);
 					scrn_flags[i] |= SCRN_IN_DECLARATIVES;	/* Set the screens declaratives flag.		*/
 				}
 			}
-			par_count++;
+			proc_paras_cnt++;
 		}
 		fclose(par_file);
-
-		par_file = fopen(lib_file,"w");					/* Now open the paragraph file for out		*/
-
-		if (!par_file)
-		{
-			write_log("WISP",'E',"CANTOPENLIB","Unable to open paragraph copy lib for output.");
-			exit_wisp(-1);
-		}
 	}
 
 	p_workfile();								/* Process the work file.			*/
 	p_optfile();								/* Process the options file.			*/
 	p_keyfile();								/* Process the keylist file.			*/
 
-	open_output(out_fname);							/* Open the output file				*/
-
 }
 
-
-int open_input(filename)							/* Open a file while remembering the Previous	*/
-char *filename;
+/*
+**	Routine:	open_cob_context()
+**
+**	Function:	To establish a new cobol file context by opening new input files.
+**
+**	Description:	The cobol context is a data structure that describes what file
+**			COBOL lines are being read from and what file they should be
+**			written to.
+**
+**			At program start and for COPY statements this routine is called
+**			with a new input file and corresponding output file.  This routine
+**			opens the files and creates a new context.  If we are not generating
+**			copybooks then the output file is not opened and the context points
+**			to the main output file.
+**
+**			If an open of a input copybook fails the context is set to the 
+**			main cobol context. (If a open output fail WISP will abort.)
+**
+**			These contexts are "atomic", they are malloced here and are never
+**			freed so can be pointed at by tokens.
+**
+**	Arguments:
+**	infile		The native input file name.
+**	outfile		The corresponding native output file name.
+**
+**	Globals:
+**	main_cob_context
+**
+**	Return:		A new context pointer.
+**
+**	Warnings:	None
+**
+**	History:
+**	05/28/93	Written by GSL
+**
+*/
+cob_file_context *open_cob_context(infile,outfile)
+char	*infile;
+char	*outfile;
 {
+	cob_file_context *context;
 
-	FILE	*tempfile;
-	char	*p;
+	context = (cob_file_context *)wmalloc(sizeof(cob_file_context));
 
-#ifdef unix
-	for( p=filename; *p; *p=tolower(*p),p++ );
-#endif
-
-	tempfile = fopen(filename,"r");						/* Try to open it.				*/
-
-	if (open_files) 							/* See about putting it into the read list.	*/
-		set_rlist(filename);
-
-	if (!tempfile)								/* No good, report the error & return.		*/
+	if (!main_cob_context)
 	{
-		write_log("WISP",'E',"CANTOPEN","Unable to open file %s for input.",filename);
-		if (open_files) return(0);
-		exit(1);							/* First file, error-exit.			*/
-	}
-
-	if (log_stats)
-	{
-		printf("Opened %s for input.\n",filename);			/* write status					*/
-	}
-
-	had_read = 0;								/* Didn't find a read yet.			*/
-
-	if (open_files)
-	{
-		num_copy = 0;
-		strcpy(copy_name,filename);					/* Save the copy file name			*/
-		trimname(copy_name);
-		cpy_seq = 0;							/* Reset the copy sequence counter.		*/
-		file_ptrs[open_files-1] = infile;				/* Save the ptr to the current file structure	*/
+		context->infile  = open_cob_file(infile,FOR_INPUT,0);
+		if (!context->infile) exit_with_err();				/* Error opening main input file		*/
+		context->outfile = open_cob_file(outfile,FOR_OUTPUT,0);
+		if (!context->outfile) exit_with_err();				/* Error opening main output file		*/
 	}
 	else
 	{
-		num_main = 0;
-		strcpy(main_name,filename);
-		trimname(main_name);
-	}
-	open_files++;								/* Count it					*/
-	infile = tempfile;							/* And set the infile pointer to it.		*/
-	return(0);
-}
-
-close_input()
-{
-
-	if (open_files)								/* Make sure there is a file to close		*/
-	{
-		fclose(infile);							/* Yep, close the current file			*/
-		open_files--;							/* One less to worry about			*/
-		if (open_files)							/* Other files open?				*/
+		context->infile  = open_cob_file(infile,FOR_INPUT,1);
+		if (context->infile)
 		{
-			num_copy = 0;
-			copy_name[0] = '\0';
-			infile = file_ptrs[open_files-1];			/* Yes, return them to working status		*/
-		}
-	}
-}
-open_output(filename)								/* Open an output file & remember the last file	*/
-char *filename;
-{
+			set_rlist(infile);
+			cpy_seq = 0;						/* Reset the copy sequence counter.		*/
 
-	int tempfile,tskip;
-	char *p;
-
-#ifdef unix
-	for( p=filename; *p; *p=tolower(*p),p++ );
-#endif
-
-	wflush();								/* flush the current file			*/
-
-	tskip = 0;								/* Not skipping yet				*/
-
-	if (out_files)								/* If there are already files, must be copy lib	*/
-	{
-		tempfile = open(filename,O_RDONLY);				/* First see if it exists.			*/
-		if (tempfile == -1)
-		{								/* Does not exist, so open it new.		*/
-#ifdef VMS
-			tempfile = creat(filename,0);				/* Try to open it.				*/
-#else
-			tempfile = creat(filename,00666);			/* Try to open it.				*/
-#endif
+			if (copylib)
+			{
+				context->outfile = open_cob_file(outfile,FOR_OUTPUT,1);
+				if (!context->outfile) exit_with_err();
+			}
+			else
+			{
+				context->outfile = main_cob_context->outfile;
+			}
 		}
 		else
 		{
-			tskip = 1;						/* Flag it as a skip.				*/
+			context->infile  = main_cob_context->infile;
+			context->outfile = main_cob_context->outfile;
 		}
+	}
+	return( context );
+}
+
+/*
+**	Note On ATOMIC data elements:
+**	============================
+**	The memory for this data is atomic, it is malloced once and exists for the
+**	duration of the process.  This means you can set a pointer to the memory
+**	and know it will not be freed or changed ever.  These are used in tokens
+**	to maintain which file the token came from.  The token may exist across
+**	opening and closing of copybooks so we can't point to a "current state"
+**	variable yet we don't want the overhead of the filename in each token.
+**	Additionally we can determine if in the same file be comparing the pointers
+**	instead of a full name comparison because tokens from the same file
+**	will all point to the same atomic file data structure.
+*/
+
+int writing_cob_main()
+{
+	return(!writing_copybook());
+}
+
+int writing_copybook()
+{
+	return(curr_cob_context->outfile->is_copybook);
+}
+
+int reading_copybook()
+{
+	return(curr_cob_context->infile->is_copybook);
+}
+
+char *context_infile_name(context)
+cob_file_context *context;
+{
+	if (context && context->infile && context->infile->a_file)
+	{
+		return(context->infile->a_file->name);
 	}
 	else
 	{
-#ifdef VMS
-		tempfile = creat(filename,0);					/* Try to open it.				*/
-#else
-		tempfile = creat(filename,00666);				/* Try to open it.				*/
-#endif
+		return("(UNKNOWN)");
 	}
+}
 
-	if (tempfile == -1)							/* No good, report the error and return.	*/
+char *context_outfile_name(context)
+cob_file_context *context;
+{
+	if (context && context->outfile && context->outfile->a_file)
 	{
-		write_log("WISP",'E',"CANTOPEN","Unable to open file %s for output.",filename);
-		exit_wisp(-1);
+		return(context->outfile->a_file->name);
+	}
+	else
+	{
+		return("(UNKNOWN)");
+	}
+}
+
+int context_infile_count(context)
+cob_file_context *context;
+{
+	if (context && context->infile)
+	{
+		return(context->infile->line_count);
+	}
+	else
+	{
 		return(0);
 	}
-
-	if (log_stats && !tskip)
-	{
-		printf("Opened %s for output.\n",filename);			/* write status					*/
-	}
-
-	write_log("WISP",'I',"OPNOUTFILE","Opened file %s for output.\n",filename);
-
-	if (out_files)
-	{
-		o_file_ptrs[out_files-1] = outfile;				/* Save the ptr to the current file structure	*/
-		o_skip[out_files-1] = skiplib;					/* Save the skiplib status			*/
-	}
-	out_files++;								/* Count it					*/
-	outfile = tempfile;							/* And set the infile pointer to it.		*/
-	skiplib = tskip;							/* Set the correct skip flag			*/
-
 }
 
-close_output()
+int curr_context_infile_count()
 {
-
-	if (out_files)								/* Make sure there is a file to close		*/
-	{
-		wflush();							/* flush our output buffer			*/
-		close(outfile);							/* Yep, close the current file			*/
-		write_log("WISP",'I',"CLOSEOUT","Closed output file.");
-		out_files--;							/* One less to worry about			*/
-		if (out_files)							/* Other files open?				*/
-		{
-			outfile = o_file_ptrs[out_files-1];			/* Yes, return them to working status		*/
-			skiplib = o_skip[out_files-1];				/* skip flag too				*/
-		}
-	}
+	return(context_infile_count(curr_cob_context));
 }
 
+cob_file_context *get_curr_cob_context()
+{
+	return(curr_cob_context);
+}
 
-
-
-copy_file(the_file)								/* just copy a file to outfile			*/
+copy_file(the_file)								/* just copy a file to the cob file		*/
 char *the_file;
 {
-	FILE *infile;
-	int lstat;
-	char input_line[133];
+	cob_file *cob_file_ptr;
+	char	input_line[128];
 
-	infile = fopen(the_file,"r");						/* open the file				*/
+	cob_file_ptr = open_cob_file(the_file,FOR_INPUT,1);			/* open the file				*/
 
-	if (infile)
+	if (cob_file_ptr)
 	{
-		do
+		while(0==get_clean_cobol_line(input_line,sizeof(input_line),cob_file_ptr->a_file))
 		{
-			lstat = (int)wfgets(input_line,132,infile);		/* Read a line					*/
-			if (lstat)
-			{
-				put_line(input_line);				/* copy it to the output file			*/
-			}
+			cob_file_ptr->line_count++;
+			tput_line(input_line);					/* copy it to the output file			*/
 		}
-		while(lstat);							/* till all done				*/
-		fclose(infile);
+		close_cob_file(cob_file_ptr);
 	}
 	else
 	{
@@ -340,6 +352,7 @@ p_optfile()									/* Read the option file.			*/
 {
 	int i,k,wisp_opt;
 	char tstr[133],*scn_ptr,*prm_ptr;
+	FILE *opt_file;								/* The option file.				*/
 
 	if (!do_optfile) return(1);
 
@@ -348,7 +361,7 @@ p_optfile()									/* Read the option file.			*/
 	if (!opt_file)
 	{
 		write_log("WISP",'F',"CANTFINDOPT","Option file %s not found.",opt_fname);
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 
 	if (!opt_file)
@@ -367,6 +380,8 @@ scan_opt:
 	while (wfgets(tstr,132,opt_file))
 	{									/* Read the names of the paragraphs.		*/
 		scn_ptr = tstr;
+
+		for (i=0; i<MAX_PARMS; i++) o_parms[i][0] = (char)0;		/* Clear the o_parms				*/
 
 		i = 0;
 		do								/* scan the line and extract the parms		*/
@@ -400,6 +415,8 @@ scan_opt:
 #define NO_DISPLAY_PROCESSING	185
 #define SORTFILE		208
 #define USING_UFB 		219
+#define CHANGE_STOP_RUN		250
+#define DBFILE			267
 
 /*				      1         2         3         4         5         6         7				*/
 /*			    01234567890123456789012345678901234567890123456789012345678901234567890				*/
@@ -418,29 +435,25 @@ scan_opt:
 			if (k != -1) k += 150;
 		}
 
+		if (k == -1)
+		{		/* 250	     260       270	 280	   290	     300       310	 320			*/
+/*				    01234567890123456789012345678901234567890123456789012345678901234567890			*/
+			k = strpos("#CHANGE_STOP_RUN #DBFILE ",o_parms[0]);
+			if (k != -1) k += 250;
+		}
+
 		switch (k)
 		{
 			case COPY_DECLARATIVE:
 			{
-				if (ppdiv_count == MAX_PARAGRAPHS)
+				if (proc_performs_cnt == MAX_PARAGRAPHS)
 				{
 					write_log("WISP",'E',"MAXPARDECL","Maximum DECLARATIVES paragraphs to copy exceeded.");
 					break;
 				}
 
-				strcpy(perf_pdiv[ppdiv_count++],o_parms[1]);	/* Save the name of the performed procedure.	*/
-
-				if (!decl_file)
-				{
-					decl_file = fopen(decl_fname,"w");	/* Now open the paragraph file for out		*/
-
-					if (!decl_file)
-					{
-						write_log("WISP",'E',"CANTOPENLIB",
-							"Unable to open DECLARATIVES copy lib for output.");
-						exit_wisp(-1);
-					}
-				}
+				strcpy(proc_performs[proc_performs_cnt++],o_parms[1]);	
+										/* Save the name of the performed procedure.	*/
 				break;
 			}
 
@@ -501,6 +514,12 @@ scan_opt:
 				break;
 			}
 
+			case CHANGE_STOP_RUN:
+			{
+				changestop = 1;					/* Change STOP RUN statements to EXIT PROGRAM	*/
+				break;
+			}
+
 			case DELETE_RECORD_CONTAINS:				/* Delete the RECORD CONTAINS clause.		*/
 			{
 				delrecon = 1;
@@ -557,7 +576,7 @@ printf("USING_UFB=[%s]\n",using_ufb_item.name);
 					{
 						write_log("WISP",'F',"RINGOPEN",
 							"Unable to open ring [using_ufb_ring] rc=%d [%s]",rc,ring_error(rc));
-						exit_wisp(-1);
+						exit_wisp(EXIT_WITH_ERR);
 					}
 				}
 				
@@ -565,8 +584,14 @@ printf("USING_UFB=[%s]\n",using_ufb_item.name);
 				{
 					write_log("WISP",'F',"RINGADD",
 						"Unable to add to ring [using_ufb_ring] rc=%d [%s]",rc,ring_error(rc));
-					exit_wisp(-1);
+					exit_wisp(EXIT_WITH_ERR);
 				}
+				break;
+			}
+
+			case DBFILE:
+			{
+				dbfile_add_item(o_parms[1], o_parms[2]);
 				break;
 			}
 
@@ -609,7 +634,7 @@ p_keyfile()									/* Read the key file.				*/
 	if (!key_file && (do_keyfile == USE_SPECIFIC_FILE))
 	{
 		write_log("WISP",'F',"CANTFINDKEY","Key file %s not found.",key_fname);
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 
 scan_key:
@@ -621,7 +646,7 @@ scan_key:
 	while (wfgets(tstr,132,key_file))
 	{									/* Read the names of the fields.		*/
 		scn_ptr = tstr;
-		for(i=0; tstr[i]; i++) tstr[i] = toupper(tstr[i]);		/* Shift whole string to uppercase		*/
+		uppercase(tstr);						/* Shift whole string to uppercase		*/
 
 		i = 0;
 		do								/* scan the line and extract the parms		*/
@@ -655,7 +680,7 @@ scan_key:
 					{
 						write_log("WISP",'F',"INVALIDKEYFILE",
 								"Unknown Control in Key file %5.5s.",scn_ptr);
-						exit_wisp(-1);
+						exit_wisp(EXIT_WITH_ERR);
 					}
 				
 					if ( tflag )
@@ -746,35 +771,6 @@ p_workfile()										/* Read the workfile.			*/
 	used_wrk = 1;									/* Signal we used the workfile.		*/
 }
 
-
-
-static int sav_outfile;
-static int sav_skiplib;
-
-set_main()
-{
-	if (out_files == 1)	return(0);						/* if there are other open files, do this	*/
-
-	wflush();
-
-	sav_outfile = outfile;							/* Save the file pointer.			*/
-	sav_skiplib = skiplib;
-
-	outfile = o_file_ptrs[0];						/* Set the file pointer to the main.		*/
-	skiplib = o_skip[0];							/* Set the correct skip flag			*/
-
-}
-
-set_lib()
-{
-	if (out_files == 1)	return(0);					/* if there are other open files, do this	*/
-
-	wflush();
-	outfile = sav_outfile;							/* Restore the saved info.			*/
-	skiplib = sav_skiplib;
-}
-
-
 int rcpy_compare(p1,p2)
 struct rcpy_struct *p1, *p2;
 {
@@ -813,7 +809,7 @@ char *filename;
 		if ( rc = ring_open(&rcpy_list_ring,sizeof(struct rcpy_struct),10,10,rcpy_compare,1) )
 		{
 			write_log("WISP",'F',"RINGOPEN","Unable to open ring [rcpy_list] rc=%d [%s]",rc,ring_error(rc));
-			exit_wisp(-1);
+			exit_wisp(EXIT_WITH_ERR);
 		}
 	}
 
@@ -824,7 +820,7 @@ char *filename;
 	if (rc = ring_add(rcpy_list_ring,0,&rcpy_element) )
 	{
 		write_log("WISP",'F',"RINGADD","Unable to add to ring [rcpy_list] rc=%d [%s]",rc,ring_error(rc));
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 }
 
@@ -882,4 +878,190 @@ char	*item;
 	strcpy(using_ufb_item.name,item);
 	rc = ring_find(using_ufb_ring,&using_ufb_item,0,0);
 	return(!rc);
+}
+
+/*
+	wfgets		This is a frontend to fgets
+*/
+char *wfgets(s, n, stream)
+char	*s;
+int	n;
+FILE	*stream;
+{
+	char	*ptr;
+
+	ptr = fgets(s, n, stream);
+	return(ptr);
+}
+
+static cob_file *cob_file_list_start = NULL;
+
+cob_file *open_cob_file(filename,openmode,copybook)
+char	*filename;
+int	openmode;
+int	copybook;
+{
+	FILE		*tempfile;
+	char		*open_mode_ptr;
+	cob_file	*cob_file_ptr;
+
+	switch(openmode)
+	{
+	case FOR_INPUT:
+		open_mode_ptr = "r";
+		break;
+	case FOR_OUTPUT:
+		open_mode_ptr = "w";
+		break;
+	default:
+		write_log("WISP",'F',"COBOPEN","Invalid open mode %d",openmode);
+		exit_with_err();
+		break;
+	}
+
+	tempfile = fopen(filename,open_mode_ptr);
+	if (!tempfile)								/* No good, report the error & return.		*/
+	{
+		write_log("WISP",'S',"CANTOPEN","Unable to open file %s for %s.",
+						filename,(FOR_INPUT==openmode)?"INPUT":"OUTPUT");
+		delayed_exit_with_err();
+		return(NULL);
+	}
+
+	/*
+	**	Create a cob_file area, add it to the list (in reverse order), then
+	**	fill in all the data.
+	*/
+	cob_file_ptr = (cob_file *)wmalloc(sizeof(cob_file));
+	cob_file_ptr->next = cob_file_list_start;
+	cob_file_list_start = cob_file_ptr;
+
+	cob_file_ptr->a_file = (A_file *)wmalloc(sizeof(A_file));
+	strcpy(cob_file_ptr->a_file->name,filename);
+	cob_file_ptr->a_file->file = tempfile;
+
+	cob_file_ptr->line_count = 0;
+	cob_file_ptr->is_open = openmode;
+	cob_file_ptr->is_copybook = copybook;
+
+	write_log("WISP",'I',"OPENCOB","Open %s file %s.",
+				(FOR_INPUT==cob_file_ptr->is_open) ? "INPUT":"OUTPUT",
+				cob_file_ptr->a_file->name);
+
+	if (log_stats)
+	{
+		printf("Opened file %s for %s %s.\n",
+					cob_file_ptr->a_file->name,
+					(cob_file_ptr->is_copybook) ? "COPY":"MAIN",
+					(FOR_INPUT==cob_file_ptr->is_open) ? "input":"output");
+	}
+
+	return(cob_file_ptr);
+}
+
+int close_cob_file(cob_file_ptr)
+cob_file	*cob_file_ptr;
+{
+	if (!cob_file_ptr) return(0);
+
+	if (cob_file_ptr->is_open)
+	{
+		if (cob_file_ptr->a_file && cob_file_ptr->a_file->file)
+		{
+			fclose(cob_file_ptr->a_file->file);
+			cob_file_ptr->a_file->file = NULL;
+			write_log("WISP",'I',"CLOSECOB","Closed %s file %s count=%d.",
+				(FOR_INPUT==cob_file_ptr->is_open) ? "INPUT":"OUTPUT",
+				cob_file_ptr->a_file->name, cob_file_ptr->line_count);
+
+			if (log_stats)
+			{
+				printf("Closed file %s for %s %s count=%d.\n",
+					cob_file_ptr->a_file->name,
+					(cob_file_ptr->is_copybook) ? "COPY":"MAIN",
+					(FOR_INPUT==cob_file_ptr->is_open) ? "input":"output",
+					cob_file_ptr->line_count);
+			}
+		}
+
+		cob_file_ptr->is_open = 0;
+	}
+
+	return(0);
+}
+
+int close_all_cob_files()
+{
+	cob_file	*cob_file_ptr;
+
+	cob_file_ptr = cob_file_list_start;
+	while(cob_file_ptr)
+	{
+		close_cob_file(cob_file_ptr);
+		cob_file_ptr = cob_file_ptr->next;
+	}
+	return(0);
+}
+
+struct dbfile_item_struct
+{
+	struct dbfile_item_struct *next;
+	char	*select;
+	char	*table;
+};
+
+static struct dbfile_item_struct *dbfile_item_list = NULL;
+
+int dbfile_add_item(select_name, table_name)
+char	*select_name;
+char	*table_name;
+{
+	struct dbfile_item_struct *item;
+
+	item = wmalloc(sizeof(struct dbfile_item_struct));
+
+	item->next = dbfile_item_list;
+	item->select = wdupstr(select_name);
+	uppercase(item->select);
+	item->table = wdupstr(table_name);
+	dbfile_item_list = item;
+}
+
+struct dbfile_item_struct *get_dbfile_item(select_name)
+{
+	struct dbfile_item_struct *item;
+
+	item = dbfile_item_list;
+	while(item)
+	{
+		if (noncase_eq(select_name,item->select)) return(item);
+		item = item->next;
+	}
+	return(NULL);
+}
+
+int is_dbfile(select_name)
+char	*select_name;
+{
+	if (get_dbfile_item(select_name)) return(1);
+	return(0);
+}
+
+void dbfile_write_mark(select_name)
+char	*select_name;
+{
+	struct dbfile_item_struct *item;
+
+	item = get_dbfile_item(select_name);
+	if (item)
+	{
+		if (item->table && item->table[0])
+		{
+			tput_scomment("$XFD FILE=%s",item->table);
+		}
+		else
+		{
+			tput_scomment("$XFD FILE=%s",item->select);
+		}
+	}
 }

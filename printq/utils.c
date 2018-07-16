@@ -1,8 +1,149 @@
 /*
  * Module:  utils.c
  * Program: IDSIprint 
+ * Description:  functions used by both client and server
  *
+ */
+static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
+static char rcsid[] = "$Id:$";
+
+#define EXT extern 
+#include "defs.h"
+#include "qpaths.h"
+
+key_t myftok(char *file, char x)
+                
+            								/* For IBM - generate unique numbers.	*/
+           										/* Replaces FTOK (system one doesn't 	*/
+       											/*  work properly for IBM.)		*/
+{
+#ifdef _AIX
+	struct stat buf;
+	int	rc;
+
+	rc = stat(file,&buf);
+	if (rc == -1)
+	{
+		return( (key_t) -1 );
+	}
+	if (buf.st_ino&0xff000000) printf("warning %08x\n",buf.st_ino);
+	return (key_t)(((key_t)x<<24)|(buf.st_ino&0x00ffffff));
+#else
+	return ftok(file,x);
+#endif
+}
+
+#define VLEN 5
+#define MDLEN 20
+void make_vers_date(char *idstr, char *version, char *moddate)
+{
+	char *p,*e,*strchr(CONST char *, int);
+	extern long version_num, revision_num;
+	
+	memset(version,0,VLEN);
+	p=strchr(idstr,'V');
+	if (p)
+	{
+		e=strchr(++p,' ');
+		memcpy(version,p,e-p);
+		p=strchr(version,'_');
+		if (p) *p='.';
+	}
+	else
+	{
+		p=strchr(idstr,' ');
+		p=strchr(++p,' ');
+		e=strchr(++p,' ');
+		version[0]='~';
+		memcpy(version+1,p,e-p);
+	}
+	memset(moddate,0,MDLEN);
+	p=strchr(idstr,' ');
+	p=strchr(++p,' ');
+	p=strchr(++p,' ');
+	e=strchr(++p,' ');
+	memcpy(moddate,p,e-p);
+}
+#define REPMAX 4096
+char *repchar(cnt, ch)
+int cnt,ch;
+{
+	static char repbuf[REPMAX];
+	static int lastch= -1;
+	static int lastcnt= -1;
+
+	if (cnt>REPMAX)
+	{
+		cnt=REPMAX;
+	}
+	if (lastch != ch)
+	{
+		memset(repbuf,ch,cnt);
+		lastch = ch;
+		lastcnt = cnt;
+		repbuf[cnt]='\0';
+		return repbuf;
+	}
+	else
+	{
+		if (lastcnt == cnt)
+		{
+			return repbuf;
+		}
+		else if (lastcnt < cnt)
+		{
+			memset(repbuf+lastcnt,ch,cnt-lastcnt);
+			lastch = ch;
+			lastcnt = cnt;
+			repbuf[cnt]='\0';
+			return repbuf;
+		}
+		else
+		{
+			lastch = ch;
+			lastcnt = cnt;
+			repbuf[cnt]='\0';
+			return repbuf;
+		}
+	}
+}
+
+/*
  * $Log: utils.c,v $
+ * Revision 1.21  1993/09/13  15:28:29  jockc
+ * 499
+ * 503
+ *
+ * Revision 1.21  1993/09/10  18:28:03  jockc
+ * added repchar function
+ *
+ * Revision 1.20  1993/08/13  22:08:51  jockc
+ * const
+ *
+ * Revision 1.19  1993/08/13  20:14:21  jockc
+ * changes for alpha/c89
+ *
+ * Revision 1.18  1993/01/12  02:09:58  jockc
+ * moved many functions to more appropriate modules.  this module
+ * is only for functions used in common between client and server
+ *
+ * Revision 1.17  1993/01/04  22:42:23  jockc
+ * took out lockfour on dumpread
+ *
+ * Revision 1.16  1992/12/31  23:51:25  jockc
+ * qpaths/ISPOOL.  fixed null action in truncspc.
+ *
+ * Revision 1.15  1992/10/28  22:14:11  jockc
+ * fixed username() crash on nonexistant user
+ *
+ * Revision 1.14  1992/10/09  21:41:51  jockc
+ * a slight adjustment to lockfour..  for loop would sometimes not execute
+ *
+ * Revision 1.13  1992/10/09  20:19:46  jockc
+ * revised the locking scheme.  moved dosubst here, and added
+ * more macros.
+ * moved x_username here
+ *
  * Revision 1.12  1992/07/07  23:07:07  jockc
  * added improved lock mech for daemon detect.  Still
  * need to rework entire lockfile logic
@@ -43,204 +184,3 @@
  *
  *
  */
-static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-static char rcsid[] = "$Id:$";
-
-#define EXT extern 
-#include "defs.h"
-
-lockfile(type,val)
-int type,val;
-{
-	int lockfd;
-	int lockinfo;
-	int ret;
-	
-	if (val==DAEMON_RUNNING && type==LK_STAT)
-		return daemon_lock_check();
-	lockfd=open(LOCKFILE,O_RDWR);
-	if (lockfd== -1) return 0;
-	lockf(lockfd,F_LOCK,4);
-	read(lockfd,&lockinfo,sizeof(lockinfo));
-	lseek(lockfd,0,0);
-	
-	switch (type)
-	{
-	      case LK_SET:
-		if(lockinfo & val) ret=1;
-		else
-		{
-			lockinfo |= val;
-			write(lockfd,&lockinfo,sizeof(lockinfo));
-			ret=0;
-		}
-		break;
-	      case LK_CLEAR:
-		lockinfo &= ~val;
-		write(lockfd,&lockinfo,sizeof(lockinfo));
-		ret=0;
-		break;
-	      case LK_STAT:
-		ret = (lockinfo & val)!=0;
-		break;
-	}
-	lseek(lockfd,0,0);
-	lockf(lockfd,F_ULOCK,4);
-	close(lockfd);
-	return ret;
-}
-/*
-  the next two routines were added before the 3.2 release to 
-  improve the "daemon running" check.  When we have more time,
-  the LOCKFILE scheme should be redone, but for now, we use
-  these functions.  daemon_lock_set establishes a lock on 
-  bytes 4-7 of the lockfile.  daemon_lock_check just checks
-  for the lock 
-*/
-daemon_lock_check()
-{
-	int lockfd;
-	int lockst;
-	
-	lockfd=open(LOCKTMP,O_RDWR);
-	if (lockfd < 0)
-	  return FALSE;
-	lockst=lockf(lockfd,F_TEST,4);
-	close(lockfd);
-	if (lockst < 0)
-	  return TRUE;
-	else 
-	  return FALSE;
-}
-daemon_lock_set()
-{
-	int lockfd;
-
-	lockfd=open(LOCKTMP,O_RDWR|O_CREAT);
-	chmod(LOCKTMP,0666);
-	write(lockfd,&lockfd,4);
-	lseek(lockfd,0,0);
-	lockf(lockfd,F_LOCK,4);
-}
-char *gmem(sz)
-int sz;
-{
-	char *calloc();
-	static char *tmp;
-	
-	tmp=calloc(sz,1);
-	return tmp;
-}
-void truncspc(p)
-char *p;
-{
-	char *tmpp,*gmem();
-	char *st,*end;
-	
-	if (strlen(p))
-	{
-		tmpp=gmem(strlen(p)+1);
-		strcpy(tmpp,p);
-		for(st=tmpp; *st && *st==' '; ++st);
-		for(end=st;*end && *end!=' ';++end);
-		if(*end) *end='\0';
-		memcpy(p,st,end-st>0?end-st:0);
-		p[end-st>0?end-st:0];
-	}
-}
-#ifdef MQCODE
-key_t myftok(file,x)								/* For IBM - generate unique numbers.	*/
-char *file;										/* Replaces FTOK (system one doesn't 	*/
-char x;											/*  work properly for IBM.)		*/
-{
-#ifdef _AIX
-	struct stat buf;
-	int	rc;
-
-	rc = stat(file,&buf);
-	if (rc == -1)
-	{
-		return( (key_t) -1 );
-	}
-	if (buf.st_ino&0xff000000) printf("warning %08x\n",buf.st_ino);
-	return (key_t)(((key_t)x<<24)|(buf.st_ino&0x00ffffff));
-#else
-	return ftok(file,x);
-#endif
-}
-#endif
-#define VLEN 5
-#define MDLEN 20
-make_vers_date(idstr,version,moddate)
-char *idstr, *version, *moddate;
-{
-	char *p,*e,*strchr();
-	extern long version_num, revision_num;
-	
-	memset(version,0,VLEN);
-	p=strchr(idstr,'V');
-	if (p)
-	{
-		e=strchr(++p,' ');
-		memcpy(version,p,e-p);
-		p=strchr(version,'_');
-		if (p) *p='.';
-	}
-	else
-	{
-		p=strchr(idstr,' ');
-		p=strchr(++p,' ');
-		e=strchr(++p,' ');
-		version[0]='~';
-		memcpy(version+1,p,e-p);
-	}
-	memset(moddate,0,MDLEN);
-	p=strchr(idstr,' ');
-	p=strchr(++p,' ');
-	p=strchr(++p,' ');
-	e=strchr(++p,' ');
-	memcpy(moddate,p,e-p);
-}
-chk_vers(type)
-int type;
-{
-	if (type&QVERS && chk_qvers()<0) 
-	  return INCOMPAT_VERS;
-	if (type&QVERS && chk_qvers()<0) 
-	  return INCOMPAT_VERS;
-	if (type&CVERS && chk_cvers()<0) 
-	  return INCOMPAT_VERS;
-	return 0;
-}
-chk_qvers()
-{
-	return chk_dump(QDUMPFILE);
-}
-chk_pvers()
-{
-	return chk_dump(PDUMPFILE);
-}
-chk_cvers()
-{
-	return chk_dump(CDUMPFILE);
-}
-chk_dump(path)
-char *path;
-{
-	int dump,ret=0;
-	unsigned long magic, version;
-	
-	dump=open(path,O_RDONLY);
-	if (dump<0)
-	  ret = INCOMPAT_VERS;
-	if (read(dump,&magic,sizeof(magic))<0)
-	  ret = INCOMPAT_VERS;
-	if (read(dump,&version,sizeof(version))<0)
-	  ret = INCOMPAT_VERS;
-	if ((magic & 0xffffff00) != (QDUMPMAGIC & 0xffffff00))
-	  ret = INCOMPAT_VERS;
-	if (version != DUMPVERSION)
-	  ret = INCOMPAT_VERS;
-	if (dump>=0) close(dump);
-	return ret;
-}

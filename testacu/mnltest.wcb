@@ -1,0 +1,609 @@
+000001******************************************************************
+000002* EIGHTBTEST - test and demo program for using 8 bit multinational 
+000002*              facility
+000003******************************************************************
+000006 IDENTIFICATION DIVISION.
+000013 PROGRAM-ID. EIGHTBTEST.
+000015 AUTHOR. J Cooper.
+000016 DATE-WRITTEN. FEB 11 1992.
+000085 ENVIRONMENT DIVISION.
+000214 FIGURATIVE-CONSTANTS.
+000214     UPPER-ENTRY-FAC        IS "81"
+000214     NUMERIC-ENTRY-FAC      IS "82"
+000214     UPLOW-ENTRY-FAC        IS "80"
+000214     BLINK-ENTRY-FAC        IS "90"
+000214     UPPER-ENTRY-FAC-MOD    IS "C1"
+000214     NUMERIC-ENTRY-FAC-MOD  IS "C2"
+000214     UPLOW-ENTRY-FAC-MOD    IS "C0"
+000214     BLINK-ENTRY-FAC-MOD    IS "D0"
+000214     DIM-FAC                IS "8C"
+000214     DIM-UNDERLINE-FAC      IS "AC"
+000214     HIDE-FAC               IS "9C"
+000214     BRITE-FAC              IS "84"
+000214     LO-PRO-NUM-FAC         IS "8E"
+000214     MENU-PICK              IS "05"
+
+000214     MY-UPPER-FAC           IS "A1"
+000214     MY-UPLOW-FAC           IS "A0"
+000214     MY-NUMERIC-FAC         IS "A2"
+000214     MY-UPPER-MOD-FAC       IS "A4"
+000214     MY-UPLOW-MOD-FAC       IS "A3"
+000214     MY-NUMERIC-MOD-FAC     IS "A5"
+000214     MY-LO-PRO-NUM          IS "A6"
+
+000214
+           UPPER-A-BACKQUOTE      IS "C0"
+           UPPER-A-QUOTE          IS "C1"
+           UPPER-A-CIRCUM         IS "C2"
+           UPPER-A-TILDE          IS "C3"
+           UPPER-A-UMLAUT         IS "C4"
+           UPPER-A-RING           IS "C5"
+           UPPER-A-E              IS "C6"
+           UPPER-CEDILLA          IS "C7"
+           UPPER-E-BACKQUOTE      IS "C8"
+           UPPER-E-QUOTE          IS "C9"
+           UPPER-E-CIRCUM         IS "CA"
+           UPPER-E-UMLAUT         IS "CB"
+           UPPER-I-BACKQUOTE      IS "CC"
+           UPPER-I-QUOTE          IS "CD"
+           UPPER-I-CIRCUM         IS "CE"
+           UPPER-I-UMLAUT         IS "CF"
+           UPPER-N-TILDE          IS "D1"
+           UPPER-O-BACKQUOTE      IS "D2"
+           UPPER-O-QUOTE          IS "D3"
+           UPPER-O-CIRCUM         IS "D4"
+           UPPER-O-TILDE          IS "D5"
+           UPPER-O-UMLAUT         IS "D6"
+           UPPER-O-E              IS "D7" 
+           UPPER-O-SLASH          IS "D8"
+           UPPER-U-BACKQUOTE      IS "D9"
+           UPPER-U-QUOTE          IS "DA" 
+           UPPER-U-CIRCUM         IS "DB" 
+           UPPER-U-UMLAUT         IS "DC" 
+           UPPER-Y-UMLAUT         IS "DD" 
+
+           LOWER-A-BACKQUOTE      IS "E0"
+           LOWER-A-QUOTE          IS "E1"
+           LOWER-A-CIRCUM         IS "E2"
+           LOWER-A-TILDE          IS "E3"
+           LOWER-A-UMLAUT         IS "E4"
+           LOWER-A-RING           IS "E5"
+           LOWER-A-E              IS "E6"
+           LOWER-CEDILLA          IS "E7"
+           LOWER-E-BACKQUOTE      IS "E8"
+           LOWER-E-QUOTE          IS "E9"
+           LOWER-E-CIRCUM         IS "EA"
+           LOWER-E-UMLAUT         IS "EB"
+           LOWER-I-BACKQUOTE      IS "EC"
+           LOWER-I-QUOTE          IS "ED"
+           LOWER-I-CIRCUM         IS "EE"
+           LOWER-I-UMLAUT         IS "EF"
+           LOWER-N-TILDE          IS "F1"
+           LOWER-O-BACKQUOTE      IS "F2"
+           LOWER-O-QUOTE          IS "F3"
+           LOWER-O-CIRCUM         IS "F4"
+           LOWER-O-TILDE          IS "F5"
+           LOWER-O-UMLAUT         IS "F6"
+           LOWER-O-E              IS "F7" 
+           LOWER-O-SLASH          IS "F8"
+           LOWER-U-BACKQUOTE      IS "F9"
+           LOWER-U-QUOTE          IS "FA" 
+           LOWER-U-CIRCUM         IS "FB" 
+           LOWER-U-UMLAUT         IS "FC" 
+           LOWER-Y-UMLAUT         IS "FD" 
+
+           HEX-00 IS "00"
+           HEX-B1 IS "B1"
+           HEX-B2 IS "B2"
+           HEX-B3 IS "B3"
+           HEX-B8 IS "B8"
+           HEX-BB IS "BB"
+           HEX-BC IS "BC"
+
+           WBLANK IS "32"
+000214     .
+000085 INPUT-OUTPUT SECTION.
+000085 FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+       DATA DIVISION.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+000018 WORKING-STORAGE SECTION.
+       77  PF-KEY PIC XX.
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+           03  CURS-ROW                   PIC X(01).
+
+       01  MNL-UPLOW-FIELD PIC X(22) VALUE SPACES.
+       01  MNL-UPPER-FIELD PIC X(22) VALUE SPACES.
+       01  MNL-NUMERIC-FIELD PIC X(22) VALUE SPACES.
+       01  RETURNED-UPPER PIC X(22) VALUE SPACES.
+       01  RETURNED-UPLOW PIC X(22) VALUE SPACES.
+       01  RETURNED-NUMERIC PIC X(22) VALUE SPACES.
+
+       01  MONKEY-1.
+           03 MONKEY-MENU-PIC-1 PIC X VALUE MENU-PICK.
+           03 MONKEY-I1 PIC X(16) VALUE " Item Number One".
+           
+       01  MONKEY-2.
+           03 MONKEY-MENU-PIC-2 PIC X VALUE MENU-PICK.
+           03 MONKEY-I2 PIC X(12) VALUE " Second Item".
+           
+       01  MONKEY-3.
+           03 MONKEY-MENU-PIC-3 PIC X VALUE MENU-PICK.
+           03 MONKEY-I3 PIC X(11) VALUE " Third Item".        
+
+       01  MONKEY-4.
+           03 MONKEY-MENU-PIC-4 PIC X VALUE MENU-PICK.
+           03 MONKEY-I4 PIC X(10) VALUE " Last Pick".
+
+       01  UP-FAC-VALUE PIC X VALUE SPACES.
+       01  UPLOW-FAC-VALUE PIC X VALUE SPACES.
+       01  NUMERIC-FAC-VALUE PIC X VALUE SPACES.
+       01  UP-FAC-PICTURE PIC XX VALUE SPACES.
+       01  UPLOW-FAC-PICTURE PIC XX VALUE SPACES.
+       01  NUMERIC-FAC-PICTURE PIC XX VALUE SPACES.
+
+       01  LEN-1.
+           03  LENGTH-1 BINARY VALUE ZERO.
+           03  LENGTH-2 BINARY VALUE 1.
+
+       01  FAC-SUBST-LIST.
+           05  FAC-SUBST-ENTRY PIC X OCCURS 143.
+
+       01  LOWUP-LIST.
+           05  LOWUP-ENTRY PIC X OCCURS 59.
+
+       01  NUM-LIST.
+           05  NUM-ENTRY PIC X OCCURS 7.
+
+       01  MNLSCREEN USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(23) ROW 2 COL 28
+               VALUE "WISP VWANG SET8BIT TEST".
+
+           03  FILLER PIC X(40) ROW 4 COL 3
+               VALUE "Using SET8BIT to map the following FACs:".
+
+           03  FILLER PIC X(28) ROW 6 COL 3
+               VALUE "0xA0 - BRIGHT MOD ALL NOLINE".
+
+           03  FILLER PIC X(36) ROW 6 COL 40
+               VALUE "0xA3 - BRIGHT MOD ALL NOLINE ALTERED".
+
+           03  FILLER PIC X(30) ROW 7 COL 3
+               VALUE "0xA1 - BRIGHT MOD UPPER NOLINE".
+
+           03  FILLER PIC X(38) ROW 7 COL 40
+               VALUE "0xA4 - BRIGHT MOD UPPER NOLINE ALTERED".
+
+           03  FILLER PIC X(32) ROW 8 COL 3
+               VALUE "0xA2 - BRIGHT MOD NUMERIC NOLINE".
+
+           03  FILLER PIC X(40) ROW 8 COL 40
+               VALUE "0xA5 - BRIGHT MOD NUMERIC NOLINE ALTERED".
+
+           03  FILLER PIC X(38) ROW 10 COL 3
+               VALUE "0xA6 - DIM PROT NUMERIC NOLINE ALTERED".
+
+           03  FILLER PIC X(16) ROW 13 COL 3
+               VALUE "All       A0  > ".
+           03  FILLER PIC X(16) ROW 14 COL 3
+               VALUE "Upper     A1  > ".
+           03  FILLER PIC X(16) ROW 15 COL 3
+               VALUE "Numeric   A2  > ".
+
+           03  ACTUAL-UPLOW-FIELD PIC X(22) ROW 13 COL 19
+               SOURCE MNL-UPLOW-FIELD OBJECT MNL-UPLOW-FIELD.
+
+           03  ACTUAL-UPPER-FIELD PIC X(22) ROW 14 COL 19
+               SOURCE MNL-UPPER-FIELD OBJECT MNL-UPPER-FIELD.
+
+           03  ACTUAL-NUMERIC-FIELD PIC X(22) ROW 15 COL 19
+               SOURCE MNL-NUMERIC-FIELD OBJECT MNL-NUMERIC-FIELD.
+
+           03  ACTUAL-FAC-HEADING PIC X(3) ROW 12 COL 13
+               VALUE "FAC".
+
+           03  ACTUAL-DATA-HEADING PIC X(4) ROW 12 COL 21
+               VALUE "Data".
+
+           03  FILLER PIC X(9) ROW 17 COL 3
+               VALUE "returned:".
+
+           03  FILLER PIC X(2) ROW 17 COL 17
+               VALUE "> ".
+
+           03  FILLER PIC XX ROW 17 COL 13
+               SOURCE UPLOW-FAC-PICTURE.
+
+           03  ACTUAL-RETURNED-UPLOW PIC X(22) ROW 17 COL 19
+               SOURCE RETURNED-UPLOW.
+
+           03  FILLER PIC XX ROW 18 COL 13
+               SOURCE UP-FAC-PICTURE.
+
+           03  FILLER PIC X(2) ROW 18 COL 17
+               VALUE "> ".
+
+           03  ACTUAL-RETURNED-UPPER PIC X(22) ROW 18 COL 19
+               SOURCE RETURNED-UPPER.
+
+           03  FILLER PIC XX ROW 19 COL 13
+               SOURCE NUMERIC-FAC-PICTURE.
+
+           03  FILLER PIC X(2) ROW 19 COL 17
+               VALUE "> ".
+
+           03  ACTUAL-RETURNED-NUMERIC PIC X(22) ROW 19 COL 19
+               SOURCE RETURNED-NUMERIC.
+
+           03  FILLER PIC X(15) ROW 14 COL 57
+               VALUE "Monkey Bar Test".
+
+           03  MONKEY-F1 PIC X(17) ROW 16 COL 57
+               SOURCE MONKEY-1.
+
+           03  MONKEY-F2 PIC X(13) ROW 17 COL 57
+               SOURCE MONKEY-2.
+
+           03  MONKEY-F3 PIC X(12) ROW 18 COL 57
+               SOURCE MONKEY-3.
+
+           03  MONKEY-F4 PIC X(10) ROW 19 COL 57
+               SOURCE MONKEY-4.
+
+
+000045 PROCEDURE DIVISION.
+000047 MAIN SECTION.
+
+           PERFORM INIT.
+           PERFORM LOOP.
+
+       INIT.
+           MOVE UPPER-ENTRY-FAC        TO FAC-SUBST-ENTRY (1).
+           MOVE MY-UPPER-FAC           TO FAC-SUBST-ENTRY (2).
+
+           MOVE UPLOW-ENTRY-FAC        TO FAC-SUBST-ENTRY (3).
+           MOVE MY-UPLOW-FAC           TO FAC-SUBST-ENTRY (4).
+
+           MOVE NUMERIC-ENTRY-FAC      TO FAC-SUBST-ENTRY (5). 
+           MOVE MY-NUMERIC-FAC         TO FAC-SUBST-ENTRY (6).
+
+           MOVE UPPER-ENTRY-FAC-MOD    TO FAC-SUBST-ENTRY (7). 
+           MOVE MY-UPPER-MOD-FAC       TO FAC-SUBST-ENTRY (8).
+
+           MOVE UPLOW-ENTRY-FAC-MOD    TO FAC-SUBST-ENTRY (9). 
+           MOVE MY-UPLOW-MOD-FAC       TO FAC-SUBST-ENTRY (10).
+
+           MOVE NUMERIC-ENTRY-FAC-MOD  TO FAC-SUBST-ENTRY (11).
+           MOVE MY-NUMERIC-MOD-FAC     TO FAC-SUBST-ENTRY (12).
+
+           MOVE LO-PRO-NUM-FAC         TO FAC-SUBST-ENTRY (13).
+           MOVE MY-LO-PRO-NUM          TO FAC-SUBST-ENTRY (14).
+
+           MOVE LOWER-A-BACKQUOTE TO FAC-SUBST-ENTRY (15).
+           MOVE LOWER-A-BACKQUOTE TO FAC-SUBST-ENTRY (16).
+
+           MOVE UPPER-A-BACKQUOTE TO FAC-SUBST-ENTRY (17).
+           MOVE UPPER-A-BACKQUOTE TO FAC-SUBST-ENTRY (18).
+
+           MOVE LOWER-A-QUOTE     TO FAC-SUBST-ENTRY (19).
+           MOVE LOWER-A-QUOTE     TO FAC-SUBST-ENTRY (20).
+
+           MOVE UPPER-A-QUOTE     TO FAC-SUBST-ENTRY (21).
+           MOVE UPPER-A-QUOTE     TO FAC-SUBST-ENTRY (22).
+
+           MOVE LOWER-A-CIRCUM    TO FAC-SUBST-ENTRY (23).
+           MOVE LOWER-A-CIRCUM    TO FAC-SUBST-ENTRY (24).
+
+           MOVE UPPER-A-CIRCUM    TO FAC-SUBST-ENTRY (25).
+           MOVE UPPER-A-CIRCUM    TO FAC-SUBST-ENTRY (26).
+
+           MOVE LOWER-A-TILDE     TO FAC-SUBST-ENTRY (27).
+           MOVE LOWER-A-TILDE     TO FAC-SUBST-ENTRY (28).
+
+           MOVE UPPER-A-TILDE     TO FAC-SUBST-ENTRY (29).
+           MOVE UPPER-A-TILDE     TO FAC-SUBST-ENTRY (30).
+
+           MOVE LOWER-A-UMLAUT    TO FAC-SUBST-ENTRY (31).
+           MOVE LOWER-A-UMLAUT    TO FAC-SUBST-ENTRY (32).
+
+           MOVE UPPER-A-UMLAUT    TO FAC-SUBST-ENTRY (33).
+           MOVE UPPER-A-UMLAUT    TO FAC-SUBST-ENTRY (34).
+
+           MOVE LOWER-A-RING      TO FAC-SUBST-ENTRY (35).
+           MOVE LOWER-A-RING      TO FAC-SUBST-ENTRY (36).
+
+           MOVE UPPER-A-RING      TO FAC-SUBST-ENTRY (37).
+           MOVE UPPER-A-RING      TO FAC-SUBST-ENTRY (38).
+
+           MOVE LOWER-A-E         TO FAC-SUBST-ENTRY (39).
+           MOVE LOWER-A-E         TO FAC-SUBST-ENTRY (40).
+
+           MOVE UPPER-A-E         TO FAC-SUBST-ENTRY (41).
+           MOVE UPPER-A-E         TO FAC-SUBST-ENTRY (42).
+
+           MOVE LOWER-CEDILLA     TO FAC-SUBST-ENTRY (43).
+           MOVE LOWER-CEDILLA     TO FAC-SUBST-ENTRY (44).
+
+           MOVE UPPER-CEDILLA     TO FAC-SUBST-ENTRY (45).
+           MOVE UPPER-CEDILLA     TO FAC-SUBST-ENTRY (46).
+
+           MOVE LOWER-E-BACKQUOTE TO FAC-SUBST-ENTRY (47).
+           MOVE LOWER-E-BACKQUOTE TO FAC-SUBST-ENTRY (48).
+
+           MOVE UPPER-E-BACKQUOTE TO FAC-SUBST-ENTRY (49).
+           MOVE UPPER-E-BACKQUOTE TO FAC-SUBST-ENTRY (50).
+
+           MOVE LOWER-E-QUOTE     TO FAC-SUBST-ENTRY (51).
+           MOVE LOWER-E-QUOTE     TO FAC-SUBST-ENTRY (52).
+
+           MOVE UPPER-E-QUOTE     TO FAC-SUBST-ENTRY (53).
+           MOVE UPPER-E-QUOTE     TO FAC-SUBST-ENTRY (54).
+
+           MOVE LOWER-E-CIRCUM    TO FAC-SUBST-ENTRY (55).
+           MOVE LOWER-E-CIRCUM    TO FAC-SUBST-ENTRY (56).
+
+           MOVE UPPER-E-CIRCUM    TO FAC-SUBST-ENTRY (57).
+           MOVE UPPER-E-CIRCUM    TO FAC-SUBST-ENTRY (58).
+
+           MOVE LOWER-E-UMLAUT    TO FAC-SUBST-ENTRY (59).
+           MOVE LOWER-E-UMLAUT    TO FAC-SUBST-ENTRY (60).
+
+           MOVE UPPER-E-UMLAUT    TO FAC-SUBST-ENTRY (61).
+           MOVE UPPER-E-UMLAUT    TO FAC-SUBST-ENTRY (62).
+
+           MOVE LOWER-I-BACKQUOTE TO FAC-SUBST-ENTRY (63).
+           MOVE LOWER-I-BACKQUOTE TO FAC-SUBST-ENTRY (64).
+
+           MOVE UPPER-I-BACKQUOTE TO FAC-SUBST-ENTRY (65).
+           MOVE UPPER-I-BACKQUOTE TO FAC-SUBST-ENTRY (66).
+
+           MOVE LOWER-I-QUOTE     TO FAC-SUBST-ENTRY (67).
+           MOVE LOWER-I-QUOTE     TO FAC-SUBST-ENTRY (68).
+
+           MOVE UPPER-I-QUOTE     TO FAC-SUBST-ENTRY (69).
+           MOVE UPPER-I-QUOTE     TO FAC-SUBST-ENTRY (70).
+
+           MOVE LOWER-I-CIRCUM    TO FAC-SUBST-ENTRY (71).
+           MOVE LOWER-I-CIRCUM    TO FAC-SUBST-ENTRY (72).
+
+           MOVE UPPER-I-CIRCUM    TO FAC-SUBST-ENTRY (73).
+           MOVE UPPER-I-CIRCUM    TO FAC-SUBST-ENTRY (74).
+
+           MOVE LOWER-I-UMLAUT    TO FAC-SUBST-ENTRY (75).
+           MOVE LOWER-I-UMLAUT    TO FAC-SUBST-ENTRY (76).
+
+           MOVE UPPER-I-UMLAUT    TO FAC-SUBST-ENTRY (77).
+           MOVE UPPER-I-UMLAUT    TO FAC-SUBST-ENTRY (78).
+
+           MOVE LOWER-N-TILDE     TO FAC-SUBST-ENTRY (79).
+           MOVE LOWER-N-TILDE     TO FAC-SUBST-ENTRY (80).
+
+           MOVE UPPER-N-TILDE     TO FAC-SUBST-ENTRY (81).
+           MOVE UPPER-N-TILDE     TO FAC-SUBST-ENTRY (82).
+
+           MOVE LOWER-O-BACKQUOTE TO FAC-SUBST-ENTRY (83).
+           MOVE LOWER-O-BACKQUOTE TO FAC-SUBST-ENTRY (84).
+
+           MOVE UPPER-O-BACKQUOTE TO FAC-SUBST-ENTRY (85).
+           MOVE UPPER-O-BACKQUOTE TO FAC-SUBST-ENTRY (86).
+
+           MOVE LOWER-O-QUOTE     TO FAC-SUBST-ENTRY (87).
+           MOVE LOWER-O-QUOTE     TO FAC-SUBST-ENTRY (88).
+
+           MOVE UPPER-O-QUOTE     TO FAC-SUBST-ENTRY (89).
+           MOVE UPPER-O-QUOTE     TO FAC-SUBST-ENTRY (90).
+
+           MOVE LOWER-O-CIRCUM    TO FAC-SUBST-ENTRY (91).
+           MOVE LOWER-O-CIRCUM    TO FAC-SUBST-ENTRY (92).
+
+           MOVE UPPER-O-CIRCUM    TO FAC-SUBST-ENTRY (93).
+           MOVE UPPER-O-CIRCUM    TO FAC-SUBST-ENTRY (94).
+
+           MOVE LOWER-O-TILDE     TO FAC-SUBST-ENTRY (95).
+           MOVE LOWER-O-TILDE     TO FAC-SUBST-ENTRY (96).
+
+           MOVE UPPER-O-TILDE     TO FAC-SUBST-ENTRY (97).
+           MOVE UPPER-O-TILDE     TO FAC-SUBST-ENTRY (98).
+
+           MOVE LOWER-O-UMLAUT    TO FAC-SUBST-ENTRY (99).
+           MOVE LOWER-O-UMLAUT    TO FAC-SUBST-ENTRY (100).
+
+           MOVE UPPER-O-UMLAUT    TO FAC-SUBST-ENTRY (101).
+           MOVE UPPER-O-UMLAUT    TO FAC-SUBST-ENTRY (102).
+
+           MOVE LOWER-O-E         TO FAC-SUBST-ENTRY (103).
+           MOVE LOWER-O-E         TO FAC-SUBST-ENTRY (104).
+
+           MOVE UPPER-O-E         TO FAC-SUBST-ENTRY (105).
+           MOVE UPPER-O-E         TO FAC-SUBST-ENTRY (106).
+
+           MOVE LOWER-O-SLASH     TO FAC-SUBST-ENTRY (107).
+           MOVE LOWER-O-SLASH     TO FAC-SUBST-ENTRY (108).
+
+           MOVE UPPER-O-SLASH     TO FAC-SUBST-ENTRY (109).
+           MOVE UPPER-O-SLASH     TO FAC-SUBST-ENTRY (110).
+
+           MOVE LOWER-U-BACKQUOTE TO FAC-SUBST-ENTRY (111).
+           MOVE LOWER-U-BACKQUOTE TO FAC-SUBST-ENTRY (112).
+
+           MOVE UPPER-U-BACKQUOTE TO FAC-SUBST-ENTRY (113).
+           MOVE UPPER-U-BACKQUOTE TO FAC-SUBST-ENTRY (114).
+
+           MOVE LOWER-U-QUOTE     TO FAC-SUBST-ENTRY (115).
+           MOVE LOWER-U-QUOTE     TO FAC-SUBST-ENTRY (116).
+
+           MOVE UPPER-U-QUOTE     TO FAC-SUBST-ENTRY (117).
+           MOVE UPPER-U-QUOTE     TO FAC-SUBST-ENTRY (118).
+
+           MOVE LOWER-U-CIRCUM    TO FAC-SUBST-ENTRY (119).
+           MOVE LOWER-U-CIRCUM    TO FAC-SUBST-ENTRY (120).
+
+           MOVE UPPER-U-CIRCUM    TO FAC-SUBST-ENTRY (121).
+           MOVE UPPER-U-CIRCUM    TO FAC-SUBST-ENTRY (122).
+
+           MOVE LOWER-U-UMLAUT    TO FAC-SUBST-ENTRY (123).
+           MOVE LOWER-U-UMLAUT    TO FAC-SUBST-ENTRY (124).
+
+           MOVE UPPER-U-UMLAUT    TO FAC-SUBST-ENTRY (125).
+           MOVE UPPER-U-UMLAUT    TO FAC-SUBST-ENTRY (126).
+
+           MOVE LOWER-Y-UMLAUT    TO FAC-SUBST-ENTRY (127).
+           MOVE LOWER-Y-UMLAUT    TO FAC-SUBST-ENTRY (128).
+
+           MOVE UPPER-Y-UMLAUT    TO FAC-SUBST-ENTRY (129).
+           MOVE UPPER-Y-UMLAUT    TO FAC-SUBST-ENTRY (130).
+
+           MOVE HEX-B1            TO FAC-SUBST-ENTRY (131).
+           MOVE HEX-B1            TO FAC-SUBST-ENTRY (132).
+
+           MOVE HEX-B2            TO FAC-SUBST-ENTRY (133).
+           MOVE HEX-B2            TO FAC-SUBST-ENTRY (134).
+
+           MOVE HEX-B3            TO FAC-SUBST-ENTRY (135).
+           MOVE HEX-B3            TO FAC-SUBST-ENTRY (136).
+
+           MOVE HEX-B8            TO FAC-SUBST-ENTRY (137).
+           MOVE HEX-B8            TO FAC-SUBST-ENTRY (138).
+
+           MOVE HEX-BB            TO FAC-SUBST-ENTRY (139).
+           MOVE HEX-BB            TO FAC-SUBST-ENTRY (140).
+
+           MOVE HEX-BC            TO FAC-SUBST-ENTRY (141).
+           MOVE HEX-BC            TO FAC-SUBST-ENTRY (142).
+
+           MOVE HEX-00                 TO FAC-SUBST-ENTRY (143).
+
+           MOVE LOWER-A-BACKQUOTE TO LOWUP-ENTRY (1).
+           MOVE UPPER-A-BACKQUOTE TO LOWUP-ENTRY (2).
+           MOVE LOWER-A-QUOTE     TO LOWUP-ENTRY (3).
+           MOVE UPPER-A-QUOTE     TO LOWUP-ENTRY (4).
+           MOVE LOWER-A-CIRCUM    TO LOWUP-ENTRY (5).
+           MOVE UPPER-A-CIRCUM    TO LOWUP-ENTRY (6).
+           MOVE LOWER-A-TILDE     TO LOWUP-ENTRY (7).
+           MOVE UPPER-A-TILDE     TO LOWUP-ENTRY (8).
+           MOVE LOWER-A-UMLAUT    TO LOWUP-ENTRY (9).
+           MOVE UPPER-A-UMLAUT    TO LOWUP-ENTRY (10).
+           MOVE LOWER-A-RING      TO LOWUP-ENTRY (11)
+           MOVE UPPER-A-RING      TO LOWUP-ENTRY (12).
+           MOVE LOWER-A-E         TO LOWUP-ENTRY (13).
+           MOVE UPPER-A-E         TO LOWUP-ENTRY (14).
+           MOVE LOWER-CEDILLA     TO LOWUP-ENTRY (15).
+           MOVE UPPER-CEDILLA     TO LOWUP-ENTRY (16).
+           MOVE LOWER-E-BACKQUOTE TO LOWUP-ENTRY (17).
+           MOVE UPPER-E-BACKQUOTE TO LOWUP-ENTRY (18).
+           MOVE LOWER-E-QUOTE     TO LOWUP-ENTRY (19).
+           MOVE UPPER-E-QUOTE     TO LOWUP-ENTRY (20).
+           MOVE LOWER-E-CIRCUM    TO LOWUP-ENTRY (21).
+           MOVE UPPER-E-CIRCUM    TO LOWUP-ENTRY (22).
+           MOVE LOWER-E-UMLAUT    TO LOWUP-ENTRY (23).
+           MOVE UPPER-E-UMLAUT    TO LOWUP-ENTRY (24).
+           MOVE LOWER-I-BACKQUOTE TO LOWUP-ENTRY (25).
+           MOVE UPPER-I-BACKQUOTE TO LOWUP-ENTRY (26).
+           MOVE LOWER-I-QUOTE     TO LOWUP-ENTRY (27).
+           MOVE UPPER-I-QUOTE     TO LOWUP-ENTRY (28).
+           MOVE LOWER-I-CIRCUM    TO LOWUP-ENTRY (29).
+           MOVE UPPER-I-CIRCUM    TO LOWUP-ENTRY (30).
+           MOVE LOWER-I-UMLAUT    TO LOWUP-ENTRY (31).
+           MOVE UPPER-I-UMLAUT    TO LOWUP-ENTRY (32).
+           MOVE LOWER-N-TILDE     TO LOWUP-ENTRY (33).
+           MOVE UPPER-N-TILDE     TO LOWUP-ENTRY (34).
+           MOVE LOWER-O-BACKQUOTE TO LOWUP-ENTRY (35).
+           MOVE UPPER-O-BACKQUOTE TO LOWUP-ENTRY (36).
+           MOVE LOWER-O-QUOTE     TO LOWUP-ENTRY (37).
+           MOVE UPPER-O-QUOTE     TO LOWUP-ENTRY (38).
+           MOVE LOWER-O-CIRCUM    TO LOWUP-ENTRY (39).
+           MOVE UPPER-O-CIRCUM    TO LOWUP-ENTRY (40).
+           MOVE LOWER-O-TILDE     TO LOWUP-ENTRY (41).
+           MOVE UPPER-O-TILDE     TO LOWUP-ENTRY (42).
+           MOVE LOWER-O-UMLAUT    TO LOWUP-ENTRY (43).
+           MOVE UPPER-O-UMLAUT    TO LOWUP-ENTRY (44).
+           MOVE LOWER-O-E         TO LOWUP-ENTRY (45).
+           MOVE UPPER-O-E         TO LOWUP-ENTRY (46).
+           MOVE LOWER-O-SLASH     TO LOWUP-ENTRY (47).
+           MOVE UPPER-O-SLASH     TO LOWUP-ENTRY (48).
+           MOVE LOWER-U-BACKQUOTE TO LOWUP-ENTRY (49).
+           MOVE UPPER-U-BACKQUOTE TO LOWUP-ENTRY (50).
+           MOVE LOWER-U-QUOTE     TO LOWUP-ENTRY (51).
+           MOVE UPPER-U-QUOTE     TO LOWUP-ENTRY (52).
+           MOVE LOWER-U-CIRCUM    TO LOWUP-ENTRY (53).
+           MOVE UPPER-U-CIRCUM    TO LOWUP-ENTRY (54).
+           MOVE LOWER-U-UMLAUT    TO LOWUP-ENTRY (55).
+           MOVE UPPER-U-UMLAUT    TO LOWUP-ENTRY (56).
+           MOVE LOWER-Y-UMLAUT    TO LOWUP-ENTRY (57).
+           MOVE UPPER-Y-UMLAUT    TO LOWUP-ENTRY (58).
+           MOVE HEX-00            TO LOWUP-ENTRY (59).                                                   
+                                                
+           MOVE HEX-B1 TO NUM-ENTRY (1).
+           MOVE HEX-B2 TO NUM-ENTRY (2).
+           MOVE HEX-B3 TO NUM-ENTRY (3).
+           MOVE HEX-B8 TO NUM-ENTRY (4).
+           MOVE HEX-BB TO NUM-ENTRY (5).
+           MOVE HEX-BC TO NUM-ENTRY (6).
+           MOVE HEX-00 TO NUM-ENTRY (7).
+
+       LOOP.
+
+           MOVE MY-UPPER-FAC TO FAC OF ACTUAL-UPPER-FIELD.
+           MOVE MY-UPLOW-FAC TO FAC OF ACTUAL-UPLOW-FIELD.
+           MOVE MY-NUMERIC-FAC TO FAC OF ACTUAL-NUMERIC-FIELD.
+
+           MOVE DIM-UNDERLINE-FAC TO FAC OF ACTUAL-FAC-HEADING.
+           MOVE DIM-UNDERLINE-FAC TO FAC OF ACTUAL-DATA-HEADING.
+
+           MOVE MY-LO-PRO-NUM TO FAC OF MONKEY-F1.
+           MOVE MY-LO-PRO-NUM TO FAC OF MONKEY-F2.
+           MOVE MY-LO-PRO-NUM TO FAC OF MONKEY-F3.
+           MOVE MY-LO-PRO-NUM TO FAC OF MONKEY-F4.
+
+           CALL "SET8BIT" USING
+              FAC-SUBST-LIST
+              LOWUP-LIST
+              NUM-LIST.
+
+           DISPLAY AND READ MNLSCREEN ON CRT
+              PFKEYS 16.
+
+           MOVE MNL-UPPER-FIELD TO RETURNED-UPPER.
+           MOVE MNL-UPLOW-FIELD TO RETURNED-UPLOW.
+           MOVE MNL-NUMERIC-FIELD TO RETURNED-NUMERIC.
+
+           MOVE FAC OF ACTUAL-UPPER-FIELD TO UP-FAC-VALUE.
+           MOVE FAC OF ACTUAL-UPLOW-FIELD TO UPLOW-FAC-VALUE.
+           MOVE FAC OF ACTUAL-NUMERIC-FIELD TO NUMERIC-FAC-VALUE.
+
+           CALL "HEXUNPK" USING UP-FAC-VALUE UP-FAC-PICTURE LEN-1.
+           CALL "HEXUNPK" USING UPLOW-FAC-VALUE 
+                   UPLOW-FAC-PICTURE LEN-1.
+           CALL "HEXUNPK" USING NUMERIC-FAC-VALUE 
+                   NUMERIC-FAC-PICTURE LEN-1.
+
+           IF PF-KEY = "16" THEN GO TO EXIT-PROGRAM
+           ELSE GO TO LOOP.           
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+           STOP RUN.

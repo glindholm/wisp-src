@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -24,6 +24,8 @@
 
 char *regex();
 char *regcmp();
+char *gmem();
+static char *nextfile();
 
 /*
 ** The following was in wsysconf.h
@@ -34,7 +36,15 @@ int fcount;
 char curnam[16];
 char tmpold[64];
 char tmpnew[64];
-static char *classes[] = { "ws", "lp", "mt", "dk", 0 };
+/*
+**	NOTE: The devclass for DISKS was "dk" and the lines were
+**	being generated without a devname field, using the volume
+**	name as the devtype.
+**
+**	OLD:	200 dk VOL100
+**	NEW:	200 dv disk VOL100
+*/
+static char *classes[] = { "ws", "lp", "mt", "dv", 0 };
 static int   classvals[] = { 192, 97, 45, 50, 0 };
 static char *classnames[] = { "workstation", "line printer", "magtape", "disk", 0 };
 
@@ -77,6 +87,12 @@ DEV_ENTRY *devhead, *devp;
 #define DEFTTY	"vt220"
 #endif
 
+#ifdef OSF1_ALPHA
+#define WSNAME2	"pty..*"
+#define WSPATH2	"/dev"
+#define DEFTTY	"vt220"
+#endif
+
 #ifdef SCO
 #define WSNAME2 "pty..*"
 #define WSPATH2 "/dev"
@@ -96,11 +112,21 @@ DEV_ENTRY *devhead, *devp;
 #define DEFTTY "ansidos"
 #endif
 
+#ifdef ICL
+#define WSNAME  ".*"
+#define WSPATH  "/dev/pts"
+#endif
+
 #ifdef UNISYS
 #define WSNAME	".*"
 #define WSPATH	"/dev/pts"
 #define WSNAME2	".*"
 #define WSPATH2	"/dev/term"
+#endif
+
+#ifdef MOTOROLA
+#define WSNAME2 "pty..*"
+#define WSPATH2	"/dev"
 #endif
 
 #ifndef WSNAME
@@ -127,6 +153,10 @@ DEV_ENTRY *devhead, *devp;
 #define DEFMAGTAPE "CompacTape"
 #endif
 
+#ifdef OSF1_ALPHA 
+#define DEFMAGTAPE "4mmDat"
+#endif
+
 #ifdef HPUX
 #define MTNAME "[0-9].*"
 #define MTPATH "/dev/rmt"
@@ -139,6 +169,11 @@ DEV_ENTRY *devhead, *devp;
 #endif
 
 #ifdef DGUX
+#define MTNAME "[0-9].*"
+#define MTPATH "/dev/rmt"
+#endif
+
+#ifdef ICL
 #define MTNAME "[0-9].*"
 #define MTPATH "/dev/rmt"
 #endif
@@ -203,7 +238,7 @@ char *argv[];
 
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992, International Digital Scientific Inc.\n\n");
+	printf("Copyright (c) 1992,1993 International Digital Scientific Inc.\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -259,13 +294,20 @@ char *argv[];
 		panic(buff);
 	}
 
+	fprintf(cfg,"#   %s - WISP SYSTEM CONFIGURATION\n#\n",CFGFNAME);
+	fprintf(cfg,"#   DEVICE NUMBER MAP:\n#\n");
+	fprintf(cfg,"#Num Class Type Name\n");
 	for (devp=devhead, fcount=0; devp; devp=devp->next)
 	{
 		++fcount;
 		if (strlen(devp->specfile))
 		{
-			if (!access(devp->specfile,0))
+			if (0==strcmp("dv",devp->class) || 0==access(devp->specfile,0))
 			{
+				/*
+				**	If the specfile is found or we have a disk volume then write it.
+				**	(For dv we use the volume name which isn't a special file.)
+				*/
 				fprintf(cfg,RECFMT,devp->devnum,devp->class,devp->type,devp->specfile);
 				
 			}
@@ -279,6 +321,7 @@ char *argv[];
 				fprintf(cfg,RECFMT,devp->devnum,devp->class,devp->type,"");
 		}
 	}
+	fprintf(cfg,"#\n#   DEVICE TYPE MAP:\n#\n");
 	fclose(cfg);
 	build_dtyp_list();
 
@@ -383,17 +426,14 @@ char *devtype;										/* type (att605/oki92/etc)		*/
 
 build_disks()										/* special case */
 {
-	char *devclass = "dk";
+	char *devclass = "dv";
 	logical_id *p;
-	extern logical_id *logical_list;
 
-	wpload();
-
-	for (p=logical_list; p; p=(logical_id *)p->next)
+	for (p=get_logical_list(); p; p=(logical_id *)p->next)
 	{
 		if (strcmp(p->logical,"."))
 		{
-			add(NULL,devnum,devclass,p->logical);
+			add(p->logical,devnum,devclass,"disk");
 			increment_devnum();
 		}
 		else 
@@ -410,9 +450,7 @@ build_lprs()										/* also a special case */
 	char lpid[64];
 	char *devclass = "lp";
 
-#ifndef AIX
-#ifndef ULTRIX
-#ifndef sun
+#if !defined(AIX) && !defined(ULTRIX) && !defined(sun) && !defined(OSF1_ALPHA)
 	memset(lpclass,(char)0,sizeof(lpclass));
 	memset(lpid,(char)0,sizeof(lpid));
 
@@ -443,15 +481,12 @@ build_lprs()										/* also a special case */
 	}
 	unlink(tmp);
 #endif
-#endif
-#endif
 }
 
 add(specfile,num,class,type)
 char *specfile, *class, *type;
 int num;
 {
-	char *gmem();
 
 	if (devhead==NULL)
 	{
@@ -484,13 +519,16 @@ char *argv[];
 char *gmem(nelem,size)
 unsigned nelem, size;
 {
+	static long	total = 0;
 	static char *tmp;
 	char *calloc();
+
+	total += nelem*size;
 
 	tmp = calloc(nelem,size);
 	if (tmp==NULL)
 	{
-		fprintf(stderr,"wispdev: Process out of memory.");
+		fprintf(stderr,"wsysconf: Process out of memory. [total=%dl]\n",total);
 		exit(2);
 	}
 	return(tmp);
@@ -554,6 +592,7 @@ init_stuff()
 	ttyraw.c_cc[5] = 10;
 }
 ask(dtyp,def)
+char *dtyp, *def;
 {
 	char pr[64];
 
@@ -585,7 +624,7 @@ build_dtyp_list()
         char *cpat,*spc;
 	char *getclass(),*strchr();
 	DIR *cur;
-	char **typlst, *gmem();
+	char **typlst;
 	int i=0;
 	int (*fn)(), cmpare();
 	char last[16];
@@ -610,11 +649,22 @@ build_dtyp_list()
 
 	while (fgets(buf,sizeof(buf),dtyp))
 	{
-		*(typlst+i) = gmem(strlen(buf)-4+1,sizeof(char));
-		strcpy(*(typlst+i),buf+4);						/* Copy in the type "ws" "mt"		*/
-		*(*(typlst+i)+18)=(char)0;						/* NULL after the comment		*/
-		spc=strchr( *(typlst+i)+3, ' ');
-		if (spc) *spc=(char)0;							/* NULL after the type			*/
+		int	rc;
+		int	dev_num;
+		char	dev_class[10];
+		char	dev_type[20];
+		char	dev_name[80];
+
+		if (buf[0] == '#') continue;						/* Skip over comments			*/
+		rc = sscanf(buf,"%d %2s %20s %80s",&dev_num, dev_class, dev_type, dev_name);
+		if (rc < 4) dev_name[0] = (char)0;
+		if (rc < 3) dev_type[0] = (char)0;
+		if (rc < 2) continue;							/* Skip Badly formed line.		*/
+
+		*(typlst+i) = gmem(sizeof(dev_class)+sizeof(dev_type)+2,sizeof(char));
+		strcpy(*(typlst+i),dev_class);						/* Copy in the type "ws" "mt"		*/
+		strcat(*(typlst+i)," ");
+		strcat(*(typlst+i),dev_type);
 		++i;
 	}
 	fclose(dtyp);
@@ -627,7 +677,6 @@ build_dtyp_list()
 		panic(buf);
 	}
 
-	fprintf(dtyp,"#device types\n");
 	for (i=0, memset(last,(char)0,sizeof(last)); i<fcount; ++i)
 	{
 		int type;

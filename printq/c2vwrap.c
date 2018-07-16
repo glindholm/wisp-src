@@ -4,6 +4,9 @@
  * Purpose: translate curses calls into video calls
  * 
  * $Log: c2vwrap.c,v $
+ * Revision 1.3  1993/08/13  18:30:46  jockc
+ * take out vstate and verase from init_screen.. move to man_misc
+ *
  * Revision 1.2  1991/04/19  00:47:04  jockc
  * *** empty log message ***
  *
@@ -23,8 +26,6 @@ static char rcsid[]="$Id:$";
 
 initscr()
 {
-	vstate(0);
-	verase(FULL_SCREEN);
 }
 mvaddstr(r,c,s)
 int r,c;

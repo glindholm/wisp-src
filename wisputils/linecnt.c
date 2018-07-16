@@ -40,8 +40,10 @@ char    template[MAXBUF],							/* user entered file specification, wildcard OK	
 	*context;
 int	i;
 
+#pragma NOSTANDARD
 $DESCRIPTOR(template_desc, template);
 $DESCRIPTOR(result_desc, result_spec);
+#pragma STANDARD
 
 	memset(template,'\0',sizeof(template));						/* Prepare template for system services	*/
 	switch (argc)									/* Input handling logic			*/

@@ -11,7 +11,7 @@
 	WCOMMON.H		Define common defines for WISP and WISPLIB
 */
 
-#define WISP_VERSION "V3.2b"				 				/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V3.3c"			 					/* WISPTRAN version (char[20])		*/
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
 
@@ -47,6 +47,7 @@
 #define IS_DECLARE	0x00100000							/* There are DECLARITIVES for this file */
 #define IS_EXTEND	0x00200000							/* File opened EXTEND.			*/
 #define IS_NOEXTENSION	0x00400000							/* A file without an extension.		*/
+#define IS_DBFILE	0x00800000							/* A DATABASE file			*/
 
 #define		OPEN_INPUT		1
 #define		OPEN_SHARED		2

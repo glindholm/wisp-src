@@ -717,16 +717,16 @@
                    MY-INDEX IS > 3.
 
        INIT-THE-ARRAY.
-           MOVE "BLANK" TO ACCOUNT-FIELD (MY-INDEX,1).
-           MOVE "BLANK" TO ACCOUNT-DESC-FIELD (MY-INDEX,1).
-           MOVE "BLANK" TO SRC-TAG-FIELD (MY-INDEX,1).
-           MOVE "BLANK" TO SOURCE-FIELD (MY-INDEX,1).
-           MOVE "BLANK" TO PROJ-TAG-FIELD (MY-INDEX,1).
-           MOVE "BLANK" TO PROJECT-FIELD (MY-INDEX,1).
-           MOVE "BLANK" TO PROJ-DESC-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO ACCOUNT-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO ACCOUNT-DESC-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO SRC-TAG-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO SOURCE-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO PROJ-TAG-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO PROJECT-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO PROJ-DESC-FIELD (MY-INDEX, 1).
 
-           MOVE 1 TO DIST-PCT-FIELD (MY-INDEX,1).
-           MOVE 2 TO AMOUNT-FIELD  (MY-INDEX,1).
+           MOVE 1 TO DIST-PCT-FIELD (MY-INDEX, 1).
+           MOVE 2 TO AMOUNT-FIELD  (MY-INDEX, 1).
 
         END-INIT-SCREEN.
 
@@ -815,98 +815,98 @@
            MOVE HEX-80 TO CRTREC2-OA-2
 
            MOVE "BRITE  MOD   ALL   NOLINE   [80]" TO CRTREC2-ROW (2).
-           MOVE HEX-80 TO CRTREC2-X (2,40).
-           MOVE HEX-8C TO CRTREC2-X (2,75).
+           MOVE HEX-80 TO CRTREC2-X (2, 40).
+           MOVE HEX-8C TO CRTREC2-X (2, 75).
 
            MOVE "BRITE  PROT  ALL   NOLINE   [84]" TO CRTREC2-ROW (3).
-           MOVE HEX-84 TO CRTREC2-X (3,40).
-           MOVE HEX-8C TO CRTREC2-X (3,75).
+           MOVE HEX-84 TO CRTREC2-X (3, 40).
+           MOVE HEX-8C TO CRTREC2-X (3, 75).
 
            MOVE "DIM    MOD   ALL   NOLINE   [88]" TO CRTREC2-ROW (4).
-           MOVE HEX-88 TO CRTREC2-X (4,40).
-           MOVE HEX-8C TO CRTREC2-X (4,75).
+           MOVE HEX-88 TO CRTREC2-X (4, 40).
+           MOVE HEX-8C TO CRTREC2-X (4, 75).
 
            MOVE "DIM    PROT  ALL   NOLINE   [8C]" TO CRTREC2-ROW (5).
-           MOVE HEX-8C TO CRTREC2-X (5,40).
-           MOVE HEX-8C TO CRTREC2-X (5,75).
+           MOVE HEX-8C TO CRTREC2-X (5, 40).
+           MOVE HEX-8C TO CRTREC2-X (5, 75).
 
            MOVE "BLINK  MOD   ALL   NOLINE   [90]" TO CRTREC2-ROW (6).
-           MOVE HEX-90 TO CRTREC2-X (6,40).
-           MOVE HEX-8C TO CRTREC2-X (6,75).
+           MOVE HEX-90 TO CRTREC2-X (6, 40).
+           MOVE HEX-8C TO CRTREC2-X (6, 75).
 
            MOVE "BLINK  PROT  ALL   NOLINE   [94]" TO CRTREC2-ROW (7).
-           MOVE HEX-94 TO CRTREC2-X (7,40).
-           MOVE HEX-8C TO CRTREC2-X (7,75).
+           MOVE HEX-94 TO CRTREC2-X (7, 40).
+           MOVE HEX-8C TO CRTREC2-X (7, 75).
 
            MOVE "BLANK  MOD   ALL   NOLINE   [98]" TO CRTREC2-ROW (8).
-           MOVE HEX-98 TO CRTREC2-X (8,40).
-           MOVE HEX-8C TO CRTREC2-X (8,75).
+           MOVE HEX-98 TO CRTREC2-X (8, 40).
+           MOVE HEX-8C TO CRTREC2-X (8, 75).
 
            MOVE "BLANK  PROT  ALL   NOLINE   [9C]" TO CRTREC2-ROW (9).
-           MOVE HEX-9C TO CRTREC2-X (9,40).
-           MOVE HEX-8C TO CRTREC2-X (9,75).
+           MOVE HEX-9C TO CRTREC2-X (9, 40).
+           MOVE HEX-8C TO CRTREC2-X (9, 75).
 
            MOVE "BRITE  MOD   ALL   LINE     [A0]" TO CRTREC2-ROW (10).
-           MOVE HEX-A0 TO CRTREC2-X (10,40).
-           MOVE HEX-8C TO CRTREC2-X (10,75).
+           MOVE HEX-A0 TO CRTREC2-X (10, 40).
+           MOVE HEX-8C TO CRTREC2-X (10, 75).
 
            MOVE "BRITE  PROT  ALL   LINE     [A4]" TO CRTREC2-ROW (11).
-           MOVE HEX-A4 TO CRTREC2-X (11,40).
-           MOVE HEX-8C TO CRTREC2-X (11,75).
+           MOVE HEX-A4 TO CRTREC2-X (11, 40).
+           MOVE HEX-8C TO CRTREC2-X (11, 75).
 
            MOVE "DIM    MOD   ALL   LINE     [A8]" TO CRTREC2-ROW (12).
-           MOVE HEX-A8 TO CRTREC2-X (12,40).
-           MOVE HEX-8C TO CRTREC2-X (12,75).
+           MOVE HEX-A8 TO CRTREC2-X (12, 40).
+           MOVE HEX-8C TO CRTREC2-X (12, 75).
 
            MOVE "DIM    PROT  ALL   LINE     [AC]" TO CRTREC2-ROW (13).
-           MOVE HEX-AC TO CRTREC2-X (13,40).
-           MOVE HEX-8C TO CRTREC2-X (13,75).
+           MOVE HEX-AC TO CRTREC2-X (13, 40).
+           MOVE HEX-8C TO CRTREC2-X (13, 75).
 
            MOVE "BLINK  MOD   ALL   LINE     [B0]" TO CRTREC2-ROW (14).
-           MOVE HEX-B0 TO CRTREC2-X (14,40).
-           MOVE HEX-8C TO CRTREC2-X (14,75).
+           MOVE HEX-B0 TO CRTREC2-X (14, 40).
+           MOVE HEX-8C TO CRTREC2-X (14, 75).
 
            MOVE "BLINK  PROT  ALL   LINE     [B4]" TO CRTREC2-ROW (15).
-           MOVE HEX-B4 TO CRTREC2-X (15,40).
-           MOVE HEX-8C TO CRTREC2-X (15,75).
+           MOVE HEX-B4 TO CRTREC2-X (15, 40).
+           MOVE HEX-8C TO CRTREC2-X (15, 75).
 
            MOVE "BLANK  MOD   ALL   LINE     [B8]" TO CRTREC2-ROW (16).
-           MOVE HEX-B8 TO CRTREC2-X (16,40).
-           MOVE HEX-8C TO CRTREC2-X (16,75).
+           MOVE HEX-B8 TO CRTREC2-X (16, 40).
+           MOVE HEX-8C TO CRTREC2-X (16, 75).
 
            MOVE "BLANK  PROT  ALL   LINE     [BC]" TO CRTREC2-ROW (17).
-           MOVE HEX-BC TO CRTREC2-X (17,40).
-           MOVE HEX-8C TO CRTREC2-X (17,75).
+           MOVE HEX-BC TO CRTREC2-X (17, 40).
+           MOVE HEX-8C TO CRTREC2-X (17, 75).
 
            MOVE "BRITE  MOD   ALL   NOLINE   [80]" TO CRTREC2-ROW (18).
-           MOVE HEX-80 TO CRTREC2-X (18,40).
-           MOVE HEX-8C TO CRTREC2-X (18,75).
+           MOVE HEX-80 TO CRTREC2-X (18, 40).
+           MOVE HEX-8C TO CRTREC2-X (18, 75).
 
            MOVE "BRITE  MOD   ALL   LINE     [A0]" TO CRTREC2-ROW (19).
-           MOVE HEX-A0 TO CRTREC2-X (19,40).
-           MOVE HEX-8C TO CRTREC2-X (19,75).
+           MOVE HEX-A0 TO CRTREC2-X (19, 40).
+           MOVE HEX-8C TO CRTREC2-X (19, 75).
 
-           MOVE HEX-0B TO CRTREC2-X (18,41)
-                          CRTREC2-X (18,42)
-                          CRTREC2-X (18,43)
-                          CRTREC2-X (18,44)
-                          CRTREC2-X (18,45)
-                          CRTREC2-X (18,46)
-                          CRTREC2-X (18,47)
-                          CRTREC2-X (18,48)
-                          CRTREC2-X (18,49)
-                          CRTREC2-X (18,50).
+           MOVE HEX-0B TO CRTREC2-X (18, 41)
+                          CRTREC2-X (18, 42)
+                          CRTREC2-X (18, 43)
+                          CRTREC2-X (18, 44)
+                          CRTREC2-X (18, 45)
+                          CRTREC2-X (18, 46)
+                          CRTREC2-X (18, 47)
+                          CRTREC2-X (18, 48)
+                          CRTREC2-X (18, 49)
+                          CRTREC2-X (18, 50).
 
-           MOVE HEX-0B TO CRTREC2-X (19,41)
-                          CRTREC2-X (19,42)
-                          CRTREC2-X (19,43)
-                          CRTREC2-X (19,44)
-                          CRTREC2-X (19,45)
-                          CRTREC2-X (19,46)
-                          CRTREC2-X (19,47)
-                          CRTREC2-X (19,48)
-                          CRTREC2-X (19,49)
-                          CRTREC2-X (19,50).
+           MOVE HEX-0B TO CRTREC2-X (19, 41)
+                          CRTREC2-X (19, 42)
+                          CRTREC2-X (19, 43)
+                          CRTREC2-X (19, 44)
+                          CRTREC2-X (19, 45)
+                          CRTREC2-X (19, 46)
+                          CRTREC2-X (19, 47)
+                          CRTREC2-X (19, 48)
+                          CRTREC2-X (19, 49)
+                          CRTREC2-X (19, 50).
 
 
            MOVE "           REWRITE & READ MODIFIABLE (1)" 
@@ -924,27 +924,27 @@
            READ CRT MODIFIABLE INTO CRTREC2.
 
 
-           MOVE HEX-0B TO CRTREC2-X (18,41)
-                          CRTREC2-X (18,42)
-                          CRTREC2-X (18,43)
-                          CRTREC2-X (18,44)
-                          CRTREC2-X (18,45)
-                          CRTREC2-X (18,46)
-                          CRTREC2-X (18,47)
-                          CRTREC2-X (18,48)
-                          CRTREC2-X (18,49)
-                          CRTREC2-X (18,50).
+           MOVE HEX-0B TO CRTREC2-X (18, 41)
+                          CRTREC2-X (18, 42)
+                          CRTREC2-X (18, 43)
+                          CRTREC2-X (18, 44)
+                          CRTREC2-X (18, 45)
+                          CRTREC2-X (18, 46)
+                          CRTREC2-X (18, 47)
+                          CRTREC2-X (18, 48)
+                          CRTREC2-X (18, 49)
+                          CRTREC2-X (18, 50).
 
-           MOVE HEX-0B TO CRTREC2-X (19,41)
-                          CRTREC2-X (19,42)
-                          CRTREC2-X (19,43)
-                          CRTREC2-X (19,44)
-                          CRTREC2-X (19,45)
-                          CRTREC2-X (19,46)
-                          CRTREC2-X (19,47)
-                          CRTREC2-X (19,48)
-                          CRTREC2-X (19,49)
-                          CRTREC2-X (19,50).
+           MOVE HEX-0B TO CRTREC2-X (19, 41)
+                          CRTREC2-X (19, 42)
+                          CRTREC2-X (19, 43)
+                          CRTREC2-X (19, 44)
+                          CRTREC2-X (19, 45)
+                          CRTREC2-X (19, 46)
+                          CRTREC2-X (19, 47)
+                          CRTREC2-X (19, 48)
+                          CRTREC2-X (19, 49)
+                          CRTREC2-X (19, 50).
 
 
            MOVE "           REWRITE & READ ALTERED (1)" 

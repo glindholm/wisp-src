@@ -9,6 +9,7 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vintdef.h"
 #include "vmenu.h"
 
 #define WIDTH  32
@@ -18,6 +19,12 @@ static int row, col, rows, cols;
 static int emode,cmode;
 static unsigned char *save;
 static int line, column;
+
+static int givehelp();
+static int showtab();
+static int move();
+static int nextcol();
+static int home();
 
 int gcal2(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 {

@@ -15,6 +15,8 @@
 			*** Don't add cobol specific code to this file. ***
 */
 
+#include "idsistd.h"
+
 shutexitcobol(exit_code)			
 int exit_code;
 {

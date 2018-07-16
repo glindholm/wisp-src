@@ -7,11 +7,13 @@
 			/*									*/
 			/************************************************************************/
 #include <stdio.h>
+#include "idsistd.h"
+#include "wdefines.h"
 
 no_wispconfig()
 {
 	vonexit( 0 );
-	printf("\n\r %%STARTUP-F-WISPCONFIG WISPCONFIG is undefined.\n\r\n\r\n\r");
+	printf("\n\r %%STARTUP-F-WISPCONFIG %s is undefined.\n\r\n\r\n\r",WISP_CONFIG_ENV);
 	wexit(1L);
 }
 

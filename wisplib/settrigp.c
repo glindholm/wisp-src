@@ -7,6 +7,7 @@
 
 /*						Include required header files.							*/
 
+#include "idsistd.h"
 #include "wfiles.h"
 #include "wcommon.h"
 #include "werrlog.h"
@@ -32,7 +33,7 @@ char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
 {
 #define		ROUTINE		59300
-	long 	mode;									/* The mode of opening			*/
+	int4 	mode;									/* The mode of opening			*/
 	char	*ptr;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);

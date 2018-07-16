@@ -50,6 +50,7 @@
 009000         ACCESS MODE     IS RANDOM                                        
 009400         FILE STATUS     IS SCRN-STAT.                                    
 008600*                                                                         
+      *$SEQLINE
 008700     SELECT SCREEN-OUT
 008800         ASSIGN TO "OUTSCRN",  NODISPLAY                                 
 009000         ACCESS MODE     IS SEQUENTIAL.
@@ -182,29 +183,29 @@
 026200 01  LK-VOLUME                      PIC X(06) VALUE SPACES.               
        01  LK-MODE                        PIC X(01) VALUE SPACES.
        01  LK-DISPOSITION                 PIC X(02) VALUE SPACES.
-       01  LK-COPIES-BIN                  USAGE IS BINARY.
-           05  FILLER                               VALUE ZERO.
-           05  LK-COPIES.
+       01  LK-COPIES-BIN.
+           05  FILLER                     BINARY VALUE 0.
+           05  LK-COPIES                  BINARY VALUE 0.
        01 LK-CLASS                        PIC X(01) VALUE SPACES.
-       01 LK-FORM-BIN                     USAGE IS BINARY.
-           05  FILLER                               VALUE ZERO.
-           05  LK-FORM.
-       01 LK-RET-CODE-BIN                 USAGE IS BINARY.
-           05  FILLER                               VALUE ZERO.
-           05  LK-RET-CODE.
+       01 LK-FORM-BIN.
+           05  FILLER                     BINARY VALUE 0.
+           05  LK-FORM                    BINARY VALUE 0.
+       01 LK-RET-CODE-BIN.
+           05  FILLER                     BINARY VALUE 0.
+           05  LK-RET-CODE                BINARY VALUE 0.
        01  LK-KEYWORD                     PIC X(02) VALUE SPACES.
        01  LK-PASSBACK                    PIC X(06) VALUE SPACES.
        01  LK-TYPE                        PIC X(01) VALUE SPACES.
-       01 LK-START-BIN                    USAGE IS BINARY.
-           05  FILLER                               VALUE ZERO.
-           05  LK-START.
-       01 LK-COUNTER-BIN                  USAGE IS BINARY.
-           05  FILLER                               VALUE ZERO.
-           05  LK-COUNTER.
-       01 LK-FILE-CTR-BIN                 USAGE IS BINARY.
-           05  FILLER                               VALUE ZERO.
-           05  LK-FILE-CRT.
-       01  LK-FILES-RECD                  PIC X(240) VALUE SPACES.
+       01 LK-START-BIN.
+           05  FILLER                     BINARY VALUE 0.
+           05  LK-START                   BINARY VALUE 0.
+       01 LK-COUNTER-BIN.
+           05  FILLER                     BINARY VALUE 0.
+           05  LK-COUNTER                 BINARY VALUE 0.
+       01 LK-FILE-CTR-BIN.
+           05  FILLER                     BINARY VALUE 0.
+           05  LK-FILE-CRT                BINARY VALUE 0.
+       01  LK-FILES-RECD                  PIC X(800) VALUE SPACES.
        01  LK-SCRATCH-TYPE                PIC X(01) VALUE SPACES.
        01  LK-BYPASS-EXP                  PIC X(01) VALUE SPACES.
        01  LK-LIMIT-ACC                   PIC X(01) VALUE SPACES.
@@ -269,8 +270,9 @@
            05  FILLER        PIC IS X(70)   ROW 03 COLUMN 05
                VALUE "This utility will convert EZFORMAT MENU files into
       -        " text files than can".
-           05  FILLER        PIC IS X(34)   ROW 04 COLUMN 05
-               VALUE "be used with the TEXTMENU utility.".
+           05  FILLER        PIC IS X(75)   ROW 04 COLUMN 05
+               VALUE "be used with the TEXTMENU utility.  Will convert A
+      -        "LL files in the library.".
            05  FILLER        PIC IS X(54)   ROW 05 COLUMN 12
                VALUE "NOTE:  There is a file limit of 100 files per libr
       -        "ary.".

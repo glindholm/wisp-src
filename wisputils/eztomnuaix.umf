@@ -1,0 +1,26 @@
+#  Makefile to create new iMicro Focus (AIX) version of "EXTOMNU.int"
+
+# include aix.rules
+
+RUNDIR    = /usr/bin/wispbin
+
+WISP      = wisp
+WISPFLAGS = -I//u/wisp/utils/src -z -1 
+COBOL     = cob
+COBFLAGS  = -i -C warning=2  
+LANG      = -VAIX
+ext       =.int
+MV        = mv
+cext      =.cob
+wext      =.wcb
+pext      =.cpy
+
+all:	$(RUNDIR)/eztomnu$(ext)
+
+$(RUNDIR)/extomnu$(ext): eztomnu$(wext)
+	echo '****** Processing eztomnu.wcb' >>error.log 2>&1 
+	$(WISP) $(WISPFLAGS) $(LANG) extomnu$(wext) >>error.log 2>&1 
+	$(COBOL) $(COBFLAGS) eztomnu$(cext)  >>error.log 2>&1 
+
+cleanup:
+	rm -f *.errs

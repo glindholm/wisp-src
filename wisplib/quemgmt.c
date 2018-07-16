@@ -69,7 +69,7 @@ static int window_top;									/* Vars for the window parameters.	*/
 static int window_rows;
 static char window_data[24][80];							/* Array to save data under window.	*/
 
-quemngmnt(queflags,quenameptr,numq)
+void quemngmnt(queflags,quenameptr,numq)
 long queflags, numq;									/* Usage flags set for search queues.	*/
 char *quenameptr;
 {
@@ -91,7 +91,7 @@ char *quenameptr;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
-	if (wbackground()) return(FAILURE);
+	if (wbackground()) return;
 
 	chng_que = TRUE;								/* Set so will display queue.		*/
 	fstque_fl = TRUE;								/* Set first time flag TRUE.		*/
@@ -104,7 +104,7 @@ char *quenameptr;
 			if (!available)							/* There are no queues to choose from.	*/
 			{
 				genq_empty_list(&rrow,&rcol,&key);			/* Init an empty queue list.		*/
-				return(FAILURE);
+				return;
 			}
 			init_rlist(qrows);						/* Zero out the result array.		*/
 			mlist_id = MENU_LIST;
@@ -141,7 +141,7 @@ char *quenameptr;
 				vue_print_que = FALSE;
 			}
 			free(result_list);						/*  main queue menu.			*/
-			return(SUCCESS);
+			return;
 		}
 		tcpt = qm_qn + (rrow * 31);						/* Get position in queue name array.	*/
 		i = 0;
@@ -371,7 +371,6 @@ char *quenameptr;
 static void menu_header_footer(l_id)							/* Init the text for header and footer.	*/
 long l_id;
 {
-	char *calloc();
 	char *cp;
 	char buff[81];
 	char txt[81];
@@ -419,7 +418,6 @@ long l_id;
 static void prntq_header_footer(type)
 int type;
 {
-	char *calloc();
 	char *cp;
 	char buff[81];
 	char txt[81];
@@ -481,7 +479,6 @@ int type;
 static void batchq_header_footer(type)
 int type;
 {
-	char *calloc();
 	char *cp;
 	char buff[81];
 	char txt[81];
@@ -554,10 +551,10 @@ long l_id;										/*  available keys.			*/
 		queuefn_keys[i].list_function = DOWN_PAGE;				/* Scroll down a complete page.		*/
 		queuefn_keys[i].meta_key = fn5_key;					/* Assign PF5.				*/
 		i++;
-		queuefn_keys[i].list_function = TOP;					/* Go to top of list.			*/
+		queuefn_keys[i].list_function = VLIST_TOP;				/* Go to top of list.			*/
 		queuefn_keys[i].meta_key = fn2_key;					/* Assign PF2.				*/
 		i++;
-		queuefn_keys[i].list_function = BOTTOM;					/* Go to bottom of list.		*/
+		queuefn_keys[i].list_function = VLIST_BOTTOM;				/* Go to bottom of list.		*/
 		queuefn_keys[i].meta_key = fn3_key;					/* Assign PF3.				*/
 		i++;
 		queuefn_keys[i].list_function = ALLOW_KEY;				/* Allow termination of input.		*/
@@ -596,10 +593,10 @@ long l_id;
 		fn_keys[i].list_function = DOWN_PAGE;					/* Scroll down a complete page.		*/
 		fn_keys[i].meta_key = fn5_key;						/* Assign PF5.				*/
 		i++;
-		fn_keys[i].list_function = TOP;						/* Go to top of list.			*/
+		fn_keys[i].list_function = VLIST_TOP;						/* Go to top of list.			*/
 		fn_keys[i].meta_key = fn2_key;						/* Assign PF2.				*/
 		i++;
-		fn_keys[i].list_function = BOTTOM;					/* Go to bottom of list.		*/
+		fn_keys[i].list_function = VLIST_BOTTOM;					/* Go to bottom of list.		*/
 		fn_keys[i].meta_key = fn3_key;						/* Assign PF3.				*/
 		i++;
 		fn_keys[i].list_function = SELECT_ROW;					/* Toggle Select/De-select this row.	*/
@@ -903,7 +900,6 @@ static void alloc_queue_arrays(queflags,qnptr,numq)					/* Allocate the memory n
 long queflags, numq;									/*  columns of the queues.		*/
 char *qnptr;
 {
-	char	*calloc();
 	char	srchname[2], queue_name[32], qttext[8], cputext[12];
 	char	qstext[12];
 	int 	i;
@@ -994,7 +990,6 @@ char *qnptr;
 static void alloc_job_arrays(queflags)							/* Allocate the memory needed for the 	*/
 unsigned long queflags;									/*  columns of the chosen queue jobs.	*/
 {
-	char	*calloc();
 	char	jobname[40], jusername[13], sttext[15];
 	unsigned long qflags;
 	long exec_cnt, hold_cnt, pend_cnt, ret_cnt, tr_cnt;
@@ -1506,7 +1501,6 @@ long rrow;										/*  retrieved from system.		*/
 static int gen_job_arrays(queflags)							/* This will generate the arays of data	*/
 unsigned long queflags;									/*  for the specified queue.		*/
 {
-	char *calloc();
 	char jobname[40], jusername[13], formname[32];
 	char dtext[15], *cpt;
 	long num, size, jstat, copies, form, *lpt;
@@ -1770,7 +1764,7 @@ long ndx;
 	register int i;
 	unsigned long qflags;
 	int state, c;
-$DESCRIPTOR(p_desc, the_file);
+#include "quemgmt1.d"
 
 	jcpt = qe_jbn + (ndx * 39);							/* Point to position in job name array.	*/
 	i = 0;
@@ -2636,7 +2630,7 @@ char *name, *quemsg;
 	long status, outbuf;
 	short mlen;
 	char msgstr[256];
-$DESCRIPTOR(msgval,msgstr);
+#include "quemgmt2.d"
 
 	if (stat_ss != SS$_NORMAL)							/* If was a failure on the system call	*/
 	{										/*  then get the error message.		*/
@@ -2817,26 +2811,15 @@ int lmar, rmar;
 }
 #endif	/* VMS */
 
-#ifdef unix
+#if defined(unix) || defined(MSDOS)
 #include "werrlog.h"
 
-quemngmnt()
+void quemngmnt()
 {
 #define		ROUTINE		49500
 
 	werrlog(ERRORCODE(3),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 	return;
 }
-#endif	/* unix */
-
-#ifdef MSDOS
-#include "werrlog.h"
-
-quemngmnt()
-{
-#define		ROUTINE		49500
-
-	werrlog(ERRORCODE(3),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
-}
-#endif	/* MSDOS */
+#endif	/* unix || MSDOS */
 

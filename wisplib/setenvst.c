@@ -12,6 +12,8 @@
 #include <string.h>
 #endif
 
+#include "idsistd.h"
+
 /*
 	setenvstr		Set an environment string
 */

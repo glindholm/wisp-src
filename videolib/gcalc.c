@@ -10,10 +10,13 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vintdef.h"
 #include "vmenu.h"
 
 #define DISPLAY_SIZE 15
 #define REG_SIZE     64
+
+#define INIT_REG_DISPLAY "              0"
 
 #define RIGHT 0
 #define LEFT 1
@@ -30,23 +33,42 @@
 #define	FUNCTION 0
 
 static int row, col, rows, cols;
-static char xreg[REG_SIZE];
+static char reg_display[REG_SIZE];
 static int emode, cmode, last;
 static int digits, period, xpend, ypend;
-static double decimal;
-static double x, y;
 static int operation;
 static int error;
 static int mode;
 static unsigned char *save;
 
+static double decimal, base;
+static double reg_x, reg_y;
+
+static int showcalc();
+static int position();
+static int display();
+static int show_reg_display();
+static int shuffle();
+static int newdisp();
+static int do_operation();
+static int standard_op();
+static int clear();
+static int arrow();
+static int givehelp();
+static int overflow();
+
 int gcalc()
 {
-	register int i, j, k;
+	int i, j, k;
 	int active;
 	unsigned char *vsss();
 	char c;
 
+	reg_x = 0.0;
+	reg_y = 0.0;
+	base = 10.0;
+	decimal = 0.0;
+	
 	row = 4;
 	col = 24;
 	rows = 13;
@@ -83,11 +105,11 @@ int gcalc()
 		{
 			if (xpend) newdisp();
 
-			if ((xreg[DISPLAY_SIZE-2] == ' ') &&
-			    (xreg[DISPLAY_SIZE-1] == '0') &&
+			if ((reg_display[DISPLAY_SIZE-2] == ' ') &&
+			    (reg_display[DISPLAY_SIZE-1] == '0') &&
 			    (k == '0'))
 			{
-				show();
+				show_reg_display();
 				last = k;
 				position();
 			}
@@ -96,13 +118,13 @@ int gcalc()
 			{
 				if (period)
 				{
-					x = x + ((double)(k-'0'))/decimal;
-					decimal = decimal * 10.0;
+					reg_x += ((double)(k-'0'))/decimal;
+					decimal *= base;
 				}
-				else x = (x * 10.) + (double)(k - '0');
+				else reg_x = (reg_x * base) + (double)(k - '0');
 				shuffle(LEFT);
-				xreg[DISPLAY_SIZE-1] = (char) k;
-				show();
+				reg_display[DISPLAY_SIZE-1] = (char) k;
+				show_reg_display();
 				last = k;
 				position();
 			}
@@ -120,10 +142,10 @@ int gcalc()
 			if (!period && (digits++ < DISPLAY_SIZE))
 			{
 				period = TRUE;
-				decimal = 10.0;
+				decimal = base;
 				shuffle(LEFT);
-				xreg[DISPLAY_SIZE-1] = (char) k;
-				show();
+				reg_display[DISPLAY_SIZE-1] = (char) k;
+				show_reg_display();
 				last = k;
 				position();
 			}
@@ -176,7 +198,7 @@ int gcalc()
 		{
 			if (!mode) overkey(PRIMARY);
 			clear();
-			show();
+			show_reg_display();
 			position();
 		}
 
@@ -190,14 +212,14 @@ int gcalc()
 			active = funcalc();
 		}
 
-		else if (k == help_key)
+		else if ((k == 'H') || (k == 'h') || (k == help_key))
 		{
 			givehelp(mode);
 			last = 'F';
 			position();
 		}
 
-		else if (k == fn16_key) active = FALSE;
+		else if ((k == fn16_key) || (k == 'X') || (k == 'x') || (k == 'E') || (k == 'e')) active = FALSE;
 
 		else if (k == ' ');
 
@@ -209,7 +231,7 @@ int gcalc()
 
 static int showcalc(m) int m;
 {
-	register int i, j, k;
+	int i, j, k;
 
 	mode = m;
 
@@ -262,7 +284,7 @@ static int showcalc(m) int m;
 	vmode(CLEAR);
 	vcharset(DEFAULT);
 
-	show();
+	show_reg_display();
 	position();
 
 	vbuffering(AUTOMATIC);
@@ -311,68 +333,73 @@ static int position()
 
 static int display()
 {
-	register int i;
+	int i;
 
-	for (i = 0; i < REG_SIZE; i++) xreg[i] = CHAR_NULL;
-	sprintf(xreg,"%15.15g",x);
+	memset(reg_display,(char)0,sizeof(reg_display));
+	sprintf(reg_display,"%15.15g",reg_x);
 
-	if (strpos(xreg,"e") >= 0)
+	if (strpos(reg_display,"e") >= 0)
 	{
-		if (x >= 0.0) sprintf(xreg,"%15.9e",x);
-		else sprintf(xreg,"%15.8e",x);
+		if (reg_x >= 0.0) sprintf(reg_display,"%15.9e",reg_x);
+		else sprintf(reg_display,"%15.8e",reg_x);
 	}
-	else if (strpos(xreg,".") >= 0)
+	else if (strpos(reg_display,".") >= 0)
 	{
-		while (xreg[DISPLAY_SIZE-1] == '0') shuffle(RIGHT);
-		if ((xreg[DISPLAY_SIZE-1] == '.') && !period) shuffle(RIGHT);
+		while (reg_display[DISPLAY_SIZE-1] == '0') shuffle(RIGHT);
+		if ((reg_display[DISPLAY_SIZE-1] == '.') && !period) shuffle(RIGHT);
 	}
-	xreg[DISPLAY_SIZE] = CHAR_NULL;
-	show();
+	reg_display[DISPLAY_SIZE] = CHAR_NULL;
+	show_reg_display();
 }
 
-show()
+static int show_reg_display()
 {
-	register int i;
-/*	vmove(21,0); vprint("%15.15f",x); verase(TO_EOL);
-	vmove(22,0); vprint("%15.15e",x); verase(TO_EOL);
-	vmove(23,0); vprint("%15.15g",x); verase(TO_EOL);
-*/
-	if (x >= 1.0)
+	int i;
+	double	dtemp;
+
+	dtemp = reg_x;
+
+	if (dtemp >= 1.0)
 	{
-again:		i = 0;
-		while(xreg[i++] == ' ')
-		if (xreg[i] == '0')
+		/*
+		**	Clear leading zeros
+		*/
+		i = 0;
+		while(i < DISPLAY_SIZE && reg_display[i] == ' ')
 		{
-			xreg[i] = ' ';
-			goto again;
+			i++;
+			if (reg_display[i] == '0')
+			{
+				reg_display[i] = ' ';
+			}
 		}
 	}
-	vtext(cmode,row+1,col+2,xreg);
+	vtext(cmode,row+1,col+2,reg_display);
 	vmode(CLEAR);
 	return(SUCCESS);
 }
 
 static int shuffle(direction) int direction;
 {
-	register int i;
+	int i;
 
 	if (direction == LEFT)
 	{
-		for (i = 0; i < DISPLAY_SIZE-1; i++) xreg[i] = xreg[i+1];
-		xreg[DISPLAY_SIZE] = CHAR_NULL;
+		for (i = 0; i < DISPLAY_SIZE-1; i++) reg_display[i] = reg_display[i+1];
 	}
 	else
 	{
-		for (i = DISPLAY_SIZE-1; i > 0; i--) xreg[i] = xreg[i-1];
-		xreg[0] = ' ';
+		for (i = DISPLAY_SIZE-1; i > 0; i--) reg_display[i] = reg_display[i-1];
+		reg_display[0] = ' ';
 	}
+	reg_display[DISPLAY_SIZE] = (char)0;
 	return(SUCCESS);
 }
 
 static int newdisp()
 {
-	x = 0.0;
-	strcpy(xreg,"              0");
+	reg_x = 0.0;
+	strcpy(reg_display,INIT_REG_DISPLAY);
 	xpend = FALSE;
 	period = FALSE;
 	decimal = 0.0;
@@ -382,14 +409,14 @@ static int newdisp()
 
 static int do_operation()
 {
-	double lx, ly, ax, ay, log10();
+	double lx, ly, ax, ay;
 
 	if (operation != NULL_OP)
 	{
-		if (x >= 0) lx = log10(x);
-		else lx = log10(-x);
-		if (y >= 0) ly = log10(y);
-		else ly = log10(-y);
+		if (reg_x >= 0) lx = log10(reg_x);
+		else lx = log10(-reg_x);
+		if (reg_y >= 0) ly = log10(reg_y);
+		else ly = log10(-reg_y);
 		if (lx >= 0.0) ax = lx;
 		else ax = -lx;
 		if (ly >= 0.0) ay = ly;
@@ -401,28 +428,28 @@ static int do_operation()
 		case ADD:
 		{
 			if ((ax > LIMIT) || (ay > LIMIT)) overflow();
-			else x = y + x;
+			else reg_x += reg_y;
 			break;
 		}
 		case SUBTRACT:
 		{
 			if ((ax > LIMIT) || (ay > LIMIT)) overflow();
-			else x = y - x;
+			else reg_x = reg_y - reg_x;
 			break;
 		}
 		case MULTIPLY:
 		{
 			if ((lx + ly) > LIMIT) overflow();
 			else if ((lx + ly) < -LIMIT) overflow();
-			else x = y * x;
+			else reg_x *= reg_y;
 			break;
 		}
 		case DIVIDE:
 		{
-			if (x == 0.0) overflow();
+			if (reg_x == 0.0) overflow();
 			else if ((ly - lx) >  LIMIT) overflow();
 			else if ((ly - lx) < -LIMIT) overflow();
-			else x = y / x;
+			else reg_x = reg_y / reg_x;
 			break;
 		}
 	}
@@ -434,20 +461,20 @@ static int standard_op(k) int k;
 	if (ypend)
 	{
 		ypend = FALSE;
-		y = x;
+		reg_y = reg_x;
 	}
 	if (!xpend) do_operation();
 	display();
-	y = x;
+	reg_y = reg_x;
 	xpend = TRUE;
 	last = k;
 }
 
 static int clear()
 {
-	y = 0.0;
-	x = 0.0;
-	strcpy(xreg,"              0");
+	reg_y = 0.0;
+	reg_x = 0.0;
+	strcpy(reg_display,INIT_REG_DISPLAY);
 	xpend = FALSE;
 	ypend = FALSE;
 	operation = NULL_OP;
@@ -532,7 +559,7 @@ overkey(m) int m;
 
 static int arrow(k) int k;
 {
-	register int i, j;
+	int i, j;
 
 	if (k == up_arrow_key)
 	{
@@ -578,7 +605,7 @@ static int arrow(k) int k;
 
 funcalc()
 {
-	register int i, j, k;
+	int i, j, k;
 
 	last = 'F';
 	errno = 0;
@@ -587,29 +614,29 @@ funa:	k = vgetm();
 
 	if ((k == '0') || (k == fn16_key)) return(FAILURE);
 	else if (k == ' ') goto funa;
-	else if (k == '-') x = -x;
+	else if (k == '-') reg_x = -reg_x;
 	else if ((k == '+') || (k == ','))
 	{
-		if (x == 0.0) errno = 1;
-		else x = 1 / x;
+		if (reg_x == 0.0) errno = 1;
+		else reg_x = 1 / reg_x;
 	}
-	else if (k == '7') x = sin(x);
-	else if (k == '8') x = cos(x);
-	else if (k == '9') x = tan(x);
-	else if (k == '4') x = asin(x);
-	else if (k == '5') x = acos(x);
-	else if (k == '6') x = atan(x);
-	else if (k == '1') x = exp(x);
-	else if (k == '2') x = log(x);
-	else if (k == '3') x = log10(x);
-	else if (k == '.') x = 2.0 * acos(0.0);
-	else if ((k == '=') || (k == return_key)) x = sqrt(x);
+	else if (k == '7') reg_x = sin(reg_x);
+	else if (k == '8') reg_x = cos(reg_x);
+	else if (k == '9') reg_x = tan(reg_x);
+	else if (k == '4') reg_x = asin(reg_x);
+	else if (k == '5') reg_x = acos(reg_x);
+	else if (k == '6') reg_x = atan(reg_x);
+	else if (k == '1') reg_x = exp(reg_x);
+	else if (k == '2') reg_x = log(reg_x);
+	else if (k == '3') reg_x = log10(reg_x);
+	else if (k == '.') reg_x = 2.0 * acos(0.0);
+	else if ((k == '=') || (k == return_key)) reg_x = sqrt(reg_x);
 
 	else if ((k == '*') || (k == fn4_key))
 	{
 		i = 0;
-		while (xreg[i] == ' ') i++;
-		vcut(&xreg[i]);
+		while (i < DISPLAY_SIZE && reg_display[i] == ' ') i++;
+		vcut(&reg_display[i]);
 		goto xit;
 	}
 
@@ -617,8 +644,8 @@ funa:	k = vgetm();
 	{
 		if (vpaste(0))
 		{
-			x = 0.0;
-			strcpy(xreg,"              0");
+			reg_x = 0.0;
+			strcpy(reg_display,INIT_REG_DISPLAY);
 			xpend = FALSE;
 			digits = 0;
 			decimal = 0.0;
@@ -632,7 +659,7 @@ funa:	k = vgetm();
 	else if ((k == 'C') || (k == 'c') || (k == fn2_key))
 	{
 		clear();
-		show();
+		show_reg_display();
 		overkey(PRIMARY);
 		last = k;
 		position();
@@ -665,7 +692,7 @@ xit:	overkey(PRIMARY);
 static int givehelp(m) int m;
 {
 	struct video_menu help;
-	register int key;
+	int key;
 
 
 	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);

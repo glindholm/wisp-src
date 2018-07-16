@@ -1,3 +1,10 @@
+			/************************************************************************/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/************************************************************************/
+
 #ifdef VMS				/* This entire source file is in this #ifdef and is only valid on the VMS system	*/
 
 #include <ssdef.h>
@@ -25,8 +32,9 @@ setup_qm()										/* Sets up all parameters passed to the	*/
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
-	wpload();									/* Call to make sure have in memory.	*/
-	queflags = (0x0000f000 & defaults.flags);					/* Set apart the need queue flags.	*/
+	get_defs(DEFAULTS_FLAGS,&queflags);						/* Set apart the need queue flags.	*/
+	queflags &= (HELP_SBATCH_ENABLED | HELP_SGENERIC_ENABLED | HELP_SOUTPUT_ENABLED | HELP_RESTRJOBS_DISABLED);
+
 	sort_que_names();								/* Get and sort possible queues.	*/
 	quemngmnt(queflags,quenameptr,numq);						/* Call the queue management program.	*/
 	return;
@@ -39,10 +47,9 @@ sort_que_names()									/* If called from WISP then use LPMAP	*/
 	struct que qd[100];
 	prt_id *prt_ptr;								/* Local ptrs to WISP$CONFIG data.	*/
 	pq_id *pq_ptr;
-	char *calloc();
 
-	prt_ptr = prt_list;								/* Point to LPMAP data.			*/
-	pq_ptr = pq_list;								/* Point to PQMAP data.			*/
+	prt_ptr = get_prt_list();							/* Point to LPMAP data.			*/
+	pq_ptr = get_pq_list();								/* Point to PQMAP data.			*/
 	quenameptr = 0;
 	numq = orig_numq = 0;								/* Init to no queues to search.		*/
 	while (pq_ptr)									/* While have data from PQMAP.		*/
@@ -155,25 +162,35 @@ char *qname;										/* Return TRUE if it does.		*/
 }
 
 static int copy_class(tcpt,qd,name)							/* First copy classes associated.	*/
-char *tcpt, *name;									/* Return the numbe of chars used.	*/
+char *tcpt, *name;									/* Return the number of chars used.	*/
 struct que *qd;
 {
 	int i, nlen, first;
-	int num;
+	int num, match_cnt;
 
 	first = TRUE;
+	match_cnt = 0;
 	num = 0;
 	for (i = 0; i < orig_numq; i++)							/* Test each queue in struct for match.	*/
 	{
-		if (strcmp(qd[i].name,name) == 0)					/* If found a match.			*/
+		if (match_cnt > 4)     							/* Too many to keep track of so		*/
+		{									/* display ...				*/
+			*tcpt++ = '.';
+			*tcpt++ = '.';
+			*tcpt++ = '.';
+			num += 3;
+			break;
+		}
+		else if (strcmp(qd[i].name,name) == 0)					/* If found a match.			*/
 		{
-			if (!first)
+			if (!first)                               
 			{
-				*tcpt++ = ',';					/* Seperate classes with a comma.	*/
+				*tcpt++ = ',';						/* Seperate classes with a comma.	*/
 				num++;
 			}
 			else first = FALSE;
 			*tcpt++ = qd[i].class;
+			match_cnt++;
 			num++;
 		}
 	}
@@ -182,4 +199,6 @@ struct que *qd;
 	return(num);	
 }
 
-#endif	/* VMS */
+#else	/* VMS */
+static int dummy_setupqm;
+#endif

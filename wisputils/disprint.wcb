@@ -161,9 +161,9 @@
 
 123456*8901234567890123456789012345678901234567890123456789012345678901234567890
            05  FILLER   PIC X(35)                     ROW 08 COLUMN 03
-               VALUE "Copies  Filename   Records  Created".
+               VALUE "Copies  Filename   Size-Kb  Created".
            05  FILLER   PIC X(35)                     ROW 08 COLUMN 43
-               VALUE "Copies  Filename   Records  Created".
+               VALUE "Copies  Filename   Size-Kb  Created".
            05  FILLER   OCCURS 12 TIMES.
                10  DISP-COL05       PIC ZZ            ROW 09 COLUMN 05
                    SOURCE L-P-COPY  OBJECT L-P-COPY.
@@ -171,7 +171,7 @@
                10  DISP-COL11       PIC X(8)          ROW 09 COLUMN 11
                    SOURCE L-P-PROGRAM  OBJECT L-P-PROGRAM.
 
-               10  DISP-COL22       PIC Z(7)          ROW 09 COLUMN 22
+               10  DISP-COL22       PIC X(7)          ROW 09 COLUMN 22
                    SOURCE L-P-RECS  OBJECT L-P-RECS.
 
                10  DISP-COL30       PIC X(8)          ROW 09 COLUMN 30
@@ -183,7 +183,7 @@
                10  DISP-COL51       PIC X(8)          ROW 09 COLUMN 51
                    SOURCE R-P-PROGRAM  OBJECT R-P-PROGRAM.
 
-               10  DISP-COL62       PIC Z(7)          ROW 09 COLUMN 62
+               10  DISP-COL62       PIC X(7)           ROW 09 COLUMN 62
                    SOURCE R-P-RECS  OBJECT R-P-RECS.
 
                10  DISP-COL70       PIC X(8)          ROW 09 COLUMN 70
@@ -219,21 +219,23 @@
                    10  WSA-P-COPY        PIC 99.
                    10  WSA-PFNUM         PIC 99.
                    10  WSA-P-PROGRAM     PIC X(8).
-                   10  WSA-P-RECS        PIC 9(7).
+                   10  WSA-P-RECS        PIC X(7).
                    10  WSA-P-DATE        PIC X(8).
            03  WSA-PROGRAM-SCREEN REDEFINES WSA-PROGRAM-AREA.
                05  WSA-SCREEN-L OCCURS 12 TIMES.
                    10  L-P-COPY        PIC 99.                  
                    10  L-PFNUM         PIC 99.
                    10  L-P-PROGRAM     PIC X(8).
-                   10  L-P-RECS        PIC 9(7).
+                   10  L-P-RECS        PIC X(7).
                    10  L-P-DATE        PIC X(8).
                05  WSA-SCREEN-R OCCURS 12 TIMES.
                    10  R-P-COPY        PIC 99.
                    10  R-PFNUM         PIC 99.
                    10  R-P-PROGRAM     PIC X(8).
-                   10  R-P-RECS        PIC 9(7).
+                   10  R-P-RECS        PIC X(7).
                    10  R-P-DATE        PIC X(8).
+       01  WS-NUM-FORMAT               PIC Z(6)9.
+       01  TEMP-ERROR                  PIC X(35) VALUE SPACES.
 025300/*****************************************************************        
 025400*                                                                *        
 025500*                   DEFINITIONS FOR LINK CALL(S)                 *        
@@ -299,6 +301,7 @@
 031400     05  FILLER  USAGE IS BINARY VALUE 0.                                 
 031500     05  FDR-FUNCTION-CODE USAGE IS BINARY VALUE 0.                       
 
+       01  FDR-BS               PIC X(2) VALUE "BS".
        01  FDR-CD               PIC X(2) VALUE "CD".
        01  FDR-DATE.
            05  FDR-YY           PIC X(2).
@@ -311,6 +314,8 @@
            05  FILLER           PIC X VALUE "/".
            05  FDR-F-YY         PIC X(2).
 031600 01  FDR-RECORD-SIZE     PIC X(2) VALUE "RS".                             
+       01  FDR-BYTE-SIZE        PIC 9(18) VALUE 0.
+       01  WS-BYTE-CALC         PIC 9(08) VALUE 0.
 031700 01  FDR-SIZE.                                                            
 031800     05  FILLER       USAGE IS BINARY VALUE 0.                            
 031900     05  FDR-REC-SIZE USAGE IS BINARY VALUE 0.                            
@@ -387,7 +392,9 @@
        01  FN-KEY           PIC XX VALUE "FN".
        01  PR-RETURN.
 032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
-032300     05  PR-RTN        USAGE IS BINARY VALUE 0.
+032300     05  PR-RTN       USAGE IS BINARY VALUE 0.
+       01  PR-RTN-DISP      PIC 99.
+       01  PR-RTN-STR REDEFINES PR-RTN-DISP PIC X(02).
 034400/*****************************************************************        
 034500*                                                                *        
 034600*                         PROCEDURE DIVISION                     *        
@@ -401,6 +408,7 @@
 035400     PERFORM TERMINATION.                                                 
 035500                                                                          
 035600 EXIT-PROGRAM.                                                            
+035610     EXIT PROGRAM.
 035700     STOP RUN.                                                            
 035800                                                                          
 035900******************************************************************        
@@ -449,21 +457,42 @@
       *$VAX_CODE
       *        MOVE "LIS "    TO WISPFILEXT
       *$VAX_END  
-041500         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,                 
-041600              FDR-FUNCTION, FDR-CD, FDR-DATE, FDR-RTN                     
+
+      *  2/22/93 Jim K. - Modified to return k-blocks in lieu of 
+      *                   0 or 1.  Also added check of READFDR return code
+041500*         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,             
+041600*              FDR-FUNCTION, FDR-CD, FDR-DATE, FDR-RTN.
+      *         MOVE FDR-MM TO FDR-F-MM
+      *         MOVE FDR-DD TO FDR-F-DD
+      *         MOVE FDR-YY TO FDR-F-YY
+      *         MOVE FDR-F-DATE     TO  FILE-DATE(IND-CNT)
+041500*         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,
+041600*              FDR-FUNCTION, FDR-BS, FDR-BYTE-SIZE, FDR-RTN.
+
+041500         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,             
+041600              FDR-FUNCTION, FDR-CD, FDR-DATE,
+                    FDR-BS, FDR-BYTE-SIZE, FDR-RTN.
+
+               IF FDR-RTN-NUM > 0
+                  MOVE "  ?  ?  " TO FILE-DATE(IND-CNT)
+                  MOVE 0         TO FILE-RECS(IND-CNT)
+                  GO TO A-EXIT.
 
                MOVE FDR-MM TO FDR-F-MM
                MOVE FDR-DD TO FDR-F-DD
                MOVE FDR-YY TO FDR-F-YY
                MOVE FDR-F-DATE     TO  FILE-DATE(IND-CNT)
-      *$VAX_CODE
-      *        MOVE "LIS "    TO WISPFILEXT
-      *$VAX_END  
-041500         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,                 
-041600              FDR-FUNCTION, FDR-RECORD-NUM, FDR-NUM, FDR-RTN                     
 
-               MOVE FDR-REC-NUM     TO  FILE-RECS(IND-CNT).
+               IF FDR-BYTE-SIZE NOT = 0
+                   IF FDR-BYTE-SIZE < 1000
+                       MOVE 1 TO WS-BYTE-CALC
+                   ELSE
+                       DIVIDE FDR-BYTE-SIZE BY 1000 GIVING
+                           WS-BYTE-CALC ROUNDED
+               ELSE
+                   MOVE 0 TO WS-BYTE-CALC.
 
+               MOVE WS-BYTE-CALC     TO  FILE-RECS(IND-CNT).
 042200 A-EXIT.                                                                  
 042300     EXIT.                                                                
 042400                                                                          
@@ -473,7 +502,7 @@
 047400*                                                                         
 047500 TERMINATION.                                                             
 047600     CLOSE CRT.                                                           
-047800     STOP RUN.                                                            
+047800     PERFORM EXIT-PROGRAM.
 047900/*****************************************************************        
 048000*                                                                *        
 048100*                       INPUT OUTPUT ROUTINES                    *        
@@ -491,9 +520,10 @@
            MOVE CRTREC-OA TO OA-SAVE.
            MOVE POS-CURSOR TO OA-SAVE-WCC.
            MOVE OA-SAVE TO ORDER-AREA OF SCREEN-1.
+           MOVE SPACES TO WSA-ERROR.
 
 049200     IF PF-KEY = 16 
-              STOP RUN.                                                
+              PERFORM EXIT-PROGRAM.
 
            IF PF-KEY = 00
               PERFORM DISPLAY-OVER.
@@ -541,7 +571,13 @@
            IF FILE-NAME(CURR-IND) NOT = SPACES
              MOVE 1 TO WSA-P-COPY(IND-CNT).
            MOVE FILE-NAME(CURR-IND) TO WSA-P-PROGRAM(IND-CNT).
-           MOVE FILE-RECS(CURR-IND) TO WSA-P-RECS(IND-CNT).
+
+           IF FILE-DATE(CURR-IND) = "  ?  ?  "
+               MOVE "      ?"           TO WSA-P-RECS(IND-CNT)
+           ELSE  
+               MOVE FILE-RECS(CURR-IND) TO WS-NUM-FORMAT
+               MOVE WS-NUM-FORMAT       TO WSA-P-RECS(IND-CNT).
+
            MOVE FILE-DATE(CURR-IND) TO WSA-P-DATE(IND-CNT).
            ADD 1     TO CURR-IND.
 
@@ -627,7 +663,7 @@
        X-INIT-TABLE.
            MOVE 0       TO WSA-PFNUM(IND-CNT).
        X-INIT-RECS.
-           MOVE 0       TO WSA-P-RECS(IND-CNT).
+           MOVE SPACES       TO WSA-P-RECS(IND-CNT).
        X-INIT-COPY.
            MOVE 0       TO WSA-P-COPY(IND-CNT).
 
@@ -681,6 +717,13 @@
              CALL "PRINT" USING PR-FILE, DSK-LIB, DSK-VOL,
                PR-MODE, PR-DISP, PR-COPY, PR-CLASS,
                PR-FORM, PR-RETURN
+             IF PR-RTN NOT = 0
+                 MOVE PR-RTN TO PR-RTN-DISP
+                 MOVE "ERROR CALLING PRINT, RETURN CODE = "
+                    TO TEMP-ERROR 
+                 STRING TEMP-ERROR, PR-RTN-STR DELIMITED BY SIZE
+                     INTO WSA-ERROR
+             END-IF
              MOVE 1  TO WSA-P-COPY(CURR-IND).
 
        D-DELETE-FILE.
@@ -699,6 +742,13 @@
              CALL "PRINT" USING PR-FILE, DSK-LIB, DSK-VOL,
                PR-MODE, PR-DISP, PR-COPY, PR-CLASS,
                PR-FORM, PR-RETURN
+             IF PR-RTN NOT = 0
+                 MOVE PR-RTN TO PR-RTN-DISP
+                 MOVE "ERROR CALLING PRINT, RETURN CODE = "
+                    TO TEMP-ERROR 
+                 STRING TEMP-ERROR, PR-RTN-STR DELIMITED BY SIZE
+                     INTO WSA-ERROR
+             END-IF
              MOVE 1  TO WSA-P-COPY(CURR-IND).
 
        DO-ENTER-KEY.
@@ -782,7 +832,7 @@
                MOVE 0      TO WSA-PFNUM(IND-CNT)
                MOVE 0      TO WSA-P-COPY(IND-CNT)
                MOVE SPACES TO WSA-P-PROGRAM(IND-CNT)
-               MOVE 0      TO WSA-P-RECS(IND-CNT)
+               MOVE SPACES      TO WSA-P-RECS(IND-CNT)
                MOVE 0      TO FILE-RECS(CURR-IND)
                MOVE SPACES TO WSA-P-DATE(IND-CNT)
                PERFORM CHECK-FAC VARYING IND-CNT FROM 1

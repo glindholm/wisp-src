@@ -1,10 +1,8 @@
 			/************************************************************************/
-			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		       Copyright (c) 1988, 1989, 1990			*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
-			/*									*/
 			/************************************************************************/
 
 /********************************************************************************************************************************
@@ -26,12 +24,15 @@
 
 
 
+#include "idsistd.h"
 #ifdef VMS
 #include <varargs.h>                                                                    /* Allow variable number of arguments	*/
 #include <ctype.h>									/* for isdigit()			*/
 #include <descrip.h>
 #include <rms.h>
 #include <ssdef.h>
+#include <sordef.h>
+
 #include "wcommon.h"
 
 #define MAX_REC_SZ 8192									/*R01* used in isempty as default size	*/
@@ -82,7 +83,8 @@ va_dcl
 	char	outvol[7],outfil[9],outlib[9];						/* output file info buffers		*/
 	char 	infile[100], outfile[100], *wfname();					/* pathname buffers			*/
 	char	*p;									/* scratch pointer			*/
-	long	mode, status;								/* mode for wfname(), status from SOR$	*/
+	int4	mode;									/* mode for wfname()			*/
+	unsigned long	status;								/* status from SOR$			*/
 	extern char WISPFILEXT[39];							/* foo					*/
 
 	struct key_struct sor_key_info;							/* key struct to pass to SOR$		*/
@@ -90,10 +92,9 @@ va_dcl
 	struct k_inf *pas_key_p;							/* working pointer for passed key data	*/
 	short 	cnvpicz();								/*R01 convert PIC Z type into short	*/
 	long 	opt = SOR$M_NOSIGNAL;							/* option word for SOR$BEGIN_SORT()	*/
+	unsigned char out_org;								/* Output file organization.		*/
 	
-	$DESCRIPTOR(inp_desc,infile);
-	$DESCRIPTOR(out_desc,outfile);
-	
+#include "sortcall.d"
 
 	/********************************************************
 	*	Receive variable number of arguments		*
@@ -148,7 +149,6 @@ va_dcl
 	if (isempty(infile))
 	{
 		*ret_status=4;
-
 		wswap(ret_status);
 		return;
 	}
@@ -156,7 +156,13 @@ va_dcl
 	inp_desc.dsc$w_length = strlen(infile);						/* set descriptor length info		*/
 	inp_desc.dsc$w_length = strlen(outfile);
 
-	status = SOR$PASS_FILES(&inp_desc,&out_desc);					/* tell SOR$ our in and out files	*/
+	out_org = FAB$C_SEQ;
+	status = SOR$PASS_FILES(&inp_desc,&out_desc,&out_org);				/* tell SOR$ our in and out files	*/
+	if (status != SS$_NORMAL)
+	{
+		*ret_status=50;
+		goto sort_end;
+	}
 
 	memset(&sor_key_info,(char)0,sizeof(struct key_struct));			/* zero our info structure		*/
 	sor_key_p = sor_key_info.keys;							/* init working pointers		*/
@@ -189,6 +195,11 @@ va_dcl
 	}	
 
 	status = SOR$BEGIN_SORT(&sor_key_info,0,&opt);	      				/* pass this ^^^ info to SOR$		*/
+	if (status != SS$_NORMAL) 							/* Test if is not normal.		*/
+	{
+		*ret_status=16;
+		goto sort_end;
+	}
                                                              
 
 	/********************************************************
@@ -196,9 +207,35 @@ va_dcl
 	********************************************************/
 
 	status = SOR$SORT_MERGE();							/* Do the sort				*/
-	if (status != SS$_NORMAL)
-		*ret_status = 4;							/* could not open input file		*/
+	switch(status)
+	{
+	case SS$_NORMAL:
+		*ret_status = 0;	/* OK */
+		break;
+	case SOR$_EXTEND:
+	case SOR$_NO_WRK:
+		*ret_status = 8;
+		break;
+	case SOR$_SPCIVC:
+	case SOR$_SPCIVD:
+	case SOR$_SPCIVF:
+	case SOR$_SPCIVI:
+	case SOR$_SPCIVK:
+	case SOR$_SPCIVP:
+	case SOR$_SPCIVS:
+	case SOR$_SPCIVX:
+	case SOR$_SPCSIS:
+		*ret_status = 16;
+		break;
+	case SOR$_ENDDIAGS:
+		*ret_status = 1;
+		break;
+	default:
+		*ret_status = 50;
+		break;
+	}
 
+sort_end:
 	status = SOR$END_SORT();							/* release resources			*/
 
 	wswap(ret_status);
@@ -206,7 +243,7 @@ va_dcl
 
 		/*R01	the following routine was rewritten	*/
 
-short cnvpicz(p,digits)		/*R01*/							/* convert a PIC Z type to long		*/
+short cnvpicz(p,digits)		/*R01*/							/* convert a PIC Z type to int4		*/
 char *p;										/* pointer to picture			*/
 int digits;										/* number of digits			*/
 {
@@ -238,7 +275,7 @@ char *file_name;
         struct RAB record_block;
 
 	int rms_status;
-        char *byte_buffer, *malloc();
+        char *byte_buffer;
 
 	file_block = cc$rms_fab;
 	file_block.fab$l_fna = file_name;
@@ -293,12 +330,12 @@ char *file_name;
 */
 void SORTCALL(sortdata,retcode)
 char	*sortdata;
-long	*retcode;
+int4	*retcode;
 {
 #define		ROUTINE		61000
 	char	filetype;
-	long	recsize;
-	long	*sortcode_ptr;
+	int4	recsize;
+	int4	*sortcode_ptr;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 

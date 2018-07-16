@@ -16,6 +16,7 @@
 /*					Static data.										*/
 
 static int doing_save = FALSE;								/* Not already doing a save.		*/
+static int debug_save = FALSE;								/* Not already saved debugger state.	*/
 
 /*					Subroutine entry point.									*/
 
@@ -30,34 +31,15 @@ int vstate(action) int action;								/* Perform specified action.		*/
 		{
 			vcapload();							/* init vcap stuff                      */
 			vbuffering(LOGICAL);						/* Turn on logical buffering.		*/
-			vcontrol(vcapdef[INIT_TERMINAL]);
-#if 0
-			vset(TERMINAL,ANSI);						/* Turn on VT100/VT200 mode.		*/
-			vmove(0,0);							/* Move to home position.		*/
-			vset(KEYPAD,NORMAL);						/* Set application keys to normal.	*/
-			vset(CURSOR_KEYS,NORMAL);					/* Set cursor keys normal.		*/
-			vset(SCROLL,JUMP);						/* Turn on jump scroll.			*/
-			vset(ORIGIN,TOP_OF_SCREEN);					/* Origin is top of screen.		*/
-			vset(AUTO_WRAP,OFF);						/* Don't auto-wrap at end of line.	*/
-			vset(AUTO_REPEAT,ON);						/* Turn auto-repeat on.			*/
-			vset(INTERLACE,OFF);						/* Turn off unpleasant interlace.	*/
-			vset(AUTO_PRINT,OFF);						/* Don't let the printer print.		*/
-			vset(PRINTER,OFF);						/* Turn the printer off too.		*/
-			vset(HOST_ECHO,ON);						/* We want to echo, not the terminal.	*/
-			vset(NEW_LINE_MODE,OFF);					/* We don't want line-feed to new-line.	*/
-			vset(KEYBOARD,UNLOCKED);					/* We want the keyboard enabled.	*/
-			vset(INSERT_MODE,REPLACE);					/* We want insert mode replacing.	*/
-			vset(CURSOR,VISIBLE);						/* We want a visible cursor.		*/
-			vset(PRINT_TERMINATOR,NONE);					/* No form feed from the printer.	*/
-			vset(PRINT_EXTENT,FULL_SCREEN);					/* Want full screen on print screen.	*/
-#endif
+			vcontrol(vcapdef[INIT_TERMINAL]);				/* Send the initial terminal string.	*/
 			vmode(CLEAR);							/* Clear all renditions.		*/
 			vcharset(DEFAULT);						/* Standard character set.		*/
 			vroll(0,MAX_LINES_PER_SCREEN-1);				/* Set scroll area to full screen.	*/
 			vbuffering(AUTOMATIC);						/* Restore automatic buffering.		*/
+			state_active = TRUE;						/* State 0 is now active.		*/
 			break;
 		}
-
+
 		case SAVE:								/* Save current setup and status.	*/
 		{
 			if (doing_save) vre("vstate(SAVE)-Warning: Already in save state.");
@@ -79,10 +61,38 @@ int vstate(action) int action;								/* Perform specified action.		*/
 			break;
 		}
 
+		case SAVE_DEBUG:							/* Save the debugger terminal setup.	*/
+		{
+			if (debug_save) vre("vstate(SAVE_DEBUG)-Warning: Debugger terminal setup already saved.");
+			debug_save = TRUE;
+			if (isdebug())
+			{
+				vraw_stty_save();
+				vraw_stty_sync();
+			}
+			break;
+		}
+
+		case RESTORE_DEBUG:
+		{
+			if (!debug_save) vre("vstate(RESTORE_DEBUG)-Warning: Debugger terminal setup not saved.");
+			debug_save = FALSE;
+			if (isdebug())
+			{
+				vcharset(DEFAULT);					/* Put back the character set.		*/
+				vmode(CLEAR);						/* Restore the rendition.		*/
+				vset(CURSOR,VISIBLE);					/* Set cursor on.			*/
+				vdefer(RESTORE);					/* Restore from deferred state.		*/
+				vcontrol(DUMP_OUTPUT);					/* Dump the buffer.			*/
+				vraw_stty_restore();					/* Restore debugger's state.		*/
+				break;							/* Now we are done.			*/
+			}
+		}
+
 		default:
 		{
 			ret = FAILURE;							/* Invalid option.			*/
-			vre("vstate(%d)-Invalid control parameter, must be SAVE, RESTORE or DEFAULT",action);	/* Report. 	*/
+			vre("vstate(%d)-Invalid control parameter, must be SAVE, RESTORE, DEFAULT or debugger control",action);
 			break;
 		}
 	}

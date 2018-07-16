@@ -1,13 +1,16 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
 /*						Include necessary header files.							*/
 
 #include <stdio.h>
+#include "idsistd.h"
 #include "wcommon.h"
 #include "wperson.h"
 #include "movebin.h"
@@ -23,26 +26,26 @@ PRINT(va_alist)										/* Variable number of arguments.	*/
 va_dcl											/* Define the list structure.		*/
 {
 	va_list the_args;								/* Define a pointer to the list.	*/
-	int	arg_count, x, i;							/* Number of arguments.			*/
-	int	num_copies,form_num,return_code;
-	long	l_val;									/* to move int to long value.		*/
+	int4	arg_count, x, i;							/* Number of arguments.			*/
+	int4	num_copies,form_num,return_code;
+	int4	l_val;									/* to move int to int4 value.		*/
 
 	char *l_file,									/* Address of the filename.		*/
 	     *l_lib,									/* Address of the library name.		*/
 	     *l_vol,									/* Address of the volume name.		*/
 	     *l_mode,									/* Address of the job print mode.	*/
 	     *l_disposition,								/* Address of the disposition action.	*/
-	     *l_class,									/* Address of the print class		*/
+	     l_class,									/* print class				*/
 	      dummy_arg;								/* Used to burn off extra args.		*/
 
-	long	*l_return_code,								/* Address of 4 byte return code value.	*/
+	int4	*l_return_code,								/* Address of 4 byte return code value.	*/
 		l_copies,								/* Local number of copys.		*/
 		*long_ptr,
 		l_form;									/* Local form number.			*/
 
 	char sav_mode, name[132], *end_name;
 	char *wfname();									/* wfname returns a point to a string.	*/
-	long mode;
+	int4 mode;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
@@ -105,7 +108,7 @@ va_dcl											/* Define the list structure.		*/
 
 	if (x > 1)									/* Are we NOT at the last arg ?		*/
 	{
-		long_ptr = va_arg(the_args, long*);					/* Get the address of the copies value.	*/
+		long_ptr = va_arg(the_args, int4*);					/* Get the address of the copies value.	*/
 		GETBIN(&l_copies,long_ptr,4);
 		l_val = l_copies;							/* Now the value.			*/
 		wswap(&l_val);								/* Correct the word order.		*/
@@ -119,41 +122,41 @@ va_dcl											/* Define the list structure.		*/
                                                                                         
 	if (x > 1)									/* Are we NOT at the last arg ?		*/
 	{
-		l_class = va_arg(the_args, char*);					/* Get address of print class value.	*/
+		l_class = *(va_arg(the_args, char*));					/* Get print class value.		*/
 		x--;									/* One less argument.			*/
-		if (*l_class == ' ') l_class = &defaults.prt_class;			/* Use the default.			*/
+		if (l_class == ' ') 
+			get_defs(DEFAULTS_PC,&l_class);					/* Use the default.			*/
 	}
 	else
 	{
-		l_class = &defaults.prt_class;						/* Use the default.			*/
+		get_defs(DEFAULTS_PC,&l_class);						/* Use the default.			*/
 	}
 
 	if (x > 1)									/* Are we NOT at the last arg ?		*/
 	{
-		long_ptr = va_arg(the_args, long*);					/* Get address of the form number.	*/
+		long_ptr = va_arg(the_args, int4*);					/* Get address of the form number.	*/
 		GETBIN(&l_form,long_ptr,4);
 		l_val = l_form;
 		wswap(&l_val);
 		form_num = (int)l_val;
 		x--;									/* One less arg.			*/
-		if ( form_num == 255 ) form_num = defaults.prt_form;
+		if ( form_num == 255 )
+			get_defs(DEFAULTS_FN,(char*)&form_num);				/* Use the default.			*/
 	}
 	else
 	{
-		form_num = defaults.prt_form;						/* Use the default.			*/
+		get_defs(DEFAULTS_FN,(char*)&form_num);					/* Use the default.			*/
 	}
          
-	l_return_code = va_arg(the_args, long*);					/* Get the address of the return code.	*/
+	l_return_code = va_arg(the_args, int4*);					/* Get the address of the return code.	*/
 
 	if (return_code)								/* There is an error so exit PRINT.	*/
 	{
-		l_val = (long) return_code;
+		l_val = (int4) return_code;
 		wswap(&l_val);
 		PUTBIN(l_return_code,&l_val,4);	
 		return(0);
 	}
-	sav_mode = defaults.prt_mode;							/* Save the default print mode.		*/
-	defaults.prt_mode = *l_mode;							/* Set the current mode to whatever...	*/
 
 	if ((WISPFILEXT[0] == ' ') || !memcmp(WISPFILEXT,"LIS ",4))			/* If it's a listing file.		*/
 	{
@@ -166,10 +169,9 @@ va_dcl											/* Define the list structure.		*/
 
 	end_name = wfname(&mode,l_vol,l_lib,l_file,name);				/* now make a name for ourselves...	*/
 	*end_name = 0;
-	defaults.prt_mode = sav_mode;							/* Restore the print mode default.	*/
 
-	wprint(name,*l_mode,l_disposition,num_copies,*l_class,form_num,&return_code);
-	l_val = (long)return_code;
+	wprint(name,*l_mode,l_disposition,num_copies,l_class,form_num,&return_code);
+	l_val = (int4)return_code;
 	wswap(&l_val);
 	PUTBIN(l_return_code,&l_val,4);	
 }

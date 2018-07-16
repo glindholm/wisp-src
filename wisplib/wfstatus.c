@@ -1,6 +1,7 @@
 /* WFSTATUS.C ... Converts the VAX/VMS status code value into the VS equivalent.						*/
 
 #include <ctype.h>
+#include "idsistd.h"
 
 wfstatus(status_val)
 char *status_val;					                                /* Pointer to the arg.			*/

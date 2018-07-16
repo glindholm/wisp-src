@@ -36,6 +36,11 @@
 #IDALPHA		(default)
 #IDNUMERIC
 
+# If you want EXTRACT to return the 5-7 characters instead of the 1-3 default,
+# then set IDFIVE.
+#IDONE			(default)
+#IDFIVE
+
 # WISP normally filters out "fatal" file status codes and causes an
 # "error getparm" EVEN when the user has supplied DECLARATIVES. 
 # If you specify ALLSTATUSKEYS then WISP will pass all status codes

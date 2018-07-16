@@ -11,6 +11,7 @@
 **	wexith.c
 */
 
+#include "idsistd.h"
 #include "que_jobs.h"
 #include "wperson.h"
 #include "wfiles.h"
@@ -26,7 +27,7 @@ void wexith()										/* This is the WISP exit handler.	*/
 {											/* It is installed by WFOPEN, and refed	*/
 	int i;										/* vuserexit.				*/
 	char fname[NAME_LENGTH+10];
-	long status;
+	int4 status;
 
 	if (already) return;								/* Already been here.			*/
 	else	already = 1;
@@ -50,6 +51,9 @@ void wexith()										/* This is the WISP exit handler.	*/
 	}
 
 	wfclose("*");									/* Ask close routine to spool everything.*/
+
+	oldlevel();									/* Decrement the link-level		*/
+	ppunlink(linklevel());								/* Putparm UNLINK			*/
 
 #ifdef VMS
 	setretcode(WISPRETURNCODE);

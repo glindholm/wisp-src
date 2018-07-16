@@ -11,6 +11,7 @@
 	ERR_GETPARM ... 	This routine will put up the operator intervention error screen.
 */
 
+#include "idsistd.h"
 #include "wangkeys.h"
 #include "wperson.h"
 #include "movebin.h"
@@ -18,7 +19,7 @@
 
 #include "wdefines.h"
 
-static	long	N[255];
+static	int4	N[255];
 static	int	Ni=0;
 
 err_getparm(prname,messid,issuer,msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8)
@@ -27,14 +28,14 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 {                                                  
 #define		ROUTINE		18100
 
-	long	pfkey;
+	int4	pfkey;
 	char	pfkey_rcvr;
 	int	va_cnt;
 	int	i;
-	long 	two=2;
+	int4 	two=2;
 
 	struct argst { char *ptrs[100]; } args;
-	long	cnt;
+	int4	cnt;
 #define GP	args.ptrs[cnt++] = (char *)
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/

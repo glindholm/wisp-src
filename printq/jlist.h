@@ -11,7 +11,7 @@ typedef struct linked_list
 } linked_list;
 
 #define LIST linked_list
-#define list_tail data
+#define list_tail prev
 #ifndef NULL
 #define NULL 0
 #endif

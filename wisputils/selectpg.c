@@ -10,6 +10,8 @@
 
 
 #include <stdio.h>
+static int selectpages();
+static int printusage();
 
 #define PROGNAME "selectpg"
 

@@ -1,13 +1,11 @@
-
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
-
 
 /*
 **	File:		submit.c
@@ -24,6 +22,8 @@
 **			mm/dd/yy	Written by OLD
 **			05/29/92	Fix RETURN-CODE, it is not optional, Wang manual was wrong. GSL
 **			06/10/92	Removed the unused "flags" args from unix_submit(). GSL
+**			07/24/92	Changed to use new wfname() and runtype() UNIX. GSL
+**			11/17/92	Added SETSUBMIT params to unix_submit of EXEC & PROC. GSL
 */
 
 #ifndef MSDOS						/* There is no "background" concept for MSDOS, so, this is removed.	*/
@@ -33,11 +33,12 @@
 
 #ifdef unix
 #include <stdio.h>
-#include <a.out.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
+static int unix_submit();
+static int fixerr();
 #endif
 
 #ifdef VMS
@@ -47,24 +48,22 @@
 #include <descrip.h>
 #endif
 
+#include "idsistd.h"
 #include "que_jobs.h"
 #include "wcommon.h"
 #include "wperson.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"
+#include "filext.h"
 
 #ifdef unix
 #include "wrunconf.h"
-
-int retstat;
-
-char *osd_ext();
+#include "runtype.h"
 #endif
 
-char *malloc();
-char *strchr();
-
+char	*strchr();
+char	*shell_var();
 
 #define WPERM 28
 #define WFNOTFOUND 20
@@ -102,27 +101,20 @@ va_dcl											/* Define the list structure.		*/
  	     *l_return_code,								/* Address of 4 byte return code value.	*/
 	     dummy_return_code;
 
-	long rc;
+	int4 rc;
 	int cpulim;
 	char name[132],qname[40];
-	long mode;
+	int4 mode;
 	char jobname[9];
 	int flags;
-	long wang_retcod;								/* Value expected from Wang COBOL.	*/
+	int4 wang_retcod;								/* Value expected from Wang COBOL.	*/
 #ifdef VMS
 	pq_id *pq_ptr;									/* Pointer to the proc queue list.	*/
 	char result[132], *context;							/* Vars to use with lib$find_file	*/
-$DESCRIPTOR(f_desc,name);
-$DESCRIPTOR(r_desc,result);
+#include "submit.d"
 #endif
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-
-	/*
-	**
-	**  IMPORTANT NOTE: The return code for submit is OPTIONAL !!! It is arg11 IF present !!!
-	**
-	*/
 
 	va_start(the_args);								/* Set pointer to top of stack.		*/
 	arg_count = va_count(the_args);							/* Determine the number of arguments.	*/
@@ -182,14 +174,17 @@ $DESCRIPTOR(r_desc,result);
 
 	if (*jobname == ' ') *jobname = '\0';						/* If spaces, make blank.		*/
 
+	l_status = ' ';
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
 		l_status = *va_arg(the_args, char*);					/* Get address of the status value.	*/
 		args_remaining--;							/* One less argument.			*/
 		if (!strchr("RH ",l_status)) wang_retcod = 900;				/* If invalid status.			*/
 	}
-	else	l_status = defaults.proc_stat;
-	if (l_status == ' ') l_status = defaults.proc_stat;
+	if (l_status == ' ')
+	{
+		get_defs(DEFAULTS_JS,&l_status);
+	}
 
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
@@ -199,14 +194,17 @@ $DESCRIPTOR(r_desc,result);
 	}
 	else	l_disposition = 'D';
 
+	l_job_class = ' ';
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
 		l_job_class = *va_arg(the_args, char*);					/* Get the address of the class value.	*/
 		args_remaining--;							/* One less argument.			*/
 		if (!strchr("ABCDEFGHIJKLMNOPQRSTUVWXYZ ",l_job_class)) wang_retcod = 902; /* If invalid job class.		*/
 	}
-	else	l_job_class = defaults.proc_class;
-	if (l_job_class == ' ') l_job_class = defaults.proc_class;
+	if (l_job_class == ' ')
+	{
+		get_defs(DEFAULTS_JC,&l_job_class);
+	}
 
 	if (args_remaining > 1)								/* Are we NOT at the last arg ?		*/
 	{
@@ -251,12 +249,14 @@ $DESCRIPTOR(r_desc,result);
 	if (wang_retcod)								/* If the return code has been set	*/
 	{
 		wswap( &wang_retcod );							/* Set up so is returned correctly.	*/
-		PUTBIN(l_return_code,&wang_retcod,sizeof(long));
+		PUTBIN(l_return_code,&wang_retcod,sizeof(int4));
 		return;
 	}
 
-											/* NOTE: can only submit .COM under VMS.*/
-	mode = IS_SUBMIT;								/* Set the 4th bit.			*/
+#ifdef VMS
+	loadpad(WISPFILEXT,"COM",sizeof(WISPFILEXT));					/* NOTE: can only submit .COM under VMS.*/
+#endif
+	mode = IS_SUBMIT;
 	end_name = wfname(&mode,l_vol,l_lib,l_file,name);				/* now make a name for ourselves...	*/
 	*end_name = '\0';								/* Null terminate properly.		*/
 
@@ -266,12 +266,15 @@ $DESCRIPTOR(r_desc,result);
 		wswap(&cpulim);								/* Get requested cpu limit. (1/100 sec)	*/
 		if (cpulim == -1)							/* Use usage constants.			*/
 		{
-			cpulim = (defaults.proc_cpu[0] - '0') * 36000;			/* Do tens of hours.			*/
-			cpulim += (defaults.proc_cpu[1] - '0') * 3600;			/* Do hours.				*/
-			cpulim += (defaults.proc_cpu[2] - '0') * 600;			/* Tens of minutes.			*/
-			cpulim += (defaults.proc_cpu[3] - '0') * 60;			/* Minutes.				*/
-			cpulim += (defaults.proc_cpu[4] - '0') * 10;			/* Tens of seconds.			*/
-			cpulim += (defaults.proc_cpu[5] - '0');				/* Seconds.				*/
+			char	def_proc_cpu[6];
+			get_defs(DEFAULTS_JL,def_proc_cpu);
+
+			cpulim  = (def_proc_cpu[0] - '0') * 36000;			/* Do tens of hours.			*/
+			cpulim += (def_proc_cpu[1] - '0') * 3600;			/* Do hours.				*/
+			cpulim += (def_proc_cpu[2] - '0') * 600;			/* Tens of minutes.			*/
+			cpulim += (def_proc_cpu[3] - '0') * 60;				/* Minutes.				*/
+			cpulim += (def_proc_cpu[4] - '0') * 10;				/* Tens of seconds.			*/
+			cpulim += (def_proc_cpu[5] - '0');				/* Seconds.				*/
 			cpulim *= 100;							/* Time is in hundredths.		*/
 		}
 	}
@@ -281,7 +284,7 @@ $DESCRIPTOR(r_desc,result);
 	}
 
 #ifdef VMS
-	pq_ptr = pq_list;								/* Get a pointer to the queue list	*/
+	pq_ptr = get_pq_list();								/* Get a pointer to the queue list	*/
 
 	do
 	{
@@ -293,8 +296,8 @@ $DESCRIPTOR(r_desc,result);
 	else		qname[0] = '\0';						/* Or send it nowhere.			*/
 	flags = 0;
 	if (l_status == 'H') flags |= Q_HOLD_JOB;					/* Hold the job if they want.		*/
-	f_desc.dsc$w_length = strlen(name);						/* Set the length of the descriptor.	*/
 	context = 0;
+	f_desc.dsc$w_length = strlen(name);						/* Set the length of the descriptor.	*/
 	rc = lib$find_file(&f_desc,&r_desc,&context,0,0,0,0);				/* See if the file exists first.	*/
 	lib$find_file_end(&context);							/* End the FIND_FILE context.		*/
 	if (rc == SS$_NORMAL || rc == RMS$_NORMAL)					/* If LIB$FIND_FILE was successful	*/
@@ -306,7 +309,7 @@ $DESCRIPTOR(r_desc,result);
 	{
 		rc = 0;
 		wswap( &rc );
-		PUTBIN(l_return_code,&rc,sizeof(long));					/* Return code from queued job.		*/
+		PUTBIN(l_return_code,&rc,sizeof(int4));					/* Return code from queued job.		*/
 	}
 	else
 	{										/* Set return code from queued job:	*/
@@ -325,13 +328,13 @@ $DESCRIPTOR(r_desc,result);
 		else if (rc == SS$_ACCVIO) wang_retcod = 52; 				/* Access violation.			*/
 
 		wswap( &wang_retcod );							/* Set up so is returned correctly.	*/
-		PUTBIN(l_return_code,&wang_retcod,sizeof(long));
+		PUTBIN(l_return_code,&wang_retcod,sizeof(int4));
 	}
 #endif	/* #ifdef VMS */
 #ifdef unix
 	rc = unix_submit(name,jobname,l_job_class,l_vol,l_lib);
 	wswap(&rc);
-	PUTBIN(l_return_code,&rc,sizeof(long));
+	PUTBIN(l_return_code,&rc,sizeof(int4));
 #endif
 }
 
@@ -365,7 +368,7 @@ va_dcl											/* Define the list structure.		*/
 	{
 		subp_len[subp_num] = *va_arg(the_args,short *);				/* Get the length.			*/
 		ptr = va_arg(the_args, char *);						/* and the text.			*/
-		memcpy(subp_text[subp_num],ptr,(long) subp_len[subp_num]);		/* Copy to local area.			*/
+		memcpy(subp_text[subp_num],ptr,(int4) subp_len[subp_num]);		/* Copy to local area.			*/
 		subp_text[subp_num][subp_len[subp_num]] = '\0';				/* Null terminate the parameters	*/
 		subp_num++;
 		arg_count--;
@@ -374,49 +377,50 @@ va_dcl											/* Define the list structure.		*/
 
 
 #ifdef unix
-static int unix_submit(name,jobname,jobclass,p_vol,p_lib)
-char *name;										/* name of file to submit		*/
+static int unix_submit(filespec,jobname,jobclass,p_vol,p_lib)
+char *filespec;										/* name of file to submit		*/
 char *jobname;										/* name of job				*/
 char  jobclass;										/* the jobclass				*/
 char	*p_vol;										/* PROGVOL				*/
 char	*p_lib;										/* PROGLIB				*/
 {
-	int pid,ftyp;
-	char testname[NAME_LENGTH+1];							/* scratch buffer			*/
-	char pname[NAME_LENGTH+1];							/* program name buffer			*/
-	char *p;									/* scratch pointer			*/
-	int retcode, i, ii;
-	int	not_found, typeext;
+	int 	pid,ftyp;
+	char 	*p;									/* scratch pointer			*/
+	int 	retcode, i, ii;
+	char	*sh_parm[64];
 
 	retcode = 0;
-	strcpy(testname,name);
 
-	not_found = findexts(testname,pname,&typeext);
-
-	if (not_found)
+	if (!fexists(filespec))
 	{
-											/* Test for uppercase			*/
-		for(ii=strlen(testname)-1; ii && testname[ii] != '/' && testname[ii] != '.'; ii--)
-		{
-			testname[ii] = (char) toupper(testname[ii]);
-		}
-
-		not_found = findexts(testname,pname,0);
-		if (not_found) retcode = 20;						/* 20 = file not found.			*/
+		retcode = 20;								/* 20 = file not found.			*/
 	}
 
 	if ( retcode == 0 )
 	{
-		ftyp = isexec(pname);							/* decide if it's exec'able or 		*/
-											/* shell script 			*/
-		if ( ftyp == ACCERR )
-			retcode = 28;							/* 28 = file access denied.		*/
+		ftyp = runtype(filespec);						/* Get the run type			*/
+
+		switch(ftyp)
+		{
+		default:
+		case RUN_NOT:
+		case RUN_ACCESS:
+		case RUN_UNKNOWN:
+			retcode = 24;
+			break;
+
+		case RUN_EXEC:
+		case RUN_ACUCOBOL:
+		case RUN_MFINT:
+		case RUN_MFGNT:
+		case RUN_SHELL:
+		case RUN_PROC:
+		case RUN_PROCOBJ:
+			break;
+		}
+
 	}
 
-	if (typeext == DOTGNT)
-	{
-		ftyp = ISMFINT;
-	}
 
 	if ( retcode == 0 )
 	{
@@ -431,24 +435,17 @@ char	*p_lib;										/* PROGLIB				*/
 				char	*env_ptr;
 				int	msize;
 				int	pid;
-				scmap_id *scmap_ptr;
+				int	nice_value;
 
 				signal( SIGHUP,  SIG_IGN );				/* Ignore HangUps & term signals.	*/
 				signal( SIGTERM, SIG_IGN );
 
+				zerolevel();						/* set link-level to zero		*/
 
-				scmap_ptr = scmap_list;					/* Get a ptr to the submit class list	*/
-
-				if (scmap_ptr)
-				do
+				if (0 == getscmapnice(jobclass,&nice_value))
 				{
-					if (scmap_ptr->class == jobclass)		/* look for the class that matches	*/
-					{
-						nice( scmap_ptr->nice );		/* set the nice value			*/
-						break;
-					}
-					scmap_ptr = (scmap_id *) scmap_ptr->next;	/* next one				*/
-				} while (scmap_ptr);
+					nice(nice_value);
+				}
 
 				setprogdefs(p_vol,p_lib);				/* Set up PROGLIB and PROGVOL		*/
 				clearprogsymb();					/* Clear PROGLIB/VOL from symbol	*/
@@ -505,76 +502,102 @@ char	*p_lib;										/* PROGLIB				*/
 				freopen("/dev/null","w",stdout);
 				freopen("/dev/null","w",stderr);
 
-				if (ftyp==ISEXEC)
+				switch(ftyp)
 				{
-					execlp(pname,pname,NULL)	;		/* try exec'ing it 			*/
-					retcode=fixerr(errno);				/* xlat unix errno to wang error# 	*/
-					werrlog(ERRORCODE(6),pname,errno,retcode,0,0,0,0,0);
-				}
-				else	if (ftyp==NOTEXEC)				/* must be shell script 		*/
-				{
-					int	ii;
-					char	*sh_argv[16];
-
-					sh_argv[0] = (char *)shell_var();		/* exec the shell			*/
-					sh_argv[1] = pname;				/* shell script to exec			*/
+				case RUN_EXEC:
+					sh_parm[0] = filespec;				/* File spec to exec			*/
 					for (ii=0; ii < subp_num; ii++)			/* load SETSUBMIT parameters		*/
 					{
-						sh_argv[ii+2] = subp_text[ii];
+						sh_parm[ii+1] = subp_text[ii];
 					}
-					sh_argv[ii+2] = '\0';				/* Null terminate the arg list		*/
+					sh_parm[ii+1] = '\0';				/* Null terminate the arg list		*/
 
-					execvp( sh_argv[0], sh_argv );			/* Do the exec				*/
+					execvp( sh_parm[0], sh_parm );			/* Do the exec				*/
 
-					retcode=fixerr(errno);
-					werrlog(ERRORCODE(6),"sh",errno,retcode,0,0,0,0,0);
-				}
-				else if(ftyp==ISACU || ftyp==ISMFINT)
-				{
-					struct wruncfg cfg;
-					char	options[80];
-					char	*eptr, *optr;
-					int	arg;
-					char	*sh_parm[64];
+					retcode=fixerr(errno);				/* xlat unix errno to wang error# 	*/
+					werrlog(ERRORCODE(6),filespec,errno,retcode,0,0,0,0,0);
+					break;
 
-					wrunconfig(&cfg);
-					options[0] = '\0';
-					if ( eptr = (char *)getenv(WRUNOPTIONS_ENV) )
+				case RUN_SHELL:
+					sh_parm[0] = shell_var();			/* exec the shell			*/
+					sh_parm[1] = filespec;				/* shell script to exec			*/
+					for (ii=0; ii < subp_num; ii++)			/* load SETSUBMIT parameters		*/
 					{
-						strcpy(options,eptr);
+						sh_parm[ii+2] = subp_text[ii];
 					}
-					else
-					{
-						strcpy(options,cfg.wrun_options);
-					}
+					sh_parm[ii+2] = '\0';				/* Null terminate the arg list		*/
 
-					arg=0;
-					sh_parm[arg++] = cfg.wrun_runcbl;
-					
-					for( optr=options; *optr; optr++ )
-					{
-						for(;*optr==' ';optr++);		/* Scan til first non-space 	*/
-						if (! *optr ) break;
-					
-						sh_parm[arg++] = optr;			/* Point to option		*/
-					
-						for(;*optr && *optr != ' ';optr++);	/* Scan til space.		*/
-						if (! *optr ) break;
-					
-						*optr = '\0';				/* Null terminate the option	*/
-					}				
-
-					sh_parm[arg++] = pname;				/* the program name		*/
-					sh_parm[arg++] = '\0';				/* null terminate it		*/
-
-					execvp(sh_parm[0],sh_parm);			/* do the EXEC			*/
-
-					/*
-						If we get here then there is an error and the exec failed.
-					*/
+					execvp( sh_parm[0], sh_parm );			/* Do the exec				*/
 
 					retcode=fixerr(errno);
 					werrlog(ERRORCODE(6),sh_parm[0],errno,retcode,0,0,0,0,0);
+					break;
+
+				case RUN_ACUCOBOL:
+				case RUN_MFINT:
+				case RUN_MFGNT:
+					{
+						struct wruncfg cfg;
+						char	options[80];
+						char	*eptr, *optr;
+						int	arg;
+
+						wrunconfig(&cfg);
+						strcpy(options,cfg.wrun_options);
+
+						arg=0;
+						sh_parm[arg++] = cfg.wrun_runcbl;
+					
+						for( optr=options; *optr; optr++ )
+						{
+							for(;*optr==' ';optr++);		/* Scan til first non-space 	*/
+							if (! *optr ) break;
+						
+							sh_parm[arg++] = optr;			/* Point to option		*/
+					
+							for(;*optr && *optr != ' ';optr++);	/* Scan til space.		*/
+							if (! *optr ) break;
+					
+							*optr = '\0';				/* Null terminate the option	*/
+						}				
+
+						sh_parm[arg++] = filespec;			/* the program name		*/
+						sh_parm[arg++] = '\0';				/* null terminate it		*/
+
+						execvp(sh_parm[0],sh_parm);			/* do the EXEC			*/
+
+						/*
+							If we get here then there is an error and the exec failed.
+						*/
+
+						retcode=fixerr(errno);
+						werrlog(ERRORCODE(6),sh_parm[0],errno,retcode,0,0,0,0,0);
+						break;
+					}
+
+				case RUN_PROC:
+				case RUN_PROCOBJ:
+					{
+						char	*name_ptr;
+
+						if ( !(name_ptr = (char *)getenv("WPROC")) )	/* Get the name of "wproc"	*/
+						{
+							name_ptr = "wproc";		/* Use "wproc" as the default name	*/
+						}
+						sh_parm[0] = name_ptr;			/* argv[0] is the "wproc" program	*/
+						sh_parm[1] = filespec;			/* argv[1] in the filespec	 	*/
+						for (ii=0; ii < subp_num; ii++)		/* load SETSUBMIT parameters		*/
+						{
+							sh_parm[ii+2] = subp_text[ii];
+						}
+						sh_parm[ii+2] = '\0';			/* Null terminate the arg list		*/
+
+						execvp(sh_parm[0],sh_parm);
+
+						retcode=fixerr(errno);
+						werrlog(ERRORCODE(6),sh_parm[0],errno,retcode,0,0,0,0,0);
+						break;
+					}
 				}
 				exit(retcode);
 				break;
@@ -594,7 +617,7 @@ char	*p_lib;										/* PROGLIB				*/
 		}
 	}
 
-	werrlog(ERRORCODE(3),name,retcode,0,0,0,0,0,0);
+	werrlog(ERRORCODE(3),filespec,retcode,0,0,0,0,0,0);
 
 	subp_num = 0;									/* Clear any SETSUBMIT parameters	*/
 
@@ -622,4 +645,14 @@ int code;
 #endif	/* #ifdef unix */
 
 #endif	/* #ifndef MSDOS */
+#ifdef MSDOS
+SUBMIT()
+{
+	werrlog(102,"SUBMIT: Not Yet Implemented",0,0,0,0,0,0,0);
+}
+SETSUBMIT()
+{
+	werrlog(102,"SETSUBMIT: Not Yet Implemented",0,0,0,0,0,0,0);
+}
+#endif /* MSDOS */
 

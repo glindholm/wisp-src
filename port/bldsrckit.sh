@@ -35,6 +35,9 @@
 #			06/09/92	Added copy of .umf to Makefile. GSL
 #			06/30/92	Split src/test into src/testacu & src/testmf. GSL
 #			07/07/92	Added wisp common include to printq. GSL
+#                       12/14/92        Added libivs and vse JEC
+#			04/29/93	Completed WISP SAMPLE section. GSL
+#                       04/29/93        Slight change to some Unix commands for better efficiency. JEC
 #
 
 echo This script will build WISP source kit.
@@ -52,32 +55,36 @@ else
 echo	continuing...
 fi
 echo
-echo -n	'Enter parent directory [/usr2/wisp] ? '
+echo -n	"Enter parent directory [$HOME] ? "
 read ANS
 if [ "$ANS" = "" ]
 then
-	cd /usr2/wisp
+	cd $HOME
 else
 	cd $ANS
 fi
 PARENTDIR=`pwd`
 echo pwd = `pwd`
 echo
-echo -n	'Enter name of save dir (e.g. source.v32a) ? '
+echo -n	"Enter name of save dir (e.g. src32b) ? "
 read ANS
+if [ "$ANS" = "" ]
+then
+	ANS=srcXXX
+fi
 
 #
 #	Make all the directories needed
 #
 
 echo mkdir $ANS
-mkdir $ANS
+test -d $ANS || mkdir $ANS
 
 echo cd $ANS
 cd $ANS
 
 echo mkdir src
-mkdir src
+test -d src || mkdir src
 
 echo cd src
 cd src
@@ -85,13 +92,22 @@ cd src
 SOURCEDIR=`pwd`
 
 echo mkdir acu ede etc include mf msdos port printq proctran 
-mkdir acu ede etc include mf msdos port printq proctran
+for i in acu ede etc include mf msdos port printq proctran
+do
+	test -d $i || mkdir $i
+done
 
 echo mkdir videolib videotest videocap wisplib wisptran wisputils
-mkdir videolib videotest videocap wisplib wisptran wisputils
+for i in videolib videotest videocap wisplib wisptran wisputils
+do
+	test -d $i || mkdir $i
+done
 
-echo mkdir lib lib/x include/v testacu testmf
-mkdir lib lib/x include/v testacu testmf
+echo mkdir ivslib lib lib/x include/v testacu testmf vsedit
+for i in ivslib lib lib/x include/v testacu testmf vsedit
+do
+	test -d $i || mkdir $i
+done
 
 #
 #	Down load all the SCS files into the source kit.
@@ -201,6 +217,38 @@ echo	Loading VIDEO CAP
 fi
 
 echo
+echo =================== VIDEO IVS LIB ========================================
+echo
+echo cd $SOURCEDIR/ivslib
+cd $SOURCEDIR/ivslib
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	echo -n	'Load VIDEO IVS LIB [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading VIDEO IVS LIB
+	dcp -c -v 'scalos::scs$video:[ivs.master.source]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.master.include]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.master.build]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.master.misc]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.qahold.source]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.qahold.include]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.qahold.build]*.*' .
+	dcp -c -v 'scalos::scs$video:[ivs.qahold.misc]*.*' .
+
+	cp libivs.umf Makefile
+fi
+
+echo
 echo ==================== VIDEO INCLUDE =====================================
 echo
 echo cd $SOURCEDIR/include/v
@@ -208,7 +256,8 @@ cd $SOURCEDIR/include/v
 echo Loading VIDEO include headers
 dcp -c -v 'scalos::scs$video:[lib.master.include]*.*' .
 dcp -c -v 'scalos::scs$video:[lib.qahold.include]*.*' .
-
+dcp -c -v 'scalos::scs$video:[common.master.include]*.*' .
+dcp -c -v 'scalos::scs$video:[common.qahold.include]*.*' .
 echo
 echo ================== WISP ACUCOBOL =======================================
 echo
@@ -238,7 +287,7 @@ echo	Loading WISP ACUCOBOL
 	dcp -c -v 'scalos::scs$wisp:[acucobol.qahold.build]*.*' .
 	dcp -c -v 'scalos::scs$wisp:[acucobol.qahold.misc]*.*' .
 
-	cp wruncbl.umf Makefile
+	cp wruncblx.umf Makefile
 fi
 
 echo
@@ -457,8 +506,46 @@ echo	Loading WISP PROCTRAN
 
 	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
 	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
 
 	cp proctran.umf Makefile
+fi
+echo
+echo ================= WISP VSEDIT ========================================
+echo
+echo cd $SOURCEDIR/vsedit
+cd $SOURCEDIR/vsedit
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	echo -n	'Load WISP VSEDIT [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading WISP VSEDIT
+	dcp -c -v 'scalos::scs$wisp:[vsedit.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.master.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.master.build]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.master.misc]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.build]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.misc]*.*' .
+
+	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+
+	cp vsedit.umf Makefile
 fi
 
 echo
@@ -491,6 +578,18 @@ echo	Loading WISP SAMPLE
 	dcp -c -v 'scalos::scs$wisp:[sample.qahold.misc]*.*' .
 	echo Duplicating testacu into testmf
 	cp * ../testmf
+
+	cp sampleacu.umf Makefile
+	cp ../testmf/samplemf.umf ../testmf/Makefile
+
+	echo Copying ACU files to testacu
+	cp $SOURCEDIR/acu/acu.rules    $SOURCEDIR/testacu
+	cp $SOURCEDIR/acu/aculink.wcb  $SOURCEDIR/testacu
+	cp $SOURCEDIR/acu/acuusing.cob $SOURCEDIR/testacu
+
+	echo Copying MF files to testmf
+	cp $SOURCEDIR/mf/mf.rules      $SOURCEDIR/testmf
+	cp $SOURCEDIR/mf/mflink.cob    $SOURCEDIR/testmf
 fi
 
 echo
@@ -560,6 +659,8 @@ echo	Loading WISP UTILS
 	dcp -c -v 'scalos::scs$wisp:[utils.master.misc]*.*' .
 	dcp -c -v 'scalos::scs$wisp:[utils.qahold.misc]*.*' .
 
+	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
 	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
 	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
 
@@ -652,10 +753,10 @@ then
 fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
-echo 'find . -name "*.com" -print -exec rm {} \;'
-find . -name "*.com" -print -exec rm {} \;
-echo 'find . -name "*.obj" -print -exec rm {} \;'
-find . -name "*.obj" -print -exec rm {} \;
+echo 'find . -name "*.com" -print | xargs rm'
+find . -name "*.com" -print | xargs rm
+echo 'find . -name "*.obj" -print | xargs rm'
+find . -name "*.obj" -print | xargs rm
 fi
 
 #
@@ -664,6 +765,7 @@ fi
 
 echo "This routine next removes any file names longer than 14 characters."
 echo
+
 
 for fil in `find . -name "???????????????*" -print`
 do
@@ -702,7 +804,7 @@ done
 
 echo " "
 echo "Changing mode of all .sh files to 771."
-find . -name '*.sh' -exec chmod 771 {} \; -print
+find . -name '*.sh' -print | tee /dev/tty | xargs chmod 771
 
 #echo "Removing .sh from file name of selected commands."
 #echo cd $SOURCEDIR/port

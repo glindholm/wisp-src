@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -12,8 +12,10 @@
  *	function:	Log off user immediately										*
  ********************************************************************************************************************************/
 
-extern long LOGOFFFLAG;
-extern long CANEXITFLAG;
+#include "idsistd.h"
+
+extern int4 LOGOFFFLAG;
+extern int4 CANEXITFLAG;
 
 
 #ifdef VMS
@@ -36,9 +38,8 @@ LOGOFF()
 
 #ifdef unix
 #include <signal.h>
+#include "idsistd.h"
 #include "wdefines.h"
-
-extern int PGRPID;									/* Process Group ID.			*/
 
 LOGOFF()
 {
@@ -48,7 +49,7 @@ LOGOFF()
 	LOGOFFFLAG = 1;								/* We've hit a logoff				*/
 	if ( CANEXITFLAG )							/* Cancel exit was set so don't logoff just	*/
 	{									/* bubble up to the next link-level.		*/
-		wexit(32L);
+		wexit(32);
 	}
 
 	vexit();
@@ -63,7 +64,7 @@ LOGOFF()
 		rc = sscanf(ptr,"%d",&kpid);					/* - Get the pid to kill.			*/
 		if ( rc != 1 )
 		{
-			wexit(32L);						/* This should not happen -- Just exit		*/
+			wexit(32);						/* This should not happen -- Just exit		*/
 		}
 
 		if ( kpid != 0 )						/* If cancel-exit not turned off by SUBMIT	*/
@@ -72,15 +73,35 @@ LOGOFF()
 			{
 				kill(kpid,SIGKILL);				/* Kill the process below the cancel-exit point	*/
 			}
-			wexit(32L);						/* - This process is probably dead already but	*/
+			wexit(32);						/* - This process is probably dead already but	*/
 										/*   just in case lets do an exit.		*/
 		}
 	}
 
 										/* No cancel-exit so really LOGOFF		*/
-	gpid=PGRPID;								/* Get process group id 			*/
+	gpid=wgetpgrp();							/* Get process group id 			*/
 	kill(-gpid,SIGKILL);							/* Kill all procs in our group			*/
+
+	/*
+	**	If WISPGID was set for a Bourne shell then the above
+	**	might not work so try again with the *REAL* group id.
+	*/
+	gpid=getpgrp();								/* Get the *REAL* process group id 		*/
+	kill(-gpid,SIGKILL);							/* Kill all procs in our group			*/
+
+	wexit(32);
 }
 
 #endif
+
+#ifdef MSDOS
+LOGOFF()
+{
+	/*
+	**	No equivalent to LOGOFF on MSDOS so we just do a full exit.
+	*/
+	wexit(32L);
+}
+#endif /* MSDOS */
+
 

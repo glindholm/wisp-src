@@ -1,0 +1,236 @@
+
+UniQue Print Queue 
+Release Notes
+
+
+
+November 1993
+
+This document contains changes and additions to the UniQue Print
+Queue User's Guide.
+
+Software Version:  UniQue Version 3.02
+
+Associated Software: Ultrix 4.2, AIX 3.2, DG/UX, HP/UX, SCO Unix,
+                     Unix System V, OSF/1
+
+
+
+IDSI (International Digital Scientific, Incorporated)
+28460 Avenue Stanford, Suite 100
+Valencia, California 91355
+
+Phone: (805) 295-1155     Fax: (805) 295-8755
+
+
+
+November 1993
+                        COPYRIGHT Notice.
+
+The information in this document is subject to change without
+notice and should not be construed as a commitment by International
+Digital Scientific Incorporated.  IDSI assumes no responsibility
+for any errors that might appear in these release notes.
+
+The software described herein is furnished under license and may only
+be used or copied in accordance with the terms of that license.
+
+
+
+Copyright (c) 1993 by International Digital Scientific Inc., Valencia, CA.
+
+                        All rights reserved.
+
+
+Under international copyright laws, you may not copy this manual or
+the software it describes, in whole or in part, without permission in
+writing from International Digital Scientific Incorporated.  Under the
+law, these restrictions apply to translation into other languages or
+formats.
+
+
+
+
+1.1  Known bugs and limitations.
+
+1.1.1 The UniQue management program "unique" will operate correctly with 
+      Wyse-60 or Wyse-50 terminals if they are running in VT-100 emulation 
+      mode.  This is also true of other terminals which use a "FAC based"
+      method of screen attribute mapping.  Terminals of this type are 
+      sometimes said to have 'magic cookie glitch'.
+
+1.1.2 On certain systems, the terminfo definition for a given terminal
+      is unsatisfactory.  
+
+      For example, the terminfo definition for "enter alternate character 
+      set" may not put the terminal in the correct mode for line drawing.  
+      Thus, some informational windows may be displayed with unusual 
+      characters on their borders. 
+     
+      As another example, on the HP, the definition for VT220 maps the
+      Function keys F1 through F8 to the actual keys F6 - F14.  Function
+      keys F9 and F10 are not defined.
+
+      The program "untic" can be helpful in these cases.  It allows the
+      user to uncompile the terminfo definitions into a user modifiable
+      format.  The user can then edit the definition to improve the
+      desired behavior,  and recompile the definition using the program
+      "tic".  The program "tic" is provided on most systems. The program 
+      "untic" is free software and is provided with the UniQue kit as a 
+      convienience for users of UniQue.  It is not supported by IDSI.
+      Some systems provide a similar program called "infocmp" for this
+      purpose.  If this program is available on your system, consult
+      the Unix man page for information on how to use it to tailor your
+      terminfo database to fit your needs.
+
+1.1.3 The prtdef "input" field, documented in section 3.2.2 of the manual, is
+      not available in release 3.00 and 3.01.  In these releases, the program 
+      specified in a type=program printer MUST accept the print data as 
+      standard input.
+
+      As of relase 3.02 this feature is supported.
+
+1.1.4 Information for WISP users.
+
+      Unique V3.00 is only compatible with WISP version 3.2x11 or later.
+      If you are currently running V2.27 or earlier of the IDSI Print Queue,
+      be advised that the default location for the work/configuration
+      directory has been changed from /usr/spool/iprint to
+      /usr/spool/uprint.  Also, the ilpdef file is now called ulpdef.
+   
+1.2   VKEYMAP file
+
+      The mapping for the UniQue function keys can be changed using the
+      VKEYMAP file.  The path of the file can be specified using the 
+      environment variable VKEYMAP.  If this variable is not set, the
+      path $HOME/.vkeymap is used.  
+
+      The VKEYMAP file consists of records which define which key 
+      maps to which function when running the "unique" management program.
+      The format of each record is as follows:
+
+      Program name         function name        key to use
+
+      A portion of a sample VKEYMAP file is shown below:
+
+        UNIQUE  DISPLAY         F2
+        UNIQUE  HOLDREL         F3
+        UNIQUE  STOPSTART       F5
+
+      The program name should always be "UNIQUE".  The functions which
+      are allowed are as follows:
+
+        EXIT              exits from "unique" management program
+        PAGEUP            moves the cursor up one page
+        PAGEDOWN          moves the cursor down one page
+        UP                moves the cursor up one line
+        DOWN              moves the cursor down one line
+        EDITDELLEFT       in edit mode, destructive backspace
+        EDITINSERT        in edit mode, insert blank character
+        EDITLEFT          in edit mode, move cursor left
+        EDITRIGHT         in edit mode, move cursor right
+        EDITDELRIGHT      in edit mode, delete the character under
+                            the cursor
+        DISPLAY           on queue display, display current file
+        HOLDREL           on queue display, hold or release current file
+        STOPSTART         on queue display, stop or start the current job
+        MODIFY            on queue display, modify the current job
+        REMOVE            on queue display, remove the current job
+        ALLMINE           on queue display, toggle display between all
+                            jobs and user's jobs
+        OTHERINFO         on queue and printer display, show other info
+        PRINTERS          on queue display, go to printer display screen
+                         
+        ENABLEDISABLE     on printer display, enable or disable current 
+                          printer
+        SHOWPERR          on printer display, show the error on the current
+                          printer
+        CLEARPERR         on printer display, clear the error status of 
+                          the current printer
+        CHANGEFORM        on printer display, mount the appropriate form
+                          onto the current printer
+        ALIGN             on printer display, send an alignment page to
+                          the current printer
+        QUEUE             on printer display, switch to queue display mode
+
+
+      The keys which may be specified are as follows:
+
+        F1 F2 F3 F4 F5          
+        F6 F7 F8 F9 F10         
+        PAGEUP PAGEDOWN    
+        UP          
+        DOWN        
+        DELETE      
+        INSERT      
+        LEFT        
+        RIGHT       
+              
+      If the requested key is not defined by terminfo, an appropriate 
+      substitute will be provided by the software.      
+
+1.3   Running multiple udaemons or changing the work/configuration
+      directory for a single udaemon.
+
+      In some cases it may be desirable to run more than one udaemon 
+      process.  It is possible to run multiple udaemons on the same
+      machine.  Each udaemon will have its own queue.
+
+      In order to do this, you must set up a configuration/work directory
+      for each udaemon.  Each of these directories must have the 
+      prtdef, formdef, classdef, and ulpdef files, to define the setup
+      for that udaemon instance.  Before running each udaemon,
+      set and export the variable USPOOL to point to the appropriate 
+      directory.  
+
+      This variable must also be set before running the programs 
+      unique, ulp and ushut.  These programs will examine the USPOOL
+      variable to decide which udaemon to interact with.
+
+1.4   Additional RS232 parameters for serial printers.
+
+      The following fields be specified for serial printers in the
+      prtdef file:
+
+      databits -  Data Bits
+      --------
+       Value is either 7 or 8.  Specifies the number of data bits
+       per character.
+
+      stopbits -  Stop Bits
+      --------
+       Value is either 1 or 2.  Specifies the number of stop bits
+       per character.
+
+      parity - Parity
+      ------
+       Value is either none, even, or odd. Specifies the parity 
+       setting.
+
+1.5   For parallel printers, you must add this line to the prtdef
+      entry for that printer:
+
+           parallel
+
+      For example:
+
+           parprt1:
+              lp=/dev/bpp0
+              parallel
+              class=ABC  
+              form=letter
+
+1.6   ulp command now supports the -s flag to suppress all messages.
+      The -s flag is identical to the existing -q flag.  This was
+      added to provide compatibility with the standard Unix lp 
+      command.
+
+1.7   A new field was added to the ulpdef file.  The field allows 
+      the administrator to control the priority at which the udaemon
+      process runs.  The field is as follows:
+
+          priority=<value>
+
+      <value> is a negative (higher priority) or positive (lower 
+      priority) number from -20 to 20.  The value is the same as is
+      used in the Unix "nice" command.
