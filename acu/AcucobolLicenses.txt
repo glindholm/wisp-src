@@ -31,6 +31,14 @@ Serial #          333725
 Product Code      JAAS 42L2 JNCS YLZ8
 Product Key       QQVB 28L2 JKLM
 ----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+Riverside
+Product Detail    ACUCOBOL-GT Runtime v6.0.0 for HP-UX 11i RISC (64-bit) / HP 9000
+Users/Devs        250 User
+Serial #          431917
+Product Code      58PAUYEXAM3LGBJ6
+Product Key       2RRTSSEXAQSB
+----------------------------------------------------------------------------
 AWS
 Product Detail    ACUCOBOL-GT Dev Sys Ver: v6.0.0 for MS Windows 2000 / Professional
 Users/Devs        1 Developer  (TEMP - EXPIRES 2003/07/24)

@@ -2214,7 +2214,7 @@ static int osd_open_seg_sm(int *is_new)
 	 *	Go ahead and do the osd_map_seg() logic so we can do the retry.
 	 */
 	osd_shmaddr = (char *)shmat(osd_shmid,(char *)0,0);
-	if ( (int4)osd_shmaddr == -1 )
+	if ( osd_shmaddr == (char*)-1 )
 	{
 		save_errno = errno;
 		WL_wtrace("SHAREMEM","SHMAT",
@@ -2333,7 +2333,7 @@ static char *osd_map_seg_sm(void)
 	if (osd_shmaddr == NULL) 							/* if not mapped			*/
 	{
 		osd_shmaddr = (char *)shmat(osd_shmid,(char *)0,0);			/* Get the address of requested id.	*/
-		if ( (int4)osd_shmaddr == -1 )
+		if ( osd_shmaddr == (char*)-1 )
 		{
 			osd_shmaddr = NULL;
 			osd_shmid = -1;
@@ -2643,6 +2643,9 @@ static int osd_sync_seg_fm(void)
 /*
 **	History:
 **	$Log: sharemem.c,v $
+**	Revision 1.51  2003/07/30 17:09:00  gsl
+**	Fix cast of pointers
+**	
 **	Revision 1.50  2003/05/19 19:08:27  gsl
 **	-Wall
 **	

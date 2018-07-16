@@ -68,34 +68,46 @@
 #
 ACUOTHER=
 
-#
+#----------------------------------------------------------------------------
 #	ACUCOBOL on HP-UX 11 (32-bit)
 #
 #ACUOTHER= -lnsl
 #SYSCCFLAGS = -Ae +DAportable -D_LARGEFILE64_SOURCE
 #
+#----------------------------------------------------------------------------
+#	ACUCOBOL on HP-UX 11i (64-bit)
+#
+#ACUOTHER= -lnsl
+#SYSCCFLAGS = -Ae +DS2.0 +DA2.0W +DD64 
+#
+#----------------------------------------------------------------------------
 #	ACUCOBOL 5.2, 6.0 on Solaris 8 (32-bit)
 #
 #ACUOTHER= -lnsl -lsocket -ldl
 #
+#----------------------------------------------------------------------------
 #	ACUCOBOL 5.0, 5.1 on Solaris 8 (32-bit)
 #
 #ACUOTHER= -lnsl -lsocket
 #
+#----------------------------------------------------------------------------
 #	ACUCOBOL on LINUX
 #
 #ACUOTHER= -ldl
 #SYSCCFLAGS = -D_LARGEFILE64_SOURCE
 #
+#----------------------------------------------------------------------------
 #	ACUCOBOL on SCO Unix
 #
 #ACUOTHER= -lsocket
 #SYSCCFLAGS = -b elf
 #
+#----------------------------------------------------------------------------
 #	ACUCOBOL on AIX (32-bit)
 #
 #SYSCCFLAGS = -qarch=com -qmaxmem=16384
 #
+#----------------------------------------------------------------------------
 #============================================================================
 #
 # 	****  DON'T CHANGE SETTINGS IN THIS SECTION ****

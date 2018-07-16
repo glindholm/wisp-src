@@ -442,26 +442,12 @@ rename_return:
 	WL_put_swap(return_code, rename_status);
 }                                                         
 
-#if defined(unix) && defined(NORENAME)
-static int unix_shell_move(const char* old_filename, const char* new_filename)
-{
-	char	cmd[256];
-
-	sprintf(cmd,"mv '%s' '%s' >/dev/null 2>&1",old_filename,new_filename);
-	return (WL_wsystem(cmd));
-}
-#endif /* unix */
-
 int WL_rename(const char* old_filename, const char* new_filename)
 {
 	int rc = 0;
 	int save_errno = 0;
 	errno = 0;
-#if defined(unix) && defined(NORENAME)
-	rc = unix_shell_move(old_filename,new_filename);
-#else	
 	rc = rename(old_filename,new_filename);
-#endif
 	save_errno = errno;
 	WL_wtrace("rename","return","Old=[%s] New=[%s] rc=[%d] errno=[%d]",
 		old_filename, new_filename, rc, save_errno);
@@ -472,6 +458,9 @@ int WL_rename(const char* old_filename, const char* new_filename)
 /*
 **	History:
 **	$Log: rename.c,v $
+**	Revision 1.42  2003/08/04 14:40:18  gsl
+**	remove obsolete code
+**	
 **	Revision 1.41  2003/02/04 17:05:01  gsl
 **	Fix -Wall warnings
 **	

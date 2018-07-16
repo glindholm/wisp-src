@@ -1547,7 +1547,19 @@ static void select_edit(const char* file)
 		}
 		else
 		{
-			sprintf(cmd,"'%s' '%s'",WL_weditorexe(),file);	/* Quote wrap file		*/
+#ifdef WIN32
+			/*
+			**	On Windows Double-Quote wrap file to allow spaces in file names.
+			**
+			**	NOTE: Windows does not like single-quotes.
+			*/
+			sprintf(cmd,"\"%s\" \"%s\"",WL_weditorexe(),file);
+#else
+			/*
+			**	On UNIX Single-Quote wrap file to prevent $macro expansion.
+			*/
+			sprintf(cmd,"'%s' '%s'",WL_weditorexe(),file);
+#endif
 			rc = WL_wsystem_interactive(cmd);
 
 			if (rc)
@@ -3348,6 +3360,9 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.67  2003/08/01 20:44:17  gsl
+**	On Windows fix (12) Edit a file by using double-quotes instead of the unix single quotes
+**	
 **	Revision 1.66  2003/05/28 18:07:14  gsl
 **	Acucobol 6.0, Vision 5 support
 **	

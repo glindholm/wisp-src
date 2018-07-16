@@ -266,8 +266,11 @@ SYSDEF = "Error SYSDEF not defined"
 #
 #CC_STD  = cc
 #CC_ANSI = cc
-#CC_SYS_FLAGS = +z +DD64 -lcurses
+#CC_SYS_FLAGS = +z +DS2.0 +DA2.0W +DD64 -lcurses
 #
+#CCC = /usr/local/pa20_64/bin/g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_LINK = -lpthread
 
 #==================================================================
 #	SCO UNIX
