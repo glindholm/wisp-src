@@ -123,8 +123,7 @@ static char MODDATE[20];
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
-
-#if defined(WIN32)
+#ifndef O_LARGEFILE
 #define O_LARGEFILE 0
 #endif
 
@@ -3270,6 +3269,9 @@ static void load3480(char *tapedev, int cartridge)
 #endif
 /*
  * $Log: vsx.c,v $
+ * Revision 1.96.2.3  2002/11/19 16:24:08  gsl
+ * Define O_LARGEFILE for ALPHA and SCO
+ *
  * Revision 1.96.2.2  2002/10/10 12:56:45  gsl
  * Huge file support
  *

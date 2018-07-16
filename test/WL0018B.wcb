@@ -71,7 +71,7 @@
 	   if MSG-RC-2 NOT EQUAL 0 THEN
 	       display "Create message port ", MSG-PORT-B, 
        	       	       " failed with rc =", rc-txt
-	       GO 9999-STOP.
+	       GO 9999-DONE.
 
 	   display "Please start WL0018A as a different user.".
 
@@ -88,7 +88,7 @@
 	   if MSG-RC-2 NOT EQUAL 0 THEN
 	       display "Transmit ", MSG-MSG-B, 
        	       	       " Failed rc = ", rc-txt
-	       GO 9999-STOP.
+	       GO 9999-DONE.
 
        	   call "MESSAGE" using 
        	       	       	   MSG-CH, 
@@ -102,7 +102,7 @@
 			   
 	   if MSG-RC-2 NOT EQUAL 0 THEN
 	       display "Check failed rc = ", rc-txt
-	       GO 9999-STOP.
+	       GO 9999-DONE.
 	       
            MOVE LOW-VALUES TO CRTREC-OA.
 	   MOVE MSG-NUM-A TO SCREEN-CNT.
@@ -111,19 +111,20 @@
 	   if MSG-NUM-A NOT EQUAL MSG-NUM-B THEN
 	       display " MSG-NUM-A = ", MSG-NUM-A,
 	       	       " MSG-NUM-B = ", MSG-NUM-B
-	       GO 9999-STOP.
+	       GO 9999-DONE.
 	   
        	   ADD 1 TO MSG-NUM-B.
 	   if MSG-NUM-B > 100 then
 	       display "WL0018B transmitted and recieved 100 messages"
-       	       GO 9999-STOP.
+       	       GO 9999-DONE.
 
        	   GO 1000-LOOP.
 002500
 002600 9999-END SECTION.
+       9999-DONE.
+       	   call "MESSAGE" using MSG-DE, MSG-PORT-B, MSG-RC.
 002700 9999-EXIT.
 002800     EXIT PROGRAM.
-       	   call "MESSAGE" using MSG-DE, MSG-PORT-B, MSG-RC.
 002900 9999-STOP.
 003000     STOP RUN.
 006500**

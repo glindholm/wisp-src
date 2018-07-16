@@ -489,7 +489,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "wauthorize"=.\wisputils\wauthorize.dsp - Package Owner=<4>
+Project: "wauthorize"=.\wauth\wauthorize.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -549,9 +549,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name acn
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name videolib
     End Project Dependency
     Begin Project Dependency
@@ -583,6 +580,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name mfsubs
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name acn
     End Project Dependency
 }}}
 

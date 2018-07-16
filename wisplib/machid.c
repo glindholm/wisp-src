@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-2003 NeoMedia Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
 
 /*
@@ -14,14 +14,19 @@ static char rcsid[]="$Id:$";
 **
 */
 
+#include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
+#include "idsisubs.h"
 #include "intdef.h"
 #include "wlicense.h"
 #include "wispnt.h"
 #include "assert.h"
 #include "machid.h"
 #include "wmalloc.h"
+#include "wisplib.h"
+#include "platsubs.h"
 
 /*
 **	Routine:	getmachineid()
@@ -51,93 +56,141 @@ static char rcsid[]="$Id:$";
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 
-#if defined(SOLARIS) || defined(UNIXWARE)
-#include <sys/systeminfo.h>
-#endif
-
+#ifdef AIX
 int getmachineid(char* machineid)
 {
 	struct utsname 	uname_s;
+	*machineid = '\0';
 
-	*machineid = '\0';							/* Init machineid to NULL string		*/
-
-#ifdef AIX
 	if (uname(&uname_s))
 	{
 		return(1);
 	}
 
 	strcpy(machineid,uname_s.machine);
-#endif
+
+	upper_string(machineid);
+	return(0);
+}
+#endif /* AIX */
 
 #ifdef HPUX
+int getmachineid(char* machineid)
+{
+	struct utsname 	uname_s;
+	*machineid = '\0';
+
 	if (uname(&uname_s))
 	{
 		return(1);
 	}
 
 	strcpy(machineid,uname_s.__idnumber);
-#endif
+
+	upper_string(machineid);
+	return(0);
+}
+#endif /* HPUX */
 
 #ifdef SCO
+int getmachineid(char* machineid)
+{
+	struct scoutsname sco_buff;
+	*machineid = '\0';
+
+	if (-1 == __scoinfo(&sco_buff, sizeof(sco_buff)))
 	{
-		struct scoutsname sco_buff;
-		if (-1 == __scoinfo(&sco_buff, sizeof(sco_buff)))
-		{
-			return(1);
-		}
-		memcpy(machineid, sco_buff.sysserial, sizeof(sco_buff.sysserial));
-		machineid[sizeof(sco_buff.sysserial)] = '\0';
+		return(1);
 	}
-	
-#endif
+	memcpy(machineid, sco_buff.sysserial, sizeof(sco_buff.sysserial));
+	machineid[sizeof(sco_buff.sysserial)] = '\0';
 
-#ifdef LINUX
-	{
-		char name[80];
-		computername(name);
-		if (strlen(name) < 10)
-		{
-			strcat(name,"0102010301");
-			name[10] = '\0';
-		}
-
-		sprintf(machineid,"LX0%s0X0",name);
-	}
-#endif 
-
-#if defined(SI_HW_SERIAL)
-	/*
-	 *	This is used on SOLARIS and looks like it is also available on UNIXWARE
-	 */
-	if (! *machineid)
-	{
-		if ( -1 == sysinfo(SI_HW_SERIAL, machineid, MAX_MACHINEID_LENGTH))
-		{
-			return(1);
-		}
-	}	
-#endif
-
-	/*
-	**	If no machine id use the inode.
-	*/
-	if (! *machineid)
-	{
-		long	inode = WL_inode(license_filepath());
-		if (0==inode)
-		{
-			return(1);
-		}
-
-		sprintf(machineid,"I%ld", inode);
-	}
-
-	upper_string(machineid);						/* Shift to upper case just in case alphas	*/
+	upper_string(machineid);
 	return(0);
-
 }
+#endif /* SCO */
+
+#if defined(LINUX) || defined(OSF1_ALPHA)
+int getmachineid(char* machineid)
+{
+	char name[80];
+	char* ptr;
+	*machineid = '\0';
+
+	computername(name);
+	if (strlen(name) < 10)
+	{
+		strcat(name,"0102010301");
+		name[10] = '\0';
+	}
+
+	sprintf(machineid,"%s0%s0X0", WL_platform_code(), name);
+
+	/*
+	** Remove unwanted file name characters from machine id
+	*/
+	for(ptr = machineid; *ptr != '\0'; ptr++)
+	{
+		if (!isalnum(*ptr))
+		{
+			*ptr = '-';
+		}
+	}
+
+	upper_string(machineid);
+	return(0);
+}
+#endif /* LINUX || OSF1_ALPHA */
+
+#if defined(SOLARIS) || defined(UNIXWARE)
+#include <sys/systeminfo.h>
+
+int getmachineid(char* machineid)
+{
+	*machineid = '\0';
+	if ( -1 == sysinfo(SI_HW_SERIAL, machineid, MAX_MACHINEID_LENGTH))
+	{
+		return(1);
+	}
+
+	upper_string(machineid);
+	return(0);
+}
+#endif
+
+#ifdef OLD /* DO NOT USE */
+/*
+** This was the old style used up thru 4.4.06 for machines that
+** did not provide a hardware id.
+** 
+** It used the inode of the license file with a leading 'I' as
+** the machine id.
+** 
+** It's biggest problem is if the license file was deleted and
+** recreated the machine id would change.
+** Also the machine id could not be determined unless the
+** license file exists.
+** 
+** int getmachineid(char* machineid)  OLD INODE STYLE
+** {
+** 	long	inode = WL_inode(WLIC_license_filepath());
+** 	*machineid = '\0';
+** 
+** 	if (0==inode)
+** 	{
+** 		return(1);
+** 	}
+** 
+** 	sprintf(machineid,"I%ld", inode);
+** 
+** 	upper_string(machineid);
+** 	return(0);
+** }
+*/
+#endif
+
 
 /*
 **	ROUTINE:	computername()
@@ -612,6 +665,12 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
+**	Revision 1.15.2.7  2003/02/14 18:17:01  gsl
+**	sync with $HEAD
+**	Remove old INODE based machine id logic.
+**	Change OSF1_ALPHA machine id logic to be the same as LINUX which
+**	is based on machine name instead of inode.
+**	
 **	Revision 1.15.2.6  2002/11/14 19:04:42  gsl
 **	LINUX base machineid on the computer name
 **	

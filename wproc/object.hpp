@@ -25,11 +25,7 @@ class object {
    public:
 #if DOS
       void *operator new(size_t size);
-#if DEBUG
       void  operator delete(void* p, size_t size);
-#else
-      void  operator delete(void* p);
-#endif
 #endif
 };
 
@@ -39,6 +35,9 @@ class object {
 //
 //	History:
 //	$Log: object.hpp,v $
+//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.5  1998/08/31 19:13:58  gsl
 //	drcs update
 //	

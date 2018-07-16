@@ -52,9 +52,6 @@ class reader : public object {
 
 class file_reader : public reader {
    public:
-#if ! AIX
-      typedef FILE source_file;
-#endif
       file_reader(const char *a_filename, Boolean skip_comments = true);
       ~file_reader();
       char    next_char();
@@ -63,11 +60,7 @@ class file_reader : public reader {
       int_32  timestamp() {return the_timestamp;}
 
    private:
-#if ! AIX
-      source_file *the_file;
-#else
       FILE   *the_file;
-#endif
       char    record[MAX_FILE_RECORD_SIZE];
       int     record_len;
       int     record_index;
@@ -92,19 +85,12 @@ const char substitution_char = '\f';
 
 class message_reader : public reader {
    public:
-#if ! AIX
-      typedef FILE message_file;
-#endif
       message_reader(const char *a_filename);
       ~message_reader();
       char next_char();
       void position_to(int a_message_number);
    private:
-#if ! AIX
-      message_file *the_file;
-#else
       FILE *the_file;
-#endif
 };
 
 #endif
@@ -112,6 +98,9 @@ class message_reader : public reader {
 //
 //	History:
 //	$Log: reader.hpp,v $
+//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.5  1998/08/31 19:14:11  gsl
 //	drcs update
 //	

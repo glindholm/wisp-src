@@ -11,7 +11,6 @@
 // Author : George Soules
 // Date   : 24 February 1991
 
-#if DEBUG
 
 // Specification
 #include "debugaid.hpp"
@@ -188,7 +187,6 @@ void debug_trace_level_restore() {
    trace_level = saved_trace_level;
 }
 
-#endif
 
 
 
@@ -197,6 +195,9 @@ void debug_trace_level_restore() {
 //
 //	History:
 //	$Log: debugaid.cpp,v $
+//	Revision 1.11.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.11  2001/08/22 20:17:50  gsl
 //	fix missing type
 //	

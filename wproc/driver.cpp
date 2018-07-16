@@ -49,7 +49,6 @@ extern unsigned _stklen = 8192U;
 #endif
 
 int main(int argc, char *argv[]) {
-   save_memory_state();
 
    int        argv_index = 1;
    input     *the_input;
@@ -184,7 +183,6 @@ int main(int argc, char *argv[]) {
    delete the_process;
    user_options.options::~options();
 
-   check_memory_state();
 
 #if WANG
    wang_os_decrement_link_level();
@@ -201,6 +199,9 @@ int main(int argc, char *argv[]) {
 //
 //	History:
 //	$Log: driver.cpp,v $
+//	Revision 1.13.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.13  1999/08/29 17:19:37  gsl
 //	Move the vwang_title() call out of wang_os_init() so it doesn't get
 //	called while in CoSTAR if just checking the version.

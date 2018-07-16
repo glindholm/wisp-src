@@ -28,7 +28,7 @@ WPROC_DISTRIB_DIR=wproc.$(WPROC_VERSION)
 WPROC_DIST=$(WPROC_EXE) ../doc/wproc.txt wproc.msg
 WPROC_DEMOSTUFF=cursor.wps demo.wps dr.wps ed.wps environ.wps putparm.wps screen.wps test.wps video.wps
 
-WPROC_STD_FLAGS = -DWANG -DUNIX -DDEBUG -I$(WC) -I$(VC) -DWPROC_VERSION=$(WPROC_VERSION)
+WPROC_STD_FLAGS = -DWANG -DUNIX -I$(WC) -I$(VC) -DWPROC_VERSION=$(WPROC_VERSION)
 
 CFLAGS  = $(CFLAGS0)  $(WPROC_STD_FLAGS)
 CCFLAGS = $(CCFLAGS0) $(WPROC_STD_FLAGS)
@@ -115,8 +115,6 @@ WPROC.$(WPROC_VERSION):
 clean:
 	rm -r -f $(WPROC_EXE) $(WPROC_SHIP_DIR) *.o *~ core *.wpr WPROC.$(WPROC_VERSION)
 
-WPROC_DEBUG_OBJECTS =
-
 WPROC_RUNTIME_OBJECTS = \
 args.o     \
 assert.o   \
@@ -185,10 +183,9 @@ p_scrnio.o \
 p_ttyio.o  \
 p_var.o    \
 p_wang.o   \
-scanner.o  \
-isspace.o
+scanner.o  
 
-WPROC_OBJECTS = $(WPROC_DEBUG_OBJECTS) $(WPROC_COMPILER_OBJECTS) $(WPROC_RUNTIME_OBJECTS)
+WPROC_OBJECTS = $(WPROC_COMPILER_OBJECTS) $(WPROC_RUNTIME_OBJECTS)
 
 $(WPROC_EXE): $(WPROC_OBJECTS) $(WISP_LIBS_PATHS)
 	@echo Linking $(WPROC_EXE)
@@ -298,7 +295,6 @@ input.o : input.$(CCC_EXT) input.hpp args.hpp exp.hpp object.hpp symbols.hpp dat
   screen.hpp wang_os.hpp wangfile.hpp 
 install.o : install.$(CCC_EXT) install.hpp environ.hpp crt_io.hpp colors.hpp fileinfo.hpp \
   object.hpp ext.hpp memory.hpp product.hpp report.hpp range.hpp token.hpp utility.hpp 
-isspace.o : isspace.$(CCC_EXT) 
 machine.o : machine.$(CCC_EXT) machine.hpp args.hpp exp.hpp object.hpp symbols.hpp data.hpp \
   pcode.hpp stateobj.hpp environ.hpp assert.hpp opcodes.hpp scope.hpp colors.hpp \
   process.hpp range.hpp token.hpp utility.hpp stack.hpp sysenv.hpp report.hpp \

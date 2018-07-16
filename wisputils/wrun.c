@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		wrun.c
 **
@@ -70,7 +93,11 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <stdarg.h>
 
-#if defined(MSDOS) || defined(WIN32)
+#ifdef unix
+#include <unistd.h>
+#endif
+
+#if defined(WIN32)
 #include <process.h>
 #include <io.h>
 #endif
@@ -83,6 +110,7 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wisplib.h"
 #include "wispcfg.h"
+#include "platsubs.h"
 
 /*
 **	Structures and Defines
@@ -516,9 +544,9 @@ int main	(int argc, char *argv[])
 		char line2[1024], tmp[256];
 
 #ifdef WRUNT
-		sprintf(line2,"WRUNT \t\t= WISP Version %s\n",wisp_version());
+		sprintf(line2,"WRUNT \t\t= WISP Version %s [%s]\n",wisp_version(), WL_platform_name());
 #else
-		sprintf(line2,"WRUN \t\t= WISP Version %s\n",wisp_version());
+		sprintf(line2,"WRUN \t\t= WISP Version %s [%s]\n",wisp_version(), WL_platform_name());
 #endif
 		sprintf(tmp,"WISPCONFIG \t= %s\n", wispconfigdir());
 		strcat(line2, tmp);
@@ -588,6 +616,9 @@ void msgprintf(const char* format, ...)
 /*
 **	History:
 **	$Log: wrun.c,v $
+**	Revision 1.19.2.2  2003/02/10 20:21:33  gsl
+**	Add platform to version
+**	
 **	Revision 1.19.2.1  2002/09/05 19:22:27  gsl
 **	LINUX
 **	

@@ -83,27 +83,31 @@ SOURCE=.\wacu.mak
 # End Source File
 # Begin Source File
 
-SOURCE=.\wacuerror.cob
+SOURCE=.\WACUDISPLAY.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\wacufac2screen.cob
+SOURCE=.\WACUERROR.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\wacugetparm.cob
+SOURCE=.\WACUFAC2SCREEN.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\wacugetpfkey.cob
+SOURCE=.\WACUGETPARM.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\wacuhelp.cob
+SOURCE=.\WACUGETPFKEY.cob
 # End Source File
 # Begin Source File
 
-SOURCE=.\wacuwsb.cob
+SOURCE=.\WACUHELP.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WACUWSB.cob
 # End Source File
 # End Target
 # End Project

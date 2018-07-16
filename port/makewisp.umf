@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -13,7 +13,7 @@
 #				$ make -f makewisp.umf
 #
 
-WISPVER=4406
+WISPVER=4407
 
 
 include $(WISPSRC)/port/make.include

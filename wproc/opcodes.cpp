@@ -20,7 +20,6 @@
 // Definitions and subprograms
 // (none)
 
-#if DEBUG
 
 
 char *opcode_name(opcode an_opcode) {
@@ -117,12 +116,14 @@ char *opcode_name(opcode an_opcode) {
    }
 }
 
-#endif
 
 
 //
 //	History:
 //	$Log: opcodes.cpp,v $
+//	Revision 1.6.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.6  1998/08/31 19:13:59  gsl
 //	drcs update
 //	

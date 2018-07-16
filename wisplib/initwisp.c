@@ -48,6 +48,7 @@ static char rcsid[]="$Id:$";
 #include "machid.h"
 #include "wsb.h"
 #include "wispvers.h"
+#include "platsubs.h"
 
 /*
 **	Structures and Defines
@@ -117,8 +118,8 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 		wexit(1L);
 	}
 
-	wtrace("INITWISP2","VERSION", "Runtime=[%s] Cobol=[%3.3s] Wisptran=[%20.20s]",
-	       wisp_version(), cobol_type, wisp_tran_version);
+	wtrace("INITWISP2","VERSION", "Runtime=[%s] Cobol=[%3.3s] Wisptran=[%20.20s] Platform=[%s]",
+	       wisp_version(), cobol_type, wisp_tran_version, WL_platform_name());
 
 	/*=========================================================================*/
 
@@ -471,6 +472,9 @@ static int license_checked(int set)
 /*
 **	History:
 **	$Log: initwisp.c,v $
+**	Revision 1.31.2.4  2003/02/10 14:48:53  gsl
+**	Add platform to trace
+**	
 **	Revision 1.31.2.3  2002/11/14 21:12:23  gsl
 **	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
 **	

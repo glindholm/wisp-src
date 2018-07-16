@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "MSFS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -143,6 +143,10 @@ SOURCE=..\wisplib\winnt.c
 # Begin Source File
 
 SOURCE=..\wisplib\wispcfg.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisplib\wispvers.c
 # End Source File
 # Begin Source File
 

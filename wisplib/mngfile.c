@@ -47,8 +47,7 @@ static char rcsid[]="$Id:$";
 #ifndef O_TEXT
 #define O_TEXT 0
 #endif
-
-#if defined(WIN32)
+#ifndef O_LARGEFILE
 #define O_LARGEFILE 0
 #endif
 
@@ -3342,6 +3341,9 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.35.2.2.2.5  2002/11/19 16:24:05  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
+**	
 **	Revision 1.35.2.2.2.4  2002/11/12 16:00:20  gsl
 **	Applied global unique changes to be compatible with combined KCSI
 **	

@@ -669,7 +669,6 @@ Boolean machine::builtin_value(
       }
 
       case bi_remainder : {
-#if ! defined(AIX) && !defined(SUNOS)
          int_32 op1 = exp[1].integer(25, txt_parameter);
          if (bad_exp(1)) return false;
          int_32 op2 = exp[2].integer(25, txt_parameter);
@@ -681,9 +680,6 @@ Boolean machine::builtin_value(
          }
          else
             value = 0;
-#else
-	assert(false); // Need AIX support for &remainder
-#endif
          break;
       }
 
@@ -975,7 +971,6 @@ Boolean machine::builtin_value(
             value = dup_string("");
 #else
 #if UNIX
-#if ! AIX
          struct stat buf;
          struct tm timedate;
          struct tm *ptimedate = &timedate;
@@ -1009,9 +1004,6 @@ Boolean machine::builtin_value(
          }
          else
             value = dup_string("");
-#else
-assert(false); // Need AIX support for &file_date, &file_time
-#endif
 #endif
 #endif
          break;
@@ -1225,6 +1217,9 @@ void machine::exec_builtin() {
 //
 //	History:
 //	$Log: builtin.cpp,v $
+//	Revision 1.13.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.13  1998/08/31 19:13:33  gsl
 //	drcs update
 //	

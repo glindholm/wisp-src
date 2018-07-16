@@ -41,13 +41,13 @@ wisp_dist_list=	\
 	$(WISPKIT)/acu/acucobol.include 	\
 	$(WISPKIT)/acu/sub85.c 	\
 	$(WISPKIT)/acu/sub85_acu51.c 	\
-	$(WISPKIT)/acu/wacudisplay.cob 	\
-	$(WISPKIT)/acu/wacuerror.cob 	\
-	$(WISPKIT)/acu/wacufac2screen.cob 	\
-	$(WISPKIT)/acu/wacugetparm.cob 	\
-	$(WISPKIT)/acu/wacugetpfkey.cob 	\
-	$(WISPKIT)/acu/wacuhelp.cob 	\
-	$(WISPKIT)/acu/wacuwsb.cob 	\
+	$(WISPKIT)/acu/WACUDISPLAY.cob 	\
+	$(WISPKIT)/acu/WACUERROR.cob 	\
+	$(WISPKIT)/acu/WACUFAC2SCREEN.cob 	\
+	$(WISPKIT)/acu/WACUGETPARM.cob 	\
+	$(WISPKIT)/acu/WACUGETPFKEY.cob 	\
+	$(WISPKIT)/acu/WACUHELP.cob 	\
+	$(WISPKIT)/acu/WACUWSB.cob 	\
 	$(WISPKIT)/acu/wispacn.txt 	\
 	$(WISPKIT)/acu/wruncbl.umf 	\
 	$(WISPKIT)/acu/xterm.acu 	\
@@ -301,15 +301,15 @@ $(WISPKIT)/acu/acu.rules 	\
 $(WISPKIT)/acu/acucobol.include 	\
 $(WISPKIT)/acu/sub85.c 	\
 $(WISPKIT)/acu/sub85_acu51.c 	\
-$(WISPKIT)/acu/wacudisplay.cob 	\
-$(WISPKIT)/acu/wacuerror.cob 	\
-$(WISPKIT)/acu/wacufac2screen.cob 	\
-$(WISPKIT)/acu/wacugetparm.cob 	\
-$(WISPKIT)/acu/wacugetpfkey.cob 	\
-$(WISPKIT)/acu/wacuhelp.cob 	\
-$(WISPKIT)/acu/wacuwsb.cob 	\
 $(WISPKIT)/acu/wruncbl.umf 	\
 $(WISPKIT)/acu/xterm.acu 	\
+$(WISPKIT)/acu/WACUDISPLAY.cob 	\
+$(WISPKIT)/acu/WACUERROR.cob 	\
+$(WISPKIT)/acu/WACUFAC2SCREEN.cob 	\
+$(WISPKIT)/acu/WACUGETPARM.cob 	\
+$(WISPKIT)/acu/WACUGETPFKEY.cob 	\
+$(WISPKIT)/acu/WACUHELP.cob 	\
+$(WISPKIT)/acu/WACUWSB.cob 	\
 : 	$(SRCDIR)/acu/$(@F)
 	$(COPY) $(SRCDIR)/acu/$(@F) $@
 

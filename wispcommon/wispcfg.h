@@ -24,6 +24,7 @@
 **	Structures and Defines
 */
 #define DEF_WISPSERVER	"(LOCAL)"
+#define WISPCONFIG_UNSET_VALUE	"$WISPCONFIG"
 
 /*
 **	Function Prototypes
@@ -65,6 +66,9 @@ const char* wisprcfilepath(void);
 /*
 **	History:
 **	$Log: wispcfg.h,v $
+**	Revision 1.11.2.1  2003/02/14 16:55:25  gsl
+**	Add check to ensure $WISPCONFIG is set
+**	
 **	Revision 1.11  2001/10/31 20:27:39  gsl
 **	Add wisprcfilepath()
 **	

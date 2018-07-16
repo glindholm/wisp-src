@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -161,8 +161,8 @@ ACURPCDIR=C:\ACUFTP
 # Uncomment for Acuserver client enabled runtime.
 #CLIENT=1
 
-WISPDIR=C:\WISP4406
-EDEDIR=C:\EDE4406
+WISPDIR=C:\WISP4407
+EDEDIR=C:\EDE4407
 CRIDDIR=C:\CRIDACU3004
 
 OUTDIR=.

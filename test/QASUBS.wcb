@@ -4202,9 +4202,10 @@
       *$MF_END
 
       
+      * Comment out the VISION 2 tests
       ************************************          
-      *	   VISION 2 file
-      *$ACU_CODE PROCESS
+      *	   VISION 2 file 
+      *** ACU_CODE PROCESS
       *    MOVE "ALTVARV2"  TO READFDR-FILE.
       *    MOVE "LIBSAM" TO READFDR-LIB.
       *    MOVE "VOLOUT" TO READFDR-VOL.
@@ -4246,7 +4247,7 @@
       *    MOVE 0      TO READFDR-EXPECT-RC-X.
       *    MOVE "V2"    TO READFDR-EXPECT-CHAR8.
       *    PERFORM TEST-READFDR4-CHAR8.
-      *$ACU_END
+      *** ACU_END
       
 
       ************************************          
@@ -5806,15 +5807,16 @@
            MOVE 2000       TO SORTCALL-RECCNT.
            PERFORM CALL-SORTCALL-AND-VERIFY.
 
+      * Comment out the VISION 2 tests
       ************************************
-      *$ACU_CODE PROCESS
+      *** ACU_CODE PROCESS
       *    MOVE 107        TO SORTCALL-TEST-ID.
       *    MOVE "ALTVARV2" TO SORTCALL-INFILE.
       *    MOVE "I"        TO SC-FILETYPE
       *    MOVE 90         TO SC-RECSIZE-N.
       *    MOVE 1334       TO SORTCALL-RECCNT.
       *    PERFORM CALL-SORTCALL-AND-VERIFY.
-      *$ACU_END
+      *** ACU_END
 
       ************************************
       *$ACU_CODE PROCESS

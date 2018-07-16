@@ -1520,7 +1520,6 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	int	pfkey, currow, curcol;
 	char 	buff[256];
 	char	temp[256];
-	char	platname[80], platcode[2];
 
 	currow = 0;
 	curcol = 0;
@@ -1536,8 +1535,10 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	sprintf(buff,"Version=[%s]", wisp_version());
 	wsb_add_text(hWsb, 22, 0,buff);
 
-	whatplat(platname,platcode);
-	sprintf(temp, "Platform = %s (%2.2s)", platname,platcode);
+	sprintf(temp, "Platform = %s (%2.2s - %s)", 
+		WL_platform_name(),
+		WL_platform_code(),
+		WL_platform_define());
 	wsb_add_text(hWsb, 18, 0, temp);
 
 #ifdef FUNC_UNAME
@@ -3792,6 +3793,9 @@ int wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.79.2.5  2003/02/07 18:40:22  gsl
+**	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
+**	
 **	Revision 1.79.2.4  2002/11/12 16:00:27  gsl
 **	Applied global unique changes to be compatible with combined KCSI
 **	

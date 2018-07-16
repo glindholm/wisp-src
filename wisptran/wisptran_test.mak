@@ -25,7 +25,7 @@ WISPLANG  = ACU
 WISPFLAGS = -V $(WISPLANG) 
 
 COBOL    = c:\acucorp\acucbl520\acugt\bin\ccbl32.exe
-COBFLAGS = -Gd -Zi -Za -Da4 -Te 800
+COBFLAGS = -Da4 -Gd -Zi -Za -Te 800
 
 COPY=copy
 
@@ -75,7 +75,7 @@ TEST_COBOL_COBS= $(TEST_COBOL_WCBS:.wcb=.cob)
 TEST_COBOL_OBJS= $(TEST_COBOL_WCBS:.wcb=.acu)
 
 
-all:	clean header $(TEST_COBOL_OBJS) 
+all:	header $(TEST_COBOL_OBJS) 
 	@echo " "
 	@echo "TEST is up-to-date"
 	@echo " "

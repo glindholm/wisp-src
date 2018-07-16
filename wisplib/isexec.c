@@ -26,6 +26,7 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "wdefines.h"
 #include "runtype.h"
+#include "werrlog.h"
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
@@ -42,13 +43,6 @@ static char rcsid[]="$Id:$";
 **	Standard platforms
 */
 
-#ifdef AIX
-/*
-**	AIX uses only it's only executable format
-*/
-#include <filehdr.h>
-#define EXECMAGIC 0x01df
-#endif
 
 #ifdef SCO
 /*
@@ -322,6 +316,62 @@ int isexec(const char* name)
 }
 #endif
 
+#ifdef AIX
+/*
+**	U802TOCMAGIC	0737 == 0x01df		32-bit
+**	U803XTOCMAGIC	0757 == 0x01ef		Discontinued 64-bit XCOFF
+**	U64_TOCMAGIC	0767 == 0x01f7		AIX 64-bit XCOFF
+*/
+#define ISEXEC_DEFINED
+#include <filehdr.h>
+
+int isexec(const char* name)
+{
+	FILE *f;
+	struct filehdr fhdr;
+
+	f = fopen(name,"r");
+	if (!f)
+	{
+		wtrace("ISEXEC","ACCERR","Unable to open File=[%s] errno=[%d]", name, errno);
+		return ACCERR;
+	}
+	fread(&fhdr, sizeof(struct filehdr), 1, f);
+	fclose(f);
+
+	if (U802TOCMAGIC == fhdr.f_magic) 
+	{
+		wtrace("ISEXEC","ISEXEC","File=[%s] has AIX U802TOCMAGIC magic number", name);
+		return ISEXEC;
+	}
+
+#ifdef U803XTOCMAGIC
+	if (U803XTOCMAGIC == fhdr.f_magic) 
+	{
+		wtrace("ISEXEC","ISEXEC","File=[%s] has AIX U803XTOCMAGIC magic number", name);
+		return ISEXEC;
+	}
+#endif
+
+#ifdef U64_TOCMAGIC
+	if (U64_TOCMAGIC == fhdr.f_magic) 
+	{
+		wtrace("ISEXEC","ISEXEC","File=[%s] has AIX 64-bit XCOFF magic number", name);
+		return ISEXEC;
+	}
+#endif
+
+	if (is_acuobject_magic((char*)&fhdr, sizeof(fhdr))) 
+	{
+		wtrace("ISEXEC","ISACU","File=[%s] has ACUCOBOL magic number", name);
+		return ISACU;
+	}
+
+	wtrace("ISEXEC","NOTEXEC","File=[%s] does not have an exec magic number", name);
+	return NOTEXEC;
+}
+#endif /* AIX */
+
 
 
 #ifndef ISEXEC_DEFINED
@@ -403,6 +453,9 @@ int isexec(const char* name)
 /*
 **	History:
 **	$Log: isexec.c,v $
+**	Revision 1.15.2.2  2003/02/11 21:20:46  gsl
+**	Add AIX 64-bit XCOFF support
+**	
 **	Revision 1.15.2.1  2002/09/05 19:22:29  gsl
 **	LINUX
 **	

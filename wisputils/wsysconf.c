@@ -1,18 +1,34 @@
-static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifdef unix
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <ctype.h>
@@ -21,15 +37,16 @@ static char rcsid[]="$Id:$";
 
 #include "wcommon.h"
 #include "wperson.h"
-#define EXT_FILEXT
 #include "filext.h"
 #include "wdefines.h"
 #include "wsysconf.h"
+#include "platsubs.h"
+#include "wispvers.h"
 
 char *regex();
 char *regcmp();
-char *gmem();
-static char *nextfile();
+static char *gmem(unsigned int nelem, unsigned int size);
+static char *nextfile(char * path, DIR **curdir, char *pattern);
 
 /*
 ** The following was in wsysconf.h
@@ -110,10 +127,6 @@ DEV_ENTRY *devhead, *devp;
 #ifdef HPUX
 #define WSNAME2 "t.*"
 #define WSPATH2 "/dev/pts"
-#endif
-
-#ifdef MSDOS
-#define DEFTTY "ansidos"
 #endif
 
 #ifdef ICL
@@ -212,9 +225,7 @@ char cfgdir[100];
 
 #define CFGDIR cfgdir
 
-#ifndef MSDOS									/* struct termio is NOT defined for MSDOS	*/
 struct termio ttyraw,ttynorm;
-#endif
 
 int prompt;
 
@@ -224,8 +235,36 @@ char devtype[10];
 ** End of wsysconf.h stuff
 */
 
-static int build_seq_list(const char* dev_template, int low_value, int high_value, char* devclass, char* devtype);
+#ifdef LINUX
+static void build_seq_list(const char* dev_template, int low_value, int high_value, char* devclass, char* devtype);
+#endif
 
+static void build_ttys();
+static void build_tapes();
+static void build_list(
+	char *srcpath,		/* where to look for special files 	*/
+	char *srcpat,		/* pattern to match special file names	*/
+	char *cfgdir,		/* our config dir			*/
+	char *devclass,		/* class (tty/printer/disk/etc)		*/
+	char *devtype);		/* type (att605/oki92/etc)		*/
+static void build_disks();
+static void add(char *specfile, int num,char *clas, char *type);
+static char *gmem(unsigned int nelem, unsigned int size);
+static char *nextfile(char * path, DIR **curdir, char *pattern);
+static int getyn(char* pr);
+static void rawmode();
+static void norawmode();
+static void init_stuff();
+static void ask(char *dtyp,char *def);
+static void panic(char *p);
+static void build_dtyp_list();
+static char *getclass(char *p);
+static int cmpare(char **s1,char **s2);
+static void increment_devnum();
+
+#ifdef AIX
+static void ttyxlat(char* p);
+#endif
 
 static int	autoconfig;							/* Use automatic configuring			*/
 
@@ -239,7 +278,7 @@ static int	autoconfig;							/* Use automatic configuring			*/
 static int	DEVNUM_MAX	= 254;
 static int	DEVNUM_RESET 	= 100;
 
-main(argc,argv)
+int main(argc,argv)
 int argc;
 char *argv[];
 {
@@ -249,12 +288,12 @@ char *argv[];
 	char cfgpath_old[256];
 	char buff[256];
 
-	process_args(argc,argv);
 	init_stuff();
 
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Incorporated\n\n");
+	printf("       Version: %s  Platform: %s\n", wisp_version(), WL_platform_name());
+	printf("Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Incorporated\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -310,8 +349,14 @@ char *argv[];
 		panic(buff);
 	}
 
-	fprintf(cfg,"#   %s - WISP SYSTEM CONFIGURATION\n#\n",CFGFNAME);
-	fprintf(cfg,"#   DEVICE NUMBER MAP:\n#\n");
+	fprintf(cfg,"# WISP SYSTEM CONFIGURATION\n");
+	fprintf(cfg,"#\n");
+	fprintf(cfg,"# File:     %s\n", CFGFNAME);
+	fprintf(cfg,"# Version:  %s\n", wisp_version());
+	fprintf(cfg,"# Platform: %s\n", WL_platform_name());
+	fprintf(cfg,"#\n");
+	fprintf(cfg,"# DEVICE NUMBER MAP:\n");
+	fprintf(cfg,"#\n");
 	fprintf(cfg,"#Num Class Type Name\n");
 	for (devp=devhead, fcount=0; devp; devp=devp->next)
 	{
@@ -367,7 +412,7 @@ char *argv[];
 	exit(0);
 }
 
-build_ttys()
+static void build_ttys()
 {
 	char *devclass = "ws";
 
@@ -389,6 +434,7 @@ build_ttys()
 #endif /* !LINUX */
 }
 
+#ifdef LINUX
 /*
 **	Build a sequential list of devices 
 **
@@ -399,7 +445,7 @@ build_ttys()
 **	devtype		- devtype
 **
 */
-static int build_seq_list(const char* dev_template, int low_value, int high_value, char* devclass, char* devtype)
+static void build_seq_list(const char* dev_template, int low_value, int high_value, char* devclass, char* devtype)
 {
 	char	devname[256];
 	int	i;
@@ -415,9 +461,9 @@ static int build_seq_list(const char* dev_template, int low_value, int high_valu
 		i++;
 	}
 }
+#endif
 
-
-build_tapes()
+static void build_tapes()
 {
 	char *devclass = "mt";
 
@@ -426,22 +472,22 @@ build_tapes()
 	build_list(MTPATH,MTNAME,CFGDIR,devclass,devtype);
 }
 
-build_list(srcpath,srcpat,cfgdir,devclass,devtype)
-char *srcpath;										/* where to look for special files 	*/
-char *srcpat;										/* pattern to match special file names	*/
-char *cfgdir;										/* our config dir			*/
-char *devclass;										/* class (tty/printer/disk/etc)		*/
-char *devtype;										/* type (att605/oki92/etc)		*/
+static void build_list(
+	char *srcpath,		/* where to look for special files 	*/
+	char *srcpat,		/* pattern to match special file names	*/
+	char *cfgdir,		/* our config dir			*/
+	char *devclass,		/* class (tty/printer/disk/etc)		*/
+	char *devtype)		/* type (att605/oki92/etc)		*/
 {
 	DIR *cur;
-	char *filename, *nextfile();
+	char *filename;
 	char dtyp[10];
 	char *srcname;
 
 	cur = NULL;
 
 	srcname = regcmp(srcpat,NULL);
-	while (filename=nextfile(srcpath,&cur,srcname)) 
+	while ((filename=nextfile(srcpath,&cur,srcname))) 
 	{
 		sprintf(tmpold,"%s/%s",srcpath,filename);
 		if (prompt)
@@ -454,7 +500,7 @@ char *devtype;										/* type (att605/oki92/etc)		*/
 			else
 			{
 				char *ptr;
-				if (ptr = strchr(dtyp,'\n')) *ptr = (char)0;
+				if ((ptr = strchr(dtyp,'\n'))) *ptr = (char)0;
 			}
 			if (strlen(dtyp)==0) strcpy(dtyp,devtype);
 		}
@@ -467,7 +513,7 @@ char *devtype;										/* type (att605/oki92/etc)		*/
 	free(srcname);
 }
 
-build_disks()										/* special case */
+static void build_disks()
 {
 	char *devclass = "dv";
 	logical_id *p;
@@ -528,9 +574,7 @@ build_lprs()										/* also a special case */
 }
 #endif /* OLD */
 
-add(specfile,num,class,type)
-char *specfile, *class, *type;
-int num;
+static void add(char *specfile, int num,char *clas, char *type)
 {
 
 	if (devhead==NULL)
@@ -545,24 +589,16 @@ int num;
 	if (specfile) strcpy(devp->specfile,specfile);
 	else devp->specfile[0] = (char)0;
 #ifdef AIX
-	if (!strncmp(class,"ws",2))
+	if (!strncmp(clas,"ws",2))
 	  ttyxlat(devp->specfile);
 #endif
 	devp->devnum=num;
-	devp->class=class;
+	devp->class=clas;
 	devp->type=gmem(strlen(type)+1,sizeof(char));
 	strcpy(devp->type,type);
 }
 
-process_args(argc,argv)
-int argc;
-char *argv[];
-{
-										                /* no possible args yet 	*/
-}
-
-char *gmem(nelem,size)
-unsigned nelem, size;
+static char *gmem(unsigned int nelem, unsigned int size)
 {
 	static long	total = 0;
 	static char *tmp;
@@ -572,16 +608,13 @@ unsigned nelem, size;
 	tmp = calloc(nelem,size);
 	if (tmp==NULL)
 	{
-		fprintf(stderr,"wsysconf: Process out of memory. [total=%dl]\n",total);
+		fprintf(stderr,"wsysconf: Process out of memory. [total=%ld]\n",total);
 		exit(2);
 	}
 	return(tmp);
 }
 
-static char *nextfile(path,curdir,pattern)
-char *path;
-DIR **curdir;
-char *pattern;
+static char *nextfile(char * path, DIR **curdir, char *pattern)
 {
 	struct dirent *dp;
 
@@ -604,8 +637,7 @@ char *pattern;
 		if (regex(pattern,dp->d_name)) return dp->d_name; 
 	}
 }
-getyn(pr)
-char *pr;
+static int getyn(char* pr)
 {
 	char ch;
 
@@ -619,15 +651,16 @@ char *pr;
 	printf("\n");
 	return ch=='Y'||ch=='y'?TRUE:FALSE;
 }
-rawmode()
+
+static void rawmode()
 {
 	ioctl(0,TCSETA,&ttyraw);
 }
-norawmode()
+static void norawmode()
 {
 	ioctl(0,TCSETA,&ttynorm);
 }
-init_stuff()
+static void init_stuff()
 {
 	ioctl(0,TCGETA,&ttynorm);
 	ioctl(0,TCGETA,&ttyraw);
@@ -635,8 +668,7 @@ init_stuff()
 	ttyraw.c_cc[4] = 1;
 	ttyraw.c_cc[5] = 10;
 }
-ask(dtyp,def)
-char *dtyp, *def;
+static void ask(char *dtyp,char *def)
 {
 	char pr[64];
 
@@ -655,7 +687,7 @@ char *dtyp, *def;
 		else
 		{
 			char *ptr;
-			if (ptr = strchr(devtype,'\n')) *ptr = (char)0;
+			if ((ptr = strchr(devtype,'\n'))) *ptr = (char)0;
 		}
 
 		if (strlen(devtype)==0) strcpy(devtype,def);
@@ -664,22 +696,19 @@ char *dtyp, *def;
 		else prompt=FALSE;
 	}
 }
-panic(p)
-char *p;
+static void panic(char *p)
 {
 	fprintf(stderr,"fatal error: %s\n",p);
 	exit(2);
 }
-build_dtyp_list()
+static void build_dtyp_list()
 {
 	FILE *dtyp;
-	char dtnam[256], *fname;
-        char *cpat,*spc;
-	char *getclass();
+	char dtnam[256];
 	DIR *cur;
 	char **typlst;
 	int i=0;
-	int (*fn)(), cmpare();
+	int (*fn)();
 	char last[16];
 	char buf[256];
 	
@@ -757,7 +786,7 @@ build_dtyp_list()
 				else
 				{
 					char *ptr;
-					if (ptr = strchr(buf,'\n')) *ptr = (char)0;
+					if ((ptr = strchr(buf,'\n'))) *ptr = (char)0;
 				}
 				if (strlen(buf)!=0)
 				{
@@ -771,8 +800,7 @@ build_dtyp_list()
 	}
 	fclose(dtyp);
 }
-char *getclass(p)
-char *p;
+static char *getclass(char *p)
 {
 	int i;
 
@@ -782,14 +810,24 @@ char *p;
 	}
 	return 0;
 }
-cmpare(s1,s2)
-char **s1, **s2;
+static int cmpare(char **s1,char **s2)
 {
 	return strcmp(*s1,*s2);
 }
 #ifdef AIX
-ttyxlat(p)										/* kludge to xlate aix ttyp? and ptyp? */
-char *p;										/* to ptc/? and pts/? */
+static int hextoi(char* p)
+{
+	int res;
+
+	for (res=0; *p && isxdigit(*p); ++p)
+	{
+		res *= 16;
+		res += isdigit((int)*p)?*p-0x30:toupper(*p)-'A'+10;
+	}
+	return res;
+}
+static void ttyxlat(char* p)			/* kludge to xlate aix ttyp? and ptyp? */
+						/* to ptc/? and pts/? */
 {
 	static char tmpbuf[100];
 	char *ptr;
@@ -807,21 +845,9 @@ char *p;										/* to ptc/? and pts/? */
 		break;
 	}
 }
-hextoi(p)
-char *p;
-{
-	int res;
-
-	for (res=0; *p && isxdigit(*p); ++p)
-	{
-		res *= 16;
-		res += isdigit(*p)?*p-0x30:toupper(*p)-'A'+10;
-	}
-	return res;
-}
 #endif	/* AIX	*/
 
-increment_devnum()
+static void increment_devnum()
 {
 	if( devnum < DEVNUM_MAX )
 	{
@@ -839,18 +865,70 @@ increment_devnum()
 /*
 **	History:
 **	$Log: wsysconf.c,v $
-**	Revision 1.20.2.1.2.2  2002/09/06 15:27:25  gsl
+**	Revision 1.20.2.1.2.3  2003/02/11 14:48:29  gsl
+**	Sync with $HEAD
+**	
+**	Revision 1.39  2003/02/11 14:26:44  gsl
+**	display version and plaftom
+**	
+**	Revision 1.38  2003/02/11 14:20:13  gsl
+**	display version and plaftom
+**	
+**	Revision 1.37  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.36  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.35  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.34  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.33  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.32  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.31  2003/01/28 20:04:20  gsl
+**	fix warnings
+**	
+**	Revision 1.30  2002/10/14 18:15:51  gsl
+**	prototypes
+**	
+**	Revision 1.29  2002/09/06 15:06:43  gsl
 **	When changing gets() to fgets() you have to now strip off the trailing NL (and CR)
 **	
-**	Revision 1.20.2.1.2.1  2002/09/05 19:22:28  gsl
+**	Revision 1.28  2002/09/05 14:20:08  gsl
+**	gets()->fgets()
+**	
+**	Revision 1.27  2002/09/04 20:02:12  gsl
+**	For LINUX generate a sequential list of /dev/pts/nnn workstation
+**	devices
+**	
+**	Revision 1.26  2002/09/04 19:27:03  gsl
 **	LINUX
 **	
-**	Revision 1.20.2.1  2002/08/16 21:50:52  gsl
-**	Alpha Port 4402f
+**	Revision 1.25  2002/07/18 21:04:25  gsl
+**	Remove MSDOS code
 **	
-**	Revision 1.20  2002-03-28 10:12:04-05  gsl
+**	Revision 1.24  2002/07/10 21:06:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.23  2002/07/09 20:00:06  gsl
+**	Fis OSF1 tty devices
+**	
+**	Revision 1.22  2002/07/08 21:08:35  gsl
+**	FIx missing arg in printf call
+**	
+**	Revision 1.21  2002/06/25 18:18:37  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.20  2002/03/28 15:12:04  gsl
 **	use define for copyright yaer
-**
+**	
 **	Revision 1.19  2002-03-26 16:51:27-05  gsl
 **	(C) 2002
 **
@@ -877,7 +955,6 @@ increment_devnum()
 **	bye
 **
 **	Revision 1.11  1996-12-12 13:16:26-05  gsl
-**	Devtech -> NeoMedia
 **
 **	Revision 1.10  1996-10-08 17:49:29-07  gsl
 **	fix getenv()'s

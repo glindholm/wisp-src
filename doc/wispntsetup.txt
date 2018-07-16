@@ -1,4 +1,5 @@
-Copyright (c) 2002 by NeoMedia Migrations Inc. All Rights Reserved.
+Copyright (c) 2002-2003 by NeoMedia Migrations Inc. 
+All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +8,7 @@ Title:          WISP for Windows (WIN32) Quick Set-Up Steps
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/WIN32
-Versions:       4.4.06
+Versions:       4.4.07
 
 Summary:        WISP for WIN32 installation and setup steps
 

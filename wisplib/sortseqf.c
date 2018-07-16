@@ -47,8 +47,7 @@ static char rcsid[]="$Id:$";
 #ifndef O_TEXT
 #define O_TEXT 0
 #endif
-
-#if defined(WIN32)
+#ifndef O_LARGEFILE
 #define O_LARGEFILE 0
 #endif
 
@@ -2337,6 +2336,9 @@ static int ssbytenormal(void)
 /*
 **	History:
 **	$Log: sortseqf.c,v $
+**	Revision 1.18.2.2  2002/11/19 16:24:05  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
+**	
 **	Revision 1.18.2.1  2002/10/09 21:03:03  gsl
 **	Huge file support
 **	

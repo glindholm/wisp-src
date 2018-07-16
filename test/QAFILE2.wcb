@@ -1268,7 +1268,7 @@
            PERFORM LOAD-FILE-AV.
 	   
       *$ACU_CODE PROCESS	       
-      *    PERFORM LOAD-FILE-AV2.
+      **   PERFORM LOAD-FILE-AV2.  - Comment out VISION 2 tests
       *    PERFORM LOAD-FILE-AV3.
       *$ACU_END
       *$MF_CODE PROCESS	       
@@ -1319,8 +1319,8 @@
            CLOSE       FILE-AV.
 
       *$ACU_CODE PROCESS	       
-      *    OPEN OUTPUT FILE-AV2.
-      *    CLOSE       FILE-AV2.
+      **   OPEN OUTPUT FILE-AV2. - Comment out VISION 2 tests
+      **   CLOSE       FILE-AV2.
       *
       *    OPEN OUTPUT FILE-AV3.
       *    CLOSE       FILE-AV3.

@@ -1,0 +1,369 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WL0029.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test SCRATCH routine 
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     WL0029.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",  "DISPLAY".
+
+           SELECT BASE-FILE-UFB
+               ASSIGN TO "BASEFILE", "DISK",  NODISPLAY.
+
+001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+
+       FD  BASE-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  BASE-FIL-RECORD PIC X(80).
+
+
+001400 Working-Storage Section.
+001500
+       01  failed-cnt	   pic 99 value 0.
+
+       01  base-fil	   PIC X(8) VALUE "WL0029".
+       01  base-lib	   pic x(8) VALUE "WL0029".
+       01  base-vol	   pic x(6).
+
+       01  scr-type	   PIC X.
+       01  scr-fil	   PIC X(8).
+       01  scr-lib	   pic x(8).
+       01  scr-vol	   pic x(6).
+       01  scr-exp	   pic x.
+       01  scr-limit	   pic x.
+
+       01  tst-fil	   PIC X(8).
+       01  tst-lib	   pic x(8).
+       01  tst-vol	   pic x(6).
+
+       01  rc-int4.
+           03 rc-high     BINARY  VALUE 0.
+           03 rc-bin      BINARY  value 0.
+       01  rc-num	   pic 999.
+
+       01  expected-error  pic 999.
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  INLIB   PIC X(8).
+       01  INVOL   PIC X(6).
+       
+       01  TEST-NAME PIC X(8).
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01  CD-keyword PIC XX VALUE "CD".
+       01  CREATE-DATE PIC 9(8).
+       01  L-TYPE PIC X VALUE "L".
+       01  F-TYPE PIC X VALUE "F".
+
+       01  spaces-fil   pic x(8) values spaces.
+       01  find-start-cnt-int4.
+	   05  find-start-cnt-high binary value 0.
+	   05  find-start-cnt-bin  binary value 0.
+       01  find-cnt-int4.
+	   05  find-cnt-high binary value 0.
+	   05  find-cnt-bin  binary value 0.
+       01  find-receiver   pic x(22).	   
+	   
+001600 Procedure Division.
+       
+      *============================================================	  
+       0000-init.
+	   move 0 to failed-cnt.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+	   MOVE INVOL    TO BASE-VOL.
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+
+      *============================================================	  
+      * TEST: Scratch one file 7 args.
+       test001.
+	   MOVE "TEST001" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move "WL0029"   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move "F"	   TO scr-type.
+	   move base-fil   to scr-fil.
+	   move base-lib   to scr-lib.
+	   move base-vol   to scr-vol.
+	   move "B"	   to scr-exp.
+	   move "L"	   to scr-limit.
+	   
+	   PERFORM CALL-SCRATCH-7ARGS.
+	   PERFORM CHECK-SCRATCH-FILE-SUCCESS.
+
+      * TEST: Scratch one file 6 args.
+       test002.
+	   MOVE "TEST002" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move "WL0029"   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move "F"	   TO scr-type.
+	   move base-fil   to scr-fil.
+	   move base-lib   to scr-lib.
+	   move base-vol   to scr-vol.
+	   move "B"	   to scr-exp.
+	   
+	   PERFORM CALL-SCRATCH-6ARGS.
+	   PERFORM CHECK-SCRATCH-FILE-SUCCESS.
+
+      * TEST: Scratch one file 5 args.
+       test003.
+	   MOVE "TEST003" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move "WL0029"   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move "F"	   TO scr-type.
+	   move base-fil   to scr-fil.
+	   move base-lib   to scr-lib.
+	   move base-vol   to scr-vol.
+	   
+	   PERFORM CALL-SCRATCH-5ARGS.
+	   PERFORM CHECK-SCRATCH-FILE-SUCCESS.
+
+      * TEST: scratch blank file - expect error
+       test004.
+	   MOVE "TEST004" TO TEST-NAME.
+
+	   move "F"	   TO scr-type.
+	   move spaces	   to scr-fil.
+	   move "WL0029"   to scr-lib.
+	   move invol	   to scr-vol.
+	   
+	   PERFORM CALL-SCRATCH-5ARGS.
+	   move 20 to expected-error.
+	   PERFORM CHECK-SCRATCH-FAILURE.
+
+      * TEST: scratch a file that does not exist - expect error
+       test005.
+	   MOVE "TEST005" TO TEST-NAME.
+	   move "F"	   TO scr-type.
+	   move "MISSING"  to scr-fil.
+	   move "WL0029"   to scr-lib.
+	   move invol	   to scr-vol.
+	   
+	   PERFORM CALL-SCRATCH-5ARGS.
+	   move 20 to expected-error.
+	   PERFORM CHECK-SCRATCH-FAILURE.
+
+      * TEST: scratch a lib
+       test006.
+	   MOVE "TEST006" TO TEST-NAME.
+	   
+	   move "TEST006a"  TO base-fil.
+	   move "WL0029"   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+	   
+	   move "TEST006b"  TO base-fil.
+	   move "WL0029"   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move "L"	   TO scr-type.
+	   move spaces	   to scr-fil.
+	   move base-lib   to scr-lib.
+	   move base-vol   to scr-vol.
+	   
+	   PERFORM CALL-SCRATCH-5ARGS.
+	   PERFORM CHECK-SCRATCH-LIB-SUCCESS.
+
+      * TEST: scratch a lib that does not exist - expect error
+       test007.
+	   MOVE "TEST007" TO TEST-NAME.
+
+	   move "L"	   TO scr-type.
+	   move spaces	   to scr-fil.
+	   move base-lib   to scr-lib.
+	   move base-vol   to scr-vol.
+	   
+	   PERFORM CALL-SCRATCH-5ARGS.
+	   move 16 to expected-error.
+	   PERFORM CHECK-SCRATCH-FAILURE.
+
+      *============================================================	  
+       9999-done.
+           IF failed-cnt = 0   THEN
+                DISPLAY "SCRATCH completion successful."
+           ELSE 
+                DISPLAY "SCRATCH failed "
+	   END-IF.
+	   
+       9999-exit.
+            EXIT PROGRAM.
+       9999-stop.
+            STOP RUN.
+
+      *============================================================
+       CLEANUP-FILES.
+	   move spaces	   TO base-fil.
+	   move "WL0029"   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   CALL "SCRATCH" USING 
+	       L-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, RC-int4.
+       
+      *============================================================
+       CHECK-SCRATCH-FILE-SUCCESS.
+	   if rc-bin NOT = 0 THEN
+	       add 1 to failed-cnt
+	       display "SCRATCH FAILED ", TEST-NAME,
+		   " RC=", RC-NUM
+	   ELSE
+	       perform test-file-scratched
+	   END-IF.
+       
+      *============================================================	  
+       TEST-FILE-SCRATCHED.
+	   CALL "READFDR4" USING
+	       scr-fil, scr-lib, scr-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 20  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-SCRATCHED FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", scr-fil,
+		   " LIB=", scr-lib,
+		   " VOL=", scr-vol.
+       
+      *============================================================
+       CHECK-SCRATCH-LIB-SUCCESS.
+	   if rc-bin NOT = 0 THEN
+	       add 1 to failed-cnt
+	       display "SCRATCH FAILED ", TEST-NAME,
+		   " RC=", RC-NUM
+	   ELSE
+	       perform test-lib-scratched
+	   END-IF.
+       
+      *============================================================	  
+       TEST-LIB-SCRATCHED.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, scr-lib, scr-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-SCRATCHED FAILED ",
+		   TEST-NAME,
+		   " LIB=", scr-lib,
+		   " VOL=", scr-vol.
+	       
+      *============================================================
+       CHECK-SCRATCH-FAILURE.	        	   
+	   if rc-num NOT = expected-error THEN
+	       add 1 to failed-cnt
+	       display "SCRATCH FAILED ", TEST-NAME,
+		   " Expecting RC=", expected-error,
+		   " Got RC=", rc-num.
+
+      *============================================================
+       CALL-SCRATCH-7ARGS.
+           CALL "SCRATCH" USING 
+	       scr-type, scr-fil, scr-lib, scr-vol,
+	       scr-exp, scr-limit,
+	       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-SCRATCH-6ARGS.
+           CALL "SCRATCH" USING 
+	       scr-type, scr-fil, scr-lib, scr-vol,
+	       scr-exp,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   
+      *============================================================
+       CALL-SCRATCH-5ARGS.
+           CALL "SCRATCH" USING 
+	       scr-type, scr-fil, scr-lib, scr-vol,
+	       rc-int4.
+	   move rc-bin to rc-num.
+       
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+	       
+      *============================================================
+       CREATE-BASE-FILE.
+      * Create a file to copy.
+	   OPEN OUTPUT BASE-FILE-UFB.
+	   WRITE BASE-FIL-RECORD.
+	   CLOSE BASE-FILE-UFB.
+
+      * Ensure file exists.
+	   move base-fil to tst-fil.
+	   move base-lib to tst-lib.
+	   move base-vol to tst-vol.
+	   perform TEST-FILE-EXISTS.
+	   if rc-bin NOT = 0 THEN GO TO 9999-exit.
+  
+006600**   End of WL0029.wcb 

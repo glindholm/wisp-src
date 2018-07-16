@@ -30,19 +30,6 @@
 
 /*				werrlog.h, common error logger for WISP system.							*/
 
-#ifdef INIT_ERR
-#define INIT_ITEM_CLEAR		= 0
-#define INIT_ITEM_SET		= 1
-
-#define DEFAULT_LOG_MODE	= 15
-
-#else
-#define INIT_ERR extern
-#define INIT_ITEM_CLEAR
-#define INIT_ITEM_SET
-#define DEFAULT_LOG_MODE
-#endif
-
 /* Flag bits in "w_errflag" are defined as follows:										*/
 /*																*/
 /*	Bit		Meaning													*/
@@ -57,6 +44,18 @@
 #define	    LOG_EXCEPTIONS_ONLY		8
 /*	 4		1 : Log Subroutine entry messages. 0 : Don't log entry messages.					*/
 #define	    LOG_SUBROUTINE_ENTRY	16
+
+#ifdef INIT_ERR
+#define INIT_ITEM_CLEAR	 = 0
+#define INIT_ITEM_SET	 = ENABLE_LOGGING
+#define DEFAULT_LOG_MODE = (ENABLE_LOGGING+LOG_LOGFILE+LOG_SCREEN+LOG_EXCEPTIONS_ONLY) /* 15 */
+
+#else
+#define INIT_ERR extern
+#define INIT_ITEM_CLEAR
+#define INIT_ITEM_SET
+#define DEFAULT_LOG_MODE
+#endif
 
 INIT_ERR uint4		w_err_flag	DEFAULT_LOG_MODE;
 INIT_ERR uint4		w_err_logged	INIT_ITEM_CLEAR;			/* Indicate no logs made to log file.		*/
@@ -81,6 +80,9 @@ const char* WL_strerror(int errnum);
 /*
 **	History:
 **	$Log: werrlog.h,v $
+**	Revision 1.14.2.3  2003/02/13 16:45:06  gsl
+**	Use defines instead of numeric constants for error modes
+**	
 **	Revision 1.14.2.2  2002/11/12 16:00:18  gsl
 **	Applied global unique changes to be compatible with combined KCSI
 **	

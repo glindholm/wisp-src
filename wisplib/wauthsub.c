@@ -14,9 +14,7 @@ static char rcsid[]="$Id:$";
 **			packdate()		Pack an 8 char date into 3 bytes
 **			unpkdate()		Unpack a date created by packdate()
 **			lictypename()		Return the text string name of the license type code.
-**			create_license_file()	Create the license file.
 **			getmachineid()		Get the MACHINE ID.
-**			write_license()		Write the info to the license file.
 **			validate_license()	Read the license file and validate the license.
 **			check_timeout()		Check if the license has timed-out
 **
@@ -74,13 +72,11 @@ static char rcsid[]="$Id:$";
 
 #ifdef OLD
 static	char	*tt_tran = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
-static	char	*tt_tran = "QAZ9CX1EU2GR3IO4YL5MJN6PH7SFT8VDWKB";	/* WISP */
-static	char	*tt_tran = "YL5MJN6PH7SFT8VDWKBQAZ9CX1EU2GR3IO4";	/* UniQue */
 #endif
 
 char	entran(int innum)
 {
-	char	*tt_tran = lic_trantable();
+	const char	*tt_tran = lic_trantable();
 	if (innum >= 0 && innum <= 34)
 	{
 		return( tt_tran[innum] );
@@ -114,8 +110,8 @@ char	entran(int innum)
 
 int	detran(char inchar)
 {
-	char	*ptr;
-	char	*tt_tran = lic_trantable();
+	const char	*ptr;
+	const char	*tt_tran = lic_trantable();
 
 	ptr = strchr(tt_tran, toupper(inchar));					/* Search for the char in the table (uppercase)	*/
 	if (ptr)
@@ -321,171 +317,6 @@ static	char	*l_invalid	= "INVALID";
 	case LICENSE_NETWORK:	return(l_network);
 	default:		return(l_invalid);
 	}
-}
-
-/*
-**	Routine:	create_license_file()
-**
-**	Function:	To create the license file
-**
-**	Description:	This routine will create the license file if it doesn't already exist.
-**			If the temp inode file exists it will rename it to be the license file.
-**
-**	Input:		None
-**			
-**
-**	Output:		/lib/{product}.license
-**			
-**
-**	Return:		0 = success
-**			1 = unable to create
-**
-**	Warnings:	None
-**
-**	History:	05/26/92	Written by GSL
-**			07/31/92	Added rename of temp inode file. GSL
-**
-*/
-
-int create_license_file(void)
-{
-	FILE	*fh;
-
-	if ( 0 != access(license_filepath(),0000) )					/* check if file exists			*/
-	{
-		if ( 0 != access(x_license_filepath(),0000) )				/* Check for temp inode file		*/
-		{
-			fh = fopen(license_filepath(),"w");
-			if (!fh)
-			{
-				return(1);
-			}
-			fclose(fh);
-		}
-		else									/* Rename the temp file			*/
-		{
-			rename(x_license_filepath(),license_filepath());
-
-			if ( 0 != access(license_filepath(),0000) )			/* Make sure it worked			*/
-			{
-				return(1);
-			}
-		}
-	}
-
-	return(0);
-}
-
-/*
-**	Routine:	write_license()
-**
-**	Function:	To write the license file.
-**
-**	Description:	This routine will write the license file.
-**			The dates will be formatted.  A expiration date of 00000000 will display as "None".
-**			After writing the file the mode is changed to read-only (444).
-**
-**			The file will contain.
-**				LICENSEE	  ABC company
-**				CUSTOMER-NUMBER	  10001
-**				PLATFORM	  AX - AIX RISC
-**				LICENSE-KEY	  ABCD-ABCD-ABCD-ABCD
-**				LICENSE-TYPE	  SINGLE
-**				LICENSE-DATE	  1992/05/01
-**				EXPIRATION-DATE	  None
-**				MACHINE-ID	  0000234500		| These are only on SINGLE machine licenses
-**				VALIDATION-CODE   ASD			|
-**
-**	Input:		custname		the LICENSEE
-**			custnum			the CUSTOMER-NUMBER
-**			platform		the 2 digit platform code
-**			licensekey		the 16 digit license key
-**			lictype			the encode license type
-**			licdate			the 8 digit license date
-**			expdate			the 8 digit expiration date or 00000000
-**			machineid		the MACHINE ID or empty string
-**			valcode			the VALIDATION CODE or empty string
-**
-**	Output:		/lib/{product}.license	the license file
-**			
-**
-**	Return:		0 = success
-**			1 = open failed
-**			2 = error in writing
-**
-**	Warnings:	Only the LICENSE-KEY and the VALIDATION-CODE are ever read for validation.
-**
-**	History:	05/26/92	Written by GSL
-**
-*/
-
-int write_license(char	*custname,
-		int4	custnum,
-		char	platform[2],
-		char	*licensekey,
-		int	lictype,
-		char	licdate[8],
-		char	expdate[8],
-		char	*machineid,
-		char	*valcode)
-{
-	FILE	*fp;
-	char	flickey[80];
-	char	platname[80];
-	char	licdatebuff[20];
-	char	expdatebuff[20];
-
-	if (plat_code(platform,platname,NULL))					/* expand the platform code			*/
-	{
-		strcpy(platname,"??");
-	}
-
-	formatkey(licensekey,flickey);						/* format the key				*/
-
-	sprintf(licdatebuff,"%4.4s/%2.2s/%2.2s",&licdate[0],&licdate[4],&licdate[6]);
-
-	if (0 == memcmp(expdate,"00000000",8))
-	{
-		strcpy(expdatebuff,"None");
-	}
-	else
-	{
-		sprintf(expdatebuff,"%4.4s/%2.2s/%2.2s",&expdate[0],&expdate[4],&expdate[6]);
-	}
-
-	fp = fopen(license_filepath(),"w");
-	if (!fp)
-	{
-		return(1);
-	}
-
-	fprintf(fp,		"LICENSEE           %s\n",custname);
-	fprintf(fp,		"CUSTOMER-NUMBER    %06d\n",custnum);
-	fprintf(fp,		"PLATFORM           %2.2s - %s\n",platform,platname);
-	fprintf(fp,		"LICENSE-KEY        %s\n",flickey);
-	fprintf(fp,		"LICENSE-TYPE       %s\n",lictypename(lictype));
-	fprintf(fp,		"LICENSE-DATE       %s\n",licdatebuff);
-	fprintf(fp,		"EXPIRATION-DATE    %s\n",expdatebuff);
-	if (machineid && *machineid)
-	{
-		fprintf(fp,	"MACHINE-ID         %s\n",machineid);
-	}
-	if (valcode && *valcode)
-	{
-		fprintf(fp,	"VALIDATION-CODE    %3.3s\n",valcode);
-	}
-
-	if (ferror(fp))								/* Check for an error in writing		*/
-	{
-		fclose(fp);
-		return(2);
-	}
-
-	fclose(fp);
-
-	chmod(license_filepath(),0444);						/* Make file read-only				*/
-
-	return(0);
 }
 
 /*
@@ -814,6 +645,15 @@ int check_timeout(char lowdate[8], char highdate[8])
 /*
 **	History:
 **	$Log: wauthsub.c,v $
+**	Revision 1.12.2.4  2003/02/14 18:19:07  gsl
+**	fix const difference warnings
+**	
+**	Revision 1.12.2.3  2003/01/03 16:41:37  gsl
+**	move routines to write licenses to wlicense.c
+**	
+**	Revision 1.12.2.2  2003/01/03 15:09:02  gsl
+**	Move the license gen stuff out of runtime into wauthorize.c
+**	
 **	Revision 1.12.2.1  2002/11/14 18:03:52  gsl
 **	expose get_license_info() for use in wlicense
 **	

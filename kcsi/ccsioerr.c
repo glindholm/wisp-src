@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*----
 Error logging for ccsio
@@ -12,7 +26,6 @@ Error logging for ccsio
 #include "shrthand.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)ccsioerr.c	1.11 2/26/94";
 
 static char *err_lit[]={
 	"Duplicate key",			/*100*/
@@ -90,7 +103,9 @@ static char *io_lit[]={
 	};
 
 static int ccsioerr(int status,char *io,char *name);
+#ifdef KCSI_MFX
 static void add_mf_error(KFB *kfb);
+#endif /* KCSI_MFX */
 
 /*----
 Some statuses are legal such as at end on a read next or a start
@@ -168,8 +183,14 @@ static int ccsioerr(int status,char *io,char *name)
 void KCSI_kfberr(KFB *kfb)
 {
 	if(ccsioerr(kfb->_status, kfb->_io, kfb->_sys_name))
+	{
+#ifdef KCSI_MFX
 		add_mf_error(kfb);
+#endif /* KCSI_MFX */
+	}
 }
+
+#ifdef KCSI_MFX
 
 typedef struct {
 	char *ecode;
@@ -236,12 +257,19 @@ static void add_mf_error(KFB *kfb)
 	kcsitrace(4, "MICROFOCUS", "IOERR", "%-6s-%-50s", kfb->_x_status, msg);
 }
 
+#endif /* KCSI_MFX */
 
 /*
 **	History:
 **	$Log: ccsioerr.c,v $
-**	Revision 1.8.2.2  2002/11/12 15:56:19  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8.2.3  2003/02/13 15:32:03  gsl
+**	sync with $HEAD
+**	
+**	Revision 1.14  2003/02/13 15:30:12  gsl
+**	Only add MF error if KCSI_MFX defined
+**	
+**	Revision 1.13  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.12  2002/10/24 14:20:41  gsl
 **	Make globals unique

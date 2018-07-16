@@ -30,11 +30,10 @@
 #define		LICENSE_INVALID		1003
 #define		LICENSE_UNKNOWN		1004
 
-char *product_name();
-char *license_filepath();
-char *x_license_filepath();
-char *lic_trantable();
-char *authlogfile();
+const char *product_name(void);
+const char *license_filepath(void);
+const char *lic_trantable(void);
+const char *authlogfile(void);
 
 /* wauthsub.c */
 char entran(int innum);
@@ -43,28 +42,12 @@ int checksummem(char* instr,int size,int mod);
 int packdate(char* yyyymmdd, char* ymd);
 int unpkdate(char* yyyymmdd,char* ymd);
 char *lictypename(int lictype);
-int create_license_file(void);
-int write_license(char	*custname,
-		int4	custnum,
-		char	platform[2],
-		char	*licensekey,
-		int	lictype,
-		char	licdate[8],
-		char	expdate[8],
-		char	*machineid,
-		char	*valcode);
 int validate_license(void);
 int check_timeout(char lowdate[8], char highdate[8]);
 int get_license_info(char* flickey, char* valcode);
 
 /* wlickey.c */
-int	mklickey(
-		int4	custnum,
-		char	platform[2],
-		int	lictype,
-		char	licdate[8],
-		char	expdate[8],
-		char	lickey[LICENSE_KEY_SIZE]);
+#define WLIC_MAXTRAN		34
 int	bklickey(
 		int4	*custnum,
 		char	*platform,
@@ -74,13 +57,21 @@ int	bklickey(
 		char	licensekey[LICENSE_KEY_SIZE]);
 void formatkey(const char* lickey, char* formkey);
 void unformatkey(char* lickey, const char* formkey);
-void mkvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3]);
 int ckvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3]);
 
 #endif /* WLICENSE_H */
 /*
 **	History:
 **	$Log: wlicense.h,v $
+**	Revision 1.13.2.4  2003/02/14 18:20:24  gsl
+**	make const prototypes for license routines
+**	
+**	Revision 1.13.2.3  2003/01/03 16:41:38  gsl
+**	move routines to write licenses to wlicense.c
+**	
+**	Revision 1.13.2.2  2003/01/03 15:09:02  gsl
+**	Move the license gen stuff out of runtime into wauthorize.c
+**	
 **	Revision 1.13.2.1  2002/11/14 18:03:52  gsl
 **	expose get_license_info() for use in wlicense
 **	

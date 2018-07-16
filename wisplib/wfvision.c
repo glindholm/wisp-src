@@ -33,8 +33,7 @@ static char rcsid[]="$Id:$";
 #ifndef O_TEXT
 #define O_TEXT 0
 #endif
-
-#if defined(WIN32)
+#ifndef O_LARGEFILE
 #define O_LARGEFILE 0
 #endif
 
@@ -422,6 +421,9 @@ int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBO
 /*
 **	History:
 **	$Log: wfvision.c,v $
+**	Revision 1.21.2.1.2.2  2002/11/19 16:24:03  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
+**	
 **	Revision 1.21.2.1.2.1  2002/10/09 21:03:05  gsl
 **	Huge file support
 **	

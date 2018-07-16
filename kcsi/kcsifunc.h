@@ -273,10 +273,8 @@ void WL_wswap(void *lword);			/* swap the order of the words in a longword item 
 void GETPARM();
 void SCRATCH();
 void WL_wpload(void);
-void EXTRACT();
 void WFCLOSE(const char* fname);								/* This routine is called after COBOL*/
 int  WL_link_display(const char *file_name);
-void FIND();
 void SET();
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
 int getopt( int argc, char *const argv[], const char *flags);
@@ -287,6 +285,9 @@ void setwispfilext(char* wispfilext);
 /*
 **	History:
 **	$Log: kcsifunc.h,v $
+**	Revision 1.14.2.2  2003/02/06 18:12:41  gsl
+**	fix prototype mismatch warnings for EXTRACT and FIND
+**	
 **	Revision 1.14.2.1  2002/11/12 15:56:27  gsl
 **	Sync with $HEAD Combined KCSI 4.0.00
 **	

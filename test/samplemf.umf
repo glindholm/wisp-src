@@ -54,7 +54,8 @@ int: 	SAMPLE.int QAFILEIO.int QAFILE2.int QANETCAP.int QAPRINT.int \
 	QABCKGRD.int QADPCOMA.int QAWSXIO.int MFLINK.int DISPFILE.int LESWAP.int \
 	WL0000.int WL0010.int WL0011.int WL0012.int WL0013.int WL0014.int \
 	WL0015.int WL0016.int WL0017.int WL0018.int WL0018A.int WL0018B.int WL0019.int WL0020.int \
-	WL0021.int WL0022.int WL0023.int WL0024.int WL0025.int WL0026.int WL0027.int
+	WL0021.int WL0022.int WL0023.int WL0024.int WL0025.int WL0026.int WL0027.int \
+	WL0028.int WL0029.int WL0030.int WL0031.int WL0032.int 
 	@echo
 	@echo 'All sample (int) are up-to-date'
 	@echo

@@ -74,13 +74,13 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\wwruncbl.mak	\
 		$(WISPKIT)\acu\wrun32wisp_acu51.mak	\
 		$(WISPKIT)\acu\wrun32wisp_acu52.mak	\
-		$(WISPKIT)\acu\wacuerror.cob		\
-		$(WISPKIT)\acu\wacudisplay.cob		\
-		$(WISPKIT)\acu\wacufac2screen.cob	\
-		$(WISPKIT)\acu\wacugetparm.cob		\
-		$(WISPKIT)\acu\wacugetpfkey.cob		\
-		$(WISPKIT)\acu\wacuhelp.cob		\
-		$(WISPKIT)\acu\wacuwsb.cob		\
+		$(WISPKIT)\acu\WACUERROR.cob		\
+		$(WISPKIT)\acu\WACUDISPLAY.cob		\
+		$(WISPKIT)\acu\WACUFAC2SCREEN.cob	\
+		$(WISPKIT)\acu\WACUGETPARM.cob		\
+		$(WISPKIT)\acu\WACUGETPFKEY.cob		\
+		$(WISPKIT)\acu\WACUHELP.cob		\
+		$(WISPKIT)\acu\WACUWSB.cob		\
 		$(WISPKIT)\acu\wispacn.txt		\
 		$(WISPKIT)\acu\wispicon.ico		\
 		$(WISPKIT)\acu\wisprts.rc		\
@@ -415,25 +415,25 @@ $(WISPKIT)\acu\wrun32wisp_acu51.mak:	$(BASEDIR)\acu\$(@F)
 $(WISPKIT)\acu\wrun32wisp_acu52.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacuerror.cob:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUERROR.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacudisplay.cob:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUDISPLAY.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacufac2screen.cob:	$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUFAC2SCREEN.cob:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacugetparm.cob:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUGETPARM.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacugetpfkey.cob:	$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUGETPFKEY.cob:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacuhelp.cob:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUHELP.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wacuwsb.cob:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\WACUWSB.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\acu\wispacn.txt:		$(BASEDIR)\doc\$(@F)

@@ -1,0 +1,339 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WL0028.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test FILECOPY routine 
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     WL0028.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",  "DISPLAY".
+
+           SELECT COPY-FILE-UFB
+               ASSIGN TO "COPYFILE", "DISK",  NODISPLAY.
+
+001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+
+       FD  COPY-FILE-UFB
+           VALUE OF FILENAME IS COPY-FIL,
+                    LIBRARY  IS COPY-LIB,
+                    VOLUME   IS COPY-VOL.
+
+       01  COPY-FIL-RECORD PIC X(80).
+
+
+001400 Working-Storage Section.
+001500
+       01  failed-cnt	   pic 99 value 0.
+
+       01  copy-fil	   PIC X(8) VALUE "WL0028".
+       01  copy-lib	   pic x(8) VALUE "WL0028".
+       01  copy-vol	   pic x(6).
+
+       01  src-fil	   PIC X(8).
+       01  src-lib	   pic x(8).
+       01  src-vol	   pic x(6).
+
+       01  dst-fil	   PIC X(8).
+       01  dst-lib	   pic x(8).
+       01  dst-vol	   pic x(6).
+
+       01  tst-fil	   PIC X(8).
+       01  tst-lib	   pic x(8).
+       01  tst-vol	   pic x(6).
+
+       01  rc-int4.
+           03 rc-high     BINARY  VALUE 0.
+           03 rc-bin      BINARY  value 0.
+       01  rc-num	   pic 999.
+
+       01  expected-error  pic 999.
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  INLIB   PIC X(8).
+       01  INVOL   PIC X(6).
+       
+       01  TEST-NAME PIC X(8).
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01 CD-keyword PIC XX VALUE "CD".
+       01 CREATE-DATE PIC 9(8).
+       01 L-TYPE PIC X VALUE "L".
+       01 F-TYPE PIC X VALUE "F".
+	   
+001600 Procedure Division.
+       
+      *============================================================	  
+       0000-init.
+	   move 0 to failed-cnt.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+	   MOVE INVOL    TO COPY-VOL.
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+	   
+      * Create a file to copy.
+	   OPEN OUTPUT COPY-FILE-UFB.
+	   WRITE COPY-FIL-RECORD.
+	   CLOSE COPY-FILE-UFB.
+
+      * Ensure file exists.
+	   MOVE "TEST000" TO TEST-NAME.
+	   move copy-fil to tst-fil.
+	   move copy-lib to tst-lib.
+	   move copy-vol to tst-vol.
+	   perform TEST-FILE-EXISTS.
+	   if rc-bin NOT = 0 THEN GO TO 9999-exit.
+
+      *============================================================	  
+      * Simple 7 arg test with all values filled.
+       test001.
+	   MOVE "TEST001" TO TEST-NAME.
+	   
+	   move copy-fil to src-fil.
+	   move copy-lib to src-lib.
+	   move copy-vol to src-vol.
+	   
+	   move test-name to dst-fil.
+	   move src-lib to dst-lib.
+	   move src-vol to dst-vol.
+	   
+	   move dst-fil to tst-fil.
+	   move dst-lib to tst-lib.
+	   move dst-vol to tst-vol.
+	   
+	   PERFORM CALL-FILECOPY-7ARGS.
+	   PERFORM CHECK-FILECOPY-SUCCESS.
+
+      * 7 arg test with blank file
+       test002.
+	   MOVE "TEST002" TO TEST-NAME.
+	   
+	   move copy-fil to src-fil.
+	   move copy-lib to src-lib.
+	   move copy-vol to src-vol.
+	   
+	   move spaces to dst-fil.
+	   move inlib to dst-lib.
+	   move invol to dst-vol.
+	   
+	   move src-fil to tst-fil.
+	   move inlib to tst-lib.
+	   move invol to tst-vol.
+	   
+	   PERFORM CALL-FILECOPY-7ARGS.
+	   PERFORM CHECK-FILECOPY-SUCCESS.
+
+      * 7 arg test with blank lib & vol
+       test003.
+	   MOVE "TEST003" TO TEST-NAME.
+	   
+	   move copy-fil to src-fil.
+	   move spaces to src-lib.
+	   move spaces to src-vol.
+	   
+	   move test-name to dst-fil.
+	   move spaces to dst-lib.
+	   move spaces to dst-vol.
+	   
+	   move dst-fil to tst-fil.
+	   move inlib to tst-lib.
+	   move invol to tst-vol.
+	   
+	   PERFORM CALL-FILECOPY-7ARGS.
+	   PERFORM CHECK-FILECOPY-SUCCESS.
+
+      * 5 arg test 
+       test004.
+	   MOVE "TEST004" TO TEST-NAME.
+	   
+	   move copy-fil to src-fil.
+	   move copy-lib to src-lib.
+	   move copy-vol to src-vol.
+	   
+	   move test-name to dst-fil.
+	   
+	   move dst-fil to tst-fil.
+	   move src-lib to tst-lib.
+	   move src-vol to tst-vol.
+	   
+	   PERFORM CALL-FILECOPY-5ARGS.
+	   PERFORM CHECK-FILECOPY-SUCCESS.
+
+      * 6 arg test 
+       test005.
+	   MOVE "TEST005" TO TEST-NAME.
+	   
+	   move copy-fil to src-fil.
+	   move copy-lib to src-lib.
+	   move copy-vol to src-vol.
+	   
+	   move test-name to dst-fil.
+	   move src-lib to dst-lib.
+	   
+	   move dst-fil to tst-fil.
+	   move src-lib to tst-lib.
+	   move src-vol to tst-vol.
+	   
+	   PERFORM CALL-FILECOPY-6ARGS.
+	   PERFORM CHECK-FILECOPY-SUCCESS.
+	   
+      *  Dest file already exists
+       test006.
+	   MOVE "TEST006" TO TEST-NAME.
+	   
+	   move copy-fil to src-fil.
+	   move copy-lib to src-lib.
+	   move copy-vol to src-vol.
+	   
+	   move test-name to dst-fil.
+	   move src-lib to dst-lib.
+	   move src-vol to dst-vol.
+	   
+	   move dst-fil to tst-fil.
+	   move dst-lib to tst-lib.
+	   move dst-vol to tst-vol.
+	   
+	   PERFORM CALL-FILECOPY-7ARGS.
+	   PERFORM CHECK-FILECOPY-SUCCESS.
+
+	   PERFORM CALL-FILECOPY-7ARGS.
+	   move 52 to expected-error.
+	   PERFORM CHECK-FILECOPY-FAILURE.
+
+      * Source file missing
+       test007.
+	   MOVE "TEST007" TO TEST-NAME.
+	   
+	   move "MISSING" to src-fil.
+	   move copy-lib to src-lib.
+	   move copy-vol to src-vol.
+	   
+	   move test-name to dst-fil.
+	   
+	   PERFORM CALL-FILECOPY-5ARGS.
+	   move 20 to expected-error.
+	   PERFORM CHECK-FILECOPY-FAILURE.
+
+
+
+      *============================================================	  
+       9999-done.
+           IF failed-cnt = 0   THEN
+                DISPLAY "FILECOPY completion successful."
+           ELSE 
+                DISPLAY "FILECOPY failed "
+	   END-IF.
+	   
+       9999-exit.
+            EXIT PROGRAM.
+       9999-stop.
+            STOP RUN.
+
+      *============================================================
+       CLEANUP-FILES.
+	   CALL "SCRATCH" USING 
+	       L-TYPE, COPY-FIL, COPY-LIB, COPY-VOL, RC-int4.
+	       
+	   CALL "SCRATCH" USING 
+	       F-TYPE, COPY-FIL, INLIB, INVOL, RC-int4.
+	       
+	   MOVE "TEST003" TO SRC-FIL.
+	   CALL "SCRATCH" USING 
+	       F-TYPE, SRC-FIL, INLIB, INVOL, RC-int4.
+       
+      *============================================================
+       CHECK-FILECOPY-SUCCESS.
+	   if rc-bin NOT = 0 THEN
+	       add 1 to failed-cnt
+	       display "FILECOPY FAILED ", TEST-NAME,
+		   " RC=", RC-NUM
+	   ELSE
+	       perform test-file-exists
+	   END-IF.
+	       
+       CHECK-FILECOPY-FAILURE.	        	   
+	   if rc-num NOT = expected-error THEN
+	       add 1 to failed-cnt
+	       display "FILECOPY FAILED ", TEST-NAME,
+		   " Expecting RC=", expected-error,
+		   " Got RC=", rc-num.
+
+      *============================================================
+       CALL-FILECOPY-7ARGS.
+           CALL "FILECOPY" USING 
+	       src-fil, src-lib, src-vol,
+	       dst-fil, dst-lib, dst-vol,
+	       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-FILECOPY-6ARGS.
+           CALL "FILECOPY" USING 
+	       src-fil, src-lib, src-vol,
+	       dst-fil, dst-lib, 
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   
+      *============================================================
+       CALL-FILECOPY-5ARGS.
+           CALL "FILECOPY" USING 
+	       src-fil, src-lib, src-vol,
+	       dst-fil, 
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   
+       
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+	       
+  
+006600**   End of WL0028.wcb 

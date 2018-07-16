@@ -32,7 +32,7 @@
 #
 # 3) Edit this file and set WISPDIR and KCSIDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4406
+#       WISPDIR=C:\WISP44xx
 #       KCSIDIR=C:\KCSIACU4000
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command.
@@ -74,7 +74,7 @@
 ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP and KCSI directory here.
-WISPDIR=C:\WISP4406
+WISPDIR=C:\WISP4407
 KCSIDIR=C:\KCSIACU4000
 
 #  Set the runtime name here. (Do not include a file extension.)

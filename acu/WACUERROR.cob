@@ -1,13 +1,13 @@
-000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000100**   Copyright (c) 1997-2002 NeoMedia Technologies, All rights reserved.
 000200**   $Id:$
 000300**
-000400**   File:       wacuerror.cob
+000400**   File:       WACUERROR.cob
 000500**
 000600**   Project:    WISP for Acucobol with Native Screens
 000700**
 000800**   Purpose:    Display a WISP error log error
 000900**
-001000**   Build:      ccbl -o WACUERROR wacuerror.cob
+001000**   Build:      ccbl -Da4 -o WACUERROR.acu WACUERROR.cob
 001100**
 001200**
 001300

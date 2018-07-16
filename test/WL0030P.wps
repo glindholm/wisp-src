@@ -1,0 +1,13 @@
+PROCEDURE WL0030P
+* COPY FILE WL0030 in WL0030 on "invol"
+* TO file   COPY   in WL0030 on "invol"
+
+declare &invol as string(6)
+
+extract &invol=INVOL
+
+run copy
+	enter input file=WL0030, library=WL0030, volume=&invol,
+		copy=file
+	enter output file=COPY, library=WL0030, volume=&invol
+	enter eoj 16
