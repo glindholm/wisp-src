@@ -8,7 +8,7 @@ Title:          RELEASE NOTES FOR WISP VERSION 5.0
 Document:       wisp_relnotes.txt
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       5.0.00
+Versions:       5.0.01
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
@@ -25,6 +25,15 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         Email support@neom.com
         FAQ   http://www.neom.com/support/wisp/faq.jsp
 
+
+
+CHANGES FOR RELEASE 5.0.01
+==========================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit for release 5.0.01.
+
+The WFILECHK3 routine was incorrectly generating ERROR screens instead 
+of passing control to the DECLARATIVES.  This has been corrected.
 
 
 CHANGES FOR RELEASE 5.0.00
@@ -2964,6 +2973,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        5.0.01          11/10/03        5.0 Patch 1
         5.0.00          07/09/03        Major Release
         4.4.07          02/14/03        Unix license file changes
         4.4.06          11/12/02        KCSI v4.0.00

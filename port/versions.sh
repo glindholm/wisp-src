@@ -3,11 +3,18 @@
 #
 #	Usage: version.sh {version}
 #
+SAVEPWD=`pwd`
+cd ..
+WISPDIR=`pwd`
+export WISPDIR
+WISPSRC=`pwd`
+export WISPSRC
 
-if [ ! -d ${WISPSRC} ]
+cd ${WISPSRC}/port
+if [ ${SAVEPWD} != ${WISPSRC}/port ]
 then
-	echo 'Directory ${WISPSRC} not found'
-	exit
+	echo 'ERROR must be run from ${WISPSRC}/port directory'
+	exit 1
 fi
 
 echo

@@ -147,10 +147,18 @@ void WFILECHK3(
 	WL_cobfileop2wispfileop(file_operation, wispfileop);
 	WL_cobx2cstr(select_name_str,select_name,COB_SELECT_NAME_SIZE);
 
-	wtrace("WFILECHK3", "ENTRY", "Op=[%s (%2.2s)] File=[%s] (%8.8s in %8.8s on %6.6s) App=[%8.8s] Status=[%2.2s][%10.10s] Attr=[%10.10s]",
-	       l_cobfileop, wispfileop, select_name_str, file_fil, file_lib, file_vol, app_name, file_status, file_status_extended, file_attributes);
+	wtrace("WFILECHK3", "ENTRY", 
+	       "Op=[%s (%2.2s)] File=[%s] (%8.8s in %8.8s on %6.6s) App=[%8.8s] Status=[%2.2s][%10.10s] Attr=[%10.10s] Decl=[%c]",
+	       l_cobfileop, wispfileop, select_name_str, file_fil, file_lib, file_vol, app_name, 
+	       file_status, file_status_extended, file_attributes, has_declaratives[0]);
 
 	wisp_fileattr2mode(file_attributes, &mode);
+
+	if (has_declaratives[0] == 'Y')
+	{
+		/* Added to 5.0.01 to fix bug */
+		mode |= IS_DECLARE;
+	}
 
 
 	memcpy(decl_status,wispfileop,2);
@@ -885,6 +893,16 @@ void WL_wispfileop2cobfileop(const char wispfileop[2], char cobfileop[COB_FILEOP
 /*
 **	History:
 **	$Log: wfilechk.c,v $
+**	Revision 1.35.4.1  2003/11/10 18:54:07  gsl
+**	Sync with HEAD
+**	Fix WFILECHK3 has declaratives bug and add WC0005 test case
+**	
+**	Revision 1.37  2003/11/10 17:18:50  gsl
+**	Fix WFILECHK3 has declaratives bug and add WC0005 test case
+**	
+**	Revision 1.36  2003/11/10 17:09:11  gsl
+**	Fix WFILECHK3 has declaratives bug and add WC0005 test case
+**	
 **	Revision 1.35  2003/07/28 20:54:04  gsl
 **	fix c++ style comments
 **	

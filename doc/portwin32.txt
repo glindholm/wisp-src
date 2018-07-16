@@ -61,15 +61,11 @@
 	file "wisp\src\wisp.dsw" . 
 
 
-	[_] Select "SHIPKIT - Win32 Release" as the Active project. 
+	[_] Build "SHIPKIT - Win32 Release" 
 
-	Start the build ...
+	[_] Build "TESTACU - Win32 Release"	(Expect 2 errors)
 
-	The project build should complete without further errors.  
-
-	[_] Select "WISPTRAN_TEST - Win32 Release" as the Active project. 
-
-	[_] Select "TESTACU - Win32 Release" as the Active project. 
+	[_] Build "acu60_kcsi - Win32 Release" 
 
 
 	The WISP Shipping Kits

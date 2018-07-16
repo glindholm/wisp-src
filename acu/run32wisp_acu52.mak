@@ -5,7 +5,7 @@
 #
 #################################################################
 #
-# Creating an Acucobol 5.2.1 ATM runtime requires WISP 5.0.00
+# Creating an Acucobol 5.2.1 ATM runtime requires WISP 5.0.01
 #
 # ACUDIR=C:\acucorp\acucbl520\acugt
 #
@@ -74,7 +74,7 @@
 #################################################################
 
 # Set the installed WISP directory here.
-WISPDIR=C:\WISP5000
+WISPDIR=C:\WISP5001
 
 ## WISP libraries
 WISP_LIBS=      $(WISPDIR)\lib\wisp.lib  \

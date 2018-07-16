@@ -6,7 +6,7 @@
 #
 #	Versions:
 #		Acucobol-GT	6.0, 5.2, 5.1, 5.0
-#		WISP		5.0.00
+#		WISP		5.0.01
 #		KCSI		4.1.00
 #
 #	Function:
@@ -143,7 +143,7 @@ ACU_LIBDIR=$(ACUDIR)/lib
 # EDEDIR	The EDE lib directory
 # KCSIDIR	The KCSI directory
 # 
-EDEDIR=$(WISPDIR)/ede_5000
+EDEDIR=$(WISPDIR)/ede_5001
 KCSIDIR=$(WISPDIR)/kcsi_acu_4100
 
 #============================================================================

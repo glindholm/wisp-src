@@ -280,7 +280,7 @@ void p_assign(int* num_asn,
 						strcat(cur_assign->field1,name_buf);
 						init_current(num_var);			/* Add to the DECLARE list.		*/
 						set_value(name_buf,num_asn,*current_row);
-						sprintf(cur_assign->length,"%d",strlen(cur_decl->value));
+						sprintf(cur_assign->length,"%ld",(long)strlen(cur_decl->value));
 						nvar++;					/* Increment fields in ASSIGN stmnt.	*/
 						nexttok();
 					}
@@ -312,7 +312,7 @@ void p_assign(int* num_asn,
 					}
 					*cstr = '\0';					/* Null the string.			*/
 					strcpy(cur_assign->type,loc_str_typ);
-					sprintf(cur_assign->length,"%d",strlen(cur_assign->field1));
+					sprintf(cur_assign->length,"%ld",(long)strlen(cur_assign->field1));
 					nvar++;						/* Increment fields in ASSIGN stmnt.	*/
 					aptr++;						/* Step past the closing quote.		*/
 					next_ptr = aptr;				/* Set so finds next token properly.	*/
@@ -498,6 +498,9 @@ static void process_back_ref(int* num_asn,int* num_var,int* num_val)			/* Proces
 /*
 **	History:
 **	$Log: ptequatn.c,v $
+**	Revision 1.9  2003/08/05 18:42:27  gsl
+**	fix warnings
+**	
 **	Revision 1.8  2003/02/05 21:15:03  gsl
 **	fix -Wall warnings
 **	

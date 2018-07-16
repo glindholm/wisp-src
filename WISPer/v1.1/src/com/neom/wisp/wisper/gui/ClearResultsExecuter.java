@@ -1,7 +1,5 @@
 package com.neom.wisp.wisper.gui;
-import com.neom.wisp.wisper.*;
-import java.io.*;
-import javax.swing.*;
+import com.neom.wisp.wisper.SourceModule;
 
 /**
  * @author Kevin Hunter

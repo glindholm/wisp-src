@@ -8,7 +8,7 @@ Title:          WISP PACKING LIST
 Document:       wisp_packlist.lis
 Last Updated:   $Date:$
 Products:       WISP
-Versions:       5.0.00
+Versions:       5.0.01
 
 Summary:        Packing list for the WISP shipping kit.
 

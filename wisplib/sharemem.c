@@ -2056,7 +2056,7 @@ static int hide_file_rename(const char* filename)
 {
 	char newname[256];
 
-	sprintf(newname, "%s_%s_%ld.hide", filename, WL_longuid(), time(NULL));
+	sprintf(newname, "%s_%s_%ld.hide", filename, WL_longuid(), (long)time(NULL));
 
 	return WL_rename(filename, newname);
 }
@@ -2643,6 +2643,9 @@ static int osd_sync_seg_fm(void)
 /*
 **	History:
 **	$Log: sharemem.c,v $
+**	Revision 1.52  2003/08/05 18:59:26  gsl
+**	fix warnings
+**	
 **	Revision 1.51  2003/07/30 17:09:00  gsl
 **	Fix cast of pointers
 **	

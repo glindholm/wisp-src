@@ -46,6 +46,7 @@
 	Change WISP_VERSION:
 	- wispcommon/wcommon.h
 	- port/makewisp.umf
+	- doc/wisp_packlist.txt
 	- doc/wisp_relnotes.txt
 	- doc/wisp_install_unix.txt
 	- doc/wispntsetup.txt
@@ -65,7 +66,7 @@
 	- kcsi/kcsi_relnotes.txt
 	- kcsi/kcsintsetup.txt
 */
-#define WISP_VERSION "V5.0.00"			 		/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V5.0.01"			 		/* WISPTRAN version (char[20])		*/
 #define WISP_LICENSE_VERSION 50
 
 #define WISP_LIB_VERSION	30				/* WISPLIB version number.		*/
@@ -165,6 +166,12 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.73.4.2  2003/11/11 15:42:13  gsl
+**	Add packing_list.txt to list of version numbers
+**	
+**	Revision 1.73.4.1  2003/11/10 19:26:42  gsl
+**	Release 5.0.01
+**	
 **	Revision 1.73  2003/07/08 20:55:24  gsl
 **	WISP 5000
 **	

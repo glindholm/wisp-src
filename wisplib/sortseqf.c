@@ -507,7 +507,7 @@ int WL_sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char f
 	/* Generate base name for tmp sort files */
 	{
 		char buff[80];
-		sprintf(buff, "sort_%s_%lx_%ld", WL_splitname(infile), (unsigned long)getpid(), time(NULL));
+		sprintf(buff, "sort_%s_%lx_%ld", WL_splitname(infile), (unsigned long)getpid(), (long)time(NULL));
 		WL_buildfilepath(tmpfile, l_tmpdir, buff);
 	}
 	strcpy(mrgfile, tmpfile);
@@ -2320,6 +2320,9 @@ static int ssbytenormal(void)
 /*
 **	History:
 **	$Log: sortseqf.c,v $
+**	Revision 1.33  2003/08/05 18:42:27  gsl
+**	fix warnings
+**	
 **	Revision 1.32  2003/05/19 19:08:27  gsl
 **	-Wall
 **	

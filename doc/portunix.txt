@@ -71,7 +71,9 @@
 		directory.
 
 		    $ cd wisp
-                    $ cvs co -d src wisp/src
+                    $ cvs co -P -d src wisp/src
+		or
+		    $ cvs co -P -r V5_0_xx_branch -d src.50xx wisp/src
 		or
 		    $ uncompress -c wispXXXX.src.tar.Z | tar -xvf -
 		or

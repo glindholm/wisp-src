@@ -77,6 +77,7 @@ SAMPLE_COBOL_WCBS= \
 	WC0003.wcb \
 	WC0003B.wcb \
 	WC0004.wcb \
+	WC0005.wcb \
 	WL0000.wcb \
 	WL0010.wcb \
 	WL0011.wcb \

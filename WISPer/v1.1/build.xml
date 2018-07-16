@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<project name="WISPer" default="BuildAll" basedir=".">
+	<description>
+		Build file for the WISPer Utility
+	</description>
+	
+	<!-- Properties -->
+	<property name="bin" location="bin"/>
+	<property name="src" location="src"/>
+	<property name="jarfile" location="WISPer.jar" />
+	
+	<target name="BuildAll" depends="-Init, -Prep, Compile, Jar" >
+		<echo message="Build complete" />
+	</target>
+	
+	<target name="-Init">
+	<!-- Set timestamp and print time -->
+		<tstamp/>
+		<echo message="Build time: ${TODAY} ${TSTAMP}" />
+	</target>
+	
+	<target name="-Prep">
+		<delete dir="${bin}" />
+		<mkdir dir="${bin}" />
+	</target>
+	
+	<target name="Compile" depends="-Init">
+		<javac srcdir="${src}" destdir="${bin}" />
+		<copy todir="${bin}" >
+			<fileset dir="${src}">
+				<include name="**/*.gif" />
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="Jar" depends="Compile">
+		<description>"Build Jar file"</description>
+		<echo message="Building jar file" />
+		<jar destfile="${jarfile}" basedir="${bin}" />
+	</target>
+</project>
