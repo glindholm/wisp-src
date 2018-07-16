@@ -76,7 +76,7 @@
 ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP and CRID directory here.
-WISPDIR=C:\WISP4405
+WISPDIR=C:\WISP4406
 CRIDDIR=C:\CRIDACU3004
 
 #  Set the runtime name here. (Do not include a file extension.)

@@ -11,7 +11,7 @@ intstead of clearing al internally.
 This was done so that get file info could clear a single key that was
 found to have no length.
 
-Cloned from ccsio.c for routine names.
+Cloned from KCSI_ccsio.c for routine names.
 
 ------*/
 #include <stdio.h>
@@ -63,6 +63,8 @@ static void ccsio_init(void);
 static void cinit_for_open(KFB *kfb);
 static void decide(KFB *kfb);
 static void logit(KFB *kfb);
+static void clear_one_key(struct keydesc *k);
+
 
 /*------
 		C Level IO Logic
@@ -97,18 +99,17 @@ Entry conditions.
 #define	OUTPUT_GP	2
 
 /*----
-gpcsio() is a higher level version of ccsio(). It is passed a
+KCSI_gpcsio() is a higher level version of KCSI_ccsio(). It is passed a
 kfb, a record, and a system or wang flag of 0, or 1. If the IO
 request is an open, then a the result of the open is tested and
 a GETPARM issued to resolve difficulties. THe flag indicates
 whether to use _sys_name, or wang _name, _lib and _vol attributes
-for the processing. gpwcsio() and gpscsio() are entries that force
+for the processing. KCSI_gpwcsio() and KCSI_gpscsio() are entries that force
 the file naming type in question
 ------*/
 
-#ifndef KCSI_VAX
 
-void gpcsio(kfb,recarea,wangflag)
+void KCSI_gpcsio(kfb,recarea,wangflag)
 char *recarea;
 KFB *kfb;
 int wangflag;
@@ -120,19 +121,19 @@ int wangflag;
 	if(io_is_open(kfb))
 		gpcsio_open(kfb,recarea,wangflag);
 	else
-		ccsio(kfb,recarea);
+		KCSI_ccsio(kfb,recarea);
 }
 
-void gpwcsio(KFB *kfb,char *recarea)
+void KCSI_gpwcsio(KFB *kfb,char *recarea)
 {
-	gpcsio(kfb,recarea,1);
+	KCSI_gpcsio(kfb,recarea,1);
 }
 
-void gpscsio(kfb,recarea)
+void KCSI_gpscsio(kfb,recarea)
 char *recarea;
 KFB *kfb;
 {
-	gpcsio(kfb,recarea,0);
+	KCSI_gpcsio(kfb,recarea,0);
 }
 
 
@@ -148,7 +149,7 @@ static void gpcsio_open(KFB *kfb,char *recarea,int wangflag)
 
 	mode = 0;
 	if(kfb->_org[0] == 'I')
-		mode += WISP_INDEXED;
+		mode += IS_INDEXED;
 	if(wangflag)
 		kcsio_wfopen(mode,kfb);
 /*
@@ -160,15 +161,14 @@ static void gpcsio_open(KFB *kfb,char *recarea,int wangflag)
  */
 	while(1)
 		{
-		strunc(kfb->_sys_name);
-		ccsio(kfb,recarea);
-		unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
+		KCSI_strunc(kfb->_sys_name);
+		KCSI_ccsio(kfb,recarea);
+		KCSI_unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
 		if(kfb->_status == 0)
 			break;
 		if(gpcsio_error(kfb,wangflag,OPEN_GP) == 16)
 			{
-			vwang_shut();
-			exit(0);
+			kcsi_exit(0);
 			}
 		}
 		
@@ -179,9 +179,9 @@ static void gpcsio_output(KFB *kfb,char *recarea,int wangflag)
 	int4 mode;
 	int rc;
 
-	mode = WISP_OUTPUT;
+	mode = IS_OUTPUT;
 	if(kfb->_org[0] == 'I')
-		mode += WISP_INDEXED;
+		mode += IS_INDEXED;
 	if(wangflag)
 		kcsio_wfopen(mode,kfb);
 /*
@@ -192,19 +192,18 @@ static void gpcsio_output(KFB *kfb,char *recarea,int wangflag)
  */
 	while(1)
 		{
-		strunc(kfb->_sys_name);
+		KCSI_strunc(kfb->_sys_name);
 		rc = gpcsio_unlink(kfb->_sys_name,"");
 		if(!rc)
 			rc = gpcsio_unlink(kfb->_sys_name,".dat");
 		if(!rc)
 			rc = gpcsio_unlink(kfb->_sys_name,".idx");
-		unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
+		KCSI_unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
 		if(rc == 0)
 			break;
 		if(gpcsio_error(kfb,wangflag,SCRATCH_GP) == 16)
 			{
-			vwang_shut();
-			exit(0);
+			kcsi_exit(0);
 			}
 		}
 		
@@ -217,15 +216,14 @@ static void gpcsio_output(KFB *kfb,char *recarea,int wangflag)
  */
 	while(1)
 		{
-		strunc(kfb->_sys_name);
-		ccsio(kfb,recarea);
-		unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
+		KCSI_strunc(kfb->_sys_name);
+		KCSI_ccsio(kfb,recarea);
+		KCSI_unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
 		if(kfb->_status == 0)
 			break;
 		if(gpcsio_error(kfb,wangflag,OUTPUT_GP) == 16)
 			{
-			vwang_shut();
-			exit(0);
+			kcsi_exit(0);
 			}
 		}
 		
@@ -252,15 +250,15 @@ static int gpcsio_error(KFB *kfb,int wangflag,int type)
 	int4 pf;
 	char prname[9];
 
-	init_gpint();
-	wpload();
-	gppfkeys = 0;
+	GP_init_gpint();
+	WL_wpload();
+	GP_pfkeys = 0;
 
 /* pfkeys for scratch getparm and an open getparm */
 	if(type == SCRATCH_GP)
-		gppfkeys=GP_PF_03|GP_PF_16;
+		GP_pfkeys=GP_PF_03|GP_PF_16;
 	else	/*OPEN or OUTPUT */
-		gppfkeys=GP_PF_16;
+		GP_pfkeys=GP_PF_16;
 
 /*prname use one of it exists, else make one up based on open type */
 	if(kfb->_prname[0] > ' ')
@@ -271,7 +269,7 @@ static int gpcsio_error(KFB *kfb,int wangflag,int type)
 	else
 		strcpy(prname,"OUTFILE ");
 	
-	wswap(&gppfkeys);
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD(prname,"CCSIO ");
 	if(type == SCRATCH_GP)
@@ -299,21 +297,20 @@ static int gpcsio_error(KFB *kfb,int wangflag,int type)
 		{
 		GPCTEXT("PFKey (16) to Exit",18,2);
 		}
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	rc = pf;
 	return(rc);
 }
 
-#endif /* not KCSI_VAX */
 
-void ccsio(KFB *kfb,char *recarea)
+void KCSI_ccsio(KFB *kfb,char *recarea)
 {
 	kfb->_record = recarea;
 
 	kfb->_status = 0;
 
-	strunc(kfb->_sys_name);
+	KCSI_strunc(kfb->_sys_name);
 	ccsio_init();
 	if(io_is_open(kfb))
 		cinit_for_open(kfb);
@@ -323,17 +320,19 @@ void ccsio(KFB *kfb,char *recarea)
  * area.
  */
 	strcpy(kfb->_last_io,kfb->_io);
-	unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
+	KCSI_unstrunc(kfb->_sys_name,sizeof(kfb->_sys_name) - 1);
 }
 
-static int initted;
 static void ccsio_init(void)
 {
+	static int initted = 0;
+
 	if(initted)
+	{
 		return;
-#ifdef	KCSI_ACU
-	i_init();
-#endif
+	}
+
+	ksam_init();
 	initted = 1;
 	
 }
@@ -345,41 +344,7 @@ static void cinit_for_open(KFB *kfb)
 	kfb->_io_vector = NULL;
 }
 
-#ifdef OLD
-/*----
-Extract the root file data and move in the space.
-------*/
-static void get_file_space(KFB *kfb)
-{
-	kcsitrace(1, "get_file_space()", "enter", "[%c] %s", kfb->_org[0], kfb->_sys_name);
 
-	switch(kfb->_org[0])
-		{
-		case 'I':
-			ksam_file_space(kfb);
-			break;
-		case 'C':
-			seq_file_space(kfb);
-			break;
-		case 'B':
-			brel_file_space(kfb);
-			break;
-		case 'R':
-		default:
-#ifdef KCSI_ACU
-			brel_file_space(kfb);
-#else
-			rel_file_space(kfb);
-#endif
-			break;
-		}
-}
-#endif /* OLD */
-
-void wargs(int4 count)
-{
-	wvaset(&count);
-}
 /*----
             <<<<<<<<<  OPEN AND CLOSE ROUTINES   >>>>>>>>>>>
 ------*/
@@ -1011,7 +976,7 @@ static void delete_record(KFB *kfb)
 /*----
 Clear a key structure in preparation for an open.
 ------*/
-void clear_keys(KFB *kfb)
+void KCSI_clear_keys(KFB *kfb)
 {
 	int i;
 	for(i = 0 ; i < WANG_MAX_KEYS ; ++i)
@@ -1022,7 +987,7 @@ void clear_keys(KFB *kfb)
 /*----
 Clear one key structure.
 ------*/
-void clear_one_key(struct keydesc *k)
+static void clear_one_key(struct keydesc *k)
 {
     int j;
 
@@ -1042,7 +1007,7 @@ This routine is a simple init that forces a key to have
 the COBOL base 1 offsets and must have 1 subtracted to use
 'C' base 0 offsets.
 ------*/
-void init_a_key(struct keydesc *k,int pos,int len,int dups)
+void KCSI_init_a_key(struct keydesc *k,int pos,int len,int dups)
 {
 	if((pos == 0) ||(len == 0))
 		return;
@@ -1131,7 +1096,7 @@ typedef struct _dispatch{
 	void (*func)(KFB *);
 	}DISPATCH;
 
-DISPATCH dis[]={
+static DISPATCH dis[]={
 	{OPEN_SHARED, open_shared},
 	{OPEN_INPUT, open_input},
 	{OPEN_OUTPUT, open_output},
@@ -1182,22 +1147,22 @@ static void logit(KFB *kfb)
 	if(kfb->_status == 0)
 		return;
 
-	kfberr(kfb);
+	KCSI_kfberr(kfb);
 }
 
 void kcsio_wfopen(int4 mode,KFB *kfb)
 {
-	wfopen(&mode,
+	wfopen2(&mode,
 			kfb->_volume,kfb->_library,kfb->_name,kfb->_sys_name,
-			kfb->_prname);
-	strunc(kfb->_sys_name);
+			"KCSI    ", kfb->_prname);
+	KCSI_strunc(kfb->_sys_name);
 }
 
 /* Routine added here on 03/14/95 by ZR as per MJB.  Copied from relio.c,
    and commented out in that file . Also commented out of vxrelio.c (VMS)
 */
 
-int e_trans(int code)
+int KCSI_e_trans(int code)
 {
 	if(code == 0)
 		return(0);
@@ -1206,6 +1171,47 @@ int e_trans(int code)
 /*
 **	History:
 **	$Log: vcsio.c,v $
+**	Revision 1.14.2.1  2002/11/12 15:56:39  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.26  2002/10/24 14:20:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.25  2002/10/23 20:39:05  gsl
+**	make global name unique
+**	
+**	Revision 1.24  2002/10/21 16:07:04  gsl
+**	Add ksam_init
+**	
+**	Revision 1.23  2002/10/17 21:22:44  gsl
+**	cleanup
+**	
+**	Revision 1.22  2002/10/17 17:17:23  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.21  2002/07/29 14:47:21  gsl
+**	wfopen2 ->WFOPEN2
+**	wfopen3 ->WFOPEN3
+**	
+**	Revision 1.20  2002/07/25 15:48:42  gsl
+**	Globals
+**	
+**	Revision 1.19  2002/07/25 15:20:23  gsl
+**	Globals
+**	
+**	Revision 1.18  2002/07/23 20:49:51  gsl
+**	globals
+**	
+**	Revision 1.17  2002/07/12 17:17:02  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.16  2002/07/10 21:06:26  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/06/21 20:48:14  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.14  2002/04/23 20:49:56  gsl
 **	add trace
 **	

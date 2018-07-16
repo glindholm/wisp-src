@@ -18,15 +18,6 @@ COBOL version.
 
 static char sccsid[]="@(#)kcsio.c	1.15 11/15/93";
 
-/*
-Temporary patch.
-*/
-/*
-#define IS_OUTPUT 0x00000001
-#define IS_IO     0x00000010
-#define IS_PRNAME 0x00000800
-#define IS_INDEXED 0x00000100
-*/
 
 /*
 #define	DEBUG
@@ -59,7 +50,7 @@ static long atollen(char *s,int len);
 This should handle an alignment problem by copying the struct
 from the sys-io-block into an aligned structure.
 ------*/
-KCSIO_BLOCK akfb;
+static KCSIO_BLOCK akfb;
 
 /*----
 0. The extract info routine is passed the kio character array so
@@ -94,11 +85,6 @@ static int atointlen(char *s,int len);
 static void itoalen(char *dest,int value,int len);
 static void ltoalen(char *dest,long value,int len);
 
-/*
-main()
-{
-}
-*/
 
 /*----
 Returns file info type.
@@ -176,7 +162,7 @@ void KCSIO(char *kio,char *ufb,char *recarea)
 			break;
 		}
 
-	ccsio(kfb,recarea);
+	KCSI_ccsio(kfb,recarea);
 
 	if(	(IOis(FILE_INFO))	||
 		(IOis(TABLE_INFO))	)
@@ -251,18 +237,18 @@ static void init_for_open(char *kio,KCSIO_BLOCK *kfb)
  * Mode flags used by wfopen
  */
 
-	mode = WISP_PRNAME;
+	mode = 0;
 	if(IOis(OPEN_OUTPUT))
 		{
-		mode += WISP_OUTPUT;
+		mode += IS_OUTPUT;
 		}
 	else
 	/*if(IOis(OPEN_IO)) */
 		{
-		mode += WISP_IO;
+		mode += IS_IO;
 		}
 	if(kfb->_org[0] == 'I')
-		mode += WISP_INDEXED;
+		mode += IS_INDEXED;
 
 /*
  	 Determine if is a Database file
@@ -315,7 +301,7 @@ Only init the alternates if a primary exists.
 ------*/
 static void init_keys(char *kio,KCSIO_BLOCK *kfb)
 {
-	clear_keys(kfb);
+	KCSI_clear_keys(kfb);
 	init_primary(kio,kfb);
 	if(file_is_indexed(kfb))
 		init_altkeys(kio,kfb);
@@ -326,7 +312,7 @@ Initialize the first key structure from the passed data.
 ------*/
 static void init_primary(char *kio,KCSIO_BLOCK *kfb)
 {
-	init_a_key(&kfb->_key[0],
+	KCSI_init_a_key(&kfb->_key[0],
 		atointlen(&kio[KEY_POS_POS],KEY_POS_LEN),
 		atointlen(&kio[KEY_LEN_POS],KEY_LEN_LEN),
 		ISNODUPS
@@ -346,7 +332,7 @@ static void init_altkeys(char *kio,KCSIO_BLOCK *kfb)
 
 	for(i=1 ; i <= kfb->_altkey_count ; ++i)
 		{
-	init_a_key(&kfb->_key[i],
+	KCSI_init_a_key(&kfb->_key[i],
 			atointlen(&kio[ALTKEY_POS_OFF],ALTKEY_POS_LEN),
 			atointlen(&kio[ALTKEY_LEN_OFF],ALTKEY_LEN_LEN),
 			(kio[ALTKEY_DUP_OFF]) == '1'?ISDUPS:ISNODUPS
@@ -577,6 +563,28 @@ static void ltoalen(char *dest,long value,int len)
 /*
 **	History:
 **	$Log: kcsio.c,v $
+**	Revision 1.13.2.1  2002/11/12 15:56:27  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.19  2002/10/24 14:20:38  gsl
+**	Make globals unique
+**	
+**	Revision 1.18  2002/10/23 20:39:08  gsl
+**	make global name unique
+**	
+**	Revision 1.17  2002/10/17 16:35:17  gsl
+**	comments
+**	
+**	Revision 1.16  2002/07/25 15:20:27  gsl
+**	Globals
+**	
+**	Revision 1.15  2002/07/25 14:06:28  gsl
+**	x4dbfile -> X4DBFILE
+**	
+**	Revision 1.14  2002/06/21 20:48:15  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.13  1998/08/03 19:48:27  gsl
 **	The logic which tests is the data file has duplicate alternate keys
 **	was broken in CRID 2.93.  It was incorrectly reporting that all alternate

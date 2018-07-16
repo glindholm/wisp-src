@@ -35,7 +35,7 @@ if found is passed to IDSI display.
 void KDISP(char* fspec,char* type, char* rc)
 {
 	int4 mode;
-	char *eoname,*wfname();
+	char *eoname;
 
 	Set_return(DISP_OK);
 
@@ -46,7 +46,7 @@ void KDISP(char* fspec,char* type, char* rc)
 		return;
 		}
 /* Build the name */
-	mode = WISP_PRINTFILE;
+	mode = IS_PRINTFILE;
 	eoname = wfname(&mode,
 		&fspec[FILE_VOL],
 		&fspec[FILE_LIB],
@@ -76,11 +76,24 @@ static void do_display(char *name,char *rc)
 		}
 	    }
 /* Otherwise we found it one way or the other so display it */
-	link_display(name);
+	WL_link_display(name);
 }
 /*
 **	History:
 **	$Log: kdisp.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:28  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/07/12 19:10:24  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.7  2002/07/10 21:06:25  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.6  2002/06/21 20:48:15  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.5  1997/10/23 17:56:25  gsl
 **	CHanged to use link_display*(
 **	

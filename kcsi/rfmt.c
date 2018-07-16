@@ -58,6 +58,7 @@ static char *format_numeric(RPT_RFL *rfl,char *d,int editing);
 static char *zero_supp(char* dest, int ch,int count,int editing);
 
 
+static int myisblank(char *str);
 
 
 /*----
@@ -69,7 +70,7 @@ main()
 {
 	int i,ch;
 	RPT_RFL x;
-	DTYPE new;
+	DTYPE l_new;
 
 	char input[132];
 	char format[132];
@@ -83,8 +84,8 @@ main()
 
 
 	memset(format,0,132);
-	memset(&new,0,sizeof(DTYPE));
-	x._new = &new;
+	memset(&l_new,0,sizeof(DTYPE));
+	x._new = &l_new;
 	x._new->_base = input;	
 	x._new->_pos = 0;
 
@@ -214,7 +215,7 @@ main()
 	if(x._dollar_sign == 2)
 		++sptr;
 	printf("Dollar          = %s\n",sptr);
-	format_a_field(&x,format,0);
+	rpt_format_a_field(&x,format,0);
 	printf("<%s>\n",format);
 	
 		
@@ -228,13 +229,13 @@ char *record;
 	cvt_record(d,s,record);
 
 		
-	if(fieldeq(record,RFL_SIGN_CONTROL,"CR"))
+	if(KCSI_fieldeq(record,RFL_SIGN_CONTROL,"CR"))
 		wrk_rfl._sign_control = 1;
 	else
-	if(fieldeq(record,RFL_SIGN_CONTROL,"DB"))
+	if(KCSI_fieldeq(record,RFL_SIGN_CONTROL,"DB"))
 		wrk_rfl._sign_control = 2;
 
-	if(fieldeq(record,RFL_DEC_CARRY," "))
+	if(KCSI_fieldeq(record,RFL_DEC_CARRY," "))
 		wrk_rfl._dec_carry = -1;
 
 	if(wrk_rfl._e._origin == 3)
@@ -259,14 +260,14 @@ void KFORMAT(char* dec,char* rcvr,char* rflrec)
 	wrk_rfl._new = &temp;
 	wrk_rfl._old = &old;
 	cvt_one_rfl(rpt_rfl_dest,rpt_rfl_src,rflrec);
-	wrk_rfl._new->_dec = atoilen(dec,1);
+	wrk_rfl._new->_dec = kcsi_atoilen(dec,1);
 	wrk_rfl._new->_base = data_field;
 	wrk_rfl._new->_pos = 0;
 	wrk_rfl._new->_len = 16;
 	wrk_rfl._new->_type = BZON;
-	format_a_field(&wrk_rfl,work_field,1);
+	rpt_format_a_field(&wrk_rfl,work_field,1);
 	while(strlen(work_field) < 35)
-		inschar(work_field,' ');
+		KCSI_inschar(work_field,' ');
 	memcpy(rcvr,work_field,35);
 	
 }
@@ -291,10 +292,7 @@ The parts of an RFL needed for formatting are
 /*----
 Format a field as alpha or numeric, and then do the inserts.
 ------*/
-char *format_a_field(rfl,d,code)
-RPT_RFL *rfl;
-char *d;
-int code;
+char *rpt_format_a_field(RPT_RFL *rfl, char *d, int code)
 {
 	if(ITS_NUMERIC(rfl))
 		format_numeric(rfl,d,code);
@@ -312,7 +310,7 @@ RPT_RFL *rfl;
 
 static void (*lmg_edit_case)() = lmg_dummy_edit_case;
 
-void set_lmg_edit_case(void (*func)())
+void KCSI_set_lmg_edit_case(void (*func)())
 {
 	if(func)
 		lmg_edit_case = func;
@@ -326,7 +324,7 @@ static void  lmg_dummy_edit_spaces(char *start,RPT_RFL *rfl)
 
 static void (*lmg_edit_spaces)(char *,RPT_RFL *) = lmg_dummy_edit_spaces;
 
-void set_lmg_edit_spaces(void (*func)(char *,RPT_RFL *))
+void KCSI_set_lmg_edit_spaces(void (*func)(char *,RPT_RFL *))
 {
 	if(func)
 		lmg_edit_spaces = func;
@@ -385,7 +383,7 @@ static char *format_alpha(RPT_RFL *rfl,char *d)
  */
 	while((int)strlen(start) < ext_size)
 		{
-		inschar(end++,' ');
+		KCSI_inschar(end++,' ');
 		}
 
 /* Do the inserts */
@@ -412,7 +410,7 @@ static char *format_alpha(RPT_RFL *rfl,char *d)
 
 static char *format_numeric(RPT_RFL *rfl,char *d,int editing)
 {
-	double fl, get_real_value();
+	double fl;
 	char *start,*end,*dollar,*decpos;
 	char print_value[133];
 	char work_v[133];
@@ -529,14 +527,14 @@ static char *format_numeric(RPT_RFL *rfl,char *d,int editing)
  */
 	end -= ddec;
 	if(ddec)
-		inschar(end,'.');
+		KCSI_inschar(end,'.');
 /*
  * Pad the left with zeroes until the correct string size is
  * reached.
  */
 	while((int)strlen(start) < ext_size)
 		{
-		inschar(start,'0');
+		KCSI_inschar(start,'0');
 		++end;
 		}
 /*
@@ -790,7 +788,7 @@ Insert commas every third character moving backwards.
 static void do_commas(char *d,char *e)
 {
 	for(e -= 3;e > d; e -= 3)
-		inschar(e,',');
+		KCSI_inschar(e,',');
 }
 /*----
 If the position for the insert is a zero suppressed character, (not 'Z')
@@ -804,7 +802,7 @@ int c,count,zerochar;
 		return;
 
 	d += count;
-	inschar(d,(zerochar == 'Z')?c:(*d == zerochar)?zerochar:c);
+	KCSI_inschar(d,(zerochar == 'Z')?c:(*d == zerochar)?zerochar:c);
 }
 
 static void do_inserts(RPT_RFL *rfl,char *d,int zerochar)
@@ -844,7 +842,7 @@ static void do_inserts(RPT_RFL *rfl,char *d,int zerochar)
 /*----
 Insert a character and ripple down to the end
 ------*/
-void inschar(char* d, int c)
+void KCSI_inschar(char* d, int c)
 {
 	int x;
 
@@ -879,7 +877,7 @@ static void delchar(char* d)
 /*----
 Fill out to 132 characters.
 ------*/
-void strfil(char* s)
+void KCSI_strfil(char* s)
 {
 	int len;
 
@@ -893,7 +891,7 @@ void strfil(char* s)
 Copy src to dest for size. If size is not exhausted then add blanks
 Return ptr to point after.
 ------*/
-char *cpsize(d,s,len)
+char *KCSI_cpsize(d,s,len)
 char *d,*s;
 int len;
 {
@@ -907,29 +905,11 @@ int len;
 	return(d);
 }
 
-#ifdef OLD
-static char *cpxsize(d,s,mx,mn)
-char *d,*s;
-int mx,mn;
-{
-	while(mx)
-		{
-		if((mn==0) ||(*s == 0))
-			*d++ = ' ';
-		else
-			*d++ = *s++;
-		--mx;
-		--mn;
-		}
-	return(d);
-}
-#endif /* OLD */
 
 /*----
 Return true if the entire field is spaces
 ------*/
-myisblank(str)
-char *str;
+static int myisblank(char *str)
 {
 	while(*str)
 		{
@@ -942,6 +922,21 @@ char *str;
 /*
 **	History:
 **	$Log: rfmt.c,v $
+**	Revision 1.6.2.1  2002/11/12 15:56:33  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.10  2002/10/24 14:20:35  gsl
+**	Make globals unique
+**	
+**	Revision 1.9  2002/10/17 21:22:43  gsl
+**	cleanup
+**	
+**	Revision 1.8  2002/10/17 17:56:19  gsl
+**	Rename variables new to l_new
+**	
+**	Revision 1.7  2002/07/25 15:20:25  gsl
+**	Globals
+**	
 **	Revision 1.6  2002/04/22 15:40:21  gsl
 **	Change crid_error_trace to kcsitrace
 **	

@@ -1,0 +1,110 @@
+Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
+All Rights Reserved.
+
+====================================================================
+
+Title:          KCSI for Acucobol on Windows (WIN32) Setup
+
+Document:       kcsintsetup.txt
+Last Updated:   $Date:$
+Products:       KCSI/WIN32 for Acucobol
+Versions:       4.0.00 
+
+Summary:        Quick setup steps for KCSI on Windows.
+
+====================================================================
+
+
+KCSI for Acucobol on Windows Setup
+==================================
+
+This document describes the steps for installing and setting up
+the CONTROL, REPORT, INQUIRY, DATENTRY and CREATE programs for 
+Acucobol on Windows (WIN32).
+
+
+Overview
+--------
+
+1) Ensure WISP is installed first.
+2) Install KCSI for Acucobol.
+3) Build the Acucobol Runtime System.
+4) Setup the WRUN.CFG configuration file.
+5) Ensure ACUCONFIG is setup.
+
+
+The Steps
+---------
+
+1) Ensure WISP 4.4.06 is installed first.
+
+    WISP 4.4.06 must be installed first before you can install KCSI.
+    Ensure you have WISP installed and configured before
+    continuing.
+
+2) Install KCSI for Acucobol.
+
+    a) Insert Disk 1 into floppy drive A:
+    b) Run A:SETUP
+
+    The following instructions assume you have installed KCSI in
+    directory C:\kcsiacuXXXX where XXXX is the version number.  
+    If you have installed KCSI into a different location the adjust 
+    the instructions accordingly.
+
+3) Build the Acucobol Runtime System.
+
+    a) Ensure ACUCOBOL-GT V5.2 (or later) is installed and the
+       Acucobol BIN directory is on the PATH.
+
+          PATH %PATH%;C:\Acucorp\Acucbl520\acugt\bin
+
+    b) Ensure Microsoft Visual C++ 6 (or later) is installed.
+
+    c) Create an MSDOS/COMMAND prompt window
+
+    d) In the MSDOS/COMMAND prompt window run the bat file
+       Vcvars32.bat that came with MS Visual C++. This bat
+       file enables you to compile and link C programs from
+       the command prompt. 
+       (Substitute path to Vcvars32.bat with the location used by
+       Visual C++) 
+
+       MSVC++ 6.x:
+          C:> "C:\Program Files\Microsoft Visual Studio\VC98\bin\
+              Vcvars32.bat"
+
+       NOTE: If you get an out-of-space message, click on the
+             properties button on the toolbar, go to the Memory tab,
+             set the Initial Environment size to 4096, click OK, close
+             the MSDOS/Command window, reopen and try again.
+
+
+    e) Build the Acucobol runtime by following the instructions in
+       the makefile C:\kcsiacuXXXX\WRUN32WISP_KCSI_ACU52.MAK.
+
+
+4) Setup the WRUN.CFG configuration file.
+
+    Edit the WRUN.CFG configuration file in the WISPCONFIG
+    directory and change the RUNCBL= option to point to the new
+    runtime system.
+
+           RUNCBL=\\SERVER01\ACUCOBOL\ACUGT\BIN\WRUN32WISPK.EXE
+
+    Substitute the actual server and share name inplace of 
+    "\\SERVER01\ACUCOBOL" in the above example.
+
+
+5) Ensure ACUCONFIG is setup.
+
+    The Acucobol object files CONTROL, REPORT, INQUIRY, DATENTRY
+    and CREATE will be installed in the C:\kcsiacuXXXX directory.
+
+    Ensure that the KCSI directory is on Acucobols CODE-PREFIX
+    or copy the four program files to a directory that is already
+    on the CODE-PREFIX.
+
+           CODE-PREFIX . \\SERVER01\kcsiacuXXXX ...
+
+========================= END OF DOCUMENT ==========================

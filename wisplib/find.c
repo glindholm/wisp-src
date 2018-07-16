@@ -224,17 +224,13 @@ static void osd_find(char* the_file,char* the_lib,char* the_vol,
 	if (isspaces(fspec)) search_mode = LISTLIBS;
 	if (isspaces(lspec) && isspaces(fspec)) search_mode = LISTVOLS;
 
-	leftjust(WISPFILEXT,39);
-
-	memcpy(find_ext,WISPFILEXT,39);							/* grab a copy of WISPFILEXT		*/
-	*(strchr(find_ext,' ')) = NULL_CHAR;						/* Make find_ext null terminated	*/
-
-	if ( WISPFILEXT[0] != ' ' )							/* If ext then add to fspec.		*/
+	WGETFILEXT(find_ext);								/* grab a copy of file extension	*/
+	if ( find_ext[0] != ' ' )							/* If ext then add to fspec.		*/
 	{
 		strcat(fspec,".");
 		strcat(fspec,find_ext);
 	}
-	memset(WISPFILEXT,' ',sizeof(WISPFILEXT));					/* Clear the extension			*/
+	WSETFILEXT(" ");								/* Clear the extension			*/
 
 
 	build_list(vspec,lspec,fspec);							/* Generate to list.			*/
@@ -485,6 +481,9 @@ static int haswc(char* p)
 /*
 **	History:
 **	$Log: find.c,v $
+**	Revision 1.18.2.2  2002/11/14 21:12:22  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.18.2.1  2002/10/09 21:03:00  gsl
 **	Huge file support
 **	

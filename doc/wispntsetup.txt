@@ -7,7 +7,7 @@ Title:          WISP for Windows (WIN32) Quick Set-Up Steps
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/WIN32
-Versions:       4.4.05
+Versions:       4.4.06
 
 Summary:        WISP for WIN32 installation and setup steps
 

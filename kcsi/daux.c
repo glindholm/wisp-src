@@ -25,6 +25,12 @@ static void sum_one_accumulator(FIELD *fld);
 static void sum_this_field(FIELD *sum,FIELD *addend);
 static void move_accumulators();
 static void move_one_accumulator(FIELD *fld);
+static void fac_all_prompts(int code);
+static void fac_one_prompt(FIELD *fld,int code);
+static void fac_one_field(FIELD *fld,int code);
+static void fac_all_fields(int code);
+static void dte_error_on(FIELD *fld);
+
 
 /*----
 			GENERAL UTILITY
@@ -33,7 +39,7 @@ static void move_one_accumulator(FIELD *fld);
 /*----
 Extract system dates and times and build the date/time stamps.
 ------*/
-void get_date_stamps()
+void KCSI_get_date_stamps()
 {
 /* Call the cobol routine */
 	DTEDAT(dte_sys_d_ymd,dte_sys_d_mdy,dte_sys_t,dte_sys_jd);
@@ -45,20 +51,20 @@ void get_date_stamps()
 /*----
 Set up and error, error message and blinking bits
 ------*/
-void field_error(FIELD *fld,char *msg)
+void KCSI_field_error(FIELD *fld,char *msg)
 {
 	dte_screen_error = 1;
-	make_error_message(msg);
-	error_on(fld);
+	KCSI_make_error_message(msg);
+	dte_error_on(fld);
 }
 
-void make_error_message(char *msg)
+void KCSI_make_error_message(char *msg)
 {
-	init_message_field();
+	dte_init_message_field();
 	memcpy(dte_message,msg,strlen(msg));
 }
 
-void error_on(FIELD *fld)
+static void dte_error_on(FIELD *fld)
 {
 	char *fac;
 
@@ -66,7 +72,7 @@ void error_on(FIELD *fld)
 	*fac |= ERROR_BIT;
 }
 
-void space_out(char *mem,int len)
+void dte_space_out(char *mem,int len)
 {
 	memset(mem,' ',len);
 }
@@ -74,7 +80,7 @@ void space_out(char *mem,int len)
 /*----
 			MOVE TO & FROM SCREEN
 ------*/
-void move_to_record()
+void dte_move_to_record()
 {
 	int i;
 
@@ -83,11 +89,11 @@ void move_to_record()
 	for(i = 0; dtefld[i].name[0] > ' '; ++i)
 		{
 		if(dtefld[i].frow)
-			move_one_to_record(&dtefld[i]);
+			dte_move_one_to_record(&dtefld[i]);
 		}
 }
 
-void move_one_to_record(FIELD *fld)
+void dte_move_one_to_record(FIELD *fld)
 {
 	DTYPE scr_type,rec_type,i_type;
 
@@ -102,7 +108,7 @@ void move_one_to_record(FIELD *fld)
 	cvt_data(&rec_type,&scr_type);
 }
 
-void move_to_screen()
+void dte_move_to_screen()
 {
 	int i;
 
@@ -169,14 +175,8 @@ static void bld_data_types(FIELD *fld,DTYPE *etype,DTYPE *rtype,DTYPE *itype)
 		case 'B':
 /* Default for most systems overridden by subsequent ifdefs*/
 			rtype->_type = ABIN;
-#ifdef	KCSI_MF
+#ifdef KCSI_MFX
 			rtype->_type = ABMN;
-#endif
-#ifdef	KCSI_MFX
-			rtype->_type = ABMN;
-#endif
-#ifdef	KCSI_VAXCOBOL
-			rtype->_type = ABLH;
 #endif
 			if(!fld->bin)
 				{
@@ -204,7 +204,7 @@ static void zero_accumulators()
 {
 	int fidx;
 
-	for (fidx = 0; fidx < field_count; ++fidx)
+	for (fidx = 0; fidx < KD_field_count; ++fidx)
 		{
 		dtefld[fidx].is_added = 0;
 		if(dtefld[fidx].is_accum)
@@ -216,7 +216,7 @@ static void sum_accumulators()
 {
 	int fidx;
 
-	for (fidx = 0; fidx < field_count; ++fidx)
+	for (fidx = 0; fidx < KD_field_count; ++fidx)
 		{
 		if(dtefld[fidx].cumm_name[0] > ' ')
 			sum_one_accumulator(&dtefld[fidx]);
@@ -228,7 +228,7 @@ static void sum_one_accumulator(FIELD *fld)
 {
 	int fidx;
 
-	for (fidx = 0; fidx < field_count; ++fidx)
+	for (fidx = 0; fidx < KD_field_count; ++fidx)
 		{
 		if(Streq(dtefld[fidx].name,fld->cumm_name))
 			sum_this_field(&dtefld[fidx],fld);
@@ -280,7 +280,7 @@ static void move_accumulators()
 {
 	int fidx;
 
-	for (fidx = 0; fidx < field_count; ++fidx)
+	for (fidx = 0; fidx < KD_field_count; ++fidx)
 		{
 		if(dtefld[fidx].is_accum)
 			move_one_accumulator(&dtefld[fidx]);
@@ -302,24 +302,24 @@ static void move_one_accumulator(FIELD *fld)
 	cvt_data(&rec_type,&scr_type);
 }
 
-void init_dte_record()
+void dte_init_record()
 {
 	memset(dte_record,0,2040);
 }
 
-void init_message_field()
+void dte_init_message_field()
 {
-	space_out(dte_message,MESSAGE_LEN);
+	dte_space_out(dte_message,MESSAGE_LEN);
 }
 
 /*----
 Convert index to key integer.
 ------*/
-int key_from_idx(char *idx)
+int dte_key_from_idx(char *idx)
 {
 	int key,mask;
 
-	key = atoilen(idx,IDX_LEN);
+	key = kcsi_atoilen(idx,IDX_LEN);
 	if(key > 16)
 		key = -1;
 	else
@@ -337,39 +337,39 @@ int key_from_idx(char *idx)
 /*----
 			FAC ROUTINES
 ------*/
-void unprotect_all_fields()
+void dte_unprotect_all_fields()
 {
 	fac_all_fields(UNPROTECT_ALL);
 }
-void protect_all_fields()
+void dte_protect_all_fields()
 {
 	fac_all_fields(PROTECT_ALL);
 }
-void hide_all_fields()
+void dte_hide_all_fields()
 {
 	fac_all_fields(HIDE_FIELD);
 }
-void protect_nomod_fields()
+void dte_protect_nomod_fields()
 {
 	fac_all_fields(PROTECT_NOMOD);
 }
-void protect_key_fields()
+void dte_protect_key_fields()
 {
 	fac_all_fields(PROTECT_KEY);
 }
-void unprotect_idx_fields(char *idx)
+void dte_unprotect_idx_fields(char *idx)
 {
 	int key,i;
 
-	key = key_from_idx(idx);
+	key = dte_key_from_idx(idx);
 	for(i = 0; dtefld[i].name[0] > ' '; ++i )
 		{
-		if(is_this_key(&dtefld[i],key))
+		if(dte_is_this_key(&dtefld[i],key))
 			fac_one_field(&dtefld[i],UNPROTECT_ALL);
 		}
 }
 
-int is_this_key(FIELD *fld,int key)
+int dte_is_this_key(FIELD *fld,int key)
 {
 	if(key == -1)
 		{
@@ -384,7 +384,7 @@ int is_this_key(FIELD *fld,int key)
 	return(0);
 }
 
-void fac_all_fields(int code)
+static void fac_all_fields(int code)
 {
 	int i;
 
@@ -393,25 +393,25 @@ void fac_all_fields(int code)
 		fac_one_field(&dtefld[i],code);
 		}
 }
-void unprotect_rel_field()
+void dte_unprotect_rel_field()
 {
-	fac_one_field(&relative_record,UNPROTECT_ALL);
+	fac_one_field(&dte_relative_record,UNPROTECT_ALL);
 }
-void protect_rel_field()
+void dte_protect_rel_field()
 {
-	fac_one_field(&relative_record,PROTECT_ALL);
+	fac_one_field(&dte_relative_record,PROTECT_ALL);
 }
 
 /*----
 Various manipulations on the fac of of the relative record
 number field.
 ------*/
-void hide_rel_field()
+void dte_hide_rel_field()
 {
-	fac_one_field(&relative_record,HIDE_FIELD);
+	fac_one_field(&dte_relative_record,HIDE_FIELD);
 }
 
-void fac_one_field(FIELD *fld,int code)
+static void fac_one_field(FIELD *fld,int code)
 {
 	fac_t *fac;
 
@@ -442,29 +442,29 @@ void fac_one_field(FIELD *fld,int code)
 
 }
 
-void hide_all_prompts()
+void dte_hide_all_prompts()
 {
 	fac_all_prompts(HIDE_FIELD);
 }
 
-void display_all_prompts()
+void dte_display_all_prompts()
 {
 	fac_all_prompts(DIM_FIELD);
 }
 
-void display_idx_prompts(char *idx)
+void dte_display_idx_prompts(char *idx)
 {
 	int key,i;
 
-	key = key_from_idx(idx);
+	key = dte_key_from_idx(idx);
 	for(i = 0; dtefld[i].name[0] > ' '; ++i )
 		{
-		if(is_this_key(&dtefld[i],key))
+		if(dte_is_this_key(&dtefld[i],key))
 			fac_one_prompt(&dtefld[i],DIM_FIELD);
 		}
 }
 
-void fac_all_prompts(int code)
+static void fac_all_prompts(int code)
 {
 	int i;
 
@@ -477,17 +477,17 @@ void fac_all_prompts(int code)
 /*----rel 22-Mar-1990
 The fac of the prompt fo rthe record number.
 ------*/
-void hide_rel_prompt()
+void dte_hide_rel_prompt()
 {
-	fac_one_prompt(&relative_record,HIDE_FIELD);
+	fac_one_prompt(&dte_relative_record,HIDE_FIELD);
 }
 
-void display_rel_prompt()
+void dte_display_rel_prompt()
 {
-	fac_one_prompt(&relative_record,DIM_FIELD);
+	fac_one_prompt(&dte_relative_record,DIM_FIELD);
 }
 
-void fac_one_prompt(FIELD *fld,int code)
+static void fac_one_prompt(FIELD *fld,int code)
 {
 	char *fac;
 
@@ -508,6 +508,27 @@ void fac_one_prompt(FIELD *fld,int code)
 /*
 **	History:
 **	$Log: daux.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:21  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.10  2002/10/24 14:20:40  gsl
+**	Make globals unique
+**	
+**	Revision 1.9  2002/10/23 21:07:28  gsl
+**	make global name unique
+**	
+**	Revision 1.8  2002/10/23 20:39:10  gsl
+**	make global name unique
+**	
+**	Revision 1.7  2002/10/17 21:22:41  gsl
+**	cleanup
+**	
+**	Revision 1.6  2002/10/17 17:17:16  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.5  2002/07/25 15:20:29  gsl
+**	Globals
+**	
 **	Revision 1.4  1996/09/25 01:01:40  gsl
 **	Cast (fac_t *) to fix a warning
 **	

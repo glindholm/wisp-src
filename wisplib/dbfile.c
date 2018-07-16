@@ -44,9 +44,7 @@ static char rcsid[]="$Id:$";
 **	01/06/94	Written by GSL
 **
 */
-void setdbfile(mode,flag)
-int4	*mode;
-int	flag;
+void setdbfile(int4 *mode, int flag)
 {
 	if (flag)
 	{
@@ -60,9 +58,17 @@ int	flag;
 		}
 	}
 }
+void WL_setdbfile(int4 *mode, int flag)
+{
+	setdbfile(mode, flag);
+}
+
 /*
 **	History:
 **	$Log: dbfile.c,v $
+**	Revision 1.5.2.1  2002/11/14 21:12:21  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.5  1996/08/19 22:32:16  gsl
 **	drcs update
 **	

@@ -26,7 +26,7 @@ static int file_is_consecutive();
 /*----
 			ADD RECORDS
 ------*/
-int add_records()
+int dte_add_records()
 {
 	char ufb[1];
 
@@ -42,11 +42,11 @@ int add_records()
 
 static void add_records_init()
 {
-	init_add_fields();
+	KCSI_init_add_fields();
 	init_add_facs();
 	init_add_footers();
 	init_add_pfs();
-	init_message_field();
+	dte_init_message_field();
 }
 static int add_records_entry()
 {
@@ -54,11 +54,11 @@ static int add_records_entry()
 	while(dte_screen_error)
 		{
 		dte_screen_error = 0;
-		space_out(dte_crt_file_status,2);
+		dte_space_out((char*)dte_crt_file_status,2);
 		memcpy(dte_on_pfkeys,"X",1);
 		memcpy(dte_crt_record,dte_order_area,4);
 
-		wscreen(main_scr,
+		WSCREEN(dte_main_scr,
 			dte_dnr_altered,
 			dte_crt_record,
 			dte_full_screen,
@@ -67,7 +67,7 @@ static int add_records_entry()
 			dte_pfkey_code,
 			dte_crt_file_status);
 
-		init_message_field();
+		dte_init_message_field();
 
 		if(Memeq(dte_pfkey_code,"16",2))
 			return(16);
@@ -78,7 +78,7 @@ static int add_records_entry()
 			val_add_fields();
 			if(!dte_screen_error)
 				{
-				move_to_record();
+				dte_move_to_record();
 				add_the_record();
 				if(!dte_screen_error)
 					return(0);
@@ -95,16 +95,16 @@ static int add_records_entry()
 /*----
 Init the data record and move spaces to all fields.
 ------*/
-void init_add_fields()
+void KCSI_init_add_fields()
 {
 	int i;
 	FIELD *fld;
 
 
-	init_dte_record();
-	get_date_stamps();
-	clear_all_fields();
-	display_all_prompts();
+	dte_init_record();
+	KCSI_get_date_stamps();
+	KCSI_clear_all_fields();
+	dte_display_all_prompts();
 
 	for(i = 0; dtefld[i].name[0] > ' '; ++i )
 		{
@@ -126,27 +126,27 @@ void init_add_fields()
 		}
 }
 
-void clear_all_fields()
+void KCSI_clear_all_fields()
 {
 	int i;
 
-	space_out(rel_rec_num,relative_record.edit_len);    /*22-Mar-1990*/
-	if (file_is_relative()) 			    /*09-Apr-1990*/
+	dte_space_out(dte_rel_rec_num,dte_relative_record.edit_len);    /*22-Mar-1990*/
+	if (dte_file_is_relative()) 			    /*09-Apr-1990*/
 	    {
-	    space_out(relative_record.fld,relative_record.edit_len);
+	    dte_space_out(dte_relative_record.fld,dte_relative_record.edit_len);
 	    }
 
 	for(i = 0; dtefld[i].name[0] > ' '; ++i )
 		{
-		clear_one_field(&dtefld[i]);
+		KCSI_clear_one_field(&dtefld[i]);
 		}
 }
 
-void clear_one_field(FIELD *fld)
+void KCSI_clear_one_field(FIELD *fld)
 {
 	if(!fld->frow)
 		return;
-	space_out(fld->fld,fld->edit_len);
+	dte_space_out(fld->fld,fld->edit_len);
 
 }
 
@@ -156,15 +156,15 @@ and display only fields.
 ------*/
 static void init_add_facs()
 {
-	if(file_is_relative())
-		unprotect_rel_field();
-	unprotect_all_fields();
-	protect_nomod_fields();
+	if(dte_file_is_relative())
+		dte_unprotect_rel_field();
+	dte_unprotect_all_fields();
+	dte_protect_nomod_fields();
 }
 
 static void init_add_footers()
 {
-	load_footer("(ENTER) Add record (9) Exit to Modify    (16) Exit");
+	dte_load_footer("(ENTER) Add record (9) Exit to Modify    (16) Exit");
 }
 
 static void init_add_pfs()
@@ -177,9 +177,9 @@ Validate all fields before adding the record.
 ------*/
 static void val_add_fields()
 {
-	if(file_is_relative())
+	if(dte_file_is_relative())
 		val_add_rel_key();
-	val_all_fields();
+	dte_val_all_fields();
 }
 static void val_add_rel_key()
 {
@@ -189,25 +189,25 @@ static void val_add_rel_key()
 	static char rnf[]="Error - Record Already on File";
 	static char invk[]="Error - Invalid key for relative file";
 
-	memcpy(work,relative_record.fld,REL_KEY_LEN);
+	memcpy(work,dte_relative_record.fld,REL_KEY_LEN);
 	work[REL_KEY_LEN] = 0;
 	rec_num = 0;
 	sscanf(work,"%ld",&rec_num);
 	if(rec_num == 0)
 		{
-		make_error_message(invk);
+		KCSI_make_error_message(invk);
 		dte_screen_error = 1;
 		return;
 		}
-	read_rel_key_record();
+	dte_read_rel_key_record();
 	if(!(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN)))
 		{
-		make_error_message(rnf);
+		KCSI_make_error_message(rnf);
 		dte_screen_error = 1;
 		}
 	else
 		{
-		rel_rec_num_to_fld();
+		dte_rel_rec_num_to_fld();
 		}
 
 }
@@ -229,7 +229,7 @@ static void add_the_record()
 /*----22-Mar-1990
 Return true when the org is the requested type.
 ------*/
-int file_is_relative()
+int dte_file_is_relative()
 {
 	if(dte_dio_block[ORG_POS] == 'R')
 		return(1);
@@ -241,18 +241,38 @@ static int file_is_consecutive()
 		return(1);
 	return(0);
 }
-#ifdef OLD
-int file_is_indexed()
-{
-	if(dte_dio_block[ORG_POS] == 'I')
-		return(1);
-	return(0);
-}
-#endif /* OLD */
+
 
 /*
 **	History:
 **	$Log: dadd.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:21  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.12  2002/10/24 15:48:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.11  2002/10/24 14:20:41  gsl
+**	Make globals unique
+**	
+**	Revision 1.10  2002/10/23 21:07:28  gsl
+**	make global name unique
+**	
+**	Revision 1.9  2002/10/23 20:39:10  gsl
+**	make global name unique
+**	
+**	Revision 1.8  2002/10/17 21:22:41  gsl
+**	cleanup
+**	
+**	Revision 1.7  2002/08/01 16:49:54  gsl
+**	type warnings
+**	
+**	Revision 1.6  2002/07/26 18:19:19  gsl
+**	wscreen -> WSCREEN
+**	
+**	Revision 1.5  2002/07/25 15:20:29  gsl
+**	Globals
+**	
 **	Revision 1.4  1999/09/13 19:45:48  gsl
 **	Fix missing return code
 **	

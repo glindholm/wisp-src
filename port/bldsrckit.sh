@@ -104,11 +104,11 @@ WISPXXXX=$ANS
 #
 MKDIR="mkdir -p"
 
-echo $MKDIR $WISPXXXX
-test -d $WISPXXXX || $MKDIR $WISPXXXX
+echo $MKDIR ${WISPXXXX}
+test -d ${WISPXXXX} || $MKDIR ${WISPXXXX}
 
-echo cd $WISPXXXX
-cd $WISPXXXX
+echo cd ${WISPXXXX}
+cd ${WISPXXXX}
 
 echo $MKDIR src
 test -d src || $MKDIR src
@@ -147,7 +147,7 @@ WISPDIRLIST="
 	"
 
 echo Creating directories ...
-for i in $WISPDIRLIST
+for i in ${WISPDIRLIST}
 do
 	if [ -d $i ]
 	then
@@ -197,7 +197,7 @@ else
 	#
 	#	Set the state for each project
 	#
-	for the_proj in $WISP_PROJ_LIST
+	for the_proj in ${WISP_PROJ_LIST}
 	do
 		echo Setting state for project $the_proj
 		drcs state $the_state $the_proj
@@ -499,9 +499,9 @@ echo cd $SOURCEDIR
 cd $SOURCEDIR
 VERSIONS=Versions.lis
 
-echo "# Versions for $WISPXXXX on " `date` > $VERSIONS
+echo "# Versions for ${WISPXXXX} on " `date` > $VERSIONS
 
-for i in $WISP_PROJ_LIST
+for i in ${WISP_PROJ_LIST}
 do
 	echo Versions for $i
 	drcs vers $i >>$VERSIONS
@@ -514,6 +514,9 @@ exit
 #
 #	History:
 #	$Log: bldsrckit.sh,v $
+#	Revision 1.50.2.1  2002/11/07 22:53:44  gsl
+#	change to use WISPSRC variable
+#	
 #	Revision 1.50  2002/04/10 14:47:32  gsl
 #	Change wisp/acucobol to wisp/acu
 #	
@@ -534,7 +537,7 @@ exit
 #	Remove kcsi/common dir
 #
 #	Revision 1.44  2001-09-21 09:25:14-04  gsl
-#	Put $WISPXXXX and date into Versions.lis file
+#	Put ${WISPXXXX} and date into Versions.lis file
 #
 #	Revision 1.43  1999-09-15 09:31:17-04  gsl
 #	Add copy wispicon.ico to wrun.ico

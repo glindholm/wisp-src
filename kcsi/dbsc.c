@@ -44,15 +44,99 @@ mixed in with the updateables.
 #define	Is_a_key(x)		(((x)->keynum) || ((x)->altkeynum))
 #define	Is_a_group(x)		(((x)->noupdate) && ((x)->occurrences > 1))
 
-static void init_bsc_load();
 
+static void init_bsc_load();
+static int is_within(FIELD *outer,FIELD *inner);
+static void bld_fld(FIELD *fld);
+static void cpy_fld(FIELD *f1,FIELD *f2);
+static int kill_fld_hole(FIELD *fld);
+static void bsc_load(char *hdr,char *t1,char *t2);
+static void bsc_bld_scr(char *hdr,FIELD *fld);
+static void bsc_fld_set(char *hdr,char *t1,char *t2,FIELD *fld);
+static void bsc_key_set(char *hdr,FIELD *fld);
+static void bsc_accum_set(FIELD *fld);
+static int set_a_key_element(FIELD *element,FIELD *key);
+static void bsc_fld_load(char *hdr,FIELD *fld);
+static int do_update(FIELD *fld);
+static int do_group(FIELD *fld,int *gnflds);
+static void get_edit_len(FIELD *fld);
+static void cvt_fld(char *t1,char *t2);
+static int set_a_key(char *hdr,FIELD *fld);
+static int insert_fld(FIELD *dest,FIELD *src);
+static int make_fld_hole(FIELD *fld);
+
+
+static int next_row = 0;
+static int next_col = 0;
+static int datentry_spacing = 1;
+
+
+
+static DTYPE	ch_src[]={
+	{CH_SPACING},
+	{NULL,0,0,0,0}};
+
+static DTYPE	ch_dest[]={
+	{(char*)&datentry_spacing,0,0,CINT,0},
+	{NULL,0,0,0,0}};
+
+
+static DTYPE	cf_t1_src[]={
+	{T1_INT_LEN},
+	/* {T1_EXT_LEN}, */
+	{T1_START_POS},
+	{T1_OCCURRENCES},
+	{T1_ZERO_SUPPRESS},
+	{T1_SIGN},
+	{T1_DOLLAR_COMMA},
+	{T1_UPDATE},
+	{T1_DEC},
+	{T1_BIN},
+	{T1_SEQ},
+	{T1_DISPLAY},
+	{NULL,0,0,0,0}};
+
+static DTYPE	cf_t1_dest[]={
+	{(char*)&dte_wrk_field.len,0,0,CINT,0},
+	/* {(char*)&dte_wrk_field.ext_len,0,0,CINT,0}, */
+	{(char*)&dte_wrk_field.pos,0,0,CINT,0},
+	{(char*)&dte_wrk_field.occurrences,0,0,BONE,0},
+	{(char*)&dte_wrk_field.supp,0,0,CINT,0},
+	{(char*)&dte_wrk_field.sign,0,0,CINT,0},
+	{(char*)&dte_wrk_field.dollar,0,0,CINT,0},
+	{(char*)&dte_wrk_field.noupdate,0,0,CINT,0},
+	{(char*)&dte_wrk_field.dec,0,0,CINT,0},
+	{(char*)&dte_wrk_field.bin,0,0,CINT,0},
+	{(char*)&dte_wrk_field.seq,0,0,CINT,0},
+	{(char*)&dte_wrk_field.display,0,0,CINT,0},
+	{NULL,0,0,0,0}};
+
+static DTYPE	cf_t2_src[]={
+	{T2_NAME},
+	{T2_TYPE},
+	{T2_VALIDATION},
+	{T2_DEFAULT_FAC},
+	{T2_TABLE_NAME},
+	{T2_LO_RANGE},
+	{T2_HI_RANGE},
+	{T2_CUMMULATIVE_NAME},
+	{NULL,0,0,0,0}};
+
+static DTYPE	cf_t2_dest[]={
+	{dte_wrk_field.name,0,0,CSTR,0},
+	{(char*)&dte_wrk_field.type,0,0,CCHR,0},
+	{dte_wrk_field.val,0,0,CSTR,0},
+	{(char*)&dte_wrk_field.fac,0,0,CCHR,0},
+	{(char*)dte_wrk_field.table,0,0,CSTR,0},
+	{dte_wrk_field.lo,0,0,CSTR,0},
+	{dte_wrk_field.hi,0,0,CSTR,0},
+	{dte_wrk_field.cumm_name,0,0,CSTR,0},
+	{NULL,0,0,0,0}};
  
 void DBSC(char *cf_hdrs,char *cf_t1,char *cf_t2,char *io_block,char *dio_block,char *ret_code)
 {
 	int rc;
 
-/* Dummy call for the VAX linker */
-	vax_dte_globals();
 /* Clear the return Code */
 	memcpy(ret_code,"00",2);
 /* Point the io blocks in the right direction */
@@ -63,7 +147,7 @@ void DBSC(char *cf_hdrs,char *cf_t1,char *cf_t2,char *io_block,char *dio_block,c
 	dte_dio_block = dio_block;
 
 /* Load up and and set an error if any */
-	if(!(rc = dbscl(cf_hdrs,cf_t1,cf_t2)))
+	if(!(rc = KCSI_dbscl(cf_hdrs,cf_t1,cf_t2)))
 		return;
 	if(rc == 99)
 		memcpy(ret_code,"99",2);
@@ -77,7 +161,7 @@ This routine has a difference from the WANG. The Wang will bomb out
 if spacing is set to two and the screen cannot be constructed.
 This routine will try again at one to build the screen and.
 ------*/
-int dbscl(char *hdrs,char *t1,char *t2)
+int KCSI_dbscl(char *hdrs,char *t1,char *t2)
 {
 /*
 	datentry_spacing = 2;
@@ -93,7 +177,7 @@ int dbscl(char *hdrs,char *t1,char *t2)
 		init_bsc_load();
 		bsc_load(hdrs,t1,t2);
 /* No updateable fields */
-		if(field_count == 0)
+		if(KD_field_count == 0)
 			return(98);
 /* All on the screen OK */
 		if(next_row <= LAST_ROW)
@@ -112,34 +196,33 @@ static void init_bsc_load()
 {
 	int i;
 
-	for(i = 0; i < MAX_DISPLAY_FIELDS; ++i)
-		keys[i] = NULL;	
+/*	for(i = 0; i < MAX_DISPLAY_FIELDS; ++i)	keys[i] = NULL;	*/
 	for(i = 0; i < MAX_FIELDS; ++i)
 		memset(&dtefld[i],0,sizeof(FIELD));
 	memcpy(dtefld[LAST_FIELD].name,LAST_FIELD_NAME,8);
-	field_count = 0;
+	KD_field_count = 0;
 	next_row = FIRST_ROW;
 	next_col = FIRST_COL;
-	d_new_screen = d_new_key = 1;
+	dte_new_screen = dte_new_key = 1;
 }
 
-void bsc_load(char *hdr,char *t1,char *t2)
+static void bsc_load(char *hdr,char *t1,char *t2)
 {
 	int i;
 	FIELD *fld;
 
 	bsc_fld_set(hdr,t1,t2,&dtefld[0]);
 	bsc_bld_scr(hdr,&dtefld[0]);
-	for(i = 0; i < field_count; ++i)
+	for(i = 0; i < KD_field_count; ++i)
 		{
 		fld = &dtefld[i];
 		if(Is_updateable(fld))
 			return;
 		}
-	field_count = 0;
+	KD_field_count = 0;
 }
 
-void bsc_bld_scr(char *hdr,FIELD *fld)
+static void bsc_bld_scr(char *hdr,FIELD *fld)
 {
 	bsc_key_set(hdr,fld);
 	bsc_accum_set(fld);
@@ -148,33 +231,33 @@ void bsc_bld_scr(char *hdr,FIELD *fld)
 /*----
 Convert all passed fields.
 ------*/
-void bsc_fld_set(char *hdr,char *t1,char *t2,FIELD *fld)
+static void bsc_fld_set(char *hdr,char *t1,char *t2,FIELD *fld)
 {
 	while(1)
 		{
 		cvt_fld(t1,t2);
-		cpy_fld(fld,&wrk_field);
+		cpy_fld(fld,&dte_wrk_field);
 		fld->fac &= 0xff;
-		if(Memeq(wrk_field.name,"        ",8))
+		if(Memeq(dte_wrk_field.name,"        ",8))
 			break;
 		++fld;
 		t1 += T1_ENTRY_LEN;
 		t2 += T2_ENTRY_LEN;
-		++field_count;
+		++KD_field_count;
 		}
 }
 /*----
 Flag all fields that are keys. If a key is non updateable
 then find all updateable elements and tag them.
 ------*/
-void bsc_key_set(char *hdr,FIELD *fld)
+static void bsc_key_set(char *hdr,FIELD *fld)
 {
 	FIELD *savefld;
 	int i, got_one;
 
-	for(i = 0, savefld = fld; i < field_count; ++fld, ++i)
+	for(i = 0, savefld = fld; i < KD_field_count; ++fld, ++i)
 		set_a_key(hdr,fld);
-	for(i = 0, fld = savefld; i < field_count; ++fld, ++i)
+	for(i = 0, fld = savefld; i < KD_field_count; ++fld, ++i)
 		{
 		if(Is_a_key(fld) && Is_not_updateable(fld) )
 			{
@@ -188,22 +271,22 @@ void bsc_key_set(char *hdr,FIELD *fld)
 /*----
 Flag all accumulator fields.
 ------*/
-void bsc_accum_set(FIELD *fld)
+static void bsc_accum_set(FIELD *fld)
 {
 	FIELD *sfld,*savefld;
 	int fidx,sidx;
 
 	savefld = fld;
-	for(fidx = 0;fidx < field_count; ++fld, ++fidx)
+	for(fidx = 0;fidx < KD_field_count; ++fld, ++fidx)
 		{
 		if(fld->cumm_name[0] > ' ')
 			{
-			for(sidx = 0,sfld = savefld; sidx < field_count; ++sfld,++sidx)
+			for(sidx = 0,sfld = savefld; sidx < KD_field_count; ++sfld,++sidx)
 				{
 				if(Memeq(fld->cumm_name,sfld->name,8))
 					sfld->is_accum = 1;
 				}
-			strunc(fld->cumm_name);
+			KCSI_strunc(fld->cumm_name);
 			}
 		}
 }
@@ -214,11 +297,11 @@ non-updateable key and marking any if found. An element is part of
 a key if it falls completely within the start and end position of the
 key, and is updateable.
 ------*/
-int set_a_key_element(FIELD *element,FIELD *key)
+static int set_a_key_element(FIELD *element,FIELD *key)
 {
 	int i, gotkey;
 
-	for(i = 0, gotkey = 0; i < field_count; ++i, ++element)
+	for(i = 0, gotkey = 0; i < KD_field_count; ++i, ++element)
 		{
 		if((is_within(key,element)) &&
 		   (Is_updateable(element)) )
@@ -257,18 +340,18 @@ for use in datentry or discarding it.
 	are located and screen positions are built for each occurrence of
 	each child.
 ------*/
-void bsc_fld_load(char *hdr,FIELD *fld)
+static void bsc_fld_load(char *hdr,FIELD *fld)
 {
 	int key,update,group,fidx,gnflds;
 	int	change_fld_cnt;
 
 /* If it is relative file, then start with a record number field */
-	if(file_is_relative())			/*22-Mar-1990*/
-		do_update(&relative_record);	/*22-Mar-1990*/
+	if(dte_file_is_relative())			/*22-Mar-1990*/
+		do_update(&dte_relative_record);	/*22-Mar-1990*/
 
 	fidx = 0;
 
-	while(fidx < field_count)
+	while(fidx < KD_field_count)
 	{
 		change_fld_cnt = 0;
 		key = Is_a_key(fld);
@@ -309,7 +392,7 @@ void bsc_fld_load(char *hdr,FIELD *fld)
 			}
 		}
 		
-		field_count += change_fld_cnt;
+		KD_field_count += change_fld_cnt;
 		++change_fld_cnt;
 		fidx += change_fld_cnt;
 		fld += change_fld_cnt;
@@ -319,7 +402,7 @@ void bsc_fld_load(char *hdr,FIELD *fld)
 An updateable field may be either a single or an occurs. Returns the
 number of additional fields created.
 ------*/
-int do_update(FIELD *fld)
+static int do_update(FIELD *fld)
 {
 	int count;
 	FIELD *nfld;
@@ -366,7 +449,7 @@ NAME (03) XXXXXX  NUMBER (03) 99
 
 Returns the number of additional fields created.
 ------*/
-int do_group(FIELD *fld,int *gnflds)
+static int do_group(FIELD *fld,int *gnflds)
 {
 	int total_len,count,nflds;
 	FIELD *cfld,*efld,*sfld,*tfld;
@@ -443,13 +526,13 @@ int do_group(FIELD *fld,int *gnflds)
 Generate screen positioning logic for fields and prompts.
 ------*/
 
-void bld_fld(FIELD *fld)
+static void bld_fld(FIELD *fld)
 {
 /*
  * Prompt length is field name length plus 6 for an occurs DATA (01)
  * if any.
  */
-	strunc(fld->name);
+	KCSI_strunc(fld->name);
 	fld->plen = strlen(fld->name);
 	if(fld->occurrence)
 		fld->plen += 5;
@@ -479,16 +562,16 @@ The edited length of the field is based on the internal length,
 data type and editing options.
 First calculate the default external length.
 ------*/
-void get_edit_len(FIELD *fld)
+static void get_edit_len(FIELD *fld)
 {
 	char pic[101];
 
 	
 	fld->edit_len = 
-		get_pic_len(pic,fld->type,fld->len,fld->dec,fld->bin);
+		KCSI_get_pic_len(pic,fld->type,fld->len,fld->dec,fld->bin);
 }
 
-void cvt_fld(char *t1,char *t2)
+static void cvt_fld(char *t1,char *t2)
 {
 /* Peel off the fields in the record */
 	cvt_record(cf_t1_dest,cf_t1_src,t1);
@@ -497,7 +580,7 @@ void cvt_fld(char *t1,char *t2)
 /*----
 Set any field that is a key with a flag indicating which kind.
 ------*/
-int set_a_key(char *hdr,FIELD *fld)
+static int set_a_key(char *hdr,FIELD *fld)
 {
 	char *phdr;
 	int i,mask;
@@ -536,7 +619,7 @@ int set_a_key(char *hdr,FIELD *fld)
 /*----
 Insert a field in the array at the specified position.
 ------*/
-int insert_fld(FIELD *dest,FIELD *src)
+static int insert_fld(FIELD *dest,FIELD *src)
 {
 	if(make_fld_hole(dest))
 		{
@@ -546,7 +629,7 @@ int insert_fld(FIELD *dest,FIELD *src)
 	return(0);
 }
 
-void cpy_fld(FIELD *f1,FIELD *f2)
+static void cpy_fld(FIELD *f1,FIELD *f2)
 {
 	memcpy(f1,f2,sizeof(FIELD));
 }
@@ -554,7 +637,7 @@ void cpy_fld(FIELD *f1,FIELD *f2)
 /*----
 Make a hole in the field array by shuffling everything down one
 ------*/
-int make_fld_hole(FIELD *fld)
+static int make_fld_hole(FIELD *fld)
 {
 	FIELD *f,*g;
 
@@ -575,7 +658,7 @@ int make_fld_hole(FIELD *fld)
 /*----
 Delete a field in the field array by shuffling everything up one
 ------*/
-int kill_fld_hole(FIELD *fld)
+static int kill_fld_hole(FIELD *fld)
 {
 	FIELD *f,*g;
 
@@ -599,7 +682,7 @@ int kill_fld_hole(FIELD *fld)
 	return(1);
 }
 
-int is_within(FIELD *outer,FIELD *inner)
+static int is_within(FIELD *outer,FIELD *inner)
 {
 	if((inner->pos < outer->pos) ||
                   ((inner->pos + inner->len) > (outer->pos + outer->len) ) )
@@ -610,6 +693,27 @@ int is_within(FIELD *outer,FIELD *inner)
 /*
 **	History:
 **	$Log: dbsc.c,v $
+**	Revision 1.6.2.1  2002/11/12 15:56:22  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.12  2002/10/24 14:20:40  gsl
+**	Make globals unique
+**	
+**	Revision 1.11  2002/10/23 21:07:27  gsl
+**	make global name unique
+**	
+**	Revision 1.10  2002/10/23 20:39:09  gsl
+**	make global name unique
+**	
+**	Revision 1.9  2002/10/22 21:10:20  gsl
+**	Unique global sysmbols
+**	
+**	Revision 1.8  2002/10/17 17:17:16  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.7  2002/07/25 15:20:29  gsl
+**	Globals
+**	
 **	Revision 1.6  1999/09/13 19:46:23  gsl
 **	fix missing return code
 **	

@@ -29,6 +29,10 @@ static char rcsid[]="$Id:$";
 
 #include "intdef.h"
 #include "kcsit.h"
+#include "vwang.h"
+#include "werrlog.h"
+#include "wperson.h"
+#include "wexit.h"
 
 /*
 **	Structures and Defines
@@ -41,9 +45,6 @@ static char rcsid[]="$Id:$";
 /*
 **	Function Prototypes
 */
-
-void werr_write(const char* buff); 		/* Write out a buffer to the error log $HOME/wisperr.log from werrlog.c.	*/
-void werrlog(uint4 id, const char* msg);	/* Use werrlog(104,msg) for errors.						*/
 
 
 /*
@@ -128,12 +129,19 @@ int kcsi_tracelevel(void)
 
 	if (first)
 	{
-		char *ptr;
+		const char *ptr;
 		first = 0;
 		
 		if ( ptr = getenv("KCSITRACE") )			       		/* Test if an environment var exists.   */
 		{
 			sscanf(ptr,"%d", &tracing_level);
+		}
+		else
+		{
+			if (ptr = get_wisp_option("KCSITRACE"))
+			{
+				sscanf(ptr,"%d", &tracing_level);
+			}
 		}
 
 		/* Restrict tracing_level to 1-4 */
@@ -151,10 +159,33 @@ int kcsi_tracelevel(void)
 	return tracing_level;	
 }
 
+/*
+	kcsi_exit() - Common exit logic.
+*/
+void kcsi_exit(int num)
+{
+	WL_wexit(num);
+}
+
 
 /*
 **	History:
 **	$Log: kcsit.c,v $
+**	Revision 1.6.2.3  2002/11/14 15:23:33  gsl
+**	Change wexit() to WL_wexit()
+**	
+**	Revision 1.6.2.2  2002/11/13 22:50:42  gsl
+**	set trace level with get_wisp_option("KCSITRACE")
+**	
+**	Revision 1.6.2.1  2002/11/12 15:56:28  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/10/17 21:22:42  gsl
+**	cleanup
+**	
+**	Revision 1.7  2002/07/10 21:06:25  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.6  2002/05/14 21:46:45  gsl
 **	ifdef unix include
 **	remove unused status var

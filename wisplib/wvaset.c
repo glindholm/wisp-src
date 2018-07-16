@@ -25,6 +25,16 @@ int4 *x;
 	WVACOUNT = *x;
 }
 
+void WL_set_va_count(int x)
+{
+	WVACOUNT = x;
+}
+
+int WL_va_count()
+{
+	return(WVACOUNT);
+}
+
 #ifndef VMS
 #include <varargs.h>
 
@@ -38,6 +48,9 @@ va_dcl
 /*
 **	History:
 **	$Log: wvaset.c,v $
+**	Revision 1.9.2.1  2002/11/12 16:00:30  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.9  1996/08/19 22:33:26  gsl
 **	drcs update
 **	

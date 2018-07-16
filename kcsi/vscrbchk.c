@@ -84,7 +84,7 @@ static int rel_is_done(CR_FLD *fld)
 	return(0);
 }
 
-int block_is_done(CR_BLK *blk)
+int CR_block_is_done(CR_BLK *blk)
 {
 	if(blk->count > 0)
 		{
@@ -99,6 +99,12 @@ int block_is_done(CR_BLK *blk)
 /*
 **	History:
 **	$Log: vscrbchk.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:39  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.5  2002/10/23 20:39:05  gsl
+**	make global name unique
+**	
 **	Revision 1.4  1999/09/13 19:54:38  gsl
 **	fix missing return code
 **	

@@ -38,7 +38,7 @@ static WORD profile_buf[PROFILE_BUFSIZE];
 static KCSIO_BLOCK kfb1;
 static KCSIO_BLOCK kfb2;
 
-void debug_report_def(void);
+static void debug_report_def(void);
 
 /*----
 Within a nf op, lits are translated differently from
@@ -49,7 +49,7 @@ DTYPE *d,*s;
 char *record;
 {
 	cvt_record(d,s,record);
-	if(charat(record,NF_NOT_LIT_CODE) == 'X')
+	if(KCSI_charat(record,NF_NOT_LIT_CODE) == 'X')
 		cvt_record(rpt_nfo_name_dest,rpt_nfo_name_src,record);
 	else
 		cvt_record(rpt_nfo_lit_dest,rpt_nfo_lit_src,record);
@@ -64,7 +64,7 @@ DTYPE *d,*s;
 char *record;
 {
 	cvt_record(d,s,record);
-	if(charat(record,DL_NOT_LIT_CODE) == 'X')
+	if(KCSI_charat(record,DL_NOT_LIT_CODE) == 'X')
 		cvt_record(rpt_dlo_name_dest,rpt_dlo_name_src,record);
 	else
 		cvt_record(rpt_dlo_lit_dest,rpt_dlo_lit_src,record);
@@ -79,9 +79,9 @@ char *record;
 	for(i = 0; i< RFL_ENTRY_COUNT; ++i)
 		{
 		Clear(rpt_rfl[i]);
-		rpt_rfl[i]._old = &_old[i];
-		rpt_rfl[i]._new = &_new[i];
-		if((charat(record,RFL_NAME)) > ' ')
+		rpt_rfl[i]._old = &rpt_old[i];
+		rpt_rfl[i]._new = &rpt_new[i];
+		if((KCSI_charat(record,RFL_NAME)) > ' ')
 			{
 			memcpy(&wrk_rfl,&rpt_rfl[i],sizeof(wrk_rfl));
 			cvt_one_rfl(d,s,record);
@@ -104,34 +104,34 @@ void cvt_one_rfl(DTYPE *d,DTYPE *s,char *record)
 	if(wrk_rfl._lseq[0] > 40)
 		wrk_rfl._line = 0;
 	else
-	if(fieldeq(record,RFL_LINE,"X"))
+	if(KCSI_fieldeq(record,RFL_LINE,"X"))
 		wrk_rfl._line = 3;
 	else
-	if(fieldeq(record,RFL_LINE,"Y"))
+	if(KCSI_fieldeq(record,RFL_LINE,"Y"))
 		wrk_rfl._line = 2;
 	else
-	if(fieldeq(record,RFL_LINE,"Z"))
+	if(KCSI_fieldeq(record,RFL_LINE,"Z"))
 		wrk_rfl._line = 1;
 	else
 		wrk_rfl._line = 0;
 		
-	if(fieldeq(record,RFL_SIGN_CONTROL,"CR"))
+	if(KCSI_fieldeq(record,RFL_SIGN_CONTROL,"CR"))
 		wrk_rfl._sign_control = 1;
 	else
-	if(fieldeq(record,RFL_SIGN_CONTROL,"DB"))
+	if(KCSI_fieldeq(record,RFL_SIGN_CONTROL,"DB"))
 		wrk_rfl._sign_control = 2;
 
-	if(fieldeq(record,RFL_DEC_CARRY," "))
+	if(KCSI_fieldeq(record,RFL_DEC_CARRY," "))
 		wrk_rfl._dec_carry = -1;
 /*
  * If the count fields are blank, then the insert characters are set
  * to null
  */
-	if(fieldeq(record,RFL_INSERT_1_COUNT," "))
+	if(KCSI_fieldeq(record,RFL_INSERT_1_COUNT," "))
 		wrk_rfl._insert_char[0] = 0;
-	if(fieldeq(record,RFL_INSERT_2_COUNT," "))
+	if(KCSI_fieldeq(record,RFL_INSERT_2_COUNT," "))
 		wrk_rfl._insert_char[1] = 0;
-	if(fieldeq(record,RFL_INSERT_3_COUNT," "))
+	if(KCSI_fieldeq(record,RFL_INSERT_3_COUNT," "))
 		wrk_rfl._insert_char[2] = 0;
 
 /*
@@ -159,9 +159,9 @@ char *record;
 		if((rpt_rfl[i]._e._origin == 1) || (rpt_rfl[i]._e._origin == 2))
 			{
 			memcpy(&wrk_rfl,&rpt_rfl[i],sizeof(wrk_rfl));
-			memcpy(&wrk_dtype,&_old[i],sizeof(wrk_dtype));
+			memcpy(&wrk_dtype,&rpt_old[i],sizeof(wrk_dtype));
 			cvt_record(d,s,record);
-			memcpy(&_old[i],&wrk_dtype,sizeof(wrk_dtype));
+			memcpy(&rpt_old[i],&wrk_dtype,sizeof(wrk_dtype));
 			memcpy(&rpt_rfl[i],&wrk_rfl,sizeof(wrk_rfl));
 			}
 		record += CRF_ENTRY_LEN;
@@ -182,7 +182,7 @@ char *record;
 	for(i = 0; i < 10 ; ++i)
 		{
 		memset(nfo,0,sizeof(RPT_NFO));
-		if(charat(record,NF_OP_NAME) > ' ')
+		if(KCSI_charat(record,NF_OP_NAME) > ' ')
 			{
 			memcpy(&wrk_nfo,nfo,sizeof(wrk_nfo));
 			cvt_one_nfo(d,s,record);
@@ -203,7 +203,7 @@ char *record;
 	for (i = 0; i < 10 ; ++i)
 		{
 		Clear(rpt_nf[i]);
-		if(charat(record,NF_NAME) > ' ')
+		if(KCSI_charat(record,NF_NAME) > ' ')
 			{
 			memcpy(&wrk_nf,&rpt_nf[i],sizeof(wrk_nf));
 			cvt_record(d,s,record);
@@ -234,9 +234,9 @@ char *record;
 
 /* Special Conversions */
 	if(rpt_opt._option == -2)
-		rpt_opt._option = atoifield(record,RPT_OPTION);
+		rpt_opt._option = KCSI_atoifield(record,RPT_OPTION);
 
-	if(fieldeq(record,RPT_DEVICE,"PRINTER "))
+	if(KCSI_fieldeq(record,RPT_DEVICE,"PRINTER "))
 		rpt_opt._device = 1;
 	else
 		rpt_opt._device = 0;
@@ -271,7 +271,7 @@ char *record;
 {
 	cvt_record(d,s,record);
 	if(wrk_rcb._action_code == -2)
-		wrk_rcb._action_code = atoifield(record,RCB_ACTION_CODE);
+		wrk_rcb._action_code = KCSI_atoifield(record,RCB_ACTION_CODE);
 		
 }
 
@@ -284,7 +284,7 @@ char *record;
 	for(i = 0; i< 5; ++i)
 		{
 		Clear(rpt_rcb[i]);
-		if(charat(record,RCB_NAME) > ' ')
+		if(KCSI_charat(record,RCB_NAME) > ' ')
 			{
 			memcpy(&wrk_rcb,&rpt_rcb[i],sizeof(wrk_rcb));
 			cvt_one_rcb(d,s,record);
@@ -302,7 +302,7 @@ char *record;
 
 	for(i = 0; i< 5; ++i)
 		{
-		if(charat(record,RCD_BREAK) > ' ')
+		if(KCSI_charat(record,RCD_BREAK) > ' ')
 			{
 			memcpy(&wrk_rcb,&rpt_rcb[i],sizeof(wrk_rcb));
 			cvt_record(d,s,record);
@@ -339,7 +339,7 @@ char *record;
 	for(i = 0; i< 8; ++i)
 		{
 		Clear(rpt_srt[i]);
-		if(charat(record,SRT_NAME) > ' ')
+		if(KCSI_charat(record,SRT_NAME) > ' ')
 			{
 			memcpy(&wrk_srt,&rpt_srt[i],sizeof(wrk_srt));
 			cvt_record(d,s,record);
@@ -360,7 +360,7 @@ char *record;
 	for(i = 0; i < DLO_ENTRY_COUNT ; ++i)
 		{
 		memset(dlo,0,sizeof(RPT_DLO));
-		if(charat(record,DL_OP_NAME) > ' ')
+		if(KCSI_charat(record,DL_OP_NAME) > ' ')
 			{
 			memcpy(&wrk_dlo,dlo,sizeof(wrk_dlo));
 			cvt_one_dlo(d,s,record);
@@ -380,7 +380,7 @@ char *record;
 	for (i = 0; i < LMG_DL_ENTRY_COUNT ; ++i)
 		{
 		Clear(rpt_dl[i]);
-		if(charat(record,DL_NAME) > ' ')
+		if(KCSI_charat(record,DL_NAME) > ' ')
 			{
 			memcpy(&wrk_dl,&rpt_dl[i],sizeof(wrk_dl));
 			cvt_record(d,s,record);
@@ -446,8 +446,8 @@ char 	*cob_rpt_opt,
 	monitor((int(*)())2,&etext,profile_buf,PROFILE_BUFSIZE,PROFILE_NFUNCS);
 #endif
 
-/* Vax linker dummy routine */
-	vax_rpt_globals();
+/*  linker dummy routine */
+	rpt_globals();
 /*
  * Make the print file library and volume global.
  */
@@ -459,8 +459,8 @@ char 	*cob_rpt_opt,
  * are critical to the operation to extract the positions and lengths
  * of the items.
  */
-	memset(_old,0,(sizeof(_old[0]) * (RFL_ENTRY_COUNT + 1)));
-	memset(_new,0,(sizeof(_new[0]) * (RFL_ENTRY_COUNT + 1)));
+	memset(rpt_old,0,(sizeof(rpt_old[0]) * (RFL_ENTRY_COUNT + 1)));
+	memset(rpt_new,0,(sizeof(rpt_new[0]) * (RFL_ENTRY_COUNT + 1)));
 	cvt_rfl(rpt_rfl_dest,rpt_rfl_src,cob_rpt_rfl);
 	cvt_crf(rpt_crf_dest,rpt_crf_src,cob_rpt_crf);
 /*New Fields are converted next to get the positions*/
@@ -483,10 +483,10 @@ char 	*cob_rpt_opt,
 /* Data Limits*/
 	cvt_dl(rpt_dl_dest,rpt_dl_src,cob_rpt_dl);
 /* Index to the key to the secondary file */
-	rpt_key_to_sec_idx = atoilen(kts,2);
+	rpt_key_to_sec_idx = kcsi_atoilen(kts,2);
 	--rpt_key_to_sec_idx;
 /* Tie up the loose pointers */
-	tie_rpt();
+	rpt_tie();
 
 /*
  * The file io data which travels as part of the system io block
@@ -516,8 +516,8 @@ char 	*cob_rpt_opt,
 	rpt_def._srt = &rpt_srt[0];
 	rpt_def._dl  = &rpt_dl[0];
 	rpt_def._nf  = &rpt_nf[0];
-	rpt_def._old = &_old[0];
-	rpt_def._new = &_new[0];
+	rpt_def._old = &rpt_old[0];
+	rpt_def._new = &rpt_new[0];
 	rpt_def._kfb1 = &kfb1;
 	rpt_def._kfb2 = &kfb2;
 	rpt_caller = caller;
@@ -527,7 +527,7 @@ char 	*cob_rpt_opt,
         debug_report_def();
     }
 
-    rptbld();
+    KCSI_rptbld();
 #ifdef PROFILE
 	monitor((int(*)())0,0,0,0,0);
 #endif
@@ -783,7 +783,7 @@ void crid_debug_print_RPT_RCB(const char* name, RPT_RCB* rcb)
     crid_debug_print_RPT_RFL(subname, rcb->_rfl);
 }
 
-void debug_report_def(void)
+static void debug_report_def(void)
 {
     char name[100];
     int i;
@@ -902,6 +902,24 @@ void debug_report_def(void)
 /*
 **	History:
 **	$Log: rcal.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:31  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 14:20:35  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/23 21:07:25  gsl
+**	make global name unique
+**	
+**	Revision 1.7  2002/10/23 20:39:07  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/10/17 17:17:20  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.5  2002/07/25 15:20:26  gsl
+**	Globals
+**	
 **	Revision 1.4  2002/04/22 18:25:58  gsl
 **	formating
 **	

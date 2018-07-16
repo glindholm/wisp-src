@@ -55,6 +55,7 @@ int write_license(char	*custname,
 		char	*valcode);
 int validate_license(void);
 int check_timeout(char lowdate[8], char highdate[8]);
+int get_license_info(char* flickey, char* valcode);
 
 /* wlickey.c */
 int	mklickey(
@@ -80,6 +81,9 @@ int ckvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3]);
 /*
 **	History:
 **	$Log: wlicense.h,v $
+**	Revision 1.13.2.1  2002/11/14 18:03:52  gsl
+**	expose get_license_info() for use in wlicense
+**	
 **	Revision 1.13  1998/12/18 18:28:41  gsl
 **	fix templates
 **	

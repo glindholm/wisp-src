@@ -1,5 +1,8 @@
 static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies, Inc, All rights reserved.";
 static char rcsid[]="$Id:$";
+
+#ifdef KCSI_MFX
+
 /*---
 	kmf.c
 
@@ -31,7 +34,6 @@ static char rcsid[]="$Id:$";
 /*
 **      Globals and Externals
 */
-extern void wargs(int4 count);
 
 /*
 **      Static data
@@ -55,6 +57,17 @@ static void mf_x_status(KFB* kfb, FCD* user_fcd);
 static int2 mf_trans(FCD* user_fcd);
 static void set_local_key_info(KFB* kfb);
 static void do_start(KFB* kfb, int mode);
+
+void ksam_init()
+{
+	static int first = 1;
+
+	if (first)
+	{
+		/* No init code needed */
+		first = 0;
+	}
+}
 
 /*
 **      Routine:        call_ixfile()
@@ -243,17 +256,17 @@ ksam_open_io(KFB* kfb)
 */
 static FCD* fcd_new()
 {
-	FCD* new;
+	FCD* l_new;
 
-	new = (FCD*) MALLOCT( FCD );
-	memset(new, 0x00, sizeof(FCD));
+	l_new = (FCD*) MALLOCT( FCD );
+	memset(l_new, 0x00, sizeof(FCD));
 
 #ifdef DEBUG
-	new->magic = FCDMAGIC;
-	ASSERT( (char *) &new->magic - (char *) new == 100 );
+	l_new->magic = FCDMAGIC;
+	ASSERT( (char *) &l_new->magic - (char *) l_new == 100 );
 #endif
 
-	return( new );
+	return( l_new );
 }
 
 /*
@@ -278,7 +291,7 @@ static FCD* fcd_new()
 */
 static char* mfkblock_new()
 {
-	char* new;
+	char* l_new;
 	int2 size;
 
 /*
@@ -289,10 +302,10 @@ static char* mfkblock_new()
 		of keys.
 */
 	size = LENGIA + (LENKDA * WANG_MAX_KEYS) + (LENCDA * NPARTS * WANG_MAX_KEYS );
-	new = (char*) MALLOCA( char, size );
-	memset(new, 0x00, size);
+	l_new = (char*) MALLOCA( char, size );
+	memset(l_new, 0x00, size);
 
-	return( new );
+	return( l_new );
 }
 
 /*
@@ -1300,7 +1313,7 @@ static void local_file_info(KFB* kfb)
 	}	
 	
 	retrieve_number(user_fcd->maxreclen, &kfb->_record_len, 2);
-	clear_keys( kfb );
+	KCSI_clear_keys( kfb );
 	mgia = (MFGIA*) kfb->_mfkblock;
 	retrieve_number(mgia->nkeys, &l_nkeys, 2);
 	if ( l_nkeys <= 0 )
@@ -1615,9 +1628,9 @@ static void store_number(char* dest, void* src, int len)
 		return;
 	}
 
-	if ( !bytenormal() )
+	if ( !WL_bytenormal() )
 	{
-		reversebytes(dest, len);
+		WL_reversebytes(dest, len);
 	}
 }
 
@@ -1650,9 +1663,9 @@ static void retrieve_number(char* src, void* dest, int len)
 	if ( len == 2 || len == 4)
 	{
 		memcpy(dest, src, len);
-		if ( !bytenormal() )
+		if ( !WL_bytenormal() )
 		{
-			reversebytes(dest, len);
+			WL_reversebytes(dest, len);
 		}
 	}
 	else
@@ -1661,10 +1674,29 @@ static void retrieve_number(char* src, void* dest, int len)
 	}
 }
 
+#endif /* KCSI_MFX */
 
 /*
 **	History:
 **	$Log: kmf.c,v $
+**	Revision 1.26.2.1  2002/11/12 15:56:29  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.31  2002/10/24 14:20:37  gsl
+**	Make globals unique
+**	
+**	Revision 1.30  2002/10/21 16:07:05  gsl
+**	Add ksam_init
+**	
+**	Revision 1.29  2002/10/17 17:56:17  gsl
+**	Rename variables new to l_new
+**	
+**	Revision 1.28  2002/07/25 15:20:26  gsl
+**	Globals
+**	
+**	Revision 1.27  2002/07/10 21:06:25  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.26  2002/04/24 15:35:04  gsl
 **	Tracing
 **	

@@ -12,7 +12,7 @@
 # Standard CC flags
 #
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 
 #=================================================================

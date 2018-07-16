@@ -73,7 +73,7 @@ static void fields_init(void)
 	strcpy(outpos,"1   ");
 	strcpy(count,"1   ");
 	strcpy(increment,"1      ");
-	kfb = &wkfb;
+	kfb = &CR_wkfb;
 	org = kfb->_org[0];
 	reclen = kfb->_record_len;
 	sprintf(length,"%-4d",reclen);
@@ -102,7 +102,7 @@ static void init_key_field(void)
 	{
 		keylen = 64;
 	}
-	wfld.keylen = keylen;
+	CR_wfld.keylen = keylen;
 	keyflen = keylen;
 	memset(end_key, 'z', keyflen);
 
@@ -154,7 +154,7 @@ static int fields_entry(void)
 				continue;
 			else
 			{
-				save_cr_in_file();
+				cr_save_in_file();
 				break;
 			}
 		}
@@ -167,15 +167,15 @@ static int fields_screen(void)
 	int rc;
 	long pf;
 
-	wpload();
-	gppfkeys = GP_PF_01|GP_PF_02|GP_PF_13;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_01|GP_PF_02|GP_PF_13;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("FILE    ","CREATE");
 	GPCTEXT("Input file          in          on        is",9,2);
-	GPCTEXT(wkfb._name,9,13);
-	GPCTEXT(wkfb._library,9,25);
-	GPCTEXT(wkfb._volume,9,37);
+	GPCTEXT(CR_wkfb._name,9,13);
+	GPCTEXT(CR_wkfb._library,9,25);
+	GPCTEXT(CR_wkfb._volume,9,37);
 	switch( org )
 	{
 		case 'I':
@@ -193,7 +193,7 @@ static int fields_screen(void)
 	if( org == 'I' )
 	{
 		GPCTEXT("Key starts at      and length is     .",10,2);
-		sprintf(keypos_s,"%-4d",wkfb._key[0].k_part[0].kp_start + 1);
+		sprintf(keypos_s,"%-4d",CR_wkfb._key[0].k_part[0].kp_start + 1);
 		GPCTEXT(keypos_s,10,16);
 		sprintf(keylen_s,"%-4d",keylen);
 		GPCTEXT(keylen_s,10,35);
@@ -234,8 +234,8 @@ static int fields_screen(void)
 	GPCTEXT("(13) Help",23,40);
 	GPCTEXT(msg_fld,24,2);
 
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	rc = pf;
 	return(rc);
 }
@@ -263,19 +263,19 @@ static void val_inpos(void)
 {
 	int value;
 
-	wfld.type = CFIELD_FILE;
+	CR_wfld.type = CFIELD_FILE;
 
 	value = atoi(inpos);
 	if(must_be_positive_error(value,"INPOS"))
 		return;
 
-	if(value > wkfb._record_len)
+	if(value > CR_wkfb._record_len)
 	{
 		strcpy(msg_fld,"INPOS is outside the input record.");
 		screen_error = 1;
 		return;
 	}
-	wfld.inpos = value - 1;
+	CR_wfld.inpos = value - 1;
 }
 
 static void val_outpos(void)
@@ -292,7 +292,7 @@ static void val_outpos(void)
 		screen_error = 1;
 		return;
 	}
-	wfld.outpos = value - 1;
+	CR_wfld.outpos = value - 1;
 }
 
 static void val_length(void)
@@ -303,21 +303,21 @@ static void val_length(void)
 	if(must_be_positive_error(value,"LENGTH"))
 		return;
 
-	if( (value + wfld.inpos) > wkfb._record_len)
+	if( (value + CR_wfld.inpos) > CR_wkfb._record_len)
 	{
 		strcpy(msg_fld,"The field is not within the input record.");
 		screen_error = 1;
 		return;
 	}
 
-	if( (value + wfld.outpos) > cr_out.ofile._record_len)
+	if( (value + CR_wfld.outpos) > cr_out.ofile._record_len)
 	{
 		strcpy(msg_fld,"The field is not within the output record.");
 		screen_error = 1;
 		return;
 	}
 
-	wfld.len = value;
+	CR_wfld.len = value;
 }
 
 static void val_count(void)
@@ -328,7 +328,7 @@ static void val_count(void)
 	if(must_be_positive_error(value,"COUNT"))
 		return;
 
-	wfld.count = value;
+	CR_wfld.count = value;
 }
 
 static void val_start_key(void)
@@ -349,7 +349,7 @@ static void val_index_start_key(void)
 
 	if( !hexmode )
 	{
-		memcpy(wfld.string,start_key,65);
+		memcpy(CR_wfld.string,start_key,65);
 		return;
 	}
 
@@ -367,7 +367,7 @@ static void val_index_start_key(void)
 	{
 		value = 0;
 		sscanf(&start_key[idx],"%2x",&value);
-		wfld.string[idx/2] = value;
+		CR_wfld.string[idx/2] = value;
 	}
 }
 
@@ -377,7 +377,7 @@ static void val_rel_start_key(void)
 
 	if(!memcmp(start_key,"FIRST  ",7))
 	{
-		wfld.begval = 0;
+		CR_wfld.begval = 0;
 		return;
 	}
 
@@ -388,8 +388,8 @@ static void val_rel_start_key(void)
 		screen_error = 1;
 		return;
 	}
-	wfld.begval = value;
-	wfld.curval = 0;
+	CR_wfld.begval = value;
+	CR_wfld.curval = 0;
 }
 
 static void val_end_key(void)
@@ -410,7 +410,7 @@ static void val_index_end_key(void)
 
 	if( !hexmode )
 	{
-		memcpy(wfld.endrange,end_key,65);
+		memcpy(CR_wfld.endrange,end_key,65);
 		return;
 	}
 
@@ -428,7 +428,7 @@ static void val_index_end_key(void)
 	{
 		value = 0;
 		sscanf(&end_key[idx],"%2x",&value);
-		wfld.endrange[idx/2] = value;
+		CR_wfld.endrange[idx/2] = value;
 	}
 }
 
@@ -438,7 +438,7 @@ static void val_rel_end_key(void)
 
 	if(!memcmp(end_key,"LAST   ",7))
 	{
-		wfld.endval = 0;
+		CR_wfld.endval = 0;
 		return;
 	}
 	value = atol(end_key);
@@ -448,7 +448,7 @@ static void val_rel_end_key(void)
 		screen_error = 1;
 		return;
 	}
-	wfld.endval = value;
+	CR_wfld.endval = value;
 }
 
 static void val_increment(void)
@@ -468,7 +468,7 @@ static void val_increment(void)
 		screen_error = 1;	
 		return;
 	}
-	wfld.increment = value;
+	CR_wfld.increment = value;
 }
 
 static void val_cinpos(void)
@@ -480,7 +480,7 @@ static void val_cinpos(void)
 		return;
 	--value;
 
-	wfld.cinpos = value;
+	CR_wfld.cinpos = value;
 }
 
 static void val_clength(void)
@@ -489,22 +489,22 @@ static void val_clength(void)
 
 	if( hexmode )
 	{
-		wfld.clen = 0;
+		CR_wfld.clen = 0;
 		return;
 	}
-	if(wfld.cinpos == -1)
+	if(CR_wfld.cinpos == -1)
 		return;
 	value = atoi(clength);
 	if(negative_error(value,"CLENGTH"))
 		return;
-	wfld.clen = value;
+	CR_wfld.clen = value;
 }
 
 static void val_compare(void)
 {
-	if(wfld.cinpos == -1)
+	if(CR_wfld.cinpos == -1)
 		return;
-	strcpy(wfld.compare,compare);
+	strcpy(CR_wfld.compare,compare);
 	if(Streq(compare,"EQ"))
 		return;
 	if(Streq(compare,"NE"))
@@ -527,15 +527,15 @@ static void val_cstring(void)
 
 	if( !hexmode )
 	{
-		strcpy(wfld.cstring,cstring);
-		if(wfld.clen == 0)
+		strcpy(CR_wfld.cstring,cstring);
+		if(CR_wfld.clen == 0)
 		{
-			wfld.clen = non_blanklen(cstring);
+			CR_wfld.clen = non_blanklen(cstring);
 		}
 		return;
 	}
-	wfld.clen = non_blanklen(cstring);
-	for(idx = 0; idx < wfld.clen; ++idx)
+	CR_wfld.clen = non_blanklen(cstring);
+	for(idx = 0; idx < CR_wfld.clen; ++idx)
 	{
 		if(!isxdigit(cstring[idx]))
 		{
@@ -545,13 +545,13 @@ static void val_cstring(void)
 		}
 	}
 
-	for(idx = 0; idx < wfld.clen; idx += 2)
+	for(idx = 0; idx < CR_wfld.clen; idx += 2)
 	{
 		value =0;
 		sscanf(&cstring[idx],"%2x",&value);
-		wfld.cstring[idx/2] = value;
+		CR_wfld.cstring[idx/2] = value;
 	}
-	wfld.clen = idx/2;
+	CR_wfld.clen = idx/2;
 }
 
 static int non_blanklen(char *str)
@@ -604,6 +604,24 @@ static int zero_error(int value, char *str)
 /*
 **	History:
 **	$Log: vscrffld.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:41  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 14:20:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/23 21:07:24  gsl
+**	make global name unique
+**	
+**	Revision 1.7  2002/07/25 15:20:23  gsl
+**	Globals
+**	
+**	Revision 1.6  2002/07/12 17:17:02  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.5  2002/07/10 21:06:27  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.4  1997/08/13 14:36:45  scass
 **	Fixed some formatting of code.
 **	

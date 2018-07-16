@@ -19,16 +19,6 @@
 #	crid_mf		The Micro Focus CRID shipkit
 #	clean		Remove all built pieces
 #
-#-----------------------------------------------------------------------
-#
-#	This makefile assumes that the environment is setup for porting
-#	the WISP kit.
-#
-#	Usage:
-#
-#	$ make -f cridmake.umf WISP=xxx WISPDIR=xxx {target}
-#	or
-#	$ make -e -f cridmake.umf {target}
 #
 #-----------------------------------------------------------------------
 crid_default: crid

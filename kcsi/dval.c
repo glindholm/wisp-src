@@ -19,7 +19,7 @@ static int chkval(char *mem1,char *mem2,int len);
 /*----
 			VALIDATION ROUTINES
 ------*/
-void val_all_fields()
+void dte_val_all_fields()
 {
 
 	int i;
@@ -55,7 +55,7 @@ static void val_one_range(FIELD *fld)
 	   ((hirc = chkval(fld->fld,fld->hi,fld->edit_len)) < 1) )
 		return;
 	else
-		field_error(fld,out_of_range);
+		KCSI_field_error(fld,out_of_range);
 }
 
 static void val_one_table(FIELD *fld)
@@ -77,7 +77,7 @@ static void val_one_table(FIELD *fld)
 	KCSIO(tio_block,ufb,table_record);			/*OPEN*/
 	if(memcmp(&tio_block[STATUS_POS],"00",STATUS_LEN))	/*IO not ok*/
 		{
-		field_error(fld,no_table);
+		KCSI_field_error(fld,no_table);
 		return;
 		}
 	memcpy(table_record,fld->fld,fld->edit_len);
@@ -85,7 +85,7 @@ static void val_one_table(FIELD *fld)
 	KCSIO(tio_block,ufb,table_record);
 	if(memcmp(&tio_block[STATUS_POS],"00",STATUS_LEN))	/*IO not ok*/
 		{
-		field_error(fld,out_of_table);
+		KCSI_field_error(fld,out_of_table);
 		}
 	memcpy(&tio_block[IO_POS],CLOSE_FILE,IO_LEN);		/*Close up*/
 	KCSIO(tio_block,ufb,table_record);
@@ -111,6 +111,15 @@ static int chkval(char *mem1,char *mem2,int len)
 /*
 **	History:
 **	$Log: dval.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:24  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.5  2002/10/24 15:48:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.4  2002/07/25 15:20:28  gsl
+**	Globals
+**	
 **	Revision 1.3  1996/09/17 23:45:36  gsl
 **	drcs update
 **	

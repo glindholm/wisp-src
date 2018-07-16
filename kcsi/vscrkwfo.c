@@ -6,21 +6,13 @@ static char rcsid[]="$Id:$";
 
 #include "kcsio.h"
 
-static char sccs_id[]="@(#)vscrkwfo.c	1.2 10/31/93";
 
-/* now included in vscsio.c
-kcsio_wfopen(mode,kfb)
-long mode;
-KCSIO_BLOCK *kfb;
-{
-	wfopen(&mode,
-			kfb->_volume,kfb->_library,kfb->_name,kfb->_sys_name,
-			kfb->_prname);
-	strunc(kfb->_sys_name);
-}
+#ifdef OLD
+
+/*
+DUPLICATE with rcvs.c
 */
-
-void strunc(char *dest)
+void KCSI_strunc(char *dest)
 {
 	char *end;
 
@@ -34,7 +26,7 @@ void strunc(char *dest)
 /*----
 Pad a str from first null to len with spaces.
 ------*/
-void unstrunc(char *str, int len)
+void KCSI_unstrunc(char *str, int len)
 {
 	while(*str)
 		{
@@ -44,10 +36,24 @@ void unstrunc(char *str, int len)
 	while(len-- > 0)
 		*str++ = ' ';
 }
+#endif /* OLD */
 
 /*
 **	History:
 **	$Log: vscrkwfo.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:42  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/22 17:59:02  gsl
+**	Combined KCSI
+**	
+**	Revision 1.5  2002/07/25 15:20:22  gsl
+**	Globals
+**	
+**	Revision 1.4  2002/06/21 20:48:14  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.3  1996/10/02 16:10:46  gsl
 **	Add standard headers
 **	Fix prototypes

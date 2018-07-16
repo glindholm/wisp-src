@@ -57,9 +57,9 @@ int ISDBFILE(char *select_name, int4 l1, char *answer, int4 l2)
 */
 int x4dbfile(char *select_name, int4 l1, int4 *select_status, int4 l2)
 {
-	extern void setdbfile(int4 *mode, int flag);
+	extern void WL_setdbfile(int4 *mode, int flag);
 	
-        setdbfile(select_status,0);
+        WL_setdbfile(select_status,0);
 
         return 0;
 }
@@ -67,6 +67,15 @@ int x4dbfile(char *select_name, int4 l1, int4 *select_status, int4 l2)
 /*
 **	History:
 **	$Log: mfstub.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:31  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.5  2002/07/25 14:06:27  gsl
+**	x4dbfile -> X4DBFILE
+**	
+**	Revision 1.4  2002/07/11 20:29:21  gsl
+**	Fix WL_ globals
+**	
 **	Revision 1.3  1997/07/15 19:33:50  gsl
 **	fix
 **	

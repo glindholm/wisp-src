@@ -8,7 +8,7 @@ static char rcsid[]="$Id:$";
 
 static char sccs_id[]="@(#)vscrhelp.c	1.1 8/15/93";
 
-WISPSCR_FLDS(hof) = {
+WISPSCR_FLDS(CR_hof) = {
 {LEN(0)	ROW(4)	COL(3)	VALUE("Some Helpful Information")},
 {LASTITEM}};
 
@@ -34,7 +34,7 @@ static char *name_and_type_help_text[]={
 "           3  = Vision 3",
 "           4  = Vision 4",
 #endif
-#ifdef KCSI_MF
+#ifdef KCSI_MFX
 "FORMAT   - Indexed file format: 0  = Default",
 "                                1  = C-ISAM",
 "                                2  = LEVEL II COBOL",
@@ -126,7 +126,7 @@ static void cr_help(char **text)
 	int row,idx;
 
 
-	wpload();
+	WL_wpload();
 	GPSETUP();
 	GPSTD("FILEINFO","CREATE");
 
@@ -135,13 +135,28 @@ static void cr_help(char **text)
 		GPCTEXT(text[idx],row,2);
 		}
 	GPCTEXT("Press (ENTER) to return",24,2);
-	display_and_read_gp();
+	GP_display_and_read();
 
 }
 
 /*
 **	History:
 **	$Log: vscrhelp.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:42  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 14:20:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/17 21:22:44  gsl
+**	cleanup
+**	
+**	Revision 1.7  2002/07/25 15:20:22  gsl
+**	Globals
+**	
+**	Revision 1.6  2002/07/10 21:06:27  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.5  1998/05/19 14:02:57  gsl
 **	Add the FORMAT field to the help text
 **	

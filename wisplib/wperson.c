@@ -268,7 +268,7 @@ static void add_option(const char *keyword, const char *trailing);
 **		dynamically if and only if they are used.
 **		Currently only load_options() is done.
 */
-void wpload(void)
+void WL_wpload(void)
 {
 	static int loaded = 0;							/* flag to indicate info is loaded		*/
 
@@ -2906,6 +2906,9 @@ const char *get_wisp_option(const char *keyword)
 /*
 **	History:
 **	$Log: wperson.c,v $
+**	Revision 1.53.2.1  2002/11/12 16:00:25  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.53  2001/10/31 20:39:09  gsl
 **	Added wisp_temp_defaults_path()
 **	Rework the logic to build parent_path and temp_person_path now uses

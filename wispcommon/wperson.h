@@ -119,7 +119,8 @@ typedef struct	{
 **	Function Prototypes
 */
 
-void wpload(void);
+#define wpload WL_wpload
+void WL_wpload(void);
 int save_defaults(void);
 int load_defaults(void);
 int write_defaults_to_file(char *file);
@@ -172,6 +173,9 @@ const char *get_wisp_option(const char *keyword);
 /*
 **	History:
 **	$Log: wperson.h,v $
+**	Revision 1.24.2.1  2002/11/12 16:00:19  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.24  2001/10/31 20:26:05  gsl
 **	Add wisp_temp_defaults_path()
 **	

@@ -107,7 +107,7 @@ ALL_COBOL_COBS= $(ALL_COBOL_OBJS:.acu=.cob)
 
 TEST_DIRS= volrun volin volout volspl volwrk
 
-all:	clean header $(ALL_COBOL_OBJS) testdirs prtargs.exe
+all:	header $(ALL_COBOL_OBJS) testdirs prtargs.exe
 	@echo " "
 	@echo "SAMPLE is up-to-date"
 	@echo " "
@@ -125,9 +125,9 @@ header:
 
 
 clean:
-	del /Q $(ALL_COBOL_OBJS)
-	del /Q $(TEST_DIRS)
-	del /Q *.cob *.acu *.cpy *.obj
+	-del /Q $(ALL_COBOL_OBJS)
+	-del /Q $(TEST_DIRS)
+	-del /Q *.cob *.acu *.cpy *.obj
 
 # Recreate the .cob files if $(WISPTRAN) is newer
 $(ALL_COBOL_COBS): $(WISPTRAN)
@@ -239,6 +239,9 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
+#	Revision 1.13.2.2  2002/11/12 20:21:35  gsl
+#	Use -del
+#	
 #	Revision 1.13.2.1  2002/10/08 19:54:09  gsl
 #	Updated from HEAD
 #	

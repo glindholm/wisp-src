@@ -67,7 +67,7 @@ static demoexit()
 		printf("Your EVALUATION copy of WISP has timed out.\n\n");
 		printf("For assistance contact:\n\n");
 		printf("                       NeoMedia Technologies Incorporated\n");
-		printf("                          2201 2nd Street, Suite 600,\n");
+		printf("                          2201 Second Street Suite 402,\n");
 		printf("                              Fort Myers FL 33901\n");
 		printf("                            Phone: %s\n", WISP_PHONE_NUMBER);
 
@@ -79,6 +79,9 @@ static demoexit()
 /*
 **	History:
 **	$Log: demovali.h,v $
+**	Revision 1.11.2.2  2002/11/06 21:25:31  gsl
+**	Change address to Suite 402
+**	
 **	Revision 1.11.2.1  2002/10/10 12:56:44  gsl
 **	Huge file support
 **	

@@ -99,6 +99,7 @@ EndRNotes
 #include "kcsifunc.h"
 #include "vscrglb.h"
 #include "kwisp.h"
+#include "vwang.h"
 
 /*
 **	Structures and Defines
@@ -110,21 +111,9 @@ EndRNotes
 
 static char applname[]="CREATE  ";
 
-char WISPFILEXT[39];
-char WISPRETURNCODE[3];
 
 
-extern char *create_version(void);
-extern char *create_platform(void);
-
-extern void vwang_title(const char *title);
-
-static void create_init(void);
-static void vscreate(void);
-static void create_extract_usage(void);
-
-
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	int ch;
 	char the_title[80];
@@ -132,110 +121,68 @@ main(int argc, char **argv)
 	sprintf(the_title,"CREATE %s.%s", create_version(), create_platform());
 	vwang_title(the_title);
 
-	while( (ch = getopt(argc,argv,"d")) != -1)
-		{
-		switch(ch)
-			{
-			case 'd':
-				cr_debug = 1;
-				break;
-			default:
-				break;
-			}
-		}
-
 	initglbs(applname);
-	create_init();
-	vscreate();
-	cr_exit(0);
+
+	kcsi_create_main();
+
+	kcsi_exit(0);
 	return 0;
 }
 
-void cr_exit(int code)
+#ifdef WIN32
+/*
+**	Older versions of Acucobol (5.1 and earlier) exposed
+**	the f_errno variable as extern short.
+**	
+**	In 5.2  f_errno is replaced by (*Astdlib_f_errno())  
+**	which is defined int sub.h.
+*/
+
+/* For CREATE on Windows we are using Acucobol 4.1 so use old version */
+
+extern  short		f_errno;
+short *Astdlib_f_errno() /* From ACU 5.2 sub.h */
 {
-	vwang_shut();
-	exit(code);
+	return &f_errno;
 }
 
-static void create_init(void)
-{
-	init_gpint();
-	create_extract_usage();
-}
-static void init_cr_out(void)
-{
-	memset(&cr_out,0,sizeof(cr_out));
-	memset(cr_out.ofile._name,' ',8);
-	memcpy(cr_out.ofile._library,create_outlib,8);
-	memcpy(cr_out.ofile._volume,create_outvol,6);
-	strcpy(cr_out.ofile._prname,"NEWFILE ");
-}
-
-static void create_extract_usage(void)
-{
-	wargs(2L);
-	EXTRACT("IL",create_inlib);
-	EXTRACT("IV",create_invol);
-	EXTRACT("OL",create_outlib);
-	EXTRACT("OV",create_outvol);
-}
-
-static void vscreate(void)
-{
-	int rc;
-
-	for(;;)
-		{
-		init_cr_out();
-		rc = cr_get_output_spec(create_version(),create_platform());
-		if (rc == 1)
-			continue;
-		if(rc == 16)
-			break;
-		cr_get_blocks();
-		cr_create_file();
-		rc = cr_eoj();
-		if(rc == 16)
-			break;
-		}
-}
-
-/*----
-A quick io routine to the cr_out.ofile.
-------*/
-void cr_io(char *io)
-{
-	cr_out.ofile._record = cr_out_rec;
-	strcpy(cr_out.ofile._io,io);
-	gpwcsio(&cr_out.ofile,cr_out.ofile._record);
-}
-
-/*----
-A quick io routine to any file 
-------*/
-void cr_fileio(KCSIO_BLOCK *kfb, char *io)
-{
-	long mode;
-
-	mode = 0;
-	if(kfb->_org[0] == 'I')
-		mode += WISP_INDEXED;
-
-	strcpy(kfb->_io,io);
-	if(*io == 'O')
-		{
-		if(!(strcmp(io,OPEN_OUTPUT))) 
-			mode += WISP_OUTPUT;
-		kcsio_wfopen(mode,kfb);
-		}
-		
-	ccsio(kfb, kfb->_record);
-}
-
+#endif
 
 /*
 **	History:
 **	$Log: vscrmain.c,v $
+**	Revision 1.12.2.2  2002/11/14 16:02:58  gsl
+**	Replace cr_debug the trace level
+**	
+**	Revision 1.12.2.1  2002/11/12 15:56:42  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.20  2002/10/18 20:13:04  gsl
+**	Move Acucobol 5.1 f_error support from kv3.c to vscrmain.c
+**	
+**	Revision 1.19  2002/10/17 21:22:20  gsl
+**	move kcsi_create_main() from vscrmain.c to vscrglb.c
+**	The only thing left in vscmain.c is main()
+**	
+**	Revision 1.18  2002/10/17 16:36:37  gsl
+**	move routines  from vscrmain.c to vscrfile.c
+**	
+**	Revision 1.17  2002/07/25 15:20:22  gsl
+**	Globals
+**	
+**	Revision 1.16  2002/07/10 21:06:27  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/06/25 18:18:34  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.14  2002/06/25 17:46:03  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
+**	
+**	Revision 1.13  2002/06/21 20:48:14  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.12  1997/12/19 22:10:13  gsl
 **	fix warnings
 **	

@@ -3,8 +3,6 @@
 #ifndef _LL_H
 #define _LL_H
 
-#define	PROTOTYPING		/* Comment out for porting */
-
 typedef struct _ll{
     struct _ll *prev;
     struct _ll *next;
@@ -33,49 +31,27 @@ typedef struct _lls{
 
 #define NULL_LL {NULL,NULL}
 
-#define ll_add(where,new)	ll_add_next(where,new)
+#define ll_add(where,l_new)	ll_add_next(where,l_new)
 
-#ifdef	PROTOTYPING
 
 void	ll_swap(LLTYPE*,LLTYPE*);
 
-void	*ll_bubble_sort(LLTYPE*,int(*)()),
-	*ll_all(void *base, void(*func)()),
-	*ll_next_select(LLTYPE*,int(*)()),
-	*ll_prev_select(LLTYPE*,int(*)()),
-	*ll_add_sorted(LLTYPE*,LLTYPE*,int(*)(LLTYPE*,LLTYPE*)),
-	*ll_next(LLTYPE*),
-	*ll_circ_next(LLTYPE*),
-	*ll_circ_prev(LLTYPE*),
-	*ll_prev(LLTYPE*),
-	*ll_first(LLTYPE*),
-	*ll_last(LLTYPE*),
-	*ll_unlink(LLTYPE*),
-	*ll_add_next(LLTYPE*,LLTYPE*),
-	*ll_add_prev(LLTYPE*,LLTYPE*),
-	*ll_append(LLTYPE*,LLTYPE*)
-	;
-#else
-
-void	ll_swap();
-
-void	*ll_bubble_sort(),
-	*ll_all(),
-	*ll_next_select(),
-	*ll_prev_select(),
-	*ll_add_sorted(),
-	*ll_next(),
-	*ll_circ_next(),
-	*ll_circ_prev(),
-	*ll_prev(),
-	*ll_first(),
-	*ll_last(),
-	*ll_unlink(),
-	*ll_add_next(),
-	*ll_add_prev(),
-	*ll_append()
-	;
-#endif
+void	*ll_bubble_sort(LLTYPE*,int(*)());
+void	*ll_all(void *base, void(*func)());
+void	*ll_next_select(LLTYPE*,int(*)());
+void	*ll_prev_select(LLTYPE*,int(*)());
+void	*ll_add_sorted(LLTYPE*,LLTYPE*,int(*)(LLTYPE*,LLTYPE*));
+void	*ll_next(LLTYPE*);
+void	*ll_circ_next(LLTYPE*);
+void	*ll_circ_prev(LLTYPE*);
+void	*ll_prev(LLTYPE*);
+void	*ll_first(LLTYPE*);
+void	*ll_last(LLTYPE*);
+void	*ll_unlink(LLTYPE*);
+void	*ll_add_next(LLTYPE*,LLTYPE*);
+void	*ll_add_prev(LLTYPE*,LLTYPE*);
+void	*ll_append(LLTYPE*,LLTYPE*);
+void	*ll_select(void *base, int (*func) ());
 
 
 
@@ -83,6 +59,15 @@ void	*ll_bubble_sort(),
 /*
 **	History:
 **	$Log: ll.h,v $
+**	Revision 1.7.2.1  2002/11/12 15:56:30  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/21 18:29:20  gsl
+**	cleanup
+**	
+**	Revision 1.8  2002/10/17 17:56:18  gsl
+**	Rename variables new to l_new
+**	
 **	Revision 1.7  1999/01/19 16:11:42  gsl
 **	fix warning
 **	

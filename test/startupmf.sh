@@ -9,44 +9,52 @@
 #			using Micro Focus .
 #
 QA=`pwd`
-WISPDIR=../../QA/wisp
-if [ ! -d $WISPDIR ]
+WISPDIR=../QA/wisp
+if [ ! -d ${WISPDIR} ]
 then
-	echo "**** WISPDIR=$WISPDIR NOT FOUND"
+	echo "**** WISPDIR=${WISPDIR} NOT FOUND"
 	WISPDIR=/usr/local/wisp
-	echo "**** USING WISPDIR=$WISPDIR"
+	echo "**** USING WISPDIR=${WISPDIR}"
 else
-	cd $WISPDIR
+	cd ${WISPDIR}
 	WISPDIR=`pwd`
-	cd $QA
 fi
-cd ../..
-WISP=`pwd`
-cd $QA
-WISPCONFIG=$QA/config
+cd ${QA}
+cd ..
+WISPSRC=`pwd`
+cd ${QA}
+WISPCONFIG=${QA}/config
 COBSW=-F
-COBPATH=:$QA
-PATH=$WISPDIR/bin:$WISPDIR/mf:$WISPDIR/cridmfx:$WISPDIR/createmfx:$QA/volrun/onpath:$PATH
-export QA WISPCONFIG COBSW COBPATH PATH
+COBPATH=:${QA}
+PATH=${WISPDIR}/bin:${WISPDIR}/mf:${WISPDIR}/kcsimf:${QA}/volrun/onpath:${PATH}
+export QA WISPCONFIG COBSW COBPATH PATH WISPDIR WISPSRC
 echo
 echo '**** SETTING UP FOR MICRO FOCUS ****'
-echo "WISP       = $WISP"
-echo "WISPDIR    = $WISPDIR"
-echo "QA         = $QA"
-echo "WISPCONFIG = $WISPCONFIG"
-echo "COBDIR     = $COBDIR"
-echo "COBPATH    = $COBPATH"
-echo "COBSW      = $COBSW"
-echo "SHELL      = $SHELL"
-echo "PATH       = $PATH"
+echo "WISPDIR      = ${WISPDIR}"
+echo "WISPSRC      = ${WISPSRC}"
+echo "QA           = ${QA}"
+echo "WISPCONFIG   = ${WISPCONFIG}"
+echo "COBDIR       = ${COBDIR}"
+echo "COBPATH      = ${COBPATH}"
+echo "COBSW        = ${COBSW}"
+echo "SHELL        = ${SHELL}"
+echo "PATH         = ${PATH}"
 
-COBVER=$COBDIR/etc/cobver
-if [ ! -f $COBVER ]
+COBVER=${COBDIR}/etc/cobver
+if [ ! -f ${COBVER} ]
 then
-COBVER=$COBDIR/cobver
+COBVER=${COBDIR}/cobver
 fi
-cat $COBVER
+cat ${COBVER}
 wisp|grep Version
+
+# If needed create ${WISPCONFIG} 
+if [ ! -d ${WISPCONFIG} ]
+then
+	configmf.sh
+fi
+wusage set PROGVOL=SOURCE
+wusage set PROGLIB=TESTMF
 
 echo
 echo Switching to new shell for WISP QA

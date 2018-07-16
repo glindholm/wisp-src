@@ -82,7 +82,7 @@ KCSIO_BLOCK *kfb;
 {
 	errno = 0;
 	kfb->_io_channel = open(kfb->_sys_name,mode);
-	kfb->_status = e_trans(errno);
+	kfb->_status = KCSI_e_trans(errno);
 	kfb->_last_io_key = 0;
 	kfb->_open_status = 1;
 	kfb->_pos = lseek(kfb->_io_channel,0L,0);
@@ -100,7 +100,7 @@ KCSIO_BLOCK *kfb;
 	kfb->_io_channel = open(kfb->_sys_name,
 			        O_WRONLY|O_CREAT|O_TRUNC,
 			        0666);
-	kfb->_status = e_trans(errno);
+	kfb->_status = KCSI_e_trans(errno);
 	kfb->_space = 0;
 	if(errno)
 		return;
@@ -119,7 +119,7 @@ KCSIO_BLOCK *kfb;
 	if(kfb->_open_status == 0)
 		return;
 	close(kfb->_io_channel);
-	kfb->_status = e_trans(errno);
+	kfb->_status = KCSI_e_trans(errno);
 	kfb->_open_status = 0;
 	rel_file_space(kfb);
 }
@@ -166,7 +166,7 @@ KCSIO_BLOCK *kfb;
 	if(rc == 0)
 		kfb->_status = EENDFILE;
 	else
-		kfb->_status = e_trans(errno);
+		kfb->_status = KCSI_e_trans(errno);
 }
 rel_read_previous(kfb)
 KCSIO_BLOCK *kfb;
@@ -235,7 +235,7 @@ KCSIO_BLOCK *kfb;
 	if(isnull(rlen,2))
 		kfb->_status = ENOREC;
 	else
-		kfb->_status = e_trans(errno);
+		kfb->_status = KCSI_e_trans(errno);
 }
 
 /*----
@@ -403,7 +403,7 @@ KCSIO_BLOCK *kfb;
 	rlb_two_from_int(rlen,kfb->_record_len);
 	write(kfb->_io_channel,rlen,2);
 	write(kfb->_io_channel,kfb->_record,RECORD_LEN);
-	kfb->_status = e_trans(errno);
+	kfb->_status = KCSI_e_trans(errno);
 	rel_file_space(kfb);
 }
 
@@ -430,7 +430,7 @@ KCSIO_BLOCK *kfb;
 	rlb_two_from_int(rlen, kfb->_record_len);
 	write(kfb->_io_channel, rlen, 2);
 	write(kfb->_io_channel, kfb->_record, RECORD_LEN);
-	kfb->_status = e_trans(errno);
+	kfb->_status = KCSI_e_trans(errno);
 	rel_file_space(kfb);
 }
 
@@ -451,7 +451,7 @@ KCSIO_BLOCK *kfb;
  * Re-seek to where we were
  */
 	lseek(kfb->_io_channel,kfb->_pos,0);
-	kfb->_status = e_trans(errno);
+	kfb->_status = KCSI_e_trans(errno);
 	rel_file_space(kfb);
 }
 
@@ -474,7 +474,7 @@ KCSIO_BLOCK *kfb;
 
 	kfb->_altkey_count = 0;
 
-	clear_keys(kfb);
+	KCSI_clear_keys(kfb);
 
 	if(!(kfb->_record_len))
 		kfb->_record_len = 1;
@@ -491,7 +491,7 @@ KCSIO_BLOCK *kfb;
 }
 
 /*
-e_trans(code)
+KCSI_e_trans(code)
 int code;
 {
 	if(code == 0)
@@ -504,6 +504,15 @@ int code;
 /*
 **	History:
 **	$Log: rlbio.c,v $
+**	Revision 1.2.2.1  2002/11/12 15:56:34  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.4  2002/10/24 14:20:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.3  2002/07/25 15:48:42  gsl
+**	Globals
+**	
 **	Revision 1.2  1996/09/17 23:45:49  gsl
 **	drcs update
 **	

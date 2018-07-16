@@ -56,32 +56,32 @@ Select for listmgmt.
 2.	If test for sero and space does not eliminate the field then 3
 3.	Test as usual
 ------*/
-static void lmg_select(dl,tbl,new)
+static void lmg_select(dl,tbl,l_new)
 RPT_DL *dl;
 TT *tbl;
-DTYPE *new;
+DTYPE *l_new;
 {
 	DTYPE *hi;
 
 	if(dl->lmg_rec_no)
 		{
 		hi = &dl->_o[1]._lit_op;
-		tbl->_result = comp_rec_num(rpt_total_records,new,hi);
+		tbl->_result = KCSI_comp_rec_num(rpt_total_records,l_new,hi);
 		return;
 		}
 /*
 	tbl->_result = 1;
-	if((dl->lmg_skip_zero) &&  (new->_type & IS_NUM))
-		tbl->_result = (!(comp_zero(new)));
-	if((dl->lmg_skip_space) &&  (!(new->_type & IS_NUM)))
-		tbl->_result = (!(comp_space(new)));
+	if((dl->lmg_skip_zero) &&  (l_new->_type & IS_NUM))
+		tbl->_result = (!(KCSI_comp_zero(l_new)));
+	if((dl->lmg_skip_space) &&  (!(l_new->_type & IS_NUM)))
+		tbl->_result = (!(KCSI_comp_space(l_new)));
 	if(tbl->_result)
-		tbl->_result = csel(new,&dl->_o[0]);
+		tbl->_result = csel(l_new,&dl->_o[0]);
 */
 	tbl->_result = 0;
-	if(new->_type & IS_NUM)
+	if(l_new->_type & IS_NUM)
 		{
-		if(comp_zero(new))
+		if(KCSI_comp_zero(l_new))
 			{
 			if(dl->lmg_skip_zero == EXCLUDE_THEM)
 				{
@@ -96,9 +96,9 @@ DTYPE *new;
 				}
 			}
 		}
-	if(!(new->_type & IS_NUM))
+	if(!(l_new->_type & IS_NUM))
 		{
-		if(comp_space(new))
+		if(KCSI_comp_space(l_new))
 			{
 			if(dl->lmg_skip_space == EXCLUDE_THEM)
 				{
@@ -113,18 +113,18 @@ DTYPE *new;
 				}
 			}
 		}
-	tbl->_result = csel(new,&dl->_o[0]);
+	tbl->_result = csel(l_new,&dl->_o[0]);
 }
 
 /*----
 Select for report
 ------*/
-static void rpt_select(dl,tbl,new)
+static void rpt_select(dl,tbl,l_new)
 RPT_DL *dl;
 TT *tbl;
-DTYPE *new;
+DTYPE *l_new;
 {
-	tbl->_result = csel(new,&dl->_o[0]);
+	tbl->_result = csel(l_new,&dl->_o[0]);
 }
 
 static void clear_table(t)
@@ -145,7 +145,7 @@ static int csel(DTYPE *l,RPT_DLO *dlo)
 {
 	TT ctable[LMG_DL_ENTRY_COUNT];
 	int cidx;
-	DTYPE *new;
+	DTYPE *l_new;
 
 	clear_table(ctable);
 	ctable[0]._result = 1;
@@ -154,10 +154,10 @@ static int csel(DTYPE *l,RPT_DLO *dlo)
 		if(dlo->_code[0] == 0)
 			break;
 		if(dlo->_not_lit)
-			new = *dlo->_pnew;
+			l_new = *dlo->_pnew;
 		else
-			new = &dlo->_lit_op;
-		ctable[cidx]._result = rptcmp(l,dlo->_code,new);
+			l_new = &dlo->_lit_op;
+		ctable[cidx]._result = KCSI_rptcmp(l,dlo->_code,l_new);
 		if(!(ctable[cidx]._connector = dlo->_connector))
 			break;
 		++dlo;
@@ -224,12 +224,12 @@ static int resolve_table(TT *t)
 	return(sav_t->_result);
 }
 
-int rptsel()
+int KCSI_rptsel()
 {
 	RPT_DL *dl;
 	TT stable[LMG_DL_ENTRY_COUNT];
 	int sidx,maxidx;
-	DTYPE *new;
+	DTYPE *l_new;
 
 	dl = rpt_def._dl;
 
@@ -248,16 +248,16 @@ int rptsel()
 		{
 		if((dl->_e._name[0] == 0) || (!dl->_pnew))
 			break;
-		new = *dl->_pnew;
+		l_new = *dl->_pnew;
 /*
  * Special tests when rpt_caller is listmgmt. First check if we
  * are skipping spaces or zeroes. If so test if the field is such
  * and skip else test as usual.
  */
 		if(*rpt_caller < ':')
-			lmg_select(dl,&stable[sidx],new);
+			lmg_select(dl,&stable[sidx],l_new);
 		else
-			rpt_select(dl,&stable[sidx],new);
+			rpt_select(dl,&stable[sidx],l_new);
 		if(!(stable[sidx]._connector = dl->_set_connector))
 			break;
 		++dl;
@@ -280,6 +280,18 @@ int rptsel()
 /*
 **	History:
 **	$Log: rsel.c,v $
+**	Revision 1.2.2.1  2002/11/12 15:56:36  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.5  2002/10/24 14:20:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.4  2002/10/23 20:39:06  gsl
+**	make global name unique
+**	
+**	Revision 1.3  2002/10/17 17:56:19  gsl
+**	Rename variables new to l_new
+**	
 **	Revision 1.2  1996/09/17 23:45:49  gsl
 **	drcs update
 **	

@@ -44,9 +44,9 @@ PFKEY masks for building valid PFKEYS
 /*----
 A series of MACROs to shorten GETPARM definition
 ------*/
-#define	GP gparg.ptr[gpcnt++] = (char*)
+#define	GP GP_arg.ptr[GP_cnt++] = (char*)
 
-#define	GPNUM(num)			GP &GPINT[num]
+#define	GPNUM(num)			GP &GP_INT[num]
 #define	GPLEN(len)			GPNUM(len)
 #define	GPAT(row,col)			GP "A";GPNUM(row);GP "A";GPNUM(col)
 #define	GPFLD(fld,len,row,col)		GP fld;GPLEN(len);GPAT(row,col)
@@ -56,9 +56,9 @@ A series of MACROs to shorten GETPARM definition
 #define	GPID(pn,pf,mn,mi)		GP pn;GP pf;GP mn; GP mi
 #define	GPTYP(tp,rq)			GP tp;GP rq
 #define	GPTOP(tp,rq,pn,pf,mn,mi)	GPTYP(tp,rq);GPID(pn,pf,mn,mi);GPLEN(0)
-#define	GPSETUP()			init_gpint();gpcnt=0
-#define	GPSTD(pn,mi)			GPTOP("I ","R",pn,gppfrcvr,"0001",mi)
-#define	GPDEF(pn,mi)			GPTOP("ID","R",pn,gppfrcvr,"0001",mi)
+#define	GPSETUP()			GP_init_gpint();GP_cnt=0
+#define	GPSTD(pn,mi)			GPTOP("I ","R",pn,GP_pfrcvr,"0001",mi)
+#define	GPDEF(pn,mi)			GPTOP("ID","R",pn,GP_pfrcvr,"0001",mi)
 #define	GPFILE(fn,fr,fc)		GPFILEC(fn,fr,fc,"C")
 #define GPDOC(fn,fr,fc)                 GPDOCC(fn,fr,fc,"C")
 #define	GPLIB(ln,lr,lc)			GPLIBC(ln,lr,lc,"C")
@@ -101,7 +101,7 @@ typedef struct _gparg {char *ptr[500];}GPARG;
 /*----
 The functions
 ------*/
-int4	display_and_read_gp();
+int4	GP_display_and_read();
 
 #ifdef	EXTERN_DEF
 #undef	EXTERN_DEF
@@ -113,18 +113,24 @@ int4	display_and_read_gp();
 #define	EXTERN_DEF	extern
 #endif
 
-EXTERN_DEF	int4	GPINT[255];
-EXTERN_DEF	GPARG	gparg;
-EXTERN_DEF	int4	gpcnt;
-EXTERN_DEF	int4	gppfkeys;
-EXTERN_DEF	int4	gppfkey;
-EXTERN_DEF	char	gppfrcvr[1];
+EXTERN_DEF	int4	GP_INT[255];
+EXTERN_DEF	GPARG	GP_arg;
+EXTERN_DEF	int4	GP_cnt;
+EXTERN_DEF	int4	GP_pfkeys;
+EXTERN_DEF	int4	GP_pfkey;
+EXTERN_DEF	char	GP_pfrcvr[1];
 
 #endif	/* _GP_H */
 
 /*
 **	History:
 **	$Log: gp.h,v $
+**	Revision 1.6.2.1  2002/11/12 15:56:25  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.7  2002/10/24 14:20:39  gsl
+**	Make globals unique
+**	
 **	Revision 1.6  1996/09/17 23:34:08  gsl
 **	drcs update
 **	

@@ -45,7 +45,7 @@
 ########################################################################
 #       The following variables must be configured by the user:
 #
-#       WISP            This name of the wisp translator
+#       WISPTRAN        This name of the wisp translator
 #	WISPTYPE  	This identifies the type of cobol used 
 #			with WISP
 #       WISPFLAGS       Flags to use with WISP
@@ -110,11 +110,11 @@ FILENAME=`echo $filename | tr '[a-z]' '[A-Z]'`
 #        variables for either AcuCobol  #
 #        or Micro Focus cobol           #
 
-WISP=wisp
+WISPTRAN=wisp
 
 ### *** ACUCOBOL ***
 #WISPTYPE="-VACU"
-#WISPFLAGS=$WISPTYPE
+#WISPFLAGS=${WISPTYPE}
 #COBOL=ccbl
 #OBJFILE=$objectdir/$FILENAME
 #TARGET=$OBJFILE
@@ -123,7 +123,7 @@ WISP=wisp
 
 ### *** Micro Focus ***
 #WISPTYPE="-VMF"
-#WISPFLAGS=$WISPTYPE
+#WISPFLAGS=${WISPTYPE}
 #COBOL=cob
 #IDYFILE=./$filename.idy
 #COBFILE=./$filename.cob
@@ -138,7 +138,7 @@ WISP=wisp
 #                                       #
 #########################################
 
-if [ -z "$WISP" ]
+if [ -z "${WISPTRAN}" ]
 then
 	echo "# NO WISP defined in wac.sh script!"
 	echo "# Edit the wac.sh script to define WISP translator"
@@ -244,8 +244,8 @@ fi
 
 echo
 echo "# WISPING $filename_ext"
-echo $WISP $WISPFLAGS $filename_ext
-$WISP $WISPFLAGS $filename_ext
+echo ${WISPTRAN} ${WISPFLAGS} $filename_ext
+${WISPTRAN} ${WISPFLAGS} $filename_ext
 rc=$?
 if [ "0" != "$rc" ]
 then

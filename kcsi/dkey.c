@@ -36,14 +36,14 @@ For key entry, delete must always be by primary key.
 Note mode is passed as 'A', 'B','C' for Add Change Delete.
 Odd as 'C' is Delete, 'B' is change.
 ------*/
-int enter_the_key(char *idx,char *mode)
+int dte_enter_the_key(char *idx,char *mode)
 {
 	int pf;
 
 	while(1)
 		{
 /* If the file is relative, force the primary key */
-		if(file_is_relative())
+		if(dte_file_is_relative())
 			memcpy(idx,"017",IDX_LEN);
 /* In delete mode, force the primary key */
 		if(*mode == 'C')
@@ -86,11 +86,11 @@ static int enter_key_entry(char *idx,char *mode)
 	while(dte_screen_error)
 		{
 		dte_screen_error = 0;
-		space_out(dte_crt_file_status,2);
+		dte_space_out((char*)dte_crt_file_status,2);
 		memcpy(dte_on_pfkeys,"X",1);
 		memcpy(dte_crt_record,dte_order_area,4);
 
-		wscreen(main_scr,
+		WSCREEN(dte_main_scr,
 			dte_dnr_altered,
 			dte_crt_record,
 			dte_full_screen,
@@ -99,7 +99,7 @@ static int enter_key_entry(char *idx,char *mode)
 			dte_pfkey_code,
 			dte_crt_file_status);
 
-		init_message_field();
+		dte_init_message_field();
 
 		if(Memeq(dte_pfkey_code,"16",2))	/*Exit*/
 			return(16);
@@ -107,32 +107,32 @@ static int enter_key_entry(char *idx,char *mode)
 			return(9);
 		if(Memeq(dte_pfkey_code,"07",2))	/*Change Path if not*/
 			{				/*rel Shouldn't happen*/
-			if(file_is_relative())		/*as 7 now not enabled*/
+			if(dte_file_is_relative())		/*as 7 now not enabled*/
 				dte_screen_error = 1;	/*for rel files.      */
 			else
 				return(7);
 			}
 		if(Memeq(dte_pfkey_code,"02",2))	/*Find*/
 			{
-			load_first_record(idx);
+			dte_load_first_record(idx);
 			if(!dte_screen_error)
 				return(0);
 			}
 		if(Memeq(dte_pfkey_code,"04",2))	/*Previous*/
 			{
-			load_previous_record(idx);
+			dte_load_previous_record(idx);
 			if(!dte_screen_error)
 			    return(0);
 			}
 		if(Memeq(dte_pfkey_code,"05",2))	/*Next*/
 			{
-			load_next_record(idx);
+			dte_load_next_record(idx);
 			if(!dte_screen_error)
 				return(0);
 			}
 		if(Memeq(dte_pfkey_code,"06",2))	/*Start partial key*/
 			{
-			if(file_is_relative())		/* relfiles 26-Mar-1990*/
+			if(dte_file_is_relative())		/* relfiles 26-Mar-1990*/
 				dte_screen_error = 1;	/* relfiles 26-Mar-1990*/
 			else
 				{
@@ -158,24 +158,24 @@ Should be nothing to do after the screen is built.
 ------*/
 static void init_enter_fields()
 {
-	clear_all_fields();
+	KCSI_clear_all_fields();
 }
 /*----
 Again all okay based on the screen.
 ------*/
 static void init_enter_facs(char *idx)
 {
-	hide_all_fields();
-	hide_all_prompts();
-	if(file_is_relative())
+	dte_hide_all_fields();
+	dte_hide_all_prompts();
+	if(dte_file_is_relative())
 		{
-		display_rel_prompt();
-		unprotect_rel_field();
+		dte_display_rel_prompt();
+		dte_unprotect_rel_field();
 		}
 	else
 		{
-		display_idx_prompts(idx);
-		unprotect_idx_fields(idx);
+		dte_display_idx_prompts(idx);
+		dte_unprotect_idx_fields(idx);
 		}
 }
 
@@ -183,17 +183,6 @@ static void init_enter_facs(char *idx)
 /*----
 key pfs and messages change for mode and file type.
 ------*/
-#ifdef KCSI_VAXCOBOL
-static char del_key_footer[]=
-    "(ENTER)Find (2)First         (5)Next (6)by Inexact Key (16)Exit";
-static char del_key_pfs[]="000200050616X";
-static char chg_idx_footer[]=
-    "(ENTER)Find (2)1st         (5)Next (6)Inexact Key (7)Path (9)Add (16)Exit";
-static char chg_idx_pfs[]="0002000506070916X";
-static char chg_rel_footer[]=
-    "(ENTER)Find (2)1st         (5)Next (9)Add (16)Exit";
-static char chg_rel_pfs[]="000204050916X";
-#else
 static char del_key_footer[]=
     "(ENTER)Find (2)First (4)Prev (5)Next (6)by Inexact Key (16)Exit";
 static char del_key_pfs[]="000204050616X";
@@ -203,22 +192,21 @@ static char chg_idx_pfs[]="0002040506070916X";
 static char chg_rel_footer[]=
     "(ENTER)Find (2)1st (4)Prev (5)Next (9)Add (16)Exit";
 static char chg_rel_pfs[]="000204050916X";
-#endif /* KCSI_VAXCOBOL */
 
 static void init_enter_footers(char *mode)
 {
 	if(*mode == 'C')    /*delete mode */
 		{
-		load_footer(del_key_footer);
+		dte_load_footer(del_key_footer);
 		}
 	else		    /* change mode */
-	if(file_is_relative())
+	if(dte_file_is_relative())
 		{
-		load_footer(chg_rel_footer);
+		dte_load_footer(chg_rel_footer);
 		}
 	else
 		{
-		load_footer(chg_idx_footer);
+		dte_load_footer(chg_idx_footer);
 		}
 
 
@@ -228,7 +216,7 @@ static void init_enter_pfs(char *mode)
 	if(*mode == 'C')	/* delete mode */
 		memcpy(dte_pfkeys,del_key_pfs,strlen(del_key_pfs));
 	else
-	if(file_is_relative())	/* change mode */
+	if(dte_file_is_relative())	/* change mode */
 		memcpy(dte_pfkeys,chg_rel_pfs,strlen(chg_rel_pfs));
 	else
 		memcpy(dte_pfkeys,chg_idx_pfs,strlen(chg_idx_pfs));
@@ -237,7 +225,7 @@ static void init_enter_pfs(char *mode)
 
 static void val_key_fields(char *idx)
 {
-	if(file_is_relative())
+	if(dte_file_is_relative())
 		val_rel_key_fields();
 	else
 		val_keyed_key_fields(idx);
@@ -247,26 +235,26 @@ static void val_rel_key_fields()
 {
 	static char rnf[]="Error - Record Not Found";
 
-	read_rel_key_record();
+	dte_read_rel_key_record();
 	if(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN))
 		{
-		make_error_message(rnf);
+		KCSI_make_error_message(rnf);
 		dte_screen_error = 1;
 		}
 	else
 		{
-		rel_rec_num_to_fld();
+		dte_rel_rec_num_to_fld();
 		}
 
 }
 
-void read_rel_key_record()
+void dte_read_rel_key_record()
 {
 	char ufb[1];
 
-	memcpy(rel_rec_num,relative_record.fld,REL_KEY_LEN);
-	rel_rec_num[REL_KEY_LEN] = 0;
-	memcpy(&dte_dio_block[REL_KEY_POS],rel_rec_num,REL_KEY_LEN);
+	memcpy(dte_rel_rec_num,dte_relative_record.fld,REL_KEY_LEN);
+	dte_rel_rec_num[REL_KEY_LEN] = 0;
+	memcpy(&dte_dio_block[REL_KEY_POS],dte_rel_rec_num,REL_KEY_LEN);
 	memcpy(&dte_dio_block[IO_KEY_POS],"00",2);
 	memcpy(&dte_dio_block[IO_POS],READ_KEYED,IO_LEN);
 	KCSIO(dte_dio_block,ufb,dte_record);
@@ -276,12 +264,12 @@ void read_rel_key_record()
 Extract the isam record number into the display field for this record.
 ------*/
 
-void rel_rec_num_to_fld()
+void dte_rel_rec_num_to_fld()
 {
 
-    memcpy(rel_rec_num,&dte_dio_block[REL_KEY_POS],REL_KEY_LEN);
-    rel_rec_num[REL_KEY_LEN] = 0;
-    memcpy(relative_record.fld,&dte_dio_block[REL_KEY_POS],REL_KEY_LEN);
+    memcpy(dte_rel_rec_num,&dte_dio_block[REL_KEY_POS],REL_KEY_LEN);
+    dte_rel_rec_num[REL_KEY_LEN] = 0;
+    memcpy(dte_relative_record.fld,&dte_dio_block[REL_KEY_POS],REL_KEY_LEN);
 }
 
 
@@ -291,7 +279,7 @@ static void val_keyed_key_fields(char *idx)
 	char ufb[1];
 	static char rnf[]="Error - Record Not Found";
 
-	key = key_from_idx(idx);
+	key = dte_key_from_idx(idx);
 	for(i = 0; dtefld[i].name[0] > ' '; ++i)
 		{
 		if(dtefld[i].frow)
@@ -305,7 +293,7 @@ static void val_keyed_key_fields(char *idx)
 	KCSIO(dte_dio_block,ufb,dte_record);
 	if(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN))
 		{
-		make_error_message(rnf);
+		KCSI_make_error_message(rnf);
 		dte_screen_error = 1;
 		}
 }
@@ -316,38 +304,52 @@ static void init_key_message_field(char *mode)
 	static char del_msg[]="Enter the key of the record to Delete";
 
 	if(*mode == 'B')
-		make_error_message(chg_msg);
+		KCSI_make_error_message(chg_msg);
 	else
-		make_error_message(del_msg);
+		KCSI_make_error_message(del_msg);
 }
 
 static void move_key_fld(FIELD *fld,int key)
 {
-	if(is_this_key(fld,key))
-		move_one_to_record(fld);
+	if(dte_is_this_key(fld,key))
+		dte_move_one_to_record(fld);
 }
 
-void load_first_record(char *idx)
+void dte_load_first_record(char *idx)
 {
-	init_dte_record();
-	if(file_is_relative())		    /* relfiles 26-Mar-1990*/
-		{			    /* relfiles 26-Mar-1990*/
-		strcpy(relative_record.fld,"1 ");    /* relfiles 26-Mar-1990*/
-		val_key_fields(idx);
+	dte_init_record();	/* Blank out the dte_record */
+	if(dte_file_is_relative())		    
+	{			    
+		memcpy(dte_relative_record.fld,"1       ", REL_KEY_LEN);    
+		val_rel_key_fields(idx);
 		if (!dte_screen_error)
-		    move_to_screen();
-		}			    /* relfiles 26-Mar-1990*/
-	else
 		{
-		start_this_record_key(idx);
+			dte_move_to_screen();
 		}
+		else
+		{
+			/* 
+			** There is not a record 1 so 
+			** clear the error message and 
+			** try reading next record 
+			*/
+			dte_screen_error = 0;
+			dte_init_message_field();
+			dte_load_next_record(idx);
+		}
+
+	}			    
+	else
+	{
+		start_this_record_key(idx);
+	}
 }
 
 static void start_this_key(char *idx)
 {
 	int key,i;
 
-	key = key_from_idx(idx);
+	key = dte_key_from_idx(idx);
 
 	for(i = 0; dtefld[i].name[0] > ' '; ++i)
 		{
@@ -374,13 +376,13 @@ static void start_this_record_key(char *idx)
 	if(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN))	/*IO no ok*/
 		{
 		dte_screen_error = 1;
-		make_error_message(record_not_found);
+		KCSI_make_error_message(record_not_found);
 		return;
 		}
-	load_next_record(idx);
+	dte_load_next_record(idx);
 }
 
-void load_next_record(char *idx)
+void dte_load_next_record(char *idx)
 {
 	static char last_record[]="Error - Last Record Already Displayed.";
 	char ufb[1];
@@ -390,19 +392,19 @@ void load_next_record(char *idx)
 	if(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN))	/*IO no ok*/
 		{
 		dte_screen_error = 1;
-		make_error_message(last_record);
+		KCSI_make_error_message(last_record);
 		return;
 		}
 	else
-		move_to_screen();
-	if(file_is_relative())		    /* relfiles 26-Mar-1990*/
-		rel_rec_num_to_fld();	    /* relfiles 26-Mar-1990*/
+		dte_move_to_screen();
+	if(dte_file_is_relative())		    /* relfiles 26-Mar-1990*/
+		dte_rel_rec_num_to_fld();	    /* relfiles 26-Mar-1990*/
 }
 
 /*----
 Added to load a previous record from the current pointer.
 ------*/
-void load_previous_record(char *idx)
+void dte_load_previous_record(char *idx)
 {
 	static char first_record[]="Error - First Record Already Displayed.";
 	char ufb[1];
@@ -412,18 +414,59 @@ void load_previous_record(char *idx)
 	if(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN))	/*IO no ok*/
 		{
 		dte_screen_error = 1;
-		make_error_message(first_record);
+		KCSI_make_error_message(first_record);
 		return;
 		}
 	else
-		move_to_screen();
+		dte_move_to_screen();
 
-	if(file_is_relative())		    /* relfiles 26-Mar-1990*/
-		rel_rec_num_to_fld();	    /* relfiles 26-Mar-1990*/
+	if(dte_file_is_relative())		    /* relfiles 26-Mar-1990*/
+		dte_rel_rec_num_to_fld();	    /* relfiles 26-Mar-1990*/
 }
 /*
 **	History:
 **	$Log: dkey.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:23  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.16  2002/10/24 15:48:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.15  2002/10/24 14:20:39  gsl
+**	Make globals unique
+**	
+**	Revision 1.14  2002/10/23 21:07:27  gsl
+**	make global name unique
+**	
+**	Revision 1.13  2002/10/23 20:39:09  gsl
+**	make global name unique
+**	
+**	Revision 1.12  2002/10/17 17:17:17  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.11  2002/09/03 18:08:47  gsl
+**	load_first_record() for relative file if no record 1
+**	clear the error message then
+**	try a dte_load_next_record
+**	
+**	Revision 1.10  2002/09/03 18:02:33  gsl
+**	load_first_record() for relative file if no record 1 try a dte_load_next_record
+**	
+**	Revision 1.9  2002/09/03 17:58:11  gsl
+**	load_first_record() for relative file if no record 1
+**	
+**	Revision 1.8  2002/09/03 17:49:46  gsl
+**	load_first_record() for relative file if no record 1
+**	
+**	Revision 1.7  2002/08/01 16:49:54  gsl
+**	type warnings
+**	
+**	Revision 1.6  2002/07/26 18:19:19  gsl
+**	wscreen -> WSCREEN
+**	
+**	Revision 1.5  2002/07/25 15:20:29  gsl
+**	Globals
+**	
 **	Revision 1.4  1999/09/13 19:47:06  gsl
 **	fix missing return code
 **	

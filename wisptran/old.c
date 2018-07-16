@@ -1610,27 +1610,27 @@ int p_open(void)
 		fnum = 0;								/* It's not a file name yet		*/
 		if (!strcmp(o_parms[0],"SHARED"))					/* handle SHARED phrase	    		*/
 		{
-			open_mode = OPEN_SHARED;
+			open_mode = WFOPEN_SHARED;
 		}									/* Handle other modes			*/
 		else if (!strcmp(o_parms[0],"SPECIAL-INPUT"))				/* handle SPECIAL-INPUT phrase		*/
 		{
-			open_mode = OPEN_SPECIAL_INPUT;
+			open_mode = WFOPEN_SPECIAL_INPUT;
 		}									/* Handle other modes			*/
 		else if (!strcmp(o_parms[0],"I-O"))					/* handle I-O phrase			*/
 		{
-			open_mode = OPEN_I_O;
+			open_mode = WFOPEN_I_O;
 		}									/* Handle other modes			*/
 		else if (!strcmp(o_parms[0],"INPUT"))
 		{
-			open_mode = OPEN_INPUT;
+			open_mode = WFOPEN_INPUT;
 		}
 		else if (!strcmp(o_parms[0],"OUTPUT"))
 		{
-			open_mode = OPEN_OUTPUT;
+			open_mode = WFOPEN_OUTPUT;
 		}
 		else if (!strcmp(o_parms[0],"EXTEND"))
 		{
-			open_mode = OPEN_EXTEND;
+			open_mode = WFOPEN_EXTEND;
 		}
 		else if (is_crt)							/* delete CRT file opens		*/
 		{
@@ -1653,7 +1653,7 @@ int p_open(void)
 				o_fref[o_count] = fnum;					/* remember which one it is		*/
 				prog_ref[fnum]++;					/* Say it was used.			*/
 
-				if (open_mode == OPEN_SHARED)				/* handle SHARED phrase	    		*/
+				if (open_mode == WFOPEN_SHARED)				/* handle SHARED phrase	    		*/
 				{							/* If Sequential, change to EXTEND	*/
 					if (prog_ftypes[fnum] & (SEQ_DYN + SEQ_FILE))
 					{
@@ -1675,7 +1675,7 @@ int p_open(void)
 					}
 
 				}							/* Handle other modes			*/
-				else if (open_mode == OPEN_SPECIAL_INPUT)		/* handle SPECIAL-INPUT phrase		*/
+				else if (open_mode == WFOPEN_SPECIAL_INPUT)		/* handle SPECIAL-INPUT phrase		*/
 				{
 					strcpy(o_fmode[o_count],"INPUT");		/* CHANGE IT				*/
 					if (lpi_cobol||mf_aix)
@@ -1685,7 +1685,7 @@ int p_open(void)
 					else
 						strcpy(o_allow[o_count]," ALLOWING ALL");	/* And the trailing mode	*/
 				}							/* Handle other modes			*/
-				else if (open_mode == OPEN_I_O)				/* handle I-O phrase			*/
+				else if (open_mode == WFOPEN_I_O)				/* handle I-O phrase			*/
 				{
 					strcpy(o_fmode[o_count],"I-O");			/* Set to I-O				*/
 
@@ -1699,7 +1699,7 @@ int p_open(void)
 						strcpy(o_allow[o_count]," ALLOWING READERS");	/* Manual record locking	*/
 											/* Vax needs readers - READFDR		*/
 				}							/* Handle other modes			*/
-				else if (open_mode == OPEN_INPUT)
+				else if (open_mode == WFOPEN_INPUT)
 				{
 					strcpy(o_fmode[o_count],"INPUT");		/* save the mode			*/
 					o_allow[o_count][0] = 0;			/* Wang/VAX/LPI allow other readers	*/
@@ -1708,7 +1708,7 @@ int p_open(void)
 					else if (vax_cobol || acu_cobol)		/* Manual record locking		*/
 						strcpy(o_allow[o_count], " ALLOWING READERS");
 				}
-				else if (open_mode == OPEN_OUTPUT)
+				else if (open_mode == WFOPEN_OUTPUT)
 				{
 					strcpy(o_fmode[o_count],"OUTPUT");		/* save the mode			*/
 					strcpy(o_allow[o_count]," ");			/* Automatic record locking.		*/
@@ -1728,7 +1728,7 @@ int p_open(void)
 						strcpy(o_allow[o_count]," ALLOWING READERS");	/* Manual record locking.	*/
 #endif
 				}
-				else if (open_mode == OPEN_EXTEND)
+				else if (open_mode == WFOPEN_EXTEND)
 				{
 					strcpy(o_fmode[o_count],"EXTEND");		/* save the mode			*/
 					if (lpi_cobol||mf_aix)
@@ -3432,6 +3432,9 @@ p_delete()
 /*
 **	History:
 **	$Log: old.c,v $
+**	Revision 1.4.2.1  2002/11/12 16:00:30  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.4  1998/03/27 19:11:52  gsl
 **	updated
 **	

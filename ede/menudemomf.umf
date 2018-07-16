@@ -1,4 +1,4 @@
-WISP=wisp
+WISPTRAN=wisp
 WISPFLAGS= -VMF -m -I .
 COBOL=cob 
 COBOLFLAGS=-i -C warning=2 -C linkcount=500
@@ -13,35 +13,35 @@ MCBBLD:	mcbbld.cob
 	mv mcbbld.int MCBBLD.int
 
 mcbbld.cob: mcbbld.wcb
-	$(WISP) $(WISPFLAGS) $(OPT) mcbbld
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) mcbbld
 
 MCBEDIT: mcbedit.cob
 	$(COBOL) $(COBOLFLAGS) mcbedit.cob
 	mv mcbedit.int MCBEDIT.int
 
 mcbedit.cob: mcbedit.wcb
-	$(WISP) $(WISPFLAGS) mcbedit
+	$(WISPTRAN) $(WISPFLAGS) mcbedit
 
 MENUDISP: menudisp.cob
 	$(COBOL) $(COBOLFLAGS) menudisp.cob
 	mv menudisp.int MENUDISP.int
 
 menudisp.cob: menudisp.wcb
-	$(WISP) $(WISPFLAGS) $(OPT) menudisp
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) menudisp
 
 MENULOGO: menulogo.cob
 	$(COBOL) $(COBOLFLAGS) menulogo.cob
 	mv menulogo.int MENULOGO.int
 
 menulogo.cob: menulogo.wcb
-	$(WISP) $(WISPFLAGS) $(OPT) menulogo
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) menulogo
 
 MENUVECT: menuvect.cob
 	$(COBOL) $(COBOLFLAGS) menuvect.cob
 	mv menuvect.int MENUVECT.int
 
 menuvect.cob: menuvect.wcb
-	$(WISP) $(WISPFLAGS) menuvect
+	$(WISPTRAN) $(WISPFLAGS) menuvect
 
 
 MENUDEMO: menudemo.cob
@@ -49,5 +49,5 @@ MENUDEMO: menudemo.cob
 	mv menudemo.int MENUDEMO.int
 
 menudemo.cob: menudemo.wcb
-	$(WISP) $(WISPFLAGS) $(OPT) menudemo
+	$(WISPTRAN) $(WISPFLAGS) $(OPT) menudemo
 

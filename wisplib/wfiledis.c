@@ -138,12 +138,13 @@ int display_util_getparms(char *filename)
 		{
 			if (0 != memcmp(file,"        ",8))
 			{
+				char saveExt[39];
 				mode = IS_PRINTFILE|IS_BACKFILL;			/* Tell wfname what type of file.	*/
-				SAVE_WISPFILEXT;					/* Save the file extension.		*/
+				WGETFILEXT(saveExt);					/* Save the file extension.		*/
 				end_name = wfname(&mode, volume, library, file, filename);	/* Construct native filename.	*/
 				*end_name = '\0';					/* Null terminate.			*/
 				memcpy(tempname,filename,strlen(filename));
-				RESTORE_WISPFILEXT;					/* Restore the extension.		*/
+				WSETFILEXT(saveExt);					/* Restore the extension.		*/
 			}
 			else
 			{
@@ -294,7 +295,7 @@ int use_internal_display(void)
 **	WARNINGS:	None
 **
 */
-int link_display(const char* filepath)
+int WL_link_display(const char* filepath)
 {
 	if (use_internal_display())
 	{
@@ -453,6 +454,12 @@ const char* custom_display_utility(void)
 /*
 **	History:
 **	$Log: wfiledis.c,v $
+**	Revision 1.17.2.3  2002/11/14 21:12:27  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
+**	Revision 1.17.2.2  2002/11/12 16:00:23  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.17.2.1  2002/10/09 21:03:04  gsl
 **	Huge file support
 **	

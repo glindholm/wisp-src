@@ -55,6 +55,21 @@ static char rcsid[]="$Id:$";
 **	Static Function Prototypes
 */
 
+static char	WISPRETURNCODE[3] = {'0','0','0'};
+
+int WL_get_internal_retcode(void)
+{
+	return atol ( WISPRETURNCODE );
+}
+
+void WL_set_internal_retcode(unsigned int rc)
+{
+	char buf[10];
+	sprintf(buf, "%03u", rc);
+	memcpy(WISPRETURNCODE, buf, 3);
+}
+
+
 #define		ROUTINE		54000
 
 void RETCODE(char code[3])
@@ -153,6 +168,9 @@ void delete_retcode(void)
 /*
 **	History:
 **	$Log: retcode.c,v $
+**	Revision 1.18.2.1  2002/11/14 21:12:25  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.18  2001/10/31 20:30:44  gsl
 **	moved wisprcfilepath() to wispcfg.c
 **	

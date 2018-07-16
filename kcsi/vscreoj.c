@@ -13,9 +13,9 @@ int cr_eoj(void)
 	char records[15];
 	char errors[15];
 
-	wpload();
-	gppfkeys = GP_PF_01|GP_PF_16;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_01|GP_PF_16;
+	WL_wswap(&GP_pfkeys);
 
 	GPSETUP();
 	GPSTD("EOJ     ","CREATE");
@@ -37,8 +37,8 @@ int cr_eoj(void)
 		GPCTEXT(errors,20,10);
 		}
 	GPNOENTER();
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	rc = pf;
 	return(rc);
 }
@@ -46,6 +46,18 @@ int cr_eoj(void)
 /*
 **	History:
 **	$Log: vscreoj.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:40  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.7  2002/10/24 14:20:32  gsl
+**	Make globals unique
+**	
+**	Revision 1.6  2002/07/12 17:17:02  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.5  2002/07/10 21:06:26  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.4  1996/10/03 00:11:40  gsl
 **	Fixed pfkey tags for w4w suppport
 **	

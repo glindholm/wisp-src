@@ -87,8 +87,8 @@
 	___	Change directory to your "test" dir based on the COBOL you
 		are using.
 
-		ACU	$ cd $WISP/src/testacu
-		MF	$ cd $WISP/src/testmf
+		ACU	$ cd $WISPSRC/testacu
+		MF	$ cd $WISPSRC/testmf
 
 	___	Run the "startup" file to setup environment variables.  
 		This will set your $WISPCONFIG plus COBOL specific variables.
@@ -103,7 +103,7 @@
 
 +	First execute the kcsitest.sh setup script.
 
-	___     cd $WISP/src/kcsi/crid
+	___     cd $WISPSRC/kcsi/crid
 		MF:	$ kcsitest.sh >> kcsi.log 2>&1
 
  	---	Verify file formats by looking at kcsi.log

@@ -48,8 +48,6 @@ Different field types
 Aliases that for struct members that do double duty
 ------*/
 
-#define	begrange	string
-
 typedef struct {
 	LL	ll;
 	int	no;
@@ -86,16 +84,13 @@ EXTERN_DEF	char	cr_out_rec[2049];
 /*
 EXTERN_DEF	char	cr_in_rec[2049];
 */
-EXTERN_DEF	KCSIO_BLOCK	wkfb;
-EXTERN_DEF	CR_FLD		wfld;
-EXTERN_DEF	char		wrecord[2049];
+EXTERN_DEF	KCSIO_BLOCK	CR_wkfb;
+EXTERN_DEF	CR_FLD		CR_wfld;
 EXTERN_DEF	int		cr_split_keys;
-EXTERN_DEF	int		keys_overlap;
-EXTERN_DEF	int		cr_debug;
+EXTERN_DEF	int		CR_keys_overlap;
 
 
-void *ll_select(void *base, int (*func) ());
-int block_is_done(CR_BLK *blk);
+int CR_block_is_done(CR_BLK *blk);
 
 #endif /* _VSCRGLB_H */
 
@@ -105,6 +100,21 @@ int block_is_done(CR_BLK *blk);
 /*
 **	History:
 **	$Log: vscrglb.h,v $
+**	Revision 1.3.2.2  2002/11/14 16:02:59  gsl
+**	Replace cr_debug the trace level
+**	
+**	Revision 1.3.2.1  2002/11/12 15:56:41  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/23 20:39:04  gsl
+**	make global name unique
+**	
+**	Revision 1.5  2002/10/21 18:29:20  gsl
+**	cleanup
+**	
+**	Revision 1.4  2002/07/25 15:20:22  gsl
+**	Globals
+**	
 **	Revision 1.3  1997/10/02 14:44:48  gsl
 **	Fix warnings
 **	

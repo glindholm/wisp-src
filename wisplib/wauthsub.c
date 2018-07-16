@@ -45,7 +45,6 @@ static char rcsid[]="$Id:$";
 #include "machid.h"
 #include "wispcfg.h"
 
-static int get_license_info(char* flickey, char* valcode);
 
 
 /*
@@ -693,7 +692,7 @@ int validate_license(void)
 **	WARNINGS:	None
 **
 */
-static int get_license_info(char* flickey, char* valcode)
+int get_license_info(char* flickey, char* valcode)
 {
 	FILE	*fp;
 	char	buff[256];
@@ -815,6 +814,9 @@ int check_timeout(char lowdate[8], char highdate[8])
 /*
 **	History:
 **	$Log: wauthsub.c,v $
+**	Revision 1.12.2.1  2002/11/14 18:03:52  gsl
+**	expose get_license_info() for use in wlicense
+**	
 **	Revision 1.12  1997/03/21 15:29:55  gsl
 **	Split the retrieval of the LICENSE_KEY and VALICATION_CODE into a separate
 **	routine in preparation of storing the info in the registry for WIN32

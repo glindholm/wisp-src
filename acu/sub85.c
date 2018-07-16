@@ -1,15 +1,16 @@
 /*
-	sub85.c		
-
-	This is the WISP compatable version of sub85.c for use with 
-	Acucobol 5.2 or later.
-
-	If you are using Acucobol 5.1 or earlier you will need to 
-	use the file sub85_acu51.c instead.  Rename this file 
-	to sub85_acu52.c then rename sub85_acu51.c to sub85.c.
-
-	All of the WISP added code is enclosed in
-	"#ifdef WISP" statements.
+**	Id:	$Id:$
+**	File:	sub85.c		
+**
+**	This is the WISP compatable version of sub85.c for use with 
+**	Acucobol 5.2 or later.
+**
+**	If you are using Acucobol 5.1 or earlier you will need to 
+**	use the file sub85_acu51.c instead.  Rename this file 
+**	to sub85_acu52.c then rename sub85_acu51.c to sub85.c.
+**
+**	All of the WISP added code is enclosed in
+**	"#ifdef WISP" statements.
 */
 #define WISP
 
@@ -43,17 +44,16 @@
 
 #ifdef WISP
 /************************************************************************/
-static char wisp_copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies, All rights reserved.";
-static char wisp_rcsid[]="$Id:$";
+
 /*
 	To reduce the size of the RTS you can remove any of the following
 	"#define" statements and the corresponding files will not be
 	included.
 
-		ACP	 The Wang ACP routines.
-		NETCAP	 The Netron Cap routines.
-		EDE	 The EDE routines.
-		CRID	 Control Report Inquiry Datentry (by default they are not included) 
+	ACP	 The Wang ACP routines.
+	NETCAP	 The Netron Cap routines.
+	EDE	 The EDE routines.
+	KCSI	 The KCSI utilties (Control Report Inquiry Datentry Create)
 */
 
 #include <string.h>
@@ -70,14 +70,11 @@ typedef unsigned int   	uint4;
 #define NETCAP
 #define EDE
 
-char	WISPFILEXT[39];			/* Define the file extension variable.	*/
-char	WISPRETURNCODE[3];		/* Define the return code field.	*/
-
 extern int va_set();
 extern void reversebytes();
 extern int bytenormal();
 extern void werrlog();
-extern void wexit();
+extern void WL_wexit();
 extern void set_isdebug_true();
 extern void set_isdebug_false();
 extern char *upper_string();
@@ -88,11 +85,12 @@ int 	wfrontend();
 int	wfrontend2();
 
 /*
-**  Include the CRID header files
+**  Include the KCSI header files
 */
-#ifdef CRID
-#include "crid.h"
-#endif /* CRID */
+#ifdef KCSI
+#define KCSI_SUB85_HEADER
+#include "kcsi_sub85_inc.c"
+#endif /* KCSI */
 
 /************************************************************************/
 #endif /* WISP */
@@ -296,11 +294,12 @@ struct	PROCTABLE LIBTABLE[] = {
 #endif /* ORIGMENU */
 
 /*
-** This includes the CRID utility routines
+** This includes the KCSI utility routines
 */
-#ifdef CRID
-#include "cridtbl.c"
-#endif /* CRID */
+#ifdef KCSI
+#define KCSI_SUB85_LIBTABLE
+#include "kcsi_sub85_inc.c"
+#endif /* KCSI */
 
 /*
 ** Terminate with a NULL
@@ -1575,7 +1574,7 @@ int	error_halt;
 		
 		wisp_wexit = 1;
 
-		wexit(error_halt);
+		WL_wexit(error_halt);
 	}
 }
 void Shutdown(error_halt)
@@ -1755,11 +1754,12 @@ int4 l2;
 }
 
 /*
-** Include CRID interface routines
+** Include KCSI interface routines
 */
-#ifdef CRID
-#include "crid85.c"
-#endif /* CRID */
+#ifdef KCSI
+#define KCSI_SUB85_ROUTINES
+#include "kcsi_sub85_inc.c"
+#endif /* KCSI */
 
 /************************************************************************/
 #endif /* WISP */

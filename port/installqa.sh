@@ -1,25 +1,18 @@
 #!/bin/sh
+#	Id:		$Id:$
 #
 #	File:		installqa.sh
 #
 #	Function:	This script installs a QA version of wisp 
-#			to $WISP/wisp.QA.
+#			to ${WISPSRC}/QA.
 #
 #	Desciption:	This routine "installs" the QA ship kit.
-#			- remove old $WISP/wisp.QA
-#			- create $WISP/wisp.QA
-#			- copy $WISP/src/ship/wisp to $WISP/wisp.QA
-#			- add EDE and the runtime systems
 #
-#	Warning:	The previous version of $WISP/wisp.QA will be
-#			deleted.
-#
-#	History:	06/30/92	Written. GSL
 #
 
-if [ ! -d $WISP ]
+if [ ! -d ${WISPSRC} ]
 then
-	echo 'Directory $WISP not found'
+	echo 'Directory ${WISPSRC} not found'
 	echo installqa.sh Aborting!
 	exit
 fi
@@ -27,7 +20,7 @@ fi
 echo
 echo Available WISP shipping kits:
 echo
-ls -d $WISP/src/wisp_*.ship
+ls -d ${WISPSRC}/wisp_*.ship
 
 echo
 echo "Enter the WISP version number (e.g. 4400) ?"
@@ -46,11 +39,11 @@ echo Using Version=[${VER}]
 #
 WISP_VER=wisp_${VER}
 EDE_VER=ede_${VER}
-SHIP=$WISP/src/${WISP_VER}.ship
+SHIP=${WISPSRC}/${WISP_VER}.ship
 SHIPWISPTARZ=$SHIP/${WISP_VER}.tar.Z
 SHIPEDETARZ=$SHIP/${EDE_VER}.tar.Z
-QABASE=${WISP}/QA
-WISPDIR=${WISP}/QA/wisp
+QABASE=${WISPSRC}/QA
+WISPDIR=${WISPSRC}/QA/wisp
 
 if [ ! -f ${SHIPWISPTARZ} ]
 then
@@ -61,13 +54,12 @@ fi
 
 #
 #	Cleanup old QA
-#		$WISP/QA
-#		$WISP/wisp.QA --> $WISP/QA/wisp_XXXX
+#		${WISPSRC}/QA
 #
 if [ -d ${QABASE} ]
 then
 	echo
-	echo 'Removing OLD $WISP/QA'
+	echo 'Removing OLD ${WISPSRC}/QA'
 	rm -r -f ${QABASE}
 
 	if [ -d ${QABASE} ]
@@ -79,10 +71,10 @@ then
 fi
 
 #
-#	Make a new $WISP/QA
+#	Make a new ${WISPSRC}/QA
 #
 echo
-echo 'Creating $WISP/QA'
+echo 'Creating ${WISPSRC}/QA'
 mkdir ${QABASE}
 
 if [ ! -d ${QABASE} ]
@@ -112,61 +104,32 @@ uncompress -c ${SHIPEDETARZ} | tar -xvpf -
 ln -s ${EDE_VER} ede
 
 echo
-echo 'Adding CRID for Acucobol'
-CRIDSHIP=$WISP/src/kcsi/crid_acu_*.ship
-if [ -d $CRIDSHIP ]
+echo 'Adding KCSI for Acucobol'
+KCSISHIP=${WISPSRC}/kcsi/kcsi_acu_*.ship
+if [ -d ${KCSISHIP} ]
 then
 	cd ${WISPDIR}
-	uncompress -c $CRIDSHIP/crid_acu_*.tar.Z|tar -xvpf -
-	ln -s crid_acu_* cridacu
+	uncompress -c $KCSISHIP/kcsi_acu_*.tar.Z|tar -xvpf -
+	ln -s kcsi_acu_* kcsiacu
 else
 	echo
-	echo '**** CRID ACU NOT INSTALLED ****'
+	echo '**** KCSI ACU NOT INSTALLED ****'
 	echo
 fi
 
 echo
-echo 'Adding CRID for Micro Focus'
-CRIDSHIP=$WISP/src/kcsi/crid_mf_*.ship
-if [ -d $CRIDSHIP ]
+echo 'Adding KCSI for Micro Focus'
+KCSISHIP=${WISPSRC}/kcsi/kcsi_mf_*.ship
+if [ -d ${KCSISHIP} ]
 then
 	cd ${WISPDIR}
-	uncompress -c $CRIDSHIP/crid_mf_*.tar.Z|tar -xvpf -
-	ln -s crid_mf_* cridmfx
+	uncompress -c ${KCSISHIP}/kcsi_mf_*.tar.Z|tar -xvpf -
+	ln -s kcsi_mf_* kcsimf
 else
 	echo
-	echo '**** CRID MF NOT INSTALLED ****'
+	echo '**** KCSI MF NOT INSTALLED ****'
 	echo
 fi
-
-echo
-echo 'Adding CREATE for Acucobol'
-CREATESHIP=$WISP/src/kcsi/create_acu_*.ship
-if [ -d $CREATESHIP ]
-then
-	cd ${WISPDIR}
-	uncompress -c $CREATESHIP/create_acu_*.tar.Z|tar -xvpf -
-	ln -s create_acu_* createacu
-else
-	echo
-	echo '**** CREATE ACU NOT INSTALLED ****'
-	echo
-fi
-
-echo
-echo 'Adding CREATE for Micro Focus'
-CREATESHIP=$WISP/src/kcsi/create_mf_*.ship
-if [ -d $CREATESHIP ]
-then
-	cd ${WISPDIR}
-	uncompress -c $CREATESHIP/create_mf_*.tar.Z|tar -xvpf -
-	ln -s create_mf_* createmfx
-else
-	echo
-	echo '**** CREATE MF NOT INSTALLED ****'
-	echo
-fi
-
 
 echo
 echo 'Building ACUCOBOL runtime systems'
@@ -192,17 +155,17 @@ else
 fi
 
 
-if [ -f ${WISPDIR}/cridacu/wruncbl.umf ]
+if [ -f ${WISPDIR}/kcsiacu/wruncbl.umf ]
 then
 	echo
-	echo 'Building the ACU+CRID runtime'
+	echo 'Building the ACU+KCSI runtime'
 	echo 
 
-	cd ${WISPDIR}/cridacu
-	make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} CRIDDIR=${WISPDIR}/cridacu -f wruncbl.umf crid
+	cd ${WISPDIR}/kcsiacu
+	make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} KCSIDIR=${WISPDIR}/kcsiacu -f wruncbl.umf kcsi
 else
 	echo
-	echo '**** CRID ACU is NOT INSTALLED ****'
+	echo '**** KCSI ACU is NOT INSTALLED ****'
 	echo
 fi
 

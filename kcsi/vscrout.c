@@ -39,9 +39,9 @@ typedef struct {
 /*
 **	Globals and Externals
 */
-AKEY	akey[WANG_MAX_KEYS];
-AKEY	split[NPARTS];
-AKEY	blank_akey = { "     ", "   ", " "};
+static AKEY	akey[WANG_MAX_KEYS];
+static AKEY	split[NPARTS];
+static AKEY	blank_akey = { "     ", "   ", " "};
 
 /*
 **	Static data
@@ -176,7 +176,7 @@ static void name_and_type_init(char *vers, char *platform)
 	memcpy(cr_out.ofile._library,create_outlib,8);
 	memcpy(cr_out.ofile._volume,create_outvol,8);
 	cr_out.ofile._org[0] = ' ';
-#ifdef KCSI_MF
+#ifdef KCSI_MFX
 	cr_out.ofile._format = MF_FILE_DEFAULT_FORMAT;
 #endif
 #ifdef KCSI_ACU
@@ -218,9 +218,9 @@ static int name_and_type_screen(void)
 	int rc;
 	long pf;
 
-	wpload();
-	gppfkeys = GP_PF_13|GP_PF_16;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_13|GP_PF_16;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("OUTPUT  ","CREATE");
 	GPCTEXT(logo,10,15);
@@ -236,7 +236,7 @@ static int name_and_type_screen(void)
 	GPCTEXT("Record size:",17,2);
 	GPCTEXT("Record Length",17,35);
 	GPKW("RECSIZE ",recsize,4,17,15,"N");
-#ifdef KCSI_MF
+#ifdef KCSI_MFX
 	GPCTEXT("Format:",18,2);
 	GPCTEXT("0 = Default, 1 = C-ISAM, 2 = LEVEL II COBOL,",18,35);
 	GPCTEXT("3 = Format used by system, 4 = IDXFORMAT\"4\"",19,35);
@@ -251,8 +251,8 @@ static int name_and_type_screen(void)
 	GPCTEXT("Or Select:",22,2);
 	GPCTEXT("(13) Help  (16) Exit ",23,45);
 	GPCTEXT(message_field,24,2);
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	strcpy(message_field,"");
 	rc = pf;
 	return(rc);
@@ -263,9 +263,7 @@ static void val_name_and_type(void)
 	if(! screen_error) val_name();
 	if(! screen_error) val_type();
 	if(! screen_error) val_recsize();
-#ifdef KCSI_MF
 	if(! screen_error) val_format();
-#endif
 }
 
 
@@ -306,7 +304,7 @@ static void val_type(void)
 
 static void val_name(void)
 {
-	if(! valspec_filled(cr_out.ofile._name,
+	if(! KCSI_valspec_filled(cr_out.ofile._name,
 			   cr_out.ofile._library,
 			   cr_out.ofile._volume))
 		{
@@ -323,7 +321,7 @@ static void val_format(void)
 
 	format = output_format[0];
 
-#ifdef KCSI_MF
+#ifdef KCSI_MFX
 	if ( format == '1' )	cr_out.ofile._format = MF_CISAM_FORMAT;
 	else if ( format == '2' )	cr_out.ofile._format = MF_LEVEL2_FORMAT;
 	else if ( format == '3' )	cr_out.ofile._format = MF_NATIVE_FORMAT;
@@ -458,9 +456,9 @@ static int primary_key_screen(void)
 	int rc;
 	long pf;
 
-	wpload();
-	gppfkeys = GP_PF_01|GP_PF_13;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_01|GP_PF_13;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("INDEXOPT","CREATE");
 	GPCTEXT(logo,10,15);
@@ -477,8 +475,8 @@ static int primary_key_screen(void)
 	GPCTEXT("Press (1) to respecify output parameters", 22, 2);
 	GPCTEXT("(13) Help",22,45);
 	GPCTEXT(message_field,24,2);
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	strcpy(message_field,"");
 	rc = pf;
 	return(rc);
@@ -554,12 +552,12 @@ static void val_errlist(void)
 {
 	if(! strcmp(errlist,"YES"))
 		{
-		cr_errlist = 'Y';
+		cr_errlist = 1;
 		return;
 		}
 	if(! strcmp(errlist,"NO "))
 		{
-		cr_errlist = 'N';
+		cr_errlist = 0;
 		return;
 		}
 	strcpy(message_field,"ERRLIST must be YES or NO.");
@@ -619,9 +617,9 @@ static int split_key_screen(int key, char *dups)
 	char gpname[10];
 	char duptext[81];
 
-	wpload();
-	gppfkeys = GP_PF_01|GP_PF_13;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_01|GP_PF_13;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	if(key == 0)
 		{
@@ -649,8 +647,8 @@ static int split_key_screen(int key, char *dups)
 		}
 	GPCTEXT("Press (1) to respecify output parameters  (13) for Help",22,2);
 	GPCTEXT(message_field,24,2);
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	strcpy(message_field,"");
 	rc = pf;
 	return(rc);
@@ -758,17 +756,17 @@ static void squeeze(char *base, int len, int count,
 Semi generic squeezing routine, uses squeeze()
 ------*/
 
-static int can_squeeze_akey(void *old, void *new)
+static int can_squeeze_akey(void *old, void *l_new)
 {
 	if(strcmp(((AKEY *)old)->pos,"     "))
 		return(0);
 	return(1);
 }
 
-static int  squeeze_akey(void *old, void *new)
+static int  squeeze_akey(void *old, void *l_new)
 {
-	memcpy(old,new,sizeof(AKEY));
-	memcpy(new,&blank_akey,sizeof(AKEY));
+	memcpy(old,l_new,sizeof(AKEY));
+	memcpy(l_new,&blank_akey,sizeof(AKEY));
 	return 0;
 }
 
@@ -847,9 +845,9 @@ static int alt_keys_screen(void)
 	int rc,idx;
 	long pf;
 
-	wpload();
-	gppfkeys = GP_PF_01|GP_PF_13;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_01|GP_PF_13;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("ALTKEYS ","CREATE");
 	for(idx = 0; idx < 16; ++idx)
@@ -867,8 +865,8 @@ static int alt_keys_screen(void)
 	GPCTEXT("  (13) Help",22,50);
 	GPCTEXT(m1_field,23,50);
 	GPCTEXT(m2_field,24,50);
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	strcpy(message_field,"");
 	rc = pf;
 	return(rc);
@@ -1027,6 +1025,36 @@ static int isblank(char *str, int len)
 /*
 **	History:
 **	$Log: vscrout.c,v $
+**	Revision 1.13.2.1  2002/11/12 15:56:42  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.22  2002/10/24 15:48:30  gsl
+**	Make globals unique
+**	
+**	Revision 1.21  2002/10/24 14:20:30  gsl
+**	Make globals unique
+**	
+**	Revision 1.20  2002/10/21 18:27:59  gsl
+**	fix setting value of cr_errlist (was 'Y' or 'N')
+**	
+**	Revision 1.19  2002/10/21 15:27:04  gsl
+**	cleanup
+**	
+**	Revision 1.18  2002/10/17 21:22:44  gsl
+**	cleanup
+**	
+**	Revision 1.17  2002/10/17 17:56:19  gsl
+**	Rename variables new to l_new
+**	
+**	Revision 1.16  2002/07/25 15:20:22  gsl
+**	Globals
+**	
+**	Revision 1.15  2002/07/12 17:17:02  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.14  2002/07/10 21:06:27  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.13  2002/03/28 14:19:02  gsl
 **	FIx PF1 -> (1) tag
 **	

@@ -23,8 +23,11 @@ static char rcsid[]="$Id:$";
 #include "wdefines.h"
 #include "wglobals.h"
 
-
-void wfclose(char* fname)								/* This routine is called after COBOL*/
+void wfclose(const char* fname)
+{
+	WFCLOSE(fname);
+}
+void WFCLOSE(const char* fname)								/* This routine is called after COBOL*/
 {											/* closes the file.			*/
 
 	int retcd;
@@ -85,6 +88,9 @@ void wfclose(char* fname)								/* This routine is called after COBOL*/
 /*
 **	History:
 **	$Log: wfclose.c,v $
+**	Revision 1.12.2.1  2002/11/12 16:00:23  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.12  1998/10/22 18:12:42  gsl
 **	change to use g_print_file_list
 **	Fix "*" processing to free and null the list

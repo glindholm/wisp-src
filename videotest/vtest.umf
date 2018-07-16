@@ -20,7 +20,7 @@ CDEBUG = -g
 
 L_VIDEO = video
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 CFLAGS  = $(CFLAGS0) -I$(VIDEO_INC_DIR)
 

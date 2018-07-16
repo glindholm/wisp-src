@@ -102,7 +102,7 @@ int WL_stat_size_int8(const char* name, INT8 *size);
 void FILECOPY();
 
 /* filgparm.c */
-void file_getparm2(int4 f_mode, char *file, char *lib, char *vol, char *prname, 
+void file_getparm2(int4 f_mode, char *file, char *lib, char *vol, const char *prname, 
 		char *issuer, int4 *entry_mode, char *getparm_type, char *native_path,
 		char *msg1, char *msg2, char *pfkey_rcvr, char intv_type,	
 		char *orig_file, char *prtclass, int4 *form, int4* copies);
@@ -205,6 +205,9 @@ void RETCODE(char code[3]);
 void setretcode(char* wispreturncode);
 void delete_retcode(void);
 
+int  WL_get_internal_retcode(void);
+void WL_set_internal_retcode(unsigned int rc);
+
 /* scratch.c */
 int wisp_unlink(const char *filename);
 void SCRATCH();
@@ -257,7 +260,8 @@ void wexith(void);
 void wispexit_cleanup(void);
 
 /* wfclose.c */
-void wfclose(char* fname);
+void wfclose(const char* fname);
+void WFCLOSE(const char* fname);
 
 /* wgetpgrp.c */
 int wgetpgrp(void);
@@ -285,6 +289,9 @@ void wprint(
 	int	prt_form,			/* The form number.					*/
 	int	*return_code);			/* The return code.					*/
 
+/* wscreen.c */
+void WSCREEN();
+void wscreen();
 
 /* wshelp.c */
 int wsh_help(int prog_running);								/* Put up the shell screen.		*/
@@ -301,7 +308,8 @@ int sethelpactive(int flag);
 void WSPAWN(short *action,char *progname,short *name_len,char *msg,short *msg_len);
 
 /* wswap.c */
-void wswap(void *lword);			/* swap the order of the words in a longword item (for WANG routines to use)	*/
+void WL_wswap(void *lword);
+void wswap(void *lword);
 void reversebytes(void *ptr, int len);							/* Reverse the bytes.			*/
 int bytenormal(void);
 int4 get_swap(const int4 *src);
@@ -314,6 +322,8 @@ int run_unixcommand_silent(const char* command);
 /* wvaset.c */
 void wvaset(int4 *x);
 int va_count();
+void WL_set_va_count(int x);
+int WL_va_count();
 
 
 #endif /* wisplib_H */
@@ -321,6 +331,12 @@ int va_count();
 /*
 **	History:
 **	$Log: wisplib.h,v $
+**	Revision 1.38.2.5  2002/11/14 21:12:29  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
+**	Revision 1.38.2.4  2002/11/12 16:00:19  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.38.2.3  2002/10/09 21:17:35  gsl
 **	Huge file support
 **	

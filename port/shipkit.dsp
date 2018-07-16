@@ -79,6 +79,14 @@ CFG=shipkit - Win32 Debug
 
 # Begin Source File
 
+SOURCE=..\doc\portunix.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\doc\portwin32.txt
+# End Source File
+# Begin Source File
+
 SOURCE=.\shipnt.mak
 # End Source File
 # End Target

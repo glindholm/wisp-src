@@ -89,14 +89,8 @@ char inq_progname[81]
 #ifdef KCSI_ACU
 ="wrun INQUIRY"
 #endif
-#ifdef KCSI_MF
-="wrun inquiry"
-#endif
 #ifdef KCSI_MFX
-="wrun inquiry"
-#endif
-#ifdef KCSI_LPI
-="wrun inquiry"
+="inquiry"
 #endif
 ;
 
@@ -141,10 +135,10 @@ void GENINQ(char *gio,char *display,char *endrun,char *dio,char *change,
 #endif
         }
 	
-	mode = WISP_PRNAME + WISP_OUTPUT;
-	wfopen(&mode,&gio[VOLUME_POS],&gio[LIBRARY_POS],&gio[NAME_POS],
-			inq_sys_name,"INQUIRY ");
-	strunc(inq_sys_name);
+	mode = IS_OUTPUT;
+	wfopen2(&mode,&gio[VOLUME_POS],&gio[LIBRARY_POS],&gio[NAME_POS],
+			inq_sys_name,"INQUIRY ","INQUIRY ");
+	KCSI_strunc(inq_sys_name);
 	qfile = fopen(inq_sys_name,"w");
 
 	/* Introductory stuff and comments */
@@ -306,7 +300,7 @@ static void query_putparm(FILE *qf,char *disp,char *title,char *lines)
 			++wrk_ptr;
 		}
 		sprintf(qkeyword,"LINE%dA",qnum);
-		if(!isnblank(wrk_buf,40))
+		if(!KCSI_isnblank(wrk_buf,40))
 		{
 			continue_line(qf);
 			enter_quoted_keyword(qf,qkeyword,wrk_buf);
@@ -324,7 +318,7 @@ static void query_putparm(FILE *qf,char *disp,char *title,char *lines)
 			++wrk_ptr;
 		}
 		sprintf(qkeyword,"LINE%dB",qnum);
-		if(!isnblank(wrk_buf,39))
+		if(!KCSI_isnblank(wrk_buf,39))
 		{
 			continue_line(qf);
 			enter_quoted_keyword(qf,qkeyword,wrk_buf);
@@ -462,7 +456,7 @@ static void end_line(FILE *qf)
 	fprintf(qf,"\n");
 }
 
-int isnblank(char *mem,int len)
+int KCSI_isnblank(char *mem,int len)
 {
 	while(len--)
 	{
@@ -476,6 +470,37 @@ int isnblank(char *mem,int len)
 /*
 **	History:
 **	$Log: igen.c,v $
+**	Revision 1.8.2.1  2002/11/12 15:56:25  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.16  2002/10/17 21:22:41  gsl
+**	cleanup
+**	
+**	Revision 1.15  2002/10/17 17:17:18  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.14  2002/07/29 15:46:54  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.13  2002/07/29 14:47:21  gsl
+**	wfopen2 ->WFOPEN2
+**	wfopen3 ->WFOPEN3
+**	
+**	Revision 1.12  2002/07/25 15:20:28  gsl
+**	Globals
+**	
+**	Revision 1.11  2002/07/23 20:49:51  gsl
+**	globals
+**	
+**	Revision 1.10  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.9  2002/06/21 20:48:16  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.8  2001/11/02 23:13:33  gsl
 **	Fixed WPROC comment characters
 **	Removed VMS

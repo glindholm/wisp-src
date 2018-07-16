@@ -23,6 +23,14 @@ static void add_footer();
 static void add_fld_prompt(FIELD *fld);
 static void add_fld_item(FIELD *fld);
 static int add_edit_flags(FIELD *fld,char *edits);
+static void dmntl(char *mode,char *idx);
+static void add_dte_logo();
+static void end_main_screen();
+static void add_fld(FIELD *fld);
+static void add_fld_pic(FIELD *fld);
+static void add_prompt(int row,int col,char *prompt,char **fld,char **pfac);
+static void add_dte_scr_header();
+
 
 void DMNT(char *hdrs,char *t1,char *t2,char *cblock,char *dblock,char *mode,char *idx)
 {
@@ -59,62 +67,33 @@ void DMNT(char *hdrs,char *t1,char *t2,char *cblock,char *dblock,char *mode,char
 	dte_cf_hdrs = hdrs;
 	dte_cio_block = cblock;
 	dte_dio_block = dblock;
-/*
-	start_up_code();	
-*/
 	dmntl(mode,idx);
-/*
-	exit_code();
-*/
 }
 
-/*
-void start_up_code()
-{
-	static int4 one = 1L;
-	static int4 two = 2L;
 
-	wvaset(&two);
-	initwisp2(dte_app_name,&one);
-}
-*/
 
-/*
-void exit_code()
-{
-	close_crt();
-	setretcode();
-	wexith();
-	vexit();
-}
-void close_crt()
-{
-	vwang(dte_close_ws);
-}
-*/
-
-void dmntl(char *mode,char *idx)
+static void dmntl(char *mode,char *idx)
 {
 	int pfkey;
-	if(d_new_screen)
+	if(dte_new_screen)
 		bld_main_scr();
-	d_new_screen = 0;
+	dte_new_screen = 0;
 	while(1)
 		{
 		switch(*mode)
 			{
 			case 'A':
-				pfkey = add_records();
+				pfkey = dte_add_records();
 				if(pfkey == 9)
 					*mode = 'B';
 				break;
 			case 'B':
-				pfkey = change_records(idx,mode);
+				pfkey = dte_change_records(idx,mode);
 				if(pfkey == 9)
 					*mode = 'A';
 				break;
 			case 'C':
-				pfkey = delete_records(idx,mode);
+				pfkey = dte_delete_records(idx,mode);
 				break;
 			}
 		if(pfkey == 16)
@@ -129,12 +108,12 @@ static void bld_main_scr()
 {
 	int i;
 
-	dte_scr = main_scr;
+	dte_scr = (char*)dte_main_scr;
 	add_dte_scr_header();
 	add_dte_logo();
 	add_message();
-	if (file_is_relative()) 	/* relfiles 25-Mar-1990*/
-	    add_fld(&relative_record);	/* relfiles 25-Mar-1990*/
+	if (dte_file_is_relative()) 	/* relfiles 25-Mar-1990*/
+	    add_fld(&dte_relative_record);	/* relfiles 25-Mar-1990*/
 	for(i = 0; dtefld[i].name[0] > ' '; ++i)
 		{
 		if(dtefld[i].frow)
@@ -144,20 +123,20 @@ static void bld_main_scr()
 	end_main_screen();
 }
 
-void load_footer(char *prompt)
+void dte_load_footer(char *prompt)
 {
 	memset(dte_trailer,' ',79);
 	memcpy(dte_trailer,prompt,strlen(prompt));
 }
 
-void add_text_prompt(int row,int col,char *prompt)
+static void add_text_prompt(int row,int col,char *prompt)
 {
 	char *junk;
 
 	add_prompt(row,col,prompt,&junk,&junk);
 }
 
-void end_main_screen()
+static void end_main_screen()
 {
 	if(LIB_VERS == 22)
 		*dte_scr++ = '.';
@@ -171,7 +150,7 @@ void end_main_screen()
 /*----
 Copy the header data into the screen.
 ------*/
-void add_dte_scr_header()
+static void add_dte_scr_header()
 {
 	int len;
 
@@ -184,7 +163,7 @@ void add_dte_scr_header()
 	memcpy(dte_scr,start_scr,len = strlen(start_scr));
 	dte_scr += len;
 }
-void add_dte_logo()
+static void add_dte_logo()
 {
 	
 	static char deu[]=
@@ -228,7 +207,7 @@ static void add_footer()
 /*----
 Add the field as a prompt and a data item.
 ------*/
-void add_fld(FIELD *fld)
+static void add_fld(FIELD *fld)
 {
 	add_fld_prompt(fld);
 	add_fld_item(fld);
@@ -301,12 +280,12 @@ static void add_fld_item(FIELD *fld)
 	dte_scr += fld->edit_len;
 }
 
-void add_fld_pic(FIELD *fld)
+static void add_fld_pic(FIELD *fld)
 {
 	char pic[101];
 
 
-	get_pic_len(	pic,
+	KCSI_get_pic_len(	pic,
 		    	fld->type,
 			fld->len,
 			fld->dec,
@@ -396,7 +375,7 @@ static int add_edit_flags(FIELD *fld,char *edits)
 /*----
 A prompt is a simple field containing no modifiable characteristics
 ------*/
-void add_prompt(int row,int col,char *prompt,char **fld,char **pfac)
+static void add_prompt(int row,int col,char *prompt,char **fld,char **pfac)
 {
 	int len;
 
@@ -416,6 +395,30 @@ void add_prompt(int row,int col,char *prompt,char **fld,char **pfac)
 /*
 **	History:
 **	$Log: dmnt.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:23  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.12  2002/10/24 15:48:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.11  2002/10/24 14:20:39  gsl
+**	Make globals unique
+**	
+**	Revision 1.10  2002/10/23 21:07:27  gsl
+**	make global name unique
+**	
+**	Revision 1.9  2002/10/23 20:39:09  gsl
+**	make global name unique
+**	
+**	Revision 1.8  2002/08/01 16:49:53  gsl
+**	type warnings
+**	
+**	Revision 1.7  2002/07/25 15:20:28  gsl
+**	Globals
+**	
+**	Revision 1.6  2002/07/12 17:17:00  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.5  1996/09/26 21:22:44  gsl
 **	fix a memory overwrite in add_footer() which was wiping out the stack on NT
 **	

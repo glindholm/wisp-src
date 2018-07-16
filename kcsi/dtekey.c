@@ -13,7 +13,6 @@ Version 1.10 (c) 1991
 #include "intdef.h"
 #include "kcsifunc.h"
 
-extern char WISPRETURNCODE[];
 
 static char sccsid[] = "@(#)dtekey.c	1.7 6/12/94";
 
@@ -58,11 +57,15 @@ static int init_the_literals();
 static void clear_the_altkeys();
 static int load_the_altkeys();
 static int load_one_altkey();
+static void set_up_extra_pfs();
+static void set_gp_pf(uint4 *mask,int pf,int onoff);
+
+
 
 void DTEKEY(char *mode,char *idx)
 {
 	mode_flag[0] = *mode;
-	index_of_key = atoilen(idx,IDX_LEN);
+	index_of_key = kcsi_atoilen(idx,IDX_LEN);
 	if(opening_procedure())
 		{
 		main_process();
@@ -76,8 +79,6 @@ void DTEKEY(char *mode,char *idx)
 	sprintf(format,"%%0%dd",IDX_LEN);
 	sprintf(work,format,index_of_key);
 	memcpy(idx,work,IDX_LEN);
-	
-	setretcode(WISPRETURNCODE);
 }
 static int opening_procedure() /*tic*/
 {
@@ -161,7 +162,7 @@ static void get_the_keyname() /*tic*/
 static void call_keypath_getparm() /*tic*/
 {
 
-	wpload();	
+	WL_wpload();	
 	GPSETUP();
 	GPSTD("KEYPATH ","PATHS ");
 	GPCTEXT(text_01,9,2);
@@ -178,9 +179,9 @@ static void call_keypath_getparm() /*tic*/
 	GPCTEXT(text_10,23,2);
 	GPCTEXT(message_field,24,2);
 	GPENTER();
-	wswap(&gppfkeys);
-	GPPFS(&gppfkeys);
-	gp_numeric_pfkey = display_and_read_gp();
+	WL_wswap(&GP_pfkeys);
+	GPPFS(&GP_pfkeys);
+	gp_numeric_pfkey = GP_display_and_read();
 }
 static void clear_message_field()
 {
@@ -190,7 +191,7 @@ static int init_the_literals() /*tic*/
 {
 	int nkeys;
 
-	gppfkeys = 0;
+	GP_pfkeys = 0;
 	clear_the_altkeys();
 	clear_message_field();
 	nkeys = load_the_altkeys();
@@ -232,19 +233,19 @@ static int load_one_altkey() /*tic*/
 		ak_idx + 1,
 		cname,
 		cdups);
-		set_gp_pf((uint4*)&gppfkeys,ak_idx + 1, 1);
+		set_gp_pf((uint4*)&GP_pfkeys,ak_idx + 1, 1);
 		return(1);
 		}
 	return(0);
 }
 
-void set_up_extra_pfs()
+static void set_up_extra_pfs()
 {
-	gppfkeys |= GP_PF_17;
-	gppfkeys |= GP_PF_32;
+	GP_pfkeys |= GP_PF_17;
+	GP_pfkeys |= GP_PF_32;
 }
 
-void set_gp_pf(uint4 *mask,int pf,int onoff)
+static void set_gp_pf(uint4 *mask,int pf,int onoff)
 {
 	uint4 smask;
 
@@ -263,6 +264,24 @@ void set_gp_pf(uint4 *mask,int pf,int onoff)
 /*
 **	History:
 **	$Log: dtekey.c,v $
+**	Revision 1.6.2.1  2002/11/12 15:56:24  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.11  2002/10/24 14:20:39  gsl
+**	Make globals unique
+**	
+**	Revision 1.10  2002/07/25 15:20:28  gsl
+**	Globals
+**	
+**	Revision 1.9  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.8  2002/07/10 21:06:24  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.7  2002/06/25 18:18:34  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.6  1998/11/02 21:21:50  gsl
 **	Fix (ENTER) tag
 **	

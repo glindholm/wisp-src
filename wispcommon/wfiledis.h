@@ -31,7 +31,7 @@ void wfile_disp(void);
 int display_util_getparms(char *filename);
 int utils_in_windows(void);
 int use_internal_display(void);
-int link_display(const char* filepath);
+int WL_link_display(const char* filepath);
 int internal_display(const char* filepath);
 const char* custom_display_utility(void);
 
@@ -40,6 +40,9 @@ const char* custom_display_utility(void);
 /*
 **	History:
 **	$Log: wfiledis.h,v $
+**	Revision 1.4.2.1  2002/11/12 16:00:18  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.4  1999/02/23 21:57:26  gsl
 **	Move no_windows() to wispcfg.h
 **	

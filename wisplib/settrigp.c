@@ -39,9 +39,6 @@ char *file;										/* The file name	(8 chars)	*/
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
-#ifdef VMS
-	if (WISPFILEXT[0] == ' ' || WISPFILEXT[0] == '\0') setwispfilext("EXE");
-#endif
 	mode = IS_SUBMIT;
 	ptr=wfname(&mode,vol,lib,file,trigpname);					/* Get the native system name.		*/
 	*ptr = '\0';									/* Be sure to null terminate.		*/
@@ -51,6 +48,9 @@ char *file;										/* The file name	(8 chars)	*/
 /*
 **	History:
 **	$Log: settrigp.c,v $
+**	Revision 1.9.2.1  2002/11/14 21:12:26  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.9  1996/08/19 22:32:55  gsl
 **	drcs update
 **	

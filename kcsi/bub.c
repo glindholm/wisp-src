@@ -13,7 +13,7 @@ static int changes;
 static void pass_down(char *base,int nel,int len,int (*comp)(),int (*swap)());
 static void pass_up(char *base,int nel,int len,int (*comp)(),int (*swap)());
 
-void bub_sort(char *base,int nel,int len,int (*comp)(),int (*swap)())
+void KCSI_bub_sort(char *base,int nel,int len,int (*comp)(),int (*swap)())
 {
 
 	changes = 1;
@@ -79,6 +79,12 @@ static void pass_up(char *base,int nel,int len,int (*comp)(),int (*swap)())
 /*
 **	History:
 **	$Log: bub.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:19  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.4  2002/07/25 15:20:30  gsl
+**	Globals
+**	
 **	Revision 1.3  1996/09/17 23:45:26  gsl
 **	drcs update
 **	

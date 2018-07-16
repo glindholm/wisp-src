@@ -13,17 +13,14 @@ static char receiver[23];
 
 void KEXISTS(char *rc, char *name, char *lib, char *vol)
 {
-	int4 seven;
-
-	seven = 7;
 	strcpy(receiver,"                      ");
 	starter = 1;
 	count = 1;
 	found = 0;
-	wswap(&starter);
-	wswap(&count);
-	wswap(&found);
-	wvaset(&seven);
+	WL_wswap(&starter);
+	WL_wswap(&count);
+	WL_wswap(&found);
+	WL_set_va_count(7);
 	FIND(name, lib, vol, &starter, &count, receiver,&found);
 	if(found == 0)
 		memcpy(rc,"096",3);
@@ -34,7 +31,7 @@ void KEXISTS(char *rc, char *name, char *lib, char *vol)
 /*----
 C Version
 -----*/
-int ckexists(char *file, char *lib, char *vol)
+int KCSI_ckexists(char *file, char *lib, char *vol)
 {
 	char rc[4];
 
@@ -49,6 +46,15 @@ int ckexists(char *file, char *lib, char *vol)
 /*
 **	History:
 **	$Log: kexists.c,v $
+**	Revision 1.6.2.1  2002/11/12 15:56:28  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/07/25 15:20:26  gsl
+**	Globals
+**	
+**	Revision 1.7  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.6  1996/10/02 16:14:33  gsl
 **	Fix prototypes
 **	

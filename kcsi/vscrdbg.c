@@ -207,9 +207,9 @@ static void open_debug_file(void)
 	strcpy(debug_kfb._volume,"      ");
 	debug_kfb._record_len = 132;
 	debug_kfb._record = debug_rec;
-	mode = WISP_PRINTFILE + WISP_OUTPUT;
+	mode = IS_PRINTFILE + IS_OUTPUT;
 	kcsio_wfopen(mode,&debug_kfb);
-	ccsio(&debug_kfb, debug_rec);
+	KCSI_ccsio(&debug_kfb, debug_rec);
 }
 
 static void close_debug_file(void)
@@ -247,6 +247,16 @@ static void process_the_info(void)
 /*
 **	History:
 **	$Log: vscrdbg.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:40  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/23 20:39:04  gsl
+**	make global name unique
+**	
+**	Revision 1.5  2002/06/21 20:48:14  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.4  1996/10/02 22:12:54  gsl
 **	Fix calls to ll_all()
 **	

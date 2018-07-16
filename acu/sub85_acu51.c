@@ -69,14 +69,11 @@ typedef unsigned int   	uint4;
 #define NETCAP
 #define EDE
 
-char	WISPFILEXT[39];			/* Define the file extension variable.	*/
-char	WISPRETURNCODE[3];		/* Define the return code field.	*/
-
 extern int va_set();
 extern void reversebytes();
 extern int bytenormal();
 extern void werrlog();
-extern void wexit();
+extern void WL_wexit();
 extern void set_isdebug_true();
 extern void set_isdebug_false();
 extern char *upper_string();
@@ -1158,7 +1155,7 @@ int	error_halt;
 		
 		wisp_wexit = 1;
 
-		wexit(error_halt);
+		WL_wexit(error_halt);
 	}
 }
 void Shutdown(error_halt)

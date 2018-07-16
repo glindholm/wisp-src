@@ -108,6 +108,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	char native_file[20], native_lib[20], native_vol[80], native_ext[40];		/* Native format of file/lib/vol/ext.	*/
 	int i,len;
 	int	nomodext;								/* No modifcations of ext allowed	*/
+	char fileext[WISP_FILE_EXT_SIZE];
 
 	/*
 	**	INITIALIZE
@@ -189,13 +190,13 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	*/
 
 	nomodext = 0;
-	leftjust(WISPFILEXT,39);
-	if (WISPFILEXT[0] != ' ' && WISPFILEXT[0] != 0)					/* If WISPFILEXT then load & null term	*/
+	WGETFILEXT(fileext);
+	if (fileext[0] != ' ' && fileext[0] != 0)					/* If file ext then load & null term	*/
 	{
 		native_ext[0] = '.';
-		for( i=0; i<39 && WISPFILEXT[i] != ' '; i++ )
+		for( i=0; i<WISP_FILE_EXT_SIZE && fileext[i] != ' '; i++ )
 		{
-			native_ext[i+1] = WISPFILEXT[i];
+			native_ext[i+1] = fileext[i];
 		}
 		native_ext[i+1] = '\0';
 		nomodext = 1;								/* No modification of ext allowed	*/
@@ -218,7 +219,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 		strcpy( native_ext, DEFAULT_FILE_EXT );
 	}
 
-	memset(WISPFILEXT,' ',39);							/* Always reset the file extension.	*/
+	WSETFILEXT(" ");								/* Always reset the file extension.	*/
 
 	if (*mode & IS_LIB)								/* If IS_LIB then blank the extension	*/
 	{
@@ -780,6 +781,9 @@ int wfexists(char *file, char *lib, char *vol)
 /*
 **	History:
 **	$Log: wfname.c,v $
+**	Revision 1.22.2.1  2002/11/14 21:12:27  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.22  1999/01/30 00:02:06  gsl
 **	Fix the handling of work files to make a distiction between # and ## work
 **	files.  Only the single # files get the IS_SCRATCH flag and will be deleted

@@ -1,5 +1,8 @@
 static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
+
+#ifdef KCSI_LPI
+
 /*---
 IO for LPI C-ISAM Files
 ------*/
@@ -35,6 +38,18 @@ and to improve readability.
 #define Streq(x,y)        (!strcmp(x,y))               /* True when equal   */
 #define IOis(y)           Streq(kfb->_io,y)            /* Test for IO type  */
 #define LastIOis(y)       Streq(kfb->_last_io,y)        /* Test the last IO  */
+
+
+void ksam_init()
+{
+	static int first = 1;
+
+	if (first)
+	{
+		/* No init code needed */
+		first = 0;
+	}
+}
 
 /*----
 Extract the root file data and move in the space.
@@ -379,7 +394,7 @@ ksam_file_info(KCSIO_BLOCK *kfb)
 /*
  * And all the keys.
  */
-	clear_keys(kfb);
+	KCSI_clear_keys(kfb);
 	if(d.di_nkeys > 0)
 		{
 		kfb->_altkey_count = d.di_nkeys - 1;
@@ -400,11 +415,23 @@ static logit(KCSIO_BLOCK *kfb)
 {
 	if(kfb->_status == 0)
 		return;
-	kfberr(kfb);
+	KCSI_kfberr(kfb);
 }
+
+#endif /* KCSI_LPI */
+
 /*
 **	History:
 **	$Log: klpi.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:29  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/24 14:20:38  gsl
+**	Make globals unique
+**	
+**	Revision 1.5  2002/10/21 16:07:05  gsl
+**	Add ksam_init
+**	
 **	Revision 1.4  1996/09/17 23:34:12  gsl
 **	drcs update
 **	

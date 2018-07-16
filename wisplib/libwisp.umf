@@ -21,7 +21,7 @@ VC=../videolib
 
 TARGET=all
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 CFLAGS  = $(CFLAGS0) -I $(WC) -I$(VC)
 
@@ -1755,6 +1755,9 @@ $(VALLIST): $(THE_LIB)
 
 #	History:
 #	$Log: libwisp.umf,v $
+#	Revision 1.41.2.2  2002/11/07 22:53:52  gsl
+#	change to use WISPSRC variable
+#	
 #	Revision 1.41.2.1  2002/10/08 19:00:16  gsl
 #	update from HEAD
 #	

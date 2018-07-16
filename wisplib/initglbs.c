@@ -70,8 +70,8 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 
 	memcpy(WISPRUNNAME,wisprunname,8);
 	setprogid(wisprunname);
-	memset(WISPFILEXT,' ',39);							/* Set file extension to spaces.	*/
-	memset(WISPRETURNCODE,'0',3);							/* Set RETURN-CODE to zero.		*/
+	WSETFILEXT(" ");								/* Set file extension to spaces.	*/
+	WL_set_internal_retcode(0);							/* Set RETURN-CODE to zero.		*/
 	strcpy(WISPTRANVER,"INITGLBS");							/* Set the translator version		*/
 	
 	load_options();									/* Load the opt_xxxx variables		*/
@@ -102,10 +102,20 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 #define SIGHUP	SIGTERM
 #endif
 
+static int wexit_handler_depth = 0;	/* Keep track of re-entering signal handlers */
+
 void wexitint(int sig)
 {
 #undef		ROUTINE
 #define		ROUTINE		74400
+	wexit_handler_depth++;	
+	if (wexit_handler_depth > 1)
+	{
+		/*
+		** If re-entered then we are in a loop so abort
+		*/
+		abort();
+	}
 
 	signal( SIGINT,  SIG_IGN );
 	signal( SIGQUIT, SIG_IGN );
@@ -117,16 +127,35 @@ void wexitbug(int sig)
 {
 #undef		ROUTINE
 #define		ROUTINE		74500
+	wexit_handler_depth++;	
+	if (wexit_handler_depth > 1)
+	{
+		/*
+		** If re-entered then we are in a loop so abort
+		*/
+		abort();
+	}
+		
 	signal( SIGINT,  SIG_IGN );
 	signal( SIGQUIT, SIG_IGN );
 	werrlog(ERRORCODE(2),sig,0,0,0,0,0,0,0);					/* Fatal signalled interrupt.		*/
 	wexit(ERRORCODE(2));
+
 }
 
 void wexitsig(int sig)
 {
 #undef		ROUTINE
 #define		ROUTINE		74400
+	wexit_handler_depth++;	
+	if (wexit_handler_depth > 1)
+	{
+		/*
+		** If re-entered then we are in a loop so abort
+		*/
+		abort();
+	}
+		
 	/*
 	**	This routine is only called when we want to terminate without further user interaction.
 	**	We do however what to log the signal error so we change the w_err_flag to only write to wisperr.log
@@ -188,6 +217,12 @@ void wisp_signal_handler(void)
 /*
 **	History:
 **	$Log: initglbs.c,v $
+**	Revision 1.21.2.3  2002/11/14 21:12:22  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
+**	Revision 1.21.2.2  2002/11/13 16:31:04  gsl
+**	Prevent recursive calls to the exit handlers routines
+**	
 **	Revision 1.21.2.1  2002/09/05 19:22:28  gsl
 **	LINUX
 **	

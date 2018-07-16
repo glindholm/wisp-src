@@ -99,7 +99,7 @@ void KTRACE(char *str)
 	if(ktrace_enabled != 1)	return;
 
 	mystrncpy(buf,str,80);
-	strunc(buf);
+	KCSI_strunc(buf);
 	kcsitrace(1,"KTRACE","COBOL",buf);
 	
 }
@@ -150,6 +150,12 @@ void crid_func_trace_out(char *func)
 /*
 **	History:
 **	$Log: cridebug.c,v $
+**	Revision 1.9.2.1  2002/11/12 15:56:20  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.10  2002/07/25 15:20:30  gsl
+**	Globals
+**	
 **	Revision 1.9  2002/04/22 18:30:29  gsl
 **	Rework to use kcsitrace()
 **	

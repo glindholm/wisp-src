@@ -5,14 +5,14 @@
 #include "dtype.h"
 #include "dbsc.h"
 
-extern	int d_new_screen,d_new_key;
-extern DTYPE cf_t1_src[],cf_t1_dest[],cf_t2_src[],cf_t2_dest[],
-	     ch_src[],ch_dest[];
+extern	int dte_new_screen,dte_new_key;
 
-extern	FIELD dtefld[],*keys[],wrk_field,relative_record;
+extern	FIELD dtefld[],dte_wrk_field,dte_relative_record;
+/* extern	FIELD *keys[]; */
 
-extern int field_count,next_row,next_col,datentry_spacing;
-extern char main_scr[],key_scr[];
+extern int KD_field_count;
+unsigned extern char dte_main_scr[];
+extern char dte_key_scr[];
 /*
 extern char start_scr[];
 extern int lib_vers;
@@ -21,7 +21,6 @@ extern int lib_vers;
 
 extern char dte_record[];
 
-extern char dum_fld[];
 extern char *dte_scr,*dte_trailer,
 	    *dte_key_trailer,*dte_message,*dte_key_message;
 extern int dte_screen_error;
@@ -29,12 +28,12 @@ extern char dte_on_pfkeys[];
 
 extern char dte_pfkeys[];
 extern char dte_pfkey_code[];
-extern char dte_crt_file_status[];
-extern char dte_crt_record[];
-extern char dte_order_area[];
-extern char dte_dnr_altered[];
-extern char dte_full_screen[];
-extern char dte_close_ws[];
+extern unsigned char dte_crt_file_status[];
+extern unsigned char dte_crt_record[];
+extern unsigned char dte_order_area[];
+extern unsigned char dte_dnr_altered[];
+extern unsigned char dte_full_screen[];
+extern unsigned char dte_close_ws[];
 extern long dte_a_longword;
 extern char dte_app_name[];
 /*----
@@ -50,12 +49,33 @@ extern char dte_sys_d_ymd[],
 Saviors of the passed globals.
 ------*/
 extern char *dte_cio_block,*dte_dio_block,*dte_cf_t1,*dte_cf_t2,*dte_cf_hdrs;
-extern char rel_rec_num[];
+extern char dte_rel_rec_num[];
 
 #endif
 /*
 **	History:
 **	$Log: dglb.h,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:23  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 15:48:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/24 14:20:40  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/23 21:07:27  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/10/23 20:39:09  gsl
+**	make global name unique
+**	
+**	Revision 1.5  2002/08/01 15:41:24  gsl
+**	type warnings
+**	
+**	Revision 1.4  2002/07/25 15:20:29  gsl
+**	Globals
+**	
 **	Revision 1.3  1996/09/17 23:34:05  gsl
 **	drcs update
 **	

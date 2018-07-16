@@ -28,13 +28,18 @@
 
 #include "intdef.h"
 
-void wexit(int4 num);
+#define wexit	WL_wexit
+
+void WL_wexit(int4 num);
 
 
 #endif /* WEXIT_H */
 /*
 **	History:
 **	$Log: wexit.h,v $
+**	Revision 1.6.2.1  2002/11/14 15:23:38  gsl
+**	Change wexit() to WL_wexit()
+**	
 **	Revision 1.6  1996/07/23 18:17:56  gsl
 **	drcs update
 **	

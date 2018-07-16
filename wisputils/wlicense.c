@@ -100,6 +100,20 @@ char	*argv[];
 
 	putheader();
 
+	/* Display License Info */
+	if (0 == get_license_info(licensekey, valcode))
+	{
+		printf("Current values:\n");
+		printf("LICENSE KEY:     [%s].\n", licensekey);
+		printf("VALIDATION CODE: [%s].\n", valcode);
+
+	}
+	if (0 == getmachineid(machineid))
+	{
+		printf("MACHINE ID:      [%s].\n", machineid);
+	}
+	printf("\n");
+
 #ifdef unix
 	if (0 != geteuid())
 	{
@@ -543,7 +557,7 @@ static void catfile(const char *filename)
 /*
 **	DUMMY routines to stop the whole WISPLIB from being linked in.
 */
-void wexit(int code)
+void WL_wexit(int code)
 {
 	finish_ok();
 	exit_wlicense();
@@ -560,16 +574,16 @@ void wtrace()
 {
 }
 
-#ifdef OLD
-#include "wutils.h"
-
-#define EXT_FILEXT
-#include "filext.h"
-#endif /* OLD */
 
 /*
 **	History:
 **	$Log: wlicense.c,v $
+**	Revision 1.22.2.4  2002/11/14 18:04:40  gsl
+**	Display the Machine Id and current license info at begining
+**	
+**	Revision 1.22.2.3  2002/11/14 15:23:37  gsl
+**	Change wexit() to WL_wexit()
+**	
 **	Revision 1.22.2.2  2002/09/06 16:18:36  gsl
 **	Fix phone numbers
 **	

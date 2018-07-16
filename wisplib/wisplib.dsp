@@ -309,6 +309,10 @@ SOURCE=.\message.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\mfstubs.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\mngfile.c
 # End Source File
 # Begin Source File

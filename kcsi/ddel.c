@@ -24,13 +24,13 @@ static void delete_the_record(char *idx);
 			DELETE RECORDS
 ------*/
 
-int delete_records(char *idx,char *mode)
+int dte_delete_records(char *idx,char *mode)
 {
 	int pf;
 
 	while(1)
 		{
-		pf = enter_the_key(idx,mode);
+		pf = dte_enter_the_key(idx,mode);
 		if(pf == 16)
 			return(16);
 		if(pf == 9)
@@ -49,7 +49,7 @@ static void delete_records_init(char *idx)
 	init_del_facs();
 	init_del_footers();
 	init_del_pfs();
-	init_message_field();
+	dte_init_message_field();
 
 }
 static int delete_records_entry(char *idx)
@@ -57,11 +57,11 @@ static int delete_records_entry(char *idx)
 	while(1)
 		{
 		dte_screen_error = 0;
-		space_out(dte_crt_file_status,2);
+		dte_space_out((char*)dte_crt_file_status,2);
 		memcpy(dte_on_pfkeys,"X",1);
 		memcpy(dte_crt_record,dte_order_area,4);
 
-		wscreen(main_scr,
+		WSCREEN(dte_main_scr,
 			dte_dnr_altered,
 			dte_crt_record,
 			dte_full_screen,
@@ -70,21 +70,21 @@ static int delete_records_entry(char *idx)
 			dte_pfkey_code,
 			dte_crt_file_status);
 
-		init_message_field();
+		dte_init_message_field();
 
 		if(Memeq(dte_pfkey_code,"16",2))
 			return(16);
 		if(Memeq(dte_pfkey_code,"02",2))
 			{
-			load_first_record(idx);
+			dte_load_first_record(idx);
 			}
 		if(Memeq(dte_pfkey_code,"04",2))
 			{
-			load_previous_record(idx);
+			dte_load_previous_record(idx);
 			}
 		if(Memeq(dte_pfkey_code,"05",2))
 			{
-			load_next_record(idx);
+			dte_load_next_record(idx);
 			}
 		if(Memeq(dte_pfkey_code,"01",2))
 			{
@@ -94,7 +94,7 @@ static int delete_records_entry(char *idx)
 			{
 			delete_the_record(idx);
 			if(!dte_screen_error)
-			     load_next_record(idx);
+			     dte_load_next_record(idx);
 			}
 		}
 
@@ -105,31 +105,23 @@ static int delete_records_entry(char *idx)
 ------*/
 static void init_del_fields()
 {
-	move_to_screen();
+	dte_move_to_screen();
 
 }
 static void init_del_facs()
 {
-	display_all_prompts();
-	protect_all_fields();
-	if(file_is_relative())
-		protect_rel_field();
+	dte_display_all_prompts();
+	dte_protect_all_fields();
+	if(dte_file_is_relative())
+		dte_protect_rel_field();
 }
 
 static void init_del_footers()
 {
-#ifdef KCSI_VAXCOBOL
-	load_footer("(ENTER)Delete (1)Find (2)1st         (5)Nxt (16)Exit");
-#else
-	load_footer("(ENTER)Delete (1)Find (2)1st (4)Prev (5)Nxt (16)Exit");
-#endif /*KCSI_VAXCOBOL */
+	dte_load_footer("(ENTER)Delete (1)Find (2)1st (4)Prev (5)Nxt (16)Exit");
 }
 
-#ifdef KCSI_VAX_COL
-static char del_idx_pfs[]="000102000516X";
-#else
 static char del_idx_pfs[]="000102040516X";
-#endif /* KCSI_VAXCOBOL */
 
 static void init_del_pfs()
 {
@@ -148,7 +140,7 @@ static void delete_the_record(char *idx)
 	KCSIO(dte_dio_block,ufb,dte_record);
 	if(memcmp(&dte_dio_block[STATUS_POS],"00",STATUS_LEN))
 		{
-		make_error_message(no_delete);
+		KCSI_make_error_message(no_delete);
 		dte_screen_error = 1;
 		}
 
@@ -156,6 +148,27 @@ static void delete_the_record(char *idx)
 /*
 **	History:
 **	$Log: ddel.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:22  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 15:48:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/24 14:20:40  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/23 20:39:09  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/10/17 17:17:16  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.5  2002/08/01 16:49:54  gsl
+**	type warnings
+**	
+**	Revision 1.4  2002/07/26 18:19:19  gsl
+**	wscreen -> WSCREEN
+**	
 **	Revision 1.3  1996/09/17 23:45:33  gsl
 **	drcs update
 **	

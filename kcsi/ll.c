@@ -47,19 +47,19 @@ Insert after base.
 
 Returns base
 ------*/
-void *ll_add_next(LL *base, LL *new)
+void *ll_add_next(LL *base, LL *l_new)
 {
     	LLTYPE *below;
 
     	if(base == 0)
 		{
-		return((void*) new);
+		return((void*) l_new);
 		}
 	if(below = NEXT(base))
-	    PREV(below) = new;
-	NEXT(new) = NEXT(base);
-	NEXT(base) = new;
-	PREV(new) = base;
+	    PREV(below) = l_new;
+	NEXT(l_new) = NEXT(base);
+	NEXT(base) = l_new;
+	PREV(l_new) = base;
     	return((void*)base);
 }
 /*----
@@ -67,20 +67,20 @@ Insert before base
 
 Returns new base
 ------*/
-void *ll_add_prev(LL *base, LL *new)
+void *ll_add_prev(LL *base, LL *l_new)
 {
     	LLTYPE *above;
 
     	if(base == 0)
 		{
-		return((void*) new);
+		return((void*) l_new);
 		}
 	if(above = PREV(base))
-	    NEXT(above) = new;
-	PREV(new) = PREV(base);
-	PREV(base) = new;
-	NEXT(new) = base;
-    	return(ll_first(new));
+	    NEXT(above) = l_new;
+	PREV(l_new) = PREV(base);
+	PREV(base) = l_new;
+	NEXT(l_new) = base;
+    	return(ll_first(l_new));
 }
 
 /*----
@@ -111,14 +111,14 @@ Append to the end of a linked list that starts at base
 
 Return a pointer to base
 ------*/
-void *ll_append(LL *base, LL *new)
+void *ll_append(LL *base, LL *l_new)
 {
     	LLTYPE *newbase;
 
     	if(base == 0)
-		return((void*) new);
+		return((void*) l_new);
     	newbase = (LLTYPE*) ll_last(base);
-    	ll_add_next(newbase,new);
+    	ll_add_next(newbase,l_new);
     	return((void*) base);
 }
 
@@ -162,28 +162,28 @@ void *ll_all(void *base, void (*func)())
 /*----
 Add to the list in sorted order. Returns the base of the list.
 ------*/
-void *ll_add_sorted(LL *base, LL *new, int (*compare)(LL *,LL *))
+void *ll_add_sorted(LL *base, LL *l_new, int (*compare)(LL *,LL *))
 {
 	LLTYPE *nbase;
 
     	base = (LLTYPE*) ll_first(base);
 	if(base == 0)
 		{
-		return((void*) new);
+		return((void*) l_new);
 		}
     	while(1)
 		{
-		if( (*compare)(base,new) )
+		if( (*compare)(base,l_new) )
 	    		{
 	    		if((nbase = (LLTYPE*)ll_prev(base)) != 0)
-				ll_add_next(nbase,new);
+				ll_add_next(nbase,l_new);
 	    		else
-				ll_add_prev(base,new);
+				ll_add_prev(base,l_new);
 	    		break;
 	    		}
 		if( ( nbase = (LLTYPE*) ll_next(base)) == 0)
 	    		{
-	    		ll_add_next(base,new);
+	    		ll_add_next(base,l_new);
 	    		break;
 	    		}
 		base = nbase;
@@ -340,6 +340,12 @@ void *ll_unlink(LL *base)
 /*
 **	History:
 **	$Log: ll.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:30  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/17 17:56:18  gsl
+**	Rename variables new to l_new
+**	
 **	Revision 1.5  1997/10/02 14:44:20  gsl
 **	fix warnings
 **	

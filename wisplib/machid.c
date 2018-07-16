@@ -93,6 +93,20 @@ int getmachineid(char* machineid)
 	
 #endif
 
+#ifdef LINUX
+	{
+		char name[80];
+		computername(name);
+		if (strlen(name) < 10)
+		{
+			strcat(name,"0102010301");
+			name[10] = '\0';
+		}
+
+		sprintf(machineid,"LX0%s0X0",name);
+	}
+#endif 
+
 #if defined(SI_HW_SERIAL)
 	/*
 	 *	This is used on SOLARIS and looks like it is also available on UNIXWARE
@@ -172,7 +186,7 @@ char *computername(char *cname)
 
 		if (!tmp_name || !*tmp_name)
 		{
-			tmp_name = "UNIX";
+			tmp_name = "(UNKNOWN)";
 		}
 
 		the_computername = wstrdup(tmp_name);
@@ -598,6 +612,18 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
+**	Revision 1.15.2.6  2002/11/14 19:04:42  gsl
+**	LINUX base machineid on the computer name
+**	
+**	Revision 1.15.2.5  2002/11/14 17:46:30  gsl
+**	LINUX getmachineid() based on computername
+**	
+**	Revision 1.15.2.4  2002/11/14 17:42:57  gsl
+**	LINUX getmachineid() based on computername
+**	
+**	Revision 1.15.2.3  2002/11/14 16:56:49  gsl
+**	LINUX getmachineid() based on computername
+**	
 **	Revision 1.15.2.2  2002/10/10 13:12:53  gsl
 **	Huge file support
 **	

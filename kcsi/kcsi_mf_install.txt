@@ -1,0 +1,60 @@
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          Installation of KCSI for Micro Focus COBOL on UNIX
+
+Document:       kcsi_mf_install.txt
+Last Updated:   $Date:$
+Products:       KCSI Utilities
+Versions:       4.0.00
+
+Summary:        Installation instructions for the KCSI Utilities
+                using the Micro Focus COBOL compiler.
+
+====================================================================
+
+
+INSTALLATION
+============
+
+First install WISP and setup the WISP runtime environment.  This
+must be in place before KCSI can be used.
+
+KCSI will normally be distributed on CDROM as a tar file named
+"kcsi_mf_XXXX.tar".  It is recommended that you install KCSI
+in your WISP directory ($WISPDIR). 
+
+Extract the distribution files from "kcsi_mf_XXXX.tar" using the
+following tar command:
+
+        $ cd $WISPDIR
+        $ tar -xvf kcsi_mf_XXXX.tar
+
+This will create a directory "kcsi_mf_XXXX" where XXXX is a version
+number.  Refer to kcsi_packlist.txt in the distribution for a listing
+of expected files.
+
+
+Configuration
+-------------
+
+The utilities control/report/inquiry/datentry/create need to be on 
+your $PATH. 
+
+Add the KCSI installaton directory to your $PATH:
+
+   $ PATH=$PATH:/usr/local/wisp_XXXX/kcsi_mf_XXXX
+
+
+Test your installation by running the utilites:
+
+        $ control
+        $ report
+        $ inquiry
+        $ datentry
+        $ create
+
+
+========================= END OF DOCUMENT ==========================
+

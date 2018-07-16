@@ -10,8 +10,7 @@ KITDIR=		$(BASEDIR)\kit
 
 WISPKIT=	$(KITDIR)\wisp
 EDEKIT=		$(KITDIR)\ede
-CRIDACUKIT=	$(KITDIR)\cridacu
-CREATEACUKIT=	$(KITDIR)\createacu
+KCSIACUKIT=	$(KITDIR)\kcsiacu
 RTSKIT=		$(KITDIR)\rts
 VHEADKIT=	$(KITDIR)\v
 
@@ -132,33 +131,20 @@ ede_dist_list=	$(EDEKIT)\good.exe		\
 		$(EDEKIT)\demo\menudemo.opt	\
 		$(EDEKIT)\demo\menudemo.mak
 
-cridacu_dist_list= \
-		$(CRIDACUKIT)\CONTROL		\
-		$(CRIDACUKIT)\DATENTRY		\
-		$(CRIDACUKIT)\INQUIRY		\
-		$(CRIDACUKIT)\REPORT		\
-		$(CRIDACUKIT)\cridacu.lib	\
-		$(CRIDACUKIT)\cridacum.lib	\
-		$(CRIDACUKIT)\crid.h		\
-		$(CRIDACUKIT)\crid85.c		\
-		$(CRIDACUKIT)\cridtbl.c		\
-		$(CRIDACUKIT)\ctlcnvrt.wcb	\
-		$(CRIDACUKIT)\rptcnvrt.wcb	\
-		$(CRIDACUKIT)\wwruncbl.mak	\
-		$(CRIDACUKIT)\wrun32wisp_crid_acu51.mak	\
-		$(CRIDACUKIT)\wrun32wisp_crid_acu52.mak	\
-		$(CRIDACUKIT)\crid_relnotes.txt	\
-		$(CRIDACUKIT)\crid_packlist.txt	\
-		$(CRIDACUKIT)\cridntsetup.txt	
-
-createacu_dist_list= \
-		$(CREATEACUKIT)\create.exe	\
-		$(CREATEACUKIT)\createacu.lib	\
-		$(CREATEACUKIT)\vscrmain.obj	\
-		$(CREATEACUKIT)\wwruncbl.mak	\
-		$(CREATEACUKIT)\create_relnotes.txt	\
-		$(CREATEACUKIT)\create_packlist.txt	\
-		$(CREATEACUKIT)\createntsetup.txt	
+kcsiacu_dist_list= \
+		$(KCSIACUKIT)\CONTROL		\
+		$(KCSIACUKIT)\DATENTRY		\
+		$(KCSIACUKIT)\INQUIRY		\
+		$(KCSIACUKIT)\REPORT		\
+		$(KCSIACUKIT)\CREATE		\
+		$(KCSIACUKIT)\kcsiacu.lib	\
+		$(KCSIACUKIT)\kcsi_sub85_inc.c	\
+		$(KCSIACUKIT)\ctlcnvrt.wcb	\
+		$(KCSIACUKIT)\rptcnvrt.wcb	\
+		$(KCSIACUKIT)\wrun32wisp_kcsi_acu52.mak	\
+		$(KCSIACUKIT)\kcsi_relnotes.txt	\
+		$(KCSIACUKIT)\kcsi_packlist.txt	\
+		$(KCSIACUKIT)\kcsintsetup.txt	
 
 rts_dist_list= \
 		$(RTSKIT)\wwruncbl.exe		\
@@ -169,15 +155,13 @@ rts_dist_list= \
 #
 #	targets
 #
-default: 	wispshipkit edeshipkit cridacushipkit createacushipkit
+default: 	wispshipkit edeshipkit kcsiacushipkit
 
 wispshipkit:	header wispkitdirs configdirs $(wisp_dist_list)
 
 edeshipkit:	header edekitdirs $(ede_dist_list)
 
-cridacushipkit:	header cridacukitdirs $(cridacu_dist_list)
-
-createacushipkit: header createacukitdirs $(createacu_dist_list)
+kcsiacushipkit:	header kcsiacukitdirs $(kcsiacu_dist_list)
 
 rtsshipkit:	rtskitdirs $(rts_dist_list)
 
@@ -219,14 +203,9 @@ edekitdirs: $(KITDIR) $(edekit_dir_list)
 $(edekit_dir_list):
 	mkdir $@
 
-cridacukitdirs: $(KITDIR) $(CRIDACUKIT)
+kcsiacukitdirs: $(KITDIR) $(KCSIACUKIT)
 
-$(CRIDACUKIT):
-	mkdir $@
-
-createacukitdirs: $(KITDIR) $(CREATEACUKIT)
-
-$(CREATEACUKIT):
+$(KCSIACUKIT):
 	mkdir $@
 
 config_dir_list = \
@@ -610,85 +589,48 @@ $(EDEKIT)\demo\menudemo.mak:	$(BASEDIR)\ede\demo\$(@F)
 
 
 #
-#	cridacu
+#	kcsiacu
 #
 
-$(CRIDACUKIT)\CONTROL:		$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\CONTROL:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\DATENTRY:		$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\DATENTRY:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\INQUIRY:		$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\INQUIRY:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\REPORT:		$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\REPORT:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridacu.lib:	$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\CREATE:		$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridacum.lib:	$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\kcsiacu.lib:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\crid.h:		$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\kcsi_sub85_inc.c:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\crid85.c:		$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\cridtbl.c:	$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\wrun32wisp_kcsi_acu52.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
+$(KCSIACUKIT)\kcsintsetup.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
+$(KCSIACUKIT)\kcsi_relnotes.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\wrun32wisp_crid_acu51.mak:	$(BASEDIR)\acu\$(@F)
+$(KCSIACUKIT)\kcsi_packlist.txt:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
-$(CRIDACUKIT)\wrun32wisp_crid_acu52.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\cridntsetup.txt:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\crid_relnotes.txt:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\crid_packlist.txt:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-
-#
-#	createacu
-#
-
-$(CREATEACUKIT)\create.exe:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CREATEACUKIT)\createacu.lib:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CREATEACUKIT)\vscrmain.obj:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CREATEACUKIT)\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(CREATEACUKIT)\create_relnotes.txt:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CREATEACUKIT)\createntsetup.txt:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
-
-$(CREATEACUKIT)\create_packlist.txt:	$(BASEDIR)\kcsi\$(@F)
-	$(COPY) $** $@
 
 #
 #	WISPKIT components

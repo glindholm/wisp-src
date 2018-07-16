@@ -54,8 +54,10 @@ Main entry to these routines
 ----*/
 void cr_create_file(void)
 {
-	if(cr_debug)
+	if(kcsi_tracelevel() <= 2)
+	{
 		cr_print_the_spec();
+	}
 	process_the_info();
 }
 
@@ -144,7 +146,7 @@ static void process_one_block(CR_BLK *blk)
 		{
 		start_one_blk(blk);
 		do_one_blk(blk);
-		if(block_is_done(blk))
+		if(CR_block_is_done(blk))
 			break;
 		end_one_blk(blk);
 		++blk->counter;
@@ -221,9 +223,9 @@ static void open_error_file(void)
 	strcpy(error_kfb._volume,"      ");
 	error_kfb._record_len = 132;
 	error_kfb._record = error_rec;
-	mode = WISP_PRINTFILE + WISP_OUTPUT;
+	mode = IS_PRINTFILE + IS_OUTPUT;
 	kcsio_wfopen(mode,&error_kfb);
-	ccsio(&error_kfb, error_rec);
+	KCSI_ccsio(&error_kfb, error_rec);
 }
 
 static void close_error_file(void)
@@ -470,9 +472,60 @@ static void close_all_input(CR_BLK *blk)
 }
 
 
+/*----
+A quick io routine to the cr_out.ofile.
+------*/
+void cr_io(char *io)
+{
+	cr_out.ofile._record = cr_out_rec;
+	strcpy(cr_out.ofile._io,io);
+	KCSI_gpwcsio(&cr_out.ofile,cr_out.ofile._record);
+}
+
+/*----
+A quick io routine to any file 
+------*/
+void cr_fileio(KCSIO_BLOCK *kfb, char *io)
+{
+	long mode;
+
+	mode = 0;
+	if(kfb->_org[0] == 'I')
+		mode += IS_INDEXED;
+
+	strcpy(kfb->_io,io);
+	if(*io == 'O')
+		{
+		if(!(strcmp(io,OPEN_OUTPUT))) 
+			mode += IS_OUTPUT;
+		kcsio_wfopen(mode,kfb);
+		}
+		
+	KCSI_ccsio(kfb, kfb->_record);
+}
+
 /*
 **	History:
 **	$Log: vscrfile.c,v $
+**	Revision 1.4.2.2  2002/11/14 16:02:59  gsl
+**	Replace cr_debug the trace level
+**	
+**	Revision 1.4.2.1  2002/11/12 15:56:41  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/10/24 14:20:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/23 20:39:04  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/10/17 16:36:37  gsl
+**	move routines  from vscrmain.c to vscrfile.c
+**	
+**	Revision 1.5  2002/06/21 20:48:14  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.4  1996/10/02 22:13:20  gsl
 **	Fix args in calls to ll_all()
 **	

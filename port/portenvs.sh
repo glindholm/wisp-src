@@ -11,11 +11,11 @@ SAVEPWD=`pwd`
 cd ..
 WISPDIR=`pwd`
 export WISPDIR
-cd ..
-WISP=`pwd`
-export WISP
-cd $WISPDIR/port
-if [ $SAVEPWD != $WISPDIR/port ]
+WISPSRC=`pwd`
+export WISPSRC
+
+cd ${WISPSRC}/port
+if [ ${SAVEPWD} != ${WISPSRC}/port ]
 then
 	echo ERROR must be run from wisp/src/port directory
 	exit 1
@@ -32,19 +32,19 @@ then
 	export COBDIR
 fi
 
-echo WISP=$WISP
-echo WISPDIR=$WISPDIR
-echo ACUDIR=$ACUDIR
-if [ ! -d $ACUDIR ]
+echo WISPSRC=${WISPSRC}
+echo WISPDIR=${WISPDIR}
+echo ACUDIR=${ACUDIR}
+if [ ! -d ${ACUDIR} ]
 then
 	echo '**** ACUDIR not found ****'
 fi
-echo COBDIR=$COBDIR
-if [ ! -d $COBDIR ]
+echo COBDIR=${COBDIR}
+if [ ! -d ${COBDIR} ]
 then
 	echo '**** COBDIR not found ****'
 fi
-echo SHELL=$SHELL
+echo SHELL=${SHELL}
 echo
 echo Switching to new shell for WISP PORT
 echo

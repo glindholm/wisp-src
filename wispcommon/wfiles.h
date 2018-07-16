@@ -31,16 +31,14 @@ struct pstruct	{									/* The structure for PRINT files.	*/
 		};
 typedef struct pstruct pstruct;
 
-static char X_twfxt[39];
-
-#define	SAVE_WISPFILEXT		memcpy(X_twfxt,WISPFILEXT,sizeof(X_twfxt))
-#define RESTORE_WISPFILEXT	memcpy(WISPFILEXT,X_twfxt,sizeof(X_twfxt))
-
 #endif	/* WFILES_INCLUDED */
 
 /*
 **	History:
 **	$Log: wfiles.h,v $
+**	Revision 1.11.2.1  2002/11/14 21:12:29  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.11  1998/10/22 18:05:48  gsl
 **	Fix the fstruct and pstruct typedefs
 **	

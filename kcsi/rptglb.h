@@ -1,6 +1,6 @@
 /* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
 /* $Id:$ */
-extern DTYPE _old[],_new[];
+extern DTYPE rpt_old[],rpt_new[];
 extern DTYPE wrk_dtype;
 extern RPT_OPT rpt_opt;
 extern RPT_RHD rpt_rhd;
@@ -25,13 +25,13 @@ extern DTYPE rpt_opt_dest[],rpt_opt_src[],rpt_rhd_dest[],rpt_rhd_src[],
 	   rpt_dlo_lit_dest[],rpt_dlo_lit_src[],
 	   rpt_nfo_lit_dest[],rpt_nfo_lit_src[];
 
-extern char inp_rec1[],inp_rec2[],inp_rec[];
-extern int inp_rec_len;
+extern char rpt_inp_rec1[],rpt_inp_rec2[],rpt_inp_rec[];
+extern int rpt_inp_rec_len;
 extern int rpt_key_to_sec_idx;
 
 extern SORT rpt_sort[];
 
-extern char nf_bld_fld[];
+extern char rpt_bld_fld[];
 
 extern char *rpt_PRT_FILE;
 extern char *rpt_PRT_LIB;
@@ -42,6 +42,18 @@ extern long rpt_total_records,rpt_record_count,rpt_sorted_records;
 /*
 **	History:
 **	$Log: rptglb.h,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:35  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/24 14:20:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.5  2002/10/23 21:07:25  gsl
+**	make global name unique
+**	
+**	Revision 1.4  2002/07/25 15:20:24  gsl
+**	Globals
+**	
 **	Revision 1.3  1996/09/17 23:34:17  gsl
 **	drcs update
 **	

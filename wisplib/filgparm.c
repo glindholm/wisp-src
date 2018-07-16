@@ -52,7 +52,7 @@ static char *inf_msg[] =
 void file_getparm2(
 		   int4 f_mode, 				/* wfopen mode		*/
 		   char file[8], char lib[8], char vol[6], 	/* Wang style file spec */
-		   char prname[8], 				/* Prname[8]		*/
+		   const char prname[8], 			/* Prname[8]		*/
 		   char issuer[6], 				/* Issuer[6]		*/
 		   int4 *entry_mode, 				/* 0 = Wang style, 1 = Native style filepath */
 		   char getparm_type[2],
@@ -344,6 +344,9 @@ int password_getparm(int initial, char* uservalue, int userlen, char* passvalue,
 /*
 **	History:
 **	$Log: filgparm.c,v $
+**	Revision 1.14.2.1  2002/11/12 16:00:20  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.14  1997/10/20 21:16:46  gsl
 **	Add tracing
 **	

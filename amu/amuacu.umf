@@ -17,9 +17,9 @@
 #
 #
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
-include $(WISP)/src/acu/acu.rules
+include $(WISPSRC)/acu/acu.rules
 
 ALL=	AMU AMUROOT AMUEDIT AMUMDM AMUFKM AMUUDM CAMUMENU
 

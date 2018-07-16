@@ -24,13 +24,13 @@ is used for conversions.
 
 static char sccsid[]="@(#)rglb.c	1.11 6/8/93";
 
-void vax_rpt_globals()
+void rpt_globals()
 {
-	/* NULL routine to force vax linker to resolve this module */
+	/* NULL routine to force  linker to resolve this module */
 }
 
-DTYPE	_old[RFL_ENTRY_COUNT + 1];
-DTYPE	_new[RFL_ENTRY_COUNT + 1];
+DTYPE	rpt_old[RFL_ENTRY_COUNT + 1];
+DTYPE	rpt_new[RFL_ENTRY_COUNT + 1];
 DTYPE	wrk_dtype;
 
 RPT_OPT	rpt_opt;
@@ -221,7 +221,7 @@ and then copied to the actual element.
 RPT_SRT wrk_srt;
 RPT_SRT rpt_srt[SRT_ENTRY_COUNT + 1];
 DTYPE	wrk_sort;
-DTYPE	_sort[SRT_ENTRY_COUNT + 1];
+/* DTYPE	_sort[SRT_ENTRY_COUNT + 1]; */
 
 DTYPE rpt_srt_src[]={
 	{SRT_NAME},
@@ -341,10 +341,12 @@ DTYPE rpt_nf_dest[]={
 /*----
 The input and output records.
 ------*/
-char inp_rec1[2041],inp_rec2[2041],inp_rec[7080];
-int inp_rec_len;
+char rpt_inp_rec1[2041];
+char rpt_inp_rec2[2041];
+char rpt_inp_rec[7080];
+int  rpt_inp_rec_len;
 
-int rpt_key_to_sec_idx;
+int  rpt_key_to_sec_idx;
 
 /*----
 The sort
@@ -354,7 +356,7 @@ SORT rpt_sort[8];
 
 RPT_DEF rpt_def;
 
-char nf_bld_fld[132];
+char rpt_bld_fld[132];
 
 char *rpt_PRT_FILE;
 char *rpt_PRT_LIB;
@@ -366,6 +368,21 @@ long rpt_total_records,rpt_record_count,rpt_sorted_records;
 /*
 **	History:
 **	$Log: rglb.c,v $
+**	Revision 1.2.2.1  2002/11/12 15:56:34  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/24 14:20:35  gsl
+**	Make globals unique
+**	
+**	Revision 1.5  2002/10/23 21:07:25  gsl
+**	make global name unique
+**	
+**	Revision 1.4  2002/10/17 17:17:21  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.3  2002/07/25 15:20:25  gsl
+**	Globals
+**	
 **	Revision 1.2  1996/09/17 23:45:48  gsl
 **	drcs update
 **	

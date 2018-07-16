@@ -21,25 +21,23 @@
 #ifndef FILEXT_DEF
 #define FILEXT_DEF
 
-#ifdef EXT_FILEXT
-#define EXTERN_DEF 
-#else
-#define EXTERN_DEF extern
-#endif
-											/* If COBOL defines storage for the	*/
-											/* extern variables then don't define	*/
-											/* storage here.			*/
+void getwfilext(char* ptr);
+void setwfilext(const char* wispfilext);
+void setwispfilext(const char* wispfilext);
 
-EXTERN_DEF char	WISPFILEXT[39];								/* Define the file extension variable.	*/
-EXTERN_DEF char	WISPRETURNCODE[3];							/* Define the return code field.	*/
+void WSETFILEXT(const char* wispfilext);
+void WGETFILEXT(char* ptr);
 
-#undef EXTERN_DEF
+#define WISP_FILE_EXT_SIZE	39
 
 #endif
 
 /*
 **	History:
 **	$Log: filext.h,v $
+**	Revision 1.8.2.1  2002/11/14 21:12:29  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.8  1996/07/23 18:17:46  gsl
 **	drcs update
 **	

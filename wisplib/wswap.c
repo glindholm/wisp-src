@@ -10,8 +10,12 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "wexit.h"
 
+void wswap(void *lword)		/* Preserved for backwards compatability */
+{
+	WL_wswap(lword);
+}
 
-void wswap(void *lword)				/* swap the order of the words in a longword item (for WANG routines to use)	*/
+void WL_wswap(void *lword)			/* swap the order of the words in a longword item (for WANG routines to use)	*/
 {
 	int2 *swords;
 	int2 temp;									/* used for the swap			*/
@@ -40,6 +44,10 @@ void wswap(void *lword)				/* swap the order of the words in a longword item (fo
 	
 }
 
+void WL_reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
+{
+	reversebytes(ptr, len);
+}
 void reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
 {
 	char	temp[80];
@@ -53,6 +61,10 @@ void reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
 	}			
 }	
 
+int WL_bytenormal(void)
+{
+	return bytenormal();
+}
 int bytenormal(void)
 {
 	static int first = 1;
@@ -89,14 +101,14 @@ int4 get_swap(const int4 *src)
 	int4	temp;
 
 	memcpy((char*)&temp, (const char*)src, 4);
-	wswap(&temp);
+	WL_wswap(&temp);
 
 	return temp;
 }
 
 void put_swap(int4 *dest, int4 value)
 {
-	wswap(&value);
+	WL_wswap(&value);
 	memcpy((char*)dest, (char*)&value, 4);
 }
 
@@ -142,6 +154,12 @@ void WBB2B4(char* bb)
 /*
 **	History:
 **	$Log: wswap.c,v $
+**	Revision 1.15.2.2  2002/11/14 21:12:28  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
+**	Revision 1.15.2.1  2002/11/12 16:00:30  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.15  2002/03/28 20:43:14  gsl
 **	Add WBB2B4 to do a wswap() from cobol
 **	

@@ -17,7 +17,7 @@
 #			for KCSI and Micro Focsu COBOL with the
 #			use of the extended file format EXTFH().
 #
-#       Desciption:     This routine is run after the $WISPCONFIG
+#       Desciption:     This routine is run after the ${WISPCONFIG}
 #                       directory is built for testing Micro Focus
 #			COBOL.  startup.mf must be executed and
 #			make sure that samplemf.umf has also been
@@ -25,14 +25,13 @@
 #			has been run to set up the usage constants.
 #
 #
-#       Input:          $WISP           The WISP base directory.
-#                       $WISP/src/...   The ported WISP.
+#       Input:          ${WISPSRC}/...   The ported WISP.
 #
-#       Output:         $WISP/src/testmf/volin/kcsictl/...
+#       Output:         ${WISPSRC}/testmf/volin/kcsictl/...
 #                               The CONTROL data file directory.
-#			$WISP/src/testmf/volin/libin/...
+#			${WISPSRC}/testmf/volin/libin/...
 #				Data files for testing KCSI.
-#			$WISP/src/testmf/volrun/librun/...
+#			${WISPSRC}/testmf/volrun/librun/...
 #				Create data file for testing KCSI.
 #
 #       History:        11/03/97        Written by SMC
@@ -40,15 +39,15 @@
 
 SCRIPT=kcsitest.sh
 
-if [ x$WISP = x ]
+if [ x${WISPSRC} = x ]
 then
         echo
-        echo Variable \$WISP is not set!
+        echo Variable \${WISPSRC} is not set!
         echo $SCRIPT ABORTING!
         exit
 fi
 
-TESTDIR=$WISP/src/testmf
+TESTDIR=${WISPSRC}/testmf
 if [ ! -d $TESTDIR ]
 then
         echo
@@ -60,10 +59,10 @@ fi
 #
 #       Define some variables
 #
-KCSISRC=$WISP/src/kcsi/crid
-KCSICTL=$WISP/src/testmf/volin/kcsictl
-KCSIDTA=$WISP/src/testmf/volin/libin
-KCSIPRG=$WISP/src/testmf/volrun/librun
+KCSISRC=${WISPSRC}/kcsi/crid
+KCSICTL=${WISPSRC}/testmf/volin/kcsictl
+KCSIDTA=${WISPSRC}/testmf/volin/libin
+KCSIPRG=${WISPSRC}/testmf/volrun/librun
 
 echo Creating $KCSICTL
 mkdir $KCSICTL

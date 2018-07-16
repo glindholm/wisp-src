@@ -64,8 +64,8 @@
 ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP and EDE directory here.
-WISPDIR=C:\WISP4405
-EDEDIR=C:\EDE4405
+WISPDIR=C:\WISP4406
+EDEDIR=C:\EDE4406
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispe

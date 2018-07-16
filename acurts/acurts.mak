@@ -2,7 +2,7 @@
 #
 ACUDIR=C:\Acucorp\ACUCBL520\ACUGT
 ACULIB=$(ACUDIR)\lib
-WISPDIR=C:\dev\wisp\src
+WISPDIR=..
 ACUMAK=wrun32wisp_acu52.mak
 RTS=wrun32wisp
 
