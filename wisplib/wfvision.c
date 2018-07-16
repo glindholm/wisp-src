@@ -383,7 +383,7 @@ int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBO
 {
 	char	command[256];
 
-	sprintf(command,"%s -unload %s %s ", acu_vutil_exe(), inname, outname );
+	sprintf(command,"%s -unload '%s' '%s' ", acu_vutil_exe(), inname, outname );
 
 	return 	run_unixcommand_silent(command);
 }

@@ -1858,10 +1858,10 @@ done_soft_link:
 					**	Put each arg in quotes
 					*/
 					command[cpos++] = ' ';
-					command[cpos++] = '\"';
+					command[cpos++] = '\'';
 					memcpy(&command[cpos], parm_list.parm[i], len_list.len[i]);
 					cpos += len_list.len[i];
-					command[cpos++] = '\"';
+					command[cpos++] = '\'';
 					command[cpos] = (char)0;
 				}
 			}

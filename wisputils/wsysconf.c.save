@@ -92,8 +92,8 @@ DEV_ENTRY *devhead, *devp;
 #endif
 
 #ifdef OSF1_ALPHA
-#define WSNAME2 ".*"
-#define WSPATH2 "/dev/pts"
+#define WSNAME2	"pty..*"
+#define WSPATH2	"/dev"
 #define DEFTTY	"vt220"
 #endif
 
@@ -355,7 +355,7 @@ char *argv[];
 
 		if ( 0 != unlink(cfgpath) )						/* remove wsysconfig			*/
 		{
-			fprintf(stderr,"Unable to remove existing file %s\n\n", cfgpath);
+			fprintf(stderr,"Unable to remove existing file %s\n\n");
 			fprintf(stderr,"wsysconfig has NOT been updated!!\n");
 			fprintf(stderr,"wsysconf terminating ...\n");
 			exit(3);

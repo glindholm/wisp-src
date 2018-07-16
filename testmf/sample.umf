@@ -25,7 +25,7 @@ mf:
 	$(MAKE) -f samplemf.umf WISPLANG=MF
 
 MFSE \
-mf:
+mfse:
 	$(MAKE) -f samplemf.umf WISPLANG=MFSE
 
 clean:

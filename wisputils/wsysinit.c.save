@@ -33,7 +33,6 @@ static char *idsi_copyright = "(c)1990,1993 International Digital Scientific, In
 
 #include "idsistd.h"
 #include "wdefines.h"
-#include "wperson.h"
 #define EXT_FILEXT
 #include "filext.h"
 

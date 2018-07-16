@@ -530,7 +530,9 @@ static int unix_submit(
 						wexit(ERRORCODE(4));
 					}
 				}
-#if defined(BSD) || defined(_BSD) || defined(OSF1_ALPHA)
+#ifdef OSF1_ALPHA
+				setpgrp(); 						/* Set the PROCESS GROUP ID		*/
+#elif defined(BSD) || defined(_BSD)
 				setpgrp(pid,pid); 					/* Set the PROCESS GROUP ID		*/
 #else
 				setpgrp(); 						/* Set the PROCESS GROUP ID		*/

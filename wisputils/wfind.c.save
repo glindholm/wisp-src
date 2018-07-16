@@ -10,15 +10,12 @@ static char rcsid[]="$Id:$";
 			/************************************************************************/
 
 /*
-	Scratch a file from the unix shell
-
-	wscratch         file library volume
-	wscratch LIBRARY      library volume
+	wfind	test the FIND usersub
 */
+
 #ifdef unix
 
 #include <stdio.h>
-#include <string.h>
 
 #define EXT_FILEXT
 #include "filext.h"
@@ -30,46 +27,49 @@ char	*argv[];
 	int	argcount, retcode;
 	char	type[1], check[1], access[1];
 	char	key[20], file[20], lib[20], vol[20];
+	int	starter, counter, filecount;
+	char	rtype[1], receiver[2200];
+	char	*ptr;
 
-	initglbs("WSCRATCH");
+	initglbs("WFIND   ");
 
 	if (argc != 4) badusage();
 
-	strcpy( key, argv[1] );
-	upper_string( key );
-
-	if ( 0 == strcmp( "LIBRARY", key ) )
-	{
-		type[0] = 'L';
-		strcpy(file, "        ");
-	}
-	else
-	{
-		type[0] = 'F';
-		strcpy(file, argv[1]);
-	}
+	strcpy(file, argv[1]);
 	strcpy(lib, argv[2]);
 	strcpy(vol, argv[3]);
+
+	if (!strcmp(lib,".")) strcpy(lib,"        ");
+	if (!strcmp(vol,".")) strcpy(vol,"      ");
 	 
 	if ( strlen(file)>8 || strlen(lib)>8 || strlen(vol)>6 ) badusage();
  
-	check[0] = 'B';
-	access[0] = ' ';
 	retcode = 0;
 
-	argcount = 7;
+	argcount = 8;
 	wvaset( &argcount );
-	SCRATCH( type, file, lib, vol, check, access, &retcode);
-
-	wswap(&retcode);
+	starter=1;
+	wswap(&starter);
+	counter=100;
+	wswap(&counter);
+	rtype[0] = 'A';
+	FIND( file, lib, vol, &starter, &counter, receiver, &filecount, rtype);
+	wswap(&counter);
+	wswap(&filecount);
+	printf("\n");
+	printf("FIND file(%s) lib(%s) vol(%s)\n", file, lib, vol);
+	printf("     counter=%d filecount=%d\n\n",counter,filecount);
+	for(ptr=receiver; filecount > 0; filecount--, ptr+=22)
+	{
+		printf("     %22.22s\n",ptr);
+	}
 	exit(retcode);
 }
 
 badusage()
 {
 	printf("\n");
-	printf("Usage: wscratch         file library volume\n");
-	printf("       wscratch LIBRARY      library volume\n");
+	printf("Usage: wfind         file library volume\n");
 	printf("\n");
 	exit(-1);
 }
@@ -80,8 +80,8 @@ badusage()
 
 /*
 **	History:
-**	$Log: wscratch.c,v $
-**	Revision 1.7  1996-07-23 14:13:12-04  gsl
+**	$Log: wfind.c,v $
+**	Revision 1.7  1996-07-23 14:13:09-04  gsl
 **	drcs update
 **
 **

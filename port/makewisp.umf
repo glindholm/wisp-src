@@ -79,69 +79,85 @@ create_acu:	wisplib videolib
 		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf WISPDIR=../.. acu_all)
 
 edelib:	
+		@echo Making $@
 		(cd $(WISP)/src/ede; 		$(MAKE) -f libede.umf install)
 
 good:		videolib edelib
+		@echo Making $@
 		(cd $(WISP)/src/ede; 		$(MAKE) -f good.umf)
 
 proctran:
+		@echo Making $@
 		(cd $(WISP)/src/proctran;	$(MAKE) -f proctran.umf)
 		@echo PROCTRAN is up-to-date.
 
 ivslib:
+		@echo Making $@
 		(cd $(WISP)/src/ivslib;		$(MAKE) -f libivs.umf)
 		@echo IVSLIB is up-to-date.
 
 vsedit:		wisplib videolib
+		@echo Making $@
 		(cd $(WISP)/src/vsedit;		$(MAKE) -f vsedit.umf)
 		@echo VSEDIT is up-to-date.
 
 videolib:	
+		@echo Making $@
 		(cd $(WISP)/src/videolib;	$(MAKE) -f libvideo.umf install)
 		@echo VIDEOLIB is up-to-date.
 
 videotest:	videolib
+		@echo Making $@
 		(cd $(WISP)/src/videotest;	$(MAKE) -f vtest.umf)
 		@echo VIDEOTEST is up-to-date.
 
 wisplib:
+		@echo Making $@
 		(cd $(WISP)/src/wisplib;	$(MAKE) -f libwisp.umf install)
 		@echo WISPLIB is up-to-date.
 
 wisptran:
+		@echo Making $@
 		(cd $(WISP)/src/wisptran;	$(MAKE) -f wisp.umf)
 		@echo WISPTRAN is up-to-date.
 
 wisputils:	wisplib videolib
+		@echo Making $@
 		(cd $(WISP)/src/wisputils;	$(MAKE) -f utils.umf)
 		@echo WISPUTILS is up-to-date.
 
 mfsubs:		
+		@echo Making $@
 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. subsonly)
 		@echo MFSUBS is up-to-date.
 
 rts:		rts_acu rts_mf
 
 rts_acu:	wisplib videolib
+		@echo Making $@
 		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. ACUDIR=$(ACUDIR))
 		@echo ACUCOBOL RTS is up-to-date.
 
 rts_mf:		wisplib videolib
+		@echo Making $@
 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. COBDIR=$(COBDIR))
 		@echo MICRO FOCUS RTS is up-to-date.
 
 rts_ede:	rts_acu_ede rts_mf_ede
 
 rts_acu_ede:	wisplib videolib edelib
-		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. ACUDIR=$(ACUDIR) ede)
+		@echo Making $@
+		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. EDE_LIB_PATH=../lib/libede.a ACUDIR=$(ACUDIR) ede)
 		@echo ACUCOBOL RTS is up-to-date.
 
 rts_mf_ede:	wisplib videolib edelib
-		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. COBDIR=$(COBDIR) ede)
+		@echo Making $@
+		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. EDE_LIB_PATH=../lib/libede.a COBDIR=$(COBDIR) ede)
 		@echo MICRO FOCUS RTS is up-to-date.
 
 clean:
-		(cd $(WISP)/src/acu; 		$(MAKE) -f wruncbl.umf  clean)
+		@echo Making $@
+		(cd $(WISP)/src/acu; 		$(MAKE) -f wruncbl.umf  WISPDIR=.. clean)
 		(cd $(WISP)/src/amu;		$(MAKE) -f amuunix.umf  clean)
 		(cd $(WISP)/src/ede; 		$(MAKE) -f libede.umf   clean)
 		(cd $(WISP)/src/ede; 		$(MAKE) -f good.umf     clean)

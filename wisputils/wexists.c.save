@@ -20,7 +20,6 @@ static char rcsid[]="$Id:$";
 /*	exists VOLUME               volume				*/
 
 #include <stdio.h>
-#include <string.h>
 
 #define EXT_FILEXT
 #include "filext.h"

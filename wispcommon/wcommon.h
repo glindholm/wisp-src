@@ -21,7 +21,7 @@
 	WCOMMON.H		Define common defines for WISP and WISPLIB
 */
 
-#define WISP_VERSION "V4.4.02"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.4.03"			 					/* WISPTRAN version (char[20])		*/
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
 
