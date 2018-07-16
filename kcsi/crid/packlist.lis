@@ -1,90 +1,93 @@
- 	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
-	
-	====================================================================
-	
-	Title:		KCSI CRID PACKING LIST FOR UNIX
-	
-	Document:	packlist.lis
-	Last Updated:	$Date:$
-	Products:	CRID
-	Versions:	2.93 (AND LATER)
-	
-	Summary:	Packing list for the CRID utilities shipping kit.
+        Copyright (c) 1997-2000 by NeoMedia Technologies Inc. 
+        All Rights Reserved.
+        
+        ====================================================================
+        
+        Title:          KCSI CRID PACKING LIST FOR UNIX
+        
+        Document:       packlist.lis
+        Last Updated:   $Date:$
+        Products:       CRID
+        Versions:       2.98 (AND LATER)
+        
+        Summary:        Packing list for the CRID utilities shipping kit.
 
-	====================================================================
-	
+        ====================================================================
+        
 
-	CRID for ACUCOBOL on UNIX:
-	==========================
+        CRID for ACUCOBOL on UNIX:
+        ==========================
 
-	This distribution should include:
+        This distribution should include:
  
-	packlist.lis		- This packing list
-	install_crid_acu.lis	- Installation instructions
-	release.lis		- Release notes for the latest version
+        packlist.lis            - This packing list
+        install_crid_acu.lis    - Installation instructions
+        release.lis             - Release notes for the latest version
 
-	CONTROL			- CONTROL  utility (ACUCOBOL object file)
-	REPORT			- REPORT   utility (ACUCOBOL object file)
-	INQUIRY			- INQUIRY  utility (ACUCOBOL object file)
-	DATENTRY		- DATENTRY utility (ACUCOBOL object file)
+        CONTROL                 - CONTROL  utility (ACUCOBOL object file)
+        REPORT                  - REPORT   utility (ACUCOBOL object file)
+        INQUIRY                 - INQUIRY  utility (ACUCOBOL object file)
+        DATENTRY                - DATENTRY utility (ACUCOBOL object file)
 
-	wruncblk.umf		- Makefile for building ACUCOBOL runtime
-	libcrid.a		- CRID library for building RTS
-	crid.h			- C header for building RTS
-	crid85.c 		- C source for building RTS
-	cridtbl.c		- C source for building RTS
+        wruncblk.umf            - Makefile for building ACUCOBOL runtime
+        libcrid.a               - CRID library for building RTS
+        crid.h                  - C header for building RTS
+        crid85.c                - C source for building RTS
+        cridtbl.c               - C source for building RTS
 
-	ctlcnvrt.wcb		- Source for control file conversion
-	rptcnvrt.wcb		- Source for report file conversion
+        ctlcnvrt.wcb            - Source for control file conversion
+        rptcnvrt.wcb            - Source for report file conversion
 
 
-	CRID for ACUCOBOL on Windows NT/95:
-	===================================
+        CRID for ACUCOBOL on Windows NT/95:
+        ===================================
 
-	This distribution should include:
+        This distribution should include:
  
-	packlist.lis		- This packing list
-	cridntsetup.txt		- Installation instructions
-	release.lis		- Release notes for the latest version
+        packlist.lis            - This packing list
+        cridntsetup.txt         - Installation instructions
+        release.lis             - Release notes for the latest version
 
-	CONTROL			- CONTROL  utility (ACUCOBOL object file)
-	REPORT			- REPORT   utility (ACUCOBOL object file)
-	INQUIRY			- INQUIRY  utility (ACUCOBOL object file)
-	DATENTRY		- DATENTRY utility (ACUCOBOL object file)
+        CONTROL                 - CONTROL  utility (ACUCOBOL object file)
+        REPORT                  - REPORT   utility (ACUCOBOL object file)
+        INQUIRY                 - INQUIRY  utility (ACUCOBOL object file)
+        DATENTRY                - DATENTRY utility (ACUCOBOL object file)
 
-	wwruncbl.mak		- Makefile for building ACUCOBOL runtime
-	cridacu.lib		- CRID library for building RTS
-	crid.h			- C header for building RTS
-	crid85.c 		- C source for building RTS
-	cridtbl.c		- C source for building RTS
+        wwruncbl.mak            - Makefile for building ACUCOBOL runtime
+        wrun32wisp_crid.mak     - Makefile for building ACUCOBOL 4.3 runtime
+        cridacu.lib             - CRID library for building RTS
+        cridacum.lib            - CRID multi-threaded library for building RTS
+        crid.h                  - C header for building RTS
+        crid85.c                - C source for building RTS
+        cridtbl.c               - C source for building RTS
 
-	ctlcnvrt.wcb		- Source for control file conversion
-	rptcnvrt.wcb		- Source for report file conversion
+        ctlcnvrt.wcb            - Source for control file conversion
+        rptcnvrt.wcb            - Source for report file conversion
 
 
-	CRID for MICRO FOCUS COBOL on UNIX:
-	===================================
+        CRID for MICRO FOCUS COBOL on UNIX:
+        ===================================
 
-	This distribution should include:
+        This distribution should include:
 
-	packlist.lis		- This packing list
-	install_crid_mf.lis	- Installation instructions
-	release.lis		- Release notes for the latest version
+        packlist.lis            - This packing list
+        install_crid_mf.lis     - Installation instructions
+        release.lis             - Release notes for the latest version
 
-	control			- CONTROL  utility (executable file)
-	report			- REPORT   utility (executable file)
-	inquiry			- INQUIRY  utility (executable file)
-	datentry		- DATENTRY utility (executable file)
+        control                 - CONTROL  utility (executable file)
+        report                  - REPORT   utility (executable file)
+        inquiry                 - INQUIRY  utility (executable file)
+        datentry                - DATENTRY utility (executable file)
 
-	cridmfx.umf		- Makefile for rebuilding utilities
-	libmfxcrid.a		- CRID library for building utils
-	libmfxcridwcb.a		- CRID library for building utils
-	control.o		- Object for building CONTROL
-	report.o		- Object for building REPORT
-	inquiry.o		- Object for building INQUIRY
-	datentry.o		- Object for building DATENTRY
+        cridmfx.umf             - Makefile for rebuilding utilities
+        libmfxcrid.a            - CRID library for building utils
+        libmfxcridwcb.a         - CRID library for building utils
+        control.o               - Object for building CONTROL
+        report.o                - Object for building REPORT
+        inquiry.o               - Object for building INQUIRY
+        datentry.o              - Object for building DATENTRY
 
-	ctlcnvrt.wcb		- Source for control file conversion
-	rptcnvrt.wcb		- Source for report file conversion
+        ctlcnvrt.wcb            - Source for control file conversion
+        rptcnvrt.wcb            - Source for report file conversion
 
        ========================= END OF DOCUMENT ==========================

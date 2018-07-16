@@ -76,6 +76,8 @@ struct my_event
 */
 HWND vraw_get_console_hWnd(void);
 
+extern int vcur_atr;
+
 /*
  * Globals whose storage is defined in other compilation units:
  *
@@ -823,7 +825,7 @@ static void vrawSetConsoleSize(HANDLE hConsole)
 **
 **	FUNCTION:	Do the actual writing to the console
 **
-**	DESCRIPTION:	This routine calls WriteConsole then updates the cursor position.
+**	DESCRIPTION:	This routine calls WriteConsole.
 **
 **	ARGUMENTS:	
 **	hConsole	The console handle
@@ -1796,6 +1798,8 @@ void vrawerase(int fr, int fc, int tr, int tc) 			/* from/to row/column   */
 		vrawWriteConsole(hConsole, spaces, tc-fc+1);
 	}
 
+	vrawattribute( vcur_atr ); /* Restore the attribute */
+
 	vrawmove(save_row,save_col);
 }
 
@@ -2425,6 +2429,13 @@ static void writelog(char *fmt,...)
 /*
 **	History:
 **	$Log: vrawntcn.c,v $
+**	Revision 1.61  2000-03-16 12:23:53-05  gsl
+**	Finished color fix
+**
+**	Revision 1.60  2000-03-16 11:44:16-05  gsl
+**	Fix "erratic colors" problem.
+**	vrawerase() was resetting the current attribute to "0" the default.
+**
 **	Revision 1.59  1999-09-15 09:16:16-04  gsl
 **	CHange the default console title from NT/95 to NT/9x
 **

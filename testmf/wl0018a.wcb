@@ -56,7 +56,10 @@
 	   05  MSG-LEN-B2   BINARY VALUE 15.
 	   
        01  MSG-TYPE-K   PIC X VALUE "K".
-       01  MSG-TIME     PIC X(4) VALUE LOW-VALUES.
+       01  MSG-TYPE-T   PIC X VALUE "T".
+       01  MSG-TIME.
+	   05  MSG-TIME-1  BINARY VALUE 0.
+	   05  MSG-TIME-2  BINARY VALUE 1000.
        
 
 002200
@@ -90,7 +93,7 @@
        	   call "MESSAGE" using 
        	       	       	   MSG-CH, 
        	       	       	   MSG-PORT-A,
-			   MSG-TYPE-K,
+			   MSG-TYPE-T,
 			   MSG-TIME,
        	       	       	   MSG-MSG-B, 
        	       	       	   MSG-LEN-B,

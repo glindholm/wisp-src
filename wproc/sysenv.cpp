@@ -24,7 +24,7 @@
 #include "utility.hpp"
 
 
-#if WANG && ! DOS_HOST
+#if WANG && !defined(WIN32)
 extern char **environ;
 #endif
 char    **os_environ       = environ; // Borland & UNIX global
@@ -187,6 +187,9 @@ void system_environment::restore() {
 //
 //	History:
 //	$Log: sysenv.cpp,v $
+//	Revision 1.8  2000-03-13 14:11:41-05  gsl
+//	fix win32 warning
+//
 //	Revision 1.7  1998-08-31 15:14:20-04  gsl
 //	drcs update
 //

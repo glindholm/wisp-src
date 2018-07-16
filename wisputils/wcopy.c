@@ -464,7 +464,7 @@ char	*ilib, *ivol, *olib, *ovol;
 	int4	retcode;
 	char	reciever[2200];
 	char	ifile[9], ofile[9];
-	char	*fileptr;
+	char	*fileptr = NULL;
 	int	pfkey;
 
 #define RSIZE	100
@@ -1331,6 +1331,9 @@ int4 retcode;
 /*
 **	History:
 **	$Log: wcopy.c,v $
+**	Revision 1.18  2000-03-13 14:16:52-05  gsl
+**	Fix WIN32 warning
+**
 **	Revision 1.17  1998-06-18 10:26:35-04  gsl
 **	Trk 542 - For NT/95 change to ignore arguments.
 **

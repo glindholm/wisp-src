@@ -121,7 +121,7 @@ static struct dir_struct								/* Struct for dir info			*/
 static char	wang_file[SIZEOF_FILE];							/* Current Wang style FILENAME		*/
 static char	wang_lib[SIZEOF_LIB];							/* Current Wang style LIBRARY		*/
 static char	wang_vol[SIZEOF_VOL];							/* Current Wang style VOLUME		*/
-static char	native_path[COB_FILEPATH_LEN + 1];					/* Current native file path		*/
+static char	native_path[WISP_FILEPATH_LEN + 1];					/* Current native file path		*/
 
 static int	native_path_loaded;							/* Is the native path loaded		*/
 
@@ -2788,7 +2788,7 @@ static int load_dir_ring(int force_load)
 {
 	int	rc;
 	int	len;
-	char	filepath[COB_FILEPATH_LEN];
+	char	filepath[WISP_FILEPATH_LEN];
 	char	*ptr;
 	char	*context;
 	int	cnt;
@@ -2851,6 +2851,12 @@ static int load_dir_ring(int force_load)
 	context = NULL;
 	while( ptr = nextfile(native_path,&context) )
 	{
+		if (strlen(native_path) + 1 + strlen(ptr) >= sizeof(filepath))
+		{
+			putmessage("File path is too long");
+			return(0);
+		}
+		
 		strcpy(dir_item.file,ptr);
 		strcpy(filepath,native_path);
 		len = strlen(filepath);
@@ -3412,6 +3418,12 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.31  2000-01-07 11:07:38-05  gsl
+**	Fixed load_dir_ring() and native_path to allow filenames longer the 80.
+**	It was aborting previously.
+**	There is still many functions that are unusable for filenames over 80
+**	but this seems to have fixed the aborts.
+**
 **	Revision 1.30  1999-09-13 15:48:13-04  gsl
 **	fix missing return code
 **

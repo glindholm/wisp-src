@@ -17,10 +17,10 @@
 #			nmake -f sampleacu.mak
 #			
 #
-WISPDIR=d:\WISP4305
+WISPDIR=c:\WISP4306
 WISPTRAN=$(WISPDIR)\bin\wisp
 WISPFLAGS= -I..\wisputils -M
-COBOL=ccbl32
+COBOL=c:\acucbl43\acugt\bin\ccbl32.exe
 COBFLAGS=-Zd -Da4
 LANG=-VACU
 CFLAGS=-DWIN32 -DMSFS
@@ -206,7 +206,7 @@ $(WC)\wispmsg.dat:		$(WISPDIR)\config\$(@F)
 $(WC)\wproc.msg:		$(WISPDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wrun.cfg:			$(WISPDIR)\config\$(@F)
+$(WC)\wrun.cfg:			.\wrun_acu.cfg
 	$(COPY) $** $@
 
 $(WC)\wsysconf.cfg:		$(WISPDIR)\config\$(@F)
@@ -218,6 +218,12 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
+#	Revision 1.9  2000-04-24 20:59:17-04  gsl
+#	wisp 4.3.06
+#
+#	Revision 1.8  1999-09-27 09:58:04-04  gsl
+#	Update the auto build of WISPCONFIG to use a custom wrun.cfg file
+#
 #	Revision 1.7  1999-09-13 15:53:08-04  gsl
 #	Add wispconfigsetup to do the WIN32 setup of the config dir.
 #

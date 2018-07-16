@@ -85,19 +85,11 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
-SOURCE=.\acp.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\acpmap.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\acustubs.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\assert.h
 # End Source File
 # Begin Source File
 
@@ -153,23 +145,11 @@ SOURCE=.\cobpic.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\cobpic.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\cobrun.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\cobscrn.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\costar.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\costar.h
 # End Source File
 # Begin Source File
 
@@ -214,10 +194,6 @@ SOURCE=.\extract.c
 # Begin Source File
 
 SOURCE=.\fcopy.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\fcopy.h
 # End Source File
 # Begin Source File
 
@@ -325,10 +301,6 @@ SOURCE=.\linkvect.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\linkvect.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\logoff.c
 # End Source File
 # Begin Source File
@@ -342,10 +314,6 @@ SOURCE=.\machid.c
 # Begin Source File
 
 SOURCE=.\makepath.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\menu.h
 # End Source File
 # Begin Source File
 
@@ -374,10 +342,6 @@ SOURCE=.\mngfile.c
 # Begin Source File
 
 SOURCE=.\mount.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\movebin.h
 # End Source File
 # Begin Source File
 
@@ -425,18 +389,6 @@ SOURCE=.\operator.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\osddefs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\p0x386.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\p2x386.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\packer.c
 # End Source File
 # Begin Source File
@@ -469,19 +421,7 @@ SOURCE=.\que_jobs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\que_jobs.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\quemgmt.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\quemgmt.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\quidef.h
 # End Source File
 # Begin Source File
 
@@ -498,10 +438,6 @@ SOURCE=.\readvtoc.c
 # Begin Source File
 
 SOURCE=.\regexpr.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\regexpr.h
 # End Source File
 # Begin Source File
 
@@ -525,15 +461,7 @@ SOURCE=.\runtype.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\runtype.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\rvmap.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\rvmap.h
 # End Source File
 # Begin Source File
 
@@ -597,10 +525,6 @@ SOURCE=..\wispcommon\sleepdos.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\softkeys.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\sort.c
 # End Source File
 # Begin Source File
@@ -625,10 +549,6 @@ SOURCE=.\spawn.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\spawn.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\string.c
 # End Source File
 # Begin Source File
@@ -642,10 +562,6 @@ SOURCE=.\sysdev.c
 # Begin Source File
 
 SOURCE=.\sysinf.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\trmdef.h
 # End Source File
 # Begin Source File
 
@@ -665,23 +581,7 @@ SOURCE=.\vdispidx.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vdispidx.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vdisplay.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\visint.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\visn2.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\visn3.h
 # End Source File
 # Begin Source File
 
@@ -690,10 +590,6 @@ SOURCE=.\vmspargs.c
 # Begin Source File
 
 SOURCE=.\vmssort.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmssort.h
 # End Source File
 # Begin Source File
 
@@ -777,10 +673,6 @@ SOURCE=.\wfaccess.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wfaccess.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\wfcisam.c
 # End Source File
 # Begin Source File
@@ -837,15 +729,7 @@ SOURCE=.\win32err.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\win32err.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\win32msg.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\win32msg.h
 # End Source File
 # Begin Source File
 
@@ -857,15 +741,7 @@ SOURCE=.\win32spn.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\win32spn.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\winnt.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\winnt.h
 # End Source File
 # Begin Source File
 
@@ -901,19 +777,11 @@ SOURCE=.\wmalloc.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wngdcmls.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\wpause.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\wperson.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wplatdef.h
 # End Source File
 # Begin Source File
 
@@ -941,19 +809,11 @@ SOURCE=.\wscreen.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wscrn.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\wsfnm.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\wsfns.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wsfns.h
 # End Source File
 # Begin Source File
 
@@ -997,11 +857,35 @@ SOURCE=.\wwaitpid.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
 # Begin Source File
 
+SOURCE=.\acp.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\assert.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\cobpic.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\cobrun.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\cobscrn.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\costar.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\day.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\fcopy.h
 # End Source File
 # Begin Source File
 
@@ -1013,7 +897,55 @@ SOURCE=..\wispcommon\getopt.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\linkvect.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\menu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\movebin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\osddefs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\p0x386.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\p2x386.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\que_jobs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\quemgmt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\quidef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\regexpr.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\wispcommon\ring.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\runtype.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\rvmap.h
 # End Source File
 # Begin Source File
 
@@ -1025,7 +957,59 @@ SOURCE=.\setprgid.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\softkeys.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\spawn.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\submit.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\trmdef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vdispidx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\visint.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\visn2.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\visn3.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vmssort.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wfaccess.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\win32err.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\win32msg.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\win32spn.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winnt.h
 # End Source File
 # Begin Source File
 
@@ -1033,128 +1017,28 @@ SOURCE=..\wispcommon\wisp_pic.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\wngdcmls.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wplatdef.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\wsb.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wscrn.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wsfns.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # End Group
-# Begin Source File
-
-SOURCE=.\filecopy.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\find.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\message1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\message2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\message3.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\message4.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\message5.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\openacp.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\pwdname.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\que_jobs.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\quemgmt1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\quemgmt2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\readvtoc.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\rename1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\rename2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\rename3.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\scratch1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\scratch2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\setsymb1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\setsymb2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\sharemem1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\sharemem2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\submit.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\sysdev.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmssort1.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmssort2.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmssort3.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\vwang.d
-# End Source File
-# Begin Source File
-
-SOURCE=.\wchain.d
-# End Source File
 # End Target
 # End Project

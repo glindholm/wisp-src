@@ -39,13 +39,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisplib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name edelib
+    Project_Dep_Name wisptran
     End Project Dependency
 }}}
 
@@ -117,19 +111,28 @@ Package=<4>
     Project_Dep_Name cridlib
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wwruncblk
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wwruncblke
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name CRID
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name cridlibm
     End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "cridlib"=.\kcsi\crid\cridlib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "cridlibm"=.\KCSI\CRID\cridlibm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -150,10 +153,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -174,13 +177,25 @@ Package=<4>
     Project_Dep_Name edelib
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wwruncble
+    Project_Dep_Name edelibm
     End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "edelib"=.\ede\edelib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "edelibm"=.\ede\edelibm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -201,10 +216,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name edelibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name edelib
+    Project_Dep_Name videolibm
     End Project Dependency
 }}}
 
@@ -219,7 +234,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
 }}}
 
@@ -276,10 +291,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -312,7 +327,52 @@ Package=<4>
 
 ###############################################################################
 
-Project: "testacu"=.\testacu\testacu.dsp - Package Owner=<4>
+Project: "shipkitcridacu"=.\PORT\shipkitcridacu.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name cridacu
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "shipkitede"=.\PORT\shipkitede.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name ede
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "shipkitwisp"=.\PORT\shipkitwisp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wispkit
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "videolib"=.\videolib\videolib.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -324,7 +384,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "videolib"=.\videolib\videolib.dsp - Package Owner=<4>
+Project: "videolibm"=.\videolib\videolibm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -345,7 +405,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
 }}}
 
@@ -360,10 +420,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -390,7 +450,7 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -405,10 +465,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -423,10 +483,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -444,16 +504,10 @@ Package=<4>
     Project_Dep_Name acn
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name proctran
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name videolib
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name videotest
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name vsedit
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name wisplib
@@ -465,19 +519,31 @@ Package=<4>
     Project_Dep_Name wisputils
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wproc
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wwruncbl
+    Project_Dep_Name wisplibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wwruncblt
+    Project_Dep_Name acu
     End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "wisplib"=.\wisplib\wisplib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "wisplibm"=.\wisplib\wisplibm.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -551,6 +617,21 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name wrunt
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name proctran
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name vsedit
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name vsx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wauthorize
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name wproc
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -576,10 +657,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -594,10 +675,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -639,10 +720,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -657,10 +738,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 
@@ -675,10 +756,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name videolib
+    Project_Dep_Name videolibm
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name wisplib
+    Project_Dep_Name wisplibm
     End Project Dependency
 }}}
 

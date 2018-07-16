@@ -1,12 +1,16 @@
-#	Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2000 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
 #	File:	wwruncbl.mak
 #
 #	Function:
-#		The WIN32 makefile for building the ACUCOBOL runtime
+#		The WIN32 makefile for building the ACUCOBOL-GT runtime
 #		systems that include the WISP runtime routines.
+#
+#		For ACUCOBOL-GT 2.4 through 4.2.
+#
+#		NOTE: Use wrun32wisp.mak for ACUCOBOL-GT 4.3.
 #
 #	Description:
 #		This makefile can generate the following versions
@@ -16,13 +20,13 @@
 #
 #		wwruncble.exe	The EDE version of the runtime.
 #
-#		wwruncblk.exe	The KCSI version of the runtime.
+#		wwruncblk.exe	The CRID version of the runtime.
 #
-#		wwruncblke.exe	The KCSI + EDE runtime.
+#		wwruncblke.exe	The CRID + EDE runtime.
 #
 #		run32w.exe	The console runtime.
 #
-#		run32wk.exe	The console runtime with KCSI.
+#		run32wk.exe	The console runtime with CRID.
 #
 #
 #	Instructions:
@@ -36,15 +40,17 @@
 #
 #			WISPDIR = The installed WISP directory
 #			ACUDIR  = The ACUCOBOL directory
-#			KCSIDIR = The KCSI directory (if needed)
+#			EDEDIR  = The EDE directory (if needed)
+#			CRIDDIR = The CRID directory (if needed)
 #
 #
 #		Edit this file and change WISPDIR and ACUDIR to 
 #		point to the correct locations.
 #
-#			WISPDIR=C:\WISP
-#			ACUDIR=C:\ACUCOBOL
-#			KCSIDIR=C:\CRIDACU
+#			WISPDIR=C:\WISP4305
+#			ACUDIR=C:\ACUCBL42\ACUGT
+#			EDEDIR=C:\EDE4305
+#			CRIDDIR=C:\CRIDACU297
 #
 #		To build a standard runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak
@@ -52,17 +58,17 @@
 #		To build a EDE runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak ede
 #
-#		To build a KCSI runtime:
-#			C:\WISP\ACU> nmake /f wwruncbl.mak kcsi
+#		To build a CRID runtime:
+#			C:\WISP\ACU> nmake /f wwruncbl.mak crid
 #
-#		To build a KCSI+EDE runtime:
-#			C:\WISP\ACU> nmake /f wwruncbl.mak kcsiede
+#		To build a CRID+EDE runtime:
+#			C:\WISP\ACU> nmake /f wwruncbl.mak cridede
 #
 #		To build a console runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak rtst
 #
-#		To build a console runtime with KCSI:
-#			C:\WISP\ACU> nmake /f wwruncbl.mak kcsit
+#		To build a console runtime with CRID:
+#			C:\WISP\ACU> nmake /f wwruncbl.mak cridt
 #
 #
 #	Targets:
@@ -84,11 +90,11 @@
 #				Runtime = wwruncble.exe
 #				Macro   = RTSE
 #
-#		kcsi		The KCSI runtime.
+#		crid		The CRID runtime.
 #				Runtime = wwruncblk.exe
 #				Macro   = RTSK
 #
-#		kcsiede		The KCSI + EDE  runtime.
+#		cridede		The CRID + EDE  runtime.
 #				Runtime = wwruncblke.exe
 #				Macro   = RTSKE
 #
@@ -96,7 +102,7 @@
 #				Runtime = run32w.exe
 #				Macro   = RTST
 #
-#		kcsit		The console KCSI runtime.
+#		cridt		The console CRID runtime.
 #				Runtime = run32wt.exe
 #				Macro   = RTSKT
 #
@@ -131,23 +137,27 @@
 # ACURPCDIR	The directory for FTP libraries for Acuserver. Supply if
 #		an Acuserver client (CLIENT=1).
 # WISPDIR	The installed WISP directory
-# KCSIDIR	The KCSI directory
+# EDEDIR	The installed EDE directory
+# CRIDDIR	The CRID directory
 # CREATEDIR	The CREATE directory
 #
 # OUTDIR	The output directory where the rts is created
 #
 #ACUDIR=D:\ACUCBL40\ACUGT
 #ACUDIR=D:\ACUCBL41
-ACUDIR=D:\ACUCBL42\ACUGT
-ACURPCDIR=D:\ACUFTP
+#ACUDIR=C:\ACUCBL42\ACUGT
+ACUDIR=C:\ACUCBL43\ACUGT
+ACURPCDIR=C:\ACUFTP
 
 # Uncomment for Acuserver client enabled runtime.
 #CLIENT=1
 
-#WISPDIR=C:\WISP
+#WISPDIR=C:\WISP4306
 WISPDIR=..
-KCSIDIR=$(WISPDIR)\CRIDACU.297
-CREATEDIR=$(WISPDIR)\CREATEACU.34
+
+EDEDIR=C:\EDE4306
+CRIDDIR=C:\CRIDACU297
+CREATEDIR=C:\CREATEACU34
 
 OUTDIR=.
 
@@ -179,7 +189,7 @@ LIBEDE=$(L_EDE).lib
 
 WISP_LIB_PATH  		= $(WISPLIBSDIR)\$(LIBWISP)
 VIDEO_LIB_PATH 		= $(WISPLIBSDIR)\$(LIBVIDEO)
-EDE_LIB_PATH   		= $(WISPLIBSDIR)\$(LIBEDE)
+EDE_LIB_PATH   		= $(EDEDIR)\$(LIBEDE)
 
 WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
@@ -500,20 +510,21 @@ ACUFILES=$(ACUSRCDIR)\sub.c \
 #
 WISPFILES=$(WISPLIBSDIR)\$(LIBWISP) \
 	$(WISPLIBSDIR)\$(LIBVIDEO) \
-	$(WISPLIBSDIR)\$(LIBEDE) \
 	$(WISPACUFILES)
+
+EDEFILES=$(EDEDIR)\$(LIBEDE)
 
 #============================================================================
 #
-# KCSIFILES is a list of KCSI files used in building the runtime.
+# CRIDFILES is a list of CRID files used in building the runtime.
 #
-KCSI_LIB_PATH=$(KCSIDIR)\cridacu.lib
-KCSIFILES=$(KCSIDIR)\crid.h \
-	$(KCSIDIR)\cridtbl.c \
-	$(KCSIDIR)\crid85.c \
-	$(KCSI_LIB_PATH)
+CRID_LIB_PATH=$(CRIDDIR)\cridacu.lib
+CRIDFILES=$(CRIDDIR)\crid.h \
+	$(CRIDDIR)\cridtbl.c \
+	$(CRIDDIR)\crid85.c \
+	$(CRID_LIB_PATH)
 
-KCSI_DEP = crid.h crid85.c cridtbl.c
+CRID_DEP = crid.h crid85.c cridtbl.c
 
 CREATEACUSUB=$(CREATEDIR)\vscracu.obj
 CREATESUBS=$(CREATEACUSUB) filetbl.obj
@@ -543,8 +554,12 @@ header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
 	@CD
 	@echo ">>>>"
 
-headerkcsi:
-	@echo ">>>> KCSIDIR   = " $(KCSIDIR)
+headerede:
+	@echo ">>>> EDEDIR    = " $(EDEDIR)
+	@echo ">>>>"
+
+headercrid:
+	@echo ">>>> CRIDDIR   = " $(CRIDDIR)
 	@echo ">>>>"
 
 headercreate:
@@ -558,6 +573,16 @@ $(WISPDIR):
 	@echo ">>>>"
 	@echo ">>>> See the instructions at the beginning of this makefile"
 	@echo ">>>> for information on setting WISPDIR."
+	@echo ">>>>"
+	@exit_with_error
+
+$(EDEDIR):
+	@echo ">>>> ERROR: The EDE directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using EDEDIR = " $(EDEDIR)
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting EDEDIR."
 	@echo ">>>>"
 	@exit_with_error
 
@@ -616,6 +641,16 @@ $(WISPFILES):
 	@echo ">>>>"
 	@exit_with_error
 
+$(EDEFILES):
+	@echo ">>>> ERROR: An WISP EDE configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The EDE file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = $(WISPDIR)"
+	@echo ">>>> Using EDEDIR  = $(EDEDIR)"
+	@echo ">>>>"
+	@exit_with_error
+
 $(WISPTRAN):
 	@echo ">>>> ERROR: An WISP configuration error was detected!"
 	@echo ">>>>"
@@ -625,12 +660,12 @@ $(WISPTRAN):
 	@echo ">>>>"
 	@exit_with_error
 
-$(KCSIFILES):
-	@echo ">>>> ERROR: An KCSI configuration error was detected!"
+$(CRIDFILES):
+	@echo ">>>> ERROR: An CRID configuration error was detected!"
 	@echo ">>>>"
-	@echo ">>>> The KCSI file $@ was not found."
+	@echo ">>>> The CRID file $@ was not found."
 	@echo ">>>>"
-	@echo ">>>> Using KCSIDIR = $(KCSIDIR)"
+	@echo ">>>> Using CRIDDIR = $(CRIDDIR)"
 	@echo ">>>>"
 	@exit_with_error
 
@@ -639,7 +674,7 @@ rts:	header $(RTS) $(RTS:.exe=.alc) acu
 	@echo ">>>> RTS     = " $(RTS) is up to date.
 	@echo ">>>>"
 
-ede:	header $(RTSE) $(RTSE:.exe=.alc) acu
+ede:	header headerede $(RTSE) $(RTSE:.exe=.alc) acu
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSE) is up to date.
 	@echo ">>>>"
@@ -649,29 +684,29 @@ rtst:	header $(RTST) $(RTST:.exe=.alc) acu
 	@echo ">>>> RTS     = " $(RTST) is up to date.
 	@echo ">>>>"
 
-edet:	header $(RTSET) $(RTSET:.exe=.alc) acu
+edet:	header headerede $(RTSET) $(RTSET:.exe=.alc) acu
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSET) is up to date.
 	@echo ">>>>"
 
 both:	rts ede
 
-kcsi:	header headerkcsi $(RTSK) $(RTSK:.exe=.alc)
+crid:	header headercrid $(RTSK) $(RTSK:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSK) is up to date.
 	@echo ">>>>"
 
-kcsiede: header headerkcsi $(RTSKE)  $(RTSKE:.exe=.alc)
+cridede: header headerede headercrid $(RTSKE)  $(RTSKE:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSKE) is up to date.
 	@echo ">>>>"
 
-kcsit:	header headerkcsi $(RTSKT) $(RTSKT:.exe=.alc)
+cridt:	header headercrid $(RTSKT) $(RTSKT:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSKT) is up to date.
 	@echo ">>>>"
 
-kcsiedet: header headerkcsi $(RTSKET)  $(RTSKET:.exe=.alc)
+cridedet: header headerede headercrid $(RTSKET)  $(RTSKET:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSKET) is up to date.
 	@echo ">>>>"
@@ -703,40 +738,48 @@ RTSLINKOBJS = $(ACUSUBS) $(WISPRTSRES)
 #
 
 $(RTS): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) sub_wisp.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISP_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK)
 
 $(RTSE): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) sub_wisp.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISPEDE_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK) 
 
-$(RTSK): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) sub_crid.obj
+$(RTSK): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $(CRID_DEP) sub_crid.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
-		$(WISP_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+		$(WISP_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
-$(RTSKE): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) sub_crid.obj
+$(RTSKE): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $(CRID_DEP) sub_crid.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ sub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
-		$(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+		$(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
 #
 #	RTS (alternate terminal) targets - Required at least Acucobol-GT 4.0.0 
 #
 
 $(RTST): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) tsub_wisp.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(conflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACUTLIBS) \
 		$(WISP_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK)
 
 $(RTSET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) tsub_wisp.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
 		$(WISPEDE_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK) 
 
-$(RTSKT): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) tsub_crid.obj
+$(RTSKT): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $(CRID_DEP) tsub_crid.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
-		$(WISP_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+		$(WISP_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
-$(RTSKET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(KCSI_LIB_PATH) $(ACU_SUB_DEP) $(KCSI_DEP) tsub_crid.obj
+$(RTSKET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $(CRID_DEP) tsub_crid.obj
+	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
-		$(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+		$(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
 #
 #	CREATE target
@@ -799,11 +842,11 @@ $(RTST:.exe=.alc) $(RTSET:.exe=.alc) $(RTSKT:.exe=.alc) $(RTSKET:.exe=.alc): $(R
 	copy $(RTSALC) $@
 
 #
-#	KCSI targets
+#	CRID targets
 #
 
-$(KCSI_DEP): $(KCSIDIR)\$(@F)
-	copy $(KCSIDIR)\$@ $@
+$(CRID_DEP): $(CRIDDIR)\$(@F)
+	copy $(CRIDDIR)\$@ $@
 
 $(CREATEACUSUB):
 	$(cc) $(CLFLAGS) /Fo$@ $*.c
@@ -871,3 +914,6 @@ WACUHELP: wacuhelp.cob
 WACUWSB: wacuwsb.cob
 	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
 
+#
+# End of file
+#

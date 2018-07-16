@@ -39,7 +39,7 @@ CFG=wwruncblk - Win32 Debug
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. KCSIDIR=..\kcsi\crid kcsi"
+# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. CRIDDIR=..\kcsi\crid crid"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "wwruncblk.exe"
 # PROP Bsc_Name "wwruncblk.bsc"
@@ -58,7 +58,7 @@ CFG=wwruncblk - Win32 Debug
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak KCSIDIR=..\kcsi\crid L_WISP=wispd L_VIDEO=videod WISPDIR=.. EXTRA_LINK=msvcrtd.lib kcsi"
+# PROP Cmd_Line "NMAKE /f wwruncbl.mak CRIDDIR=..\kcsi\crid L_WISP=wispd L_VIDEO=videod WISPDIR=.. EXTRA_LINK=msvcrtd.lib crid"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "wwruncblk.exe"
 # PROP Bsc_Name "wwruncblk.bsc"

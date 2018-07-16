@@ -1,4 +1,4 @@
-Copyright (c) 1999 by NeoMedia Technologies Inc. All Rights Reserved.
+Copyright (c) 2000 by NeoMedia Technologies Inc. All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +7,7 @@ Title:          RELEASE NOTES FOR WISP VERSION 4.3
 Document:       v43_relnotes.lis (RELNOTES)
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       4.3.05
+Versions:       4.3.06
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
@@ -26,6 +26,49 @@ Summary:        Release notes for changes to WISP since version 3.3c.
 
 
 
+CHANGES FROM 4.3.05 TO 4.3.06
+=============================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit from release 4.3.05 to release 4.3.06.
+
+The version numbers of utilities that are released with this version
+or WISP are:
+
+    WPROC  v1.16
+    CRID   v2.98
+    CREATE v3.4
+
+On WIN32, support has been added for ACUCOBOL-GT 4.3.  This release of
+ACUCOBOL-GT has changed the nature of the runtime from a statically
+linked executable to a multi-threaded DLL plus a small exe file.
+Several new files have been added to the release:
+
+    wispm.lib         - WISP library with multi-threaded DLL support.
+    videom.lib        - VIDEO library with multi-threaded DLL support.
+    wrun32wisp.mak    - Makefile for building the ACUCOBOL-GT 4.3
+                        runtime.
+
+NOTE: You can not use the WISP NT Telnet support with ACUCOBOL-GT 4.3
+as this version does not support building an "Alternate Terminal
+Manager" runtime.
+
+On WIN32 when using console I/O without Co*STAR a problem with colors
+has been corrected.  Characters that should be displayed in bold (or
+other non-default attributes) would on occasion be display with the
+default attribute.
+
+The DISPRINT utility has been changed to display the "Modified" date
+of the file instead of the "Created" date.  The created date is not
+actually stored by the system and previously what was being displayed
+was the date of the last status change.
+
+The WISP Command Processor Manage Files and Libraries facility was
+aborting if you attempted to navigate down a filepath that was greater
+then 80 characters long.  The aborting has been fixed however most of
+the functions (rename, copy, etc) are not usable with filepaths
+greater the 80 characters.
+
+
 CHANGES FROM 4.3.04 TO 4.3.05
 =============================
 The following items describe corrections and improvements that have
@@ -39,7 +82,7 @@ or WISP are:
     CREATE v3.4
 
 This version of WISP has been verified to be compatible with
-Acucobol-GT 4.2.0.
+ACUCOBOL-GT 4.2.0.
 
 Support for the VSSUB DATE4 has been added. In the WISP implementation
 the routine DATE4 is the same routine as DATE2.  The DATE4 functions
@@ -1961,6 +2004,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE
     ------------      ------------
+        4.3.06          03/16/00        WIN32 Acucobol 4.3 support
         4.3.05          09/15/99        4.3 patch 5
         4.3.04          03/03/99        NT Telnet Support
         4.3.03          01/05/99        4.3 patch 3

@@ -251,7 +251,7 @@ char *argv[];
 	/* CHANGE-COPYRIGHT-DATE */
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992-1999 NeoMedia Technologies Incorporated\n\n");
+	printf("Copyright (c) 1992-2000 NeoMedia Technologies Incorporated\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -790,6 +790,9 @@ increment_devnum()
 /*
 **	History:
 **	$Log: wsysconf.c,v $
+**	Revision 1.16  2000-03-16 10:29:37-05  gsl
+**	2000
+**
 **	Revision 1.15  1999-09-23 13:39:12-04  gsl
 **	change copyright
 **

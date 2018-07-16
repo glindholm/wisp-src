@@ -77,5 +77,45 @@ CFG=wispkit - Win32 Debug
 
 !ENDIF 
 
+# Begin Group "DOC"
+
+# PROP Default_Filter "txt;lis"
+# Begin Source File
+
+SOURCE=..\etc\aqmwisp.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\nonascii.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\nttelnet.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\v43_relnotes.lis
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\vcolors.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\wispacn.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\wispmsg.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\wispntdoc.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\wispntsetup.txt
+# End Source File
+# End Group
 # End Target
 # End Project

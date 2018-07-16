@@ -1058,8 +1058,17 @@ int *rc;
 {
 #define MAX_CALL_ARGS	32
 extern	short A_call_err;
+
+#ifndef A_COBOL_DECLARED
+/* In 4.3 Acucobol started declaring cobol() in sub.h */
 extern	int cobol();
-extern	int acu_cancel();
+#endif /* A_COBOL_DECLARED */
+
+#ifdef WIN32
+extern void PASCAL acu_cancel(char *);
+#else
+extern void acu_cancel();
+#endif
 	Argument args[MAX_CALL_ARGS];
 	int	argcnt, i;
 
@@ -1096,7 +1105,7 @@ static int wisp_wexit = 0;
 void shutexitcobol(exit_code)					/* Called by wisp from wexit()  */
 int exit_code;
 {
-	extern int stop_runtime();
+	extern void stop_runtime();
 	
 	/*
 	**	If already processing WISP exit logic then just return.
@@ -1107,7 +1116,7 @@ int exit_code;
 	}
 
 	/*
-	**	This prevents an COBOL and WISP exit loop.
+	**	This prevents a COBOL and WISP exit loop.
 	*/
 	wisp_wexit = 1;
 

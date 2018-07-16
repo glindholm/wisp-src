@@ -1,4 +1,4 @@
-Copyright (c) 1999 by NeoMedia Migrations Inc. All Rights Reserved.
+Copyright (c) 2000 by NeoMedia Migrations Inc. All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +7,7 @@ Title:          WISP for NT/9x Quick Set-Up Steps
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/NT
-Versions:       4.3.05
+Versions:       4.3.06
 
 Summary:        WISP for NT/9x installation and setup steps
 
@@ -52,7 +52,7 @@ The Steps
     b) Run A:SETUP
 
     The following instructions assume you have installed WISP in
-    directory C:\WISP4xxx .  If you have installed WISP into a
+    directory C:\WISP43xx .  If you have installed WISP into a
     different location the adjust the instructions accordingly.
 
 2) Share the WISP directory using a Share Name of "WISP".  
@@ -66,7 +66,7 @@ The Steps
 
 3) Run Wconfig.exe to configure the server machine.
 
-    a) Run C:\WISP4xxx\BIN\WCONFIG.EXE
+    a) Run C:\WISP43xx\BIN\WCONFIG.EXE
     b) Answer the prompts.
 
        "Would you like to import configuration information from a
@@ -125,7 +125,7 @@ The Steps
 4) Run Wlicense to install the WISP license.
 
     a) Ensure you have a WISP license key. 
-    b) Run C:\WISP4xxxx\BIN\WLICENSE.EXE
+    b) Run C:\WISP43xx\BIN\WLICENSE.EXE
     c) Write down the machine id that is reported by Wlicense.
     d) Call NeoMedia Technical support for a Validation Code.
     e) Enter the Valication Code to complete the license
@@ -136,25 +136,18 @@ The Steps
     a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
        Acucobol BIN directory is on the PATH.
 
-          PATH %PATH%;C:\ACUCBL42\ACUGT\BIN
+          PATH %PATH%;C:\ACUCBL43\ACUGT\BIN
 
     b) Ensure MicroSoft Visual C++ 5 or 6 is installed.
-    c) Edit the makefile WWRUNCBL.MAK in C:\WISP4xxx\ACU to
-       change ACUDIR to the location where Acucobol was
-       installed. 
 
-           ACUDIR=C:\ACUCBL42\ACUGT
+    c) Create an MSDOS/COMMAND prompt window
 
-    d) Create an MSDOS/COMMAND prompt window
-    e) In the MSDOS/COMMAND prompt window run the bat file
+    d) In the MSDOS/COMMAND prompt window run the bat file
        Vcvars32.bat that came with MS Visual C++. This bat
        file enables you to compile and link C programs from
        the command prompt. 
        (Substitute path to Vcvars32.bat with the location used by
        Visual C++) 
-
-       MSVC++ 4.x:
-          C:> C:\MSDEV\BIN\VCVARS32.BAT x86
 
        MSVC++ 5.x:
           C:> "C:\Program Files\DevStudio\VC\bin\Vcvars32.bat" x86  
@@ -167,12 +160,14 @@ The Steps
              set the Initial Environment size to 4096, click OK, close
              the MSDOS/Command window, reopen and try again.
 
-    f) Change directory: cd C:\WISP4xxx\ACU
-    g) Issue the commands to build the Runtime.
+    e) Build the Acucobol runtime by following the instructions in
+       the makefile.
 
-           C:> nmake /f wwruncbl.mak rts
+       If you are using ACUCOBOL-GT 4.3 then follow the instructions
+       in file C:\WISP43xx\ACU\WRUN32WISP.MAK.
 
-    h) The Runtime System WWRUNCBL.EXE will have been created.
+       If you are using ACUCOBOL-GT 4.2 or ealier then follow the
+       instructions in C:\WISP43xx\ACU\WWRUNCBL.MAK.
 
 6) Setup the WISPCONFIG files
 
@@ -186,7 +181,7 @@ The Steps
    The process can be simplified by "Exporting" the configuration to a
    text file then "Importing" the configuration on each machine.
 
-   a) On the server run C:\WISP4xxx\BIN\WCONFIG.EXE
+   a) On the server run C:\WISP43xx\BIN\WCONFIG.EXE
    b) Click on the "Export" button and enter a file name.
 
            \\SERVER01\WISP\wisp.reg
