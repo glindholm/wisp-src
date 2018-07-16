@@ -1,0 +1,18 @@
+000000*--------------------------------------------
+000000* Sets and unsets KEEP printmode.
+000000*--------------------------------------------
+000000
+000000 SET-KEEP-MODE.
+000000     CALL "EXTRACT" USING
+000000          KEEP-PRNTMODE-KW
+000000          SAVE-KEEP-PRNTMODE.
+000000
+000000     CALL "SET" USING
+000000          KEEP-PRNTMODE-KW
+000000          KEEP-PRNTMODE.
+000000
+000000 UNSET-KEEP-MODE.
+000000     CALL "SET" USING
+000000          KEEP-PRNTMODE-KW
+000000          SAVE-KEEP-PRNTMODE.
+000000

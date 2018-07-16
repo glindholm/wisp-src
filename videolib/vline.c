@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			 Copyright (c) 1987-1991			*/
@@ -7,8 +9,12 @@
 
 /*						Include standard header files.							*/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"									/* Include local definitions.		*/
+#include "vmodules.h"
 #include "vdata.h"
 #include "vcap.h"
 
@@ -22,130 +28,153 @@ static unsigned char jknuvwq[8];
 static unsigned char jmntuvx[8];
 static unsigned char lmntvwq[8];
 
-static int do_vert();
-static int do_horiz();
-static int is_gr();
+static int do_vert(int type, int length, int end_line);					/* Draw vertical line.			*/
+static int do_horiz(int type, int length, int end_col);					/* Draw a horizontal line.		*/
+static int is_gr(int row, int col);				/* Routine to see if a position is a line drawing character.	*/
+
 
 /*						Subroutine entry point.								*/
 
-int vline(type, length) int type, length;						/* Draw a line.				*/
+int vline(int type, int length)								/* Draw a line.				*/
 {
-	register int i, j0, ret;							/* Working registers.			*/
+	static int first = 1;
+	register int ret;								/* Working registers.			*/
 
-	x = vcapdef[GRAPHSTR][SINGLE_VERTICAL_BAR];
-	q = vcapdef[GRAPHSTR][SINGLE_HORIZONTAL_BAR];
-	l = vcapdef[GRAPHSTR][SINGLE_UPPER_LEFT_CORNER];
-	k = vcapdef[GRAPHSTR][SINGLE_UPPER_RIGHT_CORNER];
-	m = vcapdef[GRAPHSTR][SINGLE_LOWER_LEFT_CORNER];
-	j = vcapdef[GRAPHSTR][SINGLE_LOWER_RIGHT_CORNER];
-	w = vcapdef[GRAPHSTR][SINGLE_UPPER_TEE];
-	v = vcapdef[GRAPHSTR][SINGLE_LOWER_TEE];
-	t = vcapdef[GRAPHSTR][SINGLE_LEFT_TEE];
-	u = vcapdef[GRAPHSTR][SINGLE_RIGHT_TEE];
-	n = vcapdef[GRAPHSTR][SINGLE_CROSS];
+	if (first)
+	{
+		char graphstr[20];
+		
+		first = 0;
+		
+		strcpy(graphstr,vcapvalue(GRAPHSTR));
+		
+		x = graphstr[SINGLE_VERTICAL_BAR];
+		q = graphstr[SINGLE_HORIZONTAL_BAR];
+		l = graphstr[SINGLE_UPPER_LEFT_CORNER];
+		k = graphstr[SINGLE_UPPER_RIGHT_CORNER];
+		m = graphstr[SINGLE_LOWER_LEFT_CORNER];
+		j = graphstr[SINGLE_LOWER_RIGHT_CORNER];
+		w = graphstr[SINGLE_UPPER_TEE];
+		v = graphstr[SINGLE_LOWER_TEE];
+		t = graphstr[SINGLE_LEFT_TEE];
+		u = graphstr[SINGLE_RIGHT_TEE];
+		n = graphstr[SINGLE_CROSS];
 
-	ctable[0] = q;
-	ctable[1] = v;
-	ctable[2] = q;
-	ctable[3] = m;
-	ctable[4] = w;
-	ctable[5] = n;
-	ctable[6] = l;
-	ctable[7] = t;
-	ctable[8] = q;
-	ctable[9] = j;
-	ctable[10] = q;
-	ctable[11] = v;
-	ctable[12] = k;
-	ctable[13] = u;
-	ctable[14] = w;
-	ctable[15] = n;
-	ctable[16] = x;
-	ctable[17] = x;
-	ctable[18] = t;
-	ctable[19] = m;
-	ctable[20] = x;
-	ctable[21] = x;
-	ctable[22] = l;
-	ctable[23] = t;
-	ctable[24] = u;
-	ctable[25] = j;
-	ctable[26] = n;
-	ctable[27] = v;
-	ctable[28] = k;
-	ctable[29] = u;
-	ctable[30] = w;
-	ctable[31] = n;
-	ctable[32] = CHAR_NULL;
+		ctable[0] = q;
+		ctable[1] = v;
+		ctable[2] = q;
+		ctable[3] = m;
+		ctable[4] = w;
+		ctable[5] = n;
+		ctable[6] = l;
+		ctable[7] = t;
+		ctable[8] = q;
+		ctable[9] = j;
+		ctable[10] = q;
+		ctable[11] = v;
+		ctable[12] = k;
+		ctable[13] = u;
+		ctable[14] = w;
+		ctable[15] = n;
+		ctable[16] = x;
+		ctable[17] = x;
+		ctable[18] = t;
+		ctable[19] = m;
+		ctable[20] = x;
+		ctable[21] = x;
+		ctable[22] = l;
+		ctable[23] = t;
+		ctable[24] = u;
+		ctable[25] = j;
+		ctable[26] = n;
+		ctable[27] = v;
+		ctable[28] = k;
+		ctable[29] = u;
+		ctable[30] = w;
+		ctable[31] = n;
+		ctable[32] = CHAR_NULL;
 
-	klntuwx[0] = k;
-	klntuwx[1] = l;
-	klntuwx[2] = n;
-	klntuwx[3] = t;
-	klntuwx[4] = u;
-	klntuwx[5] = w;
-	klntuwx[6] = x;
-	klntuwx[7] = CHAR_NULL;
+		klntuwx[0] = k;
+		klntuwx[1] = l;
+		klntuwx[2] = n;
+		klntuwx[3] = t;
+		klntuwx[4] = u;
+		klntuwx[5] = w;
+		klntuwx[6] = x;
+		klntuwx[7] = CHAR_NULL;
 
-	jknuvwq[0] = j;
-	jknuvwq[1] = k;
-	jknuvwq[2] = n;
-	jknuvwq[3] = u;
-	jknuvwq[4] = v;
-	jknuvwq[5] = w;
-	jknuvwq[6] = q;
-	jknuvwq[7] = CHAR_NULL;
+		jknuvwq[0] = j;
+		jknuvwq[1] = k;
+		jknuvwq[2] = n;
+		jknuvwq[3] = u;
+		jknuvwq[4] = v;
+		jknuvwq[5] = w;
+		jknuvwq[6] = q;
+		jknuvwq[7] = CHAR_NULL;
 
-	jmntuvx[0] = j;
-	jmntuvx[1] = m;
-	jmntuvx[2] = n;
-	jmntuvx[3] = t;
-	jmntuvx[4] = u;
-	jmntuvx[5] = v;
-	jmntuvx[6] = x;
-	jmntuvx[7] = CHAR_NULL;
+		jmntuvx[0] = j;
+		jmntuvx[1] = m;
+		jmntuvx[2] = n;
+		jmntuvx[3] = t;
+		jmntuvx[4] = u;
+		jmntuvx[5] = v;
+		jmntuvx[6] = x;
+		jmntuvx[7] = CHAR_NULL;
 
-	lmntvwq[0] = l;
-	lmntvwq[1] = m;
-	lmntvwq[2] = n;
-	lmntvwq[3] = t;
-	lmntvwq[4] = v;
-	lmntvwq[5] = w;
-	lmntvwq[6] = q;
-	lmntvwq[7] = CHAR_NULL;
+		lmntvwq[0] = l;
+		lmntvwq[1] = m;
+		lmntvwq[2] = n;
+		lmntvwq[3] = t;
+		lmntvwq[4] = v;
+		lmntvwq[5] = w;
+		lmntvwq[6] = q;
+		lmntvwq[7] = CHAR_NULL;
+	}
+	
 
 	ret = SUCCESS;									/* Assume all will be successful.	*/
 	switch(type)									/* Determine the type of line.		*/
 	{
-		case VERTICAL: case FAT_VERTICAL:					/* Vertical lines?			*/
+		case VLINE_VERTICAL: case VLINE_FAT_VERTICAL:				/* Vertical lines?			*/
 		{
-			i = vcur_lin + length;						/* Determine end position.		*/
-			if (length < 0)	i++;						/* Adjust for direction.		*/
-			else i--;
-			if ((i < 0) || (i >= MAX_LINES_PER_SCREEN))			/* End position valid?			*/
+			int	end_line;
+			
+			end_line = vcur_lin + length;					/* Determine end position.		*/
+			if (length < 0)	end_line++;					/* Adjust for direction.		*/
+			else end_line--;
+			if ((end_line < 0) || (end_line >= MAX_LINES_PER_SCREEN))	/* End position valid?			*/
 			{
 				vre("vline(%d,%d)-Length too long, drawing from line %d.",type,length,vcur_lin);
 				ret = FAILURE;
 			}
-			else if (length) ret = do_vert(type,length,i);			/* Draw the line if not zero length	*/
+			else if (length) 
+			{
+				ret = do_vert(type,length,end_line);			/* Draw the line if not zero length	*/
+			}
 			break;								/* All done.				*/
 		}
-		case HORIZONTAL: case FAT_HORIZONTAL:
+		case VLINE_HORIZONTAL: case VLINE_FAT_HORIZONTAL:
 		{
-			i = vcur_col + length;						/* Determine end position of line.	*/
-			if (length < 0)	i++;						/* Adjust for direction.		*/
-			else i--;
-			if ((i < 0) || (i >= vscr_wid))					/* Still on the screen?			*/
+			int	end_col;
+			
+			end_col = vcur_col + length;					/* Determine end position of line.	*/
+			if (length < 0)	end_col++;					/* Adjust for direction.		*/
+			else end_col--;
+			if ((end_col < 0) || (end_col >= vscr_wid))			/* Still on the screen?			*/
 			{
 				vre("vline(%d,%d)-Length too long, drawing from line %d.",type,length,vcur_lin);
 				ret = FAILURE;
 			}
-			else if (length) ret = do_horiz(type, length, i);		/* Draw the line if not zero length	*/
+			else if (length) 
+			{
+				ret = do_horiz(type, length, end_col);			/* Draw the line if not zero length	*/
+			}
+			
 			break;								/* Don't drop through.			*/
 		}
 		default:								/* Hmmm, he doesn't know what he wants.	*/
 		{
-			vre("vline(%d,%d)-Invalid line type.");				/* Report the condition.		*/
+			vre("vline()-Invalid line type=%d.", type);			/* Report the condition.		*/
 			ret = FAILURE;							/* Return with failure.			*/
 		}
 	}
@@ -154,7 +183,7 @@ int vline(type, length) int type, length;						/* Draw a line.				*/
 
 /*				Subroutine to draw vertical lines.								*/
 
-static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw vertical line.			*/
+static int do_vert(int type, int length, int end_line)					/* Draw vertical line.			*/
 {
 	int cs_save, md_save;								/* Save locations.			*/
 	unsigned char tchar;								/* A temp string.			*/
@@ -162,7 +191,7 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 	int  upper, lower, here, cvalue;						/* work vars				*/
 	register int i, j0, k0, m0, n0;							/* Working registers.			*/
 
-	vbuffering(LOGICAL);								/* Turn on logical buffering.		*/
+	vbuffering(VBUFF_START);							/* Turn on logical buffering.		*/
 
 	j0 = vcur_lin;									/* Assume we start at current line.	*/
 	m0 = vcur_col;
@@ -177,7 +206,7 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 
 	cs_save = vchr_set;								/* Remember the old character set.	*/
 	md_save = vcur_atr;								/* Remember the old rendition.		*/
-	if (type == FAT_VERTICAL) vmode(REVERSE | (vcur_atr & BOLD));			/* Remove all rendition except bold.	*/
+	if (type == VLINE_FAT_VERTICAL) vmode(VMODE_REVERSE | (vcur_atr & VMODE_BOLD));	/* Remove all rendition except bold.	*/
 	else vcharset(GRAPHICS);							/* Or go into graphics mode.		*/
 
 	for (i = 0; i < length; i++)							/* Loop...				*/
@@ -185,7 +214,7 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 		vmove(j0+(i*k0),m0);							/* Move to where this element starts.	*/
 		here = vml(vcur_lin);							/* Get this line.			*/
 
-		if (type == FAT_VERTICAL) vprint("  ");					/* Output spaces in fat case.		*/
+		if (type == VLINE_FAT_VERTICAL) vprint("  ");				/* Output spaces in fat case.		*/
 		else if (is_gr(here,vcur_col))						/* We are crossing something.		*/
 		{
 			n0 = j0+(i*k0);							/* Calc actual screen row		*/
@@ -202,7 +231,7 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 			{
 				tchar = vchr_map[upper][vcur_col];			/* Get the character map element.	*/
 				if (((k0 == -1) && (i < (length-1))) ||
-					strchr(klntuwx,tchar))				/* The upper char is a descender.	*/
+					strchr((char *)klntuwx,(char)tchar))		/* The upper char is a descender.	*/
 				{
 					cvalue += 1;					/* Flag it				*/
 				}
@@ -210,18 +239,19 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 			if ((vcur_col < MAX_COLUMNS_PER_LINE+1) && is_gr(here,vcur_col+1))
 			{		 						/* Hit by a line from the right?	*/
 				tchar = vchr_map[here][vcur_col+1];			/* Get the character map element.	*/
-				if (strchr(jknuvwq,tchar))				/* The right char is a connector.	*/
+				if (strchr((char *)jknuvwq,(char)tchar))		/* The right char is a connector.	*/
 				{
 					cvalue += 2;					/* Flag it				*/
 				}
 			}
+			else if ((vcur_col == 0) && (vchr_map[here][0] == q)) cvalue += 2;	/* Special left case.		*/
 
 			if (((k0 == 1) && (i < (length-1))) ||
 				((lower != -1) && is_gr(lower,n0)))			/* Hit by a line from below		*/
 			{
 				tchar = vchr_map[lower][n0];				/* Get the character map element.	*/
 				if (((k0 == 1) && (i < (length-1))) ||
-					strchr(jmntuvx,tchar))				/* The lower char is an ascender.	*/
+					strchr((char *)jmntuvx,(char)tchar))		/* The lower char is an ascender.	*/
 				{
 					cvalue += 4;					/* Flag it				*/
 				}
@@ -229,11 +259,13 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 			if ((vcur_col > 0) && is_gr(here,vcur_col-1))			/* Hit by a line from the left		*/
 			{
 				tchar = vchr_map[here][vcur_col-1];			/* Get the character map element.	*/
-				if (strchr(lmntvwq,tchar))				/* The left char is a connector.	*/
+				if (strchr((char *)lmntvwq,(char)tchar))		/* The left char is a connector.	*/
 				{
 					cvalue += 8;					/* Flag it.				*/
 				}
 			}
+			else if ((vchr_map[here][vcur_col] == q) && (vcur_col >= vscr_wid-2)) cvalue += 8;	/* Edge?	*/
+
 			cross = ctable[cvalue];						/* Get the character.			*/
 			vputc(cross);							/* Print it out.			*/
 		}
@@ -243,14 +275,14 @@ static int do_vert(type, length, end_line) int type, length, end_line;			/* Draw
 	vcharset(cs_save);								/* Restore the old character set.	*/
 	vmode(md_save);									/* Restore the old mode.		*/
 	vmove(end_line,m0);								/* Move to the end of the line.		*/
-	vbuffering(AUTOMATIC);								/* Dump the buffer as appropriate.	*/
+	vbuffering(VBUFF_END);								/* Dump the buffer as appropriate.	*/
 	if (vlin_op) return(OPTIMIZED);							/* Return optimized if we did.		*/
 	vlin_op = TRUE;									/* Line optimization on.		*/
 	return(SUCCESS);								/* Return just success.			*/
 }
 /*					Subroutine to draw horizontal lines.							*/
 
-static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw a horizontal line.		*/
+static int do_horiz(int type, int length, int end_col)					/* Draw a horizontal line.		*/
 {
 	int md_save, cs_save;								/* Save locations.			*/
 	unsigned char tchar;								/* A temp string.			*/
@@ -258,7 +290,7 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 	int  upper, lower, here, cvalue;						/* work vars				*/
 	register int i, j0, k0, m0, n0;							/* Working registers.			*/
 
-	vbuffering(LOGICAL);								/* Turn on logical buffering.		*/
+	vbuffering(VBUFF_START);							/* Turn on logical buffering.		*/
 
 	j0 = vcur_col;									/* Assume we start at current column.	*/
 	m0 = vcur_lin;
@@ -273,7 +305,7 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 
 	cs_save = vchr_set;								/* Remember the old character set.	*/
 	md_save = vcur_atr;
-	if (type == FAT_HORIZONTAL) vmode(REVERSE | (vcur_atr & BOLD));			/* Remove all rendition except bold.	*/
+	if (type == VLINE_FAT_HORIZONTAL) vmode(VMODE_REVERSE | (vcur_atr & VMODE_BOLD));/* Remove all rendition except bold.	*/
 	else vcharset(GRAPHICS);							/* Or go into graphics mode.		*/
 
 	if (vcur_lin > 0)  upper = vml(vcur_lin-1);					/* Get array position of upper line.	*/
@@ -288,14 +320,14 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 	{
 		n0 = j0+(i*k0);								/* Calculate screen column.		*/
 		vmove(m0,n0);								/* Move to where this element starts.	*/
-		if (type == FAT_HORIZONTAL) vprint(" ");				/* Print spaces for fat line.		*/
+		if (type == VLINE_FAT_HORIZONTAL) vprint(" ");				/* Print spaces for fat line.		*/
 		else if (is_gr(here,n0))						/* We are crossing something.		*/
 		{
 			cvalue = 0;							/* Table character value is null.	*/
 			if ((upper != -1) && is_gr(upper,n0))				/* Hit by a line from above?		*/
 			{
 				tchar = vchr_map[upper][n0];				/* Get the character map element.	*/
-				if (strchr(klntuwx,tchar))				/* The upper char is a descender.	*/
+				if (strchr((char *)klntuwx,(char)tchar))		/* The upper char is a descender.	*/
 				{
 					cvalue += 1;					/* Flag it.				*/
 				}
@@ -305,7 +337,7 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 			{
 				tchar = vchr_map[here][n0+1];				/* Get the character map element.	*/
 				if (((k0 == 1) && (i < (length-1))) ||
-						 strchr(jknuvwq,tchar))			/* The right char is a connector.	*/
+					strchr((char *)jknuvwq,(char)tchar))		/* The right char is a connector.	*/
 				{
 					cvalue += 2;					/* Flag it.				*/
 				}
@@ -313,7 +345,7 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 			if ((lower != -1) && is_gr(lower,n0))				/* Hit by a line from below?		*/
 			{
 				tchar = vchr_map[lower][n0];				/* Get the character map element.	*/
-				if (strchr(jmntuvx,tchar))				/* The lower char is an ascender.	*/
+				if (strchr((char *)jmntuvx,(char)tchar))		/* The lower char is an ascender.	*/
 				{
 					cvalue += 4;					/* Flag it.				*/
 				}
@@ -323,7 +355,7 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 			{
 				tchar = vchr_map[here][n0-1];				/* Get the character map element.	*/
 				if (((k0 == -1) && (i < (length-1))) ||
-					strchr(lmntvwq,tchar))				/* The left char is a connector.	*/
+					strchr((char *)lmntvwq,(char)tchar))		/* The left char is a connector.	*/
 				{
 					cvalue += 8;					/* Flag it.				*/
 				}
@@ -342,20 +374,33 @@ static int do_horiz(type, length, end_col) int type, length, end_col;			/* Draw 
 	vcharset(cs_save);								/* Restore the old character set.	*/
 	vmode(md_save);									/* Restore old mode.			*/
 	vmove(m0,end_col);								/* Move to the end of the line.		*/
-	vbuffering(AUTOMATIC);								/* Restore automatic buffer dumpint.	*/
+	vbuffering(VBUFF_END);								/* Restore automatic buffer dumpint.	*/
 	if (vlin_op) return(OPTIMIZED);							/* Return optimized if we did.		*/
 	vlin_op = TRUE;									/* Line optimization on.		*/
 	return(SUCCESS);								/* Return just success.			*/
 }
 
-static int is_gr(row,col) int row,col;				/* Routine to see if a position is a line drawing character.	*/
+static int is_gr(int row, int col)				/* Routine to see if a position is a line drawing character.	*/
 {
 	unsigned char tchar;
 
 	if (vmap_cng[row][col] < 0) return(FALSE);					/* Is it NOT old data?			*/
 	if (!(vatr_map[row][col] & GRAPHICS)) return(FALSE);				/* And if new, is it a graphics char?	*/
 	tchar = vchr_map[row][col];
-	if (0==strchr(vcapdef[GRAPHSTR],tchar)) return(FALSE);				/* Is it in the graphics list?		*/
+	if (0==strchr(vcapvalue(GRAPHSTR),(char)tchar)) return(FALSE);			/* Is it in the graphics list?		*/
 	return(SUCCESS);								/* It is a graphics character.		*/
 }
-
+/*
+**	History:
+**	$Log: vline.c,v $
+**	Revision 1.10  1997-07-08 17:12:10-04  gsl
+**	change to using vcapvalue()
+**	use new video.h defines
+**
+**	Revision 1.9  1996-03-12 08:22:50-05  gsl
+**	Change to VBUFF_START/END and VLINE_xxx
+**	Only initialize character table the first time in.
+**
+**
+**
+*/

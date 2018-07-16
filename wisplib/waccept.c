@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -11,9 +13,13 @@
 	WACCEPT		This routine builds an ACCEPT getparm.
 */
 
+#include <string.h>
 #include "idsistd.h"
+#include "wisplib.h"
 
-WACCEPT(argcnt,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
+static void nullterm(char* str, int len);
+
+void WACCEPT(argcnt,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
 int4	*argcnt;
 char	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*item11,*item12,*item13,*item14,*item15,*item16;
 {
@@ -98,9 +104,7 @@ char	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*ite
 /*
 	nullterm	Scan from the end of a string and insert a NULL after the last non-space.
 */
-int nullterm(str,len)
-char	*str;
-int	len;
+static void nullterm(char* str, int len)
 {
 	for(len--;len>=0;len--)
 	{
@@ -110,6 +114,14 @@ int	len;
 		}
 	}
 	str[len+1] = '\0';
-	return(0);
 }
 
+/*
+**	History:
+**	$Log: waccept.c,v $
+**	Revision 1.8  1996-08-19 18:33:06-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,80 @@
+#/************************************************************************/
+#/*                                                                      */
+#/*              Copyright (c) 1994, 1995, 1997        			 */
+#/*              An unpublished work of NeoMedia Technologies Inc.	 */
+#/*                         All rights reserved.                         */
+#/*                                                                      */
+#/************************************************************************/
+#
+#
+#       File:           amuacu.umf
+#
+#       Function:       The UNIX makefile for AMU/ACUCOBOL
+#
+#       Desciption:     This makefile will build AMU for ACUCOBOL.
+#
+#                       make -f amuacu.umf
+#
+#
+
+include $(WISP)/src/port/make.include
+
+include $(WISP)/src/acu/acu.rules
+
+ALL=	AMU AMUROOT AMUEDIT AMUMDM AMUFKM AMUUDM CAMUMENU
+
+all:	$(ALL)	
+	@echo
+	@echo AMU is up-to-date
+	@echo
+
+clean:
+	rm -f $(ALL)
+	rm -f *.cob
+	rm -f *.cpy
+
+AMU:    amu.cob
+	$(COBOL) $(COBFLAGS) -o $@ amu.cob 
+
+AMUROOT:amuroot.cob
+	$(COBOL) $(COBFLAGS) -o $@ amuroot.cob 
+
+AMUEDIT:amuedit.cob
+	$(COBOL) $(COBFLAGS) -o $@ amuedit.cob 
+
+AMUMDM: amumdm.cob
+	$(COBOL) $(COBFLAGS) -o $@ amumdm.cob 
+
+AMUFKM: amufkm.cob
+	$(COBOL) $(COBFLAGS) -o $@ amufkm.cob 
+
+AMUUDM: amuudm.cob
+	$(COBOL) $(COBFLAGS) -o $@ amuudm.cob 
+
+CAMUMENU: camumenu.cob
+	$(COBOL) $(COBFLAGS) -o $@ camumenu.cob 
+
+#
+#==============================================================
+#
+
+amu.cob: amu.wcb
+	$(WISPTRAN) $(WISPFLAGS) amu 
+
+amuroot.cob: amuroot.wcb
+	$(WISPTRAN) $(WISPFLAGS) -n amuroot 
+
+amuedit.cob: amuedit.wcb
+	$(WISPTRAN) $(WISPFLAGS) amuedit 
+
+amumdm.cob: amumdm.wcb
+	$(WISPTRAN) $(WISPFLAGS) amumdm 
+
+amufkm.cob: amufkm.wcb
+	$(WISPTRAN) $(WISPFLAGS) amufkm 
+
+amuudm.cob: amuudm.wcb
+	$(WISPTRAN) $(WISPFLAGS) amuudm 
+
+camumenu.cob: camumenu.wcb
+	$(WISPTRAN) $(WISPFLAGS) camumenu 

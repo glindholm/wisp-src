@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -9,6 +11,10 @@
 
 /* Scratch a file or a library													*/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef VMS
 #include <ssdef.h>
 #include <descrip.h>
@@ -17,23 +23,24 @@
 #include <rms.h>
 #endif
 
-#ifdef unix
-#include <stdio.h>
+#ifndef VMS
 #include <sys/types.h>
+#endif
+
+#ifdef unix
 #include <dirent.h>
-static char *s_nextfile();
-static int do_delete();
+#endif
+
+#if defined(MSDOS) || defined(_MSC_VER)
+#include <direct.h>
 #endif
 
 #ifdef MSDOS
-#include <direct.h>
 #include <dos.h>
-#include <sys/types.h>
 #endif
 
 #include <errno.h>
 #include <varargs.h>
-#include <v/video.h>
 
 #include "idsistd.h"
 #include "wcommon.h"
@@ -41,11 +48,25 @@ static int do_delete();
 #include "movebin.h"
 #include "cobrun.h"
 #include "idsisubs.h"
+#include "wisplib.h"
+#include "wfname.h"
+#include "filext.h"
+#include "wispcfg.h"
 
-extern char WISPFILEXT[39];
-extern char *wfname();
+#ifndef ETXTBSY
+#define ETXTBSY 26
+#endif
 
-SCRATCH(va_alist)
+
+static int scratch_mode_32 = -1;
+
+static int4 chkrms(int status, int lib_fl);
+static int do_delete(char* file, int lib_flag, int* err_type);
+static int del_dir(char* file_spec);
+
+
+
+void SCRATCH(va_alist)
 va_dcl
 {
 	va_list	the_args;
@@ -59,11 +80,13 @@ va_dcl
 	int4 *retcod;							/* return code						*/
 	int4 mode;							/* the mode for wfname					*/
 	char the_file[132];						/* actual file name					*/
-	int  	j;
 	char	*ptr;
 	int	lib_flag, vmstry;
-	int4	ret, rc, status;
+	int4	ret, rc;
+	char	l_file[9], l_lib[9], l_vol[7];				/* Local copies of the file lib and vol			*/
 #ifdef VMS
+	int  	j;
+	int4 status;
 	char result[256], *context, *statval;						/* Vars to use with lib$find_file	*/
 #include "scratch1.d"
 
@@ -93,13 +116,66 @@ va_dcl
 	{
 		mode |= IS_LIB;									/* this is a library		*/
 		lib_flag = TRUE;
+		strcpy(l_file,"        ");
+	}
+	else
+	{
+		memcpy(l_file,fname,8);
+		l_file[8] = (char)0;
+		leftjust(l_file,8);
+		if (!l_file[0] || ' ' == l_file[0])
+		{
+			ret = 20;
+			wswap(&ret);
+			PUTBIN(retcod,&ret,sizeof(int4));
+			return;
+		}
+	}
+
+	if ( -1 == scratch_mode_32 )
+	{
+		if (0==strcmp(wispscratchmode(),"32"))
+		{
+			/*
+			**	This is a hack to provide backwards compatiblity.
+			**	Version 3.2 of srcatch did not check if lib and vol 
+			**	were supplied, so wfname() defaulted them to inlib/invol.
+			*/
+			scratch_mode_32 = 1;
+		}
+		else
+		{
+			scratch_mode_32 = 0;
+		}
+	}
+
+	memcpy(l_lib,lib,8);
+	l_lib[8] = (char)0;
+	leftjust(l_lib,8);
+	if ( (!l_lib[0] || ' ' == l_lib[0]) && !scratch_mode_32 )
+	{
+		ret = 16;
+		wswap(&ret);
+		PUTBIN(retcod,&ret,sizeof(int4));
+		return;
+	}
+
+	memcpy(l_vol,vol,6);
+	l_vol[6] = (char)0;
+	leftjust(l_vol,6);
+	if ( (!l_vol[0] || ' ' == l_vol[0]) && !scratch_mode_32 )
+	{
+		ret = 4;
+		wswap(&ret);
+		PUTBIN(retcod,&ret,sizeof(int4));
+		return;
 	}
 
 #ifdef VMS
 	if (0==memcmp(WISPFILEXT,"LIS",3)) mode |= IS_PRINTFILE;
 #endif
 
-	ptr = wfname( &mode, vol, lib, fname, the_file );					/* create native filename	*/
+	ptr = wfname( &mode, l_vol, l_lib, l_file, the_file );					/* create native filename	*/
 	*ptr = (char)0;
 #ifdef VMS
 	if ( lib_flag ) strcat(ptr,"*.*;*");						/* Scratch library - file name is *.*;*	*/
@@ -136,7 +212,9 @@ va_dcl
 	if ( ret == 0 )
 	{											/* Do all versions.		*/
 		int st_err;									/* Flag to decide which error	*/
+#ifdef VMS
 		int4 stat;									/* value to use.		*/
+#endif
 
 		st_err = 0;									/* Set to use errno values.	*/
 		rc = do_delete(the_file,lib_flag,&st_err);					/* now delete it		*/
@@ -153,14 +231,16 @@ va_dcl
 		switch (rc)
 		{
 			case 0: break;								/* no error 			*/
+#ifndef WATCOM
 			case ENOTDIR: ret=16; break;						/* Libary not found		*/
-			case ENOENT:  ret=20; break;						/* file not found		*/
-			case EACCES:  ret= (lib_flag) ? 52:24; break;				/* permission denied 		*/
 			case EPERM:   ret=20; break;						/* permission denied 		*/
 			case EBUSY:   ret=32; break;						/* file in use			*/
 			case ETXTBSY: ret=32; break;						/* file in use			*/
 			case EROFS:   ret=52; break;						/* permission denied		*/
 			case EFAULT:  ret=48; break;						/* I/O error			*/
+#endif
+			case ENOENT:  ret=20; break;						/* file not found		*/
+			case EACCES:  ret= (lib_flag) ? 52:24; break;				/* permission denied 		*/
 #ifdef VMS
 			case EVMSERR: ret=chkrms(stat,lib_flag); break;				/* Check RMS error.		*/
 #endif
@@ -172,8 +252,7 @@ va_dcl
 }
 
 #ifdef VMS
-static int4 chkrms(status,lib_fl)								/* Check RMS error code.	*/
-int status, lib_fl;
+static int4 chkrms(int status, int lib_fl)								/* Check RMS error code.	*/
 {
 	int4 wrc;										/* Wang style return code.	*/
 	switch (status)
@@ -230,9 +309,7 @@ int status, lib_fl;
 #endif	/* VMS */
 
 #ifdef VMS
-static int do_delete(file, lib_flag, err_type)
-char	*file;
-int	lib_flag, *err_type;
+static int do_delete(char* file, int lib_flag, int* err_type)
 {
 	char *p, *strchr(), *strrchr();
 	char fpat[128];								/* pattern incl. wildcards			*/
@@ -258,7 +335,7 @@ int	lib_flag, *err_type;
 		{
 			p = strchr(fnam,' ');
 			if (p) *p = '\0';						/* Null terminate returned file name.	*/
-			if (delete(fnam) < 0)						/* Try to delete file.			*/
+			if (unlink(fnam) < 0)						/* Try to delete file.			*/
 			{
 				rc = errno;						/* Return error - FAILURE.		*/
 				goto return_point;
@@ -301,14 +378,10 @@ return_point:
 
 #else /* !VMS */
 
-static int do_delete(file, lib_flag, err_type)
-char	*file;
-int	lib_flag, *err_type;
+static int do_delete(char* file, int lib_flag, int* err_type)
 {
-	char *p, *strchr(), *strrchr();
 	char fpat[128];								/* pattern incl. wildcards			*/
 	char *filename;
-	char	*ptr;
 	int	first;
 
 	strcpy(fpat,file);							/* copy to our descriptor			*/
@@ -411,80 +484,9 @@ int	lib_flag, *err_type;
 }
 #endif /* !VMS */
 
-#ifdef unix
-static char *s_nextfile(path,first)
-char 	*path;
-int	*first;
-{
-	static DIR *curdir;
-	static struct dirent *dp;
-
-	if ( *first )
-	{
-		*first = 0;
-
-		if (!(curdir = opendir(path))) 
-		{
-			return(NULL);
-		}
-	}
-
-	for (;;)
-	{
-		if ((dp=readdir(curdir))==NULL)
-		{
-			closedir(curdir);
-			return(NULL);
-		}
-
-		if (0 != strcmp(dp->d_name,".") &&				/* skip entry for . */
-		    0 != strcmp(dp->d_name,"..")   )				/* skip entry for .. */
-		{
-			return dp->d_name; 
-		}
-	}
-}
-#endif	/* unix */
-
-#ifdef MSDOS
-static char *s_nextfile(path,first)
-char 	*path;
-int	*first;
-{
-	char	wildpath[128];
-	static	char	file_name[13];
-	static	struct	find_t	fileinfo;
-
-	if ( *first )
-	{
-		*first = 0;
-
-		strcpy( wildpath, path );
-		strcat( wildpath, "\\*.*" );
-
-		if( 0 != _dos_findfirst( wildpath,
-			(_A_NORMAL | _A_RDONLY),				/* | _A_SUBDIR if directories also wanted.	*/
-			&fileinfo) )
-		{
-			return(NULL);
-		}
-
-		strcpy( file_name, fileinfo.name );
-		return( file_name );
-	}
-
-	if ( 0 != _dos_findnext( &fileinfo ) )
-	{
-		return(NULL);
-	}	
-	strcpy( file_name, fileinfo.name );
-	return( file_name );
-}
-#endif	/* MSDOS */
 
 #ifdef VMS
-static int del_dir(file_spec)							/* Attempt to delete the directory.		*/
-char *file_spec;
+static int del_dir(char* file_spec)						/* Attempt to delete the directory.		*/
 {
 	char the_dir[132], *cpos;
 	struct FAB fab;									/* RMS data structures.			*/
@@ -544,3 +546,15 @@ char *file_spec;
 	else return(16);
 }
 #endif	/* VMS */
+/*
+**	History:
+**	$Log: scratch.c,v $
+**	Revision 1.14  1996-10-08 20:24:47-04  gsl
+**	replace getenv() with wispscratchmode() call
+**
+**	Revision 1.13  1996-08-19 15:32:52-07  gsl
+**	drcs update
+**
+**
+**
+*/

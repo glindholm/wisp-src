@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -12,7 +14,7 @@ General utilties and routines for miscellaneous field
 and file manipulation.
 ------*/
 
-#ifdef unix
+#ifndef VMS
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
@@ -20,13 +22,16 @@ and file manipulation.
 #include <stat.h>
 #endif
 #include <ctype.h>
+#include <string.h>
+
 #include "idsistd.h"
+
+#include "vseutl.h"
 
 /*----
 Truncate to last non-space
 ----*/
-trunc(str)
-char *str;
+void trunc(char *str)
 {
 	int len;
 	len = strlen(str)-1;
@@ -45,21 +50,27 @@ char *str;
 }
 
 /*----
-Add spaces to the end of a field to len
+Add spaces to the end of a field to len.
+Returns a null terminated string that is blank padded so strlen(s) == len.
+*** NOTE *** s must be at least len+1 bytes long.
 ------*/
-untrunc(s,len)
-char *s,len;
+void untrunc(char *s, int len)
 {
-	while(strlen(s) < len)
-		strcat(s," ");
+	int	i;
+
+	s[len] = (char)0;
+
+	i = strlen(s);
+	if (i != len)
+	{
+		memset(&s[i],' ',len-i);
+	}		
 }
 
 /*----
 Returns true if str is spaces for len
 ------*/
-isblank(str,len)
-char *str;
-int len;
+int isblankstr(char *str, int len)
 {
 	while((*str) &&
 	      (len)   )
@@ -75,8 +86,7 @@ int len;
 /*----
 Returns true is a system named file exists.
 ------*/
-exists(name)
-char *name;
+int exists(char *name)
 {
 	struct stat stat_buf;
 	int rc;
@@ -88,7 +98,7 @@ char *name;
 }
 
 /*
-**	Routine:	untabify()
+**	Routine:	vse_untabify()
 **
 **	Function:	To change tabs into spaces.
 **
@@ -106,9 +116,7 @@ char *name;
 **	Warnings:	If the expanded string is greater then size then in will be truncated to size.
 **
 */
-untabify(str,size)
-char *str;
-int size;
+void vse_untabify(char *str, int size)
 {
 	char 	*tmpbuf;
 	int 	iidx,oidx;
@@ -135,6 +143,12 @@ int size;
 	str[size-1]=(char)0;
 	free(tmpbuf);
 }
-
-		
-	       
+/*
+**	History:
+**	$Log: vseutl.c,v $
+**	Revision 1.10  1996-09-03 18:24:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

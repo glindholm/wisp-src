@@ -5,11 +5,12 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include <v/vintdef.h>
-#include <v/vmenu.h>
+#include <video.h>
+#include <vlocal.h>
+#include <vdata.h>
+#include <vintdef.h>
+#include <vmenu.h>
+#include <vmodules.h>
 
 #define CANCEL_CODE -1
 #define CLOCK_CODE 13
@@ -18,15 +19,15 @@
 #define CALEND_CODE 14
 #define PUZZLE_CODE 15
 
-testa()
+void testa()
 {
-	register int i,j;
+	int4 i;
 	struct video_menu goodies;
 
 	verase(FULL_SCREEN);
 	vmenumode(STATIC_MENU);
 
-	vmenuinit(&goodies, POP_UP_MENU, REVERSE, 10, 10, 0);
+	vmenuinit(&goodies, POP_UP_MENU, VMODE_REVERSE, 10, 10, 0);
 	vmenuitem(&goodies, "Clock", CLOCK_CODE, NULL);
 	vmenuitem(&goodies, "Calculator", CALC_CODE, NULL);
 	vmenuitem(&goodies, "Calendar", CALEND_CODE, NULL);

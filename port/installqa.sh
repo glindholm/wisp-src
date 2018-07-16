@@ -32,15 +32,42 @@ then
 	exit
 fi
 
-if [ -d $WISP/wisp.QA ]
+echo
+echo "Enter the WISP version number (e.g. 3319) ?"
+read ANS
+if [ "$ANS" = "" ]
+then
+	echo Version can not be blank.
+	exit 1
+fi
+VER=$ANS
+echo
+echo Using Version=[$VER]
+
+#
+#	Define some variables
+#
+SHIP=$WISP/src/wisp$VER.ship
+SHIPWISP=$SHIP/wisp.$VER
+SHIPEDE=$SHIP/ede.$VER
+WISPQA=$WISP/wisp.QA
+
+if [ ! -d $SHIPWISP ]
+then
+	echo '$SHIPWISP does not exist'
+	echo installqa.sh Aborting!
+	exit
+fi
+
+if [ -d $WISPQA ]
 then
 	echo
 	echo 'Removing OLD $WISP/wisp.QA'
-	rm -r $WISP/wisp.QA
+	rm -r -f $WISPQA
 
-	if [ -d $WISP/wisp.QA ]
+	if [ -d $WISPQA ]
 	then
-		echo Unable to remove $WISP/wisp.QA
+		echo Unable to remove $WISPQA
 		echo installqa.sh Aborting!
 		exit
 	fi
@@ -48,45 +75,43 @@ fi
 
 echo
 echo 'Creating $WISP/wisp.QA'
-mkdir $WISP/wisp.QA
+mkdir $WISPQA
 
-if [ ! -d $WISP/wisp.QA ]
+if [ ! -d $WISPQA ]
 then
-	echo Unable to create $WISP/wisp.QA
-	echo installqa.sh Aborting!
-	exit
-fi
-
-if [ ! -d $WISP/src/ship/wisp ]
-then
-	echo '$WISP/src/ship/wisp does not exist'
+	echo Unable to create $WISPQA
 	echo installqa.sh Aborting!
 	exit
 fi
 
 echo
-cd $WISP/src/ship/wisp
+cd $SHIPWISP
 echo pwd=`pwd`
 
-echo 'Copying $WISP/src/ship/wisp to $WISP/wisp.QA'
-find . -print | cpio -pvdum $WISP/wisp.QA
-
 echo
-echo 'Adding EDE to $WISP/wisp.QA'
-cd $WISP/src/ship
-find ede -print | cpio -pvdum $WISP/wisp.QA
-cp $WISP/src/ship/ede/good     $WISP/wisp.QA/bin
-cp $WISP/src/ship/ede/libede.a $WISP/wisp.QA/lib
+echo "Copying $SHIPWISP"
+echo "     to $WISPQA"
+echo
+find . -print | cpio -pvdum $WISPQA
+echo
+echo "Adding  $SHIPEDE"
+echo "    to  $WISPQA/ede"
+echo
+mkdir $WISPQA/ede
+cd $SHIPEDE
+find . -print | cpio -pvdum $WISPQA/ede
+cp $SHIPEDE/good     $WISPQA/bin
+cp $SHIPEDE/libede.a $WISPQA/lib
 
 echo
 echo 'Adding ACUCOBOL runtime systems'
-cp $WISP/src/ship/rts/wruncbl  $WISP/wisp.QA/bin
-cp $WISP/src/ship/rts/wruncble $WISP/wisp.QA/bin
+cp $SHIP/rts/wruncbl  $WISPQA/bin
+cp $SHIP/rts/wruncble $WISPQA/bin
 
 echo
 echo 'Adding Micro Focus runtime systems'
-cp $WISP/src/mf/wrunmf  $WISP/wisp.QA/bin
-cp $WISP/src/mf/wrunmfe $WISP/wisp.QA/bin
+cp $WISP/src/mf/wrunmf  $WISPQA/bin
+cp $WISP/src/mf/wrunmfe $WISPQA/bin
 
 echo
 echo '*** DONE ***'

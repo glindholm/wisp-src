@@ -1,0 +1,77 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		VCOLORS
+	
+	Document:	vcolors.txt
+	Last Updated:	$Date:$
+	Products:	WISP for Windows NT/95
+	Versions:	4.1.00 (or later)
+	
+	Summary:	Customizing attribute colors on Windows NT/95
+
+	====================================================================
+
+	This document describes how to customize WISP screen colors on
+	Windows NT/95 using the environment variable VCOLORS.
+
+
+	COLOR ATTRIBUTES TABLE: (VCOLORS)
+	=================================
+
+	There is an internal video table which determines how 
+	display characteristics are mapped to colors. To change the 
+	default values you can set the environment variable called 
+	VCOLORS to a replacement hex string.  This string contains 
+	32 hex characters which represent the 16 supported display 
+	attributes in this order:
+
+		0	Normal
+		1	Bold
+		2	Underscore
+		3	Bold + Underscore
+		4	Blink
+		5	Blink + Bold
+		6	Blink + Underscore
+		7	Blink + Underscore + Bold
+		8	Reverse
+		9	Reverse + Bold
+		A	Reverse + Underscore
+		B	Reverse + Underscore + Bold
+		C	Reverse + Blink
+		D	Reverse + Blink + Bold
+		E	Reverse + Blink + Underscore
+		F	Reverse + Blink + Underscore + Bold
+
+	There is also 16 possible colors represented by the hex digits 0-F
+	in the following table.
+
+		0	BLACK		8	GRAY (dark gray)
+		1	BLUE		9	LIGHTBLUE
+		2	GREEN		A	LIGHTGREEN
+		3	CYAN		B	LIGHTCYAN
+		4	RED		C	LIGHTRED
+		5	MAGENTA		D	LIGHTMAGENTA (pink)
+		6	BROWN		E	YELLOW
+		7	WHITE (gray)	F	BRIGHTWHITE (white)
+
+	Each attribute is specified as 2 hex digits. The first hex digit
+	is the background color and the second is the foreground color.
+
+		xxxx....	Background color 0-F
+		....xxxx 	Foreground color 0-F
+
+	To change the colors you would set the environment variable
+	VCOLORS in you autoexec.bat file. The default VCOLORS setting
+	would be specified as: 
+
+		SET VCOLORS=F9FCB9BCE9ECA9AC797C3F3B4F4B1F1B
+
+	Windows console mode I/O does not support either the BLINK or the
+	UNDERSCORE attribute.  These attributes must be simulated by
+	colors.
+
+	The screen is erased writing spaces with attribute 0 (Normal).
+
+	========================= END OF DOCUMENT ==========================

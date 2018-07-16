@@ -1,15 +1,27 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		wfopen.c
+**
+**	Project:	WISP
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Wang VS COBOL Open logic
+**
+**	Routines:	
+**	wfopen()	Obsolete
+**	wfopen2()
+**	wfopen3()
+*/
 
+/*
+**	Includes
+*/
 
-/* wfopen -- this is the routine which WISP makes COBOL programs call just before they open a file				*/
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <errno.h>
 
@@ -17,17 +29,12 @@
 #include <ssdef.h>
 #endif
 
-#ifndef unix	/* VMS or MSDOS */
-#include <stdlib.h>
-#endif
-
 #ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <io.h>
 #endif
 
@@ -39,6 +46,14 @@
 #include "cobrun.h"
 #include "wglobals.h"
 #include "filext.h"
+#include "wmalloc.h"
+#include "assert.h"
+#include "wdefines.h"
+#include "rvmap.h"
+#include "wisplib.h"
+#include "wexit.h"
+#include "idsisubs.h"
+#include "wfname.h"
 
 #include "werrlog.h"
 #define		ROUTINE		78000
@@ -47,12 +62,30 @@
 */
 
 
-char *wfname();
+/*
+**	Structures and Defines
+*/
 
-void wfopen2();
+/*
+**	Globals and Externals
+*/
+extern void lastacufilestat(char *buff);
+
+extern void wfopen2();
+extern void wfopen3(int4 *mode, char *vol, char *lib, char *file, char *name, char *appl, char *prname, int4 *openmode);
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+static void acc_message(int access_status, char* msgbuf);
+
 
 /********************************************************************************************************************************/
-wfopen(mode,vol,lib,file,name,prname)							/* WISP 2.0B and earlier		*/
+void wfopen(mode,vol,lib,file,name,prname)							/* WISP 2.0B and earlier		*/
 int4 *mode;										/* the mode of opening			*/
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
@@ -69,15 +102,15 @@ char *prname;										/* The PRNAME (optional).		*/
 			It uses this openmode to set the bits in mode instead of doing this is the COBOL code, and then
 			calls wfopen2();
 */
-void wfopen3(mode,vol,lib,file,name,appl,prname,openmode)				/* WISP 3.0 and later			*/
-int4 *mode;										/* the mode of opening			*/
-char *vol;										/* the WANG volume name	(6 chars)	*/
-char *lib;										/* The WANG library name (8 chars)	*/
-char *file;										/* The file name	(8 chars)	*/
-char *name;										/* The resultant name			*/
-char *appl;										/* The COBOL program id (8 chars)	*/
-char *prname;										/* The PRNAME (optional).		*/
-int4 *openmode;										/* The open mode			*/
+void wfopen3(										/* WISP 3.0 and later			*/
+	     int4 *mode,								/* the mode of opening			*/
+	     char *vol,									/* the WANG volume name	(6 chars)	*/
+	     char *lib,									/* The WANG library name (8 chars)	*/
+	     char *file,								/* The file name	(8 chars)	*/
+	     char *name,								/* The resultant name			*/
+	     char *appl,								/* The COBOL program id (8 chars)	*/
+	     char *prname,								/* The PRNAME (optional).		*/
+	     int4 *openmode)								/* The open mode			*/
 {
 	uint4	set,clear;
 	int4	the_openmode;
@@ -141,36 +174,39 @@ int4 *openmode;										/* The open mode			*/
 }
 
 /********************************************************************************************************************************/
-void wfopen2(mode,vol,lib,file,name,appl,prname)					/* WISP 2.0C and later			*/
+void wfopen2(mode,vol,lib,file,cob_name,appl,prname)					/* WISP 2.0C and later			*/
 int4 *mode;										/* the mode of opening			*/
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
-char *name;										/* The resultant name			*/
+char *cob_name;										/* The resultant name			*/
 char *appl;										/* The COBOL program id (8 chars)	*/
 char *prname;										/* The PRNAME (optional).		*/
 {
 											/* These are static so they will be set */
 											/* on an IS_ERROR repeat.		*/
-static	char *l_vol,*l_lib,*l_file,*l_name,*l_prname;					/* local vars cause the vax protects	*/
-static	int4 native_mode;								/* Set to 1 if in VAX/VMS native mode.	*/
-static	char getparm_type[3];
-static	char	prtclass[1];
-static	int4	form;
-static	int4	copies;
-static	char	orig_file[9];								/* Var to save original passed in file.	*/
+	static	char *l_vol,*l_lib,*l_file,*l_name,*l_prname;				/* local vars cause the vax protects	*/
+	static	int4 native_mode;							/* Set to 1 if in VAX/VMS native mode.	*/
+	static	char getparm_type[3];
+	static	char	prtclass[1];
+	static	int4	form;
+	static	int4	copies;
+	static	char	orig_file[9];							/* Var to save original passed in file.	*/
+
+	static	char	remote_filepath[COB_FILEPATH_LEN];				/* The remote filepath via RVMAP	*/
+	static	int	remote_flag = 0;						/* Flag if this is a remote file	*/
 
 	char temp[132];
-	int i,j,access_status, pfkey;
+	int i,access_status;
 	char pf_rcvr[1];								/* Stores the PF-KEY selection.		*/
-	char text_type[1], key_word[1];
- 	int4 va_cnt;
 	char *msg1,*msg2;
 	char intv_type;									/* Intervention type E or R (rename)	*/
 
 	werrlog(ERRORCODE(1),file,lib,vol,appl,0,0,0,0);				/* Say we are here.			*/
 
 	setprogid(appl);								/* Set the global var program id.	*/
+
+	/*---------------------*/
 	if( *mode & IS_ERROR )								/* This is the second time thru after	*/
 	{										/* an error on the COBOL OPEN stmt.	*/
 											/* Goto openerror, all of the file/lib	*/
@@ -178,28 +214,29 @@ static	char	orig_file[9];								/* Var to save original passed in file.	*/
 											/* and are static.			*/
 		goto openerror;
 	}
+	/*---------------------*/
 
 	native_mode = 0L;								/* Use WANG style file spec		*/
 
-	dispchars(vol,6);								/* Change all non-display chars to sp	*/
-	dispchars(lib,8);
-	dispchars(file,8);
+	dispchars(vol,SIZEOF_VOL);							/* Change all non-display chars to sp	*/
+	dispchars(lib,SIZEOF_LIB);
+	dispchars(file,SIZEOF_FILE);
 
-	leftjust(vol,6);								/* Left justify file/lib/vol.		*/
-	leftjust(lib,8);
-	leftjust(file,8);
+	leftjust(vol,SIZEOF_VOL);							/* Left justify file/lib/vol.		*/
+	leftjust(lib,SIZEOF_LIB);
+	leftjust(file,SIZEOF_FILE);
 
 	l_vol = vol;									/* set pointers				*/
 	l_lib = lib;
 	l_file = file;                                                                                                            
-	l_name = name;
+	l_name = cob_name;
 
 	if (*mode & IS_PRNAME)								/* If PRNAME is passed then		*/
 		l_prname = prname;							/* Use the passed PRNAME		*/
 	else
 		l_prname = "        ";							/* Else use blank			*/
 
-	memcpy(orig_file,l_prname,8);							/* Save original file name passed in.	*/
+	memcpy(orig_file,l_prname,SIZEOF_FILE);						/* Save original file name passed in.	*/
 
 	get_defs(DEFAULTS_PC,prtclass);
 	get_defs(DEFAULTS_FN,&form);
@@ -211,7 +248,7 @@ static	char	orig_file[9];								/* Var to save original passed in file.	*/
 
 	strcpy(getparm_type,"ID");							/* "ID" is for hidden getparms		*/
 
-	memset(l_name, ' ', NAME_LENGTH);						/* Clear out the 80 character filename.	*/
+	memset(l_name, ' ', COB_FILEPATH_LEN);						/* Clear out the 80 character filename.	*/
 	msg1="OVERRIDE FILE SPECIFICATIONS.";
 	msg2="PLEASE RESPECIFY FILENAME.";
                                        
@@ -264,6 +301,12 @@ translate_name:
 		wfname(mode,l_vol,l_lib,l_file,l_name);					/* generate a native file name		*/
 	}
 
+	/*
+	**	Generate a remote filepath based on RVMAP path prefixes.
+	**	This is used with ACUServer and FileShare2.
+	*/
+	remote_flag = remote_volume(l_name, remote_filepath);
+
 #ifdef VMS
 	if (*mode & IS_PRINTFILE)							/* VAX ON-LINE printing			*/
 	{
@@ -277,7 +320,7 @@ translate_name:
 #endif /* VMS */
 
                                                                                         
-check_access:
+/* check_access: */
 	/*
 	**	Check to see if we have access to the file.
 	*/
@@ -296,6 +339,15 @@ check_access:
 		/*
 		**	For DATABASE files bypass the normal access checking.
 		*/
+		access_status = ACC_ALLOWED;
+	}
+
+	/*
+	**	This is a test for AcuSERVER.
+	**	If a remote file syntax (leading '@') then bypass normal access checking.
+	*/
+	if ('@' == l_name[0])
+	{
 		access_status = ACC_ALLOWED;
 	}
 
@@ -338,7 +390,7 @@ openerror:
 											/* exist (ACC_ALLOWED means it doesn't  */
 											/* exist) then create the file (empty).	*/
 		int	fdesc;
-		char	xname[80];
+		char	xname[COB_FILEPATH_LEN];
 
 		for(i=0; l_name[i] != ' '; i++) xname[i] = l_name[i];
 		xname[i] = '\0';
@@ -372,7 +424,6 @@ respecify:
 
 	if (access_status != ACC_ALLOWED && access_status != ACC_UNKNOWN)           	/* Access granted ?			*/
 	{                                                                       	/* Nope. 				*/
-		char *p_prname;
 		char  msgbuf[80];
 
 		if (*mode & IS_NORESPECIFY)
@@ -411,7 +462,7 @@ respecify:
 	}
 
 
-acc_allowed:
+/* acc_allowed: */
 	/*
 	**	We believe that access is allowed so we are going to get ready
 	**	to fall thur and allow the COBOL OPEN to occur.
@@ -425,27 +476,27 @@ acc_allowed:
 		**	This only really needs to be done if we are creating a CISAM file
 		**	but no safe way of telling since acucobol can use cisam.
 		*/
-		unloadpad(temp,l_name,80);
-		delete(temp);								/* The delete the lockfile		*/
+		unloadpad(temp,l_name,COB_FILEPATH_LEN);
+		unlink(temp);								/* The delete the lockfile		*/
 	}
 
 	if ((*mode & IS_PRINTFILE) && (*mode & IS_OUTPUT))				/* Is this a print file open for output	*/
 	{       
 		if (!plist)								/* haven't saved any yet		*/
 		{
-			plist = (pstruct *) malloc(sizeof(pstruct));			/* get some memory to start the list	*/
+			plist = (pstruct *) wmalloc(sizeof(pstruct));			/* get some memory to start the list	*/
 			plptr = plist;							/* set the current file ptr to it	*/
 			plptr->nextfile = 0;						/* null ptr				*/
 		}
 		else           
 		{
-			plptr->nextfile = (struct pstruct *) malloc(sizeof(pstruct));	/* get some memory for the next item	*/
+			plptr->nextfile = (struct pstruct *) wmalloc(sizeof(pstruct));	/* get some memory for the next item	*/
 			plptr = (pstruct *) plptr->nextfile;				/* update the list			*/
 			plptr->nextfile = 0;						/* set null ptr				*/
 		}
 
 		memset(plptr->name,'\0',sizeof(plptr->name));
-		for(i=0; i<80 && l_name[i] != ' ' && l_name[i] != '\0'; i++)
+		for(i=0; i<COB_FILEPATH_LEN && l_name[i] != ' ' && l_name[i] != '\0'; i++)
 			plptr->name[i] = l_name[i];					/* Save the name			*/
 		plptr->form = form;							/* Set the current form.		*/
 		plptr->class = prtclass[0];						/* Set the current class.		*/
@@ -455,21 +506,21 @@ acc_allowed:
 	{
 		if (!flist)								/* haven't saved any yet		*/
 		{
-			flist = (fstruct *) malloc(sizeof(fstruct));			/* get some memory to start the list	*/
+			flist = (fstruct *) wmalloc(sizeof(fstruct));			/* get some memory to start the list	*/
 			flptr = flist;							/* set the current file ptr to it	*/
 			flptr->nextfile = 0;						/* null ptr				*/
 		}
 		else
 		{
-			flptr->nextfile = (struct fstruct *) malloc(sizeof(fstruct));	/* get some memory for the next item	*/
+			flptr->nextfile = (struct fstruct *) wmalloc(sizeof(fstruct));	/* get some memory for the next item	*/
 			flptr = (fstruct *) flptr->nextfile;				/* update the list			*/
 			flptr->nextfile = 0;						/* set null ptr				*/
 		}
 
-		memcpy(flptr->vol,l_vol,6);						/* Save the volume			*/
-		memcpy(flptr->lib,l_lib,8);						/* Save the library			*/
-		memcpy(flptr->file,l_file,8);						/* Save the file name			*/
-		memcpy(flptr->name,l_name,NAME_LENGTH);					/* Save the name			*/
+		memcpy(flptr->vol,l_vol,SIZEOF_VOL);					/* Save the volume			*/
+		memcpy(flptr->lib,l_lib,SIZEOF_LIB);					/* Save the library			*/
+		memcpy(flptr->file,l_file,SIZEOF_FILE);					/* Save the file name			*/
+		memcpy(flptr->name,l_name,COB_FILEPATH_LEN);				/* Save the name			*/
 
 		if ((*mode & IS_OUTPUT) && !(*mode & IS_SORT) && !(*mode & IS_EXTEND))	/* if the file was open for output only	*/
 		{									/* but was not a SORT or EXTEND file.	*/
@@ -481,10 +532,10 @@ acc_allowed:
 				{
 					temp[i] = l_name[i];
 					i++;
-				} while ((l_name[i] != ' ') && (i < NAME_LENGTH));
+				} while ((l_name[i] != ' ') && (i < COB_FILEPATH_LEN));
 				temp[i] = '\0';
 				strcat(temp,";");					/* add ;				*/
-				delete(temp);						/* try to delete it			*/
+				unlink(temp);						/* try to delete it			*/
 			}
 		}
 	}
@@ -497,6 +548,154 @@ acc_allowed:
 				&native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,intv_type,orig_file,prtclass,&form,&copies);
 	}
 
+	if (remote_flag) 
+	{
+		/*
+		**	If this is a remote file then copy the remote_filepath
+		**	into the COBOL native file name area so COBOL will
+		**	use the remote name to open the file.
+		*/
+		memcpy(l_name, remote_filepath, COB_FILEPATH_LEN);
+	}
+	
 	return;
 }
 
+static void acc_message(int access_status, char* msgbuf)
+{
+	char	fsbuf[40];
+
+	switch( access_status )
+	{
+	case ACC_DENIED:
+		strcpy(msgbuf,"READ OR WRITE ACCESS DENIED FOR SPECIFIED FILE.");
+		break;
+	case ACC_NOFILE:
+		strcpy(msgbuf,"SPECIFIED FILE DOES NOT EXIST.");
+		break;
+	case ACC_NODIR:                                                    
+		strcpy(msgbuf,"UNABLE TO CREATE DIRECTORY FOR SPECIFIED FILE.");
+		break;
+	case ACC_LOCKED:
+		strcpy(msgbuf,"SPECIFIED FILE IS LOCKED BY ANOTHER USER.");
+		break;
+	case ACC_NOLOCK:
+		strcpy(msgbuf,"UNABLE TO LOCK SPECIFIED FILE.");
+		break;
+	case ACC_NOLINK:
+		strcpy(msgbuf,"UNABLE TO PHYSICALLY ACCESS SPECIFIED FILE.");
+		break;
+	case ACC_BADDIR:                                                             
+		strcpy(msgbuf,"INVALID DIRECTORY IN PATH OF SPECIFIED FILE.");
+		break;
+	case ACC_READONLY:
+		strcpy(msgbuf,"WRITE ACCESS REQUESTED ON READ-ONLY DEVICE.");
+		break;
+	case ACC_INUSE:
+		strcpy(msgbuf,"SPECIFIED FILE IN USE BY ANOTHER USER.");
+		break;
+	case ACC_EXISTS:
+		strcpy(msgbuf,"SPECIFIED FILE ALREADY EXISTS, NO WRITE ACCESS.");
+		break;
+	case ACC_SYSLIMIT:
+		strcpy(msgbuf,"A SYSTEM LIMIT HAS BEEN EXCEEDED.");
+		break;
+	case ACC_MISSING:
+		strcpy(msgbuf,"SPECIFIED FILE OR DIRECTORY PATH DOES NOT EXIST.");
+		break;
+	case ACC_BADDEV:
+		strcpy(msgbuf,"UNABLE TO ACCESS SPECIFIED DEVICE.");
+		break;
+	case ACC_BADVOL:
+		strcpy(msgbuf,"VOLUME NOT FOUND.");
+		break;
+	case ACC_OUTEXISTS:
+		strcpy(msgbuf,"FILE EXISTS, RENAME OR PRESS PF3 TO CONTINUE.");
+		break;
+	case ACC_ERROPEN:
+		strcpy(msgbuf,"OPEN FAILED WITH FILE STATUS ");
+
+		if ((mf_cobol || aix_cobol) && wfilestat[0] == '9')
+		{
+			sprintf(fsbuf,"[9/RT%03d]",(unsigned)wfilestat[1]);
+		}
+		else
+		{
+			sprintf(fsbuf,"[%2.2s]", wfilestat);
+		}
+		strcat(msgbuf,fsbuf);
+
+		if (acu_cobol)
+		{
+			char acustring[40];
+			char acufilestat[11];
+			int len, i;
+			
+			lastacufilestat(acufilestat);						/* Get the last file status	*/
+			len = strlen(acufilestat);
+
+			if (len > 2)
+			{
+				strcpy(acustring, "[");
+				for (i=2; i<len; i++)
+				{
+					if (acufilestat[i] < ' ' || acufilestat[i] > '~')	/* If status not printable	*/
+					{
+						sprintf(fsbuf,"(0x%02x)",(unsigned int)(acufilestat[i]));
+					}
+					else
+					{
+						sprintf(fsbuf,"%c",acufilestat[i]);
+					}
+					strcat(acustring,fsbuf);
+				}
+				strcat(acustring, "]");
+
+				strcat(msgbuf,acustring);
+			}
+			
+		}
+		break;
+	case ACC_UNKNOWN:
+		strcpy(msgbuf,"UNABLE TO OPEN SPECIFIED FILE. (REASON UNKNOWN)");
+		break;
+	default:
+		strcpy(msgbuf,"UNABLE TO OPEN SPECIFIED FILE. (REASON UNAVAILABLE)");
+		break;
+	}
+}
+
+/*
+**	History:
+**	$Log: wfopen.c,v $
+**	Revision 1.16  1997-04-29 13:39:46-04  gsl
+**	Moved acc_message() from wfaccess.c
+**	Changed to understand the long file status codes from acucobol
+**
+**	Revision 1.15  1996-07-17 17:54:40-04  gsl
+**	change to use wmalloc()
+**
+**	Revision 1.14  1996-07-10 17:12:01-07  gsl
+**	fix prototyypes and includes for NT
+**
+**	Revision 1.13  1996-06-28 09:16:37-07  gsl
+**	change delete() to unlink()
+**
+**	Revision 1.12  1996-01-04 02:39:32-08  gsl
+**	Add include of rvmap.h
+**
+ * Revision 1.11  1996/01/04  10:35:45  gsl
+ * Added the Remote Volume support so as to support AcuServer and FileShare2.
+ * After filename translation remote_volume() is called to generate a
+ * remote filepath. If this is a remote file then the remote filepath
+ * is returned to COBOL for the OPEN.
+ *
+ * Revision 1.10  1996/01/03  14:03:11  gsl
+ * Replace hard-coded literals with defines
+ *
+ * Revision 1.9  1996/01/03  11:57:03  gsl
+ * Added std headers and comments
+ *
+**
+**
+*/

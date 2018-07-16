@@ -1,8 +1,3023 @@
+static char copyright[]="Copyright (c) 1991-1997 NeoMedia Technologies, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
- *  module: vsx_main.c
- * program: vsx
- *
+**	File:		vsx.c
+**
+**	Purpose:	Loading VS BACKUP format tapes onto Unix
+**
+**	Routines:	
+**          usage                print usage info
+**          setord               compute byte order of this machine
+**          savemode             save (s)tty mode
+**          parseopts            parse options from command line
+**          postprocess          convert .tmp's to uncompressed
+**          setdebuginfo         parse the debug flag to get debug range
+**          load                 load the tape(s)
+**          geteot               load end of tape block 
+**          prompt_new_tape      ask user to insert new tape
+**          getbytes             load a certain number of bytes into workbuf
+**          chk_valid_hdr        examine the file header
+**          rawmode              set tty to raw mode
+**          normalmode           set tty to cooked mode
+**          lower                convert a string to lower case
+**          pushname             push a filename onto a stack
+**          skipbytes            skip over a certain number of bytes on tape
+**          writefixed           write a fixed block
+**          nulls2spaces         convert nulls to spaces in the buffer
+**          matchopt             identify current option
+**          digest               process a .tmp file
+**          readtape             read some bytes from the tape
+**
+**
+**	History:
+**			History is at end of file
+**
+*/
+
+static char idsi_copyright[] = "Copyright 1991,1992,1993,1994 International Digital Scientific, Inc. All Rights Reserved.";
+
+static char VERSION[5];
+static char MODDATE[20];
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <memory.h>
+#include <string.h>
+
+#include "idsistd.h"
+
+/* #include "vsx.h" */
+
+#ifdef SOLARIS
+#include <sys/ioctl.h>
+#include <sys/mtio.h>
+#endif
+
+/*--- BEGIN vsx.h ----*/
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/msg.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <termio.h>
+#include <values.h>
+#include <errno.h>
+#include <string.h>
+
+#ifdef FALSE
+#undef FALSE
+#endif
+#ifdef TRUE
+#undef TRUE
+#endif
+#define FALSE 0
+#define TRUE 1
+
+#ifdef SCO					/* This must be define in the .umf file on SCO machines with CFLAGS = -DSCO	*/
+#define TAPEDEV "//dev/rct0"
+#endif
+#ifdef ULTRIX
+#define TAPEDEV "//dev/rmt0h"
+#endif
+#ifdef DGUX
+#define TAPEDEV "//dev/rmt/0"
+#endif
+#ifdef NCR486
+#define TAPEDEV "//dev/rmt/c0s0"
+#endif
+#ifndef TAPEDEV
+#define TAPEDEV "//dev/rmt0"
+#endif
+
+static int skip_lib=0;
+
+#define TAPE_BUFSZ 5120*20
+static unsigned char tapebuf[TAPE_BUFSZ];
+static unsigned char workbuf[TAPE_BUFSZ];
+
+static char dest_dir[100];
+static char arch_file[100];
+static char norwd_file[100]={0};
+
+#define RT_UNKNOWN	0
+#define RT_COMPRESSED 	1
+#define RT_FIXED 	2
+#define RT_VARIABLE 	3
+
+static char *rectypename[]=
+{
+	"Unknown",
+	"C",
+	"F",
+	"V"
+};
+
+static enum 
+{ 
+	ORG_UNKNOWN	= 0, 
+	ORG_CONSEC	= 1,
+	ORG_INDEX  	= 2,
+	ORG_PRINT  	= 3,
+	ORG_PROG   	= 4,
+	ORG_WORD   	= 5,
+	ORG_REL		= 6
+} org_type;
+
+static char *orgtypename[]=
+{
+	"???",
+	"CONSEC",
+	"INDEXD",
+	"PRINT",
+	"PROG",
+	"WORD",
+	"REL"
+};
+static char *orgtypeext[]=
+{
+	".unknown",
+	".seq",
+	".index",
+	".print",
+	".prog",
+	".word",
+	".rel"
+};
+
+static int dont_unload_file = 0;
+static int unload_all = 0;
+static int needs_postprocessing = 0;
+
+static unsigned short seq_num;
+
+static int spec_rec_type = RT_COMPRESSED;
+
+
+#define FT_SRC 		0
+#define FT_DAT 		1
+#define FT_PRT 		2
+#define FT_REL 		3
+#define FT_ASK_L 	4
+#define FT_ASK_F 	5
+
+static char *filetypename[]=
+{
+	"Source",
+	"Data",
+	"Print",
+	"Rel",
+	"",
+	""
+};
+
+static int file_type     = FT_DAT;
+static int act_file_type = FT_DAT;
+static int ask_file_type = FT_DAT;
+
+#define EXT_ASK_L 1
+#define EXT_ASK_F 2
+#define EXT_ADD 3
+#define EXT_NONE 4
+
+#define DEF_SRC_EXT ".wcb"
+#define DEF_NORM_EXT ".seq"
+
+static int src_ext_flag=EXT_NONE;
+static char src_ext[16];
+static char norm_ext[16];
+
+#define CASE_LOWER 1
+#define CASE_UPPER 2
+
+static int lname_case= CASE_LOWER;
+static int fname_case= CASE_LOWER;
+
+#define ACT_EXTRACT 1
+#define ACT_INDEX 2
+
+static int action=ACT_EXTRACT;
+static int interactive=FALSE;
+
+struct optstruct
+{
+	char *opt;
+	int type;
+	char *optdest;
+	int optval;
+};
+
+
+static char debug_level_str[20],debug_range[20];
+static int debug_level=0, debug_start=0, debug_end=0;
+
+#define OPT_INT 1
+#define OPT_STRING 2
+#define OPT_BAD -1
+
+static int eightmil=0, eightmilx=0;
+
+#define ADDLF 1
+#define NOLF 2
+#define GUESSLF 3
+static int add_lf=GUESSLF;
+static int check_nulls=0;
+static int trim_source=0;
+static int process_tmps=0;
+
+static int new_vol = TRUE;
+static char expected_vol[6] = { 0 };
+static short expected_seq=1;
+static int eoarchive=FALSE;
+static int eotape=FALSE;
+static int file_continued=FALSE;
+#ifdef SOLARIS
+static int tape3480=FALSE;
+#endif
+
+static char tape_rq_str[200] = {0};
+static int tape_blocksz=TAPE_BUFSZ;
+
+static char **arg_list;
+
+static struct optstruct optlist[]=
+{
+	{ "-d", OPT_STRING, dest_dir, 0 },
+	{ "-lnu", OPT_INT, (char *)&lname_case, CASE_UPPER },
+	{ "-fnu", OPT_INT, (char *)&fname_case, CASE_UPPER },
+	{ "-es", OPT_STRING, src_ext, 0 },
+	{ "-en", OPT_STRING, norm_ext, 0 },
+	{ "-El", OPT_INT, (char *)&src_ext_flag, EXT_ASK_L },
+	{ "-Ef", OPT_INT, (char *)&src_ext_flag, EXT_ASK_F },
+	{ "-ts", OPT_INT, (char *)&file_type, FT_SRC },
+	{ "-td", OPT_INT, (char *)&file_type, FT_DAT },
+	{ "-tl", OPT_INT, (char *)&file_type, FT_ASK_L },
+	{ "-tf", OPT_INT, (char *)&file_type, FT_ASK_F },
+	{ "-ua", OPT_INT, (char *)&unload_all, 1 },
+	{ "-i", OPT_INT, (char *)&action, ACT_INDEX },
+	{ "-q", OPT_INT, (char *)&interactive, TRUE },
+	{ "-8", OPT_INT, (char *)&eightmil, TRUE },
+	{ "-9", OPT_INT, (char *)&eightmilx, TRUE },
+	{ "-f", OPT_STRING, arch_file, 0 },
+	{ "-xl", OPT_STRING, debug_level_str, 0 },
+	{ "-xr", OPT_STRING, debug_range, 0 },
+	{ "-lf", OPT_INT, (char*)&add_lf, ADDLF },
+	{ "-nolf", OPT_INT, (char*)&add_lf, NOLF },
+	{ "-null", OPT_INT, (char*)&check_nulls, TRUE },
+	{ "-trim", OPT_INT, (char*)&trim_source, TRUE },
+	{ "-tmp", OPT_INT, (char*)&process_tmps, TRUE },
+	{ "-bs", OPT_STRING, tape_rq_str, 0 },
+	{ "-nrw", OPT_STRING, norwd_file, 0 },
+#ifdef SOLARIS
+	{ "-3480", OPT_INT, (char*)&tape3480, TRUE },
+#endif
+	{ NULL, 0, NULL, 0 }
+};
+
+
+struct tapeheader {
+	unsigned char encfhdr[4];
+	unsigned char vol1[6];
+	unsigned char userid1[3];
+	unsigned char filler1[4];
+	unsigned char sysversion[3];
+	unsigned char backupversion[3];
+	unsigned char budate[3];
+	unsigned char srcvol[6];
+	unsigned char srclib[8];
+	unsigned char seqnum[2];
+	unsigned char backsection[1];
+	unsigned char volseq[1];
+	unsigned char filler4a[6];
+	unsigned char fdr1org;		/* FDR1ORG 	FILE ORGANIZATION	*/
+#define 		FDR1ORG_CONSEC		((unsigned char)0x01)
+#define 		FDR1ORG_INDEXED		((unsigned char)0x02)
+#define 		FDR1ORG_WP		((unsigned char)0x04)
+#define 		FDR1ORG_RELATIVE	((unsigned char)0x08)
+#define 		FDR1ORG_PROLOG		((unsigned char)0x10)
+#define 		FDR1ORG_VARIABLE	((unsigned char)0x20)
+#define 		FDR1ORG_PRINT		((unsigned char)0x40)
+#define 		FDR1ORG_PROG		((unsigned char)0x80)
+	unsigned char fdr1flags;		/* FDR1FLAGS 	FLAGS FOR STATUS 	*/
+#define 		FDR1FLAGS_PRIV		((unsigned char)0x01)
+#define 		FDR1FLAGS_ADMS		((unsigned char)0x02)
+#define 		FDR1FLAGS_PARTIAL	((unsigned char)0x04)
+#define 		FDR1FLAGS_LOG		((unsigned char)0x08)
+#define 		FDR1FLAGS_ALTX		((unsigned char)0x10)
+#define 		FDR1FLAGS_RECOV		((unsigned char)0x20)
+#define 		FDR1FLAGS_COMPRESSED	((unsigned char)0x40)
+#define 		FDR1FLAGS_UPDATE	((unsigned char)0x80)
+	unsigned char filler4c[2];
+	unsigned char filename[8];	
+	unsigned char filler5[1];
+	unsigned char date1[3];
+	unsigned char date2[3];
+	unsigned char date3[3];
+	unsigned char filler6[1];
+	unsigned char userid2[3];
+	unsigned char filler7[24];
+	unsigned char reccnt[4];
+	unsigned char recsz[2];
+	unsigned char filler8[27];
+	unsigned char tapevol[6];
+	unsigned char trailer[5];
+};
+#define BLANKSPACE 1908
+
+struct tapetrailer 
+{
+	unsigned char beot[4];
+	unsigned char tapevol[6];
+	unsigned char userid[3];
+	unsigned char filler1[1];
+	unsigned char sysversion[3];
+	unsigned char backupversion[3];
+	unsigned char time[3];
+	unsigned char date[3];
+	unsigned char origvol[6];
+	unsigned char nextvol[6];
+	unsigned char fileseq[2];
+	unsigned char flag[1];
+	unsigned char filler2[5];
+
+};
+
+struct stack_node
+{
+	struct stack_node *prev;
+	unsigned char *name;
+};
+struct stack_node *head=NULL, *stackp;
+
+struct tapeheader *tapehdr;
+
+
+#define ST_START 0
+#define ST_NORMAL 1
+#define ST_COMP 2
+#define ST_NEXTCOMP 3
+#define ST_END 4
+#define ST_COMP0 5
+
+#define ORDER_NORMAL 0
+#define ORDER_REVERSE 1
+
+static int byteorder;
+
+/*
+** these defines were setup long before idsistd and intdef were used.
+** they don't really refer to 'C' longs and shorts, they refer to 
+** long and short int size within the context of the VS backup.
+*/
+#define LONG 4
+#define SHORT 2
+
+static char oldlib[9];
+
+static struct termio old,new;
+
+#define D if(debug_level==1 && ((seq_num>=(unsigned short)debug_start) && (seq_num<=(unsigned short)debug_end)))
+#define DD if(debug_level==2 && ((seq_num>=(unsigned short)debug_start) && (seq_num<=(unsigned short)debug_end)))
+#define DDD if(debug_level==3 && ((seq_num>=(unsigned short)debug_start) && (seq_num<=(unsigned short)debug_end)))
+
+#define RT_SKIPTOEND 1
+#define RT_GETBLOCK 2
+#define RT_GETBYTES 3
+#define RT_SKIPBYTES 4
+
+extern char *sys_errlist[];
+
+/*--- END vsx.h ----*/
+
+
+struct my_header
+{
+	uint4 rectype;
+	uint4 filetype;
+	uint4 reccnt;
+	uint4 recsz;
+};
+
+
+static int tape_fd = -1;
+static int tapebytes =0;
+
+static int usage (void);
+static void setord (void);
+static int savemode (void);
+static int parseopts (int c, char **v);
+static int postprocess (void);
+static int setdebuginfo (void);
+static int load (void);
+static int geteot (void);
+static int prompt_new_tape (void);
+static int getbytes (int cnt);
+static int chk_valid_hdr (void);
+static int rawmode (void);
+static int normalmode (void);
+static int lower (char *p);
+static int pushname (char *str);
+static int skipbytes (int cnt);
+static int writefixed (unsigned char *buf, int recs, int size, FILE *f);
+static int nulls2spaces (unsigned char *buf);
+static int matchopt (char *opt, int *num, int *type, char **destval, int *val);
+static int readtape(unsigned char *buf, int bytesrq, int command);
+static int digest (char *name);
+static uint4 normalize_byteorder(uint4 value);
+static void getbin(unsigned char *dest, unsigned char *src, int cnt);
+
+#ifdef NOSTRDUP
+static char *strdup(char *str)
+{
+        char *tmp;
+        
+        tmp = malloc(strlen(str)+1);
+        strcpy(tmp,str);
+        return tmp;
+}
+#endif
+
+#ifdef SOLARIS
+static void load3480(char *tapedev, int cartridge);
+#endif
+
+/*
+**	Routine:	main()
+**
+**	Function:	main entry point for vsx
+**
+**	Input:		argc  - # of args 
+**			argv  - arg values
+**
+**	Output:		loads a tape
+**			
+**
+**	Return:		zero
+**
+**	Warnings:	None
+**
+**	History:	
+**
+*/
+
+void main(int argc, char **argv)
+{
+        char *p,*e;
+	void handler(int sig);
+	
+	/*
+	** make a version and date stamp
+	**
+	*/
+        memset(VERSION,0,sizeof(VERSION));
+        p=strchr(rcsid,' ');
+        p=strchr(++p,' ');
+        e=strchr(++p,' ');
+        
+        memcpy(VERSION,p,e-p);
+        memset(MODDATE,0,sizeof(MODDATE));
+        p=strchr(++e,' ');
+        memcpy(MODDATE,e,p-e);
+
+        setbuf(stderr,NULL);
+        
+	/*
+	** print usage info if necessary or else print version info and continue
+	**
+	**/
+        if (argc==2 && argv[1][0]=='-' && (argv[1][1]=='?'||argv[1][1]=='h')) usage();
+        else
+	{
+		printf("VSX Release V%s %s - 'vsx -h' for help\n",VERSION,MODDATE);
+		printf("%s\n",copyright);
+	}
+
+	/*
+	** get the byte order of this box
+	*/ 
+        setord();
+
+	/*
+	** save tty mode for restoring later
+	**/
+        savemode();
+        
+	/*
+	** now look at what options we have
+	**
+	**/
+        parseopts(argc,argv);
+
+	/*
+	** if we are in eightmilx mode set eightmil flag too.
+	** (eightmilx is a debugging mode only.. works like eightmil except instead of
+	** reading from tape we read a list of files from the disk)
+	**
+	**/
+	if (eightmilx)
+	  eightmil = TRUE;
+	
+	/*
+	** check for -tmp flag.. if we have it we just do a postprocess (no tape load) phase
+	**
+	*/
+	if (process_tmps)
+	{
+		arg_list = ++argv;
+		postprocess();
+		handler(0);
+	}
+
+	/*
+	** check for debug info request 
+	**
+	**/
+        setdebuginfo();
+        if (debug_level) { printf("debug level %d: files %d thru %d\n",debug_level,debug_start,debug_end);}
+
+	/*
+	** print some info for user
+	**
+	**/
+	if (strlen(norwd_file))
+	{
+		fprintf(stdout,"\nArchive file: %s\n",norwd_file);
+	}
+	else
+	{
+		fprintf(stdout,"\nArchive file: %s\n",arch_file);
+	}
+#ifdef SOLARIS
+	if (tape3480)
+	{
+		fprintf(stderr,"Make sure 3480 tape unit is in AUTO mode.\n");
+	}
+#endif
+
+	/*
+	** setup int handler
+	**
+	**/
+        signal(SIGINT,  handler );
+        signal(SIGQUIT, handler );
+        signal(SIGILL,  handler );
+        signal(SIGEMT,  handler );
+        signal(SIGBUS,  handler );
+        signal(SIGSEGV, handler );
+
+	/*
+	** perform load phase
+	**
+	*/
+        load();
+        printf("end of archive reached..\f\npostprocessing:\n");
+	fflush(stdout);
+	fflush(stderr);
+
+	/*
+	** perform postprocessing phase
+	**
+	*/
+        postprocess();
+        handler( 0 );
+        /*NOTREACHED*/
+}
+/*
+**	Routine:	handler()
+**
+**	Function:	To shutdown gracefully
+**
+**	Description:	To print a shutdown message, close the tapefile and exit
+**
+**	Input:		ignored
+**			
+**
+**	Output:		None
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	at EOF
+**
+*/
+
+void handler(int sig)
+{
+        fprintf(stderr,"\nVSX exiting.\n");
+	if (tape_fd != -1)
+		close(tape_fd);
+        exit(0);
+}
+/*
+**	Routine:	readtape()
+**
+**	Function:	To read bytes from tape
+**
+**	Description:	To read bytes from tape
+**
+**	Input:		buf       pointer to receiving buffer
+**			bytesrq   number of bytes requested
+**                      command   type of read to perform
+**                                 RT_SKIPTOEND  - read until end of current tapefile (discard data)
+**                                 RT_GETBLOCK   - read a blocksize amount of data
+**                                 RT_GETBYTES   - read a certain (smaller) number of bytes
+**                                 RT_SKIPBYTES  - skip a certain small number of bytes
+** 
+**	Output:		loads bytes into buf
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	at EOF
+**
+*/
+static int readtape(unsigned char *buf, int bytesrq, int command)
+{
+        static int bufpos = 0;
+        int stat, bytes;
+        static int tapepos=0, file8num=0, readzero=0;
+	static int fileseq= -1;
+	static int eots=0;
+#ifdef SOLARIS
+	static int tapenum3480=0;
+#endif
+
+/*
+** printing debug info if needed
+**
+*/	
+DD{
+fprintf(stderr,"readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
+        bytesrq,
+	command==RT_SKIPTOEND?"skip to end":
+	command==RT_GETBLOCK?"get block":
+	command==RT_GETBYTES?"get bytes":
+	command==RT_SKIPBYTES?"skip bytes":"",
+        tapebytes,bufpos,tape_blocksz);
+}
+DDD{
+fprintf(stderr,"readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
+        bytesrq,
+	command==RT_SKIPTOEND?"skip to end":
+	command==RT_GETBLOCK?"get block":
+	command==RT_GETBYTES?"get bytes":
+	command==RT_SKIPBYTES?"skip bytes":"",
+        tapebytes,bufpos,tape_blocksz);
+}
+	/*
+	** setup fileseq counter for debugging
+	**
+	*/
+	if (fileseq == -1)
+	{
+		fileseq = debug_start;
+	}
+	/*
+	** SKIPTOEND just read()s until EOF
+	** 
+	**
+	*/
+        if(command==RT_SKIPTOEND) 
+        { 
+                tapebytes=0;
+
+                do 
+                { 
+                        stat=read(tape_fd,tapebuf,tape_blocksz); 
+DDD{
+printf("skipping %d %c%c%c%c\n",stat,tapebuf[0],tapebuf[1],tapebuf[2],tapebuf[3]); 
+}
+                } while (stat); 
+
+                return 0;     
+        }
+	/*
+	** GETBLOCK returns a block of data, size unimportant.  it is called
+	** when specific sizes of data are not important, we just want to
+	** grab some data
+	**
+	*/
+        if (command == RT_GETBLOCK)
+        {
+                int ret;
+               
+		/*
+		** if local buffer has bytes in it, return them
+		**
+		*/
+                if (tapebytes)
+                {
+                        memcpy(buf,tapebuf+bufpos,tapebytes);
+                        ret=tapebytes;
+                        tapebytes=0;
+                }
+		/*
+		** otherwise read a blocksz chunk and hand it back
+		**
+		*/
+                else
+                {
+                        tapebytes = read(tape_fd,tapebuf,tape_blocksz);
+                        memcpy(buf,tapebuf,tapebytes);
+                        ret=tapebytes;
+			tapebytes=0;
+                }
+                return ret;
+        }
+	/*
+	** at this point we either have a GETBYTES or a SKIPBYTES command.
+	** the basic actions are the same so most of the code is shared
+	**
+	*/
+	/*
+	** first setup a loop, bytes is the number returned so far, bytesrq is the number
+	** needed.
+	**
+	*/
+        for (bytes=0; bytes < bytesrq; )
+        {
+		/*
+		** open the tape if necessary
+		**
+		**/
+                if (tape_fd == -1)
+                {
+		      openloop:
+			
+			/*
+			** eightmilx lets a read a series of files named file1 file2 file3 etc.
+			** the files must have been loaded from an 8mil or 9 track tape
+			**
+			*/
+			if (eightmilx)
+			{
+				sprintf(arch_file,"file%d",fileseq++);
+			}
+#ifdef SOLARIS
+			/*
+			** now if it's a 3480 tape try to make it load the tape into the reader
+			**
+			*/
+			if (tape3480)
+			{
+				load3480((strlen(norwd_file))?norwd_file:arch_file,tapenum3480);
+			}
+#endif
+			/*
+			** now open it and set eotape flag false
+			**
+			*/
+                        tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY);
+			eotape=FALSE;
+			/*
+			** handle error condition
+			**
+			*/
+                        if (tape_fd<0) 
+                        {
+			/*      openloop:    8/16/94-JEC-dunno why this label was here*/
+				
+				/*
+				** ENXIO seems to indicate dev is offline.. this is of course
+				** only returned by tape devices that have off and on line states
+				**
+				*/
+				if (errno==ENXIO)
+				{
+					fprintf(stderr,"Place device %s ONLINE and press Return.\n",
+						arch_file);
+					getchar();
+					goto openloop;
+				}
+				else
+				{
+					fprintf(stderr,"Error opening %s: %s (errno=%d)\n",
+						arch_file,sys_errlist[errno],errno);
+					handler(0);
+				}
+                        }
+                }
+		/*
+		** if we have no bytes in our local buffer, read some
+		**
+		*/
+                if (tapebytes == 0)
+                {
+		      loop:
+
+			/* 
+			** simple read on tape fd 
+			*/
+                        tapebytes = read(tape_fd,tapebuf,tape_blocksz);
+DDD{
+fprintf(stderr,"read %d bytes, bytes rqd is %d\n",tapebytes,bytesrq);
+}                       
+
+				
+			/*
+			** handle special behaviors and return codes
+			**
+			*/
+				
+#ifdef ATT3B2
+			/*
+			** end of file reached, set tapebytes to zero 
+			**
+			*/
+			if (tapebytes<0 && errno == ENXIO)
+			{
+				tapebytes=0;
+			}
+#endif
+#ifdef DGUX
+			/*
+			** end of file reached, set tapebytes to zero 
+			** AND close the tape fd (it must be closed and reopened to
+			** get the next file)
+			**
+			*/
+			if (tapebytes < 0 && errno== ENXIO)
+			{
+				tapebytes=0;
+				close(tape_fd);
+				tape_fd= -1;
+			}
+#endif
+			/*
+			** real error on the tape read
+			**
+			*/
+                        if (tapebytes<0) 
+                        {
+                                fprintf(stderr,"Error reading %s: %s (errno=%d)\n",
+					arch_file,sys_errlist[errno],errno);
+                                exit(1);
+                        }
+			/*
+			** read zero bytes. if it's not an 8mil type, expect end of tape.
+			** this code is a little hairy; because we call geteot which in turn
+			** calls getbytes.  not the best design, but, the geteot logic was
+			** added after the fact to allow tape spanning; previously it was ignored.
+			**
+			*/
+                        if (tapebytes == 0 && !eightmil)
+                        {       
+				/*
+				** got end of tape block yet?
+				**
+				*/
+				if (!eotape)
+				{
+					/*
+					** read the eot block yet?
+					** (eots is a kludge flag to prevent this block from being
+					**  executed when the below call to geteot (which calls readtape)
+					**  is called)
+					**
+					*/
+					if (eots==0)
+					{
+						fprintf(stdout,"\nEnd of tape encountered.\n");
+						eotape=TRUE;
+						++eots;
+						/*
+						** might need to close and reopen the file
+						**
+						*/
+						if (strlen(norwd_file))
+						{
+							close(tape_fd);
+							tape_fd =  -1; 
+						}
+						/*
+						** now read the eot
+						*/
+						geteot();
+						eots=0;
+#ifdef SOLARIS
+						++tapenum3480;
+#endif
+					}
+					else
+					{
+						return -1;
+					}
+				}
+				else
+				{
+					/*
+					** no EOT block found
+					**
+					*/
+					fprintf(stderr,"\nMissing EOT block.  Check tape or try running\n");
+					fprintf(stderr,"VSX again using the no-rewind device.\n");
+					fprintf(stderr,"\n");
+					return -1;
+				}
+				/*
+				** now close and rewind
+				**
+				**/
+				fprintf(stderr,"Rewinding tape\n");
+				tapebytes=0;
+				close(tape_fd);
+				/*
+				** tape we've been using is norewind, so we have to rewind it 
+				** another way
+				**
+				*/
+				if (strlen(norwd_file))
+				{
+					/*
+					** just open and close the normal tape dev 
+					**
+					*/
+					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
+					{
+						int  rwd;
+						rwd=open(arch_file,O_RDONLY);
+						close(rwd);
+					}
+					else
+					{
+						/*
+						** otherwise, request that the  user specify the 
+						** rewind tape too 
+						*/
+						fprintf(stderr,"Unable to rewind.  When using -nrw <tape>, specify the\nrewind on close device as -f <tape>.\n");
+					}
+				}
+				tape_fd =  -1; 
+                                return -1;
+                        }
+			/*
+			** now handle 8mil case where we read only 48 bytes- it's the eotblock
+			**
+			*/
+			if (eightmil && tapebytes == 48)
+			{
+				/*
+				** set  eotape flag and call geteot
+				**
+				*/
+				if (!eotape)
+				{
+					eotape=TRUE;
+					fprintf(stderr,"\nEnd of tape encountered.\n");
+					geteot();
+				}
+				else
+				{
+					/*
+					** complain
+					**
+					*/
+					fprintf(stderr,"\nMissing EOT block.  Verify tape and try again.\n");
+					fprintf(stderr,"\n");
+				}
+				fprintf(stderr,"Rewinding tape\n");
+				tapebytes=0;
+				close(tape_fd);
+#ifdef REV_1_64_1_1
+				if (strlen(norwd_file))
+				{
+					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
+					{
+						int  rwd;
+						rwd=open(arch_file,O_RDONLY);
+						close(rwd);
+					}
+					else
+					{
+						fprintf(stderr,"Unable to rewind.  When using -nrw <tape>, specify the\nrewind on close device as -f <tape>.\n");
+					}
+				}
+#endif /* REV_1_64_1_1 */
+				tape_fd =  -1; 
+				return -1;
+			}
+#ifdef REV_1_64_1_1
+			if (eightmil && tapebytes == 0)
+			{
+				close(tape_fd);
+				tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY);
+				goto loop;
+			}
+#endif /* REV_1_64_1_1 */
+			/*
+			** in 8milx mode, close file and continue
+			**
+			*/
+			if (eightmilx && tapebytes==0)
+			{
+				close(tape_fd);
+				tape_fd =  -1; 
+				if (fileseq == debug_end)
+				{
+					eotape=TRUE;
+					return -1;
+				}
+			}
+			/*
+			** reset bufpos, we just read a brand new buffer
+			**
+			*/
+                        bufpos=0;
+                }
+		/*
+		** if we have more bytes than he requested, return the number he wants
+		** (minus what we may have already given him) and adjust our counters
+		**
+		*/
+                if ((bytesrq-bytes) < tapebytes)
+                {
+                        if (command != RT_SKIPBYTES) 
+			  memcpy(buf+bytes,tapebuf+bufpos,bytesrq-bytes);
+                        bufpos += (bytesrq - bytes);     /* move bufpos. bufpos points to next avail data in our buffer */
+                        tapebytes -= (bytesrq-bytes);    /* decrement byte count */
+                        bytes=bytesrq;                   /* indicate user has been given bytesrq bytes */
+                }
+                else
+                {
+			/* 
+			** otherwise we give him what we have and go thru the loop again 
+			**
+			*/
+                        if (command != RT_SKIPBYTES) 
+			  memcpy(buf+bytes,tapebuf+bufpos,tapebytes);
+                        bytes += tapebytes;
+                        tapebytes=0;
+                }
+        }
+	/*
+	** update the byte position on the tape and return it
+	**
+	*/
+        tapepos += bytesrq;
+        return tapepos;
+}
+/*
+**	Routine:	geteot()
+**
+**	Function:	To load the END-OF-TAPE block
+**
+**	Description:	To call readtape and get eot block. Then set any 
+**                      flags for next tape etc
+**
+**	Input:		None
+**			
+**
+**	Output:		None
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	at EOF
+**
+*/
+
+static int geteot(void)
+{
+	struct tapetrailer x;
+	FILE *eotlog;
+	short seq;
+	int st;
+	
+	/*
+	** call readtape again to get additional bytes
+	**
+	*/
+	if (!eightmil)
+	{
+		st = readtape((unsigned char*)&x,sizeof(x),RT_GETBYTES);
+		if (st== -1)
+		{
+			fprintf(stderr,"Bad EOT block\n");
+			eoarchive=TRUE;
+			return 0;
+		}
+	}
+	else
+	{
+		/*
+		** in 8mil mode we already know we have 48 bytes; otherwise
+		** this routine would not have been called
+		**
+		*/
+		memcpy(&x,tapebuf,sizeof(struct tapetrailer));
+	}
+	/*
+	** compute file sequence number
+	**
+	*/
+	getbin((unsigned char*)&seq,x.fileseq,SHORT);
+#if 0
+	eotlog = fopen("eotlog","a");
+	fprintf(eotlog,"BEOT     [%4.4s]\n",x.beot);
+	fprintf(eotlog,"TAPEVOL  [%6.6s]\n",x.tapevol);
+	fprintf(eotlog,"ORIGVOL  [%6.6s]\n",x.origvol);
+	fprintf(eotlog,"NEXTVOL  [%6.6s]\n",x.nextvol);
+	fprintf(eotlog,"SEQUENCE [%5.5d]\n",seq);
+	fprintf(eotlog,"FLAG [%x/%c]\n",x.flag[0],x.flag[0]);
+	fclose(eotlog);
+#endif
+	/*
+	** this 0x80 byte indicates additional tapes
+	**
+	*/
+	if (x.flag[0] == 0x80)
+	{
+		/*
+		** copy name of next tape volume
+		**
+		*/
+		memcpy(expected_vol,x.nextvol,6);
+		++expected_seq;
+		file_continued=1;
+		/*
+		** increment the expected tape seq and set a continuation flag
+		**
+		*/
+		fprintf(stderr,"Backup continued on tape volume %6.6s\n",expected_vol);
+	}
+	else
+	{
+		/*
+		** else no more tapes
+		**
+		*/
+		eoarchive=TRUE;
+	}
+
+	return 0;
+}
+/*
+**	Routine:	load()
+**
+**	Function:	To load an archive
+**
+**	Description:	A very complex routine.  It loads an archive, interpereting
+**                      VS BACKUP blocking info
+**
+**	Input:		None
+**			
+**
+**	Output:		files on the disk
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	at EOF
+**
+*/
+
+static int load(void)
+{
+	/* recs    - index for reading a records in a non blocked file 
+        ** fileeof - end of file flag
+	** reccnt  - number of recs in current file
+	** recsz   - number of bytes in current record
+	** recbuf  - receiver for record data
+        ** vol, lib, file - wang style path info from file header on tape
+	** small   - bytecount in current "small" block
+	** smallextra - extra unused bytes at end of current small block
+	** med     - bytecount in current "medium" block
+	** eofword - receiver of 4 byte signature at end of medium block
+	** big     - bytecount in current "small" block
+	** bigextra - extra unused bytes at end of current big block
+	** oreccnt - total recs read so far (non blocked)
+	** outpath - output file path
+	** newlib  - new library (directory) is needed
+	** out     - FILE * to output file
+	** saverecs- used to initialize recs index (for spanned files)
+	** dfpos   - used to track position on tape 
+	**
+	*/
+        unsigned int recs,fileeof,reccnt;
+        unsigned short recsz;
+        unsigned char *recbuf;
+        char vol[7],lib[9],file[9];
+        unsigned short small,smallextra;
+        uint4 med,eofword;
+        uint4 big, bigextra;
+        unsigned int oreccnt;
+        char outpath[200];
+        char *s;
+        int newlib;
+        FILE *out;
+	static int saverecs;
+        int dfpos;
+        
+	/* 
+	** setup the header pointer so we can examine its contents
+	*/
+        tapehdr=(struct tapeheader *)workbuf;
+
+	/*
+	** initialize counters and flags.
+	** first block is special. big size is sizeof the tape header, extra bytes
+	** at the end are ignored. file data starts at 0x800.
+	**
+	*/
+        big=sizeof(struct tapeheader); bigextra= 0x800-big;
+        med=newlib=eoarchive=0;
+        small=smallextra=skip_lib=0;
+        eoarchive=FALSE;
+        recbuf=NULL;
+        
+	/*
+	** loop until end of archive reached
+	**
+	*/
+        while (eoarchive==FALSE)
+        {
+		/*
+		** is file continued from a prior tape?
+		*/
+		if (file_continued)
+		{
+#ifdef SOLARIS
+			if (tape3480)
+			{
+				/* 
+				** if its 3480, just inform user we will mount next
+				**
+				*/
+				fprintf(stderr,"Mounting next backup tape (volume: %6.6s).\n", expected_vol);
+			}
+			else
+			{
+				/*
+				** otherwise ask him to do it
+				**
+				*/
+				prompt_new_tape();
+			}
+#else
+			/*
+			** non 3480-supporting systems always ask
+			**
+			*/
+			prompt_new_tape();
+#endif
+		}
+		/*
+		** now grab the tape header
+		**
+		*/
+                dfpos= getbytes(sizeof(struct tapeheader));
+		/*
+		** check for a valid header
+		**
+		*/
+                if (dfpos== -1 || chk_valid_hdr()== -1)
+		{
+			continue;
+		}
+		/*
+		** update big counter (big is the number of valid bytes left in the big block 
+		**
+		*/
+                big -= sizeof(struct tapeheader);
+		/*
+		** now extract some fields: record size and count, file sequence number
+		**
+		*/
+                getbin((unsigned char *)&recsz,   (unsigned char *)tapehdr->recsz,SHORT);
+                getbin((unsigned char *)&reccnt,  (unsigned char *)tapehdr->reccnt,LONG);
+                getbin((unsigned char *)&seq_num, (unsigned char *)tapehdr->seqnum,SHORT);
+
+		/*
+		** determine the file organization
+		**
+		*/
+
+		dont_unload_file = 0;
+		
+		if (tapehdr->fdr1org & FDR1ORG_PROG)
+		{
+			org_type = ORG_PROG;
+			dont_unload_file = 1;
+			act_file_type = FT_DAT;
+		}
+		else if (tapehdr->fdr1org & FDR1ORG_PRINT)
+		{
+			org_type = ORG_PRINT;
+			act_file_type = FT_PRT;
+		}
+		else if (tapehdr->fdr1org & FDR1ORG_WP)
+		{
+			org_type = ORG_WORD;
+			act_file_type = FT_DAT;
+		}
+		else if (tapehdr->fdr1org & FDR1ORG_INDEXED)
+		{
+			org_type = ORG_INDEX;
+			dont_unload_file = 1;
+			act_file_type = FT_DAT;
+		}
+		else if (tapehdr->fdr1org & FDR1ORG_RELATIVE)
+		{
+			org_type = ORG_REL;
+			act_file_type = FT_REL;
+			dont_unload_file = 1;
+		}
+		else if (tapehdr->fdr1org & FDR1ORG_CONSEC)
+		{
+			org_type = ORG_CONSEC;
+
+			/*
+			**	These are assumptions that can be overriden later
+			*/
+			if (recsz==80)
+			{
+				act_file_type=FT_SRC;
+			}
+			else
+			{
+				act_file_type=FT_DAT;
+			}
+		}
+		else
+		{
+			org_type = ORG_UNKNOWN;
+			act_file_type = FT_DAT;
+		}
+
+		if (unload_all)
+		{
+			dont_unload_file = 0;
+		}
+
+		/*
+		** now figure out what format the records are
+		**
+		*/
+                if (tapehdr->fdr1flags & FDR1FLAGS_COMPRESSED) 
+		{
+			spec_rec_type = RT_COMPRESSED;
+		}
+		else if (tapehdr->fdr1org & FDR1ORG_VARIABLE)
+		{
+			spec_rec_type = RT_VARIABLE;
+		}
+		else
+		{
+			spec_rec_type = RT_FIXED;
+		}
+		
+		/*
+		** reset the rec buffer (it is probably incorrect size)
+		**
+		*/
+                if (recbuf) 
+                {
+                        free(recbuf);
+                        recbuf=NULL;
+                }
+                
+		/*
+		** brand new file, so reset oreccnt
+		**
+		*/
+                if (!file_continued) 
+		{
+			oreccnt=0;
+		}
+		
+		/*
+		** now get a record buf, then copy file lib and vol
+		**
+		*/
+                recbuf=(unsigned char *)calloc(recsz+1,1);
+                memcpy(vol,tapehdr->srcvol,6);
+                memcpy(lib,tapehdr->srclib,8);
+                memcpy(file,tapehdr->filename,8);
+                vol[6]=lib[8]=file[8]=(char)0;
+DD{printf("header=%s\n",tapehdr->encfhdr); fflush(stdout);}
+D{printf("header=%4.4s backsection=%1.1d volseq=%2.2d\n",tapehdr->encfhdr,tapehdr->backsection[1],tapehdr->volseq[1]); fflush(stdout);}
+
+		/*
+		** if we are interactively querying to load the libs
+		**
+		*/
+                if (interactive)
+                {
+		        /* 
+			** if it's a new lib, ask if we should load it
+			**
+			*/
+                        if (strcmp(lib,oldlib))
+                        {
+                                int foo,ok;
+                          
+				/*
+				** this code is self documenting
+				**
+				*/
+                                for (ok=FALSE; ok==FALSE; )
+                                {
+                                        printf("\nLibrary name: %8s    Restore this library? (y/n)-->",lib);
+                                        rawmode();
+                                        foo=getchar();
+                                        normalmode();
+                                        printf("\n");
+                                        if (foo=='y'||foo=='Y') { skip_lib=FALSE; ok=TRUE; }                                    
+                                        else if (foo=='n'||foo=='N') { skip_lib=TRUE; ok=TRUE; }
+                                        else ok=FALSE;
+                                        newlib=TRUE;
+                                }
+                        }
+                }
+	        /*
+		** now we may need to ask what type the lib is also
+		**
+		*/
+                if (file_type==FT_ASK_L && !skip_lib)
+                {
+                        if (strcmp(lib,oldlib))
+                        {
+                                int foo;
+
+                                if (interactive)
+                                {
+					printf("                          Type source/normal (s/n)-->");
+                                }
+                                else
+				{
+					printf("\nLibrary name: %8s     Type source/normal (s/n)-->",lib);
+				}
+				
+                                rawmode();
+                                foo=getchar();
+                                normalmode();
+                                printf("\n\n");
+				if (foo=='s'||foo=='S')
+				{
+					ask_file_type=FT_SRC;
+				}
+				else
+				{
+					ask_file_type=FT_DAT;
+				}
+				
+                                if (foo=='x'||foo=='X') skip_lib=TRUE;
+                                else skip_lib=FALSE;
+                                newlib=TRUE;
+                        }
+
+			if (ORG_CONSEC == org_type)
+			{
+				act_file_type = ask_file_type;
+			}
+                }
+	        /*
+		** now record lib name, and truncate the spaces in lib and file
+		** (volume is not really used)
+		**
+		*/
+                if (newlib)
+                {
+                        strcpy(oldlib,lib);
+                        newlib=FALSE;
+                }
+                s=strchr(lib,' ');
+                if (s) *s=(char)0;
+                s=strchr(file,' ');
+                if (s) *s=(char)0;
+       
+
+		/*
+		** print a dot for skipped libs
+		**
+		*/
+                if (skip_lib==TRUE)
+		{
+			fprintf(stderr,".");
+			fflush(stderr);
+		}
+		
+
+                if (skip_lib==FALSE)
+                {
+			if (((seq_num-1) % 55) == 0)
+			{
+				printf("\f\n");
+				printf("VOLUME  LIBRARY   FILE       FSEQ  FORG  RECFM  TYPE    LRECL  NRECS  Org,Flg\n");
+				printf("------  --------  --------   ----  ----  -----  ------  -----  -----  -------\n");
+			}
+
+			printf("%-6s  %-8s  %-8s  %5d  %-6s  %s    %-6s   %4d  %5d  (%02X,%02X)",
+			       vol, lib, file, seq_num, 
+			       orgtypename[org_type], rectypename[spec_rec_type], filetypename[act_file_type], 
+			       recsz, reccnt,
+			       tapehdr->fdr1org, tapehdr->fdr1flags);
+
+			if (action != ACT_EXTRACT)
+			{
+				printf("\n");
+			}
+		}
+		
+		/*
+		** now the fun begins, time to read the file
+		**
+		*/
+
+                if (action==ACT_EXTRACT && skip_lib==FALSE)
+                {
+                        char *use_ext;
+                  
+			/*
+			** usually we want to lower case all the names
+			*/
+			if (lname_case==CASE_LOWER) 
+			{
+				lower(lib);
+			}
+                        if (fname_case==CASE_LOWER)
+			{
+				lower(file);
+			}
+                        mkdir(lib,0777);
+                        chmod(lib,0777);
+			/*
+			** if the recs aren't fixed, make a .tmp file instead
+			**
+			*/
+			needs_postprocessing = 0;
+			
+			if (dont_unload_file)
+			{
+				use_ext = orgtypeext[org_type];
+			}
+                        else if (spec_rec_type == RT_COMPRESSED || spec_rec_type == RT_VARIABLE)
+			{
+				use_ext = ".tmp";
+				needs_postprocessing = 1;
+			}
+                        else if (ORG_CONSEC == org_type)
+			{
+				/*
+				** otherwise grab the needed extension
+				**
+				*/
+				use_ext = (act_file_type==FT_SRC)?src_ext:norm_ext;
+			}
+			else
+			{
+				use_ext = orgtypeext[org_type];
+			}
+
+			/*
+			** compose an output file name
+			**
+			*/
+                        sprintf(outpath,"%s/%s%s",lib,file,use_ext);
+			/*
+			** push it onto our stack if it needs postprocessing later
+			**
+			*/
+                        if (needs_postprocessing)
+			{
+				pushname(outpath);
+			}
+			/*
+			** if its continued, print a message about it
+			**
+			*/
+			if (file_continued)
+			{
+				printf("Continuing %s...\n",outpath);
+			}
+			/*
+			** if it isn't index, print the name and info for the user to watch.
+			** if it is, tell him we skipped it
+			**
+			*/
+			if (dont_unload_file)
+			{
+				printf("   ==> *** SKIPPED ***\n");
+			}
+			else
+			{
+				printf("   ==> %s\n", outpath);
+			}
+DD{
+                        printf("top %08x : big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",dfpos,
+                       big,big,bigextra,bigextra,med,med,small,small,smallextra,smallextra);
+}
+                }
+                else if (action==ACT_INDEX && skip_lib==FALSE)
+                {
+			/*
+			** user just wants a file list.. so print a slightly different message
+			**
+			*/
+
+                }               
+		/*
+		** if action is extract (-i not specified) and 
+		** not told to skip the lib (query lib option)
+		** and file is not continued (meaning it's already open)
+		** then open it
+		*/
+                if(action==ACT_EXTRACT && skip_lib==FALSE && !file_continued) 
+		{
+			out=fopen(outpath,"w");
+		}
+                fileeof=0;
+
+		/*
+		** if file isn't fixed recs (it is therefor a .tmp)
+		** and output file actually exists 
+		** and action is extract (-i not specified) 
+		** and file is not continued (meaning header was already written)
+		** then write a header
+		**
+		*/
+                if (spec_rec_type != RT_FIXED  && out!=NULL && action==ACT_EXTRACT
+			&& !file_continued) /* stamp an info struct for post-processing */
+                {
+                        struct my_header mh;
+			uint4	tmpu4;
+                  
+			/*
+			** include record type, (max) size, and count
+			** and file type 
+			**
+			*/
+			mh.rectype  = spec_rec_type;	/* normalize_byteorder(tmpu4 = spec_rec_type); */
+			mh.filetype = act_file_type;	/* normalize_byteorder(tmpu4 = act_file_type); */
+			mh.recsz    = recsz;		/* normalize_byteorder(tmpu4 = recsz); */
+			mh.reccnt   = reccnt;		/* normalize_byteorder(tmpu4 = reccnt); */
+
+                        if (1 != fwrite(&mh,sizeof(struct my_header),1,out))
+			{
+				fprintf(stderr,"\nERROR write of temp file header failed: %s [errno=%d]\n",outpath,errno);
+				perror("Writing temp file header");
+				errno = 0;
+			}
+                }
+		if (file_continued)
+		{
+			file_continued = FALSE;
+			big=med=0;
+			bigextra= 0x800-sizeof(struct tapeheader);
+			med=0;
+			small=smallextra=0;
+			saverecs=recs;
+		}
+		else
+		{
+			saverecs = 0;
+		}
+		
+		/*
+		** now loop, reading and writing file data until EOF or EOT
+		**
+		*/
+                while (!fileeof && !file_continued)
+                {
+                        DD{
+                                printf("toploop %08x r%d: big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",dfpos,recs,
+                                       big,big,bigextra,bigextra,med,med,small,small,smallextra,smallextra);
+                        }
+                        do
+                        {
+				/*
+				** not an eightmil, so process blocking stuff
+				**
+				*/
+                                if (!eightmil)
+                                {
+					/*
+					** big is zero, time for a new big block
+					**
+					*/
+                                        if (big==0)
+                                        {
+						/*
+						** get a four byte value, this value is the number of bytes
+						** in the big block
+						**
+						*/
+                                                if (bigextra) skipbytes(bigextra);
+                                                if (getbytes(LONG)<0) 
+						{
+							continue;
+						}
+                                                
+						/*
+						** extract the four bytes into our variable
+						**
+						*/
+                                                getbin((unsigned char *)&big,workbuf,LONG);
+						/*
+						** compute the extra garbage bytes.  Max big block size is
+						** 0x20000, so we subtract the big count from that and also
+						** four more (the four bytes we just read above)
+						**
+						*/
+                                                bigextra = 0x20000-big-4;
+                                                DD{
+                                                        printf("index: got big %x %x\n",big,bigextra);
+                                                }
+                                        }
+					/*
+					** same for medium blocks, if it's zero, read a new value
+					**
+					*/
+                                        if (med==0)
+                                        {
+                                                getbytes(LONG);
+                                                getbin((unsigned char *)&med,workbuf,LONG);
+                                                big-=LONG;
+                                                DD{
+                                                        printf("index: got med %x\n",med);
+                                                }
+                                                
+						/*
+						** if the med byte count is 0xffff0090 it means the
+						** file is done
+						**
+						*/
+                                                eofword=med;
+                                        }
+                                        if (med != 0xffff0090) 
+                                        {
+						/*
+						** in case you are wondering about this and other similarly
+						** placed continues, this error is caught at a later point
+						** not here, hence the continue
+						**/
+                                                if (getbytes(med)<0)
+						{
+							continue;
+						}
+						/*
+						** decrement big counter since we just read med bytes
+						**
+						*/
+                                                big -= med;     
+						/*
+						** stacked if follows:
+						** first decide if we're writing the file, then take
+						** actions based on if it's fixed len recs or otherwise
+						**
+						*/ 
+                                                if(action==ACT_EXTRACT && 
+                                                   skip_lib==FALSE && 
+                                                   out!=NULL && 
+                                                   !dont_unload_file)
+                                                if (spec_rec_type==RT_FIXED)
+                                                {
+                                                        int recs_this_block;
+							int offset;
+							/*
+							** first compute the number of recs in this medium
+							** block.  then loop and write each rec into the 
+							** output file with no processing on it.  Some bytes
+							** will be leftover at the end which are effectively 
+							** skipped
+							**/
+							recs_this_block = 2048/recsz;
+							for (offset=0;offset < med; offset+=2048)
+							{
+								if (oreccnt + recs_this_block > reccnt)
+								{
+									recs_this_block = reccnt - oreccnt;
+								}
+								if (recs_this_block)
+								{
+									writefixed(workbuf+offset,recs_this_block,recsz,out);
+								}
+								oreccnt += recs_this_block;
+							}
+                                                }
+                                                else
+                                                {
+							/*
+							** otherwise dump the entire medium block into the .tmp
+							** file as is.. the small block processing was moved 
+							** from here to the digest routine
+							**/
+                                                        if (fwrite(workbuf,1,med,out) != med)
+							{
+								fprintf(stderr,"\nERROR write to temp file failed: %s [errno=%d]\n"
+									,outpath,errno);
+								perror("Writing temp file");
+								errno = 0;
+							}
+                                                }
+                                        }
+					/*
+					** med block processed.  reset count
+					**
+					*/
+                                        med=0;
+                                }
+                                else
+                                {
+					/* 
+					** 8 mil tapes (USUALLY) have no big and medium blocking junk.
+					** apparently sometimes they are written differently and
+					** must be read without the -8
+					*/
+                                        int cnt;
+
+                                        if (spec_rec_type==RT_FIXED)
+                                        {
+						int cur, leftover;
+						
+						/*
+						** compute the leftover.  there are 0x800 blocks
+						** into which the recs are inserted. There will be unused
+						** bytes at the end of the 0x800 block
+						**
+						*/
+						leftover = 0x800 % recsz;
+						/*
+						** now loop and read and write the records
+						**
+						*/
+                                                for (cur=0, recs=saverecs; recs<reccnt; ++recs)
+                                                {
+							if (cur + leftover >= 0x800)
+							{
+								/*
+								** skip the extra bytes
+								**
+								*/
+								skipbytes(leftover);
+								cur=0;
+							}
+                                                        if (getbytes(recsz)<0)
+							{
+								goto endloop;
+							}
+							/*
+							** update cur counter
+							**
+							*/
+							cur+=recsz;
+
+							/*
+							** now if appropriate we actually write the fixed record
+							**
+							*/
+                                                        if(action==ACT_EXTRACT && 
+                                                           skip_lib==FALSE && 
+                                                           out!=NULL && 
+							   !dont_unload_file)
+							{
+								/*
+								** convert nulls to spaces if requested to
+								**
+								*/
+								if (recsz==80 && check_nulls) nulls2spaces(workbuf);
+								
+								/*
+								** write the record
+								**
+								*/
+								if (fwrite(workbuf,1,recsz,out) != recsz)
+								{
+									fprintf(stderr,"\nERROR write failed: [errno=%d]\n",errno);
+									perror("Writing out file");
+									errno = 0;
+								}
+								
+								if (add_lf==ADDLF)
+								{
+									fprintf(out,"\n");
+								}
+								else if (add_lf==GUESSLF && recsz==80)
+								{
+									fprintf(out,"\n");
+								}
+							}
+                                                }
+						/*
+						** now skip to next tape mark for next file
+						**
+						*/
+                                                readtape(0,0,RT_SKIPTOEND);
+                                        }
+                                        else /* rec type is not fixed */
+                                        {
+						/*
+						** just loop reading arbitrary sized blocks and write them
+						** to output .tmp file
+						**
+						*/
+                                                while (cnt=readtape(workbuf,0,RT_GETBLOCK)) /* skip was 1? */
+                                                {
+							if (cnt== -1)
+							{
+								goto endloop;
+							}
+                                                        if(action==ACT_EXTRACT && 
+                                                           skip_lib==FALSE && 
+                                                           out!=NULL && 
+							   !dont_unload_file)
+							{
+                                          			if (fwrite(workbuf,1,cnt,out) != cnt)
+								{
+									fprintf(stderr,"\nERROR write failed: [errno=%d]\n",errno);
+									perror("Writing out file");
+									errno = 0;
+								}
+							}
+                                                }
+
+                                        }
+					/*
+					** force the eofword value
+					*/
+                                        eofword = 0xffff0090;
+                                        
+                                }
+
+			      endloop: ;
+				
+                        } while (eofword != 0xffff0090 && !eoarchive && !eotape);
+
+			/* ^^
+			** keep looping until that med count is ffff0090 (or a tape mark  on an 8mil)
+			** or end of archive or end of tape
+			*/
+
+                        ++fileeof;
+                        continue;
+                }
+		/*
+		** fclose the output file if we have one 
+		**
+		*/
+                if (action==ACT_EXTRACT && skip_lib==FALSE && !file_continued) 
+		{
+			fclose(out);
+		}
+		
+		if (dont_unload_file)
+		{
+			unlink(outpath);
+		}
+        }
+	return 0;
+}
+/*
+**	Routine:	trim()
+**
+**	Function:	To trim spaces and modcodes from end of COBOL rec
+**
+**	Input:		pointer to 80 char buffer
+**			
+**
+**	Output:		None
+**			
+**
+**	Return:		None
+**
+**	Warnings:	don't use it if your clients want their modcodes
+**
+**	History:	at EOF
+**
+*/
+
+static int trim(unsigned char *buf)
+{
+        register unsigned char *p;
+	int i;
+	
+	if (check_nulls)
+	  nulls2spaces(buf);
+
+        buf[72]=(char)0;
+        p=buf+71;
+        while (*p==' ') --p;
+        ++p;
+        *p=(char)0;
+
+	return 0;
+}
+/*
+**	Routine:	nulls2spaces()
+**
+**	Function:	To replace nulls with spaces
+**
+**	Description:	To scan 80 bytes in a buffer and replace all nulls with spaces
+**
+**	Input:		buf   pointer to buffer
+**			
+**
+**	Output:		None
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	at EOF
+**
+*/
+
+static int nulls2spaces(unsigned char *buf)
+{
+	int i;
+
+	for (i=0; i<80; ++i) if (buf[i]==0x00) buf[i]=' ';
+
+	return 0;
+}
+
+/*
+** return a byte repeated
+**
+*/
+static char *reptstr(int ch, int cnt)
+{
+        static char rept[128];
+        
+        memset(rept,ch,cnt);
+        rept[cnt]=(char)0;
+        return rept;
+}
+
+/*
+**	Routine:	buildrec()
+**
+**	Function:	To uncompress a compressed record
+**
+**	Input:		src    - compressed record
+**			dest   - receiving buffer
+**                      size   - number of bytes in src
+**
+**	Output:		uncompressed record left in dest
+**			
+**
+**	Return:		None
+**
+**	Warnings:	it's a state machine
+**
+**	History:	at EOF
+**
+*/
+
+static int bldrec(unsigned char *src, unsigned char *dest, int size)       /* need to redo states START COMP0 COMP and NEXTCOMP */
+{
+	/*
+	** in_i  - input index
+	** ch    - current character
+	** next  - next character
+	*/
+        register unsigned int in_i,ch,cnt,next,out_i;
+        register int state;
+
+        char *states[6];
+        
+	/*
+	** names of states for diagnostic output 
+	**
+
+        states[0]="start";
+        states[1]="normal";
+        states[2]="comp";
+        states[3]="nextcomp";
+        states[4]="end";
+        states[5]="comp0";
+
+	** uncomment and use if desired
+	**
+	*/
+
+        state=ST_START;
+        in_i=out_i=0;
+        next=65535;
+        
+	/*
+	** the state machine is mostly obvious in how it works.  the 
+	** reason why I wrote the "next" logic is unclear.  It appears
+	** to account for a certain anomoly sometimes seen in the compressed
+	** records
+	*/
+        while (state != ST_END)
+        {
+                ch=src[in_i];
+
+                switch (state)
+                {
+                      case ST_START:
+                        if (ch>=0x80)
+                        {
+                                cnt=ch-0x80+1;
+                                state=ST_COMP;
+                        }
+                        else 
+                        {
+                                next=ch+1;
+                                state=ST_NORMAL;
+                        }
+                        ++in_i;
+                        break;
+                      case ST_NORMAL:
+                        dest[out_i]=ch;
+                        ++out_i;
+                        ++in_i;
+                        break;
+                      case ST_COMP0:
+                        if (ch>=0x80)
+                        {
+                                cnt=ch-0x80+1;
+                                state=ST_COMP;
+                        }
+                        else 
+                        {
+                                next=ch+1;
+                                state=ST_NORMAL;
+                        }
+                        ++in_i;
+                        break;
+                      case ST_COMP:
+                        memcpy(&dest[out_i],reptstr(ch,cnt),cnt);
+                        ++in_i;
+                        out_i += cnt;
+                        if (src[in_i]>=0x80) state=ST_COMP0;
+                        else state=ST_NEXTCOMP;
+                        break;
+                      case ST_NEXTCOMP:
+                        next=ch+1;
+                        state=ST_NORMAL;
+                        ++in_i;
+                        break;
+                }
+                if (in_i>=size) state=ST_END;
+                if (next==0) { state=ST_COMP0; next=65535; }
+                else --next;
+        }
+
+	return 0;
+}
+/*
+** call readtape to load data into workbuf
+**
+*/
+static int getbytes(int cnt)
+{
+        int pos;
+        
+        if(cnt<=0)return 0;
+        pos=readtape(workbuf,cnt,RT_GETBYTES);
+        return pos;
+}
+/*
+** call readtape to skip data
+**
+*/
+static int skipbytes(int cnt)
+{
+        int tmp;
+        
+        if (cnt<=0)return 0;
+
+        tmp=readtape(NULL,cnt,RT_SKIPBYTES);
+        return tmp;
+}
+/*
+** lowercase an entire string
+**
+*/
+static int lower(char *p)
+{
+        while (*p)
+        {
+                *p = tolower(*p);
+                ++p;
+        }
+	return 0;
+}
+/*
+** parse the options
+**
+*/
+static int parseopts(int c, char **v)
+{
+        int i,num,type,val;
+        char *destval;
+
+
+	strcpy(arch_file,TAPEDEV);
+        strcpy(src_ext,DEF_SRC_EXT);
+        strcpy(norm_ext,DEF_NORM_EXT);
+        
+        for (i=1;i<c;)
+        {
+                matchopt(v[i],&num,&type,&destval,&val);
+		if (num == -1 && process_tmps) return;
+                if (num == -1) fprintf(stderr,"bad option \"%s\"\n",v[i]);
+                if (type==OPT_INT) *((int*)destval)=val;
+                else if (type==OPT_STRING) 
+                {
+                        if (strlen(v[i])!=strlen(optlist[num].opt)) strcpy(destval,v[i]+strlen(optlist[num].opt));
+                        else strcpy(destval,v[++i]);
+                }
+                ++i;
+        }
+	if (strlen(tape_rq_str))
+	{
+		tape_blocksz=atoi(tape_rq_str);
+	}
+#ifdef ATT3B2
+	if (tape_blocksz>5120) 
+	  tape_blocksz=5120;
+#endif
+
+	return 0;
+}
+/*
+** match a single option
+**
+*/
+static int matchopt(char *opt, int *num, int *type, char **destval, int *val)
+{
+        struct optstruct *p;
+        int i;
+        
+        for(i=0,p=optlist;p->opt;++p,++i)
+        {
+                if (!strncmp(opt,p->opt,strlen(p->opt)))
+                {
+                        *num=i;
+                        *type=p->type;
+                        *destval=p->optdest;
+                        *val=p->optval;
+                        return;
+                        
+                }
+                
+        }
+        *num= -1;
+        *type = OPT_BAD;
+
+	return 0;
+}
+/*
+** get a binary value
+**
+*/
+static void getbin(unsigned char *dest, unsigned char *src, int cnt)
+{
+        if (byteorder==ORDER_NORMAL)
+	{
+		memcpy(dest,src,cnt);
+		return;
+	}
+        --cnt;
+        while (cnt>=0)
+        {
+                *dest++ = *(src+cnt);
+                --cnt;
+        }
+        return;
+}
+/*
+** set byte order
+**
+*/
+static void setord(void)
+{
+        int foo=0x12345678;
+        if ((((char*)&foo)[0])==0x78) byteorder=ORDER_REVERSE;
+        else byteorder=ORDER_NORMAL;
+}
+/*
+**	Routine:	normalize_byteorder()
+**
+**	Function:	To convert a 4 byte value into a neutral format
+**
+**	Description:	on a order reverse machine, reverse the bytes
+**
+**	Input:		value to normalize
+**			
+**
+**	Output:		None
+**			
+**
+**	Return:		normalized value
+**
+**	Warnings:	None
+**
+**	History:	08/16/94   written by JEC
+**
+*/
+
+static uint4 normalize_byteorder(uint4 value)
+{
+	uint4 retval;
+	unsigned char *source, *dest;
+	
+	if (byteorder == ORDER_NORMAL)
+	{
+		return value;
+	}
+
+	source= (unsigned char *) &value;
+	dest = (unsigned char *) &retval;
+
+	dest[0] = source[3];
+	dest[1] = source[2];
+	dest[2] = source[1];
+	dest[3] = source[0];
+
+	return retval;
+}
+
+static int usage(void)
+{
+	fprintf(stderr,"VSX Release V%s %s\n",VERSION,MODDATE);
+	fprintf(stderr,"%s\n",copyright);
+        fprintf(stderr,"\nusage:\nvsx [-f <device or file>] [ -nrw <norewind file> ] [-e.ext] [-i] [-lnu] [-fnu]\n");
+        fprintf(stderr,"   -f <archive> specify device or file containing archive (default: %s)\n",TAPEDEV);
+        fprintf(stderr,"   -nrw <tape>  specify no-rewind device file\n",TAPEDEV);
+        fprintf(stderr,"   -es.ext      append .ext to all source files created (normally .wcb)\n");
+        fprintf(stderr,"   -en.ext      append .ext to all normal files created (normally .seq)\n");
+        fprintf(stderr,"   -i           generate list of files in archive (do not extract)\n");
+        fprintf(stderr,"   -lnu         generate uppercase directory names\n");
+        fprintf(stderr,"   -fnu         generate uppercase file names\n");
+        fprintf(stderr,"   -tl          query for filetype (source vs. nonsource) per library\n");
+        fprintf(stderr,"   -q           query before restoring each library\n");
+        fprintf(stderr,"   -8           archive is an 8 millimeter tape or 9-track reel tape\n");
+        fprintf(stderr,"   -null        examine cobol source for embedded null values and fix\n");
+        fprintf(stderr,"   -tmp <*.tmp> process .tmp files left over in case of vsx premature abort\n");
+        fprintf(stderr,"   -lf          add linefeeds between records on all files\n");
+        fprintf(stderr,"   -nolf        do not add linefeeds to any files\n");
+        fprintf(stderr,"                (vsx normally adds linefeeds only to files with 80 byte records)\n");
+        fprintf(stderr,"   -trim        trim spaces and modcodes from COBOL source\n");
+        fprintf(stderr,"   -bs <size>   specify blocksize for tape reads\n");
+        fprintf(stderr,"   -ua          unload all files including Indexed and Prog files\n");
+#ifdef SOLARIS
+	fprintf(stderr,"   -3480        tape device is a Wang 3480\n");
+#endif
+        exit(1);
+	return 0;
+}
+
+static int savemode(void)
+{
+        ioctl(0,TCGETA,&old);
+	return 0;
+}
+
+static int rawmode(void)
+{
+        new=old;
+        new.c_cc[VMIN]=1;
+        new.c_cc[VTIME]=0;
+        new.c_lflag &= ~ICANON;
+        new.c_iflag = 0;
+        ioctl(0,TCSETA,&new);
+	return 0;
+}
+
+static int normalmode(void)
+{
+        ioctl(0,TCSETA,&old);
+	return 0;
+}
+
+static int setdebuginfo(void)
+{
+        char *p;
+        
+        if (strlen(debug_level_str)) 
+          debug_level=atoi(debug_level_str);
+
+        if (strlen(debug_range))
+        {
+                p=strchr(debug_range,':');
+                if (p==debug_range)
+                {
+                        debug_start=1;
+                        debug_end=atoi(++p);
+                        return 0;
+                }
+                else if (p)
+                {
+                        *p++ =(char)0;
+                        debug_start=atoi(debug_range);
+                        debug_end=atoi(p);
+                        return 0;
+                }
+                else
+                {
+                        debug_start=atoi(debug_range);
+                        debug_end=999999;
+                        return 0;
+                }
+        }  
+        else
+        {
+                debug_start=1;
+                debug_end=999999;
+                return 0;
+        }               
+}
+
+static int pushname(char *str)
+{
+        struct stack_node *new_node;
+        
+        if (head==NULL)
+        {
+                new_node=stackp=head=(struct stack_node *)calloc(1,sizeof(struct stack_node));
+                head->prev = NULL;
+        }
+        else
+        {
+                new_node=(struct stack_node *)calloc(1,sizeof(struct stack_node));
+                new_node->prev = stackp;
+        }
+        new_node->name = (unsigned char*) strdup(str);
+        stackp = new_node;
+
+	return 0;
+}
+
+static char *getname(void)
+{
+        char *tmp;
+        struct stack_node *save;
+
+        if (!process_tmps)
+	{
+		if (stackp==NULL) return NULL;
+		tmp = (char*)stackp->name;
+		save = stackp;
+		stackp = stackp->prev;
+		free(save);
+		return tmp;
+	}
+	else
+	{
+		if (*arg_list == NULL) return NULL;
+		while(**arg_list=='-') ++arg_list;
+		return *arg_list++;
+	}
+}
+
+static int postprocess(void)
+{
+        char *inname,*getname(void);
+        int dummy;
+        
+        while (inname=getname())
+        {
+                if (fork()) wait(&dummy);
+                else
+                {
+                        digest(inname);
+                        exit(0);
+                }
+        }
+
+	return 0;
+}
+
+void baddata(int sig)
+{
+        fprintf(stderr," file appears corrupted\n");
+        exit(1);
+}
+/*
+**	Routine:	digest()
+**
+**	Function:	To process a compressed record file
+**
+**	Input:		name   - name of file
+**			
+**
+**	Output:		None
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	at EOF
+**
+*/
+static int digest(char *name)
+{
+        char *p;
+	unsigned char *recbuf;
+        struct my_header foo;
+        FILE *in,*out;
+        char outname[100];
+        unsigned short small, smallextra, curlen;
+        int recs, recsz,reccnt, the_size;
+	int	rc;
+
+        signal(SIGINT,  baddata );
+        signal(SIGQUIT, baddata );
+        signal(SIGILL,  baddata );
+        signal(SIGEMT,  baddata );
+        signal(SIGBUS,  baddata );
+        signal(SIGSEGV, baddata );
+
+        printf("%-22s",name); fflush(stderr);
+
+	if ((in=fopen(name,"r")) == NULL)
+	{
+                fprintf(stderr,"\nERROR cannot open temp file: %s [errno=%d]\n",name,errno);
+		perror("Opening temp file for reading");
+		errno = 0;
+		return 1;
+	}
+
+        strcpy(outname,name);
+        p=strchr(outname,'.');
+        if (!p)
+        {
+                fprintf(stderr,"\nERROR bad temp filename: %s\n",outname);
+                fclose(in);
+		return 1;
+        }
+
+        rc = fread(&foo,sizeof(struct my_header),1,in);
+	if (1 != rc)
+	{
+                fprintf(stderr,"\nERROR read of temp file header failed: %s [errno=%d]\n",name,errno);
+		perror("Reading temp file header");
+		errno = 0;
+                fclose(in);
+		return 1;
+	}
+	
+        spec_rec_type 	= foo.rectype;		/* normalize_byteorder(foo.rectype); */
+        act_file_type 	= foo.filetype;		/* normalize_byteorder(foo.filetype); */
+        recsz 		= foo.recsz;		/* normalize_byteorder(foo.recsz); */
+        reccnt 		= foo.reccnt;		/* normalize_byteorder(foo.reccnt); */
+
+        recbuf=(unsigned char *)calloc(recsz+1,1);
+        
+        if (act_file_type==FT_SRC) 	strcpy(p,src_ext);
+        else if (act_file_type==FT_PRT) strcpy(p,orgtypeext[ORG_PRINT]);
+        else if (act_file_type==FT_REL) strcpy(p,orgtypeext[ORG_REL]);
+        else 				strcpy(p,norm_ext);
+
+        printf(" ==>  %-24s : ",outname); fflush(stdout);
+        
+        if ((out = fopen(outname,"w"))==NULL)
+        {
+                fprintf(stderr,"\nERROR cannot open output: %s [errno=%d]\n",outname,errno);
+		perror("Opening output file for writing");
+		errno = 0;
+		fclose(in);
+	        free(recbuf);
+		return 1;
+        }
+
+        recs=small=smallextra=0;
+        while (recs<reccnt)
+        {
+                if (small==0)
+                {
+                        if (smallextra) 
+			{
+				the_size = smallextra;
+				rc = fread(workbuf,1,the_size,in);
+				if (rc != the_size)
+				{
+					fprintf(stderr, "\nERROR read failed: %s [errno=%d] (smallextra)\n",name,errno);
+					if (feof(in))
+					{
+						fprintf(stderr, "Premature EOF\n");
+					}
+					else
+					{
+						perror("Reading temp file");
+						errno = 0;
+						fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
+							recs, reccnt,small,smallextra,rc,the_size);
+					}
+					fclose(in);
+					fclose(out);
+				        free(recbuf);
+					return 1;
+				}
+
+			}
+			the_size=2;
+                        rc = fread(workbuf,1,the_size,in);
+			if (rc != the_size)
+			{
+				fprintf(stderr, "\nERROR read failed: %s [errno=%d] (first bin)\n",name,errno);
+				if (feof(in))
+				{
+					fprintf(stderr, "Premature EOF\n");
+				}
+				else
+				{
+					perror("Reading temp file");
+					errno = 0;
+					fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
+						recs, reccnt,small,smallextra,rc,the_size);
+				}
+				fclose(in);
+				fclose(out);
+			        free(recbuf);
+				return 1;
+			}
+                        getbin((unsigned char *)&small,workbuf,2);
+                        smallextra = 0x800 - small;
+                        small -= 2;
+
+                }
+		the_size = 2;
+                rc = fread(workbuf,1,the_size,in);
+		if (rc != the_size)
+		{
+			fprintf(stderr, "\nERROR read failed: %s [errno=%d] (second bin)\n",name,errno);
+			if (feof(in))
+			{
+				fprintf(stderr, "Premature EOF\n");
+			}
+			else
+			{
+				perror("Reading temp file");
+				errno = 0;
+				fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
+						recs, reccnt,small,smallextra,rc,the_size);
+			}
+			fclose(in);
+			fclose(out);
+		        free(recbuf);
+			return 1;
+		}
+                getbin((unsigned char *)&curlen,workbuf,2);
+
+		the_size = curlen-2;
+                rc = fread(workbuf,1,the_size,in);
+		if (rc != the_size)
+		{
+			fprintf(stderr, "\nERROR read failed: %s [errno=%d] (record)\n",name,errno);
+			if (feof(in))
+			{
+				fprintf(stderr, "Premature EOF\n");
+			}
+			else
+			{
+				perror("Reading temp file");
+				errno = 0;
+				fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
+					recs, reccnt,small,smallextra,rc,the_size);
+			}
+			fclose(in);
+			fclose(out);
+		        free(recbuf);
+			return 1;
+		}
+                small -= curlen;
+                if (spec_rec_type == RT_COMPRESSED) 
+		{
+			bldrec(workbuf,recbuf,curlen-2);
+		}
+                else 
+		{
+			memcpy(recbuf,workbuf,recsz);
+			recbuf[recsz]=(char)0;
+		}
+		
+                ++recs;
+
+		the_size = recsz;
+		
+		if (act_file_type == FT_SRC || act_file_type == FT_PRT)
+		{
+			recbuf[recsz]=(char)0;
+		}
+		
+                if ((act_file_type == FT_SRC && trim_source==TRUE) || (act_file_type == FT_PRT))
+		{
+			trim(recbuf);
+			the_size = strlen((char*)recbuf);
+		}
+
+                rc = fwrite(recbuf, 1, the_size, out);
+		if (rc != the_size)
+		{
+	                fprintf(stderr,"\nERROR write failed: %s [errno=%d]\n",outname,errno);
+			perror("Writing output file");
+			errno = 0;
+			fclose(in);
+			fclose(out);
+		        free(recbuf);
+			return 1;
+		}
+
+                if ((add_lf==ADDLF) ||
+		    (add_lf==GUESSLF && act_file_type == FT_SRC && recsz==80) ||
+		    (act_file_type == FT_PRT))
+		{
+                	fprintf(out,"\n");
+		}
+
+        }
+        printf("%5d recs of %4d bytes\n",reccnt,recsz);
+        
+        fclose(in);
+	fclose(out);
+        free(recbuf);
+        unlink(name);
+
+	return 0;
+}
+
+static int writefixed(unsigned char *buf, int recs, int size, FILE *f)
+{
+        while (recs)
+        {
+		if (size==80 && check_nulls) nulls2spaces(buf);
+		
+                if (fwrite(buf,1,size,f) != size)
+		{
+			fprintf(stderr,"\nERROR write failed: [errno=%d]\n",errno);
+		}
+                buf += size;
+                --recs;
+
+
+                if ((add_lf==ADDLF) ||
+		    (add_lf==GUESSLF && act_file_type == FT_SRC && size==80) ||
+		    (act_file_type == FT_PRT))
+		{
+                	fprintf(f,"\n");
+		}
+        }
+
+	return 0;
+}
+
+static int chk_valid_hdr(void)
+{
+	char volseq;
+	int vsxdump;
+
+	if (strncmp("ENCF",(char *)tapehdr->encfhdr,4))
+	{
+		close(tape_fd);
+		tape_fd= -1;
+		tapebytes=0;
+		vsxdump=open(".vsxdump",O_WRONLY|O_CREAT|0666);
+		write(vsxdump,tapebuf,tapebytes);
+		close(vsxdump);
+		if (new_vol)
+		{
+			fprintf(stderr,"Volume header appears to be bad.\n");
+			return -1;
+		}
+		else
+		{
+			fprintf(stderr,"Bad file header.\n");
+			postprocess();
+			handler(0);
+		}
+	}
+	if (strlen(expected_vol)==0)
+	  return 1;
+	if (new_vol && strncmp(expected_vol,(char *)tapehdr->vol1,6))
+	{
+		fprintf(stderr,"Warning: Incorrect volume label. [%6.6s/%6.6s/%6.6s]\n",
+			tapehdr->vol1,tapehdr->tapevol,expected_vol);
+	}
+	else new_vol=FALSE;
+	return 1;
+#ifdef NOT_USED
+	volseq = tapehdr->backsection[0];
+	if (volseq != expected_seq)
+	{
+		close(tape_fd);
+		tape_fd= -1;
+		tapebytes=0;
+		fprintf(stderr,"Tape appears to have incorrect sequence number (%d).  Expected %d.\n",
+			volseq, expected_seq);
+		return -1;
+	}
+	return 1;
+#endif
+}
+
+static int prompt_new_tape(void)
+{
+	fprintf(stderr,"Insert next backup tape (volume: %6.6s).\n",
+		expected_vol);
+	fprintf(stderr,"Press return when ready\n");
+	getchar();
+	new_vol=TRUE;
+
+	return 0;
+}
+
+#ifdef SOLARIS
+static void load3480(char *tapedev, int cartridge)
+{
+	int fd;
+	struct mtop mt_command;
+
+	quickkludge:
+	if ((fd = open(tapedev, O_RDONLY)) < 0) {
+		if (errno == EIO) {
+#if 0
+			fprintf(stderr, "%s: no tape loaded or drive offline\n", 
+				tapedev);
+#endif
+			fprintf(stderr,"Please LOAD the first tape in the sequence and press Return.\n");
+			getchar();
+			goto quickkludge;
+		}
+		else {
+		    perror("open() 3480 tape drive");
+		}
+	exit(1);
+	}
+	if (cartridge > 0)
+	{
+		mt_command.mt_op=MTOFFL;
+		mt_command.mt_count = 1;
+
+		if (ioctl(fd,MTIOCTOP,&mt_command)<0)
+		{
+			perror("vsx: while attempting to load next tape");
+			exit(1);
+		}
+	}
+	close(fd);
+#if 0
+	/*
+	 * zero out the cdb
+	 */ 
+	 memset((char *) &cdb, 0, sizeof(cdb));
+  
+/*
+ *  position or eject the loader
+ */
+	cdb.scc_cmd = 0x02;			/* byte 0 */
+	cdb.scc_lun = 0;			/* byte 1 (bits 7-5) */
+	cdb.t_code = eflag << 1;		/* byte 1 (bits 4-0) */
+	cdb.low_count = cartridge;		/* byte 4 */
+	
+	/*
+	 *  fill the uscsi structure
+	 */
+	memset((char *) &ucmd, 0, sizeof(ucmd));
+	ucmd.uscsi_cdb = (char *) &cdb;
+	ucmd.uscsi_cdblen = CDB_GROUP0;
+	ucmd.uscsi_bufaddr = (caddr_t) NULL;
+	ucmd.uscsi_buflen = 0;
+	ucmd.uscsi_flags = USCSI_READ;
+	
+	if (ioctl(fd, USCSICMD, &ucmd) < 0) {
+		perror("vsx: position tape failed");
+		exit(errno);
+	}
+
+
+/*
+ *  load the tape if we just positioned the loader and don't if we
+ * just did an eject
+ */
+	if (!eflag) {
+		/*
+		 *	Load (tape)
+		 */
+		cdb.scc_cmd = 0x1b;			/* byte 0 */
+		cdb.scc_lun = 0;			/* byte 1 (bits 7-5) */
+		cdb.low_count = 1;			/* byte 4 */
+	
+		/*
+		 *  fill the uscsi structure
+		 */
+		memset((char *) &ucmd, 0, sizeof(ucmd)); 
+		ucmd.uscsi_cdb = (char *) &cdb;
+		ucmd.uscsi_cdblen = CDB_GROUP0;
+		ucmd.uscsi_bufaddr = (caddr_t) NULL;
+		ucmd.uscsi_buflen = 0;
+		ucmd.uscsi_flags = USCSI_READ;
+	
+		if (ioctl(fd, USCSICMD, &ucmd) < 0) {
+			perror("vsx: load next tape failed");
+			exit(errno);
+		}
+	}
+#endif
+}
+#endif
+/*
  * $Log: vsx.c,v $
+ * Revision 1.85  1997-09-11 09:11:43-04  gsl
+ * Finish up the improvements to recognizing file orgs and types.
+ * It now fully understands the FDR1ORG and FDR1FLAGS bit masks.
+ * Now it recognizes RELATIVE files and doesn't unload them.
+ * The output report has been reformated to match the VS BACKUP.
+ *
+ * Revision 1.84  1997-09-09 21:14:32-04  gsl
+ * VSX now recognizes PROG and PRINT file types.
+ * The PROG are programs which are treated like INDEXD files and ingnored.
+ * The PRINT are printer files and are treated like text files.
+ *
+ * Revision 1.83  1997-06-05 12:54:09-04  scass
+ * Corrected definition for setord.  No return value so
+ * changed int to void
+ *
+ * Revision 1.82  1995-06-13 07:19:06-04  gsl
+ * fix warning
+ *
+ * Revision 1.81  1995/06/13  09:57:54  gsl
+ * change NEED_STRDUP to NOSTRDUP on the #ifdef
+ *
+ * Revision 1.80  1995/05/01  09:18:38  gsl
+ * Added even more verbose error messages and error checking.
+ *
+ * Revision 1.79  1995/04/27  11:32:46  gsl
+ * added error checking around all the fread() and fwrite() rotuines.
+ *
+ * Revision 1.78  1995/04/27  10:21:47  gsl
+ * Removed the normalize_byteorder() logic.
+ * Embed the vsx.h inline. (vsx.h is now oboslete)
+ * prototyped the rest of the routines.
+ *
+ * Revision 1.77  1995/04/26  15:51:28  gsl
+ * normalize on both in and out
+ *
+ * Revision 1.76  1995/04/26  14:43:25  gsl
+ * fix the routine normalize_byteorder() as it was broken for
+ * little-endian machines.
+ * This likely caused the COMPRESSED files to break.
+ *
+ * Revision 1.75  1995/04/25  09:58:45  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.74  1995/04/17  11:51:10  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.73  1995/02/06  14:49:13  gsl
+ * fix copyright
+ *
+ * Revision 1.72  1995/02/02  11:06:22  gsl
+ * fixed the copyright messages to Devtech
+ * and fixed some compiler warnings
+ *
+ * Revision 1.71  1995/02/02  10:44:19  gsl
+ * fix duplicate copyright
+ *
+ * Revision 1.70  1995/02/01  00:45:30  gsl
+ * added devtech copyright
+ *
+ * Revision 1.69  1995/01/31  23:08:48  gsl
+ * Merged in the 1.64.1.1 changes that JEC made at SFG.
+ * Only two areas have changed and I enclosed then in ifdef REV_1_64_1_1
+ * for now until I can figure out what they do.
+ *
+ * Revision 1.68  1995/01/31  00:28:13  gsl
+ * fix a missing end of comment
+ * VSX is now in sync
+ *
+ * Revision 1.67  1994/09/21  18:42:26  jockc
+ * small code cleanup
+ *
+ * Revision 1.66  1994/09/21  18:26:49  jockc
+ * take out gnu protoize sysfunc protos
+ *
+ * Revision 1.65  1994/09/21  18:24:46  jockc
+ * code cleanup
+ *
+ * Revision 1.64  1994/05/03  01:34:19  jockc
+ * restore var file handling
+ *
+ * Revision 1.63  1994/04/04  17:06:54  jockc
+ * dgux 9 track tape fix
+ *
+ * Revision 1.62  1994/03/16  18:26:50  jockc
+ * changed ifdef SOLARIS3480 to ifdef SOLARIS
+ *
+ * Revision 1.61  1994/03/15  20:15:45  jockc
+ * move the code around a little
+ *
+ * Revision 1.60  1994/03/15  20:10:29  jockc
+ * added code to handle 3480 autoloading tape drive.
+ * changed var file handling a tad.. var files appear to look like fixed
+ *
  * Revision 1.59  1993/11/08  19:04:57  jockc
  * rename loop var from open: to openloop:
  *
@@ -207,1196 +3222,3 @@
  *
  */
 
-#ifndef lint
-static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-#endif
-static char rcsid[] = "$Id:$";
-
-static char VERSION[5];
-static char MODDATE[20];
-
-#include <stdio.h>
-#include <fcntl.h>
-#include "vsx.h"
-#include "idsistd.h"
-
-int tape_fd = -1;
-int tapebytes =0;
-
-main(argc,argv)
-int argc;
-char **argv;
-{
-        char *p,*e,*strchr();
-	void handler();
-	
-        memset(VERSION,0,sizeof(VERSION));
-        p=strchr(rcsid,' ');
-        p=strchr(++p,' ');
-        e=strchr(++p,' ');
-        
-        memcpy(VERSION,p,e-p);
-        memset(MODDATE,0,sizeof(MODDATE));
-        p=strchr(++e,' ');
-        memcpy(MODDATE,e,p-e);
-
-        setbuf(stderr,NULL);
-        
-        if (argc==2 && argv[1][0]=='-' && (argv[1][1]=='?'||argv[1][1]=='h')) usage();
-        else
-          fprintf(stderr,"VSX Release V%s (c)IDSI %s - 'vsx -h' for help\n",VERSION,MODDATE);
-
-        setord();
-        savemode();
-        
-        parseopts(argc,argv);
-	if (eightmilx)
-	  eightmil = TRUE;
-	
-	if (process_tmps)
-	{
-		arg_list = ++argv;
-		postprocess();
-		handler(0);
-	}
-        setdebuginfo();
-        if (debug_level) { printf("debug level %d: files %d thru %d\n",debug_level,debug_start,debug_end);}
-
-	if (strlen(norwd_file))
-	{
-		fprintf(stderr,"\nArchive file: %s\n",norwd_file);
-	}
-	else
-	{
-		fprintf(stderr,"\nArchive file: %s\n",arch_file);
-	}
-
-        signal(SIGINT,  handler );
-        signal(SIGQUIT, handler );
-        signal(SIGILL,  handler );
-        signal(SIGEMT,  handler );
-        signal(SIGBUS,  handler );
-        signal(SIGSEGV, handler );
-        load();
-        printf("end of archive reached..\npostprocessing:\n");
-        postprocess();
-        handler( 0 );
-        /*NOTREACHED*/
-}
-void handler(sig)
-int sig;
-{
-        fprintf(stderr,"\nVSX exiting.\n");
-	if (tape_fd != -1)
-		close(tape_fd);
-        exit(0);
-}
-readtape(buf,bytesrq,command)
-unsigned char buf[];
-int bytesrq,command;
-{
-        static int bufpos = 0;
-        int stat, bytes;
-        static int tapepos=0, file8num=0, readzero=0;
-	static int fileseq= -1;
-	static int eots=0;
-	
-DD{
-fprintf(stderr,"readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
-        bytesrq,
-	command==RT_SKIPTOEND?"skip to end":
-	command==RT_GETBLOCK?"get block":
-	command==RT_GETBYTES?"get bytes":
-	command==RT_SKIPBYTES?"skip bytes":"",
-        tapebytes,bufpos,tape_blocksz);
-}
-DDD{
-fprintf(stderr,"readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
-        bytesrq,
-	command==RT_SKIPTOEND?"skip to end":
-	command==RT_GETBLOCK?"get block":
-	command==RT_GETBYTES?"get bytes":
-	command==RT_SKIPBYTES?"skip bytes":"",
-        tapebytes,bufpos,tape_blocksz);
-}
-	if (fileseq == -1)
-	{
-		fileseq = debug_start;
-	}
-        if(command==RT_SKIPTOEND) 
-        { 
-                tapebytes=0;
-
-                do 
-                { 
-                        stat=read(tape_fd,tapebuf,tape_blocksz); 
-DDD{
-printf("skipping %d %c%c%c%c\n",stat,tapebuf[0],tapebuf[1],tapebuf[2],tapebuf[3]); 
-}
-                } while (stat); 
-
-                return 0;     
-        }
-
-        if (command == RT_GETBLOCK)
-        {
-                int ret;
-               
-                if (tapebytes)
-                {
-                        memcpy(buf,tapebuf+bufpos,tapebytes);
-                        ret=tapebytes;
-                        tapebytes=0;
-                }
-                else
-                {
-                        tapebytes = read(tape_fd,tapebuf,tape_blocksz);
-                        memcpy(buf,tapebuf,tapebytes);
-                        ret=tapebytes;
-			tapebytes=0;
-                }
-                return ret;
-        }
-        for (bytes=0; bytes < bytesrq; )
-        {
-                if (tape_fd == -1)
-                {
-			if (eightmilx)
-			{
-				sprintf(arch_file,"file%d",fileseq++);
-			}
-                        tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY);
-			eotape=FALSE;
-                        if (tape_fd<0) 
-                        {
-			      openloop:
-				
-				if (errno==ENXIO)
-				{
-					fprintf(stderr,"Place device %s ONLINE and press Return.\n",
-						arch_file);
-					getchar();
-					goto openloop;
-				}
-				else
-				{
-					fprintf(stderr,"Error opening %s: %s (errno=%d)\n",
-						arch_file,sys_errlist[errno],errno);
-					handler();
-				}
-                        }
-                }
-                if (tapebytes == 0)
-                {
-		      loop:
-                        tapebytes = read(tape_fd,tapebuf,tape_blocksz);
-DDD{
-fprintf(stderr,"read %d bytes, bytes rqd is %d\n",tapebytes,bytesrq);
-}                       
-
-				
-
-				
-#ifdef ATT3B2
-			if (tapebytes<0 && errno = ENXIO)
-			{
-				tapebytes=0;
-			}
-#endif
-                        if (tapebytes<0) 
-                        {
-                                fprintf(stderr,"Error reading %s: %s (errno=%d)\n",
-					arch_file,sys_errlist[errno],errno);
-                                exit(1);
-                        }
-                        if (tapebytes == 0 && !eightmil)
-                        {       
-				if (!eotape)
-				{
-					if (eots==0)
-					{
-						fprintf(stderr,"\nEnd of tape encountered.\n");
-						eotape=TRUE;
-						++eots;
-						if (strlen(norwd_file))
-						{
-							close(tape_fd);
-							tape_fd =  -1; 
-						}
-						geteot();
-					}
-					else
-					{
-						return -1;
-					}
-				}
-				else
-				{
-					fprintf(stderr,"\nMissing EOT block.  Check tape or try running\n");
-					fprintf(stderr,"VSX again using the no-rewind device.\n");
-					fprintf(stderr,"\n");
-					return -1;
-				}
-				fprintf(stderr,"Rewinding tape\n");
-				tapebytes=0;
-				close(tape_fd);
-				if (strlen(norwd_file))
-				{
-					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
-					{
-						int  rwd;
-						rwd=open(arch_file,O_RDONLY);
-						close(rwd);
-					}
-					else
-					{
-						fprintf(stderr,"Unable to rewind.  When using -nrw <tape>, specify the\nrewind on close device as -f <tape>.\n");
-					}
-				}
-				tape_fd =  -1; 
-                                return -1;
-                        }
-			if (eightmil && tapebytes == 48)
-			{
-				if (!eotape)
-				{
-					eotape=TRUE;
-					fprintf(stderr,"\nEnd of tape encountered.\n");
-					geteot();
-				}
-				else
-				{
-					fprintf(stderr,"\nMissing EOT block.  Verify tape and try again.\n");
-					fprintf(stderr,"\n");
-				}
-				fprintf(stderr,"Rewinding tape\n");
-				tapebytes=0;
-				close(tape_fd);
-				tape_fd =  -1; 
-				return -1;
-			}
-			if (eightmilx && tapebytes==0)
-			{
-				close(tape_fd);
-				tape_fd =  -1; 
-				if (fileseq == debug_end)
-				{
-					eotape=TRUE;
-					return -1;
-				}
-			}
-                        bufpos=0;
-                }
-                if ((bytesrq-bytes) < tapebytes)
-                {
-                        if (command != RT_SKIPBYTES) 
-			  memcpy(buf+bytes,tapebuf+bufpos,bytesrq-bytes);
-                        bufpos += (bytesrq - bytes);
-                        tapebytes -= (bytesrq-bytes);
-                        bytes=bytesrq;
-                }
-                else
-                {
-                        if (command != RT_SKIPBYTES) 
-			  memcpy(buf+bytes,tapebuf+bufpos,tapebytes);
-                        bytes += tapebytes;
-                        tapebytes=0;
-                }
-        }
-        tapepos += bytesrq;
-        return tapepos;
-}
-geteot()
-{
-	struct tapetrailer x;
-	FILE *eotlog;
-	short seq;
-	void getbin();
-	int st;
-	
-	if (!eightmil)
-	{
-		st = readtape(&x,sizeof(x),RT_GETBYTES);
-		if (st== -1)
-		{
-			fprintf(stderr,"Bad EOT block\n");
-			eoarchive=TRUE;
-			return;
-		}
-	}
-	else
-	{
-		memcpy(&x,tapebuf,sizeof(struct tapetrailer));
-	}
-	getbin(&seq,x.fileseq,SHORT);
-#if 0
-	eotlog = fopen("eotlog","a");
-	fprintf(eotlog,"BEOT     [%4.4s]\n",x.beot);
-	fprintf(eotlog,"TAPEVOL  [%6.6s]\n",x.tapevol);
-	fprintf(eotlog,"ORIGVOL  [%6.6s]\n",x.origvol);
-	fprintf(eotlog,"NEXTVOL  [%6.6s]\n",x.nextvol);
-	fprintf(eotlog,"SEQUENCE [%5.5d]\n",seq);
-	fprintf(eotlog,"FLAG [%x/%c]\n",x.flag[0],x.flag[0]);
-	fclose(eotlog);
-#endif
-	if (x.flag[0] == 0x80)
-	{
-		memcpy(expected_vol,x.nextvol,6);
-		++expected_seq;
-		file_continued=1;
-		fprintf(stderr,"Backup continued on tape volume %6.6s\n",expected_vol);
-	}
-	else
-	  eoarchive=TRUE;
-}
-
-load()
-{
-        unsigned int recs,fileeof,reccnt;
-        unsigned short recsz;
-        unsigned char *recbuf;
-        char vol[7],lib[9],file[9];
-        unsigned short small,smallextra;
-        uint4 med,eofword;
-        uint4 big, bigextra;
-        unsigned int oreccnt;
-        char outpath[200];
-        char *strchr(),*s;
-        int newlib;
-        FILE *out;
-        void getbin();
-	static int saverecs;
-        int dfpos;
-        
-        tapehdr=(struct tapeheader *)workbuf;
-
-        act_file_type=file_type==FT_ASK_L?0:FT_SRC;
-
-        big=sizeof(struct tapeheader); bigextra= 0x800-big;
-        med=newlib=eoarchive=0;
-        small=smallextra=skip_lib=0;
-        eoarchive=FALSE;
-        recbuf=NULL;
-        spec_rec_type=rec_type;
-        
-        while (eoarchive==FALSE)
-        {
-		if (file_continued)
-		{
-			prompt_new_tape();
-		}
-                dfpos=
-                getbytes(sizeof(struct tapeheader));
-                if (dfpos== -1 || chk_valid_hdr()== -1)
-		{
-			continue;
-		}
-                big -= sizeof(struct tapeheader);
-                getbin((unsigned char *)&recsz,   (unsigned char *)tapehdr->recsz,SHORT);
-                getbin((unsigned char *)&reccnt,  (unsigned char *)tapehdr->reccnt,LONG);
-                getbin((unsigned char *)&seq_num, (unsigned char *)tapehdr->seqnum,SHORT);
-                org_type = tapehdr->filler4b&ORG_MASK;
-                if (tapehdr->filler4b&0x40) 
-		  org_type = ORG_INDEX;
-                if (recbuf) 
-                {
-                        free(recbuf);
-                        recbuf=NULL;
-                }
-                
-                if (!file_continued) 
-		  oreccnt=0;
-                recbuf=(unsigned char *)calloc(recsz+1,1);
-                memcpy(vol,tapehdr->srcvol,6);
-                memcpy(lib,tapehdr->srclib,8);
-                memcpy(file,tapehdr->filename,8);
-                vol[6]=lib[8]=file[8]=(char)0;
-DD{printf("header=%s\n",tapehdr->encfhdr); fflush(stdout);}
-D{printf("header=%4.4s backsection=%1.1d volseq=%2.2d\n",tapehdr->encfhdr,tapehdr->backsection[1],tapehdr->volseq[1]); fflush(stdout);}
-
-                if (interactive)
-                {
-                        if (strcmp(lib,oldlib))
-                        {
-                                int foo,ok;
-                                
-                                for (ok=FALSE; ok==FALSE; )
-                                {
-                                        printf("\nLibrary name: %8s    Restore this library? (y/n)-->",lib);
-                                        rawmode();
-                                        foo=getchar();
-                                        normalmode();
-                                        printf("\n");
-                                        if (foo=='y'||foo=='Y') { skip_lib=FALSE; ok=TRUE; }                                    
-                                        else if (foo=='n'||foo=='N') { skip_lib=TRUE; ok=TRUE; }
-                                        else ok=FALSE;
-                                        newlib=TRUE;
-                                }
-                        }
-                }
-                if (file_type==FT_ASK_L && !skip_lib)
-                {
-                        if (strcmp(lib,oldlib))
-                        {
-                                int foo;
-
-                                if (interactive)
-                                {
-                                  printf("                          Type source/normal (s/n)-->",lib);
-                                }
-                                else
-                                  printf("\nLibrary name: %8s     Type source/normal (s/n)-->",lib);
-                                rawmode();
-                                foo=getchar();
-                                normalmode();
-                                printf("\n\n");
-                                act_file_type=(foo=='s'||foo=='S')?FT_SRC:FT_DAT;
-                                if (foo=='x'||foo=='X') skip_lib=TRUE;
-                                else skip_lib=FALSE;
-                                newlib=TRUE;
-                        }
-                }
-                if (newlib)
-                {
-                        strcpy(oldlib,lib);
-                        newlib=FALSE;
-                }
-                s=strchr(lib,' ');
-                if (s) *s=(char)0;
-                s=strchr(file,' ');
-                if (s) *s=(char)0;
-                if (tapehdr->rectype==HD_RT_COMP) spec_rec_type=RT_COMP;
-                else if (tapehdr->rectype==HD_RT_NORM) spec_rec_type=RT_NORM;
-                else if (tapehdr->rectype==HD_RT_VAR) spec_rec_type=RT_VAR;
-                else if (tapehdr->rectype==0xa0) spec_rec_type=RT_NORM;
-                else spec_rec_type=rec_type;
-
-                if (file_type!=FT_ASK_L)
-                {
-                        if (recsz==80) act_file_type=FT_SRC;
-                        else act_file_type=FT_DAT;
-                }
-                if (skip_lib==TRUE) fprintf(stderr,".");
-
-		
-                if (action==ACT_EXTRACT && skip_lib==FALSE)
-                {
-                        char *use_ext;
-                        
-			if (lname_case==CASE_LOWER) 
-			{
-				lower(lib);
-			}
-                        if (fname_case==CASE_LOWER)
-			{
-				lower(file);
-			}
-                        mkdir(lib,0777);
-                        chmod(lib,0777);
-                        if (spec_rec_type != RT_NORM) /* it's compressed or var, needs post-processing */
-                          use_ext = ".tmp";
-                        else 
-                          use_ext = act_file_type==FT_SRC?src_ext:norm_ext;
-                        sprintf(outpath,"%s/%s%s",lib,file,use_ext);
-                        if (spec_rec_type != RT_NORM && org_type != ORG_INDEX)
-                          pushname(outpath);
-			if (file_continued)
-			  printf("Continuing %s...\n",outpath);
-			if (org_type != ORG_INDEX)
-			  printf("%5d:vol=%-6s lib=%-8s file=%-8s recsize=%-5d reccount=%-10d [%s,%s] ==>%s\n",seq_num,
-				 vol,lib,file,recsz,reccnt, /* tapehdr->filler4b,tapehdr->rectype, */
-				 rectypenames[spec_rec_type],
-				 act_file_type==FT_SRC?"Source":"Data",outpath);
-			else
-			  printf("*** Index file skipped: %-6s %-8s %-8s\n",vol,lib,file);
-DD{
-                        printf("top %08x : big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",dfpos,
-                       big,big,bigextra,bigextra,med,med,small,small,smallextra,smallextra);
-}
-                }
-                else if (action==ACT_INDEX && skip_lib==FALSE)
-                {
-                        printf("%5d:vol=%-6s lib=%-8s file=%-8s recsize=%-5d reccount=%-10d [%s,%s,%02x]\n",seq_num,
-                               vol,lib,file,recsz,reccnt, /*tapehdr->rectype, */
-                               rectypenames[spec_rec_type],
-                               act_file_type==FT_SRC?"Source":"Data",tapehdr->filler4b);
-#ifdef OLD
-                        printf("vol=%-6s lib=%-8s file=%-8s recsize=%-5d reccount=%-5d [%02x%02x]\n",
-                               vol,lib,file,recsz,reccnt,tapehdr->filler4b,tapehdr->rectype);
-#endif
-                }               
-                if(action==ACT_EXTRACT && skip_lib==FALSE && !file_continued) 
-                  out=fopen(outpath,"w");
-                fileeof=0;
-
-                if (spec_rec_type != RT_NORM && out!=NULL && action==ACT_EXTRACT
-			&& !file_continued) /* stamp an info struct for post-processing */
-                {
-                        struct my_header mh;
-                        
-                        mh.rectype = spec_rec_type;
-                        mh.filetype = act_file_type;
-                        mh.recsz = recsz;
-                        mh.reccnt = reccnt;
-                        fwrite(&mh,1,sizeof(struct my_header),out);
-                }
-		if (file_continued)
-		{
-			file_continued = FALSE;
-			big=med=0;
-			bigextra= 0x800-sizeof(struct tapeheader);
-			med=0;
-			small=smallextra=0;
-			saverecs=recs;
-		}
-		else
-		  saverecs = 0;
-                while (!fileeof && !file_continued)
-                {
-                        DD{
-                                printf("toploop %08x r%d: big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",dfpos,recs,
-                                       big,big,bigextra,bigextra,med,med,small,small,smallextra,smallextra);
-                        }
-                        do
-                        {
-                                if (!eightmil)
-                                {
-                                        if (big==0)
-                                        {
-                                                if (bigextra) skipbytes(bigextra);
-                                                if (getbytes(LONG)<0) 
-						{
-							continue;
-						}
-                                                
-                                                getbin((unsigned char *)&big,workbuf,LONG);
-                                                bigextra = 0x20000-big-4;
-                                                DD{
-                                                        printf("index: got big %x %x\n",big,bigextra);
-                                                }
-                                        }
-                                        if (med==0)
-                                        {
-                                                getbytes(LONG);
-                                                getbin((unsigned char *)&med,workbuf,LONG);
-                                                big-=LONG;
-                                                DD{
-                                                        printf("index: got med %x\n",med);
-                                                }
-                                                
-                                                eofword=med;
-                                        }
-                                        if (med != 0xffff0090) 
-                                        {
-                                                if (getbytes(med)<0)
-						{
-							continue;
-						}
-                                                big -= med;     
-                                                if(action==ACT_EXTRACT && 
-                                                   skip_lib==FALSE && 
-                                                   out!=NULL && 
-                                                   org_type!=ORG_INDEX) 
-                                                if (spec_rec_type==RT_NORM)
-                                                {
-                                                        int recs_this_block;
-							int offset;
-							recs_this_block = 2048/recsz;
-							for (offset=0;offset < med; offset+=2048)
-							{
-								if (oreccnt + recs_this_block > reccnt)
-								{
-									recs_this_block = reccnt - oreccnt;
-								}
-								if (recs_this_block)
-								  writefixed(workbuf+offset,recs_this_block,recsz,out);
-								oreccnt += recs_this_block;
-							}
-                                                }
-                                                else
-                                                {
-                                                        fwrite(workbuf,1,med,out);
-                                                }
-                                        }
-                                        med=0;
-                                }
-                                else /* 8 mil tapes have no big and medium blocking junk */
-                                {
-                                        int cnt;
-                                        
-                                        if (spec_rec_type==RT_NORM)
-                                        {
-						int cur, leftover;
-						
-						leftover = 0x800 % recsz;
-                                                for (cur=0, recs=saverecs; recs<reccnt; ++recs)
-                                                {
-							if (cur + leftover >= 0x800)
-							{
-								skipbytes(leftover);
-								cur=0;
-							}
-                                                        if (getbytes(recsz)<0)
-							{
-								goto endloop;
-							}
-							cur+=recsz;
-
-                                                        if(action==ACT_EXTRACT && 
-                                                           skip_lib==FALSE && 
-                                                           out!=NULL && 
-                                                           org_type!=ORG_INDEX) 
-							{
-								if (recsz==80 && check_nulls) nulls2spaces(workbuf);
-								fwrite(workbuf,1,recsz,out);
-								if (add_lf==ADDLF)
-								  fprintf(out,"\n");
-								if (add_lf==GUESSLF && recsz==80)
-								  fprintf(out,"\n");
-							}
-                                                }
-                                                readtape(0,0,RT_SKIPTOEND);
-                                        }
-                                        else
-                                        {
-                                                while (cnt=readtape(workbuf,0,RT_GETBLOCK)) /* skip was 1? */
-                                                {
-							if (cnt== -1)
-							{
-								goto endloop;
-							}
-                                                        if(action==ACT_EXTRACT && 
-                                                           skip_lib==FALSE && 
-                                                           out!=NULL && 
-                                                           org_type!=ORG_INDEX) 
-                                                          fwrite(workbuf,1,cnt,out);
-                                                }
-
-                                        }
-                                        eofword = 0xffff0090;
-                                        
-                                }
-
-			      endloop: ;
-				
-                        } while (eofword != 0xffff0090 && !eoarchive && !eotape);
-                        ++fileeof;
-                        continue;
-                }
-                if (action==ACT_EXTRACT && skip_lib==FALSE && !file_continued) fclose(out);
-                if (org_type == ORG_INDEX) unlink(outpath);
-        }
-}
-trim(buf)
-unsigned char buf[];
-{
-        register unsigned char *p;
-	int i;
-	
-	if (check_nulls)
-	  nulls2spaces(buf);
-
-        buf[72]=(char)0;
-        p=buf+71;
-        while (*p==' ') --p;
-        ++p;
-        *p=(char)0;
-}
-nulls2spaces(buf)
-unsigned char buf[];
-{
-	int i;
-
-	for (i=0; i<80; ++i) if (buf[i]==0x00) buf[i]=' ';
-}
-bldrec(src,dest,size)       /* need to redo states START COMP0 COMP and NEXTCOMP */
-unsigned char *src,*dest;
-int size;
-{
-        register unsigned int in_i,ch,cnt,next,out_i;
-        register int state;
-        char *reptstr();
-
-        char *states[6];
-        
-        states[0]="start";
-        states[1]="normal";
-        states[2]="comp";
-        states[3]="nextcomp";
-        states[4]="end";
-        states[5]="comp0";
-        
-        state=ST_START;
-        in_i=out_i=0;
-        next=65535;
-        
-        while (state != ST_END)
-        {
-                ch=src[in_i];
-
-                switch (state)
-                {
-                      case ST_START:
-                        if (ch>=0x80)
-                        {
-                                cnt=ch-0x80+1;
-                                state=ST_COMP;
-                        }
-                        else 
-                        {
-                                next=ch+1;
-                                state=ST_NORMAL;
-                        }
-                        ++in_i;
-                        break;
-                      case ST_NORMAL:
-                        dest[out_i]=ch;
-                        ++out_i;
-                        ++in_i;
-                        break;
-                      case ST_COMP0:
-                        if (ch>=0x80)
-                        {
-                                cnt=ch-0x80+1;
-                                state=ST_COMP;
-                        }
-                        else 
-                        {
-                                next=ch+1;
-                                state=ST_NORMAL;
-                        }
-                        ++in_i;
-                        break;
-                      case ST_COMP:
-                        memcpy(&dest[out_i],reptstr(ch,cnt),cnt);
-                        ++in_i;
-                        out_i += cnt;
-                        if (src[in_i]>=0x80) state=ST_COMP0;
-                        else state=ST_NEXTCOMP;
-                        break;
-                      case ST_NEXTCOMP:
-                        next=ch+1;
-                        state=ST_NORMAL;
-                        ++in_i;
-                        break;
-                }
-                if (in_i>=size) state=ST_END;
-                if (next==0) { state=ST_COMP0; next=65535; }
-                else --next;
-        }
-}
-char *reptstr(ch,cnt)
-{
-        static char rept[128];
-        
-        memset(rept,ch,cnt);
-        rept[cnt]=(char)0;
-        return rept;
-}
-getbytes(cnt)
-int cnt;
-{
-        int pos;
-        
-        if(cnt<=0)return 0;
-        pos=readtape(workbuf,cnt,RT_GETBYTES);
-        return pos;
-}
-skipbytes(cnt)
-int cnt;
-{
-        int tmp;
-        
-        if (cnt<=0)return 0;
-
-        tmp=readtape(NULL,cnt,RT_SKIPBYTES);
-        return tmp;
-}
-lower(p)
-char *p;
-{
-        while (*p)
-        {
-                *p = tolower(*p);
-                ++p;
-        }
-}
-parseopts(c,v)
-int c;
-char **v;
-{
-        int i,num,type,val;
-        char *destval;
-
-
-	strcpy(arch_file,TAPEDEV);
-        strcpy(src_ext,DEF_SRC_EXT);
-        strcpy(norm_ext,DEF_NORM_EXT);
-        
-        for (i=1;i<c;)
-        {
-                matchopt(v[i],&num,&type,&destval,&val);
-		if (num == -1 && process_tmps) return;
-                if (num == -1) fprintf(stderr,"bad option \"%s\"\n",v[i]);
-                if (type==OPT_INT) *((int*)destval)=val;
-                else if (type==OPT_STRING) 
-                {
-                        if (strlen(v[i])!=strlen(optlist[num].opt)) strcpy(destval,v[i]+strlen(optlist[num].opt));
-                        else strcpy(destval,v[++i]);
-                }
-                ++i;
-        }
-	if (strlen(tape_rq_str))
-	{
-		tape_blocksz=atoi(tape_rq_str);
-	}
-#ifdef ATT3B2
-	if (tape_blocksz>5120) 
-	  tape_blocksz=5120;
-#endif
-}
-matchopt(opt,num,type,destval,val)
-char *opt,**destval;
-int *num,*type,*val;
-{
-        struct optstruct *p;
-        int i;
-        
-        for(i=0,p=optlist;p->opt;++p,++i)
-        {
-                if (!strncmp(opt,p->opt,strlen(p->opt)))
-                {
-                        *num=i;
-                        *type=p->type;
-                        *destval=p->optdest;
-                        *val=p->optval;
-                        return;
-                        
-                }
-                
-        }
-        *num= -1;
-        *type = OPT_BAD;
-}
-
-void getbin(dest,src,cnt)
-unsigned char *dest,*src;
-int cnt;
-{
-        if (byteorder==ORDER_NORMAL)
-	{
-		memcpy(dest,src,cnt);
-		return;
-	}
-        --cnt;
-        while (cnt>=0)
-        {
-                *dest++ = *(src+cnt);
-                --cnt;
-        }
-        return;
-}
-setord()
-{
-        int foo=0x12345678;
-        if ((((char*)&foo)[0])==0x78) byteorder=ORDER_REVERSE;
-        else byteorder=ORDER_NORMAL;
-}
-usage()
-{
-        fprintf(stderr,"VSX Release V%s (c)IDSI %s\n",VERSION,MODDATE);
-        fprintf(stderr,"\nusage:\nvsx [-f <device or file>] [ -nrw <norewind file> ] [-e.ext] [-i] [-lnu] [-fnu]\n");
-        fprintf(stderr,"   -f <archive> specify device or file containing archive (default: %s)\n",TAPEDEV);
-        fprintf(stderr,"   -nrw <tape>  specify no-rewind device file\n",TAPEDEV);
-        fprintf(stderr,"   -es.ext      append .ext to all source files created (normally .wcb)\n");
-        fprintf(stderr,"   -en.ext      append .ext to all normal files created (normally .seq)\n");
-        fprintf(stderr,"   -i           generate list of files in archive (do not extract)\n");
-        fprintf(stderr,"   -lnu         generate uppercase directory names\n");
-        fprintf(stderr,"   -fnu         generate uppercase file names\n");
-        fprintf(stderr,"   -tl          query for filetype (source vs. nonsource) per library\n");
-        fprintf(stderr,"   -q           query before restoring each library\n");
-        fprintf(stderr,"   -8           archive is an 8 millimeter tape or 9-track reel tape\n");
-        fprintf(stderr,"   -null        examine cobol source for embedded null values and fix\n");
-        fprintf(stderr,"   -tmp         process .tmp files left over in case of vsx premature abort\n");
-        fprintf(stderr,"   -lf          add linefeeds between records on all files\n");
-        fprintf(stderr,"   -nolf        do not add linefeeds to any files\n");
-        fprintf(stderr,"                (vsx normally adds linefeeds only to files with 80 byte records)\n");
-        fprintf(stderr,"   -bs <size>   specify blocksize for tape reads\n");
-        exit(1);
-}
-savemode()
-{
-        ioctl(0,TCGETA,&old);
-}       
-rawmode()
-{
-        new=old;
-        new.c_cc[VMIN]=1;
-        new.c_cc[VTIME]=0;
-        new.c_lflag &= ~ICANON;
-        new.c_iflag = 0;
-        ioctl(0,TCSETA,&new);
-}
-normalmode()
-{
-        ioctl(0,TCSETA,&old);
-}
-setdebuginfo()
-{
-        char *p,*strchr();
-        
-        if (strlen(debug_level_str)) 
-          debug_level=atoi(debug_level_str);
-
-        if (strlen(debug_range))
-        {
-                p=strchr(debug_range,':');
-                if (p==debug_range)
-                {
-                        debug_start=1;
-                        debug_end=atoi(++p);
-                        return;
-                }
-                else if (p)
-                {
-                        *p++ =(char)0;
-                        debug_start=atoi(debug_range);
-                        debug_end=atoi(p);
-                        return;
-                }
-                else
-                {
-                        debug_start=atoi(debug_range);
-                        debug_end=999999;
-                        return;
-                }
-        }  
-        else
-        {
-                debug_start=1;
-                debug_end=999999;
-                return;
-        }               
-}
-char *strdup(str)
-char *str;
-{
-        char *tmp;
-        
-        tmp=(char *)calloc(strlen(str)+1,1);
-        strcpy(tmp,str);
-        return tmp;
-}
-pushname(str)
-char *str;
-{
-        char *strdup();
-        struct stack_node *new_node;
-        
-        if (head==NULL)
-        {
-                new_node=stackp=head=(struct stack_node *)calloc(1,sizeof(struct stack_node));
-                head->prev = NULL;
-        }
-        else
-        {
-                new_node=(struct stack_node *)calloc(1,sizeof(struct stack_node));
-                new_node->prev = stackp;
-        }
-        new_node->name = (unsigned char*) strdup(str);
-        stackp = new_node;
-}
-char *getname()
-{
-        char *tmp;
-        struct stack_node *save;
-
-        if (!process_tmps)
-	{
-		if (stackp==NULL) return NULL;
-		tmp = (char*)stackp->name;
-		save = stackp;
-		stackp = stackp->prev;
-		free(save);
-		return tmp;
-	}
-	else
-	{
-		if (*arg_list == NULL) return NULL;
-		while(**arg_list=='-') ++arg_list;
-		return *arg_list++;
-	}
-}
-postprocess()
-{
-        char *inname,*getname();
-        int dummy;
-        
-        while (inname=getname())
-        {
-                if (fork()) wait(&dummy);
-                else
-                {
-                        digest(inname);
-                        exit(0);
-                }
-        }
-}
-void baddata(sig)
-int sig;
-{
-        fprintf(stderr," file appears corrupted\n");
-        exit(1);
-}
-digest(name)
-char *name;
-{
-        char *p, *strchr();
-	unsigned char *recbuf;
-        struct my_header foo;
-        FILE *in,*out;
-        char outname[100];
-        unsigned short small, smallextra, curlen;
-        int recs, recsz,reccnt;
-	void baddata();
-	void getbin();
-	
-        signal(SIGINT,  baddata );
-        signal(SIGQUIT, baddata );
-        signal(SIGILL,  baddata );
-        signal(SIGEMT,  baddata );
-        signal(SIGBUS,  baddata );
-        signal(SIGSEGV, baddata );
-
-        fprintf(stderr,"%s",name); fflush(stderr);
-        in=fopen(name,"r");
-        strcpy(outname,name);
-        p=strchr(outname,'.');
-        if (!p)
-        {
-                fprintf(stderr,"bad temp filename: %s\n",outname);
-                fclose(in);
-        }
-        fread(&foo,1,sizeof(struct my_header),in);
-        spec_rec_type = foo.rectype;
-        act_file_type = foo.filetype;
-        recsz = foo.recsz;
-        reccnt = foo.reccnt;
-        recbuf=(unsigned char *)calloc(recsz+1,1);
-        
-        if (act_file_type==FT_SRC) strcpy(p,src_ext);
-        else strcpy(p,norm_ext);
-        fprintf(stderr," ==> %s : ",outname); fflush(stderr);
-        
-        if ((out = fopen(outname,"w"))==NULL)
-        {
-                fprintf(stderr,"cannot open output: %s\n",outname);
-        }
-        recs=small=smallextra=0;
-        while (recs<reccnt)
-        {
-                if (small==0)
-                {
-                        if (smallextra) fread(workbuf,1,smallextra,in);
-                        fread(workbuf,1,sizeof(short),in);
-                        getbin((unsigned char *)&small,workbuf,2);
-                        smallextra = 0x800 - small;
-                        small -= 2;
-
-                        
-                }
-                fread(workbuf,1,sizeof(short),in);
-                getbin((unsigned char *)&curlen,workbuf,2);
-
-                
-                fread(workbuf,1,curlen-2,in);
-                small -= curlen;
-                if (spec_rec_type == RT_COMP) bldrec(workbuf,recbuf,curlen-2);
-                else memcpy(recbuf,workbuf,recsz),*(recbuf+recsz)=(char)0;
-                ++recs;
-                if (act_file_type == FT_SRC) trim(recbuf);
-                fwrite(recbuf,1,act_file_type == FT_SRC?strlen(recbuf):recsz,out);
-                if (add_lf==ADDLF)
-                  fprintf(out,"\n");
-                if (add_lf==GUESSLF && recsz==80)
-                  fprintf(out,"\n");
-        }
-        fprintf(stderr,"%d records, rec size %d bytes\n",reccnt,recsz);
-        
-        fclose(in);
-        free(recbuf);
-        unlink(name);
-}
-
-writefixed(buf,recs,size,f)
-unsigned char buf[];
-int recs,size;
-FILE *f;
-{
-        while (recs)
-        {
-		if (size==80 && check_nulls) nulls2spaces(buf);
-		
-                fwrite(buf,1,size,f);
-                buf += size;
-                --recs;
-                if (add_lf==ADDLF) 
-                  fprintf(f,"\n");
-                if (add_lf==GUESSLF && size==80)
-                  fprintf(f,"\n");
-        }
-}
-chk_valid_hdr()
-{
-	char volseq;
-	int vsxdump;
-
-	if (strncmp("ENCF",tapehdr->encfhdr,4))
-	{
-		close(tape_fd);
-		tape_fd= -1;
-		tapebytes=0;
-		vsxdump=open(".vsxdump",O_WRONLY|O_CREAT|0666);
-		write(vsxdump,tapebuf,tapebytes);
-		close(vsxdump);
-		if (new_vol)
-		{
-			fprintf(stderr,"Volume header appears to be bad.\n");
-			return -1;
-		}
-		else
-		{
-			fprintf(stderr,"Bad file header.\n");
-			postprocess();
-			handler();
-		}
-	}
-	if (strlen(expected_vol)==0)
-	  return 1;
-	if (new_vol && strncmp(expected_vol,tapehdr->vol1,6))
-	{
-		fprintf(stderr,"Warning: Incorrect volume label. [%6.6s/%6.6s/%6.6s]\n",
-			tapehdr->vol1,tapehdr->tapevol,expected_vol);
-	}
-	else new_vol=FALSE;
-	return 1;
-	volseq = tapehdr->backsection[0];
-	if (volseq != expected_seq)
-	{
-		close(tape_fd);
-		tape_fd= -1;
-		tapebytes=0;
-		fprintf(stderr,"Tape appears to have incorrect sequence number (%d).  Expected %d.\n",
-			volseq, expected_seq);
-		return -1;
-	}
-	return 1;
-}
-prompt_new_tape()
-{
-	fprintf(stderr,"Insert next backup tape (volume: %6.6s).\n",
-		expected_vol);
-	fprintf(stderr,"Press return when ready\n");
-	getchar();
-	new_vol=TRUE;
-}

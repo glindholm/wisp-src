@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* Extended regular expression matching and search library.
    Copyright (C) 1985, 1989 Free Software Foundation, Inc.
 
@@ -1742,3 +1744,12 @@ error (string)
 }
 
 #endif /* test */
+/*
+**	History:
+**	$Log: regex.c,v $
+**	Revision 1.6  1996-07-23 14:12:59-04  gsl
+**	drcs update
+**
+**
+**
+*/

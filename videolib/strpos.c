@@ -1,3 +1,11 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+
+#ifdef OLD
+/*
+**	strpos() has been replaced by the ansi standard routine strstr()
+*/
+#include <string.h>
 
 int strpos(src,srch) unsigned char *src,*srch;						/* Search a string for a string.	*/
 {
@@ -13,4 +21,17 @@ int strpos(src,srch) unsigned char *src,*srch;						/* Search a string for a str
 	}
 	return(-1);
 }
+#endif
 
+/*
+**	History:
+**	$Log: strpos.c,v $
+**	Revision 1.9  1997-01-08 16:37:39-05  gsl
+**	Removed strpos() as all calls replaced with ansi standard strstr() calls.
+**
+**	Revision 1.8  1996-10-11 15:15:57-07  gsl
+**	drcs update
+**
+**
+**
+*/

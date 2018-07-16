@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -97,3 +99,12 @@ int4	*len;									/* Length of Value (optional)			*/
 	return( 0 );
 }
 #endif
+/*
+**	History:
+**	$Log: setsymb.c,v $
+**	Revision 1.8  1996-08-19 18:32:55-04  gsl
+**	drcs update
+**
+**
+**
+*/

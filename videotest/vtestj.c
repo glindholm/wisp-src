@@ -8,12 +8,15 @@
 /*									*/
 /************************************************************************/
 
-#include <v/video.h>
+#include <ctype.h>
+#include <video.h>
+#include <vmodules.h>
 
 testj()
 {
-	unsigned char c,vgetc();
-	register int retcount;
+	char c,vgetc();
+	int retcount;
+	unsigned char uc;
 
 	verase(FULL_SCREEN);
 	vmove(0,0);
@@ -27,10 +30,15 @@ again:	c = vgetc();
 		if (retcount >= 2) return(SUCCESS);
 	}
 	else retcount = 0;
-	if (c <= 040)
+
+	uc = (unsigned char)c;
+	if (isprint(c) && isascii(c))
 	{
-		vprint("Character is = %o octal, %d decimal.\n",c,c);
+		vprint("Character is \'%c\' = %o octal = %u decimal.\n",c,(int)uc,(int)uc);
 	}
-	else vprint("Character is %c = %o octal = %d decimal.\n",c,c,c);
+	else 
+	{
+		vprint("Character is     = %o octal, %u decimal.\n",(int)uc,(int)uc);
+	}
 	goto again;
 }

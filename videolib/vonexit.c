@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -9,6 +11,7 @@
 
 #include	"video.h"
 #include	"vlocal.h"
+#include	"vmodules.h"
 
 /*					Subroutine entry point.									*/
 
@@ -31,3 +34,12 @@ vonexit(new) int new;									/* Change the exit defaults.		*/
 	
 	return(SUCCESS);								/* Now let the caller know how it went.	*/
 }
+/*
+**	History:
+**	$Log: vonexit.c,v $
+**	Revision 1.9  1996-10-11 18:16:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,9 +1,5 @@
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		ptmain.c
@@ -47,16 +43,11 @@
 EXT char cli_infile[STRBUFF];								/* Wang Procedure Language file name.	*/
 EXT char out_fname[STRBUFF];								/* VMS COBOL generated output file name.*/
 
-#ifndef lint
-static char copyright[] = "(C) 1990,1991,1992, 1993 International Digital Scientific, Inc. All Rights Reserved.";
-#endif
-static char rcsid[] = "$Id:$";
-
 static char VERSION[5];
 static char MODDATE[20];
 
 static char *sargv[50];									/* Save the argv			*/
-static int wcbname();
+static void wcbname(char* out_name, char* in_name);					/* Generate the output file name from	*/
 
 #ifdef VMS
 static unsigned long stval[5] = {SS$_ACCVIO, SS$_ABORT, 200956 ,0 ,0 };
@@ -71,8 +62,7 @@ char *argv[];
 #else
         void handler();
 #endif
-        char *p,*e,*strchr();
-	char temp[256], *ptr;
+        char *p,*e;
 	int i;
 
         memset(VERSION,0,sizeof(VERSION));
@@ -89,7 +79,7 @@ char *argv[];
         
         if (argc==2 && argv[1][0]=='-' && (argv[1][1]=='?'||argv[1][1]=='h')) usage(0);
         else
-          fprintf(stderr,"\nPROCTRAN V%s (c)IDSI %s - 'proctran -h' for help\n",VERSION,MODDATE);
+          fprintf(stderr,"\nPROCTRAN V%s (c) NeoMedia Migrations, Inc. %s - 'proctran -h' for help\n",VERSION,MODDATE);
 
 	for (i = 0; i < argc; i++ ) sargv[i] = argv[i];					/* Save the argv			*/
 	sargv[argc] = 0;								/* Null terminate sargv			*/
@@ -101,7 +91,7 @@ char *argv[];
 #endif
 
 #ifdef unix
-	if (ptr = (char *)getenv("DBPROC"))
+	if (getenv("DBPROC"))
 	{
 	        signal(SIGINT,  SIG_DFL );
         	signal(SIGQUIT, SIG_DFL );
@@ -141,10 +131,11 @@ char *argv[];
 #ifdef VMS										/*  Set back so uses VAX signal handler.*/
 	lib$revert();
 #endif
+	return 0;
 }
 
-static wcbname(out_name,in_name)							/* Generate the output file name from	*/
-char *out_name, *in_name;								/* input name.				*/
+static void wcbname(char* out_name, char* in_name)					/* Generate the output file name from	*/
+											/* input name.				*/
 {
 	int len;
 
@@ -155,10 +146,9 @@ char *out_name, *in_name;								/* input name.				*/
 	strcpy(&out_name[len],".wcb");							/* Copy needed ext. to output name.	*/
 }
 
-usage(prnt)
-int prnt;
+void usage(int prnt)
 {
-	if (!prnt) fprintf(stderr,"PROCTRAN V%s (c)IDSI %s\n",VERSION,MODDATE);
+	if (!prnt) fprintf(stderr,"PROCTRAN V%s (c)NeoMedia Migrations, Inc. %s\n",VERSION,MODDATE);
 
         fprintf(stderr,"\nusage:  proctran [-flags] filename\n");
 	fprintf(stderr," FLAG   VMS SWITCH     DESCRIPTION\n");
@@ -184,7 +174,7 @@ void handler()
 	else
 	{
 		fprintf(stderr,"reading file.\n");
-		fprintf(stderr,"     In file: %s line: %d\n",cli_infile,num_inlines);
+		fprintf(stderr,"     In file: %s line: %d\n",cli_infile,num_lineins);
 	}
 	fprintf(stderr,"          MODIFICATIONS ARE NEEDED!\n");
         fprintf(stderr,"\n  PROCTRAN exiting.\n");
@@ -240,15 +230,41 @@ struct chf$mech_array *mechargs;
 		else
 		{
 			fprintf(stderr,"reading file.\n");
-			fprintf(stderr,"     In file: %s line: %d\n",cli_infile,num_inlines);
+			fprintf(stderr,"     In file: %s line: %d\n",cli_infile,num_lineins);
 		}
 
-		fprintf(stderr,"     Contact IDSI with sample code OR comment line and try again!\n");
+		fprintf(stderr,"     Contact NeoMedia Migrations, Inc. with sample code OR comment line and try again!\n");
 	}
 
         fprintf(stderr,"\n  PROCTRAN exiting.\n");
+#ifndef __ALPHA
+	/*
+	**	This has not yet been implemented for VMS/ALPHA
+	*/
 	sys$unwind(mechargs->chf$l_mch_savr0);						/* Unwind the call stack by the depth 	*/
+#endif
         exit(mstat);									/* between established and when condition*/
 }											/* was signaled.			*/
 #endif
 
+/*
+**	History:
+**	$Log: ptmain.c,v $
+**	Revision 1.11  1997-04-21 11:37:46-04  scass
+**	Corrected double copyright definition.
+**
+**	Revision 1.10  1997-04-21 11:16:35-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.9  1996-12-12 13:31:43-05  gsl
+**	DevTech -> NeoMedia
+**
+**	Revision 1.8  1996-09-13 08:56:58-07  gsl
+**	Remove explicit strchr() def
+**
+**	Revision 1.7  1996-09-12 16:17:29-07  gsl
+**	fix prototypes
+**
+**
+**
+*/

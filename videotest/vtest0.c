@@ -5,7 +5,38 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
+
+#include "video.h"
+#include "vmodules.h"
+
+extern void exit();
+extern void testa();
+extern void testb();
+extern void testc();
+extern void testd();
+extern void teste();
+extern void testf();
+extern void testg();
+extern void testh();
+extern void testi();
+extern void testj();
+extern void testk();
+extern void testl();
+extern void testm();
+extern void testn();
+extern void testo();
+extern void testp();
+extern void testq();
+extern void testr();
+extern void tests();
+extern void testt();
+extern void testu();
+extern void testv();
+extern void testw();
+extern void testx();
+extern void testy();
+extern void testz();
+extern void line();
 
 main()
 {
@@ -16,7 +47,7 @@ main()
 	vstate(0);
 	vscreen(NARROW|DARK);
 
-start:	vbuffering(LOGICAL);
+start:	vbuffering_start();
 	vmode(0);
 	vmove(0,0);
 	vline(FAT_HORIZONTAL,78);
@@ -46,7 +77,7 @@ start:	vbuffering(LOGICAL);
 	vtext(0,i++,6,"Y -                                  ^B, ^E & ^G macro control.");
 	vtext(BOLD,21,20,"Please select? ");
 	vmode(0);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 inp:	t = vgetc();
 	if ((t >= 'a') && (t <= 'z')) t = t - 'a' + 'A';
 
@@ -74,7 +105,7 @@ inp:	t = vgetc();
 	vrelease();
 	switch(t)
 	{
-		case '0': {vrelease(); verase(FULL_SCREEN); vmove(0,0); vexit(); exit(0); break;}
+		case '0': {vrelease(); verase(FULL_SCREEN); vmove(0,0); vexit(); return(0); break;}
 		case 'A': {testa(); break;}
 		case 'B': {testb(); break;}
 		case 'C': {testc(); break;}
@@ -185,7 +216,7 @@ inp:	t = vgetc();
 	verase(FULL_SCREEN);
 	goto start;
 }
-line()
+void line()
 {
 vprint("\n-------------------------------------------------------------\n");
 }

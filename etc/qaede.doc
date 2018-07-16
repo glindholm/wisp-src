@@ -1,0 +1,292 @@
+##################### EDE QA Method ###################################
+
+EDE setup:
+    
+    1. verify the the following run time environments have been
+       generated and are in "/usr/bin/wispbin":
+          wruncbl2e    :for ACUcobol
+        or  
+          wrunmfe      :for Micro Focus
+    
+    2. set the run time variable, RUNCBL
+          $ RUNCBL=wruncbl2e export RUNCBL    :for ACUcobol
+        or
+          $ RUNCBL=wrunmfe export RUNCBL      :for Micro Focus
+
+    3. insure that the IDSI print daemon is running.
+    
+    4. go to the QA directory:
+          $ cd $QA
+    
+    5. verify that the following files are present:
+          MENUDEMO  MENUDISP  MENULOGO  MENUVECT  MCBBLD
+          MCBEDIT   HELPMAP   *.hlp     good
+
+
+
+Run EDE:
+    
+    1. run MENUDEMO:
+          
+       ___ a. $ wrun MENUDEMO
+              Note: a master BAR menu and IDSI logo should appear on the
+                    screen, before appearing the screen should have cleared.
+    
+        ---------------------------------------------------------------------
+         DIRECTIONS   MENU MANAGEMENT   LONG CHAIN   SYSTEM   GOODIES   EXIT
+        ---------------------------------------------------------------------
+                  Extended Development Environment Demonstration
+                    Select Directions for more information
+
+                             -----------------
+                             |    i d s i    |
+                             -----------------
+                    Copyright (c) 1991 by International
+                      Digital Scientific Incorporated
+                            All rights reserved
+        ---------------------------------------------------------------------
+
+       ___ b. use a "^w" to cause the screen to re-fresh.
+
+       ___ c. use a "^e" to bring up a help screen.  A HELP box should
+              appear on the screen. 
+              ___ Is the box formed correctly 
+              ___ Is the text formated correctly and readable.
+              ___ using the LEFT arrow key, move the cursor to the
+                  edge of the box and move the box to the LEFT 3 
+                  character positions.
+              Press RETURN to release the box.
+
+       ___ d. using the letter "E" jump to the EXIT item on the BAR
+              menu, press RETURN.  The program should exit to the
+              unix prompt.
+
+
+    2. Checking the master BAR menu:
+          
+       ___ a. $ wrun MENUDEMO
+              Note: a master BAR menu and IDSI logo should appear.
+       
+       ___ b. using the arrow keys move the highlighted area left
+              and right from one BAR menu item to another.
+
+       ___ c. using the first letter of each item on the BAR menu,
+              check that the highlighted area jumps from item to item.
+       
+       
+    3. Checking the PULL down menus:    
+          
+       ___ a. using the arrow keys move to the BAR menu DIRECTIONS item
+              and use the DOWN arrow to pull down the DIRECTIONS menu.
+       
+       ___ b. using the DOWN arrow key, move highlighted area to the
+              HELP item, press RETURN.  A HELP directions box should
+              appear on the screen. 
+              ___ Is the box formed correctly 
+              ___ Is the text formated correctly and readable.
+              ___ using the LEFT arrow key, move the cursor to the
+                  edge of the box and move the box to the LEFT 3 
+                  character positions.
+              Press RETURN to release the box.
+       
+       ___ c. use the UP arrow key to release the DIRECTIONS pull
+              down menu.  You sould be back on the master BAR menu. 
+
+       ___ d. using the RIGHT arrow key to move to the SYSTEM item.
+              Press RETURN, a help message stating: 
+              
+               ------------------------------------------------------- 
+               | So sorry...                                         |
+               | The function you have requested is not implemented. |
+               -------------------------------------------------------
+
+              should appear.  Press RETURN to exit the help message.
+       
+       ___ e. using the RIGHT arrow key to move to the GOODIES item.
+       
+       ___ f. using the DOWN arrow key pull down the GOODIES menu.  Press
+              RETURN to bring up the CLOCK, check that the time is right
+              and that the time changes.  Press RETURN to release CLOCK.
+       
+       ___ g. use the DOWN arrow key to move down to the CALCULATOR.  
+              Press RETURN to bring up the CALCULATOR, check that the
+              general CALCULATOR format is correct, try several
+              calculations and verify the answers:
+              ___ 2+3 = 5 +5 = 10
+              ___ 2*3 = 6 *5 = 30
+              ___ 30/5 = 6 /2 = 3
+              ___ 30-5 = 25 -20 = 5
+              ___ 100*100 = 10000 *100 = 1000000 / 10000 = 100
+              Press PF16 to release the CALCULATOR.
+       
+       ___ h. use the DOWN arrow key to move down to the CALENDAR.  
+              Press RETURN to bring up the CALENDAR, check that the
+              general CALENDAR format is correct, try several
+              calendar changes and verify the answers. 
+              ___ move the highlighted area (day of month) to the 15th.
+              ___ press RETURN, this should bring up a Daily (by hour)
+                  calendar.
+              ___ Press PF16 to release Daily calendar.
+              Press PF16 to release the CALENDAR.
+       
+       ___ i. use the DOWN arrow key to move down to the NOTEPAD.  
+              Press RETURN to bring up the NOTEPAD, check that the
+              general NOTEPAD format is correct, try entering several
+              lines of text, press RETURN.
+              Press PF16 to release the NOTEPAD.
+       
+       ___ j. use the DOWN arrow key to move down to the PUZZLE.  
+              Press RETURN to bring up the PUZZLE, check that the
+              general PUZZLE format is correct, try several
+              PUZZLE entries.
+              Press PF16 to release the PUZZLE.
+
+       ___ k. using the UP arrow to move the cursor back to the 
+              NOTYEPAD menu, press RETURN and verify that the text
+              entered in "i" above is correct.
+              Press PF16 to release the NOTEPAD.
+
+       ___ l. using the UP arrow to move the cursor back to the 
+              BAR menu, this should release the GOODIES pull down
+              menu.
+
+       ___ m. using the "L" key jump to the LONG CHAINS menu item.
+
+       ___ n. using the DOWN arrow, pull down the first of 5 test 
+              menus. Each test menu consists of item selections, one
+              of which is preceeded/followed by a ">" or ">>".  Move
+              the highlighted menu selector to these items and press
+              RETURN.
+              ___ pull down menu 1, go to selection item 3.
+              ___ pull down menu 2, go to selection item 14.
+              ___ pull down menu 3, go to selection item 102
+                  (reverse pointer shown)
+              ___ pull down menu 4, go to selection item 1008.
+              ___ pull down menu 5, "This is the last level".
+              ___ position to a menu selection (5001-5003, press 
+                  RETURN you should get a "So sorry..." no function
+                  message, press RETURN.
+        
+        ___ o. using the UP arrow, collapse the LONG CHAIN menus' back 
+               to the BAR menu.
+              
+        ___ p. using the "M" key, jump to the MENU MANAGEMENT item on
+               the BAR menu.
+
+        ___ q. using the DOWN arrow pull down the MENU MANAGEMENT menu
+               and move the highlighted area down to CREATE EMPTY
+               MENU CONTROL FILE, press RETURN.  This will create
+               an MCBFILE, no message or display appears.
+
+        ___ r. using the DOWN arrow, move the highlighted area down
+               to ADD TO OR EDIT MENU CONTROL FILE.  Press RETURN,
+               this will bring up the MCB edit program.  The screen
+               display is as follows:
+               ------------------------------------------------------------
+                MCB Maintanence: Id ROOTMENU        Type   0  Option   0
+                                 Row  0  Column  0  Width  0 No Items  0
+
+                Text                                            Code Name
+                ________________________________________________  _  ______ 
+                ________________________________________________  _  ______
+                 <17 more lines>
+                ________________________________________________  _  ______  
+                <message area> 1>MENU 2>UPDT 3>DEL 4>NEXT 5>PREV 6>FIRST
+                               7>PRINT 16>EXIT
+
+                Note: if a GETPARM screen appears showing LIBIN and VOLIN
+                      change them to LIBOUT and VOLOUT and press RETURN.
+
+
+         ___ s. use "^e" to test the Help Screen.  It should bring up a 
+                HELP bar menu, move the highlighted area to ENVIRONMENT.
+                Press enter, this should give you the standard WISP help
+                menu. Do a PF1 to leave the help menu, you should be back
+                on the MCB edit screen.
+
+         ___ t. Now we need to build several MCB menus in the MCBFILE
+                using the MCB edit program.  Follow the following data
+                entry instrutions to build these menus: 
+                
+                ___ ROOTMENU  
+                    1. tab to the "No Items" (number of line items) field.
+                    2. set the field value to "4".
+                    3. tab to the TEXT field, enter "First test menu".
+                    4. tab to the CODE field, enter "M".
+                    5. in the NAME field, enter "TEST1".
+                    6. tab to the TEXT field, enter "Second test menu".
+                    7. tab to the CODE field, enter "M".
+                    8. in the NAME field, enter "TEST2".
+                    9. tab to the TEXT field, enter "First test program".
+                   10. tab to the CODE field, enter "P".
+                   11. in the NAME field, enter "PROGX".
+                   12. tab to the TEXT field, enter "EXIT".
+                   13. tab to the CODE field, enter "P".
+                   14. in the NAME field, enter "exit".
+                   15. enter PF2. The program should display the message
+                                  ** MCB UPDATED ** in the lower left
+                                  message area.
+                
+                ___ TEST1
+                    1. in the "Id" field, enter TEST1
+                    2. enter PF1
+                    3. tab to the "No Items" (number of line items) field.
+                    4. set the field value to "2".
+                    5. tab to the TEXT field, enter "Test program 1".
+                    6. tab to the CODE field, enter "P".
+                    7. in the NAME field, enter "PROG1".
+                    8. tab to the TEXT field, enter "Test program 2".
+                    9. tab to the CODE field, enter "P".
+                   10. in the NAME field, enter "PROG2".
+                   11. enter PF2. The program should display the message
+                                  ** MCB UPDATED ** in the lower left
+                                  message area.
+
+                ___ TEST1
+                    1. in the "Id" field, enter TEST2
+                    2. enter PF1
+                    3. tab to the "No Items" (number of line items) field.
+                    4. set the field value to "1".
+                    5. tab to the TEXT field, enter "Test program 3".
+                    6. tab to the CODE field, enter "P".
+                    7. in the NAME field, enter "PROG3".
+                    8. enter PF2. The program should display the message
+                                  ** MCB UPDATED ** in the lower left
+                                  message area.
+
+         ___ u. Having build the test menus, now check the following
+                PF KEY functions:
+                ___ PF4 - NEXT menu
+                ___ PF5 - PREVIOUS menu
+                ___ PF6 - FIRST menu
+                ___ PF7 - print a menu image
+                ___ PF16 - EXIT menu editing
+
+         ___ v. using the DOWN arrow move the highlighted area to the
+                DYNAMIC MENU LINKING, press RETURN. If a GETPARM screen
+                appears, change the LIBIN and VOLIN to LIBOUT and VOLOUT,
+                press RETURN.
+                ___ a BAR menu and the IDSI logo should appear.  This is
+                    the ROOTMENU built above.  Test the highlighted
+                    area movement, back and forth across the BAR menu.
+                ___ using the DOWN arrow pull down the LEFT most menu.
+                ___ press RETURN, this should bring up the following
+                    screen format:
+                    --------------------------------------------------------
+                                                             MENUVECT-SCREEN
+                             
+                            Program name is "PROG1"
+
+                            Selected PF key is 00
+
+
+                               Press PF key 16 to EXIT
+                    --------------------------------------------------------
+                    Enter PF16. 
+                ___ Check each of the other BAR menu items.    
+                ___ The LAST item to be checked is EXIT, this should take
+                    you back to the MCB EDIT pull down menu and the MCB
+                    MENUDEMO BAR menu.
+
+         ___ w. enter PF16, this will end the QA and exit back to the
+                unix prompt.

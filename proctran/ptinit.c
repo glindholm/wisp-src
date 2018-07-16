@@ -1,10 +1,6 @@
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 #define EXT extern
-			/************************************************************************/
-			/*	    PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 /* PG_INIT.C   Contains all of the initialization sub-routines.									*/
 
@@ -14,9 +10,9 @@
 #include "pgstruct.h"
 #include "pgglobal.h"
 
-static int memerr();
+static void memerr(void);								/* Memory error.			*/
 
-void setflag()										/* Init all of the "in" flags.		*/
+void setflag(void)									/* Init all of the "in" flags.		*/
 {											
 	in_proc = 0;
 	in_prompt = 0;
@@ -47,7 +43,7 @@ void setflag()										/* Init all of the "in" flags.		*/
 	set_string = 0;
 }
 
-void setscreen()									/* Initialize the screen flags.		*/
+void setscreen(void)									/* Initialize the screen flags.		*/
 {
 	in_pfkey = 0;
 	in_row = 0;
@@ -57,7 +53,7 @@ void setscreen()									/* Initialize the screen flags.		*/
 	in_alarm = 0;
 }
 
-void setgot()										/* Init all of the "got" flags.		*/
+void setgot(void)									/* Init all of the "got" flags.		*/
 {
 	got_link = 0;									/* Set no link as default.		*/
 	got_prompt = 0;									/* Set no prompt as default.		*/
@@ -76,8 +72,7 @@ void setgot()										/* Init all of the "got" flags.		*/
 	got_backref = 0;								/* Set no backwards ref. as default.	*/
 }
 
-init_assign(num)									/* Standard init of command buffer.	*/
-int *num;
+void init_assign(int* num)								/* Standard init of command buffer.	*/
 {
 	assign_item *hld_cur_assign;
 
@@ -108,8 +103,7 @@ int *num;
 	cur_assign->next_item	= NULL;
 }
 
-init_current(num_var)									/* Standard init of command buffer.	*/
-int *num_var;
+void init_current(int* num_var)								/* Standard init of command buffer.	*/
 {
 	declare_item *hld_cur_item;
 
@@ -134,8 +128,7 @@ int *num_var;
 	cur_decl->next_item = NULL;
 }
 
-init_link(num_link_var)									/* Standard init of program link.	*/
-int *num_link_var;
+void init_link(int* num_link_var)							/* Standard init of program link.	*/
 {
 	link_item *hld_cur_link;
 
@@ -160,8 +153,7 @@ int *num_link_var;
 	cur_link->next_item	= NULL;
 }
 
-init_para(num_cmds)									/* Standard init of command buffer.	*/
-int *num_cmds;
+void init_para(int* num_cmds)							/* Standard init of command buffer.	*/
 {
 	paragraph_item *hld_cur_para;
 
@@ -185,8 +177,7 @@ int *num_cmds;
 	cur_para->next_item	= NULL;
 }
 
-init_cmd(num_cmds)									/* Standard init of command buffer.	*/
-int *num_cmds;
+void init_cmd(int* num_cmds)								/* Standard init of command buffer.	*/
 {
 	command_item *hld_cur_cmd;
 
@@ -222,8 +213,7 @@ int *num_cmds;
 	cur_cmd->next_item	  = NULL;
 }
 
-init_screen(screen_num)									/* Standard init of screen buffer.	*/
-int *screen_num;
+void init_screen(int* screen_num)							/* Standard init of screen buffer.	*/
 {
 	screen_item *hld_cur_scn;
 
@@ -252,8 +242,7 @@ int *screen_num;
 	cur_scn->next_item	= NULL;
 }
 
-init_screen_field(current_row)								/* Standard init of screen buffer.	*/
-int *current_row;
+void init_screen_field(int* current_row)						/* Standard init of screen buffer.	*/
 {
 	scn_fld_item *hld_scn_fld;
 
@@ -289,7 +278,7 @@ int *current_row;
 	cur_scn_fld->next_item		= NULL;
 }
 
-init_string_param()									/* Standard init of STRING parameter	*/
+void init_string_param(void)								/* Standard init of STRING parameter	*/
 {											/*  field.				*/
 	string_item *hld_str;
 
@@ -306,7 +295,7 @@ init_string_param()									/* Standard init of STRING parameter	*/
 	cur_str_param->next_item	= NULL;
 }
 
-init_using()										/* Standard init of program using.	*/
+void init_using(void)									/* Standard init of program using.	*/
 {
 	using_item *hld_use;
 
@@ -325,7 +314,7 @@ init_using()										/* Standard init of program using.	*/
 	cur_using->next_item	= NULL;
 }
 
-init_se()										/* Standard init of command buffer.	*/
+void init_se(void)									/* Standard init of command buffer.	*/
 {
 	set_extract_item *hld_se;
 
@@ -351,7 +340,7 @@ init_se()										/* Standard init of command buffer.	*/
 	cur_set_extr->next_item		= NULL;
 }
 
-init_rfdr()										/* Standard init of command buffer.	*/
+void init_rfdr(void)								/* Standard init of command buffer.	*/
 {
 	readfdr_item *hld_rfdr;
 
@@ -378,7 +367,7 @@ init_rfdr()										/* Standard init of command buffer.	*/
 	*cur_rfdr->id		= '\0';
 }
 
-init_if()										/* Standard init of command buffer.	*/
+void init_if(void)									/* Standard init of command buffer.	*/
 {
 	if_item *hld_if;
 
@@ -409,7 +398,7 @@ init_if()										/* Standard init of command buffer.	*/
 	cur_if->next_item	= NULL;
 }
 
-program_item *init_prg()								/* Standard init of program buffer.	*/
+program_item *init_prg(void)								/* Standard init of program buffer.	*/
 {
 	if (!(cur_prg = (program_item *) malloc(sizeof(program_item)))) memerr(); 	/* Initialize Program area.		*/
 
@@ -441,7 +430,7 @@ program_item *init_prg()								/* Standard init of program buffer.	*/
 	return(cur_prg);								/* Point subroutine to current pointer.	*/
 }
 
-rs_item *init_rs()									/* Standard init of program buffer.	*/
+rs_item *init_rs(void)									/* Standard init of program buffer.	*/
 {
 	if (!(cur_ren_sctch = (rs_item *) malloc(sizeof(rs_item)))) memerr(); 		/* Init for RENAME and SCRATCH.		*/
 
@@ -481,8 +470,7 @@ rs_item *init_rs()									/* Standard init of program buffer.	*/
 	return(cur_ren_sctch);								/* Point subroutine to current pointer.	*/
 }
 
-init_pparm(func)									/* Standard init of putparm buffer.	*/
-int func;
+void init_pparm(int func)								/* Standard init of putparm buffer.	*/
 {
 	putparm_item *hld_pp;
 
@@ -511,7 +499,7 @@ int func;
 	cur_pp->next_item	= NULL;
 }
 
-init_ppkw()										/* Standard init of putparm keyword.	*/
+void init_ppkw(void)									/* Standard init of putparm keyword.	*/
 {
 	pp_keywords *hld_kw;
 
@@ -535,7 +523,7 @@ init_ppkw()										/* Standard init of putparm keyword.	*/
 	*cur_pp_key->type2    = '\0';
 	cur_pp_key->next_item = NULL;
 }
-init_return()										/* Standard init of return buffer.	*/
+void init_return(void)									/* Standard init of return buffer.	*/
 {
 	return_item *hld_rtrn;
 
@@ -553,7 +541,7 @@ init_return()										/* Standard init of return buffer.	*/
 	cur_rtrn->next_item	= NULL;
 }
 
-init_literals()										/* Initialize the common literal strings.*/
+void init_literals(void)								/* Initialize the common literal strings.*/
 {
 	strcpy(util,"PROCTRAN");
 	strcpy(paren_sym,"(");
@@ -566,8 +554,20 @@ init_literals()										/* Initialize the common literal strings.*/
 	strcpy(len_two,"(2)");
 }
 
-static memerr()										/* Memory error.			*/
+static void memerr(void)								/* Memory error.			*/
 {
 	write_log("PROCTRAN",'F','R',"NOMEM","No memory availbale for allocation of PROCTRAN structures.");
 	exit(1);									/* Unconditional exit.			*/
 }
+/*
+**	History:
+**	$Log: ptinit.c,v $
+**	Revision 1.5  1997-04-21 11:13:49-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.4  1996-09-12 19:17:20-04  gsl
+**	fix prototypes
+**
+**
+**
+*/

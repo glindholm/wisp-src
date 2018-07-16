@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -74,14 +76,10 @@
 		It is possible that other block sizes are supported.
 */
 
-#ifdef unix
-#define CISAM
-#endif
-#ifdef DMF
+#if defined(unix) || defined(DMF) || defined(WIN32)
 #define CISAM
 #endif
 
-#include "idsistd.h"
 
 #ifdef CISAM
 
@@ -89,12 +87,17 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <string.h>
 
-#ifdef	PROTOTYPES_ALLOWED						/* Prototypes are not part of K&R C.			*/
-static	int4	chars_to_int( unsigned char *cp, int sz );		/* Convert string from cisam file into integer.		*/
-#else
-static	int4	chars_to_int( );					/* Convert string from cisam file into integer.		*/
+#ifdef _MSC_VER
+#include <io.h>
 #endif
+
+#include "idsistd.h"
+#include "wisplib.h"
+#include "osddefs.h"
+
+static	int4	chars_to_int( unsigned char *cp, int sz );			/* Convert string from cisam file into integer.	*/
 										/* The following 2 macros are used to convert	*/
 										/* multiple byte values in a cisam index header	*/
 										/* into machine byte-order independent short	*/
@@ -104,23 +107,25 @@ static	int4	chars_to_int( );					/* Convert string from cisam file into integer.
 #define	CTOS(p) ( (short) chars_to_int( (p), 2 ) )				/* 2 character bytes to short integer.		*/
 #define CTOL(p) ( (int4)  chars_to_int( (p), 4 ) )				/* 4 character bytes to 4 byte integer.		*/
 
-static int cisamRC();
+static int cisamRC(char* path, int4* cnt);					/* Return the record count for a cisam file.	*/
 
-int4 cisaminfo( path, code, field )					/* CISAM file system interface				*/
-char 	*path;								/* File path						*/
-char	*code;								/* Function code					*/
-char	*field;								/* Return info						*/
+int4 cisaminfo(				/* CISAM file system interface				*/
+		char 	*path,		/* File path						*/
+		char	*code,		/* Function code					*/
+		void	*raw_field)	/* Return info						*/
 {
 	char	l_path[132];						/* local path						*/
 	int	f;							/* File handle						*/
-	int	i1, i2;
+	int	i1;
 	int4	*size;
+	char	*field;
 	int	is_cisam;
 	int	is_mffh;
 	unsigned char	fheader[256];
 
 	is_mffh = 0;
 
+	field = (char*) raw_field;
 	size = (int4 *) field;
 
 	strcpy(l_path,path);
@@ -155,6 +160,7 @@ char	*field;								/* Return info						*/
 	{
 		if      ( i1 > 2 && (fheader[0] == 0xFE && fheader[1] == 0x53) ) is_cisam = 1;
 		else if ( i1 > 2 && (fheader[0] == 0x31 && fheader[1] == 0xFE) ) { is_mffh = 1; is_cisam = 0; }
+		else if ( i1 > 2 && (fheader[0] == 0x33 && fheader[1] == 0xFE) ) { is_mffh = 1; is_cisam = 0; }
 		else return(68);
 	}
 
@@ -229,9 +235,7 @@ char	*field;								/* Return info						*/
 	return( 40 );
 }
 
-static int cisamRC(path,cnt)							/* Return the record count for a cisam file. */
-char	*path;
-int4	*cnt;
+static int cisamRC(char* path, int4* cnt)			/* Return the record count for a cisam file. */
 {
 	FILE 	*fp;
 	short	blocksize;
@@ -242,7 +246,7 @@ int4	*cnt;
 	int4	pos;									/* position to seek to			*/
 	int4	ndel;									/* Position of next deleted record num.	*/
 
-	fp = fopen(path,"r");	
+	fp = fopen(path,FOPEN_READ_BINARY);	
 	if ( !fp )
 	{
 		return(44);
@@ -288,9 +292,9 @@ int4	*cnt;
 	return(0);
 }
 
-static	int4	chars_to_int( cp, sz )					/* Convert string from cisam file into integer.		*/
-unsigned	char	*cp;						/* Pointer to first byte (high order) of string.	*/
-int	sz;								/* Numer of bytes to convert; 2 = short, 4 = int4.	*/
+static	int4	chars_to_int( unsigned char *cp, int sz )		/* Convert string from cisam file into integer.		*/
+/* cp	Pointer to first byte (high order) of string.	*/
+/* sz	Numer of bytes to convert; 2 = short, 4 = int4.	*/
 {
 	int4	val;							/* Running total of characters processed so far.	*/
 	int	i;							/* Index to each character to process in for loop.	*/
@@ -305,10 +309,31 @@ int	sz;								/* Numer of bytes to convert; 2 = short, 4 = int4.	*/
 }
 #else /* !CISAM */
 
-int4 cisaminfo()
+int4 cisaminfo(				/* CISAM file system interface				*/
+		char 	*path,		/* File path						*/
+		char	*code,		/* Function code					*/
+		void	*field)		/* Return info						*/
 {
 	werrlog(102,"cisaminfo() not implemented",0,0,0,0,0,0,0);
 	return -1;
 }
 
 #endif /* !CISAM */
+/*
+**	History:
+**	$Log: wfcisam.c,v $
+**	Revision 1.13  1997-07-29 14:56:10-04  gsl
+**	Add the new ID3 and ID4 magic numbers for micro focus
+**
+**	Revision 1.12  1997-03-12 13:21:21-05  gsl
+**	Changed to use WIN32 define
+**
+**	Revision 1.11  1996-09-10 11:49:55-04  gsl
+**	Fix uninitailized variable "field"
+**
+**	Revision 1.10  1996-08-19 15:33:13-07  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,48 +1,18 @@
-			/************************************************************************/
-			/*									*/
-			/*	     VIDEO - Video Interactive Development Environment		*/
-			/*									*/
-			/*			    Copyright (c) 1987				*/
-			/*									*/
-			/*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	voptimize() has been moved to vdefer.c   
+*/
 
-
-/*						Include standard header files.							*/
-
-#include "video.h"									/* Include video definitions.		*/
-
-
-/*						Subroutine entry point.								*/
-
-voptimize(how) int how;
-{
-	extern int optimization;							/* Optimization control flag.		*/
-	register int ret;								/* Working registers.			*/
-
-	switch(how)
-	{
-		case OFF:
-		case TRACKING_ONLY:
-		case DATA_ONLY:
-		case DATA_AND_CONTROLS:
-		case DATA_CONTROLS_AND_MOTION:
-		case DEFER_MODE:
-		case BLOCK_MODE:
-		{
-			ret = optimization;						/* Remember the old optimization.	*/
-			vdefer(RESTORE);						/* No, so restore from deferred action.	*/
-			optimization = how;						/* Select the optimization.		*/
-			break;								/* We're all done.			*/
-		}
-
-		default:								/* Oops, caller doesn't know...		*/
-		{
-			vre("voptimize(%d)-Invalid parameter",how);			/* Report the error.			*/
-			return(FAILURE);						/* And return in shame.			*/
-			break;
-		}
-	}
-	return(ret);
-}
+/*
+**	History:
+**	$Log: vop.c,v $
+**	Revision 1.10  1997-07-08 16:33:14-04  gsl
+**	Moved the optimization logic to vdefer.c
+**
+**	Revision 1.9  1996-10-11 18:16:14-04  gsl
+**	drcs update
+**
+**
+**
+*/

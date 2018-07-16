@@ -1,12 +1,18 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		getparm.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	???
+**
+**	Routines:	
+**	GETPARM()
+**	use_last_prb()
+*/
 
 /*
 	getparm.c	The emulation of the VSSUB  GETPARM.
@@ -51,72 +57,109 @@
 					Answer: NO
 */
 
+/*
+**	Includes
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <varargs.h>
+#include <errno.h>
+#include <string.h>
+
 #ifdef unix
 #include <sys/types.h>
 #include <sys/ipc.h>
 #endif
 
-#include <stdio.h>
-#include <varargs.h>
-#include <errno.h>
-
-#ifndef unix	/* VMS or MSDOS */
-#include <stdlib.h>
-#endif
 #include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wangkeys.h"
 #include "wcommon.h"
 #include "scnfacs.h"
-#include "wshmem.h"
+#include "sharemem.h"
 #include "putparm.h"
 #include "wglobals.h"
+#include "wispvers.h"
+#include "wisplib.h"
+#include "wexit.h"
+#include "idsisubs.h"
+#include "vwang.h"
+#include "wmalloc.h"
+#include "cobrun.h"
+#include "wperson.h"
+#include "setprgid.h"
 
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
+/*
+**	Structures and Defines
+*/
+#define		ROUTINE		20000
+/*
+20001	%%GETPARM-I-ENTRY Entry into GETPARM
+20002	%%GETPARM-F-NOMEM Can't get memory for GETPARM screen
+20003	%%GETPARM-E-DATATYPE Invalid keyword datatype %c
+20004	%%GETPARM-F-ARGUMENTS Unable to decipher.(%s - %d) (Add optional args) 
+20006	%%GETPARM-E-NOTSUP Function (%s) not supported
+*/
 
 #define		INITIAL			0					/* type = "I "					*/
 #define		INITIAL_DEFAULT		1					/* type = "ID"					*/
 #define		RESPECIFY		2					/* type = "R "					*/
 #define		RESPECIFY_DEFAULT	3					/* type = "RD"					*/
 
-#define		FIRST_PFKEY	0x80000000
+#define		FIRST_PFKEY	((uint4)0x80000000)
 
-#define		ALL_KEYS	0xFFFFFFFF
-#define		NO_KEYS		0x00000000
+#define		ALL_KEYS	((uint4)0xFFFFFFFF)
+#define		NO_KEYS		((uint4)0x00000000)
 
-int	tag_prb();
-char	*strchr();
-static int wfget();
-
-static SHMH *curr_prb;								/* Ptr to PRB for current prname		*/
-static int last_prb_id=0;							/* The last PRB used				*/
-static int use_last_prb_id=0;							/* Use the last PRB used as in last_prd_id	*/
-
-extern int rts_first;								/* Init the video drivers			*/
+/*
+**	Globals and Externals
+*/
 
 int alpha_pfkey = 0;	/* This is an external global that tells GETPARM to treat the pfkey-mask as 4 byte alpha value. It is	*/
 			/* normally treated as a 4 byte binary (2+2) which creates a problem if on a "little-Endian" (byte-swap)*/
 			/* machines if the pfkey-mask is an alpha.								*/
+
+extern void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec);
+
+/*
+**	Static data
+*/
+
+static SHMH *curr_prb;								/* Ptr to PRB for current prname		*/
+static int2 last_prb_id=0;							/* The last PRB used				*/
+static int use_last_prb_id=0;							/* Use the last PRB used as in last_prd_id	*/
+
+static int nativecharmap = -1;		/* Flag to do automatic CHARMAP translation to native charset */
+
+/*
+**	Function Prototypes
+*/
+
+static void gdisp_init(void);
+static void gdisp_put(int row, int col, fac_t fac, const char* val);
+static void gdisp_getparm(char* keylist, unsigned char *aid_char);
+static void gdisp_get(int row, int col, char *val, int4 len);			/* get a field from the screen	*/
+static void gdisp_cleanup(void);
+static void gdisp_postdisp(void);
 
 
 /*==============================================================================================================================*/
 void GETPARM(va_alist)
 va_dcl
 {
-#define		ROUTINE		20000
 
 	int done,i,j,arg_count;
 	va_list	the_args;
 	char *the_item;
 	int4 *long_item;
 	int *int_item;
-	char	keylist[80], templine[84], function, lines, term[2], no_mod[2];
+	char	keylist[80], templine[84];
 	uint4   pfkey_mask;						/* the mask of possible pfkeys			*/
 	uint4	key_num;
 	int	the_type;							/* the type of getparm				*/
+	char	the_type_str[2];
 	char	*the_form;							/* the form					*/
 	char	*the_name;							/* the name of the caller			*/
 	char	*pf_ret;							/* the pfkey return field			*/
@@ -135,30 +178,41 @@ va_dcl
 	char	*spcf;								/* collumn flag					*/
 	int4	spcol;								/* collumn value				*/
 	char	*spdtype;							/* data type					*/
-	char 	*screen, screen_mem[2000];					/* The screen pointer & memory (1924+fudge)	*/
 	char    spaces[9];             						/* A string full of spaces.			*/
 	int     relative_row, row, relative_column, column, old_row;		/* Used for relative locations.			*/
-	int	keyfieldfac;							/* The fac translated for data type.		*/
+	fac_t	keyfieldfac;							/* The fac translated for data type.		*/
 	char	prname[9];
 	int	found_keyword, display_flag, missing_word, enter_flagged;	/* 1 if screen display required			*/
-	short	main_arg7;
-	short 	arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9;
+	int	main_arg7;
+	int 	arg4,arg6,arg7,arg9;
 	int4    long_temp;
 	int	struct_type;							/* Flag-determine passed struct.		*/
 	char	**arg_addr;							/* Ptr to array of addresses.			*/
 	int	aa_ndx;								/* Address array index value.			*/
 	char 	prid[8];							/* Local copy of program id.			*/
-	int	label_prb;							/* Was a labled PRB found			*/
-	KEYW	*fmtlist;							/* List to hold keyword/value pairs		*/
+	FMTLIST	*fmtlist;							/* List to hold keyword/value pairs		*/
 	int	labeled_prb;							/* Was a PRB found and was it labeled		*/
+	int	chained_prb;							/* Was a PRB found that is chained		*/
 	int	used_ok;							/* Are PRBs with USED status ok to return	*/
 
 	/* 
 	**	INITIALIZATION
 	*/
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);					/* Say we are here.				*/
 
-	screen = NULL;
+	/* First time thru set nativecharmap flag */
+	if (-1 == nativecharmap)
+	{
+		nativecharmap = 0;
+		if (get_wisp_option("NATIVECHARMAP"))
+		{
+			nativecharmap = 1;
+			/*
+			**	If using NATIVECHARMP then ensure the charmap is loaded
+			*/
+			vwang_load_charmap(0);
+		}
+	}
+
 	enter_flagged = 0;
 	memset(spaces,' ', 8);							/* Fill the string with spaces.			*/
 	spaces[8] = '\0';							/* And null terminate it.			*/
@@ -204,7 +258,7 @@ va_dcl
 	}
 	else the_item = va_arg(the_args, char*);
 	--done;
-
+	
 	if      (the_item[0] == 'I' && the_item[1] == ' ') the_type = INITIAL;
 	else if (the_item[0] == 'I' && the_item[1] == 'D') the_type = INITIAL_DEFAULT;
 	else if (the_item[0] == 'R' && the_item[1] == ' ') the_type = RESPECIFY;
@@ -217,6 +271,8 @@ va_dcl
 		werrlog(ERRORCODE(6),the_item,0,0,0,0,0,0,0);			/* Function not implemented.			*/
 		return;
 	}
+
+	memcpy(the_type_str,the_item,2);
 
 	if (struct_type)							/* get pointer to FORM item			*/
 	{
@@ -247,6 +303,9 @@ va_dcl
 	strncpy(prname,the_name,8);
 
 
+	wtrace("GETPARM","ENTER","Type=[%2.2s] Form=[%c] Prname=[%8.8s]", the_type_str ,*the_form ,prname);
+
+
 	/*
 	**	Search for a PRB that matches the PRNAME for this GETPARM.
 	*/
@@ -260,7 +319,7 @@ va_dcl
 		{
 			if (last_prb_id)					/* We have a last PRB to use			*/
 			{
-				curr_prb = (SHMH *)get_prb_id(last_prb_id);	/* Get the PRB based on the ID			*/
+				curr_prb = get_prb_id(last_prb_id);		/* Get the PRB based on the ID			*/
 			}
 
 			if (!curr_prb)						/* If no PRB then nothing to do			*/
@@ -279,7 +338,7 @@ va_dcl
 	{
 		for(;;)
 		{
-			curr_prb = (SHMH *)get_prb_area(prname,NULL,used_ok);	/* Search for a PRB with this PRNAME		*/
+			curr_prb = get_prb_area(prname,NULL,used_ok);		/* Search for a PRB with this PRNAME		*/
 
 			if (!curr_prb) break;					/* No PRB found					*/
 
@@ -292,7 +351,7 @@ va_dcl
 
 			if (curr_prb->status == P_DELETED)			/* If PRB marked DELETED then 			*/
 			{
-				wax_table_entry((char *)curr_prb);		/* Remove the PRB entry from pr_table		*/
+				wax_table_entry(curr_prb);			/* Remove the PRB entry from pr_table		*/
 			}
 		}
 	}
@@ -303,11 +362,17 @@ va_dcl
 	}
 
 	labeled_prb = 0;							/* Assume no label PRB				*/
+	chained_prb = 0;
 	if (curr_prb)
 	{
 		if (curr_prb->label[0] && curr_prb->label[0] != ' ')
 		{
 			labeled_prb = 1;					/* We found a labeled PRB (Updated PRB values)	*/
+
+			if (get_chained_prb(curr_prb))				/* Check if this is a chained putparm		*/
+			{
+				chained_prb = 1;
+			}
 		}
 	}
 
@@ -363,22 +428,20 @@ va_dcl
 	**	Build the GETPARM screen
 	*/
 
-	screen = screen_mem;							/* get the screen memory			*/
-
-	wsc_init(screen,0,0);							/* init the screen				*/
-
-	wput(screen,1,2,PLAIN_TEXT,"WISP GETPARM");
-	wput(screen,1,15,PLAIN_TEXT,WISP_VERSION);
+	gdisp_init();
+	
+	gdisp_put(1,2,PLAIN_TEXT,"WISP GETPARM");
+	gdisp_put(1,15,PLAIN_TEXT,wisp_version());
 	memset(templine,0,sizeof(templine));
 	sprintf(templine,"Parameter reference Name: %-s",prname);
-	wput(screen,1,46,PLAIN_TEXT,templine);
+	gdisp_put(1,46,PLAIN_TEXT,templine);
 	memset(templine,0,sizeof(templine));
 	sprintf(templine,"Message Id: %4.4s",messid);
-	wput(screen,2,60,PLAIN_TEXT,templine);
+	gdisp_put(2,60,PLAIN_TEXT,templine);
 	memset(templine,0,sizeof(templine));
 	strcpy(templine,"Component: ");
 	strncpy(templine+strlen(templine),messiss,6);
-	wput(screen,3,61,PLAIN_TEXT,templine);
+	gdisp_put(3,61,PLAIN_TEXT,templine);
 	memset(templine,0,sizeof(templine));
 
 	if (RESPECIFY == the_type)						/* The message is dependent on the type/form	*/
@@ -388,12 +451,12 @@ va_dcl
 	else
 		strcpy(templine,"Information Required by ");
 
-	memcpy(prid,WISPPROGID,8);						/* Copy prog id from global to local.		*/
+	memcpy(prid,getprogid(),8);						/* Copy prog id from global to local.		*/
 	strncpy(templine+strlen(templine),prid,8);
-	wput(screen,4,23,PLAIN_TEXT,templine);
+	gdisp_put(4,23,PLAIN_TEXT,templine);
 	sprintf(templine,"----------------------------------------");
 	strcat(templine,"---------------------------------------");
-	wput(screen,6,2,PLAIN_TEXT,templine);
+	gdisp_put(6,2,PLAIN_TEXT,templine);
 
 	/*
 	**	ARG7 is optional
@@ -412,9 +475,8 @@ va_dcl
 	{
 		main_arg7 = 1;
 		long_item = (int4 *)the_item;					/* the number of lines in mess			*/
-		GETBIN(&messlines,long_item,4);
+		messlines = get_swap(long_item);
 		--done;
-		wswap(&messlines);						/* put words in correct order			*/
 		messlines_save = messlines;
 
 		while (messlines)						/* get each line of text			*/
@@ -433,13 +495,13 @@ va_dcl
 			else long_item = va_arg(the_args, int4*);
 			--done;
 
-			GETBIN(&messlen,long_item,4);
-			wswap(&messlen);
+			messlen = get_swap(long_item);
 			messlines--;
 
 			memset(templine,0,sizeof(templine));
-			strncpy(templine,messtxt,(int)messlen);
-			wput(screen,(int)(6+messlines_save-messlines),2,PLAIN_TEXT,templine);
+			if (messlen > WSB_COLS-1) messlen = WSB_COLS-1;
+			memcpy(templine, messtxt,(int)messlen);
+			gdisp_put((int)(6+messlines_save-messlines),2,PLAIN_TEXT,templine);
 		}
 	}
 	else
@@ -459,27 +521,25 @@ va_dcl
 		else long_item = va_arg(the_args, int4*);
 		--done;
 
-		GETBIN(&messlen,long_item,4);
-		wswap(&messlen);
+		messlen = get_swap(long_item);
 
 		arg7_line = 6;
 		memset(templine,0,sizeof(templine));
-		for( i=0, j=0; i<=messlen;)
+		for( i=0, j=0; i < messlen && arg7_line < 23; i++)
 		{
-			if ( messtxt[i] == 0x0d || i == messlen )		/* Break the line on a x0d 			*/
+			if (messtxt[i] != 0x0d)
+			{
+				templine[j++] = messtxt[i];
+			}
+
+			if ( messtxt[i] == 0x0d || i >= (messlen-1) || j >= WSB_COLS-1 ) /* Break the line on a x0d 		*/
 			{
 				arg7_line += 1;
 				messlines_save += 1;
-				wput(screen,arg7_line,4,PLAIN_TEXT,templine);
+				gdisp_put(arg7_line,2,PLAIN_TEXT,templine);
 				memset(templine,0,sizeof(templine));
 				j = 0;
 			}
-			else
-			{
-				templine[j] = messtxt[i];
-				j++;
-			}
-			i++;
 		}
 	}
 
@@ -514,6 +574,8 @@ va_dcl
 		case 'R': case 'r':	/* RESPECIFY KEYWORD FIELD	*/
 
 			{							/* process keyword field    			*/
+				int	force_uppercase;
+
 			/*2*/	if (struct_type)				/* get ptr to KEYWORD NAME item			*/
 				{
 					spkey = (char *)arg_addr[aa_ndx++];
@@ -533,9 +595,8 @@ va_dcl
 					long_item = (int4 *)arg_addr[aa_ndx++];
 				}
 				else long_item = va_arg(the_args, int4*);
-				GETBIN(&splen,long_item,4);
+				splen = get_swap(long_item);
 				--done;
-				wswap(&splen);
 
 			/*5 OPTIONAL */	
 				if (struct_type)				/* get ptr to ROW FLAG item			*/
@@ -559,8 +620,7 @@ va_dcl
 					long_item = (int4 *)sprf;
 					sprf = "R";
 				}
-				GETBIN(&sprow,long_item,4);
-				wswap(&sprow);
+				sprow = get_swap(long_item);
 				if ( sprow < 0 || sprow >24 )			/* Report the args are messed-up		*/
 				{
 					werrlog(ERRORCODE(4),"SPROW",sprow,0,0,0,0,0,0);	
@@ -598,8 +658,7 @@ va_dcl
 					spcf = "R";
 				}
 
-				GETBIN(&long_temp,long_item,4);
-				wswap(&long_temp);
+				long_temp = get_swap(long_item);
 
 				if ( long_temp < 0 || long_temp > 80 )
 				{
@@ -624,12 +683,15 @@ va_dcl
 				}
 				else	spdtype = the_item;
 
+				force_uppercase = 0;
+
 				switch( *spdtype )
 				{
 				case 'A':
 				case 'L':
 				case 'U':
 				case 'H':
+					force_uppercase = 1;
 					keyfieldfac = (*sptype == 'R') ? BLINKUP_FIELD:UPCASE_FIELD;
 					break;
 				case 'a':
@@ -651,6 +713,12 @@ va_dcl
 				case 'n':
 				case 'i':
 					keyfieldfac = NUMPROT_FIELD;
+					break;
+				case 'B':
+					keyfieldfac = ((fac_t)0x98); /* BLANK_FIELD */
+					break;
+				case 'b':
+					keyfieldfac = ((fac_t)0x9C); /* BLANK_FIELD */
 					break;
 				default:
 					werrlog(ERRORCODE(4),"SPDTYPE",*spdtype,0,0,0,0,0,0);
@@ -682,7 +750,7 @@ va_dcl
 					if (*spcf == 'J') column = (column >= 11+2) ? column-11: 2;
 					if (*sptype == 'K' || *sptype == 'R')
 					{
-	 					wput(screen,row,column,PLAIN_TEXT,templine);	/* put on the screen		*/
+	 					gdisp_put(row,column,PLAIN_TEXT,templine);	/* put on the screen		*/
 					}
 					column += 11;				/* add 11 to the column				*/
 				}
@@ -697,7 +765,27 @@ va_dcl
 				found_keyword=0;
 				if (curr_prb && the_type != RESPECIFY_DEFAULT)	/* If there is a PRB then search for keyword	*/
 				{
-					found_keyword = search_parm_area(templine,spkey,0,splen,(char *)curr_prb,0);
+					found_keyword = search_parm_area(templine,spkey,splen,curr_prb);
+
+					if (chained_prb)
+					{
+						/*
+						**	If this is a chained putparm then we will search the parm area
+						**	of each prb on the chain for the keyword.
+						*/
+
+						SHMH	*temp_prb;
+
+						temp_prb = curr_prb;
+
+						while (temp_prb = get_chained_prb(temp_prb))
+						{
+							if (search_parm_area(templine,spkey,splen,temp_prb))
+							{
+								found_keyword = 1;
+							}
+						}
+					}
 				}
 				if (!found_keyword)				/* If no PRB value then use spval (G/A)		*/
 				{
@@ -706,13 +794,19 @@ va_dcl
 				}
 
 				templine[splen] = '\0';				/* null terminate				*/
+
 				relative_column = column + splen + 1;
 
 				if (*sptype == 'K' || *sptype == 'R')		/* If keyword is not a "skip"			*/
 				{
 					if (splen > 0)
 					{
-						wput(screen,row,column,keyfieldfac,templine);	/* output the line		*/
+						if (force_uppercase)
+						{
+							upper_string(templine);
+						}
+
+						gdisp_put(row,column,keyfieldfac,templine);	/* output the line		*/
 					}
 				}
 				break;
@@ -735,8 +829,7 @@ va_dcl
 				}
 				else long_item = va_arg(the_args, int4*);
 				--done;
-				GETBIN(&splen,long_item,4);
-				wswap(&splen);
+				splen = get_swap(long_item);
 
 			/*4 OPTIONAL */	
 				if (struct_type)				/* get ptr to ROW_FLAG item			*/
@@ -766,8 +859,7 @@ va_dcl
 					--done;
 				}
 				else	long_item = (int4 *)the_item;
-				GETBIN(&sprow,long_item,4);
-				wswap(&sprow);
+				sprow = get_swap(long_item);
 				if ( sprow < 0 || sprow >24 )			/* Report the args are messed-up		*/
 				{
 					werrlog(ERRORCODE(4),"SPROW",sprow,0,0,0,0,0,0);	
@@ -802,8 +894,7 @@ va_dcl
 					--done;
 				}
 				else	long_item = (int4 *)the_item;
-				GETBIN(&spcol,long_item,4);
-				wswap(&spcol);
+				spcol = get_swap(long_item);
 				if ( spcol < 0 || spcol >80 )			/* Report the args are messed-up		*/
 				{
 					werrlog(ERRORCODE(4),"SPCOL",spcol,0,0,0,0,0,0);	
@@ -830,14 +921,14 @@ va_dcl
 
 				if (*sptype == 'T' || *sptype == 'U')		/* If not a "skip"				*/
 				{
-					int	fieldfac;
+					fac_t	fieldfac;
 
 					if (*sptype == 'T')	fieldfac = PLAIN_TEXT;
 					else			fieldfac = UNDER_TEXT;
 
 					if (splen > 0)
 					{
-						wput(screen,row,column,fieldfac,templine);	/* output the line		*/
+						gdisp_put(row,column,fieldfac,templine);	/* output the line		*/
 					}
 				}
 				break;
@@ -860,8 +951,7 @@ va_dcl
 				--done;
 
 				long_item = (int4*) spval;                                                           
-				GETBIN(&pfkey_mask,long_item,4);
-				wswap(&pfkey_mask);				/* change order of words			*/
+				pfkey_mask = get_swap(long_item);
 				if (alpha_pfkey && !bytenormal())
 				{
 					reversebytes((char *)&pfkey_mask,4);  	/* Correct alpha pfkey-mask			*/
@@ -889,9 +979,6 @@ va_dcl
 			}
 		}								/* end of switch				*/
 	}
-
-	function = 7;
-	lines = 24;
 
 	if ( !enter_flagged )							/* No "enter" sequences so			*/
 	{
@@ -944,9 +1031,11 @@ va_dcl
 
 	if (display_flag) 							/* Do we have to display ?			*/
 	{
-		wpushscr();							/* Push the old screen.				*/
-		vwang(&function,screen,&lines,keylist,term,no_mod);		/* display the screen				*/
-		pf_ret[0] = no_mod[1];						/* Get the key value				*/
+		unsigned char aid_char;
+		
+		gdisp_getparm(keylist,&aid_char);
+
+		pf_ret[0] = aid_char;
 	}
 	else
 	{
@@ -1004,9 +1093,8 @@ va_dcl
 			long_item = (int4 *)arg_addr[aa_ndx++];
 		}
 		else long_item = va_arg(the_args, int4*);
-		GETBIN(&messlines,long_item,4);
+		messlines = get_swap(long_item);
 		--done;
-		wswap(&messlines);
                              
 		while (messlines)						/* skip each line of text			*/
 		{
@@ -1073,8 +1161,7 @@ va_dcl
 				}
 				else long_item = va_arg(the_args, int4*);
 				--done;
-				GETBIN(&splen,long_item,4);
-				wswap(&splen);
+				splen = get_swap(long_item);
 
 			/*5 OPTIONAL */	
 				if (struct_type)				/* get ptr to ROW FLAG item			*/
@@ -1098,8 +1185,7 @@ va_dcl
 					long_item = (int4 *)sprf;
 					sprf = "R";
 				}
-				GETBIN(&sprow,long_item,4);
-				wswap(&sprow);
+				sprow = get_swap(long_item);
 				if ( sprow < 0 || sprow >24 )			/* Report the args are messed-up		*/
 				{
 					werrlog(ERRORCODE(4),"SPROW",sprow,0,0,0,0,0,0);	
@@ -1135,8 +1221,7 @@ va_dcl
 					spcf = "R";
 				}
 
-				GETBIN(&long_temp,long_item,4);
-				wswap(&long_temp);
+				long_temp = get_swap(long_item);
 				if ( long_temp < 0 || long_temp > 80 )
 				{
 					arg9=0;					/* Don't get arg9 (already have)		*/
@@ -1167,6 +1252,7 @@ va_dcl
 				case 'L': case 'l':
 				case 'U': case 'u':
 				case 'H': case 'h':
+				case 'B': case 'b':
 					break;
 				default:					/* Report the args are messed-up		*/
 					werrlog(ERRORCODE(4),"SPDTYPE",*spdtype,0,0,0,0,0,0);	
@@ -1198,7 +1284,7 @@ va_dcl
 				{
 					if (splen > 0)
 					{
-						wfget(screen,row,column,spval,splen);	/* get the field			*/
+						gdisp_get(row,column,spval,splen);	/* get the field			*/
 
 						/*
 						** 	If PRB and labeled then we have to updated the PRB with all these
@@ -1207,21 +1293,21 @@ va_dcl
 
 						if (labeled_prb)
 						{
-							KEYW	*p;
+							static FMTLIST	*p;
 
 							if (!fmtlist)
 							{
-								p = fmtlist = (KEYW *)calloc(1,sizeof(KEYW));
+								p = fmtlist = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 							}
 							else
 							{
-								p->next = (KEYW *)calloc(1,sizeof(KEYW));
+								p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 								p = p->next;
 							}
 							p->next = NULL;
 							memcpy(p->keyword,spkey,8);
 							p->len = splen;
-							p->value = (char *)calloc((int)(p->len+1),sizeof(char));
+							p->value = (char *)wcalloc((int)(p->len+1),sizeof(char));
 							memcpy(p->value,spval,(int)(p->len));
 							p->special = SPECIAL_NOT;
 						}
@@ -1248,8 +1334,7 @@ va_dcl
 				}
 				else long_item = va_arg(the_args, int4*);
 				--done;
-				GETBIN(&splen,long_item,4);
-				wswap(&splen);
+				splen = get_swap(long_item);
 
 			/*4 OPTIONAL */	
 				if (struct_type)				/* get ptr to ROW_FLAG item			*/
@@ -1280,8 +1365,7 @@ va_dcl
 					--done;
 				}
 				else          long_item = (int4 *)the_item;
-				GETBIN(&sprow,long_item,4);
-				wswap(&sprow);
+				sprow = get_swap(long_item);
 				if ( sprow < 0 || sprow >24 )			/* Report the args are messed-up		*/
 				{
 					werrlog(ERRORCODE(4),"SPROW",sprow,0,0,0,0,0,0);	
@@ -1316,8 +1400,7 @@ va_dcl
 					--done;
 				}
 				else	long_item = (int4 *)the_item;
-				GETBIN(&spcol,long_item,4);
-				wswap(&spcol);
+				spcol = get_swap(long_item);
 				if ( spcol < 0 || spcol >80 )			/* Report the args are messed-up		*/
 				{
 					werrlog(ERRORCODE(4),"SPCOL",spcol,0,0,0,0,0,0);	
@@ -1369,13 +1452,24 @@ va_dcl
 	if (labeled_prb && fmtlist)						/* Update the labeled PRB with new values	*/
 	{
 		update_prb(&curr_prb,fmtlist);
+
+		if (chained_prb)
+		{
+			SHMH	*temp_prb;
+
+			temp_prb = curr_prb;
+			while ( temp_prb = get_chained_prb(temp_prb) )
+			{
+				update_prb(&temp_prb,fmtlist);
+			}
+		}
+
 		free_fmtlist(fmtlist);
 	}
 
 	if (display_flag)
 	{
-		wpopscr();							/* Restore any saved screen.			*/
-		synch_required = ede_synch;					/* Synch. not needed unless EDE			*/
+		gdisp_postdisp();
 	}
 
 	/*
@@ -1385,6 +1479,32 @@ va_dcl
 	if (curr_prb && the_type != RESPECIFY_DEFAULT)
 	{
 		use_prb(curr_prb);						/* Use this PRB.				*/
+
+#ifdef NOTYET
+		/*
+		**	Currently we only "USE" the lowest one on the chain.
+		**
+		**	The use_last_prb logic doesn't work very well for chained putparms,
+		**	this is because the "chain" structure is not maintained in the prb.
+		**	The "chain" structure is figured out each time it is needed, if
+		**	the putparms up the chain got "used" then the chain structure
+		**	would be different next time it is traced.
+		**
+		**	In the future, we will store the chain in the prb as a chain_prb_id
+		**	field.   Then update_prb() and use_prb() can be made to follow
+		**	the chain.
+		*/
+		if (chained_prb)
+		{
+			SHMH	*temp_prb;
+
+			temp_prb = curr_prb;
+			while ( temp_prb = get_chained_prb(temp_prb) )
+			{
+				use_prb(temp_prb);
+			}
+		}
+#endif
 	}
 
 exit_getparm:
@@ -1392,6 +1512,7 @@ exit_getparm:
 	va_end(the_args);							/* done with the list				*/
 
 	cleanup_shrfil();
+	gdisp_cleanup();
 
 	return;
 }
@@ -1408,17 +1529,483 @@ int use_last_prb()
 }
 
 /*==============================================================================================================================*/
-static int wfget(screen,row,col,val,len)					/* get a field from the screen	*/
-char	*screen;								/* pointer to screen structure	*/
-int	row;									/* the row to start		*/
-int	col;									/* the column			*/
-char	*val;									/* the place to store the value	*/
-int4	len;									/* the size of the area		*/
+
+#define MAX_COB_GP_FIELDS	32	/* Max number of entry fields */
+#define MAX_GP_FIELD_LEN	79	/* Max length of entry fields */
+
+static char *local_screen = NULL;
+static int cob_fields = 0;
+
+typedef struct
 {
- 	int i;
-              
-	i = ((row-1) * 80) + (col-1) + 4;					/* location in screen map	*/
-	memcpy(val,&screen[i],(int)len);					/* copy the data		*/
-	return(0);
+	uint2 row;			/* UNSIGNED-SHORT 	*/
+	uint2 col;			/* UNSIGNED-SHORT 	*/
+	uint2 len;			/* UNSIGNED-SHORT 	*/
+	char fac;			/* PIC X COMP-X 	*/
+	char field[MAX_GP_FIELD_LEN];	/* PIC X(79) 		*/
+} cob_gp_field;
+
+static cob_gp_field *cob_field_list = NULL;
+
+/*
+**	ROUTINE:	gdisp_init()
+**
+**	FUNCTION:	Init the screen display structs.
+**
+**	DESCRIPTION:	WISP screens: 
+**			Init the vwang() screen buffer
+**
+**			Native screens:
+**			Init the static text buffer and the field table.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	
+**	local_screen	Screen image buffer.
+**	cob_fields	Number of entry fields.
+**	cob_field_list	Table of entry fields for cobol native screens
+**
+**	RETURN:		None
+**
+**	WARNINGS:	This must be called as the first gdisp_xxx() routines.
+**
+*/
+static void gdisp_init(void)
+{
+	int	i;
+	
+	if (acu_cobol && nativescreens())
+	{
+		cob_fields = 0;
+		
+		local_screen = wmalloc(WSB_ROWS*WSB_COLS);
+		memset(local_screen,' ', WSB_ROWS*WSB_COLS);
+
+		cob_field_list = wmalloc(sizeof(cob_gp_field)*MAX_COB_GP_FIELDS);
+		memset(cob_field_list, ' ', sizeof(cob_gp_field)*MAX_COB_GP_FIELDS);
+
+		for(i=0; i<MAX_COB_GP_FIELDS;i++)
+		{
+			/* This is a empty spot on a GETPARM screen */
+			cob_field_list[i].row =  2;
+			cob_field_list[i].col = 79;
+			cob_field_list[i].len =  1;
+		}
+	}
+	else
+	{
+		local_screen = wmalloc(2000);
+		wsc_init(local_screen,0,0);
+	}
 }
 
+/*
+**	ROUTINE:	gdisp_postdisp()
+**
+**	FUNCTION:	Perform post-display screen actions.
+**
+**	DESCRIPTION:	WISP screens: 
+**			Pop the screen stack and resynch if needed
+**
+**			Native screens:
+**			No-op.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	Must be called after gdisp_getparm().
+**
+*/
+static void gdisp_postdisp(void)
+{
+	if (acu_cobol && nativescreens())
+	{
+		/* No action needed */
+	}
+	else
+	{
+		wpopscr();							/* Restore any saved screen.			*/
+		vwang_set_synch(ede_synch);					/* Synch. not needed unless EDE			*/
+	}
+}
+
+
+/*
+**	ROUTINE:	gdisp_cleanup()
+**
+**	FUNCTION:	Cleanup the screen display structs.
+**
+**	DESCRIPTION:	WISP screens: 
+**			Free the screen buffer
+**
+**			Native screens:
+**			Free the field table
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	
+**	local_screen	Screen image buffer.
+**	cob_fields	Number of entry fields.
+**	cob_field_list	Table of entry fields for cobol native screens
+**
+**	RETURN:		None
+**
+**	WARNINGS:	Must be called as the last action.
+**
+*/
+static void gdisp_cleanup(void)
+{
+	free(local_screen);
+	local_screen = NULL;
+
+	if (cob_field_list)
+	{
+		free(cob_field_list);
+		cob_field_list = NULL;
+	}
+}
+
+/*
+**	ROUTINE:	gdisp_put()
+**
+**	FUNCTION:	Add a text of entry field to the getparm screen.
+**
+**	DESCRIPTION:	WISP screens: 
+**			Insert the fac and data into the vwang() screen buffer.
+**
+**			Native screens:
+**			Add the text to the static text buffer. 
+**			If a entry field add it to the entry field table.
+**
+**	ARGUMENTS:	
+**	row		The fields row position (1-24)
+**	col		The fields column position (1-80)
+**	fac		The wang style fac for this field.
+**	val		The field value (NULL terminated)
+**
+**	GLOBALS:	
+**	local_screen	Screen image buffer.
+**	cob_fields	Number of entry fields.
+**	cob_field_list	Table of entry fields for cobol native screens
+**
+**	RETURN:		None
+**
+**	WARNINGS:	Must call gdisp_init() first.
+**
+*/
+static void gdisp_put(int row, int col, fac_t fac, const char* val)
+{
+	if (acu_cobol && nativescreens())
+	{
+		int	len;
+		
+		len = strlen(val);		
+
+		/*
+		**	Validate the values
+		*/
+		if (row < 1 || row > WSB_ROWS)
+		{
+			wtrace("GETPARM","ROW","Invalid row value %d",row);
+			row = 1;
+		}
+		if (col < 1 || col > WSB_COLS)
+		{
+			wtrace("GETPARM","COLUMN","Invalid column value %d",col);
+			col = 1;
+		}
+		if (len > MAX_GP_FIELD_LEN)
+		{
+			wtrace("GETPARM","LENGTH","Invalid field length value %d",len);
+			len = MAX_GP_FIELD_LEN;
+		}
+		
+		/*
+		**	If not a blank field - add it to the static text buffer
+		*/
+		if (!FAC_BLANK(fac))
+		{
+			memcpy(&local_screen[(row-1)*WSB_COLS + col-1], val, len);
+		}
+
+		/*
+		**	If an entry field then add it to the entry field table
+		*/
+		if (!FAC_PROTECTED(fac))
+		{
+			if (cob_fields >= MAX_COB_GP_FIELDS)
+			{
+				werrlog(104,"%%GETPARM-E-MAXFIELDS Max 32 modifiable fields",0,0,0,0,0,0,0);
+			}
+			else
+			{
+				cob_field_list[cob_fields].row = row;
+				cob_field_list[cob_fields].col = col;
+				cob_field_list[cob_fields].len = len;
+
+				cob_field_list[cob_fields].fac = fac;
+			
+				memcpy(cob_field_list[cob_fields].field, val, len);
+				cob_fields++;
+			}
+		}
+	}
+	else
+	{
+		/*
+		**	Insert the FAC and text into the vwang buffer
+		*/
+
+		char str[256];
+
+		strcpy(str,val);
+		
+		if (nativecharmap)
+		{
+			/*
+			**	Translate ansi charset into wang charset in preparation of vwang call.
+			*/
+			vwang_ansi2wang((unsigned char *)str, strlen(str));
+		}
+
+		wput(local_screen, row, col, fac, str);
+	}
+}
+
+
+/*
+**	ROUTINE:	gdisp_getparm()
+**
+**	FUNCTION:	Display the GETPARM.
+**
+**	DESCRIPTION:	WISP screens: 
+**			Push the screen then call vwang() to display the screen buffer.
+**
+**			Native screens:
+**			Call "WACUGETPARM" to display the screen.
+**
+**	ARGUMENTS:	
+**	keylist		The valid function keys in ascii pairs (eg "00010316X")
+**	aid_char	The returned AID char used to terminate the GETPARM.
+**
+**	GLOBALS:	
+**	local_screen	Screen image buffer.
+**	cob_fields	Number of entry fields.
+**	cob_field_list	Table of entry fields for cobol native screens
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void gdisp_getparm(char* keylist, unsigned char *aid_char)
+{
+	if (acu_cobol && nativescreens())
+	{
+		/*
+		**	CALL "WACUGETPARM" USING
+		**	[0]	static_text		PIC X(24*80)
+		**	[1]	field_cnt		PIC 99			0-32
+		**	[2]	field_table		PIC X(86) * 32	
+		**	[3]	key_list		PIC X(80)
+		**	[4]	key_cnt			UNSIGNED-SHORT		1-32
+		**	[5]	term_key		UNSIGNED-SHORT		0-32
+		*/
+		char	*parms[6];
+		int4	lens[6];
+		int4	rc;
+		uint2	field_cnt;
+		uint2	key_cnt;
+		uint2	term_key;
+		char 	*ptr;
+
+		field_cnt = cob_fields;
+
+		/*
+		**	Count number of keys in the key list
+		*/
+		key_cnt = 0;
+		if (ptr = strchr(keylist,'X'))
+		{
+			*ptr = (char)0;
+			key_cnt = strlen(keylist) / 2;
+		}
+		if (key_cnt < 1)
+		{
+			wtrace("GETPARM","KEYLIST","Invalid keylist [%s]",keylist);
+			key_cnt = 1;
+			strcpy(keylist,"00X");
+		}
+
+		parms[0] = local_screen;
+		lens[0]  = WSB_ROWS*WSB_COLS;
+
+		parms[1] = (char*)&field_cnt;
+		lens[1]  = sizeof(field_cnt);
+
+		parms[2] = (char*)cob_field_list;
+		lens[2]  = sizeof(cob_gp_field)*MAX_COB_GP_FIELDS;
+		
+		parms[3] = keylist;
+		lens[3]  = 80;
+		
+		parms[4] = (char*)&key_cnt;
+		lens[4]  = sizeof(key_cnt);
+		
+		parms[5] = (char*)&term_key;
+		lens[5]  = sizeof(term_key);
+		
+		call_acucobol("WACUGETPARM", 6, parms, lens, &rc);
+
+		if (rc)
+		{
+			int4	wrc, wcc;
+			
+			call_acucobol_error(rc, &wrc, &wcc, "WACUGETPARM");
+		}
+		else
+		{
+			int i;
+			
+			/*
+			**	Load the field data into the screen buffer so it can
+			**	be retrieved with gdisp_get().
+			*/
+			for(i=0; i<cob_fields; i++)
+			{
+				int	row,col,len;
+
+				row = cob_field_list[i].row;
+				col = cob_field_list[i].col;
+				len = cob_field_list[i].len;
+				
+				memcpy(&local_screen[(row-1)*WSB_COLS + col-1], cob_field_list[i].field, len);
+			}
+
+			/*
+			**	Convert the term key to an aid char
+			*/
+			if (term_key < 0 || term_key > 32) 
+			{
+				wtrace("GETPARM","TERMKEY","Invalid term_key [%d]",term_key);
+				term_key = 0;
+			}
+			
+			*aid_char = ("@ABCDEFGHIJKLMNOPabcdefghijklmnop")[term_key];
+		}
+	}
+	else
+	{
+		unsigned char	function, lines, term[2], no_mod[2];
+
+		function = DISPLAY_AND_READ_ALTERED;
+		lines = 24;
+
+		wpushscr();							/* Push the old screen.				*/
+		vwang(&function,local_screen,&lines,keylist,term,no_mod);	/* display the screen				*/
+		*aid_char = no_mod[1];						/* Get the key value				*/
+	}
+}
+
+/*
+**	ROUTINE:	gdisp_get()
+**
+**	FUNCTION:	Get an entry fields data after user input.
+**
+**	DESCRIPTION:	Copy the data out of the screen buffer.
+**
+**	ARGUMENTS:	
+**	row		The fields row position (1-24)
+**	col		The fields column position (1-80)
+**	val		The returned value
+**	len		The length of the field (1-79)
+**
+**	GLOBALS:	
+**	local_screen	Screen image buffer.
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void gdisp_get(int row, int col, char *val, int4 len)
+{
+	if (acu_cobol && nativescreens())
+	{
+		memcpy(val, &local_screen[((row-1)*WSB_COLS)+(col-1)], len);
+	}
+	else
+	{
+		memcpy(val, &local_screen[((row-1)*WSB_COLS)+(col-1)+4], len);
+
+		if (nativecharmap)
+		{
+			/*
+			**	Translate wang charset into ansi charset following a vwang read.
+			*/
+			vwang_wang2ansi((unsigned char *)val, len);
+		}
+	}
+}
+
+
+/*
+**	History:
+**	$Log: getparm.c,v $
+**	Revision 1.22  1997-12-18 20:58:40-05  gsl
+**	Fix CHARMAP handling
+**
+**	Revision 1.21  1997-12-17 20:44:56-05  gsl
+**	Add support for NATIVECHARMAP option
+**
+**	Revision 1.20  1997-10-21 10:15:32-04  gsl
+**	Changed to use getprogid()
+**	Changed to use get_swap()
+**
+**	Revision 1.19  1997-09-30 14:05:51-04  gsl
+**	FIx warnings
+**
+**	Revision 1.18  1997-09-24 12:00:45-04  gsl
+**	Add error tracing
+**
+**	Revision 1.17  1997-09-23 17:13:31-04  gsl
+**	Add the Acucobol native screen support
+**
+**	Revision 1.16  1997-08-21 16:19:45-04  gsl
+**	Add support for a BLANK "B" key field data type.
+**
+**	Revision 1.15  1997-05-08 17:17:31-04  gsl
+**	Change to use wtrace()
+**
+**	Revision 1.14  1997-04-22 21:31:24-04  gsl
+**	Fix handling of Message_Text so it doesn't overwrite memory with
+**	a long message
+**
+**	Revision 1.13  1996-07-17 17:50:27-04  gsl
+**	change to use wcalloc()
+**
+**	Revision 1.12  1996-07-09 16:34:50-07  gsl
+**	Fix last_prb_id to be an int2
+**
+**	Revision 1.11  1996-06-28 08:51:57-07  gsl
+**	add missing include files
+**
+**	Revision 1.10  1995-06-14 08:23:40-07  gsl
+**	change to use wisp_version()
+**
+ * Revision 1.9  1995/04/25  09:52:47  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.8  1995/04/17  11:46:10  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.7  1995/03/09  13:42:02  gsl
+ * replace synch_required with call to vwang_set_synch() plus
+ * added standard headers
+ *
+**
+**
+*/

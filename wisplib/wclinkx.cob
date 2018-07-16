@@ -4,7 +4,7 @@
        DATA DIVISION.
 
        LINKAGE SECTION.
-       01  PROGRAM-NAME PIC X(8).
+       01  PROGRAM-NAME PIC X(80).
        01  PARM-1       PIC X.
        01  PARM-2       PIC X.
        01  PARM-3       PIC X.
@@ -37,7 +37,7 @@
        01  PARM-30      PIC X.
        01  PARM-31      PIC X.
        01  PARM-32      PIC X.
-       01  RETURN-VALUE PIC 9(9) COMP.
+       01  RETURN-VALUE PIC 9(9) COMP-5.
 
        PROCEDURE DIVISION USING
                           PROGRAM-NAME,

@@ -1,3 +1,21 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
+
+/*
+**	File:		menu.h
+**
+**	Project:	WISPLIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	menu system
+**
+*/
+
+#ifndef menu_H
+#define menu_H
 
 
 						/* menu structures header file */
@@ -27,4 +45,28 @@ struct menu	{						/* The structure of a complete menu			*/
 #define DISPLAY_MENU			8				/* Display a new menu					*/
 #define EXIT_PROGRAM			9				/* Exit the program					*/
 #define LOGOFF				10				/* Log off the system					*/
+
+
+int menu_go(char* menuname, char* menuvalue);
+int menu_get_key(int key_num);
+int menu_set_key(int key_num, int value);
+struct menu *menu_read(char* pmenufile);
+int menu_scan(struct menu *themenu);
+void menu(char *name,	/* The name of the menu file			*/
+	  char *rval);	/* The return value				*/
+
+#endif /* menu_H */
+
+/*
+**	History:
+**	$Log: menu.h,v $
+**	Revision 1.9  1996-07-17 12:19:50-04  gsl
+**	Fix missing newline
+**
+**	Revision 1.8  1996-07-17 09:19:11-07  gsl
+**	Add headers and prototypes for NT
+**
+**	
+**
+*/
 

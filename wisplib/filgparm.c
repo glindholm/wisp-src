@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -23,9 +25,14 @@
 #include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"											
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "filgparm.h"
 
 #define WANG_MODE 0
 #define NATIVE_MODE !WANG_MODE
+
+#define GP	args.ptrs[cnt++] = (char *)
 
 static char rval[4];									/* The place to put the return code.	*/
 
@@ -42,39 +49,41 @@ static char *inf_msg[] =
 	0 
 };
 
-file_getparm2(f_mode,file,lib,vol,prname,issuer,entry_mode,getparm_type,native_path,msg1,msg2,pfkey_rcvr,intv_type,orig_file,
-		prtclass, form, copies)
-int4 f_mode;
-char *file, *lib, *vol, *prname, *issuer, *orig_file;
-int4 *entry_mode;
-char *getparm_type;
-char *native_path;
-char *msg1,*msg2;
-char *pfkey_rcvr;
-char intv_type;							/* 'E' Error  'R' Rename (open output, file exists)		*/
-char	*prtclass;
-int4	*form;
-int4	*copies;
+void file_getparm2(
+		   int4 f_mode, 				/* wfopen mode		*/
+		   char file[8], char lib[8], char vol[6], 	/* Wang style file spec */
+		   char prname[8], 				/* Prname[8]		*/
+		   char issuer[6], 				/* Issuer[6]		*/
+		   int4 *entry_mode, 				/* 0 = Wang style, 1 = Native style filepath */
+		   char getparm_type[2],
+		   char native_path[80],
+		   char *msg1, char *msg2, 
+		   char *pfkey_rcvr, 
+		   char intv_type,				/* 'R' - Rename PF3,  'E' - Everything else */
+		   char orig_file[8], 				/* Original Wang file name */
+		   char *prtclass, 
+		   int4 *form, 
+		   int4* copies
+		   )
 {                                                  
 #define		ROUTINE		18000
 
 	int4	pfkey;
 	int	i,inf;
 	char	*error_msg;
-	int4	va_cnt;
-	int4	*long_ptr;
 	char	pf_footer[100];
 	char	temp[100];
 	char	temp2[10];
 	char	filename[80];
 	int	done, type_ID;
 	char	prtform[10], prtcopies[10];
+	int	exit_key;
 
 	struct argst { char *ptrs[160]; } args;
 	int4	cnt;
-#define GP	args.ptrs[cnt++] = (char *)
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+	wtrace("FILE_GETPARM","ENTRY","PRNAME=[%8.8s] ISSUER=[%6.6s] TYPE=[%2.2s] STYLE=[%s] [%c]",
+	       prname, issuer, getparm_type, ((*entry_mode)?"Native":"Wang"), intv_type);
 
 	*pfkey_rcvr = ENTER_KEY_PRESSED;					/* Default the reciever to '@'			*/
 	
@@ -103,11 +112,21 @@ int4	*copies;
 
 	wpload();									/* Get user personality and defaults.	*/
 
-	if (intv_type == 'R')
+	if (intv_type == 'R') /* 'E' Error  'R' Rename (open output, file exists) */
 		pfkey = PFKEY_3_ENABLED|PFKEY_5_ENABLED|PFKEY_16_ENABLED;
 	else
 		pfkey = PFKEY_5_ENABLED|PFKEY_16_ENABLED;				/* Only two keys enabled.		*/
 
+	if (pfkeys12())
+	{
+		pfkey |= PFKEY_12_ENABLED;
+		exit_key = 12;
+	}
+	else
+	{
+		exit_key = 16;
+	}
+	
 	wswap( &pfkey );								/* Do system dependent swap		*/
 
 	if (f_mode & IS_IO)
@@ -170,11 +189,11 @@ int4	*copies;
 		}
 
 		if (intv_type == 'R')
-			sprintf(pf_footer,"     (Press PF3 to continue, PF5 for %s entry mode or PF16 to exit.)       ",
-					mode_string);
+			sprintf(pf_footer,"     (Press (3) to continue, (5) for %s entry mode or (%d) to exit.)       ",
+					mode_string, exit_key);
 		else
-			sprintf(pf_footer,"            (Press PF5 for %s entry mode or PF16 to exit.)                 ",
-					mode_string);
+			sprintf(pf_footer,"            (Press (5) for %s entry mode or (%d) to exit.)                 ",
+					mode_string, exit_key);
 
 		GP "T";	GP pf_footer;		GP &N[79];			GP "A";	GP &N[24];	GP "A";	GP &N[1];
 		GP "E";
@@ -192,11 +211,13 @@ int4	*copies;
 
 		if ((*pfkey_rcvr == ENTER_KEY_PRESSED) ||
 		    (*pfkey_rcvr == PFKEY_3_PRESSED)   ||
+		    (*pfkey_rcvr == PFKEY_12_PRESSED)  ||
 		    (*pfkey_rcvr == PFKEY_16_PRESSED))					/* Do they want out ?		*/
 		{
 			++done;
-			if (*pfkey_rcvr == PFKEY_16_PRESSED)
+			if (*pfkey_rcvr == PFKEY_12_PRESSED || *pfkey_rcvr == PFKEY_16_PRESSED)
 			{
+				*pfkey_rcvr = PFKEY_16_PRESSED;
 				setretcode("016");
 			}
 			continue;
@@ -219,5 +240,122 @@ int4	*copies;
 		sscanf(prtform,"%d",form);
 		sscanf(prtcopies,"%d",copies);
 	}
+
+	if (*entry_mode)
+	{
+		wtrace("FILE_GETPARM","EXIT","NATIVEFILE=[%80.80s] KEY=[%c]",
+		       native_path, *pfkey_rcvr);
+	}
+	else
+	{
+		wtrace("FILE_GETPARM","EXIT","FILE=[%8.8s] LIB=[%8.8s] VOL=[%6.6s] KEY=[%c]",
+		       file, lib, vol, *pfkey_rcvr);
+	}
 }
 
+/*
+**	ROUTINE:	password_getparm()
+**
+**	FUNCTION:	Issue the PASSWORD and USERNAME GETPARM
+**
+**	DESCRIPTION:	This is used with SUBMIT on NT/95
+**
+**	ARGUMENTS:	
+**	initial		Is this an initial ("I ") or respecify ("R ") getparm
+**	uservalue	The USERNAME value
+**	userlen		THe field length to use for USERNAME
+**	passvalue	The PASSWORD value
+**	passlen		The field length to use for PASSWORD
+**	savevalue	The SAVE value (YES or NO)
+**	messtext	The message text.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Terminated with ENTER key (Normal exit)
+**	1		Aborted
+**
+**	WARNINGS:	None
+**
+*/
+int password_getparm(int initial, char* uservalue, int userlen, char* passvalue, int passlen, char* savevalue, char* messtext)
+{
+	int	i;
+	struct argst { char *ptrs[160]; } args;
+	int4	cnt;
+	char	pfkey_rcvr[1];
+	char	*prname, *issuer, *userkey, *passkey, *savekey, *endmess, *savemess, *savexxx;
+	char	*ut, *pt, *gt;
+	
+	if (!Ni) 
+	{
+		for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 
+		{
+			N[i]=(int4)i; 
+			wswap(&N[i]);
+		}
+		++Ni;
+	}
+
+	*pfkey_rcvr = ENTER_KEY_PRESSED;					/* Default the reciever to '@'			*/
+
+	prname = "PASSWORD";
+	issuer = "SUBMIT";
+	userkey = "USERNAME";
+	passkey = "PASSWORD";
+	savekey = "SAVE";
+	savemess = "Do you want to save these values for additional SUBMIT commands?";
+	savexxx  = "(\"YES\" or \"NO \")";
+	endmess  = "Enter the required values and press (ENTER) to continue.";
+
+	gt = (initial) ? "I " : "R ";
+	
+	ut = (' ' == uservalue[0]) ? "R" : "K";
+	pt = (' ' == passvalue[0]) ? "R" : "K";
+
+	cnt = 0;
+	GP gt;   GP "R"; GP prname; GP pfkey_rcvr; GP "0001"; GP issuer; GP &N[1]; GP messtext; GP &N[strlen(messtext)];
+	GP pt;   GP passkey; GP passvalue; GP &N[passlen]; GP "A"; GP &N[11]; GP "A"; GP &N[10]; GP "B";
+	GP ut;   GP userkey; GP uservalue; GP &N[userlen]; GP "A"; GP &N[13]; GP "A"; GP &N[10]; GP "C";
+	GP "T";  GP savemess; GP &N[strlen(savemess)];     GP "A"; GP &N[17]; GP "A"; GP &N[10];
+	GP "K";  GP savekey; GP savevalue; GP &N[3];       GP "A"; GP &N[19]; GP "A"; GP &N[10]; GP "A";
+	GP "T";  GP savexxx;  GP &N[strlen(savexxx)];      GP "A"; GP &N[19]; GP "A"; GP &N[30];
+	GP "T";  GP endmess;  GP &N[strlen(endmess)];      GP "A"; GP &N[24]; GP "A"; GP &N[(80-strlen(endmess))/2];
+	GP "E";
+	
+	wvaset(&two);
+	GETPARM(&args,&cnt);
+
+	/*
+	**	This getparm can only end with the ENTER key 
+	**	(or the HELP key if the command processor is already active).
+	*/
+	if (ENTER_KEY_PRESSED == pfkey_rcvr[0])
+	{
+		return 0;	/* ENTER key */
+	}
+	else
+	{
+		return 1;	/* HELP key */
+	}
+}
+
+
+/*
+**	History:
+**	$Log: filgparm.c,v $
+**	Revision 1.14  1997-10-20 17:16:46-04  gsl
+**	Add tracing
+**
+**	Revision 1.13  1997-09-24 17:12:02-04  gsl
+**	Add support for pfkeys12()
+**
+**	Revision 1.12  1997-08-22 17:38:37-04  gsl
+**	Finish the PASSWORD GETPARM
+**
+**	Revision 1.11  1996-08-19 18:32:20-04  gsl
+**	drcs update
+**
+**
+**
+*/

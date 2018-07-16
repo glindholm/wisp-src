@@ -1,78 +1,119 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 #include <stdio.h>
 
+#include "idsistd.h"
 #include "vseglb.h"
 #include "vsescr.h"
 #include "vsedscr.h"
-#include "idsistd.h"
+#include "vsebasic.h"
+#include "vsedfnd.h"
+#include "vsedit.h"
+#include "vsedmod.h"
+#include "vsemov.h"
+#include "vsetxt.h"
+#include "vseutl.h"
+
+
+static void vse_ed_ins_dispatch(void);
+static void vse_ed_ins_on(void);
+static void vse_ed_ins_unload(void);
+static int vse_ed_ins_init(void);
+static int new_number(TEXT *txt);
+static void vse_ed_ins_top(void);
+static void vse_ed_ins_col(void);
+
 
 static TEXT *lastins;
 static int ins_row;
-int start_renum, inc_renum, startl_renum, endl_renum;
 static int vse_ins_nextline=1;
 static int vse_ins_save_col;
 
-static char max_start_field[6], min_start_field[6];
-static char start_renum_field[6],inc_renum_field[6],startl_renum_field[17],endl_renum_field[17];
+static char number_field[7], incr_field[7], start_field[17], end_field[17];
+
+static char max_start_field[7], min_start_field[7];
+static char renum_first_line[80];
+
 static VSESCR_FLDS(ask_renum_flds) = {
-{LEN(0) ROW(1)  COL(2) BRIGHT("Note")},
-{LEN(0) ROW(1)  COL(7) VALUE("-  The file must be renumbered to continue inserts.")},
-{LEN(0) ROW(2)  COL(2) VALUE("Enter renumbering information, or press PF1 to exit.")},
+{LEN(0) ROW(1)  COL(2) BRIGHT(renum_first_line)},
+{LEN(0)	ROW(1)	COL(73)	ULINEVALUE("Renumber")},
+{LEN(0) ROW(2)  COL(2) VALUE("Enter renumbering information, or press (1) to exit.")},
+
 {LEN(0) ROW(3)  COL(2) VALUE("New starting line is ")},
-{LEN(5) ROW(3)  COL(23) USING(start_renum_field)},
-{LEN(0) ROW(3)  COL(30) VALUE("Increment by ")},
-{LEN(5) ROW(3)  COL(43) USING(inc_renum_field)},
-{LEN(0) ROW(4)  COL(2) VALUE("from line ")},
-{LEN(16) ROW(4)  COL(12) USING(startl_renum_field)},
-{LEN(0) ROW(4)  COL(30) VALUE("to line ")},
-{LEN(16) ROW(4)  COL(38) USING(endl_renum_field)},
+{LEN(6) ROW(3)  COL(23) USING(number_field)},
+{LEN(0) ROW(3)  COL(32) VALUE("Increment by ")},
+{LEN(6) ROW(3)  COL(45) USING(incr_field)},
+
+{LEN(0)  ROW(4)  COL(2) VALUE("from line ")},
+{LEN(16) ROW(4)  COL(12) USING(start_field)},
+{LEN(0)  ROW(4)  COL(32) VALUE("to line ")},
+{LEN(16) ROW(4)  COL(40) USING(end_field)},
+
 {LASTITEM}
 };
 static VSESCR_FLDS(ask_renum_startl_flds) = {
 {LEN(0) ROW(1)  COL(2) BRIGHT("Note")},
 {LEN(0) ROW(1)  COL(7) VALUE("-  The starting line must be between ")},
-{LEN(5) ROW(1)  COL(44) BRIGHT(min_start_field)},
-{LEN(0) ROW(1)  COL(50) VALUE("and")},
-{LEN(5) ROW(1)  COL(54) BRIGHT(max_start_field)},
-{LEN(0) ROW(2)  COL(2) VALUE("Enter renumbering information, or press PF1 to exit.")},
+{LEN(6) ROW(1)  COL(44) BRIGHT(min_start_field)},
+{LEN(0) ROW(1)  COL(51) VALUE("and")},
+{LEN(6) ROW(1)  COL(55) BRIGHT(max_start_field)},
+{LEN(0)	ROW(1)	COL(73)	ULINEVALUE("Renumber")},
+{LEN(0) ROW(2)  COL(2) VALUE("Enter renumbering information, or press (1) to exit.")},
+
 {LEN(0) ROW(3)  COL(2) VALUE("New starting line is ")},
-{LEN(5) ROW(3)  COL(23) USING(start_renum_field)},
-{LEN(0) ROW(3)  COL(30) VALUE("Increment by ")},
-{LEN(5) ROW(3)  COL(43) USING(inc_renum_field)},
-{LEN(0) ROW(4)  COL(2) VALUE("from line ")},
-{LEN(16) ROW(4)  COL(12) USING(startl_renum_field)},
-{LEN(0) ROW(4)  COL(30) VALUE("to line ")},
-{LEN(16) ROW(4)  COL(38) USING(endl_renum_field)},
+{LEN(6) ROW(3)  COL(23) USING(number_field)},
+{LEN(0) ROW(3)  COL(32) VALUE("Increment by ")},
+{LEN(6) ROW(3)  COL(45) USING(incr_field)},
+
+{LEN(0)  ROW(4)  COL(2) VALUE("from line ")},
+{LEN(16) ROW(4)  COL(12) USING(start_field)},
+{LEN(0)  ROW(4)  COL(32) VALUE("to line ")},
+{LEN(16) ROW(4)  COL(40) USING(end_field)},
+
 {LASTITEM}
 };
 static VSESCR_FLDS(ask_renum_incre_flds) = {
 {LEN(0) ROW(1)  COL(2) BRIGHT("Note")},
 {LEN(0) ROW(1)  COL(7) VALUE("-  The increment must be between ")},
-{LEN(5) ROW(1)  COL(40) BRIGHT(&min_start_field[0])},
-{LEN(0) ROW(1)  COL(56) VALUE("and")},
-{LEN(5) ROW(1)  COL(50) BRIGHT(&max_start_field[0])},
-{LEN(0) ROW(2)  COL(2) VALUE("Enter renumbering information, or press PF1 to exit.")},
+{LEN(6) ROW(1)  COL(40) BRIGHT(&min_start_field[0])},
+{LEN(0) ROW(1)  COL(47) VALUE("and")},
+{LEN(6) ROW(1)  COL(51) BRIGHT(&max_start_field[0])},
+{LEN(0)	ROW(1)	COL(73)	ULINEVALUE("Renumber")},
+{LEN(0) ROW(2)  COL(2) VALUE("Enter renumbering information, or press (1) to exit.")},
+
 {LEN(0) ROW(3)  COL(2) VALUE("New starting line is ")},
-{LEN(5) ROW(3)  COL(23) USING(start_renum_field)},
-{LEN(0) ROW(3)  COL(30) VALUE("Increment by ")},
-{LEN(5) ROW(3)  COL(43) USING(inc_renum_field)},
-{LEN(0) ROW(4)  COL(2) VALUE("from line ")},
-{LEN(16) ROW(4)  COL(12) USING(startl_renum_field)},
-{LEN(0) ROW(4)  COL(30) VALUE("to line ")},
-{LEN(16) ROW(4)  COL(38) USING(endl_renum_field)},
+{LEN(6) ROW(3)  COL(23) USING(number_field)},
+{LEN(0) ROW(3)  COL(32) VALUE("Increment by ")},
+{LEN(6) ROW(3)  COL(45) USING(incr_field)},
+
+{LEN(0)  ROW(4)  COL(2) VALUE("from line ")},
+{LEN(16) ROW(4)  COL(12) USING(start_field)},
+{LEN(0)  ROW(4)  COL(32) VALUE("to line ")},
+{LEN(16) ROW(4)  COL(40) USING(end_field)},
+
 {LASTITEM}
 };
 
 
-vse_ed_ins()
+void vse_ed_ins(void)
 {
 	for(vse_ins_nextline=1,vse_edit_pick=0;;)
 	{
-		ins_row = ed_oa[3];
+		ins_row = ed_oa[OA_CURSOR_ROW];
 
 		if(ins_row <= 4)
-		  ed_oa[3]=ins_row=4;
+		  ed_oa[OA_CURSOR_ROW]=ins_row=4;
 
-		ins_row -= 5;             
+		ins_row -= VSE_FIRST_SCREEN_ROW;
 		while(ins_row > -1)
 		{
 			if(ed_txt[ins_row])
@@ -101,7 +142,7 @@ vse_ed_ins()
 	}
 }
 
-vse_ed_ins_dispatch()
+static void vse_ed_ins_dispatch(void)
 {
 	extern char ed_oa[];
 	
@@ -121,44 +162,36 @@ vse_ed_ins_dispatch()
 		vse_ins_nextline=1;
 		break;
 	}
-	vse_ins_save_col = ed_oa[2];
+	vse_ins_save_col = ed_oa[OA_COL];
 	
 	vse_ed_ins_on();
 }
-vse_ed_ins_on()
+
+static void vse_ed_ins_on(void)
 {
 	vse_file_changed=1;
 	vseunscr(ed_line_flds,ed_scr);
 	vse_ed_ins_unload();
 }
 
-vse_ed_ins_unload()
+static void vse_ed_ins_unload(void)
 {
-	spaceout(ed_line[ins_row],vse_text_width);
-	if ( !(strcmp( vse_gp_options_modcode, "        " )) )
-		trunc(ed_line[ins_row]);
+	spaceout(ed_line[ins_row],vse_edit_width);
+	trunc(ed_line[ins_row]);
 	over_text(ed_txt[ins_row],ed_line[ins_row]);
 
-	/* Add the modcode if necessary. Added by CIS: 08/12/93 AJA */
-	if ( strcmp( vse_gp_options_modcode, "        " ) )
-	{
-		ed_txt[ins_row]->modfld = (char *) calloc( 9, sizeof( char ) );
-		strncpy( ed_txt[ins_row]->modfld, vse_gp_options_modcode, 8 );
-	}
-	else
-		ed_txt[ins_row]->modfld = NULL;
+	ed_txt[ins_row]->modfld = NULL;
+	add_modcode(ed_txt[ins_row]);
 
-	/* If language is BASIC, look for embedded line number in added BASIC
-	   line. Added by CIS, 07/13/93 AJA */
-	if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
+	if (lang_type() == LANG_BASIC)
 		find_linenum( ed_txt[ins_row] );
 
 }
 
-vse_ed_ins_init()
+static int vse_ed_ins_init(void)
 {
 	int fac;
-	TEXT *txt,*above,*below ,*new_text();
+	TEXT *txt,*above,*below;
 
 
 	vsescr_init(ed_scr);
@@ -194,11 +227,11 @@ vse_ed_ins_init()
 		{
 			scr_first = txt;
 		}
-		if(ins_row == 19)
+		if(ins_row == VSE_EDIT_ROWS-1)
 		{
 			scr_first = scr_first->next;
 		}
-		if(ins_row < 19)
+		if(ins_row < VSE_EDIT_ROWS-1)
 		  ++ins_row;
 	}
 /* 
@@ -219,30 +252,23 @@ vse_ed_ins_init()
 	vsescr(ed_line_flds,ed_scr);
 	vsescr(ed_menu_flds,ed_scr);
 	vse_ed_add_numbers();
-	ed_oa[3] = ins_row + 5;
-/*	if(vse_numbering)
-		ed_oa[2] = 9;
-	else
-		ed_oa[2] = 2;*/
+	ed_oa[OA_CURSOR_ROW] = ins_row + VSE_FIRST_SCREEN_ROW;
+
 	if (vse_ins_nextline)
 	{
-		ed_oa[2]=9;
+		ed_oa[OA_COL]=VSE_FIRST_SCREEN_COL;
 		vse_ins_nextline=0;
 	}
 	else
-	  ed_oa[2]=vse_ins_save_col;
+	  ed_oa[OA_COL]=vse_ins_save_col;
 	
 	return(0);
 }
 
-new_number(txt)
-TEXT *txt;
+static int new_number(TEXT *txt)
 {
 	int4 lo,hi,diff;
-	
 
-/*	if(!vse_numbering)
-		return(1);*/
 	lo = 0;
 	hi = 900000;
 	if(txt->prev)
@@ -253,7 +279,7 @@ TEXT *txt;
 	if(diff < 2)
 		{
 		del_text(txt);
-		do_we_renumber();
+		ask_renumber();
 		return(0);
 		}
 	if(diff > vse_options_number)
@@ -271,152 +297,65 @@ TEXT *txt;
 	
 	return(1);
 }
-do_we_renumber()
-{
-	start_renum=inc_renum=startl_renum=endl_renum= -1;
-	
-	if(ask_renumber(100))
-		{
-		renumber_text();
-		}
-}
-/* rewrite */
-renumber_text()
-{
-	TEXT *txt;
-	int lineno;
-	
-	for (txt = text_first; txt && txt->lineno != startl_renum; txt = txt->next)
-	  ;
 
-	if (!txt)
-	  return;
-	
-	lineno = start_renum;
+int ask_renumber(void)
+{
+	int4 	number, incr, start, end, count;
+	int	resp_flag = 0;
+
+	ed_oa[OA_CURSOR_ROW] = ed_oa[OA_COL] = 0;
+	sprintf(number_field,"%-6d",vse_options_number);
+	sprintf(incr_field,"%-6d",vse_options_incr);
+	sprintf(start_field,"%-16s","FIRST");
+	sprintf(end_field,"%-16s","LAST");
+
 	for(;;)
 	{
-		/* If language is BASIC, look for references to old line number in
-		   list and change those to the new line number in text and list.
-		   Added by CIS, 07/12/93 AJA */
-		if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
-			update_linenum( txt->lineno, lineno );
-		txt->lineno = lineno;
-		lineno += inc_renum;
-		txt = txt->next;
-		if (txt==NULL)
-		  break;
-		if (txt->prev->lineno == endl_renum)
-		  break;
-	}
-
-	/* After renumbering is complete, update the branch values in the linked
-	   list of embedded BASIC line numbers. Added by CIS, 07/13/93 AJA */
-	if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
-		update_branch();
-}
-
-ask_renumber(lcnt)
-int lcnt;
-{
-	TEXT *txt;
-	
-	CLEAR_FIELD(start_renum_field);	
-	CLEAR_FIELD(inc_renum_field);
-	CLEAR_FIELD(startl_renum_field);
-	CLEAR_FIELD(endl_renum_field);
-	if (start_renum >=0) 
-	  sprintf(start_renum_field,"%-5d",start_renum);
-	if (inc_renum >=0) 
-	  sprintf(inc_renum_field,"%-5d",inc_renum);
-
-	if (startl_renum >=0) 
-	  sprintf(startl_renum_field,"%-16d",startl_renum);
-	else
-	  sprintf(startl_renum_field,"%-16s","FIRST");
-	
-	if (endl_renum >=0) 
-	  sprintf(endl_renum_field,"%-16d",endl_renum);
-	else
-	  sprintf(endl_renum_field,"%-16s","LAST");
-
-	strcpy(ed_pfs,"0001X");
-	vsescr_init(ed_scr);
-	vse_ed_load_lines();
-	vsescr(ask_renum_flds,ed_scr);
-	vsescr(ed_line_flds,ed_scr);
-	vse_ed_add_numbers();
-      bad:	
-	d_and_r_ed(TAB_TO_FIELD);
-	int4_from_str2(ed_pfcode,&vse_edit_pick);
-	vseunscr(ask_renum_flds,ed_scr);
-	
-	sscanf(start_renum_field,"%5d",&start_renum);
-	if (start_renum<=0) 
-	  start_renum=100;
-	sscanf(inc_renum_field,"%5d",&inc_renum);
-	if (inc_renum<=0) 
-	  inc_renum=100;
-	if (!strncmp(startl_renum_field,"FIRST",5))
-	{
-		startl_renum = text_first->lineno;
-	}
-	else
-	  sscanf(startl_renum_field,"%6d",&startl_renum);
-	if (!strncmp(endl_renum_field,"LAST",4))
-	{
-		endl_renum = text_last->lineno;
-	}
-	else
-	{
-		sscanf(endl_renum_field,"%6d",&endl_renum);
-		if (endl_renum==0 && startl_renum != 0)
-		  endl_renum=startl_renum;
-	}
-
-	for (txt = text_first; txt && txt->lineno != startl_renum; txt=txt->next)
-	  ;
-	if (txt && txt->lineno == startl_renum)
-	{
-		int min_inc;
-		
-		if (!txt->prev || !txt->next)
-		  ;
-		else
-		if ((start_renum <= txt->prev->lineno) ||
-		    (start_renum >= txt->next->lineno))
+		if (0==resp_flag)
 		{
-			sprintf(min_start_field,"%-5d",txt->prev->lineno+1);
-			sprintf(max_start_field,"%-5d",txt->next->lineno-1);			
-			vsescr_init(ed_scr);
-			vse_ed_load_lines();
-			vsescr(ask_renum_startl_flds,ed_scr);
-			vsescr(ed_line_flds,ed_scr);
-			vse_ed_add_numbers();
-			goto bad;
+			strcpy(renum_first_line,"\224NOTE\204- The file must be renumbered to continue inserts.");
 		}
 		else
-		if ( (min_inc=(txt->next->lineno - txt->prev->lineno) 
-		      / lcnt ) > inc_renum)
 		{
-			sprintf(min_start_field,"%-5d",1);
-			sprintf(max_start_field,"%-5d",min_inc);			
-			vsescr_init(ed_scr);
-			vse_ed_load_lines();
-			vsescr(ask_renum_incre_flds,ed_scr);
-			vsescr(ed_line_flds,ed_scr);
-			vse_ed_add_numbers();
-			goto bad;
+			strcpy(renum_first_line,vse_err(resp_flag));
+		}
 
+		strcpy(ed_pfs,"0001X");
+		vsescr_init(ed_scr);
+		vse_ed_load_lines();
+		vsescr(ask_renum_flds,ed_scr);
+		vsescr(ed_line_flds,ed_scr);
+		vse_ed_add_numbers();
+
+		d_and_r_ed(TAB_TO_FIELD);
+		int4_from_str2(ed_pfcode,&vse_edit_pick);
+		if(1 == vse_edit_pick)
+		{
+			return 1;
+		}
+		vseunscr(ask_renum_flds,ed_scr);
+
+		resp_flag = validate_numincr(number_field, &number, incr_field, &incr);
+
+		if (!resp_flag)
+		{
+			resp_flag = validate_range(start_field, &start, end_field, &end);
+		}
+
+		if (!resp_flag)
+		{
+			resp_flag = vse_renumberer(number,incr,start,end,&count);
+			if (!resp_flag)
+			{
+				return 0;
+			}
 		}
 	}
-	if(1 == vse_edit_pick)
-	  return 0;
-	else 
-	  return 1;
 }
-vse_ed_ins_top()
+
+static void vse_ed_ins_top(void)
 {
-	strcpy(ed_top1,"Input New Line and press ENTER or select:");
+	strcpy(ed_top1, "Input New Line and press (ENTER) or select:                             \254Insert");
 	strcpy(ed_top2,"(1) Exit  (2) Set Tabs (15) Show Column");
 	vse_ed_ins_col();
 }
@@ -424,8 +363,17 @@ vse_ed_ins_top()
 /*----
 Column logic is the same as modifiy mode
 ------*/
-vse_ed_ins_col()
+static void vse_ed_ins_col(void)
 {
 	vse_ed_mod_col();
 }
 
+/*
+**	History:
+**	$Log: vsedins.c,v $
+**	Revision 1.11  1996-09-03 18:24:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

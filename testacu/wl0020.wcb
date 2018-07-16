@@ -1,0 +1,214 @@
+
+000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wl0020.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test SORT routine
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     wl0020.
+001300 Data Division.
+001400 Working-Storage Section.
+
+258500 01  SORT-LIST.
+258800     03 FILLER  PIC X(14) VALUE "Belgium       ".
+258700     03 FILLER  PIC X(14) VALUE "Austria       ".
+259000     03 FILLER  PIC X(14) VALUE "Finland       ".
+258900     03 FILLER  PIC X(14) VALUE "Canada        ".
+259200     03 FILLER  PIC X(14) VALUE "Germany       ".
+259300     03 FILLER  PIC X(14) VALUE "Hong Kong     ".
+259400     03 FILLER  PIC X(14) VALUE "Ireland       ".
+259600     03 FILLER  PIC X(14) VALUE "Japan         ".
+259700     03 FILLER  PIC X(14) VALUE "Mexico        ".
+259800     03 FILLER  PIC X(14) VALUE "Netherlands   ".
+259500     03 FILLER  PIC X(14) VALUE "Italy         ".
+259900     03 FILLER  PIC X(14) VALUE "Scotland      ".
+260000     03 FILLER  PIC X(14) VALUE "United States ".
+259100     03 FILLER  PIC X(14) VALUE "France        ".
+260200
+260500
+260300 01  SORT-ARRAY REDEFINES SORT-LIST.
+260400     03 COUNTRY-ITEM PIC X(14) OCCURS 14 TIMES.
+262600
+263700 01  SORT-ARRAY-SIZE.
+263800     03 FILLER BINARY VALUE 0.
+263900     03 NUM-OF-ELEM BINARY VALUE 14.
+
+263300 01  SORT-ITEM-LEN.
+263400     03 FILLER BINARY VALUE 0.
+263500     03 LEN-OF-ELEM BINARY VALUE 14.
+262800
+262400 01  SORTED-ARRAY. 
+           03 SORTED-ITEM PIC X(14) OCCURS 14 TIMES.
+
+       01  START-POS.
+           03 FILLER BINARY VALUE 0.
+           03 START-POS-X BINARY VALUE 1.
+
+262900 01  SORT-LEN-P.
+263000     03 FILLER BINARY VALUE 0.
+263100     03 SORT-LEN-X BINARY VALUE 14.
+264400
+       01  TYPE-OF-SORT  PIC X(01) VALUE "A".
+
+       01  LOCATOR       PIC X(01) VALUE "S".
+
+262900 01  LOC-LEN.
+263000     03 FILLER BINARY VALUE 0.
+263100     03 LOC-LEN-X BINARY VALUE 1.
+
+       01  COMPLETION-STATUS          PIC 9(02)  VALUE 0.
+
+001600 Procedure Division.
+
+359200
+
+359600     PERFORM DO-SORT.
+           PERFORM CHECK-SORT.
+         
+      *Checking sort options.
+
+      *Output array and ascending type of sort.
+           PERFORM DO-SORT-OPTIONS.
+
+      *Output array and descending type of sort.
+           MOVE "D"     TO TYPE-OF-SORT.
+           PERFORM DO-SORT-OPTIONS.
+
+      *Output array, ascending type of sort, starting position.
+           MOVE "A"     TO TYPE-OF-SORT.
+           MOVE 2       TO START-POS-X.
+           MOVE 3       TO SORT-LEN-X.
+           PERFORM DO-SORT-OPTIONS.
+
+      *Output array, descending type of sort, starting position.
+           MOVE "D"     TO TYPE-OF-SORT.
+           MOVE 2       TO START-POS-X.
+           MOVE 3       TO SORT-LEN-X.
+           PERFORM DO-SORT-OPTIONS.
+           PERFORM CHECK-STATUS.
+
+       CHECK-SORT.
+           IF  COUNTRY-ITEM (1) NOT = "Austria" OR  
+               COUNTRY-ITEM (2) NOT = "Belgium" OR  
+               COUNTRY-ITEM (3) NOT = "Canada" OR  
+               COUNTRY-ITEM (4) NOT = "Finland" OR  
+               COUNTRY-ITEM (5) NOT = "France" OR  
+               COUNTRY-ITEM (6) NOT = "Germany" OR  
+               COUNTRY-ITEM (7) NOT = "Hong Kong" OR  
+               COUNTRY-ITEM (8) NOT = "Ireland" OR  
+               COUNTRY-ITEM (9) NOT = "Italy" OR  
+               COUNTRY-ITEM (10) NOT = "Japan" OR  
+               COUNTRY-ITEM (11) NOT = "Mexico" OR  
+               COUNTRY-ITEM (12) NOT = "Netherlands" OR  
+               COUNTRY-ITEM (13) NOT = "Scotland" OR  
+               COUNTRY-ITEM (14) NOT = "United States" THEN  
+               ADD 1        TO COMPLETION-STATUS.
+
+       CHECK-SORTOUT-ASCEND.
+           IF  SORTED-ITEM (1) NOT = "Austria" OR
+               SORTED-ITEM (2) NOT = "Belgium" OR
+               SORTED-ITEM (3) NOT = "Canada" OR
+               SORTED-ITEM (4) NOT = "Finland" OR
+               SORTED-ITEM (5) NOT = "France" OR
+               SORTED-ITEM (6) NOT = "Germany" OR
+               SORTED-ITEM (7) NOT = "Hong Kong" OR
+               SORTED-ITEM (8) NOT = "Ireland" OR
+               SORTED-ITEM (9) NOT = "Italy" OR
+               SORTED-ITEM (10) NOT = "Japan" OR
+               SORTED-ITEM (11) NOT = "Mexico" OR
+               SORTED-ITEM (12) NOT = "Netherlands" OR
+               SORTED-ITEM (13) NOT = "Scotland" OR
+               SORTED-ITEM (14) NOT = "United States" THEN
+               ADD 1        TO COMPLETION-STATUS.
+
+       CHECK-SORTOUT-DESCEND.
+           IF  SORTED-ITEM (1) NOT = "United States" OR
+               SORTED-ITEM (2) NOT = "Scotland" OR
+               SORTED-ITEM (3) NOT = "Netherlands" OR
+               SORTED-ITEM (4) NOT = "Mexico" OR
+               SORTED-ITEM (5) NOT = "Japan" OR
+               SORTED-ITEM (6) NOT = "Italy" OR
+               SORTED-ITEM (7) NOT = "Ireland" OR
+               SORTED-ITEM (8) NOT = "Hong Kong" OR
+               SORTED-ITEM (9) NOT = "Germany" OR
+               SORTED-ITEM (10) NOT = "France" OR
+               SORTED-ITEM (11) NOT = "Finland" OR
+               SORTED-ITEM (12) NOT = "Canada" OR
+               SORTED-ITEM (13) NOT = "Belgium" OR
+               SORTED-ITEM (14) NOT = "Austria" THEN
+               ADD 1        TO COMPLETION-STATUS.
+
+       CHECK-SORTOUT-ASCEND-1.
+           IF  SORTED-ITEM (1) NOT = "Canada" OR
+               SORTED-ITEM (2) NOT = "Japan" OR
+               SORTED-ITEM (3) NOT = "Scotland" OR
+               SORTED-ITEM (4) NOT = "Belgium" OR
+               SORTED-ITEM (5) NOT = "Germany" OR
+               SORTED-ITEM (6) NOT = "Netherlands" OR
+               SORTED-ITEM (7) NOT = "Mexico" OR
+               SORTED-ITEM (8) NOT = "Finland" OR
+               SORTED-ITEM (9) NOT = "United States" OR
+               SORTED-ITEM (10) NOT = "Hong Kong" OR
+               SORTED-ITEM (11) NOT = "France" OR
+               SORTED-ITEM (12) NOT = "Ireland" OR
+               SORTED-ITEM (13) NOT = "Italy" OR
+               SORTED-ITEM (14) NOT = "Austria" THEN
+               ADD 1        TO COMPLETION-STATUS.
+
+       CHECK-SORTOUT-DESCEND-1.
+           IF  SORTED-ITEM (1) NOT = "Austria" OR
+               SORTED-ITEM (2) NOT = "Italy" OR
+               SORTED-ITEM (3) NOT = "Ireland" OR
+               SORTED-ITEM (4) NOT = "France" OR
+               SORTED-ITEM (5) NOT = "Hong Kong" OR
+               SORTED-ITEM (6) NOT = "United States" OR
+               SORTED-ITEM (7) NOT = "Finland" OR
+               SORTED-ITEM (8) NOT = "Mexico" OR
+               SORTED-ITEM (9) NOT = "Netherlands" OR
+               SORTED-ITEM (10) NOT = "Germany" OR
+               SORTED-ITEM (11) NOT = "Belgium" OR
+               SORTED-ITEM (12) NOT = "Scotland" OR
+               SORTED-ITEM (13) NOT = "Japan" OR
+               SORTED-ITEM (14) NOT = "Canada" THEN 
+               ADD 1        TO COMPLETION-STATUS.
+359100 DO-SORT.
+359900     CALL "SORT" USING SORT-ARRAY, SORT-ARRAY-SIZE,
+360000                         SORT-ITEM-LEN.
+360100                        
+360300 DO-SORT-OPTIONS.
+360400
+359900     CALL "SORT" USING SORT-ARRAY, SORT-ARRAY-SIZE,
+360000                         SORT-ITEM-LEN, SORTED-ARRAY,
+                               START-POS, SORT-LEN-P,
+                               TYPE-OF-SORT, LOCATOR,
+                               LOC-LEN.
+361700     IF  TYPE-OF-SORT = "A" AND START-POS-X = 2 THEN
+               PERFORM CHECK-SORTOUT-ASCEND-1
+           ELSE IF TYPE-OF-SORT = "A" THEN
+               PERFORM CHECK-SORTOUT-ASCEND
+           ELSE IF TYPE-OF-SORT = "D" AND START-POS-X = 2 THEN
+               PERFORM CHECK-SORTOUT-DESCEND-1
+           ELSE IF TYPE-OF-SORT = "D" THEN
+               PERFORM CHECK-SORTOUT-DESCEND.
+
+       CHECK-STATUS.
+           IF  COMPLETION-STATUS = 0 THEN
+                DISPLAY "SORT completion successful."
+           ELSE
+                DISPLAY "SORT failed.".
+
+            EXIT PROGRAM.
+            STOP RUN.
+
+
+006600**   End of wl0020.wcb
+
+
+

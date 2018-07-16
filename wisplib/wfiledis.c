@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -18,32 +20,39 @@
 #include <string.h>
 #include "idsistd.h"
 #include "wperson.h"
-#include <v/video.h>                                                                    /* Get Video interface definitions.	*/
 #include "wfiles.h"									/* Interface with WFNAME.		*/
 #include "wcommon.h"
 #include "wangkeys.h"
+#include "wfname.h"
 #include "werrlog.h"
-
-extern char WISPFILEXT[39];
+#include "level.h"
+#include "wisplib.h"
+#include "sharemem.h"
+#include "vwang.h"
+#include "filext.h"
+#include "wdefines.h"
 
 
 /*			Subroutine entry point.											*/
 
-wfile_disp()
+void wfile_disp(void)
 {
 #define		ROUTINE		77100
-	char file[8], library[8], volume[6], filename[80], entry_message[80], *end_name;
-	char tempname[80], orig_file[8];
+	char file[SIZEOF_FILE];
+	char library[SIZEOF_LIB];
+	char volume[SIZEOF_VOL];
+	char filename[COB_FILEPATH_LEN];
+	char entry_message[80];
+	char *end_name;
+	char tempname[COB_FILEPATH_LEN], orig_file[SIZEOF_FILE];
 	int4 mode;
 	int4 native_mode;
 	char getparm_type[3];
-	char *wfname();
 	char pf_key;
 	FILE *fh;
 	int displaying = TRUE;								/* Flag set to loop until PF16 pushed.	*/
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
-	newlevel();									/* Increment the link-level		*/
 
 	wpload();									/* Load personality stuff.		*/
 	native_mode = 0L;                                           			/* Start off in WANG_VS mode.		*/
@@ -54,9 +63,9 @@ wfile_disp()
 
 		displaying = FALSE;							/* Only do one display.			*/
 
-		memset(file, ' ', 8);							/* Initialize variables goin' to	*/
-		memset(orig_file, ' ', 8);						/* file_getparm().			*/
-		memset(tempname, ' ', 80);
+		memset(file, ' ', SIZEOF_FILE);						/* Initialize variables goin' to	*/
+		memset(orig_file, ' ', SIZEOF_FILE);					/* file_getparm().			*/
+		memset(tempname, ' ', COB_FILEPATH_LEN);
 		get_defs(DEFAULTS_IV,volume);
 		get_defs(DEFAULTS_IL,library);
 
@@ -85,7 +94,7 @@ get_name_loop:						      				/* A label to go to.			*/
 
 			if (native_mode)
 			{
-				memcpy(filename,tempname,80);
+				memcpy(filename,tempname,COB_FILEPATH_LEN);
 				*strchr(filename,' ') = '\0';				/* Null terminate.			*/
 			}
 			else		  						/* Are we NOT in native mode?		*/
@@ -135,7 +144,138 @@ get_name_loop:						      				/* A label to go to.			*/
 		}
 	}
 
-	oldlevel();									/* Decrement the link-level		*/
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
-	return(SUCCESS); 	      							/* All done mate.			*/
+	return;			      							/* All done mate.			*/
 }
+
+/*
+**	ROUTINE:	use_internal_display()
+**
+**	FUNCTION:	Test if using an internal (soft-link) to DISPLAY utility
+**
+**	DESCRIPTION:	Default is to use the internal display facility.
+**			If nativescreens or if the EXTDISPLAY options is set
+**			the use the external DISPLAY utility.
+**
+**	ARGUMENTS:	none
+**
+**	GLOBALS:	none
+**
+**	RETURN:		
+**	1		(TRUE)  Use internal display.
+**	0		(FALSE) LINK to external DISPLAY utility
+**
+**	WARNINGS:	none
+**
+*/
+int use_internal_display(void)
+{
+	static int rc = -1;
+	
+	if (-1 == rc)
+	{
+		if (nativescreens())
+		{
+			rc = 0;
+		}
+		else if (get_wisp_option("EXTDISPLAY"))
+		{
+			rc = 0;
+		}
+		else
+		{
+			rc = 1;
+		}
+	}
+	return rc;
+}
+
+/*
+**	ROUTINE:	link_display()
+**
+**	FUNCTION:	Display a file (either internal or external display)
+**
+**	DESCRIPTION:	If an internal display call vdisplay() directly.
+**			If an external display call LINK.
+**
+**	ARGUMENTS:	
+**	filepath	The native file path to display.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Failed
+**	1		Success
+**
+**	WARNINGS:	None
+**
+*/
+int link_display(const char* filepath)
+{
+	if (use_internal_display())
+	{
+		int	reclen;
+
+		reclen = greclen(filepath);
+		if (reclen >= 0)
+		{
+			return vdisplay(filepath,reclen);
+		}
+		return 0;
+	}
+	else
+	{
+		int4	argcnt, onecnt, compcode, retcode;
+		char	the_file[WISP_FILEPATH_LEN];
+
+		if (strlen(filepath) >= sizeof(the_file))
+		{
+			werrlog(104,"%%DISPLAY-F-NAME Name of file to display is too big",0,0,0,0,0,0,0);
+			return 0;
+		}
+		
+		memset(the_file,'\0',sizeof(the_file));
+		strcpy(the_file,filepath);
+		
+		put_swap(&onecnt, 1);
+
+		argcnt = 8;
+		wvaset(&argcnt);
+		LINK2("DISPLAY ", 	(int4)SIZEOF_FILE,
+		      "S",		(int4)1,
+		      "@SYSTEM@",	(int4)SIZEOF_LIB,
+		      "SYSTEM",		(int4)SIZEOF_VOL,
+		      &onecnt,		(int4)sizeof(int4),
+		      the_file,		(int4)sizeof(the_file),
+		      &compcode,	(int4)sizeof(int4),
+		      &retcode,		(int4)sizeof(int4));
+
+		wswap(&compcode);
+		wswap(&retcode);
+
+		if (8 == compcode)
+		{
+			werrlog(104,"%%DISPLAY-F-LINK Link to DISPLAY failed",0,0,0,0,0,0,0);
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
+	}
+}
+
+/*
+**	History:
+**	$Log: wfiledis.c,v $
+**	Revision 1.12  1997-10-23 16:21:41-04  gsl
+**	Add use_internal_display()
+**	Add link_display() as a front-end to vdisplay() or to LINK to DISPLAY.
+**	In wfile_disp() moved the link-level logic into LINK where it handles
+**	the soft-link to DISPLAY.
+**
+**	Revision 1.11  1996-08-19 18:33:15-04  gsl
+**	drcs update
+**
+**
+**
+*/

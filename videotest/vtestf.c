@@ -5,10 +5,11 @@
 			/************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
+#include <video.h>
 #include <ctype.h>										/* Get character type macros.	*/
+#include <vmodules.h>
 
-testf()
+void testf()
 {
 	vre_window("Test F has been moved to a separate program called 'view'.");
 }

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -47,11 +49,27 @@
 #include "wispfile.h"
 #include "token.h"
 #include "node.h"
+#include "output.h"
+#include "statment.h"
+#include "tokenize.h"
 
-static cob_file *override_cobfile();
-static int x_tput_token();
-NODE make_statement();
 
+struct tput_context_struct
+{
+	int		last_line;					/* Last line number				*/
+	cob_file	*the_cobfile;					/* Current output file				*/
+#define SIZEOF_OUT_LINE	128
+	char		out_line[SIZEOF_OUT_LINE];			/* Output line buffer				*/
+	int		out_column;					/* Column of last written char in out_line	*/
+	int		lint;						/* Does line contain only lint ?		*/
+	int		write_comments;					/* Do we write out comments and lint		*/
+};
+typedef struct tput_context_struct tput_context;
+
+
+static cob_file *override_cobfile(void);
+static int x_tput_token(tput_context *ctx, int mincol, TOKEN *tokptr);
+static int x_tput_flush_ctx(tput_context *ctx);
 
 #define	TPUT_FLUSH	-1
 #define	TPUT_OVERRIDE	-2
@@ -82,9 +100,7 @@ NODE make_statement();
 **	06/07/93	Written by GSL
 **
 */
-NODE tput_statement(column,tree)
-int	column;
-NODE	tree;
+NODE tput_statement ( int column, NODE tree )
 {
 	if (!tree) return(tree);					/* Nothing to do					*/
 
@@ -118,8 +134,7 @@ NODE	tree;
 **	06/07/93	Written by GSL
 **
 */
-int tput_fluff(tree)
-NODE	tree;
+int tput_fluff ( NODE tree )
 {
 	if (!tree) return(0);
 
@@ -137,14 +152,13 @@ NODE	tree;
 
 static void *the_tput_use_context = NULL;
 
-int tput_set_context(the_context)
-void *the_context;
+int tput_set_context ( void *the_context )
 {
 	the_tput_use_context = the_context;
 	return 0;
 }
 
-void *tput_use_context()
+void *tput_use_context (void)
 {
 	return(the_tput_use_context);
 }
@@ -172,8 +186,7 @@ void *tput_use_context()
 **	06/07/93	Written by GSL
 **
 */
-int tput_block(the_block)
-char	*the_block;
+int tput_block ( char *the_block )
 {
 	char	a_line[256];
 	char	*ptr, *line;
@@ -193,7 +206,10 @@ char	*the_block;
 		}
 		else
 		{
-			tput_line("%s", line);
+			if (line[0])
+			{
+				tput_line("%s", line);
+			}
 			return(0);
 		}
 	}
@@ -227,11 +243,9 @@ char	*the_block;
 **	06/07/93	Written by GSL
 **
 */
-int tput_clause(col,clause,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)
-int	col;
-char	*clause,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
+int tput_clause ( int col, char *clause, char *p0, char *p1, char *p2, char *p3, char *p4, char *p5, char *p6, char *p7, char *p8, char *p9, char *p10, char *p11 )
 {
-	NODE	the_statement, the_node;
+	NODE	the_statement;
 	char	the_line[256];
 
 	memset(the_line,' ',12);
@@ -246,12 +260,54 @@ char	*clause,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
 }
 
 /*
+**	Routine:	offset_statement()
+**
+**	Function:	To offset the token column positions by a given amount.
+**
+**	Description:	For each non-fixed column token in the statement it
+**			will add num to the column position.
+**
+**	Arguments:
+**	num		The amount to offset by.
+**	curr		The node tree.
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	It is possible to offset a token to an invalid
+**			column position.  This should later be caught
+**			by the output routines.
+**
+**	History:	
+**	08/09/94	Written by GSL
+**
+*/
+NODE offset_statement(int num, NODE curr)
+{
+	if (!curr) return NULL;
+
+	if (curr->token)
+	{		
+		if (!curr->token->column_fixed)
+		{
+			curr->token->column += num;
+		}
+	}
+	offset_statement(num, curr->down);
+	offset_statement(num, curr->next);
+	return curr;
+}
+
+/*
 **	Routine:	tput_line_at()
 **
-**	Function:	Write a line starting at a given column using tput_line().
+**	Function:	Write a line starting at a given column.
 **
 **	Description:	This routine is passed a string that contains a COBOL line.
-**			The line is composited at the given column then tput_line() is called to print it.
+**			The idea here is to build a line then shift it to the
+**			desired column position, we do it this way to avoid 
+**			overflowing the line.
 **
 **	Arguments:
 **	col		The minimum starting column for "floating" tokens.
@@ -270,15 +326,54 @@ char	*clause,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
 **	06/07/93	Written by GSL
 **
 */
-int tput_line_at(col,line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)
-int	col;
-char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
+int tput_line_at ( int col, char *line, char *p0, char *p1, char *p2, char *p3, char *p4, char *p5, char *p6, char *p7, char *p8, char *p9, char *p10, char *p11 )
 {
+	NODE	the_statement, the_node;
 	char	the_line[256];
 
-	memset(the_line,' ',col);
-	sprintf(&the_line[col-1],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
-	tput_line("%s",the_line);
+	tput_flush();
+
+	/*
+	**	Build the line at a known column position
+	*/
+	if (col <= 12)
+	{
+		memset(the_line,' ',col);
+		sprintf(&the_line[col-1],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
+	}
+	else
+	{
+		memset(the_line,' ',12);
+		sprintf(&the_line[11],line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
+	}
+
+	the_statement = make_statement(the_line,tput_use_context());
+
+	if (col > 12)
+	{
+		/*
+		**	Shift the tokens to there desired position
+		*/
+		offset_statement(col-12,the_statement);
+	}
+
+	if (the_node = (NODE)first_node_with_token(the_statement))
+	{
+		/*
+		**	Mark the first token with a fixed column
+		*/
+		the_node->token->column_fixed = 1;
+		tput_statement(col+4, the_statement);
+	}
+	else if (comments)
+	{
+		/*
+		**	Blank line
+		*/
+		tput_blank();
+	}
+
+	free_statement(the_statement);
 	return(0);
 }
 
@@ -308,12 +403,12 @@ char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
 **	06/07/93	Written by GSL
 **
 */
-int tput_line(line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)
-char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
+int tput_line ( char *line, char *p0, char *p1, char *p2, char *p3, char *p4, char *p5, char *p6, char *p7, char *p8, char *p9, char *p10, char *p11 )
 {
 	NODE	the_statement, the_node;
 	char	the_line[256];
 
+	tput_flush();
 	sprintf(the_line,line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,"{ERROR}");
 
 	the_statement = make_statement(the_line, tput_use_context());
@@ -321,9 +416,16 @@ char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
 	if (the_node = (NODE)first_node_with_token(the_statement))
 	{
 		the_node->token->column_fixed = 1;
+		tput_statement(12, the_statement);
+	}
+	else if (comments)
+	{
+		/*
+		**	Blank line
+		*/
+		tput_blank();
 	}
 
-	tput_statement(12, the_statement);
 	free_statement(the_statement);
 	return(0);
 }
@@ -353,8 +455,7 @@ char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
 **	06/07/93	Written by GSL
 **
 */
-int tput_scomment(line,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11)
-char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
+int tput_scomment ( char *line, char *p0, char *p1, char *p2, char *p3, char *p4, char *p5, char *p6, char *p7, char *p8, char *p9, char *p10, char *p11 )
 {
 	char	the_line[256];
 	TOKEN	*tokptr;
@@ -390,8 +491,7 @@ char	*line,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11;
 **	06/07/93	Written by GSL
 **
 */
-int tput_noprocess(line)
-char	*line;
+int tput_noprocess ( char *line )
 {
 	TOKEN	*tokptr;
 
@@ -421,9 +521,10 @@ char	*line;
 **	06/07/93	Written by GSL
 **
 */
-tput_blank()
+int tput_blank (void)
 {
 	tput_token(TPUT_BLANK,NULL);
+	return 0;
 }
 
 /*
@@ -446,9 +547,10 @@ tput_blank()
 **	06/07/93	Written by GSL
 **
 */
-tput_flush()
+int tput_flush (void)
 {
 	tput_token(TPUT_FLUSH,NULL);
+	return 0;
 }
 
 /*
@@ -473,7 +575,7 @@ tput_flush()
 **	06/07/93	Written by GSL
 **
 */
-tput_token_cache()
+int tput_token_cache (void)
 {
 	int	tokcnt;
 	TOKEN	tmptok;
@@ -512,8 +614,7 @@ tput_token_cache()
 */
 static cob_file *the_override_cobfile;
 
-int override_output_stream(cob_file_ptr)
-cob_file *cob_file_ptr;
+int override_output_stream ( cob_file *cob_file_ptr )
 {
 	the_override_cobfile = cob_file_ptr;
 	tput_token(TPUT_OVERRIDE,NULL);
@@ -540,7 +641,7 @@ cob_file *cob_file_ptr;
 **	06/07/93	Written by GSL
 **
 */
-int release_output_stream()
+int release_output_stream (void)
 {
 	tput_token(TPUT_RELEASE,NULL);
 	the_override_cobfile = NULL;
@@ -567,7 +668,7 @@ int release_output_stream()
 **	06/07/93	Written by GSL
 **
 */
-static cob_file *override_cobfile()
+static cob_file *override_cobfile (void)
 {
 	return(the_override_cobfile);
 }
@@ -621,22 +722,7 @@ static cob_file *override_cobfile()
 **
 */
 
-struct tput_context_struct
-{
-	int		last_line;					/* Last line number				*/
-	cob_file	*the_cobfile;					/* Current output file				*/
-#define SIZEOF_OUT_LINE	128
-	char		out_line[SIZEOF_OUT_LINE];			/* Output line buffer				*/
-	int		out_column;					/* Column of last written char in out_line	*/
-	int		lint;						/* Does line contain only lint ?		*/
-	int		write_comments;					/* Do we write out comments and lint		*/
-};
-typedef struct tput_context_struct tput_context;
-
-
-int tput_token(mincol, tokptr)
-int	mincol;
-TOKEN	*tokptr;
+int tput_token ( int mincol, TOKEN *tokptr )
 {
 	static	int		first = 1;
 	static	tput_context	main_ctx;					/* The main context structure			*/
@@ -790,10 +876,7 @@ TOKEN	*tokptr;
 **	05/27/93	Written by GSL
 **
 */
-static int x_tput_token(ctx, mincol, tokptr)
-tput_context *ctx;
-int	mincol;
-TOKEN	*tokptr;
+static int x_tput_token ( tput_context *ctx, int mincol, TOKEN *tokptr )
 {
 	int	column,len;
 	char	*data;
@@ -851,7 +934,7 @@ TOKEN	*tokptr;
 	{
 		data = tokptr->data;
 	}
-	else if (strlen(tokptr->indata) != len)
+	else if ((int)strlen(tokptr->indata) != len)
 	{
 		data = tokptr->data;
 	}
@@ -902,6 +985,14 @@ TOKEN	*tokptr;
 	{
 		char	last_char, next_char;
 
+		if (ctx->out_column < mincol-1)
+		{
+			/*
+			**	pay attention to the mincol value.
+			*/
+			ctx->out_column = mincol-1;
+		}
+
 		/*
 		**	Check if a space is required between the last token and this one.
 		**	We are going to use out_column as the column number (repositioning token).
@@ -910,7 +1001,14 @@ TOKEN	*tokptr;
 		last_char = ctx->out_line[ctx->out_column-1];
 		next_char = data[0];
 
-		if (VERB==tokptr->type)
+		if (' '==last_char)
+		{
+			/*
+			**	Last char is a space so don't need to check further.
+			**	This can happen if mincol causes the out_column to be bumped up.
+			*/
+		}
+		else if (VERB==tokptr->type)
 		{
 			ctx->out_column++;
 		}
@@ -975,11 +1073,25 @@ TOKEN	*tokptr;
 
 			x_tput_flush_ctx(ctx);
 
-			if (72 - column < len)					/* Token doesn't fit on line at requested col	*/
+			if (72 - column < len)
 			{
-				if (column > 12)
+				/* 
+				**	Token doesn't fit on line at requested column
+				*/
+
+				if (72 - mincol >= len)
 				{
-					column = 12;				/* Reduce the column if possible.		*/
+					/*
+					**	It will fit at mincol
+					*/
+					column = mincol;
+				}
+				else
+				{
+					/*
+					**	Last chance - use column 12
+					*/
+					column = 12;
 				}
 			}
 
@@ -1038,8 +1150,7 @@ TOKEN	*tokptr;
 **	06/05/93	Changed to use the tput_context (ctx). GSL
 **
 */
-int x_tput_flush_ctx(ctx)
-tput_context	*ctx;
+static int x_tput_flush_ctx ( tput_context *ctx )
 {
 	if (ctx->out_column && (!ctx->lint || ctx->write_comments))
 	{
@@ -1085,9 +1196,7 @@ tput_context	*ctx;
 **	05/27/93	Written by GSL
 **
 */
-int put_cobol_line(cob_file_ptr,the_line)
-cob_file	*cob_file_ptr;
-char		*the_line;
+int put_cobol_line ( cob_file *cob_file_ptr, char *the_line )
 {
 	if (!cob_file_ptr->is_open)
 	{
@@ -1123,9 +1232,7 @@ char		*the_line;
 **	05/27/93	Written by GSL
 **
 */
-int write_file(the_file,buff)
-A_file	*the_file;
-char	*buff;
+int write_file ( A_file *the_file, char *buff )
 {
 	if (fprintf(the_file->file,"%s",buff) < 0)
 	{
@@ -1135,9 +1242,7 @@ char	*buff;
 	return 0;
 }
 
-int split_token_to_dcl_file(mincol, tokptr)
-int	mincol;
-TOKEN	*tokptr;
+int split_token_to_dcl_file ( int mincol, TOKEN *tokptr )
 {
 	static	int		first = 1;
 	static	tput_context	split_ctx;
@@ -1331,9 +1436,7 @@ write_the_token:
 	}
 }
 
-int split_token_to_dtp_file(mincol, tokptr)
-int	mincol;
-TOKEN	*tokptr;
+int split_token_to_dtp_file ( int mincol, TOKEN *tokptr )
 {
 	static	int		first = 1;
 	static	tput_context	split_ctx;
@@ -1475,3 +1578,15 @@ write_the_token:
 	x_tput_token(&split_ctx, mincol, tokptr);
 
 }
+/*
+**	History:
+**	$Log: output.c,v $
+**	Revision 1.8  1996-10-09 12:30:27-04  gsl
+**	fix warning
+**
+**	Revision 1.7  1996-08-30 18:56:07-07  gsl
+**	drcs update
+**
+**
+**
+*/

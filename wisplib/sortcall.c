@@ -1,328 +1,154 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990			*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
-/********************************************************************************************************************************
-*																*
-*	SORTCALL.C  Emulation of WANG VSSUB:  SORTCALL										*
-*																*
-********************************************************************************************************************************/
-/********************************************************************************************************************************
-*																*
-*	Revision History:                           										*
-*																*
-*	R01 - 10/30/90  DM  Fix isempty call to sys$get was returning 0x186F4 RMS$_USZ						*
-*			    Also, rewrite cnvpicz to allow for both right and left justification				*
-*	R02 - 11/02/90	DM  Fix call to wfname so that "##name" will work correctly						*
-*																*
-*																*
-*																*
-********************************************************************************************************************************/
-
-
+/*
+**	File:		sortcall.c
+**
+**	Purpose:	To ...
+**
+**	Routines:	
+**	SORTCALL()	Wang VSSUB SORTCALL.
+**
+**
+*/
 
 #include "idsistd.h"
-#ifdef VMS
-#include <varargs.h>                                                                    /* Allow variable number of arguments	*/
-#include <ctype.h>									/* for isdigit()			*/
-#include <descrip.h>
-#include <rms.h>
-#include <ssdef.h>
-#include <sordef.h>
-
+#include "idsisubs.h"
 #include "wcommon.h"
+#include "werrlog.h"
+#include "wisplib.h"
 
-#define MAX_REC_SZ 8192									/*R01* used in isempty as default size	*/
-											/*R01* for a file record.		*/
+#define		ROUTINE		61000
 
-struct key_block {									/* VMS key block structure 		*/
-	short type;									/* type of key (char/decimal/etc)	*/
-	short order;									/* 1-descending, 0-ascending		*/
-	short offset;									/* offset from start of file record 	*/
-	short length;									/* length in bytes			*/
-	};
-struct key_struct {									/* passed to SOR$BEGIN_SORT		*/
-	short cnt;									/* number of keys to sort on		*/
-	struct key_block keys[8];							/* actual key info (above)		*/
-	};
+#ifdef VMS
+#include "wfname.h"
+#include "vssort.h"
+#include "vmssort.h"
 
-#define SOR$M_NOSIGNAL 8								/* option for SOR$ sort routine		*/
-											/* to return err code instead of 	*/
-											/* signaling it				*/
-struct k_inf {										/* key info as passed from cobol 	*/
-	char field_pos[4];								/* PIC Z(4) key offset 			*/
-	char flen[3];									/* PIC Z(3) key len			*/
-	char ftype;									/* PIC Z type 'C'har, 'P'acked Decimal	*/
-	char sort_order;								/* PIC Z order 'A'sc, 'D'escending	*/
-	};
-
-struct info_s {										/* info struct passed from cobol	*/
-	char ifile[8];									/* input file name 			*/
-	char ilib[8];									/* input file library			*/
-	char ivol[6];									/* input file volume			*/
-	char ofile[8];									/* output name				*/
-	char olib[8];									/* output library			*/
-	char ovol[6];									/* output volume			*/
-	struct k_inf key_info[8];							/* key data (above)			*/
-	};
-
-struct info_s *sort_info;								/* working pointer to passed info	*/
-
-SORTCALL(va_alist)
-
-va_dcl
+void SORTCALL(struct sortdata_s *sortdata, int4 *retcode)
 {
-	va_list	the_args;								/* A pointer to traverse the stack.	*/
-	int 	arg_count;								/* passed arg count			*/
-	int 	*ret_status;								/* passed ret status			*/
-	char 	*passed_info;								/* arg1 from cobol			*/
-	char 	invol[7],infil[9],inlib[9];						/* input file info buffers 		*/
-	char	outvol[7],outfil[9],outlib[9];						/* output file info buffers		*/
-	char 	infile[100], outfile[100], *wfname();					/* pathname buffers			*/
-	char	*p;									/* scratch pointer			*/
-	int4	mode;									/* mode for wfname()			*/
-	unsigned long	status;								/* status from SOR$			*/
-	extern char WISPFILEXT[39];							/* foo					*/
+	char 	flist[MAXSORTINFILES][9]; 
+	char 	llist[MAXSORTINFILES][9];
+	char 	vlist[MAXSORTINFILES][7];
+	char 	infilename[MAXSORTINFILES][80];
+	int4 	infile_count;
+	char 	ofile[9];
+	char 	olib[9];
+	char 	ovol[9];
+	char 	outfilename[80];
+	char 	ofileorg;
+	int4 	maxrec;
+	char 	outrectype;
+	int 	replace_flag;
+	struct select_criteria selinfo[MAXSORTSELECTS];
+	int4 	selcnt;
+	struct key_info keyinfo[MAXSORTKEYS];
+	int4 	keycnt;
+	int4 	stable; 
+	int4 	wangcode;
+	int4 	errcode; 
+	char 	errmess[256];
+	int4	mode;
+	char	*ptr;
+	int	idx;
 
-	struct key_struct sor_key_info;							/* key struct to pass to SOR$		*/
-	struct key_block *sor_key_p;							/* working pointer for ^^^		*/
-	struct k_inf *pas_key_p;							/* working pointer for passed key data	*/
-	short 	cnvpicz();								/*R01 convert PIC Z type into short	*/
-	long 	opt = SOR$M_NOSIGNAL;							/* option word for SOR$BEGIN_SORT()	*/
-	unsigned char out_org;								/* Output file organization.		*/
-	
-#include "sortcall.d"
+	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
-	/********************************************************
-	*	Receive variable number of arguments		*
-	********************************************************/
+	infile_count = 1;
+	memcpy(flist[0], sortdata->ifile, 8);
+	flist[0][8] = (char)0;
+	memcpy(llist[0], sortdata->ilib, 8);
+	llist[0][8] = (char)0;
+	memcpy(vlist[0], sortdata->ivol, 6);
+	vlist[0][6] = (char)0;
 
-	va_start(the_args);								/* Set pointer to top of stack.		*/
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
-
-	va_start(the_args);								/* Go back to the top of the stack.	*/
-
-	passed_info  = va_arg(the_args, char*);						/* Get address of the information 	*/
-	arg_count -= 1;									/* One less argument.			*/
-
-	ret_status = va_arg(the_args, int*);						/* return code 				*/
-	arg_count -= 1;									/* One less argument.			*/
-
-	sort_info = (struct info_s *)passed_info;					/* so we can access this block of 	*/
-											/* mem as a struct info_s		*/
-	memset(infile,(char)0,sizeof(infile));						/* null these buffers 			*/
-	memset(outfile,(char)0,sizeof(outfile));
-
-	/*
-	memset(invol,' ',sizeof(invol));
-	memset(inlib,' ',sizeof(inlib));
-	memset(infil,' ',sizeof(infil));
-	memset(outvol,' ',sizeof(outvol));
-	memset(outlib,' ',sizeof(outlib));
-	memset(outfil,' ',sizeof(outfil));
-	strncpy(invol,sort_info->ivol,6);
-	strncpy(inlib,sort_info->ilib,8);
-	strncpy(infil,sort_info->ifile,8);
-	strncpy(outvol,sort_info->ovol,6);
-	strncpy(outlib,sort_info->olib,8);
-	strncpy(outfil,sort_info->ofile,8);
-	*/
-	
 	mode = 0;
-	mode |= IS_BACKFILL;
-	p=wfname(&mode,sort_info->ivol,sort_info->ilib,sort_info->ifile,infile);	/* convert wang style to vax names	*/
+	ptr = wfname(&mode, sortdata->ivol, sortdata->ilib, sortdata->ifile, infilename[0]);
+	*ptr = (char)0;
 
-	mode = 0;									/*R02 reset mode for 2nd wfname call    */
-	mode |= IS_BACKFILL;                                                            /*R02 return new vol, lib, file names	*/
-	mode |= IS_OUTPUT;                                                              /*R02 file is an output file        	*/
-	p=wfname(&mode,sort_info->ovol,sort_info->olib,sort_info->ofile,outfile);	/* convert wang style to vax names	*/
-
-	/********************************************************
-	*	Initialize SOR$ parameters			*
-	********************************************************/
-
-	*ret_status = 0;
-
-	if (isempty(infile))
+	if (!wfexists(sortdata->ifile, sortdata->ilib, sortdata->ivol)) 
 	{
-		*ret_status=4;
-		wswap(ret_status);
+		swap_put(retcode, (int4)4);
 		return;
 	}
 
-	inp_desc.dsc$w_length = strlen(infile);						/* set descriptor length info		*/
-	inp_desc.dsc$w_length = strlen(outfile);
+	memcpy(ofile, sortdata->ofile, 8);
+	ofile[8] = (char)0;
+	memcpy(olib, sortdata->olib, 8);
+	olib[8] = (char)0;
+	memcpy(ovol, sortdata->ovol, 6);
+	ovol[6] = (char)0;
 
-	out_org = FAB$C_SEQ;
-	status = SOR$PASS_FILES(&inp_desc,&out_desc,&out_org);				/* tell SOR$ our in and out files	*/
-	if (status != SS$_NORMAL)
+	mode = IS_OUTPUT | IS_BACKFILL;
+	ptr = wfname(&mode, sortdata->ovol, sortdata->olib, sortdata->ofile, outfilename);
+	*ptr = (char)0;
+
+	ofileorg = 'C';
+	maxrec = 0;
+	outrectype = 'F';
+
+	replace_flag = (0==memcmp(sortdata->ifile,sortdata->ofile,8) &&
+			0==memcmp(sortdata->ilib,sortdata->olib,8) &&
+			0==memcmp(sortdata->ivol,sortdata->ovol,6)     ) ? 1 : 0;
+
+	memset(&selinfo,' ',sizeof(selinfo));
+	selcnt = 0;
+
+	memset(&keyinfo,' ',sizeof(keyinfo));
+	keycnt = 0;
+	for(idx=0; idx<8; idx++)
 	{
-		*ret_status=50;
-		goto sort_end;
-	}
-
-	memset(&sor_key_info,(char)0,sizeof(struct key_struct));			/* zero our info structure		*/
-	sor_key_p = sor_key_info.keys;							/* init working pointers		*/
-	pas_key_p = sort_info->key_info;						
-	while (strncmp((char *)pas_key_p,"       ",7)&&sor_key_info.cnt<8)
-											/* spaces mean no more keys		*/
-	{
-		int tmp;
-
-		switch (pas_key_p->ftype)						/* convert type byte			*/
+		if (0==memcmp(sortdata->keys[idx].pos,"    ",4))
 		{
-			case 'C':	sor_key_p->type = DSC$K_DTYPE_T; 		/* char key data			*/
-					break;
-			case 'P':	sor_key_p->type = DSC$K_DTYPE_P;		/* packed decimal data			*/
-					break;
-			case 'Z':	sor_key_p->type = DSC$K_DTYPE_NZ;		/* zoned decimal data			*/
-					break;                  
-			default:	vre("%SRTC-FLD-NOIMP, field type <%c> not implemented, field %d",
-						pas_key_p->ftype,sor_key_info.cnt+1);
-					pas_key_p++; sor_key_info.cnt++;
-					continue;					/* else ignore this key (not implementd	*/
+			break;
 		}
-		sor_key_p->offset = cnvpicz(pas_key_p->field_pos,4)-1;			/* set key position			*/
-		tmp = sor_key_p->length = cnvpicz(pas_key_p->flen,3);	   		/* and length				*/
-		if (sor_key_p->type==DSC$K_DTYPE_P)
-			sor_key_p->length = tmp*2 -1; 
-		sor_key_p->order  = pas_key_p->sort_order=='D'?1:0;			/* convert order byte			*/
- 		sor_key_info.cnt++;							/* adjust key count			*/
-		sor_key_p++; pas_key_p++;						/* point to next struct in array	*/
-	}	
 
-	status = SOR$BEGIN_SORT(&sor_key_info,0,&opt);	      				/* pass this ^^^ info to SOR$		*/
-	if (status != SS$_NORMAL) 							/* Test if is not normal.		*/
-	{
-		*ret_status=16;
-		goto sort_end;
-	}
-                                                             
-
-	/********************************************************
-	*	Do the sorting					*
-	********************************************************/
-
-	status = SOR$SORT_MERGE();							/* Do the sort				*/
-	switch(status)
-	{
-	case SS$_NORMAL:
-		*ret_status = 0;	/* OK */
-		break;
-	case SOR$_EXTEND:
-	case SOR$_NO_WRK:
-		*ret_status = 8;
-		break;
-	case SOR$_SPCIVC:
-	case SOR$_SPCIVD:
-	case SOR$_SPCIVF:
-	case SOR$_SPCIVI:
-	case SOR$_SPCIVK:
-	case SOR$_SPCIVP:
-	case SOR$_SPCIVS:
-	case SOR$_SPCIVX:
-	case SOR$_SPCSIS:
-		*ret_status = 16;
-		break;
-	case SOR$_ENDDIAGS:
-		*ret_status = 1;
-		break;
-	default:
-		*ret_status = 50;
-		break;
-	}
-
-sort_end:
-	status = SOR$END_SORT();							/* release resources			*/
-
-	wswap(ret_status);
-}
-
-		/*R01	the following routine was rewritten	*/
-
-short cnvpicz(p,digits)		/*R01*/							/* convert a PIC Z type to int4		*/
-char *p;										/* pointer to picture			*/
-int digits;										/* number of digits			*/
-{
-	int digit;									/* which digit are we looking at	*/
-	short val=0;									/* current value			*/
-
-	char dig;									/* current digit			*/
-
-
-	for ( digit=0 ; ( *(p+digit) == ' ' ) && ( digit < digits ) ; ++digit );	/* skip the initial spaces if any	*/
-
-	for ( ; ( *(p+digit) != ' ' ) && ( digit < digits ) ; ++digit )			/* look at each digit until space	*/
-	{
-		dig = *(p+digit);							/* get the char at location 'digit'	*/
-		if ( !isdigit(dig)) return -1;						/* abort if it is not a digit		*/
-   
-		val = (val * 10) + (dig - 0x30);					/* multiply previous value by 10 and	*/
-											/* add the numeric value of dig		*/
-	}
-
-	return val;									/* return with the cumulative val	*/
-}
-
-static int isempty(file_name)
-char *file_name;
-{
-	int ret;
-	struct FAB file_block;
-        struct RAB record_block;
-
-	int rms_status;
-        char *byte_buffer;
-
-	file_block = cc$rms_fab;
-	file_block.fab$l_fna = file_name;
-	file_block.fab$b_bks = 4;
-	file_block.fab$l_dna = ".DAT";
-	file_block.fab$b_dns = 4;             
-	file_block.fab$b_fns = strlen(file_name);			/*R01*/                                          
-	file_block.fab$b_fac = FAB$M_GET;                
-	file_block.fab$l_fop = FAB$M_CIF;
-	file_block.fab$b_shr = FAB$V_SHRPUT | FAB$V_SHRGET | FAB$V_SHRDEL | FAB$V_SHRUPD;
-
-	record_block = cc$rms_rab;
-	record_block.rab$l_fab = &file_block;
-	
-	rms_status = sys$open(&file_block);
-	if (rms_status != RMS$_NORMAL) return 1;			/*R01*/
-
-    	byte_buffer = malloc(MAX_REC_SZ);				/*R01*/
-    	record_block.rab$l_ubf = byte_buffer;
-    	record_block.rab$w_usz = MAX_REC_SZ;				/*R01*/
-
-    	rms_status = sys$connect(&record_block);
-	if (rms_status == RMS$_NORMAL)					/*R01*/
-	{								/*R01*/
-    		rms_status = sys$get(&record_block);
-
-    		if (rms_status == RMS$_NORMAL)				 /* Just verify successful retrieval of RAB info.*/
-    		{
-			ret=0;
-    		}
-    		else
+		if (field2int4(sortdata->keys[idx].pos, 4, &keyinfo[idx].spos))
 		{
-			ret=2;
+			swap_put(retcode, (int4)16);
+			return;
 		}
-    	}								/*R01*/
-	else								/*R01*/
-	{								/*R01*/
-		ret=3;							/*R01*/
-    	}								/*R01*/
-	rms_status = sys$close(&file_block);
-	free(byte_buffer);						/*R01*/
-	return ret;
+
+		if (field2int4(sortdata->keys[idx].len, 3, &keyinfo[idx].len))
+		{
+			swap_put(retcode, (int4)16);
+			return;
+		}
+
+		keyinfo[idx].type = sortdata->keys[idx].type;
+		keyinfo[idx].order = sortdata->keys[idx].order;
+
+		keycnt += 1;
+	}
+
+	if (keycnt < 1 || keycnt > 8)
+	{
+		swap_put(retcode, (int4)16);
+		return;
+	}
+
+	stable = 0;
+
+	vmssort(flist, llist, vlist, infilename, infile_count,
+		ofile, olib, ovol, outfilename, 
+		ofileorg, maxrec, outrectype, replace_flag,
+		&selinfo, selcnt, &keyinfo, keycnt, stable, 
+		&wangcode, &errcode, errmess);
+
+	swap_put(retcode,wangcode);
+	return;
 }
 #endif /* VMS */
 
 #ifndef VMS
-#include "werrlog.h"
 
 /*
 	SORTCALL	For UNIX and MS-DOS this routine will call WISPSORT.  It will use the info from SORTINFO
@@ -332,7 +158,6 @@ void SORTCALL(sortdata,retcode)
 char	*sortdata;
 int4	*retcode;
 {
-#define		ROUTINE		61000
 	char	filetype;
 	int4	recsize;
 	int4	*sortcode_ptr;
@@ -345,3 +170,13 @@ int4	*retcode;
 	return;
 }
 #endif /* NOT VMS */
+
+/*
+**	History:
+**	$Log: sortcall.c,v $
+**	Revision 1.10  1996-08-19 18:32:57-04  gsl
+**	drcs update
+**
+**
+**
+*/

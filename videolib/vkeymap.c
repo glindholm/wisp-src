@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -21,6 +23,7 @@
 */
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 #ifndef NOSTDLIB
 #include <stdlib.h>
@@ -32,7 +35,9 @@ typedef unsigned int size_t;
 
 #include "vkeymap.h"
 #include "vintdef.h"
+#include "vmodules.h"
 
+extern int access();
 static int4 strtometakey();
 char *upstring();
 
@@ -112,7 +117,7 @@ int4	*rc_metakey;
 		/*
 		**	Preallocate one item on list.
 		*/
-		vkeymap_head = malloc(sizeof(struct vkeymap_struct));
+		vkeymap_head = (struct vkeymap_struct *)malloc(sizeof(struct vkeymap_struct));
 		vkeymap_curr = vkeymap_head;
 
 		/*
@@ -148,7 +153,7 @@ int4	*rc_metakey;
 			/*
 			**	Preallocate the next list item and link down to it.
 			*/
-			vkeymap_curr->next = malloc(sizeof(struct vkeymap_struct));
+			vkeymap_curr->next = (struct vkeymap_struct *)malloc(sizeof(struct vkeymap_struct));
 			vkeymap_curr = vkeymap_curr->next;
 		}
 
@@ -215,7 +220,7 @@ char	*path;
 
 	path[0] = (char)0;
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 	if (ptr = getenv("VKEYMAP"))
 	{
 		/*
@@ -238,10 +243,12 @@ char	*path;
 			path[0] = (char)0;
 		}
 	}
-#endif /* unix || MSDOS */
+#endif /* unix || MSDOS || WIN32 */
 
 	if (!path[0])
 	{
+		char *vinfoname();
+
 		strcpy(path, vinfoname(VKEYMAP_FILE));
 	}
 	return(path);
@@ -361,3 +368,12 @@ char	*argv[];
 	exit(0);
 }
 #endif /* MAIN */
+/*
+**	History:
+**	$Log: vkeymap.c,v $
+**	Revision 1.7  1996-10-11 18:16:07-04  gsl
+**	drcs update
+**
+**
+**
+*/

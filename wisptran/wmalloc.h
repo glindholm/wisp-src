@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -21,7 +25,17 @@
 #ifndef wmalloc_H
 #define wmalloc_H
 
-void *wmalloc();
-void *wdupstr();
+void *wmalloc(int size);
+void wfree(void *ptr);
+void *wdupstr(char *str);
 
 #endif /* wmalloc_H */
+/*
+**	History:
+**	$Log: wmalloc.h,v $
+**	Revision 1.6  1996-08-30 21:56:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

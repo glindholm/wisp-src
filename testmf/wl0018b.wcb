@@ -1,0 +1,110 @@
+000100**   Copyright (c) 1997 NeoMedia Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wl0018b.wcb
+000500**
+000600**   Project:    WISP/SAMPLE
+000700**
+000800**   Purpose:    
+000900**
+001000**   Example:
+001100**
+001200 IDENTIFICATION DIVISION.
+001300 PROGRAM-ID. wl0018b.
+001400 
+001500 ENVIRONMENT DIVISION.
+001600 CONFIGURATION SECTION.
+001700 INPUT-OUTPUT SECTION.
+001800
+001900 DATA DIVISION.
+002000 FILE SECTION.
+002100 WORKING-STORAGE SECTION.
+       01  MSG-CR       PIC XX   VALUE "CR".
+       01  MSG-DE       PIC XX   VALUE "DE".
+       01  MSG-XM       PIC XX   VALUE "XM".
+       01  MSG-CH       PIC XX   VALUE "CH".
+       01  MSG-PORT-A   PIC X(4) VALUE "T18A".
+       01  MSG-PORT-B   PIC X(4) VALUE "T18B".
+       01  MSG-RC.
+       	   05  MSG-RC-1	   BINARY.
+	   05  MSG-RC-2	   BINARY.
+       01  RC-TXT       PIC ----9.
+       01  MSG-MSG-A.
+       	   05  FILLER     PIC X(10) VALUE "MESSAGE A ".
+	   05  MSG-NUM-A  PIC 99999 VALUE 0.
+       01  MSG-MSG-B.
+       	   05  FILLER     PIC X(10) VALUE "MESSAGE B ".
+	   05  MSG-NUM-B  PIC 99999 VALUE 0.
+       01  MSG-LEN-A.
+       	   05  MSG-LEN-A1   BINARY VALUE 0.
+	   05  MSG-LEN-A2   BINARY VALUE 15.
+       01  MSG-LEN-B.
+       	   05  MSG-LEN-B1   BINARY VALUE 0.
+	   05  MSG-LEN-B2   BINARY VALUE 15.
+	   
+       01  MSG-TYPE-K   PIC X VALUE "K".
+       01  MSG-TIME     PIC X(4) VALUE LOW-VALUES.
+       
+
+002200
+002300 PROCEDURE DIVISION.
+002400 0000-MAIN SECTION.
+
+       	   call "MESSAGE" using MSG-CR, MSG-PORT-B, MSG-RC.
+       	   move msg-rc-2 to rc-txt.
+	   if MSG-RC-2 NOT EQUAL 0 THEN
+	       display "Create message port ", MSG-PORT-B, 
+       	       	       " failed with rc =", rc-txt
+	       GO 9999-STOP.
+
+	   display "Please start WL0018A as a different user.".
+
+       1000-LOOP.
+
+       	   call "MESSAGE" using 
+       	       	       	   MSG-XM, 
+       	       	       	   MSG-PORT-A, 
+       	       	       	   MSG-MSG-B, 
+       	       	       	   MSG-LEN-B,
+			   MSG-RC.
+       	   move msg-rc-2 to rc-txt.
+			   
+	   if MSG-RC-2 NOT EQUAL 0 THEN
+	       display "Transmit ", MSG-MSG-B, 
+       	       	       " Failed rc = ", rc-txt
+	       GO 9999-STOP.
+
+       	   call "MESSAGE" using 
+       	       	       	   MSG-CH, 
+       	       	       	   MSG-PORT-B,
+			   MSG-TYPE-K,
+			   MSG-TIME,
+       	       	       	   MSG-MSG-A, 
+       	       	       	   MSG-LEN-A,
+			   MSG-RC.
+       	   move msg-rc-2 to rc-txt.
+			   
+	   if MSG-RC-2 NOT EQUAL 0 THEN
+	       display "Check failed rc = ", rc-txt
+	       GO 9999-STOP.
+	       
+	   if MSG-NUM-A NOT EQUAL MSG-NUM-B THEN
+	       display " MSG-NUM-A = ", MSG-NUM-A,
+	       	       " MSG-NUM-B = ", MSG-NUM-B
+	       GO 9999-STOP.
+	   
+       	   ADD 1 TO MSG-NUM-B.
+	   if MSG-NUM-B > 100 then
+	       display "WL0018B transmitted and recieved 100 messages"
+       	       GO 9999-STOP.
+
+       	   GO 1000-LOOP.
+002500
+002600 9999-END SECTION.
+002700 9999-EXIT.
+002800     EXIT PROGRAM.
+002900 9999-STOP.
+003000     STOP RUN.
+006500**
+006600**   End of wl0018b.wcb
+006700**

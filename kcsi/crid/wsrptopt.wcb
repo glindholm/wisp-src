@@ -1,0 +1,21 @@
+000000* THESE ARE THE FIELDS FOR THE OPTIONS SELECTION.
+       01  RPT-OPTIONS.
+           05  RPT-ID       PIC X(8).
+           05  RPT-DATE     PIC X(8).
+           05  RPT-DEVICE   PIC X(8).
+           05  RPT-FILES    PIC X(3).
+           05  RPT-OPTION   PIC X(3).
+           05  RPT-ONLY     PIC X(3).
+           05  RPT-PAGE     PIC 99.
+           05  RPT-LINES    PIC X(3).
+           05  FILLER REDEFINES RPT-LINES.
+               10  RPT-LINE-1 PIC X.
+               10  RPT-LINE-2 PIC X.
+               10  RPT-LINE-3 PIC X.
+           05  RPT-SPACING  PIC X(3).
+           05  FILLER REDEFINES RPT-SPACING.
+               10  RPT-SPACING-1 PIC X.
+               10  RPT-SPACING-2 PIC X.
+               10  RPT-SPACING-3 PIC X.
+           05  RPT-EXT-SORT      PIC XXX.
+

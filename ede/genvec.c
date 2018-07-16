@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,13 +15,24 @@
 
 			NOTE: If called from COBOL the parameters are not NULL terminated.
 */
+#include "werrlog.h"
+#include "wexit.h"
 
-GENVEC( program, inparms, outparms)
-char	*program;								/* The PROGRAM to vector to			*/
-char	*inparms;								/* Input parameters				*/
-char	*outparms;								/* Output parameters				*/
+void GENVEC( 
+	char	*program,		/* The PROGRAM to vector to			*/
+	char	*inparms,		/* Input parameters				*/
+	char	*outparms)		/* Output parameters				*/
 {
-	werrvre("GENVEC: unable to vector program. Aborting!");
+	werr_message_box("GENVEC: unable to vector program. Aborting!");
 	wexit(0);
 }
 
+/*
+**	History:
+**	$Log: genvec.c,v $
+**	Revision 1.8  1996-09-13 13:54:33-04  gsl
+**	Fix warnings for NT
+**
+**
+**
+*/

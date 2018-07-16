@@ -1,0 +1,19 @@
+      *	        123456789 123456789 123456789 123456789 123456789 123456
+      *         789 123456789 123456789		
+020200     05  FILLER
+020300         PIC X(77) ROW 23 COLUMN 2 VALUE
+020400         "(1)Menu (2)Titles (3)Column Headings (4)Spacing (5)Seque
+020500-        "nce (6)Ext.Field Size".
+020600     05  FILLER
+020700         PIC X(78) ROW 24 COLUMN 2 VALUE
+020800         "(7)Edit (8)Data Limits (9)Sort (10)Control Fields (11)Su
+020900-        "mmary Options (16)Exit".
+
+051800*    05  FILLER
+051900*        PIC X(77) ROW 23 COLUMN 2 VALUE
+052000*        "1-Menu  2-Titles  3-Column Headings  4-Spacing  5-Sequen
+052100*        "ce  6-Ext. Field Size".
+052200*    05  FILLER
+052300*        PIC X(77) ROW 24 COLUMN 2 VALUE
+052400*        "7-Edit  8-Data Limits  9-Sort  10-Control Fields  11-Sum
+052500*        "mary Options  16-Exit".

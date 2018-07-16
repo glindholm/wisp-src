@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -17,30 +19,24 @@
 
 #include "idsistd.h"
 #include "wglobals.h"
+#include "wisplib.h"
 
-void wfwait(stat,timer) char *stat; int4 *timer;				/* Wait for locks to clear.				*/
+void wfwait(char* stat, int4* timer)					/* Wait for locks to clear.				*/
 {
-	uint4 delay, delaysec;					/* Delay period.					*/
+	uint4 delay;							/* Delay period.					*/
 
 	if (stat[0] == hardlock[0] && 
 	    stat[1] == hardlock[1]    ) 				/* A hard lock record lock				*/
 	{
-#ifdef VMS
+#if defined(VMS) || defined(MSDOS) || defined(WIN32)
 		delay = 20;						/* Yes, then delay for 1/5 of a second.			*/
 		wswap(&delay);						/* Pre-swap because wpause() will swap back.		*/
 		wpause(&delay);						/* Now do the wait.					*/
 		wswap(&delay);						/* Un-swap 						*/
 #endif
 #ifdef unix
-		delaysec = 1;						/* Under UNIX, wait 1 second.				*/
-		sleep(delaysec);					/* zzzzzzzzzzz.						*/
-		delay = delaysec * 100;					/* Return delay in 1/100ths of a sec.			*/
-#endif
-#ifdef MSDOS
-		delay = 20;						/* Yes, then delay for 1/5 of a second.			*/
-		wswap(&delay);						/* Pre-swap because wpause() will swap back.		*/
-		wpause(&delay);						/* Now do the wait.					*/
-		wswap(&delay);						/* Un-swap 						*/
+		sleep(1);						/* zzzzzzzzzzz.						*/
+		delay = 100;						/* Return delay in 1/100ths of a sec.			*/
 #endif
 	}
 	else
@@ -57,29 +53,22 @@ void wfwait(stat,timer) char *stat; int4 *timer;				/* Wait for locks to clear.	
 
 /* wfswait - Wait for a soft or hard lock to clear. The caller is interested in applying a lock, and needs the record free.	*/
 
-void wfswait(stat, timer) char *stat; int4 *timer;
+void wfswait(char* stat, int4* timer)
 {
-	uint4 delay, delaysec;					/* Delay period.					*/
+	uint4 delay;							/* Delay period.					*/
 
 	if ( (stat[0] == hardlock[0] && stat[1] == hardlock[1]) ||	/* A hard lock record lock or				*/
 	     (stat[0] == softlock[0] && stat[1] == softlock[1])    )	/* a soft lock record lock				*/
 	{
-#ifdef VMS
+#if defined(VMS) || defined(MSDOS) || defined(WIN32)
 		delay = 20;						/* Yes, then delay for 1/5 of a second.			*/
 		wswap(&delay);						/* Pre-swap because wpause() will swap back.		*/
 		wpause(&delay);						/* Now do the wait.					*/
 		wswap(&delay);						/* Un-swap 						*/
 #endif
 #ifdef unix
-		delaysec = 1;						/* Under UNIX, wait 1 second.				*/
-		sleep(delaysec);					/* zzzzzzzzzzz.						*/
-		delay = delaysec * 100;					/* Return delay in 1/100ths of a sec.			*/
-#endif
-#ifdef MSDOS
-		delay = 20;						/* Yes, then delay for 1/5 of a second.			*/
-		wswap(&delay);						/* Pre-swap because wpause() will swap back.		*/
-		wpause(&delay);						/* Now do the wait.					*/
-		wswap(&delay);						/* Un-swap 						*/
+		sleep(1);						/* zzzzzzzzzzz.						*/
+		delay = 100;						/* Return delay in 1/100ths of a sec.			*/
 #endif
 	}
 	else
@@ -93,3 +82,15 @@ void wfswait(stat, timer) char *stat; int4 *timer;
 		if ((*timer = (*timer - delay)) < 0) *timer = 0;	/* Yes, then decrement the timer but not below zero.	*/
 	}
 }
+/*
+**	History:
+**	$Log: wfwait.c,v $
+**	Revision 1.10  1997-03-12 13:25:47-05  gsl
+**	changed to use WIN32 define
+**
+**	Revision 1.9  1996-08-19 18:33:17-04  gsl
+**	drcs update
+**
+**
+**
+*/

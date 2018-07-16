@@ -1,0 +1,648 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP ACUCOBOL NATIVE SCREENS PRE-RELEASE NOTES
+	
+	Document:	wispacn.txt
+	Last Updated:	30 Sept 1997
+	Products:	WISP for Acucobol
+	Versions:	(Note yet determined)
+	
+	Summary:	Pre-release notes on WISP Native Screens.
+			Usage information.
+			List of known limitations.
+
+	====================================================================
+	
+	***
+	*** ALL INFORMATION WITHIN THIS DOCUMENT IS CONFIDENTIAL AND
+	*** SUBJECT TO CHANGE PRIOR TO OFFICIAL RELEASE. THERE IS NO
+	*** GUARANTEE THAT THE FINAL PRODUCT WILL BEHAVE AS DESCRIBED
+	*** HERE.
+	***
+
+
+	WISP ACUCOBOL NATIVE SCREENS PRE-RELEASE NOTES
+	==============================================
+	
+	This document contains pre-release information on WISP support for
+	Acucobol native screens.  It is meant to assist pre-release users
+	and beta testers.
+
+	We are actively developing this product and the functionalities,
+	methods and specifications described here are being changed,
+	update, and refined on a daily basis.
+
+
+	Environment Information
+	-----------------------
+	Development and testing has been done using the following
+	environments:
+
+	    AIX 3.2.5
+	    HP-UX 10.01
+	    WISP Runtime 4.1.03
+	    ACUCOBOL-GT 3.1.1
+
+	Components
+	----------
+	The following new components are used with ACUCOBOL native
+	screens: 
+
+	    wacufac2screen.cob	  - FAC translation
+	    wacugetpfkey.cob	  - Generic pfkey handler
+	    wacuhelp.cob	  - HELP key processor
+	    wacuerror.cob	  - Runtime error message handler
+	    wacugetparm.cob	  - GETPARM screen handler
+
+	Installation
+	------------
+	Install the WISP toolkit following the normal installation
+	instructions.  This must include building a new runtime system as
+	runtime support for native screens has been added.
+
+	Build the ACUCOBOL Native Screens programs.
+
+	    $ cd $WISPDIR/acu
+	    $ make -f wruncbl.umf acn
+
+
+	OVERVIEW
+	========
+
+	Only Wang DISPLAY AND READ style screen	IO statements and DISPLAY
+	verb are handled in this pre-release. 
+
+	The WISP translator translates DISPLAY-WS records into ACUCOBOL
+	SCREEN SECTION records.  Wang DISPLAY AND READ statements are
+	translated into DISPLAY and ACCEPT statements wrapped with logic
+	to handle the function keys and RANGE clause checking.
+
+
+	UNDERSTANDING ACUCOBOL SCREEN IO
+	================================
+	In order to be successful you will need to understand how ACUCOBOL
+	screen IO works.  The following list details the relevent chapters
+	and sections of the Acucobol manuals.
+
+	Please read the following information before proceeding.
+
+	Acucobol-GT 3.1 User's Guide:
+	   Chapter 4                "Terminal Manager"
+	   Chapter 6 Section 6.5    "Screen Section"
+
+	Acucobol-GT 3.1 Reference Manual:
+	   Chapter 5 Section 5.8    "Screen Section"
+	   Chapter 5 Section 5.9    "Screen Description Entry"
+	   Chapter 6 Section 6.4.9  "Common Screen Options"
+	   Chapter 6 Section 6.6.1  "ACCEPT Statement"
+	   Chapter 6 Section 6.6.13 "DISPLAY Statement"
+	   Chapter 4 Section 4.1.3  "Special-Names Paragraph"
+
+
+	WISP TRANSLATION INFORMATION
+	============================
+	To translate for ACUCOBOL native screens use the new "-VACN"
+	(Acucobol Native) language option flag.  Since native screens will
+	be maintained using the translated code you should also consider
+	using the "-1" flag.
+
+	    $ wisp -VACN -1 sample.wcb
+	    $ ccbl -da4 -zd -za -o SAMPLE sample.cob
+
+	Other WISP and ccbl flags may be required.
+
+
+	DISPLAY-WS Records
+	------------------
+	DISPLAY-WS records are translated into SCREEN SECTION records.
+	This is mostly straight forward however there are some
+	considerations.
+
+	On the Wang the tab-order of screen fields is determined by there
+	row and column position on the screen.  With ACUCOBOL the
+	tab-order is determined by the field order within the SCREEN
+	SECTION record.  This difference is highly noticable especially
+	with OCCURS clauses where tabbing takes you down a column instead
+	of across the screen.
+
+	To maintain the same tab-order as on the Wang the fields within a
+	screen are rearranged to match the screen tab-order.
+
+	The Wang allows three levels of OCCURS clauses in a DISPLAY-WS
+	record.  ACUCOBOL allows only one level of OCCURS and it behaves
+	substantially different then the Wang OCCURS.  The WISP translator
+	will "un-roll" the OCCURS fields into individual screen fields and
+	generate them in Wang tab-order.  As an example, a screen field
+	that occurs 4 will be un-rolled into 4 individual screen fields
+	that are subscribed 1 thru 4.
+
+	RANGE clauses are simulated following an ACCEPT of the screen by
+	performing a paragraph with checks the fields against the valid
+	ranges.
+
+	Display characteristics of screen fields are controled on the Wang
+	by naming the screen fields so FAC OF fields can be used.  With
+	ACUCOBOL screens the display characteristics are controlled with
+	the COLOR and CONTROL phrases.  If a screen field was named then a
+	corresponding COLOR and CONTROL field will be generated.  These
+	fields will be set, before the screen is displayed, based on the
+	values in the simulated FAC OF fields.
+
+
+	FAC OF And ORDER AREA OF Clauses
+	--------------------------------
+	The WISP translator generates simulated FAC OF fields for each
+	named screen field in the DISPLAY-WS record.  It also generates
+	simulated ORDER AREA OF fields for each DISPLAY-WS record.
+
+	The PROCEDURE DIVISION logic which uses FAC OF and ORDER AREA of
+	clauses is translated the same as with WISP screen IO.  The logic
+	will manipulate simulated fields.  These simulated fields will be
+	used in the DISPLAY AND READ logic to control behaviour.
+
+
+	DISPLAY AND READ Statements
+	---------------------------
+	The DISPLAY AND READ statements are translated into a PERFORM of a
+	paragraph which does a DISPLAY and ACCEPT of the screen.
+
+	This paragraph handles all aspects of DISPLAY AND READ.  Before
+	the DISPLAY the silumated FAC OF fields are used to set the COLOR
+	and CONTROL fields.  Following the ACCEPT the function key
+	exception values are tested to see if a valid function key or an
+	"ON PFKEY" was pressed.  If a valid key was pressed then the RANGE
+	clause fields are checked.
+
+	With ACUCOBOL screens a tab out of the last field will terminate
+	the ACCEPT.  The logic WISP generates will catch the tab and
+	return the ACCEPT positioned at the first field on the screen.
+
+	If a PFKEY clause was specified for the workstation it will be
+	updated.  If the CURSOR POSITION clause was specified it will be
+	updated.
+
+
+	DISPLAY verb
+	------------
+	The DISPLAY verb is translated into native screens by stringing
+	the fields into a WISP-DISPLAY-FIELDS array and displaying it
+	using a generated WISP-DISPLAY-SCREEN screen.
+
+	On the Wang the DISPLAY verb generated a GETPARM which could be
+	statisfied with a PUTPARM.  This functionality is not available
+	when translating for native screens.
+
+
+	CLOSE workstation
+	-----------------
+	When translating for native screens any "CLOSE workstation"
+	statements will be removed as they are not needed.
+
+
+	CALL "BELL" vssub
+	-----------------
+	The "BELL" vssub uses WISP screens so CALL "BELL" statements are
+	translated into a "DISPLAY OMITTED BELL" statement. This is the
+	native screens way to ring the bell once.  If multiple bell rings
+	are required this will need to be modified.
+
+
+	WCC - Write Control Character
+	-----------------------------
+	The WCC in the ORDER AREA OF clause is partially supported. Logic
+	is generated to recognize and simulate the UNLOCK KEYBOARD, SOUND
+	ALARM, and POSITION CURSOR bits.
+
+	If the UNLOCK KEYBOARD bit is not set then the ACCEPT part the the
+	DISPLAY AND READ logic is not performed.  If the SOURCE ALARM bit
+	is set then a DISPLAY OMITTED BELL statement is issued before the
+	ACCEPT statement.  If the POSITION CURSOR bit is set then the
+	cursor row and column values are moved into the global CURSOR
+	clause fields before the ACCEPT statement.
+
+
+	GETPARM Vssub, ACCEPT and STOP Verbs
+	------------------------------------
+	The GETPARM vssub as well as the ACCEPT and STOP verbs use GETPARM
+	to do screen IO.  These are translated the same as with WISP
+	screens, however, if the NATIVESCREENS options is used then the
+	WISP runtime will use the Acucobol routine WACUGETPARM to display
+	them using Acucobol screen IO.  There is a limit of 32 entry
+	fields per GETPARM screen when WACUGETPARM is used.
+
+
+	Native Screens Warnings
+	-----------------------
+	The WISP translator will generate the following warnings when it
+	detects features which may not be compatible with Native Screens.
+
+	    Call "BELL" changed to DISPLAY OMITTED BELL
+	    Features of "MESSAGE" are not compatible with Native Screens
+	    Call "SCREEN" not supported with Native Screens
+	    Call "WSXIO" uses WISP Screens
+	    Call "WSCLOSE" uses WISP Screens
+	    Call "WSFNM" uses WISP Screens
+	    Call "WSFNS" uses WISP Screens
+	    Workstation CLOSE removed for Native Screens
+	    Workstation READ uses WISP Screens
+	    Workstation REWRITE uses WISP Screens
+	    ALTERED clause on DISPLAY AND READ not supported
+	    NO-MOD clause of DISPLAY AND READ not supported
+
+
+
+	RUNTIME CONFIGURATION
+	=====================
+
+	Do not use the "-b" runtime flag, this is normally used with WISP
+	screen IO but it is incompatible the ACUCOBOL screens.
+
+	Runtime OPTIONS file
+	--------------------
+	To tell the WISP runtime that you are using ACUCOBOL native
+	screens set the NATIVESCREENS option in the options file.
+
+	    NATIVESCREENS
+
+	The WISP runtime can be instructed to use only pfkeys (1) to (12)
+	for internally generated screens instead of the 32 pfkeys that
+	were used on the Wang VS.  When the PFKEYS12 option file option is
+	used then internal screens like OPEN GETPARMS use only pfkeys (1)
+	to (12) and they use pfkey (12) as the EXIT key instead of the
+	Wang VS standard of pfkey (16).
+
+	    PFKEYS12
+
+
+	Function Keys
+	-------------
+	Configure your function keys in A_TERMCAP and map the keys to
+	exception values in the configuration file according to the
+	ACUCOBOL Terminal Manager documentation. 
+
+	We will be using the exception codes 1-32 for the PFkeys 1-32.
+	See "Terminal Manager" chapter 4 Acucobol User's Guide.  Exception
+	codes 1-10 are normally defined, 11-20 are also available as
+	shifted F1-F10 which may or may not be available depending on the
+	terminal.  Exception codes 21-32 are not normally coded but can be
+	added to A_TERMCAP using the U1-U0,A1-A0,or C1-C0 key codes.
+	These key codes can then be mapped to exception values in the
+	configuration file.
+
+	Some terminals may not be able to generate 32 pfkey escape codes.
+	The COBOL may have to adjusted to work with fewer function keys. 
+
+	A generic function key entry mechanism has been mapped to
+	exception code 34.  If the translated DISPLAY AND READ statement
+	receives an exception code 34 it will call WACUGETPFKEY to accept
+	a numeric pfkey value from the user.  The WISP screens used "^F"
+	(numeric value 6) to generically enter function keys, however it
+	may be more convenient to use the ESC key (value 27).  Use the
+	KEYSTROKE option in the configuration file to map keystrokes to
+	exception code 34.
+
+	    KEYSTROKE  EXCEPTION=34   6
+	    KEYSTROKE  EXCEPTION=34  27
+	
+	The source code for WACUGETPFKEY is provided so it can be
+	customized if needed.
+
+	HELP Key
+	--------
+	The Wang style HELP key is mapped to exception code 33.  If the
+	translated DISPLAY AND READ statement receives an exception code
+	33 it will call WACUHELP to simulate the Wang style HELP key.  To
+	map the "^E" (Control-E) key to exception code 33 use the
+	KEYSTROKE option in the configuration file.  The "^E" key has a
+	numeric value of five (5).
+
+	    KEYSTROKE  EXCEPTION=33  5
+
+	*** The program WACUHELP is not yet completed.
+
+	FAC Translation
+	---------------
+	A ACUCOBOL progam WACUFAC2SCREEN is supplied for converting
+	simulated FAC OF fields into COLOR and CONTROL fields.  This
+	program must be placed in a directory on your CODE-PREFIX path.
+
+	The source code for WACUFAC2SCREEN is provided so it can be
+	customized if needed.
+
+	Pseudo Blanks
+	-------------
+	To simulate pseudo-blanks you can use the configuration file
+	SCREEN option with the PROMPT and PROMPT-ALL keywords. See the
+	Acucobol User's Guide section 4.4.2.
+
+	    SCREEN PROMPT=* PROMPT-ALL=YES
+
+
+
+	IMPLEMENTATION DETAILS
+	======================
+	
+	LINK to DISPLAY
+	---------------
+	When using native screens a vssub LINK to DISPLAY will perform an
+	external LINK to the DISPLAY utility as if the EXTDISPLAY options
+	file option was used.  When WISP screens are used the default is
+	to treat a vssub LINK to DISPLAY as an internal call to the
+	display routine.
+
+
+
+	KNOWN LIMITATIONS
+	=================
+	Direct READ and REWRITE of the workstation and WSXIO use WISP
+	screen IO.
+
+	GETPARMS have a limit of 32 modifiable entry fields.
+
+	The Co*STAR for WISP customizations are not available with Native
+	Screens.  Co*STAR will work generically as described in the
+	Co*STAR manual but without the builtin WISP enhancements
+
+	The "ON PFKEY(S)" clause on the Wang DISPLAY AND READ will prevent
+	the screen data from being moved to the WORKING-STORAGE fields.
+	With native screens the ACCEPT clause will always move the data
+	into the WORKING-STORAGE fields.
+
+	The "ALTERED" clause of DISPLAY AND READ is not supported and will
+	be ignored.  The ACCEPT logic will not update modified bit in the
+	simulated FAC OF fields.
+
+	The "NO-MOD" clause on DISPLAY AND READ is not supported. The
+	NO-MOD logic will be enclosed in IF WISP-DNR-NO-MOD conditional
+	which will never be true so will be dead code.
+
+	NUMERIC FACs are not supported. Use a numeric PIC clause to
+	enforce numeric only fields.
+
+	The "IF FAC OF xxx ALTERED" statements are not supported.  These
+	statements will be translated the same as with WISP screen IO
+	however since the modified bit will never be set in the simulated
+	FAC OF fields the condition will never be true.
+
+	The "IF figcon {IN|OF} {FAC OF screen-field} IS NOT {ON|OFF}"
+	statements may not behave correctly because the DISPLAY AND READ
+	logic does not update the simulated FAC OF fields.
+
+	The ACUCOBOL screen manager prevents the cursor from being moved
+	outside of a modifiable field. The Wang "Monkey Bar Menus" use
+	FACs to create tab-stops with no modifiable area. This feature is
+	not supported.
+
+	On the Wang it is possible to shorten, split or alter a DISPLAY-WS
+	screen field at runtime by moving a FAC character into the field.
+	This "Embedded FAC" functionality is not supported.
+
+	The Wang workstation file SELECT statement can define a FILE
+	STATUS clause which gets updated by all screen IO.  With native
+	screens the status field does not get updated with the AID
+	character. 
+
+	The WCC Write Control Character has not been fully implmented.
+
+	ACUCOBOL on Windows NT/95 is not supported with native screens.
+
+	Psuedo blanks are not supported. (See Runtime Configuration
+	above.)
+
+	EDE uses WISP screens.
+
+	CRID uses WISP screens.
+
+	NetronCap screen I/O routines WSFNS and WSFNM uses WISP screens.
+
+	The BELL vssub is disabled when using native screens. This should
+	not be a concern because the translator will replace all calls to
+	the BELL vssub as described above.
+
+	The SCREEN vssub always returns a blank screen  when using native
+	screens.  The image of the screen is not stored by WISP so is not
+	returned.  It is possible to retrieve the screen contents using
+	the ACUCOBOL format 4 ACCEPT SCREEN.
+
+	The MESSAGE vssub does not support check ("CH") type "K" or "B" as
+	these require tight interaction with the screen handler which is
+	not available with native screens.  If these are used a runtime
+	error message will be displayed.
+
+
+	CODE SEGMENTS
+	=============
+
+       SPECIAL-NAMES.
+           CURSOR         IS WISP-CURSOR
+           CRT STATUS     IS WISP-CRT-STATUS
+           SCREEN CONTROL IS WISP-SCREEN-CONTROL
+
+      *******
+      ******* WISP generated screen control fields.
+      *******
+
+      *    Special-names CURSOR clause.
+       01  WISP-CURSOR.
+           05  WISP-CURSOR-LINE    PIC 999 VALUE 1.
+           05  WISP-CURSOR-COL     PIC 999 VALUE 1.
+
+      *    Special-names CRT STATUS clause.
+       01  WISP-CRT-STATUS.
+           05  WISP-CRT-KEY-1               PIC X.
+               88  WISP-CRT-STATUS-TERMINATED  VALUE '0'.
+               88  WISP-CRT-STATUS-EXCEPTION   VALUE '1'.
+               88  WISP-CRT-STATUS-EOF         VALUE '2'.
+               88  WISP-CRT-STATUS-TIMEOUT     VALUE '3'.
+               88  WISP-CRT-STATUS-NOITEM      VALUE '9'.
+           05  WISP-CRT-KEY-EXCEPTION       PIC X COMP-X.
+               88  WISP-CRT-EX-HELP            VALUE 33.
+               88  WISP-CRT-EX-GETKEY          VALUE 34.
+               88  WISP-CRT-KEY-AUTOSKIP       VALUE 49.
+           05  WISP-CRT-KEY-3               PIC X COMP-X.
+               88  WISP-CRT-KEY-TAB            VALUE  9.
+               88  WISP-CRT-KEY-ENTER          VALUE 13.
+
+      *    Special-names SCREEN CONTROL clause.
+       01  WISP-SCREEN-CONTROL.
+           05  WISP-ACCEPT-CONTROL     PIC 9   VALUE 0.
+           05  WISP-CONTROL-VALUE      PIC 999 VALUE 1.
+           05  WISP-CONTROL-HANDLE     USAGE HANDLE.
+           05  WISP-CONTROL-ID         PIC XX COMP-X.
+
+      *    Fields for DISPLAY statements.
+       01  WISP-DISPLAY-FIELDS-DATA PIC X(1185).
+       01  FILLER REDEFINES WISP-DISPLAY-FIELDS-DATA.
+           05  WISP-DISPLAY-FIELDS OCCURS 15 PIC X(79).
+
+      *    Screen items COLOR phrase values.
+       78  WCLR-REVERSE     VALUE  1024.
+       78  WCLR-BRIGHT      VALUE  4096.
+       78  WCLR-UNDERLINE   VALUE  8192.
+       78  WCLR-BLINK       VALUE 16384.
+       78  WCLR-PROTECT     VALUE 32768.
+       78  WCLR-ERROR       VALUE 17408.
+
+      *    WISP workstation working items.
+       01  WISP-PFKEY                 PIC 99.
+           88  WISP-PFKEY-ENTER       VALUE  0.
+           88  WISP-PFKEY-HELP        VALUE 33.
+           88  WISP-PFKEY-INVALID     VALUE 99.
+       01  WISP-CURSOR-POSITION.
+           05  WISP-CURSOR-POSITION-COL COMP-1 PIC S9(4).
+           05  WISP-CURSOR-POSITION-ROW COMP-1 PIC S9(4).
+
+      *    WISP DISPLAY AND READ working items.
+       01  WISP-ALLOWABLE-PF-KEYS-CNT PIC 99.
+       01  WISP-ON-PF-KEYS-CNT        PIC 99.
+       01  WISP-DNR-ON-PFKEY          PIC X VALUE "N".
+       01  WISP-DNR-NO-MOD            PIC X VALUE "N".
+       01  WISP-DNR-RANGE-ERROR       PIC X VALUE "N".
+       01  WISP-DNR-ORDER-AREA.
+           05  WISP-DNR-ROW         PIC X COMP-X VALUE 1.
+           05  WISP-DNR-WCC         PIC X COMP-X VALUE 160.
+               88  WISP-DNR-WCC-UNLOCK-KEYBOARD  VALUES
+                   128 THRU 255.
+               88  WISP-DNR-WCC-SOUND-ALARM      VALUES
+                    64 THRU 127, 192 THRU 255.
+               88  WISP-DNR-WCC-POSITION-CURSOR  VALUES
+                    32 THRU  63,  96 THRU 127,
+                   160 THRU 171, 224 THRU 255.
+           05  WISP-DNR-CURSOR-COL  PIC X COMP-X VALUE 0.
+           05  WISP-DNR-CURSOR-ROW  PIC X COMP-X VALUE 0.
+       01  WISP-DNR-WCC-CURSOR-BIT  PIC X VALUE X"20".
+       01  WISP-DNR-WCC-ALARM-BIT   PIC X VALUE X"40".
+
+
+
+       SCREEN SECTION.
+
+      *    Native translation of DISPLAY verb.
+       01  WISP-DISPLAY-SCREEN.
+           05  COL 2 LINE 1 VALUE "DISPLAY FROM PROGRAM SAMPLE  ".
+           05  LINE 7.
+               10  COL 2 LINE PLUS 1 PIC X(79) OCCURS 15
+                   FROM WISP-DISPLAY-FIELDS.
+           05  COL 2 LINE 24 VALUE "PRESS (ENTER) TO CONTINUE PROGRAM.".
+
+      *    Invalid CRT status.
+       01  WISP-INVALID-CRT-STATUS-SCREEN.
+           05  LINE 12 COL 30  VALUE "INVALID CRT STATUS" BOLD.
+           05  LINE + 2 PIC X   FROM WISP-CRT-KEY-1 BOLD.
+           05  LINE + 2 PIC 999 FROM WISP-CRT-KEY-EXCEPTION BOLD.
+           05  LINE + 2 PIC 999 FROM WISP-CRT-KEY-3 BOLD.
+           05  LINE 24 COL 25 VALUE "PRESS (ENTER) TO CONTINUE." BOLD.
+
+      ******* Generated fields for screen MAIN-SCREEN *******
+       01  O-A-MAIN-SCREEN.
+           05  FILLER         PIC X  VALUE DEC-BYTE-1.
+           05  FILLER         PIC X  VALUE WISP-SCWCC.
+           05  FILLER         PIC X  VALUE DEC-BYTE-0.
+           05  FILLER         PIC X  VALUE DEC-BYTE-0.
+
+      *    DISPLAY AND READ MAIN-SCREEN.
+           MOVE "0003040506070816" TO WISP-ALLOWABLE-PF-KEYS,
+           MOVE 8 TO WISP-ALLOWABLE-PF-KEYS-CNT
+           MOVE 0 TO WISP-ON-PF-KEYS-CNT
+           PERFORM WDNR-MAIN-SCREEN.
+
+      ***** DISPLAY AND READ MAIN-SCREEN
+       WDNR-MAIN-SCREEN.
+
+           MOVE O-A-MAIN-SCREEN TO WISP-DNR-ORDER-AREA.
+
+           PERFORM WFAC-MAIN-SCREEN.
+           PERFORM WISP-DNR-SETUP.
+
+           PERFORM UNTIL WISP-DNR-DONE
+               DISPLAY MAIN-SCREEN
+               ACCEPT MAIN-SCREEN
+                   EXCEPTION CONTINUE
+               END-ACCEPT
+               IF WISP-CRT-STATUS-NOITEM THEN
+                   PERFORM WISP-DNR-ACCEPT-NOFIELDS
+               END-IF
+               PERFORM WISP-DNR-CHECK-PFKEY
+           END-PERFORM.
+
+           MOVE WISP-PFKEY TO PF-KEY.
+           MOVE WISP-CURSOR-LINE TO WISP-CURSOR-POSITION-ROW.
+           MOVE WISP-CURSOR-COL  TO WISP-CURSOR-POSITION-COL.
+           MOVE WISP-CURSOR-POSITION TO CURSOR-POS.
+
+
+      ***** SETUP FOR DISPLAY AND READ STATEMENTS
+       WISP-DNR-SETUP.
+           DISPLAY WINDOW ERASE.
+
+           IF WISP-DNR-WCC-SOUND-ALARM THEN
+               DISPLAY OMITTED BELL
+           END-IF.
+
+           IF WISP-DNR-WCC-POSITION-CURSOR THEN
+               MOVE WISP-DNR-CURSOR-ROW TO WISP-CURSOR-LINE
+               MOVE WISP-DNR-CURSOR-COL TO WISP-CURSOR-COL
+           ELSE
+               MOVE 0 TO WISP-CURSOR-COL, WISP-CURSOR-LINE
+           END-IF.
+
+           IF WISP-DNR-WCC-UNLOCK-KEYBOARD THEN
+               MOVE "N" TO WISP-DNR-DONE-FLAG
+           ELSE
+               MOVE "Y" TO WISP-DNR-DONE-FLAG
+           END-IF.
+
+      ***** ACCEPT A SCREEN WITH NO FIELDS
+       WISP-DNR-ACCEPT-NOFIELDS.
+           ACCEPT OMITTED LINE 1 COL 1
+               EXCEPTION CONTINUE
+           END-ACCEPT.
+
+      ***** CHECK PF KEYS AFTER AN ACCEPT
+       WISP-DNR-CHECK-PFKEY.
+
+           SET WISP-PFKEY-INVALID TO TRUE.
+           IF WISP-CRT-STATUS-TERMINATED AND
+               (WISP-CRT-KEY-TAB OR WISP-CRT-KEY-AUTOSKIP) THEN
+               MOVE 0 TO WISP-CURSOR-LINE, WISP-CURSOR-COL
+           ELSE IF WISP-CRT-STATUS-TERMINATED AND WISP-CRT-KEY-ENTER
+               MOVE 0 TO WISP-PFKEY
+           ELSE IF WISP-CRT-STATUS-EXCEPTION AND WISP-CRT-EX-GETKEY
+               CALL "WACUGETPFKEY" USING WISP-PFKEY
+           ELSE IF WISP-CRT-STATUS-EXCEPTION
+               MOVE WISP-CRT-KEY-EXCEPTION TO WISP-PFKEY
+           ELSE
+               DISPLAY WINDOW ERASE
+               DISPLAY WISP-INVALID-CRT-STATUS-SCREEN
+               ACCEPT OMITTED BELL
+               DISPLAY WINDOW ERASE
+           END-IF.
+
+           IF WISP-PFKEY-HELP THEN
+               CALL "WACUHELP"
+           ELSE IF NOT WISP-PFKEY-INVALID THEN
+               PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL WISP-DNR-DONE
+                   OR WIDX-1 > WISP-ALLOWABLE-PF-KEYS-CNT
+                   IF WISP-PFKEY = WISP-ALLOWABLE-PF-KEYS-SUB(WIDX-1)
+                       MOVE "Y" TO WISP-DNR-DONE-FLAG
+                   END-IF
+               END-PERFORM
+
+               MOVE "N" TO WISP-DNR-ON-PFKEY
+               PERFORM VARYING WIDX-1 FROM 1 BY 1 UNTIL
+                   WIDX-1 > WISP-ON-PF-KEYS-CNT
+                   OR WISP-DNR-DONE-FLAG = "N"
+                   OR WISP-DNR-ON-PFKEY = "Y"
+                   IF WISP-PFKEY = WISP-ON-PF-KEYS-SUB(WIDX-1) THEN
+                       MOVE "Y" TO WISP-DNR-ON-PFKEY
+                   END-IF
+               END-PERFORM
+
+               IF WISP-DNR-DONE-FLAG = "N" THEN
+                   DISPLAY OMITTED BELL
+               END-IF
+           END-IF.
+
+	========================= END OF DOCUMENT ==========================

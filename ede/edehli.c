@@ -1,23 +1,64 @@
-			/************************************************************************/
-			/*		  WISP - Wang Interchange Source Processor		*/
-			/*		    Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		edehli.c
+**
+**	Project:	WISP/EDE
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	EDE HLI interface
+**
+*/
 
+/*
+**	Includes
+*/
 #include <stdio.h>
-#include <v/video.h>
-#include <v/vintdef.h>
-#include <v/vmenu.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "video.h"
+#include "vintdef.h"
+#include "vmenu.h"
+#include "vlocal.h"
+#include "vdata.h"
+#include "vutil.h"
+#include "vline.h"
+#include "verase.h"
+#include "vprint.h"
+#include "vscreen.h"
+#include "vmove.h"
+#include "vtrim.h"
+
 #include "idsistd.h"
 #include "wglobals.h"
 
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+int vmode(int control);
+int vmacro(int action);
+void vexit(void);
+int init_screen(void);
+
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
 /*				High Level Interface for the Extended Development Library					*/
 
-EDLOAD() {
-
+void EDLOAD(void) 
+{
 #ifdef OSF1_ALPHA
 #include <sys/sysinfo.h>
 #include <sys/proc.h>
@@ -29,96 +70,136 @@ EDLOAD() {
 	setsysinfo(SSI_NVPAIRS,buf,1,0, 0);
 #endif
 
-
-
 	init_screen(); 
 	ede_synch = TRUE;
 }											/* Enable the EDE environment.		*/
-EDEXIT() {ede_synch = FALSE; vexit();}							/* Disable the EDE environment.		*/
 
-EDCLRSCR() {verase(FULL_SCREEN);}							/* Erase the full screen.		*/
-EDDRKSCR() {verase(FULL_SCREEN); vscreen(DARK);}					/* Make the screen background dark.	*/
-EDLTESCR() {verase(FULL_SCREEN); vscreen(LIGHT);}					/* Make the screen background light.	*/
-EDWIDSCR() {verase(FULL_SCREEN); vscreen(WIDE);}					/* Make the screen wide.		*/
-EDNARSCR() {verase(FULL_SCREEN); vscreen(NARROW);}					/* Make the screen narrow.		*/
+void EDEXIT(void) 									/* Disable the EDE environment.		*/
+{
+	ede_synch = FALSE; 
+	vexit();
+}
 
-TRACEGO()  {vmacro(START_SAVE); }							/* Start a trace.			*/
-TRACEEND() {vmacro(END_SAVE);   }							/* End a trace.				*/
-RETRACE()  {vmacro(START_RESTORE); }							/* Retrace what happened.		*/
+void EDCLRSCR(void) 									/* Erase the full screen.		*/
+{
+	verase(FULL_SCREEN);
+}
+void EDDRKSCR(void) 					/* Make the screen background dark.	*/
+{
+	verase(FULL_SCREEN); 
+	vscreen(DARK);
+}
+void EDLTESCR(void) 					/* Make the screen background light.	*/
+{
+	verase(FULL_SCREEN); 
+	vscreen(LIGHT);
+}
+void EDWIDSCR(void) 					/* Make the screen wide.		*/
+{
+	verase(FULL_SCREEN); 
+	vscreen(WIDE);
+}
+void EDNARSCR(void) 					/* Make the screen narrow.		*/
+{
+	verase(FULL_SCREEN); 
+	vscreen(NARROW);
+}
 
-PFKEYSON() {vmenu_pfkeys(ON); }								/* Turn on the PF keys.			*/
-NOPFKEYS() {vmenu_pfkeys(OFF); }							/* No PF keys.				*/
+void TRACEGO(void)  							/* Start a trace.			*/
+{
+	vmacro(START_SAVE); 
+}
+void TRACEEND(void) 							/* End a trace.				*/
+{
+	vmacro(END_SAVE);   
+}
+void RETRACE(void)  							/* Retrace what happened.		*/
+{
+	vmacro(START_RESTORE); 
+}
 
-MENUSAVE(md) struct video_menu *md;							/* Save the current menu choice path.	*/
+void PFKEYSON(void) 								/* Turn on the PF keys.			*/
+{
+	vmenu_pfkeys(ON); 
+}
+void NOPFKEYS(void) 							/* No PF keys.				*/
+{
+	vmenu_pfkeys(OFF); 
+}
+
+void MENUSAVE(struct video_menu *md)							/* Save the current menu choice path.	*/
 {
 	vmenusave(md);									/* Save it.				*/
 }
 
-MENUREST() {vmenurestore(); }								/* Start restoration.			*/
-
-MENULOAD(md, t, o, r, c, w) struct video_menu *md; int4 *t, *o, *r, *c, *w;		/* Get the menu data.			*/
+void MENUREST(void)									/* Start restoration.			*/
 {
-	vmenuinit(md, (int)*t, (int)*o, (int)*r, (int)*c, (int)*w);			/* Do the call.				*/
+	vmenurestore(); 
 }
 
-MENUITEM(md, t, v, p) struct video_menu *md; unsigned char *t; int4 *v, *p;		/* Get the item data.			*/
+void MENULOAD(struct video_menu *md, int4 *t, int4 *o, int4 *r, int4 *c, int4 *w)	/* Get the menu data.			*/
+{
+	vmenuinit(md, *t, *o, *r, *c, *w);						/* Do the call.				*/
+}
+
+void MENUITEM(struct video_menu *md, char *t, int4 *v, void *p)				/* Get the item data.			*/
 {
 	if (*v == STATIC_MENU) vmenuitem(md, t, 0, (struct video_menu *)p);		/* Initialize linking.			*/
-	else if (*v == DYNAMIC_MENU) vmenuitem(md, t, (int)*p, DYNAMIC_LINK);		/* Initialize dynamically.		*/
-	else vmenuitem(md, t, (int)*v, NULL);						/* Initialize the value only.		*/
+	else if (*v == DYNAMIC_MENU) vmenuitem(md, t, *((int4 *)p), DYNAMIC_LINK);	/* Initialize dynamically.		*/
+	else vmenuitem(md, t, *v, NULL);						/* Initialize the value only.		*/
 }
 
-MENUGO(md, v) struct video_menu *md; int4 *v;						/* Run the menu.			*/
+void MENUGO(struct video_menu *md, int4 *v)						/* Run the menu.			*/
 {
-	*v = (int4)vmenugo(md);								/* Call the menu manager.		*/
+	*v = vmenugo(md);								/* Call the menu manager.		*/
 }
 
-MENUCONT(md, v) struct video_menu *md; int4 *v;						/* Continue the menu.			*/
+void MENUCONT(struct video_menu *md, int4 *v)						/* Continue the menu.			*/
 {
-	*v = (int4)vmenucont(md);							/* Call the menu manager.		*/
+	*v = vmenucont(md);								/* Call the menu manager.		*/
 }
 
-DYLINK(base, dyna) struct video_menu *base, *dyna;					/* Link for dynamic operation.		*/
+void DYLINK(struct video_menu *base, struct video_menu *dyna)				/* Link for dynamic operation.		*/
 {
 	vdynalink(base,dyna);								/* Link them together.			*/
 }
 
-DYUNLINK(md) struct video_menu *md;							/* Unlink a menu structure.		*/
+void DYUNLINK(struct video_menu *md)							/* Unlink a menu structure.		*/
 {
 	vdynaunlink(md);								/* Unlink...				*/
 }
 
-MENUKILL(md, how) struct video_menu *md; int4 *how;					/* Erase menus.				*/
+void MENUKILL(struct video_menu *md, int4 *how)						/* Erase menus.				*/
 {
-	verase_menu((int)*how,md);							/* Erase the menus as requested.	*/
+	verase_menu(*how,md);								/* Erase the menus as requested.	*/
 }
 
-MENUEXIT(md) struct video_menu *md;							/* Erase all menus.			*/
+void MENUEXIT(struct video_menu *md)							/* Erase all menus.			*/
 {
 	verase_menu(ALL_MENUS, md);							/* Get em all.				*/
 }
 
-MENUMODE(mode) int4 *mode;								/* Menu mode.				*/
+void MENUMODE(int4 *mode)								/* Menu mode.				*/
 {
-	vmenumode((int)*mode);								/* Select the menu mode.		*/
+	vmenumode(*mode);								/* Select the menu mode.		*/
 }
 
-VIDMODE(mode) int4 *mode;								/* Select the character rendition.	*/
+void VIDMODE(int4 *mode)								/* Select the character rendition.	*/
 {
-	vmode((int)*mode);								/* Select the mode.			*/
+	vmode(*mode);									/* Select the mode.			*/
 }
 
-VIDMOVE(row, col) int4 *row, *col;							/* Move to a position on the screen.	*/
+void VIDMOVE(int4 *row, int4 *col)							/* Move to a position on the screen.	*/
 {
-	vmove((int)(*row)-1, (int)(*col)-1 );						/* Do the move.				*/
+	vmove((*row)-1, (*col)-1 );		       					/* Do the move.				*/
 }
 
-VIDLINE(type, length) int4 *type, *length;						/* Draw a line.				*/
+void VIDLINE(int4 *type, int4 *length)							/* Draw a line.				*/
 {
-	vline((int)*type, (int)*length);						/* Do the draw.				*/
+	vline(*type, *length);								/* Do the draw.				*/
 }
 
-VIDTEXT(text, length) char *text; int4 *length;						/* Output text.				*/
+void VIDTEXT(char *text, int4 *length)							/* Output text.				*/
 {
 	char string[65];								/* Working string.			*/
 	register int i;									/* Working register.			*/
@@ -126,8 +207,8 @@ VIDTEXT(text, length) char *text; int4 *length;						/* Output text.				*/
 
 	if (*length > 64)
 	{
-		vre("VIDTEXT-E-INVALID Invalid string length [%d].  Max is 64.",(int4)*length);
-		return(0);
+		vre("VIDTEXT-E-INVALID Invalid string length [%d].  Max is 64.", *length);
+		return;
 	}
 	for (i = 0; i < 64; i++) string[i] = text[i];					/* Copy the string.			*/
 	string[64] = CHAR_NULL;								/* Terminate the string.		*/
@@ -138,28 +219,44 @@ VIDTEXT(text, length) char *text; int4 *length;						/* Output text.				*/
 	vprint("%s", string);								/* Print it.				*/
 }
 
-PUSHSCRN(s) unsigned char **s;								/* Push full screen.			*/
+void PUSHSCRN(unsigned char **s)							/* Push full screen.			*/
 {
-	*s = (unsigned char *)vsss(0,0,MAX_LINES_PER_SCREEN,vscr_wid);			/* Save the full screen.		*/
+	*s = vsss(0,0,MAX_LINES_PER_SCREEN,vscr_wid);					/* Save the full screen.		*/
 	ede_synch = TRUE;								/* Low level synch now required.	*/
 }
 
-PUSHAREA(r, c, rs, cs, s) int4 *r, *c, *rs, *cs; unsigned char **s;			/* Push screen area.			*/
+void PUSHAREA(int4 *r, int4 *c, int4 *rs, int4 *cs, unsigned char **s)			/* Push screen area.			*/
 {
-	*s = (unsigned char *)vsss((int)(*r)-1,(int)(*c)-1,(int)*rs,(int)*cs);		/* Save the screen segment.		*/
+	*s = vsss((*r)-1, (*c)-1, *rs, *cs);						/* Save the screen segment.		*/
 	ede_synch = TRUE;								/* Low level synch now required.	*/
 }
 
-POPAREA(s) unsigned char **s;								/* Restore the screen area.		*/
+void POPAREA(unsigned char **s)								/* Restore the screen area.		*/
 {
 	vrss(*s);									/* Restore the screen area.		*/
 	synch_required = TRUE;								/* Force a synchronization.		*/
 }
 
-MENUINFO(mcb,level,item,link) struct video_menu *mcb; int4 *level, *item, *link;	/* Return the menu level and item.	*/
+void MENUINFO(struct video_menu *mcb, int4 *level, int4 *item, int4 *link)		/* Return the menu level and item.	*/
 {
-	*level = (int4)vlastlevel(mcb) + 1;						/* Get the current level.		*/
-	*item = (int4)vlastitem(mcb) + 1;						/* Get the current item.		*/
-        *link = (int4)vlastlink(mcb);							/* Get the current link.		*/
+	*level = vlastlevel(mcb) + 1;							/* Get the current level.		*/
+	*item = vlastitem(mcb) + 1;							/* Get the current item.		*/
+        *link = vlastlink(mcb);								/* Get the current link.		*/
 }
 
+/*
+**	History:
+**	$Log: edehli.c,v $
+**	Revision 1.8  1996-09-13 13:53:50-04  gsl
+**	Add missing includes
+**
+**	Revision 1.7  1996-03-28 14:50:03-08  gsl
+**	Removed all the (cast *)'ing.
+**	Fix all the prototypes
+**	Include all the video header files with the function prototypes
+**	All this was to fix a SIG 11 on the Alpha in PUSHSCREEN() on the
+**	call to vsss(), an 8 byte pointer was compressed into an int (4 bytes).
+**
+**
+**
+*/

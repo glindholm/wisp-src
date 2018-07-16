@@ -1,10 +1,6 @@
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 #define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 /* PTPDIV.C	*/
 
@@ -20,10 +16,15 @@
 
 EXT char out_fname[STRBUFF];								/* Output file name for COBOL program.	*/
 char br_label[20];									/* Backwards reference label.		*/
-static int add_decl();
+static void add_decl(char* keyword_lbl, int* num_val,int* num_var);			/* If have a label then declare		*/
 
-p_pl_kw(ndx,num_val,num_asn,num_cmds,scn_num,current_row,num_var)			/* Process the WPL keywords.		*/
-int ndx, *num_val, *num_asn, *num_cmds, *scn_num, *current_row, *num_var;
+int p_pl_kw(int  ndx,
+	    int* num_val,
+	    int* num_asn,
+	    int* num_cmds,
+	    int* scn_num,
+	    int* current_row,
+	    int* num_var)								/* Process the WPL keywords.		*/
 {
 	char *cstr, proc_id[81];							/* The procedure id of this program	*/
 	register int i;
@@ -362,6 +363,7 @@ int ndx, *num_val, *num_asn, *num_cmds, *scn_num, *current_row, *num_var;
 		case PROCEDURE:
 		{
 			char *cpos;
+			int cnt;
 			time_t clock;
 
 			write_log("PROCTRAN",'I','R',"PROCESS","Processing PROCEDURE keyword.");
@@ -371,9 +373,14 @@ int ndx, *num_val, *num_asn, *num_cmds, *scn_num, *current_row, *num_var;
 				strcpy (proc_id,"000000      ");			/* Initialize the bufer.		*/
 				nexttok();						/* Set ptr to procedure name.		*/
 				cstr = &proc_id[12];
+				cnt = 0;						/* Init lenght of proc_id.		*/
 				if (tststrt(aptr))					/* If a procedure name is given.	*/
 				{
-					while (tststrt(aptr)) *cstr++ = toupper(*aptr++); /* Copy procedure name to proc_id str.*/
+					while (tststrt(aptr) && cnt < 8)
+					{
+						*cstr++ = toupper(*aptr++);		/* Copy procedure name to proc_id str.	*/
+						cnt++;
+					}
 					*cstr = '\0';					/* Null terminate the proc id buffer.	*/
 				}
 				else							/* else generate one.			*/
@@ -444,8 +451,7 @@ int ndx, *num_val, *num_asn, *num_cmds, *scn_num, *current_row, *num_var;
 	else	return(1);
 }
 
-int test_para_name(num_par,num_cmds)							/* See if it is a paragraph name.	*/
-int num_par, *num_cmds;
+int test_para_name(int num_par, int* num_cmds)						/* See if it is a paragraph name.	*/
 {
 	char *lptr, *cstr;
 	char *save_aptr;								/* Save aptr in case not a RUN label.	*/
@@ -517,10 +523,8 @@ int num_par, *num_cmds;
 }
 
 
-p_run_clause_kw(ndx,num_var,num_val)							/* Process RUN Clause keyword.		*/
-int ndx, *num_var, *num_val;
+void p_run_clause_kw(int ndx)								/* Process RUN Clause keyword.		*/
 {
-	register int i;
 	char *cstr;
 	char *l_aptr;
 
@@ -605,10 +609,8 @@ int ndx, *num_var, *num_val;
 	}
 }
 
-p_print_submit_kw(caller,ndx)								/* Process PRINT/SUBMIT keyword.	*/
-int caller, ndx;
+void p_print_submit_kw(int caller,int ndx)						/* Process PRINT/SUBMIT keyword.	*/
 {
-	register int i;
 	char *cstr;
 	char *tptr, temp[15];
 
@@ -663,9 +665,8 @@ int caller, ndx;
 	}
 }
 
-static add_decl(keyword_lbl,num_val,num_var)						/* If have a label then declare		*/
-char *keyword_lbl;									/* var to hold RETURN-CODE value.	*/
-int *num_val, *num_var;
+static void add_decl(char* keyword_lbl, int* num_val,int* num_var)			/* If have a label then declare		*/
+											/* var to hold RETURN-CODE value.	*/
 {
 	init_current(num_var);								/* Alloc next node for declare.		*/
 	(*num_val)++;									/* Keep track of init stmnt role back.	*/
@@ -673,3 +674,15 @@ int *num_val, *num_var;
 	strcpy(cur_decl->type,"IR");							/* Set the var type indicator.		*/
 	strcpy(keyword_lbl,cur_para->name);						/* Set var to return value to.		*/
 }
+/*
+**	History:
+**	$Log: ptpdiv.c,v $
+**	Revision 1.6  1997-04-21 11:17:42-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.5  1996-09-12 19:17:36-04  gsl
+**	fix prototypes
+**
+**
+**
+*/

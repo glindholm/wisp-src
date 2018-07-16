@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,18 +15,13 @@
 *																*
 ********************************************************************************************************************************/
 
-#if defined(unix) || defined(VMS) || defined(MSDOS_SORTX)
+#if defined(unix) || defined(VMS) || defined(MSDOS_SORTX) || defined(WIN32)
 /*
 	For MSDOS this whole module gets included into sortx.c which defined MSDOS_SORTX.
 */
 
-#ifndef unix	/* VMS or MSDOS */
 #include <stdlib.h>
-#endif
-
-#ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
-#endif
+#include <string.h>
 
 #ifdef MSDOS
 #include <search.h>
@@ -33,6 +30,7 @@
 #include <varargs.h>                                                                    /* Allow variable number of arguments	*/
 #include "idsistd.h"
 #include "werrlog.h"
+#include "wisplib.h"
 
 #define		ROUTINE		60000
 
@@ -41,21 +39,19 @@
 #include <descrip.h>
 #endif
 
-#ifdef unix
-#include <memory.h>
-#endif
+static int4 keypos, keylen, elemsz;
 
-#ifdef MSDOS
-#include <memory.h>
-#endif
+static	void local_sort(char* in, char* out, int4 e_cnt, int4 e_len, int4 s_start, 
+			int4 s_len, int s_type, int loc, int4 loc_sz);
 
-int4 keypos, keylen, elemsz;
-static int _sort();
-static int binncmp();
-static int ourcmp();
-static int ourrcmp();
+static int ourcmp(const char** p1, const char** p2);
+static int ourrcmp(const char** p1, const char** p2);
+static int binncmp(		/* compare two areas of memory		*/
+	const void *p1,		/* area one				*/
+	const void *p2,		/* area two				*/
+	int4 len);		/* number of bytes to compare		*/
 
-SORT(va_alist)
+void SORT(va_alist)
 
 va_dcl
 {
@@ -65,25 +61,8 @@ va_dcl
 	char	l_sort_type, l_locator_flag;
 	int4	*element_count,  *element_length,  *sort_start,  *sort_length,  *locator_length;
 	int4	l_element_count, l_element_length, l_sort_start, l_sort_length, l_locator_length;	/* Local copies - wswap	*/
-	int	return_length;
 	int4	i;
-	int4	context, status;
 
-#if 0
-#ifdef VMS
-	struct key_struct
-	{
-		short key_count;
-		short data_type;
-		short sort_order;
-		short offset;
-		short length;
-	} key_buffer;
-
-	struct dsc$descriptor_s input_array_desc  = {0, DSC$K_DTYPE_T, DSC$K_CLASS_S, 0};
-	struct dsc$descriptor_s output_array_desc = {0, DSC$K_DTYPE_T, DSC$K_CLASS_S, 0};
-#endif
-#endif
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -167,75 +146,27 @@ va_dcl
 		l_locator_length = i;
 	}
 
-#if 0
-#ifdef VMS
-	/********************************************************
-	*	Initialize SOR$ parameters			*
-	********************************************************/
-	key_buffer.key_count = 1;
-	key_buffer.data_type = DSC$K_DTYPE_Z;
-	if (l_sort_type == 'D' || l_sort_type == 'd')
-		key_buffer.sort_order = 1;
-	else
-		key_buffer.sort_order = 0;						/* Default sort is ascending		*/
-	if (l_locator_flag == 'L' || l_locator_flag == 'l')
-		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
-	key_buffer.offset = l_sort_start - 1;
-	key_buffer.length = l_sort_length;
-	context = 0;
-
-	/********************************************************
-	*	Put the right values in the DESCRIPTORs		*
-	********************************************************/
-	input_array_desc.dsc$a_pointer = input_array;
-	output_array_desc.dsc$a_pointer = output_array;
-	input_array_desc.dsc$w_length = l_element_length;
-	output_array_desc.dsc$w_length = l_element_length;
-
-	/********************************************************
-	*	Do the sorting					*
-	********************************************************/
-	status = sor$begin_sort(&key_buffer,&l_element_length,0,0,0,0,0,0,&context);	/* Tell SOR what we're going to do	*/
-
-	for (i = 1; i <= l_element_count; i++)						/* Release records to SOR services	*/
-	{
-		status = sor$release_rec(&input_array_desc,&context);
-		input_array_desc.dsc$a_pointer += l_element_length;			/* Increment address for next call	*/
-	}
-
-	status = sor$sort_merge(&context);						/* Do the sort				*/
-
-	for (i = 1; i <= l_element_count; i++)						/* Retrieve records in sorted order	*/
-	{
-		status = sor$return_rec(&output_array_desc,&return_length,&context);
-		output_array_desc.dsc$a_pointer += l_element_length;			/* Increment address for next call	*/
-	}
-
-		status = sor$end_sort(&context);					/* Release resources allocated by SOR	*/
-#endif
-#endif
-											/* above code has been replaced with 	*/
 											/* standard c qsort()			*/
 	if (l_locator_flag == 'L' || l_locator_flag == 'l')				/* gen err if Locator requested		*/
 	{
 		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
-		return(0);
+		return;
 	}
 
 	if (l_element_length > 255)							/* check their parms			*/
 	{
 		werrlog(ERRORCODE(4),l_element_length,0,0,0,0,0,0,0);
-		return(0);
+		return;
 	}
 
 	if (l_sort_length+(l_sort_start-1) > l_element_length || l_sort_start > l_element_length)
 	{
 		werrlog(ERRORCODE(6),l_sort_start,l_sort_length,0,0,0,0,0,0);
-		return(0);
+		return;
 
 	}
 											/* now call func to do the work 	*/
-	_sort(input_array, 								/* source array 			*/
+	local_sort(input_array, 								/* source array 			*/
 		output_array, 								/* dest array 				*/
 		l_element_count, 							/* number of elems in source array 	*/
 		l_element_length,							/* length of each elem in source 	*/
@@ -246,22 +177,20 @@ va_dcl
 		l_locator_length); 							/* size (bytes) of locator 		*/
 
 }
-static	_sort(in, out, e_cnt, e_len, s_start, s_len, s_type, loc, loc_sz)		/* general purpose sort 		*/
-char	*in, *out;									/* see above for formal parm desc's 	*/
-int4	e_cnt, e_len, s_start, s_len, loc_sz;
-int	s_type, loc;
+
+static	void local_sort(char* in, char* out, int4 e_cnt, int4 e_len, int4 s_start, 
+			int4 s_len, int s_type, int loc, int4 loc_sz)
 {
-	int (*comp)();									/* pointer to compare fn for qsort()	*/
+	int (*comp)(const void*, const void*);						/* pointer to compare fn for qsort()	*/
 	char *buf, **p, **ptrs;
-	int ourcmp(), ourrcmp();
 	int i;
 
 	elemsz = e_len;									/* globals that compare routines 	*/
 	keypos = s_start-1;								/* must know about 			*/
 	keylen = s_len;
 	
-	if (s_type=='D') comp = ourrcmp;						/* reverse compare 			*/
-	else comp = ourcmp;								/* normal compare 			*/
+	if (s_type=='D') comp = (int (*)(const void*, const void*))ourrcmp;		/* reverse compare 			*/
+	else comp = (int (*)(const void*, const void*))ourcmp;				/* normal compare 			*/
 
 	ptrs = (char **)calloc((int)e_cnt,sizeof(char *));				/* grab space for pointer list 		*/
 	for (buf=in, p=ptrs, i=e_cnt; i; --i, buf += e_len, ++p)			/* build pointer list for qsort 	*/
@@ -285,21 +214,25 @@ int	s_type, loc;
 	if (out==in) free(buf);	    							/* zed the temp buf 			*/
 	free(ptrs);									/* and pointer list 			*/
 }
-static int ourcmp(p1,p2)								/* normal compare			*/
-char **p1, **p2;									/* pointers to pointers to the areas	*/
+
+static int ourcmp(const char** p1, const char** p2)		     			/* normal compare			*/
 {											/* supplied that way by qsort()		*/
 	return binncmp(*p1+keypos,*p2+keypos,keylen);					/* call binncmp() to do binary compare	*/
 }											/* keylen is global set by _sort	*/
-static int ourrcmp(p1,p2)								/* reverse compare			*/
-char **p1, **p2;									/* see above				*/
+
+static int ourrcmp(const char** p1, const char** p2)					/* reverse compare			*/
 {
 	return binncmp(*p2+keypos,*p1+keypos,keylen);
 }
-static int binncmp(s1,s2,len)								/* compare two areas of memory		*/
-unsigned char *s1;									/* area one				*/
-unsigned char *s2;									/* area two				*/
-int4 len;										/* number of bytes to compare		*/
+
+static int binncmp(		/* compare two areas of memory		*/
+	const void *p1,		/* area one				*/
+	const void *p2,		/* area two				*/
+	int4 len)		/* number of bytes to compare		*/
 {
+	const unsigned char *s1 = (const unsigned char *)p1;
+	const unsigned char *s2 = (const unsigned char *)p2;
+
 	while (len)								
 	{
 		if (*s1 != *s2) return *s1 - *s2;					/* compare byte by byte			*/
@@ -308,4 +241,16 @@ int4 len;										/* number of bytes to compare		*/
 	return 0;									/* areas are the same			*/
 }
 
-#endif /* unix || VMS || MSDOS_SORTX */
+#endif /* unix || VMS || MSDOS_SORTX || WIN32 */
+/*
+**	History:
+**	$Log: sort.c,v $
+**	Revision 1.12  1997-03-12 13:12:54-05  gsl
+**	changes to use WIN32
+**
+**	Revision 1.11  1996-08-19 18:32:57-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,11 +1,5 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	wwaitpid.c
@@ -15,7 +9,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#if !defined(u3b2) && !defined(NCR32)
+#if !defined(ATT3B2) && !defined(NCR32)
 #include <sys/wait.h>
 #endif
 #include "idsistd.h"
@@ -41,7 +35,7 @@ int *rc,pid;
 
         *rc=WEXITSTATUS(stat_loc);
 
-#ifdef DEBUG
+#ifdef TESTING
 printf("\n\r wait (stat_loc = %8x) (rc = %d)\n\r",stat_loc, *rc);
 getchar();
 #endif
@@ -50,3 +44,12 @@ getchar();
 
 #endif
 
+/*
+**	History:
+**	$Log: wwaitpid.c,v $
+**	Revision 1.9  1996-01-02 10:40:38-05  gsl
+**	*** empty log message ***
+**
+**
+**
+*/

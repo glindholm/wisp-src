@@ -1,12 +1,22 @@
-#define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995-97 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		ptcheck.c
+**
+**	Project:	wisp/proctran
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	check syntax routines.
+**
+**	Routines:	
+**	chk_cmd()	Checks tables for a valid cmd then call correct format routine.
+**	chk_num()	Return FALSE if instr contains anything but  * + , - . / or a number from 0 - 9
+**	chk_num1()	Return FALSE if instr contains anything but numbers (0-9)
+**
+*/
 
-/* PG_CHECK.C	*/
+#define EXT extern
 
 #include <stdio.h>
 
@@ -15,10 +25,41 @@
 #include "pgcblsrc.h"
 #include "pgstruct.h"
 
-void chk_cmd(num_cmds,num_var)								/* Routine checks tables for a valid	*/
-int *num_cmds, *num_var;								/* cmd then call correct format routine.*/
-{
-	char compute_line[60];								/* String for equation.			*/
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+
+/*
+**	ROUTINE:	chk_cmd()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void chk_cmd(int *num_cmds,int *num_var)						/* Routine checks tables for a valid	*/
+{											/* cmd then call correct format routine.*/
 	char scrn_num[FLDLEN];
 
 	(*num_cmds)++;									/* Keep track of number of commands.	*/
@@ -167,10 +208,25 @@ int *num_cmds, *num_var;								/* cmd then call correct format routine.*/
 	}
 }
 
-int chk_num(instr)									/* Return FALSE if instr contains 	*/
-char *instr;										/*  anything but  * + , - . / 		*/
-{											/*  or a number from 0 - 9.		*/
-	register int i;
+/*
+**	ROUTINE:	chk_num()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+int chk_num(char *instr)								/* Return FALSE if instr contains 	*/
+{											/*  anything but  * + , - . / 		*/
+	register int i;									/*  or a number from 0 - 9.		*/
 
 	for (i = 0; ((i < FLDLEN) && (instr[i] != '\0')); i++)
 	{
@@ -179,16 +235,54 @@ char *instr;										/*  anything but  * + , - . / 		*/
 	return(TRUE);
 }
 
-int chk_num1(instr)									/* Return FALSE if instr contains 	*/
-char *instr;										/* anything but numbers (0-9).		*/
-{
+/*
+**	ROUTINE:	chk_num1()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+int chk_num1(char *instr)								/* Return FALSE if instr contains 	*/
+{											/* anything but numbers (0-9).		*/
 	register int i;
 
 	if (*instr == '\0') return(FALSE);						/* If no value in instr.		*/
 
 	for (i = 0; ((i < FLDLEN) && (instr[i] != '\0')); i++)
 	{
-		if (!number(inline[i])) return(FALSE);
+		if (!number(linein[i])) return(FALSE);
 	}
 	return(TRUE);
 }
+
+/*
+**	History:
+**	$Log: ptcheck.c,v $
+**	Revision 1.9  1997-04-21 11:02:46-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.8  1996-09-12 19:14:27-04  gsl
+**	Remove unused data items
+**
+**	Revision 1.7  1995-09-22 07:10:23-07  scass
+**	Moved defines of EXT to top of file before includes
+**
+ * Revision 1.6  1995/09/22  13:59:23  scass
+ * Removed history that was not needed.
+ *
+ * Revision 1.5  1995/09/22  13:57:58  scass
+ * Added standard DTMI headers
+ *
+#
+**
+**
+*/

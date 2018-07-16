@@ -1,12 +1,46 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		vchinese.c
+**
+**	Project:	video/ivs
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Chinese character support
+**
+**	Routines:	
+*/
+
+
 #define __CHINESE__
+
+
+/*
+**	Includes
+*/
 
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <v/vchinese.h>
+#include <vchinese.h>
+
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+extern char *sys_errlist[];
+
+/*
+**	Static data
+*/
 
 static	int f1indsz, f2indsz;
 static	int f1size, f2size;
@@ -15,10 +49,16 @@ static	int max1[3],max2[3];
 static	int mult1[3], mult2[3];
 
 static	int cnt,i,j,k;
-static int setord(),getbuf(),fixbyteorder();
 
 struct xfileheader header;
 static int byteorder;
+
+/*
+**	Static Function Prototypes
+*/
+
+static int setord(),getbuf(),fixbyteorder();
+
 /*
 **      Routine:        xlat_stream()
 **
@@ -55,9 +95,6 @@ unsigned char *instr, *out;
 int insz, *outsz;
 struct xlcontext **ctx;
 {
-	char *calloc();
-	char *getenv();
-	
 	static int address=0;
 	
 	register int inpos=0, outpos=0, ch;
@@ -247,7 +284,6 @@ char xfile[];
 	char xlatpath[200];
 	int xlatfd;
 	static int global_init_flag= -1;
-	extern char *sys_errlist[];
 	
 	if (global_init_flag != -1)
 	  return;
@@ -413,8 +449,6 @@ static int getbuf(buf,sz)
 char **buf;
 int sz;
 {
-	char *malloc();
-	
 	if (*buf)
 	  free(*buf);
 	*buf = malloc(sz);
@@ -461,8 +495,21 @@ char *path;
 	init_xlat_ctx(&inctx,vlangfile,XL_TO_IVS);
 }
 
-
-
-
-
-
+/*
+**	History:
+**	$Log: vchinese.c,v $
+**	Revision 1.5  1996-07-26 13:18:52-04  gsl
+**	fix video include
+**
+**	Revision 1.4  1995-04-25 02:50:07-07  gsl
+**	drcs state V3_3_15
+**
+ * Revision 1.3  1995/04/17  11:43:48  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.2  1995/04/10  09:09:29  gsl
+ * fix compiler warnings and added headers.
+ *
+**
+**
+*/

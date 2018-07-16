@@ -1,14 +1,12 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* IDSI proprietary stuff										*/
 
 #include <string.h>
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
 
 #include "idsistd.h"
 
-cgetneg(value)
-int4 *value;
+void cgetneg(int4 *value)
 {
 	int4 tmp1,tmp2;
 
@@ -16,3 +14,12 @@ int4 *value;
 	tmp2 = -tmp1;
 	memcpy(value,&tmp2,4);
 }
+/*
+**	History:
+**	$Log: cgetneg.c,v $
+**	Revision 1.10  1996-08-19 18:32:12-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,20 @@
+procedure qabckprc.wps
+
+declare &task as integer
+
+extract &task=TASK#
+
+set inlib="QABCKPRC"
+set outlib="V" !! &task
+
+set runlib="BKA1"
+run QABCKGRD
+	enter PRTFILE FILE="##BKA1"
+
+set runlib="BKA2"
+run QABCKGRD
+	enter PRTFILE FILE="##BKA2"
+
+submit QABCKPC2
+
+return

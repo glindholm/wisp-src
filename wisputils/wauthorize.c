@@ -1,11 +1,5 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		wauthorize.c
@@ -22,11 +16,6 @@
 **			logvalinfo()	Log the VALIDATION CODE info to the logfile.
 **			printkeydoc()	Print the LICENSE KEY document
 **
-**	History:
-**	05/22/92	Written by GSL
-**	05/26/92	Moved putplattab() to platsubs.c to isolate platform_table GSL.
-**	09/25/92	Added CLUSTER support. GSL
-**	09/13/93	Generalize for UniQue. GSL
 */
 
 #include <stdio.h>
@@ -41,6 +30,10 @@ extern char	*sys_errlist[];
 
 #define DOCTEMPLATE	"license.template"
 
+static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lictype, char licdate[8], char expdate[8],
+			 char lickey[LICENSE_KEY_SIZE], char* machid, char* valcode);
+
+
 /*
 **	Routine:	main()		[xauthorize]
 **				wauthorize	WISP
@@ -48,7 +41,7 @@ extern char	*sys_errlist[];
 **
 **	Function:	To generate a  LICENSE KEY and VALIDATION CODE.
 **
-**	Description:	This routine is for IDSI use only.
+**	Description:	This routine is for internal use only.
 **
 **			It will interactively prompt for information and use the info to generate a LICENSE KEY or a 
 **			VALIDATION CODE.
@@ -88,7 +81,8 @@ char	*argv[];
 	{
 		strcpy(groupname,grp->gr_name);
 		upper_string(groupname);
-		if (0 != strcmp(groupname,"IDSI"))
+		if (0 != strcmp(groupname,"DEVTECH") &&
+		    0 != strcmp(groupname,"NEOMEDIA"))
 		{
 			printf("\n\n**** Invalid Group ****\n");
 			exit(1);
@@ -103,34 +97,43 @@ char	*argv[];
 	for(;;)
 	{
 		printf("\n");
+		/*      12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
+		printf("===============================================================================\n");
 		printf("%s AUTHORIZE UTILITY\n",product_name());
-		help = "Enter K to generate a LICENSE KEY.\nEnter V to generate a VALIDATION CODE.\nEnter T to TEST either.";
-		rc = prompt_list("Generate a Key, Validation, or Test",NULL,"k,v,t",help);
+		printf("===============================================================================\n");
+		printf("\n");
+		
+		help = "Enter K to generate a LICENSE KEY.\n"
+		       "Enter V to generate a VALIDATION CODE.\n"
+		       "Enter T to TEST either.\n"
+		       "Enter Q to Quit.";
+		
+		rc = prompt_list("Generate a Key, Validation, Test, or Quit",NULL,"k,v,t,q",help);
 		switch(rc)
 		{
 		case -1:
 			exit(0);
 			break;
 		case 1:		/* LICENSE KEY */
-			done=0;
-			while(!done)
+			gen_key();
+			printf("\n");
+			help = "Enter Y to generate a VALIDATION CODE using the the LICENSE KEY information\n"
+			       "you just entered.\n"
+			       "Enter N to continue.\n"
+			       "Enter . (period) to Exit";
+			rc = prompt_list("Generate a VALIDATION CODE for this LICENSE KEY","n","y,n",help);
+			if (rc == -1) exit(0);
+			if (rc == 1)
 			{
-				gen_key();					/* Generate the LICENSE KEY			*/
-				printf("\n");
-				printf("%s AUTHORIZE UTILITY\n",product_name());
-				help = "Enter Y to generate another LICENSE KEY.\nEnter N to continue.";
-				rc = prompt_list("Generate another LICENSE KEY","y","y,n",help);
-				if (rc == -1) exit(0);
-				if (rc == 2) done = 1;
+				gen_val(1);
 			}
 			break;
 		case 2:		/* VALIDATION CODE */
 			done=0;
 			while(!done)
 			{
-				gen_val();					/* Generate the VALIDATION CODE			*/
+				gen_val(0);					/* Generate the VALIDATION CODE			*/
 				printf("\n");
-				printf("%s AUTHORIZE UTILITY\n",product_name());
 				help = "Enter Y to generate another VALIDATION CODE.\nEnter N to continue.";
 				rc = prompt_list("Generate another VALIDATION CODE","y","y,n",help);
 				if (rc == -1) exit(0);
@@ -143,23 +146,18 @@ char	*argv[];
 			{
 				test_codes();					/* TEST keys or validation codes		*/
 				printf("\n");
-				printf("%s AUTHORIZE UTILITY\n",product_name());
 				help = "Enter Y to TEST another LICENSE KEY and VALIDATION CODE.\nEnter N to continue.";
 				rc = prompt_list("Test another Key and Validation","y","y,n",help);
 				if (rc == -1) exit(0);
 				if (rc == 2) done = 1;
 			}
+			break;
+			
+		case 4:
+			exit(0);
+			
 		}
 
-		printf("\n");
-		help = "Enter R to restart this program.\nEnter Q to quit.";
-		rc = prompt_list("Restart or Quit","r","r,q",help);
-		switch(rc)
-		{
-		case -1:
-		case 2:
-			exit(0);
-		}
 	}
 }
 
@@ -194,15 +192,16 @@ char	*argv[];
 **
 */
 
+static	char	custname[256];
+static	int4	custnum;
+static	char	platform[3];
+static	int	licensetype;
+static	char	licensedate[20];
+static	char	expdate[20];
+static	char	licensekey[20];
+
 static gen_key()
 {
-	char	custname[256];
-	long	custnum;
-	char	platform[3];
-	int	licensetype;
-	char	licensedate[20];
-	char	expdate[20];
-	char	licensekey[20];
 
 	char	buff[256];
 	int	rc;
@@ -252,9 +251,13 @@ static gen_key()
 			
 	}
 
-	help = "Enter S for a SINGLE machine license.\nEnter U for an UNLIMITED machine license.\n\
-Enter T for a TIMED license.\nEnter C for a CLUSTER license.";
-	rc = prompt_list("LICENSE TYPE","s","s,u,t,c",help);
+	help = "Enter S for a SINGLE machine license.\n"
+	       "Enter T for a TIMED license.\n"
+	       "Enter N for a NETWORK license.\n"
+	       "Enter C for a CLUSTER license.\n"
+	       "Enter U for an UNLIMITED machine license.";
+	
+	rc = prompt_list("LICENSE TYPE","s","s,t,n,c,u",help);
 	switch(rc)
 	{
 	case -1:
@@ -265,13 +268,16 @@ Enter T for a TIMED license.\nEnter C for a CLUSTER license.";
 		licensetype = LICENSE_SINGLE;
 		break;
 	case 2:
-		licensetype = LICENSE_UNLIMITED;
+		licensetype = LICENSE_TIMED;
 		break;
 	case 3:
-		licensetype = LICENSE_TIMED;
+		licensetype = LICENSE_NETWORK;
 		break;
 	case 4:
 		licensetype = LICENSE_CLUSTER;
+		break;
+	case 5:
+		licensetype = LICENSE_UNLIMITED;
 		break;
 	}
 
@@ -358,9 +364,11 @@ Enter T for a TIMED license.\nEnter C for a CLUSTER license.";
 	formatkey(licensekey,buff);
 
 	printf("\n");
-	printf("                        >>> %19s <<<\n","");
-	printf("LICENSE KEY             >>> %19s <<<\n",buff);
-	printf("                        >>> %19s <<<\n","");
+	printf("                         =======================\n");
+	printf("                        || %19s ||\n","");
+	printf("LICENSE KEY             || %19s ||\n",buff);
+	printf("                        || %19s ||\n","");
+	printf("                         =======================\n");
 
 	custnum = 0;								/* Reset all the values except the key		*/
 	platform[0] = '\0';
@@ -374,15 +382,16 @@ Enter T for a TIMED license.\nEnter C for a CLUSTER license.";
 		return;
 	}
 
+#ifdef OLD
 	printf("\nThe above LICENSE KEY decodes to the following values:\n\n");
-
 	putkeyinfo(NULL,custnum,platform,licensetype,licensedate,expdate);
+
 	printf("\n");
 	printf("**** ENSURE THIS INFOMATION IS CORRECT BEFORE ISSUEING THE KEY ****\n");
-
+#endif
 	logkeyinfo(custname,custnum,platform,licensetype,licensedate,expdate,licensekey);
 
-	printkeydoc(custname,custnum,platform,licensetype,licensedate,expdate,licensekey);
+	printkeydoc(custname,custnum,platform,licensetype,licensedate,expdate,licensekey,"___","___");
 }
 
 
@@ -412,15 +421,8 @@ Enter T for a TIMED license.\nEnter C for a CLUSTER license.";
 **
 */
 
-static gen_val()
+static gen_val(int useglobals)
 {
-	char	custname[256];
-	long	custnum;
-	char	platform[3];
-	int	licensetype;
-	char	licensedate[20];
-	char	expdate[20];
-	char	licensekey[20];
 	char	machineid[80];
 	char	valcode[20];
 
@@ -433,14 +435,18 @@ static gen_val()
 	time_t	now;
 	int	t_year, t_month, t_day;
 
+	if (useglobals) goto get_machine_id;
+	
+
 	printf("\n\n>>> Generating a %s VALIDATION CODE <<<\n\n",product_name());
 
 	help = "Enter the customer's name for whom your generating this VALIDATION CODE.";
 	rc = prompt_text("CUSTOMER NAME",NULL,0,help,custname);
 	if (rc == -1) exit(0);
 
-	help = "Enter the LICENSE KEY.\nThis was sent to the customer with the kit.  If the customer doesn't \n\
-know his LICENSE KEY then you can look it up in the log book.";
+	help = "Enter the LICENSE KEY.\n"
+	       "This was sent to the customer with the kit.  If the customer doesn't \n"
+	       "know his LICENSE KEY then you can look it up in the log book.";
 	done = 0;
 	while(!done)
 	{
@@ -459,7 +465,7 @@ know his LICENSE KEY then you can look it up in the log book.";
 			done = 1;
 		}
 	}
-
+	
 	printf("\nThis LICENSE KEY decodes to the following values:\n\n");
 
 	putkeyinfo(NULL,custnum,platform,licensetype,licensedate,expdate);
@@ -478,12 +484,15 @@ know his LICENSE KEY then you can look it up in the log book.";
 		printf("\n\nDo not use this LICENSE KEY to generate a VALIDATION CODE.\n");
 		printf("Get the correct LICENSE KEY from the customer or issue a new LICENSE KEY.\n");
 		printf("If this is the correct LICENSE KEY yet the information is incorrect then\n");
-		printf("report this to the IDSI Customer Service Manager.\n\n");
+		printf("report this to the NeoMedia Customer Service Manager.\n\n");
 		return;
 		break;
 	}
 
-	help = "Enter the MACHINE ID. (Up to 16 digits)\nThe wlicense utility will display this for the customer.";
+get_machine_id:
+	printf("\n");
+	help = "Enter the MACHINE ID. (Up to 16 digits)\n"
+	       "The wlicense utility will display this for the customer.";
 	rc = prompt_text("MACHINE ID",NULL,0,help,machineid);
 	if (rc == -1) exit(0);
 
@@ -514,11 +523,15 @@ know his LICENSE KEY then you can look it up in the log book.";
 	valcode[VALIDATION_CODE_SIZE] = '\0';
 
 	printf("\n");
-	printf("                        >>> %3s <<<\n","");
-	printf("VALIDATION CODE         >>> %3s <<<\n",valcode);
-	printf("                        >>> %3s <<<\n","");
+	printf("                         =======\n");
+	printf("                        || %3s ||\n","");
+	printf("VALIDATION CODE         || %3s ||\n",valcode);
+	printf("                        || %3s ||\n","");
+	printf("                         =======\n");
 
 	logvalinfo(custname,custnum,platform,licensetype,licensedate,expdate,licensekey,machineid,valcode);
+
+	printkeydoc(custname,custnum,platform,licensetype,licensedate,expdate,licensekey,machineid,valcode);
 }
 
 /*
@@ -544,7 +557,7 @@ know his LICENSE KEY then you can look it up in the log book.";
 
 static test_codes()
 {
-	long	custnum;
+	int4	custnum;
 	char	platform[3];
 	int	licensetype;
 	char	licensedate[20];
@@ -630,14 +643,11 @@ static putheader()
 {
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
-	printf("\n");
 	printf("                   **** %s LICENSE AUTHORIZATION TOOL ****\n",product_name());
-	printf("         Copyright (c) 1992 by International Digital Scientific Inc.\n");
-	printf("\n");
+	printf("         Copyright (c) 1992-1997 by NeoMedia Technologies Incorporated.\n");
 	printf("\n");
 	printf("This program will generate %s license keys and validation codes for use with\n",product_name());
-	printf("the wlicense program.  This program is for use by IDSI personnel only!\n");
-	printf("\n");
+	printf("the wlicense program.  This program is for use by NeoMedia personnel only!\n");
 	printf("\n");
 	printf("LICENSE KEY        The LICENSE KEY is the code that is sent out with every\n");
 	printf("                   %s kit.  It defines the type of license and contains the\n",product_name());
@@ -680,7 +690,7 @@ static putheader()
 
 static putkeyinfo(custname,custnum,platform,lictype,licdate,expdate)
 char	*custname;
-long	custnum;
+int4	custnum;
 char	platform[2];
 int	lictype;
 char	licdate[8];
@@ -734,7 +744,7 @@ char	expdate[8];
 
 static 	logkeyinfo(custname,custnum,platform,lictype,licdate,expdate,lickey)
 char	*custname;
-long	custnum;
+int4	custnum;
 char	platform[2];
 int	lictype;
 char	licdate[8];
@@ -804,7 +814,7 @@ char	lickey[LICENSE_KEY_SIZE];
 
 static logvalinfo(custname,custnum,platform,lictype,licdate,expdate,lickey,machineid,valcode)
 char	*custname;
-long	custnum;
+int4	custnum;
 char	platform[2];
 int	lictype;
 char	licdate[8];
@@ -821,7 +831,7 @@ char	*valcode;
 	fp = fopen(authlogfile(),"a");
 	if (!fp)
 	{
-		printf("\n*** ERROR ***\n");
+		printf("\n**** ERROR ****\n");
 		printf("Unable to open log file %s [errno=%d %s]\n\n",authlogfile(),errno,sys_errlist[errno]);
 		return;
 	}
@@ -881,14 +891,8 @@ char	*valcode;
 **
 */
 
-static 	printkeydoc(custname,custnum,platform,lictype,licdate,expdate,lickey)
-char	*custname;
-long	custnum;
-char	platform[2];
-int	lictype;
-char	licdate[8];
-char	expdate[8];
-char	lickey[LICENSE_KEY_SIZE];
+static 	void printkeydoc(char* custname, int4 custnum, char platform[2], int lictype, char licdate[8], char expdate[8],
+			 char lickey[LICENSE_KEY_SIZE], char* machid, char* valcode)
 {
 	FILE	*tp, *fp;
 	char	platname[80];
@@ -925,7 +929,7 @@ char	lickey[LICENSE_KEY_SIZE];
 	tp = fopen(DOCTEMPLATE,"r");						/* open the template file			*/
 	if (!tp)
 	{
-		printf("\n*** ERROR ***\n");
+		printf("\n**** ERROR ****\n");
 		printf("Unable to open template file %s [errno=%d %s]\n\n",DOCTEMPLATE,errno,sys_errlist[errno]);
 		return;
 	}
@@ -939,7 +943,7 @@ char	lickey[LICENSE_KEY_SIZE];
 	fp = fopen(docfile,"w");						/* open the document file			*/
 	if (!fp)
 	{
-		printf("\n*** ERROR ***\n");
+		printf("\n**** ERROR ****\n");
 		printf("Unable to open doc file %s [errno=%d %s]\n\n",docfile,errno,sys_errlist[errno]);
 		fclose(tp);
 		return;
@@ -954,6 +958,8 @@ char	lickey[LICENSE_KEY_SIZE];
 		stredt(buff,"<LICENSETYPE>",lictypename(lictype));
 		stredt(buff,"<LICENSEDATE>",licdatebuff);
 		stredt(buff,"<EXPIRATION>",expdatebuff);
+		stredt(buff,"<MACHINEID>",machid);
+		stredt(buff,"<VALCODE>",valcode);
 
 		fprintf(fp,"%s",buff);						/* write out the edited line			*/
 	}
@@ -961,7 +967,39 @@ char	lickey[LICENSE_KEY_SIZE];
 	fclose(fp);								/* close both files				*/
 	fclose(tp);
 
-	printf("\n*** Printing license doc file %s ***\n\n",docfile);		/* print the file				*/
-	sprintf(buff,"ilp -f LICENSE -C L %s",docfile);
+	printf("\n**** Printing license doc file %s ****\n\n",docfile);		/* print the file				*/
+	sprintf(buff, "./PRINTLICENSE %s", docfile);
 	system(buff);
 }
+
+/*
+**	DUMMY routines to prevent the whole WISPLIB from being included
+*/
+wexit(int code)
+{
+	exit(code);
+}
+werrlog()
+{
+}
+
+/*
+**	History:
+**	$Log: wauthorize.c,v $
+**	Revision 1.9  1997-03-17 11:09:14-05  gsl
+**	Add support for NETWORK license for WISP/NT
+**	Change to NeoMedia Technologies
+**	Streamline how the program works.
+**	Add option to generate a validation code using the information just
+**	entered for a license key so the user does not have to reenter the info.
+**
+**	Revision 1.8  1996-07-23 14:13:04-04  gsl
+**	drcs update
+**
+**	05/22/92	Written by GSL
+**	05/26/92	Moved putplattab() to platsubs.c to isolate platform_table GSL.
+**	09/25/92	Added CLUSTER support. GSL
+**	09/13/93	Generalize for UniQue. GSL
+**
+**
+*/

@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /**
  **																*
  **	acp.h	Header file for (WANG) Asynchronous Communications Program.							*
@@ -7,14 +11,8 @@
 #ifndef ACP_H
 #define ACP_H
 static char *ident="@(#)acp 1.0   [Asynch Comm Prog]   IDSI Unix/VMS xx/xx/90";
-#ifdef VMS
-#define	ACPMAP_FILE "ACP$CONFIG:ACPMAP.DAT"		
-#endif
 
 #ifdef unix
-#define ACPMAP_PATH "ACPCONFIG"
-#define ACPMAP_FILE "ACPMAP"
-char cfgpath[100];
 #define BLOCKING 0
 #define NONBLOCKING 1
 #endif
@@ -196,3 +194,15 @@ extern struct matchstruc  stopbval[];
 #endif
 
 #endif /*ACP_H*/
+/*
+**	History:
+**	$Log: acp.h,v $
+**	Revision 1.9  1996-10-08 20:18:07-04  gsl
+**	Removed unneeded defines and moved cfgpath[] to openacp.c
+**
+**	Revision 1.8  1996-08-19 15:32:07-07  gsl
+**	drcs update
+**
+**
+**
+*/

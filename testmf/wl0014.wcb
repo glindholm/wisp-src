@@ -1,0 +1,40 @@
+
+000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wl0014.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test HEXPACK routine 
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     wl0014.
+001300 Data Division.
+001400 Working-Storage Section.
+001500 01  INPUT-STRING       PIC X(8).
+       01  OUTPUT-STRING      PIC X(4).
+       01  INPUT-LENGTH.
+           03 FILLER          BINARY   VALUE 0.
+           03 INPUT-LEN       BINARY.
+  
+001600 Procedure Division.  
+           MOVE LOW-VALUES TO INPUT-LENGTH.
+           MOVE 8 TO INPUT-LEN.
+           MOVE "6131323B"   TO INPUT-STRING.
+           CALL "HEXPACK" USING INPUT-STRING,
+                               OUTPUT-STRING,
+                               INPUT-LENGTH.  
+ 
+           IF OUTPUT-STRING = "a12;"   THEN
+                DISPLAY "HEXPACK completion successful."
+           ELSE 
+                DISPLAY "HEXPACK failed.".
+
+            EXIT PROGRAM.
+            STOP RUN.
+  
+006600**   End of wl0014.wcb 

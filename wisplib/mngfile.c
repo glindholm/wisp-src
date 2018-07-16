@@ -1,11 +1,21 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		mngfile.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Emulate Wang Manage Files and Libraries
+**
+**	Routines:
+**	mngfile()
+*/
+
+/*
+**	Includes
+*/
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -14,8 +24,10 @@
 #include <time.h>
 #include <signal.h>
 #include <errno.h>
+#include <string.h>
 
 #ifdef unix
+#include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
 extern char *sys_errlist[];
@@ -24,6 +36,9 @@ extern int   sys_nerr;
 
 #ifdef MSDOS
 #include <dos.h>
+#endif
+#ifdef _MSC_VER
+#include <direct.h>
 #include <io.h>
 #endif
 
@@ -35,77 +50,46 @@ extern int   sys_nerr;
 #include "wperson.h"
 #include "wdefines.h"
 #include "werrlog.h"
-#define ROUTINE 91000
+#include "wfname.h"
+#include "ring.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "paths.h"
+#include "runtype.h"
+#include "wispcfg.h"
+#include "screen.h"
 
-#define SCREENSIZE 	1924
+/*
+**	Structures and Defines
+*/
+
+#define ROUTINE 91000
+/*
+91001	%%MANAGEFILES-I-ENTRY Entry into Manage Files
+91002	%%MANAGEFILES-F-RING [%s] [%s]
+*/
+
 #define ROW_FILESPEC	5
 
-#ifdef unix
-#define DDS_CHAR	'/'
-#define DDS_STR		"/"
+#define DDS_CHAR	DIR_SEPARATOR
+#define DDS_STR		DIR_SEPARATOR_STR
+
+#ifndef S_ISDIR
+#define S_ISFIFO(m)	(((m)&(_S_IFMT)) == (_S_IFIFO))
+#define S_ISDIR(m)	(((m)&(_S_IFMT)) == (_S_IFDIR))
+#define S_ISCHR(m)	(((m)&(_S_IFMT)) == (_S_IFCHR))
+#define S_ISBLK(m)	(((m)&(_S_IFMT)) == (_S_IFBLK))
+#define S_ISREG(m)	(((m)&(_S_IFMT)) == (_S_IFREG))
 #endif
-#ifdef MSDOS
-#define DDS_CHAR	'\\'
-#define DDS_STR		"\\"
-#endif
 
-char	*wfname();
-char	*nextfile();
+/*
+**	Globals and Externals
+*/
 
-static int vol_cmp();									/* Compare routine for vol_ring		*/
-static int dir_cmp();									/* Compare routine for dir_ring		*/
+/*
+**	Static data
+*/
 
-static int mng_entry_screen();
-static int mng_dir_screen();
-static int mng_file_screen();
-static int build_entry_screen();
-static int select_dir_entry();
-static int add_file_adjust();
-static int remove_file_adjust();
-static int select_display();
-static int select_edit();
-static int select_scratch();
-static int scratch_directory();
-static int select_print();
-static int select_rename();
-static int build_dir_screen();
-static int file_screen();
-static int get_vol_choice();
-static int get_dir_choice();
-static int vol_add();
-static int load_dir_ring();
-static int disp_screen();
-static int stattype();
-static int typefile();
-static int addpath();
-static int modestring();
-static int putmessage();
-static int load_native_path();
-static int is_blank();
-static int wsb_init();
-static int wsb_init_wcc();
-static int save_oa_pos();
-static int restore_oa_pos();
-static int init_oa_pos();
-static int wsb_put_text();
-static int wsb_put_field();
-static int wsb_get_field();
-static int wsb_message();
-static int wsb_build_filespec();
-static int entry_screen();
-static int dir_screen();
-static int build_print_screen();
-static int build_rename_screen();
-static int return_file_screen();
-static int build_file_screen();
-static int do_protect();
-static int get_filespec();
-static int load_vol_ring();
-static int dir_add();
-static int libpath();
-static int uppath();
-static int wsb_init_oa();
-static int wsb_put_tab();
 
 static char *vol_ring;									/* The volume ring pointer		*/
 static struct vol_struct								/* Struct for vol info			*/
@@ -209,21 +193,80 @@ static int	print_screen_return;							/* Return to from print_screen		*/
 #define PF_SCRATCH	8
 #define PF_PROTECT	9
 #define PF_PRINT	10
-#define PF_DISPLAY	11
-#define PF_EDIT		12
-#define PF_SCREEN	15
+#define PF_DISPLAY_11	11
+#define PF_EDIT_12	12
+#define PF_PRTSCRN_15	15
+#define PF_PRTSCRN_11	11
 
 #define NOMOD		0
 #define MODIFIABLE	1
+
+
+/*
+**	Function Prototypes
+*/
+
+static int vol_cmp();									/* Compare routine for vol_ring		*/
+static int dir_cmp();									/* Compare routine for dir_ring		*/
+
+static int mng_entry_screen(void);
+static int mng_dir_screen(void);
+static int mng_file_screen();
+static int build_entry_screen();
+static int select_dir_entry();
+static int add_file_adjust();
+static void remove_file_adjust(void);
+static void select_display(char* file);
+static void select_edit(char* file);
+static int select_scratch();
+static int scratch_directory();
+static int select_print();
+static int select_rename();
+static int build_dir_screen();
+static int file_screen();
+static int get_vol_choice();
+static int get_dir_choice();
+static int vol_add();
+static int load_dir_ring();
+static int disp_screen();
+static int stattype();
+static int typefile();
+static void addpath();
+static int modestring();
+static void putmessage();
+static void load_native_path();
+static int is_blank();
+static void wsb_init();
+static void wsb_init_wcc();
+static int save_oa_pos();
+static int restore_oa_pos();
+static int init_oa_pos();
+static void wsb_put_text();
+static void wsb_put_field();
+static int wsb_get_field();
+static void wsb_message();
+static void wsb_build_filespec();
+static int entry_screen(void);
+static int dir_screen();
+static int build_print_screen();
+static int build_rename_screen();
+static int return_file_screen();
+static int build_file_screen();
+static int do_protect();
+static void get_filespec();
+static int load_vol_ring();
+static int dir_add();
+static void libpath();
+static int uppath();
+static void wsb_init_oa();
+static void wsb_put_tab();
 
 /*
 	mngfile		Manage Files and Libraries main entry point.
 			This routine is called from the COMMAND PROCESSOR screen.
 
-91001	%%MANAGEFILES-I-ENTRY Entry into Manage Files
-91002	%%MANAGEFILES-F-RING [%s] [%s]
 */
-int mngfile()
+int mngfile(void)
 {
 	uint4 dflags;
 	int	stop;									/* Stop this routine			*/
@@ -240,8 +283,8 @@ int mngfile()
 	wpload();									/* Load the DEFAULTS struct		*/
 
 	get_defs(DEFAULTS_FLAGS,(char*)&dflags);					/* Get the defaults flags		*/
-	modify_allowed = (dflags & HELP_CHANGE_FILES_LIBS);				/* Is modify operations allowed		*/
-	display_allowed = (dflags & HELP_DISPLAY);					/* Is DISPLAY allowed			*/
+	modify_allowed = ((dflags & HELP_CHANGE_FILES_LIBS) ? TRUE : FALSE); 		/* Is modify operations allowed		*/
+	display_allowed = ((dflags & HELP_DISPLAY) ? TRUE : FALSE);			/* Is DISPLAY allowed			*/
 
 	get_defs(DEFAULTS_IV,wang_vol);							/* Default to INVOL INLIB		*/
 	get_defs(DEFAULTS_IL,wang_lib);
@@ -285,7 +328,7 @@ int mngfile()
 /*
 	mng_entry_screen		The entry screen to display on entry.
 */
-static int mng_entry_screen()
+static int mng_entry_screen(void)
 {
 	int	rc;
 
@@ -309,7 +352,7 @@ static int mng_entry_screen()
 	return(0);
 }
 
-static int mng_dir_screen()
+static int mng_dir_screen(void)
 {
 	int	rc;
 
@@ -320,7 +363,7 @@ static int mng_dir_screen()
 	return(0);
 }
 
-static int mng_file_screen()
+static int mng_file_screen(void)
 {
 	int	rc;
 
@@ -334,11 +377,11 @@ static int mng_file_screen()
 /*
 	entry_screen		Display the ENTRY_SCREEN
 */
-static int entry_screen()
+static int entry_screen(void)
 {
 	static	int	start_item;
 	static	char	volcurpos[2];
-	char	wsb[SCREENSIZE];
+	char	wsb[WSB_LENGTH];
 	int	pfkey;
 	int	item_cnt,end_item;
 	char	pf_list[80];
@@ -361,6 +404,14 @@ static int entry_screen()
 		pfkey = disp_screen(wsb,pf_list);					/* Display and Read the screen		*/
 		save_oa_pos(wsb,volcurpos);						/* Save the cursor position in O-A	*/
 		last_screen = ENTRY_SCREEN;						/* Last screen display is ENTRY_SCREEN	*/
+
+		if (pfkeys12())
+		{
+			if (PF_PRTSCRN_11 == pfkey)
+			{
+				pfkey = PF_PRTSCRN_15;
+			}
+		}
 
 		switch(pfkey)								/* Take action based on key pressed	*/
 		{
@@ -403,24 +454,20 @@ static int entry_screen()
 					file_style = STYLE_FILE;
 				}
 				return(0);
-				break;
 
 			case VOL_OPTION_NATIVE:						/* Native file path selected		*/
 				next_screen = DIR_SCREEN;
 				return(0);
-				break;
 
 			case VOL_OPTION_VOLUME:						/* VOLUME tabstop selected		*/
 				next_screen = DIR_SCREEN;
 				return(0);
-				break;
 			}
 			break;
 
 		case PF_RETURN: 
 			next_screen = EXIT_SCREEN;					/* (1) EXIT file manager		*/
 			return(0);
-			break;
 
 		case PF_FIRST:	
 			start_item = 0;							/* (2) FIRST				*/
@@ -439,14 +486,14 @@ static int entry_screen()
 			start_item = end_item;						/* (5) NEXT				*/
 			break;
 
-		case PF_SCREEN:
-			wsh_progprnt(0);
+		case PF_PRTSCRN_15:
+			screen_print();
 			putmessage("Screen printed");
 			break;
+
 		default: /* HELP */
 			next_screen = EXIT_SCREEN;
 			return(0);
-			break;
 		}
 	}
 }
@@ -455,16 +502,16 @@ static int entry_screen()
 	build_entry_screen	Build the screen buffer (wsb) for ENTRY_SCREEN based on the vol_ring entries.
 */
 static int build_entry_screen(wsb,item_cnt,start_item,end_item,pf_list)
-char	wsb[SCREENSIZE];								/* Screen buffer			*/
-int4	item_cnt;									/* Number of VOLUME items in vol_ring	*/
-int4	start_item;									/* Starting position in vol_ring	*/
-int4	*end_item;									/* last+1 item displayed on screen	*/
+char	wsb[WSB_LENGTH];								/* Screen buffer			*/
+int	item_cnt;									/* Number of VOLUME items in vol_ring	*/
+int	start_item;									/* Starting position in vol_ring	*/
+int	*end_item;									/* last+1 item displayed on screen	*/
 char	*pf_list;									/* vwang pfkey list			*/
 {
 	char	vol[6], lib[8], file[8], filepath[80];					/* All are blank padded			*/
-	int4	rc;
+	int	rc;
 	int4	mode;
-	int4	pos, row, col;
+	int	pos, row, col;
 	char	buff[255];
 
 	memcpy(vol,wang_vol,6);								/* Load local variable with file info	*/
@@ -496,9 +543,20 @@ char	*pf_list;									/* vwang pfkey list			*/
 	wsb_put_text(wsb,9,2,0,"at the associated Tabstop:");
 	wsb_put_text(wsb,22, 2,0,"(1) Exit");
 	wsb_put_text(wsb,22,50,0,"(ENTER) To display a directory");
-	wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+	strcpy(pf_list,"0001");
 
-	strcpy(pf_list,"000115");
+	if (pfkeys12())
+	{
+		wsb_put_text(wsb,24,50,0,"(11) Print Screen");
+		strcat(pf_list,"11");
+	}
+	else
+	{
+		wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+		strcat(pf_list,"15");
+	}
+	
+
 	if (start_item > 0)  								/* Add FIRST and PREV options		*/
 	{
 		wsb_put_text(wsb,23, 2,0,"(2) First");
@@ -531,11 +589,18 @@ char	*pf_list;									/* vwang pfkey list			*/
 			vol_item.currow = row;						/* update cursor tabstop position	*/
 			vol_item.curcol = col;
 
-			sprintf(buff,"%6.6s  %s",vol_item.wang,vol_item.path);		/* Construct screen display of VOLUME	*/
-			if (strlen(buff) > VOLCOLWIDTH-4)
+			/* Construct screen display of VOLUME	*/
+			if (strlen(vol_item.path) > (VOLCOLWIDTH-12))
 			{
-				buff[VOLCOLWIDTH-4] = '+';				/* Truncate long names			*/
-				buff[VOLCOLWIDTH-3] = '\0';
+				int off;
+				off = strlen(vol_item.path) - (VOLCOLWIDTH-12);
+				
+				sprintf(buff,"%6.6s  %s",vol_item.wang,&vol_item.path[off]);
+				buff[8] = '+';
+			}
+			else
+			{
+				sprintf(buff,"%6.6s  %s",vol_item.wang,vol_item.path);	
 			}
 
 			wsb_put_tab(wsb,row,col);					/* Add tabstop				*/
@@ -569,7 +634,7 @@ static int dir_screen()
 {
 	static	int start_item;
 	static	char dircurpos[2];
-	char	wsb[SCREENSIZE];
+	char	wsb[WSB_LENGTH];
 	int	pfkey;
 	int	item_cnt,end_item;
 	char	pf_list[80];
@@ -606,7 +671,7 @@ static int dir_screen()
 		native_path[i-1] = '\0';
 	}
 #endif
-#ifdef MSDOS
+#ifdef MSFS
 	if (((i>3 && native_path[1]==':') || (i>1 && native_path[1] != ':')) &&
 		native_path[i-1] == DDS_CHAR)						/* Remove trailing '\' character	*/
 	{
@@ -622,19 +687,16 @@ static int dir_screen()
 		putmessage("File Not Found");
 		next_screen = ENTRY_SCREEN;
 		return(0);
-		break;
 
 	case TYPE_NOACCESS:
 		putmessage("Access denied");
 		next_screen = ENTRY_SCREEN;
 		return(0);
-		break;
 
 	case TYPE_ERROR:
 		putmessage("Error attempting to access file");
 		next_screen = ENTRY_SCREEN;
 		return(0);
-		break;
 
 	case TYPE_DIR:									/* Only continue if a DIRECTORY		*/
 		break;
@@ -647,13 +709,11 @@ static int dir_screen()
 	case TYPE_HIDDEN:
 		next_screen = FILE_SCREEN;
 		return(0);
-		break;
 
 	default:
 		putmessage("Unknown File Type");
 		next_screen = ENTRY_SCREEN;
 		return(0);
-		break;
 	}
 
 	if (last_screen == ENTRY_SCREEN ||						/* If coming from ENTRY_SCREEN or	*/
@@ -687,6 +747,13 @@ static int dir_screen()
 		last_screen = DIR_SCREEN;						/* Last screen display is DIR_SCREEN	*/
 		file_screen_return = DIR_SCREEN;
 
+		if (pfkeys12())
+		{
+			if (PF_PRTSCRN_11 == pfkey)
+			{
+				pfkey = PF_PRTSCRN_15;
+			}
+		}
 
 		switch(pfkey)
 		{
@@ -695,8 +762,8 @@ static int dir_screen()
 		case PF_SCRATCH: 	/* Scratch */
 		case PF_PROTECT: 	/* Protect */
 		case PF_PRINT: 		/* Print */
-		case PF_DISPLAY:	/* Display */
-		case PF_EDIT:		/* Edit */
+		case PF_DISPLAY_11:	/* Display */
+		case PF_EDIT_12:	/* Edit */
 			if (rc=get_dir_choice(wsb,item_cnt,start_item,end_item,&option,filepath)) return(rc);
 
 			if (option == DIR_OPTION_NONE)
@@ -767,7 +834,7 @@ static int dir_screen()
 					putmessage("You can not PRINT a directory");
 				}
 				break;
-			case PF_DISPLAY:	/* Display */
+			case PF_DISPLAY_11:	/* Display */
 				if (option == DIR_OPTION_FILE)
 				{
 					select_display(buff);
@@ -777,7 +844,7 @@ static int dir_screen()
 					putmessage("You can not DISPLAY a directory");
 				}
 				break;
-			case PF_EDIT:		/* Edit the file */
+			case PF_EDIT_12:		/* Edit the file */
 				if (option == DIR_OPTION_FILE)
 				{
 					select_edit(buff);
@@ -793,14 +860,13 @@ static int dir_screen()
 		case PF_RETURN: 	/* Return to Volume Display */
 			next_screen = ENTRY_SCREEN;
 			return(0);
-			break;
 
 		case PF_FIRST:		/* First */
 			start_item = 0;
 			init_oa_pos(dircurpos);						/* Init the cursor position		*/
 			break;
 
-#ifdef unix
+#if defined(unix) || defined(WIN32)
 #define DIRSCREENITEMS	30
 #endif
 #ifdef MSDOS
@@ -823,14 +889,13 @@ static int dir_screen()
 			init_oa_pos(dircurpos);						/* Init the cursor position		*/
 			break;
 
-		case PF_SCREEN:
-			wsh_progprnt(0);
+		case PF_PRTSCRN_15:
+			screen_print();
 			putmessage("Screen printed");
 			break;
 		default: /* HELP */
 			next_screen = EXIT_SCREEN;
 			return(0);
-			break;
 		}
 
 	}
@@ -946,7 +1011,7 @@ char	*filepath;
 	}
 }
 
-static remove_file_adjust()
+static void remove_file_adjust(void)
 {
 	uppath(native_path);
 
@@ -957,8 +1022,7 @@ static remove_file_adjust()
 	}
 }
 
-static select_display(file)
-char	*file;
+static void select_display(char* file)
 {
 	if (!fexists(file))
 	{
@@ -970,14 +1034,12 @@ char	*file;
 	}
 	else
 	{
-		vdisplay(file,255);							/* Display the file			*/
+		link_display(file);							/* Display the file			*/
 	}
 }
 
-static select_edit(file)
-char	*file;
+static void select_edit(char* file)
 {
-	char	*ptr;
 	char	cmd[256], mess[256];
 	int	rc;
 
@@ -991,11 +1053,7 @@ char	*file;
 	}
 	else
 	{
-		if (!(ptr = getenv("WEDITOR")))
-		{
-			ptr = "vsedit";
-		}
-		sprintf(cmd,"%s %s",ptr,file);
+		sprintf(cmd,"%s %s",weditorexe(),file);
 		WISPSHUT();
 		rc = wsystem(cmd);
 		WISPSYNC();
@@ -1030,7 +1088,9 @@ char	*wsb;
 			{
 			case ENOENT:	putmessage("File not found");		break;
 			case EACCES:	putmessage("Access Denied");		break;
+#ifndef WATCOM										/* Watcom does not support this error code */
 			case EBUSY:	putmessage("File is busy");		break;
+#endif
 			default:	
 				sprintf(buff,"Unable to SCRATCH file [errno=%d]",errno);
 				putmessage(buff);
@@ -1045,11 +1105,9 @@ char	*wsb;
 		break;
 	case 1:
 		return(1);								/* Scratch failed			*/
-		break;
 	default: /* HELP */
 		next_screen = EXIT_SCREEN;
 		return(1);								/* Scratch failed			*/
-		break;
 	}
 }
 
@@ -1077,7 +1135,9 @@ char	*wsb;
 			case EEXIST:	putmessage("Directory is not empty");			break;
 			case ENOENT:	putmessage("Directory not found");			break;
 			case EACCES:	putmessage("Access Denied");				break;
-			case EBUSY:	putmessage("Directory is busy");			break;
+#ifndef WATCOM										/* Watcom does not support this error code */
+			case EBUSY:	putmessage("Directory is busy");		break;
+#endif
 			default:
 				if (errno < sys_nerr)
 				{
@@ -1098,23 +1158,20 @@ char	*wsb;
 		break;
 	case 1:
 		return(1);
-		break;
 	default: /* HELP */
 		next_screen = EXIT_SCREEN;
 		return(1);
-		break;
 	}
 }
 
 static int select_print()
 {
-	char	wsb[SCREENSIZE];
+	char	wsb[WSB_LENGTH];
 	char	pf_list[80];
 	int	pfkey;
 	char	print_mode[10], print_class[10], scratch_after[10], copies_char[10], form_char[10], disp[10];
 	int4	tlong;
 	int4	copies_num, form_num;
-	int4	mod;
 	int4	rc;
 
 	print_mode[0] = 'S';
@@ -1128,6 +1185,14 @@ static int select_print()
 	{
 		build_print_screen(wsb,pf_list,print_mode,print_class,scratch_after,copies_char,form_char);
 		pfkey = disp_screen(wsb,pf_list);					/* Display and Read the screen		*/
+
+		if (pfkeys12())
+		{
+			if (PF_PRTSCRN_11 == pfkey)
+			{
+				pfkey = PF_PRTSCRN_15;
+			}
+		}
 
 		switch(pfkey)
 		{
@@ -1177,7 +1242,7 @@ static int select_print()
 			wprint(native_path,print_mode[0],disp,copies_num,print_class[0],form_num,&rc);
 			switch(rc)
 			{
-			case  0:	putmessage("File printed");  return(0); break;
+			case  0:	putmessage("File printed");  		return(0);
 			case 20:	putmessage("File Not Found");		break;
 			case 28:	putmessage("Access Denied");		break;
 			case 40:	putmessage("Invalid argument");		break;
@@ -1186,21 +1251,19 @@ static int select_print()
 			break;
 		case PF_RETURN:
 			return(0);
-			break;
-		case PF_SCREEN:
-			wsh_progprnt(0);
+		case PF_PRTSCRN_15:
+			screen_print();
 			putmessage("Screen printed");
 			break;
 		default: /* HELP */
 			next_screen = EXIT_SCREEN;
 			return(0);
-			break;
 		}
 	}
 }
 
 static int build_print_screen(wsb,pf_list,print_mode,print_class,scratch_after,copies,print_form)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 char	*pf_list;
 char	*print_mode;
 char	*print_class;
@@ -1209,7 +1272,6 @@ char	*copies;
 char	*print_form;
 {
 	char	vol[6], lib[8], file[8], filepath[80];
-	char	buff[255];
 
 	memcpy(vol,wang_vol,6);
 	memcpy(lib,wang_lib,8);
@@ -1225,8 +1287,18 @@ char	*print_form;
 
 	wsb_put_field(wsb,20,2,0,"Press (ENTER) to PRINT, or Select:",BOLD_UNDER_TEXT);
 	wsb_put_text(wsb,22, 2,0,"(1) Return to Display");
-	wsb_put_text(wsb,24,50,0,"(15) Print Screen");
-	strcpy(pf_list,"000115X");
+	strcpy(pf_list,"0001X");
+
+	if (pfkeys12())
+	{
+		wsb_put_text(wsb,24,50,0,"(11) Print Screen");
+		strcat(pf_list,"11");
+	}
+	else
+	{
+		wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+		strcat(pf_list,"15");
+	}
 
 	wsb_put_text(wsb, 9,30,0,"PRINT MODE      = +     (S=SPOOL,H=HOLD)");
 	wsb_put_text(wsb,11,30,0,"PRINT CLASS     = +     (A-Z)");
@@ -1245,25 +1317,19 @@ char	*print_form;
 }
 
 static int select_rename(file_type)
-int4	file_type;
+int	file_type;
 {
-	char	wsb[SCREENSIZE];
+	char	wsb[WSB_LENGTH];
 	char	pf_list[80];
-	int4	pfkey;
+	int	pfkey;
 	char	vol[6],lib[8],file[8],filepath[80];
 	char	path[256],buff[256];
-	int4	option;
+	int	option;
 	int4	mode;
-	char	*ptr;
-	int4	dest_spec;
-	int4	rc;
-	char	pbuf[80];
+	int	dest_spec;
 	char	ebuf[8][80];
-	int4	ecnt;
-	FILE	*fp;
-	void	(*save_sig)();
+	int	ecnt=0;
 
-	ecnt = 0;
 
 	memcpy(vol,wang_vol,6);
 	memcpy(lib,wang_lib,8);
@@ -1286,11 +1352,18 @@ int4	file_type;
 		build_rename_screen(wsb,pf_list,ecnt,ebuf,vol,lib,file,filepath);
 		pfkey = disp_screen(wsb,pf_list);
 
+		if (pfkeys12())
+		{
+			if (PF_PRTSCRN_11 == pfkey)
+			{
+				pfkey = PF_PRTSCRN_15;
+			}
+		}
+
 		switch(pfkey)
 		{
 		case PF_RETURN:	/* Return */
 			return(0);
-			break;
 		case PF_ENTER:	/* RENAME */
 		case 2:		/* RENAME */
 		case 3: 	/* COPY */
@@ -1320,14 +1393,13 @@ int4	file_type;
 				break;
 			}
 			break;
-		case PF_SCREEN:	/* PRINT SCREEN */
-			wsh_progprnt(0);
+		case PF_PRTSCRN_15:	/* PRINT SCREEN */
+			screen_print();
 			putmessage("Screen printed");
 			break;
 		default: /* HELP */
 			next_screen = EXIT_SCREEN;
 			return(0);
-			break;
 		}
 
 		if (dest_spec)
@@ -1342,26 +1414,34 @@ int4	file_type;
 			}
 			else
 			{
-				makepath( path );				/* Ensure the target path exists		*/
-
 #ifdef unix
+				void	(*save_sig)();
+				FILE	*fp;
+				char	pbuf[80];
+#endif
+
+				makepath( path );	/* Ensure the target path exists		*/
+#ifdef unix
+
 				switch(pfkey)
 				{
 				case PF_ENTER:
 				case 2:
-					sprintf(buff,"mv -f %s %s 2>&1",native_path,path);
+					sprintf(buff,"mv -f '%s' '%s' 2>&1",native_path,path);
 					break;
 				case 3:
-					sprintf(buff,"cp %s %s 2>&1",native_path,path);
+					sprintf(buff,"cp '%s' '%s' 2>&1",native_path,path);
 					break;
 				case 5:
-					sprintf(buff,"ln -f %s %s 2>&1",native_path,path);
+					sprintf(buff,"ln -f '%s' '%s' 2>&1",native_path,path);
 					break;
 				case 6:
-					sprintf(buff,"ln -s %s %s 2>&1",native_path,path);
+					sprintf(buff,"ln -s '%s' '%s' 2>&1",native_path,path);
 					break;
 				}
 
+				wtrace("MNGFILE","COMMAND","popen(\"%s\")",buff);
+				
 				save_sig = signal(SIGCLD,SIG_DFL);
 				fp = popen(buff,"r");
 				if (!fp)
@@ -1384,7 +1464,7 @@ int4	file_type;
 					return(0);
 				}
 #endif /* unix */
-#ifdef MSDOS
+#if defined(MSDOS)|| defined(WIN32)
 				switch(pfkey)
 				{
 				case PF_ENTER:
@@ -1417,21 +1497,20 @@ int4	file_type;
 					putmessage(buff);
 					break;
 				}
-#endif /* MSDOS */
+#endif /* MSDOS || WIN32 */
 			}
 		}
 	}
 }
 
 static int build_rename_screen(wsb,pf_list,ecnt,ebuf,dvol,dlib,dfile,dfilepath)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 char	*pf_list;
 int	ecnt;
 char	ebuf[8][80];
 char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 {
 	char	vol[6], lib[8], file[8], filepath[80];
-	char	buff[255];
 	int	i;
 
 	memcpy(vol,wang_vol,6);
@@ -1443,7 +1522,7 @@ char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 #ifdef unix
 	wsb_put_text(wsb,1,26,0,"***  Rename/Copy File  ***");
 #endif
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 	wsb_put_text(wsb,1,28,0,"***  Rename File  ***");
 #endif
 	wsb_message(wsb);
@@ -1463,10 +1542,18 @@ char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 	wsb_put_text(wsb,23,20,0,"(5) LINK");		strcat(pf_list,"05");
 	wsb_put_text(wsb,24,20,0,"(6) Symbolic LINK");	strcat(pf_list,"06");
 #endif
-	wsb_put_text(wsb,24,50,0,"(15) Print Screen");	strcat(pf_list,"15");
+
+	if (pfkeys12())
+	{
+		wsb_put_text(wsb,24,50,0,"(11) Print Screen");	strcat(pf_list,"11");
+	}
+	else
+	{
+		wsb_put_text(wsb,24,50,0,"(15) Print Screen");	strcat(pf_list,"15");
+	}
+	
 
 	strcat(pf_list,"X");
-/*	strcpy(pf_list,"010203050615X"); */
 
 	for (i=0;i<ecnt;i++)
 	{
@@ -1477,16 +1564,15 @@ char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 }
 
 static int build_dir_screen(wsb,item_cnt,start_item,end_item,pf_list)
-char	wsb[SCREENSIZE];
-int4	item_cnt;
-int4	start_item;
-int4	*end_item;
+char	wsb[WSB_LENGTH];
+int	item_cnt;
+int	start_item;
+int	*end_item;
 char	*pf_list;
 {
 	char	vol[6], lib[8], file[8], filepath[80];
-	int4	mode;
 	int	rc;
-	int4	pos, row, col;
+	int	pos, row, col;
 	char	buff[255];
 
 	memcpy(vol,wang_vol,6);
@@ -1504,31 +1590,48 @@ char	*pf_list;
 	wsb_build_filespec(wsb,vol,lib,file,filepath,file_style,NOMOD,ROW_FILESPEC);
 
 	wsb_put_field(wsb,19,2,0,"Position cursor to a File or Directory and press (ENTER) or Select:",BOLD_UNDER_TEXT);
+
 	strcpy(pf_list,"00");
-		wsb_put_text(wsb,21, 2,0,"(1) Return to Volume Display");	strcat(pf_list,"01");
+	wsb_put_text(wsb,21, 2,0,"(1) Return to Volume Display");
+	strcat(pf_list,"01");
 
 	if (modify_allowed)
 	{
-		wsb_put_text(wsb,21,35,0," (7) Rename");			strcat(pf_list,"07");
-		wsb_put_text(wsb,22,35,0," (8) Scratch");			strcat(pf_list,"08");
+		wsb_put_text(wsb,21,35,0," (7) Rename");
+		strcat(pf_list,"07");
+		wsb_put_text(wsb,22,35,0," (8) Scratch");
+		strcat(pf_list,"08");
 #ifdef unix
-		wsb_put_text(wsb,23,35,0," (9) Protect");			strcat(pf_list,"09");
+		wsb_put_text(wsb,23,35,0," (9) Protect");
+		strcat(pf_list,"09");
 #endif
 	}
 
-		wsb_put_text(wsb,24,35,0,"(10) Print");				strcat(pf_list,"10");
+	wsb_put_text(wsb,24,35,0,"(10) Print");
+	strcat(pf_list,"10");
 
-	if (display_allowed)
+	if (pfkeys12())
 	{
-		wsb_put_text(wsb,21,50,0,"(11) Display");			strcat(pf_list,"11");
+		wsb_put_text(wsb,24,50,0,"(11) Print Screen");
+		strcat(pf_list,"11");
 	}
-	if (modify_allowed)
+	else
 	{
-		wsb_put_text(wsb,22,50,0,"(12) Edit");				strcat(pf_list,"12");
-	}
-		wsb_put_text(wsb,24,50,0,"(15) Print Screen");			strcat(pf_list,"15");
+		if (display_allowed)
+		{
+			wsb_put_text(wsb,21,50,0,"(11) Display");
+			strcat(pf_list,"11");
+		}
+		if (modify_allowed)
+		{
+			wsb_put_text(wsb,22,50,0,"(12) Edit");
+			strcat(pf_list,"12");
+		}
 
-/*	strcpy(pf_list,"000107080910111215"); */
+		wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+		strcat(pf_list,"15");
+	}
+	
 	if (start_item > 0)  
 	{
 		wsb_put_text(wsb,23, 2,0,"(2) First");
@@ -1536,7 +1639,7 @@ char	*pf_list;
 		strcat(pf_list,"0204");
 	}
 
-#ifdef unix
+#if defined(unix) || defined(WIN32)
 #define DIRCOLWIDTH	26
 #endif
 #ifdef MSDOS
@@ -1619,13 +1722,10 @@ char	*pf_list;
 */
 static int file_screen()
 {
-	char	wsb[SCREENSIZE];
+	char	wsb[WSB_LENGTH];
 	int	pfkey;
 	char	pf_list[80];
-	char	filepath[255];
 	int	rc, i;
-	int	option;
-	int4	mode;
 	int	protect;
 	int	filetype;
 
@@ -1657,6 +1757,22 @@ static int file_screen()
 		pfkey = disp_screen(wsb,pf_list);
 		last_screen = FILE_SCREEN;						/* Last screen display is FILE_SCREEN	*/
 
+		if (pfkeys12())
+		{
+			switch(pfkey)
+			{
+			case 3:
+				pfkey = PF_DISPLAY_11;
+				break;
+			case 4:
+				pfkey = PF_EDIT_12;
+				break;
+			case 11:
+				pfkey = PF_PRTSCRN_15;
+				break;
+			}
+		}
+
 		switch(pfkey)
 		{
 #ifdef unix
@@ -1680,7 +1796,7 @@ static int file_screen()
 			}
 			break;
 		case PF_RENAME:
-			select_rename((filetype == TYPE_DIR)?DIR_OPTION_FILE:DIR_OPTION_FILE);
+			select_rename((filetype == TYPE_DIR)?DIR_OPTION_DIR:DIR_OPTION_FILE);
 			break;
 		case PF_SCRATCH:
 			if (select_scratch(native_path,wsb) == 0)
@@ -1695,20 +1811,19 @@ static int file_screen()
 		case PF_PRINT:
 			select_print();
 			break;
-		case PF_DISPLAY:
+		case PF_DISPLAY_11:
 			select_display(native_path);
 			break;
-		case PF_EDIT:
+		case PF_EDIT_12:
 			select_edit(native_path);
 			break;
-		case PF_SCREEN:
-			wsh_progprnt(0);
+		case PF_PRTSCRN_15:
+			screen_print();
 			putmessage("Screen printed");
 			break;
 		default: /* HELP */
 			next_screen = EXIT_SCREEN;
 			return(0);
-			break;
 		}
 
 		if (g_protect) 
@@ -1736,17 +1851,17 @@ static int return_file_screen()
 }
 
 static int build_file_screen(wsb,pf_list,protect,filetype)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 char	*pf_list;
 int	protect;
 int	filetype;
 {
 	char	vol[6], lib[8], file[8], filepath[80];
-	int	rc,col,row;
 	char	buff[80];
 	char	type[80];
 	struct	stat	filestat;
 #ifdef unix
+	int	rc,col,row;
 	struct	passwd	*pw;
 	struct	group	*gr;
 	char	owner[80], group[80], protection[20];
@@ -1783,28 +1898,55 @@ int	filetype;
 
 		if (modify_allowed)
 		{
-			wsb_put_text(wsb,21,35,0," (7) Rename");	strcat(pf_list,"07");
-			wsb_put_text(wsb,22,35,0," (8) Scratch");	strcat(pf_list,"08");
+			wsb_put_text(wsb,21,35,0," (7) Rename");
+			strcat(pf_list,"07");
+			wsb_put_text(wsb,22,35,0," (8) Scratch");
+			strcat(pf_list,"08");
 #ifdef unix
-			wsb_put_text(wsb,23,35,0," (9) Protect");	strcat(pf_list,"09");
+			wsb_put_text(wsb,23,35,0," (9) Protect");
+			strcat(pf_list,"09");
 #endif
 		}
 		if (TYPE_REG == filetype)
 		{
-			wsb_put_text(wsb,24,35,0,"(10) Print");		strcat(pf_list,"10");
-		}
-		if (TYPE_REG == filetype && display_allowed)
-		{
-			wsb_put_text(wsb,21,50,0,"(11) Display");	strcat(pf_list,"11");
-		}
-		if (TYPE_REG == filetype && modify_allowed)
-		{
-			wsb_put_text(wsb,22,50,0,"(12) Edit");		strcat(pf_list,"12");
+			wsb_put_text(wsb,24,35,0,"(10) Print");
+			strcat(pf_list,"10");
 		}
 
-		wsb_put_text(wsb,24,50,0,"(15) Print Screen");	strcat(pf_list,"15");
+		if (pfkeys12())
+		{
+			if (TYPE_REG == filetype && display_allowed)
+			{
+				wsb_put_text(wsb,23,2,0,"(3) Display");	
+				strcat(pf_list,"03");
+			}
+			if (TYPE_REG == filetype && modify_allowed)
+			{
+				wsb_put_text(wsb,24,2,0,"(4) Edit");
+				strcat(pf_list,"04");
+			}
+
+			wsb_put_text(wsb,24,50,0,"(11) Print Screen");
+			strcat(pf_list,"11");
+		}
+		else
+		{
+			if (TYPE_REG == filetype && display_allowed)
+			{
+				wsb_put_text(wsb,21,50,0,"(11) Display");
+				strcat(pf_list,"11");
+			}
+			if (TYPE_REG == filetype && modify_allowed)
+			{
+				wsb_put_text(wsb,22,50,0,"(12) Edit");
+				strcat(pf_list,"12");
+			}
+
+			wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+			strcat(pf_list,"15");
+		}
+		
 		strcat(pf_list,"X");
-/*		strcpy(pf_list,"0107080910111215X"); */
 	}
 
 	switch (filetype)
@@ -1980,7 +2122,8 @@ int	filetype;
 #ifdef unix
 static do_protect(wsb)
 {
-	int	col,row,mode;
+	int	col,row;
+	mode_t	mode;
 	char	ur,uw,ux,gr,gw,gx,or,ow,ox;
 
 	row=15;
@@ -2029,7 +2172,7 @@ static do_protect(wsb)
 				  3	Use selection from volume list
 */
 static int get_vol_choice(wsb,item_cnt,start_item,end_item,option)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 int	item_cnt;
 int	start_item;
 int	end_item;
@@ -2095,8 +2238,8 @@ int	*option;
 	return(0);
 }
 
-static	get_filespec(wsb,vol,lib,file,path,option,startrow)
-char	wsb[SCREENSIZE];
+static	void get_filespec(wsb,vol,lib,file,path,option,startrow)
+char	wsb[WSB_LENGTH];
 char	vol[6],lib[8],file[8],path[80];
 int	*option;
 int	startrow;
@@ -2179,7 +2322,7 @@ int	startrow;
 			
 */
 static int get_dir_choice(wsb,item_cnt,start_item,end_item,option,filename)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 int	item_cnt;
 int	start_item;
 int	end_item;
@@ -2245,14 +2388,14 @@ static int load_vol_ring()
 	if (rc = vol_add()) return(rc);
 
 	memcpy(vol_item.wang,"(HOME)",6);
-	strcpy(vol_item.path,getenv("HOME"));
+	strcpy(vol_item.path,wisphomedir(NULL));
 	if (rc = vol_add()) return(rc);
 
 	memcpy(vol_item.wang,"(ROOT)",6);
 #ifdef unix
 	strcpy(vol_item.path,DDS_STR);
 #endif
-#ifdef MSDOS
+#ifdef MSFS
 	strcpy(vol_item.path,"C:\\");
 #endif
 	if (rc = vol_add()) return(rc);
@@ -2316,10 +2459,10 @@ int	force_load;
 	char	*context;
 	int	cnt;
 
-#ifdef unix
+#if defined(unix)
 	/*
-	**	MSDOS stat() routine has bug try to stat() a directory.
-	**	Also stat.st_ino is not reliable on DOS for a directory.
+	**	This code only works on unix because only there is stat() fully implemented.
+	**	Also stat.st_ino is not reliable on WIN32 or DOS for a directory.
 	*/
 
 	static struct	stat	old_stat, new_stat;
@@ -2427,7 +2570,7 @@ struct	dir_struct *i1, *i2;
 	disp_screen	Display and read a screen and return the pfkey
 */
 static int disp_screen(wsb,pfkey_list)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 char	*pfkey_list;
 {
 	char	function, lines;
@@ -2454,7 +2597,7 @@ char	*pfkey_list;
 	libpath		Call wfname to get the library path.
 			If lib is blank then just change to dot (.).
 */
-static libpath(vol,lib,path)
+static void libpath(vol,lib,path)
 char	vol[6], lib[8], path[80];
 {
 	char	l_file[8], l_lib[8], l_vol[6];
@@ -2509,7 +2652,7 @@ char	vol[6], lib[8], path[80];
 static int stattype(path)
 char	*path;
 {
-#ifdef unix
+#if defined(unix) || defined(WIN32)
 	int	rc;
 	struct stat buf;
 
@@ -2534,12 +2677,14 @@ char	*path;
 	else if (S_ISREG (buf.st_mode))  rc = TYPE_REG;
 	else if (S_ISFIFO(buf.st_mode))  rc = TYPE_FIFO;
 	else if (S_ISCHR (buf.st_mode))  rc = TYPE_CHR;
+#ifndef _MSC_VER
 	else if (S_ISBLK (buf.st_mode))  rc = TYPE_BLK;
+#endif
 	else			  	 rc = TYPE_UNKNOWN;
 
 	return(rc);
 #endif /* unix */
-#ifdef MSDOS
+#if defined(MSDOS) 
 	int	rc;
 	unsigned attrib;
 
@@ -2559,7 +2704,7 @@ char	*path;
 		rc = TYPE_NOTFOUND;
 	}
 	return(rc);
-#endif /* MSDOS */
+#endif /* MSDOS  */
 }
 
 /*
@@ -2602,6 +2747,11 @@ char	*file;
 		return(FILE_FHISAMI);
 	}
 
+	if ( buff[0] == 0x33 && buff[1] == 0xFE )
+	{
+		return(FILE_FHISAMI);
+	}
+
 	if ( buff[0] == 0x30 && buff[1] == 0x7E )
 	{
 		return(FILE_FHISAMD);
@@ -2609,7 +2759,7 @@ char	*file;
 
 	switch(runtype(file))
 	{
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 	case RUN_EXEC:		return(FILE_EXEC);
 	case RUN_SHELL:		return(FILE_BATCH);
 	case RUN_ACUCOBOL:	return(FILE_ACUOBJ);
@@ -2625,13 +2775,10 @@ char	*file;
 	{
 	case ISEXEC:
 		return(FILE_EXEC);
-		break;
 	case ISACU:
 		return(FILE_ACUOBJ);
-		break;
 	case ISMFINT:
 		return(FILE_MFINT);
-		break;
 	}
 #endif /* unix */
 
@@ -2687,7 +2834,7 @@ char	*path;
 		strcpy(path,DDS_STR);
 	}
 #endif /* unix */
-#ifdef MSDOS
+#ifdef MSFS
 	else if ( i == 0 )			/*  "\xxx"	==>	"C:\"	*/
 	{
 		getcwd(path,80);
@@ -2708,7 +2855,7 @@ char	*path;
 	{
 		path[i] = (char)0;
 	}
-#endif /* MSDOS */
+#endif /* MSFS */
 
 	return(0);
 }
@@ -2716,7 +2863,7 @@ char	*path;
 /*
 	addpath		Create a new path by adding a file to an path
 */
-static addpath(newpath,oldpath,file)
+static void addpath(newpath,oldpath,file)
 char	*newpath, *oldpath, *file;
 {
 	if ( oldpath[0] )
@@ -2759,14 +2906,14 @@ char	*mode;
 }
 #endif /* unix */
 
-static putmessage(message)
+static void putmessage(message)
 char *message;
 {
 	strcpy(screen_message,message);
 	sound_alarm = 1;
 }
 
-static load_native_path()
+static void load_native_path()
 {
 	char	buff[256];
 	int4	mode;
@@ -2814,15 +2961,15 @@ int	len;
 /*
 	wsb_init	Initialize the screen buffer
 */
-static wsb_init(wsb)
-char	wsb[SCREENSIZE];
+static void wsb_init(wsb)
+char	wsb[WSB_LENGTH];
 {
-	memset(wsb,' ',SCREENSIZE);
+	memset(wsb,' ',WSB_LENGTH);
 	wsb_init_oa(wsb);
 }
 
-static wsb_init_oa(wsb)
-char	wsb[SCREENSIZE];
+static void wsb_init_oa(wsb)
+char	wsb[WSB_LENGTH];
 {
 	wsb[0] = (char)1;
 	wsb_init_wcc(wsb);
@@ -2830,24 +2977,24 @@ char	wsb[SCREENSIZE];
 	wsb[3] = (char)0;
 }
 
-static wsb_init_wcc(wsb)
-char	wsb[SCREENSIZE];
+static void wsb_init_wcc(wsb)
+char	wsb[WSB_LENGTH];
 {
-	wsb[1] = (char)POSITION_CURSOR|UNLOCK_KEYBOARD;
+	wsb[1] = ((char)POSITION_CURSOR)|((char)UNLOCK_KEYBOARD);
 }
 
 /*
 	save_oa_pos	Save the order area cursor position
 */
 static int save_oa_pos(wsb,curpos)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 char	curpos[2];
 {
 	memcpy(curpos,&wsb[2],2);
 	return(0);
 }
 static int restore_oa_pos(wsb,curpos)
-char	wsb[SCREENSIZE];
+char	wsb[WSB_LENGTH];
 char	curpos[2];
 {
 	memcpy(&wsb[2],curpos,2);
@@ -2874,8 +3021,8 @@ int	row,col;
 	wsb_put_text	Put a character string into a 1924 byte screen buffer.
 			Row and Col are one based.
 */
-static wsb_put_text(wsb, row, col, len, text)
-char 	wsb[SCREENSIZE]; 
+static void wsb_put_text(wsb, row, col, len, text)
+char 	wsb[WSB_LENGTH]; 
 int 	row, col, len; 
 char 	*text;
 {
@@ -2890,8 +3037,8 @@ char 	*text;
 	wsb_get_text	Get a character string from a 1924 byte screen buffer.
 			Row and Col are one based.
 */
-static wsb_get_text(wsb, row, col, len, text)
-char 	wsb[SCREENSIZE]; 
+static void wsb_get_text(wsb, row, col, len, text)
+char 	wsb[WSB_LENGTH]; 
 int 	row, col, len; 
 char 	*text;
 {
@@ -2905,8 +3052,8 @@ char 	*text;
 	wsb_put_field	Put a field into the screen buffer at the given location with the given fac.
 			Row and Col are one based.
 */
-static wsb_put_field(wsb, row, col, len, text, fac)
-char 	wsb[SCREENSIZE]; 
+static void wsb_put_field(wsb, row, col, len, text, fac)
+char 	wsb[WSB_LENGTH]; 
 int 	row, col, len; 
 char 	*text;
 char	fac;
@@ -2921,7 +3068,7 @@ char	fac;
 	if (!len) len = strlen(text);
 	offset +=len;
 
-	if (col+len < 80) wsb[offset] = PLAIN_TEXT;
+	if (col+len < 80) wsb[offset] = (char)PLAIN_TEXT;
 }
 
 /*
@@ -2929,7 +3076,7 @@ char	fac;
 			Row and Col are one based.
 */
 static int wsb_get_field(wsb, row, col, len, text)
-char 	wsb[SCREENSIZE]; 
+char 	wsb[WSB_LENGTH]; 
 int 	row, col, len; 
 char 	*text;
 {
@@ -2941,20 +3088,20 @@ char 	*text;
 	return( (int)(wsb[offset-1] & 0x40) );
 }
 
-static wsb_put_tab(wsb,row,col)
-char	wsb[SCREENSIZE];
+static void wsb_put_tab(wsb,row,col)
+char	wsb[WSB_LENGTH];
 int	row, col;
 {
 	wsb_put_field(wsb,row,col,1,"-",(char)NUMPROT_FIELD);
 }
 
-static wsb_message(wsb)
-char	wsb[SCREENSIZE];
+static void wsb_message(wsb)
+char	wsb[WSB_LENGTH];
 {
 	wsb_put_field(wsb,2,2,0,screen_message,BOLD_TEXT);
 }
 
-static wsb_build_filespec(wsb,vol,lib,file,filepath,style,mod,startrow)
+static void wsb_build_filespec(wsb,vol,lib,file,filepath,style,mod,startrow)
 char	*wsb, *vol, *lib, *file, *filepath;
 int	style, mod, startrow;
 {
@@ -2964,8 +3111,8 @@ int	style, mod, startrow;
 #ifdef unix
 		wsb_put_text (wsb,startrow,2,0,"UNIX File Specification:");
 #endif
-#ifdef MSDOS
-		wsb_put_text (wsb,startrow,2,0,"MS-DOS File Specification:");
+#ifdef MSFS
+		wsb_put_text (wsb,startrow,2,0,"MS File Specification:");
 #endif
 		break;
 	case STYLE_FILE:
@@ -2999,3 +3146,53 @@ main()
 #endif
 
 
+/*
+**	History:
+**	$Log: mngfile.c,v $
+**	Revision 1.18  1998-01-09 14:43:49-05  gsl
+**	Change the way long volume mapping is truncated. Was on the right now on
+**	the left.  I think its more important to see the end of the filepath.
+**
+**	Revision 1.17  1997-12-18 09:11:47-05  gsl
+**	change wsh_protprnt(0) with screen_print()
+**
+**	Revision 1.16  1997-12-17 13:24:02-05  gsl
+**	In the popen commands quoted all the filenames
+**
+**	Revision 1.15  1997-10-23 16:14:21-04  gsl
+**	change vdisplay() to link_display()
+**
+**	Revision 1.14  1997-09-30 14:07:35-04  gsl
+**	Add support for pfkeys12()
+**
+**	Revision 1.13  1997-07-29 14:55:16-04  gsl
+**	Add the new magic number of I3 and I4 micro focus files.
+**
+**	Revision 1.12  1996-10-08 20:22:34-04  gsl
+**	replace getenv() with weditorexe()
+**
+**	Revision 1.11  1996-09-10 10:54:58-07  gsl
+**	Change to using wisphomedir()
+**
+**	Revision 1.10  1996-08-19 10:03:33-07  gsl
+**	Fix a section of code for NT which used inode numbers which are
+**	not reliable for directoies
+**
+**	Revision 1.9  1996-07-03 16:28:22-07  gsl
+**	Fix includes and prototypes and reuse unix and/or msdos code for NT
+**
+**	Revision 1.8  1995-06-13 06:34:13-07  gsl
+**	fix compiler warnings
+**
+ * Revision 1.7  1995/04/25  09:53:13  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.6  1995/04/17  11:46:32  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.5  1995/03/10  16:46:29  gsl
+ * fixed headers
+ *
+**
+**
+*/

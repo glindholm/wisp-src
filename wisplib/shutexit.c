@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -17,9 +19,17 @@
 
 #include "idsistd.h"
 
-shutexitcobol(exit_code)			
-int exit_code;
+void shutexitcobol(int exit_code)			
 {
 	exit(exit_code);
 }
 
+/*
+**	History:
+**	$Log: shutexit.c,v $
+**	Revision 1.9  1996-08-19 18:32:56-04  gsl
+**	drcs update
+**
+**
+**
+*/

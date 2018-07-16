@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -30,6 +32,7 @@
 
 */
 
+#include <stdio.h>
 #include <ctype.h> 
 #include <varargs.h>
 
@@ -37,6 +40,7 @@
 #include "movebin.h"
 #include "werrlog.h"
 #include "cobrun.h"
+#include "wisplib.h"
 
 void SORTLINK(va_alist)						                        /* Function uses variable arguments.	*/
 va_dcl											/* Parameter declaration.     		*/
@@ -315,10 +319,7 @@ static int4	sort_dummy;							/* Dummy sortcode				*/
 	SORTINFO	This routine is used to pass extra info to the routines SORTLINK and SORTCALL.
 			If not called they will default to filetype="I" (INDEXED).
 */
-void SORTINFO(filetype,recsize,sortcode)
-char	*filetype;
-int4	*recsize;
-int4	*sortcode;
+void SORTINFO(char* filetype, int4* recsize, int4* sortcode)
 {
 	sort_filetype = *filetype;
 
@@ -333,10 +334,7 @@ int4	*sortcode;
 	getsortinfo	This routine is call by SORTCALL and SORTLINK to get the extra info supplied by SORTINFO.
 			It can only be called once, then it will reset the variable to an uninitialized state.
 */
-getsortinfo(filetype,recsize,sortcode_ptr)
-char	*filetype;
-int4	*recsize;
-int4	**sortcode_ptr;
+void getsortinfo(char* filetype, int4* recsize, int4** sortcode_ptr)
 {
 	if (' ' == sort_filetype)
 	{
@@ -355,3 +353,12 @@ int4	**sortcode_ptr;
 	sort_recsize = 0;
 	sort_sortcode_ptr = &sort_dummy;
 }
+/*
+**	History:
+**	$Log: sortlink.c,v $
+**	Revision 1.8  1996-08-19 18:32:58-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -56,3 +60,12 @@
 char *vkeymap_path();
 
 #endif /* vkeymap_H */
+/*
+**	History:
+**	$Log: vkeymap.h,v $
+**	Revision 1.6  1996-10-11 18:16:07-04  gsl
+**	drcs update
+**
+**
+**
+*/

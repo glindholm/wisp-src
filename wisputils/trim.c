@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -20,7 +22,7 @@
 
 /*						Static data									*/
 
-FILE *fopen(), *in;										/* Reference input and output.	*/
+FILE *in;											/* Reference input and output.	*/
 int out;
 
 #define OUTPUT_BUFFER_SIZE	32768
@@ -173,3 +175,12 @@ static wflush()										/* flush WISP output buffer		*/
 	}
 	fo_cnt = 0;
 }
+/*
+**	History:
+**	$Log: trim.c,v $
+**	Revision 1.8  1996-07-23 14:13:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

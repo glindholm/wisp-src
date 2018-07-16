@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
@@ -135,6 +137,7 @@ int	*total_lines, *wisp_lines;								/* line counters		*/
 		printf("%%LINECOUNT-I-FILE %s (lines: %d; comments: %d; COBOL: %d)\n",
 			file_name, *total_lines, *total_lines - *wisp_lines, *wisp_lines);
 	}
+	return(1);
 }
 
 /********************************************************************************************************************************
@@ -151,3 +154,12 @@ int trim(string) char string[];									/* Trim trailing blanks.	*/
 	}
 	return(i+1);										/* Return string length.	*/
 }
+/*
+**	History:
+**	$Log: linecnt.c,v $
+**	Revision 1.8  1996-07-23 14:12:54-04  gsl
+**	drcs update
+**
+**
+**
+*/

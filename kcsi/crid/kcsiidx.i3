@@ -1,0 +1,9 @@
+IN kcsiidx
+IE
+IT I0
+PK (0:11:CHARTYPE)
+AK (11:11:CHARTYPE)
+ON kcsii3
+OE
+OT I3
+OF 75

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -36,21 +38,25 @@
 key_t wftok(file)									/* WISP ftok				*/
 char *file;
 {
-	key_t myftok(), ftok();
-#ifdef _AIX
+#ifdef AIX
+	static key_t myftok(char *file, char x);
 	return( myftok(file,0xd5) );
 #else
-	return( ftok(file,0xd5) );
+#ifdef SCO
+	return( ftok(file,(char)0xd5) );
+#else
+	return( ftok(file,(int)0xd5) );
+#endif
 #endif
 }
 
-#ifdef _AIX
+#ifdef AIX
 /*
 	myftok()	Local ftok()
 */
-static key_t myftok(file,x)								/* For IBM - generate unique numbers.	*/
-char *file;										/* Replaces FTOK (system one doesn't	*/
-char x;											/*  work properly for IBM.)		*/
+static key_t myftok(char *file,char x)							/* For IBM - generate unique numbers.	*/
+											/* Replaces FTOK (system one doesn't	*/
+											/*  work properly for IBM.)		*/
 {
 	struct stat buf;
 	int	rc;
@@ -63,5 +69,14 @@ char x;											/*  work properly for IBM.)		*/
 	if (buf.st_ino&0xff000000) printf("warning %08x\n",buf.st_ino);
 	return (key_t)(((key_t)x<<24)|(buf.st_ino&0x00ffffff));
 }
-#endif /* _AIX */
+#endif /* AIX */
 #endif /* unix */
+/*
+**	History:
+**	$Log: wftok.c,v $
+**	Revision 1.6  1996-08-19 18:33:16-04  gsl
+**	drcs update
+**
+**
+**
+*/

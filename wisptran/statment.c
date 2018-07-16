@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -21,9 +23,14 @@
 **
 */
 
+#include <string.h>
 #include "token.h"
 #include "node.h"
 #include "lines.h"
+#include "statment.h"
+#include "tokenize.h"
+#include "proto.h"
+#include "ring.h"
 
 /*
 **	Routine:	get_statement()
@@ -53,7 +60,7 @@
 **	06/01/93	Added IDCOMMENT special case. GSL
 **
 */
-NODE get_statement()
+NODE get_statement(void)
 {
 	NODE	start_node, curr_node, temp_node;
 	TOKEN	*tokptr;
@@ -160,7 +167,7 @@ NODE get_statement()
 **	06/12/93	Added "FAC OF" and "ORDER-AREA OF" translation. GSL
 **
 */
-NODE get_verb_statement()
+NODE get_verb_statement(void)
 {
 	NODE	start_node, curr_node, temp_node;
 	TOKEN	*tokptr;
@@ -271,9 +278,27 @@ NODE get_verb_statement()
 			*/
 
 			temp_node = curr_node->next;				/* Point to the "OF" node			*/
-			curr_node->next = temp_node->next;			/* Unlink the "OF" node				*/
-			temp_node->next = NULL;
-			free_statement(temp_node);				/* Delete the "OF" node				*/
+			if (!eq_token(temp_node->token,KEYWORD,"OF"))
+			{
+				if (is_fac)
+				{
+					write_tlog(temp_node->token, "WISP",'E',"FAC-OF",
+						"Error parsing FAC OF, expecting OF found [%s]",
+						token_data(temp_node->token));
+				}
+				else
+				{
+					write_tlog(temp_node->token, "WISP",'E',"ORDER-AREA-OF",
+						"Error parsing ORDER-AREA OF, expecting OF found [%s]",
+						token_data(temp_node->token));
+				}
+			}
+			else
+			{
+				curr_node->next = temp_node->next;		/* Unlink the "OF" node				*/
+				temp_node->next = NULL;
+				free_statement(temp_node);			/* Delete the "OF" node				*/
+			}
 
 			temp_node = curr_node->next;				/* Point to the identifier node			*/
 			if (is_fac)
@@ -332,9 +357,7 @@ NODE get_verb_statement()
 **	05/26/93	Written by GSL
 **
 */
-NODE make_statement(line, the_context)
-char	*line;
-void	*the_context;
+NODE make_statement(char *line, void *the_context)
 {
 	static	int	first = 1;
 	static	char	*private_cache;
@@ -387,10 +410,7 @@ void	*the_context;
 	return( the_statement );	
 }
 
-NODE make_clause(column,clause,the_context)
-int	column;
-char	*clause;
-void	*the_context;
+NODE make_clause(int column, char *clause, void *the_context)
 {
 	char	the_line[128];
 
@@ -400,8 +420,7 @@ void	*the_context;
 	return(make_statement(the_line,the_context));
 }
 
-NODE first_node_with_token(the_tree)
-NODE the_tree;
+NODE first_node_with_token(NODE the_tree)
 {
 	NODE the_node;
 
@@ -415,14 +434,13 @@ NODE the_tree;
 	return(first_node_with_token(the_tree->next));				/* Search next					*/
 }
 
-int free_statement(start)
-NODE start;
+NODE free_statement(NODE start)
 {
 	delete_tree(start);
+	return NULL;
 }
 
-int hold_statement(start)
-NODE start;
+void hold_statement(NODE start)
 {
 	/*
 	**	THIS IS NOT FINISHED !!!
@@ -431,32 +449,30 @@ NODE start;
 	free_statement(start);
 }
 
-void delint_statement(start)
-NODE start;
+NODE delint_statement(NODE start)
 {
-	if (!start) return;
+	if (!start) return start;
 
 	delint_statement(start->down);
 	delint_statement(start->next);
 
-	if (!start->token) return;
+	if (!start->token) return start;
 
 	if (lint_token(start->token))
 	{
 		free_token_from_node(start);
 	}
-	return;
+	return start;
 }
 
-void strip_statement(start)
-NODE start;
+NODE strip_statement(NODE start)
 {
-	if (!start) return;
+	if (!start) return start;
 
 	strip_statement(start->down);
 	strip_statement(start->next);
 
-	if (!start->token) return;
+	if (!start->token) return start;
 
 	if (lint_token(start->token) || COMMENT == start->token->type)
 	{
@@ -472,18 +488,17 @@ NODE start;
 		}
 		start->token->context = NULL;
 	}
-	return;
+	return start;
 }
 
-void decontext_statement(start)
-NODE start;
+NODE decontext_statement(NODE start)
 {
-	if (!start) return;
+	if (!start) return start;
 
 	decontext_statement(start->down);
 	decontext_statement(start->next);
 
-	if (!start->token) return;
+	if (!start->token) return start;
 
 	start->token->absline = 0;
 	start->token->line = 0;
@@ -493,5 +508,14 @@ NODE start;
 	}
 	start->token->context = NULL;
 
-	return;
+	return start;
 }
+/*
+**	History:
+**	$Log: statment.c,v $
+**	Revision 1.7  1996-08-30 21:56:09-04  gsl
+**	drcs update
+**
+**
+**
+*/

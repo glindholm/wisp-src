@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -17,6 +19,7 @@
 #include "keylist.h"
 #include "token.h"
 #include "node.h"
+#include "statment.h"
 
 char *next_filler();
 
@@ -26,6 +29,12 @@ NODE working_storage_section();
 NODE linkage_section();
 
 NODE parse_data_description();
+
+void unexpected_eof(char *location)
+{
+	write_log("WISP",'F',"EOF","Unexpected End-Of-File in %s.",location);
+	exit_with_err();
+}
 
 /*
 **	Routine:	working_storage_section()
@@ -85,6 +94,8 @@ NODE the_statement;
 
 	the_statement = parse_data_description(NULL);
 
+	if (!the_statement) unexpected_eof("WORKING-STORAGE SECTION");
+
 	if (eq_token(the_statement->next->token,KEYWORD,"LINKAGE") ||
 	    eq_token(the_statement->next->token,KEYWORD,"PROCEDURE")  )
 	{
@@ -93,7 +104,7 @@ NODE the_statement;
 		**	Perform any end logic.
 		*/
 
-		gen_screens();
+		gen_screen_storage();
 
 		return(the_statement);
 	}
@@ -155,6 +166,8 @@ NODE the_statement;
 
 	the_statement = parse_data_description(NULL);
 
+	if (!the_statement) unexpected_eof("LINKAGE SECTION");
+
 	if (eq_token(the_statement->next->token,KEYWORD,"PROCEDURE"))
 	{
 		return(the_statement);
@@ -194,6 +207,7 @@ get_next_statement:
 	else
 	{
 		the_statement = get_statement();				/* Load the statement				*/
+		if (!the_statement) return(the_statement);
 	}
 
 	was_level77 = 0;
@@ -440,13 +454,16 @@ get_next_statement:
 
 		if (!next_statement)
 		{
-			next_statement = get_statement();			/* Load the next statement			*/
+			next_statement = get_statement();				/* Load the next statement		*/
 		}
-		temp_node = next_statement->next;				/* Point to first significant token		*/
-		next_level = 0;							/* Default to next level of zero		*/
-		if ( temp_node->token && NUMBER == temp_node->token->type )
+		if (next_statement)
 		{
-			sscanf(temp_node->token->data,"%d",&next_level);	/* Load the next level number			*/
+			temp_node = next_statement->next;				/* Point to first significant token	*/
+			next_level = 0;							/* Default to next level of zero	*/
+			if ( temp_node->token && NUMBER == temp_node->token->type )
+			{
+				sscanf(temp_node->token->data,"%d",&next_level);	/* Load the next level number		*/
+			}
 		}
 
 
@@ -865,3 +882,19 @@ char *next_filler()
 	return(filler);
 }
 
+/*
+**	History:
+**	$Log: wt_wsdiv.c,v $
+**	Revision 1.12  1997-08-29 18:14:17-04  gsl
+**	Fix the gen_screens() call
+**
+**	Revision 1.11  1997-08-28 17:47:06-04  gsl
+**	Don't gen_screens() if native
+**	,
+**
+**	Revision 1.10  1996-08-30 21:56:28-04  gsl
+**	drcs update
+**
+**
+**
+*/

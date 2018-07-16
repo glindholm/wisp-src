@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			    Copyright (c) 1987				*/
@@ -18,6 +20,7 @@
 #include "vdata.h"
 #include "vintdef.h"
 #include "vmenu.h"
+#include "vmodules.h"
 
 static unsigned char *save;								/* Save location.			*/
 static int move_hole = FALSE;								/* Move the button, not the hole.	*/
@@ -50,17 +53,23 @@ int gpuzzle()
 {
 	unsigned char *vsss();
 	register int i, j, k;
-	int num_key;
-	int *board_ptr;
-	int st_fl;
 	int active;
-	char c;
 
 	vdetpos(0, &row, &col, rows, cols);
 	save = vsss(row,col,rows,cols);
-	vbuffering(LOGICAL);
-	if (vscr_atr & LIGHT) { emode = BOLD; cmode = REVERSE|BOLD; umode = CLEAR; }
-	else { emode = REVERSE; cmode = CLEAR|BOLD; umode = REVERSE|BOLD; }
+	vbuffering_start();
+	if (vscr_atr & LIGHT) 
+	{ 
+		emode = VMODE_BOLD; 
+		cmode = VMODE_REVERSE|VMODE_BOLD; 
+		umode = VMODE_CLEAR; 
+	}
+	else 
+	{ 
+		emode = VMODE_REVERSE; 
+		cmode = VMODE_CLEAR|VMODE_BOLD; 
+		umode = VMODE_REVERSE|VMODE_BOLD; 
+	}
 
 	active = TRUE;
 	while(active)
@@ -74,7 +83,7 @@ int gpuzzle()
 		scramble();								/* Mix up the numbers on board.		*/
 		total_moves = 0;							/* Initialize number of moves to zero.	*/
 		display_grid();								/* Display the board grid.		*/
-		vset(CURSOR,INVISIBLE);							/* Do not display cursor.		*/
+		vset_cursor_off();							/* Do not display cursor.		*/
 
 		game_active = TRUE;							/* Initialize local parameters.		*/
 		game_over = FALSE;
@@ -111,7 +120,7 @@ int gpuzzle()
 			if (game_active && solved())					/* Check if the game was just won? 	*/
 			{
 				for (i = 0; i < 10; i++) vbell();			/* Let the bells ring.			*/
-				vtext(emode|BLINK, row+10, col, "   Winner: %3d   ", total_moves);
+				vtext(emode|VMODE_BLINK, row+10, col, "   Winner: %3d   ", total_moves);
 				game_active = FALSE;					/* Now this game is done.		*/
 				vmove(23,0);						/* Hide the cursor.			*/
 				k = vgetm();						/* Wait for a character.		*/
@@ -120,17 +129,16 @@ int gpuzzle()
 		}
 	}
 	vrss(save);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	return(SUCCESS);
 }
 
 static int display_grid()
 {
 	int i, j;
-	int n, cell;									/* Define a temp cell position.		*/
-	int *board_ptr;									/* Define a pointer to board array.	*/
+	int cell;									/* Define a temp cell position.		*/
 
-	vset(CURSOR,INVISIBLE);								/* Do not display cursor.		*/
+	vset_cursor_off();								/* Do not display cursor.		*/
 	top = row + 1;									/* Assign starting row of grid.		*/
 	left = col;									/* Assign starting column of grid.	*/
 
@@ -149,15 +157,16 @@ static int display_grid()
 	}
 	vtext(emode, row+10, col, "   Moves:  %3d   ", total_moves);
 	vmove(23,0);
+	return 0;	
 }
 
 static int scramble()									/* This routine will move backwards	*/
 {											/*  from the solved config. so that all	*/
-	int y, i;									/*  random starting configurations	*/
+	int i;										/*  random starting configurations	*/
 	time_t x;
 
 	time(&x);									/* Use time as random seed.		*/
-	rseed = x;
+	rseed = (int) x;
 
 	for (i = 0; i < 100; i++)
 	{
@@ -198,17 +207,20 @@ static int scramble()									/* This routine will move backwards	*/
 			}
 		}
 	}		
+	return 0;
 }
 
 static int random(x)									/* Random number generator of		*/
 int x;											/*  range 0-3.				*/
 {
+	long int overflow = 2147483647;
+	long int trimmer = 211327; 
 	x++;
 	rseed = rseed * 9821;
-	if (rseed < 0) 	 rseed = rseed + 2147483647;
-	rseed = rseed + 211327;
-	if (rseed < 0) 	 rseed = rseed + 2147483647;
-	x = rseed / ( 2147483647 / x );
+	if (rseed < 0) rseed = (int) ((long) rseed + overflow);
+	rseed = (int) ((long) rseed + trimmer);
+	if (rseed < 0) rseed = (int) ((long) rseed + overflow);
+	x = (int) ((long) rseed / ( overflow / (long) x ));
 
 	return(x);
 }
@@ -335,12 +347,12 @@ static int move(nrows, ncols) int nrows, ncols;
 	return(SUCCESS);
 }
 
-static int givehelp(m) int m;
+static int givehelp(void)
 {
 	struct video_menu help;
-	register int key;
+	int4 key;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Puzzle Help - Page 1 - General", 0, NULL);
 	vmenuitem(&help,"", 0, NULL);
 	vmenuitem(&help,"PF2 will rescramble the puzzle.", 0, NULL);
@@ -352,6 +364,18 @@ static int givehelp(m) int m;
 	vmenuitem(&help,"Depress any key to exit...", 0, NULL);
 
 	key = vmenugo(&help);
-	vset(CURSOR,INVISIBLE);
+	vset_cursor_off();
 	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: gpuzzle.c,v $
+**	Revision 1.10  1997-07-08 16:18:53-04  gsl
+**	change to use new video.h interface
+**
+**	Revision 1.9  1996-10-11 18:15:56-04  gsl
+**	drcs update
+**
+**
+**
+*/

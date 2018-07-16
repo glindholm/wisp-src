@@ -1,0 +1,18 @@
+000100*---------------------------------------------------------------
+000200* LINKAGE FOR THE CF-TABLE VARIOUS ACTIVITIES.
+000300*---------------------------------------------------------------
+000400 01  CF-VALUES.
+000500     05  CF-IDX                BINARY.
+000600     05  CF-NEXT-IDX           BINARY.
+000700     05  CF-SEQ-IDX            BINARY.
+000800     05  CF-MAX-ENTRY          BINARY.
+000900     05  CF-WRK-IDX            BINARY.
+001000     05  CF-ARRAY-CODE         PIC X(10).
+001100     05  CF-ACTION-CODE REDEFINES
+001200         CF-ARRAY-CODE         PIC X(10).
+001300     05  CF-MSG                PIC X(79).
+001400     05  CF-RETURN-CODE        PIC XX.
+001500     05  CF-NUMERIC-RETURN-CODE REDEFINES
+001600         CF-RETURN-CODE        PIC 99.
+001700     05  CF-DBG                PIC X.
+

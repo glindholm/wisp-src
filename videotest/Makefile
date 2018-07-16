@@ -17,48 +17,56 @@
 #
 
 CDEBUG = -g
-#CDEBUG = -O
+
+L_VIDEO = video
 
 include $(WISP)/src/port/make.include
 
+CFLAGS  = $(CFLAGS0) -I$(VIDEO_INC_DIR)
 
-OBJS = 	vtest0.o vtesta.o vtestb.o vtestc.o vtestd.o vteste.o \
-	vtestf.o vtestg.o vtesth.o vtesti.o vtestj.o vtestk.o vtestl.o   \
-	vtestm.o vtestn.o vtesto.o vtestp.o vtestq.o vtestr.o vtests.o   \
-	vtestt.o vtestu.o vtestv.o vtestw.o vtestx.o vtesty.o vtestz.o
+VTEST_EXE = vtest
 
-LIBPATHS= $(STDLIB)/libvideo.a
-LIBS= $(LIBCFLAGS) -lvideo -lm $(LIBCURSES)
 
-vtest : $(OBJS) $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+VTEST_OBJS = 	vtest0.o vtesta.o vtestb.o vtestc.o vtestd.o vteste.o \
+		vtestf.o vtestg.o vtesth.o vtesti.o vtestj.o vtestk.o vtestl.o   \
+		vtestm.o vtestn.o vtesto.o vtestp.o vtestq.o vtestr.o vtests.o   \
+		vtestt.o vtestu.o vtestv.o vtestw.o vtestx.o vtesty.o vtestz.o
 
-dump_map.o: dump_map.c  $(V)/video.h
-vtest0.o:   vtest0.c    $(V)/video.h
-vtesta.o:   vtesta.c    $(V)/video.h
-vtestb.o:   vtestb.c    $(V)/video.h
-vtestc.o:   vtestc.c    $(V)/video.h
-vtestd.o:   vtestd.c    $(V)/video.h
-vteste.o:   vteste.c    $(V)/video.h
-vtestf.o:   vtestf.c    $(V)/video.h
-vtestg.o:   vtestg.c    $(V)/video.h
-vtesth.o:   vtesth.c    $(V)/video.h
-vtesti.o:   vtesti.c    $(V)/video.h
-vtestj.o:   vtestj.c    $(V)/video.h
-vtestk.o:   vtestk.c    $(V)/video.h
-vtestl.o:   vtestl.c    $(V)/video.h
-vtestm.o:   vtestm.c    $(V)/video.h
-vtestn.o:   vtestn.c    $(V)/video.h
-vtesto.o:   vtesto.c    $(V)/video.h   $(V)/vlocal.h
-vtestp.o:   vtestp.c    $(V)/video.h
-vtestq.o:   vtestq.c    $(V)/video.h
-vtestr.o:   vtestr.c    $(V)/video.h
-vtests.o:   vtests.c    $(V)/video.h
-vtestt.o:   vtestt.c    $(V)/video.h
-vtestu.o:   vtestu.c    $(V)/video.h
-vtestv.o:   vtestv.c    $(V)/video.h
-vtestw.o:   vtestw.c    $(V)/video.h
-vtestx.o:   vtestx.c    $(V)/video.h
-vtesty.o:   vtesty.c    $(V)/video.h
-vtestz.o:   vtestz.c    $(V)/video.h
+VTEST_LIBS_PATHS = $(VIDEO_LIB_PATH)
+VTEST_LIBS_LINK = $(VIDEO_LIB_PATH) $(MATH_LINK) $(CURSES_LINK)
+
+$(VTEST_EXE): $(VTEST_OBJS) $(VTEST_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $(VTEST_OBJS) $(VTEST_LIBS_LINK)
+
+clean:
+	rm -f $(VTEST_OBJS) $(VTEST_EXE) core *~
+
+dump_map.o: dump_map.c  $(VIDEO_INC_DIR)/video.h
+vtest0.o:   vtest0.c    $(VIDEO_INC_DIR)/video.h
+vtesta.o:   vtesta.c    $(VIDEO_INC_DIR)/video.h
+vtestb.o:   vtestb.c    $(VIDEO_INC_DIR)/video.h
+vtestc.o:   vtestc.c    $(VIDEO_INC_DIR)/video.h
+vtestd.o:   vtestd.c    $(VIDEO_INC_DIR)/video.h
+vteste.o:   vteste.c    $(VIDEO_INC_DIR)/video.h
+vtestf.o:   vtestf.c    $(VIDEO_INC_DIR)/video.h
+vtestg.o:   vtestg.c    $(VIDEO_INC_DIR)/video.h
+vtesth.o:   vtesth.c    $(VIDEO_INC_DIR)/video.h
+vtesti.o:   vtesti.c    $(VIDEO_INC_DIR)/video.h
+vtestj.o:   vtestj.c    $(VIDEO_INC_DIR)/video.h
+vtestk.o:   vtestk.c    $(VIDEO_INC_DIR)/video.h
+vtestl.o:   vtestl.c    $(VIDEO_INC_DIR)/video.h
+vtestm.o:   vtestm.c    $(VIDEO_INC_DIR)/video.h
+vtestn.o:   vtestn.c    $(VIDEO_INC_DIR)/video.h
+vtesto.o:   vtesto.c    $(VIDEO_INC_DIR)/video.h   $(VIDEO_INC_DIR)/vlocal.h
+vtestp.o:   vtestp.c    $(VIDEO_INC_DIR)/video.h
+vtestq.o:   vtestq.c    $(VIDEO_INC_DIR)/video.h
+vtestr.o:   vtestr.c    $(VIDEO_INC_DIR)/video.h
+vtests.o:   vtests.c    $(VIDEO_INC_DIR)/video.h
+vtestt.o:   vtestt.c    $(VIDEO_INC_DIR)/video.h
+vtestu.o:   vtestu.c    $(VIDEO_INC_DIR)/video.h
+vtestv.o:   vtestv.c    $(VIDEO_INC_DIR)/video.h
+vtestw.o:   vtestw.c    $(VIDEO_INC_DIR)/video.h
+vtestx.o:   vtestx.c    $(VIDEO_INC_DIR)/video.h
+vtesty.o:   vtesty.c    $(VIDEO_INC_DIR)/video.h
+vtestz.o:   vtestz.c    $(VIDEO_INC_DIR)/video.h
 

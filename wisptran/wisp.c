@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1987-1997 NeoMedia Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -7,12 +9,15 @@
 			/*									*/
 			/************************************************************************/
 
+#include <stdio.h>
+
 #ifdef VMS
 #include <descrip.h>
 #endif
 
-#ifdef MSDOS
+#ifdef _MSC_VER
 #include <time.h>
+#include <process.h>
 #endif
 
 #include <string.h>
@@ -28,10 +33,14 @@
 #include "keylist.h"
 #include "directiv.h"
 #include "wmalloc.h"
+#include "input.h"
+#include "ring.h"
+#include "statment.h"
+#include "wt_procd.h"
 
 #include "wcommon.h"
+#include "wispcfg.h"
 
-static char *copyright = "(c) 1988-1993 International Digital Scientific Inc.";
 static struct tbuffer { int cpu; int x,y,z; } time_now;					/* Time reference structure.		*/
 static int cpu_time;									/* Initial CPU time.			*/
 static char *sargv[50];									/* Save the argv			*/
@@ -41,6 +50,10 @@ static int run_wisp();
 static int initialize1();
 static int initialize2();
 static int response_file();
+
+static void wisp(void);
+static void gen_txt_file(void);
+static void wisp_exit_code(char *prefix);
 
 main(argc, argv)
 int	argc;
@@ -75,10 +88,10 @@ char	*argv[];
 	{
 		wisp();
 	}
-
+	return 0;
 }
 
-gen_txt_file()
+static void gen_txt_file()
 {
 	int	lstat;
 	char	tstr[10];
@@ -88,19 +101,19 @@ gen_txt_file()
 	cnt = 0;
 	while(EOF != (lstat=get_cobol_inline()))
 	{
-		if (ptr = strchr(inline,'\n')) *ptr = (char)0;
+		if (ptr = strchr(linein,'\n')) *ptr = (char)0;
 		sprintf(tstr,"%06d",++cnt);
-		if (strlen(inline) >= 6) 
-			memcpy(inline,tstr,6);
+		if (strlen(linein) >= 6) 
+			memcpy(linein,tstr,6);
 		else
-			strcpy(inline,tstr);
+			strcpy(linein,tstr);
 
-		tput_noprocess(inline);
+		tput_noprocess(linein);
 	}
 	exit_wisp(EXIT_OK);
 }
 
-wisp()
+static void wisp(void)
 {
 	NODE	the_statement;
 
@@ -149,6 +162,7 @@ char	*reason;
 		need_to_rerun_reason = ptr;
 	}
 	need_to_rerun_flag = 1;
+	return 0;
 }
 
 static int delayed_error = 0;
@@ -156,19 +170,20 @@ static int delayed_error = 0;
 delayed_exit_with_err()
 {
 	delayed_error = 1;
+	return 0;
 }
 
 exit_with_err()
 {
 	exit_wisp(EXIT_WITH_ERR);
+	return 0;
 }
 
 exit_wisp(err)										/* exit WISP, clean up 			*/
 int err;
 {
-	int i,j,k,a,b,rc;
+	int i,j,k,a,rc;
 	c_list *tptr;									/* if not an error-exit			*/
-	char tstr[256];
 
 	if (err == EXIT_FAST) goto exit_fast;
 
@@ -179,7 +194,7 @@ int err;
 
 	if (!err && !copy_only && !data_conv) 
 	{
-		scrn_para();								/* write all the screen paragraphs	*/
+		gen_endstuff();								/* write all the screen paragraphs	*/
 	}
 
 	if (!err && !copy_only && !data_conv && (prog_cnt || lock_clear_para)) 
@@ -272,7 +287,7 @@ int err;
 		{
 			fprintf(xref_file,"FILE       LIBRARY    NATIVE FILE PATH\n");
 			fprintf(xref_file,"========   ========   ================\n");
-			while(0 == (rc = ring_pop(rcpy_list_ring,&rcpy_element)))
+			while(0 == (rc = ring_pop((ring_struct*)rcpy_list_ring,(char*)&rcpy_element)))
 			{
 				fprintf(xref_file,"%-8.8s   %-8.8s   %s\n",
 					rcpy_element.file, rcpy_element.lib, rcpy_element.native);
@@ -282,7 +297,7 @@ int err;
 		fclose(xref_file);
 	}
 
-#ifdef MSDOS
+#ifdef _MSC_VER
 	cpu_time = clock() - cpu_time;							/* Get the number of CPU "ticks".	*/
 	j = cpu_time / CLK_TCK;								/* Convert "ticks" to integer seconds.	*/
 	k = ((( cpu_time * 100 )) / CLK_TCK ) - ( j * 100 );				/* Get remainder 100ths of seconds.	*/
@@ -332,9 +347,10 @@ exit_fast:
 	if (err == EXIT_OK) exit(0);
         exit(1);
 #endif
+	return 0;
 }
 
-wisp_exit_code(prefix)
+static void wisp_exit_code(prefix)
 char *prefix;
 {
 	int	stoprun;
@@ -374,11 +390,12 @@ char *prefix;
 	else
 	{
 		tput_line		("           EXIT PROGRAM.");
+        	tput_line		("           STOP RUN.");
 	}
 	tput_blank();
 }
 
-wisp_exit_para()
+int wisp_exit_para(void)
 {
 	wisp_exit_code("");
 
@@ -388,6 +405,7 @@ wisp_exit_para()
 		tput_blank();
 		tput_line		("       END PROGRAM WISPLINK.");
 	}
+	return 0;
 }
 
 d_wisp_exit_para()
@@ -433,12 +451,95 @@ static run_wisp()									/* Execute the WISP command again	*/
 	fflush(stdout);
 	fflush(stderr);
 
+#ifdef WATCOM
+#define NOEXEC
+#endif
+
+#ifdef NOEXEC
+	special_noexec_exec(the_com);
+#else
 #ifdef VMS
 	lib$do_command(&com_desc);
 #else
 	execvp( sargv[0], sargv );
 #endif
+#endif
+
+	printf("\n%%WISP-F-NOEXEC Fatal error; EXEC failed.\n");
+	exit(-1);
+	return 0;
 }
+
+/*
+**	Routine:	special_noexec_exec()
+**
+**	Function:	Replacement for the exec() routine for machines that don't support exec.
+**
+**	Description:	WISP on occasion must rerun itself.  The Watcom compiler does not support
+**			the exec() routine.
+**			This is what we do...
+**
+**			The first instance of WISP processes normally up to the point where it
+**			must rerun itself.  It then acts as a stub which controls the repeated
+**			rerunning of itself.
+**			The first time thru it sets an environment variable to lets later instances
+**			of WISP know that a controlling stub is in place.  It then uses system()
+**			to run a second instance of WISP.  If the second instance of WISP has to
+**			rerun then it checks the env variable and sees that a stub is in place, it
+**			then exits with an exit code which tells the stub to rerun.
+**
+**	Arguments:
+**	command		The command string to pass to system().
+**
+**	Globals:	The NOEXEC_STUB environment variable.
+**
+**	Return:		It will only return if an error occurs.
+**
+**	Warnings:	None
+**
+**	History:	
+**	05/13/94	Written by GSL
+**
+*/
+#ifdef NOEXEC
+int special_noexec_exec(command)
+char	*command;
+{
+#define NOEXEC_STUB	"NOEXEC_STUB"
+#define NOEXEC_RERUN	127
+	static	char	envstr[40];
+	char	*ptr;
+
+	/*
+	**	If stub already in place then exit with rerun code.
+	*/
+	if (getenv(NOEXEC_STUB)) exit(NOEXEC_RERUN);
+
+	/*
+	**	Set self up as the noexec stub
+	*/
+	sprintf(envstr,"%s=1",NOEXEC_STUB);
+	if (putenv(envstr)) 
+	{
+		printf("\n%%WISP-F-PUTENV putenv() failed.\n");
+		return(1);
+	}
+
+	/*
+	**	Keep rerunning WISP while recieving a RERUN code.
+	*/
+	for(;;)
+	{
+		int	rc;
+		_flushall();
+		rc = spawnvp( P_WAIT, sargv[0], sargv );
+
+		if (NOEXEC_RERUN != rc) exit(rc);
+	}
+
+	return(1);
+}
+#endif
 
 #ifndef VMS
 delete( path )
@@ -454,7 +555,7 @@ char	*argv[];
 {
 	int	i;
 
-#ifdef MSDOS
+#ifdef _MSC_VER
 	cpu_time = clock();								/* Get the number of CPU "ticks".	*/
 #else		/* unix and VMS */
 	times(&time_now);								/* Get the current CPU value.		*/
@@ -472,6 +573,7 @@ char	*argv[];
 	crt_file[0][0] = 0;
 
 	for (i=0; i<MAX_SCREENS; i++) scrn_flags[i] = 0;				/* Init screen flags now.		*/
+	return 0;
 }
 
 static initialize2()									/* Perform switch specific initialize	*/
@@ -537,6 +639,7 @@ static initialize2()									/* Perform switch specific initialize	*/
 		xref_ptr->call_count = 0;
 		xref_ptr->next_list = 0;
 	}
+	return 0;
 }
 
 char *packed_decimal()
@@ -618,12 +721,14 @@ char	*argv[];
 		}
 		printf("\n");
 	}
-#ifdef DEBUG
+#ifdef TEST
 	for(i=0; i<targc; i++)
 	{
 		printf("targv[%d] = [%s]\n",i,targv[i]);
 	}
-#endif /* DEBUG */
+#endif /* TEST */
+
+	return 0;
 }
 
 #ifdef DEMO
@@ -634,21 +739,21 @@ static demo_message()
 		printf("The software converted by this copy of WISP is for evaluation purposes only\n");
 		printf("and must be destroyed upon the end of the evaluation period.\n\n");
 		printf("This program contains proprietary information that is the legal property of\n");
-		printf("International Digital Scientific Inc.\n\n");
-		printf("WISP is a trademark of International Digital Scientific Incorporated,\n");
-		printf("Valencia California.\n\n");
+		printf("NeoMedia Migrations Inc.\n\n");
+		printf("WISP is a trademark of NeoMedia Migrations Incorporated,\n");
+		printf("Fort Myers Florida USA.\n\n");
 		printf("For assistance contact:\n\n");
-		printf("                 International Digital Scientific Incorporated\n");
-		printf("                        28460 Avenue Stanford, Suite 100,\n");
-		printf("                              Valencia CA 91355\n");
-		printf("                            Phone: (805) 295-1155\n");
-		printf("                            Fax:   (805) 295-8755\n\n");
+		printf("                        NeoMedia Migrations Incorporated\n");
+		printf("                          2201 2nd Street Suite 600,\n");
+		printf("                              Fort Myers FL 33901\n");
+		printf("                            Phone: (941) 337-3434\n");
+		printf("                            Fax:   (941) 337-3668\n\n");
 
 
 		tput_scomment("*  *****  WISP Version %s  EVALUATION COPY ***** \n",WISP_VERSION);
 		tput_scomment("* \n");
 		tput_scomment("*  This program contains proprietary information that is the\n");
-		tput_scomment("*  legal property of International Digital Scientific Inc.\n");
+		tput_scomment("*  legal property of NeoMedia Migrations Inc.\n");
 		tput_scomment("*\n");
 		tput_scomment("*  This program was translated by an evaluation copy of WISP.\n");
 		tput_scomment("*  The purpose of this evaluation software is to allow the\n");
@@ -663,19 +768,19 @@ static demo_message()
 		tput_scomment("*  This converted software must be DESTROYED upon the end of\n");
 		tput_scomment("*  the evaluation period.\n");
 		tput_scomment("*\n");
-		tput_scomment("*  WISP is a trademark of International Digital Scientific Inc.,\n");
-		tput_scomment("*  Valencia California.\n");
+		tput_scomment("*  WISP is a trademark of NeoMedia Migrations Inc.,\n");
+		tput_scomment("*  Fort Myers Florida USA.\n");
 		tput_scomment("*\n");
-		tput_scomment("*  COPYRIGHT (C) 1989,1990,1991,1992,1993 by International Digital \n");
-		tput_scomment("*  Scientific Incorporated. All rights reserved.\n");
+		tput_scomment("*  COPYRIGHT (c) 1987-1995 by NeoMedia Migrations Incorporated, \n");
+		tput_scomment("*  All rights reserved.\n");
 		tput_scomment("*\n");
 		tput_scomment("*  For assistance contact:\n");
 		tput_scomment("*\n");
-		tput_scomment("*           International Digital Scientific Incorporated\n");
-		tput_scomment("*                  28460 Avenue Stanford, Suite 100,\n");
-		tput_scomment("*                        Valencia CA 91355\n");
-		tput_scomment("*                      Phone: (805) 295-1155\n");
-		tput_scomment("*                      Fax:   (805) 295-8755\n");
+		tput_scomment("*                  NeoMedia Migrations Incorporated\n");
+		tput_scomment("*                     2201 2nd Street Suite 600,\n");
+		tput_scomment("*                        Fort Myers FL 33901\n");
+		tput_scomment("*                      Phone: (941) 337-3434\n");
+		tput_scomment("*                      Fax:   (941) 337-3668\n");
 		tput_scomment("*\n");
 
 }
@@ -685,3 +790,24 @@ static demo_message()
 
 
 
+/*
+**	History:
+**	$Log: wisp.c,v $
+**	Revision 1.18  1997-09-09 17:55:48-04  gsl
+**	Change scrn_para() to gen_endstuff() as part of ACN code
+**
+**	Revision 1.17  1997-02-17 16:46:22-05  gsl
+**	Change address
+**
+**	Revision 1.16  1996-12-12 12:56:23-05  gsl
+**	Changed Devtech to NeoMedia
+**
+**	Revision 1.15  1996-10-09 09:30:49-07  gsl
+**	add include wispcfg.h
+**
+**	Revision 1.14  1996-08-30 18:56:12-07  gsl
+**	drcs update
+**
+**
+**
+*/

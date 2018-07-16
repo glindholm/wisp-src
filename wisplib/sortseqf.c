@@ -1,23 +1,47 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		sortseqf.c
+**
+**	Project:	WISP
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Sort a sequential file.
+**
+**	Routines:	
+*/
 
 #include <stdio.h>
 #ifdef unix
 #include <fcntl.h>
 #endif
+
 #include <errno.h>
-#include <memory.h>
-#include <malloc.h>
+#include <string.h>
+#include <stdlib.h>
+
+#if defined(WATCOM) || defined(_MSC_VER)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 #include "idsistd.h"
 #include "sortseqf.h"
+#include "idsisubs.h"
+#include "wisplib.h"
+#include "wispcfg.h"
+
+
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+#ifndef O_TEXT
+#define O_TEXT 0
+#endif
 
 
 /*
@@ -103,24 +127,22 @@
 
 #define DEF_SORTINDEX	5000
 #define DEF_SMALL_REC	50
-#define MAX_NUMKEYS	16
 #define MAX_ERRSIZE	256
 #define MAX_MEMSIZEK	65535
 #define MIN_MEMSIZEK	16
+
 #ifdef unix
 #define DEF_MEMSIZEK	512
-#define DEF_TMPDIR	"/tmp"
 #endif /* unix */
-#ifdef MSDOS
-#ifdef _INTELC32_
+
+#if defined (_INTELC32_) || defined (WATCOM)
 #define DEF_MEMSIZEK	256
 #endif
-#ifdef _MSC_VER
-#define DEF_MEMSIZEK	64
+
+#ifdef WIN32
+#define DEF_MEMSIZEK	512
 #endif
-#define DEF_TMPDIR	"C:\\TMP"
-#endif /* MSDOS */
-#define DEF_TMPPREFIX	"sort"
+
 #define DEF_ONE_K	1024
 #define DEF_READSIZE	1024
 #define DEF_SORTNAME	"sortseqf"
@@ -128,6 +150,8 @@
 #define BIN_NATURAL	0
 #define BIN_NORMAL	1
 #define BIN_2N2		2
+
+#define MAXPACKEDLENGTH	18
 
 typedef float 	FLOAT4;
 typedef double 	FLOAT8;
@@ -149,7 +173,7 @@ static int	g_sizerecend;							/* Global size of recend string			*/
 static int 	g_numkeys;							/* Global numkeys				*/
 static struct s_recindex **g_sortindex, **curr_sndx;				/* Ptr to table of Index to recindex 		*/
 static struct s_recindex *g_recindex, *curr_rndx;				/* Ptr to table of Index to records in memblock	*/
-static struct s_sortkeys (*g_sortkeys)[];					/* Global sortkeys				*/
+static struct s_sortkeys *g_sortkeys;						/* Global sortkeys				*/
 static int	g_errlevel;							/* Global errlevel				*/
 static FILE 	*g_errfile;							/* Global errfile				*/
 static char	*g_errbuff;							/* Global errbuff				*/
@@ -162,25 +186,28 @@ static int4	g_sortindex_size;						/* Local size of sort index table.		*/
 static int4	g_sortindex_bytes;						/* Byte size of g_sortindex			*/
 static int4	g_recindex_bytes;						/* Byte size of g_recindex			*/
 
-static int loadmem();
-static int compare();
-static int load_decimal();
-static int writemem();
-static int mergemem();
-static int reporterr();
-static int reversebytes();
-static int ssbytenormal();
-static int sizerec();
+static int loadmem( char *memblock, int4 memsize, char *infile, int f_infile, int *p_eof_infile, int *p_fully_loaded );
+static char *memchrs(char *p1, int l1, char *p2, int l2);
+static int sizerec(char *ptr, char *endptr);
+static int checklen( struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int *rc);
+static int compare( /* struct s_recindex **p1, struct s_recindex **p2 */);
+static int cmp_ascii(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_binary(struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int bintype);
+static int cmp_float(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_zonelead(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_zonetrail(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_zoneright(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_zoneleft(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
+static int cmp_packed(struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int issigned);
+static int cmp_decimal(struct s_recindex *index1, struct s_recindex *index2, int offset, int length);
 
-static int cmp_ascii();
-static int cmp_binary();
-static int cmp_float();
-static int cmp_zonelead();
-static int cmp_zonetrail();
-static int cmp_zoneright();
-static int cmp_zoneleft();
-static int cmp_packed();
-static int cmp_decimal();
+static void load_decimal(double *d, char *p, int len);
+static int writemem(char *filename, int f_file);
+static int mergemem(char *inname, int f_in, char *outname, int f_out);
+static int reporterr(int errnum, char *messstr);
+static void l_reversebytes(char *ptr, int len);
+static int ssbytenormal(void);
+
 
 /*
 	The g_sortindex is a table of pointers, each pointer points to an entry in g_recindex which is a table
@@ -204,26 +231,44 @@ static int cmp_decimal();
 
 */
 
-int sortseqf( infile, outfile, tmpdir, memsizek, filetype, recsize, recend, numkeys, sortkeys, errlevel, errfile, errbuff )
-char	*infile;								/* Input file to sort				*/
-char	*outfile;								/* Output file					*/
-char	*tmpdir;								/* Temporary directory for work files		*/
-int	memsizek;								/* Size of memory block to alloc in K		*/
-char	filetype;								/* Type of file [F-Fixed, N-Newline,V-Variable]	*/
-int	recsize;								/* Size of each record	(Fixed)			*/
-char	*recend;								/* Record terminator    (Variable)		*/
-int	numkeys;								/* Number of sort keys				*/
-struct	s_sortkeys (*sortkeys)[];						/* The sort keys				*/
-int	errlevel;								/* Error level 0-all 1-errors only		*/
-FILE	*errfile;								/* Where to report errors			*/
-char	*errbuff;								/* Store last error here  (Min 256 bytes)	*/
+/*
+**	Routine:	sortseqf()
+**
+**	Function:	Sort a sequential file
+**
+**	Description:	{Full detailed description}...
+**
+**	Arguments:
+**	infile		Input file to sort
+**	outfile		Output file					
+**	tmpdir		Temporary directory for work files		
+**	memsizek	Size of memory block to alloc in K		
+**	filetype	Type of file [F-Fixed, N-Newline,V-Variable]	
+**	recsize;	Size of each record	(Fixed)			
+**	recend;		Record terminator    (Variable)		
+**	numkeys;	Number of sort keys			
+**	sortkeys	The sort keys				
+**	errlevel;	Error level 0-all 1-errors only		
+**	errfile;	Where to report errors			
+**	errbuff;	Store last error here  (Min 256 bytes)	
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by xxx
+**
+*/
+
+int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char filetype, int recsize, char *recend, 
+		int numkeys, struct s_sortkeys sortkeys[], int errlevel, FILE *errfile, char *errbuff )
 {
-	char	*l_tmpdir;							/* Local tmpdir.				*/
+	const char* l_tmpdir = (tmpdir) ? tmpdir : wtmpdir(NULL);		/* Local tmpdir.				*/
 	int	l_memsizek;							/* Local memsizek.				*/
 	char	messstr[80];							/* Error message string buffer.			*/
 	int	i;								/* Temp loop counter index.			*/
 	int	rc;								/* Return code.					*/
-	int	pid;								/* Process id.					*/
 	char	tmpfile[80];							/* Temp filename buff				*/
 	char	mrgfile[80];							/* Merge filename buff				*/
 	char	swapfile[80];							/* Buffer used to swap the temp & merge files	*/
@@ -238,10 +283,7 @@ char	*errbuff;								/* Store last error here  (Min 256 bytes)	*/
 	int	tmpfile_active;							/* Is there data in the tmpfile.		*/
 	int	mrgfile_active;							/* Is there data in the mrgfile.		*/
 	int	fully_loaded;							/* Flag if all records have been loaded & sorted*/ 
-	char	*tdptr;								/* Pointer to TMPDIR definition.		*/
-	char	buff[256];							/* Working buffer				*/
-
-	pid = getpid();								/* Get the PID					*/
+	char*	ptr;
 
 	g_init_load = 1;							/* Initalize the loadmem() routine.		*/
 	g_init_cmp = 1;								/* Initalize the compare() routine.		*/
@@ -250,7 +292,7 @@ char	*errbuff;								/* Store last error here  (Min 256 bytes)	*/
 	mrgfile_active = 0;							/* No merge file open				*/
 
 	g_errfile = errfile;							/* Make errfile available to reporterr()	*/
-#ifdef DEBUG
+#ifdef TESTING
 	g_errfile = stderr;
 #endif
 	g_errbuff = errbuff;
@@ -275,21 +317,14 @@ char	*errbuff;								/* Store last error here  (Min 256 bytes)	*/
 	}
 	g_outfileopen = 0;
 
-
-	if (!tmpdir)								/* If no tmpdir then check TMPDIR.		*/
-	{									/* If no TMPDIR then use /tmp			*/
-		l_tmpdir = (!(tdptr = (char *)getenv("TMPDIR"))) ? DEF_TMPDIR : tdptr;
-	}
-	else l_tmpdir = tmpdir;							/* Use tmpdir because passed in.		*/
-
-#ifdef DEBUG
+#ifdef TESTING
 printf("tmpdir=%s\n\n\n\n",l_tmpdir);
 #endif
 
 	l_memsizek = (!memsizek) ? DEF_MEMSIZEK : memsizek;			/* If no memsizek then use default		*/
 	l_memsizek = (l_memsizek < MIN_MEMSIZEK) ? MIN_MEMSIZEK : l_memsizek;
 	l_memsizek = (l_memsizek > MAX_MEMSIZEK) ? MAX_MEMSIZEK : l_memsizek;
-#ifdef DEBUG
+#ifdef TESTING
 printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 #endif
 
@@ -326,7 +361,7 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	}
 	g_filetype = filetype;							/* Make filetype global				*/
 
-	if (numkeys < 1 || numkeys > MAX_NUMKEYS)				/* Validate the number of sort keys.		*/
+	if (numkeys < 1 || numkeys > SSF_MAX_NUMKEYS)				/* Validate the number of sort keys.		*/
 	{
 		sprintf(messstr,"[numkeys = %d]",numkeys);
 		return(reporterr(ERR_BADNUMKEYS,messstr));
@@ -340,60 +375,68 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 
 	for ( i=0; i<numkeys; i++)
 	{
-		if ( (*sortkeys)[i].offset < 0 )
+		if ( sortkeys[i].offset < 0 )
 		{
-			sprintf(messstr,"[key = %d, offset = %d]", i+1, (*sortkeys)[i].offset);
+			sprintf(messstr,"[key = %d, offset = %d]", i+1, (sortkeys)[i].offset);
 			return(reporterr(ERR_BADOFFSET,messstr));
 		}
 
-		if ( filetype == 'F' && (*sortkeys)[i].offset >= recsize )
+		if ( filetype == 'F' && (sortkeys)[i].offset >= recsize )
 		{
-			sprintf(messstr,"[key = %d, offset = %d, recsize = %d]", i+1, (*sortkeys)[i].offset, recsize);
+			sprintf(messstr,"[key = %d, offset = %d, recsize = %d]", i+1, (sortkeys)[i].offset, recsize);
 			return(reporterr(ERR_BADOFFSET,messstr));
 		}
 
-		if ((*sortkeys)[i].length < 1)
+		if ((sortkeys)[i].length < 1)
 		{
-			sprintf(messstr,"[key = %d, length = %d]", i+1, (*sortkeys)[i].length);
+			sprintf(messstr,"[key = %d, length = %d]", i+1, (sortkeys)[i].length);
 			return(reporterr(ERR_BADLENGTH,messstr));
 		}
 
-		if (filetype == 'F' && (*sortkeys)[i].offset + (*sortkeys)[i].length > recsize)
+		if (filetype == 'F' && (sortkeys)[i].offset + (sortkeys)[i].length > recsize)
 		{
 			sprintf(messstr,"[key = %d, offset+length = %d, recsize = %d]", i+1, 
-				(*sortkeys)[i].length+(*sortkeys)[i].offset,recsize);
+				(sortkeys)[i].length+(sortkeys)[i].offset,recsize);
 			return(reporterr(ERR_BADLENGTH,messstr));
 		}
 
-		if ( (*sortkeys)[i].offset + (*sortkeys)[i].length > g_minrecsize )	/* Set g_minrecsize			*/
+		if ( (sortkeys)[i].offset + (sortkeys)[i].length > g_minrecsize )	/* Set g_minrecsize			*/
 		{
-			g_minrecsize = (*sortkeys)[i].offset + (*sortkeys)[i].length;
+			g_minrecsize = (sortkeys)[i].offset + (sortkeys)[i].length;
 		}
 
-		if ((*sortkeys)[i].direction != KD_ASCENDING &&
-		    (*sortkeys)[i].direction != KD_DESCENDING  )
+		if ((sortkeys)[i].direction != KD_ASCENDING &&
+		    (sortkeys)[i].direction != KD_DESCENDING  )
 		{
-			sprintf(messstr,"[key = %d, direction = %d]", i+1, (*sortkeys)[i].direction);
+			sprintf(messstr,"[key = %d, direction = %d]", i+1, (sortkeys)[i].direction);
 			return(reporterr(ERR_BADDIRECTION,messstr));
 		}
-		switch((*sortkeys)[i].type)
+		switch((sortkeys)[i].type)
 		{
 		case KT_ASCII:
 			break;
 		case KT_BINARY:
 		case KT_BINARY_NORMAL:
 		case KT_BINARY_2N2:
-			if ((*sortkeys)[i].length != 2 && (*sortkeys)[i].length != 4)
+			if ((sortkeys)[i].length != 2 && (sortkeys)[i].length != 4)
 			{
-				sprintf(messstr,"[key = %d, length = %d]", i+1, (*sortkeys)[i].length);
+				sprintf(messstr,"[key = %d, length = %d]", i+1, (sortkeys)[i].length);
 				return(reporterr(ERR_BINLEN,messstr));
 			}
 			break;
 		case KT_FLOAT:
-			if ((*sortkeys)[i].length != 4 && (*sortkeys)[i].length != 8)
+			if ((sortkeys)[i].length != 4 && (sortkeys)[i].length != 8)
 			{
-				sprintf(messstr,"[key = %d, length = %d]", i+1, (*sortkeys)[i].length);
+				sprintf(messstr,"[key = %d, length = %d]", i+1, (sortkeys)[i].length);
 				return(reporterr(ERR_FLOATLEN,messstr));
+			}
+			break;
+		case KT_PACKED:
+		case KT_PACKED_UNSIGNED:
+			if ((sortkeys)[i].length > MAXPACKEDLENGTH)
+			{
+				sprintf(messstr,"[key = %d, length = %d]", i+1, (sortkeys)[i].length);
+				return(reporterr(ERR_BADLENGTH,messstr));
 			}
 			break;
 		case KT_DECIMAL:
@@ -401,11 +444,9 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 		case KT_ZONED_TRAIL:
 		case KT_ZONED_RIGHT:
 		case KT_ZONED_LEFT:
-		case KT_PACKED:
-		case KT_PACKED_UNSIGNED:
 			break;
 		default:
-			sprintf(messstr,"[key = %d, type = %d]", i+1, (*sortkeys)[i].type);
+			sprintf(messstr,"[key = %d, type = %d]", i+1, (sortkeys)[i].type);
 			return(reporterr(ERR_BADTYPE,messstr));
 			break;
 		}
@@ -416,7 +457,7 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	**	Open input file
 	*/
 
-	f_infile = open(infile,O_RDONLY,0400);					/* Open infile.					*/
+	f_infile = open(infile,O_RDONLY|O_BINARY,0400);				/* Open infile.					*/
 
 	if (f_infile == -1)
 	{
@@ -427,10 +468,20 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	g_infileopen = 1;
 	g_total_rec = 0;
 
+#ifdef OLD
 	sprintf(buff,"%s%06d.1",DEF_TMPPREFIX,pid);				/* Build temp file filename			*/
 	buildfilepath(tmpfile, l_tmpdir, buff);
 	sprintf(buff,"%s%06d.2",DEF_TMPPREFIX,pid);				/* Build merge file filename			*/
 	buildfilepath(mrgfile, l_tmpdir, buff);
+#endif /* OLD */
+
+	ptr = tempnam(l_tmpdir,"sort");
+	strcpy(tmpfile,ptr);
+	strcpy(mrgfile,ptr);
+	free(ptr);
+	
+	strcat(tmpfile, ".1");
+	strcat(mrgfile, ".2");
 
 	makepath(tmpfile);							/* Ensure the directory path exists		*/
 
@@ -446,7 +497,7 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 		memblock = (char *)malloc((size_t)memsize);
 		if ( memblock )
 		{
-#ifdef DEBUG
+#ifdef TESTING
 printf("sortseqf:memsize=%d\n",memsize);
 #endif
 			break;
@@ -480,13 +531,13 @@ printf("sortseqf:memsize=%d\n",memsize);
 	}
 	else g_sortindex_size = DEF_SORTINDEX;						/* Else use the default value.		*/
 
-#ifdef DEBUG
+#ifdef TESTING
 printf("sortseqf:g_sortindex_size=%d\n",g_sortindex_size);
 #endif
 
 	g_sortindex_bytes = sizeof(struct s_recindex *)*g_sortindex_size;		/* Calc bytes to alloc			*/
 
-#ifdef DEBUG
+#ifdef TESTING
 printf("sortseqf:g_sortindex_bytes=%d\n",g_sortindex_bytes);
 #endif
 
@@ -500,7 +551,7 @@ printf("sortseqf:g_sortindex_bytes=%d\n",g_sortindex_bytes);
 
 	g_recindex_bytes = sizeof(struct s_recindex)*g_sortindex_size;			/* Calc bytes to alloc			*/
 
-#ifdef DEBUG
+#ifdef TESTING
 printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 #endif
 
@@ -546,7 +597,7 @@ printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 				break;
 			}
 
-			f_outfile = open(outfile,O_WRONLY|O_CREAT|O_TRUNC,0666);	/* Open outfile.			*/
+			f_outfile = open(outfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0666); /* Open outfile.			*/
 
 			if (f_outfile == -1)
 			{
@@ -562,11 +613,11 @@ printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 		/*
 		**	Sort the in memory block of data
 		*/
-#ifdef DEBUG
+#ifdef TESTING
 printf("qsort: %d items\n",g_numelements);
 #endif
 
-		qsort( (char *)g_sortindex, (size_t)g_numelements, sizeof(struct s_recindex *), compare);
+		qsort( (char *)g_sortindex, (size_t)g_numelements, sizeof(struct s_recindex *), (int(*)(const void*,const void*))compare);
 
 		if ( g_cmp_rc > WARNING )
 		{
@@ -595,7 +646,7 @@ printf("qsort: %d items\n",g_numelements);
 		else if (!fully_loaded && !tmpfile_active)			/* (2) First chunk				*/
 		{
 
-			f_tmpfile = open(tmpfile,O_WRONLY|O_CREAT|O_TRUNC,0666);	/* Open tmpfile for output.		*/
+			f_tmpfile = open(tmpfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0666); /* Open tmpfile for output.		*/
 
 			if (f_tmpfile == -1)
 			{
@@ -616,7 +667,7 @@ printf("qsort: %d items\n",g_numelements);
 		}
 		else if (!fully_loaded && tmpfile_active)			/* (3) Middle chunk				*/
 		{
-			f_tmpfile = open(tmpfile,O_RDONLY,0400);			/* Open tmpfile for input.		*/
+			f_tmpfile = open(tmpfile,O_RDONLY|O_BINARY,0400);		/* Open tmpfile for input.		*/
 
 			if (f_tmpfile == -1)
 			{
@@ -624,7 +675,7 @@ printf("qsort: %d items\n",g_numelements);
 				return(reporterr(ERR_OPENINPUT,messstr));
 			}
 
-			f_mrgfile = open(mrgfile,O_WRONLY|O_CREAT|O_TRUNC,0666);	/* Open mrgfile for output.		*/
+			f_mrgfile = open(mrgfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0666); /* Open mrgfile for output.		*/
 
 			if (f_mrgfile == -1)
 			{
@@ -655,7 +706,7 @@ printf("qsort: %d items\n",g_numelements);
 		}
 		else if (fully_loaded && tmpfile_active)			/* (4) Last chunk				*/
 		{
-			f_tmpfile = open(tmpfile,O_RDONLY,0400);			/* Open tmpfile for input.		*/
+			f_tmpfile = open(tmpfile,O_RDONLY|O_BINARY,0400);		/* Open tmpfile for input.		*/
 
 			if (f_tmpfile == -1)
 			{
@@ -711,13 +762,7 @@ printf("qsort: %d items\n",g_numelements);
 			Build the sortindex and return the numelements.
 */
 
-static int loadmem( memblock, memsize, infile, f_infile, p_eof_infile, p_fully_loaded )
-char	*memblock;
-int4	memsize;
-char	*infile;
-int	f_infile;
-int	*p_eof_infile;
-int	*p_fully_loaded;
+static int loadmem( char *memblock, int4 memsize, char *infile, int f_infile, int *p_eof_infile, int *p_fully_loaded )
 {
 	static int4	memused;
 	static char	*memptr;
@@ -855,9 +900,7 @@ int	*p_fully_loaded;
 	return( 0 );
 }
 
-static char *memchrs(p1,l1,p2,l2)						/* Find substring p2 in p1.			*/
-char 	*p1, *p2;
-int  	l1, l2;
+static char *memchrs(char *p1, int l1, char *p2, int l2)			/* Find substring p2 in p1.			*/
 {
 	char	*ptr;
 
@@ -878,8 +921,7 @@ int  	l1, l2;
 	return(0);								/* Ran out of string, didn't find it.		*/
 }
 
-static int sizerec(ptr,endptr)							/* Find the size of the record.			*/
-char *ptr, *endptr;
+static int sizerec(char *ptr, char *endptr)					/* Find the size of the record.			*/
 {
 	int 	size;
 	char	*p;
@@ -910,10 +952,8 @@ char *ptr, *endptr;
 	return( size );
 
 }
-
-static int checklen(index1,index2,offset,length, rc)			/* check the length of the variable record		*/
-struct s_recindex *index1, *index2;
-int	offset, length, *rc;
+									/* check the length of the variable record		*/
+static int checklen( struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int *rc)
 {
 	int 	end, len1, len2;
 
@@ -957,8 +997,7 @@ int	offset, length, *rc;
 
 */
 
-static int compare(p1,p2)
-struct s_recindex **p1, **p2;
+static int compare( struct s_recindex **p1, struct s_recindex **p2)
 {
 	static int bad;
 	char	messstr[80];
@@ -976,52 +1015,52 @@ struct s_recindex **p1, **p2;
 		return(0);
 	}
 
-#ifdef DEBUG2
+#ifdef TESTING2
 printf("compare(%d,%d) ",(*p1-g_recindex), (*p2-g_recindex));
 #endif
 
 	for(key=0; key<g_numkeys; key++)
 	{
-		switch((*g_sortkeys)[key].type)
+		switch((g_sortkeys)[key].type)
 		{
 		case KT_ASCII:
-			rc = cmp_ascii(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_ascii(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		case KT_BINARY:
-			rc = cmp_binary(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length,BIN_NATURAL);
+			rc = cmp_binary(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length,BIN_NATURAL);
 			break;
 		case KT_BINARY_NORMAL:
-			rc = cmp_binary(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length,BIN_NORMAL);
+			rc = cmp_binary(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length,BIN_NORMAL);
 			break;
 		case KT_BINARY_2N2:
-			rc = cmp_binary(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length,BIN_2N2);
+			rc = cmp_binary(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length,BIN_2N2);
 			break;
 		case KT_FLOAT:
-			rc = cmp_float(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_float(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		case KT_ZONED_LEAD:
-			rc = cmp_zonelead(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_zonelead(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		case KT_ZONED_TRAIL:
-			rc = cmp_zonetrail(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_zonetrail(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		case KT_ZONED_RIGHT:
-			rc = cmp_zoneright(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_zoneright(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		case KT_ZONED_LEFT:
-			rc = cmp_zoneleft(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_zoneleft(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		case KT_PACKED:
-			rc = cmp_packed(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length,1);
+			rc = cmp_packed(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length,1);
 			break;
 		case KT_PACKED_UNSIGNED:
-			rc = cmp_packed(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length,0);
+			rc = cmp_packed(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length,0);
 			break;
 		case KT_DECIMAL:
-			rc = cmp_decimal(*p1,*p2,(*g_sortkeys)[key].offset,(*g_sortkeys)[key].length);
+			rc = cmp_decimal(*p1,*p2,(g_sortkeys)[key].offset,(g_sortkeys)[key].length);
 			break;
 		default:
-			sprintf(messstr,"[key = %d, type = %d]", key+1, (*g_sortkeys)[key].type);
+			sprintf(messstr,"[key = %d, type = %d]", key+1, (g_sortkeys)[key].type);
 			g_cmp_rc = reporterr(ERR_BADTYPE,messstr);
 			bad = 1;
 			return(0);
@@ -1030,7 +1069,7 @@ printf("compare(%d,%d) ",(*p1-g_recindex), (*p2-g_recindex));
 
 		if (rc != 0)							/* If rc not zero then return			*/
 		{
-			if ( (*g_sortkeys)[key].direction == KD_DESCENDING )
+			if ( (g_sortkeys)[key].direction == KD_DESCENDING )
 			{
 				rc = 0 - rc;
 			}
@@ -1044,9 +1083,7 @@ printf("compare(%d,%d) ",(*p1-g_recindex), (*p2-g_recindex));
 /*
 	cmp_ascii:	Compare ASCII text using natural byte order.
 */
-static int cmp_ascii(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_ascii(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	int rc;
 	unsigned char	*p1, *p2;
@@ -1101,9 +1138,7 @@ int	offset, length;
 /*
 	cmp_binary:	Compare Binary data
 */
-static int cmp_binary(index1,index2,offset,length,bintype)
-struct s_recindex *index1, *index2;
-int	offset, length, bintype;
+static int cmp_binary(struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int bintype)
 {
 	static int first = 1;
 	static int bad = 0;
@@ -1155,8 +1190,8 @@ int	offset, length, bintype;
 
 		if ( !ssbytenormal() && bintype != BIN_NATURAL )
 		{
-			reversebytes((char*)&short1,sizeof(int2));
-			reversebytes((char*)&short2,sizeof(int2));
+			l_reversebytes((char*)&short1,sizeof(int2));
+			l_reversebytes((char*)&short2,sizeof(int2));
 		}
 
 		if (short1 != short2)
@@ -1177,8 +1212,8 @@ int	offset, length, bintype;
 		{
 			if ( bintype == BIN_NORMAL )
 			{
-				reversebytes((char*)&long1,sizeof(int4));
-				reversebytes((char*)&long2,sizeof(int4));
+				l_reversebytes((char*)&long1,sizeof(int4));
+				l_reversebytes((char*)&long2,sizeof(int4));
 			}
 			if ( bintype == BIN_2N2 )
 			{
@@ -1213,9 +1248,7 @@ int	offset, length, bintype;
 /*
 	cmp_float:	Compare
 */
-static int cmp_float(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_float(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	static int first = 1;
 	static int bad = 0;
@@ -1298,9 +1331,7 @@ int	offset, length;
 			{-}
 
 */
-static int cmp_zonelead(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_zonelead(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	char	*p1, *p2;
 	int 	rc;
@@ -1356,9 +1387,7 @@ int	offset, length;
 			     {-}
 
 */
-static int cmp_zonetrail(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_zonetrail(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	char	*p1, *p2;
 	int 	rc;
@@ -1413,9 +1442,7 @@ int	offset, length;
 			         (     }JKLMNOPQR )
 
 */
-static int cmp_zoneright(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_zoneright(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	char	*p1, *p2;
 	int 	rc;
@@ -1485,9 +1512,7 @@ int	offset, length;
 			         (     }JKLMNOPQR )
 
 */
-static int cmp_zoneleft(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_zoneleft(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	char	*p1, *p2;
 	int 	rc;
@@ -1555,15 +1580,13 @@ int	offset, length;
 
 
 */
-static int cmp_packed(index1,index2,offset,length,issigned)
-struct s_recindex *index1, *index2;
-int	offset, length, issigned;
+static int cmp_packed(struct s_recindex *index1, struct s_recindex *index2, int offset, int length, int issigned)
 {
 	char	*p1, *p2;
 	int 	rc;
 	int	pos1, pos2;
 	char	c1, c2;
-	char	t1[20], t2[20];
+	char	t1[MAXPACKEDLENGTH], t2[MAXPACKEDLENGTH];
 
 	if ( g_filetype != 'F' )
 	{
@@ -1635,9 +1658,7 @@ int	offset, length, issigned;
 			Embedded comas.
 			Embedded decimal point.
 */
-static int cmp_decimal(index1,index2,offset,length)
-struct s_recindex *index1, *index2;
-int	offset, length;
+static int cmp_decimal(struct s_recindex *index1, struct s_recindex *index2, int offset, int length)
 {
 	int 	rc;
 	double	d1, d2;
@@ -1687,10 +1708,7 @@ int	offset, length;
 	return( rc );
 }
 
-static load_decimal(d,p,len)
-double	*d;
-char	*p;
-int	len;
+static void load_decimal(double *d, char *p, int len)
 {
 	double	digit,lfact,rfact;
 	int	decimal, neg, lead;
@@ -1779,9 +1797,7 @@ int	len;
 	writemem:	This routine writes the contents of memblock (sorted) out to a file.
 */
 
-static int writemem(filename,f_file)
-char	*filename;
-int	f_file;
+static int writemem(char *filename, int f_file)
 {
 	int	i,rc;
 	char	messstr[80];
@@ -1811,11 +1827,7 @@ int	f_file;
 	mergemem:	Merge the sorted memblock with file f_in and write to file f_out.
 */
 
-static int mergemem(inname,f_in,outname,f_out)
-char	*inname;
-int	f_in;
-char 	*outname;
-int	f_out;
+static int mergemem(char *inname, int f_in, char *outname, int f_out)
 {
 	int	i,rc;
 	char	messstr[80];
@@ -1996,9 +2008,7 @@ int	f_out;
 			It then returns the errnum.
 */
 
-static int reporterr(errnum,messstr)
-int	errnum;									/* The error number.			*/
-char	*messstr;								/* Additional message.			*/
+static int reporterr(int errnum, char *messstr)
 {
 	char	*errptr;
 	char	buff[MAX_ERRSIZE+MAX_ERRSIZE];
@@ -2127,9 +2137,7 @@ char	*messstr;								/* Additional message.			*/
 
 
 
-static reversebytes(ptr,len)							/* Reverse the bytes.			*/
-char	*ptr;
-int	len;
+static void l_reversebytes(char *ptr, int len)						/* Reverse the bytes.			*/
 {
 	char	temp[80];
 
@@ -2141,7 +2149,7 @@ int	len;
 	}			
 }
 
-static int ssbytenormal()
+static int ssbytenormal(void)
 {
 	static int first = 1;
 	static int normal;
@@ -2173,4 +2181,32 @@ static int ssbytenormal()
 	return( normal );
 }
 
+/*
+**	History:
+**	$Log: sortseqf.c,v $
+**	Revision 1.16  1996-10-10 12:26:06-04  gsl
+**	Free ptr after call to tempnam()
+**
+**	Revision 1.15  1996-10-08 17:25:53-07  gsl
+**	replaced getenv() with wtmpdir() call
+**
+**	Revision 1.14  1996-09-26 10:14:21-07  gsl
+**	Change MAX_NUMKEYS to SSF_MAX_NUMKEYS and move to header
+**
+**	Revision 1.13  1996-09-10 08:47:05-07  gsl
+**	ensure system includes are before wisp include
+**
+**	Revision 1.12  1996-07-10 16:49:05-07  gsl
+**	Fix prototype for arg sortkey, fix the level of indirection for the arg.
+**
+**	Revision 1.11  1996-07-09 16:54:53-07  gsl
+**	Fix prototypes for NT
+**	Rework temp filename generation.
+**
+**	Revision 1.10  1996-01-02 07:35:36-08  gsl
+**	Change DEBUG --> TESTING defines
+**
+**
+**
+*/
 

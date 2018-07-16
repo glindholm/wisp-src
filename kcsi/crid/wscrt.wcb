@@ -1,0 +1,119 @@
+000100
+000200 01  CRT-FILE-STATUS                 PIC XX VALUE SPACE.
+000300
+000400 01  CRT-RELATIVE-KEY                PIC 99 VALUE 1.
+000500
+000600 01  CRT-CURSOR-POSITION.
+000700     05  CRT-COL-POS                 BINARY VALUE ZERO.
+000800     05  CRT-ROW-POS                 BINARY VALUE ZERO.
+000000 01  FILLER REDEFINES CRT-CURSOR-POSITION.
+000000     05  FILLER                      PIC X.
+000000     05  CRT-COL-POS-BYTE            PIC X.
+000000     05  FILLER                      PIC X.
+000000     05  CRT-ROW-POS-BYTE            PIC X.
+000900
+001000 01  CRT-ROW-INDEX                   PIC 99 VALUE 1.
+001100 01  CRT-COL-INDEX                   PIC 99 VALUE 1.
+001200
+002200 01  SAVE-PFKEY-CODE                 PIC 99 VALUE ZEROES.
+002400
+002500 01  PFKEY-CODE                      PIC 99 VALUE ZERO.
+002600     88  ENTER-KEY-PRESSED           VALUE ZERO.
+002700     88  PFKEY-1-PRESSED             VALUE 01.
+002800     88  PFKEY-2-PRESSED             VALUE 02.
+002900     88  PFKEY-3-PRESSED             VALUE 03.
+003000     88  PFKEY-4-PRESSED             VALUE 04.
+003100     88  PFKEY-5-PRESSED             VALUE 05.
+003200     88  PFKEY-6-PRESSED             VALUE 06.
+003300     88  PFKEY-7-PRESSED             VALUE 07.
+003400     88  PFKEY-8-PRESSED             VALUE 08.
+003500     88  PFKEY-9-PRESSED             VALUE 09.
+003600     88  PFKEY-10-PRESSED            VALUE 10.
+003700     88  PFKEY-11-PRESSED            VALUE 11.
+003800     88  PFKEY-12-PRESSED            VALUE 12.
+003900     88  PFKEY-13-PRESSED            VALUE 13.
+004000     88  PFKEY-14-PRESSED            VALUE 14.
+004100     88  HELP-KEY-PRESSED            VALUE 14.
+004200     88  PFKEY-15-PRESSED            VALUE 15.
+004300     88  PFKEY-16-PRESSED            VALUE 16.
+004400     88  END-KEY-PRESSED             VALUE 16.
+004500     88  PFKEY-17-PRESSED            VALUE 17.
+004600     88  RESTART-KEY-PRESSED         VALUE 17.
+004700     88  PFKEY-18-PRESSED            VALUE 18.
+004800     88  PFKEY-19-PRESSED            VALUE 19.
+004900     88  PFKEY-20-PRESSED            VALUE 20.
+005000     88  PFKEY-21-PRESSED            VALUE 21.
+005100     88  PFKEY-22-PRESSED            VALUE 22.
+005200     88  PFKEY-23-PRESSED            VALUE 23.
+005300     88  PFKEY-24-PRESSED            VALUE 24.
+005400     88  PFKEY-25-PRESSED            VALUE 25.
+005500     88  PFKEY-26-PRESSED            VALUE 26.
+005600     88  PFKEY-27-PRESSED            VALUE 27.
+005700     88  PFKEY-28-PRESSED            VALUE 28.
+005800     88  PFKEY-29-PRESSED            VALUE 29.
+005900     88  PFKEY-30-PRESSED            VALUE 30.
+006000     88  PFKEY-31-PRESSED            VALUE 31.
+006100     88  PFKEY-32-PRESSED            VALUE 32.
+006200
+010100 01  INITIALIZED-PFKEYS.
+010200     05  PF-1                        PIC 99 VALUE 01.
+010300     05  PF-2                        PIC 99 VALUE 02.
+010400     05  PF-3                        PIC 99 VALUE 03.
+010500     05  PF-4                        PIC 99 VALUE 04.
+010600     05  PF-5                        PIC 99 VALUE 05.
+010700     05  PF-6                        PIC 99 VALUE 06.
+010800     05  PF-7                        PIC 99 VALUE 07.
+010900     05  PF-8                        PIC 99 VALUE 08.
+011000     05  PF-9                        PIC 99 VALUE 09.
+011100     05  PF-10                       PIC 99 VALUE 10.
+011200     05  PF-11                       PIC 99 VALUE 11.
+011300     05  PF-12                       PIC 99 VALUE 12.
+011400     05  PF-13                       PIC 99 VALUE 13.
+011500     05  PF-14                       PIC 99 VALUE 14.
+011600     05  PF-15                       PIC 99 VALUE 15.
+011700     05  PF-16                       PIC 99 VALUE 16.
+011800     05  PF-17                       PIC 99 VALUE 17.
+011900     05  PF-18                       PIC 99 VALUE 18.
+012000     05  PF-19                       PIC 99 VALUE 19.
+012100     05  PF-20                       PIC 99 VALUE 20.
+012200     05  PF-21                       PIC 99 VALUE 21.
+012300     05  PF-22                       PIC 99 VALUE 22.
+012400     05  PF-23                       PIC 99 VALUE 23.
+012500     05  PF-24                       PIC 99 VALUE 24.
+012600     05  PF-25                       PIC 99 VALUE 25.
+012700     05  PF-26                       PIC 99 VALUE 26.
+012800     05  PF-27                       PIC 99 VALUE 27.
+012900     05  PF-28                       PIC 99 VALUE 28.
+013000     05  PF-29                       PIC 99 VALUE 29.
+013100     05  PF-30                       PIC 99 VALUE 30.
+013200     05  PF-31                       PIC 99 VALUE 31.
+013300     05  PF-32                       PIC 99 VALUE 32.
+013400
+013500 01  SCREEN-COMPLETE-STATUS          PIC X(1) VALUE SPACE.
+013600     88  SCREEN-IS-COMPLETE          VALUE "Y".
+013700     88  SCREEN-IS-NOT-COMPLETE      VALUE SPACE.
+013800
+013900 01  SCREEN-ERROR-STATUS             PIC X(1) VALUE SPACE.
+014000     88  SCREEN-ENTRY-ERROR          VALUE "E", "Y".
+014100     88  SCREEN-ENTRY-OK             VALUE SPACE.
+014200
+014300 01  SCREEN-STATUSES.
+014400     05  ENTRY-ERROR                 PIC X(1) VALUE "E".
+014500     05  SCREEN-COMPLETE             PIC X(1) VALUE "Y".
+014600     05  ENTRY-WARNING               PIC X(1) VALUE "W".
+014700     05  SCREEN-VALIDATED            PIC X(1) VALUE "V".
+014800
+014900 01  MESSAGE-FIELD                   PIC X(79) VALUE SPACE.
+000000
+015000 01  CRT-LOCKED-OA.
+000000     05  FILLER                      PIC X VALUE VAL01.
+000000     05  FILLER                      PIC X VALUE LOCK-KEYBOARD.
+000000     05  FILLER                      PIC XX VALUE LOW-VALUES.
+000000
+000000 01  CRT-POS-OA.
+000000     05  FILLER              PIC X VALUE VAL01.
+000000     05  FILLER              PIC X VALUE POSITION-CURSOR.
+000000     05  CRT-POS-COL-ROW.
+000000         10  CRT-POS-COL     PIC X VALUE LOW-VALUES.
+000000         10  CRT-POS-ROW     PIC X VALUE LOW-VALUES.
+000000

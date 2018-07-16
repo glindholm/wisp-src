@@ -1,60 +1,80 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		initwisp.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Initialize the WISP runtime
+**
+**	Routines:	
+**	initwisp2()	The COBOL called routine to do initialization.
+*/
 
-#ifndef unix
-#ifndef VMS
-#ifndef MSDOS
-		Error:  This will not compile as unix, VMS and MSDOS are not defined!!! 
-#endif
-#endif
+#if !(defined(unix) || defined(VMS) || defined(MSDOS) || defined(WIN32))
+
+#error	'This will not compile as unix || VMS || MSDOS || WIN32 are not defined!!!'
+#error	'This will not compile as unix || VMS || MSDOS || WIN32 are not defined!!!'
+#error	'This will not compile as unix || VMS || MSDOS || WIN32 are not defined!!!'
+
 #endif
 
+/*
+**	Includes
+*/
 
-#ifdef unix
-#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <varargs.h>
+#include <string.h>
+
+#ifdef VMS
+#include <ssdef.h>
+#endif
+
+#if defined(unix) || defined(_MSC_VER)
 #include <sys/types.h>
-void wexitsig();
-void wexitint();
-void wexitbug();
-static int license_checked();
 #endif
 
 #ifdef MSDOS
 #include <process.h>
-#include <stdlib.h>
 #include <DOS.H>
 #ifdef DMF
 #define EXT_FILEXT
 #endif /* DMF */
 #endif /* MSDOS */
 
-#include <stdio.h>
-#include <time.h>
-#include <varargs.h>
-
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wdefines.h"
 #include "wcommon.h"
 
+#include "vwang.h"
 #include "cobrun.h"
 #include "wglobals.h"
 #include "filext.h"
 #include "wperson.h"
+#include "wisplib.h"
+#include "wexit.h"
+#include "level.h"
+#include "machid.h"
+#include "wsb.h"
 
-static void license_warning();
-static int centload();
+/*
+**	Structures and Defines
+*/
 
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
 #ifdef VMS
-#include <ssdef.h>
-int wexith();										/* Declare the exit handler routine.	*/
-
 static struct {
 		int4 flink;								/* The forward link (VMS only)		*/
 		char *exproc;								/* The pointer to the proc.		*/
@@ -67,6 +87,17 @@ static uint4 status;
 #endif	/* VMS */
 
 /*
+**	Static Function Prototypes
+*/
+
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
+static int license_checked(int set);
+void license_warning(void);
+#endif
+
+
+
+/*
 	INITWISP is OLD and has been replaced by initwisp2()
 
 =================================================================
@@ -77,7 +108,7 @@ static uint4 status;
 			W-Error-Flag		int
 */
 
-initwisp()
+void initwisp(void)
 {
 	printf("\n\r %%WISP-F-INITWISP \n\r");
 	printf(" The routine \"initwisp\" is no longer in use and has \n\r");
@@ -85,7 +116,7 @@ initwisp()
 	exit(0);
 }
 
-setrunname( )
+void setrunname(void)
 {
 	printf("\n\r %%WISP-F-SETRUNNAME \n\r");
 	printf(" The routine \"setrunname\" is no longer in use and has \n\r");
@@ -93,26 +124,29 @@ setrunname( )
 	exit(0);
 }
 	
-void initwisp2(wisp_tran_version, wisp_lib_version, cobol_type, wisp_application_name, wisprunname, swap_on, err_flag)
-char	wisp_tran_version[20];								/* The TRANSLATOR version		*/
-char	wisp_lib_version[1];								/* The LIBRARY version			*/
-char	cobol_type[3];									/* The type of COBOL			*/
-char	wisp_application_name[8];							/* The name of the program		*/
-char	wisprunname[8];									/* The first appl name this run unit	*/
-int4	*swap_on;									/* Swap_on == 0 forces swaping off	*/
-int4	*err_flag;									/* Err_flag != 0 Changes error logging	*/
+void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
+		char	wisp_lib_version[1],						/* The LIBRARY version			*/
+		char	cobol_type[3],							/* The type of COBOL			*/
+		char	wisp_application_name[8],					/* The name of the program		*/
+		char	wisprunname[8],							/* The first appl name this run unit	*/
+		int4	*swap_on,							/* Swap_on == 0 forces swaping off	*/
+		int4	*err_flag)							/* Err_flag != 0 Changes error logging	*/
 {
 #define		ROUTINE		24000
 
-static  int 	already = 0;								/* Have we already done it?		*/
-	int 	i;
+	static  int 	already = 0;							/* Have we already done it?		*/
 	time_t	clock;
+	char	datestamp[40];
+
+#ifdef WATCOM
+	init_watcom();
+#endif
 
 	werrset();									/* get runtime w_err_flag override.	*/
 
 	clock = time(0);
-	werrlog(101,wisp_application_name,ctime(&clock),0,0,0,0,0,0);			/* Timestamp with application name.	*/
-
+	strcpy(datestamp, ctime(&clock));
+	datestamp[strlen(datestamp) - 1] = '\0';					/* Remove the trailing newline 		*/
 
 	if ( *wisp_lib_version != 20 &&							/* Accept 20 (2.0a-2.0f,3x)		*/
 	     *wisp_lib_version != LIBRARY_VERSION )
@@ -125,7 +159,6 @@ static  int 	already = 0;								/* Have we already done it?		*/
 
 	if (already) 									/* Already did it!			*/
 	{
-
 		if( memcmp(WISPRUNNAME,"ACULINK ",8) == 0 ||				/* Reset RUNNAME only if ACULINK	*/
 		    memcmp(WISPRUNNAME,"ACUUSING",8) == 0    )				/* 		      or ACUUSING	*/
 		{
@@ -133,6 +166,9 @@ static  int 	already = 0;								/* Have we already done it?		*/
 		}
 		memcpy(wisprunname,WISPRUNNAME,8);					/* Set the COBOL wisprunname		*/
 		setprogid(wisp_application_name);					/* Set the program id in C.		*/
+
+		wtrace("INITWISP2","ENTRY","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X] TIME=[%s]",
+		       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp(), datestamp);
 
 		return;
 	}
@@ -143,9 +179,12 @@ static  int 	already = 0;								/* Have we already done it?		*/
 
 	time(&WSTARTTIME);
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say hello.				*/
-
 	newlevel();									/* Increment the link-level		*/
+	wgetpgrp();									/* Call to Set the Process Group ID.	*/
+
+	wtrace("INITWISP2","FIRST","APPNAME=[%8.8s] LINKLEVEL=[%d] GID=[%d][0x%08X] TIME=[%s]",
+	       wisp_application_name, linklevel(), wgetpgrp(), wgetpgrp(), datestamp);
+
 
 	memcpy(WISPTRANVER,wisp_tran_version,20);					/* Get the translator version		*/
 	WISPTRANVER[20] = NULL_CHAR;
@@ -153,6 +192,11 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	memcpy(WISPRUNNAME,wisp_application_name,8);					/* Set the RUN name in C.		*/
 	memcpy(wisprunname,wisp_application_name,8);					/* Set the RUN name in COBOL.		*/
 	setprogid(wisp_application_name);						/* Set the program id name in C.	*/
+
+	if (!wbackground())
+	{
+		vwang_pre_init();							/* Determine if COBOL debugger running	*/
+	}
 
 
 	if      ( !memcmp(cobol_type,"VAX",3) )
@@ -227,7 +271,7 @@ static  int 	already = 0;								/* Have we already done it?		*/
 		w_err_flag = *err_flag;							/* Get the flag.			*/
 	}
 
-	wpload();
+	load_options();									/* Load the opt_xxxx variables		*/
 
 	if (opt_errflag_found)
 	{
@@ -247,98 +291,23 @@ static  int 	already = 0;								/* Have we already done it?		*/
 	license_warning();
 #endif
 
-#ifdef unix
-	if (!wbackground())
-	{
-		set_isdebug();								/* Determine if COBOL debugger running	*/
-	}
+#if defined(unix) || defined(WIN32)
 
-	PGRPID = wgetpgrp();								/* Set the Process Group ID.		*/
 
 	license_warning();								/* Check the WISP license		*/
 
 	saveprogdefs();									/* Save PROGLIB/PROGVOL values		*/
 
 	/*
-	**	Ignore DEATH OF CHILD signals (from submitted processes).
-	**	This is to stop the <DEFUNCT> zombie processes from occuring because of no "wait".
-	**	SIGCLD will need to be reset to SIG_DFL around a fork-exec-wait (LINK) so that the wait will work correctly.
+	**	Set up the standard wisp signal handling
 	*/
-	signal( SIGCLD, SIG_IGN );
-
-	if (opt_signalsoff)
-	{
-		signal( SIGINT,  SIG_DFL );
-		signal( SIGQUIT, SIG_DFL );
-		signal( SIGILL,  SIG_DFL );
-		signal( SIGEMT,  SIG_DFL );
-		signal( SIGBUS,  SIG_DFL );
-		signal( SIGSEGV, SIG_DFL );
-	}
-	else
-	{
-		signal( SIGINT,  wexitint );
-		signal( SIGQUIT, wexitint );
-		signal( SIGILL,  wexitbug );
-		signal( SIGEMT,  wexitbug );
-		signal( SIGBUS,  wexitbug );
-		signal( SIGSEGV, wexitbug );
-	}
-
-	if (!wbackground())
-	{
-		/*
-		**	We need to catch SIGHUP because it does not properly kill the process.
-		**	It the user closes a window the process was being sent a SIGHUP but this
-		**	was NOT killing the process, it only terminated the terminal-read with
-		**	an error.  The process then tried to report the error with a werrlog()
-		**	"Press and key to continue." box which hung the process waiting for
-		**	a response that would never come.
-		*/
-		signal( SIGHUP,  wexitsig );
-	}
+	wisp_signal_handler();
 #endif
 
 }
 
-#ifdef unix
-void wexitint(sig)
-int sig;
-{
-#undef		ROUTINE
-#define		ROUTINE		74400
 
-	signal( SIGINT,  SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	werrlog(ERRORCODE(2),sig,0,0,0,0,0,0,0);					/* User signalled interrupt.		*/
-	wexit(ERRORCODE(2));
-}
-void wexitbug(sig)
-int sig;
-{
-#undef		ROUTINE
-#define		ROUTINE		74500
-	signal( SIGINT,  SIG_IGN );
-	signal( SIGQUIT, SIG_IGN );
-	werrlog(ERRORCODE(2),sig,0,0,0,0,0,0,0);					/* Fatal signalled interrupt.		*/
-	wexit(ERRORCODE(2));
-}
-void wexitsig(sig)
-int sig;
-{
-#undef		ROUTINE
-#define		ROUTINE		74400
-	/*
-	**	This routine is only called when we want to terminate without further user interaction.
-	**	We do however what to log the signal error so we change the w_err_flag to only write to wisperr.log
-	*/
-	w_err_flag = ENABLE_LOGGING + LOG_LOGFILE;
-	werrlog(ERRORCODE(2),sig,0,0,0,0,0,0,0);					/* User signalled interrupt.		*/
-	wexit(ERRORCODE(2));
-}
-#endif
-
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 /*
 **	Routine:	license_warning()
 **
@@ -366,14 +335,11 @@ int sig;
 
 #include "wlicense.h"
 
-static void license_warning()
+void license_warning(void)
 {
+	int pfkey, currow, curcol;
+	HWSB	hWsb;
 	int	code;
-	char	sbuff[1924];
-	char	func;
-	char	lines;
-	char	termkey[2];
-	char	status[2];
 
 	if (wbackground()) return;						/* don't check in background			*/
 
@@ -387,45 +353,43 @@ static void license_warning()
 		return;
 	}
 
-	memset(sbuff,' ',1924);							/* Perpare message screen			*/
-	sbuff[0] = 1;
-	sbuff[1] = 0xc0;
-	sbuff[2] = 1;
-	sbuff[3] = 1;
+	currow = 0;
+	curcol = 0;
+	hWsb = wsb_new();
 
-	centload(sbuff,1,"****  WISP License Information  ****");
-	centload(sbuff,3,"Copyright (c) 1988,89,90,91,92,93 International Digital Scientific Inc.");
-	centload(sbuff,4,"28460 Avenue Stanford Suite 100, Valencia CA 91355  (805) 295-1155");
+	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
+	wsb_add_text(hWsb,3,0,"Copyright (c) 1988-1997 NeoMedia Technologies Inc.");
+	wsb_add_text(hWsb,4,0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
 	switch (code)
 	{
 	case LICENSE_MISSING:
-		centload(sbuff,10,"****  WARNING  ****");
-		centload(sbuff,12,"This machine has not been licensed to use the WISP runtime system.");
-		centload(sbuff,13,"Please run the wlicense program to install the WISP license.");
-		centload(sbuff,15,"****  WARNING  ****");
-		centload(sbuff,24,"Press ENTER to continue.");
+		wsb_add_text(hWsb,10,0,"****  WARNING  ****");
+		wsb_add_text(hWsb,12,0,"This machine has not been licensed to use the WISP runtime system.");
+		wsb_add_text(hWsb,13,0,"Please run the wlicense program to install the WISP license.");
+		wsb_add_text(hWsb,15,0,"****  WARNING  ****");
+		wsb_add_text(hWsb,24,0,"Press (ENTER) to continue.");
 		break;
 	case LICENSE_TIMEDOUT:
-		centload(sbuff,10,"****  TIMED OUT  ****");
-		centload(sbuff,12,"The WISP demo license for this machine has timed out.");
-		centload(sbuff,13,"Please contact I.D.S.I. at the above number for assistance.");
-		centload(sbuff,15,"****  TIMED OUT  ****");
-		centload(sbuff,24,"Press ENTER to EXIT.");
+		wsb_add_text(hWsb,10,0,"****  TIMED OUT  ****");
+		wsb_add_text(hWsb,12,0,"The WISP demo license for this machine has timed out.");
+		wsb_add_text(hWsb,13,0,"Please contact NeoMedia at the above number for assistance.");
+		wsb_add_text(hWsb,15,0,"****  TIMED OUT  ****");
+		wsb_add_text(hWsb,24,0,"Press (ENTER) to EXIT.");
 		break;
 	case LICENSE_INVALID:
 	case LICENSE_UNKNOWN:
 	default:
-		centload(sbuff,10,"****  INVALID LICENSE  ****");
-		centload(sbuff,12,"An invalid WISP runtime license has been installed on this machine.");
-		centload(sbuff,13,"Please run the wlicense program to install the correct WISP license.");
-		centload(sbuff,15,"****  INVALID LICENSE  ****");
-		centload(sbuff,24,"Press ENTER to EXIT.");
+		wsb_add_text(hWsb,10,0,"****  INVALID LICENSE  ****");
+		wsb_add_text(hWsb,12,0,"An invalid WISP runtime license has been installed on this machine.");
+		wsb_add_text(hWsb,13,0,"Please run the wlicense program to install the correct WISP license.");
+		wsb_add_text(hWsb,15,0,"****  INVALID LICENSE  ****");
+		wsb_add_text(hWsb,24,0,"Press (ENTER) to EXIT.");
 		break;
 	}
-	func = 3;
-	lines = 24;
-	vwang(&func,sbuff,lines,"A",termkey,status);				/* Display the message				*/
+	
+	wsb_display_and_read(hWsb, "001216X", &pfkey, &currow, &curcol);
+	wsb_delete(hWsb);
 
 	if (code == LICENSE_MISSING) 						/* only a warning				*/
 	{
@@ -467,53 +431,34 @@ static void license_warning()
 **
 */
 
-#ifdef unix
-static int license_checked(set)
-int	set;
+static int license_checked(int set)
 {
 	char	*ptr;
-	int	gid, gid_x;
 	char	buff[128];
-
-	gid = wgetpgrp();							/* get the Process Group ID.			*/
-
-	if (set)
-	{
-		sprintf(buff,"WISPLICENSE=%d",gid);				/* set env variable - message was displayed	*/
-		setenvstr(buff);
-		return(1);
-	}
-	else
-	{
-		if (ptr = getenv("WISPLICENSE"))				/* see if license already checked 		*/
-		{
-			sscanf(ptr,"%d",&gid_x);				/* If WISPLICENSE env var is equal to the GID	*/
-			if (gid_x == gid) return(1);				/* then license has already been checked	*/
-		}
-		return(0);							/* License has not been checked			*/
-	}
-}
-#endif /* unix */
-
-#ifdef MSDOS
-static int license_checked(set)
-int	set;
-{
-	char	*ptr;
 	char	mid[80];
-	char	buff[128];
-	int	i, len;
 
+#if defined(unix) || defined(WIN32)
+	{
+		int	gid;
+		gid = wgetpgrp();	/* get the Process Group ID.			*/
+		sprintf(mid,"%d",gid);
+	}
+#endif
+#if defined(MSDOS)
 	getmachineid(mid);							/* Get the machine id				*/
 
-	/*
-	**	Mung the machine id so can't be easily figured out by a hacker.
-	*/
-	len = strlen(mid);
-	for(i=0; i<len; i++)
 	{
-		mid[i] += 96;
+		int	i, len;
+		/*
+		**	Mung the machine id so can't be easily figured out by a hacker.
+		*/
+		len = strlen(mid);
+		for(i=0; i<len; i++)
+		{
+			mid[i] += 96;
+		}
 	}
+#endif
 
 	if (set)
 	{
@@ -530,40 +475,54 @@ int	set;
 		return(0);							/* License has not been checked			*/
 	}
 }
-#endif /* MSDOS */
+
+#endif /* unix || MSDOS || WIN32 */
 
 /*
-**	Routine:	centload()
+**	History:
+**	$Log: initwisp.c,v $
+**	Revision 1.22  1997-10-29 11:57:09-05  gsl
+**	fix cursor col position
 **
-**	Function:	To load a string into a screen map and center it on a given row.
+**	Revision 1.21  1997-10-29 11:55:39-05  gsl
+**	Changed license_warning() to use the WSB generic screen handler
 **
-**	Description:	
+**	Revision 1.20  1997-10-23 16:41:00-04  gsl
+**	FIx (ENTER) key tags
 **
-**	Input:		buff		the screen buffer
-**			row		the row number to load at
-**			mess		the message string to load
+**	Revision 1.19  1997-07-16 15:06:04-04  gsl
+**	Change the ENTRY logging into wtrace() and include more vital info
+**	including the GID and the LINKLEVEL
 **
-**	Output:		buff		the modified screen buffer
-**			
+**	Revision 1.18  1997-03-21 10:23:35-05  gsl
+**	Changed the WISPLICENSE logic for WIN32 to be the same as UNIX instead of DOC
+**	thats MSDOS
 **
-**	Return:		None
+**	Revision 1.17  1997-03-20 16:46:21-05  gsl
+**	Make license_warning() external so it can be called from wshell
 **
-**	Warnings:	No error checking is done.
+**	Revision 1.16  1997-03-17 13:22:47-05  gsl
+**	Change to NeoMedia Technologies
 **
-**	History:	05/27/92	Written by GSL
+**	Revision 1.15  1997-02-17 16:37:40-05  gsl
+**	Change address
+**
+**	Revision 1.14  1996-12-12 12:57:50-05  gsl
+**	Changed DevTech to NeoMedia
+**
+**	Revision 1.13  1996-08-22 17:24:03-07  gsl
+**	Call wgetpgrp() at start to initialize gid
+**
+**	Revision 1.12  1996-06-28 16:36:41-07  gsl
+**	Fix includes and prototypes for NT.
+**	Combine the msdos and unix code for use with NT.
+**	Update copyrights for 96
+**
+**	Revision 1.11  1995-08-25 04:26:44-07  gsl
+**	Moved the unix signal handling logic to a new routine wisp_signal_handler()
+**	and moved it into initglbs().
+**	Added the standard headers and protoized everything.
+**
+**
 **
 */
-
-static centload(buff,row,mess)
-char	buff[1924];
-int	row;
-char	*mess;
-{
-	int	col,len;
-
-	len = strlen(mess);
-	col = 40 - len/2;
-
-	memcpy(&buff[4+(row-1)*80+col],mess,len);
-}
-#endif /* unix || MSDOS */

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -11,10 +13,7 @@
 **	ACUCOBOL is defined for unix and MSDOS (when DACU defined).
 */
 
-#ifdef unix
-#define ACUCOBOL
-#endif
-#ifdef DACU
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #define ACUCOBOL
 #endif
 
@@ -26,6 +25,12 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <string.h>
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
+#include "wisplib.h"
 
 #ifdef SCO
 /*	XENIX_386  is used by ACUCOBOL for SC0 386 machines */
@@ -72,10 +77,7 @@ struct vision3_struct
 	char	keys[352];
 };
 
-int4 acuvision( path, code, field )					/* ACUCOBOL Vision file system interface		*/
-char 	*path;								/* File path						*/
-char	*code;								/* Function code					*/
-char	*field;
+int4 acuvision( char* path, char* code, void* raw_field )		/* ACUCOBOL Vision file system interface		*/
 {
 	struct	_phys_hdr phdr;						/* Struct for first header record.			*/
 	struct	_log_hdr  lhdr;						/* Struct for second header record.			*/
@@ -84,14 +86,15 @@ char	*field;
 	int	acumagic;						/* is this an acucobol indexed file			*/
 	int	i0, i1, i2;
 	int4	*size;
+	char	*field;
 	int	vision3;
 	char	buff[256];
 	short	tshort;
 
 	vision3 = 0;
 
-	size = (int4 *) field;
-
+	size = (int4 *) raw_field;
+	field = (char*) raw_field;
 
 	f = open( path, O_RDONLY );					/* Open the file					*/
 
@@ -212,3 +215,18 @@ int4 acuvision()
 
 
 
+/*
+**	History:
+**	$Log: wfvision.c,v $
+**	Revision 1.11  1997-03-12 13:24:10-05  gsl
+**	changed to use WIN32 define
+**
+**	Revision 1.10  1996-08-19 19:13:49-04  gsl
+**	Correct error introduced in 1.7
+**
+**	Revision 1.9  1996-08-19 15:33:16-07  gsl
+**	drcs update
+**
+**
+**
+*/

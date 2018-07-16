@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -36,6 +38,10 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
 #define EXT extern
 #include "wisp.h"
 #include "directiv.h"
@@ -44,8 +50,11 @@
 #include "node.h"
 #include "lines.h"
 #include "wmalloc.h"
+#include "input.h"
 
-static int handle_directives();
+static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol);
+static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol);
+static int handle_directives(char *the_line);
 
 /*
 **	Routine:	get_cobol_inline()
@@ -59,7 +68,7 @@ static int handle_directives();
 **	Arguments:	None
 **
 **	Globals:
-**	inline		The global COBOL input line buffer.
+**	linein		The global COBOL input line buffer.
 **
 **	Return:
 **	NORMAL_LINE	Line was not in conditional code, no special processing needed.
@@ -74,11 +83,11 @@ static int handle_directives();
 **	05/18/93	Written by GSL
 **
 */
-int get_cobol_inline()
+int get_cobol_inline(void)
 {
 	int	line_status;
 
-	line_status = get_cobol_line(inline,sizeof(inline));
+	line_status = get_cobol_line(linein,sizeof(linein));
 
 	if (EOF == line_status)
 	{
@@ -118,9 +127,7 @@ int get_cobol_inline()
 **	05/18/93	Written by GSL
 **
 */
-int get_cobol_line(the_line, linesize)
-char	*the_line;
-int	linesize;
+int get_cobol_line(char *the_line, int linesize)
 {
 	static int	line_status;
 	int		discard_this_line;
@@ -201,9 +208,7 @@ int	linesize;
 **	05/15/93	Written by GSL
 **
 */
-int get_next_cobol_line(the_line, linesize)
-char	*the_line;
-int	linesize;
+int get_next_cobol_line(char *the_line, int linesize)
 {
 	static 	char	split_saveline[256];					/* Save rest of line until next time.		*/
 	static	int	split_line_status = NORMAL_LINE;			/* Save line_status until next time.		*/
@@ -682,6 +687,9 @@ int	linesize;
 		postcopy_line_status = line_status;
 	}
 
+	strcpy(cpy_file,file_name);						/* Save the file name too.			*/
+	strcpy(cpy_lib, library_name);						/* Save it.					*/
+
 	gen_native_copybooks(wcb_copybook, lib_copybook, libopen_copybook, file_name, library_name, volume_name);
 
 	parse_step = 1;								/* Reset the parse_step to look for COPY	*/
@@ -743,11 +751,7 @@ int	linesize;
 **	05/13/93	Written by GSL
 **
 */
-int get_conditional_cobol_line(the_line, linesize, the_file, copy_within_conditional_code)
-char	*the_line;
-int	linesize;
-A_file	*the_file;
-int	copy_within_conditional_code;
+int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, int copy_within_conditional_code)
 {
 #define WANG_CODE	1
 #define VAX_CODE	2
@@ -1010,13 +1014,10 @@ int	copy_within_conditional_code;
 **	05/13/93	Written by GSL
 **
 */
-int get_clean_cobol_line(the_line,linesize,the_file)
-char	*the_line;
-int	linesize;
-A_file	*the_file;
+int get_clean_cobol_line(char *the_line, int linesize, A_file *the_file)
 {
+#ifdef unix
 extern	int	errno;
-#if defined(unix) || defined(MSDOS)
 extern	int	sys_nerr;
 extern	char	*sys_errlist[];
 #endif
@@ -1032,7 +1033,7 @@ extern	char	*sys_errlist[];
 			return EOF;						/* Return EOF					*/
 		}
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSDOS) || defined(WINNT)
 		if (errno > sys_nerr)						/* Error occured, report it			*/
 		{
 			ptr = sys_errlist[errno];
@@ -1078,9 +1079,10 @@ extern	char	*sys_errlist[];
 **
 **	Description:	This routine generates the native filepath for copybooks from the
 **			Wang style names.
-**			On VAX the name used in the COPY statement may be different then
-**			the name used to open the file.  This happens if we were requested
-**			to pre-translate the logicals.
+**			The name used in the COPY statement may be different then
+**			the name used to open the file.  On VMS this happens if we were requested
+**			to pre-translate the logicals, and on UNIX if the -P prefixpath option
+**			is used.
 **
 **	Arguments:
 **	wcb		The native wcb filepath to generate.
@@ -1091,9 +1093,8 @@ extern	char	*sys_errlist[];
 **	vol		Wang style volume name  (NOT USED)
 **
 **	Globals:
-**	cpy_file
-**	cpy_lib
-**	cli_ildir
+**	cli_ildir	/INLIB	-I path
+**	cli_prefixpath		-P prefixpath
 **	trans_lib
 **	t_desc
 **	r_desc
@@ -1104,8 +1105,24 @@ extern	char	*sys_errlist[];
 **
 **	History:	
 **	05/15/93	Written by GSL
+**	05/17/94	Split into osd routines and added the -P logic. GSL
 **
 */
+static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol)
+{
+	write_log("WISP",'I',"COPYBOOK", "file=%s lib=%s vol=%s",file,lib,vol);
+
+	if (!lib[0] && !cli_ildir[0])
+	{
+		write_log("WISP",'I',"NOINLIB","No INLIB specified for COPY %s.",file);
+	}
+
+	osd_gen_native_copybooks(wcb, copy_cob, open_cob, file, lib, vol);
+
+	write_log("WISP",'I',"COPYBOOK", "wcb=%s copy_cob=%s open_cob=%s",wcb,copy_cob,open_cob);
+	return;
+}
+
 #ifdef VMS
 #include <rmsdef.h>
 #include <descrip.h>
@@ -1113,63 +1130,47 @@ static char 	template[256];
 static char 	result[256];
 $DESCRIPTOR(t_desc,template);
 $DESCRIPTOR(r_desc,result);
-#endif
 
-int gen_native_copybooks(wcb, copy_cob, open_cob, file, lib, vol)
-char	*wcb, *copy_cob, *open_cob, *file, *lib, *vol;
+static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol)
 {
 	static  char *context;
-	char	lib_list[256];
-
-	write_log("WISP",'I',"COPYBOOK", "file=%s lib=%s vol=%s",file,lib,vol);
-
-	strcpy(wcb,file);
-	strcpy(cpy_file,file);							/* Save the file name too.			*/
-	strcpy(cpy_lib, lib);							/* Save it.					*/
-
 
 	/*
 	**	Generate the WCB copybook name.
 	*/
 
-	if (lib[0])								/* Process Library name				*/
+	wcb[0] = (char)0;
+
+	if (lib[0])								/* If LIBRARY supplied use it.			*/
 	{
-		strcpy(lib_list, lib);
-#ifdef unix
-		strcpy(lib_list, "../");
-		strcat(lib_list, lib);
-		lowercase(lib_list);
-#endif
-#ifdef MSDOS
-		strcpy(lib_list, "..\\");
-		strcat(lib_list, lib);
-#endif
+		strcpy(wcb, lib);
 	}
-	else									/* No library was supplied			*/
+	else if (cli_ildir[0])							/* Use the default LIBRARY			*/
 	{
-		if (cli_ildir[0])
+		strcpy(wcb, cli_ildir);
+	}
+
+	if (wcb[0])
+	{
+		/* 
+		**	If library has no ":" or "[", it is a logical name,
+		**	so we should add a ":" as a separator.
+		*/
+		if ((strpos(wcb,":") == -1) && (strpos(wcb,"[") == -1))	
 		{
-			write_log("WISP",'I',"USEINLIB","Using INLIB for COPY %s.",file);
-			strcpy(lib_list,cli_ildir);
-		}
-		else
-		{
-			write_log("WISP",'I',"NOINLIB","No INLIB specified for COPY %s.",file);
-			lib_list[0] = (char)0;
+			strcat(wcb,":");
 		}
 	}
 
-	fparse(wcb,"wcb",lib_list);						/* Call fparse to build correct file		*/
+	strcat(wcb,file);							/* Add on the filename and extension		*/
+	strcat(wcb,".WCB");
 
-#ifndef unix
 	uppercase(wcb);								/* Make uppercase				*/
-#endif
 
 	/*
 	**	Generate the COB (.lib) copybook name
 	*/
 
-#ifdef VMS
 	strcpy(template,wcb);							/* Template has the lib:file.wcb name		*/
 	if (trans_lib)								/* Should we translate the lib.			*/
 	{									/* Before we open the output file.		*/
@@ -1186,29 +1187,138 @@ char	*wcb, *copy_cob, *open_cob, *file, *lib, *vol;
 			strcpy(result,template);  	 			/* Set up for failure.				*/
 		}
 		status = LIB$FIND_FILE_END(&context);				/* free the file context			*/
-       		stredt(template,".WCB",".LIB");					/* Change .WCB to .LIB				*/
-       		stredt(result,".WCB",".LIB");					/* Change .WCB to .LIB				*/
 	}
 	else
 	{
-       		stredt(template,".WCB",".LIB");					/* Change .WCB to .LIB				*/
 		strcpy(result,template);
 	}
 
+	stredt(template,".WCB",".LIB");						/* Change .WCB to .LIB				*/
+	stredt(result,".WCB",".LIB");						/* Change .WCB to .LIB				*/
 	strcpy(copy_cob,template);
 	strcpy(open_cob,result);
 
-#else /* unix and MSDOS */
-	strcpy(copy_cob,wcb);
-	stredt(copy_cob,".WCB",".LIB");						/* Change .WCB to .LIB				*/
-	stredt(copy_cob,".wcb",".lib");						/* Change .WCB to .LIB				*/
-	strcpy(open_cob,copy_cob);						/* copy_cob and open_cob are thr same		*/
+	return;
+}
+
+#else
+
+static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol)
+{
+	char	file_wcb[80], file_lib[80];
+	char	pathprefix[80];
+	char	*pathptr;
+
+	if (lib[0])
+	{
+		sprintf(file_wcb,"%s%s%s.wcb",lib,DSS_STR,file);
+		sprintf(file_lib,"%s%s%s.lib",lib,DSS_STR,file);
+	}
+	else
+	{
+		sprintf(file_wcb,"%s.wcb",file);
+		sprintf(file_lib,"%s.lib",file);
+	}		
+
+#ifdef unix
+	lowercase(file_wcb);
+	lowercase(file_lib);
+#endif
+#ifdef MSFS
+	uppercase(file_wcb);
+	uppercase(file_lib);
 #endif
 
-	write_log("WISP",'I',"COPYBOOK", "wcb=%s copy_cob=%s open_cob=%s",wcb,copy_cob,open_cob);
+	/*
+	**	Generate the WCB copybook name.
+	**
+	**	lib	cli_ildir	cli_prefixpath		wcb			open			copy
+	**	N	N		x			file.wcb		file.lib		file.lib
+	**	Y	x		N			../lib/file.wcb		../lib/file.lib		../lib/file.lib
+	**	N	Y		x			Ipath/file.wcb		Ipath/file.lib		Ipath/file.lib
+	**	Y	x		Y			Ppath/lib/file.wcb	Ppath/lib/file.lib	lib/file.lib
+	*/
 
-	return(0);
+	if (!lib[0] && !cli_ildir[0])
+	{
+		strcpy(wcb,file_wcb);
+		strcpy(open_cob,file_lib);
+		strcpy(copy_cob,file_lib);
+		return;
+	}
+
+	if (lib[0] && !cli_prefixpath[0])
+	{
+		sprintf(wcb,     "..%s%s",DSS_STR,file_wcb);
+		sprintf(open_cob,"..%s%s",DSS_STR,file_lib);
+		sprintf(copy_cob,"..%s%s",DSS_STR,file_lib);
+		return;
+	}
+
+	/*
+	**	If no library then search the -I path else search the -P path.
+	*/
+
+	strcpy(wcb,file_wcb);							/* Set default in case of bad path		*/
+	strcpy(pathprefix,".");							/* Set default in case of bad path		*/
+
+	if (!lib[0])
+	{
+		pathptr = cli_ildir;
+	}
+	else
+	{
+		pathptr = cli_prefixpath;
+	}
+
+	/*
+	**	Loop thru the path checking each directory until we find a match or
+	**	run out of dirs.
+	*/
+	while(*pathptr)
+	{
+		int	i;
+
+		/*
+		**	Extract the directories out of the path and into pathprefix.
+		*/
+		for(i=0; *pathptr && *pathptr != PSS_CHAR; pathptr++, i++)
+		{
+			pathprefix[i] = *pathptr;
+		}
+		pathprefix[i] = (char)0;
+		pathptr++;							/* Skip over the path seperator char		*/
+		if (0==i)
+		{
+			strcpy(pathprefix,".");					/* Empty prefix use "."				*/
+		}
+
+		sprintf(wcb,"%s%s%s",pathprefix,DSS_STR,file_wcb);
+
+		/*
+		**	Break if we find a match.
+		*/
+		if (0==access(wcb,0)) break;
+	}
+
+	sprintf(open_cob,"%s%s%s",pathprefix,DSS_STR,file_lib);
+
+	if (!lib[0])
+	{
+		sprintf(copy_cob,"%s%s%s",pathprefix,DSS_STR,file_lib);
+	}
+	else
+	{
+		/*
+		**	When using the prefixpath we don't use the full path in
+		**	the COPY statements only the lib/file.lib part.
+		*/
+		strcpy(copy_cob,file_lib);
+	}
+
+	return;
 }
+#endif
 
 /*
 **	Routine:	handle_directives()
@@ -1243,8 +1353,7 @@ char	*wcb, *copy_cob, *open_cob, *file, *lib, *vol;
 **	05/27/93	Separated from wt_io.c. GSL
 **
 */
-static int handle_directives(the_line)
-char	*the_line;
+static int handle_directives(char *the_line)
 {
 	int	i;
 	char	*ptr;
@@ -1376,6 +1485,18 @@ also failed because of addressing errors.  Additionally SUN COBOL would not comp
 		write_log("WISP",'I',"DBFILE","Next file is a DBFILE.");
 	}
 
+	if ((i = strpos(the_line,"$OPENIOEXCLUSIVEFILE")) != -1)
+	{
+		openioxfile = 1;
+		write_log("WISP",'I',"OPENIOX","Next file is OPENIOEXCLUSIVE.");
+	}
+
+	if ((i = strpos(the_line,"$OPENIOEXCLUSIVEALL")) != -1)
+	{
+		openioxall = 1;
+		write_log("WISP",'I',"OPENIOX","All files are OPENIOEXCLUSIVE.");
+	}
+
 	return 0;
 }
 
@@ -1411,8 +1532,7 @@ also failed because of addressing errors.  Additionally SUN COBOL would not comp
 static int is_held_line = 0;
 static char *the_held_lines[10];
 
-int hold_this_line(the_line)
-char	*the_line;
+int hold_this_line(char *the_line)
 {
 	the_held_lines[is_held_line] = wdupstr(the_line);
 	is_held_line++;
@@ -1445,8 +1565,7 @@ char	*the_line;
 **	05/17/93	Written by GSL
 **
 */
-int get_held_line(the_line)
-char	*the_line;
+int get_held_line(char *the_line)
 {
 	if (is_held_line)
 	{
@@ -1484,7 +1603,7 @@ char	*the_line;
 **	05/27/93	Written by GSL
 **
 */
-int held_line()
+int held_line(void)
 {
 	return(is_held_line);
 }
@@ -1492,13 +1611,23 @@ int held_line()
 
 static int end_of_input_flag = 0;
 
-int end_of_input()
+int end_of_input(void)
 {
 	return end_of_input_flag;
 }
 
-int set_end_of_input()
+int set_end_of_input(void)
 {
 	end_of_input_flag = 1;
 	return 1;
 }
+
+/*
+**	History:
+**	$Log: input.c,v $
+**	Revision 1.7  1996-08-30 21:56:03-04  gsl
+**	drcs update
+**
+**
+**
+*/

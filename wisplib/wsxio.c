@@ -1,20 +1,33 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		wsxio.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Emulate the WSXIO VSSUB.
+**
+**	Routines:	
+**	WSXIO()
+*/
 
-/*						Include required header files.							*/
+/*
+**	Includes
+*/
 
-#include <v/video.h>									/* Reference the VIDEO library.		*/
-#include <v/vlocal.h>									/* Needed for vdata.h header.		*/
-#include <v/vdata.h>									/* For enter_key and return_key defs.	*/
+#include <string.h>
+
 #include "idsistd.h"
 #include "vwang.h"									/* Reference workstation emulation.	*/
 #include "werrlog.h"
+#include "wisplib.h"
+
+/*
+**	Structures and Defines
+*/
+
 #define		ROUTINE		88000
 /*
 88001	%%WSXIO-I-ENTRY Entry into WSXIO [%c]
@@ -23,8 +36,6 @@
 88006	%%WSXIO-E-BADLEN Invalid mapping area length [%d]
 88008	%%WSXIO-E-NOTSUPP Feature not supported [%s]
 */
-
-/*						Local definitions.								*/
 
 #define OPEN 	'O'									/* Define WSXIO options - Open.		*/
 #define CLOSE 	'C'									/*			- Close.	*/
@@ -52,24 +63,16 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 	unsigned char *function;
 	unsigned char *command;
 	unsigned char *order_area;
-	uint4 *oa_length;
 	unsigned char *mapping_area;
 	uint4 *ma_length;
 	unsigned char *iosw;
 	unsigned char *timer;
 
-
-	char c, vgetc();								/* A working character.			*/
 	unsigned char vw_function[1], *vw_wsb, vw_lines[1];				/* vwang parameters.			*/
-	char oa_save[4],oa_temp[4];							/* Order area save location.		*/
-	register char *k;								/* Working pointer.			*/
 	int4	map_len;
-	int4	metachar;
-	int4	pfk;
 	uint4 timeout, l;
 	unsigned char dummy[40];							/* Dummy storage.			*/
-	unsigned char vwang_scr[2000];
-	unsigned char *tmp;
+	unsigned char vwang_scr[WSB_LENGTH+20];
 	char vw_no_mod[2];
 	unsigned char	aid_char;
 	
@@ -85,8 +88,9 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 		}
 		case CLOSE:								/* Close the workstation.		*/
 		{
-			vdefer(RESTORE);						/* Short cut, bring screen up to date.	*/
-			vshut();							/* Shut down all I/O.			*/
+			vw_function[0] = CLOSE_WORK_STATION;
+			vw_lines[0]  = (unsigned char)0;
+			vwang(vw_function,"\001\000\000\000",vw_lines,"X",NULL,NULL);
 			break;								/* And we're all done.			*/
 		}
 		case WAIT:								/* Wait for a character.		*/
@@ -94,7 +98,7 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			int4	sec100, seconds;
 
 			iosw = arg4;
-			memcpy(&sec100,arg3,4);						/* Get timeout period.			*/
+			memcpy(&sec100,arg3,sizeof(int4));				/* Get timeout period.			*/
 			wswap(&sec100);
 			if ( sec100 < 0 )						/* Less then zero means no timeout	*/
 				seconds = 0;
@@ -131,12 +135,12 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			*/
 
 			vw_function[0] = READ_MODIFIABLE;
-			memset(vwang_scr,' ',1924);
-			vwang_scr[0] = (unsigned char)1;
-			vw_lines[0]  = (unsigned char)24;
+			memset(vwang_scr,' ',WSB_LENGTH);
+			vwang_scr[OA_ROW] = (unsigned char)1;
+			vw_lines[0]  = (unsigned char)WSB_ROWS;
 			vwang_timeout(seconds);						/* Set the timer.			*/
 			vwang(vw_function,vwang_scr,vw_lines,"A",dummy,vw_no_mod);	/* Go do the I/O action.		*/
-			vwang_timeout(0L);						/* Cancel timer				*/
+			vwang_timeout((int4)0);						/* Cancel timer				*/
 
 			aid_char = vwang_aid();						/* Get the current AID char		*/
 			if (aid_char != AID_UNLOCKED)					/* If keyboard is locked then		*/
@@ -156,7 +160,7 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			command = arg3;
 			order_area = arg4;
 
-			memcpy(&l,arg5,4);
+			memcpy(&l,arg5,sizeof(int4));
 			wswap(&l);
 			if ( l == 4 )
 			{
@@ -190,24 +194,23 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 			default: 
 				werrlog(ERRORCODE(2),(int)(command[0]),0,0,0,0,0,0,0);
 				return(0);
-				break;
 			}
 
-			memcpy(&map_len,ma_length,4);					/* Get the length of the mapping area.	*/
+			memcpy(&map_len,ma_length,sizeof(int4));			/* Get the length of the mapping area.	*/
 			wswap(&map_len);
-			if (map_len > 1920 || map_len < 0)				/* Validate map length			*/
+			if (map_len > (WSB_LENGTH-OA_LENGTH) || map_len < 0)		/* Validate map length			*/
 			{
 				werrlog(ERRORCODE(6),map_len,0,0,0,0,0,0,0);
 				return(0);
 			}
-			vw_lines[0] = (map_len > 0) ? (map_len / 80) : 0;		/* Determine the number of lines.	*/
+			vw_lines[0] = (map_len > 0) ? (map_len / WSB_COLS) : 0;		/* Determine the number of lines.	*/
 			vw_wsb = &vwang_scr[0];						/* Point to the mapping area.		*/
-			memcpy(vw_wsb,order_area,4);					/* Now copy the order area in.		*/
-			memcpy(&vwang_scr[4],mapping_area,(int)map_len);
+			memcpy(vw_wsb,order_area,OA_LENGTH);				/* Now copy the order area in.		*/
+			memcpy(&vwang_scr[OA_LENGTH],mapping_area,(int)map_len);
 			
 			if (function[0] == TXIO)					/* If A TIMED READ			*/
 			{
-				memcpy((char *)&timeout,(char *)timer,4);
+				memcpy((char *)&timeout,(char *)timer,sizeof(int4));
 				wswap(&timeout);
 				vwang_timeout(timeout);					/* Set the timer.			*/
 			}
@@ -216,48 +219,29 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 
 			if (command[0] == XIO_WRITE || command[0] == XIO_WRITE_SELECTED)
 			{
-				vdefer(RESTORE);					/* Bring screen up to date.		*/
+				vwang_flush();						/* Bring screen up to date.		*/
 			}
 
-			memcpy(order_area,vw_wsb,4);					/* Return the modified one.		*/
-			memcpy(mapping_area,&vwang_scr[4],(int)map_len);
+			memcpy(order_area,vw_wsb,OA_LENGTH);				/* Return the modified one.		*/
+			memcpy(mapping_area,&vwang_scr[OA_LENGTH],(int)map_len);
 
 			iosw[2] = (unsigned char)vwang_aid();				/* Assign the AID char to the IOSW	*/
 			
-			if (function[0] == TXIO) vwang_timeout(0L);			/* Clear timer if needed.		*/
+			if (function[0] == TXIO) vwang_timeout((int4)0);		/* Clear timer if needed.		*/
 			break;								/* Whew, we're done.			*/
 		}
 
 		case AID:								/* Attention ID character.		*/
 		{
 			/*
-			**	Get the last AID character.
+			**	Get the last AID character, including reading if unlocked.
+			**	This functionality used to be inline here but has been moved to vwang.
+			**
+			**	To compensate for not modelling a client/server we check to see if
+			**	there are keystrokes waiting to be read and if so we do a 1 second Wait.
 			*/
 
-			aid_char = vwang_aid();						/* Get the current AID char		*/
-			if (aid_char == AID_UNLOCKED)					/* If keyboard is unlocked then		*/
-			{
-				char	c;
-
-				/*
-				**	To compensate for not modelling a client/server we check to see if
-				**	there are keystrokes waiting to be read and if so we do a 1 second Wait.
-				*/
-
-				if (c = (char)vcheck())					/* If available get next char		*/
-				{
-					vpushc(c);					/* We got a char so push it back	*/
-
-					vw_function[0] = READ_MODIFIABLE;
-					memset(vwang_scr,' ',1924);
-					vwang_scr[0] = (unsigned char)1;
-					vw_lines[0]  = (unsigned char)24;
-					vwang_timeout(1);				/* Set the timer for 1 second.		*/
-					vwang(vw_function,vwang_scr,vw_lines,"A",dummy,vw_no_mod); /* Go do the I/O action.	*/
-					vwang_timeout(0L);				/* Cancel timer				*/
-				}
-			}
-			*arg3 = vwang_aid();						/* Return the current AID char		*/
+			*arg3 = vwang_aid_read_unlocked();
 			break;								/* Exit.				*/
 		}
 
@@ -265,8 +249,36 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 		{
 			werrlog(ERRORCODE(4),function[0],0,0,0,0,0,0,0);
 			return(0);
-			break;
 		}
 	}
 	return(0);
 }
+
+/*
+**	History:
+**	$Log: wsxio.c,v $
+**	Revision 1.13  1996-07-15 13:25:11-04  gsl
+**	Fix for NT
+**
+**	Revision 1.12  1995-04-25 02:55:09-07  gsl
+**	drcs state V3_3_15
+**
+ * Revision 1.11  1995/04/17  11:48:05  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.10  1995/03/07  11:33:44  gsl
+ * replace literals with defines
+ *
+ * Revision 1.9  1995/02/14  17:00:52  gsl
+ * remove the video includes.
+ * Move the AID function logic to vwang_aid_read_unlocked() in vwang.c
+ * and replace it with a call the this routine.
+ *
+ * Revision 1.8  1995/02/14  16:07:30  gsl
+ * Change the CLOSE function to a call vwang(CLOSE_WORK_STATION),
+ * and change a vdefer(RESTORE) to a call to vwang_flash()
+ * (thats vwang_flush())
+ *
+**
+**
+*/

@@ -1,0 +1,156 @@
+#######################################################################
+# Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+#######################################################################
+#
+# OPTIONS:	The WISP runtime options file.
+#
+#          	All of the following lines with leading '#' characters
+#		are comments.  To uncomment remove the leading '#'.
+#		The default settings are marked.
+#
+#		Not all options are meaningful to all environments, see
+#		the WISP manual for a complete description of each
+#		option.
+#
+#######################################################################
+
+# Set the error reporting level	
+#ERRFLAG 15
+
+# Turning signals off will cause a core file to be created on a
+# signal 10 or 11. (UNIX only)
+#SIGNALSON		(default)
+#SIGNALSOFF
+
+# A NULL (hex 00) usually displays as a space on the screen. 
+# To find them set NULLISDOT and they will display as a 
+# dot (.), this is useful in tracking down odd screen behavior.
+#NULLISSPACE		(default)
+#NULLISDOT
+
+# If you want WISP to never prompt you on an OPEN OUTPUT to 
+# "Press PF3 to Continue" then set OUTPUTVERIFYOFF.
+#OUTPUTVERIFYON		(default)
+#OUTPUTVERIFYOFF
+
+# If you want WISP to automatically "create" a volume when not
+# found in LGMAP then set CREATEVOLUMEON. (UNIX only)
+#CREATEVOLUMEOFF	(default)
+#CREATEVOLUMEON
+
+# WISP can use either the ILP of UNIQUE versions of the Print Queue.
+# To changed the default use one of the following options.
+#PQLP			(Use LP)
+#PQILP			(Use ILP)
+#PQUNIQUE		(Use UNIQUE - default)
+#PQNP			(Use NP the HP/UX network print)
+
+# WISP can use either the UNIQUE Batch Queue, another batch queue
+# product, or no batch queue product.
+#
+## No batch queue
+#BATCHQUEUE none	(No batch queue)
+#BATCHMAN none 		(No batch queue management tool)
+#
+## UniQue Batch Queue options
+#BATCHQUEUE usubmit	(Use UniQue usubmit to submit jobs)
+#BATCHMAN ubatchman 	(Use UniQue ubatchman to manage batch queue)
+#
+## Argent Queue Manager on Windows NT Options
+#BATCHQUEUE  AQM
+#BATCMAN     none
+#BATCHCMD    QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME% /PARAMS="%SUBPARAMS%" /LOG_FILE=%BATCHLOG% /USER=%BATCHUSER% /PASSWORD=%BATCHPASS% %SUBSTAT% /NONOTIFY
+#BATCHCMD95  REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% %BATCHCMD%
+#BATCHUSER   user
+#BATCHPASS   password
+#BATCHSERVER server
+#BATCHLOGVOL volume
+#BATCHLOGLIB library
+#BATCHHOLD   /AFTER+365
+#BATCHRUN
+
+# If you want EXTRACT to return a numeric ID instead of the alpha
+# default, then set IDNUMERIC.
+#IDALPHA		(default)
+#IDNUMERIC
+
+# If you want EXTRACT to return the 5-7 characters instead of
+# the 1-3 default, then set IDFIVE.
+#IDONE			(default)
+#IDFIVE
+
+# WISP normally filters out "fatal" file status codes and causes an
+# "error getparm" EVEN when the user has supplied DECLARATIVES. 
+# If you specify ALLSTATUSKEYS then WISP will pass all status codes
+# through to the users DECLARATIVES when present.
+#ALLSTATUSKEYS
+
+# WISP defaults to a maximum of 128 PRBs (putparms) and uses a shared
+# memory size of 40 pages (page size is 512 bytes).  You can adjust
+# these values to "tune" your system. (NOTE: Keep ratio approx 3:1)
+#MAXPRBPARMS 128	(default 128)	
+#MAXPRBPAGES 40		(default 40)
+
+# WISP defaults to a Wang style HELP screen (HELPSYTLE1).
+# HELPSTYLE2 can be used to change to a non-Wang style HELP screen.
+#HELPSTYLE1		(default)
+#HELPSTYLE2
+
+# WISP will vector CALL "LINK"s to VSSUBS into internal calls of the
+# desired VSSUB.  The LINKVECTOROFF option will disable this feature.
+#
+#LINKVECTOROFF
+
+# WISP/NT can implement a "LINK" from one COBOL program to another
+# COBOL program as an internal "call".  This is referred to as a
+# "soft link" and it is much faster an much more effecient then a 
+# "hard link" which involes spawning a new processes and starting
+# a new COBOL RTS.  However, since the new program is being run by
+# the same RTS it can result in a recursive call which will fail.
+#
+#USEHARDLINK		(default)
+#USESOFTLINK
+
+# If you have translated your applications for Acucobol Native Screens 
+# then uncomment the NATIVESCREENS option to inform the runtime.
+#
+#NATIVESCREENS
+
+# The WISP runtime can be instructed to use only pfkeys (1) to (12)
+# for internally generated screens instead of the 32 pfkeys that
+# were used on the Wang VS.  When the PFKEYS12 option file option is
+# used then internal screens like OPEN GETPARMS use only pfkeys (1)
+# to (12) and they use pfkey (12) as the EXIT key instead of the
+# Wang VS standard of pfkey (16).
+#
+#PFKEYS12
+
+# The EXTDISPLAY option instructs the runtime to use the 
+# external DISPLAY utility instead of the internal DISPLAY 
+# routine which is the default.
+#
+#EXTDISPLAY
+
+# The DISPLAY8BIT option instruct the DISPLAY utility to display
+# 8-bit non-ASCII characters without CHARMAP substitution. If the
+# option NATIVECHARMAP is specified it will override this option.
+#
+#DISPLAY8BIT
+
+# The NATIVECHARMAP option instructs the runtime and utilities that
+# text data within the application is encoded using the "native" 
+# character set based on CHARMAP the character map configuration 
+# file.  If this option is not specified then the default behaviour
+# is to encode text data using the "Wang" character set.
+# When this option is set the "DISPLAY AND READ" processing (through
+# the wscreen routine), the GETPARM VSSUB, and the DISPLAY and 
+# VSEDIT utility will automatically convert between "native" and 
+# "Wang" character set encoding and "native" character set encoding
+# will be returned to the applications (or saved in the file).
+#
+# NOTE: The workstation operations READ, REWRITE, and WSXIO are
+#       not affected by this option and will use the "Wang" 
+#	character set.  Embedded FAC's can not be used with "DISPLAY
+#	AND READ" screens.
+#
+#NATIVECHARMAP

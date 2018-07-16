@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -10,17 +12,12 @@
 /* BITS ... A VAX/VMS implementation of two WANG-VS subroutines.  By...Steve Guilford.						*/
 
 #include <string.h>
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
 
 #include "idsistd.h"
 #include "werrlog.h"
+#include "wisplib.h"
                  
-BITPACK(in_ptr,out_ptr,in_len)
-unsigned char *in_ptr, *out_ptr;				                        /* Pointers to parameters.		*/
-int4 *in_len;										/* Input length.			*/
-
+void BITPACK(unsigned char *in_ptr,unsigned char *out_ptr, int4 *in_len)
 {      
 #define		ROUTINE		3000
 
@@ -57,10 +54,7 @@ int4 *in_len;										/* Input length.			*/
 	}
 }
 
-BITUNPK(in_ptr,out_ptr,in_len)
-unsigned char *in_ptr, *out_ptr;							/* Pointers to parameters.		*/
-int4 *in_len;										/* Input length.			*/
-
+void BITUNPK(unsigned char *in_ptr, unsigned char *out_ptr, int4 *in_len)
 {      
 #undef		ROUTINE
 #define		ROUTINE		3500
@@ -101,3 +95,12 @@ int4 *in_len;										/* Input length.			*/
 		ilen--;									/* One less byte to process.		*/
 	}       
 }
+/*
+**	History:
+**	$Log: bits.c,v $
+**	Revision 1.10  1996-08-19 18:32:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

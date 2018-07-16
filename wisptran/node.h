@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -27,29 +31,58 @@
 #define NULL	((void *)0)
 #endif
 
+enum Node_type {NODE_UNKNOWN,
+		NODE_START,
+		NODE_END,
+		NODE_TOKEN,
+		NODE_DATAITEM,
+		NODE_STATEMENT,
+		NODE_PARENS };
+
 struct Node_struct
 {
-	int		type;
-#define		NODE_UNKNOWN	0
-#define		NODE_START	1
-#define		NODE_END	2
-#define		NODE_TOKEN	3
-#define		NODE_DATAITEM	4
-#define		NODE_STATEMENT	5
-#define		NODE_PARENS	6
+	enum   Node_type	type;
 	struct Node_struct	*next;
 	struct Node_struct	*down;
 	TOKEN			*token;
 };
 typedef struct Node_struct * NODE;
 
-NODE makenode();
-NODE maketoknode();
-NODE cleartoknode();
-NODE tie_next();
-NODE tie_down();
-NODE tie_bottom();
-NODE tie_end();
+#ifdef __STDC__
+extern NODE makenode(enum Node_type type, NODE down, NODE next, TOKEN *token);
+extern NODE maketoknode(TOKEN *token);
+extern NODE free_token_from_node(NODE the_node);
+extern NODE cleartoknode(NODE curr);
+extern NODE tie_next(NODE curr, NODE new);
+extern NODE tie_down(NODE curr, NODE new);
+extern NODE tie_end(NODE curr, NODE new);
+extern NODE tie_bottom(NODE curr, NODE new);
+extern NODE tie_end_many(/* many */);
+extern NODE delete_tree(NODE tree);
+extern NODE unhook_sub_tree(NODE parent_tree, NODE sub_tree);
+#else
+extern NODE makenode();
+extern NODE maketoknode();
+extern NODE free_token_from_node();
+extern NODE cleartoknode();
+extern NODE tie_next();
+extern NODE tie_down();
+extern NODE tie_end();
+extern NODE tie_bottom();
+extern NODE tie_end_many();
+extern NODE delete_tree();
+extern NODE unhook_sub_tree();
+#endif
+
 
 #endif /* NODE_H */
 
+/*
+**	History:
+**	$Log: node.h,v $
+**	Revision 1.6  1996-08-30 21:56:06-04  gsl
+**	drcs update
+**
+**
+**
+*/

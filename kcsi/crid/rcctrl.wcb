@@ -1,0 +1,4 @@
+000100 01  CTRL-RECORD.
+000200     05  FILLER              PIC XX.
+000300     05  CTRL-KEY            PIC X(8).
+000400     05  FILLER              PIC X(120).

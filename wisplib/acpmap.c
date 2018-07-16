@@ -1,3 +1,7 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+#if defined(unix) || defined(VMS)
+
 /********************************************************************************************************************************
 *	filename:	acpmap.c												*
 ********************************************************************************************************************************/
@@ -34,7 +38,7 @@ bldacp()
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0);					/* Generate an entry log.			*/
 
-	acp_file = fopen(ACPMAP_FILE,"r");					/* ACPMAP.DAT contains terminal definitions.	*/
+	acp_file = fopen("ACP$CONFIG:ACPMAP.DAT","r");					/* ACPMAP.DAT contains terminal definitions.	*/
 
 	if (!acp_file)								/* Error opening file.				*/
 	{
@@ -238,3 +242,16 @@ char *name;
 	return &acp_term_struct;
 }
 #endif
+#endif /* unix || VMS */
+/*
+**	History:
+**	$Log: acpmap.c,v $
+**	Revision 1.11  1996-10-08 20:18:49-04  gsl
+**	Replace ACPMAP_FILE define with real value for VMS
+**
+**	Revision 1.10  1996-08-19 15:32:08-07  gsl
+**	drcs update
+**
+**
+**
+*/

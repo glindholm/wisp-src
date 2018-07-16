@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -23,11 +25,17 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <string.h>
+
+#ifdef _MSC_VER
+#include <io.h>
+#endif
 
 #include "idsistd.h"
 #include "runtype.h"
 #include "wdefines.h"
 #include "idsisubs.h"
+#include "wisplib.h"
 
 /*
 **	Routine:	runtype()
@@ -75,6 +83,8 @@ char	*filespec;
 		if (0==strcmp(buff,".sh")) 	return(RUN_SHELL);
 		if (0==strcmp(buff,".wps")) 	return(RUN_PROC);
 		if (0==strcmp(buff,".wpr")) 	return(RUN_PROCOBJ);
+		if (0==strcmp(buff,".cbx")) 	return(RUN_ACUCOBOL);
+		if (0==strcmp(buff,".acu")) 	return(RUN_ACUCOBOL);
 		if (0==strcmp(buff,".wcb")) 	return(RUN_NOT);
 		if (0==strcmp(buff,".cob")) 	return(RUN_NOT);
 	}
@@ -116,12 +126,11 @@ char	*filespec;
 }
 #endif /* unix */
 
-#ifdef MSDOS
-int runtype(filespec)
-char	*filespec;
+#ifdef MSFS
+int runtype(char* filespec)
 {
 	char	buff[64];
-	int	i, rc;
+	int	rc;
 	int	fh;
 
 	if (!fexists(filespec)) return(RUN_ACCESS);
@@ -138,6 +147,8 @@ char	*filespec;
 		if (0==strcmp(buff,".BAT")) 	return(RUN_SHELL);
 		if (0==strcmp(buff,".WPS")) 	return(RUN_PROC);
 		if (0==strcmp(buff,".WPR")) 	return(RUN_PROCOBJ);
+		if (0==strcmp(buff,".CBX")) 	return(RUN_ACUCOBOL);
+		if (0==strcmp(buff,".ACU")) 	return(RUN_ACUCOBOL);
 		if (0==strcmp(buff,".WCB")) 	return(RUN_NOT);
 		if (0==strcmp(buff,".COB")) 	return(RUN_NOT);
 		return(RUN_NOT);
@@ -163,4 +174,16 @@ char	*filespec;
 
 	return(RUN_UNKNOWN);
 }
-#endif /* MSDOS */
+#endif /* MSFS */
+/*
+**	History:
+**	$Log: runtype.c,v $
+**	Revision 1.7  1996-09-16 17:44:04-04  gsl
+**	Add extensions .CBX and .ACU to be Acucobol object files
+**
+**	Revision 1.6  1996-08-19 15:32:51-07  gsl
+**	drcs update
+**
+**
+**
+*/

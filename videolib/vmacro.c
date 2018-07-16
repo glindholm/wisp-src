@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -10,6 +12,7 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vmodules.h"
 
 FILE *vopenf();
 
@@ -64,3 +67,12 @@ vmacro(action) int action;
 	}
 	return(ret);									/* Return to the caller.		*/
 }
+/*
+**	History:
+**	$Log: vmacro.c,v $
+**	Revision 1.9  1996-10-11 18:16:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

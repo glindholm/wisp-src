@@ -1,13 +1,11 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include "idsistd.h"
 
-binary_to_packed(src, dest)		                           
-
-int4 *src;
-unsigned char *dest;
-
+void binary_to_packed(int4 *src, unsigned char *dest)		                           
 {
 
-	int4 x, y, val;
+	int4 x, val;
 	unsigned char *l_dest, low_ord, hi_ord;
 											
 	l_dest = dest;                                                                  /* Get local copy of addr.		*/
@@ -20,7 +18,7 @@ unsigned char *dest;
 	*l_dest++ = 0;
 	*l_dest++ = 0;
 
-	if (!*src) return(0);								/* Ain't gotta do nuthin' if its 0.	*/
+	if (!*src) return;								/* Ain't gotta do nuthin' if its 0.	*/
 
 	l_dest = dest;									/* Get local copy of addr.		*/
 
@@ -61,12 +59,8 @@ unsigned char *dest;
 	}
 }
 
-packed_to_binary(src, dest)		                           
-unsigned char *src;
-int4 *dest;
-
+void packed_to_binary(unsigned char *src, int4 *dest)		                           
 {
-      	int x;
     	int4 val;
 	unsigned char *source, y;
                       
@@ -96,3 +90,12 @@ int4 *dest;
 	*dest = val;									/* And set the output.			*/
 
 }
+/*
+**	History:
+**	$Log: packer.c,v $
+**	Revision 1.9  1996-08-19 18:32:38-04  gsl
+**	drcs update
+**
+**
+**
+*/

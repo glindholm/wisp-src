@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -17,10 +19,10 @@
 
 static int WVACOUNT;
 
-int wvaset(x)
+void wvaset(x)
 int4 *x;
 {
-	WVACOUNT = (int4)*x;
+	WVACOUNT = *x;
 }
 
 #ifndef VMS
@@ -33,3 +35,12 @@ va_dcl
 }
 #endif
 
+/*
+**	History:
+**	$Log: wvaset.c,v $
+**	Revision 1.9  1996-08-19 18:33:26-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,12 +1,14 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /************************************************************************/
-/*	     VIDEO - Video Interactive Development Environment		*/
-/*			    Copyright (c) 1987				*/
-/*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
+/*           VIDEO - Video Interactive Development Environment          */
+/*                          Copyright (c) 1987                          */
+/*      An unpublished work by Greg L. Adams.  All rights reserved.     */
 /************************************************************************/
 
 #include <stdio.h>
 
-#ifndef VMS	/* unix and MSDOS */
+#ifndef VMS     /* unix and MSDOS */
 #include <malloc.h>
 #include <sys/types.h>
 #endif
@@ -16,11 +18,13 @@
 #endif
 
 #include <time.h>
+#include <string.h>
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
 #include "vintdef.h"
 #include "vmenu.h"
+#include "vmodules.h"
 
 #define SECSINWEEK 604800L /* (7*24*60*60) */
 #define SECSINDAY  86400L  /*   (24*60*60) */
@@ -46,7 +50,7 @@ static int lines = 5;
 static char *mo[12] = { "Jan","Feb","Mar","Apr","May","Jun",
 			"Jul","Aug","Sep","Oct","Nov","Dec" };
 static int dim[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-static char this_date[32];
+static char this_date[32] = { "" };
 static char apt[MAX_APT][16];
 static char *tab;
 static int newcal;
@@ -74,10 +78,10 @@ static int fdom();
 
 int gcalend()
 {
-	unsigned int i, j, k;
+	unsigned int i, j;
+	int k;
 	unsigned char *vsss();
 	int active;
-	char c;
 	FILE *fp, *vopenf();
 	char *fgets();
 	int last, found, freepage;
@@ -120,7 +124,7 @@ int gcalend()
 		fclose(fp);
 	}
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	row = 4;
 	col = 20;
 	rows = 15;
@@ -131,15 +135,15 @@ int gcalend()
 
 	if (vscr_atr & LIGHT)
 	{
-		emode = BOLD;
-		cmode = REVERSE|BOLD;
-		umode = UNDERSCORE;
+		emode = VMODE_BOLD;
+		cmode = VMODE_REVERSE|VMODE_BOLD;
+		umode = VMODE_UNDERSCORE;
 	}
 	else
 	{
-		emode = REVERSE;
-		cmode = BOLD;
-		umode = REVERSE|BOLD|UNDERSCORE;
+		emode = VMODE_REVERSE;
+		cmode = VMODE_BOLD;
+		umode = VMODE_REVERSE|VMODE_BOLD|VMODE_UNDERSCORE;
 	}
 
 	time(&bintime);
@@ -162,7 +166,7 @@ int gcalend()
 			freepage = -1;
 			for (i = 0; ((i < MAX_APT) && !found); i++)
 			{
-			    if (strpos(this_date, apt[i]) >= 0) found = TRUE;
+			    if (strstr(this_date, apt[i]) != NULL) found = TRUE;
 			    if ((apt[i][0] == ' ') && (freepage < 0)) freepage = i;
 			}
 
@@ -224,10 +228,10 @@ int gcalend()
 			}
 			else
 			{
-ua1:				i = row;
+ua1:                            i = row;
 				row = row - 2;
 				if (row < 1) row = 1;
-				if (row == i) vbell();
+				if (row == (int) i) vbell();
 				else move();
 			}
 		}
@@ -236,7 +240,7 @@ ua1:				i = row;
 		{
 			i = 5;
 			if (lines == 6) i = 3;
-			if (row+rowpos < row + rows - i)
+			if (row+rowpos < row + rows - (int) i)
 			{
 				date = date + 7;
 				if (date > dim[tval->tm_mon])
@@ -256,13 +260,13 @@ ua1:				i = row;
 			}
 			else
 			{
-da1:				i = row;
+da1:                            i = row;
 				row = row + 2;
 				if (row > MAX_LINES_PER_SCREEN-rows)
 				{
 					row = MAX_LINES_PER_SCREEN-rows;
 				}
-				if (row == i) vbell();
+				if (row == (int) i) vbell();
 				else move();
 			}
 		}
@@ -289,10 +293,10 @@ da1:				i = row;
 			}
 			else
 			{
-la1:				i = col;
+la1:                            i = col;
 				col = col - 4;
 				if (col < 0) col = 0;
-				if (col == i) vbell();
+				if (col == (int) i) vbell();
 				else move();
 			}
 		}
@@ -319,10 +323,10 @@ la1:				i = col;
 			}
 			else
 			{
-ra1:				i = col;
+ra1:                            i = col;
 				col = col + 4;
 				if (col > vscr_wid-cols) col = vscr_wid-cols;
-				if (col == i) vbell();
+				if (col == (int) i) vbell();
 				else move();
 			}
 		}
@@ -363,7 +367,7 @@ ra1:				i = col;
 
 	vrss(save);
 	vrss(save2);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 
 	if (newcal) fp = vopenf("cal","w");
 	else fp = vopenf("cal","w");
@@ -389,9 +393,9 @@ ra1:				i = col;
 static int givehelp()
 {
 	struct video_menu help;
-	register int key;
+	int4 key;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Calendar Help - Page 1 - General",0,0);
 	vmenuitem(&help,"",0,0);
 	vmenuitem(&help,"Use TAB, SPACE or arrow keys to select a date.",0,0);
@@ -407,17 +411,17 @@ static int givehelp()
 	vmenuitem(&help,"Depress any key to exit...",0,0);
 
 	key = vmenugo(&help);
-	vset(CURSOR,OFF);
+	vset_cursor_off();
 	return(SUCCESS);
 }
 
 static int showcalend()
 {
-	register int i, j, k, m, y;
+	register int i, j, k, m;
 	char wstr[156];
 
-	vbuffering(LOGICAL);
-	vset(CURSOR,OFF);
+	vbuffering_start();
+	vset_cursor_off();
 
 	tval = localtime(&bintime);
 	setleap();
@@ -484,7 +488,7 @@ static int showcalend()
 	position(cmode);
 	vmode(CLEAR);
 	vcharset(DEFAULT);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -585,11 +589,11 @@ static int lastmonth()
 
 static int showdates()
 {
-	register int i, j, k, m, y;
+	register int i, j, k, m;
 	char wstr[156];
 
-	vbuffering(LOGICAL);
-	vset(CURSOR,OFF);
+	vbuffering_start();
+	vset_cursor_off();
 
 	tval = localtime(&bintime);
 	setleap();
@@ -640,7 +644,7 @@ static int showdates()
 	position(cmode);
 	vmode(CLEAR);
 	vcharset(DEFAULT);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -703,6 +707,7 @@ static int initpage(page) char page[LENGTH][WIDTH+1];
 	 if (i+6 < 10) sprintf(page[i],"0%d:00                           ",i+6);
 	 else           sprintf(page[i],"%d:00                           ",i+6);
 	}
+	return 0;
 }
 
 static int getnow()
@@ -738,3 +743,18 @@ static int in_use(wstr) char *wstr;
 	}
 	return(ret);
 }
+/*
+**	History:
+**	$Log: gcalend.c,v $
+**	Revision 1.11  1997-07-08 16:16:21-04  gsl
+**	Change to use new video.h defines
+**
+**	Revision 1.10  1997-01-08 16:37:13-05  gsl
+**	Change strpos() to strstr()
+**
+**	Revision 1.9  1996-10-11 15:15:54-07  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -40,3 +44,12 @@ EXT_COBRUN_DEF int	run_cobol	INIT_ZERO;
 #undef INIT_ZERO
 
 #endif /* COBRUN_H */
+/*
+**	History:
+**	$Log: cobrun.h,v $
+**	Revision 1.8  1996-08-19 18:32:14-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,133 @@
+  	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		KCSI CREATE INSTALLATION INSTRUCTIONS 
+	
+	Document:	install_create.lis
+	Last Updated:	31 OCTOBER 95
+	Products:	CREATE/MF, CREATE/ACU
+	Versions:	1.8 (AND LATER)
+	
+	Summary:	Installation instructins for the CREATE tool for unix
+			with Micro Focus COBOL or AcuCOBOL.
+
+	==================================================================== 
+ 
+			***** ! ! ! ATTENTION ! ! ! *****
+ 
+ 	Please Read carefully! The instructions have changed from
+	previous releases.
+ 
+	USING EXISTING UTILITIES
+	========================
+
+	Distribution
+        ------------
+
+        First install WISP and setup the WISP runtime environment.  This
+        must be in place before create can be used.
+
+        CREATE will normally be distributed on diskette or tape as a
+        compressed tar file.
+
+		Micro Focus:	createmf.XXX.tar.Z
+		AcuCOBOL:	createacu.XXX.tar.Z
+
+	Unload this file from the distribution media as follows:
+
+        E.g.    $ tar -xvf /dev/rfd0
+
+        Extract the distribution files from the compressed tar file using
+	the following command:
+
+	Micro Focus:
+                $ uncompress -c createmf.XXX.tar.Z|tar -xvpf -
+	AcuCOBOL:
+                $ uncompress -c createacu.XXX.tar.Z|tar -xvpf -
+
+        This will create a directory "createmf.XXX" ("createacu.XXX" for
+	AcuCOBOL) where XXX is a version number.  Refer to packlist.lis
+	in the distribution for a listing of expected files.
+ 
+	Installation
+        ------------
+ 
+	Copy the create executable to a program directory or a directory
+	on your path.
+
+	Test your installation by running the utilites:
+
+		$ create
+ 
+	NOTE:  If there is any problem running create, proceed to
+               the steps for MAKING THE UTILITY below.
+
+        ====================================================================
+
+	   *********************************************************
+	       If you could not run the distribution executable,
+	       then continue.
+	   *********************************************************
+
+	MAKING THE UTILITY
+	------------------ 
+ 	1. Copy the distribution into a directory on the user's path.
+ 
+	2. Ensure that the COBOL compiler will run in this directory.
+ 
+	3. Once this is complete, you may build the create utility.
+
+	   a.  Edit the make file create.umf.  The make file contains
+	       instructions for building the utility. This make file
+	       needs to be edited to correctly reflect the location of
+	       the wisp libraries.
+
+	   b.  Locate the WISP libraries and edit the value for:
+ 
+		WISPDIR=/usr/local/wisp
+
+	   c.  Verify and uncomment the correct curses library location.
+
+		CURSES_LINK = -lcurses
+
+	   d.  AcuCOBOL:  Confirm the versin of AcuCOBOL that you are
+			  using and correclty comment and uncomment the
+			  ACULIBS, ACUSUBS, and ACUTEST variables.
+
+		# 2     ACUCOBOL Version 2.0 - 2.3.2
+		#
+		ACULIBS=$(ACULIBS2)
+		ACUSUBS=$(ACUSUBS2)
+		ACUTEST=$(ACUTEST2)
+		#
+ 
+	4. Now the utility may be built:
+
+	   Micro Focus:
+
+			$ make -f create.umf mfcreate
+ 
+		   or if you are creating an EDE version type
+ 
+			$ make -f create.umf mfcreatee
+
+	   AcuCOBOL:
+
+			$ make -f create.umf
+ 
+		   or if you are creating an EDE version type
+ 
+			$ make -f create.umf acucreatee
+ 
+	5. Once the make process is complete, the create executable
+	   will exist in the working directory, and may be moved to any
+	   suitable directory on the path and renamed create.
+
+	   NOTE: create is a full executable, and does not require
+	   	 any run time.
+
+
+
+
+

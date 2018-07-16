@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -45,3 +47,12 @@ int vfnkey(key) int key;							/* Return the numeric value of a function key.	*/
 	if (key == fn32_key) return(32);
 	return(0);								/* Was not a function key.			*/
 }
+/*
+**	History:
+**	$Log: vfnkey.c,v $
+**	Revision 1.9  1996-10-11 18:16:04-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /************************************************************************/
 /*	     VIDEO - Video Interactive Development Environment		*/
 /*			    Copyright (c) 1991				*/
@@ -5,12 +7,14 @@
 /************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
 #include "vintdef.h"
 #include "vmenu.h"
+#include "vmodules.h"
 
 #define WIDTH  32
 #define LENGTH 16
@@ -33,15 +37,15 @@ int gcal2(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 	int active;
 	unsigned char c;
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	row = 2;
 	col = 20;
 	rows = LENGTH+3;
 	cols = WIDTH+2;
 	vdetpos(1,&row,&col,rows,cols);
 	save = vsss(row,col,rows,cols);
-	if (vscr_atr & LIGHT) { emode = BOLD;    cmode = REVERSE|BOLD; }
-	else                  { emode = REVERSE; cmode = CLEAR|BOLD;   }
+	if (vscr_atr & LIGHT) { emode = VMODE_BOLD;    cmode = VMODE_REVERSE|VMODE_BOLD; }
+	else                  { emode = VMODE_REVERSE; cmode = VMODE_CLEAR|VMODE_BOLD;   }
 
 	line = 0;
 	column = 6;
@@ -254,17 +258,17 @@ int gcal2(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 	}
 
 	vrss(save);
-	vset(CURSOR,OFF);
-	vbuffering(AUTOMATIC);
+	vset_cursor_off();
+	vbuffering_end();
 	return(k);
 }
 
 static int givehelp()
 {
 	struct video_menu help;
-	register int key;
+	int4 key;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Calendar Help - Page 2 - General",0,NULL);
 	vmenuitem(&help,"",0,NULL);
 	vmenuitem(&help,"PF1 returns to monthly calendar.",0,NULL);
@@ -285,11 +289,11 @@ static int givehelp()
 
 static int showtab(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 {
-	register int i, j, k;
+	register int i, j;
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 
-	vset(CURSOR,OFF);
+	vset_cursor_off();
 	i = row;
 
 	vtext(emode, i++, col, " Good Calendar    %s ",this_date);
@@ -305,8 +309,8 @@ static int showtab(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 	vmove(row+2+line, col+1+column);
 	vmode(CLEAR);
 	vcharset(DEFAULT);
-	vset(CURSOR,ON);
-	vbuffering(AUTOMATIC);
+	vset_cursor_on();
+	vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -338,3 +342,15 @@ static int home()
 	vmove(row+2+line, col+1+column);
 	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: gcal2.c,v $
+**	Revision 1.10  1997-07-08 16:13:58-04  gsl
+**	Change to use new video.h defines
+**
+**	Revision 1.9  1996-10-11 18:15:53-04  gsl
+**	drcs update
+**
+**
+**
+*/

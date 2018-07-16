@@ -1,10 +1,5 @@
-			/************************************************************************/
-			/*									*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		wlicense.c
@@ -18,11 +13,6 @@
 **			assistance()		Print an assistance message.
 **			putheader()		Print the copyright and running instructions.
 **
-**	History:
-**	05/22/92	Written by GSL
-**	05/26/92	Added get_validation() and exit_wlicense()  GSL
-**	09/25/92	Added LICENSE_CLUSTER. GSL
-**	07/07/93	Added MSDOS support. GSL
 **
 */
 
@@ -30,14 +20,27 @@
 #include <sys/types.h>
 #include <time.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifdef WIN32
+#include <io.h>
+#include <direct.h>
+#endif
 
 #include "wlicense.h"
+#include "idsisubs.h"
+#include "prompt.h"
+#include "platsubs.h"
+#include "machid.h"
 
 extern char	*sys_errlist[];
-static int get_validation();
-static int exit_wlicense();
-static int assistance();
-static int putheader();
+static void get_validation();
+static void exit_wlicense();
+static void assistance();
+static void putheader();
+static void catfile(const char *filename);
+static void finish_ok(void);
 
 static	int created_license_file = 0;
 
@@ -76,7 +79,7 @@ int	argc;
 char	*argv[];
 {
 	char	custname[80];
-	long	custnum;
+	int4	custnum;
 	char	platform[3];
 	int	licensetype;
 	char	licensedate[20];
@@ -187,7 +190,8 @@ char	*argv[];
 	{
 		printf("SORRY - The LICENSE KEY given is not valid for this platform.\n");
 		assistance();
-		exit(0);
+		finish_ok();
+		exit_wlicense();
 	}
 
 	/*
@@ -198,6 +202,7 @@ char	*argv[];
 	{
 		printf("SORRY - Unable to create %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
+		finish_ok();
 		exit_wlicense();
 	}
 
@@ -213,10 +218,12 @@ char	*argv[];
 		*/
 	case LICENSE_CLUSTER:
 	case LICENSE_SINGLE:
+	case LICENSE_NETWORK:
 		if (rc = getmachineid(machineid))
 		{
 			printf("SORRY - Unable to get the MACHINE ID\n");
 			assistance();
+			finish_ok();
 			exit_wlicense();
 		}
 		get_validation(licensekey,machineid,valcode);
@@ -228,11 +235,12 @@ char	*argv[];
 	default:
 		printf("SORRY - This LICENSE KEY contains an unknown LICENSE TYPE.\n");
 		assistance();
+		finish_ok();
 		exit_wlicense(0);
 		break;
 	}
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 	/*
 	**	On MSDOS there is no "root" user so we have to make file writable first in case
 	**	we are overwriting an existing license file.
@@ -249,16 +257,19 @@ char	*argv[];
 	case 1:
 		printf("SORRY - Unable to open file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
+		finish_ok();
 		exit_wlicense();
 		break;
 	case 2:
 		printf("SORRY - Unable to write file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
+		finish_ok();
 		exit_wlicense();
 		break;
 	default:
 		printf("SORRY - Error writing file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
+		finish_ok();
 		exit_wlicense();
 		break;
 	}
@@ -266,20 +277,22 @@ char	*argv[];
 	printf("\n");
 	printf("The %s license file %s has been created.\n\n",product_name(),license_filepath());
 
-#ifdef unix
-	sprintf(buff,"cat %s",license_filepath());
-	system(buff);
+	catfile(license_filepath());
+	printf("\n");
+
+	finish_ok();
+
+	return 0;
+}
+
+static void finish_ok(void)
+{
+#ifdef WIN32
+	char	buff[80];
+	
+	prompt_text("Press ENTER to finish",NULL,1,"Press ENTER to finish.", buff);
 	printf("\n");
 #endif
-
-#ifdef MSDOS
-	hide_file(license_filepath());
-	sprintf(buff,"type %s",license_filepath());
-	system(buff);
-	printf("\n");
-#endif
-
-	exit(0);
 }
 
 /*
@@ -306,7 +319,7 @@ char	*argv[];
 **
 */
 
-static get_validation(licensekey,machineid,valcode)
+static void get_validation(licensekey,machineid,valcode)
 char	licensekey[LICENSE_KEY_SIZE];
 char	*machineid;
 char	valcode[VALIDATION_CODE_SIZE];
@@ -322,8 +335,8 @@ char	valcode[VALIDATION_CODE_SIZE];
 	/*      12345678901234567890123456789012345678901234567890123456789012345678901234567890				*/
 	printf("\n");
 	printf("In order to install this %s license you will need a VALIDATION CODE.\n",product_name());
-	printf("A VALIDATION CODE can be received by calling I.D.S.I at (805) 295-1155\n");
-	printf("(M-F 8:30a-5:00p PST) and asking for a VALIDATION CODE.  You will be asked for\n");
+	printf("A VALIDATION CODE can be received by calling NeoMedia at (941) 337-3434\n");
+	printf("(M-F 8:30a-5:00p EST) and asking for a VALIDATION CODE.  You will be asked for\n");
 	printf("the following information:\n");
 	printf("\n\n");
 	printf("       LICENSE KEY:    %s\n",flickey);
@@ -333,7 +346,7 @@ char	valcode[VALIDATION_CODE_SIZE];
 	printf("\n");
 
 	/*                12345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
-	sprintf(helpbuff,"Call I.D.S.I. at (805) 295-1155 (M-F 8:30a-5:00p PST) to get a VALIDATION CODE.\n");
+	sprintf(helpbuff,"Call NeoMedia at (941) 337-3434 (M-F 8:30a-5:00p EST) to get a VALIDATION CODE.\n");
 	strcat (helpbuff,"If you are unable to call at this time you may record the information and call\n");
 	strcat (helpbuff,"at your convenience.\n\n\n");
 	strcat (helpbuff,"       LICENSE KEY:    ");
@@ -393,7 +406,7 @@ char	valcode[VALIDATION_CODE_SIZE];
 **			07/31/92	Added rename to temp inode file. GSL
 */
 
-static exit_wlicense()
+static void exit_wlicense()
 {
 	if (created_license_file)
 	{
@@ -427,11 +440,11 @@ static exit_wlicense()
 **
 */
 
-static assistance()
+static void assistance()
 {
 	printf("\n");
 	/*      12345678901234567890123456789012345678901234567890123456789012345678901234567890	*/
-	printf("If you need assistance call I.D.S.I. at (805) 295-1155 (M-F 8:30a-5:00p PST).\n");
+	printf("If you need assistance call NeoMedia at (941) 337-3434 (M-F 8:30a-5:00p EST).\n");
 }
 
 /*
@@ -453,14 +466,14 @@ static assistance()
 **
 */
 
-static putheader()
+static void putheader()
 {
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("\n");
 	printf("                   **** %s LICENSE INSTALLATION TOOL ****\n",product_name());
-	printf("         Copyright (c) 1992,93 by International Digital Scientific Inc.\n");
-	printf("                             (805) 295-1155\n");
+	printf("         Copyright (c) 1992-1997 by NeoMedia Technologies Incorporated\n");
+	printf("                             (941) 337-3434\n");
 	printf("\n");
 	printf("\n");
 	printf("This program will install the %s runtime license onto this machine.\n",product_name());
@@ -483,3 +496,81 @@ static putheader()
 	printf("\n");
 }
 
+static void catfile(const char *filename)
+{
+	char	inlin[256];
+	FILE	*fh;
+	
+	fh = fopen(filename, "r");
+	if (!fh)
+	{
+		printf("Error opening license file [%s]\n", filename);
+		return;
+	}
+
+	while (fgets(inlin,sizeof(inlin),fh))
+	{
+		printf("%s",inlin);
+	}
+	
+}
+
+/*
+**	DUMMY routines to stop the whole WISPLIB from being linked in.
+*/
+void wexit(int code)
+{
+	finish_ok();
+	exit_wlicense();
+}
+void werrlog()
+{
+}
+
+void get_wisp_option()
+{
+}
+
+#ifdef OLD
+#include "wutils.h"
+
+#define EXT_FILEXT
+#include "filext.h"
+#endif /* OLD */
+
+/*
+**	History:
+**	$Log: wlicense.c,v $
+**	Revision 1.14  1997-12-18 20:44:03-05  gsl
+**	Add DUMMY routines
+**
+**	Revision 1.13  1997-03-17 11:54:59-05  gsl
+**	Add NETWORK license logic.
+**	Add finish_ok() for WIN32 to prompt before finishing to stop the console
+**	from closing
+**
+**	Revision 1.12  1997-03-14 15:59:11-05  gsl
+**	update for WIN32
+**
+**	Revision 1.11  1997-02-17 16:54:42-05  gsl
+**	Change address and phone number
+**
+**	Revision 1.10  1996-12-12 13:15:30-05  gsl
+**	Devtech -> NeoMedia
+**
+**	Revision 1.9  1996-07-24 16:37:13-07  gsl
+**	Fix for NT
+**
+**	Revision 1.8  1996-07-23 12:51:21-07  gsl
+**	Fix warning
+**
+**	Revision 1.7  1996-07-23 11:13:10-07  gsl
+**	drcs update
+**
+**	05/22/92	Written by GSL
+**	05/26/92	Added get_validation() and exit_wlicense()  GSL
+**	09/25/92	Added LICENSE_CLUSTER. GSL
+**	07/07/93	Added MSDOS support. GSL
+**
+**
+*/

@@ -1,0 +1,458 @@
+							wproc.map
+	WPROC - classes and functions by file
+	=====================================
+
+
+args.cc
+args.hpp
+	[arguments]
+
+assert.cc
+assert.hpp
+	assert_error()
+
+attribs.hpp
+
+builtin.cc
+builtin.hpp
+	[machine]
+
+cancel.cc
+cancel.hpp
+	set_cancel_handler()
+	cancel_handler()
+	cancel_requested()
+
+colors.cc
+colors.hpp
+	init_color_table()
+	is_color()
+	number_to_color()
+	colors_cleanup()
+
+compiler.cc
+compiler.hpp
+	[compiler]
+	[parser]	- [table_entry]
+
+critical.cc
+critical.hpp
+	** DOS ONLY **
+
+crt_io.cc
+crt_io.hpp
+	clear_screen()
+	clear_to_eol()
+	color_monitor()
+	....
+
+data.cc
+data.hpp
+	[data]
+	[array_data]		- [data]
+	[integer_data]		- [data]
+	[integer_array_data]	- [array_data]
+	[string_data]		- [data]
+	[fixed_string_data]	- [string_data]
+	[dynamic_string_data]	- [string_data]
+	[string_array_data]	- [array_data]
+	[builtin_data]		- [data]
+	[label_data]		- [data]
+
+debugaid.cc
+debugaid.hpp
+	valid_ptr()
+	debug_trace_begin()
+	debug_trace ...
+
+driver.cc
+	main()
+	
+dummyep.c
+	vgetm_timed()
+	vlanguage()
+
+e_assign.cc
+	[machine]
+
+e_decl.cc
+	[machine]
+
+e_math.cc
+	[machine]
+
+e_os.cc
+	[machine]
+
+e_run.cc
+	[machine]
+
+e_scrnio.cc
+	[machine]
+
+e_substr.cc
+	[machine]
+
+e_ttyio.cc
+	[machine]
+
+e_varref.cc
+	[machine]
+
+e_wang.cc
+	[machine]
+
+environ.hpp
+
+execute.cc
+	[machine]
+
+exp.cc
+exp.hpp
+	[lvalue]
+	[expression]
+	[expression_array]
+
+ext.hpp
+
+fileinfo.cc
+fileinfo.hpp
+	[wang_filename]
+	file_dir()
+	file_extension()
+	file_name()
+	...
+files.cc
+files.hpp
+	[file]
+	[file_entry]
+	open_file()
+	close_file()
+	flush_open_files()
+	files_cleanup()
+
+fixup.cc
+fixup.hpp
+	[fixup]
+
+holdev.h
+
+input.cc
+input.hpp
+	[input]
+	[nonexistent_input]	- [input]
+	[system_command_input]	- [input]
+	[spawnable_input]	- [input]
+	[procedure_input]	- [input]
+	[source_input]		- [procedure_input]
+	[source_file_input]	- [source_input]
+	[source_string_input]	- [source_input]
+	[state_file_input]	- [procedure_input]
+	create_input_object()
+	
+install.cc
+install.hpp
+	installation_pathname()
+	installation_ok()
+
+isspace.cc
+	isspace()
+
+keyboard.hpp
+
+machine.cc
+machine.hpp
+	[machine]
+
+memcheck.cc
+memcheck.hpp
+	** DOS ONLY **
+
+memory.cc
+memory.hpp
+	new_string()
+	dup_string()
+	delete_string()
+
+network.cc
+network.hpp
+	** DOS ONLY **
+
+object.cc
+object.hpp
+	[object]
+
+opcodes.cc
+opcodes.hpp
+	opcode_name()
+
+options.cc
+options.hpp
+	[options]
+	show_usage()
+
+p_assign.cc
+	[compiler::assign_stmt]
+
+p_ctrl.cc
+	[compiler::end_error]
+	[compiler::statements]
+	[compiler::statements_in_case]
+	[compiler::label_accessible]
+	[compiler::resolve_label_offset]
+	[compiler::resolve_label_fixups]
+	[compiler::resolve_static_label]
+	[compiler::emit_labels_accessible_from]
+	[compiler::block_stmt]
+	[compiler::call_builtin]
+	[compiler::call_stmt]
+	[compiler::case_stmt]
+	[compiler::end_stmt]
+	[compiler::exit_stmt]
+	[compiler::for_stmt]
+	[compiler::goto_stmt]
+	[compiler::if_stmt]
+	[compiler::logoff_stmt]
+	[compiler::parse_if_exists]
+	[compiler::leave_stmt]
+	[compiler::loop_stmt]
+	[compiler::return_stmt]
+	[compiler::subroutine_stmt]
+	[compiler::while_stmt]
+
+p_decl.cc
+	[compiler::parse_declaration]
+	[compiler::declare_stmt]
+	[compiler::declare_label]
+
+p_exp.cc
+	[compiler::expression]
+	[compiler::simple_expression]
+	[compiler::logical]
+	[compiler::relation]
+	[compiler::catenation]
+	[compiler::binary_add_subtract]
+	[compiler::binary_multiple_divide]
+	[compiler::unary_plus_minus]
+	[compiler::primary]
+	[compiler::parens]
+	[compiler::parse_yes_no]
+	[compiler::parse_color]
+	[compiler::emit_string]
+	[compiler::emit_range_of]
+	[compiler::parse_identifier]
+	[compiler::parse_cobol_keyword]
+	[compiler::parse_char_option]
+	[compiler::parse_keyword_option]
+	[compiler::keyword_matches]
+	[compiler::parse_file_component]
+	[compiler::parse_filename]
+	[compiler::parse_libname]
+	[compiler::parse_volname]
+	[compiler::parse_full_backward_ref]
+	[compiler::is_full_backward_ref]
+
+p_os.cc
+	[compiler::p_os_cleanup]
+
+p_run.cc
+	[compiler::run_stmt]
+	[compiler::system_stmt]
+	[compiler::interpret_stmt]
+	[compiler::using_stmt]
+
+p_scrnio.cc
+	[scrnio_option]			- [option_name]
+	[attribute]			- [name_kind]
+	init_scrnio_tables()
+	[compiler::p_scrnio_cleanup]
+	[compiler::message_stmt]
+	[compiler::prompt_stmt]
+	[compiler::parse_screen_field]
+	[compiler::parse_screen_line]
+	[compiler::parse_screen]
+	[compiler::parse_color_list]
+	[compiler::parse_fkey_list]
+	[compiler::parse_corners_list]
+	[compiler::parse_attribute_condition]
+	[compiler::screen_stmt]
+
+p_ttyio.cc
+	[compiler::close_stmt]
+	[compiler::open_stmt]
+	[compiler::read_stmt]
+	[compiler::write_stmt]
+
+p_var.cc
+	[compiler::parse_comma_list]
+	[compiler::parse_parameters]
+	[compiler::parse_variable]
+
+p_wang.cc
+	[keyword]		- [table_entry]
+	[compiler::delacl_stmt]
+	[compiler::dismount_stmt]
+	[compiler::extracl_stmt]
+	init_extract_options()
+	[compiler::extract_stmt]
+	[compiler::mount_stmt]
+	[compiler::operator_stmt]
+	[compiler::options_stmt]
+	init_print_options()
+	[compiler::print_stmt]
+	[compiler::protect_stmt]
+	[compiler::rename_stmt]
+	[compiler::scratch_stmt]
+	init_set_options()
+	[compiler::set_stmt]
+	[compiler::setacl_stmt]
+	init_submit_options()
+	[compiler::submit_stmt]
+	[compiler::wang_trace_stmt]
+	init_display_enter_table()
+	[compiler::parse_display_enter]
+	[compiler::p_wang_cleanup]
+
+pcode.cc
+pcode.hpp
+	[pcode]			- [state_object]
+	[pcode_access]
+	[pcode_reader]		- [pcode_access]
+	[pcode_emitter]		- [pcode_access]
+
+procedur.cc
+procedur.hpp
+	[procedure]
+	[compilable_procedure]	- [procedure]
+	[executable_procedure]	- [procedure]
+
+process.cc
+process.hpp
+	[process]
+
+product.cc
+product.hpp
+	product_copyright()
+	product_version()
+	product_name()
+
+range.cc
+range.hpp
+	[range]
+
+reader.cc
+reader.hpp
+	[reader]
+	[file_reader]		- [reader]
+	[string_reader]		- [reader]
+	[message_reader]	- [reader]
+
+report.cc
+report.hpp
+	[location]
+	report_syntax_error()
+	report_semantic_error()
+	report_correction()
+	report_filename_correction()
+	report_general_error()
+	report_fatal_error()
+	report_status()
+	put()
+	put_newline()
+	create_screen()
+	init_screen()
+	cleanup_after_error()
+	locate_message()
+	show_new_line()
+	show_new_indented_line()
+	show()
+	show.....
+
+runtype.h
+
+scanner.cc
+scanner.hpp
+	[scanner]
+
+scope.cc
+scope.hpp
+	[scope]
+
+screen.cc
+screen.hpp
+	[field_attributes]
+	[screen_info]
+	[screen_contents]
+	[field]
+	[mod_field]		- [field]
+	[screen]
+
+stack.cc
+stack.hpp
+	[stack_entry]
+	[stack]
+
+state.cc
+state.hpp
+	[state]			- [state_object]
+
+stateobj.cc
+stateobj.hpp
+	[state_object]
+
+status.hpp
+
+subops.hpp
+
+symbols.cc
+symbols.hpp
+	[symbol_attributes]
+	[symbol]		- [state_object]
+	[symbol_table_entry]
+	[symbol_table]		- [state_object]
+	[builtin]		- [name_kind]
+	init_builtins()
+	
+sysenv.cc
+sysenv.hpp
+	[system_environment]
+
+tables.cc
+tables.hpp
+	[table_entry]
+	[name_kind]		- [table_entry]
+	[option_name]		- [name_kind]
+	[table]
+
+token.cc
+token.hpp
+	[token]
+
+tracer.cc
+tracer.hpp
+	[scroll_region]
+	[tracer]
+	fkey()
+
+txt.cc
+txt.hpp
+	** text strings **
+
+utility.cc
+utility.hpp
+	strip()
+	trim()
+	str_index()
+	...
+
+video_rt.h
+	** interface to VIDEO **
+
+wang_os.cc
+wang_os.hpp
+	wang_os_backref_full()
+	wang_os_ ...
+
+wisp_rts.c
+wisp_rts.h
+	** interface to VSSUBS **

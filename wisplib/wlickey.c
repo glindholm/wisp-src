@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -26,16 +28,10 @@
 **
 */
 
+#include <stdio.h>
+#include <string.h>
 #include "idsistd.h"
 #include "wlicense.h"
-
-char	entran();
-int	detran();
-int	entrandate();
-int	detrandate();
-int	checksummem();
-int	packdate();
-int	unpkdate();
 
 #define MAXTRAN		34
 
@@ -72,13 +68,13 @@ int	unpkdate();
 **
 */
 
-int	mklickey(custnum,platform,lictype,licdate,expdate,lickey)
-int4	custnum;
-char	platform[2];
-int	lictype;
-char	licdate[8];
-char	expdate[8];
-char	lickey[LICENSE_KEY_SIZE];
+int	mklickey(
+		int4	custnum,
+		char	platform[2],
+		int	lictype,
+		char	licdate[8],
+		char	expdate[8],
+		char	lickey[LICENSE_KEY_SIZE])
 {
 	char	buff[20];
 	int	i, idx;
@@ -94,8 +90,8 @@ char	lickey[LICENSE_KEY_SIZE];
 	/*
 	**	the platform is already in the format of A-Z1-9
 	*/
-	lickey[idx++] = detran(toupper(platform[0]));				/* Detran the platfrom code, it will be		*/
-	lickey[idx++] = detran(toupper(platform[1]));				/* validated later.				*/
+	lickey[idx++] = detran((char)toupper(platform[0]));				/* Detran the platfrom code, it will be		*/
+	lickey[idx++] = detran((char)toupper(platform[1]));				/* validated later.				*/
 
 	lickey[idx++] = lictype;
 
@@ -159,15 +155,14 @@ char	lickey[LICENSE_KEY_SIZE];
 **
 */
 
-int	bklickey(custnum,platform,lictype,licdate,expdate,licensekey)
-int4	*custnum;
-char	*platform;
-int	*lictype;
-char	licdate[8];
-char	expdate[8];
-char	licensekey[LICENSE_KEY_SIZE];
+int	bklickey(
+		int4	*custnum,
+		char	*platform,
+		int	*lictype,
+		char	licdate[8],
+		char	expdate[8],
+		char	licensekey[LICENSE_KEY_SIZE])
 {
-	char	buff[20];
 	char	lickey[LICENSE_KEY_SIZE];
 	int	i, idx;
 	int	rc;
@@ -178,7 +173,7 @@ char	licensekey[LICENSE_KEY_SIZE];
 	*/
 	for(i=0;i<LICENSE_KEY_SIZE;i++)
 	{
-		lickey[i] = detran((int)licensekey[i]);
+		lickey[i] = detran(licensekey[i]);
 		if (lickey[i] < 0) return(1);
 	}
 
@@ -244,9 +239,7 @@ char	licensekey[LICENSE_KEY_SIZE];
 **
 */
 
-formatkey(lickey,formkey)
-char	*lickey;
-char	*formkey;
+void formatkey(char* lickey, char* formkey)
 {
 	sprintf(formkey,"%4.4s-%4.4s-%4.4s-%4.4s",&lickey[0],&lickey[4],&lickey[8],&lickey[12]);
 }
@@ -274,9 +267,7 @@ char	*formkey;
 **
 */
 
-unformatkey(lickey,formkey)
-char	*lickey;
-char	*formkey;
+void unformatkey(char* lickey, char* formkey)
 {
 	int	i1,i2;
 
@@ -317,10 +308,7 @@ char	*formkey;
 **
 */
 
-mkvalcode(lickey,machineid,valcode)
-char	lickey[LICENSE_KEY_SIZE];
-char	*machineid;
-char	valcode[3];
+void mkvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3])
 {
 	valcode[0] = entran(checksummem(lickey,LICENSE_KEY_SIZE,MAXTRAN));
 	valcode[1] = entran(checksummem(machineid,strlen(machineid),MAXTRAN));
@@ -352,10 +340,7 @@ char	valcode[3];
 **
 */
 
-int ckvalcode(lickey,machineid,valcode)
-char	lickey[LICENSE_KEY_SIZE];
-char	*machineid;
-char	valcode[3];
+int ckvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3])
 {
 	if ( valcode[0] == entran(checksummem(lickey,LICENSE_KEY_SIZE,MAXTRAN)) &&
 	     valcode[1] == entran(checksummem(machineid,strlen(machineid),MAXTRAN)) &&
@@ -369,3 +354,12 @@ char	valcode[3];
 	}
 }
 
+/*
+**	History:
+**	$Log: wlickey.c,v $
+**	Revision 1.7  1996-08-19 18:33:18-04  gsl
+**	drcs update
+**
+**
+**
+*/

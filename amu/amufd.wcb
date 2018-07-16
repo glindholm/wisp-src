@@ -1,0 +1,24 @@
+      *******************************************************************************
+      *     Record Definition for the AMU menu file.                                *
+      *******************************************************************************
+000001 FD  MENU-FILE
+000001     RECORD 2024 CHARACTERS
+000001     LABEL RECORDS ARE STANDARD
+000001     VALUE OF FILENAME IS FIL-FOR-MFILE
+000001              LIBRARY  IS LIB-FOR-MFILE
+000001              VOLUME   IS VOL-FOR-MFILE.
+000001
+123456 01  MFILE-RECORD.
+123456     03  MFILE-KEY.
+               05  RECORD-TYPE               PIC X(02).
+               05  MENU-ID                   PIC X(06).
+               05  USER-ID-KEY REDEFINES MENU-ID.
+                   07  USER-ID               PIC X(03).
+                   07  FILLER                PIC X(03).
+               05  MREC-DEFINITION.
+                   07  FILLER                PIC X(02).
+                   07  MRECORD-DEF           PIC X(02).
+                   07  MREC-DEF-NUMBER REDEFINES MRECORD-DEF.
+                       10  FILLER            PIC X(01).
+                       10  MREC-DEF-NUM      PIC 9(01).
+123456     03  MFILE-REST-OF-RECORD          PIC X(2012).

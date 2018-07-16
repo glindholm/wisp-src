@@ -1,18 +1,16 @@
-
       /*****************************************************************
       *                                                                *
       *                       IDENTIFICATION DIVISION                  *
       *                                                                *
       ******************************************************************
       *
-      *$LINKMAIN
        IDENTIFICATION DIVISION.
        PROGRAM-ID.
            SAMPLE.
        AUTHOR.
            Greg Lindholm.
        DATE-WRITTEN.
-           03/13/89.
+           $Date:$.
       /*****************************************************************
       *                                                                *
       *                         ENVIRONMENT DIVISION                   *
@@ -128,14 +126,10 @@
        01  FLV-LIB                        PIC X(8) VALUE SPACES.
        01  FLV-VOL                        PIC X(6) VALUE SPACES.
 
-       01  SAMPLE-PROG                    PIC X(8) VALUE "SAMPLE  ".
        01  DISPLAY-PROG                   PIC X(8) VALUE "DISPLAY ".
 
        01  CODE-ELSE-TEST                 PIC x(80) VALUE SPACES.
 
-       01  VOL-TRIGGER-PROG               PIC X(6) VALUE SPACES.
-       01  LIB-TRIGGER-PROG               PIC X(8) VALUE SPACES.
-       01  FILE-TRIGGER-PROG              PIC X(8) VALUE SPACES.
 
       /*****************************************************************
       *                                                                *
@@ -161,62 +155,70 @@
                SOURCE FLV-VOL OBJECT FLV-VOL.
 
        01  MAIN-SCREEN USAGE IS DISPLAY-WS.
-           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
-               "TRY THINGS:".
+           03  FILLER  PIC X(50) ROW 1 COL 2  VALUE
+               "SAMPLE: WISP QA TEST PROGRAMS".
            03  FILLER  PIC X(11) ROW 1 COL 60 VALUE
                "MAIN-SCREEN".
-           03  FILLER  PIC X(40) ROW 3 COL 20 VALUE
-               "1) COBLINK".
-           03  FILLER  PIC X(37) ROW 5 COL 20 VALUE
-               "2) TRY [MOVE WITH CONVERSION] FIELDS.".
-           03  FILLER  PIC X(18) ROW 7 COL 20 VALUE
-               "3) FILE I/O TESTS.".
-           03  FILLER  PIC X(20) ROW 9 COL 20 VALUE
-               "4) SCREEN I/O TESTS.".
-           03  FILLER  PIC X(30) ROW 11 COL 20 VALUE
-               "5) WANG USERSUBS TESTS.".
-           03  FILLER  PIC X(15) ROW 13 COL 20 VALUE
-               "6) COBOL TESTS.".
-           03  FILLER  PIC X(18) ROW 15 COL 20 VALUE
-               "7) PRINTING TESTS.".
-           03  FILLER  PIC X(30) ROW 17 COL 20 VALUE
-               "8) WISP SUBROUTINE TESTS.".
-           03  FILLER  PIC X(37) ROW 19 COL 20 VALUE
-               "9) SET TRIGGER PROGRAM (ONLINE HELP).".
+           03  FILLER  PIC X(40) ROW 7 COL 20 VALUE
+               "(3) FILE I/O TESTS.".
+           03  FILLER  PIC X(40) ROW 9 COL 20 VALUE
+               "(4) SCREEN I/O TESTS.".
+           03  FILLER  PIC X(40) ROW 11 COL 20 VALUE
+               "(5) WANG VSSUBS TESTS.".
+           03  FILLER  PIC X(40) ROW 13 COL 20 VALUE
+               "(6) COBOL TESTS.".
+           03  FILLER  PIC X(40) ROW 15 COL 20 VALUE
+               "(7) PRINTING TESTS.".
+           03  FILLER  PIC X(40) ROW 17 COL 20 VALUE
+               "(8) WISP SUBROUTINE TESTS.".
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
        01  CONDITIONAL-SCREEN USAGE IS DISPLAY-WS.
-           05  COND-LINE-1   PIC X(40) ROW 5   COL 20.
-           05  COND-LINE-2   PIC X(40) ROW 6   COL 20.
-           05  COND-LINE-3   PIC X(40) ROW 7   COL 20.
-           05  COND-LINE-4   PIC X(40) ROW 8   COL 20.
-           05  COND-LINE-5   PIC X(40) ROW 9   COL 20.
-           05  COND-LINE-6   PIC X(40) ROW 10  COL 20.
-           05  COND-LINE-7   PIC X(40) ROW 11  COL 20.
-           05  COND-LINE-8   PIC X(40) ROW 12  COL 20.
-           05  COND-LINE-9   PIC X(40) ROW 13  COL 20.
-           05  COND-LINE-10  PIC X(40) ROW 14  COL 20.
+           05  SOURCE COND-LINE-1   PIC X(40) ROW 5   COL 20.
+           05  SOURCE COND-LINE-2   PIC X(40) ROW 6   COL 20.
+           05  SOURCE COND-LINE-3   PIC X(40) ROW 7   COL 20.
+           05  SOURCE COND-LINE-4   PIC X(40) ROW 8   COL 20.
+           05  SOURCE COND-LINE-5   PIC X(40) ROW 9   COL 20.
+           05  SOURCE COND-LINE-6   PIC X(40) ROW 10  COL 20.
+           05  SOURCE COND-LINE-7   PIC X(40) ROW 11  COL 20.
+           05  SOURCE COND-LINE-8   PIC X(40) ROW 12  COL 20.
+           05  SOURCE COND-LINE-9   PIC X(40) ROW 13  COL 20.
+           05  SOURCE COND-LINE-10  PIC X(40) ROW 14  COL 20.
+
+       01  filler.	   
+           05  COND-LINE-1   PIC X(40).
+           05  COND-LINE-2   PIC X(40).
+           05  COND-LINE-3   PIC X(40).
+           05  COND-LINE-4   PIC X(40).
+           05  COND-LINE-5   PIC X(40).
+           05  COND-LINE-6   PIC X(40).
+           05  COND-LINE-7   PIC X(40).
+           05  COND-LINE-8   PIC X(40).
+           05  COND-LINE-9   PIC X(40).
+           05  COND-LINE-10  PIC X(40).
 
        01  COBOL-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
                "TRY THINGS:".
            03  FILLER  PIC X(12) ROW 1 COL 60 VALUE
                "COBOL-SCREEN".
-           03  FILLER  PIC X(16) ROW 3 COL 20 VALUE
-               "1) DISPLAY VERB.".
+           03  FILLER  PIC X(35) ROW 3 COL 20 VALUE
+               "(1) DISPLAY VERB.".
            03  FILLER  PIC X(35) ROW 5 COL 20 VALUE
-               "2) RETURN-CODE.".
+               "(2) RETURN-CODE.".
            03  FILLER  PIC X(35) ROW 7 COL 20 VALUE
-               "3) SORT VERB.".
+               "(3) SORT VERB.".
            03  FILLER  PIC X(35) ROW 9 COL 20 VALUE
-               "4) CONDITIONAL TEST.".
+               "(4) CONDITIONAL TEST.".
            03  FILLER  PIC X(35) ROW 11 COL 20 VALUE
-               "5) ACCEPT VERB.".
+               "(5) ACCEPT VERB.".
            03  FILLER  PIC X(35) ROW 13 COL 20 VALUE
-               "6) STOP VERB.".
+               "(6) STOP VERB.".
+           03  FILLER  PIC X(40) ROW 15 COL 20 VALUE
+               "(7) TRY [MOVE WITH CONVERSION] FIELDS.".
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
        01  SORT-INX        PIC 99.
        01  SORT-SCREEN USAGE IS DISPLAY-WS.
@@ -237,7 +239,7 @@
                10  FILLER PIC X(27) ROW 8 COL 40 
                    SOURCE SCN-SORTED-REC.
            05  FILLER PIC X(60) ROW 24 COL 10
-               VALUE "Verify the above are correct; ENTER to continue.".
+               VALUE "Verify the above are correct (ENTER) to continue".
        01  FILLER.
            05  FILLER OCCURS 10 TIMES.
                10  SCN-UNSORTED-REC  PIC X(27).
@@ -256,7 +258,7 @@
            03  FILLER  PIC 9(3)  ROW 10 COL 51
                SOURCE MY-RETURN-CODE OBJECT MY-RETURN-CODE.
            03  FILLER  PIC X(35) ROW 24 COL 10 VALUE
-               "PRESS RETURN TO CONTINUE".
+               "PRESS (ENTER) TO CONTINUE".
 
        01  MWCONV-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(28) VALUE
@@ -270,27 +272,20 @@
                OBJECT MWC-TXT.
            03  MWC-NUMERIC PIC 9(12).9(5)- ROW 12 COL 20
                SOURCE MWC-NUM.
+	   03  FILLER  PIC X(30) ROW 20 COL 10 
+       	       VALUE "Press (1) to run auto-test".
+	   03  FILLER  PIC X(35) ROW 20 COL 42 SOURCE MWC-AUTO-TEST.
            03  FILLER  PIC X(40) ROW 24 COL 10 VALUE
-               "ENTER TO CONTINUE; PF16-EXIT".
+               "(ENTER) TO CONTINUE, (16) TO EXIT".
 
-       01  COBLINK-SCREEN USAGE IS DISPLAY-WS.
-           05  FILLER PIC X(30) VALUE
-               "CALL COBLINK USING PROGNAME"
-               ROW 1 COL 25.
-           05  COBLINK-TITLE PIC X(60) VALUE SPACES ROW 4 COL 10.
-           05  FILLER PIC X(8) VALUE "PROGNAME" ROW 12 COL 20.
-           05  FILLER PIC X(8) SOURCE SAMPLE-PROG
-                               OBJECT SAMPLE-PROG
-               ROW 12 COL 30.
-           05  FILLER PIC X(40) VALUE "ENTER TO CONTINUE; PF16-EXIT"
-               ROW 24 COL 20.
+       01  MWC-AUTO-TEST PIC X(35) VALUE "(Test not run)".
+       01  MWC-TXT PIC X(18) VALUE SPACES.
+       01  MWC-NUM PIC S9(12)V9(5).
+       
 
        01  COMPANY     PIC X(20).
        01  YEARCODE    PIC 9(4).
        01  ACCESSCODE  PIC X.
-
-       01  MWC-TXT PIC X(18) VALUE SPACES.
-       01  MWC-NUM PIC S9(12)V9(5).
 
       /*****************************************************************
       *                                                                *
@@ -301,13 +296,9 @@
        PROCEDURE DIVISION.
        LOOP-DISPLAY.
            DISPLAY AND READ MAIN-SCREEN ON CRT
-           PFKEYS 1, 2, 3, 4, 5, 6, 7, 8, 9, 16.
+           PFKEYS 3, 4, 5, 6, 7, 8, 16.
 
-           IF PF-KEY = "01" THEN
-              PERFORM DO-COBLINK
-           ELSE IF PF-KEY = "02" THEN
-              PERFORM DO-MOVE-WITH-CONVERSION
-           ELSE IF PF-KEY = "03" THEN
+           IF PF-KEY = "03" THEN
               PERFORM FILE-TESTS
            ELSE IF PF-KEY = "04" THEN
               PERFORM SCREEN-TESTS
@@ -319,8 +310,6 @@
               PERFORM PRINTING-TESTS
            ELSE IF PF-KEY = "08" THEN
               PERFORM WISPSUBS-TESTS
-           ELSE IF PF-KEY = "09" THEN
-              PERFORM SET-TRIGGER-PROGRAM
            ELSE IF PF-KEY = "16" THEN
               GO TO EXIT-PROGRAM.
 
@@ -344,18 +333,21 @@
        COBOL-TESTS.
 
            DISPLAY AND READ COBOL-SCREEN ON CRT
-           PFKEYS 1, 2, 3, 4, 5, 6, 16.
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 16.
 
            IF PF-KEY = "01" THEN
 123456*78901234567890123456789012345678901234567890123456789012345678901
+      *
+      * Note A DISPLAY VERB does 79 characters per line.
+      *
               DISPLAY 
            "123456789012345678901234567890123456789012345678901234567890
-      -    "12345678901234567890"
-           "(2)         *** THIS IS A TEST OF THE DISPLAY VERB ***       
-      -    "                    "
-           "(3)
-      -    "                    "
-           "(4)  Four lines item are sent to the screen. "
+      -    "1234567890123456789"
+           "<2>         *** THIS IS A TEST OF THE DISPLAY VERB ***       
+      -    "                   "
+           "<3>
+      -    "                   "
+           "<4>  Four lines item are sent to the screen. "
               GO TO COBOL-TESTS
            ELSE IF PF-KEY = "02" THEN
               MOVE RETURN-CODE TO MY-RETURN-CODE
@@ -378,6 +370,8 @@
               STOP "TEST OF STOP VERB"
               STOP 3
               GO TO COBOL-TESTS
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM DO-MOVE-WITH-CONVERSION
            ELSE IF PF-KEY NOT = "16" THEN
               GO TO COBOL-TESTS.
 
@@ -437,17 +431,13 @@
 
       ******************************************************************
 
-       DO-COBLINK.
-           DISPLAY AND READ COBLINK-SCREEN ON CRT PFKEYS 16.
-           IF PF-KEY NOT = "16"
-               CALL "COBLINK" USING SAMPLE-PROG
-               GO TO DO-COBLINK.
-
-      ******************************************************************
-
        DO-MOVE-WITH-CONVERSION.
            DISPLAY AND READ MWCONV-SCREEN ON CRT
-           PFKEYS 16.
+           PFKEYS 1, 16.
+
+	   IF PF-KEY = "01" THEN
+	       PERFORM MWC-AUTO THRU MWC-AUTO-EXIT
+	       GO TO DO-MOVE-WITH-CONVERSION.
 
            MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
            ON ERROR MOVE "ERROR" TO MWC-TXT.
@@ -455,6 +445,68 @@
            IF PF-KEY NOT = "16"
               GO TO DO-MOVE-WITH-CONVERSION.              
 
+      ******************************************************************
+       MWC-AUTO.
+
+       	   MOVE "AUTO TEST FAILED" TO MWC-AUTO-TEST.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE "+123.45" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = 123.45 OR MWC-TXT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE ".12345" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = .12345 OR MWC-TXT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE "12345-" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = -12345 OR MWC-TXT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE "-12.34" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = -12.34 OR MWC-TXT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE "12.345678" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = 0 OR MWC-TXT NOT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE "12.345.67" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = 0 OR MWC-TXT NOT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE "XYZ" TO MWC-TXT.
+           MOVE WITH CONVERSION MWC-TXT TO MWC-NUM
+           ON ERROR MOVE "ERROR" TO MWC-TXT.
+	   IF MWC-NUM NOT = 0 OR MWC-TXT NOT = "ERROR" THEN
+	       GO TO MWC-AUTO-EXIT.
+
+
+       	   MOVE 0 TO MWC-NUM.
+       	   MOVE SPACES TO MWC-TXT.
+       	   MOVE "AUTO TEST SUCEEDED" TO MWC-AUTO-TEST.
+
+       MWC-AUTO-EXIT.
+       	   EXIT.
+	   
       ******************************************************************
 
        TRY-DISPLAY-UTILITY.
@@ -604,23 +656,7 @@
       *$MF-END
 
       ******************************************************************
-       SET-TRIGGER-PROGRAM.
 
-           MOVE "SET TRIGGER PROGRAM FILE NAME" TO FLV-TITLE.
-           MOVE FILE-TRIGGER-PROG               TO FLV-FILE.
-           MOVE LIB-TRIGGER-PROG                TO FLV-LIB.
-           MOVE VOL-TRIGGER-PROG                TO FLV-VOL.
-
-           DISPLAY AND READ FILE-LIB-VOL ON CRT
-           PFKEYS 16.
-
-           MOVE FLV-FILE  TO FILE-TRIGGER-PROG.
-           MOVE FLV-LIB   TO LIB-TRIGGER-PROG.
-           MOVE FLV-VOL   TO VOL-TRIGGER-PROG.
-
-           CALL "settrigprog" USING VOL-TRIGGER-PROG,
-                                    LIB-TRIGGER-PROG,
-                                    FILE-TRIGGER-PROG.
 
       ******************************************************************
       * ALL DONE.

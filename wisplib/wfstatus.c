@@ -1,13 +1,14 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* WFSTATUS.C ... Converts the VAX/VMS status code value into the VS equivalent.						*/
 
+#include <string.h>
 #include <ctype.h>
 #include "idsistd.h"
 
-wfstatus(status_val)
-char *status_val;					                                /* Pointer to the arg.			*/
+void wfstatus(char* status_val)
 {
 	char l_status_val[2];								/* Storage for the arg.			*/
-	int i;
 
  	memcpy(l_status_val, status_val, 2);						/* Get the value for speed purposes.	*/
 
@@ -30,3 +31,12 @@ char *status_val;					                                /* Pointer to the arg.			*
  	memcpy(status_val, l_status_val, 2);
 }
                                                                                                                          
+/*
+**	History:
+**	$Log: wfstatus.c,v $
+**	Revision 1.9  1996-08-19 18:33:15-04  gsl
+**	drcs update
+**
+**
+**
+*/

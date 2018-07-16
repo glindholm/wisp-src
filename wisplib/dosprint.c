@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -20,6 +22,7 @@
 **	prtwrite()	Write a block of data to a dos printer.
 **	prtcheck()	Check if a dos printer if ready for data. INT x17 x02
 **	prtputc()	Write a single character to a dos printer. INT x17 x00
+**	dos_int_17()	prtcheck(), prtputc() and prtinit() call this fcn
 **	prtstatus()	Return a coded error number based on a dos printer status.
 **	prtinit()	Initialize a dos printer. INT x17 x01
 **	prterr()	Return an error message for a return code from prtfile()
@@ -41,6 +44,8 @@
 #include "idsistd.h"
 #include "wdefines.h"
 #include "werrlog.h"
+#include "wrunconfig.h"
+#include "wispcfg.h"
 
 #define PRTFILE_SUCCESS                 0
 #define PRTFILE_FILE_OPEN_FAILED        1
@@ -55,6 +60,17 @@
 #define ERR_OUT_OF_PAPER	3
 #define ERR_IO_ERROR		4
 
+/*
+**	DOS functions for Int 17h
+**	The last macro, NO_CHARACTER, is not a DOS fcn.  Need to 
+**	pass no character when only doing functions 1 and 2.
+*/
+#define WRITE_CHAR		0
+#define INIT_PORT		1
+#define GET_STATUS		2
+
+#define NO_CHARACTER		0
+
 static char *statusmess[] = {
 	"OK",
 	"NOT SELECTED",
@@ -67,8 +83,9 @@ static int prtfile();
 static int prtwrite();
 static int prtcheck();
 static int prtputc();
-static int prtstatus();
 static int prtinit();
+static unsigned char dos_int_17();
+static int prtstatus();
 static char *prterr();
 static int get_prtinfo();
 static int escstr();
@@ -168,7 +185,7 @@ char    mode;
 		put_lastline(lastline);
 		while( copies-- )
 		{
-			rc = prtfile(file,(int)printer,lpclass,(int)formnum);
+			rc = prtfile(file,(unsigned int)printer,lpclass,(int)formnum);
 			if ( rc != 0 )
 			{
 				werrlog(ERRORCODE(6),file,prterr(rc),0,0,0,0,0,0); 
@@ -233,7 +250,7 @@ char    mode;
 */
 static int prtfile(file,prtnum,class,form)
 char    *file;
-int	prtnum;
+unsigned int	prtnum;
 char	class;
 int	form;
 {
@@ -254,9 +271,11 @@ int	form;
 		break;
 	case 1:
 		printer = "LPT2";
+		prtnum = 1;
 		break;
 	case 2:
 		printer = "LPT3";
+		prtnum = 2;
 		break;
 	}
 
@@ -268,7 +287,7 @@ int	form;
 	*/
 	serial_printer = 0;
 
-	while (rc = prtcheck(prtnum))
+	while (rc = prtcheck( prtnum ))
 	{
 		char	buff[256];
 
@@ -322,8 +341,8 @@ int	form;
 			rc = PRTFILE_NOT_READY;
 		}
 	}
-
         return( rc );
+
 }
 
 /*
@@ -360,13 +379,13 @@ int	form;
 **
 */
 static int prtwrite(printer,serial_printer,data,len)
-int	printer;
+unsigned int	printer;
 int	serial_printer;
 char	*data;
 int	len;
 {
 #define BUSY_TIMEOUT	20
-	char	buff[256];
+	unsigned char	buff[256];
 	int	rc;
 	int	twiddle;
 
@@ -375,7 +394,7 @@ int	len;
 		twiddle = 0;
 		if (serial_printer)
 		{
-			while (rc = prtcheck(printer))
+			while (rc = prtcheck( printer ))
 			{
 				twiddle++;
 				if (rc != ERR_BUSY || twiddle > BUSY_TIMEOUT)
@@ -398,7 +417,7 @@ int	len;
 			}
 		}
 
-		while (rc = prtputc(printer,*data))
+		while (rc = prtputc( printer, *data ))
 		{
 			if (!serial_printer)
 			{
@@ -429,7 +448,7 @@ int	len;
 /*
 **	Routine:	prtcheck()
 **
-**	Function:	Check if a dos printer if ready for data. INT x17 x02
+**	Function:	Check if a dos printer is ready for data. INT x17 x02
 **
 **	Description:	Does a DOS interupt 17 function 2 to get the status of the printer.
 **			Then calls prtstatus() to convert the status into an error code.
@@ -448,18 +467,12 @@ int	len;
 **
 */
 static int prtcheck(printer)
-int	printer;
+unsigned int printer;
 {
-#define	NOT_BUSY	0x80
-#define	OUT_OF_PAPER	0x20
-#define SELECTED	0x10
-#define IO_ERROR	0x08
-	union REGS reg;
-	reg.h.ah = 2;
-	reg.x.dx = printer;
-	int86(0x17, &reg, &reg);
+	unsigned char dos_fcn = GET_STATUS;
+	unsigned char c	= NO_CHARACTER;
 
-	return(prtstatus((unsigned char)reg.h.ah));
+	return( prtstatus( dos_int_17( printer, c, dos_fcn )));
 }
 
 /*
@@ -484,46 +497,12 @@ int	printer;
 **
 */
 static int prtputc(printer,c)
-int	printer;
-char	c;
+unsigned int printer;
+unsigned char	c;
 {
-	union REGS reg;
-	reg.h.ah = 0;
-	reg.h.al = (unsigned char)c;
-	reg.x.dx = printer;
-	int86(0x17, &reg, &reg);
-
-	return(prtstatus((unsigned char)reg.h.ah));
-}
-
-/*
-**	Routine:	prtstatus()
-**
-**	Function:	To convert the DOS int 17 printer status into a error code.
-**
-**	Description:	Test the error bits of the status and return an error code.
-**
-**	Arguments:
-**	reg_h_ah	The printer status from an INT 17.
-**
-**	Globals:	None
-**
-**	Return:		error code.
-**
-**	Warnings:	None
-**
-**	History:	
-**	04/01/93	Written by GSL
-**
-*/
-static int prtstatus(reg_h_ah)
-unsigned char reg_h_ah;
-{
-	if (  reg_h_ah & OUT_OF_PAPER) 	return(ERR_OUT_OF_PAPER);
-	if (!(reg_h_ah & SELECTED)) 	return(ERR_NOT_SELECTED);
-	if (!(reg_h_ah & NOT_BUSY)) 	return(ERR_BUSY);
-	if (  reg_h_ah & IO_ERROR) 	return(ERR_IO_ERROR);
-	return(0);
+	unsigned char dos_fcn = WRITE_CHAR;
+	
+	return( prtstatus( dos_int_17( printer, c, dos_fcn )));
 }
 
 /*
@@ -548,13 +527,114 @@ unsigned char reg_h_ah;
 **
 */
 static int prtinit(printer)
-int	printer;
+unsigned int	printer;
 {
+	unsigned char dos_fcn = INIT_PORT;
+	unsigned char c = NO_CHARACTER;
+
+	return( prtstatus( dos_int_17( printer, c, dos_fcn )));
+}
+
+/*
+**	Routine:	dos_int_17()
+**
+**	Function:	Front-end to the DOS int 17h call; consolidates
+**			previous fcns: prtcheck(), prtputc() and 
+**			prtinit(). 
+**
+**	Description:	Does a DOS interupt 17 function xx.  Current 
+**			implementations: Get printer status, initialize
+**			printer or print a character. 
+**			prtstatus() is called to convert the return 
+**			status into an error code.
+**
+**	Arguments:
+**	printer		DOS printer number (0, 1 or 2)
+**	c		The character to print (depends on dos_fcn).
+**	dos_fcn		DOS function to run when int 17h is called. 
+**
+**	Globals:	None
+**
+**	Return:		See prtstatus()
+**
+**	Warnings:	None
+**
+**	History:	
+**	05/31/94	Written by CBA.
+**
+*/
+static unsigned char dos_int_17( printer, c, dos_fcn )
+unsigned int printer;
+unsigned char c;
+unsigned char dos_fcn;
+{
+
 	union REGS reg;
-	reg.h.ah = 1;
-	reg.x.dx = printer;
-	int86(0x17, &reg, &reg);
-	return(prtstatus((unsigned char)reg.h.ah));
+
+	reg.h.ah = dos_fcn;
+	reg.h.al = c;
+	#ifdef _INTELC32_
+		reg.x.dx = printer;
+		int86(0x17, &reg, &reg);
+	#endif
+	#ifdef WATCOM
+		reg.x.edx = printer;
+		int386(0x17, &reg, &reg);
+	#endif
+	#ifdef DMF
+		__asm
+		{
+			pusha	; preprocess, save regs and flags
+			pushf
+			mov ah,dos_fcn
+			mov al,c
+			mov dx,printer	
+			int 17h		; make the call
+			mov reg.h.ah,ah	; xfer the returned value back to protected memory
+			popf	; post-process, pop registers/flags back
+			popa
+		}
+	#endif
+
+
+	return( reg.h.ah );
+}
+
+/*
+**	Routine:	prtstatus()
+**
+**	Function:	To convert the DOS int 17 printer status into a error code.
+**
+**	Description:	Test the error bits of the status and return an error code.
+**
+**	Arguments:
+**	reg_h_ah	The printer status from an INT 17.
+**
+**	Globals:	None
+**
+**	Return:		error code.
+**
+**	Warnings:	None
+**
+**	History:	
+**	04/01/93	Written by GSL
+**	05/31/94	CBA, relocated macros originally def'd in prtcheck()
+**
+*/
+static int prtstatus(reg_h_ah)
+unsigned char reg_h_ah;
+{
+
+#define	NOT_BUSY	0X80
+#define OUT_OF_PAPER	0X20
+#define SELECTED	0x10
+#define IO_ERROR	0X08
+
+	if (  reg_h_ah & OUT_OF_PAPER) 	return(ERR_OUT_OF_PAPER);
+	if (!(reg_h_ah & SELECTED)) 	return(ERR_NOT_SELECTED);
+	if (!(reg_h_ah & NOT_BUSY)) 	return(ERR_BUSY);
+	if (  reg_h_ah & IO_ERROR) 	return(ERR_IO_ERROR);
+	return(0);
 }
 
 /*
@@ -713,7 +793,7 @@ char	*prt_reset;
 		prt_info_list = (struct prt_info *)malloc(sizeof(struct prt_info));
 		curr = prt_info_list;
 
-		if (ptr = getenv(WISP_CONFIG_ENV))
+		if (ptr = wispconfigdir())
 		{
 			buildfilepath(filename,ptr,"PRTMAP");
 			if (fh = fopen(filename,"r"))
@@ -913,3 +993,15 @@ char	*dest;
 static int dummy_dosprint;
 #endif
 
+/*
+**	History:
+**	$Log: dosprint.c,v $
+**	Revision 1.8  1996-10-08 20:19:35-04  gsl
+**	add include wispcfg.h
+**
+**	Revision 1.7  1996-08-19 15:32:16-07  gsl
+**	drcs update
+**
+**
+**
+*/

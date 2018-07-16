@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			 Copyright (c) 1988 - 1991			*/
@@ -9,18 +11,16 @@
 /*					Include required header files.								*/
 
 #include <stdio.h>
-#ifndef unix	/* VMS or MSDOS */
+#include <string.h>
 #include <stdlib.h>
-#endif
-#ifndef VMS	/* unix or MSDOS */
-#endif
+#include <stdarg.h>
+
+#include "vutil.h"
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
-
-#ifdef OSF1_ALPHA
-void *malloc();
-#endif
+#include "vmodules.h"
+#include "vraw.h"
 
 /*					Local definitions.									*/
 
@@ -29,22 +29,38 @@ void *malloc();
 
 /*					Report internal errors if verbose.							*/
 
-int vre(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8;
+int vre(char *text, ...)
 {
+	static int already_in_vre = 0;
 	extern int verbose;								/* Verbosity control.			*/
 	char string[PRINT_BUFFER_SIZE];
+	va_list args;
+	
+	va_start(args,text);
+
+	if (already_in_vre)
+	{
+		/*
+		**	If vre() is called recursively then we have completely lost control
+		**	of the terminal (probably disconnected) so just exit.
+		**	(Don't call vexit as it will probably result in another vre() call.)
+		*/
+		exit(2);
+	}
+
+	already_in_vre = 1;
 
 	if (verbose)									/* Don't report unless verbose.		*/
 	{
-		sprintf(string, text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);		/* Display the text.			*/
-		printf("\007\r\n%s\r\n",string);
-		printf("Depress any key to continue...\r\n");
-		vgetm();
+		vsprintf(string, text,args);						/* Display the text.			*/
+		vrawerror(string);
 	}
+
+	already_in_vre = 0;
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-int vre_window(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8;
+int vre_window(char *text, ...)
 {
 	extern int verbose;								/* Verbosity flag.			*/
 	char string[PRINT_BUFFER_SIZE];
@@ -54,9 +70,12 @@ int vre_window(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long a
 	int row,col,rows,cols;
 	int eot;									/* End of text flag.			*/
 	unsigned char *vsss(), *save;							/* Memory save pointer.			*/
+	va_list args;
+
+	va_start(args,text);
 
 	if (!verbose) return(FAILURE);							/* Return to the caller.		*/
-	sprintf(string, text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);			/* Display the text.			*/
+	vsprintf(string, text,args);							/* Display the text.			*/
 
 	row = 4;									/* Determine where to put the window.	*/
 	col = 6;
@@ -67,12 +86,12 @@ int vre_window(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long a
 
 	if (!state_active) { vstate(0); verase(FULL_SCREEN); }				/* Initialize if not already done.	*/
 
-	vbuffering(LOGICAL);								/* Start buffering.			*/
+	vbuffering(VBUFF_START);					       		/* Start buffering.			*/
 	save = vsss(row, col, rows, cols);						/* Save the window area.		*/
 	vbell();									/* Let the bells ring.			*/
 
-	vmode(BOLD|REVERSE);								/* Select the background.		*/
-	vcharset(DEFAULT);								/* Default character set.		*/
+	vmode(VMODE_BOLD|VMODE_REVERSE);						/* Select the background.		*/
+	vcharset(VCS_DEFAULT);								/* Default character set.		*/
 	eot = FALSE;									/* Not at end of text yet.		*/
 	currrow = 0;
 	for (i = 0; i < linesize*(rows-3); i++)
@@ -91,20 +110,20 @@ int vre_window(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long a
 		}
 	}
 	currrow++;
-	vtext(BOLD|REVERSE,row+currrow,col+1,"Depress any key to continue...                                  ");
+	vtext(VMODE_BOLD|VMODE_REVERSE,row+currrow,col+1,"Depress any key to continue...                                  ");
 	vgrid(row,col,rows,cols,0,0);							/* Outline the window.			*/
 	vmove(row+currrow,col+32);							/* Move to an appropriate position.	*/
 	vgetm();									/* Wait for a key.			*/
 
 	vrss(save);									/* Restore the memory area.		*/
-	vbuffering(AUTOMATIC);
+	vbuffering(VBUFF_END);
 
 	return(SUCCESS);
 }
 
 
 /*					Calculate the array position in screen map.						*/
-int vml(y) int y;									/* Calculate the virtual map line no.	*/
+int vml(int y)										/* Calculate the virtual map line no.	*/
 {
 	extern int vmap_top;								/* Reference to current map top.	*/
 	register int i;									/* Working register.			*/
@@ -115,7 +134,7 @@ int vml(y) int y;									/* Calculate the virtual map line no.	*/
 }
 /*					Calculate the array position in screen map.						*/
 /* This is the same as vml() except you must supply the top arg.								*/
-int vmlx(top,y) int top,y;								/* Calculate the virtual map line no.	*/
+int vmlx(int top, int y)								/* Calculate the virtual map line no.	*/
 {
 	register int i;									/* Working register.			*/
 
@@ -127,7 +146,7 @@ int vmlx(top,y) int top,y;								/* Calculate the virtual map line no.	*/
 
 /*					Adjust for false movement to home position.						*/
 
-int vha()										/* Move to vcur_lin and vcur_col.	*/
+int vha(void)										/* Move to vcur_lin and vcur_col.	*/
 {
 	extern int vcur_lin, vcur_col;							/* Current postion.			*/
 	register int i, j;								/* Working registers.			*/
@@ -142,62 +161,38 @@ int vha()										/* Move to vcur_lin and vcur_col.	*/
 
 /*					Subroutine to determine if data is visible.						*/
 
-int visible(c,a) char c; int a;								/* Check char c with attributes a.	*/
+int visible(char c, int a)								/* Check char c with attributes a.	*/
 {
 	extern int vis_space, rvis_space;						/* Reference visible blank renditions.	*/
-	if (c  < ' ') return(-1);							/* A control character?			*/
 	if (c != ' ') return(TRUE);							/* As space?				*/
-	if ((vscr_atr & LIGHT) && (a & (rvis_space))) return(TRUE);			/* Is space visible?			*/
-	if ((vscr_atr & DARK ) && (a & ( vis_space))) return(TRUE);
+	if ((vscr_atr & VSCREEN_LIGHT) && (a & (rvis_space))) return(TRUE);		/* Is space visible?			*/
+	if ((vscr_atr & VSCREEN_DARK ) && (a & ( vis_space))) return(TRUE);
 	return(FALSE);									/* Not visible.				*/
 }
 
 /*					SubroutineS to adjust global change tracking flags.					*/
 
-int vic(line) int line;									/* Adjust global change count for line.	*/
+int vmaskc(int cset)									/* Mask all but character set bits.	*/
 {
-	extern int vscr_cng, vlin_cng[MAX_LINES_PER_SCREEN];				/* Global change control flags.		*/
-
-	if (vscr_cng++ > MAP_SIZE) vscr_cng = MAP_SIZE;					/* More changes than chars per screen?	*/
-	if (vlin_cng[line]++ > MAX_COLUMNS_PER_LINE) vlin_cng[line] = MAX_COLUMNS_PER_LINE;
-	return(SUCCESS);								/* Return to the caller.		*/
+	return(cset & (VCS_GRAPHICS|VCS_ROM_STANDARD|VCS_ROM_GRAPHICS|VCS_DOWN_LOADED));/* Return the value.			*/
 }
 
-int vdc(line) int line;									/* Adjust global change count for line.	*/
+int vmaskm(int mode)									/* Mask all but rendition bits.		*/
 {
-	extern int vscr_cng, vlin_cng[MAX_LINES_PER_SCREEN];				/* Global change control flags.		*/
-
-	if (--vscr_cng < 0) vscr_cng = 0;						/* More changes than chars per screen?	*/
-	if (--vlin_cng[line] < 0) vlin_cng[line] = 0;
-	return(SUCCESS);								/* Return to the caller.		*/
-}
-
-int vmasks(size) int size;								/* Mask all but size bits.		*/
-{
-	return(size & (DOUBLE_WIDTH|DOUBLE_HEIGHT));					/* Return the value.			*/
-}
-
-int vmaskc(cset) int cset;								/* Mask all but character set bits.	*/
-{
-	return(cset & (GRAPHICS|ROM_STANDARD|ROM_GRAPHICS|DOWN_LOADED));		/* Return the value.			*/
-}
-
-int vmaskm(mode) int mode;								/* Mask all but rendition bits.		*/
-{
-	return(mode & (BOLD|UNDERSCORE|BLINK|REVERSE));					/* Return the value.			*/
+	return(mode & (VMODE_BOLD|VMODE_UNDERSCORE|VMODE_BLINK|VMODE_REVERSE));		/* Return the value.			*/
 }
 
 
 /*						Save screen section								*/
 
-unsigned char *vsss(row,col,rows,cols) int row,col,rows,cols;				/* Save a screen segment.		*/
+unsigned char *vsss(int row, int col, int rows, int cols)				/* Save a screen segment.		*/
 {
 	register int i, j, k;								/* Working registers.			*/
 	unsigned char *save, *s;							/* Memory allocation pointers.		*/
 	int savesize;
 
-	vbuffering(LOGICAL);								/* This is all one section.		*/
-	vdefer(RESTORE);								/* Restore from any deferred states.	*/
+	vbuffering(VBUFF_START);							/* This is all one section.		*/
+	vdefer_restore();								/* Restore from any deferred states.	*/
 
 	savesize = 9 + (rows*cols*2);
 	save = (unsigned char *)malloc( savesize );					/* Ask for the memory.			*/
@@ -229,7 +224,7 @@ unsigned char *vsss(row,col,rows,cols) int row,col,rows,cols;				/* Save a scree
 		*s++ = (unsigned char) vcur_col;
 		*s++ = (unsigned char) vcur_atr;
 		*s++ = (unsigned char) vchr_set;
-		*s++ = (unsigned char) vcur_set[14];					/* Save the cursor status.		*/
+		*s++ = (unsigned char) vcur_set[VSET_CURSOR];				/* Save the cursor status.		*/
 
 		if ((s-save) > savesize)
 		{
@@ -237,20 +232,20 @@ unsigned char *vsss(row,col,rows,cols) int row,col,rows,cols;				/* Save a scree
 		}
 	}
 
-	vbuffering(AUTOMATIC);								/* End of the logical section.		*/
+	vbuffering(VBUFF_END);								/* End of the logical section.		*/
 	return(save);									/* Return the pointer.			*/
 }
 
 /*						Restore screen section.								*/
 
-int vrss(loc) unsigned char *loc; 							/* Restore a screen segment.		*/
+int vrss(unsigned char *loc)								/* Restore a screen segment.		*/
 {
 	register int i, j, m;								/* Working registers.			*/
 	unsigned char *s;								/* Memory allocation pointers.		*/
 	int row,col,rows,cols;								/* Position information.		*/
 
-	vbuffering(LOGICAL);								/* This is all one section.		*/
-	vdefer(RESTORE);								/* Restore from any deferred states.	*/
+	vbuffering(VBUFF_START);							/* This is all one section.		*/
+	vdefer_restore();								/* Restore from any deferred states.	*/
 
 	s = loc;									/* Initialize working pointer.		*/
 
@@ -278,17 +273,20 @@ int vrss(loc) unsigned char *loc; 							/* Restore a screen segment.		*/
 	i = (int) *s++;
 	vcharset(i);
 	i = (int) *s++;									/* Make the cursor visible again.	*/
-	vset(CURSOR,i);
+	if (i) 
+		vset_cursor_on();
+	else
+		vset_cursor_off();
 
 	free(loc);									/* Free the memory.			*/
 	loc = NULL;									/* Now set the pointer to a null.	*/
-	vbuffering(AUTOMATIC);								/* End of the logical section.		*/
+	vbuffering(VBUFF_END);								/* End of the logical section.		*/
 	return(SUCCESS);								/* Return the pointer.			*/
 }
 
 /*			Invalidate a section of the map (assume caller knows what he is doing!)					*/
 
-varb(row,col,rows,cols) int row,col,rows,cols;						/* Invalidate map section.		*/
+void varb(int row, int col, int rows, int cols)						/* Invalidate map section.		*/
 {
 	register int i, j, k;								/* Working registers.			*/
 
@@ -298,3 +296,37 @@ varb(row,col,rows,cols) int row,col,rows,cols;						/* Invalidate map section.		
 		for (j = col; j < col+cols; j++) vchr_map[k][j] = 0177;			/* Set to an impossible character.	*/
 	}
 }
+
+void vtitle(const char *titlestr)
+{
+	vrawtitle(titlestr);
+}
+
+
+/*
+**	History:
+**	$Log: vutil.c,v $
+**	Revision 1.14  1997-07-09 12:37:52-04  gsl
+**	Change to use new interface
+**	Remove obsolete routines.
+**	Fix interface to vraw routines
+**
+**	Revision 1.13  1997-01-11 18:37:23-05  gsl
+**	For WIN32 vre() does a vrawerror() which puts up a message box
+**
+**	Revision 1.12  1996-11-12 15:16:57-08  jockc
+**	added vtitle function
+**
+**	Revision 1.11  1996-07-17 14:26:08-07  jockc
+**	changed hard coded optional args to use stdarg ... syntax
+**
+**	Revision 1.10  1996-03-28 13:16:07-08  gsl
+**	Fix defines and prototype
+**
+ * Revision 1.9  1996/03/12  13:25:59  gsl
+ * fic vbuffering()
+ * thats FIX.
+ *
+**
+**
+*/

@@ -1,0 +1,795 @@
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           TOCCURS.
+       AUTHOR.
+           Suzette Cass.
+       DATE-WRITTEN.
+           09/09/97.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           A-0-BYTE IS "00"
+           A-1-BYTE IS "01"
+           A-160-BYTE IS "A0"
+           HEX-9C IS "9C"
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           UNDERLN-BIT IS "20"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           BRITE-MOD-ALL IS "80"
+           DIM-PROT-ALL IS "8C"
+           NO-ECHO IS "98"
+           MENU-PICK IS "8E".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT CRT-ROW
+               ASSIGN TO "CRTROW",    "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT CRT-OA
+               ASSIGN TO "CRTOA",    "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA                    PIC X(4).
+           03  CRTREC-MAPPING-AREA          PIC X(1920).
+
+       FD  CRT-ROW
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-ROW-REC.
+           03  CRT-ROW-REC-OA.
+               05  CRT-ROW-OA-1             PIC X.
+               05  CRT-ROW-OA-2             PIC X.
+               05  CRT-ROW-OA-3             PIC X.
+               05  CRT-ROW-OA-4             PIC X.
+           03  CRT-ROW-REC-MAP.
+               05  FILLER                   PIC X(80).
+           03  CRT-ROW-REC-MAP-X REDEFINES CRT-ROW-REC-MAP.
+               05  CRT-ROW-X OCCURS 80 TIMES PIC X.
+
+       FD  CRT-OA
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-OA-REC.
+               05  CRT-OA-1             PIC X.
+               05  CRT-OA-2             PIC X.
+               05  CRT-OA-3             PIC X.
+               05  CRT-OA-4             PIC X.
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+      ******************************************************************
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  MY-INDEX                       PIC 9(5).
+       01  INDEX-D1                       PIC 9(5).
+       01  INDEX-D2                       PIC 9(5).
+       01  INDEX-D3                       PIC 9(5).
+
+       01  SCREEN-OCC-1.
+           03  FILLER OCCURS 3 TIMES.
+
+               10  FILLER OCCURS 1 TIMES.
+                   15  ACCOUNT-FIELD       PIC X(25).
+                   15  ACCOUNT-DESC-FIELD  PIC X(30).
+                   15  DIST-PCT-FIELD      PIC 999.99-.
+                   15  AMOUNT-FIELD        PIC 99999.99.
+
+               10  FILLER OCCURS 1 TIMES.
+
+                   15  SRC-TAG-FIELD       PIC X(7).
+                   15  SOURCE-FIELD        PIC X(10).
+                   15  PROJ-TAG-FIELD      PIC X(8).
+                   15  PROJECT-FIELD       PIC X(10).
+                   15  PROJ-DESC-FIELD     PIC X(30).
+
+       01  CRTREC2.
+           05  CRTREC2-FULL         PIC X(1924) VALUE SPACES.
+           05  FILLER REDEFINES CRTREC2-FULL.
+               10  CRTREC2-OA.
+                   15  CRTREC2-OA-1   PIC X.
+                   15  CRTREC2-OA-2   PIC X.
+                   15  CRTREC2-OA-3   PIC X.
+                   15  CRTREC2-OA-4   PIC X.
+               10  CRTREC2-24-ROWS.
+                   15  CRTREC2-ROW  OCCURS 24 TIMES.
+                       20 CRTREC2-X OCCURS 80 TIMES PIC X.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+       01  FLOAT-KEY PIC 99 VALUE 4.
+
+       01  YES-NO    PIC XXX VALUE "YES".
+       01  T1.
+           03  ENTRIES.
+               05  FILLER PIC XXX VALUE "YES".
+               05  FILLER PIC XXX VALUE "NO ".
+           03  FILLER REDEFINES ENTRIES.
+               05  YN-TABLE OCCURS 2 TIMES PIC XXX.
+
+       01  FILLER.
+           03  NUM-ANS-EXPANDED.
+               05  FILLER PIC X(5) VALUE "ONE".
+               05  FILLER PIC X(5) VALUE "TWO".
+               05  FILLER PIC X(5) VALUE "THREE".
+           03  FILLER REDEFINES NUM-ANS-EXPANDED.
+               05  NUM-ANS   PIC X(5) OCCURS 3 TIMES.
+
+       01  T2.
+           03  ENTRIES.
+               05  FILLER PIC X(5) VALUE "ONE".
+               05  FILLER PIC X(5) VALUE "TWO".
+               05  FILLER PIC X(5) VALUE "THREE".
+               05  FILLER PIC X(5) VALUE "FOUR".
+               05  FILLER PIC X(5) VALUE "FIVE".
+               05  FILLER PIC X(5) VALUE "SIX".
+               05  FILLER PIC X(5) VALUE "SEVEN".
+               05  FILLER PIC X(5) VALUE "EIGHT".
+               05  FILLER PIC X(5) VALUE "NINE".
+               05  FILLER PIC X(5) VALUE "TEN".
+           03  FILLER REDEFINES ENTRIES.
+               05  NUM-TABLE OCCURS 10 TIMES PIC X(5).
+
+       01  FILLER.
+           05  t3-x.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+           05  t3 redefines t3-x pic s9(4)v99 occurs 5 times.
+
+       01  FILLER.
+           03  FILLER                      OCCURS 3 TIMES.
+               05  FILLER                  OCCURS 2 TIMES.
+                   07  MATRIX-DATE-SOURCE  OCCURS 8 TIMES
+                       PIC X(7) VALUE SPACES.
+
+               05  FILLER                  OCCURS 4 TIMES.
+                   07  MATRIX-GROUP-SOURCE OCCURS 7 TIMES
+                       PIC X(7) VALUE SPACES.
+
+       01  MATRIX-ITEM.
+           05  FILLER     PIC X VALUE "(".
+           05  MATRIX-D1  PIC 9 VALUE ZERO.
+           05  FILLER     PIC X VALUE "-".
+           05  MATRIX-D2  PIC 9 VALUE ZERO.
+           05  FILLER     PIC X VALUE "-".
+           05  MATRIX-D3  PIC 9 VALUE ZERO.
+           05  FILLER     PIC X VALUE ")".
+
+       01  MATRIX-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(18) ROW 1 COL 20 VALUE
+               "h + v1 + v2 OCCURS".
+           03  FILLER                      OCCURS 3 TIMES.
+               05  FILLER                  OCCURS 2 TIMES.
+                   07  MATRIX-DATE         OCCURS 8 TIMES
+                       PIC X(7)  LINE 3 COLUMN 02
+                       SOURCE MATRIX-DATE-SOURCE.
+
+               05  FILLER                  OCCURS 4 TIMES.
+                   07  MATRIX-GROUP         OCCURS 7 TIMES
+                       PIC X(7)  LINE 5 COL 04
+                       SOURCE MATRIX-GROUP-SOURCE
+                       OBJECT MATRIX-GROUP-SOURCE.
+
+           03  MATRIX-LINE-24 PIC X(38) LINE 24 COL 02 VALUE
+               "Press (ENTER) to continue.".
+                                                        
+       01  SCREEN-1 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(29) 
+                      ROW 1 COL 25
+                      VALUE "Screen 1 in program TOCCURS. ".
+
+           03  FILLER PIC X(158) ROW 3 COL 1 VALUE
+               "This screen contains some modifiable text fields and som
+      -    "e modifiable numeric fields. All of the fields are part of a
+      -    " grouped screen item which OCCURS 6 times.".
+
+           03  FILLER OCCURS 3 TIMES.
+
+               10  FILLER OCCURS 1 TIMES.
+                   15  SRC-TAG-ITEM-4      PIC X(07)  ROW 6 COLUMN 08
+                       SOURCE SRC-TAG-FIELD.
+                   15  SOURCE-ITEM-4       PIC X(10)  ROW 6 COLUMN 16
+                       SOURCE SOURCE-FIELD
+                       OBJECT SOURCE-FIELD.
+                   15  PROJ-TAG-ITEM-4     PIC X(08)  ROW 6 COLUMN 29
+                       SOURCE PROJ-TAG-FIELD.
+                   15  PROJECT-ITEM-4      PIC X(10)  ROW 6 COLUMN 38
+                       SOURCE PROJECT-FIELD
+                       OBJECT PROJECT-FIELD.
+                   15  PROJ-DESC-ITEM-4    PIC X(30)  ROW 6 COLUMN 49
+                       SOURCE PROJ-DESC-FIELD.
+
+               10  FILLER OCCURS 1 TIMES.
+                   15  ACCOUNT-ITEM-4      PIC X(25)  ROW 7 COLUMN 03
+                       SOURCE ACCOUNT-FIELD.
+                   15  ACCOUNT-DESC-ITEM-4 PIC X(30)  ROW 7 COLUMN 29
+                       SOURCE ACCOUNT-DESC-FIELD
+                       OBJECT ACCOUNT-DESC-FIELD.
+                   15  DIST-PCT-ITEM-4  PIC Z(2)9.99- ROW 7 COLUMN 60
+                       SOURCE DIST-PCT-FIELD
+                       OBJECT DIST-PCT-FIELD.
+                   15  AMOUNT-ITEM-4     PIC 9(9).99- ROW 7 COLUMN 68
+                       SOURCE AMOUNT-FIELD
+                       OBJECT AMOUNT-FIELD.
+
+           03  FILLER PIC X(158) ROW 14 COL 1 VALUE
+               "This part contains some modifiable fields which check th
+      -    "e range within a table  as well as displaying elements acros
+      -    "s a row with the OCCURS clause.".
+
+           03  FILLER PIC X(18) ROW 18 COL 5 VALUE "RANGE (YES ,NO)".
+           03  FILLER PIC X(3)  ROW 18 COL 25 
+               SOURCE IS YES-NO OBJECT IS YES-NO
+      *$RANGE_COUNT 2
+               RANGE IS YN-TABLE.
+
+           03  FILLER PIC X(18) ROW 18 COL 30 VALUE "RANGE (ONE-TEN)".
+           03  FILLER PIC X(5)  ROW 18 COL 50 OCCURS 3 TIMES
+               SOURCE IS NUM-ANS OBJECT IS NUM-ANS
+      *$RANGE_COUNT 10
+               RANGE IS NUM-TABLE.
+
+	   03  FILLER PIC X(17) ROW 20 COL 5 VALUE "RANGE (-99 - 175)".
+           03  NUM-RANGE-ITEM-4 PIC Z(4).ZZ- OCCURS 5 TIMES
+               ROW 20 COLUMN 25
+               RANGE -99 to 175 SOURCE t3 OBJECT t3.
+
+           03  FILLER PIC X(40)
+                      ROW 24 COL 27
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
+
+       01  SCREEN-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY OCCURS:".
+           03  FILLER  PIC X(13) ROW 1 COL 60 VALUE
+               "SCREEN-SCREEN".
+           03  FILLER  PIC X(37) ROW  3 COL 02 VALUE
+               " (1) DISPLAY A COMPLEX OCCURS SCREEN.".
+           03  FILLER  PIC X(35) ROW  4 COL 02 VALUE
+               " (2) ".
+           03  FILLER  PIC X(35) ROW  5 COL 02 VALUE
+               " (3) h OCCURS (Horizontal)".
+           03  FILLER  PIC X(35) ROW  6 COL 02 VALUE
+               " (4) v1 OCCURS (Vertical)".
+           03  FILLER  PIC X(35) ROW  7 COL 02 VALUE
+               " (5) h + v1 OCCURS".
+           03  FILLER  PIC X(35) ROW  8 COL 02 VALUE
+               " (6) v1 + v2 OCCURS".
+           03  FILLER  PIC X(35) ROW  9 COL 02 VALUE
+               " (7) h + v1 + v2 OCCURS".
+           03  FILLER  PIC X(37) ROW 10 COL 02 VALUE
+               " (8) ".
+           03  FILLER  PIC X(38) ROW 11 COL 02 VALUE
+               " (9) ".
+           03  FILLER  PIC X(35) ROW 12 COL 02 VALUE
+               "(10) ".
+           03  FILLER  PIC X(35) ROW 13 COL 02 VALUE
+               "(11) ".
+           03  FILLER  PIC X(35) ROW 14 COL 02 VALUE
+               "(12) ".
+           03  FILLER  PIC X(35) ROW 15 COL 02 VALUE
+               "(13) ".
+           03  FILLER  PIC X(35) ROW 16 COL 02 VALUE
+               "(14) ".
+           03  FILLER  PIC X(35) ROW 17 COL 02 VALUE
+               "(15) ".
+           03  FILLER  PIC X(35) ROW 19 COL 02 VALUE
+               "(16) EXIT".
+           03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
+               "(17) ".
+           03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
+               "(18) MULTIPLE COLUMNS".
+           03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
+               "(19) ".
+           03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
+               "(20) ".
+           03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
+               "(21) ".
+           03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
+               "(22) ".
+           03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
+               "(23) ".
+           03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
+               "(24) ".
+           03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+               "(25) ".
+           03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+               "(26) ".
+           03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
+               "(27) ".
+           03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
+               "(28) ".
+           03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
+               "(29) ".
+           03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
+               "(30) ".
+           03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
+               "(31) ".
+           03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
+               "PRESS (16) TO EXIT".
+
+000001 01  MESSAGE-SUMMARY USAGE DISPLAY-WS.
+           05  SUMMARY-LINE-1 COLUMN 20 PIC X(50)
+               SOURCE MESSAGE-SUMMARY-TOPLINE.
+           05  FILLER ROW 2 OCCURS 23.
+            10 FILLER ROW 2 COLUMN 02 PIC X(19) SOURCE SUMMARY-COLUMN-1.
+            10 FILLER ROW 2 COLUMN 22 PIC X(19) SOURCE SUMMARY-COLUMN-2.
+            10 FILLER ROW 2 COLUMN 42 PIC X(19) SOURCE SUMMARY-COLUMN-3.
+            10 FILLER ROW 2 COLUMN 62 PIC X(19) SOURCE SUMMARY-COLUMN-4.
+
+000001 01  MESSAGE-SUMMARY-TOPLINE.
+           05  FILLER PIC X(50) VALUE 
+               "MULTIPLE COLUMNS 4 x 23 = 92 ELEMENTS".
+
+000001 77  TOTAL-MESSAGE-COUNT PIC 9(5) COMP.
+       01  SUMMARY-COLUMNS.
+           05  SUMMARY-ELEMENT OCCURS 92.
+            10 SUMMARY-ELEMENT-ID      PIC XXX.
+            10 SUMMARY-ELEMENT-GRP REDEFINES SUMMARY-ELEMENT-ID PIC XX.
+            10 SUMMARY-ELEMENT-TO      PIC ZZZ9.
+            10 SUMMARY-ELEMENTTO       PIC XXXX.    %   VALUE " TO;".
+            10 SUMMARY-ELEMENT-BY      PIC ZZZ9.
+            10 SUMMARY-ELEMENTBY       PIC XXXX.    %   VALUE " BY".
+            10 J1                      PIC 9999 COMP.
+            10 J2                      PIC 9999 COMP.
+       01  FILLER REDEFINES SUMMARY-COLUMNS.
+           05  SUMMARY-COLUMN-1 PIC X(25) OCCURS 23.
+           05  SUMMARY-COLUMN-2 PIC X(25) OCCURS 23.
+           05  SUMMARY-COLUMN-3 PIC X(25) OCCURS 23.
+           05  SUMMARY-COLUMN-4 PIC X(25) OCCURS 23.
+
+       01 SC1-DATA-ITEM.
+           03  SC1-COL-QTY PIC S9(7)V99 OCCURS 9 TIMES.
+
+       01  V1-OCCURS-SCREEN USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(32)     ROW 1 COL 28  VALUE
+               "* * * v1 OCCURS (Vertical) * * *".
+
+           03  FILLER PIC X(50) ROW 4 COL 10 VALUE
+               "This test does a display and validate of table ".
+           03  FILLER PIC X(50) ROW 5 COL 10 VALUE
+               "elements down a screen row of a 9 element".
+           03  FILLER PIC X(50) ROW 6 COL 10 VALUE
+               "vertical matrix with a PIC Z(7).ZZ- and a RANGE of".
+           03  FILLER PIC X(50) ROW 7 COL 10 VALUE
+               "-99 to 999.".
+
+           03  SC1-MATRIX-DAT OCCURS 9 TIMES ROW 12.
+               05  SC1-COL-QTY-FAC PIC Z(7).ZZ- ROW 12 COL 25
+                   RANGE -99 TO 999
+                   SOURCE SC1-COL-QTY
+                   OBJECT SC1-COL-QTY.
+
+           03  FILLER PIC X(40)
+                      ROW 24 COL 27
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
+
+       01 SC2-DATA-ITEM1.
+           03  SC2-COL-QTY1 PIC S9(7)V99 OCCURS 9 TIMES.
+       01 SC2-DATA-ITEM2.
+           03  SC2-COL-QTY2 PIC S9(7)V99 OCCURS 9 TIMES.
+
+       01  V1-V2-OCCURS-SCREEN USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(39)     ROW 1 COL 25  VALUE
+               "* * * v1 + v2 OCCURS (2-Vertical) * * *".
+
+           03  FILLER PIC X(50) ROW 4 COL 10 VALUE
+               "This test does a display and validate of table ".
+           03  FILLER PIC X(50) ROW 5 COL 10 VALUE
+               "elements down a screen row (twice) of a 9 element".
+           03  FILLER PIC X(50) ROW 6 COL 10 VALUE
+               "vertical matrix with a PIC Z(7).ZZ- and a RANGE of".
+           03  FILLER PIC X(50) ROW 7 COL 10 VALUE
+               "-99 to 999.".
+
+           03  SC2-MATRIX-DAT1 OCCURS 9 TIMES ROW 12.
+               05  SC2-COL-QTY-FAC1 PIC Z(7).ZZ- ROW 12 COL 20
+                   RANGE -99 TO 999
+                   SOURCE SC2-COL-QTY1
+                   OBJECT SC2-COL-QTY1.
+
+           03  SC2-MATRIX-DAT2 OCCURS 9 TIMES ROW 12.
+               05  SC2-COL-QTY-FAC2 PIC Z(7).ZZ- ROW 12 COL 40
+                   RANGE -99 TO 999
+                   SOURCE SC2-COL-QTY2
+                   OBJECT SC2-COL-QTY2.
+
+           03  FILLER PIC X(40)
+                      ROW 24 COL 27
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
+
+       01  H-OCCURS-SCREEN  USAGE IS DISPLAY-WS.
+           03  FILLER                      PIC X(28)
+               ROW 5 COLUMN 26
+               VALUE IS "FOUR FIELDS OCCURING ACROSS".
+           03  FILLER    ROW 7.
+               05  FILLER OCCURS 4 TIMES  PIC X(8)
+                   ROW 7  COLUMN 23
+                   SOURCE IS ELEMENT-TABLE  OBJECT IS ELEMENT-TABLE.
+
+       01  FILLER.
+           03  ELEMENTS.
+               05  FILLER VALUE "ELEMENT1"  PIC X(8).
+               05  FILLER VALUE "ELEMENT2"  PIC X(8).
+               05  FILLER VALUE "ELEMENT3"  PIC X(8).
+               05  FILLER VALUE "ELEMENT4"  PIC X(8).
+           03  ELEMENT-TABLE REDEFINES  ELEMENTS
+                   OCCURS 4 TIMES   PIC X(8).
+
+       01  TWO-OCCURS-LEVELS  USAGE IS DISPLAY-WS.
+           03  FILLER        PIC X(45)
+                   ROW 5 COLUMN 17
+               VALUE "DISPLAYING A TABLE OCCURING ACROSS AND DOWN".
+           03  FILLER  OCCURS 3 TIMES  ROW 7.
+               05  FILLER OCCURS 6 TIMES ROW 7 COLUMN 8  PIC X(10)
+                   SOURCE IS LEVEL-2  OBJECT IS LEVEL-2.
+
+       01  TWO-LEVEL-TABLE.
+           03  LEVEL-1  OCCURS 3 TIMES.
+               05  LEVEL-2  OCCURS 6 TIMES.
+                   07  TABLE-ENTRY.
+                       09  FILLER        PIC IS X(6).
+                       09  FIRST-INDEX   PIC IS 9.
+                       09  COMMA-LITERAL PIC IS X.
+                       09  SECOND-INDEX  PIC IS 9.
+                       09  RIGHT-PAREN   PIC IS X.
+
+       77  SUB1     PIC IS 9 VALUE IS 0.
+       77  SUB2     PIC IS 9 VALUE IS 0.
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       SCREEN-TESTS.
+      
+           DISPLAY AND READ SCREEN-SCREEN ON CRT
+           PFKEYS 1, 3, 4, 5, 6, 7, 18, 16.
+
+           IF PF-KEY = "01" THEN
+              PERFORM DISPLAY-SCREEN
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM DISPLAY-H-OCCURS
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM DISPLAY-V1-OCCURS
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM DISPLAY-H-V2-OCCURS
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "06" THEN
+              PERFORM DISPLAY-V1-V2-OCCURS
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM DO-MATRIX
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "18" THEN
+              PERFORM RHS-TEST
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO SCREEN-TESTS.
+
+       DISPLAY-SCREEN.
+      ******************************************************************
+      * FIRST MAKE SURE THE SCREEN ITEMS GET THERE INITIAL VALUES.     *
+      ******************************************************************
+           PERFORM INITIALIZE-SCREEN-OCC-1.
+
+           MOVE "BAILEYS" TO SRC-TAG-FIELD(1, 1).
+           MOVE "Smiths " TO SRC-TAG-FIELD(2, 1).
+           MOVE "Holmes " TO SRC-TAG-FIELD(3, 1).
+
+           MOVE "LAUNCH  " TO PROJ-TAG-FIELD(1, 1).
+           MOVE "ORBIT   " TO PROJ-TAG-FIELD(2, 1).
+           MOVE "SPACE   " TO PROJ-TAG-FIELD(3, 1).
+
+           MOVE "INITIAL LAUNCH PROCEDURE   " TO
+                PROJ-DESC-FIELD(1, 1).
+           MOVE "ENTER ASYNCHRONOUS ORBIT   " TO
+                PROJ-DESC-FIELD(2, 1).
+           MOVE "STUDY THE EFFECTS OF SPACE " TO
+                PROJ-DESC-FIELD(3, 1).
+
+           MOVE "SUPER LAUNCH COMPANY     " TO
+                ACCOUNT-FIELD(1, 1).
+           MOVE "GREAT ORBITER CORPORATION" TO
+                ACCOUNT-FIELD(2, 1).
+           MOVE "SPACE EFFECT INCORPORATED" TO
+                ACCOUNT-FIELD(3, 1).
+
+      ******************************************************************
+      * SET UP A FIELD TO ACT AS A NON-ECHO PASSWORD FIELD.
+      ******************************************************************
+
+           SET PROTECT-BIT IN FAC OF SOURCE-ITEM-4(1, 1) OFF.
+           SET PROTECT-BIT IN FAC OF SOURCE-ITEM-4(2, 1) OFF.
+           SET PROTECT-BIT IN FAC OF SOURCE-ITEM-4(3, 1) OFF.
+
+           SET PROTECT-BIT IN FAC OF PROJECT-ITEM-4(1, 1) OFF.
+           SET PROTECT-BIT IN FAC OF PROJECT-ITEM-4(2, 1) OFF.
+           SET PROTECT-BIT IN FAC OF PROJECT-ITEM-4(3, 1) OFF.
+
+           SET PROTECT-BIT IN FAC OF ACCOUNT-DESC-ITEM-4(1, 1) OFF.
+           SET PROTECT-BIT IN FAC OF ACCOUNT-DESC-ITEM-4(2, 1) OFF.
+           SET PROTECT-BIT IN FAC OF ACCOUNT-DESC-ITEM-4(3, 1) OFF.
+
+           SET PROTECT-BIT IN FAC OF DIST-PCT-ITEM-4(1, 1) OFF.
+           SET PROTECT-BIT IN FAC OF DIST-PCT-ITEM-4(2, 1) OFF.
+           SET PROTECT-BIT IN FAC OF DIST-PCT-ITEM-4(3, 1) OFF.
+
+           SET PROTECT-BIT IN FAC OF AMOUNT-ITEM-4(1, 1) OFF.
+           SET PROTECT-BIT IN FAC OF AMOUNT-ITEM-4(2, 1) OFF.
+           SET PROTECT-BIT IN FAC OF AMOUNT-ITEM-4(3, 1) OFF.
+
+           SET BLINK-BIT IN FAC OF AMOUNT-ITEM-4(3, 1) ON.
+
+           SET UNDERLN-BIT IN FAC OF NUM-RANGE-ITEM-4(1) ON.
+           SET UNDERLN-BIT IN FAC OF NUM-RANGE-ITEM-4(2) ON.
+           SET UNDERLN-BIT IN FAC OF NUM-RANGE-ITEM-4(3) ON.
+           SET UNDERLN-BIT IN FAC OF NUM-RANGE-ITEM-4(4) ON.
+           SET UNDERLN-BIT IN FAC OF NUM-RANGE-ITEM-4(5) ON.
+
+      ******************************************************************
+      * NOW DISPLAY THE FIRST SCREEN
+      ******************************************************************
+
+           DISPLAY AND READ SCREEN-1 ON CRT
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+                  17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+                  30, 31, 32.
+
+      ******************************************************************
+      * PROTECT ALL THE FIELDS THAT WERE MODIFIABLE.
+      ******************************************************************
+
+           SET PROTECT-BIT IN FAC OF SOURCE-ITEM-4(1, 1) ON.
+           SET PROTECT-BIT IN FAC OF SOURCE-ITEM-4(2, 1) ON.
+           SET PROTECT-BIT IN FAC OF SOURCE-ITEM-4(3, 1) ON.
+
+           SET PROTECT-BIT IN FAC OF PROJECT-ITEM-4(1, 1) ON.
+           SET PROTECT-BIT IN FAC OF PROJECT-ITEM-4(2, 1) ON.
+           SET PROTECT-BIT IN FAC OF PROJECT-ITEM-4(3, 1) ON.
+
+
+           SET PROTECT-BIT IN FAC OF ACCOUNT-DESC-ITEM-4(1, 1) ON.
+           SET PROTECT-BIT IN FAC OF ACCOUNT-DESC-ITEM-4(2, 1) ON.
+           SET PROTECT-BIT IN FAC OF ACCOUNT-DESC-ITEM-4(3, 1) ON.
+
+           SET PROTECT-BIT IN FAC OF DIST-PCT-ITEM-4(1, 1) ON.
+           SET PROTECT-BIT IN FAC OF DIST-PCT-ITEM-4(2, 1) ON.
+           SET PROTECT-BIT IN FAC OF DIST-PCT-ITEM-4(3, 1) ON.
+
+           SET PROTECT-BIT IN FAC OF AMOUNT-ITEM-4(1, 1) ON.
+           SET PROTECT-BIT IN FAC OF AMOUNT-ITEM-4(2, 1) ON.
+
+      ******************************************************************
+      * RE DISPLAY THE FIELDS
+      ******************************************************************
+
+           DISPLAY AND READ SCREEN-1 ON CRT.
+
+       DISPLAY-V1-OCCURS.
+           MOVE 1 TO SC1-COL-QTY(1).
+           MOVE 2 TO SC1-COL-QTY(2).
+           MOVE 3 TO SC1-COL-QTY(3).
+           MOVE 4 TO SC1-COL-QTY(4).
+           MOVE 5 TO SC1-COL-QTY(5).
+           MOVE 6 TO SC1-COL-QTY(6).
+           MOVE 7 TO SC1-COL-QTY(7).
+           MOVE 8 TO SC1-COL-QTY(8).
+           MOVE 9 TO SC1-COL-QTY(9).
+
+           DISPLAY AND READ V1-OCCURS-SCREEN ON CRT.
+
+       DISPLAY-V1-V2-OCCURS.
+           MOVE 1 TO SC2-COL-QTY1(1), SC2-COL-QTY2(1).
+           MOVE 2 TO SC2-COL-QTY1(2), SC2-COL-QTY2(2).
+           MOVE 3 TO SC2-COL-QTY1(3), SC2-COL-QTY2(3).
+           MOVE 4 TO SC2-COL-QTY1(4), SC2-COL-QTY2(4).
+           MOVE 5 TO SC2-COL-QTY1(5), SC2-COL-QTY2(5).
+           MOVE 6 TO SC2-COL-QTY1(6), SC2-COL-QTY2(6).
+           MOVE 7 TO SC2-COL-QTY1(7), SC2-COL-QTY2(7).
+           MOVE 8 TO SC2-COL-QTY1(8), SC2-COL-QTY2(8).
+           MOVE 9 TO SC2-COL-QTY1(9), SC2-COL-QTY2(9).
+
+           DISPLAY AND READ V1-V2-OCCURS-SCREEN ON CRT.
+
+       DISPLAY-H-OCCURS.
+
+           DISPLAY AND READ H-OCCURS-SCREEN ON CRT.
+
+       DISPLAY-H-V2-OCCURS.
+           PERFORM INIT1 VARYING SUB1 FROM 1 BY 1 UNTIL SUB1 > 3.
+           DISPLAY AND READ TWO-OCCURS-LEVELS ON CRT.
+
+       INIT1.
+           PERFORM INIT-TABLE VARYING SUB2 FROM 1 BY 1 UNTIL SUB2 > 6.
+
+       INIT-TABLE.
+           MOVE "ENTRY("  TO TABLE-ENTRY   (SUB1, SUB2).
+           MOVE SUB1      TO FIRST-INDEX   (SUB1, SUB2).
+           MOVE ","       TO COMMA-LITERAL (SUB1, SUB2).
+           MOVE SUB2      TO SECOND-INDEX  (SUB1, SUB2).
+           MOVE ")"       TO RIGHT-PAREN   (SUB1, SUB2).
+
+       INITIALIZE-SCREEN-OCC-1.
+
+           PERFORM INIT-THE-ARRAY VARYING MY-INDEX FROM 1 BY 1 UNTIL
+                   MY-INDEX IS > 3.
+
+       INIT-THE-ARRAY.
+           MOVE "BLANK" TO ACCOUNT-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO ACCOUNT-DESC-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO SRC-TAG-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO SOURCE-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO PROJ-TAG-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO PROJECT-FIELD (MY-INDEX, 1).
+           MOVE "BLANK" TO PROJ-DESC-FIELD (MY-INDEX, 1).
+
+           MOVE 1 TO DIST-PCT-FIELD (MY-INDEX, 1).
+           MOVE 2 TO AMOUNT-FIELD  (MY-INDEX, 1).
+
+        END-INIT-SCREEN.
+
+      ******************************************************************
+
+       DO-MATRIX.
+
+           PERFORM INIT-MATRIX-D1 VARYING INDEX-D1 FROM 1 BY 1
+                   UNTIL INDEX-D1 IS > 3.
+
+           DISPLAY AND READ MATRIX-SCREEN ON CRT.
+
+       INIT-MATRIX-D1.
+           MOVE INDEX-D1 TO MATRIX-D1.
+
+           PERFORM INIT-MATRIX-D2-1 VARYING INDEX-D2 FROM 1 BY 1
+                   UNTIL INDEX-D2 IS > 2.
+
+           PERFORM INIT-MATRIX-D2-2 VARYING INDEX-D2 FROM 1 BY 1
+                   UNTIL INDEX-D2 IS > 4.
+
+       INIT-MATRIX-D2-1.
+           MOVE INDEX-D2 TO MATRIX-D2.
+
+           PERFORM INIT-MATRIX-D3-1 VARYING INDEX-D3 FROM 1 BY 1
+                   UNTIL INDEX-D3 IS > 8.
+
+       INIT-MATRIX-D2-2.
+           MOVE INDEX-D2 TO MATRIX-D2.
+
+           PERFORM INIT-MATRIX-D3-2 VARYING INDEX-D3 FROM 1 BY 1
+                   UNTIL INDEX-D3 IS > 7.
+
+       INIT-MATRIX-D3-1.
+           MOVE INDEX-D3 TO MATRIX-D3.
+           MOVE MATRIX-ITEM TO 
+                MATRIX-DATE-SOURCE(INDEX-D1, INDEX-D2, INDEX-D3).
+
+       INIT-MATRIX-D3-2.
+           MOVE INDEX-D3 TO MATRIX-D3.
+           MOVE MATRIX-ITEM TO 
+                MATRIX-GROUP-SOURCE(INDEX-D1, INDEX-D2, INDEX-D3).
+
+       RHS-TEST.
+           PERFORM RHS-SETUP VARYING TOTAL-MESSAGE-COUNT FROM 1 BY 1
+                             UNTIL TOTAL-MESSAGE-COUNT > 92.
+           PERFORM RHS-DR.
+
+       RHS-DR.
+           DISPLAY AND READ MESSAGE-SUMMARY ON CRT.
+
+       RHS-SETUP.
+           MOVE "(( " TO SUMMARY-ELEMENT-ID ( TOTAL-MESSAGE-COUNT ).
+           MOVE " ) (" TO SUMMARY-ELEMENTTO ( TOTAL-MESSAGE-COUNT ).
+           MOVE " )) " TO SUMMARY-ELEMENTBY ( TOTAL-MESSAGE-COUNT ).
+           MOVE TOTAL-MESSAGE-COUNT TO
+                SUMMARY-ELEMENT-TO ( TOTAL-MESSAGE-COUNT )
+                SUMMARY-ELEMENT-BY ( TOTAL-MESSAGE-COUNT )
+                J1 ( TOTAL-MESSAGE-COUNT )
+                J2 ( TOTAL-MESSAGE-COUNT ).
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

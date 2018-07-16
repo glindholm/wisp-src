@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -32,9 +34,12 @@
 */
 
 #include <stdio.h>
+#include <string.h>
+
 #include "token.h"
 #include "node.h"
 #include "wispfile.h"
+#include "wisp.h"
 
 static char	the_debug_levels[] = "NNNNNNNNNN";
 static int debug_std_print_line();
@@ -54,10 +59,9 @@ char	*levels;
 	return 0;
 }
 
-int debug_level(level)
-int	level;
+int debug_level(int level)
 {
-	if (level < strlen(the_debug_levels) && the_debug_levels[level] == 'Y')
+	if (level < (int)strlen(the_debug_levels) && the_debug_levels[level] == 'Y')
 		return(1);
 	return(0);
 }
@@ -244,3 +248,15 @@ int	depth;
 	return(0);
 }
 
+/*
+**	History:
+**	$Log: wt_debug.c,v $
+**	Revision 1.7  1996-10-09 12:31:19-04  gsl
+**	Fix warnings
+**
+**	Revision 1.6  1996-08-30 18:56:15-07  gsl
+**	drcs update
+**
+**
+**
+*/

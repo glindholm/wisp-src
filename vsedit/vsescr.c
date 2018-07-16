@@ -1,18 +1,23 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
+#include <string.h>
 #include "vseglb.h"
 #include "vsescr.h"
-
-/* General information: The total length of an editable line is 72 columns,
-   not 80 and the code has been changed to reflect this. Between columns 72
-   and 80 a MOD code (modification code) is displayed under certain situations.
-   Modifications by CIS: 07/20/93 AJA */
 
 /*----
 Is passed an array of field values and a 1924 byte area for the blah blah blah
 screen, and build and displayable screen
 ------*/
-vsescr(fld,scr)
-VSEFLD *fld;
-char *scr;
+void vsescr(VSEFLD *fld, char *scr)
 {
 	while(fld->src)
 		{
@@ -21,8 +26,7 @@ char *scr;
 		}
 }
 
-vsescr_init(scr)
-char *scr;
+void vsescr_init(char *scr)
 {
 	memset(scr+sizeof(vse_default_oa),0,1920);
 }
@@ -36,14 +40,12 @@ If the field ends in col 80 then a DIM_AC is not appended
 If the new fac would overlay an existing fac then a fac
 is not loaded.
 ------*/
-vsefld(fld,scr)
-VSEFLD *fld;
-char *scr;
+void vsefld(VSEFLD *fld, char *scr)
 {
-	int col,row,offset,len,fac;
+	int offset,len,fac;
 
 	scr += sizeof(vse_default_oa);
-	offset = ((fld->row - 1) * 80) + (fld->col - 1);
+	offset = ((fld->row - 1) * VSE_SCREEN_WIDTH) + (fld->col - 1);
 	if(offset < 0)
 		offset = 0;
 	scr += offset;
@@ -54,28 +56,23 @@ char *scr;
 		++scr;
 		}
 	memcpy(scr,fld->src,len = (fld->len)?fld->len:strlen(fld->src));
-	if( 72 > (fld->col + len))
-		{
+
+	if( (fld->col + len - 1) < VSE_SCREEN_WIDTH )
+	{
+		/*
+		**	Add in the trailing FAC unless already has one.
+		*/
 		scr += len;
 		fac = *scr;
 		if(!(fac&FAC_BIT))
+		{
 			*scr = DIM_FAC;
 		}
-
-	/* Set the fac in column 72 (the end of the line).
-	   Added by CIS: 07/20/93 AJA */
-	else if ( 80 > (fld->col + len) )
-	{
-		scr += len;
-		*scr = language_case();
-		*(++scr) = DIM_FAC;
 	}
 }
 
 
-vseunscr(fld,scr)
-VSEFLD *fld;
-char *scr;
+void vseunscr(VSEFLD *fld, char *scr)
 {
 	while(fld->src)
 		{
@@ -91,16 +88,14 @@ If the fac is 0 then a DIMFAC is assumed
 If the length is zero then strlen of the src is used
 If the field ends in col 80 then a DIM_FAC is not appended
 ------*/
-vseunfld(fld,scr)
-VSEFLD *fld;
-char *scr;
+void vseunfld(VSEFLD *fld, char *scr)
 {
-	int col,row,offset,len,fac;
+	int offset,len,fac;
 
 	if(!fld->obj)
 		return;
 	scr += sizeof(vse_default_oa);
-	offset = ((fld->row - 1) * 80) + (fld->col - 1);
+	offset = ((fld->row - 1) * VSE_SCREEN_WIDTH) + (fld->col - 1);
 	if(offset < 0)
 		offset = 0;
 	scr += offset;
@@ -110,10 +105,19 @@ char *scr;
 	fac = *scr;
 	++scr;
 	len = (fld->len)?fld->len:strlen(fld->src);
-	if (len + fld->col > 80)
+	if (len + fld->col - 1 > VSE_SCREEN_WIDTH)
 	{
-		len = 80-(fld->col);
+		len = VSE_SCREEN_WIDTH - fld->col + 1;
 	}
 	memcpy(fld->obj,scr,len);
 }
 
+/*
+**	History:
+**	$Log: vsescr.c,v $
+**	Revision 1.10  1996-09-03 18:24:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,12 +17,7 @@
 #include <stat.h>
 #endif
 
-#ifdef unix
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif
-
-#ifdef MSDOS
+#ifndef VMS
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
@@ -34,6 +31,10 @@
 #include "movebin.h"
 #include "cobrun.h"
 #include "werrlog.h"
+#include "wisplib.h"
+#include "wfname.h"
+#include "idsisubs.h"
+#include "filext.h"
 
 #ifdef VMS
 #define	FILE_TYPE	001
@@ -41,16 +42,14 @@
 #define	RECORD_SIZE	003
 #endif
 
-char *wfname();
-extern char WISPFILEXT[39];
 
 #define		ROUTINE		51000
-READFDR(va_alist)	  								/* Function uses variable arguments.	*/
+void READFDR(va_alist)	  								/* Function uses variable arguments.	*/
 va_dcl
 {
 	va_list the_args;
 	int 	arg_count;
-	int4	l_long, *retcod, access_code, *temp_long_ptr, l_mode;
+	int4	l_long, access_code, *temp_long_ptr, l_mode;
 	char 	*end_name, *temp_ptr;
 	char 	*l_vol,*l_lib,*l_file, *l_field;
 	char 	filespec[132], filespec_idx[132], filespec_noext[132];
@@ -58,8 +57,8 @@ va_dcl
 	int	default_case;
 	int	rc;
 	struct stat sbuf;
-	struct tm *localtime(), *tm_ptr;
-	char 	tmp[7];
+	struct tm *tm_ptr;
+	char 	tmp[20];
 	char 	tmp_bs[19];
 	int	is_cisam;
 
@@ -78,7 +77,7 @@ va_dcl
 	if (l_mode != 0 )
 	{
 		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
-		return(0);
+		return;
 	}
 	wfname_mode = 0;
 
@@ -103,7 +102,7 @@ va_dcl
 		access_code = 0;							/* File was found			*/
 	}
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSFS)
 	if ( !hasext(filespec) )							/* If no extension (maybe CISAM)	*/
 	{
 		strcpy(filespec_noext,filespec);
@@ -128,7 +127,7 @@ va_dcl
 			}
 		}
 	}
-#endif /* unix || MSDOS */
+#endif /* unix || MSFS */
 
 	while ( arg_count > 1 )
 	{
@@ -167,7 +166,8 @@ va_dcl
 			{
 				switch ( l_field[1] )
 				{
-				case 'D':						/* Creation date.			*/
+				case 'D':						/* Creation date.	    YYMMDD	*/
+				case 'X':						/* Creation date extended.  YYYYMMDD	*/
 #ifdef VMS
 					strcat(filespec,";-0");				/* we want the earliest version		*/
 #endif
@@ -187,9 +187,26 @@ va_dcl
 					}
 
 					tm_ptr=localtime(&(sbuf.st_ctime));
-					memset(tmp,0,sizeof(tmp));
-					sprintf(tmp,"%02d%02d%02d",tm_ptr->tm_year,tm_ptr->tm_mon+1,tm_ptr->tm_mday);
-					strncpy(temp_ptr,tmp,6);
+
+					if ('D' == l_field[1])
+					{
+						sprintf(tmp,"%02d%02d%02d",
+							tm_ptr->tm_year % 100,
+							tm_ptr->tm_mon + 1,
+							tm_ptr->tm_mday);
+
+						memcpy(temp_ptr,tmp,6);
+					}
+					else /* "CX" */
+					{
+						sprintf(tmp,"%04d%02d%02d",
+							tm_ptr->tm_year + 1900,
+							tm_ptr->tm_mon + 1,
+							tm_ptr->tm_mday);
+
+						memcpy(temp_ptr,tmp,8);
+					}
+					
 					break;
 
 				default:
@@ -270,7 +287,8 @@ va_dcl
 			{
 				switch ( l_field[1] )
 				{
-				case 'D':						/* Mod date.				*/
+				case 'D':						/* Mod date.		YYMMDD		*/
+				case 'X':						/* Mod date Extended.	YYYYMMDD	*/
 #ifdef VMS
 					strcat(filespec,";");				/* we want the latest version		*/
 #endif
@@ -290,9 +308,26 @@ va_dcl
 					}
 
 					tm_ptr=localtime(&(sbuf.st_mtime));
-					memset(tmp,0,sizeof(tmp));
-					sprintf(tmp,"%02d%02d%02d",tm_ptr->tm_year,tm_ptr->tm_mon+1,tm_ptr->tm_mday);
-					strncpy(temp_ptr,tmp,6);
+
+					if ('D' == l_field[1])
+					{
+						sprintf(tmp,"%02d%02d%02d",
+							tm_ptr->tm_year % 100,
+							tm_ptr->tm_mon + 1,
+							tm_ptr->tm_mday);
+
+						memcpy(temp_ptr,tmp,6);
+					}
+					else /* "MX" */
+					{
+						sprintf(tmp,"%04d%02d%02d",
+							tm_ptr->tm_year + 1900,
+							tm_ptr->tm_mon + 1,
+							tm_ptr->tm_mday);
+
+						memcpy(temp_ptr,tmp,8);
+					}
+
 					break;
 
 				default:
@@ -510,3 +545,19 @@ short action;
 }
 #endif	/* #ifdef VMS	*/
 
+/*
+**	History:
+**	$Log: readfdr.c,v $
+**	Revision 1.12  1997-10-03 12:14:45-04  gsl
+**	YEAR2000 support:
+**	Changed CD and MD to do a mod 100 on the year so these will
+**	continue to report year of century correctly (YY).
+**	Added CX and MX which are modified versions of CD and MD that
+**	return a 4 digit year in the format YYYYMMDD.
+**
+**	Revision 1.11  1996-08-19 18:32:46-04  gsl
+**	drcs update
+**
+**
+**
+*/

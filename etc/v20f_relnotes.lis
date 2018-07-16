@@ -1,0 +1,234 @@
+							   v20f_relnotes.lis
+
+
+	RELEASE NOTES FOR WISP VERSION V2.0F
+	====================================
+
+	- WISP is now ported to the new Wang/MIPS RC 3230 computer.
+
+	- *** User maintainable translated screen structures ***
+	  WISP now generates a completely new screen structure for
+	  usage is DISPLAY-WS screens. Previously WISP was generating
+	  a cryptic structure that contained binary values and bit maps.
+	  WISP now generates readable "control string" composed only of
+	  ascii characters.
+ 
+	  E.g. Wang:	03  FILLER ROW 2 COLUMN 2 OCCURS 4 PIC $ZZ,ZZZ.ZZ+
+	       Control:	"L3R2C2O4P{$ZZ,ZZZ.ZZ+};"
+			The above Wang syntax would be translated into
+			this control string.
+
+	  You must re-WISP to take advantage of this new screen structure.
+	  This creates much more compact code. The new screen version is 22.
+	  WISP will continue to support previous screen versions 20 and 21,
+	  so you can re-link to the new library without re-WISPing.
+
+	- The WISP compress flag "/COMPRESS" or "-z" is now working
+	  correctly on all platforms. 
+
+	- The new screen structures allow full and correct handling of
+	  edited-numeric screen data items.  An error has been corrected
+	  and WISP now properly handles the following:
+			PIC 99/99/99
+			PIC $$,$$$.99CR
+
+	- For print files if no VALUE OF FILENAME clause is supplied
+	  WISP will now correctly generate a temporary filename based
+	  on the running program name. It was previously using the PRNAME
+	  as the filename.
+
+	- If a SORT verb used the same file for input and output WISP was
+	  generating a GETPARM asking you to "Press PF3 to Continue"; this
+	  has been corrected.
+
+	- The COMP clause was not being translated when followed immediately
+	  by a comma ("COMP,"); this has been fixed.
+
+	- WISP now preserves the I-O-CONTROL paragraph in the translated
+	  code.
+
+	- Added a directive *$COMPRESSFILE. This can be inserted as a 
+	  comment before the SELECT statement and when WISPed for ACUCOBOL
+	  will cause the "WITH COMPRESSION" clause to be added to the 
+	  SELECT statement. This has no effect if WISPed for VAX or LPI
+	  COBOL.
+
+	- Added a directive *$NOOPTIONAL. This can be inserted as a comment
+	  before the SELECT statement for a sequential file and will cause
+	  WISP to not insert the OPTIONAL clause into the SELECT statement.
+
+	- Added a directive *$SORTFILE (or *$SORT_FILE). This can be
+	  inserted before the SELECT statement for a sort file and will
+	  cause the SELECT statement to be generated correctly for a 
+	  SORT file. This has the same effect as the #SORT_FILE option
+	  in the option file.
+
+	- Added a directive *$SELECTTEXT. This can be inserted before the
+	  SELECT statement and will cause WISP to insert the trailing text
+	  into the SELECT statement. You can specifiy several *$SELECTTEXT
+	  comments before a SELECT statement and all will be inserted.
+	  (There is a 400 character limit approx 5-6 lines.) The text
+	  is inserted verbatim with no syntax checking so it must be
+	  correct and it must not contain a period (.) as WISP will add
+	  the period.
+	  Example:
+
+		001400 FILE-CONTROL.
+		001500*SELECTTEXT LOCK MODE IS MANUAL
+		001600*SELECTTEXT WITH MASS-UPDATE
+		001700     SELECT MY-FILE ......
+
+	  The above would insert into the SELECT statement:
+
+		           SELECT MY-FILE
+				ASSIGN ....
+				LOCK MODE IS MANUAL
+				WITH MASS-UPDATE
+				....
+
+	- ACUCOBOL: WISP now generates the SELECT statements for PRINTER
+	  files with ORGANIZATION IS LINE SEQUENTIAL.
+
+	- Added two directives for use with ACUCOBOL: *$SEQLINE and
+	  *$SEQBINARY. You can insert one of these before the SELECT
+	  statement for a sequential file and it will cause WISP to
+	  generate the following:
+
+		*$SEQLINE	ORGANIZATION IS LINE SEQUENTIAL
+		*$SEQBINARY	ORGANIZATION IS BINARY SEQENTIAL
+
+	  A line sequential file has a newline character added to the
+	  end of each line. This is useful if you plan to view the file
+	  using DISPLAY or a text editor like vi.
+
+	  See the ACUCOBOL Reference Guide for a description of LINE
+	  and BINARY SEQUENTIAL organization.
+
+	- Added a VALUE IS "000" to WISPRETURNCODE as it was uninitialized
+	  and had garbage in it.
+
+	- DISPLAY: Fixed an access violation that occasionally occured
+	  when PF14 was pressed to print the screen. Fixed an abort
+	  that was occurring because of display incorrectly handling
+	  carriage returns (^M) on UNIX.
+
+	- The DISPLAY utility now allows you to interrupt a search or
+	  a go-to-bottom, when the "working" is flashing, by pressing any
+	  key.
+
+	- The MENU system as used for the HELP screen had a bug where
+	  it would "find" entries from previous menu screens; this has
+	  been corrected.
+
+	- The utility wputparm with function SHOW now provides a much
+	  improved information screen of existing PRBs.
+
+	- UNIX: The current temporary USAGE CONSTANTS are stored in files
+	  in /usr/tmp named PERSONxxxx where xxxx was the ttyslot number.
+	  This was not working on the RS6000 64 port boards as the
+	  ttyslot routine was failing. Also if you logged onto the
+	  same ttyslot without doing a "wusage read" you would get
+	  the previous person's USAGE CONSTANTS. This has been corrected
+	  by using the last 5 characters of the tty plus the 3 character
+	  Wang style userid instead of the ttyslot.
+
+	- Currently TRIGGER-KEY support is suspended. It was not working
+	  correctly on UNIX. It is currently being re-worked and will
+	  be re-introduced in a later release.
+
+	- The NETRON-CAP routines have been impoved to fix all reported
+	  problems.
+
+	- The Print Screen function has been improved to correctly
+	  show underscores on the printout.
+
+	- On an Error GETPARM both the Wang style and the native filepath
+	  are now displayed.
+
+	- The RENAME usersub correctly uses the default usage constants
+	  if not provided.
+
+	- Added two new runtime flags for the OPTIONS (OPTIONS.DAT) file.
+	  These are NULLISSPACE and NULLISDOT and they control the way
+	  a null is displayed on the workstation. The default is to 
+	  display a null as a space (NULLISSPACE). To have nulls displayed
+	  as a dot (.) you can specify NULLISDOT.
+
+	- VMS: WISP was deleting files in the worklib that were being 
+	  opened in EXTEND mode; this has been fixed.
+
+	- Error messages were being garbled if they occurred before the
+	  first screen was displayed; this has been fixed.
+
+	- UNIX: Fixed a protection problem that could occur on the
+	  MESSAGE port file and on the WLIBLIST file. This could cause
+	  errors if the creator of the message port had a UMASK that
+	  prevented others from accessing the file.
+
+	- Added the OUTPUTVERIFYOFF and CREATEVOLUMEON flags to the
+	  runtime OPTIONS (OPTIONS.DAT) file.
+
+		OUTPUTVERIFYOFF 	
+			Turns off the GETPARM screen that asks you to 
+			press PF3 to continue when doing an OPEN OUTPUT
+			on a existing file. 
+
+		CREATEVOLUMEON
+			Tells WISP on UNIX to create the volume as a 
+			directory of that name if the volume name is not 
+			found in the LGMAP.  Otherwise an error is reported 
+			as the volume does not exist.
+
+	- The SET usersub has been rewritten. It use to give unpredictable
+	  results if the keyword was not supported.
+
+	- UNIX: WISP now supports use of the "C" shell and Korne shell.
+	  Certain features of WISP would not work with csh or ksh because
+	  WISP relyed on the process group id (GID) to tie all the processes
+	  of a logon together, and csh and ksh would reset the GID for
+	  each new process. 
+	
+	  To allow use of csh and ksh, WISP will first look at the shell
+	  variable WISPGID for the GID. So you should first set the
+	  shell variable WISPGID to your process id when you login
+	  as follows:
+
+		ksh:	$ WISPGID=$$; export WISPGID
+		csh	$ setenv WISPGID $$
+
+	  Also you need to set the varible SHELL=/bin/ksh or /bin/csh
+	  so that WISP will know which shell to use.
+
+	- The FIND usersub was aborting when the VOLUME was blank. This
+	  has been fixed so as to set the return code and return.
+
+	- VMS: The SCRATCH usersub will now look for a ".LIS" file
+	  if it fails to find a ".DAT" file.
+
+	- UNIX: Fixed the exit code for the wscratch utility.
+
+	- The vsx utility has been enhanced to skip over indexed files.
+
+	- Most of the UNIX utilities have been greatly reduced in size.
+
+	- UNIX: The temporary link files are now placed in the dir
+	  /usr/tmp/wisplink (was /usr/tmp/aculink).
+
+	- ACUCOBOL: The make file for wruncbl is now called wruncbl.umf
+	  (was runcbl.umf).
+
+	- ACUCOBOL: WISP now intercepts ACUCOBOL fatal error exits and
+	  displays a message that the program is terminating on a fatal
+	  ACUCOBOL error. WISP will reset your terminal so it should
+	  never be left in raw mode. (The most common reason for a fatal 
+	  error from ACUCOBOL is a CALL verb where it can't find the 
+	  program to run.)
+
+	- The utility to translate Wang Procs into Wang Cobol has been
+	  greatly enhanced and given a better name. 
+	  It is now call "proctran" for procedure translator. (Previously
+	  it was called pl2cbl; this was too difficult a name to use.)
+
+	- UNIX: The ACP routines have been improved to correctly handle
+	  non-blocking reads.
+

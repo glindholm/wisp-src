@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -8,10 +10,17 @@
 			/************************************************************************/
 
 #include <stdio.h>
-#include <termio.h>
 #include <signal.h>
+#include <sys/types.h>
+#include <sys/time.h>
 
+#ifdef USEIOCTL
+#include <termio.h>
 struct termio old,new;
+#else
+#include <termios.h>
+struct termios old,new;
+#endif
 
 main()
 {
@@ -20,7 +29,11 @@ main()
 	char *makeprintable();
 	char *oct();
 	int	exit_flag;
-	
+
+#ifdef TESTING	
+sleep(3);
+#endif
+
 	signal(SIGQUIT,cleanexit);
 	signal(SIGINT,cleanexit);
 
@@ -70,20 +83,49 @@ unsigned char value;
 }
 rawmode()
 {
+#ifdef USEIOCTL
 	ioctl(0,TCGETA,&old);
+#else
+	tcgetattr(0,&old);
+#endif
+	
 	new=old;
 	new.c_cc[VMIN]=1;
 	new.c_cc[VTIME]=0;
 	new.c_lflag &= ~(ICANON|ECHO);
+	
 	new.c_iflag = 0;
-	ioctl(0,TCSETA,&new);
+
+#ifdef USEIOCTL
+	ioctl(0,TCSETAW,&new);
+#else
+	tcsetattr(0,TCSADRAIN,&new);
+#endif
+	
 }
 void cleanexit(sig)
 int sig;
 {
-	ioctl(0,TCSETA,&old);
+#ifdef USEIOCTL
+	ioctl(0,TCSETAW,&old);
+#else
+	tcsetattr(0,TCSANOW,&old);
+#endif
+
 	exit(0);
 }
 
 	     
 
+/*
+**	History:
+**	$Log: viewkey.c,v $
+**	Revision 1.9  1996-07-26 18:14:16-04  gsl
+**	Fix includes for termio.h and termios.h
+**
+**	Revision 1.8  1996-07-23 11:13:02-07  gsl
+**	drcs update
+**
+**
+**
+*/

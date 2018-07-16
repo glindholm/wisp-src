@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -13,15 +15,23 @@
 
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"									/* Include local references.		*/
+#include "vmodules.h"
+
+#include <stdio.h>
+#include <stdarg.h>
 
 /*						Subroutine entry point.								*/
 
-int vtext(display,row,column,text,a0,a1,a2,a3) int display, row, column; char *text; long a0, a1, a2, a3;
+int vtext(int display,int row,int column,char *text,...)
 {
+	va_list args;
 	int push_flag;									/* Flags.				*/
-	register int i, j;								/* Working registers.			*/
-
-	vbuffering(LOGICAL);								/* Turn on logical buffering.		*/
+	char buffer[1920];
+	
+	va_start(args,text);
+	vsprintf(buffer,text,args);
+	
+	vbuffering_start();								/* Turn on logical buffering.		*/
 	if (display < 0)								/* Old rendition restored on exit?	*/
 	{
 		display = -display;							/* Convert to positive entity.		*/
@@ -31,21 +41,23 @@ int vtext(display,row,column,text,a0,a1,a2,a3) int display, row, column; char *t
 	else push_flag = FALSE;								/* Flag that we don't have to restore.	*/
 	vcharset(vmaskc(display));							/* Select character set.		*/
 	vmode(vmaskm(display));								/* Select character rendition.		*/
-	if ((display & DOUBLE_HEIGHT) && (row-1 >= 0))					/* Is this a double high line.		*/
-	{
-		vmove(row-1,column);							/* Move to the last line.		*/
-		vsize(row-1,DOUBLE_TOP);						/* Select the new size.			*/
-		vprint(text,a0,a1,a2,a3);						/* Print the text.			*/
-		vmove(row,column);							/* Move to the bottom line.		*/
-		vsize(row,DOUBLE_BOTTOM);						/* Select the size.			*/
-	}
-	else										/* Not a double height line.		*/
-	{
-		vmove(row,column);							/* Move to the line.			*/
-		vsize(row,vmasks(display));						/* Select line size.			*/
-	}
-	vprint(text,a0,a1,a2,a3);							/* Output the text.			*/
+
+	vmove(row,column);
+	vprint(buffer);									/* Output the text.			*/
 	if (push_flag) vstate(RESTORE);							/* Do we have to restore?		*/
-	vbuffering(AUTOMATIC);								/* Restore automatic buffering.		*/
+	vbuffering_end();								/* Restore automatic buffering.		*/
+	va_end(args);
 	return(SUCCESS);								/* Return to the caller.		*/
 }
+/*
+**	History:
+**	$Log: vtext.c,v $
+**	Revision 1.12  1997-07-09 12:31:49-04  gsl
+**	Removed support for double height text
+**
+**	Revision 1.11  1996-10-11 18:16:22-04  gsl
+**	drcs update
+**
+**
+**
+*/

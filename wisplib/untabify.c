@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -7,6 +9,7 @@
 			/*									*/
 			/************************************************************************/
 
+#include <string.h>
 #include "idsistd.h"
 /*
 **	Routine:	untabify()
@@ -27,9 +30,7 @@
 **	Warnings:	If the expanded string is greater then size then in will be truncated to size.
 **
 */
-int untabify(str,size)
-char *str;
-int size;
+int untabify(char* str, int size)
 {
 	char 	*tmpbuf;
 	int 	iidx,oidx;
@@ -57,3 +58,12 @@ int size;
 	free(tmpbuf);
 	return 0;
 }
+/*
+**	History:
+**	$Log: untabify.c,v $
+**	Revision 1.6  1996-08-19 18:33:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

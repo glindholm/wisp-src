@@ -1,0 +1,121 @@
+      **********************************************************
+      *                                                        *
+      *           Screen layout for ALL screens                *
+      *                                                        *
+      **********************************************************
+
+       01  SELECTION-SIZE         PIC 9(02) VALUE ZERO.
+       01  MAX-SLOTS              PIC 9(02) VALUE ZERO.
+       01  MAX-SEL-LEN-1          BINARY    VALUE ZERO.
+       01  MAX-SEL-LEN-2          BINARY    VALUE ZERO.
+       01  MAX-SEL-LEN-3          BINARY    VALUE ZERO.
+       01  C1-SEL-STRT            BINARY    VALUE ZERO.
+       01  P1-SEL-STRT            BINARY    VALUE ZERO.
+       01  C2-SEL-STRT-1          BINARY    VALUE ZERO.
+       01  P2-SEL-STRT-1          BINARY    VALUE ZERO.
+       01  C2-SEL-STRT-2          BINARY    VALUE ZERO.
+       01  P2-SEL-STRT-2          BINARY    VALUE ZERO.
+       01  C3-SEL-STRT-1          BINARY    VALUE ZERO.
+       01  P3-SEL-STRT-1          BINARY    VALUE ZERO.
+       01  C3-SEL-STRT-2          BINARY    VALUE ZERO.
+       01  P3-SEL-STRT-2          BINARY    VALUE ZERO.
+       01  C3-SEL-STRT-3          BINARY    VALUE ZERO.
+       01  P3-SEL-STRT-3          BINARY    VALUE ZERO.
+
+       01  C1-DEF.
+           03  C1-DEF-ROW.
+               05  C1-ROW     OCCURS 23 TIMES.
+                   07  FILLER          PIC X(08) VALUE SPACES.
+                   07  C1-MENU-PICK-INDICATOR.
+                       09  C1-PICK1    PIC X(01) VALUE SPACES.
+                       09  C1-PICK2    PIC X(01) VALUE SPACES.
+                   07  C1-FAC          PIC X(01) VALUE SPACES.
+                   07  C1-DESC         PIC X(60) VALUE SPACES.
+                   07  FILLER          PIC X(09) VALUE SPACES.
+           03  C1-TEXT REDEFINES C1-DEF-ROW.
+               05  C1-TEXT-ROW     OCCURS 23 TIMES.
+                   07  C1-CHAR     OCCURS 80 TIMES.
+                       09  FILLER      PIC X(01).
+           03  C1-MS-TABLE-INDEX.
+               05  C1-TABLE     OCCURS 23 TIMES.
+                   07  C1-INDEX-VAL    PIC 9(02) VALUE 0.
+
+       01  P1-DEF.
+           03  P1-DEF-ROW.
+               05  P1-ROW     OCCURS 23 TIMES.
+                   07  FILLER          PIC X(09) VALUE SPACES.
+                   07  P1-PFKEY        PIC X(04) VALUE SPACES.
+                   07  P1-FAC          PIC X(01) VALUE SPACES.
+                   07  P1-DESC         PIC X(57) VALUE SPACES.
+                   07  FILLER          PIC X(09) VALUE SPACES.
+           03  P1-TEXT REDEFINES P1-DEF-ROW.
+               05  P1-TEXT-ROW     OCCURS 23 TIMES.
+                   07  P1-CHAR     OCCURS 80 TIMES.
+                       09  FILLER      PIC X(01).
+           03  P1-MS-TABLE-INDEX.
+               05  P1-TABLE     OCCURS 23 TIMES.
+                   07  P1-INDEX-VAL    PIC 9(02) VALUE 0.
+
+       01  C2-DEF.
+           03  C2-ROW     OCCURS 23 TIMES.
+               05  C2-ROW-DESC     OCCURS 2 TIMES.
+                   07  C2-SLOT.
+                       09  C2-MENU-PICK-INDICATOR.
+                           10  C2-PICK1    PIC X(01) VALUE SPACES.
+                           10  C2-PICK2    PIC X(01) VALUE SPACES.
+                       09  C2-FAC       PIC X(01) VALUE SPACES.
+                       09  C2-DESC      PIC X(37) VALUE SPACES.   
+                   07  C2-TEXT REDEFINES C2-SLOT.
+                       09  C2-CHAR     OCCURS 40 TIMES.
+                           10  FILLER   PIC X(01).
+           03  C2-MS-TABLE-INDEX     OCCURS 23 TIMES.
+               05  C2-TABLE     OCCURS 2 TIMES.
+                   07  C2-INDEX-VAL     PIC 9(02) VALUE 0.
+
+       01  P2-DEF.
+           03  P2-ROW     OCCURS 23 TIMES.
+               05  P2-ROW-DESC     OCCURS 2 TIMES.
+                   07  P2-SLOT.
+                       09  FILLER      PIC X(03) VALUE SPACES.
+                       09  P2-PFKEY    PIC X(04) VALUE SPACES.
+                       09  P2-FAC      PIC X(01) VALUE SPACES.
+                       09  P2-DESC     PIC X(32) VALUE SPACES.   
+                   07  P2-TEXT REDEFINES P2-SLOT.
+                       09  P2-CHAR     OCCURS 40 TIMES.
+                           10  FILLER   PIC X(01).
+           03  P2-MS-TABLE-INDEX     OCCURS 23 TIMES.
+               05  P2-TABLE     OCCURS 2 TIMES.
+                   07  P2-INDEX-VAL     PIC 9(02) VALUE 0.
+
+       01  C3-DEF.
+           03  C3-ROW     OCCURS 23 TIMES.
+               05  C3-ROW-DESC     OCCURS 3 TIMES.
+                   07  C3-SLOT.
+                       09  C3-MENU-PICK-INDICATOR.
+                           10  C3-PICK1    PIC X(01) VALUE SPACES.
+                           10  C3-PICK2    PIC X(01) VALUE SPACES.
+                       09  C3-FAC       PIC X(01) VALUE SPACES.
+                       09  C3-DESC      PIC X(23) VALUE SPACES.
+                   07  C3-TEXT REDEFINES C3-SLOT.
+                       09  C3-CHAR     OCCURS 26 TIMES.
+                           10  FILLER   PIC X(01).
+           03  C3-MS-TABLE-INDEX     OCCURS 23 TIMES.
+               05  C3-TABLE     OCCURS 3 TIMES.
+                   07  C3-INDEX-VAL     PIC 9(02) VALUE 0.
+
+       01  P3-DEF.
+           03  P3-ROW     OCCURS 23 TIMES.
+               05  FILLER          PIC X(01) VALUE SPACES.
+               05  P3-ROW-DESC     OCCURS 3 TIMES.
+                   07  P3-SLOT.
+                       09  FILLER      PIC X(03) VALUE SPACES.
+                       09  P3-PFKEY    PIC X(04) VALUE SPACES.
+                       09  P3-FAC      PIC X(01) VALUE SPACES.
+                       09  P3-DESC     PIC X(18) VALUE SPACES.   
+                   07  P3-TEXT REDEFINES P3-SLOT.
+                       09  P3-CHAR     OCCURS 26 TIMES.
+                           10  FILLER   PIC X(01).
+               05  FILLER          PIC X(02) VALUE SPACES.
+           03  P3-MS-TABLE-INDEX     OCCURS 23 TIMES.
+               05  P3-TABLE     OCCURS 3 TIMES.
+                   07  P3-INDEX-VAL     PIC 9(02) VALUE 0.

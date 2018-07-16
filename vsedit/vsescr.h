@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 #ifndef _VSESCR_H
 #define _VSESCR_H
 
@@ -23,7 +27,7 @@ typedef struct	_vsefld
 #define	UPPER_ENTRY_FAC		(0x81)
 #define	NUMERIC_ENTRY_FAC	(0x82)
 #define	UPLOW_ENTRY_FAC		(0x80)
-#define	DIM_FAC			(0x8C)
+#define	DIM_FAC			((char)0x8C)
 #define DIM_UNDERLINE_FAC	(0xAC)
 #define	HIDE_FAC		(0x9C)
 #define	BRITE_FAC		(0x84)
@@ -41,7 +45,6 @@ typedef struct	_vsefld
 
 #define BLINK(x)		x,x,BLINK_FAC
 #define ERRORN(x)               x,NULL,ERROR_FAC
-#define ERRORA(x)
 
 #define OBJECT(x)		x,UPPER_ENTRY_FAC
 #define	USING(x)		x,OBJECT(x)
@@ -52,4 +55,19 @@ typedef struct	_vsefld
 #define BRIGHT(x)		x,NULL,BRITE_FAC
 #define LASTITEM		0,0,0,NULL,NULL,0
 
+void vsescr(VSEFLD *fld, char *scr);
+void vsescr_init(char *scr);
+void vsefld(VSEFLD *fld, char *scr);
+void vseunscr(VSEFLD *fld, char *scr);
+void vseunfld(VSEFLD *fld, char *scr);
+
 #endif	/* _VSESCR_H */
+/*
+**	History:
+**	$Log: vsescr.h,v $
+**	Revision 1.10  1996-09-03 18:24:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

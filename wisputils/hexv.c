@@ -1,12 +1,34 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+ * Program: hexv
+ *  Module: $RCSfile: hexv.c,v $
+ * 
+ * $Log: hexv.c,v $
+ * Revision 1.7  1995-04-25 05:58:21-04  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.6  1995/04/17  11:50:46  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.5  1995/02/06  15:13:24  gsl
+ * updated
+ * ,.
+ *
+ * Revision 1.1  1991/04/18  23:17:29  jockc
+ * Initial revision
+ *
+ *
+ *
+ */
+
 #include <stdio.h>
 
-static char *copyright="Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-static char *id="@(#)hexv.c	1.1 (c)IDSI 3/13/91";
-#define SCCSVERS "1.1"
-#define SCCSDATE "3/13/91"
+#define RCSVERS "$Revision:$"
+#define RCSDATE "$Date:$"
 
-static char *vers=SCCSVERS;
-static char *date=SCCSDATE;
+static char *vers=RCSVERS;
+static char *date=RCSDATE;
 
 #define VER(x) x[0]=='%'?"0.0":x
 #define DAT(x) x[0]=='%'?"19xx":x

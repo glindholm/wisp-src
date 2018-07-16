@@ -1,42 +1,77 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		find.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Find the file or files which match the template
+**
+**	Routines:	
+**	FIND()
+*/
 
-/* 			   		Find the file or files which match the template						*/
+/*
+**	Includes
+*/
 
 #include <varargs.h>
-
-#ifdef unix
 #include <stdio.h>
-#include <memory.h>
+#include <stdlib.h>
 #include <string.h>
-#endif
-
-#ifdef MSDOS
 #include <errno.h>
-#include <stdio.h>
+
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <io.h>
 #endif
+
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <ctype.h>
+#endif /* unix || MSDOS || WIN32 */
 
 #include "idsistd.h"
 #include "wfiles.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"
+#include "wfname.h"
+#include "idsisubs.h"
+#include "wexit.h"
+#include "wisplib.h"
+#include "filext.h"
 
-extern char WISPFILEXT[39];
-static int osd_find();
-static int build_lib_list();
-static int pass_back();
-static int build_list();
-static int build_file_list();
+/*
+**	Structures and Defines
+*/
 
-FIND(va_alist)
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Function Prototypes
+*/
+
+static int haswc(char* p);
+static void osd_find(char* the_file,char* the_lib,char* the_vol,
+		     int4 l_starter, int4* l_counter_p,
+		     char* receiver, int4* l_file_count_p);
+static void build_list(char* vspec, char* lspec, char* fspec);
+static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec);
+static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec);
+static void pass_back( char* vol, char* lib, char* fil);
+
+
+
+void FIND(va_alist)
 va_dcl
 {
 #define		ROUTINE		19000
@@ -46,8 +81,6 @@ va_dcl
 	char	*the_file,*the_lib,*the_vol,*receiver,*receiver_type;
 	int4	*starter,*counter,*file_count;
 	int4	l_starter,l_counter,l_file_count;
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
 	l_starter = l_counter = l_file_count = 0;
 	va_start(the_args);								/* Point to the top of the stack.	*/
@@ -94,16 +127,23 @@ va_dcl
 	wswap(&l_starter);								/* swap order of the words		*/
 	wswap(&l_counter);								/* swap order of the words		*/
 
+	wtrace("FIND","ARGS","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Start=%ld Cnt=%ld",
+	       the_file, the_lib, the_vol, (long)l_starter, (long)l_counter);
+
 	leftjust(the_file,8);
 	leftjust(the_lib,8);
 	leftjust(the_vol,6);
 
 	if ( the_vol[0] == ' ' )							/* Not a valid call to FIND.		*/
 	{
+		wtrace("FIND","BADARG", "Volume is blank");
+
 		l_counter = 0;
 		l_file_count = 0;
 	}
 	else osd_find( the_file, the_lib, the_vol, l_starter, &l_counter, receiver, &l_file_count );
+
+	wtrace("FIND","RETURN", "Files returned=%ld  Files found=%ld", (long)l_counter, (long)l_file_count); 
 
 	wswap(&l_counter);								/* swap order of the words		*/
 	wswap(&l_file_count);								/* swap order of the words		*/
@@ -138,7 +178,7 @@ int	*l_file_count_p;
 	uint4  	status,status2;
 	int  	i,j;
 	int 	cnt, pos;
-	char 	*end_name, *wfname();
+	char 	*end_name;
 	int4 	mode;
 	int	lib_search;
 	unsigned short reslen;
@@ -371,21 +411,15 @@ int	*l_file_count_p;
 #endif	/* VMS */
 
 
-#ifndef VMS
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 /*
 **	The same osd_find() routines are used for unix and MSDOS
 */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <ctype.h>
 #include "wperson.h"
 #include "wdefines.h"
+#include "paths.h"
 
-char *compressit();
-char *wfname();
-char *strchr();
-char *osd_ext();
 char *nextfile();
 
 static char *rec_ptr;									/* Ptr to reciever area			*/
@@ -405,14 +439,9 @@ static	int4	item_start;								/* First match to return		*/
 static	int4	item_count;								/* Current match position		*/
 
 
-static osd_find( the_file, the_lib, the_vol, l_starter, l_counter_p, receiver, l_file_count_p )
-char	*the_file;
-char	*the_lib;
-char	*the_vol;
-int4	l_starter;
-int4	*l_counter_p;
-char	*receiver;
-int4	*l_file_count_p;
+static void osd_find(char* the_file,char* the_lib,char* the_vol,
+		     int4 l_starter, int4* l_counter_p,
+		     char* receiver, int4* l_file_count_p)
 {
 	char *fspec;									/* pointers to the "passed" strings	*/
 	char *lspec;
@@ -482,8 +511,7 @@ int4	*l_file_count_p;
 }
 
 											/* Build the list starting by matching	*/
-static build_list(vspec,lspec,fspec)							/* the VOLUMES.				*/
-char *vspec,*lspec,*fspec;
+static void build_list(char* vspec, char* lspec, char* fspec)							/* the VOLUMES.				*/
 {
 	logical_id *p;
 	char	*vol, *vol_path;
@@ -538,9 +566,7 @@ char *vspec,*lspec,*fspec;
 }
 
 											/* Build the list of LIBRARY under VOL	*/
-static build_lib_list(vol,vol_path,lspec,fspec)
-char *vol, *vol_path;
-char *lspec, *fspec;
+static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 {
 	char	*vol_context = NULL;
 	char	*libname;
@@ -620,10 +646,7 @@ char *lspec, *fspec;
 }
 
 											/* Build list of FILEs under LIB	*/
-static build_file_list(vol,vol_path,lib,fspec)
-char *vol, *vol_path;
-char *lib;
-char *fspec;
+static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 {
 	char 	*lib_context = NULL;
 	char 	*filename;
@@ -694,8 +717,7 @@ char *fspec;
 	nextfile(NULL,&lib_context);							/* Reset nextfile for reading dir	*/
 }
 
-static pass_back(vol,lib,fil)								/* Load the results into reciever	*/
-char *vol, *lib, *fil;
+static void pass_back( char* vol, char* lib, char* fil)								/* Load the results into reciever	*/
 {
 #define REC struct receiver_struct
 struct receiver_struct {
@@ -720,14 +742,11 @@ struct receiver_struct {
 	}
 }
 
-#endif /* !VMS */
+#endif /* unix || MSDOS || WIN32 */
 
 
-int haswc(p)
-char *p;
+static int haswc(char* p)
 {
-	char *strchr();
-
 	if( strchr(p,'*') || strchr(p,'?') ) return(1);
 	else return(0);
 }
@@ -813,3 +832,34 @@ int4	*total;										/* Total number of wildcard matches.	*/
 
 #endif	/* unix */
 
+
+/*
+**	History:
+**	$Log: find.c,v $
+**	Revision 1.14  1997-04-15 23:11:13-04  gsl
+**	Update to use wtrace()
+**
+**	Revision 1.13  1997-03-12 13:03:07-05  gsl
+**	changed to use WIN32 define
+**
+**	Revision 1.12  1996-09-10 11:43:09-04  gsl
+**	move the system include before wisp includes
+**
+**	Revision 1.11  1996-07-15 09:43:27-07  gsl
+**	fix include filext
+**
+**	Revision 1.10  1996-06-28 08:45:25-07  gsl
+**	fix prototypes, includes and reuse unix and msdos code for NT
+**
+**	Revision 1.9  1995-04-25 02:52:43-07  gsl
+**	drcs state V3_3_15
+**
+ * Revision 1.8  1995/04/17  11:46:07  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.7  1995/03/10  14:01:27  gsl
+ * fix headers
+ *
+**
+**
+*/

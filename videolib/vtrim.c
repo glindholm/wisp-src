@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			    Copyright (c) 1987				*/
@@ -8,7 +10,11 @@
 /*						Include standard header files.							*/
 
 #include <stdio.h>									/* We need standard I/O.		*/
+#include <string.h>
+
 #include "video.h"									/* We need standard video definitions.	*/
+#include "vmodules.h"
+#include "vtrim.h"
 
 /*						Local definitions.								*/
 
@@ -17,8 +23,7 @@
 
 /*						Subroutine entry point.								*/
 
-int vtrim(string) char string[];							/* Trim a string of trailing blanks.	*/
-
+int vtrim(char *string)									/* Trim a string of trailing blanks.	*/
 {
 	register int i;									/* Working register storage.		*/
 
@@ -29,7 +34,7 @@ int vtrim(string) char string[];							/* Trim a string of trailing blanks.	*/
 	return(i+1);									/* Return the string length.		*/
 }
 
-int vtrimlen(outstr,instr,length) char outstr[]; char instr[]; int length;		/* Trim a string of length.		*/
+int vtrimlen(char *outstr, char *instr, int length)					/* Trim a string of length.		*/
 {	
 	register int i;
 
@@ -38,7 +43,7 @@ int vtrimlen(outstr,instr,length) char outstr[]; char instr[]; int length;		/* T
 	return(vtrim(outstr));								/* Trim it.				*/
 }
 
-int vputlen(outstr,instr,length) char outstr[]; char instr[]; int length;		/* Opposite of vtrimlen.		*/
+int vputlen(char *outstr, char *instr, int length)					/* Opposite of vtrimlen.		*/
 {
 	register int i;
 	int eos;
@@ -57,4 +62,14 @@ int vputlen(outstr,instr,length) char outstr[]; char instr[]; int length;		/* Op
 			}
 		}
 	}
+	return 0;
 }
+/*
+**	History:
+**	$Log: vtrim.c,v $
+**	Revision 1.10  1996-10-11 18:16:23-04  gsl
+**	drcs update
+**
+**
+**
+*/

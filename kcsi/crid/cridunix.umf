@@ -1,0 +1,815 @@
+#-----------------------------------------------------------------------
+# @(#)cridunix.umf
+#-----------------------------------------------------------------------
+
+#
+# To change the version for CRID, change it here and in "cridvers.c"
+#
+CRID_VERSION=291
+VER=$(CRID_VERSION)
+
+#-----------------------------------------------------------------------
+#			Instructions for DOS
+# Create Sibling directories containing .\acucrid .\inc and .\kcsicopy
+# and load the source and make from these three.
+#
+# The DOS Code Builder MAKE uses !include instead of include, so
+# change includes to !includes.
+#
+# Use the Code Builder modxconf.exe to create a 5 Meg swap file
+# (You can probably work with a smaller one, I just got tired of
+# fiddling around)
+#
+# Copy wisp.lib and video.lib and run386.lib into the .\acucrid
+# directory.
+#
+# Make the crid library with 
+# make dos_acucrid
+#
+# Note: Using awkward syntax you can remake the library by recompiling
+# but it is not supported in this make file. If you need to modify code,
+# then delete all copies of .obj and crid.lib, and remake crid.lib
+#
+# Build the runtime for testing with
+# make -f wruncblk.umf dos  (or dose for ede version)
+#
+# Create individual utilities with 
+# make DOSCONTROL
+# make DOSREPORT
+# make DOSINQUIRY
+# make DOSDATENTRY
+#
+#-----------------------------------------------------------------------
+
+include $(WISP)/src/port/make.include
+
+#-----------------------------------------------------------------------
+#		!!!! User modifiable !!!!
+#-----------------------------------------------------------------------
+
+CFLAGS_KCSI= $(CFLAGS) -DCRID -DCRID_VERSION=$(CRID_VERSION)
+
+WISPDIR=/usr/local/wisp
+WISPTRAN=../../wisptran/wisp
+
+#
+# Standard WISP libraries
+#
+WISP_LIBDIR=$(WISPDIR)/lib
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+LIBWISP=lib$(L_WISP).a
+LIBVIDEO=lib$(L_VIDEO).a
+LIBEDE=lib$(L_EDE).a
+
+WISP_LIB_PATH  		= $(WISP_LIBDIR)/$(LIBWISP)
+VIDEO_LIB_PATH 		= $(WISP_LIBDIR)/$(LIBVIDEO)
+EDE_LIB_PATH   		= $(WISP_LIBDIR)/$(LIBEDE)
+
+WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+
+WISPLIBS=  $(WISP_LIBS_PATHS)
+WISPELIBS= $(WISPEDE_LIBS_PATHS)
+
+#-----------------------------------------------------------------------
+# Two different run times for Acu-COBOL
+RUNTIME=wruncblk
+ERUNTIME=wruncblke
+#-----------------------------------------------------------------------
+
+#-----------------------------------------------------------------------
+# ACUCOBOL version information
+#
+#  NOTE:  $(WISPDIR)/acu/acucobol.include may require modifications to indicate
+#         the version of ACUCOBOL that is installed on your system.
+
+include $(WISPDIR)/acu/acucobol.include
+
+# Used to make the Acu-COBOL runtime
+CRIDDERS=crid.h cridtbl.c crid85.c
+SUBS = $(ACUSUBS) $(CRIDDERS)
+#-----------------------------------------------------------------------
+
+# Pickup the list of C modules for the libraries
+# and the list of all cobol modules
+include cridc.umf
+include cridwcb.umf
+
+SRCLIST=*.h ../inc/*.h *.c *.wcb ../kcsicopy/*.wcb *.umf *.dmf \
+	*Makefile 
+ACUOBJ=CONTROL REPORT INQUIRY DATENTRY ACULINK ACUUSING
+PORT=$(SRCLIST) $(ACUOBJ)
+ATT1PORT=*.h *.c *.umf Makefile ../inc/*.h
+ATT2PORT=*.wcb ../kcsicopy/*.wcb
+PORTDIR=../portcrid
+CARRYALL=cridp
+ARCHIVE=$(PORT) mrq.* *.flo *.bug
+BACKUP=$(SRCLIST) mrq.* *.flo *.bug
+
+# Distribution lists
+#-------------------
+UTILDIST=ctlcnvrt.wcb rptcnvrt.wcb
+
+ACUDIST=libcrid.a crid.h cridtbl.c crid85.c wruncblk.umf \
+	CONTROL REPORT INQUIRY DATENTRY $(UTILDIST) \
+	release.lis install_crid_acu.lis packlist.lis
+
+LPIUTIL=control.lpi report.lpi inquiry.lpi datentry.lpi
+LPIEUTIL=$(LPIUTIL:.lpi=.lpie)
+LPIDIST=$(LPIUTIL) liblpicridwcb.a liblpicrid.a \
+	control.o report.o inquiry.o datentry.o cridutil.umf $(UTILDIST) \
+	release.lis install_crid_lpi.lis packlist.lis
+
+MFUTIL=$(LPIUTIL:.lpi=.mf)
+MFEUTIL=$(LPIUTIL:.lpi=.mfe)
+MFXUTIL=$(LPIUTIL:.lpi=.mfx)
+MFXEUTIL=$(LPIUTIL:.lpi=.mfxe)
+MFMAKERS=cridutil.umf
+MFDIST=$(MFUTIL) $(MFMAKERS) libmfcrid.a libmfcridwcb.a \
+	control.o report.o inquiry.o datentry.o libmfisam.a $(UTILDIST) \
+	release.lis install_crid_mf.lis packlist.lis
+MFXDIST=$(MFXUTIL) $(MFMAKERS) libmfxcrid.a libmfxcridwcb.a \
+	control.o report.o inquiry.o datentry.o $(UTILDIST) \
+	release.lis install_crid_mf.lis packlist.lis
+
+.SUFFIXES:      .dbg .cbo .wcb .umf .mf .lpi .mlb .dmf
+
+
+make:
+	@echo "CRID Make utility. Build"
+	@echo " 1.  For Micro-FOCUS COBOL (with DISAM 3.4)"
+	@echo " 2.  For AcuCOBOL"
+	@echo " 3.  Make individual pieces"
+	@echo " 4.  For Micro-FOCUS COBOL (with ExtFH)"
+	@echo " "
+	@echo " 0.  Exit"
+	@read lang ; \
+	case $$lang in \
+		1) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" gen_mf_all ;;\
+		2) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" gen_acu_all ;;\
+		3) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" makep ;;\
+		4) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" gen_mfx_all ;;\
+		0) echo "Exiting make"; exit ;; \
+		*) echo "Exiting make"; exit ;; \
+	esac
+
+makep:
+	@echo "CRID Make utility. Build"
+	@echo " 1.  CRID Back end Library (needed for all systems)"
+	@echo " 2.  CRID libmfisam.a Library (for Micro-FOCUS only)"
+	@echo " 3.  CRID Front end library (not needed for Acu-COBOL)"
+	@echo " 4.  The actual utilities (Micro Focus or LPI)"
+	@echo " 5.  The actual utilities (Acu COBOL)"
+	@echo " 6.  A distribution library"
+	@echo " 7.  Porting library options"
+	@echo " 8.  Acu-COBOL Runtime"
+	@echo " 9.  Quick Make Options"
+	@echo " "
+	@echo " 0.  Exit"
+	@read build ; \
+	here=`pwd` ; \
+	case $$build in \
+		1) $(MAKE) -f libcridc.umf "CFLAGS=$(CFLAGS_KCSI)" ;;\
+		2) $(MAKE) -f cridunix.umf disam ;; \
+		3) $(MAKE) -f libcridwcb.umf "THE_LIB=libcridwcb.a" ;; \
+		4) $(MAKE) -f cridutil.umf "WISPDIR=$(WISPDIR)" ;; \
+		5) $(MAKE) -f cridunix.umf acutil ;; \
+		6) $(MAKE) -f cridunix.umf dist ;; \
+		7) $(MAKE) -f cridunix.umf portpick ;; \
+		8) $(MAKE) -f wruncblk.umf -e ;; \
+		9) $(MAKE) -f cridunix.umf making ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac
+
+making:
+	@echo "Quick Make Menu"
+	@echo "1.  Acu-COBOL on HP"
+	@echo "2.  Acu-COBOL on SUNOS"
+	@echo "3.  Acu-COBOL on other machines"
+	@echo "4.  Microfocus COBOL on IBM"
+	@echo "5.  LPI on AT&T"
+	@echo " "
+	@echo "0.  Exit"
+	@read qbuild ; \
+	case $$qbuild in \
+		1) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" hp_acu_all ;; \
+		2) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" sun_acu_all ;; \
+		3) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" gen_acu_all ;; \
+		4) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" gen_mf_all ;; \
+		5) $(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" gen_lpi_all ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac
+
+disam:	libmfisam.a
+	@echo LIBRARY libmfisam.a is UP-TO-DATE
+
+
+libmfisam.a:	../disam/libmfisam.a
+	cp ../disam/libmfisam.a .
+
+../disam/libmfisam.a:
+	@(cd ../disam ;  $(MAKE) -f libmfisam.umf )
+
+
+gen_mf_all:
+	$(MAKE) -f libcridc.umf "CFLAGS=$(CFLAGS_KCSI)" libmfcrid
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" disam
+	$(MAKE) -f libcridwcb.umf "THE_LIB=libmfcridwcb.a" "WISPTRAN=$(WISPTRAN)" all
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" all.mf
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" mfdist
+
+gen_mfx_all:
+	$(MAKE) -f libcridc.umf "CFLAGS=$(CFLAGS_KCSI)" libmfxcrid
+	$(MAKE) -f libcridwcb.umf "THE_LIB=libmfxcridwcb.a" "WISPTRAN=$(WISPTRAN)" all
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" all.mfx
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" mfxdist
+
+gen_lpi_all:
+	$(MAKE) -f libcridc.umf "CFLAGS=$(CFLAGS_KCSI)" liblpicrid
+	$(MAKE) -f libcridwcb.umf "THE_LIB=liblpicridwcb.a" "WISPTRAN=$(WISPTRAN)" all
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" all.lpi
+
+gen_acu_all:
+	$(MAKE) -f libcridc.umf "CFLAGS=$(CFLAGS_KCSI)" libacucrid
+	$(MAKE) -f cridunix.umf "WISPTRAN=$(WISPTRAN)" "WISPDIR=$(WISPDIR)" CONTROL REPORT INQUIRY DATENTRY
+	$(MAKE) -f wruncblk.umf -e "WISPDIR=$(WISPDIR)" rts
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" acudist
+
+dos_acucrid:
+	$(MAKE) -f cridunix.umf "CFLAGS=$(CFLAGS_KCSI) -DKCSI_DOS -DKCSI_ACU" acucrid.lib
+
+libacucrid liblpicrid libmfxcrid libmfcrid :
+	$(MAKE) -f libcridc.umf "CFLAGS=$(CFLAGS_KCSI)" $@
+
+$(RUNTIME): $(SUBS) libcrid.a
+	$(MAKE) -f $(RUNTIME).umf "WISPDIR=$(WISPDIR)" 
+
+$(ERUNTIME): $(SUBS) libcrid.a
+	$(MAKE) -f $(RUNTIME).umf "WISPDIR=$(WISPDIR)" 
+
+#-----------------------------------------------------------------
+# The libraries
+#-----------------------------------------------------------------
+
+acucrid.lib: $(ACUCRIDMLB)
+	@echo $@ Complete
+
+#-----------------------------------------------------------------
+# All crid modules for LPI and mf
+#-----------------------------------------------------------------
+all.lpi:
+	$(MAKE) -e -f cridunix.umf control.lpi
+	$(MAKE) -e -f cridunix.umf report.lpi
+	$(MAKE) -e -f cridunix.umf inquiry.lpi
+	$(MAKE) -e -f cridunix.umf datentry.lpi
+
+all.mf:
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" control.mf
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" report.mf
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" inquiry.mf
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" datentry.mf
+
+
+all.mfx:
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" control.mfx
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" report.mfx
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" inquiry.mfx
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" datentry.mfx
+
+#-----------------------------------------------------------------
+#  Individual crid modules
+#  LPI and Micro-Focus
+#-----------------------------------------------------------------
+
+control.mf control.mfe control.mfx control.lpi control.lpie \
+report.mf report.mfe report.mfx report.lpi report.lpie \
+inquiry.mf inquiry.mfe inquiry.mfx inquiry.lpi inquiry.lpie \
+datentry.mf datentry.mfe datentry.mfx datentry.lpi datentry.lpie :
+	$(MAKE) -f cridutil.umf "WISPDIR=$(WISPDIR)" $@
+
+#-----------------------------------------------------------------
+#  Individual crid modules
+#  Acu-COBOL
+#-----------------------------------------------------------------
+
+acutil:
+	@echo "Building Acu-COBOL Utilities. Please select:"
+	@echo " "
+	@echo " 1. CONTROL"
+	@echo " 2. REPORT"
+	@echo " 3. INQUIRY"
+	@echo " 4. DATENTRY"
+	@echo " 5. REPORTW"
+	@echo " "
+	@echo " 0. Exit"
+	@read util ; \
+	case $$util in \
+		1) $(MAKE) -f cridunix.umf CONTROL ;; \
+		2) $(MAKE) -f cridunix.umf REPORT ;; \
+		3) $(MAKE) -f cridunix.umf INQUIRY ;; \
+		4) $(MAKE) -f cirdunix.umf DATENTRY ;; \
+		5) $(MAKE) -f cridunix.umf REPORTW ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac
+
+
+CONTROL:	$(CONTROLCBO)
+	$(CBLUTIL) -lib -o CONTROL $(CONTROLCBO)
+
+REPORT:		$(REPORTCBO)
+	$(CBLUTIL) -lib -o REPORT $(REPORTCBO)
+
+REPORTW:	$(REPORTWCBO)
+	$(CBLUTIL) -lib -o REPORTW $(REPORTWCBO)
+
+INQUIRY:	$(INQUIRYCBO)
+	$(CBLUTIL) -lib -o INQUIRY $(INQUIRYCBO)
+
+DATENTRY:	$(DATENTRYCBO)
+	$(CBLUTIL) -lib -o DATENTRY $(DATENTRYCBO)
+
+
+#-----------------------------------------------------------------
+#  DOS versions
+#-----------------------------------------------------------------
+
+DOSCONTROL:
+	del cridtemp.1
+	del cridtemp.2
+	del CONTROL
+	$(MAKE) DOSCONTROLLIB
+	rename cridtemp.1 CONTROL
+
+DOSCONTROLLIB: $(CONTROLCBO)
+
+DOSREPORT:
+	del cridtemp.1
+	del cridtemp.2
+	del REPORT
+	$(MAKE) DOSREPORTLIB
+	rename cridtemp.1 REPORT
+
+DOSREPORTLIB: $(REPORTCBO)
+
+DOSINQUIRY:
+	del cridtemp.1
+	del cridtemp.2
+	del INQUIRY
+	$(MAKE) DOSINQUIRYLIB 
+	rename cridtemp.1 INQUIRY
+
+DOSINQUIRYLIB: $(INQUIRYCBO)
+
+DOSDATENTRY:
+	del cridtemp.1
+	del cridtemp.2
+	del DATENTRY
+	$(MAKE) DOSDATENTRYLIB 
+	rename cridtemp.1 DATENTRY
+
+DOSDATENTRYLIB: $(DATENTRYCBO)
+
+#-----------------------------------------------------------------
+# Creating the porting library.
+#-----------------------------------------------------------------
+
+portpick:
+	@echo "Making a Porting Set. Enter porting type"
+	@echo " "
+	@echo " 1.  A port package from SCCS files"
+	@echo " 2.  A port package from Source files"
+	@echo " 3.  A VAX port set at IDSI"
+	@echo " 4.  A DOS port set"
+	@echo " 5.  A New code only porting package"
+	@echo " "
+	@echo " 0. Exit"
+	@read dist ; \
+	case $$dist in \
+		1) $(MAKE) port ;; \
+		2) $(MAKE) localport ;; \
+		3) $(MAKE) vaxport ;; \
+		4) $(MAKE) dosport ;; \
+		5) $(MAKE) newlist ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac 
+
+port:
+	@if [ -f p.* ] ; \
+		then echo "Can't port, outstanding p.?? files" ; \
+	else \
+		$(MAKE) -f cridunix.umf porter ; \
+	fi
+
+porter:
+	-@rm -rf $(PORTDIR)
+	-@mkdir $(PORTDIR)
+	-@curdir=`pwd` ; \
+	cd $(PORTDIR); \
+	portdir=`pwd` ; \
+	cd $$curdir ; \
+	cp $(ACUSUBS) $$portdir ; \
+	cp $(ACUOBJ) $$portdir ; \
+	cp *.h $$portdir ; \
+	cd $$portdir ; \
+	for name in $$curdir/s.* ; do \
+		get $$name ; \
+	done ; \
+
+	ls $(PORT)|cpio -ocvB >$(CARRYALL).cpio ; \
+	compress $(CARRYALL).cpio ; \
+	echo "$$portdir/$(CARRYALL).cpio.Z complete"  ; \
+	uuencode $(CARRYALL).cpio.Z $(CARRYALL).cpio.Z >$(CARRYALL).czu ; \
+	echo "$$portdir/$(CARRYALL).czu complete"  ;\
+	ls $(ATT1PORT)|cpio -ocvB >att1.cpio ; \
+	compress att1.cpio ; \
+	echo "$$portdir/att1.cpio.Z complete"  ; \
+	ls $(ATT2PORT)|cpio -ocvB >att2.cpio ; \
+	compress att2.cpio ; \
+	echo "$$portdir/att2.cpio.Z complete"  ; \
+	echo "Porting Code ready"
+
+localport:
+	-@rm -rf $(PORTDIR)
+	-@mkdir $(PORTDIR)
+	-@curdir=`pwd` ; \
+	cd $(PORTDIR); \
+	portdir=`pwd` ; \
+	for name in $$curdir/* ; do \
+		cp $$name . ; \
+	done ; \
+
+	ls $(PORT)|cpio -ocvB >$(CARRYALL).cpio ; \
+	compress $(CARRYALL).cpio ; \
+	echo "$$portdir/$(CARRYALL).cpio.Z complete"  ; \
+	uuencode $(CARRYALL).cpio.Z $(CARRYALL).cpio.Z >$(CARRYALL).czu ; \
+	echo "$$portdir/$(CARRYALL).czu complete"  ;\
+	ls $(ATT1PORT)|cpio -ocvB >att1.cpio ; \
+	compress att1.cpio ; \
+	echo "$$portdir/att1.cpio.Z complete"  ; \
+	ls $(ATT2PORT)|cpio -ocvB >att2.cpio ; \
+	compress att2.cpio ; \
+	echo "$$portdir/att2.cpio.Z complete"  ; \
+	echo "Porting Code ready"
+
+vaxport:
+	$(MAKE) -f vaxcom.umf
+	$(MAKE) -f vaxcom.umf vaxpak
+	@echo "For a VAX port, transfer the following files to the VAX"
+	@echo *.pak kunpak.c makepak.com
+
+dosport:
+	$(MAKE) -f dospak.umf dospak
+	@echo "For a DOS port, transfer the following files to the PC"
+	@echo *.dpk kunpak.c
+
+vaxcom:
+	$(MAKE) -f vaxcom.umf vaxcom
+
+vaxpak:
+	$(MAKE) -f vaxcom.umf vaxpak
+
+#-----------------------------------------------------------------
+# Creating and filling the ditribution directory.
+#-----------------------------------------------------------------
+
+dist:
+	@echo "Making Distribution directory. Enter Distribution type"
+	@echo " "
+	@echo " 1. Micro-Focus"
+	@echo " 2. Micro-Focus including .wcb Source"
+	@echo " 3. Micro-Focus .wcb Source from SCCS files"
+	@echo " 4. Micro-Focus (EXTFH)"
+	@echo " 5. Micro-Focus (EXTFH) including .wcb Source"
+	@echo " 6. Micro-Focus (EXTFH) .wcb Source from SCCS files"
+	@echo " 7. LPI COBOL"
+	@echo " 8. Acu-COBOL"
+	@echo " "
+	@echo " 0. Exit"
+	@read dist ; \
+	case $$dist in \
+		1) DIST=mfdist ;; \
+		2) DIST=lmfdist ;; \
+		3) DIST=smfdist ;; \
+		4) DIST=mfxdist ;; \
+		5) DIST=lmfxdist ;; \
+		6) DIST=smfxdist ;; \
+		7) DIST=lpidist ;; \
+		8) DIST=acudist ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac ; \
+	$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" $$DIST
+
+acudist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" acudist.$(VER) ; \
+	else \
+		echo "Must make acudist VER=nnn " ; \
+	fi
+
+acudist.$(VER): $(UTILDIST)
+	-@distdir=cridacu.$(VER) ; \
+	shipdir=cridacu$(VER).ship ; \
+	rm -rf $$shipdir ; \
+	echo ; \
+	echo Creating AcuCOBOL distribution $$shipdir - Please wait ... ; \
+	echo ; \
+	mkdir $$shipdir $$shipdir/$$distdir ; \
+	cp $(ACUDIST) $$shipdir/$$distdir ; \
+	cd $$shipdir ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+lpidist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf lpidist.$(VER) ; \
+	else \
+		echo "Must make lpidist VER=nnn " ; \
+	fi
+
+lpidist.$(VER): $(UTILDIST)
+	-@distdir=cridlpi.$(VER) ; \
+	rm -rf ../$$distdir ; \
+	echo ; \
+	echo Creating LPI COBOL distribution ../$$distdir - Please wait ... ; \
+	echo ; \
+	mkdir ../$$distdir ; \
+	cp $(LPIDIST) ../$$distdir  ; \
+	cd ../$$distdir ; \
+	mv control.lpi control ; \
+	mv report.lpi report ; \
+	mv inquiry.lpi inquiry ; \
+	mv datentry.lpi datentry ; \
+	echo "     Stripping utilities ..." ; \
+	strip control report inquiry datentry ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	chmod 555 control report inquiry datentry ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+mfdist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" mfdist.$(VER) ; \
+	else \
+		echo "Must make mfdist VER=nnn " ; \
+	fi
+
+mfdist.$(VER): $(UTILDIST) $(MFMAKERS)
+	-@distdir=cridmf.$(VER) ; \
+	shipdir=cridmf$(VER).ship ; \
+	rm -rf $$shipdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution $$shipdir - Please wait ... ; \
+	echo ; \
+	mkdir $$shipdir $$shipdir/$$distdir ; \
+	cp $(MFDIST) $$shipdir/$$distdir ; \
+	cd $$shipdir/$$distdir ; \
+	mv control.mf control ; \
+	mv report.mf report ; \
+	mv inquiry.mf inquiry ; \
+	mv datentry.mf datentry ; \
+	echo "     Stripping utilities ..." ; \
+	strip control report inquiry datentry ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	chmod 555 control report inquiry datentry ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+smfdist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" smfdist.$(VER) ; \
+	else \
+		echo "Must make mfdist VER=nnn " ; \
+	fi
+
+smfdist.$(VER): $(UTILDIST) $(MFMAKERS)
+	-@distdir=cridmf.$(VER) ; \
+	rm -rf ../$$distdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution ../$$distdir - Please wait ... ; \
+	echo ; \
+	mkdir ../$$distdir ; \
+	cp $(MFDIST) ../$$distdir  ; \
+	ls *.wcb|cpio -ocvB >kcsisrc.cpio ; \
+	mv kcsisrc.cpio ../$$distdir 
+	cd ../$$distdir ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+lmfdist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" lmfdist.$(VER) ; \
+	else \
+		echo "Must make mfdist VER=nnn " ; \
+	fi
+
+lmfdist.$(VER): $(UTILDIST) $(MFMAKERS)
+	-@distdir=cridmf.$(VER) ; \
+	rm -rf ../$$distdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution ../$$distdir - Please wait ... ; \
+	echo ; \
+	mkdir ../$$distdir ; \
+	cp $(MFDIST) ../$$distdir  ; \
+	ls *.wcb|cpio -ocvB >kcsisrc.cpio ; \
+	mv kcsisrc.cpio ../$$distdir 
+	cd ../$$distdir ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+mfxdist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" mfxdist.$(VER) ; \
+	else \
+		echo "Must make mfxdist VER=nnn " ; \
+	fi
+
+mfxdist.$(VER): $(UTILDIST) $(MFMAKERS)
+	-@distdir=cridmfx.$(VER) ; \
+	shipdir=cridmfx$(VER).ship ; \
+	rm -rf $$shipdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution $$shipdir - Please wait ... ; \
+	echo ; \
+	mkdir $$shipdir $$shipdir/$$distdir ; \
+	cp $(MFXDIST) $$shipdir/$$distdir ; \
+	cd $$shipdir/$$distdir ; \
+	mv control.mfx control ; \
+	mv report.mfx report ; \
+	mv inquiry.mfx inquiry ; \
+	mv datentry.mfx datentry ; \
+	echo "     Stripping utilities ..." ; \
+	strip control report inquiry datentry ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	chmod 555 control report inquiry datentry ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+smfxdist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunix.umf "WISPDIR=$(WISPDIR)" smfxdist.$(VER) ; \
+	else \
+		echo "Must make mfxdist VER=nnn " ; \
+	fi
+
+smfxdist.$(VER): $(UTILDIST) $(MFMAKERS)
+	-@distdir=cridmfx.$(VER) ; \
+	rm -rf ../$$distdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution ../$$distdir - Please wait ... ; \
+	echo ; \
+	mkdir ../$$distdir ; \
+	cp $(MFXDIST) ../$$distdir  ; \
+	ls *.wcb|cpio -ocvB >kcsisrc.cpio ; \
+	mv kcsisrc.cpio ../$$distdir 
+	cd ../$$distdir ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+lmfxdist: 
+	@if [ $(VER) ] ; then \
+		$(MAKE) -f cridunux.umf "WISPDIR=$(WISPDIR)" lmfxdist.$(VER) ; \
+	else \
+		echo "Must make mfxdist VER=nnn " ; \
+	fi
+
+lmfxdist.$(VER): $(UTILDIST) $(MFMAKERS)
+	-@distdir=crdimfx.$(VER) ; \
+	rm -rf ../$$distdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution ../$$distdir - Please wait ... ; \
+	echo ; \
+	mkdir ../$$distdir ; \
+	cp $(MFXDIST) ../$$distdir  ; \
+	ls *.wcb|cpio -ocvB >kcsisrc.cpio ; \
+	mv kcsisrc.cpio ../$$distdir 
+	cd ../$$distdir ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	cd .. ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z 
+
+#-----------------------------------------------------------------
+# Backups, archives cleanup etc.
+#-----------------------------------------------------------------
+
+cparchive:
+	ls $(ARCHIVE)|cpio -ocv >crid.cpio
+	compress crid.cpio
+	@echo CRID Full archive completed as crid.cpio.Z
+
+cpbackup:
+	cpbku $(BACKUP)
+
+cprestore:
+	cprst
+
+clean:
+	rm -f *.a *.o *~ core
+	rm -f *.o
+	rm -f *.cob
+	rm -f *.cbo
+	rm -f *.cpy
+	rm -f *.com
+	rm -f *.int
+	rm -f *.idy
+	rm -f control.mf report.mf inquiry.mf datentry.mf
+	rm -f control.mfx report.mfx inquiry.mfx datentry.mfx
+	rm -f control.lpi report.lpi inquiry.lpi datentry.lpi
+	rm -f CONTROL REPORT INQUIRY DATENTRY REPORTW
+	rm -f wruncblk wruncblke wruncblk_oracle7 wruncblke_oracle7
+	rm -fr crid*.ship
+
+sub.o: sub.c sub85.c $(CRIDDERS)
+	$(CC) -DCRID $(CFLAGS) -c -I$(ACUSRCDIR) sub.c
+
+sub.c:  $(ACUSRCDIR)/sub.c
+	cmp -s $(ACUSRCDIR)/sub.c $@ || cp $(ACUSRCDIR)/sub.c $@
+
+filetbl.c: $(ACUSRCDIR)/filetbl.c
+	cmp -s $(ACUSRCDIR)/filetbl.c $@ || cp $(ACUSRCDIR)/filetbl.c $@
+
+# Use this routine to create an updated list of parts from the
+# parts lists in cridwcb.umf. This builds the entries for ALLWCB and ALLWCBO
+# to be inserted into cridwcb.umf
+
+wcblist:
+	-@rm wcblist1
+	@for name in $(DATENTRYWCB) $(REPORTWCB) $(CONTROLWCB) $(INQUIRYWCB) $(REPORTWWCB) ; \
+	do echo $$name >> wcblist1; \
+	done
+	cat wcblist1|sort|uniq| awk 'BEGIN { count = 0 ; printf("ALLWCB=");}; {printf("%-13s ", $$1); ++count; if(count == 4){printf(" \\\n"); count = 0;}} END {printf("\nALLWCBO=$$(ALLWCB:.wcb=.o)\n\n");}' >wcblist2
+	rm wcblist1
+	mv wcblist2 wcblist
+
+newlist:
+	$(MAKE) -f newlist.umf
+
+# Creates a testing program for KFORMAT
+
+kformat:
+	$(MAKE) -f cridunix.umf "CFLAGS=$(CFLAGS_KCSI) -DKFORMAT_TEST" "WISPDIR=$(WISPDIR)" rfmt
+
+rfmt:	rfmt.o rglb.o
+	$(CC) $(CFLAGS) -o rfmt rfmt.o rglb.o crid.a
+
+#-----------------------------------------------------------------
+# Rules
+#-----------------------------------------------------------------
+#
+# Builds a response file for the very silly Code Builder Librarian
+# and serve it to lib32
+.obj.mlb:
+	@echo a $< > $@
+	@echo quit exit >> $@
+	@lib32 crid.lib < $@
+
+.o.lpi:
+	$(MAKE) -f lpicobol.umf $*.o
+	$(LPILINK) -o $@.mf $@.o $(WISPLIBS)
+
+CCBL      = $(COBOL)
+CCBLDBG   = -Zd -Za
+CCBLFLAGS = -da4
+
+.wcb.cbo:
+	$(WISPTRAN) -VACU $*.wcb
+	$(CCBL) $(CCBLFLAGS) -o $*.cbo $*.cob
+
+
+.wcb.dbg:
+	$(WISPTRAN) -VACU $*.wcb
+	$(CCBL) $(CCBLFLAGS) $(CCBLDBG) -o $*.dbg $*.cob
+

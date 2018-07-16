@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -22,15 +24,13 @@
 					volume/LIBRARY/file[.ext]		uppercase lib and lowercase file
 */
 
+#include <string.h>
 #include "idsistd.h"
+#include "wisplib.h"
 
 #ifdef unix
 
-char *strrchr();
-char *strchr();
-
-int findcase(o_name, c_name)
-char	*o_name, *c_name;
+int findcase(char* o_name, char* c_name)
 {
 	char	buff[128], volume[80], library[20], file[20], ext[45], *ptr;
 	int	i;
@@ -104,11 +104,10 @@ char	*o_name, *c_name;
 #else
 
 /* 
-	On VMS and MSDOS the filepaths are not case sensitive so just check access.
+	On VMS and MSFS the filepaths are not case sensitive so just check access.
 */
 
-int findcase(o_name, c_name)
-char	*o_name, *c_name;
+int findcase(char* o_name, char* c_name)
 {
 	if ( fexists(o_name) )
 	{
@@ -121,3 +120,12 @@ char	*o_name, *c_name;
 #endif
 
 
+/*
+**	History:
+**	$Log: findcase.c,v $
+**	Revision 1.9  1996-08-19 18:32:21-04  gsl
+**	drcs update
+**
+**
+**
+*/

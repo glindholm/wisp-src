@@ -1,0 +1,265 @@
+000100 IDENTIFICATION DIVISION.
+000200 PROGRAM-ID. RPTXLN.
+000300 AUTHOR. HLM.
+000400 DATE-WRITTEN.  11/15/89.
+000500 DATE-COMPILED.
+000600*--------------------------------------------------------------
+000700* LINE LENGTH > 132 HAS BEEN DEFINED PLEASE FIX
+000800*---------------------------------------------------------------
+000900
+001000 ENVIRONMENT DIVISION.
+001100 CONFIGURATION SECTION.
+001200 FIGURATIVE-CONSTANTS.
+001300     COPY FIGS.
+001400
+001500 INPUT-OUTPUT SECTION.
+001600
+001700 FILE-CONTROL.
+001800     COPY SLCRT.
+001900
+002000 DATA DIVISION.
+002100 FILE SECTION.
+002200     COPY FDCRT.
+002300
+002400 WORKING-STORAGE SECTION.
+000000     COPY WSKTRACE.
+000000 01  SCCS-WHAT PIC X(50) VALUE
+000000     "@(#)rptxln.wcb 1.4 9/11/94".
+002500     COPY WSINT.
+002600     COPY WSCRT.
+002700
+002800 01  XLENGTH-SCREEN-C USAGE IS DISPLAY-WS.
+002900     05  FILLER
+003000         PIC X(51) ROW 1 COLUMN 2 VALUE
+003100         "                                              ERROR".
+003200     05  FILLER
+003300         PIC X(74) ROW 4 COLUMN 2 VALUE
+003400         "     You have defined a print line that contains more th
+003500-        "an 132 characters.".
+003600     05  FILLER
+003700         PIC X(22) ROW 5 COLUMN 2 VALUE
+003800         "      (Line 1 contains".
+003900     05  XLEN-COUNT-1-ITEM-A
+004000         PIC ZZZZ ROW 5 COLUMN 25
+004100         SOURCE XLEN-COUNT-1-FIELD.
+004200     05  FILLER
+004300         PIC X(18) ROW 5 COLUMN 30 VALUE
+004400         ",  Line 2 contains".
+004500     05  XLEN-COUNT-2-ITEM-A
+004600         PIC ZZZZ ROW 5 COLUMN 49
+004700         SOURCE XLEN-COUNT-2-FIELD.
+004800     05  FILLER
+004900         PIC X(18) ROW 5 COLUMN 54 VALUE
+005000         ",  Line 3 contains".
+005100     05  XLEN-COUNT-3-ITEM-A
+005200         PIC ZZZZ ROW 5 COLUMN 73
+005300         SOURCE XLEN-COUNT-3-FIELD.
+005400     05  FILLER
+005500         PIC X(1) ROW 5 COLUMN 78 VALUE
+005600         ")".
+005700     05  FILLER
+005800         PIC X(68) ROW 6 COLUMN 2 VALUE
+005900         "         Select the appropriate Function Key to enable y
+006000-        "ou to reduce".
+006100     05  FILLER
+006200         PIC X(60) ROW 7 COLUMN 2 VALUE
+006300         "                 the number of characters in the print l
+006400-        "ine.".
+006500     05  FILLER
+006600         PIC X(69) ROW 9 COLUMN 2 VALUE
+006700         "      (Remember:  The space reserved for a field on the
+006800-        "report is its".
+006900     05  FILLER
+007000         PIC X(71) ROW 10 COLUMN 2 VALUE
+007100         "         External Size or Column Heading Length, whichev
+007200-        "er is greater.)".
+007300     05  FILLER
+007400         PIC X(24) ROW 13 COLUMN 2 VALUE
+007500         "        PFKey     Action".
+007600     05  FILLER
+007700         PIC X(67) ROW 15 COLUMN 2 VALUE
+007800         "         (1)      Reselect the fields for the report. (B
+007900-        "egin again)".
+008000     05  FILLER
+008100         PIC X(71) ROW 16 COLUMN 2 VALUE
+008200         "         (2)      Reduce the External Field Size of one
+008300-        "or more fields.".
+008400     05  FILLER
+008500         PIC X(65) ROW 17 COLUMN 2 VALUE
+008600         "         (3)      Reduce the Spacing between Fields.".
+008700     05  FILLER
+008800         PIC X(67) ROW 18 COLUMN 2 VALUE
+008900         "         (4)      Reduce the Length of one or more Colum
+009000-        "n Headings.".
+009100     05  FILLER
+009200         PIC X(59) ROW 19 COLUMN 2 VALUE
+009300         "         (5)      Reselect Print Line Number for fields,
+009400-        " or".
+009500     05  FILLER
+009600         PIC X(68) ROW 20 COLUMN 2 VALUE
+009700         "                    specify fields to be used in report
+009800-        "preparation,".
+009900     05  FILLER
+010000         PIC X(49) ROW 21 COLUMN 2 VALUE
+010100         "                    but not appear on the report.".
+010200     05  FILLER
+010300         PIC X(51) ROW 23 COLUMN 2 VALUE
+010400         "        (16)      Return to the Report Utility Menu".
+010500
+010600 01  XLENGTH-SCREEN-M USAGE IS DISPLAY-WS.
+010700     05  FILLER
+010800         PIC X(51) ROW 1 COLUMN 2 VALUE
+010900         "                                              ERROR".
+011000     05  FILLER
+011100         PIC X(74) ROW 4 COLUMN 2 VALUE
+011200         "     You have defined a print line that contains more th
+011300-        "an 132 characters.".
+011400     05  FILLER
+011500         PIC X(22) ROW 5 COLUMN 2 VALUE
+011600         "      (Line 1 contains".
+011700     05  XLEN-COUNT-1-ITEM-B
+011800         PIC ZZZZ ROW 5 COLUMN 25
+011900         SOURCE XLEN-COUNT-1-FIELD.
+012000     05  FILLER
+012100         PIC X(18) ROW 5 COLUMN 30 VALUE
+012200         ",  Line 2 contains".
+012300     05  XLEN-COUNT-2-ITEM-B
+012400         PIC ZZZZ ROW 5 COLUMN 49
+012500         SOURCE XLEN-COUNT-2-FIELD.
+012600     05  FILLER
+012700         PIC X(18) ROW 5 COLUMN 54 VALUE
+012800         ",  Line 3 contains".
+012900     05  XLEN-COUNT-3-ITEM-B
+013000         PIC ZZZZ ROW 5 COLUMN 73
+013100         SOURCE XLEN-COUNT-3-FIELD.
+013200     05  FILLER
+013300         PIC X(1) ROW 5 COLUMN 78 VALUE
+013400         ")".
+013500     05  FILLER
+013600         PIC X(68) ROW 6 COLUMN 2 VALUE
+013700         "         Select the appropriate Function Key to enable y
+013800-        "ou to reduce".
+013900     05  FILLER
+014000         PIC X(60) ROW 7 COLUMN 2 VALUE
+014100         "                 the number of characters in the print l
+014200-        "ine.".
+014300     05  FILLER
+014400         PIC X(69) ROW 9 COLUMN 2 VALUE
+014500         "      (Remember:  The space reserved for a field on the
+014600-        "report is its".
+014700     05  FILLER
+014800         PIC X(71) ROW 10 COLUMN 2 VALUE
+014900         "         External Size or Column Heading Length, whichev
+015000-        "er is greater.)".
+015100     05  FILLER
+015200         PIC X(24) ROW 13 COLUMN 2 VALUE
+015300         "        PFKey     Action".
+015400     05  FILLER
+015500         PIC X(67) ROW 15 COLUMN 2 VALUE
+015600         "         (3)      Reduce the Length of one or more Colum
+015700-        "n Headings.".
+015800     05  FILLER
+015900         PIC X(52) ROW 16 COLUMN 2 VALUE
+016000         "         (4)      Reduce the Spacing between Fields.".
+016100     05  FILLER
+016200         PIC X(75) ROW 17 COLUMN 2 VALUE
+016300         "         (5)      Reselect Print Line Number for fields,
+016400-        " or ".
+016500     05  FILLER
+016600         PIC X(68) ROW 18 COLUMN 2 VALUE
+016700         "                    specify fields to be used in report
+016800-        "preparation,".
+016900     05  FILLER
+017000         PIC X(49) ROW 19 COLUMN 2 VALUE
+017100         "                    but not appear on the report.".
+017200     05  FILLER
+017300         PIC X(75) ROW 20 COLUMN 2 VALUE
+017400         "         (6)      Reduce the External Field Size of one
+017500-        "or more fields, or.".
+017600
+017700     05  FILLER
+017800         PIC X(51) ROW 23 COLUMN 2 VALUE
+017900         "        (16)      Return to the Report Utility Menu".
+018000
+018100 01  XLENGTH-FIELDS.
+018200     05  XLEN-COUNT-1-FIELD                PIC 9999 VALUE ZERO.
+018300     05  XLEN-COUNT-2-FIELD                PIC 9999 VALUE ZERO.
+018400     05  XLEN-COUNT-3-FIELD                PIC 9999 VALUE ZERO.
+018500
+018600 LINKAGE SECTION.
+018700 01  LOAD-SWITCH      PIC X(01).
+018800 01  RPT-PFKEY        PIC 9(02).
+018900     COPY WSRPTREC.
+019000
+019100 PROCEDURE DIVISION USING
+019200     LOAD-SWITCH
+019300     RPT-PFKEY
+019400     RPT-RECORDS.
+019500
+019600 MAIN-LOGIC SECTION.
+019700 PROGRAM-BEGIN.
+000000     MOVE "RPTXLN BEGIN" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+019800     PERFORM OPENING-PROCEDURE.
+019900     PERFORM MAIN-PROCESS.
+020000     PERFORM CLOSING-PROCEDURE.
+000000     MOVE "RPTXLN EXIT" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+020100 MAIN-LOGIC-EXIT.
+020200     EXIT PROGRAM.
+020300 MAIN-LOGIC-STOP.
+020400     STOP RUN.
+020500 LEVEL-2 SECTION.
+020600 OPENING-PROCEDURE.
+020700     OPEN I-O  CRT-FILE.
+020800 CLOSING-PROCEDURE.
+020900     CLOSE CRT-FILE.
+021000
+021100 MAIN-PROCESS.
+021200     MOVE RHD-LINE-1-LEN TO XLEN-COUNT-1-FIELD.
+021300     MOVE RHD-LINE-2-LEN TO XLEN-COUNT-2-FIELD.
+021400     MOVE RHD-LINE-3-LEN TO XLEN-COUNT-3-FIELD.
+021500
+021600     IF LOAD-SWITCH = "M"
+021700         PERFORM DISPLAY-XCESS-LENGTH-OPTIONS-M
+021800     ELSE
+021900         PERFORM DISPLAY-XCESS-LENGTH-OPTIONS-C.
+022000
+022100 DISPLAY-XCESS-LENGTH-OPTIONS-C.
+022200
+022300     DISPLAY AND READ ALTERED XLENGTH-SCREEN-C ON CRT-FILE
+022400     ONLY PFKEYS 1, 2, 3, 4, 5, 16.
+022500
+022600     IF PFKEY-1-PRESSED
+022700         MOVE 16 TO RPT-PFKEY
+022800     ELSE
+022900     IF PFKEY-2-PRESSED
+023000         MOVE 6 TO RPT-PFKEY
+023100     ELSE
+023200     IF PFKEY-3-PRESSED
+023300         MOVE 4 TO RPT-PFKEY
+023400     ELSE
+023500     IF PFKEY-4-PRESSED
+023600         MOVE 3 TO RPT-PFKEY
+023700     ELSE
+023800     IF PFKEY-5-PRESSED
+023900         MOVE 5 TO RPT-PFKEY
+024000     ELSE
+024100     IF PFKEY-16-PRESSED
+024200         MOVE SPACES TO RPT-RECORDS
+024300         MOVE 16 TO RPT-PFKEY.
+024400
+024500 DISPLAY-XCESS-LENGTH-OPTIONS-M.
+024600
+024700     DISPLAY AND READ ALTERED XLENGTH-SCREEN-M ON CRT-FILE
+024800     ONLY PFKEYS 3, 4, 5, 6, 16.
+024900
+025000     IF PFKEY-16-PRESSED
+025100         MOVE 14 TO RPT-PFKEY
+025200     ELSE
+025300         MOVE PFKEY-CODE TO RPT-PFKEY.
+025400
+025500
+025600
+025700
+000000     COPY PLKTRACE.

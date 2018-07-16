@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 #ifndef	_VSEDSCR_H
 #define	_VSEDSCR_H
 #include "vseglb.h"
@@ -22,10 +26,10 @@ EXTERN_DEF	char ed_oa[4];
 
 EXTERN_DEF	char ed_top1[81],ed_top2[81],ed_top3[81],ed_top4[81];
 
-EXTERN_DEF	char ed_line[20][81];
-EXTERN_DEF	char ed_num[20][7];
-EXTERN_DEF	char ed_mod[20][9];
-EXTERN_DEF	TEXT *ed_txt[20];
+EXTERN_DEF	char ed_line[VSE_EDIT_ROWS][81];
+EXTERN_DEF	char ed_num[VSE_EDIT_ROWS][7];
+EXTERN_DEF	char ed_mod[VSE_EDIT_ROWS][9];
+EXTERN_DEF	TEXT *ed_txt[VSE_EDIT_ROWS];
 
 EXTERN_DEF	VSESCR_FLDS(ed_menu_flds)
 #ifdef	_VSEDSCR_C
@@ -116,5 +120,26 @@ EXTERN_DEF	VSESCR_FLDS(ed_mod_flds)
 {LASTITEM} }
 #endif	/* _VSEDSCR_C */
 ;
+
+void vse_ed_scr(int pick);
+void d_and_r_ed(int tabs);
+void vse_save_pos(void);
+void vse_ed_load_full_lines(void);
+void vse_ed_load_lines(void);
+void vse_ed_add_numbers(void);
+void vse_ed_add_mod(void);
+void make_all(int fac);
+void vse_sho_col(void);
+void file_bottom(void);
+
 #endif	/* _VSEDSCR_H */
 
+/*
+**	History:
+**	$Log: vsedscr.h,v $
+**	Revision 1.9  1996-09-03 18:24:04-04  gsl
+**	drcs update
+**
+**
+**
+*/

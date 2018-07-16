@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -37,13 +39,13 @@ ws_init()
 						      || Version 
 						      || |
 	*/
-	if      (vax_cobol) strcpy(COPY_WORKSTOR,"wc002106.cpy");
-	else if (acu_cobol) strcpy(COPY_WORKSTOR,"wc002206.cpy");
-	else if (lpi_cobol) strcpy(COPY_WORKSTOR,"wc002306.cpy");
-	else if (aix_cobol) strcpy(COPY_WORKSTOR,"wc002406.cpy");
-	else if (mf_cobol)  strcpy(COPY_WORKSTOR,"wc002506.cpy");
-	else if (dmf_cobol) strcpy(COPY_WORKSTOR,"wc002606.cpy");
-	else                strcpy(COPY_WORKSTOR,"wc002x06.cpy");
+	if      (vax_cobol) strcpy(COPY_WORKSTOR,"wc002108.cpy");
+	else if (acu_cobol) strcpy(COPY_WORKSTOR,"wc002208.cpy");
+	else if (lpi_cobol) strcpy(COPY_WORKSTOR,"wc002308.cpy");
+	else if (aix_cobol) strcpy(COPY_WORKSTOR,"wc002408.cpy");
+	else if (mf_cobol)  strcpy(COPY_WORKSTOR,"wc002508.cpy");
+	else if (dmf_cobol) strcpy(COPY_WORKSTOR,"wc002608.cpy");
+	else                strcpy(COPY_WORKSTOR,"wc002x08.cpy");
 
 	tput_scomment		("*****************************************************************");
 	tput_scomment		("*  Special WISP variables inserted by the translator program");
@@ -77,6 +79,7 @@ ws_init()
 		tput_line		("       01  VWANG-WRITE-SELECTED      PIC X VALUE DEC-BYTE-5.");
 		tput_line		("       01  VWANG-READ-ALTERED        PIC X VALUE DEC-BYTE-6.");
 		tput_line		("       01  VWANG-READ-MODIFIABLE     PIC X VALUE DEC-BYTE-10.");
+		tput_line		("       01  VWANG-DISP-AND-READ       PIC X VALUE DEC-BYTE-3.");
 		tput_line		("       01  VWANG-DISP-AND-READ-ALT   PIC X VALUE DEC-BYTE-7.");
 		tput_line		("       01  VWANG-LOAD-SUB-TABLE      PIC X VALUE DEC-BYTE-8.");
 		tput_line		("       01  VWANG-INIT-DEFAULT-TABLE  PIC X VALUE DEC-BYTE-9.");
@@ -84,11 +87,37 @@ ws_init()
 		tput_line		("       01  VWANG-FULL-SCREEN         PIC X VALUE DEC-BYTE-24.");
 		tput_line		("       01  WISP-SET-BYTE             PIC X.");
 		tput_line		("       01  WISP-TEST-BYTE            PIC X.");
+#ifdef OLD
 		tput_line		("       01  WISP-ALLOWABLE-PF-KEYS    PIC X(67).");
 		tput_line		("       01  WISP-ON-PF-KEYS           PIC X(67).");
+#endif
+		tput_line		("       01  WISP-ALLOWABLE-PF-KEYS.");
+		tput_line		("           03  WISP-ALLOWABLE-PF-KEYS-SUB  PIC 99 OCCURS 40.");
+		tput_line		("           03  WISP-ALLOWABLE-PF-KEYS-STOP PIC X.");
+		tput_line		("       01  WISP-ON-PF-KEYS.");
+		tput_line		("           03  WISP-ON-PF-KEYS-SUB   PIC 99 OCCURS 40.");
+		tput_line		("           03  WISP-ON-PF-KEYS-STOP  PIC X.");
+
+		tput_line		("       01  WISP-DNR-DONE-FLAG        PIC X.");
+		tput_line		("           88  WISP-DNR-DONE         VALUE \"Y\".");
+		tput_line		("           88  WISP-DNR-NOT-DONE     VALUE \"N\".");
+
+		tput_line		("       01  WISP-DNR-ALT-FLAG         PIC X.");
+		tput_line		("           88  WISP-DNR-ALT          VALUE \"Y\".");
+		tput_line		("           88  WISP-DNR-NOT-ALT      VALUE \"N\".");
+
+		tput_line		("       01  WISP-DNR-FUNCTION         PIC X.");
+
 		tput_line		("       01  WISP-BIT-FLAG             PIC X(1).");
 		tput_line		("           88  WISP-FAC-BIT-IS-ON    VALUE \"Y\".");
 		tput_line		("           88  WISP-FAC-BIT-IS-OFF   VALUE \"N\".");
+		tput_line		("       01  WISP-FAC-PROTECT-FLAG     PIC X(1).");
+		tput_line		("           88  WISP-FAC-PROTECTED    VALUE \"Y\".");
+		tput_line		("           88  WISP-FAC-MODIFIABLE   VALUE \"N\".");
+		tput_line		("       01  WISP-FAC-ALTERED-FLAG     PIC X(1).");
+		tput_line		("           88  WISP-FAC-ALTERED      VALUE \"Y\".");
+		tput_line		("           88  WISP-FAC-NOT-ALTERED  VALUE \"N\".");
+
 		tput_blank();
 	
 		tput_line		("       01  WISP-LOCK-ID           PIC X(40) VALUE SPACES.");
@@ -135,15 +164,24 @@ ws_init()
 		tput_line		("           REDEFINES WISP-DECLARATIVES-STATUS.");
 		tput_line		("           05  WISP-DECLARATIVES-STATUS-1 PIC X.");
 		tput_line		("           05  WISP-DECLARATIVES-STATUS-2 PIC X.");
-		tput_line		("       01  WISP-EXTENDED-FILE-STATUS   PIC X(4).");
-		tput_line		("       01  WISP-EXTENDED-FILE-STATUS-1 PIC S9(9)");
-		tput_line		("           LEADING SEPARATE.");
-		tput_line		("       01  WISP-EXTENDED-FILE-STATUS-2 PIC S9(9)");
-		tput_line		("           LEADING SEPARATE.");
+		if (vax_cobol)
+		{
+			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-1 PIC S9(9)");
+			tput_line	("           LEADING SEPARATE.");
+			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-2 PIC S9(9)");
+			tput_line	("           LEADING SEPARATE.");
+		}
+		else
+		{
+			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-1 PIC X(10).");
+			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-2 PIC X(10).");
+		}
 		tput_line		("       01  WISP-CURRENT-FILE-ID      PIC X(40).");
 		tput_line		("       01  WISP-SAVE-FILE-STATUS     PIC X(2).");
 		tput_line		("       01  WISP-PFKEY-VALUE          PIC 9(2).");
 		tput_line		("       01  WISP-SAVE-WCC             PIC X.");
+		tput_line		("       01  WISP-PROTECT-BIT          PIC X(1) VALUE DEC-BYTE-4.");
+		tput_line		("       01  WISP-XERROR-BIT           PIC X(1) VALUE DEC-BYTE-8.");
 		tput_line		("       01  WISP-ERROR-BIT            PIC X(1) VALUE DEC-BYTE-16.");
 		tput_line		("       01  WISP-MOD-BIT              PIC X(1) VALUE DEC-BYTE-64.");
 		tput_line		("       01  WISP-ALTERED-BIT          PIC X(1) VALUE DEC-BYTE-64.");
@@ -414,7 +452,20 @@ ws_init()
 		copy_file(crt_file_ptr->a_file->name);					/* copy the crt definitions	*/
 		delete(crt_file_ptr->a_file->name);					/* now remove the file		*/
 	}
-
+	return 0;
 }
 
 
+/*
+**	History:
+**	$Log: wt_wsdat.c,v $
+**	Revision 1.11  1997-04-29 12:56:03-04  gsl
+**	Change the working-storage copybook for WISP-EXTENDED-FILE-STATUS-1 and 2.
+**	Now is a 10 digit field.
+**
+**	Revision 1.10  1996-08-30 21:56:27-04  gsl
+**	drcs update
+**
+**
+**
+*/

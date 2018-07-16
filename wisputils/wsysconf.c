@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -9,9 +11,10 @@
 
 #ifdef unix
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <memory.h>
 #include <ctype.h>
 #include <termio.h>
 #include <fcntl.h>
@@ -124,6 +127,11 @@ DEV_ENTRY *devhead, *devp;
 #define WSPATH2	"/dev/term"
 #endif
 
+#ifdef SOLARIS
+#define WSNAME2 ".*"
+#define WSPATH2 "/dev/pts"
+#endif
+
 #ifdef MOTOROLA
 #define WSNAME2 "pty..*"
 #define WSPATH2	"/dev"
@@ -226,7 +234,6 @@ main(argc,argv)
 int argc;
 char *argv[];
 {
-	char *getenv();
 	FILE *cfg;
 	char cfgpath[256];
 	char cfgpath_new[256];
@@ -238,15 +245,15 @@ char *argv[];
 
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
-	printf("Copyright (c) 1992,1993 International Digital Scientific Inc.\n\n");
+	printf("Copyright (c) 1992-1996 NeoMedia Migrations Incorporated\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
 	printf("runs.  See the WISP Manual for further explanations.\n\n\n");
 
-	if (getenv(WISP_CONFIG_ENV)) 
+	if (getenv("WISPCONFIG")) 
 	{
-		strcpy(cfgdir,getenv(WISP_CONFIG_ENV));
+		strcpy(cfgdir,getenv("WISPCONFIG"));
 	}
 	else
 	{
@@ -443,7 +450,7 @@ build_disks()										/* special case */
 
 build_lprs()										/* also a special case */
 {
-	char *tmp, *tmpnam(), *p, *e, *strchr(), *strrchr();
+	char *tmp, *p, *e;
 	FILE *tmpfile;
 	char buf[100];
 	char lpclass[16];
@@ -521,7 +528,6 @@ unsigned nelem, size;
 {
 	static long	total = 0;
 	static char *tmp;
-	char *calloc();
 
 	total += nelem*size;
 
@@ -563,7 +569,7 @@ char *pattern;
 getyn(pr)
 char *pr;
 {
-	char ch, *strchr();
+	char ch;
 
 	printf(pr);
 	rawmode();
@@ -622,7 +628,7 @@ build_dtyp_list()
 	FILE *dtyp;
 	char dtnam[256], *fname;
         char *cpat,*spc;
-	char *getclass(),*strchr();
+	char *getclass();
 	DIR *cur;
 	char **typlst;
 	int i=0;
@@ -731,7 +737,6 @@ ttyxlat(p)										/* kludge to xlate aix ttyp? and ptyp? */
 char *p;										/* to ptc/? and pts/? */
 {
 	static char tmpbuf[100];
-	char *strchr(),*strrchr();
 	char *ptr;
 	
 	ptr=strrchr(p,'/');
@@ -776,3 +781,22 @@ increment_devnum()
 #include "wutils.h"
 
 #endif
+/*
+**	History:
+**	$Log: wsysconf.c,v $
+**	Revision 1.12  1998-01-19 15:45:45-05  gsl
+**	Fix autoconfig for SOLARIS
+**	bye
+**
+**	Revision 1.11  1996-12-12 13:16:26-05  gsl
+**	Devtech -> NeoMedia
+**
+**	Revision 1.10  1996-10-08 17:49:29-07  gsl
+**	fix getenv()'s
+**
+**	Revision 1.9  1996-07-23 11:13:12-07  gsl
+**	drcs update
+**
+**
+**
+*/

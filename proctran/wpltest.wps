@@ -278,9 +278,9 @@ PROMPT  PFKEY = &PF-KEY1
                CENTER BRIGHT
                "Testing: PROMPT keyword";;;;;;;;;
                CENTER
-               "IDSI SOLUTIONS", &fld5, ""
+               "NEOM SOLUTIONS", &fld5, ""
                CENTER
-               "IDSI SYSTEMS SOLUTIONS", NUMERIC &INT1, ""
+               "NEOM SYSTEMS SOLUTIONS", NUMERIC &INT1, ""
 
 SCRN1:   PROMPT PFKEY=&PFKEY
          &DISPDAT,"             ****-  ADDITIONAL FUNCTIONS  -****   ",

@@ -5,10 +5,10 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-
+#include <video.h>
+#include <vlocal.h>
+#include <vdata.h>
+#include <vmodules.h>
 testw()
 {
 	unsigned char *vsss(), *remember;
@@ -20,7 +20,7 @@ testw()
 
 	remember = vsss(irow,icol,irows,icols);
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 
 	vmode(REVERSE);
 	vmove(irow,icol);
@@ -41,6 +41,8 @@ testw()
 	vmove(irow+1,icol+2);
 	vprint("Screen segment saved %o.",remember);
 
+	vbuffering_end();
+	
 	vmove(irow+irows-2,icol+2);
 	vprint("Depress any key to continue...");
 	vgetc();

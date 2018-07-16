@@ -1,32 +1,50 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		keywords.c
 **
-**	Purpose:	To ...
+**	Project:	wisp/tran
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Keyword routines
 **
 **	Routines:	
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
-**
+*/
+
+/*
+**	Includes
 */
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "wmalloc.h"
+#include "keywords.h"
+#include "proto.h"
 
-int keyword(the_word,the_list)						/* search a list of keywords to see if the_word is in	*/
-char *the_word;								/* the list						*/
-char *the_list[];
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+static int binkeyword(char *the_word, char *the_list[], int numitems);
+
+
+int keyword (char *the_word, char *the_list[])				/* search a list of keywords to see if the_word is in	*/
 {
 	int 	i;
 	char	**list_ptr;
@@ -67,10 +85,7 @@ char *the_list[];
 **	05/17/93	Written by GSL
 **
 */
-int binkeyword(the_word,the_list,numitems)
-char	*the_word;
-char	*the_list[];
-int	numitems;
+static int binkeyword(char *the_word, char *the_list[], int numitems)
 {
 	int	low,curr,high;
 	int	rc;
@@ -130,8 +145,7 @@ static char *proc_keywords[] =
 	""
 };
 
-int proc_keyword(the_word)
-char *the_word;
+int proc_keyword(char *the_word)
 {
 	static int count = 0;
 
@@ -161,8 +175,7 @@ static char *brk_keywords[] =
 	""
 };
 
-int brk_keyword(the_word)
-char *the_word;
+int brk_keyword(char *the_word)
 {
 	static int count = 0;
 
@@ -185,7 +198,6 @@ static char *res_defaults[] =
 	"CLASS","CRT",	"CURRENT",
 	"DAY-OF-WEEK",	"DB", "DEFAULT",
 	"EMPTY",
-	"FALSE",
 	"ID",
 	"LENGTH",
 	"MATCH","MESSAGE",
@@ -194,19 +206,20 @@ static char *res_defaults[] =
 	"PROCESS",
 	"RESEND","RETURN-CODE",
 	"SEQUENCE-NUMBER","SCREEN","SHUT-DOWN",	"STANDBY",
-	"TAB","TERMINAL","TRUE",	
+	"TAB","TERMINAL",
 	"WAIT",
 	""
 };
 
-strcmpptr(p1,p2)
-char	**p1, **p2;
+int strcmpptr(const void *v1, const void *v2)
 {
+	char **p1 = (char **)v1;
+	char **p2 = (char **)v2;
+
 	return(strcmp(*p1,*p2));
 }
 
-int reserved_keyword(the_word)
-char *the_word;
+int reserved_keyword(char *the_word)
 {
 	static int count = 0;
 
@@ -214,7 +227,7 @@ char *the_word;
 	{
 		for(;res_keywords[count][0];count++);
 
-		qsort(res_keywords, count, sizeof(char *), strcmpptr);
+		qsort((void *)res_keywords, (size_t)count, sizeof(char *), strcmpptr);
 	}
 
 	return(binkeyword(the_word,res_keywords,count));
@@ -223,13 +236,11 @@ char *the_word;
 
 #define MAX_RESWORDS 100
 
-int load_res_keywords(filename)
-char	*filename;
+int load_res_keywords(char *filename)
 {
 	FILE	*fd;
-	char	*ptr;
 	char	buf[256];
-	int	rc,i,j;
+	int	rc,i;
 
 	if ( !filename || !filename[0] )
 	{
@@ -284,8 +295,7 @@ static char *verb_keywords[] =
 	""
 };
 
-int verb_keyword(the_word)
-char *the_word;
+int verb_keyword(char *the_word)
 {
 	static int count = 0;
 
@@ -374,8 +384,7 @@ static char *cobol_keywords[] =
 	""
 };
 
-int cobol_keyword(the_word)
-char *the_word;
+int cobol_keyword(char *the_word)
 {
 	static int count = 0;
 
@@ -386,3 +395,17 @@ char *the_word;
 
 	return(binkeyword(the_word,cobol_keywords,count));
 }
+
+/*
+**	History:
+**	$Log: keywords.c,v $
+**	Revision 1.7  1996-06-24 14:08:49-04  gsl
+**	Fix prototypes for NT
+**
+**	Revision 1.6  1995-05-09 04:36:41-07  gsl
+**	Removed TRUE and FALSE from the reserved words list.
+**	These are used in COBOL-85 stmts like SET condition TO TRUE.
+**
+**
+**
+*/

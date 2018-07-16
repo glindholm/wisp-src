@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -18,11 +20,12 @@
 #include "werrlog.h"
 
 #include "wdefines.h"
+#include "wisplib.h"
 
 static	int4	N[255];
 static	int	Ni=0;
 
-err_getparm(prname,messid,issuer,msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8)
+void err_getparm(prname,messid,issuer,msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8)
 char 	prname[8], messid[4], issuer[6];
 char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 {                                                  
@@ -30,9 +33,9 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 
 	int4	pfkey;
 	char	pfkey_rcvr;
-	int	va_cnt;
 	int	i;
 	int4 	two=2;
+	char	*cancel_msg;
 
 	struct argst { char *ptrs[100]; } args;
 	int4	cnt;
@@ -52,7 +55,17 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 
 	wpload();									/* Get user personality and defaults.	*/
 
-	pfkey = PFKEY_16_ENABLED;
+	if (pfkeys12())
+	{
+		pfkey = PFKEY_12_ENABLED | PFKEY_16_ENABLED;
+		cancel_msg = "Press (12) to Cancel Processing    ";
+	}
+	else
+	{
+		pfkey = PFKEY_16_ENABLED;
+		cancel_msg = "Press (16) to Cancel Processing    ";
+	}
+	
 
 	wswap( &pfkey );								/* Do system dependent swap		*/
 
@@ -69,7 +82,7 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 	GP msg6?"T":"t";	GP  msg6;	GP  &N[msg6?strlen(msg6):0];	GP  "A"; GP  &N[16]; GP  "A"; GP  &N[2];
 	GP msg7?"T":"t";	GP  msg7;	GP  &N[msg7?strlen(msg7):0];	GP  "A"; GP  &N[17]; GP  "A"; GP  &N[2];
 	GP msg8?"T":"t";	GP  msg8;	GP  &N[msg8?strlen(msg8):0];	GP  "A"; GP  &N[18]; GP  "A"; GP  &N[2];
-	GP "T";	GP  "SELECT:   PF16 to Cancel Processing";	GP  &N[35];	GP  "A"; GP  &N[24]; GP  "A"; GP  &N[22];
+	GP "T";	GP  cancel_msg;	GP  &N[35];	GP  "A"; GP  &N[24]; GP  "A"; GP  &N[22];
 	GP "N";
 	GP "P";	GP  &pfkey;
 
@@ -78,3 +91,15 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 
 }
 
+/*
+**	History:
+**	$Log: errgparm.c,v $
+**	Revision 1.11  1997-09-24 16:11:55-04  gsl
+**	Add support for pfkeys12()
+**
+**	Revision 1.10  1996-08-19 18:32:17-04  gsl
+**	drcs update
+**
+**
+**
+*/

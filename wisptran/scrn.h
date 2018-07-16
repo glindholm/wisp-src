@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -23,7 +27,7 @@
 
 #include "node.h"
 
-#define		MAX_SCREENS	100							/* the maximum number of screens	*/
+#define		MAX_SCREENS	200							/* the maximum number of screens	*/
 
 #define		SCRN_IN_DECLARATIVES		0x01					/* flag if screen used in declaratives	*/
 #define		SCRN_IN_PROCDIV			0x02					/* flag screen used in procedure div.	*/
@@ -40,7 +44,7 @@ struct item_record
 		short	vert_1;								/* First vertical occurs count		*/
 		short	vert_2;								/* Second vertical occurs count		*/
 		short	horiz;								/* Horizontal occurs count		*/
-		short	vert_off;							/* Number of lines between vertical OCC	*/
+		short	vert_off1;							/* Number of lines between vertical OCC	*/
 		short	vert_off2;							/* Number of lines between vertical OCC	*/
 		short	num_range;							/* The number of range items		*/
 		char	item_num[4];							/* Cobol ref number example = 01 or 05	*/
@@ -50,6 +54,8 @@ struct item_record
 		NODE	object_clause;							/* The var that is the target for input */
 		NODE	lo_range_clause;						/* The low end range item		*/
 		NODE	hi_range_clause;						/* The High end range item		*/
+		short	x_level_col;							/* The level column number		*/
+		short	size;								/* The size based on the PIC clause	*/
 	};
 typedef struct item_record item_record;
 
@@ -62,6 +68,19 @@ EXT int  scrn_crt[MAX_SCREENS];								/* The crt files they are using.	*/
 EXT char scrn_flags[MAX_SCREENS];							/* 8 bit flags				*/
 
 EXT int num_screens INIT_ZERO;								/* How many screen items so far		*/
-EXT int scount;										/* global screen counter		*/
+
+extern item_record *find_item(char *the_name);
 
 #endif /* SCRN_H */
+/*
+**	History:
+**	$Log: scrn.h,v $
+**	Revision 1.8  1997-09-09 17:55:04-04  gsl
+**	Change needed for ACN code
+**
+**	Revision 1.7  1996-08-30 21:56:09-04  gsl
+**	drcs update
+**
+**
+**
+*/

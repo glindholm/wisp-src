@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -24,12 +26,14 @@
 **
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "idsistd.h"
+#include "level.h"
+#include "wisplib.h"
 
 #define ENV_LINKLEVEL	"WISPLINKLEVEL"
 #define SYMB_LINKLEVEL	"$W_LINK_LEVEL"
-
-char *getenv();
 
 static	int	link_level;							/* The link-level counter			*/
 static 	int	first=1;							/* The first time flag				*/
@@ -55,10 +59,12 @@ static 	int	first=1;							/* The first time flag				*/
 **
 */
 
-int linklevel()
+int linklevel(void)
 {
 	char	*ptr;
+#ifdef VMS
 	char	buff[20];
+#endif
 
 	if (first)
 	{
@@ -105,7 +111,7 @@ int linklevel()
 **
 */
 
-int newlevel()
+int newlevel(void)
 {
 	return( setlevel(linklevel()+1) );
 }
@@ -130,7 +136,7 @@ int newlevel()
 **
 */
 
-int oldlevel()
+int oldlevel(void)
 {
 	return( setlevel(linklevel()-1) );
 }
@@ -155,7 +161,7 @@ int oldlevel()
 **
 */
 
-int zerolevel()
+int zerolevel(void)
 {
 	return(setlevel(0));
 }
@@ -177,8 +183,7 @@ int zerolevel()
 **	08/12/92	Written by GSL
 **
 */
-int setlevel(level)
-int level;
+int setlevel(int level)
 {
 	char	buff[128];
 
@@ -195,3 +200,12 @@ int level;
 
 	return( link_level );
 }
+/*
+**	History:
+**	$Log: level.c,v $
+**	Revision 1.7  1996-08-19 18:32:25-04  gsl
+**	drcs update
+**
+**
+**
+*/

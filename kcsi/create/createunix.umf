@@ -1,0 +1,267 @@
+
+#--------------------------------------------------------------------
+# @(#)createunix.umf	1.8 10/31/95
+#--------------------------------------------------------------------
+# CREATE Utility for UNIX
+#--------------------------------------------------------------------
+
+#
+# To change the version for CREATE, change it here"
+#
+CREATE_VERSION=31
+VER=$(CREATE_VERSION)
+
+COBDEBUG=$(CDEBUG)
+LINKFLAGS=-C LINKCOUNT=5000
+KCSI_COBFLAGS=$(COBDEBUG) $(COBFLAGS) $(LINKFLAGS)
+WISPTRAN=../../wisptran/wisp
+
+.SUFFIXES:	.a
+
+.c.a:
+	$(CC) -c $(CFLAGS) $<
+	ar rv $@ $*.o
+	rm -f $*.o
+
+
+include $(WISP)/src/port/make.include
+
+CFLAGS=$(CFLAGS0) -DCREATE_VERSION=$(CREATE_VERSION)
+CFLAGSX=$(CFLAGS0) -DCREATE_VERSION=$(CREATE_VERSION)
+
+IOL=acuio.a
+MFIOL=mfio.a
+MFXIOL=mfxio.a
+
+L=create.a
+MFL=mfcreate.a
+MFXL=mfxcreate.a
+
+CARRYALL=cre8p
+
+ACUSRC=filetbl.c
+LMGSRC=ll.c
+CRIDSRC=ccsioerr.c cridebug.c gp.c kexists.c kv3.c \
+	relio.c seqio.c valflv.c vcsio.c klpi.c brlio.c
+XTRASRC=$(ACUSRC) $(LMGSRC) $(CRIDSRC)
+
+RELEASEDIST=install_create.lis packlist.lis release.lis create.umf
+ACUDIST=create $(L) vscracu.o $(IOL) $(RELEASEDIST)
+MFDIST=create.mf vscrmain.o $(MFL) $(MFIOL) ../crid/libmfisam.a $(RELEASEDIST)
+MFXDIST=create.mfx vscrmain.o $(MFXL) $(MFXIOL) $(RELEASEDIST)
+
+.SUFFIXES: .umf .umf~
+
+make:
+	@echo
+	@echo "CREATE Make utility. Build"
+	@echo
+	@echo " 1.  For Micro Focus 
+	@echo " 2.  For AcuCOBOL
+	@echo " 3.  For Micro Focus (using ExtFH)
+	@echo " "
+	@echo " 0.  Exit"
+	@read build ; \
+	here=`pwd` ; \
+	case $$build in \
+		1) make -f createunix.umf mf_all ;;\
+		2) make -f createunix.umf acu_all ;; \
+		3) make -f createunix.umf mfx_all ;;\
+		0) make -f createunix.umf nothing ;; \
+		*) make -f createunix.umf nothing ;; \
+	esac
+
+nothing:
+	@echo "Exiting make"
+
+clean:
+	rm -f *.a *.o *~ core
+	rm -f sub.c
+	rm -f filetbl.c
+	rm -f create
+	rm -f createe
+	rm -f create.mf
+	rm -f createe.mf
+	rm -f create.mfx
+	rm -f createe.mfx
+	rm -fr create*.ship
+
+mf_all:
+	make -e -f createunix.umf mf_create
+	make -e -f createunix.umf mfdist
+
+mfx_all:
+	make -e -f createunix.umf mfx_create
+	make -e -f createunix.umf mfxdist
+
+acu_all:
+	make -e -f createunix.umf acu_create
+	make -e -f createunix.umf acudist
+
+acu_create: $(IOL) vscracu.o
+	make -f createunix.umf "L=create.a" \
+		"CFLAGS=$(CFLAGS) -DKCSI_UNIX -DKCSI_ACU" create.a
+	make -e -f create.umf acucreate 
+	@echo Target acu_create is up to date
+
+mf_create: $(MFIOL)
+	make -f createunix.umf "L=mfcreate.a" \
+		"CFLAGS=$(CFLAGS) -I../disam -DKCSI_UNIX -DKCSI_MF" mfcreate.a
+	make -f create.umf mfcreate -e
+	@echo Target mf_create is up to date
+
+mfx_create: $(MFXIOL)
+	make -f createunix.umf "L=mfxcreate.a" \
+		"CFLAGS=$(CFLAGSX) -DKCSI_UNIX -DKCSI_MF" mfxcreate.a
+	make -f create.umf mfxcreate -e
+	@echo Target mfx_create is up to date
+
+createe:
+	make -f create.umf createe -e
+	
+cpbackup:
+	cpbku *.c *.h Makefile *.umf
+
+mfdist: $(MFDIST)
+	@if [ $(VER) ] ; then \
+		make -f createunix.umf mfcrt$(VER) -e ; \
+	else \
+		echo "Must make mfdist VER=nnn " ; \
+	fi
+
+mfxdist: $(MFXDIST)
+	@if [ $(VER) ] ; then \
+		make -e -f createunix.umf mfxcrt$(VER) ; \
+	else \
+		echo "Must make mfdist VER=nnn " ; \
+	fi
+
+mfcrt$(VER): 
+	-@distdir=createmf.$(VER) ; \
+	shipdir=createmf$(VER).ship ; \
+	rm -rf $$shipdir ; \
+	echo ; \
+	echo "Creating Micro Focus CREATE distribution $$shipdir - Please wait ..." ; \
+	echo ; \
+	mkdir $$shipdir $$shipdir/$$distdir ; \
+	cp $(MFDIST) $$shipdir/$$distdir ; \
+	cd $$shipdir ; \
+	mv $$distdir/create.mf $$distdir/create ; \
+	echo "\tStripping create utility ..." ; \
+	strip $$distdir/create ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	chmod 555 $$distdir/create ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z
+
+mfxcrt$(VER): 
+	-@distdir=createmfx.$(VER) ; \
+	shipdir=createmfx$(VER).ship ; \
+	rm -rf $$shipdir ; \
+	echo ; \
+	echo "Creating Micro Focus CREATE distribution $$shipdir - Please wait ..." ; \
+	echo ; \
+	mkdir $$shipdir $$shipdir/$$distdir ; \
+	cp $(MFXDIST) $$shipdir/$$distdir ; \
+	cd $$shipdir ; \
+	mv $$distdir/create.mfx $$distdir/create ; \
+	echo "\tStripping create utility ..." ; \
+	strip $$distdir/create ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	chmod 555 $$distdir/create ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z
+
+acudist: $(ACUDIST)
+	@if [ $(VER) ] ; then \
+		make -e -f createunix.umf acrt.$(VER) ; \
+	else \
+		echo "Must make acudist VER=nnn " ; \
+	fi
+
+acrt.$(VER): 
+	-@distdir=createacu.$(VER) ; \
+	shipdir=createacu$(VER).ship ; \
+	rm -rf $$shipdir ; \
+	echo ; \
+	echo "Creating AcuCOBOL CREATE distribution $$shipdir - Please wait ..." ; \
+	echo ; \
+	mkdir $$shipdir $$shipdir/$$distdir ; \
+	cp $(ACUDIST) $$shipdir/$$distdir ; \
+	cd $$shipdir ; \
+	find . -type d -exec chmod 755 {} \; ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	chmod 555 $$distdir/create ; \
+	echo "     Creating compressed tar file ..." ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z
+
+port:
+	@if [ -f p.* ] ; \
+		then echo "Can't port, outstanding p.?? files" ; \
+	else \
+		make -e -f createunix.umf porter ; \
+	fi
+
+porter:
+	-portdir=portcre8 ; \
+	rm -rf ../$$portdir ; \
+	mkdir ../$$portdir ; \
+	curdir=`pwd` ; \
+	cp *.h ../$$portdir ; \
+	cp ../inc/*.h ../$$portdir ; \
+	cp $(XTRASRC) ../$$portdir ; \
+	cd ../$$portdir ; \
+	for name in $$curdir/s.* ; do \
+		get $$name ; \
+	done ;\
+	ls|cpio -ocvB >$(CARRYALL).cpio ; \
+	compress $(CARRYALL).cpio ; \
+	echo "$$portdir/$(CARRYALL).cpio.Z complete" ; \
+	uuencode $(CARRYALL).cpio.Z $(CARRYALL).cpio.Z >$(CARRYALL).czu ; \
+	echo "$$portdir/$(CARRYALL).czu complete" 
+
+localport:
+	-portdir=portcre8 ; \
+	rm -rf ../$$portdir ; \
+	mkdir ../$$portdir ; \
+	curdir=`pwd` ; \
+	cp *.h *.c *.umf Makefile ../$$portdir ; \
+	cd ../$$portdir ; \
+	ls|cpio -ocvB >$(CARRYALL).cpio ; \
+	compress $(CARRYALL).cpio ; \
+	echo "$$portdir/$(CARRYALL).cpio.Z complete" ; \
+	uuencode $(CARRYALL).cpio.Z $(CARRYALL).cpio.Z >$(CARRYALL).czu ; \
+	echo "$$portdir/$(CARRYALL).czu complete" 
+
+
+
+$(L):	$(L)(vscrglb.o) $(L)(version.o) $(L)(vscrhelp.o) $(L)(vscrout.o) \
+	$(L)(vscrblk.o) $(L)(vscrfile.o) $(L)(vscreoj.o) \
+	$(L)(vscrffld.o) $(L)(vscrbchk.o) $(L)(vscrdbg.o) \
+	$(L)(vscrspky.o) $(L)(vscrsqz.o) $(L)(vscrkwfo.o) \
+	$(L)(ll.o) $(L)(gp.o) $(L)(valflv.o) \
+	$(L)(vcsio.o) $(L)(ccsioerr.o) $(L)(cridebug.o) \
+	$(L)(kexists.o)
+
+$(IOL):	$(IOL)(kv3.o) $(IOL)(brlio.o) $(IOL)(seqio.o)
+
+$(MFIOL): $(MFIOL)(klpi.o) $(MFIOL)(rlaio.o) $(MFIOL)(seqio.o) $(MFIOL)(brlio.o)
+
+$(MFXIOL): $(MFXIOL)(kmf.o) $(MFXIOL)(rlaio.o) $(MFXIOL)(seqio.o) $(MFXIOL)(brlio.o) \
+	   $(MFXIOL)(assert.o) $(MFXIOL)(kcsimem.o) $(MFXIOL)(kcsit.o) \
+	   $(MFXIOL)(cobextfh.o)
+
+vscrglb.o: vscrglb.c vscrglb.h
+
+$(MFXIOL)(cobextfh.o):   ../crid/figs.wcb  ../crid/plktrace.wcb ../crid/wsktrace.wcb  cobextfh.wcb
+	$(WISPTRAN) -VMF -I ../crid cobextfh.wcb
+	cob -xc $(KCSI_COBFLAGS) cobextfh.cob 
+	ar rv $(MFXIOL) cobextfh.o
+	rm -f cobextfh.o
+
+

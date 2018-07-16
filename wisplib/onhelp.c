@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -10,7 +12,7 @@
 #include "idsistd.h"
 #include "wperson.h"
 
-ONHELP()									/* Turn help on.				*/
+void ONHELP(void)									/* Turn help on.				*/
 {
 	int4	def_flags;
 
@@ -20,7 +22,7 @@ ONHELP()									/* Turn help on.				*/
 	save_defaults();
 }
 
-NOHELP()									/* Turn help off.				*/
+void NOHELP(void)									/* Turn help off.				*/
 {
 	int4	def_flags;
 
@@ -29,3 +31,12 @@ NOHELP()									/* Turn help off.				*/
 	set_defs(DEFAULTS_FLAGS,(char*)&def_flags);
 	save_defaults();
 }
+/*
+**	History:
+**	$Log: onhelp.c,v $
+**	Revision 1.9  1996-08-19 18:32:36-04  gsl
+**	drcs update
+**
+**
+**
+*/

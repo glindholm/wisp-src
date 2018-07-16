@@ -1,49 +1,33 @@
-#!/bin/sh
-#/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
-#/************************************************************************/
+#!/bin/ksh
+#
+#	Copyright (c) 1995-1997 NeoMedia Technologies, All rights reserved.
+#	$Id:$
 #
 #
 #	File:		bldsrckit.sh
 #
 #	Function:	This script builds the WISP source kit
 #
-#	Desciption:	This routine can only be run from hammer.  
+#	Desciption:	This routine can only be run from zigzag.  
 #			It builds the WISP source kit.
-#			It uses dcp to download all the relevent files
-#			from SCALOS to HAMMER.  It copies directly out
-#			of the SCS directories.
+#			It unloads the source for DRCS.
 #
 #			- build the directories
-#			- download each component (MASTER then QAHOLD)
+#			- unload each component
 #			- copy the ".umf" files to "Makefile"
-#			- video include files  --> src/include/v
 #			- sample config files have ".unix" extension removed
 #			- all ".obj" and ".com" files are deleted
 #			- all long files (15+ chars are removed)
 #			- all ".sh" files have x bit set (chmod +x)
 #
-#	Warning:	If the SCS directory structures change or new ones
+#	Warning:	If the DRCS directory structures change or new ones
 #			are added then this routine must be updated.
 #
-#	History:	06/04/92	Written. GSL
-#			06/09/92	Remove src/bin directory. GSL
-#			06/09/92	Added copy of .umf to Makefile. GSL
-#			06/30/92	Split src/test into src/testacu & src/testmf. GSL
-#			07/07/92	Added wisp common include to printq. GSL
-#                       12/14/92        Added libivs and vse JEC
-#			04/29/93	Completed WISP SAMPLE section. GSL
-#                       04/29/93        Slight change to some Unix commands for better efficiency. JEC
-#
 
-echo This script will build WISP source kit.
+echo This script will build the WISP source kit.
 echo
-echo It creates all the directory needed and then uses dcp to copy all the 
-echo source files from their SCS directories on SCALOS.
+echo It creates all the directory needed and then uses DRCS to unload all the 
+echo source files from their DRCS directories on ZIGZAG.
 echo
 echo -n	'Do you wish to continue [y/n] ? ' 
 read ANS
@@ -54,19 +38,67 @@ exit
 else
 echo	continuing...
 fi
-echo
-echo -n	"Enter parent directory [$HOME] ? "
-read ANS
-if [ "$ANS" = "" ]
-then
-	cd $HOME
-else
-	cd $ANS
-fi
+
+#
+#	WISP_PROJ_LIST is a list of all the projects in DRCS that 
+#	are used in the WISP source kit.  It is used to set the
+#	RCS states and to create the Versions.lis file.
+#
+WISP_PROJ_LIST="
+video/cap
+video/ivs
+video/lib
+video/test
+wisp/acucobol
+wisp/amu
+wisp/common
+wisp/costar
+wisp/doc
+wisp/ede
+wisp/etc
+wisp/ivs
+wisp/kcsi/create
+wisp/kcsi/crid
+wisp/kcsi/common
+wisp/lib
+wisp/menudemo
+wisp/mf
+wisp/msdos
+wisp/nt
+wisp/port
+wisp/proctran
+wisp/sample
+wisp/tran
+wisp/utils
+wisp/vms
+wisp/vsedit
+wisp/wproc"
+
+DISAM_PROJ_LIST="
+disam.34/code
+disam.34/decs
+disam.34/docs
+disam.34/head
+disam.34/make
+disam.34/port
+disam.34/test
+disam.34/tp.21
+disam.34/util
+disam.34/mfisam"
+
 PARENTDIR=`pwd`
+echo
+echo -n	"Enter parent directory [$PARENTDIR] ? "
+read ANS
+if [ "$ANS" != "" ]
+then
+	cd $ANS
+	PARENTDIR=`pwd`
+fi
+
 echo pwd = `pwd`
 echo
-echo -n	"Enter name of save dir (e.g. src32b) ? "
+echo -n	"Enter name of save dir (e.g. wisp3318) ? "
 read ANS
 if [ "$ANS" = "" ]
 then
@@ -91,31 +123,112 @@ cd src
 
 SOURCEDIR=`pwd`
 
-echo mkdir acu ede etc include mf msdos port printq proctran 
-for i in acu ede etc include mf msdos port printq proctran
+WISPDIRLIST="
+	acu \
+	amu \
+	ede \
+	etc \
+	ivslib \
+	kcsi \
+	kcsi/common \
+	kcsi/create \
+	kcsi/crid \
+	lib \
+	mf \
+	msdos \
+	nt \
+	port \
+	proctran \
+	testacu \
+	testmf \
+	videolib \
+	videotest \
+	videocap \
+	vsedit \
+	wispcommon \
+	wisplib \
+	wisptran \
+	wisputils \
+	wproc \
+	"
+
+DISAMDIRLIST="
+	kcsi/disam \
+	"
+
+echo Creating directories ...
+for i in $WISPDIRLIST
 do
-	test -d $i || mkdir $i
+	if [ -d $i ]
+	then
+		echo Dir $i already exists
+	else
+		echo mkdir $i
+		mkdir $i
+		if [ ! -d $i ]
+		then
+			echo ERROR mkdir $i failed
+			exit 1
+		fi
+	fi
 done
 
-echo mkdir videolib videotest videocap wisplib wisptran wisputils
-for i in videolib videotest videocap wisplib wisptran wisputils
-do
-	test -d $i || mkdir $i
-done
+#
+#	SET the RCS STATES
+#
 
-echo mkdir ivslib lib lib/x include/v testacu testmf vsedit
-for i in ivslib lib lib/x include/v testacu testmf vsedit
-do
-	test -d $i || mkdir $i
-done
+echo
+echo "This script can set the RCS states of all the files in WISP to"
+echo "a new version number (e.g. V3_3_18)."
+echo
+echo -n	'Do you wish to set the RCS states [y/n] ? ' 
+
+read ANS
+if [ "y" != "${ANS}" ]
+then
+	echo
+	echo	RCS States will not be changed.
+else
+	#
+	#	Get the version number to use
+	#
+	echo
+	echo -n	"Enter the state to use (e.g. V3_3_18) ? "
+	read ANS
+	if [ "$ANS" = "" ]
+	then
+		echo state can not be blank.
+		exit 1
+	fi
+	the_state=$ANS
+	echo
+	echo Using state=[$the_state]
+
+	#
+	#	Set the state for each project
+	#
+	for the_proj in $WISP_PROJ_LIST
+	do
+		echo Setting state for project $the_proj
+		drcs state $the_state $the_proj
+	done
+
+	echo 
+	echo 
+	echo RCS states have been set to $the_state
+	echo 
+fi
+
 
 #
 #	Down load all the SCS files into the source kit.
 #
 
-echo ' '
-echo 'Your choices for each project/component are y=yes, n=no, a=all or q=quit'
-echo ' '
+#echo ' '
+#echo 'Your choices for each project/component are y=yes, n=no, a=all or q=quit'
+#echo ' '
+
+ANS=a
 
 echo
 echo ==================== VIDEO LIB ===========================================
@@ -137,19 +250,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO LIB
-	dcp -c -v 'scalos::scs$video:[lib.master.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.master.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.master.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[lib.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$video:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[common.qahold.include]*.*' .
+	drcs unload video/lib
 
 	cp libvideo.umf Makefile
 fi
@@ -174,14 +275,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO TEST
-	dcp -c -v 'scalos::scs$video:[test.master.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.master.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.master.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[test.qahold.misc]*.*' .
+	drcs unload video/test
 
 	cp vtest.umf Makefile
 fi
@@ -206,14 +300,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO CAP
-	dcp -c -v 'scalos::scs$video:[cap.master.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.master.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.master.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[cap.qahold.misc]*.*' .
+	drcs unload video/cap
 fi
 
 echo
@@ -236,28 +323,20 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading VIDEO IVS LIB
-	dcp -c -v 'scalos::scs$video:[ivs.master.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.master.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.master.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$video:[ivs.qahold.misc]*.*' .
+	drcs unload video/ivs
 
 	cp libivs.umf Makefile
 fi
 
+
 echo
-echo ==================== VIDEO INCLUDE =====================================
+echo ==================== WISP COMMON =====================================
 echo
-echo cd $SOURCEDIR/include/v
-cd $SOURCEDIR/include/v
-echo Loading VIDEO include headers
-dcp -c -v 'scalos::scs$video:[lib.master.include]*.*' .
-dcp -c -v 'scalos::scs$video:[lib.qahold.include]*.*' .
-dcp -c -v 'scalos::scs$video:[common.master.include]*.*' .
-dcp -c -v 'scalos::scs$video:[common.qahold.include]*.*' .
+echo cd $SOURCEDIR/wispcommon
+cd $SOURCEDIR/wispcommon
+echo Loading WISP COMMON
+drcs unload wisp/common
+
 echo
 echo ================== WISP ACUCOBOL =======================================
 echo
@@ -278,16 +357,10 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP ACUCOBOL
-	dcp -c -v 'scalos::scs$wisp:[acucobol.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[acucobol.qahold.misc]*.*' .
+	drcs unload wisp/acucobol
 
-	cp wruncblx.umf Makefile
+	chmod +w wruncbl.umf
+	cp wruncbl.umf Makefile
 fi
 
 echo
@@ -310,16 +383,34 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP MF
-	dcp -c -v 'scalos::scs$wisp:[mf.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[mf.qahold.misc]*.*' .
+	drcs unload wisp/mf
 
-	cp wrunmfx.umf Makefile
+	chmod +w wrunmf.umf
+	cp wrunmf.umf Makefile
+fi
+
+echo
+echo ==================== WISP NT ===========================================
+echo
+echo cd $SOURCEDIR/nt
+cd $SOURCEDIR/nt
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	echo -n	'Load WISP NT [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading WISP NT
+	drcs unload wisp/nt
+
 fi
 
 echo
@@ -342,16 +433,10 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP PORT
-	dcp -c -v 'scalos::scs$wisp:[port.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[port.qahold.misc]*.*' .
+	drcs unload wisp/port
 
 	cp makewisp.umf Makefile
+	chmod +w make.include
 fi
 
 echo
@@ -374,28 +459,8 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP EDE
-	dcp -c -v 'scalos::scs$wisp:[ede.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[ede.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[menudemo.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[menudemo.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+	drcs unload wisp/ede
+	drcs unload wisp/menudemo
 
 	cp libede.umf Makefile
 fi
@@ -420,22 +485,30 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP ETC
-	dcp -c -v 'scalos::scs$wisp:[etc.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[etc.qahold.misc]*.*' .
+	drcs unload wisp/etc
 
-	for old in *.unix
+	for i in `drcs dir wisp/doc | sed -n '/relnotes/p'`
 	do
-		new=`basename $old .unix`
-		echo "moving $old to $new"
-		mv $old $new
+		drcs borrow $i wisp/doc
 	done
 
+	drcs borrow qawisp.lis wisp/doc
+	drcs borrow qaede.doc wisp/doc
+	drcs borrow portunix.lis wisp/doc
+	drcs borrow portwin32.txt wisp/doc
+	drcs borrow wispntdoc.txt wisp/doc
+	drcs borrow wispntsetup.txt wisp/doc
+	drcs borrow wispacn.txt wisp/doc
+	drcs borrow aqmwisp.txt wisp/doc
+	drcs borrow nonascii.txt wisp/doc
+	drcs borrow vcolors.txt wisp/doc
+
+	for i in v*_relnotes.lis
+	do
+		latest_relnotes=$i
+	done
+	echo "cp $latest_relnotes RELNOTES"
+	cp $latest_relnotes RELNOTES
 fi
 
 echo
@@ -458,19 +531,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP LIB
-	dcp -c -v 'scalos::scs$wisp:[lib.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[lib.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+	drcs unload wisp/lib
 
 	cp libwisp.umf Makefile
 fi
@@ -495,19 +556,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP PROCTRAN
-	dcp -c -v 'scalos::scs$wisp:[proctran.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[proctran.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+	drcs unload wisp/proctran
 
 	cp proctran.umf Makefile
 fi
@@ -531,19 +580,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP VSEDIT
-	dcp -c -v 'scalos::scs$wisp:[vsedit.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[vsedit.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+	drcs unload wisp/vsedit
 
 	cp vsedit.umf Makefile
 fi
@@ -568,14 +605,8 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP SAMPLE
-	dcp -c -v 'scalos::scs$wisp:[sample.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[sample.qahold.misc]*.*' .
+	drcs unload wisp/sample
+
 	echo Duplicating testacu into testmf
 	cp * ../testmf
 
@@ -612,19 +643,7 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP TRAN
-	dcp -c -v 'scalos::scs$wisp:[tran.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[tran.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+	drcs unload wisp/tran
 
 	cp wisp.umf Makefile
 fi
@@ -649,58 +668,11 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP UTILS
-
-	dcp -c -v 'scalos::scs$wisp:[utils.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[utils.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
+	drcs unload wisp/utils
 
 	cp utils.umf Makefile
 fi
 
-echo
-echo ================== WISP PRINTQ ==========================================
-echo
-echo cd $SOURCEDIR/printq
-cd $SOURCEDIR/printq
-
-echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	echo -n	'Load PRINTQ UNIX [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
-echo	Loading PRINTQ UNIX
-	dcp -c -v 'scalos::scs$printq:[unix.master.source]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.master.include]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.master.build]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$printq:[unix.qahold.misc]*.*' .
-
-	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[common.qahold.include]*.*' .
-
-	cp printq.umf Makefile
-fi
 
 echo
 echo ================== WISP MSDOS ===========================================
@@ -722,14 +694,109 @@ fi
 if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
 then
 echo	Loading WISP MSDOS
-	dcp -c -v 'scalos::scs$wisp:[msdos.master.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.master.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.master.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.master.misc]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.qahold.source]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.qahold.include]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.qahold.build]*.*' .
-	dcp -c -v 'scalos::scs$wisp:[msdos.qahold.misc]*.*' .
+	drcs unload wisp/msdos
+
+	drcs borrow autoexec.wsp wisp/doc
+	drcs borrow config.wsp wisp/doc
+	drcs borrow doswisp.lis wisp/doc
+	drcs borrow readme.dos wisp/doc
+fi
+
+echo
+echo =================== WISP WPROC ===========================================
+echo
+echo cd $SOURCEDIR/wproc
+cd $SOURCEDIR/wproc
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	echo -n	'Load WISP WPROC [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading WISP WPROC
+	drcs unload wisp/wproc
+
+	chmod +w Makefile
+	cp wproc.umf Makefile
+
+	drcs borrow wproc.lis wisp/doc
+fi
+
+echo
+echo =================== WISP AMU ===========================================
+echo
+echo cd $SOURCEDIR/amu
+cd $SOURCEDIR/amu
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	echo -n	'Load WISP AMU [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading WISP AMU
+	drcs unload wisp/amu
+fi
+
+echo
+echo =================== KCSI ===========================================
+echo
+echo cd $SOURCEDIR/kcsi
+cd $SOURCEDIR/kcsi
+
+echo pwd = `pwd`
+if [ "a" != "$ANS" ]
+then
+	echo -n	'Load KCSI [y/n/a/q] ? '
+	read ANS
+fi
+if [ "q" = "$ANS" ]
+then
+	echo 'bldsrckit.sh: aborted.'
+	exit 1
+fi
+if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
+then
+echo	Loading KCSI
+	cd $SOURCEDIR/kcsi/common
+	drcs unload wisp/kcsi/common
+
+	cd $SOURCEDIR/kcsi/create
+	drcs unload wisp/kcsi/create
+	drcs unload wisp/kcsi/common
+	drcs borrow createntsetup.txt wisp/kcsi/create
+
+	cd $SOURCEDIR/kcsi/crid
+	drcs unload wisp/kcsi/crid
+	drcs unload wisp/kcsi/common
+	drcs borrow cridntsetup.txt wisp/kcsi/crid
+
+#	cd $SOURCEDIR/kcsi/disam
+#	drcs unload disam.34/code
+#	drcs unload disam.34/decs
+#	drcs unload disam.34/docs
+#	drcs unload disam.34/head
+#	drcs unload disam.34/make
+#	drcs unload disam.34/port
+#	drcs unload disam.34/test
+#	drcs unload disam.34/tp.21
+#	drcs unload disam.34/util
+#	drcs unload disam.34/mfisam
 fi
 
 echo
@@ -740,98 +807,108 @@ echo cd $SOURCEDIR
 cd $SOURCEDIR
 
 echo pwd = `pwd`
-if [ "a" != "$ANS" ]
-then
-	echo
-	echo -n 'Delete all *.com and *.obj files [y/n/a/q] ? '
-	read ANS
-fi
-if [ "q" = "$ANS" ]
-then
-	echo 'bldsrckit.sh: aborted.'
-	exit 1
-fi
-if [ "y" = "${ANS}" -o "a" = "${ANS}" ]
-then
+echo
+echo 'Deleting all *.com and *.obj files'
 echo 'find . -name "*.com" -print | xargs rm'
 find . -name "*.com" -print | xargs rm
 echo 'find . -name "*.obj" -print | xargs rm'
 find . -name "*.obj" -print | xargs rm
-fi
-
-#
-#	Remove all long names greater then 14 characters
-#
-
-echo "This routine next removes any file names longer than 14 characters."
-echo
-
-
-for fil in `find . -name "???????????????*" -print`
-do
-	echo "File <$fil> name too long. Rename?"
-	read ans
-	if [ "$ans" = "y" ]
-	then
-		echo "Enter new name:"
-		read nam
-		bas=`dirname $fil`
-		if [ -f $bas/$nam ]
-		then
-			echo "$bas/$name exists"
-			ls $bas
-			echo "Enter new name:"
-			read nam
-		fi
-		echo "Rename $fil to $bas/$nam"
-		mv $fil $bas/$nam
-	else
-		echo "Delete it?"
-		read ans
-		if [ "$ans" = "y" ]
-		then
-			echo "Delete $fil"
-			rm $fil
-		else
-			echo "Name is still too long."
-		fi
-	fi
-done
 
 #
 #	File name cleanup
 #
-
 echo " "
-echo "Changing mode of all .sh files to 771."
-find . -name '*.sh' -print | tee /dev/tty | xargs chmod 771
+echo "Changing mode of all .sh files to ug+rx."
+find . -name '*.sh' -print | tee /dev/tty | xargs chmod ug+rx
 
-#echo "Removing .sh from file name of selected commands."
-#echo cd $SOURCEDIR/port
-#cd $SOURCEDIR/port
-#for cmd in cacbl doumf echon go lc mkpath search sumnums to version which wver
-#do
-#	echo "Moving $cmd.sh to $cmd"
-#	mv $cmd.sh $cmd
-#done
 #
-#echo "Copying mvold.sh & rmold.sh to $SOURCEDIR"
-#cp mvold.sh rmold.sh $SOURCEDIR
+#	Create a file version list
 #
-#echo " "
-#echo "Getting printq.doc from SCALOS."
-#echo cd $SOURCEDIR/etc
-#cd $SOURCEDIR/etc
-#dcp -c -v 'scalos::scs$wisp:[doc.master.source]printq.doc' .
-#dcp -c -v 'scalos::scs$wisp:[doc.qahold.source]printq.doc' .
-#echo "Moving printq.doc to PRINTQDOC"
-#mv printq.doc PRINTQDOC
+echo cd $SOURCEDIR
+cd $SOURCEDIR
+
+for i in $WISP_PROJ_LIST
+do
+	echo Versions for $i
+	drcs vers $i >>Versions.lis
+done
 
 echo 
-echo "You must get the current release notes (WISP  DOC  V39X_RELNOTES.LIS)"
-echo "and copy them to a $SOURCEDIR/etc/RELNOTES file."
+echo "The latest release notes [" $latest_relnotes "] have"
+echo "been copied to etc/RELNOTES"
 echo 
 echo 
 echo DONE.
 echo 
 exit
+#
+#	History:
+#	$Log: bldsrckit.sh,v $
+#	Revision 1.33  1998-01-08 11:30:08-05  gsl
+#	Add vcolors.txt
+#
+#	Revision 1.32  1997-12-19 17:22:14-05  gsl
+#	Add aqmwisp.txt to wisp/etc
+#
+#	Revision 1.31  1997-12-19 15:09:36-05  gsl
+#	removed the wisp/etc *.unix stuff
+#
+#	Revision 1.30  1997-12-19 14:35:42-05  gsl
+#	Add nonascii.txt
+#
+#	Revision 1.29  1997-12-02 09:48:11-05  gsl
+#	Remove the NT code for WISPTRAN and WCONFIG
+#
+#	Revision 1.28  1997-09-30 10:28:38-04  gsl
+#	add wispacn.txt
+#
+#	Revision 1.27  1997-08-28 16:15:30-04  gsl
+#	Removed DISAM from the source kit
+#
+#	Revision 1.26  1997-05-02 23:10:42-04  gsl
+#	move drcs states stuff after all other questions
+#
+#	Revision 1.25  1997-04-18 15:22:19-04  gsl
+#	Add the NT setup.txt files
+#
+#	Revision 1.24  1997-03-27 11:38:44-05  gsl
+#	Add docs to etc
+#
+#	Revision 1.23  1997-03-25 17:16:49-05  gsl
+#	Fix the kcsi common stuff
+#
+#	Revision 1.22  1997-03-25 15:20:25-05  gsl
+#	Add NT plus remove wisp/common from all the projects
+#
+#	Revision 1.21  1996-09-12 12:01:26-04  gsl
+#	Add WISP/NT source directory
+#
+#	Revision 1.20  1996-07-26 10:22:58-07  gsl
+#	Remove the include/v directory
+#
+#	Revision 1.19  1996-07-26 10:02:49-07  gsl
+#	Ensure that wisp/common was always unloaded first in each project
+#
+#	Revision 1.18  1996-04-10 06:38:30-07  gsl
+#	New disam 3.4 stuff for KCSI utilities
+#
+# 	Revision 1.17  1996/01/11  15:02:03  gsl
+# 	Add wisp/kcsi/common
+# 	Fix mode for .sh files
+#
+# 	Revision 1.16  1996/01/05  13:31:50  gsl
+# 	*** empty log message ***
+#
+#	06/04/92	Written. GSL
+#	06/09/92	Remove src/bin directory. GSL
+#	06/09/92	Added copy of .umf to Makefile. GSL
+#	06/30/92	Split src/test into src/testacu & src/testmf. GSL
+#	07/07/92	Added wisp common include to printq. GSL
+#       12/14/92        Added libivs and vse JEC
+#	04/29/93	Completed WISP SAMPLE section. GSL
+#       04/29/93        Slight change to some Unix commands for better efficiency. JEC
+#	04/11/94	Added wproc. GSL
+#	05/13/94	Added AMU. GSL
+#	06/08/94	MS-DOS Docs and V*_RELNOTES. GSL
+#	07/07/94	ILP -> UNIQUE . GSL
+#	02/01/95	Change to use DRCS

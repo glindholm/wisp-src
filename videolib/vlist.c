@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -5,28 +7,44 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
-/* VLIST.C ... This routine will generate a structure for a list and then display and mark items for a function.		*/
-/*             This is a list manager.  You can scroll through the items and "mark" them.  A front end program will do the	*/
-/* 	       procesing on the	marked items.											*/
+/*
+**	File:		vlist.c
+**
+**	Purpose:	This routine will generate a structure for a list and then display and mark items for a function.
+**			This is a list manager.  You can scroll through the items and "mark" them.  A front end program
+**			will do the procesing on the marked items.
+**
+**	Routines:	
+**	vlist()		
+**	init_list()
+**	free_list_memory()	Free the memory assigne to list
+**	lookup()
+**	add_head_foot()
+**	add_col()		Add column to the list
+**	delete_col()
+**	resize_struct()
+**	define_func_keys()
+**	display_scan()
+**	disp_one_item()		Display one item in row
+**	display_header_footer()	Display the header and footer
+**	display_cols()		Display columns
+**	display_row()		Display one row
+**	generate_display()
+**	set_select_remove()	Set the select/remove bit
+**	up_list()		Up one line
+**	down_list()		Down one line
+**	verify_columns()	Verify that scroll can occur
+**	calc_col()
+**	get_function()
+**	vlist_memory_err()
+**
+*/
 
-/*						Include standard header files.							*/
-
-#ifndef unix	/* VMS and MSDOS */
-#include <stdlib.h>
-#endif
-#ifndef VMS	/* unix and MSDOS */
-#include <malloc.h>
-#endif
-
-#include <stdio.h>									/* Get standard I/O definitions.	*/
-#include <ctype.h>									/* Get character type macros.		*/
-#include "video.h"									/* Include video definitions.		*/
-#include "vlist.h"									/* Include struct for each item.	*/
-#include "vlocal.h"
-#include "vdata.h"
+#include "vlist.h"
 
 /*						Data Definitions.								*/
-static char *copyright = " (c) 1988,89 International Digital Scientific Incorporated.";	/* Here so it shows up in object code.	*/
+static char *idsi_copyright = 
+			" (c) 1988,89 International Digital Scientific Incorporated.";	/* Here so it shows up in object code.	*/
 
 /*                                              Global Variables								*/
 static int num_scr = MAX_LINES_PER_SCREEN;						/* Number of avail. lines in scroll reg.*/
@@ -52,11 +70,27 @@ static int verify_columns();
 static int calc_col();
 static int get_function();
 static int generate_display();
+static int vlist_memory_err();
 
-#ifdef OSF1_ALPHA
-void *malloc();
-#endif
-
+/*
+**	Routine:	vlist()
+**
+**	Function:	
+**
+**	Description:	
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by SMC
+**
+*/
 int vlist(function,list_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
 unsigned char *function,*list_id,
 	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*item11,*item12,*item13,*item14,*item15,*item16;
@@ -64,9 +98,6 @@ unsigned char *function,*list_id,
 	struct tmpst *tmp;								/* Ptr to struct containing temp stuff.	*/
 	long *fptr, vlist_func;
 
-#if 0
-	vkbmap(INITIALIZE);								/* Initialize keyboard mapping.		*/
-#endif
 	vcapload();
 
 	fptr = (long *)function;
@@ -78,6 +109,7 @@ unsigned char *function,*list_id,
 		{
 			long *lptr, list_num, *rst_row, *rst_col;			/* Pointers to long.			*/
 			long *row_rtrn, *col_rtrn, *marked_rtrn, *key_rtrn, *rtrn_code; /* Pointers to returned values.		*/
+			int *adjust_row;
 
 			lptr = (long *)list_id;
 			list_num = *lptr;						/* Assign the list id number.		*/
@@ -88,14 +120,16 @@ unsigned char *function,*list_id,
 			marked_rtrn = (long *)item5;					/* Assign ptr to array of marked items.	*/
 			key_rtrn = (long *)item6;					/* Assign ptr to function key returned.	*/
 			rtrn_code = (long *)item7;					/* Assign ptr to return code.		*/
+			adjust_row = (int *)item8;					/* Assign ptr to adjust row values flag.*/
 
-			display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,1);
+			display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,1,adjust_row);
 			break;
 		}
 		case NO_DISPLAY_LIST:							/* Do not re-display a list, allow	*/
 		{									/* further processing.			*/
 			long *lptr, list_num, *rst_row, *rst_col;			/* Pointers to long.			*/
 			long *row_rtrn, *col_rtrn, *marked_rtrn, *key_rtrn, *rtrn_code; /* Pointers to returned values.		*/
+			int *adjust_row;
 
 			lptr = (long *)list_id;
 			list_num = *lptr;						/* Assign the list id number.		*/
@@ -106,8 +140,9 @@ unsigned char *function,*list_id,
 			marked_rtrn = (long *)item5;					/* Assign ptr to array of marked items.	*/
 			key_rtrn = (long *)item6;					/* Assign ptr to function key returned.	*/
 			rtrn_code = (long *)item7;					/* Assign ptr to return code.		*/
+			adjust_row = (int *)item8;					/* Assign ptr to adjust row values flag.*/
 
-			display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,0);
+			display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,0,adjust_row);
 			break;
 		}
 		case DISP_ROW_ITEM:							/* Display an item in a given row and	*/
@@ -159,7 +194,7 @@ unsigned char *function,*list_id,
 				vre("vlist()-Invalid number of items - %d.",num_items);	/* Report the situation.		*/
 				return(FAILURE);					/* Return to the caller.		*/
 			}
-			if (!(tmp = (struct tmpst *)malloc(8+sizeof(struct tmpst)))) memory_err(); /* Get some memory.		*/
+			if (!(tmp = (struct tmpst *)malloc(8+sizeof(struct tmpst)))) vlist_memory_err(); /* Get some memory.	*/
 			if (num_items > 3)
 			{
 				tmp->it[3].dtext = item12;				/* Assign the passed data to text four.	*/
@@ -299,7 +334,7 @@ static int init_list(list_id,rows,retcd) long list_id, rows, *retcd;
 
 	if (headal == NULL)
 	{
-		if (!(currlist = (struct active_list *)malloc(8+sizeof(struct active_list)))) memory_err(); /* Get some memory.	*/
+		if (!(currlist = (struct active_list *)malloc(8+sizeof(struct active_list)))) vlist_memory_err();
 		headal = currlist;							/* Init the head of list pointer.	*/
 		currlist->l_id = list_id;						/* Init list id of the new structure.	*/
 		currlist->func_keys = NULL;						/* Init to no functions available.	*/
@@ -326,7 +361,7 @@ static int init_list(list_id,rows,retcd) long list_id, rows, *retcd;
 		}
 		else									/* Create new list.			*/
 		{
-			if (!(newlist = (struct active_list *)malloc(8+sizeof(struct active_list)))) memory_err(); /* Get memory.*/
+			if (!(newlist = (struct active_list *)malloc(8+sizeof(struct active_list)))) vlist_memory_err();
 			currlist = headal;						/* Set ptr to head of active lists.	*/
 			while (currlist->nextl != NULL) currlist = currlist->nextl;	/* Traverse to end of list.		*/
 			currlist->nextl = newlist;					/* Add new list to linked list.		*/
@@ -337,7 +372,7 @@ static int init_list(list_id,rows,retcd) long list_id, rows, *retcd;
 			*retcd = 1;							/* Set retcd to 1 for created new list.	*/
 		}
 	}
-	if (!(a_def = (struct list *)malloc(8+sizeof(struct list)))) memory_err();	/* Get some memory for the definition.	*/
+	if (!(a_def = (struct list *)malloc(8+sizeof(struct list)))) vlist_memory_err(); /* Get some memory for the definition.	*/
 	currlist->thedef = a_def;							/* Assign pointer to the def struct.	*/
 	a_def->num_rows = rows;								/* Init the requested number of rows.	*/
 	a_def->start_scroll_row = 0;							/* Init so scroll region is full screen.*/
@@ -357,7 +392,6 @@ static int free_list_memory(list_id,retcd) long list_id, *retcd;			/* Free the m
 {
 	struct active_list *prevl;
 	struct column *currcol, *ncol;
-	register int i;									/* Working registers.			*/
 
 	if (!headal) return(SUCCESS);							/* No list to free.			*/
 
@@ -459,7 +493,6 @@ unsigned char *itemlist;
 	struct list *a_def;
 	struct column *a_col, *currcol;
 	long coln;
-	register int i;									/* Working registers.			*/
 
 	if ((currlist = lookup(list_id)) == NULL)					/* Returns a ptr to the list struct.	*/
 	{
@@ -478,7 +511,7 @@ unsigned char *itemlist;
 	coln = 0;									/* Start with first column.		*/
 	if (function != REPLACE_COLUMN)							/* If not replace.			*/
 	{
-		if (!(a_col = (struct column *)malloc(8+sizeof(struct column)))) memory_err(); /* Get some memory for new list.	*/
+		if (!(a_col = (struct column *)malloc(8+sizeof(struct column)))) vlist_memory_err();
 	}
 	if (currcol == NULL)								/* If no columns in list yet.		*/
 	{
@@ -545,9 +578,8 @@ static int delete_col(list_id,col_num,retcd) long list_id, col_num, *retcd;
 {
 	struct active_list *lookup();
 	struct list *a_def;
-	struct column *a_col, *currcol;
+	struct column *currcol;
 	long coln;
-	register int i;									/* Working registers.			*/
 
 	if ((currlist = lookup(list_id)) == NULL)					/* Returns a ptr to the list struct.	*/
 	{
@@ -594,7 +626,6 @@ static int resize_struct(list_id,rows,retcd) long list_id, rows, *retcd;
 {
 	struct active_list *lookup();
 	struct list *a_def;
-	register int i;									/* Working registers.			*/
 
 	if ((currlist = lookup(list_id)) == NULL)					/* Returns a ptr to the list struct.	*/
 	{
@@ -639,7 +670,7 @@ unsigned char *key_array;
 		}
 		if (cont) i++;								/* Add one to available func keys.	*/
 	}
-	if (!(fkeys = (struct available_keys *)calloc(i,8+sizeof(struct available_keys)))) memory_err();	/* Get some memory.	*/
+	if (!(fkeys = (struct available_keys *)calloc(i,8+sizeof(struct available_keys)))) vlist_memory_err();
 	currlist->func_keys = fkeys;							/* Set ptr in list structure.		*/
 	fnk = (struct available_keys *)key_array;					/* Point to beginning of the list.	*/
 	for (j = 0; j < i; j++)								/* Init th local copy of avail. funcs.	*/
@@ -656,9 +687,9 @@ unsigned char *key_array;
 /* Bit mask will be a 1 if selected, 0 otherwise.										*/
 /********************************************************************************************************************************/
 
-int display_scan(list_id,rst_row,rst_col,cursor_row,cursor_col,result_list,key_val,retcd,disp_fl)
+int display_scan(list_id,rst_row,rst_col,cursor_row,cursor_col,result_list,key_val,retcd,disp_fl,adjust_flag)
 long list_id, *rst_row, *rst_col, *cursor_row, *cursor_col, *result_list, *key_val, *retcd;
-int disp_fl;										/* Flag to depict if redisplay or not.	*/
+int disp_fl, *adjust_flag;									/* Flag to depict if redisplay or not.	*/
 {
 	struct active_list *lookup();
 	struct list *a_def;
@@ -666,14 +697,14 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 	struct available_keys *key_array;
 	long *ipt;									/* Ptr to a long integer.		*/
 	long ril;
-	register int i, j;								/* Working registers.			*/
+	int i;										/* Working registers.			*/
 	int in_key, vgetm(), tx, ty, done;
 	long currpos;
-	int svo;
+	enum e_vop svo;
 	short lf;
 
-	svo = voptimize(DATA_AND_CONTROLS);
-	vset(CURSOR,VISIBLE);
+	svo = voptimize(VOP_DATA_AND_CONTROLS);
+	vset_cursor_on();
 	if ((currlist = lookup(list_id)) == NULL)					/* Returns a ptr to the list struct.	*/
 	{
 		vre("vlist(%d)-Invalid list id - does not exist.",list_id);		/* Report the situation.		*/
@@ -690,7 +721,9 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 	}
 	currpos = *cursor_row;
 	ty = *cursor_col + 1;								/* Assign starting display cursor column.*/
-	vroll((int)st_scr,(int)(st_foot_scr - 1));						/* Set the scroll region.		*/
+	st_scr = a_def->start_scroll_row;						/* Get current list scroll parameters.	*/
+	st_foot_scr = a_def->sfoot_row;
+	vroll((int)st_scr,(int)(st_foot_scr - 1));					/* Set the scroll region.		*/
 	num_scr = st_foot_scr - st_scr;							/* Calculate the available scroll lines.*/
 	if (disp_fl)									/* If display the re-init result list.	*/
 	{
@@ -705,22 +738,23 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 	else scr_col = hcol; 
 	for (;;)
 	{
-		int tmp;
+		enum e_vop tmp;
 
 		tx = st_scr + currpos;							/* Assign move position row on screen.	*/
 		done = FALSE;								/* Set to not done so can do function.	*/
-		tmp=optimization;
-		optimization=OFF;
+		tmp = voptimize(VOP_OFF);
 		vmove(tx,ty);								/* Move to current pos in scroll reg.	*/
-		optimization=tmp;
+		voptimize(tmp);
 		in_key = vgetm();							/* Input a meta character.		*/
 		if (in_key == up_arrow_key)						/* Up one line.				*/
 		{									/* If at the top of scroll region.	*/
+			*adjust_flag = TRUE;
 			up_list(scr_col,rst_row,&currpos,result_list,cursor_row);
 			done = TRUE;							/* Set so will not check for other keys.*/
 		}
 		else if (in_key == down_arrow_key || in_key == tab_key)			/* Down one line.			*/
 		{									/* If at the bottom of scroll region.	*/
+			*adjust_flag = TRUE;
 			down_list(scr_col,rst_row,ril,&currpos,result_list,cursor_row);
 			done = TRUE;							/* Set so will not check for other keys.*/
 		}
@@ -784,6 +818,7 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 					}
 					else
 					{
+						*adjust_flag = TRUE;
 						if ((i = *rst_row - num_scr) <= 0)	/* If not a full page available.	*/
 						{
 							*rst_row = 0;
@@ -807,6 +842,7 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 					}
 					else
 					{
+						*adjust_flag = TRUE;
 						*rst_row = *rst_row + num_scr;		/* Set start ptr to one page down.	*/
 						while (*rst_row + num_scr > ril)	/* If not a full screen.		*/
 						{
@@ -824,6 +860,7 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 				}
 				case VLIST_TOP:						/* Go to top of list.			*/
 				{
+					*adjust_flag = TRUE;
 					if (!(*rst_row))				/* Already at top.			*/
 					{
 						if (!currpos)  vbell();			/* Cursor already at top.		*/
@@ -846,6 +883,7 @@ int disp_fl;										/* Flag to depict if redisplay or not.	*/
 				}
 				case VLIST_BOTTOM:					/* Go to bottom of list.		*/
 				{
+					*adjust_flag = TRUE;
 					if (*rst_row + num_scr >= ril) 			/* Already at bottom.			*/
 					{
 						if (*rst_row + currpos == ril-1) vbell(); /* Cursor already at bottom.		*/
@@ -900,7 +938,7 @@ unsigned char *itemlist;
 {
 	struct active_list *lookup();
 	struct list *a_def;
-	struct column *a_col, *currcol;
+	struct column *currcol;
 	long coln, cwidth, clength;
 	register int i, j;								/* Working registers.			*/
 	char buff[81], *buf;								/* Ptr to buffer to hold display row.	*/
@@ -1058,7 +1096,7 @@ long st_row, st_col, currpos, *retcd, *result_list;
 	for (j = lin + st_scr; j < num_scr + st_scr; j++)				/* Erase the rest of the scroll region.	*/
 	{
 		vmove(j,0);								/* Move to the line.			*/
-		verase(CURRENT_LINE);							/* Erase it.				*/
+		verase(TO_EOL);								/* Erase it.				*/
 	}
 	return(cp);									/* Retrun ptr to starting scroll col.	*/
 }
@@ -1068,7 +1106,7 @@ struct column *cp;
 long st_row, row, *result_list;
 long currpos;
 {
-	int pia, drow, rend;
+	int pia, drow;
 	long *ipt;
 	char pref;
 	int scr_fl;
@@ -1086,7 +1124,7 @@ long currpos;
 		else									/* Set to scroll backward/up.		*/
 		{
 			drow = st_scr;							/* Assign the display row.		*/
-			vlinefeed(REVERSE);						/* Set for scrolling backward.		*/
+			vlinefeed(VLF_REVERSE);						/* Set for scrolling backward.		*/
 			vprint("\n");							/* Linefeed forward first.		*/
 		}
 		row = currpos;								/* Set row to what it should be.	*/
@@ -1094,11 +1132,10 @@ long currpos;
 	}
 	else  drow = st_scr + row;							/* Calculate row position on screen.	*/
 	pia = st_row + row;								/* Assign position in array.		*/
-	tmp=optimization;
-	optimization=OFF;
+	tmp = voptimize(VOP_OFF);
 	vmove(drow,0);									/* Move to beginning of current line.	*/
-	optimization=tmp;
-	if (!scr_fl)  /* verase(CURRENT_LINE)	*/ ;					/* Erase the current line.		*/
+	voptimize(tmp);
+	if (!scr_fl)  /* verase(TO_EOL)	*/ ;						/* Erase the current line.		*/
 	ipt = (long *)(result_list + pia);						/* Get the address of current long.	*/
 	if (*ipt == 1)  pref = '*';							/* Item is marked.			*/
 	else  pref = ' ';								/* Regular item.			*/
@@ -1119,8 +1156,10 @@ struct column *colst;
 	short *ps;									/* Pointer to an integer.		*/
 	long *pl;									/* pointer to a long.			*/
 	char buff[81], *buf;								/* Ptr to buffer to hold display row.	*/
-	char tmp[81], *tptr;								/* Variable to hold item to display.	*/
+	char tmp[11], *tptr;								/* Variable to hold item to display.	*/
 
+	memset(tmp,' ',10);								/* Initialize the tmp string to blank.	*/
+	buff[10] = '\0';								/* Null terminate the tmp string.	*/
 	memset(buff,' ',80);								/* Initialize the buffer to blank.	*/
 	buff[80] = '\0';								/* Null terminate the buffer.		*/
 	buf = buff;									/* Set pointer to buffer.		*/
@@ -1155,8 +1194,14 @@ struct column *colst;
 			}
 			case TEXTIT: case SEPARATOR: 					/* Text item or separator.		*/
 			{
-				if (ctype == SEPARATOR)  pc = itlist;			/* Has only one item in list.		*/
-				else pc = itlist + (clength * rndx);			/* Calculate the address of the item.	*/
+				if (ctype == SEPARATOR)
+				{
+					pc = itlist;					/* Has only one item in list.		*/
+				}
+				else
+				{
+					pc = itlist + (clength * rndx);			/* Calculate the address of the item.	*/
+				}
 				j = 0;							/* Set to zero characters momved.	*/
 				while (*pc && j < cwidth)				/* Copy until null or string length.	*/
 				{
@@ -1287,7 +1332,6 @@ int lfunc;
 {
 	struct column *currcol;
 	int ccol, cnt;
-	long i;
 
 	if (lfunc == LEFT_COL || lfunc == LEFT_PAGE)					/* If left scroll.			*/
 	{
@@ -1399,8 +1443,21 @@ struct available_keys *key_array;
 	return(lfunc);
 }
 
-int memory_err()
+static int vlist_memory_err()
 {
 	vre("Run-time error, unable to allocate memory for list structure");		/* Oops, cannot get memory.		*/
 	vexit();									/* Unconditionally fatal.		*/
+	return(1);
 }                                         
+/*
+**	History:
+**	$Log: vlist.c,v $
+**	Revision 1.11  1997-07-08 17:14:04-04  gsl
+**	change to use video.h new interfaces
+**
+**	Revision 1.10  1996-10-11 18:16:08-04  gsl
+**	drcs update
+**
+**
+**
+*/

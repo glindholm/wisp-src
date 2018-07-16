@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
  			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -11,6 +13,8 @@
 
 /*						Definitions									*/
 
+#include "vmodules.h"
+
 #define	MAX_BUFFS 64									/* Define maximum number of messages.	*/
 #define MAX_MSG   80									/* Define maximum message size.		*/
 
@@ -20,10 +24,11 @@ static char labels[MAX_BUFFS][MAX_MSG];							/* Array of labels.			*/
 static int tcount = 0;									/* Count of number of buffers.		*/
 static int initial;									/* Initial CPU time.			*/
 
+extern int clock();
 
 /*						Subroutine Entry Point								*/
 
-vtrace(info) char *info;								/* Set up to trace.			*/
+void vtrace(info) char *info;								/* Set up to trace.			*/
 {
 	register char *linfo;								/* Working pointer.			*/
 	register int i, j, j1, k;							/* Working registers.			*/
@@ -51,7 +56,12 @@ vtrace(info) char *info;								/* Set up to trace.			*/
 			vgetc();
 		}
 
+#if defined (unix) || defined (VMS)
 		times(&time_now);							/* Get the current CPU value.		*/
+#endif
+#if defined (MSDOS)
+	time_now.cpu = clock();
+#endif
 		initial = time_now.cpu;							/* Record the current CPU time.		*/
 		tcount = 0;								/* Nothing left to log.			*/
 	}
@@ -67,8 +77,23 @@ vtrace(info) char *info;								/* Set up to trace.			*/
 			}
 
 			labels[tcount][i] = '\0';					/* Null terminate.			*/
+
+#if defined (unix) || defined (VMS)
 			times(&time_now);						/* Get the current CPU value.		*/
+#endif
+#if defined (MSDOS)
+			time_now.cpu = clock();
+#endif
 			time_buf[tcount++] = time_now.cpu;				/* Save it.				*/
 		}
 	}
 }
+/*
+**	History:
+**	$Log: vtrace.c,v $
+**	Revision 1.9  1996-10-11 18:16:22-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -23,7 +25,28 @@
 */
 
 #include <stdio.h>
+
+#ifdef VMS
+#include <stat.h>
+#else /* !VMS */
+#include <sys/types.h>
+#include <sys/stat.h>
+#endif /* !VMS */
+
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
 #include "idsistd.h"
+
+#ifndef S_ISDIR
+#define S_ISFIFO(m)	(((m)&(_S_IFMT)) == (_S_IFIFO))
+#define S_ISDIR(m)	(((m)&(_S_IFMT)) == (_S_IFDIR))
+#define S_ISCHR(m)	(((m)&(_S_IFMT)) == (_S_IFCHR))
+#define S_ISBLK(m)	(((m)&(_S_IFMT)) == (_S_IFBLK))
+#define S_ISREG(m)	(((m)&(_S_IFMT)) == (_S_IFREG))
+#endif
+
 /*
 **	Routine:	fexists()
 **
@@ -48,20 +71,91 @@
 **
 */
 
-int fexists(name)
-char	*name;
+int fexists(const char* name)
 {
-#ifdef VMS
-#include <stat.h>
-#else /* !VMS */
-#include <sys/types.h>
-#include <sys/stat.h>
-#endif /* !VMS */
-
 	struct stat buf;
 
 	return((0==stat(name,&buf)) ? 1:0);
 }
+
+/*
+**	ROUTINE:	isafile()
+**
+**	FUNCTION:	Checks if a file exists (and is a regular file)
+**
+**	DESCRIPTION:	Call stat() to see if a file exists then check the
+***			mode to see that it is a regular file.
+**
+**	ARGUMENTS:	
+**	name		The file path
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	1		It is a file and does exist
+**	0		It doesn't exist or is not a file.
+**
+**	WARNINGS:	None
+**
+*/
+int isafile(const char* name)
+{
+	struct stat buf;
+
+	if ( 0 != stat(name,&buf) )
+	{
+		return 0;
+	}
+
+	if (S_ISREG(buf.st_mode))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/*
+**	ROUTINE:	isadir()
+**
+**	FUNCTION:	Checks if a directory exists
+**
+**	DESCRIPTION:	Call stat() to see if a file exists then check the
+***			mode to see that it is a directory.
+**
+**	ARGUMENTS:	
+**	name		The directory path
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	1		It is a directory and does exist
+**	0		It doesn't exist or is not a directory.
+**
+**	WARNINGS:	None
+**
+*/
+int isadir(const char* name)
+{
+	struct stat buf;
+
+	if ( 0 != stat(name,&buf) )
+	{
+		return 0;
+	}
+
+	if (S_ISDIR(buf.st_mode))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 
 /*
 **	Routine:	fcanread()
@@ -88,24 +182,39 @@ char	*name;
 **
 */
 
-int fcanread(name)
-char *name;
+int fcanread(const char* name)
 {
+#if defined(unix) || defined(VMS)
+	FILE 	*fh;
 	int	rc;
 
-	rc = 0;
-#if defined(unix) || defined(VMS)
+	if (fh = fopen(name,"r"))
 	{
-		FILE 	*fh;
-		if (fh = fopen(name,"r"))
-		{
-			rc = 1;
-			fclose(fh);
-		}
+		fclose(fh);
+		return 1;
 	}
+	return 0;
 #endif /* unix || VMS */
-#if defined(MSDOS)
-	rc = (0==access(name,004)) ? 1 : 0;
+
+#if defined(MSDOS) || defined(WIN32)
+	return (0==access(name,004)) ? 1 : 0;
 #endif /* MSDOS */
-	return(rc);
 }
+/*
+**	History:
+**	$Log: fexists.c,v $
+**	Revision 1.10  1996-12-11 16:31:10-05  gsl
+**	Added isafile() and isadir()
+**
+**	Revision 1.9  1996-09-10 08:41:55-07  gsl
+**	move idsistd.h to after systemincludes
+**
+**	Revision 1.8  1996-08-23 13:58:01-07  gsl
+**	filename parameter is now const
+**
+**	Revision 1.7  1996-08-19 15:32:19-07  gsl
+**	drcs update
+**
+**
+**
+*/

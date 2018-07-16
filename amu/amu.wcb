@@ -1,0 +1,330 @@
+000001/*****************************************************************
+000001*                                                                *
+000001*                       IDENTIFICATION DIVISION                  *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001/*****************************************************************
+000001*     Application Management Utility (AMU)                       *
+000001*                                                                *
+000001*     This is the Runtime system (AMU)                           *
+000001******************************************************************
+000001
+000001 IDENTIFICATION DIVISION.
+000001 PROGRAM-ID.
+000001     AMU.
+000001 AUTHOR.
+000001     Suzette Cass.
+000001 DATE-WRITTEN.
+000001     06/09/93.
+000001/*****************************************************************
+000001*                                                                *
+000001*                         ENVIRONMENT DIVISION                   *
+
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 ENVIRONMENT DIVISION.
+000001 CONFIGURATION SECTION.
+000001 SOURCE-COMPUTER.
+000001     WANG-VS.
+000001 OBJECT-COMPUTER.
+000001     WANG-VS.
+000001 FIGURATIVE-CONSTANTS.
+           A-0-BYTE    IS "00"
+           A-1-BYTE    IS "01"
+           A-10-BYTE   IS "10"
+           A-14-BYTE   IS "14"
+           A-16-BYTE   IS "16"
+           A-160-BYTE  IS "A0"
+000001     PROTECT-BIT IS "04"
+           SUB-5       IS "05"                     
+000001     DIM-BIT     IS "08"
+000001     LF          IS "0A"
+000001     BLINK-BIT   IS "10"
+           POSITION-CURSOR IS "20"
+           UNLOCK-KEYBOARD IS "80"
+000001     BRITE       IS "84"
+000001     TAB-STOP    IS "86"
+           PLAIN-TEXT  IS "8C"
+           MENU-PICK   IS "8E"
+000001     BLINKING-DISPLAY IS "94"
+000001     NO-ECHO     IS "98"
+           BR-MOD-UCL  IS "A1"
+           UNDER-TEXT  IS "AC".
+000001                                                      
+000001/*****************************************************************
+000001*                                                                *
+000001*                         INPUT-OUTPUT SECTION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 INPUT-OUTPUT SECTION.
+000001 FILE-CONTROL.
+000001*
+000001     SELECT CRT
+000001         ASSIGN TO "CRT",      "DISPLAY",
+000001         ORGANIZATION    IS SEQUENTIAL
+000001         ACCESS MODE     IS RANDOM
+000001         RELATIVE KEY    IS LINENUM
+000001         PFKEY           IS PF-KEY
+000001         CURSOR POSITION IS CURSOR-POS
+000001         FILE STATUS     IS FILSTAT.
+000001
+000001/*****************************************************************
+000001*                                                                *
+000001*                      DATA DIVISION - FILE SECTION              *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 DATA DIVISION.
+000001 FILE SECTION.
+000001*
+123456*89012345678901234567890123456789012345678901234567890123456789012
+000001 FD  CRT
+000001     LABEL RECORDS ARE OMITTED.
+000001 01  CRTREC.
+           03  CRTREC-OA                  PIC X(4).
+            03  CRTREC-MAPPING-AREA       PIC X(1920).
+000001*
+000001/*****************************************************************
+000001*                                                                *
+000001*                         WORKING STORAGE                        *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 WORKING-STORAGE SECTION.
+000001
+       COPY VERSION.
+
+000001 01  FILSTAT.
+000001     03  ERR-FLAG                   PIC X(01).
+000001     03  PFK-BYTE                   PIC X(01).
+000001 01  MFILE-STAT                     PIC X(02).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  BELL-TIME.
+           03  FILLER                     BINARY VALUE 0.
+           03  BELL-TIME-2                BINARY VALUE 1.
+
+       01  SELECTION-MENU-TEXT            PIC X(20) VALUE SPACES.
+
+       01  CHOICE                PIC X(02)   VALUE SPACES.
+       01  START-MENU            PIC X(06)   VALUE SPACES.
+       01  START-FILE            PIC X(08)   VALUE SPACES.
+       01  START-LIB             PIC X(08)   VALUE SPACES.
+       01  START-VOL             PIC X(06)   VALUE SPACES.
+       01  MODIFY-VALS.
+           03  MOD-START         PIC X(01)   VALUE "Y".
+           03  MOD-FILE          PIC X(01)   VALUE "Y".
+           03  MOD-LIB           PIC X(01)   VALUE "Y".
+           03  MOD-VOL           PIC X(01)   VALUE "Y".
+       01  PRODUCT-TEXT          PIC X(24)   VALUE
+           "AMU Command Processor".
+       01  PROCESS-LIB           PIC X(08)   VALUE SPACES. 
+       01  PROCESS-VOL           PIC X(06)   VALUE SPACES. 
+
+      ******************************************************************
+      *                DATA FOR GETPARM                                *
+      ******************************************************************
+
+       01  GP-TYPE               PIC X(2)  VALUE "ID".
+       01  GP-FORM               PIC X(1)  VALUE "R".
+       01  GP-PRNAME             PIC X(8)  VALUE "MENUS   ".
+       01  GP-PFKEY              PIC X(1)  VALUE " ".
+       01  GP-MESSAGE-ID         PIC X(4)  VALUE "0001".
+       01  GP-MESSAGE-ISSUER     PIC X(6)  VALUE "AMU   ".
+       01  GP-MSG-LINE-CNT.
+           03  FILLER            BINARY    VALUE 0.
+           03  GP-MSG-LINE-CNT-2 BINARY    VALUE 0.
+       01  GP-SPEC-TYPE          PIC X(1)  VALUE "K".
+       01  GP-ROW-VAL.
+           03  FILLER            BINARY VALUE 0.
+           03  GP-ROW-VAL-2      BINARY VALUE 1.
+       01  GP-COL-VAL.
+           03  FILLER            BINARY VALUE 0.
+           03  GP-COL-VAL-2      BINARY VALUE 1.
+       01  GP-DATA-TYPE          PIC X(01) VALUE "A".
+       01  GP-KEYLEN-6.
+           03  FILLER            BINARY VALUE 0.
+           03  FILLER            BINARY VALUE 6.
+       01  GP-KEYLEN-8.
+           03  FILLER            BINARY VALUE 0.
+           03  FILLER            BINARY VALUE 8.
+       01  GP-KEYLEN-4.
+           03  FILLER            BINARY VALUE 0.
+           03  FILLER            BINARY VALUE 4.
+       01  GP-KEYLEN-24.
+           03  FILLER            BINARY VALUE 0.
+           03  FILLER            BINARY VALUE 24.
+       01  GP-KEYWRD-1           PIC X(8)  VALUE "START   ".
+       01  GP-KEYWRD-2           PIC X(8)  VALUE "FILE    ".
+       01  GP-KEYWRD-3           PIC X(8)  VALUE "LIBRARY ".
+       01  GP-KEYWRD-4           PIC X(8)  VALUE "VOLUME  ".
+       01  GP-KEYWRD-5           PIC X(8)  VALUE "MODIFY  ".
+       01  GP-KEYWRD-6           PIC X(8)  VALUE "PLIB    ".
+       01  GP-KEYWRD-7           PIC X(8)  VALUE "PVOL    ".
+       01  GP-KEYWRD-8           PIC X(8)  VALUE "PRODUCT ".
+
+       01  MESSAGE-NUM           PIC 9(02) VALUE 0.
+           88 NO-USER-REC                  VALUE 1.
+           88 NO-MENU-MATCH                VALUE 2.
+
+       01 NO-USER-REC-TEXT       PIC X(21) VALUE
+            "USER RECORD REQUIRED.".
+       01 NO-MENU-MATCH-TEXT     PIC X(21) VALUE
+            "NO MENU RECORD FOUND.".
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+123456*89012345678901234567890123456789012345678901234567890123456789012
+       01  AMU-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(18) ROW 1 COL 32 VALUE
+               "AMU Menu Processor".
+           03  FILLER  PIC X(08) ROW 2 COL 10 VALUE
+               "Version ".
+           03  FILLER  PIC X(08) ROW 2 COL 18
+               SOURCE AMU-VERSION.
+           03  FILLER  PIC X(50) ROW 2 COL 27 VALUE
+               "- (c) Copyright NeoMedia Technologies Inc. 1993-97".
+           03  AMU-4 PIC X(31) ROW 4 COL 26 VALUE
+               "Menu Definition File Assignment".
+           03  FILLER     PIC X(15) ROW 6  COL 5 VALUE
+               "Starting Menu =".
+           03  AMU-6-1    PIC X(06) ROW 6  COL 21
+               SOURCE START-MENU  OBJECT START-MENU.
+           03  FILLER     PIC X(06) ROW 6  COL 28 VALUE
+               "File =".
+           03  AMU-6-2    PIC X(08) ROW 6  COL 35
+               SOURCE START-FILE  OBJECT START-FILE.
+           03  FILLER     PIC X(09) ROW 6  COL 44 VALUE
+               "Library =".
+           03  AMU-6-3    PIC X(08) ROW 6  COL 54
+               SOURCE START-LIB  OBJECT START-LIB.
+           03  FILLER     PIC X(08) ROW 6  COL 63 VALUE
+               "Volume =".
+           03  AMU-6-4    PIC X(06) ROW 6  COL 72
+               SOURCE START-VOL  OBJECT START-VOL.
+           03  AMU-MESSAGE PIC X(80) ROW 8 COL 2
+               SOURCE MESSAGE-TEXT.
+           03  AMU-21     PIC X(71)  ROW 21 COL  5 VALUE
+               "Complete Specifications for the Menu Definition File and
+      -        " Press <RETURN>".
+           03  FILLER     PIC X(06)  ROW 22 COL 37 VALUE
+               "- or -".
+           03  FILLER     PIC X(30)  ROW 23 COL 25 VALUE
+               "<<< Press PFKEY 16 to Exit >>>".
+
+       01  MESSAGE-TEXT   PIC X(80) VALUE SPACES.
+
+000001/*****************************************************************
+000001*                                                                *
+000001*                         PROCEDURE DIVISION                     *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 PROCEDURE DIVISION.
+       MAIN-START.
+           CALL "GETPARM" USING GP-TYPE, GP-FORM, GP-PRNAME,GP-PFKEY,
+                              GP-MESSAGE-ID, GP-MESSAGE-ISSUER,
+                              GP-MSG-LINE-CNT, GP-SPEC-TYPE,
+                              GP-KEYWRD-1, START-MENU, GP-KEYLEN-6,
+                              GP-ROW-VAL, GP-COL-VAL, GP-DATA-TYPE,
+                              GP-SPEC-TYPE, GP-KEYWRD-2, START-FILE,
+                              GP-KEYLEN-8, GP-ROW-VAL, GP-COL-VAL,
+                              GP-DATA-TYPE, GP-SPEC-TYPE, GP-KEYWRD-3,
+                              START-LIB, GP-KEYLEN-8, GP-ROW-VAL,
+                              GP-COL-VAL, GP-DATA-TYPE, GP-SPEC-TYPE,
+                              GP-KEYWRD-4, START-VOL, GP-KEYLEN-6,
+                              GP-ROW-VAL, GP-COL-VAL, GP-DATA-TYPE,
+                              GP-SPEC-TYPE, GP-KEYWRD-5, MODIFY-VALS,
+                              GP-KEYLEN-4, GP-ROW-VAL, GP-COL-VAL,
+                              GP-DATA-TYPE, GP-SPEC-TYPE, GP-KEYWRD-6,
+                              PROCESS-LIB, GP-KEYLEN-8, GP-ROW-VAL,
+                              GP-COL-VAL, GP-DATA-TYPE, GP-SPEC-TYPE,
+                              GP-KEYWRD-7, PROCESS-VOL, GP-KEYLEN-6,
+                              GP-ROW-VAL, GP-COL-VAL, GP-DATA-TYPE,
+                              GP-SPEC-TYPE, GP-KEYWRD-8, PRODUCT-TEXT,
+                              GP-KEYLEN-24, GP-ROW-VAL, GP-COL-VAL,
+                              GP-DATA-TYPE.
+
+           IF START-MENU = SPACES OR MODIFY-VALS NOT = "NNNN" THEN
+               PERFORM GET-MENU-TO-DISPLAY THRU
+                 EXIT-GET-MENU-TO-DISPLAY.
+
+           CALL "AMUROOT" USING START-MENU, START-FILE,
+                                START-LIB, START-VOL,
+                                PRODUCT-TEXT, MESSAGE-NUM,
+                                PROCESS-LIB, PROCESS-VOL.
+
+           IF MESSAGE-NUM > 0
+               CALL "BELL" USING BELL-TIME
+               MOVE "YYYY" TO MODIFY-VALS
+               PERFORM ERROR-PROCESSING 
+               MOVE 0 TO MESSAGE-NUM
+               GO TO MAIN-START.
+
+000001 EXIT-PROGRAM.
+000001     EXIT PROGRAM.
+000001
+000001 STOP-RUN.
+000001     STOP RUN.
+
+       GET-MENU-TO-DISPLAY.
+           IF MOD-START = "Y" OR MOD-START = "1" THEN
+               MOVE BR-MOD-UCL TO FAC OF AMU-6-1
+           ELSE
+               MOVE PLAIN-TEXT TO FAC OF AMU-6-1.
+
+           IF MOD-FILE = "Y" OR MOD-FILE = "1" THEN
+               MOVE BR-MOD-UCL TO FAC OF AMU-6-2
+           ELSE
+               MOVE PLAIN-TEXT TO FAC OF AMU-6-2.
+
+           IF MOD-LIB = "Y" OR MOD-LIB = "1" THEN
+               MOVE BR-MOD-UCL TO FAC OF AMU-6-3
+           ELSE
+               MOVE PLAIN-TEXT TO FAC OF AMU-6-3.
+
+           IF MOD-VOL = "Y" OR MOD-VOL = "1" THEN
+               MOVE BR-MOD-UCL TO FAC OF AMU-6-4
+           ELSE
+               MOVE PLAIN-TEXT TO FAC OF AMU-6-4.
+
+           MOVE UNDER-TEXT TO FAC OF AMU-4, FAC OF AMU-21.
+
+           DISPLAY AND READ AMU-SCREEN ON CRT
+           PFKEYS 16.
+
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+       EXIT-GET-MENU-TO-DISPLAY.
+           EXIT.
+
+       ERROR-PROCESSING.
+           IF NO-USER-REC
+               MOVE NO-USER-REC-TEXT TO MESSAGE-TEXT
+           ELSE
+             IF NO-MENU-MATCH
+                 MOVE NO-MENU-MATCH-TEXT TO MESSAGE-TEXT
+             ELSE
+                 MOVE "UNKNOWN ERROR" TO MESSAGE-TEXT
+             END-IF
+           END-IF.

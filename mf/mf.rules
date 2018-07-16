@@ -62,6 +62,8 @@ EXE=-x
 LDFILES=wispmf.o
 LIB=-lwtest -lwisp -lilp -lvideo
 
+.SUFFIXES: .o .gnt .int .cob .wcb
+
 .wcb.cob:
 	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
 
@@ -107,4 +109,3 @@ LIB=-lwtest -lwisp -lilp -lvideo
 .int:
 	$(COBOL) $(EXE) $(COBFLAGS) $*.int $(LDFILES) $(LIB)
 
-.SUFFIXES: .o .gnt .int .cob .wcb

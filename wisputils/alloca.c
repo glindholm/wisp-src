@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 	alloca -- (mostly) portable public-domain implementation -- D A Gwyn
 
@@ -184,3 +186,12 @@ alloca (size)			/* returns pointer to storage */
     return (pointer)((char *)new + sizeof(header));
   }
 }
+/*
+**	History:
+**	$Log: alloca.c,v $
+**	Revision 1.7  1996-07-23 14:12:48-04  gsl
+**	drcs update
+**
+**
+**
+*/

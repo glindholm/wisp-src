@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -65,6 +69,7 @@
 #define		PLATFORM_OSF1_DEC	1037
 #define		PLATFORM_SUN_3		1038
 #define		PLATFORM_UNIXWARE	1039
+#define		PLATFORM_DGUX_INTEL	1040
 
 /*
 **	Non-UNIX
@@ -77,3 +82,15 @@
 
 #endif
 
+/*
+**	History:
+**	$Log: wplatdef.h,v $
+**	Revision 1.7  1997-09-09 14:28:03-04  scass
+**	Added DG/UX Intel as a platform
+**
+**	Revision 1.6  1996-08-19 18:33:20-04  gsl
+**	drcs update
+**
+**
+**
+*/

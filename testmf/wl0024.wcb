@@ -1,0 +1,58 @@
+
+000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wl0024.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test UPPER routine.
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     wl0024.
+001300 Data Division.
+001400 Working-Storage Section.
+
+       01 CHAR-STRING              PIC X(14).
+       01 STRING-LENGTH.
+          03 FILLER                BINARY VALUE 0.
+          03 STRING-LEN            BINARY.
+       01  COMPLETION-STATUS        PIC 9(02) VALUE 0.
+
+001600 Procedure Division.
+
+           MOVE "This is a test"   TO CHAR-STRING.
+           MOVE 14                 TO STRING-LEN.
+           CALL "UPPER" USING CHAR-STRING, STRING-LENGTH.
+           IF CHAR-STRING NOT = "THIS IS A TEST" THEN
+              ADD 1     TO COMPLETION-STATUS.
+
+           MOVE SPACES   TO CHAR-STRING.
+           MOVE "Testing"   TO CHAR-STRING.
+           MOVE LOW-VALUES  TO STRING-LENGTH.
+           MOVE 4           TO STRING-LEN.
+           CALL "UPPER" USING CHAR-STRING, STRING-LENGTH.
+           IF CHAR-STRING NOT = "TESTing       " THEN
+              ADD 1     TO COMPLETION-STATUS.
+
+
+
+       CHECK-STATUS.
+           IF  COMPLETION-STATUS = 0 THEN
+           DISPLAY "UPPER completion successful."
+           ELSE
+                DISPLAY "UPPER failed.".
+
+            EXIT PROGRAM.
+            STOP RUN.
+
+
+
+
+
+
+006600**   End of wl0024.wcb
+

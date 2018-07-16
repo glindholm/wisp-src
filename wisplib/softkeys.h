@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /* SOFT_KEYS.H ... An include file that defines the map for all user definable, and software selectable keys.			*/
                                                                                         
 /* This structure defines the two byte character to be assocated with a function key.						*/
@@ -14,3 +18,12 @@ struct soft_keys
 	char pfkey_value[48][2];							/* Currently we're supporting a two	*/
 											/* byte char string value.		*/
 	};
+/*
+**	History:
+**	$Log: softkeys.h,v $
+**	Revision 1.8  1996-08-19 18:32:57-04  gsl
+**	drcs update
+**
+**
+**
+*/

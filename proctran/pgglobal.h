@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
+/* $Id:$ */
 /*
 **	File:		pgglobal.h
 **
@@ -11,13 +13,13 @@
 EXT FILE *infile, *outfile;								/* Ptrs to source file and output file.	*/
 EXT FILE *logfile;									/* Current logfile (stdout by default)	*/
 
-EXT char inline[STRBUFF], rline[STRBUFF];
+EXT char linein[STRBUFF], rline[STRBUFF];
 EXT char cobline[COBBUF];
 EXT char *aptr, *next_ptr;								/* Tells the pointer to next string.	*/
 
 EXT int logging;									/* Flag to enable logging.		*/
 EXT int log_stats;									/* Flag to enable statistic logging.	*/
-EXT int num_inlines;									/* Number of input lines read.		*/
+EXT int num_lineins;									/* Number of input lines read.		*/
 EXT int num_outlines;									/* Number of output lines written.	*/
 EXT int lncnt_type;									/* Flag to say print in or out line cnt.*/
 EXT int genslink;									/* Flag to enable generation of "S" type*/
@@ -52,3 +54,15 @@ EXT char int_compute[3], int_return[3], str_literal[3];
 EXT char len_one[4], len_two[4];
 EXT char *captr;
 EXT int lcnt;
+/*
+**	History:
+**	$Log: pgglobal.h,v $
+**	Revision 1.9  1997-04-21 10:55:44-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.8  1996-09-12 19:22:33-04  gsl
+**	Add drcs headers
+**
+**
+**
+*/

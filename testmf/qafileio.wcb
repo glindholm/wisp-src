@@ -255,11 +255,11 @@
       ******************************************************************
 
        01  SEQ-FILE-SCREEN USAGE IS DISPLAY-WS.
-           03  FILLER PIC X(47) ROW 5 COL 20
+           03  FILLER PIC X(48) ROW 5 COL 20
                VALUE 
-               "THE SEQ FILE IS OPEN, PRESS RETURN TO CLOSE IT.".
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+               "THE SEQ FILE IS OPEN, PRESS (ENTER) TO CLOSE IT.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 5 COL 20
@@ -278,7 +278,7 @@
                SOURCE FLV-VOL OBJECT FLV-VOL.
 
            03  FILLER PIC X(40) ROW 24 COL 20 VALUE
-               "ENTER to continue; PF16-EXIT".
+               "(ENTER) to continue, (16) to EXIT".
 
        01  FILE-B-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 1 COL 20 VALUE
@@ -323,8 +323,11 @@
            03  FILLER PIC X(02) ROW 22 COL 47
                SOURCE FILE-B-STAT OBJECT FILE-B-STAT.
 
-           03  B-SCREEN-FOOTER PIC X(60) ROW 24 COL 20 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER SOURCE B-SCREEN-FOOTER PIC X(60) ROW 24 COL 20.
+
+       01  B-SCREEN-FOOTER  PIC X(60) VALUE
+               "PRESS (ENTER) TO CONTINUE.".
+
 
        01  SEQ-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 1 COL 20 VALUE
@@ -337,8 +340,8 @@
            03  FILLER PIC X(20) ROW  5 COL 40 
                SOURCE SEQ-RECORD OBJECT SEQ-RECORD.
 
-           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
-               "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
+               "PRESS (ENTER) TO CONTINUE.".
 
        01  FILE-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(11) ROW  1 COL 20 VALUE
@@ -346,73 +349,73 @@
            03  FILLER  PIC X(11) ROW  1 COL 60 VALUE
                "FILE-SCREEN".
            03  FILLER  PIC X(35) ROW  3 COL  2 VALUE
-               "01) CREATE FILE-A AND WRITE IT".
+               "(1)  CREATE FILE-A AND WRITE IT".
            03  FILLER  PIC X(35) ROW  4 COL  2 VALUE
-               "02) OPEN & CLOSE FILE-A FOR I-O.".
-           03  FILLER  PIC X(35) ROW  5 COL  2 VALUE
-               "03) OPEN & CLOSE FILE-A FOR SHARED.".
+               "(2)  Auto test FILE-B.".
+           03  FILLER  PIC X(36) ROW  5 COL  2 VALUE
+               "(3)  (unused)".
            03  FILLER  PIC X(35) ROW  6 COL  2 VALUE
-               "04) DELETE RECORDS FROM FILE-A.".
-           03  FILLER  PIC X(35) ROW  7 COL  2 VALUE
-               "05) TRY START LOCK DETECTION LOGIC.".
+               "(4)  DELETE RECORDS FROM FILE-A.".
+           03  FILLER  PIC X(36) ROW  7 COL  2 VALUE
+               "(5)  TRY START LOCK DETECTION LOGIC.".
            03  FILLER  PIC X(35) ROW  8 COL  2 VALUE
-               "06) CREATE A SEQUENTIAL FILE.".
+               "(6)  CREATE A SEQUENTIAL FILE.".
            03  FILLER  PIC X(35) ROW  9 COL  2 VALUE
-               "07) CREATE FILE-B.".
+               "(7)  CREATE FILE-B.".
            03  FILLER  PIC X(35) ROW 10 COL  2 VALUE
-               "08) OPEN FILE-B I-O.".
+               "(8)  OPEN FILE-B I-O.".
            03  FILLER  PIC X(35) ROW 11 COL  2 VALUE
-               "09) OPEN FILE-B SHARED.".
+               "(9)  OPEN FILE-B SHARED.".
            03  FILLER  PIC X(35) ROW 12 COL  2 VALUE
-               "10) CLOSE FILE-B.".
+               "(10) CLOSE FILE-B.".
            03  FILLER  PIC X(35) ROW 13 COL  2 VALUE
-               "11) WRITE FILE-B.".
+               "(11) WRITE FILE-B.".
            03  FILLER  PIC X(35) ROW 14 COL  2 VALUE
-               "12) READ FILE-B FILE-B-KEY.".
+               "(12) READ FILE-B FILE-B-KEY.".
            03  FILLER  PIC X(35) ROW 15 COL  2 VALUE
-               "13) READ FILE-B FILE-B-ALTKEY-1.".
+               "(13) READ FILE-B FILE-B-ALTKEY-1.".
            03  FILLER  PIC X(35) ROW 16 COL  2 VALUE
-               "14) READ FILE-B FILE-B-ALTKEY-2.".
+               "(14) READ FILE-B FILE-B-ALTKEY-2.".
            03  FILLER  PIC X(35) ROW 17 COL  2 VALUE
-               "15) OPEN FILE-B INPUT.".
+               "(15) OPEN FILE-B INPUT.".
            03  FILLER  PIC X(35) ROW 20 COL  2 VALUE
-               "16) EXIT".
+               "(16) EXIT".
 
            03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
-               "17) READ FILE-B NEXT INTO ALT.".
+               "(17) READ FILE-B NEXT INTO ALT.".
            03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
-               "18) WRITE FILE-B FROM ALT.".
+               "(18) WRITE FILE-B FROM ALT.".
            03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
-               "19) READ FILE-B HOLD.".
+               "(19) READ FILE-B HOLD.".
            03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
-               "20) READ FILE-B HOLD & REWRITE.".
+               "(20) READ FILE-B HOLD & REWRITE.".
            03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
-               "21) READ FILE-B HOLD & DELETE.".
+               "(21) READ FILE-B HOLD & DELETE.".
            03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
-               "22) OPEN EXTEND SEQUENTIAL".
+               "(22) OPEN EXTEND SEQUENTIAL".
            03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
-               "23) OPEN OUTPUT SEQUENTIAL".
+               "(23) OPEN OUTPUT SEQUENTIAL".
            03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
-               "24) CLOSE SEQUENTIAL".
+               "(24) CLOSE SEQUENTIAL".
            03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
-               "25) WRITE EXTEND TO SEQUENTIAL".
+               "(25) WRITE EXTEND TO SEQUENTIAL".
            03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
-               "26) START FILE-B.".
+               "(26) START FILE-B.".
            03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
-               "27) READ FILE-B HOLD TIMEOUT".
+               "(27) READ FILE-B HOLD TIMEOUT".
            03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
-               "28) START FILE-B FILE-B-ALTKEY-1".
+               "(28) START FILE-B FILE-B-ALTKEY-1".
            03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
-               "29) FREE ALL".
+               "(29) FREE ALL".
            03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
-               "30) OPEN FILE-B SPECIAL-INPUT.".
+               "(30) OPEN FILE-B SPECIAL-INPUT.".
            03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
-               "31) ".
+               "(31) OPEN SHARED SEQUENTIAL".
            03  FILLER  PIC X(35) ROW 20 COL 40 VALUE
-               "32) NEXT SCREEN".
+               "(32) NEXT SCREEN".
 
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
       /*****************************************************************
       *                                                                *
@@ -466,10 +469,10 @@
               PERFORM DO-FILE
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "02" THEN
-              PERFORM OPEN-FILE-FOR-I-O
+              PERFORM AUTO-TEST-FILE-B THRU 
+       	       	      AUTO-TEST-FILE-B-EXIT
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "03" THEN
-              PERFORM OPEN-FILE-SHARED
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "04" THEN
               PERFORM DELETE-INDEXED-RECORDS
@@ -550,6 +553,7 @@
               PERFORM OPEN-FILE-B-SPECIAL-INPUT
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "31" THEN
+              PERFORM OPEN-SHARED-SEQ
               GO TO FILE-TESTS
            ELSE IF PF-KEY = "32" THEN
               GO TO FILE-TESTS-2
@@ -603,7 +607,7 @@
            PERFORM DELETE-INDEX-RECORDS VARYING INDEX-COUNTER
                    FROM 1 BY 1 UNTIL INDEX-COUNTER IS EQUAL TO 200.
            DISPLAY
-           "ALL RECORDS ARE DELETED, PRESS RETURN TO CLOSE THE FILE".
+           "ALL RECORDS ARE DELETED, PRESS (ENTER) TO CLOSE THE FILE".
            CLOSE FILE-A.
 
        DELETE-INDEX-RECORDS.
@@ -706,6 +710,275 @@
            EXIT.
 
       ******************************************************************
+       AUTO-TEST-FILE-B.
+           OPEN OUTPUT FILE-B.
+           CLOSE FILE-B.
+	   DISPLAY "FILE-B CREATED".
+
+           OPEN I-O FILE-B.
+       	   DISPLAY "FILE-B OPENED I-O".
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+
+	   MOVE "AAAA" TO FILE-B-KEY.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-1.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-2.
+	   MOVE "1"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "BBBB" TO FILE-B-KEY.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-1.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-2.
+	   MOVE "2"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "CCCC" TO FILE-B-KEY.
+	   MOVE "CCCC" TO FILE-B-ALTKEY-1.
+	   MOVE "CCCC" TO FILE-B-ALTKEY-2.
+	   MOVE "3"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "ABBB" TO FILE-B-KEY.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-1.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-2.
+	   MOVE "4"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "AABB" TO FILE-B-KEY.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-1.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-2.
+	   MOVE "5"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "AAAB" TO FILE-B-KEY.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-1.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-2.
+	   MOVE "6"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "EEEE" TO FILE-B-KEY.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-1.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-2.
+	   MOVE "7"    TO B-VALUE-1.
+	   MOVE SPACES TO B-VALUE-2.
+	   PERFORM AUTO-WRITE-B.
+
+	   MOVE "DDDDCCCCBBBB" TO FILE-B-KEYS-ALT.
+	   MOVE "8"    TO B-VALUE-1-ALT.
+	   MOVE SPACES TO B-VALUE-2-ALT.
+           WRITE FILE-B-RECORD FROM FILE-B-RECORD-ALT
+               INVALID KEY
+               DISPLAY 
+       	       "WRITE FILE-B ALT *** INVALID KEY *** RECNO=", 
+       	       	       B-VALUE-1-ALT.
+
+       	   DISPLAY "FILE-B RECORDS WRITTEN".
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "EEEE" TO FILE-B-KEY.
+	   READ FILE-B
+	       INVALID KEY
+	       DISPLAY "READ FILE-B *** INVALID KEY *** KEY=",
+	       FILE-B-KEY.
+	   IF B-VALUE-1 NOT = "7" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 1 failed".
+	       
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "XXXX" TO FILE-B-KEY.
+	   READ FILE-B
+	       INVALID KEY.
+	   IF FILE-B-STAT NOT = 23 THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 2 failed".
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "AAAA" TO FILE-B-ALTKEY-1.
+           READ FILE-B KEY IS FILE-B-ALTKEY-1
+	       INVALID KEY
+	       DISPLAY "READ FILE-B *** INVALID KEY *** KEY=",
+	       FILE-B-ALTKEY-1.
+	   IF B-VALUE-1 NOT = "1" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 3 failed".
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-1.
+           READ FILE-B KEY IS FILE-B-ALTKEY-1
+	       INVALID KEY
+	       DISPLAY "READ FILE-B *** INVALID KEY *** KEY=",
+	       FILE-B-ALTKEY-1.
+	   IF B-VALUE-1 NOT = "2" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 4 failed".
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "CCCC" TO FILE-B-ALTKEY-2.
+           READ FILE-B KEY IS FILE-B-ALTKEY-2
+	       INVALID KEY
+	       DISPLAY "READ FILE-B *** INVALID KEY *** KEY=",
+	       FILE-B-ALTKEY-2.
+	   IF B-VALUE-1 NOT = "3" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 5 failed".
+
+
+	   DISPLAY "FILE-B FINISHED KEYED READ TESTS".
+
+           CLOSE FILE-B.
+	   DISPLAY "FILE-B CLOSED".
+
+           OPEN I-O FILE-B.
+       	   DISPLAY "FILE-B OPENED I-O".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "1" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 6 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "6" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 7 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "5" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 8 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "4" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 9 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "2" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 10 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "3" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 11 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "8" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 12 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "7" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 13 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END.
+	   IF FILE-B-STAT NOT = 10 THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 14 failed".
+
+	   DISPLAY "FILE-B FINISHED SEQUENTIAL READ TESTS".
+
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "CCCC" TO FILE-B-KEY.
+           START FILE-B
+               INVALID KEY
+               DISPLAY "START FILE-B *** ERROR *** Test 15 failed".
+	       
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "3" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 16 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "8" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 17 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "7" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 18 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END.
+	   IF FILE-B-STAT NOT = 10 THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 19 failed".
+	   
+
+           MOVE SPACES TO FILE-B-RECORD.
+           MOVE SPACES TO FILE-B-RECORD-ALT.
+	   MOVE "BBBB" TO FILE-B-ALTKEY-1.
+           START FILE-B KEY FILE-B-ALTKEY-1 EQUAL FILE-B-ALTKEY-1
+               INVALID KEY
+               DISPLAY "START FILE-B *** ERROR *** Test 20 failed".
+
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "2" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 21 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "7" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 22 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "3" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 23 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END
+               DISPLAY "FILE-B READ NEXT *** ERROR AT END ****".
+	   IF B-VALUE-1-ALT NOT = "8" THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 24 failed".
+
+           READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
+               AT END.
+	   IF FILE-B-STAT NOT = 10 THEN
+	       DISPLAY "READ FILE-B *** ERROR *** Test 25 failed".
+
+	   DISPLAY "FILE-B FINISHED START AND READ TESTS".
+	   
+           CLOSE FILE-B.
+       	   DISPLAY "FILE-B CLOSED".
+
+	   DISPLAY "FILE-B AUTO TESTS FINISHED".
+
+       AUTO-TEST-FILE-B-EXIT.
+       	   EXIT.
+
+       AUTO-WRITE-B.
+           WRITE FILE-B-RECORD
+               INVALID KEY
+               DISPLAY "WRITE FILE-B *** INVALID KEY *** RECNO=", 
+       	       	       B-VALUE-1.
+
+      ******************************************************************
 
        CREATE-FILE-B.
            MOVE SPACES TO FILE-B-RECORD.
@@ -715,7 +988,7 @@
            CLOSE FILE-B.
 
            MOVE "FILE CREATED" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
        OPEN-FILE-B-I-O.
@@ -725,7 +998,7 @@
            OPEN I-O FILE-B.
 
            MOVE "OPEN I-O" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
        OPEN-FILE-B-SHARED.
@@ -735,7 +1008,7 @@
            OPEN SHARED FILE-B.
 
            MOVE "OPEN SHARED" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
        OPEN-FILE-B-INPUT.
@@ -745,7 +1018,7 @@
            OPEN INPUT FILE-B.
 
            MOVE "OPEN INPUT" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
        OPEN-FILE-B-SPECIAL-INPUT.
@@ -755,7 +1028,7 @@
            OPEN SPECIAL-INPUT FILE-B.
 
            MOVE "OPEN SPECIAL-INPUT" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
        CLOSE-FILE-B.
@@ -765,7 +1038,7 @@
            CLOSE FILE-B.
 
            MOVE "CLOSE" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
        WRITE-FILE-B.
@@ -773,7 +1046,8 @@
            MOVE SPACES TO FILE-B-RECORD-ALT.
 
            MOVE "ENTER A RECORD TO WRITE" TO B-SCREEN-TITLE.
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT PFKEY 16.
            IF PF-KEY = "16" THEN GO TO WRITE-FILE-B-EXIT.
 
@@ -783,7 +1057,8 @@
                INVALID KEY
                MOVE "*** INVALID KEY ***" TO B-SCREEN-TITLE.
 
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
            DISPLAY AND READ FILE-B-SCREEN ON CRT PFKEY 16.
            IF PF-KEY NOT = "16" THEN GO TO WRITE-FILE-B.
        WRITE-FILE-B-EXIT.
@@ -793,7 +1068,8 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER ALT RECORD TO WRITE" TO B-SCREEN-TITLE.
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT PFKEY 16.
            IF PF-KEY = "16" THEN GO TO WRITE-FILE-B-FROM-EXIT.
@@ -812,7 +1088,7 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER A KEY TO START ON" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
@@ -829,7 +1105,7 @@
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER A FILE-B-ALTKEY-1 TO START ON" 
                  TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
@@ -848,7 +1124,8 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER FILE-B-KEY FOR READ" TO B-SCREEN-TITLE.
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT PFKEY 16.
            IF PF-KEY = "16" THEN GO TO READ-FILE-B-EXIT.
@@ -867,7 +1144,8 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "THE RECORD READ" TO B-SCREEN-TITLE.
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
 
            READ FILE-B NEXT RECORD INTO FILE-B-RECORD-ALT
                AT END
@@ -880,7 +1158,8 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER FILE-B-ALTKEY-1 FOR READ" TO B-SCREEN-TITLE.
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT PFKEY 16.
            IF PF-KEY = "16" THEN GO TO READ-FILE-B-ALT-1-EXIT.
@@ -899,7 +1178,8 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER FILE-B-ALTKEY-2 FOR READ" TO B-SCREEN-TITLE.
-           MOVE "ENTER to continue; PF16-EXIT" to B-SCREEN-FOOTER.
+           MOVE "(ENTER) to continue, (16) to EXIT" 
+		to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT PFKEY 16.
            IF PF-KEY = "16" THEN GO TO READ-FILE-B-ALT-2-EXIT.
@@ -918,7 +1198,7 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER FILE-B-KEY FOR READ & HOLD" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
@@ -934,7 +1214,7 @@
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "READ WITH HOLD TIMEOUT 5 SECS"
                 TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
@@ -951,7 +1231,7 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER FILE-B-KEY FOR READ & REWRITE" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
@@ -971,7 +1251,7 @@
            MOVE SPACES TO FILE-B-RECORD.
            MOVE SPACES TO FILE-B-RECORD-ALT.
            MOVE "ENTER FILE-B-KEY FOR READ & DELETE" TO B-SCREEN-TITLE.
-           MOVE "Press ENTER to continue." to B-SCREEN-FOOTER.
+           MOVE "Press (ENTER) to continue." to B-SCREEN-FOOTER.
 
            DISPLAY AND READ FILE-B-SCREEN ON CRT.
 
@@ -991,6 +1271,9 @@
 
        OPEN-EXTEND-SEQ.
            OPEN EXTEND SEQUENTIAL-FILE.
+
+       OPEN-SHARED-SEQ.
+           OPEN SHARED SEQUENTIAL-FILE.
 
        OPEN-OUTPUT-SEQ.
            OPEN OUTPUT SEQUENTIAL-FILE.

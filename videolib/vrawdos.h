@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*           VIDEO - Video Interactive Development Environment          */
 			/*                      Copyright (c) 1987-1993                         */
@@ -24,6 +28,8 @@
 
 #define INIT_ZERO	INIT_VAL(0)
 #define INIT_ONE	INIT_VAL(1)
+
+extern void v_modeflag(int bg, int fg, int ch);
 
 /*
 	MSDOS DIRECT SCREEN MEMORY I/O:
@@ -103,7 +109,7 @@
 		Blink		0x04	.x..
 		Reverse 	0x08	x...
 */
-EXTERN_DEF long attributes[16] =
+EXTERN_DEF int attributes[16] =
 {
 	( ANOR ),	 	/* 0	Normal 					*/
 	( ANOR | AFBR ),	/* 1	Bold					*/
@@ -140,7 +146,7 @@ EXTERN_DEF _segment		 segvar	INIT_VAL(BASE_VIDEO_SEG);
 EXTERN_DEF char	_based(void)	*vp	INIT_ZERO;
 #endif /* _MSC_VER */
 
-#ifdef _INTELC32_
+#if defined (_INTELC32_) || defined (WATCOM)
 /*
 **	Intel 386/486 C Code Builder
 */
@@ -157,7 +163,7 @@ EXTERN_DEF char	_based(void)	*vp	INIT_ZERO;
 #define SET_CVT(v)	(SET_VT(out_row,out_col,(v),out_atr))
 #define NEXT_COL	(out_col = ((out_col + 1) % 80))
 
-#define SET_MF(b)	((mode_flag) ? v_modeflag(b,15,' ') : 0)
+#define SET_MF(b)	{v_modeflag(b,15,' ');}
 
 EXTERN_DEF	unsigned	short	*screen_memory	INIT_ZERO;
 
@@ -183,3 +189,12 @@ EXTERN_DEF	int	mode_flag	INIT_ZERO;	/* Display flag?     */
 
 #endif	/* MSDOS */
 
+/*
+**	History:
+**	$Log: vrawdos.h,v $
+**	Revision 1.9  1996-10-11 18:16:17-04  gsl
+**	drcs update
+**
+**
+**
+*/

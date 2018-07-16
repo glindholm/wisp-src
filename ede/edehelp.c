@@ -1,11 +1,5 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		edehelp.c
@@ -20,42 +14,50 @@
 **	disphelp()	Displays a single helpfile.
 **	first_diff()	Finds the first difference in two strings
 **	trim()		Trims a string.
-**	ws_cut()	CUT
-**	ws_paste()	PASTE
 **
 */
 
 
 /*						Include required header files.							*/
 
-#ifdef	MSDOS
-#include <malloc.h>
-#include <stdlib.h>
-#endif
 
 #include <stdio.h>									/* Include video definitions.		*/
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include <v/vintdef.h>
-#include <v/vmenu.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <video.h>
+#include <vdata.h>
+#include <vmenu.h>
+#include <vutil.h>
+
 #include "idsistd.h"
 #include "vwang.h"
 #include "wglobals.h"
+#include "wperson.h"
+#include "wisplib.h"
+
+/*
+**	This are defined in edeoldoc.c and can be customized by the user.
+*/
+extern void EDEOLDOC();
+extern int EDECUSTM(char custtitle[64]);
+extern void EDECUSTX();
+
+
+extern unsigned char *vsss();
+	
 
 /*						Static and Global Data Definitions.						*/
 
 static int ol_doc = FALSE;								/* Assume on-line documentation off.	*/
-static unsigned char *snptr;								/* Point to the screen number.		*/
-static unsigned char *elptr;
-static unsigned char *odptr;
+static unsigned char *snptr = NULL;							/* Point to the screen number.		*/
+static unsigned char *elptr = NULL;
+static unsigned char *odptr = NULL;
 static char *helpmap;									/* System base location.		*/
 
 static int filehelp();
 static int first_diff();
 static int trim();
-static int ws_cut();
-static int ws_paste();
 static int disphelp();
 
 #define HELP_CODE 10									/* Define the code for help.		*/
@@ -70,6 +72,7 @@ static int disphelp();
 #define PUZZLE_CODE 126
 #define CUT_CODE 201
 #define PASTE_CODE 202
+#define EDECUSTOM_CODE 500
 
 /*
 **	Routine:	ws_bar_menu()
@@ -90,18 +93,17 @@ static int disphelp();
 **	curset		Flag if cursor on or off
 **	vr		Cursor row
 **	vc		Cursor column
-**	ak		Virtual row (from vml())
+**	dummy		(not used)
 **	ar		Altered read flag
 **	nm		No Modification flag
 **	dp		Do pseudoblank processing flag
 **
 **	History:	
 **	04/16/93	Change to call EDEOLDOC. GSL
+**	05/18/94	Added to interface documentation. JAK
 **
 */
-int ws_bar_menu(curset,vr,vc,ak,ar,nm,dp)						/* Put up a menu bar.			*/
-int curset,vr,vc,ak,ar,dp;								/* vcur_lin,vcur_col,alt_read,do_pseudo	*/
-unsigned	char	*nm;								/* no_mod				*/
+int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm, int dp)
 {
 	struct hlp_buf 
 	{ 
@@ -133,11 +135,10 @@ unsigned	char	*nm;								/* no_mod				*/
 	char blankline[HLP_LINE_SIZE];
 	int hl_cnt, hl_rtn;
 	struct video_menu menu_bar, menu_exit, menu_good, olh;				/* The default menu bar.		*/
-	int bar_active;									/* Working parameter.			*/
-	int op_save;									/* Optimization save word.		*/
+	enum e_vop op_save;								/* Optimization save word.		*/
 	int choice;									/* Menu choice.				*/
 	int row_current, col_current;							/* Current screen locations.		*/
-	unsigned char temp[MAX_COLUMNS_PER_LINE];					/* Working storage.			*/
+	char temp[MAX_COLUMNS_PER_LINE];						/* Working storage.			*/
 	int mdsave, pfsave;								/* Menu state save words.		*/
 	int r, c, k;
 	struct cursor_position 
@@ -145,7 +146,8 @@ unsigned	char	*nm;								/* no_mod				*/
 		short int sc; 
 		short int sr; 
 	} curspos;
-	unsigned char *ssave, *vsss();							/* Screen save.				*/
+	unsigned char *ssave;								/* Screen save.				*/
+	char	custtitle[64];
 
 	if (ishelpactive())								/* Are we already in help.		*/
 	{
@@ -153,7 +155,7 @@ unsigned	char	*nm;								/* no_mod				*/
 		return(FAILURE);							/* Return to the caller.		*/
 	}
 	else sethelpactive(TRUE);							/* Now help is active.			*/
-	vdefer(RESTORE);								/* Cannot be in deferred mode.		*/
+	vdefer_restore();								/* Cannot be in deferred mode.		*/
 
 	row_current = vcur_lin+1;							/* Remember where on Wang screen.	*/
 	col_current = vcur_col+1;
@@ -162,13 +164,20 @@ unsigned	char	*nm;								/* no_mod				*/
 	hl_txt = (help_text *) 0;
 	hl_buf = (help_buf *) 0;
 	memset(blankline,' ',HLP_LINE_SIZE);
-	op_save = voptimize(DEFER_MODE);						/* Make sure optimization is on.	*/
+	op_save = voptimize(VOP_DEFER_MODE);						/* Make sure optimization is on.	*/
 
-	vmenuinit(&menu_bar, BAR_MENU, REVERSE, 0, 3, 3);				/* Initialize the menu definition.	*/
+	vmenuinit(&menu_bar, BAR_MENU, VMODE_REVERSE, 0, 3, 3);				/* Initialize the menu definition.	*/
 	vmenuitem(&menu_bar, "Help", HELP_CODE, DYNAMIC_LINK);				/* Add the help selection.		*/
 	vmenuitem(&menu_bar, "Environment", WANG_CODE, DYNAMIC_LINK);			/* Add the environment selection.	*/
+	if (EDECUSTM(custtitle))
+	{
+		/*
+		**	If the user has specified a custom memu item then add it here.
+		*/
+		vmenuitem(&menu_bar, custtitle, EDECUSTOM_CODE, NULL);
+	}
 	vmenuitem(&menu_bar, "Goodies", GOOD_CODE, &menu_good);				/* Add the goodies selection.		*/
-	vmenuinit(&menu_good, 0, REVERSE, 0, 0, 0);					/* Add the exit menu.			*/
+	vmenuinit(&menu_good, 0, VMODE_REVERSE, 0, 0, 0);				/* Add the exit menu.			*/
 	vmenuitem(&menu_good, "Clock", CLOCK_CODE, NULL);				/* Add the items.			*/
 	vmenuitem(&menu_good, "Calculator", CALC_CODE, NULL);
 	vmenuitem(&menu_good, "Calendar", CALEND_CODE, NULL);
@@ -177,7 +186,7 @@ unsigned	char	*nm;								/* no_mod				*/
 	vmenuitem(&menu_bar, "Cut", CUT_CODE, NULL);
 	vmenuitem(&menu_bar, "Paste", PASTE_CODE, NULL);
 	vmenuitem(&menu_bar, "Exit", EXIT_CODE, &menu_exit);				/* Add the exit selection.		*/
-	vmenuinit(&menu_exit, 0, REVERSE, 0, 0, 0);					/* Add the exit menu.			*/
+	vmenuinit(&menu_exit, 0, VMODE_REVERSE, 0, 0, 0);				/* Add the exit menu.			*/
 	vmenuitem(&menu_exit, "Return to program", EXIT_CODE, NULL);			/* Add the single item.			*/
 
 	vmenustatus(&mdsave, &pfsave);							/* Get the menu status.			*/
@@ -212,11 +221,11 @@ unsigned	char	*nm;								/* no_mod				*/
 				**		0	Success
 				**		1	No help, Empty or not found
 				**		2	Don't draw a box, help takes full screen
-				**			(was drawn by EDEOLDOC ??)
+				**			(was drawn by EDEOLDOC ?)
 				*/
 				vrss(ssave);
 
-	                        if (hl_rtn != 2) vmenuinit(&olh, DISPLAY_ONLY_MENU, REVERSE, r, c, 0);
+	                        if (hl_rtn != 2) vmenuinit(&olh, DISPLAY_ONLY_MENU, VMODE_REVERSE, r, c, 0);
 				if (ol_doc && !hl_rtn)
 				{
 					if (	strncmp(hl_txt->hlp_line_0,blankline,HLP_LINE_SIZE) ||
@@ -292,7 +301,7 @@ unsigned	char	*nm;								/* no_mod				*/
 			else
 			{
 				k = vml(row_current-1);
-				filehelp(k+1,ws_sof(k,col_current-1)+1);
+				filehelp(k+1,ws_sof(row_current-1,col_current-1)+1);
 			}
 
 			break;
@@ -305,12 +314,22 @@ unsigned	char	*nm;								/* no_mod				*/
 		case PUZZLE_CODE:	{ gpuzzle(); break; }
 		case ZONE_CODE:		{ gzones(); break; }
 		case CUT_CODE:		{ ws_cut(row_current-1,col_current-1); break; }
-		case PASTE_CODE:	{ ws_paste(row_current-1,col_current-1,vr,vc,ak,ar,nm,dp); break; }
+		case PASTE_CODE:	{ ws_paste(row_current-1,col_current-1,vr,vc,ar,nm,dp); break; }
 		case WANG_CODE:
 		{
 			sethelpactive(FALSE);						/* Turn off the active help.		*/
 			ws_help(curset);						/* Go to environment processing.	*/
 			break;
+		}
+		case EDECUSTOM_CODE:
+		{
+			/*
+			**	Process the custom menu item by calling EDECUSTX() routine.
+			**	This acts like the EDEOLDOC so we need to push and pop the screen.
+			*/
+			wpushscr();
+			EDECUSTX();
+			wpopscr();
 		}
 	}
 
@@ -325,17 +344,37 @@ unsigned	char	*nm;								/* no_mod				*/
 **
 **	Function:	To enable and setup the ON-LINE doc feature.
 **
-**	Description:	This routine is called near the beginning of a application
-**			to enable EDE's ON-LINE doc feature and pass in setup parameters.
+**	Description:	This routine is called near the beginning of a user application
+**			to enable EDE's custom user ON-LINE doc feature and gets passed
+**      		in setup parameters.
 **
 **	Arguments:
-**	ets_link_program_definition	?
-**	on_line_doc_passing_values	?
+**	ets_link_program_definition	33 character parameter area, as follows:
+**					user help pfkey number = signed   char 03
+**					user help program name = unsigned char 08
+**					blank filler           = unsigned char 02
+**					user help prog library = unsigned char 08
+**					blank filler           = unsigned char 02
+**                                      user help prog volume  = unsigned char 06
+**					blank filler           = unsigned char 04
+**
+**	on_line_doc_passing_values	167 character parameter area, as follows:
+**					user application name descrp  = unsigned char 79
+**					user computer type	      = unsigned char 01
+**					user company name             = unsigned char 30
+**					user help document library    = unsigned char 08
+**					user help document volume     = unsigned char 06
+**					user security classes         = unsigned char 27
+**					user application program name = unsigned char 08
+**					user screen number            = unsigned char 03
+**					user screen phase	      = unsigned char 05
 **
 **	Globals:
-**	elptr		?
-**	odptr		?
-**	snptr		?
+**	elptr		Pointer to values that define user HELP program, passed
+**			by user application program (ie. ets_link-program_definition).
+**	odptr		Pointer to values passed in by user application program (ie. 
+**			on_line_doc_passing_values).
+**	snptr		Pointer to screen number field in on_line_doc_passing_values.
 **	ol_doc		Enable ON-LINE doc feature.
 **
 **	Return:		None
@@ -362,7 +401,7 @@ unsigned char *on_line_doc_passing_values;
 				unix	$(WISPCONFIG)/HELPMAP
 				MSDOS	$(WISPCONFIG)\\HELPMAP.DAT
 */
-#if defined(VMS) || defined(MSDOS)
+#if defined(VMS) || defined(MSFS)
 #define HELPFILE	"HELPMAP.DAT"
 #endif
 #ifdef unix
@@ -375,29 +414,12 @@ char *type;
 	FILE 	*fd;
 	static int first = 1;
 	static char helpmapbuff[80];
-	char	*ptr;
-	char	prefix[80];
 
 	if (first)
 	{
 		first = 0;
+		build_wisp_config_path(HELPFILE,helpmapbuff);
 		helpmap = helpmapbuff;
-#ifdef VMS
-		strcpy( helpmap, "WISP$CONFIG:" );
-#else
-		helpmap[0] = '\0';
-		if ( ptr = (char *)getenv( "WISPCONFIG" ) )
-		{
-			strcpy(helpmap,ptr);
-#ifdef unix
-			strcat(helpmap,"/");
-#endif
-#ifdef MSDOS
-			strcat(helpmap,"\\");
-#endif
-		}
-#endif /* !VMS */
-		strcat(helpmap,HELPFILE);
 	}
 	
 	fd = fopen(helpmap,type); 							/* Open the help file.			*/
@@ -408,7 +430,7 @@ char *type;
 static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 {
 	char temp[256];									/* Working string.			*/
-	FILE *hf, *fopen();								/* File stuff.				*/
+	FILE *hf;									/* File stuff.				*/
 	register int i, j, k, m;
 	int sr, sc, ec;
 	char sub_progname[133], sub_screen[133];					/* Substitution strings.		*/
@@ -454,7 +476,7 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 	if (wisp_progname[0] != CHAR_NULL) strcpy(sub_progname,wisp_progname);		/* Copy in the program name.		*/
 	if (wisp_screen[0] != CHAR_NULL) strcpy(sub_screen,wisp_screen);		/* Copy in the screen name.		*/
 
-	if (ws_mod(vml(r-1),c-1))							/* Is cursor in a mod field?		*/
+	if (ws_mod(r-1,c-1))								/* Is cursor in a mod field?		*/
 	{
 		sprintf( (char *) temp, "%s_%s_%d_%d", sub_progname, sub_screen, r, c);
 		if (disphelp(temp)) return(SUCCESS);
@@ -474,7 +496,7 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 
 static int disphelp(help_descriptor) char *help_descriptor;				/* Display the help from a file.	*/
 {
-	FILE *hf, *hm, *fopen();							/* Open a file.				*/
+	FILE *hf, *hm;								/* Open a file.				*/
 	struct video_menu help_window;							/* Help window structure.		*/
 	register int i, j, k;								/* Working registers.			*/
 	char temp[256];
@@ -506,7 +528,7 @@ static int disphelp(help_descriptor) char *help_descriptor;				/* Display the he
 		return(FAILURE);
 	}
 
-	vmenuinit(&help_window, DISPLAY_ONLY_MENU, REVERSE, 0, 0, 0);			/* Init the help window.		*/
+	vmenuinit(&help_window, DISPLAY_ONLY_MENU, VMODE_REVERSE, 0, 0, 0);		/* Init the help window.		*/
 
 	i = 0;										/* Now read the file.			*/
 	while ((fgets(temp,132,hf) != NULL) && (i < 14))				/* Read the file.			*/
@@ -524,7 +546,7 @@ static int disphelp(help_descriptor) char *help_descriptor;				/* Display the he
 
 static int first_diff(s1,s2) char *s1, *s2;						/* Find the 1st difference in a string.	*/
 {
-	register int i,j;
+	register int i;
 
 	i = 0;
 	while ((s1[i] == s2[i]) && (s1[i] != CHAR_NULL) && (s2[i] != CHAR_NULL)) i++;	/* Scan until the first difference.	*/
@@ -539,49 +561,19 @@ static int trim(temp) char *temp;							/* Trim a string.			*/
 		temp[j] = CHAR_NULL;							/* Insert a null.			*/
 		return(j);
 }
-
-static int ws_cut(r,c) int r,c;								/* Cut the current field.		*/
-{
-	register int i, s, e, k;							/* Working registers.			*/
-	unsigned char cutbuf[WS_MAX_COLUMNS_ON_A_LINE];					/* Working buffer.			*/
-
-	k = vml(r);									/* Get the scroll index.		*/
-
-	if ((s = ws_sof(k,c)) && (e = ws_eof(k,c)))					/* Are we in a field?			*/
-	{
-		for (i = s; i <= e; i++)						/* Copy the field.			*/
-		{
-			if ((cutbuf[i-s] = vchr_map[k][i]) < ' ') cutbuf[i-s] = ' ';	/* Copy a character.			*/
-		}
-		cutbuf[i-s] = CHAR_NULL;						/* Terminate the string.		*/
-		vcut(cutbuf);								/* Output the result.			*/
-	}
-	else vbell();									/* Oops, not in field so ring the bell.	*/
-	return(SUCCESS);								/* Return.				*/
-}
-
-static int ws_paste(r,c,vr,vc,ak,ar,nm,dp)						/* Cut the current field.		*/
-int r,c,vr,vc,ak,ar,dp;									/* vcur_lin,vcur_col,alt_read,do_pseudo	*/
-unsigned	char	*nm;								/* no_mod				*/
-{
-	register int s, e, k;								/* Working registers.			*/
-
-	k = vml(r);									/* Get the scroll index.		*/
-	if (ws_mod(k,c))								/* Are we in a modifyable field?	*/
-	{
-		s = ws_sof(k,c);
-		e = ws_eof(k,c);							/* Are we in a field?			*/
-		vdefer(RESTORE);							/* Restore from deferred actions.	*/
-		k = voptimize(TRACKING_ONLY);						/* Turn off optimization for vwang.	*/
-		ws_clear(vr,vc,ak,ar,nm,dp);						/* Clear the field.			*/
-		voptimize(k);								/* Restore the optimization.		*/
-		vpaste(e-s+1);								/* Paste only the allowed fields.	*/
-		return(SUCCESS);							/* Return.				*/
-	}
-	else
-	{
-		vbell();								/* Not modifyable so just ring bell.	*/
-		return(FAILURE);							/* Return to the caller.		*/
-	}
-}
-
+/*
+**	History:
+**	$Log: edehelp.c,v $
+**	Revision 1.13  1997-07-08 16:10:58-04  gsl
+**	Change to use new video.h defines
+**
+**	Revision 1.12  1997-01-02 17:08:23-05  gsl
+**	Add custom menu item logic for STERLING
+**
+**	Revision 1.11  1996-09-13 10:52:58-07  gsl
+**	mod for NT
+**	Changed to use build_wisp_config_path() to create helpmap path
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /********************************************************************************************************************************
 *																*
 *	openacp.c	Initialize logical connection between application program and telecommunications device.		*
@@ -11,31 +13,40 @@
 *																*
 ********************************************************************************************************************************/
 
-#ifndef MSDOS								/* Defined for unix and VMS only.			*/
+#if defined(unix) || defined(VMS)					/* Defined for unix and VMS only.			*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "idsistd.h"
+#include "wispcfg.h"
+#include "paths.h"
 
 #define INIT_ACP							/* Declare global variable definitions from this module.*/
 #define __OPENACP
-#include "acp.h"							/* Header file containing global variable definitions.	*/
+#include "acp.h"
+#include "wmalloc.h"							/* Header file containing global variable definitions.	*/
 
 #ifdef VMS
 #include <descrip.h>							/* SYS$ASSIGN requires string descriptors.		*/
 #endif
 
 #ifdef unix
-#include <stdio.h>
 #include <sys/types.h>
 #include <fcntl.h>
 struct termio otermacp,ntermacp;
 char the_ttyname[32];
-static char *mystrdup();
 static int loadcfg();
-static char **splitstr();
+static char **splitstr(char *string);
 static int match();
-char *getenv();
+static void hexcnv();
+static int hexdig();
+static void chopspace();
+static int spaces();
 #endif	/* unix */
 
+static char cfgpath[100];
 
 OPENACP(destination,rel_line,ret_code)
 
@@ -178,7 +189,7 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 #ifdef unix
 			acp_ch[i] = fd;					/* Add new channel to acp_ch[].				*/
 			acp_blockmode[i] = BLOCKING;
-			acp_devname[i] = mystrdup(the_ttyname);
+			acp_devname[i] = wstrdup(the_ttyname);
 #endif
 			for(j=0;j<4;j++) acp_iosb[i][j] = 0;		/* Clear I/O status block.				*/
 			acp_ef[i] = 0;					/* Clear event flag.					*/
@@ -234,8 +245,7 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 static int loadcfg(pname)
 char *pname;
 {
-	char *tmp,linebuf[200],**fields,**splitstr();
-	char *strchr();
+	char *tmp,linebuf[200],**fields;
 	FILE *cfg;
 	int len,foundit=0,i;
 	char name[17];
@@ -246,11 +256,9 @@ char *pname;
 	if (tmp) *tmp=(char)0;
 	len=strlen(name);
 
-	tmp=getenv(ACPMAP_PATH);					/* get path */
-	strcpy(cfgpath,tmp?tmp:".");
-	strcat(cfgpath,"/");
-	tmp=getenv(ACPMAP_FILE);	
-	strcat(cfgpath,tmp?tmp:ACPMAP_FILE);					/* add file name */
+	strcpy(cfgpath,acpconfigdir());
+	strcat(cfgpath,DIR_SEPARATOR_STR);
+	strcat(cfgpath,acpmapfile());
 	if ((cfg=fopen(cfgpath,"r"))==NULL)
 	{
 		return -14;						/* no config file */
@@ -302,7 +310,7 @@ char *pname;
 	}
 	else acp_term_struct.acp_reorseq[2][0]=0;
 }
-hexcnv(dest,src)
+static void hexcnv(dest,src)
 char *dest,*src;
 {
 	while (*src)
@@ -312,7 +320,7 @@ char *dest,*src;
 		++src; ++src;
 	}
 }
-hexdig(ch)
+static int hexdig(ch)
 char ch;
 {
 	if (ch>='0' && ch<='9') 
@@ -327,9 +335,9 @@ char ch;
 	{
 		return ch-'a'+10;
 	}
+	return 0;
 }
-static char **splitstr(string)
-char *string;
+static char **splitstr(char *string)
 {
 	static char *ptr[NUMFIELDS],linebuf[200];
 	char *p;
@@ -356,7 +364,7 @@ char *str;
 struct matchstruc *list;
 {
 	int 	i;
-	char 	tmp[20],*p,*strchr();
+	char 	tmp[20],*p;
 
 	/*
 	**	On error or no match return 0 index as a default.
@@ -384,7 +392,7 @@ struct acpinfo_cbl *info;
 int *ret;
 {
 	FILE *acpmap,*tmpfile;
-	char tmppath[64],*tmp,linebuf[200],*strchr();
+	char tmppath[64],*tmp,linebuf[200];
 	int len,notfound;
 	int intbaud;
 	int	rc;
@@ -427,12 +435,10 @@ int *ret;
 	chopspace(lreor3);
 	chopspace(lbaud);
 	
-	tmp=getenv(ACPMAP_PATH);					/* get path */
-	strcpy(cfgpath,tmp?tmp:".");
-	sprintf(tmppath,"%s/acp%d",cfgpath,getpid());
-	strcat(cfgpath,"/");
-	tmp=getenv(ACPMAP_FILE);	
-	strcat(cfgpath,tmp?tmp:ACPMAP_FILE);					/* add file name */
+	strcpy(cfgpath,acpconfigdir());
+	sprintf(tmppath,"%s%sacp%d",cfgpath,DIR_SEPARATOR_STR,getpid());
+	strcat(cfgpath,DIR_SEPARATOR_STR);
+	strcat(cfgpath,acpmapfile());
 
 	if ((fd=open(cfgpath,O_RDONLY))<0)    /* create the ACPMAP file if it doesn't exist */
 	{
@@ -511,7 +517,7 @@ struct acpinfo_cbl *info;
 int *ret;
 {
 	FILE *acpmap,*debug;
-	char *tmp,**fields,**splitstr(),name[17],*strchr(),linebuf[200];
+	char *tmp,**fields,name[17],linebuf[200];
 	int foundit,len;
 	int intbaud;
 	int	rc;
@@ -522,11 +528,9 @@ int *ret;
 	if (tmp) *tmp=(char)0;
 	len=strlen(name);
 
-	tmp=getenv(ACPMAP_PATH);					/* get path */
-	strcpy(cfgpath,tmp?tmp:".");
-	strcat(cfgpath,"/");
-	tmp=getenv(ACPMAP_FILE);	
-	strcat(cfgpath,tmp?tmp:ACPMAP_FILE);					/* add file name */
+	strcpy(cfgpath,acpconfigdir());
+	strcat(cfgpath,DIR_SEPARATOR_STR);
+	strcat(cfgpath,acpmapfile());
 	if ((acpmap=fopen(cfgpath,"r"))==NULL)
 	{
 		rc = 14;
@@ -584,10 +588,10 @@ int *ret;
 	wswap(ret);
 	return;
 }
-chopspace(p)
+static void chopspace(p)
 char *p;
 {
-	char *strchr(),*tmp;
+	char *tmp;
 	
 	if (spaces(p))
 	{
@@ -597,7 +601,7 @@ char *p;
 	tmp=strchr(p,' ');
 	if (tmp) *tmp=(char)0;
 }	
-spaces(p)
+static int spaces(p)
 char *p;
 {
 	do
@@ -609,33 +613,21 @@ char *p;
 	return 1;
 }
 
-static char *
-mystrdup(p)
-char *p;
-{
-	char *tmp;
-	
-	tmp=malloc(strlen(p)+1);
-	strcpy(tmp,p);
-	return tmp;
-}
-
 #endif	/* unix */
 
 #endif	/* unix or VMS */
-
-#ifdef MSDOS	/* stub section.	*/
-
-int	OPENACP(destination,rel_line,ret_code)
-
-char	*destination;							/* WANG terminal name, up to 16 chars.			*/
-int	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
-int	*ret_code;							/* WANG ACP return code.				*/
-
-{
-	vre("\n  Call to OPENACP invalid for MSDOS.  \n");
-	return(0);							/* Return to application program.			*/
-}
-
-#endif	/* MSDOS */
-
+/*
+**	History:
+**	$Log: openacp.c,v $
+**	Revision 1.14  1996-10-10 12:07:01-04  gsl
+**	fix prototype errors
+**
+**	Revision 1.13  1996-10-08 17:23:20-07  gsl
+**	replace getenv() with acpconfigdir() and acpmapfile() calls
+**
+**	Revision 1.12  1996-08-19 15:32:36-07  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -29,13 +31,15 @@
 #include "cobfiles.h"
 #include "token.h"
 #include "node.h"
+#include "statment.h"
+#include "wt_datad.h"
+#include "output.h"
 
-NODE get_statement();
-static NODE dcv_process_selects();
-static NODE dcv_process_fd();
-NODE delete_fd();
-static int dcv_gen_ws_data();
-static int dcv_gen_procedure();
+static NODE dcv_process_selects(void);
+static NODE dcv_process_fd(NODE the_statement);
+static int dcv_gen_ws_data(void);
+static int dcv_gen_procedure(void);
+static int seq_name(char *outname, char *inname);
 
 static char prog_firstrec[MAX_FILES][40];
 
@@ -76,10 +80,9 @@ static char prog_firstrec[MAX_FILES][40];
 **	06/25/93	Written by GSL
 **
 */
-gen_data_conv()
+void gen_data_conv (void)
 {
 	NODE	the_statement;
-	NODE	curr_node;
 
 	/*
 	**	Set options to include comments etc.
@@ -210,7 +213,7 @@ gen_data_conv()
 **	05/25/93	Written by GSL
 **
 */
-static NODE dcv_process_selects()
+static NODE dcv_process_selects (void)
 {
 	NODE	the_statement;
 	NODE	curr_node, org_node, acc_node, name_node;
@@ -356,8 +359,7 @@ static NODE dcv_process_selects()
 **	05/25/93	Written by GSL
 **
 */
-static NODE dcv_process_fd(the_statement)
-NODE	the_statement;
+static NODE dcv_process_fd ( NODE the_statement )
 {
 	NODE	curr_node, name_node;
 	int	this_file;
@@ -551,7 +553,7 @@ NODE	the_statement;
 **	06/25/93	Written by GSL
 **
 */
-static int dcv_gen_ws_data()
+static int dcv_gen_ws_data (void)
 {
 	tput_blank();
 	tput_line_at(8, "01  CONVERT-INREC   PIC 9(9) VALUE 0.");
@@ -637,7 +639,7 @@ static int dcv_gen_ws_data()
 **	06/25/93	Written by GSL
 **
 */
-static int dcv_gen_procedure()
+static int dcv_gen_procedure (void)
 {
 	int	this_file;
 	char	seqfile[80], seqrec[80];
@@ -745,7 +747,7 @@ static int dcv_gen_procedure()
 **	06/25/93	Written by GSL
 **
 */
-int is_data_conv()
+int is_data_conv (void)
 {
 	return(data_conv);
 }
@@ -772,9 +774,7 @@ int is_data_conv()
 **	06/29/93	Written by GSL
 **
 */
-int seq_name(outname,inname)
-char	*outname;
-char	*inname;
+static int seq_name ( char *outname, char *inname )
 {
 	int	len;
 
@@ -788,4 +788,14 @@ char	*inname;
 			outname[29] = 'X';
 		}
 	}
+	return 0;
 }
+/*
+**	History:
+**	$Log: dataconv.c,v $
+**	Revision 1.7  1996-08-30 21:56:02-04  gsl
+**	drcs update
+**
+**
+**
+*/

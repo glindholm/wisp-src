@@ -1,17 +1,25 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1987-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		wt_cli.c
+**
+**	Project:	WISP
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Command Language Interface (Handle command line args)
+**
+**	Routines:	
+*/
 
+#include <string.h>
 
 #define EXT extern
 #include "wisp.h"
 #include "wcommon.h"
 #include "wispfile.h"
+#include "getopt.h"
+#include "keywords.h"
 
 int	symbzero = 0;
 
@@ -68,6 +76,7 @@ $DESCRIPTOR(cli_xref,"CROSS_REFERENCE");
 $DESCRIPTOR(cli_nowarn,"WARNINGS");
 $DESCRIPTOR(cli_dlink,"DLINK");
 $DESCRIPTOR(cli_dataconv,"DATACONV");
+$DESCRIPTOR(cli_x4dbfile,"X4DBFILE");
 #endif	/* VMS */
 
 get_cli(argc,argv)
@@ -130,19 +139,17 @@ char	*argv[];
 		compress = 1;
 	}
 
-
 	status = cli$present(&cli_com);
-	if ((status != CLI$_NEGATED) && (status == CLI$_PRESENT))			/*  /COMMENTS switch is set		*/
+	if ((status == CLI$_NEGATED) && (status == CLI$_PRESENT))			/*  /COMMENTS switch is set		*/
 	{										/* so keep comments...			*/
-		comments = 1;
-		blanklines = 1;
-	}
-	else
-	{
 		comments = 0;
 		blanklines = 0;
 	}
-
+	else
+	{
+		comments = 1;
+		blanklines = 1;
+	}
 
 	status = cli$present(&cli_cat);
 	if (status == CLI$_NEGATED)							/* No Concatenation desired		*/
@@ -205,6 +212,16 @@ char	*argv[];
 	else
 	{
 		data_conv = 0;
+	}
+
+	status = cli$present(&cli_x4dbfile);
+	if (status == CLI$_PRESENT)							/* Generate data conversion program	*/
+	{
+		x4dbfile = 1;
+	}
+	else
+	{
+		x4dbfile = 0;
 	}
 
 	status = cli$present(&cli_proc);
@@ -402,7 +419,6 @@ char	*argv[];
 			case ACUCOBOL:
 			{
 				acu_cobol = 1;
-				unix_cobol = 1;
 				break;
 			}
 
@@ -459,7 +475,7 @@ char	*argv[];
 	i = strpos(cli_infile," ");
 	if (i != -1) cli_infile[i] = '\0';						/* NUll terminate			*/
 #else
-	int	i,c;
+	int	c;
 	extern	char	*optarg;
 	extern	int	optind,opterr;
 	/*
@@ -467,8 +483,12 @@ char	*argv[];
 	*/
 	log_stats = 0;									/* No logging				*/
 	compress = 1;									/* Compressed screens			*/
+#ifdef OLD
 	comments = 0;									/* No comments				*/
 	blanklines = 0;									/* No blanklines			*/
+#endif
+	comments = 1;									/* Comments				*/
+	blanklines = 1;									/* Blanklines				*/
 	concat = 1;									/* Concatenate files			*/
 	copylib = 0;									/* No copylibs generated		*/
 	do_xref = 0;									/* No cross reference			*/
@@ -488,10 +508,11 @@ char	*argv[];
  	unix_cobol = 0;									/* Not UNIX				*/
  	dos_cobol = 0;									/* Not MS-DOS				*/
 	mf_aix = 0;									/* Not MF or AIX			*/
+	x4dbfile = 0;
 
 #ifdef unix
 	unix_cobol = 1;
-#ifdef u3b2
+#ifdef ATT3B2
 	lpi_cobol = 1;									/* If 3b2 then default is LPI		*/
 #else
 	acu_cobol = 1;									/* All others then default is ACUCOBOL	*/
@@ -509,6 +530,11 @@ char	*argv[];
 #endif
 #endif /* MSDOS */
 
+#ifdef WINNT
+	nt_cobol = 1;
+	acu_cobol = 1;
+#endif
+
 	do_keyfile = 0;
 	do_optfile = 0;
 	show_flags = 0;
@@ -521,7 +547,7 @@ char	*argv[];
 		exit_wisp(EXIT_FAST);
 	}
 
-	while ( (c = getopt( argc, argv, "LlzZcsCxneTRS1dDFmfwI:G:qkK:oO:V:W:U?")) != -1 )
+	while ( (c = getopt( argc, argv, "LlzZcsCxneTRS1dDFmfwI:P:G:qkK:oO:V:W:U4?")) != -1 )
 	{
 		switch( c )
 		{
@@ -568,6 +594,14 @@ char	*argv[];
 			case 'I':							/* /INLIB=				*/
 				strcpy(cli_ildir,optarg);
 				sp_trunc(cli_ildir);					/* truncate at first space		*/
+				break;
+			case 'P':
+				/*
+				**	Special enhancement for use with "COPY file IN lib", gives
+				**	the locations to look for "lib/file"
+				*/
+				strcpy(cli_prefixpath,optarg);
+				sp_trunc(cli_prefixpath);
 				break;
 			case 'G':							/* /DEBUG= 0 1 2 3			*/
 				debug_set_level(optarg);
@@ -650,7 +684,6 @@ char	*argv[];
 			 	mf_cobol = 0;
 			 	dmf_cobol = 0;
 			 	dos_cobol = 0;
-				unix_cobol = 0;
 				mf_aix = 0;
 				if ( 0 == memcmp( optarg, "LPI", 3 ) )
 				{
@@ -660,11 +693,17 @@ char	*argv[];
 				else if ( 0 == memcmp( optarg, "ACU", 3 ) )
 				{
 					acu_cobol = 1;
-					unix_cobol = 1;
+				}
+				else if ( 0 == memcmp( optarg, "ACN", 3 ) )	/* Acucobol with native screens */
+				{
+					acu_cobol = 1;
+					acn_cobol = 1;
+					native_cobol = 1;
 				}
 				else if ( 0 == memcmp( optarg, "VAX", 3 ) )
 				{
 					vax_cobol = 1;
+					unix_cobol = 0;
 				}
 				else if ( 0 == memcmp( optarg, "AIX", 3 ) )
 				{
@@ -699,6 +738,9 @@ char	*argv[];
 			case 'q':
 				data_conv = 1;
 				break;
+			case '4':							/* /X4DBFILE				*/
+				x4dbfile = 1;
+				break;
 			case 'U':
 				fullusage();
 				exit_wisp(EXIT_FAST);
@@ -709,6 +751,11 @@ char	*argv[];
 				exit_wisp(EXIT_FAST);
 				break;
 		}
+	}
+
+	if (show_flags)
+	{
+		showflags();
 	}
 
 	if (optind >= argc)
@@ -725,11 +772,6 @@ char	*argv[];
 
 	strcpy( in_fname, argv[argc-1] );						/* Get the filename to convert.		*/
 	strcpy( cli_infile, in_fname );
-
-	if (show_flags)
-	{
-		showflags();
-	}
 
 #endif
 
@@ -776,6 +818,7 @@ char	*argv[];
 
 	load_res_keywords(word_fname);
 
+	return 0;
 }
 
 whodunit()
@@ -789,24 +832,25 @@ whodunit()
 	printf("  Screen management and Wang workstation emulation written by Gregory Adams.\n");
 	printf("  Unix implementation written by Greg Lindholm and Jock Cooper.\n");
 	printf("  MS-DOS implementation written by Greg Lindholm.\n");
+	printf("  Windows NT/95 implementation written by Greg Lindholm and Jock Cooper.\n");
 	printf("\n");
 	printf("  Many thanks to our clients for their assistance and patience, without which\n");
 	printf("  this product would not exist.\n");
 	printf("\n");
-	printf("  Copyright (c) 1987,1988,1989,1990,1991,1992,1993 an unpublished work by\n");
-	printf("  International Digital Scientific Incorporated of Valencia California.\n");
-	printf("  All rights reserved.\n\n\n\n\n");
+	printf("  %s\n\n\n",copyright);
+	return 0;
 }
 
 #ifndef VMS
 printusage()
 {
+	printf("%s\n",copyright);
 	printf("\n");
 	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION);
 	printf("\n");
 	printf("USAGE: wisp [-flags] filename\n\n");
 	printf("       FLAG     VMS SWITCH		DESCRIPTION\n");
-	printf("	-Vxxx	/LANGUAGE=xxx		COBOL: LPI,ACU,VAX,AIX,DMF,MF,MF0\n");
+	printf("	-Vxxx	/LANGUAGE=xxx		COBOL: ACU,ACN,MF,VAX\n");
 	printf("	-Idir	/INLIB=			Input copy directory.\n");
 	printf("	-T	/NOPROCESS		Create only a .txt file.\n");
 	printf("	-x	/CROSS_REFERENCE	Produce a cross reference.\n");
@@ -817,9 +861,11 @@ printusage()
 	printf("	-U				SHOW ALL USAGE FLAGS.\n");
 	printf("	-F				SHOW FLAGS IN USE.\n");
 	printf("\n");
+	return 0;
 }
 fullusage()
 {
+	printf("%s\n",copyright);
 	printf("\n");
 	printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n",WISP_VERSION,LIBRARY_VERSION,SCREEN_VERSION);
 	printf("\n");
@@ -843,7 +889,7 @@ fullusage()
 	printf("	-R	/OVERRIDE=(KEYWORD)	Do not do keyword processing.\n");
 	printf("	-S	/NODMS     		Do not add DMS locking.\n");
 	printf("	-1	/CONVERT		One way conversion (-csC).\n");
-	printf("	-Vxxx	/LANGUAGE=xxx		COBOL: LPI,ACU,VAX,AIX,DMF,MF,MF0\n");
+	printf("	-Vxxx	/LANGUAGE=xxx		COBOL: ACU,ACN,MF,VAX\n");
 	printf("	-n	/DLINK			Use VMS dynamic LINK.\n");
 	printf("	-d	/INIT=(NODATA)		Don't init data areas.\n");
 	printf("	-D	/INIT=(DATA)		Do init data areas.\n");
@@ -851,6 +897,8 @@ fullusage()
 	printf("	-f	/INIT=(NOFD_FILLER)	Change FD FILLERs to fields.\n");
 	printf("	-w	/INIT=(NOWS_FILLER)	Change WS FILLERS to fields.\n");
 	printf("	-q	/DATACONV		Generate data conversion program.\n");
+	printf("	-4	/X4DBFILE		Add check for database files.\n");
+	return 0;
 }
 showflags()
 {
@@ -896,6 +944,8 @@ showflags()
 		printf("     no -n	/NODLINK		Use VMS pseudo-LINK not dynamic LINK.\n");
 	if ( data_conv )
 		printf("	-q	/DATACONV		Generate data conversion program.\n");
+	if ( x4dbfile )
+		printf("	-4	/X4DBFILE		Add check for database files.\n");
 	if ( init_data )								/* Init data areas			*/
 		printf("	-D	/INIT=(DATA)		Do init data areas.\n");
 	else
@@ -915,7 +965,12 @@ showflags()
 	if ( lpi_cobol )								
 		printf("	-VLPI	/LANGUAGE=LPI		Generate LPI COBOL.\n");
 	if ( acu_cobol )								
-		printf("	-VACU	/LANGUAGE=ACU		Generate ACUCOBOL COBOL.\n");
+	{
+		if ( acn_cobol )
+			printf("	-VACN	/LANGUAGE=ACN		Generate ACUCOBOL (NATIVE) COBOL.\n");
+		else
+			printf("	-VACU	/LANGUAGE=ACU		Generate ACUCOBOL COBOL.\n");
+	}
  	if ( vax_cobol )								
 		printf("	-VVAX	/LANGUAGE=VAX		Generate VAX COBOL.\n");
  	if ( aix_cobol )								
@@ -938,5 +993,25 @@ showflags()
 		printf("     no -S	/DMS			Add DMS locking logic.\n");
 	else
 		printf("        -S	/NODMS			Do not add DMS locking logic.\n");
+	return 0;
 }
 #endif
+
+/*
+**	History:
+**	$Log: wt_cli.c,v $
+**	Revision 1.14  1997-08-28 17:12:05-04  gsl
+**	Add -VACN for Native Acucobol
+**
+**	Revision 1.13  1997-07-29 10:31:21-04  gsl
+**	Change copyright to NeoMedia
+**
+**	Revision 1.12  1996-06-24 14:12:14-04  gsl
+**	add NT defaults and add missing return codes
+**
+**	Revision 1.11  1996-01-08 02:24:09-08  gsl
+**	Changed Copyright to 1996
+**
+**
+**
+*/

@@ -8,9 +8,10 @@
 /*									*/
 /************************************************************************/
 
-#include <v/video.h>
+#include <video.h>
+#include <vmodules.h>
 
-testd()
+void testd()
 {
 	int i,a,b;
 
@@ -98,11 +99,11 @@ testd()
 	vmove(2,1);
 	vprint("INVOICE NUMBER 00987.");
 	vmove(2,29);
-	vprint("Int'l Digital Scientific Inc.");
+	vprint("NeoMedia Migrations Inc.");
 	vmove(3,29);
-	vprint("25050 Avenue Kearn, Suite 203");
+	vprint("2201 2nd Street, Suite 600");
 	vmove(4,29);
-	vprint("Valencia, CA 91355");
+	vprint("Fort Myers, FL 33901");
 
 	vmove(5,0);
 	vline(HORIZONTAL,60);						/* line 2					*/

@@ -1,0 +1,8 @@
+000000*---------------------------------------------
+000000* Working storage to set and unset KEEP mode.
+000000*---------------------------------------------
+000000
+000000 01  SAVE-KEEP-PRNTMODE       PIC X VALUE SPACE.
+000000 01  KEEP-PRNTMODE            PIC X VALUE "K".
+000000 01  KEEP-PRNTMODE-KW         PIC XX VALUE "PM".
+000000

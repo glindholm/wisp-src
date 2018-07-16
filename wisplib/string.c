@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -11,12 +13,15 @@
 
 #include <ctype.h> 
 #include <varargs.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
+#include "wisplib.h"
 
-static char ascii2ebcdic[256] =
+static unsigned char ascii2ebcdic[256] =
 {
 /* ATOE   x0    x1    x2    x3    x4    x5    x6    x7    x8    x9    xA    xB    xC    xD    xE    xF   */
 /* 0x */  0x00, 0x01, 0x02, 0x03, 0x37, 0x2D, 0x2E, 0x2F, 0x16, 0x05, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
@@ -37,7 +42,7 @@ static char ascii2ebcdic[256] =
 /* Fx */  0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x48, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0xFF
 };
 
-static char ebcdic2ascii[256] =
+static unsigned char ebcdic2ascii[256] =
 {
 /* ETOA   x0    x1    x2    x3    x4    x5    x6    x7    x8    x9    xA    xB    xC    xD    xE    xF   */
 /* 0x */  0x00, 0x01, 0x02, 0x03, 0x1A, 0x09, 0x0A, 0x7F, 0x1A, 0x1A, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 
@@ -58,7 +63,12 @@ static char ebcdic2ascii[256] =
 /* Fx */  0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x91, 0x1A, 0x8F, 0x80, 0x1A, 0xFF 
 };
 
-void center_text(), leftj_text(), rightj_text(), rev_text(), move_and_pad(), str_xlat();
+void center_text(char *l_in_string, int4 l_len, char *l_out_string);
+void leftj_text(char *l_in_string, int4 l_len, char *l_out_string);
+void rightj_text(char *l_in_string, int4 l_len, char *l_out_string);
+void rev_text(char *l_in_string, int4 l_len, char *l_out_string);
+void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 l_ondx, int4 l_olen, char l_pad);
+void str_xlat(char func, char *in_string, char *out_string, int4 len, char *table);
 					     						
 void STRING(va_alist)						                        /* Function uses variable arguments.	*/
 va_dcl											/* Parameter declaration.     		*/
@@ -205,11 +215,11 @@ va_dcl											/* Parameter declaration.     		*/
 
 			if ('A' == func_type[0] && 'E' == func_type[1])
 			{
-				str_xlat('T',in_string,out_string,len,ascii2ebcdic);
+				str_xlat('T',in_string,out_string,len,(char *)ascii2ebcdic);
 			}
 			else if ('E' == func_type[0] && 'A' == func_type[1])
 			{
-				str_xlat('T',in_string,out_string,len,ebcdic2ascii);
+				str_xlat('T',in_string,out_string,len,(char *)ebcdic2ascii);
 			}
 			else
 			{
@@ -249,9 +259,7 @@ va_dcl											/* Parameter declaration.     		*/
  	va_end(the_args);								/* Done with the args.			*/
 }
 
-void center_text(l_in_string, l_len, l_out_string)					/* Centera line of text.		*/
-unsigned char *l_in_string, *l_out_string;						/* Arg. pointers.			*/
-int4  l_len;										/* " "					*/
+void center_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Centera line of text.		*/
 {
 	int  i, i_len, x;								/* Work variables.			*/
 	char *work_area;								/* Pointer to work area			*/
@@ -282,12 +290,10 @@ int4  l_len;										/* " "					*/
 	free(work_area);								/* Done with storage.			*/
 }
 											/* Left justify a line of text.		*/
-void leftj_text(l_in_string, l_len, l_out_string)					/*  added  10-12-89 jec			*/
-char *l_in_string, *l_out_string;							/* Arg. pointers.			*/
-int4  l_len;										/* " "					*/
+void leftj_text(char *l_in_string, int4 l_len, char *l_out_string)
 {                                                                                                                                 
 	char *tmp;
-	char *src, *dest, *p;
+	char *src, *dest;
 	int len, outlen;
 
 	tmp = (char *)calloc((int)(l_len+1),sizeof(char));
@@ -303,13 +309,11 @@ int4  l_len;										/* " "					*/
 	free(tmp);
 }
 
-void rightj_text(l_in_string, l_len, l_out_string)					/* Right justify a line of text.	*/
-char *l_in_string, *l_out_string;							/* Arg. pointers.			*/
-int4  l_len;										/* " "					*/
+void rightj_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right justify a line of text.	*/
 {
 	char *tmp;
-	char *src, *dest, *p;
-	int len, outlen;
+	char *src, *dest;
+	int len;
 
 	tmp = (char *)calloc((int)(l_len+1),sizeof(char));
 	memset(tmp,' ',(int)l_len);							/* Fill with spaces.			*/
@@ -327,9 +331,7 @@ int4  l_len;										/* " "					*/
 	free(tmp);
 }
 
-void rev_text(l_in_string, l_len, l_out_string)						/* Right justify a line of text.	*/
-char *l_in_string, *l_out_string;							/* Arg. pointers.			*/
-int4  l_len;										/* " "					*/
+void rev_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right justify a line of text.	*/
 {
 	char *src, *dest, *tmpbuf;
        	int i;
@@ -341,9 +343,8 @@ int4  l_len;										/* " "					*/
 	free(tmpbuf);
 }
 
-void move_and_pad(l_in_str,l_ndx,l_len,l_out_str,l_ondx,l_olen,l_pad)			/* Move and pad with character.		*/
-char *l_in_str, *l_out_str, l_pad;
-int4 l_ndx, l_len, l_ondx, l_olen;
+void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 l_ondx, int4 l_olen, char l_pad)
+											/* Move and pad with character.		*/
 {
 	char *st_pos, *cpy_pos;
 	int i, cnt;
@@ -361,33 +362,47 @@ int4 l_ndx, l_len, l_ondx, l_olen;
 	for (i = cnt; i < l_olen; i++)  *cpy_pos++ = l_pad;				/* Pad character for remaining length.	*/
 }
 
-void str_xlat(func,in_string,out_string,len,table)
-char func;
-char *in_string, *out_string;
-int4 len;
-char *table;
+void str_xlat(char func, char *in_string, char *out_string, int4 len, char *table)
 {
-	char *tmp;
-	register char *inp, *outp, *p;
+	char *tmp_outbuff;
+	register char *outp, *inp, *p;
 	register int cnt,cnt2;
 	int tablen;
 
-	tmp = calloc((int)(len+1),sizeof(char));
+	tmp_outbuff = calloc((int)(len+1),sizeof(char));
 	switch (func)
 	{
-	      case 'T':
-		for (inp=in_string, outp=tmp, cnt=0; cnt<len; ++cnt, ++inp, ++outp)
-		  *outp = *(table + (int)*inp);
-		break;
-	      case 'L':
-		for (p=table, tablen=0; !(*p==(char)0 && *(p+1)==(char)0); ++tablen,p+=2);
-		for (inp=in_string, outp=tmp, cnt=0; cnt<len; ++cnt, ++inp, ++outp)
+	case 'T':	/* Translation Table */
+		for (inp=in_string, outp=tmp_outbuff, cnt=0; cnt<len; ++cnt, ++inp, ++outp)
 		{
-			for (p=table, cnt2=0; cnt2<tablen && *(p+1) != *inp; cnt2++, p += 2);
-			if (cnt2<tablen) *outp = *p;
-			else *outp = *inp;
+			*outp = table[ *((unsigned char *)inp) ];
+		}
+		break;
+
+	case 'L':	/* Translation List */
+		for (p=table, tablen=0; !(*p==(char)0 && *(p+1)==(char)0); ++tablen, p+=2) 
+		{
+			/* Calculate tablen = number of entries in the list */
+		}
+
+		for (inp=in_string, outp=tmp_outbuff, cnt=0; cnt<len; ++cnt, ++inp, ++outp)
+		{
+			for (p=table, cnt2=0; cnt2<tablen && *(p+1) != *inp; cnt2++, p += 2) { /* EMPTY */ };
+			if (cnt2<tablen) 
+				*outp = *p;
+			else 
+				*outp = *inp;
 		}
 	}
-	strncpy(out_string,tmp,(int)len);
-	free(tmp);
+	memcpy(out_string,tmp_outbuff,(int)len);
+	free(tmp_outbuff);
 }
+/*
+**	History:
+**	$Log: string.c,v $
+**	Revision 1.12  1996-08-19 18:33:00-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1992-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 **      File:           bldmf.c
 **
@@ -34,16 +36,11 @@
 **                                      added usage on bad opt, fixed errlog behavior
 **
 **
- *
+**
 */
 
-static char copyright[] = "Copyright 1992 International Digital Scientific, Inc. All Rights Reserved.";
-static char rcsid[] = "$Id:$";
-
-char VERSION[5];
-static char MODDATE[20];
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
@@ -53,6 +50,11 @@ static char MODDATE[20];
 #define MAIN
 
 #include "bldmf.h"
+
+static char rcs_date[]		="$Date:$";
+static char rcs_revision[]	="$Revision:$";
+static char rcs_state[]		="$State: V4_2_00 $";
+static char bldmf_version[80];
 
 /**************************************************************
 **  FUNCTION DECLARATIONS                                     
@@ -80,8 +82,8 @@ char *my_strdup(char* str );
 int srch_fixed(char* string, char* substr );
 char *gmem(int size, int cnt);
 void add_node( LIST** listp, void* node );
-void sort_list( LIST* listp, int (*sortroutine)( void** s1, void** s2 ) );
-int compare_strs( void **s1, void **s2 );
+void sort_list( LIST* listp, int (*sortroutine)( void* s1, void* s2 ) );
+int compare_strs( void *s1, void *s2 );
 int list_size( LIST* listp );
 
 extern char *nextfile( char* path, char** context );
@@ -161,7 +163,7 @@ char* argv[];
 {
         LIST *proglist = NULL;
 
-	make_vers_date(rcsid,VERSION,MODDATE);
+	make_version();
         parse_args(argc, argv);
         
         if (show_help)
@@ -305,7 +307,7 @@ char *name;
         if (re_stat)
         {
                 fprintf(stderr,"bldmf: PANIC: %s\n",re_stat);
-                fprintf(stderr,"       Contact IDSI Customer Support.\n");
+                fprintf(stderr,"       Contact NeoMedia Customer Support.\n");
                 exit(1);
         }
 
@@ -414,18 +416,24 @@ char* path;
         LIST *deps=NULL;
         extern FILE *yyin;
         int copystate;
-        extern char yytext[];
+
+	/*
+	 * the following line was changed from 
+	 * extern char *yytext;
+	 * changing it to the following fixed the 33x8 core dump 
+ 	 */
+
+	extern char yytext[];
         char name[9];
         char lib[9];
         char *genpath(), *dpath;
         int eof;
-        extern int yylineno;
         int token;
 
-        yylineno=0;
+        line_number=0;
         current_prog = path;
         yyin = fopen(path,"r");
-
+	nextwcbfile(); /* in bldmf_l.l file */
         /* first dep is the program's source */
         add_node(&deps,(void*)path);
 
@@ -438,7 +446,12 @@ char* path;
         copystate=S_NORMAL;
         for (eof=FALSE; eof==FALSE; )
         {
+		extern int cont_str;
                 token=yylex();  /* get a token from the cobol prog */
+		if (cont_str)
+		{
+			continue;
+		}
 
               reset:
                 copystate = stab[token][copystate];   /* determine state */
@@ -450,7 +463,16 @@ char* path;
                         
                       case S_COPYNAME:
 			if (token == T_QUOTED)
-			  strcpy(name,yytext+1);
+			{
+				char *p;
+				
+				strcpy(name,yytext+1);
+				p=strchr(name,'"');
+				if (p) 
+				{
+					*p=(char)0;
+				}
+			}
 			else
 			  strcpy(name,yytext);
                         break;
@@ -518,7 +540,6 @@ char *name, *lib;
         char *my_strdup();
         LIST *copydirs;
         extern LIST *inc_dir_list;
-        extern int yylineno;
 
         good=NULL;
         lowstring(name);
@@ -556,7 +577,7 @@ char *name, *lib;
                 {
                         fprintf(stderr,"\n");
                 }
-                fprintf(stderr,"ERROR: %11s:%-5d    Missing copy member: %s\n",current_prog,yylineno,
+                fprintf(stderr,"ERROR: %11s:%-5d    Missing copy member: %s\n",current_prog,line_number,
                         buf);
                 column=0;
         }
@@ -589,7 +610,7 @@ char* name;
 {
         char buf[200];
         char newname[9];
-        char *p, *strchr();
+        char *p;
 
         memset(newname,0,sizeof(newname));
         p=strchr(name,'.');
@@ -626,7 +647,7 @@ LIST **plist;
         LIST *pp, *dp;
         FILE *output;
         char basename[32];
-        char *p,*strchr();
+        char *p;
         char logerrstr[64];
         char output_name_old[256];
 	int saved;
@@ -862,12 +883,11 @@ int *num,*type,*val;
 {
         struct optstruct *p;
         int i;
-        int strncmp();
 
         /* go down opt list, looking for match of opt string */
         for(i=0,p=optlist;p->opt;++p,++i)
         {
-                if (!strncmp((unsigned char *)opt,(unsigned char *)p->opt,strlen(p->opt)))
+                if (!strncmp(opt,p->opt,strlen(p->opt)))
                 {
                         *num=i;
                         *type=p->type;
@@ -1109,7 +1129,7 @@ void init_globals()
 void process_globals()
 {
         if (!quiet_mode)
-          fprintf(stderr,"bldmf %s %s: Build makefiles for COBOL projects\n",VERSION,MODDATE);
+		fprintf(stderr,"bldmf %s: Build makefiles for COBOL projects\n",bldmf_version);	
         
         upstring(cobol_type);
         
@@ -1233,17 +1253,20 @@ void usage()
         fprintf(stderr,"Possible args:\n");
         fprintf(stderr,"     -t <type>               Specify COBOL type: ACU (default) or MF\n");
         fprintf(stderr,"     -s <srcdir>             Directory containing source files\n");
-        fprintf(stderr,"     -r <destdir>            Destination directory for run files (default: ../run)\n");
+        fprintf(stderr,"     -r <destdir>            Destination directory for run files\n");
+	fprintf(stderr,"                                (default: \"../run\")\n");
         fprintf(stderr,"     -ws <wisp switches>     Additional switches for WISP command\n");
-        fprintf(stderr,"     -wp <wisp path>         Path of WISP translator (default: $wispexecdef)\n");
+        fprintf(stderr,"     -wp <wisp path>         Path of WISP translator (default: \"wisp\")\n");
         fprintf(stderr,"     -cs <cob switches>      Additional switches for COBOL compile command\n");
         fprintf(stderr,"     -cm <cobol name>        Command to use to compile .cob files\n");
         fprintf(stderr,"     -I <include dir(s)>     Directory(s) containing copy books\n");
-        fprintf(stderr,"     -l <line count>         Specify number of lines to search for \"ENVIRONMENT DIVISION\"\n");
+        fprintf(stderr,"     -l <line count>         Specify number of lines to search for\n");
+	fprintf(stderr,"                                \"IDENTIFICATION DIVISION\"\n");
+	fprintf(stderr,"                                (default: 500 lines)\n");
         fprintf(stderr,"     -dc                     Delete .cob files after successful compilation\n");
         fprintf(stderr,"     -cc                     Compress .cob files after compilation\n");
         fprintf(stderr,"     -e                      Log errors to error.log during make\n");
-        fprintf(stderr,"     -o                      Output filename (default: Makefile)\n");
+        fprintf(stderr,"     -o                      Output filename (default: \"Makefile\")\n");
         fprintf(stderr,"     -q                      Quiet mode\n");
         fprintf(stderr,"     -h                      This help message\n");
         exit(0);
@@ -1311,8 +1334,11 @@ void *node;   /* data for new node */
 **
 **      Description:    sort a linked list
 **
-**      Input:          LIST  - pointer to  the list
-**                      SORTROUTINE - routine to compare two items
+**      Input:          
+**	listp		pointer to  the list
+**      sortroutine	comparison routine
+**			receives two void ** pointers (called by qsort)
+**			routine must deref twice to get to data item
 **
 **      Output:         rearranges the list in place
 **
@@ -1323,11 +1349,7 @@ void *node;   /* data for new node */
 **      History:        06/11/92        Written by JEC
 **
 */
-void sort_list(listp,sortroutine)  /* reorder a linked list. */
-LIST *listp; /* list head */
-int (*sortroutine)();   /* routine for item comparison...*/
-                        /*  receives two void ** pointers (called by qsort)*/
-                        /* routine must deref twice to get to data item */
+void sort_list( LIST* listp, int (*sortroutine)( void* s1, void* s2 ) )
 {
   void **ptrs;
   char *gmem();
@@ -1390,62 +1412,49 @@ LIST *listp;
 **      History:        06/11/92        Written by JEC
 **
 */
-int compare_strs(s1,s2)
-void** s1;
-void** s2;
+int compare_strs(void *s1, void *s2)
 {
-        return strcmp( *s1, *s2 );
+	/*
+	**	s1 and s2 are actually (char **)
+	*/
+        return strcmp( *((char **)s1), *((char **)s2) );
 }
-#define VLEN 5
-#define MDLEN 20
+
+make_version()
+{
+	char	buff[80];
+	
+	bldmf_version[0] = (char)0;
+
+	buff[0] = (char)0;
+	sscanf(&rcs_state[1],"State: %s ",buff);
+	strcat(bldmf_version,buff);
+	strcat(bldmf_version," ");
+	
+	buff[0] = (char)0;
+	sscanf(&rcs_revision[1],"Revision: %s ",buff);
+	strcat(bldmf_version,buff);
+	strcat(bldmf_version," ");
+	
+	buff[0] = (char)0;
+	sscanf(&rcs_date[1],"Date: %s ",buff);
+	strcat(bldmf_version,buff);
+}
 /*
-**      Routine:        make_vers_date()
+**	History:
+**	$Log: bldmf.c,v $
+**	Revision 1.14  1997-06-02 09:18:27-04  gsl
+**	Fix usage message
 **
-**      Function:       create a version and date string
+**	Revision 1.13  1997-06-02 09:14:16-04  gsl
+**	Correct the usage/help message
 **
-**      Description:    using rcsid (passed in), create a version string
-**                      and a date stamp string that can be used to 
-**                      print the version for the user's information
+**	Revision 1.12  1996-12-12 13:12:32-05  gsl
+**	DevTech -> NeoMedia
 **
-**      Input:          recieves rcsid string and version and date
-**                      reciever areas
+**	Revision 1.11  1996-07-23 11:12:48-07  gsl
+**	drcs update
 **
-**      Output:         version and date are created
 **
-**      Return:         None
-**
-**      Warnings:       None
-**
-**      History:        12/23/92     borrowed from print queue utils.c by JEC
 **
 */
-make_vers_date(idstr,version,moddate)
-char *idstr, *version, *moddate;
-{
-	char *p,*e,*strchr();
-	extern long version_num, revision_num;
-	
-	memset(version,0,VLEN);
-	p=strchr(idstr,'V');
-	if (p)
-	{
-		e=strchr(++p,' ');
-		memcpy(version,p,e-p);
-		p=strchr(version,'_');
-		if (p) *p='.';
-	}
-	else
-	{
-		p=strchr(idstr,' ');
-		p=strchr(++p,' ');
-		e=strchr(++p,' ');
-		version[0]='~';
-		memcpy(version+1,p,e-p);
-	}
-	memset(moddate,0,MDLEN);
-	p=strchr(idstr,' ');
-	p=strchr(++p,' ');
-	p=strchr(++p,' ');
-	e=strchr(++p,' ');
-	memcpy(moddate,p,e-p);
-}

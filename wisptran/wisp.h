@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -7,22 +11,24 @@
 			/*									*/
 			/************************************************************************/
 
+#ifndef WISP_H
+#define WISP_H
+
 /* WISP common variable definition file, EXT is defined to be "extern" for the wangutils, and blank for MAIN  */
 
 #include <ctype.h>
 #include <stdio.h>
 
-#ifndef NOSTDLIB
 #include <stdlib.h>
-#endif
-#ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
-#endif
-#ifdef MSDOS
+#include <string.h>
+
+#ifdef _MSC_VER
 #include <io.h>
-#else	/* VMS or unix */
-extern char *mktemp();
 #endif
+
+#include "proto.h"
+#include "output.h"
+#include "keywords.h"
 
 #ifdef INIT_COMMON
 
@@ -49,16 +55,11 @@ extern char *mktemp();
 
 EXT char prog_id[16];								/* the program id of this program		*/
 
-EXT char inline[256];								/* The current input line.			*/
+EXT char linein[256];								/* The current input line.			*/
 EXT char templine[256];
 
 EXT int re_copy	   INIT_FALSE;							/* Is this the scond time for this copy lib.	*/
 EXT int cpy_seq    INIT_FALSE;							/* Copy lib sequence counter.			*/
-
-#define MAX_NAME_LIST		500
-
-EXT char name_list[MAX_NAME_LIST][100];							/* A list of names, used as scratch.	*/
-EXT int name_count INIT_FALSE;								/* The number in the list.		*/
 
 #define MAX_PARAGRAPHS		512							/* How many paragraphs can be copied.	*/
 
@@ -112,9 +113,6 @@ EXT c_list *xref_ptr;									/* Pointer to cross ref list.		*/
 
 #define STRING_BUFFER_SIZE 4096
 
-EXT char pf_str[STRING_BUFFER_SIZE];							/* Buffer for ON PFKEY phrases		*/
-EXT char nm_str[STRING_BUFFER_SIZE];							/* Buffer for NO-MOD phrases		*/
-
 EXT int in_decl		INIT_FALSE;							/* Are we in the declaratives section?	*/
 EXT int has_lit		INIT_FALSE;							/* Does the current line have a literal?*/
 EXT int isalit		INIT_FALSE;							/* Is the current input open literal?	*/
@@ -142,9 +140,6 @@ EXT int copy_to_dtp_file 	INIT_FALSE;						/* Declarative copy mode.		*/
 EXT int ptype;										/* the parm type (first last middle)	*/
 EXT int kwproc    	INIT_TRUE;							/* flag to stop keyword processing.	*/
 EXT int d_period  	INIT_FALSE;							/* flag to indicate a period is found	*/
-EXT int pfkeys	  	INIT_FALSE;							/* flag to indicate PFKEYS phrase	*/
-EXT int no_mod    	INIT_FALSE;							/* flag to indicate a NO-MOD		*/
-EXT int on_pfkeys 	INIT_FALSE;							/* flag to indicate an ON PFKEYS	*/
 EXT int keepstop  	INIT_FALSE;							/* Keep STOP RUN statements.		*/
 EXT int changestop	INIT_FALSE;							/* Change STOP RUN to EXIT PROGRAM	*/
 EXT int trap_start	INIT_FALSE;							/* Trap START timeouts.			*/
@@ -169,15 +164,19 @@ EXT int copy_only 	INIT_FALSE;							/* don't just copy it, process it.	*/
 EXT int logging 	INIT_FALSE;							/* no logging by default		*/
 EXT int log_stats 	INIT_FALSE;							/* no stats either.			*/
 EXT int data_conv	INIT_FALSE;							/* Default to not data conversion	*/
+EXT int x4dbfile	INIT_FALSE;							/* Do not add check for database file	*/
 
 EXT int  vax_cobol 	INIT_FALSE;							/* VAX COBOL				*/
 EXT int  lpi_cobol 	INIT_FALSE;							/* LPI COBOL				*/
 EXT int  acu_cobol 	INIT_FALSE;							/* ACUCOBOL 				*/
+EXT int  acn_cobol 	INIT_FALSE;							/* ACUCOBOL (NATIVE)			*/
+EXT int  native_cobol 	INIT_FALSE;							/* NATIVE SCREENS			*/
 EXT int  aix_cobol 	INIT_FALSE;							/* AIX VS COBOL 			*/
 EXT int  mf_cobol 	INIT_FALSE;							/* Micro Focus COBOL 			*/
 EXT int  dmf_cobol 	INIT_FALSE;							/* Micro Focus MSDOS COBOL 		*/
 EXT int  unix_cobol 	INIT_FALSE;							/* Any UNIX COBOL 			*/
 EXT int  dos_cobol 	INIT_FALSE;							/* Any DOS COBOL 			*/
+EXT int  nt_cobol 	INIT_FALSE;							/* Any NT COBOL 			*/
 EXT int  mf_aix 	INIT_FALSE;							/* Micro Focus (or AIX) COBOL 		*/
 EXT char cobol_type[4];									/* The type of COBOL			*/
 
@@ -203,3 +202,18 @@ EXT int  wrote_special_names INIT_FALSE;						/* Was SPECIAL-NAMES written		*/
 #define QUOTE_CHAR '"'
 #define QUOTE_STR  "\""
 
+
+#endif /* WISP_H */
+
+/*
+**	History:
+**	$Log: wisp.h,v $
+**	Revision 1.12  1997-08-28 17:11:08-04  gsl
+**	Add flags for native screens with acucobol
+**
+**	Revision 1.11  1996-06-24 14:22:52-04  gsl
+**	add NT cobol and fix MSDOS for WINNT
+**
+**
+**
+*/

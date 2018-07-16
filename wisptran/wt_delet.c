@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -6,9 +8,6 @@
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
-#ifdef MSDOS
-#include <string.h>
-#endif
 
 #define EXT extern
 #include "wisp.h"
@@ -16,8 +15,7 @@
 
 p_delete()
 {
-	int	i,j,hold,fnum,inv_key,n_alt;
-	char	tstr[132];
+	int	i,j,fnum,inv_key;
 	char	fdname[40];
 	int	lock_clause;
 
@@ -52,7 +50,7 @@ p_delete()
 	{
 		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
 
-		if (o_parms[0][0]) stredt(inline,o_parms[0],"");			/* Remove it from the input line	*/
+		if (o_parms[0][0]) stredt(linein,o_parms[0],"");			/* Remove it from the input line	*/
 		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
 
 		if (ptype == 1)								/* first parm on a new line		*/
@@ -62,14 +60,14 @@ p_delete()
 
 		if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
 		{
-			stredt(inline," INVALID"," ");					/* remove INVALID			*/
+			stredt(linein," INVALID"," ");					/* remove INVALID			*/
 			if (ptype != -1)
 			{
 				peek_param(o_parms[7]);					/* get "KEY"				*/
 				if (!strcmp(o_parms[7],"KEY"))				/* Was it KEY?				*/
 				{
 					ptype = get_param(o_parms[0]);			/* Get it, and remove it.		*/
-					stredt(inline," KEY"," ");			/* remove KEY				*/
+					stredt(linein," KEY"," ");			/* remove KEY				*/
 				}
 			}
 
@@ -106,14 +104,14 @@ p_delete()
 		{
 			tput_line("           IF WISP-TEST-BYTE = \"N\" THEN");
 			tput_line("               MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fnum]);
-			tput_line("               UNLOCK %s ALL", fdname );
+			tput_line("               UNLOCK %s", fdname );
 			tput_line("               MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fnum]);
 			tput_line("           ELSE");
 		}
 		else
 		{
 			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fnum]);
-			tput_line("           UNLOCK %s ALL", fdname );
+			tput_line("           UNLOCK %s", fdname );
 			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fnum]);
 		}
 	}
@@ -128,9 +126,19 @@ p_delete()
 	if (ptype != -1) hold_line();
 
 	write_log("WISP",'I',"DELETEDONE","Completed DELETE analysys");
+	return 0;
 
 }
 
 
 
 
+/*
+**	History:
+**	$Log: wt_delet.c,v $
+**	Revision 1.10  1996-08-30 21:56:16-04  gsl
+**	drcs update
+**
+**
+**
+*/

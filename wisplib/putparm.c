@@ -1,15 +1,19 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		putparm.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	This routine emmulates the WANG VSSUB  PUTPARM.
+**
+**	Routines:	
+*/
 
-
-/* 
-	PUTPARM.C 	This routine emmulates the WANG VSSUB  PUTPARM.
+/*
+**	Includes
 */
 
 #ifdef unix 
@@ -18,12 +22,8 @@
 #include <sys/shm.h>
 #endif
 
-#ifdef MSDOS
-#include <stdlib.h>
-#include <malloc.h>
-#endif
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <ctype.h>
 #include <varargs.h>									/* This routine uses variable args.	*/
@@ -31,20 +31,43 @@
 #include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
-#include "wshmem.h"
+#include "sharemem.h"
 #include "putparm.h"
 #include "wdefines.h"
 #include "wglobals.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "wmalloc.h"
 
-static int	test_nextarg();
-static int4 	write_putparm();							/* Do the write to the shared memory.	*/
-static int	block_fmtlist();
-static int      test_next_arg();
+/*
+**	Structures and Defines
+*/
+
+#define PRNAME_SIZE	8
+#define LABEL_SIZE	8
+#define KEYWORD_SIZE	8
 
 #ifndef MAX
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #endif
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+static int      test_next_arg();
+static int4 	write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fmtlist, char pfkey, 
+				char *pp_label, char *pp_reflbl, char cleanup);
+static int 	block_fmtlist(FMTLIST *fmtlist, char *receiver, int4 *rlen, int4 *tlen);
 
 /*
 **	PUTPARM('D/E', [Usage_count], Prname,  Keyword_count, {Keyword,Value,Length}, PFkey, PPlabel, Reflabel, Cleanup, RC)
@@ -63,11 +86,11 @@ va_dcl
 	int4	*long_item;
 	int4	swap_me, *return_code;
 	char	*pp_function, *prname, *pplabel_arg, *byte_pointer;			/* Pointers to args off the stack.	*/
-	char 	pp_label[9], pp_reflbl[9];
+	char 	pp_label[LABEL_SIZE + 1], pp_reflbl[LABEL_SIZE + 1];
 	int	rc_fl, idx;
 	int4	ret;
 	int4	process_ref;
-	KEYW	*fmtlist;
+	FMTLIST	*fmtlist;
 	char	*ptr;
 	char	*r_receiver;
 	int4	*rlptr, rcvr_len, *tlptr, tot_len;
@@ -147,7 +170,7 @@ va_dcl
 		if (pplabel_arg && ' ' != pplabel_arg[0])				/* If a label was supplied then		*/
 		{
 			SHMH	*prb;
-			prb = (SHMH *)get_prb_area(NULL,pplabel_arg,OK_USED);		/* find the PRB				*/
+			prb = get_prb_area(NULL,pplabel_arg,OK_USED);			/* find the PRB				*/
 			if (prb)
 			{
 				ret = (int4)erase_prb(prb);				/* erase the prb			*/
@@ -225,7 +248,7 @@ va_dcl
 	m_kwdata = NULL;
 	for (idx = 0; idx < keyword_count; idx++)
 	{
-		KEYW	*p;
+		FMTLIST	*p;
 		char	*nameptr, *valptr;
 		int4	*lenptr, len;
 
@@ -234,16 +257,16 @@ va_dcl
 		**
 		**	Build a linked list of the keywords.
 		**
-		**	fmtlist -> KEYW -> KEYW -> KEYW ->(NULL)
+		**	fmtlist -> FMTLIST -> FMTLIST -> FMTLIST ->(NULL)
 		*/
 		if (!fmtlist) 
 		{
-			p = fmtlist = (KEYW *)calloc(1,sizeof(KEYW));
-			if ('M' == *pp_function) m_kwdata = (char **)calloc((size_t)keyword_count,sizeof(char *));
+			p = fmtlist = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
+			if ('M' == *pp_function) m_kwdata = (char **)wcalloc((size_t)keyword_count,sizeof(char *));
 		}
 		else
 		{
-			p->next = (KEYW *)calloc(1,sizeof(KEYW));
+			p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 			p = p->next;
 		}
 		p->next = NULL;
@@ -271,17 +294,17 @@ va_dcl
 		}
 
 		p->len = len;								/* set len 				*/
-		loadpad(p->keyword,nameptr,8);						/* copy the keyword in (incl. spaces) 	*/
+		loadpad(p->keyword,nameptr,KEYWORD_SIZE);				/* copy the keyword in (incl. spaces) 	*/
 
 		/*
 		**	Special case for FILE, LIBRARY, VOLUME to ensure that if backwards referenced the fields are big enough.
 		**	len will be set to the parameter length, p->len will be set to the adjusted length.
 		*/
-		if      (0==memcmp(p->keyword,"FILE    ",8)) { p->len = MAX(p->len,8); }
-		else if (0==memcmp(p->keyword,"LIBRARY ",8)) { p->len = MAX(p->len,8); }
-		else if (0==memcmp(p->keyword,"VOLUME  ",8)) { p->len = MAX(p->len,6); }
+		if      (0==memcmp(p->keyword,"FILE    ",KEYWORD_SIZE)) { p->len = MAX(p->len,8); }
+		else if (0==memcmp(p->keyword,"LIBRARY ",KEYWORD_SIZE)) { p->len = MAX(p->len,8); }
+		else if (0==memcmp(p->keyword,"VOLUME  ",KEYWORD_SIZE)) { p->len = MAX(p->len,6); }
 
-		p->value = (char *)calloc((int)(p->len+1),(int)sizeof(char));		/* grab space 				*/
+		p->value = (char *)wcalloc((int)(p->len+1),(int)sizeof(char));		/* grab space 				*/
 		if (p->len > len) memset(p->value,' ',(size_t)p->len);			/* if special case then blank fill	*/
 		memcpy(p->value,valptr,(int)len);					/* copy len bytes 			*/
 	}
@@ -320,8 +343,8 @@ va_dcl
 		--arg_count;
 		if (test_next_arg(the_args,arg_count))					/* Are there any more arguments ?	*/
 		{									/* Yes, so set label address.		*/
-			memcpy(pp_label,ptr,8);
-			pp_label[8] = '\0';						/* Null terminate the string.		*/
+			memcpy(pp_label,ptr,LABEL_SIZE);
+			pp_label[LABEL_SIZE] = '\0';				       	/* Null terminate the string.		*/
 		}
 		else									/* No, so set return code address.	*/
 		{
@@ -334,8 +357,8 @@ va_dcl
 			--arg_count;
 			if (test_next_arg(the_args,arg_count))				/* Are there any more arguments ?	*/
 			{								/* Yes, so set reference label address.	*/
-				memcpy(pp_reflbl,ptr,8); 				/* Set up kws & vals from reference.	*/
-				pp_reflbl[8] = '\0';					/* null terminate the string.		*/
+				memcpy(pp_reflbl,ptr,LABEL_SIZE); 			/* Set up kws & vals from reference.	*/
+				pp_reflbl[LABEL_SIZE] = '\0';				/* null terminate the string.		*/
 				if (strcmp(pp_reflbl,"        "))			/* If a reference label has been	*/
 				{							/* specified then set flag so will try	*/
 					process_ref = TRUE; 				/*  to access it.			*/
@@ -372,13 +395,13 @@ va_dcl
 
 	if ('R' == *pp_function || 'M' == *pp_function)				/* Retreive info for 'R' and 'M'.		*/
 	{
-		KEYW	*ref_fmtlist;
-		char	*parm_area;
+		FMTLIST	*ref_fmtlist;
+		SHMH	*parm_area;
 
 		/*
 		**	This section handles both 'R' and 'M' requests.
 		*/
-		parm_area = (char *)get_prb_area(NULL,pplabel_arg,OK_USED);	/* Search for label match.			*/
+		parm_area = get_prb_area(NULL,pplabel_arg,OK_USED);		/* Search for label match.			*/
 		if (parm_area)							/* If reference label found.			*/
 		{								
 			ret = load_fmtlist(parm_area,&ref_fmtlist);		/* Load the ref PRB into a fmtlist		*/
@@ -390,7 +413,7 @@ va_dcl
 				*/
 				if (ref_fmtlist && fmtlist)			/* If we have both fmtlists then merge them	*/
 				{
-					KEYW	*p;
+					FMTLIST	*p;
 					int	ii;
 
 					mergex_fmtlist(ref_fmtlist,fmtlist);	/* Merge the ref into the dest fmtlist		*/
@@ -421,11 +444,11 @@ va_dcl
 
 			if (0==ret)
 			{
-				*pfkey_rcvr = ((SHMH *)parm_area)->pfkey;	/* Get aid char from referenced PUTPARM.	*/
+				*pfkey_rcvr = parm_area->pfkey;			/* Get aid char from referenced PUTPARM.	*/
 
 				if ('C' == cleanup_opt || 'c' == cleanup_opt)	/* Cleanup the referenced PUTPARM.		*/
 				{
-					erase_prb((struct shm_header *)parm_area);
+					erase_prb(parm_area);
 				}
 			}
 		}
@@ -442,9 +465,9 @@ va_dcl
 
 		if (process_ref) 
 		{
-			char	*ref_prb;
+			SHMH	*ref_prb;
 
-			ref_prb = (char *)get_prb_area(NULL,pp_reflbl,OK_USED);		/* Search for label match.		*/
+			ref_prb = get_prb_area(NULL,pp_reflbl,OK_USED);			/* Search for label match.		*/
 			if (ref_prb)							/* If reference label found.		*/
 			{
 				/*
@@ -454,7 +477,7 @@ va_dcl
 				*/
 				if (fmtlist)
 				{
-					KEYW	*ref_fmtlist;
+					FMTLIST	*ref_fmtlist;
 					ret = load_fmtlist(ref_prb,&ref_fmtlist);	/* Load the reference fmtlist		*/
 
 					if (0==ret && ref_fmtlist)			/* If OK then merge the fmtlists	*/
@@ -465,9 +488,9 @@ va_dcl
 
 					if ('C' == cleanup_opt || 'c' == cleanup_opt)	/* Cleanup the referenced PUTPARM.	*/
 					{
-						erase_prb((struct shm_header *)ref_prb);
+						erase_prb(ref_prb);
 					}
-					memset(pp_reflbl,' ',8);			/* Clear the reflbl - it's been done	*/
+					memset(pp_reflbl,' ',LABEL_SIZE);		/* Clear the reflbl - it's been done	*/
 				}
 			}
 			else
@@ -490,10 +513,15 @@ va_dcl
 	return(0);
 }                                                                                                                                 
 
+/*
+**	Remove original test in test_next_arg;  under Watcom, this test DOES 
+**	increment the ptr to the list.
+*/
 static int test_next_arg(args,cnt)							/* Return TRUE if there is another arg.	*/
 va_list args;										/* on the stack.			*/
 int cnt;										/* NOTE: This does not adjust the ptr	*/
 {											/*       to the arguments above!	*/
+#ifdef VMS
 	char *tst_scratch;
 
 	if (!cnt) return(FALSE);							/* No more arguments to get.		*/
@@ -501,6 +529,13 @@ int cnt;										/* NOTE: This does not adjust the ptr	*/
 	tst_scratch = va_arg(args, char*);						/* Address of the next argument.	*/
 	if (tst_scratch) return(TRUE);							/* Return TRUE, have an address.	*/
 	else		 return (FALSE);						/* Return FALSE, no address available.	*/
+#else  /* !VMS */
+
+	if (cnt > 0)
+		return (TRUE);
+	else
+		return (FALSE);
+#endif
 }
 
 /*
@@ -536,21 +571,16 @@ int cnt;										/* NOTE: This does not adjust the ptr	*/
 **
 */
 
-static int4 write_putparm(function,ucount,prname,fmtlist,pfkey,pp_label,pp_reflbl,cleanup)
-char	*function;	/* 'D' or 'E' */
-int4 	ucount;
-char 	*prname;
-KEYW	*fmtlist;
-char	pfkey;
-char	*pp_label;
-char	*pp_reflbl;
-char	cleanup;
+static int4 write_putparm(char *function, int4 ucount, char *prname, FMTLIST *fmtlist, char pfkey, 
+			char *pp_label, char *pp_reflbl, char cleanup)
 {
 	int 	mem_needed;
 	int	keyword_count;
 	char	*shmaddr;
 	int	id,size;
 	SHMH 	*pputparm;
+
+	wtrace("PUTPARM", "WRITE", "fcn=%c prname=%8.8s", *function, prname);
 
 	if (!prname || ' ' == *prname || 0 == *prname)					/* Didn't supply a prname!		*/
 	{
@@ -562,9 +592,16 @@ char	cleanup;
 
 	if ( pp_label[0] && pp_label[0] != ' ' )					/* If Labeled then delete previous	*/
 	{										/* (Only 1 PRB with a given label.)	*/
-		erase_prb((struct shm_header *)get_prb_area(NULL,pp_label,OK_USED));	/* Get & erase the labeled PRB		*/
+		erase_prb(get_prb_area(NULL,pp_label,OK_USED));				/* Get & erase the labeled PRB		*/
 	}
 #endif
+	if ( pp_label[0] && pp_label[0] != ' ' )
+	{
+		/*
+		**	Only one PRB with a given label allowed at a given level.
+		*/
+		erase_prb_label_level(pp_label);
+	}
 
 	size_fmtlist(fmtlist,&keyword_count,&mem_needed);				/* Get size values for fmtlist		*/
 
@@ -578,17 +615,17 @@ char	cleanup;
 	pputparm->prb_size 	= size;
 	pputparm->type 		= *function;						/* insert the function type  		*/
 	pputparm->usage_cnt 	= ucount;						/* and usage count			*/
-	memcpy(pputparm->prname,prname,8);						/* and prname				*/
+	memcpy(pputparm->prname,prname,PRNAME_SIZE);					/* and prname				*/
 	pputparm->keyw_cnt 	= keyword_count;					/* and keyword count 			*/
 	pputparm->status 	= P_OK;
 
 	write_fmtlist(pputparm,fmtlist);
 
 	pputparm->pfkey = pfkey;
-	if (strcmp(pp_label,"        ")) memcpy(pputparm->label,pp_label,8);		/* Copy the PUTPARM label to structure	*/
-	else				 memset(pputparm->label,0,8);			/*  else set it to NULL.		*/
-	if (strcmp(pp_reflbl,"        ")) memcpy(pputparm->reflbl,pp_reflbl,8);		/* Copy reference label to structure.	*/
-	else				  memset(pputparm->reflbl,0,8);			/*  else set it to NULL.		*/
+	if (strcmp(pp_label,"        ")) memcpy(pputparm->label,pp_label,LABEL_SIZE);	/* Copy the PUTPARM label to structure	*/
+	else				 memset(pputparm->label,0,LABEL_SIZE);		/*  else set it to NULL.		*/
+	if (strcmp(pp_reflbl,"        ")) memcpy(pputparm->reflbl,pp_reflbl,LABEL_SIZE);/* Copy reference label to structure.	*/
+	else				  memset(pputparm->reflbl,0,LABEL_SIZE);	/*  else set it to NULL.		*/
 	pputparm->cleanup = cleanup;
 
 	finish_sh_seg(size);								/* Update counters			*/
@@ -618,12 +655,10 @@ char	cleanup;
 **	08/28/92	Written by GSL
 **
 */
-int write_fmtlist(prb,fmtlist)
-SHMH	*prb;
-KEYW	*fmtlist;
+int write_fmtlist(SHMH *prb, FMTLIST *fmtlist)
 {
 	char	*dest;
-	KEYW	*p;
+	FMTLIST	*p;
 	int	offs;
 
 	dest = (char *)prb;
@@ -631,7 +666,7 @@ KEYW	*fmtlist;
 
 	for (p=fmtlist; p; p=p->next)						/* Loop thru and write each keywshm item	*/
 	{	
-		offs = load_keywshm((struct keyw_st_shmem *)dest,p);
+		offs = load_keywshm((KEYWSHM *)dest,p);
 		dest += offs;
 	}
 	return(0);
@@ -659,12 +694,9 @@ KEYW	*fmtlist;
 **	08/28/92	Written by GSL
 **
 */
-int size_fmtlist(fmtlist,cnt,mem)
-KEYW	*fmtlist;
-int	*cnt;
-int	*mem;
+int size_fmtlist(FMTLIST *fmtlist, int *cnt, int *mem)
 {
-	KEYW	*p;
+	FMTLIST	*p;
 
 	*cnt = 0;
 	*mem = sizeof(SHMH);								/* PRB header size			*/
@@ -672,7 +704,7 @@ int	*mem;
 	{
 		*cnt += 1;
 		/* Each keyword takes: size of KEYWSHM struct + 8 for keyword + length of value + null terminator		*/
-		*mem += sizeof(KEYWSHM) + 8 + p->len + 1;
+		*mem += sizeof(KEYWSHM) + KEYWORD_SIZE + p->len + 1;
 	}
 	return(0);
 }
@@ -701,25 +733,21 @@ int	*mem;
 **
 */
 
-int load_fmtlist(parm_area,fmtlist_ptr)
-char 	*parm_area;
-KEYW	**fmtlist_ptr;
+int load_fmtlist(SHMH *parm_area, FMTLIST **fmtlist_ptr)
 {
-	SHMH 	*pputparm;
 	int	i;
 	int	ret;
 
 	ret = 0;									/* Assume success.			*/
-	pputparm = (SHMH *) parm_area;							/* cast our header struct onto it 	*/
 
 	*fmtlist_ptr = NULL;
 
-	for (i = 1; i <= pputparm->keyw_cnt; i++)
+	for (i = 1; i <= parm_area->keyw_cnt; i++)
 	{
-		KEYW	*p;
+		FMTLIST	*p;
 		KEYWSHM	*prb_keystruct;						/* Pointer to keyword struct in PRB		*/
 		char	*prb_keyword;						/* Pointer to actual keyword in PRB		*/
-		short	len;
+		int2	len;
 
 		prb_keystruct = find_prb_keyword(parm_area,NULL,i);		/* Get pointer to keyword struct		*/
 
@@ -731,23 +759,23 @@ KEYW	**fmtlist_ptr;
 
 		if (!*fmtlist_ptr) 
 		{
-			p = *fmtlist_ptr = (KEYW *)calloc(1,sizeof(KEYW));
+			p = *fmtlist_ptr = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 		}
 		else
 		{
-			p->next = (KEYW *)calloc(1,sizeof(KEYW));
+			p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 			p = p->next;
 		}
 		p->next = NULL;
 
 		prb_keyword = (char *)prb_keystruct + sizeof(KEYWSHM);		/* Get ptr to keyword in PRB			*/
-		memcpy(p->keyword,prb_keyword,8);				/* copy the keyword in (incl. spaces) */
+		memcpy(p->keyword,prb_keyword,KEYWORD_SIZE);			/* copy the keyword in (incl. spaces) */
 
-		memcpy(&len,&(prb_keystruct->value_len),sizeof(short));		/* Load the value into dest.			*/
+		len = a_int2(&prb_keystruct->value_len);			/* Load the value into dest.			*/
 		p->len = (int4)len;						/* set len */
 
-		p->value = (char *)calloc((int)len+1,(int)sizeof(char));	/* grab space */
-		memcpy(p->value,prb_keyword+8,(int)len);			/* copy len bytes */
+		p->value = (char *)wcalloc((int)len+1,(int)sizeof(char));	/* grab space */
+		memcpy(p->value,prb_keyword+KEYWORD_SIZE,(int)len);		/* copy len bytes */
 		p->special = prb_keystruct->special;
 	}
 
@@ -780,10 +808,9 @@ KEYW	**fmtlist_ptr;
 **
 */
 
-int mergex_fmtlist(src,dest)
-KEYW	*src, *dest;
+int mergex_fmtlist(FMTLIST *src, FMTLIST *dest)
 {
-	KEYW	*s, *d;
+	FMTLIST	*s, *d;
 	int	rc;
 
 	rc = 1;									/* Nothing has been merged			*/
@@ -793,7 +820,7 @@ KEYW	*src, *dest;
 	{
 		for(s=src; s; s=s->next)
 		{
-			if (0==memcmp(d->keyword,s->keyword,8) && SPECIAL_NOT == s->special)
+			if (0==memcmp(d->keyword,s->keyword,KEYWORD_SIZE) && SPECIAL_NOT == s->special)
 			{
 				/*
 				**	The destination (d) should never be type SPECIAL, the backwards reference should
@@ -836,10 +863,9 @@ KEYW	*src, *dest;
 **
 */
 
-int merge_fmtlist(src,dest_ptr)
-KEYW	*src, **dest_ptr;
+int merge_fmtlist(FMTLIST *src, FMTLIST **dest_ptr)
 {
-	KEYW	*s, *d, *append_list, *p;
+	FMTLIST	*s, *d, *append_list, *p;
 	int	rc;
 	int	item_merged;
 
@@ -853,7 +879,7 @@ KEYW	*src, **dest_ptr;
 		item_merged = 0;
 		for(d = *dest_ptr; d; d = d->next)
 		{
-			if (0==memcmp(d->keyword,s->keyword,8))
+			if (0==memcmp(d->keyword,s->keyword,KEYWORD_SIZE))
 			{
 				/*
 				**	The destination (d) should never be type SPECIAL, the backwards reference should
@@ -876,18 +902,18 @@ KEYW	*src, **dest_ptr;
 		{
 			if (!append_list) 
 			{
-				p = append_list = (KEYW *)calloc(1,sizeof(KEYW));
+				p = append_list = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 			}
 			else
 			{
-				p->next = (KEYW *)calloc(1,sizeof(KEYW));
+				p->next = (FMTLIST *)wcalloc(1,sizeof(FMTLIST));
 				p = p->next;
 			}
 			p->next = NULL;
 
-			memcpy(p->keyword,s->keyword,8);				/* copy the keyword in (incl. spaces) */
+			memcpy(p->keyword,s->keyword,KEYWORD_SIZE);			/* copy the keyword in (incl. spaces) */
 			p->len = s->len;						/* set len */
-			p->value = (char *)calloc((int)p->len+1,(int)sizeof(char));	/* grab space */
+			p->value = (char *)wcalloc((int)p->len+1,(int)sizeof(char));	/* grab space */
 			memcpy(p->value,s->value,(int)p->len);				/* copy len bytes */
 			p->special = s->special;
 		}
@@ -939,10 +965,9 @@ KEYW	*src, **dest_ptr;
 **
 */
 
-int free_fmtlist(fmtlist)
-KEYW	*fmtlist;
+int free_fmtlist(FMTLIST *fmtlist)
 {
-	KEYW	*p;
+	FMTLIST	*p;
 
 	while(fmtlist)
 	{
@@ -981,13 +1006,9 @@ KEYW	*fmtlist;
 **	08/26/92	Written by GSL
 **
 */
-static int block_fmtlist(fmtlist,receiver,rlen,tlen)
-KEYW	*fmtlist;
-char	*receiver;
-int4	*rlen;
-int4	*tlen;
+static int block_fmtlist(FMTLIST *fmtlist, char *receiver, int4 *rlen, int4 *tlen)
 {
-	KEYW	*p;
+	FMTLIST	*p;
 	char	*ptr;
 	int4	used;
 
@@ -1014,8 +1035,8 @@ int4	*tlen;
 
 		if (*rlen >= size)						/* If room left in receiver then unload		*/
 		{
-			memcpy(ptr,p->keyword,8);				/* 1-8 		KEYWORD				*/
-			ptr += 8;
+			memcpy(ptr,p->keyword,KEYWORD_SIZE);			/* 1-8 		KEYWORD				*/
+			ptr += KEYWORD_SIZE;
 			ll = p->len;	
 			wswap(&ll);						/* Swap the length field for output		*/
 			memcpy(ptr,&ll,4);					/* 9-12		LENGTH				*/
@@ -1033,53 +1054,54 @@ int4	*tlen;
 
 /*
 	find_prb_keyword	Return a pointer to the keyword in a PRB.
+
+		key; 		Keyword to search for (if kw_num==0)
+		parm_a;		Parm area ptr (SHMH *)
+		kw_num;		Relative keyword to find (if kw_num != 0)
 */
 
-KEYWSHM *find_prb_keyword(parm_a,key,kw_num)
-char	*key; 								/* Keyword to search for (if kw_num==0)			*/
-char	*parm_a;							/* Parm area ptr (SHMH *)				*/
-int 	kw_num;								/* Relative keyword to find (if kw_num != 0)		*/
+KEYWSHM *find_prb_keyword(SHMH *parm_a, char *key, int kw_num)
 {
-	char 	l_keyword[9], 						/* Local keyword (Null terminated)			*/
-		d_keyword[9];						/* Keyword from PRB (Null terminated)			*/
-	char 	*data, 							/* Ptr to keyword in PRB				*/
-		*strchr();
-	char 	*str,							/* Ptr for going thru PRB				*/
-		*p; 							/* Temp ptr						*/
-	int 	kw_cnt; 						/* Which keyword are we looking at in the loop		*/
-	short 	offs,							/* Offset to next keyword in PRB			*/
-		cnt;							/* Number of keywords in PRB 				*/
-	KEYWSHM	*ptr_shm;						/* Pointer to keyword in PRB				*/
+	char 	l_keyword[KEYWORD_SIZE+1], 					/* Local keyword (Null terminated)		*/
+		d_keyword[KEYWORD_SIZE+1];					/* Keyword from PRB (Null terminated)		*/
+	char 	*data; 								/* Ptr to keyword in PRB			*/
+	char 	*str,								/* Ptr for going thru PRB			*/
+		*p; 								/* Temp ptr					*/
+	int 	kw_cnt; 							/* Which keyword are we looking at in the loop	*/
+	int2 	offs,								/* Offset to next keyword in PRB		*/
+		cnt;								/* Number of keywords in PRB 			*/
+	KEYWSHM	*ptr_shm;							/* Pointer to keyword in PRB			*/
 
-	if ( 0==kw_num )								/* if scan by KEY match			*/
+	if ( 0==kw_num )							/* if scan by KEY match				*/
 	{
-		if (!key) return(0);							/* no key passed			*/
+		if (!key) return(0);						/* no key passed				*/
 
-		memcpy(l_keyword,key,8);						/* Copy key into local variable.	*/
-		l_keyword[8] = '\0';	
-		p = strchr(l_keyword,' ');						/* Find first occurance of space & null	*/
-		if (p) *p=(char)0;							/* terminate the string.		*/
+		memcpy(l_keyword,key,KEYWORD_SIZE);				/* Copy key into local variable.		*/
+		l_keyword[KEYWORD_SIZE] = '\0';	
+		p = strchr(l_keyword,' ');					/* Find first occurance of space & null		*/
+		if (p) *p=(char)0;						/* terminate the string.			*/
 	}
 
-	memcpy(&cnt,&(((SHMH*)parm_a)->keyw_cnt),sizeof(short));			/* Get the number of keywords in PRB	*/
+	cnt = a_int2(&parm_a->keyw_cnt);					/* Get the number of keywords in PRB		*/
 
-	str = parm_a+sizeof(SHMH);							/* Point to first keyword		*/
+	str = (char *)parm_a;
+	str += sizeof(SHMH);							/* Point to first keyword			*/
 	for (kw_cnt=1; kw_cnt<=cnt; kw_cnt++, str = str+offs) 
 	{
 		ptr_shm = (KEYWSHM *)str;
 		data = (char *)ptr_shm + sizeof(KEYWSHM);				/* get ptr to keyword in PRB		*/
 
-		memcpy(d_keyword,data,8);						/* Load & null terminate the keyword	*/
-		d_keyword[8] = '\0';
+		memcpy(d_keyword,data,KEYWORD_SIZE);					/* Load & null terminate the keyword	*/
+		d_keyword[KEYWORD_SIZE] = '\0';
 		p=strchr(d_keyword,' ');
 		if (p) *p=(char)0;
 
 		if ( kw_num == kw_cnt || 						/* If requested keyword # or		*/
-		    (kw_num == 0 && !strncmp(d_keyword,l_keyword,8)))			/* a keyword match.			*/
+		    (kw_num == 0 && !strncmp(d_keyword,l_keyword,KEYWORD_SIZE)))	/* a keyword match.			*/
 		{
 			return( ptr_shm );						/* Return the ptr			*/
 		}
-	        memcpy(&offs,&(ptr_shm->next_offs),sizeof(short));			/* Get offset to next keyword		*/
+	        offs = a_int2(&ptr_shm->next_offs);				/* Get offset to next keyword		*/
 	}
 	return( 0 );
 }
@@ -1089,21 +1111,21 @@ int 	kw_num;								/* Relative keyword to find (if kw_num != 0)		*/
 	search_parm_area	Search a given PRB for a keyword (or by number -- kw_num) and return the value in dest.
 				If keyword found, dest is set to spaces (for maxlen) then loaded with the value found.
 				Returns 0 if not found.  If kw_num != 0 then it also loads the keyword into key.
+
+		dest,		Destination to load value found.
+		key, 		Keyword to search for (if kw_num==0)
+		parm_a;		Parm area ptr (SHMH *)
+		maxlen;		Maxlen of dest
+
 */
 
-int search_parm_area(dest,key,unused,maxlen,parm_a,kw_num)
-char 	*dest,								/* Destination to load value found.			*/
-	*key, 								/* Keyword to search for (if kw_num==0)			*/
-	*unused, 							/* UNUSED - old arg no longer used			*/
-	*parm_a;							/* Parm area ptr (SHMH *)				*/
-int4 	maxlen;								/* Maxlen of dest					*/
-int 	kw_num;								/* Relative keyword to find (if kw_num != 0)		*/
+int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a)
 {
 	KEYWSHM	*prb_keystruct;						/* Pointer to keyword struct in PRB			*/
 	char	*prb_keyword;						/* Pointer to actual keyword in PRB			*/
-	short	len;
+	int2	len;
 
-	prb_keystruct = find_prb_keyword(parm_a,key,kw_num);
+	prb_keystruct = find_prb_keyword(parm_a,key,0);
 
 	if (!prb_keystruct)						/* Not found						*/
 	{
@@ -1112,15 +1134,31 @@ int 	kw_num;								/* Relative keyword to find (if kw_num != 0)		*/
 
 	prb_keyword = (char *)prb_keystruct + sizeof(KEYWSHM);		/* Get ptr to keyword in PRB				*/
 
-	if (kw_num != 0)						/* Copy the keyword to key				*/
-	{
-		memcpy(key,prb_keyword,8);
-	}
-	memcpy(&len,&(prb_keystruct->value_len),sizeof(short));		/* Load the value into dest.		*/
+	len = a_int2(&prb_keystruct->value_len);			/* Load the value into dest.		*/
 	memset(dest,' ',(int)maxlen);
-	strncpy(dest,prb_keyword+8, ((len > (int)maxlen) ? (int)maxlen : len));
+	strncpy(dest,prb_keyword+KEYWORD_SIZE, ((len > (int)maxlen) ? (int)maxlen : len));
 
 	return(1);
 }
 
-
+/*
+**	History:
+**	$Log: putparm.c,v $
+**	Revision 1.12  1997-04-15 23:09:26-04  gsl
+**	Update to use wtrace() plus remove a lot of unneeded entry logging
+**
+**	Revision 1.11  1996-07-17 17:51:56-04  gsl
+**	change to use wcalloc()
+**
+**	Revision 1.10  1996-07-08 16:35:29-07  gsl
+**	fix for NT
+**
+**	Revision 1.9  1995-05-15 06:08:26-07  gsl
+**	Added call to erase_prb_label_level() to erase an existing putparm
+**	with the same label at the same linklevel.
+**	Replaced numeric literals with meaningful defines.
+**	Added trace calls to werrlog() for entry into all the routines.
+**
+**
+**
+*/

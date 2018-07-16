@@ -1,0 +1,125 @@
+000100 IDENTIFICATION DIVISION.                                                 
+000200 PROGRAM-ID. RPTMOR.                                                      
+000300 AUTHOR. HLM.                                                             
+000400 DATE-WRITTEN.  11/20/89.                                                 
+000500 DATE-COMPILED.                                                           
+000600*----------------------------------------------------------------         
+000700* DO YOU WANT TO ADD MORE FIELDS?                                         
+000800*----------------------------------------------------------------         
+000900                                                                          
+001000 ENVIRONMENT DIVISION.                                                    
+001100 CONFIGURATION SECTION.                                                   
+001200 FIGURATIVE-CONSTANTS.                                                    
+001300     COPY FIGS.                                               
+001400                                                                          
+001500 INPUT-OUTPUT SECTION.                                                    
+001600                                                                          
+001700 FILE-CONTROL.                                                            
+001800     COPY SLCRT.                                              
+001900                                                                          
+002000 DATA DIVISION.                                                           
+002100 FILE SECTION.                                                            
+002200     COPY FDCRT.                                              
+002300                                                                          
+002400 WORKING-STORAGE SECTION.                                                 
+000000     COPY WSKTRACE.
+000000 01  SCCS-WHAT PIC X(50) VALUE
+000000     "@(#)rptmor.wcb 1.4 9/11/94".
+002500     COPY WSINT.                                              
+002600     COPY WSCRT.                                              
+002700                                                                          
+002800 01  MORE-FIELDS-SCREEN USAGE IS DISPLAY-WS.                              
+002900     05  FILLER                                                           
+003000         PIC X(47) ROW 5 COLUMN 2 VALUE                                   
+003100         "                                ADD MORE FIELDS".               
+003200     05  UPPER-MSG-ITEM                                                   
+003300         PIC X(78) ROW 7 COLUMN 3                                         
+003400         SOURCE UPPER-MSG-FIELD.                                          
+003500     05  FILLER                                                           
+003600         PIC X(70) ROW 8 COLUMN 2 VALUE                                   
+003700         "         This option allows the user to add more fields         
+003800-        "to the report.".                                                
+003900     05  FILLER                                                           
+004000         PIC X(72) ROW 9 COLUMN 2 VALUE                                   
+004100         "       These fields may come from the data file(s) or ma        
+004200-        "y be new fields.".                                              
+004300     05  FILLER                                                           
+004400         PIC X(56) ROW 13 COLUMN 2 VALUE                                  
+004500       "                       Do you wish to add more fields?".          
+004600     05  MORFLD-ANSWER-ITEM                                               
+004700         PIC XXX ROW 13 COLUMN 60                                         
+004800         SOURCE MORFLD-ANSWER-FIELD                                       
+004900         OBJECT MORFLD-ANSWER-FIELD.                                      
+005000     05  FILLER                                                           
+005100         PIC X(58) ROW 17 COLUMN 2 VALUE                                  
+005200         "                    ** Please Press (ENTER) to Continue         
+005300-        "**".                                                            
+005400                                                                          
+005500 01  MORE-FIELDS-FIELDS.                                                  
+005600     05  UPPER-MSG-FIELD             PIC X(78) VALUE SPACE.               
+005700     05  MORFLD-ANSWER-FIELD               PIC XXX VALUE SPACE.           
+005800                                                                          
+005900 01  MESSAGE-LITERALS.                                                    
+006000       05  MUST-BE-YES-NO-LITERAL        PIC X(78) VALUE                  
+006100           "* Error * Value must be 'YES' or 'NO'".                       
+006200                                                                          
+006300 LINKAGE SECTION.                                                         
+006400 01  LOAD-SWITCH         PIC X(01).                                       
+006500     COPY WSRPTREC.                                           
+006600                                                                          
+006700 PROCEDURE DIVISION USING                                                 
+006800     LOAD-SWITCH                                                          
+006900     RPT-RECORDS.                                                         
+007000                                                                          
+007100 MAIN-LOGIC SECTION.                                                      
+007200 PROGRAM-BEGIN.                                                           
+000000     MOVE "RPTMOR BEGIN" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+007300     PERFORM OPENING-PROCEDURE.                                           
+007400     PERFORM MAIN-PROCESS.                                                
+007500     PERFORM CLOSING-PROCEDURE.                                           
+000000     MOVE "RPTMOR EXIT" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+007600 MAIN-LOGIC-EXIT.                                                         
+007700     EXIT PROGRAM.                                                        
+007800 MAIN-LOGIC-STOP.                                                         
+007900     STOP RUN.                                                            
+008000 LEVEL-2 SECTION.                                                         
+008100 OPENING-PROCEDURE.                                                       
+008200     OPEN I-O  CRT-FILE.                                                  
+008210     MOVE "NO " TO MORFLD-ANSWER-FIELD.                                   
+008300 CLOSING-PROCEDURE.                                                       
+008400     CLOSE CRT-FILE.                                                      
+008500                                                                          
+008600 MAIN-PROCESS.                                                            
+008700     MOVE UPPER-ENTRY-FAC TO FAC OF MORFLD-ANSWER-ITEM.                   
+008800     MOVE DISPLAY-HI-FAC  TO FAC OF UPPER-MSG-ITEM.                       
+008900                                                                          
+009000     PERFORM ANSWER-THE-QUESTION.                                         
+009100     IF MORFLD-ANSWER-FIELD = "YES"                                       
+009200         MOVE "Y" TO LOAD-SWITCH.                                         
+009300                                                                          
+009400 ANSWER-THE-QUESTION.                                                     
+009500                                                                          
+009600     MOVE SPACES TO SCREEN-ERROR-STATUS.                                  
+009700                                                                          
+009800     DISPLAY AND READ ALTERED                                             
+009900         MORE-FIELDS-SCREEN ON CRT-FILE.                                  
+010000                                                                          
+010100     MOVE SPACE TO UPPER-MSG-FIELD.                                       
+010200                                                                          
+010300       PERFORM VAL-ANSWER.                                                
+010400       IF SCREEN-ENTRY-ERROR                                              
+010500           GO TO ANSWER-THE-QUESTION.                                     
+010600                                                                          
+010700 VAL-ANSWER.                                                              
+010800                                                                          
+010900       IF MORFLD-ANSWER-FIELD IS NOT = "YES"  AND                         
+011000          MORFLD-ANSWER-FIELD IS NOT = "NO "                              
+011100           MOVE ENTRY-ERROR TO SCREEN-ERROR-STATUS                        
+011200           SET ERROR-BIT IN FAC OF MORFLD-ANSWER-ITEM ON                  
+011300           MOVE MUST-BE-YES-NO-LITERAL TO UPPER-MSG-FIELD.                
+011400                                                                          
+011500 
+
+000000     COPY PLKTRACE.

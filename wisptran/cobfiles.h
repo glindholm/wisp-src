@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -35,11 +39,12 @@
 #define AUTOLOCK		0X0400							/* The file to use automatic locking.	*/
 #define SEQ_SEQ			0x0800							/* The file was SEQUENTIAL/SEQUENTIAL.	*/
 #define DBFILE_FILE		0x1000							/* The file is a DATABASE file		*/
+#define OPENIOX_FILE		0x2000							/* OPEN I-O exclusive			*/
 #define FILE_MASK		~(DISK_FILE + PRINTER_FILE + SORT_FILE + TAPE_FILE)	/* The mask used to remove file bits.	*/
 
 #define FSET(F,V) 		(F = (F & FILE_MASK) | V)				/* Macro to set a file value.		*/
 
-#define MAX_FILES		200							/* The maximum number of files		*/
+#define MAX_FILES		250							/* The maximum number of files		*/
 
 EXT int  prog_ftypes[MAX_FILES];							/* the file type flags			*/
 EXT char prog_files[MAX_FILES][40];							/* the program files in SELECT's	*/
@@ -56,3 +61,12 @@ EXT int  prog_sort INIT_FALSE;								/* how many were sort files		*/
 EXT int  prog_dscnt INIT_FALSE;								/* How many need their SELECT deleted.	*/
 
 #endif /* COBFILES_H */
+/*
+**	History:
+**	$Log: cobfiles.h,v $
+**	Revision 1.6  1996-08-30 21:56:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

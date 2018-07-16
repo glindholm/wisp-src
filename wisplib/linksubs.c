@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -14,9 +16,9 @@
 /*	LINKSUBS	Subroutines for Wang USERSUB LINK	*/
 
 #include <stdio.h>
+#include <errno.h>
 
 #ifdef unix
-#include <errno.h>
 #include <ctype.h>
 #include <signal.h>
 #endif
@@ -27,23 +29,35 @@
 #include <rmsdef.h>
 #endif
 
+#ifdef _MSC_VER
+#include <direct.h>
+#include <io.h>
+#include <process.h>
+#endif
+
 #include "idsistd.h"
+#include "idsisubs.h"
 #include "link.h"
 #include "wglobals.h"
 #include "wdefines.h"
 #include "movebin.h"
+#include "wisplib.h"
+#include "osddefs.h"
+#include "paths.h"
+#include "wexit.h"
+#include "wperson.h"
 
 #include "werrlog.h"
 #define ROUTINE		28000
 
-#ifndef unix
+#if defined(VMS) || defined(MSDOS) 
 #define TEMPVMSLINK "SYS$SCRATCH:"
 #define	A(x)	(parm_list->parm[x])
 #define	P0	A(0),  A(1),  A(2),  A(3),  A(4),  A(5),  A(6),  A(7)
 #define	P1	A(8),  A(9),  A(10), A(11), A(12), A(13), A(14), A(15)
 #define	P2	A(16), A(17), A(18), A(19), A(20), A(21), A(22), A(23)
 #define	P3	A(24), A(25), A(26), A(27), A(28), A(29), A(30), A(31)
-#endif /* !unix */
+#endif /* VMS || MSDOS */
 
 /*
 	The following should be OK even though they are global 
@@ -60,7 +74,7 @@ int4	LINKPARMCNT = 0;							/* The number of arguments passed (0-32)	*/
 char	*LINKPARMPTR[MAX_LINK_PARMS];						/* The passed arguments				*/
 int4	LINKPARMLEN[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*/
 
-#ifdef	unix
+#if defined(unix) || defined(WIN32)
 
 /*
 	DYNAMIC LINKING WITH PARAMETERS
@@ -76,23 +90,37 @@ int4	LINKPARMLEN[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*
 
 */
 
-writeunixlink ( pname, parmcnt, parm_list, len_list, linkkey)		/* This routine takes the parameters collected by LINK	*/
-									/* and writes them out to a tmp parm file.		*/
-char	*pname;									/* Program to link to (fullpath)		*/
-int	parmcnt;								/* Number of parameters.			*/
-struct str_parm *parm_list;							/* Parms					*/
-struct str_len   *len_list;							/* Parm lengths					*/
-char	*linkkey;								/* key to parm area				*/
+/*
+**	ROUTINE:	writeunixlink()
+**
+**	FUNCTION:	Write the temp link parm file (used by unix and WIN32)
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:
+**	pname		Program to link to (fullpath)
+**	parmcnt		Number of parameters
+**	parm_list	The parameters
+**	len_lisst	The parameter lengths
+**	linkkey		The returned "key" to the temp parm file
+**
+**	GLOBALS:	?
+**
+**	RETURN:		?
+**
+**	WARNINGS:	?
+**
+*/
+void writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, struct str_len *len_list, char *linkkey)
 {
 	int	pid;
-	char	*predir;
+	const char *predir = wisplinkdir(NULL);
 	FILE	*fp;
 	int4	size, i;
 
 	pid = getpid();
-	predir = WISP_LINK_DIR;
 
-	if ( !fexists(predir) )								/* Create /usr/tmp/aculink dir		*/
+	if ( !fexists(predir) )
 	{
 		if (mkdir ( predir, 0777))
 		{
@@ -102,8 +130,8 @@ char	*linkkey;								/* key to parm area				*/
 		chmod ( predir,0777);
 	}
 
-	sprintf(linkkey,"%s/LINK%06d", predir, pid);					/* Open the parm file			*/
-	fp = fopen(linkkey,"w");
+	sprintf(linkkey,"%s%sLINK%06d", predir, DIR_SEPARATOR_STR, pid);		/* Open the parm file			*/
+	fp = fopen(linkkey,FOPEN_WRITE_BINARY);
 	if ( !fp )
 	{
 		werrlog(ERRORCODE(12),linkkey,errno,"writeunixlink",0,0,0,0,0);
@@ -133,32 +161,44 @@ char	*linkkey;								/* key to parm area				*/
 }
 
 /*
-	readunixlink:	Read and delete file "X".
-
-		- if file "X" is unchanged then program "B" doesn't understand this protocol.
-		- if file "X" is missing then program "B" terminated abnormally.
-		- if file "X" is changed then program "B" terminated normally.
-
-
+**	ROUTINE:	readunixlink()
+**
+**	FUNCTION:	Read and delete the temp link parm file (used by unix and WIN32)
+**
+**	DESCRIPTION:	
+**			This routine is called after the LINK has completed
+**			to read the tmp parm file back into the parms from
+**			the calling program.
+**
+**			- if file is unchanged then program "B" doesn't understand this protocol.
+**			- if file is missing then program "B" terminated abnormally.
+**			- if file is changed then program "B" terminated normally.
+**
+**	ARGUMENTS:
+**	parmcnt		Number of parameters
+**	parm_list	The parameters
+**	len_lisst	The parameter lengths
+**	linkkey		The "key" to the temp parm file
+**	compcode	Returned completion code
+**				16  = Temp file not found - linked to program aborted
+**				-1  = Temp file unchanged - linked to program doesn't understand protocol
+**	returncode	Returned return code
+**
+**	GLOBALS:	?
+**
+**	RETURN:		?
+**
+**	WARNINGS:	?
+**
 */
-
-readunixlink ( pname, parmcnt, parm_list, len_list, linkkey, compcode, returncode)
-									/* This routine is called after the LINK has completed 	*/
-									/* to read the tmp parm file back into the parms from 	*/
-									/* the calling program.					*/
-char	*pname;									/* Program to link to (fullpath)		*/
-int	parmcnt;								/* Number of parameters.			*/
-struct str_parm *parm_list;							/* Parms					*/
-struct str_len   *len_list;							/* Parm lengths					*/
-char	*linkkey;								/* key to parm area				*/
-int4	*compcode;
-int4	*returncode;
+void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_list, const char *linkkey, 
+		  int4 *compcode, int4 *returncode)
 {
 	FILE	*fp;
 	int4	size,i;
 	char	tempstr[80];
 
-	fp = fopen(linkkey,"r");							/* Open the Parm file			*/
+	fp = fopen(linkkey,FOPEN_READ_BINARY);						/* Open the Parm file			*/
 	if ( !fp )
 	{
 		*compcode = 16;								/* File missing, program aborted.	*/
@@ -193,7 +233,6 @@ int4	*returncode;
 		*returncode = -1;
 		LOGOFFFLAG = 0;
 	}
-
 }
 
 /*
@@ -204,7 +243,7 @@ int4	*returncode;
 		A pcount=-1 means that no parameter file was found.
 */
 
-LINKGARG(pname,pcount,p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p15,p16,
+void LINKGARG(pname,pcount,p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p15,p16,
 		      p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32)
 
 char	*pname;									/* Program to call				*/
@@ -214,7 +253,7 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 {
 	char	*linkkey;							/* Link parm area key				*/
 
-	linkkey = (char *)getenv(WISP_LINK_ENV);
+	linkkey = getenv(WISP_LINK_ENV);
 	if ( !linkkey )								/* If no linkkey then not coming from a link	*/
 	{
 		*pcount = 0;
@@ -228,18 +267,17 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 	*pcount = (short) LINKPARMCNT;
 }
 
-ISRUNUSING()
+void ISRUNUSING(void)
 {
 	LINKPARM = 0;								/* Were coming from a RUN USING not a LINK 	*/
 }
 
-LINKPARG()
+void LINKPARG(void)
 {
 	ACUPARGS();
 }
 
-LINKNARG( argcount )
-int2 *argcount;
+void LINKNARG( int2* argcount )
 {
 	ACUNARGS( argcount );
 }
@@ -248,7 +286,7 @@ int2 *argcount;
 	The original ACUCOBOL versions
 */
 
-ACUGARGS(linkkey,pname, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p15,p16,
+void ACUGARGS(linkkey,pname, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p15,p16,
 			p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32)
 										/* This routine is call on the way into a LINK	*/
 										/* from ACULINK. It reads the tmp parameter	*/
@@ -302,7 +340,7 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 
 	unloadpad(LINKPARMKEY,linkkey,80-1);
 
-	fp = fopen(LINKPARMKEY,"r");							/* Open the Parm file			*/
+	fp = fopen(LINKPARMKEY,FOPEN_READ_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
 		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"LINKGARG",0,0,0,0,0);
@@ -334,13 +372,12 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 	unlink(LINKPARMKEY);								/* Delete the temp file			*/
 }
 
-ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
+void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 									/* with ACU_COBOL. It writes the LINKAGE parameters	*/
 									/* from the linked program to the tmp file.		*/
 {
 	FILE	*fp;
 	int4	size,i;
-	char	tempstr[80];
 	static	int	first=1;
 
 	if (!LINKPARM) return;
@@ -348,7 +385,7 @@ ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 	if (!first) return;
 	first = 0;
 
-	fp = fopen(LINKPARMKEY,"w");							/* Open the Parm file			*/
+	fp = fopen(LINKPARMKEY,FOPEN_WRITE_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
 		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"LINKPARG",0,0,0,0,0);
@@ -377,15 +414,14 @@ ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 }
 
 
-ACUNARGS( argcount )								/* Return the number of ARGs passed	*/
-short *argcount;
+void ACUNARGS( short* argcount )							/* Return the number of ARGs passed	*/
 {
 	short i;
 
 	i = LINKPARMCNT;
 	*argcount = i;
 }
-#endif /* unix */
+#endif /* unix || WIN32 */
 
 /************************************************************************/
 
@@ -419,7 +455,7 @@ char	*vmskey;							/* key to parm area				*/
 		delete ( vmskey ) ;						/* Delete it before opening		*/
 	}
 
-	fp = fopen(vmskey,"w");							/* open the parm file.			*/
+	fp = fopen(vmskey,FOPEN_WRITE_BINARY);					/* open the parm file.			*/
 	if ( !fp )
 	{
 		werrlog(ERRORCODE(12),vmskey,errno,"writevmslink",0,0,0,0,0);
@@ -464,7 +500,7 @@ int4	*returncode;
 	int4	size,i;
 	char	tempstr[80];
 
-	fp = fopen(vmskey,"r");							/* Open the Parm file			*/
+	fp = fopen(vmskey,FOPEN_READ_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
 		werrlog(ERRORCODE(12),vmskey,errno,"readvmslink",0,0,0,0,0);
@@ -489,9 +525,14 @@ int4	*returncode;
 
 	fclose(fp);
 
-	delete(vmskey);								/* delete the tmp file			*/
+	unlink(vmskey);								/* delete the tmp file			*/
 
-	if ( *compcode == -1 ) *compcode = 16;					/* Linked prg exited abnormaly		*/
+	if ( *compcode == -1 ) 							/* Program didn't understand protocol.	*/
+	{
+		*compcode = 16;							/* Linked prg exited abnormaly		*/
+		*returncode = 0;
+		LOGOFFFLAG = 0;
+	}
 }
 
 
@@ -563,7 +604,7 @@ char	*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 		LINKPARMKEY[i] = vmskey[i];
 	}
 
-	fp = fopen(LINKPARMKEY,"r");							/* Open the Parm file			*/
+	fp = fopen(LINKPARMKEY,FOPEN_READ_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
 		werrlog(ERRORCODE(12),LINKPARMKEY,errno,"VMSGARGS",0,0,0,0,0);
@@ -804,8 +845,7 @@ int4	vms_code ;							/* VMS return code.					*/
 									/* system, it is currently only used in the LINK.	*/
 									/* subsystem.  It should eventually be given a name.	*/
 									/* starting with a "w" and used from the WISP Library.	*/
-swap_put ( destination, new_value )
-int4	*destination, new_value ;					/* convert new_value to WANG,  and move to destination.	*/
+void swap_put ( int4* destination, int4 new_value )
 {
 	int4	use_value ;						/* temporary holder for the value needing WANGing.	*/
 
@@ -816,3 +856,21 @@ int4	*destination, new_value ;					/* convert new_value to WANG,  and move to de
 
 
 /*	End of	link.c	*/
+/*
+**	History:
+**	$Log: linksubs.c,v $
+**	Revision 1.17  1996-09-10 11:44:22-04  gsl
+**	Remove redefine of mkdir() - now in win32std.h from idsistd.h
+**
+**	Revision 1.16  1996-08-28 17:55:34-07  gsl
+**	Document some routines
+**
+**	Revision 1.15  1996-08-23 14:01:21-07  gsl
+**	Changed to use wisplinkdir()
+**
+**	Revision 1.14  1996-08-19 15:32:26-07  gsl
+**	drcs update
+**
+**
+**
+*/

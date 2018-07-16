@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -12,16 +14,24 @@
 /*						Include standard header files.							*/
 
 #include "video.h"									/* Include video definitions.		*/
-
+#include "vdata.h"
 
 /*						Subroutine entry point.								*/
 
-int vedge(line) register int line;							/* Determine edge of screen.		*/
+int vedge(int line)									/* Determine edge of screen.		*/
 {
-	extern int vscr_wid, vlin_atr[MAX_LINES_PER_SCREEN];				/* Reference screen and line widths.	*/
-	register int i;									/* Working registers.			*/
-
-	i = vscr_wid;									/* Assume edge is screen width.		*/
-	if (vlin_atr[line] != 0) i = i / 2;						/* Nope, edge is 1/2 screen width.	*/
-	return(i);									/* All done.				*/
+	return(vscr_wid);								/* All done.				*/
 }
+/*
+**	History:
+**	$Log: vedge.c,v $
+**	Revision 1.10  1997-07-08 16:55:57-04  gsl
+**	Removed the double width logic so vedge()
+**	now returns the screen width
+**
+**	Revision 1.9  1996-10-11 18:16:03-04  gsl
+**	drcs update
+**
+**
+**
+*/

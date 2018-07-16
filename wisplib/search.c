@@ -1,8 +1,12 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
 
@@ -10,19 +14,49 @@
 
 #include <stdio.h>
 #include <varargs.h>
+#include <errno.h>
 
 #ifdef unix
 #include <fcntl.h>
-#include <errno.h>
 #endif
 
 #include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"
+#include "wisplib.h"
 
-int4	bsrch();
 
+static int4 bsrch(char* table, int4 n_elem, int4 e_len, char* s_item, int4 s_len);
+
+/*
+**	Routine:	SEARCH()
+**
+**	Function:	The VSSUB SEARCH 
+**
+**	Description:	Searches a table for a matching string.
+**			The table must sorted as it does a binary search.
+**
+**	Arguments:
+**	table		Alpha(var)	The table to search (Must be sorted A or D)
+**	table_size	Int(4)		The number of items in the table
+**	item_length	Int(4)		The length of each table item
+**	search_item	Alpha(var)	Value to search for.
+**	search_len	Int(4)		Lenght of search_item (Optional)
+**	ret_code	Int(4)		Return code
+**					0 = not found
+**					n = position in table
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	12/13/93	Fix to allow binary data in the table. GSL
+**
+*/
 void SEARCH( va_alist )
 va_dcl
 {
@@ -71,32 +105,37 @@ va_dcl
 #define ASCENDING 1
 #define DESCENDING -1
 
-int4	bsrch(table,n_elem,e_len,s_item,s_len)
-char	*table,*s_item;
-int4	n_elem,e_len,s_len;
+static int4 bsrch(char* table, int4 n_elem, int4 e_len, char* s_item, int4 s_len)
 {
 	int	order;
 	int4	top,bottom,middle;
 
-	char foo[15],bar[15],baz[15];
-	
 #define IND(_ind) (table+(_ind)*e_len)
 
 	bottom = 0;
 	top    = n_elem-1;
 	middle = (top+bottom)/2;
 
-	if (strncmp(IND(bottom),IND(top),(int)e_len)<0) order = ASCENDING;
+	if (memcmp(IND(bottom),IND(top),(int)e_len)<0) order = ASCENDING;
 	else order = DESCENDING;
 
-	while (order*strncmp(s_item,IND(middle),(int)s_len) && bottom<=top)
+	while (order*memcmp(s_item,IND(middle),(int)s_len) && bottom<=top)
 	{
-		if (order*strncmp(s_item,IND(middle),(int)s_len)<0) top=middle-1;
-		if (order*strncmp(s_item,IND(middle),(int)s_len)>0) bottom=middle+1;
+		if (order*memcmp(s_item,IND(middle),(int)s_len)<0) top=middle-1;
+		if (order*memcmp(s_item,IND(middle),(int)s_len)>0) bottom=middle+1;
 		middle = (top+bottom)/2;
 	}
 	
-	if (strncmp(s_item,IND(middle),(int)s_len)==0) return middle+1;
+	if (memcmp(s_item,IND(middle),(int)s_len)==0) return middle+1;
 	else return 0;
 }
 
+/*
+**	History:
+**	$Log: search.c,v $
+**	Revision 1.10  1996-08-19 18:32:53-04  gsl
+**	drcs update
+**
+**
+**
+*/

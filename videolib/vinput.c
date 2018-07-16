@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -8,33 +10,35 @@
 /*						Include standard header files.							*/
 
 #include <stdio.h>									/* Include standard I/O.		*/
+#include <time.h>
 #include "video.h"									/* Include definitions.			*/
 #include "vlocal.h"									/* Include local definitions.		*/
 #define VIDEO_DATA_ROOT 1								/* This is the video data root.		*/
 #include "vcap.h"
 #include "vdata.h"									/* Include internal database.		*/
+#include "vmodules.h"
 
 /*						Data declarations.								*/
 
 static char char_pushed = 0;								/* Push-back character.			*/
-static char vgc();
-static int vgc_control();
+static char vgc(int wait);
+static int vgc_control(char c);
 
 /*						Get a single character (wait for it).						*/
 
-char vgetc()
+char vgetc(void)
 {
 	char vgc();									/* Working storage.			*/
 	return(vgc(1));									/* Call common get char routine.	*/
 }
 
-char vcheck()
+char vcheck(void)
 {
 	char vgc();									/* Define vgc routine.			*/
 	return(vgc(0));									/* Call the commmon routine.		*/
 }
 
-static char vgc(wait) int wait;								/* Wait / nowait flag.			*/
+static char vgc(int wait)          							/* Wait / nowait flag.			*/
 {
 	char c;										/* Working character storage.		*/
 
@@ -69,8 +73,8 @@ static char vgc(wait) int wait;								/* Wait / nowait flag.			*/
 		}
 	}
 
-	vdefer(RESTORE);								/* Restore if action deferred.		*/
-	if (vb_count) vcontrol(DUMP_OUTPUT);						/* And dump all buffers.		*/
+	vdefer_restore();								/* Restore if action deferred.		*/
+	if (vb_count) vcontrol_flush();							/* And dump all buffers.		*/
 
 	if (wait)									/* Are we in wait mode?			*/
 	{
@@ -95,18 +99,18 @@ try_again:	c = vrawcheck();							/* None, so get input.			*/
 }
 /*						Perform control W processing.							*/
 
-static int vgc_control(c) char c;
+static int vgc_control(char c)
 {
-	if ((c == refresh_character) && (optimization != OFF))				/* Is this the refresh queue char?	*/
+	if ((c == refresh_character) && (voptlevel() != VOP_OFF))			/* Is this the refresh queue char?	*/
 	{
 		if (macro_input == NULL)						/* Don't do if reading a macro.		*/
 		{
 			vrefresh(HARD_REFRESH);						/* Hard refresh the full screen.	*/
-			vcontrol(DUMP_OUTPUT);						/* Make sure the buffer dumps.		*/
+			vcontrol_flush();						/* Make sure the buffer dumps.		*/
 		}
 		return(TRUE);								/* Return reporting that we did it.	*/
 	}
-	else if ((c == trigger_character) && (optimization != OFF))			/* Is this the trigger character?	*/
+	else if ((c == trigger_character) && (voptlevel() != VOP_OFF))			/* Is this the trigger character?	*/
 	{
 		return(vtrigger());							/* Yes, then should it be processed?	*/
 	}
@@ -115,7 +119,7 @@ static int vgc_control(c) char c;
 
 /*						Push a character back.								*/
 
-char vpushc(char_to_be_pushed) char char_to_be_pushed;
+int vpushc(char char_to_be_pushed)
 {
 	if (char_pushed) return(FAILURE);						/* Char already pushed?			*/
 	char_pushed = char_to_be_pushed;						/* No, then push it.			*/
@@ -124,21 +128,21 @@ char vpushc(char_to_be_pushed) char char_to_be_pushed;
 
 /*						Get a character allowing timeout.						*/
 
-char vgetcto(timer) int timer;
+char vgetcto(int timer)
 {
-	long time();
-	long sttime, endtime;									/* System time value.			*/
-	char vcheck();
+	long sttime, endtime;								/* System time value.			*/
 	int c;
 
 	sttime = time(NULL);
-	endtime = sttime + timer;								/* Get the current time.		*/
+	endtime = sttime + timer;							/* Get the current time.		*/
 
 	for( c=0 ; (c==0) && (time(NULL)<endtime) ;)
 	{
 		c = vcheck();
 		if (c==0)
-		  sleep(1);
+		{
+			vwait(1,0);							/* Sleep 1 second			*/
+		}
 	}
 	return(c);									/* Return what we got, 0 for timeout.	*/
 }
@@ -161,13 +165,13 @@ char vgetcto(timer) int timer;
 
 static int g_verror = 0;							/* The last error number flag			*/
 
-vseterr(error)									/* Set the error number flag			*/
-int	error;									/* The error number (non-zero)			*/
+void vseterr(int error)								/* Set the error number flag			*/
+   	      									/* The error number (non-zero)			*/
 {
 	g_verror = error;
 }
 
-int vgeterr()									/* Get the error number flag			*/
+int vgeterr(void)								/* Get the error number flag			*/
 {
 	int	error;
 
@@ -176,3 +180,19 @@ int vgeterr()									/* Get the error number flag			*/
 	return(error);								/* Return the error number			*/
 }
 
+/*
+**	History:
+**	$Log: vinput.c,v $
+**	Revision 1.13  1997-07-08 17:01:32-04  gsl
+**	Change to use vwait()
+**	Change to use new video.h interfaces
+**
+**	Revision 1.12  1996-11-13 20:30:24-05  gsl
+**	Use vcontrol_flush()
+**
+**	Revision 1.11  1996-10-11 15:16:06-07  gsl
+**	drcs update
+**
+**
+**
+*/

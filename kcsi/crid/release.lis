@@ -1,0 +1,134 @@
+	Copyright (c) 1995-1997 by NeoMedia Technologies Inc. 
+	All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		RELEASE NOTES FOR KCSI CRID UTILITIES
+	
+	Document:	relnotes.lis (RELNOTES)
+	Last Updated:	14 August 1997
+	Products:	CONTROL, REPORT, INQUIRY, DATENTRY
+	Versions:	2.90
+	
+	Summary:	Release notes for changes to CONTROL, REPORT,
+			INQUIRY, DATENTRY utilities since initial release.
+			Supplemental documents.
+
+	====================================================================
+
+	DevTech Migrations has merged with it's parent company DevTech
+        Assosciates and has changed their company name to NeoMedia
+        Technologies Inc.  The main office has been relocated to Florida.
+
+                NeoMedia Technologies Inc.
+                2201 2nd Street Suite 600
+                Fort Myers FL, 33901
+                USA
+
+                Voice (941) 337-3434
+                Fax   (941) 337-3668
+                Web   www.neomedia-tech.com
+
+
+	HIGHLIGHTS
+	==========
+
+	CONTROL and REPORT previously were limited to 300 fields, this has
+	been increased in 2.79 to allow up to 500 fields.
+
+	Corrected installation procedures and packing list are now included.
+
+	Support for use with Acu4GL interface.
+
+	File I/O is now processed through the use of ExtFH() rather than
+	using DISAM.
+
+	--------------------------------------------------------------------
+	The following supplemental documents describe specialized aspects
+	of KCSI-CRID and are included in hardcopy format.
+
+
+
+	--------------------------------------------------------------------
+	The following items may alter the behavior of already converted
+	software.  Please check these over carefully.
+
+
+
+	--------------------------------------------------------------------
+	The following items are not yet available.
+
+	DEC Alpha running Digital Unix 4.0 requires Micro Focus COBL v4.1
+	for use of the extended file handler ExtFH().  This will be
+	available as soon as the port is completed and tested with the
+	proper version of Micro Focus COBOL.
+
+
+
+	--------------------------------------------------------------------
+	The following items describe changes to the KCSI-CRID distribution kit
+	that have been made since the initial release.
+
+	- The following are the changes to the KCSI-CRID distribution kit.
+
+		ADDITIONS
+		=========
+
+		DELETIONS
+		=========
+
+
+	--------------------------------------------------------------------
+	The following items describe new features of KCSI-CRID that have been
+	added since the initial release.  None of these items should alter the
+	behavior of existing software.
+
+
+
+	--------------------------------------------------------------------
+	The following items describe corrections and improvements that have 
+	been made to the KCSI-CRID runtime system since the initial release.
+
+
+	CHANGES FROM 2.83 TO 2.84
+	=========================
+	Added support for RDBMS when using Acu4GL.
+
+	To use:  There is no additional configuration required for use with
+	the Acu4GL interface.  Make sure the runtime configuration for
+	Acu4GL is properly setup.  Create a new runtime which includes the
+	appropriate file systems.
+
+	RESTRICTIONS:
+
+	- Control and Report files will remain in the Vision file system.
+
+	- XFD file name must match the Wang style file name.
+
+
+	CHANGES FROM 2.84 TO 2.90
+	=========================
+	Micro Focus COBOL:  The file I/O is now processed through the
+	use of the extended file handler ExtFH().  DISAM is no longer a
+	requirement for building the tools.  The ability to now process
+	the extended file formats IDXFORMAT"3" and IDXFORMAT"4" files
+	is now available.
+	
+
+        --------------------------------------------------------------------
+        The following table shows the CRID release history. 
+
+                +------ Major version number (2)
+                | +---- Patch level number   (83)
+                | |  +- OS and COBOL         (ua)
+                | |  |
+                2.83.ua
+
+            CRID VERSION      CUTOVER DATE
+            ------------      ------------
+                2.84.ua          07/10/97        Support for Acu4GL
+		2.90.ua		 08/14/97	 Uses ExtFH() for file I/O
+
+
+	========================= END OF DOCUMENT ==========================
+

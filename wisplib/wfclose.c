@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,13 +17,14 @@
 #include "idsistd.h"
 #include "wperson.h"
 #include "wfiles.h"
+#include "wisplib.h"
+#include "idsisubs.h"
 
 extern pstruct *plist;									/* pointer to printer files		*/
 
-wfclose(fname)										/* This routine is called after COBOL*/
-char *fname;
+void wfclose(char* fname)								/* This routine is called after COBOL*/
 {											/* closes the file.			*/
-	int i, spos, retcd;
+	int spos, retcd;
 	pstruct *lptr;									/* A local pointer into the structure.	*/
 	char	def_prt_mode;
 
@@ -36,8 +39,9 @@ char *fname;
 			{
 				if (lptr->name[0])
 				{
-					wprint(lptr->name,def_prt_mode,0,lptr->numcopies,
+					wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
 							lptr->class,lptr->form,&retcd);
+
 					lptr->name[0] = '\0';				/* Say we have already processed it.	*/
 				}
 				lptr = (pstruct *)lptr->nextfile;
@@ -60,7 +64,7 @@ char *fname;
 
 			if (lptr)							/* If there was a match, spool it.	*/
 			{
-				wprint(lptr->name,def_prt_mode,0,lptr->numcopies,
+				wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
 						lptr->class,lptr->form,&retcd);
 				lptr->name[0] = '\0';					/* Say we have already processed it.	*/
 			}
@@ -68,3 +72,12 @@ char *fname;
 		}
 	}
 }
+/*
+**	History:
+**	$Log: wfclose.c,v $
+**	Revision 1.10  1996-08-19 18:33:14-04  gsl
+**	drcs update
+**
+**
+**
+*/

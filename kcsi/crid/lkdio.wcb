@@ -1,0 +1,50 @@
+000100*--------------------------------------------------------
+000200* DIO BLOCK ALLOWS A FILE TO BE STRUCTURED DYNAMICALLY
+000300* BEFORE AN OPEN OR OTHER IO REQUEST.
+000400*--------------------------------------------------------
+000500     03  COBOL-DATA.
+000600     05  FILE-IO.
+000700         10  FILE-IO-MAIN            PIC X.
+000800         10  FILE-IO-SUB             PIC X.
+000900     05  FILE-SPEC.
+001000         10  FILE-NAME               PIC X(8).
+001100         10  FILE-LIBRARY            PIC X(8).
+001200         10  FILE-VOLUME             PIC X(6).
+001210     05  FILE-PRNAME                 PIC X(8).
+001300     05  FILE-STATUS                 PIC XX.
+000000* The extended file status is provided by C-ISAM
+000000* and could be useful for additional diagnostics.
+000000     05  FILE-STATUS-EXT             PIC XXX.
+001400     05  FILE-OPEN-STATUS            PIC 9.
+001500     05  FILE-SPACE                  PIC 9(8).
+001900     05  FILE-COMPRESSED-FLAG        PIC X.
+002000     05  FILE-VARIABLE-FLAG          PIC X.
+002100     05  FILE-IO-KEY                 PIC 99.
+002200     05  FILE-REL-KEY                PIC 9(8).
+002300* THE FILE IO CHANNEL IS ALLOCATED BY C-ISAM AT OPEN
+002400* TIME AND SHOULD BE USED FOR ALL IO.
+002500     05  FILE-IO-CHANNEL             PIC 9(5).
+002505* Everything within the FILE-ID 05 level is used to
+002506* to identify a file format key and organization.
+000000* If an opened file's data is extracted into this
+000000* structure and matched with a similar block
+000000* constructed from the CONTROL data. If they match
+000000* then the file can be processed by control.
+002510     05  FILE-ID-DATA.
+000000         10  FILE-ORG                    PIC X.
+001600         10  FILE-RECORD-LEN             PIC 9999.
+001700         10  FILE-KEY-POS                PIC 9999.
+001800         10  FILE-KEY-LEN                PIC 99.
+002600         10  FILE-ALTKEY-DATA.
+002700             15  FILE-ALTKEY-COUNT       PIC 99.
+002800             15  FILE-ALTKEY-BLOCKS.
+002900                 20  FILLER   OCCURS 16 TIMES.
+003000                     25  FILE-ALTKEY-NUMBER  PIC 99.
+003100                     25  FILE-ALTKEY-POS     PIC 9999.
+003250                     25  FILE-ALTKEY-LEN     PIC 99.
+003300                     25  FILE-ALTKEY-DUP     PIC 9.
+000000
+003400     03  C-DATA.
+000000* The Sys IO block holds the copy of the struct
+000000* used for IO by KCSIO.
+003500     05  FILE-SYS-IO-BLOCK               PIC X(3000).

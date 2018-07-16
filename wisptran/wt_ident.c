@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -6,9 +8,6 @@
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
-#ifdef MSDOS
-#include <string.h>
-#endif
 
 #define EXT extern
 #include "wisp.h"
@@ -17,6 +16,8 @@
 #include "token.h"
 #include "node.h"
 #include "wmalloc.h"
+#include "statment.h"
+#include "ring.h"
 
 extern int 	symbzero;
 extern char	decimal_is;
@@ -27,7 +28,8 @@ struct	figcon1_struct
 	int	value;
 	char	name[40];
 } figcon1_item;
-int figcon1_compare();
+
+static int figcon1_compare(struct figcon1_struct *p1, struct figcon1_struct *p2);
 
 NODE get_statement();
 
@@ -341,6 +343,8 @@ NODE the_statement;
 				edit_token(curr_node->token,"VAX");
 			else if (dos_cobol)
 				edit_token(curr_node->token,"MSDOS");
+			else if (nt_cobol)
+				edit_token(curr_node->token,"WINNT");
 			else
 				edit_token(curr_node->token,"UNIX");
 
@@ -428,7 +432,7 @@ NODE the_statement;
 			}
 			else
 			{
-				free_statement(12,the_statement);
+				free_statement(the_statement);
 				special_statement = NULL;
 				write_log("WISP",'E',"SPECIAL","Error parsing SPECIAL-NAMES para, period not found.");
 			}
@@ -588,6 +592,7 @@ static int flag_is_dpcomma = 0;
 set_dpcomma()
 {
 	flag_is_dpcomma = 1;
+	return 0;
 }
 int is_dpcomma()
 {
@@ -595,8 +600,7 @@ int is_dpcomma()
 }
 
 
-int figcon1_compare(p1,p2)
-struct figcon1_struct *p1, *p2;
+static int figcon1_compare(struct figcon1_struct *p1, struct figcon1_struct *p2)
 {
 	int	cmp;
 
@@ -620,7 +624,7 @@ init_figcons()
 {
 	static int first = 1;
 
-	int i,j,l,k,offset;
+	int i,offset;
 	int	use_copy, output_copy;
 	char	COPY_SYMBOLICS[40];
 	cob_file	*cob_file_ptr;
@@ -641,6 +645,16 @@ init_figcons()
 		tput_line_at(8, "SPECIAL-NAMES.");					/* Output special names section		*/
 	}
 
+	if ( acn_cobol)
+	{
+		/*
+		**	Acucobol Native screen controls
+		*/
+		tput_line_at(12, "CURSOR         IS WISP-CURSOR");
+		tput_line_at(12, "CRT STATUS     IS WISP-CRT-STATUS");
+		tput_line_at(12, "SCREEN CONTROL IS WISP-SCREEN-CONTROL");
+	}
+	
 	if ( writing_cob_main() || !copylib )						/* If not writing to a copybook file	*/
 	{
 		tput_line_at(12,"COPY \"%s\".",COPY_SYMBOLICS);				/* Write the copy statement		*/
@@ -702,3 +716,15 @@ finish_figcons()
 	write_log("WISP",'I',"FINFIGCON","Finish FIGURATIVE-CONSTANTS Analysis.");
 }
 
+/*
+**	History:
+**	$Log: wt_ident.c,v $
+**	Revision 1.11  1997-09-09 17:56:41-04  gsl
+**	Add ACUCOBOL Native Screens Special-Names clauses
+**
+**	Revision 1.10  1996-08-30 21:56:19-04  gsl
+**	drcs update
+**
+**
+**
+*/

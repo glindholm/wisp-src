@@ -1,14 +1,30 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* 			WDINIT, subroutine to close out, save screen, set up for a DISPLAY verb.				*/
 
-#include <v/video.h>
+#include "video.h"
 
 #include "idsistd.h"
-wdinit()
+#include "vwang.h"
+
+void wdinit(void )
 {
 	wpushscr();								/* Push the current screen.			*/
 	vmove(0,0);
 	vmode(CLEAR);
 	verase(FULL_SCREEN);							/* Erase it.					*/
-	vset(CURSOR,VISIBLE);							/* Set the cursor visible.			*/
-	vdefer(RESTORE);							/* Make it up to date.				*/
+	vset_cursor_on();							/* Set the cursor visible.			*/
+	vdefer_restore();							/* Make it up to date.				*/
 }
+/*
+**	History:
+**	$Log: wdinit.c,v $
+**	Revision 1.9  1997-07-09 12:42:46-04  gsl
+**	Change to use new video.h intefaces.
+**
+**	Revision 1.8  1996-08-19 18:33:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

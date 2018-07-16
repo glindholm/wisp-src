@@ -1,19 +1,36 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 #define	_VSEDSCR_C
 #include <stdio.h>
 
 #include "idsistd.h"
+#include "vwang.h"
+
 #include "vseglb.h"
 #include "vsescr.h"
 #include "vsedscr.h"
+#include "vsedel.h"
+#include "vsedfnd.h"
+#include "vsedit.h"
+#include "vsedmod.h"
+#include "vsemov.h"
 
 static char ed_func[]={03};
 static char ed_lines[]={24};
 
 static char ed_menu1[]=
-"        (2)First (3)Last (4)Prev (5)Next  (6)Down  (7)Up   (8)Find";
-
+  "        (2)First (3)Last (4)Prev (5)Next  (6)Down  (7)Up   (8)Find     \254Display";
 static char ed_menu2[]=
-"(9)Mod (10)Chng (11)Ins (12)Del (13)Move (14)Copy (15)Col (16)Menu";
+  "(9)Mod (10)Chng (11)Ins (12)Del (13)Move (14)Copy (15)Col (16)Menu";
 
 static char col_num[4];
 static VSESCR_FLDS(ed_showcol_fld) = {
@@ -21,9 +38,23 @@ static VSESCR_FLDS(ed_showcol_fld) = {
 {LEN(3) ROW(2)  COL(79) FROM(col_num)},
 {LASTITEM}
 };
-static int lines_below();
 
-vse_ed_scr()
+static void init_line_fields(void);
+static void vse_ed_scr_dispatch(void);
+static void init_vse_ed_scr(void);
+static void vse_ed_scr_pfs(void);
+static int lines_below(int4 lines);
+static void menu_off(int pf, char *menu);
+static void disable_16(int pf, char *pfs);
+static void spacecpy(char *dest, char *src, int len);
+static void next_line(void);
+static void prev_line(void);
+static void next_page(void);
+static void prev_page(void);
+static void file_top(void);
+
+
+void vse_ed_scr(int pick)
 {
 	extern int vse_initial_keypress;
 	init_line_fields();
@@ -34,7 +65,7 @@ vse_ed_scr()
 	{
 		init_vse_ed_scr();
 		if (vse_initial_keypress != -1)
-		  ed_oa[1] &= 0x7f;
+		  ed_oa[OA_WCC] &= 0x7f;
 		d_and_r_ed(TAB_TO_FIELD);
 		if (vse_initial_keypress == -1)
 		{
@@ -44,7 +75,7 @@ vse_ed_scr()
 		{
 			vse_edit_pick = vse_initial_keypress;
 			vse_initial_keypress = -1;
-			ed_oa[1] |= 0x80;
+			ed_oa[OA_WCC] |= 0x80;
 			if (!strncmp(&ed_pfs[vse_edit_pick*2],"16",2))
 			  vse_edit_pick=1;
 		}
@@ -54,8 +85,7 @@ vse_ed_scr()
 	}
 }
 
-d_and_r_ed(tabs)
-int tabs;
+void d_and_r_ed(int tabs)
 {
 	char settab;
 	char write_all=1, read_all=2;
@@ -84,27 +114,20 @@ int tabs;
 		vwang(&settab,0,0,0,0,0);
 	}
 }
-init_line_fields()
+
+static void init_line_fields(void)
 {
 	int idx,col;
 
-/*	if(vse_numbering)
+	col = VSE_FIRST_SCREEN_COL;
+	for (idx = 0; idx < VSE_EDIT_ROWS; ++idx)
 		{
-		col = 9;
-		}
-	else
-		{
-		col = 2;
-		}
-*/ 
-	col = 9;
-	for (idx = 0; idx < 20; ++idx)
-		{
-		ed_line_flds[idx].len = vse_numbering?vse_text_width:71;
+		ed_line_flds[idx].len = vse_edit_width;
 		ed_line_flds[idx].col = col;
 		}
 }
-vse_ed_scr_dispatch()
+
+static void vse_ed_scr_dispatch(void)
 {
 	switch(vse_edit_pick)
 		{
@@ -128,11 +151,11 @@ vse_ed_scr_dispatch()
 			break;
 		case 8:
 			vse_save_pos();
-			vse_ed_fnd();
+			vse_ed_find();
 			break;
 		case 9:
-			vse_save_pos();
 			vse_ed_mod();
+			vse_save_pos();		/* Force the cursor to stay at the current location */
 			break;
 		case 11:
 			vse_save_pos();
@@ -147,7 +170,7 @@ vse_ed_scr_dispatch()
 			break;
 		case 10:
 			vse_save_pos();
-			vse_ed_srch_repl();
+			vse_ed_change();
 			break;
 		case 13:
 			vse_save_pos();
@@ -169,20 +192,18 @@ vse_ed_scr_dispatch()
 		}
 
 }
-vse_save_pos()
+
+void vse_save_pos(void)
 {
 	extern char ed_oa[];
 	
-	vse_save_row = ed_oa[3];
-	vse_save_col = ed_oa[2];
+	vse_save_row = ed_oa[OA_CURSOR_ROW];
+	vse_save_col = ed_oa[OA_COL];
 }
 
 
-init_vse_ed_scr()
+static void init_vse_ed_scr(void)
 {
-	int idx;
-	TEXT *txt;
-
 	make_all(DIM_FAC);
 
 	vse_ed_load_full_lines();
@@ -195,67 +216,64 @@ init_vse_ed_scr()
 		vse_sho_col();
 		show_col_flag=0;
 	}
-	sprintf(col_num,"%3d",ed_oa[2] - (vse_numbering?2:9));
+	sprintf(col_num,"%3d",ed_oa[OA_COL] + vse_edit_start_col - VSE_FIRST_SCREEN_COL);
 	vse_ed_add_numbers();
 	vse_ed_add_mod();
 	if (vse_save_row!= -1)
 	{
-		ed_oa[3]=vse_save_row;
+		ed_oa[OA_CURSOR_ROW]=vse_save_row;
 	}
 	else
-	  ed_oa[3]=5;
+	  ed_oa[OA_CURSOR_ROW]=VSE_FIRST_SCREEN_ROW;
 	if (vse_save_col!= -1)
 	{
-		ed_oa[2]=vse_save_col;
+		ed_oa[OA_COL]=vse_save_col;
 	}
 	else
-	  ed_oa[2]=9;
+	  ed_oa[OA_COL]=VSE_FIRST_SCREEN_COL;
 }
 
-vse_ed_load_full_lines()
+void vse_ed_load_full_lines(void)
 {
 	TEXT *txt;
 	int idx;
 
-	for(idx = 0, txt = scr_first; idx < 20; ++idx)
+	for(idx = 0, txt = scr_first; idx < VSE_EDIT_ROWS; ++idx)
 		{
-		memset(ed_line[idx],0,vse_text_width);
-		memset(ed_num[idx],0,6);
-		memset(ed_mod[idx],0,8);
+		memset(ed_line[idx],0,vse_edit_width);
+		memset(ed_num[idx],0,VSE_NUM_WIDTH);
+		memset(ed_mod[idx],0,vse_mod_width);
 		ed_txt[idx] = NULL;
 		strcpy(ed_num[idx],"ADD - ");
 		if(txt)
 			{
-			if ( !(strcmp( vse_gp_defaults_showmod, "YES" )) )
-				spacecpy( ed_line[idx], txt->text, vse_mod_text_width );
-			else
-				spacecpy(ed_line[idx],txt->text,vse_text_width);
+			spacecpy(ed_line[idx],txt->text,(int) vse_edit_width);
 			ed_txt[idx] = txt;
 			sprintf(ed_num[idx],"%06ld",txt->lineno);
 			if ( txt->modfld )
-				sprintf( ed_mod[idx], "%.8s", txt->modfld );
+				strcpy( ed_mod[idx], txt->modfld );
 			else
-				memset( ed_mod[idx], ' ', 8 );
+				memset( ed_mod[idx], ' ', vse_mod_width );
 			txt=txt->next;
 			}
 		}
 }
 
-vse_ed_load_lines()
+void vse_ed_load_lines(void)
 {
 	TEXT *txt;
 	int idx;
 
-	for(idx = 0, txt = scr_first; idx < 20; ++idx)
+	for(idx = 0, txt = scr_first; idx < VSE_EDIT_ROWS; ++idx)
 		{
-		ed_line_flds[idx].len = vse_text_width;
-		memset(ed_line[idx],0,vse_text_width);
-		memset(ed_num[idx],0,6);
+		ed_line_flds[idx].len = vse_edit_width;
+		memset(ed_line[idx],0,vse_edit_width);
+		memset(ed_num[idx],0,VSE_NUM_WIDTH);
 		ed_txt[idx] = NULL;
 		strcpy(ed_num[idx],"ADD - ");
 		if(txt)
 			{
-			spacecpy(ed_line[idx],txt->text,vse_text_width);
+			spacecpy(ed_line[idx],txt->text,(int) vse_edit_width);
 			ed_txt[idx] = txt;
 			sprintf(ed_num[idx],"%06ld",txt->lineno);
 			txt=txt->next;
@@ -263,47 +281,46 @@ vse_ed_load_lines()
 		}
 }
 
-vse_ed_add_numbers()
+void vse_ed_add_numbers(void)
 {
 	static int kludge=0;
 	int idx;
 	
-	if(vse_numbering)
+	if(vse_num_start_col)
 		vsescr(ed_num_flds,ed_scr);
 	else
 	{
 		kludge=1;
-		for (idx=0; idx<20; ++idx)
+		for (idx=0; idx<VSE_EDIT_ROWS; ++idx)
 		{
 			ed_num_flds[idx].col=2;
-			ed_num_flds[idx].len=6;
-			ed_num_flds[idx].row=idx+5;
-			ed_line_flds[idx].len=71;
-			ed_line_flds[idx].col=9;
+			ed_num_flds[idx].len=VSE_NUM_WIDTH;
+			ed_num_flds[idx].row=idx+VSE_FIRST_SCREEN_ROW;
+
+			ed_line_flds[idx].len=vse_edit_width;
+			ed_line_flds[idx].col=VSE_FIRST_SCREEN_COL;
 		}
 		vsescr(ed_num_flds,ed_scr);
 	}
 }
 
-vse_ed_add_mod()
-
+void vse_ed_add_mod(void)
 {
-	int idx;
+	int 	idx;
+	int	showmod_col = VSE_SCREEN_WIDTH - vse_mod_width + 1;
 
-	if ( !(strcmp( vse_gp_defaults_showmod, "YES" )) )
+	if ( 0==strcmp( vse_gp_defaults_showmods, "YES" ) && vse_mod_width )
 	{
-		for ( idx = 0; idx < 20; idx++ )
+		for ( idx = 0; idx < VSE_EDIT_ROWS; idx++ )
 		{
-			ed_mod_flds[idx].col = 73;
-			ed_mod_flds[idx].len = 8;
-			ed_line_flds[idx].len = vse_mod_text_width;
-			ed_line_flds[idx].col = 9;
+			ed_mod_flds[idx].col = showmod_col;
+			ed_mod_flds[idx].len = vse_mod_width;
 		}
 		vsescr( ed_mod_flds, ed_scr );
 	}
 }
 
-vse_ed_scr_pfs()
+static void vse_ed_scr_pfs(void)
 {
 	int idx;
 
@@ -312,6 +329,15 @@ vse_ed_scr_pfs()
 	strcpy(ed_top2,ed_menu2);		/* oh yeah */
 	CLEAR_FIELD(ed_top3);
 	CLEAR_FIELD(ed_top4);
+
+	if (vse_mod_width && 0==strcmp(vse_gp_defaults_showmods, "YES") )
+	{
+		int	col;
+
+		col = VSE_SCREEN_WIDTH - vse_mod_width - 1;
+		ed_top4[col-1] = '\254';
+		memcpy(&ed_top4[col],"Modcode ",vse_mod_width);
+	}
 
 	for(idx= 17; idx < 33; ++idx)		/*disable 17 thru 32*/
 		disable_16(idx,ed_pfs);
@@ -333,7 +359,7 @@ vse_ed_scr_pfs()
 		menu_off(3,ed_top1);
 		menu_off(5,ed_top1);
 		}
-	if(!lines_below(5))			/* If at bot*/
+	if(!lines_below((int4)VSE_BOTTOM_ROWS))	/* If at bot*/
 		{
 		disable_16(7,ed_pfs);		/*Disable UP*/
 		menu_off(7,ed_top1);
@@ -357,8 +383,7 @@ vse_ed_scr_pfs()
 /*----
 Are there lines left
 ------*/
-static lines_below(lines)
-int4 lines;
+static int lines_below(int4 lines)
 {
 	TEXT *txt;
 	int idx;
@@ -367,19 +392,18 @@ int4 lines;
 		return(0);
 	txt = scr_first->next;
 	for(idx = 0; idx < lines; ++idx)
-		{
+	{
 		if(!txt)
 			return(0);
 		txt = txt->next;
-		}
+	}
+	return(1);
 }
 /*----
 Clears a menu selection
 Each selection is 9 bytes long
 ------*/
-menu_off(pf,menu)
-int pf;
-char *menu;
+static void menu_off(int pf, char *menu)
 {
 	int idx,len;
 	
@@ -410,30 +434,25 @@ char *menu;
 /*----
 Disable a pfkey by dropping 16 into it's slot
 ------*/
-disable_16(pf,pfs)
-char *pfs;
-int pf;
+static void disable_16(int pf, char *pfs)
 {
 	pf *= 2;
 	memcpy(&pfs[pf],"16",2);
 }
 
 
-make_all(fac)
-int fac;
+void make_all(int fac)
 {
 	int idx;
 
-	for(idx = 0; idx < 20; ++idx)
+	for(idx = 0; idx < VSE_EDIT_ROWS; ++idx)
 		{
 		ed_line_flds[idx].fac = fac;
 		}
 }
 
 
-spacecpy(dest,src,len)
-char *dest,*src;
-int len;
+static void spacecpy(char *dest, char *src, int len)
 {
 	while(len--)
 		{
@@ -449,30 +468,40 @@ int len;
 		}
 }
 
-spaceout(str,len)
-char *str;
-int4 len;
-{
-	while(len--)
-		if(str[len] == 0)
-			str[len] = ' ';
-}
-
-next_line()
+static void next_line(void)
 {
 	if(!scr_first)
 		return;
 	if(!scr_first->next)
 		return;
 	scr_first = scr_first->next;
+
+	if (ed_oa[OA_CURSOR_ROW] <= VSE_FIRST_SCREEN_ROW)
+	{
+		vse_save_row = ed_oa[OA_CURSOR_ROW];
+	}
+	else if ( ed_oa[OA_CURSOR_ROW] <= 24)
+	{
+		vse_save_row = ed_oa[OA_CURSOR_ROW] - 1;
+	}
 }
-prev_line()
+static void prev_line(void)
 {
 	if(!scr_first->prev)
 		return;
 	scr_first = scr_first->prev;
+
+	if (ed_oa[OA_CURSOR_ROW] < VSE_FIRST_SCREEN_ROW)
+	{
+		vse_save_row = ed_oa[OA_CURSOR_ROW];
+	}
+	else if (ed_oa[OA_CURSOR_ROW] < 24)
+	{
+		vse_save_row = ed_oa[OA_CURSOR_ROW] + 1;
+	}
 }
-next_page()
+
+static void next_page(void)
 {
 	TEXT *txt;
 	int idx;
@@ -489,7 +518,8 @@ next_page()
 		}
 	scr_first = txt;
 }
-prev_page()
+
+static void prev_page(void)
 {
 	TEXT *txt;
 	int idx;
@@ -507,33 +537,48 @@ prev_page()
 	scr_first = txt;
 }
 
-file_top()
+static void file_top(void)
 {
+	vse_save_row = VSE_FIRST_SCREEN_ROW;
+	vse_save_col = VSE_FIRST_SCREEN_COL;
 	scr_first = text_first;
 }
-file_bottom()
+
+void file_bottom(void)
 {
 	TEXT *txt;
 	int idx;
 	
-	scr_first = text_last;
+	vse_save_row = VSE_FIRST_SCREEN_ROW;
+	vse_save_col = VSE_FIRST_SCREEN_COL;
 
-	if(!scr_first)
-		return;
-	for(idx = 0, txt=scr_first; idx < 5; ++idx)
-		{
+	scr_first = text_last;
+	if(!scr_first) return;
+
+	for(idx = 1, txt=scr_first; idx < VSE_BOTTOM_ROWS; ++idx)
+	{
 		if(!txt->prev)
 			break;
 		txt = txt->prev;
-		}
+		vse_save_row += 1;
+	}
 	scr_first = txt;
 }
 
-vse_sho_col()
+void vse_sho_col(void)
 {
 	extern char ed_oa[];
 
-	sprintf(col_num,"%-2d",(ed_oa[2]<=1)?0:(ed_oa[2] - (vse_numbering?2:8)));
+	sprintf(col_num,"%-2d",(ed_oa[OA_COL]<=1)?0:(ed_oa[OA_COL] + vse_edit_start_col - VSE_FIRST_SCREEN_COL));
 	vsescr(ed_showcol_fld,ed_scr);
 }
 
+/*
+**	History:
+**	$Log: vsedscr.c,v $
+**	Revision 1.10  1996-09-03 18:24:04-04  gsl
+**	drcs update
+**
+**
+**
+*/

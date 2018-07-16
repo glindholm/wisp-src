@@ -1,18 +1,16 @@
-			/************************************************************************/
-			/*									*/
-			/*		WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
-
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
-**	NAME:	sharemem.c
+**	File:		sharemem.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	WISP shared memory access routines.
+**
+**	Routines:	
 */
-
-/* WISP shared memory access routines.												*/
 
 /*
 	The layout of shared memory:
@@ -65,7 +63,7 @@
 static	max_pages()		Return the size in pages.
 static	max_parms()		Return max number of parms.
 static	roundup4()		Round a number up to the next 4 divisable number.
-static	a_short()		Takes a pointer to an unaligned short and returns a short.
+	a_int2()		Takes a pointer to an unaligned int2 and returns a int2.
 static	get_sh_raw()		Get a chunk of shared mem data area.
 	get_sh_seg()		Get a shared segment of memory.
 	finish_sh_seg()		This is called to update the shr_header counters after the PRB has been loaded.
@@ -108,29 +106,33 @@ static	ctlfile()		Generate control file name.
 
 */
 
+/*
+**	Includes
+*/
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 
-#ifdef VMS
-#include <stdlib.h>
-#else
-#include <malloc.h>
-#include <memory.h>
-#endif
-
-#ifdef MSDOS
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <direct.h>
 #include <io.h>
-#include <stdlib.h>
 #endif
 
 #include "idsistd.h"
 #include "werrlog.h"
-#include "wshmem.h"
+#include "sharemem.h"
 #include "putparm.h"
 #include "wdefines.h"
 #include "wanguid.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "level.h"
+#include "wexit.h"
+#include "wperson.h"
+#include "osddefs.h"
+#include "wmalloc.h"
 
 #define		ROUTINE		59800
 
@@ -161,6 +163,10 @@ static	ctlfile()		Generate control file name.
 59846	%%SHAREMEM-F-BACKREF Backwards reference failed [%s]
 */
 
+/*
+**	Structures and Defines
+*/
+
 #define W_PAGE_SIZE	512
 #ifdef MSDOS
 #define DEF_MAX_PARMS	64
@@ -170,6 +176,9 @@ static	ctlfile()		Generate control file name.
 #define DEF_MAX_PAGES	40
 #endif
 
+#define PRNAME_SIZE	8
+#define LABEL_SIZE	8
+#define KEYWORD_SIZE	8
 
 /*
 ** OLD		SHM_VERSION	"V2.0_2"	Very old method
@@ -178,33 +187,45 @@ static	ctlfile()		Generate control file name.
 */
 
 #define SHM_VERSION	"V3.3_1"
-
-static char gp_pp_version[7] = SHM_VERSION;						/* Version indicator for GETPARM/PUTPARM*/
-static char cur_version[7];								/* Current version indicator.		*/
+#define THE_VERSION_SIZE 6
 
 
 typedef struct sh_mem_header
 	{
-		char	gp_pp_ver[8];							/* The version number			*/
-		short	cur_prb_id;							/* Current prb id number		*/
-		short	num_parms;							/* The current number of parms stored.	*/
-		short	max_num_parms;							/* The maximum number of parms		*/
-		short	max_num_pages;							/* The maximum number of pages		*/
+		char	gp_pp_ver[8];	/* THE_VERSION_SIZE + 2 */			/* The version number			*/
+		int2	cur_prb_id;							/* Current prb id number		*/
+		int2	num_parms;							/* The current number of parms stored.	*/
+		int2	max_num_parms;							/* The maximum number of parms		*/
+		int2	max_num_pages;							/* The maximum number of pages		*/
 		int4	unused_off;							/* Offset of unused data area		*/
 		char	filler[24];							/* Set up for futrue use.		*/
 	} gp_pp_header;
-static gp_pp_header *shr_header;							/* Pointer to header of shared memory.	*/
 
 struct gbl_parm_table
 	{
 		int4	proff;								/* Offset of the data in the file.	*/
-		short	prb_id;								/* Id to link with data area		*/
-		char	prname[9];							/* prname				*/
-		char	label[8];							/* The PUTPARM label.			*/
+		int2	prb_id;								/* Id to link with data area		*/
+		char	prname[PRNAME_SIZE + 1];					/* prname				*/
+		char	label[LABEL_SIZE];						/* The PUTPARM label.			*/
 		char	linklevel;							/* The link level			*/
 		char	filler[4];							/* Filler for future use.		*/
 	};
 typedef struct gbl_parm_table gbl_parm_table;
+
+/*
+**	Globals and Externals
+*/
+extern	int opt_max_pages;								/* OPTIONS file max pages.		*/
+extern	int opt_max_parms;								/* OPTIONS file max parms.		*/
+
+/*
+**	Static data
+*/
+
+static char gp_pp_version[THE_VERSION_SIZE + 1] = SHM_VERSION;				/* Version indicator for GETPARM/PUTPARM*/
+static char cur_version[THE_VERSION_SIZE + 1];						/* Current version indicator.		*/
+
+static gp_pp_header *shr_header;							/* Pointer to header of shared memory.	*/
 
 static char *gbl_ptr = (char *) 0;							/* The base pointer of the global mem.	*/
 											/* Initial part of data in global area. */
@@ -212,38 +233,43 @@ static gbl_parm_table *pr_table;							/* The table. It has MAX_PARMS items.	*/
 static char *pr_data;									/* The pointer to the data.		*/
 static char *end_data;									/* A pointer to the end of all the data.*/
 
-
 static new_file;									/* Flag indicating a new file.		*/
 static int found_shr_mem;								/* Found the shared memory file flag.	*/
 
+/*
+**	Static Function Prototypes
+*/
 
-char	*strchr();
-char	*get_prb_area();
-static	int4	off_prbid();
+static int 	max_pages(void);
+static int 	max_parms(void);
+static int 	roundup4(int x);
+static char 	*get_sh_raw(int size);
+static int4 	off_prbid(int2 id);
+static void	compress_data(void);
+static int	map_shr_ptrs(void);
+static int	init_parm_area(void);
+static void	map_global_ptrs(void);
+static char 	getlinklevel(void);
+static int 	rewrite_prb(SHMH **prb_ptr, FMTLIST *fmtlist);
 
-static int osd_open_seg();
-static int osd_delete_seg();
-static char *osd_map_seg();
-static int osd_unmap_seg();
-static int osd_exists_seg();
-static int osd_sync_seg();
-static short a_short();
-static int compress_data();
-static int map_shr_ptrs();
-static int map_global_ptrs();
-static char getlinklevel();
-static int rewrite_prb();
-static int init_parm_area();
+static int 	osd_open_seg(int *new);
+static int 	osd_delete_seg(void);
+static char 	*osd_map_seg(void);
+static int 	osd_unmap_seg(void);
+static int 	osd_exists_seg(void);
+static int 	osd_sync_seg(void);
+static char 	*ctlfile(void);
+
+
 
 /*==============================================================================================================================*/
 
 /*
 **	max_pages()	Return the number of pages
 */
-static	int	max_pages()
+static	int	max_pages(void)
 {
 static	int pages=DEF_MAX_PAGES;							/* Max number of pages in the sec file. */
-extern	int opt_max_pages;								/* OPTIONS file max pages.		*/
 static	int	first=1;
 
 	if (first)
@@ -258,10 +284,9 @@ static	int	first=1;
 /*
 **	max_parms()	Return the number of parms
 */
-static	int	max_parms()
+static	int	max_parms(void)
 {
 static	int parms=DEF_MAX_PARMS;							/* Maximum number of prb's in the sect. */
-extern	int opt_max_parms;								/* OPTIONS file max parms.		*/
 static	int	first=1;
 
 	if (first)
@@ -278,21 +303,27 @@ static	int	first=1;
 **	roundup4()	Round a number up to the next 4 divisable number.
 **			This is used when allocating memory, so as to always get 4 byte chunks.
 */
-static int roundup4(x)
-int	x;
+static int roundup4(int x)
 {
 	return( (x+3) & ~(3l) );
 }
 
 /*
-	a_short		Takes a pointer to an unaligned short and returns a short.
+	a_int2		Takes a pointer to an unaligned int2 and returns a int2.
 */
-static short a_short(ptr)
-char	*ptr;
+int2 a_int2(void *ptr)
 {
-	short	tmp;
+	int2	tmp;
 
-	memcpy(&tmp,ptr,sizeof(short));
+	memcpy(&tmp,ptr,sizeof(int2));
+	return(tmp);
+}
+
+int4 a_int4(void *ptr)
+{
+	int4	tmp;
+
+	memcpy(&tmp,ptr,4);
 	return(tmp);
 }
 
@@ -301,13 +332,12 @@ char	*ptr;
 			This routine will return a pointer size bytes of data.
 			It will also update the unused_off (unused offset) variable in the header.
 */
-static char *get_sh_raw(size)
-int size;
+static char *get_sh_raw(int size)
 {
 	int	cur_item;
 	char	*dat_ptr;
 
-	werrlog(ERRORCODE(1),"get_sh_raw",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","GET_SH_RAW","Get a chuck of the shared memory data area (size=%d)",size);
 
 	size = roundup4(size);
 
@@ -349,16 +379,13 @@ int size;
 			*** NOTE ***	The position in the data area of the PRBs will be changed if by compress.
 
 */
-char *get_sh_seg(prname,label,size,id,rsize)						/* Get a pointer to shared mem area and */
-char *prname, *label;									/* Allocate the memory needed.		*/
-int size;
-int *id;
-int *rsize;
+char *get_sh_seg(char *prname, char *label, int size, int *id, int *rsize)
 {
-	int i, cur_item, ptr_offset;
-	char *dat_ptr, *ptr1, *ptr2;
+	int cur_item;
+	char *dat_ptr;
 
-	werrlog(ERRORCODE(1),"get_sh_seg",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","GET_SH_SEG","Get a segment of shared memory and setup pr_table. prname=[%8.8s] label=[%8.8s] size=%d",
+	       prname, label, size);
 
 	size = roundup4(size);
 	*rsize = size;
@@ -372,8 +399,8 @@ int *rsize;
 	}
 
 	cur_item = shr_header->num_parms;						/* This is the index of the current item*/
-	memcpy(pr_table[cur_item].prname,prname,8);					/* Copy the prname.			*/
-	memcpy(pr_table[cur_item].label,label,8);					/* Copy the PUTPARM label.		*/
+	memcpy(pr_table[cur_item].prname,prname,PRNAME_SIZE);				/* Copy the prname.			*/
+	memcpy(pr_table[cur_item].label,label,LABEL_SIZE);				/* Copy the PUTPARM label.		*/
 	pr_table[cur_item].prb_id = shr_header->cur_prb_id;
 	*id			  = shr_header->cur_prb_id;
 	pr_table[cur_item].proff = shr_header->unused_off;
@@ -400,10 +427,9 @@ int *rsize;
 /*
 	finish_sh_seg	This is called to update the shr_header counters after the PRB has been loaded.
 */
-int finish_sh_seg(size)
-int	size;
+int finish_sh_seg(int size)
 {
-	werrlog(ERRORCODE(1),"finish_sh_seg",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","FINISH_SH_SEG","Update the shr_header counters after the PRB has been loaded (size=%d)",size);
 
 	shr_header->num_parms += 1;							/* Add 1.				*/
 	shr_header->cur_prb_id += 1;
@@ -414,13 +440,12 @@ int	size;
 /*
 	get_prb_id	This routine returns a pointer to the PRB identified by id or NULL if not found.
 */
-SHMH *get_prb_id(id)
-int id;
+SHMH *get_prb_id(int2 id)
 {
-	int	off;
+	int4	off;
 	SHMH	*prb_ptr;
 
-	werrlog(ERRORCODE(1),"get_prb_id",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","GET_PRB_ID","Find PRB for id=%d",(int)id);
 
 	if (map_shr_ptrs()) return(NULL);					/* Map into shared memory			*/
 
@@ -435,13 +460,11 @@ int id;
 	off_prbid		Returns the offset into the data area of a prb with the given id.
 				A return = -1 means the prb was not found in the data area.
 */
-static int4 off_prbid(id)
-short	id;
+static int4 off_prbid(int2 id)
 {
 	SHMH	*ptr_shmh;
 	char	*ptr;
-
-	werrlog(ERRORCODE(1),"off_prbid",0,0,0,0,0,0,0);
+	int4	rc;
 
 	ptr = pr_data;
 	for(;;)
@@ -449,14 +472,20 @@ short	id;
 		ptr_shmh = (SHMH *)ptr;
 		if (ptr_shmh >= (SHMH *)(pr_data + shr_header->unused_off))
 		{
-			return(-1);
+			rc = -1;
+			break;
 		}
 		if (ptr_shmh->prb_id == id )
 		{
-			return( (char *)ptr_shmh - pr_data );
+			rc =  (char *)ptr_shmh - pr_data;
+			break;
 		}
 		ptr += ptr_shmh->prb_size;
 	}
+
+	wtrace("SHAREMEM","OFF_PRBID","Offset for PRB id=%d is %ld", (int)id, (long)rc);
+
+	return rc;
 }
 
 /*
@@ -464,13 +493,13 @@ short	id;
 				and shifting all remaining prbs to lower memory. It will also update the pr_table offsets
 				to point to the new locations.
 */
-static compress_data()
+static void compress_data(void)
 {
 	char	*ptr_source, *ptr_dest;
 	int4	len,i;
 	SHMH	*ptr_shmh;
 
-	werrlog(ERRORCODE(1),"compress_data",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","COMPRESS_DATA","Compress the data area to remove deleted PRBs");
 
 	/*
 	**	Compress the data area by shifting all non-deleted prbs to lower memory
@@ -525,16 +554,15 @@ static compress_data()
 }
 
 /*
-**	map_shr_ptr()		Map shared memory pointers into the shared memory area/file.
+**	map_shr_ptrs()		Map shared memory pointers into the shared memory area/file.
 **				The shared memory file will be created if needed.
 **				The global shared memory pointers will then be maped.
 */
-static int map_shr_ptrs()								/* This routine maps the pointers	*/
+static int map_shr_ptrs(void)								/* This routine maps the pointers	*/
 {											/* in the shared memory file.		*/
 	int	new;
 
-	werrlog(ERRORCODE(1),"map_shr_ptrs",0,0,0,0,0,0,0);
-
+	wtrace("SHAREMEM","MAP_SHR_PTRS","Map shared memory pointers into the shared memory area");
 
 	osd_open_seg(&new);								/* Open the shared memory segment	*/
 	gbl_ptr = osd_map_seg();							/* Map the segment into memory		*/
@@ -548,8 +576,8 @@ static int map_shr_ptrs()								/* This routine maps the pointers	*/
 											/* All ok, map the needed pointers.	*/
 		shr_header = (gp_pp_header *)gbl_ptr;					/* Pointer to the header section.	*/
 
-		memcpy(cur_version,shr_header->gp_pp_ver,6);				/* GETPARM/PUTPARM version indicator.	*/
-		cur_version[6] = '\0';							/* Null terminate.			*/
+		memcpy(cur_version,shr_header->gp_pp_ver,THE_VERSION_SIZE);		/* GETPARM/PUTPARM version indicator.	*/
+		cur_version[THE_VERSION_SIZE] = '\0';					/* Null terminate.			*/
 		if (strcmp(cur_version,gp_pp_version) != 0)				/* Test the version number.		*/
 		{
 			werrlog(ERRORCODE(12),cur_version,gp_pp_version,0,0,0,0,0,0);	/* Version mismatch.			*/
@@ -565,15 +593,15 @@ static int map_shr_ptrs()								/* This routine maps the pointers	*/
 **	init_parm_area		Initialize the shared memory area.
 **				This is called once after shared memory area is created.
 */
-static int init_parm_area()								/* Init the parm area.			*/
+static int init_parm_area(void)								/* Init the parm area.			*/
 {
-	werrlog(ERRORCODE(1),"init_parm_area",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","INIT_PARM_AREA","Initializing the shared memory area");
 
 	memset(gbl_ptr,'\0',(max_pages() * W_PAGE_SIZE));				/* Init to nulls			*/
 
 	shr_header = (gp_pp_header *)gbl_ptr;						/* Pointer to the header section.	*/
 
-	memcpy(shr_header->gp_pp_ver,gp_pp_version,6);					/* Copy version to gbl file.		*/
+	memcpy(shr_header->gp_pp_ver,gp_pp_version,THE_VERSION_SIZE);			/* Copy version to gbl file.		*/
 	shr_header->cur_prb_id = 1;							/* Starting prb_id			*/
 	shr_header->num_parms = 0;							/* init number of parms.		*/
 	shr_header->max_num_parms = max_parms();					/* Record the sizes			*/
@@ -595,9 +623,9 @@ static int init_parm_area()								/* Init the parm area.			*/
 	map_global_ptrs()	Map the global shared memory pointers.
 				This routines requires glb_ptr to already point to the start of shared memory.
 */
-static map_global_ptrs()
+static void map_global_ptrs(void)
 {
-	werrlog(ERRORCODE(1),"map_global_ptrs",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","MAP_GLOBAL_PTRS","Mapping the global shared memory pointers");
 
 	shr_header = (gp_pp_header *)gbl_ptr;						/* Pointer to the header section.	*/
 
@@ -612,9 +640,9 @@ static map_global_ptrs()
 /*
 	cleanup_shrfil		Cleanup and unmap the shared memory file.
 */
-int cleanup_shrfil()									/* Cleanup after users of the shared dat*/
+int cleanup_shrfil(void)								/* Cleanup after users of the shared dat*/
 {
-	werrlog(ERRORCODE(1),"cleanup_shrfil",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","CLEARUP_SHRFIL","Cleanup and unmap the shared memory area");
 
 	if (!osd_exists_seg()) return(0);						/* If doesn't exist then just return	*/
 
@@ -637,7 +665,7 @@ int cleanup_shrfil()									/* Cleanup after users of the shared dat*/
 	show_parm_area		Print a report showing the current putparm status.
 				Used by WPUTPARM SHOW
 */
-int show_parm_area()									/* Display the available PUTPARMs.	*/
+int show_parm_area(void)								/* Display the available PUTPARMs.	*/
 {
 	int 	i;
 	int	first=1;
@@ -681,11 +709,11 @@ int show_parm_area()									/* Display the available PUTPARMs.	*/
 			kh = (KEYWSHM *)tptr;
 		}
 
-		if (pp->reflbl[0] && 0 != memcmp(pp->reflbl,"        ",8))		/* If there is a reference label then	*/
+		if (pp->reflbl[0] && 0 != memcmp(pp->reflbl,"        ",LABEL_SIZE))	/* If there is a reference label then	*/
 		{
 			char	tbuf[20];
 
-			unloadpad(tbuf,pp->reflbl,8);					/* Display the reference label		*/
+			unloadpad(tbuf,pp->reflbl,LABEL_SIZE);				/* Display the reference label		*/
 			sprintf(bptr,"(%s) ",tbuf);
 			bptr += strlen(bptr);
 		}
@@ -697,7 +725,7 @@ int show_parm_area()									/* Display the available PUTPARMs.	*/
 		{
 			memcpy(&tkh,kh,sizeof(KEYWSHM));				/* Get temp align copy of *kh		*/
 
-			if (bptr+a_short(&tkh.value_len)+8+3 >= buff+sizeof(buff)-5)
+			if (bptr+a_int2(&tkh.value_len)+8+3 >= buff+sizeof(buff)-5)
 			{
 				*bptr++ = '.';
 				*bptr++ = '.';
@@ -718,8 +746,8 @@ int show_parm_area()									/* Display the available PUTPARMs.	*/
 			tptr += sizeof(KEYWSHM);
 			tptr += 8;
 
-			memcpy(bptr,tptr, (int)a_short(&tkh.value_len));
-			bptr += a_short(&tkh.value_len);
+			memcpy(bptr,tptr, (int)a_int2(&tkh.value_len));
+			bptr += a_int2(&tkh.value_len);
 			*bptr++ = ']';
 			*bptr++ = ' ';
 
@@ -767,7 +795,7 @@ int show_parm_area()									/* Display the available PUTPARMs.	*/
 				Used by WPUTPARM ISHOW
 
 */
-int ishow_parm_area()	/* Do an internals SHOW */
+int ishow_parm_area(void)	/* Do an internals SHOW */
 {
 	int 	i;
 	SHMH	*ptr_shmh;
@@ -860,8 +888,7 @@ int ishow_parm_area()	/* Do an internals SHOW */
 	dump_parm_area		Copy the contents of the shared memory area to a file.
 				Used by WPUTPARM DUMP filename
 */
-int dump_parm_area(filename)
-char	*filename;
+int dump_parm_area(char *filename)
 {
 	FILE	*fp;
 	char	*ptr;
@@ -880,7 +907,7 @@ char	*filename;
 		return(0);
 	}
 
-	fp = fopen(filename,"w");
+	fp = fopen(filename,FOPEN_WRITE_BINARY);
 	if (!fp)
 	{
 		printf("Unable to open file=[%s] for DUMP\n",filename);
@@ -897,15 +924,14 @@ char	*filename;
 /*
 	wax_table_entry		This routine removes a PRB entry from the pr_table. (Also ensures status=P_DELETED)
 				Previously called "wax_parm_area".
+
+		parm_area	Ptr to SHMH (PRB) area.
+
 */
-int wax_table_entry(parm_area)
-char *parm_area;									/* Ptr to SHMH (PRB) area.		*/
+int wax_table_entry(SHMH *parm_area)
 {
 	int	cur_item;
 	int	dat_off;
-	SHMH	*ptr_shmh;
-
-	werrlog(ERRORCODE(1),"wax_table_entry",0,0,0,0,0,0,0);
 
 	if (!gbl_ptr)									/* Not mapped.				*/
 	{
@@ -915,14 +941,16 @@ char *parm_area;									/* Ptr to SHMH (PRB) area.		*/
 
 	if (!shr_header->num_parms) return(0);						/* Nothing there			*/
 
-	dat_off = parm_area - pr_data;							/* Calculate the offset.		*/
+	dat_off = (char *)parm_area - pr_data;						/* Calculate the offset.		*/
 											/* Look for the item with that offset.	*/
 	for (cur_item=0; (cur_item < shr_header->num_parms) && (pr_table[cur_item].proff != dat_off); cur_item++);
 
 	if (cur_item == shr_header->num_parms) return(0);				/* Was not found.			*/
 
-	ptr_shmh = (SHMH *)parm_area;							/* Mark the SHMH as deleted.		*/
-	ptr_shmh->status = P_DELETED;
+	parm_area->status = P_DELETED;							/* Mark the SHMH as deleted.		*/
+
+	wtrace("SHAREMEM","WAX_TABLE_ENTRY","Remove a PRB entry from the pr_table prname=[%8.8s] id=%d", 
+	       parm_area->prname, parm_area->prb_id);
 
 	shr_header->num_parms -= 1;							/* Decrememt the list.			*/
 	while (cur_item < shr_header->num_parms)					/* Now move all the parms up one.	*/
@@ -954,19 +982,20 @@ char *parm_area;									/* Ptr to SHMH (PRB) area.		*/
 **	History:	
 **	09/04/92	Written by GSL
 */
-int	erase_prb_level()
+int	erase_prb_level(void)
 {
 	int	cur_item;
 	SHMH	*prb;
 	int 	done;
 	int	level;
 
-	werrlog(ERRORCODE(1),"erase_prb_level",0,0,0,0,0,0,0);
-
 	if (!osd_exists_seg()) return(0);						/* If shrfil doesn't exist		*/
 	if (map_shr_ptrs()) return 0;							/* Unsuccessful map to shared mem area. */
 
 	level = (int)getlinklevel();
+
+	wtrace("SHAREMEM","ERASE_PRB_LEVEL","Erase all PRBs at this linklevel=%d",level);
+	
 	done = 0;
 	while(!done)
 	{
@@ -1012,14 +1041,12 @@ int	erase_prb_level()
 **	History:	
 **	09/04/92	Written by GSL
 */
-int	erase_prb(prb)
-SHMH	*prb;
+int	erase_prb(SHMH *prb)
 {
-	werrlog(ERRORCODE(1),"erase_prb",0,0,0,0,0,0,0);
 	if (!prb) return(0);
 
 	prb->status = P_DELETED;
-	wax_table_entry((char *)prb);
+	wax_table_entry(prb);
 
 	return(0);
 }
@@ -1046,11 +1073,11 @@ SHMH	*prb;
 **	09/04/92	Written by GSL
 **
 */
-int delete_prb(prb)
-SHMH	*prb;
+int delete_prb(SHMH *prb)
 {
-	werrlog(ERRORCODE(1),"delete_prb",0,0,0,0,0,0,0);
 	if (!prb) return(0);
+
+	wtrace("SHAREMEM","DELETE_PRB","Delete PRB prname=[%8.8s] id=%d", prb->prname, (int)prb->prb_id);
 
 	prb->usage_cnt = 1;							/* Rig the usage_cnt so it will delete.		*/
 	return( use_prb(prb) );							/* Call use_prb to do the delete		*/
@@ -1079,29 +1106,28 @@ SHMH	*prb;
 **	09/04/92	Written by GSL
 **
 */
-int	use_prb(prb)
-SHMH	*prb;
+int	use_prb(SHMH *prb)
 {
-	werrlog(ERRORCODE(1),"use_prb",0,0,0,0,0,0,0);
-
 	if (!prb) return(0);
 	if (P_OK != prb->status) return(0);						/* Already used or deleted		*/
 	if (0 == prb->usage_cnt) return(0);						/* Unlimited usage count		*/
 
+	wtrace("SHAREMEM","USE_PRB","Mark this PRB as used prname=[%8.8s] id=%d",prb->prname, prb->prb_id);
+	
 	prb->usage_cnt--;								/* Use one instance of it.		*/
 	if (0 < prb->usage_cnt) return(0);						/* If usages remain then return		*/
 	
 	/*
 	**	This PRB is all used up so DELETE it or mark it as USED.
 	*/
-	if (prb->label[0] && 0 != memcmp(prb->label,"        ",8))
+	if (prb->label[0] && 0 != memcmp(prb->label,"        ",LABEL_SIZE))
 	{
 		prb->status = P_USED;
 	}
 	else
 	{
 		prb->status = P_DELETED;
-		wax_table_entry((char *)prb);
+		wax_table_entry(prb);
 	}
 	
 	return(0);
@@ -1113,33 +1139,32 @@ SHMH	*prb;
 				If PRB is found it returns a pointer to the SHMH structure.
 				If a label is supplied it searches by label else it searches by prname.
 				If used_ok is set then it will match even if PRB is marked as USED. (keep).
+
+	m_prname;		The prname to match (or NULL)
+	m_label;		The label to match (or NULL)
+	used_ok;
+
 */
-char *get_prb_area(m_prname, m_label, used_ok)
-char	*m_prname;									/* The prname to match (or NULL)	*/
-char	*m_label;									/* The label to match (or NULL)		*/
-int	used_ok;
+
+SHMH *get_prb_area(char *m_prname, char *m_label, int used_ok)
 {
-	uint4	status;
 	int	cur_item, found_item;
-	char	*dat_ptr;
 	SHMH	*ptr_shmh;
 	int	bylabel;
 	int	wantlevel, found_level, cur_level;
 
-	werrlog(ERRORCODE(1),"get_prb_area",0,0,0,0,0,0,0);
-
 	if (!osd_exists_seg()) return(NULL);						/* If shrfil doesn't exist		*/
 
-	if (status = map_shr_ptrs()) return(NULL);					/* Unsuccessful map to shared mem area. */
+	if (map_shr_ptrs()) return(NULL);						/* Unsuccessful map to shared mem area. */
 
 	if (shr_header->num_parms == 0) return(NULL);					/* No parms.				*/
 
-	if (m_label && memcmp(m_label,"        ",8) != 0)				/* If label and not blank		*/
+	if (m_label && memcmp(m_label,"        ",LABEL_SIZE) != 0)			/* If label and not blank		*/
 	{
 		bylabel = 1;
 		wantlevel = linklevel();						/* Want current link-level.		*/
 	}
-	else if (m_prname && memcmp(m_prname,"        ",8) != 0)			/* else match the prname.		*/
+	else if (m_prname && memcmp(m_prname,"        ",PRNAME_SIZE) != 0)		/* else match the prname.		*/
 	{
 		bylabel = 0;
 		wantlevel = linklevel() - 1;						/* Want previous link-level.		*/
@@ -1149,14 +1174,17 @@ int	used_ok;
 		return(NULL);
 	}
 
+	wtrace("SHAREMEM","GET_PRB_AREA","Search pr_table for PRB prname=[%8.8s] label=[%8.8s]", 
+	       (m_prname)? m_prname:"(nil)", (m_label)?m_label:"(nil)");
 
 	found_item = -1;
 	found_level = -1;
 
 	for (cur_item=0; cur_item < shr_header->num_parms; cur_item++)			/* Loop each PUTPARM and test prname.	*/
 	{
-		if ( ( bylabel && memcmp(pr_table[cur_item].label,m_label,8)==0) ||
-		     (!bylabel && memcmp(pr_table[cur_item].prname,m_prname,8)==0)  )	/* found a match			*/
+		if ( ( bylabel && memcmp(pr_table[cur_item].label,m_label,LABEL_SIZE)==0) ||
+		     (!bylabel && memcmp(pr_table[cur_item].prname,m_prname,PRNAME_SIZE)==0)  )	
+											/* found a match			*/
 		{
 			ptr_shmh = (SHMH *)(pr_data + pr_table[cur_item].proff);	/* Get a pointer to the data.		*/
 			if (used_ok || ptr_shmh->status != P_USED)			/* Is it valid to return		*/
@@ -1185,43 +1213,248 @@ int	used_ok;
 		return(NULL);								/* Was not found.			*/
 	}
 
-	dat_ptr = pr_data + pr_table[found_item].proff;					/* Get a pointer to the data.		*/
+	ptr_shmh = (SHMH *)(pr_data + pr_table[found_item].proff);			/* Get a pointer to the data.		*/
 
-	return(dat_ptr);								/* Return the pointer.			*/
+	return(ptr_shmh);								/* Return the pointer.			*/
+}
+
+/*
+**	ROUTINE:	erase_prb_label_level()
+**
+**	FUNCTION:	Check for and erase a prb with the given label at the current linklevel.
+**
+**	DESCRIPTION:	Try to find a prb at the current linklevel with the given label.
+**			If one is found then erase it - as only one is allowed - and we are 
+**			about to add a new one.
+**
+**			This is called near the begining of write_putparm().
+**
+**	ARGUMENTS:
+**	m_label		The putparm label
+**
+**	GLOBALS:	yes
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void erase_prb_label_level(char *m_label)
+{
+	int	cur_item;
+	int	wantlevel;
+
+	if (!osd_exists_seg()) return;							/* If shrfil doesn't exist		*/
+
+	if (map_shr_ptrs()) return;							/* Unsuccessful map to shared mem area. */
+
+	if (shr_header->num_parms == 0) return;						/* No parms.				*/
+
+	if (!m_label || memcmp(m_label,"        ",LABEL_SIZE) == 0)			/* No label				*/
+	{
+		return;
+	}
+
+	wantlevel = linklevel();							/* Want current link-level.		*/
+
+	wtrace("SHAREMEM","ERASE_PRB_LABEL_LEVEL","Erase PRB with label=[%8.8s] at this linklevel=%d",m_label,wantlevel);
+
+	for (cur_item=0; cur_item < shr_header->num_parms; cur_item++)			/* Loop each PUTPARM and test prname.	*/
+	{
+		if ( memcmp(pr_table[cur_item].label,m_label,LABEL_SIZE)==0 )		/* found a match			*/
+		{
+			if (wantlevel == (int)pr_table[cur_item].linklevel)
+			{
+				/*
+				**	Found a putparm at this linklevel with this label so delete it.
+				*/
+				SHMH	*ptr_shmh;
+				ptr_shmh = (SHMH *)(pr_data + pr_table[cur_item].proff);	/* Get a pointer to the data.	*/
+
+				erase_prb(ptr_shmh);
+				return;
+			}
+		}
+	}
+
+	return;										/* Was not found.			*/
+}
+
+
+/*
+**	Routine:	get_prb_prname_level()
+**
+**	Function:	Get the PRB for a given prname and linklevel
+**
+**	Description:	{Full detailed description}...
+**
+**	Arguments:
+**	m_prname	The prname to find.
+**	wantlevel	The link level to look at.
+**
+**	Globals:	None
+**
+**	Return:		The SHMH pointer or NULL if not found.
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/02/94	Written by GSL
+**
+*/
+SHMH *get_prb_prname_level(char *m_prname, int wantlevel)
+{
+	int	cur_item, found_item;
+	SHMH	*ptr_shmh;
+	int	cur_level;
+
+	if (!osd_exists_seg()) return(NULL);						/* If shrfil doesn't exist		*/
+
+	if (map_shr_ptrs()) return(NULL);						/* Unsuccessful map to shared mem area. */
+
+	if (shr_header->num_parms == 0) return(NULL);					/* No parms.				*/
+
+	if (!m_prname || memcmp(m_prname,"        ",PRNAME_SIZE) != 0)			/* else match the prname.		*/
+	{
+		return(NULL);
+	}
+
+	wtrace("SHAREMEM","GET_PRB_PRNAME_LEVEL","Get PRB for prname=[%8.8s] at linklevel=%d",m_prname,wantlevel);
+	
+	found_item = -1;
+
+	for (cur_item=0; cur_item < shr_header->num_parms; cur_item++)			/* Loop each PUTPARM and test prname.	*/
+	{
+		if (0==memcmp(pr_table[cur_item].prname,m_prname,PRNAME_SIZE))		/* found a match			*/
+		{
+			ptr_shmh = (SHMH *)(pr_data + pr_table[cur_item].proff);	/* Get a pointer to the data.		*/
+			if (ptr_shmh->status != P_USED)					/* If Not used				*/
+			{
+				cur_level = (int)pr_table[cur_item].linklevel;
+				if (wantlevel == cur_level)				/* Found exactly what we wanted		*/
+				{
+					found_item = cur_item;
+					break;
+				}
+			}
+		}
+	}
+
+	if (found_item == -1)								/* Nothing was found			*/
+	{
+		return(NULL);								/* Was not found.			*/
+	}
+
+	ptr_shmh = (SHMH *)(pr_data + pr_table[found_item].proff);			/* Get a pointer to the data.		*/
+
+	return(ptr_shmh);								/* Return the pointer.			*/
+}
+
+/*
+**	Routine:	get_chained_prb()
+**
+**	Function:	If passed a chained PRB it will return the next PRB up the chain.
+**
+**	Description:	If the starting PRB is labeled the look for a PUTPARM at the
+**			previous link-level with a prname that matches this label.
+**			If one is found return it.
+**
+**	Arguments:
+**	start_prb	The starting prb.
+**
+**	Globals:	None
+**
+**	Return:		The next prb up the chain (working backwards) or NULL.
+**
+**	Warnings:	This assumes that the shared memory stuff is already mapped in etc.
+**
+**	History:	
+**	09/06/94	Written by GSL
+**
+*/
+SHMH *get_chained_prb(SHMH *start_prb)
+{
+	int	start_idx, curr_idx;
+	SHMH	*ptr_shmh;
+
+	werrlog(ERRORCODE(1),"get_chained_prb",0,0,0,0,0,0,0);
+
+	if (!start_prb) return NULL;
+
+	if (!start_prb->label[0] || 0 == memcmp(start_prb->label,"        ",LABEL_SIZE)) return NULL;
+
+	/*
+	**	Find the index into the pr_table for the starting prb.
+	*/
+	for (start_idx=0; start_idx < shr_header->num_parms; start_idx++)
+	{
+		if ( start_prb->prb_id == pr_table[start_idx].prb_id )
+		{
+			break;
+		}
+	}
+	if (start_idx >= shr_header->num_parms)
+	{
+		/*
+		**	This should never happen.
+		*/
+		return NULL;
+	}
+
+	/*
+	**	Search the pr_table for an entry at the previous linklevel
+	**	with a prname that matches the label.
+	*/
+	for (curr_idx=0; curr_idx < shr_header->num_parms; curr_idx++)
+	{
+		if (	pr_table[curr_idx].linklevel == pr_table[start_idx].linklevel - 1
+		    &&	0 == memcmp(pr_table[curr_idx].prname, start_prb->label, LABEL_SIZE)	   )
+		{
+			/*
+			**	Found a match for this chain.
+			**	If status is OK then were done.
+			*/
+			ptr_shmh = (SHMH *)(pr_data + pr_table[curr_idx].proff);
+			if ( P_OK == ptr_shmh->status )
+			{
+				return ptr_shmh;
+			}
+		}
+	}
+
+	return NULL;
 }
 
 /*
 	load_keywshm	Load the keyword=value at the given address
 			return the offset to next keyword.
 */
-int load_keywshm(keywshm_ptr,p)
-KEYWSHM *keywshm_ptr;
-KEYW	*p;
+int load_keywshm(KEYWSHM *keywshm_ptr, FMTLIST *p)
 {
-	short	tmp;
+	int2	tmp;
 	int	off;
 	char	*data_ptr;
 
-	werrlog(ERRORCODE(1),"load_keywshm",0,0,0,0,0,0,0);
+	wtrace("SHAREMEM","LOAD_KEYWSHM","Load keyword=[%8.8s]", p->keyword);
 
-	off = sizeof(KEYWSHM)+8+p->len+1;					/* setup offset for next			*/
-	tmp = (short)off;
-	memcpy(&(keywshm_ptr->next_offs),&tmp,sizeof(short));
-	tmp = (short)p->len;
-	memcpy(&(keywshm_ptr->value_len),&tmp,sizeof(short));
+	off = sizeof(KEYWSHM)+KEYWORD_SIZE+p->len+1;				/* setup offset for next			*/
+	tmp = (int2)off;
+	memcpy(&(keywshm_ptr->next_offs),&tmp,sizeof(int2));
+	tmp = (int2)p->len;
+	memcpy(&(keywshm_ptr->value_len),&tmp,sizeof(int2));
 	keywshm_ptr->special = p->special;
 
 	data_ptr = (char *)keywshm_ptr + sizeof(KEYWSHM);
-	loadpad( data_ptr, p->keyword, 8);					/* copy in keyword				*/
-	memcpy( data_ptr+8, p->value, (int)p->len);				/* and value					*/
-	*(data_ptr+8+p->len) = '\0';						/* place a null at the end			*/
+	loadpad( data_ptr, p->keyword, KEYWORD_SIZE);				/* copy in keyword				*/
+	memcpy( data_ptr+KEYWORD_SIZE, p->value, (int)p->len);			/* and value					*/
+	*(data_ptr+KEYWORD_SIZE+p->len) = '\0';					/* place a null at the end			*/
 	return(off);
 }
 
 /*
 	getlinklevel	Return the current linklevel. 
 */
-static char getlinklevel()
+static char getlinklevel(void)
 {
 	return((char)linklevel());
 }
@@ -1253,11 +1486,10 @@ static char getlinklevel()
 **
 */
 
-int backwards_reference(prb_ptr)
-SHMH **prb_ptr;
+int backwards_reference(SHMH **prb_ptr)
 {
 	int	ret, had_special;
-	KEYW	*fmtlist, *p;
+	FMTLIST	*fmtlist, *p;
 	char	buff[80];
 
 	werrlog(ERRORCODE(1),"backwards_reference",0,0,0,0,0,0,0);
@@ -1273,15 +1505,15 @@ SHMH **prb_ptr;
 			/*
 			**	Need to backwards reference this individual keyword.
 			*/
-			char	label[8], keyword[8];
+			char	label[LABEL_SIZE], keyword[KEYWORD_SIZE];
 			SHMH	*ref_prb;
 			KEYWSHM	*kw;
 
 			had_special = 1;
 
-			memcpy(label,p->value,8);
-			memcpy(keyword,p->value+8,8);
-			ref_prb = (SHMH *)get_prb_area(NULL,label,OK_USED);	/* Get the referenced PRB			*/
+			memcpy(label,p->value,LABEL_SIZE);
+			memcpy(keyword,p->value+LABEL_SIZE,KEYWORD_SIZE);
+			ref_prb = get_prb_area(NULL,label,OK_USED);	/* Get the referenced PRB			*/
 			if (!ref_prb)
 			{
 				sprintf(buff,"Label=%8.8s Not found",label);
@@ -1302,9 +1534,9 @@ SHMH **prb_ptr;
 				wexit(ERRORCODE(46));
 			}
 			free(p->value);							/* Free the old VALUE			*/
-			p->len = kw->value_len;						/* Set the new length			*/
-			p->value = (char *)calloc((int)(p->len+1),(int)sizeof(char));	/* Get space for new VALUE		*/
-			memcpy(p->value, (char *)kw + sizeof(KEYWSHM) + 8, (int)p->len);/* Load new VALUE.			*/
+			p->len = a_int2(&kw->value_len);				/* Set the new length			*/
+			p->value = (char *)wcalloc((int)(p->len+1),(int)sizeof(char));	/* Get space for new VALUE		*/
+			memcpy(p->value, (char *)kw + sizeof(KEYWSHM) + KEYWORD_SIZE, (int)p->len);/* Load new VALUE.		*/
 			p->special = SPECIAL_NOT;					/* No longer special			*/
 		}
 	}
@@ -1318,7 +1550,8 @@ SHMH **prb_ptr;
 	}
 	free_fmtlist(fmtlist);
 
-	if ((*prb_ptr)->reflbl[0] && 0 != memcmp((*prb_ptr)->reflbl,"        ",8))	/* If there is a reference label then	*/
+	if ((*prb_ptr)->reflbl[0] && 0 != memcmp((*prb_ptr)->reflbl,"        ",LABEL_SIZE))	
+											/* If there is a reference label then	*/
 	{
 		SHMH	*ref_prb;
 
@@ -1327,10 +1560,10 @@ SHMH **prb_ptr;
 		**	Don't worry if not found as it may have been deleted. (this could happen if usage_cnt > 1)
 		**	If cleanup then delete the referenced PRB.
 		*/
-		ref_prb = (SHMH *)get_prb_area(NULL,(*prb_ptr)->reflbl,OK_USED);/* Get the referenced PRB			*/
+		ref_prb = get_prb_area(NULL,(*prb_ptr)->reflbl,OK_USED);	/* Get the referenced PRB			*/
 		if (ref_prb)
 		{
-			KEYW	*ref_fmtlist;
+			FMTLIST	*ref_fmtlist;
 			ret = load_fmtlist(ref_prb,&ref_fmtlist);		/* Load the reference fmtlist			*/
 
 			if (0==ret && ref_fmtlist)				/* If all ok then UPDATE the PRB		*/
@@ -1342,7 +1575,7 @@ SHMH **prb_ptr;
 			if ('C' == (*prb_ptr)->cleanup || 'c' == (*prb_ptr)->cleanup)
 			{
 				/* NOTE: we have to get the ref_prb again because the update_prb() invalidated the pointer	*/
-				ref_prb = (SHMH *)get_prb_area(NULL,(*prb_ptr)->reflbl,OK_USED);
+				ref_prb = get_prb_area(NULL,(*prb_ptr)->reflbl,OK_USED);
 				erase_prb(ref_prb);
 			}
 		}
@@ -1375,9 +1608,7 @@ SHMH **prb_ptr;
 **
 */
 
-int update_prb(prb_ptr,fmtlist)
-SHMH	**prb_ptr;
-KEYW	*fmtlist;
+int update_prb(SHMH **prb_ptr, FMTLIST *fmtlist)
 {
 	int4	ret;
 
@@ -1394,7 +1625,7 @@ KEYW	*fmtlist;
 		**	If the PRB has keywords then all we want to do is merge the fmtlist into this PRB.
 		*/
 
-		KEYW	*prb_fmtlist;
+		FMTLIST	*prb_fmtlist;
 
 		ret = load_fmtlist(*prb_ptr,&prb_fmtlist);			/* Load the fmtlist from the PRB		*/
 		if (0==ret)
@@ -1449,9 +1680,7 @@ KEYW	*fmtlist;
 **
 */
 
-static int rewrite_prb(prb_ptr,fmtlist)
-SHMH	**prb_ptr;
-KEYW	*fmtlist;
+static int rewrite_prb(SHMH **prb_ptr, FMTLIST *fmtlist)
 {
 	int	cnt,mem;
 
@@ -1474,7 +1703,7 @@ KEYW	*fmtlist;
 		SHMH	*new_prb;
 		int	off;
 		int	i;
-		short	update_id;
+		int2	update_id;
 
 		update_id = (*prb_ptr)->prb_id;					/* Get the ID for this PRB			*/
 
@@ -1559,14 +1788,13 @@ KEYW	*fmtlist;
 **
 */
 
-int ppunlink(level)
-int	level;
+int ppunlink(int level)
 {
 	int	cur_item;
 	SHMH	*ptr_shmh;
 	int 	done;
 
-	werrlog(ERRORCODE(1),"ppunlink",0,0,0,0,0,0,0);
+	wtrace("PPUNLINK","ENTER","Unlink the putparms for level=%d",level);
 
 	done = 0;
 	while(!done)
@@ -1646,29 +1874,26 @@ static	char	*ctlfile();
 **
 */
 
-static int osd_open_seg(new)
-int	*new;
+static int osd_open_seg(int *new)
 {
 	FILE 	*shrtmpfile;
 	key_t shmkey, wftok();
 	char	buff[256];
 	char	*shr_file;
 
-	werrlog(ERRORCODE(1),"osd_open_seg",0,0,0,0,0,0,0);
-
 	*new = 0;								/* Flag it as an old file.			*/
 	if (osd_shmid != -1) return(0);						/* If already exists then just return		*/
 
-	if (!fexists(WISP_PRB_DIR))						/* Ensure the directory exists			*/
+	if (!fexists(wispprbdir(NULL)))						/* Ensure the directory exists			*/
 	{
-		if (0 != mkdir(WISP_PRB_DIR,0777))				/* Create the directory				*/
+		if (0 != mkdir(wispprbdir(NULL),0777))				/* Create the directory				*/
 		{
-			werrlog(ERRORCODE(28),WISP_PRB_DIR,errno,0,0,0,0,0,0);
+			werrlog(ERRORCODE(28),wispprbdir(NULL),errno,0,0,0,0,0,0);
 			wexit(ERRORCODE(28));
 		}
-		if (0 != chmod(WISP_PRB_DIR,0777))				/* Set protections on directory			*/
+		if (0 != chmod(wispprbdir(NULL),0777))				/* Set protections on directory			*/
 		{
-			werrlog(ERRORCODE(30),WISP_PRB_DIR,errno,0,0,0,0,0,0);
+			werrlog(ERRORCODE(30),wispprbdir(NULL),errno,0,0,0,0,0,0);
 			wexit(ERRORCODE(30));
 		}
 	}
@@ -1677,7 +1902,7 @@ int	*new;
 
 	if (!osd_exists_seg())							/* If key file doesn't exist then create it.	*/
 	{
-		if ((shrtmpfile = fopen(shr_file,"w")) == NULL)			/* The creation of a file is only used		*/
+		if ((shrtmpfile = fopen(shr_file,FOPEN_WRITE_BINARY)) == NULL)	/* The creation of a file is only used		*/
 		{								/* to get a unique inode number to use		*/
 			werrlog(ERRORCODE(32),shr_file,errno,0,0,0,0,0,0);	/* as an address into the unix shared		*/
 			wexit(ERRORCODE(32));					/* memory area.					*/
@@ -1693,7 +1918,7 @@ int	*new;
 	if (shmkey == -1)
 	{
 		sprintf(buff,"errno %d/shr_file=%s\n\015",errno,shr_file);	/* should *Never* happen			*/
-		werrvre(buff);
+		werr_message_box(buff);
 	}
 	osd_shmid = shmget(shmkey,max_pages()*W_PAGE_SIZE,IPC_CREAT|IPC_EXCL|0600);/* Get a shared memory segment.		*/
 	if (osd_shmid == -1)
@@ -1745,11 +1970,9 @@ int	*new;
 **	09/01/93	Replaced the call to osd_unmap_seg() with inline code. GSL
 **
 */
-static int osd_delete_seg()
+static int osd_delete_seg(void)
 {
 	int	new;
-
-	werrlog(ERRORCODE(1),"osd_delete_seg",0,0,0,0,0,0,0);
 
 	if (osd_exists_seg())
 	{
@@ -1805,10 +2028,8 @@ static int osd_delete_seg()
 **
 */
 
-static char *osd_map_seg()
+static char *osd_map_seg(void)
 {
-	werrlog(ERRORCODE(1),"osd_map_seg",0,0,0,0,0,0,0);
-
 	if (osd_shmaddr == NULL) 							/* if not mapped			*/
 	{
 		osd_shmaddr = (char *)shmat(osd_shmid,(char *)0,0);			/* Get the address of requested id.	*/
@@ -1847,10 +2068,8 @@ static char *osd_map_seg()
 **
 */
 
-static int osd_unmap_seg()
+static int osd_unmap_seg(void)
 {
-	werrlog(ERRORCODE(1),"osd_unmap_seg",0,0,0,0,0,0,0);
-
 	if (osd_shmaddr != NULL) 							/* if not mapped			*/
 	{
 		shmdt(osd_shmaddr);							/* Detach the segment			*/
@@ -1884,10 +2103,8 @@ static int osd_unmap_seg()
 **
 */
 
-static int osd_exists_seg()
+static int osd_exists_seg(void)
 {
-	werrlog(ERRORCODE(1),"osd_exists_seg",0,0,0,0,0,0,0);
-
 	return(fexists(ctlfile()));
 }
 
@@ -1912,17 +2129,15 @@ static int osd_exists_seg()
 **
 */
 
-static int osd_sync_seg()
+static int osd_sync_seg(void)
 {
-	werrlog(ERRORCODE(1),"osd_sync_seg",0,0,0,0,0,0,0);
-
 	return 0;
 }
 
 /*
 	ctlfile()	Generate control file name.	UNIX
 */
-static char *ctlfile()									/* Generate a temp file name for the	*/
+static char *ctlfile(void)								/* Generate a temp file name for the	*/
 {
 static	char	buff[256];
 static	int	first = 1;
@@ -1931,21 +2146,21 @@ static	int	first = 1;
 		int	gid;
 		first = 0;
 		gid = wgetpgrp();
-		sprintf(buff,"%s/w2$sh%04X",WISP_PRB_DIR,gid);				/* Construct filepath to use.		*/
+		sprintf(buff,"%s/w2$sh%04X",wispprbdir(NULL),gid);			/* Construct filepath to use.		*/
+		wtrace("SHAREMEM","CTLFILE", "Control file=[%s]", buff);
 	}
 	return(buff);
 }
 
 #endif	/* #ifdef unix	*/								/* End of UNIX specific memory code.	*/
 
-/********************* Begin MSDOS specific shared memory routines **************************************************************/
-#ifdef MSDOS
+/********************* Begin MSDOS||WIN32 specific shared memory routines *******************************************************/
+#if defined(MSDOS) || defined(WIN32)
 
 static	char	*osd_shmaddr = NULL;
-static	char	*ctlfile();
 
 /*
-**	Routine:	osd_open_seg()		MSDOS
+**	Routine:	osd_open_seg()		WIN32
 **
 **	Function:	To create/open the shared memory segment.
 **
@@ -1967,26 +2182,21 @@ static	char	*ctlfile();
 **	08/21/92	Written by GSL
 **
 */
-
-
-static int osd_open_seg(new)
-int	*new;
+static int osd_open_seg(int *new)
 {
 	FILE 	*shrtmpfile;
 	char	*shr_file;
 
-	werrlog(ERRORCODE(1),"osd_open_seg",0,0,0,0,0,0,0);
-
 	*new = 0;								/* Flag it as an old file.			*/
 	if (osd_shmaddr) return(0);						/* If already exists then just return		*/
 
-	if (!fexists(WISP_PRB_DIR))						/* Ensure the directory exists			*/
+	if (!fexists(wispprbdir(NULL)))						/* Ensure the directory exists			*/
 	{
-		makepath(WISP_PRB_DIR);						/* Ensure parent dirs are there	(C:\TMP)	*/
+		makepath(wispprbdir(NULL));					/* Ensure parent dirs are there	(C:\TMP)	*/
 
-		if (0 != mkdir(WISP_PRB_DIR))					/* Create the directory				*/
+		if (0 != _mkdir(wispprbdir(NULL)))				/* Create the directory				*/
 		{
-			werrlog(ERRORCODE(28),WISP_PRB_DIR,errno,0,0,0,0,0,0,0);
+			werrlog(ERRORCODE(28),wispprbdir(NULL),errno,0,0,0,0,0,0,0);
 			wexit(ERRORCODE(28));
 		}
 	}
@@ -1995,7 +2205,7 @@ int	*new;
 
 	if ( !osd_exists_seg() )						/* If segment file doesn't exist then create.	*/
 	{
-		if ((shrtmpfile = fopen(shr_file,"wb")) == NULL)
+		if ((shrtmpfile = fopen(shr_file,FOPEN_WRITE_BINARY)) == NULL)
 		{
 			werrlog(ERRORCODE(32),shr_file,errno,0,0,0,0,0,0);
 			wexit(ERRORCODE(32));
@@ -2008,7 +2218,7 @@ int	*new;
 }
 
 /*
-**	Routine:	osd_delete_seg()	MSDOS
+**	Routine:	osd_delete_seg()	WIN32
 **
 **	Function:	To delete the shared memory segment.
 **
@@ -2030,12 +2240,8 @@ int	*new;
 **	08/21/92	Written by GSL
 **
 */
-static int osd_delete_seg()
+static int osd_delete_seg(void)
 {
-	int	new;
-
-	werrlog(ERRORCODE(1),"osd_delete_seg",0,0,0,0,0,0,0);
-
 	if (osd_exists_seg())
 	{
 		osd_unmap_seg();						/* Ensure it is unmapped			*/
@@ -2051,7 +2257,7 @@ static int osd_delete_seg()
 }
 
 /*
-**	Routine:	osd_map_seg()		MSDOS
+**	Routine:	osd_map_seg()		WIN32
 **
 **	Function:	To map the shared memory segment into program address space.
 **
@@ -2072,19 +2278,17 @@ static int osd_delete_seg()
 **
 */
 
-static char *osd_map_seg()
+static char *osd_map_seg(void)
 {
 	FILE 	*shrtmpfile;
 	char	*shr_file;
 
-	werrlog(ERRORCODE(1),"osd_map_seg",0,0,0,0,0,0,0);
-
 	if (osd_shmaddr == NULL) 						/* if not mapped				*/
 	{
 		shr_file = ctlfile();						/* Get the file name				*/
-		osd_shmaddr = malloc( max_pages() * W_PAGE_SIZE );		/* Malloc the space				*/
+		osd_shmaddr = wmalloc( max_pages() * W_PAGE_SIZE );		/* Malloc the space				*/
 
-		if ((shrtmpfile = fopen(shr_file,"rb")) == NULL)		/* Open file for reading			*/
+		if ((shrtmpfile = fopen(shr_file,FOPEN_READ_BINARY)) == NULL)	/* Open file for reading			*/
 		{
 			werrlog(ERRORCODE(32),shr_file,errno,0,0,0,0,0,0);
 			unlink(shr_file);
@@ -2097,7 +2301,7 @@ static char *osd_map_seg()
 }
 
 /*
-**	Routine:	osd_unmap_seg()		MSDOS
+**	Routine:	osd_unmap_seg()		WIN32
 **
 **	Function:	To unmap the shared memory segment from program address space.
 **
@@ -2118,10 +2322,8 @@ static char *osd_map_seg()
 **
 */
 
-static int osd_unmap_seg()
+static int osd_unmap_seg(void)
 {
-	werrlog(ERRORCODE(1),"osd_unmap_seg",0,0,0,0,0,0,0);
-
 	if (osd_shmaddr != NULL) 						/* if not mapped				*/
 	{
 		free(osd_shmaddr);						/* free the memory				*/
@@ -2131,7 +2333,7 @@ static int osd_unmap_seg()
 }
 
 /*
-**	Routine:	osd_exists_seg()	MSDOS
+**	Routine:	osd_exists_seg()	WIN32
 **
 **	Function:	To check if the shared memory segment exists.
 **
@@ -2152,15 +2354,13 @@ static int osd_unmap_seg()
 **
 */
 
-static int osd_exists_seg()
+static int osd_exists_seg(void)
 {
-	werrlog(ERRORCODE(1),"osd_exists_seg",0,0,0,0,0,0,0);
-
 	return(fexists(ctlfile()));
 }
 
 /*
-**	Routine:	osd_sync_seg()		MSDOS
+**	Routine:	osd_sync_seg()		WIN32
 **
 **	Function:	To synchronize the external shared memory area with the internal area.
 **
@@ -2181,15 +2381,13 @@ static int osd_exists_seg()
 **
 */
 
-static int osd_sync_seg()
+static int osd_sync_seg(void)
 {
 	FILE 	*shrtmpfile; 
 	char	*shr_file;
 
-	werrlog(ERRORCODE(1),"osd_sync_seg",0,0,0,0,0,0,0);
-
 	shr_file = ctlfile();
-	if ((shrtmpfile = fopen(shr_file,"wb")) == NULL)
+	if ((shrtmpfile = fopen(shr_file,FOPEN_WRITE_BINARY)) == NULL)
 	{
 		werrlog(ERRORCODE(32),shr_file,errno,0,0,0,0,0,0);
 		unlink(shr_file);
@@ -2201,23 +2399,29 @@ static int osd_sync_seg()
 }
 
 /*
-	ctlfile()	Generate control file name.	MSDOS
+	ctlfile()	Generate control file name.	WIN32
 */
-static char *ctlfile()									/* Generate a temp file name for the	*/
+static char *ctlfile(void)								/* Generate a temp file name for the	*/
 {
-static	char	buff[256];
-static	int	first = 1;
-	char *wanguid3();
+static	char	*the_name = NULL;
 
-	if (first)
+	if (NULL==the_name)
 	{
-		first = 0;
-		sprintf( buff, "%s\\W3SM-%.3s.gbl", WISP_PRB_DIR, wanguid3() );		/* Construct MSDOS filepath to use.	*/
+		char buff[256];
+
+#ifdef MSDOS
+		sprintf(buff, "%s\\W3SM-%.3s.gbl", wispprbdir(NULL), wanguid3() );	/* Construct MSDOS filepath to use.	*/
+#else /* WIN32 */
+		sprintf(buff, "%s\\W%04X.shm", wispprbdir(NULL), wgetpgrp());		/* Construct WIN32 filepath to use.	*/
+#endif
+		the_name = wstrdup(buff);
+
+		wtrace("SHAREMEM","CTLFILE", "Control file=[%s]", the_name);
 	}
-	return(buff);
+	return(the_name);
 }
 
-#endif	/* #ifdef MSDOS */								/* End of MSDOS specific memory code.	*/
+#endif	/*  MSDOS || WIN32 */								/* End of MSDOS specific memory code.	*/
 
 /********************* Begin VAX specific shared memory routines ****************************************************************/
 #ifdef VMS
@@ -2230,14 +2434,11 @@ static	int	first = 1;
 #include <descrip.h>
 
 static	char	*osd_shmaddr = NULL;						/* Shared memory segment address pointer	*/
-static	short	osd_shrchan = 0;						/* I/O channel to shared memory file		*/
+static	int2	osd_shrchan = 0;						/* I/O channel to shared memory file		*/
 static	char	osd_secname[128];						/* Shared memory section name			*/
 static	char 	osd_filename[128];						/* The shared memory file name			*/
 static struct FAB osd_sharefab;							/* The shared memory file FAB struct		*/
 static	char 	*osd_addr_range[2];						/* The actual address range used		*/
-
-static	char	*ctlfile();
-
 
 
 /*
@@ -2266,8 +2467,7 @@ static	char	*ctlfile();
 **
 */
 
-static int osd_open_seg(new)
-int	*new;
+static int osd_open_seg(int *new)
 {
 	uint4	status;
 
@@ -2333,7 +2533,7 @@ int	*new;
 **	08/21/92	Written by GSL
 **
 */
-static int osd_delete_seg()
+static int osd_delete_seg(void)
 {
 	int	new;
 	uint4	status;
@@ -2390,7 +2590,7 @@ static int osd_delete_seg()
 **
 */
 
-static char *osd_map_seg()
+static char *osd_map_seg(void)
 {
 #include "sharemem1.d"
 	uint4 status;
@@ -2463,7 +2663,7 @@ static char *osd_map_seg()
 **
 */
 
-static int osd_unmap_seg()
+static int osd_unmap_seg(void)
 {
 	uint4	status;
 
@@ -2519,15 +2719,13 @@ static int osd_unmap_seg()
 **
 */
 
-static int osd_exists_seg()
+static int osd_exists_seg(void)
 {
 	uint4	status;
 	char 	*context;
 	char	fnam[128];							/* filename returned by system			*/
 	char	filename[128];
 #include "sharemem2.d"
-
-	werrlog(ERRORCODE(1),"osd_exists_seg",0,0,0,0,0,0,0);
 
 	strcpy(filename,ctlfile());						/* Load the file name.				*/
 	p_desc.dsc$w_length = strlen(filename);					/* Set the length in descriptor.		*/
@@ -2563,7 +2761,7 @@ static int osd_exists_seg()
 **
 */
 
-static int osd_sync_seg()
+static int osd_sync_seg(void)
 {
 	uint4	status;
 	struct
@@ -2614,7 +2812,7 @@ static int osd_sync_seg()
 **
 */
 
-static char *ctlfile()
+static char *ctlfile(void)
 {
 static	char	buff[256];
 static	int	first = 1;
@@ -2659,3 +2857,49 @@ static	int	first = 1;
 
 /********************* END VAX specific shared memory routines ******************************************************************/
 
+/*
+**	History:
+**	$Log: sharemem.c,v $
+**	Revision 1.20  1997-07-16 15:08:33-04  gsl
+**	Add wtrace() to report the control file name
+**
+**	Revision 1.19  1997-05-02 12:00:20-04  gsl
+**	Replaced the werrlog() stuff with wtrace() with useful info
+**
+**	Revision 1.18  1997-04-03 20:00:00-05  gsl
+**	Remove unneeded traces
+**
+**	Revision 1.17  1996-09-10 11:46:35-04  gsl
+**	fix mkdir() code
+**
+**	Revision 1.16  1996-08-23 14:04:25-07  gsl
+**	Changed to use wispprbdir()
+**
+**	Revision 1.15  1996-08-22 17:27:25-07  gsl
+**	Change cntfile() for DOS and NT to use wgetpgrp()
+**
+**	Revision 1.14  1996-07-17 14:52:57-07  gsl
+**	Change to use wmalloc()
+**
+**	Revision 1.13  1996-07-11 16:21:40-07  gsl
+**	Fix to use FOPEN mode defines for NT
+**
+**	Revision 1.12  1996-07-09 16:49:26-07  gsl
+**	Fix missing includes, reuse MSDOS code for NT.
+**	Fix get_prb_id() to take an int2 arg.
+**
+**	Revision 1.11  1995-08-25 08:18:38-07  gsl
+**	In backwards_reference() the logic that handles SPECIAL_KEYs that
+**	come from backwards reference of individual keywords (this feature
+**	is only accessable from wproc) was ref value_len which was
+**	an unaligned int2.  This would sometimes cause a SIGNAL 10 on
+**	the second keyword (the first keyword was always aligned).
+**
+ * Revision 1.10  1995/05/15  13:05:42  gsl
+ * Added routine erase_prb_label_level() which is called from write_putparm()
+ * to delete an existing putparm with the same label at the same linklevel.
+ * Also replace numeric literals with meaningful defines LABEL_SIZE, KEYWORD_SIZE, PRNAME_SIZE.
+ *
+**
+**
+*/

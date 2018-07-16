@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -33,6 +37,17 @@
 #define		RUN_PROC	6
 #define		RUN_PROCOBJ	7
 
+int runtype(char* filespec);
+
 #endif
 
 
+/*
+**	History:
+**	$Log: runtype.h,v $
+**	Revision 1.6  1996-08-19 18:32:51-04  gsl
+**	drcs update
+**
+**
+**
+*/

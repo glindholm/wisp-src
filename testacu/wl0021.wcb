@@ -1,0 +1,249 @@
+
+000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wl0021.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test STRING routine
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     wl0021.
+001300 Data Division.
+001400 Working-Storage Section.
+       01  STRING-FUNCTION    PIC X(02).
+001500 01  INPUT-STRING       PIC X(37) VALUE
+                              "##### MESSAGE PADDED WITH STARS #####".
+       01  INPUT-INDEX.
+           03 FILLER          BINARY     VALUE 0.
+           03 INPUT-INDEX-X   BINARY     VALUE 5.
+       01  INPUT-LENGTH.
+           03 FILLER          BINARY     VALUE 0.
+           03 INPUT-LEN       BINARY     VALUE 27.
+       01  OUTPUT-STRING      PIC X(37)  VALUE "*****".
+       01  OUTPUT-INDEX.
+           03 FILLER          BINARY     VALUE 0.
+           03 OUTPUT-INDEX-X  BINARY     VALUE 5.
+       01  OUTPUT-LENGTH.
+           03 FILLER          BINARY     VALUE 0.
+           03 OUTPUT-LEN      BINARY     VALUE 37.
+       01  PAD-CHARACTER      PIC X(01)  VALUE "*".
+       01  COMPLETION-STATUS  PIC 9(02)  VALUE 0.
+
+258500 01  TRANS-LIST.
+258800     03 FILLER  PIC X(02) VALUE "AB".
+258700     03 FILLER  PIC X(02) VALUE "CD".
+259000     03 FILLER  PIC X(02) VALUE "EF".
+258900     03 FILLER  PIC X(02) VALUE "GH".
+258600     03 FILLER  PIC X(02) VALUE "IJ".
+259200     03 FILLER  PIC X(02) VALUE LOW-VALUES.
+260300 01  TRANS-ARRAY REDEFINES TRANS-LIST.
+260400     03 TRANS-ITEM PIC X(02) OCCURS 6 TIMES.
+
+
+
+001600 Procedure Division.
+
+      * "MI"-finction.
+      *     DISPLAY "OUTPUT STRING BEFORE MOVE = ", OUTPUT-STRING.
+
+           MOVE "MI"      TO STRING-FUNCTION.
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-INDEX, INPUT-LENGTH,
+                               OUTPUT-STRING, OUTPUT-INDEX,
+                               OUTPUT-LENGTH, PAD-CHARACTER.
+
+           IF  OUTPUT-STRING NOT = 
+              "***** MESSAGE PADDED WITH STARS *****" THEN
+              ADD 1   TO COMPLETION-STATUS.
+      *     DISPLAY "OUTPUT STRING AFTER MOVE = ", OUTPUT-STRING.
+
+           MOVE SPACES TO OUTPUT-STRING.
+      *     DISPLAY "OUTPUT STRING BEFORE MOVE = ", OUTPUT-STRING.
+           MOVE "##### MESSAGE PADDED WITH STARS #####" TO INPUT-STRING.
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-INDEX, INPUT-LENGTH,
+                               OUTPUT-STRING.
+
+           IF  OUTPUT-STRING NOT = 
+              " MESSAGE PADDED WITH STARS " THEN
+              ADD 1   TO COMPLETION-STATUS.
+      *     DISPLAY "OUTPUT STRING AFTER MOVE = ", OUTPUT-STRING.
+          
+      * "MV"-function.
+           MOVE "MV"      TO STRING-FUNCTION.
+           MOVE " MESSAGE PADDED WITH STARS #####*****" TO INPUT-STRING.
+           MOVE SPACES TO OUTPUT-STRING.
+      *     DISPLAY "OUTPUT STRING BEFORE MOVE = ", OUTPUT-STRING.
+
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-LENGTH,
+                               OUTPUT-STRING, 
+                               OUTPUT-LENGTH, PAD-CHARACTER.
+      *     DISPLAY "OUTPUT STRING AFTER MOVE = ", OUTPUT-STRING.
+           IF  OUTPUT-STRING NOT = 
+              " MESSAGE PADDED WITH STARS **********" THEN
+              ADD 1   TO COMPLETION-STATUS.
+
+      *"CT"-function.
+           MOVE "CT"      TO STRING-FUNCTION.
+           MOVE SPACES TO OUTPUT-STRING.
+           MOVE "ABCD"  TO INPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-1.
+           PERFORM CALL-STRING-AND-CHECK-2.
+
+      *"LJ"-function.
+           MOVE "LJ"      TO STRING-FUNCTION.
+           MOVE SPACES TO OUTPUT-STRING.
+           MOVE "    ABCD"  TO INPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-1.
+           PERFORM CALL-STRING-AND-CHECK-2.
+
+      *"RJ"-function.
+           MOVE "RJ"      TO STRING-FUNCTION.
+           MOVE SPACES TO OUTPUT-STRING.
+           MOVE "    ABCD"  TO INPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-1.
+           PERFORM CALL-STRING-AND-CHECK-2.
+
+      *"RV"-function.
+           MOVE "RV"      TO STRING-FUNCTION.
+           MOVE SPACES TO OUTPUT-STRING.
+           MOVE "DCBA"  TO INPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-1.
+           PERFORM CALL-STRING-AND-CHECK-2.
+
+      *"AE"-function.
+           MOVE "AE"      TO STRING-FUNCTION.
+           MOVE "?,"      TO INPUT-STRING.
+           MOVE 2         TO INPUT-LEN.
+           MOVE SPACES    TO OUTPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-1.
+           PERFORM CALL-STRING-AND-CHECK-2.
+
+      *"EA"-function.
+           MOVE "EA"      TO STRING-FUNCTION.
+           MOVE "ok"      TO INPUT-STRING.
+           MOVE 2         TO INPUT-LEN.
+           MOVE SPACES    TO OUTPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-1.
+           PERFORM CALL-STRING-AND-CHECK-2.
+
+      *"TL"-function.
+           MOVE "TL"      TO STRING-FUNCTION.
+
+           MOVE "BDF"      TO INPUT-STRING.
+           MOVE 3         TO INPUT-LEN.
+           MOVE SPACES    TO OUTPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-3.
+           IF  OUTPUT-STRING NOT = 
+              "ACE                                  "  THEN
+              ADD 1   TO COMPLETION-STATUS.
+           PERFORM CALL-STRING-AND-CHECK-4.
+           IF  INPUT-STRING NOT = 
+              "ACE                                  "  THEN
+              ADD 1   TO COMPLETION-STATUS.
+
+           MOVE "KLB1F3JD"      TO INPUT-STRING.
+           MOVE 8         TO INPUT-LEN.
+           MOVE SPACES    TO OUTPUT-STRING.
+           PERFORM CALL-STRING-AND-CHECK-3.
+           IF  OUTPUT-STRING NOT = 
+              "KLA1E3IC                             "  THEN
+              ADD 1   TO COMPLETION-STATUS.
+           PERFORM CALL-STRING-AND-CHECK-4.
+           IF  INPUT-STRING NOT = 
+              "KLA1E3IC                             "  THEN
+              ADD 1   TO COMPLETION-STATUS.
+
+           PERFORM CHECK-STATUS.
+
+       CALL-STRING-AND-CHECK-1. 
+
+      *     DISPLAY "INPUT STRING = ", INPUT-STRING.
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-LENGTH,
+                               OUTPUT-STRING. 
+                               
+      *     DISPLAY "OUTPUT STRING = ", OUTPUT-STRING.
+
+           IF  STRING-FUNCTION = "CT" AND OUTPUT-STRING NOT = 
+              "           ABCD                      "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "LJ" AND OUTPUT-STRING NOT =
+              "ABCD                                 "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "RJ" AND OUTPUT-STRING NOT =
+              "                       ABCD          "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "RV" AND OUTPUT-STRING NOT =
+              "                       ABCD          "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "AE" AND OUTPUT-STRING NOT =
+              "ok                                   "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "EA" AND OUTPUT-STRING NOT =
+              "?,                                   "  THEN
+              ADD 1   TO COMPLETION-STATUS.
+
+       CALL-STRING-AND-CHECK-2. 
+
+      *     DISPLAY "INPUT STRING BEFORE = ", INPUT-STRING.
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-LENGTH.
+                                
+      *     DISPLAY "INPUT STRING AFTER = ", INPUT-STRING.
+
+           IF  STRING-FUNCTION = "CT" AND INPUT-STRING NOT = 
+              "           ABCD                      "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "LJ" AND INPUT-STRING NOT =
+              "ABCD                                 "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "RJ" AND INPUT-STRING NOT =
+              "                       ABCD          "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "RV" AND INPUT-STRING NOT =
+              "                       ABCD          "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "AE" AND INPUT-STRING NOT =
+              "ok                                   "  THEN
+              ADD 1   TO COMPLETION-STATUS
+           ELSE IF STRING-FUNCTION = "EA" AND INPUT-STRING NOT =
+              "?,                                   "  THEN
+              ADD 1   TO COMPLETION-STATUS.
+
+       CALL-STRING-AND-CHECK-3. 
+
+      *     DISPLAY "INPUT STRING = ", INPUT-STRING.
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-LENGTH, TRANS-ARRAY,
+                               OUTPUT-STRING.
+
+      *     DISPLAY "OUTPUT STRING = ", OUTPUT-STRING.
+
+       CALL-STRING-AND-CHECK-4. 
+
+      *     DISPLAY "INPUT STRING BEFORE = ", INPUT-STRING.
+           CALL "STRING" USING STRING-FUNCTION, INPUT-STRING,
+                               INPUT-LENGTH, TRANS-ARRAY.
+                               
+
+      *     DISPLAY "INPUT STRING AFTER = ", INPUT-STRING.
+
+       CHECK-STATUS.
+           IF  COMPLETION-STATUS = 0 THEN
+                DISPLAY "STRING completion successful."
+           ELSE
+                DISPLAY "STRING failed.".
+
+            EXIT PROGRAM.
+            STOP RUN.
+
+
+006600**   End of wl0021.wcb
+

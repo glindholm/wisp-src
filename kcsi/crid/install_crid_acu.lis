@@ -1,0 +1,112 @@
+        Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+
+        ====================================================================
+
+        Title:          crid - CONTROL REPORT INQUIRY DATENTRY
+
+        Document:       install_crid_acu.lis
+        Last Updated:   10 July 97
+        Products:       KCSI Utilities - CRID
+        Versions:       2.77 (AND LATER)
+
+        Summary:        Installation instructions for the KCSI Utilities
+			using the AcuCOBOL compiler.
+
+        ====================================================================
+ 
+			***** ! ! ! ATTENTION ! ! ! *****
+ 
+ 	Please Read carefully! The instructions have changed from
+	previous releases.
+ 
+	USING EXISTING UTILITIES
+	========================
+
+	Distribution
+        ------------
+
+        First install WISP and setup the WISP runtime environment.  This
+        must be in place before CRID can be used.  Create a standard 
+	AcuCOBOL WISP runtime by following the instructions supplied
+	with your WISP distribution. This will ensure that all current
+	pieces are up to date for WISP.
+
+        CRID will normally be distributed on diskette or tape as a
+        compressed tar file named "cridmf.XXX.tar.Z".  Unload this file
+        from the distribution media as follows.
+
+        E.g.    $ tar -xvf /dev/rfd0
+
+        Extract the distribution files from "cridacu.XXX.tar.Z" using the
+        following command:
+
+                $ uncompress -c cridacu.XXX.tar.Z|tar -xvpf -
+
+        This will create a directory "cridacu.XXX" where XXX is a version
+	number.  Refer to packlist.lis in the distribution for a listing
+	of expected files.
+ 
+	Installation
+        ------------
+
+	1. Build an extended wisp runtime for the CRID utilities:
+
+	   ******************************************************
+	   To use C-ISAM with AcuCOBOL:
+ 
+		Edit filetbl.c supplied by AcuCOBOL.
+ 
+		Locate the line that reads
+		#define USE_CISAM 0
+ 
+		Modify this line to read
+		#define USE_CISAM 1
+	   ******************************************************
+	   To use Acu4GL and Oracle interface with AcuCOBOL:
+ 
+		Edit filetbl.c supplied by AcuCOBOL.
+ 
+		Locate the line that reads
+		#define USE_ORACLE 0
+ 
+		Modify this line to read
+		#define USE_ORACLE 1
+	   ******************************************************
+
+	   Read the wruncblk.umf file to determine the method for building
+	   the needed runtime.  The resulting output will be a file named
+	   wruncblk or wruncblke for an ede version of the runtime.
+
+		$ make -f wruncblk.umf
+	   or
+		$ make -f wruncblk.umf ede
+
+	   For a runtime which includes the Acu4GL Oracle interface the
+	   the resulting output will be a file named wruncblk_oracle7 or
+	   wruncblke_oracle7 for an ede version.
+
+		$ make -f wruncblk.umf oracle7
+	   or
+		$ make -f wruncblk.umf oracle7e
+
+	2. To install. Replace the existing version of wruncbl (or wruncble)
+	   with wruncblk, wruncblke, wruncblk_oracle7, or wruncblke_oracle7.
+ 
+	   Edit $WISPCONFIG/wrunconfig to read:
+
+		runcbl=wruncblk
+	   or
+		runcbl=wruncblk_oracle7
+ 
+	3. Copy CONTROL/REPORT/INQUIRY/DATENTRY to a WISP runable directory
+	   that should also include ACULINK and ACUUSING.
+
+
+	Test your installation by running the utilites:
+ 
+		$ wrun CONTROL
+		$ wrun REPORT
+		$ wrun INQUIRY
+		$ wrun DATENTRY
+
+       ========================= END OF DOCUMENT ==========================

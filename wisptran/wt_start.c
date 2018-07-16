@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,6 +17,7 @@
 #include "token.h"
 #include "node.h"
 #include "reduce.h"
+#include "statment.h"
 
 
 /*
@@ -82,6 +85,14 @@ NODE the_statement;
 		/*
 		**	Replace a START crt-file with a CONTINUE.
 		*/
+
+		if (acn_cobol)
+		{
+			write_log("WISP",'W',"NATIVE","Workstation START %s is removed for Native Screens",
+				  token_data(file_node->token));
+			tput_scomment("*>>> Workstation START removed for Native Screens.");
+			tput_scomment("*    START %s",token_data(file_node->token));
+		}
 
 		write_log("WISP",'I',"STARTCRT","START crt-file replaced with CONTINUE.");
 		edit_token(start_node->token,"CONTINUE");
@@ -185,7 +196,7 @@ NODE the_statement;
 		curr_node = curr_node->next;
 	}
 
-	if (vax_cobol)
+	if (vax_cobol && !(prog_ftypes[fnum] & AUTOLOCK))
 	{
 		/*
 		**	add REGARDLESS OF LOCK clause (tie down in reverse order)
@@ -221,190 +232,21 @@ NODE the_statement;
 	return(0);
 }
 
-#ifdef OLD
-
-p_start()										/* Process START statements.		*/
-{
-	int i,j,hold,fnum,inv_key,n_alt,is_crt;
-	char tstr[132];
-	char t_mktemp[40];
-	short	keeplooping;
-	int	lock_clause;
-
-	write_log("WISP",'I',"PROCSTART","Processing START Statement.");
-
-	ptype = get_param(o_parms[0]);							/* get next parameter (should be START)	*/
-	j = peek_param(o_parms[1]);							/* peek at the file name		*/
-
-											/* is it a crt record?			*/
-	is_crt = (crt_index(o_parms[1]) == -1) ? 0 : 1;
-
-	if (is_crt)
-	{
-		stredt(inline," START "," ");						/* Remove start.			*/
-		stredt(inline,o_parms[1],"CONTINUE");					/* Replace crt file with n-s.		*/
-		tput_line("%s", inline);						/* Output the line.			*/
-		return(0);
-	}
-	else
-	{
-		lock_clause = 0;
-		i = 0;
-		o_parms[5][0] = '\0';							/* no status field yet			*/
-
-		fnum = file_index(o_parms[1]);
-
-		if (fnum == -1)								/* no file matched, error		*/
-		{
-			write_log("WISP",'F',"STARTFNF",
-			"Error -- File %s, referenced by START statement but not Declared.",o_parms[1]);
-			exit_wisp(EXIT_WITH_ERR);
-		}
-		else
-		{
-			write_log("WISP",'I',"HANDLESTART","Handling START of %s.",prog_files[fnum]);
-			strcpy(o_parms[5],prog_fstats[fnum]);				/* copy the status field		*/
-		}
-
-		if (trap_start)
-		{
-			tput_line_at(12, "MOVE \"%s\" TO",o_parms[1]);
-			tput_clause (16, "WISP-CURRENT-FILE-ID");
-		}
-
-		if (copy_to_dcl_file || in_decl)
-			write_log("WISP",'W',"STARTINDECL","START statement in DECLARATIVES, record locking not applied.");
-
-
-		tput_line("           MOVE \"ST\" TO WISP-DECLARATIVES-STATUS\n");
-		tput_line("           START");						/* start a new line			*/
-
-
-		hold = 0;								/* no hold yet...			*/
-		inv_key = 0;								/* no INVALID KEY yet...		*/
-
-		keeplooping = 1;
-		do
-		{
-			if (o_parms[0][0]) stredt(inline,o_parms[0],"");		/* Remove it from the input line	*/
-			ptype = get_param(o_parms[0]);					/* get a new parm....			*/
-			if (ptype == -1) keeplooping = 0;
-
-			if (ptype == 1)							/* first parm on a new line		*/
-			{
-				tput_flush();
-			}
-
-			if (!strcmp(o_parms[0],"KEY"))					/* handle KEY.				*/
-			{
-
-				tput_clause(16, "KEY");					/* output parm				*/
-
-				i = strpos(inline," KEY");				/* Remove the KEY word.			*/
-				stredt(inline," KEY","");
-				ptype = get_param(o_parms[0]);				/* get the key name.			*/
-				if (ptype == -1) keeplooping = 0;
-
-				if (strpos(" IS EQUAL = GREATER > NOT LESS < <= >= ",o_parms[0]) == -1) /* Must be a variable	*/
-				{
-					strcpy(templine," ");
-					strcat(templine,o_parms[0]);
-
-					if (ptype == 1) 				/* First on line?			*/
-					{
-						i = 0;
-						tput_flush();
-					}
-
-					stredt(&inline[i],templine,"");			/* remove the field name		*/
-					write_log("WISP",'I',"STARTFLDDEL","Field name %s removed from START.",o_parms[0]);
-					o_parms[0][0] = '\0';				/* Clear it out.			*/
-				}
-				else
-				{
-					write_log("WISP",'I',"NOMODS","No mods made to START.");
-
-					if (ptype == 1)					/* first parm on a new line		*/
-					{
-						tput_flush();
-					}
-
-				}
-			}
-			else if (!strcmp(o_parms[0],"INVALID"))				/* INVALID KEY phrase?			*/
-			{
-				int	add_cont;
-				add_cont = 0;
-				stredt(inline," INVALID"," ");				/* remove INVALID			*/
-				if (ptype != -1)
-				{
-					peek_param(o_parms[7]);				/* get "KEY"				*/
-					if (!strcmp(o_parms[7],"KEY"))			/* Was it KEY?				*/
-					{
-						ptype = get_param(o_parms[0]);		/* Get it, and remove it.		*/
-						if (ptype == -1) keeplooping = 0;
-						stredt(inline," KEY"," ");		/* remove KEY				*/
-					}
-				}
-
-				if (ptype == -1)					/* Premature period!			*/
-				{
-					keeplooping = 0;
-					write_log("WISP",'I',"BADINVKEY",
-						"Bad START syntax, INVALID KEY followed by a period.");
-					o_parms[0][0] = '\0';
-					add_cont = 1;
-				}
-				else
-				{
-					ptype = get_param(o_parms[0]);			/* what to do?				*/
-					if (ptype == -1) keeplooping = 0;
-				}
-
-				if ( vax_cobol )
-				{
-					tput_line("               REGARDLESS OF LOCK");
-					lock_clause = 1;
-				}
-				tput_line        ("               INVALID KEY"); 	/* write it out				*/
-				if (add_cont) 
-					tput_line("               CONTINUE");		/* Invalid key followed by period	*/ 
-
-				inv_key = 1;						/* flag it				*/
-			}
-
-			if (proc_keyword(o_parms[0]))					/* If we hit a keyword	terminate loop	*/
-			{
-				keeplooping = 0;
-			}
-			else
-			{
-				/*
-					Output the param
-				*/
-
-				key_name(o_parms[0],0);					/* Do key name translation		*/
-
-				tput_clause(16, "%s",o_parms[0]);			/* output parm				*/
-
-			}
-
-		} while (keeplooping);		/* do till we hit a LAST parm or keyword*/
-
-
-		if ( vax_cobol && !lock_clause )
-		{
-			tput_line("               REGARDLESS OF LOCK");
-			lock_clause = 1;
-		}
-
-		if (ptype == -1) tput_clause(16, "."); 				/* a LAST parm				*/
-
-		if (ptype != -1) hold_line();
-
-		write_log("WISP",'I',"STARTDONE","Completed START analysys");
-	}
-
-}
-#endif /* OLD */
-
+/*
+**	History:
+**	$Log: wt_start.c,v $
+**	Revision 1.13  1997-09-15 13:56:51-04  gsl
+**	Fix warning
+**
+**	Revision 1.12  1997-09-12 14:01:32-04  gsl
+**	change native warning
+**
+**	Revision 1.11  1997-09-12 13:32:43-04  gsl
+**	Add Native Screens warning for WS START
+**
+**	Revision 1.10  1996-08-30 21:56:26-04  gsl
+**	drcs update
+**
+**
+**
+*/

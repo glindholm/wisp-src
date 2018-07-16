@@ -1,3 +1,7 @@
+#
+#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	$Id:$
+#
 #	/************************************************************************/
 #	/*									*/
 #	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
@@ -18,117 +22,147 @@
 #	09/13/93	Added ulicense and uauthorize, removed ilp stuff. GSL
 #
 
-#CDEBUG = -g
-CDEBUG = -O
+CDEBUG   =
+
+L_WISP  = wisp
+L_VIDEO = video
+
+WC=../wispcommon
+VC=../videolib
 
 include $(WISP)/src/port/make.include
 
-LIBS= $(LIBCFLAGS) -lwisp -lvideo -lm $(LIBCURSES)
-LIBPATHS= $(STDLIB)/libwisp.a $(STDLIB)/libvideo.a
+CFLAGS  = $(CFLAGS0) -I $(WC) -I$(VC)
 
+UTILS_LIBS_LINK = $(WISP_LIBS_LINK) $(MATH_LINK) $(CURSES_LINK)
+
+ACU_LIBS_LINK = $(LIBACU)
 #VSNIDX=vsn_only.o
 
-all: 	bldmf display makemsg selectpg wcopy wdelay wdelwrk wexists wfind \
+ALL= 	bldmf display makemsg selectpg wcopy wdelay wdelwrk wexists wfind \
 	wputparm wrename wretcode wrun wscratch wsubmit wsysconf wsysinit wusage \
-	viewkey vsx wsort vcapkeys wlicense wdiag
+	viewkey vsx wsort vcapkeys wlicense wdiag wshell wlictest
 
-bldmf: bldmf.c bldmf.h bldmf_l.o $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ bldmf.c bldmf_l.o $(LIBS) -ll
+all:	$(ALL)
+
+debug:
+	$(MAKE) $(MAKEFLAGS) CDEBUG=-g L_WISP=wispd L_VIDEO=videod
+
+clean:
+	rm -f $(ALL) *.o core *~ bldmf_l.c
+
+bldmf: bldmf.c bldmf.h bldmf_l.o $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ bldmf.c bldmf_l.o $(UTILS_LIBS_LINK) $(LEX_LINK)
 
 bldmf_l.c: bldmf_l.l bldmf.h
 	lex -t bldmf_l.l >bldmf_l.c 	
 
-#bldmf: bldmf.c bldmf.h bldmf_l.l $(LIBPATHS)
-#	rm -f bldmf_l.c
-#	lex -t bldmf_l.l >bldmf_l.c 	
-#	$(CC) $(CFLAGS) -c bldmf_l.c
-#	$(CC) $(CFLAGS) -o $@ bldmf.c bldmf_l.o $(LIBS) -ll
+display: display.c $(WC)/werrlog.h $(WC)/idsistd.h $(WC)/intdef.h $(WC)/vwang.h $(WC)/wisplib.h \
+		$(WC)/setenvst.h $(WC)/filext.h $(WISP_LIBS_PATHS) $(VSNIDX)
+	$(CC) $(CFLAGS) -o $@ display.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
 
-display: display.c $(LIBPATHS) $(VSNIDX)
-	$(CC) $(CFLAGS) -o $@ display.c $(LIBS) $(LIBACU) 
-
-makemsg: makemsg.c
+makemsg: makemsg.c $(WC)/intdef.h
 	$(CC) $(CFLAGS) -o $@ makemsg.c
 
 selectpg: selectpg.c
 	$(CC) $(CFLAGS) -o $@ selectpg.c
 
-wcopy: wcopy.c $(LIBPATHS) $(VSNIDX)
-	$(CC) $(CFLAGS) -o $@ wcopy.c $(LIBS) $(LIBACU) 
+wcopy: wcopy.c $(WC)/filext.h $(WC)/wcommon.h $(WC)/wperson.h $(WC)/wangkeys.h $(WC)/wfname.h \
+ 	$(WC)/intdef.h $(WC)/wexit.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/level.h $(WC)/idsisubs.h \
+ 	$(WC)/idsistd.h $(WC)/vwang.h $(WISP_LIBS_PATHS) $(VSNIDX)
+	$(CC) $(CFLAGS) -o $@ wcopy.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
 
 wdelay: wdelay.c
 	$(CC) $(CFLAGS) -o $@ wdelay.c
 
-wdelwrk: wdelwrk.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wdelwrk.c $(LIBS)
+wdelwrk: wdelwrk.c $(WC)/filext.h $(WC)/wcommon.h $(WC)/wperson.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wdelwrk.c $(UTILS_LIBS_LINK)
 
-wdiag: 	wdiag.c
-	$(CC) $(CFLAGS) -o $@ wdiag.c $(LIBS)
+wdiag: wdiag.c $(WC)/filext.h $(WC)/paths.h $(WC)/wrunconf.h $(WC)/idsisubs.h $(WC)/idsistd.h $(WC)/intdef.h wutils.h
+	$(CC) $(CFLAGS) -o $@ wdiag.c $(UTILS_LIBS_LINK)
 
-wexists: wexists.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wexists.c $(LIBS)
+wexists: wexists.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wexists.c $(UTILS_LIBS_LINK)
 
-wfind: wfind.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wfind.c $(LIBS) 
+wfind: wfind.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wfind.c $(UTILS_LIBS_LINK) 
 
-wputparm: wputparm.c $(LIBPATHS) 
-	$(CC) $(CFLAGS) -o $@ wputparm.c $(LIBS)
+wputparm: wputparm.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/filext.h $(WC)/wdefines.h $(WC)/putparm.h \
+	$(WC)/sharemem.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/wexit.h wutils.h $(WISP_LIBS_PATHS) 
+	$(CC) $(CFLAGS) -o $@ wputparm.c $(UTILS_LIBS_LINK)
 
 # SEQUENT needs these special flags
 #
-#wputparm: wputparm.c $(LIBPATHS) 
-#	$(CC) $(CFLAGS) -W0,-Nt2000 -o $@ wputparm.c $(LIBS)
+#wputparm: wputparm.c $(WISP_LIBS_PATHS) 
+#	$(CC) $(CFLAGS) -W0,-Nt2000 -o $@ wputparm.c $(UTILS_LIBS_LINK)
 
-wrename: wrename.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wrename.c $(LIBS)
+wrename: wrename.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wrename.c $(UTILS_LIBS_LINK)
 
-wretcode: wretcode.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wretcode.c $(LIBS)
+wretcode: wretcode.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wretcode.c $(UTILS_LIBS_LINK)
 
-wrun: wrun.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wrun.c $(LIBS)
+wrun: wrun.c $(WC)/wrunconf.h $(WC)/wdefines.h $(WC)/link.h $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wcommon.h \
+	$(WC)/wispvers.h $(WC)/idsisubs.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/wispcfg.h saveterm.c \
+	wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wrun.c $(UTILS_LIBS_LINK)
 
-wscratch: wscratch.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wscratch.c $(LIBS)
+wscratch: wscratch.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wscratch.c $(UTILS_LIBS_LINK)
 
-wsubmit: wsubmit.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wsubmit.c $(LIBS)
+wshell: wshell.c $(WC)/vwang.h $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wexit.h $(WC)/wglobals.h \
+ 	$(WC)/wfiles.h $(WC)/werrlog.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/filext.h \
+	$(WISP_LIBS_PATHS) $(VSNIDX)
+	$(CC) $(CFLAGS) -o $@ $@.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
 
-wsysconf: wsysconf.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wsysconf.c $(LIBS)
+wsubmit: wsubmit.c $(WC)/wispvers.h $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wsubmit.c $(UTILS_LIBS_LINK)
 
-wsysinit: wsysinit.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wsysinit.c $(LIBS)
+wsysconf: wsysconf.c $(WC)/wperson.h $(WC)/filext.h $(WC)/wdefines.h $(WC)/wsysconf.h wutils.h \
+ 	wsysinit.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wdefines.h $(WC)/filext.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wsysconf.c $(UTILS_LIBS_LINK)
 
-wusage: wusage.c $(LIBPATHS) $(VSNIDX)
-	$(CC) $(CFLAGS) -o $@ wusage.c $(LIBS) $(LIBACU) 
+wsysinit: wsysinit.c $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wsysinit.c $(UTILS_LIBS_LINK)
+
+wusage: wusage.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/werrlog.h $(WC)/scnfacs.h $(WC)/wcommon.h \
+ 	$(WC)/wperson.h $(WC)/wdefines.h $(WC)/wanguid.h $(WC)/wispvers.h $(WC)/wisplib.h $(WC)/setenvst.h \
+ 	$(WC)/idsisubs.h $(WC)/vwang.h $(WC)/wispcfg.h $(WC)/filext.h $(WISP_LIBS_PATHS) $(VSNIDX)
+	$(CC) $(CFLAGS) -o $@ wusage.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
 
 viewkey: viewkey.c 
 	$(CC) $(CFLAGS) -o $@ viewkey.c
 
-vsx: vsx.c vsx.h
+vsx: vsx.c $(WC)/idsistd.h $(WC)/intdef.h
 	$(CC) $(CFLAGS) -o $@ vsx.c
 
-wsort: wsort.c $(LIBPATHS) $(VSNIDX)
-	$(CC) $(CFLAGS) -o $@ wsort.c $(LIBS) $(LIBACU) 
+wsort: wsort.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/filext.h $(WC)/wcommon.h $(WC)/wperson.h \
+ 	$(WC)/wangkeys.h $(WC)/vssort.h $(WC)/wexit.h $(WC)/level.h $(WC)/wfname.h $(WC)/idsisubs.h \
+ 	$(WC)/sysdev.h $(WC)/wispvers.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/vwang.h \
+	$(WISP_LIBS_PATHS) $(VSNIDX)
+	$(CC) $(CFLAGS) -o $@ wsort.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
 
-wpfkey: wpfkey.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ wpfkey.c $(LIBS)
+wpfkey: wpfkey.c $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ wpfkey.c $(UTILS_LIBS_LINK)
 
 vcapkeys: vcapkeys.c 
-	$(CC) $(CFLAGS) -o $@ vcapkeys.c $(LIBSOC)
+	$(CC) $(CFLAGS) -o $@ vcapkeys.c $(SOCKET_LINK)
 
-wlicense: wlicense.c prompt.o
-	$(CC) $(CFLAGS) -o $@ wlicense.c prompt.o $(LIBS)
+wlicense: wlicense.c $(WC)/wlicense.h $(WC)/intdef.h $(WC)/idsisubs.h $(WC)/idsistd.h $(WC)/prompt.h \
+	$(WC)/platsubs.h $(WC)/machid.h prompt.o
+	$(CC) $(CFLAGS) -o $@ wlicense.c prompt.o $(UTILS_LIBS_LINK)
 
-ulicense: wlicense.c prompt.o licunique.o
-	$(CC) $(CFLAGS) -o $@ wlicense.c prompt.o licunique.o $(LIBS)
+# ulicense: wlicense.c prompt.o licunique.o
+#	$(CC) $(CFLAGS) -o $@ wlicense.c prompt.o licunique.o $(UTILS_LIBS_LINK)
 
-wauthorize: wauthorize.c prompt.o
-	$(CC) $(CFLAGS) -o $@ wauthorize.c prompt.o $(LIBS)
+wauthorize: wauthorize.c prompt.o $(WC)/wlicense.h $(WC)/intdef.h
+	$(CC) $(CFLAGS) -o $@ wauthorize.c prompt.o $(UTILS_LIBS_LINK)
 
 uauthorize: wauthorize.c prompt.o licunique.o
-	$(CC) $(CFLAGS) -o $@ wauthorize.c prompt.o licunique.o $(LIBS)
+	$(CC) $(CFLAGS) -o $@ wauthorize.c prompt.o licunique.o $(UTILS_LIBS_LINK)
 
-hexed: hexed.c $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ hexed.c $(LIBS)
+hexed: hexed.c $(VC)/vlocal.h $(VC)/video.h $(VC)/vcap.h $(VC)/vdata.h $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ hexed.c $(UTILS_LIBS_LINK)
+
+wlictest: wlictest.c $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $@.c $(UTILS_LIBS_LINK)

@@ -1,3 +1,6 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+#if defined(unix) || defined(VMS)
 /********************************************************************************************************************************
 *																*
 *	readacp.c	Obtain data from specified line.									*
@@ -10,18 +13,27 @@
 *																*
 ********************************************************************************************************************************/
 #include "idsistd.h"
+
 #ifdef VMS
 #include <iodef.h>							/* I/O function definitions.				*/
 #include "trmdef.h"							/* Terminal function modifier definitions.		*/
 #endif
+
 #ifdef unix
 #include <signal.h>
+#include <termio.h>
+#include <sys/types.h>
 extern struct termio ntermacp;
 #include <fcntl.h>
+static int matchreor();
+static void eortimeout();
 #endif
+
 #include <varargs.h>							/* Allow variable number of arguments.			*/
 #include "acp.h"							/* Header file containing global variable definitions.	*/
 #include "movebin.h"
+
+static int io_error();
 
 #define INVALIDLINE	20000						/* For io_error invalid relative line number.		*/
 #define INVALIDRECLEN	20001						/* For io_error invalid record length.			*/
@@ -292,9 +304,16 @@ va_dcl
 	{
 		if (acp_blockmode[i]==BLOCKING)
 		{
+			int	oflag;
+
 			acp_blockmode[i]=NONBLOCKING;
 			close(acp_ch[i]);
-			acp_ch[i]=open(acp_devname[i],O_RDWR|O_NDELAY);
+#ifdef O_NDELAY
+			oflag = O_RDWR|O_NDELAY;
+#else
+			oflag = O_RDWR|O_NONBLOCK;
+#endif
+			acp_ch[i]=open(acp_devname[i],oflag);
 			ioctl(acp_ch[i],TCSETA,&ntermacp);			/* satisfied */
 		}
 		ioctl(acp_ch[i],TCGETA,&ntermacp);
@@ -328,15 +347,22 @@ va_dcl
 	for (eor1pos=eor2pos=eor3pos=eor_found=0;cnt<l_length && !eor_found;)
 	{
 		status=read(acp_ch[i],&ch,1);
-		
-		if (status==0)                                          /* no chars read */
+
+		if (status<1)                                          /* no chars read */
 		{
 			if (eor_timeout) break;
-			else 
+
+			if (-1 == status && EAGAIN != errno)
 			{
-				sleep(1);
-				continue;
+				/* 
+				**	An errno of EAGAIN is the only one we can handle.
+				*/
+				*ret_code = 99;
+				break;
 			}
+
+			sleep(1);
+			continue;
 		}
 		
 		++cnt;
@@ -369,7 +395,7 @@ va_dcl
 #endif 
 }
 #ifdef unix
-matchreor(seq,pos,ch)
+static int matchreor(seq,pos,ch)
 char *seq;
 int *pos,ch;
 {
@@ -383,7 +409,7 @@ int *pos,ch;
 	if (*pos>=seq[0]) return 1;					/* if matched all chars, return true value */
 	else return 0;							/* else not */
 }
-void eortimeout(sig)
+static void eortimeout(sig)
 int	sig;
 {
 	++eor_timeout;
@@ -397,8 +423,7 @@ int	sig;
 *																*
 *			output:	ret_code	value placed into *ret_code.							*
 ********************************************************************************************************************************/
-io_error(status,ret_code)
-
+static int io_error(status,ret_code)
 int4	status;
 int	*ret_code;
 {
@@ -449,6 +474,19 @@ int	*ret_code;
 			break;
 		}
 	}
-	return(0);							/* Return to caller.					*/
 #endif
+	return(0);							/* Return to caller.					*/
 }
+#endif /* unix || VMS */
+/*
+**	History:
+**	$Log: readacp.c,v $
+**	Revision 1.11  1997-06-05 12:08:42-04  scass
+**	Moved return outside of #ifdef to resolve warning.
+**
+**	Revision 1.10  1996-08-19 18:32:46-04  gsl
+**	drcs update
+**
+**
+**
+*/

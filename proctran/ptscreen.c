@@ -1,12 +1,7 @@
-#define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 
-/* PG_SCREEN.C	*/
+#define EXT extern
 
 #include <stdio.h>
 #include <string.h>
@@ -16,14 +11,13 @@
 #include "pgglobal.h"
 #include "pgkeyw.h"
 
-static int eval_column();
-static int clear_attributes();
-static int generate_screen_field();
-static int concat_screen_field();
-static int adjust_for_fac();
+static void eval_column(int crow, int fac_msk);						/* Set the correct columns for current 	*/
+static int clear_attributes(long *fac_msk);						/* Attributes apply only to their	*/
+static void generate_screen_field(int *num_var, int *num_val, int *slen);		/* Generate a screen field item in	*/
+static void concat_screen_field(int *slen);						/* Now add the current field to previous*/
+static void adjust_for_fac(int fac_msk, int *len, int *adjust);				/* Adjust length for FAC attributes.	*/
 
-p_scn_kw(tndx)										/* Process screen keywords.		*/
-int tndx;
+void p_scn_kw(int tndx)									/* Process screen keywords.		*/
 {
 	setscreen();									/* Reset screen flags.			*/
 
@@ -168,8 +162,7 @@ int tndx;
 	}
 }
 
-save_screen_item(num_asn,num_var,num_val,current_row)					/* Save the screen expression.		*/
-int *num_asn, *num_var, *current_row, *num_val;
+void save_screen_item(int* num_asn,int* num_var,int* num_val,int* current_row)		/* Save the screen expression.		*/
 {
 	char *cstr;
 	int crfm, ndx, semi_beg;							/* Current row FAC mask.		*/
@@ -212,7 +205,7 @@ int *num_asn, *num_var, *current_row, *num_val;
 				int num;
 				char tmp_str[80];
 
-				num = aptr - inline;					/* Concatenate spaces to end of line.	*/
+				num = aptr - linein;					/* Concatenate spaces to end of line.	*/
 				num = WPLMAX - num;
 				memset(tmp_str,' ',num);
 				tmp_str[num] = '\0';
@@ -335,8 +328,8 @@ int *num_asn, *num_var, *current_row, *num_val;
 	next_ptr = aptr;								/* Set ptr to current position.		*/
 }
 
-static eval_column(crow,fac_msk)							/* Set the correct columns for current 	*/
-int crow, fac_msk;									/* row of screen display.		*/
+static void eval_column(int crow, int fac_msk)						/* Set the correct columns for current 	*/
+											/* row of screen display.		*/
 {
 	scn_fld_item *stitem, *hld_scn_fld;
 	int totlen, ccol, len, adj_att;
@@ -407,10 +400,11 @@ int crow, fac_msk;									/* row of screen display.		*/
 	cur_scn_fld = hld_scn_fld;							/* Set pointr back.			*/
 }
 
-static int clear_attributes(fac_msk)							/* Attributes apply only to their	*/
-int *fac_msk;										/*  associated field so clear for next	*/
+static int clear_attributes(long *fac_msk)						/* Attributes apply only to their	*/
+											/*  associated field so clear for next	*/
 {											/*  item.				*/
-	int l_fac_msk, no_attr;
+	long l_fac_msk;
+	int  no_attr;
 
 	l_fac_msk = *fac_msk;								/* Set the local copy of field.		*/
 	no_attr = TRUE;
@@ -468,8 +462,7 @@ int *fac_msk;										/*  associated field so clear for next	*/
 	return(no_attr);
 }
 
-static adjust_for_fac(fac_msk,len,adjust)						/* Adjust length for FAC attributes.	*/
-int fac_msk, *len, *adjust;
+static void adjust_for_fac(int fac_msk, int *len, int *adjust)				/* Adjust length for FAC attributes.	*/
 {											/* Add one for FAC char.		*/
 
 	if ( (fac_msk & FMBLANK) || (fac_msk & FMBLINK) || (fac_msk & FMBRIGHT) || (fac_msk & FMDIM) ||
@@ -485,12 +478,10 @@ int fac_msk, *len, *adjust;
 
 		*adjust = 0;
 	}
-
-	return;
 }
 
-static generate_screen_field(num_var,num_val,slen)					/* Generate a screen field item in	*/
-int *num_var, *num_val, *slen;								/*  declare list and use in screen.	*/
+static void generate_screen_field(int *num_var, int *num_val, int *slen)		/* Generate a screen field item in	*/
+											/*  declare list and use in screen.	*/
 {
 	if ( cur_scn_fld->row != num_sf_var ||
 	     (cur_scn_fld->row == num_sf_var && cnt_sf &&
@@ -517,10 +508,9 @@ int *num_var, *num_val, *slen;								/*  declare list and use in screen.	*/
 	else *slen = atoi(cur_scn_fld->len);						/* Set the current length.		*/
 }
 
-static concat_screen_field(slen)							/* Now add the current field to previous*/
-int *slen;										/* field parameters.			*/
+static void concat_screen_field(int *slen)						/* Now add the current field to previous*/
+											/* field parameters.			*/
 {
-	char tlen[4];
 	struct scn_fld_item *hld_scn_fld;
 
 	if (cur_scn_fld->prev_item->str_params || *cur_scn_fld->screen_fld == '&'	/* If var and no attributes set and	*/
@@ -548,3 +538,15 @@ int *slen;										/* field parameters.			*/
 	sprintf(cur_scn_fld->len,"%d",*slen);
 	cur_scn_fld->next_item = '\0';
 }
+/*
+**	History:
+**	$Log: ptscreen.c,v $
+**	Revision 1.6  1997-04-21 11:21:31-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.5  1996-09-12 19:18:01-04  gsl
+**	Fix prototypes
+**
+**
+**
+*/

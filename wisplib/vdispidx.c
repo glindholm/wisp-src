@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -42,36 +44,25 @@
 #ifdef INCLUDE_VDISPIDX
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #include <fcntl.h>            /* if this is not found (BSD types) then it it is in <sys/file.h>..  */
 #endif
-#ifdef unix
-#include <unistd.h>
+#ifdef _MSC_VER
+#include <io.h>
 #endif
-#ifndef unix	/* VMS or MSDOS */
-#include <stdlib.h>
-#endif
-#ifdef MSDOS
-#include <fcntl.h>
-#endif
-#ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
 #include <string.h>
-#include <memory.h>
-#endif
-
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include <v/vcap.h>
 
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wperson.h"
 #include "scnfacs.h"
 #include "vwang.h"
+#include "ring.h"
 #include "visn3.h"         /* Acucobol Vision internals header */
+#include "wanguid.h"
+#include "wisplib.h"
 
 #define VDISPIDX_C
 #include "vdispidx.h"
@@ -81,10 +72,8 @@
        void   EXFUN(do_disp,		   (struct idxfile *));
        int    EXFUN(init_idxfile,	   (struct idxfile *, char *, int));
        int    EXFUN(show_screen,	   (int));
-#if 0
-       void   EXFUN(setup_oa,		   (struct vwang_screen *, char, char, char, char));
-#endif
-void setup_oa();
+
+       void setup_oa();
 
        void   EXFUN(setup_screen,	   (struct idxfile *, int ));
        void   EXFUN(setup_screen_normal,   (struct idxfile *, int, int));
@@ -115,19 +104,8 @@ static void   EXFUN(shutdown,	           (struct idxfile *));
 
 /* extern function stuff */
 
-#define ring_struct char
 
-extern int    EXFUN(ring_open,	           (char **, int, int, int, int (*ecompare)(), int));
-extern int    EXFUN(ring_close,		   (ring_struct *));
-extern int    EXFUN(ring_que,		   (ring_struct *, char *));
-extern int    EXFUN(ring_unque,		   (ring_struct *, char *));
-extern int    EXFUN(ring_front,		   (ring_struct *, char *));
-extern int    EXFUN(ring_back,		   (ring_struct *, char *));
-extern int    EXFUN(ring_count,		   (ring_struct *, int *));
-extern int    EXFUN(ring_get,              (ring_struct *, int, char *));
-
-
-extern int    EXFUN(vwang,		   (char *, char *, char *, char *, char *, char *));
+static int stx(unsigned char *string, unsigned char *mask);	/* Get string index in another string.	*/
 
 /* ACUCOBOL functions */
 
@@ -137,9 +115,6 @@ extern int    EXFUN(i_next,		   (int4, char *));
 extern int    EXFUN(i_read,		   (int4, char *, int));
 extern int    EXFUN(i_start,		   (int4, char *, int, int, int));
 extern int    EXFUN(i_close,               (int4));		
-
-extern char * EXFUN(wanguid3,              ());  
-extern void   EXFUN(di_write_file,         (char *, int, int, char *, char*));
 
 /*
 **	Routine:	vdispidx()
@@ -261,7 +236,6 @@ struct idxfile *file;
 	int read_status;				 /* status returned from the read */
 	int fkey;					 /* fkey pressed by the user */
 	static char *keybuf=NULL;			 /* buffer for key input */
-	char *calloc();
 	struct vwang_screen *scrptr;			 /* a screen pointer that we use for our vwang call */
 	int findpos = -1;
 	
@@ -545,7 +519,7 @@ char *keybuf;		  /* a pointer to the key buffer  in case  the user entered one *
 				term[0]=no_mod[0]='\0';
 				memset(filelibvol,' ',22);
 				memset(filelibvol,'#',2);
-				memcpy(&filelibvol[2],(char *)wanguid3(),3);
+				memcpy(&filelibvol[2],wanguid3(),3);
 				memset(&filelibvol[5],' ',22-5); /* fix bug */
 
 				/* for screen print, we vwang read the screen, and hand it to di_write_file */
@@ -1312,7 +1286,7 @@ int status,rec_disp_start;
 	INSERTSCN(main_scr,0,60,"(8)Find Record");
 	INSERTSCN(main_scr,1,55,"(15)Print");
 	INSERTSCN(main_scr,1,65,"(16)End of Job");
- INSERTSCN(main_scr,1,1,"(9)Find Text");
+	INSERTSCN(main_scr,1,1,"(9)Find Text");
 	
 	
 	if (CHKFLAG(status,DISP_MODE_HEX)==TRUE)
@@ -1330,7 +1304,6 @@ static void initialize(file)
 struct idxfile *file;
 {
 	extern char *recbuf;
-	char *calloc();
 	
 	ring_open(&reclist,file->reclen,file->recs_per_page,1,NULL,0);
 	recbuf=calloc(file->reclen,1);
@@ -1372,7 +1345,7 @@ char *keybuf;
 int *foundpos;
 {
 	int recidx, reccnt, iter;
-	char srchbuf[65],*p;
+	char srchbuf[65];
 	
 	memcpy(srchbuf,keybuf,64);
 	srchbuf[64]=(char)0;
@@ -1398,7 +1371,7 @@ int *foundpos;
 		++iter;
 		if (iter % 100)
 		{
-			if (vcheck() != 0)
+			if (vwang_keypressed(1))
 			{
 				return;
 			}
@@ -1442,8 +1415,7 @@ int status;
 		srch_csense = TRUE;
 	}
 }
-static int stx(string,mask)								/* Get string index in another string.	*/
-register unsigned char *mask, *string;
+static int stx(unsigned char *string, unsigned char *mask)	/* Get string index in another string.	*/
 {
 	register m_idx, s_idx, cmpval;
 	register int m_len, s_len;
@@ -1597,5 +1569,18 @@ char *key;
 {
 	return 0;
 }
-
-#endif /* INCLUDE_VDISPIDX */
+#else
+static int dummy_vdispidx;
+#endif
+/*
+**	History:
+**	$Log: vdispidx.c,v $
+**	Revision 1.8  1997-03-12 13:14:28-05  gsl
+**	Change to use WIN32
+**
+**	Revision 1.7  1996-08-19 18:33:03-04  gsl
+**	drcs update
+**
+**
+**
+*/

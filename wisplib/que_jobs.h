@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /* 		Define the constants used by any program needing access to the 'que_jobs' routines				*/
 
 /* These are the flag values		*/
@@ -23,3 +27,12 @@ typedef union	{
 			long	endlist;					/* Indicate the end of the item list		*/
 		} item_list;
 
+/*
+**	History:
+**	$Log: que_jobs.h,v $
+**	Revision 1.8  1996-08-19 18:32:41-04  gsl
+**	drcs update
+**
+**
+**
+*/

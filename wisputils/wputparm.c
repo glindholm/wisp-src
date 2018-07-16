@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
@@ -16,13 +18,21 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <ctype.h>
 #include <varargs.h>
 
+#include "idsistd.h"
 #define EXT_FILEXT
 #include "filext.h"
 #include "wdefines.h"
+
+#include "putparm.h"
+#include "wisplib.h"
+#include "wexit.h"
+#include "level.h"
 
 static char func;									/* Function E, D, or C.			*/
 static char prname[9];									/* putparm parameter referance name	*/
@@ -106,7 +116,7 @@ static int cutarg();
 static int getaid();
 
 #ifdef unix
-extern int PGRPID;
+static int gid;
 #endif
 
 
@@ -118,16 +128,41 @@ char 	*o_argv[];
 	int	argc;									/* Adjusted argc & argv			*/
 	char	*argv[256];
 
-	char *calloc();
-	long *keyw_len;
-	char *p,*strchr();
+	int4 *keyw_len;
+	char *p;
 	int pargc, retcode, i, j, kw_cnt_pos, pid;
+	int level;
+
+        /************* PATCH FOR ALPHA/OPENVMS **************/
+        /* alpha returns argc of 2 when no parms are passed */
+        /* so added a check to see if argc=2 and argv[1] is */
+        /* NULL, then set argc to 1.                        */
+        if (2 == o_argc && !o_argv[1])
+        {
+           o_argc = 1;
+        }
+        /****************************************************/
 
 	if (o_argc < 2) usage();							/* Need 2 args for this stuff.		*/
 
 	response_file(o_argc, o_argv, &argc, argv);					/* Process any response file.		*/
 
+	/*
+	**	The link-level a putparm is created at is very important as
+	**	it determines when it is cleaned-up in an "unlink".
+	**	The initglbs() routine will increment the link-level which we 
+	**	don't want.  So we save the linklevel then restore it after the
+	**	call to initglbs().
+	**
+	**	A putparm created from a startup script should have a link-level
+	**	of 0 because the cobol program which follows it will have a 
+	**	link-level of 1.
+	**	
+	*/
+	level = linklevel();
 	initglbs("WPUTPARM");								/* Init WISP parameters because not	*/
+	setlevel(level);
+
 	aidchar='@';									/* called from COBOL.			*/
 	usage_cnt= -1;									/* Mark as NOT-SET			*/
 	strcpy(plabel,"        ");							/* Set the PUTPARM label to blanks.	*/
@@ -137,9 +172,9 @@ char 	*o_argv[];
 	capitalize(argv[1]);
 
 #ifdef unix
-	PGRPID=wgetpgrp();
+	gid=wgetpgrp();
 	pid = getpid(0);
-	if (pid == PGRPID)
+	if (pid == gid)
 	{
 		fprintf(stderr,"%%WPUTPARM-F-SHELL Group ID = Process ID; Use Bourne Shell or set %s=$$\n",WISP_GID_ENV);
 		wexit(1);
@@ -194,7 +229,7 @@ char 	*o_argv[];
 	}
 	else if (!strcmp(argv[1],"GET"))		/* unix: symbol=`wputparm -l label GET keyword`				*/
 	{						/* VMS:  wputparm -l label GET &symbol=keyword [&symbol=keyword ...]	*/
-		char	*parm_area;
+		SHMH	*parm_area;
 		char	buff[100];
 		int	pos, i, len;
 
@@ -218,7 +253,7 @@ char 	*o_argv[];
 		}
 #endif
 
-		parm_area = (char *)get_prb_area(NULL,plabel,1);			/* Find PRB for label			*/
+		parm_area = get_prb_area(NULL,plabel,1);				/* Find PRB for label			*/
 		if (!parm_area)
 		{
 			fprintf(stderr,"Label not found [%s]\n",plabel);
@@ -230,7 +265,7 @@ char 	*o_argv[];
 			char	keyword[8+1];
 			char	symbol[80];
 			char	*ptr;
-			long	status;
+			int4	status;
 
 			capitalize(argv[pos]);						/* Make args uppercase			*/
 
@@ -260,7 +295,7 @@ char 	*o_argv[];
 			}
 
 
-			if ( !search_parm_area(buff,keyword,0,sizeof(buff),parm_area,0))
+			if ( !search_parm_area(buff,keyword,sizeof(buff),parm_area))
 			{
 				fprintf(stderr,"Keyword not found [%s]\n",keyword);
 				wexit(1);
@@ -320,7 +355,7 @@ char 	*o_argv[];
 			usage();
 		}
 		*p++ = (char)0;						    		/* replace the = with a null		*/
-		keyw_len = (long *)calloc(1,sizeof(long));				/* make a long				*/ 
+		keyw_len = (int4 *)calloc(1,sizeof(int4));				/* make a 4 byte int			*/ 
 		*keyw_len = strlen(p);							/* store the keyword len there		*/
 		wswap(keyw_len);
 		pstruct.pargv[j] = (char *)malloc(9);					/* malloc space for keyword		*/
@@ -622,15 +657,39 @@ char	*n_argv[];
 	}
 	n_argv[*n_argc_ptr] = NULL;							/* Add a null to the end of the list	*/
 
-#ifdef DEBUG
+#ifdef TESTING
 	for(i=0; i<*n_argc_ptr; i++)
 	{
 		printf("n_argv[%d] = [%s]\n",i,n_argv[i]);
 	}
-#endif /* DEBUG */
+#endif /* TESTING */
 }
 
 #ifndef VMS
 #include "wutils.h"
 #endif /* !VMS */
 
+/*
+**	History:
+**	$Log: wputparm.c,v $
+**	Revision 1.13  1997-07-29 11:03:17-04  gsl
+**	Fix problem with link-level in wputparm()
+**	It was incorrectly incrementing the link-level in initglbs()
+**	which caused the putparm to be marked with the wrong link-link
+**	which caused the putparm to be deleted at the wrong "unlink".
+**
+**	Revision 1.12  1997-06-10 14:57:28-04  scass
+**	?Changed long to int4 for portability.
+**
+**	Revision 1.11  1996-08-22 20:34:53-04  gsl
+**	Removed use of PGRPID.
+**
+**	Revision 1.10  1996-07-23 11:22:41-07  gsl
+**	add headers
+**
+**	Revision 1.9  1996-07-23 11:13:11-07  gsl
+**	drcs update
+**
+**
+**
+*/

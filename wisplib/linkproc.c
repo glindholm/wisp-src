@@ -1,15 +1,18 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
-**	linkproc.c
+**	File:		linkproc.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	???
+**
+**	Routines:	
+**	LINKPROC()
 */
+
 
 /*	LINKPROC	Preforms a WANG style LINK to a procedure (DCL or UNIX shell) with parameters.
 			This is a one-way passing of parameters, no pass-back is done.
@@ -46,8 +49,16 @@
 			    7		invalid proc file
 */
 
-#ifdef unix
+/*
+**	Includes
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <varargs.h>									/* Function uses variable params.	*/
 #include <errno.h>
+
+#ifdef unix
 #include <ctype.h>
 #include <signal.h>
 #endif
@@ -62,11 +73,8 @@
 #include <process.h>
 #endif
 
-#include <stdio.h>
-#include <v/video.h>
-#include <varargs.h>									/* Function uses variable params.	*/
-
 #include "idsistd.h"
+#include "vwang.h"
 #include "wdefines.h"
 #include "movebin.h"
 #include "werrlog.h"
@@ -74,6 +82,16 @@
 #include "wfiles.h"
 #include "wcommon.h"
 #include "runtype.h"
+#include "wfname.h"
+#include "wisplib.h"
+#include "level.h"
+#include "sharemem.h"
+#include "wexit.h"
+#include "wispcfg.h"
+
+/*
+**	Structures and Defines
+*/
 
 #define WNOTMTD 	 4
 #define WVOLBUSY	 8
@@ -88,13 +106,23 @@
 #define		MAX_LINKPROC_PARMS	8
 #define		ROUTINE		28500
 
-extern	int	rts_first ;								/* First time flag for screen init.	*/
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Function Prototypes
+*/
 
 #ifdef unix
 static int fixerr();
 #endif
 
-char	*shell_var();
+
 
 void LINKPROC(va_alist)									/* There are a variable number of args.	*/
 va_dcl
@@ -107,18 +135,22 @@ va_dcl
 	int4		*retcode, *compcode;
 	char 		filespec[NAME_LENGTH+1];
 	int4 		mode;
-	int 		i, idx;
+	int 		i;
 	char 		*p;
-	int  		not_found,cpos;
-	int 		pid,ftyp;
-	char 		*sh_parm[17], *wfname();
+	int  		cpos;
+	int 		ftyp;
 	int		arg_count;
 	int4		l_retcode, l_compcode;
 	char		l_lib[9], l_vol[7];
-	int		savelevel;
 	char		command[516];
+#ifdef unix
+	int		pid;
+#endif
+#ifdef VMS
 	uint4		status;
 	uint4		vms_status;
+	int		savelevel;
+#endif
 
 	l_retcode = 0;
 	l_compcode = 0;
@@ -172,7 +204,7 @@ va_dcl
 	strcpy(&command[1],filespec);							/* Now add the name of the procedure.	*/
 	cpos = strlen(filespec) + 1;							/* Find out the end of the string.	*/
 #endif
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 	memset(command,' ',sizeof(command));						/* Init the command string.		*/
 	strcpy(command,filespec);							/* Now add the name of the procedure.	*/
 	cpos = strlen(filespec);							/* Find out the end of the string.	*/
@@ -197,7 +229,7 @@ va_dcl
 		cpos += parmlen[i];
 		command[cpos++] = '\"';							/* Close Quotes.			*/
 #endif
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 		if (parmlen[i] > 0)
 		{
 			if ((cpos + parmlen[i] + 3) > 128)
@@ -248,7 +280,7 @@ va_dcl
 	return;
 #endif
 
-#ifndef VMS
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 	if ( !fexists(filespec) )
 	{
 		int4 twenty=20;
@@ -274,9 +306,7 @@ va_dcl
 			PUTBIN(retcode,&l28,4);
 			werrlog(ERRORCODE(5),filespec,0,0,0,0,0,0,0);
 			return;
-			break;
 		}
-		break;
 
 	default:
 		{
@@ -285,35 +315,45 @@ va_dcl
 			PUTBIN(retcode,&l52,4);
 			werrlog(ERRORCODE(7),filespec,0,0,0,0,0,0,0);
 			return;
-			break;
 		}
-		break;
 	}
 
 	*retcode = 0;
 
 #ifdef unix
-	if (!ishelpactive() && isdebug())						/* If COBOL debugger running		*/
+	if (vsharedscreen())								/* If screen is shared		*/
 	{
-		vraw_stty_save();							/* Save the current stty values		*/
+		vwang_stty_save();							/* Save the current stty values		*/
 	}
 #endif /* unix */
 
-	vexit();									/* Reset the terminal.			*/
+	vwang_shut();									/* Reset the terminal.			*/
 
 #ifdef unix
+	if (vsharedscreen())								/* If screen is shared			*/
+	{
+		/*
+		**	Force the stty into a SANE state.
+		**	If there has been no screen I/O then vwang_shut() will have done nothing.
+		*/
+		vwang_stty_sane();
+	}
+
 	signal(SIGCLD,  SIG_DFL);							/* Use Default DEATH-OF-CHILD signal	*/
 
 	switch (pid = fork())
 	{
 		case 0:									/* is child process 			*/
 		{
+			char *sh_parm[17];
+			int idx;
+
 			setprogdefs(l_vol,l_lib);					/* Set up PROGLIB and PROGVOL		*/
 			clearprogsymb();						/* Clear PROGLIB/VOL from symbol	*/
 
 			memset(sh_parm,(char)0,sizeof(sh_parm));
 			idx=0;
-			sh_parm[idx++]=shell_var();					/* std argv[0] is progname 		*/
+			sh_parm[idx++]=wispshellexe();					/* std argv[0] is progname 		*/
 			sh_parm[idx++]=filespec;					/* name of shell script for /bin/sh 	*/
 			for (i=0; i<parmcnt; i++)					/* start at elem 1 in parm_list, 	*/
 				sh_parm[idx++]=parmtext[i];				/* elem 2 in sh_parm 			*/
@@ -335,22 +375,22 @@ va_dcl
 
 	signal(SIGCLD,  SIG_IGN);							/* Ignore DEATH-OF-CHILD signal		*/
 
-	if (!ishelpactive() && isdebug())						/* If COBOL debugger running		*/
+	if (vsharedscreen())								/* If screen is shared			*/
 	{
-		vraw_stty_restore();							/* Restore the saved stty values	*/
+		vwang_stty_restore();							/* Restore the saved stty values	*/
 	}
 #endif /* unix */
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 	newlevel();
-	l_retcode = system(command);
+	l_retcode = wsystem(command);
 	l_compcode = 0;
 	oldlevel();
-#endif /* MSDOS */
+#endif /* MSDOS || WIN32 */
 
-	vsynch();								/* Resync the video				*/
+	vwang_synch();								/* Resync the video				*/
 	load_defaults();							/* Reload defaults in case they changed		*/
-	rts_first = TRUE ;							/* Set so return from link re-inits screen	*/
+	vwang_set_reinitialize(TRUE);						/* Set so return from link re-inits screen	*/
 
 	ppunlink(linklevel());								/* Putparm UNLINK			*/
 
@@ -364,12 +404,11 @@ va_dcl
 	}
 	return;
 
-#endif /* !VMS */
+#endif /* unix || MSDOS || WIN32 */
 }
 
 #ifdef unix
-static fixerr(code)
-int code;
+static fixerr(int code)
 {
 	switch (code)
 	{
@@ -387,3 +426,37 @@ int code;
 	}
 }
 #endif
+
+/*
+**	History:
+**	$Log: linkproc.c,v $
+**	Revision 1.15  1997-11-21 16:36:19-05  gsl
+**	Fixed the vsharedscreen() logic to work from help and add the sync logic.
+**
+**	Revision 1.14  1997-09-22 12:32:59-04  gsl
+**	Change isdebug() to the more general vsharedscreen()
+**
+**	Revision 1.13  1996-11-13 15:49:14-05  gsl
+**	Changes for NT
+**
+**	Revision 1.12  1996-10-08 17:21:47-07  gsl
+**	replace shell_var() with wispshellexe()
+**
+**	Revision 1.11  1996-07-15 10:06:22-07  gsl
+**	Fixed for NT
+**
+**	Revision 1.10  1995-04-25 02:53:02-07  gsl
+**	drcs state V3_3_15
+**
+ * Revision 1.9  1995/04/17  11:46:21  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.8  1995/03/10  14:07:51  gsl
+ * fix headers
+ *
+ * Revision 1.7  1995/03/09  15:49:26  gsl
+ * replace video calls with vwang calls
+ *
+**
+**
+*/

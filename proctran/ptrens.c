@@ -1,10 +1,6 @@
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 #define EXT extern
-			/************************************************************************/
-			/*	PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 /* PG_RS.C	*/
 
@@ -14,8 +10,12 @@
 #include "pgglobal.h"
 #include "pgstruct.h"
 
-p_rs_kw(tndx,num_var,num_val,filler_num,current_row,num_cmds)
-int tndx, *num_var, *num_val, *filler_num, *current_row, *num_cmds;
+void p_rs_kw(int  tndx,
+	     int* num_var,
+	     int* num_val,
+	     int* filler_num,
+	     int* current_row,
+	     int* num_cmds)
 {
 	char *cstr;
 	int full_br;
@@ -234,3 +234,15 @@ int tndx, *num_var, *num_val, *filler_num, *current_row, *num_cmds;
 		}
 	}
 }
+/*
+**	History:
+**	$Log: ptrens.c,v $
+**	Revision 1.5  1997-04-21 11:18:57-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.4  1996-09-12 19:17:44-04  gsl
+**	Fix prototypes
+**
+**
+**
+*/

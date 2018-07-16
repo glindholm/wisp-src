@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -10,7 +12,6 @@
 /*
 	MSDOSFNS.C	-	MSDOS Functions from unix system calls.
 
-	These modules are from SCS WISP MSDOS:
 
 		MSDOSFNS.C - Functions written for MSDOS (many are from unix).
 		WISPDMF.C  - Like WISPAIX.C, includes shutexitcobol().
@@ -22,15 +23,15 @@
 		PARSECOM() [IDSI] parses COBOL startup command line.
 */
 
-#ifdef MSDOS
+#if defined(MSDOS)
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <memory.h>
 #include <sys/types.h>
 
 #include "idsistd.h"
+#include "wanguid.h"
 
 #define DEFAULT_UID	"USER"
 #define DEFAULT_TTY	"CON:"
@@ -39,20 +40,16 @@
 
 static	char	dosuid[40] = "";
 
-set_cuserid(newid,len)
-char	*newid;
-int	len;
+void set_cuserid(char* newid, int len)
 {
 	memcpy(dosuid,newid,len);
 	dosuid[len] = (char)0;
 
 	reset_wanguid3();
 	reset_longuid();
-	return(0);
 }
 
-char *cuserid(cuid)
-char *cuid;
+char *cuserid(char* cuid)
 {
 	char	*env_uid;
 
@@ -79,16 +76,14 @@ char *cuid;
 	}
 }
 
-
-int getuid()		/* This is a stub for MSDOS. It always returns a User Id == 1. */
+int getuid(void)	/* This is a stub for MSDOS. It always returns a User Id == 1. */
 {
 	return(1);
 }
 
 
 
-char	*ttyname(fd)
-int	fd;
+const char *ttyname(int fd)
 {
 	static	int	first_time = 1;
 	char	*env_tty;
@@ -106,8 +101,7 @@ int	fd;
 	return( dostty );
 }
 
-PARSECOM( com_line, com_link )
-char *com_line, *com_link;
+void PARSECOM( char* com_line, char* com_link )
 {
 	char	*cptr;
 	int	i;
@@ -136,6 +130,16 @@ char *com_line, *com_link;
 }
 
 
-#else	/* #ifdef MSDOS */
-static int dummy_msdosfns;
-#endif
+#endif	/* MSDOS  */
+/*
+**	History:
+**	$Log: msdosfns.c,v $
+**	Revision 1.9  1996-08-26 20:05:52-04  gsl
+**	Moved all the NT stuff to winnt.c
+**
+**	Revision 1.8  1996-08-19 15:32:33-07  gsl
+**	drcs update
+**
+**
+**
+*/

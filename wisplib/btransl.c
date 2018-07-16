@@ -1,5 +1,13 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*	Copyright (c) 1994 by International Digital Scientific, Inc.	*/
+			/* 	All rights reserved.						*/
+			/************************************************************************/
 
 #include "idsistd.h"
+#include "werrlog.h"
+
 #ifdef VMS
 #include <stdio.h>
 #include <descrip.h>
@@ -7,9 +15,7 @@
 #include <ssdef.h>
 #include <libdef.h>
 
-int *btransl(in_string,len_flds,eb_as)
-	char *in_string, *eb_as;
-	short *len_flds;
+int *btransl(char *in_string,short *len_flds,char *eb_as)
 {	
 	struct dsc$descriptor_s in_ebs, out_ebs;				/* Descirptor to sting for system service.	*/
  
@@ -82,13 +88,24 @@ int *btransl(in_string,len_flds,eb_as)
 	free(out_line);								/* Free the used areas.				*/
 	free(out_fld);								/* Free the used areas.				*/
 	free(hld_fld);								/* Free the used areas.				*/
+
+	return(NULL);								/* Why is this here?				*/
 }	
 											
-#endif
-#ifdef unix
-btransl()
+#else
+int *btransl(char *in_string,short *len_flds,char *eb_as)
 {
-	vre("btransl: Not Supported");
+	werr_message_box("btransl: Not Supported");
+	return(NULL);								/* Why is this here?				*/
 }
 #endif
 											
+/*
+**	History:
+**	$Log: btransl.c,v $
+**	Revision 1.12  1996-08-19 18:32:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,71 @@
+
+       01  CUR-TOKEN           PIC X(24) VALUE SPACES.
+       01  CUR-TOKEN-SIZE      BINARY    VALUE ZERO.
+       01  TOKEN-TYPE          PIC X(08) VALUE SPACES.
+           88  TITLE-TYPE                VALUE "TITLE".
+           88  INSTRUCT-TYPE             VALUE "INSTRUCT".
+       01  RESERVE-MESSAGE     PIC X(78) VALUE
+           "[----------------------------RESERVED FOR MESSAGES----------
+      -    "-----------------]".
+       01  RESERVE-MESS-ROW    BINARY    VALUE 24.
+
+      **************************************************************
+      *                                                            *
+      *                    Title Window Tokens.                    *
+      **************************************************************
+
+       01  TITLE-TOKEN-TABLE.
+           03  TITLE-TOKEN  PIC X(24)  OCCURS 18 TIMES
+               INDEXED BY TITLE-INDEX.
+
+       01  TITLE-TOK-DEFINES.
+           05  DATE-TOK         PIC X(24)  VALUE "[-DATE-]".
+           05  DAY-L-TOK        PIC X(24)  VALUE "[-DAY-L-]".
+           05  DAY-R-TOK        PIC X(24)  VALUE "[-DAY-R-]".
+           05  DAY-LNE-TOK      PIC X(24)  VALUE "[---DAY-L---]".
+           05  DAY-RNE-TOK      PIC X(24)  VALUE "[---DAY-R---]".
+           05  TIME-TOK         PIC X(24)  VALUE "[-TIME-]".
+           05  SYSTEM-TOK       PIC X(24)  VALUE "[----SYSTEM----]".
+           05  SYSTEM-L-TOK     PIC X(24)  VALUE "[---SYSTEM-L---]".
+           05  SYSTEM-R-TOK     PIC X(24)  VALUE "[---SYSTEM-R---]".
+           05  MENU-TOK         PIC X(24)  VALUE "[MENU]".
+           05  MENU-P-TOK       PIC X(24)  VALUE "[-MENU-]".
+           05  TITLE-TOK        PIC X(24)  VALUE "[-TITLE-]".
+           05  TITLE-L-TOK      PIC X(24)  VALUE "[-TITLE-L-]".
+           05  TITLE-R-TOK      PIC X(24)  VALUE "[-TITLE-R-]".
+           05  TASK-TOK         PIC X(24)  VALUE "[-TASK-]".
+           05  ID-TOK           PIC X(24)  VALUE "[@]".
+           05  WS-TOK           PIC X(24)  VALUE "[#]".
+           05  NAME-ID-TOK      PIC X(24)  VALUE
+               "[-----NAME-OF-USER-----]".
+
+      **************************************************************
+      *                                                            *
+      *                      FAC Characters                        *
+      **************************************************************
+
+       01  FAC-TABLE.
+           03  FAC-CHAR   PIC X(01)  OCCURS 6 TIMES
+               INDEXED BY FAC-INDEX.
+
+       01  FAC-CHAR-DEFINES.
+           05  UP-ARROW          PIC X(01) VALUE "^".
+           05  UNDER-LINE        PIC X(01) VALUE "_".
+           05  PLUS-SIGN         PIC X(01) VALUE "+".
+           05  EXCLAMATION       PIC X(01) VALUE "!".
+           05  DOLLAR-SIGN       PIC X(01) VALUE "$".
+           05  PERCENT-SIGN      PIC X(01) VALUE "%".
+
+      **************************************************************
+      *                                                            *
+      *                 Instruction Window Tokens.                 *
+      **************************************************************
+
+       01  INSTRUCT-TOKEN-TABLE.
+           03  INSTRUCT-TOKEN  PIC X(20)  OCCURS 3 TIMES
+               INDEXED BY INSTRUCT-INDEX.
+
+       01  INSTRUCT-TOK-DEFINES.
+           05  FILE-TOK         PIC X(20)  VALUE "[-FILE-]".
+           05  RLIB-TOK         PIC X(20)  VALUE "[-RLIB-]".
+           05  RVOL-TOK         PIC X(20)  VALUE "[-RVOL-]".

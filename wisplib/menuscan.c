@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
@@ -6,20 +8,34 @@
 			/************************************************************************/
 
 #include <stdio.h>
-#ifdef unix
+#ifndef VMS
 #include <sys/types.h>
 #endif
 #include <time.h>
+#include <string.h>
+
 #include "idsistd.h"
 #include "menu.h"
 #include "wperson.h"
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
+#include "wisplib.h"
+#include "vwang.h"
+
+#include "video.h"
+#include "vlocal.h"
+#include "vdata.h"
+
+static int up_one_item(struct menu *themenu);
+static int down_one_item(struct menu *themenu);
+static int left_one_item(struct menu *themenu);
+static int right_one_item(struct menu *themenu);
+static int home_item(struct menu *themenu);
+static int find_item(int thekey, struct menu *themenu);
+static int draw_item(int row, int col,int mode,char* pref,char* item);
+static int vcurrtime(int irow, int icol);
 
 /* Construct a Menu stored in the structure "themenu" on the screen and let the user select an item, return the item to caller	*/
 
-int menu_scan(themenu) struct menu *themenu;
+int menu_scan(struct menu *themenu)
 {
 	int i,tx,ty;
 	char username[34];
@@ -83,10 +99,9 @@ get_input:
 
 		if (key == meta_exit_key)							/* Did they hit the exit ?	*/
 		{
-			vdefer(RESTORE);
-			vstate(DEFAULT);							/* Set terminal to normal.	*/
+			vdefer_restore();
+			vstate(VSTATE_DEFAULT);							/* Set terminal to normal.	*/
 			return(-1);								/* Return (maybe exit)?		*/
-			break;
 		}
 
 		else if (key == home_key) home_item(themenu);					/* Home?			*/
@@ -102,7 +117,6 @@ get_input:
 		else if ((key == enter_key) || (key == return_key))				/* Enter?			*/
 		{
 			return(themenu->curritem);
-			break;
 		}
 
 		else if (key == help_key) ws_help(OFF);						/* Help?			*/
@@ -125,7 +139,7 @@ get_input:
 }
 
 
-up_one_item(themenu) struct menu *themenu;
+static int up_one_item(struct menu *themenu)
 {
 	int i;
 	i = themenu->curritem;									/* un highlite the current item	*/
@@ -146,8 +160,7 @@ up_one_item(themenu) struct menu *themenu;
 	}
 }
 
-down_one_item(themenu)
-struct menu *themenu;
+static int down_one_item(struct menu *themenu)
 {
 	int i;
 	i = themenu->curritem;								/* Unhilite the current item		*/
@@ -169,8 +182,7 @@ struct menu *themenu;
 }
 
 
-left_one_item(themenu)
-struct menu *themenu;
+static int left_one_item(struct menu *themenu)
 {
 	int i;
 	i = themenu->curritem;
@@ -199,8 +211,7 @@ struct menu *themenu;
 	} 											/* end of for */
 }
 
-right_one_item(themenu)
-struct menu *themenu;
+static int right_one_item(struct menu *themenu)
 {
 	int i;
 	i = themenu->curritem;
@@ -239,8 +250,7 @@ struct menu *themenu;
 }
 
 
-home_item(themenu)
-struct menu *themenu;
+static int home_item(struct menu *themenu)
 {
 	int i;
 	i = themenu->curritem;
@@ -264,7 +274,7 @@ struct menu *themenu;
 
 
 
-find_item(thekey,themenu) int thekey; struct menu *themenu;
+static int find_item(int thekey, struct menu *themenu)
 {
 	int i;
 	char keyval;
@@ -300,9 +310,7 @@ find_item(thekey,themenu) int thekey; struct menu *themenu;
 	} 											/* end of for 			*/
 }
 
-draw_item(row,col,mode,pref,item)
-int row,col,mode;
-char *pref,*item;									/* Draw the item on the screen		*/
+static int draw_item(int row, int col,int mode,char* pref,char* item)
 {
 	vmove(row,col);
 	vmode(mode);
@@ -322,10 +330,7 @@ char *pref,*item;									/* Draw the item on the screen		*/
 }
 
 
-vcurrtime(irow,icol)
-
-int irow,icol;
-
+static int vcurrtime(int irow, int icol)
 {
 	struct tm *time_structure;
 	time_t time_val;
@@ -348,10 +353,32 @@ int irow,icol;
 	}
 	else i = 0;
 
-	sprintf(timestring,"%s, %s %d, 19%d    %d:%02d %s",weekday[time_structure->tm_wday],month[time_structure->tm_mon],
-			time_structure->tm_mday,time_structure->tm_year,time_structure->tm_hour,time_structure->tm_min,hour[i]);
+	sprintf(timestring,"%s, %s %d, %d    %d:%02d %s",
+		weekday[time_structure->tm_wday],
+		month[time_structure->tm_mon],
+		time_structure->tm_mday,
+		time_structure->tm_year+1900,
+		time_structure->tm_hour,
+		time_structure->tm_min,
+		hour[i]);
+
 	vmove(irow,icol);
 	vprint("%s",timestring);
 
 	return(0);
 }
+/*
+**	History:
+**	$Log: menuscan.c,v $
+**	Revision 1.13  1997-10-03 13:36:07-04  gsl
+**	YEAR2000 fix
+**
+**	Revision 1.12  1997-07-09 12:41:12-04  gsl
+**	Change to use new interface
+**
+**	Revision 1.11  1996-08-19 18:32:30-04  gsl
+**	drcs update
+**
+**
+**
+*/

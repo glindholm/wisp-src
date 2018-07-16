@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,8 +15,6 @@
 
 #include "idsistd.h"
 
-#ifdef unix
-
 #include <errno.h>
 
 #define WNOTMTD 	4
@@ -28,26 +28,40 @@
 #define WNOMEM 		60
 
 
-int fixerr(code)
-int code;
+int fixerr(int code)
 {
 	switch (code)
 	{
-		case EPERM: case EACCES:	
+/*
+**	Watcom does not support EBUSY, ENOTDIR, EPERM, ETXTBSY
+**	EROFS and EFAULT error return code
+*/
+#ifndef WATCOM
+		case EPERM: 
+		case EACCES:	
 				return WPERM;
+		case EBUSY:	return WVOLBUSY;
+#endif
 		case ENOENT: 	return WFNOTFOUND;
 		case EIO:	return WIOERR;
 		case ENXIO:	return WNOTMTD;
 		case ENOEXEC:	return WINVPROG;
 		case EAGAIN:	return WLEXCEED;
 		case ENOMEM:	return WNOMEM;
-		case EBUSY:	return WVOLBUSY;
 		case ENOTDIR:	return WDNOTFOUND;
 		default:	return code;
 	}
 }
 
-#endif
 
 
 
+/*
+**	History:
+**	$Log: fixerr.c,v $
+**	Revision 1.10  1996-08-19 18:32:21-04  gsl
+**	drcs update
+**
+**
+**
+*/

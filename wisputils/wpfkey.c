@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*		WISP - Wang Interchange Source Pre-processor		*/
@@ -11,10 +13,10 @@
 
 /*  This utility will return the string value of the PFkey pressed.								*/
 
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vcap.h>
-#include <v/vdata.h>
+#include <video.h>
+#include <vlocal.h>
+#include <vcap.h>
+#include <vdata.h>
 
 main()
 {
@@ -42,3 +44,15 @@ main()
 	if (x == fn16_key) printf("16");
 	vexit();
 }
+/*
+**	History:
+**	$Log: wpfkey.c,v $
+**	Revision 1.8  1996-07-26 13:20:09-04  gsl
+**	fix video includes
+**
+**	Revision 1.7  1996-07-23 11:13:10-07  gsl
+**	drcs update
+**
+**
+**
+*/

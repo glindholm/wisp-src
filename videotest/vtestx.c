@@ -8,28 +8,28 @@
 /*									*/
 /************************************************************************/
 
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vcap.h>
-#include <v/vdata.h>
+#include <video.h>
+#include <vlocal.h>
+#include <vcap.h>
+#include <vdata.h>
+#include <vmodules.h>
 
 testx()
 {
 	char vgetcto();									/* Internal get character function.	*/
 	char vcheck();									/* Internal check for char function.	*/
 	char c, da_string[48];								/* String for primary DA.		*/
-	char da1, da2;									/* Working character storage.		*/
-	register int i;									/* Working register.			*/
+	int i;										/* Working register.			*/
 	int count;									/* Working counter.			*/
 
 	while ((c = vcheck()) != 0);							/* Flush all type ahead.		*/
 	verase(FULL_SCREEN);
 	vmove(0,0);
-	vdefer(RESTORE);								/* Cannot defer now.			*/
+	vdefer_restore();								/* Cannot defer now.			*/
 	count = 0;
 
 again:	vcontrol(chterm_esc);								/* What type of terminal are you?	*/
-	vcontrol(DUMP_OUTPUT);
+	vcontrol_flush();
 
 	for (i = 0; (i < 48) && ((da_string[i] = vgetcto(1)) != 'c') && (da_string[i] != 0); i++);
 

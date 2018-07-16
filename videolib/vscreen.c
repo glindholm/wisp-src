@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -7,28 +9,48 @@
 
 /*						Include standard header files.							*/
 
-#include "video.h"									/* Include video definitions.		*/
-#include "vlocal.h"									/* Include all the local definitions.	*/ 
-#include "vdata.h"									/* Include all keyboard control definitions.	*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "video.h"								/* Include video definitions.		*/
+#include "vlocal.h"								/* Include all the local definitions.	*/ 
+#include "vdata.h"								/* Include all keyboard control definitions.	*/
 #include "vcap.h"
+#include "vmodules.h"
+#include "vscreen.h"
+#include "vraw.h"
+
+static int vscr_do(char *string);
+static int vscr_valid(int state);
 
 /*						Local definitions.								*/
 
-#define HAVE_WIDE	(vscr_atr & WIDE)						/* Screen is currently in wide mode.	*/
-#define HAVE_LIGHT	(vscr_atr & LIGHT)						/* Screen is currently in light mode.	*/
-#define WANT_WIDE	(state & WIDE)							/* Want wide mode.			*/
-#define WANT_NARROW	(state & NARROW)						/* Want narrow mode.			*/
-#define WANT_LIGHT	(state & LIGHT)							/* Want light mode.			*/
-#define WANT_DARK	(state & DARK)							/* Want dark mode.			*/
+#define HAVE_WIDE	(vscr_atr & VSCREEN_WIDE)					/* Screen is currently in wide mode.	*/
+#define HAVE_LIGHT	(vscr_atr & VSCREEN_LIGHT)					/* Screen is currently in light mode.	*/
+#define WANT_WIDE	(state & VSCREEN_WIDE)						/* Want wide mode.			*/
+#define WANT_NARROW	(state & VSCREEN_NARROW)					/* Want narrow mode.			*/
+#define WANT_LIGHT	(state & VSCREEN_LIGHT)						/* Want light mode.			*/
+#define WANT_DARK	(state & VSCREEN_DARK)						/* Want dark mode.			*/
 
 /*						Subroutine entry point.								*/
 
-vscreen(state) int state;								/* Set screen to a given state.		*/
+int vscreen(int state)									/* Set screen to a given state.		*/
 {
 	char string[MAX_ESC*2];								/* Output control string.		*/
-	register int j, ret, changed_color, changed_width, atr;				/* Working registers.			*/
+	register int ret, changed_color, changed_width, atr;				/* Working registers.			*/
 
-	if (state == 0) state = DARK | NARROW;						/* Allow null argument case.		*/
+	if (state == VSCREEN_NOOP)
+	{
+		/*
+		**	Clear the "first" flags.
+		*/
+		width_first = FALSE;
+		color_first = FALSE;
+		return OPTIMIZED;
+	}
+
+	if (state == VSCREEN_DEFAULT) state = VSCREEN_DARK | VSCREEN_NARROW;		/* Allow null argument case.		*/
 
 	if (!vscr_valid(state))								/* Is the argument valid?		*/
 	{
@@ -44,91 +66,102 @@ vscreen(state) int state;								/* Set screen to a given state.		*/
 
 	if (WANT_WIDE) 									/* Find out if we were correct.		*/
 	{
-		if (width_first || !HAVE_WIDE || (optimization == OFF))			/* Force if first width change or	*/
+		if (width_first || !HAVE_WIDE || (voptlevel() == VOP_OFF))		/* Force if first width change or	*/
 		{									/* want to change to WIDE.		*/
 			changed_width = TRUE;
-			atr = (atr | WIDE) & ~NARROW;					/* Flag screen now as wide.		*/
+			atr = (atr | VSCREEN_WIDE) & ~VSCREEN_NARROW;			/* Flag screen now as wide.		*/
 			strcat(string,swide_esc);					/* Put wide into control string.	*/
-			synch_required = TRUE;						/* Make sure screen is synchronized.	*/
 		}
 		width_first = FALSE;							/* No longer the first width change.	*/
 	}
 
 	if (WANT_NARROW)								/* Want narrow screen.			*/
 	{
-		if (width_first || HAVE_WIDE || (optimization == OFF))			/* Force if first width change or	*/
+		if (width_first || HAVE_WIDE || (voptlevel() == VOP_OFF))		/* Force if first width change or	*/
 		{									/* want to change to NARROW.		*/
 			changed_width = TRUE;						/* Flag if it is a change.		*/
-			atr = (atr | NARROW) & ~WIDE;					/* Flag now as narrow.			*/
+			atr = (atr | VSCREEN_NARROW) & ~VSCREEN_WIDE;			/* Flag now as narrow.			*/
 			strcat(string,snarw_esc);					/* Create non-wide control string.	*/
-			synch_required = TRUE;						/* Make sure screen is synchronized.	*/
 		}
 		width_first = FALSE;							/* No longer the first width change.	*/
 	}
 
 	if (WANT_LIGHT)									/* Want light screen.			*/
 	{
-		if (color_first || !HAVE_LIGHT || (optimization == OFF))		/* First color change? or		*/
+		if (color_first || !HAVE_LIGHT || (voptlevel() == VOP_OFF))		/* First color change? or		*/
 		{									/* want to change to LIGHT.		*/
 			changed_color = TRUE;						/* Flag the change.			*/
-			atr = (atr | LIGHT) & ~DARK;					/* Flag now as light.			*/
+			atr = (atr | VSCREEN_LIGHT) & ~VSCREEN_DARK;			/* Flag now as light.			*/
 			strcat(string,slight_esc);					/* Create light control string.		*/
-			synch_required = TRUE;						/* Make sure screen is synchronized.	*/
 		}
 		color_first = FALSE;							/* No longer the first color change.	*/
 	}
 
 	if (WANT_DARK)									/* Want dark screen.			*/
 	{
-		if (color_first || HAVE_LIGHT || (optimization == OFF))			/* First color change? or		*/
+		if (color_first || HAVE_LIGHT || (voptlevel() == VOP_OFF))		/* First color change? or		*/
 		{									/* want to change to DARK.		*/
 			changed_color = TRUE;						/* Flag change.				*/
-			atr = (atr | DARK) & ~LIGHT;					/* Flag now as dark.			*/
+			atr = (atr | VSCREEN_DARK) & ~VSCREEN_LIGHT;			/* Flag now as dark.			*/
 			strcat(string,sdark_esc);					/* Create non-light control string.	*/
-			synch_required = TRUE;						/* Make sure screen is synchronized.	*/
 		}
 		color_first = FALSE;							/* No longer the first color change.	*/
 	}
 
-	vscr_wid = (atr & WIDE ? 132 : 80);						/* Select screen width flag.		*/
-	vbuffering(LOGICAL);								/* Group the output together.		*/
-	verase(FULL_SCREEN);								/* Erase the screen before the change.	*/
+	vscr_wid = (atr & VSCREEN_WIDE ? 132 : 80);					/* Select screen width flag.		*/
 
-	if ((!vscr_op) || (optimization <= DATA_ONLY))					/* Should we optimize?			*/
-        {
-		ret = vscr_do(string);							/* Do data string or other change.      */
-#ifdef OLD_unix
-		/*
-		**	This was causing pointless delays in many cases.
-		**	The sleep(1) logic has been moved into vdisplay() where actual screen width changes occur.
-		*/
-		if (changed_width)
-			sleep(1);							/* Wait for some terminals to do it.    */
-#endif
+#ifdef DIRECTVID
+	if (vrawdirectio())
+	{
+		vscr_atr = atr;								/* Rember the current attributes.	*/
+		return(SUCCESS);
 	}
-	else
-		if (!changed_color && !changed_width)
-			ret = OPTIMIZED;						/* Did the width or color change?	*/
-      		else									/* Yes so process according to op.	*/
-		{
-			if (optimization <= DEFER_MODE)
-				ret = vscr_do(string);					/* Looks like we can optimize.		*/
-			else
-				vdefer(SAVE);						/* Must defer...			*/
+#endif
+
+	if (strlen(string) > 0)
+	{
+		synch_required = TRUE;							/* Make sure screen is synchronized.	*/
+		vbuffering(VBUFF_START);						/* Group the output together.		*/
+		verase(FULL_SCREEN);							/* Erase the screen before the change.	*/
+
+		if ((!vscr_op) || (voptlevel() <= VOP_DATA_ONLY))			/* Should we optimize?			*/
+	        {
+			ret = vscr_do(string);						/* Do data string or other change.      */
 		}
+		else
+		{
+			if (!changed_color && !changed_width)
+			{
+				ret = OPTIMIZED;					/* Did the width or color change?	*/
+			}
+	      		else								/* Yes so process according to op.	*/
+			{
+				if (voptlevel() <= VOP_DEFER_MODE)
+					ret = vscr_do(string);				/* Looks like we can optimize.		*/
+				else
+					vdefer_save();					/* Must defer...			*/
+			}
+		}
+		vbuffering(VBUFF_END);							/* Now dump buffers as appropriate.	*/
+	}
 
 	vscr_atr = atr;									/* Rember the current attributes.	*/
-	vbuffering(AUTOMATIC);								/* Now dump buffers as appropriate.	*/
+
 	return(ret);									/* And we're all done.			*/
+}
+
+int vscreen_check(int state)
+{
+	return (vscr_atr & state) ? 1 : 0;
 }
 
 
 /*					Subroutine to do actual output								*/
 
-int vscr_do(string) char string[];
+static int vscr_do(char *string)
 {
 
-	vdefer(RESTORE);								/* Yes, restore what we were doing.	*/
+	vdefer_restore();								/* Yes, restore what we were doing.	*/
 	vcontrol(string);								/* Output the data.			*/
 	vscr_op = ON;									/* Now the one shot is on.		*/
 	return(SUCCESS);								/* Return successful condition.		*/
@@ -137,9 +170,28 @@ int vscr_do(string) char string[];
 
 /*					Subroutine to check valididy of state							*/
 
-int vscr_valid(state) int state;
+static int vscr_valid(int state)
 {
 	if ((WANT_DARK && WANT_LIGHT) || (WANT_NARROW && WANT_WIDE)) return(FAILURE);	/* Does the caller want the impossible?	*/
-	if (!(state & (DARK|LIGHT|NARROW|WIDE))) return(FAILURE);			/* Does he/she want anything?		*/
+	if (!(state & (VSCREEN_DARK|VSCREEN_LIGHT|VSCREEN_NARROW|VSCREEN_WIDE))) 
+		return(FAILURE);							/* Does he/she want anything?		*/
 	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: vscreen.c,v $
+**	Revision 1.12  1997-07-09 12:14:49-04  gsl
+**	Add support for direct IO
+**	Change to use new video.h interfaces
+**
+**	Revision 1.11  1997-01-11 15:44:23-05  gsl
+**	changed vscreen() so that it only resets and erases the screen
+**	if the specified option is valid for this terminal (esc string > 0)
+**	Added vscreen_check() to test the current state of the screen attribute.
+**
+**	Revision 1.10  1996-10-11 15:16:19-07  gsl
+**	drcs update
+**
+**
+**
+*/

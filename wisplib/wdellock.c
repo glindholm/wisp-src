@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -21,7 +23,7 @@
 #include "idsistd.h"
 #include "wcommon.h"
 
-wdellock(mode,file)
+void wdellock(mode,file)
 int4	*mode;
 char	*file;
 {
@@ -33,18 +35,32 @@ char	*file;
 		return;
 	}
 
+	if (file[0] == ' ' || file[0] == (char)0)
+	{
+		return;
+	}
+
 	memcpy(buff,file,80);
-	ptr = strchr(buff,' ');
-	if ( !ptr ) return;								/* If messed up then return.		*/
+	if (ptr = strchr(buff,' '))
+	{
+		*ptr = (char)0;								/* Null terminate a blank padded string	*/
+	}
 
-	*ptr++	= ';';									/* Append a ";1" version number		*/
-	*ptr++	= '1';
-	*ptr	= '\0';
+	strcat(buff,";1");								/* Append a ";1" version number		*/
 
-	delete(buff);									/* Delete the lock file.		*/
+	unlink(buff);									/* Delete the lock file.		*/
 }
 
 #else
 static int dummy_wdellock;
 #endif
 	
+/*
+**	History:
+**	$Log: wdellock.c,v $
+**	Revision 1.10  1996-08-19 18:33:09-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -20,13 +22,16 @@
 **
 */
 
-#include "wmalloc.h"
+#include <stdlib.h>
+#include <string.h>
 
-void *wmalloc(size)
-int size;
+#include "wmalloc.h"
+#include "output.h"
+#include "proto.h"
+
+void *wmalloc(int size)
 {
 	char	*ptr;
-	char	*malloc();
 
 	ptr = malloc(size);
 
@@ -38,14 +43,12 @@ int size;
 	return( (void *)ptr );
 }
 
-void wfree(ptr)
-char *ptr;
+void wfree(void *ptr)
 {
 	free(ptr);
 }
 
-void *wdupstr(str)
-char *str;
+void *wdupstr(char *str)
 {
 	char	*new;
 
@@ -60,3 +63,12 @@ char *str;
 	}
 	return( (void *)new );
 }
+/*
+**	History:
+**	$Log: wmalloc.c,v $
+**	Revision 1.6  1996-08-30 21:56:12-04  gsl
+**	drcs update
+**
+**
+**
+*/

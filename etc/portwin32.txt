@@ -1,0 +1,150 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		PORTING WISP TO WIN32 (NT/95)
+	
+	Document:	portwin32.txt
+	Last Updated:	$Date:$
+	Products:	WISP/NT EDE KCSI
+	Versions:	4.2.00 and later
+	
+	Summary:	Instructions on re-porting WISP to NT
+
+
+	====================================================================
+	
+
+	PORTING WISP TO WIN32 (NT/95)
+	=============================
+	
+	This document describes the process of re-porting WISP to Windows
+	NT and Windows 95.
+	
+
+	Transfering a WISP Source Kit
+	-----------------------------
+
+	Use bldsrckit.sh to create a source kit.
+
+	Create a CPIO version of the source kit.
+
+		wisp4200.src.cpio.Z 	 
+
+	FTP the kit to NT/95
+
+	Use the MKS toolkit CPIO with the "-q" option to unload the kit.
+	The "-q" option fixes the line termination characters differences
+	between UNIX and Windows.
+
+		C:\work> mkdir wisp
+		C:\work> cd wisp
+		C:\work\wisp> uncompress wisp4200.src.cpio.Z
+		C:\work\wisp> cpio -icdqv < wisp4200.src.cpio
+
+	This will create a standard wisp source kit directory layout.
+
+
+	Set Up The Project
+	------------------
+	Get the Microsoft Developer Studio project files and copy them to
+	the wisp\src directory.
+
+		wisp\src\wisp.mdp	- project file
+		wisp\src\wisp.mak	- makefile
+
+	Create a couple of needed directories.
+
+		mkdir wisp\src\cridacu
+		mkdir wisp\src\createacu
+
+	Edit wisp\src\acu\wwruncbl.mak and set the ACUDIR value to point
+	to the location of Acucobol directory.
+
+		ACUDIR=C:\ACUCBL321
+
+	Copy the Acucobol CRID object files from a UNIX kit.  Currently
+	the instructions for building these on NT are not coded but
+	because the objects are platform independant you can use the UNIX
+	versions. 
+
+		FTP in binary mode CONTROL, DATENTRY, INQUIRY, REPORT
+
+		wisp\src\kcsi\crid\CONTROL
+		wisp\src\kcsi\crid\DATENTRY
+		wisp\src\kcsi\crid\INQUIRY
+		wisp\src\kcsi\crid\REPORT
+
+
+	Build the Project
+	-----------------
+	Run the developer studio using the wisp project file
+	wisp\src\wisp.mdp . 
+
+	Check the Build->Settings to ensure the VERSION numbers are
+	correct for needed components.
+
+		*** THESE NUMBERS ARE ONLY EXAMPLES ***
+		*** GET AND USE THE REAL NUMBERS    ***
+
+		WPROC	   WPROC_VERSION=108
+		CRID	   CRID_VERSION=291
+		CREATE	   CREATE_VERSION=31
+
+	Select "WISP - Win32 Release" as the default project.
+
+	Start the build ...
+
+	There will be "Don't Know How To Build" errors with the following
+	components:
+
+		BIN\WCONFIG.EXE
+		BIN\WISPTRAN.EXE
+
+	Copy WCONFIG.EXE and WISPTRAN.EXE from there external projects.
+
+		wisp\src\bin\WCONFIG.EXE
+		wisp\src\bin\WISPTRAN.EXE
+
+	Restart the build ...
+
+	The project build should complete without further errors.  
+
+
+	The WISP Shipping Kits
+	----------------------
+	The build will have created a KIT directory with the shipping kits.
+
+		wisp\src\kit
+		wisp\src\kit\wisp	The WISP kit
+		wisp\src\kit\ede	The EDE kit
+		wisp\src\kit\cirdacu	The CRID/Acucobol kit
+		wisp\src\kit\createacu	The CREATE/Acucobol kit
+		wisp\src\kit\rts	Built Runtime systems
+		wisp\src\kit\v		Video header files
+
+
+	Building InstallShield Disks
+	----------------------------
+
+	Move the "wisp\src\kit" directory to "wisp\kit".  Copy the
+	InstallShield files to "wisp\kit".
+
+		wisp\kit\wisp4200.iwz
+		wisp\kit\ede4200.iwz
+		wisp\kit\crida291.iwz
+		wisp\kit\creata31.iwz
+
+	Double click on the ".iwz" file to start InstallShield.  Follow
+	the instructions to build diskettes.
+
+
+	QA TEST WISP
+	------------
+
+	Install WISP in C:\wisp following the Quick Setup instructions.
+
+	Follow QAWISP.LIS instructions.
+
+	
+	========================= END OF DOCUMENT ==========================

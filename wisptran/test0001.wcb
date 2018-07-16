@@ -1,0 +1,151 @@
+000100* Copyright (c) 1995 DevTech Migrations, All rights reserved.
+000200* $Id:$
+000300*
+000400* FILE:   TEST0001.WCB
+000500*
+000600* RCS:    $Source:$
+000700*
+000800* FUNCTION: Test the SET verb
+000900*
+001000
+001100/*****************************************************************
+001200*                                                                *
+001300*                       IDENTIFICATION DIVISION                  *
+001400*                                                                *
+001500******************************************************************
+001600*
+001700 IDENTIFICATION DIVISION.
+001800 PROGRAM-ID.
+001900     TEST0001.
+002000 AUTHOR.
+002100     QA.
+002200/*****************************************************************
+002300*                                                                *
+002400*                         ENVIRONMENT DIVISION                   *
+002500*                                                                *
+002600******************************************************************
+002700*
+002800 ENVIRONMENT DIVISION.
+002900 CONFIGURATION SECTION.
+003000 SOURCE-COMPUTER.
+003100     WANG-VS.
+003200 OBJECT-COMPUTER.
+003300     WANG-VS.
+003400 FIGURATIVE-CONSTANTS.
+003500     BLINK-BIT IS "10"
+003600     PROTECT-BIT IS "04"
+003700     DIM-BIT IS "08"
+003800     TAB-STOP IS "86"
+003900     BLINKING-DISPLAY IS "94"
+004000     NO-ECHO IS "98".
+004100
+004200/*****************************************************************
+004300*                                                                *
+004400*                         INPUT-OUTPUT SECTION                   *
+004500*                                                                *
+004600******************************************************************
+004700*
+004800 INPUT-OUTPUT SECTION.
+004900 FILE-CONTROL.
+005000
+005100     SELECT CRT
+005200         ASSIGN TO "CRT",      "DISPLAY",
+005300         ORGANIZATION    IS SEQUENTIAL
+005400         ACCESS MODE     IS RANDOM
+005500         RELATIVE KEY    IS CRT-RELKEY
+005600         PFKEY           IS CRT-PFKEY
+005700         CURSOR POSITION IS CRT-CURSOR-POS
+005800         FILE STATUS     IS CRT-FILE-STATUS.
+005900
+006000
+006100/*****************************************************************
+006200*                                                                *
+006300*                      DATA DIVISION - FILE SECTION              *
+006400*                                                                *
+006500******************************************************************
+006600*
+006700 DATA DIVISION.
+006800 FILE SECTION.
+006900
+007000 FD  CRT
+007100     LABEL RECORDS ARE OMITTED.
+007200 01  CRT-RECORD                         PIC X(1924).
+007300
+007400
+007500/*****************************************************************
+007600*                                                                *
+007700*                         WORKING STORAGE                        *
+007800*                                                                *
+007900******************************************************************
+008000*
+008100 WORKING-STORAGE SECTION.
+008200
+008300*
+008400*   CRT FILE VARIABLES
+008500*
+008600 77  CRT-RELKEY  PIC 9(02) VALUE 1.
+008700 77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+008800 01  CRT-CURSOR-POS.
+008900     03  CRT-CURSOR-POS-COL  BINARY.
+009000     03  CRT-CURSOR-POS-ROW  BINARY.
+009100 01  CRT-FILE-STATUS.
+009200     03  CRT-FILE-STATUS-ERR        PIC X(01).
+009300     03  CRT-FILE-STATUS-AID        PIC X(01).
+009400
+009500******************************************************************
+009600
+009700 01  ENTRY-SCREEN-X USAGE DISPLAY-WS.
+009800     05 TOTAL-AMOUNT-ITEM PIC ZZZ,ZZZ,ZZZ.ZZ-
+009900        ROW 15 COLUMN 50 VALUE 999.
+010000
+010100 01  COMPARE-FAC                    PIC X.
+010200
+010300
+010400 77  Call-Pricing-DONE-SW       PIC X(01) VALUE "N".              110191gb
+010500     88  Call-Pricing-Start               VALUE "N".              110191gb
+010600     88  Call-Pricing-DONE                VALUE "Y".              110191gb
+010700
+010800 77  Write-Previous-OCC-Query-Sw           PIC X VALUE "N".       083093sk
+010900     88  Write-Previous-OCC-Query-CN       VALUE "Y".             083093sk
+011000     88  Previous-OCC-Query-Written-CN     VALUE "N".             083093sk
+011100                                                                  012293sk
+011200 77  Ws-1-800-Collect-Call-Status          PIC X.                 072693sk
+011300     88  1-800-Collect-CN                  VALUE "Y".             072693sk
+011400     88  Not-1-800-Collect-CN              VALUE "N".             072693sk
+011500
+011600/*****************************************************************
+011700*                                                                *
+011800*                         PROCEDURE DIVISION                     *
+011900*                                                                *
+012000******************************************************************
+012100*
+012200 PROCEDURE DIVISION.
+012300
+012400 0000-INITIALIZATION.
+012500
+012600 P60-SET-FAC-OF.
+012700
+012800     SET BLINK-BIT IN FAC OF TOTAL-AMOUNT-ITEM OFF.
+012900
+013000 P61-SET-FIGCON.
+013100
+013200     SET BLINK-BIT OF COMPARE-FAC ON.
+013300
+013400
+013500             SET Call-Pricing-DONE TO TRUE.                       012392gb
+013600
+013700         SET Previous-OCC-Query-Written-CN OF                     090393sk
+013800             Write-Previous-OCC-Query-Sw TO TRUE.                 090393sk
+013900
+014000          SET 1-800-Collect-CN OF                                 072693sk
+014100              Ws-1-800-Collect-Call-Status TO TRUE.               072693sk
+014200
+014300******************************************************************
+014400* ALL DONE.
+014500******************************************************************
+014600
+014700 EXIT-PROGRAM.
+014800     EXIT PROGRAM.
+014900
+015000 STOP-RUN.
+015100     STOP RUN.

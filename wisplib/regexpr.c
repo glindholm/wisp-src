@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 
 regexpr.c
@@ -25,15 +27,19 @@ Free Software Foundation.
 Emacs-specific code and syntax table code is almost directly borrowed
 from GNU regexp.
 
-$Header: /u/src/lib/tools/RCS/regexpr.c,v 1.4 92/03/29 16:52:04 ylo Exp $
+$Header: /disk1/devtech/RCS/wisp/lib/regexpr.c,v 1.9 1997-07-18 14:50:12-04 gsl V4_2_00 $
 
 */
 
 #include <stdio.h>
-#ifdef OSF1_ALPHA
+#ifndef NDEBUG
+#ifndef DEBUG
 #define NDEBUG
 #endif
+#endif
 #include <assert.h>
+#include <string.h>
+
 #include "idsistd.h"
 #include "regexpr.h"
 
@@ -1736,3 +1742,15 @@ int main()
 }
 
 #endif /* TEST_REGEXP */
+/*
+**	History:
+**	$Log: regexpr.c,v $
+**	Revision 1.9  1997-07-18 14:50:12-04  gsl
+**	Fix warning
+**
+**	Revision 1.8  1996-08-19 18:32:48-04  gsl
+**	drcs update
+**
+**
+**
+*/

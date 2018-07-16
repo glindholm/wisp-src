@@ -19,35 +19,65 @@
 #CDEBUG = -g
 CDEBUG = -O
 
-#LIB = libeded.a
-LIB = libede.a
+#THE_LIB = libeded.a
+THE_LIB = libede.a
+
+WC=../wispcommon
+VC=../videolib
 
 include $(WISP)/src/port/make.include
 
-.PRECIOUS:	$(LIB) 
+CFLAGS=$(CFLAGS0) -I $(WC) -I $(VC)
 
-all: $(STDLIB)/$(LIB)
+.PRECIOUS:	$(THE_LIB) 
 
-$(STDLIB)/$(LIB): $(LIB)
-	cp $(LIB) $@
+all: $(THE_LIB)
+
+clean:
+	rm -f $(THE_LIB)
+
+install: $(STDLIB)/$(THE_LIB)
+
+$(STDLIB)/$(THE_LIB): $(THE_LIB)
+	cp $(THE_LIB) $@
 
 
-$(LIB):	$(LIB)(edehelp.o) \
-	$(LIB)(edehli.o) \
-	$(LIB)(edenetc.o) \
-	$(LIB)(edeoldoc.o) \
-	$(LIB)(genvec.o) 
-	$(RANLIB) $(LIB)
-	@echo lib $(LIB) is now up-to-date
+$(THE_LIB):	$(THE_LIB)(edehelp.o) \
+	$(THE_LIB)(edehli.o) \
+	$(THE_LIB)(edenetc.o) \
+	$(THE_LIB)(edeoldoc.o) \
+	$(THE_LIB)(genvec.o) 
+	$(RANLIB) $(THE_LIB)
+	@echo lib $(THE_LIB) is now up-to-date
 
-$(LIB)(edehelp.o): edehelp.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(edehelp.o): $(V)/vmenu.h vwang.h wglobals.h wfiles.h
-$(LIB)(edehli.o): edehli.c $(V)/video.h $(V)/vmenu.h $(V)/vlocal.h
-$(LIB)(edehli.o): $(V)/vdata.h wglobals.h wfiles.h
-$(LIB)(edenetc.o): edenetc.c $(V)/video.h $(V)/vlocal.h $(V)/vdata.h
-$(LIB)(edenetc.o): $(V)/vmenu.h vwang.h wglobals.h wfiles.h
-$(LIB)(genvec.o): genvec.c
-$(LIB)(edeoldoc.o): edeoldoc.c
+$(THE_LIB)(edehelp.o): edehelp.c $(VC)/video.h
+$(THE_LIB)(edehelp.o): $(VC)/vlocal.h $(VC)/vdata.h
+$(THE_LIB)(edehelp.o): $(VC)/vintdef.h $(VC)/vmenu.h
+$(THE_LIB)(edehelp.o): $(VC)/vutil.h $(WC)/idsistd.h
+$(THE_LIB)(edehelp.o): $(WC)/intdef.h $(WC)/vwang.h
+$(THE_LIB)(edehelp.o): $(WC)/wglobals.h $(WC)/wfiles.h
+$(THE_LIB)(edehelp.o): $(WC)/wperson.h $(WC)/wisplib.h
+$(THE_LIB)(edehelp.o): $(WC)/setenvst.h
+$(THE_LIB)(edehli.o): edehli.c $(VC)/video.h
+$(THE_LIB)(edehli.o): $(VC)/vintdef.h $(VC)/vmenu.h
+$(THE_LIB)(edehli.o): $(VC)/vlocal.h $(VC)/vdata.h
+$(THE_LIB)(edehli.o): $(VC)/vutil.h $(VC)/vline.h
+$(THE_LIB)(edehli.o): $(VC)/verase.h $(VC)/vprint.h
+$(THE_LIB)(edehli.o): $(VC)/vscreen.h $(VC)/vmove.h
+$(THE_LIB)(edehli.o): $(VC)/vtrim.h $(WC)/idsistd.h
+$(THE_LIB)(edehli.o): $(WC)/intdef.h $(WC)/wglobals.h
+$(THE_LIB)(edehli.o): $(WC)/wfiles.h
+$(THE_LIB)(edenetc.o): edenetc.c $(VC)/video.h
+$(THE_LIB)(edenetc.o): $(VC)/vlocal.h $(VC)/vdata.h
+$(THE_LIB)(edenetc.o): $(VC)/vintdef.h $(VC)/vmenu.h
+$(THE_LIB)(edenetc.o): $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(edenetc.o): $(WC)/vwang.h $(WC)/wglobals.h
+$(THE_LIB)(edenetc.o): $(WC)/wfiles.h
+$(THE_LIB)(edeoldoc.o): edeoldoc.c
+$(THE_LIB)(genvec.o): genvec.c $(WC)/werrlog.h
+$(THE_LIB)(genvec.o): $(WC)/idsistd.h $(WC)/intdef.h
+$(THE_LIB)(genvec.o): $(WC)/wexit.h
+
 
 
 

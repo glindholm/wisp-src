@@ -4,12 +4,13 @@
 /*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
 /************************************************************************/
 
-#include <v/video.h>
+#include <video.h>
+#include <vmodules.h>
 
 testl()
 {
 	extern int vlin_op;
-	register int i, j;
+	int i;
 
 	vstate(0);
 	vscreen(0);
@@ -105,7 +106,7 @@ testl()
 	vmove(0,0);
 	vprint("Next test - Some fun.                                            \n");
 	vprint("Depress any key to do it."); vgetc();
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	for (i = 0; i < MAX_LINES_PER_SCREEN/2; i++)
 	{
 		vmove(i,(i*2));
@@ -117,15 +118,15 @@ testl()
 		vmove((22-i),(i*2));
 		vline(FAT_VERTICAL,((i*2)-22));
 	}
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	vlin_op = ON;
 
-	vset(CURSOR,OFF);
+	vset_cursor_off();
 	vmode(BOLD);
 	vmove(10,22); vprint("         All done.          ");
 	vmove(11,22); vprint(" Depress any key to exit... "); vgetc();
 	vmove(23,0);
 	vmode(0);
-	vset(CURSOR,ON);
+	vset_cursor_on();
 	return(SUCCESS);
 }

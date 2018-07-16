@@ -11,7 +11,7 @@
        AUTHOR.
            Greg Lindholm.
        DATE-WRITTEN.
-           12/08/89.
+           $Date:$.
       /*****************************************************************
       *                                                                *
       *                         ENVIRONMENT DIVISION                   *
@@ -169,7 +169,7 @@
            03  WORKVOL             PIC X(6) VALUE SPACES.
 
        01  EX-LINE6.
-           03  FILLER          PIC X(15) VALUE "   IPLLIB".
+           03  FILLER          PIC X(15) VALUE "          ".
            03  IPLLIB              PIC X(8) VALUE SPACES.
            03  FILLER          PIC X(15) VALUE "   IPLVOL".
            03  IPLVOL              PIC X(6) VALUE SPACES.
@@ -188,6 +188,15 @@
        01  KW-SV    PIC X(2) VALUE "SV".
        01  VALUE-V  PIC X(6) VALUE "VOLSPL".
 
+       01  SEP-LINE PIC X(80) VALUE ALL "*".
+       01  EX-IX       PIC X(32).
+       01  EX-JN       PIC X(8).
+       01  EX-SN       PIC X(16).
+       COPY WISPPLAT.
+
+       01  DATE-FUNC PIC XX VALUE "HL".
+       01  DATE-STRING PIC X(45).
+       
       /*****************************************************************
       *                                                                *
       *                         PROCEDURE DIVISION                     *
@@ -197,6 +206,18 @@
        PROCEDURE DIVISION.
 
        DO-PRINT-FILE.
+
+001800     Call "WISPPLAT" USING WISPPLAT-NAME, WISPPLAT-CODE.
+
+	   CALL "DATE2" USING DATE-FUNC, DATE-STRING.
+	   
+           MOVE "IX" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC EX-IX.
+           MOVE "JN" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC EX-JN.
+           MOVE "S$" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC EX-SN.
+
 
            MOVE "IL" TO EX-FUNC.
            CALL "EXTRACT" USING EX-FUNC INLIB.
@@ -250,6 +271,36 @@
 
            OPEN OUTPUT PRINT-FILE.
 
+       	   WRITE PRINT-RECORD FROM SEP-LINE.
+	   MOVE "QABCKGRD: WISP PROGRAM TO TEST BACKGROUND PROCESSING"
+	       TO PRINT-RECORD.
+	   WRITE PRINT-RECORD.    
+       	   WRITE PRINT-RECORD FROM SEP-LINE.
+
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING "USERNAME = ", EX-IX 
+       	       DELIMITED BY SIZE INTO PRINT-RECORD.
+	   WRITE PRINT-RECORD.
+
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING "SYSTEM NAME = ", EX-SN
+       	       DELIMITED BY SIZE INTO PRINT-RECORD.
+	   WRITE PRINT-RECORD.	  
+
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING "PLATFORM NAME = ", WISPPLAT-NAME 
+       	       DELIMITED BY SIZE INTO PRINT-RECORD.
+	   WRITE PRINT-RECORD.	  
+
+	   MOVE SPACES TO PRINT-RECORD.
+	   STRING "JOB NAME = ", EX-JN
+       	       DELIMITED BY SIZE INTO PRINT-RECORD.
+	   WRITE PRINT-RECORD.	  
+
+	   WRITE PRINT-RECORD FROM DATE-STRING.
+	   
+       	   WRITE PRINT-RECORD FROM SEP-LINE.
+
            WRITE PRINT-RECORD FROM EX-LINE0.
            WRITE PRINT-RECORD FROM EX-LINE1.
            WRITE PRINT-RECORD FROM EX-LINE2.
@@ -258,6 +309,8 @@
            WRITE PRINT-RECORD FROM EX-LINE5.
            WRITE PRINT-RECORD FROM EX-LINE6.
            WRITE PRINT-RECORD FROM EX-LINE7.
+
+       	   WRITE PRINT-RECORD FROM SEP-LINE.
 
            CLOSE PRINT-FILE.
 

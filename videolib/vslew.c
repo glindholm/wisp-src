@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -12,7 +14,7 @@
 /*						Include standard header files.							*/
 
 #include "video.h"									/* Include video definitions.		*/
-
+#include "vmodules.h"
 
 /*						Subroutine entry point.								*/
 
@@ -36,3 +38,12 @@ int vslew(nrows, ncols) int nrows, ncols;						/* Slew by nrows and ncols.		*/
 
 	return(ret);									/* Return to the caller.		*/
 }
+/*
+**	History:
+**	$Log: vslew.c,v $
+**	Revision 1.9  1996-10-11 18:16:20-04  gsl
+**	drcs update
+**
+**
+**
+*/

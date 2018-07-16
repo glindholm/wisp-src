@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 				/************************************************************************/
 				/*									*/
 				/* Simple get string routine.						*/
@@ -6,55 +8,61 @@
 
 #include <stdio.h>
 #include "video.h"
+#include "vmodules.h"
 
-vgets0(string,count) char *string; int count;
+int vgets0(char* string, int count)
 {
-	register int i;										/* Working variables.		*/
-	register char c;
-	int term;										/* Terminator.			*/
+	int i;											/* Working variables.		*/
+	int the_meta_char;
 
 	i = 0;											/* Assume no chars yet.		*/
-	term = 0;										/* No terminator depressed yet.	*/
 
-	if (count)										/* Does he want any chars?	*/
+	while (count>0 && i<count)
 	{
-		while ((i < count) && !term)							/* Repeat until term or full.	*/
+		the_meta_char = vgetm();
+		
+		if (the_meta_char >= ' ' && the_meta_char <= '~')
 		{
-			c = vgetc();								/* Get the meta character.	*/
-#ifdef	MSDOS
-			if (c == '\200')							/* Is this an escape char?	*/
-#else	/* VMS or unix */
-			if (c == '\033')							/* Is this an escape char?	*/
-#endif	/* VMS or unix */
+			vputc((char)the_meta_char);						/* Echo the character.		*/
+			string[i++] = the_meta_char;						/* Record the string.		*/
+		}
+		else if ((the_meta_char == return_key)  || 
+			 (the_meta_char == enter_key)   ||
+			 (the_meta_char == newline_key)   ) 
+		{
+			break;
+		}
+		else if (the_meta_char == delete_key) 
+		{
+			if (i)								/* Anything to rub out?		*/
 			{
-				vpushc(c);							/* Yes then push it back.	*/
-				term = vgetm();							/* It's a terminator so done.	*/
-			}
-			else if (c == 21)							/* A control U?			*/
-			{
-				while (i)							/* Continue until all gone.	*/
-				{
-					vprint("\010 \010");					/* Rub out the last char.	*/
-					i = i - 1;						/* Set counter back one char.	*/
-				}
-			}
-			else if (c < 040) term = c;						/* Is it a control char?	*/
-			else if (c >= 0177)							/* Is it a delete?		*/
-			{
-				if (i)								/* Anything to rub out?		*/
-				{
-					vprint("\010 \010");					/* Rub out the last char.	*/
-					i = i - 1;						/* Set counter back one char.	*/
-				}
-			}
-			else
-			{
-				vputc(c);							/* Echo the character.		*/
-				string[i++] = c;						/* Record the string.		*/
+				vprint("\010 \010");					/* Rub out the last char.	*/
+				i = i - 1;						/* Set counter back one char.	*/
 			}
 		}
+		else if (the_meta_char < ' ')
+		{
+			break;
+		}
+		else
+		{
+			vbell();
+		}
+		
 	}
 
-	string[i] = CHAR_NULL;									/* Terminate the string.	*/
-	return(term);										/* Return the terminator.	*/
+	string[i] = '\0';									/* Terminate the string.	*/
+	return(the_meta_char);									/* Return the terminator.	*/
 }
+/*
+**	History:
+**	$Log: vgets0.c,v $
+**	Revision 1.10  1997-07-08 16:59:48-04  gsl
+**	rewrite
+**
+**	Revision 1.9  1996-10-11 18:16:05-04  gsl
+**	drcs update
+**
+**
+**
+*/

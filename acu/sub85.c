@@ -2,17 +2,16 @@
 	sub85.c		This is the WISP compatable version of sub85.c.
 			All of the WISP added code is enclosed in
 			"#ifdef WISP" statements.
-
-	ACUCOBOL VERSION 2.0
-	The "system" call routine has been changed by Acucobol to
-	"Asystem" it was "system". To make this sub85.c compatable
-	for both 2.0 and 1.5 we have surrounded the "Asystem" call
-	in "#ifdef ACUCOBOL2". To use the 2.0 version you need to
-	add the line "#define ACUCOBOL2".
 */
 #define WISP
 
 /* sub85.c - RM/COBOL-85 compatible 'C' routine interface */
+
+/* Copyright (c) 1995 by Acucobol, Inc.  All rights reserved. */
+/* Users of the ACUCOBOL-85 runtime may freely modify and distribute */
+/* this file as they see fit in order to support an ACUCOBOL-85 based */
+/* application.  */
+
 
 /* The following LIBTABLE should be modified to contain the names and	*/
 /* function addresses of 'C' routines you wish to link into the runtime	*/
@@ -30,6 +29,8 @@
 /* CANCELLED since its last CALL.  Otherwise this parameter is zero.	*/
 
 #ifdef WISP
+static char wisp_copyright[]="Copyright (c) 1989-1997 NeoMedia Technologies, All rights reserved.";
+static char wisp_rcsid[]="$Id:$";
 /*
 	To reduce the size of the RTS you can remove any of the following
 	"#define" statements and the corresponding files will not be
@@ -37,37 +38,46 @@
 
 		ACP	 The Wang ACP routines.
 		NETCAP	 The Netron Cap routines.
-		WISPTEST Wisp test routines.  (by default they are not included)
 		EDE	 The EDE routines.
 		CRID	 Control Report Inquiry Datentry (by default they are not included) 
+		W4W	 WISP FOR WINDOWS (COSTAR)
 */
 
-#ifndef MSDOS
+#include <string.h>
+
+#ifdef MSDOS
+typedef short 		 int2; 
+typedef long  		 int4;
+typedef unsigned short  uint2;  
+typedef unsigned long   uint4;
+#else
+typedef short 		 int2; 
+typedef int  		 int4;
+typedef unsigned short  uint2;  
+typedef unsigned int   	uint4;
+#endif
+
+#ifdef unix
 #define ACP
+#endif
+
+#define W4W
 #define NETCAP
-#endif /* MSDOS */
-
 #define EDE
-
 
 char	WISPFILEXT[39];			/* Define the file extension variable.	*/
 char	WISPRETURNCODE[3];		/* Define the return code field.	*/
 
-
-#ifdef OLD
-*** I don't think this is needed any more. GSL 11/12/92 ***
-#ifndef MOTOROLA
-#ifndef DGUX
-#ifdef m88k
-int __stdinb;
-int __stderrb;
-int __stdoutb;
-#endif /* m88k */
-#endif /* DGUX */
-#endif /* MOTOROLA */
-#endif /* OLD */
-
 extern int va_set();
+extern void reversebytes();
+extern int bytenormal();
+extern void werrlog();
+extern void wexit();
+extern void set_isdebug_true();
+extern void set_isdebug_false();
+extern char *upper_string();
+extern void setdbfile();
+extern int nativescreens();
 
 int 	wfrontend();
 int	wfrontend2();
@@ -81,18 +91,19 @@ int	wfrontend2();
 
 #endif /* WISP */
 
+int	call_system();
+
+struct	PROCTABLE WNEAR LIBTABLE[] = {
+	{ "SYSTEM", 	call_system },
+#ifdef WISP
 /*
 	The first entry must be UPPERCASE.
 */
-int	call_system();
-struct	PROCTABLE LIBTABLE[] = {
-	{ "SYSTEM", 	call_system },
-#ifdef WISP
-#ifdef unix
+#if defined(unix) || defined(WIN32)
 	{ "ACUGARGS", 	wfrontend },
 	{ "ACUNARGS", 	wfrontend },
 	{ "ACUPARGS", 	wfrontend },
-#endif /* unix */
+#endif /* unix || WIN32 */
 	{ "BELL", 	wfrontend },
 	{ "BITPACK",	wfrontend },
 	{ "BITUNPK",	wfrontend },
@@ -103,6 +114,7 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "CEXIT",	wfrontend },
 	{ "COBLINK",	wfrontend },
 	{ "DATE",	wfrontend },
+	{ "DATE2",	wfrontend },
 	{ "DAY",	wfrontend },
 	{ "EXTRACT",	wfrontend },
 	{ "FILECOPY",	wfrontend },
@@ -121,7 +133,6 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "LINK",	wfrontend2 },
 	{ "LINKPROC",	wfrontend },
 	{ "LOGOFF",	wfrontend },
-	{ "MENU",	wfrontend },
 	{ "MESSAGE",	wfrontend },
 	{ "MWCONV",	wfrontend },
 	{ "NOHELP",	wfrontend },
@@ -152,15 +163,20 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "SUBMIT",	wfrontend },
 	{ "UPDATFDR",	wfrontend },
 	{ "UPPER",	wfrontend },
+	{ "USEHARDLINK",wfrontend },
+	{ "USESOFTLINK",wfrontend },
 	{ "VEXIT",      wfrontend },
 	{ "VWANG",	wfrontend },
+	{ "W2ROWCOL",	wfrontend },
 	{ "WACCEPT",	wfrontend },
+	{ "WANSI2WANG",	wfrontend },
 	{ "WCHAIN",	wfrontend },
 	{ "WDISPLAY",	wfrontend },
-	{ "WDINIT",	wfrontend },
-	{ "WDFINISH",	wfrontend },	
+/*	{ "WDINIT",	wfrontend },	*/
+/*	{ "WDFINISH",	wfrontend },	*/
 	{ "WEXITH",     wfrontend },
 	{ "WFILECHK",   wfrontend },
+	{ "WFILECHK2",  wfrontend },
 	{ "WFNAME",     wfrontend },
 	{ "WFOPEN",	wfrontend },
 	{ "WFOPEN2",	wfrontend },
@@ -169,6 +185,8 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "WFWAIT",	wfrontend },
 	{ "WFSWAIT",	wfrontend },
 	{ "WISPEXIT",	wfrontend },
+	{ "WISPHELP",	wfrontend },
+	{ "WISPPLAT",	wfrontend },
 	{ "WISPSHUT",	wfrontend },
 	{ "WISPSORT",	wfrontend },
 	{ "WISPSYNC",	wfrontend },
@@ -179,10 +197,14 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "WS80",	wfrontend },
 	{ "WSCREEN",	wfrontend },
 	{ "WSETSTAT",	wfrontend },
+	{ "WSTOP",	wfrontend },
 	{ "WSXIO",	wfrontend },
-	{ "W2ROWCOL",	wfrontend },
+	{ "WTITLE",	wfrontend },
 	{ "WVASET",     wfrontend },
+	{ "WWANG2ANSI",	wfrontend },
 	{ "XX2BYTE",	wfrontend },
+	{ "X4DBFILE",	wfrontend2 },
+	{ "ISDBFILE",	wfrontend2 },
 /*
 ** The following are NETRON CAP specific routines
 */
@@ -190,15 +212,6 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "WSCLOSE",	wfrontend },
 	{ "WSFNM",	wfrontend },
 	{ "WSFNS",	wfrontend },
-#endif
-/*
-** The following are TEST routines
-*/
-#ifdef WISPTEST
-	{ "MESSUP",	wfrontend },
-	{ "QASCROLL",	wfrontend },
-	{ "QATSTLST",	wfrontend },
-	{ "QAGP255",	wfrontend },
 #endif
 /*
 ** The following are ACP routines 
@@ -259,6 +272,20 @@ struct	PROCTABLE LIBTABLE[] = {
 #endif /* EDE */
 
 /*
+** The following are W4W routines
+*/
+#ifdef W4W
+	{ "W4WAPI",	wfrontend },
+#endif /* W4W */
+
+/*
+** The OLD WISP menuing system (obsolete)
+*/
+#ifdef ORIGMENU
+	{ "MENU",	wfrontend },
+#endif /* ORIGMENU */
+
+/*
 ** This includes the CRID utility routines
 */
 #ifdef CRID
@@ -273,119 +300,121 @@ struct	PROCTABLE LIBTABLE[] = {
 	};
 
 #ifdef WISP
- extern SYSTEM();
-#ifdef unix
- extern ACUGARGS();
- extern ACUNARGS();
- extern ACUPARGS();
-#endif /* unix */
- extern BELL();
- extern BITPACK();
- extern BITUNPK();
- extern COBLINK();
- extern CANCEL();
- extern CEXIT();
- extern DATE();
- extern DAY();
- extern EXTRACT();
- extern FILECOPY();
- extern FIND();
- extern FXZONE();
- extern GETPARM();
- extern getparmbuild();
- extern PUTPARM();
- extern HEXPACK();
- extern HEXUNPK();
- extern LINK2();
- extern LINKPROC();
- extern LOGOFF();
- extern MESSAGE();
- extern NOHELP();
- extern ONHELP();
- extern PRINT();
- extern RETCODE();
- extern READFDR();
- extern READVTOC();
- extern SCRATCH();
- extern SCREEN();
- extern SEARCH();
- extern SET();
- extern SET8BIT();
- extern SETFILE();
- extern SETSUBMIT();
- extern SETTRIGPROG();
- extern SORT();
- extern SORTCALL();
- extern SORTINFO();
- extern SORTLINK();
- extern STRING();
- extern SUBMIT();
- extern UPDATFDR();
- extern UPPER();
- extern WACCEPT();
- extern WCHAIN();
- extern WDISPLAY();
- extern WISPEXIT();
- extern WISPSHUT();
- extern WISPSYNC();
- extern WISPSORT();
- extern WSXIO();
- extern menu();
- extern wrename();
- extern w2rowcol();
- extern wscreen();
- extern mwconv();
- extern initwisp();
- extern initwisp2();
- extern bit_on();
- extern bit_off();
- extern lbit_on();
- extern lbit_off();
- extern bit_test();
- extern wfname();
- extern wfopen();
- extern wfopen2();
- extern wfopen3();
- extern wfclose();
- extern wdinit();
- extern wdfinish();
- extern wfwait();
- extern wfswait();
- extern wmemcpy();
- extern wvaset();
- extern setwfilext();
- extern getwfilext();
- extern setretcode();
- extern wexith();
- extern vexit();
- extern wfilechk();
- extern vwang();
- extern greclen();
- extern setrunname();
- extern setwispfilext();
- extern setprogid();
- extern wpause();
- extern wsetstat();
- extern xx2byte();
- extern ws80();
- extern ws132();
+extern SYSTEM();
+#if defined(unix) || defined(WIN32)
+extern ACUGARGS();
+extern ACUNARGS();
+extern ACUPARGS();
+#endif /* unix || WIN32 */
+extern BELL();
+extern BITPACK();
+extern BITUNPK();
+extern COBLINK();
+extern CANCEL();
+extern CEXIT();
+extern WISPDATE();
+extern DATE2();
+extern DAY();
+extern EXTRACT();
+extern FILECOPY();
+extern FIND();
+extern FXZONE();
+extern GETPARM();
+extern getparmbuild();
+extern PUTPARM();
+extern HEXPACK();
+extern HEXUNPK();
+extern LINK2();
+extern LINKPROC();
+extern LOGOFF();
+extern MESSAGE();
+extern NOHELP();
+extern ONHELP();
+extern PRINT();
+extern RETCODE();
+extern READFDR();
+extern READVTOC();
+extern SCRATCH();
+extern SCREEN();
+extern SEARCH();
+extern SET();
+extern SET8BIT();
+extern SETFILE();
+extern SETSUBMIT();
+extern SETTRIGPROG();
+extern SORT();
+extern SORTCALL();
+extern SORTINFO();
+extern SORTLINK();
+extern STRING();
+extern SUBMIT();
+extern UPDATFDR();
+extern UPPER();
+extern USEHARDLINK();
+extern USESOFTLINK();
+extern WACCEPT();
+extern WCHAIN();
+extern WDISPLAY();
+extern WISPEXIT();
+extern WISPHELP();
+extern WISPPLAT();
+extern WISPSHUT();
+extern WISPSYNC();
+extern WISPSORT();
+extern WSTOP();
+extern WSXIO();
+extern WTITLE();
+extern wrename();
+extern w2rowcol();
+extern wscreen();
+extern mwconv();
+extern initwisp();
+extern initwisp2();
+extern bit_on();
+extern bit_off();
+extern lbit_on();
+extern lbit_off();
+extern bit_test();
+extern wfname();
+extern wfopen();
+extern wfopen2();
+extern wfopen3();
+extern wfclose();
+/* extern wdinit();	*/
+/* extern wdfinish();	*/
+extern wfwait();
+extern wfswait();
+extern wmemcpy();
+extern wvaset();
+extern setwfilext();
+extern getwfilext();
+extern setretcode();
+extern wexith();
+extern vexit();
+extern wfilechk();
+extern wfilechk2();
+extern vwang();
+extern greclen();
+extern setrunname();
+extern setwispfilext();
+extern setprogid();
+extern wpause();
+extern wsetstat();
+extern xx2byte();
+extern x4dbfile();
+extern ISDBFILE();
+extern ws80();
+extern ws132();
+extern WANSI2WANG();
+extern WWANG2ANSI();
 
 /*
 ** The following are NETRON CAP specific routines
 */
 #ifdef NETCAP
- extern WSCLOSE();
- extern WSFNM();
- extern WSFNS();
-#endif
-/*
-** The following are WISPTEST routines
-*/
-#ifdef WISPTEST
- extern MESSUP();
- extern QASCROLL();
- extern QATSTLST();
- extern QAGP255();
+extern WSCLOSE();
+extern WSFNM();
+extern WSFNS();
 #endif
 
 /*
@@ -449,17 +478,27 @@ extern gpuzzle();
 extern GENVEC();
 #endif /* EDE */
 
+/*
+** The following are W4W routines
+*/
+#ifdef W4W
+extern W4WAPI();
+#endif /* W4W */
+
+#ifdef ORIGMENU
+extern menu();
+#endif /* ORIGMENU */
 
 /*
 	The first entry is UPPERCASE.
 	The second is case sensitive.
 */
 struct	PROCTABLE WISPTABLE[] = {
-#ifdef unix
+#if defined(unix) || defined(WIN32)
 	{ "ACUGARGS",	ACUGARGS },
 	{ "ACUNARGS",	ACUNARGS },
 	{ "ACUPARGS",	ACUPARGS },
-#endif /* unix */
+#endif /* unix || WIN32 */
 	{ "BELL",	BELL },
 	{ "BITPACK",	BITPACK },
 	{ "BITUNPK",	BITUNPK },
@@ -469,7 +508,8 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "CANCEL",	CANCEL },	
 	{ "CEXIT",	CEXIT },	
 	{ "COBLINK",	COBLINK },	
-	{ "DATE",	DATE },
+	{ "DATE",	WISPDATE },
+	{ "DATE2",	DATE2 },
 	{ "DAY",	DAY },
 	{ "EXTRACT",	EXTRACT },	
 	{ "FILECOPY",	FILECOPY },
@@ -482,7 +522,6 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "LINK",	LINK2 },	/* NOTE: Translate LINK ==> LINK2 */
 	{ "LINKPROC",	LINKPROC },
 	{ "LOGOFF",	LOGOFF },
-	{ "MENU", 	menu },
 	{ "MESSAGE",	MESSAGE },
 	{ "MWCONV",	mwconv },
 	{ "NOHELP",	NOHELP },
@@ -508,12 +547,16 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "SUBMIT",	SUBMIT },
 	{ "UPDATFDR",	UPDATFDR },
 	{ "WISPEXIT",	WISPEXIT },
+	{ "WISPHELP",	WISPHELP },
+	{ "WISPPLAT",	WISPPLAT },
 	{ "WISPSHUT",	WISPSHUT },
 	{ "WISPSORT",	WISPSORT },
 	{ "WISPSYNC",	WISPSYNC },
 	{ "WS132",	ws132 },
 	{ "WS80",	ws80 },
+	{ "WSTOP",	WSTOP },
 	{ "WSXIO",	WSXIO },
+	{ "WTITLE",	WTITLE },
 	{ "WRENAME",	wrename },
 	{ "INITWISP",	initwisp },
 	{ "INITWISP2",	initwisp2 },
@@ -521,16 +564,19 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "LBIT_OFF",	lbit_off },
 	{ "MWCONV",	mwconv },
 	{ "UPPER",	UPPER },
+	{ "USEHARDLINK",USEHARDLINK },
+	{ "USESOFTLINK",USESOFTLINK },
 	{ "WACCEPT",	WACCEPT },
 	{ "WFILECHK",   wfilechk },
+	{ "WFILECHK2",  wfilechk2 },
 	{ "WFOPEN",	wfopen },
 	{ "WFOPEN2",	wfopen2 },
 	{ "WFOPEN3",	wfopen3 },
 	{ "WFCLOSE",	wfclose },
 	{ "WCHAIN",	WCHAIN },
 	{ "WDISPLAY",	WDISPLAY },
-	{ "WDINIT",	wdinit },
-	{ "WDFINISH",	wdfinish },
+/*	{ "WDINIT",	wdinit },	*/
+/*	{ "WDFINISH",	wdfinish },	*/
 	{ "WFNAME",     wfname },
 	{ "WFWAIT",	wfwait },
 	{ "WVASET", 	wvaset },
@@ -548,9 +594,13 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "WFSWAIT",    wfswait },
 	{ "WMEMCPY",    wmemcpy },
 	{ "WPAUSE",     wpause },
+	{ "WANSI2WANG", WANSI2WANG },	
+	{ "WWANG2ANSI", WWANG2ANSI },	
 	{ "VEXIT",      vexit },
 	{ "VWANG",	vwang },
 	{ "XX2BYTE",	xx2byte },
+	{ "X4DBFILE",	x4dbfile },
+	{ "ISDBFILE",	ISDBFILE },
 /*
 ** The following are NETRON CAP specific routines
 */
@@ -558,15 +608,6 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "WSCLOSE",	WSCLOSE },
 	{ "WSFNM",	WSFNM },
 	{ "WSFNS",	WSFNS },
-#endif
-/*
-** The following are  WISPTEST routines
-*/
-#ifdef WISPTEST
-	{ "MESSUP",	MESSUP },
-	{ "QASCROLL",	QASCROLL },
-	{ "QATSTLST",	QATSTLST },
-	{ "QAGP255",	QAGP255 },
 #endif
 /*
 ** The following are ACP routines 
@@ -628,24 +669,23 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "GENVEC",	GENVEC },
 #endif /* EDE */
 /*
+** The following are W4W routines
+*/
+#ifdef W4W
+	{ "W4WAPI",	W4WAPI },
+#endif /* W4W */
+/*
+** The OLD wisp menu system (obsolete)
+*/
+#ifdef ORIGMENU
+	{ "MENU", 	menu },
+#endif /* ORIGMENU */
+
+/*
 ** Terminate with a NULL
 */
 	{ NULL,		NULL }
 };
-
-#define MAXARGS 128
-
-struct 
-{ 
-	char *arglist[MAXARGS]; 
-} argtable;
-
-#define MAXARGS2 64
-
-struct 
-{ 
-	char *arglist[MAXARGS2*2]; 
-} argtable2;
 
 #endif /* WISP */
 
@@ -665,8 +705,12 @@ typedef struct {
 	char	backgrnd;
 } COLORMAP;
 
-extern	COLORMAP	colormap[];
+extern	COLORMAP	colormap[19];
 extern	char		w_foregrnd, w_backgrnd;
+
+extern	int		Asystem();
+extern	void		A_moveleft();
+
 
 #define	EXIT_COLOR	4
 #define	MAXCMD		256
@@ -700,22 +744,21 @@ int		initial;
 		resetunit();
 	}
 
-#ifdef ACUCOBOL2
 	/* execute command and set return code to exit status */
 
 	return_code = Asystem( command );
-#else
-	/* execute command */
-
-	system( command );
-#endif
 
 	/* set terminal back to COBOL state and return */
 
+#ifdef	ACU_ALWAYS_INIT
+	w_foregrnd = w_backgrnd = 0;
+	setunit();
+#else
 	if ( num_args == 1 ) {
 		w_foregrnd = w_backgrnd = 0;
 		setunit();
 	}
+#endif
 	return Okay;
 
 }   /* call_system */
@@ -723,9 +766,10 @@ int		initial;
 
 
 /* wstoasc - this routine simply takes an Argument and copies to a 'C'	*/
-/* string, adding a NULL terminator.  It is provided for RM/COBOL 	*/
+/* string, adding a NULL terminator.  It is provided for RM/COBOL-85 	*/
 /* compatibility.  */
 
+void
 wstoasc( arg, dest )
 Argument	*arg;
 char		*dest;
@@ -733,7 +777,7 @@ char		*dest;
 	register char		*src;
 	register unsigned	count;
 
-	count = arg->a_length;
+	count = (unsigned) arg->a_length;
 	for( src = arg->a_address; 
 			count-- && *src >= ' ' && *src <= '~'; 
 			*dest++ = *src++ );
@@ -744,20 +788,19 @@ char		*dest;
 
 
 #ifdef WISP
-
 wfrontend( name, num_args, args, initial )
 char		*name;
 int		num_args;
 Argument	args[];
 int		initial;
 {
-	char **argp;
-	int i,l,j;
+#define MAXARGS 128
+	int i;
 	int (*fn)();
 	struct PROCTABLE *p;
 
-	for (p = WISPTABLE; strcmp(p->name,name); ++p);
-	if (!strcmp(p->name,name))
+	for (p = WISPTABLE; p->name && 0 != strcmp(p->name,name); ++p);
+	if (p->name && 0 == strcmp(p->name,name))
 	{
 		fn = p->routine;
 	}
@@ -777,6 +820,9 @@ int		initial;
 	if (num_args)
 	{
 		long	tempbin[MAXARGS];					/* Place to store binary values to reverse bytes*/
+		void 	*arglist[MAXARGS]; 
+
+		memset((char *)arglist, '\0', sizeof(arglist));
 
 		for (i=0; i < num_args; ++i)
 		{
@@ -784,49 +830,50 @@ int		initial;
 			{
 				memcpy(&tempbin[i], args[i].a_address, args[i].a_length);	/* Store bin in temp area	*/
 				reversebytes(&tempbin[i], args[i].a_length);			/* Reverse the bytes		*/
-				argtable.arglist[i] = (char *)&tempbin[i];			/* Put addr of temp in argtable	*/
+				arglist[i] = (void *)&tempbin[i];				/* Put addr of temp in arglist	*/
 			}
 			else
 			{
-				argtable.arglist[i] = args[i].a_address;
+				arglist[i] = (void *)args[i].a_address;
 			}
 		}
-#ifdef NOTUSED
-		(*fn)(argtable);	/* This doesn't work on all systems */
-#endif
+
+		/*
+		**	Call the function.
+		*/
 		(*fn)(
-		      argtable.arglist[0],      argtable.arglist[1],	argtable.arglist[2],      argtable.arglist[3],
-		      argtable.arglist[4],      argtable.arglist[5],    argtable.arglist[6],      argtable.arglist[7],
-		      argtable.arglist[8],      argtable.arglist[9],  	argtable.arglist[10],     argtable.arglist[11],
-		      argtable.arglist[12],     argtable.arglist[13],   argtable.arglist[14],     argtable.arglist[15],
-		      argtable.arglist[16],     argtable.arglist[17],   argtable.arglist[18],     argtable.arglist[19],
-		      argtable.arglist[20],     argtable.arglist[21],   argtable.arglist[22],     argtable.arglist[23],
-		      argtable.arglist[24],     argtable.arglist[25],	argtable.arglist[26],     argtable.arglist[27],
-		      argtable.arglist[28],     argtable.arglist[29],	argtable.arglist[30],     argtable.arglist[31],
-		      argtable.arglist[32],     argtable.arglist[33],	argtable.arglist[34],     argtable.arglist[35],
-		      argtable.arglist[36],     argtable.arglist[37],	argtable.arglist[38],     argtable.arglist[39],
-		      argtable.arglist[40],     argtable.arglist[41],	argtable.arglist[42],     argtable.arglist[43],
-		      argtable.arglist[44],     argtable.arglist[45],	argtable.arglist[46],     argtable.arglist[47],
-		      argtable.arglist[48],     argtable.arglist[49],	argtable.arglist[50],     argtable.arglist[51],
-		      argtable.arglist[52],     argtable.arglist[53],	argtable.arglist[54],     argtable.arglist[55],
-		      argtable.arglist[56],     argtable.arglist[57],	argtable.arglist[58],     argtable.arglist[59],
-		      argtable.arglist[60],     argtable.arglist[61],	argtable.arglist[62],     argtable.arglist[63],
-		      argtable.arglist[64],     argtable.arglist[65],	argtable.arglist[66],     argtable.arglist[67],
-		      argtable.arglist[68],     argtable.arglist[69],	argtable.arglist[70],     argtable.arglist[71],
-		      argtable.arglist[72],     argtable.arglist[73],	argtable.arglist[74],     argtable.arglist[75],
-		      argtable.arglist[76],     argtable.arglist[77],	argtable.arglist[78],     argtable.arglist[79],
-		      argtable.arglist[80],     argtable.arglist[81],	argtable.arglist[82],     argtable.arglist[83],
-		      argtable.arglist[84],     argtable.arglist[85],	argtable.arglist[86],     argtable.arglist[87],
-		      argtable.arglist[88],	argtable.arglist[89],	argtable.arglist[90],     argtable.arglist[91],
-		      argtable.arglist[92],     argtable.arglist[93],	argtable.arglist[94],     argtable.arglist[95],
-		      argtable.arglist[96],     argtable.arglist[97],	argtable.arglist[98],     argtable.arglist[99],
-		      argtable.arglist[100],    argtable.arglist[101],	argtable.arglist[102],    argtable.arglist[103],
-		      argtable.arglist[104],    argtable.arglist[105],	argtable.arglist[106],    argtable.arglist[107],
-		      argtable.arglist[108],    argtable.arglist[109],	argtable.arglist[110],    argtable.arglist[111],
-		      argtable.arglist[112],    argtable.arglist[113],	argtable.arglist[114],    argtable.arglist[115],
-		      argtable.arglist[116],    argtable.arglist[117],	argtable.arglist[118],    argtable.arglist[119],
-		      argtable.arglist[120],    argtable.arglist[121],	argtable.arglist[122],    argtable.arglist[123],
-		      argtable.arglist[124],    argtable.arglist[125],	argtable.arglist[126],    argtable.arglist[127]);
+		      arglist[0],      arglist[1],	arglist[2],      arglist[3],
+		      arglist[4],      arglist[5],    	arglist[6],      arglist[7],
+		      arglist[8],      arglist[9],  	arglist[10],     arglist[11],
+		      arglist[12],     arglist[13],   	arglist[14],     arglist[15],
+		      arglist[16],     arglist[17],   	arglist[18],     arglist[19],
+		      arglist[20],     arglist[21],   	arglist[22],     arglist[23],
+		      arglist[24],     arglist[25],	arglist[26],     arglist[27],
+		      arglist[28],     arglist[29],	arglist[30],     arglist[31],
+		      arglist[32],     arglist[33],	arglist[34],     arglist[35],
+		      arglist[36],     arglist[37],	arglist[38],     arglist[39],
+		      arglist[40],     arglist[41],	arglist[42],     arglist[43],
+		      arglist[44],     arglist[45],	arglist[46],     arglist[47],
+		      arglist[48],     arglist[49],	arglist[50],     arglist[51],
+		      arglist[52],     arglist[53],	arglist[54],     arglist[55],
+		      arglist[56],     arglist[57],	arglist[58],     arglist[59],
+		      arglist[60],     arglist[61],	arglist[62],     arglist[63],
+		      arglist[64],     arglist[65],	arglist[66],     arglist[67],
+		      arglist[68],     arglist[69],	arglist[70],     arglist[71],
+		      arglist[72],     arglist[73],	arglist[74],     arglist[75],
+		      arglist[76],     arglist[77],	arglist[78],     arglist[79],
+		      arglist[80],     arglist[81],	arglist[82],     arglist[83],
+		      arglist[84],     arglist[85],	arglist[86],     arglist[87],
+		      arglist[88],     arglist[89],	arglist[90],     arglist[91],
+		      arglist[92],     arglist[93],	arglist[94],     arglist[95],
+		      arglist[96],     arglist[97],	arglist[98],     arglist[99],
+		      arglist[100],    arglist[101],	arglist[102],    arglist[103],
+		      arglist[104],    arglist[105],	arglist[106],    arglist[107],
+		      arglist[108],    arglist[109],	arglist[110],    arglist[111],
+		      arglist[112],    arglist[113],	arglist[114],    arglist[115],
+		      arglist[116],    arglist[117],	arglist[118],    arglist[119],
+		      arglist[120],    arglist[121],	arglist[122],    arglist[123],
+		      arglist[124],    arglist[125],	arglist[126],    arglist[127]);
 
 		if ( !bytenormal() )
 		{
@@ -843,6 +890,9 @@ int		initial;
 	}
 	else 
 	{
+		/*
+		**	Call the function with no arguments
+		*/
 		(*fn)();
 	}	
 	return 0;
@@ -858,13 +908,13 @@ int		num_args;
 Argument	args[];
 int		initial;
 {
-	char **argp;
-	int i,l,j;
+#define MAXARGS2 64
+	int i,l;
 	int (*fn)();
 	struct PROCTABLE *p;
 
-	for (p = WISPTABLE; strcmp(p->name,name); ++p);
-	if (!strcmp(p->name,name))
+	for (p = WISPTABLE; p->name && 0 != strcmp(p->name,name); ++p);
+	if (p->name && 0 == strcmp(p->name,name))
 	{
 		fn = p->routine;
 	}
@@ -884,6 +934,9 @@ int		initial;
 	if (num_args)
 	{
 		long	tempbin[MAXARGS2];					/* Place to store binary values to reverse bytes*/
+		void 	*arglist[MAXARGS2*2]; 
+
+		memset((char *)arglist, '\0', sizeof(arglist));
 
 		for (i=0,l=0; i < num_args; ++i)
 		{
@@ -891,52 +944,52 @@ int		initial;
 			{
 				memcpy(&tempbin[i], args[i].a_address, args[i].a_length);	/* Store bin in temp area	*/
 				reversebytes(&tempbin[i], args[i].a_length);			/* Reverse the bytes		*/
-				argtable2.arglist[l++] = (char *)&tempbin[i];			/* Put addr of temp in argtable	*/
+				arglist[l++] = (void *)&tempbin[i];				/* Put addr of temp in arglist	*/
 			}
 			else
 			{
-				argtable2.arglist[l++] = args[i].a_address; 
+				arglist[l++] = (void *)args[i].a_address; 
 			}
 
-			argtable2.arglist[l++] = (char *) args[i].a_length;		/* Put the length on the stack		*/
+			arglist[l++] = (void *)args[i].a_length;				/* Put the length on the stack	*/
 		}
 
-#ifdef NOTUSED
-		(*fn)(argtable2);	/* This doesn't work on all systems */
-#endif
+		/*
+		**	Call the function.
+		*/
 		(*fn)(
-		      argtable2.arglist[0],	argtable2.arglist[1],	argtable2.arglist[2],      argtable2.arglist[3],
-		      argtable2.arglist[4],	argtable2.arglist[5],   argtable2.arglist[6],      argtable2.arglist[7],
-		      argtable2.arglist[8],	argtable2.arglist[9],   argtable2.arglist[10],     argtable2.arglist[11],
-		      argtable2.arglist[12],	argtable2.arglist[13],  argtable2.arglist[14],     argtable2.arglist[15],
-		      argtable2.arglist[16],	argtable2.arglist[17],  argtable2.arglist[18],     argtable2.arglist[19],
-		      argtable2.arglist[20],	argtable2.arglist[21],  argtable2.arglist[22],     argtable2.arglist[23],
-		      argtable2.arglist[24],	argtable2.arglist[25],	argtable2.arglist[26],     argtable2.arglist[27],
-		      argtable2.arglist[28],	argtable2.arglist[29],	argtable2.arglist[30],     argtable2.arglist[31],
-		      argtable2.arglist[32],	argtable2.arglist[33],	argtable2.arglist[34],     argtable2.arglist[35],
-		      argtable2.arglist[36],	argtable2.arglist[37],	argtable2.arglist[38],     argtable2.arglist[39],
-		      argtable2.arglist[40],	argtable2.arglist[41],	argtable2.arglist[42],     argtable2.arglist[43],
-		      argtable2.arglist[44],	argtable2.arglist[45],	argtable2.arglist[46],     argtable2.arglist[47],
-		      argtable2.arglist[48],	argtable2.arglist[49],	argtable2.arglist[50],     argtable2.arglist[51],
-		      argtable2.arglist[52],	argtable2.arglist[53],	argtable2.arglist[54],     argtable2.arglist[55],
-		      argtable2.arglist[56],	argtable2.arglist[57],	argtable2.arglist[58],     argtable2.arglist[59],
-		      argtable2.arglist[60],	argtable2.arglist[61],	argtable2.arglist[62],     argtable2.arglist[63],
-		      argtable2.arglist[64],	argtable2.arglist[65],	argtable2.arglist[66],     argtable2.arglist[67],
-		      argtable2.arglist[68],	argtable2.arglist[69],	argtable2.arglist[70],     argtable2.arglist[71],
-		      argtable2.arglist[72],	argtable2.arglist[73],	argtable2.arglist[74],     argtable2.arglist[75],
-		      argtable2.arglist[76],	argtable2.arglist[77],	argtable2.arglist[78],     argtable2.arglist[79],
-		      argtable2.arglist[80],	argtable2.arglist[81],	argtable2.arglist[82],     argtable2.arglist[83],
-		      argtable2.arglist[84],	argtable2.arglist[85],	argtable2.arglist[86],     argtable2.arglist[87],
-		      argtable2.arglist[88],	argtable2.arglist[89],	argtable2.arglist[90],     argtable2.arglist[91],
-		      argtable2.arglist[92],	argtable2.arglist[93],	argtable2.arglist[94],     argtable2.arglist[95],
-		      argtable2.arglist[96],	argtable2.arglist[97],	argtable2.arglist[98],     argtable2.arglist[99],
-		      argtable2.arglist[100],	argtable2.arglist[101],	argtable2.arglist[102],    argtable2.arglist[103],
-		      argtable2.arglist[104],	argtable2.arglist[105],	argtable2.arglist[106],    argtable2.arglist[107],
-		      argtable2.arglist[108],	argtable2.arglist[109],	argtable2.arglist[110],    argtable2.arglist[111],
-		      argtable2.arglist[112],	argtable2.arglist[113],	argtable2.arglist[114],    argtable2.arglist[115],
-		      argtable2.arglist[116],	argtable2.arglist[117],	argtable2.arglist[118],    argtable2.arglist[119],
-		      argtable2.arglist[120],	argtable2.arglist[121],	argtable2.arglist[122],    argtable2.arglist[123],
-		      argtable2.arglist[124],	argtable2.arglist[125],	argtable2.arglist[126],    argtable2.arglist[127]);
+		      arglist[0],	arglist[1],	arglist[2],      arglist[3],
+		      arglist[4],	arglist[5],   	arglist[6],      arglist[7],
+		      arglist[8],	arglist[9],   	arglist[10],     arglist[11],
+		      arglist[12],	arglist[13],  	arglist[14],     arglist[15],
+		      arglist[16],	arglist[17],  	arglist[18],     arglist[19],
+		      arglist[20],	arglist[21],  	arglist[22],     arglist[23],
+		      arglist[24],	arglist[25],	arglist[26],     arglist[27],
+		      arglist[28],	arglist[29],	arglist[30],     arglist[31],
+		      arglist[32],	arglist[33],	arglist[34],     arglist[35],
+		      arglist[36],	arglist[37],	arglist[38],     arglist[39],
+		      arglist[40],	arglist[41],	arglist[42],     arglist[43],
+		      arglist[44],	arglist[45],	arglist[46],     arglist[47],
+		      arglist[48],	arglist[49],	arglist[50],     arglist[51],
+		      arglist[52],	arglist[53],	arglist[54],     arglist[55],
+		      arglist[56],	arglist[57],	arglist[58],     arglist[59],
+		      arglist[60],	arglist[61],	arglist[62],     arglist[63],
+		      arglist[64],	arglist[65],	arglist[66],     arglist[67],
+		      arglist[68],	arglist[69],	arglist[70],     arglist[71],
+		      arglist[72],	arglist[73],	arglist[74],     arglist[75],
+		      arglist[76],	arglist[77],	arglist[78],     arglist[79],
+		      arglist[80],	arglist[81],	arglist[82],     arglist[83],
+		      arglist[84],	arglist[85],	arglist[86],     arglist[87],
+		      arglist[88],	arglist[89],	arglist[90],     arglist[91],
+		      arglist[92],	arglist[93],	arglist[94],     arglist[95],
+		      arglist[96],	arglist[97],	arglist[98],     arglist[99],
+		      arglist[100],	arglist[101],	arglist[102],    arglist[103],
+		      arglist[104],	arglist[105],	arglist[106],    arglist[107],
+		      arglist[108],	arglist[109],	arglist[110],    arglist[111],
+		      arglist[112],	arglist[113],	arglist[114],    arglist[115],
+		      arglist[116],	arglist[117],	arglist[118],    arglist[119],
+		      arglist[120],	arglist[121],	arglist[122],    arglist[123],
+		      arglist[124],	arglist[125],	arglist[126],    arglist[127]);
 
 
 		if ( !bytenormal() )
@@ -954,6 +1007,9 @@ int		initial;
 	}
 	else 
 	{
+		/*
+		**	Call the function with no arguments
+		*/
 		(*fn)();
 	}	
 
@@ -987,15 +1043,17 @@ int		initial;
 **	12/22/92	Written by GSL
 **
 */
-call_acucobol( filespec, parmcnt, parms, lens, rc )
-char 	*filespec;
-long 	parmcnt;
-char 	*parms[];
-long 	lens[];
-int 	*rc;
+void call_acucobol( filespec, parmcnt, parms, lens, rc )
+char *filespec;
+int4 parmcnt;
+char *parms[];
+int4 lens[];
+int *rc;
 {
 #define MAX_CALL_ARGS	32
 extern	short A_call_err;
+extern	int cobol();
+extern	int acu_cancel();
 	Argument args[MAX_CALL_ARGS];
 	int	argcnt, i;
 
@@ -1019,63 +1077,224 @@ extern	short A_call_err;
 		*rc = (int)A_call_err;
 	}
 
+	/*
+	**	Cancel the program
+	*/
+	acu_cancel(filespec);
+
 	return;
 }
 
 static int wisp_wexit = 0;
 
-shutexitcobol(exit_code)					/* Called by wisp from wexit()  */
+void shutexitcobol(exit_code)					/* Called by wisp from wexit()  */
 int exit_code;
 {
+	extern int stop_runtime();
+	
 	wisp_wexit = 1;
 	stop_runtime(exit_code,0,0,0,0,0);			/* Acucobol routine to shutdown */
 }
 
 /*
-	Shutdown is called by ACUCOBOL at shutdown.
+	AShutdown is called by ACUCOBOL at shutdown.
 	If error_halt==0 then a normal STOP RUN otherwise error.
+
+	Shutdown() was renamed to AShutdown() for version 2.4.x
 */
 void
-Shutdown( error_halt )
+AShutdown( error_halt )
 int	error_halt;
 {
 	if (error_halt && !wisp_wexit)
 	{
-		werrlog(102,"Terminating on an error detected by ACUCOBOL.",0,0,0,0,0,0,0);
-		werrlog(102,"Use the -e runtime option to capture the error message.",0,0,0,0,0,0,0);
+		if (!nativescreens())
+		{
+			werrlog(102,"Terminating on an error detected by ACUCOBOL.",0,0,0,0,0,0,0);
+#ifdef unix
+			werrlog(102,"Use the -e runtime option to capture the error message.",0,0,0,0,0,0,0);
+#endif
+		}
+		
 		wexit(error_halt);
 	}
 	return;
 }
+void Shutdown(error_halt)
+int error_halt;
+{
+	AShutdown(error_halt);
+}
 
 #define Shutdown OLD_Shutdown
+#define AShutdown OLD_Shutdown
 
-void 
+int
 exam_args( argc, argv )
 int argc;
 char *argv[];
 {
 	int idx;
-	int gotdashd;
-	
-	for (idx=gotdashd=0; idx<argc; ++idx)
+	int gotdashd = 0;
+
+	/* Start looking at argv[1] the second arg */
+	for (idx=1; idx<argc; idx++)
 	{
-		if (!strcmp(argv[idx],"-d"))
+		if (argv[idx] && 0==strcmp(argv[idx],"-d"))
 		{
 			gotdashd = 1;
 		}
 	}
 	if (gotdashd)
 	{
-		set_debug_true();
+		set_isdebug_true();
 	}
 	else
 	{
-		set_debug_false();
+		set_isdebug_false();
 	}
+	return 0;
 }
 
 #define exam_args OLD_exam_args
+
+/*
+**	Routine:	ISDBFILE()
+**
+**	Function:	Check if a file is a Database file
+**
+**	Description:	This routine uses Agetenv() to check the ACUCONFIG file
+**			to see if this file is a database file.
+**
+**	Arguments:
+**	select_name	The COBOL select name of the file. It should be terminated
+**			by a space or a period or by length.
+**	answer		The answer flag 
+**				'Y' yes
+**				'N' no
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	04/06/94	Written by GSL
+**
+*/
+int ISDBFILE(select_name, l1, answer, l2)
+char *select_name;
+int4 l1;
+char *answer;
+int4 l2;
+{
+	static	int first = 1;
+	static	char	default_host[40];
+	int	i;
+	char	*ptr;
+	char	test_host[80];
+	char	buff[80];
+	char	*Agetenv();
+
+	if (first)
+	{
+		/*
+		**	The first time thru get the default host, if not set assume VISION.
+		*/
+		if (ptr = Agetenv("DEFAULT_HOST"))
+		{
+			strcpy(default_host,ptr);
+			upper_string(default_host);
+		}
+		else
+		{
+			strcpy(default_host,"VISION");
+		}
+		first = 0;
+	}
+
+	for(i=0; i < l1; i++)
+	{
+		if (select_name[i] <= ' ' ||
+		    select_name[i] == '.' ||
+		    select_name[i] >  'z'   ) break;
+
+		test_host[i] = select_name[i];
+		if (test_host[i] == '-') test_host[i] = '_';
+	}
+	test_host[i] = (char)0;
+	strcat(test_host,"_HOST");
+	upper_string(test_host);
+
+	if (ptr = Agetenv(test_host))
+	{
+		strcpy(buff,ptr);
+		upper_string(buff);
+	}
+	else
+	{
+		strcpy(buff,default_host);
+	}
+
+	if (	(0 == strcmp(buff,"INFORMIX"))	||
+		(0 == strcmp(buff,"ORACLE"))	||
+		(0 == strcmp(buff,"SYBASE"))	  )
+	{
+		*answer = 'Y';
+	}
+	else
+	{
+		*answer = 'N';
+	}
+	return 0;
+}
+
+/*
+**	Routine:	x4dbfile()
+**
+**	Function:	To set the IS_DBFILE flag in a files status word.
+**
+**	Description:	This routine uses ISDBFILE() to check the ACUCONFIG file
+**			to see if this file is a database file if it is it will set
+**			flag in the status word.
+**
+**	Arguments:
+**	select_name	The COBOL select name of the file. It should be terminated
+**			by a space or a period or by length.
+**	select_status	The 4 byte status for the file.
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	04/06/94	Written by GSL
+**
+*/
+int x4dbfile(select_name, l1, select_status, l2)
+char *select_name;
+int4 l1;
+int *select_status;
+int4 l2;
+{
+	char	answer;
+	int4	one = 1;
+
+	ISDBFILE(select_name, l1, &answer, one);
+
+	if ('Y' == answer)
+	{
+		setdbfile(select_status,1);
+	}
+	else
+	{
+		setdbfile(select_status,0);
+	}
+	return 0;
+}
 
 /*
 ** Include CRID interface routines

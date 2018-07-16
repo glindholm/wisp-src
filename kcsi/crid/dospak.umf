@@ -1,0 +1,73 @@
+
+#-------------------------------------------------------------
+# @(#)dospak.umf	1.1 3/22/93
+# Make DOS port packs
+#-------------------------------------------------------------
+
+include cridwcb.umf
+include cridc.umf
+
+dospak:
+	-@rm -f *.dpk
+	@make -f dospak.umf c.dpk
+	@make -f dospak.umf wcb.dpk
+	@make -f dospak.umf kcsicopy.dpk
+	@make -f dospak.umf inc.dpk
+
+c.dpk:
+	-@rm -f $@
+	-@for name in *.c ; \
+		do echo "===== $$name" >> $@; \
+		   cat $$name >> $@ ; \
+		   echo " " >> $@ ; \
+		done
+	-@for name in *.h ; \
+		do echo "===== $$name" >> $@ ; \
+		cat $$name >> $@ ; \
+		echo " " >> $@ ; \
+		done
+	-@for name in *.umf *.dmf Makefile ; \
+		do echo "===== $$name" >> $@ ; \
+		cat $$name >> $@ ; \
+		echo " " >> $@ ; \
+		done
+	-@make  release
+	-@for name in *.dos *.crd ; \
+		do echo "===== $$name" >> $@ ; \
+		cat $$name >> $@ ; \
+		echo " " >> $@ ; \
+		done
+
+wcb.dpk:
+	-@rm -f $@ 
+	-@for name in *.wcb ; \
+		do echo "===== $$name" >> $@ ; \
+		cat $$name >> $@ ; \
+	        echo " " >> $@ ; \
+		done 
+
+
+inc.dpk:
+	-@rm -f $@
+	-@here=`pwd` ; \
+	cd ../inc ; \
+	rm -f $@ ; \
+	for name in *.h ; \
+		do echo "===== $$name" >> $@ ; \
+		cat $$name >> $@ ; \
+		echo " " >> $@ ; \
+		done ; \
+	mv $@ $$here 
+
+kcsicopy.dpk:
+	-@rm -f $@
+	-@here=`pwd` ; \
+	cd ../kcsicopy ; \
+	rm -f $@ ; \
+	for name in *.wcb ; \
+		do echo "===== $$name" >> $@ ; \
+		cat $$name >> $@ ; \
+		   echo " " >> $@ ; \
+		done ; \
+	mv $@ $$here
+

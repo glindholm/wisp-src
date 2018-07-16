@@ -8,7 +8,7 @@
 000800 PROGRAM-ID.                                                              
 000900     DISPRINT.                                                           
 001000 AUTHOR.                                                                  
-001100     IDSI CONVERSION TEAM                                                 
+001100     DevTech Migrations                                                
 001200 DATE-WRITTEN.                                                            
 001300     08/02/89.                                                            
 001400/*****************************************************************        
@@ -80,12 +80,6 @@
 012300******************************************************************        
 012400*                                                                         
 012500 WORKING-STORAGE SECTION.                                                 
-012600 01  DATE-INFO.                                                           
-012700     03  DATEIN                     PIC 9(06).                            
-012800     03  DATEGROUP                  REDEFINES DATEIN.                     
-012900         05  YEAR-DIGITS            PIC 9(02).                            
-013000         05  MONTH-DIGITS           PIC 9(02).                            
-013100         05  DAY-DIGITS             PIC 9(02).                            
 013800******************************************************************        
 013900*                   FILE CONTROL STATUS SWITCHES                 *        
 014000******************************************************************        
@@ -156,7 +150,8 @@
            VALUE "shown). Position the cursor to the file name. (via TAB
       -          ")".
            05  FILLER         PIC X(72)               ROW 06 COLUMN 5
-           VALUE "PF 1 - DISPLAY   PF 2 - PRINT   PF 3 - DELETE   PF 4 -
+      *    VALUE "PF 1 - DISPLAY   PF 2 - PRINT   PF 3 - DELETE   PF 4 -
+           VALUE " (1) - DISPLAY    (2) - PRINT    (3) - DELETE    (4) -
       -          "PRINT (NO DELETE)".
 
 123456*8901234567890123456789012345678901234567890123456789012345678901234567890
@@ -190,8 +185,8 @@
                    SOURCE R-P-DATE  OBJECT R-P-DATE.
 
 
-019500     05  ROW22-COL20    PICTURE IS  X(50)       ROW 22 COLUMN 20          
-019600     VALUE IS "Press PF16 to Exit -or- ENTER for First/Next Page".
+019500     05  ROW22-COL20    PICTURE IS  X(52)       ROW 22 COLUMN 18          
+019600     VALUE "Press (16) to Exit -or- (ENTER) for First/Next Page".
 019700     05  ROW24-COL11    PICTURE IS  X(60)       ROW 24 COLUMN 11          
 019800         SOURCE IS WSA-ERROR OBJECT IS WSA-ERROR.                         
 019900                                                                          
@@ -416,7 +411,6 @@
 036100******************************************************************        
 036200*                                                                         
 036300 INITIALIZATION.                                                          
-036400     ACCEPT DATEIN FROM DATE.                                             
            CALL "EXTRACT" USING SL DSK-LIB
                                 SV DSK-VOL
                                 PC-KEY PR-CLASS
@@ -484,10 +478,10 @@
                MOVE FDR-F-DATE     TO  FILE-DATE(IND-CNT)
 
                IF FDR-BYTE-SIZE NOT = 0
-                   IF FDR-BYTE-SIZE < 1000
+                   IF FDR-BYTE-SIZE < 1024
                        MOVE 1 TO WS-BYTE-CALC
                    ELSE
-                       DIVIDE FDR-BYTE-SIZE BY 1000 GIVING
+                       DIVIDE FDR-BYTE-SIZE BY 1024 GIVING
                            WS-BYTE-CALC ROUNDED
                ELSE
                    MOVE 0 TO WS-BYTE-CALC.

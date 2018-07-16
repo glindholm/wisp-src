@@ -1,52 +1,61 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 #include <stdio.h>
 
+#include "vsedmod.h"
 #include "vseglb.h"
 #include "vsescr.h"
 #include "vsedscr.h"
+#include "vsebasic.h"
+#include "vsedit.h"
+#include "vsetxt.h"
+#include "vseutl.h"
 
 
-vse_ed_mod()
+static void vse_ed_mod_unload(void);
+static void vse_ed_mod_init(void);
+static void vse_ed_mod_top(void);
+
+
+void vse_ed_mod(void)
 {
-	int min_col,mod_col,mod_row;
+	int mod_col,mod_row;
 
-	mod_row = ed_oa[3];
-	mod_col = ed_oa[2];
-	if(mod_row < 5)
-		mod_row = 5;
-	if(vse_numbering)
-		min_col = 9;
-	else
-		min_col = 2;
-	if(mod_col < min_col)
-		mod_col = min_col;
-	ed_oa[3] = mod_row;
-	ed_oa[2] = mod_col;
+	mod_row = ed_oa[OA_CURSOR_ROW];
+	mod_col = ed_oa[OA_COL];
+	if(mod_row < VSE_FIRST_SCREEN_ROW)
+		mod_row = VSE_FIRST_SCREEN_ROW;
+	if(mod_col < VSE_FIRST_SCREEN_COL)
+		mod_col = VSE_FIRST_SCREEN_COL;
+	ed_oa[OA_CURSOR_ROW] = mod_row;
+	ed_oa[OA_COL] = mod_col;
 
 	
+	vse_ed_load_lines();
 
 	for(;;)
 	{
 		vse_ed_mod_init();
 		d_and_r_ed(TAB_NORMAL);
 		int4_from_str2(ed_pfcode,&vse_edit_pick);
-		vse_ed_mod_dispatch();
-		if(vse_edit_pick == 1) 
-			break;
-		vse_file_changed=1;
-		if((vse_edit_pick == 0) &&
-		   (!vse_append)         )
-			break;
-		if(vse_append)
-			{
-			file_bottom();
-			vse_ed_load_lines();
-			}
-	}
-}
 
-vse_ed_mod_dispatch()
-{
-	switch(vse_edit_pick)
+		if ( 1 == vse_edit_pick )
+		{
+			return;
+		}
+		
+		vseunscr(ed_line_flds,ed_scr);
+
+		switch(vse_edit_pick)
 		{
 		case 2:
 			vse_set();
@@ -55,111 +64,94 @@ vse_ed_mod_dispatch()
 			++show_col_flag;
 			break;
 		case 0:
-			vse_ed_mod_renew();
+			vse_ed_mod_unload();
+
+			if(!vse_append)
+			{
+				return;
+			}
+			
+			file_bottom();
+			ed_oa[OA_CURSOR_ROW] = vse_save_row + 1;
+			ed_oa[OA_COL] = vse_save_col;
+			vse_ed_load_lines();
+
 			break;
 		}
-}
-vse_ed_mod_renew()
-{
-	vseunscr(ed_line_flds,ed_scr);
-	vse_ed_mod_unload();
+	}
 }
 
-vse_ed_mod_unload()
+static void vse_ed_mod_unload(void)
 {
-	TEXT *txt,*new_text();
-	int idx,lidx;
+	TEXT *txt;
+	int idx,last_idx;
 
 	vse_append = 0;
 	txt = scr_first;
-	for(idx = 0,lidx = 0; idx < 20; ++idx)
+	for(idx = 0,last_idx = 0; idx < VSE_EDIT_ROWS; ++idx)
+	{
+		spaceout(ed_line[idx],vse_edit_width);
+		if(!(isblankstr(ed_line[idx],vse_edit_width)))
+			last_idx = idx;
+		trunc(ed_line[idx]);
+	}
+	for(idx = 0;idx < VSE_EDIT_ROWS; ++idx)
+	{
+		if ( !txt )
 		{
-		spaceout(ed_line[idx],vse_text_width);
-		if(!(isblank(ed_line[idx],vse_text_width)))
-			lidx = idx;
-		}
-	for(idx = 0;idx < 20; ++idx)
-		{
-
-		/* If the current line of text does not have a value for it's modfld,
-		   you can remove the trailing blanks. Added by CIS: 08/12/93 AJA */
-		if ( txt )
-		{
-			if ( !(txt->modfld) )
-				trunc(ed_line[idx]);
-		}
-		else
-		{
-			if(lidx >= idx)
+			if(last_idx >= idx)
 			{
 				vse_append = 1;
-				trunc( ed_line[idx] );
 			}
 			else
+			{
 				break;
+			}
 		}
+
 		if(!vse_append)
 		{
-
-			/* If the line has been changed, copy the new line over, set the
-			   modcode if necessary, and scan the line for embedded line
-			   numbers. Added by CIS: 08/12/93 AJA */
-			if ( strcmp( txt->text, ed_line[idx] ) )
+			/*
+			**	Check to see if the line was modified.
+			**	Both fields are (had better be) truncated.
+			*/
+			if ( 0 != strcmp( txt->text, ed_line[idx] ) )
 			{
-				if ( strcmp( vse_gp_options_modcode, "        " ) )
-				{
-					if ( !(txt->modfld) )
-						txt->modfld = (char *) calloc( 9, sizeof( char ) );
-					strncpy( txt->modfld, vse_gp_options_modcode, 8 );
-					spaceout( ed_line[idx], vse_text_width );
-				}
+				vse_file_changed = 1;
+				add_modcode(txt);
 				over_text(txt,ed_line[idx]);
 
-				/* If language is BASIC, look for embedded line number in
-				   modified line. Added by CIS, 07/12/93 AJA */
-				if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
+				if (lang_type() == LANG_BASIC)
 				{
-
-					/* Delete all elements where this line has references to
-					   other line numbers */
 					delete_linenum( txt->lineno );
-
-					/* Rescan the modified line looking for embedded line
-					   numbers */
 					find_linenum( txt );
 				}
 			}
 		}
 		else
 		{
+			vse_file_changed = 1;
 			txt = new_text(ed_line[idx]);
 
-			/* Set the modcode if necessary */
-			if ( strcmp( vse_gp_options_modcode, "        " ) )
-			{
-				txt->modfld = (char *) calloc( 9, sizeof( char ) );
-				strncpy( txt->modfld, vse_gp_options_modcode, 8 );
-				spaceout( ed_line[idx], vse_text_width );
-			}
-			else
-				txt->modfld = NULL;
+			txt->modfld = NULL;
+			add_modcode(txt);
+
 			append_text(txt);
 			txt->lineno = next_lineno(0);
 
 			/* If the language is BASIC, look for embedded line number in
 			   line. Added by CIS: 08/12/93 AJA */
-			if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
+			if (lang_type() == LANG_BASIC)
 				find_linenum( txt );
 		}
 		txt = txt->next;
-		}
+	}
 }
 
-vse_ed_mod_init()
+static void vse_ed_mod_init(void)
 {
 	int fac;
 
-	vse_ed_load_lines();
 	vsescr_init(ed_scr);
 	vse_ed_mod_top();
 	strcpy(ed_pfs,"00010215X");
@@ -175,44 +167,99 @@ vse_ed_mod_init()
 	vsescr(ed_line_flds,ed_scr);
 }
 
-language_case()
+int mode_upper(void)
 {
-	if(strcmp(vse_gp_defaults_mode,"UPPER"))
-		return(UPLOW_ENTRY_FAC);
-	else
+	return (0==strcmp(vse_gp_defaults_mode,"UPPER")) ? 1 : 0;
+}
+
+int language_case(void)
+{
+	if(mode_upper())
 		return(UPPER_ENTRY_FAC);
+	else
+		return(UPLOW_ENTRY_FAC);
 }
 
 
-vse_ed_mod_top()
+static void vse_ed_mod_top(void)
 {
-	strcpy(ed_top1,"Make changes and press ENTER or select:");
-	strcpy(ed_top2,"(1) Exit  (2) Set Tabs (15) Show Column");
+	strcpy(ed_top1,   "Make changes and press (ENTER) or select:                               \254Modify");
+	strcpy(ed_top2,   "(1) Exit  (2) Set Tabs (15) Show Column");
 	vse_ed_mod_col();
 }
-vse_ed_mod_col()
+
+void vse_ed_mod_col(void)
 {
 	char *tens, *ones;
 	int didx,sidx;
 
 	tens="         1         2         3         4         5         6         7         ";
 	ones="123456789012345678901234567890123456789012345678901234567890123456789012";
-	if (vse_numbering)
-	{
-		didx = 7;
-		sidx = 6;
-	}
-	else
-	{
-		didx = 7;
-		sidx = 0;
-	}
+
+	didx = VSE_NUM_WIDTH+1;
+	sidx = vse_edit_start_col - 1;
+
 	CLEAR_FIELD(ed_top3);
 	CLEAR_FIELD(ed_top4);
 
-	memcpy(&ed_top3[didx],&tens[sidx],vse_text_width);
-	memcpy(&ed_top4[didx],&ones[sidx],vse_text_width);
-	ed_top3[vse_text_width + didx] = 0;
-	ed_top4[vse_text_width + didx] = 0;
+	memcpy(&ed_top3[didx],&tens[sidx],vse_edit_width);
+	memcpy(&ed_top4[didx],&ones[sidx],vse_edit_width);
+	ed_top3[vse_edit_width + didx] = 0;
+	ed_top4[vse_edit_width + didx] = 0;
 }
 
+/*
+**	Routine:	add_modcode()
+**
+**	Function:	Add a modcode to the line.
+**
+**	Description:	This add the modcode to the given line if applicable.
+**
+**	Arguments:
+**	txt		The line to add the modcode to.
+**
+**	Globals:
+**	vse_gp_options_modcode
+**			The modcode
+**	vse_mod_width	The modcode width
+**
+**	Return:
+**	1		Modcode was added.
+**	0		Not added.
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/09/94	Written by GSL
+**
+*/
+int add_modcode(TEXT *txt)
+{
+	if ( vse_mod_width && 0 != memcmp( vse_gp_options_modcode, "        ", vse_mod_width ) )
+	{
+		if ( !(txt->modfld) )
+		{
+			txt->modfld = (char *) calloc( vse_mod_width+1, sizeof( char ) );
+		}
+		strncpy( txt->modfld, vse_gp_options_modcode, vse_mod_width );
+		txt->modfld[vse_mod_width] = (char)0;
+		return 1;
+	}
+	return 0;
+}
+
+void spaceout(char *str, int4 len)
+{
+	while(len--)
+		if(str[len] == 0)
+			str[len] = ' ';
+}
+/*
+**	History:
+**	$Log: vsedmod.c,v $
+**	Revision 1.12  1996-09-03 18:24:03-04  gsl
+**	drcs update
+**
+**
+**
+*/

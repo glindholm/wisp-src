@@ -1,0 +1,75 @@
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		INSTALLATION INSTRUCTIONS FOR CRID ON VMS
+	
+	Document:	INSTALL_CRID_VMS.LIS
+	Last Updated:	30 OCTOBER 95
+	Products:	KCSI/VMS
+	Versions:	2.77 (AND LATER)
+	
+	Summary:	How to install CRID utilities for VMS.
+
+	====================================================================
+	
+	The following instructions assume you have a TK50 as your media type.
+	Consult your system manager if the media is not TK50.
+
+	Log onto the system account, mount the distribution kit and enter:
+
+		$ SET DEFAULT temp_dir
+		$ MOUNT/FOR/NOSHARE MU:
+		$ BACKUP/VERIFY/REWIND/LOG MU:CRID.BCK *.*
+		$ DISMOUNT/UNLOAD MU:
+
+	This will put the distribution files into a temporary directory.  The
+	first step is to see if the executables will run:
+
+		$ RUN CONTROL
+		$ RUN REPORT
+		$ RUN INQUIRY
+		$ RUN DATENTRY
+
+	If no problem then copy all executables to WISP$ROOT:[EXE]:
+
+		$ COPY *.EXE WISP$ROOT:[EXE]
+		$ SET FILE/PROT=(S:RWED,O:RWE,G:RWE,W:RE) WISP$ROOT:[EXE]
+
+	====================================================================
+
+	If there is a problem then you will have to re-link the executables
+	on your system.  The distribution should contain a .COM for each
+	utility:  
+
+		$ LINK_CONTROL <RETURN> 
+		$ @LINK_DATENTRY <RETURN>
+		$ @LINK_INQUIRY <RETURN>
+		$ @LINK_REPORT <RETURN>
+
+	The above procedures will create the executables.  Copy the .EXEs to
+	WISP$ROOT:[EXE]. (defined above)
+
+	Copy the command file which defines foreign commands.
+
+		$ COPY CRID_SYMBOLS.COM WISP$ROOT:[COM]
+		$ SET FILE/PROT=(S:RWED,O:RWE,G;RWE,W:RE) WISP$ROOT:[COM]*.COM
+
+	For improved performance, each .EXE can be installed by adding the
+	following to SYSTARTUP.COM
+                                                                                                      
+		$ RUN SYS$SYSTEM:INSTALL
+		WISP$ROOT:[EXE]CONTROL.EXE/HEADER/OPEN/SHARED
+
+		(Execute the above for each executable.)
+
+	To define the various commands as foreign commands, edit the system
+	wide login file, which is named SYLOGIN.COM and is found in the
+	directory SYS$MANAGER, to contain the following line:
+
+		$ @WISP$ROOT:[COM]CRID_SYMBOLS
+
+	Each user must logoff and log back in for the utilities to work.
+
+
+       ========================= END OF DOCUMENT ==========================

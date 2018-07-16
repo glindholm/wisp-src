@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 **	selectpg.c	selectpg [-l#] start:end [infile]
 **				-l#		Number of lines per page, default is 66 lpp.
@@ -116,7 +118,7 @@ char	*argv[];
 	{
 		f_in = stdin;
 	}
-#ifdef DEBUG
+#ifdef TESTING
 printf("start=%d, end=%d, lpp=%d\n",start,end,lpp);
 #endif
 
@@ -186,3 +188,12 @@ char	*message;
 	fprintf(stderr,"               infile      The optional input file.\n");
 	exit(1);
 }
+/*
+**	History:
+**	$Log: selectpg.c,v $
+**	Revision 1.8  1996-07-23 14:13:00-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,10 +1,11 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+
+#include <string.h>
 #include "idsistd.h"
-WSPAWN(action,progname,name_len,msg,msg_len)
-short *action;
-char *progname;
-short *name_len;
-char *msg;
-short *msg_len;
+#include "wisplib.h"
+
+void WSPAWN(short *action,char *progname,short *name_len,char *msg,short *msg_len)
 {
 	char l_msg[200],l_name[200];
 	int l_act;
@@ -26,3 +27,12 @@ short *msg_len;
 
 	spawn2 (l_act,l_name,l_msg,&vms_status);					/* Do the spawn				*/
 }
+/*
+**	History:
+**	$Log: wspawn.c,v $
+**	Revision 1.9  1996-08-19 18:33:24-04  gsl
+**	drcs update
+**
+**
+**
+*/

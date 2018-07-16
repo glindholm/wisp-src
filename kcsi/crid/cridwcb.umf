@@ -1,0 +1,100 @@
+
+#----------------------------------------------------------------------------
+# @(#)cridwcb.umf	1.9 4/11/93
+#
+# This is a make include file.
+# This is not a complete makefile, but a listing of all the .wcb files used
+# to make up all the various Utility modules.
+# The .cbo extensions are used for the acu-COBOL version. The .o
+# versions are used for Micro-Focus and LPI cobol.
+#----------------------------------------------------------------------------
+
+
+CONTROLCBO= ctrlmain.cbo ctrlary.cbo   ctrlfld.cbo   ctrlio.cbo \
+  ctrlgrp.cbo   ctrllst.cbo   ctrlrng.cbo   ctrloptl.cbo  listmopt.cbo \
+  ctrlerr.cbo   ctrlhdi.cbo   ctrlmap.cbo   ctrlseq.cbo   tableio.cbo \
+  ctrlext.cbo   ctrlhdl.cbo   ctrload.cbo   ctrltbl.cbo   ctrlprt.cbo \
+  ctrlfil.cbo   ctrlhdr.cbo   ctrlopt.cbo   ctrlval.cbo   ctrldif.cbo \
+  ctrldepp.cbo	cobextfh.cbo
+
+REPORTCBO = rptmain.cbo  \
+ rptctlh.cbo  rptedt.cbo   rptmor.cbo   rptseq.cbo   \
+ rptctll.cbo  rptedth.cbo  rptnew.cbo   rptsfl.cbo   rptxcl.cbo \
+ rptaka.cbo   rptctlm.cbo  rptfil.cbo   rptnfl.cbo   rptsiz.cbo   rptxdt.cbo \
+ rptckfl.cbo  rptctlp.cbo  rptlim.cbo   rptopt.cbo   rptsor.cbo   rptxfl.cbo \
+ rptcln.cbo   rptdef.cbo   rptlod.cbo   rptpdt.cbo   rptspc.cbo   rptxln.cbo \
+ rptcol.cbo   rptdnw.cbo   rptmdt.cbo   rptpfl.cbo   rptsum.cbo \
+ rptcon.cbo   rptdup.cbo   rptmnu.cbo   rpttit.cbo \
+ rptctl.cbo   rptedo.cbo   rptmod.cbo   rptsdt.cbo   rptwmn.cbo \
+ blnksc.cbo   cobextfh.cbo plswait.cbo  ctrldif.cbo  \
+ rptcld.cbo   rptio.cbo    rptmak.cbo \
+ ctrlary.cbo  ctrldio.cbo  ctrlhdi.cbo  ctrlhdl.cbo  ctrlio.cbo \
+ ctrlmap.cbo  ctrlval.cbo  
+
+REPORTWCBO = rptwmain.cbo  \
+ rptfil.cbo   rptlod.cbo   \
+ rptwmn.cbo   \
+ blnksc.cbo   cobextfh.cbo plswait.cbo \
+ rptopt.cbo   ctrldif.cbo \
+ rptcld.cbo   rptio.cbo    ctrldio.cbo  ctrlhdi.cbo  \
+ ctrlhdl.cbo  ctrlio.cbo  
+
+INQUIRYCBO = inqmain.cbo inqctl.cbo   inqent.cbo   inqhlp.cbo  \
+ inqnam.cbo   inqrpt.cbo   inqxtr.cbo \
+ inqdat.cbo   inqget.cbo   inqmak.cbo   inqopt.cbo   inqxst.cbo \
+ dteload.cbo  ctrldif.cbo \
+ blnksc.cbo   cobextfh.cbo plswait.cbo \
+ rptmak.cbo   rptcld.cbo   rptio.cbo \
+ ctrlary.cbo  ctrlio.cbo   ctrlhdl.cbo  ctrlhdi.cbo  ctrlmap.cbo \
+ ctrlval.cbo  ctrldio.cbo
+
+DATENTRYCBO=dtemain.cbo \
+ dtectl.cbo   dtefac.cbo   dtemnu.cbo   dtespc.cbo   dteuph.cbo   \
+ dteoop.cbo   dteupd.cbo   dtexst.cbo   dteinqpp.cbo \
+ blnksc.cbo   cobextfh.cbo ctrldif.cbo \
+ dteload.cbo  ctrldio.cbo  ctrlval.cbo \
+ ctrlio.cbo   ctrlhdl.cbo  ctrlhdi.cbo  \
+ ctrlary.cbo  ctrlmap.cbo  
+
+CONTROLO=$(CONTROLCBO:.cbo=.o)
+REPORTO=$(REPORTCBO:.cbo=.o)
+REPORTWO=$(REPORTWCBO:.cbo=.o)
+INQUIRYO=$(INQUIRYCBO:.cbo=.o)
+DATENTRYO=$(DATENTRYCBO:.cbo=.o)
+CONTROLOBJ=$(CONTROLCBO:.cbo=.obj)
+REPORTOBJ=$(REPORTCBO:.cbo=.obj)
+INQUIRYOBJ=$(INQUIRYCBO:.cbo=.obj)
+DATENTRYOBJ=$(DATENTRYCBO:.cbo=.obj)
+CONTROLWCB=$(CONTROLCBO:.cbo=.wcb)
+REPORTWCB=$(REPORTCBO:.cbo=.wcb)
+INQUIRYWCB=$(INQUIRYCBO:.cbo=.wcb)
+DATENTRYWCB=$(DATENTRYCBO:.cbo=.wcb)
+
+ALLWCB=blnksc.wcb cobextfh.wcb ctrlary.wcb ctrldepp.wcb ctrldif.wcb  \
+ctrldio.wcb   ctrlerr.wcb   ctrlext.wcb   ctrlfil.wcb    \
+ctrlfld.wcb   ctrlgrp.wcb   ctrlhdi.wcb   ctrlhdl.wcb    \
+ctrlhdr.wcb   ctrlio.wcb    ctrllst.wcb   ctrlmain.wcb   \
+ctrlmap.wcb   ctrload.wcb   ctrlopt.wcb   ctrloptl.wcb   \
+ctrlprt.wcb   ctrlrng.wcb   ctrlseq.wcb   ctrltbl.wcb    \
+ctrlval.wcb   dtectl.wcb    dtefac.wcb    dteinqpp.wcb   \
+dteload.wcb   dtemain.wcb   dtemnu.wcb    dteoop.wcb     \
+dtespc.wcb    dteupd.wcb    dteuph.wcb    dtexst.wcb     \
+inqctl.wcb    inqdat.wcb    inqent.wcb    inqget.wcb     \
+inqhlp.wcb    inqmain.wcb   inqmak.wcb    inqnam.wcb     \
+inqopt.wcb    inqrpt.wcb    inqxst.wcb    inqxtr.wcb     \
+listmopt.wcb  plswait.wcb   rptaka.wcb    rptckfl.wcb    \
+rptcld.wcb    rptcln.wcb    rptcol.wcb    rptcon.wcb     \
+rptctl.wcb    rptctlh.wcb   rptctll.wcb   rptctlm.wcb    \
+rptctlp.wcb   rptdef.wcb    rptdnw.wcb    rptdup.wcb     \
+rptedo.wcb    rptedt.wcb    rptedth.wcb   rptfil.wcb     \
+rptio.wcb     rptlim.wcb    rptlod.wcb    rptmain.wcb    \
+rptmak.wcb    rptmdt.wcb    rptmnu.wcb    rptmod.wcb     \
+rptmor.wcb    rptnew.wcb    rptnfl.wcb    rptopt.wcb     \
+rptpdt.wcb    rptpfl.wcb    rptsdt.wcb    rptseq.wcb     \
+rptsfl.wcb    rptsiz.wcb    rptsor.wcb    rptspc.wcb     \
+rptsum.wcb    rpttit.wcb    rptwmn.wcb    rptxcl.wcb     \
+rptxdt.wcb    rptxfl.wcb    rptxln.wcb    tableio.wcb 
+
+ALLWCBO=$(ALLWCB:.wcb=.o)
+
+

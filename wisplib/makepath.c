@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,17 +15,15 @@
 
 #include <string.h>
 #include <errno.h>
-#include "idsistd.h"
 
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
-
-#ifdef MSDOS
-#include <memory.h>
+#ifdef MSFS
 #include <io.h>
 #include <direct.h>
 #endif
+
+#include "idsistd.h"
+#include "paths.h"
+#include "wisplib.h"
 
 #ifdef VMS
 
@@ -34,8 +34,7 @@
 						errno   if it was not able to make the path.
 */
 
-int	makepath( fullpath )
-char	*fullpath;
+int	makepath(const char* fullpath )
 {
 	char 	buff[81];
 	int	i,rc;
@@ -76,14 +75,14 @@ char	*fullpath;
 }
 #endif	/* VMS */
 
-#ifndef VMS	/* unix and MSDOS */
+#if defined(unix) || defined(MSFS)
 
-#ifdef MSDOS
-#define DS '\\'					/* Directory Separator	*/
+#define DS DIR_SEPARATOR			/* Directory Separator	*/
+
+#ifdef MSFS
 #define PS 3					/* Path Start (Skip this many chars in front of path to bypass root "E:\path")	*/
 
 #else	/* unix */
-#define DS '/'					/* Directory Separator	*/
 #define PS 1					/* Path Start (Skip this many chars in front of path to bypass root "/path")	*/
 
 #endif
@@ -95,66 +94,132 @@ char	*fullpath;
 						errno   if it was not able to make the path.
 */
 
-int	makepath( fullpath )
-char	*fullpath;
+int	makepath(const char* fullpath )
 {
-	char 	buff[81];
+	char 	buff[256];
 	int	i,rc;
+	int	ps=PS;
+	char	*ptr;
 
-	memcpy( buff, fullpath, 80 );						/* Get a local copy.				*/
-	for( i=0; i < 80; i++ )
+	/*
+	**	Get a local copy and null terminate at the first space.
+	*/
+	for( i=0; i< sizeof(buff)-1; i++)
 	{
-		if ( buff[i] == ' ' )
+		buff[i] = fullpath[i];
+		if (' '==buff[i] && '\0'==buff[i])
 		{
-			buff[i] = '\0';
 			break;
 		}
-		if ( buff[i] == '\0' ) break;
 	}
+	buff[i] = '\0';
 
-										/* First try the simple case.			*/
-										/* Strip the filename from the path and then	*/
-										/* see if the directory path exists.		*/
- 
-	for( i=strlen(buff); i > PS; i-- )					/* Scan backwards for the begining of filename.	*/
+#ifdef WIN32
+	/*
+	**	Calculate the skip chars needed to get to the DIRPATH based on the name format.
+	**
+	**	\\SERVER\SHARE\DIRPATH\FILE
+	**	C:\DIRPATH\FILE
+	**	C:DIRPATH\FILE
+	**	\DIRPATH\FILE
+	**	DIRPATH\FILE
+	*/
+	if (0 == memcmp(buff,"\\\\",2))  /* If a UNC name \\SERVER\SHARE\DIR */
 	{
-		if ( fullpath[i] == DS )
+		/* Skip the SERVER name */
+		if (ptr = strchr(&buff[2],DS))
 		{
-			buff[i] = '\0';						/* Null-Term the dir-path.			*/
-			if ( fexists(buff) )					/* Check if dir-path exists.			*/
+			ps = ptr - buff + 1;
+			/* Skip the SHARE name */
+			if (ptr = strchr(&buff[ps],DS))
 			{
-				return(0);					/* Dir-path exists, all is fine.		*/
+				ps = ptr - buff + 1;
 			}
-			buff[i] = DS;						/* Put back the directory separator		*/
-			break;
 		}
+		else
+		{
+			ps = 2;
+		}
+	}
+	else
+	{
+		/* Skip the drive */
+		if (ptr = strchr(buff,':'))
+		{
+			ps = ptr - buff + 1;
+			if (DS == buff[ps])
+			{
+				/* Skip the leading DS */
+				ps++;
+			}
+		}
+		else
+		{
+			ps = 1;
+		}
+	}
+#endif /* WIN32 */
+
+	/*
+	**	First try the simple case: Strip off the filename and
+	**	see if the directory exists.
+	*/
+	if (ptr = strrchr(buff,DS))
+	{
+		/* Find the last directory separator and null it out */
+		*ptr = '\0';
+		if (fexists(buff))
+		{
+			return(0);
+		}
+		*ptr = DS;
 	}
 										/* The dir-path does not exist so begin at the	*/
 										/* top and make sure each dir exists or create	*/
 										/* the directories.				*/
 
-	for( i = PS; i < (int)strlen(buff); i++ )				/* Start at the PS position and search forward	*/
+	for( i = ps; i < (int)strlen(buff); i++ )				/* Start at the PS position and search forward	*/
 	{
-		if ( fullpath[i] == DS )					/* If you find a directory separator then	*/
+		if (ptr = strchr(&buff[i],DS))
 		{
-			buff[i] = '\0';
+			*ptr = '\0';
 			if (!fexists(buff))					/* See if the directory exists, If it doesn't	*/
 			{
-#ifdef MSDOS
-				rc = mkdir( buff );				/* Try to create it.				*/
-#else	/* unix or VMS */
 				rc = mkdir( buff, 00777 );			/* Try to create it. (with mode)		*/
-#endif
 				if ( rc < 0 )					/* If can't create the dir then			*/
 				{
 					return( errno );			/* Give up.					*/
 				}
 			}
-			buff[i] = DS;						/* Reset directory separator for next loop	*/
+			*ptr = DS;						/* Reset directory separator for next loop	*/
+			i = ptr - buff;
+		}
+		else
+		{
+			break;
 		}
 	}
 	return( 0 );								/* The path now exists.				*/
 }
-#endif	/* unix  and MSDOS */
+#endif	/* unix  and MSFS */
 
 /*	End of makepath.c source code.	*/
+/*
+**	History:
+**	$Log: makepath.c,v $
+**	Revision 1.13  1997-05-04 12:25:52-04  gsl
+**	Fix of WIN32 to properly handle UNC names and relative paths.
+**
+**	Revision 1.12  1996-09-10 11:45:18-04  gsl
+**	move system include before wisp includes,
+**	combine WIN32 and unix code for mkdir()
+**
+**	Revision 1.11  1996-08-23 14:01:55-07  gsl
+**	filepath parm isnow const
+**
+**	Revision 1.10  1996-08-19 15:32:29-07  gsl
+**	drcs update
+**
+**
+**
+*/

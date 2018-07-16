@@ -1,0 +1,1269 @@
+
+		Release Notes	-	12/5/93
+
+*	Not Released indicates a version number that was used
+	for internal development or bug-fix version control, and
+	was not released to customers.
+
+
+v. 2.68 12/5/93
+
+Utility:	REPORT and INQUIRY under UNIX.
+
+Problem:	REPORT and INQUIRY are issuing an initial form feed
+		before printing the report. This causes a problem with
+		certain types of printers (laser) by ejecting an extra
+		blank page before printing.
+
+Resolution:	For all UNIX versions, an environment variable may
+		be used to omit this initial form feed.
+
+		To suppress the initial form feed, use the following 
+		commands berfore running REPORT, or include these
+		commands in a profile file for the user.
+
+		kcsi_reportff=0 ; export kcsi_reportff
+
+		The variable must be in lower case, and the value 
+		used for kcsi_reportff must be 0 as written.
+
+
+
+v. 2.65 November 6, 1993
+
+Utility:	All - Microfocus versions
+
+Problem:	The Microfocus file handler routine contains a bug that
+		causes the return_file_info function of EXTFH() to
+		produce invalid key structure information on a file.
+		This causes REPORT, INQUIRY and DATENTRY to believe
+		that the file does not match the layout given in the
+		CONTROL definition file.
+
+Resolution:	Until the bug in Microfocus is repaired, the requirement
+		that files in REPORT, INQUIRY and DATENTRY match
+		the definition in the CONTROL file has been disabled.
+
+		This will allow the files to be opened, but can cause
+		memory errors if the file being opened does not actually
+		match the control definition.
+
+		Normally REPORT, INQUIRY and DATENTRY will provide a message
+		that the data file and control definition do match.
+
+		With this disabled, you will probably simply receive
+		a crash or memory fault error until the bug is fixed by
+		Microfocus.
+
+		
+v. 2.64 October 31, 93
+
+Utility:	DATENTRY
+
+Problem:	Using DATENTRY to create a relative file would sometimes
+		create a very large file.
+
+Resolution:	Corrected the open output routine for relative files.
+
+
+
+v. 2.63 October 20, 1993
+
+Utility:	REPORT
+
+Problem:	The Report utility is not handling titles and headings
+		in the same way as the Utility.
+
+Resolution:	Title and heading handling revised to match Wang style
+		titles and headings.
+
+v. 2.62 Aug 22, 1993
+
+Utility:	ALL Micro Focus COBOL AIX Systems only.
+
+Problem:	A problem in version 3.1 of the COBOL compiler was fixed
+		with patch level 10.04. 
+
+Resolution:	The utilities have been recompiled with this fix. There were
+		no internal changes to the utilities.
+
+v. 2.61 Aug 22, 1993
+
+Utility:	ALL
+Problem:	The criderr.log created during file IO errors is now
+		used by all KCSI utilities and is no longer exclusive
+		to CONTROL REPORT etc.
+Resolution:	Name of the error log changed to kcsierr.log
+
+Utility:	INQUIRY
+
+Problem:	Fields for alias names were too short to display
+		the entire alias.
+
+Resolution:	Fields lengthened to make room for all 31 characters.
+
+
+
+v. 2.60 Aug 3, 1993
+
+Utility:	INQUIRY
+
+Problem:	INQUIRY did not support the use of aliases.
+
+Resolution:	Some limited alias capability has been incorporated
+		in INQUIRY. An ALIAS that contains no spaces can
+		be used for an inquiry. Thus COMPLETION DATE could
+		not be used as an alias, but COMPLETION-DATE could be.
+		CONTROL file Aliases are allowed to be 31 characters
+		long. INQUIRY will not print all 31 characters, but
+		only prints the first 25 as the column
+		heading.
+
+		Thus THE-DAY-UPON-WHICH-ALL-WAS-DONE can be used
+		to formulate the query, but it will be printed as
+		a column heading of:
+
+		THE-DAY-UPON-WHICH-ALL-W
+
+		This provides some alias capability for INQUIRY.
+		
+
+Utility:	REPORT/INQUIRY  (DOS version only)
+
+Problems:	When Inquiry and Report were run back to back, it
+		could sometimes set up conditions that caused Report
+		or Inquiry to run incorrectly based on values set for
+		the other utility.
+
+Resolution:	The DOS version does not reload the run time, so
+		all global variables had to be re-initialized
+		for the DOS version. This eliminated the problem.
+
+v. 2.59 July 15, 1993
+
+Utility:	ALL
+
+Problem:	Acu-COBOL versions required that run with C-ISAM
+		files.
+
+Resolution:	File IO module modified to handle C-ISAM files.
+		New installation instructions for building a
+		C-ISAM version of the WISP/Acu-COBOL/KCSI
+		run time.
+		There were no other changes to the utilities other
+		than at file level, so there will be no visible
+		difference in behavior.
+
+
+v. 2.58 June 9, 1993
+
+Utility:	REPORT INQUIRY
+
+Problem:	Certain comparisons for data limits on decimal
+		numbers not working correctly.
+
+Resolution:	Comparison logic modified to correctly handle
+		decimals.
+
+
+
+v. 2.57 June 8, 1993
+
+Utility:	REPORT
+
+Problem:	String fields not being concatenated as New Fields.
+
+Resolution:	Concatenation fixed.
+
+
+
+v. 2.56  May 13, 1993
+
+Utility:	CONTROL and DATENTRY
+
+Problem:	Dynamic Links from CONTROL and DATENTRY need to be
+		(S)ystem calls to LINK, as the utilities are not
+		correctly located unless in the active directory.
+
+Resolution:	Links changed to (S)ystem calls and utilities
+		are now searched for on the user
+		path variable.
+
+Utility:	REPORT and INQUIRY
+
+Problem:	Some changes in the way limits are checked caused
+		a problem with data limits in REPORT. Second data
+		limit was being ignored.
+
+Resolution:	Limits checking fixed.
+
+
+v. 2.55 May 2, 1993
+
+Utility:	REPORT
+
+Problem:	Data Limit and New Field constants that fill
+		the entire 20 character field, are being truncated
+		at the last character, thus deleting the the closing
+		quote at the end of the field.
+
+Resolution:	Truncation eliminated.
+
+v. 2.54 Apr 24, 1993
+
+
+Utility:	REPORT INQUIRY
+
+Problem:	Range values not being matched correctly.
+
+Resolution:	Range handling corrected.
+v. 2.53 Apr 18, 1993
+
+Internal changes for listmgmt.
+
+
+v. 2.52 April 11, 1993
+
+
+Utility:	REPORT
+
+Problem:	When the sequnce of fields selected changes, the Column
+		heading screen did not change sequence to match the
+		new sequence, unless exit report modify (or add mode)
+		and then returned to modify mode.
+
+Resolution:	Column headings now sort with the field sequence.
++++++
+
+Utility:	REPORT
+
+Problem:	A RPTDEF GETPARM was missing when Add mode was selected
+		while running REPORT through a procedure. The PUTPARM
+		that filled in RPTDEF was not honored.
+
+Resolution:	RPTDEF GETPARM added just before the screen to identify
+		the new report definition to be created. If this RPTDEF
+		GETPARM is filled in, its values are saved and used.
+
+
+Utility:	CONTROL - VAX only
+
+Problem:	When a changing a control file, if an alternate key
+		was added to the key list when the data name for that
+		key had not yet been defined, CONTROL crashed.
+
+Resolution:	Problem in linkage located and eliminated.
+
+Utility:	REPORT-VAX Only
+
+Problem:	Creating two report files. One empty and one containing
+		the report. Both used the same name with different
+		version numbers.
+
+Resolution:	Extra was a 'lock' file being used to reserve the selected
+		file name before the actual open. Logic added to remove
+		the lock file.
+
+Utility:	DATENTRY-VAX Only
+
+Problem:	The alternate keys for a file, where they existed, were
+		not being displayed as optional paths into the
+		data file in modify mode.
+
+Resolution:	Display and select of alternate paths corrected
+
+
+v. 2.51 Apr 01, 1993
+
+Utility:	REPORT
+
+Problem:	REPORT was issuing extra getparms causing long procedures
+		to get out of synch because REPORT was using up pending
+		PUTPARMS that should not have been consumed.
+
+Resolution:	Extra GETPARMS removed or renamed so that they do not
+		interfere with the correct course of PUTPARM as the
+		utility runs.
+
+
+Utility:	REPORT
+
+Problem:	When requesting a modify on a report definition, no
+		GETPARMS were issued by the utility. The Wang version
+		did issue GETPARMS.
+
+Resolution:	Hidden GETPARMS for RPTDEF, CONTROL, CONTROL2, INPUT1
+		and INPUT2 are now issued if PF3 is selected from the
+		main menu.
+
+v. 2.50		March 26, 1993
+Internal changes with no affect on the utilities
+
+v. 2.49		March 26, 1993
+
+Utility:	REPORT
+
+Problem:	Data File getparms INPUT1 and INPUT2 were coming
+		up with blank PRNAMES when an error occurred on
+		an open.
+
+Resolution:	PRNAMES correctly filled in.
+
+
+v. 2.48 March 20, 1993		Internal Changes
+
+
+v. 2.47 March 12, 1993
+
+Utility:	REPORT
+
+Problem:	Occasional crashes with signal 10 or 11 depending on
+		machine.
+
+Resolution:	Traced to file permissions and routines to check
+		permissions not matching up. Modified permissions
+		routines to veriry that user has read and write
+		access at group level in order to access a data file
+		control file or report definition file.
+
+Module:		REPORT
+
+Problem:	Inserts not showing up correctly in the edited picture
+		of a zero suppressed field.
+
+Resolution:	Display of edit for zero suppressed fields modifed to
+		coorrect the display.
+
+Utility:	REPORT
+
+Problem:	The KCSI version of REPORT expected that the field
+		named as key to the secondary file would be picked
+		as a report field. The Wang version does not require
+		this. REPORT files that were converted from the Wang,
+		that named a key to the secondary file that had not
+		been selected, were crashing when run as the program
+		was unable to locate in the key in the secondary
+		record.
+
+Resolution:	REPORT modified to locate and load the key to the 
+		secondary file whether the field was selected or
+		not.
+
+v. 2.45 March 9, 1993
+
+
+Utility:	REPORT
+
+Problem:	REPORT sometimes locks up when all 10 of the data limits
+		are filled.
+
+Resolution:	Lock up eliminated.
+
+
+Utility:	REPORT, INQUIRY
+
+Problem:	INQUIRY allows literals to be enclosed single or double
+		quotes. REPORT data limits options only allowed double
+		quotes, so data limits created by generating a REPORT
+		definition from an INQUIRY were not valid if INQUIRY
+		had used single quotes.
+
+Resolution:	Modified REPORT to allow single or double quotes as
+		a delimter for a literal field when specifying a
+		data limit.
+
+
+
+v. 2.44	Mar 4, 1993
+
+
+Utility:	REPORT and INQUIRY
+
+Problem:	Selection or Data Limit would not work unless the
+		selection criteria exactly matched the number
+		of trailing blanks. For example a three byte field
+		containing "PD " would not be matched if the
+		selection request was FIELD="PD". The only way
+		to match the field was to use FIELD="PD ". This
+		was not the way the Wang utlities did their
+		matching, as the Wang Utilities ignored trying
+		to match trailing spaces.
+
+Resolution:	Selection criteria for REPORT and INQUIRY modified
+		to ignore trailing spaces when doing the
+		comparison.
+
+Utility:	INQUIRY
+
+Problem:	INQUIRY was clearing the query fields after each inquiry
+		causing a need to re-enter a full query even though a
+		second or subsequent query might be based on the
+		original.
+
+Resolution:	Query fields are no longer cleared, leaving the
+		original query intact.
+
+
+v. 2.43		March 3, 1993
+
+
+Utility:	CONTROL
+
+Problem:	Control encountering problems with Wang control
+		record fields specified as numeric, but containing
+		non-numeric data.
+
+Resolution:	CTRLOAD module modified to inspect all numeric
+		fields for valid numeric data and correcting
+		errors.
+
+Module:		REPORT
+
+Problem:	The sort in report takes a long time when the sort
+		involves duplicate keys.
+
+Resolution:	Sort logic modified to improve handling for
+		duplicated keys.
+
+
+v. 2.42		Feb 22, 1993
+
+
+Module:		DATENTRY
+
+Problem:	Numeric fields defaulting to an upper entry fac
+		when they should be numeric facs and allowing
+		the FAC to be modified to UPLOW Entry.
+
+Resolution:	Locked the UPLOW field for numeric items
+		when requesting the modify fac options for
+		a field.
+Module:		REPORT
+
+Problem:	Report was displaying extra GETPARMS which normally
+		default in the Wang versions.
+
+Changes:	GETPARMS modified to work as default GETPARMs in the
+		same manner as the Wang REPORT utility.
+
+
+v. 2.41 Feb 7, 1993
+
+Module:		CONTROL
+
+Problem:	CONTROL was not imitating Wang behavior of passing
+		the CONTROL file values to DATENTRY when calling
+		DATENTRY.
+
+Resolution:	These values are now filled in when calling
+		DATENTRY.
+
+Module:		DATENTRY
+
+Proiblem:	DATENTRY was not imitating Wang behavior of
+		passing Data values to INQUIRY when calling
+		INQUIRY.
+
+Resolution:	These values are now filled when calling INQUIRY.
+
+Module:		REPORT
+
+Problem:	Some RPTDEF conversions from the Wang are causing
+		non numeric data to be stored in the occurence
+		field in REPORT. This is probably a recent change
+		in REPORT on the Wang that allows spaces to be stored
+		in that field. This was causing 'Non-numeric' errors
+		in REPORT when a newly converted RPTDEF was loaded
+		for the first time.
+
+Resolution:	Logic added to check for and handle this condition
+		thus preventing anoying but not troublesome
+		warning messages.
+		
+Module:		DATENTRY
+
+Problem:	When the number and/or length of modifiable fields
+		exceeded the screen size, the message indicating
+		that a screen overflow had occurred was causing
+		the program to crash. The effect was that DATENTRY
+		would appear to crash immediately after entering the
+		data file and control file names.
+
+Resolution:	Logic for the warning message corrected.
+
+
+Module:		REPORT
+
+Problem:	Under certain conditions REPORT was refusing to
+		accept a secondary input file stating that the
+		seconday input file did not match the secondary
+		control file definition when in fact it did.
+
+Resolution:	Problem in identifying the layout of a secondary file
+		corrected.
+
+Module:		REPORT
+
+Problem:	VAX version hanging up under certain conditions when
+		trying to modify a report.
+
+Resolution:	Error in RMS record holding logic corrected. Hangup
+		eliminated.
+
+
+
+v. 2.40 Jan 31, 1993
+
+
+Module:		INQUIRY
+
+Problem:	VAX inquiries to be formatted as .COM files.
+
+Resolution:	The output inquiry specification is correctly
+		formatted for a .COM file, but VAX names the
+		file with a .DAT extension. These files need to be
+		renamed before they can be run or must be run with
+		the .DAT extension.
+
+v. 2.39 Jan 31, 1993 Not released
+Internal Changes for VAX version
+
+v. 2.38 Jan 30, 1993 Not released
+Internal Changes for VAX version
+
+v. 2.37 Jan 27, 1993	Not Released
+Internal Changes for VAX version
+
+v. 2.36 Jan 21, 1993
+
+Utility:	REPORT
+
+Problem:	Control breaking logic and what is printed on the report
+		does not mirror the logic in the latest version of
+		Wang REPORT
+
+Resolution:	The newer version of Wang control breaking
+		for Summary ONLY = YES reports was installed.
+		In this version a summary ONLY = YES will cause
+		the values on which the break is occurring to be.
+		For example: A file containing REGION MANAGER SALESPER
+		and DOLLARS Can be sorted by REGION, MANAGER and
+		SALESPERS. Control Breaks can be specified of;
+
+		Field		Level	Skip	Print each
+		REGION		03	00	YES
+		MANAGER		02	00	YES
+		SALESPER	01	00	YES
+	
+		With Summary options set to total for the DOLLARS field
+		this will result in a Summary ONLY = YES report
+		that would look something like this.
+		
+		SALESPER	MANAGER		REGION	DOLLARS
+		0014		001		12A	12,600.00
+		0015		001		12A	18,200.00
+		0022		001		12A	16,300.00
+				001		12A	47,100.00
+		0003		002		12A	11,200.00
+		0083		002		12A	12,300.00
+				002		12A	23,500.00
+						12A	60,600.00
+		0017		004		13B	14,100.00
+		0018		004		13B	15,200.00
+				004		13B	29,300.00
+						13B	29,300.00
+							89,900.00
+
+		The second change in control breaking is the skip
+		action. The Wang skip lines action was unpredicatable
+		(buggy). A skip lines specification of 0, 1 or 2 would
+		usually result in a skip of only 1 line, or sometimes
+		0 lines. In this version of REPORT you get what you ask
+		for, as in the example above, a skip of 0 was specified
+		and no lines were skipped between totals. Wang report
+		would have skipped one line between each line even though
+		zero skip was requested.
+
+		If you have report definitions already done for
+		earlier versions of REPORT, you may have
+		to alter your control break skip lines count
+		to adjust for these changes.
+		
+		
+
+Utility:	CONTROL REPORT INQUIRY DATENTRY	LISTMGMT
+
+Problem:	Under the lastest version of the Wang utilities, a
+		blank file org defaults to 'I'ndexed. It used to
+		default to 'C'onsecutive in earlier versions
+		which default is currently reflected in the CRID
+		utilities.
+
+Resolution:	All utilties set up to default to Indexed
+		when the file organization field is blank
+		in the control file.
+
+
+
+v. 2.35 Jan 20, 1993
+
+Utility:	INQUIRY
+
+Problem:	Number of conditions was too limited for a
+		complex INQUIRY. It was limited to 10 fields
+		with 10 conditions per field.
+
+Resolution:	Number of fields changed to 100 with 10 conditions
+		per field.
+		If more than 10 conditions for 1 field are required,
+		the field can be repeated with another 10 conditions
+		Ex:
+		FIELD1 EQ "A" OR EQ "B" OR EQ "C" OR EQ "D" OR EQ "E"
+		OR EQ "F" OR EQ "G" OR EQ "H" OR EQ "I" OR EQ "J"
+		OR FIELD1 EQ "K" etc.
+		The above example would be better handled by a range
+		limit, and is only for illustration purposes.
+
+Utility:	REPORT and INQUIRY
+
+Problem:	The utility not correctly recognizing a limit
+		(or INQUIRY condition) that included blanks at
+		the end of the field. 
+		WHEN FIELD1 = "XY " (in INQUIRY) or
+		FIELD1 EQ "XY " (in report)
+		would not match a field in which FIELD1 actually
+		contained "XY ".
+
+Resolution:	Matching conditions adjusted so that testing
+		is done by all field characters even when trailing
+		characters include spaces.
+
+
+
+v. 2.34 Jan 18,1993 Not Released
+
+Utility:	DATENTRY
+
+Problem:	When a file had reached an at end condition using
+		PFKey 5 to 'next' through the file, subsequent
+		presses of PFKey 5 to read the next record
+		were causing an 'File corrupted' error to
+		be logged in criderr.log. The file was in fact not
+		corrupted. Acu-COBOL version.
+
+Resolution:	Logging action removed for this condition.
+
+
+v. 2.33 Jan 17, 1993 Not Released
+
+Utility:	ALL
+
+Problem:	DOS Acu-COBOL versions.
+
+Resolution:	This version includes the release of the of
+		the DOS Acu-COBOL versions of CONTROL, REPORT,
+		INQUIRY and DATENTRY.
+
+v. 2.32 Jan 13, 1993 Not Released
+
+v. 2.31	Jan  5, 1993 Not Released
+
+v. 2.30 Jan  5, 1993 Not released
+
+Utility:	DATENTRY
+
+Problem:	Was not allowing the default fac to be changed
+		for screen entry.
+
+Resolution:	FAC handling corrected.
+
+v. 2.29  Dec 29, 1992  Not Released
+
+Utlity:		REPORT
+
+Problem:	Occasional memory errors reported in reports
+		with user defined (NEW) fields.
+
+Resolution:	Bug located in sign handling of user defined numeric
+		fields that was at least some of the cause of the
+		error.
+
+Utility:	REPORT INQUIRY DATENTRY
+
+Problem:	When a control file and data file do not match,
+		the error message is too cryptic to be able to
+		determine the problem.
+
+Resolution:	Changed to provide a detailed display of
+		Record length, Primary and alternate key definitions
+		in order to be able to better isolate 
+		problems.
+		
+
+v. 2.27 Dec 2, 1992
+
+Utility:	REPORT
+
+Problem:	Binary decimal fields would default to COMMA=YES
+		in the field edit options.
+
+Resolution:	Now Defaulting to NO
+
+
+Utility:	ALL but only showing up in REPORT
+
+Problem:	HOLD-NEXT was not working correctly for LPI and 
+		MicroFocus Isam files causing a record-not found
+		status to be incorrectly returned. This showed
+		up as REPORT records that would not modify. For
+		example a change made to a field edit would disappear
+		after the file was saved.
+
+Resolution:	Hold next logic corrected.
+
+
+Utility:	CONTROL REPORT INQUIRY DATENTRY
+
+Problem:	The Micro Focus equivalent of a WANG binary
+		field is a COMP-5 which has a machine dependent
+		byte order.
+
+Resolution:	All utilities had to be modified
+		to determine machine order for control fields
+		described as binaries. This implies that data file
+		conversions will have to take into account
+		the machine order for binaries and convert them
+		to the correct order for the target machine.
+
+
+v. 2.26 Nov 21, 1992
+
+Utility:	INQUIRY
+
+Problem:	When saving a report definition from an inquiry,
+		the output library defaulted to OUTLIB instead
+		of userid + RPT.
+
+Resolution:	Output library for saved report definitions 
+		defaults to userid + RPT.
+
+Utility:	INQUIRY
+
+Problem:	The shell script generated to execute an inquiry
+		was attempting to enter CHANGE=YE for a change in
+		control file, as the YES/NO option was being
+		truncated to 2 characters
+
+Resolution:	Truncation eliminated. Change is now correctly
+		entered as CHANGE=YES.
+
+
+Utility:	ALL
+
+Problem:	An error in the close logic for LPI and Micro
+		Focus versions was causing a spurious error
+		to be logged on certain file closes.
+
+Resolution:	Close logic corrected.
+
+
+v. 2.25 Nov 16, 1992 Not Released
+
+Utility:	DATENTRY
+
+Problem:	The RELATIVE RECORD field for relative files in ADD
+		mode sometimes gets locked up and will not accept
+		data entry. Also allowed entry of zero as a relative
+		record number.
+
+Resolution:	Correct initialization for the FAC of the relative
+		record number field installed, and validation
+		routines modified to prevent entry of zeroes.
+
+
+v. 2.24 Nov 13, 1992
+
+Utility:	REPORT and INQUIRY
+
+Problem:	Print files were being incorrectly queued, or queued
+		twice, and disposition was not being correctly set
+		to Delete.
+
+Resolution:	Print file close routines corrected to queue the
+		files once with correct disposition set.
+
+
+v. 2.23 11 Nov, 1992 Not Released
+
+Utility:	REPORT and INQUIRY
+
+Problem:	Processing screens not displayed while waiting for
+		REPORT or INQUIRY results.
+
+Resolution:	Please Wait .... Processing screens added and display
+		if the task is running in foreground.
+
+Utility:	ALL
+
+Problem:	Control field validation was not allowing a '#'
+		to appear as a character in a field name.
+
+Resolution:	Field validation corrected to allow
+		valid field names to contain A-Z, 1-9, @, #, -,
+		and $.
+
+Utility:	DATENTRY
+
+Problem:	Converted control files that used a different
+		external length than the default length were
+		not behaving correctly in DATENTRY causing
+		memory problems and "Level not found" errors.
+
+Resolution:	DATENTRY modified to use default external
+		lengths for all DATENTRY as is done in the
+		Wang VS environment.
+
+Utility:	INQUIRY
+
+Problem:	Incorrect handing of quoted fields in a saved
+		inquiry.
+
+Resolution:	Corrected so that double quotes are consistently
+		converted to single quotes
+
+
+
+v. 2.22 Oct 27, 1992 Not Released
+
+Utility:	INQUIRY
+
+Problem:	Rewrites on a file that caused a duplicate
+		alternate key when no duplicates were allowed
+		were not returning a correct file status. The
+		record would not be rewritten, but no message
+		appeared.
+
+Resolution:	File status corrected for rewrites, and screen
+		now correctly presents a Recprd Already on File
+		message.
+
+Utility:	INQUIRY
+
+Problem:	When saving an inquiry, the inquiry file could
+		not be saved in a directory that did not exist,
+		and the output library defaulted to OUTLIB instead
+		of userid + INQ.
+
+Resolution:	Inquiry files can now be saved in new directories
+		provided the user's access allows creation of
+		directories. Output library for saved queries defaults
+		to USERID + INQ.
+		The output PUTPARM for a saved Query now includes
+		the value for CONSEC that was entered on that screen.	 
+
+Utility:	INQUIRY
+
+Problem:	Would not create a consecutive output file when
+		using the EXTRACT option.
+
+Resolution:	If CONSEC on the EXTRACT screen is set to YES,
+		the output will be a consecutive format with
+		new line terminators. CONSEC will also accept
+		a 'REL' option which will output the record
+		as is with new line terminators.
+
+Utility:	INQUIRY
+
+Problem:	Not producing a final record count when displaying
+		the results of an inquiry.
+
+Resolution:	Total records selected not displayed at the end
+		of the listing.
+
+Utility:	REPORT
+
+Problem:	Would not allow spaces between fields to be set to 0.
+
+Resolution:	Now Accepts zero spacing.
+
+Utility:	DATENTRY
+
+Problem:	Change mode for alternate key files was not prsenting
+		an key path selection screen, so all changing had to be
+		done on the primary key path.
+
+Resolution:	Key path screen is now available for alternate keyed
+		files in change mode. Delete mode still requires
+		primary key path access.
+
+Utility:	DATENTRY
+
+Problem:	Add mode for relative files was not requesting a
+		relative record number.
+
+Resolution:	Record number and record validation now appears
+		on the add mode screen.
+
+Utility:	DATENTRY
+
+Problem:	After a delete on a relative or indexed 
+		record the record pointer
+		was not being positioned correctly.
+
+Resolution:	Next record is now being displayed after a
+		delete on a relative or keyed file.
+
+
+Utility:	DATENTRY
+
+Problem:	Keyed files with duplicate alternates were returning
+		a Record on file status when writing a record with
+		an alternate key that was already on file. The record
+		was being correctly written, but the screen displayed
+		an erroneous "Record already on file" message.
+
+Resolution:	File status corrected, and message no longer appears.
+
+
+v. 2.21 July 8,1992
+
+Utility:	REPORT REPORTW
+
+Problem:	Zero suppression of Z0 causes no suppression
+		when it should cause full field suppression,
+		and Z0 with a $ caused a dollar sign to be
+		printed with a blank field when the field
+		should have been completely blank.
+
+Resolution:	Zero and dollar sign suppression corrected
+		for 'Z0' and '$' type fields.
+
+
+Utility:	REPORT
+
+Problem:	A data limit specification in a report
+		that contained embedded spaces such as
+		FIELD1 NE "DO " produced an incorrect
+		error message of
+		Literal must be delimited by double quotes.
+
+Resolution:	Embedded spaces are now accepted.
+
+Utility:	REPORT REPORTW
+
+Problem:	When specifying a report using two files the
+		key to the secondary file must have the same
+		field name as the field named in the primary 
+		file. When this is not the case, the REPORT
+		writer portion of the utility returns a
+		CONTROL File and RPTDEF files do not match
+		error.
+
+Resolution:	This problem as fixed allowing different field names.
+
+
+Utility:	REPORT REPORTW INQUIRY
+
+Problem:	Utilities required that the primary and
+		secondary keys be identical in length and
+		data type to work correctly.
+
+Resolution:	Conversion routines modified to allow the key to
+		the secondary file to be any length or data type.
+		If the field in the primary file is characters,
+		then the field in the secondary must be characters.
+		If the field in the primary is numeric (zoned,
+		unsigned, binary or packed) then the field in the
+		secondary may be any of the numeric types and
+		the values will be converted.
+
+Notes:		The key field for the secondary file must always
+		be selected as a field to use in the report,
+		even if it is given a sequence of 99 preventing
+		it being reported upon. It must be selected, or 
+		reading of the secondary file will not take place
+		correctly.
+
+
+Utility:	ALL     
+
+Problem:	Under certain circumstances, Zoned negatives
+		in ACU-COBOL were being converted to positive
+		values.
+
+Resolution:	Conversions were corrected so that the sign
+		of the field is preserved.
+
+
+v. 2.20 July 8,1992
+
+Utility:	INQUIRY
+
+Problem:	When creating an EXTRACT file from an INQUIRY
+		the INQUIRY was terminating with a fatal error
+		10 if the library specified did not exist for
+		the new output file.
+
+Resolution:	Corrected. The directory and file will be created
+		if the user has sufficient access rights to the
+		directory in which the new directory and file
+		are to be created.
+
+Utility:	INQUIRY
+
+Problem:	INQUIRY had no option to specify a consecutive
+		file as an alternative form of an EXTRACT file.
+
+Resolution:	Corrected. INQUIRY will now create a consecutive
+		file if requested. The file format is equivalent to 
+		the ACU-COBOL binary sequential file described in
+		programmer's guide section on Sequential files.
+
+
+
+v. 2.18  6/27/92 - Not Released
+
+Utility:	CONTROL REPORT INQUIRY DATENTRY REPORTW
+
+Problem:	None
+
+Resolution:	Internal changes to module names which will
+		have no effect as far as the end user is
+		concerned.
+
+
+v. 2.17  6/22/92 - Not Released
+
+Utility:	CONTROL REPORT INQUIRY DATENTRY REPORTW
+
+Problem:	ENOREC (RECORD-NOT-FOUND) is a valid 
+		return code from a failed start but was being
+		logged as a file error in criderr.log.
+
+Resolution:	Removed from ccsioerr as a log-able error.
+
+
+Utility:	CONTROL REPORT INQUIRY DATENTRY REPORTW
+
+Problem:	Error logging was split into several
+		files.
+
+Resolution:	All error logging is now done into criderr.log
+		in the current directory for utility errors, as
+		well as the usual wisperr.log in the users $HOME
+		directory for wisp errors.
+
+
+Utility:	REPORT
+
+Problem:	New fields defined with an initial literal
+		field would not convert correctly if the the new
+		field was defined as numeric.
+
+Resolution:	Conversion problem fixed.
+
+
+Utility:	REPORT
+
+Problem:	New fields could not be defined with
+		a literal that started with a sign or a decimal.
+
+Resolution:	Fixed New field Literals may start with signs or
+		decimal characters.
+
+
+Utility:	REPORT INQUIRY
+
+Problem:	Zero suppression on fields with 
+		decimal values was not being done correctly.
+		A field defined as having 2 decimals with a zero
+		suppression of Z1 would print as  ". 0" when the
+		the field value was zero. A floating dollar sign
+		on the same field would print as ".$0".
+
+Resolution:	Corrected field formatting logic to imitate WANG
+		logic and the above fields now print correctly
+		as "0" and "$0".
+
+
+Utility:	REPORT
+
+Problem:	Control break fields were not printing
+		on the first record, if the control break action
+		for a field specified not to print the field on
+		on each line.
+
+Resolution:	Fixed - Values now print correctly.
+
+
+Utility:	REPORT
+
+Problem:	In modify mode would allow an
+		invalid file to be named as the report
+		definition file, but would lock up and
+		not allow the user to exit via PFKey 16.
+
+Resolution:	Fixed and PFkey 16 will now allow exit.
+
+
+v. 2.16 6/21/92	- Not Released
+
+Utility:	INQUIRY
+
+Problem:	Would not accept commas (,) as field 
+		delimiters on a query screen.
+
+Resolution:	Commas now accepted as a valid delimiter.
+
+
+v. 2.15 6/21/92 - Not Released
+
+Utility:	REPORT REPORTW
+
+Problem:	If a field were specified for summary
+		options; Minimum, Maximum, or Average, a literal
+		was printed for each of these options. This literal
+		continued to be printed even if the field in
+		question were then given a sequence of 99. The 99
+		corrrectly eliminated the field from the report
+		but the summary option literals were still printed
+		at the end of the report.
+
+Resolution:	Fixed - Setting a field to 99 now eliminates the
+		summary option literals.
+
+
+v. 2.14 6/20/92 - Not Released
+
+Utility:	REPORT REPORTW INQUIRY
+
+Problem:	"Please Wait" messages being displayed by REPORT and
+		INQUIRY were interfering with background running when
+		REPORT or INQUIRY were submitted to background.
+
+Resolution:	"Please Wait" message removed from both utilities.
+
+
+v.  2.13 6/20/92
+
+This version consolidates CONTROL, REPORT, INQUIRY, and DATENTRY under
+a single version numbering system. All of the utilities shared comnmon
+routines such that any single modification will usually affect more
+than one of the programs. Using a single version number for all four
+utilities makes version tracking easier.
+
+This release incorporates what were originally:
+
+CONTROL		v. 1.50.27
+REPORT		v. 1.70.02
+REPORTW		v. 1.70.02
+INQUIRY		v. 1.30.38
+DATENTRY	v. 2.10.15
+
+
+Known Bugs and Problems as of version 2.68 :
+
+Utility:	REPORT
+
+Problem:	When defining a secondary file for report,
+		no checking is done to verify that the secondary
+		file is indexed. Using a relative or consecutive
+		file as a secondary file in REPORT can cause
+		unpredictable results.
+
+
+
+Utility:	REPORT
+
+Problem:	In various places while defining a report,
+		the edit checks for a subscripted field are very
+		exacting about the name of the field. For example
+		if a field named VALUE occurs 3 times, some of
+		the screens require that the individual elements
+		be defined as a eight character field name padded
+		with blanks followed by parenthesis enclosing a 2
+		digit subscript. Thus VALUE(3) would not be
+		an acceptable entry, but VALUE   (03) would be
+		accepted. 
+
+Utility:	REPORT
+
+Problem:	When specifying data limits, the input field is
+		20 characters long. This should allow a literal
+		of 18 characters plus the opening and closing
+		quote marks. If a literal is defined using the
+		the full 20 character field, the closing quote
+		is not stored correctly in the file.
+
+Utility:	CONTROL - (VAX version only)
+
+Problem:	When adding an alternate key to an existing CONTROL file,
+		if the field to be used as an alternate has not been
+		defined, it causes a stack dump. On non-VAX versions this
+		situation correctly displays the error message that
+		the field requested has not been defined.
+
+Work Around:	Ensure that fields to be added as alternates are defined
+		before adding them as alternates.
+
+Utility:	CONTROL - (VAX version only)
+
+Problem:	The utility allows updateable fields to be entered that
+		overlap each other in the record, and does not
+		provide the error message that fields overlap.
+
+Work Around:	Do not define overlapping updateable fields.
+
+
+		Release Notes - 3/26/94
+
+v. 1.7 3/26/94
+
+v. 1.6 3/17/94	Not Released
+
+
+v. 1.5 3/3/94
+
+Problem:	INPOS not being used correctly as the starting
+		point for an inputfield in a file.
+
+Resolution:	INPOS logic corrected to start input from
+		the correct position in a record.
+
+
+v. 1.4 3/3/94
+	Internal version control only. No changes in the utility.
+
+v. 1.3 10/31/93
+
+Problem:	Relative files being created that consume large
+		disk space. 
+
+Resolution:	Open output logic for relative files corrected
+		to create corrrect size files.
+
+v. 1.2 08/15/93
+
+	Initial Release for AIX, using AcuCOBOL Vision 3.0 files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

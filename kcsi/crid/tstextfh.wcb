@@ -1,0 +1,159 @@
+000000*
+003100 IDENTIFICATION DIVISION.                                                 
+003200 PROGRAM-ID.  TSTEXTFH.                                                   
+      *
+      *  This program will convert the sequential file KCSISEQ
+      *  that is stored in drcs into the proper test index file
+      *  KCSIIDX for the current environment.
+      *
+003500/*****************************************************************        
+003600*                                                                *        
+003700*                         ENVIRONMENT DIVISION                   *        
+003800*                                                                *        
+003900******************************************************************        
+004000*                                                                         
+004100 ENVIRONMENT DIVISION.                                                    
+004200 CONFIGURATION SECTION.                                                   
+004300 SOURCE-COMPUTER.                                                         
+004400     WANG-2200-VS.                                                        
+004500 OBJECT-COMPUTER.                                                         
+004600     WANG-2200-VS.                                                        
+004700 FIGURATIVE-CONSTANTS.                                                    
+004900*                                                                *        
+005000/*****************************************************************        
+005100*                                                                *        
+005200*                         INPUT-OUTPUT SECTION                   *        
+005300*                                                                *        
+005400******************************************************************        
+005500*                                                                         
+005600 INPUT-OUTPUT SECTION.                                                    
+005700 FILE-CONTROL.                                                            
+005800*                               
+      *$SEQLINE                                          
+           SELECT KCSISEQ
+      
+               ASSIGN TO "KCSISEQ", "DISK", NODISPLAY
+               ORGANIZATION IS SEQUENTIAL
+               ACCESS MODE IS SEQUENTIAL
+               FILE STATUS IS FILE-STAT.
+
+           SELECT KCSIIDX
+      
+               ASSIGN TO "KCSIIDX", "DISK", NODISPLAY
+               ORGANIZATION IS INDEXED
+               ACCESS MODE IS DYNAMIC
+               RECORD KEY IS CURRENCY-HISTORY-KEY
+               ALTERNATE RECORD KEY
+                   1 IS CURR-HIST-ALT-KEY-1
+               FILE STATUS IS FILE-STAT.
+006400                                                                          
+007100 DATA DIVISION.                                                           
+007200 FILE SECTION.                                                            
+007300*                                                                         
+       FD  KCSISEQ 
+           LABEL RECORDS ARE STANDARD
+           DATA RECORD IS SEQ-CURRENCY-HISTORY-RECORD
+           VALUE OF
+               FILENAME IS "KCSISEQ"
+               LIBRARY IS "LIBIN"
+               VOLUME IS "VOLIN".
+      
+       01  SEQ-CURRENCY-HISTORY-RECORD.
+      
+           03  SEQ-CURRENCY-HISTORY-KEY.
+               05  SURR-HIST-CURRENCY-CODE     PIC X(3).
+               05  SURR-HIST-PERIOD-DATE       PIC 9(8).
+      
+           03  SEQ-CURR-HIST-ALT-KEY-1.
+               05  SURR-HIST-CURRENCY-CODE-ALT   PIC X(3).
+               05  SURR-HIST-REVERSE-PERIOD-DATE PIC 9(8).
+      
+           03  SURR-HIST-IN-HC-AVERAGE-RATE    PIC S9(6)V9(9) COMP.
+           03  SURR-HIST-IN-HC-FINAL-RATE      PIC S9(6)V9(9) COMP.
+      
+           03  SURR-HIST-PER-HC-AVERAGE-RATE   PIC S9(6)V9(9) COMP.
+           03  SURR-HIST-PER-HC-FINAL-RATE     PIC S9(6)V9(9) COMP.
+      
+           03  SEQ-CURR-HIST-UPDATE-ID             PIC X(10).
+           03  SEQ-CURR-HIST-DATE-UPDATED          PIC 9(8).
+      
+           03  FILLER                              PIC X(3).
+007900                                                                          
+
+       FD  KCSIIDX 
+           LABEL RECORDS ARE STANDARD
+           RECORD CONTAINS 75 COMPRESSED CHARACTERS
+           DATA RECORD IS CURRENCY-HISTORY-RECORD
+           VALUE OF
+               FILENAME IS "KCSIIDX"
+               LIBRARY IS "LIBIN"
+               VOLUME IS "VOLIN".
+      
+       01  CURRENCY-HISTORY-RECORD.
+      
+           03  CURRENCY-HISTORY-KEY.
+               05  CURR-HIST-CURRENCY-CODE     PIC X(3).
+               05  CURR-HIST-PERIOD-DATE       PIC 9(8).
+      
+           03  CURR-HIST-ALT-KEY-1.
+               05  CURR-HIST-CURRENCY-CODE-ALT   PIC X(3).
+               05  CURR-HIST-REVERSE-PERIOD-DATE PIC 9(8).
+      
+           03  CURR-HIST-IN-HC-AVERAGE-RATE    PIC S9(6)V9(9) COMP.
+           03  CURR-HIST-IN-HC-FINAL-RATE      PIC S9(6)V9(9) COMP.
+      
+           03  CURR-HIST-PER-HC-AVERAGE-RATE   PIC S9(6)V9(9) COMP.
+           03  CURR-HIST-PER-HC-FINAL-RATE     PIC S9(6)V9(9) COMP.
+      
+           03  CURR-HIST-UPDATE-ID             PIC X(10).
+           03  CURR-HIST-DATE-UPDATED          PIC 9(8).
+      
+           03  FILLER                          PIC X(3).
+007900                                                                          
+008600 WORKING-STORAGE SECTION.                                                 
+       01  FILE-STAT                           PIC XX.
+       01  CONVERT-INREC                       PIC 9(9) VALUE 0.
+       01  CONVERT-OUTREC                      PIC 9(9) VALUE 0.
+       01  CONVERT-INVALID                     PIC 9(9) VALUE 0.
+       01  CONVERT-STATUS                      PIC 99 VALUE 0.
+           88  CONVERT-DONE                           VALUE 10.
+008700*                                                                         
+054000 PROCEDURE DIVISION.
+054600                                                                          
+054700 START-PROGRAM SECTION.                                                   
+054800 START-PROGRAM-S.                                                         
+000000*
+           OPEN INPUT KCSISEQ.
+000000     OPEN OUTPUT KCSIIDX.
+
+           MOVE 0 TO CONVERT-STATUS.
+           MOVE 0 TO CONVERT-INREC.
+           MOVE 0 TO CONVERT-OUTREC.
+           MOVE 0 TO CONVERT-INVALID.
+           PERFORM 0000-READ-PARA.
+           PERFORM UNTIL CONVERT-DONE
+               ADD 1 TO CONVERT-INREC
+               PERFORM 0000-MOVE-PARA
+               PERFORM 0000-WRITE-PARA
+               PERFORM 0000-READ-PARA
+           END-PERFORM.
+
+           DISPLAY "RECORDS IN "  CONVERT-INREC
+               "    RECORDS OUT " CONVERT-OUTREC.
+
+           CLOSE KCSISEQ.
+000000     CLOSE KCSIIDX.
+054900     STOP RUN.
+
+       0000-READ-PARA.
+           READ KCSISEQ
+               AT END MOVE 10 TO CONVERT-STATUS.
+
+       0000-MOVE-PARA.
+           MOVE SEQ-CURRENCY-HISTORY-RECORD TO CURRENCY-HISTORY-RECORD.
+
+       0000-WRITE-PARA.
+           ADD 1 TO CONVERT-OUTREC.
+           WRITE CURRENCY-HISTORY-RECORD INVALID
+               ADD 1 TO CONVERT-INVALID
+               SUBTRACT 1 FROM CONVERT-OUTREC.

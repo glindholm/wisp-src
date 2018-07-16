@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
@@ -71,9 +73,7 @@ static	int cur_flags = -1;								/* Current flags.			*/
 
 	/* #ifdef vax11c */
 
-osd_term(tnum,flags)									/* return the terminal number		*/
-int *tnum;
-int *flags;										/* and flags indicating what it can do	*/
+int osd_term(int4* tnum, int *flags)
 {
 #define		ROUTINE		65500
 	char retbuf[65];
@@ -427,100 +427,15 @@ char latname[32],portname[32];
 #endif	/* #ifdef VMS */
 
 
-#ifndef VMS
-
-#ifdef unix
-#define PATH_SEPARATOR	':'
-#define DIR_SEPARATOR	'/'
-#endif
-#ifdef MSDOS
-#define PATH_SEPARATOR	';'
-#define DIR_SEPARATOR	'\\'
-#endif
-
-char *osd_path(pathnum)
-int	pathnum;
-{
-#undef          ROUTINE
-#define		ROUTINE		65800
-	static	int	first=1;
-	static	int	totalcnt=1;							/* Number of dirs in $PATH		*/
-	static  char	*fullpath;							/* The $PATH				*/
-	static  char	*nullpath;							/* $PATH with ':' replaced by '\0'.	*/
-	char	*ptr;
-	int	size, i, cnt;
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-
-	if ( first)
-	{
-		first = 0;
-		ptr = (char *)getenv("PATH");
-		size = strlen(ptr);
-		
-		fullpath = (char *)malloc(size+1);
-		nullpath = (char *)malloc(size+1);
-		if ( ! fullpath || ! nullpath )
-		{
-			werrlog(ERRORCODE(2),size+1,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(2));
-		}
-
-		strcpy(fullpath,ptr);
-		strcpy(nullpath,ptr);
-
-		for( i=0; fullpath[i]; i++ )
-		{
-			if ( nullpath[i] == PATH_SEPARATOR )
-			{
-				nullpath[i] = '\0';					/* Replace ':' with '\0'.		*/
-				totalcnt += 1;
-			}
-		}
-	}
-
-	if ( pathnum == 0 ) return( fullpath );
-	if ( pathnum == 1 ) return( nullpath );
-	if ( pathnum > totalcnt ) return( NULL );
-	if ( pathnum < 0 )
-	{
-		werrlog(ERRORCODE(4),pathnum,0,0,0,0,0,0,0);
-		return( NULL );
-	}
-
-	cnt = 1;
-	for( i=0; fullpath[i]; i++ )
-	{
-		if ( fullpath[i] == PATH_SEPARATOR )
-		{
-			cnt += 1;
-			if ( cnt == pathnum ) return( &nullpath[i+1] );
-		}
-	}
-
-	werrlog(ERRORCODE(6),pathnum,fullpath,0,0,0,0,0,0);
-	return( NULL );									/* This should never occur.		*/
-}
-
-char *osd_ext(filepath)									/* Return a ptr to the file extension.	*/
-char *filepath;
-{
-#undef          ROUTINE
-#define		ROUTINE		65900
-	char	*ptr;
-	int	k;
-
-	werrlog(ERRORCODE(1),filepath,0,0,0,0,0,0,0);
-
-	for( k=strlen(filepath); k>=0; k-- )
-	{
-		if ( filepath[k] == DIR_SEPARATOR ) return( NULL );
-
-		if ( filepath[k] == '.' ) return( &filepath[k+1] );
-	}
-
-	return( NULL );
-}
-
-#endif /* !VMS */
-
+/*
+**	History:
+**	$Log: sysinf.c,v $
+**	Revision 1.10  1996-08-26 20:09:07-04  gsl
+**	fix prototype
+**
+**	Revision 1.9  1996-08-19 15:33:01-07  gsl
+**	drcs update
+**
+**
+**
+*/

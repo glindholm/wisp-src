@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
+/* $Id:$ */
 /* PGCBLSRC.H															*/
 /*		 COBOL source that needs to be inserted into the .WCB that is generated.					*/
 
@@ -13,7 +15,7 @@ EXT char *ident_div[] = {
 			"000700 IDENTIFICATION DIVISION.\n",                                                 
 			"000800 PROGRAM-ID.\n",
 			"001000 AUTHOR.\n",
-			"001100     IDSI CONVERSION TEAM.\n",
+			"001100     PROCTRAN Wang VS Procedure Translator.\n",
 			"001200 DATE-WRITTEN.\n",                                                            
 			""
 			};
@@ -607,9 +609,8 @@ EXT char *call_rename[] = {
 			"053600                       RENAME-FILE, RENAME-LIB,\n",
 			"053700                       RENAME-BYPASS-FLAG, RENAME-ACCESS-FLAG,\n",
 			"053950                       RENAME-OPEN, RENAME-RETURN-CODE.\n",
-			"054115     MOVE RENAME-R-2     TO RETURN-CODE.\n",
 			"",
-/*10*/			"053950*\n",
+/*9*/			"053950*\n",
 			"054000     IF RENAME-R-2 IS GREATER THAN ZERO\n",                            
 			"054005        MOVE RENAME-R-2 TO ERROR-RC.\n",
 			"054100        DISPLAY \"ERROR CALL RENAME \", WSA-FILE-NAME,\n",
@@ -635,9 +636,8 @@ EXT char *call_scratch[] = {
 			"053550                       WSA-LIB-NAME, WSA-VOL-NAME,\n",
 			"053600                       SCRATCH-BYPASS-FLAG,\n",
 			"053950                       SCRATCH-ACCESS-FLAG, SCRATCH-RETURN-CODE.\n",
-			"054110     MOVE SCRATCH-R-2     TO RETURN-CODE.\n",
 			"",
-/*10*/			"053950*\n",
+/*9*/			"053950*\n",
 			"054000     IF SCRATCH-R-2 IS GREATER THAN ZERO\n",                            
 			"054010        MOVE SCRATCH-R-2 TO ERROR-RC.\n",
 			"054100        DISPLAY \"ERROR CALL SCRATCH \", WSA-FILE-NAME,\n",
@@ -655,9 +655,8 @@ EXT char *call_print[] = {
 			"053700                       PRINT-DISPOSITION, PRINT-NUMBER-COPIES,\n",
 			"053900                       PRINT-CLASS, PRINT-FORM-NUMBER,\n",
 			"053950                       PRINT-RETURN-CODE.\n",
-			"054110     MOVE PRINT-R-2     TO RETURN-CODE.\n",
 			"",
-			"053950*\n",
+/*10*/			"053950*\n",
 			"054000     IF PRINT-R-2 IS GREATER THAN ZERO\n",                            
 			"054010        MOVE PRINT-R-2 TO ERROR-RC.\n",
 			"054100        DISPLAY \"ERROR CALL PRINT \", WSA-FILE-NAME,\n",
@@ -676,9 +675,8 @@ EXT char *call_submit[] = {
 			"053700                       SUBMIT-DISPOSITION, SUBMIT-JOB-CLASS,\n",
 			"053900                       SUBMIT-ABORT-ACTION, SUBMIT-CPU-TIME,\n",
 			"053950                       SUBMIT-LIMIT-FLAG, SUBMIT-RETURN-CODE.\n",
-			"054110     MOVE SUBMIT-R-2     TO RETURN-CODE.\n",
 			"",
-/*12*/			"053950*\n",
+/*11*/			"053950*\n",
 			"054000     IF SUBMIT-R-2 IS GREATER THAN ZERO\n",                            
 			"054010        MOVE SUBMIT-R-2 TO ERROR-RC\n",
 			"054100        DISPLAY \"ERROR CALL SUBMIT \", WSA-FILE-NAME,\n",
@@ -718,13 +716,12 @@ EXT char *call_putparm[] = {
 /*8*/			"              PPARM-RETURN-CODE",
 /*9*/			"IF PPARM-R-2 IS GREATER THAN ZERO",                            
 /*10*/			"    DISPLAY \"ERROR CALL PUTPARM \", PPARM-PRNAME",
-/*11*/			"MOVE PPARM-R-2     TO RETURN-CODE",
-/*12*/			"           MOVE PPARM-PFKEY-TABLE-TABLE(",
-/*13*/			") TO PPARM-PFKEY.\n",
-/*14*/			"PPARM-FUNC",
-/*15*/			"PPARM-KW-",
-/*16*/			"PPARM-VAL-",
-/*17*/			"PPARM-LEN-",
+/*11*/			"           MOVE PPARM-PFKEY-TABLE-TABLE(",
+/*12*/			") TO PPARM-PFKEY.\n",
+/*13*/			"PPARM-FUNC",
+/*14*/			"PPARM-KW-",
+/*15*/			"PPARM-VAL-",
+/*16*/			"PPARM-LEN-",
 			""
 			};
 
@@ -736,9 +733,8 @@ EXT char *call_readfdr[] = {
 			"038400     CALL \"READFDR\" USING READFDR-FILE, READFDR-LIB, READFDR-VOL,\n",
 			"038500                     READFDR-MODE, READFDR-FLD-ID, READFDR-RECVR,\n",
 			"038500                     READFDR-RETURN-CODE.\n",
-			"038500     MOVE RFDR-RC-R-2     TO RETURN-CODE.\n",
 			"",
-/*9*/			"053950*\n",
+/*8*/			"053950*\n",
 			"038500     IF RFDR-RC-R-2 IS GREATER THAN ZERO\n",                            
 			"038500        MOVE RFDR-RC-R-2  TO ERROR-RC\n",
 			"038500        DISPLAY \"ERROR CALL READFDR \", READFDR-FILE,\n",
@@ -783,3 +779,18 @@ EXT char *call_putparm[];
 EXT char *call_readfdr[];
 
 #endif
+/*
+**	History:
+**	$Log: pgcblsrc.h,v $
+**	Revision 1.11  1997-04-21 10:50:29-04  scass
+**	Corrected copyright
+**
+**	Revision 1.10  1997-02-18 10:32:14-05  gsl
+**	Changed AUTHOR name
+**
+**	Revision 1.9  1996-09-12 19:21:55-04  gsl
+**	Add drcs headers
+**
+**
+**
+*/

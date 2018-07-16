@@ -1,0 +1,45 @@
+ 	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		KCSI CREATE PACKING LIST FOR UNIX
+	
+	Document:	packlist.lis
+	Last Updated:	31 OCTOBER 95
+	Products:	CREATE/ACU, CREATE/MF
+	Versions:	1.8 (AND LATER)
+	
+	Summary:	Packing list for the CREATE tool for unix.
+
+	==================================================================== 
+ 
+	This distribution should include:
+ 
+	packlist.lis		- This packing list
+	install_create.lis	- Instructions for building kcsi create and
+				  installation notes.
+	release.lis		- Release notes for the latest version if any.
+
+	EXECUTABLES
+	===========
+	Micro Focus		AcuCOBOL
+	-----------		--------
+	create			CREATE		- The CREATE utility
+
+	====================================================================
+
+	If for some reason the executable does not run on the system, or you
+	want to build it with your version of COBOL, the distribution contains
+	the pieces to make the executable on the current machine.
+
+	Micro Focus		AcuCOBOL
+	-----------		--------
+	mfcreate.a		create.a	- library of support routines
+	mfio.a			acuio.a		- library of I/O routines
+	libmfisam.a				- ISAM library
+				vscracu.o	- Needed for AcuCOBOL
+	create.umf		create.umf	- Make file for create utility
+
+
+       ========================= END OF DOCUMENT ==========================
+

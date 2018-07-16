@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
+/* $Id:$ */
 struct vol_rec {
 	char header[4];
 	char label[6];
@@ -48,3 +50,12 @@ struct header2 {
 struct vol_rec svol;
 struct header1 shead1;
 struct header2 shead2;
+/*
+**	History:
+**	$Log: readtape.h,v $
+**	Revision 1.7  1996-07-23 14:12:58-04  gsl
+**	drcs update
+**
+**
+**
+*/

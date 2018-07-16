@@ -1,10 +1,6 @@
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 #define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 /* PG_IF.C	*/
 
@@ -17,10 +13,23 @@
 
 static int start_num = 1;
 static int tstdel();
-static int process_complex_sub();
+static void process_complex_sub(char type,
+				int* num_var,
+				int* num_val,
+				int  caller,
+				int* num_asn,
+				int* filler_num,
+				int* current_row,
+				int* num_cmds,
+				char* fld,
+				char* tbuf);
 
-p_if_kw(tndx,num_var,num_val,filler_num,current_row,num_cmds)				/* Proccess IF keyword.			*/
-int tndx, *num_var, *num_val, *filler_num, *current_row, *num_cmds;
+void p_if_kw(int tndx,
+	     int* num_var,
+	     int* num_val,
+	     int* filler_num,
+	     int* current_row,
+	     int* num_cmds)								/* Proccess IF keyword.			*/
 {
 	char cond, *cstr;
 
@@ -189,8 +198,11 @@ int tndx, *num_var, *num_val, *filler_num, *current_row, *num_cmds;
 	}
 }
 
-save_if_var(num_var,num_val,filler_num,current_row,num_cmds)				/* Proccess IF variable.		*/
-int *num_var, *num_val, *filler_num, *current_row, *num_cmds;
+void save_if_var(int* num_var,
+		 int* num_val,
+		 int* filler_num,
+		 int* current_row,
+		 int* num_cmds)				/* Proccess IF variable.		*/
 {
 	char *lptr, *cstr, ptyp;
 	int len, pos, fndlbl, cont;
@@ -279,7 +291,7 @@ int *num_var, *num_val, *filler_num, *current_row, *num_cmds;
 			lptr = aptr;
 			if (*lptr == ' ')						/* Test for nothing between quotes then	*/
 			{								/* save as a NULL.			*/
-				int numq, rem;
+				int numq;
 
 				numq = 1;
 				while (*lptr != '\0' && *lptr != LNFD)			/* Count the num of quotes on line.	*/
@@ -291,7 +303,7 @@ int *num_var, *num_val, *filler_num, *current_row, *num_cmds;
 
 			while (cont)
 			{
-				while(*aptr != '\0' && *aptr != LNFD && *aptr != '\'' && (aptr - inline < WPLMAX))
+				while(*aptr != '\0' && *aptr != LNFD && *aptr != '\'' && (aptr - linein < WPLMAX))
 				{
 					*cstr++ = *aptr++;
 				}
@@ -396,9 +408,14 @@ char * cptr;
 	else return(FALSE);
 }
 
-process_sub_var(type,num_var,num_val,caller,num_asn,filler_num,current_row,num_cmds)	/* Generate working storage for substr.	*/
-char type;
-int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
+void process_sub_var(char type,
+		     int* num_var,
+		     int* num_val,
+		     int  caller,
+		     int* num_asn,
+		     int* filler_num,
+		     int* current_row,
+		     int* num_cmds)							/* Generate working storage for substr.	*/
 {
 	char start[FLDLEN], flen[5], *tptr;						/* Temp var to hold subscript values.	*/
 	char newvar[FLDLEN], ntype[3];
@@ -426,7 +443,7 @@ int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
 		if (caller != 2)
 		{
 			write_log("PROCTRAN",'E','R',"INCORRASS",
-				"Assumed only an ASSIGN statemen. Caller(%d)  Notify IDSI.",caller);
+				"Assumed only an ASSIGN statemen. Caller(%d)  Notify NeoMedia Migrations.",caller);
 			return;
 		}
 
@@ -535,7 +552,7 @@ int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
 		else if (*cur_if->var)							/* Display message if already have var.	*/
 		{
 			write_log("PROCTRAN",'E','R',"HAVEVAR",
-				"Already have variable (%s) for this IF structure, Notify IDSI.",cur_if->var);
+				"Already have variable (%s) for this IF structure, Notify NeoMedia Migrations.",cur_if->var);
 		}
 
 		strcpy(cur_if->var,newvar);
@@ -563,13 +580,20 @@ int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
 	}										/*  structure list item.		*/
 }                                                                                       
 											 /* Process complex start/length field.	*/
-static process_complex_sub(type,num_var,num_val,caller,num_asn,filler_num,current_row,num_cmds,fld,tbuf)
-char type, *fld, *tbuf;
-int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
+static void process_complex_sub(char type,
+				int* num_var,
+				int* num_val,
+				int  caller,
+				int* num_asn,
+				int* filler_num,
+				int* current_row,
+				int* num_cmds,
+				char* fld,
+				char* tbuf)
 {
 	assign_item *h_assign;
 	command_item *h_cmd, *prev_cmd;	
-	char *tb, l_buf[80], h_inline[STRBUFF];
+	char l_buf[80], h_linein[STRBUFF];
 	char *h_aptr;
 	int h_num_asn;
 	
@@ -581,12 +605,12 @@ int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
 
 	h_assign = cur_assign;								/* Save current pointers for later.	*/
 	h_aptr = aptr;									/* Set pointers to process new ASSIGN.	*/
-	strcpy(h_inline,inline);
+	strcpy(h_linein,linein);
 	h_num_asn = *num_asn;
 	h_cmd = cur_cmd;
 
-	strcpy(inline,l_buf);
-	aptr = inline;
+	strcpy(linein,l_buf);
+	aptr = linein;
 	next_ptr = aptr;
 
 	*num_asn = 0;									/* Count number of variables in field.	*/
@@ -613,7 +637,22 @@ int *num_var, *num_val, caller, *num_asn, *filler_num, *current_row, *num_cmds;
 	cur_cmd = h_cmd;								/* Set back to continue processing.	*/
 	cur_assign = h_assign;
 	*num_asn = h_num_asn;
-	strcpy(inline,h_inline);
+	strcpy(linein,h_linein);
 	aptr = h_aptr;
 	next_ptr = aptr;
 }
+/*
+**	History:
+**	$Log: ptif.c,v $
+**	Revision 1.8  1997-04-21 11:10:54-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.7  1996-12-12 13:37:44-05  gsl
+**	DevTech -> NeoMedia
+**
+**	Revision 1.6  1996-09-12 16:17:13-07  gsl
+**	fix prototypes
+**
+**
+**
+*/

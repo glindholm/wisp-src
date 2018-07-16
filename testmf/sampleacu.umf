@@ -1,13 +1,14 @@
-#/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
-#/************************************************************************/
+#
+#	Copyright (c) 1988-1996 NeoMedia Migrations, All rights reserved.
+#	$Id:$
+#
 #
 #
 #	File:		sampleacu.umf
+#
+#	Project:	WISP/SAMPLE
+#
+#	RCS:		$Source:$
 #
 #	Function:	The UNIX makefile for SAMPLE/ACUCOBOL
 #
@@ -17,18 +18,45 @@
 #			
 #
 
-CFLAGS= -g
 WISPTRAN=wisp
+WISPFLAGS= -I../wisputils
 COBOL=ccbl
 COBFLAGS=-Zd -Da4
+LANG=-VACU
 
-all: 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
+OS=unix
+
+.SUFFIXES: .cob .wcb
+
+.wcb.cob:
+	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+
+.wcb:
+	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
+	$(COBOL) $(COBFLAGS) -o `echo $*|tr '[a-z]' '[A-Z]'` $*.cob
+
+.cob:
+	$(COBOL) $(COBFLAGS) -o `echo $*|tr '[a-z]' '[A-Z]'` $*.cob
+
+ALL= 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
-	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING prtargs \
-	test_dirs
+	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING $(OS)_stuff
+
+AUTOQA=	WL0000 WL0010 WL0011 WL0012 WL0013 WL0014 WL0015 WL0016 WL0017 \
+	WL0018 WL0019 WL0020 WL0021 WL0022 WL0023 WL0024 WL0025 WL0026 \
+	WL0018A WL0018B
+
+TEST_DIRS= volrun volin
+
+all:	$(ALL) $(TEST_DIRS) $(AUTOQA)
 	@echo
 	@echo SAMPLE is up-to-date
 	@echo
+
+clean:
+	rm -f $(ALL)
+	rm -rf $(TEST_DIRS)
+	rm -f *.cob
 
 SAMPLE: sample.cob
 	$(COBOL) $(COBFLAGS) -o $@ sample.cob
@@ -103,72 +131,33 @@ ACUUSING: acuusing.cob
 #
 
 sample.cob: sample.wcb
-	$(WISPTRAN) -O samopt.opt sample
+	$(WISPTRAN) $(WISPFLAGS) -O samopt.opt sample
 
-qafileio.cob: qafileio.wcb
-	$(WISPTRAN) qafileio
+acuusing.cob: ../acu/acuusing.cob
+	cp "../acu/acuusing.cob" .
 
-qafile2.cob: qafile2.wcb
-	$(WISPTRAN) qafile2
 
-qanetcap.cob: qanetcap.wcb
-	$(WISPTRAN) qanetcap
-
-qaprint.cob: qaprint.wcb
-	$(WISPTRAN) qaprint
-
-qascreen.cob: qascreen.wcb
-	$(WISPTRAN) qascreen
-
-qascrn2.cob: qascrn2.wcb
-	$(WISPTRAN) qascrn2
-
-qasubs.cob: qasubs.wcb
-	$(WISPTRAN) qasubs
-
-qasy000m.cob: qasy000m.wcb
-	$(WISPTRAN) qasy000m  
-
-qasys99.cob: qasys99.wcb
-	$(WISPTRAN) qasys99
-
-qawsfnm.cob: qawsfnm.wcb
-	$(WISPTRAN) qawsfnm
-
-qawsfns.cob: qawsfns.wcb
-	$(WISPTRAN) qawsfns
-
-qawsubs.cob: qawsubs.wcb
-	$(WISPTRAN) qawsubs  
-
-qabckgrd.cob: qabckgrd.wcb
-	$(WISPTRAN) qabckgrd
-
-sub1.cob: sub1.wcb
-	$(WISPTRAN) sub1
-
-sub3.cob: sub3.wcb
-	$(WISPTRAN) sub3
-
-trigger.cob: trigger.wcb
-	$(WISPTRAN) trigger
-
-xlink.cob: xlink.wcb
-	$(WISPTRAN) xlink
-
-xlink1.cob: xlink1.wcb
-	$(WISPTRAN) xlink1
-
-qadpcoma.cob: qadpcoma.wcb
-	$(WISPTRAN) qadpcoma
-
-qawsxio.cob: qawsxio.wcb
-	$(WISPTRAN) qawsxio
-
-aculink.cob: aculink.wcb
-	$(WISPTRAN) aculink
-
-test_dirs: volrun volin
+WL0000: wl0000
+WL0010: wl0010
+WL0011: wl0011
+WL0012: wl0012
+WL0013: wl0013
+WL0014: wl0014
+WL0015: wl0015
+WL0016: wl0016
+WL0017: wl0017
+WL0018: wl0018
+WL0018A: wl0018a
+WL0018B: wl0018b
+WL0019: wl0019
+WL0020: wl0020
+WL0021: wl0021
+WL0022: wl0022
+WL0023: wl0023
+WL0024: wl0024
+WL0025: wl0025
+WL0026: wl0026
+WL0027: wl0027
 
 volrun:
 	mkdir volrun
@@ -177,4 +166,31 @@ volrun:
 volin:
 	mkdir volin
 	mkdir volin/libin
+
+unix_stuff:	prtargs
+
+win32_stuff:	prtargs.exe
+
+#
+#	History:
+#	$Log: sampleacu.umf,v $
+#	Revision 1.12  1997-08-28 14:37:49-04  gsl
+#	Fix and simplify so qabckgrd builds properly
+#
+#	Revision 1.11  1997-07-23 10:14:56-04  scass
+#	Moved .SUFFIXES to be above rules so make
+#	works properly on DEC Alpha
+#
+#	Revision 1.10  1997-05-20 16:23:15-04  gsl
+#	Add WL0018A and WL0018B for extra MESSAGE tests
+#
+#	Revision 1.9  1997-05-01 09:24:21-04  gsl
+#	Add all the WL00xx automatic tests
+#
+#	Revision 1.8  1996-12-13 14:47:37-05  gsl
+#	Update so will work on NT as well as unix
+#
+#
+#
+#
 

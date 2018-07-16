@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
@@ -7,34 +9,26 @@
 
 #include <stdio.h>
 #include <string.h>
-
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
+#include <stdlib.h>
 
 #ifdef MSDOS
 #include <io.h>
-#include <malloc.h>
-#include <stdlib.h>
 #endif
 
 #include "idsistd.h"
 #include "menu.h"
+#include "paths.h"
+#include "wispcfg.h"
 
 /* This procedure locates a menu file and loads it into a menu structure to be used by the menu system to display the menu	*/
 /* If the menufile name has a hex -1 as its first int, it is assumed to actually be a structure.				*/
 
-struct menu *menu_read(pmenufile)
-char *pmenufile;
+struct menu *menu_read(char* pmenufile)
 {
 	int i,j;
 	char *fstat;                                                            
 	char temp[132];
 	FILE *infile;
-	FILE *fopen();
-#ifdef unix
-	char *getenv();
-#endif
 	struct menu *themenu;
 	struct menu *menufile;
 	char *menuname;
@@ -69,16 +63,9 @@ char *pmenufile;
 			strcpy(temp,"APP$MENU:");					/* Start with the application directory	*/
 			strcat(temp,menuname);						/* Then add the file name.		*/
 			infile = fopen(temp,"r");					/* Try to read it. 			*/
-#endif	/* VMS */
-#ifndef VMS	/* unix or MSDOS */
-			if (getenv("WISPMENU")) strcpy(temp,getenv("WISPMENU"));
-			else strcpy(temp,".");
-#ifdef unix
-			strcat(temp,"/");
-#endif
-#ifdef MSDOS
-			strcat(temp,"\\");
-#endif
+#else	/* VMS */
+			strcpy(temp,wispmenudir());
+			strcat(temp,DIR_SEPARATOR_STR);
 			strcat(temp,menuname);
 			infile = fopen(temp,"r");
 #endif
@@ -143,3 +130,15 @@ char *pmenufile;
 		if (themenu->menulist[i].message[j] == 10) themenu->menulist[i].message[j] = 0;
 	}
 }
+/*
+**	History:
+**	$Log: menuread.c,v $
+**	Revision 1.11  1996-10-08 20:22:05-04  gsl
+**	Replace getenv() with wispmenudir()
+**
+**	Revision 1.10  1996-08-19 15:32:30-07  gsl
+**	drcs update
+**
+**
+**
+*/

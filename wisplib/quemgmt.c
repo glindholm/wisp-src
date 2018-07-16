@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #ifdef VMS
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -6,28 +8,67 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
-			/*	            QUEMGMT - Queue Management				*/
+/*
+**	File:		quemgmt.c
+**
+**	Purpose:	To manage the jobs in the queues under VMS.
+**
+**			This is only a display front end to the OpenVMS queue manager.
+**
+**	Routines:	
+**	quemngmnt()		Entry point into the queue manager routines.
+**	menu_header_footer()	Init the text for header and footer.
+**	prntq_header_footer()
+**	batchq_header_footer()
+**	init_q_fkeys()		Assign values and functions to available queue screen keys.
+**	i_qe_fkeys()		Assign values and functions to queue entry screen.
+**	init_rlist()
+**	init_qmenu()
+**	init_jobs()
+**	get_time()
+**	menu_help()		Display queue help window.
+**	display_help()		Display queue entries help window.
+**	alloc_queue_arrays()	Allocate the memory needed for the columns of the queue.
+**	alloc_job_arrays()	Allocate the memory needed for the columns of the choosen queue.
+**	get_qt_text()		Return the appropriate queue type.
+**	get_qs_text()		Return the appropriate queue status in text format.
+**	get_cpul_text()		Return the appropriate CPU limit in text format.
+**	gen_queue_arrays()	This will generate the arays of data for the menu list.
+**	get_js_text()		Return the appropriate job status in text format.
+**	add_queue_cols()	Init the queue list with data that has been retrieved from the system.
+**	add_job_cols()		Init the queue list with job info that has been retrieved from the system.
+**	gen_job_arrays()	This will generate the arays of data for the specified queue.
+**	hold_release_job()	Toggle the HOLD or release status of a job.
+**	delete_job()
+**	remove_job()		Function to delete from the current queue a pending or executing job.
+**	change_disp()		Function to change the disposition of a job.
+**	requeue_job()		Function to requeue an executing job.
+**	submit_remove_job()	Submit job to new queue and remove from the old queue.
+**	get_first_last()	Get the first and last print pages.
+**	genq_empty_list()
+**	genj_empty_list()
+**	check_result_list()	Return TRUE if items selected.
+**	rescan_jobs()		Return if still have entries.
+**	change_job()		Change information on a queue entry.
+**	c_mntdef_qform()	Change the default queue form number.
+**	display_job()		Display job using DISPLAY Utility.
+**	find_new_qname()	Get new qname info.
+**	start_stop_queue()	Toggle start/stop of a queue.
+**	report_error()		Display the error that occured.
+**	que_mem_err()		display no memory error.
+**	free_qmenu()		Free up memory assiciated with queues.
+**	free_qentries()		Free up memory assiciated with queue entries.
+**	work_message()		Display the working message.
+**	display_box()		Draw the outline box.
+**	save_window()		Save orig data under window.
+**	restore_window()	Display orig data under window.
+**
+*/
 
-#include <ctype.h>
-#include <time.h>
-#include <ssdef.h>
-#include <quidef.h>
-#include <jbcmsgdef.h>
-#include <sjcdef.h>
-#include <descrip.h>
-#include <stdio.h>
-#include <math.h>
-
-#include "werrlog.h"
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include "vwang.h"
-#include "scnfacs.h"
 #include "quemgmt.h"
 
 /********************************************************************************************************************************/
-/*****                               Global Variables									    *****/
+/*****                               Static Global Variables								    *****/
 /********************************************************************************************************************************/
 
 static long function, mlist_id, list_id, retcd;						/* Variables used to identify the list.	*/
@@ -40,14 +81,14 @@ static struct available_keys {
 			short meta_key;							/* VIDEO meta_key value.		*/
 			short list_function;						/* Value defined by vlist.		*/
 		};
-static struct available_keys fn_keys[15];						/* Array to hold avail. print job keys.	*/
-static struct available_keys queuefn_keys[8];						/* Array to hold avail. menu queue keys.*/
+static struct available_keys fn_keys[16];						/* Array to hold avail. print job keys.	*/
+static struct available_keys queuefn_keys[10];						/* Array to hold avail. menu queue keys.*/
 static int llen, nopriv_fl;
 
 static struct qui_itmlst_struct qui_qbuf[11];						/* Return queue info for each QUI call.	*/
 static struct qui_itmlst_struct quibuf[3];						/* Return queue info for each QUI call.	*/
 static struct qui_itmlst_struct qui_jbuf[9];						/* Buffer to hold job info from QUI call.*/
-static struct qui_itmlst_struct qui_fbuf[2];						/* Buffer to hold file info from QUI call.*/
+static struct qui_itmlst_struct qui_fbuf[3];						/* Buffer to hold file info from QUI call.*/
 static struct io_status_block {								/* $GETQUI iosb parameter structure.	*/
 		long status;								/* Completion status of func call.	*/
 		long fill;								/* Condition value returned.		*/
@@ -57,9 +98,12 @@ static char *qm_qn, *qm_qt, *qm_qs, *qm_cpul;						/* Ptrs to arrays of queue co
 static long *qm_bp, *qm_jl, *qm_blmin, *qm_blmax, *qm_quet;
 static char curr_queue[32];
 static char *qe_jbn, *qe_usrn, *qe_st, *qe_frmn;					/* Ptrs to arrays of job column data.	*/
-static long *qe_ent, *qe_blks, *qe_jf, *qe_cpy, *qe_jobs;
+static long *qe_ent, *qe_blks, *qe_jf, *qe_cpy, *qe_jobs, *del_entry;
 static char separ[2], dash[2];								/* Separator variables.			*/
-static int num_mhead, num_mfoot, num_qehead, num_qefoot;
+static int num_mhead = 0;
+static int num_mfoot = 0;
+static int num_qehead = 0;
+static int num_qefoot = 0;
 static int vue_batch_que = FALSE;							/* Flags if view type queue for free.	*/
 static int vue_print_que = FALSE;
 static int fstque_fl = TRUE;								/* Flag to depict first time in queue.	*/
@@ -67,8 +111,34 @@ static int class_qname_typ;								/* Flag print class is in queue name.	*/
 
 static int window_top;									/* Vars for the window parameters.	*/
 static int window_rows;
-static char window_data[24][80];							/* Array to save data under window.	*/
+static char window_data[WSB_ROWS][WSB_COLS];						/* Array to save data under window.	*/
+static long firstp, lastp;
 
+static void genj_empty_list();
+static void genq_empty_list();
+static void add_queue_cols();
+static void add_job_cols();
+static void init_rlist();
+
+/*
+**	Routine:	quemngmnt()
+**
+**	Function:	
+**
+**	Description:	
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by SMC
+**
+*/
 void quemngmnt(queflags,quenameptr,numq)
 long queflags, numq;									/* Usage flags set for search queues.	*/
 char *quenameptr;
@@ -83,11 +153,8 @@ char *quenameptr;
 	char *tcpt;
 	int ckfl, svo, chng_que, cnt;
 	long *jpt;
-	void genj_empty_list();
-	void genq_empty_list();
-	void add_queue_cols();
-	void add_job_cols();
-	void init_rlist();
+	int adjust_sq;
+	char qpntclass[15], *pcptr;							/* Print class of queue.		*/
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -96,6 +163,8 @@ char *quenameptr;
 	chng_que = TRUE;								/* Set so will display queue.		*/
 	fstque_fl = TRUE;								/* Set first time flag TRUE.		*/
 	another = TRUE;
+	adjust_sq = TRUE;
+
 	while (another)									/* Display queues to choose from.	*/
 	{
 		if (fstque_fl)								/* Is this the first time through? 	*/
@@ -122,7 +191,14 @@ char *quenameptr;
 			chng_que = FALSE;
 		}
 		else 	function = NO_DISPLAY_LIST;					/* No changes so don't re-display list.	*/
-		vlist(&function,&mlist_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd);
+		vlist(&function,&mlist_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd,&adjust_sq);
+		if (adjust_sq)
+		{
+			rrow = rrow - st_row;
+			adjust_sq = FALSE;
+		}
+		rqrow = st_row + rrow;
+
 		if (key == fn16_key) 							/* Exit the queue management routine.	*/
 		{									/* Have hit the PF16 key.		*/
 			function = FREE_LIST;
@@ -142,36 +218,39 @@ char *quenameptr;
 			}
 			free(result_list);						/*  main queue menu.			*/
 			return;
-		}
-		tcpt = qm_qn + (rrow * 31);						/* Get position in queue name array.	*/
+		}                               
+		tcpt = qm_qn + (rqrow * 31);						/* Get position in queue name array.	*/
 		i = 0;
 		cnt = 0;
 		if (class_qname_typ)
 		{
+			memset(qpntclass,'\0',10);					/* Set print class to nulls.		*/
+			pcptr = qpntclass;						/* Set ptr to print class string.	*/
 			while (*tcpt != ' ')						/* Step past the class info.		*/
 			{
+				*pcptr++ = *tcpt;					/* Get the class info.			*/
 				tcpt++;
 				cnt++;
 			}
+			*pcptr = '\0';							/* Null terminate the string.		*/
 			tcpt++;								/* Step past the seperating space.	*/
 			cnt++;
 		}
 		while (*tcpt != ' ' && i < 31-cnt) curr_queue[i++] = *tcpt++;		/* Copy name into variable.		*/
 		curr_queue[i] = '\0';							/* Null terminate the string.		*/
-		tst = 24 - num_mhead - num_mfoot;					/* Calculate scroll region.		*/
-		if (rrow < tst)  rqrow = rrow;						/* Assign current cursor pos so when	*/
-		else rqrow = rrow - st_row;						/* come back to screen.			*/
+
+		tst = WSB_ROWS - num_mhead - num_mfoot;					/* Calculate scroll region.		*/
 		st_qr = st_row;
 		st_qc = st_col;
 		if (key == fn7_key)							/* Toggle Start and Stop queue.		*/
 		{
-			chng_que = start_stop_queue(rrow);				/* Toggle start/stop of a queue.	*/
+			chng_que = start_stop_queue(rqrow);				/* Toggle start/stop of a queue.	*/
 		}
 		else if (key == fn9_key || key == fn10_key)				/* Change mounted/default form # of que.*/
 		{
 			long qtfl;
 
-			qtfl = *(qm_quet + rrow);					/* Get the queue flags for current queue.*/
+			qtfl = *(qm_quet + rqrow);					/* Get the queue flags for current queue.*/
 			if ( ((qtfl & QUI$M_QUEUE_PRINTER) != QUI$M_QUEUE_PRINTER) &&
 			     ((qtfl & QUI$M_QUEUE_TERMINAL) != QUI$M_QUEUE_TERMINAL) )
 			{
@@ -190,11 +269,11 @@ char *quenameptr;
 		}
 		else if (key == return_key || key == enter_key)				/* Selected a queue.			 */
 		{
-			int etype;
+			int etype, rs_flag;
 
 			chng_que = TRUE;						/* Set so will redisplay queue on return.*/
 			nopriv_fl = FALSE;
-			available = gen_job_arrays(queflags);				/* Generate job columns, return # rows.	*/
+			available = gen_job_arrays(queflags,&rs_flag);			/* Generate job columns, return # rows.	*/
 			if (!available)							/* There are no jobs to choose from.	*/
 			{
 				genj_empty_list(&rrow,&rcol,&key);
@@ -202,31 +281,56 @@ char *quenameptr;
 			else
 			{
 				int rqerow, chng_entries;				/* Flag do depict if to re-display.	*/
+				int adjust_sj;						/* First screen of job display.		*/
 
+				adjust_sj = TRUE;
 				etype = FALSE;
-				init_jobs(etype,rrow);					/* Create job list structure.		*/
-				add_job_cols(rrow);					/* Init the job list structure.		*/
-				tst = 24 - num_qehead - num_qefoot;			/* Calculate scroll region.		*/
+				init_jobs(etype,rqrow);					/* Create job list structure.		*/
+				add_job_cols(rqrow);					/* Init the job list structure.		*/
+				tst = WSB_ROWS - num_qehead - num_qefoot;		/* Calculate scroll region.		*/
 				st_row = 0;						/* Init to top of list.			*/
 				st_col = 0;
 				rrow = st_row;
 				rcol = st_col;
 				chng_entries = TRUE;					/* Set so will display first time in.	*/
 				contfl = TRUE;
+				if (rs_flag)						/* If need to delete entries where files*/
+				{							/*  don't exist then rescan first before*/
+					register cnt;					/*  displaying.				*/
+					long *dptr;
+
+					for (cnt = 0; cnt < jrows; cnt++)
+					{
+						dptr = del_entry + cnt;			/* Point to pos in del entry array.	*/
+						if (*dptr == 1)
+						{
+							remove_job(cnt,1);		/* Remove the job from the queue.	*/
+						}                                     
+					}
+					contfl = rescan_jobs(rqrow,queflags);		/* Set TRUE if still have entries.	*/
+				}
+
 				while (contfl)						/* While still want to continue.	*/
 				{
 					int chnged, wmon;				/* Flag if entry actually changed.	*/
 
 					chnged = FALSE;					/* Assumes no changes in list structure.*/
+					rqerow = rrow;
 					if (chng_entries)
 					{
 						function = DISPLAY_LIST;		/* Display the jobs in queue.		*/
 						chng_entries = FALSE;
 					}
 					else 	function = NO_DISPLAY_LIST;		/* No changes so don't re-display list.	*/
-					vlist(&function,&list_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd);
-					if (rrow < tst)  rqerow = rrow;			/* Assign current cursor pos so when	*/
-					else rqerow = rrow - st_row;			/* come back to screen.			*/
+					vlist(&function,&list_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd,&adjust_sj);
+
+					if (adjust_sj)
+					{
+						rrow = rrow - st_row;
+						adjust_sj = FALSE;
+					}
+					rqerow = st_row + rrow;
+
 					if (key == help_key)
 					{
 						display_help();				/* Display the help menu.		*/
@@ -244,7 +348,7 @@ char *quenameptr;
 					else if (key == fn7_key)			/* Toggle hold/release job.		 */
 					{
 						wmon = 0;
-						vset(CURSOR,OFF);
+						vset_cursor_off();
 						if (ckfl = check_result_list())		/* TRUE if there are items selected.	*/
 						{					/* Loop through for each selected job.	*/
 							for (i = 0; i < jrows; i++)
@@ -257,9 +361,9 @@ char *quenameptr;
 								}
 							}
 						}
-						else  chnged = hold_release_job(rrow);	/* Perform on cursor job only.		*/
+						else  chnged = hold_release_job(rqerow);/* Perform on cursor job only.		*/
 						chng_entries = TRUE;			/* Set so will do display.		*/
-						vset(CURSOR,ON);
+						vset_cursor_on();
 					}						/* Remove the job from queue and	*/
 					else if (key == fn8_key)			/* Scratch the file.			*/
 					{
@@ -277,13 +381,16 @@ char *quenameptr;
 						}					/* Perform on cursor job only.		*/
 						else
 						{
-							chnged = delete_job(rrow);
+							chnged = delete_job(rqerow);
 							if (chnged) rqerow--;
 						}
 						chng_entries = TRUE;			/* Set so will do display.		*/
 					}
 					else if (key == fn10_key)			/* Change the job.			*/
 					{
+						int caller;
+
+						caller = 0;				/* Set so gives modifiable fields.	*/
 						if (ckfl = check_result_list())		/* TRUE if there are items selected.	*/
 						{
 							for (i = 0; i < jrows; i++)
@@ -291,17 +398,41 @@ char *quenameptr;
 								jpt = (long *)(result_list + i);
 								if (*jpt)		/* If the job is selected.		*/
 								{
-									chnged = change_job(i);
+									chnged = change_job(i,qpntclass,numq,caller);
+									if (chnged == 2) rqerow--; /* Moved to another queue	*/
 								}
 							}
 						}
-						else  chnged = change_job(rrow);
+						else
+						{
+							chnged = change_job(rqerow,qpntclass,numq,caller);
+							if (chnged == 2) rqerow--;	/* Moved to another queue.		*/
+						}
+						chng_entries = TRUE;			/* Set so will do display.		*/
+					}
+					else if (key == fn11_key)			/* Display the job.			*/
+					{
+						if (ckfl = check_result_list())		/* TRUE if there are items selected.	*/
+						{					/* Loop through for each selected job.	*/
+							for (i = 0; i < jrows; i++)
+							{
+								jpt = (long *)(result_list + i);
+								if (*jpt)		/* If the job is selected.		*/
+								{
+									chnged = display_job(i);
+								}
+							}
+						}					/* Perform on cursor job only.		*/
+						else
+						{
+							chnged = display_job(rqerow);
+						}
 						chng_entries = TRUE;			/* Set so will do display.		*/
 					}
 					else if (key == fn12_key)			/* Remove the job from queue.		 */
 					{
 						wmon = 0;
-						vset(CURSOR,OFF);
+						vset_cursor_off();
 						if (ckfl = check_result_list())		/* TRUE if there are items selected.	*/
 						{					/* Loop through for each selected job.	*/
 							for (i = 0; i < jrows; i++)
@@ -317,10 +448,10 @@ char *quenameptr;
 						}
 						else
 						{
-							chnged = remove_job(rrow);	/* Perform on cursor job only.		*/
+							chnged = remove_job(rqerow);	/* Perform on cursor job only.		*/
 							if (chnged) rqerow--;
 						}
-						vset(CURSOR,ON);
+						vset_cursor_on();
 						chng_entries = TRUE;			/* Set so will do display.		*/
 					}
 					else if (key == fn13_key)			/* Change the disposition of the job.	*/
@@ -332,11 +463,27 @@ char *quenameptr;
 								jpt = (long *)(result_list + i);
 								if (*jpt)		/* If the job is selected.		*/
 								{
-									chnged = requeue_job(i,queflags);
+									chnged = change_disp(i,queflags);
 								}
 							}
 						}
-						else chnged = requeue_job(rrow,queflags);
+						else chnged = change_disp(rqerow,queflags);
+						chng_entries = TRUE;			/* Set so will do display.		*/
+					}
+					else if (key == fn14_key)			/* Requeue an executing job.		*/
+					{
+						if (ckfl = check_result_list())		/* TRUE if there are items selected.	*/
+						{
+							for (i = 0; i < jrows; i++)
+							{
+								jpt = (long *)(result_list + i);
+								if (*jpt)		/* If the job is selected.		*/
+								{
+									chnged = requeue_job(i,queflags,qpntclass,numq);
+								}
+							}
+						}
+						else chnged = requeue_job(rqerow,queflags,qpntclass,numq);
 						chng_entries = TRUE;			/* Set so will do display.		*/
 					}
 					else
@@ -351,7 +498,7 @@ char *quenameptr;
 						contfl = rescan_jobs(rqrow,queflags);	/* Set TURE if still have entries.	*/
 						if (rqerow < 0) rqerow = 0;
 					}
-					rrow = rqerow;					/* Set cursor to chosen entry on return.*/
+
 					rcol = 0;
 				}							/* End while display jobs.		*/
 			}								/* End else - display jobs.		*/
@@ -361,7 +508,7 @@ char *quenameptr;
 			vbell();							/* No match of queue function key.	*/
 		}
 
-		rrow = rqrow;								/* Set cursor to chosen queue on return.*/
+		rrow = rqrow - st_qr;							/* Set cursor to chosen queue on return.*/
 		st_row = st_qr;
 		st_col = st_qc;
 		rcol = 0;
@@ -375,7 +522,7 @@ long l_id;
 	char buff[81];
 	char txt[81];
 
-	strcpy(txt,"VAX/VMS QUEUE MANAGEMENT");						/* Init the header string.		*/
+	strcpy(txt,"OpenVMS QUEUE MANAGEMENT");						/* Init the header string.		*/
 	menutstrl[0] = get_time(buff,txt);						/* Get user,date,time & return length.	*/
 	if (!(cp = (char *)calloc(menutstrl[0],sizeof(char)))) que_mem_err(menutstrl[0]); /* Get some memory for the string.	*/
 	menutstr[0] = cp;								/* Init the pointer array to the string.*/
@@ -398,14 +545,14 @@ long l_id;
 		menutstrl[4] = 42;							/* Init the array of lengths.		*/
 		if (!(cp = (char *)calloc(menutstrl[4],sizeof(char)))) que_mem_err(menutstrl[4]); /* Get some memory for string.*/
 		menutstr[4] = cp;							/* Init the pointer array to the string.*/
-		strcpy(cp,"     Press <RETURN> or <PF16> to continue.");
+		strcpy(cp,"     Press (ENTER) or (16) to continue.");
 		menurnd[4] = BOLD;
 		return;
 	}
 	menutstrl[4] = 73;								/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(menutstrl[4],sizeof(char)))) que_mem_err(menutstrl[4]); /* Get some memory for the string.	*/
 	menutstr[4] = cp;								/* Init the pointer array to the string.*/
-	strcpy(cp,"     Position cursor to indicate queue and press <RETURN>, <PF16> to exit");
+	strcpy(cp,"     Position cursor to indicate queue and press (ENTER), (16) to exit");
 	menurnd[4] = CLEAR;
 	menutstrl[5] = 77;								/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(menutstrl[5],sizeof(char)))) que_mem_err(menutstrl[5]); /* Get some memory for the string.	*/
@@ -423,13 +570,13 @@ int type;
 	char txt[81];
 	int lnl;
 
-	strcpy(txt,"VAX/VMS Print Queue Management");					/* Init the header string.		*/
+	strcpy(txt,"OpenVMS Print Queue Management");					/* Init the header string.		*/
 	tstrl[0] = get_time(buff,txt);							/* Get user,date,time & return length.	*/
 	if (!(cp = (char *)calloc(tstrl[0],sizeof(char)))) que_mem_err(tstrl[0]);	/* Get some memory for the string.	*/
 	tstr[0] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,buff);								/* Init the header string.		*/
 	tstrrnd[0] = CLEAR;
-	lnl = (80 - strlen(curr_queue)) / 2;
+	lnl = (WSB_COLS - strlen(curr_queue)) / 2;
 	memset(buff,' ',lnl);								/* Copy the blanks into buffer.		*/
 	buff[lnl] = '\0';
 	strcat(buff,curr_queue);
@@ -438,7 +585,7 @@ int type;
 	tstr[1] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,buff);								/* Init the header string.		*/
 	tstrrnd[1] = BOLD;
-	tstrl[2] = 80;									/* Init the array of lengths.		*/
+	tstrl[2] = WSB_COLS;								/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[2],sizeof(char)))) que_mem_err(tstrl[2]);	/* Get some memory for the string.	*/
 	tstr[2] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp," Job name                       Username    Entry  Status       Blocks Form Cpy");
@@ -449,7 +596,7 @@ int type;
 		tstrl[4] = 42;								/* Init the array of lengths.		*/
 		if (!(cp = (char *)calloc(tstrl[4],sizeof(char)))) que_mem_err(tstrl[4]); /* Get some memory for string.	*/
 		tstr[4] = cp;								/* Init the pointer array to the string.*/
-		strcpy(cp,"     Press <RETURN> or <PF16> to continue.");
+		strcpy(cp,"     Press (ENTER) or (16) to continue.");
 		tstrrnd[4] = BOLD;
 		return;
 	}
@@ -458,20 +605,20 @@ int type;
 	tstr[4] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"     Position cursor to indicate file and press PFkey to perform action:");
 	tstrrnd[4] = CLEAR;
-	tstrl[5] = 45;									/* Init the array of lengths.		*/
+	tstrl[5] = 67;									/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[5],sizeof(char)))) que_mem_err(tstrl[5]);	/* Get some memory for the string.	*/
 	tstr[5] = cp;									/* Init the pointer array to the string.*/
-	strcpy(cp,"(HELP) Help screen       (1) Select/De-select");
+	strcpy(cp,"(HELP) Help screen       (1) Select/De-select          (11) Display");
 	tstrrnd[5] = CLEAR;
 	tstrl[6] = 78;									/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[6],sizeof(char)))) que_mem_err(tstrl[6]);	/* Get some memory for the string.	*/
 	tstr[6] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp," (6) Re-scan queue       (7) Hold/Release (10) Change  (13) Change disposition");
 	tstrrnd[6] = CLEAR;
-	tstrl[7] = 53;									/* Init the array of lengths.		*/
+	tstrl[7] = 71;									/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[7],sizeof(char)))) que_mem_err(tstrl[7]);	/* Get some memory for the string.	*/
 	tstr[7] = cp;									/* Init the pointer array to the string.*/
-	strcpy(cp,"(16) Exit                (8) Scratch      (12) Remove");
+	strcpy(cp,"(16) Exit                (8) Scratch      (12) Remove  (14) Requeue job");
 	tstrrnd[7] = CLEAR;
 	return;
 }
@@ -484,13 +631,13 @@ int type;
 	char txt[81];
 	int lnl;
 
-	strcpy(txt,"VAX/VMS Batch Queue Management");					/* Init the header string.		*/
+	strcpy(txt,"OpenVMS Batch Queue Management");					/* Init the header string.		*/
 	tstrl[0] = get_time(buff,txt);							/* Get user,date,time & return length.	*/
 	if (!(cp = (char *)calloc(tstrl[0],sizeof(char)))) que_mem_err(tstrl[0]);	/* Get some memory for the string.	*/
 	tstr[0] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,buff);								/* Init the header string.		*/
 	tstrrnd[0] = CLEAR;
-	lnl = (80 - strlen(curr_queue)) / 2;
+	lnl = (WSB_COLS - strlen(curr_queue)) / 2;
 	memset(buff,' ',lnl);								/* Copy the blanks into buffer.		*/
 	buff[lnl] = '\0';
 	strcat(buff,curr_queue);
@@ -499,7 +646,7 @@ int type;
 	tstr[1] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,buff);								/* Init the header string.		*/
 	tstrrnd[1] = BOLD;
-	tstrl[2] = 80;									/* Init the array of lengths.		*/
+	tstrl[2] = WSB_COLS;								/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[2],sizeof(char)))) que_mem_err(tstrl[2]);	/* Get some memory for the string.	*/
 	tstr[2] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp," Job name                       Username    Entry  Status                       ");
@@ -510,7 +657,7 @@ int type;
 		tstrl[4] = 42;								/* Init the array of lengths.		*/
 		if (!(cp = (char *)calloc(tstrl[4],sizeof(char)))) que_mem_err(tstrl[4]); /* Get some memory for string.	*/
 		tstr[4] = cp;								/* Init the pointer array to the string.*/
-		strcpy(cp,"     Press <RETURN> or <PF16> to continue.");
+		strcpy(cp,"     Press (ENTER) or (16) to continue.");
 		tstrrnd[4] = BOLD;
 		return;
 	}
@@ -519,10 +666,10 @@ int type;
 	tstr[4] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"     Position cursor to indicate file and press PFkey to perform action:");
 	tstrrnd[4] = CLEAR;
-	tstrl[5] = 45;									/* Init the array of lengths.		*/
+	tstrl[5] = 67;									/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[5],sizeof(char)))) que_mem_err(tstrl[5]);	/* Get some memory for the string.	*/
 	tstr[5] = cp;									/* Init the pointer array to the string.*/
-	strcpy(cp,"(HELP) Help screen       (1) Select/De-select");
+	strcpy(cp,"(HELP) Help screen       (1) Select/De-select          (11) Display");
 	tstrrnd[5] = CLEAR;
 	tstrl[6] = 41;									/* Init the array of lengths.		*/
 	if (!(cp = (char *)calloc(tstrl[6],sizeof(char)))) que_mem_err(tstrl[6]);	/* Get some memory for the string.	*/
@@ -593,10 +740,10 @@ long l_id;
 		fn_keys[i].list_function = DOWN_PAGE;					/* Scroll down a complete page.		*/
 		fn_keys[i].meta_key = fn5_key;						/* Assign PF5.				*/
 		i++;
-		fn_keys[i].list_function = VLIST_TOP;						/* Go to top of list.			*/
+		fn_keys[i].list_function = VLIST_TOP;					/* Go to top of list.			*/
 		fn_keys[i].meta_key = fn2_key;						/* Assign PF2.				*/
 		i++;
-		fn_keys[i].list_function = VLIST_BOTTOM;					/* Go to bottom of list.		*/
+		fn_keys[i].list_function = VLIST_BOTTOM;				/* Go to bottom of list.		*/
 		fn_keys[i].meta_key = fn3_key;						/* Assign PF3.				*/
 		i++;
 		fn_keys[i].list_function = SELECT_ROW;					/* Toggle Select/De-select this row.	*/
@@ -611,8 +758,14 @@ long l_id;
 		fn_keys[i].list_function = ALLOW_KEY;					/* Allow termination of input.		*/
 		fn_keys[i].meta_key = fn7_key;						/* Assign PF7.				*/
 		i++;
+		fn_keys[i].list_function = ALLOW_KEY;					/* Allow Display of file.		*/
+		fn_keys[i].meta_key = fn11_key;						/* Assign PF11.				*/
+		i++;
 		fn_keys[i].list_function = ALLOW_KEY;					/* Allow termination of input.		*/
 		fn_keys[i].meta_key = fn12_key;						/* Assign PF12.				*/
+		i++;
+		fn_keys[i].list_function = ALLOW_KEY;					/* Define requeue executing job.	*/
+		fn_keys[i].meta_key = fn14_key;						/* Assign PF14.				*/
 		i++;
 		fn_keys[i].list_function = ALLOW_KEY;					/* Define re-scan jobs in queue key.	*/
 		fn_keys[i].meta_key = fn6_key;						/* Assign PF6.				*/
@@ -771,11 +924,16 @@ char *cp, *txt;
 		i = 1;
 	}
 	else i = 0;
-	sprintf(timestring,"%s %d, 19%d  %d:%02d %s",month[time_structure->tm_mon],
-			time_structure->tm_mday,time_structure->tm_year,time_structure->tm_hour,time_structure->tm_min,hour[i]);
+	sprintf(timestring,"%s %d, %d  %d:%02d %s",
+		month[time_structure->tm_mon],
+		time_structure->tm_mday,
+		time_structure->tm_year+1900,
+		time_structure->tm_hour,
+		time_structure->tm_min,
+		hour[i]);
 	timel = strlen(timestring);
 	i = cnt + timel + strlen(txt);							/* Calculate the number of used chars.	*/
-	numsp = (80 - i)/2;								/* Assign number of padding spaces.	*/
+	numsp = (WSB_COLS - i)/2;							/* Assign number of padding spaces.	*/
 	for (i = 0; i < numsp; i++)							/* Put spaces into buffer.		*/
 	{
 		*bptr++ = ' ';
@@ -818,23 +976,23 @@ static menu_help()									/* Display queue help window.		*/
 	save_window(lhs,columns);							/* Save data before window created.	*/
 	display_box(lhs,columns);
 	i = window_top;									/* Point the help area.			*/
-	vmode(REVERSE|UNDERSCORE);							/* Do it in reverse underscore,		*/
+	vmode(VMODE_REVERSE|VMODE_UNDERSCORE);						/* Do it in reverse underscore,		*/
 	vmove(i++,lhs);									/* Move to the info area.		*/
 	vprint("                      *** QUEUE MANAGEMENT HELP MENU ***                    ");
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vmode(REVERSE);									/* Do it in reverse.			*/
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vmode(VMODE_REVERSE);								/* Do it in reverse.			*/
 	vmove(i++,lhs);
 	vprint("FUNCTION KEYS                             CURSOR MOVEMENT                   ");
 	vmove(i++,lhs);
 	vprint("HELP  Help Menu                                                             ");
 	vmove(i++,lhs);
-	vprint("PF7   Start/Stop queue toggle             PF2   Go to the TOP of list       ");
+	vprint("(7)   Start/Stop queue toggle             (2)   Go to the TOP of list       ");
 	vmove(i++,lhs);
-	vprint("PF9   Change queue mounted print form     PF3   Go to the BOTTOM of the list");
+	vprint("(9)   Change queue mounted print form     (3)   Go to the BOTTOM of the list");
 	vmove(i++,lhs);
-	vprint("PF10  Change queue default print form     PF4   Scroll UP a page in list    ");
+	vprint("(10)  Change queue default print form     (4)   Scroll UP a page in list    ");
 	vmove(i++,lhs);
-	vprint("PF16  Exit from queue management          PF5   Scroll DOWN a page in list  ");
+	vprint("(16)  Exit from queue management          (5)   Scroll DOWN a page in list  ");
 	vmove(i++,lhs);
 	vprint("Use the HELP key to bring this window back.                                 ");
 	vmove(i,lhs);
@@ -861,31 +1019,31 @@ static display_help()									/* Display queue entries help window.	*/
 	save_window(lhs,columns);							/* Save data before window created.	*/
 	display_box(lhs,columns);
 	i = window_top;									/* Point the help area.			*/
-	vmode(REVERSE|UNDERSCORE);							/* Do it in reverse underscore,		*/
+	vmode(VMODE_REVERSE|VMODE_UNDERSCORE);						/* Do it in reverse underscore,		*/
 	vmove(i++,lhs);									/* Move to the info area.		*/
 	vprint("                       *** QUEUE ENTRIES HELP MENU ***                      ");
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vmode(REVERSE);									/* Do it in reverse.			*/
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vmode(VMODE_REVERSE);								/* Do it in reverse.			*/
 	vmove(i++,lhs);
 	vprint("FUNCTION KEYS                             CURSOR MOVEMENT                   ");
 	vmove(i++,lhs);
 	vprint("HELP  Help Menu                                                             ");
 	vmove(i++,lhs);
-	vprint(" PF1   Select/De-select an entry toggle   PF2   Go to the TOP of the list   ");
+	vprint("(1)    Select/De-select an entry toggle   (2)   Go to the TOP of the list   ");
 	vmove(i++,lhs);
-	vprint(" PF6   Re-scan the jobs in the queue      PF3   Go to the BOTTOM of the list");
+	vprint("(6)    Re-scan the jobs in the queue      (3)   Go to the BOTTOM of the list");
 	vmove(i++,lhs);
-	vprint(" PF7   Hold/Release an entry toggle       PF4   Scroll UP a page in list    ");
+	vprint("(7)    Hold/Release an entry toggle       (4)   Scroll UP a page in list    ");
 	vmove(i++,lhs);
-	vprint(" PF8   Remove from queue and scratch      PF5   Scroll DOWN a page in list  ");
+	vprint("(8)    Remove from queue and scratch      (5)   Scroll DOWN a page in list  ");
 	vmove(i++,lhs);
-	vprint("PF10   Change the print file                                                ");
+	vprint("(10)   Change the print file                                                ");
 	vmove(i++,lhs);
-	vprint("PF12   Remove a file from queue only                                        ");
+	vprint("(12)   Remove a file from queue only                                        ");
 	vmove(i++,lhs);
-	vprint("PF13   Change print file disposition                                        ");
+	vprint("(13)   Change print file disposition                                        ");
 	vmove(i++,lhs);
-	vprint("PF16   Exit from the current queue                                          ");
+	vprint("(16)   Exit from the current queue                                          ");
 	vmove(i++,lhs);
 	vprint("Use the HELP key to bring this window back.                                 ");
 	vmove(i,lhs);
@@ -973,14 +1131,14 @@ char *qnptr;
 		}
 		else									/* Need to get the queue name array.	*/
 		{									/* Get memory for the queue name array.	*/
-			if (!(qm_qn = (char *)calloc(qrows,sizeof(queue_name)))) que_mem_err(qrows*32);
+			if (!(qm_qn = (char *)calloc(qrows,32))) que_mem_err(qrows*32);
 		}
 		if (!(qm_quet = (long *)calloc(qrows,sizeof(long)))) que_mem_err(qrows); /* Get mem for queue type long array.	*/
-		if (!(qm_qt = (char *)calloc(qrows,sizeof(qttext)))) que_mem_err(qrows*8); /* Get mem for queue type text array.*/
+		if (!(qm_qt = (char *)calloc(qrows,8))) que_mem_err(qrows*8);		/* Get mem for queue type text array.	*/
 		if (!(qm_bp = (long *)calloc(qrows,sizeof(long)))) que_mem_err(qrows);	/* Get memory for base priority array.	*/
 		if (!(qm_jl = (long *)calloc(qrows,sizeof(long)))) que_mem_err(qrows);	/* Get memory for max job limit array.	*/
-		if (!(qm_cpul = (char *)calloc(qrows,sizeof(cputext)))) que_mem_err(qrows*12); /* Get mem for CPU limit array.	*/
-		if (!(qm_qs = (char *)calloc(qrows,sizeof(qstext)))) que_mem_err(qrows*12); /* Get memory for queue stat array.	*/
+		if (!(qm_cpul = (char *)calloc(qrows,12))) que_mem_err(qrows*12);	/* Get memory for CPU limit array.	*/
+		if (!(qm_qs = (char *)calloc(qrows,12))) que_mem_err(qrows*12);		/* Get memory for queue stat array.	*/
 		if (!(qm_blmin = (long *)calloc(qrows,sizeof(long)))) que_mem_err(qrows); /* Get memory for job limit min array.*/
 		if (!(qm_blmax = (long *)calloc(qrows,sizeof(long)))) que_mem_err(qrows); /* Get memory for job limit max array.*/
 	}
@@ -1048,14 +1206,15 @@ unsigned long queflags;									/*  columns of the chosen queue jobs.	*/
 	}
 	if (jrows)									/* If there are jobs then allocate	*/
  	{										/*  memory for the columns in list.	*/
-		if (!(qe_jbn = (char *)calloc(jrows,sizeof(jobname)))) que_mem_err(jrows*40); /* Get memory for job name array.	*/
-		if (!(qe_usrn = (char *)calloc(jrows,sizeof(jusername)))) que_mem_err(jrows*13); /* Get mem for user name array.*/
-		if (!(qe_st = (char *)calloc(jrows,sizeof(sttext)))) que_mem_err(jrows*15); /* Get mem for job status text.	*/
-		if (!(qe_ent = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows);	/* Get memory for job entry array.	*/
+		if (!(qe_usrn = (char *)calloc(jrows,13+2))) que_mem_err(jrows*13);	/* Get memory for user name array.	*/
+		if (!(qe_st   = (char *)calloc(jrows,15+2))) que_mem_err(jrows*15);	/* Get memory for job status text.	*/
+		if (!(qe_ent  = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows); /* Get memory for job entry array.	*/
 		if (!(qe_jobs = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows); /* Get memory for job status array.	*/
 		if (!(qe_blks = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows); /* Get memory for job size in blocks.	*/
-		if (!(qe_jf = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows);	/* Get memory for job form array.	*/
-		if (!(qe_cpy = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows);	/* Get memory for job copies array.	*/
+		if (!(qe_jf   = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows); /* Get memory for job form array.	*/
+		if (!(qe_cpy  = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows); /* Get memory for job copies array.	*/
+		if (!(qe_jbn  = (char *)calloc(jrows,40+2))) que_mem_err(jrows*40);	/* Get memory for job name array.	*/
+		if (!(del_entry = (long *)calloc(jrows,sizeof(long)))) que_mem_err(jrows); /* Get mem for delete job flag array.*/
 	}
 	return;
 }
@@ -1065,6 +1224,8 @@ long flags;										/* in text format.			*/
 char *dtext;
 {
 	char itext[9], *tcpt, *dpt;
+
+	strcpy(itext,"Busy    ");							/* Init to Unknown queue type.		*/
 
 	if ((flags & QUI$M_QUEUE_BATCH) == QUI$M_QUEUE_BATCH)			strcpy(itext,"Batch   ");
 	if ((flags & QUI$M_QUEUE_GENERIC) == QUI$M_QUEUE_GENERIC)		strcpy(itext,"Generic ");
@@ -1087,7 +1248,9 @@ char *dtext;										/* The highest status willprevail.	*/
 {
 	char itext[12], *tcpt, *dpt;
 
-	if (qstat == 0)								  strcpy(itext,"Executing  ");
+	strcpy(itext,"Busy       ");
+
+	if (qstat == 0)							  strcpy(itext,"Executing  ");
 	if ((qstat & QUI$M_QUEUE_ALIGNING) == QUI$M_QUEUE_ALIGNING)	  strcpy(itext,"Aligning   ");
 	if ((qstat & QUI$M_QUEUE_CLOSED) == QUI$M_QUEUE_CLOSED)		  strcpy(itext,"Closed     ");
 	if ((qstat & QUI$M_QUEUE_IDLE) == QUI$M_QUEUE_IDLE)		  strcpy(itext,"Idle       ");
@@ -1122,6 +1285,8 @@ char *dtext;
 	long actsecs, days, hours, minutes, seconds;
 	char nexti[4];
 
+	memset(itext,' ',12);								/* Copy the blanks into string.		*/
+	itext[12] = '\0';
 	days = 0;
 	hours = 0;
 	minutes = 0;
@@ -1279,38 +1444,63 @@ char *qnptr;
 						strcpy(cpt,qname);			/* Copy return qname into array.	*/
 					}
 
-					lpt = qm_quet + cq;				/* Point to pos in queue type long array.*/
-					*lpt = flgs;					/* Put return queue type into array.	*/
+					if (qm_quet)
+					{
+						lpt = qm_quet + cq;			/* Point to pos in queue type long array.*/
+						*lpt = flgs;				/* Put return queue type into array.	*/
+					}
 					dtext[0] = '\0';				/* Begin with no text.			*/
 					get_qt_text(flgs,dtext);			/* Get the appropriate queue type text.	*/
-					cpt = qm_qt + (cq * 8);				/* Point to pos in queue type array.	*/
-					strcpy(cpt,dtext);				/* Copy text into the array.		*/
 
-					lpt = qm_bp + cq;				/* Point to pos in base priority array.	*/
-					*lpt = bprior;					/* Put return bprior into array.	*/
+					if (qm_qt)
+					{
+						cpt = qm_qt + (cq * 8);			/* Point to pos in queue type array.	*/
+						strcpy(cpt,dtext);			/* Copy text into the array.		*/
+					}
 
-					lpt = qm_jl + cq;				/* Point to pos in max job limit array.	*/
-					*lpt = joblimit;				/* Put return joblimit into array.	*/
+					if (qm_bp)
+					{
+						lpt = qm_bp + cq;			/* Point to pos in base priority array.	*/
+						*lpt = bprior;				/* Put return bprior into array.	*/
+					}
+
+					if (qm_jl)
+					{
+						lpt = qm_jl + cq;			/* Point to pos in max job limit array.	*/
+						*lpt = joblimit;			/* Put return joblimit into array.	*/
+					}
 
 					dtext[0] = '\0';				/* Begin with no text.			*/
-					cpt = qm_cpul + (cq * 11);			/* Point to pos in CPU limit array.	*/
-					if (flgs & QUI$M_QUEUE_BATCH)			/* Only applies to Batch queues.	*/
+					if (qm_cpul)
 					{
-						get_cpul_text(cpulimit,dtext);		/* Convert CPU limit into text format.	*/
+						cpt = qm_cpul + (cq * 11);		/* Point to pos in CPU limit array.	*/
+						if (flgs & QUI$M_QUEUE_BATCH)		/* Only applies to Batch queues.	*/
+						{
+							get_cpul_text(cpulimit,dtext);	/* Convert CPU limit into text format.	*/
+						}
+						else strcpy(dtext,"           ");	/* Fill with blanks.			*/
+						strcpy(cpt,dtext);			/* Copy text into the array.		*/
 					}
-					else strcpy(dtext,"           ");		/* Fill with blanks.			*/
-					strcpy(cpt,dtext);				/* Copy text into the array.		*/
 
 					dtext[0] = '\0';				/* Begin with no text.			*/
 					get_qs_text(qstat,dtext);			/* Get appropriate queue status text.	*/
-					cpt = qm_qs + (cq * 11);			/* Point to pos in queue status array.	*/
-					strcpy(cpt,dtext);				/* Copy text into array.		*/
+					if (qm_qs)
+					{
+						cpt = qm_qs + (cq * 11);		/* Point to pos in queue status array.	*/
+						strcpy(cpt,dtext);			/* Copy text into array.		*/
+					}
 
-					lpt = qm_blmin + cq;				/* Point to pos in job limit max array.	*/
-					*lpt = blimmin;					/* Put return blimmin into array.	*/
+					if (qm_blmin)
+					{
+						lpt = qm_blmin + cq;			/* Point to pos in job limit max array.	*/
+						*lpt = blimmin;				/* Put return blimmin into array.	*/
+					}
 
-					lpt = qm_blmax + cq;				/* Point to pos in job limit max array.	*/
-					*lpt = blimmax;					/* Put return blimmax into array.	*/
+					if (qm_blmax)
+					{
+						lpt = qm_blmax + cq;			/* Point to pos in job limit max array.	*/
+						*lpt = blimmax;				/* Put return blimmax into array.	*/
+					}
 
 					cq++;
 				}
@@ -1350,18 +1540,20 @@ char *dtext;										/* The highest status willprevail.	*/
 {
 	char itext[15], *tcpt, *dpt;
 
-	if ((jstat & QUI$M_JOB_ABORTING) == QUI$M_JOB_ABORTING)	  	strcpy(itext,"Aborting      ");
-	if ((jstat & QUI$M_JOB_EXECUTING) == QUI$M_JOB_EXECUTING)	strcpy(itext,"Executing     ");
-	if ((jstat & QUI$M_JOB_HOLDING) == QUI$M_JOB_HOLDING)	  	strcpy(itext,"Holding       ");
-	if ((jstat & QUI$M_JOB_INACCESSIBLE) == QUI$M_JOB_INACCESSIBLE)	strcpy(itext,"Inaccessible  ");
-	if ((jstat & QUI$M_JOB_REFUSED) == QUI$M_JOB_REFUSED)		strcpy(itext,"Refused       ");
-	if ((jstat & QUI$M_JOB_REQUEUE) == QUI$M_JOB_REQUEUE)		strcpy(itext,"Requeue       ");
-	if ((jstat & QUI$M_JOB_RESTARTING) == QUI$M_JOB_RESTARTING)	strcpy(itext,"Restarting    ");
-	if ((jstat & QUI$M_JOB_RETAINED) == QUI$M_JOB_RETAINED) 	strcpy(itext,"Retained      ");
-	if ((jstat & QUI$M_JOB_STARTING) == QUI$M_JOB_STARTING)		strcpy(itext,"Starting      ");
+	strcpy(itext,"Unknown       ");
+
+	if ((jstat & QUI$M_JOB_ABORTING) == QUI$M_JOB_ABORTING)	  	  strcpy(itext,"Aborting      ");
+	if ((jstat & QUI$M_JOB_EXECUTING) == QUI$M_JOB_EXECUTING)	  strcpy(itext,"Executing     ");
+	if ((jstat & QUI$M_JOB_HOLDING) == QUI$M_JOB_HOLDING)	  	  strcpy(itext,"Holding       ");
+	if ((jstat & QUI$M_JOB_INACCESSIBLE) == QUI$M_JOB_INACCESSIBLE)	  strcpy(itext,"Inaccessible  ");
+	if ((jstat & QUI$M_JOB_REFUSED) == QUI$M_JOB_REFUSED)		  strcpy(itext,"Refused       ");
+	if ((jstat & QUI$M_JOB_REQUEUE) == QUI$M_JOB_REQUEUE)		  strcpy(itext,"Requeue       ");
+	if ((jstat & QUI$M_JOB_RESTARTING) == QUI$M_JOB_RESTARTING)	  strcpy(itext,"Restarting    ");
+	if ((jstat & QUI$M_JOB_RETAINED) == QUI$M_JOB_RETAINED) 	  strcpy(itext,"Retained      ");
+	if ((jstat & QUI$M_JOB_STARTING) == QUI$M_JOB_STARTING)		  strcpy(itext,"Starting      ");
 	if ((jstat & QUI$M_JOB_TIMED_RELEASE) == QUI$M_JOB_TIMED_RELEASE) strcpy(itext,"Timed Released");
-	if ((jstat & QUI$M_JOB_SUSPENDED) == QUI$M_JOB_SUSPENDED)	strcpy(itext,"Suspended     ");
-	if ((jstat & QUI$M_JOB_PENDING) == QUI$M_JOB_PENDING)		strcpy(itext,"Pending       ");
+	if ((jstat & QUI$M_JOB_SUSPENDED) == QUI$M_JOB_SUSPENDED)	  strcpy(itext,"Suspended     ");
+	if ((jstat & QUI$M_JOB_PENDING) == QUI$M_JOB_PENDING)		  strcpy(itext,"Pending       ");
 
 	tcpt = itext;									/* Set ptr to beginning of text.	*/
 	dpt = dtext;									/* Set ptr to beginning of destination.	*/
@@ -1498,22 +1690,24 @@ long rrow;										/*  retrieved from system.		*/
 	return;
 }
 
-static int gen_job_arrays(queflags)							/* This will generate the arays of data	*/
-unsigned long queflags;									/*  for the specified queue.		*/
-{
+static int gen_job_arrays(unsigned long queflags,int *rescan_flag)			/* This will generate the arays of data	*/
+{											/*  for the specified queue.		*/
 	char jobname[40], jusername[13], formname[32];
+	char the_file[256];
 	char dtext[15], *cpt;
 	long num, size, jstat, copies, form, *lpt;
 	int cq, wmon;
 	unsigned long qflags, jflags;
 	register int i, j;
+	char username[34];
 	
+	*rescan_flag = FALSE;
 	alloc_job_arrays(queflags);							/* Allocate memory , set avail rows.	*/
 	if (!jrows)
 	{
 		return(FAILURE);							/* There are no jobs available.		*/
 	}
-	if (!(qe_frmn = (char *)calloc(jrows,sizeof(formname)))) que_mem_err(jrows*32);	/* Get memory for the form name array.	*/
+	if (!(qe_frmn = (char *)calloc(jrows,32+2))) que_mem_err(jrows*32);		/* Get memory for the form name array.	*/
 
 	qflags = QUI$M_SEARCH_WILDCARD;							/* Set up for queue context.		*/
 	jflags = QUI$M_SEARCH_WILDCARD;
@@ -1581,10 +1775,15 @@ unsigned long queflags;									/*  for the specified queue.		*/
 	qui_fbuf[0].bufptr = (long *)&copies;
 	qui_fbuf[0].retlen = 0;
 
-	qui_fbuf[1].item_code = 0;							/* Mark the end of the buffer.		*/
-	qui_fbuf[1].buflen = 0;
-	qui_fbuf[1].bufptr = (long *)0;
+	qui_fbuf[1].item_code = QUI$_FILE_SPECIFICATION;				/* Set up to return the file spec so	*/
+	qui_fbuf[1].buflen = 255;							/*  can check if exists.		*/
+	qui_fbuf[1].bufptr = (long *)the_file;
 	qui_fbuf[1].retlen = 0;
+
+	qui_fbuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_fbuf[2].buflen = 0;
+	qui_fbuf[2].bufptr = (long *)0;
+	qui_fbuf[2].retlen = 0;
 
 	quibuf[0].item_code = QUI$_SEARCH_NAME;						/* Set up search path.			*/
 	quibuf[0].buflen = 31;								/* Pass in the form name.		*/
@@ -1611,7 +1810,7 @@ unsigned long queflags;									/*  for the specified queue.		*/
 		stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
 		stat_qui = iosb.status;
 		wmon = 0;
-		vset(CURSOR,OFF);
+		vset_cursor_off();
 		while ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* While there are jobs.		*/
 		{
 			if (jrows > 10)							 /* Output flashing working message.	*/
@@ -1630,39 +1829,79 @@ unsigned long queflags;									/*  for the specified queue.		*/
 						&iosb, (long) 0, (long) 0);
 				stat_qui = iosb.status;
 
-				cpt = qe_jbn + (cq * 39);				/* Point to pos in job name array.	*/
-				strcpy(cpt,jobname);					/* Copy return jobname into array.	*/
+				lpt = del_entry + cq;
+				if (!fexists(the_file))					/* Check if file exists.		*/
+				{
+					cuserid(username);
+					if (strcmp(username,jusername))			/* Not the owner so don't mark.		*/
+					{
+						*lpt = 0;
+					}
+					else
+					{
+						*rescan_flag = TRUE;
+						*lpt = 1;
+					}
+				}
+				else	*lpt = 0;
 
-				cpt = qe_usrn + (cq * 12);				/* Point to pos in user name array.	*/
-				strcpy(cpt,jusername);					/* Copy return username into array.	*/
+				if (qe_jbn)
+				{
+					cpt = qe_jbn + (cq * 39);			/* Point to pos in job name array.	*/
+					strcpy(cpt,jobname);				/* Copy return jobname into array.	*/
+				}
 
-				lpt = qe_cpy + cq;					/* Point to pos in copies array.	*/
-				*lpt = copies;						/* Put return copies into array.	*/
+				if (qe_usrn)
+				{
+					cpt = qe_usrn + (cq * 12);			/* Point to pos in user name array.	*/
+					strcpy(cpt,jusername);				/* Copy return username into array.	*/
+				}
 
-				lpt = qe_blks + cq;					/* Point to pos in job size array.	*/
-				*lpt = size;						/* Put return size into array.		*/
+				if (qe_cpy)
+				{
+					lpt = qe_cpy + cq;				/* Point to pos in copies array.	*/
+					*lpt = copies;					/* Put return copies into array.	*/
+				}
 
-				lpt = qe_ent + cq;					/* Point to pos in job entry array.	*/
-				*lpt = num;						/* Put return num into array.		*/
+				if (qe_blks)
+				{
+					lpt = qe_blks + cq;				/* Point to pos in job size array.	*/
+					*lpt = size;					/* Put return size into array.		*/
+				}
 
-				lpt = qe_jobs + cq;					/* Point to pos in job status array.	*/
-				*lpt = jstat;						/* Put return num into array.		*/
+				if (qe_ent)
+				{
+					lpt = qe_ent + cq;				/* Point to pos in job entry array.	*/
+					*lpt = num;					/* Put return num into array.		*/
+				}
+
+				if (qe_jobs)
+				{
+					lpt = qe_jobs + cq;				/* Point to pos in job status array.	*/
+					*lpt = jstat;					/* Put return num into array.		*/
+				}
 
 				dtext[0] = '\0';					/* Begin with no text.			*/
 				get_js_text(jstat,dtext);				/* Get appropriate job status text.	*/
 
-				cpt = qe_st + (cq * 14);				/* Point to pos in job status text array.*/
-				strcpy(cpt,dtext);					/* Copy text into array.		*/
+				if (qe_st)
+				{
+					cpt = qe_st + (cq * 14);			/* Point to pos in job status text array.*/
+					strcpy(cpt,dtext);				/* Copy text into array.		*/
+				}
 
-				cpt = qe_frmn + (cq * 31);				/* Point to pos in form name array.	*/
-				strcpy(cpt,formname);					/* Copy return formname into array.	*/
+				if (qe_frmn)
+				{
+					cpt = qe_frmn + (cq * 31);			/* Point to pos in form name array.	*/
+					strcpy(cpt,formname);				/* Copy return formname into array.	*/
+				}
 
 				cq++;
 			}
 			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
 			stat_qui = iosb.status;
 		}
-		vset(CURSOR,ON);
+		vset_cursor_on();
 	}
 	if (!jrows)
 	{
@@ -1673,15 +1912,22 @@ unsigned long queflags;									/*  for the specified queue.		*/
 
 	for (i = 0; i < jrows; i++)							/* Get the form numbers.		*/
 	{
-		cpt = qe_frmn + (i * 31);						/* Point to pos in form name array.	*/
 		j = 0;
-		while (*cpt != ' ' && j < 31) formname[j++] = *cpt++;			/* Copy formname into field.		*/
+		if (qe_frmn)
+		{
+			cpt = qe_frmn + (i * 31);					/* Point to pos in form name array.	*/
+			j = 0;
+			while (*cpt != ' ' && j < 31) formname[j++] = *cpt++;		/* Copy formname into field.		*/
+		}
 		formname[j] = '\0';							/* Null terminate the form name.	*/
 		stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_FORM, (long) 0, quibuf, &iosb, (long) 0, (long) 0);
 		stat_qui = iosb.status;
 		if (!((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))) form = 0;	/* Is no form number or default.	*/
-		lpt = qe_jf + i;							/* Point to pos in form array.		*/
-		*lpt = form;								/* Put return form number into array.	*/
+		if (qe_jf)
+		{
+			lpt = qe_jf + i;						/* Point to pos in form array.		*/
+			*lpt = form;							/* Put return form number into array.	*/
+		}
 	}
 	return(SUCCESS);								/* Return info available.		*/
 }
@@ -1763,12 +2009,16 @@ long ndx;
 	char jobname[40], curr_job[40], *jcpt;
 	register int i;
 	unsigned long qflags;
-	int state, c;
+	int state, c, return_code;
 #include "quemgmt1.d"
 
-	jcpt = qe_jbn + (ndx * 39);							/* Point to position in job name array.	*/
 	i = 0;
-	while (*jcpt != ' ' && i < 39) jobname[i++] = *jcpt++;				/* Copy job name from array to var.	*/
+	if (qe_jbn)
+	{
+		jcpt = qe_jbn + (ndx * 39);						/* Point to position in job name array.	*/
+		i = 0;
+		while (*jcpt != ' ' && i < 39) jobname[i++] = *jcpt++;			/* Copy job name from array to var.	*/
+	}
 	jobname[i] = '\0';								/* Null terminate the string.		*/
 
 	qflags = QUI$M_SEARCH_WILDCARD;
@@ -1848,7 +2098,7 @@ long ndx;
 	while (*jcpt++) disp_name[i++] = *jcpt;						/* Copy file name into temp var.	*/
 	disp_name[i] = '\0';								/* Null terminate the string.		*/
 
-	if ((screen = (char *)malloc(1924)) == 0) que_mem_err(1924);			/* Get some memory for screen.		*/
+	if ((screen = (char *)malloc(WSB_LENGTH)) == 0) que_mem_err(WSB_LENGTH);	/* Get some memory for screen.		*/
 	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
 
 	wput(screen, 1,25,PLAIN_TEXT,"*** DELETE FILE SUBROUTINE ***");			/* Layout the screen.			*/
@@ -1856,12 +2106,12 @@ long ndx;
 	wput(screen, 8, 5,PLAIN_TEXT,"       as stop the removal of the job from the queue.");
 	wput(screen,11, 2,PLAIN_TEXT,"Scratch file:");
 	wput(screen,12, 2,BOLD_TEXT,disp_name);
-	wput(screen,23,10,PLAIN_TEXT,"Push <RETURN> to continue or <PF16> to abort.");
+	wput(screen,23,10,PLAIN_TEXT,"Push (ENTER) to continue or (16) to abort.");
 
 	wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;					/* Set the Wang Control Character.	*/
 	screen[WCC_BYTE] = wcc;
 	vwfunc = DISPLAY_AND_READ;							/* Set vwang function.			*/
-	lines = 24;
+	lines = WSB_ROWS;
 	ws_erap(FULL_SCREEN);
 	do
 	{
@@ -1917,14 +2167,323 @@ long ndx;										/*  queue a pending or executing job.	*/
 	}
 }
 
-static int requeue_job(ndx,queflags)							/* Function to requeue an executing 	*/
-long ndx, queflags;									/*  job.	*/
+static int change_disp(ndx,queflags)							/* Function to change the disposition 	*/
+long ndx, queflags;									/*  of a job.				*/
+{
+	char *screen, wcc;								/* Ptr to screen to call vwang.		*/
+	char vwfunc, lines, term[2], no_mod[2];						/* Working vars. for vwang.		*/
+	long entry_num, rent_num, fflgs, *lpt;
+	long fnum, copies, jstat;
+	char jobn[40], *pjbn, fdisp[7];
+	long char_num;
+	char the_file[256], jobname[40];
+	int c, state, return_code;
+	register int i;
+	unsigned long jflags, sqflags, qflags;
+
+	sqflags = QUI$M_SEARCH_WILDCARD;						/* Set up for queue context.		*/
+	jflags = QUI$M_SEARCH_WILDCARD;
+	if ((queflags & RESTRICT_JOBS_DISABLED) == RESTRICT_JOBS_DISABLED)
+	{
+		jflags |= QUI$M_SEARCH_ALL_JOBS;					/* Flag set so pick up all jobs.	*/
+	}										/* Set up the buffers for system calls.	*/
+
+	qui_qbuf[0].item_code = QUI$_SEARCH_NAME;					/* Init the buffer structure.		*/
+	qui_qbuf[0].buflen = strlen(curr_queue);
+	qui_qbuf[0].bufptr = (long *)curr_queue;
+	qui_qbuf[0].retlen = 0;
+
+	qui_qbuf[1].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_qbuf[1].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_qbuf[1].bufptr = (long *)&sqflags;						/* which is flags.			*/
+	qui_qbuf[1].retlen = 0;								/* return length address		*/
+
+	qui_qbuf[2].item_code = QUI$_QUEUE_FLAGS;					/* Set up to return queue flags.	*/
+	qui_qbuf[2].buflen = sizeof(long);
+	qui_qbuf[2].bufptr = (long *)&qflags;
+	qui_qbuf[2].retlen = 0;
+
+	qui_qbuf[3].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_qbuf[3].buflen = 0;
+	qui_qbuf[3].bufptr = (long *)0;
+	qui_qbuf[3].retlen = 0;
+
+	qui_jbuf[0].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_jbuf[0].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_jbuf[0].bufptr = (long *)&jflags;						/* which is flags.			*/
+	qui_jbuf[0].retlen = 0;								/* return length address		*/
+
+	qui_jbuf[1].item_code = QUI$_ENTRY_NUMBER;					/* Set up to return Job entry number.	*/
+	qui_jbuf[1].buflen = sizeof(long);
+	qui_jbuf[1].bufptr = (long *)&rent_num;
+	qui_jbuf[1].retlen = 0;
+
+	qui_jbuf[2].item_code = QUI$_JOB_NAME;						/* Set up to return Job name.		*/
+	qui_jbuf[2].buflen = 39;
+	qui_jbuf[2].bufptr = (long *)jobname;
+	qui_jbuf[2].retlen = 0;
+
+	qui_jbuf[3].item_code = QUI$_JOB_STATUS;					/* Set up to return job status.		*/
+	qui_jbuf[3].buflen = sizeof(long);
+	qui_jbuf[3].bufptr = (long *)&jstat;
+	qui_jbuf[3].retlen = 0;
+
+	qui_jbuf[4].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_jbuf[4].buflen = 0;
+	qui_jbuf[4].bufptr = (long *)0;
+	qui_jbuf[4].retlen = 0;
+
+	qui_fbuf[0].item_code = QUI$_FILE_SPECIFICATION;				/* Set up to return file spec.		*/
+	qui_fbuf[0].buflen = 255;
+	qui_fbuf[0].bufptr = (long *)the_file;
+	qui_fbuf[0].retlen = 0;
+
+	qui_fbuf[1].item_code = QUI$_FILE_COPIES;					/* Set up to return file copies.	*/
+	qui_fbuf[1].buflen = sizeof(long);
+	qui_fbuf[1].bufptr = (long *)&copies;
+	qui_fbuf[1].retlen = 0;
+
+	qui_fbuf[2].item_code = QUI$_FILE_FLAGS;					/* Set up to return file flags.		*/
+	qui_fbuf[2].buflen = sizeof(long);
+	qui_fbuf[2].bufptr = (long *)&fflgs;
+	qui_fbuf[2].retlen = 0;
+
+	qui_fbuf[3].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_fbuf[3].buflen = 0;
+	qui_fbuf[3].bufptr = (long *)0;
+	qui_fbuf[3].retlen = 0;
+
+	if (qe_ent)
+	{
+		lpt = qe_ent + ndx;							/* Set ptr to pos in job entry arrya.	*/
+		entry_num = *lpt;
+	}
+	i = 0;
+	if (qe_jbn)
+	{
+		pjbn = qe_jbn + (ndx * 39);						/* Point to position in job name array.	*/
+		i = 0;
+		while (*pjbn != ' ' && i < 39) jobn[i++] = *pjbn++;			/* Copy job name into variable.		*/
+	}
+	jobn[i] = '\0';									/* Null terminate the string.		*/
+
+	stat_ss = sys$getquiw((long) 0, QUI$_CANCEL_OPERATION, (long) 0,(long) 0, &iosb, (long) 0, (long) 0);
+
+	stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_QUEUE, (long) 0, qui_qbuf, &iosb, (long) 0, (long) 0);
+	stat_qui = iosb.status;
+	if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))
+	{										/* Check if any jobs available.		*/
+		stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+		stat_qui = iosb.status;
+		while ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* While there are jobs.		*/
+		{									/* Assume only one file in print job.	*/
+			if (rent_num == entry_num)					/* Is the job we want.			*/
+			{								/* Get the file flags.			*/
+				stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_FILE, (long) 0, qui_fbuf,
+						&iosb, (long) 0, (long) 0);
+				stat_qui = iosb.status;
+				break;							/* Get out of loop.			*/
+			}
+			else								/* Try again.				*/
+			{
+				stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+				stat_qui = iosb.status;
+			}
+		}
+		if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL));		/* Successfully found file.		*/
+		else
+		{
+			if (stat_qui == JBC$_NOSUCHENT)					/* Is an invalid entry.			*/
+			{
+				report_error(stat_qui,entry_num,"","Change entry disposition, getting job");
+				return(TRUE);						/* Set so will rescan the queue.	*/
+			}
+			else  return(report_error(stat_qui,entry_num,"","Change entry disposition, getting job")); /* Report.	*/
+		}
+	}
+	else return(report_error(stat_qui,0,curr_queue,"Change entry disposition, getting queue")); /* Report situation.	*/
+
+	if ((fflgs & QUI$M_FILE_DELETE) == QUI$M_FILE_DELETE)
+	{
+		strcpy(fdisp,"DELETE");
+	}
+	else
+	{
+		strcpy(fdisp,"SAVE  ");
+	}
+
+	if ((screen = (char *)malloc(WSB_LENGTH)) == 0) que_mem_err(WSB_LENGTH);	/* Get some memory for screen.		*/
+	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
+
+	wput(screen, 1,20,PLAIN_TEXT,"*** CHANGE ENTRY DISPOSITION ***");		/* Layout the screen.			*/
+	wput(screen, 5, 7,PLAIN_TEXT," (4) - SAVE   - don't delete file after printing");
+	wput(screen, 7, 7,PLAIN_TEXT," (5) - DELETE - delete file after printing");
+	wput(screen, 9, 7,PLAIN_TEXT,"(16) - NO CHANGE");
+	wput(screen,12, 5,PLAIN_TEXT,"Job name:");
+	wput(screen,12,26,BOLD_TEXT,jobn);
+	wput(screen,13, 5,PLAIN_TEXT,"Current Disposition:");
+	wput(screen,13,26,BOLD_TEXT,fdisp);
+	wput(screen,23, 5,PLAIN_TEXT,"Push the appropriate PF key or (16) to exit.");
+
+	wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;					/* Set the Wang Control Character.	*/
+	screen[WCC_BYTE] = wcc;
+	vwfunc = DISPLAY_AND_READ;							/* Set vwang function.			*/
+	lines = WSB_ROWS;
+	ws_erap(FULL_SCREEN);
+	state = TRUE;									/* Assume there will be a change.	*/
+	do
+	{
+		vwang(&vwfunc,screen,&lines,"00040516X",term,no_mod);			/* Call Wang emulation to fill screen.	*/
+											/* Hit the abort PF16 key or return key.*/
+		if ((term[0] == '1' && term[1] == '6') || (term[0] == '0' && term[1] == '0'))
+		{
+			state = FALSE;							/* No change so set to FALSE.		*/
+		}
+		else if (term[0] == '0' && term[1] == '4')				/* Hit PF4 key.  Change dispositin to	*/
+		{									/*  SAVE.				*/
+			qui_jbuf[0].item_code = SJC$_QUEUE;				/* Set up to input queue name.		*/
+			qui_jbuf[0].buflen = strlen(curr_queue);
+			qui_jbuf[0].bufptr = (long *)curr_queue;
+			qui_jbuf[0].retlen = 0;
+
+			qui_jbuf[1].item_code = SJC$_ENTRY_NUMBER;			/* Set up to input job entry number.	*/
+			qui_jbuf[1].buflen = sizeof(long);
+			qui_jbuf[1].bufptr = (long *)&entry_num;
+			qui_jbuf[1].retlen = 0;
+
+			qui_jbuf[2].item_code = SJC$_NO_DELETE_FILE;			/* Change job to be save file status.	*/
+			qui_jbuf[2].buflen = 0;
+			qui_jbuf[2].bufptr = (long *)0;
+			qui_jbuf[2].retlen = 0;
+
+			qui_jbuf[3].item_code = 0;					/* Mark the end of the buffer.		*/
+			qui_jbuf[3].buflen = 0;
+			qui_jbuf[3].bufptr = (long *)0;
+			qui_jbuf[3].retlen = 0;
+
+			stat_ss = sys$sndjbcw((long) 0, SJC$_ALTER_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+			stat_snd = iosb.status;
+			if ((stat_snd == JBC$_NORMAL) && (stat_ss == SS$_NORMAL)) state = TRUE;
+			else
+			{                             
+				if (stat_snd == JBC$_NOSUCHENT)				/* Is an invalid entry.			*/
+				{
+					report_error(stat_snd,entry_num,"","Changing entry disposition to SAVE");
+					return(TRUE);					/* Set so will rescan the queue.	*/
+				}
+				else return(report_error(stat_snd,entry_num,"","Changing entry disposition to SAVE"));
+			}
+		}
+		else if (term[0] == '0' && term[1] == '5')				/* Hit PF5 key.  Change disposition to	*/
+		{									/*  DELETE.				*/
+			qui_jbuf[0].item_code = SJC$_QUEUE;				/* Set up to input queue name.		*/
+			qui_jbuf[0].buflen = strlen(curr_queue);
+			qui_jbuf[0].bufptr = (long *)curr_queue;
+			qui_jbuf[0].retlen = 0;
+
+			qui_jbuf[1].item_code = SJC$_ENTRY_NUMBER;			/* Set up to input job entry number.	*/
+			qui_jbuf[1].buflen = sizeof(long);
+			qui_jbuf[1].bufptr = (long *)&entry_num;
+			qui_jbuf[1].retlen = 0;
+
+			qui_jbuf[2].item_code = 0;					/* Mark the end of the buffer.		*/
+			qui_jbuf[2].buflen = 0;
+			qui_jbuf[2].bufptr = (long *)0;
+			qui_jbuf[2].retlen = 0;
+											/* First delete the original job.	*/
+			stat_ss = sys$sndjbcw((long) 0, SJC$_DELETE_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+			stat_snd = iosb.status;
+
+			if ((stat_snd == JBC$_NORMAL) && (stat_ss == SS$_NORMAL)) state = TRUE;
+			else
+			{
+				if (stat_snd == JBC$_NOSUCHENT)				/* Is an invalid entry.			*/
+				{
+					report_error(stat_snd,entry_num,"","Changing entry disposition, delete job");
+					return(TRUE);					/* Set so will rescan the queue.	*/
+				}
+				else return(report_error(stat_snd,entry_num,"","Changing entry disposition, delete job"));
+			}
+											/* Then, queue job with delete disp.	*/
+			fflgs |= Q_DELETE_FILE;
+			fflgs |= Q_HOLD_JOB;
+			if (qe_jf)
+			{
+				lpt = qe_jf + ndx;					/* Set ptr to pos in form number array.	*/
+				fnum = *lpt;
+			}
+											/* Queue job.				*/
+			state = TRUE;
+			return_code = que_job(PRINT_QUEUE,curr_queue,the_file,jobname,copies,fnum,fflgs);
+			if (return_code != SS$_NORMAL)
+			{
+				return(report_error(stat_snd,entry_num,"","Changing entry disposition to DELETE"));
+			}
+		}
+		else if (term[0] == '0' && term[1] == '6')				/* Hit PF6 key.  Change dispossition to */
+		{									/*  RETAIN.				*/
+
+			return(report_error(0,0,"","Not a supported function - RETAIN"));
+
+			qui_jbuf[0].item_code = SJC$_QUEUE;				/* Set up to input queue name.		*/
+			qui_jbuf[0].buflen = strlen(curr_queue);
+			qui_jbuf[0].bufptr = (long *)curr_queue;
+			qui_jbuf[0].retlen = 0;
+
+			qui_jbuf[1].item_code = SJC$_ENTRY_NUMBER;			/* Set up to input job entry number.	*/
+			qui_jbuf[1].buflen = sizeof(long);
+			qui_jbuf[1].bufptr = (long *)&entry_num;
+			qui_jbuf[1].retlen = 0;
+
+			qui_jbuf[3].item_code = 0;					/* Mark the end of the buffer.		*/
+			qui_jbuf[3].buflen = 0;
+			qui_jbuf[3].bufptr = (long *)0;
+			qui_jbuf[3].retlen = 0;
+
+			stat_ss = sys$sndjbcw((long) 0, SJC$_DELETE_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+			stat_snd = iosb.status;
+
+			if ((stat_snd == JBC$_NORMAL) && (stat_ss == SS$_NORMAL)) state = TRUE;
+			else
+			{
+				if (stat_snd == JBC$_NOSUCHENT)				/* Is an invalid entry.			*/
+				{
+					report_error(stat_snd,entry_num,"","Changing entry disposition, retain job");
+					return(TRUE);					/* Set so will rescan the queue.	*/
+				}
+				else return(report_error(stat_snd,entry_num,"","Changing entry disposition, delete job"));
+			}
+											/* Then, queue job with retain disp.	*/
+/*			fflgs |= Q_RETAIN_JOB;	*/
+			if (qe_jf)
+			{
+				lpt = qe_jf + ndx;					/* Set ptr to pos in form number array.	*/
+				fnum = *lpt;
+			}
+											/* Queue job.				*/
+			state = TRUE;
+			return_code = que_job(PRINT_QUEUE,curr_queue,the_file,jobname,copies,fnum,fflgs);
+			if (return_code != SS$_NORMAL)
+			{
+				return(report_error(stat_snd,entry_num,"","Changing entry disposition to RETAIN"));
+			}
+		}
+		else vbell();
+	} while ((no_mod[0] == 'M') && !((term[0] == '1') && (term[1] == '6'))); 	/* Repeat until valid return key.	*/
+
+	free(screen);									/* Free up screen memory.		*/
+	return(state);									/* True if changed otherwise false.	*/
+}
+
+static int requeue_job(ndx,queflags,pc,numq)						/* Function to requeue an executing 	*/
+long ndx, queflags, numq;								/*  job.				*/
+char *pc;
 {
 	char *screen, wcc;								/* Ptr to screen to call vwang.		*/
 	char vwfunc, lines, term[2], no_mod[2];						/* Working vars. for vwang.		*/
 	long entry_num, rent_num, fflgs, *lpt;
 	char jobn[40], *pjbn, fdisp[7];
-	int c, state;
+	int c, state, caller;
 	register int i;
 	unsigned long jflags, qflags;
 
@@ -2017,109 +2576,257 @@ long ndx, queflags;									/*  job.	*/
 	}
 	else return(report_error(stat_qui,0,curr_queue,"Requeue entry, getting queue")); /* Report situation.			*/
 
-	if ((fflgs & QUI$M_FILE_DELETE) == QUI$M_FILE_DELETE)	strcpy(fdisp,"DELETE");
-	else							strcpy(fdisp,"SAVE  ");
+	qui_jbuf[0].item_code = SJC$_QUEUE;						/* Set up to input queue name.		*/
+	qui_jbuf[0].buflen = strlen(curr_queue);
+	qui_jbuf[0].bufptr = (long *)curr_queue;
+	qui_jbuf[0].retlen = 0;
 
-	if ((screen = (char *)malloc(1924)) == 0) que_mem_err(1924);			/* Get some memory for screen.		*/
-	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
+	qui_jbuf[1].item_code = SJC$_ENTRY_NUMBER;					/* Set up to input job entry number.	*/
+	qui_jbuf[1].buflen = sizeof(long);
+	qui_jbuf[1].bufptr = (long *)&entry_num;
+	qui_jbuf[1].retlen = 0;
 
-	wput(screen, 1,20,PLAIN_TEXT,"*** CHANGE ENTRY DISPOSITION ***");		/* Layout the screen.			*/
-	wput(screen, 5,15,PLAIN_TEXT,"(4) - SAVE     (5) - REQUEUE     (16) - NO CHANGE");
-	wput(screen, 8, 5,PLAIN_TEXT,"Job name:");
-	wput(screen, 8,26,BOLD_TEXT,jobn);
-	wput(screen, 9, 5,PLAIN_TEXT,"Current Disposition:");
-	wput(screen, 9,26,BOLD_TEXT,fdisp);
-	wput(screen,23, 5,PLAIN_TEXT,"Push the appropriate PF key or <PF16> to exit.");
+	qui_jbuf[2].item_code = SJC$_REQUEUE;						/* Set up to requeue job.		*/
+	qui_jbuf[2].buflen = 0;
+	qui_jbuf[2].bufptr = (long *)0;
+	qui_jbuf[2].retlen = 0;
 
-	wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;					/* Set the Wang Control Character.	*/
-	screen[WCC_BYTE] = wcc;
-	vwfunc = DISPLAY_AND_READ;							/* Set vwang function.			*/
-	lines = 24;
-	ws_erap(FULL_SCREEN);
-	state = TRUE;									/* Assume there will be a change.	*/
-	do
+	qui_jbuf[3].item_code = SJC$_HOLD;						/* Set up to HOLD job.			*/
+	qui_jbuf[3].buflen = 0;
+	qui_jbuf[3].bufptr = (long *)0;
+	qui_jbuf[3].retlen = 0;
+	
+	qui_jbuf[4].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_jbuf[4].buflen = 0;
+	qui_jbuf[4].bufptr = (long *)0;                 
+	qui_jbuf[4].retlen = 0;
+											/* First abort the job and requeue with	*/
+	stat_ss = sys$sndjbcw((long) 0, SJC$_ABORT_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);	/* HOLD status		*/
+	stat_snd = iosb.status;
+	if ((stat_snd == JBC$_NORMAL) && (stat_ss == SS$_NORMAL)) state = TRUE;
+	else
 	{
-		vwang(&vwfunc,screen,&lines,"00040516X",term,no_mod);			/* Call Wang emulation to fill screen.	*/
-											/* Hit the abort PF16 key or return key.*/
-		if ((term[0] == '1' && term[1] == '6') || (term[0] == '0' && term[1] == '0'))
+		if (stat_snd == JBC$_NOSUCHENT)						/* Is an invalid entry.			*/
 		{
-			state = FALSE;							/* No change so set to FALSE.		*/
+			report_error(stat_snd,entry_num,"","Requeueing entry");
+			return(TRUE);							/* Set so will rescan the queue.	*/
 		}
-		else if (term[0] == '0' && term[1] == '4')				/* Hit PF4 key.				*/
-		{
-			qui_jbuf[0].item_code = SJC$_QUEUE;				/* Set up to input queue name.		*/
-			qui_jbuf[0].buflen = strlen(curr_queue);
-			qui_jbuf[0].bufptr = (long *)curr_queue;
-			qui_jbuf[0].retlen = 0;
-
-			qui_jbuf[1].item_code = SJC$_ENTRY_NUMBER;			/* Set up to input job entry number.	*/
-			qui_jbuf[1].buflen = sizeof(long);
-			qui_jbuf[1].bufptr = (long *)&entry_num;
-			qui_jbuf[1].retlen = 0;
-
-			qui_jbuf[2].item_code = SJC$_NO_DELETE_FILE;			/* Change job to be save file status.	*/
-			qui_jbuf[2].buflen = 0;
-			qui_jbuf[2].bufptr = (long *)0;
-			qui_jbuf[2].retlen = 0;
-
-			qui_jbuf[3].item_code = 0;					/* Mark the end of the buffer.		*/
-			qui_jbuf[3].buflen = 0;
-			qui_jbuf[3].bufptr = (long *)0;
-			qui_jbuf[3].retlen = 0;
-
-			stat_ss = sys$sndjbcw((long) 0, SJC$_ALTER_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
-			stat_snd = iosb.status;
-			if ((stat_snd == JBC$_NORMAL) && (stat_ss == SS$_NORMAL)) state = TRUE;
-			else
-			{
-				if (stat_snd == JBC$_NOSUCHENT)				/* Is an invalid entry.			*/
-				{
-					report_error(stat_snd,entry_num,"","Requeueing entry with SAVE");
-					return(TRUE);					/* Set so will rescan the queue.	*/
-				}
-				else return(report_error(stat_snd,entry_num,"","Requeueing entry with SAVE"));
-			}
-		}
-		else if (term[0] == '0' && term[1] == '5')				/* Hit PF5 key.				*/
-		{
-			qui_jbuf[0].item_code = SJC$_QUEUE;				/* Set up to input queue name.		*/
-			qui_jbuf[0].buflen = strlen(curr_queue);
-			qui_jbuf[0].bufptr = (long *)curr_queue;
-			qui_jbuf[0].retlen = 0;
-
-			qui_jbuf[1].item_code = SJC$_ENTRY_NUMBER;			/* Set up to input job entry number.	*/
-			qui_jbuf[1].buflen = sizeof(long);
-			qui_jbuf[1].bufptr = (long *)&entry_num;
-			qui_jbuf[1].retlen = 0;
-
-			qui_jbuf[2].item_code = SJC$_REQUEUE;				/* Set up to requeue job.		*/
-			qui_jbuf[2].buflen = 0;
-			qui_jbuf[2].bufptr = (long *)0;
-			qui_jbuf[2].retlen = 0;
-	
-			qui_jbuf[3].item_code = 0;					/* Mark the end of the buffer.		*/
-			qui_jbuf[3].buflen = 0;
-			qui_jbuf[3].bufptr = (long *)0;
-			qui_jbuf[3].retlen = 0;
-	
-			stat_ss = sys$sndjbcw((long) 0, SJC$_ABORT_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
-			stat_snd = iosb.status;
-			if ((stat_snd == JBC$_NORMAL) && (stat_ss == SS$_NORMAL)) state = TRUE;
-			else
-			{
-				if (stat_snd == JBC$_NOSUCHENT)				/* Is an invalid entry.			*/
-				{
-					report_error(stat_snd,entry_num,"","Requeueing entry");
-					return(TRUE);					/* Set so will rescan the queue.	*/
-				}
-				else return(report_error(stat_snd,entry_num,"","Requeueing entry")); /* Report the situation.	*/
-			}
-		}
-		else vbell();
-	} while ((no_mod[0] == 'M') && !((term[0] == '1') && (term[1] == '6'))); 	/* Repeat until valid return key.	*/
-
-	free(screen);									/* Free up screen memory.		*/
+		else return(report_error(stat_snd,entry_num,"","Requeueing entry")); 	/* Report the situation.		*/
+	}
+											/* Then, change the page parameters.	*/
+	caller = 1;									/* Set so give non-modifiable fields.	*/
+	change_job(ndx,pc,numq,caller);
+	state = TRUE;									/* Set so will do display.		*/
 	return(state);									/* True if changed otherwise false.	*/
+}
+
+static int submit_remove_job(ndx,nqname,copies,fnum)					/* Submit job to new queue and remove 	*/
+long ndx, copies, fnum;									/*  job from old queue.			*/
+char *nqname;
+{
+	char the_file[256];								/* File name				*/
+	char jobname[40], curr_job[40], *jcpt;
+	register int i;
+	unsigned long qflags, jflags, fflgs;
+	int state, c, return_code;
+	long jstat;
+#include "quemgmt1.d"
+
+	jcpt = qe_jbn + (ndx * 39);							/* Point to position in job name array.	*/
+	i = 0;
+	while (*jcpt != ' ' && i < 39) jobname[i++] = *jcpt++;				/* Copy job name from array to var.	*/
+	jobname[i] = '\0';								/* Null terminate the string.		*/
+
+	qflags = QUI$M_SEARCH_WILDCARD;
+	jflags = QUI$M_SEARCH_WILDCARD;
+	jflags |= QUI$M_SEARCH_ALL_JOBS;						/* Flag set so pick up all jobs.	*/
+											/* Set up the buffers for system calls.	*/
+	qui_qbuf[0].item_code = QUI$_SEARCH_NAME;					/* Init the buffer structure.		*/
+	qui_qbuf[0].buflen = strlen(curr_queue);
+	qui_qbuf[0].bufptr = (long *)curr_queue;
+	qui_qbuf[0].retlen = 0;
+
+	qui_qbuf[1].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_qbuf[1].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_qbuf[1].bufptr = (long *)&qflags;						/* which is flags.			*/
+	qui_qbuf[1].retlen = 0;								/* return length address		*/
+
+	qui_qbuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_qbuf[2].buflen = 0;
+	qui_qbuf[2].bufptr = (long *)0;
+	qui_qbuf[2].retlen = 0;
+
+	qui_jbuf[0].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_jbuf[0].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_jbuf[0].bufptr = (long *)&jflags;						/* which is flags.			*/
+	qui_jbuf[0].retlen = 0;								/* return length address		*/
+
+	qui_jbuf[1].item_code = QUI$_JOB_NAME;						/* Set up to return Job name.		*/
+	qui_jbuf[1].buflen = 39;
+	qui_jbuf[1].bufptr = (long *)curr_job;
+	qui_jbuf[1].retlen = 0;
+
+	qui_jbuf[2].item_code = QUI$_JOB_STATUS;					/* Set up to return job status.		*/
+	qui_jbuf[2].buflen = sizeof(long);
+	qui_jbuf[2].bufptr = (long *)&jstat;
+	qui_jbuf[2].retlen = 0;
+
+	qui_jbuf[3].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_jbuf[3].buflen = 0;
+	qui_jbuf[3].bufptr = (long *)0;
+	qui_jbuf[3].retlen = 0;
+
+	quibuf[0].item_code = QUI$_FILE_SPECIFICATION;					/* Set up to return file spec.		*/
+	quibuf[0].buflen = 255;
+	quibuf[0].bufptr = (long *)the_file;
+	quibuf[0].retlen = 0;
+
+	quibuf[1].item_code = QUI$_FILE_FLAGS;						/* Set up to return file flags.		*/
+	quibuf[1].buflen = sizeof(long);
+	quibuf[1].bufptr = (long *)&fflgs;
+	quibuf[1].retlen = 0;
+
+	quibuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	quibuf[2].buflen = 0;
+	quibuf[2].bufptr = (long *)0;
+	quibuf[2].retlen = 0;
+
+	stat_ss = sys$getquiw((long) 0, QUI$_CANCEL_OPERATION, (long) 0,(long) 0, (long) 0, (long) 0, (long) 0);
+											/* Check if any queues available.	*/
+	stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_QUEUE, (long) 0, qui_qbuf, &iosb, (long) 0, (long) 0);
+	stat_qui = iosb.status;
+	if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))
+	{										/* Check if any jobs available.		*/
+		stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+		stat_qui = iosb.status;
+		while ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* While there are jobs.		*/
+		{
+			if (strcmp(curr_job,jobname) == 0) break;			/* Job name equals current job.		*/
+			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+			stat_qui = iosb.status;
+		}
+		if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* Job name was found.			*/
+		{									/* Call to get the file identification.	*/
+			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_FILE, (long) 0, quibuf, &iosb, (long) 0, (long) 0);
+			stat_qui = iosb.status;
+			if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL));	/* File was found.			*/
+			else return(report_error(stat_qui,0,the_file,"Change class, getting file")); /* Report situation.	*/
+		}
+		else
+		{
+			if (stat_qui == JBC$_NOSUCHENT)					/* Is an invalid entry.			*/
+			{
+				report_error(stat_qui,0,jobname,"Change class, getting job");
+				return(TRUE);						/* Set so will rescan the queue.	*/
+			}
+			else return(report_error(stat_qui,0,jobname,"Change class, getting job")); /* Report situation.		*/
+		}
+	}
+	else return(report_error(stat_qui,0,curr_queue,"Change class, getting queue"));	/* Report situation.			*/
+
+	if ((jstat & QUI$M_JOB_HOLDING) == QUI$M_JOB_HOLDING)				/* Set to HOLD job if already on HOLD	*/
+	{
+		fflgs |= Q_HOLD_JOB;
+	}
+	return_code = que_job(PRINT_QUEUE,nqname,the_file,jobname,copies,fnum,fflgs);	/* Submit job to new queue.		*/
+
+	if (return_code == SS$_NORMAL)
+	{
+		state = remove_job(ndx);						/* Remove job, if success set TRUE.	*/
+		return(TRUE);
+	}
+	else	return(FALSE);
+}
+
+static int get_first_last(jobname)							/* Get the first and last print pages.	*/
+char *jobname;
+{
+	char curr_job[40], *jcpt;
+	register int i;
+	unsigned long qflags, jflags;
+	int state, c;
+
+	qflags = QUI$M_SEARCH_WILDCARD;
+	jflags = QUI$M_SEARCH_WILDCARD;
+	jflags |= QUI$M_SEARCH_ALL_JOBS;						/* Flag set so pick up all jobs.	*/
+											/* Set up the buffers for system calls.	*/
+	qui_qbuf[0].item_code = QUI$_SEARCH_NAME;					/* Init the buffer structure.		*/
+	qui_qbuf[0].buflen = strlen(curr_queue);
+	qui_qbuf[0].bufptr = (long *)curr_queue;
+	qui_qbuf[0].retlen = 0;
+
+	qui_qbuf[1].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_qbuf[1].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_qbuf[1].bufptr = (long *)&qflags;						/* which is flags.			*/
+	qui_qbuf[1].retlen = 0;								/* return length address		*/
+
+	qui_qbuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_qbuf[2].buflen = 0;
+	qui_qbuf[2].bufptr = (long *)0;
+	qui_qbuf[2].retlen = 0;
+
+	qui_jbuf[0].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_jbuf[0].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_jbuf[0].bufptr = (long *)&jflags;						/* which is flags.			*/
+	qui_jbuf[0].retlen = 0;								/* return length address		*/
+
+	qui_jbuf[1].item_code = QUI$_JOB_NAME;						/* Set up to return Job name.		*/
+	qui_jbuf[1].buflen = 39;
+	qui_jbuf[1].bufptr = (long *)curr_job;
+	qui_jbuf[1].retlen = 0;
+
+	qui_jbuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_jbuf[2].buflen = 0;
+	qui_jbuf[2].bufptr = (long *)0;
+	qui_jbuf[2].retlen = 0;
+
+	quibuf[0].item_code = QUI$_FIRST_PAGE;						/* Set up to return first page.		*/
+	quibuf[0].buflen = sizeof(long);
+	quibuf[0].bufptr = (long *)&firstp;
+	quibuf[0].retlen = 0;
+
+	quibuf[1].item_code = QUI$_LAST_PAGE;						/* Set up to return last page.		*/
+	quibuf[1].buflen = sizeof(long);
+	quibuf[1].bufptr = (long *)&lastp;
+	quibuf[1].retlen = 0;
+
+	quibuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	quibuf[2].buflen = 0;
+	quibuf[2].bufptr = (long *)0;
+	quibuf[2].retlen = 0;
+
+	stat_ss = sys$getquiw((long) 0, QUI$_CANCEL_OPERATION, (long) 0,(long) 0, (long) 0, (long) 0, (long) 0);
+											/* Check if any queues available.	*/
+	stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_QUEUE, (long) 0, qui_qbuf, &iosb, (long) 0, (long) 0);
+	stat_qui = iosb.status;
+	if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))
+	{										/* Check if any jobs available.		*/
+		stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+		stat_qui = iosb.status;
+		while ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* While there are jobs.		*/
+		{
+			if (strcmp(curr_job,jobname) == 0) break;			/* Job name equals current job.		*/
+			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+			stat_qui = iosb.status;
+		}
+		if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* Job name was found.			*/
+		{									/* Call to get the file identification.	*/
+			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_FILE, (long) 0, quibuf, &iosb, (long) 0, (long) 0);
+			stat_qui = iosb.status;
+			if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL));	/* File was found.			*/
+			else return(report_error(stat_qui,0,jobname,"Change status, getting file")); /* Report situation.	*/
+		}
+		else
+		{
+			if (stat_qui == JBC$_NOSUCHENT)					/* Is an invalid entry.			*/
+			{
+				report_error(stat_qui,0,jobname,"Change status, getting job");
+				return(TRUE);						/* Set so will rescan the queue.	*/
+			}
+			else return(report_error(stat_qui,0,jobname,"Change startus, getting job")); /* Report situation.	*/
+		}
+	}
+	else return(report_error(stat_qui,0,curr_queue,"Change status, getting queue"));	/* Report situation.		*/
 }
 
 static void genq_empty_list(rrow,rcol,key)
@@ -2127,7 +2834,7 @@ long *rrow, *rcol, *key;
 {
 	long type, width, length, icol;
 	long st_row, st_col;
-	char mesg[80];
+	char mesg[WSB_COLS];
 
 	mlist_id = EMPTY_LIST;
 	strcpy(mesg,"               THERE ARE NO QUEUES AVAILABLE!");
@@ -2157,8 +2864,9 @@ long *rrow, *rcol, *key;
 {
 	long type, width, length, icol;
 	long st_row, st_col;
-	char mesg[80];
+	char mesg[WSB_COLS];
 	int etype;
+	int adjust_se;
 
 	etype = TRUE;									/* Init to TRUE for an empty list.	*/
 	if (nopriv_fl) 	strcpy(mesg,"         YOU DO NOT HAVE ACCESS TO THE ENTRIES IN THE QUEUE!");
@@ -2177,7 +2885,7 @@ long *rrow, *rcol, *key;
 	st_col = 0;									/* Display the message.			*/
 	*rrow = st_row;
 	*rcol = st_col;
-	vlist(&function,&list_id,&st_row,&st_col,rrow,rcol,result_list,key,&retcd);
+	vlist(&function,&list_id,&st_row,&st_col,rrow,rcol,result_list,key,&retcd,&adjust_se);
 	function = FREE_LIST;
 	vlist(&function,&list_id,&retcd);						/* Free up memory for queue entries.	*/
 	free_qentries(etype);								/* Free header/footer memory.		*/
@@ -2206,6 +2914,7 @@ unsigned long queflags;
 {
 	int available, i, etype;
 	long rcol, key, qtfl;
+	int rs_flag;
 
 	qtfl = *(qm_quet + rrow);							/* Get the queue flags for current queue.*/
 	if ( ((qtfl & QUI$M_QUEUE_BATCH) == QUI$M_QUEUE_BATCH) ||
@@ -2217,31 +2926,58 @@ unsigned long queflags;
 	function = FREE_LIST;
 	vlist(&function,&list_id,&retcd);
 	rcol = 0;
-	available = gen_job_arrays(queflags);						/* Generate job columns, return # rows.	*/
+	rs_flag = TRUE;
+	while (rs_flag)
+	{
+		available = gen_job_arrays(queflags,&rs_flag);				/* Generate job columns, return # rows.	*/
+		if (rs_flag)								/* If need to delete entries where files*/
+		{									/*  don't exist then rescan first before*/
+			register cnt;							/*  displaying.				*/
+			long *dptr;
+
+			for (cnt = 0; cnt < jrows; cnt++)
+			{
+				dptr = del_entry + cnt;					/* Point to pos in del entry array.	*/
+				if (*dptr == 1)
+				{
+					remove_job(cnt,1);				/* Remove the job from the queue.	*/
+				}                                     
+			}
+		}
+	}
+
 	if (!available)									/* There are no jobs to choose from.	*/
 	{
 		genj_empty_list(&rrow,&rcol,&key);
-		return(FALSE);								/* No more entries so return FALSE.	*/
+		return(FALSE);	  							/* No more entries so return FALSE.	*/
 	}
-	else
-	{
-		etype = FALSE;
-		init_jobs(etype,rrow);							/* Create new job list structure.	*/
-		add_job_cols(rrow);							/* Init the new job list structure.	*/
-		return(TRUE);								/* Still have entries so return TRUE.	*/
-	}
+
+	etype = FALSE;
+	init_jobs(etype,rrow);								/* Create new job list structure.	*/
+	add_job_cols(rrow);								/* Init the new job list structure.	*/
+
+	return(TRUE);									/* Still have entries so return TRUE.	*/
 }
 
-static int change_job(ndx)								/* Change information on a queue entry.	*/
-long ndx;
+static int change_job(ndx,pc,numq,caller)						/* Change information on a queue entry.	*/
+long ndx, numq;
+char *pc;
+int caller;
 {
 	char *screen, wcc;								/* Ptr to screen to call vwang.		*/
 	char vwfunc, lines, term[2], no_mod[2];						/* Working vars. for vwang.		*/
 	char *cpt, jobname[40], formname[32], sfnum[4], scpy[4];
+	char q_print_class[15], spclass[2];
+	char sfirst[6], slast[6];
+	long job_size;
 	long entry_num, copies, fnum, *lpt;
-	int valid, state;
+	int valid, state, change_queue, pc_flag;
 	register int i;
-
+	int return_code;
+	char nqname[32];
+                                                      
+	strcpy(q_print_class,pc);							/* Copy queue print class to local	*/
+	change_queue = FALSE;
 	state = FALSE;									/* Set to assume no change.		*/
 	lpt = qe_ent + ndx;								/* Set ptr to pos in job entry array.	*/
 	entry_num = *lpt;
@@ -2257,10 +2993,15 @@ long ndx;
 	formname[i] = '\0';								/* Null terminate the string.		*/
 	lpt = qe_jf + ndx;								/* Set ptr to pos in form number array.	*/
 	fnum = *lpt;
+	lpt = qe_blks + (ndx * sizeof(long));						/* Point to pos in job size array.	*/
+	job_size = *lpt;								/* Put size into string.		*/
 	sprintf(sfnum,"%03d",fnum);							/* Convert long to string.		*/
-	sprintf(scpy,"%03d",copies);							/* Convert long to string.		*/
+	sprintf(scpy,"%03d",copies);
+	get_first_last(jobname);							/* Get the first and last print pages.	*/
+	sprintf(sfirst,"%5d",firstp);
+	sprintf(slast,"%5d",lastp);
 
-	if ((screen = (char *)malloc(1924)) == 0) que_mem_err(1924);			/* Get some memory for screen.		*/
+	if ((screen = (char *)malloc(WSB_LENGTH)) == 0) que_mem_err(WSB_LENGTH);	/* Get some memory for screen.		*/
 	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
 
 	wput(screen, 1,20,PLAIN_TEXT,"*** CHANGE AN ENTRY SUBROUTINE ***");		/* Layout the screen.			*/
@@ -2268,15 +3009,63 @@ long ndx;
 	wput(screen, 4,20,BOLD_TEXT,jobname);
 	wput(screen, 7, 5,PLAIN_TEXT,"Form:");
 	wput(screen, 7,20,PLAIN_TEXT,formname);
-	wput(screen, 8,20,NUMERIC_FIELD,sfnum);
+	if (caller)									/* If caller = 1 then called from 	*/
+	{										/*  requeue so no modify.		*/
+		wput(screen, 8,20,PLAIN_TEXT,sfnum);
+	}
+	else
+	{
+		wput(screen, 8,20,NUMERIC_FIELD,sfnum);
+	}
 	wput(screen,10, 5,PLAIN_TEXT,"Copies:");
-	wput(screen,10,20,NUMERIC_FIELD,scpy);
-	wput(screen,24, 2,PLAIN_TEXT,"Change the information as appropriate and depress <RETURN>, <PF16> to exit.");
+	if (caller)									/* If caller = 1 then called from 	*/
+	{										/*  requeue so no modify.		*/
+		wput(screen,10,20,PLAIN_TEXT,scpy);
+	}
+	else
+	{
+		wput(screen,10,20,NUMERIC_FIELD,scpy);
+	}
+	wput(screen,12, 5,PLAIN_TEXT,"Print Class:");
+        if (strlen(q_print_class) > 1)							/* If more than one class assigned	*/
+	{										/*  to the queue.			*/
+		pc_flag = 2;								/* Set flag to use two line mode.	*/
+		strcpy(spclass," ");
+		wput(screen,12,20,PLAIN_TEXT,q_print_class);
+		wput(screen,13, 5,PLAIN_TEXT,"New Class:");
+		if (caller)								/* If caller = 1 then called from 	*/
+		{									/*  requeue so no modify.		*/
+			wput(screen,13,20,PLAIN_TEXT,spclass);
+		}
+		else
+		{
+			wput(screen,13,20,UPCASE_FIELD,spclass);
+		}
+	}
+	else
+	{
+		pc_flag = 1;								/* Set flag to use one line mode.	*/
+		strcpy(spclass,q_print_class);
+		if (caller)								/* If caller = 1 then called from 	*/
+		{									/*  requeue so no modify.		*/
+			wput(screen,12,20,PLAIN_TEXT,spclass);
+		}
+		else
+		{
+			wput(screen,12,20,UPCASE_FIELD,spclass);
+		}
+	}
+	wput(screen,15, 5,PLAIN_TEXT,"START printing at page:");
+	wput(screen,15,30,NUMERIC_FIELD,sfirst);
+	wput(screen,16, 5,PLAIN_TEXT,"END printing at page:");
+	wput(screen,16,30,NUMERIC_FIELD,slast);
+	
+	wput(screen,24, 2,PLAIN_TEXT,"Change the information as appropriate and press (ENTER), (16) to exit.");
 
 	wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;					/* Set the Wang Control Character.	*/
 	screen[WCC_BYTE] = wcc;
 	vwfunc = DISPLAY_AND_READ_ALTERED;
-	lines = 24;
+	lines = WSB_ROWS;
 	ws_erap(FULL_SCREEN);
 	do
 	{
@@ -2284,12 +3073,18 @@ long ndx;
 
 		wget(screen, 8,20,sfnum);						/* Get the new form number.		*/
 		wget(screen,10,20,scpy);						/* Get the new number of copies.	*/
+		if (pc_flag == 2) wget(screen,13,20,spclass);				/* Get the new print class.		*/
+		else 		  wget(screen,12,20,spclass);
+		wget(screen,15,30,sfirst);						/* Get the new start page.		*/
+		wget(screen,16,30,slast);						/* Get the new end .			*/
 
 		valid = TRUE;								/* Assume valid.			*/
 		if ( (no_mod[0] == 'M') && !((term[0] == '1') && (term[1] == '6')) )
 		{
 			fnum = atol(sfnum);						/* Convert string to long.		*/
-			copies = atol(scpy);						/* Convert string to long.		*/
+			copies = atol(scpy);
+			firstp = atol(sfirst);
+			lastp = atol(slast);
 
 			quibuf[0].item_code = QUI$_SEARCH_NUMBER;			/* Set up search path.			*/
 			quibuf[0].buflen = sizeof(long);				/* Pass in the form number.		*/
@@ -2313,7 +3108,60 @@ long ndx;
 
 			if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))	/* Is form number valid?		*/
 			{
-				if (copies > 0 && copies < 256) valid = TRUE;		/* New copies input is valid.		*/
+				if (copies > 0 && copies < 256)				/* New copies input is valid.		*/
+				{
+					if ((*spclass >= 'A') && (*spclass <= 'Z'))
+					{						/* Get the new queue name.		*/
+						return_code = find_new_qname(nqname,spclass,numq);
+						if (return_code)
+						{
+							if (firstp == 0 && lastp == 0)	/* Print from beginning to end.		*/
+							{
+								valid = TRUE;		/* All entries are valid.		*/
+							}
+							else if ((firstp > 0 && lastp > 0) &&
+								 (firstp < lastp))
+							{
+								valid = TRUE;		/* All entries are valid.		*/
+							}
+							else if ((firstp > 0 && lastp == 0) ||
+								 (firstp == 0 && lastp > 0))
+							{
+								valid = TRUE;		/* All entries are valid.		*/
+							}
+							else
+							{
+								valid = FALSE;
+								if (firstp < 0) wput(screen,15,30,NUMERIC_FIELD|BLINK_FAC,sfirst);
+								if (lastp < 0)  wput(screen,16,30,NUMERIC_FIELD|BLINK_FAC,slast);
+								screen[CURSOR_COL_BYTE] = 0; /* Reset cursor position.		*/
+								screen[CURSOR_ROW_BYTE] = 0;
+								wcc |= SOUND_ALARM;	/* Set the Wang Control Character.	*/
+								screen[WCC_BYTE] = wcc;
+							}
+						}
+						else
+						{
+							valid = FALSE;
+							if (pc_flag == 2) wput(screen,13,20,UPCASE_FIELD|BLINK_FAC,spclass);
+							else		  wput(screen,12,20,UPCASE_FIELD|BLINK_FAC,spclass);
+							screen[CURSOR_COL_BYTE] = 0;	/* Reset cursor position.		*/
+							screen[CURSOR_ROW_BYTE] = 0;
+							wcc |= SOUND_ALARM;		/* Set the Wang Control Character.	*/
+							screen[WCC_BYTE] = wcc;
+						}
+					}
+					else
+					{
+						valid = FALSE;
+						if (pc_flag == 2) wput(screen,13,20,UPCASE_FIELD|BLINK_FAC,spclass);
+						else		  wput(screen,12,20,UPCASE_FIELD|BLINK_FAC,spclass);
+						screen[CURSOR_COL_BYTE] = 0;		/* Reset cursor position.		*/
+						screen[CURSOR_ROW_BYTE] = 0;
+						wcc |= SOUND_ALARM;			/* Set the Wang Control Character.	*/
+						screen[WCC_BYTE] = wcc;
+					}
+				}
 				else
 				{
 					valid = FALSE;
@@ -2354,10 +3202,40 @@ long ndx;
 		qui_jbuf[2].bufptr = (long *)&copies;
 		qui_jbuf[2].retlen = 0;
 
-		qui_jbuf[3].item_code = 0;						/* Mark the end of the buffer.		*/
-		qui_jbuf[3].buflen = 0;
-		qui_jbuf[3].bufptr = (long *)0;
-		qui_jbuf[3].retlen = 0;
+		if (firstp == 0)
+		{
+			qui_jbuf[3].item_code = SJC$_NO_FIRST_PAGE;			/* Set up to start with first page.	*/
+			qui_jbuf[3].buflen = sizeof(long);
+			qui_jbuf[3].bufptr = (long *)&firstp;
+			qui_jbuf[3].retlen = 0;
+		}
+		else
+		{
+			qui_jbuf[3].item_code = SJC$_FIRST_PAGE;			/* Set up for new first page.		*/
+			qui_jbuf[3].buflen = sizeof(long);
+			qui_jbuf[3].bufptr = (long *)&firstp;
+			qui_jbuf[3].retlen = 0;
+		}
+
+		if (lastp == 0)
+		{
+			qui_jbuf[4].item_code = SJC$_NO_LAST_PAGE;			/* Set up to print to end.		*/
+			qui_jbuf[4].buflen = sizeof(long);
+			qui_jbuf[4].bufptr = (long *)&lastp;
+			qui_jbuf[4].retlen = 0;
+		}
+		else
+		{
+			qui_jbuf[4].item_code = SJC$_LAST_PAGE;				/* Set up for new last page.		*/
+			qui_jbuf[4].buflen = sizeof(long);
+			qui_jbuf[4].bufptr = (long *)&lastp;
+			qui_jbuf[4].retlen = 0;
+		}
+
+		qui_jbuf[5].item_code = 0;						/* Mark the end of the buffer.		*/
+		qui_jbuf[5].buflen = 0;
+		qui_jbuf[5].bufptr = (long *)0;
+		qui_jbuf[5].retlen = 0;
 
 		stat_ss = sys$sndjbcw((long) 0, SJC$_ALTER_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
 		stat_snd = iosb.status;
@@ -2370,6 +3248,11 @@ long ndx;
 			cpt = qe_frmn + (ndx * 31);					/* Set ptr to pos in form name array.	*/
 			for (i = 0; i < 31; i++) *cpt++ = formname[i];			/* Copy form name into var.		*/
 			state = TRUE;							/* Set TRUE because entry was changed.	*/
+			if (strpos(q_print_class,spclass) < 0)				/* If new class is not in current queue	*/
+			{
+				change_queue = submit_remove_job(ndx,nqname,copies,fnum); /* Submit job to new queue and Remove	*/
+				if (change_queue) state = 2; 				/*  the job from current queue.		*/
+			}
 		}
 		else
 		{
@@ -2445,7 +3328,7 @@ long fkey;
 	}
 	sprintf(sfnum,"%03d",form);							/* Convert long to string.		*/
 
-	if ((screen = (char *)malloc(1924)) == 0) que_mem_err(1924);			/* Get some memory for screen.		*/
+	if ((screen = (char *)malloc(WSB_LENGTH)) == 0) que_mem_err(WSB_LENGTH);	/* Get some memory for screen.		*/
 	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
 
 	wput(screen, 1,20,PLAIN_TEXT,"*** CHANGE A QUEUE SUBROUTINE ***");		/* Layout the screen.			*/
@@ -2455,12 +3338,12 @@ long fkey;
 	else		     wput(screen, 7, 5,PLAIN_TEXT,"Default form:");
 	wput(screen, 7,20,PLAIN_TEXT,formname);
 	wput(screen, 8,20,NUMERIC_FIELD,sfnum);
-	wput(screen,24, 2,PLAIN_TEXT,"Change the information as appropriate and depress <RETURN>, <PF16> to exit.");
+	wput(screen,24, 2,PLAIN_TEXT,"Change the information as appropriate and press (ENTER), (16) to exit.");
 
 	wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;					/* Set the Wang Control Character.	*/
 	screen[WCC_BYTE] = wcc;
 	vwfunc = DISPLAY_AND_READ_ALTERED;
-	lines = 24;
+	lines = WSB_ROWS;
 	ws_erap(FULL_SCREEN);
 	do
 	{
@@ -2533,6 +3416,168 @@ long fkey;
 	}
 	free(screen);									/* Release the screen memory.		*/
 	return(state);
+}
+
+static int display_job(ndx)								/* Display job using DISPLAY Utility.	*/
+long ndx;
+{
+	char *screen, wcc;								/* Ptr to screen to call vwang.		*/
+	char vwfunc, lines, term[2], no_mod[2];						/* Working vars. for vwang.		*/
+	char the_file[256], disp_name[255];						/* File name				*/
+	char jobname[40], curr_job[40], *jcpt;
+	register int i;
+	unsigned long qflags;
+	int state, c, return_code;
+#include "quemgmt1.d"
+
+	jcpt = qe_jbn + (ndx * 39);							/* Point to position in job name array.	*/
+	i = 0;
+	while (*jcpt != ' ' && i < 39) jobname[i++] = *jcpt++;				/* Copy job name from array to var.	*/
+	jobname[i] = '\0';								/* Null terminate the string.		*/
+
+	qflags = QUI$M_SEARCH_WILDCARD;
+											/* Set up the buffers for system calls.	*/
+	qui_qbuf[0].item_code = QUI$_SEARCH_NAME;					/* Init the buffer structure.		*/
+	qui_qbuf[0].buflen = strlen(curr_queue);
+	qui_qbuf[0].bufptr = (long *)curr_queue;
+	qui_qbuf[0].retlen = 0;
+
+	qui_qbuf[1].item_code = QUI$_SEARCH_FLAGS;					/* Set search flags for this process.	*/
+	qui_qbuf[1].buflen = sizeof(long);						/* in a 4 byte buffer			*/
+	qui_qbuf[1].bufptr = (long *)&qflags;						/* which is flags.			*/
+	qui_qbuf[1].retlen = 0;								/* return length address		*/
+
+	qui_qbuf[2].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_qbuf[2].buflen = 0;
+	qui_qbuf[2].bufptr = (long *)0;
+	qui_qbuf[2].retlen = 0;
+
+	qui_jbuf[0].item_code = QUI$_JOB_NAME;						/* Set up to return Job name.		*/
+	qui_jbuf[0].buflen = 39;
+	qui_jbuf[0].bufptr = (long *)curr_job;
+	qui_jbuf[0].retlen = 0;
+
+	qui_jbuf[1].item_code = 0;							/* Mark the end of the buffer.		*/
+	qui_jbuf[1].buflen = 0;
+	qui_jbuf[1].bufptr = (long *)0;
+	qui_jbuf[1].retlen = 0;
+
+	quibuf[0].item_code = QUI$_FILE_SPECIFICATION;					/* Set up to return file spec.		*/
+	quibuf[0].buflen = 255;
+	quibuf[0].bufptr = (long *)the_file;
+	quibuf[0].retlen = 0;
+
+	quibuf[1].item_code = 0;							/* Mark the end of the buffer.		*/
+	quibuf[1].buflen = 0;
+	quibuf[1].bufptr = (long *)0;
+	quibuf[1].retlen = 0;
+
+	stat_ss = sys$getquiw((long) 0, QUI$_CANCEL_OPERATION, (long) 0,(long) 0, (long) 0, (long) 0, (long) 0);
+											/* Check if any queues available.	*/
+	stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_QUEUE, (long) 0, qui_qbuf, &iosb, (long) 0, (long) 0);
+	stat_qui = iosb.status;
+	if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))
+	{										/* Check if any jobs available.		*/
+		stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+		stat_qui = iosb.status;
+		while ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* While there are jobs.		*/
+		{
+			if (strcmp(curr_job,jobname) == 0) break;			/* Job name equals current job.		*/
+			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_JOB, (long) 0, qui_jbuf, &iosb, (long) 0, (long) 0);
+			stat_qui = iosb.status;
+		}
+		if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL))		/* Job name was found.			*/
+		{									/* Call to get the file identification.	*/
+			stat_ss = sys$getquiw((long) 0, QUI$_DISPLAY_FILE, (long) 0, quibuf, &iosb, (long) 0, (long) 0);
+			stat_qui = iosb.status;
+			if ((stat_qui == JBC$_NORMAL) && (stat_ss == SS$_NORMAL));	/* File was found.			*/
+			else return(report_error(stat_qui,0,the_file,"Display file, getting file")); /* Report situation.	*/
+		}
+		else
+		{
+			if (stat_qui == JBC$_NOSUCHENT)					/* Is an invalid entry.			*/
+			{
+				report_error(stat_qui,0,jobname,"Display file, getting job");
+				return(TRUE);						/* Set so will rescan the queue.	*/
+			}
+			else return(report_error(stat_qui,0,jobname,"Display file, getting job")); /* Report situation.		*/
+		}
+	}
+	else return(report_error(stat_qui,0,curr_queue,"Display file, getting queue"));	/* Report situation.			*/
+
+	state = FALSE;									/* Assume did not delete.		*/
+	jcpt = the_file;								/* Point to the file specification.	*/
+
+	if ((i = greclen(the_file)) >= 0) vdisplay(the_file,i);				/* Get the record length.		*/
+	else if (i == -2) werrlog(ERRORCODE(2),the_file,0,0,0,0,0,0,0);			/* Protection violation.		*/
+	else werrlog(ERRORCODE(4),the_file,0,0,0,0,0,0,0);				/* Error on OPEN.			*/
+}
+
+static int find_new_qname(nqname,class,numq)						/* Get new qname info.			*/
+char *nqname, *class;
+long numq;
+{
+	int i, found, cq, scnt;
+	char *cpt, pclass[15], *pcptr;
+	char type[9], *ctyp;
+	prt_id *prt_ptr;								/* Local ptrs to WISP$CONFIG data.	*/
+	pq_id *pq_ptr;
+
+	cq = 0;
+	scnt = 0;
+	found = FALSE;
+
+	while (!found && cq < numq)							/* Loop through each queue until found.	*/
+	{
+		cpt = qm_qn + (cq * 31);						/* Point to pos in queue name array.	*/
+		pcptr = pclass;
+		while (*cpt != ' ')
+		{
+			*pcptr++ = *cpt++;
+			scnt++;
+		}
+		*pcptr = '\0';								/* Null terminate the string.		*/
+		cpt++;									/* Step past the seperating space char.	*/
+		scnt++;
+		if (strpos(pclass,class) >= 0)						/* If queue class matches new class.	*/
+		{									/* Now test queue type.			*/
+			ctyp = qm_qt + (cq * 8);					/* Point to pos in queue type array.	*/
+			strncpy(type,ctyp,8);						/* Copy type into string.		*/
+			type[8] = '\0';							/* Null terminate the string.		*/
+			if ((strcmp(type,"Print   ") == 0) || (strcmp(type,"Terminal") == 0))
+			{
+				found = TRUE;						/* If queue type is Print or Terminal.	*/
+			}
+		}
+
+		if (found)
+		{
+			for (i = 0; i < 31 && *cpt != ' '; i++) nqname[i] = *cpt++;	/* Copy name into variable.		*/
+			nqname[i] = '\0';						/* Null terminate the string.		*/
+		}
+		else cq++;
+	}
+	if (found) return(1);
+											/* Not found so check data files.	*/
+	prt_ptr = get_prt_list();							/* Point to LPMAP data.			*/
+	while (prt_ptr)									/* While have data from LPMAP.		*/
+	{
+		if (prt_ptr->class == *class)
+		{
+			strcpy(nqname,prt_ptr->qname);					/* Copy queue name to string.		*/
+			return(1);							/* Return found (TRUE).			*/
+		}
+	}
+	pq_ptr = get_pq_list();								/* Point to PQMAP data.			*/
+	while (pq_ptr)									/* While have data from PQMAP.		*/
+	{
+		if (pq_ptr->class == *class)
+		{
+			strcpy(nqname,pq_ptr->qname);					/* Copy queue name into string.		*/ 
+			return(1);							/* Return found (TRUE).			*/
+		}
+	}
+	return(0);
 }
 
 static int start_stop_queue(ndx)							/* Toggle start/stop of a queue.	*/
@@ -2626,7 +3671,7 @@ static int report_error(call_stat,entry,name,quemsg)					/* Display the error th
 long call_stat, entry;
 char *name, *quemsg;
 {
-	int svo;
+	enum e_vop svo;
 	long status, outbuf;
 	short mlen;
 	char msgstr[256];
@@ -2642,7 +3687,7 @@ char *name, *quemsg;
 	}
 	msgstr[mlen] = '\0';								/* Null terminate.			*/
 	verase(FULL_SCREEN);
-	svo = voptimize(OFF);								/* No optimization.			*/
+	svo = voptimize(VOP_OFF);							/* No optimization.			*/
 	vmove(10,1);
 	if (entry == 0)									/* Report queue situation.		*/
 	{
@@ -2662,8 +3707,9 @@ long amt;
 	vmove(18,0);
 	verase(TO_EOS);
 	werrlog(ERRORCODE(8),amt,0,0,0,0,0,0,0);
-	vexit();									/* Unconditional exit.			*/
-	wexit(ERRORCODE(8));
+
+/*	vexit();		*/							/* Unconditional exit.			*/
+/*	wexit(ERRORCODE(8));	*/
 }
 
 static free_qmenu(l_id)									/* Free up memory assiciated with queues.*/
@@ -2706,14 +3752,25 @@ int etype;
 	if (!etype)									/* If not an empty list.		*/
 	{
 		free(qe_jbn);								/* Free up job name array.		*/
+		qe_jbn = '\0';
 		free(qe_usrn);								/* Free up user name array.		*/
+		qe_usrn = '\0';
 		free(qe_st);								/* Free up job status long array.	*/
+		qe_st = '\0';
 		free(qe_ent);								/* Free up job entry array.		*/
+		qe_ent = '\0';
 		free(qe_jobs);								/* Free up job status string array.	*/
+		qe_jobs = '\0';
 		free(qe_blks);								/* Free up blocks array.		*/
+		qe_blks = '\0';
 		free(qe_jf);								/* Free up job file form long array.	*/
+		qe_jf = '\0';
 		free(qe_cpy);								/* Free up copies array.		*/
+		qe_cpy = '\0';
 		free(qe_frmn);								/* Free up job file form string array.	*/
+		qe_frmn = '\0';
+		free(del_entry);							/* Free up del entry table.		*/
+		del_entry = '\0';
 	}
 	for (i = 0; i < num_qehead; i++)
 	{
@@ -2750,13 +3807,13 @@ static int work_message(on) int on;							/* Display the working message.		*/
 	if (on >= 0)									/* On or off?				*/
 	{
 		vmove(window_top+1,lhs);						/* Move to the info area.		*/
-		vmode(REVERSE);								/* Select something noticeable.		*/
+		vmode(VMODE_REVERSE);							/* Select something noticeable.		*/
 		vprint(" Working... ");							/* Display the working message.		*/
 		i = -1;									/* Turn off the next time.		*/
 	}
 
 	vstate(1);									/* Restore where we were.		*/
-	vcontrol(DUMP_OUTPUT);								/* Show what is going on.		*/
+	vcontrol_flush();								/* Show what is going on.		*/
 	return(i);									/* Return the new state.		*/
 }
 
@@ -2823,3 +3880,21 @@ void quemngmnt()
 }
 #endif	/* unix || MSDOS */
 
+/*
+**	History:
+**	$Log: quemgmt.c,v $
+**	Revision 1.16  1997-10-03 13:38:02-04  gsl
+**	YEAR2000 fix
+**
+**	Revision 1.15  1997-07-09 12:41:45-04  gsl
+**	Change to use new video.h intefaces
+**
+**	Revision 1.14  1996-11-13 20:09:05-05  gsl
+**	Changed to use vcontrol_flush()
+**
+**	Revision 1.13  1996-08-19 15:32:43-07  gsl
+**	drcs update
+**
+**
+**
+*/

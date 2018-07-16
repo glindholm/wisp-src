@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		      Copyright (c) 1988, 1989, 1990			*/
@@ -11,14 +13,13 @@
 #include "wfiles.h"
 #include "wcommon.h"
 #include "werrlog.h"
-
-extern char *wfname();
-extern char WISPFILEXT[39];								/* GLOBAL file extension value.		*/
+#include "wfname.h"
+#include "filext.h"
 
 char trigpname[256];									/* The native trigger file name.	*/
 
 #ifdef unix
-settrigprog(vol,lib,file)
+int settrigprog(vol,lib,file)
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
@@ -27,7 +28,7 @@ char *file;										/* The file name	(8 chars)	*/
 }
 #endif
 
-SETTRIGPROG(vol,lib,file)
+int SETTRIGPROG(vol,lib,file)
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
@@ -47,3 +48,12 @@ char *file;										/* The file name	(8 chars)	*/
 
 	return(1);									/* Return Success.			*/
 }
+/*
+**	History:
+**	$Log: settrigp.c,v $
+**	Revision 1.9  1996-08-19 18:32:55-04  gsl
+**	drcs update
+**
+**
+**
+*/

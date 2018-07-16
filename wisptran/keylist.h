@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -38,3 +42,12 @@ EXT int kl_count	INIT_FALSE;							/* How many are there.			*/
 
 
 #endif /* KEYLIST_H */
+/*
+**	History:
+**	$Log: keylist.h,v $
+**	Revision 1.5  1996-08-30 21:56:04-04  gsl
+**	drcs update
+**
+**
+**
+*/

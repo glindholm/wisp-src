@@ -5,11 +5,17 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include <v/vintdef.h>
-#include <v/vmenu.h>
+#include <video.h>
+#include <vlocal.h>
+#include <vdata.h>
+#include <vintdef.h>
+#include <vmenu.h>
+#include <vmodules.h>
+
+static void vmtest();
+static void vmt2();
+static vmt3();
+static vmt4();
 
 #define CANCEL_CODE -1
 #define CLOCK_CODE 13
@@ -46,9 +52,9 @@ testm()
 	return(SUCCESS);
 }
 
-vmtest()
+static void vmtest()
 {
-	register int i,j;
+	int4 i;
 	struct video_menu bmtest, manhattan, new_york, greenwich;
 	struct video_menu goodies, preferences, run;
 	struct video_menu progsel, stock, yesno;
@@ -124,10 +130,10 @@ vmtest()
 	}
 }
 
-vmt2()
+static void vmt2()
 {
-	struct video_menu auto1, auto2, auto3, auto4, auto5, auto6, auto7, auto8, autobar;
-	int choice;
+	struct video_menu auto1, auto2, auto3, auto4, auto5, auto6, auto7, auto8;
+	int4 choice;
 
 	vmenuinit(&auto1, 0, 0, 0, 0, 0);						/* Init totally automatic.		*/
 	auto1.item = 4;
@@ -222,10 +228,10 @@ vmt2()
 	verase_menu(ALL_MENUS,&auto1);
 }
 
-vmt3()			/* Test dynamic linking */
+static vmt3()			/* Test dynamic linking */
 {
 	struct video_menu autobar, static2, static12, dynamic;
-	int choice;
+	int4 choice;
 
 	vmenuinit(&autobar, BAR_MENU, REVERSE, 0, 3, 3);
 	vmenuitem(&autobar,"Direct 1", 1, NULL);
@@ -277,10 +283,10 @@ go1:	switch (choice)
 	}
 }
 
-vmt4()			/* Test dynamic linking */
+static vmt4()			/* Test dynamic linking */
 {
-	struct video_menu autobar, static2, static12, dynamic;
-	int choice;
+	struct video_menu autobar, dynamic;
+	int4 choice;
 
 	vmenuinit(&autobar, 0, REVERSE, 0, 0, 0);
 	vmenuitem(&autobar,"Dynamic 1", 1, DYNAMIC_LINK);

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
@@ -10,27 +12,24 @@
 
 #include <stdio.h>									/* Include video definitions.		*/
 
-#ifndef unix	/* VMS or MSDOS */
 #include <stdlib.h>
-#endif
 
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include <v/vintdef.h>
-#include <v/vmenu.h>
+#include <video.h>
+#include <vlocal.h>
+#include <vdata.h>
+#include <vmenu.h>
+
 #include "idsistd.h"
 #include "vwang.h"
 #include "wglobals.h"
 
+int test_end_window(char *cptr);							/* Test if end of footer area.		*/
+
 /*						Static and Global Data Definitions.						*/
-extern int netc_pfhelp;									/* Is menu pfkey help window active?	*/
+static int netc_pfhelp = FALSE;								/* Flag to avoid reentrant help.	*/
+											/* Is menu pfkey help window active?	*/
+
 struct video_menu menu_ncpfkey;								/* The generated pfkey menu pop-up.	*/
-static int filehelp();
-static int first_diff();
-static int trim();
-static int ws_cut();
-static int ws_paste();
 static int setptr_foot();
 
 int gen_ncpfkey(type,wsb,num_chars,st_win,end_win)					/* Generate the MCB from vwang screen.	*/
@@ -41,12 +40,12 @@ char **wsb;
 	char *cptr, *ede_nc;
 	char temptxt[65], *chkptr, *tptr;						/* Temp text hold variable.		*/
 	register int i, j;
-	int cnt, len, cont;
+	int cnt, cont;
 
 
 	if (ede_nc = (char *) getenv("PFKEYWINDOW")) return(FALSE);			/* Shell var set so don't want pop-up.	*/
 
-	vmenuinit(&menu_ncpfkey, DISPLAY_ONLY_MENU, REVERSE, 0, 0, 0);			/* Initialize the menu definition.	*/
+	vmenuinit(&menu_ncpfkey, DISPLAY_ONLY_MENU, VMODE_REVERSE, 0, 0, 0);		/* Initialize the menu definition.	*/
 
 	memset(tmp_scn,' ',1924);							/* Set temp area to blank.		*/
 	cptr = *wsb;									/* Point to screen passed in.		*/
@@ -132,10 +131,9 @@ int nc_pop_menu(filling,terminate_list,no_mod,pfkey)					/* Pop up the PFkey men
 unsigned char *terminate_list, *no_mod, *pfkey;						/*  the pfkey pressed.			*/
 int *filling;
 {
-	int op_save;									/* Optimization save word.		*/
+	enum e_vop op_save;								/* Optimization save word.		*/
 	int choice;									/* Menu choice.				*/
 	int row_current, col_current;							/* Current screen locations.		*/
-	unsigned char *ssave, *vsss();							/* Screen save.				*/
 	int mdsave, pfsave;								/* Menu state save words.		*/
 	char *ede_nc;
 
@@ -145,12 +143,12 @@ int *filling;
 		return(FAILURE);							/* Return to the caller.		*/
 	}
 	else netc_pfhelp = TRUE;							/* Now Netroncap pfkey help is active.	*/
-	vdefer(RESTORE);								/* Cannot be in deferred mode.		*/
+	vdefer_restore();								/* Cannot be in deferred mode.		*/
 
 	row_current = vcur_lin+1;							/* Remember where on Wang screen.	*/
 	col_current = vcur_col+1;
 
-	op_save = voptimize(DEFER_MODE);						/* Make sure optimization is on.	*/
+	op_save = voptimize(VOP_DEFER_MODE);						/* Make sure optimization is on.	*/
 	vmenustatus(&mdsave, &pfsave);							/* Get the menu status.			*/
 	vmenu_pfkeys(ON);								/* Turn PF key processing on.		*/
 	vmenumode(STATIC_MENU);								/* This is a static menu.		*/
@@ -174,7 +172,7 @@ static int setptr_foot(cnt,cptr,max)							/* Call from WSFMS so set ptr to foot
 int *cnt, max;
 char **cptr;
 {
-	char cmp_line[80], *lptr, the_char;
+	char cmp_line[80], the_char;
 	int line;
 	memset(cmp_line,' ',80);
 	for (line=14; line<24; ++line)
@@ -200,10 +198,9 @@ char **cptr;
 	}
 	return FALSE;
 }
-int test_end_window(cptr)								/* Test if end of footer area.		*/
-char *cptr;
+int test_end_window(char *cptr)								/* Test if end of footer area.		*/
 {
-	char cmp_line[81], *lptr;
+	char cmp_line[81];
 
 	memset(cmp_line,' ',80);							/* Set compare line to blanks.		*/
 	cmp_line[80] = '\0';								/* Null terminate the string.		*/
@@ -216,3 +213,15 @@ char *cptr;
 	}
 	return(TRUE);									/* Is not end so set to continue.	*/
 }
+/*
+**	History:
+**	$Log: edenetc.c,v $
+**	Revision 1.11  1997-07-08 16:12:09-04  gsl
+**	Change to use new video.h defines
+**
+**	Revision 1.10  1996-09-13 13:54:03-04  gsl
+**	fix warnings for NT
+**
+**
+**
+*/

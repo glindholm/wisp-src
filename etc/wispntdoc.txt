@@ -1,0 +1,864 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP for NT/95 Technical Notes
+	
+	Document:	wispntdoc.txt
+	Last Updated:	$Date:$
+	Products:	WISP for Windows NT/95
+	Versions:	4.0.00
+	
+	Summary:	Technical notes on WISP for Windows NT/95 (Intel).
+			Release notes that covered the beta test  and
+			pre-release period.
+
+
+	====================================================================
+	
+
+	WISP for NT/95 Technical Notes 
+	============================== 
+
+	This document provides technical notes on WISP for Windows NT/95
+	(Intel).  It is contains release notes that covered the beta test
+	and pre-release period of the WISP for NT/95 development program.
+
+	This document assumes the reader is an experienced WISP/UNIX user
+	and focuses on the differences between the NT/95 and UNIX versions
+	of WISP.  It also assumes the user has a basic understanding of
+	Windows NT/95.
+
+	This document can continue to be used until the full WISP manual
+	is available.
+
+
+	WISP for NT/95 SOFTWARE REQUIREMENTS
+	====================================
+
+	The following software and versions are currently being used in
+	conjuction with WISP for NT/95.
+
+	   - Microsoft Windows NT 3.51 for Intel
+	   - Microsoft Windows NT 4.0 for Intel
+	   - Microsoft Windows 95
+	   - Acucobol ACUCOBOL-85 2.4.2 for Windows NT Intel
+	   - Acucobol ACUCOBOL-GT 3.1 (32 bit) for Windows NT/95 Intel
+	   - Microsoft Visual C++ 4.x or 5.x **
+	   - Argent Queue Manager 3.0 (Intel) *** [Optional]
+
+	**  MicroSoft Visual C++ is required to build an Acucobol runtime
+	    system which contains the WISP libraries.  You will only need
+	    one copy of this software as it is not needed on the machines
+	    you deploy on.
+
+	*** The Argent Queue Manager (AQM) is an optional product which
+	    provides advanced batch queue management facilities. Without
+	    AQM batch processing is extremely limited.
+
+	
+
+	WISP for NT/95 Description
+	==========================
+
+	Components Not Available
+	------------------------
+	The following components are not available with this release:
+
+	   - ACP routines
+	   - Micro Focus COBOL support
+	   - Color mapping of FAC's are not user modifable.
+
+	Differences
+	-----------
+	This section details differences between the UNIX and 
+	Windows NT/95 implementations of WISP.
+
+	The LOGOFF vssub does not terminate the login session, it instead
+	terminate the current process chain.
+
+	The WISP Command processor (WSHELL or HELP screen) does not
+	support the program function key (11) "Enter commands" option.  On
+	Windows you can simply run your commands in another window.
+
+	The WRETCODE utility and the WPUTPARM utility are not available on
+	Windows NT/95.  It is recommended that you use Wang VS Procedure
+	language scripts and the WPROC utility to perform equivalent
+	functionality.
+
+	The VSX utility for reading Wang VS BACKUP tapes is not available
+	on Windows NT/95.
+
+	The BLDMF utility for building Makefile's is not available on
+	Windows NT/95.  Equivalent functionality is available though the
+	WISPTran utility.
+
+	The WDIAG utility is not available on Windows NT/95.  The new
+	Wconfig WISP configuration utility provides both configuration and
+	some diagnostic functionality.  Additional diagnostic information
+	is available by running the WRUN utility without parameters and by
+	pressing PF29, PF30, and PF31 from the WISP Command Processor
+	screen (WSHELL).
+
+	The VSEDIT utility does not support the "Compile" command. Use the
+	WISPTran utility.
+
+	Printing does not support a HOLD mode.
+
+	There is no WSYSCONF utility on Windows NT/95 that creates a
+	WSYSCONF.CFG file.  A sample WSYSCONF.CFG is provided that can be
+	modified with a text editor.
+
+
+	CHANGES FROM 3.9.91 TO 4.0.00
+	=============================
+
+	Problems with printing to certain network printer configurations
+	have been corrected.  The sample LPMAP and PRMAP now show how to
+	specify a printer using a UNC name.
+
+	Corrected a printing bug which could on occasion cause an abort
+	when printing a file which contains formfeed characters.
+
+	Support for long (10 character) extended file status codes has
+	been added.  This is needed for some indexed and database file
+	systems.
+
+	The makefile for DISPRINT has been renamed to DISPRINT.MAK.
+
+	In GETPARM vssub fixed handling of Message_Text so a long message
+	doesn't cause a memory overwrite.
+
+	Fixed the processing of DISPLAY verb so that it generates a
+	GETPARM as on the Wang VS.
+
+	Corrected a problem where WPROC would sometimes abort or crash on
+	exit in the following situation: Program COBOL-A would run proc-B
+	that runs proc-C with parameters.  When proc-C exits there would
+	be a memory overwrite which would sometimes cause WPROC to crash
+	or would sometimes cause proc-B to abort or experience
+	misc. errors.
+
+	Corrected a problem where WPROC would terminate without an error
+	on the statement following a RUN of a program other then a
+	procedure. 
+
+	Corrected a problem creating intermediate directories on a
+	filepath specified with a UNC format.
+
+
+	CHANGES FROM 3.9.90 TO 3.9.91
+	=============================
+
+	InstallShield installation has been added.
+
+	The WISP licensing software has been completed and enhanced to
+	support NETWORK licenses.  This enables you to license the server
+	machine only, you do not need to install licenses on each
+	individual machine.
+
+	Printing that used AFTER ADVANCING 0 clause has been corrected.
+
+	The WCONFIG.EXE utility was crashing sometimes, this has been
+	corrected.
+
+	The WISPERR message box now has a cancel button which allows you
+	to abort the application.
+
+	Temporary print files are now properly deleted.
+
+	Running WCONFIG.EXE and WISPTRAN.EXE on some machines would report
+	that CTL3D32.DLL was not installed, this has been corrected.
+
+	Added wispsub WTITLE which can be used to set the title of the
+	window. 
+
+
+	INSTALLATION INSTRUCTIONS
+	=========================
+
+	See the document WISPNTSETUP.TXT for installation instructions.
+
+
+	NETWORK INSTALLATION
+	====================
+
+	On a network you only need to install the WISP software on the
+	server machine.  However, every machine must be configured.
+
+	It is required that you install WISP on your server into a
+	directory with a share name of "WISP".  You should then configure
+	WISP on the server using the instructions in the next section.
+	Once WISP is configured on the server you can use the Wconfig
+	utility to "export" the configuration to a registry file (*.reg).
+	You can then run Wconfig on each of the client machines and
+	"import" the saved configuration.
+
+	When specifying a directory or file path to a network resource you
+	can use either a UNC name or a mapped network drive.
+
+	    UNC:	     \\SERVER\WISP\CONFIG
+	    Mapped drive:    G:\WISP\CONFIG
+
+	When configuring the server you should use the network file and
+	directory names so the exported configuration will work for other
+	machines on the network.
+
+
+	WISP for NT/95 CONFIGURATION
+	============================
+
+	This section describes WISP for NT/95 configuation.
+
+	Wconfig - WISP Configuration Utility
+	------------------------------------
+	Before you can run WISP utilities or WISP converted applications
+	you must configure the machine by running the Wconfig utility.
+	The Wconfig WISP configuration utility prompts you for
+	configuration information and records it in the system registry.
+
+	On UNIX and MSDOS, WISP uses environment variables to supply
+	configuration information.  On Windows NT/95 the system Registry
+	is used instead of environment variables. The Wconfig utility is
+	used to setup the registry.
+
+
+	ACUCOBOL Configuration
+	----------------------
+	ACUCOBOL must also be configured before you can compile or run
+	your applications. 
+
+	The WISP runtime requires the Acucobol utility VUTIL32.EXE be on
+	the PATH for indexed file sorting to work.  It is recommened that
+	you include the Acucobol BIN directory on the PATH.
+
+		PATH %PATH%;C:\ACUCBL31\BIN
+	
+	NOTE: If you are using an earlier versions of ACUCOBOL-85 (2.4.2
+	      and earlier) the utility is named VUTIL.EXE. You will need
+	      to copy and rename it to VUTIL32.EXE.
+
+
+	The Acucobl configuration file CBLCONFI that comes with
+	ACUCOBOL-85 is renamed to ACUCONFIG, and is located in the WISP
+	configuration directory. The file can be located by settin the
+	environment variable A_CONFIG or by using the "-c" option of the
+	runtime system.  It is recommended that you set the "-c" option in
+	the WRUN.CFG file.
+
+		options=-b -c \\SERVER\WISP\CONFIG\ACUCONFIG
+
+
+	WISP Configuration files
+	------------------------
+	The following WISP configuration files must be supplied and/or
+	configured according to the WISP manual and notes here.
+
+	FORMS, LPMAP, and PRMAP define how printing is performed. See the
+	section on printing later in this document.
+
+	LGMAP defines logical VOLUME mapping.  For NETWORK configuration
+	it is important that you use network drives or UNC names.
+
+	Example: LGMAP
+
+		VOL100 \\SERVER\WISPVOLS\VOL100
+		VOL200 \\SERVER\WISPVOLS\VOL200
+
+	OPTIONS defines many runtime options.
+
+	W4WMAP defines mouse support.  See the section on W4W later in
+	this document.
+
+	QCMAP defines batch queues mapping for use with the Argent Queue
+	Manager. 
+
+	WRUN.CFG (named wrunconfig on UNIX) configuration file defines the
+	COBOL RTS options. The RUNCBL option should specify the full path
+	to the COBOL RTS executable file.
+
+	Example: WRUN.CFG
+	
+		cobol=ACU
+		options=-b -c \\SERVER\WISP\CONFIG\ACUCONFIG
+		runcbl=\\SERVER\WISP\BIN\WWRUNCBL.EXE
+
+	WSYSCONF.CFG (named wsysconfig on UNIX) There is no wsysconf
+	utility on Windows NT/95 that creates a WSYSCONF.CFG file.  A
+	sample WSYSCONF.CFG is provided that can be modified.
+
+	In the WSYSCONF.CFG configuration file you define workstation
+	device numbers by using the machine name for the device (on unix
+	you used the tty device e.g. /dev/tty01).
+
+	Example: WSYSCONF.CFG
+
+		#
+		#Num Class Type       Name
+		#
+		000  ws    WINDOWS    THESERVER
+		001  ws    WINDOWS    MYCOMPUTER
+		002  ws    WINDOWS    YOURCOMPUTER
+
+		WINDOWS=192
+
+
+	Windows 95 Configuration
+	------------------------
+	WISP/NT uses "Console Mode I/O" for the workstation I/O.  On
+	Windows 95 the console will select an unreadably small font unless
+	it is configured to use a specific font.  You configure the
+	console by creating a PIF file for the CONAGENT.EXE program.
+
+	- Using Explorer select file C:\WINDOWS\SYSTEM\CONAGENT.EXE 
+	- From the "File" menu select "Properties"
+	- Select the "Font" tab. 
+	    Select a font size other then "auto" (eg. "8x12")
+	    Push the "Apply" button. 
+	- Select the "Screen" tab.
+	    Un-select the "Display toolbar" checkbox.
+	    Push the "OK" button.
+	- This will create file C:\WINDOWS\SYSTEM\CONAGENT.PIF
+
+
+	Files and Directories
+	---------------------
+	The following is a list of Files and Directories that WISP 
+	uses at runtime.  The UNIX equivalent is shown as reference. 
+
+
+	Files and Directories 			Unix equivalent
+						if different
+	-----------------------------------------------------------
+
+	  %WISPCONFIG%
+	  %WISPCONFIG%\ACUCONFIG
+  	  %WISPCONFIG%\QCMAP
+  	  %WISPCONFIG%\FORMS
+  	  %WISPCONFIG%\LGMAP
+  	  %WISPCONFIG%\LPMAP
+	  %WISPCONFIG%\OPTIONS
+  	  %WISPCONFIG%\PRMAP
+	  %WISPCONFIG%\W4WMAP
+	  %WISPCONFIG%\WISPMSG.DAT
+	  %WISPCONFIG%\WISPMSG.TXT
+	  %WISPCONFIG%\WPROC.MSG
+	  %WISPCONFIG%\WRUN.CFG			$WISPCONFIG/wrunconfig
+	  %WISPCONFIG%\WSYSCONF.CFG		$WISPCONFIG/wsysconfig
+
+	  %USERSDIR%\%userid%\WISP\PERSONALITY	$HOME/PERSONALITY
+	  %USERSDIR%\%userid%\WISP\WISPERR.LOG	$HOME/wisperr.log
+
+	  %TEMPDIR%\WISPTMP\			/usr/tmp/wisptmp
+	  %TEMPDIR%\WISPLINK\			/usr/tmp/wisplink
+	  %TEMPDIR%\WPPARMS\			/usr/tmp/wpparms
+
+
+	The variables %WISPCONFIG%, %USERSDIR%, and %TEMPDIR% are
+	retrieved from the registry and are set with the Wconfig utility. 
+	The %userid% variable is the name the user logged onto the network
+	with and is retieved using the GetUserName() system call.  If the
+	user did not logon then the value "USER" is used.
+
+
+	SOFTLINK and HARDLINK
+	---------------------
+	The WISPCONFIG OPTIONS file supports two new options that control
+	how the LINK vssub behaves when linking from one COBOL program to
+	another COBOL program.  
+
+	Example OPTIONS file:
+
+	   # WISP/NT can implement a "LINK" from one COBOL program to another
+	   # COBOL program as an internal "call".  This is referred to as a
+	   # "soft link" and it is much faster an much more effecient then a 
+	   # "hard link" which involes spawning a new processes and starting
+	   # a new COBOL RTS.  However, since the new program is being run by
+	   # the same RTS it can result in a recursive call which will fail.
+	   #
+	   #USEHARDLINK		(default)
+	   #USESOFTLINK
+
+	You can also control the LINK behaviour dynamically by use of two
+	new wispsubs USESOFTLINK and USEHARDLINK.
+
+	USAGE:		CALL "USESOFTLINK" USING LastState.
+			CALL "USEHARDLINK" USING LastState.
+
+	DESCRIPTION:	These two routines control how LINK behaves.
+
+			When soft links are enabled (and available) a
+			LINK() from one COBOL program to another COBOL
+			program will be implemented as an internal call
+			within the same RTS and will not spawn a new RTS.
+
+			Soft links are much faster and much more efficient
+			then a hard link which spawns a new RTS.  However,
+			because the program stays within the same RTS it
+			is possible to get a recursive call which will
+			fail.
+
+			A call to USESOFTLINK or USEHARDLINK will set the
+			flag only within that current instance of the RTS.
+			A new instance of the RTS will have the flag set
+			to it's default value.
+	PARAMETERS:
+	Laststate	Alpha(1) The softlink state prior to the call.
+				 'S' - Was using softlinks
+				 'H' - Was using hardlinks
+	EXAMPLE:
+
+		*
+		*  Force this link to spawn a new process (hard link)
+		*
+		    CALL "USEHARDLINK" USING WISPLINK-TYPE.
+
+		    CALL "LINK" USING PROGNAME, LINKTYPE, ....
+
+		*
+		*  Return to using soft links.
+		*
+		    IF WISP-SOFTLINK THEN
+		        CALL "USESOFTLINK" USING WISPLINK-TYPE.
+
+	Considerations When Using Soft LINK's
+	-------------------------------------
+	When doing COBOL-to-COBOL call "LINK"s, the linked-to program 
+	remains in the calling program's runtime environment.  If the 
+	program is reentered,  variables that were initialized the first 
+	time may not necessarily be initialized when it is reentered.
+
+	Thus, when translating programs with WISP that are normally
+	started with a CALL "LINK" you should consider using the "-D"
+	options to cause the "IS INITIAL" clause to be added to the
+	PROGRAM-ID paragraph.  This ensures initial data values each time
+	the called program is entered.
+
+	You may need to include the #CHANGE_STOP_RUN option in the option_file
+	(pp. 4-7, 4-10, 4-11 in WISP manual). This makes WISP change STOP RUN 
+	into EXIT PROGRAM statements.  It is only needed if you have coded 
+	STOP RUN statements without EXIT PROGRAM statements. The STOP RUN 
+	statements will terminate the entire runtime, not just the link-level.
+
+
+	TERMINAL AND KEYBOARD:
+	======================
+
+	Windows NT/95 does not require a Videocap file, it has internal
+	defaults that map the keyboard as follows:
+
+	F1 - F12		F1 - F12
+	Shift F1- F12		F11 - F22	(Shift  +10)
+	Ctrl F1 - F12		F21 - F32	(Ctrl	+20)
+	Alt F1,F2		F31, F32	(Alt	+30)
+	ESC			HELP
+	Home			HELP
+	End			PF16
+	Page-Up			BACKTAB
+	Page-Dn			NEWLINE
+	Ctrl-INSERT		Clear_After
+	Ctrl-DELETE		Clear_Field
+	Shift TAB		BACKTAB
+
+	Terminal and Keyboard Notes:
+	----------------------------
+	On Windows NT/95 the "Capabilities" section of the Videocap file
+	is not used.  Screen I/O is done by direct call to the WIN32 API,
+	not (as on unix) by sending escape codes to the device. The only
+	"Capabilities" used are "pseudo_blanks" and "graphstr".
+
+
+	WISP TRANSLATOR:
+	================
+
+	Also review WISP Manual Ch. 2, 4 for a general overview. To translate 
+	your *.wcb files, you need to WISP the files as you would on UNIX.  
+	By default, the -VACU language flag is set.  
+
+	Options can be specified with either a "-" (unix style) or "/".
+
+		C:\> WISP -VACU /W words.def sample
+
+	The directory path separator on the "-Idir" option is a semicolon
+	';'.  (On unix it is a colon ':' but this conflicts with the drive
+	specifier.)
+
+		C:\> WISP -I c:\copy1;c:\copy2;d:\copybook sample
+
+	Use of @response Files With WISP:
+	---------------------------------
+	To overcome limitation of 128 characters on the command line,
+	support has been added for an @response file.  Command line
+	options will be read from the response file.  WISP will accept
+	options from both the command line and the response file.  For
+	example:
+
+		C:\> WISP -I c:\copy1;c:\copy2 @my.rsp mycobapp
+
+	The full command with all options will be displayed after the
+	response file has been processed.
+
+
+
+
+
+
+	WISP SUPPORT FOR PRINTING ON MICROSOFT WINDOWS NT/95
+	==================================================== 
+	This section describes the WISP support for printing under
+	Microsoft Windows NT (3.51 and later) and Windows 95.  These
+	operating systems will be referred to as "WIN32" for the remainder
+	of this section.
+
+
+	Configuring WISP Printing Options
+	---------------------------------
+	To configure the printing options for WIN32 you use the exact same
+	configuration files as with LP on Unix. The contents of these
+	files are slightly different for WIN32 than they are for LP on
+	Unix.  These files are "FORMS", "LPMAP" and "PRMAP", and are
+	located in the $WISPCONFIG directory.  They are used to "map" the
+	Wang Form number, Printer number, and Printer class to WIN32
+	printers and print styles.  Descriptions of these files are given
+	below:
+
+
+	FORMS file
+	---------- 
+	The FORMS file consists of records which define Wang forms.  Each
+	line defines a different form.  The form number must be the first
+	3 characters of the line (followed by a single space); the
+	remainder of the line may contain keyword=value pairs that define
+	the characteristics of the form.  The supported keywords are as
+	follows:
+
+		pagewidth       page width in characters
+		-or- pw         (DEFAULT: 80)
+
+		pagelength      page length in lines
+		-or- pl         (DEFAULT: 66)
+		-or- lpp
+
+		cpi		characters per inch
+				(DEFAULT: 10)
+
+		lpi		lines per inch
+				(DEFAULT: 6)
+
+		landscape	1=landscape print
+				0=portrait print  (DEFAULT)
+
+		duplex		0=one sided printing (DEFAULT)
+				1=horizontal duplex printing
+				2=vertical duplex printing
+
+	All keywords are optional; if omitted the default is used.  Note
+	that some combinations may not be legal (eg, specifying a value
+	for cpi or lpi that causes the actual line width or page length to
+	exceed that specified by the pagewidth or pagelength keyword).  If
+	an illegal combination is specified, the behavior is undefined.
+
+	If a file is printed from WISP using a form that is not defined in
+	the FORMS file, the default values (shown above) will be used for
+	that print job.
+
+	FORMS example:
+
+      	  001 pagewidth=80  pagelength=66 cpi=12 lpi=6 landscape=0 duplex=0
+	  005 pagewidth=170 pagelength=60 cpi=16 lpi=8 landscape=1 duplex=1
+	  006 pagewidth=133 pagelength=88 cpi=16 lpi=8 landscape=0 duplex=2
+
+	FORMS file Restrictions
+	-----------------------
+	Only the "Courier New" font is supported at this time.  Only
+	standard paper (8 1/2 x 11) is supported at this time.
+
+
+	LPMAP FILE
+	----------
+	The LPMAP file is used to map print classes to specific printers.
+	Each record in the file defines a particular class.  The first
+	character on the line must be the class letter (followed by a
+	single space); the remainder of the line should contain the WIN32
+	printer name.  On Windows NT a network printer must be specifed
+	using it's UNC name (e.g \\SERVER01\HP4SI).
+
+	LPMAP example:
+
+	  A \\SERVER01\HP4SI
+	  B HP LaserJet 4si
+
+	PRMAP FILE
+	----------
+	The PRMAP file is used to map Wang style printer numbers to
+	specific WIN32 printers.  Each record in the file defines a
+	particular printer.  The first three characters on the line must
+	contain the printer number (followed by a single space); the
+	remainder of the line should contain the WIN32 printer name.
+	Printer number 000 is not allowed.
+
+	PRMAP example:
+
+	  001 TEST
+	  002 \\SERVER01\HP4SI
+	  003 HP LaserJet 4si
+
+
+	PRINTER SELECTION PRIORITY
+	--------------------------
+	If both printer number and printer class are specified for a print
+	job, the printer specified in the PRMAP file takes precedence.
+
+
+
+	W4WMAP - WISP for Windows Screen Item MAP
+	=========================================
+	This file defines screen items that will receive special treatment
+	by WISP for Windows.  It allows you to define specific text
+	strings that appear on the screen, mapping them to shaded boxes
+	that can be mouse clicked to send a pfkey.
+
+	It is very common in Wang applications to have a "menu" area at
+	the bottom of a screen that displays which pfkeys are active and
+	what each does.
+
+	Example:
+	Row 24 :(1) New (2) First (3) last (4) Next (5) Prev (16) Exit
+
+	The W4WMAP can be used to map these on screen pfkey "tags" into
+	mouse clickable areas.  For the above example you would need
+	entries in W4WMAP like the following:
+
+		PF-1   "(1)"
+		PF-2   "(2)"
+		PF-3   "(3)"
+		PF-4   "(4)"
+		PF-5   "(5)"
+		PF-16  "(16)"
+
+	The first token on each line is a keyword representing which pfkey
+	to send when the button is clicked.  The quoted string is the text
+	to change into a shaded mouse clickable area.  The text must
+	appear in a non-modifiable area of the screen and must be preceded
+	by a space character or beginning of line.
+
+	The W4WMAP keywords are	"PF-1" thru "PF-32", "ENTER", and "HELP".
+	The sample W4WMAP that is distributed with WISP defines the pfkey
+	tags which WISP uses in the Command Processor, getparms, and
+	utilities.  It is recommended that you add any additional tags you
+	use to the W4WMAP file (don't remove the standard ones.)  You may
+	use the same keyword multiple times for as many variations as your
+	applications require.
+
+		PF-16	"(16)"
+		PF-16	"PF-16"
+		PF-16	"PF16"
+
+	If one text string forms a leading sub-string of another then
+	ensure that the shorter one is defined prior to the longer one in
+	the W4WMAP file.  The string "PF1" is a leading sub-string of
+	"PF12" so must be placed first in the file.
+
+	        PF-1	"PF1"
+		PF-12	"PF12"
+
+	If one text string forms an internal sub-string of another then
+	ensure that it is placed first in the W4WMAP file.
+
+	        PF-1	      "PF1"
+		PF-16	"Press PF16 to Exit"
+
+
+
+
+	SUBMIT and Batch Processing using Argent Queue Manager
+	======================================================
+	Overview of using SUBMIT with AQM.
+
+	Required Setup with AQM
+	-----------------------
+	The OPTIONS file in the WISPCONFIG directory must be changed.  The
+	lines which read "BATCHQUEUE none" and "BATCHQUEUE usubmit" must
+	be commented out and the line "BATCHQUEUE qsubmit" must be
+	uncommented.
+
+	Example from OPTIONS file:
+
+		#BATCHQUEUE none
+		#BATCHQUEUE usubmit
+		BATCHQUEUE qsubmit
+
+	A new mapping file called CQMAP may be created in the WISPCONFIG
+	directory if desired.  This file is used to map class letters to
+	AQM queue names.  If the file is not present, the class will be
+	ignored and all jobs will be submitted to the default AQM queue.
+
+	Missing Features with AQM
+	-------------------------
+	The following features are not supported:
+   
+       		- SUBMIT disposition (requeue, permanent jobs)
+		- job CPU time limit / Limit flag
+		- Abort action
+
+	Limitations and differences with AQM
+	------------------------------------
+	The following limitations and differences exist.
+
+	Log files.
+
+	The log files for submitted jobs are placed in a library called
+	AQMLOG on VOLSPL.
+
+	Job Class.
+
+	The Argent Queue Manager does not currently support job classes.
+	Job classes are simulated by submitting each job class to a
+	different queue.  The mapping for this is configured in the CQMAP
+	file in the WISPCONFIG directory.
+
+	Hold Mode.
+
+	The Argent Queue Manager does not currently support HOLD mode for
+	jobs.  This functionality is simulated using start time.  Jobs
+	submitted with HOLD are submitted for a run time one year in the
+	future.  A job submitted this way is effectively on HOLD; to run
+	such a job it must be resubmitted from the Jobs menu in the "AQM
+	Resource Manager" program; the start time for the new resubmitted
+	job should be set to immediate (using the Scheduling option).  The
+	original job will still be present and may be deleted from the
+	Jobs menu in the "AQM Resource Manager" program.
+
+	Respool Mode.
+
+	Although the SUBMIT routine ignores the disposition flag, there
+	are two ways to simulate respool mode.
+
+	By default, all completed jobs remain in the Argent Queue for 24
+	hours after completion.  This is a property of the queue that the
+	jobs run on; it can be changed on a per queue basis from the Queue
+	menu (menu item Properties) in the "AQM Resource Manager" program.
+	This means that all jobs run on a queue are respooled according to
+	the time defined for that queue.
+
+	Also, as noted above, WISP submits "HELD" jobs with a start time
+	one year in the future.  This "HELD" job may be run as desired (by
+	resubmitting it), and it remains in the queue until deleted or
+	until it runs after one year.
+
+
+
+	SUBMIT and Batch Processing Without the Argent Queue Manager
+	============================================================
+
+	Overview of using SUBMIT without AQM
+	------------------------------------
+
+	The OPTIONS file in the WISPCONFIG directory must be changed as
+	follows: The line which reads "BATCHQUEUE none" must be
+	uncommented, and the lines "BATCHQUEUE usubmit" and "BATCHQUEUE
+	qsubmit" must be commented.
+
+	Example from OPTIONS file:
+
+		BATCHQUEUE none
+		#BATCHQUEUE usubmit
+		#BATCHQUEUE qsubmit
+
+	No changes need to be made to the CQMAP mapping file in the
+	WISPCONFIG directory if AQM is not being used.
+
+	Missing Features without AQM
+	----------------------------
+	The following features are not supported:
+   
+       		- Job Class
+		- Job Log file
+		- SUBMIT disposition (requeue, permanent jobs)
+		- job CPU time limit / Limit flag
+		- Abort action
+		- Submit in HOLD mode
+
+	Limitations and differences without AQM
+	---------------------------------------
+	The following limitations and differences exist.
+
+	Jobs submitted to backgroun run asynchronously and immediately.
+	No HOLD or RESPOOL behaviors are supported.
+
+	While output from background WPROC and COBOL programs is prevented
+	by the WISP runtime, program output from .BAT files is not
+	prevented and will overwrite the running COBOL program's screen if
+	it occurs.  For this reason it is necessary to insure that any
+	.BAT files that are submitted to background do not produce any
+	text output.
+
+
+
+	CONTENTS OF WISP DISTRIBUTION KIT
+	=================================
+
+	WISP\WISPNTDOC.TXT		- This document
+	WISP\WISPNTSETUP.TXT		- WISP quick setup guide
+
+	WISP\BIN\DISPLAY.EXE		- Display utility		
+	WISP\BIN\HEXED.EXE		- Hexed utility
+	WISP\BIN\MAKEMSG.EXE		- Makemsg utility
+	WISP\BIN\PROCTRAN.EXE		- Procedure Translator utility
+	WISP\BIN\VSEDIT.EXE		- Vsedit utility
+	WISP\BIN\VTEST.EXE		- Video Test utility
+	WISP\BIN\Wconfig.EXE		- WISP Configuration utility
+	WISP\BIN\WCOPY.EXE		- Wcopy utility
+	WISP\BIN\WISP.EXE		- WISP Translator
+	WISP\BIN\WISPTran.EXE		- GUI Translate & Compile utility
+	WISP\BIN\WLICENSE.EXE		- Wlicense utility
+	WISP\BIN\WPROC.EXE		- Wang Procedure Interpeter
+	WISP\BIN\WRUN.EXE		- Wrun utility
+	WISP\BIN\WSHELL.EXE		- Wang Command Processor
+	WISP\BIN\WSORT.EXE		- Wsort utility
+	WISP\BIN\WUSAGE.EXE		- Wusage utility
+	
+	WISP\LIB\VIDEO.LIB		- Video object library
+	WISP\LIB\WISP.LIB		- Wisp object library
+	
+	WISP\ETC\WORDS.DEF		- Word file
+	WISP\ETC\DISPRINT.WCB		- DISPRINT utility source
+	WISP\ETC\DISPRINT.MAK		- DISPRINT makefile
+	WISP\ETC\WISPPLAT.WCB		- Copybook for WISPPLAT routine
+	WISP\ETC\SOFTLINK.WCB		- Copybook for softlinks
+	
+	WISP\CONFIG\ACUCONFIG		- Sample Acucobol config file
+	WISP\CONFIG\CQMAP		- Sample CQMAP file
+	WISP\CONFIG\FORMS		- Sample FORMS file
+	WISP\CONFIG\LGMAP		- Sample LGMAP file
+	WISP\CONFIG\LPMAP		- Sample LPMAP file
+	WISP\CONFIG\OPTIONS		- Sample OPTIONS file
+	WISP\CONFIG\PRMAP		- Sample PRMAP file
+	WISP\CONFIG\W4WMAP		- Sample W4WMAP file
+	WISP\CONFIG\WISPMSG.DAT		- Messages file (compiled)
+	WISP\CONFIG\WISPMSG.TXT		- Messages file (text)
+	WISP\CONFIG\WPROG.MSG		- WPROC message file
+	WISP\CONFIG\WRUN.CFG		- Sample WRUN.CFG
+	WISP\CONFIG\WSYSCONF.CFG	- Sample WSYSCONF.CFG
+	WISP\CONFIG\VIDEOCAP\WINCON	- Windows videocap file
+	
+	WISP\ACU\ACULINK		- ACULINK object file
+	WISP\ACU\ACULINK.WCB		- ACULINK source file
+	WISP\ACU\ACUUSING		- ACUUSING object file
+	WISP\ACU\ACUUSING.COB		- ACUUSING source file
+	WISP\ACU\SUB85.C		- Acucobol "C" interface file
+	WISP\ACU\WWRUNCBL.MAK		- WWRUNCBL.EXE Makefile
+	
+	WISP\DEMO\CURSOR.WPS		- WPROC demo procedures
+	WISP\DEMO\DEMO.WPS
+	WISP\DEMO\DR.WPS
+	WISP\DEMO\ED.WPR
+	WISP\DEMO\ED.WPS
+	WISP\DEMO\ENVIRON.WPS
+	WISP\DEMO\PUTPARM.WPS
+	WISP\DEMO\SCREEN.WPS
+	WISP\DEMO\TEST.WPS
+	WISP\DEMO\VIDEO.WPS
+
+
+	========================= END OF DOCUMENT =========================

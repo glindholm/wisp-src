@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -7,6 +9,7 @@
 
 #define __CHINESE__
 #include <stdio.h>
+#include <string.h>
 #include "vchinese.h"
 
 /* 
@@ -24,7 +27,16 @@ char **ctx;
 	out[insz]=(char)0;
 	return 0;
 }
-vlanguage(path)
+void vlanguage(path)
 char *path;
 {
 }
+/*
+**	History:
+**	$Log: vchstubs.c,v $
+**	Revision 1.6  1996-10-11 18:16:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

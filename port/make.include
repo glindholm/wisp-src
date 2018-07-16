@@ -1,205 +1,350 @@
+#/***********************************************************************/
 #/*									*/
 #/*	        WISP - Wang Interchange Source Pre-processor		*/
-#/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-#/*	 An unpublished work of International Digital Scientific Inc.	*/
+#/*	    			and OPEN3K with 			*/
+#/*		CAST - Cobol Automated Software Translation		*/
+#/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993,		*/
+#/*			   1994, 1995, 1996, 1997			*/
+#/*	 	An unpublished work of NeoMedia Technologies, Inc.	*/
 #/*			    All rights reserved.			*/
 #/*									*/
-#/************************************************************************/
+#/***********************************************************************/
 #
 #
 #	File		make.include	
 #
-#	Function	Standard make include file for WISP.
+#	Function	Standard make include file for WISP & OPEN3K.
 #
-#	Description:	This file is included into all WISP makefiles.
+#	Description:	This file is included into all WISP & OPEN3K makefiles.
 #			It defines all system specific options.
 #			Uncomment the SYSTEM defines for this system.
 #			Also ensure no other SYSTEM defines are uncommented.
 #
 #	Input:		$(WISP)		points to WISP base directory
+#			$(OPEN3K)	points to OPEN3K base directory
+#			$(L_WISP)	the wisp library base name (usually "wisp")
+#			$(L_VIDEO)	the video library base name (usually "video")
+#			$(L_EDE)	the ede library base name (usually "ede")
 #			$(CDEBUG)	c flags to debug or optimize
+#			$(CCDEBUG)	C++ flags to debug or optimize
+#			$(PDEBUG)	pascal flags to debug or optimize
 #
-#	Output:		$(CFLAGS)	the standard c flags
-#			$(CFLAGS0)	same as $(CFLAGS) used to add to CFLAGS
+#	Output:
 #			$(CC)		the c compiler command
-#			$(V)		the location of video header files
+#			$(CFLAGS)	the standard c flags
+#			$(CFLAGS0)	same as $(CFLAGS) used to add to CFLAGS
+#
+#			$(CCC)		the C++ compiler command
+#			$(CCFLAGS)	the standard C++ flags
+#			$(CCFLAGS0)	same as $(CCFLAGS) used to add to CCFLAGS
+#			$(CCC_EXT)	the C++ file extension ("cc" or "C")
+#			$(CCC_LIBS_DIR)	location of standard C++ libraries
+#
+#			$(PC)		the pascal compiler command
+#			$(PFLAGS)	the standard pascal flags
+#			$(PFLAGS0)	same as $(PFLAGS) used to add to PFLAGS
+#
 #			$(RANLIB)	how to change an archive lib into a random lib
-#			$(PQFLAG)	Printq c flags
-#			$(LIBSOC)	The socket library flags
-#			$(STDBIN)	standard place to put built bin files
-#			$(STDLIB)	standard place to put build library files
-#			$(STDINC)	standard place to put <include> files
-#			$(LIBCFLAGS)	standard c flags when libraries are used
+#			$(CURSES_LINK)	The curses library link flags
+#			$(SOCKET_LINK)	The socket library link flags
+#			$(MATH_LINK)	The math library link flags
 #
-#	History		06/03/92	Written by GSL
-#			06/10/92	Fixed NCR486 & NCR32 to used LIBPW=-lgen. GSL
-#			06/12/92	Remove LIBPW and REGEX stuff. GSL
-#			11/12/92	Add Motorola. GSL
-#                       03/11/93        Add AIX 3.2 Flags. GSL
-#                       04/22/93        Add SOLARIS. JEC
-#                       04/26/93        Reinsert stuff lost on 4/22/93 log-in of old make.include. JEC
+#			$(STD_BIN_DIR)	standard place to put built bin files
+#			$(STD_LIB_DIR)	standard place to put build library files
+#			$(STD_INC_DIR)	standard place to put <include> files
 #
 #
-#	STANDARD defines used on all systems
-#		STDBIN		standard place to put built bin files
-#		STDLIB		standard place to put build library files
-#		STDINC		standard place to put <include> files
-#		STDCFLAGS	standard c flags
-#		STDLIBFLAGS	standard c flags when libraries are used
-#		V		location of the video header files
+#			$(WISP_LIB)	The WISP archieve library  (eg. libwisp.a)
+#			$(VIDEO_LIB)	The VIDEO archieve library (eg. libvideo.a)
+#			$(EDE_LIB)	The EDE archieve library   (eg. libede.a)
 #
-STDBIN= $(WISP)/src/bin
-STDLIB= $(WISP)/src/lib
-STDINC= $(WISP)/src/include
+#			$(WISP_LIB_PATH) The WISP_LIB path  (eg. /usr/local/lib/libwisp.a)
+#			$(VIDEO_LIB_PATH)The VIDEO_LIB path (eg. /usr/local/lib/libvideo.a)
+#			$(EDE_LIB_PATH)  The EDE_LIB path   (eg. /usr/local/lib/libede.a)
+#
+#			$(WISP_LINK)	The WISP library link flag  (eg. -lwisp)
+#			$(VIDEO_LINK)	The VIDEO library link flag (eg. -lvideo)
+#			$(EDE_LINK)	The EDE library link flag   (eg. -lede)
+#
+#			$(VIDEO_INC_DIR)	The location of video header files
+#			$(WISP_LIBS_LINK)	The WISP + VIDEO libraries link flags
+#			$(WISP_LIBS_PATHS)	The WISP + VIDEO libraries paths
+#			$(WISPEDE_LIBS_LINK)	The WISP + VIDEO + EDE libraries link flags
+#			$(WISPEDE_LIBS_PATHS)	The WISP + VIDEO + EDE libraries paths
+#
+#	Internal:
+#			BASE_DIR	The base directory for bin, lib, include
+#			SYSDEF		The system identification define (e.g. -DAIX)
+#			CC_STD		The standard CC command
+#			CC_ANSI		The ANSI CC command
+#			CC_STD_FLAGS	C standard non-system dependent flags
+#			CC_SYS_FLAGS	C system dependent flags
+#			CC_SYS_LINK	C system dependent flags for linking
+#			CC_OPT_FLAGS	C Special options flags
+#			CCC_STD_FLAGS	C++ standard non-system dependent flags
+#			CCC_SYS_FLAGS	C++ system dependent flags
+#			CCC_SYS_LINK	C++ system dependent flags for linking
+#			PC_STD_FLAGS	Pascal standard non-system dependent flags
+#			PC_SYS_FLAGS	Pascal system dependent flags
+#
+#
+BASE_DIR = $(WISP)/src
 
-STDCFLAGS= -Dunix -I$(STDINC)
-LIBCFLAGS= -L$(STDLIB)
-V= $(STDINC)/v
+STD_BIN_DIR	= $(BASE_DIR)/bin
+STD_LIB_DIR	= $(BASE_DIR)/lib
+STD_INC_DIR	= $(BASE_DIR)/include
 
-#
-# uncomment LIBACU to include acucobol objects for the vision
-# index file display module
-#
-#ACUPATH = /usr2/acucobol
-#DISPIDXOBJS = vsn_only.o $(ACUPATH)/filetbl.o  $(ACUPATH)/runcbl.a
-#LIBACU = $(DISPIDXOBJS)
+VIDEO_INC_DIR	= $(BASE_DIR)/videolib
+
+WISP_LINK 	= -l$(L_WISP)
+VIDEO_LINK 	= -l$(L_VIDEO)
+EDE_LINK 	= -l$(L_EDE)
+
+WISP_LIB 	= lib$(L_WISP).a
+VIDEO_LIB 	= lib$(L_VIDEO).a
+EDE_LIB		= lib$(L_EDE).a
+
+WISP_LIB_PATH	= $(BASE_DIR)/wisplib/$(WISP_LIB)
+VIDEO_LIB_PATH	= $(BASE_DIR)/videolib/$(VIDEO_LIB)
+EDE_LIB_PATH	= $(BASE_DIR)/ede/$(EDE_LIB)
+
+WISP_LIBS_PATHS = $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISP_LIBS_LINK	= $(WISP_LIBS_PATHS)
+
+WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISPEDE_LIBS_LINK	= $(WISPEDE_LIBS_PATHS)
 
 #
 #	DEFAULT defines for all systems.
 #	If the specific system requires different values it will override
 #	these later in the file.
-#		CC		the c compiler
-#               CCPRINTQ        the compiler used to compile the print queue,
-#                               c89 or gcc if possible
-#		RANLIB		how to change an archive lib into a random lib
-#		PQFLAG		Printq c flags:
-#                               -DSOCKCODE  to use Berkley sockets (default)
-#                               -DMQCODE    to use System V message Queues
-#                               -DBSDWAIT   to use BSD wait mechanism (default)
-#                               -DSYSVWAIT  to use System V wait 
-#                               -DNO_SELECT if select() not supported
-#		LIBSOC		The socket library flags
 #
-CC= cc
-CCPRINTQ= cc
+
+CC_STD = cc
+CC_ANSI = cc
+CC_STD_FLAGS = -Dunix
+CC_SYS_FLAGS =
+CC_SYS_LINK =
+
+CCC = c++
+CCC_EXT = cpp
+CCC_LIBS_DIR = /usr/local/lib
+CCC_STD_FLAGS = -Dunix
+CCC_SYS_FLAGS =
+CCC_SYS_LINK = 
+
+PC = pc
+PC_STD_FLAGS = +N
+PC_SYS_FLAGS =
+
 RANLIB= ar ts
-PQFLAG= 
-LIBSOC=
-LIBCURSES=-lcurses
+SOCKET_LINK =
+CURSES_LINK = -lcurses
+MATH_LINK = -lm
+LEX_LINK = -ll
+
+LEX=lex
+YACC=yacc
+
+# 	SPECIAL Build Options:
+#
+# 	Uncomment the following ONLY if you are building a 
+#	special kit which includes the module for displaying 
+#	of VISION indexed files.
+#
+#DISPIDXOBJS = vsn_only.o $(ACUDIR)/filetbl.o  $(ACUDIR)/runcbl.a
+#LIBACU = $(DISPIDXOBJS)
+#CC_OPT_FLAGS = -DINCLUDE_VDISPIDX
 
 #
 #	SYSTEM defines for system dependent options. 
 #	Also add any defines needed to override any dedault defines
 #	that are incorrect.
-#		SYSCFLAGS	System dependent c flags. Do not specify
-#				the -g or -O flags as these are specified
-#				externally.
+#		SYSDEF		System DEFINE flag
 #
-#                               Insert a -DINCLUDE_VDISPIDX to force
-#                               compilation of the vision index file 
-#                               display module
-#
-SYSCFLAGS= Error SYSCFLAGS not defined
+SYSDEF = "Error SYSDEF not defined"
 
 #==================================================================
 #	IBM AIX RS/6000
 #
-##  AIX 3.1 - no longer used
-##SYSCFLAGS = -DAIX
-##PQFLAG= -DSYSVWAIT
-
-#   AIX 3.2
-#CCPRINTQ=gcc
-#SYSCFLAGS = -DAIX -D__STR31__
-#PQFLAG= -DSYSVWAIT
+#	AIX 3.2 
+#
+#SYSDEF = -DAIX
+#CC_SYS_FLAGS = -qlanglvl=ansi
+#CCC = g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#
+#	AIX 4.1
+#
+#CCC = xlC
+#CCC_SYS_FLAGS = -qchars=signed 
+#CCC_EXT = C
 
 #==================================================================
 #	Ultrix RISC
 #
-#CCPRINTQ=gcc
-#SYSCFLAGS = -DULTRIX 
-#LIBCURSES=-lcursesX
+#SYSDEF = -DULTRIX -DNOCONST -DNOSTRDUP
+#CURSES_LINK=-lcursesX
+
 #==================================================================
 #       DEC ALPHA OSF/1
 #
-#CC=c89
-#CCPRINTQ=c89
-#SYSCFLAGS = -DOSF1_ALPHA -non_shared -Olimit 1536
-#PQFLAG= -DSYSVWAIT
+#  NOTE:  There are two make files on this system.  Most of the
+#         kit builds with the /usr/bin/posix version.  The parts
+#         that use wisp need to use the make in /usr/bin.
+#
+#SYSDEF = -DOSF1_ALPHA -D_USE_OLD_TTY
+#CC_STD  = c89
+#CC_ANSI = c89
+#CC_SYS_FLAGS = -non_shared
+#CCC = cxx
+#CCC_SYS_FLAGS = -ms
 
 
 #==================================================================
 #	HP/UX
 #
-#CCPRINTQ=c89
-#SYSCFLAGS = -D_HPUX_SOURCE -DHPUX +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
-#PQFLAG=-DSYSVWAIT 
+#SYSDEF = -DHPUX
+#CC_STD  = c89
+#CC_ANSI = c89
+#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
+#CCC = g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+
+# If using HP-UX 10.20 then uncomment
+#CURSES_LINK = -lcur_colr
 
 
 #==================================================================
 #	SUNOS
 #
-# Old
-#SYSCFLAGS = -DSUNOS -Bstatic
+#
+#SYSDEF = -DSUNOS
+#
+#----	Standard Sun C compiler
+#CC_ANSI = cc -Bstatis -DNOPROTO
+#CC_SYS_FLAGS = -I/usr/5include
+#
+#----	GNU C compiler
+#CC_STD  = gcc
+#CC_ANSI = gcc -ansi -static
+#
+#----	New ACC compiler
+#CC_ANSI = acc
+#CC_SYS_FLAGS = -sys5 -Xa -Bstatic -I/usr/5include
+#
+#----	Common
+#CURSES_LINK=-L/usr/5lib -lcurses
 #RANLIB=ranlib
 #
-# New
-#CC=gcc -ansi -static
-#CCPRINTQ=gcc -ansi -static
-#SYSCFLAGS = -DSUNOS -I/usr/5include
-#RANLIB=ranlib
-#LIBCURSES=-L/usr/5lib -lc -lcurses
+#----	C++
+#CCC = g++
+#CCC_SYS_FLAGS = -DNOCTYPE -fsigned-char
+#CCC_LINK = -L$(CCC_LIBS_DIR) -lg++ -liostream
 
 #==================================================================
 #	SUN Solaris
 #
-#CCPRINTQ=c89
-#SYSCFLAGS = -DSOLARIS 
-#PQFLAG = -DSYSVWAIT 
-#LIBSOC = -lsocket -lnsl /lib/libdl.so
+#  NOTE:  We have installed WorkShop which includes the proper
+#	  version of C so make sure it is included
+#	  on your path /opt/SUNWspro/bin
+#
+#SYSDEF = -DSOLARIS 
+#CDEBUG=
+#CCC = CC
+#CCC_SYS_LINK = -nolib -lm -Bstatic -lC -lC_mtstubs -Bdynamic -lc
 
+#==================================================================
+#	Data General - DG/UX Intel
+#
+#SYSDEF = -DDGUX_INTEL
+#CC_STD=gcc
+#CC_ANSI=gcc
+#CDEBUG=
+#CCC = gcc
+#CCC_LIBS_DIR = /usr/opt/c++/lib
+#CCC_STD_FLAGS =
+#CCC_SYS_FLAGS = -Bstatic
+#CCC_SYS_LINK =
 
 #==================================================================
 #	Data General Aviion
 #
-#CCPRINTQ=gcc
-#SYSCFLAGS = -DDGUX
+#SYSDEF = -DDGUX
+#CC_ANSI=gcc
+#CDEBUG=
+#CCC = g++
+#CCC_LIBS_DIR = /usr/opt/c++/lib
+#CCC_SYS_FLAGS = -fsigned-char
+#CCC_SYS_LINK = -static -L$(CCC_LIBS_DIR) -lg++ -lC
 
 #==================================================================
 #	SCO UNIX
 #
-#SYSCFLAGS = -DSCO
-#PQFLAG= -DMQCODE -DSYSVWAIT -DNO_SELECT
-#LIBSOC= -lsocket
+#SYSDEF = -DSCO
+#SOCKET_LINK= -lsocket
+#CCC = CC
+#CCC_SYS_FLAGS = +.cpp +a1
+
+#==================================================================
+#	NEC	EWS-UX
+#		EWS4800		R4000 MIPS workstation
+#		UP4800		R4x00 MIPS server	
+#
+#SYSDEF = -DNEC
+#CC_ANSI=/usr/abiccs/bin/cc
+#CC_SYS_FLAGS = -Kconform_pic -Zcommon_pic -znodefs
+
+#==================================================================
+#	UNIXWARE v1.1 for i386/486 
+#
+#SYSDEF = -DUNIXWARE
+#SOCKET_LINK = -lnsl
 
 #==================================================================
 #	NCR 386/486
 #
-#SYSCFLAGS = -DNCR486
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DNCR486
+#CC_SYS_FLAGS = -Hnocopyr -dn
+#SOCKET_LINK = -lnsl
+#CCC = ncc
+#CCC_LIBS_DIR = /opt/ncc/lib
+#CCC_SYS_LINK = -L$(CCC_LIBS_DIR) -lcplus -liostream
 
 #==================================================================
 #	NCR TOWER 32 68020
 #
-#SYSCFLAGS = -DNCR32
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DNCR32
+
+#==================================================================
+#	PYRAMID  1.1-94c079 dcosx MIServer-S 2/48 r3000
+#
+#	HARDWARE:	ES-Series (MIPS r3000)
+#	OS:		DC-OSx  1.1  079
+#
+#	NOTES:		Upwardly compatible with NILE-Series (r4000)
+#
+#SYSDEF = -DPYRAMID
+#CC_SYS_FLAGS = -K signed
+#CCC = CC
+#CCC_EXT = C
+#CCC_SYS_FLAGS = -K signed -DNOCTYPE
 
 #==================================================================
 #	MIPS
 #
-#SYSCFLAGS = -DMIPS
+#SYSDEF = -DMIPS
 
 #==================================================================
 #	AT&T u3b2
 #
-#SYSCFLAGS = -DATT3B2 -DNOSTDLIB
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DATT3B2
+#CC_SYS_FLAGS = -DNOSTDLIB
 
 #==================================================================
 #	BULL (Honeywell)
 #
-#SYSCFLAGS = -DBULL
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DBULL
 
 #==================================================================
 #	Motorola 88000
@@ -207,45 +352,84 @@ SYSCFLAGS= Error SYSCFLAGS not defined
 #		the 88K Risc chip.  The O/S is very generic S5R3.2.
 #		There is also a 3000 Series (68030) and a 4000 Series (68040).
 #
-#SYSCFLAGS = -DMOTOROLA
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DMOTOROLA
 
 #==================================================================
 #       ICL DRS 6000
 #
-#SYSCFLAGS = -DICL
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
-#LIBSOC = -lsocket -lnsl
+#SYSDEF = -DICL
+#SOCKET_LINK = -lsocket -lnsl
 
 #==================================================================
 #	Unisys 6000
 #
-#SYSCFLAGS = -DUNISYS
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DUNISYS
+#SOCKET_LINK = -lnsl
 
 #==================================================================
 #	Sequent
 #
-#SYSCFLAGS = -DSEQUENT
-#CCPRINTQ = acc
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
-#LIBSOC= -lsocket -linet -lnsl
+#SYSDEF = -DSEQUENT
+#CC_ANSI = cc
+#SOCKET_LINK= -lsocket -linet -lnsl
+#CCC = CC
+#CCC_SYS_FLAGS = +a1
 
 #==================================================================
 #	IBM PS/2 AIX
 #
-#SYSCFLAGS = -DAIX_PS2
-#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#SYSDEF = -DAIX_PS2
 
 #==================================================================
 
 
-
+#
+#	Assign the C compilers
+#
+CC 	 = $(CC_ANSI)
+CCPRINTQ = $(CC_ANSI)
 
 #
 #	Construct CFLAGS from the pieces.  
 #		CDEBUG		defined in the makefile as -g or -O
 #
-CFLAGS = $(CDEBUG) $(SYSCFLAGS) $(STDCFLAGS)
-CFLAGS0 = $(CDEBUG) $(SYSCFLAGS) $(STDCFLAGS)
 
+CFLAGS  = $(SYSDEF) $(CDEBUG) $(CC_SYS_FLAGS) $(CC_STD_FLAGS) $(CC_OPT_FLAGS)
+CFLAGS0 = $(SYSDEF) $(CDEBUG) $(CC_SYS_FLAGS) $(CC_STD_FLAGS) $(CC_OPT_FLAGS)
+
+CCFLAGS  = $(SYSDEF) $(CCDEBUG) $(CCC_SYS_FLAGS) $(CCC_STD_FLAGS)
+CCFLAGS0 = $(SYSDEF) $(CCDEBUG) $(CCC_SYS_FLAGS) $(CCC_STD_FLAGS)
+
+#
+#	Construct PFLAGS from the pieces.  
+#		PDEBUG		defined in the makefile as -g or -O1, -O2
+#								 +O1, +O2
+#
+PFLAGS  = $(PDEBUG) $(PC_STD_FLAGS) $(PC_SYS_FLAGS)
+PFLAGS0 = $(PDEBUG) $(PC_STD_FLAGS) $(PC_SYS_FLAGS)
+
+#.p.a:
+#	$(PC) -c $(PFLAGS) $<
+#	ar rv $@ $*.o
+#	rm -f $*.o
+
+#
+#	Old defines for backwards compatablity
+#
+#		$(LIBCFLAGS)	standard c flags when libraries are used
+#		$(CCPRINTQ)	the compiler used to compile the print queue (must be ansi)
+#
+V = $(VIDEO_INC_DIR)
+
+LIBCURSES = $(CURSES_LINK)
+LIBSOC = $(SOCKET_LINK)
+LIBMATH = $(MATH_LINK)
+LIBLEX = $(LEX_LINK)
+
+STDBIN = $(STD_BIN_DIR)
+STDLIB = $(STD_LIB_DIR)
+STDINC = $(STD_INC_DIR)
+
+LIBCFLAGS = -L$(STD_LIB_DIR)
+
+STDPFLAGS = $(PC_STD_FLAGS)

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -16,8 +18,8 @@
 
 #include "idsistd.h"
 #include "wperson.h"
+#include "filext.h"
 
-extern char WISPFILEXT[39];
 #define MAXLINE 10000
 
 wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rtn)
@@ -43,7 +45,7 @@ wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rt
 	short l_numflds;
 	short l_rtn;
 	
-	FILE *file1, *fopen(), *file2;						/* Creat file name.				*/
+	FILE *file1, **file2;							/* Creat file name.				*/
 	char *r, *end_name, *end_name1;						/* Pointers for wfname.				*/
 	int w, sz_of, i, tmp_sz, k, l;						/* Indexes for working string area.		*/
 	int tmp_sz_of;
@@ -307,13 +309,6 @@ wtransl(in_file,in_lib,in_vol,out_file,out_lib,out_vol,lay_out,num_flds,eb_as,rt
 		free(out_line);						
 	}
 }	
-#endif
-#ifdef unix
-wtransl()
-{
-	werrlog(102,"wtransl: Not Supported",0,0,0,0,0,0,0);
-}
-#endif
 
 cmp_byte(temp_string)											
 char *temp_string;
@@ -393,3 +388,19 @@ char *temp_string;
 		i++;
 	}
 }
+#endif
+#ifdef unix
+void wtransl()
+{
+	werrlog(102,"wtransl: Not Supported",0,0,0,0,0,0,0);
+}
+#endif
+/*
+**	History:
+**	$Log: wtransl.c,v $
+**	Revision 1.11  1996-08-19 18:33:26-04  gsl
+**	drcs update
+**
+**
+**
+*/

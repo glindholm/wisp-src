@@ -32,14 +32,20 @@ include mf.rules
 
 ## Uncomment next line for HP-COBOL
 #LANG=-VMF0
+WISPFLAGS= -I ../wisputils
 
-all:	int prtargs test_dirs
+TEST_DIRS= volrun volin
+
+all:	int prtargs $(TEST_DIRS)
 
 int: 	sample.int qafileio.int qafile2.int qanetcap.int qaprint.int \
 	qascreen.int qascrn2.int qasubs.int qawsubs.int \
 	qawsfnm.int qawsfns.int qasy000m.int qasys99.int \
 	sub1.int sub3.int xlink.int xlink1.int trigger.int \
-	qabckgrd.int qadpcoma.int qawsxio.int mflink.int
+	qabckgrd.int qadpcoma.int qawsxio.int mflink.int \
+	wl0000.int wl0010.int wl0011.int wl0012.int wl0013.int wl0014.int \
+	wl0015.int wl0016.int wl0017.int wl0018.int wl0018a.int wl0018b.int wl0019.int wl0020.int \
+	wl0021.int wl0022.int wl0023.int wl0024.int wl0025.int wl0026.int
 	@echo
 	@echo 'All sample (INT) are up-to-date'
 	@echo
@@ -53,7 +59,8 @@ gnt: 	sample.gnt qafileio.gnt qafile2.gnt qanetcap.gnt qaprint.gnt \
 	@echo 'All sample (GNT) are up-to-date'
 	@echo
 
-exe: 	sample sub1 sub3 xlink xlink1 trigger qabckgrd qadpcoma
+EXES= 	sample sub1 sub3 xlink xlink1 trigger qabckgrd qadpcoma
+exe:	$(EXES)
 	@echo
 	@echo 'All sample (EXE) are up-to-date'
 	@echo
@@ -62,16 +69,17 @@ sample.cob: sample.wcb
 	$(WISPTRAN) $(LANG) $(WISPFLAGS) -O samopt.opt sample
 
 
-LIBPATHS=$(STDLIB)/libwisp.a $(STDLIB)/libvideo.a $(STDLIB)/libilp.a
-LIBS=-lwtest -lwisp -lilp -lvideo
+LIBPATHS=$(STDLIB)/libwisp.a $(STDLIB)/libvideo.a
+
 OBJS= 	sample.o qafileio.o qafile2.o qanetcap.o qaprint.o qascreen.o \
 	qascrn2.o qasubs.o qawsubs.o qawsfnm.o qawsfns.o qasy000m.o \
 	qasys99.o qawsxio.o $(LDFILES)
 
 sample:	$(OBJS) $(LIBPATHS)
-	$(COBOL) -g $(EXE) $(COBFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(COBOL) -g $(EXE) $(COBFLAGS) -o $@ $(OBJS) $(LIBPATHS)
 
-test_dirs: volrun volin
+mflink.cob: $(WISP)/src/mf/mflink.cob
+	cp $(WISP)/src/mf/mflink.cob .
 
 volrun:
 	mkdir volrun
@@ -80,3 +88,8 @@ volrun:
 volin:
 	mkdir volin
 	mkdir volin/libin
+
+clean:
+	rm -f *.int *.gnt *.o sample $(EXES) prtargs
+	rm -fr $(TEST_DIRS)
+	rm -f *.cob

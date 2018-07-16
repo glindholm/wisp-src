@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -31,3 +35,12 @@
 
 
 
+/*
+**	History:
+**	$Log: spawn.h,v $
+**	Revision 1.5  1996-08-19 18:32:59-04  gsl
+**	drcs update
+**
+**
+**
+*/

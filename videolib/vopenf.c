@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -8,6 +10,7 @@
 /*						Keystroke Macro Manager								*/
 
 #include <stdio.h>
+#include <string.h>
 #ifndef NOSTDLIB
 #include <stdlib.h>
 #endif
@@ -15,6 +18,7 @@
 #include "video.h"									/* Include header files.		*/
 #include "vlocal.h"
 #include "vdata.h"
+#include "vmodules.h"
 
 static char filename[64];								/* Name of the file.			*/
 
@@ -37,7 +41,7 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 	strcat(filename,ext);								/* Add the extension.			*/
 #endif
 
-#ifdef MSDOS
+#ifdef MSFS
 	if (!(ptr=getenv("HOME")))							/* Get the HOME dir.			*/
 	{
 		ptr = "C:";								/* If home not found use "C:"		*/
@@ -82,6 +86,7 @@ FILE *vopenf(ext,how) char *ext, *how;
 **				If $VIDEOINFO defined use it.
 **				Else if $VIDEOCAP defined use it.			\ For compatiblity with WISP.
 **				Else if $WISPCONFIG defined use $WISPCONFIG/videocap.	/
+**				Else if $OPEN3KCONFIG defined use $OPEN3KCONFIG/videocap.	/
 **				Else use the default.
 **
 **
@@ -122,6 +127,11 @@ char *name;
 		vbldfilepath(vinfodirbuff,vinfodir,"videocap");
 		vinfodir = vinfodirbuff;
 	}
+	else if (vinfodir = getenv("OPEN3KCONFIG"))
+	{
+		vbldfilepath(vinfodirbuff,vinfodir,"videocap");
+		vinfodir = vinfodirbuff;
+	}
 	else
 	{
 		vinfodir = VIDEOINFODIR;
@@ -133,3 +143,12 @@ char *name;
 	return( s_vinfoname );
 }
 
+/*
+**	History:
+**	$Log: vopenf.c,v $
+**	Revision 1.11  1996-10-11 18:16:14-04  gsl
+**	drcs update
+**
+**
+**
+*/

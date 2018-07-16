@@ -1,0 +1,1457 @@
+000001/*****************************************************************
+000001*                                                                *
+000001*                       IDENTIFICATION DIVISION                  *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001/*****************************************************************
+000001*     Application Management Utility (AMU)                       *
+000001*                                                                *
+000001*     This is the User Definition Maintenance subroutine (AMUUDM)*
+000001******************************************************************
+000001
+000001 IDENTIFICATION DIVISION.
+000001 PROGRAM-ID.
+000001     AMUUDM.
+000001 AUTHOR.
+000001     Suzette Cass.
+000001 DATE-WRITTEN.
+000001     12/15/93.
+000001/*****************************************************************
+000001*                                                                *
+000001*                         ENVIRONMENT DIVISION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 ENVIRONMENT DIVISION.
+000001 CONFIGURATION SECTION.
+000001 SOURCE-COMPUTER.
+000001     WANG-VS.
+000001 OBJECT-COMPUTER.
+000001     WANG-VS.
+000001 FIGURATIVE-CONSTANTS.
+           A-0-BYTE  IS "00", A-1-BYTE  IS "01", A-2-BYTE  IS "02",
+           A-3-BYTE  IS "03", A-4-BYTE  IS "04", A-5-BYTE  IS "05",
+           A-6-BYTE  IS "06", A-7-BYTE  IS "07", A-8-BYTE  IS "08",
+           A-9-BYTE  IS "09", A-10-BYTE IS "0A", A-11-BYTE IS "0B",
+           A-12-BYTE IS "0C", A-13-BYTE IS "0D", A-14-BYTE IS "0E",
+           A-15-BYTE IS "0F", A-16-BYTE IS "10", A-17-BYTE IS "11",
+           A-18-BYTE IS "12", A-19-BYTE IS "13", A-20-BYTE IS "14",
+           A-21-BYTE IS "15", A-22-BYTE IS "16", A-23-BYTE IS "17",
+           A-24-BYTE IS "18", A-26-BYTE IS "1A", A-28-BYTE IS "1C",
+           A-36-BYTE IS "24", A-42-BYTE IS "2A", A-54-BYTE IS "36",
+           A-160-BYTE IS "A0"
+000001     PROTECT-BIT IS "04"
+           SUB-5       IS "05"                     
+000001     DIM-BIT     IS "08"
+000001     LF          IS "0A"
+000001     BLINK-BIT   IS "10"
+           POSITION-CURSOR IS "20"
+           UNLOCK-KEYBOARD IS "80"
+           WSXIO-READ  IS "40"
+           WSXIO-WRITE IS "80"
+000001     BRITE       IS "84"
+000001     TAB-STOP    IS "86"
+           PLAIN-TEXT  IS "8C"
+           MENU-PICK   IS "8E"
+000001     BLINKING-DISPLAY IS "94"
+000001     NO-ECHO     IS "98"
+           BR-MOD-AL   IS "A0"
+           BR-MOD-UCL  IS "A1"
+           BR-PRO-AL   IS "85"
+           BRITE-MOD   IS "80"
+           BLINK-TEXT  IS "94"
+           UNDER-TEXT  IS "AC".
+000001                                                      
+000001/*****************************************************************
+000001*                                                                *
+000001*                         INPUT-OUTPUT SECTION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 INPUT-OUTPUT SECTION.
+000001 FILE-CONTROL.
+000001*
+000001     SELECT CRT
+000001         ASSIGN TO "CRT",      "DISPLAY",
+000001         ORGANIZATION    IS SEQUENTIAL
+000001         ACCESS MODE     IS RANDOM
+000001         RELATIVE KEY    IS LINENUM
+000001         PFKEY           IS PF-KEY
+000001         CURSOR POSITION IS CURSOR-POS
+000001         FILE STATUS     IS FILSTAT.
+000001
+           COPY AMUSEL.
+
+000001/*****************************************************************
+000001*                                                                *
+000001*                      DATA DIVISION - FILE SECTION              *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 DATA DIVISION.
+000001 FILE SECTION.
+000001*
+123456*89012345678901234567890123456789012345678901234567890123456789012
+000001 FD  CRT
+000001     LABEL RECORDS ARE OMITTED.
+000001 01  CRTREC.
+           03  CRTREC-OA                  PIC X(4).
+            03  CRTREC-MAPPING-AREA       PIC X(1920).
+
+           COPY AMUFD.
+000001*
+000001/*****************************************************************
+000001*                                                                *
+000001*                         WORKING STORAGE                        *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 WORKING-STORAGE SECTION.
+000001
+000001 01  FILSTAT.
+000001     03  ERR-FLAG                   PIC X(01).
+000001     03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  TEMP-OA.
+           03  TEMP-OA-START              PIC X(01) VALUE A-1-BYTE.
+           03  TEMP-OA-WCC                PIC X(01) VALUE A-160-BYTE.
+           03  TEMP-OA-COL                PIC X(01) VALUE A-0-BYTE.
+           03  TEMP-OA-ROW                PIC X(01) VALUE A-0-BYTE.
+
+       01  BELL-TIME.
+           03  FILLER                     BINARY VALUE 0.
+           03  BELL-TIME-2                BINARY VALUE 1.
+
+           COPY AMUWS.
+
+       01  MATCH-RECORD                   PIC X(01) VALUE " ".
+           88  NO-MATCH                   VALUE " ".
+           88  1ST-CHAR-MATCH             VALUE "1".
+           88  2ND-CHAR-MATCH             VALUE "2".
+
+       01  TEST-RECORD                    PIC X(01) VALUE "N".
+           88  RECORD-EXISTS              VALUE "Y".
+           88  RECORD-NOTEXISTS           VALUE "N".
+
+       01  WRITE-RECORD                   PIC X(01) VALUE "N".
+           88  DO-WRITE                   VALUE "Y".
+           88  NO-WRITE                   VALUE "N".
+
+       01  SCREEN-TITLE     PIC X(32)  VALUE
+           "AMU Menu Environment Maintenance".
+
+       01  USER-SCREEN-TITLE     PIC X(31)  VALUE
+           "AMU User Definition Maintenance".
+
+       01  SCN-MODE         PIC X(12) VALUE SPACES.
+           88  MODE-DISPLAY            VALUE "Display Mode".
+           88  MODE-MODIFY             VALUE " Modify Mode".
+
+       01  CUR-ACCESS    PIC X(06)  VALUE SPACES.
+           88  ACCESS-UPDATE        VALUE "UPDATE".
+           88  ACCESS-BROWSE        VALUE "BROWSE".
+           88  ACCESS-ADD           VALUE "ADD   ".
+           88  ACCESS-DELETE        VALUE "DELETE".
+
+       01  CNT1                     BINARY  VALUE 0.
+       01  SUB1                     PIC 9(02) VALUE 0.
+
+       01 PF-KEY-TEXT.
+          03  PF2                  PIC X(11) VALUE "  2-First  ".
+          03  PF3                  PIC X(11) VALUE "  3-Last   ".
+          03  PF4                  PIC X(08) VALUE "4-Prev  ".
+          03  PF5                  PIC X(08) VALUE "5-Next  ".
+          03  PF6                  PIC X(10) VALUE "6-Down    ".
+          03  PF7                  PIC X(10) VALUE "7-Up      ".
+          03  PF8                  PIC X(10) VALUE "8-Position".
+          03  PF9                  PIC X(10) VALUE "9-Modify  ".
+          03  PF10                 PIC X(12) VALUE "10-Renumber ".
+          03  PF11                 PIC X(12) VALUE "11-Insert   ".
+          03  PF12                 PIC X(10) VALUE "12-Delete ".
+          03  PF13                 PIC X(10) VALUE "13-Help   ".
+          03  PF14                 PIC X(09) VALUE "14-Move  ".
+          03  PF15                 PIC X(09) VALUE "15-Save  ".
+          03  PF16                 PIC X(07) VALUE "16-Exit".
+          03  PF32                 PIC X(07) VALUE "32-Quit".
+
+       01  START-ROW                PIC 9(02)  VALUE 1.
+
+       01  CLASS-LETTERS            PIC X(26) VALUE
+           "ABCDEFGHIJKLMNOPQRSTUVWXYZ".
+       01  CLASS-ITEM REDEFINES CLASS-LETTERS.
+           05  CLASS-CHAR     OCCURS 26 TIMES.
+               07  FILLER           PIC X(01).
+
+       01  HOLD-FAC                 PIC X(01).
+       01  HOLD1-CNT                 BINARY VALUE 0.
+       01  HOLD2-CNT                 BINARY VALUE 0.
+
+      ******************************************************************
+      *                DATA FOR READFDR                                *
+      ******************************************************************
+
+       01  FDR-MODE.
+           03  FDR-MODE-1        BINARY  VALUE 0.
+           03  FDR-MODE-2        BINARY  VALUE 0.
+       01  FDR-FUNCTION          PIC X(02) VALUE SPACES.
+       01  FDR-RECEIVER.
+           03  FILLER            BINARY.
+           03  FDR-RECORD-COUNT  BINARY.
+       01  FDR-RETURN-CODE.
+           03  FILLER            BINARY.
+           03  FDR-RETURN-2      BINARY.
+
+       01  UDM-USER-TABLE.
+           03  UDM-ITEM     OCCURS 200 TIMES.
+               05  UDM-USER-ID      PIC X(03)  VALUE SPACES.
+               05  UDM-USER-ID-STR REDEFINES UDM-USER-ID.
+                   07  UDM-ID-CHAR    OCCURS 3 TIMES.
+                       10  FILLER       PIC X(01).
+               05  UDM-USER-NAME    PIC X(24)  VALUE SPACES.
+
+      *******************************************************************
+      *              WSXIO PARAMETERS                                   *
+      *******************************************************************
+       01  WSXIO-FUNCTION PIC X     VALUE SPACES.
+       01  WSXIO-UFB      PIC X(02) VALUE SPACES.
+       01  WSXIO-CMD      PIC X.
+       01  WSXIO-ORDER-AREA.
+           03  WSXIO-O-A-1 PIC X VALUE A-1-BYTE.
+           03  WSXIO-O-A-2 PIC X VALUE A-0-BYTE.
+           03  WSXIO-O-A-3 PIC X VALUE A-0-BYTE.
+           03  WSXIO-O-A-4 PIC X VALUE A-0-BYTE.
+       01  WSXIO-OA-SAVE PIC X(4).
+       01  WSXIO-O-A-LENGTH.
+           05  O-A-L1 BINARY VALUE 0.
+           05  O-A-L2 BINARY VALUE 4.
+       01  WSXIO-SCREEN-LENGTH.
+           05  S1-LEN BINARY VALUE 0.
+           05  S2-LEN BINARY VALUE 1920.
+       01  WSXIO-TIMEOUT-SEC.
+           05  WSXIO-TO1  BINARY VALUE 0.
+           05  WSXIO-TO2  BINARY VALUE 0.
+       01  WSXIO-TIMEOUT-HSEC.
+           05  WSXIO-TOH1  BINARY VALUE 0.
+           05  WSXIO-TOH2  BINARY VALUE 0.
+       01  WSXIO-IOSW    PIC X(08) VALUE SPACES.
+       01  WSXIO-AID     PIC X(01) VALUE SPACES.
+       01  WSXIO-PROMPT-SCREEN.
+           03  FILLER        PIC X(10) VALUE "    USER =".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  ENTER-USER-ID PIC X(03) VALUE SPACES.
+           03  USER-ID-STRING REDEFINES ENTER-USER-ID.
+               05  ID-CHAR     OCCURS 3 TIMES.
+                   07  FILLER           PIC X(01).
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(65) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER        PIC X(03) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE UNDER-TEXT. 
+           03  PROMPT-HELP-1 PIC X(65) VALUE
+               "Specify User ID and Press (RETURN) to Position Display o 
+      -         "r Select:".
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(10) VALUE SPACES.
+
+           03  FILLER        PIC X(04) VALUE SPACES.
+           03  PROMPT-HELP-2 PIC X(65) VALUE
+               "1-Return to User List                                 
+      -        "  13-Help".
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(10) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+       01  WSXIO-ADD-SCREEN.
+           03  FILLER        PIC X(09) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE UNDER-TEXT. 
+           03  ADD-HELP-1    PIC X(47) VALUE
+               "Specify the User to be Added and Press (RETURN)".
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(22) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER        PIC X(10) VALUE SPACES.
+           03  FILLER        PIC X(11) VALUE
+               "Add User ID".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  ADD-USER-ID   PIC X(03) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(34) VALUE
+               "- Default From the Record for User".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  DEFAULT-USER-ID PIC X(03) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(15) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER        PIC X(10) VALUE SPACES.
+           03  ADD-HELP-2 PIC X(50) VALUE
+               "or Select: 1-Cancel Request and Respecify Function".
+           03  FILLER        PIC X(20) VALUE SPACES.
+
+       01  WSXIO-MAINTAIN-SCREEN.
+           03  FILLER        PIC X(05) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE UNDER-TEXT. 
+           03  MAIN-HELP-1   PIC X(52) VALUE
+               "Specify the User to be Maintained and Press (RETURN)".
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(21) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER        PIC X(28) VALUE SPACES.
+           03  FILLER        PIC X(06) VALUE
+               "USER =".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  MAIN-USER-ID  PIC X(03) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(41) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER        PIC X(06) VALUE SPACES.
+           03  MAIN-HELP-2   PIC X(50) VALUE
+               "or Select: 1-Cancel Request and Respecify Function".
+           03  FILLER        PIC X(24) VALUE SPACES.
+
+      ******************************************************************
+      *                  LINK PARAMETERS                               *
+      ******************************************************************
+       01  LINK-TO-FILE        PIC X(08) VALUE SPACES.
+       01  LINK-TO-LIB         PIC X(08) VALUE SPACES.
+       01  LINK-TO-VOL         PIC X(06) VALUE SPACES.
+
+       01  LINK-TYPE           PIC X(01) VALUE SPACES.
+       01  LINK-PARM-CNT.
+           03 LINK-PARM-CNT-1  BINARY  VALUE ZERO.
+           03 LINK-PARM-CNT-2  BINARY  VALUE ZERO.
+       01  LINK-CANCEL-FLAG    PIC X(01) VALUE SPACES.
+       01  LINK-MESSAGE        PIC X(27) VALUE SPACES.
+       01  LINK-MESS-LEN.
+           03 LINK-MESS-LEN-1  BINARY  VALUE ZERO.
+           03 LINK-MESS-LEN-2  BINARY  VALUE ZERO.
+       01  LINK-HELP           PIC X(01) VALUE SPACES.
+       01  LINK-COMP-CODE.
+           03 LINK-COMP-CODE-1 BINARY VALUE ZERO.
+           03 LINK-COMP-CODE-2 BINARY VALUE ZERO.
+       01  LINK-COMP-CODE-X PIC 9999  VALUE ZERO.     
+       01  LINK-RETURN.
+           03 LINK-RETURN-1    BINARY    VALUE ZERO.
+           03 LINK-RETURN-2    BINARY    VALUE ZERO.
+       01  LINK-RETURN-X    PIC S9999 VALUE ZERO.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+123456*89012345678901234567890123456789012345678901234567890123456789012
+       01  AMUEM300-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(32) ROW 1 COL 25
+               SOURCE SCREEN-TITLE.
+           03  FILLER  PIC X(08) ROW 1 COL 72 VALUE
+               "AMUEM300".
+           03  AMUEM300-1  PIC X(27) ROW 2 COL 28 VALUE
+               "User Definition Maintenance".
+           03  FILLER  PIC X(08) ROW 4 COL 02 VALUE
+               "To Exit:".
+           03  AMUEM300-2 PIC X(54) ROW 4 COL 13 VALUE
+               "Position Cursor to Desired Function and Press <RETURN>".
+           03  FILLER  PIC X(08) ROW 4 COL 72 VALUE
+               "To Quit:".
+           03  FILLER  PIC X(08) ROW 5 COL 02 VALUE
+               "PFKEY 16".
+           03  FILLER  PIC X(08) ROW 5 COL 72 VALUE
+               "PFKEY 32".
+           03  AMUEM300-MENU-1 PIC X(30) ROW  6 COL 25
+               SOURCE AMUEM300-ITEM-1.
+           03  AMUEM300-MENU-2 PIC X(30) ROW  7 COL 25
+               SOURCE AMUEM300-ITEM-2.
+           03  AMUEM300-MENU-3 PIC X(30) ROW  8 COL 25
+               SOURCE AMUEM300-ITEM-3.
+           03  AMUEM300-MENU-4 PIC X(30) ROW  9 COL 25
+               SOURCE AMUEM300-ITEM-4.
+
+       01  AMUEM300-ITEM-1.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(14) VALUE
+               "Add a New User".
+
+       01  AMUEM300-ITEM-2.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(25) VALUE
+               "Maintain an Existing User".
+
+       01  AMUEM300-ITEM-3.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(25) VALUE
+               "Display List of All Users".
+
+       01  AMUEM300-ITEM-4.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(23) VALUE
+               "Define Security Classes".
+
+       01  AMUEL310-SCREEN USAGE IS DISPLAY-WS.
+           03  AMUEL310-1-ROW PIC X(31) ROW 1 COL 25
+               SOURCE USER-SCREEN-TITLE.
+           03  FILLER  PIC X(08) ROW 1 COL 72 VALUE
+               "AMUEL310".
+           03  AMUEL310-3-ROW   PIC X(70)  ROW 3 COL 05
+               SOURCE AMUEL310-FILE-INFO.
+           03  AMUEL310-5    OCCURS 15 TIMES ROW 5.
+               05  AMUEL310-5-ROW   PIC X(33)  ROW 5 COL 20
+                   SOURCE AMUEL310-ITEM-ROW
+                   OBJECT AMUEL310-ITEM-ROW. 
+           03  AMUEL310-21   OCCURS 4 TIMES  ROW 21.
+               05  AMUEL310-21-ROW  PIC X(80)  ROW 21 COL 01              
+                   SOURCE AMUEL310-HELP  OBJECT AMUEL310-HELP.
+
+       01  AMUEL310-FILE-INFO.
+           03  FILLER             PIC X(05) VALUE "File ".
+           03  LIST-MENU-FILE     PIC X(08) VALUE SPACES.
+           03  FILLER             PIC X(12) VALUE " in Library ".
+           03  LIST-MENU-LIB      PIC X(08) VALUE SPACES.
+           03  FILLER             PIC X(11) VALUE " on Volume ".
+           03  LIST-MENU-VOL      PIC X(06) VALUE SPACES.
+           03  FILLER             PIC X(10) VALUE " Contains ".
+           03  LIST-USER-CNT      PIC Z(04) VALUE ZERO.
+           03  FILLER             PIC X(06) VALUE " Users".
+
+       01  USER-COUNT             PIC 9(04) VALUE ZERO.
+       01  CURR-USER-COUNT        PIC 9(04) VALUE ZERO.
+
+       01  AMUEL310-ITEM.
+           03  AMUEL310-ITEM-ROW  OCCURS 15 TIMES.
+               05  310-SUB-COL1    PIC X     VALUE SPACES.
+               05  310-SUB-COL2    PIC X     VALUE SPACES.
+               05  FILLER          PIC X     VALUE SPACES.
+               05  LIST-USER-ID    PIC X(03) VALUE SPACES.
+               05  LIST-SEPARATOR  PIC X(03) VALUE SPACES.
+               05  LIST-USER-NAME  PIC X(24) VALUE SPACES.
+
+       01  AMUEL310-HELP-DEF.
+           03  AMUEL310-HELP    OCCURS 4 TIMES.
+               05  AMUEL310-HELP-ROW-VAL PIC X(80) VALUE SPACES.
+
+       01  AMUES301-SCREEN USAGE IS DISPLAY-WS.
+           03  AMUES301-1-ROW PIC X(31) ROW 1 COL 25
+               SOURCE USER-SCREEN-TITLE.
+           03  FILLER  PIC X(08) ROW 1 COL 72 VALUE
+               "AMUES301".
+           03  AMUES301-2-ROW   PIC X(23)  ROW 2 COL 28 VALUE
+               "Define Security Classes".
+           03  AMUES301-2-COL   PIC X(12)  ROW 2 COL 68
+               SOURCE SCN-MODE.
+           03  AMUES301-4-COL1   PIC X(05)  ROW 4 COL 2 VALUE
+               "CLASS".
+           03  AMUES301-4-COL2   PIC X(30)  ROW 4 COL 09 VALUE
+               "<-- FUNCTIONAL DESCRIPTION -->".
+           03  AMUES301-4-COL3   PIC X(05)  ROW 4 COL 43 VALUE
+               "CLASS".
+           03  AMUES301-4-COL4   PIC X(30)  ROW 4 COL 50 VALUE
+               "<-- FUNCTIONAL DESCRIPTION -->".
+           03  AMUES301-5    OCCURS 13 TIMES ROW 5.
+               05  CLASS-1-DISP  PIC X(01)  ROW 5 COL 4
+                   SOURCE CLASS-1.
+               05  FUNC-DESC-1-DISP  PIC X(30)  ROW 5 COL 9
+                   SOURCE FUNC-DESC-1 OBJECT FUNC-DESC-1.
+               05  CLASS-2-DISP  PIC X(01)  ROW 5 COL 45
+                   SOURCE CLASS-2.
+               05  FUNC-DESC-2-DISP  PIC X(30)  ROW 5 COL 50
+                   SOURCE FUNC-DESC-2 OBJECT FUNC-DESC-2.
+           03  AMUES301-21   OCCURS 4 TIMES  ROW 21.
+               05  AMUES301-21-ROW  PIC X(80)  ROW 21 COL 01              
+                   SOURCE AMUES301-HELP  OBJECT AMUES301-HELP.
+
+       01  CLASS-DESC-TABLE.
+           03  CLASS-DESC-LINE  OCCURS 13 TIMES.
+               05  CLASS-1         PIC X(01) VALUE SPACES.
+               05  FUNC-DESC-1     PIC X(30) VALUE SPACES.
+               05  CLASS-2         PIC X(01) VALUE SPACES.
+               05  FUNC-DESC-2     PIC X(30) VALUE SPACES.
+
+       01  AMUES301-HELP-DEF.
+           03  AMUES301-HELP    OCCURS 4 TIMES.
+               05  AMUES301-HELP-ROW-VAL PIC X(80) VALUE SPACES.
+
+       01  DISPLAY-SCN-TABLE.
+           03  DISP-SCN-ITEM     OCCURS 3 TIMES.
+               05  D-SCN-ROW    PIC X(01) VALUE A-0-BYTE.
+               05  D-SCN-COL    PIC X(01) VALUE A-0-BYTE.
+
+       01  SCN-INDEX            BINARY    VALUE ZEROES.
+
+       01  AMUES311-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(07)        ROW 1 COL 2 VALUE
+               "User ID".
+           03  AMUES311-1     PIC X(3)  ROW 1 COL 10
+               SOURCE USER-ID.
+           03  AMUES311-1-ROW PIC X(31) ROW 1 COL 25
+               SOURCE USER-SCREEN-TITLE.
+           03  FILLER  PIC X(08) ROW 1 COL 72 VALUE
+               "AMUES311".
+           03  AMUES311-2-ROW   PIC X(16)   ROW 2 COL 32 VALUE
+               "User Maintenance".
+           03  AMUES311-2-COL   PIC X(12)   ROW 2 COL 68
+               SOURCE SCN-MODE.
+           03  FILLER            PIC X(09)  ROW 4 COL 5 VALUE
+               "User Name".
+           03  AMUES311-4-1      PIC X(24)  ROW 4 COL 15
+               SOURCE USER-NAME  OBJECT USER-NAME.
+           03  FILLER            PIC X(13)  ROW 4 COL 40 VALUE
+               "Starting Menu".
+           03  AMUES311-4-2      PIC X(06)  ROW 4 COL 54
+               SOURCE USER-START-MENU  OBJECT USER-START-MENU.
+           03  FILLER            PIC X(16)  ROW 4 COL 62 VALUE
+               "Disable Help Key".
+           03  AMUES311-4-3      PIC X(01)  ROW 4 COL 79
+               SOURCE DISABLE-HELP-KEY  OBJECT DISABLE-HELP-KEY.
+           03  FILLER            PIC X(11)  ROW 5 COL 3 VALUE
+               "Date Format".
+           03  AMUES311-5-1      PIC X(03)  ROW 5 COL 15
+               SOURCE USER-DATE-FORMAT  OBJECT USER-DATE-FORMAT.
+           03  FILLER            PIC X(11)  ROW 5 COL 23 VALUE
+               "Time Format".
+           03  AMUES311-5-2      PIC X(01)  ROW 5 COL 35
+               SOURCE USER-TIME-FORMAT  OBJECT USER-TIME-FORMAT.
+           03  FILLER            PIC X(08)  ROW 5 COL 37 VALUE
+               "- Update".
+           03  AMUES311-5-3      PIC X(02)  ROW 5 COL 46
+               SOURCE USER-UPDATE-TIME  OBJECT USER-UPDATE-TIME.
+           03  FILLER            PIC X(13)  ROW 5 COL 53 VALUE
+               "Timeout Limit".
+           03  AMUES311-5-4      PIC X(02)  ROW 5 COL 67
+               SOURCE USER-TIMEOUT-LIMIT  OBJECT USER-TIMEOUT-LIMIT.
+           03  FILLER            PIC X(08)  ROW 5 COL 70 VALUE
+               "- Action".
+           03  AMUES311-5-5      PIC X(01)  ROW 5 COL 79
+               SOURCE USER-TIMEOUT-ACTION  OBJECT USER-TIMEOUT-ACTION.
+           03  FILLER            PIC X(48)  ROW 6 COL 15 VALUE
+               "....5....0....5....0....5....0....5....0....5...".
+           03  FILLER            PIC X(09)  ROW 7 COL 5 VALUE
+               "Parameter".
+           03  AMUES311-7      PIC X(48)  ROW 7 COL 15
+               SOURCE USER-PARAMETERS  OBJECT USER-PARAMETERS.
+           03  FILLER          PIC X(10)  ROW 8 COL 4 VALUE
+               "Access to:".
+           03  FILLER          PIC X(07)  ROW 10 COL 5 VALUE
+               "Y = Yes".
+           03  FILLER          PIC X(06)  ROW 11 COL 5 VALUE
+               "N = No".
+           03  AMUES311-8    OCCURS 13 TIMES ROW 8.
+               05  FILLER                  PIC X(30)  ROW 8 COL 15
+                   SOURCE FUNC-DESC-1.
+               05  ACCESS-YN-1                PIC X(01)  ROW 8 COL 46
+                   SOURCE ACCESS-1  OBJECT ACCESS-1. 
+               05  FILLER                  PIC X(30)  ROW 8 COL 48
+                   SOURCE FUNC-DESC-2.
+               05  ACCESS-YN-2                PIC X(01)  ROW 8 COL 79
+                   SOURCE ACCESS-2  OBJECT ACCESS-2. 
+
+           03  AMUES311-21   OCCURS 4 TIMES  ROW 21.
+               05  AMUES311-21-ROW  PIC X(80)  ROW 21 COL 01              
+                   SOURCE AMUES311-HELP  OBJECT AMUES311-HELP.
+
+       01  AMUES311-HELP-DEF.
+           03  AMUES311-HELP    OCCURS 4 TIMES.
+               05  AMUES311-HELP-ROW-VAL PIC X(80) VALUE SPACES.
+
+      ******************************************************************
+       LINKAGE SECTION.
+
+       01  LINK-MENU-FILE         PIC X(08).
+       01  LINK-MENU-LIB          PIC X(08).
+       01  LINK-MENU-VOL          PIC X(06).
+       01  LINK-MENU-ACCESS       PIC X(06).
+
+000001/*****************************************************************
+000001*                                                                *
+000001*                         PROCEDURE DIVISION                     *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 PROCEDURE DIVISION USING LINK-MENU-FILE, LINK-MENU-LIB,
+                                LINK-MENU-VOL, LINK-MENU-ACCESS.
+       START-PROGRAM.
+           MOVE "CD" TO FDR-FUNCTION.
+           CALL "READFDR" USING LINK-MENU-FILE, LINK-MENU-LIB,
+                                LINK-MENU-VOL,
+                                FDR-MODE, FDR-FUNCTION,
+                                FDR-RECEIVER, FDR-RETURN-CODE.
+           MOVE LINK-MENU-ACCESS TO CUR-ACCESS.
+           MOVE LINK-MENU-FILE TO FIL-FOR-MFILE.
+           MOVE LINK-MENU-LIB  TO LIB-FOR-MFILE.
+           MOVE LINK-MENU-VOL  TO VOL-FOR-MFILE.
+           IF FDR-RETURN-2 NOT = 0
+               MOVE "UPDATE" TO CUR-ACCESS
+               MOVE " Modify Mode" TO SCN-MODE
+               PERFORM CREATE-USER-DEF-FILE THRU
+                 EXIT-CREATE-USER-DEF-FILE.
+
+           OPEN SHARED MENU-FILE.
+           MOVE 1 TO SCN-INDEX.
+           PERFORM USER-DEF-MAINT-MENU THRU
+                 EXIT-USER-DEF-MAINT-MENU.
+           CLOSE MENU-FILE.
+
+000001 EXIT-PROGRAM.
+000001     EXIT PROGRAM.
+000001
+000001 STOP-RUN.
+000001     STOP RUN.
+
+       CREATE-USER-DEF-FILE.
+           DISPLAY "Create User Definition".
+
+       EXIT-CREATE-USER-DEF-FILE.
+           EXIT.
+
+       USER-DEF-MAINT-MENU.
+           MOVE UNDER-TEXT TO FAC OF AMUEM300-1, FAC OF AMUEM300-2.
+           MOVE D-SCN-COL(SCN-INDEX) TO TEMP-OA-COL.
+           MOVE D-SCN-ROW(SCN-INDEX) TO TEMP-OA-ROW.
+           MOVE TEMP-OA TO ORDER-AREA OF AMUEM300-SCREEN.
+
+           DISPLAY AND READ AMUEM300-SCREEN ON CRT
+           PFKEYS 16, 32.
+
+           PERFORM SAVE-OA-ROW-COL.
+
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-USER-DEF-MAINT-MENU
+           ELSE
+           IF PF-KEY = "32" THEN
+              GO TO EXIT-PROGRAM.
+
+           IF MOD-ROW = 6 THEN
+               PERFORM PROMPT-ADD-USER-ID THRU
+                       EXIT-PROMPT-ADD-USER-ID
+           ELSE
+           IF MOD-ROW = 7 THEN
+               PERFORM PROMPT-MAINTAIN-USER-ID THRU
+                       EXIT-PROMPT-MAINTAIN-USER-ID
+           ELSE
+           IF MOD-ROW = 8 THEN
+               PERFORM LIST-ALL-USERS
+           ELSE
+           IF MOD-ROW = 9 THEN
+               PERFORM SETUP-SECURITY-SCREEN
+               MOVE 3 TO SCN-INDEX
+               PERFORM DEFINE-SECURITY-CLASSES THRU
+                   EXIT-DEFINE-SECURITY-CLASSES
+           ELSE
+               CALL "BELL" USING BELL-TIME.
+
+           GO TO USER-DEF-MAINT-MENU.
+
+       EXIT-USER-DEF-MAINT-MENU.
+           EXIT.
+
+       LIST-ALL-USERS.
+           MOVE LINK-MENU-FILE TO LIST-MENU-FILE.
+           MOVE LINK-MENU-LIB  TO LIST-MENU-LIB.
+           MOVE LINK-MENU-VOL  TO LIST-MENU-VOL.
+           MOVE UNDER-TEXT TO FAC OF AMUEL310-1-ROW
+                              FAC OF AMUEL310-3-ROW.
+           PERFORM SETUP-USER-LIST.
+           PERFORM SET-LU-FACS.
+           MOVE USER-COUNT TO LIST-USER-CNT.
+           MOVE 2 TO SCN-INDEX.
+           PERFORM DISPLAY-ALL-USERS THRU EXIT-DISPLAY-ALL-USERS.
+
+       DISPLAY-ALL-USERS.
+           MOVE D-SCN-COL(SCN-INDEX) TO TEMP-OA-COL.
+           MOVE D-SCN-ROW(SCN-INDEX) TO TEMP-OA-ROW.
+           MOVE TEMP-OA TO ORDER-AREA OF AMUEL310-SCREEN.
+
+           DISPLAY AND READ AMUEL310-SCREEN ON CRT
+           PFKEYS 2, 3, 4, 5, 6, 7, 8, 16, 32.
+
+           PERFORM SAVE-OA-ROW-COL.
+
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-DISPLAY-ALL-USERS
+           ELSE
+           IF PF-KEY = "32" THEN
+              GO TO EXIT-PROGRAM
+           ELSE
+           IF PF-KEY = "00" THEN
+                PERFORM USER-MAINTENANCE
+           ELSE
+      *                         Displays first screen.
+           IF PF-KEY = "02" THEN
+               IF CURR-USER-COUNT = 1
+                   CALL "BELL" USING BELL-TIME
+               ELSE
+                 IF CURR-USER-COUNT < 16
+      *               MOVE 21 TO MOD-COL
+      *               MOVE 5  TO MOD-ROW
+      *               PERFORM SAVE-OA-ROW-COL
+                     MOVE 1 TO CURR-USER-COUNT
+                 ELSE
+                     MOVE MENU-PICK TO HOLD-FAC
+                     MOVE 1 TO CURR-USER-COUNT
+                               SUB1
+                     MOVE SPACES TO AMUEL310-ITEM
+                     PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1
+                         UNTIL CNT1 > 15
+                 END-IF
+               END-IF
+           ELSE
+      *                         Displays last screen.
+           IF PF-KEY = "03" THEN
+               IF CURR-USER-COUNT = USER-COUNT
+                   CALL "BELL" USING BELL-TIME
+               ELSE
+                 IF USER-COUNT < 16
+      *               MOVE 21 TO MOD-COL
+      *               COMPUTE MOD-ROW = USER-COUNT + 4
+      *               PERFORM SAVE-OA-ROW-COL
+                     MOVE USER-COUNT TO CURR-USER-COUNT
+                 ELSE
+                   IF CURR-USER-COUNT > USER-COUNT - 15
+      *                 MOVE 21 TO MOD-COL
+      *                 COMPUTE MOD-ROW = (USER-COUNT - CURR-USER-COUNT) + MOD-ROW
+      *                 PERFORM SAVE-OA-ROW-COL
+                       MOVE USER-COUNT TO CURR-USER-COUNT
+                   ELSE
+                       COMPUTE CURR-USER-COUNT = USER-COUNT - 15
+                       MOVE MENU-PICK TO HOLD-FAC
+                       MOVE CURR-USER-COUNT TO SUB1
+                       MOVE SPACES TO AMUEL310-ITEM
+                       PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1
+                           UNTIL CNT1 > 15
+                   END-IF
+                 END-IF
+               END-IF
+           ELSE
+      *                         Displays previous screen.
+           IF PF-KEY = "04" THEN
+               IF CURR-USER-COUNT = 1
+                   CALL "BELL" USING BELL-TIME
+               ELSE
+                 IF SUB1 < 16
+      *               MOVE 21 TO MOD-COL
+      *               MOVE 5  TO MOD-ROW
+      *               PERFORM SAVE-OA-ROW-COL
+                     MOVE 1 TO CURR-USER-COUNT
+                 ELSE
+                   IF CURR-USER-COUNT - 15 < 1
+                     MOVE MENU-PICK TO HOLD-FAC
+                     MOVE 1 TO CURR-USER-COUNT
+                               SUB1
+                     MOVE SPACES TO AMUEL310-ITEM
+                     PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1
+                         UNTIL CNT1 > 15
+                   ELSE
+                     COMPUTE CURR-USER-COUNT = CURR-USER-COUNT - 15
+                     MOVE CURR-USER-COUNT TO SUB1
+                     MOVE MENU-PICK TO HOLD-FAC
+                     MOVE SPACES TO AMUEL310-ITEM
+                     PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1
+                         UNTIL CNT1 > 15
+                   END-IF
+                 END-IF
+               END-IF
+           ELSE
+      *                         Displays next screen.
+           IF PF-KEY = "05" THEN
+               IF CURR-USER-COUNT = USER-COUNT
+                   CALL "BELL" USING BELL-TIME
+               ELSE
+                 IF USER-COUNT < 16
+      *               MOVE 21 TO MOD-COL
+      *               COMPUTE MOD-ROW = USER-COUNT + 4
+      *               PERFORM SAVE-OA-ROW-COL
+                     MOVE USER-COUNT TO CURR-USER-COUNT
+                 ELSE
+                   IF CURR-USER-COUNT > USER-COUNT - 15
+      *                 MOVE 21 TO MOD-COL
+      *                 COMPUTE MOD-ROW = (USER-COUNT - CURR-USER-COUNT) 
+      *                     + MOD-ROW
+      *                 PERFORM SAVE-OA-ROW-COL
+                       MOVE USER-COUNT TO CURR-USER-COUNT
+                   ELSE
+                       COMPUTE CURR-USER-COUNT = CURR-USER-COUNT + 15
+                       MOVE CURR-USER-COUNT TO SUB1
+                       MOVE MENU-PICK TO HOLD-FAC
+                       MOVE SPACES TO AMUEL310-ITEM
+                       PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1
+                           UNTIL CNT1 > 15
+                   END-IF
+                 END-IF
+           ELSE
+      *                         Moves list down one row.
+           IF PF-KEY = "06" THEN
+               ADD 1 TO CURR-USER-COUNT
+               IF CURR-USER-COUNT > (USER-COUNT - 15)
+                   SUBTRACT 1 FROM CURR-USER-COUNT
+                   CALL "BELL" USING BELL-TIME
+               ELSE
+                   MOVE CURR-USER-COUNT TO SUB1
+                   MOVE MENU-PICK TO HOLD-FAC
+                   MOVE SPACES TO AMUEL310-ITEM
+                   PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1 UNTIL
+                       CNT1 > 15
+               END-IF
+           ELSE
+      *                         Moves list up one row.
+           IF PF-KEY = "07" THEN
+               SUBTRACT 1 FROM CURR-USER-COUNT
+               IF CURR-USER-COUNT < 1
+                   ADD 1 TO CURR-USER-COUNT
+                   CALL "BELL" USING BELL-TIME
+               ELSE
+                   MOVE CURR-USER-COUNT TO SUB1
+                   MOVE MENU-PICK TO HOLD-FAC
+                   MOVE SPACES TO AMUEL310-ITEM
+                   PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1 UNTIL
+                       CNT1 > 15
+               END-IF
+           ELSE
+      *                         Prompts for USER-ID; then scrolls list so specified
+      *                         menu entry appears in first row of display.
+           IF PF-KEY = "08" THEN
+               MOVE PLAIN-TEXT TO HOLD-FAC
+               MOVE SPACES TO AMUEL310-ITEM
+               PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1 UNTIL
+                   CNT1 > 15
+               MOVE SPACES TO ENTER-USER-ID
+               PERFORM PROMPT-USER-ID THRU EXIT-PROMPT-USER-ID
+               MOVE MENU-PICK TO HOLD-FAC
+               MOVE CURR-USER-COUNT TO SUB1
+               MOVE SPACES TO AMUEL310-ITEM
+               PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1 UNTIL
+                   CNT1 > 15
+               MOVE A-0-BYTE TO D-SCN-COL(2)
+               MOVE A-0-BYTE TO D-SCN-ROW(2).
+
+           GO TO DISPLAY-ALL-USERS.
+
+       EXIT-DISPLAY-ALL-USERS.
+           EXIT.
+
+       SETUP-USER-LIST.
+           MOVE SPACES TO UDM-USER-TABLE.
+           MOVE SPACES TO MFILE-KEY.
+           MOVE "SF" TO RECORD-TYPE.
+           MOVE 0 TO USER-COUNT.
+           MOVE 1 TO CURR-USER-COUNT.
+           MOVE SPACES TO AMUEL310-ITEM.
+           MOVE "Y" TO TEST-RECORD.
+           START MENU-FILE KEY IS NOT < MFILE-KEY.
+           IF MFILE-STAT = "00"
+               PERFORM SETUP-USER-ITEM-TABLE UNTIL RECORD-NOTEXISTS
+           ELSE
+               MOVE "N" TO TEST-RECORD.
+
+           MOVE 1 TO SUB1.
+           MOVE MENU-PICK TO HOLD-FAC.
+           MOVE SPACES TO AMUEL310-ITEM.
+           PERFORM INIT-USER-LIST VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 15.
+
+       INIT-USER-LIST.
+           MOVE HOLD-FAC TO 310-SUB-COL1(CNT1).
+           IF HOLD-FAC = MENU-PICK AND UDM-USER-NAME(SUB1) NOT = SPACES
+               MOVE SUB-5     TO 310-SUB-COL2(CNT1)
+               MOVE UDM-USER-ID(SUB1)   TO LIST-USER-ID(CNT1)
+               MOVE "   "     TO LIST-SEPARATOR(CNT1)
+               MOVE UDM-USER-NAME(SUB1) TO LIST-USER-NAME(CNT1)
+               ADD 1 TO SUB1
+           ELSE
+               MOVE SPACES TO 310-SUB-COL2(CNT1).
+
+       SETUP-USER-ITEM-TABLE.
+           PERFORM READ-MENU-FILE-RECORD-NEXT.
+               
+           IF RECORD-EXISTS AND RECORD-TYPE NOT = "SF"
+               MOVE "N" TO TEST-RECORD.
+
+           IF RECORD-EXISTS AND RECORD-TYPE = "SF"
+                AND MRECORD-DEF = "SF"
+             MOVE MFILE-REST-OF-RECORD TO SF-RECORD
+             ADD 1 TO USER-COUNT
+             MOVE USER-ID   TO UDM-USER-ID(USER-COUNT)
+             MOVE USER-NAME TO UDM-USER-NAME(USER-COUNT).
+
+       READ-MENU-FILE-RECORD.
+           MOVE "Y" TO TEST-RECORD.
+           READ MENU-FILE RECORD
+               INVALID KEY
+                   MOVE "N" TO TEST-RECORD.
+
+       READ-MENU-FILE-RECORD-HOLD.
+           MOVE "Y" TO TEST-RECORD.
+           READ MENU-FILE WITH HOLD
+               INVALID KEY
+                   MOVE "N" TO TEST-RECORD.
+
+       READ-MENU-FILE-RECORD-NEXT.
+           MOVE "Y" TO TEST-RECORD.
+           READ MENU-FILE NEXT RECORD
+               AT END 
+                   MOVE "N" TO TEST-RECORD.
+
+       WRITE-MENU-FILE-RECORD.
+           WRITE MFILE-RECORD
+               INVALID KEY
+                   DISPLAY "Invalid key - ", MFILE-KEY.
+
+       REWRITE-MENU-FILE-RECORD.
+           REWRITE MFILE-RECORD
+               INVALID KEY
+                   DISPLAY "Invalid key - ", MFILE-KEY.
+
+       DELETE-MENU-FILE-RECORD.
+           DELETE MENU-FILE
+               INVALID KEY
+                   DISPLAY "Invalid key - ", MFILE-KEY.
+
+       SET-LU-FACS.
+           MOVE SPACES TO AMUEL310-HELP-DEF.
+           MOVE " Position Cursor and Press (RETURN) to Maintain User or
+      -         "Select:" TO AMUEL310-HELP(1).
+           STRING PF2, PF4, PF6, PF8, "                                ",
+                  PF16 DELIMITED BY SIZE INTO AMUEL310-HELP(2).
+           STRING PF3, PF5, PF7, "                       ",         
+                  PF13, "         ", PF32 DELIMITED BY SIZE
+             INTO AMUEL310-HELP(3).
+
+           MOVE UNDER-TEXT TO FAC OF AMUEL310-21-ROW(1).
+
+       DEFINE-SECURITY-CLASSES.
+           MOVE D-SCN-COL(SCN-INDEX) TO TEMP-OA-COL.
+           MOVE D-SCN-ROW(SCN-INDEX) TO TEMP-OA-ROW.
+           MOVE TEMP-OA TO ORDER-AREA OF AMUES301-SCREEN.
+
+           DISPLAY AND READ AMUES301-SCREEN ON CRT
+           PFKEYS 1, 9, 13, 16, 32.
+
+           PERFORM SAVE-OA-ROW-COL.
+
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-DEFINE-SECURITY-CLASSES
+           ELSE
+           IF PF-KEY = "32" THEN
+              GO TO EXIT-PROGRAM
+           ELSE
+           IF PF-KEY = "00" AND ACCESS-UPDATE THEN
+               MOVE 1 TO SUB1
+               PERFORM MOVE-DISPLAY-TO-SC VARYING CNT1 FROM 1 BY 1 UNTIL
+                   CNT1 > 13
+               PERFORM READ-MENU-FILE-RECORD-HOLD
+               MOVE SC-RECORD TO MFILE-REST-OF-RECORD
+               PERFORM REWRITE-MENU-FILE-RECORD
+               MOVE "BROWSE" TO CUR-ACCESS
+               PERFORM SET-SC-FACS
+           ELSE
+           IF PF-KEY = "01" AND NOT ACCESS-BROWSE THEN
+               IF ACCESS-UPDATE
+                   MOVE 1 TO SUB1
+                   PERFORM MOVE-SC-TO-DISPLAY VARYING CNT1 FROM 1 BY 1
+                       UNTIL CNT1 > 13
+               END-IF
+               MOVE "BROWSE" TO CUR-ACCESS
+               PERFORM SET-SC-FACS
+           ELSE
+           IF PF-KEY = "09" AND ACCESS-BROWSE THEN
+               MOVE "UPDATE" TO CUR-ACCESS
+               PERFORM SET-SC-FACS
+           ELSE
+               CALL "BELL" USING BELL-TIME.
+
+           GO TO DEFINE-SECURITY-CLASSES.
+
+       EXIT-DEFINE-SECURITY-CLASSES.
+           EXIT.
+
+       SETUP-SECURITY-SCREEN.
+           PERFORM READ-SECURITY-CLASSES.
+           MOVE 1 TO SUB1.
+           PERFORM MOVE-SC-TO-DISPLAY VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 13.
+           PERFORM SET-SC-FACS.
+
+       READ-SECURITY-CLASSES.
+           MOVE SPACES TO MFILE-KEY.
+           MOVE "SF" TO RECORD-TYPE.       
+           MOVE LOW-VALUES TO USER-ID.
+           MOVE "SC" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+
+           IF RECORD-EXISTS AND RECORD-TYPE = "SF"
+                AND MRECORD-DEF = "SC"
+               MOVE MFILE-REST-OF-RECORD TO SC-RECORD.
+
+       MOVE-SC-TO-DISPLAY.
+           MOVE CLASS-CHAR(SUB1) TO CLASS-1(CNT1).
+           MOVE F-DESC(SUB1)     TO FUNC-DESC-1(CNT1).
+           ADD 1 TO SUB1.
+           MOVE CLASS-CHAR(SUB1) TO CLASS-2(CNT1).
+           MOVE F-DESC(SUB1)     TO FUNC-DESC-2(CNT1).
+           ADD 1 TO SUB1.
+
+       MOVE-DISPLAY-TO-SC.
+           MOVE FUNC-DESC-1(CNT1) TO F-DESC(SUB1).
+           ADD 1 TO SUB1.
+           MOVE FUNC-DESC-2(CNT1) TO F-DESC(SUB1).
+           ADD 1 TO SUB1.
+
+       SET-SC-FACS.
+           MOVE SPACES TO AMUES301-HELP-DEF.
+           IF ACCESS-UPDATE 
+               MOVE " Modify Mode" TO SCN-MODE
+               MOVE "Make Changes and Press (RETURN) to Update Security 
+      -         "Classes or Select:" TO AMUES301-HELP(3)
+               MOVE "1-Return to Display Mode" TO AMUES301-HELP(4)
+               MOVE UNDER-TEXT TO FAC OF AMUES311-21-ROW(3)
+               MOVE BRITE-MOD TO HOLD-FAC
+           ELSE
+               MOVE "Display Mode" TO SCN-MODE
+               STRING "                                              ",     
+                      PF9, "   ", PF13, "    ", PF16
+                 DELIMITED BY SIZE INTO AMUES301-HELP(3)
+               MOVE PLAIN-TEXT TO HOLD-FAC.
+           PERFORM SET-FUNC-DESC-FAC VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 13.
+           MOVE UNDER-TEXT TO FAC OF AMUES301-2-ROW,
+                              FAC OF AMUES301-2-COL,
+                              FAC OF AMUES301-4-COL1,
+                              FAC OF AMUES301-4-COL2,
+                              FAC OF AMUES301-4-COL3, 
+                              FAC OF AMUES301-4-COL4.
+
+       SET-FUNC-DESC-FAC.
+           MOVE HOLD-FAC TO FAC OF FUNC-DESC-1-DISP(CNT1)
+                            FAC OF FUNC-DESC-2-DISP(CNT1).
+
+       SAVE-OA-ROW-COL.
+           IF MOD-ROW = 1 THEN
+               MOVE A-1-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 2 THEN
+               MOVE A-2-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 3 THEN
+               MOVE A-3-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 4 THEN
+               MOVE A-4-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 5 THEN
+               MOVE A-5-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 6 THEN
+               MOVE A-6-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 7 THEN
+               MOVE A-7-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 8 THEN
+               MOVE A-8-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 9 THEN
+               MOVE A-9-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 10 THEN
+               MOVE A-10-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 11 THEN
+               MOVE A-11-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 12 THEN
+               MOVE A-12-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 13 THEN
+               MOVE A-13-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 14 THEN
+               MOVE A-14-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 15 THEN
+               MOVE A-15-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 16 THEN
+               MOVE A-16-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 17 THEN
+               MOVE A-17-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 18 THEN
+               MOVE A-18-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 19 THEN
+               MOVE A-19-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 20 THEN
+               MOVE A-20-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 21 THEN
+               MOVE A-21-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 22 THEN
+               MOVE A-22-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 23 THEN
+               MOVE A-23-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+           IF MOD-ROW = 24 THEN
+               MOVE A-24-BYTE TO D-SCN-ROW(SCN-INDEX)
+           ELSE
+               MOVE A-0-BYTE TO D-SCN-ROW(SCN-INDEX).
+
+           IF MOD-COL = 21 THEN
+               MOVE A-21-BYTE TO D-SCN-COL(SCN-INDEX)
+           ELSE
+           IF MOD-COL = 26 THEN
+               MOVE A-26-BYTE TO D-SCN-COL(SCN-INDEX)
+           ELSE
+               MOVE A-0-BYTE TO D-SCN-COL(SCN-INDEX).
+
+       PROMPT-USER-ID.
+           MOVE SPACES TO ENTER-USER-ID. 
+           MOVE WSXIO-WRITE TO WSXIO-CMD.
+           MOVE A-20-BYTE   TO WSXIO-O-A-1.
+           MOVE A-160-BYTE  TO WSXIO-O-A-2.
+           MOVE A-12-BYTE   TO WSXIO-O-A-3.
+           MOVE A-20-BYTE   TO WSXIO-O-A-4.
+           MOVE 400 TO S2-LEN.
+           MOVE "X" TO WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-PROMPT-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE WSXIO-READ TO WSXIO-CMD.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-PROMPT-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE "A" TO WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB, WSXIO-AID.
+
+           IF WSXIO-AID = "A" THEN
+               GO TO EXIT-PROMPT-USER-ID
+           ELSE
+           IF WSXIO-AID = "@" THEN
+                PERFORM SET-LIST-TO-POSITION
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               GO TO PROMPT-USER-ID.
+
+       EXIT-PROMPT-USER-ID.
+           EXIT.
+
+       SET-LIST-TO-POSITION.
+           MOVE "N" TO TEST-RECORD.
+           MOVE " " TO MATCH-RECORD.
+           MOVE CURR-USER-COUNT TO HOLD1-CNT.
+           PERFORM FIND-USER-IN-LIST VARYING CNT1 FROM 1 BY 1 UNTIL
+               RECORD-EXISTS OR CNT1 > USER-COUNT.
+
+           IF RECORD-EXISTS
+               SUBTRACT 1 FROM CNT1
+               MOVE CNT1 TO CURR-USER-COUNT
+           ELSE
+           IF 2ND-CHAR-MATCH
+               MOVE HOLD2-CNT TO CURR-USER-COUNT
+           ELSE
+               MOVE HOLD1-CNT TO CURR-USER-COUNT.
+           
+       FIND-USER-IN-LIST.
+           IF ENTER-USER-ID = UDM-USER-ID(CNT1)
+               MOVE "Y" TO TEST-RECORD
+           ELSE
+           IF ID-CHAR(1) = UDM-ID-CHAR(CNT1,1)                                                  
+               MOVE "1" TO MATCH-RECORD
+               MOVE CNT1 TO HOLD1-CNT
+           ELSE
+           IF 1ST-CHAR-MATCH AND ID-CHAR(2)
+                    = UDM-ID-CHAR(CNT1,2)
+               MOVE "2" TO MATCH-RECORD
+               MOVE CNT1 TO HOLD2-CNT.
+
+       USER-MAINTENANCE.
+           PERFORM READ-SECURITY-CLASSES.
+           MOVE 1 TO SUB1.
+           PERFORM MOVE-SC-TO-DISPLAY VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 13.
+           COMPUTE CNT1 = CURR-USER-COUNT + (MOD-ROW - 5).
+           MOVE SPACES TO MFILE-KEY.
+           MOVE "SF" TO RECORD-TYPE.
+           MOVE UDM-USER-ID(CNT1) TO USER-ID.
+           MOVE "SF" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+           IF RECORD-EXISTS
+               PERFORM DO-MAINTENANCE.
+
+       DISP-USER-MAINTENANCE.
+           DISPLAY AND READ AMUES311-SCREEN ON CRT
+           PFKEYS 1, 9, 12, 16, 32.
+
+           IF PF-KEY = "16" THEN
+               MOVE "BROWSE" TO CUR-ACCESS
+               GO TO EXIT-DISP-USER-MAINTENANCE
+           ELSE
+           IF PF-KEY = "32" THEN
+               GO TO EXIT-PROGRAM
+           ELSE
+           IF PF-KEY = "00" AND ACCESS-ADD THEN
+               MOVE "SF" TO RECORD-TYPE
+               MOVE "SF" TO MRECORD-DEF
+               MOVE SF-RECORD TO MFILE-REST-OF-RECORD
+               PERFORM WRITE-MENU-FILE-RECORD
+               MOVE "BROWSE" TO CUR-ACCESS
+               GO TO EXIT-DISP-USER-MAINTENANCE
+           ELSE
+           IF PF-KEY = "00" AND ACCESS-UPDATE THEN
+               PERFORM READ-MENU-FILE-RECORD-HOLD
+               MOVE SF-RECORD TO MFILE-REST-OF-RECORD
+               PERFORM REWRITE-MENU-FILE-RECORD
+               MOVE "BROWSE" TO CUR-ACCESS
+               PERFORM SET-UM-FACS
+           ELSE
+           IF PF-KEY = "00" AND ACCESS-DELETE THEN
+               PERFORM READ-MENU-FILE-RECORD-HOLD
+               PERFORM DELETE-MENU-FILE-RECORD
+               MOVE "BROWSE" TO CUR-ACCESS
+               GO TO EXIT-DISP-USER-MAINTENANCE
+           ELSE
+           IF PF-KEY = "01" AND NOT ACCESS-BROWSE AND NOT ACCESS-ADD
+               IF ACCESS-UPDATE
+                   MOVE MFILE-REST-OF-RECORD TO SF-RECORD
+               END-IF
+               MOVE "BROWSE" TO CUR-ACCESS
+               PERFORM SET-UM-FACS
+           ELSE
+           IF PF-KEY = "09" AND ACCESS-BROWSE
+               MOVE "UPDATE" TO CUR-ACCESS
+               PERFORM SET-UM-FACS
+           ELSE
+           IF PF-KEY = "12" AND ACCESS-BROWSE THEN
+               MOVE "DELETE" TO CUR-ACCESS
+               PERFORM SET-UM-FACS
+           ELSE
+               CALL "BELL" USING BELL-TIME.
+  
+           GO TO DISP-USER-MAINTENANCE.
+
+       EXIT-DISP-USER-MAINTENANCE.
+           EXIT.
+
+       PROMPT-ADD-USER-ID.
+           MOVE SPACES TO ADD-USER-ID,
+                          DEFAULT-USER-ID.
+           MOVE WSXIO-WRITE TO WSXIO-CMD.
+           MOVE A-19-BYTE   TO WSXIO-O-A-1.
+           MOVE A-160-BYTE  TO WSXIO-O-A-2.
+           MOVE A-23-BYTE   TO WSXIO-O-A-3.
+           MOVE A-21-BYTE   TO WSXIO-O-A-4.
+           MOVE 400 TO S2-LEN.
+           MOVE "X" To WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-ADD-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE WSXIO-READ TO WSXIO-CMD.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-ADD-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE "A" TO WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB, WSXIO-AID.
+
+           IF WSXIO-AID = "A" THEN
+               GO TO EXIT-PROMPT-ADD-USER-ID
+           ELSE
+           IF WSXIO-AID = "@" THEN
+               MOVE "SF" TO RECORD-TYPE
+               MOVE ADD-USER-ID TO USER-ID
+               MOVE "SF" TO MRECORD-DEF
+               PERFORM READ-MENU-FILE-RECORD
+               IF RECORD-EXISTS
+                   CALL "BELL" USING BELL-TIME
+                   GO TO PROMPT-ADD-USER-ID
+               ELSE
+                   PERFORM ADD-A-NEW-USER
+               END-IF
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               GO TO PROMPT-ADD-USER-ID.
+
+       EXIT-PROMPT-ADD-USER-ID.
+           EXIT.
+
+       ADD-A-NEW-USER.
+           PERFORM READ-SECURITY-CLASSES.
+           MOVE 1 TO SUB1.
+           PERFORM MOVE-SC-TO-DISPLAY VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 13.
+           MOVE SPACES TO MFILE-KEY.
+           MOVE SPACES TO SF-RECORD.
+           MOVE "N" TO TEST-RECORD.
+           IF DEFAULT-USER-ID NOT = SPACES
+               MOVE "SF" TO RECORD-TYPE
+               MOVE DEFAULT-USER-ID TO USER-ID
+               MOVE "SF" TO MRECORD-DEF
+               PERFORM READ-MENU-FILE-RECORD
+               IF RECORD-EXISTS
+                   MOVE MFILE-REST-OF-RECORD TO SF-RECORD.
+
+           MOVE ADD-USER-ID TO USER-ID.
+           MOVE "ADD   " TO CUR-ACCESS.
+           PERFORM SET-UM-FACS.
+           PERFORM DISP-USER-MAINTENANCE THRU
+               EXIT-DISP-USER-MAINTENANCE.
+
+       PROMPT-MAINTAIN-USER-ID.
+           MOVE SPACES TO MAIN-USER-ID.
+           MOVE WSXIO-WRITE TO WSXIO-CMD.
+           MOVE A-19-BYTE   TO WSXIO-O-A-1.
+           MOVE A-160-BYTE  TO WSXIO-O-A-2.
+           MOVE A-36-BYTE   TO WSXIO-O-A-3.
+           MOVE A-21-BYTE   TO WSXIO-O-A-4.
+           MOVE 400 TO S2-LEN.
+           MOVE "X" To WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-MAINTAIN-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE WSXIO-READ TO WSXIO-CMD.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-MAINTAIN-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE "A" TO WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB, WSXIO-AID.
+
+           IF WSXIO-AID = "A" THEN
+               GO TO EXIT-PROMPT-MAINTAIN-USER-ID
+           ELSE
+           IF WSXIO-AID = "@" THEN
+                PERFORM MAINTAIN-A-USER
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               GO TO PROMPT-MAINTAIN-USER-ID.
+
+       EXIT-PROMPT-MAINTAIN-USER-ID.
+           EXIT.
+
+       MAINTAIN-A-USER.
+           PERFORM READ-SECURITY-CLASSES.
+           MOVE 1 TO SUB1.
+           PERFORM MOVE-SC-TO-DISPLAY VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 13.
+           MOVE "N" TO TEST-RECORD.
+           MOVE SPACES TO MFILE-KEY.
+           MOVE SPACES TO SF-RECORD.
+           MOVE "SF" TO RECORD-TYPE
+           MOVE MAIN-USER-ID TO USER-ID.
+           MOVE "SF" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+           IF RECORD-EXISTS
+               PERFORM DO-MAINTENANCE
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               DISPLAY "User ",MAIN-USER-ID," does NOT exist".
+
+       DO-MAINTENANCE.
+           MOVE MFILE-REST-OF-RECORD TO SF-RECORD.
+           PERFORM SET-UM-FACS.
+           PERFORM DISP-USER-MAINTENANCE THRU
+               EXIT-DISP-USER-MAINTENANCE.
+
+       SET-UM-FACS.
+           MOVE SPACES TO AMUES311-HELP-DEF.
+           IF ACCESS-UPDATE THEN
+               MOVE BR-MOD-UCL TO HOLD-FAC
+               MOVE "Make Changes and Press (RETURN) to Update User Reco
+      -         "rd or Select:" TO AMUES311-HELP(3)
+               MOVE "1-Return to Display Mode" TO AMUES311-HELP(4)
+               MOVE UNDER-TEXT TO FAC OF AMUES311-21-ROW(3)
+               MOVE PLAIN-TEXT TO FAC OF AMUES311-1
+               MOVE BR-MOD-AL TO FAC OF AMUES311-4-1
+               MOVE " Modify Mode" TO SCN-MODE
+           ELSE
+           IF ACCESS-ADD THEN
+               MOVE BR-MOD-UCL TO HOLD-FAC
+               MOVE "Enter Data as Required and Press (RETURN> to Add Us
+      -         "er or Select:" TO AMUES311-HELP(3)
+               STRING "                                           
+      -               "              ", PF13, PF16 DELIMITED BY SIZE
+                   INTO AMUES311-HELP(4)
+               MOVE UNDER-TEXT TO FAC OF AMUES311-21-ROW(3)
+               MOVE PLAIN-TEXT TO FAC OF AMUES311-1
+               MOVE BR-MOD-AL TO FAC OF AMUES311-4-1
+               MOVE "    Add Mode" TO SCN-MODE
+           ELSE
+           IF ACCESS-DELETE THEN
+               MOVE PLAIN-TEXT TO HOLD-FAC
+               MOVE "Press (RETURN) to Delete this User Record or Select
+      -             ":" TO AMUES311-HELP(3)
+               MOVE "1-Cancel Request and Respecify Function " 
+                   TO AMUES311-HELP(4)
+               MOVE UNDER-TEXT TO FAC OF AMUES311-21-ROW(3)
+               MOVE BLINK-TEXT TO FAC OF AMUES311-1,
+                                  FAC OF AMUES311-4-1
+               MOVE " Delete Mode" TO SCN-MODE
+           ELSE
+               MOVE PLAIN-TEXT TO HOLD-FAC
+               STRING "                              
+      -               "    ", PF12 DELIMITED BY SIZE
+                   INTO AMUES311-HELP(3)
+               STRING "                               ", PF9,         
+                      "            ", PF13, "         ", PF16
+                   DELIMITED BY SIZE INTO AMUES311-HELP(4)
+               MOVE PLAIN-TEXT TO FAC OF AMUES311-1,
+                                  FAC OF AMUES311-4-1
+               MOVE "Display Mode" TO SCN-MODE.
+
+           MOVe UNDER-TEXT TO FAC OF AMUES311-2-ROW, AMUES311-2-COL.
+
+           MOVE HOLD-FAC TO FAC OF AMUES311-4-2, FAC OF AMUES311-4-3,
+                            FAC OF AMUES311-5-1, FAC OF AMUES311-5-2,
+                            FAC OF AMUES311-5-3, FAC OF AMUES311-5-4,
+                            FAC OF AMUES311-5-5, FAC OF AMUES311-7.
+           PERFORM SET-ACCESS-FAC VARYING CNT1 FROM 1 BY 1 UNTIL
+               CNT1 > 13.                                 
+
+       SET-ACCESS-FAC.
+           MOVE HOLD-FAC TO FAC OF ACCESS-YN-1(CNT1),
+                            FAC OF ACCESS-YN-2(CNT1).
+

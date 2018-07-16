@@ -1,0 +1,12 @@
+010 pw=80 pl=66 cpi=10 lpi=6 landscape=0
+012 pagelength=66 pagewidth=96 cpi=12 lpi=6 landscape=0
+017 cpi=16 lpi=8 lpp=88 pw=133 landscape=0
+110 pagewidth=127 pagelength=45 cpi=10 lpi=6 landscape=1
+112 pagewidth=152 pagelength=45 cpi=12 lpi=6 landscape=1
+117 pagewidth=170 pagelength=60 cpi=16 lpi=8 landscape=1
+210 pw=80 pl=66 cpi=10 lpi=6 landscape=0 duplex=1
+212 pagelength=66 pagewidth=96 cpi=12 lpi= landscape=0 duplex=1
+217 cpi=16 lpi=8 lpp=88 pw=133 landscape=0 duplex=1
+310 pagewidth=127 pagelength=45 cpi=10 lpi=6 landscape=1 duplex=1
+312 pagewidth=152 pagelength=45 cpi=12 lpi=6 landscape=1 duplex=1
+317 pagewidth=170 pagelength=60 cpi=16 lpi=8 landscape=1 duplex=1
