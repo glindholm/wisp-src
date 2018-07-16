@@ -1,4 +1,4 @@
-# Versions for wisp4401 on  Tue Nov 27 18:22:56 EST 2001
+# Versions for wisp4401b on  Thu Feb 14 11:00:31 EST 2002
 No files found in project [video].
 video/cap	aix_xterm.vcap	1.6
 video/cap	aixterm.vcap	1.6
@@ -131,7 +131,7 @@ video/lib	vuip.c	1.6
 video/lib	vuserex.c	1.9
 video/lib	vutil.c	1.15
 video/lib	vutil.h	1.4
-video/lib	vwait.c	1.12
+video/lib	vwait.c	1.13
 video/test	dump_map.c	1.10
 video/test	videotest.dsp	1.3
 video/test	vtest.mak	1.3
@@ -165,6 +165,7 @@ video/test	vtestx.c	1.10
 video/test	vtesty.c	1.7
 video/test	vtestz.c	1.7
 No files found in project [wisp].
+wisp/acucobol	AcucobolLicenses.txt	1.2
 wisp/acucobol	Makefile.311	1.1
 wisp/acucobol	Makefile.320	1.1
 wisp/acucobol	Makefile.321	1.1
@@ -353,7 +354,7 @@ wisp/doc	printqv3x.doc	1.1
 wisp/doc	proctran.doc	1.1
 wisp/doc	products.lis	1.29
 wisp/doc	qaede.doc	1.1
-wisp/doc	qawisp.lis	1.34
+wisp/doc	qawisp.lis	1.35
 wisp/doc	qawisp32.lis	1.1
 wisp/doc	readme.dos	1.1
 wisp/doc	relparts.lis	1.1
@@ -400,7 +401,7 @@ wisp/doc	v40_relnotes.lis	1.5
 wisp/doc	v41_relnotes.lis	1.20
 wisp/doc	v42_relnotes.lis	1.20
 wisp/doc	v43_relnotes.lis	1.73
-wisp/doc	v44_relnotes.lis	1.30
+wisp/doc	v44_relnotes.lis	1.31
 wisp/doc	vax_class_discussions.lis	1.1
 wisp/doc	vcolors.txt	1.1
 wisp/doc	vms_shipkit.lis	1.1
@@ -957,7 +958,7 @@ wisp/lib	upper.c	1.10
 wisp/lib	vdispidx.c	1.8
 wisp/lib	vdispidx.h	1.5
 wisp/lib	vdisplay.c	1.45
-wisp/lib	visint.h	1.9
+wisp/lib	visint.h	1.10
 wisp/lib	visn2.h	1.8
 wisp/lib	visn3.h	1.5
 wisp/lib	vmspargs.c	1.10
@@ -1017,7 +1018,7 @@ wisp/lib	wispvers.c	1.1
 wisp/lib	wlickey.c	1.8
 wisp/lib	wmalloc.c	1.5
 wisp/lib	wngdcmls.h	1.8
-wisp/lib	wpause.c	1.14
+wisp/lib	wpause.c	1.15
 wisp/lib	wperson.c	1.53
 wisp/lib	wplatdef.h	1.7
 wisp/lib	wprint.c	1.18
@@ -1077,7 +1078,7 @@ wisp/mf	mflink.cob	1.6
 wisp/mf	wisplink.cpy	1.6
 wisp/mf	wispmf.c	1.8
 wisp/mf	wrunmf.c	1.15
-wisp/mf	wrunmf.umf	1.26
+wisp/mf	wrunmf.umf	1.27
 wisp/mf	wrunmf_aix42_mf41.umf	1.1
 wisp/nt	ACUCONFIG	1.6
 wisp/nt	CHARMAP	1.3
@@ -1094,9 +1095,10 @@ wisp/port	bldkits.sh	1.5
 wisp/port	bldshipkit.sh	1.28
 wisp/port	bldsrckit.sh	1.47
 wisp/port	cpdir	1.1
+wisp/port	cpioz	1.2
 wisp/port	etc_magic_hpux1020.txt	1.1
 wisp/port	installqa.sh	1.9
-wisp/port	make.include	1.41
+wisp/port	make.include	1.43
 wisp/port	maketail.sh	1.2
 wisp/port	makewisp.mak	1.3
 wisp/port	makewisp.umf	1.21
@@ -1108,8 +1110,9 @@ wisp/port	shipkitcridacu.dsp	1.1
 wisp/port	shipkitede.dsp	1.1
 wisp/port	shipkitwisp.dsp	1.1
 wisp/port	shipnt.mak	1.47
-wisp/port	tarz	1.1
-wisp/port	untarz	1.2
+wisp/port	tarz	1.2
+wisp/port	uncpioz	1.2
+wisp/port	untarz	1.3
 wisp/port	which.sh	1.4
 wisp/port	wisp.dsw	1.14
 wisp/port	wispkit.dsp	1.5
@@ -1227,6 +1230,8 @@ wisp/sample	startacu.bat	1.3
 wisp/sample	startmf.bat	1.3
 wisp/sample	startup.acu	1.12
 wisp/sample	startup.mf	1.11
+wisp/sample	startupacu.sh	1.2
+wisp/sample	startupmf.sh	1.2
 wisp/sample	sub1.wcb	1.8
 wisp/sample	sub2.wcb	1.6
 wisp/sample	sub3.wcb	1.7

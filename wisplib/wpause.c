@@ -32,8 +32,15 @@ void hpause(int4 hundredths)
 #endif
 
 #ifdef unix
-#include <unistd.h>
 
+#ifdef SCO
+#define NO_USLEEP 1
+#endif /* SCO */
+
+
+#ifndef NO_USLEEP /* !NO_USLEEP (double negative) - have a usleep() so use it */
+
+#include <unistd.h>
 void hpause(int4 hundredths)
 {
 	if (hundredths >= 100) /* Greater then one second */
@@ -57,9 +64,9 @@ void hpause(int4 hundredths)
 		usleep((unsigned int)hundredths * 10000U);
 	}	
 }
-#endif
 
-#ifdef OLD_UNIX
+#else /* NO_USLEEP - If no usleep() then simulate it.  */
+
 void hpause(int4 hundredths)
 {
 	unsigned hsec, ticks;
@@ -80,13 +87,18 @@ void hpause(int4 hundredths)
 		else sleep(0);								/* If small, use the overhead.		*/
 
 	}
-
 }
-#endif
+
+#endif /* NO_USLEEP */
+#endif /* unix */
 
 /*
 **	History:
 **	$Log: wpause.c,v $
+**	Revision 1.15  2002-02-14 10:42:33-05  gsl
+**	Merge in the SCO use of old code without usleep()
+**	Part of 4.4.01 on SCO
+**
 **	Revision 1.14  2001-10-03 15:01:48-04  gsl
 **	SOlaris 2.5.1 doesn't define useconds_t so cast to unsigned
 **

@@ -1,0 +1,42 @@
+Product Detail    ACUCOBOL-GT Dev Sys Ver: 5.1.0.4 for MS Win NT (Intel) / NTServer
+Users/Devs        1
+Serial #          333724
+Product Code      MTCE SAQE U4YG WEZG
+Product Key       DAA1 FFDF D6B1
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v5.1.0.2 for Solaris 2.5 (SPARC) / Sun SPARC
+Users/Devs        1
+Serial #          345135
+Product Code      M3UW 4JNN U2W6 EGXZ
+Product Key       MYFX 2QNN U4VR
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v5.1.0.4 for Solaris 8.0 (SPARC)32-bit / Sun SPARC
+Users/Devs        1
+Serial #          345135
+Product Code      MT46 4JNN U2EN EGXZ
+Product Key       M8P7 2QNN U4QR
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v5.1.0.2 for AIX 4.3 (32-bit) / IBM RS/6000
+Users/Devs        1
+Serial #          333725
+Product Code      M3L2 2JCA U4YQ WWZZ
+Product Key       CZ73 4QCA U2KB
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v5.1.0.2 for SCO UNIX OpenServer 5.00 / x86 PC
+Users/Devs        1
+Serial #          369570
+Product Code      MKUQ 2CEN S4Y8 EGFX
+Product Key       MQER 4EEN S5MR
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v5.1.0.2 for SCO UNIX OpenServer 5.00 / x86 PC
+Users/Devs        16
+Serial #          88446
+Product Code      K3UJ 4ACL S2ZN GGGZ
+Product Key       K9XK 2GCL S54P
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime Ver: 5.1.0.4 for HP/UX 11.0 (32-bit) / HP 9000
+Users/Devs        2
+Serial #          392652
+Product Code      M3LC 4CLL U2G8 YFWZ
+Product Key       LGPD 2ELL U5JF
+----------------------------------------------------------------------------

@@ -32,6 +32,12 @@
 #define	Max(a,b)	( (a) > (b) ? (a) : (b) )
 #endif
 
+/*
+** 	For SCO Vision 2:
+**	- 'Unsigned' is 2 bytes
+**	- 'FILEPTR' gets aligned on a 2 byte boundary
+*/
+
 #ifndef	FILEPTR
 #define	FILEPTR		long
 #endif
@@ -42,7 +48,7 @@
 
 /* The following line is used to allow 80286 file to be moved to a 80386 */
 
-#if defined(WIN32)	/* On Windows "Unsigned" is 2 bytes */
+#if defined(WIN32) || defined(SCO)	/* On Windows & SCO "Unsigned" is 2 bytes */
 #define INTEL
 #endif
 
@@ -74,19 +80,38 @@
 
 			/* Physical File Header */
 
-#ifdef	XENIX_386
-#include "p2x386.h"
+#ifdef	SCO
+/* This is included on SCO 386 machines to make structures align on 2-byte boundaries */
+/* NOTE: This doesn't work with GNU compiler so SCO changes were made below */
+#include "p2x386.h"	
 #endif
+
+/*
+ *	All the offset below in the struct comments are incorrect for SCO.
+ *	These defines are correct (but unsed).
+ */
+#define V2_SCO_REC_COUNT_OFF 	40	/* phdr.total_records */
+#define V2_SCO_MAX_REC_OFF 	156	/* lhdr.max_rec_size */
+#define V2_SCO_MIN_REC_OFF 	158	/* lhdr.min_rec_size */
+#define V2_SCO_NUM_KEYS_B	237	/* lhdr.num_keys */
 
 typedef	struct _phys_hdr 
 { 
 	long		magic;							/*	  0	4	1-4	*/
 	short		version;						/*	  4	2	5-6	*/
-	/* char		filler_6[2]; */						/*	  6	2	7-8	*/
+#ifndef SCO
+	char		filler_6[2];						/*	  6	2	7-8	*/
 	FILEPTR		file_size;						/*	  8	4	9-12	*/
+#else
+	char		x_file_size[4];						/*	  6	4		*/
+#endif
 	short		blk_mult;		/* # of sectors / block */	/*	 12	2	13-14	*/
-	/* char		filler_14[2]; */					/*	 14	2	15-16	*/
+#ifndef SCO
+	char		filler_14[2];						/*	 14	2	15-16	*/
 	FILEPTR		nxt_blk;		/* -> next unused block */	/*	 16	4	17-20	*/
+#else
+	char		x_nxt_blk[4];		/* -> next unused block */	/*	 12	4		*/
+#endif
 	FILEPTR		nxt_rec;		/* -> free space in rec blk */	/*	 20	4	21-24	*/
 	FILEPTR		first_rec;		/* -> first record */		/*	 24	4	25-28	*/
 	FILEPTR		free_rec;		/* -> first deleted record */	/*	 28	4	29-32	*/
@@ -107,13 +132,18 @@ typedef	struct _phys_hdr
 	short		height;							/*	128	2	129-130	*/
 	U_Short		nodes_used;						/*	130	2	131-132 */
 	U_Short		nodes_free;						/*	132	2	133-134 */
-	/* char		filler_134[2]; */					/*	134	2	135-136 */
+#ifndef SCO
+	char		filler_134[2]; 						/*	134	2	135-136 */
 	long		node_usage;		/* bytes used in nodes */	/*	136	4	137-140	*/
+#else
+	char		x_node_usage[4];	/* bytes used in nodes */	/*	130	4		*/
+#endif
 	long		lost_recs;						/*	140	4	141-144 */
 } PHYSICAL_HDR;
 
 			/* Logical File Header */
 
+/* For SCO this logical header starts at offset 138 (144 - 6) */
 typedef struct _log_hdr {
 	char		hdr_type;						/*	144	1	145	*/
 	char		log_name[ LOG_NAME_SIZE+1 ];				/*	145	13	146-158	*/
@@ -123,7 +153,9 @@ typedef struct _log_hdr {
 	U_Short		min_rec_size;						/*	164	2	165-166	*/
 	short		open_cnt;						/*	166	2	167-168	*/
 	short		key_size[ MAX_KEYS ];					/*	168	30(2*15)169-198	*/
-	/* char		filler_198[2]; */					/*U	198	2	199-200 */
+#ifndef INTEL /*  not SCO or WIN32 */
+	char		filler_198[2];						/*U	198	2	199-200 */
+#endif
 	Unsigned	key_off[ MAX_KEYS ];					/*U	200	60(4*15)201-260	*/
 										/*I 	198	30(2*15)199-228 */
 	char		key_dup[ MAX_KEYS ];					/*U	260	15	261-275 */
@@ -287,6 +319,9 @@ extern	int		v_errno, v_supl_err;
 /*
 **	History:
 **	$Log: visint.h,v $
+**	Revision 1.10  2002-01-09 17:12:58-05  gsl
+**	Update for SCO - THe Vision2 structs were all messed up.
+**
 **	Revision 1.9  2001-11-13 10:50:01-05  gsl
 **	Define INTEL for WIN32 so type "Unsigned" is 2 bytes instead of 4.
 **	Document the position and offests of all the VISION2 header fields.

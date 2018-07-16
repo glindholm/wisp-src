@@ -230,6 +230,16 @@ SYSDEF = "Error SYSDEF not defined"
 #	SCO UNIX
 #
 #SYSDEF = -DSCO
+#
+#	SCO with GNU
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = 
+#CCC = gcc
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+#CCC_SYS_LINK = 
+#
+# 	SCO Development Compilers
 #SOCKET_LINK= -lsocket
 #CCC = CC
 #CCC_SYS_FLAGS = +.cpp +a1
@@ -241,7 +251,16 @@ SYSDEF = "Error SYSDEF not defined"
 #	  version of C so make sure it is included
 #	  on your path /opt/SUNWspro/bin
 #
+#	Solaris 8 (SunOS 5.8)
 #SYSDEF = -DSOLARIS 
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = 
+#CCC = gcc
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+#CCC_SYS_LINK = 
+#
+# 	Solaris 2.5.1 (SunOS 5.5.1)
 #CDEBUG=
 #CC_STD  = c89
 #CC_ANSI = c89
