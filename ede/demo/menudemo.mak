@@ -1,4 +1,4 @@
-#	Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+#	Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 #	$Id:$
 #
 #

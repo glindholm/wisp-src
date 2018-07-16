@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -27,8 +27,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 DlgSelectDir DIALOGEX 20, 20, 355, 162
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
-    WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Select Directories"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -36,40 +35,32 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,126,141,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,179,141,50,14
     PUSHBUTTON      "Add",ctlAddBtn,147,37,57,15,BS_CENTER | BS_VCENTER
-    PUSHBUTTON      "Remove",ctlRemoveBtn,147,54,57,15,BS_CENTER | 
-                    BS_VCENTER
+    PUSHBUTTON      "Remove",ctlRemoveBtn,147,54,57,15,BS_CENTER | BS_VCENTER
     PUSHBUTTON      "Move Up",ctlMUpBtn,147,80,57,15,BS_CENTER | BS_VCENTER
-    PUSHBUTTON      "Move Down",ctlMDownBtn,147,97,57,15,BS_CENTER | 
-                    BS_VCENTER
-    CONTROL         "Tree1",TV_AvailDirs,"SysTreeView32",TVS_HASBUTTONS | 
-                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
-                    3,18,140,115,WS_EX_CLIENTEDGE
-    LISTBOX         LB_SelectedDirs,208,18,140,115,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Move Down",ctlMDownBtn,147,97,57,15,BS_CENTER | BS_VCENTER
+    CONTROL         "Tree1",TV_AvailDirs,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,3,18,140,115,WS_EX_CLIENTEDGE
+    LISTBOX         LB_SelectedDirs,208,18,140,115,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Available Directories :",IDC_STATIC,7,7,71,8
     LTEXT           "Selected Directories :",StaticText1,188,7,68,8
 END
 
 dlgRegOps DIALOGEX 0, 0, 423, 201
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | 
-    WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "WISP Configuration Utility (v2.0)"
+CAPTION "WISP Configuration Utility (v2.1)"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Tab1",tabRegOps,"SysTabControl32",TCS_MULTILINE | 
-                    TCS_TOOLTIPS,3,7,417,150
+    CONTROL         "Tab1",tabRegOps,"SysTabControl32",TCS_MULTILINE | TCS_TOOLTIPS,3,7,417,150
     DEFPUSHBUTTON   "OK",IDOK,160,180,50,14,NOT WS_TABSTOP
     PUSHBUTTON      "Cancel",IDCANCEL,212,180,50,14,NOT WS_TABSTOP
     PUSHBUTTON      "&Import",btnImport,66,162,70,14,NOT WS_TABSTOP
     PUSHBUTTON      "&Export",btnExport,138,162,70,14,NOT WS_TABSTOP
-    PUSHBUTTON      "Reset Configuration",btnRemove,214,162,70,14,NOT 
-                    WS_TABSTOP
+    PUSHBUTTON      "Reset Configuration",btnRemove,214,162,70,14,NOT WS_TABSTOP
     PUSHBUTTON      "Apply",btnApply,286,162,70,14,NOT WS_TABSTOP
 END
 
-dlgGeneral DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgGeneral DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
     EDITTEXT        S01_SERVER,50,20,150,12,ES_UPPERCASE | ES_AUTOHSCROLL
@@ -85,8 +76,7 @@ BEGIN
     EDITTEXT        S01_TEMPDIR,50,94,150,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",S01_TEMPDIR_BRS,205,94,14,12
     EDITTEXT        S01_WISPSORTMEM,62,109,40,12,ES_AUTOHSCROLL
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP]",
-                    IDC_STATIC,0,3,190,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP]",IDC_STATIC,0,3,190,8
     LTEXT           "SERVER :",IDC_STATIC,0,22,34,8
     LTEXT           "WISPDIR :",IDC_STATIC,0,37,35,8
     LTEXT           "WISPCONFIG :",IDC_STATIC,0,51,50,8
@@ -94,97 +84,79 @@ BEGIN
     LTEXT           "PATH :",IDC_STATIC,0,81,24,8
     LTEXT           "TMPDIR :",IDC_STATIC,0,96,37,8
     LTEXT           "WISPSORTMEM :",IDC_STATIC,0,111,61,8
-    LTEXT           "The name of the WISP server machine.",IDC_STATIC,225,22,
-                    140,8
-    LTEXT           "The WISP installation directory.",IDC_STATIC,225,37,145,
-                    8
-    LTEXT           "The WISP configuration directory.",IDC_STATIC,225,51,
-                    140,8
-    LTEXT           "The parent directory for users home directories.",
-                    IDC_STATIC,225,66,140,8
-    LTEXT           "The path used by LINK type ""S""",IDC_STATIC,225,81,140,
-                    8
+    LTEXT           "The name of the WISP server machine.",IDC_STATIC,225,22,140,8
+    LTEXT           "The WISP installation directory.",IDC_STATIC,225,37,145,8
+    LTEXT           "The WISP configuration directory.",IDC_STATIC,225,51,140,8
+    LTEXT           "The parent directory for users home directories.",IDC_STATIC,225,66,140,8
+    LTEXT           "The path used by LINK type ""S""",IDC_STATIC,225,81,140,8
     LTEXT           "The temporary directory. ",IDC_STATIC,225,96,149,8
-    LTEXT           "The maximum SORT memory in kilobytes.",IDC_STATIC,110,
-                    111,256,8
+    LTEXT           "The maximum SORT memory in kilobytes.",IDC_STATIC,110,111,256,8
 END
 
-dlgVideocap DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgVideocap DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VIDEOCAP]",
-                    IDC_STATIC,0,7,242,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VIDEOCAP]",IDC_STATIC,0,7,242,8
     LTEXT           "WISPTERM :",IDC_STATIC,0,23,43,8
     EDITTEXT        S02_WISPTERM,50,20,136,12,ES_AUTOHSCROLL
     LTEXT           "VIDEOCAP :",IDC_STATIC,0,36,45,8
     EDITTEXT        S02_VIDEOCAPDIR,50,34,136,12,ES_AUTOHSCROLL
-    LTEXT           "The videocap file terminal type.",IDC_STATIC,203,23,99,
-                    8
+    LTEXT           "The videocap file terminal type.",IDC_STATIC,203,23,99,8
     LTEXT           "The videocap directory.",IDC_STATIC,203,35,76,8
     PUSHBUTTON      "...",S02_VIDEOCAPDIR_BRS,187,34,14,12
 END
 
-dlgEXTRACT DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgEXTRACT DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\EXTRACT]",
-                    IDC_STATIC,0,7,275,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\EXTRACT]",IDC_STATIC,0,7,275,8
     LTEXT           "CPUID :",IDC_STATIC,0,22,28,8
     EDITTEXT        S03_CPUID,29,20,122,12,ES_AUTOHSCROLL
     LTEXT           "NETID :",IDC_STATIC,0,45,27,8
     EDITTEXT        S03_NETID,29,43,122,12,ES_AUTOHSCROLL
-    LTEXT           "The CPU ID number (CC) and the microcode version (MM) in the form of CCMM (hexidecimal digits).",
-                    IDC_STATIC,154,22,205,16
+    LTEXT           "The CPU ID number (CC) and the microcode version (MM) in the form of CCMM (hexidecimal digits).",IDC_STATIC,154,22,205,16
     LTEXT           "The 8 character network ID.",IDC_STATIC,154,47,90,8
 END
 
-dlgMESSAGE DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgMESSAGE DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\MESSAGE]",
-                    IDC_STATIC,0,7,276,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\MESSAGE]",IDC_STATIC,0,7,276,8
     LTEXT           "SHAREDIR :",IDC_STATIC,0,22,42,8
     EDITTEXT        S04_SHAREDIR,44,20,131,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",S04_SHAREDIR_BRS,175,20,14,12
-    LTEXT           "The directory for shared MESSAGE files.",IDC_STATIC,191,
-                    22,128,8
+    LTEXT           "The directory for shared MESSAGE files.",IDC_STATIC,191,22,128,8
 END
 
-dlgSCRATCH DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgSCRATCH DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\SCRATCH]",
-                    IDC_STATIC,0,7,289,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\SCRATCH]",IDC_STATIC,0,7,289,8
     LTEXT           "SCRATCHMODE :",IDC_STATIC,0,23,60,8
     EDITTEXT        S05_SCRATCHMODE,62,20,102,12,ES_AUTOHSCROLL
-    LTEXT           "The SCRATCH mode to use (""32"" or ""33"").",IDC_STATIC,
-                    166,22,138,8
+    LTEXT           "The SCRATCH mode to use (""32"" or ""33"").",IDC_STATIC,166,22,138,8
 END
 
-dlgLicense DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgLicense DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\License]",
-                    IDC_STATIC,0,7,231,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\License]",IDC_STATIC,0,7,231,8
     LTEXT           "LICENSEFILE :",IDC_STATIC,0,22,49,8
-    EDITTEXT        S06_LICENSEFILE,52,20,146,12,ES_AUTOHSCROLL | 
-                    WS_DISABLED
-    PUSHBUTTON      "...",S06_LICENSEFILE_BRS,198,20,14,12,NOT WS_VISIBLE | 
-                    WS_DISABLED
+    EDITTEXT        S06_LICENSEFILE,52,20,146,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",S06_LICENSEFILE_BRS,198,20,14,12,NOT WS_VISIBLE | WS_DISABLED
     LTEXT           "The WISP license file.",IDC_STATIC,214,22,71,8
 END
 
-dlgWISPBin DIALOG DISCARDABLE  4, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgWISPBin DIALOG  4, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\WISPBin]",
-                    IDC_STATIC,0,7,235,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\WISPBin]",IDC_STATIC,0,7,235,8
     LTEXT           "WISP :",IDC_STATIC,0,22,25,8
     EDITTEXT        S07_WISP,55,20,150,12,ES_AUTOHSCROLL
     LTEXT           "WISPEDITOR :",IDC_STATIC,0,37,50,8
@@ -199,55 +171,47 @@ BEGIN
     LTEXT           "The WISP display utility.",IDC_STATIC,230,52,95,8
 END
 
-dlgDISPLAY DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgDISPLAY DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\WISPBin\\DISPLAY]",
-                    IDC_STATIC,0,7,272,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\WISPBin\\DISPLAY]",IDC_STATIC,0,7,272,8
     LTEXT           "DISPLAY8BIT :",IDC_STATIC,0,22,51,8
-    EDITTEXT        S08_DISPLAY8BIT,52,20,102,12,ES_UPPERCASE | 
-                    ES_AUTOHSCROLL
-    LTEXT           "Use 8 bit ASCII character set. (""YES"" or ""NO"")",
-                    IDC_STATIC,157,22,148,8
+    EDITTEXT        S08_DISPLAY8BIT,52,20,102,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT           "Use 8 bit ASCII character set. (""YES"" or ""NO"")",IDC_STATIC,157,22,148,8
 END
 
-dlgWPROC DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgWPROC DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WPROC]",
-                    IDC_STATIC,0,7,269,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WPROC]",IDC_STATIC,0,7,269,8
     LTEXT           "WPROC :",IDC_STATIC,0,23,34,8
     EDITTEXT        S09_WPROC,60,20,150,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",S09_WPROC_BRS,215,20,15,12
     LTEXT           "WPROCDEBUG :",IDC_STATIC,0,38,57,8
     EDITTEXT        S09_WPROCDEBUG,60,35,150,12,ES_AUTOHSCROLL
-    LTEXT           "The WISP procedure interpreter.",IDC_STATIC,235,22,125,
-                    8
+    LTEXT           "The WISP procedure interpreter.",IDC_STATIC,235,22,125,8
     LTEXT           "The WPROC debug flags ",IDC_STATIC,235,38,120,8
 END
 
-dlgACP DIALOG DISCARDABLE  5, 15, 375, 130
-STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+dlgACP DIALOG  5, 15, 375, 130
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD | WS_VISIBLE
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\ACP]",
-                    IDC_STATIC,0,7,220,8
+    LTEXT           "[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\WISP\\ACP]",IDC_STATIC,0,7,220,8
     LTEXT           "ACPCONFIGDIR :",IDC_STATIC,0,22,59,8
     EDITTEXT        S10_ACPCONFIGDIR,60,20,122,12,ES_AUTOHSCROLL
     LTEXT           "ACPMAP :",IDC_STATIC,0,37,33,8
     EDITTEXT        S10_ACPMAP,36,35,146,12,ES_AUTOHSCROLL
-    LTEXT           "The directory containing the ACPMAP configuration file.",
-                    IDC_STATIC,197,22,176,8
+    LTEXT           "The directory containing the ACPMAP configuration file.",IDC_STATIC,197,22,176,8
     LTEXT           "The ACPMAP configuration file.",IDC_STATIC,197,37,100,8
     PUSHBUTTON      "...",S10_ACPCONFIGDIR_BRS,182,20,14,12
     PUSHBUTTON      "...",S10_ACPMAP_BRS,182,34,14,12
 END
 
-dlgWISPServer DIALOG DISCARDABLE  0, 0, 226, 75
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
+dlgWISPServer DIALOG  0, 0, 226, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "WISP Configuration Utility - WISP Server"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -256,13 +220,11 @@ BEGIN
     LTEXT           "Enter WISP server:",IDC_STATIC,7,7,62,8
     EDITTEXT        ctl_ServerName,7,18,195,12,ES_UPPERCASE | ES_AUTOHSCROLL
     PUSHBUTTON      "...",ctl_ServerBrs,205,18,14,12
-    LTEXT           "Enter the WISP server machine name.  If WISP is installed on the local machine then specify ""(LOCAL)"" as the server.",
-                    IDC_STATIC,7,34,212,18
+    LTEXT           "Enter the WISP server machine name.  If WISP is installed on the local machine then specify ""(LOCAL)"" as the server.",IDC_STATIC,7,34,212,18
 END
 
-dlgWISPDir DIALOG DISCARDABLE  0, 0, 226, 75
-STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | 
-    WS_SYSMENU
+dlgWISPDir DIALOG  0, 0, 226, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "WISP Configuration Utility - WISP Directroy"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -271,12 +233,11 @@ BEGIN
     LTEXT           "Enter WISP directory:",IDC_STATIC,7,7,71,8
     EDITTEXT        ctl_DirPath,7,18,195,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",ctl_DirBrs,205,18,14,12
-    LTEXT           "Enter the directory where WISP is installed.",
-                    IDC_STATIC,7,34,212,11
+    LTEXT           "Enter the directory where WISP is installed.",IDC_STATIC,7,34,212,11
 END
 
-dlgWISPConfig DIALOG DISCARDABLE  0, 0, 226, 75
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+dlgWISPConfig DIALOG  0, 0, 226, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "WISP Configuration Utility - WISPCONFIG Directory"
 FONT 8, "MS Sans Serif"
 BEGIN
@@ -285,20 +246,17 @@ BEGIN
     LTEXT           "Enter WISPCONFIG directory:",IDC_STATIC,7,7,115,8
     EDITTEXT        ctl_DirPath,7,18,195,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",ctl_DirBrs,205,18,14,12
-    LTEXT           "Enter the directory where the WISP configuration files are located.",
-                    IDC_STATIC,7,34,208,8
+    LTEXT           "Enter the directory where the WISP configuration files are located.",IDC_STATIC,7,34,208,8
 END
 
 dlgSelectSingleDir DIALOGEX 0, 0, 239, 169
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select Directory"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,67,148,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,121,148,50,14
-    CONTROL         "Tree1",TV_AvailDirs,"SysTreeView32",TVS_HASBUTTONS | 
-                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
-                    7,18,225,115,WS_EX_CLIENTEDGE
+    CONTROL         "Tree1",TV_AvailDirs,"SysTreeView32",TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,7,18,225,115,WS_EX_CLIENTEDGE
     LTEXT           "Available Directories :",IDC_STATIC,7,7,71,8
     LTEXT           "",ctlRetPath,7,136,228,8
 END
@@ -310,18 +268,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\0"
 END
@@ -336,7 +294,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-icoMainIcon             ICON    DISCARDABLE     "wconfig.ico"
+icoMainIcon             ICON                    "wconfig.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -344,7 +302,7 @@ icoMainIcon             ICON    DISCARDABLE     "wconfig.ico"
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO 
 BEGIN
     dlgGeneral, DIALOG
     BEGIN
@@ -357,6 +315,45 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 5,1,0,0
+ PRODUCTVERSION 5,1,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Shell Stream Software LLC"
+            VALUE "FileDescription", "WISP Registry Configurator"
+            VALUE "FileVersion", "5, 1, 0, 0"
+            VALUE "InternalName", "wconfig"
+            VALUE "LegalCopyright", "Copyright (C) 2010 Shell Stream Software LLC"
+            VALUE "OriginalFilename", "wconfig.exe"
+            VALUE "ProductName", "wconfig Application"
+            VALUE "ProductVersion", "5, 1, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-#	Copyright (c) 2002-2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 #	$Id:$
 #
 #
@@ -39,9 +39,11 @@
 # WISPDIR	The installed WISP directory
 #
 #
-#ACUDIR=C:\Acucorp\ACUCBL520\ACUGT
-ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
-WISPDIR=C:\WISP5001
+#ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL610\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL722\ACUGT
+ACUDIR=C:\Acucorp\ACUCBL810\ACUGT
+WISPDIR=C:\WISP5100
 
 COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -Da4 -Gd -Te 800 -C50 -Z50
@@ -133,7 +135,8 @@ acn_header: $(COBOL)
 	@echo "COBOL  =  $(COBOL)"
 	@echo ""
 
-
+acn_clean:
+	-del /Q $(ACN_BLD)
 
 #============================================================================
 #

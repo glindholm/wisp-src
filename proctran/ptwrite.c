@@ -407,8 +407,8 @@ void wrt_call(void)									/* Handles syntax for call verbs.	*/
 {
 	write_log(util,'I','W',"WRITE","Writing the CALL syntax.");
 
-	if (genccall)	strcpy(cobline,"      *%NeoMedia Migrations - Verification of ");
-	else	strcpy(cobline,"%NeoMedia Migrations - Verification of ");
+	if (genccall)	strcpy(cobline,"      *%WISP Support - Verification of ");
+	else	strcpy(cobline,"%WISP Support - Verification of ");
 
 	strcat(cobline,cur_cmd->command);						/* Load the PERFORM.			*/
 	strcat(cobline," P-");								/* Load the Prefix.			*/
@@ -2909,6 +2909,9 @@ static void process_br_parms(void)							/* Check if any backwards ref.parms.	*/
 /*
 **	History:
 **	$Log: ptwrite.c,v $
+**	Revision 1.16  2010/01/10 16:04:27  gsl
+**	Shell Stream
+**	
 **	Revision 1.15  2003/02/20 19:29:55  gsl
 **	fix -Wall warnings
 **	

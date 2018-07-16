@@ -82,107 +82,127 @@ CFG=ede - Win32 Debug
 # PROP Default_Filter "wcb; hlp"
 # Begin Source File
 
-SOURCE=.\helpmap.dat
+SOURCE=.\demo\helpmap.dat
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbbld.wcb
+SOURCE=.\demo\helpmap.unix
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbcode.hlp
+SOURCE=.\demo\mcbbld.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbcol.hlp
+SOURCE=.\demo\mcbcode.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbcpy1.wcb
+SOURCE=.\demo\mcbcol.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbcpy2.wcb
+SOURCE=.\demo\mcbcpy1.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbcpy3.wcb
+SOURCE=.\demo\mcbcpy2.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbdisp.hlp
+SOURCE=.\demo\mcbcpy3.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbedit.hlp
+SOURCE=.\demo\mcbdisp.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbedit.wcb
+SOURCE=.\demo\mcbedit.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbicnt.hlp
+SOURCE=.\demo\mcbedit.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbname.hlp
+SOURCE=.\demo\mcbicnt.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbopts.hlp
+SOURCE=.\demo\mcbname.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbrow.hlp
+SOURCE=.\demo\mcbopts.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbtext.hlp
+SOURCE=.\demo\mcbrow.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbtype.hlp
+SOURCE=.\demo\mcbtext.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbvalue.hlp
+SOURCE=.\demo\mcbtype.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\mcbwidth.hlp
+SOURCE=.\demo\mcbvalue.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\menudefs.wcb
+SOURCE=.\demo\mcbwidth.hlp
 # End Source File
 # Begin Source File
 
-SOURCE=.\menudemo.mak
+SOURCE=.\demo\menubld.old
 # End Source File
 # Begin Source File
 
-SOURCE=.\menudemo.opt
+SOURCE=.\demo\menudefs.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\menudemo.wcb
+SOURCE=.\demo\menudemo.mak
 # End Source File
 # Begin Source File
 
-SOURCE=.\menudisp.wcb
+SOURCE=.\demo\menudemo.opt
 # End Source File
 # Begin Source File
 
-SOURCE=.\menulogo.wcb
+SOURCE=.\demo\menudemo.umf
 # End Source File
 # Begin Source File
 
-SOURCE=.\menumcbs.wcb
+SOURCE=.\demo\menudemo.wcb
 # End Source File
 # Begin Source File
 
-SOURCE=.\menuvect.wcb
+SOURCE=.\demo\menudemomf.umf
+# End Source File
+# Begin Source File
+
+SOURCE=.\demo\menudisp.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\demo\menulogo.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\demo\menumcbs.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\demo\menumgr.old
+# End Source File
+# Begin Source File
+
+SOURCE=.\demo\menuvect.wcb
 # End Source File
 # End Group
 # Begin Group "ACU"

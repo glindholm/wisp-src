@@ -1,19 +1,10 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
 ** $Source:$
@@ -68,6 +59,7 @@
 #define MAIN
 
 #include "bldmf.h"
+#include "werrlog.h"
 
 static char rcs_date[]		="$Date:$";
 static char rcs_revision[]	="$Revision:$";
@@ -116,10 +108,6 @@ extern char *re_compile_pattern(char *regex, int regex_size, regexp_t compiled);
 /* yylex from bldmf_l.l*/
 extern int yylex();
 
-#ifndef LINUX
-extern char *sys_errlist[];
-extern int errno;
-#endif
 
 /*
 ** END OF FUNCTION DECLARATIONS                               
@@ -290,7 +278,7 @@ char *name;
         if (re_stat)
         {
                 fprintf(stderr,"bldmf: PANIC: %s\n",re_stat);
-                fprintf(stderr,"       Contact NeoMedia Customer Support.\n");
+                fprintf(stderr,"       Contact WISP Support.\n");
                 exit(1);
         }
 
@@ -1022,7 +1010,6 @@ void lowstring(char* str)
 */
 char *my_strdup(char* str)
 {
-        char *gmem();
         char *tmp;
 
         if (str==NULL)
@@ -1148,7 +1135,7 @@ void process_globals()
                 {
                         fprintf(stderr,"bldmf: cannot change dir to %s\nreason: %s\n",
                                 src_dir,
-                                sys_errlist[errno]);
+                                WL_strerror(errno));
                         exit(1);
                 }
         }
@@ -1413,51 +1400,3 @@ void make_version()
 	sscanf(&rcs_date[1],"Date: %s ",buff);
 	strcat(bldmf_version,buff);
 }
-/*
-**	History:
-**	$Log: bldmf.c,v $
-**	Revision 1.23  2003/02/24 20:19:23  gsl
-**	fix protos
-**	
-**	Revision 1.22  2003/02/05 15:40:13  gsl
-**	Fix copyright headers
-**	
-**	Revision 1.21  2003/02/05 15:23:59  gsl
-**	Fix -Wall warnings
-**	
-**	Revision 1.20  2003/02/04 18:50:26  gsl
-**	fix copyright header
-**	
-**	Revision 1.19  2002/09/04 18:12:36  gsl
-**	LINUX sys_errlist
-**	
-**	Revision 1.18  2002/07/15 14:28:32  gsl
-**	globals
-**	
-**	Revision 1.17  2002/07/11 16:11:44  gsl
-**	Fix warnings
-**	
-**	Revision 1.16  2002/07/10 04:27:32  gsl
-**	Rename global routines with WL_ to make unique
-**	
-**	Revision 1.15  1998/10/13 19:05:08  gsl
-**	Fix sub arg to qsort)
-**	
-**	Revision 1.14  1997-06-02 09:18:27-04  gsl
-**	Fix usage message
-**
-**	Revision 1.13  1997-06-02 09:14:16-04  gsl
-**	Correct the usage/help message
-**
-**	Revision 1.12  1996-12-12 13:12:32-05  gsl
-**
-**	Revision 1.11  1996-07-23 11:12:48-07  gsl
-**	drcs update
-**
-**
-**      06/17/92        Written by JEC
-**      06/30/92        added -?, fixed loop on bad opt,
-**                      added usage on bad opt, fixed errlog behavior
-**
-**
-*/

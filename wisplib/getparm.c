@@ -1476,7 +1476,7 @@ static void gdisp_init(void)
 {
 	int	i;
 	
-	if (wisp_acu_nativescreens())
+	if (wisp_nativescreens())
 	{
 		cob_fields = 0;
 		
@@ -1489,9 +1489,18 @@ static void gdisp_init(void)
 		for(i=0; i<MAX_COB_GP_FIELDS;i++)
 		{
 			/* This is a empty spot on a GETPARM screen */
-			cob_field_list[i].row =  2;
-			cob_field_list[i].col = 79;
-			cob_field_list[i].len =  1;
+			if (wisp_acu_cobol())
+			{
+				cob_field_list[i].row =  2;
+				cob_field_list[i].col = 79;
+				cob_field_list[i].len =  1;
+			}
+			else /* if (wisp_mf_cobol()) */
+			{
+				cob_field_list[i].row =  0;
+				cob_field_list[i].col =  0;
+				cob_field_list[i].len =  0;
+			}
 		}
 	}
 	else
@@ -1523,7 +1532,7 @@ static void gdisp_init(void)
 */
 static void gdisp_postdisp(void)
 {
-	if (wisp_acu_nativescreens())
+	if (wisp_nativescreens())
 	{
 		/* No action needed */
 	}
@@ -1600,7 +1609,7 @@ static void gdisp_cleanup(void)
 */
 static void gdisp_put(int row, int col, fac_t fac, const char* val)
 {
-	if (wisp_acu_nativescreens())
+	if (wisp_nativescreens())
 	{
 		int	len;
 		
@@ -1611,17 +1620,17 @@ static void gdisp_put(int row, int col, fac_t fac, const char* val)
 		*/
 		if (row < 1 || row > WSB_ROWS)
 		{
-			wtrace("GETPARM","ROW","Invalid row value %d",row);
+			WL_wtrace("GETPARM","ROW","Invalid row value %d",row);
 			row = 1;
 		}
 		if (col < 1 || col > WSB_COLS)
 		{
-			wtrace("GETPARM","COLUMN","Invalid column value %d",col);
+			WL_wtrace("GETPARM","COLUMN","Invalid column value %d",col);
 			col = 1;
 		}
 		if (len > MAX_GP_FIELD_LEN)
 		{
-			wtrace("GETPARM","LENGTH","Invalid field length value %d",len);
+			WL_wtrace("GETPARM","LENGTH","Invalid field length value %d",len);
 			len = MAX_GP_FIELD_LEN;
 		}
 		
@@ -1688,7 +1697,7 @@ static void gdisp_put(int row, int col, fac_t fac, const char* val)
 **			Push the screen then call vwang() to display the screen buffer.
 **
 **			Native screens:
-**			Call "WACUGETPARM" to display the screen.
+**			Call "WACUGETPARM" or "WMFNGETPARM" to display the screen.
 **
 **	ARGUMENTS:	
 **	keylist		The valid function keys in ascii pairs (eg "00010316X")
@@ -1706,10 +1715,10 @@ static void gdisp_put(int row, int col, fac_t fac, const char* val)
 */
 static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 {
-	if (wisp_acu_nativescreens())
+	if (wisp_nativescreens())
 	{
 		/*
-		**	CALL "WACUGETPARM" USING
+		**	CALL "WACUGETPARM"/"WMFNGETPARM" USING
 		**	[0]	static_text		PIC X(24*80)
 		**	[1]	field_cnt		PIC 99			0-32
 		**	[2]	field_table		PIC X(86) * 32	
@@ -1726,6 +1735,12 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 		char 	*ptr;
 
 		field_cnt = cob_fields;
+		if (field_cnt > MAX_COB_GP_FIELDS)
+		{
+			/* ERROR - Too many fields */
+			WL_wtrace("GETPARM","FIELDCNT","Field count [%d] exceeds NATIVESCREENS limit [%d]",
+				field_cnt, MAX_COB_GP_FIELDS);
+		}
 
 		/*
 		**	Count number of keys in the key list
@@ -1738,9 +1753,15 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 		}
 		if (key_cnt < 1)
 		{
-			wtrace("GETPARM","KEYLIST","Invalid keylist [%s]",keylist);
+			WL_wtrace("GETPARM","KEYLIST","Invalid keylist [%s]",keylist);
 			key_cnt = 1;
 			strcpy(keylist,"00X");
+		} 
+		else if (key_cnt > 32)
+		{
+			/* ERROR - Too many keys */
+			WL_wtrace("GETPARM","KEYCNT","Key count [%d] exceeds NATIVESCREENS limit [%d]",
+				key_cnt, 32);
 		}
 
 		parms[0] = (char*)local_screen;
@@ -1761,13 +1782,27 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 		parms[5] = (char*)&term_key;
 		lens[5]  = sizeof(term_key);
 		
-		WL_call_acucobol("WACUGETPARM", 6, parms, lens, &rc);
+		if (wisp_acu_cobol())
+		{
+			WL_call_acucobol("WACUGETPARM", 6, parms, lens, &rc);
+		}
+		else if (wisp_mf_cobol())
+		{
+			WL_call_mfcobol("WMFNGETPARM", 6, parms, lens, &rc);
+		}
 
 		if (rc)
 		{
 			int4	wrc, wcc;
 			
-			WL_call_acucobol_error(rc, &wrc, &wcc, "WACUGETPARM");
+			if (wisp_acu_cobol())
+			{
+				WL_call_acucobol_error(rc, &wrc, &wcc, "WACUGETPARM");
+			}
+			else if (wisp_mf_cobol())
+			{
+				WL_wtrace("GETPARM","WMFNGETPARM","RC = [%d]", rc);
+			}
 		}
 		else
 		{
@@ -1793,7 +1828,7 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 			*/
 			if (term_key > 32)   /* term_key is unsigned */
 			{
-				wtrace("GETPARM","TERMKEY","Invalid term_key [%d]",term_key);
+				WL_wtrace("GETPARM","TERMKEY","Invalid term_key [%d]",term_key);
 				term_key = 0;
 			}
 			
@@ -1838,7 +1873,7 @@ static void gdisp_getparm(char* keylist, unsigned char *aid_char)
 */
 static void gdisp_get(int row, int col, char *val, int4 len)
 {
-	if (wisp_acu_nativescreens())
+	if (wisp_nativescreens())
 	{
 		memcpy(val, &local_screen[((row-1)*WSB_COLS)+(col-1)], len);
 	}
@@ -1860,6 +1895,12 @@ static void gdisp_get(int row, int col, char *val, int4 len)
 /*
 **	History:
 **	$Log: getparm.c,v $
+**	Revision 1.51  2003/08/28 20:28:32  gsl
+**	FIx native screen field initialization
+**	
+**	Revision 1.50  2003/08/25 21:10:17  gsl
+**	MF Native Screens
+**	
 **	Revision 1.49  2003/04/21 20:02:59  gsl
 **	WL_use_last_prb() is void
 **	
@@ -1965,7 +2006,7 @@ static void gdisp_get(int row, int col, char *val, int4 len)
 **	Add support for a BLANK "B" key field data type.
 **
 **	Revision 1.15  1997-05-08 17:17:31-04  gsl
-**	Change to use wtrace()
+**	Change to use WL_wtrace()
 **
 **	Revision 1.14  1997-04-22 21:31:24-04  gsl
 **	Fix handling of Message_Text so it doesn't overwrite memory with

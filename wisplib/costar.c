@@ -260,7 +260,7 @@ fac_t costar_fac(fac_t the_fac)
 
 	new_fac = the_fac;
 
-	if (ATTR_MODE_V1==attr_mode && the_fac >= 128 && the_fac <= 255)
+	if (ATTR_MODE_V1==attr_mode && the_fac >= 128)
 	{
 		if ( FAC_PROTECTED(the_fac) )
 		{
@@ -1085,6 +1085,9 @@ int w4w_hotspot_vmode(void)
 /*
 **	History:
 **	$Log: costar.c,v $
+**	Revision 1.39  2010/01/11 04:26:06  gsl
+**	fix warnings
+**	
 **	Revision 1.38  2003/01/31 21:24:13  gsl
 **	fix -Wall warnings
 **	

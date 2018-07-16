@@ -44,7 +44,7 @@
 #	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#define KCSI_VERSION	4100
+#define KCSI_VERSION	4200
 
 /*
 **	Static data
@@ -124,6 +124,11 @@ char *create_platform(void)
 /*
 **	History:
 **	$Log: version.c,v $
+**	Revision 1.13  2010/01/16 02:04:28  gsl
+**	new release
+**	wisp 5.1.00
+**	kcsi 4.2.00
+**	
 **	Revision 1.12  2003/04/11 18:34:16  gsl
 **	Add support for Acucobol 5.0 and 5.1
 **	

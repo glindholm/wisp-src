@@ -80,7 +80,7 @@ cWindows::~cWindows ( )
 //	cWindows::CreateWnd - Creates window classes
 //		Creates the window classes of the app
 //
-cWindows::CreateWnd ( HINSTANCE hInst ) 
+int cWindows::CreateWnd ( HINSTANCE hInst ) 
 {
 	WNDCLASS wc = GenWC;
 	//	AppWindow
@@ -100,7 +100,7 @@ cWindows::CreateWnd ( HINSTANCE hInst )
 //	cWindows::ShowWnd
 //		Displays the windows of the app
 //
-cWindows::ShowWnd ( HINSTANCE hInst ) 
+int cWindows::ShowWnd ( HINSTANCE hInst ) 
 {
 	RECT ScrRes;
 	cWnd.hAppMenu = LoadMenu ( cApp.Env->hInstGlb, MAKEINTRESOURCE ( MNU_Full )  );
@@ -257,7 +257,7 @@ cWindows::ShowWnd ( HINSTANCE hInst )
 //
 //	cWindows::SizeWindow
 //		Resizes all the app's windows according to the main app window
-cWindows::SizeAppWindow ( ) 
+int cWindows::SizeAppWindow ( ) 
 {
 	GetClientRect ( cWnd.hWnd.hShellWnd, &cWnd.AppClntRect );					//	Get the new coordinates of the client area of the main app window
 
@@ -317,7 +317,7 @@ cWindows::SizeAppWindow ( )
 //	cWindows::_AppWindow::_StatusWindow::Print
 //		Prints the contents of the output window to the printer
 //
-cWindows::PrintOutputWnd ( ) 
+int cWindows::PrintOutputWnd ( ) 
 {
     int nReqCPI = 12;
     int nReqLPI = 7;
@@ -560,6 +560,9 @@ cWindows::PrintOutputWnd ( )
 /*
 **	History:
 **	$Log: cWindows.cpp,v $
+**	Revision 1.10  2009/10/17 19:55:36  gsl
+**	fix default return type to int
+**	
 **	Revision 1.9  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

@@ -81,7 +81,7 @@ static VSESCR_FLDS(restart_flds) = {
 **
 **	Description:	The library and volume default to the input values.
 **			The file starts off as blank.  It puts up the GETPARM and validates
-**			the result.  If a file is specified that already exists it makes
+**			the result.  If a file is specified that already vse_exists it makes
 **			you press PF3 to override.
 **
 **	Arguments:
@@ -126,7 +126,7 @@ int vse_output(char *file, char *library, char *volume, char *sysname, int4 *sta
 
 	for(;;)
 	{
-		untrunc(sysname,VSE_SYSNAME_LEN);
+		vse_untrunc(sysname,VSE_SYSNAME_LEN);
 		
 		GPSETUP();
 		switch(message_code)
@@ -139,7 +139,7 @@ int vse_output(char *file, char *library, char *volume, char *sysname, int4 *sta
 
 		case 1: /* FILE EXISTS */
 			GPRES("OUTPUT  ","EDITOR",4);
-			GPMSG("\224WARNING\214- The file specified below already exists.");
+			GPMSG("\224WARNING\214- The file specified below already vse_exists.");
 			GPMSG("           Use (3) if you wish to scratch the existing file and continue.");
 			GPMSG("           Otherwise, please specify another file name.");
 			GPMSG("           Use (1) to return to the special command menu.");
@@ -208,8 +208,8 @@ int vse_output(char *file, char *library, char *volume, char *sysname, int4 *sta
 			continue;
 		}
 
-		trunc(sysname);
-		if(exists(sysname) && pick != 3)
+		vse_trunc(sysname);
+		if(vse_exists(sysname) && pick != 3)
 		{
 			message_code = 1;
 		}
@@ -1159,6 +1159,10 @@ int vse_file_changed_gp(char *sysname)
 /*
 **	History:
 **	$Log: vsegps.c,v $
+**	Revision 1.15  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.14  2003/02/05 21:47:54  gsl
 **	fix -Wall warnings
 **	

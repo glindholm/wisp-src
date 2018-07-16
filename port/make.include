@@ -4,7 +4,7 @@
 #/*									*/
 #/***********************************************************************/
 #
-#	Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+#	Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 #	$Id:$
 #
 #
@@ -156,23 +156,27 @@ SYSDEF = "Error SYSDEF not defined"
 #==================================================================
 #	IBM AIX RS/6000 (32-bit)
 #
-#	AIX 4.3.3
+#	AIX 5
 #
 #SYSDEF = -DAIX
 #
-# IBM XL C (cc_r is thread safe)
+# IBM XLC Compilers (cc_r is thread safe)
 #CC_STD  = cc_r
 #CC_ANSI = cc_r
 #CC_SYS_FLAGS = -qlanglvl=ansi -qarch=com -qmaxmem=16384
 #
+#CCC = xlC
+#CCC_SYS_FLAGS = -Q -qarch=com -qchars=signed -DBOOL_TYPE
+#
 # GNU C
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = -fsigned-char
+#CC_SYS_FLAGS = -fsigned-char -Wall
 #
 # GNU C++
 #CCC = g++
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#LEX=flex
 #
 #	AIX 4.1
 #
@@ -184,10 +188,26 @@ SYSDEF = "Error SYSDEF not defined"
 #==================================================================
 #	IBM AIX RS/6000  (64-bit)
 #
-#	AIX 5.2
+#	AIX 5.2 & 5.3
+#
+#  !!!!IMPORTANT!!!! 
+#  export OBJECT_MODE=64 before building
+#  
 #
 #SYSDEF = -DAIX -DAIX_64 -DWISP_64BIT
 #OBJECT_MODE=64
+#
+# GNU C
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = -maix64 -Wall
+#
+# GNU C++
+#CCC = g++
+#CCC_SYS_FLAGS = -maix64 -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_LINK = 
+#
+#LEX=flex
 #
 # IBM XLC Compilers
 #CC_STD  = xlc
@@ -196,29 +216,6 @@ SYSDEF = "Error SYSDEF not defined"
 #
 #CCC = xlC
 #CCC_SYS_FLAGS = -Q -q64 -qarch=com -qchars=signed -DBOOL_TYPE
-
-#==================================================================
-#       DEC ALPHA OSF/1 -- Compaq Tru64 UNIX
-#
-#  NOTE:  Use GNU MAKE (gmake)!!!
-#         Both /usr/bin/make and /usr/bin/posix/make are broken.
-#
-#SYSDEF = -DOSF1_ALPHA -DWISP_64BIT -D_USE_OLD_TTY
-#CC_STD  = c89
-#CC_ANSI = c89
-#CC_SYS_FLAGS = -non_shared
-#
-#CCC = cxx
-#CCC_SYS_FLAGS = -ms
-#
-# GNU C++
-#CCC = g++
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall -mno-cix -mno-max -mno-bwx
-#CCC_SYS_LINK = 
-#
-# (using gcc instead of g++)
-#CCC = gcc
-#CCC_SYS_LINK =  /usr/local/cygnus/tru64-010710/H-alphaev56-dec-osf5.1/lib/libstdc++.a
 
 #==================================================================
 #	HP-UX
@@ -230,7 +227,14 @@ SYSDEF = "Error SYSDEF not defined"
 ## Using HP's C complier
 #CC_STD  = cc
 #CC_ANSI = cc
+#CC_SYS_FLAGS = +z -Ae +DAportable
+##Old
 #CC_SYS_FLAGS = +z +DAportable -lcurses
+#
+## Using HP's aC++ compiler
+#CCC = aCC
+#CCC_SYS_FLAGS = +z -Ae +DAportable -DBOOL_TYPE 
+#CCC_SYS_LINK =
 #
 ## Using GNU C compiler
 #CC_STD  = gcc
@@ -268,28 +272,35 @@ SYSDEF = "Error SYSDEF not defined"
 #CC_ANSI = cc
 #CC_SYS_FLAGS = +z +DS2.0 +DA2.0W +DD64 -lcurses
 #
-#CCC = /usr/local/pa20_64/bin/g++
+# GCC 3.3.2
+#   NOTE: -static doesn't work because there is no 64-bit libcurses.a
+#         so use gcc instead of g++ and include libstdc.a for link.
+#
+#CCC = /usr/local/pa64/bin/gcc
+#CCC_SYS_LINK = -lpthread  /usr/local/pa64/lib/libstdc++.a
+#
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#
+# GCC 3.1
+#CCC = /usr/local/pa20_64/bin/g++
 #CCC_SYS_LINK = -lpthread
 
 #==================================================================
-#	SCO UNIX
 #
-#SYSDEF = -DSCO
+#	HP-UX 11.xx (IA) (32-bit)
 #
-#	SCO with GNU
-#CC_STD  = gcc
-#CC_ANSI = gcc
+#SYSDEF = -DHPUX -DHPUX_IA
+#
+## Using HP's C complier
+#CC_STD  = cc
+#CC_ANSI = cc
 #CC_SYS_FLAGS = 
 #
-#CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
-#CCC_SYS_LINK = 
+## Using HP's aC++ compiler
+#CCC = aCC
+#CCC_SYS_FLAGS = -DBOOL_TYPE 
+#CCC_SYS_LINK =
 #
-# 	SCO Development Compilers
-#SOCKET_LINK= -lsocket
-#CCC = CC
-#CCC_SYS_FLAGS = +.cpp +a1
 
 #==================================================================
 #	SUN SPARC
@@ -327,16 +338,74 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC_SYS_LINK = 
 
 #==================================================================
-#	Redhat LINUX 7.3 with glibc 2.2
+#	LINUX (32-bit)
 #
 #SYSDEF = -DLINUX
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = -Wall
+#CC_SYS_FLAGS = -m32 -Wall
 #CCC = g++
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_FLAGS = -m32 -DBOOL_TYPE -fsigned-char -Wall
 #CCC_SYS_LINK = 
+#LEX_LINK = 
 
+#==================================================================
+#	LINUX (64-bit)
+#
+#SYSDEF = -DLINUX
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = -m64 -Wall
+#CCC = g++
+#CCC_SYS_FLAGS = -m32 -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_LINK = 
+#LEX_LINK = 
+
+###################################################################
+###   OLD UNSUPPORTED PLATFORMS
+###################################################################
+
+#==================================================================
+#	SCO UNIX
+#
+#SYSDEF = -DSCO
+#
+#	SCO with GNU
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = 
+#
+#CCC = gcc
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+#CCC_SYS_LINK = 
+#
+# 	SCO Development Compilers
+#SOCKET_LINK= -lsocket
+#CCC = CC
+#CCC_SYS_FLAGS = +.cpp +a1
+
+#==================================================================
+#       DEC ALPHA OSF/1 -- Compaq Tru64 UNIX
+#
+#  NOTE:  Use GNU MAKE (gmake)!!!
+#         Both /usr/bin/make and /usr/bin/posix/make are broken.
+#
+#SYSDEF = -DOSF1_ALPHA -DWISP_64BIT -D_USE_OLD_TTY
+#CC_STD  = c89
+#CC_ANSI = c89
+#CC_SYS_FLAGS = -non_shared
+#
+#CCC = cxx
+#CCC_SYS_FLAGS = -ms
+#
+# GNU C++
+#CCC = g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall -mno-cix -mno-max -mno-bwx
+#CCC_SYS_LINK = 
+#
+# (using gcc instead of g++)
+#CCC = gcc
+#CCC_SYS_LINK =  /usr/local/cygnus/tru64-010710/H-alphaev56-dec-osf5.1/lib/libstdc++.a
 
 #==================================================================
 #	Data General - DG/UX Intel

@@ -1,32 +1,13 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 /*
 **	File:		werrlog.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	Standard error reporting routines
 **
@@ -370,7 +351,9 @@ void WL_werr_write(const char* buff)								/* Write out a buffer to the error l
 	if ( first )
 	{
 		first = 0;								/* Now turn off first.			*/
+#ifdef unix
 		chmod(WL_werrpath(), 0666);						/* Allow all to write.			*/
+#endif
 	}
 
 }
@@ -563,22 +546,16 @@ const char* WL_strerror(int errnum)
 {
 	const char* ptr = NULL;
 
-#ifdef unix
-#ifndef LINUX
+#ifdef USE_SYS_ERRLIST
 	extern char *sys_errlist[];
 	extern int   sys_nerr;
-#endif
+
 
 	if (errnum >= 0 &&
 	    errnum < sys_nerr) 
 	{
 		ptr = sys_errlist[errnum];
 	}
-#endif
-
-#ifdef WIN32
-	ptr =  strerror(errnum);
-#endif
 
 	if (NULL == ptr)
 	{
@@ -586,6 +563,11 @@ const char* WL_strerror(int errnum)
 		sprintf(mess,"Unknown errno=[%d]", errnum);
 		ptr = mess;
 	}
+#endif
+
+#ifndef USE_SYS_ERRLIST
+	ptr =  strerror(errnum);
+#endif
 
 	return ptr;
 }
@@ -799,6 +781,12 @@ int wisp_unlink(const char *filename)
 /*
 **	History:
 **	$Log: werrlog.c,v $
+**	Revision 1.46  2010/01/09 23:56:49  gsl
+**	use strerror() instead of sys_errlist
+**	
+**	Revision 1.45  2009/10/18 20:55:32  gsl
+**	fix windows warnings
+**	
 **	Revision 1.44  2003/04/07 16:00:14  gsl
 **	Remove OLD logic
 **	

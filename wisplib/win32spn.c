@@ -712,8 +712,8 @@ int WL_win32spawnlp(const char *cmd, const char *args, int Mode)
 					fclose(fh);
 				}
 			}
-			unlink(temperr);
-			unlink(tempout);
+			_unlink(temperr);
+			_unlink(tempout);
 		}
 	}
 	
@@ -996,6 +996,9 @@ HANDLE opentempfile(char *path)
 /*
 **	History:
 **	$Log: win32spn.c,v $
+**	Revision 1.40  2009/10/18 20:38:27  gsl
+**	fix windows warnings
+**	
 **	Revision 1.39  2003/03/17 20:29:19  gsl
 **	Remove overly large and non-useful traces
 **	

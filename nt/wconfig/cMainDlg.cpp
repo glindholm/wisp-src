@@ -13,7 +13,7 @@
 //
 //	cDialogs::_MainDialog::ChngTab
 //		Activates the dialog for the tab that was clicked
-cDialogs::_MainDialog::ChngTab ( HWND hDlg )
+int cDialogs::_MainDialog::ChngTab ( HWND hDlg )
 {
 	HWND hTabCtl;
 	int CurTab;
@@ -74,7 +74,7 @@ cDialogs::_MainDialog::ChngTab ( HWND hDlg )
 //	cDialogs::_MainDialog::Initialize
 //		Initialize the Main Dialog
 //
-cDialogs::_MainDialog::Initialize ( HWND hDlg )
+int cDialogs::_MainDialog::Initialize ( HWND hDlg )
 {
 	HWND hTabWnd;
 	TC_ITEM TabAttrib[10];
@@ -299,7 +299,7 @@ void cDialogs::_MainDialog::RemoveClicked ( )
 //		These Save functions in turn save the dialog's data to
 //		the registry
 //
-cDialogs::_MainDialog::SaveReg ( HWND hDlg )
+int cDialogs::_MainDialog::SaveReg ( HWND hDlg )
 {
 	Dialogs.General.Save ( );
 	Dialogs.Videocap.Save ( );

@@ -1,28 +1,8 @@
 /*
-******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
-******************************************************************************
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
-
 
 /*
 **	File:		wlicense.c
@@ -65,10 +45,6 @@
 #include "wispcfg.h"
 #include "wispvers.h"
 
-#if defined(unix) && !defined(LINUX)
-extern char	*sys_errlist[];
-#endif
-
 static void get_validation(	char	licensekey[LICENSE_KEY_SIZE],
 				char	*machineid,
 				char	valcode[VALIDATION_CODE_SIZE]);
@@ -93,6 +69,36 @@ static int  WLIC_write_license(char	*custname,
 		char	*machineid,
 		char	*valcode,
 		char	*appcode);
+
+const char* WL_strerror(int errnum)
+{
+	const char* ptr = NULL;
+
+#ifdef USE_SYS_ERRLIST
+	extern char *sys_errlist[];
+	extern int   sys_nerr;
+
+
+	if (errnum >= 0 &&
+	    errnum < sys_nerr) 
+	{
+		ptr = sys_errlist[errnum];
+	}
+
+	if (NULL == ptr)
+	{
+		static char mess[30];
+		sprintf(mess,"Unknown errno=[%d]", errnum);
+		ptr = mess;
+	}
+#endif
+
+#ifndef USE_SYS_ERRLIST
+	ptr =  strerror(errnum);
+#endif
+
+	return ptr;
+}
 
 
 /*
@@ -339,7 +345,7 @@ char	*argv[];
 		printf("---------------------------------------------------------------------------\n");
 		printf("WARNING - You have entered an OLD sytle UNLIMITED license key. \n");
 		printf("WARNING - This release of WISP does not support UNLIMITED license keys.\n");
-		printf("WARNING - Contact your WISP vendor or NeoMedia for assistance.\n");
+		printf("WARNING - Contact your WISP vendor for assistance.\n");
 		printf("---------------------------------------------------------------------------\n");
 		printf("\n");
 
@@ -384,7 +390,7 @@ char	*argv[];
 		{
 			printf("----------------------------------------------------------\n");
 			printf("SORRY - Unable to delete license file %s [errno = %d %s]\n",
-				WLIC_license_filepath(),errno,sys_errlist[errno]);
+				WLIC_license_filepath(),errno,WL_strerror(errno));
 			printf("----------------------------------------------------------\n");
 			assistance();
 			finish_ok();
@@ -403,7 +409,7 @@ char	*argv[];
 		break;
 	case 1:
 		printf("----------------------------------------------------------\n");
-		printf("SORRY - Unable to open file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,sys_errlist[errno]);
+		printf("SORRY - Unable to open file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,WL_strerror(errno));
 		printf("----------------------------------------------------------\n");
 		assistance();
 		finish_ok();
@@ -411,7 +417,7 @@ char	*argv[];
 		break;
 	case 2:
 		printf("----------------------------------------------------------\n");
-		printf("SORRY - Unable to write file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,sys_errlist[errno]);
+		printf("SORRY - Unable to write file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,WL_strerror(errno));
 		printf("----------------------------------------------------------\n");
 		assistance();
 		finish_ok();
@@ -419,7 +425,7 @@ char	*argv[];
 		break;
 	default:
 		printf("----------------------------------------------------------\n");
-		printf("SORRY - Error writing file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,sys_errlist[errno]);
+		printf("SORRY - Error writing file %s [errno = %d %s]\n",WLIC_license_filepath(),errno,WL_strerror(errno));
 		printf("----------------------------------------------------------\n");
 		assistance();
 		finish_ok();
@@ -487,7 +493,7 @@ static void get_validation(	char	licensekey[LICENSE_KEY_SIZE],
 
 	/*                12345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
 	sprintf(helpbuff,"In order to install this %s license you will need a VALIDATION CODE.\n",WLIC_product_name());
-	strcat (helpbuff,"A VALIDATION CODE can be received by emailing NeoMedia at ");
+	strcat (helpbuff,"A VALIDATION CODE can be received by emailing for support at ");
 	strcat (helpbuff,WISP_EMAIL);
 	strcat (helpbuff,"\n");
 	strcat (helpbuff,"and requesting a VALIDATION CODE for the LICENSE KEY and MACHINE ID displayed\n");
@@ -576,7 +582,7 @@ static void get_appcode_validation(	char	licensekey[LICENSE_KEY_SIZE],
 	/*                12345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
 	sprintf(helpbuff,"In order to install this %s license you will need the APPLICATION CODE \n",WLIC_product_name());
 	strcat (helpbuff,"and the VALIDATION CODE for this license.  If you don't have them contact \n");
-	strcat (helpbuff,"your WISP vendor or NeoMedia at ");
+	strcat (helpbuff,"your WISP vendor or for support email ");
 	strcat (helpbuff,WISP_EMAIL);
 	strcat (helpbuff,"\n");
 	strcat (helpbuff,"\n");
@@ -671,7 +677,7 @@ static void assistance()
 {
 	printf("\n");
 	/*      12345678901234567890123456789012345678901234567890123456789012345678901234567890	*/
-	printf("If you need assistance email NeoMedia at %s .\n", WISP_EMAIL);
+	printf("If you need assistance contact WISP support at email %s .\n", WISP_EMAIL);
 }
 
 /*
@@ -698,8 +704,8 @@ static void putheader()
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("                **** %s %s LICENSE INSTALLATION TOOL ****\n",WLIC_product_name(), wisp_version());
-	printf("         Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " by NeoMedia Technologies Incorporated\n");
-	printf("                Email: %s   Phone: %s\n", WISP_EMAIL, WISP_PHONE_NUMBER);
+	printf("               Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " Shell Stream Software LLC\n");
+	printf("              Email: %s   Phone: %s\n", WISP_EMAIL, WISP_PHONE_NUMBER);
 	printf("\n");
 	printf("This program will install a %s license onto this machine.\n",WLIC_product_name());
 	printf("\n");
@@ -882,6 +888,12 @@ void WL_wtrace()
 /*
 **	History:
 **	$Log: wlicense.c,v $
+**	Revision 1.53  2010/01/10 00:06:41  gsl
+**	use strerror() instead of sys_errlist
+**	
+**	Revision 1.52  2009/10/18 21:21:14  gsl
+**	Copyright
+**	
 **	Revision 1.51  2003/06/13 17:36:12  gsl
 **	ENTERPRISE License
 **	
@@ -913,7 +925,7 @@ void WL_wtrace()
 **	reorg startup
 **	
 **	Revision 1.42  2003/02/13 21:19:23  gsl
-**	Change "call" Neomedia to "email" .
+**	Change "call" to "email" .
 **	
 **	Revision 1.41  2003/02/13 20:59:25  gsl
 **	On unix don't need to be root.

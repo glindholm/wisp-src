@@ -564,7 +564,6 @@ w4w_click_row
 w4w_hotspot_vmode
 w4w_mask_row
 wisp_acu_cobol
-wisp_acu_nativescreens
 wisp_assert
 wisp_calloc
 wisp_defaults_path

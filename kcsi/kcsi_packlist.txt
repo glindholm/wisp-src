@@ -1,6 +1,4 @@
-Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
-All Rights Reserved.
-
+Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 ====================================================================
 
 Title:          KCSI PACKING LIST
@@ -8,7 +6,7 @@ Title:          KCSI PACKING LIST
 Document:       kcsi_packlist.lis
 Last Updated:   $Date:$
 Products:       KCSI
-Versions:       4.1.00
+Versions:       4.2.00
 
 Summary:        Packing list for the KCSI utilities shipping kit.
 
@@ -53,13 +51,22 @@ INQUIRY                   - INQUIRY  utility (ACUCOBOL object file)
 DATENTRY                  - DATENTRY utility (ACUCOBOL object file)
 CREATE                    - CREATE   utility (ACUCOBOL object file)
 
-wrun32wisp_kcsi_acu50.mak - Makefile for ACUCOBOL 5.0 runtime
-wrun32wisp_kcsi_acu51.mak - Makefile for ACUCOBOL 5.1 runtime
-wrun32wisp_kcsi_acu52.mak - Makefile for ACUCOBOL 5.2 runtime
+build_kcsi_acu81_rts.txt  - Build instructions for ACUCOBOL 8.1.x
+acu81\wrundll.vcproj      - Project file for ACUCOBOL 8.1.x
+
+build_kcsi_acu72_rts.txt  - Build instructions for ACUCOBOL 7.2.x
+acu72\wrundll.vcproj      - Project file for ACUCOBOL 7.2.x
+
+build_kcsi_acu62_rts.txt  - Build instructions for ACUCOBOL 6.2
+acu62\wrundll.vcproj      - Project file for ACUCOBOL 6.2
 
 build_kcsi_acu60_rts.txt  - Build instructions for ACUCOBOL 6.0
 wrundll_wisp_acu60.mak    - Makefile for ACUCOBOL 6.0 runtime
 wrundll_wisp_acu60.dsp    - Project file for ACUCOBOL 6.0 runtime
+
+wrun32wisp_kcsi_acu50.mak - Makefile for ACUCOBOL 5.0 runtime
+wrun32wisp_kcsi_acu51.mak - Makefile for ACUCOBOL 5.1 runtime
+wrun32wisp_kcsi_acu52.mak - Makefile for ACUCOBOL 5.2 runtime
 
 kcsiacu.lib               - KCSI library for building runtime
 kcsi_sub85_inc.c          - C include file for building runtime

@@ -3,6 +3,6 @@
 #	WAUTH	- setup and run the wauthorize program
 #
 
-cd /neomedia/WispLicense
+cd /shellstream/WispLicense
 ./wauthorize
 

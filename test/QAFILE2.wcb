@@ -2625,7 +2625,7 @@
       ******************************************************************
 
        CREATE-HUGE-FILE.
-           MOVE "Specify HUGE File Create Location" TO FLV-TITLE.
+           MOVE "Specify HUGE +2GB File Create Location" TO FLV-TITLE.
            MOVE "(16) EXIT" TO FLV-FOOTER.
            MOVE FIL-FOR-FILE-HUGE  TO FLV-FILE.
            MOVE LIB-FOR-FILE-HUGE  TO FLV-LIB.
@@ -2643,7 +2643,7 @@
 	       CLOSE FILE-HUGE
 	       OPEN I-O FILE-HUGE
 
-	       DISPLAY "This can take a VERY LONG time."
+	       DISPLAY "This can take a VERY LONG time. (+2GB)"
 
 	       PERFORM VARYING HUGE-WS-KEY FROM 1 BY 1
 		   UNTIL HUGE-WS-KEY > 2100000

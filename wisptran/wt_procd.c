@@ -190,14 +190,26 @@ NODE is_paragraph(NODE the_sentence)
 	NODE first_node;
 
 	first_node = first_non_fluff_node(the_sentence);
-	if (first_node && first_node->token && IDENTIFIER == first_node->token->type)
+	if (first_node && first_node->token)
 	{
-		return first_node;
+		/* Paragraph or Section name */
+		if (IDENTIFIER == first_node->token->type)	
+		{
+			return first_node;
+		}
+
+		/* 
+		** A Paragraph or Section name can be all digits and look like a NUMBER.
+		** Ensure in AREA A.
+		*/
+		if (NUMBER == first_node->token->type && first_node->token->column < 12)
+		{
+			return first_node;
+		}
+
 	}
-	else
-	{
-		return NULL;
-	}
+
+	return NULL;
 }
 
 /*
@@ -1413,9 +1425,6 @@ static NODE parse_set(NODE the_statement)
 		**	SET figcon IN  FAC-OF-target {ON|OFF}
 		**	SET figcon OF        target {ON|OFF}
 		**
-		**	MOVE figcon TO WISP-SET-BYTE
-		**	CALL "BIT_ON"/"BIT_OFF" USING WISP-SET-BYTE, target
-		**
 		** (cob)
 		**	MOVE figcon TO WISP-SET-BYTE
 		**	MOVE target TO WISP-TEST-BYTE
@@ -1473,21 +1482,56 @@ static NODE parse_set(NODE the_statement)
 
 		decontext_statement(the_statement);
 
-		tput_line_at(col,"MOVE %s TO WISP-SET-BYTE",token_data(figcon_node->token));
-
-		tput_line_at  (col,   "MOVE");
-		tput_statement(col+4,      target_node->down);
-		tput_clause   (col+4,     "TO WISP-TEST-BYTE");
-		if (bit_on_flag)
+		if (opt_nofac)
 		{
-			tput_line_at  (col,   "CALL \"BIT_ON\" USING WISP-SET-BYTE, WISP-TEST-BYTE");
+			tput_line_at(col,"CONTINUE");
+		}
+		else if (mf_cobol && opt_native)
+		{
+			/*
+			**	To turn bits on you "OR" them.
+			**	To turn bits off you "OR" then "XOR" them
+			**
+			**	MOVE figcon TO WISP-SET-BYTE
+			**	CALL "CBL_OR"  USING WISP-SET-BYTE target BY VALUE lenght
+			**	CALL "CBL_XOR" USING WISP-SET-BYTE target BY VALUE lenght
+			*/
+			tput_line_at  (col,     "MOVE %s TO WISP-SET-BYTE",token_data(figcon_node->token));
+			tput_line_at  (col,	"CALL \"CBL_OR\" USING WISP-SET-BYTE");
+			tput_statement(col+4,	target_node->down);
+			tput_clause   (col+4,   "BY VALUE 1");
+			if (!bit_on_flag)
+			{
+				tput_line_at  (col,	"CALL \"CBL_XOR\" USING WISP-SET-BYTE");
+				tput_statement(col+4,	target_node->down);
+				tput_clause   (col+4,   "BY VALUE 1");
+			}
 		}
 		else
 		{
-			tput_line_at  (col,   "CALL \"BIT_OFF\" USING WISP-SET-BYTE, WISP-TEST-BYTE");
+			/*
+			**	MOVE figcon TO WISP-SET-BYTE
+			**	MOVE target TO WISP-TEST-BYTE
+			**	CALL "BIT_ON"/"BIT_OFF" USING WISP-SET-BYTE, WISP-TEST-BYTE
+			**	MOVE WISP-TEST-BYTE TO target
+			*/
+
+			tput_line_at(col,"MOVE %s TO WISP-SET-BYTE",token_data(figcon_node->token));
+
+			tput_line_at  (col,   "MOVE");
+			tput_statement(col+4,      target_node->down);
+			tput_clause   (col+4,     "TO WISP-TEST-BYTE");
+			if (bit_on_flag)
+			{
+				tput_line_at  (col,   "CALL \"BIT_ON\" USING WISP-SET-BYTE, WISP-TEST-BYTE");
+			}
+			else
+			{
+				tput_line_at  (col,   "CALL \"BIT_OFF\" USING WISP-SET-BYTE, WISP-TEST-BYTE");
+			}
+			tput_line_at  (col,   "MOVE WISP-TEST-BYTE TO");
+			tput_statement(col+4,      target_node->down);
 		}
-		tput_line_at  (col,   "MOVE WISP-TEST-BYTE TO");
-		tput_statement(col+4,      target_node->down);
 
 		tput_statement(col, trailing_fluff_node);
 		trailing_fluff_node = free_statement(trailing_fluff_node);
@@ -1657,6 +1701,25 @@ static NODE parse_perform(NODE the_statement, NODE the_sentence)
 	else
 	{
 		inline_perform = 1;
+
+		/*
+		**	Special case: A procedure name can be all digits so it looks
+		**	like a NUMBER.
+		**
+		**	PERFORM {NUMBER}	-- not inline
+		**	PERFORM {NUMBER} TIMES	-- inline
+		*/
+		if (curr_node && curr_node->token && NUMBER == curr_node->token->type)
+		{
+			if (curr_node->next && eq_token(curr_node->next->token,KEYWORD,"TIMES"))
+			{
+				inline_perform = 1;
+			}
+			else
+			{
+				inline_perform = 0;
+			}
+		}
 	}
 	
 	if (inline_perform)
@@ -1997,6 +2060,16 @@ NODE parse_hold(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_procd.c,v $
+**	Revision 1.46  2004/01/05 19:33:29  gsl
+**	The WISP translator was reporting errors for paragraph names that
+**	consisted of all digits. This has been fixed.
+**	
+**	Revision 1.45  2003/09/03 20:05:38  gsl
+**	For MF with native option use CBL_OR and CBL_XOR instead of BIT_ON/BIT_OFF
+**	
+**	Revision 1.44  2003/08/13 20:57:18  gsl
+**	#NOFAC option
+**	
 **	Revision 1.43  2003/03/17 20:33:16  gsl
 **	remove commented old code
 **	

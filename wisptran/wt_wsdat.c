@@ -44,8 +44,8 @@ int ws_init(void)
 	int	use_copy, output_copy;
 	cob_file	*cob_file_ptr;
 
-	use_copy = 0;									/* Use a "COPY" statement		*/
-	output_copy = 0;								/* Write the copy code.			*/
+	use_copy = 0;						/* Use a "COPY" statement		*/
+	output_copy = 0;					/* Write the copy code.			*/
 
 	/*
 		Version	Revision Date		Wisp
@@ -54,16 +54,17 @@ int ws_init(void)
 		 8	1.11	 1997/04/29	V4_2_00
 		 9	1.12     1998-02-10 
 		10	1.14     1998-03-17	4.2.02 
-		11	1.18	 2002/05/16	4.5.xx
+		11	1.18	 2002/05/16	5.0.xx
+		51xx	1.41     2003/08/11	5.1.xx - change to using 4 digit WISP version
 		--------------------------------------
 						      Copybook number ( 001=figcon, 002=Work-Stor )
 						      |COBOL (2=ACUCOBOL 5=MF)
-						      || Version 
+						      || Version (4 digit WISP version)
 						      || |
 	*/
-	if      (acu_cobol) strcpy(COPY_WORKSTOR,"wc002211.cpy");
-	else if (mf_cobol)  strcpy(COPY_WORKSTOR,"wc002511.cpy");
-	else                strcpy(COPY_WORKSTOR,"wc002x11.cpy");
+	if      (acu_cobol) sprintf(COPY_WORKSTOR, "wc22%04d.%s", (int)(WISP_VERSION_NUM), copybookext());
+	else if (mf_cobol)  sprintf(COPY_WORKSTOR, "wc25%04d.%s", (int)(WISP_VERSION_NUM), copybookext());
+	else                sprintf(COPY_WORKSTOR, "wc2x%04d.%s", (int)(WISP_VERSION_NUM), copybookext());
 
 	tput_blank();
 	tput_scomment		("*****************************************************************");
@@ -316,26 +317,25 @@ int ws_init(void)
 		tput_line		("               05  WISP-SCREEN-LINE PIC X(80) OCCURS 24 TIMES.");
 		tput_blank();
 
+		tput_blank();
+		tput_scomment( "*****************************************************************");
+		tput_scomment( "**** Native Screens fields");	/* opt_native_screens */
+		tput_scomment( "*****************************************************************");
+		tput_blank();
+	
+		tput_scomment( "*    Special-names CURSOR clause.");
+		tput_line_at(8, "01  WISP-CURSOR.");
+		tput_line_at(8, "    05  WISP-CURSOR-LINE    PIC 999 VALUE 1.");
+		tput_line_at(8, "    05  WISP-CURSOR-COL     PIC 999 VALUE 1.");
+		
 		if (acu_cobol)
 		{
-			tput_blank();
-			tput_scomment( "*****************************************************************");
-			tput_scomment( "**** Native Screens fields");
-			tput_scomment( "*****************************************************************");
-			tput_blank();
-	
-			tput_scomment( "*    Special-names CURSOR clause.");
-			tput_line_at(8, "01  WISP-CURSOR.");
-			tput_line_at(8, "    05  WISP-CURSOR-LINE    PIC 999 VALUE 1.");
-			tput_line_at(8, "    05  WISP-CURSOR-COL     PIC 999 VALUE 1.");
-		
 			tput_blank();
 			tput_scomment( "*    Special-names CRT STATUS clause.");
 			tput_line_at(8, "01  WISP-CRT-STATUS.");
 			tput_line_at(8, "    05  WISP-CRT-KEY-1               PIC X.");
 			tput_line_at(8, "        88  WISP-CRT-STATUS-TERMINATED  VALUE '0'.");
 			tput_line_at(8, "        88  WISP-CRT-STATUS-EXCEPTION   VALUE '1'.");
-			tput_line_at(8, "        88  WISP-CRT-STATUS-EOF         VALUE '2'.");
 			tput_line_at(8, "        88  WISP-CRT-STATUS-TIMEOUT     VALUE '3'.");
 			tput_line_at(8, "        88  WISP-CRT-STATUS-NOITEM      VALUE '9'.");
 			tput_line_at(8, "    05  WISP-CRT-KEY-EXCEPTION       PIC X COMP-X.");
@@ -345,7 +345,7 @@ int ws_init(void)
 			tput_line_at(8, "    05  WISP-CRT-KEY-3               PIC X COMP-X.");		       
 			tput_line_at(8, "        88  WISP-CRT-KEY-TAB            VALUE  9.");
 			tput_line_at(8, "        88  WISP-CRT-KEY-ENTER          VALUE 13.");
-		
+
 			tput_blank();
 			tput_scomment( "*    Special-names SCREEN CONTROL clause.");
 			tput_line_at(8, "01  WISP-SCREEN-CONTROL.");
@@ -353,13 +353,47 @@ int ws_init(void)
 			tput_line_at(8, "    05  WISP-CONTROL-VALUE      PIC 999 VALUE 1.");
 			tput_line_at(8, "    05  WISP-CONTROL-HANDLE     USAGE HANDLE.");
 			tput_line_at(8, "    05  WISP-CONTROL-ID         PIC XX COMP-X.");
-		
+		}
+			
+		if (mf_cobol)
+		{
 			tput_blank();
-			tput_scomment( "*    Fields for DISPLAY statements.");
-			tput_line_at(8, "01  WISP-DISPLAY-FIELDS-DATA PIC X(1185).");
-			tput_line_at(8, "01  FILLER REDEFINES WISP-DISPLAY-FIELDS-DATA.");
-			tput_line_at(8, "    05  WISP-DISPLAY-FIELDS OCCURS 15 PIC X(79).");
+			/*        123456*89+123456789+123456789+123456789+123456789+123456789+123456789+123456789+ */
+			tput_scomment( "*    Micro Focus ADIS Routine Calls.");
+			tput_line_at(8, "01  WISP-ADIS-SET-BIT-PAIRS        PIC 9(2) COMP-X VALUE 1.");
+			tput_line_at(8, "01  WISP-ADIS-USER-KEY-CONTROL.");
+			tput_line_at(8, "    05  WISP-ADIS-USER-KEY-SETTING PIC 9(2) COMP-X.");
+			tput_line_at(8, "    05  FILLER                     PIC X    VALUE \"1\".");
+			tput_line_at(8, "    05  WISP-ADIS-FIRST-USER-KEY   PIC 9(2) COMP-X.");
+			tput_line_at(8, "    05  WISP-ADIS-NUMBER-OF-KEYS   PIC 9(2) COMP-X.");
+
+			tput_blank();
+			tput_scomment( "*    Accept Omitted Field.");
+			tput_line_at(8, "01  WISP-OMITTED-FIELD PIC X.");
+
+			tput_blank();
+			tput_scomment( "*    Special-names CRT STATUS clause.");
+			tput_line_at(8, "01  WISP-CRT-STATUS.");
+			tput_line_at(8, "    05  WISP-CRT-STATUS-1            PIC X.");
+			tput_line_at(8, "        88  WISP-CRT-STATUS-TERMINATED  VALUE '0'.");
+			tput_line_at(8, "        88  WISP-CRT-STATUS-FUNCKEY     VALUE '1'.");
+			tput_line_at(8, "        88  WISP-CRT-STATUS-ERROR       VALUE '9'.");
+			tput_line_at(8, "    05  WISP-CRT-STATUS-2            PIC 99 COMP-X.");
+			tput_line_at(8, "        88  WISP-CRT-EX-ESC             VALUE 0.");
+			tput_line_at(8, "        88  WISP-CRT-EX-HELP            VALUE 33.");
+			tput_line_at(8, "        88  WISP-CRT-EX-GETKEY          VALUE 34.");
+			tput_line_at(8, "        88  WISP-CRT-EX-ENTER           VALUE 48.");
+			tput_line_at(8, "    05  WISP-CRT-STATUS-3            PIC 99 COMP-X.");		       
+		}
 		
+		tput_blank();
+		tput_scomment( "*    Fields for DISPLAY statements.");
+		tput_line_at(8, "01  WISP-DISPLAY-FIELDS-DATA PIC X(1185).");
+		tput_line_at(8, "01  FILLER REDEFINES WISP-DISPLAY-FIELDS-DATA.");
+		tput_line_at(8, "    05  WISP-DISPLAY-FIELDS OCCURS 15 PIC X(79).");
+		
+		if (acu_cobol)
+		{
 			tput_blank();
 			tput_scomment( "*    Screen items COLOR phrase values.");
 			tput_line_at(8, "78  WISP-CLR-REVERSE VALUE  1024.");
@@ -374,43 +408,50 @@ int ws_init(void)
 			tput_scomment( "*                           32768 = Protected");
 			tput_line_at(8, "78  WISP-CLR-ERROR   VALUE 17408.");
 			tput_scomment( "*                           17408 = Blink + Reversed");
-		
-			tput_blank();
-			tput_scomment( "*    WISP workstation working items.");
-			tput_line_at(8, "01  WISP-PFKEY                 PIC 99.");
-			tput_line_at(8, "    88  WISP-PFKEY-ENTER       VALUE  0.");
-			tput_line_at(8, "    88  WISP-PFKEY-HELP        VALUE 33.");
-			tput_line_at(8, "    88  WISP-PFKEY-INVALID     VALUE 99.");
-			tput_line_at(8, "01  WISP-CURSOR-POSITION.");
-			tput_line_at(8, "    05  WISP-CURSOR-POSITION-COL COMP-1 PIC S9(4).");
-			tput_line_at(8, "    05  WISP-CURSOR-POSITION-ROW COMP-1 PIC S9(4).");
-		
-			tput_blank();
-			tput_scomment( "*    WISP DISPLAY AND READ working items.");
-			tput_line_at(8, "01  WISP-ALLOWABLE-PF-KEYS-CNT PIC 99.");
-			tput_line_at(8, "01  WISP-ON-PF-KEYS-CNT        PIC 99.");
-			tput_line_at(8, "01  WISP-DNR-ON-PFKEY          PIC X VALUE \"N\".");
-			tput_line_at(8, "01  WISP-DNR-NO-MOD            PIC X VALUE \"N\".");
-			tput_line_at(8, "01  WISP-DNR-RANGE-ERROR       PIC X VALUE \"N\".");
-		
-			tput_blank();
-			tput_line_at(8, "01  WISP-DNR-ORDER-AREA.");
-			tput_line_at(8, "    05  WISP-DNR-ROW         PIC X COMP-X VALUE 1.");
-			tput_line_at(8, "    05  WISP-DNR-WCC         PIC X COMP-X VALUE 160.");
-			tput_line_at(8, "        88  WISP-DNR-WCC-UNLOCK-KEYBOARD  VALUES");
-			tput_line_at(8, "            128 THRU 255.");
-			tput_line_at(8, "        88  WISP-DNR-WCC-SOUND-ALARM      VALUES ");
-			tput_line_at(8, "             64 THRU 127, 192 THRU 255.");
-			tput_line_at(8, "        88  WISP-DNR-WCC-POSITION-CURSOR  VALUES");
-			tput_line_at(8, "             32 THRU  63,  96 THRU 127,");
-			tput_line_at(8, "            160 THRU 171, 224 THRU 255.");
-			tput_line_at(8, "    05  WISP-DNR-CURSOR-COL  PIC X COMP-X VALUE 0.");
-			tput_line_at(8, "    05  WISP-DNR-CURSOR-ROW  PIC X COMP-X VALUE 0.");
-		
-			tput_blank();
-			tput_line_at(8, "01  WISP-DNR-WCC-CURSOR-BIT  PIC X VALUE X\"20\".");
-			tput_line_at(8, "01  WISP-DNR-WCC-ALARM-BIT   PIC X VALUE X\"40\".");
 		}
+		if (mf_cobol)
+		{
+			tput_line_at(8, "78  WISP-CTR-ERROR   VALUE \"REVERSE-VIDEO\".");
+			tput_line_at(8, "78  WISP-CTR-NONERR  VALUE \"HIGHLIGHT\".");
+		}
+		
+		tput_blank();
+		tput_scomment( "*    WISP workstation working items.");
+		tput_line_at(8, "01  WISP-PFKEY                 PIC 99.");
+		tput_line_at(8, "    88  WISP-PFKEY-ENTER       VALUE  0.");
+		tput_line_at(8, "    88  WISP-PFKEY-HELP        VALUE 33.");
+		tput_line_at(8, "    88  WISP-PFKEY-INVALID     VALUE 99.");
+		tput_line_at(8, "01  WISP-CURSOR-POSITION.");
+		tput_line_at(8, "    05  WISP-CURSOR-POSITION-COL %s PIC S9(4).", bin2_type);
+		tput_line_at(8, "    05  WISP-CURSOR-POSITION-ROW %s PIC S9(4).", bin2_type);
+	
+		tput_blank();
+		tput_scomment( "*    WISP DISPLAY AND READ working items.");
+		tput_line_at(8, "01  WISP-ALLOWABLE-PF-KEYS-CNT PIC 99.");
+		tput_line_at(8, "01  WISP-ON-PF-KEYS-CNT        PIC 99.");
+		tput_line_at(8, "01  WISP-DNR-ON-PFKEY          PIC X VALUE \"N\".");
+		tput_line_at(8, "01  WISP-DNR-NO-MOD            PIC X VALUE \"N\".");
+		tput_line_at(8, "01  WISP-DNR-RANGE-ERROR       PIC X VALUE \"N\".");
+		
+		tput_blank();
+		tput_line_at(8, "01  WISP-DNR-ORDER-AREA.");
+		tput_line_at(8, "    05  WISP-DNR-ROW         PIC X COMP-X VALUE 1.");
+		tput_line_at(8, "    05  WISP-DNR-WCC         PIC X COMP-X VALUE 160.");
+		tput_line_at(8, "        88  WISP-DNR-WCC-UNLOCK-KEYBOARD  VALUES");
+		tput_line_at(8, "            128 THRU 255.");
+		tput_line_at(8, "        88  WISP-DNR-WCC-SOUND-ALARM      VALUES ");
+		tput_line_at(8, "             64 THRU 127, 192 THRU 255.");
+		tput_line_at(8, "        88  WISP-DNR-WCC-POSITION-CURSOR  VALUES");
+		tput_line_at(8, "             32 THRU  63,  96 THRU 127,");
+		tput_line_at(8, "            160 THRU 171, 224 THRU 255.");
+		tput_line_at(8, "    05  WISP-DNR-CURSOR-COL  PIC X COMP-X VALUE 0.");
+		tput_line_at(8, "    05  WISP-DNR-CURSOR-ROW  PIC X COMP-X VALUE 0.");
+	
+		tput_blank();
+		tput_line_at(8, "01  WISP-DNR-WCC-CURSOR-BIT  PIC X VALUE X\"20\".");
+		tput_line_at(8, "01  WISP-DNR-WCC-ALARM-BIT   PIC X VALUE X\"40\".");
+
+		tput_blank();
 		tput_scomment		("*****************************************************************");
 		tput_scomment		("**** END OF COPYBOOK FILE = %s",COPY_WORKSTOR);
 		tput_scomment		("*****************************************************************");
@@ -561,6 +602,35 @@ int ws_init(void)
 /*
 **	History:
 **	$Log: wt_wsdat.c,v $
+**	Revision 1.49  2003/12/02 21:23:20  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
+**	Revision 1.48  2003/09/05 18:15:22  gsl
+**	MF Native Screens
+**	
+**	Revision 1.47  2003/09/03 20:05:56  gsl
+**	MF native screens
+**	
+**	Revision 1.46  2003/08/27 16:50:45  gsl
+**	MF Native Screens
+**	
+**	Revision 1.45  2003/08/15 20:54:27  gsl
+**	Micro Focus Native Screens
+**	
+**	Revision 1.44  2003/08/13 20:57:38  gsl
+**	Micro Focus Native Screens
+**	
+**	Revision 1.43  2003/08/12 20:56:38  gsl
+**	Micro Focus native screens
+**	
+**	Revision 1.42  2003/08/11 21:08:44  gsl
+**	Use WISP_VERSION_NUM a 4 digit version number as version for cpy file
+**	
+**	Revision 1.41  2003/08/11 17:18:18  gsl
+**	MF Native screens
+**	
 **	Revision 1.40  2003/03/17 20:33:16  gsl
 **	remove commented old code
 **	

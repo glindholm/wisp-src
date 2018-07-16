@@ -6,7 +6,7 @@
 #################################################################
 #
 # Use this makefile to build an Acucobol-GT 5.0 runtime 
-# with WISP and EDE 5.0.01.
+# with WISP and EDE 5.1.00.
 #
 # ACUDIR=C:\acucorp\acucbl500\acugt
 #
@@ -74,8 +74,8 @@
 #################################################################
 
 # Set the installed WISP and EDE directory here.
-WISPDIR=C:\WISP5001
-EDEDIR=C:\EDE5001
+WISPDIR=C:\WISP5100
+EDEDIR=C:\EDE5100
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispe

@@ -1014,7 +1014,9 @@ static key_t keyval(char p[PORTNAME_SIZE], int create)
 		}
 		fprintf(keyfile,"%d\n",WL_wgetpgrp());
 		fclose(keyfile);
+#ifdef unix
 		chmod(keypath,0666);
+#endif
 	}
 #ifdef unix
 	return_key =  WL_wftok(keypath);
@@ -1118,6 +1120,9 @@ static int functype(char* func)
 /*
 **	History:
 **	$Log: message.c,v $
+**	Revision 1.44  2009/10/18 20:45:57  gsl
+**	fix windows warnings
+**	
 **	Revision 1.43  2003/01/31 18:25:18  gsl
 **	Fix  copyright header and -Wall warnings
 **	

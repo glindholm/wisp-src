@@ -99,10 +99,8 @@ int gcalend(void)
 {
 	unsigned int i, j;
 	int k;
-	unsigned char *vsss();
 	int active;
 	FILE *fp;
-	char *fgets();
 	int last, found, freepage;
 
 	i = MAX_APT * LENGTH * (WIDTH+1);
@@ -192,7 +190,7 @@ int gcalend(void)
 			if (!found) i = freepage;
 			else --i;
 
-			if (i < 0) vbell();
+			if (i > MAX_APT) vbell(); /* wrap around */
 			else if (VL_gcal2(this_date,tab+PAGE)) strcpy(apt[i], this_date);
 			else strcpy(apt[i],"               ");
 		}
@@ -539,8 +537,6 @@ static int position(m) int m;
 
 static int move()
 {
-	unsigned char *vsss();
-
 	vrss(save);
 	vrss(save2);
 	save2 = vsss(row+rows-2,col,2,cols);
@@ -712,7 +708,6 @@ static int outmonth()
 
 static int showagain()
 {
-	unsigned char *vsss();
 	if (initpos())
 	{
 		vrss(save2);
@@ -771,6 +766,12 @@ static int in_use(wstr) char *wstr;
 /*
 **	History:
 **	$Log: gcalend.c,v $
+**	Revision 1.25  2010/02/10 14:50:17  gsl
+**	fix warnings
+**	
+**	Revision 1.24  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.23  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

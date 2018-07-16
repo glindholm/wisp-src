@@ -231,7 +231,7 @@ static int debug_validate_license(void)
 		WL_upper_string(valcode);
 		if (VALIDATION_CODE_SIZE != strlen(valcode))
 		{
-			printf("INVALID strlen(valcode) = [%d]\n", strlen(valcode));
+			printf("INVALID strlen(valcode) = [%lu]\n", (unsigned long)strlen(valcode));
 			return(LICENSE_CHECK_INVALID);
 		}
 
@@ -289,7 +289,7 @@ static int debug_validate_license(void)
 		*/
 		if (VALIDATION_CODE_SIZE != strlen(valcode))
 		{
-			printf("INVALID strlen(valcode) = [%d]\n", strlen(valcode));
+			printf("INVALID strlen(valcode) = [%lu]\n", (unsigned long)strlen(valcode));
 			return(LICENSE_CHECK_INVALID);
 		}
 		break;
@@ -505,6 +505,15 @@ int main(int argc, char *argv[])
 /*
 **	History:
 **	$Log: wlictest.c,v $
+**	Revision 1.14  2010/01/22 23:03:12  gsl
+**	Fix printf %lu size_t warnings
+**	
+**	Revision 1.13  2010/01/22 16:44:05  gsl
+**	Fix printf %lu size_t warnings
+**	
+**	Revision 1.12  2010/01/20 22:25:37  gsl
+**	fix unsigned format warning
+**	
 **	Revision 1.11  2003/06/12 20:54:30  gsl
 **	Add support for ENTERPRISE licenses with a version number and remove
 **	support for UNLIMITED license.

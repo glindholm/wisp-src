@@ -1,6 +1,12 @@
-echo lp $1
-lp $1
+#echo lp $1
+#lp $1
+echo "-------------------------------------------------------------------"
+cat $1
+echo "-------------------------------------------------------------------"
+echo
+MAILADDR=wisp@shellstream.com
+echo Mailing $1 to $MAILADDR
 LICENSEE=`grep Licensee $1 | sed s/Licensee//`
 LICENSEE=`echo $LICENSEE`
 MAILSUBJECT="WISP License: $LICENSEE"
-cat $1 | mailx -s "$MAILSUBJECT" support@neom.com
+cat $1 | mail -s "$MAILSUBJECT" $MAILADDR -- -f $MAILADDR

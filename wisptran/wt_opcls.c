@@ -100,6 +100,9 @@ NODE parse_open(NODE the_statement)
 	int	with_no_rewind = 0;
 	int	open_mode = WFOPEN_UNKNOWN;
 
+	access_node = NULL;
+	file_node = NULL;
+
 	curr_node = first_token_node(the_statement);
 
 	if (!eq_token(curr_node->token,VERB,"OPEN"))
@@ -176,7 +179,7 @@ NODE parse_open(NODE the_statement)
 			{
 				write_tlog(curr_node->token,"WISP",'F',"PARSE",
 					   "Error parsing OPEN statement. Expecting open mode found [%s]",
-					   token_data(curr_node->token));
+					   token_indata(curr_node->token));
 
 				tput_statement(12, the_statement);
 				return(free_statement(the_statement));
@@ -190,6 +193,16 @@ NODE parse_open(NODE the_statement)
 			/*
 			**	Next token should be a file name(s).
 			*/
+
+			if (access_node == NULL)
+			{
+				write_tlog(curr_node->token,"WISP",'F',"PARSE",
+					   "Error parsing OPEN statement. Expecting open mode found [%s]",
+					   token_indata(curr_node->token));
+
+				tput_statement(12, the_statement);
+				return(free_statement(the_statement));
+			}
 
 			file_node = curr_node;
 
@@ -209,8 +222,8 @@ NODE parse_open(NODE the_statement)
 				/* CRT File */
 
 				tput_scomment("**** OPEN %s %s (Removed)", 
-					token_data(access_node->token), 
-					token_data(file_node->token)); 
+					token_indata(access_node->token), 
+					token_indata(file_node->token)); 
 				tput_line_at(col,"CONTINUE");
 			}
 			else if (-1 != (fnum = file_index(token_data(file_node->token))))
@@ -224,7 +237,7 @@ NODE parse_open(NODE the_statement)
 
 				write_log("WISP",'E',"NOTFOUND",
 				  "Error -- File %s, referenced by OPEN statement but not Declared.",
-				  token_data(file_node->token));
+				  token_indata(file_node->token));
 			}
 
 			curr_node = file_node->next;
@@ -252,7 +265,7 @@ NODE parse_open(NODE the_statement)
 		else
 		{
 			write_tlog(curr_node->token,"WISP",'E',"PARSE","Error parsing OPEN statement [%s].", 
-				   token_data(curr_node->token));
+				   token_indata(curr_node->token));
 		}
 		
 		/*
@@ -531,14 +544,14 @@ NODE parse_close(NODE the_statement)
 		{
 			is_crt = 1;
 
-			if (acn_cobol)
+			if (opt_native_screens)		/* CLOSE CRT */
 			{
 				/* CRT File */
 
 				tput_scomment("**** CLOSE %s (Removed)", 
 					token_data(file_node->token)); 
 
-				write_log("WISP",'I',"NATIVE","Workstation CLOSE %s removed for Native Screens",
+				write_log("WISP",'I',"NATIVESCREENS","Workstation CLOSE %s removed for Native Screens",
 					  token_data(file_node->token));
 				tput_line_at(col, "CONTINUE");
 			}
@@ -703,7 +716,13 @@ NODE parse_close(NODE the_statement)
 		fnum = file_index(token_data(printer_list->down->token));
 		if (-1 != fnum)
 		{
-			if (!opt_native)
+ 			if (opt_native)
+ 			{
+ 				tput_line_at(col, "CALL \"W@PRINTFILE\" ");
+				tput_clause(col+4,    "USING %s", get_prog_nname(fnum));
+				tput_clause(col,  "END-CALL");
+ 			}
+			else
 			{
 				tput_line_at(col, "CALL \"WFCLOSE\" ");
 				tput_clause(col+4,    "USING %s", get_prog_nname(fnum));
@@ -756,6 +775,21 @@ void gen_wfopen(int col, int fnum, int open_mode)
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
+**	Revision 1.47  2004/10/14 19:52:08  gsl
+**	The WISP translator was aborting on an improperly formed OPEN statement that was missing the Open Mode keyword. This has been
+**	fixed.
+**	
+**	Revision 1.46  2003/11/12 14:58:43  gsl
+**	Add W@PRINTFILE with #NATIVE back in for Clerity's use.
+**	
+**	Revision 1.45  2003/09/08 19:43:27  gsl
+**	Change log entries for Native Screens
+**	
+**	Revision 1.44  2003/08/08 19:52:46  gsl
+**	Add native screens comments
+**	
+**	Revision 1.43  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.42  2003/06/10 14:44:09  gsl
 **	Fix abort when missing OPEN mode
 **	

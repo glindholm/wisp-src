@@ -1,0 +1,19 @@
+**   Copyright (c) 2004 NeoMedia Technologies, All rights reserved.
+**   $Id:$
+**
+**   File:       qausing.wps
+**
+**   Project:    WISP/TEST - WANG COBOL Functionality
+**
+**   Purpose:    RETURN-CODE special register processing
+**
+**   Tests:      USING arguments
+**                
+**
+
+procedure qausing.wps
+    USING &arg1 string(10)
+
+DISPLAY "ARG1 = ", &arg1
+
+

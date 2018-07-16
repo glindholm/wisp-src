@@ -471,7 +471,7 @@ void process_sub_var(char type,
 		if (caller != 2)
 		{
 			write_log("PROCTRAN",'E','R',"INCORRASS",
-				"Assumed only an ASSIGN statemen. Caller(%d)  Notify NeoMedia Migrations.",caller);
+				"Assumed only an ASSIGN statemen. Caller(%d)  Notify WISP Support.",caller);
 			return;
 		}
 
@@ -580,7 +580,7 @@ void process_sub_var(char type,
 		else if (*cur_if->var)							/* Display message if already have var.	*/
 		{
 			write_log("PROCTRAN",'E','R',"HAVEVAR",
-				"Already have variable (%s) for this IF structure, Notify NeoMedia Migrations.",cur_if->var);
+				"Already have variable (%s) for this IF structure, Notify WISP Support.",cur_if->var);
 		}
 
 		strcpy(cur_if->var,newvar);
@@ -672,6 +672,9 @@ static void process_complex_sub(char type,
 /*
 **	History:
 **	$Log: ptif.c,v $
+**	Revision 1.12  2010/01/10 16:04:27  gsl
+**	Shell Stream
+**	
 **	Revision 1.11  2003/02/05 21:15:03  gsl
 **	fix -Wall warnings
 **	

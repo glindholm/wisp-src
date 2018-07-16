@@ -106,7 +106,7 @@ static void char_to_char(DTYPE *dest,DTYPE *src);
 static void achar_to_achar(DTYPE *dest,DTYPE *src);
 static void str_to_char(DTYPE *dest,DTYPE *src);
 static void char_to_trunc(DTYPE *dest,DTYPE *src);
-static void trunc(DTYPE *dest);
+static void k_trunc(DTYPE *dest);
 static void char_to_int(DTYPE *dest,DTYPE *src);
 static void char_to_cchar(DTYPE *dest,DTYPE *src);
 static void char_to_bchar(DTYPE *dest,DTYPE *src);
@@ -600,9 +600,9 @@ static void char_to_trunc(DTYPE *dest,DTYPE *src)
 {
 
 	char_to_str(dest,src);
-	trunc(dest);
+	k_trunc(dest);
 }
-static void trunc(DTYPE *dest)
+static void k_trunc(DTYPE *dest)
 {
 	KCSI_strunc(DEST_ADDRESS);
 	dest->_len = strlen(DEST_ADDRESS);
@@ -802,7 +802,7 @@ static void literal_to_str(DTYPE *dest,DTYPE *src)
 static void literal_to_trunc(DTYPE *dest,DTYPE *src)
 {
 	literal_to_str(dest,src);
-	trunc(dest);
+	k_trunc(dest);
 }
 static void literal_to_trailing_zoned(DTYPE *dest,DTYPE *src)
 {
@@ -2922,6 +2922,12 @@ static int get_zoned_sign(int ch)
 /*
 **	History:
 **	$Log: rcvt.c,v $
+**	Revision 1.17  2010/01/10 00:58:33  gsl
+**	fix LINUX warnings
+**	trunc
+**	isblank
+**	sys_errlist
+**	
 **	Revision 1.16  2003/02/20 19:29:54  gsl
 **	fix -Wall warnings
 **	

@@ -22,3 +22,7 @@ BOOL CALLBACK WISPSrvDlgProc ( HWND hDlg, UINT msg, WPARAM wp, LPARAM lp );
 BOOL CALLBACK WISPDirDlgProc ( HWND hDlg, UINT msg, WPARAM wp, LPARAM lp );
 BOOL CALLBACK WISPConfigDlgProc ( HWND hDlg, UINT msg, WPARAM wp, LPARAM lp );
 DWORD Validate ( HWND hCtl );
+
+void DisplayErrorMessageBox(long rc, char* title);
+long CreateRegistryKey(char* regKeyName, PHKEY phKey);
+

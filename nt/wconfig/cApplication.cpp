@@ -23,9 +23,7 @@ bool cApplication::HaveRequiredPermissions()
 	char temp[16];
 	char *msgList[2];
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,	"Software", 0, KEY_ALL_ACCESS, &hKey );
 
 	switch(rc)
 	{
@@ -91,7 +89,7 @@ bool cApplication::HaveRequiredPermissions()
 //	cApplication::InitApp
 //		Initializes and creates the main application window
 //
-cApplication::InitApp ( HINSTANCE hInst )
+int cApplication::InitApp ( HINSTANCE hInst )
 {
 	WNDCLASS wc;
 	wc.style		=	CS_HREDRAW | CS_VREDRAW;
@@ -144,6 +142,63 @@ void cApplication::MsgLoop ( )
 	}
 }
 
+void DisplayErrorMessageBox(long rc, char* title)
+{
+	LPVOID lpMsgBuf;
+	FormatMessage( 
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM | 
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		rc,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) &lpMsgBuf,
+		0,
+		NULL );
+
+	// Display the string.
+	MessageBox( NULL, (LPCTSTR)lpMsgBuf, title, MB_OK | MB_ICONINFORMATION );
+
+	// Free the buffer.
+	LocalFree( lpMsgBuf );
+}
+
+long CreateRegistryKey(char* regKeyName, PHKEY phKey)
+{
+	long rc;
+	DWORD Disp;
+
+	rc = RegCreateKeyEx ( HKEY_LOCAL_MACHINE, regKeyName,
+		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
+		NULL, phKey, &Disp );
+
+	if (ERROR_SUCCESS != rc)
+	{
+		DisplayErrorMessageBox(rc, "RegCreateKeyEx()");
+	}
+
+	return rc;
+}
+void RemoveRegistryValue(HKEY hKey, char* regValueName)
+{
+	long rc;
+	UCHAR empty[1];
+	empty[0] = '\0';
+
+	// First set value to null since on Vista the Delete does not work.
+	rc = RegSetValueEx (	hKey, regValueName, 0, REG_SZ, empty, 1);
+	if (ERROR_SUCCESS != rc)
+	{
+		DisplayErrorMessageBox(rc, "RegSetValueEx()");
+	}
+	rc = RegFlushKey ( hKey );
+
+	// Now try and delete
+	rc = RegDeleteValue ( hKey, regValueName );
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // cApplication::DeleteReg
@@ -163,34 +218,32 @@ int cApplication::DeleteReg ( )
 		be left unchanged.
 	*/
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS\\EXTRACT",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_EXTRACT, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "WISPCPU" );
-		RegDeleteValue ( hKey, "WISPNETID" );
+		RemoveRegistryValue ( hKey, REGVAL_EXTRACT_WISPCPU );
+		RemoveRegistryValue ( hKey, REGVAL_EXTRACT_WISPNETID );
+
+		RegCloseKey ( hKey );
 	}
 	
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS\\MESSAGE",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_MESSAGE, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "SHAREDIR" );
+		RemoveRegistryValue ( hKey, REGVAL_MESSAGE_SHAREDIR );
+
+		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS\\SCRATCH",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_SCRATCH, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "WISPSCRATCHMODE" );
+		RemoveRegistryValue ( hKey, REGVAL_SCRATCH_WISPSCRATCHMODE );
+
+		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VSSUBS",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
 		RegDeleteKey ( hKey, "EXTRACT" );
@@ -199,127 +252,117 @@ int cApplication::DeleteReg ( )
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WISPTran\\COBOL\\ACUCOBOL",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL_ACU, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "COB" );
-		RegDeleteValue ( hKey, "COBFLAGS" );
-		RegDeleteValue ( hKey, "OUTDIR" );
-		RegDeleteValue ( hKey, "OBJEXT" );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_COB );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_COBFLAGS );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_OUTDIR );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_OBJEXT );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WISPTran\\COBOL\\MFCOBOL",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL_MF, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "COB" );
-		RegDeleteValue ( hKey, "COBFLAGS" );
-		RegDeleteValue ( hKey, "OUTDIR" );
-		RegDeleteValue ( hKey, "OBJEXT" );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_COB );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_COBFLAGS );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_OUTDIR );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_OBJEXT );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WISPTran\\COBOL",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "Language" );
+		RemoveRegistryValue ( hKey, REGVAL_COBOL_LANGUAGE );
 		RegDeleteKey ( hKey, "ACUCOBOL" );
 		RegDeleteKey ( hKey, "MFCOBOL" );
 		RegCloseKey ( hKey );
 	}
 	
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WISPTran",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "HSize" );
-		RegDeleteValue ( hKey, "VSize" );
-		RegDeleteValue ( hKey, "WorkDir" );
+		RemoveRegistryValue ( hKey, REGVAL_WISPTRAN_HSIZE );
+		RemoveRegistryValue ( hKey, REGVAL_WISPTRAN_VSIZE );
+		RemoveRegistryValue ( hKey, REGVAL_WISPTRAN_WORKDIR );
+
 		RegDeleteKey ( hKey, "COBOL" );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\DISPLAY",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_DISPLAY, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "WISPDISPLAY8BIT" );
+		RemoveRegistryValue ( hKey, REGVAL_DISPLAY_WISPDISPLAY8BIT );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WPROC",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WPROC, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "WPROC" );
-		RegDeleteValue ( hKey, "WPROCDEBUG" );
+		RemoveRegistryValue ( hKey, REGVAL_WPROC_WPROC );
+		RemoveRegistryValue ( hKey, REGVAL_WPROC_WPROCDEBUG );
+
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "DISPLAY" );
-		RegDeleteValue ( hKey, "WEDITOR" );
-		RegDeleteValue ( hKey, "WISP" );
+		RemoveRegistryValue ( hKey, REGVAL_WISPBIN_DISPLAY );
+		RemoveRegistryValue ( hKey, REGVAL_WISPBIN_WEDITOR );
+		RemoveRegistryValue ( hKey, REGVAL_WISPBIN_WISP );
+
 		RegDeleteKey ( hKey, "DISPLAY" );
 		RegDeleteKey ( hKey, "WPROC" );
-		RegDeleteKey ( hKey, "WISPTran" );
+		RegDeleteKey ( hKey, "WISPTRAN" );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\ACP",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_ACP, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "ACPCONFIG" );
-		RegDeleteValue ( hKey, "ACPMAP" );
+		RemoveRegistryValue ( hKey, REGVAL_ACP_ACPCONFIG );
+		RemoveRegistryValue ( hKey, REGVAL_ACP_ACPMAP );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\License",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_LICENSE, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "FILE" );
+		RemoveRegistryValue ( hKey, REGVAL_LICENSE_FILE );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VIDEOCAP",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VERSIONS, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "VIDEOCAP" );
-		RegDeleteValue ( hKey, "WISPTERM" );
+		RemoveRegistryValue ( hKey, REGVAL_VERSIONS_WISP );
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,	REGKEY_WISP_VIDEOCAP, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteValue ( hKey, "PATH" );
-		RegDeleteValue ( hKey, "SERVER" );
-		RegDeleteValue ( hKey, "TMPDIR" );
-		RegDeleteValue ( hKey, "USERSDIR" );
-		RegDeleteValue ( hKey, "WISPCONFIG" );
-		RegDeleteValue ( hKey, "WISPDIR" );
-		RegDeleteValue ( hKey, "WISPSORTMEM" );
+		RemoveRegistryValue ( hKey, REGVAL_VIDEOCAP_VIDEOCAP );
+		RemoveRegistryValue ( hKey, REGVAL_VIDEOCAP_WISPTERM );
+
+		RegCloseKey ( hKey );
+	}
+
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,	REGKEY_WISP, 0, KEY_ALL_ACCESS, &hKey );
+	if (ERROR_SUCCESS == rc)
+	{
+		RemoveRegistryValue ( hKey, REGVAL_WISP_PATH );
+		RemoveRegistryValue ( hKey, REGVAL_WISP_SERVER );
+		RemoveRegistryValue ( hKey, REGVAL_WISP_TMPDIR );
+		RemoveRegistryValue ( hKey, REGVAL_WISP_USERSDIR );
+		RemoveRegistryValue ( hKey, REGVAL_WISP_WISPCONFIG );
+		RemoveRegistryValue ( hKey, REGVAL_WISP_WISPDIR );
+		RemoveRegistryValue ( hKey, REGVAL_WISP_WISPSORTMEM );
+
 		RegDeleteKey ( hKey, "ACP" );
 		RegDeleteKey ( hKey, "License" );
 		RegDeleteKey ( hKey, "VIDEOCAP" );
@@ -329,16 +372,161 @@ int cApplication::DeleteReg ( )
 		RegCloseKey ( hKey );
 	}
 
-	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE,	REGKEY_NEOMEDIA_BASE, 0, KEY_ALL_ACCESS, &hKey );
 	if (ERROR_SUCCESS == rc)
 	{
-		RegDeleteKey ( hKey, "WISP" );
+		rc = RegDeleteKey ( hKey, "WISP" );
 		RegCloseKey ( hKey );
 	}
+	
 
 	return 0;
+}
+/*
+REGEDIT4
+
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP]
+"SERVER"="MY-SERVER"
+"WISPDIR"="\\\\MY-SERVER\\wisp"
+"WISPCONFIG"="\\\\MY-SERVER\\wisp\\config"
+"PATH"="\\\\MY-SERVER\\wisp\\bin;\\\\MY-SERVER\\wisp\\acu;\\\\MY-SERVER\\volumes\\volrun\\LIB001;\\\\MY-SERVER\\KCSI"
+"TMPDIR"="C:\\temp"
+"WISPSORTMEM"=" "
+"USERSDIR"="\\\\MY-SERVER\\users"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\VIDEOCAP]
+"WISPTERM"="wincon"
+"VIDEOCAP"="\\\\MY-SERVER\\wisp\\config\\videocap"
+
+*/
+#define REG_FILE_KEY_PREFIX "[HKEY_LOCAL_MACHINE\\"
+static int ImportRegistryFile(const char* fileName)
+{
+	FILE*	the_file;
+	char	inlin[2048];
+	char	regkey[2048];
+	char*	ptr;
+	HKEY	hKey = NULL;
+
+	the_file = fopen(fileName,"r");	
+	if (the_file == NULL)
+	{
+		return 1; // Open failed
+	}
+
+	regkey[0] = '\0';
+	while (fgets(inlin,sizeof(inlin),the_file))
+	{
+		if ('\0' == regkey[0])
+		{
+			// Looking for a registry key
+			if ('[' != inlin[0])
+			{
+				continue; // Skip line until a registry key is found
+			}
+		}
+
+		if ('[' == inlin[0]) // Found a registry key
+		{
+			if (hKey != NULL)
+			{
+				RegCloseKey ( hKey );
+				hKey = NULL;
+			}
+
+			// Ensure it starts "[HKEY_LOCAL_MACHINE\"
+			if (_strnicmp(inlin, REG_FILE_KEY_PREFIX, strlen(REG_FILE_KEY_PREFIX)) != 0)
+			{
+				return 2;  // bad key - abort
+			}
+
+			strcpy(regkey,&inlin[strlen(REG_FILE_KEY_PREFIX)]);
+			ptr = strchr(regkey,']');
+			if (NULL == ptr)
+			{
+				return 2;  // misformed key - abort
+			}
+			*ptr = '\0';
+
+			// Ensure it's for WISP; all start with "SOFTWARE\\NeoMedia\\WISP"
+			if (_strnicmp(regkey, REGKEY_WISP, strlen(REGKEY_WISP)) != 0)
+			{
+				return 2;  // bad key - abort
+			}
+
+			// Add the Key
+			if (0 != CreateRegistryKey(regkey, &hKey))
+			{
+				return 3; // Create failed
+			}
+		}
+		else if ('\"' == inlin[0]) // Found a Registry Value
+		{
+			// "NAME"="VALUE"
+			char* name;
+			char* value;
+			UCHAR  valueBuf[2048];
+
+			ptr = strchr(&inlin[1],'\"'); // find end of NAME
+			if (NULL == ptr)
+			{
+				return 4; // misformed value
+			}
+			*ptr = '\0';
+
+			name = &inlin[1];
+			ptr++;
+			if ('=' != *ptr)
+			{
+				return 4;
+			}
+			ptr++;
+			if ('\"' != *ptr)
+			{
+				return 4;
+			}
+			ptr++;
+			value = ptr;
+			ptr = strrchr(value,'\"'); // find end of VALUE
+			if (NULL == ptr)
+			{
+				return 4; // misformed value
+			}
+			*ptr = '\0';
+
+			// Un-expand double backslashes
+			int xi, xo, len;
+			len = strlen(value);
+			for(xi = xo = 0; xi < len; xi++, xo++)
+			{
+				valueBuf[xo] = value[xi];
+				if ('\\' == value[xi] && '\\' == value[xi+1])
+				{
+					xi++;
+				}
+			}
+			valueBuf[xo] = '\0';
+
+			if (0 != RegSetValueEx (hKey, name, 0, REG_SZ, valueBuf, strlen ((char *) valueBuf )+1))
+			{
+				return 5; // Set failed
+			}
+
+		}
+
+	}
+
+	if (hKey != NULL)
+	{
+		RegCloseKey ( hKey );
+		hKey = NULL;
+	}
+
+	fclose(the_file);
+
+	return 0;
+	
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -346,7 +534,7 @@ int cApplication::DeleteReg ( )
 //	cDialogs::_MainDialog::ImportRegData
 //		Imports a registry file by calling regedit.exe
 //
-cApplication::ImportRegData ( HWND hDlg )
+int cApplication::ImportRegData ( HWND hDlg )
 {
 	char sFileName[MaxPath];
 	OPENFILENAME ofn;
@@ -365,25 +553,16 @@ cApplication::ImportRegData ( HWND hDlg )
 	ofn.nFilterIndex	=	1;
 	ofn.lpstrTitle		=	"Import Registry Data";
 
-	if ( GetOpenFileName ( &ofn ) == TRUE ) {
-		/*	If the user selected a file then we can build a command
-			line and create a process that calls regedit.exe to
-			import the file */
-		char sRegCmdLine[MaxPath];
-		STARTUPINFO sInfo;
-		PROCESS_INFORMATION pi;
-		ZeroMemory ( &sInfo, sizeof ( sInfo ));
-
-		sInfo.cb	=	sizeof (STARTUPINFO);
-
-		sprintf ( sRegCmdLine, "RegEdit %s", sFileName );
-		CreateProcess (NULL, sRegCmdLine, NULL,
-			NULL, TRUE, REALTIME_PRIORITY_CLASS,
-			NULL, NULL, &sInfo, &pi);
-		//	Wait for the process to return before continuing execution
-		//	Otherwise, WConfig reads the data from the registry before
-		//	it has been updated by the new process.
-		WaitForSingleObject ( pi.hProcess, INFINITE );
+	if ( GetOpenFileName ( &ofn ) == TRUE ) 
+	{
+		long rc;
+		rc = ImportRegistryFile(sFileName);
+		if (rc != 0)
+		{
+			char mess[1024];
+			sprintf(mess,"Import failed with status code=%d",rc);
+			MessageBox( NULL, (LPCTSTR)mess, "Import Failed", MB_OK | MB_ICONINFORMATION );
+		}
 	}
 	while ( Dialogs.General.Initialize ( ) == 1 );
 	Dialogs.Videocap.Initialize ( );
@@ -422,6 +601,31 @@ void expandBackslashes(char *out, const char *in, int size)
 	out[ox] = '\0';
 }
 
+static void appendRegkey(char* buf, char* regKey)
+{
+	strcat( buf, "\r\n[HKEY_LOCAL_MACHINE\\" );
+	strcat( buf, regKey );
+	strcat( buf, "]\r\n" );
+}
+
+static void appendRegValue(char* buf, char* regValueName, HKEY hKey)
+{
+	DWORD szBuf;
+	UCHAR sRegVal[2048];		//	Buffer for values that are retrieved from the registry
+	char  Line[2048];		//	Buffer for formatted registry values before
+					//		they are added to the ToWrite buffer
+	char sRegValExpanded[2048];
+
+	szBuf = sizeof ( sRegVal );
+	ZeroMemory ( sRegVal, sizeof ( sRegVal ));
+
+	RegQueryValueEx ( hKey, regValueName, 0, NULL, sRegVal, &szBuf );
+	expandBackslashes(sRegValExpanded, (char *)sRegVal, sizeof(sRegValExpanded));
+
+	sprintf ( Line, "\"%s\"=\"%s\"\r\n", regValueName, (char *) sRegValExpanded );
+	strcat ( buf, Line );
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	cApplication::WriteReg
@@ -430,18 +634,13 @@ void expandBackslashes(char *out, const char *in, int size)
 //
 void cApplication::WriteRegFile ( )
 {
-	HKEY hKey;
-	char FileName[_MAX_PATH],	//	Name of the file to export to
-		ToWrite[102400],	//	Buffer for text that is waiting to be written
-		Line[2048];		//	Buffer for formatted registry values before
-					//		they are added to the ToWrite buffer
+	HKEY hKey = NULL;
+	char FileName[_MAX_PATH];	//	Name of the file to export to
+	char ToWrite[102400];		//	Buffer for text that is waiting to be written
 	HANDLE hFile;			//	Handle of the file that the data is written to
-	UCHAR sRegVal[1024];	//	Buffer for values that are retrieved from the registry
-	ZeroMemory ( Line, sizeof ( Line ));
-	ZeroMemory ( sRegVal, sizeof ( sRegVal ));
+
 	ZeroMemory ( ToWrite, sizeof ( ToWrite ));
 	ZeroMemory ( FileName, sizeof ( FileName ));
-	DWORD szBuf = _MAX_PATH;
 
 	//	Get file name that the data is to be exported to
 	OPENFILENAME ofn;
@@ -464,474 +663,156 @@ void cApplication::WriteRegFile ( )
 			OPEN_ALWAYS,
 			FILE_ATTRIBUTE_ARCHIVE, NULL );
 
-		//	The following ints are used for string position pointers
-		int cnt = 0,
-			StartStr = 0,
-			EndStr = 0,
-			TokCnt = 0;
-		char sRegVal1[1024];
-		ZeroMemory ( sRegVal1, sizeof ( sRegVal1 ));
 
 		//	The text file must have this heading at the top, otherwise
 		//	regedit does not interpret it as a registry file
 		strcpy ( ToWrite, "REGEDIT4\r\n\r\n" );
+
 		//*************************************************************
 		//	Save the values in the WISP key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP", 0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE"
-			"\\NeoMedia\\WISP]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the SERVER entry *****
-		RegQueryValueEx ( 
-			hKey, "SERVER", 0, NULL, sRegVal, &szBuf );
-		sprintf ( Line, "\"SERVER\"=\"%s\"\r\n", (char *) sRegVal );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		RegQueryValueEx (
-			hKey, "WISPDIR", 0, NULL, sRegVal, &szBuf );
-
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-
-		sprintf ( Line, "\"WISPDIR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPCONFIG entry *****
-		RegQueryValueEx (
-			hKey, "WISPCONFIG", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPCONFIG\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the PATH entry *****
-		RegQueryValueEx (
-			hKey, "PATH", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"PATH\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the TMPDIR entry *****
-		RegQueryValueEx (
-			hKey, "TMPDIR", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"TMPDIR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPSORTMEM entry *****
-		RegQueryValueEx (
-			hKey, "WISPSORTMEM", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPSORTMEM\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the USERSDIR entry *****
-		RegQueryValueEx (
-			hKey, "USERSDIR", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"USERSDIR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP);
+		appendRegValue(ToWrite, REGVAL_WISP_SERVER, hKey);
+		appendRegValue(ToWrite, REGVAL_WISP_WISPDIR, hKey);
+		appendRegValue(ToWrite, REGVAL_WISP_WISPCONFIG, hKey);
+		appendRegValue(ToWrite, REGVAL_WISP_PATH, hKey);
+		appendRegValue(ToWrite, REGVAL_WISP_TMPDIR, hKey);
+		appendRegValue(ToWrite, REGVAL_WISP_WISPSORTMEM, hKey);
+		appendRegValue(ToWrite, REGVAL_WISP_USERSDIR, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	OK, now do the WISP\VIDEOCAP key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\VIDEOCAP",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\VIDEOCAP]\r\n" );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP_VIDEOCAP,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_VIDEOCAP);
+		appendRegValue(ToWrite, REGVAL_VIDEOCAP_WISPTERM, hKey);
+		appendRegValue(ToWrite, REGVAL_VIDEOCAP_VIDEOCAP, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPTERM entry *****
-		RegQueryValueEx (
-			hKey, "WISPTERM", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPTERM\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the VIDEOCAP entry *****
-		RegQueryValueEx (
-			hKey, "VIDEOCAP", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"VIDEOCAP\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		//*************************************************************
+		//	Now do the WISP\VSSUBS key
+		appendRegkey(ToWrite, REGKEY_WISP_VSSUBS);
 
 		//*************************************************************
 		//	Now do the WISP\VSSUBS\EXTRACT key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\EXTRACT",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\"
-			"SOFTWARE\\NeoMedia\\WISP\\VSSUBS]\r\n" );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\VSSUBS\\EXTRACT]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPCPU entry *****
-		RegQueryValueEx (
-			hKey, "WISPCPU", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPCPU\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPNETID entry *****
-		RegQueryValueEx (
-			hKey, "WISPNETID", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPNETID\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_EXTRACT,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_VSSUBS_EXTRACT);
+		appendRegValue(ToWrite, REGVAL_EXTRACT_WISPCPU, hKey);
+		appendRegValue(ToWrite, REGVAL_EXTRACT_WISPNETID, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\VSSUBS\MESSAGE key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\MESSAGE",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\VSSUBS\\MESSAGE]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the SHAREDIR entry *****
-		RegQueryValueEx (
-			hKey, "SHAREDIR", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"SHAREDIR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_MESSAGE,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_VSSUBS_MESSAGE);
+		appendRegValue(ToWrite, REGVAL_MESSAGE_SHAREDIR, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\VSSUBS\SCRATCH key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\VSSUBS\\SCRATCH",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite, "\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\VSSUBS\\SCRATCH]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPSCRATCHMODE entry *****
-		RegQueryValueEx (
-			hKey, "WISPSCRATCHMODE", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPSCRATCHMODE\"=\"%s\"\r\n",
-			(char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP_VSSUBS_SCRATCH,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_VSSUBS_SCRATCH);
+		appendRegValue(ToWrite, REGVAL_SCRATCH_WISPSCRATCHMODE, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\License key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\License",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\License]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the FILE entry *****
-		RegQueryValueEx (
-			hKey, "FILE", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"FILE\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP_LICENSE,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_LICENSE);
+		appendRegValue(ToWrite, REGVAL_LICENSE_FILE, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\Versions key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\Versions",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite, 
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\Versions]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISP entry *****
-		RegQueryValueEx (
-			hKey, "WISP", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISP\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx( HKEY_LOCAL_MACHINE, REGKEY_WISP_VERSIONS,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_VERSIONS);
+		appendRegValue(ToWrite, REGVAL_VERSIONS_WISP, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\WISPBin]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISP entry *****
-		RegQueryValueEx (
-			hKey, "WISP", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISP\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WEDITOR entry *****
-		RegQueryValueEx (
-			hKey, "WEDITOR", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WEDITOR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the DISPLAY entry *****
-		RegQueryValueEx (
-			hKey, "DISPLAY", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"DISPLAY\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN);
+		appendRegValue(ToWrite, REGVAL_WISPBIN_WISP, hKey);
+		appendRegValue(ToWrite, REGVAL_WISPBIN_WEDITOR, hKey);
+		appendRegValue(ToWrite, REGVAL_WISPBIN_DISPLAY, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin\DISPLAY key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin\\DISPLAY",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\WISPBin\\DISPLAY]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WISPDISPLAY8BIT entry *****
-		RegQueryValueEx (
-			hKey, "WISPDISPLAY8BIT", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WISPDISPLAY8BIT\"=\"%s\"\r\n",
-			(char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_DISPLAY,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN_DISPLAY);
+		appendRegValue(ToWrite, REGVAL_DISPLAY_WISPDISPLAY8BIT, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin\WPROC key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WPROC",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\WISPBin\\WPROC]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WPROC entry *****
-		RegQueryValueEx (
-			hKey, "WPROC", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WPROC\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WPROCDEBUG entry *****
-		RegQueryValueEx (
-			hKey, "WPROCDEBUG", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WPROCDEBUG\"=\"%s\"\r\n",
-			(char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WPROC,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN_WPROC);
+		appendRegValue(ToWrite, REGVAL_WPROC_WPROC, hKey);
+		appendRegValue(ToWrite, REGVAL_WPROC_WPROCDEBUG, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin\WISPTRAN key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WISPTRAN",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite, "\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\"
-			"NeoMedia\\WISP\\WISPBin\\WISPTRAN]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the HSize entry *****
-		RegQueryValueEx (
-			hKey, "HSize", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"HSize\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the VSize entry *****
-		RegQueryValueEx (
-			hKey, "VSize", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"VSize\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the WorkDir entry *****
-		RegQueryValueEx (
-			hKey, "WorkDir", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"WorkDir\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN_WISPTRAN);
+		appendRegValue(ToWrite, REGVAL_WISPTRAN_HSIZE, hKey);
+		appendRegValue(ToWrite, REGVAL_WISPTRAN_VSIZE, hKey);
+		appendRegValue(ToWrite, REGVAL_WISPTRAN_WORKDIR, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin\WISPTRAN\COBOL key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin\\WISPTRAN\\COBOL",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\"
-			"WISP\\WISPBin\\WISPTRAN\\COBOL]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the Language entry *****
-		RegQueryValueEx (
-			hKey, "Language", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"Language\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL);
+		appendRegValue(ToWrite, REGVAL_COBOL_LANGUAGE, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin\WISPTRAN\COBOL\ACUCOBOL key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin"
-			"\\WISPTRAN\\COBOL\\ACUCOBOL",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\"
-			"WISP\\WISPBin\\WISPTRAN\\COBOL\\ACUCOBOL]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the COB entry *****
-		RegQueryValueEx (
-			hKey, "COB", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"COB\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the COBFLAGS entry *****
-		RegQueryValueEx (
-			hKey, "COBFLAGS", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"COBFLAGS\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the OUTDIR entry *****
-		RegQueryValueEx (
-			hKey, "OUTDIR", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"OUTDIR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the OBJEXT entry *****
-		RegQueryValueEx (
-			hKey, "OBJEXT", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"OBJEXT\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL_ACU,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL_ACU);
+		appendRegValue(ToWrite, REGVAL_COBOL_COB, hKey);
+		appendRegValue(ToWrite, REGVAL_COBOL_COBFLAGS, hKey);
+		appendRegValue(ToWrite, REGVAL_COBOL_OUTDIR, hKey);
+		appendRegValue(ToWrite, REGVAL_COBOL_OBJEXT, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\WISPBin\WISPTRAN\COBOL\MFCOBOL key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\WISPBin"
-			"\\WISPTRAN\\COBOL\\MFCOBOL",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\NeoMedia\\"
-			"WISP\\WISPBin\\WISPTRAN\\COBOL\\MFCOBOL]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the COB entry *****
-		RegQueryValueEx (
-			hKey, "COB", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"COB\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the COBFLAGS entry *****
-		RegQueryValueEx (
-			hKey, "COBFLAGS", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"COBFLAGS\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the OUTDIR entry *****
-		RegQueryValueEx (
-			hKey, "OUTDIR", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"OUTDIR\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the OBJEXT entry *****
-		RegQueryValueEx (
-			hKey, "OBJEXT", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"OBJEXT\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL_MF,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_WISPBIN_WISPTRAN_COBOL_MF);
+		appendRegValue(ToWrite, REGVAL_COBOL_COB, hKey);
+		appendRegValue(ToWrite, REGVAL_COBOL_COBFLAGS, hKey);
+		appendRegValue(ToWrite, REGVAL_COBOL_OUTDIR, hKey);
+		appendRegValue(ToWrite, REGVAL_COBOL_OBJEXT, hKey);
+		RegCloseKey ( hKey );
+		hKey = NULL;
 
 		//*************************************************************
 		//	Now do the WISP\ACP key
-		RegOpenKeyEx ( HKEY_LOCAL_MACHINE,
-			"SOFTWARE\\NeoMedia\\WISP\\ACP",
-			0, KEY_READ, &hKey );
-		strcat ( ToWrite,
-			"\r\n[HKEY_LOCAL_MACHINE\\SOFTWARE"
-			"\\NeoMedia\\WISP\\ACP]\r\n" );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the ACPCONFIG entry *****
-		RegQueryValueEx (
-			hKey, "ACPCONFIG", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"ACPCONFIG\"=\"%s\"\r\n",
-			(char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
-		szBuf = _MAX_PATH;
-		ZeroMemory ( sRegVal, sizeof ( sRegVal ));
-		//	***** Get the value in the ACPMAP entry *****
-		RegQueryValueEx (
-			hKey, "ACPMAP", 0, NULL, sRegVal, &szBuf );
-		expandBackslashes(sRegVal1, (char *)sRegVal, sizeof(sRegVal1));
-		sprintf ( Line, "\"ACPMAP\"=\"%s\"\r\n", (char *) sRegVal1 );
-		strcat ( ToWrite, Line );
-
+		RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_ACP,0, KEY_READ, &hKey );
+		appendRegkey(ToWrite, REGKEY_WISP_ACP);
+		appendRegValue(ToWrite, REGVAL_ACP_ACPCONFIG, hKey);
+		appendRegValue(ToWrite, REGVAL_ACP_ACPMAP, hKey);
 		RegCloseKey ( hKey );
+		hKey = NULL;
+
+		//*************************************************************
 		DWORD Written = 0;
 		int foo = strlen ( ToWrite );
 		WriteFile ( hFile, ToWrite,

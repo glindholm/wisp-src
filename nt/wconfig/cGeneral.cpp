@@ -77,44 +77,46 @@ void cDialogs::_General::ChkInvalid ( HWND hCtl )
 //	cDialogs::_General::Initialize
 //		Initializes the General dialog
 //
-cDialogs::_General::Initialize ( )
+int cDialogs::_General::Initialize ( )
 {
-	HKEY hKey;
+	long rc;
+	HKEY hKey = NULL;
 	HWND hDlg = Dialogs.General.hGeneral;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
 	BOOL InvReg = FALSE;
 	ZeroMemory ( sRegValue, sizeof ( sRegValue ));
 
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-	//	Create the semaphore for the validation thread
-//	TextColorSemaphor = CreateSemaphore ( NULL, 1, 1, "ValidationSmphr" );
-	//	Open the WISP key, if doesn't exist then create it
-	//	***** END CHANGED *****
-	RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE, "Software\\NeoMedia\\WISP",
-		0, NULL, REG_OPTION_NON_VOLATILE,
-		KEY_ALL_ACCESS, NULL, &hKey, &Disp );
+	rc = CreateRegistryKey ( REGKEY_WISP, &hKey );
 
 	//	The return value of the three functions called next specify
 	//	whether they completed successfully or not
 	switch ( InitServer ( hKey )) {
 		case 2: 
+			RegCloseKey ( hKey );
 			return 2;
 			break;
 		case 1:
+			RegCloseKey ( hKey );
 			return 0;
 			break;
 	}
-	if ( InitWISPDir ( hKey ) == 2 ) return 2;
-	if ( InitWISPConf ( hKey ) == 2 ) return 2;
+	if ( InitWISPDir ( hKey ) == 2 ) 
+	{
+		RegCloseKey ( hKey );
+		return 2;
+	}
+	if ( InitWISPConf ( hKey ) == 2 ) 
+	{
+		RegCloseKey ( hKey );
+		return 2;
+	}
 	BufSize = _MAX_FNAME;
 
 
 	BufSize = _MAX_PATH;
 	//	Get value for USERDIR field
-	if ( RegQueryValueEx ( hKey, "USERSDIR", 0, NULL,
+	if ( RegQueryValueEx ( hKey, REGVAL_WISP_USERSDIR, 0, NULL,
 		sRegValue, &BufSize ) == ERROR_SUCCESS ) {
 
 		sRegValue[BufSize] = '\0';
@@ -139,7 +141,7 @@ cDialogs::_General::Initialize ( )
 	}
 	//	Get value for PATH field
 	BufSize = _MAX_PATH;
-	if ( RegQueryValueEx ( hKey, "PATH", 0, NULL,
+	if ( RegQueryValueEx ( hKey, REGVAL_WISP_PATH, 0, NULL,
 		sRegValue, &BufSize ) == ERROR_SUCCESS ) {
 
 		sRegValue[BufSize] = '\0';
@@ -155,7 +157,7 @@ cDialogs::_General::Initialize ( )
 	}
 	//	Get value for TEMPDIR field
 	BufSize = _MAX_PATH;
-	if ( RegQueryValueEx ( hKey, "TMPDIR", 0, NULL,
+	if ( RegQueryValueEx ( hKey, REGVAL_WISP_TMPDIR, 0, NULL,
 		sRegValue, &BufSize ) == ERROR_SUCCESS ) {
 
 		sRegValue[BufSize] = '\0';
@@ -169,7 +171,7 @@ cDialogs::_General::Initialize ( )
 	}
 	//	Get value for WISPSORTMEM field
 	BufSize = _MAX_PATH;
-	if ( RegQueryValueEx ( hKey, "WISPSORTMEM", 0, NULL,
+	if ( RegQueryValueEx ( hKey, REGVAL_WISP_WISPSORTMEM, 0, NULL,
 		sRegValue, &BufSize ) == ERROR_SUCCESS ) {
 
 		sRegValue[BufSize] = '\0';
@@ -182,28 +184,21 @@ cDialogs::_General::Initialize ( )
 			Dialogs.General.hGeneral, S01_WISPSORTMEM, " " );
 	}
 	if ( hKey != NULL ) 
+	{
 		RegCloseKey ( hKey );
+	}
 
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-	//	Removed HDC assignments because they aren't being used, they
-	//	are left over from a previous thing
 	HWND hCtl = GetDlgItem ( hGeneral, S01_WISPDIR );
-//	HDC hDC = GetDC ( hCtl );
 	ChkInvalid ( hCtl );
 
 	hCtl = GetDlgItem ( hGeneral, S01_WISPCONFIG );
-//	hDC = GetDC ( hCtl );
 	ChkInvalid ( hCtl );
 
 	hCtl = GetDlgItem ( hGeneral, S01_USERDIR );
-//	hDC = GetDC ( hCtl );
 	ChkInvalid ( hCtl );
 
 	hCtl = GetDlgItem ( hGeneral, S01_TEMPDIR );
-//	hDC = GetDC ( hCtl );
 	ChkInvalid ( hCtl );
-	//	***** END CHANGED *****
 
 	return 0;
 }
@@ -213,13 +208,12 @@ cDialogs::_General::Initialize ( )
 //	cDialogs::_General::InitServer
 //		Initializes the Server field of the General dialog
 //
-cDialogs::_General::InitServer ( HKEY hKey )
+int cDialogs::_General::InitServer ( HKEY hKey )
 {
 	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH] = "";
 
-	if (ERROR_SUCCESS == RegQueryValueEx ( 
-		hKey, "SERVER", 0, NULL, sRegValue, &BufSize ))
+	if (ERROR_SUCCESS == RegQueryValueEx ( hKey, REGVAL_WISP_SERVER, 0, NULL, sRegValue, &BufSize ))
 	{
 		sRegValue[BufSize] = '\0';
 	}
@@ -286,13 +280,12 @@ cDialogs::_General::InitServer ( HKEY hKey )
 //	cDialogs::_General::InitWISPConf
 //		Initializes the WISPConfigDir field of the General dialog
 //
-cDialogs::_General::InitWISPConf ( HKEY hKey )
+int cDialogs::_General::InitWISPConf ( HKEY hKey )
 {
 	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH] = "";
 
-	if (ERROR_SUCCESS == RegQueryValueEx ( 
-		hKey, "WISPCONFIG", 0, NULL, sRegValue, &BufSize ))
+	if (ERROR_SUCCESS == RegQueryValueEx ( hKey, REGVAL_WISP_WISPCONFIG, 0, NULL, sRegValue, &BufSize ))
 	{
 		sRegValue[BufSize] = '\0';
 	}
@@ -319,13 +312,12 @@ cDialogs::_General::InitWISPConf ( HKEY hKey )
 //	cDialogs::_General::InitWISPDir
 //		Initializes the WISPDir field of the General dialog
 //
-cDialogs::_General::InitWISPDir ( HKEY hKey )
+int cDialogs::_General::InitWISPDir ( HKEY hKey )
 {
 	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH] = "";
 
-	if (ERROR_SUCCESS == RegQueryValueEx ( 
-		hKey, "WISPDIR", 0, NULL, sRegValue, &BufSize ))
+	if (ERROR_SUCCESS == RegQueryValueEx ( hKey, REGVAL_WISP_WISPDIR, 0, NULL, sRegValue, &BufSize ))
 	{
 		sRegValue[BufSize] = '\0';
 	}
@@ -352,62 +344,39 @@ cDialogs::_General::InitWISPDir ( HKEY hKey )
 //	cDialogs::_General::Save
 //		Save the data in the General dialog to the registry
 //
-cDialogs::_General::Save ( )
+int cDialogs::_General::Save ( )
 {
+	long rc;
 	HWND hDlg;
-	HKEY hKey;
-	UCHAR sRegVal[_MAX_PATH];
+	HKEY hKey = NULL;
+	UCHAR sRegVal[2048];
 
 	hDlg = Dialogs.General.hGeneral;
 
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP",
-		0, KEY_ALL_ACCESS, &hKey );
+	rc = RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP, 0, KEY_ALL_ACCESS, &hKey );
 	
-	GetDlgItemText (
-		hDlg, S01_SERVER, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "SERVER", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_SERVER, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_SERVER, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	GetDlgItemText (
-		hDlg, S01_WISPDIR, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "WISPDIR", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_WISPDIR, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_WISPDIR, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	GetDlgItemText (
-		hDlg, S01_WISPCONFIG, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "WISPCONFIG", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_WISPCONFIG, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_WISPCONFIG, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	GetDlgItemText (
-		hDlg, S01_USERDIR, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "USERSDIR", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_USERDIR, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_USERSDIR, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	GetDlgItemText (
-		hDlg, S01_PATH, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "PATH", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_PATH, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_PATH, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	GetDlgItemText (
-		hDlg, S01_TEMPDIR, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "TMPDIR", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_TEMPDIR, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_TMPDIR, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	GetDlgItemText (
-		hDlg, S01_WISPSORTMEM, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "WISPSORTMEM", 0, REG_SZ, sRegVal,
-		strlen ((char *) sRegVal )+1);
+	GetDlgItemText (hDlg, S01_WISPSORTMEM, (char *) sRegVal, sizeof ( sRegVal ) );
+	rc = RegSetValueEx (hKey, REGVAL_WISP_WISPSORTMEM, 0, REG_SZ, sRegVal, strlen ((char *) sRegVal )+1);
 
-	RegFlushKey ( hKey );
-	RegCloseKey ( hKey );
+	rc = RegFlushKey ( hKey );
+	rc = RegCloseKey ( hKey );
 	return 0;
 }

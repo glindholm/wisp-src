@@ -35,7 +35,7 @@
 //	rControls::_StatusBar::Create
 //		Creates the status bar window
 //
-rControls::_StatusBar::Create ( HINSTANCE hInst, HWND hAppWnd )
+int rControls::_StatusBar::Create ( HINSTANCE hInst, HWND hAppWnd )
 {
 	WNDCLASS wc;
 	wc.style				= 	CS_HREDRAW | CS_VREDRAW;
@@ -93,7 +93,7 @@ rControls::_StatusBar::Create ( HINSTANCE hInst, HWND hAppWnd )
 //	cWindows::_AppWindow::_StatusBar::_Status::UpdateMsg ( ) 
 //		Changes the message displayed in the status element
 //
-rControls::_StatusBar::UpdateMsg ( char *sMsg ) 
+int rControls::_StatusBar::UpdateMsg ( char *sMsg ) 
 {
 	strcpy ( sOutput, sMsg );
 	SetWindowText ( hStatus, sOutput );
@@ -106,7 +106,7 @@ rControls::_StatusBar::UpdateMsg ( char *sMsg )
 //		Resizes the status bar to fill the width of the 
 //		app window 
 //
-rControls::_StatusBar::Resize ( HWND hAppWnd ) 
+int rControls::_StatusBar::Resize ( HWND hAppWnd ) 
 {
 	RECT AppRect;
 	GetClientRect ( hAppWnd, &AppRect );
@@ -124,6 +124,9 @@ rControls::_StatusBar::Resize ( HWND hAppWnd )
 /*
 **	History:
 **	$Log: rStatusBar.cpp,v $
+**	Revision 1.8  2009/10/17 19:55:04  gsl
+**	fix default return type to int
+**	
 **	Revision 1.7  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

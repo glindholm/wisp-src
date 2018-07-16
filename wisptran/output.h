@@ -49,6 +49,8 @@ extern int tput_scomment();
 extern int tput_noprocess(char *line);
 extern int tput_blank(void);
 extern int tput_flush(void);
+extern int tput_close_copybook(void);
+extern int tput_is_copybook(void);
 extern int tput_token_cache(void);
 extern int override_output_stream(cob_file *cob_file_ptr);
 extern int release_output_stream(void);
@@ -62,6 +64,14 @@ extern void split_token_to_dtp_file(int mincol, TOKEN *tokptr);
 /*
 **	History:
 **	$Log: output.h,v $
+**	Revision 1.11  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
+**	Revision 1.10  2003/12/02 21:23:21  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
 **	Revision 1.9  2003/02/05 15:40:13  gsl
 **	Fix copyright headers
 **	

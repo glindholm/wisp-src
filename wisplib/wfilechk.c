@@ -893,10 +893,6 @@ void WL_wispfileop2cobfileop(const char wispfileop[2], char cobfileop[COB_FILEOP
 /*
 **	History:
 **	$Log: wfilechk.c,v $
-**	Revision 1.35.4.1  2003/11/10 18:54:07  gsl
-**	Sync with HEAD
-**	Fix WFILECHK3 has declaratives bug and add WC0005 test case
-**	
 **	Revision 1.37  2003/11/10 17:18:50  gsl
 **	Fix WFILECHK3 has declaratives bug and add WC0005 test case
 **	

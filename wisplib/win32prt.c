@@ -397,7 +397,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 delete_after:	
 	if ( bDeleteAfter )
 	{
-		if ( 0 != unlink(file) )
+		if ( 0 != _unlink(file) )
 		{
 			WL_wtrace("WIN32PRT","UNLINK","Unable to delete %s errno=%d",
 				file,errno);
@@ -1590,6 +1590,9 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 /*
 **	History:
 **	$Log: win32prt.c,v $
+**	Revision 1.30  2009/10/18 20:38:46  gsl
+**	fix windows warnings
+**	
 **	Revision 1.29  2003/03/20 19:05:14  gsl
 **	Change references fo DATE to WISPDATE
 **	

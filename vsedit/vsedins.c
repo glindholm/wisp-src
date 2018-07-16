@@ -192,7 +192,7 @@ static void vse_ed_ins_on(void)
 static void vse_ed_ins_unload(void)
 {
 	spaceout(ed_line[ins_row],vse_edit_width);
-	trunc(ed_line[ins_row]);
+	vse_trunc(ed_line[ins_row]);
 	over_text(ed_txt[ins_row],ed_line[ins_row]);
 
 	ed_txt[ins_row]->modfld = NULL;
@@ -386,6 +386,10 @@ static void vse_ed_ins_col(void)
 /*
 **	History:
 **	$Log: vsedins.c,v $
+**	Revision 1.16  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.15  2003/02/20 19:29:54  gsl
 **	fix -Wall warnings
 **	

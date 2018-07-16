@@ -60,8 +60,7 @@ char *product_copyright() {
    char wproc_version[80];
    sprintf(wproc_version," version %s (WL=%s) [%s]\n", product_version_str(), wisp_version(), WL_platform_name());
    strcat(notice, wproc_version);
-   strcat(notice, "Copyright (c) 1991-1993 Lexical Software. All rights reserved.\n");
-   strcat(notice, "Copyright (c) 1994-2003 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
+   strcat(notice, "Copyright (c) Shell Stream Software LLC. All Rights Reserved.\n");
 #endif
    return notice;
 }
@@ -106,6 +105,15 @@ char *demo_notice() {
 //
 //	History:
 //	$Log: product.cpp,v $
+//	Revision 1.27  2010/01/10 16:12:30  gsl
+//	Shell Stream
+//	
+//	Revision 1.26  2007/01/03 14:11:44  gsl
+//	copyright 2007
+//	
+//	Revision 1.25  2005/01/03 19:12:06  gsl
+//	Copyright year 2005
+//	
 //	Revision 1.24  2003/06/26 16:18:35  gsl
 //	version numbers
 //	

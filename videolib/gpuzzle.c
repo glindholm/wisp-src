@@ -72,7 +72,6 @@ static int move();
 
 int gpuzzle(void)
 {
-	unsigned char *vsss();
 	register int i, j, k;
 	int active;
 
@@ -343,7 +342,6 @@ static int mb(k,i,j) int k, i, j;
 
 static int move(nrows, ncols) int nrows, ncols;
 {
-	unsigned char *vsss();
 	int orow, ocol;
 
 	orow = row;
@@ -391,6 +389,9 @@ static int givehelp(void)
 /*
 **	History:
 **	$Log: gpuzzle.c,v $
+**	Revision 1.17  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.16  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

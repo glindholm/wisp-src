@@ -83,10 +83,12 @@ static cob_file *override_cobfile(void);
 static int x_tput_token(tput_context *ctx, int mincol, TOKEN *tokptr);
 static int x_tput_flush_ctx(tput_context *ctx);
 
-#define	TPUT_FLUSH	-1
-#define	TPUT_OVERRIDE	-2
-#define	TPUT_RELEASE	-3
-#define	TPUT_BLANK	-4
+#define	TPUT_FLUSH		-1
+#define	TPUT_OVERRIDE		-2
+#define	TPUT_RELEASE		-3
+#define	TPUT_BLANK		-4
+#define	TPUT_CLOSE_COPYBOOK	-5
+#define	TPUT_IS_COPYBOOK	-6
 
 
 
@@ -583,6 +585,37 @@ int tput_flush (void)
 }
 
 /*
+**	Routine:	tput_close_copybook()
+**
+**	Function:	Close the output copybook and reset context to main
+**
+**	Description:	USE WITH CAUTION!!!
+**
+*/
+int tput_close_copybook(void)
+{
+	tput_token(TPUT_CLOSE_COPYBOOK,NULL);
+	return 0;
+}
+
+/*
+**	Routine:	tput_is_copybook()
+**
+**	Function:	Check if the main output context is a copybook file.
+**
+**	Return:		
+**		0	Main
+**		1	Copybook
+**
+*/
+int tput_is_copybook(void)
+{
+	return tput_token(TPUT_IS_COPYBOOK,NULL);
+}
+
+
+
+/*
 **	Routine:	tput_token_cache()
 **
 **	Function:	Write the tokens in the token cache using tput_token().
@@ -825,6 +858,36 @@ int tput_token ( int mincol, TOKEN *tokptr )
 
 			return(0);
 		}
+		else if (TPUT_CLOSE_COPYBOOK == mincol)
+		{
+			/*
+			**	If writing to a copybook then force it closed and start 
+			**	writing to the main cob file.
+			*/
+			if (use_main && main_ctx.the_cobfile->is_copybook)
+			{
+				x_tput_token(&main_ctx, TPUT_FLUSH, NULL);
+				close_cob_file(main_ctx.the_cobfile);
+
+				main_ctx.the_cobfile = main_cob_context->outfile;
+				main_ctx.last_line = 0;
+			}
+
+			return 0;
+		}
+		else if (TPUT_IS_COPYBOOK == mincol)
+		{
+			if (main_ctx.the_cobfile->is_copybook)
+			{
+				return 1;	/* Is a copybook */
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+
 	}
 
 	if (tokptr && use_main)
@@ -1621,6 +1684,14 @@ write_the_token:
 /*
 **	History:
 **	$Log: output.c,v $
+**	Revision 1.21  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
+**	Revision 1.20  2003/12/02 21:23:21  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
 **	Revision 1.19  2003/02/28 21:49:05  gsl
 **	Cleanup and rename all the options flags opt_xxx
 **	

@@ -1,26 +1,7 @@
 /*
-******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
-******************************************************************************
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 
@@ -110,17 +91,26 @@
 #define true !false;
 #endif
 
-#define ACC_EXECUTE	01
-#define ACC_READ	04
-#define ACC_RX		05
-#define ACC_FULL	07
+#ifdef unix
+#define ACC_FILE_EXECUTE	01
+#define ACC_FILE_READ		04
+#define ACC_DIR_READ		05
+#define ACC_DIR_READ_WRITE	07
+#endif
+#ifdef WIN32
+#define ACC_FILE_EXECUTE	04
+#define ACC_FILE_READ		04
+#define ACC_DIR_READ		04
+#define ACC_DIR_READ_WRITE	06
+#endif
+
 
 /*
 **	Define  called routines
 */
 int check_access(int* pnError, const char *ptr, int mode);
-int     define_os();
-int	define_videocap();
+int define_os();
+int define_videocap();
 int run_command(char *command);
 int define_acu(const char* rts);
 int checkexe(const char *tag, const char *exe, int* pError);
@@ -293,7 +283,7 @@ int main(int argc, char* argv[], char* envp[])
 	printf("**********************************************************************\n");
 	printf("*                            WISP - WDIAG                            *\n");
 	printf("*                    System Environment Diagnostic                   *\n");
-	printf("*                  NeoMedia Technologies Incorporated                *\n");
+	printf("*                      Shell Stream Software LLC                     *\n");
 	printf("*                        All rights reserved.                        *\n");
 	printf("*                  Version %7s %-20.20s              *\n", wisp_version(), WL_platform_name());
 	printf("**********************************************************************\n");
@@ -323,10 +313,10 @@ int main(int argc, char* argv[], char* envp[])
 	}
 	else
 	{
-		print_access("WISPCONFIG", 	wispconfigdir(), 	ACC_RX, &errsw);
+		print_access("WISPCONFIG", 	wispconfigdir(), 	ACC_DIR_READ, &errsw);
 	}
 
-	print_access("WISPDIR", 	wispdir(), 		ACC_RX, &errsw);
+	print_access("WISPDIR", 	wispdir(), 		ACC_DIR_READ, &errsw);
 
 	/*
 	**	Videocap file
@@ -339,15 +329,15 @@ int main(int argc, char* argv[], char* envp[])
 	/*
 	**	Check for the videocap files
 	*/
-	print_access("videocapfile", wisptermfilepath(NULL), ACC_READ, &errsw);
-	print_access("WISPTMPDIR",   wisptmpbasedir(NULL),   ACC_FULL, &errsw);
-	print_access("SYSTMPDIR",    WL_systmpdir(NULL),     ACC_FULL, &errsw);
+	print_access("videocapfile", wisptermfilepath(NULL), ACC_FILE_READ, &errsw);
+	print_access("WISPTMPDIR",   wisptmpbasedir(NULL),   ACC_DIR_READ_WRITE, &errsw);
+	print_access("SYSTMPDIR",    WL_systmpdir(NULL),     ACC_DIR_READ_WRITE, &errsw);
 #ifdef WIN32
-	print_access("WISPSHAREDIR", wispmsgsharedir(NULL),  ACC_FULL, NULL); /* warning */
+	print_access("WISPSHAREDIR", wispmsgsharedir(NULL),  ACC_DIR_READ_WRITE, NULL); /* warning */
 #endif
 
 	cptr = WLIC_license_filepath();
-	if (print_access("licensefile", cptr, ACC_READ, &errsw) == 0)
+	if (print_access("licensefile", cptr, ACC_FILE_READ, &errsw) == 0)
 	{
 		cat_file(cptr);
 	}
@@ -380,7 +370,7 @@ int main(int argc, char* argv[], char* envp[])
 	print_nl();
 
 	buildfilepath(buff,wispconfigdir(),"LGMAP");
-	if (print_access("LGMAP",buff,ACC_READ,&errsw) == 0)
+	if (print_access("LGMAP",buff,ACC_FILE_READ,&errsw) == 0)
 	{
 		logical_id	*logical_ptr;
 		logical_ptr = WL_get_lgmap_list();
@@ -393,7 +383,7 @@ int main(int argc, char* argv[], char* envp[])
 				
 				sprintf(lgbuff, "%-6.6s %s", logical_ptr->logical, logical_ptr->translate);
 				print_inset(lgbuff);
-				check_access(NULL,logical_ptr->translate,ACC_RX);
+				check_access(NULL,logical_ptr->translate,ACC_DIR_READ);
 			}
 
 			logical_ptr = logical_ptr->next;
@@ -402,9 +392,9 @@ int main(int argc, char* argv[], char* envp[])
 	}
 
 	buildfilepath(buff,wispconfigdir(),"RVMAP");
-	if (0==access(buff,ACC_READ))
+	if (0==access(buff,ACC_FILE_READ))
 	{
-		print_access("RVMAP",buff,ACC_READ,NULL);
+		print_access("RVMAP",buff,ACC_FILE_READ,NULL);
 		print_config_file(buff);
 	}
 	else
@@ -414,19 +404,19 @@ int main(int argc, char* argv[], char* envp[])
 	
 
 	buildfilepath(buff,wispconfigdir(),CFGFNAME);
-	print_access("WSYSCONF", buff, ACC_READ, &errsw);
+	print_access("WSYSCONF", buff, ACC_FILE_READ, &errsw);
 
 	buildfilepath(buff,wispconfigdir(),"OPTIONS");
-	if (print_access("OPTIONS",buff,ACC_READ,&errsw) == 0)
+	if (print_access("OPTIONS",buff,ACC_FILE_READ,&errsw) == 0)
 	{
 		print_config_file(buff);
 	}
 
 	buildfilepath(buff,wispconfigdir(),"wproc.msg");
-	print_access("WPROCMSG", buff, ACC_READ, &errsw);
+	print_access("WPROCMSG", buff, ACC_FILE_READ, &errsw);
 
 	buildfilepath(buff,wispconfigdir(),WRUNCONFIG);
-	print_access("WRUNCONFIG", buff, ACC_READ, &errsw);
+	print_access("WRUNCONFIG", buff, ACC_FILE_READ, &errsw);
 
 	/*
 	**	Check on wrun
@@ -554,6 +544,46 @@ int main(int argc, char* argv[], char* envp[])
 		print_pair_nl("BATCHMAN", "(none)");
 	}
 #endif	
+
+	/*
+	*	PRINT Config files
+	*/
+	print_nl();
+	buildfilepath(buff,wispconfigdir(),"LPMAP");
+	if (0==access(buff,ACC_FILE_READ))
+	{
+		print_access("LPMAP",buff,ACC_FILE_READ,NULL);
+		print_config_file(buff);
+		print_nl();
+	}
+	else
+	{
+		print_pair_nl("LPMAP","(Not used)");
+	}
+
+	buildfilepath(buff,wispconfigdir(),"PRMAP");
+	if (0==access(buff,ACC_FILE_READ))
+	{
+		print_access("PRMAP",buff,ACC_FILE_READ,NULL);
+		print_config_file(buff);
+		print_nl();
+	}
+	else
+	{
+		print_pair_nl("PRMAP","(Not used)");
+	}
+
+	buildfilepath(buff,wispconfigdir(),"FORMS");
+	if (0==access(buff,ACC_FILE_READ))
+	{
+		print_access("FORMS",buff,ACC_FILE_READ,NULL);
+		print_config_file(buff);
+		print_nl();
+	}
+	else
+	{
+		print_pair_nl("FORMS","(Not used)");
+	}
 
 	/*
 	**	Check the ACUCOBOL environment
@@ -737,11 +767,11 @@ int define_os(char* ut)
 	{
 		pVersion = "Unknown";
 	}
-	sprintf(buff, "%s %s", pVersion, WL_win32_version());
+	sprintf(buff, "WIN32 %s (%s)", pVersion, WL_win32_version());
 	print_pair_nl("WINDOWS", buff);
 #endif
 
-	print_access("HOME", wisphomedir(NULL), ACC_FULL, &errsw);
+	print_access("HOME", wisphomedir(NULL), ACC_DIR_READ_WRITE, &errsw);
 
 	if ((ptr = getenv("PATH")))
 	{
@@ -763,7 +793,7 @@ int define_os(char* ut)
 			/*
 			**	Only check access if a full path given
 			*/
-			check_access(&errsw,ptr,ACC_EXECUTE);
+			check_access(&errsw,ptr,ACC_FILE_EXECUTE);
 
 			if (0!=strcmp(ptr,"/bin/sh"))
 			{
@@ -788,12 +818,12 @@ int define_os(char* ut)
 
 	print_nl();
 
-	print_access("TEMP","/usr/tmp",ACC_FULL,&errsw);
-	print_access("TEMP","/tmp",    ACC_FULL,&errsw);
+	print_access("TEMP","/usr/tmp",ACC_DIR_READ_WRITE,&errsw);
+	print_access("TEMP","/tmp",    ACC_DIR_READ_WRITE,&errsw);
 
 	if ((ptr = getenv("TMPDIR")))
 	{
-		print_access("TMPDIR", ptr, ACC_FULL, &errsw);
+		print_access("TMPDIR", ptr, ACC_DIR_READ_WRITE, &errsw);
 	}
 	else
 	{
@@ -841,6 +871,9 @@ int define_acu(const char* rts)
 	char    *acu;
 	char	*ptr;
 	char	a_config[256] = "";
+	char	inlin[2048];
+	char	*pszCodePrefix = NULL;
+
 #ifdef unix
 	char	command[256];
 #endif
@@ -859,14 +892,14 @@ int define_acu(const char* rts)
 		ptr += 2;
 		sscanf(ptr,"%s",a_config);
 
-		if (print_access("-C A_CONFIG",a_config,ACC_READ,&erracu) != 0)
+		if (print_access("-C A_CONFIG",a_config,ACC_FILE_READ,&erracu) != 0)
 		{
 			a_config[0] = '\0';
 		}	
 	}
 	else if ((acu = getenv("A_CONFIG")))
 	{
-		if (print_access("A_CONFIG",acu,ACC_READ,&erracu) == 0)
+		if (print_access("A_CONFIG",acu,ACC_FILE_READ,&erracu) == 0)
 		{
 			strcpy(a_config,acu);
 		}
@@ -877,121 +910,218 @@ int define_acu(const char* rts)
 		print_pair_err_mess("A_CONFIG","","ERROR", "NOT DEFINED");
 	}
 
+	/*
+	* $CODE_PREFIX envvar takes precidence over the A_CONFIG file setting
+	*/
+	pszCodePrefix = getenv("CODE_PREFIX");
+
 	if ('\0' != a_config[0])
 	{
 		FILE 	*the_file;
-		char	inlin[512], keyword[80];
+		char	keyword[80];
 		int	cnt,len;
-		char	*pszCodePrefix = NULL;
 
 		print_config_file(a_config);
 
 
 		/*
-		 * Get CODE-PREFIX and search for ACULINK
+		 * If CODE_PREFIX was not found in the environment then 
+		 * search for it in the A_CONFIG file.
 		 */
-
-		the_file = fopen(a_config,"r");
-		if (the_file)
+		if (NULL == pszCodePrefix)
 		{
-			while(fgets(inlin,sizeof(inlin)-1,the_file))
+			the_file = fopen(a_config,"r");
+			if (the_file)
 			{
-				len=strlen(inlin);
-				if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char	*/
-				cnt = sscanf(inlin,"%s",keyword);
-				if ( cnt < 1 ) continue;
-
-
-				if (0==strcmp(keyword,"CODE-PREFIX"))
+				while(fgets(inlin,sizeof(inlin)-1,the_file))
 				{
-					pszCodePrefix = inlin;
-					break;
-				}
-			}
-			fclose(the_file);
+					char* equalsPtr;
+					len=strlen(inlin);
+					if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char	*/
+					cnt = sscanf(inlin,"%s",keyword);
+					if ( cnt < 1 ) continue;
 
-			if (NULL != pszCodePrefix)
-			{
-				char*	token = NULL;
-				int	aculink_found = 0;
-				int	acuusing_found = 0;
-				char 	aculink_path[256];
-				char 	acuusing_path[256];
+					/*
+					* Might have scanned "keyword=..."
+					* Terminal keyword at the '=' sign.
+					*/
+					equalsPtr = strchr(keyword,'=');
+					if (equalsPtr != NULL)
+					{
+						*equalsPtr = '\0';
+					}
+
+					upper_string(keyword);
+
+					if (0==strcmp(keyword,"CODE_PREFIX") || 
+						0==strcmp(keyword,"CODE-PREFIX"))
+					{
+						pszCodePrefix = &inlin[strlen("CODE_PREFIX")];
+						break;
+					}
 					
-				print_pair_nl("CODE-PREFIX",&pszCodePrefix[11]);
-				for(token = strtok(&pszCodePrefix[11]," \t"); 
-				    token!=NULL;
-				    token = strtok(NULL," \t"))
-				{
-					print_inset(token);
-					check_access(NULL,token,ACC_RX);
-
-					if (!aculink_found)
-					{
-						buildfilepath(aculink_path,token,"ACULINK");
-						if (0==access(aculink_path,ACC_READ))
-						{
-							aculink_found = 1;
-						}
-					}
-					if (!aculink_found)
-					{
-						buildfilepath(aculink_path,token,"ACULINK.acu");
-						if (0==access(aculink_path,ACC_READ))
-						{
-							aculink_found = 1;
-						}
-					}
-					if (!acuusing_found)
-					{
-						buildfilepath(acuusing_path,token,"ACUUSING");
-						if (0==access(acuusing_path,ACC_READ))
-						{
-							acuusing_found = 1;
-						}
-					}
-					if (!acuusing_found)
-					{
-						buildfilepath(acuusing_path,token,"ACUUSING.acu");
-						if (0==access(acuusing_path,ACC_READ))
-						{
-							acuusing_found = 1;
-						}
-					}
 				}
-
-				if (aculink_found)
-				{
-					print_access("ACULINK",aculink_path,ACC_READ,&erracu);
-				}
-				else
-				{
-					erracu++;
-					print_pair_err_mess("ACULINK","","ERROR","NOT FOUND");
-				}
-
-				if (acuusing_found)
-				{
-					print_access("ACUUSING",acuusing_path,ACC_READ,&erracu);
-				}
-				else
-				{
-					erracu++;
-					print_pair_err_mess("ACUUSING","","ERROR","NOT FOUND");
-				}
+				fclose(the_file);
 			}
-			else
+		}
+	}
+
+	/*
+	*	Search CODE_PREFIX for ACULINK and ACUUSING
+	*/
+	if (NULL != pszCodePrefix)
+	{
+		char*	token = NULL;
+		int	aculink_found = 0;
+		int	acuusing_found = 0;
+		char 	aculink_path[256];
+		char 	acuusing_path[256];
+		char*	linePtr;
+
+		/*
+		* Start parsing the CODE_PREFIX line past the optional '='
+		*/
+		linePtr = pszCodePrefix;
+
+		/* Skip over whitespace */
+		while(*linePtr == ' ' || *linePtr == '\t')
+		{
+			linePtr++;
+		}
+		/* Skip over optional '=' */
+		if (*linePtr == '=')
+		{
+			linePtr++;
+		}
+			
+		print_pair_nl("CODE_PREFIX",linePtr);
+
+		/*
+		*	Split the CODE_PREFIX into tokens.
+		*	Handle OS specific separators and quoted names with embedded spaces.
+		*/
+		for(;;)
+		{
+			char tokenBuf[1024];
+			char* tokPtr;
+			char os_sep = ' ';
+#ifdef unix
+			os_sep = ':';
+#endif
+#ifdef WIN32
+			os_sep = ';';
+#endif
+
+			/* Skip over separators */
+			while(*linePtr == ' ' || *linePtr == '\t' || *linePtr == os_sep)
 			{
-				erracu++;
-				print_pair_err_mess("CODE-PREFIX","","ERROR","NOT FOUND");
-				print_pair_nl("ACULINK","(Unknown)");
-				print_pair_nl("ACUUSING","(Unknown)");
+				linePtr++;
 			}
+			if (*linePtr == '\0')
+			{
+				break;
+			}
+			tokPtr = tokenBuf;
+			while(*linePtr != ' ' 
+				&& *linePtr != '\t' 
+				&& *linePtr != os_sep
+				&& *linePtr != '\0')
+			{
+				if (*linePtr == '\"')
+				{
+					linePtr++; /* Skip the quote, do not add to tokenBuf */
+					while(*linePtr != '\"' && *linePtr != '\0')
+					{
+						*tokPtr = *linePtr;
+						linePtr++;
+						tokPtr++;
+					}
+					if (*linePtr != '\"')
+					{
+						linePtr++; /* Skip the quote, do not add to tokenBuf */
+					}
+				}
+				else
+				{
+					*tokPtr = *linePtr;
+					linePtr++;
+					tokPtr++;
+				}
+			}
+			*tokPtr = '\0';
+			token = tokenBuf;
+
+			/*
+			* Skip special token "^".
+			*/
+			if (0==strcmp(token,"^"))
+			{
+				/*
+				* Include a "^" (carat) to specify the directory containing the calling program.
+				*/
+				continue;
+			}
+
+			print_inset(token);
+			check_access(NULL,token,ACC_DIR_READ);
+
+			if (!aculink_found)
+			{
+				buildfilepath(aculink_path,token,"ACULINK");
+				if (0==access(aculink_path,ACC_FILE_READ))
+				{
+					aculink_found = 1;
+				}
+			}
+			if (!aculink_found)
+			{
+				buildfilepath(aculink_path,token,"ACULINK.acu");
+				if (0==access(aculink_path,ACC_FILE_READ))
+				{
+					aculink_found = 1;
+				}
+			}
+			if (!acuusing_found)
+			{
+				buildfilepath(acuusing_path,token,"ACUUSING");
+				if (0==access(acuusing_path,ACC_FILE_READ))
+				{
+					acuusing_found = 1;
+				}
+			}
+			if (!acuusing_found)
+			{
+				buildfilepath(acuusing_path,token,"ACUUSING.acu");
+				if (0==access(acuusing_path,ACC_FILE_READ))
+				{
+					acuusing_found = 1;
+				}
+			}
+		}
+
+		if (aculink_found)
+		{
+			print_access("ACULINK",aculink_path,ACC_FILE_READ,&erracu);
+		}
+		else
+		{
+			erracu++;
+			print_pair_err_mess("ACULINK","","ERROR","NOT FOUND");
+		}
+
+		if (acuusing_found)
+		{
+			print_access("ACUUSING",acuusing_path,ACC_FILE_READ,&erracu);
+		}
+		else
+		{
+			erracu++;
+			print_pair_err_mess("ACUUSING","","ERROR","NOT FOUND");
 		}
 	}
 	else
 	{
-		print_pair_nl("CODE-PREFIX","(Unknown)");
+		print_pair_nl("CODE_PREFIX","(Unknown)");
 		print_pair_nl("ACULINK","(Unknown)");
 		print_pair_nl("ACUUSING","(Unknown)");
 	}
@@ -1001,11 +1131,11 @@ int define_acu(const char* rts)
 #ifdef unix
 	if ((acu = getenv("A_TERMCAP")))
 	{
-		print_access("A_TERMCAP",acu,ACC_READ,&erracu);
+		print_access("A_TERMCAP",acu,ACC_FILE_READ,&erracu);
 	}
 	else
 	{
-		print_access("a_termcap","/etc/a_termcap",ACC_READ,&erracu);
+		print_access("a_termcap","/etc/a_termcap",ACC_FILE_READ,&erracu);
 	}
 #endif
 
@@ -1055,7 +1185,7 @@ static int define_mf()
 	char    *mf,
 		*ptr;
 
-	char    file_path[256];
+	char    file_path[2048];
 
 	/*
 	**       Get the Micro Focus Cobol environment data
@@ -1064,10 +1194,10 @@ static int define_mf()
 	printf("Micro Focus Environment\n");
 	printf("=======================\n");
 
-	if (print_access("COBDIR", mf=getenv("COBDIR"), ACC_READ,&errmf) == 0)
+	if (print_access("COBDIR", mf=getenv("COBDIR"), ACC_DIR_READ,&errmf) == 0)
 	{
 		sprintf(file_path,"%s/etc/cobver",mf);		/* Server Express style */
-		if (0!=access(file_path,ACC_READ))
+		if (0!=access(file_path,ACC_FILE_READ))
 		{
 			sprintf(file_path,"%s/cobver",mf); 	/* MF 4.1 style */
 		}
@@ -1244,7 +1374,14 @@ int run_command(char *command)
 
 	print_nl();
 	printf("$ %s\n",command);
+
 #ifdef unix
+	if (strlen(command) >= sizeof(unixcommand) + 5)
+	{
+		print_err_mess("WARNING","Command TOO LONG");
+		return 0;
+	}
+
 	sprintf(unixcommand, "%s 2>&1", command);
 	
 	if ((file = popen(unixcommand,"r")) != NULL)
@@ -1268,6 +1405,7 @@ int run_command(char *command)
 		return 1;
 	}
 #endif
+
 #if defined(WIN32)
 	system (command);
 #endif
@@ -1277,8 +1415,14 @@ int run_command(char *command)
 
 int checkexe(const char *tag, const char *exe, int* pnError)
 {
-	char	buff[256];
-	char	file_path[256];
+	char	buff[2048];
+	char	file_path[2048];
+	
+	if (strlen(exe) >= sizeof(buff))
+	{
+		print_pair_mess(tag, exe,"[TOO LONG]");
+		return 0;
+	}
 	
 	strcpy(buff, exe);
 	
@@ -1296,16 +1440,22 @@ int checkexe(const char *tag, const char *exe, int* pnError)
 	}
 	else
 	{
-		return print_access(tag,buff,ACC_RX,pnError);
+		return print_access(tag,buff,ACC_DIR_READ,pnError);
 	}
 }
 
 void checklinkexe(const char *tag, const char *exe)
 {
-	char	buff[256];
-	char	file_path[256];
+	char	buff[2048];
+	char	file_path[2048];
 	char	*ptr;
 	
+	if (strlen(exe) >= sizeof(buff))
+	{
+		print_pair_mess(tag, exe,"[TOO LONG]");
+		return;
+	}
+
 	strcpy(buff, exe);
 
 	/*
@@ -1318,10 +1468,10 @@ void checklinkexe(const char *tag, const char *exe)
 	
 	
 #ifdef WIN32
-	WL_upper_string(buff);
+	/* WL_upper_string(buff); */
 	if (!WL_osd_ext(buff))
 	{
-		strcat(buff,".EXE");
+		strcat(buff,".exe");
 	}
 #endif
 	if (0 == WL_whichlinkpath(buff,file_path))
@@ -1337,13 +1487,13 @@ void checklinkexe(const char *tag, const char *exe)
 	}
 #endif
 
-	print_access(tag,buff,ACC_RX,&errsw);
+	print_access(tag,buff,ACC_FILE_EXECUTE,&errsw);
 }
 
 static void cat_file(const char* file_path)
 {
 	FILE 	*the_file;
-	char	inlin[512];
+	char	inlin[2048];
 
 	the_file = fopen(file_path,"r");
 	if (the_file)
@@ -1436,7 +1586,7 @@ void print_config_file(const char* options_path)
 
 static void check_path(const char* path)
 {
-	char	lpath[1024];
+	char	*lpath;
 	char	*nextdir;
 	char	ps[2];
 	
@@ -1444,6 +1594,9 @@ static void check_path(const char* path)
 	{
 		return;
 	}
+
+	lpath = (char *)malloc(strlen(path)+1);
+
 	strcpy(lpath,path);
 
 	ps[0] = PATH_SEPARATOR;
@@ -1453,9 +1606,11 @@ static void check_path(const char* path)
 	while(nextdir)
 	{
 		print_inset(nextdir);
-		check_access(NULL,nextdir,ACC_RX);
+		check_access(NULL,nextdir,ACC_DIR_READ);
 		nextdir = strtok(NULL,ps);
 	}
+
+	free(lpath);
 }
 
 static void test_int_sizes(void)
@@ -1464,9 +1619,9 @@ static void test_int_sizes(void)
 	uint2	t_uint2;
 	int4	t_int4;
 	uint4	t_uint4;
-#ifdef INT8_DEFINED
-	INT8	t_int8;
-	UINT8	t_uint8;
+#ifdef INT64_DEFINED
+	INT64	t_int8;
+	UINT64	t_uint8;
 #endif
 	int	rc = 0;
 
@@ -1493,15 +1648,15 @@ static void test_int_sizes(void)
 		printf("********************************* Size error uint4 = %lu\n", (unsigned long)sizeof(t_uint4));
 		rc = 1;
 	}
-#ifdef INT8_DEFINED
+#ifdef INT64_DEFINED
 	if (sizeof(t_int8) != 8)
 	{
-		printf("********************************* Size error INT8 = %lu\n", (unsigned long)sizeof(t_int8));
+		printf("********************************* Size error INT64 = %lu\n", (unsigned long)sizeof(t_int8));
 		rc = 1;
 	}
 	if (sizeof(t_uint8) != 8)
 	{
-		printf("********************************* Size error UINT8 = %lu\n", (unsigned long)sizeof(t_uint8));
+		printf("********************************* Size error UINT64 = %lu\n", (unsigned long)sizeof(t_uint8));
 		rc = 1;
 	}
 #endif
@@ -1541,7 +1696,7 @@ static void test_int_sizes(void)
 		rc = 1;
 	}
 
-#ifdef INT8_DEFINED
+#ifdef INT64_DEFINED
 	t_int8 = 0;
 	t_uint8 = 0;
 	t_int8--;
@@ -1568,6 +1723,26 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.61  2010/01/10 00:26:07  gsl
+**	remove unused local var
+**	
+**	Revision 1.60  2009/10/18 21:08:15  gsl
+**	Copyright
+**	
+**	Revision 1.59  2007/08/06 16:00:45  gsl
+**	TT#11 CODE_PREFIX changes
+**	TT#32 Quoted directories in CODE_PREFIX
+**	
+**	Revision 1.58  2007/08/02 20:10:09  gsl
+**	Fix access() calls for Vista.
+**	Display the Print config files
+**	
+**	Revision 1.57  2007/07/31 16:51:07  gsl
+**	Change INT8 to INT64 to avoid conflicts on WIN32
+**	
+**	Revision 1.56  2004/01/06 18:48:58  gsl
+**	fix WDIAG errors if path too long
+**	
 **	Revision 1.55  2003/07/29 13:41:25  gsl
 **	extra SCO info
 **	

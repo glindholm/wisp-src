@@ -68,6 +68,13 @@
 #define EXIT_FAST		2
 #define EXIT_AND_RUN		-2		/* Exit WISP and re run it.		*/
 
+
+#define SEVER_SUCCESS	0
+#define SEVER_WARNING	1
+#define SEVER_ERROR	2
+#define SEVER_FATAL	3
+
+
 EXT char prog_id[40];					/* the program id of this program		*/
 EXT char linein[256];					/* The current input line.			*/
 
@@ -143,7 +150,6 @@ EXT int lock_clear_para		INIT_FALSE;		/* Gen WISP-RECORD-LOCK-CLEAR para	*/
 */
 
 EXT int  acu_cobol 		INIT_FALSE;		/* ACUCOBOL 				*/
-EXT int  acn_cobol 		INIT_FALSE;		/* ACUCOBOL (NATIVE)			*/
 EXT int  mf_cobol 		INIT_FALSE;		/* Micro Focus COBOL 			*/
 EXT int  mfoc_cobol 		INIT_FALSE;		/* Micro Focus Object COBOL		*/
 EXT int  mfse_cobol 		INIT_FALSE;		/* Micro Focus Server Express COBOL 	*/
@@ -208,11 +214,26 @@ EXT char* opt_sort_file_item[MAX_SF_ITEMS];		/* #SORT_FILE - The identified SORT
 
 EXT char* opt_copy_declarative_para[MAX_PARAGRAPHS];	/* #COPY_DECLARATIVE - Copy named declarative para to procedure div	*/
 
+EXT int opt_native_screens		INIT_FALSE;	/* #NATIVE_SCREENS */
+EXT int opt_nofac			INIT_FALSE;	/* #NOFAC */
+
 #endif /* WISP_H */
 
 /*
 **	History:
 **	$Log: wisp.h,v $
+**	Revision 1.39  2005/12/02 15:22:47  gsl
+**	Keep track of the highest severity level reported.
+**	Ensure an non-zero exit status if severity is fatal or higher.
+**	
+**	Revision 1.38  2003/08/13 20:57:06  gsl
+**	#NOFAC option
+**	
+**	Revision 1.37  2003/08/08 19:52:47  gsl
+**	Add native screens comments
+**	
+**	Revision 1.36  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.35  2003/03/10 18:55:45  gsl
 **	Added nosleep option and for ACU default to using C$SLEEP instead
 **	of WFWAIT on a READ with HOLD

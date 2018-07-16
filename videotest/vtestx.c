@@ -16,7 +16,6 @@
 
 int testx()
 {
-	char vcheck();									/* Internal check for char function.	*/
 	char c, da_string[48];								/* String for primary DA.		*/
 	int i;										/* Working register.			*/
 	int count;									/* Working counter.			*/

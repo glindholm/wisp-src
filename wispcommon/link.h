@@ -53,6 +53,8 @@ void WL_readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *le
 void WL_call_acucobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
 void WL_call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec);
 
+void WL_call_mfcobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
+
 void WL_wwaitpid(int pid, int* rc);	/* Wait for process pid to complete		*/
 
 #endif /* LINK_H */
@@ -62,6 +64,9 @@ void WL_wwaitpid(int pid, int* rc);	/* Wait for process pid to complete		*/
 /*
 **	History:
 **	$Log: link.h,v $
+**	Revision 1.12  2003/08/25 21:10:18  gsl
+**	MF Native Screens
+**	
 **	Revision 1.11  2003/01/31 19:26:33  gsl
 **	Fix copyright header
 **	

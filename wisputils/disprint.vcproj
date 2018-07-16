@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="disprint"
+	ProjectGUID="{0EB54808-9234-4B5E-A571-06524488333C}"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\disprint___Win32_Debug"
+			IntermediateDirectory=".\disprint___Win32_Debug"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="nmake /f &quot;disprint.mak&quot; acu"
+				ReBuildCommandLine="nmake /f &quot;disprint.mak&quot; acu /a"
+				CleanCommandLine=""
+				Output="disprint.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory=".\disprint___Win32_Release"
+			IntermediateDirectory=".\disprint___Win32_Release"
+			ConfigurationType="0"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="NMAKE /f disprint.mak WISPDIR=C:\DEV\WISP\SRC\KIT\WISP acu "
+				ReBuildCommandLine="NMAKE /f disprint.mak WISPDIR=C:\DEV\WISP\SRC\KIT\WISP acu  /a"
+				CleanCommandLine=""
+				Output="disprint.exe"
+				PreprocessorDefinitions=""
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath="disprint.bsc"
+			>
+		</File>
+		<File
+			RelativePath="disprint.mak"
+			>
+		</File>
+		<File
+			RelativePath="disprint.umf"
+			>
+		</File>
+		<File
+			RelativePath="DISPRINT.wcb"
+			>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-2002 NeoMedia Migrations, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
 #	$Id:$
 #
 #
@@ -146,7 +146,7 @@ clean:
 # Recreate the .cob files if $(WISPTRAN) is newer
 $(ALL_COBOL_COBS): $(WISPTRAN)
 
-all_cobol_objs: $(ALL_COBOL_OBJS)
+all_cobol_objs: COMPILER_LICENSE $(ALL_COBOL_OBJS)
 
 test_dirs: $(TEST_DIRS)
 
@@ -204,152 +204,10 @@ $(WISPDIR)/acu:
 	@echo WISPDIR direcory $@ not found
 	exit 1
 
-#
-#	History:
-#	$Log: sampleacu.umf,v $
-#	Revision 1.51.4.1  2003/11/10 18:50:12  gsl
-#	Sync with HEAD
-#	
-#	Revision 1.52  2003/11/10 17:09:11  gsl
-#	Fix WFILECHK3 has declaratives bug and add WC0005 test case
-#	
-#	Revision 1.51  2003/07/07 20:38:09  gsl
-#	WL0035 READVTOC tests
-#	
-#	Revision 1.50  2003/07/07 19:39:54  gsl
-#	WC0004 ##TEMP file tests
-#	
-#	Revision 1.49  2003/07/07 17:58:27  gsl
-#	WL0034 LINK tests
-#	
-#	Revision 1.48  2003/07/07 14:29:44  gsl
-#	WC0003 ACCEPT VERB tests
-#	
-#	Revision 1.47  2003/07/03 18:53:55  gsl
-#	RETURN-CODE tests
-#	
-#	Revision 1.46  2003/07/02 21:18:30  gsl
-#	Add WL0033 FIND auto tests
-#	
-#	Revision 1.45  2003/07/01 19:28:52  gsl
-#	QA
-#	
-#	Revision 1.44  2003/03/10 19:22:10  gsl
-#	Use WISPTRAN from WISPDIR and make *.cob a dependancy of WISPTRAN
-#	
-#	Revision 1.43  2003/02/27 19:06:55  gsl
-#	Move the QA MESSAGE logic out of QASUBS into new file QAMESSAG
-#	
-#	Revision 1.42  2003/01/30 19:43:45  gsl
-#	Add WL0032 to autotest RENAME
-#	
-#	Revision 1.41  2003/01/20 20:14:19  gsl
-#	Add WL0031 auto tests for SETFILE
-#	
-#	Revision 1.40  2003/01/20 17:02:28  gsl
-#	Add WL0030 auto test for SUBMIT
-#	
-#	Revision 1.39  2003/01/17 15:31:40  gsl
-#	Added WL0029 SCRATCH autotest
-#	
-#	Revision 1.38  2003/01/16 17:25:39  gsl
-#	Add FILECOPY tests
-#	
-#	Revision 1.37  2002/11/26 21:52:02  gsl
-#	Add WC0001.wcb to test Horz Repeating fields
-#	
-#	Revision 1.36  2002/11/22 18:56:22  gsl
-#	Fix and standardize the Acucoobl COBFLAGS
-#	
-#	Revision 1.35  2002/11/21 22:21:51  gsl
-#	Change to use ACULINK.acu and ACUUSING.acu
-#	Added .acu to all Acucobol object files
-#	
-#	Revision 1.34  2002/11/07 16:44:05  gsl
-#	Change to use variable $(WISPSRC)
-#	
-#	Revision 1.33  2002/07/24 14:14:50  gsl
-#	Fix cleanup and test for $(WISPDIR) dirs
-#	
-#	Revision 1.32  2002/07/24 14:01:09  gsl
-#	Default WISPDIR to the QA install dir
-#	
-#	Revision 1.31  2002/07/23 20:50:16  gsl
-#	building sample
-#	
-#	Revision 1.30  2002/07/18 13:51:04  gsl
-#	Changes for uppercase .wcb files
-#	
-#	Revision 1.29  2002/06/05 17:38:22  gsl
-#	Changes for uppercase cobol files from the WISP kit
-#	Also add rules to copy in the ACULINK & ACUUSING files
-#	
-#	Revision 1.28  2002/03/28 22:21:07  gsl
-#	Add LESWAP
-#	
-#	Revision 1.27  2002-03-26 16:09:57-05  gsl
-#	Change VLANG to WISPLANG
-#
-#	Revision 1.26  2001-11-05 15:40:38-05  gsl
-#	Tweak to run without Acucobol compiler
-#
-#	Revision 1.25  2001-11-05 15:32:37-05  gsl
-#	Add acuqa target to tar.Z up all the ACU object files
-#
-#	Revision 1.24  2001-11-02 11:01:50-05  gsl
-#	add DISPFILE
-#
-#	Revision 1.23  2001-11-02 09:06:42-05  gsl
-#	Add build DISPRINT
-#
-#	Revision 1.22  2001-10-23 16:40:01-04  gsl
-#	Compile with debugger info -Gd
-#
-#	Revision 1.21  2001-10-19 11:21:18-04  gsl
-#	make and clean volumes
-#
-#	Revision 1.20  2001-10-19 10:55:44-04  gsl
-#	Add more to clean
-#
-#	Revision 1.19  1999-08-20 09:55:08-04  gsl
-#	Change the LANG macro to VLANG as it conflicted with the LANG environment
-#	variable when the -e option was used
-#
-#	Revision 1.18  1998-06-26 11:20:28-04  gsl
-#	Add WL0027 to build
-#
-#	Revision 1.17  1998-06-15 15:06:45-04  gsl
-#	Add manual locking l=flag
-#
-#	Revision 1.16  1998-04-03 16:28:22-05  gsl
-#	Fix the wispplat include dir
-#
-#	Revision 1.15  1998-04-03 16:22:55-05  gsl
-#	Fix the LANG flag for WISP
-#
-#	Revision 1.14  1998-03-27 15:45:07-05  gsl
-#	Update WL00xx stuff
-#
-#	Revision 1.13  1998-03-23 12:23:45-05  gsl
-#	Update
-#
-#	Revision 1.12  1997-08-28 14:37:49-04  gsl
-#	Fix and simplify so qabckgrd builds properly
-#
-#	Revision 1.11  1997-07-23 10:14:56-04  scass
-#	Moved .SUFFIXES to be above rules so make
-#	works properly on DEC Alpha
-#
-#	Revision 1.10  1997-05-20 16:23:15-04  gsl
-#	Add WL0018A and WL0018B for extra MESSAGE tests
-#
-#	Revision 1.9  1997-05-01 09:24:21-04  gsl
-#	Add all the WL00xx automatic tests
-#
-#	Revision 1.8  1996-12-13 14:47:37-05  gsl
-#	Update so will work on NT as well as unix
-#
-#
-#
-#
+COMPILER_LICENSE: $(ACUDIR)/bin/ccbl.alc
+
+$(ACUDIR)/bin/ccbl.alc:
+	@echo
+	@echo COMPILER_LICENSE $@ not found
+	exit 1
 

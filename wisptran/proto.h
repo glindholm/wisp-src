@@ -129,6 +129,7 @@ extern int is_file_status(const char *dataname);
 
 /* wt_io.c */
 #ifndef WRITE_LOG
+extern int get_highest_serverity();
 extern void write_log(const char* product, char serverity, const char* mess, const char *form, ...);
 extern void write_tlog(TOKEN* tokptr, const char* product, char serverity, const char* mess, const char *form, ...);
 #endif
@@ -139,10 +140,9 @@ void gen_wfopen(int col, int fnum, int open_mode);
 
 /* wt_scrn.c */
 extern NODE parse_display_ws_record(NODE next_statement);
-extern void gen_screen_storage(void);
+extern NODE gen_screen_storage(NODE the_statement);
 extern int gen_screens(void);
-extern int gen_acn_screens(void);
-extern int gen_acn_facs(void);
+extern NODE gen_native_screen_section(NODE the_statement);
 void gen_endstuff(void);
 void gen_screen_paras(void);
 extern int gen_label(char *newlabel);
@@ -195,12 +195,28 @@ extern int comment_line_count(void);
 
 extern void gen_data_conv(void);
 
+const char* copybookext(void);
 
 #endif /* PROTO_H */
 
 /*
 **	History:
 **	$Log: proto.h,v $
+**	Revision 1.26  2005/12/02 15:22:47  gsl
+**	Keep track of the highest severity level reported.
+**	Ensure an non-zero exit status if severity is fatal or higher.
+**	
+**	Revision 1.25  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
+**	Revision 1.24  2003/12/02 21:23:21  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
+**	Revision 1.23  2003/08/11 17:18:19  gsl
+**	MF Native screens
+**	
 **	Revision 1.22  2003/03/17 17:22:15  gsl
 **	Change to use  WFOPEN4
 **	

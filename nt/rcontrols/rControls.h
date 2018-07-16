@@ -75,7 +75,7 @@
 
 class rControls {
 	public:
-		Init ( HINSTANCE hInst );
+		int Init ( HINSTANCE hInst );
 		HINSTANCE hInst;
 		class _StatusBar {
 			public:
@@ -83,18 +83,18 @@ class rControls {
 				HWND hClock, hStatus, hStatusBar;
 				char sOutput[100];									//	Buffer to hold the text that displays in the status bar
 				//	Functions
-				Create ( HINSTANCE hInst, HWND hAppWnd );
-				ChngTime ( );
-				UpdateMsg ( char *sMsg );						//	Updates the message in the status bar
-				Resize ( HWND hAppWnd );
+				int Create ( HINSTANCE hInst, HWND hAppWnd );
+				int ChngTime ( );
+				int UpdateMsg ( char *sMsg );						//	Updates the message in the status bar
+				int Resize ( HWND hAppWnd );
 		} StatusBar;
 		class _Ctrl {
 			public:
 				//	Variables
 				//	Funstions
-				GetDrvInfo ( );
-				GetServerInfo ( );
-				GetFileAttribs ( WIN32_FIND_DATA *FileData, int FAttribs[8] );
+				int GetDrvInfo ( );
+				int GetServerInfo ( );
+				int GetFileAttribs ( WIN32_FIND_DATA *FileData, int FAttribs[8] );
 				//	Structs
 				struct _DrvInfo {
 					BOOL Exist;
@@ -114,13 +114,13 @@ class rControls {
 						OSVERSIONINFO OSVer;
 						TV_ITEM tvClicked;
 						//	Functions
-						Initialize ( HWND hDlg, HWND hTV_Ctrl );
-						GetSubDirs ( HWND hDlg, TV_ITEM tvItem, UINT tvAction );
-						RetreiveDirs ( char *sSrchPath, TV_ITEM SelItem, HWND hTVWnd );
-						DefaultToDir ( HWND, HWND );
+						int Initialize ( HWND hDlg, HWND hTV_Ctrl );
+						int GetSubDirs ( HWND hDlg, TV_ITEM tvItem, UINT tvAction );
+						int RetreiveDirs ( char *sSrchPath, TV_ITEM SelItem, HWND hTVWnd );
+						int DefaultToDir ( HWND, HWND );
 						void GetNetObjects ( TV_ITEM, HWND );
-						RetPath ( HWND hDlg, HWND hTVWnd );
-						GetPathToks ( TV_ITEM, HWND  );
+						int RetPath ( HWND hDlg, HWND hTVWnd );
+						int GetPathToks ( TV_ITEM, HWND  );
 						void GetRemoteDirs ( TV_ITEM, NETRESOURCE, char *UNCName, HWND );
 						void InsertNetItems ( TV_ITEM, HANDLE, HWND );
 				} tvList;
@@ -139,7 +139,7 @@ class rControls {
 		class _Dialogs {
 			public:
 				//	Functions
-				DrawDirCB ( HWND hDlg, LPARAM lp );
+				int DrawDirCB ( HWND hDlg, LPARAM lp );
 				//	Classes
 				class _SelectDirDlg {											//	Controls the Select directory dialog
 					public:
@@ -149,15 +149,15 @@ class rControls {
 						int Type;
 						char sTitle[80];
 						//	Functions
-						Create ( HWND hParent, /*HINSTANCE hInst, */
+						int Create ( HWND hParent, /*HINSTANCE hInst, */
 							char *sStartDir, BOOL MultiSelect,
 							int Type, HWND Caller, char *sTitle );
-						Initialize ( HWND hDlg, HINSTANCE hInst );
-						AddClicked ( HWND hDlg );
-						RemoveClicked ( HWND hDlg );
-						MUpClicked ( HWND hDlg );
-						MDownClicked ( HWND hDlg );
-						OKClicked ( HWND hDlg );
+						int Initialize ( HWND hDlg, HINSTANCE hInst );
+						int AddClicked ( HWND hDlg );
+						int RemoveClicked ( HWND hDlg );
+						int MUpClicked ( HWND hDlg );
+						int MDownClicked ( HWND hDlg );
+						int OKClicked ( HWND hDlg );
 				}SelectDirDlg;
 		}Dialogs;
 };
@@ -170,6 +170,9 @@ extern rControls	CustCtrl;
 /*
 **	History:
 **	$Log: rControls.h,v $
+**	Revision 1.7  2007/07/31 16:49:43  gsl
+**	fix warnings
+**	
 **	Revision 1.6  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

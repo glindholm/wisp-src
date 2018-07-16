@@ -253,7 +253,7 @@ void WL_license_warning(void)
 	hWsb = wsb_new();
 
 	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
-	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Inc.");
+	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " Shell Stream Software LLC");
 	wsb_add_text(hWsb,4,0,"Web: " WISP_WEBSITE "  Email: " WISP_EMAIL);
 
 	sprintf(version_mess ,"WISP Version %s", wisp_version());
@@ -262,7 +262,7 @@ void WL_license_warning(void)
 	wsb_add_text(hWsb,6,0,version_mess);
 	wsb_add_text(hWsb,7,0,platform_mess);
 
-	contact_message = "Please contact your WISP vendor or NeoMedia for assistance.";
+	contact_message = "Please contact your WISP vendor for assistance.";
 
 	row = 12;
 
@@ -447,6 +447,9 @@ static int license_checked(int set)
 /*
 **	History:
 **	$Log: initwisp.c,v $
+**	Revision 1.67  2009/10/18 20:45:31  gsl
+**	Copyright
+**	
 **	Revision 1.66  2003/06/13 17:36:12  gsl
 **	ENTERPRISE License
 **	

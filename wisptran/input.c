@@ -885,8 +885,9 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 			write_log("WISP",'I',"ACUCOPY","Start Copy of ACU code.");
 			xxx_code = ACU_CODE;
 		}
-		else if (acn_cobol && ((strpos(the_line,"$ACN_CODE") != -1) ||
-		     		       (strpos(the_line,"$ACN-CODE") != -1)    ))
+		else if (acu_cobol && opt_native_screens &&	/* $ACN-CODE */
+				((strpos(the_line,"$ACN_CODE") != -1) ||
+		     		 (strpos(the_line,"$ACN-CODE") != -1)    ))
 		{
 			write_log("WISP",'I',"ACNCOPY","Start Copy of ACN code.");
 			xxx_code = ACN_CODE;
@@ -1056,10 +1057,6 @@ int get_clean_cobol_line(char *the_line, int linesize, A_file *the_file)
 {
 #ifdef unix
 extern	int	errno;
-#ifndef LINUX
-extern	int	sys_nerr;
-extern	char	*sys_errlist[];
-#endif
 #endif
 
 	char	*ptr;
@@ -1068,22 +1065,12 @@ extern	char	*sys_errlist[];
 
 	if (NULL == wfgets(the_line,linesize,the_file->file))			/* Read next line				*/
 	{
-		const char* err_message;
-		
 		if (feof(the_file->file))					/* Check for End Of File			*/
 		{
 			return EOF;						/* Return EOF					*/
 		}
 
-		if (errno > sys_nerr)						/* Error occured, report it			*/
-		{
-			err_message = sys_errlist[errno];
-		}
-		else
-		{
-			err_message = "UNKNOWN error";
-		}
-		write_log("WISP",'F',"WFGETS","file=%s: %s [errno=%d]",the_file->name,err_message,errno);
+		write_log("WISP",'F',"WFGETS","file=%s: %s [errno=%d]",the_file->name,strerror(errno),errno);
 		exit_with_err();
 	}
 
@@ -1157,6 +1144,28 @@ static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char
 	return;
 }
 
+const char* copybookext(void)
+{
+	static char *the_ext = NULL;
+
+	if (the_ext == NULL)
+	{
+		if (opt_copybook_ext_cpy) 
+		{
+			the_ext = "cpy";
+		}
+		else if (opt_copybook_ext_lib) 
+		{
+			the_ext = "lib";
+		}
+		else
+		{
+			the_ext = "cob";
+		}
+	}
+	return the_ext;
+}
+
 static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *xfile, char *xlib, char *xvol)
 {
 	char	lfile_wcb[80], lfile_lib[80]; /* lowercase */
@@ -1166,17 +1175,7 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 
 	char	pathprefix[80];
 	char	*pathptr;
-	char	*copybookext = "cob";
 	int	found_copybook = 0;
-
-	if (opt_copybook_ext_cpy) 
-	{
-		copybookext = "cpy";
-	}
-	else if (opt_copybook_ext_lib) 
-	{
-		copybookext = "lib";
-	}
 
 	strcpy(ufile, xfile);
 	strcpy(ulib, xlib);
@@ -1191,18 +1190,18 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 	if (xlib[0])
 	{
 		sprintf(ufile_wcb,"%s%s%s.wcb",ulib,DSS_STR,ufile);
-		sprintf(ufile_lib,"%s%s%s.%s",ulib,DSS_STR,ufile,copybookext);
+		sprintf(ufile_lib,"%s%s%s.%s",ulib,DSS_STR,ufile,copybookext());
 
 		sprintf(lfile_wcb,"%s%s%s.wcb",llib,DSS_STR,lfile);
-		sprintf(lfile_lib,"%s%s%s.%s",llib,DSS_STR,lfile,copybookext);
+		sprintf(lfile_lib,"%s%s%s.%s",llib,DSS_STR,lfile,copybookext());
 	}
 	else
 	{
 		sprintf(ufile_wcb,"%s.wcb",ufile);
-		sprintf(ufile_lib,"%s.%s",ufile,copybookext);
+		sprintf(ufile_lib,"%s.%s",ufile,copybookext());
 
 		sprintf(lfile_wcb,"%s.wcb",lfile);
-		sprintf(lfile_lib,"%s.%s",lfile,copybookext);
+		sprintf(lfile_lib,"%s.%s",lfile,copybookext());
 	}		
 
 	/*
@@ -1660,6 +1659,19 @@ int set_end_of_input(void)
 /*
 **	History:
 **	$Log: input.c,v $
+**	Revision 1.28  2010/01/09 23:46:08  gsl
+**	use strerror() instead of sys_errlist
+**	
+**	Revision 1.27  2003/12/02 21:23:21  gsl
+**	Fix so native screen sections don't get generated in a copybook file.
+**	Change generated copybooks (internal) to use same file extension rules
+**	as translated copybooks. Default to .cob extension.
+**	
+**	Revision 1.26  2003/08/08 19:52:47  gsl
+**	Add native screens comments
+**	
+**	Revision 1.25  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.24  2003/03/03 22:08:40  gsl
 **	rework the options and OPTION file handling
 **	

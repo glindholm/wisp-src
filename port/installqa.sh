@@ -11,6 +11,12 @@
 #	Warning:	The previous version of ${WISPSRC}/QA will be
 #			deleted.
 #
+if [ "${WISPSRC}" = "" ]
+then
+	WISPSRC=${WISP}/src
+	export WISPSRC
+	echo WISPSRC not set using ${WISPSRC}
+fi
 
 if [ ! -d ${WISPSRC} ]
 then

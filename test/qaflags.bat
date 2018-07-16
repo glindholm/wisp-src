@@ -11,7 +11,8 @@ REM
 REM   <logical> = Y, N, T, F
 @echo on
 
-PATH \\CYCLONE\WISP\BIN;%PATH%
+REM PATH \\CYCLONE\WISP\BIN;%PATH%
+PATH %WISPDIR%\BIN;%PATH%
 
 @echo Setting all flags to 'N'
 wusage flags set HELP=N

@@ -1,5 +1,5 @@
 FILE-STATUS-CODES	74
-CODE-PREFIX		. C:\dev\wisp\src\TEST C:\dev\wisp\src\kit\wisp\acu C:\dev\wisp\src\kit\kcsiacu
+CODE_PREFIX		. C:\dev\wisp\src\TEST C:\dev\wisp\src\kit\wisp\acu C:\dev\wisp\src\kit\kcsiacu
 
 ALTVARV4-VERSION 4
 ALTVARV3-VERSION 3

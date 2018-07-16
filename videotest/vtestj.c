@@ -14,7 +14,7 @@
 
 int testj()
 {
-	char c,vgetc();
+	char c;
 	int retcount;
 	unsigned char uc;
 

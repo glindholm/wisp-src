@@ -1,6 +1,4 @@
-Copyright (c) 2003 by NeoMedia Technologies Inc. 
-All Rights Reserved.
-
+Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 ====================================================================
 
 Title:          WISP PACKING LIST
@@ -8,7 +6,7 @@ Title:          WISP PACKING LIST
 Document:       wisp_packlist.lis
 Last Updated:   $Date:$
 Products:       WISP
-Versions:       5.0.01
+Versions:       5.1.00
 
 Summary:        Packing list for the WISP shipping kit.
 
@@ -32,6 +30,9 @@ acu/sub85_acu50.c
 acu/sub85_acu51.c
 acu/sub85_acu52.c
 acu/sub85_acu60.c
+acu/sub85_acu62.c
+acu/sub85_acu72.c
+acu/sub85_acu81.c
 acu/wisp_sub85_inc.c
 acu/wacu.umf
 acu/WACUDISPLAY.cob
@@ -50,6 +51,8 @@ acu/WACUHELP.acu
 acu/WACUWSB.acu
 acu/wruncbl.umf
 acu/xterm.a_termcap
+acu/acu81/Makefile_aix53sh_32.mak
+acu/acu81/Makefile_hpux1123sh_32.mak
 bin
 bin/bldmf
 bin/display
@@ -204,6 +207,26 @@ acu\acu60\sub85.c
 acu\acu60\wrundll.rc
 acu\acu60\wrundll_wisp_acu60.dsp
 acu\acu60\wrundll_wisp_acu60.mak
+acu\acu62
+acu\acu62\build_wisp_acu62_rts.txt
+acu\acu62\sub85.c
+acu\acu62\wisp.rc
+acu\acu62\wrundll.vcproj
+acu\acu72
+acu\acu72\build_wisp_acu72_atm_rts.txt
+acu\acu72\build_wisp_acu72_rts.txt
+acu\acu72\run32.vcproj
+acu\acu72\sub85.c
+acu\acu72\wisp.rc
+acu\acu72\wrundll.vcproj
+acu\acu81
+acu\acu81\build_wisp_acu81_atm_rts.txt
+acu\acu81\build_wisp_acu81_rts.txt
+acu\acu81\run32.vcproj
+acu\acu81\sub85.c
+acu\acu81\wisp.rc
+acu\acu81\wrundll.rc
+acu\acu81\wrundll.vcproj
 bin
 bin\display.exe
 bin\hexed.exe
@@ -260,12 +283,12 @@ etc\SOFTLINK.wcb
 etc\WISPPLAT.wcb
 etc\wisp_packlist.txt
 etc\wisp_relnotes.txt
+etc\wispntdoc.txt
 etc\words.def
 etc\wproc.txt
 lib
 lib\video.lib
 lib\wisp.lib
-wispntdoc.txt
 wispntsetup.txt
 
 

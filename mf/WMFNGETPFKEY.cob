@@ -1,0 +1,75 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WMFNGETPFKEY.cob
+000500**
+000600**   Project:    WISP for Micro Focus with Native Screens
+000700**
+000800**   Purpose:    Prompt the user for a pfkey value.
+000900**
+001000**   Build:      cob WMFNGETPFKEY.cob
+001100**
+001200**
+001300
+001400 IDENTIFICATION DIVISION.
+001500 PROGRAM-ID.
+001600     WMFNGETPFKEY.
+001700*REMARKS.
+001800*    This program will prompt the user to type in the numeric
+001900*    value of a function key.
+002000*
+002100*        0     = Enter key
+002200*        1-32  = Function key 1 - 32
+002300*        33    = HELP key
+
+001800 ENVIRONMENT DIVISION.
+001900 CONFIGURATION SECTION.
+002000 SPECIAL-NAMES.
+002200     CRT STATUS     IS WISP-CRT-STATUS.
+002400
+002500 DATA DIVISION.
+002600
+002700 WORKING-STORAGE SECTION.
+002800
+
+      *    Special-names CRT STATUS clause.
+       01  WISP-CRT-STATUS.
+           05  WISP-CRT-STATUS-1            PIC X.
+               88  WISP-CRT-STATUS-TERMINATED  VALUE '0'.
+               88  WISP-CRT-STATUS-FUNCKEY     VALUE '1'.
+               88  WISP-CRT-STATUS-ERROR       VALUE '9'.
+           05  WISP-CRT-STATUS-2            PIC 99 COMP-X.
+               88  WISP-CRT-EX-ESC             VALUE 0.
+               88  WISP-CRT-EX-HELP            VALUE 33.
+               88  WISP-CRT-EX-GETKEY          VALUE 34.
+               88  WISP-CRT-EX-ENTER           VALUE 48.
+           05  WISP-CRT-STATUS-3            PIC 99 COMP-X.
+
+
+002900 LINKAGE SECTION.
+003000 01  WISP-PFKEY             PIC 99.
+003100
+003200 SCREEN SECTION.
+003300 01  PFKEY-SCREEN.
+003400     05 VALUE "[PFKEY:  ]"    HIGHLIGHT LINE 1 COL 1.
+003500     05 TO WISP-PFKEY PIC ZZ  HIGHLIGHT LINE 1 COL 8.
+003600
+003700 PROCEDURE DIVISION USING WISP-PFKEY.
+003800
+003900 0000-START.
+004000     DISPLAY PFKEY-SCREEN
+004100     ACCEPT PFKEY-SCREEN
+
+           IF WISP-CRT-STATUS-FUNCKEY 
+              IF WISP-CRT-EX-HELP OR WISP-CRT-EX-ESC
+                  MOVE 33 TO WISP-PFKEY
+              END-IF
+           END-IF.
+
+004200     DISPLAY "          " LINE 1 COL 1.
+004300
+004400 9999-EXIT.
+004500     EXIT PROGRAM.
+004600
+004700 9999-STOP.
+004800     STOP RUN.

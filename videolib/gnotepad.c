@@ -56,7 +56,6 @@ static int nextcol();
 int gnotepad(void)
 {
 	register int i, j, k;
-	unsigned char *vsss();
 	int active;
 	unsigned char c;
 	FILE *pf;
@@ -354,8 +353,6 @@ static int showpad()
 
 static int move()
 {
-	unsigned char *vsss();
-
 	vrss(save);
 	save = vsss(row,col,rows,cols);
 	showpad();
@@ -375,6 +372,9 @@ static int nextcol()
 /*
 **	History:
 **	$Log: gnotepad.c,v $
+**	Revision 1.18  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.17  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

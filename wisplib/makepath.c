@@ -160,13 +160,20 @@ int	WL_makepath(const char* fullpath )
 			*ptr = '\0';
 			if (!fexists(buff))					/* See if the directory exists, If it doesn't	*/
 			{
+#ifdef unix
 				rc = mkdir( buff, 00777 );			/* Try to create it. (with mode)		*/
+#endif
+#ifdef WIN32
+				rc = _mkdir(buff);				/* Try to create it. 		*/
+#endif
 				if ( rc < 0 )					/* If can't create the dir then			*/
 				{
 					return( errno );			/* Give up.					*/
 				}
 
+#ifdef unix
 				chmod( buff, 0777);
+#endif
 			}
 			*ptr = DS;						/* Reset directory separator for next loop	*/
 			i = ptr - buff;
@@ -184,6 +191,9 @@ int	WL_makepath(const char* fullpath )
 /*
 **	History:
 **	$Log: makepath.c,v $
+**	Revision 1.22  2009/10/18 20:37:18  gsl
+**	fix windows warnings
+**	
 **	Revision 1.21  2003/01/31 21:40:59  gsl
 **	Fix -Wall warnings
 **	

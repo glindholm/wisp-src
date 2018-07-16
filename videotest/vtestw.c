@@ -11,7 +11,7 @@
 #include <vmodules.h>
 int testw()
 {
-	unsigned char *vsss(), *remember;
+	unsigned char *remember;
 	register int i,j;
 	int irow = 3;
 	int icol = 30;

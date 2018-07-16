@@ -1,27 +1,23 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software, LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
-** $Id:$
-**
 ** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Confidential, unpublished property of Shell Stream Software, LLC.
 ** Use and distribution limited solely to authorized personnel.
 ** 
 ** The use, disclosure, reproduction, modification, transfer, or
 ** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+** any means without the written permission is strictly prohibited.
 ******************************************************************************
 */
+
+/*
+ * $Id:$
+ * $Source:$
+ */
 
 
 /*
@@ -62,9 +58,11 @@
 #include "wlicense.h"
 #include "prompt.h"
 #include "platsubs.h"
+#include "wplatdef.h"
 #include "idsisubs.h"
 #include "wisplib.h"
 #include "wanguid.h"
+#include "machid.h"
 
 #if defined(unix) && !defined(LINUX)
 extern char	*sys_errlist[];
@@ -118,6 +116,7 @@ static void init_license(struct license_s *l);
 static void search_license(struct license_s *l);
 static int gen_key(struct license_s *l);
 static void gen_val(struct license_s *l);
+static void gen_machine_id(struct license_s *l);
 
 static void test_codes(void);
 static void putheader(void);
@@ -281,8 +280,8 @@ int main(int argc, char* argv[])
 		{
 			strcpy(groupname,grp->gr_name);
 			upper_string(groupname);
-			if (0 != strcmp(groupname,"DEVTECH") &&
-			    0 != strcmp(groupname,"NEOMEDIA"))
+			if (0 != strcmp(groupname,"GSL") &&
+			    0 != strcmp(groupname,"SHELLSTREAM"))
 			{
 				printf("\n\n**** Invalid Group ****\n");
 				exit(1);
@@ -309,9 +308,10 @@ int main(int argc, char* argv[])
 			"Enter V to generate a VALIDATION CODE.\n"
 			"Enter T to TEST either.\n"
 			"Enter S to SEARCH database.\n"
+			"Enter M to generate a Machine Id from a host name.\n"
 			"Enter Q to Quit.";
 		
-		rc = prompt_list("Generate a Key, Validation, Test, Search, or Quit",NULL,"k,v,t,s,q",help);
+		rc = prompt_list("Generate a Key, Validation, Test, Search, MachineId or Quit",NULL,"k,v,t,s,m,q",help);
 		switch(rc)
 		{
 		case PROMPT_RC_EXIT:
@@ -382,8 +382,11 @@ int main(int argc, char* argv[])
 		case 4:		/* SEARCH */
 			search_license(&the_license);
 			break;
-		case 5:
-			exit(0);
+		case 5:		/* MACHINE ID */
+			gen_machine_id(&the_license);
+			break;
+		default:
+			return 0;
 			
 		}
 
@@ -645,7 +648,6 @@ static int gen_key(struct license_s *l)
 		return -1;
 	}
 	l->licensekey[LICENSE_KEY_SIZE] = '\0';
-
 	logkeyinfo(l->custname,l->custnum,l->platform,l->licensetype,l->licensedate,l->expdate,
 		l->version_number,l->licensekey);
 
@@ -997,10 +999,10 @@ static void putheader(void)
 	printf("\n");
 	printf("                   **** %s LICENSE AUTHORIZATION TOOL ****\n",WLIC_product_name());
 	printf("                               $Revision:$\n");
-	printf("         Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " by NeoMedia Technologies Incorporated.\n");
+	printf("         Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " by Shell Stream Software, LLC.\n");
 	printf("\n");
 	printf("This program will generate %s license keys and validation codes for use with\n",WLIC_product_name());
-	printf("the wlicense program.  This program is for use by NeoMedia personnel only!\n");
+	printf("the wlicense program.  This program is for use by Shell Stream personnel only!\n");
 	printf("\n");
 	printf("LICENSE KEY        The LICENSE KEY is the code that is sent out with every\n");
 	printf("                   %s kit.  It defines the type of license and contains the\n",WLIC_product_name());
@@ -1102,6 +1104,23 @@ static void formatTimeStamp(char* f_time)
 		now_time->tm_hour,
 		now_time->tm_min,
 		now_time->tm_sec);
+}
+/*
+**	Format a now Date: 
+**	YYYY-MM-DD HH:MM:SS
+*/
+static void formatNowDate(char* f_now)
+{
+	time_t	now;
+	struct tm* now_time;
+
+	now = time(NULL);
+	now_time = localtime(&now);
+
+	sprintf(f_now,"%04d-%02d-%02d",
+		now_time->tm_year + 1900,
+		now_time->tm_mon + 1,
+		now_time->tm_mday);
 }
 
 /*
@@ -1303,6 +1322,9 @@ static 	void printkeydoc(const char* custname,
 	char	licdatebuff[20], expdatebuff[20];
 	char	versionbuff[10];
 	char	buff[256];
+	char	issuedDate[40];
+
+	formatNowDate(issuedDate);
 
 	sprintf(custnum_s,"%06d",custnum);					/* string out the customer number		*/
 
@@ -1316,12 +1338,12 @@ static 	void printkeydoc(const char* custname,
 	}
 	sprintf(platform_id,"%s - %s", platform_s, platname);
 
-	sprintf(licdatebuff,"%4.4s/%2.2s/%2.2s",&licdate[0],&licdate[4],&licdate[6]);	/* format the date			*/
+	sprintf(licdatebuff,"%4.4s-%2.2s-%2.2s",&licdate[0],&licdate[4],&licdate[6]);	/* format the date			*/
 
 	strcpy(expdatebuff,"None");
 	if (lictype == LICENSE_TIMED)						/* format the date				*/
 	{
-		sprintf(expdatebuff,"%4.4s/%2.2s/%2.2s",&expdate[0],&expdate[4],&expdate[6]);
+		sprintf(expdatebuff,"%4.4s-%2.2s-%2.2s",&expdate[0],&expdate[4],&expdate[6]);
 	}
 
 	strcpy(versionbuff,"None");
@@ -1358,17 +1380,18 @@ static 	void printkeydoc(const char* custname,
 
 	while(fgets(buff,sizeof(buff),tp))					/* read the template & do substitution		*/
 	{
-		stredt(buff,"<LICENSEE>",custname);
-		stredt(buff,"<CUSTNUM>",custnum_s);
-		stredt(buff,"<LICENSEKEY>",flickey);
-		stredt(buff,"<PLATFORM>",platform_id);
-		stredt(buff,"<LICENSETYPE>",WLIC_lictypename(lictype));
-		stredt(buff,"<LICENSEDATE>",licdatebuff);
-		stredt(buff,"<EXPIRATION>",expdatebuff);
-		stredt(buff,"<VERSION>",versionbuff);
-		stredt(buff,"<MACHINEID>",machid);
-		stredt(buff,"<APPCODE>",appcode);
-		stredt(buff,"<VALCODE>",valcode);
+		stredt(buff,"[LICENSEE]",custname);
+		stredt(buff,"[CUSTNUM]",custnum_s);
+		stredt(buff,"[LICENSEKEY]",flickey);
+		stredt(buff,"[PLATFORM]",platform_id);
+		stredt(buff,"[LICENSETYPE]",WLIC_lictypename(lictype));
+		stredt(buff,"[LICENSEDATE]",licdatebuff);
+		stredt(buff,"[EXPIRATION]",expdatebuff);
+		stredt(buff,"[ISSUEDDATE]",issuedDate);
+		stredt(buff,"[VERSION]",versionbuff);
+		stredt(buff,"[MACHINEID]",machid);
+		stredt(buff,"[APPCODE]",appcode);
+		stredt(buff,"[VALCODE]",valcode);
 
 		fprintf(fp,"%s",buff);						/* write out the edited line			*/
 	}
@@ -1378,8 +1401,13 @@ static 	void printkeydoc(const char* custname,
 
 	chmod(docfile, 0644);
 
-	printf("\n**** Printing license doc file %s ****\n\n",docfile);		/* print the file				*/
+	printf("\n**** License doc file %s ****\n\n",docfile);
+#ifdef unix
 	sprintf(buff, "./PRINTLICENSE %s", docfile);
+#endif
+#ifdef WIN32
+	sprintf(buff, ".\\PRINTLICENSE.bat %s", docfile);
+#endif
 	system(buff);
 }
 
@@ -2012,6 +2040,77 @@ static void search_license(struct license_s *l)
 	freetabtable(licensetable);
 }
 
+
+static void gen_machine_id(struct license_s *l)
+{
+	char *help;
+	char* os_type;
+	int os_type_cd;
+	char machineName[80];
+	char machineid[80];
+	int rc;
+
+	for(;;)
+	{
+		help =	"Enter W for a Windows Machine Id.\n"
+			"Enter L for a Linux Machine Id.\n"
+			"Enter A for a Alpha Machine Id.\n"
+			"Enter Q to Return.";
+		
+		rc = prompt_list("Windows, Linux, Alpha or Quit",NULL,"w,l,a,q",help);
+		switch(rc)
+		{
+		case PROMPT_RC_EXIT:
+			return;
+
+		case 1:		/* Windows */
+			os_type = "Windows";
+			os_type_cd = PLATFORM_WINDOWS_NT;
+			break;
+		case 2:		/* Linux */
+			os_type = "Linux";
+			os_type_cd = PLATFORM_LINUX;
+			break;
+		case 3:		/* Alpha */
+			os_type = "Alpha";
+			os_type_cd = PLATFORM_OSF1_ALPHA;
+			break;
+
+		default:
+			return;
+		}
+
+		printf("\n");
+		help = "Enter the machine name";
+		rc = prompt_text("Enter machine name ('.' to return)",NULL,PROMPT_EMPTY_NOTALLOWED,
+			help,machineName);
+		if (rc == PROMPT_RC_EXIT)
+		{
+			break;
+		}
+
+		printf("\n");
+		printf("You entered [%s]\n", machineName);
+
+		if (os_type_cd == PLATFORM_WINDOWS_NT)
+		{
+			WL_encodemachid(machineName, machineid);
+		}
+		else if (os_type_cd == PLATFORM_LINUX)
+		{
+			WL_GetMachineIdFromName(machineid, machineName, "LX");
+		}
+		else if (os_type_cd == PLATFORM_OSF1_ALPHA)
+		{
+			WL_GetMachineIdFromName(machineid, machineName, "A1");
+		}
+
+		printf("The %s Machine Id for machine name [%s] is [%s]\n", 
+			os_type, machineName, machineid);
+
+		strcpy(l->machineid, machineid);
+	}
+}
 
 static void cgi_process_arg(char *the_arg)
 {
@@ -2748,6 +2847,20 @@ static int cgi_main(void)
 /*
 **	History:
 **	$Log: wauthorize.c,v $
+**	Revision 1.42  2009/07/19 20:54:22  gsl
+**	Shell Stream
+**	
+**	Revision 1.41  2009/07/19 00:39:23  gsl
+**	Update for Shell Stream
+**	
+**	Revision 1.40  2004/06/14 15:42:57  gsl
+**	make external the routines to generate MachineId from the Unix Machine Name
+**	Used by Linux and Alpha. Add M function to wauthorize to generate machine id for Window or Linux or Alpha from the machine name.
+**	
+**	Revision 1.39  2004/05/03 17:41:27  gsl
+**	Add IssueDate and change license.template macros to be [XXX] so as tobe
+**	compatiable with HTML
+**	
 **	Revision 1.38  2003/06/17 16:50:31  gsl
 **	fix key printout for missing values
 **	

@@ -61,7 +61,7 @@ int  gpuzzle(void);
 void MENUCONT(struct video_menu *md, int *v);		/* Continue the menu.			*/
 void MENUEXIT(struct video_menu *md);			/* Erase all menus.			*/
 void MENUGO(struct video_menu *md, int *v);		/* Run the menu.			*/
-void MENUINFO(struct video_menu *mcb, int *level, int *item, int *link);	/* Return the menu level and item.	*/
+void EDE_MENUINFO(struct video_menu *mcb, int *level, int *item, int *link);	/* Return the menu level and item.	*/
 void MENUITEM(struct video_menu *md, char *t, int *v, void *p);			/* Get the item data.			*/
 void MENUKILL(struct video_menu *md, int *how);					/* Erase menus.				*/
 void MENULOAD(struct video_menu *md, int *t, int *o, int *r, int *c, int *w);	/* Get the menu data.			*/
@@ -88,6 +88,9 @@ int  ws_bar_menu( int curset, int vr, int vc, int ak, int ar, unsigned char* nm,
 /*
 **	History:
 **	$Log: ede.h,v $
+**	Revision 1.3  2005/02/17 20:44:00  gsl
+**	Fix MENUINFO problem on Windows.
+**	
 **	Revision 1.2  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

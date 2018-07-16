@@ -1,6 +1,4 @@
-Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
-All Rights Reserved.
-
+Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 ====================================================================
 
 Title:          KCSI for Acucobol on Windows (WIN32) Setup
@@ -8,7 +6,7 @@ Title:          KCSI for Acucobol on Windows (WIN32) Setup
 Document:       kcsintsetup.txt
 Last Updated:   $Date:$
 Products:       KCSI/WIN32 for Acucobol
-Versions:       4.1.00 
+Versions:       4.2.00 
 
 Summary:        Quick setup steps for KCSI on Windows.
 
@@ -36,9 +34,9 @@ Overview
 The Steps
 ---------
 
-1) Ensure WISP 5.0.00 is installed first.
+1) Ensure WISP 5.1.00 is installed first.
 
-    WISP 5.0.00 must be installed first before you can install KCSI.
+    WISP 5.1.00 must be installed first before you can install KCSI.
     Ensure you have WISP installed and configured before
     continuing.
 
@@ -54,12 +52,14 @@ The Steps
 
 3) Build the Acucobol Runtime System.
 
-    a) Ensure ACUCOBOL-GT 6.0, 5.2, 5.1 or 5.0 is installed.
+    Follow the build instructions for your version of 
+    Acucobol.
 
-    b) Ensure MicroSoft Visual C++ 6 or later is installed.
+       For Acucobol-GT 8.1 see:
+        - C:\KCSIACUxxxx\build_kcsi_acu91_rts.txt
 
-    c) Follow the build instructions for your version of 
-       Acucobol.
+       For Acucobol-GT 7.2 see:
+        - C:\KCSIACUxxxx\build_kcsi_acu72_rts.txt
 
        For Acucobol-GT 6.0 see:
         - C:\KCSIACUxxxx\build_kcsi_acu60_rts.txt

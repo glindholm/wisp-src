@@ -69,9 +69,9 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 		return(the_statement);
 	}
 
-	if (acn_cobol)
+	if (opt_native_screens)		/* REWRITE CRT WARNING */
 	{
-		write_log("WISP",'W',"NATIVE","Workstation REWRITE %s uses WISP Screens",crt_record[crt_num]);
+		write_log("WISP",'W',"NATIVESCREENS","Workstation REWRITE %s uses WISP Screens",crt_record[crt_num]);
 	}
 
 	record_node = verb_node->next;
@@ -306,6 +306,14 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_crtrw.c,v $
+**	Revision 1.26  2003/09/08 19:43:27  gsl
+**	Change log entries for Native Screens
+**	
+**	Revision 1.25  2003/08/08 19:52:47  gsl
+**	Add native screens comments
+**	
+**	Revision 1.24  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.23  2003/02/04 17:33:19  gsl
 **	fix copyright header
 **	

@@ -216,7 +216,7 @@ void vse_ed_find(void)
 	{
 		screen_error = 0;
 
-		untrunc(fnd_field,vse_edit_width);
+		vse_untrunc(fnd_field,vse_edit_width);
 
 		vsescr_init(ed_scr);
 		vse_ed_load_full_lines();
@@ -257,7 +257,7 @@ static void vse_ed_fnd_val(void)
 	int qt;
 
 	fnd_quoted = fnd_number = 0;
-	trunc(fnd_field);
+	vse_trunc(fnd_field);
 	if( (qt = in_quotes(fnd_field)) == -1)
 	{
 		screen_error = 1;
@@ -314,8 +314,8 @@ int vse_ed_change(void)
 			strcpy(chng_first_line, std_chng_first_line);
 		}
 
-		untrunc(chng_field,vse_edit_width);
-		untrunc(repl_field,vse_edit_width);
+		vse_untrunc(chng_field,vse_edit_width);
+		vse_untrunc(repl_field,vse_edit_width);
 
 		vsescr_init(ed_scr);
 		vse_ed_load_full_lines();
@@ -342,8 +342,8 @@ int vse_ed_change(void)
 
 		screen_error = 0;
 
-		trunc(chng_field);
-		trunc(repl_field);
+		vse_trunc(chng_field);
+		vse_trunc(repl_field);
 		if (0 == strlen(chng_field))
 		{
 			screen_error = 1;
@@ -992,7 +992,7 @@ int validate_linenum(char *num_string, int4 *num)
 	temp[16] = (char)0;
 
 	leftjust(temp,16);
-	trunc(temp);
+	vse_trunc(temp);
 
 	if ( 0==strlen(temp) )
 	{
@@ -1119,6 +1119,10 @@ static int case_exact(void)
 /*
 **	History:
 **	$Log: vsedfnd.c,v $
+**	Revision 1.16  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.15  2003/02/05 21:47:53  gsl
 **	fix -Wall warnings
 **	

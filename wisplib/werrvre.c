@@ -101,7 +101,7 @@ void WL_werr_message_box(const char *instr)
 	/*
 	**	Handle errors with native screens thru cobol.
 	*/
-	if (wisp_acu_nativescreens())
+	if (wisp_nativescreens())
 	{
 		char	buf[1500];
 		char	buflen9999[5];
@@ -112,7 +112,7 @@ void WL_werr_message_box(const char *instr)
 		int4	rc;
 		
 		/*
-		**	CALL "WACUERROR" USING BUFF, LEN.
+		**	CALL "WACUERROR"/"WMFNERROR" USING BUFF, LEN.
 		**
 		**	01  BUFF PIC X(1500).
 		**	01  LEN  PIC 9999.
@@ -135,7 +135,14 @@ void WL_werr_message_box(const char *instr)
 		parms[1] = buflen9999;
 		lens[1] = 4;
 		
-		WL_call_acucobol("WACUERROR", 2, parms, lens, &rc);
+		if (wisp_acu_cobol())
+		{
+			WL_call_acucobol("WACUERROR", 2, parms, lens, &rc);
+		}
+		else if (wisp_mf_cobol())
+		{
+			WL_call_acucobol("WMFNERROR", 2, parms, lens, &rc);
+		}
 
 		/*
 		**	If there was an error then fall thru to the vwang code.
@@ -192,6 +199,9 @@ void WL_werr_message_box(const char *instr)
 /*
 **	History:
 **	$Log: werrvre.c,v $
+**	Revision 1.32  2003/08/25 21:10:17  gsl
+**	MF Native Screens
+**	
 **	Revision 1.31  2003/02/04 16:30:02  gsl
 **	Fix -Wall warnings
 **	

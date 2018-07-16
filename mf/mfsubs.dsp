@@ -106,6 +106,10 @@ SOURCE=.\MFLINK.cob
 # End Source File
 # Begin Source File
 
+SOURCE=..\doc\mfnativescreens.txt
+# End Source File
+# Begin Source File
+
 SOURCE=.\wrunmf.umf
 # End Source File
 # End Target

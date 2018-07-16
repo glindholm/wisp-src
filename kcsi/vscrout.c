@@ -61,7 +61,7 @@ static AKEY	blank_akey = { "     ", "   ", " "};
 **	Static data
 */
 /* CHANGE-COPYRIGHT-DATE */
-static char app[]="CREATE Utility - Version %s.%s (c) 1993-2003 KCSI/NEOM";
+static char app[]="CREATE Utility - Version %s.%s (c) KCSI/Shell Stream Software LLC";
 static char logo[81], message_field[81], m1_field[31], m2_field[31];
 static char recsize[5], errlist[4], output_org[2], output_format[2];
 static int screen_error;
@@ -114,7 +114,7 @@ static int val_all_akey_fields(int idx);
 static void val_alt_dup(int idx);
 static int get_alt_key_split(int idx);
 static void val_alt_key(int key);
-static int isblank(char *str, int len);
+static int k_isblank(char *str, int len);
 static void akey_pos_len_error(int idx);
 static void val_akeypos(int idx);
 static void val_akeylen(int idx);
@@ -929,9 +929,9 @@ static int val_all_akey_fields(int idx)
 
 	fcount = 0;
 
-	if(!isblank(akey[idx].pos,5))
+	if(!k_isblank(akey[idx].pos,5))
 		++fcount;
-	if(!isblank(akey[idx].len,3))
+	if(!k_isblank(akey[idx].len,3))
 		++fcount;
 
 /* if pos or len is blank, then an error */
@@ -943,7 +943,7 @@ static int val_all_akey_fields(int idx)
 /* if pos and len are both blank, dup field must be blank */
 	if(fcount == 0)
 		{
-		if(!isblank(akey[idx].dup,1))
+		if(!k_isblank(akey[idx].dup,1))
 			{
 			akey_pos_len_error(idx);
 			return(1);
@@ -1026,7 +1026,7 @@ static void val_alt_dup(int idx)
 	sprintf(m1_field,"FLAGS%d must be 'D' or BLANK.",idx +1); 
 }
 
-static int isblank(char *str, int len)
+static int k_isblank(char *str, int len)
 {
 	for( ; len ; --len, ++str)
 		{
@@ -1039,6 +1039,23 @@ static int isblank(char *str, int len)
 /*
 **	History:
 **	$Log: vscrout.c,v $
+**	Revision 1.29  2010/01/16 02:04:28  gsl
+**	new release
+**	wisp 5.1.00
+**	kcsi 4.2.00
+**	
+**	Revision 1.28  2010/01/10 00:58:33  gsl
+**	fix LINUX warnings
+**	trunc
+**	isblank
+**	sys_errlist
+**	
+**	Revision 1.27  2007/01/03 14:11:44  gsl
+**	copyright 2007
+**	
+**	Revision 1.26  2005/01/03 19:12:06  gsl
+**	Copyright year 2005
+**	
 **	Revision 1.25  2003/02/05 15:23:59  gsl
 **	Fix -Wall warnings
 **	

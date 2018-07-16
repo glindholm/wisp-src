@@ -54,7 +54,6 @@ static int home();
 int VL_gcal2(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 {
 	register int i, j, k;
-	unsigned char *vsss();
 	int active;
 	unsigned char c;
 
@@ -337,8 +336,6 @@ static int showtab(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 
 static int move(this_date,tab) char *this_date; char tab[LENGTH][WIDTH+1];
 {
-	unsigned char *vsss();
-
 	vrss(save);
 	save = vsss(row,col,rows,cols);
 	showtab(this_date,tab);
@@ -366,6 +363,9 @@ static int home()
 /*
 **	History:
 **	$Log: gcal2.c,v $
+**	Revision 1.17  2010/02/10 03:52:33  gsl
+**	fix warnings for redefined functions
+**	
 **	Revision 1.16  2003/06/23 15:28:04  gsl
 **	VL_ global symbols
 **	

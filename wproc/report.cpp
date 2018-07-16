@@ -34,19 +34,24 @@
 #include "memory.hpp"
 #include "product.hpp"
 
+
+extern "C" void WL_wtrace(const char* routine, const char* code, const char* format, ... /* args */);
+extern "C"void WL_werr_write(const char* buff);
+
+
 char *const error_label   = "ERROR ";
 char *const warning_label = "WARNING ";
 char *const arrow_label   = "   -> ";
 char *const blank_label   = "      ";
 int         indent        = 0;
 
-const int   syntax_messages         = 100;
-const int   semantic_messages       = 200;
-const int   static_runtime_messages = 300;
-const int   runtime_messages        = 400;
-const int   general_messages        = 500;
-const int   unexpected_messages     = 600;
-const int   usage_messages          = 700;
+const int   syntax_messages_100         = 100;
+const int   semantic_messages_200       = 200;
+const int   static_runtime_messages_300 = 300;
+const int   runtime_messages_400        = 400;
+const int   GENERAL_MESSAGES_500        = 500;
+const int   unexpected_messages_600     = 600;
+const int   usage_messages_700          = 700;
 
 const int   max_column   = 67;
 int         max_text_len = max_column;
@@ -223,6 +228,7 @@ void show_message_text(
    const char *sub4 = NULL)
 {
    const int subs_allowed = 4;
+
    if (! the_message_reader->ok()) {
       show_new_line();
       show("Unable to open message file to report error ");
@@ -235,11 +241,17 @@ void show_message_text(
    else {
       char c;
       int  sub_count = 0;
+      char msgbuf[4096];
+      int msgpos = 0;
       const char *subs[subs_allowed];
       subs[0] = sub1;
       subs[1] = sub2;
       subs[2] = sub3;
       subs[3] = sub4;
+
+      strcpy(msgbuf,"(WPROC) %WPROC-E-MESSAGE ");
+      msgpos = strlen(msgbuf);
+
       while ((c = the_message_reader->next_char()) != EOF) {
          if (c == substitution_char) {
             // show substitution value
@@ -247,9 +259,15 @@ void show_message_text(
             while (subs[sub_count] == NULL)
                sub_count += 1;
             assert(sub_count < subs_allowed);
+
+	    memcpy(&msgbuf[msgpos], subs[sub_count], strlen(subs[sub_count]));
+	    msgpos += strlen(subs[sub_count]);
+
             show(subs[sub_count++]);
          }
          else {
+		msgbuf[msgpos++] = c;
+
             // append char to word
             assert(word_index < max_word);
             word[word_index++] = c;
@@ -261,6 +279,10 @@ void show_message_text(
       assert(word_index < max_word);
       word[word_index++] = '.';
       show_word(); // last one
+
+      msgbuf[msgpos++] = '\n';
+      msgbuf[msgpos++] = '\0';
+      WL_werr_write(msgbuf);
    }
    delete the_message_reader;
    the_message_reader = NULL;
@@ -421,7 +443,7 @@ void display_error(location *a_location, const char *sub = NULL) {
 void report_syntax_error
    (int error_number, location *a_location, const char *sub)
 {
-   init_error(error_number + syntax_messages, a_location);
+   init_error(error_number + syntax_messages_100, a_location);
    show("Found ");
    if (sub) {
       show("'");
@@ -439,7 +461,7 @@ void report_semantic_error
    (int error_number, location *a_location, const char *sub)
 {
    warning = BOOLEAN(error_number < 0);
-   init_error(abs(error_number) + semantic_messages, a_location);
+   init_error(abs(error_number) + semantic_messages_200, a_location);
    display_error(a_location, sub);
 }
 
@@ -459,7 +481,7 @@ mod_field *init_correction(
 
    create_screen(fatal);
 
-   locate_message(error_number + runtime_messages);
+   locate_message(error_number + runtime_messages_400);
    show_error_line_number(a_location);
    show_message_text(bad_value, value_kind, first, last);
    show_source_info(a_location);
@@ -512,7 +534,7 @@ void init_filename_correction(
 {
    create_screen(fatal);
 
-   locate_message(error_number + runtime_messages);
+   locate_message(error_number + runtime_messages_400);
    show_error_line_number(a_location);
    wang_filename name(bad_value);
    char in_on[31];  // 8 + " IN " + 8 + " ON " + 6 + 1
@@ -718,7 +740,7 @@ void report_filename_correction(
 void report_general_error(int error_number, const char *sub) {
    show_copyright();
    show_new_line();
-   locate_message(error_number + general_messages);
+   locate_message(error_number + GENERAL_MESSAGES_500);
    show_message_text(sub);
    show_new_line();
 }
@@ -727,7 +749,7 @@ void report_general_error(int error_number, const char *sub) {
 void report_fatal_error(int error_number, const char *sub) {
    show_copyright();
    show_new_line();
-   locate_message(error_number + unexpected_messages);
+   locate_message(error_number + unexpected_messages_600);
    show_message_text(sub);
    show_new_line();
    restore_video_state();
@@ -747,6 +769,12 @@ void report_status(const char *msg1, const char *msg2, const char *msg3) {
 //
 //	History:
 //	$Log: report.cpp,v $
+//	Revision 1.8  2004/01/06 18:48:35  gsl
+//	in show_message_text() write the message to wisperr.log
+//	
+//	Revision 1.7  2004/01/06 18:25:11  gsl
+//	in show_message_text() write the message with WL_wtrace()
+//	
 //	Revision 1.6  1998/08/31 19:14:11  gsl
 //	drcs update
 //	

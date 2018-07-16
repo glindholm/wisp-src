@@ -34,7 +34,7 @@ void assert_error(char *source_file, int line_number) {
    write_stdout
       ("An unexpected error in WPROC has occurred.  Please report the code above\n");
    write_stdout
-      ("to NeoMedia or your dealer.  Thank you for your assistance.\n\n");
+      ("to WISP support.  Thank you for your assistance.\n\n");
    abort();
 }
 
@@ -42,6 +42,9 @@ void assert_error(char *source_file, int line_number) {
 //
 //	History:
 //	$Log: assert.cpp,v $
+//	Revision 1.10  2010/01/10 16:12:30  gsl
+//	Shell Stream
+//	
 //	Revision 1.9  2003/02/05 15:40:14  gsl
 //	Fix copyright headers
 //	

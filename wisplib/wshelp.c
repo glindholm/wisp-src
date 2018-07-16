@@ -1,32 +1,13 @@
 /*
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
-**
-** WISP - Wang Interchange Source Processor
-**
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
-** 
-** CVS
-** $Source:$
-** $Author: gsl $
-** $Date:$
-** $Revision:$
+** WISP - Wang Interchange Source Processor
+** Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 */
 
 /*
 **	File:		wshelp.c
 **
 **	Project:	wisp/lib
-**
-**	RCS:		$Source:$
 **
 **	Purpose:	WISP command processor
 **
@@ -306,7 +287,7 @@ int WL_wsh_help(int prog_running)							/* Put up the shell screen.		*/
 		time_col = 50;
 
 		wsb_add_text(hWsb, 1,  0, "***  WISP Command Processor  ***");
-		wsb_add_text(hWsb, 2,  0, "NeoMedia Technologies Inc.");
+		wsb_add_text(hWsb, 2,  0, WISP_OWNER);
 
 		sprintf(temp,"Workstation %s Ready",tty_str);
 		wsb_add_text(hWsb, 4,  8, temp);
@@ -1577,8 +1558,8 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
-	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  NeoMedia Technologies Incorporated");
-	wsb_add_text(hWsb, 6, 0,"2201 Second Street Suite 402, Fort Myers FL 33901");
+	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  " WISP_OWNER);
+	wsb_add_text(hWsb, 6, 0,WISP_ADDRESS_FULL);
 	wsb_add_text(hWsb, 7, 0,"Web: " WISP_WEBSITE "   Email: " WISP_EMAIL);
 
 	sprintf(buff,"Version=[%s]", wisp_version());
@@ -2751,12 +2732,12 @@ static int wsh_progprnt(int scrn_seq_no)						/* The screen seq. no.  Starts at 
 	return(0);
 }
 
+#define MAX_PERSONALITY_FILENAME_LEN 77
 static void wsh_usewrite(void)
 {
 	HWSB	hWsb;
 	int	pfkey, currow, curcol;
-	char 	dst[78];
-	char 	*ptr; 
+	char 	dst[MAX_PERSONALITY_FILENAME_LEN+1];
 	char 	buff[128];
 
 	currow = 0;
@@ -2764,7 +2745,7 @@ static void wsh_usewrite(void)
 	hWsb = wsb_new();
 											/* Init destination file name to spaces.*/
 	wisp_defaults_path(buff);
-	cstr2cobx(dst,buff,sizeof(dst)-1);
+	cstr2cobx(dst,buff,MAX_PERSONALITY_FILENAME_LEN);
 	dst[sizeof(dst)-1] = '\0';
 
 	wsb_add_text(hWsb, 1, 0, "*** Write Usage Constants ***");
@@ -2782,12 +2763,12 @@ static void wsh_usewrite(void)
 		switch(pfkey)
 		{
 		case 0:
-			wsb_get_field(hWsb, 8, 3, dst, sizeof(dst)-1);
-			dst[sizeof(dst)-1] = '\0';
-			leftjust(dst,sizeof(dst)-1);				/* left justify & null terminate the 	*/
-			if ((ptr = strchr(dst,' '))) *ptr=0;			/* personality file name.		*/
-			WL_load_defaults();					/* Be sure they exist.			*/
-			WL_write_defaults_to_file(dst);				/* Store the file.			*/
+			wsb_get_field(hWsb, 8, 3, buff, MAX_PERSONALITY_FILENAME_LEN);
+			buff[MAX_PERSONALITY_FILENAME_LEN] = '\0';
+			leftjust(buff,MAX_PERSONALITY_FILENAME_LEN);
+			WL_cobx2cstr(dst, buff, strlen(buff));
+			WL_load_defaults();
+			WL_write_defaults_to_file(dst);
 
 			/* Fall thru to return */
 		case 1:
@@ -3549,7 +3530,7 @@ static void wsb_build_non_wang_base(HWSB hWsb)
 	char	temp[255];
 
 	wsb_add_text(hWsb, 1, 0, "***  WISP HELP Processor  ***");
-	wsb_add_text(hWsb, 2, 0, "NeoMedia Technologies Inc.");
+	wsb_add_text(hWsb, 2, 0, WISP_OWNER);
 
 	sprintf(temp,"Username:  %s", WL_longuid());
 	wsb_add_text(hWsb, 5, 3, temp);
@@ -3857,6 +3838,16 @@ int WL_wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.125  2009/10/18 20:44:47  gsl
+**	Copyright
+**	
+**	Revision 1.124  2007/08/08 18:54:50  gsl
+**	TT#74 file names with embedded spaces.
+**	use WL_cobx2cstr() to convert the cobol input field to a C string.
+**	
+**	Revision 1.123  2005/07/11 15:10:34  gsl
+**	Moved to Suite 600
+**	
 **	Revision 1.122  2003/07/08 20:55:23  gsl
 **	WISP 5000
 **	

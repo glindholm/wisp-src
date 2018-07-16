@@ -1,0 +1,297 @@
+Copyright (c) 2003 by NeoMedia Technologies Inc. 
+All Rights Reserved.
+
+====================================================================
+ID:		$Id:$
+
+Title:          Micro Focus COBOL Native Screens Support
+
+Document:       mfnativescreens.txt
+Last Updated:   $Date:$
+
+====================================================================
+Outstanding Issues:
+
+- Only generate FAC logic if FAC is used.
+    - Record each use of "FAC OF" 
+    - only generate WMFNFAC2SCREEN calls for fields that were used 
+      or have a RANGE clause
+     
+- Configuring the keyboard
+    - Figure out how to use ADIS to configure the keyboard
+    - Configure a HELP and GETKEY function key
+
+- Activating PFKEYS in the WMFNxxx.cob routines
+    - These routines assume the funcitons keys have already been 
+      activated
+
+- Deal with selectively activating pfkeys
+    - Only activate the active pfkeys (now activates all funcion keys)
+
+- Sometimes Cursor Row & Col are returned as 0
+    - often the first time into the MANAGE FILES & LIBRARIES and 
+      position to a tabstop.
+
+- SECURE (BLANK) fields are funky!!!
+    - In a SCREEN the SECURE fields display there contains before 
+      user input is begun.  The input is not echoed.
+
+
+
+
+====================================================================
+- The #NATIVE_SCREENS option is used to generate native SCREEN SECTION 
+   screen I/O logic.
+
+- The #NOFAC option will cause the FAC to CONTROL/COLOR logic to not
+  be generated.  It will also prevent RANGE checking support.
+
+
+====================================================================
+
+- Micro Focus SCREEN SECTIONS do not support a UPPER control keyword
+  that forces input to uppercase.
+
+
+====================================================================
+- The "BLANK SCREEN" clause in a screen section is not reliable 
+  if something else modifies the screen.  Tne MF screen handler 
+  will optimize it away.  So we have WISP-BLANK-SCREEN that can 
+  be displayed to really blank the screen.
+
+- The default attribute for a input field is HIGHLIGHT.
+
+- The WISP-OMITTED-FIELD is ACCEPT'ed "WITH SECURE" to prevent the
+  character at (1,1) from being blanked out.
+
+- If the NOFAC option is used then CONTROL fields are not generated
+  and the WMFNFAC2SCREEN calls are not inserted.
+
+- In WMFNGETPFKEY is ESC or HELP is pressed a 33 (HELP) will be 
+  returned as the PFKEY.
+
+- Unless NOFAC is specified the the RANGE clauses will move 
+  REVERSE-VIDEO in the the CONTROL field on error.
+
+- Can't position the cursor at the RANGE error field. Don't have 
+  and easy way of calculating the field position (for array elements)
+  at runtime.
+
+- HELP in HELP dosen't seem to be a problem.  In WMFNWSB.cob the 
+  check for HELP to call WMFNHELP is only done if "33" is not in 
+  the list of valid pfkeys (KEY-LIST).  When called from WISPHELP 
+  the KEY-LIST always contains 33 so if HELP is pressed then 
+  33 is returned instead of calling WMFNHELP.
+
+- Unless NOFAC is specified then WMFNFAC2SCREEN calls will be 
+  generated.
+
+- Use the CONTROL value "PROTECTED" to turn off a field at runtime.
+  This is used for FAC transation of a non-modifyable field.
+
+- PROTECTED fields are still tabstops.
+
+
+
+====================================================================
+
+002000 SPECIAL-NAMES.
+           CURSOR         IS WISP-CURSOR
+           CRT STATUS     IS WISP-CRT-STATUS
+
+      *****************************************************************
+      **** Native Screens fields
+      *****************************************************************
+
+      *    Special-names CURSOR clause.
+       01  WISP-CURSOR.
+           05  WISP-CURSOR-LINE    PIC 999 VALUE 1.
+           05  WISP-CURSOR-COL     PIC 999 VALUE 1.
+
+      *    Micro Focus ADIS Routine Calls.
+       01  WISP-ADIS-SET-BIT-PAIRS        PIC 9(2) COMP-X VALUE 1.
+       01  WISP-ADIS-USER-KEY-CONTROL.
+           05  WISP-ADIS-USER-KEY-SETTING PIC 9(2) COMP-X.
+           05  FILLER                     PIC X    VALUE "1".
+           05  WISP-ADIS-FIRST-USER-KEY   PIC 9(2) COMP-X.
+           05  WISP-ADIS-NUMBER-OF-KEYS   PIC 9(2) COMP-X.
+
+      *    Accept Omitted Field.
+       01  WISP-OMITTED-FIELD PIC X.
+
+      *    Special-names CRT STATUS clause.
+       01  WISP-CRT-STATUS.
+           05  WISP-CRT-STATUS-1            PIC X.
+               88  WISP-CRT-STATUS-TERMINATED  VALUE '0'.
+               88  WISP-CRT-STATUS-FUNCKEY     VALUE '1'.
+               88  WISP-CRT-STATUS-ERROR       VALUE '9'.
+           05  WISP-CRT-STATUS-2            PIC 99 COMP-X.
+               88  WISP-CRT-EX-ESC             VALUE 0.
+               88  WISP-CRT-EX-HELP            VALUE 33.
+               88  WISP-CRT-EX-GETKEY          VALUE 34.
+               88  WISP-CRT-EX-ENTER           VALUE 48.
+           05  WISP-CRT-STATUS-3            PIC 99 COMP-X.
+
+====================================================================
+
+      *****************************************************************
+       SCREEN SECTION.
+      *****************************************************************
+
+       01  WISP-BLANK-SCREEN.
+           05  BLANK SCREEN.
+
+       01  WISP-INVALID-CRT-STATUS-SCREEN.
+           05  BLANK SCREEN.
+           05  LINE 10 COL 30 VALUE "INVALID CRT STATUS".
+           05  LINE 14 COL  3 VALUE "WISP-CRT-STATUS-1 =".
+           05  LINE 14 COL 25 PIC X  FROM WISP-CRT-STATUS-1.
+           05  LINE 16 COL  3 VALUE "WISP-CRT-STATUS-2 =".
+           05  LINE 16 COL 25 PIC 99 FROM WISP-CRT-STATUS-2.
+           05  LINE 18 COL  3 VALUE "WISP-CRT-STATUS-3 =".
+           05  LINE 18 COL 25 PIC 99 FROM WISP-CRT-STATUS-3.
+           05  LINE 24 COL 25 VALUE "PRESS (ENTER) TO CONTINUE.".
+
+
+====================================================================
+
+      *****************************************************************
+      **** SETUP FOR DISPLAY AND READ STATEMENTS
+      *****************************************************************
+       WISP-DNR-SETUP.
+           DISPLAY WISP-BLANK-SCREEN
+
+      *    ENABLE USER FUNCTION KEYS
+           MOVE 1  TO WISP-ADIS-USER-KEY-SETTING.
+           MOVE 0  TO WISP-ADIS-FIRST-USER-KEY.
+           MOVE 35 TO WISP-ADIS-NUMBER-OF-KEYS.
+           CALL X"AF" USING WISP-ADIS-SET-BIT-PAIRS,
+                              WISP-ADIS-USER-KEY-CONTROL.
+
+           IF WISP-DNR-WCC-SOUND-ALARM THEN
+               PERFORM WISP-DNR-ALARM
+           END-IF.
+
+           IF WISP-DNR-WCC-POSITION-CURSOR THEN
+               MOVE WISP-DNR-CURSOR-ROW TO WISP-CURSOR-LINE
+               MOVE WISP-DNR-CURSOR-COL TO WISP-CURSOR-COL
+           ELSE
+               MOVE 0 TO WISP-CURSOR-COL, WISP-CURSOR-LINE
+           END-IF.
+
+           MOVE "N" TO WISP-DNR-DONE-FLAG.
+
+      **** ACCEPT A SCREEN WITH NO FIELDS
+       WISP-DNR-ACCEPT-NOFIELDS.
+           ACCEPT WISP-OMITTED-FIELD LINE 1 COL 1 WITH SECURE
+               EXCEPTION CONTINUE
+           END-ACCEPT.
+
+      **** CHECK PF KEYS AFTER AN ACCEPT
+       WISP-DNR-CHECK-PFKEY.
+
+           SET WISP-PFKEY-INVALID TO TRUE.
+           IF WISP-CRT-STATUS-TERMINATED AND WISP-CRT-EX-ENTER
+               MOVE 0 TO WISP-PFKEY
+           ELSE IF WISP-CRT-STATUS-FUNCKEY
+               IF WISP-CRT-EX-GETKEY OR WISP-CRT-EX-ESC
+                   CALL "WMFNGETPFKEY" USING WISP-PFKEY
+               ELSE
+                   MOVE WISP-CRT-STATUS-2 TO WISP-PFKEY
+               END-IF
+           ELSE
+               DISPLAY WISP-INVALID-CRT-STATUS-SCREEN
+               PERFORM WISP-DNR-ALARM
+           END-IF.
+
+           IF WISP-PFKEY-HELP THEN
+               CALL "WMFNHELP"
+	       DISPLAY WISP-BLANK-SCREEN
+           ELSE IF NOT WISP-PFKEY-INVALID THEN
+               PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL WISP-DNR-DONE
+                   OR WISPX1 > WISP-ALLOWABLE-PF-KEYS-CNT
+                   IF WISP-PFKEY = WISP-ALLOWABLE-PF-KEYS-SUB(WISPX1)
+                       MOVE "Y" TO WISP-DNR-DONE-FLAG
+                   END-IF
+               END-PERFORM
+
+               MOVE "N" TO WISP-DNR-ON-PFKEY
+               PERFORM VARYING WISPX1 FROM 1 BY 1 UNTIL
+                   WISPX1 > WISP-ON-PF-KEYS-CNT
+                   OR WISP-DNR-DONE-FLAG = "N"
+                   OR WISP-DNR-ON-PFKEY = "Y"
+                   IF WISP-PFKEY = WISP-ON-PF-KEYS-SUB(WISPX1) THEN
+                       MOVE "Y" TO WISP-DNR-ON-PFKEY
+                   END-IF
+               END-PERFORM
+
+               IF WISP-DNR-DONE-FLAG = "N" THEN
+                   PERFORM WISP-DNR-ALARM
+               END-IF
+           END-IF.
+
+      **** RING THE BELL
+       WISP-DNR-ALARM.
+           CALL X"E5".
+
+
+
+====================================================================
+2.6.5.1 Enabling and Disabling User Function Keys
+By default, the Adis function keys are enabled, although you can disable them or make them act as function keys instead. 
+
+However, before you can use the user function keys, they must be enabled. If a user key is enabled, it terminates the ACCEPT operation when it is pressed. If the key is disabled, the key is rejected and the bell rung. 
+
+See the sections Enabling and Disabling Adis Keys and Enabling and Disabling User Function Keys later in this chapter.
+
+Use the following call to selectively enable and disable the user function keys: 
+
+ call x"AF" using   set-bit-pairs
+                    user-key-control
+
+where set-bit-pairs and user-key-control are defined in the Working-Storage Section of your program as follows: 
+
+123456 01 set-bit-pairs          pic 9(2) comp-x value 1.
+	01 user-key-control.
+	   03 user-key-setting    pic 9(2) comp-x.
+	   03 filler              pic x value "1".
+	   03 first-user-key      pic 9(2) comp-x.
+	   03 number-of-keys      pic 9(2) comp-x.
+
+and where:
+
+user-key-setting is set to 0 to disable keys or 1 to enable keys.  
+first-user-key is the number of the first key to be enabled or disabled. 
+number-of-keys is the number of consecutive keys to enable or disable.  
+
+Function keys are enabled or disabled until explicitly changed by another call to x"AF", or until the application terminates. Calls to enable or disable function keys are cumulative. For example, if you call x"AF" to enable function key F1, then make a second call to enable F10, both keys are enabled. 
+
+Example 
+The following code enables the Escape key and function keys F1 and F10, but disables all other user function keys: 
+
+	* Enable Escape key 
+	     move 1 to user-key-setting
+	     move 0 to first-user-key
+	     move 1 to number-of-keys
+	     call x"AF" using set-bit-pairs
+		      user-key-control
+* Disable 126 keys starting from key 1
+     move 0 to user-key-setting
+     move 1 to first-user-key
+     move 126 to number-of-keys
+     call x"AF" using set-bit-pairs
+		      user-key-control.
+* Enable F1 and F10.
+     move 1 to user-key-setting
+* Enable F1.
+     move 1 to first-user-key
+     move 1 to number-of-keys
+     call x"AF" using set-bit-pairs
+		      user-key-control
+* Enable F10
+     move 10 to first-user-key
+     call x"AF" using set-bit-pairs
+		      user-key-control
+
+========================= END OF DOCUMENT ==========================
+

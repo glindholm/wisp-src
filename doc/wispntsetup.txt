@@ -1,22 +1,20 @@
-Copyright (c) 2002-2003 by NeoMedia Migrations Inc. 
-All Rights Reserved.
-
+Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 ====================================================================
 
-Title:          WISP for Windows (WIN32) Quick Set-Up Steps
+Title:          WISP for Windows Quick Set-Up Steps
 
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/WIN32
-Versions:       5.0.01
+Versions:       5.1.00
 
-Summary:        WISP for WIN32 installation and setup steps
+Summary:        WISP for Windows installation and setup steps
 
 ====================================================================
 
 
-WISP for WIN32 Quick Set-Up Steps
-=================================
+WISP for Windows Quick Set-Up Steps
+===================================
 
 This document describes the step for installing and setting up WISP
 for Windows (WIN32).
@@ -36,7 +34,7 @@ Overview
 5) Build the Acucobol Runtime System
 6) Setup the WISPCONFIG files
 7) Configure the client machines
-8) Command Prompt Properties (Windows 2000)
+8) Command Prompt Properties
 
 
 The Steps
@@ -50,8 +48,8 @@ The Steps
 
 1) Install WISP/WIN32 on the server machine
 
-    a) Insert CD into drive D:
-    b) Run D:\INSTALL\SETUP.EXE
+    a) Unzip the WISP distribution file to a location on a local
+       disk on the server. 
 
     The following instructions refer the the WISP installation 
     directory as C:\WISPxxxx.  Adjust the instructions accordingly for 
@@ -134,19 +132,24 @@ The Steps
     a) Ensure you have a WISP license key. 
     b) Run C:\WISPxxxx\BIN\WLICENSE.EXE
     c) Write down the machine id that is reported by Wlicense.
-    d) Contact NeoMedia Technical support for a Validation Code.
-       (mailto:support@neom.com)
+    d) Contact WISP support for a Validation Code.
+       (mailto:wisp@shellstream.com)
     e) Enter the Valication Code to complete the license
        installation. 
 
 5) Build the Acucobol Runtime System
 
-    a) Ensure ACUCOBOL-GT 6.0, 5.2, 5.1 or 5.0 is installed.
+    Follow the build instructions for your version of 
+    Acucobol.
 
-    b) Ensure MicroSoft Visual C++ 6 or later is installed.
+       For Acucobol-GT 8.1 see:
+        - C:\WISPxxxx\acu\acu81\build_wisp_acu81_rts.txt
 
-    c) Follow the build instructions for your version of 
-       Acucobol.
+       For Acucobol-GT 7.2 see:
+        - C:\WISPxxxx\acu\acu72\build_wisp_acu72_rts.txt
+
+       For Acucobol-GT 6.2 see:
+        - C:\WISPxxxx\acu\acu62\build_wisp_acu62_rts.txt
 
        For Acucobol-GT 6.0 see:
         - C:\WISPxxxx\acu\acu60\build_wisp_acu60_rts.txt
@@ -166,7 +169,7 @@ The Steps
    Follow the instructions in Appendix B of the WISP manual.
 
    Share the Acucobol installation directory. (E.g. Share
-   "C:\Acucorp\acucbl600\acugt") as "ACUDIR".  
+   "C:\Acucorp\acucbl810\acugt") as "ACUDIR".  
 
    Edit the WRUN.CFG configuration file in the WISPCONFIG
    directory and change the RUNCBL= option to point to the new
@@ -213,9 +216,9 @@ The Steps
    g) Click the "OK" button to exit Wconfig.
 
 
-8) Command Prompt Properties (Windows 2000)
+8) Command Prompt Properties
 
-   On Windows 2000 if using WISP in console mode (without CoStar) you
+   On Windows** if using WISP in console mode (without CoStar) you
    will need to set the Command Prompt Properties to disable the Edit
    Options "QuickEdit Mode" and "Insert Mode" as these interfere with
    mouse click processing.
@@ -231,5 +234,6 @@ The Steps
       option to save the properties and apply to all future windows
       (do not choose the "current window only" option).
 
+   ** This seems to only apply to some older versions of Windows.
 
 ========================= END OF DOCUMENT ==========================

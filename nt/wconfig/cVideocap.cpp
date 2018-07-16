@@ -13,23 +13,18 @@
 //
 //	cDialogs::_Videocap::Initialize
 //
-cDialogs::_Videocap::Initialize ( )
+int cDialogs::_Videocap::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.Videocap.hVideocap;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
 
 	//	If unable to open key
-	if ( RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VIDEOCAP",
-		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		NULL, &hKey, &Disp ) == ERROR_SUCCESS ) {
+	if ( CreateRegistryKey ( REGKEY_WISP_VIDEOCAP, &hKey ) == ERROR_SUCCESS ) {
 		//	Get value for WISPTERM field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "WISPTERM", 0, NULL, sRegValue,
+		if ( RegQueryValueEx ( hKey, REGVAL_VIDEOCAP_WISPTERM, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 
 			sRegValue[BufSize] = '\0';
@@ -44,8 +39,7 @@ cDialogs::_Videocap::Initialize ( )
 		}
 		//	Get value for VIDEOCAPDIR field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "VIDEOCAP", 0, NULL, sRegValue,
+		if ( RegQueryValueEx ( hKey, REGVAL_VIDEOCAP_VIDEOCAP, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 			SetDlgItemText (
 				Dialogs.Videocap.hVideocap,
@@ -63,10 +57,6 @@ cDialogs::_Videocap::Initialize ( )
 	}
 
 	HWND hCtl = GetDlgItem ( hVideocap, S02_VIDEOCAPDIR );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	//	***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -77,27 +67,22 @@ cDialogs::_Videocap::Initialize ( )
 //	cDialogs::_Videocap::Save
 //		Saves the data in the Videocap dialog to the registry
 //
-cDialogs::_Videocap::Save ( )
+int cDialogs::_Videocap::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
 	UCHAR sRegVal[_MAX_PATH];
 
 	hDlg = Dialogs.Videocap.hVideocap;
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\VIDEOCAP",
-		0, KEY_ALL_ACCESS, &hKey );
+	RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_VIDEOCAP, 0, KEY_ALL_ACCESS, &hKey );
 
 	GetDlgItemText (
 		hDlg, S02_WISPTERM, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "WISPTERM", 0, REG_SZ, sRegVal,
+	RegSetValueEx (	hKey, REGVAL_VIDEOCAP_WISPTERM, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
 	GetDlgItemText (
 		hDlg, S02_VIDEOCAPDIR, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx (
-		hKey, "VIDEOCAP", 0, REG_SZ, sRegVal,
+	RegSetValueEx (	hKey, REGVAL_VIDEOCAP_VIDEOCAP, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
 
 	RegFlushKey ( hKey );

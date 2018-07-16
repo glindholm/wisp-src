@@ -77,7 +77,7 @@ int vse_input(char *emsg)
 	GPCTEXT(specify2,15,24);
 	if(vse_native)
 	{
-		untrunc(vse_sysname,VSE_SYSNAME_LEN);
+		vse_untrunc(vse_sysname,VSE_SYSNAME_LEN);
 		GPSYSNAME(vse_sysname,18);
 		GPCTEXT(go_vs,24,14);
 	}
@@ -100,7 +100,7 @@ int vse_input(char *emsg)
 
 	if (vse_native)
 	{
-		trunc(vse_sysname);
+		vse_trunc(vse_sysname);
 	}
 
 	return(vse_input_pick);
@@ -109,6 +109,10 @@ int vse_input(char *emsg)
 /*
 **	History:
 **	$Log: vseinp.c,v $
+**	Revision 1.15  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.14  2003/02/04 18:57:00  gsl
 **	fix copyright header
 **	

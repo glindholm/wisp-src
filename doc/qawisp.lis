@@ -1,6 +1,4 @@
-	Copyright (c) 1989-2003 by NeoMedia Technologies Inc. 
-	All Rights Reserved.
-	
+	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 	
 	====================================================================
 	
 	Title:		WISP QA Checklist
@@ -68,7 +66,7 @@
 
 			4) When completed turn in this checklist.
 
-
+
 
 #####################  This page is for UNIX only  ########################
 
@@ -80,6 +78,9 @@
 	___	Install WISP and build the RTS. This is normally done with
 		the "installqa.sh" script but could be done from a WISP
 		kit.
+		
+		$ cd ${WISPSRC}/port
+		$ installqa.sh
 
 
 +	SET UP FOR WISP QA TESTING.
@@ -93,14 +94,14 @@
 	___	Set the needed environment variables
 
 			$ export WISPGID=$$
-			$ export ACUDIR=/disk1/acucobol
+			$ export ACUDIR=/opt/acu
 			$ export COBDIR=/disk1/mfcobol
 
 	___	Copy the "test" directory  based on the COBOL you are using.
 
 			$ cd ${WISPSRC}
 		ACU	$ cp -r test testacu
-		MF	$ cd -r test testmf
+		MF	$ cp -r test testmf
 
 	___	Change directory to your "test" dir based on the COBOL you
 		are using.
@@ -122,19 +123,31 @@
 
 	LICENSE THE MACHINE
 
-	___	su  (to root)
-		$WISPDIR/bin/wlicense
+	___	$WISPDIR/bin/wlicense
 
 
 +	BUILD SAMPLE
 
+	***	If COBOL complier is not available
+	
+		Extract compiled ACU files
+		$ uncompress acuqa*.tar.Z
+		$ tar -xvf acuqa*.tar
+		$ touch *.acu
+		$ make -f sampleacu.umf test_dirs prtargs
+
 
 	___	Build the SAMPLE programs.  
+		(*** ONLY if COBOL Compiler available ***)
 
 		ACU	$ make -f sample.umf ACU
 		MF	$ make -f sample.umf MF
 		MFSE	$ make -f sample.umf MFSE
 
+	___	ACU: IF compiler available bundle the compiled *.acu files
+	
+			$ make -f sampleacu.umf acuqa
+			
 	___	Check your setup with WDIAG. Some LGMAP directories have
 		not yet been created.  Ensure that everything else is OK. 
 
@@ -143,6 +156,7 @@
 	WISP TRANSLATOR TESTS
 
 	___	Run the WISP translator against the t_xxx.wcb test files.
+		(*** ONLY if COBOL Compiler available ***)
 
 		$ cd ${WISPSRC}/wisptran
 		$ make -f wisp.umf testacu  2>&1 |more
@@ -165,8 +179,6 @@
 		$ vcapkeys	
 
 
-
-
 
 #####################  This page is for WIN32 only  ########################
 
@@ -201,14 +213,14 @@
 +	SETUP ${WISPCONFIG} DIRECTORY
 
 	___	Share these directories: 
-		C:\DEV\WISP\SRC\TESTACU      as TESTACU
-		C:\DEV\WISP	             as WISPDEV
-                C:\Acucorp\Acucbl600\AcuGT   as ACUDIR
+		C:\DEV\WISP\SRC\TEST			as TESTACU
+		C:\DEV\WISP				as WISPDEV
+		C:\Acucorp\Acucbl810\AcuGT		as ACUDIR
 
 	___   	Edit ...\TESTACU\SAMPLEACU.MAK
 
 		___ Set WISPDIR=C:\WISPxxxx
-		___ Set COBOL=C:\Acucorp\Acucbl600\Acugt\BIN\CCBL32.EXE
+		___ Set COBOL=C:\Acucorp\Acucbl810\Acugt\BIN\CCBL32.EXE
 
 	Copy the config files.
 	___	Run CONFIGACU.BAT
@@ -223,9 +235,9 @@
 		___ Set COSTARV2
 
 	___	ACUCONFIG: Edit CONFIG\ACUCONFIG and add the TESTACU share
-		name to the CODE-PREFIX.
+		name to the CODE_PREFIX.
 
-		    CODE-PREFIX . \\SERVER\TESTACU 
+		    CODE_PREFIX . \\SERVER\TESTACU 
 				  \\SERVER\WISP\ACU
 				  \\SERVER\KCSI
 
@@ -238,7 +250,7 @@
 	___	WSYSCONF.CFG: Edit CONFIG\WSYSCONF.CFG and add the machine
 		name as workstation 100.
 
-		    100  ws   WINDOWS  CYCLONE
+		    100  ws   WINDOWS  ZOOMSTAR
 
 	___	Run WCONFIG 
 		- GENERAL (TAB)
@@ -277,7 +289,7 @@
 
 		___ Copy DISPRINT.acu to ..\ACU
 		    COPY DISPRINT.acu ..\ACU
-
+
 
 ################  This page is for all platforms  ####################
 
@@ -364,7 +376,7 @@
 	___	(16) CANCEL Processing
 
 	___	(16) EXIT wshell
-
+
 
 	Do SAMPLE.WCB tests
 
@@ -413,6 +425,16 @@
 	___	(17) WL0025  - WGETCURPOS (w2rowcol)
 	___	(18) WL0026  - W99TOX (xx2byte)
 	___	(19) WL0027  - PUTPARM
+			Test 6  (ENTER)
+				Check FILE = BBB  (16) Exit
+			Test 7  (ENTER)
+				Check FILE = ___  (16) Exit
+			Test 11 (ENTER)
+				Check FILE = ___  (16) Exit
+			Test 19 (ENTER)
+				Check FILE = DDD  (16) Exit
+			(ENTER) EXIT Tests
+			
 	___	(20) WL0028  - FILECOPY
 	___	(21) WL0029  - SCRATCH
 	___	(22) WL0030  - SUBMIT
@@ -461,7 +483,8 @@
 
 	___	(7) MOVE WITH CONVERSION
 
-		___    (1) Auto Test
+		___ 	(1) Auto Test
+			(16) EXIT test
 
 		Exit all the way out to the shell
 		(16) to EXIT  COBOL TEST
@@ -500,7 +523,7 @@
 +	___	(6) CREATE A SEQUENTIAL FILE 
 					Leave the lib and vol blank.
 					Should create SEQFILE LIBOUT VOLOUT
-		(16) back to menu.
+			(16) back to menu.
 	
 	___	(22) OPEN EXTEND SEQUENTIAL (should be no getparm)
 	___	(24) CLOSE SEQUENTIAL	    
@@ -508,7 +531,7 @@
 	___	(24) CLOSE SEQUENTIAL	    
 
 +	___	(6)  (again): At PF3 option FILE=SEQFILE1
-		(16) back to menu.
+			(16) back to menu.
 
 +	___	(25) WRITE SEQUENTIAL	(ENTER) - File not OPEN
 					Should ERROR getparm  (85) [48][02]
@@ -535,6 +558,7 @@
 
 	___	Display BFILESEQ in LIBOUT on VOLOUT with (11) record width=92
 		and ensure it is in descending order. (7,8,3,2,4,5,6,1)
+			(16) EXIT Display
 
 	___	(15) OPEN FILE-B INPUT	Press (ENTER)  (file status 00)
 	___	(11) WRITE FILE-B  (ENTER)   		        (85) [48]
@@ -590,7 +614,7 @@
 	STEP 08	<W2> OPEN FILE-B SHARED  (success both have it opened)
 
 	STEP 09	<W2> READ HOLD (for REWRITE) key=AAAA (Record is now locked)
-	STEP 10	<W1> READ                    key=AAAA (should succeed)
+	STEP 10	<W1> READ                    key=AAAA (should succeed)	(16) EXIT
 	STEP 11	<W1> READ HOLD               key=BBBB (should succeed)
 
 	STEP 12	<W1> READ HOLD (for DELETE)  key=AAAA (should wait)
@@ -639,15 +663,17 @@
 	___	<W1> (19) READ HOLD	      key=BBBB (should wait)
 	___	<W2> (12) READ                key=CCCC (succeed) 
 						       (<W1> still waits)
+			(16) EXIT read loop
 	___	<W2> (11) WRITE               key=XXXX (succeed) 
 						       (<W1> still waits)
+			(16) EXIT write loop
 	___	<W2> (9) OPEN FILE-B SHARED  (Abort (16) <W1> gets BBBB)
 	___	<W1> (21) READ HOLD DELETE    key=XXXX (succeed) 
 	___	<W1> (10) CLOSE FILE-B       (succeed)
 						       						       
 
 		We are finished the lock tests, EXIT from <W2>.
-
+
 
 	QAFILEIO - Screen 2
 
@@ -661,6 +687,8 @@
 					between each one. This will write
 					three timestamps out to the file.
 	___	DISPLAY file (1) file=@TRNSLOG lib=@LOGFIL@ vol=VOLOUT
+	                (16) Exit DISPLAY
+			(16) Exit SES/DYN LOGGING Test
 
 	___	(Set PRINTMODE = Keep) -- (^E) HELP (3) SET PRINT Defaults
 
@@ -669,13 +697,15 @@
 					use LIBSPOOL and VOLSPL.
 	___	DISPLAY file (1) file=PRTFILE lib=LIBSPOOL vol=VOLSPL  
 		It was written with AFTER ADVANCING PAGE and 5 LINES.
+	                (16) Exit DISPLAY
 
 	___	(2) OPEN OUT PRINT WRITE CLOSE (again)
 	            ********
 		    At the PF3 screen change FILE=PRTFILE2. (Needed later)
 		    ********
+		    (ENTER) Exit Test
 
-	___	(3) OPEN OUTPUT PRINT FILE	(PF3 to continue)
+	___	(3) OPEN OUTPUT PRINT FILE	(PF3 to continue)(ENTER)
 	___	(4) CLOSE PRINT FILE		
 
 	___	(5) OPEN EXTEND PRINT FILE	(NO PF3, it's EXTEND)
@@ -689,17 +719,18 @@
 			a screen image and there should be a line following
 			it that has a name and timestamp.
 
-	___	(13) CREATE A LARGE FILE (Takes a couple seconds)
++	___	(13) CREATE A LARGE FILE (Takes a couple seconds)
 
-	___	(14) CREATE EMPTY Files
++	___	(14) CREATE EMPTY Files (ENTER) (ENTER)
 
-	___	(15) CREATE LIBSAM Files
++	___	(15) CREATE LIBSAM Files (Creates each type of data file)
 
-	___	(26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
++	___	(26) LOAD ALTVAR8 (IDX8) -- (MF ONLY may error)
 
 		(16) to EXIT FILE I/O TESTS
-
 
+
+		
 	(4) SCREEN I/O TESTS (QASCREEN)
 
 		This section tests all the screen I/O functionality.
@@ -744,7 +775,7 @@
 				1000   *
 				(rest are blank)
 
-        ___     (12) ADDITIONAL TESTS - QASCRN2 
+    ___ (12) ADDITIONAL TESTS - QASCRN2 
      
 +		(1) ROW REWRITE & READ Test ROW oriented screen I/O
 					This will write over top of the
@@ -774,7 +805,7 @@
 		This does 4 rewrites & reads of the screen. The first 2
 		are with the MODIFIABLE clause, the second 2 with ALTERED.
 		Should be pseudo blanks in the first half of the last 2
-		lines only.
+		lines only.	
 
 		**** NOTE ****  Do not type over all of the pseudo blanks
 				as we need some on the screen to test
@@ -809,7 +840,7 @@
 
 		(16) to exit SCRN2 tests
 		(16) to exit SCREEN tests
-
+
 
 	(5) WANG VSSUBS TESTS (QASUBS)
 
@@ -817,17 +848,31 @@
 
 
 		(1) READFDR tests
+		
+			*** PREREQUISITE ***
+			***(3) FILE I/O TESTS
+			***  (32) FILE 2 TESTS
+			***    (14) Create EMPTY Files
+			***    (15) Create LIBSAM Files
+			***    (26) LOAD ALTVAR8 (MF)
 
-	___	Press (8) to run the autotests.
-		You'll be asked to check the creation date of BFILE.
-		All the rest of the tests are automatic.
+	___		(8) Run the autotests.
+			- You'll be asked to check the creation date of IDXFIX.
+			- ALTVAR8 may be "NOT FOUND"
+			- You will get error:
+				%READFDR-E-NOTSUP Field ID of XX is NOT SUPPORTED
+			- All the rest of the tests are automatic.
+			(16) EXIT Test
 
-	___	(2) FIND - Press (8) to run the AUTOTESTS.
+	___	(2) FIND
+			(8) to run the AUTOTESTS.
+			(16) EXIT
 
 +	___	(3) PUTPARM & LINK TO DISPLAY   try with both D & E
 		You can display the file XYZ in LIBIN on VOLIN.
 		Just see that the PUTPARM & LINK works don't test 
-		DISPLAY yet.
+		DISPLAY yet.  
+			(16) EXIT Display
 
 	___	(5) GETPARM 		this tests getparmbuild, displays
 					a getparm only.
@@ -839,37 +884,41 @@
 
 			(ACU)	FILE=QABCKGRD  in TESTACU   on SOURCE
 			(MF)	FILE=QABCKGRD  in TESTMF    on SOURCE
-
+			(ENTER) to Continue			
 			Creates	BACK#### in LIBSPOOL on VOLSPL.
 			(1) DISPRINT
 +	___		Check:  TASKTYPE=B  (in file created)
 				TERMNUM=-1
-
 			        PROGLIB=TESTxxx  PROGVOL=SOURCE
+			(16) EXIT Display
+			(16) EXIT Disprint
+			(16) EXIT Test
 
-		(6) SUBMIT (proc)
-			        FILE=QABCKPRC   in TESTxxx   on SOURCE
+	___	(6) SUBMIT (proc)
+			FILE=QABCKPRC   in TESTxxx   on SOURCE
+			(ENTER) to continue
+			This will submit qabckprc.wps which will set
+				INLIB  = QABCKPRC
+				OUTLIB = Vxxxxxxx  (Task #)
+			It will then run QABCKGRD twice each
+			time setting RUNLIB = BKA1 then BKA2.
+			Next it SUBMITS qabckpc2.wps; this sets
+				INLIB  = QABCKPC2
+				OUTLIB = Vxxxxxxx  (Task #)
+			and runs QABCKGRD twice each time 
+			setting RUNLIB = BKB1 then BKB2.
 
-				(1) DISPRINT
-	___			This will submit qabckprc.wps which will
-				set
-					INLIB  = QABCKPRC
-					OUTLIB = Vxxxxxxx  (Task #)
-				It will then run QABCKGRD twice each
-				time setting RUNLIB = BKA1 then BKA2.
-				Next it SUBMITS qabckpc2.wps; this sets
-					INLIB  = QABCKPC2
-					OUTLIB = Vxxxxxxx  (Task #)
-				and runs QABCKGRD twice each time 
-				setting RUNLIB = BKB1 then BKB2.
-
-		___  The files BKA1 and BKA2 should have INLIB=QABCKPRC
+			(1) DISPRINT
+		___  The files BKA1xx and BKA2xx should have INLIB=QABCKPRC
 		     and have the same OUTLIBs and WORKLIBs.
 
-		___  The files BKB1 and BKB2 should have INLIB=QABCKPC2
+		___  The files BKB1xx and BKB2xx should have INLIB=QABCKPC2
 		     and have the same OUTLIBs and WORKLIBs.
 
 		___   The WORKLIBs should be different for BKA1 and BKB1.
+			(16) EXIT Display (each time)
+			(16) EXIT Disprint
+			(16) EXIT Test
 
 	___	(6) (UNIX) SUBMIT a shell script (with parameters)
 		(ACU)	FILE=QABKPACU	in TESTACU	on SOURCE
@@ -885,10 +934,9 @@
 			(1) DISPRINT
 		___	See printout of BCKP#### LIBSPOOL VOLSPL and 
 			verify that the	INVOL=NEWIN and OUTVOL=NEWOUT.
-
-		___	Check your USAGE CONSTANTS to verify that they 
-			didn't get changed by any of these background jobs.
-
+			(16) EXIT Display (each time)
+			(16) EXIT Disprint
+			(16) EXIT Test
 
 		(8) LINK
 
@@ -897,15 +945,19 @@
 		FILE	 LIB	 VOL	 	TYPE
 		=======	 ======= ======  	====
 
-	___	WSORT				S   
+	___	WSORT				S   	(16) EXIT WSORT
 
 		Link to a non-WISP program.
-+	___	UNIX:   VI			TYPE=S
++	___	UNIX:   VI			TYPE=S	(:q!) Exit vi
 		WIN32:  NOTEPAD
 
 		Link to a shell/batch
 +	___	UNIX:  PRTARGSH		TYPE=(blank)
 		WIN32: PRTARGNT
+		
+		Args are printed
+		(ENTER) to exit prtargs
+		(16) EXIT Test
 
 
 
@@ -960,6 +1012,7 @@
 					should stop waiting.
 
 	___ ***	<W1>	(2) (destroy)	RC=0
+			(16) EXIT Test (both windows)
 
 
 	Run SAMPLE & (5) WANG VSSUBS TESTS (QASUBS)
@@ -990,11 +1043,13 @@
 		(14) BELL/PAUSE
 	___	BELL 	(1)	5       Number of times to ring bell,
 					some systems optimize repeats.
-	___	PAUSE	(2)	500     Hunderths of seconds to pause,
+	___	PAUSE	(2)	300     Hunderths of seconds to pause,
 					you should move your cursor out
 					of the field before pressing (2)
 					so you can see it pop back when
 					complete.
+			(16) EXIT Test
+			
 		(19) GETPARM
 	___	Press (1) to SETUP for the tests.
 	___	Type="I " FORM=A PRNAME=XX1	(no display PF-KEY=A)
@@ -1013,16 +1068,21 @@
 
 	___	    The script will run DISPLAY on BFILEX3 (width=92)
 		    Order should be 3, 8, 2, 7, 6, 5, 4
+		    (16) EXIT Display
+		    (16) EXIT Test
 
 	___	WCOPY utility
 		(8) LINK to QACOPY
+		    (16) EXIT Test
 
 +	___	(29) WSXIO
 
 		___	(9) WSXIO UPDATE
 			Type and watch the WAIT-CNT update, there should
-			be no screen I/O interruption. Press (4) to 
-			interrrupt, AID="D".
+			be no screen I/O interruption. 
+			Press (4) to interrrupt, AID="D".
+			(ENTER) Exit
+			(16) EXIT WSXIO-SCREEN 
 
 	___	(31) COBLINK  	Does a LINK type " " and if file is not
 				found will then do a LINK of type "S".
@@ -1044,7 +1104,7 @@
 		$ startupxxx.sh
 		$ wrun SAMPLE
 
-
+
 
 	(7) PRINTING TESTS (SAMPLE)
 
@@ -1073,7 +1133,10 @@
 
 	___	(6) NO NAME PRINT FILE
 					samp####   in LIBSPOOL on VOLSPL
-
+		(12) DISPRINT
+		(16) EXIT
+
+		
 
 	UTILITIES
 
@@ -1094,7 +1157,9 @@
 		(2) Set Usage Constants
 	___	    Values should be restored
 
-		wusage flags
+	___	wusage flags
+		(1) EXIT
+		
 	___	UNIX: qaflags.sh
 
 	___	WIN32: wshell (1) Run QAFLAGS
@@ -1112,24 +1177,26 @@
 	___	(3)  + Interrupt before done by pressing any key
 	___	(5)			Next screen
 	___	(4)			Prev screen
+		(2) Top
 
-+	___	(7)			Find -enter a string the exists
++	___	(7)			Find -enter "add" an existing string
 	___	(8)			Find Next (repeat until end)
 	___	(2)			Top
-	___	(7)			Find -enter a non-extent string
+	___	(7)			Find -enter "zzz" a non-extent string
 	___	(2)			Top
 
 	___	(10)			Scroll right (several times)
 	___	(9)			Scroll left
 
-	___	(11)			Change records size
+	___	(11)			Change records size "40"
 	___	(12)			Show position
-	___	(13)			Stream mode
+	___	(13)			Stream mode (ON)
+	___	(13)			Stream mode (OFF)
 
 	___	(16)			EXIT
 
 
-
+
 	KCSI CRID
 
 	___	Run "wshell"
@@ -1156,22 +1223,25 @@
 		USIGN	41     U       10     4
 		PACK	51     P        8     2
 		BIN	59     B	4          Bin Edit = 1
-		X	63     C        3          Occurs   = 6
+		X	63     C        3          Occurs   = 06
 		(ENTER)(ENTER) after each line
 		(16) exit
 
 	___	(9) DATENTRY
 	
-	___	Data file: FILE= I1  LIBRARY= DATA VOLUME=VOLIN	
+	___	Data file: 
+		FILE    = I1    LIBRARY = DATA     VOLUME = VOLIN	
+		Control file:
+		CTLFILE = I1    CTLLIB  = CONTROL  CTLVOL = VOLIN	
 		(2) Create data file 
 
 	___	(3) Add Records
 		PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
-		AAA  AAA   AAA	 100  100   100  100 100 100
-		BBB  BBB   AAA	 200  200   200  200 200 200
-		CCC  AAA   BBB   300  300   300  300 300 300  
+		AAA  AAA   AAA	 100  100   100  100 100 100  (ENTER) Add
+		BBB  BBB   AAA	 200  200   200  200 200 200  (ENTER) Add
+		CCC  AAA   BBB   300  300   300  300 300 300  (ENTER) Add
 		** ERROR ** Record already on file
-		- Change AKEY1=AA2
+		- Change AKEY1=AA2  (ENTER) Add
 		(16) exit
 
 	___	(4) Modify Records
@@ -1285,7 +1355,7 @@
 		USIGN	41     U       10     4
 		PACK	51     P        8     2
 		BIN	59     B	4          Bin Edit = 1
-		X	63     C        3          Occurs   = 6
+		X	63     C        3          Occurs   = 06
 		(ENTER)(ENTER) after each line
 		(16) exit
 
@@ -1296,9 +1366,9 @@
 
 	___	(3) Add Records
 		RECORD PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
-		3      CCC  CCC   CCC	300  300   300  300 300 300
-		2      BBB  BBB   BBB	200  200   200  200 200 200
-		5      EEE  EEE   EEE   500  500   500  500 500 500  
+		3      CCC  CCC   CCC	300  300   300  300 300 300  (ENTER) Add
+		2      BBB  BBB   BBB	200  200   200  200 200 200  (ENTER) Add
+		5      EEE  EEE   EEE   500  500   500  500 500 500  (ENTER) Add
 
 	___	(9) Exit to Modify
 		(2) First record
@@ -1397,7 +1467,7 @@
 
 		___   A3     Alternate Indexed
 
-		___   R4     Relative
+		___   R4     Relative		[MF (11) Length=81]
 
 		___   C5     Line Consecutive
 
@@ -1405,7 +1475,6 @@
 		
 
 
-
 
 #####################  This page is for UNIX only  ####################
 

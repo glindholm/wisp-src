@@ -96,9 +96,9 @@ NODE parse_start(NODE the_statement, NODE the_sentence)
 		**	Replace a START crt-file with a CONTINUE.
 		*/
 
-		if (acn_cobol)
+		if (opt_native_screens)		/* START CRT - WARNING */
 		{
-			write_log("WISP",'W',"NATIVE","Workstation START %s is removed for Native Screens",
+			write_log("WISP",'W',"NATIVESCREENS","Workstation START %s is removed for Native Screens",
 				  token_data(file_node->token));
 			tput_scomment("*>>> Workstation START removed for Native Screens.");
 			tput_scomment("*    START %s",token_data(file_node->token));
@@ -241,6 +241,14 @@ NODE parse_start(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_start.c,v $
+**	Revision 1.23  2003/09/08 19:43:27  gsl
+**	Change log entries for Native Screens
+**	
+**	Revision 1.22  2003/08/08 19:52:46  gsl
+**	Add native screens comments
+**	
+**	Revision 1.21  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.20  2003/03/07 17:00:07  gsl
 **	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
 **	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is

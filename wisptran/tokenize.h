@@ -54,12 +54,16 @@ extern TOKEN *dup_token(TOKEN *tokptr);
 extern int fluff_token(TOKEN *tokptr);
 extern int lint_token(TOKEN *tokptr);
 extern char *token_data(TOKEN *tokptr);
+extern char *token_indata(TOKEN *tokptr);
 extern char *token_type_mess(TOKEN *tokptr);
 
 #endif /* TOKENIZE_H */
 /*
 **	History:
 **	$Log: tokenize.h,v $
+**	Revision 1.10  2004/10/14 19:51:45  gsl
+**	added token_indata() for logging, comments, and errors as it should return the actual text from the file where token_data() may be changed for reserved words etc.
+**	
 **	Revision 1.9  2003/02/05 15:40:13  gsl
 **	Fix copyright headers
 **	

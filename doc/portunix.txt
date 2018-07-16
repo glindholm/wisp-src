@@ -1,4 +1,4 @@
-	Copyright (c) 1995-2003 by NeoMedia Technologies Inc. 
+	Copyright (c) Shell Stream Software LLC. All Rights Reserved. 
 	All Rights Reserved.
 	====================================================================
 	
@@ -28,13 +28,13 @@
 
 	The following components are required to port WISP.
 
-	[ ]	WISP source kit  e.g.  wispXXXX.src.cpio.Z
+	[ ]	WISP source kit  e.g.  wispXXXX.src.tar.Z
 
 	[ ] 	Acucobol COBOL compiler
 
 	[ ] 	Micro Focus COBOL compiler
 
-	[ ]	C++ compiler for WPROC
+	[ ]	C and C++ compiler
 
 
 	INSTALL THE COBOL
@@ -78,6 +78,8 @@
 		    $ uncompress -c wispXXXX.src.tar.Z | tar -xvf -
 		or
 		    $ uncompress -c wispXXXX.src.cpio.Z | cpio -icvd
+		(to update)
+                    $ cvs update -Pd
 
 	[ ]	SET ENVIRONMENT VARIABLES
 
@@ -139,6 +141,7 @@
 
 	[ ]	 Copy the ${WISPSRC}/testacu Acucobol object files
 		 acuqa.tar.Z from a system that has them.
+		 (This is part of the CVS source set)
 
 
 	IF MISSING MICRO FOCUS COBOL
@@ -160,6 +163,10 @@
 	[ ]	$ cd ${WISPSRC}/port
 		$ maketail.sh			# make & tail
 		or
+		$ maketail.sh all_acu
+		or
+		$ maketail.sh shipkit		# missing all cobol
+		or
 		$ make -f makewisp.umf>>make.err 2>&1 &	# make and log errors
 		$ tail -f make.err		# show progress on screen
 		
@@ -180,6 +187,9 @@
 	[ ]	*** Install to ${WISPSRC}/QA ***
 		$ cd ${WISPSRC}/port
 		$ installqa.sh
+		
+		*** You may need to export CC ***
+		$ export CC=gcc
 
 
 	QA TEST WISP
@@ -191,21 +201,6 @@
 	directories and repeat the above steps starting at the BUILD step.
 
 	[ ]	Follow "qawisp.lis" checklist to test WISP.
-
-
-	UPDATED DRCS WITH MODIFIED FILES
-	================================
-
-	All modified source files need to be returned to DRCS.  Keep a
-	list of all files that changed.
-
-	[ ]	UPDATE DRCS
-		____________________________________________
-		____________________________________________
-		____________________________________________
-		____________________________________________
-		____________________________________________
-		____________________________________________
 
 
 	INSTALL THE NEW WISP

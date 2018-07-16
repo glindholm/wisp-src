@@ -40,7 +40,6 @@ extern void line();
 
 int main()
 {
-	extern char vgetc();
 	char t;
 	register int i;
 

@@ -37,7 +37,7 @@ rControls	CustCtrl;
 //	rControls::Init
 //		Performs required initialization for rControls
 //
-rControls::Init ( HINSTANCE hInst )
+int rControls::Init ( HINSTANCE hInst )
 {
 	CustCtrl.hInst = hInst;
 
@@ -50,7 +50,7 @@ rControls::Init ( HINSTANCE hInst )
 //		Inserts subdirectories into tree view ctrl when a dir is
 //		expanded
 //
-rControls::_Ctrl::_tvList::GetSubDirs
+int rControls::_Ctrl::_tvList::GetSubDirs
 	( HWND hDlg, TV_ITEM tviClicked, UINT tvAction )
 {
 	HWND hTVWnd;
@@ -139,7 +139,7 @@ rControls::_Ctrl::_tvList::GetSubDirs
 //	rControls::_Ctrl::_tvList::GetPathToks
 //		Gets the path tokens that lead to the item that is expanding
 //
-rControls::_Ctrl::_tvList::GetPathToks ( TV_ITEM tviClicked, HWND hTVWnd )
+int rControls::_Ctrl::_tvList::GetPathToks ( TV_ITEM tviClicked, HWND hTVWnd )
 {
 	TV_ITEM tviPrnt = tviClicked;
 	int cnt = 1;
@@ -172,7 +172,7 @@ rControls::_Ctrl::_tvList::GetPathToks ( TV_ITEM tviClicked, HWND hTVWnd )
 //		static control below the tree view control, this is also the
 //		string that is returned from the dialog box
 //
-rControls::_Ctrl::_tvList::RetPath ( HWND hDlg, HWND hTVWnd )
+int rControls::_Ctrl::_tvList::RetPath ( HWND hDlg, HWND hTVWnd )
 {
 	int cnt = 0;
 	char sRetPath[_MAX_PATH];
@@ -478,7 +478,7 @@ void rControls::_Ctrl::_tvList::GetNetObjects ( TV_ITEM tviClicked, HWND hTVWnd 
 //		Gets the actual subdirectories that are to be inserted into
 //		the tree view control
 //
-rControls::_Ctrl::_tvList::RetreiveDirs
+int rControls::_Ctrl::_tvList::RetreiveDirs
 	( char *sSrchPath, TV_ITEM SelItem, HWND hTVWnd )
 {
 	HANDLE hDir, hQDir;
@@ -564,7 +564,7 @@ rControls::_Ctrl::_tvList::RetreiveDirs
 //		Gets the file attributes of a specified file and puts them
 //		into an array
 //
-rControls::_Ctrl::GetFileAttribs
+int rControls::_Ctrl::GetFileAttribs
 	( WIN32_FIND_DATA *FindData, int FAttribs[8] )
 {
 	DWORD dwTmp;
@@ -634,7 +634,7 @@ HBRUSH rControls::_DrawTools::MakeSysBrush ( int i_Index )
 //	rControls::_Controls::GetDrvInfo
 //		Gets information about the disk drives on the computer
 //
-rControls::_Ctrl::GetDrvInfo ( )
+int rControls::_Ctrl::GetDrvInfo ( )
 {
 	int cnt = 0;
 
@@ -712,7 +712,7 @@ rControls::_Ctrl::GetDrvInfo ( )
 //	rControls::_Ctrl::_tvList::Initialize
 //		Initializes the dir list tree view control
 //
-rControls::_Ctrl::_tvList::Initialize ( HWND hDlg, HWND hTV_Ctrl )
+int rControls::_Ctrl::_tvList::Initialize ( HWND hDlg, HWND hTV_Ctrl )
 {
 	struct _ItemInfo {
 		TV_ITEM tvi;
@@ -809,7 +809,7 @@ rControls::_Ctrl::_tvList::Initialize ( HWND hDlg, HWND hTV_Ctrl )
 //		Selects the specified directory in the tree view control
 //		at the time the control is created
 //
-rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
+int rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
 {
 	char CurDir[_MAX_PATH];
 	char DirToks[100][_MAX_FNAME];
@@ -830,20 +830,12 @@ rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
 		isLocal = FALSE;
 		return 0;
 	}
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-	//	...otherwise
-//	else {
 		strcpy ( DirToks[0], "My Computer" );
 		if ( FindFirstFile ( CurDir,
 			&FindData ) == INVALID_HANDLE_VALUE ) {
 			GetCurrentDirectory ( _MAX_PATH, CurDir );
 		}
 		isLocal = TRUE;
-//	}
-//	if ( isLocal == TRUE ) {
-	//	This loop breaks the dir path specified as the start dir into
-	//	tokens
 	while ( TRUE ) {
 		if ( (CurDir[cnt] == '\\') || (CurDir[cnt] == '\0') ) {
 			strEnd = cnt;
@@ -855,8 +847,6 @@ rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
 		if ( CurDir[cnt] == '\0' ) break;
 		cnt++;
 	}
-//	}
-	//	***** END CHANGED *****
 	//	Set to cur drive
 	TV_ITEM tvIRet;
 	char WantLbl[_MAX_FNAME], tvLbl[_MAX_FNAME];
@@ -866,15 +856,8 @@ rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
 	//	reaches the specified starting dir
 	while ( strlen ( DirToks[cnt] ) != 0 ) {
 		ZeroMemory ( tvLbl, sizeof ( tvLbl ));
-		//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		//	***** CHANGED *****
-		//	Removed unnecissary if/else statements
-//		if ( isLocal == TRUE ) {
 		if ( cnt == 1 ) sprintf ( WantLbl, "(%s)", DirToks[1] );
 		else sprintf ( WantLbl, "%s", DirToks[cnt] );
-//		}
-//		else sprintf ( WantLbl, "%s", DirToks[cnt] );
-		//	***** END CHANGED *****
 		tvIRet.mask		=	TVIF_TEXT;
 		tvIRet.cchTextMax	=	_MAX_FNAME;
 		tvIRet.pszText		=	(char *) malloc ( _MAX_FNAME );
@@ -884,18 +867,11 @@ rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
 			TreeView_GetChild ( hTVCtrl, tvIRet.hItem );
 
 		TreeView_GetItem ( hTVCtrl, &tvIRet );
-		//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-		//	***** CHANGED *****
-		//	Removed unecissary if/else statements
-//		if ( isLocal == TRUE ) {
 		if ( cnt == 1 ) memcpy ( tvLbl,
 			&tvIRet.pszText[strlen (tvIRet.pszText)-4], 4 );
 		else strcpy ( tvLbl, tvIRet.pszText );
-//		}
-//		else strcpy ( tvLbl, tvIRet.pszText );
-		//	***** END CHANGED *****
 
-		if ( stricmp ( WantLbl, tvLbl ) == 0 ) {
+		if ( _stricmp ( WantLbl, tvLbl ) == 0 ) {
 			TreeView_Select ( hTVCtrl, tvIRet.hItem, TVGN_CARET );
 		}
 		else {
@@ -908,7 +884,7 @@ rControls::_Ctrl::_tvList::DefaultToDir ( HWND hTVCtrl, HWND hDlg )
 					&tvIRet.pszText
 					[strlen (tvIRet.pszText)-4], 4 );
 				else strcpy ( tvLbl, tvIRet.pszText );
-				if ( stricmp ( WantLbl, tvLbl ) == 0 ) {
+				if ( _stricmp ( WantLbl, tvLbl ) == 0 ) {
 					TreeView_Select ( hTVCtrl,
 						tvIRet.hItem, TVGN_CARET );
 					break;
@@ -1076,6 +1052,12 @@ void rControls::_Ctrl::_tvList::InsertNetItems ( TV_ITEM tvClicked, HANDLE hEnum
 /*
 **	History:
 **	$Log: rControls.cpp,v $
+**	Revision 1.12  2009/10/17 19:55:05  gsl
+**	fix default return type to int
+**	
+**	Revision 1.11  2007/08/07 20:08:44  gsl
+**	remove old CHANGED markers
+**	
 **	Revision 1.10  2003/06/18 16:43:07  gsl
 **	Add CVS header and history
 **	

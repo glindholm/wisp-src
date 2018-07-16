@@ -535,9 +535,12 @@ int WL_win32_98(void)
 **
 **	FUNCTION:	Get the WIN32 version formatted as a string.
 **
-**	DESCRIPTION:	NT  "WIN32 NT 4.0 build xxx"
-**			95  "WIN32 (Not NT) 4.0 build xxx"
-**			98  "WIN32 (Not NT) 4.10 build xxx"
+**	DESCRIPTION:	
+**			Vista	"Vista 6.0.xxxx xx"
+**			XP	"XP 5.1.xxxx xxx"
+**			NT	"NT 4.0.xxxx xxx"
+**			95	"(Not NT) 4.0.xxxx xxx"
+**			98	"(Not NT) 4.10.xxxx xxx"
 **
 **	ARGUMENTS:	None
 **
@@ -556,26 +559,44 @@ const char* WL_win32_version(void)
 	if (NULL == the_version)
 	{
 		OSVERSIONINFO osVer;
-		char	buff[128];
-		char	*is_nt;
+		char	buff[256];
+		char	*is_nt = "";
+		char	*name = "";
 		
 		osVer.dwOSVersionInfoSize = sizeof(osVer);
 		GetVersionEx(&osVer);
 
 		if (osVer.dwPlatformId == VER_PLATFORM_WIN32_NT)
 		{
-			is_nt = "NT";
+			is_nt = "NT ";
 		}
 		else
 		{
-			is_nt = "(Not NT)";
+			is_nt = "(Not NT) ";
 		}
 
-		sprintf(buff,"WIN32 %s %d.%d %d %s", is_nt,
-			osVer.dwMajorVersion, osVer.dwMinorVersion,
-			osVer.dwBuildNumber, osVer.szCSDVersion);
+		if (5 == osVer.dwMajorVersion)
+		{
+			name = "XP/2003 "; 
+		}
+		else if (6 == osVer.dwMajorVersion && 0 ==  osVer.dwMinorVersion)
+		{
+			name = "Vista/2008 "; 
+		}
+		else if (6 == osVer.dwMajorVersion && 1 ==  osVer.dwMinorVersion)
+		{
+			name = "Windows 7 "; 
+		}
 
-		the_version = strdup(buff);
+		sprintf(buff,"%s%s%d.%d %d %s", 
+			name,
+			is_nt,
+			osVer.dwMajorVersion, 
+			osVer.dwMinorVersion,
+			osVer.dwBuildNumber, 
+			osVer.szCSDVersion);
+
+		the_version = _strdup(buff);
 	}
 
 	return the_version;
@@ -586,6 +607,12 @@ const char* WL_win32_version(void)
 /*
 **	History:
 **	$Log: winnt.c,v $
+**	Revision 1.23  2009/10/18 20:47:20  gsl
+**	Fix how windows full version is displayed (wdiag)
+**	
+**	Revision 1.22  2007/08/02 20:09:21  gsl
+**	Add XP and Vista based on major release
+**	
 **	Revision 1.21  2003/01/31 19:08:37  gsl
 **	Fix copyright header  and -Wall warnings
 **	

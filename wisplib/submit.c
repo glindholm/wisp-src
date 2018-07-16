@@ -81,7 +81,6 @@
 
 #ifdef WIN32
 #include "win32spn.h"
-#include "win32std.h"
 #endif
 
 #include <signal.h>
@@ -1086,8 +1085,8 @@ static int win32_submit(
 				
 				leftjust(password,sizeof(password)-1);
 				leftjust(username,sizeof(username)-1);
-				unloadpad(l_username, username, sizeof(username)-1);
-				unloadpad(l_password, password, sizeof(password)-1);
+				WL_cobx2cstr(l_username, username, sizeof(username)-1);
+				WL_cobx2cstr(l_password, password, sizeof(password)-1);
 
 				if (0 == memcmp(save,"YES",3))
 				{
@@ -1325,6 +1324,13 @@ const char* WL_submit_err(int error)
 /*
 **	History:
 **	$Log: submit.c,v $
+**	Revision 1.64  2009/10/18 20:26:29  gsl
+**	Remove obsolete win32std.h
+**	
+**	Revision 1.63  2007/08/08 18:54:51  gsl
+**	TT#74 file names with embedded spaces.
+**	use WL_cobx2cstr() to convert the cobol input field to a C string.
+**	
 **	Revision 1.62  2003/03/19 20:32:11  gsl
 **	error checking for blank vol/lib and blank defaults
 **	

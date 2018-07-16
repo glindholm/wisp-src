@@ -39,7 +39,7 @@
 */
 #include "resource.h"
 #include "rControls.h"
-#include "CTL3D.H"
+//#include "CTL3D.H"
 
 /*
 **	cDialogs
@@ -51,9 +51,9 @@ class cDialogs {
 		// This is the main application window
 		class _MainDialog {
 			public:
-				Initialize ( HWND hDlg );
-				ChngTab ( HWND hDlg );
-				SaveReg ( HWND hDlg );
+				int Initialize ( HWND hDlg );
+				int ChngTab ( HWND hDlg );
+				int SaveReg ( HWND hDlg );
 				void RemoveClicked ( );
 		}MainDialog;
 		class _General {
@@ -64,10 +64,10 @@ class cDialogs {
 					ivTempDir,
 					ivUserDir;
 				int Initialize ( );
-				InitServer ( HKEY );
-				InitWISPDir ( HKEY );
-				InitWISPConf ( HKEY );
-				Save ( );
+				int InitServer ( HKEY );
+				int InitWISPDir ( HKEY );
+				int InitWISPConf ( HKEY );
+				int Save ( );
 				// The HWND parameter passed to the ChkInvalid
 				//	function is the handle of the control to be 
 				//	validated.
@@ -79,21 +79,21 @@ class cDialogs {
 				BOOL ivVideoCapDir,
 					ivWispTerm;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}Videocap;
 		class _EXTRACT {
 			public:
 				HWND hEXTRACT;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 		}EXTRACT;
 		class _MESSAGE {
 			public:
 				HWND hMESSAGE;
 				BOOL ivShareDir;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}MESSAGE;
 		class _SCRATCH {
@@ -101,7 +101,7 @@ class cDialogs {
 				HWND hSCRATCH;
 				BOOL ivScratchMode;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}SCRATCH;
 		class _License {
@@ -109,7 +109,7 @@ class cDialogs {
 				HWND hLicense;
 				BOOL ivLicenseFile;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 				void UpdateLicenseFile();
 				void CalcLicenseFile(char* file);
@@ -121,7 +121,7 @@ class cDialogs {
 					ivWEditorExe,
 					ivDisplayExe;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}WISPBin;
 		class _DISPLAY {
@@ -129,7 +129,7 @@ class cDialogs {
 				HWND hDISPLAY;
 				BOOL ivUse8Bit;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}DISPLAY;
 		class _WPROC {
@@ -137,7 +137,7 @@ class cDialogs {
 				HWND hWPROC;
 				BOOL ivWPROC;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}WPROC;
 		class _ACP {
@@ -146,7 +146,7 @@ class cDialogs {
 				BOOL ivACPConfigDir,
 					ivACPMap;
 				int Initialize ( );
-				Save ( );
+				int Save ( );
 				void ChkInvalid ( HWND );
 		}ACP;
 };
@@ -176,9 +176,9 @@ class cApplication {
 				sWISPDir[_MAX_PATH],
 				sWISPConfig[_MAX_PATH];
 		} Env;
-		ImportRegData ( HWND hDlg );
+		int ImportRegData ( HWND hDlg );
 		// Initializes the application - called from WinMain
-		InitApp ( HINSTANCE hInst );
+		int InitApp ( HINSTANCE hInst );
 		void MsgLoop ( );
 		int DeleteReg ( );
 		void WriteRegFile ( );
@@ -190,6 +190,12 @@ class cApplication {
 /*
 **	History:
 **	$Log: #Classes.h,v $
+**	Revision 1.10  2007/08/02 13:22:51  gsl
+**	Remove CTL3Dxxxx stuff, obsolete.
+**	
+**	Revision 1.9  2007/07/31 16:49:43  gsl
+**	fix warnings
+**	
 **	Revision 1.8  2003/02/05 15:40:14  gsl
 **	Fix copyright headers
 **	

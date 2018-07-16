@@ -117,11 +117,17 @@ NODE working_storage_section(NODE the_statement)
 	**	This will parse all of working storage.
 	**	It will return the last statement which it couldn't recognize,
 	**	this should be the "LINKAGE SECTION" or "PROCEDURE DIVISION" statement.
+	**	(TODO or MF "LOCAL-STORAGE SECTION" etc... NOT YET DONE)
 	*/
 
 	the_statement = parse_data_description(NULL);
 
 	if (!the_statement) unexpected_eof("WORKING-STORAGE SECTION");
+
+	/*
+	** TODO add support for MF "LOCAL-STORAGE SECTION" and other DATA DIVISION section.
+	** TODO Check if the Next->Next token is "SECTION"
+	*/
 
 	if (eq_token(the_statement->next->token,KEYWORD,"LINKAGE") ||
 	    eq_token(the_statement->next->token,KEYWORD,"PROCEDURE")  )
@@ -131,7 +137,7 @@ NODE working_storage_section(NODE the_statement)
 		**	Perform any end logic.
 		*/
 
-		gen_screen_storage();
+		the_statement = gen_screen_storage(the_statement);
 
 		return(the_statement);
 	}
@@ -957,6 +963,12 @@ char *next_filler(void)
 /*
 **	History:
 **	$Log: wt_wsdiv.c,v $
+**	Revision 1.26  2010/01/22 03:33:46  gsl
+**	Fix issue with LOCAL-STORAGE SECTION being output before screen data (MF)
+**	
+**	Revision 1.25  2003/12/03 16:18:48  gsl
+**	Fix so native screen fields and screen sections don't get generated in a copybook file.
+**	
 **	Revision 1.24  2003/02/28 21:49:04  gsl
 **	Cleanup and rename all the options flags opt_xxx
 **	

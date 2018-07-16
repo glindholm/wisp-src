@@ -98,8 +98,8 @@ int WL_stat_ctime(const char* name, time_t *create_time);
 int WL_stat_mtime(const char* name, time_t *mod_time);
 int WL_stat_size_long(const char* name, long *size);
 
-#ifdef INT8_DEFINED
-int WL_stat_size_int8(const char* name, INT8 *size);
+#ifdef INT64_DEFINED
+int WL_stat_size_int8(const char* name, INT64 *size);
 #endif
 
 
@@ -277,6 +277,9 @@ void WVASETV(int4 x);	/* MF: CALL "WVASETV" USING VALUE nn */
 /*
 **	History:
 **	$Log: wisplib.h,v $
+**	Revision 1.85  2007/07/31 16:51:07  gsl
+**	Change INT8 to INT64 to avoid conflicts on WIN32
+**	
 **	Revision 1.84  2003/07/11 16:58:31  gsl
 **	Add WSWAP() as a replacement for wswap()
 **	

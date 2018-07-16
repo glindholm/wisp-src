@@ -262,16 +262,29 @@ void POPAREA(unsigned char **s)								/* Restore the screen area.		*/
 	VL_synch_required = TRUE;							/* Force a synchronization.		*/
 }
 
+/*
+** On Windows WinUser.h defines MENUINFO as a typedef.
+** WinUser.h is not include here but is referenced in building the ACU62 runtime.
+** 
+*/
+void EDE_MENUINFO(struct video_menu *mcb, int4 *level, int4 *item, int4 *link)		/* Return the menu level and item.	*/
+{
+	*level = VL_vlastlevel(mcb) + 1;						/* Get the current level.		*/
+	*item = VL_vlastitem(mcb) + 1;							/* Get the current item.		*/
+        *link = VL_vlastlink(mcb);							/* Get the current link.		*/
+}
 void MENUINFO(struct video_menu *mcb, int4 *level, int4 *item, int4 *link)		/* Return the menu level and item.	*/
 {
-	*level = VL_vlastlevel(mcb) + 1;							/* Get the current level.		*/
-	*item = VL_vlastitem(mcb) + 1;							/* Get the current item.		*/
-        *link = VL_vlastlink(mcb);								/* Get the current link.		*/
+	EDE_MENUINFO(mcb,level,item,link);
 }
+
 
 /*
 **	History:
 **	$Log: edehli.c,v $
+**	Revision 1.18  2005/02/17 20:44:00  gsl
+**	Fix MENUINFO problem on Windows.
+**	
 **	Revision 1.17  2003/06/27 15:54:03  gsl
 **	fix EDE API
 **	

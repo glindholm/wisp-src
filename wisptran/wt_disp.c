@@ -193,35 +193,36 @@ NODE parse_display(NODE the_statement, NODE the_sentence)
 
 	tput_leading_fluff(the_statement);
 
-	if (acn_cobol)
+	if (opt_native_screens)	/* DISPLAY verb */
 	{
-		tput_line_at(col,"MOVE SPACES TO WISP-DISPLAY-FIELDS-DATA");
-	}
-	else
-	{
-		tput_line_at(col,"MOVE SPACES TO WISP-CRT-SCREEN-AREA");
-	}
+		tput_line_at(col,   "MOVE SPACES TO WISP-DISPLAY-FIELDS-DATA");
 
-	tput_flush();
+		tput_flush();
+		tput_statement(col,the_statement);
 
-	tput_statement(col,the_statement);
-
-	tput_line_at(col+4, "DELIMITED BY SIZE INTO");
-	if (acn_cobol)
-	{
-		tput_clause (col+8, "WISP-DISPLAY-FIELDS-DATA");
-		tput_line_at(col,   "CALL \"WACUDISPLAY\" USING");
+		tput_line_at(col+4,     "DELIMITED BY SIZE INTO");
+		tput_clause (col+8,         "WISP-DISPLAY-FIELDS-DATA");
+		if (acu_cobol)
+		{
+			tput_line_at(col,   "CALL \"WACUDISPLAY\" USING");
+		}
+		if (mf_cobol)
+		{
+			tput_line_at(col,   "CALL \"WMFNDISPLAY\" USING");
+		}
 		tput_clause (col+4,     "WISP-APPLICATION-NAME");
 		tput_clause (col+4,     "WISP-DISPLAY-FIELDS-DATA");
 		tput_line_at(col,   "END-CALL");
 	}
 	else
 	{
-		tput_clause (col+8, "WISP-CRT-SCREEN-AREA");
-	/*	tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");	*/
-	/*	tput_clause (col+4, "WISP-SCREEN-LINE(24)");			*/
-	/*	tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");	*/
-	/*	tput_clause (col+4, "WISP-CRT-ORDER-AREA");			*/
+		tput_line_at(col,   "MOVE SPACES TO WISP-CRT-SCREEN-AREA");
+
+		tput_flush();
+		tput_statement(col,the_statement);
+
+		tput_line_at(col+4,     "DELIMITED BY SIZE INTO");
+		tput_clause (col+8,         "WISP-CRT-SCREEN-AREA");
 		tput_line_at(col,   "CALL \"WDISPLAY\" USING WISP-CRT-RECORD");
 		tput_clause (col,   "END-CALL");
 	}
@@ -333,9 +334,9 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 	altered = 0;
 	if (eq_token(curr_node->token,KEYWORD,"ALTERED"))
 	{
-		if (acn_cobol)
+		if (opt_native_screens)		/* DISPLAY AND READ ALTERED - WARNING */
 		{
-			write_tlog(curr_node->token, "WISP",'W',"NATIVE",
+			write_tlog(curr_node->token, "WISP",'W',"NATIVESCREENS",
 				   "ALTERED clause on DISPLAY AND READ not supported with Native Screens");
 		}
 
@@ -387,7 +388,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 	}
 	scrn_crt[scrn_idx] = crt_idx;							/* Remember which one it was.		*/
 
-	if (acn_cobol)
+	if (opt_native_screens)	/* IGNORE ALTERED clause */
 	{
 		/*
 		**	Native Screens does not support the ALTERED clause
@@ -425,7 +426,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		/*
 		**	No PFKEYS clause.
 		*/
-		if (acn_cobol)
+		if (opt_native_screens)
 		{
 			tput_line_at(col,"MOVE \"00\" TO WISP-ALLOWABLE-PF-KEYS,");
 		}
@@ -437,7 +438,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		key_cnt = 1;
 	}
 
-	if (acn_cobol)
+	if (opt_native_screens)	/* WISP-ALLOWABLE-PF-KEYS-CNT */
 	{
 		/*
 		**	Native screens uses a pfkey count instead of a trailing "X"
@@ -447,9 +448,9 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 
 	if (eq_token(curr_node->token,KEYWORD,"ON"))
 	{
-		if (acn_cobol)
+		if (opt_native_screens)		/* ON PFKEY(S) CLAUSE - WARNING */
 		{
-			write_tlog(curr_node->token, "WISP",'W',"NATIVE",
+			write_tlog(curr_node->token, "WISP",'W',"NATIVESCREENS",
 				   "ON PFKEY(S) clause causes data to be transferred with Native Screens");
 		}
 
@@ -481,7 +482,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		**	No ON PFKEYS clause.
 		*/
 		on_pfkeys = 0;
-		if (acn_cobol)
+		if (opt_native_screens)	/* No ON PFKEY(S) clause */
 		{
 			/* Native screens uses a count instead of a trailing "X" */
 		}
@@ -492,7 +493,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		on_key_cnt = 0;
 	}
 
-	if (acn_cobol)
+	if (opt_native_screens)	/* WISP-ON-PF-KEYS-CNT */
 	{
 		/* Native screens uses a count instead of a trailing "X" */
 		tput_line_at(col,"MOVE %d TO WISP-ON-PF-KEYS-CNT", on_key_cnt);
@@ -500,7 +501,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 
 	if (in_decl)
 	{
-		if (acn_cobol)
+		if (opt_native_screens)
 		{
 			make_fld(wdr,scrn_name[scrn_idx],"DWDNR-");
 		}
@@ -512,7 +513,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 	}
 	else
 	{
-		if (acn_cobol)
+		if (opt_native_screens)
 		{
 			make_fld(wdr,scrn_name[scrn_idx],"WDNR-");
 		}
@@ -542,7 +543,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 	period_found = 0;
 	if (on_pfkeys)
 	{
-		if (acn_cobol)
+		if (opt_native_screens)	/* WISP-DNR-ON-PFKEY */
 		{
 			tput_line_at(col, "IF WISP-DNR-ON-PFKEY = \"Y\" THEN");
 		}
@@ -570,7 +571,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 
 		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
-		if (acn_cobol)
+		if (opt_native_screens)
 		{
 			tput_line_at(col, "END-IF");
 		}
@@ -612,12 +613,12 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 			col+= 4;
 		}
 
-		if (acn_cobol)
+		if (opt_native_screens)			/* NO-MOD CLAUSE - WARNING */
 		{
-			write_log("WISP",'E',"NATIVE","NO-MOD clause of DISPLAY AND READ not supported with Native Screens");
+			write_log("WISP",'E',"NATIVESCREENS","NO-MOD clause of DISPLAY AND READ not supported with Native Screens");
 		}
 
-		if (acn_cobol)
+		if (opt_native_screens)	/* NO-MOD CLAUSE */
 		{
 			/*
 			**	This will enclose the NO-MOD code in an IF which is never true (dead code)
@@ -647,7 +648,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		curr_node = the_statement->next;
 
 
-		if (acn_cobol)
+		if (opt_native_screens)
 		{
 			tput_line_at(col, "END-IF");
 		}
@@ -658,10 +659,10 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		}
 	}
 
-	if (acn_cobol)
+	if (opt_native_screens)
 	{
 		/*
-		**	With ACUCOBOL native screens all the work is done in the one PERFORM statement.
+		**	With native screens all the work is done in the one PERFORM statement.
 		*/
 	}
 	else
@@ -765,7 +766,7 @@ static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_
 	}
 	return_node = temp_node;
 
-	if (!nonnumeric_keys && !acn_cobol)
+	if (!nonnumeric_keys && !opt_native_screens)
 	{
 		strcat(pfkeys,"X");
 	}
@@ -830,7 +831,7 @@ static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_
 		}
 	}
 
-	if (acn_cobol)
+	if (opt_native_screens)
 	{
 		/*
 		**	ACN code does not require a trailing "X"
@@ -847,6 +848,20 @@ static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_
 /*
 **	History:
 **	$Log: wt_disp.c,v $
+**	Revision 1.34  2003/09/08 19:43:27  gsl
+**	Change log entries for Native Screens
+**	
+**	Revision 1.33  2003/08/15 20:54:28  gsl
+**	Micro Focus Native Screens
+**	
+**	Revision 1.32  2003/08/11 17:18:19  gsl
+**	MF Native screens
+**	
+**	Revision 1.31  2003/08/08 19:52:46  gsl
+**	Add native screens comments
+**	
+**	Revision 1.30  2003/08/06 18:12:10  gsl
+**	
 **	Revision 1.29  2003/02/28 21:49:05  gsl
 **	Cleanup and rename all the options flags opt_xxx
 **	

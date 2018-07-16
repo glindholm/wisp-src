@@ -67,7 +67,7 @@ cApplication::~cApplication ()
 //	cApplication::AppInit
 //		Initializes the application
 //
-cApplication::AppInit (HINSTANCE hInst)
+int cApplication::AppInit (HINSTANCE hInst)
 {
 	OSVERSIONINFO VerInfo;
 	RECT ScrRes;
@@ -132,7 +132,7 @@ void cApplication::CheckMsg ()
 //	cApplication::CloseApp
 //		Closes the app
 //
-cApplication::CloseApp (int ExitCode, int WinError)
+int cApplication::CloseApp (int ExitCode, int WinError)
 {
     char MsgText[256];
 
@@ -250,7 +250,7 @@ cApplication::CloseApp (int ExitCode, int WinError)
 //		Executes the command line specified and displays any
 //		output that is returned by the executable
 //
-cApplication::_CmdLine::Execute (char *ch_CmdLine, char *ch_FileName, int i_FilesRemain,
+int cApplication::_CmdLine::Execute (char *ch_CmdLine, char *ch_FileName, int i_FilesRemain,
 											 int i_FilesSelect, int i_TransComp, int tc )
 {
 	//	Variables
@@ -592,7 +592,7 @@ cApplication::_CmdLine::Execute (char *ch_CmdLine, char *ch_FileName, int i_File
 //		Builds the command line string to pass to the process that executes
 //		WISP or the COBOL compiler
 //
-cApplication::_CmdLine::Build (BOOL Exec, int i_TransComp)
+int cApplication::_CmdLine::Build (BOOL Exec, int i_TransComp)
 {
 	char ch_WCmdLine[MaxCmdLine],		//	Holds a character string that is passed as the command line
 		ch_CCmdLine[MaxCmdLine],	//	Holds a character string that is passed as the command line
@@ -915,7 +915,7 @@ cApplication::_CmdLine::Build (BOOL Exec, int i_TransComp)
 //		Writes the output that is returned by the executable to
 //		a text file
 //
-cApplication::_CmdLine::WriteLog (char *ch_FileName, char *ch_Msg)
+int cApplication::_CmdLine::WriteLog (char *ch_FileName, char *ch_Msg)
 {
 	HANDLE hFile;
 	int cnt;
@@ -960,7 +960,7 @@ cApplication::_CmdLine::WriteLog (char *ch_FileName, char *ch_Msg)
 //	cApplication::CmdLine::DeleteLog ()
 //		Deletes the output .LOG file
 //
-cApplication::_CmdLine::DeleteLog (char *ch_FileName)
+int cApplication::_CmdLine::DeleteLog (char *ch_FileName)
 {
     int cnt;
     char l_FileName[256];
@@ -993,7 +993,7 @@ cApplication::_CmdLine::DeleteLog (char *ch_FileName)
 //	cApplication::_FSettings::GetMaster ()
 //		Gets the settings from the .SET file for a dir
 //
-cApplication::_FSettings::GetMaster ()
+int cApplication::_FSettings::GetMaster ()
 {
 	char ch_MstrOptFile[_MAX_PATH];													//	Holds the full path and file name of the WISPTran.OPT file
 	char ch_MasterOpt[1024];															//	Holds the contents of the file
@@ -1366,7 +1366,7 @@ cApplication::_FSettings::GetMaster ()
 //	cApplication::_FSettings::SetMaster ()
 //		Saves the settings for a dir
 //
-cApplication::_FSettings::SetMaster ()
+int cApplication::_FSettings::SetMaster ()
 {
 	char ch_MstrOptFile[_MAX_PATH];													//	Holds the full path and file name of the WISPTran.OPT file
 	char ch_MasterOpt[1024];															//	Holds the contents of the file
@@ -1457,7 +1457,7 @@ cApplication::_FSettings::SetMaster ()
 //	cApplication::_FSettings::GetSingle
 //		Gets the settings for a specific file
 //
-cApplication::_FSettings::GetSingle (char *ch_FileName)
+int cApplication::_FSettings::GetSingle (char *ch_FileName)
 {
 	char ch_MstrOptFile[_MAX_PATH];													//	Holds the full path and file name of the WISPTran.OPT file
 	char ch_MasterOpt[1024],
@@ -1840,7 +1840,7 @@ cApplication::_FSettings::GetSingle (char *ch_FileName)
 //	cApplication::_FSettings::SetSingle ()
 //		Saves the settings for a specific file
 //
-cApplication::_FSettings::SetSingle (char *ch_FileName)
+int cApplication::_FSettings::SetSingle (char *ch_FileName)
 {
 	char ch_MstrOptFile[_MAX_PATH];													//	Holds the full path and file name of the WISPTran.OPT file
 	char ch_MasterOpt[1024],
@@ -1959,7 +1959,7 @@ BOOL cApplication::_FSettings::ChkOptFileExist (char *ch_FileName)
 //	cApplication::GetReg
 //		Gets the registry settings
 //
-cApplication::GetReg ()
+int cApplication::GetReg ()
 {
 	HKEY hKey;											//	Handle of the current registry key
 	UCHAR RegVal[_MAX_PATH + 1];						//	Temp buffer for value retrieved from the registry
@@ -2075,7 +2075,7 @@ cApplication::GetReg ()
 //	cApplication::SetReg
 //		Saves the registry settings
 //
-cApplication::SetReg ()
+int cApplication::SetReg ()
 {
 	HKEY hCurKey;
 	char RegVal[_MAX_PATH];
@@ -2086,9 +2086,9 @@ cApplication::SetReg ()
 			0, KEY_ALL_ACCESS, &hCurKey ) == ERROR_SUCCESS ) {
 		//	Save the current app window size
 		GetWindowRect ( cWnd.hWnd.hShellWnd, &WndSize );
-		itoa ( (WndSize.right-WndSize.left), RegVal, 10 );
+		_itoa ( (WndSize.right-WndSize.left), RegVal, 10 );
 		RegSetValueEx ( hCurKey, "HSize", 0, REG_SZ, (UCHAR*)RegVal, strlen(RegVal)+1 );
-		itoa ( (WndSize.bottom-WndSize.top), RegVal, 10 );
+		_itoa ( (WndSize.bottom-WndSize.top), RegVal, 10 );
 		RegSetValueEx ( hCurKey, "VSize", 0, REG_SZ, (UCHAR*)RegVal, strlen(RegVal)+1 );
 		GetWindowText ( cWnd.OptionWnd.WCtls._DirPath, RegVal, _MAX_PATH );
 		if ( strlen ( RegVal ) == 0 ) {
@@ -2148,7 +2148,7 @@ cApplication::SetReg ()
 //	cApplication::GetDrvInfo
 //		Gets info on the drives in the computer
 //
-cApplication::GetDrvInfo ( )
+int cApplication::GetDrvInfo ( )
 {
 	int cnt = 0;
 
@@ -2230,6 +2230,9 @@ cApplication::GetDrvInfo ( )
 /*
 **	History:
 **	$Log: cApplication.cpp,v $
+**	Revision 1.13  2009/10/17 19:55:36  gsl
+**	fix default return type to int
+**	
 **	Revision 1.12  2003/06/18 16:55:56  gsl
 **	Add /F remove /C (replace)
 **	

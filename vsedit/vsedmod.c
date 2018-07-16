@@ -108,7 +108,7 @@ static void vse_ed_mod_unload(void)
 		spaceout(ed_line[idx],vse_edit_width);
 		if(!(isblankstr(ed_line[idx],vse_edit_width)))
 			last_idx = idx;
-		trunc(ed_line[idx]);
+		vse_trunc(ed_line[idx]);
 	}
 	for(idx = 0;idx < VSE_EDIT_ROWS; ++idx)
 	{
@@ -272,6 +272,10 @@ void spaceout(char *str, int4 len)
 /*
 **	History:
 **	$Log: vsedmod.c,v $
+**	Revision 1.14  2010/01/10 00:36:15  gsl
+**	refactor utils to add vse_ prefix to avoid conflicts with trunc
+**	vse_trunc
+**	
 **	Revision 1.13  2003/02/04 18:57:00  gsl
 **	fix copyright header
 **	

@@ -1,4 +1,4 @@
-000100**   Copyright (c) 1997-2002 NeoMedia Technologies, All rights reserved.
+000100**   Copyright (c) Shell Stream Software LLC, All rights reserved.
 000200**   $Id:$
 000300**
 000400**   File:       WACUFAC2SCREEN.cob

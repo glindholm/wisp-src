@@ -1,4 +1,4 @@
-#	Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) Shell Stream Software LLC, All rights reserved.
 #	$Id:$
 #
 #
@@ -39,8 +39,8 @@ MAKEFILE=wacu.umf
 # WISPDIR	The installed WISP directory
 #
 #
-ACUDIR=/usr/local/acucobol
-WISPDIR=/usr/local/wisp
+ACUDIR=/opt/acu
+WISPDIR=/opt/wisp
 
 COBOL=$(ACUDIR)/bin/ccbl
 COBFLAGS = -Da4 -Gd -Te 800 -C50 -Z50

@@ -1,6 +1,4 @@
-Copyright (c) 2002-2003 by NeoMedia Technologies Inc. 
-All Rights Reserved.
-
+Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 ====================================================================
 
 Title:          Installation of KCSI for ACUCOBOL on UNIX
@@ -8,7 +6,7 @@ Title:          Installation of KCSI for ACUCOBOL on UNIX
 Document:       kcsi_acu_install.txt
 Last Updated:   $Date:$
 Products:       KCSI Utilities
-Versions:       4.1.00
+Versions:       4.2.00
 
 Summary:        Installation instructions for the KCSI Utilities
                 using the ACUCOBOL compiler.
@@ -64,7 +62,7 @@ Configuration
    installation. 
 
 3. The files CONTROL/REPORT/INQUIRY/DATENTRY/CREATE should be on 
-   your $PATH and on the Acucobol CODE-PREFIX. 
+   your $PATH and on the Acucobol CODE_PREFIX. 
 
    Add the KCSI installaton directory to your $PATH:
 

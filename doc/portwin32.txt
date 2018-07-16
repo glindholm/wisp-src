@@ -1,4 +1,4 @@
-	Copyright (c) 2002-2003 by NeoMedia Technologies Inc. All Rights Reserved.
+	Copyright (c) 2002-2007 by NeoMedia Technologies Inc. All Rights Reserved.
 	
 	====================================================================
 	
@@ -26,22 +26,10 @@
 
 	Check out wisp/src from CVS. 
 
-
-	(OLD WAY)
-	Create a CPIO version of the source kit.
-
-		wispXXXX.src.cpio.Z 	 
-
-	FTP the kit to Windows
-
-	Use the MKS toolkit CPIO with the "-q" option to unload the kit.
-	The "-q" option fixes the line termination characters differences
-	between UNIX and Windows.
-
-		C:\work> mkdir wisp
-		C:\work> cd wisp
-		C:\work\wisp> uncompress wispXXXX.src.cpio.Z
-		C:\work\wisp> cpio -icdqv < wispXXXX.src.cpio
+            $ cd wisp
+            $ cvs co -P -d src wisp/src
+		or
+            $ cvs co -P -r V5_0_xx_branch -d src.50xx wisp/src
 
 	This will create a standard wisp source kit directory layout.
 
@@ -51,21 +39,25 @@
 	Edit makefiles and set the ACUDIR and COBOL value to
 	point to the location of Acucobol directory. 
 
+	[_] Set the enviroment variable ACUDIR=C:\acucorp\acucbl722\acugt
+
+	or set ACUDIR in each of theses makefiles
+
 	[_] src\kcsi\kcsicob.mak
 	[_] src\test\sampleacu.mak
 	[_] src\wisptran\wisptran_test.mak
 
 	Build the Project
 	-----------------
-	Run the MSVC++ 6 developer studio using the wisp project workspace
-	file "wisp\src\wisp.dsw" . 
+	Run the MSVS.NET 2003 using the wisp project solution
+	file "wisp\src\wisp.sln" . 
 
 
-	[_] Build "SHIPKIT - Win32 Release" 
+	[_] Build "SHIPKIT - Release" 
 
-	[_] Build "TESTACU - Win32 Release"	(Expect 2 errors)
+	[_] Build "TESTACU - Release"
 
-	[_] Build "acu60_kcsi - Win32 Release" 
+	[_] Build Acucobol 722 KCSI runtime - see build_kcsi_acu72_rts.txt
 
 
 	The WISP Shipping Kits

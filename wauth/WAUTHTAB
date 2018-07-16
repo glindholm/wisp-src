@@ -6,7 +6,7 @@
 #
 #	If and email-address is not specified then 'logname'@neom.com will be used.
 #
-WLICDIR=/neomedia/WispLicense
+WLICDIR=/shellstream/WispLicense
 WTABFILE=wauthorize.tab
 WLICTAB=$WLICDIR/$WTABFILE
 THEDATE=`date "+%Y-%m-%d %H:%M"`
@@ -14,7 +14,7 @@ THEDATE=`date "+%Y-%m-%d %H:%M"`
 EADDR=$1
 if [ "x" = "x$EADDR" ]
 then
-	EADDR=`logname`@neom.com
+	EADDR=`logname`
 fi
 
 echo Mailing the WISP license datebase to $EADDR

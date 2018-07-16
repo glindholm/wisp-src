@@ -15,22 +15,17 @@
 //	cDialogs::_WPROC::Initialize
 //		Initializes the WPROC dialog
 //
-cDialogs::_WPROC::Initialize ( )
+int cDialogs::_WPROC::Initialize ( )
 {
 	HKEY hKey;
 	HWND hDlg = Dialogs.WPROC.hWPROC;
-	DWORD BufSize = _MAX_PATH, Disp;
+	DWORD BufSize = _MAX_PATH;
 	UCHAR sRegValue[_MAX_PATH];
 	//	If unable to open key
-	if ( RegCreateKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WPROC",
-		0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		NULL, &hKey, &Disp ) == ERROR_SUCCESS ) {
+	if ( CreateRegistryKey (  REGKEY_WISP_WISPBIN_WPROC, &hKey ) == ERROR_SUCCESS ) {
 		//	Get value for WPROC field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "WPROC", 0, NULL, sRegValue,
+		if ( RegQueryValueEx (hKey, REGVAL_WPROC_WPROC, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -47,8 +42,7 @@ cDialogs::_WPROC::Initialize ( )
 		}
 		//	Get value for WPROCDEBUG field
 		BufSize = _MAX_PATH;
-		if ( RegQueryValueEx (
-			hKey, "WPROCDEBUG", 0, NULL, sRegValue,
+		if ( RegQueryValueEx (hKey, REGVAL_WPROC_WPROCDEBUG, 0, NULL, sRegValue,
 			&BufSize ) == ERROR_SUCCESS ) {
 			sRegValue[BufSize] = '\0';
 			SetDlgItemText (
@@ -64,10 +58,6 @@ cDialogs::_WPROC::Initialize ( )
 	}
 
 	HWND hCtl = GetDlgItem ( hWPROC, S09_WPROC );
-	//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//	***** CHANGED *****
-//	HDC hDC = GetDC ( hCtl );
-	//	***** END CHANGED *****
 	ChkInvalid ( hCtl );
 
 	return 0;
@@ -78,23 +68,20 @@ cDialogs::_WPROC::Initialize ( )
 //	cDialogs::_WPROC::Save
 //		Saves the settings from the WPROC dialog to the registry
 //
-cDialogs::_WPROC::Save ( )
+int cDialogs::_WPROC::Save ( )
 {
 	HWND hDlg;
 	HKEY hKey;
 	UCHAR sRegVal[_MAX_PATH];
 
 	hDlg = Dialogs.WPROC.hWPROC;
-	RegOpenKeyEx (
-		HKEY_LOCAL_MACHINE,
-		"Software\\NeoMedia\\WISP\\WISPBin\\WPROC",
-		0, KEY_ALL_ACCESS, &hKey );
+	RegOpenKeyEx ( HKEY_LOCAL_MACHINE, REGKEY_WISP_WISPBIN_WPROC, 0, KEY_ALL_ACCESS, &hKey );
 
 	GetDlgItemText ( hDlg, S09_WPROC, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx ( hKey, "WPROC", 0, REG_SZ, sRegVal,
+	RegSetValueEx ( hKey, REGVAL_WPROC_WPROC, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
 	GetDlgItemText ( hDlg, S09_WPROCDEBUG, (char *) sRegVal, _MAX_PATH );
-	RegSetValueEx ( hKey, "WPROCDEBUG", 0, REG_SZ, sRegVal,
+	RegSetValueEx ( hKey, REGVAL_WPROC_WPROCDEBUG, 0, REG_SZ, sRegVal,
 		strlen ((char *) sRegVal )+1);
 
 	RegFlushKey ( hKey );

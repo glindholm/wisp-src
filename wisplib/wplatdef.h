@@ -83,6 +83,8 @@
 #define		PLATFORM_AIX_64		1042
 #define		PLATFORM_HPUX_64	1043
 #define         PLATFORM_SOLARIS_64     1044
+#define         PLATFORM_HPUX_IA        1045
+#define         PLATFORM_HPUX_IA_64     1046
 
 /*
 **	Non-UNIX
@@ -98,6 +100,9 @@
 /*
 **	History:
 **	$Log: wplatdef.h,v $
+**	Revision 1.11  2010/02/10 03:56:29  gsl
+**	add HPUX IA Itanium platform
+**	
 **	Revision 1.10  2003/02/07 17:55:21  gsl
 **	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
 **	

@@ -1,19 +1,10 @@
 /*
 ******************************************************************************
-** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+** Copyright (c) Shell Stream Software LLC. All Rights Reserved.
 **
 ** WISP - Wang Interchange Source Processor
 **
 ** $Id:$
-**
-** NOTICE:
-** Confidential, unpublished property of NeoMedia Technologies, Inc.
-** Use and distribution limited solely to authorized personnel.
-** 
-** The use, disclosure, reproduction, modification, transfer, or
-** transmittal of this work for any purpose in any form or by
-** any means without the written permission of NeoMedia 
-** Technologies, Inc. is strictly prohibited.
 ** 
 ** CVS
 ** $Source:$
@@ -294,7 +285,7 @@ char *argv[];
 	printf("\n\n");
 	printf("        *** WISP SYSTEM CONFIGURATION TOOL ***\n");
 	printf("       Version: %s  Platform: %s\n", wisp_version(), WL_platform_name());
-	printf("Copyright (c) 1994-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Incorporated\n\n");
+	printf("Copyright (c) Shell Stream Software LLC.\n\n");
 	printf("This program will create the file \"$WISPCONFIG/wsysconfig\".\n");
 	printf("It contains hardware and logical volume configuration information.\n");
 	printf("Wsysconf will prompt you for certain configuation information as it\n");
@@ -863,109 +854,3 @@ static void increment_devnum()
 #include "wutils.h"
 
 #endif
-/*
-**	History:
-**	$Log: wsysconf.c,v $
-**	Revision 1.41  2003/03/20 18:28:45  gsl
-**	Fix logical_id typedef
-**	
-**	Revision 1.40  2003/02/24 20:19:23  gsl
-**	fix protos
-**	
-**	Revision 1.39  2003/02/11 14:26:44  gsl
-**	display version and plaftom
-**	
-**	Revision 1.38  2003/02/11 14:20:13  gsl
-**	display version and plaftom
-**	
-**	Revision 1.37  2003/02/05 15:40:13  gsl
-**	Fix copyright headers
-**	
-**	Revision 1.36  2003/02/05 15:23:59  gsl
-**	Fix -Wall warnings
-**	
-**	Revision 1.35  2003/02/04 21:05:36  gsl
-**	fix -Wall warnings
-**	
-**	Revision 1.34  2003/02/04 20:42:49  gsl
-**	fix -Wall warnings
-**	
-**	Revision 1.33  2003/02/04 18:50:25  gsl
-**	fix copyright header
-**	
-**	Revision 1.32  2003/02/04 18:29:12  gsl
-**	fix -Wall warnings
-**	
-**	Revision 1.31  2003/01/28 20:04:20  gsl
-**	fix warnings
-**	
-**	Revision 1.30  2002/10/14 18:15:51  gsl
-**	prototypes
-**	
-**	Revision 1.29  2002/09/06 15:06:43  gsl
-**	When changing gets() to fgets() you have to now strip off the trailing NL (and CR)
-**	
-**	Revision 1.28  2002/09/05 14:20:08  gsl
-**	gets()->fgets()
-**	
-**	Revision 1.27  2002/09/04 20:02:12  gsl
-**	For LINUX generate a sequential list of /dev/pts/nnn workstation
-**	devices
-**	
-**	Revision 1.26  2002/09/04 19:27:03  gsl
-**	LINUX
-**	
-**	Revision 1.25  2002/07/18 21:04:25  gsl
-**	Remove MSDOS code
-**	
-**	Revision 1.24  2002/07/10 21:06:32  gsl
-**	Fix globals WL_ to make unique
-**	
-**	Revision 1.23  2002/07/09 20:00:06  gsl
-**	Fis OSF1 tty devices
-**	
-**	Revision 1.22  2002/07/08 21:08:35  gsl
-**	FIx missing arg in printf call
-**	
-**	Revision 1.21  2002/06/25 18:18:37  gsl
-**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
-**	
-**	Revision 1.20  2002/03/28 15:12:04  gsl
-**	use define for copyright yaer
-**	
-**	Revision 1.19  2002-03-26 16:51:27-05  gsl
-**	(C) 2002
-**
-**	Revision 1.18  2001-11-06 11:31:30-05  gsl
-**	Fix tty for HPUX
-**
-**	Revision 1.17  2001-09-05 14:48:02-04  gsl
-**	Change copyright date.
-**
-**	Revision 1.16  2000-03-16 10:29:37-05  gsl
-**	2000
-**
-**	Revision 1.15  1999-09-23 13:39:12-04  gsl
-**	change copyright
-**
-**	Revision 1.14  1998-10-09 10:15:53-04  gsl
-**	Update for DGUS_INTEL
-**
-**	Revision 1.13  1998-03-31 13:28:37-05  gsl
-**	update copyright
-**
-**	Revision 1.12  1998-01-19 15:45:45-05  gsl
-**	Fix autoconfig for SOLARIS
-**	bye
-**
-**	Revision 1.11  1996-12-12 13:16:26-05  gsl
-**
-**	Revision 1.10  1996-10-08 17:49:29-07  gsl
-**	fix getenv()'s
-**
-**	Revision 1.9  1996-07-23 11:13:12-07  gsl
-**	drcs update
-**
-**
-**
-*/

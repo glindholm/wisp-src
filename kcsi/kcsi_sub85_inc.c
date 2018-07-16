@@ -1,5 +1,5 @@
 /*
-**	Copyright (c) 2002 Neomedia Technologies, All rights reserved.
+**	Copyright (c) Shell Stream Software LLC, All Rights Reserved.
 **
 **	$Id:$
 **
@@ -452,6 +452,11 @@ int		initial;
 /*
 **	History:
 **	$Log: kcsi_sub85_inc.c,v $
+**	Revision 1.3  2010/01/16 02:16:22  gsl
+**	new release
+**	wisp 5.1.00
+**	kcsi 4.2.00
+**	
 **	Revision 1.2  2003/02/05 15:23:59  gsl
 **	Fix -Wall warnings
 **	

@@ -1,4 +1,301 @@
 ----------------------------------------------------------------------------
+8.1.0
+----------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Dev Sys Version: 8.1.0 For: x86 running Win NT, 9x, 2000, XP, Server 2003 32-Bit
+Licence Type: UPGRADE
+Users/Devs: 1
+Serial: 333724
+Product Code: JAAWUSGESWQAUQDL
+Product Key: NE3FSYGESZ8J
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 8.1.0 For: IBM pSeries running AIX 5.3 32-bit
+Licence Type: UPGRADE
+Users/Devs: 1
+Serial: 333725
+Product Code: JAASU2L2J6GJC8V4
+Product Key: ENTBS8L2J3NR
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 8.1.0 For: PA-RISC running HP-UX 11i 32-bit
+Licence Type: UPGRADE
+Users/Devs: 2
+Serial: 392652
+Product Code: JSAA4SLCLGYUUPC4
+Product Key: PEBT2YLCLCXM
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 8.1.0 For: x86 running Red Hat Enterprise Linux 5 32-bit (glibc 2.5)
+Licence Type: UPGRADE
+Users/Devs: 2
+Serial: 88446
+Product Code: JSSSS2UJLWQ4S7C2
+Product Key: FESBU8UJLSQH
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 8.1.0 For: Sparc running Solaris 8 64-bit
+Licence Type: UPDATE
+Users/Devs: 2
+Serial: 118947
+Product Code: VTBDCSTK2CWB4FSS
+Product Key: UNFUAYTK2BK2
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Dev Sys Version: 8.1.0 For: Sparc running Solaris 8 32-bit
+Licence Type: UPDATE
+Users/Devs: 1
+Serial: 345135
+Product Code: 3WPJBKEAM5LCAPA7
+Product Key: 6BRKDREAM9AN
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Wrong version of Solaris
+--------------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Dev Sys Version: 8.1.0 For: x86 running Solaris 8
+Licence Type: UPGRADE
+Users/Devs: 1
+Serial: 345135
+Product Code: TABHUNTX2GEDJGBT
+Product Key: TFXGSLTX2CPF
+End User : Neomedia Technologies
+
+--------------------------------------------------------------------------------------------------------------------
+Product Detail: ACUCOBOL-GT Runtime Version: 8.1.0 For: x86 running Solaris 8
+Licence Type: UPGRADE
+Users/Devs: 2
+Serial: 118947
+Product Code: JASAJA44L6G2SPAL
+Product Key: PX3TLG44L92A
+End User : Neomedia Technologies
+
+----------------------------------------------------------------------------
+7.2.2
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v7.2.2 for MS Windows NT Intel / NTServer
+Users/Devs        1 Developer
+Serial #          333724
+Product Code      2MJS ATGS F5UJ ABCW
+Product Key       59QB CZGS F298
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys (Static) v7.2.2 for Sun Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        1 Developer
+Serial #          345135
+Product Code      JASE 4W42 4626 YJFJ
+Product Key       RHJX 2U42 42TE
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime (Static) v7.2.2 for Sun Solaris 8 (64-bit) / SUN SPARC
+Users/Devs        2
+Serial #          118947
+Product Code      36AA BECS NU2L EJC7
+Product Key       82CB DCCS NTD4
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.2 for HP-UX 11.0 RISC (32-bit) / HP 9000
+Users/Devs        2 User
+Serial #          392652
+Product Code      SVAR CNAF 2TSL 4BPU
+Product Key       VAX8 ALAF 2X8K
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.2 for IBM pSeries AIX 5.3 32-bit
+Users/Devs        1 USER
+Serial #          333725
+Product Code      SUAZ UNSH 2XEM SBBC
+Product Key       VH7G SLSH 2SNN
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.2 for x86 Red Hat Enterprise Linux 5 32-bit (glibc 2.5)
+Users/Devs        2 USER
+Serial #          88446
+Product Code      JSSS S2UJ LEL8 W3G2
+Product Key       HGSB U8UJ LHWD
+----------------------------------------------------------------------------
+Upgraded 8/16/07
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.2 for IBM AIX 4.3.2 (32-bit) / pSeries/RS6000
+Users/Devs        1 USER
+Serial #          333725
+Product Code      JAAS 42L2 26CW GLZL
+Product Key       QQ3B 28L2 23JG
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.2 for SCO OpenServer 5.00 ELF / Intel x86
+Users/Devs        2 USER
+Serial #          88446
+Product Code      JSSS 2S4A LNCQ E3GJ
+Product Key       HG2B 4Y4A LJJL
+----------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+7.2
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v7.2.0 for MS Windows NT Intel
+Users/Devs        1 Developer
+Serial #          333724
+Product Code      JAAW UWCA AWLE YLHC
+Product Key       QG7F SUCA AZEN
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v7.2.0 for Sun Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        1 Developer
+Serial #          345135
+Product Code      TAAH U6S7 2YEP LBBU
+Product Key       UXXY S4S7 2UNS
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.0 for Sun Solaris 8 (64-bit) / SUN SPARC
+Users/Devs        2
+Serial #          118947
+Product Code      JASA JA44 LN4W EKEL
+Product Key       RZ3T LG44 LRBE
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.0 for HP-UX 11.0 RISC (32-bit) / HP 9000
+Users/Devs        2 User
+Serial #          392652
+Product Code      JSAA 42LC 4YL8 Y3YL
+Product Key       HQKT 28LC 4UEA
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.0 for IBM AIX 4.3.2 (32-bit) / pSeries/RS6000
+Users/Devs        1 USER
+Serial #          333725
+Product Code      JAAS 42L2 26CW GLZL
+Product Key       QQ3B 28L2 23JG
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.2.0 for SCO OpenServer 5.00 ELF / Intel x86
+Users/Devs        2 USER
+Serial #          88446
+Product Code      VTA5 C2AF 2ZEL JAKU
+Product Key       SSXL A8AF 2VQ6
+----------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+7.0
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v7.0.0 for MS Windows NT Intel
+Users/Devs        1 Developer
+Serial #          333724
+Product Code      2MJS CTGT XVCA AFCW
+Product Key       39QB AZGT XSUW
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v7.0.0 for Sun Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        1 Developer
+Serial #          345135
+Product Code      KASE 4W42 L626 UNX6
+Product Key       NRCX 2U42 L2VH
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.0.0 for Sun Solaris 8 (64-bit) / SUN SPARC
+Users/Devs        2
+Serial #          118947
+Product Code      TTJD GASB 2YWB 4FSU
+Product Key       SNPU EGSB 2XLE
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.0.0 for HP-UX 11.0 RISC (32-bit) / HP 9000
+Users/Devs        2 User
+Serial #          392652
+Product Code      UVKR GNAP 2TSC 4E7U
+Product Key       V268 ELAP 2XBJ
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.0.0 for IBM AIX 4.3.2 (32-bit) / pSeries/RS6000
+Users/Devs        1 USER
+Serial #          333725
+Product Code      KAAS 42L2 26CW U8ZQ
+Product Key       FQ5B 28L2 23QL
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v7.0.0 for SCO OpenServer 5.00 ELF / Intel x86
+Users/Devs        2 USER
+Serial #          88446
+Product Code      KSSS 2S4A 4NC8 SPG6
+Product Key       NGUB 4Y4A 4JQH
+----------------------------------------------------------------------------
+
+
+
+----------------------------------------------------------------------------
+6.2.0
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v6.2.0 for MS Windows NT Intel
+Users/Devs        1 Developer
+Serial #          333724
+Product Code      KAAW UWCE AE4A GQVG
+Product Key       PN9F SUCE AHMC
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v6.2.0 for Sun Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        1 Developer
+Serial #          345135
+Product Code      VAJH Y6S7 2CER LFBT
+Product Key       UX6G W4S7 2GJW
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v6.2.0 for Sun Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        2 User -- Upgraded to 64-bit, see below
+Serial #          118947
+Product Code      KASA JA44 L642 W7AQ
+Product Key       EX5T LG44 L25E
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime Ver:6.2.0.1 for Sun Solaris 8 (64-bit) / SUN SPARC
+Users/Devs        2
+Serial #          118947
+Product Code      KASA JA44 464S E7A8
+Product Key       EXVT LG44 49FF
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v6.2.0 for HP-UX 11.0 RISC (32-bit) / HP 9000
+Users/Devs        2 User
+Serial #          392652
+Product Code      UVKR G6AP 2FSL 4FPS
+Product Key       VA78 E4AP 2BBX
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v6.2.0 for IBM AIX 4.3.2 (32-bit) / pSeries/RS6000
+Users/Devs        1 USER
+Serial #          333725
+Product Code      UUKZ Y6SH 2BEM SFAS
+Product Key       VHPG W4SH 2EK2
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime Ver: 6.2.0.1 for SCO OpenServer 5.00 ELF / Intel x86
+Users/Devs        2 USER
+Serial #          88446
+Product Code      VTJ5 GJAP 2DEJ JF3S
+Product Key       UJ6L EQAP 2HLB
+----------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------
+6.1.0
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v6.1.0 for MS Windows NT Intel
+Users/Devs        1 Developer
+Serial #          333724
+Product Code      JBAW UWCA AE4A G8DC
+Product Key       EF7F SUCA AHME
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Dev Sys v6.1.0 for Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        1 Developer
+Serial #          345135
+Product Code      VAAH U6U7 2GEP LFBS
+Product Key       UXWY S4U7 2CJS
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v6.1.0 for Solaris 8 (32-bit) / Sun SPARC
+Users/Devs        2 User
+Serial #          118947
+Product Code      JBSA JA44 46LJ WPA4
+Product Key       PWTT LG44 42LB
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v6.1.0 for HP-UX 11.0 RISC (32-bit) / HP 9000
+Users/Devs        2 User
+Serial #          392652
+Product Code      3EKC AWET N56F GHAX
+Product Key       3TRD CUET N9QG
+----------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT Runtime v6.1.0 for IBM AIX 4.3.2 (32-bit) / pSeries/RS6000
+Users/Devs        1 USER
+Serial #          333725
+Product Code      JBAS 42L2 JNUA G8D4
+Product Key       EFTB 28L2 JK9F
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 6.0.0
 ----------------------------------------------------------------------------
 Product Detail    ACUCOBOL-GT Dev Sys v6.0.0 for MS Windows NT Intel
@@ -39,19 +336,6 @@ Serial #          431917
 Product Code      58PAUYEXAM3LGBJ6
 Product Key       2RRTSSEXAQSB
 ----------------------------------------------------------------------------
-AWS
-Product Detail    ACUCOBOL-GT Dev Sys Ver: v6.0.0 for MS Windows 2000 / Professional
-Users/Devs        1 Developer  (TEMP - EXPIRES 2003/07/24)
-Serial #          432111
-Product Code      45NB GZWT ERUK EKA6
-Product Key       7QQS ETWT EL5H
-----------------------------------------------------------------------------
-AWS
-Product Detail    ACUCOBOL-GT Runtime Ver: v6.0.0 for Alternate Terminal Mgr
-Users/Devs        1 User (TEMP - EXPIRES 2003/07/24)
-Serial #          432116
-Product Code      TTLY LYAG ABSL UKJG
-Product Key       YAFH JSAG ACG3
 ----------------------------------------------------------------------------
 AWS
 Product Detail    AcuBench v6.0.0 for MS Windows 2000 / Professional
@@ -73,6 +357,13 @@ Users/Devs        1 Developer
 Serial #          369570
 Product Code      TAKH USA5 3DWE SAXS
 Product Key       UR7Y SYA5 3AK6
+------------------------------------------------------------------------------------
+Product Detail    ACUCOBOL-GT(R) Runtime Ver:  5.2.1 for SCO OpenServer 5.00 ELF / Intel x86
+Users/Devs        2
+Serial #          88446
+Product Code      VTK5 CJAF 3DEA JB3S
+Product Key       SJ7L AQAF 3HPB
+Note              Replaced the 16-user license and added support 5/13/04
 ----------------------------------------------------------------------------
 Product Detail    ACUCOBOL-GT Runtime v5.2.1 for SCO UNIX OpnSvr 5.00 ELF / x86
 Users/Devs        16 User
