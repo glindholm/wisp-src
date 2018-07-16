@@ -1,12 +1,27 @@
 package com.neom.wisp.wisper.gui;
 
-import com.neom.wisp.wisper.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.Point;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import javax.swing.DefaultListModel;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.ListCellRenderer;
+import javax.swing.UIManager;
+
+import com.neom.wisp.wisper.SourceModule;
+import com.neom.wisp.wisper.SourceModuleList;
+import com.neom.wisp.wisper.SourceModuleListener;
 
 /**
  * @author khunter

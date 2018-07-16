@@ -1,27 +1,26 @@
 package com.neom.wisp.wisper.gui;
-import com.neom.wisp.wisper.*;
-
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import javax.swing.*;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import java.awt.Container;
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
-import java.io.File;
-import javax.swing.JOptionPane;
-import java.text.MessageFormat;
-import javax.swing.JCheckBox;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.text.MessageFormat;
+
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import com.neom.wisp.wisper.DirectoryOptions;
+import com.neom.wisp.wisper.ProgramSpec;
 
 /**
  * Title:        WISPer

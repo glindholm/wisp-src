@@ -1,16 +1,52 @@
 package com.neom.wisp.wisper.gui;
 
-import com.neom.wisp.wisper.*;
-import com.neom.util.gui.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import java.text.*;
-import javax.swing.text.*;
-import java.io.*;
-import javax.swing.border.*;
-import java.awt.datatransfer.*;
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.PrintWriter;
+import java.text.MessageFormat;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JToolBar;
+import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
+import javax.swing.text.TextAction;
+
+import com.neom.wisp.wisper.DirectoryOptions;
+import com.neom.wisp.wisper.ProgramSpec;
+import com.neom.wisp.wisper.SourceModule;
+import com.neom.wisp.wisper.SourceModuleListener;
+import com.neom.wisp.wisper.UserSettings;
 
 /**
  * @author khunter

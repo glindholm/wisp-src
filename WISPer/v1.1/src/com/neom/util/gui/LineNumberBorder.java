@@ -1,6 +1,5 @@
 package com.neom.util.gui;
 
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Insets;
 import java.awt.Color;

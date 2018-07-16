@@ -1,10 +1,19 @@
 package com.neom.wisp.wisper.gui;
 
-import com.neom.wisp.wisper.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.util.*;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.Window;
+import java.util.Locale;
+
+import javax.swing.Action;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.UIManager;
+
+import com.neom.wisp.wisper.UserSettings;
 
 /**
  * Title:        WISPer

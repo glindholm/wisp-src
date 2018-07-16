@@ -1,10 +1,16 @@
 package com.neom.wisp.wisper.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.plaf.*;
-import javax.swing.plaf.basic.*;
-import com.neom.util.gui.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.plaf.basic.BasicPanelUI;
 
 /**
  * @author Kevin Hunter
@@ -130,6 +136,6 @@ public class SourcePanel extends JPanel
 	
 	private static final int LINE_NUMBER_WIDTH = 6;
 	
-	private static final Color m_colorColumns = new Color(240,240,240);
+	private static final Color m_colorColumns = new Color(230,230,230); // A little lighter gray then the line numbers
 	private static final Color m_colorLineNumbers = Color.lightGray;
 }

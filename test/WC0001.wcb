@@ -58,7 +58,7 @@
       		       SOURCE WS-F1
       		       OBJECT WS-F1.
       	   05  FILLER PIC X(40) ROW 24 COLUMN 20
-      	       VALUE "(ENTER) - Repeat  (16) - Next".		     
+      	       VALUE "(1) - Repeat  (16) - Next".		     
 
        01  FILLER.
            05  WS-F1-ELEMENTS.
@@ -81,7 +81,7 @@
       		       SOURCE WS-F2
       		       OBJECT WS-F2.
       	   05  FILLER PIC X(40) ROW 24 COLUMN 20
-      	       VALUE "(ENTER) - Repeat  (16) - Next".		     
+      	       VALUE "(1) - Repeat  (16) - Next".		     
 
        01  FILLER.
            05  WS-F2-ELEMENTS.
@@ -104,7 +104,7 @@
             		   SOURCE WS-F3
 			   OBJECT WS-F3.
       	   05  FILLER PIC X(40) ROW 24 COLUMN 20
-      	       VALUE "(ENTER) - Repeat  (16) - Next".		     
+      	       VALUE "(1) - Repeat  (16) - Next".		     
 
        01  FILLER.
            05  WS-F3-ELEMENTS.
@@ -128,7 +128,7 @@
       		       SOURCE WS-F4
       		       OBJECT WS-F4.
       	   05  FILLER PIC X(40) ROW 24 COLUMN 20
-      	       VALUE "(ENTER) - Repeat  (16) - Next".		     
+      	       VALUE "(1) - Repeat  (16) - Next".		     
 
        01  FILLER.
            05  WS-F4-ELEMENTS.
@@ -145,22 +145,22 @@
       	   PERFORM WITH TEST AFTER 
       	       UNTIL CRT-PFKEY = "16" 	   
       	       display and read TEST1-SCREEN on crt
-      		   PFKEY 16
+      		   ONLY PFKEYS 1, 16
       	   END-PERFORM.
       	   PERFORM WITH TEST AFTER 
       	       UNTIL CRT-PFKEY = "16"   
       	       display and read TEST2-SCREEN on crt
-      		   PFKEY 16
+      		   ONLY PFKEYS 1, 16
       	   END-PERFORM.
       	   PERFORM WITH TEST AFTER 
       	       UNTIL CRT-PFKEY = "16"   
       	       display and read TEST3-SCREEN on crt
-      		   PFKEY 16
+      		   ONLY PFKEYS 1, 16
       	   END-PERFORM.
       	   PERFORM WITH TEST AFTER 
       	       UNTIL CRT-PFKEY = "16"   
       	       display and read TEST4-SCREEN on crt
-      		   PFKEY 16
+      		   ONLY PFKEYS 1, 16
       	   END-PERFORM.
 
        9999-END SECTION.

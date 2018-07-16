@@ -1,14 +1,38 @@
 package com.neom.wisp.wisper.gui;
 
-import com.neom.wisp.wisper.*;
-import com.neom.util.gui.*;
-import java.awt.*;
-import java.io.*;
-import java.util.*;
-import java.text.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.text.MessageFormat;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+
+import com.neom.util.gui.DirectoryChooserDialog;
+import com.neom.wisp.wisper.DirectoryOptions;
+import com.neom.wisp.wisper.ProgramSpec;
+import com.neom.wisp.wisper.SourceModule;
+import com.neom.wisp.wisper.SourceModuleList;
+import com.neom.wisp.wisper.UserSettings;
 
 /**
  * @author khunter

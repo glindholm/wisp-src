@@ -82,6 +82,7 @@ SAMPLE_COBOL_WCBS= \
 	WC0003.wcb \
 	WC0003B.wcb \
 	WC0004.wcb \
+	WC0005.wcb \
 	WL0000.wcb \
 	WL0010.wcb \
 	WL0011.wcb \
@@ -206,6 +207,12 @@ $(WISPDIR)/acu:
 #
 #	History:
 #	$Log: sampleacu.umf,v $
+#	Revision 1.51.4.1  2003/11/10 18:50:12  gsl
+#	Sync with HEAD
+#	
+#	Revision 1.52  2003/11/10 17:09:11  gsl
+#	Fix WFILECHK3 has declaratives bug and add WC0005 test case
+#	
 #	Revision 1.51  2003/07/07 20:38:09  gsl
 #	WL0035 READVTOC tests
 #	

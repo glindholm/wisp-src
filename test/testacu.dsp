@@ -254,6 +254,10 @@ SOURCE=.\WC0004.wcb
 # End Source File
 # Begin Source File
 
+SOURCE=.\WC0005.wcb
+# End Source File
+# Begin Source File
+
 SOURCE=.\WISPTEST.wcb
 # End Source File
 # Begin Source File
@@ -379,6 +383,10 @@ SOURCE=.\WL0034D.wcb
 # Begin Source File
 
 SOURCE=.\WL0035.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\WN0010.wcb
 # End Source File
 # Begin Source File
 
@@ -531,6 +539,10 @@ SOURCE=.\WC0003B.cob
 # Begin Source File
 
 SOURCE=.\WC0004.cob
+# End Source File
+# Begin Source File
+
+SOURCE=.\WC0005.cob
 # End Source File
 # Begin Source File
 
