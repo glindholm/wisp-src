@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #endif
 
-#ifndef unix	/* VMS and MSDOS */
+#ifndef NOSTDLIB
 #include <stdlib.h>
 #endif
 
@@ -19,9 +19,17 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vintdef.h"
 #include "vmenu.h"
 
+#define SECSINWEEK 604800L /* (7*24*60*60) */
+#define SECSINDAY  86400L  /*   (24*60*60) */
+
+#if defined(_MSC_VER)
+#define MAX_APT 64U
+#else
 #define MAX_APT 256
+#endif
 #define WIDTH 32
 #define LENGTH 16
 #define PAGE (i*LENGTH*(WIDTH+1))
@@ -44,13 +52,29 @@ static char *tab;
 static int newcal;
 static char temp[WIDTH*2];
 
+static int givehelp();
+static int showcalend();
+static int position();
+static int move();
+static int initpos();
+static int nextmonth();
+static int lastmonth();
+static int setleap();
+static int setwstr();
+static int outmonth();
+static int showagain();
+static int initpage();
+static int getnow();
+static int in_use();
+static int fdom();
+
 #define JAN  0
 #define FEB  1
 #define DEC 11
 
 int gcalend()
 {
-	register int i, j, k;
+	unsigned int i, j, k;
 	unsigned char *vsss();
 	int active;
 	char c;
@@ -87,7 +111,7 @@ int gcalend()
 				strcpy(apt[i], temp);
 				for (j = 0; j < LENGTH; j++)
 				{
-					fgets(temp, WIDTH*2, fp);
+					fgets(temp, (int)WIDTH*2, fp);
 					temp[WIDTH] = CHAR_NULL;
 					strcpy(tab+PAGE+ITEM, temp);
 				}
@@ -194,7 +218,7 @@ int gcalend()
 					position(emode);
 					rowpos = rowpos - 2;
 					date = date - 7;
-					bintime = bintime - (7*24*60*60);
+					bintime = bintime - SECSINWEEK;
 					position(cmode);
 				}
 			}
@@ -226,7 +250,7 @@ ua1:				i = row;
 					position(emode);
 					rowpos = rowpos + 2;
 					date = date + 7;
-					bintime = bintime + (7*24*60*60);
+					bintime = bintime + SECSINWEEK;
 					position(cmode);
 				}
 			}
@@ -259,7 +283,7 @@ da1:				i = row;
 					position(emode);
 					colpos = colpos - 5;
 					date--;
-					bintime = bintime - (24*60*60);
+					bintime = bintime - SECSINDAY;
 					position(cmode);
 				}
 			}
@@ -289,7 +313,7 @@ la1:				i = col;
 					position(emode);
 					colpos = colpos + 5;
 					date++;
-					bintime = bintime + (24*60*60);
+					bintime = bintime + SECSINDAY;
 					position(cmode);
 				}
 			}
@@ -312,7 +336,7 @@ ra1:				i = col;
 				position(emode);
 				while(date != 1)
 				{
-					bintime = bintime - (24*60*60);
+					bintime = bintime - SECSINDAY;
 					date--;
 				}
 				initpos();
@@ -323,7 +347,7 @@ ra1:				i = col;
 				date--;
 				position(emode);
 				date++;
-				bintime = bintime + (24*60*60);
+				bintime = bintime + SECSINDAY;
 				initpos();
 				position(cmode);
 			}
@@ -504,7 +528,7 @@ static int fdom()
 	temp = bintime;
 	while (tval->tm_mday != 1)
 	{
-		temp = temp - (24*60*60);
+		temp = temp - SECSINDAY;
 		tval = localtime(&temp);
 	}
 	wday = tval->tm_wday;
@@ -540,7 +564,7 @@ static int nextmonth()
 {
 	do
 	{
-		bintime = bintime + (24*60*60);
+		bintime = bintime + SECSINDAY;
 		tval = localtime(&bintime);
 	} while (tval->tm_mday != 1);
 
@@ -551,10 +575,10 @@ static int lastmonth()
 {
 	while (tval->tm_mday != 1)
 	{
-		bintime = bintime - (24*60*60);
+		bintime = bintime - SECSINDAY;
 		tval = localtime(&bintime);
 	}
-	bintime = bintime - (24*60*60);
+	bintime = bintime - SECSINDAY;
 
 	return(SUCCESS);
 }

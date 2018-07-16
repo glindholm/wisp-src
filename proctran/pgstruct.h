@@ -4,14 +4,14 @@
 typedef struct assign_item {
 		int	sub_flag;							/* Subscript field flag.		*/
 		int	br_flag;							/* Flags to indicate backwards ref.	*/
-		char	field1[100];							/* Output name.				*/
+		char	field1[STRLNGTH];						/* Output name.				*/
 		char	type[3];							/* Type of assign string.		*/
 		char	length[6];							/* Length of input string.		*/
 		char	len_type[3];							/* Type of length variable.		*/
 		char	dlmtr;								/* Delimeter character.			*/
-		char	start_pos[30];							/* The start of input string.		*/
+		char	start_pos[FLDLEN];						/* The start of input string.		*/
 		char	stpos_type[3];							/* Type of start_pos variable.		*/
-		char	literal[100];
+		char	literal[10];
 		struct	assign_item *prev_item;						/* A ptr to the previous item		*/
 		struct	assign_item *next_item;						/* A ptr to the next item		*/
 	} assign_item;
@@ -20,7 +20,7 @@ typedef struct declare_item {
 		char	field1[FLDLEN];							/* Field name.				*/
 		char	type[3];							/* The variable type.			*/
 		char	length[6];							/* The length of string.		*/
-		char	value[100];							/* The value of string.			*/
+		char	value[STRLNGTH];						/* The value of string.			*/
 		struct	declare_item *prev_item;					/* A ptr to previous item.		*/
 		struct	declare_item *next_item;					/* A ptr to the next item.		*/
 	} declare_item;
@@ -28,7 +28,7 @@ typedef struct declare_item {
 typedef struct link_item {
 		char	field1[FLDLEN];							/* Field name.				*/
 		char	type[3];							/* The variable type.			*/
-		char	length[10];							/* The length of string.		*/
+		char	length[6];							/* The length of string.		*/
 		struct	link_item *prev_item;						/* A ptr to Previous item.		*/
 		struct	link_item *next_item;						/* A ptr to the next item.		*/
 	} link_item;
@@ -42,8 +42,9 @@ typedef struct paragraph_item {
 	} paragraph_item;
 
 typedef struct command_item {
-		char	command[FLDLEN];						/* Commnad that I am examining.		*/
+		char	command[FLDLEN];						/* Command that I am examining.		*/
 		char	goto_para[FLDLEN];						/* GOTO paragraph.			*/
+		char	gotop_type[3];							/* GOTO paragraph type.			*/
 		struct	return_item *return_area;					/* A ptr to the return code logic	*/
 		char	call_para[FLDLEN];						/* call paragraph.			*/
 		char	*end_cmd;							/* address that points to end.		*/
@@ -52,7 +53,7 @@ typedef struct command_item {
 		struct	if_item *if_area;						/* Point to if names.			*/
 		struct	set_extract_item *set_extract_area;				/* Point to calls to set and extract.	*/
 		struct	readfdr_item *rfdr_area;					/* Point to calls to readfdr.		*/
-		struct	program_item *program_area;					/* Point to run,print,submit.		*/
+		struct	program_item *program_area;					/* Point to run,print,submit,find.	*/
 		struct	rs_item *rs_area;						/* Point to call paragraph.		*/
 		struct	screen_item *screen_area;					/* Point to Screen statement.		*/
 		struct  command_item *prev_item;					/* A ptr to previous item.		*/
@@ -77,14 +78,27 @@ typedef struct screen_item {
 typedef struct scn_fld_item {
 		int	row;								/* where do i display the field.	*/
 		int	col;								/* where do i display the field.	*/
+		int	sub_flag;							/* Subscript field flag.		*/
 		long	fac_msk;							/* FAC bit mask for field display.	*/
-		char	screen_fld[100];						/* Value or field to display.		*/
+		char	screen_fld[STRLNGTH];						/* Value or field to display.		*/
 		char	modf;								/* Modifiable FAC (if any).		*/
 		char	scn_fld_type[3];						/* Type of screen field.		*/
-		char	map_fld[100];							/* Holds the value in the map.		*/
-		char	len[30];							/* How big is it.			*/
-		struct	scn_fld_item *next_item;					/* Do I have another.?			*/
+		char	map_fld[STRLNGTH];						/* Holds the value in the map.		*/
+		char	len[FLDLEN];							/* How big is it.			*/
+		char	dlmtr;								/* Delimeter character.			*/
+		char	start_pos[FLDLEN];						/* The start of input string.		*/
+		char	stpos_type[3];							/* Type of start_pos variable.		*/
+		char	length[6];							/* The length of input string.		*/
+		char	len_type[3];							/* Type of length variable.		*/
+		struct	string_item  *str_params;					/* Ptr to list of STRING parameters.	*/
+		struct	scn_fld_item *prev_item;					/* Ptr to previous item			*/
+		struct	scn_fld_item *next_item;					/* Do I have another?			*/
 	} scn_fld_item;
+
+typedef struct string_item {
+		char	field1[STRLNGTH];						/* String of var STRING parameters.	*/
+		struct	string_item *next_item;						/* Do I have another?			*/
+	} string_item;
 
 typedef struct using_item {
 		int	br_flag;							/* Is a backwards referenced field.	*/
@@ -94,10 +108,16 @@ typedef struct using_item {
 	} using_item;
 
 typedef struct set_extract_item {
+		int	sub_flag;							/* Subscript field flag.		*/
 		int	br_flag;							/* Backwards reference flag.		*/
 		char	var[FLDLEN];							/* Varible in SET/EXTRACT clause.	*/
 		char 	type[3];							/* Type of variable.			*/
 		char	key[FLDLEN];							/* Keyword for extract.			*/
+		char	dlmtr;								/* Delimeter character.			*/
+		char	start_pos[FLDLEN];						/* The start of input string.		*/
+		char	stpos_type[3];							/* Type of start_pos variable.		*/
+		char	length[6];							/* The length of input string.		*/
+		char	len_type[3];							/* Type of length variable.		*/
 		struct	set_extract_item *next_item;					/* Point to next Item.			*/
 	} set_extract_item;
 
@@ -123,8 +143,8 @@ typedef struct if_item {
 		int	file_br;							/* Flag if filename back. ref.		*/
 		int	lib_br;								/* Flag if library back. ref.		*/
 		int	vol_br;								/* Flag if volume back. ref.		*/
-		char	paren_value[100];						/* What is the value in the parenthesis.*/
-		char	var[100];							/* Varible or string in the if clause.	*/
+		char	paren_value[STRLNGTH];						/* What is the value in the parenthesis.*/
+		char	var[STRLNGTH];							/* Varible or string in the if clause.	*/
 		char	type[3];							/* Type of variable.			*/
 		char	cond[3];							/* What if the cond or connection.	*/
 		char	file[FLDLEN];							/* Point to find file.			*/
@@ -133,12 +153,17 @@ typedef struct if_item {
 		char	lib_type[3];							/* Type of file.			*/
 		char	vol[FLDLEN];							/* Point to find file volume.		*/
 		char	vol_type[3];							/* Type of file.			*/
+		char	dlmtr;								/* Delimeter character.			*/
 		struct	if_item *next_item;						/* Point to next Item.			*/
 	} if_item;
 
 typedef struct program_item {
 		int	number_using;							/* Count number in using table.		*/
 		int	sub_flag;							/* Subscript field flag.		*/
+		int	br_flag;							/* Flags to indicate backwards ref.	*/
+		int	name_br;							/* Set if file referenced.		*/
+		int	lib_br;								/* Set if library referenced.		*/
+		int	vol_br;								/* Set if volume referenced.		*/
 		char	func;								/* P=print,S=submit,R=run,F=find	*/
 		char	name[FLDLEN];							/* Program name.			*/
 		char	name_type[3];							/* Type of name.			*/
@@ -164,6 +189,7 @@ typedef struct rs_item {
 		int	name_br;							/* Set if file referenced.		*/
 		int	lib_br;								/* Set if library referenced.		*/
 		int	vol_br;								/* Set if volume referenced.		*/
+		int	sub_flag;							/* Subscript field flag.		*/
 		char	func;								/* S=scratch,R=rename.			*/
 		char	opt;								/* L for library functions.		*/
 		char	name[FLDLEN];							/* Program name.			*/
@@ -177,6 +203,11 @@ typedef struct rs_item {
 		char	to_lib[FLDLEN];							/* Program to lib.			*/
 		char	to_lib_type[3];							/* Type of lib variable.		*/
 		char	lbl[FLDLEN];							/* Label associated with function.	*/
+		char	dlmtr;								/* Delimeter character.			*/
+		char	start_pos[FLDLEN];						/* The start of input string.		*/
+		char	stpos_type[3];							/* Type of start_pos variable.		*/
+		char	length[6];							/* The length of input string.		*/
+		char	len_type[3];							/* Type of length variable.		*/
 	} rs_item;
 
 typedef struct putparm_item {
@@ -194,12 +225,12 @@ typedef struct putparm_item {
 typedef struct pp_keywords {
 		int	len;								/* Length of keyword.			*/
 		int	len2;								/* Length of keyword.			*/
-		int	backref;							/* Flag if used in backwards reference.	*/
+		int	br_flag;							/* Flag if used in backwards reference.	*/
 		int	sub_flag;							/* Flag if used as subscripted field.	*/
 		char 	keywrd[FLDLEN];							/* Putparm keyword.			*/
-		char	val[100];							/* Keyword value.			*/
+		char	val[STRLNGTH];							/* Keyword value.			*/
 		char	type[3];							/* Type of value.			*/
-		char	val2[100];							/* Concatenation Keyword value.		*/
+		char	val2[STRLNGTH];							/* Concatenation Keyword value.		*/
 		char	type2[3];							/* Type of value.			*/
 		struct	pp_keywords *next_item;						/* Point to next keyword.		*/
 	} pp_keywords;
@@ -225,6 +256,7 @@ EXT screen_item	 *cur_scn, *start_screen;						/* Allocate command stuff for scr
 EXT declare_item *cur_decl, *hld_table;							/* Allocate Variable Table.		*/
 EXT link_item	 *cur_link, *stlinklst, *hld_link;					/* Allocate Link Variable Table.	*/
 EXT scn_fld_item *cur_scn_fld;								/* Allocate stuff for screen field.	*/
+EXT string_item  *cur_str_param;							/* Allocate stuff for STRING field.	*/
 EXT using_item	 *cur_using;								/* Allocate using information.		*/
 EXT putparm_item *cur_pp;								/* Allocate putparm instructions.	*/
 EXT pp_keywords *cur_pp_key;								/* Allocate putparm keyword values.	*/

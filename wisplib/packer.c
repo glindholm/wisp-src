@@ -1,11 +1,13 @@
+#include "idsistd.h"
+
 binary_to_packed(src, dest)		                           
 
-long int *src;
+int4 *src;
 unsigned char *dest;
 
 {
 
-	long int x, y, val;
+	int4 x, y, val;
 	unsigned char *l_dest, low_ord, hi_ord;
 											
 	l_dest = dest;                                                                  /* Get local copy of addr.		*/
@@ -61,11 +63,11 @@ unsigned char *dest;
 
 packed_to_binary(src, dest)		                           
 unsigned char *src;
-long int *dest;
+int4 *dest;
 
 {
       	int x;
-    	long val;
+    	int4 val;
 	unsigned char *source, y;
                       
 	source = src;								        /* Local copy of the arg.		*/

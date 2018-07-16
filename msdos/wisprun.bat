@@ -1,0 +1,65 @@
+@echo off
+rem
+rem     This .BAT file will start a wisp COBOL module.
+rem
+
+SET DBF=%1
+SET RTS=%2
+SET PGM=%3
+
+SHIFT
+SHIFT
+SHIFT
+
+SET COMLINE=
+:TOPCL
+IF %1!==! GOTO ENDCL
+SET COMLINE=%COMLINE% %1
+SHIFT
+GOTO TOPCL
+:ENDCL
+
+IF %DBF%==Y GOTO DODB
+SET DBF=N
+GOTO SKIPDB
+
+:DODB
+SET DFN=DEBUG.FLG
+ECHO 1 >  %DFN%
+ECHO 0 >> %DFN%
+
+:SKIPDB
+
+ECHO [RWRUN-PROGRAMS]            > RWRUN.CFG
+ECHO %PGM%                      >> RWRUN.CFG
+ECHO $LIB\UTILS.LBR             >> RWRUN.CFG
+
+ECHO [RWRUN-INSTALL]            >> RWRUN.CFG
+ECHO %RTS%                      >> RWRUN.CFG
+
+IF %COMLINE%!==! GOTO SKIPCL
+ECHO [RWRUN-COMMAND-LINE]       >> RWRUN.CFG
+ECHO %COMLINE%                  >> RWRUN.CFG
+:SKIPCL
+
+ECHO [RWRUN-SWITCHES]           >> RWRUN.CFG
+ECHO (-f)                       >> RWRUN.CFG
+
+IF %COBTRACE%!==! GOTO SKIPTRACE
+ECHO [RWRUN-TRACE]              >> RWRUN.CFG
+ECHO ON PAUSE                   >> RWRUN.CFG
+:SKIPTRACE
+
+ECHO  Loading    %PGM%...
+XMRWRUN
+DEL C:\TMP\DFTS-*.TMP
+
+IF %DBF%==N GOTO NODBEND 
+DEL %DFN%
+GOTO DBEND
+
+:NODBEND
+CLS
+:DBEND
+
+ECHO  %PGM% Completed.

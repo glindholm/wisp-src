@@ -12,14 +12,12 @@
 /*						Include standard header files.							*/
 
 #include <stdio.h>									/* Include standard I/O definitions.	*/
-#ifndef unix	/* VMS and MSDOS */
+#ifndef NOSTDLIB
 #include <stdlib.h>
-#endif
-#ifndef VMS	/* unix and MSDOS */
-#include <malloc.h>
 #endif
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"									/* Include video internal definitions.	*/
+#include "vintdef.h"
 
 /*						Global data storage.								*/
 
@@ -29,7 +27,7 @@ struct save_screen *vscrn_stack;							/* Reference to external variable.	*/
 
 vpushscr()										/* A function to save the screen addrs	*/
 											/* and variables.			*/
-{                                              
+{
 	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference to external variable array.*/
 	extern char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference to external variable array.*/
 	extern int vcur_lin, vcur_col, vcur_atr, vchr_set;				/* Reference to external variables.	*/

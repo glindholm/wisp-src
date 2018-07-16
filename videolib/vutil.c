@@ -18,6 +18,10 @@
 #include "vlocal.h"
 #include "vdata.h"
 
+#ifdef OSF1_ALPHA
+void *malloc();
+#endif
+
 /*					Local definitions.									*/
 
 #define DISPLAY_LINE 2
@@ -45,8 +49,8 @@ int vre_window(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long a
 	extern int verbose;								/* Verbosity flag.			*/
 	char string[PRINT_BUFFER_SIZE];
 	register int i;
-	int 	linesize;								/* Chars of text per line.		*/
-	int	currrow;								/* Current row.				*/
+	int linesize;									/* Chars of text per line.		*/
+	int currrow;									/* Current row.				*/
 	int row,col,rows,cols;
 	int eot;									/* End of text flag.			*/
 	unsigned char *vsss(), *save;							/* Memory save pointer.			*/
@@ -54,16 +58,14 @@ int vre_window(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) char text[]; long a
 	if (!verbose) return(FAILURE);							/* Return to the caller.		*/
 	sprintf(string, text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);			/* Display the text.			*/
 
-#ifdef unix
-	vraw_stty_set(); /* insure stty is properly setup in case animator has changed it */
-#endif
-
 	row = 4;									/* Determine where to put the window.	*/
 	col = 6;
 	linesize = 64;
 
 	rows = ((strlen(string)+linesize-1) / linesize) + 3;				/* Number of rows (including border)	*/
 	cols = linesize + 2;								/* Number of cols (including border)	*/
+
+	if (!state_active) { vstate(0); verase(FULL_SCREEN); }				/* Initialize if not already done.	*/
 
 	vbuffering(LOGICAL);								/* Start buffering.			*/
 	save = vsss(row, col, rows, cols);						/* Save the window area.		*/
@@ -192,21 +194,27 @@ unsigned char *vsss(row,col,rows,cols) int row,col,rows,cols;				/* Save a scree
 {
 	register int i, j, k;								/* Working registers.			*/
 	unsigned char *save, *s;							/* Memory allocation pointers.		*/
+	int savesize;
 
 	vbuffering(LOGICAL);								/* This is all one section.		*/
 	vdefer(RESTORE);								/* Restore from any deferred states.	*/
 
-	save = (unsigned char *)malloc( 9 + (rows*cols*2));				/* Ask for the memory.			*/
-	s = save;									/* Initialize working pointer.		*/
+	savesize = 9 + (rows*cols*2);
+	save = (unsigned char *)malloc( savesize );					/* Ask for the memory.			*/
 
-	*s++ = (unsigned char) row;							/* Save the row value.			*/
-	*s++ = (unsigned char) col;							/* Save the column value.		*/
-	*s++ = (unsigned char) rows;							/* Save the number of rows.		*/
-	*s++ = (unsigned char) cols;							/* Save the number of columns.		*/
-
-	if (save == NULL) vre("Error in vsss(), unable to allocate memory to save screen section.");	/* Did we get it?	*/
+	if (save == NULL) 								/* Did we get it?			*/
+	{
+		vre("Error in vsss(), unable to allocate memory to save screen section.");	
+	}
 	else
 	{
+		s = save;								/* Initialize working pointer.		*/
+
+		*s++ = (unsigned char) row;						/* Save the row value.			*/
+		*s++ = (unsigned char) col;						/* Save the column value.		*/
+		*s++ = (unsigned char) rows;						/* Save the number of rows.		*/
+		*s++ = (unsigned char) cols;						/* Save the number of columns.		*/
+
 		for (i = row; i < row+rows; i++)					/* Loop through rows.			*/
 		{
 			k = vml(i);							/* Get the true map position.		*/
@@ -216,13 +224,18 @@ unsigned char *vsss(row,col,rows,cols) int row,col,rows,cols;				/* Save a scree
 				*s++ = vchr_map[k][j];					/* Save the character value.		*/
 			}
 		}
-	}
 
-	*s++ = (unsigned char) vcur_lin;						/* Save where the cursor is.		*/
-	*s++ = (unsigned char) vcur_col;
-	*s++ = (unsigned char) vcur_atr;
-	*s++ = (unsigned char) vchr_set;
-	*s++ = (unsigned char) vcur_set[14];						/* Save the cursor status.		*/
+		*s++ = (unsigned char) vcur_lin;					/* Save where the cursor is.		*/
+		*s++ = (unsigned char) vcur_col;
+		*s++ = (unsigned char) vcur_atr;
+		*s++ = (unsigned char) vchr_set;
+		*s++ = (unsigned char) vcur_set[14];					/* Save the cursor status.		*/
+
+		if ((s-save) > savesize)
+		{
+			vre("Error in vsss(), save used > savesize.");
+		}
+	}
 
 	vbuffering(AUTOMATIC);								/* End of the logical section.		*/
 	return(save);									/* Return the pointer.			*/

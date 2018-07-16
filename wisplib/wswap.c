@@ -8,19 +8,20 @@
 			/************************************************************************/
 
 #include <stdio.h>
+#include "idsistd.h"
 #include "cobrun.h"
 #include "wglobals.h"
+
 
 int	BYTESWAP = -1;				/* Is this a byte swap machine (-1 == uninitialized)				*/
 
 wswap(lword)					/* swap the order of the words in a longword item (for WANG routines to use)	*/
-long int *lword;									/* Argument must be pointer to long	*/
+int4 *lword;									/* Argument must be pointer to int4	*/
 {
-	short int *swords;
-	short int temp;									/* used for the swap			*/
+	int2 *swords;
+	int2 temp;									/* used for the swap			*/
 
-
-	swords = (short *)lword;
+	swords = (int2 *)lword;
 
 	if (bytenormal()) return(0);
 	if (noswap_words) return(0);							/* Not supposed to do it.		*/
@@ -38,7 +39,7 @@ long int *lword;									/* Argument must be pointer to long	*/
 }
 
 reversebytes(ptr,len)									/* Reverse the bytes.			*/
-char	*ptr;										/* Char array; really short or long.	*/
+char	*ptr;										/* Char array; really short or int4.	*/
 int	len;
 {
 	char	temp[80];
@@ -54,12 +55,12 @@ int	len;
 #ifdef OLD
 wbyteorder()
 {
-	long	l;
+	int4	l;
 	char	*p;
 
 	if (BYTESWAP == -1)
 	{
-		l = (long) 0x01020304;
+		l = (int4) 0x01020304;
 		p = (char *)&l;
 		if      ( *p == (char) 0x01 )
 		{
@@ -86,14 +87,14 @@ int bytenormal()
 {
 	static int first = 1;
 	static int normal;
-	long	l;
+	int4	l;
 	char	*p;
 	char	messstr[80];
 
 	if (first)
 	{
 		first = 0;
-		l = (long) 0x01020304;
+		l = (int4) 0x01020304;
 		p = (char *)&l;
 		if      ( *p == (char) 0x01 )
 		{

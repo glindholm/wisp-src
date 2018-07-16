@@ -12,25 +12,26 @@
 			Returns 0 or the value of status.
 */
 
+#include "idsistd.h"
+
 #ifdef VMS
 #include <stdio.h>
 #include <descrip.h>
 #include <ssdef.h>
 #include <libdef.h>
 
-long setsymb(symbol,value,len,tabtype)
+int4 setsymb(symbol,value,len,tabtype)
 char	*symbol;								/* VMS Symbol name				*/
 char	*value;									/* Value to load into symbol			*/
-long	len;									/* Length of Value				*/
-long	tabtype;								/* Symbol table to use.	(0 == default)		*/
+int4	len;									/* Length of Value				*/
+int4	tabtype;								/* Symbol table to use.	(0 == default)		*/
 {
 	char symstr[256];
 	char valstr[256];
-	long status;
-	$DESCRIPTOR(sym,symstr);
-	$DESCRIPTOR(val,valstr);
+	int4 status;
+#include "setsymb1.d"
 
-	if (*symbol == '&') symbol++;						/* Skip over the '&'				*/
+	if (*symbol == '&') symbol++;							/* Skip over the '&'			*/
 
 	memset(symstr,' ',256);								/* Fill symbol string with spaces.	*/
 	symstr[255] = '\0';								/* Null terminate.			*/
@@ -58,18 +59,17 @@ long	tabtype;								/* Symbol table to use.	(0 == default)		*/
 	return( 0 );
 }
 
-long getsymb(symbol,value,len)
+int4 getsymb(symbol,value,len)
 char	*symbol;								/* VMS Symbol name				*/
 char	*value;									/* Value to load into symbol			*/
-long	*len;									/* Length of Value (optional)			*/
+int4	*len;									/* Length of Value (optional)			*/
 {
 	char 	symstr[256];
 	char 	valstr[256];
-	long 	status;
-	long 	tabtype;
-	long 	length;
-	$DESCRIPTOR(sym,symstr);
-	$DESCRIPTOR(val,valstr);
+	int4 	status;
+	int4 	tabtype;
+	int4 	length;
+#include "setsymb2.d"
 
 	if (*symbol == '&') symbol++;							/* Skip over the '&'			*/
 
@@ -97,5 +97,3 @@ long	*len;									/* Length of Value (optional)			*/
 	return( 0 );
 }
 #endif
-
-

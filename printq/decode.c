@@ -123,7 +123,7 @@ int *type;
 					tmp = (ch-0x30)*64;
 					tmp += (*val++ -0x30)*8;
 					tmp += (*val++ -0x30);
-					*sub++ = tmp?tmp:0x80;
+					*sub++ = tmp;
 				}
 				else
 				  *sub++ = ch;

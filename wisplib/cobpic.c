@@ -17,6 +17,7 @@
 #include <memory.h>
 #endif
 
+#include "idsistd.h"
 #include "cobrun.h"
 
 char *strchr();
@@ -25,6 +26,12 @@ char *strpbrk();
 extern char	char_decimal_point;							/* The decimal_point character		*/
 extern char	char_comma;								/* The comma character			*/
 
+static int cobpic_alphaedit();
+static int cobpic_numedit();
+static int picedit_insert();
+static int picfloatedit();
+static int piczeroedit();
+
 #define PIC_NOEDIT	0
 #define PIC_ALPHAEDIT	1
 #define PIC_NUMERIC	2
@@ -32,6 +39,8 @@ extern char	char_comma;								/* The comma character			*/
 #define	ALPHA_FAC	0x81
 #define NUM_FAC		0x82
 #define PROT_FAC	0x8C
+
+void cobxpic_edit();
 
 /*
 	cobpic_edit:	COBOL PICTURE EDIT
@@ -55,7 +64,6 @@ int 	*errcode;
 {
 	char	xpic[100], suppchar;
 	int	xflag, psize, pic_type, pic_dp, blankdecimal, suppidx, floatidx, psigned;
-	void	cobxpic_edit();
 
 	*errcode = 0;
 

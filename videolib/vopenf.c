@@ -7,6 +7,11 @@
 
 /*						Keystroke Macro Manager								*/
 
+#include <stdio.h>
+#ifndef NOSTDLIB
+#include <stdlib.h>
+#endif
+
 #include "video.h"									/* Include header files.		*/
 #include "vlocal.h"
 #include "vdata.h"
@@ -17,13 +22,13 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 {
 	char *ptr;									/* Temp char ptr			*/
 
-#ifdef vms
+#ifdef VMS
 	strcpy(filename,"sys$login:video.");						/* Store the root name.			*/
 	strcat(filename,ext);								/* Add the extension.			*/
 #endif
 
 #ifdef unix
-	if (!(ptr=(char *)getenv("HOME")))						/* Get the HOME dir.			*/
+	if (!(ptr=getenv("HOME")))							/* Get the HOME dir.			*/
 	{
 		ptr = ".";								/* If home not found use "."		*/
 	}
@@ -33,7 +38,12 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 #endif
 
 #ifdef MSDOS
-	strcpy(filename,"\video.");							/* Store in the root.			*/
+	if (!(ptr=getenv("HOME")))							/* Get the HOME dir.			*/
+	{
+		ptr = "C:";								/* If home not found use "C:"		*/
+	}
+	strcpy(filename,ptr);
+	strcat(filename,"\\video.");							/* Store in the root.			*/
 	strcat(filename,ext);
 #endif
 
@@ -44,9 +54,8 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 
 FILE *vopenf(ext,how) char *ext, *how;
 {
-	FILE *fopen();									/* Reference the fopen routine.		*/
 
-#ifdef vms
+#ifdef VMS
 	if ((how[0] == 'w') && (how[1] = '+')) 						/* Delete previous if open for update.	*/
 	{
 		delete(vfilename(ext));							/* Delete the file.			*/
@@ -56,3 +65,71 @@ FILE *vopenf(ext,how) char *ext, *how;
 
 	return(fopen(vfilename(ext),how));						/* Open the file.			*/
 }
+
+
+/*
+**	Routine:	vinfoname()
+**
+**	Function:	To construct an OSD name for a VIDEOINFO file.
+**
+**	Description:	This routine is passed a simple filename that should
+**			reside in the VIDEOINFO directory, and it constructs
+**			a full native path for that file.
+**
+**			On VMS it prefixes the filename with "V:".
+**			On Unix and MSDOS it uses environment variables and defaults as follows.
+**
+**				If $VIDEOINFO defined use it.
+**				Else if $VIDEOCAP defined use it.			\ For compatiblity with WISP.
+**				Else if $WISPCONFIG defined use $WISPCONFIG/videocap.	/
+**				Else use the default.
+**
+**
+**	Input:
+**	name		The simple filename I.e "simple.dat". It must be valid on all platforms so 8.3 and no special chars.	
+**
+**	Output:		None
+**
+**	Return:		Pointer to the full native path name.
+**
+**	Warnings:	This routine does NOT check for existence of the file.
+**			The pointer return will remain valid until vinfoname() is called again.
+**
+**	History:	
+**	07/21/93	Written by GSL
+**
+*/
+char *vinfoname(name)
+char *name;
+{
+	static char s_vinfoname[80];
+	char	*vinfodir, vinfodirbuff[80];
+
+#ifdef VMS
+	strcpy(s_vinfoname,"V:");
+	strcat(s_vinfoname,name);
+#else
+	if (vinfodir = getenv("VIDEOINFO"))
+	{
+		/* Got the video info directory */
+	}
+	else if (vinfodir = getenv("VIDEOCAP"))
+	{
+		/* Got the video info directory */
+	}
+	else if (vinfodir = getenv("WISPCONFIG"))
+	{
+		vbldfilepath(vinfodirbuff,vinfodir,"videocap");
+		vinfodir = vinfodirbuff;
+	}
+	else
+	{
+		vinfodir = VIDEOINFODIR;
+	}
+
+	vbldfilepath(s_vinfoname,vinfodir,name);
+#endif
+
+	return( s_vinfoname );
+}
+

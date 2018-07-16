@@ -19,6 +19,7 @@
 
 
 #define EXT_WGLOBALS
+#include "idsistd.h"
 #include "wglobals.h"
 
 #define	EXT_COBRUN

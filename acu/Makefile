@@ -1,13 +1,15 @@
 #/************************************************************************/
 #/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992,1993	 */
 #/*	 An unpublished work of International Digital Scientific Inc.	 */
 #/*			    All rights reserved.			 */
 #/*									 */
 #/************************************************************************/
 #
 #
-#	File:		wruncbl.umf
+#	File:		wruncblx.umf
+#
+#			**** This is an IDSI only version ****
 #
 #	Function:	The UNIX makefile for building the Acucobol runtime
 #			systems that include the WISP runtime routines.
@@ -20,9 +22,6 @@
 #
 #			wruncble	The EDE version of the runtime.
 #
-#			wruncbl1	The Acucobol version 1.5 runtime.
-#					(Only used if running an old version
-#					of Acucobol.)
 #
 #	Instructions:	To create an Acucobol runtime system follow the
 #			instructions in Appendix A of the WISP Manual
@@ -40,27 +39,53 @@
 #			location.
 #
 
-CFLAGS= -O
-LDFLAGS= -s
+#
+#	Leave CDEBUG blank - it will be filled in manually on the build
+#
+CDEBUG=
+
+include $(WISP)/src/port/make.include
 
 SUBS1=sub.o
 SUBS2=sub.o filetbl.o
 
-LIBPATH=/usr/lib
-LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideo.a
-LIBS=-lwisp -lilp -lvideo -lm
+LIBPATH=$(STDLIB)
+LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libvideo.a
+LIBPATHDS=$(LIBPATH)/libwispd.a $(LIBPATH)/libvideod.a
+LIBS=-lwisp -lvideo -lm $(LIBCURSES)
+LIBDS=-lwispd -lvideod -lm $(LIBCURSES)
 
-all:	wruncbl
+all:	setup wruncbl
+	@echo ">>> wruncbl  is up to date <<<"
+
+both:	setup wruncbl wruncble
+	@echo ">>> wruncbl  is up to date <<<"
+	@echo ">>> wruncble is up to date <<<"
+
+setup:
+	@echo ">>> BUILDING ACUCOBOL RUNTIME <<<"
+	@echo "WISP   = " $(WISP)
+	@echo "ACUDIR = " $(ACUDIR)
 
 wruncbl: $(SUBS2) $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) $(LIBS)
+	$(CC) -O $(CFLAGS) -o $@ $(SUBS2) $(ACUDIR)/runcbl.a -L$(LIBPATH) $(LIBS)
 
 wruncble: $(SUBS2) $(LIBPATHS) $(LIBPATH)/libede.a
-	$(CC) $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) -lede $(LIBS)
+	$(CC) -O $(CFLAGS) -o $@ $(SUBS2) $(ACUDIR)/runcbl.a -L$(LIBPATH) -lede $(LIBS)
 
-wruncbl1: $(SUBS1) $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ $(SUBS1) runcbl.a -L$(LIBPATH) $(LIBS)
+wruncbld: $(SUBS2) $(LIBPATHDS)
+	$(CC) -g $(CFLAGS) -o $@ $(SUBS2) $(ACUDIR)/runcbl.a -L$(LIBPATH) $(LIBDS)
 
 sub.o: sub.c sub85.c
+	$(CC) -g $(CFLAGS) -c -I$(ACUDIR) sub.c
+
+filetbl.o: filetbl.c
+	$(CC) $(CFLAGS) -c -I$(ACUDIR) filetbl.c
+
+sub.c: $(ACUDIR)/sub.c
+	cp $(ACUDIR)/sub.c .
+
+filetbl.c: $(ACUDIR)/filetbl.c
+	cp $(ACUDIR)/filetbl.c .
 
 

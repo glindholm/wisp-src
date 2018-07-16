@@ -1,644 +1,507 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
 /*
-**	wisp_datad.c
+**	File:		wt_data.c
+**
+**	Purpose:	Data division/ file section parsing routines.
+**
+**	Routines:
+**	parse_file_section()
+**
+**
+**	History:
+**	05/18/93	Changed to use parse_data_description(). GSL
+**	05/21/93	Changed to use get_statement(). GSL
+**
 */
+
+#include <string.h>
 
 #define EXT extern
 #include "wisp.h"
+#include "crt.h"
+#include "wispfile.h"
+#include "cobfiles.h"
+#include "keylist.h"
+#include "token.h"
+#include "node.h"
 
-static int did_fd = 0;
-static int did_crt = 0;
-static int crt_fd = 0;
-static int fnum = -1;									/* Remember file number.		*/
+static int g_curr_file_num = -1;							/* Remember file number.		*/
 
-char *strchr();
+NODE get_statement();
 
-p_data()
+NODE data_division();
+NODE file_section();
+
+NODE parse_crt_records();
+NODE delete_fd();
+
+/*
+**	Routine:	data_division()
+**
+**	Function:	To process the DATA DIVISION.
+**
+**	Description:	Get and put statements until out of this division then pass that statement up
+**			to be handled by a higher routine.
+**
+**			If the first statement is not DATA DIVISION then one will be generated.
+**
+**	Arguments:
+**	the_statement	The pre-loaded first statement.
+**
+**	Globals:	None
+**
+**	Return:		The next statement that is not part of this division.
+**
+**	Warnings:	None
+**
+**	History:	
+**	06/02/93	Written by GSL
+**
+*/
+NODE data_division(the_statement)
+NODE	the_statement;
 {
-	int i,is_sd, exit_valueof;
-	char the_file[40];
-	char t_mktemp[40];
-	char tstr[80];
-	short	fd_sd, changed_it;
-	int	pos;
-	char	bin_temp[8];
-	int	notdone;
+	if (!comments) tput_blank();
 
-
-	if (!strcmp(parms[0],"SD"))							/* SD's are not crt files.		*/
+	if (eq_token(the_statement->next->token,KEYWORD,"DATA"))
 	{
-		crt_fd = 0;
+		write_log("WISP",'I',"DATADIV","Processing DATA DIVISION.");
+		division = DATA_DIVISION;
+
+		tput_statement(12,the_statement);
+		free_statement(the_statement);
+
+		the_statement = get_statement();
 	}
-	else if (!strcmp(parms[0],"FD"))						/* If it's an FD, check to see if it is	*/
+	else if (eq_token(the_statement->next->token,KEYWORD,"PROCEDURE"))
 	{
-		crt_fd = 0;								/* Assume is NOT a CRT file.		*/
-		for (i=0; i<crt_fcount; i++)						/* A CRT file.				*/
+		write_log("WISP",'I',"DATADIV","DATA DIVISION not found.");
+		tput_line_at(8, "DATA DIVISION.");
+	}
+	else
+	{
+		write_tlog(the_statement->next->token, 
+				"WISP",'F',"PARSEDATA","Expecting DATA, or PROCEDURE DIVISION found %s.",
+				token_data(the_statement->next->token));
+		exit_with_err();
+	}
+
+	/*
+	**	FILE SECTION
+	*/
+	the_statement = file_section(the_statement);
+
+	/*
+	**	WORKING-STORAGE SECTION
+	*/
+	the_statement = (NODE)working_storage_section(the_statement);
+
+	/*
+	**	LINKAGE SECTION
+	*/
+	the_statement = (NODE)linkage_section(the_statement);
+
+	return(the_statement);
+}
+
+/*
+**	Routine:	file_section()
+**
+**	Function:	To process the FILE SECTION.
+**
+**	Description:	Get and put statements until out of this section then pass that statement up
+**			to be handled by a higher routine.
+**
+**			If the first statement is not FILE SECTION then one will be generated.
+**
+**	Arguments:
+**	the_statement	The pre-loaded first statement.
+**
+**	Globals:	None
+**
+**	Return:		The next statement that is not part of this section.
+**
+**	Warnings:	None
+**
+**	History:	
+**	06/01/93	Written by GSL
+**
+*/
+NODE file_section(the_statement)
+NODE the_statement;
+{
+	static 	int 	crt_fd = 0;
+
+	NODE	next_statement;
+	NODE	curr_node, file_name_node;
+	TOKEN	*tokptr;
+	char 	the_file[40];
+	int	is_fd, is_sd, is_dd;
+
+	if (eq_token(the_statement->next->token,KEYWORD,"FILE"))
+	{
+		write_log("WISP",'I',"FILESECT","Processing FILE SECTION.");
+
+		tput_statement(12,the_statement);
+		free_statement(the_statement);
+
+		tput_line_at(8, "FD  WISP-DECLARATIVES-FILE.");			/* Do FD for Declaratives display.		*/
+		tput_line_at(8, "01  WISP-DEC-FILE-DUMMY-RECORD  PIC X.");
+	}
+	else
+	{
+		write_log("WISP",'I',"FILESECT","FILE SECTION not found.");
+
+		tput_line_at(8, "FILE SECTION.");
+		tput_line_at(8, "FD  WISP-DECLARATIVES-FILE.");			/* Do FD for Declaratives display.		*/
+		tput_line_at(8, "01  WISP-DEC-FILE-DUMMY-RECORD  PIC X.");
+
+		return(the_statement);
+	}
+
+	next_statement = NULL;
+
+get_next_statement:
+	if (next_statement)
+	{
+		the_statement = next_statement;
+		next_statement = NULL;
+	}
+	else
+	{
+		the_statement = get_statement();				/* Load the statement				*/
+	}
+
+	is_fd = is_sd = is_dd = 0;						/* Assume not a FD or SD			*/ 
+
+	curr_node = the_statement->next;					/* Point to first significant token		*/
+
+	if ( eq_token(curr_node->token, KEYWORD, "FD") )
+	{
+		is_fd = 1;							/* It is an FD 					*/
+	}
+	else if ( eq_token(curr_node->token, KEYWORD, "SD") )
+	{
+		is_sd = 1;							/* It is an SD					*/
+	}
+	else if ( NUMBER==curr_node->token->type )				/* It is a Data definition			*/
+	{
+		is_dd = 1;
+	}
+	else if ( eq_token(curr_node->token, KEYWORD, "WORKING-STORAGE") 	||
+		  eq_token(curr_node->token, KEYWORD, "LINKAGE") 		||
+		  eq_token(curr_node->token, KEYWORD, "PROCEDURE") 		  )
+	{
+		/*
+		**	We've got the next statement following the FILE SECTION.
+		**	Return it to higher level to handle.
+		*/
+		return(the_statement);
+	}
+	else
+	{
+		/*
+		**	Statement is not recognized.
+		*/
+		write_tlog(the_statement->next->token, 
+				"WISP",'F',"PARSEDATA","Unrecognized token found in FILE SECTION [%s].",
+				token_data(the_statement->next->token));
+		exit_with_err();
+	}
+
+	if (is_fd || is_sd)
+	{
+		curr_node = curr_node->next;					/* Advance to the filename node			*/
+		file_name_node = curr_node;
+		strcpy(the_file,file_name_node->token->data);			/* Save the file name				*/
+
+		delint_statement(file_name_node);				/* Remove lint from filename on			*/
+
+		crt_fd = 0;							/* Assume is NOT a CRT file.			*/
+		if (is_fd)
 		{
-			if (!strcmp(crt_file[i],parms[1]))
+			if ((cur_crt = crt_index(the_file)) != -1)
 			{
-				crt_fd = 1;						/* Flag it.				*/
-				cur_crt = i;
+				crt_fd = 1;					/* Found a CRT file FD				*/
 			}
 		}
 	}
 
-	fd_sd = 0;									/* It's not a FD or SD			*/ 
-	changed_it = 0;
-
-	if ((!strcmp(parms[0],"SD") || !strcmp(parms[0],"FD")) && !crt_fd) 		/* it is a normal FD/SD			*/
+	if ((is_fd || is_sd) && !crt_fd) 					/* It is a normal file FD/SD			*/
 	{
-		fd_sd = 1;								/* It is an FD or SD			*/
-		if (!strcmp(parms[0],"SD"))
+		int	fd_parse_mode;
+#define	FD_BLOCK	1
+#define FD_RECORD	2
+#define FD_LABEL	3
+#define FD_VALUE	4
+#define FD_DATA		5
+#define FD_CODESET	6
+#define FD_EXTERNAL	7
+
+		g_curr_file_num = file_index(the_file);
+
+		if (g_curr_file_num == -1)					/* Didn't find it.				*/
 		{
-			write_log("WISP",'I',"PROCSD","Processing SD for %s.",parms[1]);
-			is_sd = 1;							/* set the flag says this is an SD	*/
-		}
-		else
-		{
-			write_log("WISP",'I',"PROCFD","Processing FD for %s.",parms[1]);
-			is_sd = 0;							/* clear the flag says this is an SD	*/
+			write_log("WISP",'E',"NOSELECT","FD for file %s, but no previous SELECT. (deleted)",the_file);
+			next_statement = delete_fd(the_statement);
+			goto get_next_statement;
 		}
 
-		strcpy(the_file,parms[1]);						/* save the name of this file		*/
-		stredt(the_file,".","");						/* Remove potential period.		*/
-
-		fnum = file_index(the_file);
-
-		if (fnum == -1)								/* Didn't find it.			*/
-		{
-			write_log("WISP",'F',"NOSELECT","FD for file %s, but no previous SELECT.\n",the_file);
-			exit(-1);							/* Abort WISP.				*/
-		}
+		if (is_sd)	write_log("WISP",'I',"PROCSD","Processing SD for %s.",the_file);
+		else		write_log("WISP",'I',"PROCFD","Processing FD for %s.",the_file);
 
 		if (is_sd)
-		{
-			FSET(prog_ftypes[fnum],SORT_FILE);				/* flag it as a sort file		*/
-			prog_sort++;							/* and count it				*/
+		{	
+			FSET(prog_ftypes[g_curr_file_num],SORT_FILE);		/* flag it as a sort file			*/
+			prog_sort++;						/* and count it					*/
 		}
 
-		prog_ftypes[fnum] |= HAD_FD;						/* Flag the FD statement.		*/
+		prog_ftypes[g_curr_file_num] |= HAD_FD;				/* Flag the FD statement.			*/
 
-		write_line("       %s  %s\n",parms[0],parms[1]);			/* Write FD FILENAME			*/
-
-		ptype = get_param(o_parms[0]);						/* Take the params off.			*/
-		ptype = get_param(o_parms[0]);						/* Take the params off.			*/
-		stredt(inline,parms[0],"  ");						/* Remove FD				*/
-		stredt(inline,parms[1],"");						/* Remove filename			*/
-
-		if (ptype != -1 )
-			hold_line();							/* Re-parm it if needed			*/
-
-		if (!is_sd)
+		if ( is_fd && (lpi_cobol || vax_cobol) )
 		{
-			make_fld(o_parms[9],prog_files[fnum],"N-");			/* start the value statement		*/
+			/*
+			**	VAX:	VALUE OF ID IS N-filename
+			**	LPI:	VALUE OF FILE-ID IS N-filename
+			*/
+			char	temp[40];
+
+			make_fld(temp,prog_files[g_curr_file_num],"N-");	/* start the value statement			*/
+			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"VALUE")));
+			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"OF")));
 			if (lpi_cobol)
-			{								/* Use FILE-ID for LPI COBOL.		*/
-				write_line("           VALUE OF FILE-ID IS %s\n",o_parms[9]);
-			}
-			else if (vax_cobol)						/* Don't use ID for acu cobol		*/
-			{								/* Use ID for VAX COBOL.		*/
-				write_line("           VALUE OF ID IS %s\n",o_parms[9]);
-			}
+				tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"FILE-ID")));
+			if (vax_cobol)
+				tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"ID")));
+			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"IS")));
+			tie_bottom(file_name_node, maketoknode(make_token(IDENTIFIER,temp)));
 		}
 
-		notdone=1;
-		while (notdone)								/* till we see a period			*/
+		curr_node = curr_node->next;					/* Advance past the filename node		*/
+		fd_parse_mode = 0;
+
+		while (NODE_END != curr_node->type)				/* Loop until end of statement.			*/
 		{
-			notdone=0;
-
-			if (ptype == -1) break;
-
-			get_line();							/* get a new input line			*/
-
-			if (!strcmp(parms[0],"VALUE"))					/* it's a VALUE OF statement		*/
+			if ( !curr_node->token)
 			{
-				ptype = get_param(o_parms[0]);				/* "VALUE"				*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-				ptype = get_param(o_parms[0]);				/* "OF"					*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				hold_line();
-
-				exit_valueof = 0;
-				while( ptype != -1 && !exit_valueof)
-				{							/* loop through looking for file info	*/
-					get_line();
-					if (!strcmp(parms[0],"VALUE"))			/* Multiple VALUE keywords.		*/
-					{
-						ptype = get_param(o_parms[0]);		/* "VALUE"				*/
-						stredt(inline,o_parms[0],"");		/* Edit it out of inline		*/
-						ptype = get_param(o_parms[0]);		/* "OF"					*/
-						stredt(inline,o_parms[0],"");		/* Edit it out of inline		*/
-
-						hold_line();				/* Re-parm the line.			*/
-						get_line();
-					}
-
-					if (!strcmp(parms[0],"FILENAME") ||
-					    !strcmp(parms[0],"LIBRARY") ||
-					    !strcmp(parms[0],"VOLUME") ||
-					    !strcmp(parms[0],"SPACE") ||
-					    !strcmp(parms[0],"SPACES") ||
-					    !strcmp(parms[0],"POSITION") ||
-					    !strcmp(parms[0],"INDEX") ||
-					    !strcmp(parms[0],"RECOVERY-BLOCKS") ||
-					    !strcmp(parms[0],"RECOVERY-STATUS") ||
-					    !strcmp(parms[0],"DATABASE-NAME") ||
-					    (!strcmp(parms[0],"DATA") && !strcmp(parms[1],"AREA")) ||
-					    !strcmp(parms[0],"PRINT-CLASS") ||
-					    !strcmp(parms[0],"PRINT-FORM") ||
-					    !strcmp(parms[0],"FILE-CLASS") 
-					   )
-					{
-						ptype = get_param(o_parms[1]);		/* get keyword	(save it)		*/
-						stredt(&inline[7],o_parms[1],"");	/* Edit it out of inline		*/
-
-						ptype = get_param(o_parms[0]);		/* get next token.			*/
-						stredt(&inline[7],o_parms[0],"");	/* Edit it out of inline		*/
-						if (!strcmp(parms[0],"INDEX") || !strcmp(parms[0],"DATA") )
-						{
-							if (!strcmp(o_parms[0],"AREA"))		/* Skip over AREA.		*/
-							{
-								ptype = get_param(o_parms[0]);	/* Get next			*/
-								stredt(&inline[7],o_parms[0],"");/* Edit it out of inline	*/
-							}
-
-						}
-
-						if (!strcmp(o_parms[0],"IS"))		/* Skip over IS.			*/
-						{
-							ptype = get_param(o_parms[0]);	/* Get next token			*/
-							stredt(&inline[7],o_parms[0],"");/* Edit it out of inline		*/
-						}
-						hold_line();
-
-						if (!strcmp(o_parms[1],"FILENAME"))
-						{
-							write_log("WISP",'I',"FILENAME","  File name is %s",o_parms[0]);
-
-							strcpy(prog_fnames[fnum],o_parms[0]);	/* FD overrides SELECT specs	*/
-							stredt(prog_fnames[fnum],".","");	/* remove periods		*/
-						}
-						else if (!strcmp(o_parms[1],"LIBRARY"))		/* Its the library.		*/
-						{
-							write_log("WISP",'I',"LIBRARY","  Library is %s.",o_parms[0]);
-
-							strcpy(prog_lnames[fnum],o_parms[0]);	/* save the library name	*/
-							stredt(prog_lnames[fnum],".","");	/* remove periods		*/
-						}
-						else if (!strcmp(o_parms[1],"VOLUME"))		/* its the volume		*/
-						{
-							write_log("WISP",'I',"VOLUME","  Volume is %s.",o_parms[0]);
-	
-							strcpy(prog_vnames[fnum],o_parms[0]);		/* save the volume name	*/
-							stredt(prog_vnames[fnum],".","");		/* remove periods	*/
-						}
-					}
-					else
-					{
-						hold_line();
-						exit_valueof = 1;
-					}
-
-				} /* End while  doing VALUE OF clauses */
-
-				if (ptype != -1)
-				{
-					notdone = 1;
-				}
-
+				/* No token on this node, do nothing */
 			}
-			else if (!strcmp(parms[0],"RECORD"))				/* it's a RECORD CONTAINS statement	*/
+			else if ( eq_token(curr_node->token, KEYWORD, "EXTERNAL") )
 			{
-				char	recbuff[300];
-				int	varying, tempint;
-
-			/*	RECORD contains                 INT-1  [TO INT-2] [COMPRESSED] characters 			*/
-			/*	RECORD is VARYING in size [from INT-1] [TO INT-2] [COMPRESSED] characters [DEPENDING on DATA-1]	*/
-
-				recbuff[0] = '\0';
-
-				write_log("WISP",'I',"RECORDCONTAINS","Processing RECORD CONTAINS from FD.\n");
-
-				ptype = extract_param(o_parms[0]);			/* Get the "RECORD"			*/
-				add2buff(recbuff,"RECORD",12,0);			/* Add RECORD				*/
-
-				ptype = extract_param(o_parms[0]);
-				if ( 0 == strcmp(o_parms[0],"CONTAINS") )
+				fd_parse_mode = FD_EXTERNAL;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "BLOCK") )
+			{
+				fd_parse_mode = FD_BLOCK;
+				write_log("WISP",'I',"BLOCKCONTAINS","Removing BLOCK CONTAINS from FD.");
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "RECORD") )
+			{
+				fd_parse_mode = FD_RECORD;
+				if (delrecon)
 				{
-					add2buff(recbuff,o_parms[0],19,0);		/* Add CONTAINS				*/
-					ptype = extract_param(o_parms[0]);
-					add2buff(recbuff,o_parms[0],19,0);		/* Add INT-1				*/
-					varying = 0;
-				}
-				else if ( 0 == strcmp(o_parms[0],"IS") )
-				{
-					add2buff(recbuff,o_parms[0],19,0);		/* Add IS				*/
-					ptype = extract_param(o_parms[0]);
-					add2buff(recbuff,o_parms[0],19,0);		/* Add VARYING				*/
-					varying = 1;
-				}
-				else if ( 0 == strcmp(o_parms[0],"VARYING") )
-				{
-					add2buff(recbuff,o_parms[0],19,0);		/* Add VARYING				*/
-					varying = 1;
+					write_log("WISP",'I',"RECORDCONTAINS","Removing RECORD CONTAINS from FD.");
 				}
 				else
 				{
-					add2buff(recbuff,o_parms[0],19,0);		/* Add INT-1				*/
-					varying = 0;
+					write_log("WISP",'I',"RECORDCONTAINS","Processing RECORD CONTAINS from FD.");
+					curr_node->token->column_fixed = 1;
 				}
-
-				if (ptype != -1) next_param(o_parms[0]);
-
-				if (ptype != -1 && varying)
-				{
-					if ( 0 == strcmp(o_parms[0],"IN") )
-					{
-						ptype = extract_param(o_parms[0]);
-						add2buff(recbuff,o_parms[0],19,0);	/* Add IN				*/
-						if (ptype != -1) next_param(o_parms[0]);
-					}
-					if ( ptype != -1 && 0 == strcmp(o_parms[0],"SIZE") )
-					{
-						ptype = extract_param(o_parms[0]);
-						add2buff(recbuff,o_parms[0],19,0);	/* Add SIZE				*/
-						if (ptype != -1) next_param(o_parms[0]);
-					}
-					if ( ptype != -1 && 1 == sscanf(o_parms[0],"%d",&tempint) && tempint > 0 )
-					{
-						ptype = extract_param(o_parms[0]);
-						add2buff(recbuff,o_parms[0],19,0);	/* Add INT-1				*/
-						if (ptype != -1) next_param(o_parms[0]);
-					}
-					if ( ptype != -1 && 0 == strcmp(o_parms[0],"FROM") )
-					{
-						ptype = extract_param(o_parms[0]);
-						add2buff(recbuff,o_parms[0],19,0);	/* Add FROM				*/
-						ptype = extract_param(o_parms[0]);
-						add2buff(recbuff,o_parms[0],19,0);	/* Add INT-1				*/
-						if (ptype != -1) next_param(o_parms[0]);
-					}
-				}
-
-				if (ptype != -1 && !strcmp(o_parms[0],"TO"))
-				{
-					ptype = extract_param(o_parms[0]);
-					add2buff(recbuff,o_parms[0],19,0);		/* Add TO				*/
-					ptype = extract_param(o_parms[0]);
-					add2buff(recbuff,o_parms[0],19,0);		/* Add INT-2				*/
-					if (ptype != -1) next_param(o_parms[0]);
-				}
-				if (ptype != -1 && !strcmp(o_parms[0],"COMPRESSED"))
-				{
-					ptype = extract_param(o_parms[0]);		/* Remove COMPRESSED			*/
-					if (ptype != -1) next_param(o_parms[0]);
-				}
-				if (ptype != -1 && !strcmp(o_parms[0],"CHARACTERS"))
-				{
-					ptype = extract_param(o_parms[0]);
-					add2buff(recbuff,o_parms[0],19,0);		/* Add CHARACTERS			*/
-					if (ptype != -1) next_param(o_parms[0]);
-				}
-				if (ptype != -1 && !strcmp(o_parms[0],"DEPENDING"))
-				{
-					ptype = extract_param(o_parms[0]);
-					add2buff(recbuff,o_parms[0],19,0);		/* Add DEPENDING			*/
-					ptype = extract_param(o_parms[0]);
-					if (!strcmp(o_parms[0],"ON"))
-					{
-						add2buff(recbuff,o_parms[0],19,0);	/* Add ON				*/
-						ptype = extract_param(o_parms[0]);
-					}
-					add2buff(recbuff,o_parms[0],19,0);		/* Add DATA-1				*/
-				}
-
-				if (!delrecon)  put_line(recbuff);
-				else		put_line("      *    RECORD CONTAINS clause deleted");
-
-				if (ptype == -1)
-				{
-					stredt(inline,"."," ");
-					if (delrecon) put_line("\n           ");
-					put_line(" .\n");
-				}
-				else
-				{
-					put_line(" \n");	
-					notdone=1;
-				}
-				hold_line();
 			}
-			else if (!strcmp(parms[0],"BLOCK"))				/* it's a BLOCK CONTAINS statement	*/
+			else if ( eq_token(curr_node->token, KEYWORD, "COMPRESSED") )
 			{
-			/* BLOCK contains [int TO] int {RECORDS|CHARACTERS} */
-
-				write_log("WISP",'I',"BLOCKCONTAINS","Removing BLOCK CONTAINS from FD.\n");
-
-				ptype = get_param(o_parms[0]);				/* Get the "BLOCK"			*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				ptype = get_param(o_parms[0]);				/* Get the "CONTAINS" or size		*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				if (!strcmp(o_parms[0],"CONTAINS"))			/* Was it contains?			*/
-				{
-					ptype = get_param(o_parms[0]);			/* Get the size				*/
-					stredt(inline,o_parms[0],"");			/* Edit it out of inline		*/
-				}
-
-				ptype = get_param(o_parms[0]);				/* Get the "TO" or RECORD/CHARACTERS	*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				if (!strcmp(o_parms[0],"TO"))				/* Was it "TO"?				*/
-				{
-					ptype = get_param(o_parms[0]);			/* Get the size				*/
-					stredt(inline,o_parms[0],"");			/* Edit it out of inline		*/
-
-					ptype = get_param(o_parms[0]);			/* Get the RECORD/CHARACTERS		*/
-					stredt(inline,o_parms[0],"");			/* Edit it out of inline		*/
-				}
-
-				if (ptype != -1)
-					notdone=1;
-
-				hold_line();
+				/*
+				**	Always remove the COMPRESSED clause
+				*/
+				cleartoknode(curr_node);
 			}
-			else if (!strcmp(parms[0],"LABEL"))			/* LABEL RECORD/S IS/ARE STANDARD/OMITTED	*/
+			else if ( eq_token(curr_node->token, KEYWORD, "LABEL") )
 			{
-				write_log("WISP",'I',"LABELRECORD","Removing LABEL RECORD from FD.\n");
+				fd_parse_mode = FD_LABEL;
+				write_log("WISP",'I',"LABELRECORD","Removing LABEL RECORD from FD.");
 
-				ptype = get_param(o_parms[0]);				/* Get the "LABEL"			*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				ptype = get_param(o_parms[0]);				/* Get the "RECORD/S" 			*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				ptype = get_param(o_parms[0]);				/* Get the "IS/ARE" or			*/
-				stredt(inline,o_parms[0],"");				/* Edit it out of inline		*/
-
-				if (!strcmp(o_parms[0],"IS") || !strcmp(o_parms[0],"ARE"))
+				/*
+				**	We are deleting "LABEL RECORD ..." clauses.
+				**	Need to position past the RECORD keyword so it is not confused
+				**	for a "RECORD CONTAINS ..." clause.
+				*/
+				cleartoknode(curr_node);			/* remove the LABEL keyword			*/
+				curr_node = curr_node->next;			/* Skip over RECORD keyword			*/
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "VALUE") )
+			{
+				fd_parse_mode = FD_VALUE;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "DATA") )
+			{
+				if ( eq_token(curr_node->next->token, KEYWORD, "RECORD") ||
+				     eq_token(curr_node->next->token, KEYWORD, "RECORDS")  )
 				{
-					ptype = get_param(o_parms[0]);			/* Get the "STANDARD/OMITTED"		*/
-					stredt(inline,o_parms[0],"");			/* Edit it out of inline		*/
+					fd_parse_mode = FD_DATA;
+					curr_node->token->column_fixed = 1;
+					curr_node = curr_node->next;		/* Skip over RECORD keyword			*/
 				}
-
-				if (ptype != -1)
-					notdone=1;
-
-				hold_line();
+				curr_node->token->line   = 0;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "CODE-SET") )
+			{
+				fd_parse_mode = FD_CODESET;
+				curr_node->token->column_fixed = 1;
+				curr_node->token->line   = 0;
+			}
+			else if ( PERIOD == curr_node->token->type )
+			{
+				fd_parse_mode = 0;
+				curr_node->token->column = 0;
+				curr_node->token->line   = 0;
 			}
 			else
 			{
-				put_line(inline);					/* write out the line			*/
-				if ( strpos(inline,".") == -1 )
-					notdone=1;
+				curr_node->token->line   = 0;
 			}
-		} 
 
-		write_log("WISP",'I',"FDFINISH","Finished FD scan, terminator line was;\n%s",inline);
-	}
-	else if (!strcmp(parms[0],"FD") && crt_fd) 					/* it is the FD for the crt		*/
-	{
-		fd_sd = 1;								/* It is an FD or SD			*/
-		crt_prec[cur_crt] = crt_count;						/* And the screen too.			*/
-
-		write_log("WISP",'I',"CRTFD","processing FD for a crt file.");
-		skip_last();								/* skip the fd definition		*/
-
-
-		if (!did_crt)
-		{
-			strcpy(t_mktemp,CRT_FILE);
-			strcpy(crt_name,mktemp(t_mktemp));				/* make a unique name			*/
-#ifdef VMS
-			strcat(crt_name,".SCR;");
-#else
-			strcat(crt_name,".scr");
-#endif
-			crt_temp_file = fopen(crt_name,"w");				/* open a scratch file			*/
-			did_crt = 1;
-		}
-		else
-		{
-			crt_temp_file = fopen(crt_name,"a");				/* open a scratch file			*/
-		}
-
-		write_line("       FD  %s.\n",crt_file[cur_crt]);			/* include FD for dummy CRT file	*/
-		write_line("       01  WISP-CRT-FILE-RECORD-%d  PIC X.\n",cur_crt);
-
-		do_crtfile();								/* process the crt file			*/
-
-		fclose(crt_temp_file);
-
-		write_log("WISP",'I',"FINISHCRT","Finished processing crt file, current line is;\n  %s",inline);
-	}
-
-	if ( !fd_sd && !has_lit )
-	{
-		editcomp();							/* Edit COMP to packdec in inline.		*/
-	}
-
-	if (!fd_sd && !has_lit && chk_binary())
-	{
-		stredt(inline," USAGE "," ");						/* Try to remove USAGE IS		*/
-		stredt(inline," IS "," ");
-		if  ((stredt(inline," BINARY."," $COMP .")) == -1) 		/* Replace the BINARY string		*/
-		{
-			if  ((stredt(inline," BINARY "," $COMP ")) == -1)
+			switch(fd_parse_mode)
 			{
-				if  ((stredt(inline," BINARY\n"," $COMP \n")) == -1)
+			case FD_BLOCK:
+				cleartoknode(curr_node);
+				break;
+
+			case FD_RECORD:
+				if (delrecon)
 				{
-					write_log("WISP",'I',"BINARYERR","Error in BINARY statement. input line is\n<%s>",inline);
+					cleartoknode(curr_node);
 				}
+				break;
+
+			case FD_LABEL:
+				cleartoknode(curr_node);
+				break;
+
+			case FD_VALUE:
+				if ( eq_token(curr_node->token, 0, "FILENAME") )
+				{
+					cleartoknode(curr_node);
+					curr_node = curr_node->next;
+					if ( eq_token(curr_node->token, KEYWORD, "IS") )
+					{
+						cleartoknode(curr_node);
+						curr_node = curr_node->next;
+					}
+					strcpy(prog_fnames[g_curr_file_num],curr_node->token->data);
+					write_log("WISP",'I',"FILENAME","VALUE OF FILENAME is %s",prog_fnames[g_curr_file_num]);
+					cleartoknode(curr_node);
+				}
+				else if ( eq_token(curr_node->token, 0, "LIBRARY") )
+				{
+					cleartoknode(curr_node);
+					curr_node = curr_node->next;
+					if ( eq_token(curr_node->token, KEYWORD, "IS") )
+					{
+						cleartoknode(curr_node);
+						curr_node = curr_node->next;
+					}
+					strcpy(prog_lnames[g_curr_file_num],curr_node->token->data);
+					write_log("WISP",'I',"LIBRARY","VALUE OF LIBRARY is %s",prog_lnames[g_curr_file_num]);
+					cleartoknode(curr_node);
+				}
+				else if ( eq_token(curr_node->token, 0, "VOLUME") )
+				{
+					cleartoknode(curr_node);
+					curr_node = curr_node->next;
+					if ( eq_token(curr_node->token, KEYWORD, "IS") )
+					{	
+						cleartoknode(curr_node);
+						curr_node = curr_node->next;
+					}
+					strcpy(prog_vnames[g_curr_file_num],curr_node->token->data);
+					write_log("WISP",'I',"VOLUME","VALUE OF VOLUME is %s",prog_vnames[g_curr_file_num]);
+					cleartoknode(curr_node);
+				}
+				else
+				{
+					cleartoknode(curr_node);
+				}
+				break;
 			}
+
+			/*
+			**	Advance to next node in the statement
+			*/
+			curr_node = curr_node->next;
 		}
 
-		if (strpos(inline," PIC") != -1)					/* It already has a PIC.		*/
+		if (!comments) tput_blank();
+
+		if (is_dbfile(the_file)) 
 		{
-			strcpy(bin_temp,bin4_type);
-			stredt(inline,"$COMP",bin_temp);				/* Just keep the COMP.			*/
-		}
-		else
-		{									/* Generate the PIC also.		*/
-			strcpy(bin_temp,bin2_type);
-			sprintf(tstr,"%s PIC S9(4)",bin_temp);
-			stredt(inline,"$COMP",tstr);
+			dbfile_write_mark(the_file);
 		}
 
-		write_log("WISP",'I',"REPLBINARY","Replaced BINARY with COMP PIC S9(4) in FILE SECTION.");
-
-		if (wsqueeze(inline,72) == -1)						/* First try to squeeze it.		*/
-		{
-			char	tmpstr[20], tmpstr2[40];
-			sprintf(tmpstr," %s ",bin_temp);
-			sprintf(tmpstr2,"\n           %s ",bin_temp);
-			stredt(inline,tmpstr,tmpstr2);					/* too long, break it			*/
-		}
+		tput_statement(12,the_statement);
+		free_statement(the_statement);
 
 	}
-
-	if ( !fd_sd && !has_lit && kl_count && ((pos = strpos(inline," REDEFINES")) != -1) )
+	else if (is_fd && crt_fd) 						/* Found a FD for the crt			*/
 	{
-		char	tmp[40];
-		char	tmp2[40];
-		char	tmp3[40];
+		char	dummy_rec[80];
+		/*
+		**	Handle CRT FILES.
+		*/
 
-		for(pos += 10;inline[pos] == ' '; pos++) {};
-		tmp[0] = inline[pos-1];
-		for(i=1;inline[pos] != ' ' && inline[pos] != '.' && inline[pos] != '\n';i++, pos++) {tmp[i] = inline[pos];};
-		tmp[i++] = inline[pos];
-		tmp[i] = '\0';
-		if (strlen(tmp) >2)
-		{
-			strcpy(tmp2, &tmp[1]);
-			tmp2[ strlen(tmp)-2] = '\0';
-			if ( key_name(tmp2,0) != -1 )
-			{
-				tmp3[0] = tmp[0];
-				strcpy(&tmp3[1],tmp2);
-				strcat(tmp3,&tmp[strlen(tmp)-1]);
-				stredt(inline,tmp,tmp3);
-			}
-		}
+		write_log("WISP",'I',"CRTFD","processing FD for a crt file %s.",the_file);
+
+		tput_fluff(file_name_node->next);
+		free_statement(file_name_node->next);				/* Free end of statement.			*/
+		file_name_node->next = maketoknode(make_token(PERIOD,"."));	/* Terminate "FD filename" with a period.	*/
+
+		if (!comments) tput_blank();
+		tput_statement(8,the_statement);				/* Write the dummy FD for the dummy CRT file	*/
+		free_statement(the_statement);					/* Free the FD statement, not needed		*/
+
+		tput_line("       01  WISP-CRT-FILE-RECORD-%d  PIC X.",cur_crt);/* Add "01 WISP-CRT-FILE-RECORD-x PIC X."	*/
+
+		next_statement = parse_crt_records();				/* process the CRT file records			*/
+
+		write_log("WISP",'I',"FINISHCRT","Finished processing crt file %s",crt_file[cur_crt]);
 	}
-
-	if (!fd_sd && 0 == strcmp(parms[0],"01") )					/* Save a list of record names.		*/
+	else
 	{
-		char	recname[40];
+		/*
+		**	Process the data description records.
+		*/
 
-		strcpy(recname,parms[1]);
-		if (strchr(recname,'.')) *(strchr(recname,'.')) = 0;			/* Null the period			*/
-		strcpy(record_list[record_cnt].name,recname);
-		record_list[record_cnt].fd = fnum;
-		record_cnt += 1;
-		if ( record_cnt >= MAX_RECORD_CNT )
-			write_log("WISP",'F',"MAXRECCNT","MAX_RECORD_CNT exceeded.\n");
-		
+		next_statement = (NODE)parse_data_description(the_statement);
 	}
 
-	if (!fd_sd && kl_count && isdigit(parms[0][0]))					/* Better see if it's a field to fix.	*/
-	{
-		if (fix_key()) return(0);						/* Try to fix a key field.		*/
-	}
-
-	if (!fd_sd)
-	{
-		if (!fdfiller) fix_filler(inline);
-		put_line(inline);							/* For now, just copy it.		*/
-	}
-
+	goto get_next_statement;
 }
 
-fix_key()
+
+#define MAX_RECORD_CNT		500							/* The max number of record names	*/
+
+static struct
+	{
+		char	name[40];
+		short	fd;
+	} record_list[MAX_RECORD_CNT];							/* List of every record name & it's fd	*/
+static int record_cnt = 0;								/* Count of records in record_list	*/
+
+add_to_record_list(recname)
+char	*recname;
 {
-	char okey[40],nkey[40],tstr[40];
-	char level[8],old_pic[40],new_pic[40],val[40],nlevel[5];
-	int indent,i,j,kidx;
-
-	strcpy(nkey,parms[1]);
-
-	kidx = key_name(nkey,0);							/* Make a new name if necessary.	*/
-	if (kidx == -1) return(0);							/* Not really a key, just finish up.	*/
-
-	put_line("      *%WISP-I-MOD Key field modified by WISP\n");
-	
-	ptype = get_param(level);							/* Start by fetching the level.		*/
-	indent = get_ppos();								/* Get the column position		*/
-	memset(tstr,' ',indent);
-	tstr[indent] = '\0';
-
-	if ( key_list[kidx].type == KL_COMP )
-	{
-		write_line("%s%s  %.33s.\n",tstr,level,nkey);				/* Now write the new definition.	*/
-		i = level[0] - '0';							/* Calc the level number		*/
-		if ( isdigit(level[1]) ) i = i*10 + (level[1] - '0'); 
-		sprintf(nlevel,"%02d",i+1);						/* New level is one greater		*/
-		memcpy(&inline[indent],nlevel,2);					/* Shove the new level back into inline	*/
-		write_line("        %.68s",&inline[6]);					/* Write out the original		*/
-		return(1);
-	}
-
-
-#define DO_PIC		0
-#define DO_LEADING	8
-#define DO_SEPARATE	16
-#define DO_VALUE	25
-
-	val[0] = '\0';
-
-	ptype = get_param(okey);							/* And the old keys name.		*/
-
-	do
-	{
-		ptype = get_param(tstr);						/* Get the next word.			*/
-/*			    012345678901234567890123456789		*/
-		i = strpos("PICTURE LEADING SEPARATE VALUE",tstr);
-		switch(i)
-		{
-			case DO_PIC:
-			{
-				ptype = get_kw(old_pic);
-				break;
-			}
-
-			case DO_LEADING:
-			case DO_SEPARATE:						/* Just lose this stuff.		*/
-			{
-				break;
-			}
-
-			case DO_VALUE:
-			{
-				ptype = get_kw(val);					/* Get the value clause.		*/
-				break;
-			}
-			default:
-			{
-				break;
-			}
-		}
-
-	} while (ptype != -1);
-
-	memset(tstr,' ',indent);
-	tstr[indent] = '\0';
-
-	if ( key_list[kidx].type == KL_LEAD )
-	{
-		i = pic_size(old_pic);
-
-		if (old_pic[0] == 'S')  sprintf(new_pic,"S9(%d)",i);			/* Does it have a sign?			*/
-		else			sprintf(new_pic,"9(%d)",i);			/* Make the new pic.			*/
-
-		j = i + 2;								/* Add 2				*/
-		j = j / 2;								/* Now divide by 2.			*/
-											/* This is the actual size.		*/
-		j = i - j;								/* The difference is...			*/
-		if (old_pic[0] == 'S') j++;						/* include the sign.			*/
-	
-		write_line("%s%s  %-33s PIC %s\n",tstr,level,nkey,new_pic);		/* Now write the new definition.	*/
-		put_line(tstr);
-		write_line("    %s.\n",packdec);
-	
-		write_line("%s%s  %-33s REDEFINES\n",tstr,level,okey);			/* Redefine it.				*/
-		write_line("%s    %-33s PIC %s\n",tstr,nkey,old_pic);
-		put_line(tstr);
-		write_line("    %s.\n",packdec);
-	
-		write_line("%s%s  FILLER                   PIC X(%d).\n",tstr,level,j);	/* Pad it.				*/
-	}
-
-
-	return(1);									/* Signal we did it.			*/
+	strcpy(record_list[record_cnt].name,recname);
+	record_list[record_cnt].fd = g_curr_file_num;
+	record_cnt += 1;
+	if ( record_cnt >= MAX_RECORD_CNT )
+		write_log("WISP",'F',"MAXRECCNT","MAX_RECORD_CNT exceeded.\n");
 }
 
 int fd_record(recname)
@@ -654,64 +517,328 @@ char	*recname;
 	return (-1);
 }
 
-editcomp()										/* Edit COMP to packdec	in inline	*/
+
+/*
+**	Routine:	parse_crt_records()
+**
+**	Function:	To ...
+**
+**	Description:	To ...
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by xxx
+**
+*/
+NODE parse_crt_records()
 {
-	if (  (strcmp("COMP",packdec) != 0) && (strpos(inline," COMP") != -1) )
+	NODE	the_statement;
+	NODE	curr_node;
+	NODE	level_node, data_name_node, occurs_node, picture_node, redefines_node, binary_node, pic_node;
+	NODE	period_node, comp_node;
+	int	i;
+	int	redefines_level;
+	int	curr_level;
+	int	first_crt_record;
+	int	first_crt_record_count;
+	int	occurs_depth;
+	int	occurs_level[10];
+	int	occurs_count[10];
+
+	if (!crt_file_ptr)
 	{
-		char	tmpstr[20];
-		short	chg;
-
-		chg = 0;
-
-		if (!chg)
-		{
-			sprintf(tmpstr," %s ",packdec);
-			if ( stredt(inline," COMP ",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s,",packdec);
-			if ( stredt(inline," COMP,",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s.",packdec);
-			if ( stredt(inline," COMP.",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s\n",packdec);
-			if ( stredt(inline," COMP\n",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s ",packdec);
-			if ( stredt(inline," COMPUTATIONAL ",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s,",packdec);
-			if ( stredt(inline," COMPUTATIONAL,",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s.",packdec);
-			if ( stredt(inline," COMPUTATIONAL.",tmpstr ) != -1) chg = 1;
-		}
-		if (!chg)
-		{
-			sprintf(tmpstr," %s\n",packdec);
-			if ( stredt(inline," COMPUTATIONAL\n",tmpstr ) != -1) chg = 1;
-		}
-
-
-		if (wsqueeze(inline,72) == -1)						/* First try to squeeze it.		*/
-		{
-			char	tmpstr2[40];
-			sprintf(tmpstr2,"\n          %s",tmpstr);
-			stredt(inline,tmpstr,tmpstr2);					/* Too long, break it.			*/
-		}
-
+		/*
+		**	CRT file FD records must be relocated into Working-Storage.
+		**	They are written now to a temp file which later will be loaded.
+		**
+		**	NOTE: 	We open output to create this file once and leave it open
+		**		so that next time thru we append to it. The close will
+		**		be done when we go to copy the file back into the cob file.
+		*/
+		crt_file_ptr = open_cob_file(crt_fname,FOR_OUTPUT,1);		/* open a scratch file				*/
 	}
 
+	/*
+	**	Switch the output stream to use the CRT temp file.
+	*/
+	override_output_stream(crt_file_ptr);
+
+	crt_prime_rec[cur_crt] = crt_record_count;				/* Save primary record index			*/
+
+	occurs_depth = 0;
+	redefines_level = 0;
+	first_crt_record = 1;
+
+	for(;;)
+	{
+		the_statement = get_statement();
+
+		level_node = data_name_node = occurs_node = picture_node = redefines_node = binary_node = NULL;
+		pic_node = period_node = comp_node = NULL;
+
+		curr_node = the_statement->next;
+
+		if ( NUMBER == curr_node->token->type )
+		{
+			level_node = curr_node;
+			sscanf(level_node->token->data,"%d",&curr_level);
+
+			curr_node = curr_node->next;
+			if ( eq_token(curr_node->token, KEYWORD, "FILLER") ||
+			     IDENTIFIER == curr_node->token->type 		)
+			{
+				data_name_node = curr_node;
+				curr_node = curr_node->next;
+			}
+		}
+		else
+		{
+			curr_level = 0;
+		}
+
+		if (1==curr_level || 0==curr_level)
+		{
+			if (!first_crt_record)
+			{
+				/*
+				**	We have finished the previous record.
+				*/
+
+				write_log("WISP",'I',"CRTSIZE","%s size is %d.", 
+					crt_record[crt_record_count],crt_record_size[crt_record_count]);
+				crt_record_count++;
+			}
+
+			if (0==curr_level)
+			{
+				/*
+				**	We are done with this CRT file FD records.
+				**	Switch the output stream back.
+				**
+				**	NOTE:	We don't close the crt_file, it is left open so it can be appended
+				**		to later.
+				*/
+
+				release_output_stream();
+
+				/*
+				**	Return with the already loaded statement.
+				*/
+				return(the_statement);
+			}
+
+			strcpy(crt_record[crt_record_count],data_name_node->token->data);
+
+			write_log("WISP",'I',"CRTRECORD","CRT record -- %s",crt_record[crt_record_count]);
+			crt_record_size[crt_record_count] = 0;
+
+			if (first_crt_record)
+			{
+				first_crt_record_count = crt_record_count;
+				first_crt_record = 0;
+			}
+			else
+			{
+				/*
+				**	This CRT file FD has multiple 01 records.  Multiple 01's under an FD 
+				**	implicitly redefine each other.  Since we are relocating these to 
+				**	working-storage we have to add explicit REDEFINES on each additional 01.
+				**
+				**	01  REC-01.
+				**	    05  xxx ...
+				**	    ....
+				**	01  REC-02 REDEFINES REC-01.
+				**	    05  xxx ...
+				**	    ....
+				**	01  REC-03 REDEFINES REC-01.
+				**	    05  xxx ...
+				**
+				*/
+				tie_next(tie_next(data_name_node,
+					maketoknode(make_token(KEYWORD,"REDEFINES"))),
+					maketoknode(make_token(IDENTIFIER,crt_record[first_crt_record_count])));
+			}
+
+			redefines_level = 0;
+			occurs_depth = 0;
+		}
+
+
+		if (redefines_level)
+		{
+			/*
+			**	Currently in a REDEFINES, check if stepped out of it.
+			*/
+			if (curr_level <= redefines_level)
+			{
+				redefines_level = 0;
+			}
+		}
+
+		while (occurs_depth)
+		{
+			/*
+			**	Currently in an OCCURS, check if stepped out of it to higher level.
+			*/
+			if (curr_level <= occurs_level[occurs_depth-1])
+			{
+				occurs_depth--;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		while (NODE_END != curr_node->type)				/* Loop until end of statement.			*/
+		{
+			if ( eq_token(curr_node->token, KEYWORD, "OCCURS") )
+			{
+				occurs_node = curr_node;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "BINARY") )
+			{
+				binary_node = curr_node;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "COMP") ||
+			          eq_token(curr_node->token, KEYWORD, "COMPUTATIONAL") )
+			{
+				comp_node = curr_node;
+				edit_token(curr_node->token,packed_decimal());	/* Edit the computational clause in place	*/
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "PIC") ||
+			          eq_token(curr_node->token, KEYWORD, "PICTURE") )
+			{
+				pic_node = curr_node;
+			}
+			else if ( PICTURE == curr_node->token->type )
+			{
+				picture_node = curr_node;
+			}
+			else if ( eq_token(curr_node->token, KEYWORD, "REDEFINES") )
+			{
+				redefines_node = curr_node;
+			}
+			else if ( PERIOD == curr_node->token->type )
+			{
+				period_node = curr_node;
+			}
+
+			curr_node = curr_node->next;
+		}
+
+		if (!redefines_level && redefines_node)
+		{
+			redefines_level = curr_level;
+		}
+
+		if (!redefines_level && occurs_node)
+		{
+			occurs_depth++;
+			occurs_level[occurs_depth-1] = curr_level;
+			sscanf(occurs_node->next->token->data,"%d",&occurs_count[occurs_depth-1]);
+		}
+
+		if (!redefines_level && (picture_node || binary_node))
+		{
+			int	dd_size;
+
+			dd_size = 0;
+
+			if (picture_node)
+			{
+				dd_size = pic_size(picture_node->token->data);
+			}
+
+			if (binary_node)
+			{
+				if (picture_node)
+				{
+					if (dd_size > 5) dd_size = 2;
+					else		 dd_size = 4;
+				}
+				else
+				{
+					dd_size = 2;
+				}
+			}
+
+			if (comp_node)
+			{
+				dd_size = (dd_size + 2) / 2;
+			}
+
+			for(i=0; i<occurs_depth; i++)
+			{
+				dd_size *= occurs_count[i];
+			}
+
+			crt_record_size[crt_record_count] += dd_size;
+		}
+
+		if (binary_node)
+		{
+			if (pic_node)
+			{
+				/*
+				**	There was a picture on this item so edit the binary but
+				**	no additional cleanup is needed.
+				*/
+				edit_token(binary_node->token, bin4_type);
+				write_log("WISP",'I',"REPLBINARY","Replaced USAGE BINARY with %s.",bin4_type);
+			}
+			else
+			{
+				/*
+				**	Found a binary with no picture clause. Add a picture clause.
+				**	NOTE: We are NOT doing multilevel binary group fixup!
+				*/
+				edit_token(binary_node->token, bin2_type);
+				write_log("WISP",'I',"REPLBINARY","Replaced BINARY with %s PIC S9(4).",bin2_type);
+
+				pic_node = maketoknode(make_token(KEYWORD,"PIC"));
+				picture_node = maketoknode(make_token(PICTURE,"S9(4)"));
+				tie_next(tie_next(binary_node,pic_node), picture_node);
+			}
+		}
+
+		/*
+		**	Write the statement to the CRT temp file.
+		*/
+
+		tput_statement(12,the_statement);
+		free_statement(the_statement);
+	}
+}
+
+NODE delete_fd(the_statement)
+NODE the_statement;
+{
+	NODE	curr_node;
+
+	for(;;)
+	{
+		free_statement(the_statement);
+		the_statement = get_statement();
+
+		if (!the_statement) return(the_statement);
+
+		curr_node = the_statement->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"FD") ||
+		    eq_token(curr_node->token,KEYWORD,"SD") ||
+		    eq_token(curr_node->token,KEYWORD,"WORKING-STORAGE") ||
+		    eq_token(curr_node->token,KEYWORD,"LINKAGE") ||
+		    eq_token(curr_node->token,KEYWORD,"PROCEDURE"))
+		{
+			return(the_statement);
+		}
+	}
 }

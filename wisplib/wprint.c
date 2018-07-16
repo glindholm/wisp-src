@@ -1,9 +1,12 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
+
 
 /*
 **	wprint.c
@@ -24,10 +27,16 @@
 #include <errno.h>
 #endif
 
+#include "idsistd.h"
 #include "que_jobs.h"
 #include "wperson.h"
 #include "werrlog.h"
 #include "wglobals.h"
+
+#ifdef unix
+static int idsi_print();
+static int lp_print();
+#endif
 
 wprint(native_fname,mode,disposition,copies,prt_class,prt_form,return_code)
 char 	*native_fname;							/* The native filepath to print.			*/
@@ -44,6 +53,7 @@ int	*return_code;							/* The return code.					*/
 	int 	qflags;
 	prt_id 	*prt_ptr;								/* Pointer to the printer list.		*/
 	int	deleteit;
+	int4	printer;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
@@ -53,16 +63,18 @@ int	*return_code;							/* The return code.					*/
 		return(0);
 	}
 
+	get_defs(DEFAULTS_PR,&printer);
+
 	deleteit = 0;
 	if ( !disposition && mode == 'S')                   deleteit = 1;		/* If Spool a disp is NULL then delete	*/
 	if (  disposition && 0==memcmp(disposition,"DX",2)) deleteit = 1;		/* Disp is DX then delete.		*/
 
 #ifdef VMS
-	prt_ptr = prt_list;								/* Get a pointer to the printer list	*/
+	prt_ptr = get_prt_list();							/* Get a pointer to the printer list	*/
 
 	do
 	{
-		if ((prt_ptr->class == prt_class) && (prt_ptr->prtnum == defaults.prt_num))
+		if ((prt_ptr->class == prt_class) && (prt_ptr->prtnum == printer))
 			break;								/* look for the printer that matches	*/
 		prt_ptr = (prt_id *) prt_ptr->next;					/* next one				*/
 	} while (prt_ptr);
@@ -89,7 +101,7 @@ int	*return_code;							/* The return code.					*/
 	else
 	{		
 		int wang_retcod;							/* Set return code from queued job:	*/
-		long rc;
+		int4 rc;
 
 		rc = *return_code;
 		wang_retcod = 56;							/* Default return code.			*/
@@ -97,7 +109,7 @@ int	*return_code;							/* The return code.					*/
 											/* Device positioning error.		*/
 		else if (rc == RMS$_WLK) wang_retcod = 8;				/* Device currently write locked when	*/
 											/* write access was attempted.		*/
-		else if (rc == RMS$_FLK) wang_retcod = 12;				/* File currently locked by another user.*/
+		else if (rc == RMS$_FLK) wang_retcod = 12;				/* File is locked by another user.	*/
 		else if (rc == RMS$_DNF || rc == RMS$_DEV) wang_retcod = 16;		/* Directory not found.			*/
 		else if (rc == RMS$_FNF) wang_retcod = 20; 				/* File not found.			*/
 		else if (rc == RMS$_PRV) wang_retcod = 28;				/* Insufficient priveledge or file prot.*/
@@ -112,49 +124,54 @@ int	*return_code;							/* The return code.					*/
 #ifdef unix
 	if (opt_idsiprint)
 	{
-		*return_code = idsi_print( native_fname, copies, prt_form, prt_class, disposition, mode);
+		*return_code = idsi_print( native_fname, copies, prt_form, prt_class, printer, disposition, mode);
 	}
 	else
 	{
-		*return_code = lp_print( native_fname, copies, prt_form, prt_class, deleteit, mode);
+		*return_code = lp_print( native_fname, copies, prt_form, prt_class, printer, deleteit, mode);
 	}
 #endif
 
 #ifdef MSDOS
-	*return_code = lp_print( native_fname, copies, prt_form, prt_class, deleteit, mode);
+	*return_code = dos_print( native_fname, copies, prt_form, prt_class, printer, deleteit, mode);
 #endif
 }
 
 #ifdef unix
-static int idsi_print( file, copies, formnum, lpclass,  disposition, mode )
+static int idsi_print( file, copies, formnum, lpclass, printer, disposition, mode )
 char	*file;
 int	copies;
 int	formnum;
 char	lpclass;
+int4	printer;
 char	*disposition;
 char	mode;
 {
-	char	l_mode, l_disp, l_form[10];
+	char	exe[80],l_form[10],l_copies[10],l_class[10],l_printer[10];
 	int	rc;
+	char	*ptr;
+	char	cmd[256];
+	char    modestr[64];
+	int del=0, re=0, hold=0;
+	
+#undef		ROUTINE
+#define		ROUTINE		46400
 
-	wpload();
+	werrlog(ERRORCODE(1),file,copies,formnum,0,0,0,0,0);
 
 	switch(mode)
 	{
 	case 'H':
-		l_mode = 'H';								/* SPOOL with HOLD			*/
-		l_disp = 'D';
+		hold=1;
+		del=1;
 		break;
 	case 'K':
 		return(0);
 		break;
 	case 'S':
-		l_mode = 'S';
-		l_disp = 'D';
+		del=1;
 		break;
 	case 'P':									/* SPOOL it.				*/
-		l_mode = 'S';
-		l_disp = 'S';
 		break;
 	default:
 		return(99);
@@ -163,26 +180,113 @@ char	mode;
 
 	if (disposition)
 	{
-		if      (0==memcmp(disposition,"DX",2)) l_disp = 'D';		/* Delete after printing.			*/
-		else if (0==memcmp(disposition,"RS",2)) l_disp = 'R';		/* Respool after printing.			*/
-		else if (0==memcmp(disposition,"DS",2)) l_disp = 'S';		/* Save after printing.				*/
+		if      (0==memcmp(disposition,"DX",2))
+		{
+			del=1;								/* Delete after printing.	*/
+		}
+		else if (0==memcmp(disposition,"RS",2)) 
+		{
+			re=1;								/* respool */
+			del=0;
+		}
+		else if (0==memcmp(disposition,"DS",2))
+		{
+			re=0;
+			del=0;
+		}
 		else return(99);
 	}
 
-	sprintf(l_form,"%03d",formnum);
+	sprintf(l_form,"-f%03d",formnum);
+	sprintf(l_copies,"-n%d",copies?copies:1);
+	if (lpclass!=' ')
+	{
+		sprintf(l_class,"-C%c",lpclass);
+	}
+	else
+	{
+		strcpy(l_class,"");
+	}
+	if (printer)
+	{
+		sprintf(l_printer,"-P%d",printer);
+	}
+	else
+	{
+		strcpy(l_printer,"");
+	}
+	werrpath();								/* Init werrlog_path			*/
 
-	ilpwisp( file, l_mode, l_disp, copies, lpclass, l_form, defaults.prt_num, &rc );
+	if (re || del || hold)
+	{
+		strcpy(modestr,"-M");
+		if (hold)
+		{
+			strcat(modestr,"hold");
+			if (re || del)
+			{
+				strcat(modestr,",");
+			}
+		}
+		if (re)
+		{
+			strcat(modestr,"re");
+		}
+		else if (del)
+		{
+			strcat(modestr,"del");
+		}
+	}
+	else
+	{
+		strcpy(modestr,"");
+	}
 
+	if (ptr = getenv("UNIQUE_PRINT"))
+	{
+		strcpy(exe,ptr);
+	}
+	else if (opt_pqunique)
+	{
+		strcpy(exe,"unique");
+	}
+	else
+	{
+		strcpy(exe,"ilp");
+	}
+
+	sprintf( cmd, "%s %s %s %s %s %s %s >>%s 2>&1", 
+		exe,
+		modestr,
+		l_class,
+		l_form,
+		l_copies,
+		l_printer,
+		file, 
+		werrlog_path );
+
+	rc = wsystem( cmd );
+	if ( rc != 0 )
+	{
+		werrlog(ERRORCODE(2),file,rc,errno,0,0,0,0,0); 
+		werrlog(102,cmd,0,0,0,0,0,0,0);
+		return( 40 );
+	}
 	return(rc);
 }
 
-static int lp_print( file, copies, formnum, lpclass,  delete_after, mode )
+static int lp_print( file, copies, formnum, lpclass, printer, delete_after, mode)
 char	*file;
 int	copies;
 int	formnum;
 char	lpclass;
+int4	printer;
 int	delete_after;
 char	mode;
+
+
+
+
 {
 #undef		ROUTINE
 #define		ROUTINE		46500
@@ -207,18 +311,15 @@ char	mode;
 		break;
 	}
 
-	if ( access( file, 00 ) )							/* Does file exist?			*/
+	if ( !fexists(file) )								/* Does file exist?			*/
 	{
 		return( 20 );
 	}
 	
-	if ( eaccess( file, 04 ) )							/* Can we read the file?		*/
+	if ( !fcanread(file) )								/* Can we read the file?		*/
 	{
 		return( 28 );
 	}
-
-
-	wpload();
 
 	rc  = 0;
 	zerofile = 0;
@@ -253,7 +354,7 @@ char	mode;
 				suppress, 
 				wforms(formnum), 
 				wlpclass(lpclass), 
-				getprmap(defaults.prt_num),
+				getprmap(printer),
 				xcopies, 
 				file, 
 				werrlog_path );
@@ -283,96 +384,3 @@ char	mode;
 }
 #endif	/* unix */
 
-#ifdef MSDOS
-
-static int lp_print( file, copies, formnum, lpclass,  delete_after, mode )
-char	*file;
-int	copies;
-int	formnum;
-char	lpclass;
-int	delete_after;
-char	mode;
-{
-#undef		ROUTINE
-#define		ROUTINE		46500
-	static	int	first_print=1;
-	static	char	prt_cmd[16];
-	char	*prt_env;
-	char	cmd[256];
-	int	rc, size, zerofile;
-	char	xcopies[20];
-	char	suppress[10];
-                                                
-	werrlog(ERRORCODE(1),file,copies,formnum,delete_after,0,0,0,0);
-
-	switch(mode)
-	{
-	case 'H':
-	case 'K':
-		return(0);								/* Don't print if HOLD mode.		*/
-		break;
-	case 'S':
-	case 'P':									/* SPOOL it.				*/
-		break;
-	default:
-		return(99);
-		break;
-	}
-
-	if ( access( file, 00 ) )							/* Does file exist?			*/
-	{
-		return( 20 );
-	}
-	
-	if ( eaccess( file, 04 ) )							/* Can we read the file?		*/
-	{
-		return( 28 );
-	}
-
-	wpload();
-
-	rc  = 0;
-	zerofile = 0;
-
-	size = filesize(file);
-	if ( size == 0 )
-	{
-		werrlog(ERRORCODE(5),file,0,0,0,0,0,0,0);
-		zerofile = 1;
-	}                     
-
-	if ( ! zerofile  && copies > 0  )
-	{
-		werrpath();								/* Init werrlog_path			*/
-
-		if ( first_print )							/* If first time to print,		*/
-		{
-			first_print = 0;						/* No longer first time.		*/
-			if( prt_env = getenv( "PRINT" ) )				/* Is PRINT environment variable set?	*/
-			{
-				strcpy( prt_cmd, prt_env );				/* Use its value as the print command.	*/
-			}
-			else								/* If "PRINT" is not set,		*/
-			{
-				strcpy( prt_cmd, "PRINT" );				/* Use "PRINT" as the default command.	*/
-			}
-		}
-		sprintf( cmd, "%s %s", prt_cmd, file );					/* Build print command with file name.	*/
-
-		while( copies-- )
-		{
-			rc = system( cmd );
-			if ( rc != 0 )
-			{
-				werrlog(ERRORCODE(2),file,rc,errno,0,0,0,0,0); 
-				werrlog(102,cmd,0,0,0,0,0,0,0);
-				return( 40 );
-			}
-		}
-	}
-
-	if ( zerofile ) rc = 24;
-
-	return( rc );
-}
-#endif	/* MSDOS */

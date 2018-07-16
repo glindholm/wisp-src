@@ -4,7 +4,7 @@ page 60,132
 ;* WISPRT - Define user supplied call-by-name routines                  *
 ;* Copyright (C) Micro Focus 1989                                       *
 ;*                                                                      *
-;* Copyright (C) International Digital Scientific, Inc. 1991		*
+;* Copyright (C) International Digital Scientific, Inc. 1991            *
 ;*                                                                      *
 ;************************************************************************
 
@@ -27,19 +27,19 @@ page 60,132
 ;*                                                                      *
 ;************************************************************************
 ;*                                                                      *
-;	ADDCALL CALCSUM		; example - define assembler subroutine	*
-;	ADDCFUN CALCMEAN	; example - define MS C6.0 function	*
-;	ADDAPI  DOSGETVERSION	; example - define OS/2 API routine	*
+;       ADDCALL CALCSUM         ; example - define assembler subroutine *
+;       ADDCFUN CALCMEAN        ; example - define MS C6.0 function     *
+;       ADDAPI  DOSGETVERSION   ; example - define OS/2 API routine     *
 ;*                                                                      *
 ;************************************************************************
 
 ;
-;	WISP functions:
+;       WISP functions:
 ;
-;	ADDCFUN ACUGARGS	; Only needed for ACU-COBOL version.
-;	ADDCFUN ACUNARGS	; Only needed for ACU-COBOL version.
-;	ADDCFUN ACUPARGS	; Only needed for ACU-COBOL version.
-;	ADDCFUN SYSTEM		; Only needed for ACU-COBOL version.
+;       ADDCFUN ACUGARGS        ; Only needed for ACU-COBOL version.
+;       ADDCFUN ACUNARGS        ; Only needed for ACU-COBOL version.
+;       ADDCFUN ACUPARGS        ; Only needed for ACU-COBOL version.
+;       ADDCFUN SYSTEM          ; Only needed for ACU-COBOL version.
 	ADDCFUN BELL 
 	ADDCFUN BITPACK 
 	ADDCFUN BITUNPK 
@@ -60,27 +60,27 @@ page 60,132
 	ADDCFUN LINKMF
 	ADDCFUN LINKPROC 
 	ADDCFUN LOGOFF
-;	ADDCFUN MESSAGE 
+;       ADDCFUN MESSAGE 
 	ADDCFUN NOHELP 
 	ADDCFUN ONHELP 
 	ADDCFUN PRINT 
 	ADDCFUN RETCODE 
 	ADDCFUN READFDR 
-;	ADDCFUN READVTOC 
+	ADDCFUN READVTOC 
 	ADDCFUN SCRATCH 
 	ADDCFUN SCREEN 
 	ADDCFUN SEARCH 
 	ADDCFUN SET 
-;	ADDCFUN SETSUBMIT
+;       ADDCFUN SETSUBMIT
 	ADDCFUN SETTRIGPROG 
 	ADDCFUN SORT 
 	ADDCFUN SORTCALL 
 	ADDCFUN SORTINFO 
 	ADDCFUN SORTLINK 
 	ADDCFUN STRING 
-;	ADDCFUN SUBMIT
+;       ADDCFUN SUBMIT
 	ADDCFUN UPDATFDR 
-;	ADDCFUN UPPER 
+;       ADDCFUN UPPER 
 	ADDCFUN WACCEPT 
 	ADDCFUN WCHAIN 
 	ADDCFUN WDISPLAY 
@@ -104,7 +104,7 @@ page 60,132
 	ADDCFUN wfname 
 	ADDCFUN wfopen 
 	ADDCFUN wfopen2 
-	ADDCFUN wfopen3		; New in version 3.0
+	ADDCFUN wfopen3         ; New in version 3.0
 	ADDCFUN wfclose 
 	ADDCFUN wdinit 
 	ADDCFUN wdfinish 
@@ -130,73 +130,73 @@ page 60,132
 	ADDCFUN ws132 
 
 ;
-;	NETRON CAP routines:	; NOT INSTALLED.
+;       NETRON CAP routines:    ; NOT INSTALLED.
 ;
-;	ADDCFUN WSCLOSE
-;	ADDCFUN WSFNM
-;	ADDCFUN WSFNS
+;       ADDCFUN WSCLOSE
+;       ADDCFUN WSFNM
+;       ADDCFUN WSFNS
 
 ;
-;	WISPTEST routines:
+;       WISPTEST routines:
 ;
-	ADDCFUN MESSUP
-	ADDCFUN QASCROLL
-	ADDCFUN QATSTLST
-	ADDCFUN QAGP255
+;       ADDCFUN MESSUP
+;       ADDCFUN QASCROLL
+;       ADDCFUN QATSTLST
+;       ADDCFUN QAGP255
 
 ;
-;	ACP routines:		; NOT INSTALLED.
+;       ACP routines:           ; NOT INSTALLED.
 ;
-;	ADDCFUN OPENACP
-;	ADDCFUN CLOSEACP
-;	ADDCFUN READACP
-;	ADDCFUN WRITEACP
-;	ADDCFUN BREAKACP
-;	ADDCFUN CHECKACP
-;	ADDCFUN GETACP
-;	ADDCFUN SETACP
+;       ADDCFUN OPENACP
+;       ADDCFUN CLOSEACP
+;       ADDCFUN READACP
+;       ADDCFUN WRITEACP
+;       ADDCFUN BREAKACP
+;       ADDCFUN CHECKACP
+;       ADDCFUN GETACP
+;       ADDCFUN SETACP
 
 ;
-;	EDE routines:		; NOT INSTALLED.
+;       EDE routines:           ; NOT INSTALLED.
 ;
-;	ADDCFUN ws_bar_menu
-;	ADDCFUN EDLOAD
-;	ADDCFUN EDEXIT
-;	ADDCFUN EDCLRSCR
-;	ADDCFUN EDDRKSCR
-;	ADDCFUN EDLTESCR
-;	ADDCFUN EDWIDSCR
-;	ADDCFUN EDNARSCR
-;	ADDCFUN TRACEGO
-;	ADDCFUN TRACEEND
-;	ADDCFUN RETRACE
-;	ADDCFUN PFKEYSON
-;	ADDCFUN NOPFKEYS
-;	ADDCFUN MENUSAVE
-;	ADDCFUN MENUREST
-;	ADDCFUN MENULOAD
-;	ADDCFUN MENUITEM
-;	ADDCFUN MENUGO
-;	ADDCFUN MENUCONT
-;	ADDCFUN DYLINK
-;	ADDCFUN DYUNLINK
-;	ADDCFUN MENUKILL
-;	ADDCFUN MENUEXIT
-;	ADDCFUN MENUMODE
-;	ADDCFUN VIDMOVE
-;	ADDCFUN VIDMODE
-;	ADDCFUN VIDLINE
-;	ADDCFUN VIDTEXT
-;	ADDCFUN PUSHSCRN
-;	ADDCFUN PUSHAREA
-;	ADDCFUN POPAREA
-;	ADDCFUN MENUINFO
-;	ADDCFUN gcalc
-;	ADDCFUN gcalend
-;	ADDCFUN gclock
-;	ADDCFUN gnotepad
-;	ADDCFUN gpuzzle
+;       ADDCFUN ws_bar_menu
+;       ADDCFUN EDLOAD
+;       ADDCFUN EDEXIT
+;       ADDCFUN EDCLRSCR
+;       ADDCFUN EDDRKSCR
+;       ADDCFUN EDLTESCR
+;       ADDCFUN EDWIDSCR
+;       ADDCFUN EDNARSCR
+;       ADDCFUN TRACEGO
+;       ADDCFUN TRACEEND
+;       ADDCFUN RETRACE
+;       ADDCFUN PFKEYSON
+;       ADDCFUN NOPFKEYS
+;       ADDCFUN MENUSAVE
+;       ADDCFUN MENUREST
+;       ADDCFUN MENULOAD
+;       ADDCFUN MENUITEM
+;       ADDCFUN MENUGO
+;       ADDCFUN MENUCONT
+;       ADDCFUN DYLINK
+;       ADDCFUN DYUNLINK
+;       ADDCFUN MENUKILL
+;       ADDCFUN MENUEXIT
+;       ADDCFUN MENUMODE
+;       ADDCFUN VIDMOVE
+;       ADDCFUN VIDMODE
+;       ADDCFUN VIDLINE
+;       ADDCFUN VIDTEXT
+;       ADDCFUN PUSHSCRN
+;       ADDCFUN PUSHAREA
+;       ADDCFUN POPAREA
+;       ADDCFUN MENUINFO
+;       ADDCFUN gcalc
+;       ADDCFUN gcalend
+;       ADDCFUN gclock
+;       ADDCFUN gnotepad
+;       ADDCFUN gpuzzle
 
 
-	end			; end of source module WISPRT
+	end                     ; end of source module WISPRT
 

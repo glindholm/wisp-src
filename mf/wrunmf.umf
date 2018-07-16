@@ -42,9 +42,17 @@ CFLAGS= -O
 #	wrunmf.c	- WISP routine list.
 SUBS=wrunmf.o wispmf.o
 
+LIBCURSES= -lcurses
+
+# Uncomment for Ultrix
+#LIBCURSES= -lcursesX
+
+# Uncomment for SunOS
+#LIBCURSES= -L/usr/5lib -lcurses
+
 LIBPATH=/usr/lib
-LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideo.a
-LIBS=-lwisp -lilp -lvideo -lm
+LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libvideo.a
+LIBS=-lwisp -lvideo -lm $(LIBCURSES)
 
 all:	wrunmf
 

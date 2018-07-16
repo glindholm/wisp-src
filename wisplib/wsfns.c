@@ -46,6 +46,7 @@
 		*                                                                    			*
 		****************************************************************************************/
 
+#include <stdio.h>									/* Allow standard I/O.			*/
 #include <varargs.h>									/* Allow variable number of arguments	*/
 
 #ifndef unix	/* VMS or MSDOS */
@@ -56,11 +57,14 @@
 #endif
 
 #include <v/video.h>
+#include "idsistd.h"
 #include "vwang.h"
 #include "werrlog.h"
 #include "wglobals.h"
 
 char	*getenv();
+static int save_screen();
+static int get_screen();
 
 char NC_pfkey[3], NC_order_area[4];							/* Define global so accessible by all	*/
 int netroncap = 0;									/* Flag so vwang knows the origin.	*/

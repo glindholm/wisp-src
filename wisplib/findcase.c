@@ -22,6 +22,8 @@
 					volume/LIBRARY/file[.ext]		uppercase lib and lowercase file
 */
 
+#include "idsistd.h"
+
 #ifdef unix
 
 char *strrchr();
@@ -90,7 +92,7 @@ char	*o_name, *c_name;
 		}
 
 		sprintf(buff,"%s%s%s%s",volume,library,file,ext);
-		if ( 0 == access(buff,0) )
+		if ( fexists(buff) )
 		{
 			strcpy(c_name,buff);
 			return(0);  /* FOUND */
@@ -108,7 +110,7 @@ char	*o_name, *c_name;
 int findcase(o_name, c_name)
 char	*o_name, *c_name;
 {
-	if ( 0 == access(o_name,0) )
+	if ( fexists(o_name) )
 	{
 		strcpy(c_name,o_name);
 		return(0);  /* FOUND */

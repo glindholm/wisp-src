@@ -42,8 +42,11 @@
 		CRID	 Control Report Inquiry Datentry (by default they are not included) 
 */
 
+#ifndef MSDOS
 #define ACP
 #define NETCAP
+#endif /* MSDOS */
+
 #define EDE
 
 
@@ -51,6 +54,9 @@ char	WISPFILEXT[39];			/* Define the file extension variable.	*/
 char	WISPRETURNCODE[3];		/* Define the return code field.	*/
 
 
+#ifdef OLD
+*** I don't think this is needed any more. GSL 11/12/92 ***
+#ifndef MOTOROLA
 #ifndef DGUX
 #ifdef m88k
 int __stdinb;
@@ -58,7 +64,9 @@ int __stderrb;
 int __stdoutb;
 #endif /* m88k */
 #endif /* DGUX */
-   
+#endif /* MOTOROLA */
+#endif /* OLD */
+
 extern int va_set();
 
 int 	wfrontend();
@@ -80,9 +88,11 @@ int	call_system();
 struct	PROCTABLE LIBTABLE[] = {
 	{ "SYSTEM", 	call_system },
 #ifdef WISP
+#ifdef unix
 	{ "ACUGARGS", 	wfrontend },
 	{ "ACUNARGS", 	wfrontend },
 	{ "ACUPARGS", 	wfrontend },
+#endif /* unix */
 	{ "BELL", 	wfrontend },
 	{ "BITPACK",	wfrontend },
 	{ "BITUNPK",	wfrontend },
@@ -97,6 +107,7 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "EXTRACT",	wfrontend },
 	{ "FILECOPY",	wfrontend },
 	{ "FIND",	wfrontend },
+	{ "FXZONE",	wfrontend },
 	{ "GETPARM",	wfrontend },
 	{ "GETPARMBUILD",wfrontend },
 	{ "GETWFILEXT", wfrontend },
@@ -124,6 +135,7 @@ struct	PROCTABLE LIBTABLE[] = {
 	{ "SCREEN",	wfrontend },
 	{ "SEARCH",	wfrontend },
 	{ "SET",	wfrontend },
+	{ "SET8BIT",	wfrontend },
 	{ "SETFILE",	wfrontend },
 	{ "SETPROGID", wfrontend },
 	{ "SETRETCODE", wfrontend },
@@ -206,6 +218,7 @@ struct	PROCTABLE LIBTABLE[] = {
 ** The following are EDE routines
 */
 #ifdef EDE
+	{ "A_WSLINK",	wfrontend },
 	{ "EDLOAD",	wfrontend },
 	{ "EDEXIT",	wfrontend },
 	{ "EDCLRSCR",	wfrontend },
@@ -260,10 +273,12 @@ struct	PROCTABLE LIBTABLE[] = {
 	};
 
 #ifdef WISP
+ extern SYSTEM();
+#ifdef unix
  extern ACUGARGS();
  extern ACUNARGS();
  extern ACUPARGS();
- extern SYSTEM();
+#endif /* unix */
  extern BELL();
  extern BITPACK();
  extern BITUNPK();
@@ -275,12 +290,13 @@ struct	PROCTABLE LIBTABLE[] = {
  extern EXTRACT();
  extern FILECOPY();
  extern FIND();
+ extern FXZONE();
  extern GETPARM();
  extern getparmbuild();
  extern PUTPARM();
  extern HEXPACK();
  extern HEXUNPK();
- extern LINK();
+ extern LINK2();
  extern LINKPROC();
  extern LOGOFF();
  extern MESSAGE();
@@ -294,6 +310,7 @@ struct	PROCTABLE LIBTABLE[] = {
  extern SCREEN();
  extern SEARCH();
  extern SET();
+ extern SET8BIT();
  extern SETFILE();
  extern SETSUBMIT();
  extern SETTRIGPROG();
@@ -392,6 +409,7 @@ extern SETACP();
 extern ws_bar_menu();
 extern gen_ncpfkey();
 extern nc_pop_menu();
+extern A_WSLINK();
 extern EDLOAD();
 extern EDEXIT();
 extern EDCLRSCR();
@@ -437,9 +455,11 @@ extern GENVEC();
 	The second is case sensitive.
 */
 struct	PROCTABLE WISPTABLE[] = {
+#ifdef unix
 	{ "ACUGARGS",	ACUGARGS },
 	{ "ACUNARGS",	ACUNARGS },
 	{ "ACUPARGS",	ACUPARGS },
+#endif /* unix */
 	{ "BELL",	BELL },
 	{ "BITPACK",	BITPACK },
 	{ "BITUNPK",	BITUNPK },
@@ -454,11 +474,12 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "EXTRACT",	EXTRACT },	
 	{ "FILECOPY",	FILECOPY },
 	{ "FIND",	FIND },
+	{ "FXZONE",	FXZONE },
 	{ "GETPARM",	GETPARM },
 	{ "GETPARMBUILD",getparmbuild },
 	{ "HEXPACK",	HEXPACK },
 	{ "HEXUNPK",	HEXUNPK },
-	{ "LINK",	LINK },
+	{ "LINK",	LINK2 },	/* NOTE: Translate LINK ==> LINK2 */
 	{ "LINKPROC",	LINKPROC },
 	{ "LOGOFF",	LOGOFF },
 	{ "MENU", 	menu },
@@ -475,6 +496,7 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "SCREEN",	SCREEN },
 	{ "SEARCH",	SEARCH },
 	{ "SET",	SET },
+	{ "SET8BIT",	SET8BIT },
 	{ "SETFILE",	SETFILE},
 	{ "SETSUBMIT",	SETSUBMIT },
 	{ "SETTRIGPROG",SETTRIGPROG },
@@ -566,6 +588,7 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "WS_BAR_MENU",ws_bar_menu},
 	{ "GEN_NCPFKEY",gen_ncpfkey},
 	{ "NC_POP_MENU",nc_pop_menu},
+	{ "A_WSLINK",	A_WSLINK },
 	{ "EDLOAD",	EDLOAD 	},
 	{ "EDEXIT",	EDEXIT 	},
 	{ "EDCLRSCR",	EDCLRSCR },
@@ -937,6 +960,68 @@ int		initial;
 	return 0;
 }
 
+/*
+**	Routine:	call_acucobol()
+**
+**	Function:	To "call" an Acucobol COBOL routine from 'C'.
+**
+**	Description:	This routine builds the correct calling sequence to call
+**			an Acucobol COBOL routine from 'C'.
+**			Currently this is used for the MSDOS implementation of LINK.
+**
+**	Arguments:
+**	filespec	The full file spec of the COBOL routine to call.
+**	parmcnt		The number of parameters to pass.
+**	parms		Array of pointers to the parms.
+**	lens		Array of lengths of the parms
+**	rc		The return code from the "cobol" routine (A_call_err). 
+**
+**	Globals:
+**	A_call_err	The error code from Acucobol
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	12/22/92	Written by GSL
+**
+*/
+call_acucobol( filespec, parmcnt, parms, lens, rc )
+char 	*filespec;
+long 	parmcnt;
+char 	*parms[];
+long 	lens[];
+int 	*rc;
+{
+#define MAX_CALL_ARGS	32
+extern	short A_call_err;
+	Argument args[MAX_CALL_ARGS];
+	int	argcnt, i;
+
+	*rc = 0;
+	if (parmcnt > MAX_CALL_ARGS)
+	{
+		*rc = -1;
+		return;
+	}
+
+	argcnt = (int)parmcnt;
+
+	for(i=0; i<argcnt; i++)
+	{
+		args[i].a_address = parms[i];
+		args[i].a_length  = (int)lens[i];
+	}
+
+	if (cobol(filespec, argcnt, args))
+	{
+		*rc = (int)A_call_err;
+	}
+
+	return;
+}
+
 static int wisp_wexit = 0;
 
 shutexitcobol(exit_code)					/* Called by wisp from wexit()  */
@@ -956,13 +1041,41 @@ int	error_halt;
 {
 	if (error_halt && !wisp_wexit)
 	{
-		werrlog(102,"Terminating on an ACUCOBOL error",0,0,0,0,0,0,0);
+		werrlog(102,"Terminating on an error detected by ACUCOBOL.",0,0,0,0,0,0,0);
+		werrlog(102,"Use the -e runtime option to capture the error message.",0,0,0,0,0,0,0);
 		wexit(error_halt);
 	}
 	return;
 }
 
 #define Shutdown OLD_Shutdown
+
+void 
+exam_args( argc, argv )
+int argc;
+char *argv[];
+{
+	int idx;
+	int gotdashd;
+	
+	for (idx=gotdashd=0; idx<argc; ++idx)
+	{
+		if (!strcmp(argv[idx],"-d"))
+		{
+			gotdashd = 1;
+		}
+	}
+	if (gotdashd)
+	{
+		set_debug_true();
+	}
+	else
+	{
+		set_debug_false();
+	}
+}
+
+#define exam_args OLD_exam_args
 
 /*
 ** Include CRID interface routines

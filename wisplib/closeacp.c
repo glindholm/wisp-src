@@ -9,6 +9,7 @@
 *			output:	ret_code	WANG 4-byte binary format return code (wswap an int)				*
 *																*
 ********************************************************************************************************************************/
+#include "idsistd.h"
 #include "acp.h"							/* Header file containing global variable definitions.	*/
 #include "werrlog.h"
 
@@ -19,15 +20,15 @@ extern struct termio otermacp;
 
 CLOSEACP(rel_line,ret_code)
 
-long	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
-long	*ret_code;							/* WANG ACP return code.				*/
+int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
+int4	*ret_code;							/* WANG ACP return code.				*/
 
 {
 #define		ROUTINE		9000
 
-	long	l_rel_line;						/* Local copy of rel_line to be wswapped.		*/
-	int	i,j,k;							/* Array indeces.					*/
-	long	status;							/* Return status from SYS$ASSIGN			*/
+	int4	l_rel_line;						/* Local copy of rel_line to be wswapped.		*/
+	int4	i,j,k;							/* Array indeces.					*/
+	int4	status;							/* Return status from SYS$ASSIGN			*/
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 

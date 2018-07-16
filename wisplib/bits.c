@@ -14,19 +14,20 @@
 #include <memory.h>
 #endif
 
+#include "idsistd.h"
 #include "werrlog.h"
                  
 BITPACK(in_ptr,out_ptr,in_len)
 unsigned char *in_ptr, *out_ptr;				                        /* Pointers to parameters.		*/
-long *in_len;										/* Input length.			*/
+int4 *in_len;										/* Input length.			*/
 
 {      
 #define		ROUTINE		3000
 
 	unsigned char	*l_in_ptr, *l_out_ptr;						/* Local copies of the arg. pointer.	*/
-	long	llen;
-	int	ilen;
-	int	x;									/* Working variables.			*/
+	int4	llen;
+	int4	ilen;
+	int4	x;									/* Working variables.			*/
 	unsigned char	test_bit = 0x80;						/* Used in setting the bytes.		*/
  
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Log the entry.			*/
@@ -37,7 +38,7 @@ long *in_len;										/* Input length.			*/
 	llen = *in_len;									/* Get passed value.			*/
 	wswap(&llen);									/* Swap the order of the words.		*/
 	ilen = llen / 8; 								/* ilen = number of bytes to set.	*/
-	memset(out_ptr,0,ilen);								/* Initialize the output bytes.		*/
+	memset(out_ptr,0,(size_t)ilen);							/* Initialize the output bytes.		*/
 
 	while (ilen)									/* Do the computed number of bytes.	*/
 	{      
@@ -58,16 +59,16 @@ long *in_len;										/* Input length.			*/
 
 BITUNPK(in_ptr,out_ptr,in_len)
 unsigned char *in_ptr, *out_ptr;							/* Pointers to parameters.		*/
-long *in_len;										/* Input length.			*/
+int4 *in_len;										/* Input length.			*/
 
 {      
 #undef		ROUTINE
 #define		ROUTINE		3500
 
 	unsigned char	*l_in_ptr, *l_out_ptr;						/* Local copies of the passed args.	*/
-	long	llen;
-	int	ilen;
-	int	x;									/* Working variables. 			*/
+	int4	llen;
+	int4	ilen;
+	int4	x;									/* Working variables. 			*/
 	unsigned char	test_bit = 0x80;						/* Byte used to test the bits.		*/
  
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
@@ -78,7 +79,7 @@ long *in_len;										/* Input length.			*/
 	llen = *in_len;									/* How many bytes to be proccessed ?	*/
 	wswap(&llen);									/* Swap the order of the words.		*/
 	ilen = llen;
-      	memset(l_out_ptr,' ',ilen*8);							/* Initialize the output array.		*/
+      	memset(l_out_ptr,' ',(size_t)ilen*8);						/* Initialize the output array.		*/
 
 	while (ilen)									/* i = number of bytes to proccess.	*/
 	{           

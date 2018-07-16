@@ -1,3 +1,4 @@
+
 %{
 
 static char rcsid[]="$Id:$";
@@ -10,6 +11,9 @@ int yydummy;
 int yyfdlineno;
 char initbuf[INITSIZE];
 char *yystrdup(),*yystrduplen();
+extern char yylbuf[];
+extern int yylpos;
+extern int yynewln;
 %}
 
 %union {
@@ -35,14 +39,57 @@ record: '\n'
 	extern char *fileread;
 	
 	yythe_form.time = filetime(fileread);
+#ifdef DEBUGCODE
+	D(DBGRELOADFORM)
+	{
+		sprintf(errmsg,"   NEW ==> %d  Form[%s]  stock[%s]  init[%s]  filt[%s]\n",
+			yythe_form.time,
+			yythe_form.form_name,
+			yythe_form.stock,
+			yythe_form.initdata,
+			yythe_form.filterstr);
+		logerr(errmsg,0);
+		if (yythe_form.p_init)
+		{
+			sprintf(errmsg,"               1st init[%s/%s]\n",yythe_form.p_init->model,yythe_form.p_init->initdata);
+			logerr(errmsg,0);
+		}
+	}
+#endif
 	yythe_formp = findfitem(yythe_form.form_name);
+#ifdef DEBUGCODE
+	D(DBGRELOADFORM)
+	{
+		if (yythe_formp)
+		{
+			sprintf(errmsg,"   OLD ==> %d  Form[%s]  stock[%s]  init[%s]  filt[%s]\n",
+				yythe_formp->time,
+				yythe_formp->form_name,
+				yythe_formp->stock,
+				yythe_formp->initdata,
+				yythe_formp->filterstr);
+			logerr(errmsg,0);
+			if (yythe_formp->p_init)
+			{
+				sprintf(errmsg,"               1st init[%s/%s]\n",yythe_formp->p_init->model,yythe_formp->p_init->initdata);
+				logerr(errmsg,0);
+			}
+		}
+	}
+#endif
 	if (!yythe_formp) 
 	{
 		FITEM *newitem;
 		char *gmem();
-		newitem=(FITEM*)gmem(sizeof(FITEM));
+		newitem=(FITEM*)gmem(1,sizeof(FITEM));
 		memcpy(newitem,&yythe_form,sizeof(FITEM));
 		addfitem(newitem);
+#ifdef DEBUGCODE
+		D(DBGRELOADFORM)
+		{
+			logerr("    Form added\n",0);
+		}
+#endif
 	}
 	else updatefitem(yythe_formp,&yythe_form);
 	memset(&yythe_form,0,sizeof(yythe_form));
@@ -133,13 +180,10 @@ char *yystrduplen(p,l)
 char *p;
 int l;
 {
-#ifdef __STDC__
 	char *tmp;
-	void *malloc();
-#else
-	char *tmp,*malloc();
-#endif
-	tmp = (char*)malloc(l+1);
+	char *gmem();
+	
+	tmp = (char*)gmem(l+1,1);
 	memcpy(tmp,p,l);
 	*(tmp+l)=(char)0;
 	return tmp;
@@ -170,6 +214,8 @@ char *string;
 	return 0;
 }
 
+static int yyfirst=TRUE;
+
 loadformdef()
 {
 	extern int yyupchar;
@@ -179,14 +225,37 @@ loadformdef()
 	memset(&yythe_form,0,sizeof(yythe_form));
 	yyupchar = -1;
 	yyparse();
+	yyfirst=FALSE;
 }
 static int yyerror()
 {
 	char yyerrbuf[200];
 	extern char *fileread;
+	char *repchar();
+	extern int fileerrs;
 	
-	sprintf(yyerrbuf,"syntax error on %s line %d\n",fileread,yyfdlineno);
+	fileerrs |= FORMDEFERR;
+	
+	sprintf(yyerrbuf,"Syntax error on %s line %d:\n",fileread,yyfdlineno+1);
 	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
+	yylbuf[yylpos]='\0';
+	sprintf(yyerrbuf,"%s\n",yylbuf);
+	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
+	sprintf(yyerrbuf,"%s^ error near this position\n",repchar(yylpos,(int)' '));
+
+	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
 }
 int yywrap()
 { 

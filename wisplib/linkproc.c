@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -47,7 +47,6 @@
 */
 
 #ifdef unix
-#include <a.out.h>
 #include <errno.h>
 #include <ctype.h>
 #include <signal.h>
@@ -59,16 +58,22 @@
 #include <climsgdef.h>
 #endif
 
+#ifdef MSDOS
+#include <process.h>
+#endif
+
 #include <stdio.h>
 #include <v/video.h>
 #include <varargs.h>									/* Function uses variable params.	*/
 
+#include "idsistd.h"
 #include "wdefines.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wperson.h"
 #include "wfiles.h"
 #include "wcommon.h"
+#include "runtype.h"
 
 #define WNOTMTD 	 4
 #define WVOLBUSY	 8
@@ -85,7 +90,13 @@
 
 extern	int	rts_first ;								/* First time flag for screen init.	*/
 
-LINKPROC(va_alist)									/* There are a variable number of args.	*/
+#ifdef unix
+static int fixerr();
+#endif
+
+char	*shell_var();
+
+void LINKPROC(va_alist)									/* There are a variable number of args.	*/
 va_dcl
 {
 	va_list		the_args;
@@ -93,23 +104,21 @@ va_dcl
 	short		parmcnt;
 	short		parmlen[MAX_LINKPROC_PARMS];
 	char		parmtext[MAX_LINKPROC_PARMS][256];
-	long		*retcode, *compcode;
-	char 		testname[NAME_LENGTH+1];
-	char 		pname[NAME_LENGTH+1];
-	long 		mode;
-	int 		i;
+	int4		*retcode, *compcode;
+	char 		filespec[NAME_LENGTH+1];
+	int4 		mode;
+	int 		i, idx;
 	char 		*p;
 	int  		not_found,cpos;
 	int 		pid,ftyp;
 	char 		*sh_parm[17], *wfname();
 	int		arg_count;
-	long		l_retcode, l_compcode;
+	int4		l_retcode, l_compcode;
 	char		l_lib[9], l_vol[7];
-
-#ifdef VMS
-	char		command[516];							/* A buffer for the vms command.	*/
-	long		status;
-#endif
+	int		savelevel;
+	char		command[516];
+	uint4		status;
+	uint4		vms_status;
 
 	l_retcode = 0;
 	l_compcode = 0;
@@ -150,18 +159,23 @@ va_dcl
 	if (parmcnt > MAX_LINKPROC_PARMS || parmcnt < 0)
 	{
 		werrlog(ERRORCODE(2),parmcnt,0,0,0,0,0,0,0);
-		return(0);
+		return;
 	}
 
 	mode = IS_SUBMIT;
-	p = wfname(&mode,l_vol,l_lib,progname,testname);				/* expand the name 			*/
+	p = wfname(&mode,l_vol,l_lib,progname,filespec);				/* expand the name 			*/
 	*p = (char)0;
 
 #ifdef VMS
-	memset(command,' ',516);							/* Init the command string.		*/
+	memset(command,' ',sizeof(command));						/* Init the command string.		*/
 	command[0] = '@';								/* Start command with an '@' symbol.	*/
-	strcpy(&command[1],testname);							/* Now add the name of the procedure.	*/
-	cpos = strlen(testname) + 1;							/* Find out the end of the string.	*/
+	strcpy(&command[1],filespec);							/* Now add the name of the procedure.	*/
+	cpos = strlen(filespec) + 1;							/* Find out the end of the string.	*/
+#endif
+#ifdef MSDOS
+	memset(command,' ',sizeof(command));						/* Init the command string.		*/
+	strcpy(command,filespec);							/* Now add the name of the procedure.	*/
+	cpos = strlen(filespec);							/* Find out the end of the string.	*/
 #endif
 
 	for( i=0; i<parmcnt;i++)
@@ -171,93 +185,125 @@ va_dcl
 		arg_count -= 2;
 		parmtext[i][parmlen[i]] = '\0';
 #ifdef VMS
-		if ((cpos + parmlen[i]) > 512)
+		if ((cpos + parmlen[i]) > sizeof(command)-4)
 		{
 			werrlog(ERRORCODE(6),parmcnt,0,0,0,0,0,0,0);			/* Write an error, line too big.	*/
-			exit(-1);							/* BAD.					*/
+			wexit(-1);							/* BAD.					*/
 		}
 
 		command[cpos++] = ' ';							/* Insert a space.			*/
 		command[cpos++] = '\"';							/* And Quotes.				*/
 		memcpy(&command[cpos],parmtext[i],parmlen[i]);
-		cpos = cpos + parmlen[i];
+		cpos += parmlen[i];
 		command[cpos++] = '\"';							/* Close Quotes.			*/
+#endif
+#ifdef MSDOS
+		if (parmlen[i] > 0)
+		{
+			if ((cpos + parmlen[i] + 3) > 128)
+			{
+				werrlog(ERRORCODE(6),parmcnt,0,0,0,0,0,0,0);		/* Write an error, line too big.	*/
+				wexit(-1);						/* BAD.					*/
+			}
+
+			command[cpos++] = ' ';						/* Insert a space.			*/
+			command[cpos++] = '\"';						/* And Quotes.				*/
+			memcpy(&command[cpos],parmtext[i],parmlen[i]);
+			cpos += parmlen[i];
+			command[cpos++] = '\"';						/* Close Quotes.			*/
+			command[cpos] = (char)0;					/* NULL terminate command		*/
+		}
 #endif
 	}
 
-	retcode = va_arg(the_args, long*);						/* The return code from the program.	*/
+	retcode = va_arg(the_args, int4*);						/* The return code from the program.	*/
 	arg_count--;
 	compcode = 0;
 	if ( arg_count == 1 )
 	{
-		compcode = va_arg(the_args, long*);
+		compcode = va_arg(the_args, int4*);
 	}
 
 	va_end(the_args);
+
 #ifdef VMS
+	savelevel = linklevel();							/* Save the link-level			*/
+	newlevel();									/* increment the link-level		*/
 	command[cpos] = '\0';								/* Null terminate.			*/
-	status = spawn(3,command,"");							/* Then execute the command.		*/
+	status = spawn2 (3,command,"",&vms_status);					/* Then execute the command.		*/
 	if (status != SS$_NORMAL && status != RMS$_NORMAL && status != CLI$_NORMAL)
 	{
 		if (status == RMS$_DNF || status == RMS$_DEV || RMS$_FNF) status = 20;	/* File not found.			*/
 		else if (status == RMS$_PRV) status = 28;				/* Insufficient priveledge or file prot.*/
 		else status = 52;							/* Invalid file.			*/
 	}
-	else status = 0;								/* Successful.				*/
+	else 
+	{
+		status = 0;								/* Successful.				*/
+		ppunlink(savelevel);							/* Putparm UNLINK			*/
+	}
 	wswap( &status );
 	PUTBIN(retcode,&status,4);
+	setlevel(savelevel);								/* Restore the link-level		*/
 	return;
 #endif
 
-#ifdef unix
-	memset(pname,(char)0,sizeof(pname));
-
-	not_found = findexts(testname,pname,0);
-
-	if ( not_found )
+#ifndef VMS
+	if ( !fexists(filespec) )
 	{
-		long twenty=20;
+		int4 twenty=20;
 		wswap( &twenty );
 		PUTBIN(retcode,&twenty,sizeof(twenty));					/* File Not Found			*/
-		werrlog(ERRORCODE(3),testname,0,0,0,0,0,0,0);
+		werrlog(ERRORCODE(3),filespec,0,0,0,0,0,0,0);
 		return;
 	}
 
-	ftyp = isexec(pname);								/* decide if it's exec'able or 		*/
+	ftyp = runtype(filespec);							/* get the run type			*/
+
 	switch(ftyp)
 	{
-	case NOTEXEC:
+	case RUN_SHELL:
+		/*  This is the only type allowed to proceed. */
+		break;
+
+	case RUN_ACCESS:
+	case RUN_UNKNOWN:
+		{
+			int4	l28=28;							/* Access denied.			*/
+			wswap( &l28 );
+			PUTBIN(retcode,&l28,4);
+			werrlog(ERRORCODE(5),filespec,0,0,0,0,0,0,0);
+			return;
+			break;
+		}
 		break;
 
 	default:
-	case ISEXEC:
-	case ISACU:
-	case ISMFINT:
 		{
-			long	l52=52;							/* Invalid file type.			*/
+			int4	l52=52;							/* Invalid file type.			*/
 			wswap( &l52 );
 			PUTBIN(retcode,&l52,4);
-			werrlog(ERRORCODE(7),pname,0,0,0,0,0,0,0);
+			werrlog(ERRORCODE(7),filespec,0,0,0,0,0,0,0);
 			return;
 			break;
 		}
-
-	case ACCERR:
-		{
-			long	l28=28;							/* Access denied.			*/
-			wswap( &l28 );
-			PUTBIN(retcode,&l28,4);
-			werrlog(ERRORCODE(5),pname,0,0,0,0,0,0,0);
-			return;
-			break;
-		}
+		break;
 	}
+
+	*retcode = 0;
+
+#ifdef unix
+	if (!ishelpactive() && isdebug())						/* If COBOL debugger running		*/
+	{
+		vraw_stty_save();							/* Save the current stty values		*/
+	}
+#endif /* unix */
 
 	vexit();									/* Reset the terminal.			*/
 
+#ifdef unix
 	signal(SIGCLD,  SIG_DFL);							/* Use Default DEATH-OF-CHILD signal	*/
 
-	*retcode = 0;
 	switch (pid = fork())
 	{
 		case 0:									/* is child process 			*/
@@ -266,13 +312,17 @@ va_dcl
 			clearprogsymb();						/* Clear PROGLIB/VOL from symbol	*/
 
 			memset(sh_parm,(char)0,sizeof(sh_parm));
-			sh_parm[0]=(char *)shell_var();					/* std argv[0] is progname 		*/
-			sh_parm[1]=pname;						/* name of shell script for /bin/sh 	*/
+			idx=0;
+			sh_parm[idx++]=shell_var();					/* std argv[0] is progname 		*/
+			sh_parm[idx++]=filespec;					/* name of shell script for /bin/sh 	*/
 			for (i=0; i<parmcnt; i++)					/* start at elem 1 in parm_list, 	*/
-				sh_parm[i+2]=parmtext[i];				/* elem 2 in sh_parm 			*/
-			sh_parm[i+2] = '\0';						/* null terminate it			*/
+				sh_parm[idx++]=parmtext[i];				/* elem 2 in sh_parm 			*/
+			sh_parm[idx] = '\0';						/* null terminate it			*/
+
+			newlevel();							/* Increment the link-level		*/
 			execvp(sh_parm[0],sh_parm);
-			werrlog(ERRORCODE(4),pname,errno,0,0,0,0,0,0);
+
+			werrlog(ERRORCODE(4),filespec,errno,0,0,0,0,0,0);
 			*retcode=fixerr(errno);
 			exit(*retcode);
 		}
@@ -280,13 +330,29 @@ va_dcl
 		{
 			wwaitpid(pid,&l_compcode);
 			l_retcode = 0;
-			vsynch();
-			wpl_usr(&defaults);
-			rts_first = TRUE ;					/* Set so return from link re-inits screen	*/
 		}
 	}
 
 	signal(SIGCLD,  SIG_IGN);							/* Ignore DEATH-OF-CHILD signal		*/
+
+	if (!ishelpactive() && isdebug())						/* If COBOL debugger running		*/
+	{
+		vraw_stty_restore();							/* Restore the saved stty values	*/
+	}
+#endif /* unix */
+
+#ifdef MSDOS
+	newlevel();
+	l_retcode = system(command);
+	l_compcode = 0;
+	oldlevel();
+#endif /* MSDOS */
+
+	vsynch();								/* Resync the video				*/
+	load_defaults();							/* Reload defaults in case they changed		*/
+	rts_first = TRUE ;							/* Set so return from link re-inits screen	*/
+
+	ppunlink(linklevel());								/* Putparm UNLINK			*/
 
 	wswap( &l_retcode );
 	PUTBIN(retcode,&l_retcode,4);
@@ -298,7 +364,7 @@ va_dcl
 	}
 	return;
 
-#endif
+#endif /* !VMS */
 }
 
 #ifdef unix

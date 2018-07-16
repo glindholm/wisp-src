@@ -7,8 +7,21 @@
 			/*									*/
 			/************************************************************************/
 
+/*
+**	ACUCOBOL is defined for unix and MSDOS (when DACU defined).
+*/
 
 #ifdef unix
+#define ACUCOBOL
+#endif
+#ifdef DACU
+#define ACUCOBOL
+#endif
+
+#include "idsistd.h"
+
+#ifdef ACUCOBOL
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -17,7 +30,8 @@
 #ifdef SCO
 /*	XENIX_386  is used by ACUCOBOL for SC0 386 machines */
 #define XENIX_386
-#endif
+#endif /* SCO */
+
 #include "visint.h"
 
 struct vision3_struct
@@ -58,7 +72,7 @@ struct vision3_struct
 	char	keys[352];
 };
 
-long acuvision( path, code, field )					/* ACUCOBOL Vision file system interface		*/
+int4 acuvision( path, code, field )					/* ACUCOBOL Vision file system interface		*/
 char 	*path;								/* File path						*/
 char	*code;								/* Function code					*/
 char	*field;
@@ -69,14 +83,14 @@ char	*field;
 	int	f;							/* File handle						*/
 	int	acumagic;						/* is this an acucobol indexed file			*/
 	int	i0, i1, i2;
-	long	*size;
+	int4	*size;
 	int	vision3;
 	char	buff[256];
 	short	tshort;
 
 	vision3 = 0;
 
-	size = (long *) field;
+	size = (int4 *) field;
 
 
 	f = open( path, O_RDONLY );					/* Open the file					*/
@@ -188,6 +202,13 @@ char	*field;
 	close(f);
 	return( 40 );
 }
-#endif
+#else /* !ACUCOBOL */
+int4 acuvision()
+{
+	werrlog(102,"acuvision() not implemented",0,0,0,0,0,0,0);
+	return -1;
+}
+#endif /* !ACUCOBOL */
+
 
 

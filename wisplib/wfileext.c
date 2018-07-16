@@ -11,6 +11,7 @@
 **	wfileext.c
 */
 
+#include "idsistd.h"
 #include "filext.h"
 
 setwispfilext(wispfilext)								/* Init the complet string (39 chars)	*/

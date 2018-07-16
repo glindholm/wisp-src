@@ -151,15 +151,13 @@
        01  CURSOR-POS.
            03  MOD-COL                    BINARY.
            03  MOD-ROW                    BINARY.
-
-      ******************************************************************
-
        01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
            03  FILLER                     PIC X(01).
            03  CURS-COL                   PIC X(01).
            03  FILLER                     PIC X(01).
            03  CURS-ROW                   PIC X(01).
 
+       77  num01                          pic 9(9).
 
       /*****************************************************************
       *                                                                *
@@ -363,7 +361,9 @@
        PROCEDURE DIVISION.
 
        SCREEN-TESTS.
-      
+           MOVE 123,45 to num01.
+           move ,45 to num01.
+           move 45, to num01.
 
        DISPLAY-MISC.
            SET PROTECT-BIT IN FAC OF MISC-ROW03 OFF.

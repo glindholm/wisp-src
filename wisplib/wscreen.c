@@ -15,10 +15,12 @@
 #include <memory.h>
 #endif
 #include <string.h>
+#include "idsistd.h"
 #include "wcommon.h"
 #include "movebin.h"
 #include "cobrun.h"
 #include "werrlog.h"
+
 
 #define ERROR_BIT 16
 #define MOD_BIT   64
@@ -32,6 +34,19 @@ static int  ver22;
 
 static int	static_screen;
 static unsigned char *reserved_space;
+
+static int wputscr22();
+static int wgetscr22();
+static int wgetfac22();
+static int calcdata();
+static int wputscr();
+static int wgetscr();
+static int wgetfac();
+static int load_item_table22();
+static int putfacdata();
+static int getfacdata();
+static int loadbytes_long();
+static int close_open_occurs();
 
 char	char_decimal_point = '.';							/* The decimal_point character		*/
 char	char_comma = ',';								/* The comma character			*/
@@ -78,8 +93,8 @@ struct v_struct
 
 struct mask_struct
 {
-	unsigned long cmask;						/* Comma mask.					*/
-	unsigned long zmask;						/* Z mask.					*/
+	uint4 cmask;						/* Comma mask.					*/
+	uint4 zmask;						/* Z mask.					*/
 };
 
 struct screen_block 
@@ -332,9 +347,10 @@ unsigned char *scrn;
 	o_pos += x_size;							/* Point to end-fac				*/
 	o_col = (o_col + x_size) % 80;						/* Point to ending col				*/
 
-	if ( o_pos < 1920 && o_col != 0 && !(scrn[o_pos] & '\200') )		/* if !eod-of-scrn && col!=0 && not-fac then	*/
+	if ( o_pos < 1920 && o_col != 0 && 
+	    !(fac_pre_vwang(scrn[o_pos]) & '\200') )				/* if !eod-of-scrn && col!=0 && not-fac then	*/
 	{
-		scrn[o_pos] = '\214';						/* Insert END FAC				*/
+		scrn[o_pos] = unfac_pre_vwang((unsigned char)'\214');
 	}
 }
 
@@ -361,7 +377,7 @@ unsigned char *scrn;
 
 	if ( o_col != 0 )
 	{
-		mod_fac = scrn[o_pos-1] & MOD_BIT;				/* Was field modified ?				*/ 
+		mod_fac = fac(scrn[o_pos-1]) & MOD_BIT;	                        /* Was field modified ?				*/ 
 		*fac_ptr = scrn[o_pos-1];					/* Copy out the FAC				*/
 	}
 
@@ -369,7 +385,8 @@ unsigned char *scrn;
 	{								/* mod bit set (0xC0 = 0x80 + 0x40) then turn	*/
 		for(i=0;i<x_size;i++)					/* on the mod flag and process the data.	*/
 		{
-			if ( (unsigned char)(scrn[o_pos+i] & 0xC0) == (unsigned char)0xC0  )
+			if ( (unsigned char)(fac(scrn[o_pos+i]) & 0xC0) == 
+			     (unsigned char)(fac((unsigned char)0xC0)))
 			{
 				mod_fac = 1;
 				break;
@@ -447,8 +464,8 @@ struct	screen_block	*block;							/* Screen structure block.			*/
 	short	temp_short;
 	struct
 	{
-		unsigned long cmask;						/* Comma mask.					*/
-		unsigned long zmask;						/* Z mask.					*/
+		uint4 cmask;						/* Comma mask.					*/
+		uint4 zmask;						/* Z mask.					*/
 	} mask;
 	register int i,j,i1,i2,i3;
 	unsigned char *inf_ptr;							/* pointer to informational stuff		*/
@@ -482,7 +499,7 @@ struct	screen_block	*block;							/* Screen structure block.			*/
 	{
 		if (*screen == 255) break;
 #ifdef OLD
-		if ( lpi_cobol && ((long)screen & 1L)) screen++;		/* Be sure it is an even address		*/
+		if ( lpi_cobol && ((int4)screen & 1)) screen++;			/* Be sure it is an even address		*/
 										/* For LPI COBOL on UNIX ugh!			*/
 #endif
 		cur_v1 = ( *screen++);						/* get the occurs for this item			*/
@@ -555,9 +572,10 @@ struct	screen_block	*block;							/* Screen structure block.			*/
 
 					col += num_chars + 1;			/* update the collumn offset count		*/
 										/* If not a Fac already, and not col 0, in map.	*/
-					if ( !(block->scrn[cpos] & '\200') && col<81 && (cpos < 1920))
+					if ( !(fac_pre_vwang(block->scrn[cpos]) & '\200') && col<81 && (cpos < 1920))
 					{
-						block->scrn[cpos] = '\214';		/* put an EFFAC there			*/
+						block->scrn[cpos] = unfac_pre_vwang((unsigned char)'\214');
+						                                /* put an EFFAC there		*/
 					}
 
 
@@ -580,8 +598,8 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 	short	temp_short;
 	struct
 	{
-		unsigned long cmask;						/* Comma mask.					*/
-		unsigned long zmask;						/* Z mask.					*/
+		uint4 cmask;							/* Comma mask.					*/
+		uint4 zmask;							/* Z mask.					*/
 	} mask;
 
 	register int i,j,i1,i2,i3;
@@ -598,7 +616,7 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 	{
 		if (*screen == 255) break;
 #ifdef OLD
-		if (lpi_cobol && ((long)screen & 1L)) screen++;			/* Need even address on LPI/AT&T/UNIX		*/
+		if (lpi_cobol && ((int4)screen & 1)) screen++;			/* Need even address on LPI/AT&T/UNIX		*/
 #endif
 		cur_v1 = ( *screen++);						/* get the occurs for this item			*/
 
@@ -656,7 +674,9 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 					if (col)					/* There is a FAC			*/
 					{
 						cpos--;					/* position of FAC			*/
-						mod_fac  = block->scrn[cpos] & MOD_BIT;	/* see if the field was modified	*/
+											/* see if the field was modified	*/
+						mod_fac  = fac(block->scrn[cpos]) & MOD_BIT;	
+
 						*fac_ptr++ = block->scrn[cpos++];	/* copy the FAC for this item		*/
 					}
 					else
@@ -707,8 +727,8 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 	short	temp_short;
 	struct
 	{
-		unsigned long cmask;						/* Comma mask.					*/
-		unsigned long zmask;						/* Z mask.					*/
+		uint4 cmask;						/* Comma mask.					*/
+		uint4 zmask;						/* Z mask.					*/
 	} mask;
 
 	register int i,j,i1,i2,i3;
@@ -722,7 +742,7 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 	{
 		if (*screen == 255) break;
 #ifdef OLD
-		if (lpi_cobol && ((long)screen & 1L)) screen++;			/* Need even address on LPI/AT&T/UNIX		*/
+		if (lpi_cobol && ((int4)screen & 1)) screen++;			/* Need even address on LPI/AT&T/UNIX		*/
 #endif
 		cur_v1 = ( *screen++);						/* get the occurs for this item			*/
 
@@ -1112,4 +1132,3 @@ struct v_struct *v1, *v2;
 		v1->v_occurs = 0;							/* Finished with v1 occurs.		*/
 	}
 }
-

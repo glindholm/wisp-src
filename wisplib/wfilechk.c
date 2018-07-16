@@ -15,6 +15,7 @@
 
 #include <errno.h>
 
+#include "idsistd.h"
 #include "werrlog.h"
 #include "wcommon.h"
 #include "cobrun.h"
@@ -30,17 +31,17 @@ static $DESCRIPTOR(msgdsc,msgtxt);
 #endif
 
 extern int werrno;									/* Wisp errno field.			*/
-extern unsigned long wextstat1;								/* Global place to put extended status.	*/
-extern unsigned long wextstat2;
+extern uint4 wextstat1;								/* Global place to put extended status.	*/
+extern uint4 wextstat2;
 extern char wfilestat[2];								/* Global file status			*/
 extern char WISPRUNNAME[8];
 extern char WISPPROGID[8];
 extern char ACUFILESTAT[4];
 
-extern long LINKCOMPCODE;
-extern long LINKRETCODE;
+extern int4 LINKCOMPCODE;
+extern int4 LINKRETCODE;
 
-char *msg_filestat();
+static char *msg_filestat();
 char *strchr();
 
 wfilechk(decl_stat,file_stat,x_stat1,x_stat2,sflag,vol,lib,fil,fname,f_id,appl)
@@ -49,7 +50,7 @@ char *file_stat;									/* X(2) the file status field.		*/
 char *x_stat1;										/* S9(9) L.S. Extended file status 1	*/
 											/* (for ACUCOBOL pic x(4) )		*/
 char *x_stat2;										/* S9(9) L.S. Extended file status 1	*/
-unsigned long *sflag;									/* Status flag.				*/
+uint4 *sflag;										/* Status flag.				*/
 char *vol;										/* Volume name.				*/
 char *lib;										/* Library name.			*/
 char *fil;										/* File name.				*/
@@ -60,7 +61,7 @@ char *appl;										/* The name of this application.	*/
 	char tstr1[120];
 	int i;
 	char	*ptr;
-	unsigned long status;
+	uint4 status;
 	short msglen;
 	unsigned char info[4];
 	short	wang_filestatus, open_error, reportit, force_error;
@@ -72,6 +73,10 @@ char *appl;										/* The name of this application.	*/
 	werrlog(ERRORCODE(1),file_stat,x_stat1,x_stat2,vol,lib,fil,fname,f_id);		/* Log the entry.			*/
 	wfilestat[0] = file_stat[0];							/* And store it away for 'C'.		*/
 	wfilestat[1] = file_stat[1];
+	if ( acu_cobol )
+	{
+		memcpy(ACUFILESTAT, x_stat1, 4);					/* Save the acucobol extended filestat */
+	}
 	wang_filestatus = TRUE;								/* Assume a WANG file status.		*/
 	reportit = TRUE;								/* Always report non-wang errors.	*/
 	force_error = FALSE;								/* Don't force				*/
@@ -347,16 +352,24 @@ char *appl;										/* The name of this application.	*/
 		sprintf( msg2, "ERROR DETECTED AND USER ERROR EXIT NOT IN USE");
 		if ( acu_cobol )
 		{
-			memcpy(ACUFILESTAT, x_stat1, 4);				/* Save the acucobol extended filestat */
 			sprintf( msg3, "FILE STATUS = %c%c [%c%c]   (%s)", 
 				file_stat[0], file_stat[1], x_stat1[2], x_stat1[3], verb);
+			strcpy(  msg4, msg_filestat(file_stat,&x_stat1[2]) );
+		}
+		else if (mf_cobol || aix_cobol)
+		{
+			if ('9' != file_stat[0])
+				sprintf( msg3, "FILE STATUS = %c%c   (%s)", file_stat[0], file_stat[1], verb);
+			else
+				sprintf( msg3, "FILE STATUS = %c/RT%03d   (%s)", file_stat[0], (unsigned)file_stat[1], verb);
+			strcpy(  msg4, msg_filestat(file_stat,"00") );
 		}
 		else
 		{
 			sprintf( msg3, "FILE STATUS = %c%c   (%s)", file_stat[0], file_stat[1], verb);
+			strcpy(  msg4, msg_filestat(file_stat,"00") );
 		}
 
-		strcpy(  msg4, msg_filestat(file_stat) );
 
 		err_getparm("FILESTAT","0001", "ERROR ",msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8 );
 		LINKCOMPCODE = 16;
@@ -396,8 +409,9 @@ char *appl;										/* The name of this application.	*/
 
 }
 
-char	*msg_filestat(file_stat)
+static char *msg_filestat(file_stat,x_stat)
 char	*file_stat;
+char	*x_stat;
 {
 	char *ptr;
 
@@ -412,58 +426,75 @@ char	*file_stat;
 		case '2':	ptr = "Duplicate alternate key";	break;
 		case '4':	ptr = "Wrong Record length";		break;
 		case '5':	ptr = "Optional file not present";	break;
-		case '7':	ptr = "Invalid file org or device";	break;
+		case '7':	ptr = "Invalid option for device";	break;
+		case 'M':	ptr = "Optional feature not supported";	break;
 		default:	ptr = "UNKNOWN (Success)";		break;
 		}
 		break;
 	case '1':
 		switch(file_stat[1])
 		{
-		case '0':	ptr = "End of File reached";			break;
-		case '1':	ptr = "No next tape (AT END)";			break;
-		case '3':	ptr = "READ No next logical record (AT END)";	break;
-		case '4':	ptr = "Relative record number too large (AT END)"; break;
+		case '0':	ptr = "End of File reached";				break;
+		case '1':	ptr = "No next tape (AT END)";				break;
+		case '3':	ptr = "READ No next logical record (AT END)";		break;
+		case '4':	ptr = "Relative record number too large (AT END)"; 	break;
 		case '5':	ptr = "READ Optional file not present (AT END)";	break;
 		case '6':	ptr = "READ No valid next record (AT END)";		break;
-		default:	ptr = "UNKNOWN (AT END)";			break;
+		default:	ptr = "UNKNOWN (AT END)";				break;
 		}
 		break;
 	case '2':
 		switch(file_stat[1])
 		{
-		case '0':	ptr = "Invalid Key";				break;
-		case '1':	ptr = "Key out of sequence (INVALID KEY)";	break;
-		case '2':	ptr = "Duplicate Key (INVALID KEY)";		break;
-		case '3':	ptr = "Record not found in file (INVALID KEY)";	break;
-		case '4':	ptr = "Boundary Violation (INVALID KEY)";	break;
-		case '5':	ptr = "Optional file not present (INVALID KEY)"; break;
-		default:	ptr = "UNKNOWN (INVALID KEY)";			break;
+		case '0':	ptr = "Invalid Key";					break;
+		case '1':	ptr = "Key out of sequence (INVALID KEY)";		break;
+		case '2':	ptr = "Duplicate Key (INVALID KEY)";			break;
+		case '3':	ptr = "Record not found (INVALID KEY)";			break;
+		case '4':
+			if (acu_cobol && 0==memcmp("00",x_stat,2))
+				ptr = "Disk full (INVALID KEY)";
+			else if (acu_cobol && 0==memcmp("01",x_stat,2))
+				ptr = "Relative record number too large (INVALID KEY)";
+			else
+				ptr = "Boundary Violation (INVALID KEY)";
+			break;
+		case '5':	ptr = "Optional file not present (INVALID KEY)"; 	break;
+		default:	ptr = "UNKNOWN (INVALID KEY)";				break;
 		}
 		break;
 	case '3':
 		switch(file_stat[1])
 		{
-		case '0':	ptr = "HARDWARE error";			break;
-		case '4':	ptr = "WRITE Boundary violation (Disk Full)";	break;
-		case '5':	ptr = "FILE not found (NORESPECIFY)";	break;
-		case '7':	ptr = "OPEN Inappropriate device type"; break;
-		case '8':	ptr = "OPEN File previously closed with lock";	break;
-		case '9':	ptr = "OPEN Conflicts with file attributes";	break;
-		default:	ptr = "UNKNOWN";			break;
+		case '0':	ptr = "Permanent error";				break;
+		case '4':	ptr = "WRITE Boundary violation (Disk Full)";		break;
+		case '5':	ptr = "FILE not found";					break;
+		case '7':
+			if (acu_cobol && 0==memcmp("07",x_stat,2))
+				ptr = "Access denied (OPEN)";
+			else if (acu_cobol && 0==memcmp("09",x_stat,2))
+				ptr = "Invalid file type (OPEN)";
+			else if (vax_cobol)
+				ptr = "Inappropriate device type (OPEN)"; 
+			else
+				ptr = "OPEN mode/access not supported";
+			break;
+		case '8':	ptr = "File previously closed with lock (OPEN)";	break;
+		case '9':	ptr = "OPEN Conflicts with file attributes";		break;
+		default:	ptr = "UNKNOWN";					break;
 		}
 		break;
 	case '4':
 		switch(file_stat[1])
 		{
-		case '1':	ptr = "File already open";		break;
-		case '2':	ptr = "File not open";			break;
-		case '3':	ptr = "No previous read";		break;
-		case '4':	ptr = "REWRITE Invalid rec size";	break;
-		case '6':	ptr = "NO Current record";		break;
-		case '7':	ptr = "READ/START incompatable open mode";	break;
-		case '8':	ptr = "WRITE incompatable open mode";	break;
-		case '9':	ptr = "REWRITE/DELETE incompatable open mode";	break;
-		default:	ptr = "UNKNOWN";			break;
+		case '1':	ptr = "File already open (OPEN)";			break;
+		case '2':	ptr = "File not open (CLOSE)";				break;
+		case '3':	ptr = "No previous read";				break;
+		case '4':	ptr = "Invalid record size (REWRITE)";			break;
+		case '6':	ptr = "No Current record";				break;
+		case '7':	ptr = "File not open, or incompatable open mode";	break;
+		case '8':	ptr = "File not open, or incompatable open mode";	break;
+		case '9':	ptr = "File not open, or incompatable open mode";	break;
+		default:	ptr = "UNKNOWN";					break;
 		}
 		break;
 	case '9':
@@ -471,24 +502,76 @@ char	*file_stat;
 		{
 			switch(file_stat[1])
 			{
-			case '0':	ptr = "Record locked by another user";		break;
-			case '1':	ptr = "OPEN File locked by another program";	break;
+			case '0':	ptr = "Record locked by another program";	break;
+			case '1':	ptr = "File locked by another program (OPEN)";	break;
 			case '2':	ptr = "Record locked by another program";	break;
-			case '3':	ptr = "UNLOCK No current record";		break;
-			case '4':	ptr = "UNLOCK File not open/closed or incompatible mode"; break;
+			case '3':	ptr = "No current record (UNLOCK)";		break;
+			case '4':	ptr = "File not open, or incompatible mode"; 	break;
 			case '5':	ptr = "OPEN No space on device";		break;
 			case '7':	ptr = "OPEN File not found";			break;
 			case '8':	ptr = "CLOSE Error";				break;
-			default:	ptr = "UNKNOWN";			break;
+			default:	ptr = "UNKNOWN";				break;
 			}
 		}
 		else if (aix_cobol || mf_cobol)
 		{
 			switch((unsigned char)file_stat[1])
 			{
+			case 35:	ptr = "Access denied";				break;
 			case 'A':	ptr = "File locked";				break;
-			case 'D':	ptr = "Record locked by another user";		break;
+			case 'D':	ptr = "Record locked by another program";	break;
 			case 213:	ptr = "Too many locks";				break;
+			default:	ptr = "UNKNOWN";				break;
+			}
+		}
+		else if (acu_cobol)
+		{
+			switch(file_stat[1])
+			{
+			case '0':
+				if (0==memcmp("01",x_stat,2))
+					ptr = "File not open, or incompatable open mode";
+				else if (0==memcmp("02",x_stat,2))
+					ptr = "No current record defined";
+				else if (0==memcmp("07",x_stat,2))
+					ptr = "Access denied (OPEN)";
+				else
+					ptr = "FILE incompatable open mode";
+				break;
+			case '1':	ptr = "File not open";			break;
+			case '2':	ptr = "File already open";		break;
+			case '3':
+				if (0==memcmp("03",x_stat,2))
+					ptr = "File closed with LOCK";
+				else
+					ptr = "File locked by another program";	
+				break;
+			case '4':
+				if (0==memcmp("00",x_stat,2))
+					ptr = "Open error";
+				else if (0==memcmp("10",x_stat,2))
+					ptr = "Too many files open";
+				else if (0==memcmp("20",x_stat,2))
+					ptr = "File not found";
+				else if (0==memcmp("62",x_stat,2))
+					ptr = "LINAGE value out of range";
+				else
+					ptr = "OPEN Conflicts with file attributes";
+				break;
+			case '5':
+				if (0==memcmp("09",x_stat,2))
+					ptr = "Invalid file type (OPEN)";
+				else
+					ptr = "OPEN mode/access not supported";
+				break;
+			case '6':	ptr = "No Current record";			break;
+			case '7':	ptr = "Invalid record size (REWRITE)";		break;
+			case '8':	ptr = "Index file corrupt";			break;
+			case '9':	ptr = "Record locked by another program";	break;
+			case 'A':	ptr = "Inadequate memory for operation";	break;
+			case 'B':	ptr = "Operation not supported";		break;
+			case 'C':	ptr = "Lock table is full";			break;
+			case 'D':	ptr = "Host file system error";			break;
 			default:	ptr = "UNKNOWN";				break;
 			}
 		}
@@ -500,13 +583,10 @@ char	*file_stat;
 			case '1':	ptr = "File Not Open";			break;
 			case '2':	ptr = "File already open";		break;
 			case '3':	ptr = "File locked";			break;
-			case '4':	ptr = "Bad open";			break;
-			case '5':	ptr = "OPEN No space on device";	break;
+			case '4':	ptr = "Invalid open";			break;
+			case '5':	ptr = "Invalid device";			break;
 			case '6':	ptr = "Undefined record pointer";	break;
 			case '7':	ptr = "Invalid record lenght";		break;
-			case '8':	ptr = "Index is corrupt";		break;
-			case 'A':	ptr = "Out of memory on SORT";		break;
-			case 'B':	ptr = "Not Supported operation";	break;
 			case '9':	ptr = "Read on LOCKED record";		break;
 			default:	ptr = "UNKNOWN";			break;
 			}

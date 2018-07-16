@@ -8,6 +8,7 @@
 *			output:	ret_code	WANG 4-byte binary format return code (wswap an int)				*
 *																*
 ********************************************************************************************************************************/
+#include "idsistd.h"
 #include "acp.h"							/* Header file containing global variable definitions.	*/
 #ifdef VMS
 #include <iodef.h>							/* I/O function definitions.				*/
@@ -27,7 +28,7 @@ int	*ret_code;							/* WANG ACP return code.				*/
 	char	*save_ptr;						/* Pointer to add WEOR sequence to outarea.		*/
 	char	save_area[3];						/* Save area for data to be replaced by WEOR sequence.	*/
 	int	i,j;							/* Indeces.						*/
-	long	status;							/* Return status from system services.			*/
+	int4	status;							/* Return status from system services.			*/
 
 	l_rel_line = *rel_line;						/* Initialize contents of l_rel_line.			*/
 	wswap(&l_rel_line);						/* Swap words from WANG format, so the VAX can read it.	*/

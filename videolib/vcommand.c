@@ -5,6 +5,7 @@
 			/*			  All rights reserved.				*/
 			/************************************************************************/
 #ifdef unix
+static int vcommand_dummy;
 #else
 #ifdef MSDOS
 #else
@@ -109,8 +110,7 @@ vcommand(command,prompt)
 	int status;			   /* Status from get_foreign.	*/
 	long int length;		   /* Maximum command length.	*/
 	long int force_prompt; 		   /* Flag to force a prompt.	*/
-	$DESCRIPTOR(cmd,command);	   /* Describe command string.	*/
-	$DESCRIPTOR(prm,prompt);	   /* Describe prompt string.	*/
+#include "inc:vcommand.d"
 	cmd.dsc$w_length = MAXSTR;		/* Actual str length.	*/
 	prm.dsc$w_length = strlen(prompt);	/* Actual prompt len.	*/
 #endif

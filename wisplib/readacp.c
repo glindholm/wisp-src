@@ -9,6 +9,7 @@
 *				inarea		data received									*
 *																*
 ********************************************************************************************************************************/
+#include "idsistd.h"
 #ifdef VMS
 #include <iodef.h>							/* I/O function definitions.				*/
 #include "trmdef.h"							/* Terminal function modifier definitions.		*/
@@ -32,8 +33,8 @@ extern struct termio ntermacp;
 typedef	struct	{							/* Definition of item list descriptor for IO$READVBLK	*/
 			short	item_buf_len;				/* Buffer length.					*/
 			short	item_code;				/* Item code.						*/
-			long	item_imm_data;				/* Buffer address or immediate data.			*/
-			long	item_ret_address;			/* Return address.					*/
+			int4	item_imm_data;				/* Buffer address or immediate data.			*/
+			int4	item_ret_address;			/* Return address.					*/
 		} itemlist_desc;
 #endif
 /********************************************************************************************************************************
@@ -47,18 +48,18 @@ va_dcl
 	va_list	arg_stack;						/* Pointer to traverse stack of input arguments.	*/
 	int	arg_count;						/* Argument counter.					*/
 
-	long	*rel_line;						/* Index from 1 to 6 for later access to acp_term[].	*/
-	long	*length;						/* Length of inarea.					*/
+	int4	*rel_line;						/* Index from 1 to 6 for later access to acp_term[].	*/
+	int4	*length;						/* Length of inarea.					*/
 	char	*inarea;						/* Input buffer for read request.			*/
-	long	*acp_wait;						/* Amount of time to wait before returning to user.	*/
-	long	*ret_code;						/* WANG ACP return code.				*/
+	int4	*acp_wait;						/* Amount of time to wait before returning to user.	*/
+	int4	*ret_code;						/* WANG ACP return code.				*/
 
-	long	l_rel_line;						/* Local copy of rel_line to be wswapped.		*/
+	int4	l_rel_line;						/* Local copy of rel_line to be wswapped.		*/
 
-	long	l_length;						/* Local copy of length to be wswapped.			*/
+	int4	l_length;						/* Local copy of length to be wswapped.			*/
 	char	*l_inarea;						/* Local copy of pointer to input buffer.		*/
 
-	long	l_acp_wait;						/* Local copy of acp_wait to be wswapped.		*/
+	int4	l_acp_wait;						/* Local copy of acp_wait to be wswapped.		*/
 #ifdef unix
 	int cnt,eor_found;
 	char ch;
@@ -77,12 +78,12 @@ va_dcl
 	struct	{							/* QIO terminator mask quadword.			*/
 			short	qio_mask_size;				/* Mask size in bytes.					*/
 			short	qio_not_used;				/* Not used.						*/
-			long	qio_mask_address;			/* Address of mask.					*/
+			int4	qio_mask_address;			/* Address of mask.					*/
 		} qio_mask_qword;
 	int	qio_length;						/* Length parameter for $QIO read.			*/
 #endif
 	int	i,j,k,x;						/* Array indeces.					*/
-	long	status;							/* Return status from system services.			*/
+	int4	status;							/* Return status from system services.			*/
 	int	eor_flag;						/* Flag to direct processing for read of EOR sequence.	*/
 
 	/********************************************************
@@ -93,12 +94,12 @@ va_dcl
 
 	va_start(arg_stack);						/* Go back to the top of the stack.			*/
 
-	rel_line = va_arg(arg_stack, long*);				/* Get relative line from arg stack.			*/
+	rel_line = va_arg(arg_stack, int4*);				/* Get relative line from arg stack.			*/
 	arg_count--;							/* One less argument.					*/
 	l_rel_line = *rel_line;						/* Initialize contents of l_rel_line.			*/
 	wswap(&l_rel_line);						/* Swap words from WANG format, so the VAX can read it.	*/
 
-	length = va_arg(arg_stack, long*);				/* Get buffer length from arg stack.			*/
+	length = va_arg(arg_stack, int4*);				/* Get buffer length from arg stack.			*/
 	arg_count--;							/* One less argument.					*/
 	l_length = *length;						/* Initialize contents of l_length.			*/
 	wswap(&l_length);						/* Swap words from WANG format, so the VAX can read it.	*/
@@ -108,7 +109,7 @@ va_dcl
 
 	if (arg_count > 1)						/* If more than one argument left, then get acp_wait.	*/
 	{
-		acp_wait = va_arg(arg_stack, long*);			/* Get wait time from arg stack.			*/
+		acp_wait = va_arg(arg_stack, int4*);			/* Get wait time from arg stack.			*/
 		arg_count--;						/* One less argument.					*/
 		l_acp_wait = *acp_wait;					/* Initialize contents of l_acp_wait.			*/
 		wswap(&l_acp_wait);					/* Swap words from WANG format, so the VAX can read it.	*/
@@ -116,7 +117,7 @@ va_dcl
 	}
 	else	l_acp_wait = -1;					/* No time out specified.				*/
 
-	ret_code = va_arg(arg_stack, long*);				/* Get pointer to return code from arg stack.		*/
+	ret_code = va_arg(arg_stack, int4*);				/* Get pointer to return code from arg stack.		*/
 	arg_count--;							/* One less argument.					*/
 
 	*ret_code = 0;							/* Initialize the return value.				*/
@@ -169,7 +170,7 @@ va_dcl
 	ptr_item_list++;
 	ptr_item_list->item_buf_len = 32;				/* Descriptor for I/O terminator mask.			*/
 	ptr_item_list->item_code = TRM$_TERM;
-	ptr_item_list->item_imm_data = (long)qio_term_mask;
+	ptr_item_list->item_imm_data = (int4)qio_term_mask;
 	ptr_item_list->item_ret_address = 0;
 
 	if (l_acp_wait > 0)						/* If time out specified...				*/
@@ -200,7 +201,7 @@ va_dcl
 	}
 	qio_mask_qword.qio_mask_size = 32;				/* Mask size in bytes.					*/
 	qio_mask_qword.qio_not_used = 0;				/* Not used.						*/
-	qio_mask_qword.qio_mask_address = (long)qio_term_mask;		/* Address of mask.					*/
+	qio_mask_qword.qio_mask_address = (int4)qio_term_mask;		/* Address of mask.					*/
 
 
 	/************************************************************************
@@ -247,11 +248,11 @@ va_dcl
 		l_length -= (acp_iosb[i][1] + 1);			/* Reduce length for next QIO by (chars read + 1 EOR)	*/
 		j=0; k=1;						/* Initialize array indeces to first EOR sequence.	*/
 		while (*l_inarea != acp_reor[i][j][k] && j<3) j++;	/* Point [i][j][k] to correct EOR sequence.		*/
-		if (acp_reor[i][j][0] == 1) break;			/* EOR seq is one character long, and we've found it.	*/
+		if (acp_reor[i][j][0] == 1) break;			/* EOR seq is one character int4, and we've found it.	*/
 
 		for (k=2;k<=acp_reor[i][j][0];k++)			/* Loop from second EOR char to last.			*/
 		{
-			if (acp_reor[i][j][0] == 1) break;		/* EOR seq is one character long, and we've found it.	*/
+			if (acp_reor[i][j][0] == 1) break;		/* EOR seq is one character int4, and we've found it.	*/
 			l_inarea++;					/* Increment to next available buffer position.		*/
 			status = sys$qiow(acp_ef[i],acp_ch[i],IO$_READVBLK | IO$M_EXTEND,acp_iosb[i],0,0,	/* Read 1 char	*/
 					  l_inarea,ONECHAR,0,0,item_list,item_list_length);			/* at a time.	*/
@@ -331,7 +332,11 @@ va_dcl
 		if (status==0)                                          /* no chars read */
 		{
 			if (eor_timeout) break;
-			else continue;
+			else 
+			{
+				sleep(1);
+				continue;
+			}
 		}
 		
 		++cnt;
@@ -394,7 +399,7 @@ int	sig;
 ********************************************************************************************************************************/
 io_error(status,ret_code)
 
-long	status;
+int4	status;
 int	*ret_code;
 {
 #ifdef VMS

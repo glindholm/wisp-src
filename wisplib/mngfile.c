@@ -1,26 +1,34 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
-#ifdef unix
-
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <signal.h>
 #include <errno.h>
-extern char *sys_errlist[];
-extern int   sys_nerr;
-#include <dirent.h>
+
+#ifdef unix
 #include <pwd.h>
 #include <grp.h>
+extern char *sys_errlist[];
+extern int   sys_nerr;
+#endif
 
+#ifdef MSDOS
+#include <dos.h>
+#include <io.h>
+#endif
+
+#include "idsistd.h"
+#include "runtype.h"
 #include "wcommon.h"
 #include "vwang.h"
 #include "scnfacs.h"
@@ -32,10 +40,72 @@ extern int   sys_nerr;
 #define SCREENSIZE 	1924
 #define ROW_FILESPEC	5
 
+#ifdef unix
+#define DDS_CHAR	'/'
+#define DDS_STR		"/"
+#endif
+#ifdef MSDOS
+#define DDS_CHAR	'\\'
+#define DDS_STR		"\\"
+#endif
+
 char	*wfname();
+char	*nextfile();
 
 static int vol_cmp();									/* Compare routine for vol_ring		*/
 static int dir_cmp();									/* Compare routine for dir_ring		*/
+
+static int mng_entry_screen();
+static int mng_dir_screen();
+static int mng_file_screen();
+static int build_entry_screen();
+static int select_dir_entry();
+static int add_file_adjust();
+static int remove_file_adjust();
+static int select_display();
+static int select_edit();
+static int select_scratch();
+static int scratch_directory();
+static int select_print();
+static int select_rename();
+static int build_dir_screen();
+static int file_screen();
+static int get_vol_choice();
+static int get_dir_choice();
+static int vol_add();
+static int load_dir_ring();
+static int disp_screen();
+static int stattype();
+static int typefile();
+static int addpath();
+static int modestring();
+static int putmessage();
+static int load_native_path();
+static int is_blank();
+static int wsb_init();
+static int wsb_init_wcc();
+static int save_oa_pos();
+static int restore_oa_pos();
+static int init_oa_pos();
+static int wsb_put_text();
+static int wsb_put_field();
+static int wsb_get_field();
+static int wsb_message();
+static int wsb_build_filespec();
+static int entry_screen();
+static int dir_screen();
+static int build_print_screen();
+static int build_rename_screen();
+static int return_file_screen();
+static int build_file_screen();
+static int do_protect();
+static int get_filespec();
+static int load_vol_ring();
+static int dir_add();
+static int libpath();
+static int uppath();
+static int wsb_init_oa();
+static int wsb_put_tab();
 
 static char *vol_ring;									/* The volume ring pointer		*/
 static struct vol_struct								/* Struct for vol info			*/
@@ -61,6 +131,9 @@ static char	wang_vol[6];								/* Current Wang style VOLUME		*/
 static char	native_path[80];							/* Current native file path		*/
 
 static int	native_path_loaded;							/* Is the native path loaded		*/
+
+static int	modify_allowed;								/* Are modify operations allowed	*/
+static int	display_allowed;							/* Is DISPLAY of file allowed		*/
 
 #define STYLE_UNKNOWN	0
 #define STYLE_FILE	1
@@ -97,6 +170,8 @@ static int	print_screen_return;							/* Return to from print_screen		*/
 #define TYPE_FIFO	6
 #define TYPE_CHR	7
 #define TYPE_BLK	8
+#define TYPE_SPECIAL	9
+#define TYPE_HIDDEN	10
 
 #define FILE_UNKNOWN	0
 #define	FILE_EXEC	1
@@ -109,6 +184,10 @@ static int	print_screen_return;							/* Return to from print_screen		*/
 #define FILE_DATA	8
 #define FILE_FHISAMI	9
 #define FILE_FHISAMD	10
+#define FILE_MFGNT	11
+#define FILE_BATCH	12
+#define FILE_PROC	13
+#define FILE_PROCOBJ	14
 
 #define VOL_OPTION_NONE		0
 #define VOL_OPTION_WANG		1
@@ -146,7 +225,10 @@ static int	print_screen_return;							/* Return to from print_screen		*/
 */
 int mngfile()
 {
+	uint4 dflags;
 	int	stop;									/* Stop this routine			*/
+
+	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
 	vol_ring = 0;									/* Rings are undefined			*/
 	dir_ring = 0;
@@ -156,6 +238,10 @@ int mngfile()
 	first_dir_load = 1;
 
 	wpload();									/* Load the DEFAULTS struct		*/
+
+	get_defs(DEFAULTS_FLAGS,(char*)&dflags);					/* Get the defaults flags		*/
+	modify_allowed = (dflags & HELP_CHANGE_FILES_LIBS);				/* Is modify operations allowed		*/
+	display_allowed = (dflags & HELP_DISPLAY);					/* Is DISPLAY allowed			*/
 
 	get_defs(DEFAULTS_IV,wang_vol);							/* Default to INVOL INLIB		*/
 	get_defs(DEFAULTS_IL,wang_lib);
@@ -207,8 +293,8 @@ static int mng_entry_screen()
 
 	if (0==memcmp(wang_vol,"      ",6))						/* If no VOLUME then use invol inlib	*/
 	{
-		memcpy(wang_vol,defaults.invol,6);
-		memcpy(wang_lib,defaults.inlib,8);
+		get_defs(DEFAULTS_IV,wang_vol);
+		get_defs(DEFAULTS_IL,wang_lib);
 	}
 
 	if (!vol_ring)									/* If undefined then load vol_ring	*/
@@ -370,15 +456,15 @@ static int entry_screen()
 */
 static int build_entry_screen(wsb,item_cnt,start_item,end_item,pf_list)
 char	wsb[SCREENSIZE];								/* Screen buffer			*/
-int	item_cnt;									/* Number of VOLUME items in vol_ring	*/
-int	start_item;									/* Starting position in vol_ring	*/
-int	*end_item;									/* last+1 item displayed on screen	*/
+int4	item_cnt;									/* Number of VOLUME items in vol_ring	*/
+int4	start_item;									/* Starting position in vol_ring	*/
+int4	*end_item;									/* last+1 item displayed on screen	*/
 char	*pf_list;									/* vwang pfkey list			*/
 {
 	char	vol[6], lib[8], file[8], filepath[80];					/* All are blank padded			*/
-	int	rc;
-	long	mode;
-	long	pos, row, col;
+	int4	rc;
+	int4	mode;
+	int4	pos, row, col;
 	char	buff[255];
 
 	memcpy(vol,wang_vol,6);								/* Load local variable with file info	*/
@@ -422,11 +508,12 @@ char	*pf_list;									/* vwang pfkey list			*/
 
 #define VOLCOLWIDTH	40
 #define VOLSTARTROW	11
+#define VOLNUMROWS	10
 
 	pos = start_item;
 	for(col=2;col<=80-VOLCOLWIDTH+2;col+=VOLCOLWIDTH)				/* Load the VOLUMES in 2 columns	*/
 	{
-		for(row=VOLSTARTROW;row<(VOLSTARTROW+10);row++)
+		for(row=VOLSTARTROW;row<(VOLSTARTROW+VOLNUMROWS);row++)
 		{
 			if (pos>=item_cnt)
 			{
@@ -435,7 +522,7 @@ char	*pf_list;									/* vwang pfkey list			*/
 				break;							/* Break inner loop			*/
 			}
 
-			if (rc=ring_remove(vol_ring,pos,&vol_item))			/* Remove item from ring		*/
+			if (rc=ring_remove(vol_ring,pos,(char*)&vol_item))		/* Remove item from ring		*/
 			{
 				werrlog(ERRORCODE(2),"vol_ring 1",ring_error(rc),0,0,0,0,0,0);
 				return(rc);
@@ -454,7 +541,7 @@ char	*pf_list;									/* vwang pfkey list			*/
 			wsb_put_tab(wsb,row,col);					/* Add tabstop				*/
 			wsb_put_text(wsb,row,col+2,0,buff);				/* Add item				*/
 
-			if (rc=ring_add(vol_ring,0,&vol_item))				/* Replace item into ring		*/
+			if (rc=ring_add(vol_ring,0,(char*)&vol_item))			/* Replace item into ring		*/
 			{
 				werrlog(ERRORCODE(2),"vol_ring 2",ring_error(rc),0,0,0,0,0,0);
 				return(rc);
@@ -513,10 +600,19 @@ static int dir_screen()
 		return(0);
 	}
 
-	if (i>1 && native_path[i-1] == '/')						/* Remove trailing '/' character	*/
+#ifdef unix
+	if (i>1 && native_path[i-1] == DDS_CHAR)					/* Remove trailing '/' character	*/
 	{
 		native_path[i-1] = '\0';
 	}
+#endif
+#ifdef MSDOS
+	if (((i>3 && native_path[1]==':') || (i>1 && native_path[1] != ':')) &&
+		native_path[i-1] == DDS_CHAR)						/* Remove trailing '\' character	*/
+	{
+		native_path[i-1] = '\0';
+	}
+#endif
 
 	type = stattype(native_path);							/* STAT the file to get TYPE		*/
 
@@ -547,6 +643,8 @@ static int dir_screen()
 	case TYPE_FIFO:
 	case TYPE_CHR:
 	case TYPE_BLK:
+	case TYPE_SPECIAL:
+	case TYPE_HIDDEN:
 		next_screen = FILE_SCREEN;
 		return(0);
 		break;
@@ -556,13 +654,6 @@ static int dir_screen()
 		next_screen = ENTRY_SCREEN;
 		return(0);
 		break;
-	}
-
-	if ( 0 != access(native_path,04) )						/* Only continue if dir is readable	*/
-	{
-		putmessage("Unable to read Directory");
-		next_screen = ENTRY_SCREEN;
-		return(0);
 	}
 
 	if (last_screen == ENTRY_SCREEN ||						/* If coming from ENTRY_SCREEN or	*/
@@ -577,6 +668,13 @@ static int dir_screen()
 		if (rc = load_dir_ring(force_load)) return(rc);
 		force_load = 0;
 		ring_count(dir_ring,&item_cnt);
+
+		if (item_cnt == 0)
+		{
+			putmessage("Unable to read Directory");
+			next_screen = ENTRY_SCREEN;
+			return(0);
+		}
 
 		if (rc = build_dir_screen(wsb,item_cnt,start_item,&end_item,pf_list)) return(rc);
 
@@ -615,14 +713,22 @@ static int dir_screen()
 				if (select_dir_entry(option,filepath)) return(0);
 				break;
 			case PF_RENAME: 	/* Rename */
-				if (0==add_file_adjust(filepath))
+				if (0==strcmp(filepath,".") || 0==strcmp(filepath,".."))
+				{
+					putmessage("You can not RENAME \".\" or \"..\"");
+				}
+				else if (0==add_file_adjust(filepath))
 				{
 					select_rename(option);
 					remove_file_adjust();
 				}
 				break;
 			case PF_SCRATCH: 	/* Scratch */
-				if (option == DIR_OPTION_FILE)
+				if (0==strcmp(filepath,".") || 0==strcmp(filepath,".."))
+				{
+					putmessage("You can not SCRATCH \".\" or \"..\"");
+				}
+				else if (option == DIR_OPTION_FILE)
 				{
 					if (0 == select_scratch(buff,wsb))
 					{
@@ -694,13 +800,20 @@ static int dir_screen()
 			init_oa_pos(dircurpos);						/* Init the cursor position		*/
 			break;
 
+#ifdef unix
+#define DIRSCREENITEMS	30
+#endif
+#ifdef MSDOS
+#define DIRSCREENITEMS	40
+#endif
+
 		case PF_LAST: 		/* Last */
-			start_item = item_cnt-30;
+			start_item = item_cnt-DIRSCREENITEMS;
 			init_oa_pos(dircurpos);						/* Init the cursor position		*/
 			break;
 
 		case PF_PREVIOUS: 	/* Previous */
-			start_item -= 30;
+			start_item -= DIRSCREENITEMS;
 			if (start_item < 0) start_item=0;
 			init_oa_pos(dircurpos);						/* Init the cursor position		*/
 			break;
@@ -754,11 +867,11 @@ char	*filepath;
 		}
 
 		addpath(buff,native_path,filepath);					/* add the dir to the path		*/
-		if (0!=access(buff,0))
+		if (!fexists(buff))
 		{
 			putmessage("Directory Not Found");
 		}
-		else if (0!=access(buff,04))
+		else if (!fcanread(buff))
 		{
 			putmessage("Unable to read Directory");
 		}
@@ -803,7 +916,7 @@ char	*filepath;
 	char	buff[256];
 
 	addpath(buff,native_path,filepath);					/* Add file to the full path		*/
-	if (0==access(buff,0))
+	if (fexists(buff))
 	{
 		switch (file_style)
 		{
@@ -847,11 +960,11 @@ static remove_file_adjust()
 static select_display(file)
 char	*file;
 {
-	if (0!=access(file,0))
+	if (!fexists(file))
 	{
 		putmessage("File Not Found");
 	}
-	else if (0!=access(file,04))
+	else if (!fcanread(file))
 	{
 		putmessage("Read Access Denied");
 	}
@@ -865,31 +978,31 @@ static select_edit(file)
 char	*file;
 {
 	char	*ptr;
-	char	buff[256];
+	char	cmd[256], mess[256];
 	int	rc;
 
-	if (0!=access(file,0))
+	if (!fexists(file))
 	{
 		putmessage("File Not Found");
 	}
-	else if (0!=access(file,04))
+	else if (!fcanread(file))
 	{
 		putmessage("Read Access Denied");
 	}
 	else
 	{
-		if (!(ptr = (char *)getenv("WEDITOR")))
+		if (!(ptr = getenv("WEDITOR")))
 		{
-			ptr = "vi";
+			ptr = "vsedit";
 		}
-		sprintf(buff,"%s %s",ptr,file);
+		sprintf(cmd,"%s %s",ptr,file);
 		WISPSHUT();
-		rc = wsystem(buff);
+		rc = wsystem(cmd);
 		WISPSYNC();
 		if (rc)
 		{
-			sprintf(buff,"EDIT failed: \"%s %s\" [rc=%d]",ptr,file,rc);
-			putmessage(buff);
+			sprintf(mess,"EDIT terminated: \"%s\" [rc=%d]",cmd,rc);
+			putmessage(mess);
 		}
 	}
 }
@@ -993,22 +1106,22 @@ char	*wsb;
 	}
 }
 
-static select_print()
+static int select_print()
 {
 	char	wsb[SCREENSIZE];
 	char	pf_list[80];
 	int	pfkey;
 	char	print_mode[10], print_class[10], scratch_after[10], copies_char[10], form_char[10], disp[10];
-	long	tlong;
-	int	copies_num, form_num;
-	int	mod;
-	int	rc;
+	int4	tlong;
+	int4	copies_num, form_num;
+	int4	mod;
+	int4	rc;
 
 	print_mode[0] = 'S';
 	get_defs(DEFAULTS_PC,print_class);
 	memcpy(scratch_after,"NO ",3);
 	memcpy(copies_char,"    1",5);
-	get_defs(DEFAULTS_FN,&tlong);
+	get_defs(DEFAULTS_FN,(char*)&tlong);
 	sprintf(form_char,"%03ld",tlong);
 	
 	for(;;)
@@ -1064,7 +1177,7 @@ static select_print()
 			wprint(native_path,print_mode[0],disp,copies_num,print_class[0],form_num,&rc);
 			switch(rc)
 			{
-			case  0:	putmessage("File printed");	return; break;
+			case  0:	putmessage("File printed");  return(0); break;
 			case 20:	putmessage("File Not Found");		break;
 			case 28:	putmessage("Access Denied");		break;
 			case 40:	putmessage("Invalid argument");		break;
@@ -1072,7 +1185,7 @@ static select_print()
 			}
 			break;
 		case PF_RETURN:
-			return;
+			return(0);
 			break;
 		case PF_SCREEN:
 			wsh_progprnt(0);
@@ -1080,11 +1193,10 @@ static select_print()
 			break;
 		default: /* HELP */
 			next_screen = EXIT_SCREEN;
-			return;
+			return(0);
 			break;
 		}
 	}
-
 }
 
 static int build_print_screen(wsb,pf_list,print_mode,print_class,scratch_after,copies,print_form)
@@ -1133,21 +1245,21 @@ char	*print_form;
 }
 
 static int select_rename(file_type)
-int	file_type;
+int4	file_type;
 {
 	char	wsb[SCREENSIZE];
 	char	pf_list[80];
-	int	pfkey;
+	int4	pfkey;
 	char	vol[6],lib[8],file[8],filepath[80];
 	char	path[256],buff[256];
-	int	option;
-	long	mode;
+	int4	option;
+	int4	mode;
 	char	*ptr;
-	int	dest_spec;
-	int	rc;
+	int4	dest_spec;
+	int4	rc;
 	char	pbuf[80];
 	char	ebuf[8][80];
-	int	ecnt;
+	int4	ecnt;
 	FILE	*fp;
 	void	(*save_sig)();
 
@@ -1179,6 +1291,7 @@ int	file_type;
 		case PF_RETURN:	/* Return */
 			return(0);
 			break;
+		case PF_ENTER:	/* RENAME */
 		case 2:		/* RENAME */
 		case 3: 	/* COPY */
 		case 5: 	/* LINK */
@@ -1223,12 +1336,18 @@ int	file_type;
 			{
 				putmessage("Destination file must be different!");
 			}
+			else if (fexists(path))
+			{
+				putmessage("Destination file already exists!");
+			}
 			else
 			{
 				makepath( path );				/* Ensure the target path exists		*/
 
+#ifdef unix
 				switch(pfkey)
 				{
+				case PF_ENTER:
 				case 2:
 					sprintf(buff,"mv -f %s %s 2>&1",native_path,path);
 					break;
@@ -1264,6 +1383,41 @@ int	file_type;
 					signal(SIGCLD,save_sig);
 					return(0);
 				}
+#endif /* unix */
+#ifdef MSDOS
+				switch(pfkey)
+				{
+				case PF_ENTER:
+				case 2:
+					if (0 == rename(native_path,path))
+					{
+						return(0);
+					}
+
+					switch(errno)
+					{
+					case ENOENT:
+					case EACCES:
+						if (file_type == DIR_OPTION_DIR)
+						{
+							sprintf(buff,"Cannot MOVE directory, only RENAME! [errno=%d]",errno);
+						}
+						else
+						{
+							sprintf(buff,"Unable to create new file! [errno=%d]",errno);
+						}
+						break;
+					case EXDEV:
+						sprintf(buff,"Cannot RENAME to a different device! [errno=%d]",errno);
+						break;
+					default:
+						sprintf(buff,"RENAME failed [errno=%d]",errno);
+						break;
+					}
+					putmessage(buff);
+					break;
+				}
+#endif /* MSDOS */
 			}
 		}
 	}
@@ -1286,7 +1440,12 @@ char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 	loadpad(filepath,native_path,sizeof(filepath));
 
 	wsb_init(wsb);
+#ifdef unix
 	wsb_put_text(wsb,1,26,0,"***  Rename/Copy File  ***");
+#endif
+#ifdef MSDOS
+	wsb_put_text(wsb,1,28,0,"***  Rename File  ***");
+#endif
 	wsb_message(wsb);
 
 	wsb_build_filespec(wsb,vol,lib,file,filepath,file_style,NOMOD,ROW_FILESPEC);
@@ -1295,14 +1454,19 @@ char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 
 	wsb_build_filespec(wsb,dvol,dlib,dfile,dfilepath,STYLE_FILE,MODIFIABLE,10);
 	
-	wsb_put_field(wsb,20,2,0,"Select:",BOLD_UNDER_TEXT);
-	wsb_put_text(wsb,22, 2,0,"(1) Return");
-	wsb_put_text(wsb,23, 2,0,"(2) RENAME");
-	wsb_put_text(wsb,24, 2,0,"(3) COPY");
-	wsb_put_text(wsb,23,20,0,"(5) LINK");
-	wsb_put_text(wsb,24,20,0,"(6) Symbolic LINK");
-	wsb_put_text(wsb,24,50,0,"(15) Print Screen");
-	strcpy(pf_list,"010203050615X");
+	wsb_put_field(wsb,20,2,0,"Press (ENTER) to RENAME or Select:",BOLD_UNDER_TEXT);
+	strcpy(pf_list,"00");
+	wsb_put_text(wsb,22, 2,0,"(1) Return");		strcat(pf_list,"01");
+#ifdef unix
+	wsb_put_text(wsb,23, 2,0,"(2) RENAME");		strcat(pf_list,"02");
+	wsb_put_text(wsb,24, 2,0,"(3) COPY");		strcat(pf_list,"03");
+	wsb_put_text(wsb,23,20,0,"(5) LINK");		strcat(pf_list,"05");
+	wsb_put_text(wsb,24,20,0,"(6) Symbolic LINK");	strcat(pf_list,"06");
+#endif
+	wsb_put_text(wsb,24,50,0,"(15) Print Screen");	strcat(pf_list,"15");
+
+	strcat(pf_list,"X");
+/*	strcpy(pf_list,"010203050615X"); */
 
 	for (i=0;i<ecnt;i++)
 	{
@@ -1314,15 +1478,15 @@ char	dvol[6], dlib[8], dfile[8], dfilepath[80];
 
 static int build_dir_screen(wsb,item_cnt,start_item,end_item,pf_list)
 char	wsb[SCREENSIZE];
-int	item_cnt;
-int	start_item;
-int	*end_item;
+int4	item_cnt;
+int4	start_item;
+int4	*end_item;
 char	*pf_list;
 {
 	char	vol[6], lib[8], file[8], filepath[80];
-	long	mode;
+	int4	mode;
 	int	rc;
-	long	pos, row, col;
+	int4	pos, row, col;
 	char	buff[255];
 
 	memcpy(vol,wang_vol,6);
@@ -1340,18 +1504,31 @@ char	*pf_list;
 	wsb_build_filespec(wsb,vol,lib,file,filepath,file_style,NOMOD,ROW_FILESPEC);
 
 	wsb_put_field(wsb,19,2,0,"Position cursor to a File or Directory and press (ENTER) or Select:",BOLD_UNDER_TEXT);
-	wsb_put_text(wsb,21, 2,0,"(1) Return to Volume Display");
+	strcpy(pf_list,"00");
+		wsb_put_text(wsb,21, 2,0,"(1) Return to Volume Display");	strcat(pf_list,"01");
 
-	wsb_put_text(wsb,21,35,0," (7) Rename");
-	wsb_put_text(wsb,22,35,0," (8) Scratch");
-	wsb_put_text(wsb,23,35,0," (9) Protect");
-	wsb_put_text(wsb,24,35,0,"(10) Print");
+	if (modify_allowed)
+	{
+		wsb_put_text(wsb,21,35,0," (7) Rename");			strcat(pf_list,"07");
+		wsb_put_text(wsb,22,35,0," (8) Scratch");			strcat(pf_list,"08");
+#ifdef unix
+		wsb_put_text(wsb,23,35,0," (9) Protect");			strcat(pf_list,"09");
+#endif
+	}
 
-	wsb_put_text(wsb,21,50,0,"(11) Display");
-	wsb_put_text(wsb,22,50,0,"(12) Edit");
-	wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+		wsb_put_text(wsb,24,35,0,"(10) Print");				strcat(pf_list,"10");
 
-	strcpy(pf_list,"000107080910111215");
+	if (display_allowed)
+	{
+		wsb_put_text(wsb,21,50,0,"(11) Display");			strcat(pf_list,"11");
+	}
+	if (modify_allowed)
+	{
+		wsb_put_text(wsb,22,50,0,"(12) Edit");				strcat(pf_list,"12");
+	}
+		wsb_put_text(wsb,24,50,0,"(15) Print Screen");			strcat(pf_list,"15");
+
+/*	strcpy(pf_list,"000107080910111215"); */
 	if (start_item > 0)  
 	{
 		wsb_put_text(wsb,23, 2,0,"(2) First");
@@ -1359,13 +1536,19 @@ char	*pf_list;
 		strcat(pf_list,"0204");
 	}
 
-
+#ifdef unix
 #define DIRCOLWIDTH	26
+#endif
+#ifdef MSDOS
+#define DIRCOLWIDTH	19
+#endif
 #define DIRSTARTROW	8
+#define DIRNUMROWS	10
+
 	pos = start_item;
 	for(col=2;col<=80-DIRCOLWIDTH;col+=DIRCOLWIDTH)
 	{
-		for(row=DIRSTARTROW;row<(DIRSTARTROW+10);row++)
+		for(row=DIRSTARTROW;row<(DIRSTARTROW+DIRNUMROWS);row++)
 		{
 			if (pos>=item_cnt)
 			{
@@ -1374,7 +1557,7 @@ char	*pf_list;
 				break;							/* Break inner loop			*/
 			}
 
-			if (rc=ring_remove(dir_ring,pos,&dir_item))
+			if (rc=ring_remove(dir_ring,pos,(char*)&dir_item))
 			{
 				werrlog(ERRORCODE(2),"dir_ring 1",ring_error(rc),0,0,0,0,0,0);
 				return(rc);
@@ -1387,7 +1570,7 @@ char	*pf_list;
 			switch(dir_item.type)
 			{
 			case TYPE_DIR:
-				strcat(filepath,"/");
+				strcat(filepath,DDS_STR);
 				break;
 			case TYPE_REG:
 				break;
@@ -1410,7 +1593,7 @@ char	*pf_list;
 			wsb_put_tab(wsb,dir_item.currow,dir_item.curcol);
 			wsb_put_text(wsb,dir_item.currow,col+2,0,filepath);
 
-			if (rc=ring_add(dir_ring,0,&dir_item))
+			if (rc=ring_add(dir_ring,0,(char*)&dir_item))
 			{
 				werrlog(ERRORCODE(2),"dir_ring 2",ring_error(rc),0,0,0,0,0,0);
 				return(rc);
@@ -1442,9 +1625,9 @@ static int file_screen()
 	char	filepath[255];
 	int	rc, i;
 	int	option;
-	long	mode;
-	struct	stat	l_stat;
+	int4	mode;
 	int	protect;
+	int	filetype;
 
 	load_native_path();								/* load the native file path		*/
 
@@ -1461,30 +1644,22 @@ static int file_screen()
 
 	while(next_screen == FILE_SCREEN)
 	{
-		if (stat(native_path,&l_stat))
+		if (!fexists(native_path))
 		{
-			switch(errno)
-			{
-			case ENOENT:
-				putmessage("File Not Found");
-				break;
-			case EACCES:
-				putmessage("Access denied");
-				break;
-			default:
-				putmessage("Error attempting to STAT the file");
-				break;
-			}
+			putmessage("File Not Found");
 			return_file_screen();
 			return(0);
 		}
 
-		if (rc = build_file_screen(wsb,&l_stat,pf_list,protect)) return(rc);
+		filetype = stattype(native_path);
+
+		if (rc = build_file_screen(wsb,pf_list,protect,filetype)) return(rc);
 		pfkey = disp_screen(wsb,pf_list);
 		last_screen = FILE_SCREEN;						/* Last screen display is FILE_SCREEN	*/
 
 		switch(pfkey)
 		{
+#ifdef unix
 		case PF_ENTER:
 			if (protect)
 			{
@@ -1492,6 +1667,7 @@ static int file_screen()
 				protect = 0;
 			}
 			break;
+#endif
 		case PF_RETURN:
 			if (protect)
 			{
@@ -1504,7 +1680,7 @@ static int file_screen()
 			}
 			break;
 		case PF_RENAME:
-			select_rename(DIR_OPTION_FILE);
+			select_rename((filetype == TYPE_DIR)?DIR_OPTION_FILE:DIR_OPTION_FILE);
 			break;
 		case PF_SCRATCH:
 			if (select_scratch(native_path,wsb) == 0)
@@ -1559,19 +1735,22 @@ static int return_file_screen()
 	return(0);
 }
 
-static int build_file_screen(wsb,filestat,pf_list,protect)
+static int build_file_screen(wsb,pf_list,protect,filetype)
 char	wsb[SCREENSIZE];
-struct	stat	*filestat;
 char	*pf_list;
 int	protect;
+int	filetype;
 {
 	char	vol[6], lib[8], file[8], filepath[80];
 	int	rc,col,row;
-	struct	passwd	*pw;
-	struct	group	*gr;
 	char	buff[80];
 	char	type[80];
+	struct	stat	filestat;
+#ifdef unix
+	struct	passwd	*pw;
+	struct	group	*gr;
 	char	owner[80], group[80], protection[20];
+#endif
 
 	memcpy(vol,wang_vol,6);
 	memcpy(lib,wang_lib,8);
@@ -1600,38 +1779,35 @@ int	protect;
 			file_screen_return = DIR_SCREEN;
 			wsb_put_text(wsb,21, 2,0,"(1) Return to Directory Display");
 		}
-		wsb_put_text(wsb,21,35,0," (7) Rename");
-		wsb_put_text(wsb,22,35,0," (8) Scratch");
-		wsb_put_text(wsb,23,35,0," (9) Protect");
-		wsb_put_text(wsb,24,35,0,"(10) Print");
+		strcpy(pf_list,"01");
 
-		wsb_put_text(wsb,21,50,0,"(11) Display");
-		wsb_put_text(wsb,22,50,0,"(12) Edit");
-		wsb_put_text(wsb,24,50,0,"(15) Print Screen");
+		if (modify_allowed)
+		{
+			wsb_put_text(wsb,21,35,0," (7) Rename");	strcat(pf_list,"07");
+			wsb_put_text(wsb,22,35,0," (8) Scratch");	strcat(pf_list,"08");
+#ifdef unix
+			wsb_put_text(wsb,23,35,0," (9) Protect");	strcat(pf_list,"09");
+#endif
+		}
+		if (TYPE_REG == filetype)
+		{
+			wsb_put_text(wsb,24,35,0,"(10) Print");		strcat(pf_list,"10");
+		}
+		if (TYPE_REG == filetype && display_allowed)
+		{
+			wsb_put_text(wsb,21,50,0,"(11) Display");	strcat(pf_list,"11");
+		}
+		if (TYPE_REG == filetype && modify_allowed)
+		{
+			wsb_put_text(wsb,22,50,0,"(12) Edit");		strcat(pf_list,"12");
+		}
 
-		strcpy(pf_list,"0107080910111215X");
+		wsb_put_text(wsb,24,50,0,"(15) Print Screen");	strcat(pf_list,"15");
+		strcat(pf_list,"X");
+/*		strcpy(pf_list,"0107080910111215X"); */
 	}
 
-	if (pw = getpwuid(filestat->st_uid))
-	{
-		strcpy(owner,pw->pw_name);
-	}
-	else
-	{
-		strcpy(owner,"(unknown)");
-	}
-
-	if (gr = getgrgid(filestat->st_gid))
-	{
-		strcpy(group,gr->gr_name);
-	}
-	else
-	{
-		strcpy(group,"(unknown)");
-	}
-
-
-	switch (stattype(native_path))
+	switch (filetype)
 	{
 	case TYPE_DIR:
 		strcpy(type,"DIRECTORY");
@@ -1644,6 +1820,12 @@ int	protect;
 		break;
 	case TYPE_BLK:
 		strcpy(type,"BLOCK SPECIAL");
+		break;
+	case TYPE_SPECIAL:
+		strcpy(type,"MS-DOS SPECIAL");
+		break;
+	case TYPE_HIDDEN:
+		strcpy(type,"HIDDEN SPECIAL");
 		break;
 	case TYPE_REG:
 		switch(typefile(native_path))
@@ -1678,6 +1860,18 @@ int	protect;
 		case FILE_FHISAMD:
 			strcpy(type,"MICRO FOCUS FH ISAM (DATA)");
 			break;
+		case FILE_MFGNT:
+			strcpy(type,"MICRO FOCUS GNT CODE");
+			break;
+		case FILE_BATCH:
+			strcpy(type,"MSDOS BATCH FILE");
+			break;
+		case FILE_PROC:
+			strcpy(type,"PROCEDURE SOURCE");
+			break;
+		case FILE_PROCOBJ:
+			strcpy(type,"PROCEDURE OBJECT");
+			break;
 		case FILE_UNKNOWN:
 		default:
 			strcpy(type,"ORDINARY");
@@ -1691,21 +1885,68 @@ int	protect;
 		break;
 	}
 
+	memset(&filestat,0,sizeof(filestat));
+
 	wsb_put_text(wsb, 8,2,0,"File type is");
 	wsb_put_field(wsb,8,20,0,type,BOLD_TEXT);
 
-	sprintf(buff,"%ld",filestat->st_size);
-	wsb_put_text(wsb, 9,2,0,"Size in bytes is");
-	wsb_put_field(wsb,9,20,0,buff,BOLD_TEXT);
+#ifdef MSDOS
+	/*
+	**	There is a bug the stat() routine in Intel C Code Builder version 1.0e.
+	**	If you try to stat() a directory on C: or B: it attempts to read the wrong drive.
+	**	To work around this don't do a stat() on a directory until fixed.
+	*/
+	if (filetype != TYPE_DIR)
+#endif
+	{
+		if (stat(native_path,&filestat))
+		{
+			switch(errno)
+			{
+			case ENOENT:
+				putmessage("File Not Found");
+				break;
+			case EACCES:
+				putmessage("Access denied");
+				break;
+			default:
+				putmessage("Error attempting to STAT the file");
+				break;
+			}
+		}
 
-	strcpy(buff,ctime(&filestat->st_mtime));
-	buff[strlen(buff)-1] = '\0';
-	wsb_put_text(wsb,11,2,0,"Last Modified");
-	wsb_put_field(wsb,11,20,0,buff,BOLD_TEXT);
+		sprintf(buff,"%ld",filestat.st_size);
+		wsb_put_text(wsb, 9,2,0,"Size in bytes is");
+		wsb_put_field(wsb,9,20,0,buff,BOLD_TEXT);
 
-	modestring(filestat,protection);
+		strcpy(buff,ctime(&filestat.st_mtime));
+		buff[strlen(buff)-1] = '\0';
+		wsb_put_text(wsb,11,2,0,"Last Modified");
+		wsb_put_field(wsb,11,20,0,buff,BOLD_TEXT);
+	}
 
-	sprintf(buff,"%s %s (%d) %s (%d)",protection,owner,filestat->st_uid,group,filestat->st_gid);
+#ifdef unix
+	if (pw = getpwuid(filestat.st_uid))
+	{
+		strcpy(owner,pw->pw_name);
+	}
+	else
+	{
+		strcpy(owner,"(unknown)");
+	}
+
+	if (gr = getgrgid(filestat.st_gid))
+	{
+		strcpy(group,gr->gr_name);
+	}
+	else
+	{
+		strcpy(group,"(unknown)");
+	}
+
+	modestring(&filestat,protection);
+
+	sprintf(buff,"%s %s (%d) %s (%d)",protection,owner,filestat.st_uid,group,filestat.st_gid);
 	wsb_put_text(wsb,13,2,0,"Protection is");
 	wsb_put_field(wsb,13,20,0,buff,BOLD_TEXT);
 
@@ -1716,10 +1957,10 @@ int	protect;
 	wsb_put_text(wsb,row+2,col,0,"Group xxxxxxxxxxxxxxxx +       +       +   ");
 	wsb_put_text(wsb,row+3,col,0,"Other                  +       +       +   ");
 
-	sprintf(buff,"%s (%d)               ",owner,filestat->st_uid);
+	sprintf(buff,"%s (%d)               ",owner,filestat.st_uid);
 	wsb_put_field(wsb,row+1,col+6,16,buff,BOLD_TEXT);
 
-	sprintf(buff,"%s (%d)               ",group,filestat->st_gid);
+	sprintf(buff,"%s (%d)               ",group,filestat.st_gid);
 	wsb_put_field(wsb,row+2,col+6,16,buff,BOLD_TEXT);
 
 	wsb_put_field(wsb,row+1,col+23,1,(protection[1]=='r')?"X":" ",(protect)?UPCASE_FIELD:BOLD_TEXT);
@@ -1731,10 +1972,12 @@ int	protect;
 	wsb_put_field(wsb,row+3,col+23,1,(protection[7]=='r')?"X":" ",(protect)?UPCASE_FIELD:BOLD_TEXT);
 	wsb_put_field(wsb,row+3,col+31,1,(protection[8]=='w')?"X":" ",(protect)?UPCASE_FIELD:BOLD_TEXT);
 	wsb_put_field(wsb,row+3,col+39,1,(protection[9]=='x')?"X":" ",(protect)?UPCASE_FIELD:BOLD_TEXT);
+#endif /* unix */
 
 	return(0);
 }
 
+#ifdef unix
 static do_protect(wsb)
 {
 	int	col,row,mode;
@@ -1774,6 +2017,7 @@ static do_protect(wsb)
 		}
 	}
 }
+#endif /* unix */
 
 /*
 	get_vol_choice		Find out what was requested and set OPTION and file_style.
@@ -1800,11 +2044,11 @@ int	*option;
 	col = (int)wsb[2];
 	row = (int)wsb[3];
 
-	if ( row >=VOLSTARTROW  && row <(VOLSTARTROW+10) )
+	if ( row >=VOLSTARTROW  && row <(VOLSTARTROW+VOLNUMROWS) )
 	{
 		for(pos=start_item; pos<end_item; pos++)
 		{
-			if (rc=ring_get(vol_ring,pos,&vol_item))
+			if (rc=ring_get(vol_ring,pos,(char*)&vol_item))
 			{
 				werrlog(ERRORCODE(2),"vol_ring 3",ring_error(rc),0,0,0,0,0,0);
 				return(rc);
@@ -1953,7 +2197,7 @@ char	*filename;
 	{
 		for(pos=start_item; pos<end_item; pos++)
 		{
-			if (rc=ring_get(dir_ring,pos,&dir_item))
+			if (rc=ring_get(dir_ring,pos,(char*)&dir_item))
 			{
 				werrlog(ERRORCODE(2),"dir_ring 3",ring_error(rc),0,0,0,0,0,0);
 				return(rc);
@@ -2005,10 +2249,15 @@ static int load_vol_ring()
 	if (rc = vol_add()) return(rc);
 
 	memcpy(vol_item.wang,"(ROOT)",6);
-	strcpy(vol_item.path,"/");
+#ifdef unix
+	strcpy(vol_item.path,DDS_STR);
+#endif
+#ifdef MSDOS
+	strcpy(vol_item.path,"C:\\");
+#endif
 	if (rc = vol_add()) return(rc);
 
-	logical_ptr = logical_list;
+	logical_ptr = get_logical_list();
 
 	while(logical_ptr)
 	{
@@ -2033,11 +2282,12 @@ static int vol_add()
 {
 	int	rc;
 
-	if (rc = ring_add(vol_ring,0,&vol_item))
+	if (rc = ring_add(vol_ring,0,(char*)&vol_item))
 	{
 		werrlog(ERRORCODE(2),"vol_ring 5",ring_error(rc),0,0,0,0,0,0);
 		return(rc);
 	}
+	return(0);
 }
 
 /*
@@ -2060,9 +2310,18 @@ static int load_dir_ring(force_load)
 int	force_load;
 {
 	int	rc;
+	int	len;
 	char	filepath[80];
-	DIR	*dirp;
-	struct dirent *dp;
+	char	*ptr;
+	char	*context;
+	int	cnt;
+
+#ifdef unix
+	/*
+	**	MSDOS stat() routine has bug try to stat() a directory.
+	**	Also stat.st_ino is not reliable on DOS for a directory.
+	*/
+
 	static struct	stat	old_stat, new_stat;
 
 	if (first_dir_load)
@@ -2079,21 +2338,15 @@ int	force_load;
 
 	if ( !force_load &&
 	    old_stat.st_ino   == new_stat.st_ino &&				/* if directory is already loaded and 		*/
-	    old_stat.st_dev   == new_stat.st_dev   )				/* has not been modified then don't reload	*/
+	    old_stat.st_dev   == new_stat.st_dev    )				/* has not been modified then don't reload	*/
 	{
 		if (old_stat.st_mtime == new_stat.st_mtime)
 		{
 			return(0);
 		}
-		else 
-		{
-#ifdef OLD
-			putmessage("Directory has been Modified");
-#endif
-		}
 	}
-
 	memcpy(&old_stat,&new_stat,sizeof(old_stat));
+#endif /* unix */
 
 	if (dir_ring)
 	{
@@ -2116,29 +2369,28 @@ int	force_load;
 
 	dir_item.currow = 0;
 	dir_item.curcol = 0;
+	cnt = 0;
 
-	dirp = opendir(native_path);
-	if (!dirp)
+	context = NULL;
+	while( ptr = nextfile(native_path,&context) )
 	{
-		putmessage("Opendir failed");
-		return(0);
-	}
-
-	while( (dp = readdir( dirp )) != NULL )
-	{
-		strcpy(dir_item.file,dp->d_name);
+		strcpy(dir_item.file,ptr);
 		strcpy(filepath,native_path);
-		strcat(filepath,"/");
+		len = strlen(filepath);
+		if (len>0 && filepath[len-1] != DDS_CHAR)			/* If no trailing DDS then add it		*/
+		{
+			strcat(filepath,DDS_STR);
+		}
 		strcat(filepath,dir_item.file);
 		dir_item.type = stattype(filepath);
 		if (rc = dir_add())
 		{
-			closedir(dirp);
+			nextfile(NULL,&context);
 			return(rc);
 		}
-		
+		cnt++;
 	}
-	closedir(dirp);
+	nextfile(NULL,&context);
 
 	return(0);
 }
@@ -2150,11 +2402,12 @@ static int dir_add()
 {
 	int	rc;
 
-	if (rc = ring_add(dir_ring,0,&dir_item))
+	if (rc = ring_add(dir_ring,0,(char*)&dir_item))
 	{
 		werrlog(ERRORCODE(2),"dir_ring 6",ring_error(rc),0,0,0,0,0,0);
 		return(rc);
 	}
+	return(0);
 }
 
 /*
@@ -2189,7 +2442,8 @@ char	*pfkey_list;
 		sound_alarm = 0;
 	}
 
-	vwang(&function,wsb,&lines,pfkey_list,pfkey,status);
+	vwang((unsigned char*)&function,(unsigned char*)wsb,(unsigned char*)&lines,
+	      (unsigned char*)pfkey_list,(unsigned char*)pfkey,(unsigned char*)status);
 
 	screen_message[0] = '\0';							/* Clear error message			*/
 
@@ -2204,7 +2458,7 @@ static libpath(vol,lib,path)
 char	vol[6], lib[8], path[80];
 {
 	char	l_file[8], l_lib[8], l_vol[6];
-	long	mode;
+	int4	mode;
 	int	blank_vol, blank_lib;
 
 	blank_vol = 0;
@@ -2229,8 +2483,10 @@ char	vol[6], lib[8], path[80];
 	if (blank_vol && blank_lib)
 	{
 		memset(path,' ',80);
+#ifdef OLD
 		path[0] = '.';
-		path[1] = '/';
+		path[1] = DDS_CHAR;
+#endif
 	}
 	else if (blank_lib)
 	{
@@ -2253,6 +2509,7 @@ char	vol[6], lib[8], path[80];
 static int stattype(path)
 char	*path;
 {
+#ifdef unix
 	int	rc;
 	struct stat buf;
 
@@ -2281,6 +2538,28 @@ char	*path;
 	else			  	 rc = TYPE_UNKNOWN;
 
 	return(rc);
+#endif /* unix */
+#ifdef MSDOS
+	int	rc;
+	unsigned attrib;
+
+	if (0==_dos_getfileattr(path,&attrib))
+	{
+		if      (attrib & _A_SUBDIR) 	rc = TYPE_DIR;
+		else if (attrib & _A_RDONLY) 	rc = TYPE_REG;
+		else if (attrib & _A_VOLID)  	rc = TYPE_SPECIAL;
+		else if (attrib & _A_HIDDEN) 	rc = TYPE_HIDDEN;
+		else if (attrib & _A_SYSTEM) 	rc = TYPE_SPECIAL;
+		else if (attrib & _A_ARCH) 	rc = TYPE_REG;
+		else if (attrib == _A_NORMAL) 	rc = TYPE_REG;		/* Normal is 0x00 */
+		else				rc = TYPE_UNKNOWN;
+	}
+	else
+	{
+		rc = TYPE_NOTFOUND;
+	}
+	return(rc);
+#endif /* MSDOS */
 }
 
 /*
@@ -2299,7 +2578,7 @@ char	*file;
 	{
 		return(FILE_UNKNOWN);
 	}
-	rc = read(fh,buff,6);
+	rc = read(fh,(char *)buff,6);
 	close(fh);
 	if (rc != 6)
 	{
@@ -2328,6 +2607,20 @@ char	*file;
 		return(FILE_FHISAMD);
 	}
 
+	switch(runtype(file))
+	{
+#ifdef MSDOS
+	case RUN_EXEC:		return(FILE_EXEC);
+	case RUN_SHELL:		return(FILE_BATCH);
+	case RUN_ACUCOBOL:	return(FILE_ACUOBJ);
+#endif
+	case RUN_MFINT:		return(FILE_MFINT);
+	case RUN_MFGNT:		return(FILE_MFGNT);
+	case RUN_PROC:		return(FILE_PROC);
+	case RUN_PROCOBJ:	return(FILE_PROCOBJ);
+	}
+
+#ifdef unix
 	switch(isexec(file))
 	{
 	case ISEXEC:
@@ -2340,6 +2633,7 @@ char	*file;
 		return(FILE_MFINT);
 		break;
 	}
+#endif /* unix */
 
 	fh = open(file,O_RDONLY,0);
 	if ( fh == -1 )
@@ -2349,7 +2643,7 @@ char	*file;
 
 	for(i=0;i<255;i++)
 	{
-		rc = read(fh,buff,1);
+		rc = read(fh,(char *)buff,1);
 		if (rc != 1) break;
 
 		if (buff[0] >= ' ' && buff[0] <= '~') continue;
@@ -2367,30 +2661,54 @@ char	*file;
 
 /*
 	uppath		This routine removes the lowest level entry from a file path ( up to "/").
-			If no leading '/' then return '.'.
+			If no leading '/' then return the current directory.
 */
 static uppath(path)
 char	*path;
 {
 	int	i;
 
-	for(i=strlen(path)-1; i>=0; i--)
+	for(i=strlen(path)-1; i>0; i--)
 	{
-		if ( path[i] == '/' ) break;
+		if ( path[i] == DDS_CHAR ) break;
 	}
 
-	if ( path[i] != '/' )
+	if ( path[i] != DDS_CHAR )
 	{
-		strcpy(path,".");
+		getcwd(path,80);
 	}
+#ifdef unix
 	else if ( i > 0 )
 	{
-		path[i] = '\0';
+		path[i] = (char)0;
 	}
 	else if ( i == 0 )
 	{
-		strcpy(path,"/");
+		strcpy(path,DDS_STR);
 	}
+#endif /* unix */
+#ifdef MSDOS
+	else if ( i == 0 )			/*  "\xxx"	==>	"C:\"	*/
+	{
+		getcwd(path,80);
+		path[3] = (char)0;
+	}
+	else if ( path[1] == ':' )		/* "C:xxx"	*/
+	{
+		if ( i == 2 )			/* "C:\xxx"	==>	"C:\"	*/
+		{
+			path[3] = (char)0;
+		}
+		else				/* "C:xxx\xxx"	==>	"C:xxx"	*/
+		{
+			path[i] = (char)0;
+		}
+	}
+	else					/* "xxx\xxx"	==>	"xxx"	*/
+	{
+		path[i] = (char)0;
+	}
+#endif /* MSDOS */
 
 	return(0);
 }
@@ -2404,14 +2722,15 @@ char	*newpath, *oldpath, *file;
 	if ( oldpath[0] )
 	{
 		strcpy(newpath,oldpath);
-		if (newpath[strlen(newpath)-1] != '/')
+		if (newpath[strlen(newpath)-1] != DDS_CHAR)
 		{
-			strcat(newpath,"/");
+			strcat(newpath,DDS_STR);
 		}
 	}
 	strcat(newpath,file);
 }
 
+#ifdef unix
 /*
 	modestring	This routine is given a stat struct and returns a "ls" style string i.e.  "-rwxr-x---"
 */
@@ -2438,6 +2757,7 @@ char	*mode;
 	if (filestat->st_mode & S_IWOTH) mode[8] = 'w';
 	if (filestat->st_mode & S_IXOTH) mode[9] = 'x';
 }
+#endif /* unix */
 
 static putmessage(message)
 char *message;
@@ -2449,7 +2769,7 @@ char *message;
 static load_native_path()
 {
 	char	buff[256];
-	long	mode;
+	int4	mode;
 
 	if (!native_path_loaded)
 	{
@@ -2563,7 +2883,7 @@ char 	*text;
 
 	offset = wsb_offset(row,col);
 	if (len) memcpy(&wsb[offset],text,len);						/* Copy len characters.			*/
-	else     strcpy(&wsb[offset],text);						/* Copy null terminated.		*/
+	else     memcpy(&wsb[offset],text,strlen(text));				/* Copy null terminated.		*/
 }
 
 /*
@@ -2641,7 +2961,12 @@ int	style, mod, startrow;
 	switch(style)
 	{
 	case STYLE_PATH:
+#ifdef unix
 		wsb_put_text (wsb,startrow,2,0,"UNIX File Specification:");
+#endif
+#ifdef MSDOS
+		wsb_put_text (wsb,startrow,2,0,"MS-DOS File Specification:");
+#endif
 		break;
 	case STYLE_FILE:
 		wsb_put_text (wsb,startrow,39,0,"FILENAME = ++++++++");
@@ -2673,5 +2998,4 @@ main()
 }
 #endif
 
-#endif /* unix */
 

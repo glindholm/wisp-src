@@ -71,6 +71,10 @@
                ASSIGN TO "NONAME", "PRINTER",  NODISPLAY,
                FILE STATUS     IS FILSTAT.
 
+           SELECT LITERAL-FILE
+               ASSIGN TO "LITERAL", "PRINTER",  NODISPLAY,
+               FILE STATUS     IS FILSTAT.
+
       /*****************************************************************
       *                                                                *
       *                      DATA DIVISION - FILE SECTION              *
@@ -104,6 +108,11 @@
            LABEL RECORDS ARE OMITTED.
 
        01  NONAME-RECORD   PIC X(40).
+
+       FD  LITERAL-FILE
+           VALUE OF FILENAME IS "##LITR  ".
+
+       01  LITERAL-RECORD   PIC X(40).
 
        FD  TEMP-PRINT-FILE
            VALUE OF FILENAME IS TPRINT-FILE-NAME
@@ -393,6 +402,8 @@
                "5) ZERO LENGHT PRINT FILE.".
            03  FILLER  PIC X(40) ROW 13 COL 20 VALUE
                "6) NO NAME PRINT FILE.".
+           03  FILLER  PIC X(40) ROW 15 COL 20 VALUE
+               "7) LITERAL NAME PRINT FILE.".
 
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
                "PRESS PF KEY 16 TO EXIT".
@@ -409,7 +420,7 @@
        PRINTING-TESTS.
 
            DISPLAY AND READ PRINTING-SCREEN ON CRT
-           PFKEYS 1, 2, 3, 4, 5, 6, 16.
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 16.
 
            IF PF-KEY = "01" THEN
               PERFORM DO-PRINT-FILE
@@ -428,6 +439,9 @@
               GO TO PRINTING-TESTS
            ELSE IF PF-KEY = "06" THEN
               PERFORM DO-NONAME-PRINT
+              GO TO PRINTING-TESTS
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM DO-LITERAL-PRINT
               GO TO PRINTING-TESTS
            ELSE IF PF-KEY = "16" THEN
               GO TO EXIT-PROGRAM.
@@ -459,6 +473,15 @@
            WRITE NONAME-RECORD AFTER ADVANCING 2.
            WRITE NONAME-RECORD AFTER ADVANCING 2.
            CLOSE NONAME-FILE.
+
+       DO-LITERAL-PRINT.
+           OPEN OUTPUT LITERAL-FILE.
+           MOVE "THIS IS A TEST OF LITERAL NAME" TO LITERAL-RECORD.
+           WRITE LITERAL-RECORD AFTER ADVANCING 2.
+           WRITE LITERAL-RECORD AFTER ADVANCING 2.
+           WRITE LITERAL-RECORD AFTER ADVANCING 2.
+           WRITE LITERAL-RECORD AFTER ADVANCING 2.
+           CLOSE LITERAL-FILE.
 
        DO-PRINT-FILE.
 

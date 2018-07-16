@@ -208,3 +208,31 @@ struct save_screen { char *xchr_map; char *xatr_map; int xcur_lin;
 #define BLUE_BIT	       040000	/* Bit indicates blue function.	*/
 
 #define SUBSTITUTION_TABLE_SIZE    64	/* Size of substitution table.	*/
+
+/************************************************************************/
+/*		Internal forms error codes and parameters.		*/
+/************************************************************************/
+
+#define FORMS_ERROR_FILE "video.err"
+
+#ifdef unix
+#define VIDEOINFODIR 	"/usr/local/lib/videoinfo"
+#define VIDEOFORMDIR	"/usr/local/lib/videoform"
+#endif
+#ifdef MSDOS
+#define VIDEOINFODIR 	"C:\\video"
+#define VIDEOFORMDIR	"C:\\video"
+#endif
+
+#define REQUIRED_FIELD_EMPTY		202
+#define INVALID_FIELD_TYPE		203
+#define FIELD_MUST_BE_DIG		204
+#define FIELD_MUST_BE_NUM		205
+#define FIELD_MUST_BE_IMPN		207
+#define FIELD_MUST_BE_YMD		208
+#define FIELD_MUST_BE_MDY		209
+#define FIELD_MUST_BE_DMY		210
+#define EDIT_TEST_FAILED		222
+#define FIELD_CANNOT_BE_NEGATIVE	328
+#define FIELD_MUST_BE_NUMN		230
+#define LOCAL_ERROR_ACTIVE		999

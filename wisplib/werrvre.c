@@ -8,6 +8,7 @@
 			/************************************************************************/
 
 extern int rts_first;
+#include "idsistd.h"
 
 werrvre(buff)
 char	*buff;

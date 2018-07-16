@@ -13,6 +13,7 @@
 
 #include <string.h>
 #include <errno.h>
+#include "idsistd.h"
 
 #ifndef VMS	/* unix or MSDOS */
 #include <memory.h>
@@ -64,7 +65,11 @@ char	*fullpath;
 			{
 				return(0);					/* Dir-path exists, all is fine.		*/
 			}
-			return( errno );
+			else if ( fexists(buff))				/* got -1 so see if have access because was	*/
+			{							/*  already there.				*/
+				return(0);					/* Dir-path exists, all is fine.		*/
+			}
+			else	return( errno );
 		}
 	}
 	return(0);
@@ -116,7 +121,7 @@ char	*fullpath;
 		if ( fullpath[i] == DS )
 		{
 			buff[i] = '\0';						/* Null-Term the dir-path.			*/
-			if ( access( buff, 00 ) == 0 )				/* Check if dir-path exists.			*/
+			if ( fexists(buff) )					/* Check if dir-path exists.			*/
 			{
 				return(0);					/* Dir-path exists, all is fine.		*/
 			}
@@ -133,7 +138,7 @@ char	*fullpath;
 		if ( fullpath[i] == DS )					/* If you find a directory separator then	*/
 		{
 			buff[i] = '\0';
-			if (access( buff, 00 ) != 0)				/* See if the directory exists, If it doesn't	*/
+			if (!fexists(buff))					/* See if the directory exists, If it doesn't	*/
 			{
 #ifdef MSDOS
 				rc = mkdir( buff );				/* Try to create it.				*/

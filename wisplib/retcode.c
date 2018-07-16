@@ -13,59 +13,81 @@
 
 /* module: retcode														*/
 /* called by COBOL to get 3 digit status code back from linked COBOL programs							*/ 
+
 #ifdef unix
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
 #include <stdio.h>
-#include <errno.h>
+#include <string.h>
+#include "idsistd.h"
 #include "werrlog.h"
 #include "wdefines.h"
 
-extern int PGRPID;									/* Process Group ID.			*/
-
-extern char *sys_errlist[];
-
 #define		ROUTINE		54000
-RETCODE(code)
-char *code;
+void RETCODE(code)
+char 	code[3];
 {
-	key_t key, wftok();
-	int msgid;
-	struct {
-		long mtype;
-		char mtext[3];
-	} msg;
-	char mtxt[4];
-	int retval;
+	int	gid;
+	int	rc;
+	char	rcfilename[80];
+	char	rcbuff[10];
+	FILE	*fh;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
-	key = wftok(WISP_RETCOD_FILE);
-	if (key == (key_t) -1)
-	{
-		memcpy(code,"000",3);
-		return;
-	}
-	msgid = msgget(key,0);
-	if (msgid == -1)
-	{
-		werrlog(ERRORCODE(3),"Cannot access message queue",sys_errlist[errno],0,0,0,0,0,0);
-		memcpy(code,"000",3);
-		return;
-	}
-	
-	memset(&msg,0,sizeof(msg));
-	memset(mtxt,0,sizeof(mtxt));
-	strncpy(mtxt,"000",3);
-	do 
-	{
-		if (msgrcv(msgid,&msg,3,PGRPID,IPC_NOWAIT)>0)
-			strncpy(mtxt,msg.mtext,3);
+	gid = wgetpgrp();
 
-	} while (errno != ENOMSG);
+	sprintf(rcfilename,"%s/RC_%04X",WISP_TEMP_DIR,gid);
 
-	strncpy(code,msg.mtext,3);
+	strcpy(rcbuff,"000");
+	if (fh = fopen(rcfilename,"r"))
+	{
+		if (1==fscanf(fh,"%d",&rc))
+		{
+			sprintf(rcbuff,"%03d",rc);
+		}
+		fclose(fh);
+	}
+	memcpy(code,rcbuff,(size_t)3);
+
+	return;
+}
+#endif /* unix */
+
+#ifdef MSDOS
+void RETCODE(code)
+char *code;
+{
+	werrlog(102,"(RETCODE) Function NOT-SUPPORTED",0,0,0,0,0,0,0);
+}
+#endif /* MSDOS */
+
+#ifdef VMS
+#include "werrlog.h"
+#include "idsistd.h"
+
+void RETCODE(code)
+char code[3];
+{
+#define		ROUTINE		54000
+	char	buff[80];
+	int4	len;
+
+	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
+
+	memcpy(code,"000",3);							/* Assume OK					*/
+
+	if ( 0 == getsymb("$W_RETURN_CODE",buff,&len) )
+	{
+		switch(len)
+		{
+		case 0:	break;
+		case 1:	code[2] = buff[0];
+			break;
+		case 2:	code[1] = buff[0];
+			code[2] = buff[1];
+			break;
+		default:
+			memcpy(code,buff,3);
+		}
+	}
 }
 #endif
-

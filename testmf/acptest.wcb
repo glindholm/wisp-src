@@ -117,8 +117,8 @@
            03  CFG-PARITY       PIC X.          
            03  CFG-SIZE PIC X.          
            03  CFG-STOP PIC X.          
-           03  CFG-DUPLEX       PIC X.          
-           03  CFG-FILLER       PIC X.               
+           03  CFG-DUPLEX       PIC X VALUE "-".
+           03  CFG-FLOW         PIC X.               
 
        01  ACP-PORT PIC X(16) VALUE SPACES.
        01  ACP-DEVICE PIC X(64) VALUE SPACES.
@@ -128,6 +128,7 @@
        01  ACP-REOR3 PIC X(6) VALUE SPACES.
        01  ACP-BAUD PIC 9(5) VALUE ZERO.
        01  ACP-PARITY PIC X(1) VALUE SPACES.
+       01  ACP-FLOW   PIC X(1) VALUE SPACES.
        01  ACP-DATA-BITS PIC 9(1) VALUE ZERO.
        01  ACP-STOP-BITS PIC 9(1) VALUE ZERO.
        01  ACP-WRITE-DATA PIC X(64) VALUE SPACES.
@@ -158,56 +159,62 @@
            03  FILLER PIC X(10) ROW 3 COL 2
                VALUE "PORT NAME ".
 
-           03  FILLER PIC X(16) ROW 3 COL 12
+           03  FILLER PIC X(16) ROW 3 COL 15
                SOURCE ACP-PORT OBJECT ACP-PORT.
 
            03  FILLER PIC X(7) ROW 4 COL 5
                VALUE "DEVICE ".
 
-           03  ACP-DEVICE-FIELD PIC X(64) ROW 4 COL 12
+           03  ACP-DEVICE-FIELD PIC X(64) ROW 4 COL 15
                SOURCE ACP-DEVICE OBJECT ACP-DEVICE.
 
            03  FILLER PIC X(5) ROW 5 COL 7
                VALUE "WEOR ".
 
-           03  FILLER PIC X(6) ROW 5 COL 12
+           03  FILLER PIC X(6) ROW 5 COL 15
                SOURCE ACP-WEOR OBJECT ACP-WEOR.
 
            03  FILLER PIC X(5) ROW 6 COL 7
                VALUE "REOR ".
 
-           03  FILLER PIC X(6) ROW 6 COL 12
+           03  FILLER PIC X(6) ROW 6 COL 15
                SOURCE ACP-REOR1 OBJECT ACP-REOR1.
 
-           03  FILLER PIC X(6) ROW 6 COL 19
+           03  FILLER PIC X(6) ROW 6 COL 22
                SOURCE ACP-REOR2 OBJECT ACP-REOR2.
 
-           03  FILLER PIC X(6) ROW 6 COL 26
+           03  FILLER PIC X(6) ROW 6 COL 29
                SOURCE ACP-REOR3 OBJECT ACP-REOR3.
 
            03  FILLER PIC X(5) ROW 7 COL 7
                VALUE "BAUD ".
 
-           03  FILLER PIC 9(5) ROW 7 COL 12
+           03  FILLER PIC 9(5) ROW 7 COL 15
                SOURCE ACP-BAUD OBJECT ACP-BAUD.
 
            03  FILLER PIC X(7) ROW 8 COL 5
                VALUE "PARITY ".
 
-           03  FILLER PIC X(1) ROW 8 COL 12
+           03  FILLER PIC X(1) ROW 8 COL 15
                SOURCE ACP-PARITY OBJECT ACP-PARITY.
 
-           03  FILLER PIC X(10) ROW 9 COL 2
+           03  FILLER PIC X(10) ROW 8 COL 22
                VALUE "DATA BITS ".
 
-           03  FILLER PIC 9(1) ROW 9 COL 12
+           03  FILLER PIC 9(1) ROW 8 COL 32
                SOURCE ACP-DATA-BITS OBJECT ACP-DATA-BITS.
 
-           03  FILLER PIC X(10) ROW 10 COL 2
+           03  FILLER PIC X(10) ROW 8 COL 42
                VALUE "STOP BITS ".
 
-           03  FILLER PIC 9(1) ROW 10 COL 12
+           03  FILLER PIC 9(1) ROW 8 COL 52
                SOURCE ACP-STOP-BITS OBJECT ACP-STOP-BITS.
+
+           03  FILLER PIC X(12) ROW 9 COL 2
+               VALUE "FLOW (X,N,U)".
+
+           03  FILLER PIC X(1) ROW 9 COL 15
+               SOURCE ACP-FLOW OBJECT ACP-FLOW.
 
            03  FILLER PIC X(6) ROW 12 COL 6
                VALUE "WRITE ".
@@ -304,6 +311,7 @@
            MOVE CFG-REOR3  TO ACP-REOR3.
            MOVE CFG-BAUD   TO ACP-BAUD.
            MOVE CFG-PARITY TO ACP-PARITY.
+           MOVE CFG-FLOW   TO ACP-FLOW.
            MOVE CFG-SIZE   TO ACP-DATA-BITS.
            MOVE CFG-STOP   TO ACP-STOP-BITS.
            MOVE ACP-RETCODE-2 TO ACP-RETCODE-X.
@@ -317,6 +325,7 @@
            MOVE ACP-REOR3     TO CFG-REOR3. 
            MOVE ACP-BAUD      TO CFG-BAUD. 
            MOVE ACP-PARITY    TO CFG-PARITY.
+           MOVE ACP-FLOW      TO CFG-FLOW.
            MOVE ACP-DATA-BITS TO CFG-SIZE.
            MOVE ACP-STOP-BITS TO CFG-STOP.  
            CALL "SETACP" USING ACP-CONFIG-THING, ACP-RETCODE.

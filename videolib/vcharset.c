@@ -12,6 +12,8 @@
 #include "vdata.h"									/* Include keyboard control definitions.*/
 #include "vcap.h"
 
+static int vchs_do();
+
 /*						Subroutine entry point.								*/
 
 int vcharset(char_set) int char_set;							/* Switch to requested character set.	*/
@@ -37,7 +39,7 @@ int vcharset(char_set) int char_set;							/* Switch to requested character set.
 	return(ret);									/* Return to the caller.		*/
 }
 
-static vchs_do(char_set) int char_set;							/* Actually do the selection.		*/
+static int vchs_do(char_set) int char_set;						/* Actually do the selection.		*/
 {
 	char chstr[MAX_ESC];								/* The control string.			*/
 	register int i;									/* Working register.			*/

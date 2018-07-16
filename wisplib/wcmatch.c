@@ -60,9 +60,8 @@
  *		Passing of MATCHONE/MANY by G. Lindholm Feb 1990
  */
 
-#ifdef unix
-
 #include <ctype.h>
+#include "idsistd.h"
 #include "wdefines.h"
 
 int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
@@ -130,77 +129,6 @@ int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 		return (FALSE);
 }
 
-#endif	/* unix */
-
-#ifdef MSDOS
-
-#include <ctype.h>
-#include "wdefines.h"
-
-int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
-	register char	*pat;								/* IN -- pointer to the pattern string */
-	register char	*str;								/* IN -- pointer to the target string */
-		int	sex;								/* IN -- boolean for case sensitivity */
-		char	MATCHONE;							/* IN -- one char WILDCARD CHAR		*/
-		char	MATCHMANY;							/* IN -- many char WILDCARD CHAR	*/
-{
-	register char	c;								/* Test character from pattern string */
-	register char	s;								/* Test character from target string */
-	register char	*strend;							/* Computed pointer to end of string */
 
 
-	/* ** Execution begins ** */
-	while (*pat != '\0')
-		{
-		c = *pat++;
-		if (c == MATCHMANY)						/* Match zero or more characters in this place */
-			{
-			if (*str == '\0')						/* Made it to the end of the target? */
-				return (TRUE);						/* yes, so its a match */
-			for (strend = str; *strend != '\0'; strend++)
-				;
-			while (strend >= str)						/* Recurse to match rest of string */
-				{
-				if (wcmatch(pat, strend, sex, MATCHONE, MATCHMANY))
-					return (TRUE);
-				strend--;
-				}
-			return (FALSE);
-			}								/* end if (match Å) */
-		else if (c == MATCHONE)							/* Match one character in this position */
-			{
-			if (*str != '\0')
-				{
-				++str;                           
-				continue;
-				}
-			else
-				{
-				return (FALSE);						/* At end of string, so return */
-				}
-			}
-		else									/* Match character-for-character */
-			{
-			s = *str;
-			if (sex == FALSE && isalpha(c) && isalpha(s))			/* Case insensitive? */
-				{
-				if (!islower(c))
-					c = tolower(c);
-				if (!islower(s))
-					s = tolower(s);
-				}
-			if (s != '\0' && c == s)
-				++str;
-			else
-				return (FALSE);
-			}
-			
-		}									/* end while() */
-	if (*str == '\0')
-		return (TRUE);
-	else
-		return (FALSE);
-}
-
-#endif	/* MSDOS */
 

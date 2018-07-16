@@ -43,13 +43,6 @@ vonexit()
 	return;
 }
 
-#ifdef unix
-wexit(num)
-int num;
-{
-	exit(num);
-}
-#endif
 #ifdef VMS
 wexit(num)
 int num;
@@ -60,8 +53,14 @@ int num;
 	else		rc = 0;
 	exit(rc);
 }
-#endif
+#else /* !VMS */
+wexit(num)
+int num;
+{
+	exit(num);
+}
+#endif /* !VMS */
 
-#endif
+#endif /* WUTILS_DEF */
 
 

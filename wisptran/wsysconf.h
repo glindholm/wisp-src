@@ -19,7 +19,7 @@
 **	CFGNAME  defines the name of the config file.
 */
 #ifdef MSDOS
-#define CFGFNAME "wsysconf"
+#define CFGFNAME "WSYSCONF.CFG"
 #else	/* NOT #ifdef MSDOS (VMS & unix) */
 #define CFGFNAME "wsysconfig"
 #endif

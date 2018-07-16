@@ -1,11 +1,11 @@
-#	/************************************************************************/
-#	/*									*/
-#	/*	        WISP - Wang Interchange Source Pre-processor		*/
-#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
-#	/*	 An unpublished work of International Digital Scientific Inc.	*/
-#	/*			    All rights reserved.			*/
-#	/*									*/
-#	/************************************************************************/
+#/************************************************************************/
+#/*									*/
+#/*	        WISP - Wang Interchange Source Pre-processor		*/
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+#/*	 An unpublished work of International Digital Scientific Inc.	*/
+#/*			    All rights reserved.			*/
+#/*									*/
+#/************************************************************************/
 #
 #
 #	File:		proctran.umf
@@ -15,6 +15,7 @@
 # 	History:	
 #			06/04/92	Changed to use make.include GSL
 #			06/09/92	Removed copy. GSL
+#			01/06/93	Changed names for MSDOS. GSL
 #
 
 #PROCTRAN = proctrand
@@ -31,56 +32,56 @@ include $(WISP)/src/port/make.include
 all: 	$(PROCTRAN)
 
 $(PROCTRAN): $(LIB)
-	cc $(CFLAGS) -o $@ $(LIB)
+	$(CC) $(CFLAGS) -o $@ $(LIB)
 
 
-$(LIB):	$(LIB)(pg_check.o) \
-	$(LIB)(pg_cli.o) \
-	$(LIB)(pg_declare.o) \
-	$(LIB)(pg_doit.o) \
-	$(LIB)(pg_equatn.o) \
-	$(LIB)(pg_extract.o) \
-	$(LIB)(pg_if.o) \
-	$(LIB)(pg_init.o) \
-	$(LIB)(pg_main.o) \
-	$(LIB)(pg_prgcnst.o) \
-	$(LIB)(pg_procdiv.o) \
-	$(LIB)(pg_rs.o) \
-	$(LIB)(pg_screen.o) \
-	$(LIB)(pg_strtscn.o) \
-	$(LIB)(pg_type.o) \
-	$(LIB)(pg_utils.o) \
-	$(LIB)(pg_write.o)
+$(LIB):	$(LIB)(ptcheck.o) \
+	$(LIB)(ptcli.o) \
+	$(LIB)(ptdecl.o) \
+	$(LIB)(ptdoit.o) \
+	$(LIB)(ptequatn.o) \
+	$(LIB)(ptextrct.o) \
+	$(LIB)(ptif.o) \
+	$(LIB)(ptinit.o) \
+	$(LIB)(ptmain.o) \
+	$(LIB)(ptusing.o) \
+	$(LIB)(ptpdiv.o) \
+	$(LIB)(ptrens.o) \
+	$(LIB)(ptscreen.o) \
+	$(LIB)(ptscrdef.o) \
+	$(LIB)(pttype.o) \
+	$(LIB)(ptutils.o) \
+	$(LIB)(ptwrite.o)
 	$(RANLIB) $(LIB)
 	@echo lib $(LIB) is now up-to-date
 
 
-$(LIB)(pg_check.o): pg_check.c pgcommon.h pgglobal.h pgcblsrc.h
-$(LIB)(pg_check.o): pgstruct.h
-$(LIB)(pg_cli.o): pg_cli.c pgcommon.h pgglobal.h
-$(LIB)(pg_declare.o): pg_declare.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_doit.o): pg_doit.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_doit.o): pgcblsrc.h pgkeyw.h pgeqtns.h
-$(LIB)(pg_equatn.o): pg_equatn.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_equatn.o): pgeqtns.h pgdefeqn.h
-$(LIB)(pg_extract.o): pg_extract.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_extract.o): pgextrct.h
-$(LIB)(pg_if.o): pg_if.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_init.o): pg_init.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_main.o): pg_main.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_main.o): pgcblsrc.h pgkeyw.h pgeqtns.h pgextrct.h
-$(LIB)(pg_prgcnst.o): pg_prgcnst.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_prgcnst.o): pgeqtns.h
-$(LIB)(pg_procdiv.o): pg_procdiv.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_procdiv.o): pgcblsrc.h pgkeyw.h
-$(LIB)(pg_rs.o): pg_rs.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_screen.o): pg_screen.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_screen.o): pgkeyw.h
-$(LIB)(pg_strtscn.o): pg_strtscn.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_strtscn.o): pgcblsrc.h
-$(LIB)(pg_type.o): pg_type.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_utils.o): pg_utils.c pgcommon.h pgglobal.h pgstruct.h
-$(LIB)(pg_utils.o): pgkeyw.h pgcblsrc.h
-$(LIB)(pg_write.o): pg_write.c pgcommon.h pgstruct.h pgglobal.h
-$(LIB)(pg_write.o): pgcblsrc.h pgextrct.h
+$(LIB)(ptcheck.o): ptcheck.c pgcommon.h pgglobal.h pgcblsrc.h
+$(LIB)(ptcheck.o): pgstruct.h
+$(LIB)(ptcli.o): ptcli.c pgcommon.h pgglobal.h
+$(LIB)(ptdecl.o): ptdecl.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptdoit.o): ptdoit.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptdoit.o): pgcblsrc.h pgkeyw.h pgeqtns.h
+$(LIB)(ptequatn.o): ptequatn.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptequatn.o): pgeqtns.h pgdefeqn.h
+$(LIB)(ptextrct.o): ptextrct.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptextrct.o): pgextrct.h
+$(LIB)(ptif.o): ptif.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptinit.o): ptinit.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptmain.o): ptmain.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptmain.o): pgcblsrc.h pgkeyw.h pgeqtns.h pgextrct.h
+$(LIB)(ptusing.o): ptusing.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptusing.o): pgeqtns.h
+$(LIB)(ptpdiv.o): ptpdiv.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptpdiv.o): pgcblsrc.h pgkeyw.h
+$(LIB)(ptrens.o): ptrens.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptscreen.o): ptscreen.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptscreen.o): pgkeyw.h
+$(LIB)(ptscrdef.o): ptscrdef.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptscrdef.o): pgcblsrc.h
+$(LIB)(pttype.o): pttype.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptutils.o): ptutils.c pgcommon.h pgglobal.h pgstruct.h
+$(LIB)(ptutils.o): pgkeyw.h pgcblsrc.h
+$(LIB)(ptwrite.o): ptwrite.c pgcommon.h pgstruct.h pgglobal.h
+$(LIB)(ptwrite.o): pgcblsrc.h pgextrct.h
 

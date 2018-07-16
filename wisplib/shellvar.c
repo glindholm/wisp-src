@@ -6,6 +6,8 @@
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
+
+#include "idsistd.h"
 #ifdef MSDOS
 #include <stdlib.h>
 #include <string.h>

@@ -5,6 +5,7 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
+#include "idsistd.h"
 int menu_exit_key = 0;									/* Global var. Key 0 -  Exit key value. */
 
 /* MENU_GET_KEY.C ... This routine accepts one parameters: 1 - Which global pfkey/action variable value to get; 		*/

@@ -4,7 +4,8 @@
 **	Purpose:	To ...
 **
 **
-**	History:	mm/dd/yy	Written by ...
+**	History:
+**	mm/dd/yy	Written by ...
 **
 */
 
@@ -13,6 +14,4 @@
 
 
 
-#endif
-
-
+#endif /* xxx_H */

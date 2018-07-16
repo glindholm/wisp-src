@@ -20,7 +20,7 @@
 #include <signal.h>
 
 
-#ifdef _AIX
+#if defined(_AIX) || defined(SEQUENT)
 #include <sys/select.h>
 #include <time.h>
 #endif
@@ -63,6 +63,16 @@ struct
 	char	seq_dvalue[50];
 	char	seq_name[25];
 } et[TABLE_SIZE];
+
+static int load101();
+static int getkey();
+static int prompt();
+static int ynprompt();
+static int getstr_to();
+static int writevcap();
+static int init_table();
+static int promptkey();
+static int dupvalue();
 
 main(argc,argv)
 int	argc;

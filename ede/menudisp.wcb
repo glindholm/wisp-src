@@ -57,7 +57,9 @@
        01 LAST-LEVEL  PIC 9(9) BINARY.
        01 LAST-ITEM   PIC 9(9) BINARY.
        01 LAST-LINK   PIC 9(9) BINARY.
-       01 SAVE-AREA   PIC 9(9) BINARY.
+       01 SAVE-AREA.
+          03 SA-PART-1   PIC 9(9) BINARY.
+          03 SA-PART-2   PIC 9(9) BINARY.
        01 TABLE-INDEX PIC 9(9) BINARY.
 
       * The item table provides storage for 12 levels

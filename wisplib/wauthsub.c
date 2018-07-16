@@ -1,12 +1,12 @@
 			/************************************************************************/
 			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
+#if defined(unix) || defined(MSDOS)
 
 /*
 **	File:		wauthsub.c
@@ -19,25 +19,31 @@
 **			packdate()		Pack an 8 char date into 3 bytes
 **			unpkdate()		Unpack a date created by packdate()
 **			lictypename()		Return the text string name of the license type code.
-**			create_license_file()	Create the WISP license file.
+**			create_license_file()	Create the license file.
 **			getmachineid()		Get the MACHINE ID.
-**			write_license()		Write the info to the WISP license file.
+**			write_license()		Write the info to the license file.
 **			validate_license()	Read the license file and validate the license.
 **			check_timeout()		Check if the license has timed-out
 **
 **	History:
-**			05/26/92	Written GSL
+**	05/26/92	Written GSL
+**	09/25/92	Added LICENSE_CLUSTER logic. GSL
+**	09/13/93	Generalized for UniQue. GSL
 **
 */
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef unix
 #include <sys/utsname.h>
+#endif
 
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
+#include <string.h>
 
+#include "idsistd.h"
 #include "wlicense.h"
 
 /*
@@ -58,19 +64,23 @@
 **	Warnings:	The innum must be between 0-34, if not a "#" will be returned.
 **			We do not use char '0' (ZERO) because of confusion with 'O' (OH).
 **
-**	History:	05/19/92	Written by GSL
-**			05/20/92	Changed to use a scrambled translation table GSL
+**	History:	
+**	05/19/92	Written by GSL
+**	05/20/92	Changed to use a scrambled translation table GSL
+**	09/13/93	Generalized to use lic_trantable(). GSL
 **
 */
 
 #ifdef OLD
 static	char	*tt_tran = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789";
+static	char	*tt_tran = "QAZ9CX1EU2GR3IO4YL5MJN6PH7SFT8VDWKB";	/* WISP */
+static	char	*tt_tran = "YL5MJN6PH7SFT8VDWKBQAZ9CX1EU2GR3IO4";	/* UniQue */
 #endif
-static	char	*tt_tran = "QAZ9CX1EU2GR3IO4YL5MJN6PH7SFT8VDWKB";
 
 char	entran(innum)
 int	innum;
 {
+	char	*tt_tran = lic_trantable();
 	if (innum >= 0 && innum <= 34)
 	{
 		return( tt_tran[innum] );
@@ -97,16 +107,18 @@ int	innum;
 **
 **	Warnings:	An invalid character outside A-Z1-9 will return a -1.
 **
-**	History:	05/19/92	Written by GSL
-**
+**	History:	
+**	05/19/92	Written by GSL
+**	09/13/93	Generalized to use lic_trantable(). GSL
 */
 
 int	detran(inchar)
 char	inchar;
 {
 	char	*ptr;
+	char	*tt_tran = lic_trantable();
 
-	ptr = (char *)strchr(tt_tran, toupper(inchar));				/* Search for the char in the table (uppercase)	*/
+	ptr = strchr(tt_tran, toupper(inchar));					/* Search for the char in the table (uppercase)	*/
 	if (ptr)
 	{
 		return( ptr - tt_tran );					/* calculate the number				*/
@@ -282,6 +294,7 @@ char	*ymd;
 **	Warnings:	The caller must not modify the string pointed to.
 **
 **	History:	05/21/92	Written by GSL
+**			09/25/92	Added LICENSE_CLUSTER. GSL
 **
 */
 
@@ -291,6 +304,7 @@ int	lictype;
 static	char	*l_single	= "SINGLE";
 static	char	*l_unlimited	= "UNLIMITED";
 static	char	*l_timed	= "TIMED";
+static	char	*l_cluster	= "CLUSTER";
 static	char	*l_invalid	= "INVALID";
 
 	switch(lictype)
@@ -298,6 +312,7 @@ static	char	*l_invalid	= "INVALID";
 	case LICENSE_SINGLE:	return(l_single);	break;
 	case LICENSE_UNLIMITED:	return(l_unlimited);	break;
 	case LICENSE_TIMED:	return(l_timed);	break;
+	case LICENSE_CLUSTER:	return(l_cluster);	break;
 	default:		return(l_invalid);	break;
 	}
 }
@@ -313,7 +328,7 @@ static	char	*l_invalid	= "INVALID";
 **	Input:		None
 **			
 **
-**	Output:		/lib/wisp.license
+**	Output:		/lib/{product}.license
 **			
 **
 **	Return:		0 = success
@@ -326,16 +341,15 @@ static	char	*l_invalid	= "INVALID";
 **
 */
 
-int create_license_file(inode)
-long	*inode;
+int create_license_file()
 {
 	FILE	*fh;
 
-	if ( 0 != access(WISP_LICENSE_FILE,0000) )					/* check if file exists			*/
+	if ( 0 != access(license_filepath(),0000) )					/* check if file exists			*/
 	{
-		if ( 0 != access(WISP_LICENSE_FILE_X,0000) )				/* Check for temp inode file		*/
+		if ( 0 != access(x_license_filepath(),0000) )				/* Check for temp inode file		*/
 		{
-			fh = fopen(WISP_LICENSE_FILE,"w");
+			fh = fopen(license_filepath(),"w");
 			if (!fh)
 			{
 				return(1);
@@ -344,9 +358,14 @@ long	*inode;
 		}
 		else									/* Rename the temp file			*/
 		{
-			link(WISP_LICENSE_FILE_X,WISP_LICENSE_FILE);			/* link the temp file to license file	*/
-			unlink(WISP_LICENSE_FILE_X);					/* Remove the temp file link		*/
-			if ( 0 != access(WISP_LICENSE_FILE,0000) )			/* Make sure it worked			*/
+#ifdef unix
+			link(x_license_filepath(),license_filepath());			/* link the temp file to license file	*/
+			unlink(x_license_filepath());					/* Remove the temp file link		*/
+#endif
+#ifdef MSDOS
+			rename(x_license_filepath(),license_filepath());
+#endif
+			if ( 0 != access(license_filepath(),0000) )			/* Make sure it worked			*/
 			{
 				return(1);
 			}
@@ -363,7 +382,7 @@ long	*inode;
 **	Function:	To get the MACHINE ID.
 **
 **	Description:	This routine will return the MACHINE ID if one is available.  If there is no MACHINE ID it will
-**			"fake it" by returning the inode number of the WISP license file.
+**			"fake it" by returning the inode number of the license file.
 **
 **	Input:		None
 **			
@@ -372,21 +391,22 @@ long	*inode;
 **			
 **
 **	Return:		0 = success
-**			1 = no machine id and the stat failed on the wisp license file.
+**			1 = no machine id and the stat failed on the license file.
 **
-**	Warnings:	Ensure that the WISP license file in created first before calling this routine.
+**	Warnings:	Ensure that the license file in created first before calling this routine.
 **			Machineid must be large enough to hold the result.
 **
 **	History:	05/26/92	Written by GSL
 **
 */
 
+#ifdef unix
 int getmachineid(machineid)
 char	*machineid;
 {
 	struct stat 	stat_buf;
 	struct utsname 	uname_s;
-	long	inode;
+	int4	inode;
 
 	*machineid = '\0';							/* Init machineid to NULL string		*/
 
@@ -412,30 +432,30 @@ char	*machineid;
 	*/
 	if (! *machineid)
 	{
-		if (stat(WISP_LICENSE_FILE,&stat_buf))
+		if (stat(license_filepath(),&stat_buf))
 		{
 			return(1);
 		}
 
-		inode = (long) stat_buf.st_ino;
+		inode = (int4) stat_buf.st_ino;
 		sprintf(machineid,"I%d",inode);
 	}
 
 	upper_string(machineid);						/* Shift to upper case just in case alphas	*/
-
 	return(0);
-}
 
+}
+#endif /* unix */
 
 /*
 **	Routine:	write_license()
 **
-**	Function:	To write the WISP license file.
+**	Function:	To write the license file.
 **
-**	Description:	This routine will write the WISP license file.
+**	Description:	This routine will write the license file.
 **			The dates will be formatted.  A expiration date of 00000000 will display as "None".
 **			After writing the file the mode is changed to read-only (444).
-
+**
 **			The file will contain.
 **				LICENSEE	  ABC company
 **				CUSTOMER-NUMBER	  10001
@@ -457,7 +477,7 @@ char	*machineid;
 **			machineid		the MACHINE ID or empty string
 **			valcode			the VALIDATION CODE or empty string
 **
-**	Output:		/lib/wisp.license	the license file
+**	Output:		/lib/{product}.license	the license file
 **			
 **
 **	Return:		0 = success
@@ -472,7 +492,7 @@ char	*machineid;
 
 int write_license(custname,custnum,platform,licensekey,lictype,licdate,expdate,machineid,valcode)
 char	*custname;
-long	custnum;
+int4	custnum;
 char	platform[2];
 char	licensekey[LICENSE_KEY_SIZE];
 int	lictype;
@@ -505,7 +525,7 @@ char	valcode[VALIDATION_CODE_SIZE];
 		sprintf(expdatebuff,"%4.4s/%2.2s/%2.2s",&expdate[0],&expdate[4],&expdate[6]);
 	}
 
-	fp = fopen(WISP_LICENSE_FILE,"w");
+	fp = fopen(license_filepath(),"w");
 	if (!fp)
 	{
 		return(1);
@@ -535,7 +555,7 @@ char	valcode[VALIDATION_CODE_SIZE];
 
 	fclose(fp);
 
-	chmod(WISP_LICENSE_FILE,0444);						/* Make file read-only				*/
+	chmod(license_filepath(),0444);						/* Make file read-only				*/
 
 	return(0);
 }
@@ -544,18 +564,18 @@ char	valcode[VALIDATION_CODE_SIZE];
 /*
 **	Routine:	validate_license()
 **
-**	Function:	To validate the WISP license.
+**	Function:	To validate the license.
 **
-**	Description:	This routine will read the WISP license file and validate the LICENSE-KEY and VALIDATION-CODE.
+**	Description:	This routine will read the license file and validate the LICENSE-KEY and VALIDATION-CODE.
 **
-**	Input:		/lib/wisp.license
+**	Input:		/lib/{product}.license
 **			
 **
 **	Output:		None
 **			
 **
 **	Return:		LICENSE_OK			All is OK
-**			LICENSE_MISSING			No WISP license file
+**			LICENSE_MISSING			No license file
 **			LICENSE_TIMEDOUT		License has timed out
 **			LICENSE_INVALID			License or validation is not valid on this platform
 **			LICENSE_UNKNOWN			Unable to validate 
@@ -563,12 +583,13 @@ char	valcode[VALIDATION_CODE_SIZE];
 **	Warnings:	None
 **
 **	History:	05/26/92	Written by GSL
+**			09/24/92	Added LICENSE_CLUSTER. GSL
 **
 */
 
 int validate_license()
 {
-	long	custnum;
+	int4	custnum;
 	char	platform[3];
 	int	licensetype;
 	char	licensedate[20];
@@ -583,18 +604,18 @@ int validate_license()
 	int	rc;
 
 	/*
-	**	Check if WISP license file exists
+	**	Check if license file exists
 	*/
 
-	if (0 != access(WISP_LICENSE_FILE,0000))
+	if (0 != access(license_filepath(),0000))
 	{
 		return(LICENSE_MISSING);
 	}
 
 	/*
-	**	Open WISP license file for reading
+	**	Open license file for reading
 	*/
-	fp = fopen(WISP_LICENSE_FILE,"r");
+	fp = fopen(license_filepath(),"r");
 	if (!fp)
 	{
 		return(LICENSE_UNKNOWN);
@@ -691,6 +712,29 @@ int validate_license()
 		}
 		break;
 
+	case LICENSE_CLUSTER:
+		/*
+		**	For a cluster don't check the validation code
+		**	as it will only be valid on the machine that
+		**	was used to install the license. 
+		**	This is used when multiple machines share the
+		**	same /lib/{product}.license file as with HP/UX cluster.
+		*/
+
+		/*
+		**	Check if a VALIDATION CODE was found
+		*/
+		if (! valcode[0]) return(LICENSE_UNKNOWN);
+
+		/*
+		**	Check if the VALIDATION CODE is right size
+		*/
+		if (VALIDATION_CODE_SIZE != strlen(valcode))
+		{
+			return(LICENSE_INVALID);
+		}
+		break;
+
 	default:
 		return(LICENSE_INVALID);
 		break;
@@ -763,3 +807,4 @@ char	highdate[8];
 
 	return(0);
 }
+#endif /* unix || MSDOS */

@@ -35,6 +35,7 @@
 #else	/* VMS and unix */
 #define MAX_COLUMNS_PER_LINE   132	/* Normally in 80 column mode.	*/
 #endif	/* VMS and unix */
+
 /************************************************************************/
 /*	vbuffering() parameters.					*/
 /************************************************************************/
@@ -120,6 +121,8 @@
 /* #define DEFAULT	0		   		As per vchset()	*/
 #define	SAVE	       -1		/* Save the current term state.	*/
 #define RESTORE		1		/* Restore a pushed term state.	*/
+#define SAVE_DEBUG     -2		/* Save debugger's terminal.	*/
+#define RESTORE_DEBUG	2		/* Restore from a debugger.	*/
 
 /************************************************************************/
 /*	video get string vgets(string,count,filter,tc) definitions 	*/
@@ -256,8 +259,7 @@
 /*	vcontrol parameters.						*/
 /************************************************************************/
 
-				/* Flag indicates buffer to be dumped.	*/
-#define DUMP_OUTPUT (unsigned char *) 0	
+#define DUMP_OUTPUT (unsigned char *) 0	  /* Flag buffer to be dumped.	*/
 
 /************************************************************************/
 /*	vterminal response parameters					*/
@@ -299,8 +301,8 @@
 #define ALLOW_KEY	0		/* Allow termination of scan.	*/
 #define UP_PAGE		1
 #define DOWN_PAGE	2
-#define TOP		3
-#define BOTTOM		4
+#define VLIST_TOP	3
+#define VLIST_BOTTOM	4
 #define RIGHT_COL	5
 #define LEFT_COL	6
 #define RIGHT_PAGE	7
@@ -357,3 +359,41 @@
 #define END_SAVE	2		/* End saving keystroke macro.	*/
 #define START_RESTORE	3		/* Start restoring a macro.	*/
 
+/************************************************************************/
+/*	vform()								*/
+/************************************************************************/
+
+#define TOGGLE_KEY_DISPLAY	 10
+
+#define MAX_NUMBER_OF_FORMS	128
+#define MAX_FORM_FIELDS		256
+#define MAX_FORM_LINES		 64
+#define MAX_PROCESSING_CHARS   8192
+#define MAX_INIT_CHARS	       8192
+#define HP_FORM_NAME_SIZE	 15
+
+#define FORM_READ_ONLY		  1
+#define FORM_WRITE_ONLY		  2
+
+#define FIELD_DISPLAY_ONLY	  0
+#define FIELD_REQUIRED		  1
+#define FIELD_PROCESSED		  2
+#define FIELD_OPTIONAL		  4
+
+#define FIELD_DATA_CHAR		  0
+#define FIELD_DATA_MDY		  1
+#define FIELD_DATA_DMY		  2
+#define FIELD_DATA_YMD		  3
+#define FIELD_DATA_DIG		  4
+#define FIELD_DATA_NUM		  5
+#define FIELD_DATA_IMP		  6
+
+#define HP_ENHANCEMENT	       0100
+#define HP_BLINK		  1
+#define HP_INVERSE		  2
+#define HP_UNDERLINE		  4
+#define HP_HALF_BRIGHT		  8
+
+#define COLLECT_MODE		  0
+#define NO_REPEAT_OR_APPEND	  0
+#define CLEAR_CURRENT_FORM	  0

@@ -339,5 +339,6 @@
                           PARM-21, PARM-22, PARM-23, PARM-24,
                           PARM-25, PARM-26, PARM-27, PARM-28,
                           PARM-29, PARM-30, PARM-31, PARM-32
-                ON EXCEPTION MOVE 0 TO RETURN-VALUE.
+                ON EXCEPTION MOVE 0 TO RETURN-VALUE
+                NOT ON EXCEPTION CANCEL PROGRAM-NAME.
            EXIT PROGRAM.

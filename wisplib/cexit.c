@@ -1,3 +1,4 @@
+#include "idsistd.h"
 #include "werrlog.h"
 
 CEXIT()

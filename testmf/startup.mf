@@ -9,9 +9,17 @@
 #
 QA=$WISP/src/testmf
 WISPCONFIG=$QA/config
-export QA WISPCONFIG
-
 COBSW=-F
-COBPATH=.
-export COBSW COBPATH
-
+COBPATH=:$QA
+PATH=$WISP/wisp.QA/bin:.:/usr/local/bin:/bin:/usr/bin:/etc:/usr/ucb:$HOME/bin
+export QA WISPCONFIG COBSW COBPATH PATH
+echo
+echo '**** SETTING UP FOR MICRO FOCUS ****'
+echo "PATH       = $PATH"
+echo "QA         = $QA"
+echo "WISPCONFIG = $WISPCONFIG"
+echo "COBDIR     = $COBDIR"
+echo "COBPATH    = $COBPATH"
+echo "COBSW      = $COBSW"
+cat $COBDIR/cobver
+wisp|grep Version

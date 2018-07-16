@@ -1,14 +1,11 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
-
-#define EXT
-#define INIT_COMMON
 
 #ifdef VMS
 #include <descrip.h>
@@ -18,20 +15,37 @@
 #include <time.h>
 #endif
 
-#include "wisp.h"
+#include <string.h>
 
-static char *copyright = "(c) 1988,89,90,91 International Digital Scientific Inc.";
+#define EXT
+#define INIT_COMMON
+
+#include "wisp.h"
+#include "scrn.h"
+#include "wispfile.h"
+#include "crt.h"
+#include "cobfiles.h"
+#include "keylist.h"
+#include "directiv.h"
+#include "wmalloc.h"
+
+#include "wcommon.h"
+
+static char *copyright = "(c) 1988-1993 International Digital Scientific Inc.";
 static struct tbuffer { int cpu; int x,y,z; } time_now;					/* Time reference structure.		*/
 static int cpu_time;									/* Initial CPU time.			*/
-static char xobuff[OUTPUT_BUFFER_SIZE+1];						/* the output buffer			*/
 static char *sargv[50];									/* Save the argv			*/
+static char *targv[50];									/* argv after response file processing	*/
+static int targc;									/* argc to match targv			*/
+static int run_wisp();
+static int initialize1();
+static int initialize2();
+static int response_file();
 
 main(argc, argv)
 int	argc;
 char	*argv[];
 {
-	int i;
-	char tstr[80];
 
 #ifdef DEMO
 	if (!demovalidate()) demoexit();
@@ -39,7 +53,7 @@ char	*argv[];
 
 	initialize1(argc,argv);
 
-	get_cli(argc,sargv);								/* parse the CLI switches		*/
+	get_cli(targc,targv);								/* parse the CLI switches		*/
 
 	initialize2();
 
@@ -49,104 +63,176 @@ char	*argv[];
 	demo_message();
 #endif
 
-	for(;;)
+	if (copy_only)
 	{
-		get_line();								/* while there are lines to get...	*/
-		if (copy_only)								/* copy only flag			*/
-		{
-			sprintf(tstr,"%06d",num_inlines);
-			if (strlen(inline) > 6) memcpy(inline,tstr,6);			/* Put in line numbers if possible.	*/
-			put_line(inline);
-		}
-		else	
-		{
-			wisp();								/* WISP it, eh?				*/
-		}
+		gen_txt_file();
+	}
+	else if (data_conv)
+	{
+		gen_data_conv();
+	}
+	else
+	{
+		wisp();
 	}
 
 }
 
-wisp()
+gen_txt_file()
 {
+	int	lstat;
+	char	tstr[10];
+	int	cnt;
+	char	*ptr;
 
-/*	Now this section of the program takes actions based on what part of the program we are in. For example, it is 		*/
-/*	not necessary to scan for the SOURCE-COMPUTER declarative when we are not in the environment division, because it	*/
-/* 	only occurs there. Also, parsing a screen record could accidently take place in the procedure division if the 		*/
-/*	programmers choice of variable names was not a "good" one.								*/
-
-	check_div();								/* parse area A and see if we have 	*/
-											/* entered into a new division		*/
-	switch(division)
+	cnt = 0;
+	while(EOF != (lstat=get_cobol_inline()))
 	{
-	case IDENTIFICATION_DIVISION:
-		p_ident();						/* process IDENTIFICATION DIVISION	*/
-		break;
+		if (ptr = strchr(inline,'\n')) *ptr = (char)0;
+		sprintf(tstr,"%06d",++cnt);
+		if (strlen(inline) >= 6) 
+			memcpy(inline,tstr,6);
+		else
+			strcpy(inline,tstr);
 
-	case ENVIRONMENT_DIVISION:
-		p_environ();
-		break;
-
-	case INPUT_OUTPUT_SECTION:					/* we are in the input-output section	*/
-		p_input();
-		break;
-
-	case DATA_DIVISION:						/* we are in the data-division section	*/
-		p_data();
-		break;
-
-	case WORKING_STORAGE_SECTION:					/* we are in the working stor section	*/
-		p_wstor();
-		break;
-
-	case PROCEDURE_DIVISION:					/* we are in the procedure  section	*/
-		p_proc();
-		break;
-	} 									/* end of switch 			*/
+		tput_noprocess(inline);
+	}
+	exit_wisp(EXIT_OK);
 }
 
+wisp()
+{
+	NODE	the_statement;
 
+	the_statement = (NODE)get_statement();
 
-exit_wisp(err)									/* exit WISP, clean up 				*/
+	/*
+	**	IDENTIFICATION DIVISION
+	*/
+	the_statement = (NODE)identification_division(the_statement);
+
+	/*
+	**	ENVIRONMENT DIVISION
+	*/
+	the_statement = (NODE)environment_division(the_statement);
+
+	/*
+	**	DATA DIVISION
+	*/
+	the_statement = (NODE)data_division(the_statement);
+
+	/*
+	**	PROCEDURE DIVISION
+	*/
+	procedure_division(the_statement);
+
+	exit_wisp(EXIT_OK);
+}
+
+static int need_to_rerun_flag = 0;
+static char *need_to_rerun_reason;
+
+need_to_rerun(reason)
+char	*reason;
+{
+	if (!need_to_rerun_flag)
+	{
+		need_to_rerun_reason = (char *)wdupstr(reason);
+	}
+	else
+	{
+		char	*ptr;
+		ptr = wmalloc(strlen(need_to_rerun_reason)+strlen(reason)+1);
+		strcpy(ptr,need_to_rerun_reason);
+		strcat(ptr,reason);
+		wfree(need_to_rerun_reason);
+		need_to_rerun_reason = ptr;
+	}
+	need_to_rerun_flag = 1;
+}
+
+static int delayed_error = 0;
+
+delayed_exit_with_err()
+{
+	delayed_error = 1;
+}
+
+exit_with_err()
+{
+	exit_wisp(EXIT_WITH_ERR);
+}
+
+exit_wisp(err)										/* exit WISP, clean up 			*/
 int err;
 {
 	int i,j,k,a,b,rc;
 	c_list *tptr;									/* if not an error-exit			*/
 	char tstr[256];
 
-	if (!err && !copy_only) scrn_para();						/* write all the screen paragraphs	*/
+	if (err == EXIT_FAST) goto exit_fast;
 
-	if (prog_cnt || lock_clear_para) gen_unlocks();					/* Since there were files, write UNLOCKs*/
-
-	if (read_name[0])								/* was a file for read's created?	*/
+	if (delayed_error) 
 	{
-		fclose(read_temp_file);							/* close the file with READ's in it	*/
+		err = EXIT_WITH_ERR;
+	}
+
+	if (!err && !copy_only && !data_conv) 
+	{
+		scrn_para();								/* write all the screen paragraphs	*/
+	}
+
+	if (!err && !copy_only && !data_conv && (prog_cnt || lock_clear_para)) 
+	{
+		gen_unlocks();								/* Since there were files, write UNLOCKs*/
+	}
+
+	if (read_file_ptr)								/* was a file for read's created?	*/
+	{
+		close_cob_file(read_file_ptr);						/* close the file with READ's in it	*/
 		if (!err)								/* if no error exit then		*/
 		{
-			copy_file(read_name);						/* copy it into the WISP SECTION	*/
+			copy_file(read_fname);						/* copy it into the WISP SECTION	*/
 		}
-		delete(read_name);							/* and delete it...			*/
+		delete(read_fname);							/* and delete it...			*/
 	}
 
-	if (par_file) fclose(par_file);							/* close the paragraph file.		*/
-	if (decl_file)
+	if (dcl_file_ptr) close_cob_file(dcl_file_ptr);					/* close the paragraph file.		*/
+	if (dtp_file_ptr)
 	{
-		fclose(decl_file);							/* close the paragraph file.		*/
+		close_cob_file(dtp_file_ptr);						/* close the paragraph file.		*/
 		if (!err)
 		{
-			copy_file(decl_fname);						/* Copy it into the wisp section.	*/
+			copy_file(dtp_fname);						/* Copy it into the wisp section.	*/
 		}
-		delete(decl_fname);							/* And delete it.			*/
+		delete(dtp_fname);							/* And delete it.			*/
 	}
 
-	if ( !err && !copy_only) wisp_exit_para();					/* write WISP-EXIT-PROGRAM.		*/
+	if ( !err && !copy_only && !data_conv) wisp_exit_para();			/* write WISP-EXIT-PROGRAM.		*/
 
-	if (fo_cnt) wflush();								/* if there is output, flush it		*/
-	close(outfile);									/* and close the outfile		*/
+	if ( !err )
+	{
+		tput_flush();								/* Flush the put_token() buffers	*/
+	}
+	close_all_cob_files();								/* Close all the cob files		*/
+
+
+	if (EXIT_WITH_ERR != err)
+	{
+		if (need_to_rerun_flag || err == EXIT_AND_RUN)				/* If they want, re run wisp.		*/
+		{
+			delete(dcl_fname);						/* delete the library file		*/
+			delete(out_fname);						/* Delete the .COB file			*/
+			run_wisp();
+		}
+	}
+
 
 	if (!err && do_xref)								/* Generate cross reference file.	*/
 	{
+		FILE 	*xref_file;							/* The cross ref file.			*/
 		xref_file = fopen(xref_fname,"w");
-		fprintf(xref_file,"Cross reference listing for file %s.\n",fname);
+		fprintf(xref_file,"Cross reference listing for file %s.\n",in_fname);
 		fprintf(xref_file,"Files referenced in SELECT statements.\n\n ");
 
 		for (i=0,j=0; i<prog_cnt; i++,j++)
@@ -210,11 +296,11 @@ int err;
 	write_log(" ",' '," ","\nEXECUTION STATISTICS WISP %s\n",WISP_VERSION);
 	write_log(" ",' '," ","Elapsed CPU                   %d\056%ds.",j,k);		/* Display the time report item.	*/
 	write_log(" ",' '," ","Number of screens processed   %d.",num_screens);
-	write_log(" ",' '," ","Number of lines written       %d.",out_number);
-	write_log(" ",' '," ","Number of lines read          %d.",num_inlines);
-	write_log(" ",' '," ","Number of Comment lines       %d.",num_comments);
+	write_log(" ",' '," ","Number of lines written       %d.",out_line_count());
+	write_log(" ",' '," ","Number of lines read          %d.",in_line_count());
+	write_log(" ",' '," ","Number of Comment lines       %d.",comment_line_count());
 	write_log(" ",' '," ","Number of SELECT statements   %d.",prog_cnt);
-	a = num_inlines-num_comments;
+	a = in_line_count() - comment_line_count();
 	write_log(" ",' '," ","Total lines processed         %d.",a);
 
 	if (log_stats && !logging)							/* /LOG switch for stats is on		*/
@@ -222,77 +308,74 @@ int err;
 		printf("\nEXECUTION STATISTICS, WISP %s\n\n",WISP_VERSION);
 		printf("Elapsed CPU                   %d\056%ds.\n",j,k);		/* Display the time report item.	*/
 		printf("Number of screens processed   %d.\n",num_screens);
-		printf("Number of lines written       %d.\n",out_number);
-		printf("Number of lines read          %d.\n",num_inlines);
-		printf("Number of Comment lines       %d.\n",num_comments);
+		printf("Number of lines written       %d.\n",out_line_count());
+		printf("Number of lines read          %d.\n",in_line_count());
+		printf("Number of Comment lines       %d.\n",comment_line_count());
 		printf("Number of SELECT statements   %d.\n",prog_cnt);
-		a = num_inlines-num_comments;
+		a = in_line_count() - comment_line_count();
 		printf("Total lines processed         %d.\n",a);
 	}
 
-	if (err == EXIT_AND_RUN)							/* If they want, re run wisp.		*/
-	{
-		delete(lib_file);							/* delete the library file		*/
-		delete(out_fname);							/* Delete the .COB file			*/
-		run_wisp();
-	}
-	else if (used_wrk)								/* Normal exit, used workfile.		*/
+	if (used_wrk)									/* Normal exit, used workfile.		*/
 	{
 		delete(work_fname);							/* So delete it.			*/
 	}
 
+	delete(par_fname);
+
+exit_fast:
 
 #ifdef VMS
-	exit(1);
+	if (err == EXIT_OK) exit(1);
+	exit(0);
 #else
-        exit(0);
+	if (err == EXIT_OK) exit(0);
+        exit(1);
 #endif
 }
 
 wisp_exit_code(prefix)
 char *prefix;
 {
-	put_line			("\n");
-	put_line			("      ********* WISP EXIT CODE\n");
-	put_line			("\n");
-	write_line			("       %sWISP-EXIT-PROGRAM.\n",prefix);
+	int	stoprun;
+
+	tput_blank();
+	tput_scomment			("****** WISP EXIT CODE ******");
+	tput_blank();
+
+	tput_line			("       %sWISP-EXIT-PROGRAM.",prefix);
 	if (!vax_cobol)
 	{
-		put_line		("           CALL \"setretcode\" USING WISPRETURNCODE.\n");
-		put_line		("           IF WISP-APPLICATION-NAME = WISPRUNNAME\n");
-		put_line		("               CALL \"WISPEXIT\".\n");
-#ifdef OLD
-		if (acu_cobol) put_line	("               CALL \"ACUPARGS\"\n");
-		put_line		("               CALL \"wexith\"\n");
-		put_line		("               CALL \"vexit\".\n");
-#endif
+		tput_line		("           CALL \"setretcode\" USING WISPRETURNCODE.");
+		tput_line		("           IF WISP-APPLICATION-NAME = WISPRUNNAME");
+		tput_line		("               CALL \"WISPEXIT\".");
 	}
-	put_line			("           EXIT PROGRAM.\n");
-	write_line			("       %sWISP-STOP-RUN.\n",prefix);
+	tput_line			("           EXIT PROGRAM.");
+	tput_line			("       %sWISP-STOP-RUN.",prefix);
 	if (!vax_cobol)
 	{
-		if ( dmf_cobol && ! keepstop )
-		{
-			write_line	("           PERFORM %sWISP-EXIT-PROGRAM.\n",prefix);
-		}
-		put_line		("           CALL \"setretcode\" USING WISPRETURNCODE.\n");
-		put_line		("           CALL \"WISPEXIT\".\n");
-#ifdef OLD
-		if (acu_cobol) put_line	("           CALL \"ACUPARGS\".\n");
-		put_line		("           CALL \"wexith\".\n");
-		put_line		("           CALL \"vexit\".\n");
-#endif
-        	put_line		("           STOP RUN.\n");
+		tput_line		("           CALL \"setretcode\" USING WISPRETURNCODE.");
+		tput_line		("           CALL \"WISPEXIT\".");
 	}
-	else if (do_dlink || keepstop)
+
+	stoprun = 1;
+	if (vax_cobol && !do_dlink)
 	{
-        	put_line		("           STOP RUN.\n");
+		stoprun = 0;
+	}
+	if (dmf_cobol) 	stoprun = 0;
+	if (keepstop) 	stoprun = 1;
+	if (changestop) stoprun = 0;
+
+	if (stoprun)
+	{
+        	tput_line		("           STOP RUN.");
 	}
 	else
 	{
-		put_line		("           EXIT PROGRAM.\n");
+		tput_line		("           EXIT PROGRAM.");
 	}
-	put_line			("\n");
+	tput_blank();
 }
 
 wisp_exit_para()
@@ -301,8 +384,9 @@ wisp_exit_para()
 
 	if (linkmain)
 	{
-		write_line		("       END PROGRAM %s.\n\n",prog_id);
-		put_line		("       END PROGRAM WISPLINK.\n");
+		tput_line		("       END PROGRAM %s.",prog_id);
+		tput_blank();
+		tput_line		("       END PROGRAM WISPLINK.");
 	}
 }
 
@@ -341,7 +425,13 @@ static run_wisp()									/* Execute the WISP command again	*/
 		strcat( the_com, sargv[i] );
 	}
 #endif
-	printf("Beginning New execution of %s\n",the_com);
+	printf("\nBeginning New execution of [%s]\n",the_com);
+	if (need_to_rerun_reason)
+	{
+		printf("REASON:\n%s\n",need_to_rerun_reason);
+	}
+	fflush(stdout);
+	fflush(stderr);
 
 #ifdef VMS
 	lib$do_command(&com_desc);
@@ -374,25 +464,14 @@ char	*argv[];
 	for (i=0; i<argc; i++ ) sargv[i] = argv[i];					/* Save the argv			*/
 	sargv[argc] = 0;								/* Null terminate sargv			*/
 
-	fo_buff = &xobuff[0];								/* point to the output buffer		*/
-
-	if (fo_buff == 0)
-	{
-		printf("%WISP-F-ERRORALLBUFF  Error allocating %d bytes for output buffer.\n",OUTPUT_BUFFER_SIZE);
-		exit(-1);
-	}
-	fo_cnt = 0;									/* nothing in it yet			*/
+	response_file(argc, sargv);							/* Process any response file.		*/
 
 	logfile = stdout;								/* Define a file for error logs		*/
 
 	crt_relative[0][0] = 0;								/* no relative key yet			*/
 	crt_file[0][0] = 0;
-	brkline[0] = '\0';								/* no break line either.		*/
 
 	for (i=0; i<MAX_SCREENS; i++) scrn_flags[i] = 0;				/* Init screen flags now.		*/
-
-	com_ptr = com_buf;								/* Set comment ptr to comment buffer.	*/
-
 }
 
 static initialize2()									/* Perform switch specific initialize	*/
@@ -454,10 +533,97 @@ static initialize2()									/* Perform switch specific initialize	*/
 
 	if (do_xref)									/* Init xref structure.			*/
 	{
-		xref_ptr = (struct c_list *)malloc(sizeof(c_list));  			/* Get some memory.			*/
+		xref_ptr = (struct c_list *)wmalloc(sizeof(c_list));  			/* Get some memory.			*/
 		xref_ptr->call_count = 0;
 		xref_ptr->next_list = 0;
 	}
+}
+
+char *packed_decimal()
+{
+	return(packdec);
+}
+
+/*
+**	Routine:	response_file()
+**
+**	Function:	To handle a response file in the arg list.
+**
+**	Description:	This routine loads globals targc and targv from the arg list plus any response file.
+**			If an argument has the form "@filename" then the file is read for additional arguments.
+**			This are inserted into targv in the order found.
+**
+**			This was done to handle MSDOS limit of 128 characters on a command line. 
+**
+**	Arguments:
+**	argc		The original arg count
+**	argv		The original arg list.
+**
+**	Globals:
+**	targc		The expanded arg count.
+**	targv		The expanded arg list.
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	01/22/93	Written by GSL
+**
+*/
+static response_file(argc,argv)
+int	argc;
+char	*argv[];
+{
+	int	i;
+	int	show_command;
+
+	show_command = 0;
+	targc = 0;
+	for(i=0; i<argc; i++)								/* Loop thru each arg in list		*/
+	{
+		if (argv[i] && argv[i][0] == '@')					/* If a response file then process	*/
+		{
+			FILE	*fh;
+			if (fh = fopen(&argv[i][1],"r"))				/* Open the response file.		*/
+			{
+				char	buff[256];
+				show_command = 1;
+				while(1 == fscanf(fh,"%s",buff) )			/* Read next token			*/
+				{
+					targv[targc] = wmalloc(strlen(buff)+1);		/* Malloc space for token		*/
+					strcpy(targv[targc],buff);			/* Copy token to arg list.		*/
+					targc++;
+				}
+				fclose(fh);
+			}
+			else								/* Unable to open response file		*/
+			{
+				write_log("WISP",'E',"CANTOPEN","Unable to open response file %s.",argv[i]);
+				exit_wisp(EXIT_WITH_ERR);
+			}
+		}
+		else									/* A regular argument.			*/
+		{
+			targv[targc++] = argv[i];					/* Regular arg so just assign		*/
+		}
+	}
+	targv[targc] = NULL;								/* Add a null to the end of the list	*/
+
+	if (show_command)
+	{
+		for(i=0; i<targc; i++)
+		{
+			printf("%s ",targv[i]);
+		}
+		printf("\n");
+	}
+#ifdef DEBUG
+	for(i=0; i<targc; i++)
+	{
+		printf("targv[%d] = [%s]\n",i,targv[i]);
+	}
+#endif /* DEBUG */
 }
 
 #ifdef DEMO
@@ -479,38 +645,38 @@ static demo_message()
 		printf("                            Fax:   (805) 295-8755\n\n");
 
 
-		write_line("      *  *****  WISP Version %s  EVALUATION COPY ***** \n",WISP_VERSION);
-		put_line("      * \n");
-		put_line("      *  This program contains proprietary information that is the\n");
-		put_line("      *  legal property of International Digital Scientific Inc.\n");
-		put_line("      *\n");
-		put_line("      *  This program was translated by an evaluation copy of WISP.\n");
-		put_line("      *  The purpose of this evaluation software is to allow the\n");
-		put_line("      *  prospective purchaser of WISP to preview the product so as to\n");
-		put_line("      *  evaluate its capabilities.  This is the only permitted use of\n");
-		put_line("      *  this software.  This converted software may not be used in a \n");
-		put_line("      *  production environment, it may not be sold or distributed in\n");
-		put_line("      *  any manner, it may not be included or embedded within other\n");
-		put_line("      *  software.  The possessor of this software has no rights to this\n");
-		put_line("      *  software.\n");
-		put_line("      *  \n");
-		put_line("      *  This converted software must be DESTROYED upon the end of\n");
-		put_line("      *  the evaluation period.\n");
-		put_line("      *\n");
-		put_line("      *  WISP is a trademark of International Digital Scientific Inc.,\n");
-		put_line("      *  Valencia California.\n");
-		put_line("      *\n");
-		put_line("      *  COPYRIGHT (C) 1989,1990,1991 by International Digital \n");
-		put_line("      *  Scientific Incorporated. All rights reserved.\n");
-		put_line("      *\n");
-		put_line("      *  For assistance contact:\n");
-		put_line("      *\n");
-		put_line("      *           International Digital Scientific Incorporated\n");
-		put_line("      *                  28460 Avenue Stanford, Suite 100,\n");
-		put_line("      *                        Valencia CA 91355\n");
-		put_line("      *                      Phone: (805) 295-1155\n");
-		put_line("      *                      Fax:   (805) 295-8755\n");
-		put_line("      *\n");
+		tput_scomment("*  *****  WISP Version %s  EVALUATION COPY ***** \n",WISP_VERSION);
+		tput_scomment("* \n");
+		tput_scomment("*  This program contains proprietary information that is the\n");
+		tput_scomment("*  legal property of International Digital Scientific Inc.\n");
+		tput_scomment("*\n");
+		tput_scomment("*  This program was translated by an evaluation copy of WISP.\n");
+		tput_scomment("*  The purpose of this evaluation software is to allow the\n");
+		tput_scomment("*  prospective purchaser of WISP to preview the product so as to\n");
+		tput_scomment("*  evaluate its capabilities.  This is the only permitted use of\n");
+		tput_scomment("*  this software.  This converted software may not be used in a \n");
+		tput_scomment("*  production environment, it may not be sold or distributed in\n");
+		tput_scomment("*  any manner, it may not be included or embedded within other\n");
+		tput_scomment("*  software.  The possessor of this software has no rights to this\n");
+		tput_scomment("*  software.\n");
+		tput_scomment("*  \n");
+		tput_scomment("*  This converted software must be DESTROYED upon the end of\n");
+		tput_scomment("*  the evaluation period.\n");
+		tput_scomment("*\n");
+		tput_scomment("*  WISP is a trademark of International Digital Scientific Inc.,\n");
+		tput_scomment("*  Valencia California.\n");
+		tput_scomment("*\n");
+		tput_scomment("*  COPYRIGHT (C) 1989,1990,1991,1992,1993 by International Digital \n");
+		tput_scomment("*  Scientific Incorporated. All rights reserved.\n");
+		tput_scomment("*\n");
+		tput_scomment("*  For assistance contact:\n");
+		tput_scomment("*\n");
+		tput_scomment("*           International Digital Scientific Incorporated\n");
+		tput_scomment("*                  28460 Avenue Stanford, Suite 100,\n");
+		tput_scomment("*                        Valencia CA 91355\n");
+		tput_scomment("*                      Phone: (805) 295-1155\n");
+		tput_scomment("*                      Fax:   (805) 295-8755\n");
+		tput_scomment("*\n");
 
 }
 

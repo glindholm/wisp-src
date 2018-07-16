@@ -12,6 +12,14 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "cobfiles.h"
+#include "wmalloc.h"
+
+static int get_call();
+static int track_call();
+static int _p_call();
+static int put_callmflink();
+static int _put_getparm();
 
 #define PTR1	((char *)1)
 #define CALL_BUFFER_SIZE	256
@@ -57,7 +65,6 @@ p_call()
 	else if (!strcmp(parms[1],"\"LINK\""))
 	{										/* call LINK 				*/
 		write_log("WISP",'I',"LINKFOUND","CALL to LINK Detected.");
-		has_link = 1;								/* Flag it.				*/
 		if (vax_cobol && do_dlink)
 		{
 			write_log("WISP",'I',"LINKDESC","Call \"LINK\" changed to \"LINKDESC\".");
@@ -77,7 +84,7 @@ p_call()
 		{
 			write_log("WISP",'I',"LINKMF","Call \"LINK\" changed to \"LINKMF\".");
 			strcpy(src,parms[1]);
-			i = get_call(src,"\"LINKMF\"",NULL,buf);				/* Count and fixup the line.		*/
+			i = get_call(src,"\"LINKMF\"",NULL,buf);			/* Count and fixup the line.		*/
 			put_callmflink(buf,i);
 		}
 		else 
@@ -103,12 +110,12 @@ p_call()
 		}									/* But skip the first one.		*/
 		name_count = name_count+3;						/* Count them.				*/
 
-		i = findfile(name_list[0]);						/* search for the file			*/
+		i = file_index(name_list[0]);						/* search for the file			*/
 
 		if (-1 == i)
 		{
 			write_log("WISP",'F',"SETFILE","SETFILE call, file %s not found.",name_list[0]);
-			exit_wisp(-1);
+			exit_wisp(EXIT_WITH_ERR);
 		}
 
 
@@ -147,13 +154,18 @@ p_call()
 		write_log("WISP",'I',"SCREENCALL","Call to SCREEN detected.");
 		strcpy(src,parms[1]);
 		i = get_call(src,src,PTR1,buf);						/* Count and fixup the line.		*/
+		if (add_wvaset)
+		{
+			tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
+			tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");
+		}
 		put_call(buf,i);
 	}
 	else if (!strcmp(parms[1],"\"PAUSE\""))
 	{										/* call PAUSE				*/
 		write_log("WISP",'I',"PAUSEFIX","PAUSE call altered.");
 		strcpy(src,parms[1]);
-		i = get_call(src,"\"wpause\"",NULL,buf);					/* Count and fixup the line.		*/
+		i = get_call(src,"\"wpause\"",NULL,buf);				/* Count and fixup the line.		*/
 		put_call(buf,i);
 	}
 	else if (!strcmp(parms[1],"\"RENAME\""))
@@ -161,16 +173,16 @@ p_call()
 		if (add_wvaset)
 		{
 			strcpy(src,parms[1]);
-			i = get_call(src,"\"wrename\"",NULL,buf);				/* Count and fixup the line.		*/
-			write_line("                   MOVE %d TO WISP-LONGWORD\n",name_count);
-			put_line  ("                   CALL \"wvaset\" USING WISP-LONGWORD\n");	/* Set the varargs for UNIX.	*/
+			i = get_call(src,"\"wrename\"",NULL,buf);			/* Count and fixup the line.		*/
+			tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
+			tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");	/* Set the varargs for UNIX.	*/
 			put_call(buf,i);						/* Write out the buffer now.		*/
 			write_log("WISP",'I',"RENAMEFIX","RENAME call altered.");
 		}
 		else
 		{
 			stredt(inline,"RENAME","wrename");				/* Fix the name.			*/
-			put_line(inline);						/* No processing needed.		*/
+			tput_line("%s", inline);					/* No processing needed.		*/
 		}
 	}
 	else if (!strcmp(parms[1],"\"CHECKACP\""))
@@ -195,9 +207,9 @@ p_call()
 				if (add_wvaset)
 				{
 											/* Set the varargs for UNIX.		*/
-					write_line("                   MOVE %d TO WISP-LONGWORD\n",name_count);
+					tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
 
-					put_line  ("                   CALL \"wvaset\" USING WISP-LONGWORD\n");
+					tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");
 				}
 				put_call(buf,i);					/* Write out the buffer now.		*/
 			}
@@ -222,72 +234,72 @@ p_call()
 	}
 	else if (!strcmp(parms[1],"\"EXTRACT\""))
 	{
-		put_line("           CALL \"setprogid\" USING WISP-APPLICATION-NAME\n"); /* Move name of current appl.		*/
-		_p_call(buf);								/* Really do it.			*/
+		tput_line_at(12, "CALL \"setprogid\" USING WISP-APPLICATION-NAME"); 	/* Move name of current appl.		*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"FILECOPY\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"PRINT\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"PUTPARM\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"READACP\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"READFDR\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SCRATCH\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SET\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SEARCH\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SUBMIT\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"UPDATFDR\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SORT\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SORTINFO\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SORTLINK\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"STRING\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"WSFNS\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"WSFNM\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
+		_p_call(buf);
 	}
 	else if (!strcmp(parms[1],"\"SPECLIO\""))
 	{										/* call SPECLIO				*/
@@ -319,20 +331,20 @@ p_call()
 		skip_param(5);								/* skip CALL WSOPEN USING, CRT, STATUS	*/
 		ptype = get_param(o_parms[1]);
 		if (ptype == -1)
-			put_line("             CONTINUE.\n");
+			tput_line_at(14, "CONTINUE.");
 		else
-			put_line("             CONTINUE,\n");
+			tput_line_at(14, "CONTINUE,");
 		write_log("WISP",'I',"WSOPENFIX","WSOPEN call altered.");
 	}
 	else if (!strcmp(parms[1],"\"@WSCLOSE\""))
 	{										/* Call WSCLOSE.			*/
-		put_line("                 CALL \"vwang\" USING VWANG-CLOSE-WS,\n");
+		tput_line_at(18, "CALL \"vwang\" USING VWANG-CLOSE-WS,");
 		skip_param(4);
 		ptype = get_param(o_parms[1]);
 		if (ptype == -1)
-			put_line("             CONTINUE.\n");
+			tput_line_at(14, "CONTINUE.");
 		else
-			put_line("             CONTINUE,\n");
+			tput_line_at(14, "CONTINUE,");
 		write_log("WISP",'I',"WSCLOSEFIX","WSCLOSE call altered.");
 	}
 	else if (!strcmp(parms[1],"\"@WSTIME\""))
@@ -343,33 +355,33 @@ p_call()
 		{
 			ptype = get_param(o_parms[0]);					/* get parms and see if they are	*/
 		}									/* last or a keyword			*/
-		while ((ptype != -1) && !keyword(o_parms[0],proc_keywords));
-		if (keyword(o_parms[0],proc_keywords))					/* was a keyword			*/
+		while ((ptype != -1) && !proc_keyword(o_parms[0]));
+		if (proc_keyword(o_parms[0]))						/* was a keyword			*/
 			hold_line();							/* save it				*/
 
 		if (ptype != -1)
-			put_line("                   CONTINUE,\n");
+			tput_line_at(20, "CONTINUE,");
 		else
-			put_line("                   CONTINUE.\n");
+			tput_line_at(20, "CONTINUE.");
 
 		write_log("WISP",'I',"WSTIMEFIX","WSTIME call altered.");
 	}
 	else if (!strcmp(parms[1],"\"@MSNAME\""))
 	{										/* call MSNAME				*/
 		stredt(inline,"@MSNAME","dummy");
-		put_line(inline);
+		tput_line("%s", inline);
 		write_log("WISP",'I',"MSNAMEFIX","MSNAME call altered.");
 	}
 	else if (!strcmp(parms[1],"\"@MSTIME\""))
 	{										/* call MSTIME 				*/
 		stredt(inline,"@MSTIME","dummy");
-		put_line(inline);
+		tput_line("%s", inline);
 		write_log("WISP",'I',"MSTIMEFIX","MSTIME call altered.");
 	}
 	else if (!strcmp(parms[1],"\"@MSVALUE\""))
 	{										/* call MSVALUE 			*/
 		stredt(inline,"@MSVALUE","dummy");
-		put_line(inline);
+		tput_line("%s", inline);
 		write_log("WISP",'I',"MSVALUEFIX","MSVALUE call altered.");
 	}
 	else if (using_ufb_test(parms[1]))
@@ -381,7 +393,7 @@ p_call()
 	}
 	else
 	{
-		put_line(inline);
+		tput_line("%s", inline);
 	}
 
 }
@@ -424,7 +436,7 @@ char *buf;										/* The call buffer			*/
 		{									/* Just skip it.			*/
 			rtype = ptype;							/* Save the type.			*/
 		}
-		else if (keyword(o_parms[0],proc_keywords))				/* is it a keyword?			*/
+		else if (proc_keyword(o_parms[0]))					/* is it a keyword?			*/
 		{									/* it is keyword, quit parsing		*/
 			ptype = 9;							/* signal keyword found			*/
 		}
@@ -433,7 +445,7 @@ char *buf;										/* The call buffer			*/
 			if (name_count == MAX_NAME_LIST)
 			{
 				write_log("WISP",'F',"CALLTOOLONG","Maximum CALL buffer size exceeded.");
-				exit_wisp(-1);
+				exit_wisp(EXIT_WITH_ERR);
 			}
 
 			substituted = 0;
@@ -441,8 +453,8 @@ char *buf;										/* The call buffer			*/
 			{
 				if ( 1==(long)subval )					/* test UFB substitution		*/
 				{
-					if (-1 != findcrt(o_parms[0]) ||		/* test for CRT files			*/
-					    -1 != findfile(o_parms[0])  )		/* test for non-CRT files		*/
+					if (-1 != crt_index(o_parms[0]) ||		/* test for CRT files			*/
+					    -1 != file_index(o_parms[0])  )		/* test for non-CRT files		*/
 					{
 						substituted = 1;
 					}
@@ -485,7 +497,7 @@ char *buf;										/* The call buffer			*/
 	if ((buf - svbuf) > CALL_BUFFER_SIZE)
 	{
 		write_log("WISP",'F',"CALLTOOLONG","Maximum CALL buffer size exceeded.");
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 
 	if (ptype == 9) hold_line();							/* keyword found, save the line		*/
@@ -526,7 +538,7 @@ c_list *tptr;
 			{
 				if (!tptr->next_list)					/* No next list, make one.		*/
 				{
-					tptr->next_list = (struct c_list *)malloc(sizeof(c_list)); /* Alloc the mem.		*/
+					tptr->next_list = (struct c_list *)wmalloc(sizeof(c_list)); /* Alloc the mem.		*/
 					tptr = tptr->next_list;
 					tptr->next_list = 0;
 					tptr->call_count = 0;
@@ -560,14 +572,14 @@ char *buf;
 		strcpy(src,parms[1]);
 
 		j = get_call(src,src,NULL,buf);						/* Count and fixup the line.		*/
-		write_line("                   MOVE %d TO WISP-LONGWORD\n",name_count);
+		tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
 
-		put_line  ("                   CALL \"wvaset\" USING WISP-LONGWORD\n");	/* Set the varargs for UNIX.		*/
+		tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");		/* Set the varargs for UNIX.		*/
 		put_call(buf,j);
 	}
 	else
 	{
-		put_line(inline);
+		tput_line("%s", inline);
 	}
 }
 
@@ -577,20 +589,21 @@ int rtype;
 {
 	int i;
 
-	put_line(buf);									/* Write out the call buffer now.	*/
+	tput_block(buf);								/* Write out the call buffer now.	*/
 
-	for (i = 0; i < (name_count - 1); i++)						/* Now do the list of parms.		*/
+	for (i = 0; i < (name_count-1); i++)						/* Now do the list of parms.		*/
 	{
-		write_line("                   %s\n",name_list[i]);
+		tput_clause(20, "%s,",name_list[i]);
+	}
+
+	if (i < name_count)
+	{
+		tput_clause(20, "%s",name_list[i]);
 	}
 
 	if (rtype == -1)								/* Need a period?			*/
 	{
-		write_line("                   %s.\n",name_list[i]);
-	}
-	else
-	{
-		write_line("                   %s\n",name_list[i]);			/* Don't need a period.			*/
+		tput_clause(20, ".");
 	}
 }
 
@@ -600,21 +613,18 @@ int rtype;
 {
 	int i;
 
-	write_line	  ("           MOVE %d TO WISP-LONGWORD\n",name_count);
-	put_line  	  ("           CALL \"wvaset\" USING WISP-LONGWORD\n");	/* Set the varargs for UNIX.	*/
+	tput_line_at(12, "MOVE %d TO WISP-LONGWORD",name_count);
+	tput_line_at(12, "CALL \"wvaset\" USING WISP-LONGWORD");
 
-	put_line(buf);									/* Write out the call buffer now.	*/
+	tput_block(buf);								/* Write out the call buffer now.	*/
 
 	for (i = 0; i < name_count; i++)						/* Now do the list of parms.		*/
 	{
-		if (i > 0 ) put_line("\n");
-		write_line("               REFERENCE       %s\n",name_list[i]);
-		write_line("               VALUE LENGTH OF %s",name_list[i]);
+		tput_line_at(16, "REFERENCE       %s",name_list[i]);
+		tput_line_at(16, "VALUE LENGTH OF %s",name_list[i]);
 	}
 
-	if (rtype == -1) put_line(".\n");						/* Need a period?			*/
-	else		 put_line("\n");						/* Don't need a period.			*/
-
+	if (rtype == -1) tput_clause(12,".");						/* Need a period?			*/
 }
 
 static _put_getparm(buf,rtype)
@@ -638,17 +648,16 @@ int rtype;
 		{
 			if (add_wvaset)
 			{
-				write_line("                   MOVE %d TO WISP-LONGWORD\n",
-								(name_count > plmt) ? plmt : name_count);
+				tput_line_at(20, "MOVE %d TO WISP-LONGWORD", (name_count > plmt) ? plmt : name_count);
 
-				put_line  ("                   CALL \"wvaset\" USING WISP-LONGWORD\n");
+				tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");
 			}
-			put_line  ("                   CALL \"getparmbuild\" USING\n");
+			tput_line_at        (20, "CALL \"getparmbuild\" USING");
 			j = 0;
 		}
 		else
 		{
-			write_line("                        %s\n",name_list[i]);
+			tput_line_at(24, "%s",name_list[i]);
 			i++;
 			j++;
 			name_count--;
@@ -657,57 +666,17 @@ int rtype;
 
 	if (add_wvaset)
 	{
-		write_line("                   MOVE 0 TO WISP-LONGWORD\n");
+		tput_line("                   MOVE 0 TO WISP-LONGWORD\n");
 
-		put_line("                   CALL \"wvaset\" USING WISP-LONGWORD\n");
+		tput_line("                   CALL \"wvaset\" USING WISP-LONGWORD\n");
 	}
 
 	if (rtype == -1)								/* Need a period?			*/
 	{
-		put_line("                   CALL \"getparmbuild\".\n");
+		tput_line("                   CALL \"getparmbuild\".\n");
 	}
 	else
 	{
-		put_line("                   CALL \"getparmbuild\"\n");
+		tput_line("                   CALL \"getparmbuild\"\n");
 	}
-}
-
-/*
-	findcrt:	Search the list of crt files and returns the position in the list, -1 == not found
-*/
-int findcrt(name)
-char	*name;
-{
-	int	i;
-
-	for(i=0; i<crt_fcount; i++)
-	{
-		if (0==strcmp(crt_file[i],name)) 
-		{
-			return(i);							/* Found it in the list			*/
-			break;
-		}
-	}
-
-	return(-1);
-}
-
-/*
-	findfile:	Search the list of files and returns the position in the list, -1 == not found
-*/
-int findfile(name)
-char	*name;
-{
-	int	i;
-
-	for(i=0; i<prog_cnt; i++)
-	{
-		if (0==strcmp(prog_files[i],name)) 
-		{
-			return(i);							/* Found it in the list			*/
-			break;
-		}
-	}
-
-	return(-1);
 }

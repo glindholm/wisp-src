@@ -7,15 +7,18 @@
 
 /*  SYSINF.C - Get the terminal information from the system.									*/
 
-#include "wglobals.h"
-
 #ifdef MSDOS
 #include <stdlib.h>
-#include "werrlog.h"
 #endif
 
+#include <stdio.h>
 
-#ifdef vax11c
+#include "idsistd.h"
+#include "wglobals.h"
+#include "werrlog.h"
+
+
+#ifdef VMS
 
 #include <iodef.h>
 #include <string.h>
@@ -28,9 +31,18 @@
 #include "quidef.h"
 
 #include "wperson.h"
-#include "werrlog.h"
 #include "wdefines.h"
 
+/*
+**	*** WARNING ***
+**	The following variable VINPUT_CHAN_NUM must be declared globalref.
+**	This does produce a NON-PORTABLITY informational message on compile 
+**	as it is a non-portable feature of the C interface to the VMS 
+**	operating system.  If you change it to "extern" then the VMS linker
+**	does not properly resolve it and the osd_term() routine fails.
+**
+**	If you have any question about this see me. GSL.
+*/
 globalref unsigned short VINPUT_CHAN_NUM;
 
 static struct	{
@@ -38,7 +50,7 @@ static struct	{
 		unsigned short	 	item_code;					/* the code for the request to GETDVI	*/
 		char 			*bufptr;					/* a pointer to the buffer		*/
 		unsigned short		*retlen;					/* the return length of the buffer	*/
-		long int 		endbuf;						/* the end of the buffer		*/
+		int4 		endbuf;						/* the end of the buffer		*/
 	} mybuf;
 
 static struct	{
@@ -50,7 +62,7 @@ static struct	{
 		unsigned short 		item_code1;					/* the code for the request to GETDVI	*/
 		char 			*bufptr1;					/* a pointer to the buffer		*/
 		unsigned short		*retlen1;					/* the return length of the buffer	*/
-		long int 		endbuf;						/* the end of the buffer		*/
+		int4 		endbuf;						/* the end of the buffer		*/
 	} quibuf;
 
 
@@ -78,6 +90,7 @@ int *flags;										/* and flags indicating what it can do	*/
 	int ft_num,ft_flags;								/* Value for default FT			*/
 	char ch,latname[32],portname[32];
 	int j,i;
+	term_id *term_ptr;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
@@ -121,7 +134,9 @@ int *flags;										/* and flags indicating what it can do	*/
 
 	*tnum = 255;									/* unknown term is 255			*/
 
-	if (!term_list)									/* Just set to 0 now.  Terminal Type	*/
+	term_ptr = get_term_list();
+
+	if (!term_ptr)									/* Just set to 0 now.  Terminal Type	*/
 	{										/* is not used anymore.			*/
 		*tnum = 255;
 		*flags = 0;
@@ -132,77 +147,80 @@ int *flags;										/* and flags indicating what it can do	*/
 
 	do
 	{
-		if (!strcmp(term_list->termname,retbuf))				/* found the terminal name?		*/
+		if (!strcmp(term_ptr->termname,retbuf))				/* found the terminal name?		*/
 		{
-			*tnum = term_list->termnum;					/* save the number			*/
+			*tnum = term_ptr->termnum;					/* save the number			*/
 			cur_term = *tnum;
-			*flags = term_list->flags;					/* and the flags			*/
+			*flags = term_ptr->flags;					/* and the flags			*/
 			cur_flags = *flags;
 			return;								/* all done				*/
 		}
-		else if (!strcmp(term_list->termname,"_TDA0:"))				/* Save default TD device.		*/
+		else if (!strcmp(term_ptr->termname,"_TDA0:"))				/* Save default TD device.		*/
 		{
-			td_num = term_list->termnum;
-			td_flags = term_list->flags;
+			td_num = term_ptr->termnum;
+			td_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_TWA0:"))				/* Save default TW device.		*/
+		else if (!strcmp(term_ptr->termname,"_TWA0:"))				/* Save default TW device.		*/
 		{
-			tw_num = term_list->termnum;
-			tw_flags = term_list->flags;
+			tw_num = term_ptr->termnum;
+			tw_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_NDA0:"))				/* Save default ND device.		*/
+		else if (!strcmp(term_ptr->termname,"_NDA0:"))				/* Save default ND device.		*/
 		{
-			nd_num = term_list->termnum;
-			nd_flags = term_list->flags;
+			nd_num = term_ptr->termnum;
+			nd_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_QNA0:"))				/* Save default QN device.		*/
+		else if (!strcmp(term_ptr->termname,"_QNA0:"))				/* Save default QN device.		*/
 		{
-			qn_num = term_list->termnum;
-			qn_flags = term_list->flags;
+			qn_num = term_ptr->termnum;
+			qn_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_QTA0:"))				/* Save default QT device.		*/
+		else if (!strcmp(term_ptr->termname,"_QTA0:"))				/* Save default QT device.		*/
 		{
-			qt_num = term_list->termnum;
-			qt_flags = term_list->flags;
+			qt_num = term_ptr->termnum;
+			qt_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_NVA0:"))				/* Save default NV device.		*/
+		else if (!strcmp(term_ptr->termname,"_NVA0:"))				/* Save default NV device.		*/
 		{
-			nv_num = term_list->termnum;
-			nv_flags = term_list->flags;
+			nv_num = term_ptr->termnum;
+			nv_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_KTA0:"))				/* Save default KT device.		*/
+		else if (!strcmp(term_ptr->termname,"_KTA0:"))				/* Save default KT device.		*/
 		{
-			kt_num = term_list->termnum;
-			kt_flags = term_list->flags;
+			kt_num = term_ptr->termnum;
+			kt_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_TNA0:"))				/* Save default TN device.		*/
+		else if (!strcmp(term_ptr->termname,"_TNA0:"))				/* Save default TN device.		*/
 		{
-			tn_num = term_list->termnum;
-			tn_flags = term_list->flags;
+			tn_num = term_ptr->termnum;
+			tn_flags = term_ptr->flags;
 		}
-		else if (!strcmp(term_list->termname,"_FTA0:"))				/* Save default FT device.		*/
+		else if (!strcmp(term_ptr->termname,"_FTA0:"))				/* Save default FT device.		*/
 		{
-			ft_num = term_list->termnum;
-			ft_flags = term_list->flags;
+			ft_num = term_ptr->termnum;
+			ft_flags = term_ptr->flags;
 		}
-		term_list = (term_id *)term_list->next;
-	} while (term_list);								/* go till none left to check		*/
+		term_ptr = (term_id *)term_ptr->next;
+	} while (term_ptr);								/* go till none left to check		*/
 											/* No match, check for pseudo-devs.	*/
 	if (retbuf[1] == 'L' && retbuf[2] == 'T')					/* special case for LT devices		*/
 	{
+		lat_id *lat_ptr;
+
 		get_lat_id(VINPUT_CHAN_NUM,latname,portname);
 
 		lt_num = 255;								/* Set the default to 255.		*/
 		lt_flags = 0;
 
-		while (lat_list)
+		lat_ptr = get_lat_list();
+		while (lat_ptr)
 		{
-			if (!lat_list->latname[0])					/* This is the default for unknowns.	*/
+			if (!lat_ptr->latname[0])					/* This is the default for unknowns.	*/
 			{
-				lt_num = lat_list->termnum;				/* i.e. LTA0: with no LAT_XXXX value.	*/
-				lt_flags = lat_list->flags;
+				lt_num = lat_ptr->termnum;				/* i.e. LTA0: with no LAT_XXXX value.	*/
+				lt_flags = lat_ptr->flags;
 			}
-			else if (!strcmp(latname,lat_list->latname))			/* Found it!.				*/
+			else if (!strcmp(latname,lat_ptr->latname))			/* Found it!.				*/
 			{
 				i = 0;
 				j = 5;
@@ -211,13 +229,13 @@ int *flags;										/* and flags indicating what it can do	*/
 					i = i * 10;					/* Shift left 1 digit			*/
 					i = i + (portname[j++] - '0');			/* Get next digit.			*/
 				}
-				*tnum = i + lat_list->termnum;				/* Add amount to basic port number.	*/
-				*flags = lat_list->flags;
+				*tnum = i + lat_ptr->termnum;				/* Add amount to basic port number.	*/
+				*flags = lat_ptr->flags;
 				cur_term = *tnum;
 				cur_flags = *flags;
 				return;
 			}
-			lat_list = (lat_id *)lat_list->next;
+			lat_ptr = (lat_id *)lat_ptr->next;
 		}
 		*tnum = lt_num;
 		*flags = lt_flags;
@@ -279,16 +297,16 @@ int *flags;										/* and flags indicating what it can do	*/
 	cur_flags = *flags;
 }
 
-	/* #ifdef vax11c */
+	/* #ifdef VMS */
 
 osd_mode(the_mode)									/* return the current execution mode,	*/
 char *the_mode;										/* Foreground, Background		*/
 {
 #undef          ROUTINE
 #define		ROUTINE		65600
-	long retbuf;									/* buffer for return value		*/
+	int4 retbuf;									/* buffer for return value		*/
 	short length;									/* length of data returned		*/
-	long retcod;
+	int4 retcod;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
@@ -334,7 +352,7 @@ char *the_mode;										/* Foreground, Background		*/
 	}
 }
 
-	/* #ifdef vax11c */
+	/* #ifdef VMS */
 
 osd_jname(the_name)									/* Return the job name (8) in background*/
 char *the_name;
@@ -343,8 +361,8 @@ char *the_name;
 #define		ROUTINE		65700
 	char retbuf[40];								/* buffer for return value		*/
 	short length;									/* length of data returned		*/
-	long retcod;
-	long flags;
+	int4 retcod;
+	int4 flags;
 	char the_mode;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
@@ -381,7 +399,7 @@ char *the_name;
 	}
 }
 
-	/* #ifdef vax11c */
+	/* #ifdef VMS */
 
 get_lat_id(channel,latname,portname)							/* Find out the ID of the LAT on a chan	*/
 unsigned short channel;
@@ -389,11 +407,11 @@ char latname[32],portname[32];
 {
 	struct                                                                                                            
 	{										/* IO status block 			*/
-		long int status;
-		long int stat1;
+		long status;
+		long stat1;
 	} iosb;
 
-	unsigned long int status;
+	uint4 status;
 	int i,j;
 	char buf[256];
 
@@ -406,107 +424,19 @@ char latname[32],portname[32];
 	for(i=buf[0]+2; j <buf[buf[0]+1]; i++) latname[j++] = buf[i];			/* Copy LAT name.			*/
 	latname[j] = '\0';
 }
-#endif	/* #ifdef vax11c */
+#endif	/* #ifdef VMS */
 
-/*
-** unix
-*/
+
+#ifndef VMS
 
 #ifdef unix
-
-#include "werrlog.h"
-
-char *osd_path(pathnum)
-int	pathnum;
-{
-#undef          ROUTINE
-#define		ROUTINE		65800
-	static	int	first=1;
-	static	int	totalcnt=1;							/* Number of dirs in $PATH		*/
-	static  char	*fullpath;							/* The unix $PATH			*/
-	static  char	*nullpath;							/* $PATH with ':' replaced by '\0'.	*/
-	char	*ptr;
-	int	size, i, cnt;
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-
-	if ( first)
-	{
-		first = 0;
-		ptr = (char *)getenv("PATH");
-		size = strlen(ptr);
-		
-		fullpath = (char *)malloc(size+1);
-		nullpath = (char *)malloc(size+1);
-		if ( ! fullpath || ! nullpath )
-		{
-			werrlog(ERRORCODE(2),size+1,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(2));
-		}
-
-		strcpy(fullpath,ptr);
-		strcpy(nullpath,ptr);
-
-		for( i=0; fullpath[i]; i++ )
-		{
-			if ( nullpath[i] == ':' )
-			{
-				nullpath[i] = '\0';					/* Replace ':' with '\0'.		*/
-				totalcnt += 1;
-			}
-		}
-	}
-
-	if ( pathnum == 0 ) return( fullpath );
-	if ( pathnum == 1 ) return( nullpath );
-	if ( pathnum > totalcnt ) return( 0 );
-	if ( pathnum < 0 )
-	{
-		werrlog(ERRORCODE(4),pathnum,0,0,0,0,0,0,0);
-		return(0);
-	}
-
-	cnt = 1;
-	for( i=0; fullpath[i]; i++ )
-	{
-		if ( fullpath[i] == ':' )
-		{
-			cnt += 1;
-			if ( cnt == pathnum ) return( &nullpath[i+1] );
-		}
-	}
-
-	werrlog(ERRORCODE(6),pathnum,fullpath,0,0,0,0,0,0);
-	return(0);									/* This should never occur.		*/
-}
-
-char *osd_ext(filepath)									/* Return a ptr to the file extension.	*/
-char *filepath;
-{
-#undef          ROUTINE
-#define		ROUTINE		65900
-	char	*ptr;
-	int	k;
-
-	werrlog(ERRORCODE(1),filepath,0,0,0,0,0,0,0);
-
-	for( k=strlen(filepath); k>=0; k-- )
-	{
-		if ( filepath[k] == '/' ) return( 0 );
-
-		if ( filepath[k] == '.' ) return( &filepath[k+1] );
-	}
-
-	return( 0 );
-}
-
-#endif	/* unix */
-
-/*
-** MSDOS
-*/
-
+#define PATH_SEPARATOR	':'
+#define DIR_SEPARATOR	'/'
+#endif
 #ifdef MSDOS
+#define PATH_SEPARATOR	';'
+#define DIR_SEPARATOR	'\\'
+#endif
 
 char *osd_path(pathnum)
 int	pathnum;
@@ -515,7 +445,7 @@ int	pathnum;
 #define		ROUTINE		65800
 	static	int	first=1;
 	static	int	totalcnt=1;							/* Number of dirs in $PATH		*/
-	static  char	*fullpath;							/* The MSDOS $PATH			*/
+	static  char	*fullpath;							/* The $PATH				*/
 	static  char	*nullpath;							/* $PATH with ':' replaced by '\0'.	*/
 	char	*ptr;
 	int	size, i, cnt;
@@ -541,7 +471,7 @@ int	pathnum;
 
 		for( i=0; fullpath[i]; i++ )
 		{
-			if ( nullpath[i] == ':' )
+			if ( nullpath[i] == PATH_SEPARATOR )
 			{
 				nullpath[i] = '\0';					/* Replace ':' with '\0'.		*/
 				totalcnt += 1;
@@ -561,7 +491,7 @@ int	pathnum;
 	cnt = 1;
 	for( i=0; fullpath[i]; i++ )
 	{
-		if ( fullpath[i] == ':' )
+		if ( fullpath[i] == PATH_SEPARATOR )
 		{
 			cnt += 1;
 			if ( cnt == pathnum ) return( &nullpath[i+1] );
@@ -584,7 +514,7 @@ char *filepath;
 
 	for( k=strlen(filepath); k>=0; k-- )
 	{
-		if ( filepath[k] == '\\' ) return( NULL );
+		if ( filepath[k] == DIR_SEPARATOR ) return( NULL );
 
 		if ( filepath[k] == '.' ) return( &filepath[k+1] );
 	}
@@ -592,5 +522,5 @@ char *filepath;
 	return( NULL );
 }
 
-#endif	/* MSDOS */
+#endif /* !VMS */
 

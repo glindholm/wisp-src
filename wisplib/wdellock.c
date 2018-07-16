@@ -18,10 +18,11 @@
 
 #ifdef VMS
 
+#include "idsistd.h"
 #include "wcommon.h"
 
 wdellock(mode,file)
-long	*mode;
+int4	*mode;
 char	*file;
 {
 	char	buff[100];
@@ -43,5 +44,7 @@ char	*file;
 	delete(buff);									/* Delete the lock file.		*/
 }
 
+#else
+static int dummy_wdellock;
 #endif
 	

@@ -17,7 +17,7 @@ int gclock()
 {
 	char *ctime();
 	time_t time_data;
-	register int i,k;
+	int i,k;
 	int active;
 	int row = 10;
 	int col = 24;

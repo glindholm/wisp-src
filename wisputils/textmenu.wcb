@@ -332,7 +332,7 @@
 053800
 051400 LINK-TO-PROGRAM.                                                         
 051500     MOVE WSA-RUN-PROGRAM(IND-002)      TO  LINK-TO-NAME.                 
-051600     MOVE " "                           TO  LINK-TYPE.                    
+051600     MOVE "S"                           TO  LINK-TYPE.                    
 051700     MOVE "        "                    TO  LINK-LIBRARY.                 
 051800     MOVE "      "                      TO  LINK-VOLUME.                  
 051900     MOVE  0                            TO  LINK-PCOUNT-NO.               

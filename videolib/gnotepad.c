@@ -9,6 +9,7 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vintdef.h"
 #include "vmenu.h"
 
 #define PAGES  10
@@ -21,6 +22,11 @@ static unsigned char *save;
 static char pad[PAGES][LENGTH][WIDTH+1];
 static int newpad;
 static int page, line, column;
+
+static int givehelp();
+static int showpad();
+static int move();
+static int nextcol();
 
 int gnotepad()
 {

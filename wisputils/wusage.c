@@ -1,8 +1,10 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
 
@@ -34,10 +36,13 @@
 #endif
 
 #include <v/video.h>
+#include "idsistd.h"
 #include "werrlog.h"
 #include "scnfacs.h"
 #include "wcommon.h"
 #include "wperson.h"									/* Get the structure definitions.	*/
+#include "wdefines.h"
+#include "wanguid.h"
 
 #ifndef VMS	/* unix or MSDOS */
 #define EXT_FILEXT
@@ -77,6 +82,7 @@ static $DESCRIPTOR(res,restr);
 #define INVAL_FLAG_LOG_ERROR	-10
 
 char err_str[256];									/* Hold the string that has error.	*/
+static int helptext();
 
 static jmp_buf	env_buf;								/* Hold the environment for error procs	*/
 
@@ -86,10 +92,21 @@ char *argv[];
 {
 #define		ROUTINE		65200
 
-	char tstr[80];
+	char tstr[80], *ptr;
 	int retcod,status;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+
+#ifndef VMS
+	if (!(ptr=(char *)getenv(WISP_CONFIG_ENV)))
+	{
+		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning Environment Variable %s is not set.\n",WISP_CONFIG_ENV);
+	}
+	else if (0!=access(ptr,00))
+	{
+		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning %s=%s Directory not found.\n",WISP_CONFIG_ENV,ptr);
+	}
+#endif /* VMS */
 
 	initglbs("WUSAGE  ");
 	retcod = 1;
@@ -119,6 +136,7 @@ char *argv[];
 #endif
 
 #ifndef VMS	/* unix or MSDOS */
+	vexit();
 	if ( retcod == 1 )
 	{
 		exit(0);
@@ -202,7 +220,7 @@ static char item_str[256];
 			vol_flag = 0;
 			lib_flag = 0;
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
-			wpl_usr(&defaults);						/* First load in the constants.		*/
+			load_defaults();						/* First load in the constants.		*/
 			status = us_equ(argc,argv,dst,src);				/* Parse out the equation.		*/
 
 			if (status) longjmp(env_buf,status);				/* If error, say so.			*/
@@ -371,7 +389,7 @@ static char item_str[256];
 					break;
 				}
 			}
-			wps_usr(&defaults);						/* Save the defaults.			*/
+			save_defaults();						/* Save the defaults.			*/
 			break;
 		}
 
@@ -380,7 +398,7 @@ static char item_str[256];
 			lib_flag = 0;
 			vol_flag = 0;
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
-			wpl_usr(&defaults);						/* First load in the constants.		*/
+			load_defaults();						/* First load in the constants.		*/
 #ifdef VMS
 			status = us_equ(argc,argv,dst,src);				/* Parse out the equation.		*/
 #endif
@@ -511,7 +529,6 @@ static char item_str[256];
 				}
 				case S_USERID:						/* Will get the 3 letter abbreviation.	*/
 				{
-					char *wanguid();
 					char id[4];
 
 					memcpy(id,wanguid3(),3);
@@ -602,9 +619,9 @@ static char item_str[256];
 		{
 			if (argc > 2) strcpy(src,argv[2]);				/* See if they provided a file name.	*/
 			else	      src[0] = '\0';					/* Or set to null			*/
-			ffl = wpl_file(&defaults,src);					/* Always load in the file.		*/
-			if (argc > 2 && ffl) retcod = FILE_NOT_FOUND_ERROR;		/* Return error code.			*/ 
-			wps_symbol(&defaults);						/* And replace the local symbol.	*/
+			ffl = read_defaults_from_file(src);				/* Always load in the file.		*/
+			if (argc > 2 && ffl) retcod = FILE_NOT_FOUND_ERROR;		/* Return error code.			*/
+			save_defaults();						/* And replace the local symbol.	*/
 			break;
 		}
 
@@ -612,8 +629,8 @@ static char item_str[256];
 		{
 			if (argc > 2) strcpy(dst,argv[2]);				/* See if they provided a file name.	*/
 			else	      dst[0] = '\0';					/* Or set to null			*/
-			wpl_usr(&defaults);						/* Be sure they exist.			*/
-			wps_file(&defaults,dst);					/* Store the file.			*/
+			load_defaults();						/* Be sure they exist.			*/
+			write_defaults_to_file(dst);					/* Store the file.			*/
 			break;
 		}
 
@@ -621,7 +638,7 @@ static char item_str[256];
 		{
 			if (argc == 2)							/* Change flags via menu options.	*/
 			{
-				wpl_usr(&defaults);
+				load_defaults();
 				us_flags();
 				vexit();
 			}
@@ -661,6 +678,7 @@ us_help()										/* Display the Wang like shell		*/
 	char scrn[1924];
 	char function,lines,term[2],no_mod[2];
 
+	init_screen();
 	wsc_init(scrn,0,0);
 
 	function = 1;									/* Use WRITE_ALL.			*/
@@ -750,27 +768,28 @@ char *dst,*src;
 int len;
 {
 #ifdef VMS
+	/*
+	**	This loads the value (src) into the symbol (dst)
+	*/
 	register int i,j,sl;
 	long status;
 
-	for(i=0;src[i] && i<len;i++) {};						/* Calc actual length			*/
-	if (i)
-	{
-		if (dst[0] == '&') j = 1; else j = 0;
-		memset(symstr,' ',256);							/* Fill symbol string with spaces.	*/
-		symstr[255] = '\0';							/* Null terminate.			*/
-		sl = strlen(&dst[j]);
-		memcpy(symstr,&dst[j],sl);						/* Copy the symbol name			*/
-		sym.dsc$w_length = sl;							/* Set the length in the descriptor.	*/
-		sl = strlen(src);
-		memcpy(restr,src,sl);							/* Copy the value to set it to.		*/
-		res.dsc$w_length = sl;							/* and its length			*/
-		status = lib$set_symbol(&sym,&res,0);					/* Set it's contents.			*/
+	if (dst[0] == '&') j = 1; else j = 0;						/* if leading & then set offset		*/
+	memset(symstr,' ',256);								/* Fill symbol string with spaces.	*/
+	symstr[255] = '\0';								/* Null terminate.			*/
+	sl = strlen(&dst[j]);
+	memcpy(symstr,&dst[j],sl);							/* Copy the symbol name			*/
+	sym.dsc$w_length = sl;								/* Set the length in the descriptor.	*/
 
-		if (status != SS$_NORMAL)
-		{
-			exit(status);							/* An error.				*/
-		}
+	memset(restr,' ',len);								/* Set to spaces (src may be < len)	*/
+	res.dsc$w_length = len;								/* Set the length in the descriptor.	*/
+	for(i=0; i<len && src[i]; i++) {}						/* Calc actual length			*/
+	memcpy(restr,src,i);								/* Copy the value to set it to.		*/
+	status = lib$set_symbol(&sym,&res,0);						/* Set it's contents.			*/
+
+	if (status != SS$_NORMAL)
+	{
+		exit(status);								/* An error.				*/
 	}
 #endif	/* #ifdef VMS */
 
@@ -796,124 +815,146 @@ int len;
 
 us_flags()
 {
-	char *malloc();									/* Memory allocation routine.		*/
 	char *field();									/* Field packing subroutine.		*/
 	char *screen;									/* Pointer to working screen routine.	*/
 	char function, lines, term[2], no_mod;						/* Working variables.			*/
 	char yn[2];
-	int valid, strow, stcol;
+	int valid;
 	int	pos;									/* position on screen			*/
 	unsigned long	defs_flags;
+	int	i;
+	int	xcol[32], xrow[32];
 
 	yn[0] = ' ';									/* Init the field for wget function.	*/
 	yn[1] = '\0';
 
-	if ((screen = malloc(1924)) == 0) exit();					/* Able to get memory?			*/
+	if ((screen = malloc(1924+8)) == 0) exit(0);					/* Able to get memory?			*/
 
 	get_defs(DEFAULTS_FLAGS,&defs_flags);						/* Get the defaults flags		*/
 
-	strow = 3;
-	stcol = 52;
+	/*
+	**	There will be 2 columns of 16 rows for a total of 32 possible flags.
+	**	This loop initializes the row and col indexes.
+	*/
+#define ROWOFFSET	5
+#define NUMROWS		16
+
+	for(i=0; i<NUMROWS; i++)
+	{
+		xcol[i] = 2;
+		xcol[i+NUMROWS] = 42;
+		xrow[i] = i+ROWOFFSET;
+		xrow[i+NUMROWS] = i+ROWOFFSET;
+	}
+
 	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
 	wput(screen, 1,20,PLAIN_TEXT,"*** Set General Usage Flags ***");		/* Layout the screen.			*/
 
 	pos = 0;
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Help Screen");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_ENABLED));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Help Screen");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ENABLED));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable SET File Usage Constants");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SET_FILES));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET File Usage Constants");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_FILES));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable SET Print Mode Defaults");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PRINTER));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Print Mode Defaults");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PRINTER));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable SET Submit Procedure Defaults");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PROC));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Submit Procedure Defaults");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PROC));
+	pos += 1;
 
 #ifdef unix
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Manage PRINT QUEUE");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_QUEUE_MNGMNT));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage PRINT QUEUE");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_QUEUE_MNGMNT));
+	pos += 1;
 #endif
 
 #ifdef VMS
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Manage QUEUES");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_QUEUE_MNGMNT));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage QUEUES");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_QUEUE_MNGMNT));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Search of Batch Queues");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SBATCH_ENABLED));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Search of Batch Queues");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SBATCH_ENABLED));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Search of Generic Queues");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SGENERIC_ENABLED));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Search of Generic Queues");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SGENERIC_ENABLED));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Search of Output Queues");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SOUTPUT_ENABLED));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Search of Output Queues");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SOUTPUT_ENABLED));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable display of queue entries other than user's");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_RESTRJOBS_DISABLED));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"display of queue entries other than user's");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_RESTRJOBS_DISABLED));
+	pos += 1;
 #endif
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Manage SYSTEM");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_SYSTEM));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage SYSTEM");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_SYSTEM));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Use UTILITIES (DISPLAY)");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_DISPLAY));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPLAY)");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPLAY));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Use UTILITIES (General)");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_GENERAL_UTILS));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (EDIT)");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_EDIT));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Use UTILITIES (Goodies)");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_GOODIES_UTILS));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPRINT)");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPRINT));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Configure TERMINAL");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_TERMINAL));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (KCSI)");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CRID));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable PSEUDO blank characteristics");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SETPSB));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Configure TERMINAL");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_TERMINAL));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable CURSOR Characteristics");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SETCURCHAR));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PSEUDO blank characteristics");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SETPSB));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable SCREEN Characteristics");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_SCREEN));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CURSOR Characteristics");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SETCURCHAR));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Enter COMMANDS");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_COMMANDS));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SCREEN Characteristics");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SCREEN));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable SAVE environment");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_USAGE_WRITE));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Enter COMMANDS");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_COMMANDS));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable PRINT Screens");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_SCREEN));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SAVE environment");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_USAGE_WRITE));
+	pos += 1;
 
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable CANCEL Processing");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_CANCEL));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PRINT Screens");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_SCREEN));
+	pos += 1;
 
-#ifdef unix
-	wput(screen,strow+pos,stcol-50,PLAIN_TEXT,"Enable Manage FILES/LIBRARIES");
-	wput(screen,strow+pos,stcol,UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_FILES_LIBS));
-	pos += 1;									/* Next Position			*/
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CANCEL Processing");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CANCEL));
+	pos += 1;
+
+#ifndef VMS
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_FILES_LIBS));
+	pos += 1;
+
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES (Modify)");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CHANGE_FILES_LIBS));
+	pos += 1;
 #endif
 
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
@@ -930,152 +971,165 @@ disp_flags:
 
 		pos = 0;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_ENABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_ENABLED);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_FILES;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_FILES);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_PRINTER;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_PRINTER);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_PROC;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_PROC);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
 #ifdef unix
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_QUEUE_MNGMNT;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_QUEUE_MNGMNT);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 #endif
 
 #ifdef VMS
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_QUEUE_MNGMNT;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_QUEUE_MNGMNT);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SBATCH_ENABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SBATCH_ENABLED);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SGENERIC_ENABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SGENERIC_ENABLED);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SOUTPUT_ENABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SOUTPUT_ENABLED);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_RESTRJOBS_DISABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_RESTRJOBS_DISABLED);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 #endif
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_SYSTEM;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_SYSTEM);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_DISPLAY;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_DISPLAY);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_GENERAL_UTILS;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_GENERAL_UTILS);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_EDIT;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_EDIT);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_GOODIES_UTILS;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_GOODIES_UTILS);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_DISPRINT;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_DISPRINT);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_CRID;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_CRID);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
+
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_TERMINAL;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_TERMINAL);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SETPSB;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SETPSB);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SETCURCHAR;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SETCURCHAR);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SCREEN;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SCREEN);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_COMMANDS;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_COMMANDS);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_USAGE_WRITE;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_USAGE_WRITE);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_PRINT_SCREEN;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_PRINT_SCREEN);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-		wget(screen,strow+pos,stcol,yn);
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_CANCEL;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_CANCEL);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 
-#ifdef unix
-		wget(screen,strow+pos,stcol,yn);
+#ifndef VMS
+		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_FILES_LIBS;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_FILES_LIBS);
-		else { valid = 0; wput(screen,strow+pos,stcol,UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;								/* Next Position			*/
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
+
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_CHANGE_FILES_LIBS;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_CHANGE_FILES_LIBS);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
 #endif
+
 		set_defs(DEFAULTS_FLAGS,&defs_flags);					/* Set the defaults flags		*/
 
-		if (valid) wps_usr(&defaults);						/* Write out the personality info.	*/
+		if (valid) save_defaults();						/* Write out the personality info.	*/
 		else goto disp_flags;
 	}
 	free(screen);									/* Release the screen memory.		*/
@@ -1130,12 +1184,16 @@ char *argv[];
 #define F_SAVE		191
 #define F_PRINTSCR	200
 #define F_DISPLAY	209
-#define F_GOOD		217
+#define F_CRID		217
 #define F_PSEUDO	222
 #define F_CURSOR	229
 #define F_SCREEN	236
 #define F_FILES		243
 #define F_CANCEL	249
+#define F_EDIT		256
+#define F_DISPRINT	261
+#define F_MODFILES	270
+#define F_KSCI		279
 
 	upper_string(argv[2]);
 	retcod = 1;
@@ -1146,7 +1204,7 @@ char *argv[];
 		case P_SET:								/* Process a SET command		*/
 		{
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
-			wpl_usr(&defaults);						/* First load in the constants.		*/
+			load_defaults();						/* First load in the constants.		*/
 			get_defs(DEFAULTS_FLAGS,&defs_flags);				/* Get the defaults flags		*/
 			setone = us_flagequ(argc,argv,dst,src);				/* Parse out the equation.		*/
 			if (setone)
@@ -1174,7 +1232,7 @@ char *argv[];
 					else
 					{
 	/* (200)    0    5    |   15    |   25    |   35    |   45    |   55    |   65    |   75    |   85    |   95    |	*/
-	i = strpos(" PRINTSCR DISPLAY GOOD PSEUDO CURSOR SCREEN FILES CANCEL ",item_str);
+	i = strpos(" PRINTSCR DISPLAY CRID PSEUDO CURSOR SCREEN FILES CANCEL EDIT DISPRINT MODFILES KCSI ",item_str);
 						if (i != -1) i+= 200;
 					}
 
@@ -1244,8 +1302,10 @@ char *argv[];
 					}
 					case F_UTILS:
 					{
-						if (!setfl) 	defs_flags &= (~ HELP_GENERAL_UTILS);
-						else 		defs_flags |=    HELP_GENERAL_UTILS;
+						if (!setfl) 	defs_flags &= (~ HELP_EDIT);
+						else 		defs_flags |=    HELP_EDIT;
+						if (!setfl) 	defs_flags &= (~ HELP_DISPRINT);
+						else 		defs_flags |=    HELP_DISPRINT;
 						break;
 					}
 					case F_DISPLAY:
@@ -1319,10 +1379,11 @@ char *argv[];
 						break;
 					}
 
-					case F_GOOD:
+					case F_CRID:
+					case F_KSCI:
 					{
-						if (!setfl) 	defs_flags &= (~ HELP_GOODIES_UTILS);
-						else 		defs_flags |=    HELP_GOODIES_UTILS;
+						if (!setfl) 	defs_flags &= (~ HELP_CRID);
+						else 		defs_flags |=    HELP_CRID;
 						break;
 					}
 
@@ -1347,6 +1408,27 @@ char *argv[];
 						break;
 					}
 
+					case F_EDIT:
+					{
+						if (!setfl) 	defs_flags &= (~ HELP_EDIT);
+						else 		defs_flags |=    HELP_EDIT;
+						break;
+					}
+
+					case F_DISPRINT:
+					{
+						if (!setfl) 	defs_flags &= (~ HELP_DISPRINT);
+						else 		defs_flags |=    HELP_DISPRINT;
+						break;
+					}
+
+					case F_MODFILES:
+					{
+						if (!setfl) 	defs_flags &= (~ HELP_CHANGE_FILES_LIBS);
+						else 		defs_flags |=    HELP_CHANGE_FILES_LIBS;
+						break;
+					}
+
 					default:
 					{
 						return(INVAL_FLAG_TYPE_ERROR);
@@ -1355,7 +1437,7 @@ char *argv[];
 				} /* end of switch */
 			} /* end of for */
 			set_defs(DEFAULTS_FLAGS,&defs_flags);				/* Set the defaults flags		*/
-			wps_usr(&defaults);						/* Write out the personality info.	*/
+			save_defaults();						/* Write out the personality info.	*/
 			break;
 		} /* end of case SET */
 		default:
@@ -1548,17 +1630,22 @@ static int helptext()
 	printf("   wusage flags set <flag>=<logical>   Set one flag in the bit mask.\n");
 	printf("   wusage version                      Print the WISP VERSION info.\n");
 	printf("\n");
-	printf("   <item>    = INLIB,INVOL,OUTLIB,OUTVOL,RUNLIB,RUNVOL,SPOOLIB,SPOOLVOL,\n");
-	printf("               WORKLIB,WORKVOL,PROGLIB,PROGVOL,PRNTMODE,PRTCLASS,FORM#,PRINTER,\n");
-	printf("               JOBQUEUE,JOBCLASS,JOBLIMIT,FLAGS,USERID,LUSERID,LINES\n");
-	printf("   <flag>    = HELP,SETFILE,SETPRINT,SETSUB,PRTQUE,SYSTEM,DISPLAY,UTILS,GOOD,\n");
-	printf("               TERMINAL,PSEUDO,CURSOR,SCREEN,COMMANDS,SAVE,PRINTSCR,CANCEL,FILES\n");
+	printf("   <item> = INLIB,INVOL,OUTLIB,OUTVOL,RUNLIB,RUNVOL,SPOOLIB,SPOOLVOL,\n");
+	printf("            WORKLIB,WORKVOL,PROGLIB,PROGVOL,PRNTMODE,PRTCLASS,FORM#,PRINTER,\n");
+	printf("            JOBQUEUE,JOBCLASS,JOBLIMIT,FLAGS,USERID,LUSERID,LINES\n");
+	printf("   <flag> = HELP,SETFILE,SETPRINT,SETSUB,PRTQUE,SYSTEM,UTILS,DISPLAY,EDIT,\n");
+	printf("            DISPRINT,KCSI,TERMINAL,PSEUDO,CURSOR,SCREEN,COMMANDS,SAVE,PRINTSCR,\n");
+	printf("            CANCEL,FILES,MODFILES\n");
 	printf("   <logical> = Y, N, T, F\n");
 	printf("\n");
+#ifdef unix
 	printf("Examples:\n");
 	printf("   wusage set inlib=mylib              SET INLIB  = \"MYLIB   \".\n");
 	printf("   shvar=`wusage extract runvol`       EXTRACT RUNVOL into shell variable.\n");
-#endif
+	printf("\n");
+#endif /* unix */
+#endif /* !VMS */
+
 #ifdef VMS
               /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
 	      /*         1         2         3         4         5         6         7         8*/
@@ -1578,8 +1665,8 @@ static int helptext()
 	printf("            WORKLIB,WORKVOL,PROGLIB,PROGVOL,PRNTMODE,PRTCLASS,FORM#,PRINTER,\n");
 	printf("            JOBQUEUE,JOBCLASS,JOBLIMIT,FLAGS,USERID,LUSERID,LINES\n");
 	printf("   <flag> = HELP,SETFILE,SETPRINT,SETSUB,QUEUES,SBQ,SGQ,SOQ,SALLJ,SYSTEM,\n");
-	printf("            DISPLAY,UTILS,GOOD,TERMINAL,PSEUDO,CURSOR,SCREEN,COMMANDS,SAVE,\n");
-	printf("            PRINTSCR,CANCEL\n");
+	printf("            UTILS,DISPLAY,EDIT,DISPRINT,KCSI,TERMINAL,PSEUDO,CURSOR,SCREEN,\n");
+	printf("            COMMANDS,SAVE,PRINTSCR,CANCEL\n");
 	printf("<logical> = Y, N, T, F\n");
 	printf("\n"); 
 #endif

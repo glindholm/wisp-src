@@ -72,6 +72,7 @@ wrunmf()
 	FILECOPY();
 	FIND();
 	findlong();
+	FXZONE();
 	GETPARM();
 	getparmbuild();
 	PUTPARM();

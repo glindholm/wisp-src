@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -63,13 +63,14 @@
 #ifndef unix	/* VMS or MSDOS */
 #include <stdlib.h>
 #endif
-
+#include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
 #include "wangkeys.h"
 #include "wcommon.h"
 #include "scnfacs.h"
 #include "wshmem.h"
+#include "putparm.h"
 #include "wglobals.h"
 
 #include <v/video.h>
@@ -88,6 +89,7 @@
 
 int	tag_prb();
 char	*strchr();
+static int wfget();
 
 static SHMH *curr_prb;								/* Ptr to PRB for current prname		*/
 static int last_prb_id=0;							/* The last PRB used				*/
@@ -109,29 +111,29 @@ va_dcl
 	int done,i,j,arg_count;
 	va_list	the_args;
 	char *the_item;
-	long *long_item;
+	int4 *long_item;
 	int *int_item;
 	char	keylist[80], templine[84], function, lines, term[2], no_mod[2];
-	unsigned long	pfkey_mask;						/* the mask of possible pfkeys			*/
-	unsigned long	key_num;
+	uint4   pfkey_mask;						/* the mask of possible pfkeys			*/
+	uint4	key_num;
 	int	the_type;							/* the type of getparm				*/
 	char	*the_form;							/* the form					*/
 	char	*the_name;							/* the name of the caller			*/
 	char	*pf_ret;							/* the pfkey return field			*/
 	char	*messid;							/* the message id				*/
 	char	*messiss;							/* the message issuer				*/
-	long	messlines;							/* the number of lines				*/
-	long	messlines_save;							/* the number of lines				*/
+	int4	messlines;							/* the number of lines				*/
+	int4	messlines_save;							/* the number of lines				*/
 	char	*messtxt;							/* the message text				*/
-	long	messlen;							/* the text length				*/
+	int4	messlen;							/* the text length				*/
 	char	*sptype;							/* spec type					*/
 	char	*spkey;								/* spec keyword					*/
 	char	*spval;								/* spec string					*/
-	long	splen;								/* length of the string				*/
+	int4	splen;								/* length of the string				*/
 	char	*sprf;								/* row flag					*/
-       	long	sprow;	  							/* row value					*/
+       	int4	sprow;	  							/* row value					*/
 	char	*spcf;								/* collumn flag					*/
-	long	spcol;								/* collumn value				*/
+	int4	spcol;								/* collumn value				*/
 	char	*spdtype;							/* data type					*/
 	char 	*screen, screen_mem[2000];					/* The screen pointer & memory (1924+fudge)	*/
 	char    spaces[9];             						/* A string full of spaces.			*/
@@ -141,16 +143,15 @@ va_dcl
 	int	found_keyword, display_flag, missing_word, enter_flagged;	/* 1 if screen display required			*/
 	short	main_arg7;
 	short 	arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9;
-	long	long_temp;
+	int4    long_temp;
 	int	struct_type;							/* Flag-determine passed struct.		*/
 	char	**arg_addr;							/* Ptr to array of addresses.			*/
 	int	aa_ndx;								/* Address array index value.			*/
 	char 	prid[8];							/* Local copy of program id.			*/
 	int	label_prb;							/* Was a labled PRB found			*/
-	prb_keyword_struct	keyword_list[100];				/* List of keywords to update PRB with		*/
-	int	keyword_count;							/* Number of keywords				*/
+	KEYW	*fmtlist;							/* List to hold keyword/value pairs		*/
 	int	labeled_prb;							/* Was a PRB found and was it labeled		*/
-	int	keep_ok;							/* Are PRBs with KEEP status ok to return	*/
+	int	used_ok;							/* Are PRBs with USED status ok to return	*/
 
 	/* 
 	**	INITIALIZATION
@@ -253,7 +254,7 @@ va_dcl
 	curr_prb = NULL;
 	if (the_type == RESPECIFY_DEFAULT)
 	{
-		keep_ok = 1;							/* PRBs of type KEEP are ok.			*/
+		used_ok = 1;							/* PRBs of type USED are ok.			*/
 
 		if (use_last_prb_id)						/* If using last PRB				*/
 		{
@@ -270,7 +271,7 @@ va_dcl
 	}
 	else
 	{
-		keep_ok = 0;
+		used_ok = 0;
 	}
 	use_last_prb_id = 0;
 
@@ -278,13 +279,13 @@ va_dcl
 	{
 		for(;;)
 		{
-			curr_prb = (SHMH *)get_prb_area(prname,NULL,keep_ok);	/* Search for a PRB with this PRNAME		*/
+			curr_prb = (SHMH *)get_prb_area(prname,NULL,used_ok);	/* Search for a PRB with this PRNAME		*/
 
 			if (!curr_prb) break;					/* No PRB found					*/
 
 			if (curr_prb->status == P_OK) break;			/* We found a valid PRB.			*/
 
-			if (curr_prb->status == P_KEEP)
+			if (curr_prb->status == P_USED)
 			{
 				if (the_type == RESPECIFY_DEFAULT) break;	/* For "RD" a used PRB is accepted		*/
 			}
@@ -294,6 +295,11 @@ va_dcl
 				wax_table_entry((char *)curr_prb);		/* Remove the PRB entry from pr_table		*/
 			}
 		}
+	}
+
+	if (curr_prb && (the_type == INITIAL || the_type == INITIAL_DEFAULT))
+	{
+		backwards_reference(&curr_prb);					/* Perform any backwards referencing needed	*/
 	}
 
 	labeled_prb = 0;							/* Assume no label PRB				*/
@@ -367,7 +373,7 @@ va_dcl
 	sprintf(templine,"Parameter reference Name: %-s",prname);
 	wput(screen,1,46,PLAIN_TEXT,templine);
 	memset(templine,0,sizeof(templine));
-	sprintf(templine,"Message Id: %04d",atoi(messid));
+	sprintf(templine,"Message Id: %4.4s",messid);
 	wput(screen,2,60,PLAIN_TEXT,templine);
 	memset(templine,0,sizeof(templine));
 	strcpy(templine,"Component: ");
@@ -399,13 +405,13 @@ va_dcl
 	}
 	else the_item =  va_arg(the_args, char*);
 
-	/* NOTE: If Little-Endian and noswap_words and arg7 is not present and Arg8 is only 1 byte long then 			*/
+	/* NOTE: If Little-Endian and noswap_words and arg7 is not present and Arg8 is only 1 byte int4 then 			*/
 	/*	 the test will likely fail. -- Arg8 MUST be made longer then 1 byte.						*/
 
 	if (longargtest(the_item,1))
 	{
 		main_arg7 = 1;
-		long_item = (long *)the_item;					/* the number of lines in mess			*/
+		long_item = (int4 *)the_item;					/* the number of lines in mess			*/
 		GETBIN(&messlines,long_item,4);
 		--done;
 		wswap(&messlines);						/* put words in correct order			*/
@@ -422,9 +428,9 @@ va_dcl
 
 			if (struct_type)					/* get ptr to TEXT LENGTH item			*/
 			{
-				long_item = (long *)arg_addr[aa_ndx++];
+				long_item = (int4 *)arg_addr[aa_ndx++];
 			}
-			else long_item = va_arg(the_args, long*);
+			else long_item = va_arg(the_args, int4*);
 			--done;
 
 			GETBIN(&messlen,long_item,4);
@@ -433,7 +439,7 @@ va_dcl
 
 			memset(templine,0,sizeof(templine));
 			strncpy(templine,messtxt,(int)messlen);
-			wput(screen,(int)(6+messlines_save-messlines),4,PLAIN_TEXT,templine);
+			wput(screen,(int)(6+messlines_save-messlines),2,PLAIN_TEXT,templine);
 		}
 	}
 	else
@@ -448,9 +454,9 @@ va_dcl
 
 		if (struct_type)						/* get ptr to TEXT LENGTH item			*/
 		{
-			long_item = (long *)arg_addr[aa_ndx++];
+			long_item = (int4 *)arg_addr[aa_ndx++];
 		}
-		else long_item = va_arg(the_args, long*);
+		else long_item = va_arg(the_args, int4*);
 		--done;
 
 		GETBIN(&messlen,long_item,4);
@@ -524,9 +530,9 @@ va_dcl
 
 			/*4*/	if (struct_type)				/* get ptr to KW VAL LENGTH item		*/
 				{
-					long_item = (long *)arg_addr[aa_ndx++];
+					long_item = (int4 *)arg_addr[aa_ndx++];
 				}
-				else long_item = va_arg(the_args, long*);
+				else long_item = va_arg(the_args, int4*);
 				GETBIN(&splen,long_item,4);
 				--done;
 				wswap(&splen);
@@ -543,14 +549,14 @@ va_dcl
 				{
 			/*6*/		if (struct_type)			/* get ptr to ROW VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
 				else
 				{
-					long_item = (long *)sprf;
+					long_item = (int4 *)sprf;
 					sprf = "R";
 				}
 				GETBIN(&sprow,long_item,4);
@@ -581,14 +587,14 @@ va_dcl
 					spcf = the_item;
 			/*8*/		if (struct_type)			/* get ptr to COLUMN VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
 				else	
 				{
-					long_item = (long *) the_item;
+					long_item = (int4 *) the_item;
 					spcf = "R";
 				}
 
@@ -624,7 +630,7 @@ va_dcl
 				case 'L':
 				case 'U':
 				case 'H':
-					keyfieldfac = UPCASE_FIELD;
+					keyfieldfac = (*sptype == 'R') ? BLINKUP_FIELD:UPCASE_FIELD;
 					break;
 				case 'a':
 				case 'l':
@@ -633,14 +639,14 @@ va_dcl
 					keyfieldfac = UPPROT_FIELD;
 					break;
 				case 'C':
-					keyfieldfac = STANDARD_FIELD;
+					keyfieldfac = (*sptype == 'R') ? BLINK_FAC:STANDARD_FIELD;
 					break;
 				case 'c':
 					keyfieldfac = PLAIN_TEXT;
 					break;
 				case 'N':
 				case 'I':
-					keyfieldfac = NUMERIC_FIELD;
+					keyfieldfac = (*sptype == 'R') ? BLINKNUM_FIELD:NUMERIC_FIELD;
 					break;
 				case 'n':
 				case 'i':
@@ -691,7 +697,7 @@ va_dcl
 				found_keyword=0;
 				if (curr_prb && the_type != RESPECIFY_DEFAULT)	/* If there is a PRB then search for keyword	*/
 				{
-					found_keyword = search_parm_area(templine,spkey,spval,splen,(char *)curr_prb,0);
+					found_keyword = search_parm_area(templine,spkey,0,splen,(char *)curr_prb,0);
 				}
 				if (!found_keyword)				/* If no PRB value then use spval (G/A)		*/
 				{
@@ -725,9 +731,9 @@ va_dcl
 
 			/*3*/	if (struct_type)				/* get ptr to VALUE LENGTH item			*/
 				{
-					long_item = (long *)arg_addr[aa_ndx++];
+					long_item = (int4 *)arg_addr[aa_ndx++];
 				}
-				else long_item = va_arg(the_args, long*);
+				else long_item = va_arg(the_args, int4*);
 				--done;
 				GETBIN(&splen,long_item,4);
 				wswap(&splen);
@@ -754,12 +760,12 @@ va_dcl
 				{
 			/*5*/		if (struct_type)			/* get ptr to ROW VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
-				else	long_item = (long *)the_item;
+				else	long_item = (int4 *)the_item;
 				GETBIN(&sprow,long_item,4);
 				wswap(&sprow);
 				if ( sprow < 0 || sprow >24 )			/* Report the args are messed-up		*/
@@ -790,12 +796,12 @@ va_dcl
 				{
 			/*7*/		if (struct_type)			/* get ptr to COLUMN VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
-				else	long_item = (long *)the_item;
+				else	long_item = (int4 *)the_item;
 				GETBIN(&spcol,long_item,4);
 				wswap(&spcol);
 				if ( spcol < 0 || spcol >80 )			/* Report the args are messed-up		*/
@@ -824,9 +830,14 @@ va_dcl
 
 				if (*sptype == 'T' || *sptype == 'U')		/* If not a "skip"				*/
 				{
+					int	fieldfac;
+
+					if (*sptype == 'T')	fieldfac = PLAIN_TEXT;
+					else			fieldfac = UNDER_TEXT;
+
 					if (splen > 0)
 					{
-						wput(screen,row,column,PLAIN_TEXT,templine);	/* output the line		*/
+						wput(screen,row,column,fieldfac,templine);	/* output the line		*/
 					}
 				}
 				break;
@@ -848,7 +859,7 @@ va_dcl
 				else spval = va_arg(the_args, char*);
 				--done;
 
-				long_item = (long*) spval;                                                           
+				long_item = (int4*) spval;                                                           
 				GETBIN(&pfkey_mask,long_item,4);
 				wswap(&pfkey_mask);				/* change order of words			*/
 				if (alpha_pfkey && !bytenormal())
@@ -939,11 +950,18 @@ va_dcl
 	}
 	else
 	{
-		if (curr_prb) 	pf_ret[0] = curr_prb->pfkey;
-	        else	  	pf_ret[0] = ENTER_KEY_PRESSED;			/* Fake the key value				*/
-	}									/* return the values				*/
+		if (curr_prb) 	
+		{
+			pf_ret[0] = curr_prb->pfkey;				/* Get the pfkey from the putparm		*/
+		}
+	        else
+		{
+			/* If no display and no putparm found then don't modify pf_ret. */
+			/* enter_key_presspf_ret[0] = ENTER_KEY_PRESSED; */
+		}
+	}
 
-	keyword_count = 0;
+	fmtlist = NULL;
 
 	va_end(the_args);
 	va_start(the_args);							/* start getting items				*/
@@ -952,7 +970,7 @@ va_dcl
 	{									/* of args and ptr to # args.			*/
 		struct_type = 1;
 		arg_addr = (char **)va_arg(the_args, char*);			/* Get pointer to array of addr.		*/
-		long_item = va_arg(the_args, long*);				/* Get pointer to # of params.			*/
+		long_item = va_arg(the_args, int4*);				/* Get pointer to # of params.			*/
 		done = *long_item;
 		aa_ndx = 0;							/* Start 1st element of array.			*/
 	}
@@ -983,9 +1001,9 @@ va_dcl
 	{
 		if (struct_type)						/* get # MESSAGE LINES item			*/
 		{
-			long_item = (long *)arg_addr[aa_ndx++];
+			long_item = (int4 *)arg_addr[aa_ndx++];
 		}
-		else long_item = va_arg(the_args, long*);
+		else long_item = va_arg(the_args, int4*);
 		GETBIN(&messlines,long_item,4);
 		--done;
 		wswap(&messlines);
@@ -996,7 +1014,7 @@ va_dcl
 			else the_item = va_arg(the_args, char*);
 			--done;
 			if (struct_type) aa_ndx++;				/* Skip ptr to TEXT LENGTH item			*/
-			else long_item = va_arg(the_args, long*);
+			else long_item = va_arg(the_args, int4*);
 			--done;
 			messlines--;
 		}
@@ -1007,7 +1025,7 @@ va_dcl
 			else the_item = va_arg(the_args, char*);
 			--done;
 			if (struct_type) aa_ndx++;				/* Skip ptr to TEXT LENGTH item			*/
-			else long_item = va_arg(the_args, long*);
+			else long_item = va_arg(the_args, int4*);
 			--done;
 	}
 	relative_row = 9 + messlines_save;					/* Start relative offset here.			*/
@@ -1051,9 +1069,9 @@ va_dcl
 
 			/*4*/	if (struct_type)				/* get ptr to KW VAL LENGTH item		*/
 				{
-					long_item = (long *)arg_addr[aa_ndx++];
+					long_item = (int4 *)arg_addr[aa_ndx++];
 				}
-				else long_item = va_arg(the_args, long*);
+				else long_item = va_arg(the_args, int4*);
 				--done;
 				GETBIN(&splen,long_item,4);
 				wswap(&splen);
@@ -1070,14 +1088,14 @@ va_dcl
 				{
 			/*6*/		if (struct_type)			/* get ptr to ROW VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
 				else
 				{
-					long_item = (long *)sprf;
+					long_item = (int4 *)sprf;
 					sprf = "R";
 				}
 				GETBIN(&sprow,long_item,4);
@@ -1106,14 +1124,14 @@ va_dcl
 					spcf = the_item;
 			/*8*/		if (struct_type)			/* get ptr to COLUMN VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
 				else	
 				{
-					long_item = (long *) the_item;
+					long_item = (int4 *) the_item;
 					spcf = "R";
 				}
 
@@ -1184,16 +1202,28 @@ va_dcl
 
 						/*
 						** 	If PRB and labeled then we have to updated the PRB with all these
-						**	values so build a table of keyword=value items.
-						**	NOTE: We are using pointers into the parameter list (spkey,spval).
+						**	values so build a fmtlist.
 						*/
 
 						if (labeled_prb)
 						{
-							keyword_list[keyword_count].keyword = spkey;
-							keyword_list[keyword_count].len = splen;
-							keyword_list[keyword_count].value = spval;
-							keyword_count++;
+							KEYW	*p;
+
+							if (!fmtlist)
+							{
+								p = fmtlist = (KEYW *)calloc(1,sizeof(KEYW));
+							}
+							else
+							{
+								p->next = (KEYW *)calloc(1,sizeof(KEYW));
+								p = p->next;
+							}
+							p->next = NULL;
+							memcpy(p->keyword,spkey,8);
+							p->len = splen;
+							p->value = (char *)calloc((int)(p->len+1),sizeof(char));
+							memcpy(p->value,spval,(int)(p->len));
+							p->special = SPECIAL_NOT;
 						}
 					}
 				}
@@ -1214,9 +1244,9 @@ va_dcl
 
 			/*3*/	if (struct_type)				/* get ptr to VALUE LENGTH item			*/
 				{
-					long_item = (long *)arg_addr[aa_ndx++];
+					long_item = (int4 *)arg_addr[aa_ndx++];
 				}
-				else long_item = va_arg(the_args, long*);
+				else long_item = va_arg(the_args, int4*);
 				--done;
 				GETBIN(&splen,long_item,4);
 				wswap(&splen);
@@ -1244,12 +1274,12 @@ va_dcl
 				{
 			/*5*/		if (struct_type)			/* get ptr to ROW VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
-				else          long_item = (long *)the_item;
+				else          long_item = (int4 *)the_item;
 				GETBIN(&sprow,long_item,4);
 				wswap(&sprow);
 				if ( sprow < 0 || sprow >24 )			/* Report the args are messed-up		*/
@@ -1280,12 +1310,12 @@ va_dcl
 				{
 			/*7*/		if (struct_type)			/* get ptr to COLUMN VALUE item			*/
 					{
-						long_item = (long *)arg_addr[aa_ndx++];
+						long_item = (int4 *)arg_addr[aa_ndx++];
 					}
-					else long_item = va_arg(the_args, long*);
+					else long_item = va_arg(the_args, int4*);
 					--done;
 				}
-				else	long_item = (long *)the_item;
+				else	long_item = (int4 *)the_item;
 				GETBIN(&spcol,long_item,4);
 				wswap(&spcol);
 				if ( spcol < 0 || spcol >80 )			/* Report the args are messed-up		*/
@@ -1336,12 +1366,10 @@ va_dcl
 		}								/* end of switch				*/
 	}
 
-	if (labeled_prb && keyword_count)					/* Update the labeled PRB with new values	*/
+	if (labeled_prb && fmtlist)						/* Update the labeled PRB with new values	*/
 	{
-		update_prb_list(&curr_prb,keyword_count,keyword_list);
-
-/* make sure that this doesn't screw up the update_prb() stuff for wfopen(). The tag_prb() may need to be ajusted.		*/
-/* It looks like it should be OK because the TAG takes place later BUT need to update curr_prb for the tag_prb().		*/
+		update_prb(&curr_prb,fmtlist);
+		free_fmtlist(fmtlist);
 	}
 
 	if (display_flag)
@@ -1356,7 +1384,7 @@ va_dcl
 
 	if (curr_prb && the_type != RESPECIFY_DEFAULT)
 	{
-		delete_parm(prname,NULL,(char *)curr_prb);			/* Attempt to delete the area.			*/
+		use_prb(curr_prb);						/* Use this PRB.				*/
 	}
 
 exit_getparm:
@@ -1373,22 +1401,24 @@ exit_getparm:
 			It is only called before a GETPARM type="RD" to indicate that we want to update the PRB used
 			by the last GETPARM of type "I " or "ID".
 */
-use_last_prb()
+int use_last_prb()
 {
 	use_last_prb_id = 1;
+	return(0);
 }
 
 /*==============================================================================================================================*/
-static wfget(screen,row,col,val,len)						/* get a field from the screen	*/
+static int wfget(screen,row,col,val,len)					/* get a field from the screen	*/
 char	*screen;								/* pointer to screen structure	*/
 int	row;									/* the row to start		*/
 int	col;									/* the column			*/
 char	*val;									/* the place to store the value	*/
-long	len;									/* the size of the area		*/
+int4	len;									/* the size of the area		*/
 {
  	int i;
               
 	i = ((row-1) * 80) + (col-1) + 4;					/* location in screen map	*/
 	memcpy(val,&screen[i],(int)len);					/* copy the data		*/
+	return(0);
 }
 

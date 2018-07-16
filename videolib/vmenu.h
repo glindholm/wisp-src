@@ -28,25 +28,51 @@
 #define EXIT_RIGHT	       2048	/* Exit to the right.		*/
 #define CENTER_MENU	       4096	/* Position by centering.	*/
 
+
+
 struct video_menu
 {
-	int type;
-	int options;
-	int row;
-	int column;
-	int width;
-	int items;
-	int item;
-	int backitem;
+	int4 type;
+	int4 options;
+	int4 row;
+	int4 column;
+	int4 width;
+	int4 items;
+	int4 item;
+	int4 backitem;
+	int4 code[MAX_MENU_ITEMS];
+	unsigned char text[MAX_MENU_ITEMS][MAX_MENU_WIDTH];
+
+        /*
+         * everything after this point is lumped together  
+         * in the COBOL FILLER PIC X(184) area, since COBOL
+         * doesn't need to see these items.
+         *
+         */
 	unsigned char *save;
 	struct video_menu *path;
 	struct video_menu *backlink;
-	int code[MAX_MENU_ITEMS];
 	struct video_menu *link[MAX_MENU_ITEMS];
-	unsigned char text[MAX_MENU_ITEMS][MAX_MENU_WIDTH];
+#if !defined(OSF1_ALPHA)
+	/* 
+         * on 4-byte pointer machines (everything but Alpha so far)
+	 * we need some dummy space to correspond with the rest of 
+         * the COBOL  FILLER PIC X(184).  Sizes are as follows:
+         *
+         * item       size on alpha:        size on other:
+         * ----       -------------         -------------
+         * save            8                     4
+         * path            8                     4
+         * backlink        8                     4
+         * link[]         160                    80
+         *           ---------------     ------------------
+         *         TOTAL: 184                    92
+         *
+         */ 
+         char filler[92];
+#endif
 };
 
 #define DYNAMIC_LINK (struct video_menu *) -1	/* Dynamic link code.	*/
-
 #endif	/*  VMENU_INCLUDED	*/
 

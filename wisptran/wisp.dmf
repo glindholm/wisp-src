@@ -1,97 +1,83 @@
+#/************************************************************************/
+#/*									*/
+#/*	        WISP - Wang Interchange Source Pre-processor		*/
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+#/*	 An unpublished work of International Digital Scientific Inc.	*/
+#/*			    All rights reserved.			*/
+#/*									*/
+#/************************************************************************/
 #
-# makefile for the wisp translator
 #
-# creation, 89.09.26, gsl
+#	File:		wisp.dmf
 #
-# Uncomment for u3b2
-#CFLAGS = -Wp,-I ./ -O
-#CFLAGS = -Wp,-I./ -g
+#	Function:	Makefile for the WISP translator on MSDOS
+#			using Intel C Code Builder
 #
-# Uncomment for ULTRIX
-#CFLAGS = -O
+# 	History:	09/26/89	Written by GSL
+#			06/04/92	Changed to use make.include GSL
+#			06/09/92	Removed copy to $(STDBIN). GSL
+#			12/31/92	Fixed for codebuilder. GSL
+#			07/14/93	Change for MFC. GSL
 #
-# Uncomment for RS6000
-#CFLAGS = -O
 
-# Uncomment for HP/UX
-#   - optimization caused problems with screens, so
-#     turn off for safety sake.
-#CFLAGS = 
+WISPTRAN = wisp.exe
+THE_LIB=wisptran.lib
 
-#
-# Uncomment for ULTRIX & RS6000 & others
-#LDSTART = /lib/crt0.o
-#LDEND = -lc
+!include $(WISP)\src\port\dosmake.inc
 
-#
-# Uncomment for u3b2
-#LDSTART = crt1.o
-#LDEND = -L/usr/lib/fp -lc -lg /usr/lib/fp/crtn.o
+.PRECIOUS:      $(THE_LIB) 
 
-# Uncomment for unix
-#DIR=/usr/bin/wispbin
-#WISP=wisp
+all: 	$(STDBIN)\$(WISPTRAN)
 
-# Uncomment for MS-DOS
-#CFLAGS = -O -AL
-CFLAGS = -AL /Zi /Gt3 /nologo /G2
-LINKFL =  /NOE /ST:12288 /SE:256 /CO /NOL
+$(STDBIN)\$(WISPTRAN):	$(WISPTRAN)
+	copy $(WISPTRAN) $@
 
-# Uncomment for MS-DOS
-DIR=\wispbin
-WISP=wisp.exe
-LIB=tran.lib
-CLIB=E:\c600\lib\llibce.lib
+OBJS =	wisp.obj \
+	getopt.obj \
+	ring.obj \
+	wisp_pic.obj \
+	wt_acept.obj \
+	wt_call.obj \
+	wt_cli.obj \
+	wt_crtrw.obj \
+	wt_datad.obj \
+	wt_decl.obj \
+	wt_delet.obj \
+	wt_disp.obj \
+	wt_divs.obj \
+	wt_files.obj \
+	wt_free.obj \
+	wt_ident.obj \
+	wt_if.obj \
+	wt_input.obj \
+	wt_io.obj \
+	wt_locks.obj \
+	wt_opcls.obj \
+	wt_procd.obj \
+	wt_read.obj \
+	wt_scrn.obj \
+	wt_sort.obj \
+	wt_start.obj \
+	wt_utils.obj \
+	wt_write.obj \
+	wt_wsdat.obj \
+	wt_wsdiv.obj 
 
-$(DIR)/$(WISP): $(WISP)
-	copy $(WISP) $(DIR)
+
+$(THE_LIB): $(OBJS)
+	!LIB $(THE_LIB) /NOI /NOL -+$?;
+	@echo lib $(THE_LIB) is now up-to-date
+
+$(WISPTRAN): $(THE_LIB)
+	echo $(THE_LIB) /link /ST:16384 /nolog >wisp.lrf
+	$(CC) $(CFLAGS) -o $@ wisp.obj @wisp.lrf
+	@echo $(WISPTRAN) is now up-to-date
 
 
-OBJS= msdosfns.obj wisp_pic.obj wt_call.obj wt_cli.obj wt_crtrw.obj \
-	wt_datad.obj wt_decl.obj wt_delet.obj wt_disp.obj wt_divs.obj \
-	wt_files.obj wt_free.obj wt_ident.obj wt_if.obj wt_input.obj \
-	wt_io.obj wt_locks.obj wt_opcls.obj wt_procd.obj wt_read.obj \
-	wt_scrn.obj wt_sort.obj wt_start.obj wt_utils.obj wt_write.obj \
-	wt_wsdat.obj wt_wsdiv.obj msdosfns.obj
-
-$(WISP): wisp.obj $(LIB)
-	cl -o $(WISP) wisp.obj /link $(LINKFL) $(LIB) $(CLIB)
-
-$(LIB): $(OBJS)
-	rm $(LIB)
-	lib /NOI /NOL $(LIB);
-	lib /NOI /NOL $(LIB) +msdosfns.obj;
-	lib /NOI /NOL $(LIB) +wisp_pic.obj;
-	lib /NOI /NOL $(LIB) +wt_call.obj;
-	lib /NOI /NOL $(LIB) +wt_cli.obj;
-	lib /NOI /NOL $(LIB) +wt_crtrw.obj;
-	lib /NOI /NOL $(LIB) +wt_datad.obj;
-	lib /NOI /NOL $(LIB) +wt_decl.obj;
-	lib /NOI /NOL $(LIB) +wt_delet.obj;
-	lib /NOI /NOL $(LIB) +wt_disp.obj;
-	lib /NOI /NOL $(LIB) +wt_divs.obj;
-	lib /NOI /NOL $(LIB) +wt_files.obj;
-	lib /NOI /NOL $(LIB) +wt_free.obj;
-	lib /NOI /NOL $(LIB) +wt_ident.obj;
-	lib /NOI /NOL $(LIB) +wt_if.obj;
-	lib /NOI /NOL $(LIB) +wt_input.obj;
-	lib /NOI /NOL $(LIB) +wt_io.obj;
-	lib /NOI /NOL $(LIB) +wt_locks.obj;
-	lib /NOI /NOL $(LIB) +wt_opcls.obj;
-	lib /NOI /NOL $(LIB) +wt_procd.obj;
-	lib /NOI /NOL $(LIB) +wt_read.obj;
-	lib /NOI /NOL $(LIB) +wt_scrn.obj;
-	lib /NOI /NOL $(LIB) +wt_sort.obj;
-	lib /NOI /NOL $(LIB) +wt_start.obj;
-	lib /NOI /NOL $(LIB) +wt_utils.obj;
-	lib /NOI /NOL $(LIB) +wt_write.obj;
-	lib /NOI /NOL $(LIB) +wt_wsdat.obj;
-	lib /NOI /NOL $(LIB) +wt_wsdiv.obj;
-	
+ring.obj: ring.c
 wisp.obj: wisp.c wisp.h wcommon.h
-
-msdosfns.obj: msdosfns.c
 wisp_pic.obj: wisp_pic.c
+wt_acept.obj: wt_acept.c wisp.h wcommon.h
 wt_call.obj: wt_call.c wisp.h wcommon.h
 wt_cli.obj: wt_cli.c wisp.h wcommon.h
 wt_crtrw.obj: wt_crtrw.c wisp.h wcommon.h
@@ -117,3 +103,4 @@ wt_utils.obj: wt_utils.c wisp.h wcommon.h
 wt_write.obj: wt_write.c wisp.h wcommon.h
 wt_wsdat.obj: wt_wsdat.c wisp.h wcommon.h
 wt_wsdiv.obj: wt_wsdiv.c wisp.h wcommon.h
+

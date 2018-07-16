@@ -8,6 +8,9 @@
 			/************************************************************************/
 
 
+#ifndef SORTSEQF_H
+#define SORTSEQF_H
+
 /*
 	Error defines for sortseqf.
 
@@ -61,3 +64,4 @@ struct s_sortkeys
 #define KT_BINARY_2N2		11
 };
 
+#endif /* SORTSEQF_H */

@@ -9,26 +9,27 @@
 
 
 /*
-	longargtest	This routine test if the arg from a variable arg list is a long.
+	longargtest	This routine test if the arg from a variable arg list is a int4.
 
-			Returns		 1  is a long
-					 0  is not a long
+			Returns		 1  is a int4
+					 0  is not a int4
 					-1  invalid size for sigbytes
 */
 
 /*
- We are testing to see if arg is a long. Arg is a 4 byte binary.
+ We are testing to see if arg is a int4. Arg is a 4 byte binary.
 
 					byteorder  	1-byte	test	2-bytes	test	3-bytes test
     (1)	Big-Endian    (byte-normal)	1 2 3 4    	0 0 0 n	 1	0 0 n n	 1	0 n n n  1
     (2)	Little-Endian (byte-swap)	2 1 4 3    	0 0 n 0  1	0 0 n n	 1	n 0 n n	 2	(2+2)
     (3)	Little-Endian (byte-swap)	4 3 2 1	   	n 0 0 0	 2	n n 0 0  3	n n n 0	 4	(4 byte bin + noswap_words)
 
-   NOTE: This test can fail if the arg is not a long and we are testing other then the first byte and the following arg 
+   NOTE: This test can fail if the arg is not a int4 and we are testing other then the first byte and the following arg 
 	 is smaller then the postion of the byte we are testing.  I.e. if we are testing byte 2 and the following are is only
-	 one byte long.
+	 one byte int4.
 */
 
+#include "idsistd.h"
 #include "wglobals.h"
 
 int	longargtest(ptr,sigbytes)

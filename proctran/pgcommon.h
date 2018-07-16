@@ -29,7 +29,8 @@
 #define WPLMAX		71								/* Max len of procedure source line.	*/
 #define COBBUF		74								/* Maximum length of COBOL buffer.	*/
 #define STRBUFF		256								/* Maximum length of STRING.		*/
-#define FLDLEN		20								/* Length of field.			*/
+#define FLDLEN		32								/* Maximum length of variable field.	*/
+#define STRLNGTH	513								/* Maximum length of string value.	*/
 #define CNTTAB		15								/* Nul name tab for pic.		*/
 
 /* Define some CASE symbols for finding key words.										*/
@@ -135,3 +136,7 @@
 #define FMTAB		0x0080
 #define FMUPLOW		0x0100
 #define FMUPPER		0x0200
+
+
+void write_log();
+

@@ -7,10 +7,11 @@
 #include <memory.h>
 #endif
 
+#include "idsistd.h"
 #include "cobrun.h"
 
 wsetstat(smask,cmask,src)							/* Used to set/clear bits in a status field.	*/
-unsigned long *smask,*cmask,*src;
+uint4 *smask,*cmask,*src;
 {
 	*src = *src | *smask;							/* Set bits with smask.				*/
 	*src = *src & (~(*cmask));						/* Clear bits with cmask.			*/
@@ -24,7 +25,7 @@ unsigned char *mask,*src;
 	*src = *src & (~(*mask));						/* complement the mask and AND it with the src	*/
 }
 lbit_off(mask,src)
-unsigned long *mask,*src;
+uint4 *mask,*src;
 {
 	*src = *src & (~(*mask));						/* complement the mask and AND it with the src	*/
 }
@@ -38,7 +39,7 @@ unsigned char *mask,*src;
 	*src = *src | *mask;							/* OR the mask with the src			*/
 }
 lbit_on(mask,src)
-unsigned long *mask,*src;
+uint4 *mask,*src;
 {
 	*src = *src | *mask;							/* OR the mask with the src			*/
 }
@@ -59,7 +60,7 @@ unsigned char *mask,*src,*value;
 }
 lbit_test(mask,src,value)
 unsigned char *value;
-unsigned long *mask, *src;
+uint4 *mask, *src;
 {
 	if (*src & *mask)				/* AND the mask with the src						*/
 	{

@@ -24,11 +24,21 @@
  * 89.07.03	dsa	Added comment headers, signal handling.
  *
  * 89.08.14	fjd	Added VSHUT module.
+ * 92.11.30     jec     Added xlat layer for IVS Chinese <==> native on the
+ *                      fly translation
+ * 93.05.13     jec     Took out flush of stdio descriptors to permit typeahead
+ *
  */
 #include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
+#ifdef OSF1_ALPHA
+#define _USE_OLD_TTY
+#endif
 #include <termio.h>
+#ifdef OSF1_ALPHA
+#include "/usr/sys/include/sys/ttydev.h"
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
@@ -36,6 +46,7 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vrawunix.h"
+#include "vchinese.h"
 
 /*
  * Globals whose storage is defined in other compilation units:
@@ -59,12 +70,21 @@
  *			Video wish to postpone flushing output waiting in the
  *			buffer until a "logical sequence" of operations is
  *			complete.
+ * 
+ * int v_control_data:  This flag is non-zero when the higher layers of 
+ *                      video have handed us output data that should not
+ *                      be processed by the translation routine, ie, control
+ *                      data.  The reason is because control data (ie cursor 
+ *                      position) resembles IVS characters (^[[3;3H for example)
+ *                      which would be munged up by the translator
  */
 extern int vb_pure;
 extern int vb_count;
 extern int debugging;
 extern int holding_output;
 extern int video_inited;
+
+extern int v_control_data;
 
 /*
  * Define the preprocessor variable 'TEST' to be 1 when you wish to test
@@ -81,8 +101,13 @@ int	vb_pure = TRUE;			/* Private vb_pure flag for testing. */
  * normally means "stop process execution now and take a process dump". 
  * "Interrupt" means "stop the current process and return to superior".
  */
+#define CONTROL_C	'\003'
+#define CONTROL_D	'\004'
 #ifndef	VRAW_INT_CHAR
-#define	VRAW_INT_CHAR	'\003'
+#define	VRAW_INT_CHAR	CONTROL_C
+#endif
+#ifndef	VRAW_EOF_CHAR
+#define	VRAW_EOF_CHAR	CONTROL_D
 #endif
 #ifndef	VRAW_QUIT_CHAR
 #define	VRAW_QUIT_CHAR	CQUIT
@@ -111,6 +136,7 @@ typedef struct termio termio_t;
  * any low-level Video routines were called.
  */
 static termio_t	vraw_termio;		/* vraw (new) term io mode */
+static termio_t async_termio;		/* vraw (new) term io mode for nonblocking read */
 static termio_t prev_termio;		/* term io previous to vraw_init */
 
 /*
@@ -124,6 +150,13 @@ static termio_t prev_termio;		/* term io previous to vraw_init */
 static int vraw_init_flag = 0;								/* TRUE if module is init'ed.		*/
 static int vraw_fildes = 0;								/* File channel to fileno(stdin). 	*/
 
+int vcurbaud;
+
+#define VRAW_BLOCKED 1
+#define VRAW_NONBLOCKED 2
+#define VRAW_TIMEOUT 3
+static int vraw_mode = VRAW_BLOCKED;
+
 /*
  * vraw_errno:	This variable is used to hold the results of calling
  *		"errno()" after an error is returned from a read, write, open,
@@ -136,10 +169,12 @@ static int vraw_fildes = 0;								/* File channel to fileno(stdin). 	*/
 static int vraw_errno = 0;		/* Module-specific error flag */
 
 /*
- * vtimer:      Holds timeout value for nonblocking char input
+ * vtimeout_value:      Holds timeout value for nonblocking char input
  *
  */
-static int vtimer = 0;
+static int vread_timed_out_flag = FALSE;
+static int vtimeout_value = 0;
+
 
 /*
  * vraw_signal:	This variable holds the action of the SIGINT (interrupt)
@@ -149,6 +184,10 @@ static int vtimer = 0;
  */
 void	(*vraw_signal)();
 
+static int vrawflush();
+static unsigned char vrawgetc();
+static int vrawintrfunc();
+
 
 /*
  * The following is the local output buffer. This buffer will be flushed
@@ -156,6 +195,18 @@ void	(*vraw_signal)();
  * during execution of vrawprint() or vrawputc().
  */
 static unsigned char vraw_buffer[VRAW_BUFSIZ];
+
+/* The following are the translation stream contexts defined in vchinese.c. 
+ * They are used by the translation engine to keep track of a data stream.
+ */
+extern struct xlcontext *inctx, *outctx;
+
+/* This is a scratch buff and size variable used by the routines below
+ * which call xlat_read etc 
+ */
+static unsigned char xbuf[VRAW_BUFSIZ];
+static 	int xcnt;
+
 
 /*
  * Routine:	vrawinit()		(Module-private routine)
@@ -201,34 +252,24 @@ static int vrawinit()
 	extern int	vrawintrfunc();							/* Interrupt recovery function. 	*/
 	extern termio_t prev_termio;							/* Previous terminal settings. 		*/
 	extern termio_t vraw_termio;							/* "Raw" terminal settings. 		*/
-	extern unsigned char vraw_buffer[];						/* Internal buffer. 			*/
 
+	int bau;
+	
 	termio_t buf;									/* termio buffer 			*/
 	int	error = 0;								/* Any error we might encounter 	*/
 
+#ifdef OLD
 	fflush(stdout);									/* Flush all pending output on the 	*/
 	fflush(stderr);									/* stdout and stderr channels. Then grab*/
 											/* the fileno for the stdout file and	*/
 											/* modify its output characteristics.	*/
-	error = ioctl(fileno(stdout), TCGETA, &buf);					/* Flush stdout. 			*/
-	error = ioctl(fileno(stdout), TCSETAW, &buf);
-#ifdef OLD
-	if (error == -1)
-	{
-		vraw_errno = errno;
-		return (FAILURE);
-	}
-#endif
-	error = ioctl(fileno(stderr), TCGETA, &buf);					/* Flush stderr. 			*/
-	error = ioctl(fileno(stderr), TCSETAW, &buf);
-#ifdef OLD
-	if (error == -1)
-	{
-		vraw_errno = errno;
-		return (FAILURE);
-	}
-#endif
-	error = ioctl(fileno(stdin), TCGETA, &buf);					/* Flush stdin. 			*/
+	ioctl(fileno(stdout), TCGETA, &buf);						/* Flush stdout. 			*/
+	ioctl(fileno(stdout), TCSETAW, &buf);
+
+	ioctl(fileno(stderr), TCGETA, &buf);						/* Flush stderr. 			*/
+	ioctl(fileno(stderr), TCSETAW, &buf);
+
+	ioctl(fileno(stdin), TCGETA, &buf);	/* NO FLUSH to allow typeahead */	/* Flush stdin. 			*/
 	error = ioctl(fileno(stdin), TCSETAF, &buf);
 	if (error == -1)
 	{
@@ -236,15 +277,30 @@ static int vrawinit()
 		vre("VIDEO-E-VRAWINIT ioctl TCSETAF failed errno=%d",errno);
 		return (FAILURE);
 	}
+#endif
 	vraw_fildes = fileno(stdin);							/* Get current terminal characteristics.*/
 	error = ioctl(vraw_fildes, TCGETA, &prev_termio);	 			/* These should be restored on exit. 	*/
 	if (error == -1)
 	{
+		vre("VIDEO-E-VRAWINIT ioctl TCGETA failed on fileno(stdin)=%d errno=%d",vraw_fildes,errno);
 		vraw_errno = errno;
 		vraw_fildes = -1;							/* Re-init this 			*/
-		vre("VIDEO-E-VRAWINIT ioctl TCGETA failed errno=%d",errno);
 		return (FAILURE);
-	}										/* Copy the old termio buffers to the	*/
+	}
+	bau = prev_termio.c_cflag & CBAUD;
+	vcurbaud = 
+#ifdef B38400
+	  bau==B38400? 38400:
+#endif
+#ifdef B19200
+	  bau==B19200? 19200:
+#endif
+	  bau==B9600? 9600:
+	  bau==B2400? 2400:
+	  bau==B1200? 1200:
+	  bau==B300? 300:0;
+								/* Copy the old termio buffers to the	*/
+
 											/* ones we will use to set the desired	*/
 	memcpy(&vraw_termio, &prev_termio, sizeof(vraw_termio));			/* characteristics.			*/
 
@@ -253,23 +309,22 @@ static int vrawinit()
 #ifdef	ISTRIP
 	vraw_termio.c_iflag &= ~ISTRIP;
 #endif
+
 	vraw_termio.c_lflag &= ~ECHO;							/* Don't echo input. 			*/
 	vraw_termio.c_lflag &= ~ICANON;							/* Non-canonical input. 		*/
-#ifdef OLD
-	vraw_termio.c_lflag |= ISIG;							/* Leave signals enabled. 		*/
-#endif
 	vraw_termio.c_lflag &= ~NOFLSH;							/* Allow flushes after INTR signal. 	*/
 
 	vraw_termio.c_oflag &= ~OPOST;							/* No output processing 		*/
+#ifdef OLD
+	This stuff is redundent, we have already said NO OUTPUT PROCESSING
+
 	vraw_termio.c_oflag &= ~OLCUC;
 	vraw_termio.c_oflag &= ~ONLCR;							/* No \n -> \r mapping. 		*/
 	vraw_termio.c_oflag &= ~OCRNL;							/* No \r -> \n mapping. 		*/
 	vraw_termio.c_oflag &= ~ONOCR;
 	vraw_termio.c_oflag &= ~ONLRET;							/* No \n after \r stuffing. 		*/
+#endif /* OLD */
 
-#ifdef	NO_TAB
-	vraw_termio.c_oflag |= TAB3; 							/* Expand tabs to spaces 		*/
-#endif
 #ifdef	EIGHT_BIT
 	vraw_termio.c_cflag |= CS8;							/* Allow 8-bit input 			*/
 	vraw_termio.c_cflag &= ~PARENB;
@@ -279,36 +334,38 @@ static int vrawinit()
 	 * Set up the default kill characters.
 	 * We use the preprocessor constant INT_CHAR for interrupts and
 	 * QUIT_CHAR for the QUIT character.
-	 * For the special characters, (SWTCH) we
-	 * init these to something fairly off-beat.
 	 * Also, tell the tty device that we want one
 	 * character at a time, no matter how long it
 	 * takes. (Blocking reads).
 	 */
-	vraw_termio.c_cc[VINTR]	 = VRAW_INT_CHAR;
+	vraw_termio.c_cc[VINTR]	 = VRAW_INT_CHAR;					/* Must set these for Micro Focus Anim	*/
 	vraw_termio.c_cc[VQUIT]	 = VRAW_QUIT_CHAR;
-#ifndef _AIX
-	vraw_termio.c_cc[VSWTCH] = 0377;						/* Disable shell switch 		*/
-#endif
+	vraw_termio.c_cc[VEOF]	 = VRAW_EOF_CHAR;
+
 	vraw_termio.c_cc[VMIN]	 = sizeof(char);
 	vraw_termio.c_cc[VTIME]	 = 0;							/* Wait forever for 1 char 		*/
+
+	memcpy(&async_termio, &vraw_termio, sizeof(async_termio));			/* setup a termio_t for a nonblocked read*/
+	async_termio.c_cc[VMIN] = 0;
 
 	error = ioctl(vraw_fildes, TCSETA, &vraw_termio);				/* We should not have to wait for any	*/
 	if (error == -1)			 					/* output flushing here, as we waited 	*/
 	{										/*  up above. 				*/
 		vraw_errno = errno;
-		vre("VIDEO-E-VRAWINIT ioctl TCSETA failed errno=%d",errno);
+		vre("VIDEO-E-VRAWINIT ioctl TCSETA failed fileno=%d errno=%d",vraw_fildes,errno);
 
 		ioctl(vraw_fildes, TCSETA, &prev_termio);				/* Reset it 				*/
 		vraw_fildes = -1;
 		return (FAILURE);
 	}
 
+	vraw_mode = VRAW_BLOCKED;
 	vb_count = 0;										/* At start of local buffer.	*/
 
 	vrawsigset(vrawintrfunc);
 	vraw_init_flag = TRUE;									/* Mark as initialized.		*/
 	video_inited = TRUE;									/* Set  - video was initialized.*/
+
 	return (SUCCESS);
 }												/* end of vrawinit(). 		*/
 
@@ -346,9 +403,8 @@ static int vrawinit()
  */
 char vrawinput()
 {
-	extern char	vrawgetc();
 	extern int	vrawinit();
-	char	the_char;
+	unsigned char	the_char;
 	int	error;
 
 	if (!vraw_init_flag)
@@ -360,7 +416,7 @@ char vrawinput()
 		}
 	}
 
-	the_char = vrawgetc(TRUE);	/* Get a character and wait for it */
+	the_char = (unsigned char) vrawgetc(TRUE);	/* Get a character and wait for it */
 
 	if (error = vrawerrno())	/* Check for an error */
 		vseterr(error);		/* There was an error so set the error number flag */
@@ -407,9 +463,9 @@ char vrawinput()
  */
 char vrawcheck()
 {
-	extern char vrawgetc();
+	extern unsigned char vrawgetc();
 	extern int  vrawinit();
-	char	the_char;
+	unsigned char	the_char;
 	int	error;
 
 	if (!vraw_init_flag)
@@ -421,26 +477,13 @@ char vrawcheck()
 		}
 	}
 
-	the_char = vrawgetc(FALSE);	/* Check for a char, don't wait */
+	the_char = (unsigned char) vrawgetc(FALSE);	/* Check for a char, don't wait */
 
 	if (error = vrawerrno())	/* Check for an error */
 		vseterr(error);		/* There was an error so set the error number flag */
 
 	return (the_char);
 }					/* end of vrawcheck() */
-
-
-static char v_read_alarm_signal;
-/*
-** Routine: vrawreadalarm()
-**
-** Purpose:	To set a flag that says the ALARM signal was recieved.
-*/
-static void vrawreadalarm(sig)
-int sig;
-{
-	v_read_alarm_signal = (char) 1;	
-}
 
 /*
  * Routine:	vrawgetc()		(Module-private routine)
@@ -483,17 +526,22 @@ int sig;
  *			if an error occurred.
  *
  */
-static char vrawgetc(wait)
+static unsigned char vrawgetc(wait)
 	int	wait;			/* IN -- TRUE means read synchronously/ */
 {
 	extern	termio_t vraw_termio;	/* Current termio setting for input. */
+	extern	termio_t async_termio;	/* Current termio setting for input. */
 	extern	int	vraw_errno;	/* Package error caching variable. */
 	extern	int	vraw_fildes;	/* Module file number for IO. */
+	extern  int     vraw_mode;      /* mode: blocked or nonblocked */
 
 	int	error = 0;		/* Local error flag */
-	char	ch_read = 0;		/* Character we read */
-	termio_t async_termio;		/* In case we need to sync up */
+	unsigned char	ch_read = 0;		/* Character we read */
 
+	int     elapsed_time=0;
+	int     before_time, after_time;
+        int     per_call_wait=0;
+	
 	/*
 	 * If the caller does not wish to wait for a character to appear,
 	 * then temporarially set the terminal characteristics to return
@@ -524,69 +572,88 @@ static char vrawgetc(wait)
 
 	vraw_errno = 0;	/* Clear this now. It is too late for it to be valid past this point */
 
+	before_time = after_time = 0;
 	if (!wait)
 	{
-		memcpy(&async_termio, &vraw_termio, sizeof(async_termio));
-		async_termio.c_cc[VMIN] = 0;
-		error = ioctl(vraw_fildes, TCSETAW, &async_termio);
-		if (error == -1)
+		if (vraw_mode!=VRAW_NONBLOCKED)
 		{
-			vraw_errno = errno;
-			return (CHAR_NULL);	/* No character read due to error. */
+			async_termio.c_cc[VTIME]=0;
+			error = ioctl(vraw_fildes, TCSETAW, &async_termio);
+			if (error == -1)
+			{
+				vraw_errno = errno;
+				return (CHAR_NULL);	/* No character read due to error. */
+			}
+			vraw_mode = VRAW_NONBLOCKED;
 		}
 
-		/*
-		** There is some sort of a problem with this code and ACUCOBOL, namely the "read" doesn't return while setting
-		** up the terminal. So we added an alarm that will signal if the read doesn't return. If this happens we return
-		** a CHAR_NULL as the character.
-		*/
-#ifdef ultrix
-		v_read_alarm_signal = CHAR_NULL;						/* Turn off alarm flag		*/
- 		signal( SIGALRM, vrawreadalarm );     						/* Set signal to catch alarm	*/
-		alarm(vtimer?vtimer:1);								/* Set a one second alarm	*/
-#else
-		if (vtimer)
-		{
-			v_read_alarm_signal = CHAR_NULL;					/* Turn off alarm flag		*/
-			signal( SIGALRM, vrawreadalarm );					/* Set signal to catch alarm	*/
-			alarm(vtimer);								/* Set a one second alarm	*/
-		}
+		/* note: use of read() in this function was replace by xlat_read(), which is at the bottom 
+                ** of this module.  Xlat_read() looks just like read except that it
+                ** transparently calls the xlat routine.
+                */
+
+		error = xlat_read(vraw_fildes, &ch_read, 1);					/* xlat calls read and then xlat*/
 		
-#endif
-
-		error = read(vraw_fildes, &ch_read, 1);
-
-#ifdef ultrix
-		alarm(0);									/* Cancel the alarm		*/
- 		signal( SIGALRM, SIG_DFL );							/* reset the signal		*/
-		if (v_read_alarm_signal) ch_read = CHAR_NULL;					/* If alarm flag set then alarm	*/
-												/* went off so return CHAR_NULL	*/
-#else
-		if (vtimer)
+		if (error==0)  /* no character available ... pass back a zero */
 		{
-			alarm(0);								/* Cancel the alarm		*/
-			signal( SIGALRM, SIG_DFL );						/* reset the signal		*/
-			if (v_read_alarm_signal) ch_read = CHAR_NULL;				/* If alarm flag set then alarm	*/
-		}										/* went off so return CHAR_NULL	*/
-#endif
-
-		/*
-		 * Reset the previous terminal settings.
-		 */
-		error = ioctl(vraw_fildes, TCSETAW, &vraw_termio);
-		if (error == -1)
-		{
-			vraw_errno = errno;
-			return (CHAR_NULL);	/* No character read due to error. */
+			ch_read=CHAR_NULL;
 		}
 	}
 	else				/* Blocking read for one character. */
 	{
-		error = read(vraw_fildes, &ch_read, 1);
+		if (vtimeout_value)
+		{
+			async_termio.c_cc[VTIME] = 10;  /* value is in tenths of a second.. */
+			error = ioctl(vraw_fildes, TCSETAW, &async_termio);
+			if (error == -1)
+			{
+				vraw_errno = errno;
+				return (CHAR_NULL);	/* No character read due to error. */
+			}
+			vraw_mode = VRAW_TIMEOUT;
+		}
+		else if (vraw_mode != VRAW_BLOCKED)
+		{
+			error = ioctl(vraw_fildes, TCSETAW, &vraw_termio);
+			if (error == -1)
+			{
+				vraw_errno = errno;
+				return (CHAR_NULL);	/* No character read due to error. */
+			}
+			vraw_mode = VRAW_BLOCKED;
+		}
+		if (vtimeout_value)
+		{
+			before_time = time(&before_time);
+			do
+			{
+				vtimeout_clear();
+				error = xlat_read(vraw_fildes, &ch_read, 1);
+				if (vtimeout_check())
+				{
+					after_time = time(&after_time);
+				}
+			} while (vtimeout_check() && ((after_time-before_time)<vtimeout_value));
+		}
+		else
+		{
+			error = xlat_read(vraw_fildes, &ch_read, 1);
+		}
+		if (vtimeout_value)
+		{
+			alarm(0);
+		}
 		if (error == -1)
 		{
-			vraw_errno = errno;
-			return (CHAR_NULL);	/* No character read due to error. */
+			if (errno != EINTR)
+			{
+				vraw_errno = errno;
+			}
+			ch_read = CHAR_NULL;
+		}
+		if (vtimeout_check())
+		{
+			ch_read = CHAR_NULL;
 		}
 	}
 	return (ch_read);
@@ -632,12 +699,20 @@ static char vrawgetc(wait)
  *				   output buffer is not known.
  *
  */
+
+   static unsigned char padbuf[2048];
+   static int           padidx=0, padstate=S_NORMAL, padevent, padms, abortidx;
+   static double        charsper, total;
+#  define PADCHAR '\0'
+#ifdef VDBGPADST
+   static FILE *padlog=NULL;
+#endif
+
 int vrawprint(buf)
 	unsigned char	*buf;		/* IN -- pointer to the buffer. */
 {
 	extern	int	vrawinit();	/* Forward declaration. */
 	extern	int	vrawflush();	/* Forward declaration. */
-	extern	unsigned char vraw_buffer[];
 	extern	int	vb_count;	/* How many characters in buffer. */
 	extern	int	vb_pure;	/* TRUE for no CR stuffing. */
 	extern	int	holding_output;	/* FALSE to flush after processing. */
@@ -645,8 +720,7 @@ int vrawprint(buf)
 
 	int	error;			/* Local error flags */
 	register unsigned char *p;	/* Fast pointer */
-
-
+	
 	/*
 	 * If the vraw module isn't yet initialized, then do so now.
 	 */
@@ -654,8 +728,21 @@ int vrawprint(buf)
 	{
 		if (SUCCESS != vrawinit())					/* If init not successful then report set error	*/
 		{
-			vseterr(vrawerrno());
-			return(FAILURE);
+			/*
+			**	If the vrawinit() failed then the print can't be done.
+			**	This used to return FAILURE up to vprint() and beyond, however
+			**	no one ever checks the return code from vprint() so a lowlevel
+			**	failure never gets detected and vprint() gets called repeatedly.
+			**	Also vprint() may never call vrawprint() depending on optimization
+			**	and buffering so the vprint() return code is useless as the error
+			**	won't be returned until a vdefer(RESTORE) occurs.
+			**
+			**	The result of all this is that no higher layer is setup to correctly
+			**	deal with a vrawinit() failure on output.  
+			**	Therefore we print a message and exit.
+			*/
+			vre("VIDEO-F-VRAWPRINT Uncorrectable error occurred in vrawinit(), aborting!");
+			exit(0);
 		}
 	}
 
@@ -664,23 +751,136 @@ int vrawprint(buf)
 		return (vrawflush());	/* Yes, so flush the buffer. */
 	}
 
-	p = (unsigned char *)buf;
+	if (!v_control_data)            /* if this is screen data, not terminal control data */
+	{
+		xlat_stream(buf,strlen(buf),xbuf,&xcnt, &outctx);  /* call the xlat routine using the output stream context */
+		p = (unsigned char *)xbuf;			   /* and setup the pointer */
+	}
+	else
+	{
+		if (outctx)					   /* otherwise, adjust the xlcontext to clear any pending  */
+		  outctx->holdstart = outctx->holdpos;		   /* stuff that it thinks is part of a IVS sequence.       */
+								   /* a more object oriented approach would not allow this  */
+								   /* type of code.  but this is ok for now                 */
+
+		p=buf;						   /* and use the buffer "buf" with the original data in it */
+	}
+
+#ifdef VDBGPADST
+	if (padlog==NULL)
+	{
+		padlog=fopen("padlog","a");
+		fflush(padlog);
+	}
+#endif
+
 	while (*p)			/* Copy until end of string. */
 	{
-		if (((vraw_buffer[vb_count++] = *p++) == '\012') && !vb_pure)
+		register char ch;
+		int padbytecnt;
+		
+		ch = *p++;
+
+		if      (ch==DOLLAR)	     { padevent=E_DOL; }
+		else if (ch==OPENBR)	     { padevent=E_OPEN; }
+		else if (ch==CLOSBR)	     { padevent=E_CLOSE; }
+		else if ((ch>='0' && ch<='9') 
+			 || ch=='*')         { padevent=E_DIG; }
+		else                         { padevent=E_ANY; }
+
+#ifdef VDBGPADST
+		fprintf(padlog,"event is %s %c, switching from %s ==> %s\n",evstr[padevent],ch,
+			ststr[padstate],ststr[padstatetab[padevent][padstate]]);
+		fflush(padlog);
+#endif
+		
+		padstate=padstatetab[padevent][padstate];
+		if (padstate == S_RNUMS && padidx > 7)
 		{
-			vraw_buffer[vb_count - 1] = '\015';
-			if (vb_count >= VRAW_BUFSIZ)
-			{
-				if (vrawflush() == FAILURE)
-					return (FAILURE);
-			}
-			vraw_buffer[vb_count++] = '\012';
+			padstate = S_ABORT;
 		}
-		if (vb_count >= VRAW_BUFSIZ)
+		switch(padstate)
 		{
-			if (vrawflush() == FAILURE)
-				return (FAILURE);
+		      case S_NORMAL:
+			if (vraw_add_outbuf(ch)==FAILURE)
+			{
+				return FAILURE;
+			}
+			break;
+			
+		      case S_GOTDOL:
+			padbuf[padidx++] = ch;
+			continue;
+			
+		      case S_GOTOP:
+			padbuf[padidx++] = ch;
+			padms = 0;
+			continue;
+			
+		      case S_RNUMS:
+			padbuf[padidx++] = ch;
+			if (ch!='*')
+			{
+				padms *= 10;
+				padms += (ch - 0x30);
+			}
+			else
+			{
+				padms *= 24;
+			}
+			continue;
+			
+		      case S_EMIT:
+			charsper = (double)vcurbaud / (double)1000;
+			total = charsper * (double)padms;
+			padbytecnt = (int)total;
+			
+			while (padbytecnt)
+			{
+				if (vb_count + padbytecnt > VRAW_BUFSIZ)
+				{
+					memset(&vraw_buffer[vb_count],PADCHAR,VRAW_BUFSIZ-vb_count);
+					padbytecnt -= (VRAW_BUFSIZ - vb_count);
+					vb_count = VRAW_BUFSIZ;
+					if (vrawflush() == FAILURE)
+					{
+						return FAILURE;
+					}
+				}
+				else
+				{
+					memset(&vraw_buffer[vb_count],PADCHAR,padbytecnt);
+					vb_count += padbytecnt;
+					padbytecnt=0;
+				}
+			}
+			padidx=0;
+			break;
+			
+		      case S_ABORT:
+			while (padidx)
+			{
+				if (vb_count + padidx > VRAW_BUFSIZ)
+				{
+					if (vrawflush() == FAILURE)
+					{
+						return FAILURE;
+					}
+				}
+				else
+				{
+					memcpy(&vraw_buffer[vb_count],padbuf,padidx);
+					vb_count += padidx;
+					padidx=0;
+				}
+			}
+			if (vraw_add_outbuf(ch)==FAILURE)
+			{
+				return FAILURE;
+			}
+			padidx=0;
+			break;
+			
 		}
 	}
 
@@ -689,10 +889,35 @@ int vrawprint(buf)
 	 * flush the buffer to the terminal now. Otherwise, simply return.
 	 */
 	if (debugging || !holding_output)
-		vrawflush();		/* Do the output now! */
-
+	{
+		if (vrawflush()==FAILURE)		/* Do the output now! */
+		{
+			return FAILURE;
+		}
+	}
 	return (SUCCESS);
 }					/* End of vrawprint(). */
+vraw_add_outbuf(ch)
+unsigned char ch;
+{
+	if (((vraw_buffer[vb_count++] = ch) == '\012') && !vb_pure)
+	{
+		vraw_buffer[vb_count - 1] = '\015';
+		if (vb_count >= VRAW_BUFSIZ)
+		{
+			if (vrawflush() == FAILURE)
+			  return (FAILURE);
+		}
+		vraw_buffer[vb_count++] = '\012';
+	}
+	if (vb_count >= VRAW_BUFSIZ)
+	{
+		if (vrawflush() == FAILURE)
+		  return (FAILURE);
+	}
+	return SUCCESS;
+}
+
 
 /*
  * Routine:	vrawputc()		(Globally visible)
@@ -731,43 +956,14 @@ int vrawprint(buf)
  *				   output buffer is not known.
  */
 int vrawputc(ch)
-	char ch;
+char ch;
 {
-	extern	int	vrawinit();	/* Forward declaration. */
-	extern	int	vrawflush();	/* Forward declaration. */
-	extern	unsigned char vraw_buffer[];
-	extern	int	vb_count;	/* # of characters in buffer. */
-	extern	int	vb_pure;	/* TRUE for no CR stuffing. */
-	extern	int	holding_output;	/* FALSE to flush after processing. */
-	extern	int	debugging;	
- 
-	int	error = SUCCESS;
-
-
-	if (((vraw_buffer[vb_count++] = ch) == '\012') && !vb_pure)
-	{
-		vraw_buffer[vb_count - 1] = '\015';
-		if (vb_count >= VRAW_BUFSIZ)
-		{
-			if (vrawflush() == FAILURE)
-				return (FAILURE);
-		}
-		vraw_buffer[vb_count++] = '\012';
-	}
-	if (vb_count >= VRAW_BUFSIZ)
-	{
-		if (vrawflush() == FAILURE)
-			return (FAILURE);
-	}
-
-	/*
-	 * If we are debugging or no longer holding the output buffer, then
-	 * flush the buffer to the terminal now. Otherwise, simply return.
-	 */
-	if (debugging || !holding_output)
-		vrawflush();		/* Start output now! */
-	return (SUCCESS);
+	char tmp[2];
+	tmp[0]=ch;
+	tmp[1]=(char)0;
+	vrawprint(tmp);
 }
+
 
 /*
  * Routine:	vrawflush()		(Module-private routine)
@@ -808,11 +1004,9 @@ static int vrawflush()
 	extern	int	vraw_fildes;	/* File number to write to. */
 	extern	int	vraw_errno;	/* Module error caching variable. */
 	extern	int	vb_count;	/* # of chars valid in vraw_buffer. */
-	extern	unsigned char vraw_buffer[]; /* Output buffer. */
 
 	int		error;		/* Local error/write flag. */
 	register int	nb_written = 0;	/* Number of bytes written. */
-
 
 	/*
 	 * Note: While improbable, we should make sure that all the
@@ -820,6 +1014,14 @@ static int vrawflush()
 	 * Unless an error occurs, 'error' will be the number of
 	 * bytes taken from the output buffer by the write() call.
 	 */
+
+#ifdef VDBGPADST
+	fprintf(padlog,"flushbuf[");
+	fwrite(vraw_buffer,1,vb_count,padlog);
+	fprintf(padlog,"]\n");
+	fflush(padlog);
+#endif
+
 	while (vb_count > 0)
 	{
 		error = write(vraw_fildes, &vraw_buffer[nb_written], vb_count);
@@ -931,6 +1133,7 @@ static int vrawintrfunc()
  * Routine:	vrawexit()		(Globally visible)
  *
  * Purpose:	To reset the terminal when a Video client has completed.
+ *		*** The terminal is forced into a SANE mode ***
  *
  * Invocation:	success_flag = vrawexit();
  *
@@ -959,35 +1162,122 @@ static int vrawintrfunc()
 int vrawexit()
 {
 	extern termio_t prev_termio;
-	extern termio_t vraw_termio;
 	extern int vraw_fildes;
+	termio_t exit_termio;
 
 	int error = 0;
 
+	/*
+		This is required to use with Micro Focus animator 3.0. 
+		When you "zoom" it sets the terminal to raw mode and sets the
+		interrupt char to ESC (first char of PFkeys.)
+	*/
+	memcpy(&exit_termio, &prev_termio, sizeof(exit_termio));			/* Get a copy of termio struct		*/
+											/* Force term into SANE mode		*/
+	exit_termio.c_lflag |= ECHO | ICANON;						/* Force ECHO & ICANON on		*/
+	exit_termio.c_oflag |= OPOST | ONLCR;						/* Force output processing		*/
+	exit_termio.c_iflag |= ICRNL; 							/* Force input processing		*/
+	exit_termio.c_cc[VEOF]  = CONTROL_D;						/* Force EOF = ^D			*/
+	exit_termio.c_cc[VINTR] = CONTROL_C;						/* Force INTR = ^C			*/
+	exit_termio.c_cc[VQUIT] = VRAW_QUIT_CHAR;
+	
 	vrawflush();									/* Flush any remaining output. 		*/
-	error = ioctl(vraw_fildes, TCSETAW, &prev_termio);
+	error = ioctl(vraw_fildes, TCSETAW, &exit_termio);
 	vraw_fildes = -1;								/* Re-init the file channels.		*/
 	vraw_init_flag = 0;								/* No longer initialized.		*/
 	return ((error == -1) ? FAILURE : SUCCESS);
-}											/* end of vrawexit().			*/
-/* functions vraw_stty_set() and vraw_stty_reset() are used
- * to place the tty into video's desired mode and reset it to
- * the previous mode respectively.  Needed for MicroFocus animator
- * which conflicts with video by mucking with the settings.  VWANG
- * calls  vraw_stty_set() at the beginning of processing to insure the
- * proper mode, then calls reset before exiting so the animator gets
- * the mode he expects also...
- */
-int vraw_stty_set() 
-{
-	if (vraw_init_flag)
-	  ioctl(vraw_fildes, TCSETA, &vraw_termio);
 }
-int vraw_stty_reset()
+											/* end of vrawexit().			*/
+/*
+**	Routine:	vraw_stty_sync()
+**
+**	Function:	To ensure the stty is set to the values video last used.
+**
+**	Description:	This routine is used when a debugger or other video
+**			handler is active and my be changing the stty values
+**			behind video back.  It ensures the stty values are
+**			actually set to what video thinks they are.
+**
+**	Arguments:	None
+**
+**	Globals:
+**	vraw_init_flag
+**	vraw_fildes
+**	vraw_mode
+**
+**	Return:		None
+**
+**	Warnings:	If video has not yet initialized the stty then this routine
+**			will do nothing as video has no expectations as to what
+**			the stty values are.
+**
+**	History:	
+**	04/20/93	Written by GSL
+**
+*/
+int vraw_stty_sync() 
 {
-	if (vraw_init_flag)
-	  ioctl(vraw_fildes, TCSETAW, &prev_termio);
+	termio_t temp_termio;
+
+	if (!vraw_init_flag) return(0);						/* If not initialized then return		*/
+
+	ioctl(vraw_fildes, TCGETA, &temp_termio);				/* Get current stty settings			*/
+	if (0 != memcmp((char *)&temp_termio,(char
+*)&vraw_termio,sizeof(vraw_termio)))		/* If stty settings are different		
+*/
+	{
+		ioctl(vraw_fildes, TCSETAW, &vraw_termio);			/* Set to required values.			*/
+		vraw_mode = VRAW_BLOCKED;
+	}
+	return(0);
 }
+
+/*
+**	Routine:	vraw_stty_save()
+**			vraw_stty_restore()
+**
+**	Function:	To save/restore the stty values.
+**
+**	Description:	vraw_stty_save() will save a copy of the current stty values
+**			and vraw_stty_restore() will restore the last stty values
+**			that were saved.
+**
+**	Arguments:	None
+**
+**	Globals:
+**	vraw_stty_saved	Flag if there are saved stty values that can be restored.
+**	save_termio	The saved stty values.
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	04/20/93	Written by GSL
+**			These routines replace vraw_stty_set/reset which never worked
+**			a 100%.
+**
+*/
+static int vraw_stty_saved = 0;
+static termio_t save_termio;
+int vraw_stty_save() 
+{
+	vraw_stty_saved = 0;
+	if (-1 != ioctl(fileno(stdin), TCGETA, &save_termio))			/* Get currect stty values.			*/
+	{
+		vraw_stty_saved = 1;
+	}
+	return(0);
+}
+int vraw_stty_restore()
+{
+	if (vraw_stty_saved)
+	{
+		ioctl(fileno(stdin), TCSETAW, &save_termio);			/* Reset the stty to last stored value		*/
+	}
+	return(0);
+}
+
 
 /*
  * Routine:	vrawerrno()		(Globally visible)
@@ -1034,9 +1324,42 @@ vshut()
 vkbtimer(cnt)
 int	cnt;
 {
-	vtimer=cnt;
+	vre_window("Warning: vkbtimer has been replaced by vtimeout");
 	return;
 }
+
+/*
+ * vtimeout:  set the timeout value (if any) for normal "blocked" reads
+ *
+ */
+vtimeout(seconds)
+int seconds;
+{
+	vtimeout_value = seconds;
+	vtimeout_clear();
+}
+/*
+ * vtimeout_clear:  clear the "timed out" status
+ *
+ */
+vtimeout_clear()
+{
+	vread_timed_out_flag = FALSE;
+}
+/*
+ * vtimeout_check: return TRUE if time out occured on last read
+ *                 FALSE otherwise
+ *
+ */
+vtimeout_check()
+{
+	return vread_timed_out_flag;
+}
+static void vtimeout_set()
+{
+	vread_timed_out_flag = TRUE;
+}
+
 
 #ifdef TEST
 /*
@@ -1129,3 +1452,76 @@ main()
 }
 #endif
 #endif
+
+/*
+**      Routine:        xlat_read()
+**
+**      Function:       this acts as a front end to read which xlats incoming
+**                      data
+**
+**      Description:    read() is called  to get data.  xlat_stream is called
+**                      to operate on read data.  This procedure is repeated
+**                      until enough bytes to satisfy the call are gathered
+**
+**      Input:          interface is identical to read(2)
+**
+**      Output:         appropriate bytes are put into out buffer
+**
+**      Return:         None
+**
+**      Warnings:       None
+**
+**      History:      
+**
+*/
+xlat_read(fd,callerbuf,bufsize)
+int fd, bufsize;
+char *callerbuf;
+{
+	static char raw_buf[2048],xlat_buf[2048];
+	static int raw_cnt,xlat_cnt=0, xlat_st=0, xlat_end=0;
+
+	extern struct xlcontext *inctx;
+	extern char vlangfile[];
+	int pos;
+	
+	pos=0;
+	
+	                                                   /* bufsize is the number of bytes requested */
+	while (bufsize)                                    /* while user still wants more bytes */
+	{
+		if (!xlat_cnt)                             /* any bytes in the xlat buffer ? */
+		{
+			raw_cnt=read(fd,raw_buf,bufsize);  /* no, so get more */
+			if (raw_cnt == 0 && vtimeout_value)
+			{
+				vtimeout_set();
+				return raw_cnt;
+			}
+			if (raw_cnt == -1 || raw_cnt == 0)
+			{
+				return raw_cnt;		   /* read returns -1, return it */
+			}
+			                                   /* otherwise, xlat what we got and put it in the xlat buffer */
+			xlat_stream(raw_buf,raw_cnt,xlat_buf,&xlat_cnt, &inctx);
+
+			xlat_st=0;			   /* reset the  "start of valid xlat data" index */
+			xlat_end=xlat_cnt;		   /* and the "end of valid xlat data" index */
+							   /* xlat_cnt is the number of bytes  */
+		}		
+		if (xlat_cnt >= bufsize)		   /* do we have sufficient bytes to satisfy his request? */
+		{
+			                                   /* yes, so memcpy them to him */
+			memcpy(callerbuf+pos,xlat_buf+xlat_st,bufsize);
+
+			xlat_st += bufsize;		   /* adjust these indices */
+			xlat_cnt -= bufsize;		   /*  "   "   "     "     */
+			return bufsize;			   /* return the bytecnt like read would do */
+		}
+							   /* not enough, so copy what we have into his buffer and loop again */
+		memcpy(callerbuf+pos,xlat_buf,xlat_cnt);  
+		pos += xlat_cnt;			   /* pos is the "end of valid data" in his buffer */
+		bufsize -= xlat_cnt;			   /* bufsize is adjusted by how many bytes we've stuck in his buffer */
+		xlat_cnt = xlat_end =  xlat_st = 0;	   /* reset these indices, as all the data was used     */
+	}
+}

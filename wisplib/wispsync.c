@@ -4,6 +4,8 @@
 **			that it can re-synchronize it's video maps.
 */
 
+#include "idsistd.h"
+
 WISPSYNC()
 {
 	vsynch();

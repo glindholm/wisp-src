@@ -1,7 +1,7 @@
 /************************************************************************/
-/*	     VIDEO - Video Interactive Development Environment		*/
-/*			    Copyright (c) 1987				*/
-/*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
+/*           VIDEO - Video Interactive Development Environment          */
+/*                          Copyright (c) 1987                          */
+/*      An unpublished work by Greg L. Adams.  All rights reserved.     */
 /************************************************************************/
 
 #include <stdio.h>
@@ -22,7 +22,7 @@ testw()
 
 	vbuffering(LOGICAL);
 
-	vmode(CLEAR);
+	vmode(REVERSE);
 	vmove(irow,icol);
 	vline(HORIZONTAL,icols);
 	vmove(irow,icol+icols-1);
@@ -32,7 +32,6 @@ testw()
 	vmove(irow+irows-1,icol);
 	vline(HORIZONTAL,icols);
 
-	vmode(REVERSE);
 	for (i = irow+1; i < irow+irows-1; i++)
 	{
 		vmove(i,icol+1);

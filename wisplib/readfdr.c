@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -29,6 +29,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <varargs.h>
+#include "idsistd.h"
 #include "wcommon.h"
 #include "movebin.h"
 #include "cobrun.h"
@@ -49,11 +50,11 @@ va_dcl
 {
 	va_list the_args;
 	int 	arg_count;
-	long	l_long, *retcod, access_code, *temp_long_ptr, l_mode;
+	int4	l_long, *retcod, access_code, *temp_long_ptr, l_mode;
 	char 	*end_name, *temp_ptr;
 	char 	*l_vol,*l_lib,*l_file, *l_field;
-	char 	l_name[132], l_name_x[132];
-	long 	wfname_mode;
+	char 	filespec[132], filespec_idx[132], filespec_noext[132];
+	int4 	wfname_mode;
 	int	default_case;
 	int	rc;
 	struct stat sbuf;
@@ -71,9 +72,9 @@ va_dcl
 	l_file = va_arg(the_args, char*);						/* Get addr. of the filename argument.	*/
 	l_lib  = va_arg(the_args, char*);						/* Get addr. of the library argument.	*/
 	l_vol  = va_arg(the_args, char*);						/* Get addr. of the volume argument.	*/
-	temp_long_ptr = va_arg(the_args, long*);					/* Get addr. of the call mode argument.	*/
+	temp_long_ptr = va_arg(the_args, int4*);					/* Get addr. of the call mode argument.	*/
 	arg_count -= 4;
-	GETBIN(&l_mode, temp_long_ptr, sizeof(l_mode) );				/* Move to local var.			*/ 
+	GETBIN(&l_mode, temp_long_ptr, sizeof(l_mode) );				/* Move to local var.			*/
 	if (l_mode != 0 )
 	{
 		werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);
@@ -81,43 +82,53 @@ va_dcl
 	}
 	wfname_mode = 0;
 
-	if ( rms_files && (WISPFILEXT[0] == ' ' || WISPFILEXT[0] == 0))			/* Need to use our file extension.	*/
-	{
-		setwispfilext("DAT");							/* Just copy it in.			*/
-	}
-	else if (!memcmp(WISPFILEXT,"LIS ",4))						/* Special case for printfiles.		*/
-	{
-		wfname_mode = IS_PRINTFILE;
-	}
+#ifdef VMS
+	if (!memcmp(WISPFILEXT,"LIS ",4)) wfname_mode = IS_PRINTFILE;			/* Special case for printfiles.		*/
+#endif
 
-	end_name = wfname(&wfname_mode,l_vol,l_lib,l_file,l_name);			/* generate a VMS file name		*/
+	end_name = wfname(&wfname_mode,l_vol,l_lib,l_file,filespec);			/* generate a VMS file name		*/
 	*end_name = '\0';								/* Null terminate			*/
 
-	is_cisam = 0;
-	if ( cisam_files )								/* Try indexed file extension.		*/
+	/*
+	**	filespec	- the full filespec  (CISAM - data file)
+	**	filespec_idx	- (CISAM - index file)
+	**	filespec_noext	- the filespec with any extension stripped off (CISAM - generic name)
+	*/
+
+	access_code = 20;								/* Assume not found			*/
+	is_cisam = 0;									/* Assume not CISAM			*/
+
+	if (fexists(filespec))
 	{
-		strcpy(l_name_x,l_name);
-		strcat(l_name_x, ".idx");
+		access_code = 0;							/* File was found			*/
 	}
 
-	if (findcase(l_name,l_name))							/* does the file exist?			*/
+#if defined(unix) || defined(MSDOS)
+	if ( !hasext(filespec) )							/* If no extension (maybe CISAM)	*/
 	{
-		access_code = 20;							/* No, set retcod = 20			*/
-		
-		if ( cisam_files && (WISPFILEXT[0] == ' ' || WISPFILEXT[0] == 0) )	/* Try indexed file extension.		*/
+		strcpy(filespec_noext,filespec);
+		strcpy(filespec_idx,filespec);
+		strcat(filespec_idx, ".idx");					
+
+		if (fexists(filespec_idx))						/* Found index file			*/
 		{
-			if (!findcase(l_name_x,l_name_x)) 
+			if (0 == access_code)						/* Data portion already found		*/
 			{
-				access_code = 0;
-				is_cisam = 1;
+				access_code = 0;					/* Found data & index			*/
+				is_cisam = 1;						/* This is a CISAM file(s)		*/
+			}
+			else								/* Data file has not yet been found	*/
+			{
+				strcat(filespec, ".dat");
+				if (fexists(filespec))					/* Try .dat file extension.		*/
+				{
+					access_code = 0;				/* Found data & index			*/
+					is_cisam = 1;					/* This is a CISAM file(s)		*/
+				}
 			}
 		}
-
 	}
-	else
-	{										/* yes it exists, set retcod = 0	*/
-		access_code = 0;
-	}
+#endif /* unix || MSDOS */
 
 	while ( arg_count > 1 )
 	{
@@ -136,7 +147,7 @@ va_dcl
 				{
 					case 'S':					/* Byte size.				*/
 					{
-						rc=stat(l_name,&sbuf);
+						rc=stat(filespec,&sbuf);
 
 						if ( rc )
 						{
@@ -157,18 +168,17 @@ va_dcl
 				switch ( l_field[1] )
 				{
 				case 'D':						/* Creation date.			*/
-					if (rms_files) 
-					{
-						strcat(l_name,";-0");			/* we want the earliest version		*/
-					}
+#ifdef VMS
+					strcat(filespec,";-0");				/* we want the earliest version		*/
+#endif
 
 					if (is_cisam)
 					{
-						rc=stat(l_name_x,&sbuf);
+						rc=stat(filespec_idx,&sbuf);
 					}
 					else
 					{
-						rc=stat(l_name,&sbuf);
+						rc=stat(filespec,&sbuf);
 					}
 					if ( rc < 0 )
 					{
@@ -204,6 +214,7 @@ va_dcl
 					default_case = 1;
 					break;
 				}
+				break;
 			}
 			case 'E':
 			{
@@ -223,6 +234,7 @@ va_dcl
 					default_case = 1;
 					break;
 				}
+				break;
 			}
 			case 'F':
 			{
@@ -230,59 +242,24 @@ va_dcl
 				{
 				case 'T':					    /* File type.			*/
 #ifdef VMS
-					if (rms_files)
-					{
-						read_fab(&l_long, l_name, FILE_TYPE);	    /* Get the file organization.	*/
-						*temp_ptr=l_long;			    /* FILE_TYPE returns a character.	*/
-						if (wfname_mode == IS_PRINTFILE) *temp_ptr='P';	    /* Redundancy, just in case.*/
-						break;
-					}
-#endif	/* #ifdef VMS */
-
-#ifdef unix
-					if (vision_files)
-					{
-
-						rc = acuvision( l_name, "FT", temp_ptr );
-						access_code = rc;
-						break;
-					}
-					else if (cisam_files)
-					{
-						rc = cisaminfo( l_name, "FT", temp_ptr );
-						access_code = rc;
-						break;
-					}
-					else
-					{
-						default_case = 1;
-					}
-#endif	/* #ifdef unix */
-
-#ifdef MSDOS
-
-#ifdef MSDOS_BYPASS	/* temp removed */
-
-					if (vision_files)
-					{
-
-						rc = acuvision( l_name, "FT", temp_ptr );
-						access_code = rc;
-						break;
-					}
-					else if (cisam_files)
-					{
-						rc = cisaminfo( l_name, "FT", temp_ptr );
-						access_code = rc;
-						break;
-					}
-					else
-#endif	/* #ifdef MSDOS_BYPASS */
-					{
-						default_case = 1;
-					}
-#endif	/* #ifdef MSDOS */
+					read_fab(&l_long, filespec, FILE_TYPE);	    /* Get the file organization.	*/
+					*temp_ptr=l_long;			    /* FILE_TYPE returns a character.	*/
+					if (wfname_mode == IS_PRINTFILE) *temp_ptr='P';	    /* Redundancy, just in case.*/
 					break;
+#else /* !VMS */
+					if (is_cisam)
+					{
+						rc = cisaminfo( filespec_noext, "FT", temp_ptr );
+						access_code = rc;
+					}
+					else
+					{
+
+						rc = acuvision( filespec, "FT", temp_ptr );
+						access_code = rc;
+					}
+					break;
+#endif /* !VMS */
 				default:
 					default_case = 1;
 					break;
@@ -294,18 +271,17 @@ va_dcl
 				switch ( l_field[1] )
 				{
 				case 'D':						/* Mod date.				*/
-					if (rms_files) 
-					{
-						strcat(l_name,";");			/* we want the latest version		*/
-					}
+#ifdef VMS
+					strcat(filespec,";");				/* we want the latest version		*/
+#endif
 
 					if (is_cisam)
 					{
-						rc=stat(l_name_x,&sbuf);
+						rc=stat(filespec_idx,&sbuf);
 					}
 					else
 					{
-						rc=stat(l_name,&sbuf);
+						rc=stat(filespec,&sbuf);
 					}
 					if ( rc < 0 )
 					{
@@ -332,7 +308,7 @@ va_dcl
 #ifdef VMS
 					case 'C':					    /* Record count.			*/
 					{
-						read_fab(&l_long, l_name, RECORD_COUNT);    /* Get the record count.		*/
+						read_fab(&l_long, filespec, RECORD_COUNT);    /* Get the record count.		*/
 						wswap(&l_long);				    /* swap the words			*/
 						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
 						break;
@@ -340,28 +316,21 @@ va_dcl
 					case 'L':					    /* Record length.			*/
 					case 'S':					    /* Record size.			*/
 					{
-						read_fab(&l_long, l_name, RECORD_SIZE);	    /* Get the record size.		*/
+						read_fab(&l_long, filespec, RECORD_SIZE);	/* Get the record size.		*/
 						wswap(&l_long);				/* swap the words			*/
 						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
 						break;
 					}
-#endif	/* #ifdef VMS */
-
-#ifdef unix
+#else /* !VMS */
 					case 'C':					    /* Record count.			*/
 					{
-						if (vision_files)
+						if (is_cisam)
 						{
-							rc = acuvision( l_name, "RC", &l_long );
-						}
-						else if (cisam_files)
-						{
-							rc = cisaminfo( l_name, "RC", &l_long );
+							rc = cisaminfo( filespec_noext, "RC", (char*)&l_long );
 						}
 						else
 						{
-							default_case = 1;
-							break;
+							rc = acuvision( filespec, "RC", (char*) &l_long );
 						}
 
 						if ( rc )
@@ -376,18 +345,13 @@ va_dcl
 					case 'L':					    /* Record length.			*/
 					case 'S':					    /* Record size.			*/
 					{
-						if (vision_files)
+						if (is_cisam)
 						{
-							rc = acuvision( l_name, "RS", &l_long );
-						}
-						else if (cisam_files)
-						{
-							rc = cisaminfo( l_name, "RS", &l_long );
+							rc = cisaminfo( filespec_noext, "RS", (char*)&l_long );
 						}
 						else
 						{
-							default_case = 1;
-							break;
+							rc = acuvision( filespec, "RS", (char*)&l_long );
 						}
 
 						if ( rc )
@@ -401,18 +365,13 @@ va_dcl
 					}
 					case 'T':					    /* Record type.			*/
 					{
-						if (vision_files)
+						if (is_cisam)
 						{
-							rc = acuvision( l_name, "RT", temp_ptr );
-						}
-						else if (cisam_files)
-						{
-							rc = cisaminfo( l_name, "RT", temp_ptr );
+							rc = cisaminfo( filespec_noext, "RT", temp_ptr );
 						}
 						else
 						{
-							default_case = 1;
-							break;
+							rc = acuvision( filespec, "RT", temp_ptr );
 						}
 						if ( rc )
 						{
@@ -421,96 +380,7 @@ va_dcl
 						}
 						break;
 					}
-#endif	/* #ifdef unix */
-
-#ifdef MSDOS
-
-					case 'C':					    /* Record count.			*/
-					{
-
-#ifdef MSDOS_BYPASS	/* temp removed */
-
-						if (vision_files)
-						{
-							rc = acuvision( l_name, "RC", &l_long );
-						}
-						else if (cisam_files)
-						{
-							rc = cisaminfo( l_name, "RC", &l_long );
-						}
-						else
-#endif	/* #ifdef MSDOS_BYPASS */
-						{
-							default_case = 1;
-							break;
-						}
-
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						wswap(&l_long);				/* swap the words			*/
-						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-						break;
-					}
-					case 'L':					    /* Record length.			*/
-					case 'S':					    /* Record size.			*/
-					{
-
-#ifdef MSDOS_BYPASS	/* temp removed */
-
-						if (vision_files)
-						{
-							rc = acuvision( l_name, "RS", &l_long );
-						}
-						else if (cisam_files)
-						{
-							rc = cisaminfo( l_name, "RS", &l_long );
-						}
-						else
-#endif	/* #ifdef MSDOS_BYPASS */
-						{
-							default_case = 1;
-							break;
-						}
-
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						wswap(&l_long);			/* swap the words			*/
-						PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-						break;
-					}
-					case 'T':					    /* Record type.			*/
-					{
-
-#ifdef MSDOS_BYPASS	/* temp removed */
-
-						if (vision_files)
-						{
-							rc = acuvision( l_name, "RT", temp_ptr );
-						}
-						else if (cisam_files)
-						{
-							rc = cisaminfo( l_name, "RT", temp_ptr );
-						}
-						else
-#endif	/* #ifdef MSDOS_BYPASS */
-						{
-							default_case = 1;
-							break;
-						}
-						if ( rc )
-						{
-							access_code = rc;
-							break;
-						}
-						break;
-					}
-#endif	/* #ifdef MSDOS */
+#endif /* !VMS */
 					default:
 					{
 						default_case = 1;
@@ -554,7 +424,7 @@ short action;
         struct RAB record_block;
 
 	int rms_status;
-        char *byte_buffer, *malloc();
+        char *byte_buffer;
 
 	file_block = cc$rms_fab;
 	file_block.fab$l_fna = file_name;

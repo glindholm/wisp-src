@@ -13,6 +13,7 @@
 #include "vlocal.h"									/* Include local definitions too.	*/
 #include "vdata.h"									/* Include keyboard mapping definitions	*/
 #include "vcap.h"
+#include "vintdef.h"
 #include "vmenu.h"
 
 /*						Static data.									*/

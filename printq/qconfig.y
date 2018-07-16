@@ -7,6 +7,9 @@ static char rcsid[]="$Id:$";
 
 extern MASTCONFIG qconfig;
 int yylineno;
+extern char yylbuf[];
+extern int yylpos;
+extern int yynewln;
 
 %}
 
@@ -18,7 +21,8 @@ int yylineno;
 
 %token <num> EQUAL COMMA LETTER NUMBER
 %token <string>  VAR
-%token <kw> OPL DEFPRT DEFFORM DEFCLASS
+%token <kw> OPL DEFPRT DEFFORM DEFCLASS INET_ADDRESS
+%token <kw> DEFMODE MODEWANG MODEUNIQUE RUNPRI
 
 %%
 
@@ -66,17 +70,33 @@ fields:	'\n'
 		{
 			qconfig.default_class = $3[0];			
 		}
+        | INET_ADDRESS EQUAL NUMBER '\n'
+                {
+			qconfig.inet_address = $3;
+		}
+        | RUNPRI EQUAL NUMBER '\n'
+                {
+			qconfig.priority = $3;
+		}
+        | DEFMODE EQUAL MODEWANG '\n'
+                {
+			qconfig.default_scrmode = SCRMODE_WANG;
+ 	        }
+        | DEFMODE EQUAL MODEUNIQUE '\n'
+                {
+			qconfig.default_scrmode = SCRMODE_UNIQUE;
+ 	        }
         ;
 %%
 
 char *yystrdup(p)
 char *p;
 {
-	char *tmp,*malloc();
+	char *tmp,*gmem();
 	int l;
 
 	l=strlen(p);
-	tmp=malloc(l+1);
+	tmp=gmem(l+1,1);
 	memcpy(tmp,p,l);
 	*(tmp+l)=(char)0;
 	return tmp;
@@ -95,6 +115,13 @@ static struct yykeyword
    { "default_form", DEFFORM },
    { "defclass", DEFCLASS },
    { "default_class", DEFCLASS },
+   { "ip_port",INET_ADDRESS },	  
+   { "defmode", DEFMODE },
+   { "default_mode", DEFMODE },
+   { "wang", MODEWANG },
+   { "unique", MODEUNIQUE },
+   { "normal", MODEUNIQUE },
+   { "priority", RUNPRI },
    { NULL, 0 }
 };
 int yykeywd(string)
@@ -108,6 +135,7 @@ char *string;
 	}	
 	return 0;
 }
+static int yyfirst=TRUE;
 
 loadqconfig()
 {
@@ -117,14 +145,37 @@ loadqconfig()
 	memset(&qconfig,0,sizeof(qconfig));
 	yyupchar = -1;
 	yyparse();
+	yyfirst=FALSE;
 }
 static int yyerror()
 {
 	char yyerrbuf[200];
 	extern char *fileread;
+	char *repchar();
+	extern int fileerrs;
 	
-	sprintf(yyerrbuf,"syntax error on %s line %d\n",fileread,yylineno);
+	fileerrs |= CONFERR;
+	
+	sprintf(yyerrbuf,"Syntax error on %s line %d:\n",fileread,yylineno+1);
 	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
+	yylbuf[yylpos]='\0';
+	sprintf(yyerrbuf,"%s\n",yylbuf);
+	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
+	sprintf(yyerrbuf,"%s^ error near this position\n",repchar(yylpos,(int)' '));
+
+	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
 }
 int yywrap()
 { 

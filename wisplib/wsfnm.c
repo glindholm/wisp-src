@@ -48,8 +48,10 @@
 		*                                                                    			*
 		****************************************************************************************/
 
+#include <stdio.h>									/* Allow standard I/O.			*/
 #include <varargs.h>									/* Allow variable number of arguments	*/
 #include <v/video.h>
+#include "idsistd.h"
 #include "vwang.h"
 #include "werrlog.h"
 #include "wglobals.h"
@@ -59,6 +61,9 @@ extern char NC_pfkey[3], NC_order_area[4];						/* Define global in WSFNS so acc
 static short screen_len, scrl_len;							/* Values for each screen setup.	*/
 unsigned char *wsfnm_cscn;								/* Current pos in long screen pointer.	*/
 static short st_scrl, end_scrl;
+static int hfio();
+static int do_erase();
+static int blank_msg_line();
 
 #define		ROUTINE		85500
 
@@ -75,7 +80,7 @@ va_dcl
 	int		another_screen, snum, l_used;
 	short		cur_scrl_len;
 	char		wsfns_func[3];
-	long		vcount;
+	int4		vcount;
 
 	werrlog(ERRORCODE(1),"?",0,0,0,0,0,0,0);					/* Say we are here.			*/
 	*wisp_progname = CHAR_NULL;							/* Set the progname name to spaces.	*/
@@ -252,7 +257,7 @@ static hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
 	for (i = 0; i < 4; i++) ldispa[i] = NC_order_area[i];				/* Concatenate order area with screen.	*/
 	l_numl = screen_len - end_scrl;							/* Set the number of lines to display.	*/
 
-	gen_ncpfkey(0,&ldispa,l_numl*80);						/* Set up PFkey window if have EDE.	*/
+	gen_ncpfkey(0,&ldispa,l_numl*80,NULL,NULL);					/* Set up PFkey window if have EDE.	*/
 											/* Don't need st_win and end_win because*/
 	vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);		/* temp screen is just pfkey area.	*/
 

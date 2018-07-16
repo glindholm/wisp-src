@@ -9,6 +9,11 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "crt.h"
+#include "cobfiles.h"
+#include "directiv.h"
+
+#include "wcommon.h"
 
 			/* Process OPEN statements for possible multiple file names amd CRT file opens	*/
 
@@ -66,7 +71,11 @@ p_open()
 		ptype = get_param(o_parms[0]);						/* get a word				*/
 
 		is_crt = 0;
-		for (i=0; i<crt_fcount; i++) if (!strcmp(o_parms[0],crt_file[i])) {is_crt = 1; cur_crt = i; syntax_ok = 1;}
+		if ((cur_crt = crt_index(o_parms[0])) != -1) 
+		{
+			is_crt = 1;
+			syntax_ok = 1;
+		}
 
 		i = 0;									/* It's not a file name yet		*/
 		if (!strcmp(o_parms[0],"SHARED"))					/* handle SHARED phrase	    		*/
@@ -113,7 +122,7 @@ p_open()
 				if (o_count > MAX_FILES)				/* Exceeded file buffer.		*/
 				{
 					write_log("WISP",'F',"EXCFILECNT","Exceeded FILE count in OPEN statement.");
-					exit_wisp(-1);
+					exit_wisp(EXIT_WITH_ERR);
 				}
 
 				o_omode[o_count] = open_mode;
@@ -176,12 +185,22 @@ p_open()
 				else if (open_mode == OPEN_OUTPUT)
 				{
 					strcpy(o_fmode[o_count],"OUTPUT");		/* save the mode			*/
+					strcpy(o_allow[o_count]," ");			/* Automatic record locking.		*/
 					if (lpi_cobol||mf_aix)
 						strcpy(o_allow[o_count]," WITH LOCK");	/* LPI needs it locked.			*/
 					else if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
 						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
 					else
+						strcpy(o_allow[o_count]," ALLOWING NO OTHERS");	/* Manual record locking.	*/
+#ifdef OLD
+					/*
+					**	The "ALLOWING READERS" clause on the VAX was causing
+					**	it to be very slow.  On the Wang an OPEN OUTPUT is exclusive,
+					**	so the only reason for this must have been the "READFDR" problem.
+					*/
+					else
 						strcpy(o_allow[o_count]," ALLOWING READERS");	/* Manual record locking.	*/
+#endif
 				}
 				else if (open_mode == OPEN_EXTEND)
 				{
@@ -210,8 +229,6 @@ p_open()
 		{
 			int	gen_bitset;
 
-			make_fld(o_parms[9],o_fnames[i],"S-");				/* create the status byte		*/
-
 			if (isaproc)
 			{
 				gen_bitset = 1;
@@ -223,90 +240,101 @@ p_open()
 
 			if (gen_bitset)
 			{
-				put_line          ("           MOVE ZERO TO WISP-BIT-CLEAR, WISP-BIT-SET\n");
+				make_fld(o_parms[9],o_fnames[i],"S-");			/* create the status byte		*/
+				tput_line          ("           MOVE ZERO TO WISP-BIT-CLEAR, WISP-BIT-SET\n");
 
-				if (isaproc)							/* Was the procedure flag set?	*/
+				if (isaproc)						/* Was the procedure flag set?		*/
 				{
-					put_line  ("           ADD WISP-PROC    TO WISP-BIT-SET,\n");
+					tput_line  ("           ADD WISP-PROC    TO WISP-BIT-SET,\n");
 				}
-				put_line  ("           CALL \"wsetstat\" USING WISP-BIT-SET, WISP-BIT-CLEAR,\n");
-				write_line("                                 %s\n",o_parms[9]);
+				tput_line  	   ("           CALL \"wsetstat\" USING WISP-BIT-SET, WISP-BIT-CLEAR,\n");
+				tput_line          ("                                 %s\n",o_parms[9]);
+			}
+
+			if (prog_ftypes[o_fref[i]] & PRINTER_FILE)
+			{
+				if (!prog_fnames[o_fref[i]][0])			/* If no FD FILENAME given then...		*/
+				{
+					make_fld(o_parms[9],o_fnames[i],"F-");
+					tput_line("           MOVE SPACES TO %s,\n",o_parms[9]);
+				}
+				else if (prog_fnames[o_fref[i]][0] == '\"')	/* If FD FILENAME is literal then...		*/
+				{
+					make_fld(o_parms[9],o_fnames[i],"F-");
+					tput_line("           MOVE %s TO %s,\n",prog_fnames[o_fref[i]],o_parms[9]);
+				}
 			}
 
 			if (!(prog_ftypes[o_fref[i]] & NORESPECIFY))				/* Was the NORESPECIFY flag set?*/
 			{									/* If RESPECIFY, then PERFORM it.*/
-				put_line  ("           PERFORM WITH TEST AFTER UNTIL\n");
-				write_line("               %s < \"10\"\n",prog_fstats[o_fref[i]]);
+				tput_line("           PERFORM WITH TEST AFTER UNTIL\n");
+				tput_line("               %s < \"10\"\n",prog_fstats[o_fref[i]]);
 			}
 
-			put_line  ("               MOVE \"OP\" TO WISP-DECLARATIVES-STATUS\n");	/* Signal an open.		*/
-			write_line("               CALL \"wfopen3\" USING %s,\n",o_parms[9]);	/* start with the status byte	*/
+			make_fld(o_parms[9],o_fnames[i],"S-");				/* create the status byte		*/
+			tput_line_at(16, "MOVE \"OP\" TO WISP-DECLARATIVES-STATUS\n");	/* Signal an open.		*/
+			tput_line_at(16, "CALL \"wfopen3\" USING %s,\n",o_parms[9]);	/* start with the status byte	*/
 
 									/* literal or null volume, pass the created field */
 			if ((prog_vnames[o_fref[i]][0] == '\"') || (!prog_vnames[o_fref[i]][0]))
 			{
 				make_fld(o_parms[9],o_fnames[i],"V-");
-				write_line("                                   %s,\n",o_parms[9]);
+				tput_clause(20, "%s,",o_parms[9]);
 			}
 			else
 			{								/* use the programs own field		*/
-				write_line("                                   %s,\n",prog_vnames[o_fref[i]]);
+				tput_clause(20, "%s,",prog_vnames[o_fref[i]]);
 			}
 
 										/* literal or null lib, pass the created field */
-			if ((prog_lnames[o_fref[i]][0] == '\042') || (!prog_lnames[o_fref[i]][0]))
+			if ((prog_lnames[o_fref[i]][0] == '\"') || (!prog_lnames[o_fref[i]][0]))
 			{
 				make_fld(o_parms[9],o_fnames[i],"L-");
-				write_line("                                   %s,\n",o_parms[9]);
+				tput_clause(20, "%s,",o_parms[9]);
 			}
 			else
 			{								/* use the programs own field		*/
-				write_line("                                   %s,\n",prog_lnames[o_fref[i]]);
+				tput_clause(20, "%s,",prog_lnames[o_fref[i]]);
 			}
 
 										/* literal or null name, pass the created field */
-			if ((prog_fnames[o_fref[i]][0] == '\042') || (!prog_fnames[o_fref[i]][0]))
+			if ((prog_fnames[o_fref[i]][0] == '\"') || (!prog_fnames[o_fref[i]][0]))
 			{
 				make_fld(o_parms[9],o_fnames[i],"F-");
-				write_line("                                   %s,\n",o_parms[9]);
+				tput_clause(20, "%s,",o_parms[9]);
 			}
 			else
 			{								/* use the programs own field		*/
-				write_line("                                   %s,\n",prog_fnames[o_fref[i]]);
+				tput_clause(20, "%s,",prog_fnames[o_fref[i]]);
 			}
 
 											/* always pass the created name		*/
 			make_fld(o_parms[9],o_fnames[i],"N-");
-			write_line        ("                                   %s,\n",o_parms[9]);
-			put_line	  ("                                   WISP-APPLICATION-NAME,\n");
+			tput_clause(20, "%s,",o_parms[9]);
+			tput_clause(20, "WISP-APPLICATION-NAME,");
 			make_fld(o_parms[9],o_fnames[i],"PR-");
-			write_line        ("                                   %s,\n",o_parms[9]);
+			tput_clause(20, "%s,",o_parms[9]);
 
-			write_line        ("                                   %s\n",open_mode_name[o_omode[i]]);
+			tput_clause(20, "%s,",open_mode_name[o_omode[i]]);
 
-			if (strlen(o_fnames[i]) > 25 )					/* If the name too long put allowing on */
-											/* next line.				*/
-				strcpy(o_next,"\n                  ");
-			else
-				*o_next = 0;
-
-			write_line("               OPEN %s %s%s%s\n",o_fmode[i],o_fnames[i],o_next,o_allow[i]);
+			tput_line_at(16, "OPEN %s %s",o_fmode[i],o_fnames[i]);
+			tput_clause (20, "%s",o_allow[i]);
 			if (vax_cobol)
 			{
 				make_fld(o_parms[9],o_fnames[i],"S-");			/* create the status byte		*/
-				write_line("               CALL \"wdellock\" USING %s,\n",o_parms[9]);
+				tput_line("               CALL \"wdellock\" USING %s,\n",o_parms[9]);
 				make_fld(o_parms[9],o_fnames[i],"N-");
-	                        write_line("                                     %s\n",o_parms[9]);
+	                        tput_line("                                     %s\n",o_parms[9]);
 			}
-			put_line  ("               MOVE SPACES TO WISP-DECLARATIVES-STATUS");	/* Signal an open.		*/
+			tput_line  ("               MOVE SPACES TO WISP-DECLARATIVES-STATUS");	/* Signal an open.		*/
 
 			if (!(prog_ftypes[o_fref[i]] & NORESPECIFY))			/* Was the NORESPECIFY flag set?	*/
 			{
-				put_line("\n           END-PERFORM");			/* No, End of the perform.		*/
+				tput_line("           END-PERFORM");			/* No, End of the perform.		*/
 			}
 
-			if ((i == o_count-1) && (ptype == -1)) put_line(".\n");		/* Last file name needs a period?	*/
-			else				     put_line(",\n");
+			if ((i == o_count-1) && (ptype == -1)) tput_clause(12, ".");	/* Last file name needs a period?	*/
+			else				       tput_clause(12, ",");
 
 
 		}
@@ -315,16 +343,16 @@ p_open()
 	else										/* There were no files, must have been	*/
 	{										/* a CRT file only. write a place holder*/
 		if (ptype == -1)
-			put_line("           CONTINUE.\n");
+			tput_line("           CONTINUE.\n");
 		else
-			put_line("           CONTINUE,\n");
+			tput_line("           CONTINUE,\n");
 	}
 	if (ptype == 1) hold_line();							/* ended on a new line, hold it		*/
 
 	if (!syntax_ok)
 	{
 		write_log("WISP",'F',"OPNSYN","Syntax Error in OPEN statement, No file name.\n%s",inline);
-		exit_wisp(-1);
+		exit_wisp(EXIT_WITH_ERR);
 	}
 }
 
@@ -348,17 +376,15 @@ p_close()
 		ptype = get_param(o_parms[0]);						/* get a word				*/
 
 		is_crt = 0;
-		for (i=0; i<crt_fcount; i++) 
-			if (!strcmp(o_parms[0],crt_file[i])) 
-			{
-				is_crt = 1; 
-				cur_crt = i;
-			}
+		if ((cur_crt = crt_index(o_parms[0])) != -1) 
+		{
+			is_crt = 1; 
+		}
 
 		if (is_crt)								/* delete CRT file closes		*/
 		{
 			write_log("WISP",'I',"DELCRTCLOSE","Fixed CLOSE of crt file, %s.",crt_file[cur_crt]);
-			put_line("                 CALL \042vwang\042 USING VWANG-CLOSE-WS,\n");
+			tput_line("                 CALL \"vwang\" USING VWANG-CLOSE-WS,\n");
 		}
 		else									/* see if it is a file name		*/
 		{
@@ -369,7 +395,7 @@ p_close()
 				if (c_count > MAX_FILES)				/* Exceeded file buffer.		*/
 				{
 					write_log("WISP",'F',"EXCFILECNT","Exceeded FILE count in CLOSE statement.");
-					exit_wisp(-1);
+					exit_wisp(EXIT_WITH_ERR);
 				}
 				c_flags[c_count] = prog_ftypes[i];			/* Remember the file type.		*/
 				strcpy(c_fnames[c_count++],o_parms[0]);			/* save it				*/
@@ -396,31 +422,31 @@ p_close()
 
 	if (c_count)									/* output the open statements		*/
 	{
-		put_line("           MOVE \"CL\" TO WISP-DECLARATIVES-STATUS\n");
+		tput_line("           MOVE \"CL\" TO WISP-DECLARATIVES-STATUS\n");
 
 		for (i=0; i<c_count; i++)
 		{
-			write_line("           CLOSE %s",c_fnames[i]);
+			tput_line("           CLOSE %s",c_fnames[i]);
 			if ((i == c_count-1) && (ptype == -1))				/* handle last file, with a period.	*/
 			{
 				if (c_flags[i] & PRINTER_FILE)				/* If it is a printer file, call wfclose*/
 				{
-					write_line("\n           CALL \"wfclose\" USING N-%s.\n",c_fnames[i]);
+					tput_line("           CALL \"wfclose\" USING N-%s.\n",c_fnames[i]);
 				}
 				else
 				{
-					put_line(".\n");
+					tput_clause(12, ".");
 				}
 			}
 			else
 			{
 				if (c_flags[i] & PRINTER_FILE)				/* If it is a printer file, call wfclose*/
 				{
-					write_line("\n           CALL \"wfclose\" USING N-%s\n",c_fnames[i]);
+					tput_line("           CALL \"wfclose\" USING N-%s\n",c_fnames[i]);
 				}
 				else
 				{
-					put_line(",\n");
+					tput_clause(12, ",");
 				}
 			}
 		}
@@ -428,9 +454,9 @@ p_close()
 	else										/* There were no files, must have been	*/
 	{										/* a CRT file only. write a place holder*/
 		if (ptype == -1)
-			put_line("           CONTINUE.\n");
+			tput_line("           CONTINUE.\n");
 		else
-			put_line("           CONTINUE,\n");
+			tput_line("           CONTINUE,\n");
 	}
 
 	hold_line();

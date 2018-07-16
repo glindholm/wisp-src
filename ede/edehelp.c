@@ -1,9 +1,29 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
+
+/*
+**	File:		edehelp.c
+**
+**	Purpose:	The EDE help system
+**
+**	Routines:	
+**	ws_bar_menu()	The HELP bar menu
+**	A_WSLINK()	Called to turn on ON-LINE doc feature
+**	openhelpmap()	Open the HELPMAP file.
+**	filehelp()	Gives HELP based on helpfiles.
+**	disphelp()	Displays a single helpfile.
+**	first_diff()	Finds the first difference in two strings
+**	trim()		Trims a string.
+**	ws_cut()	CUT
+**	ws_paste()	PASTE
+**
+*/
 
 
 /*						Include required header files.							*/
@@ -17,18 +37,26 @@
 #include <v/video.h>
 #include <v/vlocal.h>
 #include <v/vdata.h>
+#include <v/vintdef.h>
 #include <v/vmenu.h>
+#include "idsistd.h"
 #include "vwang.h"
 #include "wglobals.h"
 
 /*						Static and Global Data Definitions.						*/
 
-extern int help_active;									/* Reference the help active flag.	*/
 static int ol_doc = FALSE;								/* Assume on-line documentation off.	*/
 static unsigned char *snptr;								/* Point to the screen number.		*/
 static unsigned char *elptr;
 static unsigned char *odptr;
 static char *helpmap;									/* System base location.		*/
+
+static int filehelp();
+static int first_diff();
+static int trim();
+static int ws_cut();
+static int ws_paste();
+static int disphelp();
 
 #define HELP_CODE 10									/* Define the code for help.		*/
 #define EXIT_CODE 99									/* The exit/abort code.			*/
@@ -42,20 +70,67 @@ static char *helpmap;									/* System base location.		*/
 #define PUZZLE_CODE 126
 #define CUT_CODE 201
 #define PASTE_CODE 202
-
+
+/*
+**	Routine:	ws_bar_menu()
+**
+**	Function:	The standard EDE HELP bar menu.
+**
+**	Description:	This routine generates the standard EDE bar menu and handles the selections
+**			by calling the appropriate routines to handle.
+**
+**			It also provides a hook into a user defined ON-LINE documentation system.
+**			This was originally done for STERLING so is modeled to accomidate there
+**			existing system with a windows type look.  When HELP is selected from the
+**			EDE bar menu and the on-line doc is active it calls EDEOLDOC passing it
+**			the current cursor position and a CONTEXT string.  EDEOLDOC must then 
+**			return the help text which is displayed in a window.
+**
+**	Arguments:
+**	curset		Flag if cursor on or off
+**	vr		Cursor row
+**	vc		Cursor column
+**	ak		Virtual row (from vml())
+**	ar		Altered read flag
+**	nm		No Modification flag
+**	dp		Do pseudoblank processing flag
+**
+**	History:	
+**	04/16/93	Change to call EDEOLDOC. GSL
+**
+*/
 int ws_bar_menu(curset,vr,vc,ak,ar,nm,dp)						/* Put up a menu bar.			*/
 int curset,vr,vc,ak,ar,dp;								/* vcur_lin,vcur_col,alt_read,do_pseudo	*/
 unsigned	char	*nm;								/* no_mod				*/
 {
-	struct hlp_buf { int hlp_row; int hlp_col; char hlp_program[9]; char hlp_screen[33]; short buf_end; };
+	struct hlp_buf 
+	{ 
+		int hlp_row; 
+		int hlp_col; 
+		char hlp_program[9]; 
+		char hlp_screen[33]; 
+		short buf_end; 
+	};
 	typedef struct hlp_buf help_buf;
-	struct hlp_text {char hlp_line_0[64]; char hlp_line_1[64]; char hlp_line_2[64]; char hlp_line_3[64];
-			char hlp_line_4[64]; char hlp_line_5[64]; char hlp_line_6[64]; char hlp_line_7[64];
-		        char hlp_line_8[64]; char hlp_line_9[64]; short txt_end; };
+	struct hlp_text 
+	{
+#define	HLP_LINE_SIZE	64
+		char hlp_line_0[HLP_LINE_SIZE];	
+		char hlp_line_1[HLP_LINE_SIZE]; 
+		char hlp_line_2[HLP_LINE_SIZE]; 	
+		char hlp_line_3[HLP_LINE_SIZE];
+		char hlp_line_4[HLP_LINE_SIZE]; 	
+		char hlp_line_5[HLP_LINE_SIZE]; 
+		char hlp_line_6[HLP_LINE_SIZE]; 	
+		char hlp_line_7[HLP_LINE_SIZE];
+		char hlp_line_8[HLP_LINE_SIZE]; 	
+		char hlp_line_9[HLP_LINE_SIZE]; 
+		short txt_end; 
+	};
 	typedef struct hlp_text help_text;
 	help_text *hl_txt;
         help_buf *hl_buf;
-	char hl_cmp[64];
+	char blankline[HLP_LINE_SIZE];
 	int hl_cnt, hl_rtn;
 	struct video_menu menu_bar, menu_exit, menu_good, olh;				/* The default menu bar.		*/
 	int bar_active;									/* Working parameter.			*/
@@ -65,15 +140,19 @@ unsigned	char	*nm;								/* no_mod				*/
 	unsigned char temp[MAX_COLUMNS_PER_LINE];					/* Working storage.			*/
 	int mdsave, pfsave;								/* Menu state save words.		*/
 	int r, c, k;
-	struct cursor_position { short int sc; short int sr; } curspos;
+	struct cursor_position 
+	{ 
+		short int sc; 
+		short int sr; 
+	} curspos;
 	unsigned char *ssave, *vsss();							/* Screen save.				*/
 
-	if (help_active)								/* Are we already in help.		*/
+	if (ishelpactive())								/* Are we already in help.		*/
 	{
 		ws_bad_char();								/* Ring the bells.			*/
 		return(FAILURE);							/* Return to the caller.		*/
 	}
-	else help_active = TRUE;							/* Now help is active.			*/
+	else sethelpactive(TRUE);							/* Now help is active.			*/
 	vdefer(RESTORE);								/* Cannot be in deferred mode.		*/
 
 	row_current = vcur_lin+1;							/* Remember where on Wang screen.	*/
@@ -82,7 +161,7 @@ unsigned	char	*nm;								/* no_mod				*/
 	hl_cnt = hl_rtn = 0;
 	hl_txt = (help_text *) 0;
 	hl_buf = (help_buf *) 0;
-	memset(hl_cmp,' ',64);
+	memset(blankline,' ',HLP_LINE_SIZE);
 	op_save = voptimize(DEFER_MODE);						/* Make sure optimization is on.	*/
 
 	vmenuinit(&menu_bar, BAR_MENU, REVERSE, 0, 3, 3);				/* Initialize the menu definition.	*/
@@ -127,32 +206,58 @@ unsigned	char	*nm;								/* no_mod				*/
                                 hl_rtn = 0;
 
 				ssave = vsss(0,0,MAX_LINES_PER_SCREEN,vscr_wid);
-				SFREU041(&curspos,odptr,hl_txt,&hl_cnt,&hl_rtn);
+				EDEOLDOC(&curspos,odptr,hl_txt,&hl_cnt,&hl_rtn);
+				/*
+				**	A return code (hl_rtn) of
+				**		0	Success
+				**		1	No help, Empty or not found
+				**		2	Don't draw a box, help takes full screen
+				**			(was drawn by EDEOLDOC ??)
+				*/
 				vrss(ssave);
 
 	                        if (hl_rtn != 2) vmenuinit(&olh, DISPLAY_ONLY_MENU, REVERSE, r, c, 0);
 				if (ol_doc && !hl_rtn)
 				{
-					if (!strncmp(hl_txt->hlp_line_0,hl_cmp,64) && !strncmp(hl_txt->hlp_line_1,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_0, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_1,hl_cmp,64) && !strncmp(hl_txt->hlp_line_2,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_1, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_2,hl_cmp,64) && !strncmp(hl_txt->hlp_line_3,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_2, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_3,hl_cmp,64) && !strncmp(hl_txt->hlp_line_4,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_3, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_4,hl_cmp,64) && !strncmp(hl_txt->hlp_line_5,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_4, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_5,hl_cmp,64) && !strncmp(hl_txt->hlp_line_6,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_5, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_6,hl_cmp,64) && !strncmp(hl_txt->hlp_line_7,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_6, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_7,hl_cmp,64) && !strncmp(hl_txt->hlp_line_8,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_7, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_8,hl_cmp,64) && !strncmp(hl_txt->hlp_line_9,hl_cmp,64) );
-					else vmenuitem(&olh, hl_txt->hlp_line_8, 0, 0);
-					if (!strncmp(hl_txt->hlp_line_9,hl_cmp,64));
-					else vmenuitem(&olh, hl_txt->hlp_line_9, 0, 0);
+					if (	strncmp(hl_txt->hlp_line_0,blankline,HLP_LINE_SIZE) ||
+					    	strncmp(hl_txt->hlp_line_1,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_0, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_1,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_2,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_1, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_2,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_3,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_2, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_3,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_4,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_3, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_4,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_5,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_4, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_5,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_6,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_5, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_6,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_7,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_6, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_7,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_8,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_7, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_8,blankline,HLP_LINE_SIZE) ||
+						strncmp(hl_txt->hlp_line_9,blankline,HLP_LINE_SIZE) 	)
+						vmenuitem(&olh, hl_txt->hlp_line_8, 0, 0);
+
+					if (	strncmp(hl_txt->hlp_line_9,blankline,HLP_LINE_SIZE)	)
+						vmenuitem(&olh, hl_txt->hlp_line_9, 0, 0);
+
 		                        if (hl_txt) free(hl_txt);
 				}
 				else if (hl_rtn != 2)
@@ -179,7 +284,7 @@ unsigned	char	*nm;								/* no_mod				*/
 					curspos.sr = row_current;
 					curspos.sc = col_current;
 					wpushscr();
-					SFREU041(&curspos,odptr,hl_txt,&hl_cnt,&hl_rtn);
+					EDEOLDOC(&curspos,odptr,hl_txt,&hl_cnt,&hl_rtn);
 					wpopscr();
 				}
 			}
@@ -203,20 +308,45 @@ unsigned	char	*nm;								/* no_mod				*/
 		case PASTE_CODE:	{ ws_paste(row_current-1,col_current-1,vr,vc,ak,ar,nm,dp); break; }
 		case WANG_CODE:
 		{
-			help_active = FALSE;						/* Turn off the active help.		*/
+			sethelpactive(FALSE);						/* Turn off the active help.		*/
 			ws_help(curset);						/* Go to environment processing.	*/
 			break;
 		}
 	}
 
 	voptimize(op_save);								/* Put the optimization back as it was.	*/
-	help_active = FALSE;								/* Now help is inactive.		*/
+	sethelpactive(FALSE);								/* Now help is inactive.		*/
 	synch_required = FALSE;								/* A synch is not required.		*/
 	return(SUCCESS); 								/* All done.				*/
 }
 
-A_WSLINK(ets_link_program_definition, on_line_doc_passing_values)
-	unsigned char *ets_link_program_definition, *on_line_doc_passing_values;
+/*
+**	Routine:	A_WSLINK()
+**
+**	Function:	To enable and setup the ON-LINE doc feature.
+**
+**	Description:	This routine is called near the beginning of a application
+**			to enable EDE's ON-LINE doc feature and pass in setup parameters.
+**
+**	Arguments:
+**	ets_link_program_definition	?
+**	on_line_doc_passing_values	?
+**
+**	Globals:
+**	elptr		?
+**	odptr		?
+**	snptr		?
+**	ol_doc		Enable ON-LINE doc feature.
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**
+*/
+void A_WSLINK(ets_link_program_definition, on_line_doc_passing_values)
+unsigned char *ets_link_program_definition;
+unsigned char *on_line_doc_passing_values;
 {
 	elptr = ets_link_program_definition;						/* Remember where the link params are.	*/
 	odptr = on_line_doc_passing_values;						/* Remember where the doc values are.	*/
@@ -232,6 +362,13 @@ A_WSLINK(ets_link_program_definition, on_line_doc_passing_values)
 				unix	$(WISPCONFIG)/HELPMAP
 				MSDOS	$(WISPCONFIG)\\HELPMAP.DAT
 */
+#if defined(VMS) || defined(MSDOS)
+#define HELPFILE	"HELPMAP.DAT"
+#endif
+#ifdef unix
+#define HELPFILE	"HELPMAP"
+#endif
+
 static FILE *openhelpmap(type)
 char *type;
 {
@@ -246,24 +383,21 @@ char *type;
 		first = 0;
 		helpmap = helpmapbuff;
 #ifdef VMS
-		strcpy( helpmapbuff, "WISP$CONFIG:HELPMAP.DAT" );
-#else /* NOT VMS */
+		strcpy( helpmap, "WISP$CONFIG:" );
+#else
 		helpmap[0] = '\0';
 		if ( ptr = (char *)getenv( "WISPCONFIG" ) )
 		{
 			strcpy(helpmap,ptr);
 #ifdef unix
 			strcat(helpmap,"/");
-#endif /* unix */
+#endif
 #ifdef MSDOS
 			strcat(helpmap,"\\");
-#endif /* MSDOS */
+#endif
 		}
-		strcat(helpmap,"HELPMAP");
-#ifdef MSDOS
-		strcat(helpmap,".DAT");
-#endif /* MSDOS */
-#endif /* NOT VMS */
+#endif /* !VMS */
+		strcat(helpmap,HELPFILE);
 	}
 	
 	fd = fopen(helpmap,type); 							/* Open the help file.			*/
@@ -281,7 +415,7 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 
 	if ((hf = openhelpmap("r")) == NULL) 						/* Open the help file.			*/
 	{
-		vre_window("Help-F-File helpmap.dat not found or not accessable (privs).");
+		vre_window("Help-F-File %s not found or access denied.",HELPFILE);
 		return(FAILURE);							/* Game over...				*/
 	}
 
@@ -329,11 +463,11 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 		sprintf( (char *) temp, "%s_%s_%d_%d", sub_progname, sub_screen, 0, c);
 		if (disphelp(temp)) return(SUCCESS);
 	}
-	if (disphelp("GENERAL_HELP")) return(SUCCESS);
 	sprintf( (char *) temp, "%s_%s", sub_progname, sub_screen);
 	if (disphelp(temp)) return(SUCCESS);
 	sprintf( (char *) temp, "%s", sub_progname);
 	if (disphelp(temp)) return(SUCCESS);
+	if (disphelp("GENERAL_HELP")) return(SUCCESS);
 	vre_window("No more help available. ID: %s_%s_%d_%d", sub_progname, sub_screen, r, c);
 	return(SUCCESS);
 }

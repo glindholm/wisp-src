@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993	*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -44,12 +44,18 @@
 */
 
 
+#ifdef MSDOS
+#include <stdlib.h>
+#include <process.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include "wrunconf.h"
 #include "wdefines.h"
+#include "link.h"
 #include "wcommon.h"
 
 #define MAX_EXEC_PARMS	64
@@ -60,14 +66,13 @@ char	*argv[];
 {
 	char	options[80];
 	char	program[80];
-	char	parameters[80];
 	int	i,j,k;
 	int	arg;
 	int	addspace;
 	struct	wruncfg	cfg;
 	int	parg;
 	int	parmcnt;
-	char	*optr;
+	char	*optr, *ptr;
 	char	*parm[MAX_EXEC_PARMS];
 	int	showit;
 	int	nooptions;
@@ -80,6 +85,16 @@ char	*argv[];
 	struct 	{ long  the_len [MAX_LINK_PARMS]; }  len_list;
 	char	linkkey[80];								/* Key to link parm area		*/
 	char	buff[128];
+
+	if (!(ptr=(char *)getenv(WISP_CONFIG_ENV)))
+	{
+		fprintf( stderr,"%%WRUN-W-WISPCONFIG Warning Environment Variable %s is not set.\n",WISP_CONFIG_ENV);
+	}
+	else if (0!=access(ptr,00))
+	{
+		fprintf( stderr,"%%WRUN-W-WISPCONFIG Warning %s=%s Directory not found.\n",WISP_CONFIG_ENV,ptr);
+	}
+
 
 	parm_file_written = 0;
 
@@ -187,22 +202,17 @@ char	*argv[];
 	}
 
 	/*
-		Extract the parameters
+		Mark where the parameters start and get a count.
 	*/
 
-	parameters[0] = '\0';
 	parg = arg;
 	parmcnt = 0;
 	while( arg < argc )
 	{
 		parmcnt += 1;
-		strcat(parameters,argv[arg++]);
-		if ( arg < argc ) strcat(parameters," ");
+		arg++;
 	}
 
-#ifdef TEST
-	printf("parameters=<%s>\n",parameters);
-#endif
 
 	/*
 		Save options in shell variable
@@ -218,13 +228,13 @@ char	*argv[];
 		env_ptr = (char *)malloc( msize );
 		if ( ! env_ptr )
 		{
-			printf( "%%WRUN-F-MALLOC Malloc of %d bytes failed.\n",msize);
+			fprintf( stderr,"%%WRUN-F-MALLOC Malloc of %d bytes failed.\n",msize);
 			exit(2);
 		}
 		strcpy(env_ptr,envstring);
 		if ( putenv(env_ptr) )
 		{
-			printf( "%%WRUN-F-PUTENV Unable to put environment varible %s.\n",WRUNOPTIONS_ENV );
+			fprintf( stderr,"%%WRUN-F-PUTENV Unable to put environment varible %s.\n",WRUNOPTIONS_ENV );
 			exit(4);
 		}
 
@@ -316,6 +326,7 @@ char	*argv[];
 			parm[arg++] = argv[i];					/* Add args to command line			*/
 		}
 	}
+#ifdef unix
 	else if (aix_cobol || mf_cobol)
 	{
 		if (usingclause)
@@ -333,11 +344,12 @@ char	*argv[];
 			}
 		}
 	}
+#endif /* unix */
 	else
 	{
 		if (usingclause)
 		{
-			printf( "%%WRUN-F-COBOL Unknown COBOL type [%s]\n",cfg.wrun_cobtype);
+			fprintf( stderr,"%%WRUN-F-COBOL Unknown COBOL type [%s]\n",cfg.wrun_cobtype);
 			exit(6);
 		}
 		else
@@ -352,6 +364,7 @@ char	*argv[];
 	}
 	parm[arg++] = '\0';
 
+#ifdef unix
 	if (!showit && usingclause && (aix_cobol || mf_cobol))
 	{
 
@@ -366,6 +379,7 @@ char	*argv[];
 		setenvstr(buff);
 		parm_file_written = 1;
 	}
+#endif /* unix */
 
 
 #ifdef TEST
@@ -381,6 +395,7 @@ char	*argv[];
 
 	if (!showit)	
 	{
+#ifdef unix
 		signal( SIGINT,  SIG_IGN );
 		signal( SIGQUIT, SIG_IGN );
 		signal( SIGILL,  SIG_IGN );
@@ -394,12 +409,12 @@ char	*argv[];
 		{
 		case 0: /* Child */
 			execvp(parm[0],parm);
-			printf("%%WRUN-F-EXEC Unable to exec [%s] errno=%d\n",parm[0],errno);
+			fprintf(stderr,"%%WRUN-F-EXEC Unable to exec [%s] errno=%d\n",parm[0],errno);
 			exit(errno);
 			break;
 
 		case -1: /* fork failed */
-			printf("%%WRUN-F-FORK Unable to fork errno=%d\n",errno);
+			fprintf(stderr,"%%WRUN-F-FORK Unable to fork errno=%d\n",errno);
 			rc = errno;
 			break;
 
@@ -407,7 +422,31 @@ char	*argv[];
 			wwaitpid(pid,&rc);
 			restoreterm();
 		}
+#endif /* unix */
+#ifdef MSDOS
+		rc = spawnvp(P_WAIT,(const char *)parm[0],(const char **)parm);
+		if (rc == -1)
+		{
+			switch(errno)
+			{
+			case ENOENT:
+				fprintf(stderr,"wrun: file not found [%s]\n",parm[0]);
+				break;
+			case ENOEXEC:
+				fprintf(stderr,"wrun: file not executable [%s]\n",parm[0]);
+				break;
+			default:
+				fprintf(stderr,"wrun: spawn failed [errno=%d]\n",errno);
+				break;
+			}
+			for(i=0; parm[i]; i++)
+			{
+				fprintf(stderr,"%s ",parm[i]);
+			}
+			fprintf(stderr,"\n");
+		}
 
+#endif /* MSDOS */
 	}
 	else
 	{
@@ -421,15 +460,19 @@ char	*argv[];
 		rc = 0;
 	}
 
+#ifdef unix
 	if ( parm_file_written )							/* delete the temp file			*/ 
 	{
 		unlink(linkkey);
 	} 
+#endif /* unix */
 
 	exit(rc);
 }
 
+#ifdef unix
 #include "saveterm.c"
+#endif /* unix */
 
 #include "wutils.h"
 

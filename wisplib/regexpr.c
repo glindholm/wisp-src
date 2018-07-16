@@ -30,12 +30,16 @@ $Header: /u/src/lib/tools/RCS/regexpr.c,v 1.4 92/03/29 16:52:04 ylo Exp $
 */
 
 #include <stdio.h>
+#ifdef OSF1_ALPHA
+#define NDEBUG
+#endif
 #include <assert.h>
+#include "idsistd.h"
 #include "regexpr.h"
 
-char *malloc();
 void free();
-char *realloc();
+
+static short temp_short;
 
 #define MACRO_BEGIN do {
 #define MACRO_END } while (0)
@@ -830,7 +834,9 @@ int pos;
       case Cstar_jump:
 	a = (unsigned char)code[pos++];
 	a |= (unsigned char)code[pos++] << 8;
-	pos += (int)(short)a;
+/*	pos += (int)(short)a; */
+	temp_short = (short)a;
+	pos += (int) temp_short;
 	if (visited[pos])
 	  {
 	    /* argh... the regexp contains empty loops.  This is not
@@ -844,7 +850,9 @@ int pos;
       case Cfailure_jump:
 	a = (unsigned char)code[pos++];
 	a |= (unsigned char)code[pos++] << 8;
-	a = pos + (int)(short)a;
+/*	a = pos + (int)(short)a; */
+	temp_short = (short)a;
+	a = pos + (int)temp_short;
 	re_compile_fastmap_aux(code, a, visited, can_be_null, fastmap);
 	break;
       default:
@@ -896,7 +904,12 @@ regexp_t bufp;
 }
 
 #define INITIAL_FAILURES  128  /* initial # failure points to allocate */
+#ifdef _MSC_VER
+/* MicroSoft C for MSDOS has 16bit ints */
+#define MAX_FAILURES     2050  /* max # of failure points before failing */
+#else
 #define MAX_FAILURES     4100  /* max # of failure points before failing */
+#endif
 
 int re_match_2(bufp, string1, size1, string2, size2, pos, regs, mstop)
 regexp_t bufp;
@@ -982,6 +995,7 @@ regexp_registers_t regs;
  continue_matching:
   for (;;)
     {
+/* fprintf(stderr,"code(%09lx)= %c 0x%02x\n", (long)code, *code, *code); */
       switch (*code++)
 	{
 	case Cend:
@@ -1106,7 +1120,9 @@ regexp_registers_t regs;
 	     to star. */
 	  a = (unsigned char)*code++;
 	  a |= (unsigned char)*code++ << 8;
-	  a = (int)(short)a;
+/*	  a = (int)(short)a; */
+	  temp_short = (short)a;
+	  a = (int)temp_short;
 	  {
 	    char map[256], can_be_null;
 	    char *p1, *p2;
@@ -1225,7 +1241,9 @@ regexp_registers_t regs;
 	case Cjump:
 	  a = (unsigned char)*code++;
 	  a |= (unsigned char)*code++ << 8;
-	  code += (int)(short)a;
+/*	  code += (int)(short)a; */
+	  temp_short = (short)a;
+	  code += temp_short;
 	  break;
 	case Cdummy_failure_jump:
 	case Cfailure_jump:
@@ -1242,13 +1260,18 @@ regexp_registers_t regs;
 	    }
 	  a = (unsigned char)*code++;
 	  a |= (unsigned char)*code++ << 8;
-	  a = (int)(short)a;
+/*	  a = (int)(short)a; */
+	  temp_short = (short)a;
+	  a = (int)temp_short;
 	  if (code[-3] == Cdummy_failure_jump)
 	    { /* this is only used in plus */
 	      assert(*code == Cfailure_jump);
 	      b = (unsigned char)code[1];
 	      b |= (unsigned char)code[2] << 8;
-	      failure_sp->code = code + (int)(short)b + 3;
+/*	      failure_sp->code = code + (int)(short)b + 3; */
+	      temp_short = (short)b;
+	      failure_sp->code = code + (int)temp_short + 3;
+
 	      failure_sp->text = NULL;
 	      code += a;
 	    }
@@ -1635,7 +1658,9 @@ int main()
 	    case Cupdate_failure_jump:
 	      a = (unsigned char)exp.buffer[pos++];
 	      a += (unsigned char)exp.buffer[pos++] << 8;
-	      a = (int)(short)a;
+/*	      a = (int)(short)a; */
+              temp_short = (short)a;
+              a = (int)temp_short;
 	      switch (exp.buffer[pos-3])
 		{
 		case Cjump:

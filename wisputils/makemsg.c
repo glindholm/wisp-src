@@ -40,7 +40,7 @@ main()
 
 	printf("There are %d messages in the file, beginning build of indexed file.\n",num_msgs);
 
-#ifdef VMS
+#ifndef unix
 	idx_file = fopen("wispmsg.dat","wb");						/* Open the indexed file.		*/
 #else
 	idx_file = fopen("wispmsg.dat","w");						/* Open the indexed file.		*/

@@ -31,6 +31,7 @@
 #include <io.h>
 #endif
 
+#include "idsistd.h"
 #include "wperson.h"
 #include "wangkeys.h"									/* Include the wang pfkey defs.		*/
 #include "wcommon.h"
@@ -39,13 +40,20 @@
 #include "wglobals.h"
 #include "filext.h"
 
+#include "werrlog.h"
+#define		ROUTINE		78000
+/*
+78001   %%WFOPEN-I-ENTRY Entry into wfopen file(%8.8s) lib(%8.8s) vol(%6.6s) appl(%8.8s)
+*/
+
+
 char *wfname();
 
 void wfopen2();
 
 /********************************************************************************************************************************/
 wfopen(mode,vol,lib,file,name,prname)							/* WISP 2.0B and earlier		*/
-long *mode;										/* the mode of opening			*/
+int4 *mode;										/* the mode of opening			*/
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
@@ -62,17 +70,19 @@ char *prname;										/* The PRNAME (optional).		*/
 			calls wfopen2();
 */
 void wfopen3(mode,vol,lib,file,name,appl,prname,openmode)				/* WISP 3.0 and later			*/
-long *mode;										/* the mode of opening			*/
+int4 *mode;										/* the mode of opening			*/
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
 char *name;										/* The resultant name			*/
 char *appl;										/* The COBOL program id (8 chars)	*/
 char *prname;										/* The PRNAME (optional).		*/
-long *openmode;										/* The open mode			*/
+int4 *openmode;										/* The open mode			*/
 {
-	unsigned long	set,clear;
+	uint4	set,clear;
+	int4	the_openmode;
 
+	the_openmode = *openmode;
 	set = 0;
 	clear = 0;
 
@@ -88,11 +98,11 @@ long *openmode;										/* The open mode			*/
 		SORT			1		0		1		0		1
 	*/
 
-	if (*openmode == OPEN_SHARED && 				/* If OPEN SHARED for a  SEQ file change to EXTEND.	*/
+	if (the_openmode == OPEN_SHARED && 				/* If OPEN SHARED for a  SEQ file change to EXTEND.	*/
 	    ((*mode & IS_SEQDYN) || (*mode & IS_SEQSEQ)))
-		*openmode = OPEN_EXTEND;
+		the_openmode = OPEN_EXTEND;
 
-	switch(*openmode)
+	switch(the_openmode)
 	{
 	case OPEN_INPUT:
 		set   = IS_NOWRITE;
@@ -132,7 +142,7 @@ long *openmode;										/* The open mode			*/
 
 /********************************************************************************************************************************/
 void wfopen2(mode,vol,lib,file,name,appl,prname)					/* WISP 2.0C and later			*/
-long *mode;										/* the mode of opening			*/
+int4 *mode;										/* the mode of opening			*/
 char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
@@ -143,24 +153,23 @@ char *prname;										/* The PRNAME (optional).		*/
 											/* These are static so they will be set */
 											/* on an IS_ERROR repeat.		*/
 static	char *l_vol,*l_lib,*l_file,*l_name,*l_prname;					/* local vars cause the vax protects	*/
-static	long native_mode;								/* Set to 1 if in VAX/VMS native mode.	*/
+static	int4 native_mode;								/* Set to 1 if in VAX/VMS native mode.	*/
 static	char getparm_type[3];
 static	char	prtclass[1];
-static	long	form;
-static	long	copies;
+static	int4	form;
+static	int4	copies;
 static	char	orig_file[9];								/* Var to save original passed in file.	*/
 
 	char temp[132];
 	int i,j,access_status, pfkey;
 	char pf_rcvr[1];								/* Stores the PF-KEY selection.		*/
 	char text_type[1], key_word[1];
- 	long va_cnt;
+ 	int4 va_cnt;
 	char *msg1,*msg2;
 	char intv_type;									/* Intervention type E or R (rename)	*/
 
-#ifdef	MSDOS										/* Debug hook for MS-DOS.		*/
-	v_modeflag( 5, 15, 'O' );							/* Magenta box, white 'O'.		*/
-#endif
+	werrlog(ERRORCODE(1),file,lib,vol,appl,0,0,0,0);				/* Say we are here.			*/
+
 	setprogid(appl);								/* Set the global var program id.	*/
 	if( *mode & IS_ERROR )								/* This is the second time thru after	*/
 	{										/* an error on the COBOL OPEN stmt.	*/
@@ -192,19 +201,6 @@ static	char	orig_file[9];								/* Var to save original passed in file.	*/
 
 	memcpy(orig_file,l_prname,8);							/* Save original file name passed in.	*/
 
-	if ( (*mode & IS_PRINTFILE) || (*mode & IS_SORT) )				/* If a printfile or sortfile		*/
-	{
-		if ( l_file[0] == ' ' )							/* filename is blank then		*/
-		{
-			l_file[0] = '#';						/* generate a file name.		*/
-			l_file[1] = '#';
-			l_file[2] = WISPRUNNAME[0];
-			l_file[3] = WISPRUNNAME[1];
-			l_file[4] = WISPRUNNAME[2];
-			l_file[5] = WISPRUNNAME[3];
-		}
-	}
-
 	get_defs(DEFAULTS_PC,prtclass);
 	get_defs(DEFAULTS_FN,&form);
 	copies=1;
@@ -213,14 +209,7 @@ static	char	orig_file[9];								/* Var to save original passed in file.	*/
 	**	Perform the Initial "Hidden" getparm 
 	*/
 
-	if (l_file[0] == ' ')								/* If no filename then			*/
-	{
-		strcpy(getparm_type,"I ");						/* issue an initial getparm.		*/
-	}
-	else
-	{
-		strcpy(getparm_type,"ID");						/* "ID" is for hidden getparms		*/
-	}
+	strcpy(getparm_type,"ID");							/* "ID" is for hidden getparms		*/
 
 	memset(l_name, ' ', NAME_LENGTH);						/* Clear out the 80 character filename.	*/
 	msg1="OVERRIDE FILE SPECIFICATIONS.";
@@ -240,22 +229,60 @@ static	char	orig_file[9];								/* Var to save original passed in file.	*/
 	getparm_type[2] = '\0';
 
                                        
-prog_start:
-						/* In the case of TEMP files which are already done, and are being opened	*/
-						/* again for output only, BUT are not print files, need to be deleted before	*/
-						/* the COBOL program opens them or there may be many versions of them created	*/
+translate_name:
+	/*
+	**	Translate the Wang style name into a native file path
+	*/
 
-	*mode &= ~IS_SCRATCH;								/* Clear the scratch flag.		*/
+	if (!native_mode)
+	{
+
+		if (l_file[0] == ' ')							/* If no filename then			*/
+		{
+			if ( (*mode & IS_PRINTFILE) || (*mode & IS_SORT) )		/* If a printfile or sortfile		*/
+			{
+	
+				l_file[0] = '#';					/* generate a file name.		*/
+				l_file[1] = '#';
+				l_file[2] = WISPRUNNAME[0];
+				l_file[3] = WISPRUNNAME[1];
+				l_file[4] = WISPRUNNAME[2];
+				l_file[5] = WISPRUNNAME[3];
+			}
+			else
+			{
+				access_status = ACC_NOFILE;
+				goto respecify;
+			}
+		}
+
+		*mode &= ~IS_SCRATCH;							/* Clear the scratch flag.		*/
 											/* In case it was set by a previous call*/
-	*mode |= IS_BACKFILL;								/* Backfill the file/lib/vol.		*/
-	SAVE_WISPFILEXT;								/* Save the special file extension.	*/
+		*mode |= IS_BACKFILL;							/* Backfill the file/lib/vol.		*/
+		SAVE_WISPFILEXT;							/* Save the special file extension.	*/
 
-	if (! native_mode )  wfname(mode,l_vol,l_lib,l_file,l_name);			/* generate a native file name		*/
+		wfname(mode,l_vol,l_lib,l_file,l_name);					/* generate a native file name		*/
+	}
+
+#ifdef VMS
+	if (*mode & IS_PRINTFILE)							/* VAX ON-LINE printing			*/
+	{
+		char	printmode;
+		get_defs(DEFAULTS_PM,&printmode);
+		if ('O' == printmode)							/* If VAX ON-LINE printing assume OK	*/
+		{
+			return;
+		}
+	}
+#endif /* VMS */
 
                                                                                         
-check_access:  										/* Check to see if we can access the	*/
-											/* file.				*/
-	access_status = 0;		     						/* Initialize the status.		*/
+check_access:
+	/*
+	**	Check to see if we have access to the file.
+	*/
+
+	access_status = ACC_UNKNOWN;	     						/* Initialize the status.		*/
 
 #ifndef VMS
 	if ( !opt_createvolumeon && !native_mode && !wlgtrans(l_vol, temp) )		/* Check if there is volume translation */
@@ -264,7 +291,15 @@ check_access:  										/* Check to see if we can access the	*/
 	}
 #endif
 
-	if (!access_status)
+	if (*mode & IS_DBFILE)
+	{
+		/*
+		**	For DATABASE files bypass the normal access checking.
+		*/
+		access_status = ACC_ALLOWED;
+	}
+
+	if (ACC_UNKNOWN == access_status)
 	{
 		access_status = wfaccess(l_name, mode);					/* See if the user can access it.	*/
 	}
@@ -325,24 +360,23 @@ openerror:
 		     (*mode & IS_TEMP)   ||						/* seqdyn file - in which case a getparm*/
 		     (*mode & IS_SEQDYN) ||						/* is not generated.			*/
 		     (*mode & IS_EXTEND) ||
+		     (*mode & IS_PRINTFILE && *mode & IS_NORESPECIFY) ||
 		     opt_outputverifyoff    )
 			access_status = ACC_ALLOWED;
 	}
 
+respecify:
+	/*
+	**	If access is not allowed then this is where we issue a respecify getparm.
+	*/
 
-	if (access_status != ACC_ALLOWED)                                              	/* Access granted ?			*/
+	if (access_status != ACC_ALLOWED && access_status != ACC_UNKNOWN)           	/* Access granted ?			*/
 	{                                                                       	/* Nope. 				*/
 		char *p_prname;
 		char  msgbuf[80];
 
-
 		if (*mode & IS_NORESPECIFY)
 		{
-
-#ifdef	MSDOS										/* Debug hook for MS-DOS.		*/
-			v_modeflag( 6, 13, 'C' );					/* Gold box, magenta 'C'.		*/
-#endif
-
 			return;								/* NO_RESPECIFY file ?	If so, return.	*/
 		}
 
@@ -366,27 +400,31 @@ openerror:
 			wexit(16L);							/* Exit The program.			*/
 		}
 
-		if (pf_rcvr[0] == PFKEY_3_PRESSED) goto acc_allowed;
-
-		if (native_mode)							/* What name entry mode are we in ?	*/
+		if (pf_rcvr[0] != PFKEY_3_PRESSED)
 		{
-			goto check_access;						/* Check to see if the name is accessbl	*/
+			if (!native_mode)						/* What name entry mode are we in ?	*/
+			{								
+				RESTORE_WISPFILEXT;					/* Restore the special extension.	*/
+			}
+			goto translate_name;  						/* re-translate the name etc.		*/
 		}
-		else
-		{								
-			RESTORE_WISPFILEXT;						/* Restore the special extension.	*/
-			goto prog_start;  						/* Format name and check accessibility.	*/
-		}
-       		
 	}
 
 
 acc_allowed:
+	/*
+	**	We believe that access is allowed so we are going to get ready
+	**	to fall thur and allow the COBOL OPEN to occur.
+	*/
+
 	if ((*mode & IS_TEMP) && 
 	    (*mode & IS_INDEXED) && 
-	    (*mode & IS_OUTPUT) && 
-	    cisam_files			)						/* If micro focus and temp and index	*/
+	    (*mode & IS_OUTPUT)     )
 	{
+		/*
+		**	This only really needs to be done if we are creating a CISAM file
+		**	but no safe way of telling since acucobol can use cisam.
+		*/
 		unloadpad(temp,l_name,80);
 		delete(temp);								/* The delete the lockfile		*/
 	}
@@ -459,8 +497,6 @@ acc_allowed:
 				&native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,intv_type,orig_file,prtclass,&form,&copies);
 	}
 
-#ifdef	MSDOS										/* Debug hook for MS-DOS.		*/
-	v_modeflag( 6, 14, 'C' );							/* Gold box, yellow 'C'.		*/
-#endif
-
+	return;
 }
+

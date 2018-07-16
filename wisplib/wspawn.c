@@ -1,3 +1,4 @@
+#include "idsistd.h"
 WSPAWN(action,progname,name_len,msg,msg_len)
 short *action;
 char *progname;
@@ -7,6 +8,7 @@ short *msg_len;
 {
 	char l_msg[200],l_name[200];
 	int l_act;
+	uint4 vms_status;
 
 	l_act = *action;								/* Copy action code.			*/
 
@@ -22,5 +24,5 @@ short *msg_len;
 	}
 	l_msg[*msg_len] = 0;								/* Put null in.				*/
 
-	spawn(l_act,l_name,l_msg);							/* Do the spawn				*/
+	spawn2 (l_act,l_name,l_msg,&vms_status);					/* Do the spawn				*/
 }

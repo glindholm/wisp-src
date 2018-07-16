@@ -5,6 +5,12 @@
  *      Id: $Id:$
  *
  * $Log: c_comm.h,v $
+ * Revision 1.10  1993/01/13  23:33:55  jockc
+ * removed ierr defs
+ *
+ * Revision 1.9  1992/10/27  23:27:56  jockc
+ * added support for the internet addressing
+ *
  * Revision 1.8  1992/06/18  23:48:21  jockc
  *  remove decl of timedout
  *
@@ -37,14 +43,16 @@
 
 #include "defs.h"
 
+extern MASTCONFIG qconfig;
+#if 0
 #define IERR_SOCKET 1
 #define IERR_SERVUNDEF 2
 #define IERR_NODAEMON 3
-#define IERR_CONNECT 4
+#define IERR_BIND 4         /* used to be IERR_CONNECT, but now comm is connectionless */
 #define IERR_HOSTADDR 5
 #define IERR_INCOMPATDS 6
 #define IERR_INCOMPATDM 7
-
+#endif
 #ifdef MQCODE
 struct msgstruct
 {
@@ -71,13 +79,16 @@ EXT int msg_data;
 
 
 #ifdef SOCKCODE
-EXT struct sockaddr_un daemon_addr;
+EXT struct sockaddr_un daemon_addr_u;
+EXT struct sockaddr_in daemon_addr_i,cli_addr_i;
 #endif
 #endif
 
 #else
 #ifdef SOCKCODE
-struct sockaddr_un daemon_addr;
+struct sockaddr_un daemon_addr_u;
+struct sockaddr_in daemon_addr_i;
+struct sockaddr_in cli_addr_i;
 #endif
 
 PACKET *packet;

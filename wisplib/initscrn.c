@@ -1,15 +1,19 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
+
 
 /*					Reference standard include files.							*/
 
 #include <v/video.h>
 #include <v/vlocal.h>
 #include <v/vdata.h>
+#include "idsistd.h"
 #include "wperson.h"
 
 /*					Data declarations.									*/
@@ -22,6 +26,8 @@ int kp_on = FALSE;										/* Assume keypad will be off.	*/
 static int no_term = 0;
 extern int rts_first;										/* First time control flag.	*/
 
+extern char language_path[];									/* this is from wperson.c. it is*/
+												/* loaded from the OPTIONS file */
 int init_screen()
 {
 	int dummy, attributes;									/* Terminal attribute masks.	*/
@@ -37,6 +43,8 @@ int init_screen()
 	retcod = 1;										/* Assume success.		*/
 	if (rts_first)										/* Is this the first time?	*/
 	{
+		int4	def_bgchange, def_excolor, def_bgcolor;
+
 		rts_first = FALSE;								/* No longer the 1st time.	*/
 		voptimize(DEFER_MODE);								/* Select appropriate optimiz.	*/
 
@@ -44,20 +52,23 @@ int init_screen()
 		if (vscr_wid == 80) vscreen(NARROW);						/* Select dark narrow screen.	*/
 		else vscreen(WIDE);								/* else dark wide screen.	*/
 
-		/*
-		** Must set up the screen first before calling wpload() because it may generate a screen error.
-		*/
-		wpload();									/* Load the personality.	*/
-		vonexit(NORMALIZE|CLEAR_SCREEN);						/* Clear the screen on exit	*/
-		if (defaults.bgchange && defaults.excolor) vonexit(NORMALIZE|CLEAR_SCREEN|LIGHT);
-		if (defaults.bgchange && !defaults.excolor) vonexit(NORMALIZE|CLEAR_SCREEN|DARK);
+		get_defs(DEFAULTS_BGCHANGE,(char*)&def_bgchange);
+		get_defs(DEFAULTS_EXCOLOR,(char*)&def_excolor);
+		get_defs(DEFAULTS_BGCOLOR,(char*)&def_bgcolor);
 
-		if (defaults.bgchange)								/* Should we change background?	*/
+		vonexit(NORMALIZE|CLEAR_SCREEN);						/* Clear the screen on exit	*/
+		if (def_bgchange && def_excolor) vonexit(NORMALIZE|CLEAR_SCREEN|LIGHT);
+		if (def_bgchange && !def_excolor) vonexit(NORMALIZE|CLEAR_SCREEN|DARK);
+
+		if (def_bgchange)								/* Should we change background?	*/
 		{	
-			if (defaults.bgcolor) vscreen(LIGHT);					/* Set the screen grey.		*/
+			if (def_bgcolor) vscreen(LIGHT);					/* Set the screen grey.		*/
 			else vscreen(DARK);							/* Set the screen black.	*/
 		}
 		else color_first = FALSE;							/* Then leave it alone always.	*/
+
+		if ( strlen(language_path) )							/* if language was specified,   */
+		  vlanguage( language_path );							/* use it and call vlanguage    */
 	}
 
 	if ((term_type == VT100) && kp_on) vset(KEYPAD,APPLICATIONS);				/* Applications keypad on?	*/

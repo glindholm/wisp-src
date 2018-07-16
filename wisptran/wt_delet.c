@@ -12,6 +12,7 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "cobfiles.h"
 
 p_delete()
 {
@@ -40,25 +41,23 @@ p_delete()
 
 	predelete_locking();								/* Add locking logic			*/
 
-	put_line		("           MOVE \"DE\" TO WISP-DECLARATIVES-STATUS\n");
-	if (vax_cobol)	put_line("           MOVE \"N\" TO WISP-TEST-BYTE\n");
-	put_line("          ");								/* start a new line			*/
-
+	tput_line_at		    (12, "MOVE \"DE\" TO WISP-DECLARATIVES-STATUS\n");
+	if (vax_cobol)	tput_line_at(12, "MOVE \"N\" TO WISP-TEST-BYTE\n");
+	tput_flush();
+	
 	inv_key = 0;									/* no INVALID KEY yet...		*/
 	lock_clause = 0;
 
 	do
 	{
-		put_line(" ");
-		write_line("%s",o_parms[0]);						/* output parm				*/
+		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
 
 		if (o_parms[0][0]) stredt(inline,o_parms[0],"");			/* Remove it from the input line	*/
 		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
 
 		if (ptype == 1)								/* first parm on a new line		*/
 		{
-			put_line("\n");							/* end the previous line		*/
-			put_line("          ");  					/* start a new line 			*/
+			tput_flush();
 		}
 
 		if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
@@ -76,7 +75,7 @@ p_delete()
 
 			if (ptype == -1)						/* Premature period!			*/
 			{
-				write_log("WISP",'W',"BADINVKEY",
+				write_log("WISP",'I',"BADINVKEY",
 				"Bad DELETE syntax, INVALID KEY followed by a period.");
 				o_parms[0][0] = 0;
 			}
@@ -85,45 +84,43 @@ p_delete()
 				ptype = get_param(o_parms[0]);				/* what to do?				*/
 			}
 
-			put_line        ("\n               INVALID KEY ");		/* write it out				*/
+			tput_line_at(16, "INVALID KEY");				/* write it out				*/
 			if (vax_cobol)
 			{	
-				put_line("\n               MOVE \"Y\" TO WISP-TEST-BYTE");
-				put_line("\n           END-DELETE");
+				tput_line_at(16, "MOVE \"Y\" TO WISP-TEST-BYTE");
+				tput_line_at(12, "END-DELETE");
 			}
 			inv_key = 1;							/* flag it				*/
 		}
-	}	while ((ptype != -1) && !keyword(o_parms[0],proc_keywords));		/* do till we hit a LAST parm or keyword*/
+	}	while ((ptype != -1) && !proc_keyword(o_parms[0]));			/* do till we hit a LAST parm or keyword*/
 
-
-	put_line("\n");									/* finish this line			*/
 
 	if (ptype == -1)								/* a LAST parm				*/
 	{
-		write_line("                   %s\n",o_parms[0]); 
+		tput_line_at(20, "%s",o_parms[0]); 
 	}
 
 	if ( vax_cobol )
 	{
 		if (inv_key)
 		{
-			put_line  ("           IF WISP-TEST-BYTE = \"N\" THEN\n");
-			write_line("               MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fnum]);
-			write_line("               UNLOCK %s ALL\n", fdname );
-			write_line("               MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fnum]);
-			put_line  ("           ELSE\n");
+			tput_line("           IF WISP-TEST-BYTE = \"N\" THEN");
+			tput_line("               MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fnum]);
+			tput_line("               UNLOCK %s ALL", fdname );
+			tput_line("               MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fnum]);
+			tput_line("           ELSE");
 		}
 		else
 		{
-			write_line("           MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fnum]);
-			write_line("           UNLOCK %s ALL\n", fdname );
-			write_line("           MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fnum]);
+			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fnum]);
+			tput_line("           UNLOCK %s ALL", fdname );
+			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fnum]);
 		}
 	}
 
 	if (ptype == -1)
 	{
-		put_line  ("           CONTINUE.\n");
+		tput_line("           CONTINUE.");
 	}
 
 

@@ -257,14 +257,35 @@
       *
 
        01  FLOAT-KEY PIC 99 VALUE 4.
-       01  YES-NO    PIC XXX VALUE "YES".
 
+       01  YES-NO    PIC XXX VALUE "YES".
        01  T1.
            03  ENTRIES.
                05  FILLER PIC XXX VALUE "YES".
                05  FILLER PIC XXX VALUE "NO ".
            03  FILLER REDEFINES ENTRIES.
                05  YN-TABLE OCCURS 2 TIMES PIC XXX.
+
+       01  FILLER.
+           05  NUM-ANS   PIC X(5) OCCURS 3 TIMES.
+
+       01  T2.
+           03  ENTRIES.
+               05  FILLER PIC X(5) VALUE "ONE".
+               05  FILLER PIC X(5) VALUE "TWO".
+               05  FILLER PIC X(5) VALUE "THREE".
+               05  FILLER PIC X(5) VALUE "FOUR".
+               05  FILLER PIC X(5) VALUE "FIVE".
+               05  FILLER PIC X(5) VALUE "SIX".
+               05  FILLER PIC X(5) VALUE "SEVEN".
+               05  FILLER PIC X(5) VALUE "EIGHT".
+               05  FILLER PIC X(5) VALUE "NINE".
+               05  FILLER PIC X(5) VALUE "TEN".
+           03  FILLER REDEFINES ENTRIES.
+               05  NUM-TABLE OCCURS 10 TIMES PIC X(5).
+
+       01  FILLER.
+           05  t3 pic s9(4)v99 occurs 5 times.
 
 
        01  FILLER.
@@ -572,6 +593,21 @@
                    15  AMOUNT-ITEM-4     PIC 9(9).99- ROW 12 COLUMN 68
                        SOURCE AMOUNT-FIELD
                        OBJECT AMOUNT-FIELD.
+
+           03  FILLER PIC X(18) ROW 18 COL 5 VALUE "RANGE (YES ,NO)".
+           03  FILLER PIC X(3)  ROW 18 COL 25 
+               SOURCE IS YES-NO OBJECT IS YES-NO
+      *$RANGE_COUNT 2
+               RANGE IS YN-TABLE.
+
+           03  FILLER PIC X(18) ROW 18 COL 30 VALUE "RANGE (ONE-TEN)".
+           03  FILLER PIC X(5)  ROW 18 COL 50 OCCURS 3 TIMES
+               SOURCE IS NUM-ANS OBJECT IS NUM-ANS
+      *$RANGE_COUNT 10
+               RANGE IS NUM-TABLE.
+
+           03  FILLER PIC Z(4).ZZ- OCCURS 5 TIMES ROW 20 COLUMN 10
+               RANGE -99 to 175 SOURCE t3 OBJECT t3.
 
            03  FILLER PIC X(19) ROW 22 COL 4
                VALUE "THIS ITEM IS BLPRO.".

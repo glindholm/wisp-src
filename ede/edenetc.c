@@ -17,13 +17,21 @@
 #include <v/video.h>
 #include <v/vlocal.h>
 #include <v/vdata.h>
+#include <v/vintdef.h>
 #include <v/vmenu.h>
+#include "idsistd.h"
 #include "vwang.h"
 #include "wglobals.h"
 
 /*						Static and Global Data Definitions.						*/
 extern int netc_pfhelp;									/* Is menu pfkey help window active?	*/
 struct video_menu menu_ncpfkey;								/* The generated pfkey menu pop-up.	*/
+static int filehelp();
+static int first_diff();
+static int trim();
+static int ws_cut();
+static int ws_paste();
+static int setptr_foot();
 
 int gen_ncpfkey(type,wsb,num_chars,st_win,end_win)					/* Generate the MCB from vwang screen.	*/
 int type, num_chars, *st_win, *end_win;							/* Flag if WSFNS or WSFNM call.		*/
@@ -84,7 +92,7 @@ char **wsb;
 			while ((*cptr != '(') && (cnt < num_chars) && (i < MAX_MENU_WIDTH)) /* Copy text to next PFkey def.	*/
 			{
 				if (!(cont = test_end_window(cptr))) break;		/* Test if end of footer area.		*/
-				if (*cptr < SPACE_BAR || *cptr >= MAX_DISP_RANGE) 	/* Char not in displayable range.	*/
+				if (valid_char_data(*cptr)) 				/* Char not in displayable range.	*/
 				{
 					*cptr = ' ';					/* So, set to a space.			*/
 				}

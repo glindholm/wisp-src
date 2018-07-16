@@ -26,6 +26,7 @@
 **
 */
 
+#include "idsistd.h"
 #include "wlicense.h"
 
 char	entran();
@@ -72,7 +73,7 @@ int	unpkdate();
 */
 
 int	mklickey(custnum,platform,lictype,licdate,expdate,lickey)
-long	custnum;
+int4	custnum;
 char	platform[2];
 int	lictype;
 char	licdate[8];
@@ -159,7 +160,7 @@ char	lickey[LICENSE_KEY_SIZE];
 */
 
 int	bklickey(custnum,platform,lictype,licdate,expdate,licensekey)
-long	*custnum;
+int4	*custnum;
 char	*platform;
 int	*lictype;
 char	licdate[8];

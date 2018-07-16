@@ -1,21 +1,17 @@
 			/************************************************************************/
+			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
+			/*									*/
 			/************************************************************************/
 
 /* 		These routines are used for access to the various personality files for the WISP run-time library		*/
 
-#define INIT_WPERSON
-
 #include <stdio.h>
 #include <ctype.h>
-#include <v/video.h>
-#include "wperson.h"								/* get the structure definitions		*/
-#include "werrlog.h"
-#include "wdefines.h"
-#include "wglobals.h"
+#include <errno.h>
 
 #ifdef VMS
 #include <descrip.h>
@@ -23,14 +19,145 @@
 #include <ssdef.h>
 #endif
 
-#ifndef VMS	/* unix and MSDOS */
+#ifdef unix
+#include <unistd.h>
+#endif
+
+#ifndef VMS
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <malloc.h>
-#endif
+#endif /* !VMS */
+
+#include <v/video.h>
+
+#include "idsistd.h"
+#include "wperson.h"
+#include "werrlog.h"
+#include "wdefines.h"
+#include "wglobals.h"
+#include "wanguid.h"
+
+#ifdef MSDOS
+#define READ_BINARY	"rb"
+#define WRITE_BINARY	"wb"
+#else /* !MSDOS */
+#define READ_BINARY	"r"
+#define WRITE_BINARY	"w"
+#endif /* !MSDOS */
 
 char *getenv();
-char *wanguid3();
+static int read_from_file();
+static int write_to_file();
+static int load_defaults_temp();
+static int save_defaults_temp();
+static int loadpadnull();
+static int getprogvol();
+static int getproglib();
+static int setprogvol();
+static int setproglib();
+static int load_lpmap();
+static int load_lgmap();
+static int load_scmap();
+static int load_forms();
+static int load_prmap();
+static int build_config_paths();
+static int validate_defaults();
+static int genworklib();
+static int genworkvol();
+
+#define		ROUTINE		83000
+
+/*
+83001	%%WPERSON-I-ENTRY Entry into %s
+83002	%%WPERSON-F-PID Missing WISP_PID_ENV
+83003	%%WPERSON-I-LOADING Loading the personality
+83004	%%WPERSON-F-TTY Missing WISP_TTY_ENV
+83006	%%WPERSON-F-MALLOC Unable to malloc %s
+83008	%%WPERSON-F-FACCESS Error accessing file %s    
+83010	%%WPERSON-F-FOPEN wps_file unable to open %s
+83012	%%WPERSON-F-FWRITE wps_file unable to write to %s
+83014	%%WPERSON-F-FORMS Line too long
+83016	%%WPERSON-F-LPMAP Line too long
+83018	%%WPERSON-E-OPTIONS %s: [%s]
+83020	%%WPERSON-E-FOPEN %s unable to open %s [errno=%d]
+83022	%%WPERSON-E-FWRITE %s unable to write to %s [errno=%d]
+83024	%%WPERSON-F-LOAD %s Line too long
+*/
+
+/* NOTE: the libraries and volumes are padded to 8 or 6 chars then null terminated */
+
+										/*						*/
+typedef struct {
+		char	prt_mode;						/* Default print mode, O, S, H, K	*/
+		char	prt_class;						/* Default print class (A-Z)		*/
+		int4	prt_num;						/* default printer number (000-999)	*/
+		int4	prt_form;						/* Default form number (000-999)	*/
+		char	inlib[9];						/* Default INLIB			*/
+		char	invol[7];						/* Default INVOL			*/
+		char	outlib[9];						/* Default OUTLIB			*/
+		char	outvol[7];
+		char	runlib[9];						/* Default RUNLIB			*/
+		char	runvol[7];
+		char	spoolib[9];						/* default SPOOL lib			*/
+		char	spoolvol[7];
+		char	proglib[9];						/* PL Program lib			*/
+		char	progvol[7];						/* PV Program volume			*/
+		char	worklib[9];						/* default WORK lib			*/
+		char	workvol[7];
+		char	proc_stat;						/* Procedure queue submit status.	*/
+		char	proc_class;						/* Procedure queue class.		*/
+		char	proc_cpu[7];						/* Cpu limit.				*/
+		uint4   flags;							/* Help screen flags.			*/
+		char	kb_map[7];						/* NO LONGER IN USE.			*/
+		int4	pf_version;						/* Personality file version.		*/
+		char	psb_select;						/* Default pseudo blank char selection. */
+		int4	psb_charset;						/* Default pseudo blank char. set.	*/
+		int4	psb_rendition;						/* Default rendition for pseudo blanks.	*/
+		int4	prt_lines;						/* Default lines per page (000-255)	*/
+		int4	mp_cursor;						/* Cursor flag for menu pick items.	*/
+		int4	automove;						/* Flag set for auto_move functionality.*/
+		int4	autotab;						/* Flag set for auto_tab functionality.	*/
+		int4	bgchange;						/* Flag background to be changed.	*/
+		int4	bgcolor;						/* Background color flag.		*/
+		int4	excolor;						/* Exit background color flag.		*/
+		} usr_defaults;
+
+static usr_defaults defaults;							/* the actual defaults record		*/
+static defaults_loaded = 0;							/* Have defaults been loaded		*/
+
+typedef struct	{
+			struct forms_id *next;					/* pointer to the next one		*/
+			int	form_num;					/* the form number			*/
+			char	form_string[80];				/* the string to  insert into the lp cmd*/
+		} forms_id;
+static forms_id 	*forms_list = NULL;					/* this is the actual list		*/
+
+typedef struct	{
+			struct  prmap_id *next;					/* pointer to the next one		*/
+			int	prmap_num;					/* the Printer number			*/
+			char	prmap_string[80];				/* the string to  insert into the lp cmd*/
+		} prmap_id;
+static prmap_id 	*prmap_list = NULL;					/* this is the actual list		*/
+
+typedef struct	{
+			struct scmap_id *next;					/* pointer to the next one		*/
+			int	nice;						/* The NICE value			*/
+			char 	class;						/* the job class			*/
+		} scmap_id;
+static scmap_id 	*scmap_list = NULL;					/* this is the actual list		*/
+
+#ifdef VMS
+static pq_id		*pq_list = NULL;
+static lat_id 		*lat_list = NULL;
+static term_id 		*term_list = NULL;
+#endif
+
+static prt_id		*prt_list = NULL;
+
+#ifndef VMS
+static logical_id 	*logical_list = NULL;
+#endif
 
 static char curr_progvol[7] = "      ";						/* The current in memory PROGVOL value		*/
 static char curr_proglib[9] = "        ";					/* The current in memory PROGLIB value		*/
@@ -49,17 +176,17 @@ static char scmap_path[80];
 static char forms_path[80];
 static char prmap_path[80];
 static char options_path[80];
+char language_path[80];								/* the path of the IVS translation file         */
 
 int opt_max_pages = 0;								/* Max prb pages				*/
 int opt_max_parms = 0;								/* Max prb parms				*/
 
-#ifndef VMS	/* unix && MSDOS */
+#ifndef VMS
 static logical_id	*logical_ptr;
 static scmap_id 	*scmap_ptr;
 static forms_id 	*forms_ptr;
 static prmap_id 	*prmap_ptr;
-extern int PGRPID;
-#endif	/* unix && MSDOS */
+#endif /* !VMS */
 
 #ifdef VMS
 #define LIB$K_CLI_GLOBAL_SYM	2
@@ -68,878 +195,285 @@ static $DESCRIPTOR(sym,"$W_USAGE_CONSTANTS");					/* The descriptor of the usage
 static $DESCRIPTOR(conres,constr);						/* A descriptor to hold the constant string.	*/
 #endif
 
-static int loaded = 0;								/* flag to indicate info is loaded		*/
-#define		ROUTINE		83000
-void wpload()									/* routine to load in term info and user defaults*/
-{										/* this routine must be called before accesing 	*/
-										/* any terminal info and the user constants	*/
-	FILE *the_file;								/* a file pointer				*/
-	char inline[132],tstr[32],lptstr1[80],lptstr2[80];
-	char *scn_ptr, *prm_ptr, tempc, *ptr;
-	int flag, i;
-	prt_id	*prt_ptr;							/* Pointer to printer list structure		*/
-	int	config,lt_dev;
-	int	pnum;								/* Printer number				*/
-	char	buff[256];
+/*==============================================================================================================================*/
+/*
+**	wpload	This routine used to be responsible for loading all the device info lists
+**		as well as the defaults structure and any other config files.
+**		This is no longer required because each of these things will be loaded
+**		dynamically if and only if they are used.
+**		Currently only load_options() is done.
+*/
+void wpload()
+{
+	static int loaded = 0;							/* flag to indicate info is loaded		*/
 
-#ifdef VMS
-	term_id 	*term_ptr;
-	lat_id 		*lat_ptr;
-	pq_id		*pq_ptr;
-#endif
-
-#ifndef VMS	/* unix and MSDOS */
-	if ( ! PGRPID ) PGRPID = wgetpgrp();
-#endif
-
-	if ( !paths_built ) build_config_paths();
-
+	werrlog(ERRORCODE(1),"wpload",0,0,0,0,0,0,0);
 	if (loaded) return;							/* already done					*/
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-	werrlog(ERRORCODE(3),0,0,0,0,0,0,0,0);
+	load_options();								/* Load the runtime options file.	*/
 
-#ifdef VMS
-
-	/*
-	**
-	**	TTMAP		- Terminal definitions
-	**
-	*/
-
-	term_list = 0;								/* initialize the list				*/
-	lat_list = 0;
-
-	the_file = fopen(ttmap_path,"r");					/* first load the terminal definitions		*/
-
-	if (the_file)								/* no error opening file			*/
-	{
-		if (fgets(inline,132,the_file))   do
-		{
-			scn_ptr = &inline[0];
-
-			flag = 1;						/* switch to parse name, number			*/
-
-			do							/* scan the line and extract the parms		*/
-			{							/* skip over spaces, commas, newlines , tabs	*/
-				if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
-				{
-					scn_ptr++;
-				}
-				else							/* copy this parm			*/
-				{
-					if (flag == 1)					/* copy term name			*/
-					{
-						flag = 2;				/* set the flag				*/
-						prm_ptr = tstr;				/* load terminal name			*/
-						*prm_ptr = *scn_ptr++;			/* get first char			*/
-						if (*prm_ptr != '_')			/* have to put in a leading '_'		*/
-						{
-							tempc = *prm_ptr;		/* save char				*/
-							*prm_ptr++ = '_';		/* put in '_'				*/
-							*prm_ptr = tempc;		/* restore char				*/
-						}
-						prm_ptr++;				/* next char position			*/
-
-						do
-						{					/* copy till next whitespace		*/
-							*prm_ptr++ = *scn_ptr++;
-						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
-						      && (*scn_ptr != '\t'));
-						prm_ptr--;				/* need to look at last character	*/
-						if (*prm_ptr != ':')			/* has to end with a colon		*/
-						{
-							prm_ptr++;			/* add one on...			*/
-							*prm_ptr = ':';
-						}
-						prm_ptr++;				/* point to end				*/
-						*prm_ptr = 0;				/* end with a null			*/
-
-						if (!strncmp(tstr,"_LTA0:",6)) 		/* Is it a pseudo LT device?		*/
-						{
-							lt_dev = 1;
-							alloc_lat(&lat_ptr);		/* Get mem for next lat device.		*/
-						}
-						else
-						{
-							lt_dev = 0;
-							alloc_term(&term_ptr);
-							strcpy(term_ptr->termname,tstr);	/* Save the name.		*/
-						}
-					}
-					else if (flag == 2)				/* copy term number			*/
-					{
-						i = 0;
-						do
-						{					/* copy till no digits			*/
-							i *= 10;
-							i += (*scn_ptr++) - '0';
-						} while (isdigit(*scn_ptr));		/* stop when no digits			*/
-
-						if (lt_dev)				/* Is it a LAT device?			*/
-						{
-
-							lat_ptr->termnum = i;		/* Save the LAT term number.		*/
-							prm_ptr = lat_ptr->latname;	/* point to where the name will go.	*/
-
-							do 
-							{
-								scn_ptr++;		/* Skip over whitespace			*/
-							}
-							while ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\t'));
-
-							while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
-							      && (*scn_ptr != '\t'))
-							{				/* copy till next whitespace		*/
-								*prm_ptr++ = *scn_ptr++;
-							}
-							*prm_ptr = '\0';		/* Null terminate			*/
-						}
-						else
-						{
-							term_ptr->termnum = i;
-						}
-
-						flag = 0;				/* clear the flag			*/
-
-						if (strpos(scn_ptr,"KEYPAD_OFF") != -1)		/* Set the keypad off bit	*/
-						{
-							flag |= KEYPAD_OFF;
-						}
-
-						if (strpos(scn_ptr,"SETUP_CORRECTLY") != -1)	/* User did it bit on.		*/
-						{
-							flag |= SETUP_CORRECTLY;
-						}
-
-						if (strpos(scn_ptr,"SPACES_BLINK") != -1)	/* Set the keypad off bit	*/
-						{
-							flag |= SPACES_BLINK;
-						}
-
-						if (strpos(scn_ptr,"PRO_RT") != -1)		/* Special Pro/RT-11 system.	*/
-						{
-							flag |= PRO_RT;
-						}
-
-						if (lt_dev) lat_ptr->flags = flag;
-						else	    term_ptr->flags = flag;
-
-						flag = 0;
-					}
-				}
-			} while (*scn_ptr && flag);					/* Till a null or flag is clear.	*/
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the term file			*/
-	}
-	else
-	{										/* error opening the file		*/
-		werrlog(ERRORCODE(8),WISP_TERMINAL_FILE,0,0,0,0,0,0,0);
-		sprintf(buff,"%%WPERSON-F-FACCESS Unable to open file %s",ttmap_path);
-		werrvre(buff);
-	}
-#endif	/* VMS */
-
-	/*
-	**
-	**	LPMAP		printer definitions
-	**
-	*/
-
-	prt_list = 0;									/* initialize the list			*/
-	the_file = fopen(lpmap_path,"r");						/* now load the printer definitions	*/
-
-	if (the_file)									/* no error opening file		*/
-	{
-		if (fgets(inline,132,the_file))   do
-		{
-			if (!prt_list)							/* first time?				*/
-			{
-				prt_list = (prt_id *)malloc(sizeof(prt_id));		/* get some memory			*/
-				if (!prt_list)
-				{
-					werrlog(ERRORCODE(6),"prt_list",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				prt_list->next = 0;					/* set next pointer to zero		*/
-				prt_ptr = prt_list;					/* set up local pointer			*/
-			}
-			else
-			{
-				prt_ptr->next = (struct prt_id *)malloc(sizeof(prt_id));/* get some memory			*/
-				if (!prt_ptr->next)
-				{
-					werrlog(ERRORCODE(6),"prt_ptr->next",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				prt_ptr = (prt_id *)prt_ptr->next;			/* set pointer				*/
-				prt_ptr->next = 0;					/* set next pointer to zero		*/
-			}
-#ifdef VMS
-			scn_ptr = &inline[0];
-
-			flag = 1;							/* switch to parse class, printer	*/
-			*lptstr1 = '\0';						/* Initialize strings for number, qname	*/
-			*lptstr2 = '\0';
-
-			do								/* scan the line and extract the parms	*/
-			{							/* skip over spaces, commas, newlines , tabs	*/
-				if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
-				{
-					scn_ptr++;
-				}
-				else							/* copy this parm			*/
-				{
-					if (flag == 1)					/* copy class letter			*/
-					{
-						flag = 2;				/* set the flag				*/
-						prt_ptr->class = *scn_ptr++;		/* get first char			*/
-					}
-					else if (flag == 2)
-					{
-						flag = 3;				/* set the flag				*/
-						prm_ptr = lptstr1;			/* load next string			*/
-						do
-						{					/* copy till next whitespace		*/
-							*prm_ptr++ = *scn_ptr++;
-						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
-						      && (*scn_ptr != '\t'));
-						*prm_ptr = '\0';			/* null terminate			*/
-						if ((*scn_ptr == '\n') || (*scn_ptr == '\0')) flag = 0;	/* signal we are done	*/
-					}
-					else if (flag == 3)
-					{
-						prm_ptr = lptstr2;			/* load next string			*/
-						do
-						{					/* copy till next whitespace		*/
-							*prm_ptr++ = *scn_ptr++;
-						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
-						      && (*scn_ptr != '\t'));
-						*prm_ptr = '\0';			/* null terminate			*/
-						flag = 0;				/* signal we are done			*/
-					}
-					if (flag == 0)
-					{
-						if (*lptstr2 == '\0')			/* then lptstr1 is the qname		*/
-						{
-							prt_ptr->prtnum = 0;		/* Default to printer number 0.		*/
-							prm_ptr = prt_ptr->qname;	/* load queue name			*/
-							ptr = lptstr1;			/* ...from second string on the line.	*/
-							do
-							{
-								*prm_ptr++ = *ptr++;
-							} while (*ptr);
-						}
-						else
-						{
-							pnum = atoi(lptstr1);		/* Obtain the printer number		*/
-											/* Error in atoi will default pnum = 0	*/
-							prt_ptr->prtnum = pnum;		/* Load printer number			*/
-							prm_ptr = prt_ptr->qname;	/* load queue name			*/
-							ptr = lptstr2;			/* ...from third string on the line.	*/
-							do
-							{
-								*prm_ptr++ = *ptr++;
-							} while (*ptr);
-						}
-					}
-				}
-			} while (*scn_ptr && flag);					/* till a null or flag is clear		*/
-#endif	/* VMS */
-
-#ifndef VMS	/* unix and MSDOS */
-			if ( (int)strlen(inline) > 82 )
-			{
-				werrlog(ERRORCODE(16),0,0,0,0,0,0,0);
-				werrlog(102,inline,0,0,0,0,0,0,0);			/* Display the text.			*/
-				wexit(ERRORCODE(16));
-			}
-			inline[strlen(inline)-1] = '\0';				/* remove trailing NL			*/
-			prt_ptr->class = inline[0];					/* Load the class			*/
-			strcpy( prt_ptr->prt_string, &inline[2] );			/* Get lp control string		*/
-
-#endif	/* unix and MSDOS */
-
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the term file			*/
-	}
-	else
-	{										/* error opening the file		*/
-#ifdef VMS
-		werrlog(ERRORCODE(8),WISP_PRINTER_FILE,0,0,0,0,0,0,0);
-		sprintf(buff,"%%WPERSON-F-FACCESS Unable to open file %s",lpmap_path);
-		werrvre(buff);
-#endif
-	}
-
-#ifdef VMS
-	/*
-	**
-	**	PQMAP			Procedure Queues
-	**
-	*/
-
-	pq_list = 0;									/* initialize the list			*/
-	the_file = fopen(pqmap_path,"r");						/* now load the procedure definitions	*/
-
-	if (the_file)									/* no error opening file		*/
-	{
-		if (fgets(inline,132,the_file))   do
-		{
-			if (!pq_list)							/* first time?				*/
-			{
-				pq_list = (pq_id *)malloc(sizeof(pq_id));		/* get some memory			*/
-				if (!pq_list)
-				{
-					werrlog(ERRORCODE(6),"pq_list",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				pq_list->next = 0;					/* set next pointer to zero		*/
-				pq_ptr = pq_list;					/* set up local pointer			*/
-			}
-			else
-			{
-				pq_ptr->next = (struct pq_id *)malloc(sizeof(pq_id));	/* get some memory			*/
-				if (!pq_ptr->next)
-				{
-					werrlog(ERRORCODE(6),"pq_ptr->next",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				pq_ptr = (pq_id *)pq_ptr->next;				/* set pointer				*/
-				pq_ptr->next = 0;					/* set next pointer to zero		*/
-			}
-			scn_ptr = &inline[0];
-			flag = 1;							/* switch to parse class, printer	*/
-			do								/* scan the line and extract the parms	*/
-			{							/* skip over spaces, commas, newlines , tabs	*/
-				if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
-				{
-					scn_ptr++;
-				}
-				else							/* copy this parm			*/
-				{
-					if (flag == 1)					/* copy class letter			*/
-					{
-						flag = 2;				/* set the flag				*/
-						pq_ptr->class = *scn_ptr++;		/* get first char			*/
-					}
-					else if (flag == 2)
-					{
-						prm_ptr = pq_ptr->qname;		/* load queue name			*/
-						do
-						{					/* copy till next whitespace		*/
-							*prm_ptr++ = *scn_ptr++;
-						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
-						      && (*scn_ptr != '\t'));
-						*prm_ptr = '\0';			/* null terminate			*/
-						flag = 0;				/* signal we are done			*/
-					}
-				}
-			} while (*scn_ptr && flag);					/* till a null or flag is clear		*/
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the term file			*/
-	}
-	else
-	{										/* error opening the file		*/
-		werrlog(ERRORCODE(8),WISP_PROC_FILE,0,0,0,0,0,0,0);
-		sprintf(buff,"%%WPERSON-F-FACCESS Unable to open file %s",pqmap_path);
-		werrvre(buff);
-	}
-#endif	/* VMS */
-
-#ifndef VMS	/* unix && MSDOS */
-	/*
-	**
-	**	LGMAP
-	**
-	*/
-
-	logical_list = 0;								/* initialize the list			*/
-	config = 0;									/* CONFIG logical not found.		*/
-	the_file = fopen(lgmap_path,"r");						/* now load the logicals 		*/
-
-	if (the_file)									/* no error opening file		*/
-	{
-		char	lgmap_scan[40];
-
-		sprintf(lgmap_scan,"%%6s %%%ds",MAX_TRANSLATE);
-
-		if (fgets(inline,132,the_file))   do
-		{
-			get_logical_list_item( );					/* Set logical_ptr.			*/
-			sscanf(inline, lgmap_scan, logical_ptr->logical, logical_ptr->translate );
-			upper_string( logical_ptr->logical );
-
-			if ( strcmp( logical_ptr->logical, "CONFIG" ) == 0 ) config = 1; /* CONFIG logical found.		*/
-
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the logical file		*/
-	}
-	else
-	{										/* error opening the file		*/
-		werrlog(ERRORCODE(8),WISP_LOGICAL_FILE,0,0,0,0,0,0,0);
-		sprintf(buff,"%%WPERSON-F-FACCESS Unable to open file %s",lgmap_path);
-		werrvre(buff);
-	}
-
-	if ( ! config )								/* ADD 'CONFIG' to list of volumes.	*/
-	{
-		get_logical_list_item( );					/* Set logical_ptr.			*/
-		strcpy( logical_ptr->logical, "CONFIG" );			/* VOLUME 'CONFIG'			*/
-		if ( ptr = getenv( WISP_CONFIG_ENV ) )
-			strcpy( logical_ptr->translate, ptr );			/* TRANSLATE $WISPCONFIG		*/
-		else
-			no_wispconfig();
-	}
-											/* ADD '.' to list of volumes. 		*/
-	get_logical_list_item( );						/* Set logical_ptr.			*/
-	strcpy( logical_ptr->logical, "." );					/* VOLUME '.'				*/
-	strcpy( logical_ptr->translate, "." );					/* TRANSLATES '.'			*/
-
-	/*
-	**
-	**	SCMAP		Submit Class
-	**
-	*/
-
-	scmap_list = 0;									/* initialize the list			*/
-	the_file = fopen(scmap_path,"r");						/* now load the scmap	 		*/
-
-	if (the_file)									/* no error opening file		*/
-	{
-		if (fgets(inline,132,the_file))   do
-		{
-			if (!scmap_list)						/* first time?				*/
-			{
-				scmap_list = (scmap_id *)malloc(sizeof(scmap_id));	/* get some memory			*/
-				if (!scmap_list)
-				{
-					werrlog(ERRORCODE(6),"scmap_list",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				scmap_list->next = 0;					/* set next pointer to zero		*/
-				scmap_ptr = scmap_list;					/* set up local pointer			*/
-			}
-			else
-			{
-				scmap_ptr->next = (struct scmap_id *)malloc(sizeof(scmap_id));	/* get some memory	*/
-				if (!scmap_ptr->next)
-				{
-					werrlog(ERRORCODE(6),"scmap_ptr->next",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				scmap_ptr = (scmap_id *)scmap_ptr->next;		/* set pointer				*/
-				scmap_ptr->next = 0;					/* set next pointer to zero		*/
-			}
-			if ( (int)strlen(inline) > 84 )
-			{
-				werrlog(ERRORCODE(14),0,0,0,0,0,0,0);
-				werrlog(102,inline,0,0,0,0,0,0,0);			/* Display the text.			*/
-				wexit(ERRORCODE(14));
-			}
-			inline[strlen(inline)-1] = '\0';				/* remove trailing NL			*/
-			scmap_ptr->class = toupper(inline[0]);				/* get the class			*/
-			scmap_ptr->nice = atoi(&inline[2]);				/* convert nice to int			*/
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the scmap file			*/
-	}
-
-	/*
-	**
-	**	FORMS
-	**
-	*/
-	forms_list = 0;									/* initialize the list			*/
-	the_file = fopen(forms_path,"r");						/* now load the forms	 		*/
-
-	if (the_file)									/* no error opening file		*/
-	{
-		if (fgets(inline,132,the_file))   do
-		{
-			if (!forms_list)						/* first time?				*/
-			{
-				forms_list = (forms_id *)malloc(sizeof(forms_id));	/* get some memory			*/
-				if (!forms_list)
-				{
-					werrlog(ERRORCODE(6),"forms_list",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				forms_list->next = 0;					/* set next pointer to zero		*/
-				forms_ptr = forms_list;					/* set up local pointer			*/
-			}
-			else
-			{
-				forms_ptr->next = (struct forms_id *)malloc(sizeof(forms_id));	/* get some memory	*/
-				if (!forms_ptr->next)
-				{
-					werrlog(ERRORCODE(6),"forms_ptr->next",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				forms_ptr = (forms_id *)forms_ptr->next;		/* set pointer				*/
-				forms_ptr->next = 0;					/* set next pointer to zero		*/
-			}
-			if ( (int)strlen(inline) > 84 )
-			{
-				werrlog(ERRORCODE(14),0,0,0,0,0,0,0);
-				werrlog(102,inline,0,0,0,0,0,0,0);			/* Display the text.			*/
-				wexit(ERRORCODE(14));
-			}
-			inline[strlen(inline)-1] = '\0';				/* remove trailing NL			*/
-			inline[3] = '\0';						/* null term after form#		*/
-			forms_ptr->form_num = atoi(inline);				/* convert formnum to int		*/
-			strcpy( forms_ptr->form_string, &inline[4] );			/* Get form control string		*/
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the forms file			*/
-	}
-
-	/*
-	**
-	**	PRMAP 	Printer number map
-	**
-	*/
-	prmap_list = 0;									/* initialize the list			*/
-	the_file = fopen(prmap_path,"r");						/* now load the prmap	 		*/
-
-	if (the_file)									/* no error opening file		*/
-	{
-		if (fgets(inline,132,the_file))   do
-		{
-			if (!prmap_list)						/* first time?				*/
-			{
-				prmap_list = (prmap_id *)malloc(sizeof(prmap_id));	/* get some memory			*/
-				if (!prmap_list)
-				{
-					werrlog(ERRORCODE(6),"prmap_list",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				prmap_list->next = 0;					/* set next pointer to zero		*/
-				prmap_ptr = prmap_list;					/* set up local pointer			*/
-			}
-			else
-			{
-				prmap_ptr->next = (struct prmap_id *)malloc(sizeof(prmap_id));	/* get some memory	*/
-				if (!prmap_ptr->next)
-				{
-					werrlog(ERRORCODE(6),"prmap_ptr->next",0,0,0,0,0,0,0);
-					wexit(ERRORCODE(6));
-				}
-				prmap_ptr = (prmap_id *)prmap_ptr->next;		/* set pointer				*/
-				prmap_ptr->next = 0;					/* set next pointer to zero		*/
-			}
-			if ( (int)strlen(inline) > 84 )
-			{
-				werrlog(ERRORCODE(14),0,0,0,0,0,0,0);
-				werrlog(102,inline,0,0,0,0,0,0,0);			/* Display the text.			*/
-				wexit(ERRORCODE(14));
-			}
-			inline[strlen(inline)-1] = '\0';				/* remove trailing NL			*/
-			inline[3] = '\0';						/* null term after printer #		*/
-			prmap_ptr->prmap_num = atoi(inline);				/* convert printer # to int		*/
-			strcpy( prmap_ptr->prmap_string, &inline[4] );			/* Get printer control string		*/
-		}while (fgets(inline,132,the_file));					/* while lines in file			*/
-
-		fclose(the_file);							/* close the prmap file			*/
-	}
-#endif	/* unix && MSDOS */
-
-	load_options();									/* Load the runtime options file.	*/
-
-	wpl_usr(&defaults);								/* now load the user defaults		*/
-
-	loaded = 1;									/* already loaded now			*/
+	loaded = 1;								/* already loaded now			*/
 }
 
+/*
+	Use the following routine to manipulate the defaults struct.
 
-#ifndef VMS	/* unix && MSDOS */
-static	get_logical_list_item( )
+	save_defaults()			Call after a set_defs() to move defaults to temp-area.
+	load_defaults()			Call to load defaults from temp-area
+	write_defaults_to_file()	Call to write temp-area to a file
+	read_defaults_from_file()	Call to load temp-area from a file
+*/
+int save_defaults()
 {
-	if (!logical_list)						/* first time?				*/
+	if (defaults_loaded)
 	{
-		logical_list = (logical_id *)malloc(sizeof(logical_id));/* get some memory			*/
-		if (!logical_list)
-		{
-			werrlog(ERRORCODE(6),"logical_list",0,0,0,0,0,0,0);
-			wexit(ERRORCODE(6));
-		}
-		logical_list->next = 0;					/* set next pointer to zero		*/
-		logical_ptr = logical_list;				/* set up local pointer			*/
+		save_defaults_temp(&defaults);					/* Save defaults in temp area			*/
 	}
-	else
-	{
-		logical_ptr->next = (struct logical_id *)malloc(sizeof(logical_id));	/* get some memory	*/
-		if (!logical_ptr->next)
-		{
-			werrlog(ERRORCODE(6),"logical_ptr->next",0,0,0,0,0,0,0);
-			wexit(ERRORCODE(6));
-		}
-		logical_ptr = (logical_id *)logical_ptr->next;		/* set pointer				*/
-		logical_ptr->next = 0;					/* set next pointer to zero		*/
-	}
-}
-#endif	/* unix  && MSDOS */
-
-wpl_usr(the_def)									/* Load a user default personality.	*/
-usr_defaults *the_def;
-{
-	if ( wpl_symbol(the_def) ) return(0);						/* First look for the symbol def.	*/
-	wpl_file(the_def,"");								/* Otherwise, read the file.		*/
-	return(1);
-}
-											/* save a user default personality	*/
-wps_usr(the_def)
-usr_defaults *the_def;
-{
-	wps_symbol(the_def);								/* First store in the symbol.		*/
+	return(0);
 }
 
-int wpl_file(the_def,the_name)								/* Load the personality from the file.	*/
+int load_defaults()
+{
+	if ( !load_defaults_temp(&defaults) )					/* First try the temp defaults			*/
+	{
+		read_defaults_from_file("");					/* Otherwise, read the file.			*/
+	}
+	defaults_loaded = 1;
+	return(0);
+}
+
+int write_defaults_to_file(file)
+char	*file;
+{
+	if (!defaults_loaded)
+	{
+		load_defaults();						/* First ensure defaults are loaded		*/
+	}
+	return write_to_file(&defaults,file);					/* write defaults to the file			*/
+}
+
+int read_defaults_from_file(file)
+char	*file;
+{
+	return read_from_file(&defaults,file);
+}
+
+static int read_from_file(the_def,the_name)					/* Load the personality from the file.	*/
 usr_defaults *the_def;
 char *the_name;
 {
 	FILE *the_file;
-	int amt, retfl;									/* Set flag if use defaults.		*/
+	int amt, retfl;								/* Set flag if use defaults.		*/
+
+	werrlog(ERRORCODE(1),"read_from_file",0,0,0,0,0,0,0);
+
+	defaults_loaded = 1;							/* This routine will always succeed	*/
 
 	if ( ! paths_built ) build_config_paths();
-	retfl = 0;									/* Initialize flag.			*/
-	if (*the_name)
-#ifdef VMS
-		the_file = fopen(the_name,"r", "dna=*.dat;0");				/* Open the requested one.		*/
-#else
-		the_file = fopen(the_name,"r");						/* Open the requested one.		*/
-#endif
-	else the_file = fopen(person_path,"r");						/* try to load the local user's default	*/
-
-	if (!the_file)									/* not found, go for the system file	*/
+	retfl = 0;								/* Initialize flag.			*/
+	if (the_name && *the_name)
 	{
-		the_file = fopen(system_person_path,"r");				/* try to open it			*/
+#ifdef VMS
+		the_file = fopen(the_name,"r", "dna=*.dat;0");			/* Open the requested one.		*/
+#else
+		the_file = fopen(the_name, READ_BINARY);			/* Open the requested one.		*/
+#endif
+	}
+	else 
+	{
+		the_file = fopen(person_path,READ_BINARY);			/* try to load the local user's default	*/
 	}
 
-	if (!the_file)									/* neither file found			*/
-	{										/* set our defaults			*/
-		retfl = 1;								/* Set flag to detect use of defaults.	*/
-		the_def->prt_mode = 'S';						/* print mode is spooled		*/
-		the_def->prt_class = 'A';						/* class is A				*/
-		the_def->prt_num = 0;							/* printer number 0			*/
-		the_def->prt_form = 0;							/* printer form number is 0		*/
+	if (!the_file)								/* not found, go for the system file	*/
+	{
+		the_file = fopen(system_person_path,READ_BINARY);		/* try to open it			*/
+	}
 
-		strcpy(the_def->inlib,"        ");					/* blank out library names		*/
+	if (!the_file)								/* neither file found			*/
+	{									/* set our defaults			*/
+		retfl = 1;							/* Set flag to detect use of defaults.	*/
+		the_def->prt_mode = 'S';					/* print mode is spooled		*/
+		the_def->prt_class = 'A';					/* class is A				*/
+		the_def->prt_num = 0;						/* printer number 0			*/
+		the_def->prt_form = 0;						/* printer form number is 0		*/
+
+		strcpy(the_def->inlib,"        ");				/* blank out library names		*/
 		strcpy(the_def->outlib,"        ");
 		strcpy(the_def->runlib,"        ");
 		strcpy(the_def->spoolib,"        ");
 		strcpy(the_def->proglib,"        ");
+		strcpy(the_def->worklib,"        ");
 
-		genworklib(the_def->worklib);						/* Generate the worklib			*/
-		genspoollib(the_def->spoolib);						/* Generate the spoolib			*/
-		strcpy(the_def->invol,"      ");					/* blank out volume names		*/
+		strcpy(the_def->invol,"      ");				/* blank out volume names		*/
 		strcpy(the_def->outvol,"      ");
 		strcpy(the_def->runvol,"      ");
 		strcpy(the_def->spoolvol,"      ");
 		strcpy(the_def->progvol,"      ");
 		strcpy(the_def->workvol,"      ");
-		genworkvol(the_def->workvol);						/* Generate the workvol			*/
 
-		the_def->proc_stat = 'R';						/* Set procedure queue constants.	*/
+		the_def->proc_stat = 'R';					/* Set procedure queue constants.	*/
 		the_def->proc_class = 'A';
 		strcpy(the_def->proc_cpu,"000000");
-		the_def->kb_map[0] = '\0';						/* Clear keyboard map type name.	*/
-		the_def->flags = 0x0FFFFFFFF;						/* All things are enabled.		*/
+		the_def->kb_map[0] = '\0';					/* Clear keyboard map type name.	*/
+		the_def->flags = 0x0FFFFFFFF;					/* All things are enabled.		*/
 
-		the_def->pf_version = 0L;						/* Unset version.			*/
-		wpl_valid( the_def );							/* Set version and the following:	*/
-
-#if 0											/* These are set in wpl_valid():	*/
-
-		the_def->psb_select = 'B';						/* Pseudo blank char is a blank.	*/
-		the_def->psb_charset = 0;						/*  from the DEFAULT character set.	*/
-		the_def->psb_rendition = 2;						/*  using an UNDERSCORE rendition..	*/
-		the_def->prt_lines = 55;						/* printer default lines per page is 55	*/
-		the_def->mp_cursor = TRUE;						/* Display cursor on menu pick flag	*/
-		the_def->automove = FALSE;						/* Flag for auto_move default is FALSE.	*/
-		the_def->autotab = TRUE;						/* Flag for auto_tab default is TRUE.	*/
-#ifdef MSDOS
-		the_def->bgchange = TRUE;						/* Change background by default.	*/
-		the_def->bgcolor = TRUE;						/* Default background color is Grey.	*/
-#else	/* unix or VMS */
-		the_def->bgchange = FALSE;						/* Don't change background by default.	*/
-		the_def->bgcolor = FALSE;						/* Default background color is black.	*/
-#endif
-		the_def->excolor = FALSE;						/* Exit with a black background.	*/
-#endif	/* 0 */
+		the_def->pf_version = 0L;					/* Unset version.			*/
 	}
 	else
 	{
-		fread(the_def,sizeof(usr_defaults),1,the_file);				/* read the info.			*/
-		wpl_valid(the_def);							/* Validate the version info.		*/
-
-		genworklib(the_def->worklib);						/* Generate the worklib			*/
-		genworkvol(the_def->workvol);						/* Generate the workvol			*/
-		genspoollib(the_def->spoolib);						/* Generate the spoollib		*/
-
+		fread(the_def,sizeof(usr_defaults),1,the_file);			/* read the info.			*/
 		fclose(the_file);
 	}
 
-	strcpy(the_def->proglib,"        ");						/* Always reset PV/PL			*/
+	validate_defaults(the_def);						/* Validate the version info.		*/
+
+	genworklib(the_def->worklib);						/* Generate the worklib			*/
+	genworkvol(the_def->workvol);						/* Generate the workvol			*/
+
+	strcpy(the_def->proglib,"        ");					/* Always reset PV/PL			*/
 	strcpy(the_def->progvol,"      ");
 
-	wps_symbol(the_def);								/* create the symbol.			*/
+	save_defaults();							/* create the symbol.			*/
 
 	return(retfl);
 }
-											/* save a user default personality	*/
-wps_file(the_def,the_name)
-usr_defaults *the_def;									/* NOTE the structure MUST be properly	*/
-char *the_name;										/* loaded or there will be a problem!	*/
+										/* save a user default personality	*/
+static int write_to_file(the_def,the_name)
+usr_defaults *the_def;								/* NOTE the structure MUST be properly	*/
+char *the_name;									/* loaded or there will be a problem!	*/
 {
 	FILE 	*the_file;
 	int 	amt;
 	char	*fptr;
 
+	werrlog(ERRORCODE(1),"write_to_file",0,0,0,0,0,0,0);
+
 	if ( ! paths_built ) build_config_paths();
-	the_file = 0;
-	if (*the_name) fptr = the_name;							/* Use the supplied name.		*/
-	else           fptr = person_path;						/* Use the default.			*/
+
+	if (*the_name) fptr = the_name;						/* Use the supplied name.		*/
+	else           fptr = person_path;					/* Use the default.			*/
 
 #ifdef VMS
-	the_file = fopen(fptr,"w","dna=*.dat;0");					/* Open the file.			*/
+	the_file = fopen(fptr,"w","dna=*.dat;0");				/* Open the file.			*/
 #else
-	the_file = fopen(fptr,"w");							/* Open the file.			*/
+	the_file = fopen(fptr, WRITE_BINARY);					/* Open the file.			*/
 #endif
-	if (!the_file)									/* Open failed.				*/
+
+	if (!the_file)								/* Open failed.				*/
 	{
-		werrlog(ERRORCODE(10),fptr,0,0,0,0,0,0,0);
+		werrlog(ERRORCODE(20),"write_to_file",fptr,errno,0,0,0,0,0);
 		return(-1);
 	}
-	amt = fwrite(the_def,sizeof(usr_defaults),1,the_file);				/* Write out the usage constants.	*/
+	amt = fwrite(the_def,sizeof(usr_defaults),1,the_file);			/* Write out the usage constants.	*/
 	fclose(the_file);
-	if (amt == 0)									/* Write failed.			*/
+	if (amt == 0)								/* Write failed.			*/
 	{
-		werrlog(ERRORCODE(12),fptr,0,0,0,0,0,0,0);
+		werrlog(ERRORCODE(22),"write_to_file",fptr,errno,0,0,0,0,0);
 		return(-1);
 	}
 	return(0);
 }
 
-wpl_symbol(the_def)									/* Read the usage constants from the sym*/
+static load_defaults_temp(the_def)						/* Read defaults from temp area			*/
 usr_defaults *the_def;
 {
 #ifdef VMS
-	long status;
-	long len,tabtyp;
+	int4 status;
+	int4 len,tabtyp;
 
 	tabtyp = LIB$K_CLI_GLOBAL_SYM;
-	status = lib$get_symbol(&sym,&conres,&len,&tabtyp);				/* Get it's contents.			*/
-	if (status == SS$_NORMAL)
-	{
-		memcpy(the_def,constr,sizeof(usr_defaults));
-		wpl_valid(the_def);							/* Validate the version info.		*/
-		genworklib(the_def->worklib);						/* Generate the worklib			*/
-		genworkvol(the_def->workvol);						/* Generate the workvol			*/
-		genspoollib(the_def->spoolib);						/* Generate the spoollib		*/
-		return(1);								/* We were sucessfull.			*/
-	}
-	else
-	{
-		return(0);								/* Not sucessfull.			*/
-	}
-#endif	/* VMS */
-#ifndef VMS	/* unix && MSDOS */
-	return( get_person(the_def) );
-#endif
+	status = lib$get_symbol(&sym,&conres,&len,&tabtyp);			/* Get it's contents.				*/
+	if (status != SS$_NORMAL) return(0);					/* Not loaded					*/
+	memcpy(the_def,constr,sizeof(usr_defaults));				/* Loaded					*/
 
-}
+#else /* !VMS */
 
-wps_symbol(the_def)									/* Store the usage constants in the sym	*/
-usr_defaults *the_def;
-{
-#ifdef VMS
-	long status;
-	long len,tabtyp;
-
-	tabtyp = LIB$K_CLI_GLOBAL_SYM;
-	memcpy(constr,the_def,sizeof(usr_defaults));					/* Copy them into the descriptor.	*/
-	status = lib$set_symbol(&sym,&conres,&tabtyp);					/* Now set the global symbol.		*/
-	if (status == SS$_NORMAL)
-	{
-		return(1);								/* We were sucessfull.			*/
-	}
-	else
-	{
-		return(0);								/* Not sucessfull.			*/
-	}
-#endif	/* VMS */
-#ifndef VMS	/* unix && MSDOS */
-	return( set_person(the_def) );
-#endif
-}
-
-wferror(fname)
-char *fname;
-{
-	int i;
-
-	werrlog(ERRORCODE(8),fname,0,0,0,0,0,0,0);
-	perror("\n%%WISP-E-RTLERR ");							/* Report last error.			*/
-}
-
-#ifndef VMS	/* unix && MSDOS */
-
-static int get_person( the_def )					/* unix equv to LIB$GET_SYMBOL.				*/
-usr_defaults *the_def;							/* reads the PERSONALITY## into memory			*/
-{
 	FILE	*fp;
 	int	size;
 
 	size = 0;
 	if ( ! paths_built ) build_config_paths();
-	if ( fp = fopen( temp_person_path, "r" ) )
+	if ( fp = fopen( temp_person_path, READ_BINARY ) )
 	{
 		size = fread( (char *)the_def, sizeof( *the_def ), 1, fp );
 		fclose( fp );
 	}
-	if ( !size && wbackground() )					/* if temp not found && background copy from parent	*/
+	if ( !size && wbackground() )						/* If temp not found && background		*/
 	{
-		if ( fp = fopen( parent_path, "r" ) )
+		if ( fp = fopen( parent_path, READ_BINARY ) )			/* then  copy from parent			*/
 		{
 			size = fread( (char *)the_def, sizeof( *the_def ), 1, fp );
 			fclose( fp );
 		}
 	}
-	if ( size )
-	{
-		genworklib(the_def->worklib);						/* Generate the worklib			*/
-		genworkvol(the_def->workvol);						/* Generate the workvol			*/
-		genspoollib(the_def->spoolib);						/* Generate the spoollib		*/
-	}
-	
-	return( size );
+	if (!size) return(0);							/* Not loaded					*/
+#endif /* !VMS */
+
+	validate_defaults(the_def);						/* Validate the version info.			*/
+	genworklib(the_def->worklib);						/* Generate the worklib				*/
+	genworkvol(the_def->workvol);						/* Generate the workvol				*/
+
+	return(1);								/* Successfully loaded				*/
 }
 
-static int set_person( the_def )					/* unix equv to LIB$SET_SYMBOL.				*/
-usr_defaults *the_def;							/* Write the PERSONALITY## file from memory.		*/
+#ifdef VMS
+static save_defaults_temp(the_def)						/* Store the usage constants in the sym	*/
+usr_defaults *the_def;
+{
+	int4 status;
+	int4 len,tabtyp;
+
+	tabtyp = LIB$K_CLI_GLOBAL_SYM;
+	memcpy(constr,the_def,sizeof(usr_defaults));				/* Copy them into the descriptor.	*/
+	status = lib$set_symbol(&sym,&conres,&tabtyp);				/* Now set the global symbol.		*/
+	if (status == SS$_NORMAL)
+	{
+		return(1);							/* We were sucessfull.			*/
+	}
+	else
+	{
+		return(0);							/* Not sucessfull.			*/
+	}
+}
+#endif /* VMS */
+
+#ifndef VMS
+static int save_defaults_temp( the_def )					/* unix equv to LIB$SET_SYMBOL.			*/
+usr_defaults *the_def;								/* Write the PERSONALITY## file from memory.	*/
 {
 	FILE	*fp;
 	int	size;
 
 	if ( ! paths_built ) build_config_paths();
-	if ( fp = fopen( temp_person_path, "w" ) )
+
+	fp = fopen( temp_person_path, WRITE_BINARY );				/* Open/Create the temp personality		*/
+
+	if (!fp)								/* If Open fails then				*/
 	{
-		size = fwrite( (char *)the_def, sizeof( *the_def ), 1, fp );
-		fclose( fp );
-		chmod( temp_person_path, 0666 );
-		return(size); 								/* size will eq 1 or 0			*/
+		makepath(temp_person_path);					/* ensure path exists				*/
+		fp = fopen( temp_person_path, WRITE_BINARY );			/* try the open again.				*/
 	}
-	return( 0 );
+
+	if (!fp)
+	{
+		werrlog(ERRORCODE(20),"save_defaults_temp",temp_person_path,errno,0,0,0,0,0);
+		return( 0 );
+	}
+
+	size = fwrite( (char *)the_def, sizeof( *the_def ), 1, fp );
+	fclose( fp );
+	chmod( temp_person_path, 0666 );
+	return(size); 								/* size will eq 1 or 0				*/
 }
 
-char *wforms(num)									/* return the string for form#		*/
+#ifdef unix
+char *wforms(num)								/* return the string for form#		*/
 int	num;
 {
+	if (!forms_list)
+	{
+		load_forms();
+	}
 	forms_ptr = forms_list;
 	while( forms_ptr )
 	{
@@ -950,9 +484,13 @@ int	num;
 	return("");
 }
 
-char *getprmap(num)									/* return the string for printer #	*/
+char *getprmap(num)								/* return the string for printer #	*/
 int	num;
 {
+	if (!prmap_list)
+	{
+		load_prmap();
+	}
 	prmap_ptr = prmap_list;
 	while( prmap_ptr )
 	{
@@ -963,12 +501,12 @@ int	num;
 	return("");
 }
 
-char *wlpclass(lpclass)									/* return the string for lpclass#	*/
+char *wlpclass(lpclass)								/* return the string for lpclass#	*/
 char	lpclass;
 {
 	prt_id	*prt_ptr;
 
-	prt_ptr = prt_list;
+	prt_ptr = get_prt_list();
 	while( prt_ptr )
 	{
 		if ( prt_ptr->class == lpclass ) return( prt_ptr->prt_string );
@@ -977,8 +515,9 @@ char	lpclass;
 
 	return("");
 }
+#endif /* unix */
 
-ttyid5(tty)
+int ttyid5(tty)
 char	*tty;
 {
 #ifdef MSDOS
@@ -996,12 +535,12 @@ char	*tty;
 		if ( ptr = getenv( WISP_TTY_ENV ) )
 		{
 			strcpy( tty, ptr );
-			return;
+			return(0);
 		}
 	}
 
 
-	path = (char *)ttyname(0);
+	path = ttyname(0);
 	if ( path )
 	{
 		path += strlen(path);
@@ -1020,10 +559,10 @@ char	*tty;
 		strcpy( tty, "ERROR" );
 	}
 #endif	/* #ifdef unix */
-
+	return(0);
 }
 
-static build_config_paths()
+static int build_config_paths()
 {
 /*
 					For the following paths, assume "\\" for "/" and "C:\\TMP" for "/usr/tmp" on MSDOS:
@@ -1042,9 +581,11 @@ static build_config_paths()
 	char	temp[20];
 	char	tty[10];
 	char	uid[4];
-	long	pid;
+	int4	pid;
 
 	if ( paths_built ) return(0);
+
+	werrlog(ERRORCODE(1),"build_config_paths",0,0,0,0,0,0,0);
 
 	*person_path = '\0';
 	*parent_path = '\0';
@@ -1059,30 +600,33 @@ static build_config_paths()
 	*prmap_path = '\0';
 	*options_path = '\0';
 
-	if ( ptr = getenv( WISP_CONFIG_ENV ) )
+	if ( !(ptr = getenv( WISP_CONFIG_ENV )) )
 	{
-		strcpy( system_person_path, ptr );
-		strcat( system_person_path, DSS );
+		/*
+		**	WISPCONFIG was not set so use a dummy value to generate the names.
+		**	This will cause an error when a config file is trying to open, but if not
+		**	used then no error message needed.
+		*/
+		ptr = "$WISPCONFIG";
 	}
-	else
-	{
-		no_wispconfig();
-	}
+	strcpy( system_person_path, ptr );
+	strcat( system_person_path, DSS );
 
-	if ( ptr = getenv( WISP_HOME_ENV ) )
+	if ( !(ptr = getenv( WISP_HOME_ENV )) )
 	{
-		strcpy( person_path, ptr );
-		strcat( person_path, DSS );
-	}
-
+		/*
+		**	HOME was not set so on unix use a dummy value. 
+		**	On MSDOS then defaults to "C:".
+		*/
+#ifdef unix
+		ptr = "$HOME";
+#endif
 #ifdef MSDOS
-
-	else
-	{
-		strcpy( person_path, "C:\\" );					/* Environment Variable HOME not set, use root.	*/
+		ptr = "C:";
+#endif
 	}
-
-#endif	/* MSDOS */
+	strcpy( person_path, ptr );
+	strcat( person_path, DSS );
 
 	strcat( person_path, WISP_USER_PERSON_FILE );
 
@@ -1119,7 +663,7 @@ static build_config_paths()
 		}
 		else /* WISP_PID_ENV not set */
 		{
-			pid = (long)getpid();
+			pid = (int4)getpid();
 			sprintf(temp,"%06d",pid);
 			strcat( temp_person_path, temp );
 		}
@@ -1130,7 +674,7 @@ static build_config_paths()
 		strcat( temp_person_path, tty );
 		strcat( temp_person_path, uid );
 	}
-#endif	/* #ifdef unix */
+#endif /* unix */
 	
 	strcpy( ttmap_path, system_person_path );
 	strcat( ttmap_path, WISP_TERMINAL_FILE );
@@ -1150,12 +694,16 @@ static build_config_paths()
 	strcat( options_path, WISP_OPTIONS_FILE );
 	strcat( system_person_path, WISP_SYSTEM_PERSON_FILE );
 	paths_built = 1;
+	return(0);
 }
 #endif	/* unix  && MSDOS */
 
 #ifdef VMS
-static build_config_paths()
+static int build_config_paths()
 {
+	if (paths_built) return(0);
+	werrlog(ERRORCODE(1),"build_config_paths",0,0,0,0,0,0,0);
+
 	strcpy( person_path, WISP_USER_PERSON_FILE );
 	strcpy( parent_path, WISP_USER_PERSON_FILE );
 	strcpy( system_person_path, WISP_SYSTEM_PERSON_FILE );
@@ -1165,145 +713,93 @@ static build_config_paths()
 	strcpy( options_path, WISP_OPTIONS_FILE );
 
 	paths_built = 1;
+	return(0);
 }
 #endif	/* VMS */
 
 /* Validate the structure, and set up any initial values which aren't in the old structure versions.				*/
 
-wpl_valid(the_def)
+static validate_defaults(the_def)
 usr_defaults *the_def;
 {
-											/****************************************/
-											/* This switch/case mechanism was	*/
-											/* changed to an "if" structure due	*/
-											/* to MSDOS porting: a switch can not	*/
-											/* use a long int, it must be a short.	*/
-											/* Since the version numbers are long,	*/
-											/* ifs are needed instead of switches.	*/
-											/****************************************/
+										/****************************************/
+										/* This switch/case mechanism was	*/
+										/* changed to an "if" structure due	*/
+										/* to MSDOS porting: a switch can not	*/
+										/* use a int4, it must be a short.	*/
+										/* Since the version numbers are int4,	*/
+										/* ifs are needed instead of switches.	*/
+										/****************************************/
 
-	if ( the_def->pf_version != 61591 )						/* If before the version of 6/15/91	*/
+	if ( the_def->pf_version != 61591 )					/* If before the version of 6/15/91	*/
 	{
-		if ( the_def->pf_version != 52490 )					/* If before the version of 5/24/90	*/
+		if ( the_def->pf_version != 52490 )				/* If before the version of 5/24/90	*/
 		{
-			if ( the_def->pf_version != 103089 )				/* If before the version of 10/30/89	*/
+			if ( the_def->pf_version != 103089 )			/* If before the version of 10/30/89	*/
 			{
-				if ( the_def->pf_version != 60889 )			/* If before the version of 6/08/89	*/
-				{							/* Unrecognized version, set defaults.	*/
-					the_def->kb_map[0] = '\0';			/* Clear keyboard map type name.	*/
+				if ( the_def->pf_version != 60889 )		/* If before the version of 6/08/89	*/
+				{						/* Unrecognized version, set defaults.	*/
+					the_def->kb_map[0] = '\0';		/* Clear keyboard map type name.	*/
 				}
-											/* If it's the version of 6/8/89	*/
-				the_def->psb_select = 'B';				/* Use default characteristics for 	*/
-				the_def->psb_charset = 0;				/*  pseudo blank.			*/
+										/* If it's the version of 6/8/89	*/
+				the_def->psb_select = 'B';			/* Use default characteristics for 	*/
+				the_def->psb_charset = 0;			/*  pseudo blank.			*/
 				the_def->psb_rendition = 2;
 			}
-											/* If it's the version of 10/30/89	*/
-			the_def->prt_lines = 55;					/* printer default lines per page is 55	*/
-			the_def->mp_cursor = TRUE;					/* Display cursor on menu pick flag	*/
-			the_def->automove = FALSE;					/* Flag for auto_move default is FALSE.	*/
-			the_def->autotab = TRUE;					/* Flag for auto_tab default is TRUE.	*/
+										/* If it's the version of 10/30/89	*/
+			the_def->prt_lines = 55;				/* printer default lines per page is 55	*/
+			the_def->mp_cursor = TRUE;				/* Display cursor on menu pick flag	*/
+			the_def->automove = FALSE;				/* Flag for auto_move default is FALSE.	*/
+			the_def->autotab = TRUE;				/* Flag for auto_tab default is TRUE.	*/
 		}
-											/* If it's the version of 05/24/90	*/
+										/* If it's the version of 05/24/90	*/
 
 #ifdef MSDOS
-		the_def->bgchange = TRUE;						/* Change background by default.	*/
-		the_def->bgcolor = TRUE;						/* Default background color is Grey.	*/
-#else	/* unix or VMS */
-		the_def->bgchange = FALSE;						/* Don't change background by default.	*/
-		the_def->bgcolor = FALSE;						/* Default background color is black.	*/
+		the_def->bgchange = TRUE;					/* Change background by default.	*/
+		the_def->bgcolor = TRUE;					/* Default background color is Grey.	*/
+#else
+		the_def->bgchange = FALSE;					/* Don't change background by default.	*/
+		the_def->bgcolor = FALSE;					/* Default background color is black.	*/
 #endif
-		the_def->excolor = FALSE;						/* Exit with a black background.	*/
+		the_def->excolor = FALSE;					/* Exit with a black background.	*/
 	}
-											/* If it's the version of 06/15/91.	*/
+										/* If it's the version of 06/15/91.	*/
 
 /**************************************** MAKE SURE THIS VALUE IS CORRECT WHEN VERSIONS CHANGE **********************************/
-	the_def->pf_version = 61591;							/* Set the file version.		*/
+	the_def->pf_version = 61591;						/* Set the file version.		*/
 }
 
-#ifdef VMS
-alloc_term(term_ptr)
-term_id **term_ptr;
-{
-	if (!term_list)									/* first time?				*/
-	{
-		term_list = (term_id *)malloc(sizeof(term_id));				/* get some memory			*/
-		if (!term_list)
-		{
-			werrlog(ERRORCODE(6),"term_list",0,0,0,0,0,0,0);
-			wexit(ERRORCODE(6));
-		}
-		term_list->next = 0;							/* set next pointer to zero		*/
-		term_list->termname[0] = '\0';
-		term_list->termnum = 0;
-		term_list->flags = 0;
-		*term_ptr = term_list;							/* set up local pointer			*/
-	}
-	else
-	{
-		(*term_ptr)->next = (struct term_id *)malloc(sizeof(term_id));
-		if (!(*term_ptr)->next)
-		{
-			werrlog(ERRORCODE(6),"term_ptr->next",0,0,0,0,0,0,0);
-			wexit(ERRORCODE(6));
-		}
-		*term_ptr = (term_id *)(*term_ptr)->next;					/* set pointer				*/
-		(*term_ptr)->next = 0;							/* set next pointer to zero		*/
-		(*term_ptr)->termname[0] = '\0';
-		(*term_ptr)->termnum = 0;
-		(*term_ptr)->flags = 0;
-	}
-}
-
-alloc_lat(lat_ptr)
-lat_id **lat_ptr;
-{
-	if (!lat_list)									/* first time?				*/
-	{
-		lat_list = (lat_id *)malloc(sizeof(lat_id));				/* get some memory			*/
-		if (!lat_list)
-		{
-			werrlog(ERRORCODE(6),"lat_list",0,0,0,0,0,0,0);
-			wexit(ERRORCODE(6));
-		}
-		lat_list->next = 0;							/* set next pointer to zero		*/
-		lat_list->latname[0] = '\0';
-		lat_list->termnum = 0;
-		lat_list->flags = 0;
-		*lat_ptr = lat_list;							/* set up local pointer			*/
-	}
-	else
-	{
-		(*lat_ptr)->next = (struct lat_id *)malloc(sizeof(lat_id));
-		if (!(*lat_ptr)->next)
-		{
-			werrlog(ERRORCODE(6),"lat_ptr->next",0,0,0,0,0,0,0);
-			wexit(ERRORCODE(6));
-		}
-		*lat_ptr = (lat_id *)(*lat_ptr)->next;					/* set pointer				*/
-		(*lat_ptr)->next = 0;							/* set next pointer to zero		*/
-		(*lat_ptr)->latname[0] = '\0';
-		(*lat_ptr)->termnum = 0;
-		(*lat_ptr)->flags = 0;
-	}
-}
-#endif	/* VMS */
 
 static genworklib(worklib)
 char	*worklib;
 {
 	char temp[20];
-	long  pid;									/* Process id				*/
+	int4  pid;								/* Process id				*/
 	char	*ptr;
+
 #ifdef VMS
 	unsigned status;
 	unsigned short retlen;
 	struct	{
-		short unsigned int	buflen;						/* the length of the buffer		*/
-		short unsigned int 	item_code;					/* the code for the request to GETDVI	*/
-		char 			*bufptr;					/* a pointer to the buffer		*/
-		short unsigned int	*retlen;					/* the return length of the buffer	*/
-		long int 		endbuf;						/* the end of the buffer		*/
+		short unsigned int	buflen;					/* the length of the buffer		*/
+		short unsigned int 	item_code;				/* the code for the request to GETDVI	*/
+		char 			*bufptr;				/* a pointer to the buffer		*/
+		short unsigned int	*retlen;				/* the return length of the buffer	*/
+		int4 		endbuf;					/* the end of the buffer		*/
 	} pidbuf;
+
+	pidbuf.buflen = 4;							/* Now get process ID of the current 	*/
+	pidbuf.item_code = JPI$_MASTER_PID;					/* process in the tree.			*/
+	pidbuf.retlen = &retlen;
+	pidbuf.bufptr = (char *) &pid;
+	pidbuf.endbuf = 0;
+
+	status = sys$getjpi((long) 0,(long) 0,(long) 0, &pidbuf,(long) 0,(long) 0,(long) 0);	/* Get the ID.			*/
+
+	if (status != SS$_NORMAL) return(status);				/* Some error.				*/
+	sprintf(temp,"%08x", pid);						/* Format the PID as a hex number	*/
+	memcpy(worklib,temp,8);							/* copy it into worklib			*/
+	memcpy(worklib, "WK", 2);						/* Overlay the first to chars as "WK"	*/
 #endif	/* VMS */
 
 #ifdef unix
@@ -1321,37 +817,20 @@ char	*worklib;
 	}
 	else
 	{
-
-		if ( ! PGRPID ) PGRPID = wgetpgrp();
-		pid = PGRPID;
+		pid = wgetpgrp();
 	}
-	sprintf(temp,"%08d", pid);
+	sprintf(temp,"%08d", pid);						/* Format the PID			*/
+	memcpy(worklib,temp,8);							/* copy it into worklib			*/
+	memcpy(worklib, "WK", 2);						/* Overlay the first to chars as "WK"	*/
 #endif	/* unix */
 
 #ifdef MSDOS
-
-	if ( ! PGRPID ) PGRPID = wgetpgrp();
-	pid = PGRPID;
-
-	sprintf(temp,"%08d", pid);
+	sprintf(temp,"WORK%s    ", longuid());					/* Format the worklib			*/
+	memcpy(worklib,temp,8);							/* copy it into worklib			*/
 #endif	/* MSDOS */
 
-#ifdef VMS
-	pidbuf.buflen = 4;								/* Now get the process ID of the current */
-	pidbuf.item_code = JPI$_MASTER_PID;						/* process in the tree.			*/
-	pidbuf.retlen = &retlen;
-	pidbuf.bufptr = (char *) &pid;
-	pidbuf.endbuf = 0;
 
-	status = sys$getjpi((long) 0,(long) 0,(long) 0, &pidbuf,(long) 0,(long) 0,(long) 0);	/* Get the ID.			*/
-
-	if (status != SS$_NORMAL) return(status);					/* Some error.				*/
-	sprintf(temp,"%08x", pid);
-#endif	/* VMS */
-
-	memcpy(&worklib[0], "WK", 2);
-	memcpy(&worklib[2], &temp[2], 6);
-	upper_mem(worklib,8);
+	upper_mem(worklib,8);							/* Make uppercase			*/
 }
 
 static int genworkvol(workvol)
@@ -1396,27 +875,31 @@ char	*spoollib;
 				HELPSTYLE2		(Non-Wang style)
 				IDALPHA			(default)
 				IDNUMERIC
+				IDONE			(default return char 1-3 of user id)
+				IDFIVE			(return char 5-7 of user id)
 */
-load_options()								/* Load the runtime OPTIONS file.		*/
+int load_options()								/* Load the runtime OPTIONS file.		*/
 {
 static	int	first=1;
 	FILE 	*the_file;
-	char	inline[132], keyword[80], value[80];
+	char	inlin[132], keyword[80], value[80];
 	int	cnt,i;
 	int	len;
 
 	if (!first) return(0);
 	first=0;
-	build_config_paths();
+	werrlog(ERRORCODE(1),"load_options",0,0,0,0,0,0,0);
+
+	if ( !paths_built ) build_config_paths();
 
 	the_file = fopen(options_path,"r");
 	if (the_file)
 	{
-		while(fgets(inline,132,the_file))
+		while(fgets(inlin,132,the_file))
 		{
-			len=strlen(inline);
-			if (len>0 && inline[len-1] == '\n') inline[len-1] = '\0';	/* Null out the newline char		*/
-			cnt = sscanf(inline,"%s %s",keyword,value);
+			len=strlen(inlin);
+			if (len>0 && inlin[len-1] == '\n') inlin[len-1] = '\0';	/* Null out the newline char		*/
+			cnt = sscanf(inlin,"%s %s",keyword,value);
 			if ( cnt < 1 ) continue;
 			if (keyword[0] == '#') continue;
 			upper_string(keyword);
@@ -1425,13 +908,13 @@ static	int	first=1;
 			{
 				if ( cnt < 2 )
 				{
-					werrlog(ERRORCODE(18),"Missing Value",inline,0,0,0,0,0,0);
+					werrlog(ERRORCODE(18),"Missing Value",inlin,0,0,0,0,0,0);
 					continue;
 				}
 				cnt = sscanf(value,"%d",&i);
 				if ( cnt != 1 )
 				{
-					werrlog(ERRORCODE(18),"Invalid Value",inline,0,0,0,0,0,0);
+					werrlog(ERRORCODE(18),"Invalid Value",inlin,0,0,0,0,0,0);
 					continue;
 				}
 				opt_errflag_found = 1;
@@ -1478,6 +961,18 @@ static	int	first=1;
 			{
 				opt_idsiprint = 0;
 			}
+			else if (strcmp(keyword,"PQILP") == 0)			/* UNIX use ILP					*/
+			{
+				opt_idsiprint = 1;
+				opt_pqilp = 1;
+				opt_pqunique = 0;
+			}
+			else if (strcmp(keyword,"PQUNIQUE") == 0)		/* UNIX use UNIQUE				*/
+			{
+				opt_idsiprint = 1;
+				opt_pqilp = 0;
+				opt_pqunique = 1;
+			}
 			else if (strcmp(keyword,"IDNUMERIC") == 0)		/* UNIX EXTRACT ID returns Numeric user ID	*/
 			{
 				opt_idnumeric = 1;
@@ -1485,6 +980,14 @@ static	int	first=1;
 			else if (strcmp(keyword,"IDALPHA") == 0)		/* UNIX EXTRACT ID returns Alpha user ID	*/
 			{
 				opt_idnumeric = 0;
+			}
+			else if (strcmp(keyword,"IDFIVE") == 0)			/* UNIX EXTRACT ID returns chars 5-7 user ID	*/
+			{
+				opt_idfive = 1;
+			}
+			else if (strcmp(keyword,"IDONE") == 0)			/* UNIX EXTRACT ID returns char 1-3 user ID	*/
+			{
+				opt_idfive = 0;
 			}
 			else if (strcmp(keyword,"HELPSTYLE1") == 0)		/* Help is Wang style				*/
 			{
@@ -1502,13 +1005,13 @@ static	int	first=1;
 			{
 				if ( cnt < 2 )
 				{
-					werrlog(ERRORCODE(18),"Missing Value",inline,0,0,0,0,0,0);
+					werrlog(ERRORCODE(18),"Missing Value",inlin,0,0,0,0,0,0);
 					continue;
 				}
 				cnt = sscanf(value,"%d",&i);
 				if ( cnt != 1 )
 				{
-					werrlog(ERRORCODE(18),"Invalid Value",inline,0,0,0,0,0,0);
+					werrlog(ERRORCODE(18),"Invalid Value",inlin,0,0,0,0,0,0);
 					continue;
 				}
 				opt_max_parms = i;
@@ -1518,25 +1021,44 @@ static	int	first=1;
 			{
 				if ( cnt < 2 )
 				{
-					werrlog(ERRORCODE(18),"Missing Value",inline,0,0,0,0,0,0);
+					werrlog(ERRORCODE(18),"Missing Value",inlin,0,0,0,0,0,0);
 					continue;
 				}
 				cnt = sscanf(value,"%d",&i);
 				if ( cnt != 1 )
 				{
-					werrlog(ERRORCODE(18),"Invalid Value",inline,0,0,0,0,0,0);
+					werrlog(ERRORCODE(18),"Invalid Value",inlin,0,0,0,0,0,0);
 					continue;
 				}
 				opt_max_pages = i;
 
 			}
+			else if (strcmp(keyword,"WISPLANGUAGE") == 0)		/* Set language xlation file       */
+			{
+				char *getenv();
+				
+				if ( cnt < 2 )
+				{
+					werrlog(ERRORCODE(18),"Missing Value",inlin,0,0,0,0,0,0);
+					continue;
+				}
+#ifndef VMS
+				buildfilepath(language_path,getenv(WISP_CONFIG_ENV),value);
+				if ( !fexists(language_path) )
+				{
+					werrlog(ERRORCODE(18),"Invalid Language File",inlin,0,0,0,0,0,0);
+					continue;
+				}
+#endif /* !VMS */
+			}
 			else
 			{
-				werrlog(ERRORCODE(18),"Unknown keyword",inline,0,0,0,0,0,0);
+				werrlog(ERRORCODE(18),"Unknown keyword",inlin,0,0,0,0,0,0);
 			}
 		}
 		fclose(the_file);
 	}
+	return(0);
 }
 
 /*
@@ -1546,7 +1068,10 @@ int get_defs(code,ptr)
 int	code;
 char	*ptr;
 {
-	wpload();
+	if (!defaults_loaded)
+	{
+		load_defaults();
+	}
 
 	switch(code)
 	{
@@ -1581,6 +1106,7 @@ char	*ptr;
 		memcpy(ptr,defaults.runvol,6);
 		break;
 	case DEFAULTS_SL:
+		genspoollib(defaults.spoolib);					/* Generate the spoollib		*/
 		memcpy(ptr,defaults.spoolib,8);
 		break;
 	case DEFAULTS_SV:
@@ -1641,6 +1167,7 @@ char	*ptr;
 		memcpy(ptr,&defaults.excolor,sizeof(defaults.excolor));
 		break;
 	}
+	return(0);
 }
 
 /*
@@ -1648,14 +1175,17 @@ char	*ptr;
 
 	* * * * WARNING * * * *  
 		Set_defs only loads the value into the internal structure "defaults" -- after you finish a series of
-		calls to "set_defs" you need to perform a "wps_usr(&defaults)" to save these values into a temp area.
+		calls to "set_defs" you need to perform a "save_defaults()" to save these values into a temp area.
 
 */
 int set_defs(code,ptr)
 int	code;
 char	*ptr;
 {
-	wpload();
+	if (!defaults_loaded)
+	{
+		load_defaults();
+	}
 
 	switch(code)
 	{
@@ -1753,12 +1283,13 @@ char	*ptr;
 		memcpy(&defaults.excolor,ptr,sizeof(defaults.excolor));
 		break;
 	}
+	return(0);
 }
 
 /*
 	loadpadnull	Load dest with src padding out to size with blanks then null terminate
 */
-loadpadnull(dest,src,size)
+static loadpadnull(dest,src,size)
 char *dest;
 char *src;
 int  size;
@@ -1853,7 +1384,7 @@ char 	result[6];
 			memcpy(curr_progvol,defaults.progvol,6);		/* Copy symbol in in memory save area		*/
 		}
 #ifdef unix
-		else if (ptr = (char *)getenv(SHELL_PROGVOL))			/* Check the shell variable			*/
+		else if (ptr = getenv(SHELL_PROGVOL))				/* Check the shell variable			*/
 		{
 			if (*ptr != ' ')					/* if shell var exists and not null then use it	*/
 			{
@@ -1889,7 +1420,7 @@ char 	result[8];
 			memcpy(curr_proglib,defaults.proglib,8);		/* Copy symbol in in memory save area		*/
 		}
 #ifdef unix
-		else if (ptr = (char *)getenv(SHELL_PROGLIB))			/* Check the shell variable			*/
+		else if (ptr = getenv(SHELL_PROGLIB))				/* Check the shell variable			*/
 		{
 			if (*ptr != ' ')					/* if shell var exists and not null then use it	*/
 			{
@@ -1917,23 +1448,25 @@ char 	result[8];
 	clearprogsymb	This routine clears the PROGLIB and PROGVOL symbol both in defaults and in temp.
 			This is called before a LINK or SUBMIT.
 */
-clearprogsymb()
+int clearprogsymb()
 {
 	set_defs(DEFAULTS_PV,"      ");
 	set_defs(DEFAULTS_PL,"        ");
-	wps_usr(&defaults);							/* Write changes to temp area			*/
+	save_defaults();							/* Write changes to temp area			*/
+	return(0);
 }
 
 /*
 	setprogdefs	Set the shell variables PROGVOL and PROGLIB.
 			This is only called during a LINK, LINKPROC, and SUBMIT.
 */
-setprogdefs(progvol,proglib)
+int setprogdefs(progvol,proglib)
 char	*progvol;
 char	*proglib;
 {
 	setprogvol(progvol);
 	setproglib(proglib);
+	return(0);
 }
 static setprogvol(progvol)
 char	*progvol;
@@ -1962,7 +1495,7 @@ char	*proglib;
 static char	def_progvol[7] = "      ";
 static char	def_proglib[9] = "        ";
 
-saveprogdefs()
+int saveprogdefs()
 {
 #ifdef unix
 	char	buff[20];
@@ -1973,14 +1506,792 @@ saveprogdefs()
 	memcpy(def_progvol,defaults.progvol,6);					/* Save the entry values			*/
 	memcpy(def_proglib,defaults.proglib,8);
 #endif
+	return(0);
 }
 
-restoreprogdefs()
+int restoreprogdefs()
 {
 #ifdef unix
 	set_defs(DEFAULTS_PV,def_progvol);					/* Restore the entry values			*/
 	set_defs(DEFAULTS_PL,def_proglib);
-	wps_usr(&defaults);							/* Write changes to temp area			*/
+	save_defaults();							/* Write changes to temp area			*/
 #endif
+	return(0);
 }
 
+#ifdef VMS
+static alloc_term(term_ptr)
+term_id **term_ptr;
+{
+	if (!term_list)								/* first time?				*/
+	{
+		term_list = (term_id *)malloc(sizeof(term_id));			/* get some memory			*/
+		if (!term_list)
+		{
+			werrlog(ERRORCODE(6),"term_list",0,0,0,0,0,0,0);
+			wexit(ERRORCODE(6));
+		}
+		term_list->next = NULL;						/* set next pointer to zero		*/
+		term_list->termname[0] = (char)0;
+		term_list->termnum = 0;
+		term_list->flags = 0;
+		*term_ptr = term_list;						/* set up local pointer			*/
+	}
+	else
+	{
+		(*term_ptr)->next = (struct term_id *)malloc(sizeof(term_id));
+		if (!(*term_ptr)->next)
+		{
+			werrlog(ERRORCODE(6),"term_ptr->next",0,0,0,0,0,0,0);
+			wexit(ERRORCODE(6));
+		}
+		*term_ptr = (term_id *)(*term_ptr)->next;			/* set pointer				*/
+		(*term_ptr)->next = NULL;					/* set next pointer to zero		*/
+		(*term_ptr)->termname[0] = (char)0;
+		(*term_ptr)->termnum = 0;
+		(*term_ptr)->flags = 0;
+	}
+}
+
+static alloc_lat(lat_ptr)
+lat_id **lat_ptr;
+{
+	if (!lat_list)								/* first time?				*/
+	{
+		lat_list = (lat_id *)malloc(sizeof(lat_id));			/* get some memory			*/
+		if (!lat_list)
+		{
+			werrlog(ERRORCODE(6),"lat_list",0,0,0,0,0,0,0);
+			wexit(ERRORCODE(6));
+		}
+		lat_list->next = NULL;						/* set next pointer to zero		*/
+		lat_list->latname[0] = (char)0;
+		lat_list->termnum = 0;
+		lat_list->flags = 0;
+		*lat_ptr = lat_list;						/* set up local pointer			*/
+	}
+	else
+	{
+		(*lat_ptr)->next = (struct lat_id *)malloc(sizeof(lat_id));
+		if (!(*lat_ptr)->next)
+		{
+			werrlog(ERRORCODE(6),"lat_ptr->next",0,0,0,0,0,0,0);
+			wexit(ERRORCODE(6));
+		}
+		*lat_ptr = (lat_id *)(*lat_ptr)->next;				/* set pointer				*/
+		(*lat_ptr)->next = NULL;					/* set next pointer to zero		*/
+		(*lat_ptr)->latname[0] = (char)0;
+		(*lat_ptr)->termnum = 0;
+		(*lat_ptr)->flags = 0;
+	}
+}
+
+term_id *get_term_list()
+{
+	if (!term_list)
+	{
+		load_ttmap();
+	}
+	return(term_list);
+}
+
+lat_id *get_lat_list()
+{
+	if (!lat_list)
+	{
+		load_ttmap();
+	}
+	return(lat_list);
+}
+
+/*
+**
+**	TTMAP		- Terminal definitions
+**
+*/
+static load_ttmap()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256], tstr[32], buff[256];
+	term_id *term_ptr;
+	lat_id 	*lat_ptr;
+	char 	*scn_ptr, *prm_ptr;
+	char	tempc;
+	int	lt_dev;
+	int	i;
+	int	flag;
+
+	werrlog(ERRORCODE(1),"load_ttmap",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+
+	term_list = NULL;							/* initialize the list				*/
+	lat_list = NULL;
+
+	the_file = fopen(ttmap_path,"r");					/* first load the terminal definitions		*/
+
+	if (the_file)								/* no error opening file			*/
+	{
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			scn_ptr = &inlin[0];
+
+			flag = 1;						/* switch to parse name, number			*/
+
+			do							/* scan the line and extract the parms		*/
+			{							/* skip over spaces, commas, newlines , tabs	*/
+				if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
+				{
+					scn_ptr++;
+				}
+				else						/* copy this parm			*/
+				{
+					if (flag == 1)				/* copy term name			*/
+					{
+						flag = 2;			/* set the flag				*/
+						prm_ptr = tstr;			/* load terminal name			*/
+						*prm_ptr = *scn_ptr++;		/* get first char			*/
+						if (*prm_ptr != '_')		/* have to put in a leading '_'		*/
+						{
+							tempc = *prm_ptr;	/* save char				*/
+							*prm_ptr++ = '_';	/* put in '_'				*/
+							*prm_ptr = tempc;	/* restore char				*/
+						}
+						prm_ptr++;			/* next char position			*/
+
+						do
+						{				/* copy till next whitespace		*/
+							*prm_ptr++ = *scn_ptr++;
+						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
+						      && (*scn_ptr != '\t'));
+						prm_ptr--;			/* need to look at last character	*/
+						if (*prm_ptr != ':')		/* has to end with a colon		*/
+						{
+							prm_ptr++;		/* add one on...			*/
+							*prm_ptr = ':';
+						}
+						prm_ptr++;			/* point to end				*/
+						*prm_ptr = (char)0;		/* end with a null			*/
+
+						if (!strncmp(tstr,"_LTA0:",6)) 	/* Is it a pseudo LT device?		*/
+						{
+							lt_dev = 1;
+							alloc_lat(&lat_ptr);	/* Get mem for next lat device.		*/
+						}
+						else
+						{
+							lt_dev = 0;
+							alloc_term(&term_ptr);
+							strcpy(term_ptr->termname,tstr);	/* Save the name.		*/
+						}
+					}
+					else if (flag == 2)			/* copy term number			*/
+					{
+						i = 0;
+						do
+						{				/* copy till no digits			*/
+							i *= 10;
+							i += (*scn_ptr++) - '0';
+						} while (isdigit(*scn_ptr));	/* stop when no digits			*/
+
+						if (lt_dev)			/* Is it a LAT device?			*/
+						{
+
+							lat_ptr->termnum = i;	/* Save the LAT term number.		*/
+							prm_ptr = lat_ptr->latname;	/* point to where the name will go.	*/
+
+							do 
+							{
+								scn_ptr++;	/* Skip over whitespace			*/
+							}
+							while ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\t'));
+
+							while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
+							      && (*scn_ptr != '\t'))
+							{			/* copy till next whitespace		*/
+								*prm_ptr++ = *scn_ptr++;
+							}
+							*prm_ptr = '\0';	/* Null terminate			*/
+						}
+						else
+						{
+							term_ptr->termnum = i;
+						}
+
+						flag = 0;			/* clear the flag			*/
+
+						if (strpos(scn_ptr,"KEYPAD_OFF") != -1)		/* Set the keypad off bit	*/
+						{
+							flag |= KEYPAD_OFF;
+						}
+
+						if (strpos(scn_ptr,"SETUP_CORRECTLY") != -1)	/* User did it bit on.		*/
+						{
+							flag |= SETUP_CORRECTLY;
+						}
+
+						if (strpos(scn_ptr,"SPACES_BLINK") != -1)	/* Set the keypad off bit	*/
+						{
+							flag |= SPACES_BLINK;
+						}
+
+						if (strpos(scn_ptr,"PRO_RT") != -1)		/* Special Pro/RT-11 system.	*/
+						{
+							flag |= PRO_RT;
+						}
+
+						if (lt_dev) lat_ptr->flags = flag;
+						else	    term_ptr->flags = flag;
+
+						flag = 0;
+					}
+				}
+			} while (*scn_ptr && flag);				/* Till a null or flag is clear.	*/
+		}
+
+		fclose(the_file);						/* close the term file			*/
+	}
+	else
+	{									/* error opening the file		*/
+		werrlog(ERRORCODE(20),"load_ttmap",ttmap_path,errno,0,0,0,0,0);
+	}
+}
+#endif	/* VMS */
+#ifndef MSDOS
+/*
+**
+**	LPMAP		printer definitions
+**
+*/
+
+prt_id *get_prt_list()
+{
+	if (!prt_list)
+	{
+		load_lpmap();
+	}
+	return(prt_list);
+}
+
+static load_lpmap()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256], lptstr1[80], lptstr2[80], buff[256];
+	char 	*scn_ptr, *prm_ptr;
+	prt_id	*prt_ptr;							/* Pointer to printer list structure		*/
+	int	pnum;
+	char	*ptr;
+	int	flag;
+
+	werrlog(ERRORCODE(1),"load_lpmap",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+	prt_list = NULL;							/* initialize the list			*/
+	the_file = fopen(lpmap_path,"r");					/* now load the printer definitions	*/
+
+	if (the_file)								/* no error opening file		*/
+	{
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			if (!prt_list)						/* first time?				*/
+			{
+				prt_list = (prt_id *)malloc(sizeof(prt_id));	/* get some memory			*/
+				if (!prt_list)
+				{
+					werrlog(ERRORCODE(6),"prt_list",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				prt_list->next = NULL;				/* set next pointer to zero		*/
+				prt_ptr = prt_list;				/* set up local pointer			*/
+			}
+			else
+			{
+				prt_ptr->next = (struct prt_id *)malloc(sizeof(prt_id));/* get some memory			*/
+				if (!prt_ptr->next)
+				{
+					werrlog(ERRORCODE(6),"prt_ptr->next",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				prt_ptr = (prt_id *)prt_ptr->next;		/* set pointer				*/
+				prt_ptr->next = NULL;				/* set next pointer to zero		*/
+			}
+#ifdef VMS
+			scn_ptr = &inlin[0];
+
+			flag = 1;						/* switch to parse class, printer	*/
+			*lptstr1 = '\0';					/* Initialize strings for number, qname	*/
+			*lptstr2 = '\0';
+
+			do							/* scan the line and extract the parms	*/
+			{							/* skip over spaces, commas, newlines , tabs	*/
+				if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
+				{
+					scn_ptr++;
+				}
+				else						/* copy this parm			*/
+				{
+					if (flag == 1)				/* copy class letter			*/
+					{
+						flag = 2;			/* set the flag				*/
+						prt_ptr->class = *scn_ptr++;	/* get first char			*/
+					}
+					else if (flag == 2)
+					{
+						flag = 3;			/* set the flag				*/
+						prm_ptr = lptstr1;		/* load next string			*/
+						do
+						{				/* copy till next whitespace		*/
+							*prm_ptr++ = *scn_ptr++;
+						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
+						      && (*scn_ptr != '\t'));
+						*prm_ptr = '\0';		/* null terminate			*/
+						if ((*scn_ptr == '\n') || (*scn_ptr == '\0')) flag = 0;	/* signal we are done	*/
+					}
+					else if (flag == 3)
+					{
+						prm_ptr = lptstr2;		/* load next string			*/
+						do
+						{				/* copy till next whitespace		*/
+							*prm_ptr++ = *scn_ptr++;
+						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
+						      && (*scn_ptr != '\t'));
+						*prm_ptr = '\0';		/* null terminate			*/
+						flag = 0;			/* signal we are done			*/
+					}
+					if (flag == 0)
+					{
+						if (*lptstr2 == '\0')		/* then lptstr1 is the qname		*/
+						{
+							prt_ptr->prtnum = 0;	/* Default to printer number 0.		*/
+							strcpy(prt_ptr->qname,lptstr1);/* load queue name		*/
+						}
+						else
+						{
+							pnum = atoi(lptstr1);	/* Obtain the printer number		*/
+										/* Error in atoi will default pnum = 0	*/
+							prt_ptr->prtnum = pnum;	/* Load printer number			*/
+							strcpy(prt_ptr->qname,lptstr2);/* load queue name		*/
+						}
+					}
+				}
+			} while (*scn_ptr && flag);				/* till a null or flag is clear		*/
+#endif	/* VMS */
+
+#ifndef VMS
+			if ( (int)strlen(inlin) > 82 )
+			{
+				werrlog(ERRORCODE(24),WISP_PRINTER_FILE,0,0,0,0,0,0,0);
+				werrlog(102,inlin,0,0,0,0,0,0,0);		/* Display the text.			*/
+				wexit(ERRORCODE(24));
+			}
+			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+			prt_ptr->class = inlin[0];				/* Load the class			*/
+			strcpy( prt_ptr->prt_string, &inlin[2] );		/* Get lp control string		*/
+
+#endif /* !VMS */
+
+		}
+
+		fclose(the_file);						/* close the term file			*/
+	}
+	else
+	{									/* error opening the file		*/
+#ifdef VMS
+		werrlog(ERRORCODE(20),"load_lpmap",lpmap_path,errno,0,0,0,0,0);
+#endif
+	}
+}
+#endif /* !MSDOS */
+#ifdef VMS
+/*
+**
+**	PQMAP			Procedure Queues
+**
+*/
+pq_id *get_pq_list()
+{
+	if (!pq_list)
+	{
+		load_pqmap();
+	}
+	return(pq_list);
+}
+
+static load_pqmap()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256], buff[256];
+	pq_id	*pq_ptr;
+	char 	*scn_ptr, *prm_ptr;
+	int	flag;
+
+	werrlog(ERRORCODE(1),"load_pqmap",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+	pq_list = NULL;								/* initialize the list			*/
+	the_file = fopen(pqmap_path,"r");					/* now load the procedure definitions	*/
+
+	if (the_file)								/* no error opening file		*/
+	{
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			if (!pq_list)						/* first time?				*/
+			{
+				pq_list = (pq_id *)malloc(sizeof(pq_id));	/* get some memory			*/
+				if (!pq_list)
+				{
+					werrlog(ERRORCODE(6),"pq_list",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				pq_list->next = NULL;				/* set next pointer to zero		*/
+				pq_ptr = pq_list;				/* set up local pointer			*/
+			}
+			else
+			{
+				pq_ptr->next = (struct pq_id *)malloc(sizeof(pq_id));	/* get some memory			*/
+				if (!pq_ptr->next)
+				{
+					werrlog(ERRORCODE(6),"pq_ptr->next",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				pq_ptr = (pq_id *)pq_ptr->next;			/* set pointer				*/
+				pq_ptr->next = NULL;				/* set next pointer to zero		*/
+			}
+			scn_ptr = &inlin[0];
+			flag = 1;						/* switch to parse class, printer	*/
+			do							/* scan the line and extract the parms	*/
+			{							/* skip over spaces, commas, newlines , tabs	*/
+				if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
+				{
+					scn_ptr++;
+				}
+				else						/* copy this parm			*/
+				{
+					if (flag == 1)				/* copy class letter			*/
+					{
+						flag = 2;			/* set the flag				*/
+						pq_ptr->class = *scn_ptr++;	/* get first char			*/
+					}
+					else if (flag == 2)
+					{
+						prm_ptr = pq_ptr->qname;	/* load queue name			*/
+						do
+						{				/* copy till next whitespace		*/
+							*prm_ptr++ = *scn_ptr++;
+						} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n')
+						      && (*scn_ptr != '\t'));
+						*prm_ptr = '\0';		/* null terminate			*/
+						flag = 0;			/* signal we are done			*/
+					}
+				}
+			} while (*scn_ptr && flag);				/* till a null or flag is clear		*/
+		}
+
+		fclose(the_file);						/* close the term file			*/
+	}
+	else
+	{									/* error opening the file		*/
+		werrlog(ERRORCODE(20),"load_pqmap",pqmap_path,errno,0,0,0,0,0);
+	}
+}
+#endif	/* VMS */
+#ifndef VMS
+/*
+**
+**	LGMAP
+**
+*/
+logical_id *get_logical_list()
+{
+	if (!logical_list)
+	{
+		load_lgmap();
+	}
+	return(logical_list);
+}
+
+static	get_logical_list_item( )
+{
+	if (!logical_list)							/* first time?				*/
+	{
+		logical_list = (logical_id *)malloc(sizeof(logical_id));	/* get some memory			*/
+		if (!logical_list)
+		{
+			werrlog(ERRORCODE(6),"logical_list",0,0,0,0,0,0,0);
+			wexit(ERRORCODE(6));
+		}
+		logical_list->next = NULL;					/* set next pointer to zero		*/
+		logical_ptr = logical_list;					/* set up local pointer			*/
+	}
+	else
+	{
+		logical_ptr->next = (struct logical_id *)malloc(sizeof(logical_id));
+		if (!logical_ptr->next)
+		{
+			werrlog(ERRORCODE(6),"logical_ptr->next",0,0,0,0,0,0,0);
+			wexit(ERRORCODE(6));
+		}
+		logical_ptr = (logical_id *)logical_ptr->next;			/* set pointer				*/
+		logical_ptr->next = NULL;					/* set next pointer to zero		*/
+	}
+}
+
+static load_lgmap()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256], buff[256];
+	int	config;
+	char	*ptr;
+
+	werrlog(ERRORCODE(1),"load_lgmap",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+	logical_list = NULL;							/* initialize the list			*/
+	config = 0;								/* CONFIG logical not found.		*/
+	the_file = fopen(lgmap_path,"r");					/* now load the logicals 		*/
+
+	if (the_file)								/* no error opening file		*/
+	{
+		char	lgmap_scan[40];
+
+		sprintf(lgmap_scan,"%%6s %%%ds",MAX_TRANSLATE);
+
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			get_logical_list_item( );				/* Set logical_ptr.			*/
+			sscanf(inlin, lgmap_scan, logical_ptr->logical, logical_ptr->translate );
+			if ('$' == logical_ptr->translate[0])
+			{
+				/*
+				**	A leading '$' indicates an environment variable.
+				**		VOL100 $WANG_VOL100
+				**	This means use the contents of $WANG_VOL100 if set.
+				*/
+				if (ptr = getenv(&logical_ptr->translate[1]))
+				{
+					strcpy(logical_ptr->translate,ptr);
+				}
+			}
+			upper_string( logical_ptr->logical );
+
+			if ( strcmp( logical_ptr->logical, "CONFIG" ) == 0 ) config = 1; /* CONFIG logical found.		*/
+
+		}
+
+		fclose(the_file);						/* close the logical file		*/
+	}
+	else
+	{									/* error opening the file		*/
+		werrlog(ERRORCODE(20),"load_lgmap",lgmap_path,errno,0,0,0,0,0);
+	}
+
+	if ( ! config )								/* ADD 'CONFIG' to list of volumes.	*/
+	{
+		if ( ptr = getenv( WISP_CONFIG_ENV ) )
+		{
+			get_logical_list_item( );				/* Set logical_ptr.			*/
+			strcpy( logical_ptr->logical, "CONFIG" );		/* VOLUME 'CONFIG'			*/
+			strcpy( logical_ptr->translate, ptr );			/* TRANSLATE $WISPCONFIG		*/
+		}
+	}
+										/* ADD '.' to list of volumes. 		*/
+	get_logical_list_item( );						/* Set logical_ptr.			*/
+	strcpy( logical_ptr->logical, "." );					/* VOLUME '.'				*/
+	strcpy( logical_ptr->translate, "." );					/* TRANSLATES '.'			*/
+}
+#endif /* !VMS */
+
+#ifdef unix
+/*
+**
+**	SCMAP		Submit Class
+**
+*/
+int getscmapnice(jobclass,nice_value)
+char 	jobclass;
+int	*nice_value;
+{
+	scmap_id *scmap_ptr;
+
+	if (!scmap_list)
+	{
+		load_scmap();
+	}
+
+	scmap_ptr = scmap_list;							/* Get a ptr to the submit class list		*/
+
+	while (scmap_ptr)
+	{
+		if (scmap_ptr->class == jobclass)				/* look for the class that matches		*/
+		{
+			*nice_value = scmap_ptr->nice;				/* set the nice value				*/
+			return(0);						/* Succeeded.					*/
+		}
+		scmap_ptr = (scmap_id *) scmap_ptr->next;			/* next one					*/
+	}
+	return(1);								/* Failed.					*/
+}
+
+static load_scmap()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256];
+
+	werrlog(ERRORCODE(1),"load_scmap",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+	scmap_list = NULL;							/* initialize the list			*/
+	the_file = fopen(scmap_path,"r");					/* now load the scmap	 		*/
+
+	if (the_file)								/* no error opening file		*/
+	{
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			if (!scmap_list)					/* first time?				*/
+			{
+				scmap_list = (scmap_id *)malloc(sizeof(scmap_id));	/* get some memory			*/
+				if (!scmap_list)
+				{
+					werrlog(ERRORCODE(6),"scmap_list",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				scmap_list->next = NULL;			/* set next pointer to zero		*/
+				scmap_ptr = scmap_list;				/* set up local pointer			*/
+			}
+			else
+			{
+				scmap_ptr->next = (struct scmap_id *)malloc(sizeof(scmap_id));	/* get some memory	*/
+				if (!scmap_ptr->next)
+				{
+					werrlog(ERRORCODE(6),"scmap_ptr->next",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				scmap_ptr = (scmap_id *)scmap_ptr->next;	/* set pointer				*/
+				scmap_ptr->next = NULL;				/* set next pointer to zero		*/
+			}
+			if ( (int)strlen(inlin) > 84 )
+			{
+				werrlog(ERRORCODE(24),WISP_SUBCLASS_FILE,0,0,0,0,0,0,0);
+				werrlog(102,inlin,0,0,0,0,0,0,0);		/* Display the text.			*/
+				wexit(ERRORCODE(24));
+			}
+			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+			scmap_ptr->class = toupper(inlin[0]);			/* get the class			*/
+			scmap_ptr->nice = atoi(&inlin[2]);			/* convert nice to int			*/
+		}
+
+		fclose(the_file);						/* close the scmap file			*/
+	}
+}
+#endif /* unix */
+#ifdef unix
+/*
+**
+**	FORMS
+**
+*/
+static load_forms()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256];
+
+	werrlog(ERRORCODE(1),"load_forms",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+	forms_list = NULL;							/* initialize the list				*/
+	the_file = fopen(forms_path,"r");					/* now load the forms	 			*/
+
+	if (the_file)								/* no error opening file			*/
+	{
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			if (!forms_list)					/* first time?					*/
+			{
+				forms_list = (forms_id *)malloc(sizeof(forms_id));
+				if (!forms_list)
+				{
+					werrlog(ERRORCODE(6),"forms_list",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				forms_list->next = NULL;			/* set next pointer to zero		*/
+				forms_ptr = forms_list;				/* set up local pointer			*/
+			}
+			else
+			{
+				forms_ptr->next = (struct forms_id *)malloc(sizeof(forms_id));	/* get some memory	*/
+				if (!forms_ptr->next)
+				{
+					werrlog(ERRORCODE(6),"forms_ptr->next",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				forms_ptr = (forms_id *)forms_ptr->next;	/* set pointer				*/
+				forms_ptr->next = NULL;				/* set next pointer to zero		*/
+			}
+			if ( (int)strlen(inlin) > 84 )
+			{
+				werrlog(ERRORCODE(24),WISP_FORMS_FILE,0,0,0,0,0,0,0);
+				werrlog(102,inlin,0,0,0,0,0,0,0);		/* Display the text.			*/
+				wexit(ERRORCODE(24));
+			}
+			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+			inlin[3] = '\0';					/* null term after form#		*/
+			forms_ptr->form_num = atoi(inlin);			/* convert formnum to int		*/
+			strcpy( forms_ptr->form_string, &inlin[4] );		/* Get form control string		*/
+		}
+
+		fclose(the_file);						/* close the forms file			*/
+	}
+}
+#endif /* unix */
+#ifdef unix
+/*
+**
+**	PRMAP 	Printer number map
+**
+*/
+static load_prmap()
+{
+	FILE 	*the_file;							/* a file pointer				*/
+	char	inlin[256];
+
+	werrlog(ERRORCODE(1),"load_prmap",0,0,0,0,0,0,0);
+	if ( !paths_built ) build_config_paths();
+	prmap_list = NULL;							/* initialize the list			*/
+	the_file = fopen(prmap_path,"r");					/* now load the prmap	 		*/
+
+	if (the_file)								/* no error opening file		*/
+	{
+		while (fgets(inlin,sizeof(inlin),the_file))
+		{
+			if (!prmap_list)					/* first time?				*/
+			{
+				prmap_list = (prmap_id *)malloc(sizeof(prmap_id));	/* get some memory			*/
+				if (!prmap_list)
+				{
+					werrlog(ERRORCODE(6),"prmap_list",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				prmap_list->next = NULL;			/* set next pointer to zero		*/
+				prmap_ptr = prmap_list;				/* set up local pointer			*/
+			}
+			else
+			{
+				prmap_ptr->next = (struct prmap_id *)malloc(sizeof(prmap_id));	/* get some memory	*/
+				if (!prmap_ptr->next)
+				{
+					werrlog(ERRORCODE(6),"prmap_ptr->next",0,0,0,0,0,0,0);
+					wexit(ERRORCODE(6));
+				}
+				prmap_ptr = (prmap_id *)prmap_ptr->next;	/* set pointer				*/
+				prmap_ptr->next = NULL;				/* set next pointer to zero		*/
+			}
+			if ( (int)strlen(inlin) > 84 )
+			{
+				werrlog(ERRORCODE(24),WISP_PRMAP_FILE,0,0,0,0,0,0,0);
+				werrlog(102,inlin,0,0,0,0,0,0,0);		/* Display the text.			*/
+				wexit(ERRORCODE(24));
+			}
+			inlin[strlen(inlin)-1] = '\0';				/* remove trailing NL			*/
+			inlin[3] = '\0';					/* null term after printer #		*/
+			prmap_ptr->prmap_num = atoi(inlin);			/* convert printer # to int		*/
+			strcpy( prmap_ptr->prmap_string, &inlin[4] );		/* Get printer control string		*/
+		}
+
+		fclose(the_file);						/* close the prmap file			*/
+	}
+}
+#endif /* unix */

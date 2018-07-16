@@ -15,6 +15,7 @@
 #include <memory.h>
 #endif
 
+#include "idsistd.h"
 #include "wglobals.h"
 
 setprogid(wisp_application_name)						/* Set global variable to current program id.	*/

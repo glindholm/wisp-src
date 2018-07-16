@@ -1,0 +1,26 @@
+								README.DOS
+								11/02/93
+
+	Product:	WISP 
+	Version:	3.2x8p
+	O/S:		MS-DOS 5.0 or higher
+	COBOL:		ACUCOBOL 85 2.1.1
+
+
+	These 3 diskettes contain the WISP distribution files.  The files 
+	are compressed with PKZIP 2.04.
+
+	Installation:
+		The following will install WISP. It will create the "WISP" 
+		directory and all it's subdirectories.
+
+		(Insert disk 1)
+		C:\> PKUNZIP -D A:WISP1.ZIP
+		(Insert disk 2)
+		C:\> PKUNZIP -D A:WISP2.ZIP
+		(Insert disk 3)
+		C:\> PKUNZIP -D A:WISP3.ZIP
+
+	Read the document "doswisp.lis" for a description of the MS-DOS
+	implementation of WISP.
+

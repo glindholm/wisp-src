@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -17,7 +17,7 @@
  ** Copyright 1990  International Digital Scientific, Inc.
  **
  **/
-static char *_copyright = "(c)1990 Int'l Digital Scientific, Inc.";
+static char *_copyright = "(c)1993 Int'l Digital Scientific, Inc.";
 
 #include <stdio.h>
 
@@ -35,6 +35,7 @@ char *wfname();
 main()
 {
 	char fullpath[100],tempfile[8],cmd[100];					/* work buffers */
+	char	def_workvol[6], def_worklib[8];
 	char *end_ptr;
 	long mode;
 #ifdef VMS
@@ -43,10 +44,12 @@ $DESCRIPTOR(icom,command);								/* For DCL commands.			*/
 #endif
 	
 	initglbs("WDELWRK ");
-	wpload();									/* load the personality */
+
+	get_defs(DEFAULTS_WV,def_workvol);
+	get_defs(DEFAULTS_WL,def_worklib);
 
 	mode = IS_LIB;									/* Generate LIB name */
-	end_ptr = wfname(&mode,defaults.workvol,defaults.worklib,tempfile, fullpath);
+	end_ptr = wfname(&mode,def_workvol,def_worklib,tempfile, fullpath);
 	*end_ptr = '\0';
 	end_ptr--;
 	if ( *end_ptr == '/' ) *end_ptr = '\0';

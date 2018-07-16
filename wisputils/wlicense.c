@@ -1,18 +1,16 @@
 			/************************************************************************/
 			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
-
 /*
 **	File:		wlicense.c
 **
-**	Purpose:	To contain the wlicense utility routines.
-**			This is the program that is sent out to every customer to install there wisp license.
+**	Purpose:	To contain the license utility routines.
+**			This is the program that is sent out to every customer to install there license.
 **
 **	Routines:	main()			The wlicense utility main routine.
 **			get_validation()	Get the validation code fron the user.
@@ -21,8 +19,10 @@
 **			putheader()		Print the copyright and running instructions.
 **
 **	History:
-**			05/22/92	Written by GSL
-**			05/26/92	Added get_validation() and exit_wlicense()  GSL
+**	05/22/92	Written by GSL
+**	05/26/92	Added get_validation() and exit_wlicense()  GSL
+**	09/25/92	Added LICENSE_CLUSTER. GSL
+**	07/07/93	Added MSDOS support. GSL
 **
 */
 
@@ -33,19 +33,24 @@
 
 #include "wlicense.h"
 
-#define IDSIPHONE	"(805) 295-1155"
-
 extern char	*sys_errlist[];
+static int get_validation();
+static int exit_wlicense();
+static int assistance();
+static int putheader();
 
 static	int created_license_file = 0;
 
 /*
-**	Routine:	main()		wlicense
+**	Routine:	main()		[xlicense]
 **
-**	Function:	To install the WISP license.
+**				wlicense	WISP
+**				ulicense	UniQue
+**
+**	Function:	To install the license.
 **
 **	Description:	This routine validate the LICENSE KEY displays the MACHINE ID and prompts for the VALIDATION CODE.
-**			If all is correct it creates the WISP license file with this info.
+**			If all is correct it creates the license file with this info.
 **			You must be ROOT to run this program.
 **			It will give detail instructions to the user.
 **
@@ -53,14 +58,16 @@ static	int created_license_file = 0;
 **			
 **
 **	Output:		stdout
-**			/lib/wisp.license
-**			
+**			unix:	"/lib/{product}.license"
+**			MSDOS:	"C:\{product}.LIC"
 **
 **	Return:		None
 **
 **	Warnings:	None
 **
-**	History:	05/22/92	Written by GSL
+**	History:	
+**	05/22/92	Written by GSL
+**	07/07/93	Added MSDOS. GSL
 **
 */
 
@@ -80,31 +87,33 @@ char	*argv[];
 
 	int	rc;
 	int	done;
-	char	*help;
+	char	*help, helpbuff[256];
 	char	buff[256];
 
 	putheader();
 
+#ifdef unix
 	if (0 != geteuid())
 	{
 		printf("SORRY - you must be root to continue.\n");
 		exit(0);
 	}
+#endif
 
-	help = "Enter Y to continue the WISP license installation.\nEnter N to exit.";
-	rc = prompt_list("Do you wish to continue","y","y,n",help);
+	sprintf(helpbuff,"Enter Y to continue the %s license installation.\nEnter N to exit.",product_name());
+	rc = prompt_list("Do you wish to continue","y","y,n",helpbuff);
 	if (rc == -1 || rc == 2) exit(0);
 
 	/*
-	**	Check if WISP license file already exists.
+	**	Check if license file already exists.
 	*/
 
-	if (0 == access(WISP_LICENSE_FILE,0000))
+	if (0 == access(license_filepath(),0000))
 	{
 		printf("\n");
 		printf("**** WARNING ****\n");
-		printf("A WISP license file %s already exists.\n",WISP_LICENSE_FILE);
-		printf("Continuing will delete the previous WISP license file.\n\n");
+		printf("A %s license file %s already exists.\n",product_name(),license_filepath());
+		printf("Continuing will delete the previous %s license file.\n\n",product_name());
 
 		help = "Enter Y to continue.\nEnter N to exit the program.";
 		rc = prompt_list("Do you wish to continue",NULL,"y,n",help);
@@ -135,8 +144,9 @@ char	*argv[];
 	done = 0;
 	while(!done)
 	{
-		help = "Enter the WISP software LICENSE KEY exactly as it is was given to you.\nEnter a period (.) to exit.";
-		rc = prompt_text("Enter the LICENSE KEY",NULL,1,help,buff);
+		sprintf(helpbuff, "Enter the %s software LICENSE KEY exactly as it is was given to you.\n",product_name());
+		strcat(helpbuff,"Enter a period (.) to exit.");
+		rc = prompt_text("Enter the LICENSE KEY",NULL,1,helpbuff,buff);
 		printf("\n");
 		switch(rc)
 		{
@@ -181,12 +191,12 @@ char	*argv[];
 	}
 
 	/*
-	**	Create the WISP license file.
+	**	Create the license file.
 	*/
 
 	if (rc = create_license_file())
 	{
-		printf("SORRY - Unable to create %s [errno = %d %s]\n",WISP_LICENSE_FILE,errno,sys_errlist[errno]);
+		printf("SORRY - Unable to create %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
 		exit_wlicense();
 	}
@@ -198,6 +208,10 @@ char	*argv[];
 
 	switch(licensetype)
 	{
+		/*
+		**	CLUSTER license requires a validation code just like SINGLE does so use same logic.
+		*/
+	case LICENSE_CLUSTER:
 	case LICENSE_SINGLE:
 		if (rc = getmachineid(machineid))
 		{
@@ -218,33 +232,52 @@ char	*argv[];
 		break;
 	}
 
+#ifdef MSDOS
+	/*
+	**	On MSDOS there is no "root" user so we have to make file writable first in case
+	**	we are overwriting an existing license file.
+	**	(Otherwise an empty file was created earlier.)
+	*/
+	chmod(license_filepath(),0666);
+#endif
+
 	rc = write_license(custname,custnum,platform,licensekey,licensetype,licensedate,expdate,machineid,valcode);
 	switch(rc)
 	{
 	case 0:
 		break;
 	case 1:
-		printf("SORRY - Unable to open file %s [errno = %d %s]\n",WISP_LICENSE_FILE,errno,sys_errlist[errno]);
+		printf("SORRY - Unable to open file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
 		exit_wlicense();
 		break;
 	case 2:
-		printf("SORRY - Unable to write file %s [errno = %d %s]\n",WISP_LICENSE_FILE,errno,sys_errlist[errno]);
+		printf("SORRY - Unable to write file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
 		exit_wlicense();
 		break;
 	default:
-		printf("SORRY - Error writing file %s [errno = %d %s]\n",WISP_LICENSE_FILE,errno,sys_errlist[errno]);
+		printf("SORRY - Error writing file %s [errno = %d %s]\n",license_filepath(),errno,sys_errlist[errno]);
 		assistance();
 		exit_wlicense();
 		break;
 	}
 
 	printf("\n");
-	printf("The WISP license file %s has been created.\n\n",WISP_LICENSE_FILE);
-	sprintf(buff,"cat %s",WISP_LICENSE_FILE);
+	printf("The %s license file %s has been created.\n\n",product_name(),license_filepath());
+
+#ifdef unix
+	sprintf(buff,"cat %s",license_filepath());
 	system(buff);
 	printf("\n");
+#endif
+
+#ifdef MSDOS
+	hide_file(license_filepath());
+	sprintf(buff,"type %s",license_filepath());
+	system(buff);
+	printf("\n");
+#endif
 
 	exit(0);
 }
@@ -288,25 +321,27 @@ char	valcode[VALIDATION_CODE_SIZE];
 
 	/*      12345678901234567890123456789012345678901234567890123456789012345678901234567890				*/
 	printf("\n");
-	printf("In order to install this WISP license you will need a VALIDATION CODE.\n");
-	printf("A VALIDATION CODE can be received by calling I.D.S.I at %s and\n",IDSIPHONE);
-	printf("asking for a VALIDATION CODE.  You will be asked for the following information:\n");
-	printf("\n");
+	printf("In order to install this %s license you will need a VALIDATION CODE.\n",product_name());
+	printf("A VALIDATION CODE can be received by calling I.D.S.I at (805) 295-1155\n");
+	printf("(M-F 8:30a-5:00p PST) and asking for a VALIDATION CODE.  You will be asked for\n");
+	printf("the following information:\n");
+	printf("\n\n");
 	printf("       LICENSE KEY:    %s\n",flickey);
 	printf("       MACHINE ID:     %s\n",machineid);
-	printf("\n");
+	printf("\n\n");
 	printf("Please supply the information EXACTLY as written above.\n");
 	printf("\n");
 
-	sprintf(helpbuff,"Call I.D.S.I. at %s to get a VALIDATION CODE.\n",IDSIPHONE);
-	strcat (helpbuff,"If you are unable to call at this time you may record the information\n");
-	strcat (helpbuff,"and call at your conveneince.\n\n");
+	/*                12345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
+	sprintf(helpbuff,"Call I.D.S.I. at (805) 295-1155 (M-F 8:30a-5:00p PST) to get a VALIDATION CODE.\n");
+	strcat (helpbuff,"If you are unable to call at this time you may record the information and call\n");
+	strcat (helpbuff,"at your convenience.\n\n\n");
 	strcat (helpbuff,"       LICENSE KEY:    ");
 	strcat (helpbuff,flickey);
 	strcat (helpbuff,"\n");
 	strcat (helpbuff,"       MACHINE ID:     ");
 	strcat (helpbuff,machineid);
-	strcat (helpbuff,"\n\n");
+	strcat (helpbuff,"\n\n\n");
 	strcat (helpbuff,"You may enter a period (.) to exit.");
 	help = helpbuff;
 
@@ -362,8 +397,10 @@ static exit_wlicense()
 {
 	if (created_license_file)
 	{
-		link(WISP_LICENSE_FILE,WISP_LICENSE_FILE_X);
-		unlink(WISP_LICENSE_FILE);
+#ifdef unix
+		link(license_filepath(),x_license_filepath());
+#endif
+		unlink(license_filepath());
 	}
 	exit(0);
 }
@@ -393,7 +430,8 @@ static exit_wlicense()
 static assistance()
 {
 	printf("\n");
-	printf("If you need assistance please call I.D.S.I. at %s.\n",IDSIPHONE);
+	/*      12345678901234567890123456789012345678901234567890123456789012345678901234567890	*/
+	printf("If you need assistance call I.D.S.I. at (805) 295-1155 (M-F 8:30a-5:00p PST).\n");
 }
 
 /*
@@ -420,16 +458,18 @@ static putheader()
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("\n");
-	printf("                   **** WISP LICENSE INSTALLATION TOOL ****\n");
-	printf("         Copyright (c) 1992 by International Digital Scientific Inc.\n");
-	printf("                             %s\n",IDSIPHONE);
+	printf("                   **** %s LICENSE INSTALLATION TOOL ****\n",product_name());
+	printf("         Copyright (c) 1992,93 by International Digital Scientific Inc.\n");
+	printf("                             (805) 295-1155\n");
 	printf("\n");
 	printf("\n");
-	printf("This program will install the WISP runtime license onto this machine.\n");
+	printf("This program will install the %s runtime license onto this machine.\n",product_name());
+#ifdef unix
 	printf("In order to run this program you must be logged on as the root user.\n");
+#endif
 	printf("\n");
-	printf("This program will request your WISP software LICENSE KEY.  The LICENSE KEY is\n");
-	printf("a 16 digit code that is sent out when you license the WISP product, or when\n");
+	printf("This program will request your %s software LICENSE KEY.  The LICENSE KEY is\n",product_name());
+	printf("a 16 digit code that is sent out when you license the %s product, or when\n",product_name());
 	printf("you request a demo license.\n");
 	printf("\n");
 	printf("You will need a LICENSE KEY to continue.  If you are licensed but do not know\n");

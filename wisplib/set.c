@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -35,8 +35,10 @@
 		WV	Char(6)		Work Vol
 */
 
+#include <stdio.h>									/* Include standard I/O module.		*/
 #include <varargs.h>									/* Function uses variable params.	*/
 
+#include "idsistd.h"
 #include "wperson.h"
 #include "werrlog.h"
 #include "wglobals.h"
@@ -55,7 +57,7 @@ va_dcl
 
 	char	*keyword;
 	char	*value;                            
-	long	long_value;
+	int4    long_value;
 	int	to_do;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
@@ -85,7 +87,7 @@ va_dcl
 					case 'N':					/* FN Set form number.			*/
 					 	memcpy(&long_value,value,4);
 						wswap(&long_value);
-						set_defs(DEFAULTS_FN,&long_value);
+						set_defs(DEFAULTS_FN,(char*)&long_value);
 						break;
 					default:
 						NOT_SUPP
@@ -96,6 +98,14 @@ va_dcl
 			case 'I':
 				switch(keyword[1])
 				{
+#ifdef MSDOS
+					case 'D':					/* MSDOS Set the users ID (3 chars)	*/
+						set_cuserid(value,3);
+						break;
+					case '8':					/* MSDOS Set the users ID (8 chars)	*/
+						set_cuserid(value,8);
+						break;
+#endif /* MSDOS */
 					case 'L':					/* IL INLIB.				*/
 						set_defs(DEFAULTS_IL,value);
 						break;
@@ -119,7 +129,7 @@ va_dcl
 					case 'I':					/* LI Set default lines per page printer.*/
 					 	memcpy(&long_value,value,4);
 						wswap(&long_value);
-						set_defs(DEFAULTS_LI,&long_value);
+						set_defs(DEFAULTS_LI,(char*)&long_value);
 						break;
 					default:
 						NOT_SUPP
@@ -149,7 +159,7 @@ va_dcl
 					case 'R':
 					 	memcpy(&long_value,value,4);
 						wswap(&long_value);
-						set_defs(DEFAULTS_PR,&long_value);
+						set_defs(DEFAULTS_PR,(char*)&long_value);
 						break;
 					case 'C':					/* PC set the printer class		*/
 						set_defs(DEFAULTS_PC,value);
@@ -221,7 +231,7 @@ va_dcl
 				break;
 		}									/* End of switch.			*/
 
-		wps_usr((struct usr_defaults *)&defaults);				/* Update defaults			*/
+		save_defaults();							/* Update defaults			*/
 
 	}										/* End of WHILE				*/
 

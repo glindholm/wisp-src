@@ -7,12 +7,22 @@
 
 /*					Stubs to make EDE modules defined in regular WISPLIB					*/
 
+#include "idsistd.h"
+static int edemissing();
+
 int  ws_bar_menu( curset, vr, vc, ak, ar, nm, dp )					/* Stub so doesn't try to put up a bar	*/
 int  curset, vr, vc, ak, ar, dp;
 unsigned	char	*nm;
 {											/*  menu.				*/
 	ws_help(curset);								/* Just do regular WISP help.		*/
 	return(1);									/* Return success.			*/
+}
+
+void A_WSLINK(ets_link_program_definition, on_line_doc_passing_values)
+unsigned char *ets_link_program_definition;
+unsigned char *on_line_doc_passing_values;
+{
+	return;
 }
 
 int  gen_ncpfkey( type, wsb, num_chars, st_win, end_win)				/* Stub so doesn't try to generate a   	*/
@@ -52,7 +62,7 @@ RETRACE()  	{ edemissing(1); }							/* Retrace what happened.		*/
 PFKEYSON() 	{ edemissing(1); }							/* Turn on the PF keys.			*/
 NOPFKEYS() 	{ edemissing(1); }							/* No PF keys.				*/
 
-typedef	long			*PL;							/* Pointer to Long.			*/
+typedef	int4			*PL;							/* Pointer to Long.			*/
 typedef	char			*PC;							/* Pointer to Char.			*/
 typedef	unsigned char		*PUC, **HUC;						/* Pointer and Handle to Unsigned Char.	*/
 typedef struct	video_menu	*PSV;							/* Pointer to Structure Video_menu.	*/
@@ -84,7 +94,7 @@ MENUINFO(mcb,level,item,link)	PSV mcb; PL level,item,link;	{ edemissing(1); }	/*
 
 GENVEC(program,inparms,outparms) PC program,inparms,outparms;	{ edemissing(1); }	/* General vectoring routine		*/
 
-static edemissing(doexit) int doexit;
+static int edemissing(doexit) int doexit;
 {
 #ifdef VMS
 	werrvre("%EDE-E-MISSING: EDE is not installed [Remove EDESTUBS from WISPLIB]");

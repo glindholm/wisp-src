@@ -75,26 +75,38 @@
 */
 
 #ifdef unix
+#define CISAM
+#endif
+#ifdef DMF
+#define CISAM
+#endif
+
+#include "idsistd.h"
+
+#ifdef CISAM
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <fcntl.h>
 
 #ifdef	PROTOTYPES_ALLOWED						/* Prototypes are not part of K&R C.			*/
-static	long	chars_to_int( unsigned char *cp, int sz );		/* Convert string from cisam file into integer.		*/
+static	int4	chars_to_int( unsigned char *cp, int sz );		/* Convert string from cisam file into integer.		*/
 #else
-static	long	chars_to_int( );					/* Convert string from cisam file into integer.		*/
+static	int4	chars_to_int( );					/* Convert string from cisam file into integer.		*/
 #endif
 										/* The following 2 macros are used to convert	*/
 										/* multiple byte values in a cisam index header	*/
 										/* into machine byte-order independent short	*/
-										/* or long integers.  In a cisam index file,	*/
+										/* or 4-byte integers.  In a cisam index file,	*/
 										/* the high-order byte always comes first	*/
 										/* regardless of the machine architecture.	*/
 #define	CTOS(p) ( (short) chars_to_int( (p), 2 ) )				/* 2 character bytes to short integer.		*/
-#define CTOL(p) ( (long)  chars_to_int( (p), 4 ) )				/* 4 character bytes to long integer.		*/
+#define CTOL(p) ( (int4)  chars_to_int( (p), 4 ) )				/* 4 character bytes to 4 byte integer.		*/
 
-long cisaminfo( path, code, field )					/* CISAM file system interface				*/
+static int cisamRC();
+
+int4 cisaminfo( path, code, field )					/* CISAM file system interface				*/
 char 	*path;								/* File path						*/
 char	*code;								/* Function code					*/
 char	*field;								/* Return info						*/
@@ -102,19 +114,19 @@ char	*field;								/* Return info						*/
 	char	l_path[132];						/* local path						*/
 	int	f;							/* File handle						*/
 	int	i1, i2;
-	long	*size;
+	int4	*size;
 	int	is_cisam;
 	int	is_mffh;
 	unsigned char	fheader[256];
 
 	is_mffh = 0;
 
-	size = (long *) field;
+	size = (int4 *) field;
 
 	strcpy(l_path,path);
 	strcat(l_path,".idx");
 
-	if (access(l_path,0))
+	if (!fexists(l_path))
 	{
 		is_cisam = 0;						/* No .idx so must be seq file				*/
 		strcpy(l_path,path);
@@ -219,16 +231,16 @@ char	*field;								/* Return info						*/
 
 static int cisamRC(path,cnt)							/* Return the record count for a cisam file. */
 char	*path;
-long	*cnt;
+int4	*cnt;
 {
 	FILE 	*fp;
 	short	blocksize;
 	unsigned char	buff[256];
 	int	rc;
-	long	rcnt;									/* temp record count.			*/
-	long	nrec;									/* next record				*/
-	long	pos;									/* position to seek to			*/
-	long	ndel;									/* Position of next deleted record num.	*/
+	int4	rcnt;									/* temp record count.			*/
+	int4	nrec;									/* next record				*/
+	int4	pos;									/* position to seek to			*/
+	int4	ndel;									/* Position of next deleted record num.	*/
 
 	fp = fopen(path,"r");	
 	if ( !fp )
@@ -276,20 +288,27 @@ long	*cnt;
 	return(0);
 }
 
-static	long	chars_to_int( cp, sz )					/* Convert string from cisam file into integer.		*/
+static	int4	chars_to_int( cp, sz )					/* Convert string from cisam file into integer.		*/
 unsigned	char	*cp;						/* Pointer to first byte (high order) of string.	*/
-int	sz;								/* Numer of bytes to convert; 2 = short, 4 = long.	*/
+int	sz;								/* Numer of bytes to convert; 2 = short, 4 = int4.	*/
 {
-	long	val;							/* Running total of characters processed so far.	*/
+	int4	val;							/* Running total of characters processed so far.	*/
 	int	i;							/* Index to each character to process in for loop.	*/
 
 	val = 0;							/* Always start val at zero.				*/
 	for( i = 0 ; i < sz ; ++i )					/* look at each character one at a time.		*/
 	{
-		val = ( val << 8 ) | ( 255L & (long)cp[i] );		/* Shift previous val by 1 byte, then add next char.	*/
+		val = ( val << 8 ) | ( 255 & (int4)cp[i] );		/* Shift previous val by 1 byte, then add next char.	*/
 	}								/* "And" by 255L to insure getting just one byte.	*/
 
 	return( val );							/* val holds the converted value of the characters.	*/
 }
+#else /* !CISAM */
 
-#endif
+int4 cisaminfo()
+{
+	werrlog(102,"cisaminfo() not implemented",0,0,0,0,0,0,0);
+	return -1;
+}
+
+#endif /* !CISAM */

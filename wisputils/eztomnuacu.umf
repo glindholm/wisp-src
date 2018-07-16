@@ -1,0 +1,15 @@
+#  Makefile to create new ACUCOBOL version of EXTOMNU
+
+SHELL = /bin/sh
+COBOLTYPE = ACU
+WISPTRAN  = wisp
+WISPFLAGS =  -V$(COBOLTYPE)
+COBOL     = ccbl
+COBFLAGS  =  -da4 -Zd
+RUNDIR    = ..
+
+all:	$(RUNDIR)/EZTOMNU
+
+$(RUNDIR)/EZTOMNU:    eztomnu.wcb
+	$(WISPTRAN) $(WISPFLAGS) eztomnu.wcb 
+	$(COBOL) $(COBFLAGS) -o $(RUNDIR)/EZTOMNU eztomnu.cob 

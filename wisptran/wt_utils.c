@@ -7,13 +7,26 @@
 			/*									*/
 			/************************************************************************/
 
-#define EXT extern
+#include <ctype.h>
+#include <string.h>
 
+#define EXT extern
 #include "wisp.h"
 
 #define	ALPHA_FAC	129
 #define NUM_FAC		130
 #define PROT_FAC	140
+
+#ifdef unix
+#define DSS_CHAR	'/'
+#define	DSS_STR		"/"
+#define PSS_CHAR	':'
+#endif
+#ifdef MSDOS
+#define DSS_CHAR	'\\'
+#define	DSS_STR		"\\"
+#define PSS_CHAR	';'
+#endif
 
 fparse(fnam,fext,flib)							/* Take a filename and determine if it has already	*/
 char *fnam,*fext,*flib;							/* got an extension on it. if not, add one.		*/
@@ -22,11 +35,6 @@ char *fnam,*fext,*flib;							/* got an extension on it. if not, add one.		*/
 	char	*p;
 	char	*end, *ptr;
 	int	i;
-
-#ifdef unix
-	for( p=fnam; *p; *p=tolower(*p),p++ );				/* Shift filename to lowercase				*/
-	for( p=fext; *p; *p=tolower(*p),p++ );				/* Shift extension to lowercase				*/
-#endif
 
 	fullname[0] = 0;
 	filename[0] = 0;
@@ -38,6 +46,10 @@ char *fnam,*fext,*flib;							/* got an extension on it. if not, add one.		*/
 		strcat(filename,".");					/* no, so add a period					*/
 		strcat(filename,fext);					/* and add the extension				*/
 	}
+
+#ifdef unix
+	lowercase(filename);
+#endif
 
 	strcpy(fullname,filename);
 
@@ -56,16 +68,11 @@ char *fnam,*fext,*flib;							/* got an extension on it. if not, add one.		*/
 		end += strlen(liblist);
 		for(ptr = liblist;ptr<end;)
 		{
-			for(i=0;*ptr && *ptr != ':';ptr++,i++)
+			for(i=0;*ptr && *ptr != PSS_CHAR;ptr++,i++)
 				fullname[i] = *ptr;
 			fullname[i] = '\0';
 			ptr++;
-#ifdef unix
-			strcat(fullname,"/");
-#endif /* unix */
-#ifdef MSDOS
-			strcat(fullname,"\\");
-#endif /* MSDOS */
+			strcat(fullname,DSS_STR);
 			strcat(fullname,filename);
 			if (access(fullname,0)==0) break;
 		}
@@ -76,22 +83,7 @@ char *fnam,*fext,*flib;							/* got an extension on it. if not, add one.		*/
 
 	return(0);
 }
-
-
-int keyword(the_word,the_list)						/* search a list of keywords to see if the_word is in	*/
-char *the_word;								/* the list						*/
-char *the_list[];
-{
-	int i;
-	i = 0;
-
-	do								/* this routine will return keyword numbers starting	*/
-	{								/* with 1, not 0.					*/
-		if (!strcmp(the_word,the_list[i++])) return(i);		/* found a match					*/
-	} while (*the_list[i]);						/* look till null string				*/
-	return(0);							/* no match						*/
-}
-
+#ifdef OLD
 int strpos(src,srch)							/* search a string for the occurence of another string	*/
 char *src,*srch;							/* src is the string to search, srch is the match	*/
 {
@@ -116,6 +108,28 @@ char *src,*srch;							/* src is the string to search, srch is the match	*/
 	} while (*(++src));							/* till null					*/
 	return(-1);								/* didn't match					*/
 }
+#endif /* OLD */
+
+int strpos(src,srch)
+char	*src;
+char	*srch;
+{
+	char	*ptr;
+	int	len;
+
+	ptr = src;
+	len = strlen(srch);
+
+	for(;;)
+	{
+		ptr = strchr(ptr,srch[0]);
+		if (!ptr) return(-1);
+
+		if (0==memcmp(ptr,srch,len)) return(ptr-src);
+		ptr++;
+	}
+}
+
 	
 
 int stredt(src,srch,repl)								/* Edit a source line, find the search	*/
@@ -137,57 +151,6 @@ char *src,*srch,*repl;									/* string and replace it with *repl	*/
 	}
 	return(i);									/* return the value 0 or -1		*/
 }
-
-
-
-
-/* 	Search through the various field lists until you find the given field, then return it's pointer.			*/
-
-item_record *find_item(the_name)
-char *the_name;
-{
-	int i;
-	item_record *this_item;
-
-	for (i=0; i<num_screens; i++)							/* first search each screen...		*/
-	{
-		this_item = screen_item[i];						/* Get ptr to first field		*/
-		do
-		{
-			if (!strcmp(the_name,this_item->name))				/* found it!				*/
-			{
-				return(this_item);					/* Return the pointer.			*/
-			}
-			this_item = this_item->next_item;				/* check next item			*/
-		} while (this_item);							/* until no more items			*/
-	}
-	return(0);									/* Not found.				*/
-}
-
-int file_index(the_name)								/* Scan the file list for a file.	*/
-char *the_name;
-{
-	int i;
-
-	if (!prog_cnt) return(-1);							/* No files, just exit.			*/
-
-	for (i=prog_cnt-1; i > -1; i--) if (!strcmp(prog_files[i],the_name)) break;	/* look for the file name		*/
-
-	return(i);									/* Will be -1 or the file number.	*/
-}
-
-int crt_file_index(the_name)								/* Scan the file list for a file.	*/
-char *the_name;
-{
-	int i;
-
-	if (!crt_fcount) return(-1);							/* No files, just exit.			*/
-
-	for (i=crt_fcount-1; i > -1; i--) if (!strcmp(crt_file[i],the_name)) break;	/* look for the file name		*/
-
-	return(i);									/* Will be -1 or the file number.	*/
-}
-
 
 make_fac(fac,src)				/* take a source variable name and make a FAC variable name			*/
 char *fac,*src;
@@ -302,3 +265,54 @@ int  length;
 	if (i > length) return(-1);						/* Couldn't do it.				*/
 	else return(1);								/* say we did it				*/
 }
+
+uppercase(str)										/* Shift string to uppercase		*/
+char *str;
+{
+	for(;*str;str++)  *str = toupper(*str);
+}
+
+lowercase(str)										/* Shift string to uppercase		*/
+char *str;
+{
+	for(;*str;str++)  *str = tolower(*str);
+}
+
+int paracmp(str,strtab,tabcnt)
+char	*str;
+char	strtab[MAX_PARAGRAPHS][40];
+int	tabcnt;
+{
+	int	i;
+	for(i=0; i<tabcnt; i++)
+	{
+		if (0==strcmp(str,strtab[i])) return(1);
+	}
+	return(0);
+}
+
+int noncase_eq(str1,str2)
+char	*str1, *str2;
+{
+	while(*str1 && *str2 && toupper(*str1)==toupper(*str2))
+	{
+		str1++;
+		str2++;
+	}
+
+	if (*str1 || *str2) return(0);
+	return(1);
+}
+
+int strchrcnt(string,chr)
+char	*string;
+char	chr;
+{
+	int	cnt;
+
+	for(cnt=0; (string = strchr(string,chr)); cnt++) {string++;}
+
+	return( cnt );
+}
+
+

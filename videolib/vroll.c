@@ -55,12 +55,18 @@ int vrol_do(top,bottom) int top,bottom;							/* Actually set the scroll region.
 	vrawsetscroll(top,bottom);							/* Set scroll region in vrawdos.c.	*/
 #else	/* VMS or unix */
 	char temp[8];									/* Temporary character storage.		*/
+#ifdef unix
+	char *tparm();
+#define PARMFUNC tparm
+#else
 	char *vcparm();
+#define PARMFUNC vcparm
+#endif
 	
 	if ( !(top == 0 && bottom == MAX_LINES_PER_SCREEN-1) )
 		vcapnull(scrarea_esc,"CHANGE_SCROLL_REGION",1);				/* test if defined			*/
 	vdefer(RESTORE);								/* Must restore before actual output.	*/
-	vcontrol(vcparm(scrarea_esc,top,bottom));					/* Select the scroll area.		*/
+	vcontrol(PARMFUNC(scrarea_esc,top,bottom));					/* Select the scroll area.		*/
 	vha();										/* Adjust for unwanted home move.	*/
 #endif	/* VMS or unix */
 

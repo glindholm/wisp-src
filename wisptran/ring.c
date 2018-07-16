@@ -76,6 +76,16 @@
 #define ERR_NOTFOUND	1
 #define ERR_POSITION	2
 
+static int real_get();
+static int unload_element();
+static int free_element();
+static int validatepos();
+static int quitpath();
+static int realadd();
+static int findpos();
+static int check_id();
+static int new_block();
+static int list_corrupt();
 
 struct list_struct
 {
@@ -127,7 +137,7 @@ int	sorted_flag;							/* Should this ring be sorted ?				*/
 
 	ring_ptr->self		= ring_ptr;
 	ring_ptr->esize    	= esize;
-	ring_ptr->xsize    	= (esize + sizeof(list_struct) + 3) & ~(3);	/* Calc extended size and round up to 4		*/
+	ring_ptr->xsize    	= (esize + sizeof(list_struct) + 7) & ~(7);	/* Calc extended size and round up to 8		*/
 	ring_ptr->alloc1   	= alloc1;
 	ring_ptr->alloc2   	= alloc2;
 	ring_ptr->ecompare 	= ecompare;

@@ -27,12 +27,10 @@ int yywrap(){ return 1; }
 %}
 
 ident [A-Za-z0-9]+
-nl \n
 stuff \".*\"
-copy [^A-Z-]COPY[^A-Z-]
+copy [^A-Z"-]COPY[^A-Z"-]
 in [^A-Z-]IN[^A-Z-]
 of [^A-Z-]OF[^A-Z-]
-white [ \t]+
 
 %%
 ^.{6}[\*\/].*    ;
@@ -42,7 +40,7 @@ white [ \t]+
 {in} { yyless(yyleng-1); return T_INOF;}
 {of} { yyless(yyleng-1); return T_INOF;}
 {ident}  return T_VALUE;
-{stuff}         ;
-{white} ;
-. ;
-{nl} ++yylineno;
+{stuff} { yyless(yyleng-1); return T_QUOTED;}
+. |
+[ \t] |
+\n ;

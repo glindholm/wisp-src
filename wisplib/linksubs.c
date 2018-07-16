@@ -27,36 +27,38 @@
 #include <rmsdef.h>
 #endif
 
-
+#include "idsistd.h"
+#include "link.h"
 #include "wglobals.h"
 #include "wdefines.h"
-#include "werrlog.h"
 #include "movebin.h"
 
-
+#include "werrlog.h"
 #define ROUTINE		28000
 
-
-#ifndef unix	/* VMS and MSDOS	*/
-
+#ifndef unix
 #define TEMPVMSLINK "SYS$SCRATCH:"
 #define	A(x)	(parm_list->parm[x])
 #define	P0	A(0),  A(1),  A(2),  A(3),  A(4),  A(5),  A(6),  A(7)
 #define	P1	A(8),  A(9),  A(10), A(11), A(12), A(13), A(14), A(15)
 #define	P2	A(16), A(17), A(18), A(19), A(20), A(21), A(22), A(23)
 #define	P3	A(24), A(25), A(26), A(27), A(28), A(29), A(30), A(31)
+#endif /* !unix */
 
-#endif	/* #ifndef unix (VMS and MSDOS)	*/
+/*
+	The following should be OK even though they are global 
+	because only used for true dynamic linking so reenterant
+	code is not required. (unix and VMS/DLINK)
+
+	They are global because used in vmspargs.c.
+*/
 
 char	LINKPARMFILLER[8];							/* Filler to test bug */
 char	LINKPARMKEY[80];							/* The key to the temp file name.		*/
 char	LINKPARMPRG[80];							/* The PROGNAME to link to.			*/
-long	LINKPARMCNT = 0;							/* The number of arguments passed (0-32)	*/
+int4	LINKPARMCNT = 0;							/* The number of arguments passed (0-32)	*/
 char	*LINKPARMPTR[MAX_LINK_PARMS];						/* The passed arguments				*/
-long	LINKPARMLEN[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*/
-
-struct	str_parm	{ char *parm[MAX_LINK_PARMS]; };			/* Structure for *parm_list function argument.	*/
-struct	str_len		{ long   len[MAX_LINK_PARMS]; };			/* Structure for  *len_list function argument.	*/
+int4	LINKPARMLEN[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*/
 
 #ifdef	unix
 
@@ -85,12 +87,12 @@ char	*linkkey;								/* key to parm area				*/
 	int	pid;
 	char	*predir;
 	FILE	*fp;
-	long	size, i;
+	int4	size, i;
 
 	pid = getpid();
 	predir = WISP_LINK_DIR;
 
-	if ( 0 != access( predir, 00 ) )						/* Create /usr/tmp/aculink dir		*/
+	if ( !fexists(predir) )								/* Create /usr/tmp/aculink dir		*/
 	{
 		if (mkdir ( predir, 0777))
 		{
@@ -149,11 +151,11 @@ int	parmcnt;								/* Number of parameters.			*/
 struct str_parm *parm_list;							/* Parms					*/
 struct str_len   *len_list;							/* Parm lengths					*/
 char	*linkkey;								/* key to parm area				*/
-long	*compcode;
-long	*returncode;
+int4	*compcode;
+int4	*returncode;
 {
 	FILE	*fp;
-	long	size,i;
+	int4	size,i;
 	char	tempstr[80];
 
 	fp = fopen(linkkey,"r");							/* Open the Parm file			*/
@@ -163,10 +165,6 @@ long	*returncode;
 		*returncode = 0;
 		LOGOFFFLAG = 0;
 		return;
-#ifdef OLD
-		werrlog(ERRORCODE(12),linkkey,errno,"readunixlink",0,0,0,0,0);
-		wexit(ERRORCODE(12));
-#endif
 	}
 
 	fread( &size, 4, 1, fp );							/* Read the program path		*/
@@ -191,8 +189,8 @@ long	*returncode;
 
 	if ( *compcode == -1 ) 								/* Program didn't understand protocol.	*/
 	{
-		*compcode = 0;
-		*returncode = 0;
+		*compcode = -1;
+		*returncode = -1;
 		LOGOFFFLAG = 0;
 	}
 
@@ -210,7 +208,7 @@ LINKGARG(pname,pcount,p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p1
 		      p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32)
 
 char	*pname;									/* Program to call				*/
-short	*pcount;								/* Number of parms.				*/
+int2	*pcount;								/* Number of parms.				*/
 char	*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11,*p12,*p13,*p14,*p15,*p16; /* Parms					*/
 char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 {
@@ -241,7 +239,7 @@ LINKPARG()
 }
 
 LINKNARG( argcount )
-short *argcount;
+int2 *argcount;
 {
 	ACUNARGS( argcount );
 }
@@ -264,7 +262,7 @@ char	*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8,*p9,*p10,*p11,*p12,*p13,*p14,*p15,*p16; /* 
 char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 {
 	FILE	*fp;
-	long	size,i;
+	int4	size,i;
 	char	tempstr[80];
 
 	LINKPARM = 1;									/* We are inside an ACU link		*/
@@ -302,15 +300,7 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 	LINKPARMPTR[30] = p31;
 	LINKPARMPTR[31] = p32;
 
-	for(i=0;i<80-1;i++)
-	{
-		if ( linkkey[i] == '\0' || linkkey[i] == ' ' ) 
-		{
-			LINKPARMKEY[i] = '\0';
-			break;
-		}
-		LINKPARMKEY[i] = linkkey[i];
-	}
+	unloadpad(LINKPARMKEY,linkkey,80-1);
 
 	fp = fopen(LINKPARMKEY,"r");							/* Open the Parm file			*/
 	if ( !fp )
@@ -349,7 +339,7 @@ ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 									/* from the linked program to the tmp file.		*/
 {
 	FILE	*fp;
-	long	size,i;
+	int4	size,i;
 	char	tempstr[80];
 	static	int	first=1;
 
@@ -395,15 +385,11 @@ short *argcount;
 	i = LINKPARMCNT;
 	*argcount = i;
 }
-
-#endif		/* #ifdef unix	*/
+#endif /* unix */
 
 /************************************************************************/
 
-#ifndef unix	/* This section is for VMS and MSDOS.	*/
-
 #ifdef VMS
-
 writevmslink ( pname, parmcnt, parm_list, len_list, vmskey)/* This routine takes the parameters collected by LINK	*/
 								/* and writes them out to a tmp parm file.		*/
 char	*pname;								/* Program to link to (fullpath)		*/
@@ -415,12 +401,12 @@ char	*vmskey;							/* key to parm area				*/
 	int	pid;
 	char	*predir;
 	FILE	*fp;
-	long	size, i;
+	int4	size, i;
 
 	pid = getpid();
 	predir = TEMPVMSLINK;							/* TEMPVMSLINK = "SYS$SCRATCH:"		*/
 
-				/*  acu_cobol version of this routine calls
+					/*  acu_cobol version of this routine calls
 					*  "access" to see if "predir" is accessable. 
 					*  VMS can not do this on "SYS$SCRATCH:"
 					*  so the "access" test was removed.
@@ -428,8 +414,10 @@ char	*vmskey;							/* key to parm area				*/
 
 	sprintf( vmskey, "%sLINK%06d.TMP;1", predir, pid ) ;			/* Make the parm file name		*/
 
-	if ( 0 == access ( vmskey, 0 ) )					/* If it already exists;		*/
+	if ( fexists(vmskey) )							/* If it already exists;		*/
+	{
 		delete ( vmskey ) ;						/* Delete it before opening		*/
+	}
 
 	fp = fopen(vmskey,"w");							/* open the parm file.			*/
 	if ( !fp )
@@ -469,11 +457,11 @@ int	parmcnt;							/* Number of parameters.			*/
 struct str_parm *parm_list;						/* Parms					*/
 struct str_len   *len_list;						/* Parm lengths					*/
 char	*vmskey;							/* key to parm area				*/
-long	*compcode;
-long	*returncode;
+int4	*compcode;
+int4	*returncode;
 {
 	FILE	*fp;
-	long	size,i;
+	int4	size,i;
 	char	tempstr[80];
 
 	fp = fopen(vmskey,"r");							/* Open the Parm file			*/
@@ -522,7 +510,7 @@ char	*p11,*p12,*p13,*p14,*p15,*p16,*p17,*p18,*p19,*p20;
 char	*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,*p32;
 {
 	FILE	*fp;
-	long	size,i;
+	int4	size,i;
 	char	tempstr[80];
 	/*	char	*pname;	*/						/* Program to call; removed for VMS	*/
 
@@ -621,12 +609,20 @@ short *argcount;
 	*argcount = (short) LINKPARMCNT ;
 }
 
-#endif	/* #ifdef VMS	-	The following is for VMS and MSDOS (#ifndef unix):	*/
+#endif /* VMS */
 
+#ifdef DMF
+#define WCLINK
+#endif
+#ifdef VMS
+#define WCLINK
+#endif
+
+#ifdef WCLINK
 wclink ( progname, parm_list, retval )
 char	*progname ;
 struct str_parm *parm_list;								/* Parms				*/
-long	*retval ;
+int4	*retval ;
 {
 	lnk_depth++ ;									/* increment the depth.			*/
 
@@ -726,13 +722,13 @@ long	*retval ;
 
 	lnk_depth-- ;									/* reset the depth.			*/
 }
-									/* End of VMS & MSDOS section.  Now, VMS only:		*/
-#ifdef VMS
+#endif /* WCLINK */
 
-long	vms_to_wang_codes ( vms_code )					/* Convert VMS return code to WANG LINK return code	*/
-long	vms_code ;							/* VMS return code.					*/
+#ifdef VMS
+int4	vms_to_wang_codes ( vms_code )					/* Convert VMS return code to WANG LINK return code	*/
+int4	vms_code ;							/* VMS return code.					*/
 {
-	long	wang_retcod ;						/* Wang version of VMS return code.			*/
+	int4	wang_retcod ;						/* Wang version of VMS return code.			*/
 
 	switch ( vms_code )
 	{
@@ -798,19 +794,20 @@ long	vms_code ;							/* VMS return code.					*/
 	return ( wang_retcod ) ;					/* This code will need to be wswaped in caller.		*/
 }
 
-#endif	/* #ifdef VMS	*/
+#endif /* VMS */
 
-#endif	/* #ifndef unix	-	End of VMS and MSDOS section	*/
+#ifdef DACU
+#endif /* DACU */
 
-									/* This routine sets a WISP variable to a long value.	*/
+									/* This routine sets a WISP variable to a int4 value.	*/
 									/* although this could be used throughout the WISP.	*/
 									/* system, it is currently only used in the LINK.	*/
 									/* subsystem.  It should eventually be given a name.	*/
 									/* starting with a "w" and used from the WISP Library.	*/
 swap_put ( destination, new_value )
-long	*destination, new_value ;					/* convert new_value to WANG,  and move to destination.	*/
+int4	*destination, new_value ;					/* convert new_value to WANG,  and move to destination.	*/
 {
-	long	use_value ;						/* temporary holder for the value needing WANGing.	*/
+	int4	use_value ;						/* temporary holder for the value needing WANGing.	*/
 
 	use_value = new_value ;						/* This will preserve the original value in new_value.	*/
 	wswap ( &use_value ) ;						/* swap the bits as needed for this machine to WANG.	*/

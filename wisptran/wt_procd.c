@@ -12,15 +12,156 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "scrn.h"
+#include "crt.h"
+#include "cobfiles.h"
+#include "wispfile.h"
 
-extern item_record *find_item();
+NODE get_statement();
+NODE get_verb_statement();
+static int exit_copy_mode();
+
 extern int unterminated_if;
 int	mwconv_flag=0;
 
+/*
+**	Routine:	procedure_division()
+**
+**	Function:	To process the PROCEDURE DIVISION.
+**
+**	Description:	Get and put statements until end of program.
+**
+**			If the first statement is not PROCEDURE DIVISION then an error will be generated.
+**
+**	Arguments:
+**	the_statement	The pre-loaded first statement.
+**
+**	Globals:	None
+**
+**	Return:		The next statement that is not part of this division.
+**
+**	Warnings:	None
+**
+**	History:	
+**	06/02/93	Written by GSL
+**
+*/
+procedure_division(the_statement)
+NODE	the_statement;
+{
+	if (eq_token(the_statement->next->token,KEYWORD,"PROCEDURE"))
+	{
+		write_log("WISP",'I',"PROCDIV","Processing PROCEDURE DIVISION.");
+		division = PROCEDURE_DIVISION;
+
+		if (!comments) tput_blank();
+		tput_statement(12,the_statement);
+		free_statement(the_statement);
+	}
+	else
+	{
+		write_log("WISP",'F',"PROCDIV","PROCEDURE DIVISION not found, possible earlier syntax error.");
+		exit_with_err();
+	}
+
+	/*
+	**	The following "logic" handles the PROCEDURE DIVISION including the DECLARATIVES.
+	**	It has been relocated from wisp.c and wt_divs.c but otherwise remains unchanged.
+	**	It has not yet been moderized to use "statement" logic.
+	*/
+
+	get_line();								/* get a new line.			*/
+
+	if (strpos(inline,"DECLARATIVES") == -1)				/* no declaratives			*/
+	{
+		int i;
+
+		if (prog_cnt - prog_sort)					/* and there are valid files.		*/
+		{								/* so put ours in place			*/
+			write_log("WISP",'I',"INSERTDECL","Inserting default DECLARATIVES.");
+			tput_line_at(8, "DECLARATIVES.");
+			gen_defdecl();						/* And generate the default declaratives.*/
+			tput_line_at(8, "END DECLARATIVES.");
+			tput_blank();
+		}								/* continue processing the line 	*/
+		check_section();						/* See if there is a section name	*/
+
+		for (i=0; i<proc_performs_cnt; i++)				/* Delete any procedure division copys	*/
+		{								/* (from .OPT file)			*/
+			proc_performs[i][0] = '\0';
+		}
+	}
+	else									/* we do have declaratives, flag it	*/
+	{
+		in_decl = 1;
+	}
+
+	hold_line();
+
+	for(;;)
+	{
+		/*
+		**	This is the main loop that was in wisp.c, the check_div() call has been replaced
+		**	by check_proc_div() which is a subset of it that applies to the procedure division.
+		*/
+		get_line();
+
+		if (strcmp(area_a,"    "))					/* If area_a is not empty then there	*/
+		{
+			tput_flush();
+			exit_copy_mode();
+			check_proc_div();
+										/* If in the procedure division, when	*/
+										/* something is in area a, it has to	*/
+			chk_dpar();						/* be a paragraph, or declarative sect.	*/
+	
+		}
+
+		p_proc();
+	}
+}
+
+int sect_num = 0;
+
+static exit_copy_mode()
+{
+	extern int sect_num;								/* Current SECTION number.		*/
+
+	if (copy_sect)									/* Have we been copying a SECTION?	*/
+	{
+		if (!strncmp(parms[1],"SECTION",7))					/* Is this a section?			*/
+		{
+			TOKEN	*tok;
+			char	buff[80];
+
+			copy_sect = 0;							/* Only stop on a new section.		*/
+			copy_to_dcl_file = 0;
+
+			sprintf(buff,"       WISP-SECTION-%d-END.",sect_num++);		/* Put in the ending paragraph.		*/
+			tok = make_token(NOPROCESS,buff);
+			tok->column = 1;
+			tok->column_fixed = 1;
+			split_token_to_dcl_file(1, tok);
+			free_token(tok);
+		}
+	}
+	else if (copy_to_dcl_file)							/* Have we been copying paragraphs?	*/
+	{
+		copy_to_dcl_file = 0;							/* reset the mode.			*/
+	}
+	else if (copy_to_dtp_file)							/* Have we been copying paragraphs?	*/
+	{
+		copy_to_dtp_file = 0;							/* reset the mode.			*/
+	}
+
+}
+
 p_proc()
 {
-	int i,j,hold,fnum,inv_key,n_alt,ml,first,mwc_len;
+	int i,j,hold,fnum,inv_key,n_alt,ml,mwc_len;
 	char tstr[132],pstr[256],outline[132];
+	int	startpos;
+	NODE	the_statement;
 
 	if ( !strcmp(parms[0],"DISPLAY") && !strcmp(parms[1],"AND"))
 	{
@@ -39,7 +180,7 @@ p_proc()
 		}
 		write_log("WISP",'I',"DISPANDREAD","DISPLAY AND READ statement of screen record %s.",templine);
 
-		write_line("\n      **** DISPLAY AND READ %s.\n",templine); 
+		tput_scomment("**** DISPLAY AND READ %s.",templine); 
 
 		scount = 0;
 											/* Try to find a match in the known	*/
@@ -50,14 +191,14 @@ p_proc()
 			write_log("WISP",'F',"DISPANDRDERR","Error in DISPLAY AND READ Statement, Input line is;");
 			write_log(" ",' '," ","%s",inline);
 			write_log("WISP",'F',"CANTFINDSCRN","Could not find screen named %s",templine);
-			exit_wisp(-1);
+			exit_with_err();
 		}
 
 		if (in_decl)								/* if we are currently in declaratives	*/
 		{
 			scrn_flags[scount] |= SCRN_IN_DECLARATIVES;			/* flag it as such			*/
 		}
-		if (!in_decl || copy_decl)						/* If not, or copying.			*/
+		if (!in_decl || copy_to_dtp_file)					/* If not, or copying.			*/
 		{
 			scrn_flags[scount] |= SCRN_IN_PROCDIV;				/* Otherwise flag procedure division	*/
 		}
@@ -65,8 +206,8 @@ p_proc()
 		if (pmode == DISPLAY)							/* Nested DISPLAY AND READ		*/
 		{
 			write_log("WISP",'F',"ERRNESTDISP","Error -- NESTED DISPLAY AND READ Statement, Input line is;");
-			write_log(" ",' '," ","%s",inline);
-			exit_wisp(-1);
+			write_log(" ",'M'," ","%s",inline);
+			exit_with_err();
 		}
 					
 		this_item = screen_item[scount];					/* point to first item in the list for	*/
@@ -77,7 +218,12 @@ p_proc()
 
 		ptype = get_param(templine);						/* skip over the CRT keyword		*/
 											/* Find out which crt it is.		*/
-		for (i=0; i<crt_fcount; i++) if (!strcmp(templine,crt_file[i])) cur_crt = i;
+		cur_crt = crt_index(templine);
+		if (-1 == cur_crt)
+		{
+			write_log("WISP",'E',"NOTWS","DISPLAY AND READ on unknown Workstation file [%s]",templine);
+			cur_crt = 0;
+		}
 		scrn_crt[scount] = cur_crt;						/* Remember which one it was.		*/
 
 		d_period = 0;								/* no period found			*/
@@ -123,7 +269,7 @@ p_proc()
 #define PROC_DELETE	94
 #define PROC_ELSE	101
 
-/*       0         1         2         3         4         5	  6	    7	      8					*/
+/*       0         1         2         3         4         5         6         7         8         9         0  	*/
 /*       01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456	*/
 	else if ((i = strpos(
         "MOVE OPEN CLOSE WRITE REWRITE READ SET START CALL EXIT PERFORM STOP IF GO SORT ACCEPT DISPLAY DELETE ELSE ",
@@ -131,242 +277,17 @@ p_proc()
 	{
 		switch (i)
 		{
-			case PROC_MOVE:							/* look for MOVE WITH CONVERSION	*/
-			{								/* or MOVE SPACES TO			*/
-				if (!strcmp(parms[1],"WITH"))				/* found WITH, this is it.		*/
-				{
-					mwconv_flag = 1;				/* we need to generate mwconv code	*/
-					skip_param(3);					/* skip the phrase			*/
-					ptype = get_param(o_parms[0]);			/* get the source field			*/
-					ptype = get_param(o_parms[1]);			/* get the destination field		*/
+			case PROC_MOVE:
+			{
+				hold_line();
+				get_line();
+				the_statement = get_verb_statement();
+				
+				parse_move(the_statement);
 
-					write_log("WISP",'I',"MOVEWCONV","MOVE WITH CONVERSION, field is %s.",o_parms[0]);
-											/* if open paren and no close paren or	*/
-					if (((strpos(o_parms[0],"(") != -1) && (strpos(o_parms[0],")") == -1)) ||
-						(o_parms[1][0] == '('))			/* next parm has open,it is subscripted	*/
-					{						/* it has a subscript			*/
-						strcat(o_parms[0]," ");			/* add a space				*/
-						strcat(o_parms[0],o_parms[1]);		/* add it on to the end of the name	*/
-						while (strpos(o_parms[1],")") == -1)	/* no closing parentheses		*/
-						{
-							ptype = get_param(o_parms[1]);	/* get the next part of the sub script	*/
-							if (o_parms[1][0] != ')')	/* a field is next, add a space	*/
-							{
-								strcat(o_parms[0]," ");
-							}
-							strcat(o_parms[0],o_parms[1]);	/* add it on to the end of the name	*/
-						}
-						write_log("WISP",'I',"SUBSCRMOVE",
-							"Handle subscripted source field %s in MOVE WITH CONVERSION.",o_parms[0]);
-						ptype = get_param(o_parms[1]);		/* get the destination			*/
-					}
-					if (!strcmp(o_parms[1],"TO"))			/* skip over "TO"			*/
-					{
-						ptype = get_param(o_parms[1]);		/* get the destination field		*/
-					}
-											/* Put into WISP's field, do the conv.	*/
-					write_line("             MOVE %s TO\n",o_parms[0]);
-					put_line  ("                  WISP-ALPHA-CONVERSION-FIELD,\n");
-					put_line  ("             PERFORM CONVERT-ALPHA-VALUE-TO-NUMERIC,\n");
+				free_statement(the_statement);
+				hold_token_cache();
 
-					strcpy(o_parms[0],o_parms[1]);
-
-					peek_param(o_parms[1]);
-
-					if (((strpos(o_parms[0],"(") != -1) && (strpos(o_parms[0],")") == -1)) ||
-						(o_parms[1][0] == '('))			/* next parm has open,it is subscripted	*/
-					{						/* it has a subscript			*/
-						ptype = get_param(o_parms[1]);
-						strcat(o_parms[0]," ");			/* add a space				*/
-						strcat(o_parms[0],o_parms[1]);		/* add it on to the end of the name	*/
-						while (strpos(o_parms[1],")") == -1)	/* no closing parentheses		*/
-						{
-							ptype = get_param(o_parms[1]);	/* get the next part of the sub script	*/
-							if (o_parms[1][0] != ')')	/* a field is next, add a space	*/
-							{
-								strcat(o_parms[0]," ");
-							}
-							strcat(o_parms[0],o_parms[1]);	/* add it on to the end of the name	*/
-						}
-						write_log("WISP",'I',"SUBSCRMOVE",
-							"Handle subscripted destination field %s in MOVE WITH CONVERSION.",
-														o_parms[0]);
-					}
-
-					mwc_len = strlen(o_parms[0]);
-											/* First zero the target field.		*/
-											/* Now check it for errors.		*/
-					put_line  ("             IF WISP-NO-NUMERIC-CONV-ERROR\n");	/* None by MWCONV.	*/
-					if (mwc_len > 44)				/* Check for too long			*/
-					{						/* Put on 2 lines			*/
-						write_line("             MOVE ZERO TO\n             %s\n",o_parms[0]);
-					}
-					else
-					{
-						write_line("             MOVE ZERO TO %s\n",o_parms[0]);
-					}
-					put_line  ("                  ADD WISP-CONVERTED-INTEGER-FIELD TO\n");
-
-					if (mwc_len > 48)				/* Too big of a name, subscript combo.	*/
-					{
-						i = strpos(o_parms[0],"(");		/* Find the open paren.			*/
-						o_parms[0][i] = '\0';			/* Replace with null.			*/
-						write_line("                     %s\n",o_parms[0]);	/* Write main name.	*/
-						o_parms[0][i] = '(';			/* Put open paren back.			*/
-						write_line("                     %s\n",&o_parms[0][i]);		/* Write subscr.*/
-					}
-					else
-					{
-						write_line("                     %s\n",o_parms[0]);
-					}
-					put_line  ("                     ON SIZE ERROR\n");
-					put_line  ("                        MOVE \"Y\" TO WISP-NUMERIC-CONVERSION-FLAG\n");
-					put_line  ("                     END-ADD\n");
-					put_line  ("                  ADD WISP-CONVERTED-FRACTION-FIELD TO\n");
-
-					if (mwc_len > 48)				/* Too big of a name, subscript combo.	*/
-					{
-						i = strpos(o_parms[0],"(");		/* Find the open paren.			*/
-						o_parms[0][i] = '\0';			/* Replace with null.			*/
-						write_line("                     %s\n",o_parms[0]);	/* Write main name.	*/
-						o_parms[0][i] = '(';			/* Put open paren back.			*/
-						write_line("                     %s\n",&o_parms[0][i]);		/* Write subscr.*/
-					}
-					else
-					{
-						write_line("                     %s\n",o_parms[0]);
-					}
-
-					put_line  ("                     ON SIZE ERROR\n");
-					put_line  ("                        MOVE \"Y\" TO WISP-NUMERIC-CONVERSION-FLAG\n");
-					put_line  ("                     END-ADD\n");
-					put_line  ("             END-IF\n");		/* End of these checks.			*/
-
-					put_line  ("             IF WISP-NO-NUMERIC-CONV-ERROR\n");	/* None by ADD.		*/
-					put_line  ("                CONTINUE");		/* Do this to be sure ELSE's are paired	*/
-
-					strcpy(o_parms[1],o_parms[0]);			/* move it back				*/
-					if (ptype != -1)				/* no period, look for ON ERROR		*/
-					{
-						put_line(",\n");			/* finish previous line			*/
-						ptype  = get_param(o_parms[0]);		/* get next word			*/
-						if (!strcmp(o_parms[0],"ON"))		/* it's ON, must be error phrase	*/
-						{
-							i = get_ppos();			/* Get parameter position of ON.	*/
-							memset(inline,' ',i);		/* Fill with spaces.			*/
-							get_param(o_parms[0]);		/* skip ERROR keyword			*/
-							stredt(inline," ON ","  ");	/* remove ON				*/
-							stredt(inline," ERROR"," ");	/* remove ERROR 			*/
-							put_line  ("             ELSE\n");
-							if (strlen(o_parms[1]) < 40)
-							{
-								write_line("                  MOVE ZERO TO %s,\n",o_parms[1]);
-							}
-							else
-							{
-								put_line("                  MOVE ZERO TO\n");
-
-								if (mwc_len > 48)	/* Too big of a name, subscript combo.	*/
-								{
-									i = strpos(o_parms[1],"(");
-									o_parms[1][i] = '\0';
-									write_line("                  %s\n",o_parms[1]);
-									o_parms[1][i] = '(';
-									write_line("                  %s\n",&o_parms[1][i]);
-								}
-								else
-								{
-									write_line("                  %s\n",o_parms[1]);
-								}
-							}
-							hold_line();			/* Hold the ERROR line			*/
-						}
-						else if (!strcmp(o_parms[0],"ERROR"))	/* it's ERROR alone, error phrase	*/
-						{
-							stredt(inline," ERROR"," ");	/* remove ERROR 			*/
-							put_line  ("             ELSE\n");
-							if (mwc_len > 40)
-							{
-								put_line  ("                  MOVE ZERO TO\n");
-								if (mwc_len > 48)	/* Too big of a name, subscript combo.	*/
-								{
-									i = strpos(o_parms[1],"(");
-									o_parms[1][i] = '\0';
-									write_line("                  %s\n",o_parms[1]);
-									o_parms[1][i] = '(';
-									write_line("                  %s\n",&o_parms[1][i]);
-								}
-								else
-								{
-									write_line("                  %s\n",o_parms[1]);
-								}
-
-							}
-							else
-							{
-								write_line("                  MOVE ZERO TO %s,\n",o_parms[1]);
-							}
-							hold_line();			/* Save the ERROR line			*/
-						}
-						else					/* has no ON ERROR PHRASE		*/
-						{
-							put_line  ("             END-IF\n");	/* end it			*/
-							if (ptype == 1) hold_line();   /* new line? save it			*/
-						}
-					}
-					else						/* ended with a period			*/
-					{
-						put_line(".\n");			/* terminate last line			*/
-					}
-				}
-				else if (!strcmp(parms[1],"SPACES") && init_move)	/* found SPACES, do INITIALIZE if desired*/
-				{
-
-					ptype = get_param(o_parms[0]);			/* get MOVE keyword			*/
-					stredt(inline," MOVE"," ");			/* remove it from the input line	*/
-					ptype = get_param(o_parms[0]);			/* get SPACES keyword			*/
-					stredt(inline," SPACES","INITIALIZE");		/* change it to INITIALIZE		*/
-					if (peek_param(o_parms[0]) == 1)		/* last one on line, write it		*/
-					{
-						put_line(inline);
-					}
-					ptype = get_param(o_parms[0]);			/* should be TO				*/
-
-					if (!strcmp(o_parms[0],"TO"))			/* skip over "TO"			*/
-					{
-						stredt(inline," TO"," ");		/* remove it				*/
-					}
-
-					write_log("WISP",'I',"MOVESPACES","MOVE SPACES changed to INITIALIZE.");
-					put_line(inline);
-
-				}
-				else if (!strcmp(parms[1],"SPACE") && init_move)	/* found SPACE, do INITIALIZE if desired */
-				{
-
-					ptype = get_param(o_parms[0]);			/* get MOVE keyword			*/
-					stredt(inline," MOVE"," ");			/* remove it from the input line	*/
-					ptype = get_param(o_parms[0]);			/* get SPACE keyword			*/
-					stredt(inline," SPACE","INITIALIZE");		/* change it to INITIALIZE		*/
-					if (peek_param(o_parms[0]) == 1)		/* last one on line, write it		*/
-					{
-						put_line(inline);
-					}
-					ptype = get_param(o_parms[0]);			/* should be TO				*/
-
-					if (!strcmp(o_parms[0],"TO"))			/* skip over "TO"			*/
-					{
-						stredt(inline," TO"," ");		/* remove it				*/
-					}
-
-					write_log("WISP",'I',"MOVESPACES","MOVE SPACE changed to INITIALIZE.");
-					put_line(inline);
-
-				}
-				else							/* not a conversion, just write		*/
-				{
-					put_line(inline);
-				}
 				break;
 			}
 
@@ -390,12 +311,12 @@ p_proc()
 
 				i = 0;
 
-				while (i<crt_count && strcmp(crt_record[i],o_parms[1]))	/* is it a crt record?			*/
+				while (i<crt_record_count && strcmp(crt_record[i],o_parms[1]))	/* is it a crt record?		*/
 				{
 					i++;						/* no, keep looking			*/
 				}
 
-				if (i == crt_count)					/* didn't find it, copy the line 	*/
+				if (i == crt_record_count)				/* didn't find it, copy the line 	*/
 				{
 					p_rewrite();					/* Go process it for INVALID KEY.	*/
 				}
@@ -469,48 +390,46 @@ p_proc()
 
 					write_log("WISP",'I',"PROCSETBIT","Processing SET BITS %s.",o_parms[2]);
 
-					write_line("               MOVE %s TO WISP-SET-BYTE",o_parms[0]);
-					put_char('\n');						/* end the line			*/
+					tput_line_at(16, "MOVE %s TO WISP-SET-BYTE",o_parms[0]);
 
 											/* Can't call with indexed vars		*/
 											/* When using acu cobol.		*/
 					if (acu_cobol)
 					{
-						write_line("               MOVE %s\n",o_parms[1]);
-						put_line(  "                 TO WISP-TEST-BYTE\n");
+						tput_line_at(16, "MOVE %s",o_parms[1]);
+						tput_clause (20, "TO WISP-TEST-BYTE");
 					}
 
-					write_line("               CALL \042bit_%s\042 USING\n",o_parms[2]);
-					put_line  ("                    WISP-SET-BYTE,\n");
+					tput_line_at(16, "CALL \"bit_%s\" USING WISP-SET-BYTE,",o_parms[2]);
 
 					if (acu_cobol)
-						put_line("                    WISP-TEST-BYTE");
+						tput_clause(20, "WISP-TEST-BYTE");
 					else
-						write_line("                    %s",o_parms[1]);
+						tput_clause(20, "%s",o_parms[1]);
 
 					if (acu_cobol)
 					{
-						put_line("\n               MOVE WISP-TEST-BYTE\n");
-						write_line("                 TO %s",o_parms[1]);
+						tput_line_at(16, "MOVE WISP-TEST-BYTE TO");
+						tput_clause (20, "%s",o_parms[1]);
 					}
 
 					if (ptype == -1)					/* end of statement		*/
 					{
-						put_char('.');					/* write a period		*/
+						tput_clause(16, ".");				/* write a period		*/
 					}
-					put_char('\n');						/* end the line			*/
+
 					write_log("WISP",'I',"SETBITDONE","Done processing SET BITS command");
 				}
 				else
 				{	if (ml)
 					{							/* A multi line parse.		*/
 
-						put_line(outline);				/* Ouput the starting line.	*/
+						tput_block(outline);				/* Ouput the starting line.	*/
 						hold_line();					/* hold the second line.	*/
 					}
 					else
 					{
-						put_line(inline);				/* Singular line.		*/
+						tput_line("%s", inline);			/* Singular line.		*/
 					}
 				}
 				break;
@@ -526,8 +445,21 @@ p_proc()
 
 			case PROC_START:							/* START statements		*/
 			{
+#ifdef OLD
 				write_log("WISP",'I',"FOUNDSTART","START statement found.");
 				p_start();
+				break;
+#endif
+
+				hold_line();
+				get_line();
+				the_statement = get_verb_statement();
+				
+				parse_start(the_statement);
+
+				free_statement(the_statement);
+				hold_token_cache();
+
 				break;
 			}
 
@@ -537,96 +469,45 @@ p_proc()
 				break;
 			}
 
-			case PROC_EXIT:							/* EXIT statement		*/
-			{
-				if (!strcmp(parms[1],"PROGRAM."))
-				{							/* an EXIT-PROGRAM 		*/
-					ptype = get_param(o_parms[9]);			/* Get the EXIT.			*/
-					ptype = get_param(o_parms[9]);			/* Get the PROGRAM.			*/
-
-					if (in_decl)
-					{
-						put_line("           PERFORM D-WISP-EXIT-PROGRAM");
-						decl_stop_exit = 1;
-					}
-					else
-						put_line("           PERFORM WISP-EXIT-PROGRAM");
-					if (ptype == -1)
-						put_line(".\n");		/* Put in a period.			*/
-					else
-						put_line("\n");
-				}
-				else
-				{
-					put_line(inline);
-				}
-				break;
-			}
-
 			case PROC_PERFORM:							/* PERFORM statement		*/
 			{
 				if (in_decl)							/* is it in the declaratives?	*/
 				{
 					strcpy(pstr,parms[1]);					/* get the name.		*/
 					stredt(pstr,".","");
-					if (par_count)						/* Is there a paragraph		*/
-					{							/* substitute list?		*/
-						for (i=0; i<par_count; i++)			/* See if it is a paragraph fix.*/
-						{
-							if (!strcmp(pstr,par_name[i])) break;	/* found it.			*/
-						}
 
-						if (i < par_count)
-						{						/* now process it.		*/
-							make_fld(tstr,pstr,"D-");
-							stredt(inline,pstr,tstr);		/* replace it in the line.	*/
-						}
-						else						/* Otherwise save the name for	*/
-						{						/* later analysis.		*/
-							add_perf(pstr);
-						}
+					if (paracmp(pstr,proc_paras,proc_paras_cnt))		/* Found it.			*/
+					{							/* now process it.		*/
+						make_fld(tstr,pstr,"D-");
+						stredt(inline,pstr,tstr);			/* replace it in the line.	*/
 					}
 					else							/* Otherwise save the name for	*/
 					{							/* later analysis.		*/
 						add_perf(pstr);
 					}
 				}
-				else if (copy_para)						/* Are we copying paragraphs?	*/
+				else if (copy_to_dcl_file)					/* Are we copying paragraphs?	*/
 				{
 					strcpy(pstr,parms[1]);					/* get the name.		*/
 					stredt(pstr,".","");
-					if (par_count)						/* Is there a paragraph		*/
-					{							/* substitute list?		*/
-						for (i=0; i<par_count; i++)			/* See if it is a paragraph fix.*/
-						{
-							if (!strcmp(pstr,par_name[i])) break;	/* found it.			*/
-						}
 
-						if (i == par_count)
-						{						/* not found, process it.	*/
-							add_perf(pstr);
-						}
-					}
-					else							/* Otherwise save the name for	*/
-					{							/* later analysis.		*/
-						add_perf(pstr);
+					if (!paracmp(pstr,proc_paras,proc_paras_cnt))	
+					{
+						add_perf(pstr);					/* Not found, add to list	*/
 					}
 				}
-				else if (ppdiv_count)						/* Check to see if it is a ref	*/
+				else if (proc_performs_cnt)					/* Check to see if it is a ref	*/
 				{								/* to a paragraph in the DECLAR	*/
 					strcpy(pstr,parms[1]);					/* get the name.		*/
 					stredt(pstr,".","");
-					for (i=0; i<ppdiv_count; i++)				/* Search the list.		*/
-					{
-						if (!strcmp(pstr,perf_pdiv[i])) break;		/* found it.			*/
-					}
-					if (i != ppdiv_count)
+
+					if (paracmp(pstr,proc_performs,proc_performs_cnt))
 					{
 						make_fld(tstr,pstr,"D-");			/* If found, make the new name.	*/
 						stredt(inline,pstr,tstr);			/* Then change the statement.	*/
 					}
 				}
-				put_line(inline);
+				tput_line("%s", inline);
 				break;
 			}
 
@@ -636,96 +517,67 @@ p_proc()
 				{
 					strcpy(pstr,parms[2]);					/* get the name.		*/
 					stredt(pstr,".","");
-					if (par_count)						/* Is there a paragraph		*/
-					{							/* substitute list?		*/
-						for (i=0; i<par_count; i++)			/* See if it is a paragraph fix.*/
-						{
-							if (!strcmp(pstr,par_name[i])) break;	/* found it.			*/
-						}
 
-						if (i < par_count)
-						{						/* now process it.		*/
-							make_fld(tstr,pstr,"D-");
-							stredt(inline,pstr,tstr);		/* replace it in the line.	*/
-						}
-						else						/* Otherwise save the name for	*/
-						{						/* later analysis.		*/
-							add_perf(pstr);
-						}
+					if (paracmp(pstr,proc_paras,proc_paras_cnt))		/* Found it			*/
+					{							/* now process it.		*/
+						make_fld(tstr,pstr,"D-");
+						stredt(inline,pstr,tstr);			/* replace it in the line.	*/
 					}
 					else							/* Otherwise save the name for	*/
 					{							/* later analysis.		*/
 						add_perf(pstr);
 					}
+
 				}
-				else if (copy_para)						/* Are we copying paragraphs?	*/
+				else if (copy_to_dcl_file)					/* Are we copying paragraphs?	*/
 				{
 					strcpy(pstr,parms[2]);					/* get the name.		*/
 					stredt(pstr,".","");
-					if (par_count)						/* Is there a paragraph		*/
-					{							/* substitute list?		*/
-						for (i=0; i<par_count; i++)			/* See if it is a paragraph fix.*/
-						{
-							if (!strcmp(pstr,par_name[i])) break;	/* found it.			*/
-						}
 
-						if (i == par_count)
-						{						/* not found, process it.	*/
-							add_perf(pstr);
-						}
-					}
-					else							/* Otherwise save the name for	*/
-					{							/* later analysis.		*/
-						add_perf(pstr);
+					if (!paracmp(pstr,proc_paras,proc_paras_cnt))		/* If not found			*/
+					{
+						add_perf(pstr);					/* Add to list			*/
 					}
 				}
-				else if (ppdiv_count)						/* Check to see if it is a ref	*/
+				else if (proc_performs_cnt)					/* Check to see if it is a ref	*/
 				{								/* to a paragraph in the DECLAR	*/
 					strcpy(pstr,parms[2]);					/* get the name.		*/
 					stredt(pstr,".","");
-					for (i=0; i<ppdiv_count; i++)				/* Search the list.		*/
-					{
-						if (!strcmp(pstr,perf_pdiv[i])) break;		/* found it.			*/
-					}
-					if (i != ppdiv_count)
+
+					if (paracmp(pstr,proc_performs,proc_performs_cnt))
 					{
 						make_fld(tstr,pstr,"D-");			/* If found, make the new name.	*/
 						stredt(inline,pstr,tstr);			/* Then change the statement.	*/
 					}
 				}
-				put_line(inline);
+				tput_line("%s", inline);
 				break;
 			}
 
-			case PROC_STOP:							/* process STOP RUN's			*/
+			case PROC_EXIT:							/* EXIT statement		*/
 			{
-				ptype = get_param(o_parms[0]);				/* Get STOP				*/
-				ptype = get_param(o_parms[0]);				/* Get RUN or literal to display.	*/
-				if (!strcmp(o_parms[0],"RUN"))
-				{
-					if (in_decl)
-					{
-						put_line("           PERFORM D-WISP-STOP-RUN");
-						decl_stop_exit = 1;
-					}
-					else
-						put_line("           PERFORM WISP-STOP-RUN");
+				hold_line();
+				get_line();
+				the_statement = get_verb_statement();
+				
+				parse_exit(the_statement);
 
-					if (ptype == -1)
-						put_line(".\n");			/* Put in a period.			*/
-					else
-						put_line("\n");
-				}
-				else if (o_parms[0][0] == '\"')				/* Its a literal.			*/
-				{
-					put_line("           DISPLAY\n");		/* Write DISPLAY.			*/
-					stredt(inline," STOP ","      ");		/* Remove STOP.				*/
-					hold_line();					/* Re parm it.				*/
-				}
-				else
-				{
-					put_line(inline);
-				}
+				free_statement(the_statement);
+				hold_token_cache();
+
+				break;
+			}
+
+			case PROC_STOP:							/* process STOP statements		*/
+			{
+				hold_line();
+				get_line();
+				the_statement = get_verb_statement();
+				
+				parse_stop(the_statement);
+
+				free_statement(the_statement);
+				hold_token_cache();
 
 				break;
 			}
@@ -734,7 +586,15 @@ p_proc()
 			{								/* Process IF's for ALTERED and BIT IN.	*/
 				unterminated_if = 0;					/* Clear flag, next ELSE belongs to	*/
 											/* this IF stmt.			*/
-				p_if();
+				hold_line();
+				get_line();
+				the_statement = get_verb_statement();
+				
+				parse_if(the_statement);
+
+				free_statement(the_statement);
+				hold_token_cache();
+
 				break;
 			}
 
@@ -744,10 +604,10 @@ p_proc()
 				{							/* "IF" stmt then need to terminate it	*/
 											/* before we output this "ELSE".	*/
 					unterminated_if = 0;
-					put_line("           END-IF\n");		/* Close the IF				*/
+					tput_line("           END-IF");			/* Close the IF				*/
 				}
 
-				put_line(inline);
+				tput_line("%s", inline);
 				break;
 			}
 
@@ -759,125 +619,15 @@ p_proc()
 
 			case PROC_DISPLAY:
 			{
-				int	startpos;
+				hold_line();
+				get_line();
+				the_statement = get_verb_statement();
+				
+				parse_display(the_statement);
 
-				write_log("WISP",'I',"PROCDISP","Processing DISPLAY statement.");
+				free_statement(the_statement);
+				hold_token_cache();
 
-				if (!proc_display)					/* We aren't supposed to do this.	*/
-				{
-					write_log("WISP",'I',"SKIPDISP","Skipped processing of DISPLAY statement.");
-					put_line(inline);				/* So just write it out.		*/
-					break;						/* And exit.				*/
-				}
-
-				ptype = get_param(o_parms[0]);				/* skip DISPLAY statement.		*/
-
-				startpos = get_ppos();
-				if (startpos > 30 || startpos < 12) startpos = 15;
-				memset(tstr,' ',startpos);
-				tstr[startpos] = '\0';					/* Initialize screen area.		*/
-				strcat(tstr,"MOVE SPACES TO WISP-CRT-SCREEN-AREA\n");
-				put_line(tstr);
-
-				tstr[startpos] = '\0';
-				strcat(tstr,"STRING\n");				/* Start with the string statement.	*/
-				put_line(tstr);
-				tstr[startpos] = '\0';					/* Now clear tstr.			*/
-
-				first = 1;
-
-				do
-				{
-					ptype = get_param(o_parms[0]);			/* get parm				*/
-
-					i = get_ppos();					/* Get the character position now.	*/
-
-					if (keyword(o_parms[0],proc_keywords))		/* Is it a keyword?			*/
-					{						/* it is keyword, quit parsing		*/
-						ptype = 9;				/* signal keyword found			*/
-					}
-					else
-					{
-						/*
-						**  Remember that "(" ")" parens can occur in literals
-						*/
-
-						if (o_parms[0][0] == '\"') goto skip_parens;
-
-											/* Is there open paren w/no close?	*/
-						if ((strpos(o_parms[0],"(") != -1) && (strpos(o_parms[0],")") == -1))
-						{
-							ptype = get_param(o_parms[1]);	/* Get the close paren.			*/
-							strcat(o_parms[0],o_parms[1]);
-						}
-						else
-						{
-							peek_param(o_parms[1]);
-							/*
-							** If NOT a literal and open paren found then scan through looking
-							** for the closing paren.
-							*/
-							if (o_parms[1][0] != '\"' && strpos(o_parms[1],"(") != -1)
-							{
-								ptype = get_param(o_parms[1]);	/* really get it.		*/
-								strcat(o_parms[0],o_parms[1]);
-
-								/*
-								** Loop while a closing paren is not found (only looking at
-								** non-literals).
-								*/
-								while (o_parms[0][0] != '\"' && strpos(o_parms[0],")") == -1)
-								{
-									ptype = get_param(o_parms[1]);
-									strcat(o_parms[0],o_parms[1]);
-								}
-							}
-						}
-
-skip_parens:
-						memset(tstr,' ',i);			/* Set up a new position string.	*/
-						tstr[i] = '\0';
-						if (first)
-						{
-							first = 0;
-							if (strlen(tstr)+strlen(o_parms[0]) > 72)
-								write_line("%s\n           %s",tstr,o_parms[0]);
-							else
-								write_line("%s%s",tstr,o_parms[0]);
-						}
-						else
-						{
-							if (has_cont) tstr[6] = '-';	/* Put continuation in if needed.	*/
-							has_cont = 0;
-							write_line("%s%s",tstr,o_parms[0]);
-						}
-
-
-						if (ptype == -1)			/* write a period?			*/
-						{
-							tstr[startpos] = '\0';
-							tstr[6] = ' ';
-							finish_disp(ptype);
-						}
-						else if (ptype == 9)
-						{
-							tstr[startpos] = '\0';
-							tstr[6] = ' ';
-							finish_disp(ptype);
-						}
-						else
-						{
-							put_line("\n");			/* no period				*/
-						}
-					}
-				} while ((ptype != -1) && (ptype != 9));		/* quit if period (or keyword)		*/
-				if (ptype == 9)
-				{
-					finish_disp(ptype);				/* All done.				*/
-					i = get_ppos();					/* Find the position of the keyword.	*/
-					memset(inline,' ',i);				/* Wipe out any leftover stuff.		*/
-					hold_line();					/* Now save the line.			*/
-				}
 				break;
 			}
 
@@ -889,7 +639,7 @@ skip_parens:
 
 			default:
 			{
-				put_line(inline);
+				tput_line("%s", inline);
 				break;
 			}
 		}									/* end of switch			*/
@@ -914,9 +664,9 @@ skip_parens:
 			else if (acu_cobol) 
 			{
 				write_log("WISP",'W',"FREEALL","FREE ALL changed to UNLOCK ALL.");
-				put_line("      * FREE ALL changed to UNLOCK ALL.\n");
+				tput_scomment("*** FREE ALL changed to UNLOCK ALL. ***");
 				stredt(inline,"FREE","UNLOCK");
-				put_line(inline);
+				tput_line("%s", inline);
 			}
 			else 
 			{
@@ -931,9 +681,9 @@ skip_parens:
 			else if (acu_cobol) 
 			{
 				write_log("WISP",'W',"COMMIT","COMMIT changed to UNLOCK ALL.");
-				put_line("      * COMMIT changed to UNLOCK ALL.\n");
+				tput_scomment("*** COMMIT changed to UNLOCK ALL. ***");
 				stredt(inline,"COMMIT","UNLOCK ALL");
-				put_line(inline);
+				tput_line("%s", inline);
 			}
 			else
 			{
@@ -950,13 +700,13 @@ skip_parens:
 			stmt_unsupported("BEGIN");
 			break;
 		default:
-			put_line(inline);
+			tput_line("%s", inline);
 			break;
 		}
 	}
 	else
 	{
-		put_line(inline);							/* For now, just copy it.		*/
+		tput_line("%s",inline);							/* For now, just copy it.		*/
 	}
 
 }
@@ -964,9 +714,9 @@ skip_parens:
 stmt_unsupported(verb)
 char	*verb;
 {
-	write_line("******* WISP: Verb [%s] is not supported.\n",verb);
+	tput_scomment("****** WISP: Verb [%s] is not supported. ******",verb);
 	write_log("WISP",'E',"UNSUPPORTED","Verb [%s] is not supported.",verb);
-	put_line(inline);
+	tput_line("%s",inline);
 }
 
 p_rewrite()
@@ -987,25 +737,23 @@ p_rewrite()
 
 	prerewrite_locking();								/* Add locking logic			*/
 
-	put_line		("           MOVE \"RW\" TO WISP-DECLARATIVES-STATUS\n");
-	if (vax_cobol) put_line	("           MOVE \"N\" TO WISP-TEST-BYTE\n");
-	put_line("          ");								/* start a new line			*/
+	tput_line		("           MOVE \"RW\" TO WISP-DECLARATIVES-STATUS");
+	if (vax_cobol) tput_line("           MOVE \"N\" TO WISP-TEST-BYTE");
+	tput_flush();
 
 	inv_key = 0;									/* no INVALID KEY yet...		*/
 	lock_clause = 0;
 
 	do
 	{
-		put_line(" ");
-		write_line("%s",o_parms[0]);						/* output parm				*/
+		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
 
 		if (o_parms[0][0]) stredt(inline,o_parms[0],"");			/* Remove it from the input line	*/
 		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
 
 		if (ptype == 1)								/* first parm on a new line		*/
 		{
-			put_line("\n");							/* end the previous line		*/
-			put_line("          ");  					/* start a new line 			*/
+			tput_flush();
 		}
 
 		if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
@@ -1023,13 +771,13 @@ p_rewrite()
 
 			if (vax_cobol && !lock_clause)
 			{
-				put_line("\n               ALLOWING NO OTHERS");
+				tput_line("               ALLOWING NO OTHERS");
 				lock_clause = 1;
 			}
 
 			if (ptype == -1)						/* Premature period!			*/
 			{
-				write_log("WISP",'W',"BADINVKEY",
+				write_log("WISP",'I',"BADINVKEY",
 				"Bad REWRITE syntax, INVALID KEY followed by a period.");
 				o_parms[0][0] = 0;
 			}
@@ -1038,27 +786,24 @@ p_rewrite()
 				ptype = get_param(o_parms[0]);				/* what to do?				*/
 			}
 
-			put_line        ("\n               INVALID KEY ");		/* write it out				*/
+			tput_line        ("               INVALID KEY ");		/* write it out				*/
 			if (vax_cobol)
 			{
-				put_line("\n               MOVE \"Y\" TO WISP-TEST-BYTE");
-				put_line("\n           END-REWRITE");
+				tput_line("               MOVE \"Y\" TO WISP-TEST-BYTE");
+				tput_line("           END-REWRITE");
 			}
 			inv_key = 1;							/* flag it				*/
 		}
-	}	while ((ptype != -1) && !keyword(o_parms[0],proc_keywords));		/* do till we hit a LAST parm or keyword*/
-
-
-	put_line("\n");								/* finish this line			*/
+	}	while ((ptype != -1) && !proc_keyword(o_parms[0]));			/* do till we hit a LAST parm or keyword*/
 
 	if (ptype == -1)								/* a LAST parm				*/
 	{
-		write_line("                   %s\n",o_parms[0]); 
+		tput_line("                   %s\n",o_parms[0]); 
 	}
 
 	if ( vax_cobol && !lock_clause )
 	{
-		put_line("               ALLOWING NO OTHERS\n");
+		tput_line("               ALLOWING NO OTHERS\n");
 		lock_clause = 1;
 	}
 
@@ -1081,23 +826,23 @@ p_rewrite()
 
 		if (inv_key)
 		{
-			put_line  ("           IF WISP-TEST-BYTE = \"N\" THEN\n");
-			write_line("               MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
-			write_line("               UNLOCK %s ALL\n", fdname );
-			write_line("               MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
-			put_line  ("           ELSE\n");
+			tput_line("           IF WISP-TEST-BYTE = \"N\" THEN");
+			tput_line("               MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fd]);
+			tput_line("               UNLOCK %s ALL", fdname );
+			tput_line("               MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fd]);
+			tput_line("           ELSE");
 		}
 		else
 		{
-			write_line("           MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
-			write_line("           UNLOCK %s ALL\n", fdname );
-			write_line("           MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
+			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fd]);
+			tput_line("           UNLOCK %s ALL", fdname );
+			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fd]);
 		}
 	}
 
 	if (ptype == -1)
 	{
-		put_line  ("           CONTINUE.\n");
+		tput_line  ("           CONTINUE.");
 	}
 
 
@@ -1119,26 +864,368 @@ wd_scan()										/* scan for the parts of D & R		*/
 
 add_perf(the_name)									/* add a paragraph name to the perform	*/
 char *the_name;
-{											/* list after checking for uniqueness.	*/
-	int i;
-
-	for (i=0; i<pr_count; i++)
+{
+	if (!paracmp(the_name,decl_performs,decl_performs_cnt))				/* If not in table add it.		*/
 	{
-		if (!strcmp(perf_decl[i],the_name)) return(0);				/* if we already have it, skip it.	*/
+		strcpy(decl_performs[decl_performs_cnt++],the_name);	
 	}
-
-	strcpy(perf_decl[pr_count++],the_name);						/* save it.				*/
+	return(0);
 }
 
-static finish_disp(type)
-int type;
+parse_display(the_statement)
+NODE the_statement;
 {
-	put_line("\n");
-	put_line("               DELIMITED BY SIZE INTO WISP-CRT-SCREEN-AREA\n");
-	put_line("               MOVE \"Press RETURN to proceed.\" TO WISP-SCREEN-LINE(24)\n");
-	put_line("               MOVE WISP-FULL-SCREEN-ORDER-AREA TO WISP-CRT-ORDER-AREA\n");
-	put_line("               CALL \"WDISPLAY\" USING WISP-CRT-RECORD");		/* Call WDISPLAY.			*/
+	NODE	curr_node, display_node, period_node;
+	int	col;
 
-	if (type == -1) put_line(".\n");						/* Terminat with correct item.		*/
-	else		put_line("\n");
+	curr_node = the_statement->next;
+
+	if (!eq_token(curr_node->token,VERB,"DISPLAY"))
+	{
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	write_log("WISP",'I',"PROCDISP","Processing DISPLAY statement.");
+
+	display_node = curr_node;
+
+	if (!proc_display)
+	{
+		write_log("WISP",'I',"SKIPDISP","Skipped processing of DISPLAY statement.");
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	col = display_node->token->column;
+	if (col < 12) col = 12;
+	else if (col > 24) col = 24;
+
+	tput_line_at(col,"MOVE SPACES TO WISP-CRT-SCREEN-AREA");
+	edit_token(display_node->token,"STRING");
+	display_node->token->column = col;
+
+	curr_node = curr_node->next;
+	for(period_node=NULL; NODE_END != curr_node->type; curr_node=curr_node->next)
+	{
+		if (PERIOD==curr_node->token->type)
+		{
+			period_node = curr_node;
+			free_token_from_node(period_node);
+			break;
+		}
+	}
+
+	tput_statement(12,the_statement);
+
+	tput_line_at(col+4, "DELIMITED BY SIZE INTO");
+	tput_clause (col+8, "WISP-CRT-SCREEN-AREA");
+	tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");
+	tput_clause (col+4, "WISP-SCREEN-LINE(24)");
+	tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");
+	tput_clause (col+4, "WISP-CRT-ORDER-AREA");
+	tput_line_at(col,   "CALL \"WDISPLAY\" USING WISP-CRT-RECORD");
+
+	if (period_node)
+	{
+		tput_clause(col,".");
+	}
+	tput_flush();
+
+	return(0);
+}
+
+parse_stop(the_statement)
+NODE the_statement;
+{
+	NODE	curr_node, stop_node, period_node;
+	int	col;
+
+	curr_node = the_statement->next;
+
+	if (!eq_token(curr_node->token,VERB,"STOP"))
+	{
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	stop_node = curr_node;
+	curr_node = curr_node->next;
+
+	if (eq_token(curr_node->token,KEYWORD,"RUN"))
+	{
+		/*
+		**	STOP RUN	->	PERFORM WISP-STOP-RUN
+		**			->	PERFORM D-WISP-STOP-RUN
+		*/
+
+		edit_token(stop_node->token,"PERFORM");
+
+		if (in_decl)
+		{
+			edit_token(curr_node->token,"D-WISP-STOP-RUN");
+			decl_stop_exit = 1;
+		}
+		else
+		{
+			edit_token(curr_node->token,"WISP-STOP-RUN");
+		}
+		curr_node->token->type = IDENTIFIER;
+
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	/*
+	**	STOP literal
+	*/
+	write_log("WISP",'I',"STOPLITRL","Processing STOP literal statement.");
+
+	if (!proc_display)
+	{
+		write_log("WISP",'I',"SKIPSTOP","Skipped processing of STOP statement.");
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	col = stop_node->token->column;
+	if (col < 12) col = 12;
+	else if (col > 24) col = 24;
+
+	tput_line_at(col,"MOVE SPACES TO WISP-CRT-SCREEN-AREA");
+	edit_token(stop_node->token,"STRING");
+	stop_node->token->column = col;
+
+	if (curr_node->token->type != LITERAL)
+	{
+		char	buff[80];
+		sprintf(buff,"\"%s\"",token_data(curr_node->token));
+		edit_token(curr_node->token,buff);
+		curr_node->token->type = LITERAL;
+	}
+
+	for(period_node=NULL; NODE_END != curr_node->type; curr_node=curr_node->next)
+	{
+		if (PERIOD==curr_node->token->type)
+		{
+			period_node = curr_node;
+			free_token_from_node(period_node);
+			break;
+		}
+	}
+
+	tput_statement(12,the_statement);
+
+	tput_line_at(col+4, "DELIMITED BY SIZE INTO");
+	tput_clause (col+8, "WISP-CRT-SCREEN-AREA");
+	tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");
+	tput_clause (col+4, "WISP-SCREEN-LINE(24)");
+	tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");
+	tput_clause (col+4, "WISP-CRT-ORDER-AREA");
+	tput_line_at(col,   "CALL \"WDISPLAY\" USING WISP-CRT-RECORD");
+
+	if (period_node)
+	{
+		tput_clause(col,".");
+	}
+	tput_flush();
+
+	return(0);
+}
+
+parse_exit(the_statement)
+NODE the_statement;
+{
+	NODE	curr_node, exit_node;
+
+	curr_node = the_statement->next;
+
+	if (!eq_token(curr_node->token,VERB,"EXIT"))
+	{
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	exit_node = curr_node;
+	curr_node = curr_node->next;
+
+	if (eq_token(curr_node->token,KEYWORD,"PROGRAM"))
+	{
+		/*
+		**	EXIT PROGRAM	->	PERFORM WISP-EXIT-PROGRAM
+		**			->	PERFORM D-WISP-EXIT-PROGRAM
+		*/
+
+		edit_token(exit_node->token,"PERFORM");
+
+		if (in_decl)
+		{
+			edit_token(curr_node->token,"D-WISP-EXIT-PROGRAM");
+			decl_stop_exit = 1;
+		}
+		else
+		{
+			edit_token(curr_node->token,"WISP-EXIT-PROGRAM");
+		}
+		curr_node->token->type = IDENTIFIER;
+
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	tput_statement(12,the_statement);
+	return(0);
+}
+
+parse_move(the_statement)
+NODE the_statement;
+{
+	NODE	curr_node, move_node, temp_node, ident_node;
+	int	col;
+
+	curr_node = the_statement->next;
+
+	if (!eq_token(curr_node->token,VERB,"MOVE"))
+	{
+		write_log("WISP",'W',"NOTMOVE","NOT A MOVE Statement. STATEMENT NOT PROCESSED");
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	move_node = curr_node;
+	col = move_node->token->column;
+
+	curr_node = curr_node->next;
+
+	if (eq_token(curr_node->token,KEYWORD,"WITH"))
+	{
+		/*
+		**	MOVE WITH CONVERSION identifier-1 TO identifier-2
+		**		[ON ERROR 
+		**			imperative-statement]		| this portion is not part of the_statement
+		**		[END-MOVE]				|
+		**
+		**	MOVE identifier-1 TO WISP-ALPHA-CONVERSION-FIELD,
+		**	PERFORM CONVERT-ALPHA-VALUE-TO-NUMERIC,
+		**	IF WISP-NO-NUMERIC-CONV-ERROR
+		**		COMPUTE identifier-2 = 0 + WISP-CONVERTED-FRACTION-FIELD
+		**		IF WISP-CONVERTED-FRACTION-FIELD NOT = identifier-2 THEN
+		**			MOVE "Y" TO WISP-NUMERIC-CONVERSION-FLAG
+		**		END-IF
+		**		ADD WISP-CONVERTED-INTEGER-FIELD TO identifier-2
+		**			ON SIZE ERROR 
+		**			MOVE "Y" TO WISP-NUMERIC-CONVERSION-FLAG
+		**		END-ADD
+		**	END-IF
+		**	[IF WISP-A-NUMERIC-CONV-ERROR
+		**		MOVE ZERO TO identifier-2]
+		**		[imperative-statement]
+		*/
+
+		write_log("WISP",'I',"MOVEWC","Processing MOVE WITH CONVERSION.");
+		mwconv_flag = 1;						/* we need to generate mwconv code		*/
+
+		free_token_from_node(curr_node);				/* Delete the WITH token			*/
+		curr_node = curr_node->next;
+		free_token_from_node(curr_node);				/* Delete the CONVERSION token			*/
+		curr_node = curr_node->next;					/* Point to identifier-1			*/
+		if (!reduce_data_item(curr_node))				/* Reduce identifier-1				*/
+		{
+			write_log("WISP",'W',"MOVEWC","Error parsing MOVE WITH CONVERSION, unrecognized data item.[%s]",
+							token_data(curr_node->token));
+			reduce_one(curr_node);
+		}
+
+		if (!eq_token(curr_node->next->token,KEYWORD,"TO"))
+		{
+			write_log("WISP",'E',"MOVEWC","Error parsing MOVE WITH CONVERSION, expecting keyword \"TO\" found [%s]",
+							token_data(curr_node->next->token));
+			tput_statement(12,the_statement);
+			return(0);
+		}
+
+		if (col < 12) col = 12;
+		else if (col > 24) col = 24;
+
+		tput_token(col,move_node->token);				/* Write MOVE					*/
+		decontext_statement(curr_node->down);
+		tput_statement(col,curr_node->down);				/* Write identifier-1				*/
+
+		curr_node = curr_node->next;					/* Point at "TO" node				*/
+		curr_node = curr_node->next;					/* Point at "identifier-2"			*/
+		if (!reduce_data_item(curr_node))				/* Reduce identifier-2				*/
+		{
+			write_log("WISP",'W',"MOVEWC","Error parsing MOVE WITH CONVERSION, unrecognized data item.[%s]",
+							token_data(curr_node->token));
+			reduce_one(curr_node);
+		}
+		ident_node = curr_node->down;
+		decontext_statement(ident_node);
+
+		tput_clause (col+4, "TO WISP-ALPHA-CONVERSION-FIELD,");
+		tput_line_at(col,   "PERFORM CONVERT-ALPHA-VALUE-TO-NUMERIC,");
+
+		tput_line_at(col,   "IF WISP-NO-NUMERIC-CONV-ERROR THEN");
+		tput_line_at(col,   "    COMPUTE");
+		tput_statement(col+8,ident_node);				/* Write identifier-2				*/
+		tput_clause (col+8, "= 0 + WISP-CONVERTED-FRACTION-FIELD");
+		tput_line_at(col,   "    IF WISP-CONVERTED-FRACTION-FIELD NOT =");
+		tput_statement(col+8,ident_node);				/* Write identifier-2				*/
+		tput_line_at(col,   "        MOVE \"Y\" TO WISP-NUMERIC-CONVERSION-FLAG");
+		tput_line_at(col,   "    END-IF");
+		tput_line_at(col,   "    ADD WISP-CONVERTED-INTEGER-FIELD TO");
+		tput_statement(col+8,ident_node);				/* Write identifier-2				*/
+		tput_line_at(col,   "        ON SIZE ERROR");
+		tput_line_at(col,   "        MOVE \"Y\" TO WISP-NUMERIC-CONVERSION-FLAG");
+		tput_line_at(col,   "    END-ADD");
+		tput_line_at(col,   "END-IF");
+		tput_flush();
+
+		curr_node = curr_node->next;
+		if (eq_token(curr_node->token,KEYWORD,"ON"))
+		{
+			curr_node = curr_node->next;
+		}
+		if (eq_token(curr_node->token,KEYWORD,"ERROR"))
+		{
+			tput_line_at(col,   "IF WISP-A-NUMERIC-CONV-ERROR THEN");
+			tput_line_at(col,   "    MOVE ZERO TO");
+			tput_statement(col+4,ident_node);			/* Write identifier-2				*/
+			curr_node = curr_node->next;
+		}
+		tput_statement(col,curr_node);					/* Write trailing nodes (I.e. PERIOD)		*/
+	}
+	else if (init_move && 
+		 (eq_token(curr_node->token,KEYWORD,"SPACES") || eq_token(curr_node->token,KEYWORD,"SPACE")) )
+	{
+		/*
+		**	MOVE SPACES TO identifiers ...
+		**
+		**	INITIALIZE     identifiers ...
+		*/
+
+		write_log("WISP",'I',"MOVESPACES","Changing MOVE SPACE(S) to INITIALIZE.");
+
+		edit_token(move_node->token,"INITIALIZE");			/* Change the "MOVE" into "INITIALIZE"		*/
+		free_token_from_node(curr_node);				/* Delete "SPACES" token			*/
+
+		curr_node = curr_node->next;					/* Point to the "TO" node			*/
+		if (eq_token(curr_node->token,KEYWORD,"TO"))
+		{
+			free_token_from_node(curr_node);			/* Delete "TO" token				*/
+		}
+		else
+		{
+			write_log("WISP",'E',"MOVESPACES","Error parsing MOVE SPACES TO, expecting keyword \"TO\" found [%s]",
+							token_data(curr_node->token));
+		}
+
+		tput_statement(12, the_statement);
+	}
+	else
+	{
+		tput_statement(12, the_statement);
+	}
+
+	return(0);
 }

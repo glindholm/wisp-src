@@ -1,24 +1,22 @@
 #
 # makefile for the wisp library on MSDOS platforms.
-# Builds the WISPRTS.EXE run-time link library.
+# Builds the WISPRTS.EXE installf library.
+#
+# NOTE: Use the C700\BIN\LINK.EXE version of LINK not the COBOL version.
 #
 
-RTS=WISPRTS.EXE
-USERTS=E:\WISPBIN\$(RTS)
+!include $(WISP)\src\port\dosmake.inc
 
-WLIB=E:\LIB\WISP.LIB
-VLIB=E:\LIB\VIDEO.LIB
-TLIB=E:\LIB\WTEST.LIB
+EXE=WISPRTS.EXE
+LIBPATHS= $(STDLIB)\WISP.LIB $(STDLIB)\VIDEO.LIB
+AFLAGS= /Cp /Cx
 
+all:    $(STDBIN)\$(EXE)
 
-all: $(USERTS)
+$(STDBIN)\$(EXE):       $(EXE)
+	copy $(EXE) $@
 
-$(USERTS):      $(RTS)
-	COPY $(RTS) $(USERTS)
-
-$(RTS):         wisprts.obj $(WLIB) $(VLIB) $(TLIB)
-	LINK @LINKWRTS.LRF
+$(EXE): wisprts.obj $(LIBPATHS)
+	LINK @WISPRTS.LRF
 
 wisprts.obj:    wisprts.asm
-	MASM wisprts.asm
-

@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -23,6 +23,8 @@
 
 static	int	verbose;
 static	int	vexitdone;
+static	int	savelevel;
+static	int	exitsort();
 
 main(argc,argv)
 int	argc;
@@ -84,6 +86,9 @@ char	*argv[];
 	initglbs("WSORT   ");
       	wpload();		 							/* load the usage constants		*/
 
+	savelevel = linklevel();							/* Save the link-level			*/
+	newlevel();									/* Increment the link-level		*/
+
 	if (argc>1)
 	{
 		if (0 == memcmp(argv[1],"-v",2))
@@ -98,14 +103,14 @@ char	*argv[];
 	memset(&sort, ' ', 116);
 
 	memset(sort.infile,' ',8);
-	memcpy(sort.inlib,defaults.inlib,8);
-	memcpy(sort.invol,defaults.invol,6);
+	get_defs(DEFAULTS_IL,sort.inlib);
+	get_defs(DEFAULTS_IV,sort.invol);
 
 	memset(sort.outfile,' ',8);
-	memcpy(sort.outlib,defaults.outlib,8);
-	memcpy(sort.outvol,defaults.outvol,6);
+	get_defs(DEFAULTS_OL,sort.outlib);
+	get_defs(DEFAULTS_OV,sort.outvol);
 
-	filetype[0] = 'N';
+	filetype[0] = 'I';
 	strcpy(in_recsize,"    0");
 	in_numkeys[0] = '1';
 
@@ -195,7 +200,7 @@ char	*argv[];
 		args.ptrs[cnt++] = (char *) &N[49];
 
 		args.ptrs[cnt++] = (char *) "K";
-		args.ptrs[cnt++] = (char *) "VOLUME ";
+		args.ptrs[cnt++] = (char *) "VOLUME  ";
 		args.ptrs[cnt++] = (char *) sort.invol;
 		args.ptrs[cnt++] = (char *) &N[6];
 		args.ptrs[cnt++] = (char *) "A";
@@ -204,7 +209,7 @@ char	*argv[];
 		args.ptrs[cnt++] = (char *) &N[52];
 		args.ptrs[cnt++] = (char *) "L";
 
-#ifdef unix
+#ifndef VMS
 		args.ptrs[cnt++] = (char *) "K";
 		args.ptrs[cnt++] = (char *) "FILETYPE";
 		args.ptrs[cnt++] = (char *) filetype;
@@ -240,7 +245,7 @@ char	*argv[];
 		args.ptrs[cnt++] = (char *) &N[17];
 		args.ptrs[cnt++] = (char *) "A";
 		args.ptrs[cnt++] = (char *) &N[27];
-#endif /* unix */
+#endif /* !VMS */
 
 		args.ptrs[cnt++] = (char *) "T";
 		args.ptrs[cnt++] = (char *) "     Press PF16 to Terminate WSORT            ";
@@ -694,7 +699,7 @@ char	*argv[];
 		args.ptrs[cnt++] = (char *) &N[49];
 
 		args.ptrs[cnt++] = (char *) "K";
-		args.ptrs[cnt++] = (char *) "VOLUME ";
+		args.ptrs[cnt++] = (char *) "VOLUME  ";
 		args.ptrs[cnt++] = (char *) sort.outvol;
 		args.ptrs[cnt++] = (char *) &N[6];
 		args.ptrs[cnt++] = (char *) "A";
@@ -732,16 +737,15 @@ char	*argv[];
 		printf("        output file %8.8s in %8.8s on %6.6s\n",sort.outfile, sort.outlib, sort.outvol);
 	}
 
-#ifdef unix
+#ifdef VMS
+	SORTCALL(&sort,&retcode);
+#else /* !VMS */
 	recsize = 0;
 	sscanf(in_recsize,"%d",&recsize);
 	wswap(&recsize);
 
 	WISPSORT(&sort,filetype,&recsize,&sortcode,&retcode);
-#endif
-#ifdef VMS
-	SORTCALL(&sort,&retcode);
-#endif
+#endif /* !VMS */
 
 	wswap(&retcode);
 	switch(retcode)
@@ -753,8 +757,7 @@ char	*argv[];
 	case 16:	message = "Invalid sort key";				break;
 #ifdef VMS
 	case 20:	message = "Program Check";				break;
-#endif
-#ifdef unix
+#else /* !VMS */
 	case 40:	message = "Invalid file type";				break;
 	case 41:	message	= "No INPUT file or access denied";		break;
 	case 42:	message = "Not an ACUCOBOL/Vision file";		break;
@@ -792,7 +795,7 @@ char	*argv[];
 		default: 		message = "UNKNOWN ERROR";				break;
 		}
 		break;
-#endif
+#endif /* !VMS */
 	default: 		message = "UNKNOWN ERROR";				break;
 	}
 
@@ -803,6 +806,8 @@ static exitsort(num,message)
 int	num;
 char	*message;
 {
+	char	retcode[20];
+
 	if (!vexitdone)
 	{
 		vexit();
@@ -813,13 +818,33 @@ char	*message;
 		printf("WSORT: [%d] %s\n",num,message);
 	}
 
-#ifdef unix
-	exit(num);
-#endif
+	setlevel(savelevel);								/* Restore the link-level		*/
+	ppunlink(savelevel);								/* Putparm UNLINK			*/
+
+	sprintf(retcode,"%03d",num);
+	setretcode(retcode);
+	
 #ifdef VMS
-	if ( num == 0 )	exit(1);
-	else		exit(num*1000);
-#endif
+	if (0 == num)
+	{
+		/*
+		**	VMS normal (success) status
+		*/
+		exit(1);
+	}
+	else
+	{
+		/*
+		**	WISP coded return codes == (RC * 10000 + 1)
+		**	the "+ 1" is to make them VMS warnings/informational codes.
+		**	LINK knows how to decode.
+		*/
+
+		exit(num * 10000 + 1);
+	}
+#else /* !VMS */
+	exit(num);
+#endif /* !VMS */
 }
 
 

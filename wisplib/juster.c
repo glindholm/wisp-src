@@ -11,6 +11,7 @@
 #ifndef MSDOS						/* MSDOS does not support versions before 22, which use this module.	*/
 
 #include <ctype.h>
+#include "idsistd.h"
 #include "werrlog.h"
 
 /* justify a numeric field around a Decimal point										*/
@@ -19,9 +20,11 @@ static char *signch = "{ABCDEFGHI}JKLMNOPQR";
 
 struct mask_s
 {
-	unsigned long cmask;				/* The comma edit mask for edited fields.				*/
-	unsigned long zmask;				/* The Z edit mask for edited fields.					*/
+	uint4 cmask;                                    /* The comma edit mask for edited fields.				*/
+	uint4 zmask;					/* The Z edit mask for edited fields.					*/
 };
+static int loadfld();
+static int jzedit();
 
 int juster(src,dst,len,dp,mask,retval)
 
@@ -52,7 +55,7 @@ int *retval;						/* The field for the return value.					*/
 {
 	int idxt,idxd,idxs,idxt2,fldlen,dppos,dpoff,dptemp;
 	int numeric,a_sign,leading,neg,is_zero;
-	unsigned long a_bit,cmask,zmask;
+	uint4 a_bit,cmask,zmask;
 	char temp[100];									/* scratch string			*/
 
 	werrlog(ERRORCODE(1),src,dst,len,dp,mask,0,0,0);				/* Say hello.				*/
@@ -272,7 +275,7 @@ int	dstoff,len,dstlen;
 
 
 static jzedit(mask,dst,len,flag)
-unsigned long mask;
+uint4 mask;
 char *dst;
 int len;
 int flag;

@@ -15,7 +15,6 @@
              03 MCB-MENU-ITEMS    PIC 9(9) BINARY.
              03 MCB-MENU-ITEM     PIC 9(9) BINARY.
              03 MCB-MENU-BACKITEM PIC 9(9) BINARY.
-             03 MCB-MENU-SAVE     PIC 9(9) BINARY.
              03 MCB-MENU-CODE     PIC 9(9) BINARY OCCURS 20 TIMES.
-             03 MCB-MENU-LINK     PIC 9(9) BINARY OCCURS 20 TIMES.
              03 MCB-MENU-TEXT     PIC X(64) OCCURS 20 TIMES.
+             03 FILLER            PIC X(184).

@@ -12,6 +12,7 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "cobfiles.h"
 
 p_write()
 {
@@ -55,27 +56,25 @@ p_write()
 		lock_clause = 1;							/* clause. (Trick it into not writing	*/
 	}										/* the ALLOWING clause.)		*/
 
-	put_line("           MOVE \"WR\" TO WISP-DECLARATIVES-STATUS\n");
+	tput_line("           MOVE \"WR\" TO WISP-DECLARATIVES-STATUS\n");
 
 	if (vax_cobol && !(prog_ftypes[fd] & SEQ_FILE))
 	{
-		put_line("           MOVE \"N\" TO WISP-TEST-BYTE\n");
+		tput_line("           MOVE \"N\" TO WISP-TEST-BYTE\n");
 	}
 
-	put_line("          ");								/* start a new line			*/
+	tput_flush();
 
 	do
 	{
-		put_line(" ");
-		write_line("%s",o_parms[0]);						/* output parm				*/
+		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
 
 		if (o_parms[0][0]) stredt(inline,o_parms[0],"");			/* Remove it from the input line	*/
 		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
 
 		if (ptype == 1)								/* first parm on a new line		*/
 		{
-			put_line("\n");							/* end the previous line		*/
-			put_line("          ");  					/* start a new line 			*/
+			tput_flush();
 		}
 
 		if (!strcmp(o_parms[0],"BEFORE") || !strcmp(o_parms[0],"AFTER"))	/* Look for BEFORE or AFTER ADVANCING.	*/
@@ -92,7 +91,7 @@ p_write()
 
 			if ( vax_cobol && !lock_clause )
 			{
-				put_line("\n               ALLOWING NO OTHERS");
+				tput_line("               ALLOWING NO OTHERS");
 				lock_clause = 1;
 			}
 
@@ -114,7 +113,7 @@ p_write()
 			}
 
 											/* write it out				*/
-			write_line("\n                    %s ADVANCING",o_parms[9]);
+			tput_line("                    %s ADVANCING",o_parms[9]);
 
 		}
 		else if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
@@ -133,14 +132,14 @@ p_write()
 
 			if ( vax_cobol && !lock_clause )
 			{
-				put_line("\n               ALLOWING NO OTHERS");
+				tput_line("               ALLOWING NO OTHERS");
 				lock_clause = 1;
 			}
 
 			if (ptype == -1)						/* Premature period!			*/
 			{
-				write_log("WISP",'W',"BADINVKEY",
-				"Bad WRITE syntax, INVALID KEY followed by a period.");
+				write_log("WISP",'I',"BADINVKEY",
+					"Bad WRITE syntax, INVALID KEY followed by a period.");
 				o_parms[0][0] = 0;
 			}
 			else
@@ -148,18 +147,18 @@ p_write()
 				ptype = get_param(o_parms[0]);				/* what to do?				*/
 			}
 
-			put_line        ("\n               INVALID KEY ");		/* write it out				*/
+			tput_line        ("               INVALID KEY ");		/* write it out				*/
 			if (vax_cobol)
 			{	
-				put_line("\n               MOVE \"Y\" TO WISP-TEST-BYTE");
-				put_line("\n           END-WRITE");
+				tput_line("               MOVE \"Y\" TO WISP-TEST-BYTE");
+				tput_line("           END-WRITE");
 			}
 			else
 			{
 				if (!strcmp(o_parms[0],"ELSE"))				/* INVALID KEY followed by ELSE		*/
 				{
-					put_line("\n               CONTINUE ");
-					put_line("\n           END-WRITE ");
+					tput_line("               CONTINUE ");
+					tput_line("           END-WRITE ");
 				}
 			}
 			inv_key = 1;							/* flag it				*/
@@ -169,19 +168,17 @@ p_write()
 			write_log("WISP",'E',"TIMEOUT",	"Write %s with TIMEOUT not supported.",o_parms[1]);
 
 		}
-	}	while ((ptype != -1) && !keyword(o_parms[0],proc_keywords));		/* do till we hit a LAST parm or keyword*/
+	}	while ((ptype != -1) && !proc_keyword(o_parms[0]));			/* do till we hit a LAST parm or keyword*/
 
-
-	put_line("\n");								/* finish this line			*/
 
 	if (ptype == -1)								/* a LAST parm				*/
 	{
-		write_line("                   %s\n",o_parms[0]); 
+		tput_line("                   %s\n",o_parms[0]); 
 	}
 
 	if ( vax_cobol && !lock_clause )
 	{
-		put_line("               ALLOWING NO OTHERS\n");
+		tput_line("               ALLOWING NO OTHERS\n");
 		lock_clause = 1;
 	}
 
@@ -192,31 +189,31 @@ p_write()
 
 		if (inv_key)
 		{
-			put_line  ("           IF WISP-TEST-BYTE = \"N\" THEN\n");
-			write_line("               MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
-			write_line("               UNLOCK %s\n", fdname );
-			write_line("               MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
-			put_line  ("           ELSE\n");
+			tput_line("           IF WISP-TEST-BYTE = \"N\" THEN\n");
+			tput_line("               MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
+			tput_line("               UNLOCK %s\n", fdname );
+			tput_line("               MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
+			tput_line("           ELSE\n");
 			if (!strcmp(o_parms[0],"ELSE"))
 			{
-				put_line("               CONTINUE\n");
-				put_line("           END-IF\n");
+				tput_line("               CONTINUE\n");
+				tput_line("           END-IF\n");
 			}
 		}
 		else if ( !(prog_ftypes[fd] & AUTOLOCK) )
 		{
-			write_line("           MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
+			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
 			if ( !(prog_ftypes[fd] & SEQ_FILE) || (prog_ftypes[fd] & SEQ_DYN) ) 
-				write_line("           UNLOCK %s\n", fdname );
+				tput_line("           UNLOCK %s\n", fdname );
 			else
-				write_line("           UNLOCK %s ALL\n", fdname );
-			write_line("           MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
+				tput_line("           UNLOCK %s ALL\n", fdname );
+			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
 		}
 	}
 
 	if (ptype == -1)
 	{
-		put_line  ("           CONTINUE.\n");
+		tput_line  ("           CONTINUE.\n");
 	}
 
 	if (ptype != -1) hold_line();

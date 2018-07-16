@@ -29,6 +29,7 @@
 #include <string.h>
 #include <sys/types.h>
 
+static int printhelp();
 static char *upstr();
 
 /*

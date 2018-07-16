@@ -1,11 +1,24 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990			*/
+			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
+
+
+/*
+**	File:		wrunconf.c
+**
+**	Purpose:	To hold the routines to do wrunconfig processing.
+**
+**	Routines:	wrunconfig()	Read the wrunconfig file and load a struct with it's info.
+**
+**
+**	History:
+**
+*/
 
 #ifndef VMS			/* NOT valid on VMS system */
 
@@ -18,6 +31,7 @@
 #endif
 
 #include <stdio.h>
+#include "idsistd.h"
 #include "wrunconf.h"
 #include "wdefines.h"
 
@@ -29,7 +43,7 @@ struct wruncfg *cfg;
 	char	*ptr;
 	char	wrunpath[80];
 	FILE	*the_file;
-	char	inline[80], upline[80];
+	char	inlin[80], upline[80];
 	int	found_runcbl, found_cobtype;
 	int	rc;
 
@@ -48,31 +62,29 @@ struct wruncfg *cfg;
 
 		if ( ptr = (char *)getenv( WISP_CONFIG_ENV ) )				/* Get $WISPCONFIG			*/
 		{
-			strcpy( wrunpath, ptr );					/* Build path to $WISPCONFIG/wrunconfig */
-			strcat( wrunpath, "/" );
-			strcat( wrunpath, WRUNCONFIG );
+			buildfilepath( wrunpath, ptr, WRUNCONFIG );			/* Build path to $WISPCONFIG/wrunconfig */
 
 			if (the_file = fopen( wrunpath, "r" ))				/* Open wrunconfig			*/
 			{
-				while(fgets(inline,132,the_file))			/* Read a line				*/
+				while(fgets(inlin,132,the_file))			/* Read a line				*/
 				{
-					if ( strlen(inline) > 0 )			
+					if ( strlen(inlin) > 0 )			
 					{
-						if ( inline[strlen(inline)-1] < ' ' )
-							inline[strlen(inline)-1] = '\0'; 	/* remove trailing NL		*/
+						if ( inlin[strlen(inlin)-1] < ' ' )
+							inlin[strlen(inlin)-1] = '\0'; 	/* remove trailing NL		*/
 					}
 
-					strcpy(upline,inline);				/* Take a copy and make uppercase	*/
+					strcpy(upline,inlin);				/* Take a copy and make uppercase	*/
 					upper_string(upline);
 
 					if ( strncmp(upline,"OPTIONS=",8) == 0 )
 					{
-						strcpy(CFG.wrun_options,&inline[8]);
+						strcpy(CFG.wrun_options,&inlin[8]);
 					}
 					else if ( strncmp(upline,"RUNCBL=",7) == 0 )
 					{
 						found_runcbl = 1;
-						sscanf(&inline[7],"%s",CFG.wrun_runcbl);
+						sscanf(&inlin[7],"%s",CFG.wrun_runcbl);
 					}
 					else if ( strncmp(upline,"COBOL=ACU",9) == 0 )
 					{
@@ -92,7 +104,7 @@ struct wruncfg *cfg;
 					else if ( strncmp(upline,"COBOL=",6) == 0 )
 					{
 						found_cobtype = 1;
-						strcpy(CFG.wrun_cobtype,&inline[6]);
+						strcpy(CFG.wrun_cobtype,&inlin[6]);
 					}
 				}
 				fclose(the_file);					/* Close the file			*/
@@ -111,6 +123,11 @@ struct wruncfg *cfg;
 		{
 			strcpy(CFG.wrun_runcbl,ptr);
 		}
+
+		if ( ptr = (char *)getenv(WRUNOPTIONS_ENV) )
+		{
+			strcpy(CFG.wrun_options,ptr);
+		}
 	}
 
 	strcpy(cfg->wrun_options,CFG.wrun_options);
@@ -120,5 +137,6 @@ struct wruncfg *cfg;
 	return( rc );
 }
 
-#endif	/* #ifndef VMS */
+#endif	/* !VMS */
+
 

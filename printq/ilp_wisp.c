@@ -3,7 +3,266 @@
  * Program: IDSIprint
  * Purpose: interface routines for wisp
  *
+ */
+static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
+static char rcsid[] = "$Id:$";
+
+#define EXT extern 
+#include "defs.h"
+#include "manage.h"
+#include "c_comm.h"
+
+ilpmanage()
+{
+	int init,pid;
+	PITEM pitem;
+	QITEM qitem;
+	extern SCREEN *the_screen;
+	extern SCREEN main_screen, prtr_screen;
+	extern int reentered;
+	int saveopt;
+	int status;
+	
+	char *passed_data;
+	saveopt=voptimize(DEFER_MODE);
+      top:
+
+	if (initpaths() == -1)
+	{
+		vre_window("IDSI Print Queue Configuration Error: ISPOOL                    Contact system administrator");
+		goto leaveilpman;
+	}
+	status = init_me();
+	
+	if (status == IERR_INCOMPATDS || status == IERR_INCOMPATDM)
+	{
+		vre_window("Incompatible versions of ilpman and idaemon.                    Contact system administrator");
+		goto leaveilpman;
+	}
+	if (status != IERR_OK || isrunning()==IERR_NODAEMON)
+	{
+			vre_window("IDSI Print Queue Daemon (idaemon) not running.                  Contact system administrator");
+		goto leaveilpman;
+	}
+	if ((init=init_comm())!=INIT_OK)
+	{
+		switch (init & 0xff)
+		{
+		      case IERR_NODAEMON:
+			vre_window("IDSI Print Queue Daemon (idaemon) not running.                  Contact system administrator");
+			goto leaveilpman;
+			
+			break;
+		      case IERR_INCOMPATDS:
+			vre_window("idaemon incompatible: client=socket, server=message queue.      Contact system administrator");
+			goto leaveilpman;
+			
+			break;
+		      case IERR_INCOMPATDM:
+			vre_window("idaemon incompatible: client=message queue, server=socket.      Contact system administrator");
+			goto leaveilpman;
+			
+			break;
+		      case IERR_SERVUNDEF:
+			goto leaveilpman;
+			
+			break;
+		      case IERR_SOCKET:
+			goto leaveilpman;
+
+			break;
+		      case IERR_BIND:
+			goto leaveilpman;
+
+			break;
+		      case IERR_HOSTADDR:
+			goto leaveilpman;
+
+			break;
+		      default:
+			break;
+		}
+	}
+
+	the_screen = &main_screen;
+	reentered = TRUE;
+	global_key = -1;
+	do
+	{
+		switch(the_scrid)
+		{
+		      case QSCR:
+			passed_data=(char*)q_head;
+			break;
+		      case PSCR:
+			passed_data=(char*)p_head;
+			break;
+		}
+		
+		in_screen(passed_data);
+
+	}while (global_key != fn1_key || screen_mode==MODE_EDIT);
+
+	vdefer(RESTORE);
+	shut_comm();
+	
+      leaveilpman:
+	voptimize(saveopt);
+}
+ilpwisp(srcfile, pmode, disposition, copies, class, form, prtnum, retcode)
+char srcfile[], form[];
+char pmode, disposition, class;
+int copies, *retcode, prtnum;
+{
+	QITEM the_item;
+	char path[200];
+	char formpath[200],buf[200];
+	FILE *in;
+	int plen=66;
+	char *p,*lines;
+	int init,pid, status;
+	struct stat sbuf;
+
+      top:
+	
+	if (initpaths() == -1)
+	{
+		*retcode = 99;
+		return;
+	}
+	if (isrunning()==IERR_NODAEMON)
+	{
+		*retcode = 99;
+		return;
+	}
+	init_shmem();
+	load_qconfig();
+	if ((init=init_comm())!=INIT_OK)
+	switch(init & 0xff)
+	{
+	      case IERR_NODAEMON:
+	      case IERR_INCOMPATDS:
+	      case IERR_INCOMPATDM:
+		*retcode = 99;
+		return;
+		break;
+	      case IERR_SERVUNDEF:
+		*retcode = 40;
+		return;
+		break;
+	      case IERR_SOCKET:
+		*retcode = 41 | ((init & 0xff00) >> 8);
+		return;
+		break;
+	      case IERR_BIND:
+		*retcode = 42 | ((init & 0xff00) >> 8);
+		return;
+		break;
+	      default:
+		break;
+	}
+	memset(&the_item,0,sizeof(QITEM));
+	
+	strcpy(the_item.orig_path,srcfile);
+	if (srcfile[0] != '/')
+	{
+		char tmpbuf[200];
+		
+		getcwd(path,198);
+		sprintf(tmpbuf,"%s/%s",path,srcfile);
+		fixuppath(tmpbuf,the_item.real_path);
+	}
+	else
+	  strcpy(the_item.real_path,srcfile);
+
+	if (fexists(the_item.real_path)==FALSE)
+	{
+		*retcode=20;
+		goto leave;
+	}
+	if (fcanread(the_item.real_path)==FALSE)
+	{
+		*retcode=28;
+		goto leave;
+	}
+	strcpy(the_item.requested_prtr,"");
+	strcpy(the_item.form,form);
+
+	stat(srcfile,&sbuf);
+	the_item.size=sbuf.st_size;
+
+	the_item.stpage=1;
+	the_item.endpage=99999;
+	the_item.copies=copies;
+	the_item.class=class;
+	the_item.prtnum=prtnum;
+	switch(disposition)
+	{
+	      case 'D':
+	      case 'd':
+		the_item.mode = QMD_DELETEAFTER;
+		break;
+	      case 'R':
+	      case 'r':
+		the_item.mode = QMD_RESPOOLHOLD;
+		break;
+	      case 'S':
+	      case 's':
+	      case ' ':
+	      case 0:
+		the_item.mode = 0;
+		break;
+	}		
+	switch(pmode)
+	{
+	      case 'S':
+	      case 's':
+	      case ' ':
+	      case 0:
+		break;
+	      case 'H':
+	      case 'h':
+		the_item.mode |= QMD_HOLD;
+		break;
+	}
+	send_daemon(M_QUEUE,0,&the_item,sizeof(the_item));
+	if (comm_status!=COMM_OK)
+	  *retcode=99;
+	else
+	  *retcode=0;
+
+      leave:
+	shut_comm();
+	
+}
+/*
  * $Log: ilp_wisp.c,v $
+ * Revision 1.26  1993/05/14  23:06:38  jockc
+ * changed calls to access to use fexists() and fcanread()
+ *
+ * Revision 1.25  1993/03/12  19:24:52  jockc
+ * fixed up check of init success (in case daemon isn't
+ * running)
+ *
+ * Revision 1.24  1993/01/12  23:16:21  jockc
+ * added isrunning check to force semaphore init
+ *
+ * Revision 1.23  1993/01/12  02:10:41  jockc
+ * starting to implement semaphore stuff here
+ *
+ * Revision 1.22  1993/01/06  00:19:24  jockc
+ * added load_qconfig to ilpwisp
+ *
+ * Revision 1.21  1993/01/04  22:41:36  jockc
+ * added initpaths
+ *
+ * Revision 1.20  1992/10/27  23:35:46  jockc
+ * slight revision in daemon/version check.
+ *
+ * Revision 1.19  1992/10/09  20:20:29  jockc
+ * changed exit on incompat version to use a vre_window instead.
+ * this had been causing COBOL programs to exit()... very bad..
+ *
  * Revision 1.18  1992/04/30  19:25:15  jockc
  * added decl for sbuf
  *
@@ -68,206 +327,3 @@
  *
  *
  */
-static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-static char rcsid[] = "$Id:$";
-
-#define EXT extern 
-#include "defs.h"
-#include "manage.h"
-#include "c_comm.h"
-
-ilpmanage()
-{
-	int init,pid;
-	PITEM pitem;
-	QITEM qitem;
-	extern SCREEN *the_screen;
-	extern SCREEN main_screen, prtr_screen;
-	extern int reentered;
-	int saveopt;
-	
-	char *passed_data;
-	saveopt=voptimize(DEFER_MODE);
-      top:
-	
-	if ((init=init_comm())!=INIT_OK)
-	{
-		switch (init & 0xff)
-		{
-		      case IERR_NODAEMON:
-			vre_window("IDSI Print Queue Daemon (idaemon) not running.                  Contact system administrator");
-			goto leaveilpman;
-			
-			break;
-		      case IERR_INCOMPATDS:
-			vre_window("idaemon incompatible: client=socket, server=message queue.      Contact system administrator");
-			goto leaveilpman;
-			
-			break;
-		      case IERR_INCOMPATDM:
-			vre_window("idaemon incompatible: client=message queue, server=socket.      Contact system administrator");
-			goto leaveilpman;
-			
-			break;
-		      case IERR_SERVUNDEF:
-			goto leaveilpman;
-			
-			break;
-		      case IERR_SOCKET:
-			goto leaveilpman;
-
-			break;
-		      case IERR_CONNECT:
-			goto leaveilpman;
-
-			break;
-		      case IERR_HOSTADDR:
-			goto leaveilpman;
-
-			break;
-		      default:
-			break;
-		}
-	}
-	init_me();
-
-
-	the_screen = &main_screen;
-	reentered = TRUE;
-	global_key = -1;
-	do
-	{
-		switch(the_scrid)
-		{
-		      case QSCR:
-			passed_data=(char*)q_head;
-			break;
-		      case PSCR:
-			passed_data=(char*)p_head;
-			break;
-		}
-		
-		in_screen(passed_data);
-
-	}while (global_key != fn1_key || screen_mode==MODE_EDIT);
-
-	vdefer(RESTORE);
-	shut_comm();
-	
-      leaveilpman:
-	voptimize(saveopt);
-}
-ilpwisp(srcfile, pmode, disposition, copies, class, form, prtnum, retcode)
-char srcfile[], form[];
-char pmode, disposition, class;
-int copies, *retcode, prtnum;
-{
-	QITEM the_item;
-	char path[200];
-	char formpath[200],buf[200];
-	FILE *in;
-	int plen=66;
-	char *p,*lines;
-	int init,pid;
-	struct stat sbuf;
-
-      top:
-	
-	if ((init=init_comm())!=INIT_OK)
-	switch(init & 0xff)
-	{
-	      case IERR_NODAEMON:
-	      case IERR_INCOMPATDS:
-	      case IERR_INCOMPATDM:
-		*retcode = 99;
-		return;
-		break;
-	      case IERR_SERVUNDEF:
-		*retcode = 40;
-		return;
-		break;
-	      case IERR_SOCKET:
-		*retcode = 41 | ((init & 0xff00) >> 8);
-		return;
-		break;
-	      case IERR_CONNECT:
-		*retcode = 42 | ((init & 0xff00) >> 8);
-		return;
-		break;
-	      default:
-		break;
-	}
-	memset(&the_item,0,sizeof(QITEM));
-	
-	strcpy(the_item.orig_path,srcfile);
-	if (srcfile[0] != '/')
-	{
-		char tmpbuf[200];
-		
-		getcwd(path,198);
-		sprintf(tmpbuf,"%s/%s",path,srcfile);
-		fixuppath(tmpbuf,the_item.real_path);
-	}
-	else
-	  strcpy(the_item.real_path,srcfile);
-
-	if (access(the_item.real_path,0))
-	{
-		*retcode=20;
-		goto leave;
-	}
-	if (access(the_item.real_path,R_OK))
-	{
-		*retcode=28;
-		goto leave;
-	}
-	strcpy(the_item.requested_prtr,"");
-	strcpy(the_item.form,form);
-
-	stat(srcfile,&sbuf);
-	the_item.size=sbuf.st_size;
-
-	the_item.stpage=1;
-	the_item.endpage=99999;
-	the_item.copies=copies;
-	the_item.class=class;
-	the_item.prtnum=prtnum;
-	switch(disposition)
-	{
-	      case 'D':
-	      case 'd':
-		the_item.mode = QMD_DELETEAFTER;
-		break;
-	      case 'R':
-	      case 'r':
-		the_item.mode = QMD_RESPOOLHOLD;
-		break;
-	      case 'S':
-	      case 's':
-	      case ' ':
-	      case 0:
-		the_item.mode = 0;
-		break;
-	}		
-	switch(pmode)
-	{
-	      case 'S':
-	      case 's':
-	      case ' ':
-	      case 0:
-		break;
-	      case 'H':
-	      case 'h':
-		the_item.mode |= QMD_HOLD;
-		break;
-	}
-	send_daemon(M_QUEUE,0,&the_item,sizeof(the_item));
-	if (comm_status!=COMM_OK)
-	  *retcode=99;
-	else
-	  *retcode=0;
-
-      leave:
-	shut_comm();
-	
-}

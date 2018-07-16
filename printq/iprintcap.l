@@ -1,14 +1,21 @@
 %{
 
-static char rcsid[] = "$Id:$";
+static char rcsid[] = "$id: iprintcap.l,v 1.5 1992/05/20 23:17:32 jockc v2_18 jockc $";
 
 #define EXT extern 
+#ifdef echo
+#undef echo
+#endif
 #ifdef ECHO
 #undef ECHO
 #endif
 #include "daemon.h"
 #include "iprintcap_y.h"
 char *yystrdup();
+
+char yylbuff[1024] = {0};
+int yylposs=0;
+int yynewlnn=FALSE;
 
 int yyfd= -1;
 int yyupchar= -1;
@@ -26,11 +33,43 @@ static int input()
 		yyupchar = -1;
 		return tmp;
 	}
-	if (yyfd==-1) yyfd=open(fileread=PRINTCAP,O_RDONLY);
-	if (yyfd==-1) yyfd=open(fileread=OLDPRINTCAP,O_RDONLY); /* for compatibility */
-	if (yyfd==-1) {  perror("Warning: could not open prtdef file"); return 0; }
-	if (read(yyfd,buf,1)==1) { return buf[0]; }
-	else { close(yyfd); yyfd= -1; yyupchar= -1; return 0; }
+	if (yyfd==-1) 
+	{
+		yyfd=open(fileread=prtdef,O_RDONLY);
+	}
+	if (yyfd==-1) 
+	{
+		yyfd=open(fileread=printcap,O_RDONLY); /* for compatibility */
+	}
+	if (yyfd==-1) 
+	{  
+		perror("Warning: could not open prtdef file"); 
+		return 0; 
+	}
+	if (read(yyfd,buf,1)==1) 
+        { 
+		if (yynewlnn)
+		{
+			yylposs=0;
+			yynewlnn=FALSE;
+		}
+		if (buf[0]=='\n')
+		{
+			++yynewlnn;
+		}
+		else
+		{
+			yylbuff[yylposs++]=buf[0];
+		}
+                return buf[0]; 
+        }
+	else 
+	{ 
+		close(yyfd); 
+		yyfd= -1; 
+		yyupchar= -1; 
+		return 0; 
+	}
 }
 static int unput(ch)
 {
@@ -51,7 +90,13 @@ comment #.*
 %%
 {comment}       ;
 {whitesp}	;
-{number}	{ sscanf(yytext,"%d",&yylval.num); return NUMBER; }
+{number}	{
+#ifdef __STDC__
+	sscanf((CONST char *)yytext,"%d",&yylval.num); return NUMBER;
+#else
+	sscanf(yytext,"%d",&yylval.num); return NUMBER;
+#endif
+ 		}
 {eq}		{ return EQUAL; }
 {colon}		{ return COLON; }
 {ident}		{ 

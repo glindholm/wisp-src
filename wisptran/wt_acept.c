@@ -47,7 +47,7 @@ p_accept()
 	{
 		ptype = get_param(o_parms[toknum]);
 
-		if (keyword(o_parms[toknum],proc_keywords))			/* Is it a keyword?				*/
+		if (proc_keyword(o_parms[toknum]))				/* Is it a keyword?				*/
 		{
 			hold_line();
 			break;
@@ -80,7 +80,7 @@ p_accept()
 		}
 		if (ptype == -1) add2buff(buff,".",col,0);
 		strcat(buff,"\n");
-		put_line(buff);
+		tput_block(buff);
 		return;
 	}
 
@@ -143,18 +143,19 @@ p_accept()
 
 	}
 
-	put_line(buf1);
+	tput_block(buf1);
 
 	buf1[0] = '\0';
 	sprintf(tstr,"MOVE %d TO WISP-LONGWORD",item-1);
 	add2buff(buf1,tstr,col,1);
-	put_line(buf1);
+	tput_block(buf1);
 
-	put_line(buf2);
+	tput_block(buf2);
 
 	if (ptype == -1) add2buff(buf3,".",col2,0);
-	put_line(buf3);
-	put_line("\n");
+	tput_block(buf3);
+	tput_flush();
+	
 	return;
 }
 

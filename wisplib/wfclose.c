@@ -1,16 +1,18 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
 
+
 /*
 **	wfclose.c
 */
 
+#include "idsistd.h"
 #include "wperson.h"
 #include "wfiles.h"
 
@@ -21,10 +23,12 @@ char *fname;
 {											/* closes the file.			*/
 	int i, spos, retcd;
 	pstruct *lptr;									/* A local pointer into the structure.	*/
+	char	def_prt_mode;
 
 	if (plist)									/* if any files opened print/hold	*/
 	{
 		wpload();
+		get_defs(DEFAULTS_PM,&def_prt_mode);
 		if (fname[0] == '*')							/* '*' means dump them all.		*/
 		{
 			lptr = plist;
@@ -32,7 +36,7 @@ char *fname;
 			{
 				if (lptr->name[0])
 				{
-					wprint(lptr->name,defaults.prt_mode,0,lptr->numcopies,
+					wprint(lptr->name,def_prt_mode,0,lptr->numcopies,
 							lptr->class,lptr->form,&retcd);
 					lptr->name[0] = '\0';				/* Say we have already processed it.	*/
 				}
@@ -56,7 +60,7 @@ char *fname;
 
 			if (lptr)							/* If there was a match, spool it.	*/
 			{
-				wprint(lptr->name,defaults.prt_mode,0,lptr->numcopies,
+				wprint(lptr->name,def_prt_mode,0,lptr->numcopies,
 						lptr->class,lptr->form,&retcd);
 				lptr->name[0] = '\0';					/* Say we have already processed it.	*/
 			}

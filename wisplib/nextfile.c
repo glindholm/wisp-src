@@ -33,15 +33,19 @@
 
 #ifdef unix
 
+#include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+#include "idsistd.h"
 #include "wdefines.h"
 
 
+#ifdef strcmp
 #undef strcmp
-extern int strcmp();
+#endif /* strcmp */
+int strcmp();
 
 char *nextfile(path,context)
 char *path;
@@ -141,12 +145,26 @@ char **context;
 
 			}
 
-			strcpy(ptr,dp->d_name);
+			if (strlen(dp->d_name) < FILENAMESIZE)
+			{
+				strcpy(ptr,dp->d_name);
+			}
+			else							/* Filename is too large			*/
+			{
+				memcpy(ptr,dp->d_name,FILENAMESIZE-1);
+				ptr[FILENAMESIZE-1] = (char)0;
+			}
+
 			ptr += FILENAMESIZE;
 			CT->slots_used += 1;
 		}
 
+#ifdef OSF1_ALPHA
+		qsort(CT->slots, CT->slots_used, FILENAMESIZE,			/* Sort the table of dir entries		*/
+		      ( int (*) (const void *,const void *) )strcmp);
+#else
 		qsort(CT->slots, CT->slots_used, FILENAMESIZE, strcmp);		/* Sort the table of dir entries		*/
+#endif
 
 		CT->slots_returned = 0;
 		CT->ret_ptr = CT->slots;					/* Setup ret_ptr to begin returning		*/
@@ -179,6 +197,11 @@ char **context;
 #include <sys/types.h>
 
 #include "wdefines.h"
+
+#ifdef strcmp
+#undef strcmp
+#endif /* strcmp */
+int strcmp();
 
 				/*	#ifdef MSDOS	*/
 char *nextfile(path,context)
@@ -230,6 +253,7 @@ char **context;
 		char wildpath[256];						/* path + wild card (*.*) for directory search.	*/
 		struct find_t fi;						/* MSDOS Directory file info structure.		*/
 		int slots_alloced;						/* Number of memory slots available.		*/
+		int	len;
 
 										/* This MSDOS specific function starts a read	*/
 										/* of a directory.  Use an (OR)ing of these:	*/
@@ -254,10 +278,14 @@ char **context;
 										/*		attribute is set after any	*/
 										/*		changes to the file.		*/
 		strcpy( wildpath, path );
-		strcat( wildpath, "\\*.*" );
-		if ( 0 != ( _dos_findfirst ( wildpath,				/* Turbo C and C++ function name is "findfirst"	*/
-			_A_NORMAL | _A_RDONLY,
-			&fi ) ) )
+		len = strlen(wildpath);
+		if (len > 0 && wildpath[len-1] != '\\')
+		{
+			strcat( wildpath, "\\" );
+		}
+		strcat( wildpath, "*.*" );
+										/* Turbo C and C++ function name is "findfirst"	*/
+		if ( 0 != ( _dos_findfirst ( wildpath, _A_NORMAL | _A_RDONLY | _A_SUBDIR, &fi ) ) )
 		{
 			free( *context );
 			*context = NULL;
@@ -306,7 +334,8 @@ char **context;
 			}	
 		}
 
-		qsort(CT->slots, CT->slots_used, FILENAMESIZE, strcmp);		/* Sort the table of dir entries		*/
+		qsort(CT->slots, CT->slots_used, FILENAMESIZE, (int(*)(const void*,const void*))strcmp);
+										/* Sort the table of dir entries		*/
 
 		CT->slots_returned = 0;
 		CT->ret_ptr = CT->slots;					/* Setup ret_ptr to begin returning		*/

@@ -1,4 +1,5 @@
 #include "video.h"
+#include "vintdef.h"
 #include "vmenu.h"
 #include "vlocal.h"
 #include "vdata.h"

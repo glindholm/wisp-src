@@ -11,6 +11,8 @@
 	fixerr.c
 */
 
+#include "idsistd.h"
+
 #ifdef unix
 
 #include <errno.h>

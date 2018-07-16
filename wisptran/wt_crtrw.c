@@ -1,5 +1,16 @@
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 #define EXT extern
 #include "wisp.h"
+#include "crt.h"
+
 #include <ctype.h>
 
 /*						Process REWRITE CRT-FILE statements						*/
@@ -118,35 +129,34 @@ int crt_num;										/* the crt-file number being rewritten	*/
 	write_log("WISP",'I',"CRTREWRITE","REWRITE of %s repaired.",crt_record[crt_num]); 	/* now fix it			*/
 
 											/* Go till we go beyond it.		*/
-	for ( cur_crt=0; cur_crt<crt_fcount; cur_crt++) if (crt_prec[cur_crt] > crt_num) {cur_crt--; break;}
+	for ( cur_crt=0; cur_crt<crt_fcount; cur_crt++) 
+	{
+		if (crt_prime_rec[cur_crt] > crt_num) 
+		{
+			cur_crt--; 
+			break;
+		}
+	}
 
 	if (cur_crt == crt_fcount) cur_crt--;
 
-	put_line		("\n");
 	if (from_item[0])								/* Handle the REWRITE FROM phrase.	*/
 	{
-		write_line	("           MOVE %s TO\n",from_item);
-		write_line	("                %s,\n",crt_record[crt_num]);
+		tput_line_at(12, "MOVE %s TO",from_item);
+		tput_clause (16, "%s,",crt_record[crt_num]);
 	}
 
 	if (crt_relative[cur_crt][0])
 	{										/* write what line to start at		*/
-		write_line	("           CALL \042xx2byte\042 USING %s,\n",crt_relative[cur_crt]);
-		write_line  	("                                %s\n",crt_record[crt_num]);
+		tput_line_at(12, "CALL \"xx2byte\" USING %s,",crt_relative[cur_crt]);
+		tput_clause (16, "%s",crt_record[crt_num]);
 	}
 
-	write_line		("           MOVE %s TO WISP-CRT-RECORD,\n",crt_record[crt_num]);
+	tput_line_at(12, "MOVE %s TO WISP-CRT-RECORD,",crt_record[crt_num]);
 
 	if (wcc_byte)									/* Do a special WCC function?		*/
 	{
-#ifdef OLD
-		put_line  	("           MOVE WISP-CRT-ORDER-AREA-2 TO WISP-SAVE-WCC,\n");	/* Save the order area.		*/
-		write_line	("           MOVE DEC-BYTE-%d TO WISP-SET-BYTE,\n",wcc_byte);
-		put_line  	("           CALL \042bit_on\042 USING\n");
-		put_line  	("                WISP-SET-BYTE,\n");
-		put_line  	("                WISP-CRT-ORDER-AREA-2\n");
-#endif
-		write_line	("           MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-2,\n",wcc_byte);
+		tput_line_at(12, "MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-2,",wcc_byte);
 	}
 
 	if (row_field[0])								/* Set the row byte			*/
@@ -155,13 +165,12 @@ int crt_num;										/* the crt-file number being rewritten	*/
 		{
 			j = row_field[0] - '0';
 			if (row_field[1]) j = (j * 10) + (row_field[1] - '0');		/* Scan out the digits.			*/
-			write_line("           MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-4\n",j);
+			tput_line_at(12, "MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-4",j);
 		}
 		else									/* Must be a field name.		*/
 		{
-			write_line("           MOVE %s TO WISP-DFIELD-0\n",row_field);
-			put_line  ("           CALL \"XX2BYTE\" USING WISP-DFIELD-0\n");
-			put_line  ("                                WISP-CRT-ORDER-AREA-4\n");
+			tput_line_at(12, "MOVE %s TO WISP-DFIELD-0",row_field);
+			tput_line_at(12, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-4");
 		}
 	}
 
@@ -172,49 +181,38 @@ int crt_num;										/* the crt-file number being rewritten	*/
 		{
 			j = col_field[0] - '0';
 			if (col_field[1]) j = (j * 10) + (col_field[1] - '0');		/* Scan out the digits.			*/
-			write_line("           MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-3\n",j);
+			tput_line_at(12, "MOVE DEC-BYTE-%d TO WISP-CRT-ORDER-AREA-3",j);
 		}
 		else									/* Must be a field name.		*/
 		{
-			write_line("           MOVE %s TO WISP-DFIELD-0\n",col_field);
-			put_line  ("           CALL \"XX2BYTE\" USING WISP-DFIELD-0\n");
-			put_line  ("                                WISP-CRT-ORDER-AREA-3\n");
+			tput_line_at(12, "MOVE %s TO WISP-DFIELD-0",col_field);
+			tput_line_at(12, "CALL \"xx2byte\" USING WISP-DFIELD-0, WISP-CRT-ORDER-AREA-3");
 		}
 	}
 
 	if (wcc_byte || row_field[0] || col_field[0])
 	{
-		put_line	("           MOVE 4 TO WISP-LONGWORD\n");
-		write_line	("           CALL \"wmemcpy\" USING %s,\n",crt_record[crt_num]);
-		put_line	("                 WISP-CRT-O-A, WISP-LONGWORD\n");
+		tput_line_at	(12, "MOVE 4 TO WISP-LONGWORD");
+		tput_line_at	(12, "CALL \"wmemcpy\" USING %s,",crt_record[crt_num]);
+		tput_clause	(16, "WISP-CRT-O-A, WISP-LONGWORD");
 	}
 
-	write_line("           MOVE DEC-BYTE-%d TO VWANG-LINES,\n",(crt_size[crt_num]-4)/80);
-	write_line("           MOVE SPACES TO %s,\n",crt_status[cur_crt]);
-	put_line  ("           MOVE \"X\" TO WISP-ALLOWABLE-PF-KEYS,\n");
-	put_line  ("           CALL \042vwang\042 USING VWANG-WRITE-ALL,\n");
-	put_line  ("                              WISP-CRT-RECORD,\n");
-	put_line  ("                              VWANG-LINES,\n");				/* Write full screen for now	*/
-	put_line  ("                              WISP-ALLOWABLE-PF-KEYS,\n");
-	write_line("                              %s,\n",crt_pfkey[cur_crt]);
-	write_line("                              %s",crt_status[cur_crt]);
-
-#ifdef OLD
-	if (wcc_byte)										/* do a special WCC function?	*/
-	{
-		put_line  ("\n           MOVE WISP-SAVE-WCC TO WISP-CRT-ORDER-AREA-2");		/* restore the order area	*/
-	}
-#endif
+	tput_line_at(12, "MOVE DEC-BYTE-%d TO VWANG-LINES,\n",(crt_record_size[crt_num]-4)/80);
+	tput_line_at(12, "MOVE SPACES TO %s,\n",crt_status[cur_crt]);
+	tput_line_at(12, "MOVE \"X\" TO WISP-ALLOWABLE-PF-KEYS,\n");
+	tput_line_at(12, "CALL \"vwang\" USING VWANG-WRITE-ALL,");
+	tput_clause (16, "WISP-CRT-RECORD,");
+	tput_clause (16, "VWANG-LINES,");				/* Write full screen for now	*/
+	tput_clause (16, "WISP-ALLOWABLE-PF-KEYS,");
+	tput_clause (16, "%s,",crt_pfkey[cur_crt]);
+	tput_clause (16, "%s",crt_status[cur_crt]);
 
 
 	if (ptype == -1)									/* has a period in it...	*/
 	{
-		put_line(".\n");
+		tput_clause(12, ".");
 	}
-	else
-	{
-		put_char('\n');
-	}
+
 	if ((ptype == 1) || (kword == -1)) hold_line();						/* Ended on a new line		*/
 }
 

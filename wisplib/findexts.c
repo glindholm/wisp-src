@@ -11,73 +11,58 @@
 /*
 	findexts:	This routine takes a file basename and trys to find the complete filename by adding extensions.
 			It returns 0 if the file was found and 1 if not found.  If the file was found it loads the found
-			filename with possible extension into base_ext. If type is not null it will return the type of
-			extension that was added to basename.
+			filename with possible extension into base_ext.
 */
 
 #ifndef VMS	/* unix or MSDOS */
 
 #include <stdio.h>
+#include <string.h>
+#include "idsistd.h"
 #include "wdefines.h"
+#include "idsisubs.h"
 
-#ifdef unix
-static 	char 	*exts[] = { ".exe", ".com", ".sh",  ".gnt", ".int", NULL };		/* possible UNIX extensions		*/
-#endif	/* #ifdef unix */
+extern char *g_exts[];								/* Possible extensions (from wfname)		*/
 
-#ifdef MSDOS
-static 	char 	*exts[] = { ".exe", ".com", ".bat", ".gnt", ".int", NULL };		/* possible MSDOS extensions		*/
-#endif	/* #ifdef MSDOS */
-
-
-int findexts(basename,base_ext,type)
+int findexts(basename,base_ext)
 char 	*basename;
 char 	*base_ext;
-int	*type;
 {
 	int 	i;
 	char	base[100];
 	char 	tmp[100];
-	int	l_type;
+	char	*ptr;
+	int	not_found;
 
-	l_type = NOTFOUND;
-
-	for( i = 0 ; basename[i] != ' ' && basename[i] != '\0' ; ++i )			/* Move basename to base until space.	*/
+	not_found = 1;
+	unloadpad(base,basename,80);
+	strcpy(tmp,splitext(base));
+	if (*tmp)									/* If there is an extension remove it	*/
 	{
-		base[i] = basename[i];
+		ptr = strrchr(base,'.');
+		*ptr = (char)0;
 	}
-	base[i] = '\0';									/* Terminate with null char.		*/
 
-
-#ifdef unix
-	if ( access(base, 0) == 0 )							/* Look for basename with no extension.	*/
+	if ( fexists(base) )								/* Look for basename with no extension.	*/
 	{
 		strcpy(base_ext,base);
-		l_type = NOEXT;
+		not_found = 0;
 	}
-
-	if ( l_type == NOTFOUND && ! osd_ext(base) )
+	else
 	{
-#endif	/* #ifdef unix */								/* unix and MSDOS section.	*/
-
-		for (i=0; exts[i] != NULL ; ++i)					/* For each extension.			*/
+		for (i=0; g_exts[i] != NULL ; ++i)					/* For each extension.			*/
 		{
-			sprintf(tmp,"%s%s",base,exts[i]);				/* Put basename and extension into tmp.	*/
-			if ( access(tmp, 0) == 0 )					/* Does tmp file exist?			*/
+			sprintf(tmp,"%s%s",base,g_exts[i]);				/* Put basename and extension into tmp.	*/
+			if ( fexists(tmp) )						/* Does tmp file exist?			*/
 			{								/* If it does,				*/
 				strcpy(base_ext,tmp);					/* Move the path (tmp) to base_ext.	*/
-				l_type = i;						/* Set l_type to the extension index.	*/
+				not_found = 0;
 				break;							/* Break out of this "for" loop.	*/
 			}
 		}
-
-#ifdef unix
 	}
-#endif
 
-	if ( type ) *type = l_type;							/* If type is a ptr, put l_type in it.	*/
-
-	if ( l_type == NOTFOUND ) return(1);						/* return 1 if not found, 0 if found.	*/
-	else			  return(0);
+	return(not_found);								/* return 1 if not found, 0 if found.	*/
 }
 
 #endif		/* #ifndef VMS ( unix or MSDOS ) */

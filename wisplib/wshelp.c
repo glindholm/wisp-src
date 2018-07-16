@@ -1,6 +1,6 @@
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
+			/*		Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993	*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/************************************************************************/
@@ -17,6 +17,7 @@
 #include <malloc.h>
 #include <sys/utsname.h>
 #include <signal.h>
+static int wsh_prtque();
 #endif
 #ifdef MSDOS
 #include <malloc.h>
@@ -25,28 +26,36 @@
 #include <v/video.h>									/* Include video definitions.		*/
 #include <v/vlocal.h>									/* Include video definitions.		*/
 #include <v/vcap.h>									/* Include video key definitions.	*/
+#include <v/vchinese.h>
+#include "idsistd.h"
 #include "wcommon.h"									/* Include COMMON defines		*/
 #include "wperson.h"									/* Include personality definitions.	*/
 #include "vwang.h"									/* Include wisp/video interface defs.	*/
-#include "wscrn.h"									/* Include Wisp screen stack defs.	*/
 #include "scnfacs.h"									/* Include screen FAC definitions.	*/
 #include "wglobals.h"
 #include "werrlog.h"
 #include "wdefines.h"									/* Include bordering limits def.	*/
 #include "cobrun.h"
+#include "wanguid.h"
 
 #define ROUTINE		86000
 
 /*						Local definitions.								*/
 
-char *wanguid3();
-char *strchr();
-char *longuid();
+char 	*strchr();
+char	*shell_var();
 
 int noprogscrn = 0;									/* No program screen flag.		*/
 static int	wang_style=1;
 static int	g_prog_running;
+static char	run_complete_message[80];
 
+static int wsc_mem_err();
+static int pack();
+static int perr();
+static int mload();
+static int pfkey_value();
+static int build_non_wang_base();
 
 extern char wisp_progname[9];								/* Get access to current program name.	*/
 extern char wisp_screen[33];								/* And current screen.			*/
@@ -57,7 +66,6 @@ extern int wcurwidth;									/* Current Wang screen width.		*/
 
 int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*/
 {
-	extern int help_active;								/* Help active flag.			*/
 	char *ctime();									/* The time conversion routine.		*/
 	time_t time_data;								/* Time data.				*/
 	char old_sec, new_sec;								/* Remember the old second.		*/
@@ -67,11 +75,12 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 	int i, j, k;									/* Working registers.			*/
 	char allowed_pfkeys[81];							/* Allowed PF keys.			*/
 	char id[32], tty_str[5];							/* Vars for extract.			*/
-	long tty_num, argcnt;
+	int4 tty_num, argcnt;
 	char	time_temp[24];
 	int	row, col1, col2, time_row, time_col;
 	int	pfval;
         int 	pfkey_map[33];								/* Map for non-wang style screen pfkeys	*/
+	uint4 dflags;
 
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
@@ -89,7 +98,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 
 	strcpy(allowed_pfkeys,"00");							/* Always allow return.			*/
 	wpload();									/* Load the personality information.	*/
-	help_active = TRUE;								/* Help is now active.			*/
+	sethelpactive(TRUE);								/* Help is now active.			*/
 
 	strcpy(id,longuid());								/* Get the user id.			*/
 	wswap(&tty_num);
@@ -98,11 +107,14 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 	EXTRACT("W#",&tty_num);								/* Get the tty number from TTMAP.	*/
 	wswap(&tty_num);
 	sprintf(tty_str,"%4d",tty_num);							/* Convert value to a string.		*/
+	strcpy(run_complete_message,"  ");						/* Blank the run complete message	*/
 
-	if ( !(defaults.flags & HELP_ENABLED))						/* Help is disabled.			*/
+	get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
+
+	if ( !(dflags & HELP_ENABLED))							/* Help is disabled.			*/
 	{
 		vbell();								/* Ring the bell.			*/
-		help_active = FALSE;							/* Help no longer active.		*/
+		sethelpactive(FALSE);							/* Help no longer active.		*/
 		return(FAILURE);							/* It failed.				*/
 	}
 
@@ -147,25 +159,33 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 			{
 				if (wisp_screen[0] && wisp_screen[0] != ' ')		/* We also know the screen name		*/
 				{
-					sprintf(temp, "[Active program: %s    Screen: %s]", wisp_progname, wisp_screen);
+					if (outctx)
+					  sprintf(temp, " Active program: %s    Screen: %s ", wisp_progname, wisp_screen);
+					else
+					  sprintf(temp, "[Active program: %s    Screen: %s]", wisp_progname, wisp_screen);
 				}
 				else
 				{
-					sprintf(temp, "[Active program: %s]", wisp_progname);
+					if (outctx)
+					  sprintf(temp, " Active program: %s ", wisp_progname);
+					else
+					  sprintf(temp, "[Active program: %s]", wisp_progname);
 				}
 			}
 			else
 			{
 				if (WISPRUNNAME[0] != ' ')
 				{
-					sprintf(temp,"[Active program: %8.8s]",WISPRUNNAME);
+					if (outctx)
+					  sprintf(temp," Active program: %8.8s ",WISPRUNNAME);
+					else
+					  sprintf(temp,"[Active program: %8.8s]",WISPRUNNAME);
 				}
 				else
 				{
 					strcpy(temp,"*** A program is active ***");
 				}
 			}
-
 			pack(scrn, 11, (40 - (int)strlen(temp)/2), 0, temp);
 		}
 		pack(scrn, 13, 18, 0, "Use the function keys to select a command:");
@@ -210,7 +230,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 	}
 	strcat(allowed_pfkeys,"01");
 
-	if (defaults.flags & HELP_SET_FILES)
+	if (dflags & HELP_SET_FILES)
 	{
 		if (wang_style)
 			pack(scrn, row+1, col1, 0, "(2) SET File Usage Constants");
@@ -219,7 +239,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 		strcat(allowed_pfkeys,"02");
 	}
 
-	if (defaults.flags & HELP_SET_PRINTER)
+	if (dflags & HELP_SET_PRINTER)
 	{
 		if (wang_style)
 			pack(scrn, row+2, col1, 0, "(3) SET Print Mode Defaults");
@@ -228,7 +248,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 		strcat(allowed_pfkeys,"03");
 	}
 
-	if (defaults.flags & HELP_SET_PROC)
+	if (dflags & HELP_SET_PROC)
 	{
 		if (wang_style)
 			pack(scrn, row+3,  col1, 0, "(4) SET Submit Procedure Defaults");
@@ -237,9 +257,9 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 		strcat(allowed_pfkeys,"04");
 	}
 
-	if (defaults.flags & HELP_MANAGE_FILES_LIBS)
+	if (dflags & HELP_MANAGE_FILES_LIBS)
 	{
-#ifdef unix
+#ifndef VMS
 		if (wang_style)
 			pack(scrn, row+5, col1, 0, "(5) Manage FILES/LIBRARIES");
 		else
@@ -248,7 +268,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 #endif
 	}
 
-	if (defaults.flags & HELP_MANAGE_SYSTEM)
+	if (dflags & HELP_MANAGE_SYSTEM)
 	{
 #ifdef _AIX
 		if (wang_style)
@@ -259,7 +279,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 #endif
 	}
 
-	if (defaults.flags & HELP_QUEUE_MNGMNT)
+	if (dflags & HELP_QUEUE_MNGMNT)
 	{
 #ifdef VMS
 		if (wang_style)
@@ -280,16 +300,7 @@ int wsh_help(prog_running) int prog_running;						/* Put up the shell screen.		*
 #endif
 	}
 
-#ifdef	DO_GOODIES									/* Goodies must have EDE installed.	*/
-
-This was added to remove GOODIES from the help screen because they are not there if EDE is not installed add
-if EDE is installed then GOODIES will be on the HELP BAR.
-
-	if ((defaults.flags & HELP_GENERAL_UTILS) ||
-	    (defaults.flags & HELP_GOODIES_UTILS))
-#else
-	if (defaults.flags & HELP_GENERAL_UTILS)
-#endif
+	if ((dflags & HELP_EDIT) || (dflags & HELP_DISPRINT) || (dflags & HELP_CRID))
 	{
 		if (wang_style)
 			pack(scrn, row+0, col2, 0, " (9) Use UTILITIES");
@@ -297,7 +308,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 			mload(scrn, row+0, col2, 9, "Utilities",pfkey_map);
 		strcat(allowed_pfkeys,"09");
 	}
-	else if (defaults.flags & HELP_DISPLAY)
+	else if (dflags & HELP_DISPLAY)
 	{
 		if (wang_style)
 			pack(scrn, row+0, col2, 0, " (9) Use DISPLAY");
@@ -306,7 +317,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 		strcat(allowed_pfkeys,"09");
 	}
 
-	if (defaults.flags & HELP_TERMINAL)
+	if (dflags & HELP_TERMINAL)
 	{
 		if (wang_style)
 			pack(scrn, row+1, col2, 0, "(10) Configure TERMINAL");
@@ -315,7 +326,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 		strcat(allowed_pfkeys,"10");
 	}
 
-	if (defaults.flags & HELP_COMMANDS)
+	if (dflags & HELP_COMMANDS)
 	{
 		if (wang_style)
 			pack(scrn, row+2, col2, 0, "(11) Enter COMMANDS");
@@ -333,7 +344,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 		strcat(allowed_pfkeys,"11");
 	}
 
-	if (defaults.flags & HELP_USAGE_WRITE)
+	if (dflags & HELP_USAGE_WRITE)
 	{
 		if (wang_style)
 			pack(scrn, row+4, col2, 0, "(13) SAVE environment");
@@ -342,7 +353,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 		strcat(allowed_pfkeys,"13");
 	}
 
-	if (prog_running && (defaults.flags & HELP_PRINT_SCREEN) && !noprogscrn)
+	if (prog_running && (dflags & HELP_PRINT_SCREEN) && !noprogscrn)
 	{
 		if (wang_style)
 			pack(scrn, row+5, col2, 0, "(14) PRINT PROGRAM screen");
@@ -351,7 +362,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 		strcat(allowed_pfkeys,"14");
 	}
 
-	if (defaults.flags & HELP_PRINT_SCREEN)
+	if (dflags & HELP_PRINT_SCREEN)
 	{
 		if (wang_style)
 			pack(scrn, row+6, col2, 0, "(15) PRINT COMMAND screen");
@@ -368,7 +379,7 @@ if EDE is installed then GOODIES will be on the HELP BAR.
 			mload(scrn, row+6, col2, 16, "Exit HELP processor",pfkey_map);
 		strcat(allowed_pfkeys,"16");
 	}
-	else if (defaults.flags & HELP_CANCEL)
+	else if (dflags & HELP_CANCEL)
 	{
 		if (wang_style)
 			pack(scrn, row+7, col2, 0, "(16) CANCEL Processing");
@@ -392,7 +403,7 @@ restart:										/* Return here unless exiting.		*/
 
 	pack(scrn, time_row, time_col, 24, time_temp);
 
-	function = 1;									/* Use WRITE_ALL			*/
+	function = WRITE_ALL;								/* Use WRITE_ALL			*/
 	vwang(&function,scrn,&lines,"00X",term,no_mod);					/* Call Wang emulation to fill screen.	*/
 
 	if (!wang_style) 
@@ -443,7 +454,7 @@ skip_time_update:
 	pack(scrn, time_row, time_col, 24, time_temp);					/* Store it.				*/
 
 	synch_required = FALSE;								/* Don't need to synchronize.		*/
-	function = 3;									/* Use DISPLAY_AND_READ.		*/
+	function = DISPLAY_AND_READ;							/* Use DISPLAY_AND_READ.		*/
 	vwang(&function,scrn,&lines,allowed_pfkeys,term,no_mod);			/* Call Wang emulation to fill screen.	*/
 
 	if (wang_style)
@@ -471,10 +482,13 @@ skip_time_update:
 	case 1:										/* Run program or return.		*/
 		if (prog_running)							/* Is a program running?		*/
 		{
-			help_active = FALSE;						/* Help is no longer running.		*/
+			sethelpactive(FALSE);						/* Help is no longer running.		*/
 			return(SUCCESS);						/* Return to the caller.		*/
 		}
-		else wsh_run_program("        ");					/* No, then run a program.		*/
+		else 
+		{
+			wsh_run_program("        ");					/* No, then run a program.		*/
+		}
 		break;
 	case 2:
 		wsh_voldir();								/* Set the usage constants.		*/
@@ -486,7 +500,7 @@ skip_time_update:
 		wsh_setproc();								/* Set the usage constants.		*/
 		break;
 	case 5:
-#ifdef unix
+#ifndef VMS
 		mngfile();								/* Manage files				*/
 #endif
 		break;
@@ -526,19 +540,35 @@ skip_time_update:
 	case 16:
 		if (prog_running)
 		{
-			LINKCOMPCODE = 16;
-			setretcode("016");
-			wexit(16L);
+			if (wsh_cancel())
+			{
+				LINKCOMPCODE = 16;
+				setretcode("016");
+				wexit(16L);
+			}
 		}
 		else
 		{
-			help_active = FALSE;						/* Help not active.			*/
-			return(FAILURE);						/* Aborted by user.			*/
+			if (wsh_exit())
+			{
+				sethelpactive(FALSE);					/* Help not active.			*/
+				return(FAILURE);					/* Aborted by user.			*/
+			}
 		}
 		break;
 	case 32:
 		wsh_copyright();		 					/* Display the copyright screen.	*/
 		break;
+	}
+
+	if ( wang_style && !prog_running )
+	{
+		/*
+		**	Update the screen with the run complete message.
+		*/
+		strcpy(temp,run_complete_message);
+		memset(run_complete_message,' ',strlen(temp));				/* Blank out the run complete message	*/
+		pack(scrn, 11, (40 - (int)strlen(temp)/2), 0, temp);
 	}
 
 	goto restart;									/* And dispatch the next request.	*/
@@ -552,6 +582,7 @@ int wsh_terminal() 									/* Get a terminal menu selection.	*/
 	char okkeys[81];
 	int	pfval;
 	int	pfkey_map[33];
+	uint4 dflags;
 
 	lines = 24;									/* Use full screen.			*/
 	if (wang_style)
@@ -573,7 +604,9 @@ int wsh_terminal() 									/* Get a terminal menu selection.	*/
 		mload(scrn, 11, 8, 1, "Return to MAIN HELP menu",pfkey_map);
 	}
 
-	if (defaults.flags & HELP_SETPSB)
+	get_defs(DEFAULTS_FLAGS,&dflags);						/* Get the defaults flags		*/
+
+	if (dflags & HELP_SETPSB)
 	{
 		if (wang_style)
 			pack(scrn,  8, 20, 0, "(2) PSEUDO blank characteristics.");
@@ -582,7 +615,7 @@ int wsh_terminal() 									/* Get a terminal menu selection.	*/
 		strcat(okkeys,"02");
 	}
 
-	if (defaults.flags & HELP_SETCURCHAR)
+	if (dflags & HELP_SETCURCHAR)
 	{
 		if (wang_style)
 			pack(scrn, 10, 20, 0, "(3) CURSOR characteristics.");
@@ -591,7 +624,7 @@ int wsh_terminal() 									/* Get a terminal menu selection.	*/
 		strcat(okkeys,"03");
 	}
 
-	if (defaults.flags & HELP_SCREEN)
+	if (dflags & HELP_SCREEN)
 	{
 		if (wang_style)
 			pack(scrn, 12, 20, 0, "(4) SCREEN characteristics.");
@@ -605,7 +638,7 @@ int wsh_terminal() 									/* Get a terminal menu selection.	*/
 	if (!wang_style)
 		strcpy(okkeys,"00X");
 
-	function = 3;									/* Display and read.			*/
+	function = DISPLAY_AND_READ;							/* Display and read.			*/
 again:	vwang(&function,scrn,&lines,okkeys,term,no_mod);				/* Call Wang emulation to fill screen.	*/
 
 	if (wang_style)
@@ -680,7 +713,10 @@ int wsh_setpsb()									/* Change pseudo blank characteristics.	*/
 	char pb_char[4], pb_rend[4], pb_select[4];	
 	char dpsb[4];									/* Temp var for display of graphics.	*/
 	int pb_chset, pb_r;
-	int valid, i;
+	int valid, i, changed;
+	char	def_psb_select;
+	int4	def_psb_charset;
+	int4	def_psb_rendition;
 
 	wpload();									/* Load the personality information.	*/
 	if ((screen = malloc(1924)) == 0) wsc_mem_err();				/* Able to get memory?			*/
@@ -708,11 +744,15 @@ int wsh_setpsb()									/* Change pseudo blank characteristics.	*/
 	wput(screen,20,37,PLAIN_TEXT,"with the pseudo blank character.");
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	get_psb_char(defaults.psb_select,pb_char,pb_select);
+	get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
+	get_defs(DEFAULTS_PSB_SET,&def_psb_charset);
+	get_defs(DEFAULTS_PSB_REN,&def_psb_rendition);
+
+	get_psb_char(def_psb_select,pb_char,pb_select);
 	pb_select[1] = '\0';								/* Null terminate the string.		*/
 	pb_char[1] = '\0';								/* Null terminate the string.		*/
-	pb_chset = defaults.psb_charset;
-	pb_r = defaults.psb_rendition;
+	pb_chset = def_psb_charset;
+	pb_r = def_psb_rendition;
 	if (pb_r == 2)  pb_rend[0] = 'U';						/* Rendition is UNDERLINE.		*/
 	else if (pb_r == 8)  pb_rend[0] = 'R';						/* Rendition is REVERSE.		*/
 	else if (pb_r == 10) pb_rend[0] = 'B';						/* Both UNDERSCORE and REVERSE.		*/
@@ -746,16 +786,37 @@ int wsh_setpsb()									/* Change pseudo blank characteristics.	*/
 											/* don't want so reset to FALSE.	*/
 	function = READ_ALTERED;							/* Use read altered function.		*/
 	lines = 24;
-	do										/* Repeat until data input is valid.	*/
+	
+	valid = TRUE;									/* Assume it starts with valid values	*/
+	changed = FALSE;								/* Nothing has changed yet		*/
+
+	for(;;)										/* Repeat until data input is valid.	*/
 	{
 		vwang(&function,screen,&lines,"0001X",term,no_mod);			/* Call Wang emulation to fill screen.	*/
+		function = DISPLAY_AND_READ_ALTERED;					/* Set up for second time thru loop	*/
 
-		wget(screen, 5,40,pb_select);						/* Input the pseudo blank option.	*/
-		wget(screen, 6,40,pb_rend);						/* Input the rendition.			*/
-
-		valid = TRUE;								/* Assume we're valid.			*/
-		if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))	/* Should we validate?			*/
+		if ((term[0] == '0') && (term[1] == '1'))				/* If PF01 press then abort		*/
 		{
+			changed = FALSE;
+			break;
+		}
+
+		if (no_mod[0] == 'M')
+		{
+			changed = TRUE;							/* Values have been changed		*/
+		}
+		else
+		{
+			changed = FALSE;						/* Values have been changed		*/
+		}
+
+		if (changed)
+		{
+			valid = TRUE;							/* Assume valid values			*/
+
+			wget(screen, 5,40,pb_select);					/* Input the pseudo blank option.	*/
+			wget(screen, 6,40,pb_rend);					/* Input the rendition.			*/
+
 			pb_select[0] = toupper(pb_select[0]);				/* Make sure the char is uppercase.	*/
 			if ((i = strpos("B1234",pb_select)) < 0)			/* Was a valid char option given?	*/
 			{
@@ -768,10 +829,10 @@ int wsh_setpsb()									/* Change pseudo blank characteristics.	*/
 			{
 				pb_chset = 16;
 
-				if      (pb_select[0] == '1')  pb_char[0] = PBLANK1;	/* Assign pseudo char as a diamond.	*/
-				else if (pb_select[0] == '2')  pb_char[0] = PBLANK2; 	/* Assign pseudo char as a degree symbol.*/
-				else if (pb_select[0] == '3')  pb_char[0] = PBLANK3;	/* Assign pseudo char as a period.	*/
-				else if (pb_select[0] == '4')  pb_char[0] = PBLANK4;	/* Assign pseudo char as a period.	*/
+				if      (pb_select[0] == '1')  pb_char[0] = PBLANK1;	/* Assign default pseudo chars		*/
+				else if (pb_select[0] == '2')  pb_char[0] = PBLANK2;
+				else if (pb_select[0] == '3')  pb_char[0] = PBLANK3;
+				else if (pb_select[0] == '4')  pb_char[0] = PBLANK4;
   				else
 				{
 					pb_chset = 0;
@@ -794,16 +855,20 @@ int wsh_setpsb()									/* Change pseudo blank characteristics.	*/
 				else if (pb_rend[0] == 'B')  pb_r = 10;			/* Assign both UNDERSCORE and REVERSE.	*/
 				else pb_r = 0;						/* Default Normal rendition.		*/
 			}
-		}                                                                                                                 
+		}
 
-	} while(!valid && (no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')));/* Repeat until the data is valid.	*/
+		if (valid) break;
+	}
 
-	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))		/* Don't write unless they press enter	*/
-	{										/* and we they've changed something.	*/
-		defaults.psb_select = pb_select[0];
-		defaults.psb_charset = pb_chset;
-		defaults.psb_rendition = pb_r;
-		wps_usr(&defaults);							/* Write out the personality info.	*/
+	if (changed && valid)								/* If values changed and are valid	*/
+	{
+		def_psb_select = pb_select[0];
+		def_psb_charset = pb_chset;
+		def_psb_rendition = pb_r;
+		set_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
+		set_defs(DEFAULTS_PSB_SET,&def_psb_charset);
+		set_defs(DEFAULTS_PSB_REN,&def_psb_rendition);
+		save_defaults();							/* Write out the personality info.	*/
 	}
 	free(screen);									/* Release the screen memory.		*/
 	synch_required = TRUE;								/* Synch now required.			*/
@@ -814,9 +879,9 @@ int wsh_setcurchar()									/* Change cursor characteristics.	*/
 {
 	char *screen;									/* Pointer to working screen routine.	*/
 	char function, lines, term[2], no_mod[2];					/* Working variables.			*/
-	int automove, autotab, mp_cursor;
+	int4 automove, autotab, mp_cursor;
 	char amfl[2], atfl[2],mpfl[2];
-	int valid, i;
+	int valid, i, changed;
 
 	wpload();									/* Load the personality information.	*/
 	if ((screen = malloc(1924)) == 0) wsc_mem_err();				/* Able to get memory?			*/
@@ -828,13 +893,16 @@ int wsh_setcurchar()									/* Change cursor characteristics.	*/
 	wput(screen, 9, 5,PLAIN_TEXT,"Menu pick cursor flag = ");
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	autotab = defaults.autotab;							/* Initialize fields from personality.	*/
+	get_defs(DEFAULTS_AUTOTAB,&autotab);						/* Initialize fields from personality.	*/
+	get_defs(DEFAULTS_AUTOMOVE,&automove);
+	get_defs(DEFAULTS_MP_CURSOR,&mp_cursor);
+
 	if (autotab) strcpy(atfl,"Y");							/* Init the string value.		*/
 	else	      strcpy(atfl,"N");
-	automove = defaults.automove;
+
 	if (automove) strcpy(amfl,"Y");			
 	else	      strcpy(amfl,"N");
-	mp_cursor = defaults.mp_cursor;
+
 	if (mp_cursor) strcpy(mpfl,"Y");
 	else	      strcpy(mpfl,"N");
 
@@ -842,20 +910,40 @@ int wsh_setcurchar()									/* Change cursor characteristics.	*/
 	wput(screen, 7,30,UPCASE_FIELD,amfl);
 	wput(screen, 9,30,UPCASE_FIELD,mpfl);
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
-	do										/* Repeat until data input is valid.	*/
+
+	valid = TRUE;									/* Assume it starts with valid values	*/
+	changed = FALSE;								/* Nothing has changed yet		*/
+
+	for(;;)										/* Repeat until data input is valid.	*/
 	{
 		vwang(&function,screen,&lines,"0001X",term,no_mod);			/* Call Wang emulation to fill screen.	*/
 
-		wget(screen, 5,30,atfl);
-		wget(screen, 7,30,amfl);
-		wget(screen, 9,30,mpfl);
+		if ((term[0] == '0') && (term[1] == '1'))				/* If PF01 press then abort		*/
+		{
+			changed = FALSE;
+			break;
+		}
 
-		valid = TRUE;								/* Assume we're valid.			*/
-		if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))	/* Should we validate?			*/
+		if (no_mod[0] == 'M')
+		{
+			changed = TRUE;							/* Values have been changed		*/
+		}
+		else
+		{
+			changed = FALSE;						/* Values have been changed		*/
+		}
+
+		if (changed)
 		{
 			int pos;
+
+			valid = TRUE;							/* Assume valid values			*/
+
+			wget(screen, 5,30,atfl);
+			wget(screen, 7,30,amfl);
+			wget(screen, 9,30,mpfl);
 
 			if ((pos = strpos("YNTF10",atfl)) < 0)				/* Was a valid logical given?		*/
 			{
@@ -893,16 +981,17 @@ int wsh_setcurchar()									/* Change cursor characteristics.	*/
 				if (pos == 0 || pos == 2 || pos == 4) mp_cursor = TRUE;	/* Set mp_cursor to TRUE.		*/
 				else mp_cursor = FALSE;
 			}  
-		}                                                                                                                 
+		}
+                                                                                                 
+		if (valid) break;
+	}
 
-	} while(!valid && (no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')));/* Repeat until the data is valid.	*/
-
-	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))		/* Don't write unless they press enter	*/
-	{										/* and we they've changed something.	*/
-		defaults.automove = automove;
-		defaults.autotab = autotab;
-		defaults.mp_cursor = mp_cursor;
-		wps_usr(&defaults);							/* Write out the personality info.	*/
+	if (changed && valid)								/* If values changed and are valid	*/
+	{
+		set_defs(DEFAULTS_AUTOTAB,&autotab);
+		set_defs(DEFAULTS_AUTOMOVE,&automove);
+		set_defs(DEFAULTS_MP_CURSOR,&mp_cursor);
+		save_defaults();							/* Write out the personality info.	*/
 	}
 	free(screen);									/* Release the screen memory.		*/
 	return(SUCCESS);								/* All done.				*/
@@ -912,9 +1001,9 @@ int wsh_setbackground()									/* Change cursor characteristics.	*/
 {
 	char *screen;									/* Pointer to working screen routine.	*/
 	char function, lines, term[2], no_mod[2];					/* Working variables.			*/
-	int bgchange, bgcolor, excolor;
+	int4 bgchange, bgcolor, excolor;
 	char bgch[2], bgco[2], exco[2];
-	int valid, i;
+	int valid, i, changed;
 
 	wpload();									/* Load the personality information.	*/
 	if ((screen = malloc(1924)) == 0) wsc_mem_err();				/* Able to get memory?			*/
@@ -926,13 +1015,16 @@ int wsh_setbackground()									/* Change cursor characteristics.	*/
 	wput(screen, 9, 5,PLAIN_TEXT,"            Exit grey =    (No means select black on exit.)");
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	bgchange = defaults.bgchange;							/* Initialize fields from personality.	*/
+	get_defs(DEFAULTS_BGCHANGE,&bgchange);						/* Initialize fields from personality.	*/
+	get_defs(DEFAULTS_BGCOLOR,&bgcolor);
+	get_defs(DEFAULTS_EXCOLOR,&excolor);
+
 	if (bgchange) strcpy(bgch,"Y");							/* Init the string value.		*/
 	else	      strcpy(bgch,"N");
-	bgcolor = defaults.bgcolor;
+
 	if (bgcolor) strcpy(bgco,"Y");			
 	else	     strcpy(bgco,"N");
-	excolor = defaults.excolor;
+
 	if (excolor) strcpy(exco,"Y");
 	else         strcpy(exco,"N");
 
@@ -940,20 +1032,40 @@ int wsh_setbackground()									/* Change cursor characteristics.	*/
 	wput(screen, 7,30,UPCASE_FIELD,bgco);
 	wput(screen, 9,30,UPCASE_FIELD,exco);
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
-	do										/* Repeat until data input is valid.	*/
+
+	valid = TRUE;									/* Assume it starts with valid values	*/
+	changed = FALSE;								/* Nothing has changed yet		*/
+
+	for(;;)										/* Repeat until data input is valid.	*/
 	{
 		vwang(&function,screen,&lines,"0001X",term,no_mod);			/* Call Wang emulation to fill screen.	*/
 
-		wget(screen, 5,30,bgch);
-		wget(screen, 7,30,bgco);
-		wget(screen, 9,30,exco);
+		if ((term[0] == '0') && (term[1] == '1'))				/* If PF01 press then abort		*/
+		{
+			changed = FALSE;
+			break;
+		}
 
-		valid = TRUE;								/* Assume we're valid.			*/
-		if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))	/* Should we validate?			*/
+		if (no_mod[0] == 'M')
+		{
+			changed = TRUE;							/* Values have been changed		*/
+		}
+		else
+		{
+			changed = FALSE;						/* Values have been changed		*/
+		}
+
+		if (changed)
 		{
 			int pos;
+
+			valid = TRUE;							/* Assume we're valid.			*/
+
+			wget(screen, 5,30,bgch);
+			wget(screen, 7,30,bgco);
+			wget(screen, 9,30,exco);
 
 			if ((pos = strpos("YNTF10",bgch)) < 0)				/* Was a valid logical given?		*/
 			{
@@ -992,15 +1104,15 @@ int wsh_setbackground()									/* Change cursor characteristics.	*/
 				else excolor  = FALSE;
 			}  
 		}                                                                                                                 
+		if (valid) break;
+	}
 
-	} while(!valid && (no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')));/* Repeat until the data is valid.	*/
-
-	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))		/* Don't write unless they press enter	*/
-	{										/* and we they've changed something.	*/
-		defaults.bgchange = bgchange;
-		defaults.bgcolor = bgcolor;
-		defaults.excolor = excolor;
-		wps_usr(&defaults);							/* Write out the personality info.	*/
+	if (changed && valid)								/* If values changed and are valid	*/
+	{
+		set_defs(DEFAULTS_BGCHANGE,&bgchange);
+		set_defs(DEFAULTS_BGCOLOR,&bgcolor);
+		set_defs(DEFAULTS_EXCOLOR,&excolor);
+		save_defaults();							/* Write out the personality info.	*/
 		if (bgchange)
 		{
 			if (excolor) vonexit(NORMALIZE|CLEAR_SCREEN|LIGHT);
@@ -1013,9 +1125,13 @@ int wsh_setbackground()									/* Change cursor characteristics.	*/
 
 int wsh_voldir() 									/* Set the usage constants.		*/
 {
-	char *field();									/* Field packing subroutine.		*/
 	char *screen;									/* Pointer to working screen routine.	*/
 	char function, lines, term[2], no_mod[2];					/* Working variables.			*/
+	char	def_inlib[9], 	def_invol[7];
+	char	def_outlib[9], 	def_outvol[7];
+	char	def_runlib[9], 	def_runvol[7];
+	char	def_spoolib[9], def_spoolvol[7];
+	char	def_worklib[9], def_workvol[7];
 
 	wpload();									/* Load the personality information.	*/
 	if ((screen = malloc(1924)) == 0) wsc_mem_err();				/* Able to get memory?			*/
@@ -1031,37 +1147,50 @@ int wsh_voldir() 									/* Set the usage constants.		*/
 	wput(screen,15, 8,PLAIN_TEXT,"Spooled print files:    SPOOLLIB=               SPOOLVOL =");
 	wput(screen,19, 8,PLAIN_TEXT,"Work/Temporary files:   WORKLIB =               WORKVOL  =");
 
-	defaults.inlib[8]    = 0;							/* Make sure the fields are nulled out.	*/
-	defaults.outlib[8]   = 0;
-	defaults.runlib[8]   = 0;
-	defaults.spoolib[8]  = 0;
-	defaults.worklib[8]  = 0;
-	defaults.invol[6]    = 0;
-	defaults.outvol[6]   = 0;
-	defaults.runvol[6]   = 0;
-	defaults.spoolvol[6] = 0;
-	defaults.workvol[6]  = 0;
+	get_defs(DEFAULTS_IL,def_inlib);		get_defs(DEFAULTS_IV,def_invol);
+	get_defs(DEFAULTS_OL,def_outlib);		get_defs(DEFAULTS_OV,def_outvol);
+	get_defs(DEFAULTS_RL,def_runlib);		get_defs(DEFAULTS_RV,def_runvol);
+	get_defs(DEFAULTS_SL,def_spoolib);		get_defs(DEFAULTS_SV,def_spoolvol);
+	get_defs(DEFAULTS_WL,def_worklib);		get_defs(DEFAULTS_WV,def_workvol);
 
-	wput(screen, 9,43,UPCASE_FIELD,defaults.inlib  );  wput(screen, 9,68,UPCASE_FIELD,defaults.invol   );
-	wput(screen,11,43,UPCASE_FIELD,defaults.outlib );  wput(screen,11,68,UPCASE_FIELD,defaults.outvol  );
-	wput(screen,13,43,UPCASE_FIELD,defaults.runlib );  wput(screen,13,68,UPCASE_FIELD,defaults.runvol  );
-	wput(screen,15,43,UPCASE_FIELD,defaults.spoolib);  wput(screen,15,68,UPCASE_FIELD,defaults.spoolvol);
-	wput(screen,19,43,PLAIN_TEXT,  defaults.worklib);  wput(screen,19,68,UPCASE_FIELD,defaults.workvol );
+	def_inlib[8]    = (char)0;							/* Make sure the fields are nulled out.	*/
+	def_outlib[8]   = (char)0;
+	def_runlib[8]   = (char)0;
+	def_spoolib[8]  = (char)0;
+	def_worklib[8]  = (char)0;
+	def_invol[6]    = (char)0;
+	def_outvol[6]   = (char)0;
+	def_runvol[6]   = (char)0;
+	def_spoolvol[6] = (char)0;
+	def_workvol[6]  = (char)0;
+
+	wput(screen, 9,43,UPCASE_FIELD,def_inlib  );  wput(screen, 9,68,UPCASE_FIELD,def_invol   );
+	wput(screen,11,43,UPCASE_FIELD,def_outlib );  wput(screen,11,68,UPCASE_FIELD,def_outvol  );
+	wput(screen,13,43,UPCASE_FIELD,def_runlib );  wput(screen,13,68,UPCASE_FIELD,def_runvol  );
+	wput(screen,15,43,UPCASE_FIELD,def_spoolib);  wput(screen,15,68,UPCASE_FIELD,def_spoolvol);
+	wput(screen,19,43,PLAIN_TEXT,  def_worklib);  wput(screen,19,68,UPCASE_FIELD,def_workvol );
 
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
 	vwang(&function,screen,&lines,"0001X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
                                                        
 	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))		/* Don't write unless they press enter	*/
 	{										/* and they've changed something.	*/
-		wget(screen, 9,43,defaults.inlib  );  wget(screen, 9,68,defaults.invol   );
-		wget(screen,11,43,defaults.outlib );  wget(screen,11,68,defaults.outvol  );
-		wget(screen,13,43,defaults.runlib );  wget(screen,13,68,defaults.runvol  );
-		wget(screen,15,43,defaults.spoolib);  wget(screen,15,68,defaults.spoolvol);
-		                                      wget(screen,19,68,defaults.workvol );
-		wps_usr(&defaults);							/* Write out the personality info.	*/
+		wget(screen, 9,43,def_inlib  );  		wget(screen, 9,68,def_invol   );
+		wget(screen,11,43,def_outlib );  		wget(screen,11,68,def_outvol  );
+		wget(screen,13,43,def_runlib );  		wget(screen,13,68,def_runvol  );
+		wget(screen,15,43,def_spoolib);  		wget(screen,15,68,def_spoolvol);
+		                                 		wget(screen,19,68,def_workvol );
+
+		set_defs(DEFAULTS_IL,def_inlib);		set_defs(DEFAULTS_IV,def_invol);
+		set_defs(DEFAULTS_OL,def_outlib);		set_defs(DEFAULTS_OV,def_outvol);
+		set_defs(DEFAULTS_RL,def_runlib);		set_defs(DEFAULTS_RV,def_runvol);
+		set_defs(DEFAULTS_SL,def_spoolib);		set_defs(DEFAULTS_SV,def_spoolvol);
+								set_defs(DEFAULTS_WV,def_workvol);
+
+		save_defaults();							/* Write out the personality info.	*/
 	}
 
 	free(screen);									/* Release the screen memory.		*/
@@ -1079,10 +1208,13 @@ int wsh_copyright()									/* Display the copyright screen.	*/
 	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
 	wpcen(screen, 1,PLAIN_TEXT,"*** Copyright Information ***");			/* Layout the screen.			*/
 	wpcen(screen, 8,PLAIN_TEXT,"The WISP runtime library");
-	wpcen(screen, 9,PLAIN_TEXT,"Copyright 1988,89,90,91,92 International Digital Scientific Inc.");
+	wpcen(screen, 9,PLAIN_TEXT,"Copyright 1988,89,90,91,92,93 International Digital Scientific Inc.");
 	wpcen(screen, 10,PLAIN_TEXT,"28460 Avenue Stanford, Suite 100, Valencia CA 91355  (805) 295-1155");
 
-	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",WISP_VERSION, LIBRARY_VERSION, SCREEN_VERSION);
+	if (outctx)
+	  sprintf(buff,"Version=%s  Library=%d  Screen=%d  ",WISP_VERSION, LIBRARY_VERSION, SCREEN_VERSION);
+	else
+	  sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",WISP_VERSION, LIBRARY_VERSION, SCREEN_VERSION);
 	wpcen(screen, 22,PLAIN_TEXT,buff);
 
 #include "license.h"
@@ -1113,7 +1245,7 @@ int wsh_copyright()									/* Display the copyright screen.	*/
 	}
 #endif
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
 
 	vwang(&function,screen,&lines,"0001020304050607080910111213141516X",term,no_mod);/* Call Wang emulation to fill screen.*/
@@ -1126,7 +1258,15 @@ int wsh_copyright()									/* Display the copyright screen.	*/
 #ifdef VMS
 int wsh_dcl()										/* Issue DCL commands.			*/
 {
-	spawn(0,"","Type LOGOFF followed by (RETURN) to continue.");			/* Now Spawn a sub process.		*/
+	int	savelevel;
+	uint4	vms_status;
+
+	savelevel = linklevel();							/* Save the link-level			*/
+	newlevel();									/* Increment the link-level twice to	*/
+	newlevel();									/* prevent side effects of ppunlink().	*/
+	spawn2 (0,"","Type LOGOFF followed by (RETURN) to continue.",&vms_status);	/* Now Spawn a sub process.		*/
+	ppunlink(linklevel());								/* Putparm UNLINK			*/
+	setlevel(savelevel);								/* Restore the link-level		*/
 	return(SUCCESS);								/* All done.				*/
 }
 #endif	/* VMS */
@@ -1134,31 +1274,88 @@ int wsh_dcl()										/* Issue DCL commands.			*/
 #ifdef unix
 static int wsh_prtque()
 {
-	wpushscr();
-	vexit();
-
-	ilpmanage();
-
-	wpopscr();
-	return(SUCCESS);								/* ALl done.				*/
-}
-
-int wsh_shell()										/* Issue unix shell commands.		*/
-{
 	int	pid, rc;
 	char	*sh_ptr;
+	char 	*prtque_cmd, *getenv();
+	int 	st;
+	
+	sh_ptr = shell_var();
 
-	sh_ptr = (char *)shell_var();
+	prtque_cmd = getenv("UNIQUE_MAN");
+	if (prtque_cmd==NULL)
+	{
+		if (opt_pqunique)
+		{
+			prtque_cmd="unique";
+		}
+		else
+		{
+			prtque_cmd="ilpman";
+		}
+	}
 
 	wpushscr();
 	vexit();
-
 	signal(SIGCLD,  SIG_DFL);							/* Use Default DEATH-OF-CHILD signal	*/
 
 	switch(pid=fork())
 	{
 		case 0:
 		{	
+			st = execlp(prtque_cmd,prtque_cmd,"-q","-w",(char *)0);
+			exit(9);
+			break;
+		}
+		default:
+		{
+			wwaitpid(pid,&rc);
+			break;
+		}
+	}
+
+	signal(SIGCLD,  SIG_IGN);						/* Ignore DEATH-OF-CHILD signal			*/
+	vstate(DEFAULT);							/* Initialize the terminal			*/
+	wpopscr();
+
+	if (rc)
+	{
+		switch(rc)
+		{
+		      case 1:
+			vre_window("IDSI Print Queue Daemon not running.                            Contact system administrator");
+			break;
+		      case 9:
+			vre_window("Cannot find the printq queue management program \"%s\".         Contact system administrator",prtque_cmd);
+			break;
+		      default:
+			vre_window("Error code %d when trying to run \"%s\".                        Contact system administrator",rc,prtque_cmd);
+			break;
+		}
+	}
+
+	return(SUCCESS);								/* All done.				*/
+}
+
+int wsh_shell()										/* Issue unix shell commands.		*/
+{
+	int	pid, rc;
+	char	*sh_ptr;
+	int	savelevel;
+
+	sh_ptr = shell_var();
+
+	savelevel = linklevel();							/* Save the link-level			*/
+	newlevel();									/* Extra link-level to prevent side-	*/
+											/* effects of ppunlink().		*/
+	wpushscr();
+	vexit();
+	signal(SIGCLD,  SIG_DFL);							/* Use Default DEATH-OF-CHILD signal	*/
+
+	switch(pid=fork())
+	{
+		case 0:
+		{	
+			newlevel();							/* Increment the link-level for shell	*/
 			execlp(sh_ptr,sh_ptr,(char *)0);
 			break;
 		}
@@ -1170,52 +1367,39 @@ int wsh_shell()										/* Issue unix shell commands.		*/
 	}
 
 	signal(SIGCLD,  SIG_IGN);							/* Ignore DEATH-OF-CHILD signal		*/
-
+	vstate(DEFAULT);							/* Initialize the terminal			*/
 	wpopscr();
-	return(SUCCESS);								/* ALl done.				*/
+
+	ppunlink(linklevel());								/* Putparm UNLINK			*/
+	setlevel(savelevel);								/* Restore the link-level		*/
+	return(SUCCESS);								/* All done.				*/
 }
 #endif	/* unix */
 
 #ifdef MSDOS
-static int wsh_prtque()
-{
-	wpushscr();
-	vexit();
-
-	ilpmanage();
-
-	wpopscr();
-	return(SUCCESS);								/* ALl done.				*/
-}
-
-int wsh_shell()										/* Issue MSDOS commands.		*/
+int wsh_shell()										/* Issue unix shell commands.		*/
 {
 	int	pid, rc;
-	char	*sh_ptr, *shell_var();
+	char	*sh_ptr;
+	int	savelevel;
 
-	sh_ptr = shell_var();
+	savelevel = linklevel();							/* Save the link-level			*/
+
+	newlevel();									/* Extra link-level to prevent side-	*/
+											/* effects of ppunlink().		*/
+	newlevel();									/* Increment the link-level for shell	*/
 
 	wpushscr();
 	vexit();
-	switch(pid=fork())
-	{
-		case 0:
-		{	
-			execlp(sh_ptr,sh_ptr,(char *)0);
-			break;
-		}
-		default:
-		{
-			do
-			{
-				wait( (int *)0 );
-				rc=kill(pid,0);						/* Check if pid still exists.		*/
-			} while( rc == 0 );						/* If child still exists then wait more.*/
-			break;
-		}
-	}
+
+	system("COMMAND");
+
+	vstate(DEFAULT);							/* Initialize the terminal			*/
 	wpopscr();
-	return(SUCCESS);								/* ALl done.				*/
+
+	ppunlink(linklevel());								/* Putparm UNLINK			*/
+	setlevel(savelevel);								/* Restore the link-level		*/
+	return(SUCCESS);								/* All done.				*/
 }
 #endif	/* MSDOS */
 
@@ -1227,6 +1411,9 @@ int wsh_setprt()									/* Set the usage constants.		*/
 	int mfac;									/* FAC for the mode string.		*/
 	int valid;									/* Validation successful flag.		*/
 	int tlines;									/* Integer test for lines per page.	*/
+	int4	def_prt_num;
+	int4	def_prt_form;
+	int4	def_prt_lines;
 
 	wpload();									/* Get personality if needed.		*/
 	if ((screen = malloc(1924)) == 0) wsc_mem_err();				/* Able to get memory?			*/
@@ -1252,14 +1439,20 @@ int wsh_setprt()									/* Set the usage constants.		*/
 
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
 
-	mode[0] = defaults.prt_mode; mode[1] = 0;					/* Get the print mode data.		*/
-	class[0] = defaults.prt_class; class[1] = 0;					/* Get the print class data.		*/
-	sprintf(number,"%03d",defaults.prt_num);					/* Get the printer number.		*/
-	sprintf(form,"%03d",defaults.prt_form);						/* Get the printer form number.		*/
-	sprintf(dplines,"%03d",defaults.prt_lines);					/* Get the default lines per page.	*/
+	get_defs(DEFAULTS_PM,mode);							/* Get the print mode data.		*/
+	get_defs(DEFAULTS_PC,class);							/* Get the print class data.		*/
+	get_defs(DEFAULTS_PR,&def_prt_num);						/* Get the printer number.		*/
+	get_defs(DEFAULTS_FN,&def_prt_form);						/* Get the printer form number.		*/
+	get_defs(DEFAULTS_LI,&def_prt_lines);						/* Get the default lines per page.	*/
+
+	mode[1] = (char)0;
+	class[1] = (char)0;
+	sprintf(number, "%03d",def_prt_num);
+	sprintf(form,   "%03d",def_prt_form);		
+	sprintf(dplines,"%03d",def_prt_lines);	
 
 	wput(screen, 5,75,UPCASE_FIELD,mode);						/* Display the fields.			*/
 	wput(screen,13,75,UPCASE_FIELD,class);
@@ -1304,12 +1497,17 @@ int wsh_setprt()									/* Set the usage constants.		*/
 
 	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))		/* Ccpy to data base?			*/
 	{
-		defaults.prt_mode = mode[0];						/* Get the print mode data.		*/
-		defaults.prt_class = class[0];						/* Get the print class data.		*/
-		defaults.prt_num = atoi(number);					/* Get the printer number.		*/
-		defaults.prt_form = atoi(form);						/* Get the printer form number.		*/
-		defaults.prt_lines = atoi(dplines);					/* Get the default lines per page.	*/
-		wps_usr(&defaults);							/* Write out the personality info.	*/
+		def_prt_num   = atoi(number);
+		def_prt_form  = atoi(form);
+		def_prt_lines = atoi(dplines);
+
+		set_defs(DEFAULTS_PM,mode);
+		set_defs(DEFAULTS_PC,class);
+		set_defs(DEFAULTS_PR,&def_prt_num);
+		set_defs(DEFAULTS_FN,&def_prt_form);
+		set_defs(DEFAULTS_LI,&def_prt_lines);
+
+		save_defaults();							/* Write out the personality info.	*/
 	}
 
 	free(screen);									/* Release the screen memory.		*/
@@ -1324,6 +1522,7 @@ int wsh_setproc()									/* Set the usage constants.		*/
 	char mode[2], class[2], t_hr[3], t_min[3], t_sec[3];				/* Working versions of field data.	*/
 	int mfac;									/* FAC for the mode string.		*/
 	int valid;									/* Validation successful flag.		*/
+	char	def_proc_cpu[7];
 
 	wpload();									/* Get personality if needed.		*/
 	if ((screen = malloc(1924)) == 0) wsc_mem_err();				/* Able to get memory?			*/
@@ -1347,22 +1546,26 @@ int wsh_setproc()									/* Set the usage constants.		*/
 
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
 
-	mode[0] = defaults.proc_stat; mode[1] = 0;					/* Get the proc status mode data.	*/
-	class[0] = defaults.proc_class; class[1] = 0;					/* Get the proc class data.		*/
+	get_defs(DEFAULTS_JS,mode);							/* Get the proc status mode data.	*/
+	get_defs(DEFAULTS_JC,class);							/* Get the proc class data.		*/
+	get_defs(DEFAULTS_JL,def_proc_cpu);
 
-	t_hr[0] = defaults.proc_cpu[0];
-	t_hr[1] = defaults.proc_cpu[1];
+	mode[1] = 0;
+	class[1] = 0;
+
+	t_hr[0] = def_proc_cpu[0];
+	t_hr[1] = def_proc_cpu[1];
 	t_hr[2] = '\0';
 
-	t_min[0] = defaults.proc_cpu[2];
-	t_min[1] = defaults.proc_cpu[3];
+	t_min[0] = def_proc_cpu[2];
+	t_min[1] = def_proc_cpu[3];
 	t_min[2] = '\0';
 
-	t_sec[0] = defaults.proc_cpu[4];
-	t_sec[1] = defaults.proc_cpu[5];
+	t_sec[0] = def_proc_cpu[4];
+	t_sec[1] = def_proc_cpu[5];
 	t_sec[2] = '\0';
 
 	wput(screen,11,69,UPCASE_FIELD,mode);						/* Display the fields.			*/
@@ -1407,18 +1610,18 @@ int wsh_setproc()									/* Set the usage constants.		*/
 
 	if ((no_mod[0] == 'M') && !((term[0] == '0') && (term[1] == '1')))		/* Copy to data base?			*/
 	{
-		defaults.proc_stat = mode[0];						/* Get the proc status data.		*/
-		defaults.proc_class = class[0];						/* Get the proc class data.		*/
+		def_proc_cpu[0] = t_hr[0];
+		def_proc_cpu[1] = t_hr[1];
+		def_proc_cpu[2] = t_min[0];
+		def_proc_cpu[3] = t_min[1];
+		def_proc_cpu[4] = t_sec[0];
+		def_proc_cpu[5] = t_sec[1];
 
-		defaults.proc_cpu[0] = t_hr[0];
-		defaults.proc_cpu[1] = t_hr[1];
+		set_defs(DEFAULTS_JS,mode);
+		set_defs(DEFAULTS_JC,class);
+		set_defs(DEFAULTS_JL,def_proc_cpu);
 
-		defaults.proc_cpu[2] = t_min[0];
-		defaults.proc_cpu[3] = t_min[1];
-
-		defaults.proc_cpu[4] = t_sec[0];
-		defaults.proc_cpu[5] = t_sec[1];
-		wps_usr(&defaults);							/* Write out the personality info.	*/
+		save_defaults();							/* Write out the personality info.	*/
 	}
 
 	free(screen);									/* Release the screen memory.		*/
@@ -1521,9 +1724,15 @@ int scrn_seq_no;									/* The screen seq. no.  Starts at 1.	*/
 
 wsh_progdisp()
 {
+	int	level;
+
+	level = linklevel();								/* save the link-level			*/
 	setprogid("DISPLAY");
-	wfile_disp();									/* Front end to display and also calls	*/
-	return(0);									/*  the display_file program.		*/
+	newlevel();									/* Increment link-level an extra time	*/
+											/* to prevent side-effects of ppunlink.	*/
+	wfile_disp();									/* display				*/
+	setlevel(level);								/* restore the link-level		*/
+	return(0);
 }
 
 #ifdef VMS
@@ -1536,7 +1745,6 @@ wsh_quemngmnt()
 
 wsh_usewrite()
 {
-	char *field();									/* Field packing subroutine.		*/
 	char *screen;									/* Pointer to working screen routine.	*/
 	char function, lines, term[2], no_mod[2];					/* Working variables.			*/
 	char dst[80], answer[4];
@@ -1552,7 +1760,7 @@ wsh_usewrite()
 	wput(screen, 6, 3,PLAIN_TEXT,"NOTE:  You must enter the complete word YES to write usage constants!.");
 	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-	function = 7;									/* Use display and read altered.	*/
+	function = DISPLAY_AND_READ_ALTERED;						/* Use display and read altered.	*/
 	lines = 24;
 
 	strcpy(answer,"NO ");								/* Init to No for write.		*/
@@ -1576,7 +1784,7 @@ wsh_usewrite()
 			wput(screen,12, 5,PLAIN_TEXT,"press (RETURN) to use the personality default file.");
 			wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
 
-			function = 7;							/* Use display and read altered.	*/
+			function = DISPLAY_AND_READ_ALTERED;				/* Use display and read altered.	*/
 			lines = 24;
 
 			vwang(&function,screen,&lines,"0001X",term,no_mod);		/* Call Wang emulation to fill screen.	*/
@@ -1589,16 +1797,16 @@ wsh_usewrite()
 
 				vmove(21,10);
 				vprint ("WRITING USAGE CONSTANTS using %s",dst);	/* File name specified so display.	*/
-				wpl_usr(&defaults);					/* Be sure they exist.			*/
-				wps_file(&defaults,dst);				/* Store the file.			*/
+				load_defaults();					/* Be sure they exist.			*/
+				write_defaults_to_file(dst);				/* Store the file.			*/
 			}
 			else if ((no_mod[0] != 'M') && !((term[0] == '0') && (term[1] == '1'))) /* If no mods and not PF1.	*/
 			{
 				dst[0] = '\0';						/* Set file name to null.		*/
 				vmove(21,20);
 				vprint ("WRITING USAGE CONSTANTS");
-				wpl_usr(&defaults);					/* Be sure they exist.			*/
-				wps_file(&defaults,dst);				/* Store the file.			*/
+				load_defaults();					/* Be sure they exist.			*/
+				write_defaults_to_file(dst);				/* Store the file.			*/
 			}
 		}
 	}
@@ -1684,7 +1892,10 @@ int wsh_devices()
 #ifdef _AIX
 	wpushscr();
 	vexit();
+
 	wsystem("smit");
+
+	vstate(DEFAULT);							/* Initialize the terminal			*/
 	wpopscr();
 #else
 	werrvre("Sorry, this feature is not available on the system on which you are running.");
@@ -1699,16 +1910,21 @@ int wsh_run_program(program) char *program;						/* Run a program.			*/
 	int i, j, k;									/* Working registers.			*/
 	int prog_given;									/* Name given flag.			*/
 	char progname[9], linktype[1], libname[9], volname[7];				/* LINK parameters			*/
+	int	savelevel;
 
 	wpload();
 	memset(libname,' ',8);
 	memset(volname,' ',6);
-	memcpy(libname,defaults.runlib,8);
-	memcpy(volname,defaults.runvol,6);
 
 	prog_given = TRUE;								/* Assune name not given.		*/
 	if (memcmp(program,"        ",8) == 0) prog_given = FALSE;			/* Was a program given?			*/
 	if (*program == '\0') prog_given = FALSE;
+
+	if (!prog_given)
+	{
+		get_defs(DEFAULTS_PV,volname);	/* NOTE: If PV/PL is not set then RV/RL	are returned */
+		get_defs(DEFAULTS_PL,libname);
+	}
 
 	lines = 24;									/* Use full screen.			*/
 	wsc_init(scrn,0,0);								/* Set the screen frame to blank.	*/
@@ -1732,7 +1948,7 @@ int wsh_run_program(program) char *program;						/* Run a program.			*/
 	pfac(scrn, 14, 66, 6, UPCASE_FIELD);
 	pack(scrn, 14, 66, 6, volname);
 
-again:	function = 3;									/* Display and read.			*/
+again:	function = DISPLAY_AND_READ;							/* Display and read.			*/
 	if (prog_given)									/* Program name was given.		*/
 	{
 		term[0] = '0';								/* Fake an enter.			*/
@@ -1747,7 +1963,7 @@ again:	function = 3;									/* Display and read.			*/
 
 	if ((term[0] == '0') && (term[1] == '0'))					/* Run program or return.		*/
 	{
-		long templong, compcode, returncode;
+		int4 templong, compcode, returncode;
 
 		gfld(scrn,  7, 66, 8, progname);
 		gfld(scrn, 13, 66, 8, libname);
@@ -1767,27 +1983,23 @@ again:	function = 3;									/* Display and read.			*/
 		else
 		{
 			linktype[0] = 'P';						/* Else use the parameters 'P'		*/
-			wpload();
-			if (memcmp(libname,"        ",8) == 0) memcmp(libname,defaults.runlib,8);
-			if (memcmp(volname,"      ",  6) == 0) memcmp(volname,defaults.runvol,6);
 		} 
 
 		perr(scrn,"PROCESSING - Program in progress.");				/* Tell what is going on.		*/
-		function = 1;								/* Use WRITE_ALL			*/
+		function = WRITE_ALL;							/* Use WRITE_ALL			*/
 		if (!prog_given) vwang(&function,scrn,&lines,"00X",term,no_mod);	/* Call Wang emulation to fill screen.	*/
+
+		savelevel = linklevel();						/* Save the link-level			*/
+		newlevel();								/* Extra newlevel to prevent side-effect*/
+											/* of the ppunlink().			*/
 
 		compcode = 0;								/* Initialize the comp & return codes	*/
 		returncode = 0;
 		templong = 6;
 		wvaset(&templong);							/* Set the arg count to 6		*/
-		if (acu_cobol)
-		{
-			LINK(progname,8,linktype,1,libname,8,volname,6,&compcode,4,&returncode,4);	/* Do the LINK		*/
-		}
-		else
-		{
-			LINK(progname,  linktype,  libname,  volname,  &compcode,  &returncode);	/* Do the LINK		*/
-		}
+
+		LINK2(progname,8,linktype,1,libname,8,volname,6,&compcode,4,&returncode,4);	/* Do the LINK		*/
+
 		wswap(&compcode);							/* Un-swap the comp & return codes	*/
 		wswap(&returncode);
 
@@ -1798,28 +2010,52 @@ again:	function = 3;									/* Display and read.			*/
 			returncode = 0;
 			templong = 6;
 			wvaset(&templong);						/* Set the arg count to 6		*/
-			if (acu_cobol)
-			{
-				LINK(progname,8,linktype,1,libname,8,volname,6,&compcode,4,&returncode,4);	/* Do the LINK	*/
-			}
-			else
-			{
-				LINK(progname,  linktype,  libname,  volname,  &compcode,  &returncode);	/* Do the LINK	*/
-			}
+
+			LINK2(progname,8,linktype,1,libname,8,volname,6,&compcode,4,&returncode,4);	/* Do the LINK	*/
+
 			wswap(&compcode);						/* Un-swap the comp & return codes	*/
 			wswap(&returncode);
 		}
+		setlevel(savelevel);							/* Restore link-level			*/
 
-		if (compcode ==  0 || compcode == 16 )					/* Did program get run?			*/
+		switch(compcode)
 		{
-			return;
+		case 0:
+			sprintf(run_complete_message,"Program %8.8s Processing Completed",progname);
+			return(0);
+			break;
+		case 8:
+			switch(returncode)
+			{
+			case 4:
+				perr(scrn,"FAILED - Volume was not found.");
+				break;
+			case 16:
+			case 20:
+				perr(scrn,"FAILED - Program was not found.");
+				break;
+			case 28:
+				perr(scrn,"FAILED - Protection violation.");
+				break;
+			case 60:
+				perr(scrn,"FAILED - Insufficient memory.");
+				break;
+			default:
+				perr(scrn,"FAILED - Unable to execute program.");
+				break;
+			}
+			break;
+		case 16:
+		default:
+			perr(scrn,"Program ABORTED or was CANCELLED");
+			break;
 		}
 
-		perr(scrn,"FAILED - Program not found or protection violation.");	/* Fall thru on COMPCODE==8		*/
 		pfac(scrn,  7, 66, 8, STANDARD_FIELD);
 		prog_given = FALSE;							/* Force screen to be drawn		*/
 		goto again;
 	}
+	return(0);
 }
 
 int wsh_utils() 									/* Select utilities.			*/
@@ -1830,13 +2066,15 @@ int wsh_utils() 									/* Select utilities.			*/
 	char function,lines,term[2],no_mod[2];						/* Misc data.				*/
 	int	pfkey_map[33];
 	char	pflist[40];
+	uint4 dflags;
 
-	if ( !(defaults.flags & HELP_GENERAL_UTILS) &&
-#ifdef	DO_GOODIES									/* Goodies must have EDE installed.	*/
-	     !(defaults.flags & HELP_GOODIES_UTILS) &&
-#endif
-	      (defaults.flags & HELP_DISPLAY)		)				/* just do a DISPLAY			*/
-	{
+	get_defs(DEFAULTS_FLAGS,&dflags);
+
+	if (	 (dflags & HELP_DISPLAY) &&
+		!(dflags & HELP_EDIT) &&
+		!(dflags & HELP_DISPRINT) &&
+		!(dflags & HELP_CRID)		)
+	{										/* just do a DISPLAY			*/
 		wsh_progdisp();
 		return(0);
 	}
@@ -1850,11 +2088,7 @@ int wsh_utils() 									/* Select utilities.			*/
 
 		pack(scrn,  0, 30,  0, "***  Utilities ***");				/* Store the header.			*/
 		pack(scrn, 22, 15,  0, "Press (HELP) to return to the command processor, (1) to exit.");
-
-		if ( (defaults.flags & HELP_GENERAL_UTILS) || (defaults.flags & HELP_DISPLAY) )	
-		{
-			pack(scrn,  3, 14, 0, "GENERAL");
-		}
+		pack(scrn,  3, 14, 0, "GENERAL");
 	}
 	else
 	{
@@ -1867,7 +2101,7 @@ int wsh_utils() 									/* Select utilities.			*/
 		mload(scrn, 11, 8, 1, "Return to MAIN HELP menu",pfkey_map);
 	}
 
-	if (defaults.flags & HELP_DISPLAY) 	
+	if (dflags & HELP_DISPLAY) 	
 	{
 		if (wang_style)
 			pack(scrn,  5, 14, 0, "(2) DISPLAY a file");
@@ -1875,12 +2109,26 @@ int wsh_utils() 									/* Select utilities.			*/
 			mload(scrn, 12, 8, 2, "DISPLAY a file",pfkey_map);
 	}
 
-	if (defaults.flags & HELP_GENERAL_UTILS)
+	if (dflags & HELP_EDIT) 	
+	{
+		if (wang_style)
+			pack(scrn,  7, 14, 0, "(3) EDIT a file");
+		else
+			mload(scrn, 13, 8, 3, "EDIT a file",pfkey_map);
+	}
+
+	if (dflags & HELP_DISPRINT) 	
+	{
+		if (wang_style)
+			pack(scrn,  9, 14, 0, "(4) DISPRINT");
+		else
+			mload(scrn, 14, 8, 4, "DISPRINT",pfkey_map);
+	}
+
+	if (dflags & HELP_CRID)
 	{
 		if (wang_style)
 		{
-			pack(scrn,  7, 14, 0, "(3) EDIT a file");
-			pack(scrn,  9, 14, 0, "(4) DISPRINT");
 			pack(scrn, 11, 14, 0, "(5) REPORT");
 			pack(scrn, 13, 14, 0, "(6) INQUIRY");
 			pack(scrn, 15, 14, 0, "(7) CONTROL");
@@ -1888,8 +2136,6 @@ int wsh_utils() 									/* Select utilities.			*/
 		}
 		else
 		{
-			mload(scrn, 13, 8, 3, "EDIT a file",pfkey_map);
-			mload(scrn, 14, 8, 4, "DISPRINT",pfkey_map);
 			mload(scrn, 15, 8, 5, "REPORT",pfkey_map);
 			mload(scrn, 16, 8, 6, "INQUIRY",pfkey_map);
 			mload(scrn, 17, 8, 7, "CONTROL",pfkey_map);
@@ -1897,19 +2143,7 @@ int wsh_utils() 									/* Select utilities.			*/
 		}
 	}
 
-#ifdef	DO_GOODIES									/* Goodies must have EDE installed.	*/
-	if (defaults.flags & HELP_GOODIES_UTILS)
-	{
-		pack(scrn,  3, 44, 0, "GOODIES");
-		pack(scrn,  5, 44, 0, "(11) Clock");
-		pack(scrn,  7, 44, 0, "(12) Calculator");
-		pack(scrn,  9, 44, 0, "(13) Calendar");
-		pack(scrn, 11, 44, 0, "(14) Notepad");
-		pack(scrn, 13, 44, 0, "(15) Puzzle");
-	}
-#endif
-
-again:	function = 3;									/* Display and read.			*/
+again:	function = DISPLAY_AND_READ;							/* Display and read.			*/
 	perr(scrn,"");									/* Tell what is going on.		*/
 
 	if (wang_style)
@@ -1939,34 +2173,35 @@ again:	function = 3;									/* Display and read.			*/
 	{
 		return(0);
 	}
-	else if (pfval == 2 && (defaults.flags & HELP_DISPLAY))				/* DISPLAY?				*/
+	else if (pfval == 2 && (dflags & HELP_DISPLAY))					/* DISPLAY?				*/
 	{
 		wsh_progdisp();
 	}
-	else if (pfval >= 3 && pfval <= 8 && (defaults.flags & HELP_GENERAL_UTILS))	/* General?				*/
+	else if (pfval == 3 && (dflags & HELP_EDIT))					/* EDIT?				*/
 	{
 		perr(scrn,"PROCESSING - Program in progress.");				/* Tell what is going on.		*/
-		function = 1;
+		function = WRITE_ALL;
 		vwang(&function,scrn,&lines,"X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
-		if      (pfval == 3) wsh_run_program("VSEDIT  ");
-		else if (pfval == 4) wsh_run_program("DISPRINT");
-		else if (pfval == 5) wsh_run_program("REPORT  ");
+		wsh_run_program("VSEDIT  ");
+	}
+	else if (pfval == 4 && (dflags & HELP_DISPRINT))				/* DISPRINT?				*/
+	{
+		perr(scrn,"PROCESSING - Program in progress.");				/* Tell what is going on.		*/
+		function = WRITE_ALL;
+		vwang(&function,scrn,&lines,"X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
+		wsh_run_program("DISPRINT");
+	}
+	else if (pfval >= 5 && pfval <= 8 && (dflags & HELP_CRID))			/* CRID?				*/
+	{
+		perr(scrn,"PROCESSING - Program in progress.");				/* Tell what is going on.		*/
+		function = WRITE_ALL;
+		vwang(&function,scrn,&lines,"X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
+		if      (pfval == 5) wsh_run_program("REPORT  ");
 		else if (pfval == 6) wsh_run_program("INQUIRY ");
 		else if (pfval == 7) wsh_run_program("CONTROL ");
 		else if (pfval == 8) wsh_run_program("DATENTRY");
 	}
 
-#ifdef	DO_GOODIES									/* Goodies must have EDE installed.	*/
-	else if (term[0] == '1' && (defaults.flags & HELP_GOODIES_UTILS))		/* Goodies?				*/
-	{
-		if      (term[1] == '1') gclock();
-		else if (term[1] == '2') gcalc();
-		else if (term[1] == '3') gcalend();
-		else if (term[1] == '4') gnotepad();
-		else if (term[1] == '5') gpuzzle();
-		synch_required = FALSE;
-	}
-#endif
 	else return(FALSE);
 	goto again;
 }
@@ -2081,4 +2316,120 @@ char *scrn;
 		memset(scrn+4+( 9*80),'-',80);
 		memset(scrn+4+(22*80),'-',80);
 		pack(scrn,23,10,0,"(TAB) (SPACE) or (ARROWS) to move.     (RETURN) to select.");
+}
+
+
+/*
+**	Routine:	wsh_cancel()
+**
+**	Function:	To display the CANCEL screen
+**
+**	Description:	Display the CANCEL screen and return what the user wants to do.
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:
+**	0		Don't cancel, return to command processor.
+**	1		Go ahead and cancel.
+**
+**	Warnings:	None
+**
+**	History:	
+**	01/13/93	Written by GSL
+**
+*/
+int wsh_cancel()
+{
+	char 	scrn[1924];
+	char 	okkeys[20];
+	char 	function,lines,term[2],no_mod[2];
+
+	wsc_init(scrn,0,0);								/* Set the screen frame to blank.	*/
+	pack(scrn,  0, 33,  0, "*** Cancel ***");					/* Store the header.			*/
+	pack(scrn,  7, 12,  0, "WARNING -");
+	pack(scrn,  8, 17,  0, "Cancel is used to terminate your current program");
+	pack(scrn,  9, 17,  0, "and return all resources to the system. It will");
+	pack(scrn, 10, 17,  0, "attempt to complete any outstanding file I/O and");
+	pack(scrn, 11, 17,  0, "then close all files opened by the program.");
+	pack(scrn, 15, 12,  0, "SELECT:");
+	pack(scrn, 17, 17,  0, "(ENTER)  to begin Cancel Processing");
+	pack(scrn, 19, 17,  0, "(HELP)   to return to the Command Processor");
+
+
+	function = DISPLAY_AND_READ;							/* Display and read.			*/
+	lines = 24;									/* Use full screen.			*/
+	strcpy(okkeys,"00X");
+	vwang(&function,scrn,&lines,okkeys,term,no_mod);				/* Call Wang emulation to fill screen.	*/
+
+	if (term[0] == '0' && term[1] == '0')
+	{
+		return(1);
+	}
+
+	return(0);
+}
+
+/*
+**	Routine:	wsh_exit()
+**
+**	Function:	To display the EXIT screen
+**
+**	Description:	Display the EXIT screen and return what the user wants to do.
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:
+**	0		Don't exit, return to command processor.
+**	1		Go ahead and exit.
+**
+**	Warnings:	None
+**
+**	History:	
+**	01/13/93	Written by GSL
+**
+*/
+int wsh_exit()
+{
+	char 	scrn[1924];
+	char 	okkeys[20];
+	char 	function,lines,term[2],no_mod[2];
+
+	wsc_init(scrn,0,0);								/* Set the screen frame to blank.	*/
+	pack(scrn,  0, 33,  0, "*** Exit ***");						/* Store the header.			*/
+	pack(scrn,  7, 12,  0, "WARNING -");
+	pack(scrn,  8, 17,  0, "Exit is used to terminate the WUSAGE Command Processor");
+	pack(scrn,  9, 17,  0, "and return you to the operating system.");
+	pack(scrn, 15, 12,  0, "SELECT:");
+	pack(scrn, 17, 17,  0, "(ENTER)  to Exit the Command Processor");
+	pack(scrn, 19, 17,  0, "(HELP)   to return to the Command Processor");
+
+
+	function = DISPLAY_AND_READ;							/* Display and read.			*/
+	lines = 24;									/* Use full screen.			*/
+	strcpy(okkeys,"00X");
+	vwang(&function,scrn,&lines,okkeys,term,no_mod);				/* Call Wang emulation to fill screen.	*/
+
+	if (term[0] == '0' && term[1] == '0')
+	{
+		return(1);
+	}
+
+	return(0);
+}
+
+
+static int is_help_active = 0;
+
+int ishelpactive()
+{
+	return is_help_active;
+}
+int sethelpactive(flag)
+int flag;
+{
+	return(is_help_active = flag);
 }

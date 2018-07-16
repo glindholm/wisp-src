@@ -22,6 +22,10 @@ static unsigned char jknuvwq[8];
 static unsigned char jmntuvx[8];
 static unsigned char lmntvwq[8];
 
+static int do_vert();
+static int do_horiz();
+static int is_gr();
+
 /*						Subroutine entry point.								*/
 
 int vline(type, length) int type, length;						/* Draw a line.				*/

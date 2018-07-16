@@ -1,11 +1,10 @@
-#	/************************************************************************/
-#	/*									*/
-#	/*	        WISP - Wang Interchange Source Pre-processor		*/
-#	/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-#	/*	 An unpublished work of International Digital Scientific Inc.	*/
-#	/*			    All rights reserved.			*/
-#	/*									*/
-#	/************************************************************************/
+#/*									*/
+#/*	        WISP - Wang Interchange Source Pre-processor		*/
+#/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
+#/*	 An unpublished work of International Digital Scientific Inc.	*/
+#/*			    All rights reserved.			*/
+#/*									*/
+#/************************************************************************/
 #
 #
 #	File		make.include	
@@ -35,9 +34,11 @@
 #	History		06/03/92	Written by GSL
 #			06/10/92	Fixed NCR486 & NCR32 to used LIBPW=-lgen. GSL
 #			06/12/92	Remove LIBPW and REGEX stuff. GSL
+#			11/12/92	Add Motorola. GSL
+#                       03/11/93        Add AIX 3.2 Flags. GSL
+#                       04/22/93        Add SOLARIS. JEC
+#                       04/26/93        Reinsert stuff lost on 4/22/93 log-in of old make.include. JEC
 #
-
-
 #
 #	STANDARD defines used on all systems
 #		STDBIN		standard place to put built bin files
@@ -51,15 +52,25 @@ STDBIN= $(WISP)/src/bin
 STDLIB= $(WISP)/src/lib
 STDINC= $(WISP)/src/include
 
-STDCFLAGS= -I$(STDINC)
+STDCFLAGS= -Dunix -I$(STDINC)
 LIBCFLAGS= -L$(STDLIB)
 V= $(STDINC)/v
+
+#
+# uncomment LIBACU to include acucobol objects for the vision
+# index file display module
+#
+#ACUPATH = /usr2/acucobol
+#DISPIDXOBJS = vsn_only.o $(ACUPATH)/filetbl.o  $(ACUPATH)/runcbl.a
+#LIBACU = $(DISPIDXOBJS)
 
 #
 #	DEFAULT defines for all systems.
 #	If the specific system requires different values it will override
 #	these later in the file.
 #		CC		the c compiler
+#               CCPRINTQ        the compiler used to compile the print queue,
+#                               c89 or gcc if possible
 #		RANLIB		how to change an archive lib into a random lib
 #		PQFLAG		Printq c flags:
 #                               -DSOCKCODE  to use Berkley sockets (default)
@@ -70,9 +81,11 @@ V= $(STDINC)/v
 #		LIBSOC		The socket library flags
 #
 CC= cc
+CCPRINTQ= cc
 RANLIB= ar ts
 PQFLAG= 
 LIBSOC=
+LIBCURSES=-lcurses
 
 #
 #	SYSTEM defines for system dependent options. 
@@ -82,33 +95,74 @@ LIBSOC=
 #				the -g or -O flags as these are specified
 #				externally.
 #
+#                               Insert a -DINCLUDE_VDISPIDX to force
+#                               compilation of the vision index file 
+#                               display module
+#
 SYSCFLAGS= Error SYSCFLAGS not defined
 
 #==================================================================
 #	IBM AIX RS/6000
 #
-#SYSCFLAGS = -DAIX
+##  AIX 3.1 - no longer used
+##SYSCFLAGS = -DAIX
+##PQFLAG= -DSYSVWAIT
+
+#   AIX 3.2
+#CCPRINTQ=gcc
+#SYSCFLAGS = -DAIX -D__STR31__
 #PQFLAG= -DSYSVWAIT
 
 #==================================================================
 #	Ultrix RISC
 #
-#SYSCFLAGS = -DULTRIX
+#CCPRINTQ=gcc
+#SYSCFLAGS = -DULTRIX 
+#LIBCURSES=-lcursesX
+#==================================================================
+#       DEC ALPHA OSF/1
+#
+#CC=c89
+#CCPRINTQ=c89
+#SYSCFLAGS = -DOSF1_ALPHA -non_shared -Olimit 1536
+#PQFLAG= -DSYSVWAIT
+
 
 #==================================================================
 #	HP/UX
 #
-#SYSCFLAGS = -DHPUX +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
+#CCPRINTQ=c89
+#SYSCFLAGS = -D_HPUX_SOURCE -DHPUX +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
+#PQFLAG=-DSYSVWAIT 
+
 
 #==================================================================
-#	SUN
+#	SUNOS
 #
-#SYSCFLAGS = -DSUNOS
+# Old
+#SYSCFLAGS = -DSUNOS -Bstatic
 #RANLIB=ranlib
+#
+# New
+#CC=gcc -ansi -static
+#CCPRINTQ=gcc -ansi -static
+#SYSCFLAGS = -DSUNOS -I/usr/5include
+#RANLIB=ranlib
+#LIBCURSES=-L/usr/5lib -lc -lcurses
+
+#==================================================================
+#	SUN Solaris
+#
+#CCPRINTQ=c89
+#SYSCFLAGS = -DSOLARIS 
+#PQFLAG = -DSYSVWAIT 
+#LIBSOC = -lsocket -lnsl /lib/libdl.so
+
 
 #==================================================================
 #	Data General Aviion
 #
+#CCPRINTQ=gcc
 #SYSCFLAGS = -DDGUX
 
 #==================================================================
@@ -138,7 +192,7 @@ SYSCFLAGS= Error SYSCFLAGS not defined
 #==================================================================
 #	AT&T u3b2
 #
-#SYSCFLAGS = -DATT3B2
+#SYSCFLAGS = -DATT3B2 -DNOSTDLIB
 #PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
 
 #==================================================================
@@ -149,8 +203,19 @@ SYSCFLAGS= Error SYSCFLAGS not defined
 
 #==================================================================
 #	Motorola 88000
+#		These are known as 8000 Series (E.g. 8220) and based on
+#		the 88K Risc chip.  The O/S is very generic S5R3.2.
+#		There is also a 3000 Series (68030) and a 4000 Series (68040).
 #
 #SYSCFLAGS = -DMOTOROLA
+#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+
+#==================================================================
+#       ICL DRS 6000
+#
+#SYSCFLAGS = -DICL
+#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#LIBSOC = -lsocket -lnsl
 
 #==================================================================
 #	Unisys 6000
@@ -162,6 +227,9 @@ SYSCFLAGS= Error SYSCFLAGS not defined
 #	Sequent
 #
 #SYSCFLAGS = -DSEQUENT
+#CCPRINTQ = acc
+#PQFLAG = -DNO_SELECT -DMQCODE -DSYSVWAIT
+#LIBSOC= -lsocket -linet -lnsl
 
 #==================================================================
 #	IBM PS/2 AIX

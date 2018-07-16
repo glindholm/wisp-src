@@ -9,6 +9,23 @@
 
 #define EXT extern
 #include "wisp.h"
+#include "scrn.h"
+#include "crt.h"
+
+static char *d_ptr;									/* pointer to current buffer in use	*/
+static char on_str[72];									/* Buffer for the ON PFKEY key list	*/
+static int chk_decl();
+
+static char *disp_keywords[] =	
+{	
+	"NO-MOD",
+	"ON",
+	"ONLY",
+	"PFKEY",
+	"PFKEYS",
+	""	
+};
+static int disp_kwcount = 5;
 
 t_pfkeys(t_line)						/* test for the PFKEYS keyword in a DISPLAY AND READ statement	*/
 char t_line[];							/* if we find it or not, set the pfkey flag			*/
@@ -26,12 +43,12 @@ char t_line[];							/* if we find it or not, set the pfkey flag			*/
 
 	if (!strcmp("ONLY",t_line))							/* Look for ONLY PFKEYS			*/
 	{
-		strcpy(outline,"\042");							/* leading quotes for pfkeys string	*/
+		strcpy(outline,"\"");							/* leading quotes for pfkeys string	*/
 		d_period = get_param(t_line);						/* Skip over it...			*/
 	}
 	else
 	{
-		strcpy(outline,"\042");							/* leading quotes for pfkeys string	*/
+		strcpy(outline,"\"");							/* leading quotes for pfkeys string	*/
 		strcat(outline,"00");							/* Start the PFKEYS string with ENTER	*/
 	}
 
@@ -53,7 +70,7 @@ char t_line[];							/* if we find it or not, set the pfkey flag			*/
 				}
 				strcat(outline,t_line);					/* copy pfkey to output			*/
 			}
-			else if (!keyword(t_line,proc_keywords) && !keyword(t_line,disp_keywords))	/* it's not a keyword,	*/
+			else if (!proc_keyword(t_line) && !keyword(t_line,disp_keywords)) /* it's not a keyword,*/
 			{								/* must be a field			*/
 				strcpy(the_field[num_fields++],t_line);			/* save it				*/
 				write_log("WISP",'I',"FLDFOUND","Field %s found in PFKEYS phrase.",t_line);
@@ -65,25 +82,25 @@ char t_line[];							/* if we find it or not, set the pfkey flag			*/
 		} while (!done && (d_period != -1));					/* stop					*/
 	}
 
-	strcat(outline,"X\042");
+	strcat(outline,"X\"");
 
 	if (num_fields)									/* had some fields in it		*/
 	{
 		for (i=0; i<num_fields; i++)
 		{
-			write_line	("           MOVE %s TO WISP-DFIELD-%d\n",the_field[i],i);/* move to our PIC 99 field	*/
+			tput_line	("           MOVE %s TO WISP-DFIELD-%d",the_field[i],i);/* move to our PIC 99 field	*/
 		}
 
-		put_line  		("           STRING\n");
+		tput_line  		("           STRING");
 
 		for (i=0; i<num_fields; i++)						/* use the STRING statement to add them	*/
 		{
-			write_line	("               WISP-DFIELD-%d DELIMITED BY SIZE,\n",i);
+			tput_line	("               WISP-DFIELD-%d DELIMITED BY SIZE,",i);
 		}
 	}
 	else
 	{
-		put_line		("           MOVE\n");
+		tput_line		("           MOVE");
 	}
 #ifdef DEBUG
 put_line("123456*8901234567890123456789012345678901234567890123456789012345678901234567890\n");
@@ -93,26 +110,26 @@ put_line("123456*890123456789012345678901234567890123456789012345678901234567890
 	{
 		savchr = outline[boundary];						/* save the char			*/
 		outline[boundary] = '\0';
-		write_line		("               %s\n",outline);		/* write first part			*/
+		tput_line		("               %s",outline);			/* write first part			*/
 		outline[boundary] = savchr;
-		write_line		("      -        \"%s\n",&outline[boundary]);	/* write the rest			*/
+		tput_line		("      -        \"%s",&outline[boundary]);	/* write the rest			*/
 	}
 	else
 	{
-		write_line		("               %s\n",outline);		/* just write it			*/
+		tput_line		("               %s",outline);			/* just write it			*/
 	}
 
 	if (num_fields)
 	{
-		put_line		("               DELIMITED BY SIZE,\n");	/* delimit the string			*/
-		put_line  		("               INTO WISP-ALLOWABLE-PF-KEYS,\n");/* now finish it			*/
+		tput_line		("               DELIMITED BY SIZE,\n");	/* delimit the string			*/
+		tput_line  		("               INTO WISP-ALLOWABLE-PF-KEYS,\n");/* now finish it			*/
 	}
 	else
 	{
-		put_line  		("               TO WISP-ALLOWABLE-PF-KEYS,\n");/* just finish the MOVE			*/
+		tput_line  		("               TO WISP-ALLOWABLE-PF-KEYS,\n");/* just finish the MOVE			*/
 	}
 
-	strcpy(on_str,"\042X\042");							/* Set on pfkeys string to none		*/
+	strcpy(on_str,"\"X\"");								/* Set on pfkeys string to none		*/
 
 	if (d_period == -1)								/* if there is a period then		*/
 	{
@@ -134,7 +151,7 @@ char t_line[];
 		{
 			on_pfkeys = 1;							/* indicate that we found it		*/
 			d_ptr = pf_str;							/* set the display buffer pointer	*/
-			strcpy(on_str,"\042");						/* start the on pfkey string		*/
+			strcpy(on_str,"\"");						/* start the on pfkey string		*/
 											/* on_str contains the ON PFKEYS literal*/
 											/* pf_str is the IF statement		*/
 											/* start the IF				*/
@@ -171,7 +188,7 @@ char t_line[];
 					strcat(pf_str,"\n");
 					sprintf(outline,"           OR %s IS EQUAL TO ",crt_pfkey[cur_crt]);
 				}
-				else if (!keyword(t_line,proc_keywords) && !keyword(t_line,disp_keywords)) /* it's not a keyword,*/
+				else if (!proc_keyword(t_line) && !keyword(t_line,disp_keywords))
 				{							/* must be a field			*/
 					strcat(outline,t_line);				/* copy pfkey to output			*/
 
@@ -186,7 +203,7 @@ char t_line[];
 				}
 			} while (!done && (d_period != -1));				/* stop					*/
 
-			strcat(on_str,"X\042");						/* terminate the on pfkey list		*/
+			strcat(on_str,"X\"");						/* terminate the on pfkey list		*/
 			strcat(pf_str,"               CONTINUE,\n");			/* in case there are no action phrases	*/
 
 			if (d_period == 0)						/* still more on the line		*/
@@ -217,7 +234,7 @@ char t_line[];
 		{
 			write_log("WISP",'F',"ERRORONPFKEY","Error in ON PFKEYS phrase.\n");
 			write_log("",' ',"","%s",inline);
-			exit(0);
+			exit_wisp(EXIT_WITH_ERR);
 		}
 	}
 }	/*	upon exit, we can assume that t_line is holding the next parm to parse if pmode is still DISPLAY mode	*/
@@ -233,7 +250,7 @@ char t_line[];
 
 		strcat(nm_str,"           IF ");
 		strcat(nm_str,crt_status[cur_crt]);
-		strcat(nm_str," IS GREATER THAN \042N?\042\n");
+		strcat(nm_str," IS GREATER THAN \"N?\"\n");
 
 		strcat(nm_str,"               ");					/* start a blank line			*/
 		do
@@ -301,19 +318,19 @@ char t_line[];
 	{
 		savchr = on_str[54];							/* save the char			*/
 		on_str[54] = '\0';
-		write_line	("           MOVE   %s\n",on_str);			/* write first part			*/
+		tput_line	("           MOVE   %s\n",on_str);			/* write first part			*/
 		on_str[54] = savchr;
-		write_line	("      -     \042%s\n",&on_str[54]);			/* write the rest			*/
-		put_line	("               TO WISP-ON-PF-KEYS,\n");
+		tput_line	("      -     \"%s\n",&on_str[54]);			/* write the rest			*/
+		tput_line	("               TO WISP-ON-PF-KEYS,\n");
 	}
 	else if (strlen(on_str) < 32)
 	{
-		write_line	("           MOVE %s TO WISP-ON-PF-KEYS,\n",on_str);
+		tput_line	("           MOVE %s TO WISP-ON-PF-KEYS,\n",on_str);
 	}
 	else
 	{
-		write_line	("           MOVE %s\n",on_str);
-		put_line	("               TO WISP-ON-PF-KEYS,\n");
+		tput_line	("           MOVE %s\n",on_str);
+		tput_line	("               TO WISP-ON-PF-KEYS,\n");
 	}
 
 
@@ -326,27 +343,27 @@ char t_line[];
 		make_fld(scrtch,scrn_name[scount],"WDR-");
 	}
 
-	write_line("           PERFORM %s,\n",scrtch);
+	tput_line("           PERFORM %s,\n",scrtch);
 
 	chk_decl();									/* Check DECLARATIVES interaction.	*/
 
 	if (on_pfkeys)
 	{
-		put_line(pf_str);							/* write the ON PFKEYS phrases		*/
+		tput_block(pf_str);							/* write the ON PFKEYS phrases		*/
 	}
 
 	if (no_mod)
 	{
 		if (on_pfkeys) 								/* following an ON PFKEYS		*/
 		{
-			put_line("           ELSE\n");					/* so write an else			*/
+			tput_line("           ELSE\n");					/* so write an else			*/
 		}
-		put_line(nm_str);							/* and write the NO-MOD phrase		*/
+		tput_block(nm_str);							/* and write the NO-MOD phrase		*/
 	}
 
 	if (no_mod || on_pfkeys)							/* following something			*/
 	{
-		put_line	("           ELSE\n");					/* so write an else			*/
+		tput_line	("           ELSE\n");					/* so write an else			*/
 	}
 
 											/* now move all the screen variables to	*/
@@ -359,27 +376,26 @@ char t_line[];
 		make_fld(scrtch,scrn_name[scount],"WGS-");
 	}
 
-	write_line("           PERFORM %s\n",scrtch);
-	write_line("           MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prec[cur_crt]]);
+	tput_line("           PERFORM %s\n",scrtch);
+	tput_line("           MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prime_rec[cur_crt]]);
 											/* their target object fields		*/
 	if (no_mod || on_pfkeys)							/* we are following something		*/
 	{
-		put_line("\n           END-IF");					/* write an end-if			*/
+		tput_line("           END-IF");						/* write an end-if			*/
 	}
 
-	if (d_period == -1) 	put_line(".\n");
-	else		put_line(",\n");
+	if (d_period == -1) 	tput_clause(12, ".");
+	else			tput_clause(12, ",");
 }
 
 
-
 n_pfkeys(q_period)									/* write the empty PFKEYS phrase	*/
 int q_period;										/* flag to use a period or not		*/
 {
 	char wdr[48],wgs[48];
 
-	put_line  ("           MOVE \"00X\" TO WISP-ALLOWABLE-PF-KEYS,\n");		/* set ENTER as the only pfkey		*/
-	put_line  ("           MOVE \"X\"   TO WISP-ON-PF-KEYS,\n");			/* set ENTER as the only pfkey		*/
+	tput_line  ("           MOVE \"00X\" TO WISP-ALLOWABLE-PF-KEYS,\n");		/* set ENTER as the only pfkey		*/
+	tput_line  ("           MOVE \"X\"   TO WISP-ON-PF-KEYS,\n");			/* set ENTER as the only pfkey		*/
 	if (in_decl)
 	{
 		make_fld(wdr,scrn_name[scount],"DWDR-");
@@ -390,15 +406,15 @@ int q_period;										/* flag to use a period or not		*/
 		make_fld(wdr,scrn_name[scount],"WDR-");
 		make_fld(wgs,scrn_name[scount],"WGS-");
 	}
-	write_line("           PERFORM %s\n",wdr);					/* do the display and read		*/
-	write_line("           PERFORM %s\n",wgs);					/* now move all the screen var		*/
+	tput_line("           PERFORM %s\n",wdr);					/* do the display and read		*/
+	tput_line("           PERFORM %s\n",wgs);					/* now move all the screen var		*/
 											/* their target object fields		*/
 
-	write_line("           MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prec[cur_crt]]);
+	tput_line("           MOVE WISP-CRT-RECORD TO %s",crt_record[crt_prime_rec[cur_crt]]);
 	chk_decl();									/* Check DECLARATIVES interaction.	*/
 
-	if (q_period)	put_line(".\n");
-	else		put_line(",\n");
+	if (q_period)	tput_clause(12, ".");
+	else		tput_clause(12, ",");
 
 }
 
@@ -406,7 +422,7 @@ static chk_decl()
 {
 	char tstr[16];
 
-	if (copy_para && !(scrn_flags[scount] & SCRN_IN_DECLARATIVES))			/* If currently copying paragraphs.	*/
+	if (copy_to_dcl_file && !(scrn_flags[scount] & SCRN_IN_DECLARATIVES))		/* If currently copying paragraphs.	*/
 	{										/* And this screen is not in the DECLAR	*/
 		sprintf(tstr,"%d",scount);						/* Add it to the paragraph list.	*/
 		add_perf(tstr);								/* S we can fix it later.		*/

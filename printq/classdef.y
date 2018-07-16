@@ -8,6 +8,9 @@ static char rcsid[]="$Id:$";
 extern CLASSINFO class_info;
 int yyclassindex;
 int yycdlineno;
+extern char yylbuf[];
+extern int yylpos;
+extern int yynewln;
 
 %}
 
@@ -19,7 +22,7 @@ int yycdlineno;
 
 %token <num> EQUAL COLON COMMA
 %token <string> WORD
-%token <kw> BANNER FF BEFORE AFTER BOTH NEITHER YES NO 
+%token <kw> BANNER FF BEFORE AFTER BOTH NEITHER YES NO BETWEEN
 
 %%
 
@@ -69,22 +72,21 @@ field:	'\n'
 		class_info.classlist[yyclassindex].ffbefore = 1;
 		class_info.classlist[yyclassindex].ffafter = 1;
 		}
+        | FF EQUAL BETWEEN  {
+		class_info.classlist[yyclassindex].ffbetween = 1;
+		}
         ;
 %%
 
 char *yystrdup(p)
 char *p;
 {
-#ifdef __STDC__
 	char *tmp;
-	void *malloc();
-#else
-	char *tmp,*malloc();
-#endif
+	char *gmem();
 	int l;
 
 	l=strlen(p);
-	tmp=(char*)malloc(l+1);
+	tmp=gmem(l+1,1);
 	memcpy(tmp,p,l);
 	*(tmp+l)=(char)0;
 	return tmp;
@@ -105,6 +107,7 @@ static struct yykeyword
    { "before", BEFORE },
    { "after", AFTER },
    { "both", BOTH },
+   { "between", BETWEEN },
    { "neither", NEITHER },
    { NULL, 0 }
 };
@@ -119,7 +122,7 @@ char *string;
 	}	
 	return 0;
 }
-
+static int yyfirst=TRUE;
 loadclassdef()
 {
 	extern int yyupchar;
@@ -128,14 +131,38 @@ loadclassdef()
 	memset(&class_info,0,sizeof(class_info));
 	yyupchar = -1;
 	yyparse();
+	yyfirst=FALSE;
+
 }
 static int yyerror()
 {
 	char yyerrbuf[200];
 	extern char *fileread;
+	char *repchar();
+	extern int fileerrs;
 	
-	sprintf(yyerrbuf,"syntax error on %s line %d\n",fileread,yycdlineno);
+	fileerrs |= CLDEFERR;
+	
+	sprintf(yyerrbuf,"Syntax error on %s line %d:\n",fileread,yycdlineno+1);
 	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
+	yylbuf[yylpos]='\0';
+	sprintf(yyerrbuf,"%s\n",yylbuf);
+	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
+	sprintf(yyerrbuf,"%s^ error near this position\n",repchar(yylpos,(int)' '));
+
+	logerr(yyerrbuf,0);
+	if (yyfirst)
+	{
+		fprintf(stderr,yyerrbuf);
+	}
 }
 int yywrap()
 { 

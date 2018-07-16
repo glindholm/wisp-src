@@ -2,6 +2,7 @@
 
 #include <v/video.h>
 
+#include "idsistd.h"
 wdinit()
 {
 	wpushscr();								/* Push the current screen.			*/

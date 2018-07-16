@@ -10,6 +10,9 @@
 #define EXT extern
 
 #include "wisp.h"
+#include "token.h"
+#include "node.h"
+
 /*
 	IF condition [THEN] { statmemt-1    }
 			    { NEXT SENTENCE }
@@ -53,6 +56,205 @@
 
 */
 
+parse_if(the_statement)
+NODE the_statement;
+{
+	NODE	curr_node, if_node, temp_node, id_node, save_node;
+	int	col;
+	int 	bytenum, negate, flag_on;
+	char	buff[256];
+
+	curr_node = the_statement->next;
+
+	if (!eq_token(curr_node->token,VERB,"IF"))
+	{
+		tput_statement(12,the_statement);
+		return(0);
+	}
+
+	bytenum = 1;
+
+	write_log("WISP",'I',"PROCIF","Processing IF statement.");
+
+	if_node = curr_node;
+
+	col = if_node->token->column;
+	if (col < 12) col = 12;
+	else if (col > 24) col = 24;
+
+	for(curr_node=if_node->next; NODE_END != curr_node->type; curr_node=curr_node->next)
+	{
+		if (IDENTIFIER==curr_node->token->type)
+		{
+			temp_node = curr_node->next;
+
+			if (isafigcon1(token_data(curr_node->token)) &&
+				( eq_token(temp_node->token,KEYWORD,"IN") || 
+				  eq_token(temp_node->token,KEYWORD,"OF")   ))
+			{
+				/*
+				**	IF figcon {IN|OF} identifier IS [NOT] {ON|OFF}
+				**
+				**	MOVE figcon TO WISP-TEST-BYTE
+				**	CALL "bit_test" USING WISP-TEST-BYTE, identifier, WISP-SCRATCH-BYTE-x
+				**
+				**	IF [NOT] WISP-SCRATCH-BYTE-x-TRUE ...
+				*/
+
+				write_log("WISP",'I',"IFFIGCON","Processing IF figcon condition.");
+
+				curr_node->next = temp_node->next;		/* Unhooking the {IN|OF} node			*/
+				temp_node->next = NULL;
+				free_statement(temp_node);			/* Delete the  {IN|OF} node			*/
+
+				id_node = curr_node->next;
+				if (!reduce_data_item(id_node))			/* Reduce identifier				*/
+				{
+					write_tlog(id_node->token, "WISP",'W',"PROCIF",
+						"Error parsing IF figcon {IN|OF} identifier, unrecognized data item.[%s]",
+						token_data(id_node->token));
+					reduce_one(id_node);
+				}
+				decontext_statement(id_node->down);
+
+				temp_node = id_node->next;
+				if (eq_token(temp_node->token,KEYWORD,"IS"))
+				{
+					temp_node = temp_node->next;
+				}
+
+				negate = 0;
+				if (eq_token(temp_node->token,KEYWORD,"NOT"))
+				{
+					negate = 1;
+					temp_node = temp_node->next;
+				}
+
+				if (eq_token(temp_node->token,KEYWORD,"ON"))
+				{
+					flag_on = 1;
+				}
+				else if (eq_token(temp_node->token,KEYWORD,"OFF"))
+				{
+					flag_on = 0;
+				}
+				else
+				{
+					write_tlog(temp_node->token, "WISP",'E',"PROCIF",
+						"Error parsing IF, expecting ON or OFF found [%s]",
+						token_data(temp_node->token));
+					tput_statement(col,the_statement);
+				}
+
+				tput_line_at  (col,   "MOVE %s",token_data(curr_node->token));
+				tput_clause   (col+4, "TO WISP-TEST-BYTE,");
+				tput_line_at  (col,   "CALL \"bit_test\" USING WISP-TEST-BYTE,");
+				tput_statement(col+4, id_node->down);
+				tput_clause   (col+4, ", WISP-SCRATCH-BYTE-%d,",bytenum);
+				tput_flush();
+
+				save_node = curr_node->next;			/* Save curr->next in temp node			*/
+				curr_node->next = temp_node->next;		/* Unhook "figcon IN id IS NOT ON" clause	*/
+				temp_node->next = NULL;
+
+				sprintf(buff,"WISP-SCRATCH-BYTE-%d-TRUE",bytenum);
+
+				if ((flag_on && negate) || (!flag_on && !negate))
+				{
+					edit_token(curr_node->token,"NOT");
+					curr_node->token->type = KEYWORD;
+					tie_next(curr_node,maketoknode(make_token(IDENTIFIER,buff)));
+					curr_node = curr_node->next;
+				}
+				else
+				{
+					edit_token(curr_node->token,buff);
+				}
+
+				curr_node->down = temp_node->down;		/* Save the fluff				*/
+				temp_node->down = NULL;
+				free_statement(save_node);			/* Delete the figcon clause			*/
+
+				bytenum++;
+			}
+			else
+			{
+				id_node = curr_node;
+				if (!reduce_data_item(id_node))			/* Reduce identifier				*/
+				{
+					write_tlog(id_node->token, "WISP",'W',"PROCIF",
+						"Error parsing IF condition, unrecognized data item.[%s]",
+						token_data(id_node->token));
+					reduce_one(id_node);
+				}
+
+				temp_node = curr_node->next;
+
+				if (eq_token(temp_node->token,KEYWORD,"IS") && 
+				    eq_token(temp_node->next->token,KEYWORD,"ALTERED"))
+				{
+					/*
+					**	Remove the [invalid] "IS" token. (Not allowed per manual)
+					*/
+					curr_node->next = temp_node->next;	/* Unhook the IS node.				*/
+					temp_node->next = NULL;
+					free_statement(temp_node);		/* Free the IS node.				*/
+					temp_node = curr_node->next;		/* Point to the ALTERED  node			*/
+				}
+
+				if (eq_token(temp_node->token,KEYWORD,"ALTERED"))
+				{
+					/*
+					**	IF  FAC OF identifier [IS] ALTERED ...
+					**
+					**	CALL "bit_test" USING WISP-ALTERED-BIT, F-identifier, WISP-SCRATCH-BYTE-x
+					**
+					**	IF  WISP-SCRATCH-BYTE-x-TRUE  ...
+					*/	
+
+					write_log("WISP",'I',"IFALTERED","Processing IF FAC OF id ALTERED condition");
+
+					if (0 != memcmp(token_data(id_node->down->token),"F-",2))
+					{
+						/*
+						**	Missing the "FAC OF" clause, so add it.
+						*/
+						write_tlog(id_node->down->token,
+							"WISP",'W',"IFALTERED","Warning IF ALTERED missing \"FAC OF\" for [%s]",
+							token_data(id_node->down->token));
+
+						make_fac(buff,token_data(id_node->down->token)); /* Create a F-identifier	*/
+						edit_token(id_node->down->token,buff);
+					}
+
+					tput_line_at  (col,   "CALL \"bit_test\" USING WISP-ALTERED-BIT,");
+					decontext_statement(id_node->down);
+					tput_statement(col+4, id_node->down);
+					tput_clause   (col+4, ", WISP-SCRATCH-BYTE-%d,",bytenum);
+					tput_flush();
+
+					free_statement(id_node->down);		/* Free the identifier				*/
+					id_node->down = temp_node->down;	/* Move the fluff off the ALTERED node		*/
+					temp_node->down = NULL;
+					id_node->next = temp_node->next;	/* Unhook the ALTERED node.			*/
+					temp_node->next = NULL;
+					free_statement(temp_node);		/* Free the ALTERED node.			*/
+				
+					sprintf(buff,"WISP-SCRATCH-BYTE-%d-TRUE",bytenum);
+					id_node->type = NODE_TOKEN;
+					id_node->token = make_token(IDENTIFIER,buff);
+
+					bytenum++;
+				} /* End of if (ALTERED) */
+			}
+		} /* End of if (IDENTIFIER) */
+	} /* End of for loop */
+
+	tput_statement(12,the_statement);
+	return(0);
+}
+
+#ifdef OLD
 p_if()											/* Process IF statements.		*/
 {
 	int i,bytenum,negate;
@@ -128,7 +330,7 @@ p_if()											/* Process IF statements.		*/
 			*curnl = 0;
 		}
 											/* All done.				*/
-		if (!strcmp(curstr,"THEN") || keyword(curstr,proc_keywords) || strcmp(area_a,"    "))
+		if (!strcmp(curstr,"THEN") || proc_keyword(curstr) || strcmp(area_a,"    "))
 		{
 			if (!strcmp(curstr,"THEN"))
 			{
@@ -148,12 +350,12 @@ p_if()											/* Process IF statements.		*/
 			if (i) strcat(ifbuff,"\n            THEN\n");			/* put the THEN in.			*/
 			else   strcat(ifbuff,"\n");
 			dump_ifbuff = 1;						/* Flag we are dumping the if buffer.	*/
-			put_line(ifbuff);
+			tput_block(ifbuff);
 			dump_ifbuff = 0;
 			if (!strcmp(curstr,"ELSE"))					/* Special case, IF test ELSE		*/
 			{
 				write_log("WISP",'E',"IFNOIMPER","IF statement with no imperative, CONTINUE inserted.");
-				put_line("               CONTINUE\n");
+				tput_line("               CONTINUE\n");
 			}
 			hold_line();							/* allow the remainder to parse		*/
 			return(0);
@@ -207,20 +409,20 @@ p_if()											/* Process IF statements.		*/
 
 			strcat(ifbuff,tstr);
 
-			put_line  ("               CALL \"bit_test\" USING\n");		/* see if the bit is set		*/
-			put_line  ("                    WISP-ALTERED-BIT,\n");
+			tput_line_at(16, "CALL \"bit_test\" USING WISP-ALTERED-BIT,");	/* see if the bit is set		*/
 											/* Did they leave off FAC OF?		*/
 			if (tptr[0] == 'F' && tptr[1] == '-')				/* Does it have "F-"?			*/
 			{
-				write_line("                    %s,\n",tptr);		/* Yes, it's ok.			*/
+				tput_clause(20, "%s,",tptr);				/* Yes, it's ok.			*/
 			}
 			else
 			{
 				make_fac(tstr,tptr);					/* Make it a FAC field.			*/
-				write_line("                    %s,\n",tstr);		/* Add it on.				*/
+				tput_clause(20, "%s,",tstr);				/* Add it on.				*/
 			}
 
-			write_line("                    WISP-SCRATCH-BYTE-%d,\n\n",bytenum);
+			tput_clause(20,"WISP-SCRATCH-BYTE-%d,",bytenum);
+			tput_blank();
 
 			*curstr = '\0';							/* Clear all the strings.		*/
 			*oldstr = '\0';
@@ -275,12 +477,11 @@ p_if()											/* Process IF statements.		*/
 				ptype = get_param(o_parms[1]);				/* get the tested string		*/
 			}
 
-			write_line("               MOVE %s TO WISP-TEST-BYTE,\n",oldstr);	/* Output the test value.	*/
-			put_line  ("               CALL \"bit_test\" USING\n");
-			put_line  ("                    WISP-TEST-BYTE,\n");
-			write_line("                    %s,\n",curstr);
-			write_line("                    WISP-SCRATCH-BYTE-%d,\n\n",bytenum);
-
+			tput_line_at(16, "MOVE %s TO WISP-TEST-BYTE,\n",oldstr);	/* Output the test value.	*/
+			tput_line_at(16, "CALL \"bit_test\" USING WISP-TEST-BYTE,");
+			tput_clause (20, "%s,",curstr);
+			tput_clause (20, "WISP-SCRATCH-BYTE-%d,",bytenum);
+			tput_blank();
 
 			strcpy(curstr,o_parms[1]);
 
@@ -374,5 +575,6 @@ p_if()											/* Process IF statements.		*/
 
 	}
 }
+#endif /* OLD */
 
 
