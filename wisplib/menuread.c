@@ -1,29 +1,39 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef MSDOS
-#include <io.h>
-#endif
-
 #include "idsistd.h"
 #include "menu.h"
 #include "paths.h"
 #include "wispcfg.h"
+#include "wmalloc.h"
 
 /* This procedure locates a menu file and loads it into a menu structure to be used by the menu system to display the menu	*/
 /* If the menufile name has a hex -1 as its first int, it is assumed to actually be a structure.				*/
 
-struct menu *menu_read(char* pmenufile)
+struct menu *WL_menu_read(char* pmenufile)
 {
 	int i,j;
 	char *fstat;                                                            
@@ -38,9 +48,9 @@ struct menu *menu_read(char* pmenufile)
 	
 	if (menufile->curritem == -1)						/* Is it really a structure?		*/
 	{
-		themenu = (struct menu *)malloc(sizeof(struct menu));			/* get a menu structure ready 		*/
+		themenu = (struct menu *)wisp_malloc(sizeof(struct menu));	/* get a menu structure ready 		*/
 		memcpy((char *)themenu,menufile,sizeof(struct menu));		/* copy the passed structure into it	*/
-		themenu->menustat = 0;							/* And the menu hasn't been drawn yet	*/
+		themenu->menustat = 0;						/* And the menu hasn't been drawn yet	*/
 		i = 0;
 		do
 		{
@@ -59,16 +69,10 @@ struct menu *menu_read(char* pmenufile)
 		infile = fopen(menuname,"r");						/* try to read it			*/
 		if (!infile)
 		{									/* If its not found, look for it	*/
-#ifdef VMS
-			strcpy(temp,"APP$MENU:");					/* Start with the application directory	*/
-			strcat(temp,menuname);						/* Then add the file name.		*/
-			infile = fopen(temp,"r");					/* Try to read it. 			*/
-#else	/* VMS */
 			strcpy(temp,wispmenudir());
 			strcat(temp,DIR_SEPARATOR_STR);
 			strcat(temp,menuname);
 			infile = fopen(temp,"r");
-#endif
 			if (!infile) return((struct menu *) -1);			/* Not there either, return a -1 	*/
 		}
 	}
@@ -84,7 +88,7 @@ struct menu *menu_read(char* pmenufile)
 		if (!infile)    return((struct menu *) -1);				/* no luck, weird system so return -1 	*/
 	}
 
-	themenu = (struct menu *)malloc(sizeof(struct menu));				/* get a menu structure ready 		*/
+	themenu = (struct menu *)wisp_malloc(sizeof(struct menu));			/* get a menu structure ready 		*/
 
 	for (i=0; i<30; i++)								/* init all the menu items to be empty	*/
 	{
@@ -133,6 +137,21 @@ struct menu *menu_read(char* pmenufile)
 /*
 **	History:
 **	$Log: menuread.c,v $
+**	Revision 1.16  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.15  2002/07/10 21:05:20  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.14  2002/07/02 21:15:26  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.13  2002/06/25 15:21:53  gsl
+**	Change to use wmalloc()
+**	
+**	Revision 1.12  2002/06/21 03:10:38  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.11  1996/10/09 00:22:05  gsl
 **	Replace getenv() with wispmenudir()
 **	

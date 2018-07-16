@@ -67,6 +67,7 @@ debug_trace_level_save()
 debug_trace_level_restore()
 
 #ifdef NOT_USED
+
 #define trace_begin(kind, arg)
 #define trace_end(kind)
 #define trace(kind, arg)
@@ -77,6 +78,7 @@ debug_trace_level_restore()
 #define trace_sq(kind, arg1, arg2)
 #define trace_level_save()
 #define trace_level_restore()
+
 #endif
 #endif
 
@@ -84,8 +86,8 @@ debug_trace_level_restore()
 //
 //	History:
 //	$Log: debugaid.hpp,v $
-//	Revision 1.7.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.8  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.7  1998/08/31 19:13:40  gsl
 //	drcs update

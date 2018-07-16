@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------
-#	Copyright (c) 1998-2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1998-2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #	File:		kcsicob.mak
@@ -25,7 +25,7 @@
 #
 #	Usage:
 #
-#	$ make -f kcsicob.umf {target}
+#	$ nmake ff kcsicob.mak {target}
 #
 #-----------------------------------------------------------------------
 kcsi_default: kcsi_acu
@@ -46,22 +46,25 @@ MAKEFILE=kcsicob.mak
 #	wisp/src/kcsi/kcsi_acu_install.txt
 #	wisp/src/kcsi/kcsi_mf_install.txt
 #	wisp/src/kcsi/kcsi_packlist.txt
-#	wisp/src/doc/wisp_relnotes.lis
+#	wisp/src/doc/wisp_relnotes.txt
 #	wisp/src/acu/wruncbl.umf
+#	wisp/src/acu/wrun32wisp_kcsi_acu50.mak
+#	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 #
-KCSI_VERSION=4000
+KCSI_VERSION=4100
 
 #-----------------------------------------------------------------------
 #
 WISPTRAN=..\bin\wisp.exe
+WISPFLAGS= -VACU -u ACU50 
 #-----------------------------------------------------------------------
 #
 # 	ACUCOBOL
 #
-ACUDIR= C:\acucorp\ACUCBL520\acugt
+ACUDIR= C:\acucorp\ACUCBL600\acugt
 ACU_COBOL = $(ACUDIR)\bin\ccbl32.exe
-ACU_FLAGS = -Da4 -C50 -Z50 -Za
+ACU_COBFLAGS = -Da4 -Za -C50 -Z50
 CBLUTIL= $(ACUDIR)\bin\cblutl32.exe
 
 
@@ -123,8 +126,8 @@ DATENTRY_CBX=$(DATENTRY_WCB:.wcb=.cbx)
 .SUFFIXES:  .cbx .wcb
 
 .wcb.cbx:
-	$(WISPTRAN) -VACU $(WISPFLAGS) $*.wcb
-	$(ACU_COBOL) $(ACU_FLAGS) -o $*.cbx $*.cob
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o $*.cbx $*.cob
 
 
 #-----------------------------------------------------------------------
@@ -181,8 +184,8 @@ DATENTRY:	$(DATENTRY_CBX)
 	@echo $@ is UP-TO-DATE
 
 CREATE:	CREATE.wcb
-	$(WISPTRAN) -VACU $(WISPFLAGS) CREATE.wcb
-	$(ACU_COBOL) $(ACU_FLAGS) -o CREATE CREATE.cob
+	$(WISPTRAN) $(WISPFLAGS) CREATE.wcb
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o CREATE CREATE.cob
 	@echo $@ is UP-TO-DATE
 
 

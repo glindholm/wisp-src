@@ -1,7 +1,7 @@
-000100**   Copyright (c) 1997 NeoMedia Migrations, All rights reserved.
+000100**   Copyright (c) 1997-2003 NeoMedia Technologies, All rights reserved.
 000200**   $Id:$
 000300**
-000400**   File:       wt0012.wcb
+000400**   File:       WT0012.wcb
 000500**
 000600**   Project:    WISP/SAMPLE
 000700**
@@ -10,7 +10,7 @@
 001000**   Example:
 001100**
 001200 IDENTIFICATION DIVISION.
-001300 PROGRAM-ID. wt0012.
+001300 PROGRAM-ID. WT0012.
 001400
 001500 ENVIRONMENT DIVISION.
 001600 CONFIGURATION SECTION.

@@ -1,217 +1,54 @@
 101	%%COBOL-I-ENTRY PROGRAM-ID %8.8s TIME %s
-102	%%TEXT "%s"
-103	%%TEXT "%s"
+102	%%TEXT '%s'
 104	%s
-105	%s
-2001	%%BELL-I-ENTRY Entry into BELL
-3001	%%BITPACK-I-ENTRY Entry into BITPACK
-3501	%%BITUNPK-I-ENTRY Entry into BITUNPK
-4501	%%BLDACP-I-ENTRY Entry into BLDACP
-4510	%%BLDACP-F-FILERR Unable to open file ACPMAP.DAT
-5001	%%BREAKACP-I-ENTRY Entry into BREAKACP
-6001	%%CANCEL-I-ENTRY Entry into CANCEL
-7001	%%CEXIT-I-ENTRY Entry into CEXIT
-8001	%%CHECKACP-I-ENTRY Entry into CHECKACP
-9001	%%CLOSEACP-I-ENTRY Entry into CLOSEACP
-10001	%%COBLINK-I-ENTRY Entry into COBLINK
-10002	%%COBLINK-E-NOTYET COBLINK not yet implemented on Unix
-11001	%%DATE-I-ENTRY Entry into DATE
 11002	%%DATE-E-NOTYET Function %c%c not implemented
-11101	%%DATE2-I-ENTRY Entry into DATE2
 11102	%%DATE2-E-NOTYET Function %c%c not implemented
-12001	Entry into DATESET ??? what is this routine??? really DATETEST
-13001	%%DAY-I-ENTRY Entry into DAY
 13002	%%DAY-E-INVALID invalid date [%s]
-14001	%%DISPLAY-I-ENTRY Entry into DISPLAY
-14002	%%DISPLAY-F-PROT Protection violation, unable to access file %s
-14004	%%DISPLAY-F-OPEN Unable to open or find file %s
-15001	%%DISP_FILE-I-ENTRY Entry into DISP_FILE
-17001	%%EXTRACT-I-ENTRY Entry into EXTRACT
 17002	%%EXTRACT-E-NOTSUP %8.8s: EXTRACT of %2.2s is NOT SUPPORTED
 17004	%%EXTRACT-E-NOTYET %8.8s: EXTRACT of %2.2s is NOT YET IMPLEMENTED
 17006	%%EXTRACT-E-DEVTYPE (gettype) Error accessing device TYPES information
 17008	%%EXTRACT-E-INVPARM %8.8s: EXTRACT of %2.2s has invalid number of parameters
-17010	%%EXTRACT-E-CFGFILE Can't open config file: %s [errno=%d]. Run wsysconf.
-18001	%%FILE_GETPARM-I-ENTRY Entry into FILE_GETPARM
-18101	%%ERR_GETPARM-I-ENTRY Entry into ERR_GETPARM
-18201	%%FILECOPY-I-ENTRY Entry into FILECOPY
+17010	%%EXTRACT-E-CFGFILE Can't open config file: %s [errno=%d].
 18202	%%FILECOPY-E-INVD Invalid arg list: File[%8.8s] Lib[%8.8s] Vol[%6.6s]
 18204	%%FILECOPY-E-NOTYET  FILECOPY: File[%8.8s] Lib[%8.8s] Vol[%6.6s] no yet supported.
-19001	%%FIND-I-ENTRY Entry into FIND
 19002	%%FIND-F-NOTYET Receiver type (F) not yet supported
-19004	%%FIND-F-NOMEM (gmem) Process out of memory
-19006	%%FIND-F-NOVOL Volume can not be blank
-19008	%%FIND-F-FILESCAN Filescan of %s status= %d
-20001	%%GETPARM-I-ENTRY Entry into GETPARM
-20002	%%GETPARM-F-NOMEM Can't get memory for GETPARM screen
-20003	%%GETPARM-E-DATATYPE Invalid keyword datatype %c
 20004	%%GETPARM-F-ARGUMENTS Unable to decipher.(%s - %d) (Add optional args) 
 20006	%%GETPARM-E-NOTSUP Function (%s) not supported
-21001	%%GETPARMBUILD-I-ENTRY Entry into GETPARMBUILD
-22501	%%GETTERM-I-ENTRY Entry into GETTERM
-23001	%%HEXPACK-I-ENTRY Entry into HEXPACK
-23501	%%HEXUNPK-I-ENTRY Entry into HEXUNPK
-24001	%%INITWISP-I-ENTRY Entry into INITWISP
+20014	%%GETPARM-E-MAXFIELDS Max 32 modifiable fields
 24002	%%INITWISP-E-WSWAP Trying to turn word swap back on
-24004	%%INITWISP-E-EXIT Error installing exit handler
-24006	%%INITWISP-F-LIBVERSION Library version mismatch %d [Current=%d]
-25001	Entry into INIT_SCREEN
-26001	%%JUSTER-I-ENTRY Entry into JUSTER
-27001	%%KBMAP-I-ENTRY Entry into KBMAP, filename is %s
-27002	%%KBMAP-E-BADFILE Unable to open file %s
-27004	%%KBMAP-E-TOOMANY Too many definitions in keyboard map file
-28001	%%LINK-I-ENTRY Entry into LINK
 28002	%%LINK-E-MAXDEPTH Maximum link depth reached %d
 28003	%%LINK-I-BADPARAM Progname %8.8s Invalid parameter TYPE %1.1s
 28004	%%LINK-E-EXECVE Exec to %.60s failed [errno=%d]
-28005	%%LINK-I-NOTFOUND System routine %8.8s Not Found
-28006	%%LINK-E-EXECVE Exec /bin/sh %.60s failed [errno=%d]
-28007	%%LINK-I-NOTFOUND File %.60s Not Found
 28008	%%LINK-F-MAXPARMS Maximum %d parms. Called with %d parms.
-28009	%%LINK-I-NOACCESS Access denied to %.60s
 28010	%%LINK-F-MKDIR Unable to mkdir %s [errno=%d]
-28011	%%LINK-I-NOTRUN Not a runnable file %.60s
 28012	%%LINK-F-FOPEN Unable to fopen %s [errno=%d] in %s
-28013	%%LINK-I-NOMEMORY Not enough memory to load %.60s
 28014   %%LINK-F-EXECVP Exec of %.60s failed while linking to %8.8s [errno=%d]
 28016	%%LINK-E-RECURSIVE Recursive LINK to file %.60s
 28018	%%LINK-E-FORK Fork failed [errno=%d]
 28020	%%LINK-E-ERROR %s
 28022	%%LINK-E-FRONTEND %s failed to run. Check for COBOL RTS error.
-28501	%%LINKPROC-I-ENTRY Entry into LINK
 28502	%%LINKPROC-F-PARMCNT Invalid parmcnt %d
-28503	%%LINKPROC-I-NOTFOUND File not found %.60s
 28504	%%LINKPROC-F-EXEC Exec failed to %.60s [errno=%d]
-28505	%%LINKPROC-I-ACCESS Access denied to %.60s
-28506	%%LINKPROC-F-VMS LINKPROC is not yet implemented under VMS
-28507	%%LINKPROC-I-TYPE Invalid file type %.60s
-29001	Entry into LOGOFF
-30001	Entry into MENU_GO
-31001	Entry into MENU_KEY_GET
-32001	Entry into MENU_KEY_SET
-33001	Entry into MENU_READ
-34001	Entry into MENU_SCAN
-35001	%%MESSAGE-I-ENTRY Entry into MESSAGE, function %2.2s, port %4.4s
 35002	%%MESSAGE-E-TOOFEW Too few args for call (%d)
 35004	%%MESSAGE-E-UNKNOWN Function code is unknown (%2.2s)
-35006	%%MESSAGE-E-ERRINLOG Error forming logical name, (%4.4s)
-35008	%%MESSAGE-E-ERRCRE Error creating mailbox, status is %x (hex)
-35010	%%MESSAGE-E-CANTASIGN Unable to assign mailbox, status %x (hex)
-35012	%%MESSAGE-E-NOEF Not able to assign event flag, status %x (hex)
-35014	%%MESSAGE-E-ERR Exit error, status %x, iosb %x (hex)
 35016	%%MESSAGE-E-KEY Unable to %s file %s.
-36001	Entry into MOUNT
-37001	Entry into MOVESPACES
-38001	Entry into MSNAME
-39001	Entry into MSTIME
-40001	Entry into MSVALUE
-41001	Entry into MWCONV
-42001	Entry into ONHELP
-43001	Entry into OPENACP
-44001	Entry into PACKER
-45001	Entry into PBSET
-46001	%%PRINT-I-ENTRY Entry into PRINT
-46003	%%PRINT-I-MODE Mode (%c) Not Supported
-46005	%%PRINT-I-DISP Dispostion (%2.2s) Not Supported
-46401	%%UNIX_PRINT-I-ENTRY-ILP File=%s copies=%d form=%d
-46402	%%UNIX_PRINT-E-ILP System call failed to ILP %s rc=%d errno=%d
-46404	%%UNIX_PRINT-E-PRINTQUEUE System call failed to %s file=%s rc=%d errno=%d
-46501	%%UNIX_PRINT-I-ENTRY File=%s copies=%d form=%d
-46502	%%UNIX_PRINT-E-LP System call failed to LP %s rc=%d errno=%d
-46503	%%UNIX_PRINT-W-UNLINK Unable to delete %s errno=%d
-46505	%%UNIX_PRINT-W-SIZE Zero lenght file not printed %s
-46601	%%DOS_PRINT-I-ENTRY File=%s copies=%d form=%d printer=%d
-46602	%%DOS_PRINT-E-FAILED Print of file %s failed [errno=%d]
-46603	%%DOS_PRINT-W-UNLINK Unable to delete %s errno=%d
-46604	%%DOS_PRINT %s
-46605	%%DOS_PRINT-W-SIZE Zero lenght file not printed %s
-46606	%%DOS_PRINT-E-FAILED Print of file %s failed %s
-47001	Entry into PROTECT
-48001	%%PUTPARM-I-ENTRY Entry into PUTPARM                
-48002	%%PUTPARM-F-CREATEMTMP Unable to create master temp file %s               
-48004	%%PUTPARM-F-OPENMTMP Unable to open master temp file %s               
-48006	%%PUTPARM-F-CREATETMP Unable to create temp file %s               
-48008	%%PUTPARM-F-SHMGET Shared memory exists for file %s               
-48010	%%PUTPARM-F-SHMGET Out of shared memory for file %s               
-48012	%%PUTPARM-F-SHMGET Unable to access shared memory for file %s               
-48014	%%PUTPARM-F-SHMGET Unable to get Shared memory for file %s errno=%d               
-48016	%%PUTPARM-F-SHMAT Unable to attach to Shared memory for file %s               
+46404	%%LP_PRINT-E-PRINTQUEUE System call failed to %s file=%s rc=%d errno=%d
+46502	%%LP_PRINT-E-LP System call failed to LP %s rc=%d errno=%d
 48018	%%PUTPARM-E-NOTYET Function (%c) not implemented
-48020	%%PUTPARM-F-NOMEM Can't get memory for PUTPARM func (%c) need %d
-48101	%%SHAREMEM-I-ENTRY Entry into get_sh_seg()
-48102	%%SM-GET_SH_SEG-E-ACCESS parms=%d. Max parms (%d) exceeded. PUTPARM not generated
-48104	%%SM-GET_SH_SEG-E-NOMEM Not enough global memory to store PUTPARM end=%d, size=%d 
-48106	%%SHAREMEM-F-CORRUPT The PRB blocks in shared memory have been corrupted.
-48108	%%SHAREMEM-F-NOMEM Not enough global memory to store PRB count=%d, size=%d 
-48110	%%SHAREMEM-F-OPTIONS Invalid combination MAXPRBPARMS=%d MAXPRBPAGES=%d
-48201	%%SHAREMEM-I-ENTRY Entry into map_shr_ptrs()
-48202	%%SM-MAP_SHR_PTRS-E-GETGBLPTR ERROR accessing data in shared area. status=%x (hex)
-48204	%%SM-MAP_SHR_PTRS-F-VERSN GETPARM/PUTPARM version mismatch file=%s, current=%s
-48301	%%SHAREMEM-I-ENTRY Entry into wax_parm_area()
-48302	%%SM-WAX_PARM_AREA-F-MAPPING ERROR in WAX_PARM, global area not mapped
-48401	%%SHAREMEM-I-ENTRY Entry into close_shrfil()
-48402	%%SM-CLOSE_SHRFIL-E-DEASSIGN Error when deassigning channel. status=%x (hex)
-48404	%%SM-CLOSE_SHRFIL-E-DEL Error when close shared memory area. status=%x (hex)
-48501	%%SHAREMEM-I-ENTRY Entry into open_shrfil()
-48502	%%SM-OPEN_SHRFIL-F-CREATE PANIC: can't create /usr/tmp/wpparms. errno=%d
-48504	%%SM-OPEN_SHRFIL-E-CHMOD Can't change protection of /usr/tmp/wpparms. errno=%d
-48506	%%SM-OPEN_SHRFIL-E-GETJPI Error getting system information. Status=%x (hex)
-48508	%%SM-OPEN_SHRFIL-E-CREATE Error creating shared memory area. Status=%x (hex)
-48510	%%SM-OPEN_SHRFIL-E-OPEN Error opening shared memory area. errno=%d
-48512	%%SM-OPEN_SHRFIL-E-SHMID Error getting shared memory id, shmkey=%d, errno=%d
-48514	%%SM-OPEN_SHRFIL-E-SHMAT Error getting address of id, shmid=%d, errno=%d
-48601	%%SHAREMEM-I-ENTRY Entry into free_gblptr()
-48602	%%SM-FREE_GBLPTR-F-UPDATE Error updateing the section file. status=%x (hex)
-48604	%%SM-FREE_GBLPTR-F-UPDATE Error trying to update the section file. iosb=%d
-48606	%%SM-FREE_GBLPTR-F-DELADDRS Error deleteing virtual address. status=%x (hex)
-48608	%%SM-FREE_GBLPTR-F-SHMDT Error trying to detatch from shared memory. errno=%d
-48610	%%SHAREMEM-F-CORRUPT The PRB blocks in shared memory have been corrupted.
-49001	%%QUE_JOBS-I-ENTRY Entry into QUE_JOBS
-49002	%s
-49003	%%QUE_JOBS-I-ENTRY que_jobs: not implemented under unix
-49004	%%QUE_JOBS-E-QUEJ Parameters: %s  %s
-49006	Copies: %d  Form: %d  %s
-49008	CPU Limit: %d  %s
-49501	%%QUEMNGMNT-I-ENTRY Entry into QUEMNGMNT
-49502	%s
-49503	%%QUEMNGMNT-I-ENTRY quemngmnt: not implemented under unix
-49504	%%QUEMNGMNT-E-ERROR Entry %d in Queue %s. %s
-49506	%%QUEMNGMNT-E-ERROR %s. %s
-49508	%%QUEMNGMNT-F-NOMEM Unable to allocate memory. Need %d bytes
-50001	Entry into READACP
-51001	%%READFDR-I-ENTRY Entry into READFDR
 51002	%%READFDR-E-BLOCK Block request mode not supported
 51004	%%READFDR-E-NOTSUP Field ID of %2.2s is NOT SUPPORTED
-52001	%%READVTOC-I-ENTRY Entry into READVTOC(%c, %8.8s, %6.6s, ...)
 52002	%%READVTOC-E-NOTYET Option (%c) Not Yet Implemented
 52004	%%READVTOC-E-NOTSUPP Option (%c) Not Supported
-53001	%%RENAME-I-ENTRY Entry into RENAME
 53002	%%RENAME-E-INVD Invalid arg list: Func[%c], File[%8.8s] Lib[%8.8s] Vol[%6.6s]
 53004	%%RENAME-E-INVD Invalid arg list: Func[%c], New File[%8.8s] New Lib[%8.8s]
-54001	%%RETCODE-I-ENTRY Entry into RETCODE
-54002	%%RETCODE-E-QUEUE %s [%s]
-54003	%%RETCODE-W-QUEUE %s [%s]
-55001	Entry into RTRANSL
-56001	Entry into SCRATCH
-57001	%%SCREEN-I-ENTRY Function [%c]
 57002   %%SCREEN-E-FUNCTION Unsupported function (%d)
 57004   %%SCREEN-E-FILE Unable to open file %s [errno=%d]
 57006	%%SCREEN-E-MALLOC Unable to malloc %d bytes.
 57008	%%SCREEN-E-PRNTING Error (%d) when printing screen
-58001	%%SET-I-ENTRY Entry into SET routine
 58002	%%SET-E-NOTSUP SET of %2.2s is NOT SUPPORTED
 58004	%%SET-E-NOTYET SET of %2.2s is NOT YET IMPLEMENTED
 58006	%%SET-E-ARGCNT Invalid argument count
-59001	%%SETRETCODE-I-ENTRY Entry into SETRETCODE wispreturncode = %3.3s
-59002	%%SETRETCODE-E-QUEUE %s [%s]
-59003	%%SETRETCODE-W-QUEUE %s [%s]
 59004	%%SETRETCODE-E-CREATE Unable to create %s [errno=%d]
-59301	%%SETTRIGPROG-I-ENTRY Entry into SETTRIGPROG Set trigger program name
-59501	%%SETUPQM-I-ENTRY Entry into SETUP_QM  Setup queue management
-59502	%%SETUPQM-F-NOMEM Unable to allocate memory for queue array. Need %d
-59504	%%SETUPQM-E-NOQUEEU Error searching for queue %s. Status=%d, iosb=%d
-59506	%%SETUPQM-E-VERIFY Verify LPMAP.DAT and PQMAP.DAT. Continues without queue
-59801	%%SHAREMEM-I-ENTRY %s
 59802	%%SHAREMEM-F-OPTIONS Invalid combination MAXPRBPARMS=%d MAXPRBPAGES=%d
 59804	%%SHAREMEM-F-NOMEM Not enough global memory to store PUTPARM count=%d, size=%d 
 59806	%%SHAREMEM-F-MAXPPARMS Maximum PUTPARMs (%d) exceeded.
@@ -220,48 +57,30 @@
 59812	%%SHAREMEM-F-VERSION PUTPARM/GETPARM version mismatch file=%s, current=%s
 59814	%%SHAREMEM-F-DEASSIGN Error when deassigning channel. status=%x (hex)
 59816	%%SHAREMEM-F-UNLINK Error deleting PUTPARM temp file %s errno=%d
-59818	%%SHAREMEM-F-SYS$ERASE Error when deleting PUTPARM shared memory. status=%x (hex)
-59820	%%SHAREMEM-F-SYS$UPDSECW Error updating the PUTPARM section file. status=%x (hex)
-59822	%%SHAREMEM-F-SYS$UPDSECW Error updating the PUTPARM section file. iosb=%d
-59824	%%SHAREMEM-F-SYS$DELTVA Error deleting PUTPARM virtual address. status=%x (hex)
 59826	%%SHAREMEM-F-NOTMAPPED Error in "wax_table_entry", PUTPARM global area not mapped.
 59828	%%SHAREMEM-F-MKDIR Can't create PUTPARM tmp dir %s. errno=%d
 59830	%%SHAREMEM-F-CHMOD Can't change protection of %s. errno=%d
 59832	%%SHAREMEM-F-FOPEN Error opening PUTPARM shared memory file %s. errno=%d
 59834	%%SHAREMEM-F-SHMGET Error getting PUTPARM shared memory id, shmkey=%d, errno=%d
 59836	%%SHAREMEM-F-SHMAT Error getting PUTPARM shared memory address , shmid=%d, errno=%d
-59838	%%SHAREMEM-F-SYS$GETJPI Error getting system information. Status=%x (hex)
-59840	%%SHAREMEM-F-SYS$CREATE Error creating PUTPARM shared memory area. Status=%x (hex)
 59842	%%SHAREMEM-E-UPDATE Failed to update PRB prname=%s label=%s
 59844	%%SHAREMEM-E-UPDATE Memory calc size error PRB prname=%s label=%s
 59846	%%SHAREMEM-F-BACKREF Backwards reference failed [%s]
-60001	%%SORT-I-ENTRY Entry into SORT
 60002	%%SORT-E-NOLOCAT Locator type sort not implemented
 60004	%%SORT-E-SIZERR Specified element size [%d] too large
 60006	%%SORT-E-BOUNDSERR Sort field [Start:%d,Len:%d] extends past end of record
-61001	%%SORTCALL-I-ENTRY Entry into SORTCALL
-61501	%%SORTLINK-I-ENTRY Entry into SORTLINK
 61502	%%SORTLINK-F-ARGCNT Invalid argument count arg_count=%ld
 61504	%%SORTLINK-F-MERGE Function [%c] not supported
 61506	%%SORTLINK-F-OPTION %s=%c not supported
 61508	%%SORTLINK-F-OPTION %s=%ld not supported
 61510	%%SORTLINK-F-ARGUMENTS Unable to decode arguments [%s] arg=%ld
-62001	Entry into SPAWN
-63001	%%STRING-I-ENTRY Entry into STRING
 63002	%%STRING-E-NOTSUP STRING with %2.2s is NOT SUPPORTED
 63004	%%STRING-E-INVALPARM Call to STRING with invalid parameters
-64001	%%SUBMIT-I-ENTRY Entry into SUBMIT
 64002	%%SUBMIT-F-MALLOC Malloc of %d bytes failed for envstring %s
-64003	%%SUBMIT-I-COMPLETED Path %s retcode %d
 64004	%%SUBMIT-F-PUTENV Putenv failed for %s
 64006	%%SUBMIT-F-EXEC Exec failed for %s errno %d retcode %d
 64008	%%SUBMIT-F-FORK Fork failed errno %d
-65001	%%UPDATFDR-I-ENTRY Entry into UPDATFDR
-65002	%%UPDATFDR-E-NOTYET Function %2s not yet implemented
-65101	%%FINDTTY-I-ENTRY Entry into findtty
-65110	%%FINDTTY-E-CFGFILE Can't open config file: %s [errno=%d]. Run wsysconf.
 65112   %%FINDTTY-E-CFGFILE Invalid device number = %d tty = %s
-65201	%%WUSAGE-I-ENTRY Entry into WUSAGE
 65202	%%WUSAGE-E-ERROR Error parsing command
 65204	%%WUSAGE-E-MISSRC Missing Source item
 65206	%%WUSAGE-E-MISOBJ Missing Object
@@ -272,21 +91,6 @@
 65216	%%WUSAGE-E-INVFLAGOBJ Invalid flag object item 
 65218	%%WUSAGE-E-INVFLAG Invalid flag item
 65220	%%WUSAGE-E-INVFLAGLOG Invalid flag logical item
-65301	%%FILESIZE-I-ENTRY Entry into FILESIZE path=%s
-65302	%%FILESIZE-E-STAT Stat failed errno=%d path=%s
-65401	%%WEXIT-I-ENTRY Entry into WEXIT
-65501	%%OSD_TERM-I-ENTRY Entry into OSD_TERM
-65502	%%OSD_TERM-E-TTY Findtty returns TERM=-1 changed to TERM=0
-65503	%%OSD_TERM-W-TTY Invalid device number changed to 255
-65601	%%OSD_MODE-I-ENTRY Entry into OSD_MODE
-65701	%%OSD_JNAME-I-ENTRY Entry into OSD_JNAME
-65801	%%OSD_PATH-I-ENTRY Entry into OSD_PATH        
-65802	%%OSD_PATH-F-MALLOC Malloc failed, size %d
-65804	%%OSD_PATH-E-PATHNUM Invalid path number %d
-65806	%%OSD_PATH-E-UNKNOWN Unable to find pathnum %d in path %s
-65901	%%OSD_EXT-I-ENTRY Entry into OSD_EXT file path %s
-66001	Entry into UPPER
-66501	%%VDISPLAY-I-ENTRY Entry into VDISPLAY
 66502	%%VDISPLAY-F-Invalid record size (%d), file not displayed
 66504	%%VDISPLAY-F-Invalid buffer size (%d) (rec size - %d), file not displayed
 66506	%%VDISPLAY-F-Error opening file %s, action aborted
@@ -294,7 +98,6 @@
 66510	%%VDISPLAY-F-Error reading file %s, action aborted
 66512	%%VDISPLAY-E-Empty file %s, action aborted
 66514	%%VDISPLAY-E-Invalid record size (%s), action aborted
-67001	%%WVIDEO-I-ENTRY Entry into WVIDEO function = %d
 67002	%%WVIDEO-E-FUNCTION Invalid function (%d)
 67004	%%WVIDEO-E-WRITE Invalid Row (%d) or Row+Lines (%d)
 67006	%%WVIDEO-E-WRITE Scrolling Not Yet Implemented
@@ -309,42 +112,15 @@
 67024	%%WVIDEO-F-READ Error on VIDEO READ [error=%d]
 67026	%%WVIDEO-E-TERMLIST Invalid PFKEY list entry [%c%c] (All keys activated)
 67028	%%WVIDEO-E-TERMLIST PFKEY list is too long. (All keys activated)
-69001	Entry into WANG_MENU
-70001	%%WCHAIN-I-ENTRY Entry into WCHAIN vol(%6.6s) lib(%8.8s) file(%8.8s)
 70002	%%WCHAIN-E-NOTFOUND File %s not found
 70004	%%WCHAIN-E-ISEXEC File %s is not executable
 70006	%%WCHAIN-E-EXEC wchain to %s failed with errno=%d
 70008	%%WCHAIN-E-EXEC wchain to %s %s %s failed with errno=%d
-71001	%%WCHKSTRT-I-ENTRY  Entry into WCHKSTRT
-71003	%%WCHKSTRT-E-TIMEOUT Timeout occured on record request in file %s
-72001	Entry into WDFINISH
-73001	Entry into WDINIT
-74001	Entry into WEXITH
 74402	%%WEXITINT-F-SIGNAL User signalled interrupt, (%d)
 74502	%%WEXITBUG-F-SIGNAL Terminating on fatal signal (%d)
-75001	Entry into WFACCESS
-76001	Entry into WFCLOSE
-77001	Entry into WFILECHK
-77101	%%WFILE_DISPLAY-I-ENTRY Entry into WFILE_DISPLAY
-77102	%%WFILE_DISPLAY-F-PROT Protection violation, unable to access file %s
-77104	%%WFILE_DISPLAY-F-OPEN Unable to open or find file %s
-77501	%%WFNAME-I-ENTRY Entry into WFNAME vol(%6.6s) lib(%8.8s) file(%8.8s)
-77502	%%WFNAME-E-WILDCARD Wildcard in Vol(%6.6s) Volume ignored
 77504	%%WFNAME-E-LOGWORKLIB Unable to open %s errno=%d
-78001   %%WFOPEN-I-ENTRY Entry into wfopen file(%8.8s) lib(%8.8s) vol(%6.6s) appl(%8.8s)
-78601   %%WFORMMNT-I-ENTRY Entry into WFORMMNT printer %s form %03d
-78603	%%WFORMMNT-I-MOUNT Failed to mount %s with form %03d rc=%d
-79001	Entry into WFSTATUS
-80001	Entry into WFWAIT
-80501	%%WISPSORT-I-ENTRY Entry into WISPSORT
 80502	%%WISPSORT-E-ERROR %s
-80503	%%WISPSORT-W-WARNING %s
-80504	%%WISPSORT-E-WARNING %s
-81001	Entry into WISP_VUSERX
-82001	%%WPAUSE-I-ENTRY Entry into WPAUSE
-83001	%%WPERSON-I-ENTRY Entry into %s
 83002	%%WPERSON-F-PID Missing WISP_PID_ENV
-83003	%%WPERSON-I-LOADING Loading the personality
 83004	%%WPERSON-F-TTY Missing WISP_TTY_ENV
 83006	%%WPERSON-F-MALLOC Unable to malloc %s
 83008	%%WPERSON-F-FACCESS Error accessing file %s    
@@ -360,39 +136,27 @@
 83026	%%WPERSON-W-LOAD %s Found invalid FAC character [%x] - Ignored
 83028	%%WPERSON-F-LOAD %s Line too short
 83030	%%WPERSON-F-LOAD %s Printer number 000 not allowed.
-83501	%%WPRINT-I-ENTRY Entry into WPRINT
-83503	%%WPRINT-I-NOTSUPP Disposition RS not supported, Will print %s using DS
-83510   %%WIN32_PRINTFILE-O-FORMS form %d bad value for '%s': '%s'
-83512   %%WIN32_PRINTFILE-O-FORMS form %d bad keyword '%s'
-83514   %%WIN32_PRINTFILE-O-FORMS form %d bad syntax near position %d
-83516   %%WIN32_PRINTFILE-E-SYS System error: %s
-84001	Entry into WRITEACP
-85001	%%WSCREEN-I-ENTRY Entry into WSCREEN
+83510   %%WIN32PRT-E-FORMS form %d bad value for '%s': '%s'
+83512   %%WIN32PRT-E-FORMS form %d bad keyword '%s'
+83514   %%WIN32PRT-E-FORMS form %d bad syntax near position %d
+83516   %%WIN32PRT-E-SYS System error: %s
 85002	%%WSCREEN-F-SCRVERSION Screen version mismatch %d [Current=%d]
 85004	%%WSCREEN-F-LEVELNOTFND Expecting [L] found [%5.5s...]
 85006	%%WSCREEN-F-BADCONTROL Invalid control characters found [%5.5s...]
 85008	%%WSCREEN-F-BADPIC Expecting [P{...}] found [%9.9s...]
 85010	%%WSCREEN-F-MAXITEMS Too many screen items %d MAX=%d
-85501	%%WSFNM-I-ENTRY Entry into WSFNM function=%s
 85502	%%WSFNM-E-INVPARM Invalid %s call, check parameters. Passed %d params
 85504	%%WSFNM-E-INSUFPARM %s call. Insufficient parameters specified. Only %d params
 85506	%%WSFNM-E-INVCRSCOL %s call. Invalid cursor column (%d)
 85508	%%WSFNM-E-INVCRSROW %s call. Invalid cursor row (%d)
-85701	%%WSFNS-I-ENTRY Entry into WSFNS function=%s
 85702	%%WSFNS-E-INVPARM Invalid %s call, check parameters. Passed %d params
 85704	%%WSFNS-E-INSUFPARM %s call. Insufficient parameters specified. Passed %d params
 85706	%%WSFNS-E-INVCRSCOL %s call. Invalid cursor column (%d)
 85708	%%WSFNS-E-INVCRSCOL %s call. Invalid cursor row (%d)
 85710	%%WSFNS-F-MALLOC Malloc of %d bytes failed for save screen
-86001	%%WSHELP-I-ENTRY Entry into WSHELP
 86002	%%WSHELP-E-PRNTING Error (%d) when printing screen
-88001	%%WSXIO-I-ENTRY Entry into WSXIO [%c]
 88002	%%WSXIO-E-NOTSUPP Unsupported XIO operation [%d]
 88004	%%WSXIO-E-NOTSUPP Unsupported function [%c]
 88006	%%WSXIO-E-BADLEN Invalid mapping area length [%d]
 88008	%%WSXIO-E-NOTSUPP Feature not supported [%s]
-89001	Entry into WTRANSL
-90001	Entry into WVASET
-91001	%%MANAGEFILES-I-ENTRY Entry into Manage Files
 91002	%%MANAGEFILES-F-RING [%s] [%s]
-92001	%%OSD_FREEBLOCKS-I-ENTRY Entry into OSD_FREEBLOCKS 

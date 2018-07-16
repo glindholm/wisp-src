@@ -83,7 +83,7 @@ typedef          int  int_32;
 //
 //	History:
 //	$Log: environ.hpp,v $
-//	Revision 1.10.2.1  2003/02/07 21:11:11  gsl
+//	Revision 1.11  2003/02/07 21:10:51  gsl
 //	fix int32 sizes
 //	
 //	Revision 1.10  1998/08/31 19:13:46  gsl

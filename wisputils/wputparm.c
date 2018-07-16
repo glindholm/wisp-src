@@ -1,11 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /* program wputparm.c														*/
@@ -22,10 +39,10 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
-#include <varargs.h>
+
+#include <unistd.h>
 
 #include "idsistd.h"
-#define EXT_FILEXT
 #include "filext.h"
 #include "wdefines.h"
 
@@ -33,6 +50,9 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "wexit.h"
 #include "level.h"
+
+#include "wisplib.h"
+#include "vssubs.h"
 
 static char func;									/* Function E, D, or C.			*/
 static char prname[9];									/* putparm parameter referance name	*/
@@ -43,9 +63,6 @@ static int keyw_cnt;									/* number of keywords specified		*/
 static int usage_cnt;									/* usage count for PUTPARN.		*/
 
 #ifdef SCO				/* This must be defined in the .umf file on the SCO/unix machine with CFLAGS = -DSCO	*/
-#define PARMCNT 130
-#endif
-#ifdef MSDOS
 #define PARMCNT 130
 #endif
 #ifndef PARMCNT
@@ -108,12 +125,12 @@ struct aidstruct aidlist[] =
 	{ "", (char)0 }
 };      
 
-static int usage();
-static int capitalize();
-static int getopts();
-static int response_file();
-static int cutarg();
-static int getaid();
+static void usage();
+static void capitalize(char* p);
+static void getopts();
+static void response_file();
+static void cutarg();
+static void getaid(char* str);		/* Get the aid character.	*/
 
 #ifdef unix
 static int gid;
@@ -121,7 +138,7 @@ static int gid;
 
 
 
-main(o_argc,o_argv)
+int main(o_argc,o_argv)
 int 	o_argc;										/* Original argc & argv			*/
 char 	*o_argv[];
 {
@@ -130,7 +147,7 @@ char 	*o_argv[];
 
 	int4 *keyw_len;
 	char *p;
-	int pargc, retcode, i, j, kw_cnt_pos, pid;
+	int retcode, i, j, kw_cnt_pos, pid;
 	int level;
 
         /************* PATCH FOR ALPHA/OPENVMS **************/
@@ -150,18 +167,18 @@ char 	*o_argv[];
 	/*
 	**	The link-level a putparm is created at is very important as
 	**	it determines when it is cleaned-up in an "unlink".
-	**	The initglbs() routine will increment the link-level which we 
+	**	The WL_initglbs() routine will increment the link-level which we 
 	**	don't want.  So we save the linklevel then restore it after the
-	**	call to initglbs().
+	**	call to WL_initglbs().
 	**
 	**	A putparm created from a startup script should have a link-level
 	**	of 0 because the cobol program which follows it will have a 
 	**	link-level of 1.
 	**	
 	*/
-	level = linklevel();
-	initglbs("WPUTPARM");								/* Init WISP parameters because not	*/
-	setlevel(level);
+	level = WL_linklevel();
+	WL_initglbs("WPUTPARM");							/* Init WISP parameters because not	*/
+	WL_setlevel(level);
 
 	aidchar='@';									/* called from COBOL.			*/
 	usage_cnt= -1;									/* Mark as NOT-SET			*/
@@ -172,12 +189,12 @@ char 	*o_argv[];
 	capitalize(argv[1]);
 
 #ifdef unix
-	gid=wgetpgrp();
-	pid = getpid(0);
+	gid=WL_wgetpgrp();
+	pid = getpid();
 	if (pid == gid)
 	{
 		fprintf(stderr,"%%WPUTPARM-F-SHELL Group ID = Process ID; Use Bourne Shell or set %s=$$\n",WISP_GID_ENV);
-		wexit(1);
+		WL_wexit(1);
 	}
 #endif
 
@@ -195,37 +212,36 @@ char 	*o_argv[];
 			fprintf(stderr,"*** use options when specifying label [%s]\n",argv[2]);
 			usage();
 		}
-		j = 0;
-		pstruct.pargv[j++] = "C";						/* start setting up structure		*/
-		pstruct.pargv[j++] = plabel;
-		pstruct.pargv[j++] = (char*)&retcode;
-		wvaset(&j);
+		pstruct.pargv[0] = "C";						/* start setting up structure		*/
+		pstruct.pargv[1] = plabel;
+		pstruct.pargv[2] = (char*)&retcode;
+		WL_set_va_count(3);
 		PUTPARM(pstruct.pargv[0],pstruct.pargv[1],pstruct.pargv[2]);
-		wswap(&retcode);
+		WL_wswap(&retcode);
 		if (retcode) fprintf(stderr,"*** PUTPARM return code = %d ***\n",retcode);
-		wexit(retcode);
+		WL_wexit(retcode);
 	}
 	else if (!strcmp(argv[1],"SHOW"))						/* A SHOW command.			*/
 	{
-		show_parm_area();
-		wexit(0);
+		WL_show_parm_area();
+		WL_wexit(0);
 	}
 	else if (!strcmp(argv[1],"ISHOW"))						/* A SHOW command.			*/
 	{
-		ishow_parm_area();
-		wexit(0);
+		WL_ishow_parm_area();
+		WL_wexit(0);
 	}
 	else if (!strcmp(argv[1],"DUMP"))						/* A SHOW command.			*/
 	{
 		if ( argc > 2 )
 		{
-			dump_parm_area(argv[2]);
+			WL_dump_parm_area(argv[2]);
 		}
 		else
 		{
 			fprintf(stderr,"You must supply a filename with DUMP\nwputparm DUMP filename\n");
 		}
-		wexit(0);
+		WL_wexit(0);
 	}
 	else if (!strcmp(argv[1],"GET"))		/* unix: symbol=`wputparm -l label GET keyword`				*/
 	{						/* VMS:  wputparm -l label GET &symbol=keyword [&symbol=keyword ...]	*/
@@ -236,91 +252,67 @@ char 	*o_argv[];
 		if ( strcmp(plabel,"        ") == 0 )
 		{
 			fprintf(stderr,"Label is required with GET option\n");
-			wexit(1);
+			WL_wexit(1);
 		}
 
 		if ( argc < 3 )
 		{
 			fprintf(stderr,"Keyword is required with GET option\n");
-			wexit(1);
+			WL_wexit(1);
 		}
 
 #ifdef unix
 		if ( argc > 3 )
 		{
 			fprintf(stderr,"Too many arguments\n");
-			wexit(1);
+			WL_wexit(1);
 		}
 #endif
 
-		parm_area = get_prb_area(NULL,plabel,1);				/* Find PRB for label			*/
+		parm_area = WL_get_prb_area(NULL,plabel,1);				/* Find PRB for label			*/
 		if (!parm_area)
 		{
 			fprintf(stderr,"Label not found [%s]\n",plabel);
-			wexit(1);
+			WL_wexit(1);
 		}
 
 		for (pos = 2; pos < argc; ++pos) 
 		{
 			char	keyword[8+1];
-			char	symbol[80];
 			char	*ptr;
-			int4	status;
 
 			capitalize(argv[pos]);						/* Make args uppercase			*/
 
 			ptr = strchr(argv[pos],'=');
 			if (ptr)
 			{
-#ifdef VMS
-				*ptr = '\0';
-				ptr++;
-				strcpy(symbol,argv[pos]);
-				strncpy(keyword,ptr,8);
-				keyword[8] = '\0';
-#else
 				fprintf(stderr,"Invalid syntax: \"=\" not valid in keyword\n");
-				wexit(1);
-#endif
+				WL_wexit(1);
 			}
 			else
 			{
-#ifdef VMS
-				fprintf(stderr,"Invalid syntax: keyword=symbol required\n");
-				wexit(1);
-#else
 				strncpy(keyword,argv[pos],8);
 				keyword[8] = '\0';
-#endif
 			}
 
 
-			if ( !search_parm_area(buff,keyword,sizeof(buff),parm_area))
+			if ( !WL_search_parm_area(buff,keyword,sizeof(buff),parm_area))
 			{
 				fprintf(stderr,"Keyword not found [%s]\n",keyword);
-				wexit(1);
+				WL_wexit(1);
 			}
 			for(i=sizeof(buff)-1;i>=0 && buff[i]==' ';i--);				/* find the length		*/
 			len=i+1;
 			buff[len]='\0';
 
-#ifdef VMS
-			status = setsymb(symbol,buff,len,0 );
-			if ( status )
-			{
-				fprintf(stderr,"Unable to set the symbol [%s] to value [%s] status=%d\n",symbol,buff,status);
-				wexit(1);
-			}
-#else
 			for(i=0; i<len; i++) putchar( buff[i] );
-#endif
 		}
-		wexit(0);
+		WL_wexit(0);
 	}
 	else if (func != 'E' && func != 'D')
 	{
 		fprintf(stderr,"Unknown command\n");
-		wexit(1);
+		WL_wexit(1);
 	}
 
 	if (argc < 3) usage();								/* Need 3 args for this stuff.		*/
@@ -342,7 +334,7 @@ char 	*o_argv[];
 	pstruct.pargv[j++] = &func;							/* start setting up structure		*/
 	if (usage_cnt>=0)
 	{
-		wswap(&usage_cnt);
+		WL_wswap(&usage_cnt);
 		pstruct.pargv[j++] = (char *)&usage_cnt;
 	}
 	pstruct.pargv[j++] = prname;
@@ -357,7 +349,7 @@ char 	*o_argv[];
 		*p++ = (char)0;						    		/* replace the = with a null		*/
 		keyw_len = (int4 *)calloc(1,sizeof(int4));				/* make a 4 byte int			*/ 
 		*keyw_len = strlen(p);							/* store the keyword len there		*/
-		wswap(keyw_len);
+		WL_wswap(keyw_len);
 		pstruct.pargv[j] = (char *)malloc(9);					/* malloc space for keyword		*/
 		capitalize(argv[i]);
 		strncpy(pstruct.pargv[j],argv[i],8);					/* copy in keyword			*/
@@ -369,16 +361,16 @@ char 	*o_argv[];
 		if ( j >= PARMCNT - 3 )
 		{
 			fprintf(stderr,"Too many arguments\n");
-			wexit(1);
+			WL_wexit(1);
 		}
 	}
 	pstruct.pargv[j++] = &aidchar;
 	pstruct.pargv[j++] = plabel;
 	pstruct.pargv[j++] = rlabel;
 	pstruct.pargv[j++] = (char *)&retcode;						/* space for retcode			*/
-	wswap(&keyw_cnt);
+	WL_wswap(&keyw_cnt);
 	pstruct.pargv[kw_cnt_pos] = (char *)&keyw_cnt;					/* how many keywords?                   */
-	wvaset(&j);									/* tell how many args			*/
+	WL_set_va_count(j);									/* tell how many args			*/
 
 #ifdef OLD
 	This is not done because not all O/S allow it.
@@ -440,12 +432,13 @@ char 	*o_argv[];
 		);  /* NOTE  on VMS there is a 253 parameter limit */
 
 	if (keyw_cnt) free(keyw_len);							/* Free up memory allocated.		*/
-	wswap(&retcode);
+	WL_wswap(&retcode);
 	if (retcode) fprintf(stderr,"*** PUTPARM return code = %d ***\n",retcode);
-	wexit(retcode);
+	WL_wexit(retcode);
+	return retcode;
 }
 
-static usage()										/* self explanitory			*/
+static void usage()										/* self explanitory			*/
 {
 	fprintf(stderr,"Usage: wputparm command   [options   ] parameters\n");
 	fprintf(stderr,"                ENTER    Create a putparm.\n");
@@ -470,22 +463,17 @@ static usage()										/* self explanitory			*/
 	fprintf(stderr,"                {ISHOW}\n");
 
 	fprintf(stderr,"\n");
-#ifdef VMS
-	fprintf(stderr,"       wputparm  GET       -l label    &symbol=keyword [&symbol=keyword ...]\n");
-#else
 	fprintf(stderr,"       wputparm  GET       -l label    keyword\n");
-#endif
 
 	fprintf(stderr,"\n");
 	fprintf(stderr,"       wputparm  DUMP                  filename\n");
 
 
 
-	wexit(1);
+	WL_wexit(1);
 }
 
-static capitalize(p)
-register char *p;
+static void capitalize(char* p)
 {
 	while (*p)
 	{
@@ -494,7 +482,7 @@ register char *p;
 	}
 }
 
-static getopts(cnt,vals)								/* If options specified then parse.	*/
+static void getopts(cnt,vals)								/* If options specified then parse.	*/
 int *cnt;
 char *vals[];
 {
@@ -563,20 +551,19 @@ char *vals[];
 	}
 }
 
-static cutarg(pos,cnt,vals)								/* Remove the option from the arguments.*/
+static void cutarg(pos,cnt,vals)								/* Remove the option from the arguments.*/
 int pos, *cnt;
 char *vals[];
 {
-	register int i;
+	int i;
 	
 	for (i=pos+1; i< *cnt; ++i) vals[i-1]=vals[i];
 	vals[(*cnt)--] = NULL;
 }
 
-static getaid(str)										/* Get the aid character.	*/
-char *str;
+static void getaid(char* str)		/* Get the aid character.	*/
 {
-	register int i;
+	int i;
 	char ustr[20];
 	
 	strcpy(ustr,str);
@@ -619,7 +606,7 @@ char *str;
 **	02/03/93	Written by GSL
 **
 */
-static response_file(o_argc,o_argv,n_argc_ptr,n_argv)
+static void response_file(o_argc,o_argv,n_argc_ptr,n_argv)
 int	o_argc;
 char	*o_argv[];
 int	*n_argc_ptr;
@@ -633,7 +620,7 @@ char	*n_argv[];
 		if (o_argv[i] && o_argv[i][0] == '@')					/* If a response file then process	*/
 		{
 			FILE	*fh;
-			if (fh = fopen(&o_argv[i][1],"r"))				/* Open the response file.		*/
+			if ((fh = fopen(&o_argv[i][1],"r")))				/* Open the response file.		*/
 			{
 				char	buff[256];
 				while(1 == fscanf(fh,"%s",buff) )			/* Read next token			*/
@@ -647,7 +634,7 @@ char	*n_argv[];
 			else								/* Unable to open response file		*/
 			{
 				fprintf(stderr,"%%WPUTPARM-F-RESPONSE Unable to open response file %s.\n",o_argv[i]);
-				wexit(1);
+				WL_wexit(1);
 			}
 		}
 		else									/* A regular argument.			*/
@@ -665,13 +652,56 @@ char	*n_argv[];
 #endif /* TESTING */
 }
 
-#ifndef VMS
 #include "wutils.h"
-#endif /* !VMS */
 
 /*
 **	History:
 **	$Log: wputparm.c,v $
+**	Revision 1.28  2003/02/04 21:11:26  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.27  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.26  2003/02/04 20:44:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.25  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.24  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.23  2002/07/18 21:04:24  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.22  2002/07/12 17:17:04  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.21  2002/07/11 20:29:22  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.20  2002/07/11 15:21:45  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.19  2002/07/11 14:48:44  gsl
+**	Fix include
+**	
+**	Revision 1.18  2002/07/10 21:06:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.17  2002/07/09 04:13:49  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.16  2002/07/02 21:15:40  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.15  2002/06/26 01:42:47  gsl
+**	Remove VMS code
+**	
+**	Revision 1.14  2002/06/25 18:18:36  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.13  1997/07/29 15:03:17  gsl
 **	Fix problem with link-level in wputparm()
 **	It was incorrectly incrementing the link-level in initglbs()

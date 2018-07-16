@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wispexit.c
 **
@@ -33,14 +54,23 @@ static char rcsid[]="$Id:$";
 */
 void WISPEXIT(void)
 {
-	wtrace_timestamp("WISPEXIT");
-	wexith();							/* Do Exit handler stuff.				*/
+	WL_wtrace_timestamp("WISPEXIT");
+	WL_wexith();							/* Do Exit handler stuff.				*/
 }
 
 
 /*
 **	History:
 **	$Log: wispexit.c,v $
+**	Revision 1.15  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.14  2002/07/19 22:07:14  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.13  2002/07/10 21:05:34  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.12  1998/05/18 18:43:32  gsl
 **	Add trace
 **	

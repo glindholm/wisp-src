@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include <ctype.h>
 #include "strtkn.h"
@@ -12,7 +26,6 @@ Modified to allow NOT operators.
 6/21/92 Allowed ',' as a field separator.
 ------*/
 
-static char sccsid[]="@(#)itkn.c	1.4 8/3/93";
 
 static int sidx = 0;
 static int sline_idx = 0;
@@ -320,7 +333,7 @@ static int isnumeric(char *str)
 					++decimal;
 				break;
 			default:
-				if(isdigit(*str))
+				if(isdigit((int)*str))
 					break;
 				else
 					return(0);
@@ -370,11 +383,11 @@ static int isoccurs(char *str)
 		return(0);
 	if (! isdelimited(str,"()"))
 		return(0);
-	if( ! isdigit(str[1]))
+	if( ! isdigit((int)(str[1])))
 		return(0);
 	if(len > 3)
 		{
-		if(! isdigit(str[2]))
+		if(! isdigit((int)(str[2])))
 			return(0);
 		}
 	return(1);
@@ -396,8 +409,11 @@ char* kcsi_strupr(char* str)
 /*
 **	History:
 **	$Log: itkn.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:26  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.9  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.8  2002/10/24 15:48:32  gsl
 **	Make globals unique

@@ -21,7 +21,7 @@
 #include "environ.hpp"
 
 
-#if DOS || DOS_HOST ||MSFS
+#if DOS || DOS_HOST ||WIN32
 #define SLASH_CHAR           '\\'
 #define SLASH_STRING         "\\"
 #define PATH_DELIMETER_CHAR  ';'
@@ -75,6 +75,9 @@ char *pcode_filename(const char *a_path);
 //
 //	History:
 //	$Log: fileinfo.hpp,v $
+//	Revision 1.7  2002/07/25 17:03:43  gsl
+//	MSFS->WIN32
+//	
 //	Revision 1.6  1998/08/31 19:13:49  gsl
 //	drcs update
 //	

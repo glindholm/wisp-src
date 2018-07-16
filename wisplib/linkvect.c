@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		linkvect.c
@@ -15,8 +26,8 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To handle vectoring call "LINK"s into call sub's for internal routines.
 **
 **	Routines:	
-**	islinkvector()	Test if routine can be vectored.
-**	linkvector()	Vectors to the routine.
+**	WL_islinkvector()	Test if routine can be vectored.
+**	WL_linkvector()		Vectors to the routine.
 **
 **
 */
@@ -32,27 +43,8 @@ static char rcsid[]="$Id:$";
 /*
 **	Declare all the routines that are used in vectorlist.
 */
-void BELL();
-/* void BITPACK();	*/
-/* void BITUNPK(); 	*/
-/* void DATE(); 	*/
-/* void DAY();		*/
-/* void EXTRACT();	*/
-/* void FIND();		*/
-void HEXPACK();
-void HEXUNPK();
-void LOGOFF();
-void MESSAGE();
-void wpause();
-void PRINT();
-void READVTOC();
-void wrename();
-void SCRATCH();
-void SCREEN();
-void SEARCH();
-void SET();
-void STRING();
-void WSXIO();
+#include "vssubs.h"
+
 
 static struct 
 {
@@ -60,40 +52,41 @@ static struct
 	void	(*vector)();
 } vectorlist[] = 
 {
-	"BELL    ",	(void (*)()) BELL,
-	"BITPACK ",	(void (*)()) BITPACK,
-	"BITUNPK ",	(void (*)()) BITUNPK,
-	"DATE    ",	(void (*)()) DATE,
-	"DATE2   ",	(void (*)()) DATE2,
-	"DATE4   ",	(void (*)()) DATE4,
-	"DAY     ",	(void (*)()) DAY,
-	"EXTRACT ",	(void (*)()) EXTRACT,
-	"FIND    ",	(void (*)()) FIND,
-	"HEXPACK ",	(void (*)()) HEXPACK,
-	"HEXUNPK ",	(void (*)()) HEXUNPK,
-	"LOGOFF  ",	(void (*)()) LOGOFF,
-	"MESSAGE ",	(void (*)()) MESSAGE,
-	"PAUSE   ",	(void (*)()) wpause,
-	"PRINT   ",	(void (*)()) PRINT,
-	"READFDR ",	(void (*)()) READFDR,
-	"READFDR4",	(void (*)()) READFDR4,
-	"READVTOC",	(void (*)()) READVTOC,
-	"RENAME  ",	(void (*)()) wrename,
-	"SCRATCH ",	(void (*)()) SCRATCH,
-	"SCREEN  ",	(void (*)()) SCREEN,
-	"SEARCH  ",	(void (*)()) SEARCH,
-	"SET     ",	(void (*)()) SET,
-/*	"SORT    ",	(void (*)()) SORT,		This mucks up a link to SORT/WSORT */
-	"STRING  ",	(void (*)()) STRING,
-	"WSXIO   ",	(void (*)()) WSXIO,
+	{"BELL    ",	(void (*)()) BELL},
+	{"BITPACK ",	(void (*)()) BITPACK},
+	{"BITUNPK ",	(void (*)()) BITUNPK},
+	{"DATE    ",	(void (*)()) WISPDATE},
+	{"DATE2   ",	(void (*)()) DATE2},
+	{"DATE4   ",	(void (*)()) DATE4},
+	{"DATE6   ",	(void (*)()) DATE6},
+	{"DAY     ",	(void (*)()) DAY},
+	{"EXTRACT ",	(void (*)()) EXTRACT},
+	{"FIND    ",	(void (*)()) FIND},
+	{"HEXPACK ",	(void (*)()) HEXPACK},
+	{"HEXUNPK ",	(void (*)()) HEXUNPK},
+	{"LOGOFF  ",	(void (*)()) LOGOFF},
+	{"MESSAGE ",	(void (*)()) MESSAGE},
+	{"PAUSE   ",	(void (*)()) PAUSE},
+	{"PRINT   ",	(void (*)()) PRINT},
+	{"READFDR ",	(void (*)()) READFDR},
+	{"READFDR4",	(void (*)()) READFDR4},
+	{"READVTOC",	(void (*)()) READVTOC},
+	{"RENAME  ",	(void (*)()) RENAME},
+	{"SCRATCH ",	(void (*)()) SCRATCH},
+	{"SCREEN  ",	(void (*)()) SCREEN},
+	{"SEARCH  ",	(void (*)()) SEARCH},
+	{"SET     ",	(void (*)()) SET},
+/*	{"SORT    ",	(void (*)()) SORT},		This mucks up a link to SORT/WSORT */
+	{"STRING  ",	(void (*)()) STRING},
+	{"WSXIO   ",	(void (*)()) WSXIO},
 
-	NULL,		NULL
+	{NULL,		NULL}
 };
 
 /*
-**	Routine:	islinkvector()
+**	Routine:	WL_islinkvector()
 **
-**	Function:	Test if a routine can be used in a call to linkvector().
+**	Function:	Test if a routine can be used in a call to WL_linkvector().
 **
 **	Description:	Search the vectorlist[] to see if routine is in it.
 **			If the LINKVECTOROFF option is used this will always return 0.
@@ -106,7 +99,7 @@ static struct
 **	vectorlist	The list of known routine names and vectors.
 **
 **	Return:
-**	1		Routine is known and can be used in linkvector().
+**	1		Routine is known and can be used in WL_linkvector().
 **	0		Not found.
 **
 **	Warnings:	None
@@ -115,12 +108,12 @@ static struct
 **	04/27/94	Written by GSL
 **
 */
-int islinkvector(routine)
+int WL_islinkvector(routine)
 char	routine[8];
 {
 	int	idx;
 
-	if (opt_linkvectoroff()) return 0;
+	if (WL_opt_linkvectoroff()) return 0;
 
 	for(idx=0; vectorlist[idx].name; idx++)
 	{
@@ -133,7 +126,7 @@ char	routine[8];
 }
 
 /*
-**	Routine:	linkvector()
+**	Routine:	WL_linkvector()
 **
 **	Function:	To vector a call "LINK" to a subroutine call.
 **
@@ -158,7 +151,7 @@ char	routine[8];
 **	04/27/94	Written by GSL
 **
 */
-int linkvector(routine,parm_cnt,parm_list)
+int WL_linkvector(routine,parm_cnt,parm_list)
 char	routine[8];
 int	parm_cnt;
 struct str_parm *parm_list;
@@ -210,7 +203,7 @@ struct str_parm *parm_list;
 	**	Set the vararg count.
 	*/
 	vacnt = parm_cnt;
-	wvaset(&vacnt);
+	WL_set_va_count(vacnt);
 
 	switch(parm_cnt)
 	{
@@ -357,6 +350,39 @@ struct str_parm *parm_list;
 /*
 **	History:
 **	$Log: linkvect.c,v $
+**	Revision 1.22  2003/03/24 22:41:20  gsl
+**	Add DATE6
+**	
+**	Revision 1.21  2003/03/20 19:05:14  gsl
+**	Change references fo DATE to WISPDATE
+**	
+**	Revision 1.20  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.19  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.18  2003/01/29 16:18:35  gsl
+**	Include vssubs.h to define VSSUBS
+**	
+**	Revision 1.17  2003/01/28 19:56:51  gsl
+**	fix warnings
+**	
+**	Revision 1.16  2002/07/23 21:24:56  gsl
+**	wrename -> RENAME
+**	
+**	Revision 1.15  2002/07/16 16:24:54  gsl
+**	Globals
+**	
+**	Revision 1.14  2002/07/12 19:10:13  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.13  2002/07/12 17:00:58  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.12  2002/07/10 21:05:19  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.11  1999/09/08 23:42:53  gsl
 **	Add READFDR4
 **	

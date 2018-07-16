@@ -6,7 +6,7 @@ COBOLTYPE = ACU
 WISPTRAN  = wisp
 WISPFLAGS =  -V$(COBOLTYPE)
 COBOL     = ccbl
-COBFLAGS  =  -da4 -Zi -Za
+COBFLAGS  =  -Da4 -Gd -Za
 RUNDIR    = .
 
 all:	$(RUNDIR)/EZONEMNU\

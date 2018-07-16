@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 	Scratch a file from the unix shell
@@ -19,24 +34,31 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#define EXT_FILEXT
+#include "wisplib.h"
+#include "vssubs.h"
 #include "filext.h"
+#include "idsisubs.h"
 
-main(argc,argv)
+static void badusage();
+
+
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
-	int	argcount, retcode;
+	int	retcode;
 	char	type[1], check[1], access[1];
 	char	key[20], file[20], lib[20], vol[20];
 
-	initglbs("WSCRATCH");
+	WL_initglbs("WSCRATCH");
 
 	if (argc != 4) badusage();
 
 	strcpy( key, argv[1] );
-	upper_string( key );
+	WL_upper_string( key );
 
 	if ( 0 == strcmp( "LIBRARY", key ) )
 	{
@@ -57,15 +79,14 @@ char	*argv[];
 	access[0] = ' ';
 	retcode = 0;
 
-	argcount = 7;
-	wvaset( &argcount );
+	WL_set_va_count( 7 );
 	SCRATCH( type, file, lib, vol, check, access, &retcode);
 
-	wswap(&retcode);
+	WL_wswap(&retcode);
 	exit(retcode);
 }
 
-badusage()
+static void badusage()
 {
 	printf("\n");
 	printf("Usage: wscratch         file library volume\n");
@@ -81,12 +102,36 @@ badusage()
 /*
 **	History:
 **	$Log: wscratch.c,v $
-**	Revision 1.7.2.1  2002/08/16 21:50:52  gsl
-**	Alpha Port 4402f
+**	Revision 1.16  2003/02/04 21:23:44  gsl
+**	fix -Wall warnings
 **	
-**	Revision 1.7  1996-07-23 14:13:12-04  gsl
+**	Revision 1.15  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.14  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.12  2002/07/12 17:17:04  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.11  2002/07/11 14:33:55  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.10  2002/07/10 21:06:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/07/09 19:58:15  gsl
+**	Add missing include string.h
+**	
+**	Revision 1.8  2002/06/25 18:18:37  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.7  1996/07/23 18:13:12  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1,17 +1,22 @@
-	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
+	All Rights Reserved.
 	
 	====================================================================
 	
-	Title:		WISP for NT/95 Technical Notes
+	Title:		WISP for NT Technical Notes
 	
 	Document:	wispntdoc.txt
 	Last Updated:	$Date:$
-	Products:	WISP for Windows NT/95
-	Versions:	4.0.00
+	Products:	WISP for Windows NT
+	Versions:	5.0.00
 	
-	Summary:	Technical notes on WISP for Windows NT/95 (Intel).
+	Summary:	Technical notes on WISP for Windows NT (WIN32).
 			Release notes that covered the beta test  and
 			pre-release period.
+
+			This document covers historical information.
+			For current information see the WISP manual and
+			the latest release notes.
 
 
 	====================================================================
@@ -39,12 +44,12 @@
 	The following software and versions are currently being used in
 	conjuction with WISP for NT/95.
 
-	   - Microsoft Windows NT 3.51 for Intel
-	   - Microsoft Windows NT 4.0 for Intel
+	   - Microsoft Windows XP 
+	   - Microsoft Windows 2000 
+	   - Microsoft Windows NT 4.0 
 	   - Microsoft Windows 95
-	   - Acucobol ACUCOBOL-85 2.4.2 for Windows NT Intel
-	   - Acucobol ACUCOBOL-GT 3.1 (32 bit) for Windows NT/95 Intel
-	   - Microsoft Visual C++ 4.x or 5.x **
+	   - Acucobol ACUCOBOL-GT 5.2 (32 bit) for Windows NT Intel
+	   - Microsoft Visual C++ 6.x **
 	   - Argent Queue Manager 3.0 (Intel) *** [Optional]
 
 	**  MicroSoft Visual C++ is required to build an Acucobol runtime
@@ -67,7 +72,6 @@
 
 	   - ACP routines
 	   - Micro Focus COBOL support
-	   - Color mapping of FAC's are not user modifable.
 
 	Differences
 	-----------
@@ -92,13 +96,6 @@
 	The BLDMF utility for building Makefile's is not available on
 	Windows NT/95.  Equivalent functionality is available though the
 	WISPTran utility.
-
-	The WDIAG utility is not available on Windows NT/95.  The new
-	Wconfig WISP configuration utility provides both configuration and
-	some diagnostic functionality.  Additional diagnostic information
-	is available by running the WRUN utility without parameters and by
-	pressing PF29, PF30, and PF31 from the WISP Command Processor
-	screen (WSHELL).
 
 	The VSEDIT utility does not support the "Compile" command. Use the
 	WISPTran utility.
@@ -232,15 +229,11 @@
 	the PATH for indexed file sorting to work.  It is recommened that
 	you include the Acucobol BIN directory on the PATH.
 
-		PATH %PATH%;C:\ACUCBL31\BIN
+		PATH %PATH%;C:\ACUCBL520\BIN
 	
-	NOTE: If you are using an earlier versions of ACUCOBOL-85 (2.4.2
-	      and earlier) the utility is named VUTIL.EXE. You will need
-	      to copy and rename it to VUTIL32.EXE.
-
 
 	The Acucobl configuration file CBLCONFI that comes with
-	ACUCOBOL-85 is renamed to ACUCONFIG, and is located in the WISP
+	ACUCOBOL-GT is renamed to ACUCONFIG, and is located in the WISP
 	configuration directory. The file can be located by settin the
 	environment variable A_CONFIG or by using the "-c" option of the
 	runtime system.  It is recommended that you set the "-c" option in
@@ -340,8 +333,6 @@
 	  %WISPCONFIG%\OPTIONS
   	  %WISPCONFIG%\PRMAP
 	  %WISPCONFIG%\W4WMAP
-	  %WISPCONFIG%\WISPMSG.DAT
-	  %WISPCONFIG%\WISPMSG.TXT
 	  %WISPCONFIG%\WPROC.MSG
 	  %WISPCONFIG%\WRUN.CFG			$WISPCONFIG/wrunconfig
 	  %WISPCONFIG%\WSYSCONF.CFG		$WISPCONFIG/wsysconfig
@@ -506,7 +497,7 @@
 	WISP SUPPORT FOR PRINTING ON MICROSOFT WINDOWS NT/95
 	==================================================== 
 	This section describes the WISP support for printing under
-	Microsoft Windows NT (3.51 and later) and Windows 95.  These
+	Microsoft Windows NT (4.0 and later) and Windows 95.  These
 	operating systems will be referred to as "WIN32" for the remainder
 	of this section.
 
@@ -803,7 +794,6 @@
 
 	WISP\BIN\DISPLAY.EXE		- Display utility		
 	WISP\BIN\HEXED.EXE		- Hexed utility
-	WISP\BIN\MAKEMSG.EXE		- Makemsg utility
 	WISP\BIN\PROCTRAN.EXE		- Procedure Translator utility
 	WISP\BIN\VSEDIT.EXE		- Vsedit utility
 	WISP\BIN\VTEST.EXE		- Video Test utility
@@ -835,8 +825,6 @@
 	WISP\CONFIG\OPTIONS		- Sample OPTIONS file
 	WISP\CONFIG\PRMAP		- Sample PRMAP file
 	WISP\CONFIG\W4WMAP		- Sample W4WMAP file
-	WISP\CONFIG\WISPMSG.DAT		- Messages file (compiled)
-	WISP\CONFIG\WISPMSG.TXT		- Messages file (text)
 	WISP\CONFIG\WPROG.MSG		- WPROC message file
 	WISP\CONFIG\WRUN.CFG		- Sample WRUN.CFG
 	WISP\CONFIG\WSYSCONF.CFG	- Sample WSYSCONF.CFG

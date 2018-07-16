@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wfopen.c
 **
@@ -10,9 +31,9 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Wang VS COBOL Open logic
 **
 **	Routines:	
-**	wfopen()	Obsolete
-**	wfopen2()
-**	wfopen3()
+**	WFOPEN()	Obsolete
+**	WFOPEN2()
+**	WFOPEN3()
 */
 
 /*
@@ -29,6 +50,9 @@ static char rcsid[]="$Id:$";
 
 #ifdef WIN32
 #include <io.h>
+#endif
+#ifdef unix
+#include <unistd.h>
 #endif
 
 #include "idsistd.h"
@@ -47,9 +71,9 @@ static char rcsid[]="$Id:$";
 #include "wexit.h"
 #include "idsisubs.h"
 #include "wfname.h"
+#include "filgparm.h"
 
 #include "werrlog.h"
-#define		ROUTINE		78000
 /*
 78001   %%WFOPEN-I-ENTRY Entry into wfopen file(%8.8s) lib(%8.8s) vol(%6.6s) appl(%8.8s)
 */
@@ -62,52 +86,70 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-extern void lastacufilestat(char *buff);
+extern const char *wisp_get_last_filecheckstatus();
+extern const char *wisp_get_last_filecheckstatus_ext();
 
 
 /*
 **	Static data
 */
 
+
 /*
 **	Static Function Prototypes
 */
-static void acc_message(int access_status, char* msgbuf);
-
+static void acc_message(int access_status, 
+			char* msgbuf, 
+			const char filestatus[2],
+			const char *filestatus_extended);
 
 /********************************************************************************************************************************/
-void wfopen(mode,vol,lib,file,name,prname)							/* WISP 2.0B and earlier		*/
-int4 *mode;										/* the mode of opening			*/
-char *vol;										/* the WANG volume name	(6 chars)	*/
-char *lib;										/* The WANG library name (8 chars)	*/
-char *file;										/* The file name	(8 chars)	*/
-char *name;										/* The resultant name			*/
-const char *prname;									/* The PRNAME (optional).		*/
+void WFOPEN4(
+	     char *attrstr,				/* File attributes (10 chars)		*/
+	     char *vol,					/* the WANG volume name	(6 chars)	*/
+	     char *lib,					/* The WANG library name (8 chars)	*/
+	     char *file,				/* The file name	(8 chars)	*/
+	     char *path,				/* The resultant name			*/
+	     const char *appl,				/* The COBOL program id (8 chars)	*/
+	     const char *prname,			/* The PRNAME (optional).		*/
+	     const int4 *openmode)			/* The open mode			*/
 {
-	const char *l_prname;
-	if (*mode & IS_PRNAME)								/* If PRNAME is passed then		*/
-		l_prname = prname;							/* Use the passed PRNAME		*/
-	else
-		l_prname = "        ";							/* Else use blank			*/
+	int4 mode;
 
-	wfopen2(mode,vol,lib,file,name,WISPRUNNAME,l_prname);
+	wisp_fileattr2mode(attrstr, &mode);
+
+	WFOPEN3(&mode, vol, lib, file, path, appl, prname, openmode);
+
+	wisp_mode2fileattr(mode, attrstr);
+}
+
+/********************************************************************************************************************************/
+void WFOPEN(						/* WISP 2.0B and earlier		*/
+	int4 *mode,					/* the mode of opening			*/
+	char *vol,					/* the WANG volume name	(6 chars)	*/
+	char *lib,					/* The WANG library name (8 chars)	*/
+	char *file,					/* The file name	(8 chars)	*/
+	char *name,					/* The resultant name			*/
+	const char *prname)				/* The PRNAME (optional).		*/
+{
+	WFOPEN2(mode,vol,lib,file,name,wisp_get_runname(),prname);
 }
 
 /********************************************************************************************************************************/
 /*
-	wfopen3 	This version adds a new parameter "openmode" which tells the mode the file is being opened in.
+	WFOPEN3 	This version adds a new parameter "openmode" which tells the mode the file is being opened in.
 			It uses this openmode to set the bits in mode instead of doing this is the COBOL code, and then
-			calls wfopen2();
+			calls WFOPEN2();
 */
-void wfopen3(										/* WISP 3.0 and later			*/
-	     int4 *mode,								/* the mode of opening			*/
-	     char *vol,									/* the WANG volume name	(6 chars)	*/
-	     char *lib,									/* The WANG library name (8 chars)	*/
-	     char *file,								/* The file name	(8 chars)	*/
-	     char *name,								/* The resultant name			*/
-	     const char *appl,								/* The COBOL program id (8 chars)	*/
-	     const char *prname,							/* The PRNAME (optional).		*/
-	     const int4 *openmode)							/* The open mode			*/
+void WFOPEN3(						/* WISP 3.0 and later			*/
+	     int4 *mode,				/* the mode of opening			*/
+	     char *vol,					/* the WANG volume name	(6 chars)	*/
+	     char *lib,					/* The WANG library name (8 chars)	*/
+	     char *file,				/* The file name	(8 chars)	*/
+	     char *name,				/* The resultant name			*/
+	     const char *appl,				/* The COBOL program id (8 chars)	*/
+	     const char *prname,			/* The PRNAME 				*/
+	     const int4 *openmode)			/* The open mode			*/
 {
 	uint4	set,clear;
 	int4	the_openmode;
@@ -117,7 +159,7 @@ void wfopen3(										/* WISP 3.0 and later			*/
 	clear = 0;
 
 	/*
-		OPENMODE		IS_OUTPUT	IS_IO		IS_NOWRITE	IS_EXTEND	IS_SORT
+		OPENMODE		IS_OUTPUT	IS_IO		IS_NOTSHARE	IS_EXTEND	IS_SORT
 		========
 		INPUT			0		0		1		0		0
 		SHARED			0		1		0		0		0
@@ -135,31 +177,31 @@ void wfopen3(										/* WISP 3.0 and later			*/
 	switch(the_openmode)
 	{
 	case WFOPEN_INPUT:
-		set   = IS_NOWRITE;
+		set   = 0;
 		clear = IS_EXTEND | IS_OUTPUT | IS_IO | IS_SORT;
 		break;
 	case WFOPEN_SHARED:
 		set   = IS_IO;
-		clear = IS_EXTEND | IS_OUTPUT | IS_NOWRITE | IS_SORT;
+		clear = IS_EXTEND | IS_OUTPUT | IS_SORT;
 		break;
 	case WFOPEN_OUTPUT:
-		set   = IS_OUTPUT | IS_NOWRITE;
+		set   = IS_OUTPUT;
 		clear = IS_EXTEND | IS_IO | IS_SORT;
 		break;
 	case WFOPEN_EXTEND:
-		set   = IS_EXTEND | IS_OUTPUT | IS_NOWRITE;
+		set   = IS_EXTEND | IS_OUTPUT;
 		clear = IS_IO | IS_SORT;
 		break;
 	case WFOPEN_SPECIAL_INPUT:
 		set   = 0;
-		clear = IS_EXTEND | IS_OUTPUT | IS_NOWRITE | IS_IO | IS_SORT;
+		clear = IS_EXTEND | IS_OUTPUT | IS_IO | IS_SORT;
 		break;
 	case WFOPEN_I_O:
-		set   = IS_NOWRITE | IS_IO;
+		set   = IS_IO;
 		clear = IS_EXTEND | IS_OUTPUT | IS_SORT;
 		break;
 	case WFOPEN_SORT:
-		set   = IS_SORT | IS_OUTPUT | IS_NOWRITE;
+		set   = IS_SORT | IS_OUTPUT;
 		clear = IS_EXTEND | IS_IO;
 		break;
 	}
@@ -167,24 +209,24 @@ void wfopen3(										/* WISP 3.0 and later			*/
 	*mode = *mode | set;
 	*mode = *mode & ~clear;
 
-	wfopen2(mode,vol,lib,file,name,appl,prname);
+	WFOPEN2(mode,vol,lib,file,name,appl,prname);
 }
 
 /********************************************************************************************************************************/
-void wfopen2(mode,vol,lib,file,cob_name,appl,prname)					/* WISP 2.0C and later			*/
-int4 *mode;										/* the mode of opening			*/
-char *vol;										/* the WANG volume name	(6 chars)	*/
-char *lib;										/* The WANG library name (8 chars)	*/
-char *file;										/* The file name	(8 chars)	*/
-char *cob_name;										/* The resultant name			*/
-const char *appl;									/* The COBOL program id (8 chars)	*/
-const char *prname;									/* The PRNAME (optional).		*/
+void WFOPEN2(						/* WISP 2.0C and later			*/
+	int4 *mode,					/* the mode of opening			*/
+	char *vol,					/* the WANG volume name	(6 chars)	*/
+	char *lib,					/* The WANG library name (8 chars)	*/
+	char *file,					/* The file name	(8 chars)	*/
+	char *cob_name,					/* The resultant name			*/
+	const char *appl,				/* The COBOL program id (8 chars)	*/
+	const char *prname)				/* The PRNAME 				*/
 {
 											/* These are static so they will be set */
 											/* on an IS_ERROR repeat.		*/
 	static	char *l_vol,*l_lib,*l_file,*l_name;					/* local vars cause the vax protects	*/
 	static  const char *l_prname;
-	static	int4 native_mode;							/* Set to 1 if in VAX/VMS native mode.	*/
+	static	int4 native_mode;
 	static	char getparm_type[3];
 	static	char	prtclass[1];
 	static	int4	form;
@@ -196,15 +238,18 @@ const char *prname;									/* The PRNAME (optional).		*/
 	static  char	saveExt[WISP_FILE_EXT_SIZE];
 
 	char temp[132];
-	int i,access_status;
+	int access_status;
 	char pf_rcvr[1];								/* Stores the PF-KEY selection.		*/
 	char *msg1,*msg2;
 	char intv_type;									/* Intervention type E or R (rename)	*/
+	char attrstr[WISP_FILE_ATTR_SIZE];
 
-	wtrace("WFOPEN","ENTRY","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Mode=[0x%08X] App=[%8.8s] Prname=[%8.8s]",
-	       file, lib, vol, *mode, appl, prname);
+	wisp_mode2fileattr(*mode, attrstr);
 
-	setprogid(appl);								/* Set the global var program id.	*/
+	WL_wtrace("WFOPEN","ENTRY","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Attr=[%10.10s] App=[%8.8s] Prname=[%8.8s]",
+	       file, lib, vol, attrstr, appl, prname);
+
+	WL_setprogid(appl);								/* Set the global var program id.	*/
 
 	/*---------------------*/
 	if( *mode & IS_ERROR )								/* This is the second time thru after	*/
@@ -236,8 +281,8 @@ const char *prname;									/* The PRNAME (optional).		*/
 
 	memcpy(orig_file,l_prname,SIZEOF_FILE);						/* Save original file name passed in.	*/
 
-	get_defs(DEFAULTS_PC,prtclass);
-	get_defs(DEFAULTS_FN,&form);
+	WL_get_defs(DEFAULTS_PC,prtclass);
+	WL_get_defs(DEFAULTS_FN,&form);
 	copies=1;
 
 	/* 
@@ -254,12 +299,18 @@ const char *prname;									/* The PRNAME (optional).		*/
 		msg1="OVERRIDE FILE SPECIFICATIONS.";
 		msg2="PLEASE RESPECIFY FILENAME.";
                                        
-		file_getparm2(*mode,l_file,l_lib,l_vol,l_prname,"WFOPEN",
-			      &native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,'E',orig_file,prtclass,&form,&copies);
+		WL_file_getparm3(l_file,l_lib,l_vol,l_prname,"WFOPEN",
+			      &native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,'E',orig_file,
+			      prtclass,&form,&copies,
+			      (*mode & IS_OUTPUT),
+			      (*mode & IS_PRINTFILE),
+			      (*mode & IS_IO),
+			      0 /* IS_SHARED */
+			      );
 
 		if (pf_rcvr[0] == PFKEY_16_PRESSED)
 		{
-			LINKCOMPCODE = 16;
+			wisp_set_LINKCOMPCODE(16);
 			wexit(16L);							/* Exit The program.			*/
 		}
 	}
@@ -279,13 +330,11 @@ translate_name:
 		{
 			if ( (*mode & IS_PRINTFILE) || (*mode & IS_SORT) )		/* If a printfile or sortfile		*/
 			{
+
 	
 				l_file[0] = '#';					/* generate a file name.		*/
 				l_file[1] = '#';
-				l_file[2] = WISPRUNNAME[0];
-				l_file[3] = WISPRUNNAME[1];
-				l_file[4] = WISPRUNNAME[2];
-				l_file[5] = WISPRUNNAME[3];
+				memcpy(&l_file[2], wisp_get_runname(), 4);
 			}
 			else
 			{
@@ -296,10 +345,9 @@ translate_name:
 
 		*mode &= ~IS_SCRATCH;							/* Clear the scratch flag.		*/
 											/* In case it was set by a previous call*/
-		*mode |= IS_BACKFILL;							/* Backfill the file/lib/vol.		*/
 		WGETFILEXT(saveExt);							/* Save the special file extension.	*/
 
-		wfname(mode,l_vol,l_lib,l_file,l_name);					/* generate a native file name		*/
+		WL_wfname_backfill(mode,l_vol,l_lib,l_file,l_name);			/* generate a native file name		*/
 
 	}
 
@@ -307,7 +355,7 @@ translate_name:
 	**	Generate a remote filepath based on RVMAP path prefixes.
 	**	This is used with ACUServer and FileShare2.
 	*/
-	remote_flag = remote_volume(l_name, remote_filepath);
+	remote_flag = WL_remote_volume(l_name, remote_filepath);
                                                                                         
 /* check_access: */
 	/*
@@ -316,7 +364,7 @@ translate_name:
 
 	access_status = ACC_UNKNOWN;	     						/* Initialize the status.		*/
 
-	if ( !opt_createvolumeon && !native_mode && !wlgtrans(l_vol, temp) )		/* Check if there is volume translation */
+	if ( !OPTION_CREATEVOLUMEON && !native_mode && !WL_wlgtrans(l_vol, temp) )		/* Check if there is volume translation */
 	{
 		access_status = ACC_BADVOL;
 	}
@@ -340,7 +388,7 @@ translate_name:
 
 	if (ACC_UNKNOWN == access_status)
 	{
-		access_status = wfaccess(l_name, mode);					/* See if the user can access it.	*/
+		access_status = wisp_file_access(l_name, (*mode & IS_OUTPUT), (*mode & IS_INDEXED));/* See if the user can access it.	*/
 	}
 
 openerror:
@@ -350,8 +398,10 @@ openerror:
 		*mode &= ~IS_ERROR;							/* Clear the IS_ERROR bit		*/
 		access_status = ACC_ERROPEN;						/* Set access_status			*/
 
-		if ( wfilestat[0] == filelock[0] &&
-		     wfilestat[1] == filelock[1]    ) access_status = ACC_LOCKED;	/* Check if file locked.		*/
+		if ( 0==memcmp(wisp_get_last_filecheckstatus(), wisp_get_filelock(), 2)) 		/* Check if file locked.		*/
+		{
+			access_status = ACC_LOCKED;	
+		}
 	}
 
 
@@ -370,29 +420,9 @@ openerror:
 		}
 		else
 		{
-			access_status = wfaccess(l_name, mode);				/* Try again to access it.		*/
+			access_status = wisp_file_access(l_name, (*mode & IS_OUTPUT), (*mode & IS_INDEXED));/* Try again to access it.	*/
 			if ( access_status == ACC_MISSING )
 				access_status = ACC_NOFILE;
-		}
-	}
-
-	if ( lpi_cobol && (*mode & IS_SEQDYN) && (*mode & IS_OUTPUT) && (access_status == ACC_ALLOWED) )
-	{										/* If SEQ/DYN and OUTPUT and doesn't	*/
-											/* exist (ACC_ALLOWED means it doesn't  */
-											/* exist) then create the file (empty).	*/
-		int	fdesc;
-		char	xname[COB_FILEPATH_LEN + 1];
-
-		cobx2cstr(xname, l_name, COB_FILEPATH_LEN); 
-
-		fdesc = creat( xname, 0666 );
-		if ( fdesc != -1 )
-		{
-			close( fdesc );
-		}
-		else
-		{
-			access_status = ACC_UNKNOWN;
 		}
 	}
 
@@ -403,7 +433,7 @@ openerror:
 		     (*mode & IS_SEQDYN) ||						/* is not generated.			*/
 		     (*mode & IS_EXTEND) ||
 		     (*mode & IS_PRINTFILE && *mode & IS_NORESPECIFY) ||
-		     opt_outputverifyoff    )
+		     OPTION_OUTPUTVERIFYOFF    )
 			access_status = ACC_ALLOWED;
 	}
 
@@ -421,7 +451,9 @@ respecify:
 			goto wfopen_return;						/* NO_RESPECIFY file ?	If so, return.	*/
 		}
 
-		acc_message( access_status, msgbuf );					/* get the access message		*/
+		acc_message( access_status, msgbuf, 
+			wisp_get_last_filecheckstatus(), 
+			wisp_get_last_filecheckstatus_ext() );				/* get the access message		*/
 
 		intv_type = 'E';
 		if (access_status == ACC_OUTEXISTS) intv_type = 'R';			/* add PF3 option to delete		*/
@@ -431,13 +463,19 @@ respecify:
 
 		strcpy(getparm_type,"R ");						/* Issue an RESPECIFY getparm.		*/
 
-		file_getparm2(*mode,l_file,l_lib,l_vol,l_prname,"WFOPEN",
-				&native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,intv_type,orig_file,prtclass,&form,&copies);
+		WL_file_getparm3(l_file,l_lib,l_vol,l_prname,"WFOPEN",
+				&native_mode,getparm_type,l_name,msg1,msg2,pf_rcvr,intv_type,orig_file,
+				prtclass,&form,&copies,
+				(*mode & IS_OUTPUT),
+				(*mode & IS_PRINTFILE),
+				(*mode & IS_IO),
+				0 /* IS_SHARED */
+				);
 
 
 		if (pf_rcvr[0] == PFKEY_16_PRESSED)
 		{
-			LINKCOMPCODE = 16;
+			wisp_set_LINKCOMPCODE(16);
 			wexit(16L);							/* Exit The program.			*/
 		}
 
@@ -445,7 +483,7 @@ respecify:
 		{
 			if (!native_mode)						/* What name entry mode are we in ?	*/
 			{								
-				WSETFILEXT(saveExt);					/* Restore the special extension.	*/
+				WSETFILEXT(saveExt);				/* Restore the special extension.	*/
 			}
 			goto translate_name;  						/* re-translate the name etc.		*/
 		}
@@ -467,59 +505,68 @@ respecify:
 		**	but no safe way of telling since acucobol can use cisam.
 		*/
 		cobx2cstr(temp,l_name,COB_FILEPATH_LEN);
-		unlink(temp);								/* The delete the lockfile		*/
+		wisp_unlink(temp);								/* The delete the lockfile		*/
 	}
 
 	if ((*mode & IS_PRINTFILE) && (*mode & IS_OUTPUT))				/* Is this a print file open for output	*/
 	{       
-		pstruct	*plptr;
+		wisp_pstruct	*plptr;
 
-		plptr = (pstruct *) wmalloc(sizeof(pstruct));				/* Make a new item			*/
-		plptr->nextfile = g_print_file_list;					/* Link the existing list to the end	*/
-		g_print_file_list = plptr;						/* New item is the head of the list	*/
+		plptr = (wisp_pstruct *) wisp_malloc(sizeof(wisp_pstruct));		/* Make a new item			*/
+		plptr->nextfile = WL_g_print_file_list;					/* Link the existing list to the end	*/
+		WL_g_print_file_list = plptr;						/* New item is the head of the list	*/
 
-		cobx2cstr(g_print_file_list->name, l_name, COB_FILEPATH_LEN);
-		g_print_file_list->form = form;						/* Set the current form.		*/
-		g_print_file_list->class = prtclass[0];					/* Set the current class.		*/
-		g_print_file_list->numcopies = copies;					/* Default to spool one copy.		*/
+		cobx2cstr(WL_g_print_file_list->name, l_name, COB_FILEPATH_LEN);
+		WL_g_print_file_list->form = form;						/* Set the current form.		*/
+		WL_g_print_file_list->class = prtclass[0];					/* Set the current class.		*/
+		WL_g_print_file_list->numcopies = copies;					/* Default to spool one copy.		*/
 	}
 	else if (*mode & IS_SCRATCH)							/* Otherwise save the temp file name	*/
 	{
-		fstruct *new_fstruct;
+		wisp_fstruct *new_fstruct;
 
-		new_fstruct = (fstruct *) wmalloc(sizeof(fstruct));			/* get some memory to start the list	*/
-		new_fstruct->nextfile = g_temp_file_list;				/* Link the existing list to the end	*/
-		g_temp_file_list = new_fstruct;
+		new_fstruct = (wisp_fstruct *) wisp_malloc(sizeof(wisp_fstruct));			/* get some memory to start the list	*/
+		new_fstruct->nextfile = WL_g_temp_file_list;				/* Link the existing list to the end	*/
+		WL_g_temp_file_list = new_fstruct;
 
-		memcpy(g_temp_file_list->vol,l_vol,SIZEOF_VOL);				/* Save the volume			*/
-		memcpy(g_temp_file_list->lib,l_lib,SIZEOF_LIB);				/* Save the library			*/
-		memcpy(g_temp_file_list->file,l_file,SIZEOF_FILE);			/* Save the file name			*/
-		memcpy(g_temp_file_list->name,l_name,COB_FILEPATH_LEN);			/* Save the name			*/
+		memcpy(WL_g_temp_file_list->vol,l_vol,SIZEOF_VOL);				/* Save the volume			*/
+		memcpy(WL_g_temp_file_list->lib,l_lib,SIZEOF_LIB);				/* Save the library			*/
+		memcpy(WL_g_temp_file_list->file,l_file,SIZEOF_FILE);			/* Save the file name			*/
+		memcpy(WL_g_temp_file_list->name,l_name,COB_FILEPATH_LEN);			/* Save the name			*/
 
-		if ((*mode & IS_OUTPUT) && !(*mode & IS_SORT) && !(*mode & IS_EXTEND))	/* if the file was open for output only	*/
-		{									/* but was not a SORT or EXTEND file.	*/
-
-			if (vax_cobol)
-			{
-				i = 0;							/* On VMS we must delete it to keep from*/
-				do							/* getting too many new versions.	*/
-				{
-					temp[i] = l_name[i];
-					i++;
-				} while ((l_name[i] != ' ') && (i < COB_FILEPATH_LEN));
-				temp[i] = '\0';
-				strcat(temp,";");					/* add ;				*/
-				unlink(temp);						/* try to delete it			*/
-			}
-		}
 	}
 
 	if (!native_mode)
 	{
-		use_last_prb();								/* Use the last PRB found for GETPARM	*/
+		/*
+		**	Update the PUTPARM with updated file info.
+		**	The WL_use_last_prb() is an internal "hint" to GETPARM
+		**	to use the last PRB.  This will prevent GETPARM from
+		**	possibly updating the wrong PUTPARM if there are 
+		**	multiple with the same PRNAME.
+		**
+		**	GETPARM does not fully correctly handle link-levels
+		**	and PUTPARM chaining so this scenerio can happen:
+		**	If the original PUTPARM is not labeled then
+		**	it will be deleted once used (instead of just being
+		**	marked as used).  If there is another PUTPARM with the
+		**	same PRNAME even at a lower link-level it will be found 
+		**	by the RD GETPARM and incorrectly updated.  The call to 
+		**	WL_use_last_prb() tell GETPARM to just update the last
+		**	PUTPARM if it still exists instead of going looking
+		**	for a matching PUTPARM.
+		*/	
+		WL_use_last_prb();								/* Use the last PRB found for GETPARM	*/
 		strcpy(getparm_type,"RD");						/* Issue an RESPECIFY_DEFAULT getparm.	*/
-		file_getparm2(*mode,l_file,l_lib,l_vol,l_prname,"WFOPEN",
-				&native_mode,getparm_type,l_name,"","",pf_rcvr,'E',orig_file,prtclass,&form,&copies);
+		WL_file_getparm3(l_file,l_lib,l_vol,l_prname,"WFOPEN",
+				&native_mode,getparm_type,l_name,"","",pf_rcvr,'E',orig_file,
+				prtclass,&form,&copies,
+				(*mode & IS_OUTPUT),
+				(*mode & IS_PRINTFILE),
+				(*mode & IS_IO),
+				0 /* IS_SHARED */
+				);
+
 	}
 
 	if (remote_flag) 
@@ -530,17 +577,21 @@ respecify:
 		**	use the remote name to open the file.
 		*/
 		memcpy(l_name, remote_filepath, COB_FILEPATH_LEN);
-		wtrace("WFOPEN","REMOTE","Remote filepath=[%80.80s]", l_name);
+		WL_wtrace("WFOPEN","REMOTE","Remote filepath=[%80.80s]", l_name);
 	}
 	
 wfopen_return:
 	
-	wtrace("WFOPEN","RETURN","Cobpath=[%80.80s] File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Mode=[0x%08X]",
-	       cob_name, file, lib, vol, *mode);
+	wisp_mode2fileattr(*mode, attrstr);
+	WL_wtrace("WFOPEN","RETURN","Cobpath=[%80.80s] File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Attr=[%10.10s]",
+	       cob_name, file, lib, vol, attrstr);
 
 }
 
-static void acc_message(int access_status, char* msgbuf)
+static void acc_message(int access_status, 
+			char* msgbuf, 
+			const char filestatus[2],
+			const char *filestatus_extended)
 {
 	char	fsbuf[40];
 
@@ -594,37 +645,36 @@ static void acc_message(int access_status, char* msgbuf)
 	case ACC_ERROPEN:
 		strcpy(msgbuf,"OPEN FAILED WITH FILE STATUS ");
 
-		if ((mf_cobol || aix_cobol) && wfilestat[0] == '9')
+		if (wisp_mf_cobol() && filestatus[0] == '9')
 		{
-			sprintf(fsbuf,"[9/RT%03d]",(unsigned)wfilestat[1]);
+			sprintf(fsbuf,"[9/RT%03d]",(unsigned)filestatus[1]);
 		}
 		else
 		{
-			sprintf(fsbuf,"[%2.2s]", wfilestat);
+			sprintf(fsbuf,"[%2.2s]", filestatus);
 		}
 		strcat(msgbuf,fsbuf);
 
-		if (acu_cobol)
+		if (wisp_acu_cobol())
 		{
 			char acustring[40];
-			char acufilestat[11];
 			int len, i;
 			
-			lastacufilestat(acufilestat);						/* Get the last file status	*/
-			len = strlen(acufilestat);
+			len = strlen(filestatus_extended);
 
 			if (len > 2)
 			{
 				strcpy(acustring, "[");
 				for (i=2; i<len; i++)
 				{
-					if (acufilestat[i] < ' ' || acufilestat[i] > '~')	/* If status not printable	*/
+					if (filestatus_extended[i] < ' ' || 
+					    filestatus_extended[i] > '~')	/* If status not printable	*/
 					{
-						sprintf(fsbuf,"(0x%02x)",(unsigned int)(acufilestat[i]));
+						sprintf(fsbuf,"(0x%02x)",(unsigned int)(filestatus_extended[i]));
 					}
 					else
 					{
-						sprintf(fsbuf,"%c",acufilestat[i]);
+						sprintf(fsbuf,"%c",filestatus_extended[i]);
 					}
 					strcat(acustring,fsbuf);
 				}
@@ -647,14 +697,80 @@ static void acc_message(int access_status, char* msgbuf)
 /*
 **	History:
 **	$Log: wfopen.c,v $
-**	Revision 1.23.2.3  2002/11/15 20:34:12  gsl
-**	Move the optional prname login from wfopen2() to wfopen() where belongs
+**	Revision 1.47  2003/04/24 13:43:32  gsl
+**	Comments on WL_use_last_prb()
 **	
-**	Revision 1.23.2.2  2002/11/14 21:12:28  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.46  2003/03/17 17:21:17  gsl
+**	Change to use  WFOPEN4
 **	
-**	Revision 1.23.2.1  2002/11/12 16:00:24  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.45  2003/03/06 21:37:34  gsl
+**	Change trace to show ATTR instead of MODE
+**	
+**	Revision 1.44  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.43  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.42  2002/12/11 17:03:09  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.41  2002/12/09 21:45:44  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.40  2002/07/29 15:46:47  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.39  2002/07/29 14:47:20  gsl
+**	wfopen2 ->WFOPEN2
+**	wfopen3 ->WFOPEN3
+**	
+**	Revision 1.38  2002/07/23 20:49:49  gsl
+**	globals
+**	
+**	Revision 1.37  2002/07/12 19:10:19  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.36  2002/07/12 17:01:03  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.35  2002/07/11 20:29:17  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.34  2002/07/10 21:05:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.33  2002/07/02 21:15:32  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.32  2002/07/02 04:04:23  gsl
+**	call to get last filecheck status
+**	
+**	Revision 1.31  2002/07/01 04:02:43  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.30  2002/06/28 04:02:58  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.29  2002/06/27 04:12:41  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.28  2002/06/26 04:25:03  gsl
+**	Cleanup mode/status bit fields
+**	
+**	Revision 1.27  2002/06/25 17:46:05  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
+**	
+**	Revision 1.26  2002/06/21 20:49:30  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.25  2002/06/21 03:51:41  gsl
+**	Remove lpi_cobol
+**	
+**	Revision 1.24  2002/06/21 03:10:45  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.23  2001/11/02 15:09:20  gsl
 **	Tweak PF3 message
@@ -670,7 +786,7 @@ static void acc_message(int access_status, char* msgbuf)
 **	getparm is only done the first time a file is opened.
 **
 **	Revision 1.20  1998-10-22 14:09:26-04  gsl
-**	Simplify the g_temp_file_list and g_print_file_list processing.
+**	Simplify the g_temp_file_list and WL_g_print_file_list processing.
 **
 **	Revision 1.19  1998-08-03 17:20:47-04  jlima
 **	Support Logical Volume Translation with long file names containing eventual embedded blanks.
@@ -679,7 +795,7 @@ static void acc_message(int access_status, char* msgbuf)
 **	Fixed RD call to file_getparm() to use 'E' for intv_type.
 **
 **	Revision 1.17  1998-05-27 10:17:49-04  gsl
-**	Add better wtrace logic
+**	Add better WL_wtrace logic
 **
 **	Revision 1.16  1997-04-29 13:39:46-04  gsl
 **	Moved acc_message() from wfaccess.c

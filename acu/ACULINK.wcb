@@ -21,8 +21,8 @@
       *                   changed if neccesary by changing this 
       *                   program, re-WISP & ccbl it.
       *
-      *                   $ wisp aculink
-      *                   $ ccbl -da4 -o ACULINK aculink.cob
+      *                   $ wisp ACULINK.wcb
+      *                   $ ccbl -da4 -o ACULINK.acu ACULINK.cob
       *
       ******************************************************************
       

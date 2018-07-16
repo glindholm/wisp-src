@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		qapic.c
 **
@@ -18,7 +41,6 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include "cobpic.h"
 
-#define EXT_FILEXT
 #include "filext.h"
 
 
@@ -61,7 +83,7 @@ int test_parse_pic(
 
 	memset(xpic, '@', sizeof(xpic));
 
-	parse_pic(picture, xpic, &xflag, &psize, &pic_type, &pic_dp, &blankdecimal, 
+	WL_parse_pic(picture, xpic, &xflag, &psize, &pic_type, &pic_dp, &blankdecimal, 
 						 &suppchar, &suppidx, &floatidx, &psigned);
 
 
@@ -114,7 +136,7 @@ int test_cobpic_edit(
 	*/
 	memset(object,'@',sizeof(object));
 
-	cobpic_edit(object, source, picture, &errcode);
+	WL_cobpic_edit(object, source, picture, &errcode);
 
 	*(strchr(object, '@')) = '\0';	/* Null terminate object */
 
@@ -155,7 +177,7 @@ int test_cobpic_edit(
 	 */
 	memset(object,'@',sizeof(object));
 
-	cobpic_edit(object, t_object, picture, &errcode);
+	WL_cobpic_edit(object, t_object, picture, &errcode);
 
 	*(strchr(object, '@')) = '\0';	/* Null terminate object */
 
@@ -337,6 +359,15 @@ int main()
 /*
 **	History:
 **	$Log: qapic.c,v $
+**	Revision 1.11  2003/02/04 18:50:26  gsl
+**	fix copyright header
+**	
+**	Revision 1.10  2002/07/11 20:29:22  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.9  2002/06/25 18:18:34  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.8  2001/11/08 18:32:16  gsl
 **	remove unused vars
 **	

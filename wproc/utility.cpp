@@ -828,7 +828,7 @@ void int_32_to_ascii(int_32 an_int_32, char *a_string) {
 #if DOS
    ltoa(an_int_32, a_string, 10);
 #else
-   sprintf(a_string, "%d", an_int_32);
+   sprintf(a_string, "%ld", (long)an_int_32);
 #endif
 }
 
@@ -912,12 +912,15 @@ int parse_time(
 //
 //	History:
 //	$Log: utility.cpp,v $
-//	Revision 1.14.2.1  2002/08/16 21:51:52  gsl
-//	Alpha Port 4402f
+//	Revision 1.16  2003/02/05 15:23:59  gsl
+//	Fix -Wall warnings
 //	
-//	Revision 1.14  1998-08-31 15:50:39-04  gsl
+//	Revision 1.15  2002/07/08 21:09:31  gsl
+//	For int_32 don;'t use %ld in printf (long 64 on Alpha)
+//	
+//	Revision 1.14  1998/08/31 19:50:39  gsl
 //	drcs update
-//
+//	
 //	Revision 1.13  1998-08-31 15:14:26-04  gsl
 //	drcs update
 //

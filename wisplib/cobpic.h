@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -36,8 +56,8 @@
 /*
 **	Function Prototypes
 */
-void cobpic_edit(char* object, const char* source, const char* picture,int* errcode );
-void cobxpic_edit(char	*object,		/* Input and Output areas */
+void WL_cobpic_edit(char* object, const char* source, const char* picture,int* errcode );
+void WL_cobxpic_edit(char	*object,		/* Input and Output areas */
 		  const char	*source, 
 		  const char	*xpicture,		/* The expanded picture (also adjusted picture for Numeric only) */
 		  int	size,			/* The number of character positions in pic */
@@ -50,7 +70,7 @@ void cobxpic_edit(char	*object,		/* Input and Output areas */
 		  int	psigned,		/* Is the picture signed			 		(Numeric only)*/
 		  int 	*errcode);		/* Error code 0=success */
 
-void parse_pic(const char *picture,	/* The COBOL picture clause. */
+void WL_parse_pic(const char *picture,	/* The COBOL picture clause. */
 	       char	*xpic,		/* The expanded picture (also adjusted picture for Numeric only) */
 	       int	*xflag,		/* Flag if xpic was created. */
 	       int	*psize,		/* The number of character positions in pic */
@@ -62,11 +82,23 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 	       int	*floatidx,	/* Floating character index; offset of start of float 		(Numeric only)*/
 	       int	*psigned);	/* Is the picture signed			 		(Numeric only)*/
 
+void WL_set_char_decimal_point(char dp);
+char WL_get_char_decimal_point();
+
+void WL_set_char_comma(char comma);
+char WL_get_char_comma();
+
 #endif /* cobpic_H */
 
 /*
 **	History:
 **	$Log: cobpic.h,v $
+**	Revision 1.6  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.5  2002/07/11 20:29:06  gsl
+**	Fix WL_ globals
+**	
 **	Revision 1.4  2001/09/25 20:38:24  gsl
 **	Add defines
 **	

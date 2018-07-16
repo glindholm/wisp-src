@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /*----
@@ -13,7 +27,6 @@ First test that all the types are saved correctly
 #include "kwisp.h"
 #include "shrthand.h"
 
-static char sccs_id[]="@(#)vscrfile.c	1.4 3/19/94";
 
 
 static int field, block;
@@ -54,7 +67,8 @@ Main entry to these routines
 ----*/
 void cr_create_file(void)
 {
-	if(kcsi_tracelevel() <= 2)
+	char* ptr;
+	if((ptr=getenv("CREATE_DEBUG_REPORT")) != NULL && *ptr == '1')
 	{
 		cr_print_the_spec();
 	}
@@ -507,11 +521,14 @@ void cr_fileio(KCSIO_BLOCK *kfb, char *io)
 /*
 **	History:
 **	$Log: vscrfile.c,v $
-**	Revision 1.4.2.2  2002/11/14 16:02:59  gsl
-**	Replace cr_debug the trace level
+**	Revision 1.11  2003/05/19 13:52:25  gsl
+**	CREATE_DEBUG_REPORT
 **	
-**	Revision 1.4.2.1  2002/11/12 15:56:41  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/04 19:19:08  gsl
+**	fix header
+**	
+**	Revision 1.9  2002/11/14 16:03:29  gsl
+**	Replace cr_debug the trace level
 **	
 **	Revision 1.8  2002/10/24 14:20:31  gsl
 **	Make globals unique

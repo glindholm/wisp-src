@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #define EXT extern
 
@@ -27,7 +40,7 @@ static char rcsid[]="$Id:$";
 
 	condition 	( condition )
 
-			F-data-name ALTERED						* "FAC OF" has been changed to "F-"
+			FAC-OF-data-name ALTERED		* "FAC OF" has been changed to "FAC-OF-"
 
 			figcon  {IN} {identifier}     [IS] [NOT] {ON}
 				{OF} {F-display-item}		 {OFF}
@@ -42,13 +55,13 @@ static char rcsid[]="$Id:$";
 
 	(AFTER)
            MOVE FIGCON-1 TO WISP-TEST-BYTE,
-           CALL "bit_test" USING
+           CALL "BIT_TEST" USING
                     WISP-TEST-BYTE,
                     ITEM-1,
                     WISP-SCRATCH-BYTE-1,
 
            MOVE FIGCON-2 TO WISP-TEST-BYTE,
-           CALL "bit_test" USING
+           CALL "BIT_TEST" USING
                     WISP-TEST-BYTE,
                     ITEM-2,
                     WISP-SCRATCH-BYTE-2,
@@ -114,7 +127,7 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 				**	IF figcon {IN|OF} identifier IS [NOT] {ON|OFF}
 				**
 				**	MOVE figcon TO WISP-TEST-BYTE
-				**	CALL "bit_test" USING WISP-TEST-BYTE, identifier, WISP-SCRATCH-BYTE-x
+				**	CALL "BIT_TEST" USING WISP-TEST-BYTE, identifier, WISP-SCRATCH-BYTE-x
 				**
 				**	IF [NOT] WISP-SCRATCH-BYTE-x-TRUE ...
 				*/
@@ -137,7 +150,8 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 
 				if (acn_cobol)
 				{
-					if (0 == memcmp(token_data(id_node->down->token),"F-",2))
+					if (0 == memcmp(token_data(id_node->down->token),
+						FAC_OF_PREFIX, strlen(FAC_OF_PREFIX)))
 					{
 						write_log("WISP",'W',"FACCOND",
 							  "FAC OF condition may not be valid with Native Screens");
@@ -175,12 +189,12 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 
 				if (bytenum > 16)
 				{
-					write_log("WISP",'F',"SCRATCHBYTE","Maximum 16 bit_test operations per statement");
+					write_log("WISP",'F',"SCRATCHBYTE","Maximum 16 BIT_TEST operations per statement");
 				}
 
 				tput_line_at  (col,   "MOVE %s",token_data(curr_node->token));
 				tput_clause   (col+4, "TO WISP-TEST-BYTE,");
-				tput_line_at  (col,   "CALL \"bit_test\" USING WISP-TEST-BYTE,");
+				tput_line_at  (col,   "CALL \"BIT_TEST\" USING WISP-TEST-BYTE,");
 				tput_statement(col+4, id_node->down);
 				tput_clause   (col+4, ", WISP-SCRATCH-BYTE-%d,",bytenum);
 				tput_flush();
@@ -244,7 +258,8 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 					**	IF  FAC OF identifier [IS] [NOT] ALTERED ...
 					**	IF  F-identifier      [IS] [NOT] ALTERED ...
 					**
-					**	CALL "bit_test" USING WISP-ALTERED-BIT, F-identifier, WISP-SCRATCH-BYTE-x
+					**	CALL "BIT_TEST" USING WISP-ALTERED-BIT, 
+					**           FAC-OF-identifier, WISP-SCRATCH-BYTE-x
 					**
 					**	IF  [NOT] WISP-SCRATCH-BYTE-x-TRUE  ...
 					*/	
@@ -288,7 +303,8 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 						negate = 1;
 					}
 
-					if (0 != memcmp(token_data(id_node->down->token),"F-",2))
+					if (0 != memcmp(token_data(id_node->down->token),
+						FAC_OF_PREFIX, strlen(FAC_OF_PREFIX)))
 					{
 						/*
 						**	Missing the "FAC OF" clause, so add it.
@@ -303,10 +319,10 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 
 					if (bytenum > 16)
 					{
-						write_log("WISP",'F',"SCRATCHBYTE","Maximum 16 bit_test operations per statement");
+						write_log("WISP",'F',"SCRATCHBYTE","Maximum 16 BIT_TEST operations per statement");
 					}
 
-					tput_line_at  (col,   "CALL \"bit_test\" USING WISP-ALTERED-BIT,");
+					tput_line_at  (col,   "CALL \"BIT_TEST\" USING WISP-ALTERED-BIT,");
 					decontext_statement(id_node->down);
 					tput_statement(col+4, id_node->down);
 					tput_clause   (col+4, ", WISP-SCRATCH-BYTE-%d,",bytenum);
@@ -407,6 +423,20 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_if.c,v $
+**	Revision 1.19  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.18  2002/07/31 20:24:26  gsl
+**	globals
+**	
+**	Revision 1.17  2002/07/30 22:00:49  gsl
+**	globals
+**	
+**	Revision 1.16  2002/07/26 19:20:43  gsl
+**	
+**	Revision 1.15  2002/07/25 17:53:35  gsl
+**	Fix FAC-OF- prefix
+**	
 **	Revision 1.14  1998/03/03 18:03:18  gsl
 **	change flush into fixed
 **	

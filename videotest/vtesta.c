@@ -25,18 +25,18 @@ void testa()
 	struct video_menu goodies;
 
 	verase(FULL_SCREEN);
-	vmenumode(STATIC_MENU);
+	VL_vmenumode(STATIC_MENU);
 
-	vmenuinit(&goodies, POP_UP_MENU, VMODE_REVERSE, 10, 10, 0);
-	vmenuitem(&goodies, "Clock", CLOCK_CODE, NULL);
-	vmenuitem(&goodies, "Calculator", CALC_CODE, NULL);
-	vmenuitem(&goodies, "Calendar", CALEND_CODE, NULL);
-	vmenuitem(&goodies, "Notepad", NOTE_CODE, NULL);
-	vmenuitem(&goodies, "Puzzle", PUZZLE_CODE, NULL);
-	vmenuitem(&goodies, "", 0, NULL);        
-	vmenuitem(&goodies, "Cancel", CANCEL_CODE, NULL);
+	VL_vmenuinit(&goodies, POP_UP_MENU, VMODE_REVERSE, 10, 10, 0);
+	VL_vmenuitem(&goodies, "Clock", CLOCK_CODE, NULL);
+	VL_vmenuitem(&goodies, "Calculator", CALC_CODE, NULL);
+	VL_vmenuitem(&goodies, "Calendar", CALEND_CODE, NULL);
+	VL_vmenuitem(&goodies, "Notepad", NOTE_CODE, NULL);
+	VL_vmenuitem(&goodies, "Puzzle", PUZZLE_CODE, NULL);
+	VL_vmenuitem(&goodies, "", 0, NULL);        
+	VL_vmenuitem(&goodies, "Cancel", CANCEL_CODE, NULL);
 
-	while ((i = vmenugo(&goodies)) != CANCEL_CODE)
+	while ((i = VL_vmenugo(&goodies)) != CANCEL_CODE)
 	{
 		switch(i)
 		{

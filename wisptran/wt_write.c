@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #define EXT extern
 #include "wisp.h"
@@ -29,6 +50,7 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 	NODE	next_statement = NULL;
 	int	col;
 	int	add_after_advancing_clause = 0;
+	int	fnum = -1;
 
 	verb_node = first_token_node(the_statement);
 
@@ -47,7 +69,15 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 	if (col < 12) col = 12;
 
 	curr_node = verb_node->next;
-	record_node = curr_node;
+	record_node = curr_node;	
+	
+	fnum = fd_record(token_data(record_node->token));
+	if (-1 == fnum)
+	{
+		write_tlog(record_node->token,"WISP",'W',"NOTFOUND",
+			  "WRITE [%s], unknown record",
+			   token_data(record_node->token));
+	}
 
 	curr_node = curr_node->next;
 	if (eq_token(curr_node->token,KEYWORD,"FROM"))
@@ -56,11 +86,6 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 		from_node = reduce_data_item(curr_node);
 
 		curr_node = curr_node->next;
-	}
-	
-	if ( vax_cobol)
-	{
-		tie_down(curr_node, make_clause(col+4,"ALLOWING NO OTHERS",NULL));
 	}
 
 	/*
@@ -130,21 +155,9 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 		**	This is automatic for true printer files but WISP changes
 		**	printer files into sequentilal files so we need to check.
 		*/
-		int fnum;
-		
-		fnum = fd_record(token_data(record_node->token));
-		if (-1 == fnum)
+		if ((-1 != fnum) && (prog_ftypes[fnum] & PRINTER_FILE))
 		{
-			write_tlog(record_node->token,"WISP",'W',"NOTFOUND",
-				  "WRITE [%s], unknown record name.",
-				   token_data(record_node->token));
-		}
-		else
-		{
-			if (prog_ftypes[fnum] & PRINTER_FILE)
-			{
-				add_after_advancing_clause = 1;
-			}
+			add_after_advancing_clause = 1;
 		}
 	}
 	
@@ -178,8 +191,8 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 		if (!next_sentence_found)
 		{
 			tput_scomment("*** TIMEOUT clause removed from WRITE statement");
-			tput_line_at(col, "MOVE 1 TO WISP-FILE-TIMEOUT");
-			tput_line_at(col, "IF WISP-FILE-TIMEOUT < 1");
+			tput_line_at(col, "MOVE 1 TO WISP-LOCK-TIMEOUT");
+			tput_line_at(col, "IF WISP-LOCK-TIMEOUT < 1");
 			tput_flush();
 			next_statement = parse_imperative_statements(next_statement, the_sentence);
 			tput_line_at(col, "END-IF");
@@ -191,11 +204,16 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 		}
 	}
 
-	tput_line_at(col,"MOVE \"WR\" TO WISP-DECLARATIVES-STATUS\n");
+	if (opt_nogetlastfileop)
+	{
+		/* tput_line_at(col,"MOVE \"WR\" TO WISP-DECLARATIVES-STATUS\n"); */
+		tput_line_at(col,"MOVE \"Write\" TO WISP-LASTFILEOP");
+		tput_flush();
+	}
 
-	tput_flush();
 	tput_statement(col,the_statement);
 	the_statement = free_statement(the_statement);
+	record_node = NULL;
 
 	if (add_after_advancing_clause)
 	{
@@ -219,6 +237,14 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 	      eq_token(curr_node->next->token, KEYWORD, "EOP")))
 	    )
 	{
+		if (eq_token(curr_node->token, KEYWORD, "INVALID") &&
+		    (-1 != fnum) && (prog_ftypes[fnum] & SEQ_FILE))
+		{
+			/* INVALID KEY is not allowed on a SEQ file */
+			write_tlog(curr_node->token,"WISP",'E',"WRITEINVALIDKEY",
+				   "INVALID KEY clause is not allowed on WRITE for sequential file.");
+		}
+
 		curr_node->token->column_fixed = 1;
 		tput_statement(col+4, the_statement);
 		the_statement =  free_statement(the_statement);
@@ -276,9 +302,33 @@ NODE parse_write(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_write.c,v $
-**	Revision 1.15  1998/12/15 19:44:52  gsl
-**	Add support for the END-OF-PAGE clauses
+**	Revision 1.22  2003/03/10 18:55:44  gsl
+**	Added nosleep option and for ACU default to using C$SLEEP instead
+**	of WFWAIT on a READ with HOLD
 **	
+**	Revision 1.21  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.20  2003/03/06 21:47:10  gsl
+**	Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	
+**	Revision 1.19  2003/02/04 17:33:18  gsl
+**	fix copyright header
+**	
+**	Revision 1.18  2002/08/13 18:11:59  gsl
+**	Report Invalid use of INVALID KEY clauses
+**	
+**	Revision 1.17  2002/06/20 23:05:46  gsl
+**	remove obsolete code
+**	
+**	Revision 1.16  2002/05/16 21:53:31  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.15  1998-12-15 14:44:52-05  gsl
+**	Add support for the END-OF-PAGE clauses
+**
 **	Revision 1.14  1998-10-13 09:37:29-04  gsl
 **	Add missing include file
 **

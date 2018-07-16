@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			    Copyright (c) 1987				*/
@@ -23,7 +44,7 @@ static char rcsid[]="$Id:$";
 
 /*						Subroutine entry point.								*/
 
-int vtrim(char *string)									/* Trim a string of trailing blanks.	*/
+int VL_vtrim(char *string)									/* Trim a string of trailing blanks.	*/
 {
 	register int i;									/* Working register storage.		*/
 
@@ -34,16 +55,16 @@ int vtrim(char *string)									/* Trim a string of trailing blanks.	*/
 	return(i+1);									/* Return the string length.		*/
 }
 
-int vtrimlen(char *outstr, char *instr, int length)					/* Trim a string of length.		*/
+int VL_vtrimlen(char *outstr, char *instr, int length)					/* Trim a string of length.		*/
 {	
 	register int i;
 
 	for (i = 0; i < length; i++) outstr[i] = instr[i];				/* Copy the string.			*/
 	outstr[i] = CHAR_NULL;								/* Null terminate.			*/
-	return(vtrim(outstr));								/* Trim it.				*/
+	return(VL_vtrim(outstr));								/* Trim it.				*/
 }
 
-int vputlen(char *outstr, char *instr, int length)					/* Opposite of vtrimlen.		*/
+int VL_vputlen(char *outstr, char *instr, int length)					/* Opposite of vtrimlen.		*/
 {
 	register int i;
 	int eos;
@@ -67,6 +88,12 @@ int vputlen(char *outstr, char *instr, int length)					/* Opposite of vtrimlen.	
 /*
 **	History:
 **	$Log: vtrim.c,v $
+**	Revision 1.12  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/07/15 20:16:15  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1996/10/11 22:16:23  gsl
 **	drcs update
 **	

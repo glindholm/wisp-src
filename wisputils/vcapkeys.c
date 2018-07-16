@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1999 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 	vcapkeys:	Utility that prompts user to press PFKEYs and 
@@ -11,6 +34,7 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <termio.h>
 #include <signal.h>
 #include <time.h>
@@ -55,28 +79,27 @@ struct
 	char	seq_name[25];
 } et[TABLE_SIZE];
 
-static int load101();
+static void load101();
 static int getkey();
 static int ynprompt();
-static int getstr_to();
+static void getstr_to();
 static int writevcap();
-static int init_table();
+static void init_table();
 static int promptkey();
 static int dupvalue();
 
-static prompt(
+static void prompt(
 	      const char *message,	/* The prompt			*/
 	      const char *dvalue,	/* Default value		*/
 	      char	*buff,		/* return buffer		*/
 	      int	sizeof_buff);
 
-main(argc,argv)
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
-	int	i, len, rc;
+	int	i, rc;
 	char	buff[256];
-	char	message[50];
 	char	filename[128];
 	char	dvalue[50];
 	int	k101, backup, review;
@@ -192,7 +215,7 @@ review_label:
 	exit(0);
 }
 
-static load101()								/* Load 13 thru 32 based on 1-12		*/
+static void load101()								/* Load 13 thru 32 based on 1-12		*/
 {
 	int	i;
 	char	buff[80];
@@ -276,7 +299,7 @@ int	*backup;
 	return(0);
 }
 
-static prompt(
+static void prompt(
 	      const char *message,	/* The prompt			*/
 	      const char *dvalue,	/* Default value		*/
 	      char	*buff,		/* return buffer		*/
@@ -295,8 +318,8 @@ static prompt(
 	else
 	{
 		char *ptr;
-		if (ptr = strchr(buff,'\n')) *ptr = (char)0;
-		if (ptr = strchr(buff,'\r')) *ptr = (char)0;
+		if ((ptr = strchr(buff,'\n'))) *ptr = (char)0;
+		if ((ptr = strchr(buff,'\r'))) *ptr = (char)0;
 	}
 
 	if (strlen(buff)==0 )
@@ -319,6 +342,7 @@ int	dvalue;
 	for(;;)
 	{
 		printf("%s [%c]: ",message,yn);
+
 		if ( NULL == fgets(buff, sizeof(buff), stdin) )
 		{
 			*buff = '\0';
@@ -326,8 +350,8 @@ int	dvalue;
 		else
 		{
 			char *ptr;
-			if (ptr = strchr(buff,'\n')) *ptr = (char)0;
-			if (ptr = strchr(buff,'\r')) *ptr = (char)0;
+			if ((ptr = strchr(buff,'\n'))) *ptr = (char)0;
+			if ((ptr = strchr(buff,'\r'))) *ptr = (char)0;
 		}
 
 		if (strlen(buff)==0 )
@@ -348,7 +372,7 @@ char	*message;			/* The keyname			*/
 char	*dvalue;			/* Default value		*/
 char	*buff;				/* The returned esc_seq		*/
 {
-	int	i,len;
+	int	len;
 	char	*p, *ptr;
 	char	tbuff[50];
 
@@ -431,14 +455,14 @@ unsigned char value;
 	return buf;
 }
 
-static getstr_to(string,maxsz,fd,len)  
+static void getstr_to(string,maxsz,fd,len)  
 char *string; /* receiver area */
 int maxsz,fd; /* maxsz is max size of receiver, fd is input fd */
 int *len;
 {
 	struct timeval to;
 	fd_set rfds;
-	int pos,cnt,reading;
+	int pos,cnt;
 	struct termio old, new;
 
 	signal(SIGINT,SIG_IGN);
@@ -475,7 +499,7 @@ int *len;
 	to.tv_usec = TOUSEC;
 	pos=0;
 	read(fd,string+(pos++),1);
-	while (cnt=select(20,&rfds,NULL,NULL,&to))
+	while ((cnt=select(20,&rfds,NULL,NULL,&to)))
 	{
 		read(fd,string+pos,1);
 		FD_ZERO(&rfds);
@@ -513,7 +537,7 @@ char	*filename;
 	return(0);
 }
 
-static init_table()
+static void init_table()
 {
 	int	i;
 
@@ -587,11 +611,17 @@ static init_table()
 /*
 **	History:
 **	$Log: vcapkeys.c,v $
-**	Revision 1.13.2.1.2.2  2002/09/06 15:27:26  gsl
-**	When changing gets() to fgets() you have to now strip off the trailing NL (and CR)
+**	Revision 1.20  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
 **	
-**	Revision 1.13.2.1.2.1  2002/09/05 19:22:24  gsl
-**	LINUX
+**	Revision 1.19  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.18  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.17  2002/09/06 15:06:43  gsl
+**	When changing gets() to fgets() you have to now strip off the trailing NL (and CR)
 **	
 **	Revision 1.16  2002/09/05 14:25:16  gsl
 **	gets() ->fgets()

@@ -1,11 +1,24 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include "datcob.h"
 #include "dbsc.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)dglb.c	1.4 1/27/93";
 
 #define REL_KEY_LEN	8	/*22-Mar-1990*/
 
@@ -50,7 +63,6 @@ char dte_key_scr[SCR_DEF_SIZE];
 
 char dte_record[2040];
 
-static char dum_fld[]={0,0,1,0,24,80,0,0,2,0,0,0,0,(char)140,0,0,0,0};
 char *dte_scr,*dte_trailer,*dte_key_trailer,*dte_message,*dte_key_message;
 int dte_screen_error;
 
@@ -101,8 +113,11 @@ char dte_rel_rec_num[REL_KEY_LEN + 1];
 /*
 **	History:
 **	$Log: dglb.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:23  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.13  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.12  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.11  2002/10/24 15:48:33  gsl
 **	Make globals unique

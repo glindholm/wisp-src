@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		vchinese.c
 **
@@ -13,7 +36,7 @@ static char rcsid[]="$Id:$";
 */
 
 
-#define __CHINESE__
+#define IVS__CHINESE__
 
 
 /*
@@ -28,7 +51,8 @@ static char rcsid[]="$Id:$";
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <vchinese.h>
+#include "vchinese.h"
+#include "vutil.h"
 
 /*
 **	Structures and Defines
@@ -51,10 +75,24 @@ static	int f1size, f2size;
 static	int max1[3],max2[3];
 static	int mult1[3], mult2[3];
 
-static	int cnt,i,j,k;
+static	int i,j,k;
 
 struct xfileheader header;
 static int byteorder;
+static unsigned char *f1indbuf=NULL, *f2indbuf=NULL;
+static unsigned char *f1tof2buf=NULL, *f2tof1buf=NULL;
+static char vlangfile[MAX_FILENAME_LEN];
+
+
+static struct xlat_s charsets[CS_TYPE_MAX]=
+{
+ { "ivs", 3 },
+ { "gw",  2 },
+ { "b5",  2 },
+ { "hp",  2 },
+ { "ccdc",2 },
+ { "et",  2 },
+};
 
 /*
 **	Static Function Prototypes
@@ -63,7 +101,7 @@ static int byteorder;
 static int setord(),getbuf(),fixbyteorder();
 
 /*
-**      Routine:        xlat_stream()
+**      Routine:        IVS_xlat_stream()
 **
 **      Function:       this acts as a xlating filter to the character stream
 **
@@ -72,8 +110,8 @@ static int setord(),getbuf(),fixbyteorder();
 **                      it is basically an enhanced xlat_chars in that it
 **                      can handle partial chinese characters--it keeps track
 **                      of the char stream between calls.  If the passed context
-**                      is NULL (vlanguage was never called or was called with null 
-**                      pathname), xlat_stream will pass bytes thru transparently.
+**                      is NULL (IVS_vlanguage was never called or was called with null 
+**                      pathname), IVS_xlat_stream will pass bytes thru transparently.
 **                      
 **      Input:          globals from chinese.h:
 **                        in                input stream buf
@@ -92,25 +130,23 @@ static int setord(),getbuf(),fixbyteorder();
 **      History:        written 11/6/92 JEC
 **
 */
-
-xlat_stream(instr, insz, out, outsz, ctx)
-unsigned char *instr, *out;
-int insz, *outsz;
-struct xlcontext **ctx;
+
+void IVS_xlat_stream(unsigned char *instr, int insz, unsigned char *out, int* outsz, struct xlcontext **ctx)
 {
 	static int address=0;
 	
 	register int inpos=0, outpos=0, ch;
-	static int esc,held;
+	static int held;
 
 #ifdef LOGXL
+	char errbuf[80];
 	static int log= -1;
 
 	if (log== -1)
 	{
 		log=creat("xlat.log",0666);
 	}
-	write(log,"xlat_stream: f1==>f2:\nsrc=/",27);
+	write(log,"IVS_xlat_stream: f1==>f2:\nsrc=/",27);
 	write(log,instr,insz);
 #endif
 	
@@ -133,14 +169,14 @@ struct xlcontext **ctx;
 	{
 		*outsz = insz;
 		out[0]=(char)0;
-		return 0;
+		return;
 	}
 	if (*ctx ==NULL  )                        /* if context is not initialized, just pass */
 	{					  /* bytes through */
 		memcpy(out,instr,insz);
 		*outsz = insz;
 		out[insz]=(char)0;
-		return 0;
+		return;
 	}
 	for(;;)
 	{
@@ -257,7 +293,7 @@ int function;
 **      Routine:        init_globals()
 **
 **      Function:       loads the indicated file, and sets some global table
-**                      pointers.  The caller (xlat_stream()) will attach 
+**                      pointers.  The caller (IVS_xlat_stream()) will attach 
 **                      the table pointers to its context struct
 **
 **      Description:    load the file header, then each section.  Allocate
@@ -285,8 +321,6 @@ char xfile[];
 	int f1tof2sz,f2tof1sz;
 	int last;
 	int bytesread;
-	struct stat sbuf;
-	char *tp,*getenv();
 	char xlatpath[200];
 	int xlatfd;
 	static int global_init_flag= -1;
@@ -301,35 +335,33 @@ char xfile[];
 
 	if ((xlatfd = open(xlatpath,O_RDONLY))<0)
 	{
-		/* this should never happen -- access has been verified by vlanguage 
+		/* this should never happen -- access has been verified by IVS_vlanguage 
                    which calls this function */
-		vre_window("Unable to open file %s: %s",xlatpath,sys_errlist[errno]);
+		VL_vre_window("Unable to open file %s: %s",xlatpath,sys_errlist[errno]);
 		return -1;
 	}
 	bytesread=read(xlatfd,&header,sizeof(header));
 	if (bytesread != sizeof(header))
 	{
-		vre_window("Error processing file %s section header",xlatpath);
+		VL_vre_window("Error processing file %s section header",xlatpath);
 		close(xlatfd);
 		return -1;
 	}
 	fixbyteorder(&header);
 	if (header.magic != CHINESEMAGIC)
 	{
-		vre_window("File %s does not appear to be a translation file",
+		VL_vre_window("File %s does not appear to be a translation file",
 			   xlatpath);
 		close(xlatfd);
 		return -1;
 	}
 	if (header.version != CHINESEVERSION)
 	{
-		vre_window("File %s is the wrong version",
+		VL_vre_window("File %s is the wrong version",
 			   xlatpath);
 		close(xlatfd);
 		return -1;
 	}
-	strcpy(f1name,charsets[header.fmt1].name);
-	strcpy(f2name,charsets[header.fmt2].name);
 	f1indsz = (f1size=charsets[header.fmt1].bytesper) * 256;
 	f2indsz = (f2size=charsets[header.fmt2].bytesper) * 256;
 	
@@ -341,28 +373,28 @@ char xfile[];
 	lseek(xlatfd,header.f1_ind_offs,0);
 	if ((bytesread=read(xlatfd,f1indbuf,header.f1_ind_len))!=header.f1_ind_len)
 	{
-		vre_window("Error processing file %s section 1",xlatpath);
+		VL_vre_window("Error processing file %s section 1",xlatpath);
 		close(xlatfd);
 		return -1;
 	}
 	lseek(xlatfd,header.f2_ind_offs,0);
 	if ((bytesread=read(xlatfd,f2indbuf,header.f2_ind_len))!=header.f2_ind_len)
 	{
-		vre_window("Error processing file %s section 2",xlatpath);
+		VL_vre_window("Error processing file %s section 2",xlatpath);
 		close(xlatfd);
 		return -1;
 	}
 	lseek(xlatfd,header.f1_to_f2_offs,0);
 	if ((bytesread=read(xlatfd,f1tof2buf,header.f1_to_f2_len))!=header.f1_to_f2_len)
 	{
-		vre_window("Error processing file %s section 3",xlatpath);
+		VL_vre_window("Error processing file %s section 3",xlatpath);
 		close(xlatfd);
 		return -1;
 	}
 	lseek(xlatfd,header.f2_to_f1_offs,0);
 	if ((bytesread=read(xlatfd,f2tof1buf,header.f2_to_f1_len))!=header.f2_to_f1_len)
 	{
-		vre_window("Error processing file %s section 4",xlatpath);
+		VL_vre_window("Error processing file %s section 4",xlatpath);
 		close(xlatfd);
 		return -1;
 	}	
@@ -412,6 +444,8 @@ char xfile[];
 	for (i=1; i<f2size; ++i)
 	  f2tof1sz *= max2[i];
 	f2tof1sz *= f1size;
+
+	return 0;
 }
 /*
 ** function:  fixlong()
@@ -489,38 +523,60 @@ struct xfileheader *header;
 	
 }
 /* 
-** function: vlanguage()
+** function: IVS_vlanguage()
 ** 
 ** arguments:
 **   path -  full path of the language file 
 **
 ** desc:
 **   this function is called from the outside world to initialize
-**   the translator.  Afterwords xlat_stream is called to do the
+**   the translator.  Afterwords IVS_xlat_stream is called to do the
 **   actual work.
 **/
-vlanguage(path)
-char *path;
+int IVS_vlanguage(const char* path)
 {
-	extern struct xlcontext *outctx, *inctx;
-
 	if (!strlen(path) || access(path,R_OK)== -1)
 	  return -1;
 	strcpy(vlangfile,path);
 	if (init_globals(vlangfile)== -1)
 	  return -1;
-	init_xlat_ctx(&outctx,vlangfile,XL_FROM_IVS);
-	init_xlat_ctx(&inctx,vlangfile,XL_TO_IVS);
+	init_xlat_ctx(&IVS_outctx,vlangfile,XL_FROM_IVS);
+	init_xlat_ctx(&IVS_inctx,vlangfile,XL_TO_IVS);
+	return 0;
 }
 
 /*
 **	History:
 **	$Log: vchinese.c,v $
-**	Revision 1.5.2.1.2.1  2002/09/05 19:22:32  gsl
-**	LINUX
+**	Revision 1.15  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
 **	
-**	Revision 1.5.2.1  2002/08/16 21:37:39  gsl
-**	Alpha Port 4402f
+**	Revision 1.14  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.13  2003/01/31 19:38:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.12  2002/10/16 20:35:03  gsl
+**	no message
+**	
+**	Revision 1.11  2002/09/30 21:02:02  gsl
+**	update
+**	
+**	Revision 1.10  2002/09/04 18:14:51  gsl
+**	LINUX sys_errlist
+**	
+**	Revision 1.9  2002/07/15 20:16:17  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.8  2002/07/15 13:29:02  gsl
+**	IVS_ globals
+**	
+**	Revision 1.7  2002/07/12 20:40:43  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.6  2002/07/09 19:54:40  gsl
+**	fix warnings
 **	
 **	Revision 1.5  1996-07-26 13:18:52-04  gsl
 **	fix video include

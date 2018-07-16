@@ -1,32 +1,52 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /* Simulate the Wang PAUSE routine.												*/
 
 #include "idsistd.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "wispnt.h"
 
-void wpause(int4* hsec)								/* Pause program for hsec (1/100) seconds.	*/
+void PAUSE(int4* hsec)								/* Pause program for hsec (1/100) seconds.	*/
 {
 #define		ROUTINE		82000
 
 	int4	ltime;
 
-	GETBIN(&ltime,hsec,4);							/* Align and put into local copy.		*/
-	wswap(&ltime);								/* Swap the word order.				*/
+	ltime = WL_get_swap(hsec);
 
-	wtrace("WPAUSE","PAUSE", "HSEC=[%d]", ltime);
-	hpause(ltime);
+	wtrace("PAUSE","PAUSE", "HSEC=[%d]", ltime);
+	WL_hpause(ltime);
 }
 
 #ifdef WIN32
-void hpause(int4 hundredths)
+void WL_hpause(int4 hundredths)
 {
 	if (hundredths > 0)
 	{
-		hsleep(hundredths);
+		WL_hsleep(hundredths);
 	}
 }
 #endif
@@ -41,7 +61,7 @@ void hpause(int4 hundredths)
 #ifndef NO_USLEEP /* !NO_USLEEP (double negative) - have a usleep() so use it */
 
 #include <unistd.h>
-void hpause(int4 hundredths)
+void WL_hpause(int4 hundredths)
 {
 	if (hundredths >= 100) /* Greater then one second */
 	{
@@ -67,7 +87,7 @@ void hpause(int4 hundredths)
 
 #else /* NO_USLEEP - If no usleep() then simulate it.  */
 
-void hpause(int4 hundredths)
+void WL_hpause(int4 hundredths)
 {
 	unsigned hsec, ticks;
 	
@@ -95,6 +115,21 @@ void hpause(int4 hundredths)
 /*
 **	History:
 **	$Log: wpause.c,v $
+**	Revision 1.20  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.19  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.18  2002/07/16 16:24:51  gsl
+**	Globals
+**	
+**	Revision 1.17  2002/07/12 17:01:04  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.16  2002/07/10 21:05:35  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.15  2002/02/14 15:42:33  gsl
 **	Merge in the SCO use of old code without usleep()
 **	Part of 4.4.01 on SCO

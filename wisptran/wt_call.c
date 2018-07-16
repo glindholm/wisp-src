@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_call.c
 **
@@ -39,8 +60,6 @@ static char rcsid[]="$Id:$";
 /*
 **	Static data
 */
-
-static int add_wvaset;		/* Do we need to add a call to wvaset() before the call flag */
 
 /*
 **	Static Function Prototypes
@@ -89,8 +108,6 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	}
 
 	write_log("WISP",'I',"CALL","Processing CALL %s statement.",token_data(verb_node->next->token));
-
-        add_wvaset = (vax_cobol || acu_cobol) ? 0 : 1;
 
 	/* Get the column of the CALL token */
 	col = verb_node->token->column;
@@ -180,15 +197,21 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		/* Get the program name */
 		strcpy(program_name,token_data(program_node->down->token));
 
+		/* Use Double Quotes of the tests that follow */
+		if (program_name[0] == SINGLE_QUOTE) 
+		{
+			program_name[0] = DOUBLE_QUOTE;
+			program_name[strlen(program_name)-1] = DOUBLE_QUOTE;
+		}
+
 		/* Track it for the cross reference table */
 		track_call(program_name,xref_ptr);
 
-		if (do_xtab)
+		if (opt_xtab)
 		{
 			char pname[40];
 			strcpy(pname,program_name);
-			stredt(pname,"\"","");	/* Remove the quotes.			*/
-			stredt(pname,"\"","");
+			remove_quotes(pname);	/* Remove the quotes.			*/
 
 			xtab_log(context_infile_name(verb_node->token->context), 
 				verb_node->token->line, "CALL", pname);
@@ -239,7 +262,7 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 
 		if (0==strcmp(program_name,"\"READFDR\""))
 		{
-			write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name);
+			/* write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name); */
 		}
 
 		put_wvaset(argcnt,col);
@@ -284,16 +307,18 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		 0==strcmp(program_name,"\"DAY\"")	)
 	{
 		BYERROR(by_content);
-		write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name);
+		/* write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name); */
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"EXTRACT\""))
 	{
 		BYERROR(by_content);
-		write_log("WISP",'I',"CALL","Call %s proceeded by Call \"setprogid\".",program_name);
-		tput_line_at(col, "CALL \"setprogid\" USING WISP-APPLICATION-NAME");
-		tput_flush();
+		/*
+		** write_log("WISP",'I',"CALL","Call %s proceeded by Call \"SETPROGID\".",program_name);
+		** tput_line_at(col, "CALL \"SETPROGID\" USING WISP-APPLICATION-NAME");
+		** tput_flush();
+		*/
 		put_wvaset(argcnt,col);
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
@@ -302,13 +327,15 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	{
 		BYERROR(by_content);
 		/*
-		**	CALL "GETPARM" with more then 62 args need to be split
+		**	CALL "GETPARM" with more then 128 args need to be split
 		**	into multiple calls to "getparmbuild".
+		**
+		**	In sub85.c the wfrontend() routine is limited to 128 args.
 		*/
 
-#define		MAX_GETPARM_ARGS	62
+#define		MAX_GETPARM_ARGS	128
 
-		if (vax_cobol || argcnt <= MAX_GETPARM_ARGS)
+		if (argcnt <= MAX_GETPARM_ARGS)
 		{
 			put_wvaset(argcnt,col);
 			tput_statement(col,the_statement);
@@ -385,21 +412,12 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"LINK\""))
 	{
 		BYERROR(by_content);
-		if (vax_cobol && do_dlink)
-		{
-			write_log("WISP",'I',"CALL","Call %s changed to \"LINKDESC\".",program_name);
-
-			edit_token(program_node->down->token,"\"LINKDESC\"");
-			edit_token(using_node->token,"USING BY DESCRIPTOR");
-			tput_statement(col,the_statement);
-			the_statement = free_statement(the_statement);
-		}
-		else if (aix_cobol || mf_cobol || dmf_cobol)
+		if (mf_cobol)
 		{
 			BYERROR(by_reference);
-			write_log("WISP",'I',"CALL","Call %s changed to \"LINKMF\".",program_name);
+			write_log("WISP",'I',"CALL","Call %s changed to \"LINK2\".",program_name);
 
-			edit_token(program_node->down->token,"\"LINKMF\"");
+			edit_token(program_node->down->token,"\"LINK2\"");
 			put_wvaset(argcnt,col);
 
 			/* Point at the first argument */
@@ -462,16 +480,20 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"PAUSE\""))
 	{
 		BYERROR(by_content);
-		write_log("WISP",'I',"CALL","Call %s changed to \"wpause\".",program_name);
-		edit_token(program_node->down->token,"\"wpause\"");
+		/*
+		** write_log("WISP",'I',"CALL","Call %s changed to \"wpause\".",program_name);
+		** edit_token(program_node->down->token,"\"wpause\"");
+		*/
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
 	}
 	else if (0==strcmp(program_name,"\"RENAME\""))
 	{
 		BYERROR(by_content);
-		write_log("WISP",'I',"CALL","Call %s changed to \"wrename\".",program_name);
-		edit_token(program_node->down->token,"\"wrename\"");
+		/*
+		** write_log("WISP",'I',"CALL","Call %s changed to \"wrename\".",program_name);
+		** edit_token(program_node->down->token,"\"wrename\"");
+		*/
 		put_wvaset(argcnt,col);
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
@@ -479,12 +501,12 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 	else if (0==strcmp(program_name,"\"SETFILE\""))
 	{
 		/*
-		**	The first arg is a UFB which we convert into 4 args
-		**	which are the Volume, Library, File, and Status names
+		**	The first arg is a UFB which we convert into 3 args
+		**	which are the Volume, Library, File names
 		**
 		**	CALL "SETFILE" USING MYFILE, x, y, ...
 		**
-		**	CALL "SETFILE" USING V-MYFILE, L-MYFILE, F-MYFILE, S-MYFILE, x, y, ...
+		**	CALL "SETFILE2" USING V-MYFILE, L-MYFILE, F-MYFILE, x, y, ...
 		*/
 		int	idx;
 		char	ufb_name[80];
@@ -492,7 +514,9 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		BYERROR(by_content);
 		BYERROR(by_reference);
 
-		write_log("WISP",'I',"CALL","Call %s corrected.",program_name);
+		write_log("WISP",'I',"CALL","Call %s changed to \"SETFILE2\".",program_name);
+
+		edit_token(program_node->down->token,"\"SETFILE2\"");
 
 		/* Point to the first arg - the UFB name */
 		first_node = using_node->next;
@@ -504,8 +528,8 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 			exit_wisp(EXIT_WITH_ERR);
 		}
 
-		/* We are replacing the first arg with 4 args so add 3 to the argcnt */
-		argcnt += 3;
+		/* We are replacing the first arg with 3 args so add 2 to the argcnt */
+		argcnt += 2;
 		put_wvaset(argcnt,col);
 
 		/* Print out the first part of the statement up to the USING */
@@ -513,11 +537,10 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 		tput_statement(col,the_statement);
 		the_statement = free_statement(the_statement);
 		
-		/* Print the 4 generated args */
+		/* Print the 3 generated args */
 		tput_clause(col+4,"%s,", get_prog_vname(idx));
 		tput_clause(col+4,"%s,", get_prog_lname(idx));
 		tput_clause(col+4,"%s,", get_prog_fname(idx));
-		tput_clause(col+4,"%s,", get_prog_status(idx));
 
 		/* Print the remaining args after the first one. */
 		tput_statement(col+4,first_node->next);
@@ -716,10 +739,15 @@ NODE parse_call(NODE the_statement, NODE the_sentence)
 
 static void put_wvaset(int argcnt, int col)
 {
-	if (add_wvaset)
+	if (mf_cobol)
 	{
-		tput_line_at(col, "MOVE %d TO WISP-LONGWORD",argcnt);
-		tput_line_at(col, "CALL \"wvaset\" USING WISP-LONGWORD");
+#ifdef OLD
+		/*
+		** tput_line_at(col, "MOVE %d TO WISP-LONGWORD",argcnt);
+		** tput_line_at(col, "CALL \"WVASET\" USING WISP-LONGWORD");
+		*/
+#endif
+		tput_line_at(col, "CALL \"WVASETV\" USING VALUE %d", argcnt);
 		tput_flush();
 	}
 }
@@ -729,14 +757,13 @@ static void track_call(const char *pname, c_list *tptr)					/* Keep track of the
 	int i;
 	char tstr[40];
 
-	if (!do_xref) return;								/* Skip it.				*/
+	if (!opt_xref) return;								/* Skip it.				*/
 
-	if (tptr == xref_ptr && pname[0] != '"') return;				/* First level call with no ""		*/
+	if (tptr == xref_ptr && !is_literal(pname)) return;				/* First level call with no ""		*/
 
 	strcpy(tstr,pname);
 
-	stredt(tstr,"\"","");								/* Remove the quotes.			*/
-	stredt(tstr,"\"","");
+	remove_quotes(tstr);								/* Remove the quotes.			*/
 
 	if (tptr->call_count)								/* Scan the list.			*/
 	{
@@ -782,6 +809,48 @@ static void track_call(const char *pname, c_list *tptr)					/* Keep track of the
 /*
 **	History:
 **	$Log: wt_call.c,v $
+**	Revision 1.40  2003/03/27 21:20:45  gsl
+**	Because of DATE6 don't need to issue YEAR2000 warnings for CALL to DATE, DAY or READFDR
+**	
+**	Revision 1.39  2003/03/17 17:21:51  gsl
+**	Change to use  SETFILE2
+**	
+**	Revision 1.38  2003/03/06 21:35:27  gsl
+**	Change CALL "SETFILE" to CALL "WISP_SETFILE"
+**	
+**	Revision 1.37  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.36  2003/02/20 17:56:40  gsl
+**	Increase the arg count fom 62 to 128 for changing GETPARM into getparmbuild
+**	
+**	Revision 1.35  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.34  2003/01/28 20:30:22  gsl
+**	Change MF to use WVASETV
+**	
+**	Revision 1.33  2003/01/28 20:15:01  gsl
+**	Change MF to use WVASETV
+**	
+**	Revision 1.32  2003/01/22 17:12:36  gsl
+**	Change to use LINK2 for MF instead of LINKMF
+**	
+**	Revision 1.31  2002/08/12 20:13:51  gsl
+**	quotes and literals
+**	
+**	Revision 1.30  2002/08/01 02:44:25  gsl
+**	Remove SETPROGID from CALL EXTRACT
+**	
+**	Revision 1.29  2002/07/23 21:24:53  gsl
+**	wrename -> RENAME
+**	
+**	Revision 1.28  2002/07/16 16:24:57  gsl
+**	Globals
+**	
+**	Revision 1.27  2002/06/20 22:55:04  gsl
+**	remove obsolete code
+**	
 **	Revision 1.26  2001/09/13 14:08:23  gsl
 **	Add xtab_log tracking of CALL statements
 **	

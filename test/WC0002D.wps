@@ -1,0 +1,19 @@
+**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+**   $Id:$
+**
+**   File:       WC0002D.wps
+**
+**   Project:    WISP/TEST - WANG COBOL Functionality
+**
+**   Purpose:    RETURN-CODE special register processing
+**
+**   Tests:       This program is called from WC0002 and 
+**                runs WC0002E and passes back the RETURN-CODE.
+**
+
+procedure WC0002D.wps
+
+RC: run "WC0002E"
+
+return code = rc
+

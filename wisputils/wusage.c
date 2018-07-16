@@ -68,9 +68,9 @@
 #include "vwang.h"
 #include "wispcfg.h"
 #include "wanguid.h"
+#include "wglobals.h"
 #include "platsubs.h"
 
-#define EXT_FILEXT
 #include "filext.h"
 
 
@@ -79,9 +79,6 @@
 static int  vol_flag = 0;								/* Is this a lib or vol.		*/
 static int  lib_flag = 0;								/* Is this a lib or vol.		*/
 
-extern char wisp_progname[9];
-extern char wisp_screen[33];
-extern int  noprogscrn;
 
 /* Define the error codes for this program.											*/
 
@@ -114,8 +111,6 @@ static int can_access_temp_personality = 1;
 
 int main(int argc, char* argv[])
 {
-#define		ROUTINE		65200
-
 	int retcod;
 
         /********* PATCH FOR ALPHA/VMS **********/
@@ -127,6 +122,7 @@ int main(int argc, char* argv[])
            argc = 1;
         }
         /****************************************/
+
 
 #ifdef WIN32
 	/*
@@ -151,17 +147,15 @@ int main(int argc, char* argv[])
 	}	
 #endif /* WIN32 */
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
-
 	if (0!=access(wispconfigdir(),00))
 	{
 		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning WISPCONFIG=%s Directory not found.\n",wispconfigdir());
 	}
 
-	initglbs("WUSAGE  ");
-	noprogscrn=1;									/* No program screen to print.		*/
-	strcpy(wisp_progname,"WUSAGE");
-	strcpy(wisp_screen,"DISPLAY-SCREEN");
+	WL_initglbs("WUSAGE  ");
+	wisp_set_noprogscrn(1);								/* No program screen to print.		*/
+	wisp_set_progname("WUSAGE");
+	wisp_set_screenname("DISPLAY-SCREEN");
 
 	if (argc == 1)
 	{
@@ -175,7 +169,6 @@ int main(int argc, char* argv[])
 	{
 		errmsg(retcod);
 	}
-
 	return retcod;
 }
 
@@ -229,7 +222,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 
 	static char item_str[256];
 
-	upper_string(argv[1]);
+	WL_upper_string(argv[1]);
 
 	retcod = 0;
 	cmd_idx = strpos(
@@ -250,7 +243,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 			vol_flag = 0;
 			lib_flag = 0;
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
-			load_defaults();						/* First load in the constants.		*/
+			WL_load_defaults();						/* First load in the constants.		*/
 			status = us_equ(argc,argv,dst,src);				/* Parse out the equation.		*/
 
 			if (status) return(status);					/* If error, say so.			*/
@@ -284,14 +277,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,8);				/* Copy the value.			*/
-					set_defs(DEFAULTS_IL,buff);
+					WL_set_defs(DEFAULTS_IL,buff);
 					break;
 				}
 				case S_INVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_IV,buff);
+					WL_set_defs(DEFAULTS_IV,buff);
 					break;
 				}
 				case S_OUTLIB:
@@ -299,28 +292,28 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,8);				/* Copy the value.			*/
-					set_defs(DEFAULTS_OL,buff);
+					WL_set_defs(DEFAULTS_OL,buff);
 					break;
 				}
 				case S_OUTVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_OV,buff);
+					WL_set_defs(DEFAULTS_OV,buff);
 					break;
 				}
 				case S_PROGLIB:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,8);				/* Copy the value.			*/
-					set_defs(DEFAULTS_PL,buff);
+					WL_set_defs(DEFAULTS_PL,buff);
 					break;
 				}
 				case S_PROGVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_PV,buff);
+					WL_set_defs(DEFAULTS_PV,buff);
 					break;
 				}
 				case S_RUNLIB:
@@ -328,14 +321,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,8);				/* Copy the value.			*/
-					set_defs(DEFAULTS_RL,buff);
+					WL_set_defs(DEFAULTS_RL,buff);
 					break;
 				}
 				case S_RUNVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_RV,buff);
+					WL_set_defs(DEFAULTS_RV,buff);
 					break;
 				}
 				case S_SPOOLIB:
@@ -343,14 +336,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,8);				/* Copy the value.			*/
-					set_defs(DEFAULTS_SL,buff);
+					WL_set_defs(DEFAULTS_SL,buff);
 					break;
 				}
 				case S_SPOOLVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_SV,buff);
+					WL_set_defs(DEFAULTS_SV,buff);
 					break;
 				}
 				/*   S_WORKLIB is only available for EXTRACT.  Is defined so consistent. */
@@ -361,56 +354,56 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_WV,buff);
+					WL_set_defs(DEFAULTS_WV,buff);
 					break;
 				}
 				case S_PRNTMODE:
 				{
 					us_set(buff,src,1);				/* Copy the value.			*/
-					set_defs(DEFAULTS_PM,buff);
+					WL_set_defs(DEFAULTS_PM,buff);
 					break;
 				}
 				case S_PRTCLASS:
 				{
 					us_set(buff,src,1);				/* Copy the value.			*/
-					set_defs(DEFAULTS_PC,buff);
+					WL_set_defs(DEFAULTS_PC,buff);
 					break;
 				}
 				case S_FORM_NUM:
 				case S_FORM:
 				{
 					us_iset(&tlong,src);				/* Copy the value.			*/
-					set_defs(DEFAULTS_FN,&tlong);
+					WL_set_defs(DEFAULTS_FN,&tlong);
 					break;
 				}
 				case S_PRINTER:
 				{
 					us_iset(&tlong,src);				/* Copy the value.			*/
-					set_defs(DEFAULTS_PR,&tlong);
+					WL_set_defs(DEFAULTS_PR,&tlong);
 					break;
 				}
 				case S_JOBQUEUE:
 				{
 					us_set(buff,src,1);				/* Copy the value.			*/
-					set_defs(DEFAULTS_JS,buff);
+					WL_set_defs(DEFAULTS_JS,buff);
 					break;
 				}
 				case S_JOBCLASS:
 				{
 					us_set(buff,src,1);				/* Copy the value.			*/
-					set_defs(DEFAULTS_JC,buff);
+					WL_set_defs(DEFAULTS_JC,buff);
 					break;
 				}
 				case S_JOBLIMIT:
 				{
 					us_set(buff,src,6);				/* Copy the value.			*/
-					set_defs(DEFAULTS_JL,buff);
+					WL_set_defs(DEFAULTS_JL,buff);
 					break;
 				}
 				case S_LINES:
 				{
 					us_iset(&tlong,src);				/* Copy the value.			*/
-					set_defs(DEFAULTS_LI,&tlong);
+					WL_set_defs(DEFAULTS_LI,&tlong);
 					break;
 				}
 				default:
@@ -418,7 +411,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 					return(INVALID_OBJECT_ERROR);
 				}
 			}
-			save_defaults();						/* Save the defaults.			*/
+			WL_save_defaults();						/* Save the defaults.			*/
 			break;
 		}
 
@@ -434,7 +427,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 			lib_flag = 0;
 			vol_flag = 0;
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
-			load_defaults();						/* First load in the constants.		*/
+			WL_load_defaults();						/* First load in the constants.		*/
 
 			if ( argc < 3 ) return MISSING_SOURCE_ERROR;			/* Error, no parms to parse.		*/
 			if ( argc > 3 ) return EXTRA_ARGS_ERROR;
@@ -472,14 +465,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				case S_INDIR:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_IL,buff);
+					WL_get_defs(DEFAULTS_IL,buff);
 					us_ext(dst,buff,8);				/* Copy the value.			*/
 					break;
 				}
 				case S_INVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_IV,buff);
+					WL_get_defs(DEFAULTS_IV,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
@@ -487,28 +480,28 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				case S_OUTDIR:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_OL,buff);
+					WL_get_defs(DEFAULTS_OL,buff);
 					us_ext(dst,buff,8);				/* Copy the value.			*/
 					break;
 				}
 				case S_OUTVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_OV,buff);
+					WL_get_defs(DEFAULTS_OV,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
 				case S_PROGLIB:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_PL,buff);
+					WL_get_defs(DEFAULTS_PL,buff);
 					us_ext(dst,buff,8);				/* Copy the value.			*/
 					break;
 				}
 				case S_PROGVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_PV,buff);
+					WL_get_defs(DEFAULTS_PV,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
@@ -516,14 +509,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				case S_RUNDIR:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_RL,buff);
+					WL_get_defs(DEFAULTS_RL,buff);
 					us_ext(dst,buff,8);				/* Copy the value.			*/
 					break;
 				}
 				case S_RUNVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_RV,buff);
+					WL_get_defs(DEFAULTS_RV,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
@@ -531,14 +524,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				case S_SPOOLDIR:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_SL,buff);
+					WL_get_defs(DEFAULTS_SL,buff);
 					us_ext(dst,buff,8);				/* Copy the value.			*/
 					break;
 				}
 				case S_SPOOLVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_SV,buff);
+					WL_get_defs(DEFAULTS_SV,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
@@ -546,14 +539,14 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				case S_WORKDIR:
 				{
 					lib_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_WL,buff);
+					WL_get_defs(DEFAULTS_WL,buff);
 					us_ext(dst,buff,8);				/* Copy the value.			*/
 					break;
 				}
 				case S_WORKVOL:
 				{
 					vol_flag = 1;					/* This is a lib or vol.		*/
-					get_defs(DEFAULTS_WV,buff);
+					WL_get_defs(DEFAULTS_WV,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
@@ -561,7 +554,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					char id[4];
 
-					memcpy(id,wanguid3(),3);
+					memcpy(id,WL_wanguid3(),3);
 					id[3] = '\0';					/* Null terminate the string.		*/
 					us_ext(dst,id,3);				/* Copy the userid.			*/
 					break;
@@ -570,58 +563,58 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 				{
 					char id[32];
 
-					strcpy(id,longuid());
-					us_ext(dst,id,strlen(longuid()));		/* Copy the userid.			*/
+					strcpy(id,WL_longuid());
+					us_ext(dst,id,strlen(WL_longuid()));		/* Copy the userid.			*/
 					break;
 				}
 				case S_PRNTMODE:
 				{
-					get_defs(DEFAULTS_PM,buff);
+					WL_get_defs(DEFAULTS_PM,buff);
 					us_ext(dst,buff,1);				/* Copy the value.			*/
 					break;
 				}
 				case S_PRTCLASS:
 				{
-					get_defs(DEFAULTS_PC,buff);
+					WL_get_defs(DEFAULTS_PC,buff);
 					us_ext(dst,buff,1);				/* Copy the value.			*/
 					break;
 				}
 				case S_FORM_NUM:
 				case S_FORM:
 				{
-					get_defs(DEFAULTS_FN,&tlong);
+					WL_get_defs(DEFAULTS_FN,&tlong);
 					sprintf(buff,"%03ld",(long)tlong);		/* Convert to a string.			*/
 					us_ext(dst,buff,3);				/* Copy the value.			*/
 					break;
 				}
 				case S_PRINTER:
 				{
-					get_defs(DEFAULTS_PR,&tlong);
+					WL_get_defs(DEFAULTS_PR,&tlong);
 					sprintf(buff,"%03ld",(long)tlong);		/* Convert to a string.			*/
 					us_ext(dst,buff,3);				/* Copy the value.			*/
 					break;
 				}
 				case S_JOBQUEUE:
 				{
-					get_defs(DEFAULTS_JS,buff);
+					WL_get_defs(DEFAULTS_JS,buff);
 					us_ext(dst,buff,1);				/* Copy the value.			*/
 					break;
 				}
 				case S_JOBCLASS:
 				{
-					get_defs(DEFAULTS_JC,buff);
+					WL_get_defs(DEFAULTS_JC,buff);
 					us_ext(dst,buff,1);				/* Copy the value.			*/
 					break;
 				}
 				case S_JOBLIMIT:
 				{
-					get_defs(DEFAULTS_JL,buff);
+					WL_get_defs(DEFAULTS_JL,buff);
 					us_ext(dst,buff,6);				/* Copy the value.			*/
 					break;
 				}
 				case S_LINES:
 				{
-					get_defs(DEFAULTS_LI,&tlong);
+					WL_get_defs(DEFAULTS_LI,&tlong);
 					sprintf(buff,"%03ld",(long)tlong);		/* Convert to a string.			*/
 					us_ext(dst,buff,3);				/* Copy the value.			*/
 					break;
@@ -637,9 +630,9 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 		case P_DISPLAY:								/* Process a DISPLAY or SHELL command.	*/ 
 		case P_SHELL:
 		{
-			if ( 0 != wsystem("wshell") )
+			if ( 0 != WL_wsystem("wshell") )
 			{
-				return WSHELL_ERROR;
+				return(WSHELL_ERROR);
 			}
 			
 			break;
@@ -654,9 +647,9 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 
 			if (argc > 2) strcpy(src,argv[2]);				/* See if they provided a file name.	*/
 			else	      src[0] = '\0';					/* Or set to null			*/
-			ffl = read_defaults_from_file(src);				/* Always load in the file.		*/
+			ffl = WL_read_defaults_from_file(src);				/* Always load in the file.		*/
 			if (argc > 2 && ffl) retcod = FILE_NOT_FOUND_ERROR;		/* Return error code.			*/
-			save_defaults();						/* And replace the local symbol.	*/
+			WL_save_defaults();						/* And replace the local symbol.	*/
 			break;
 		}
 
@@ -669,8 +662,8 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 
 			if (argc > 2) strcpy(dst,argv[2]);				/* See if they provided a file name.	*/
 			else	      dst[0] = '\0';					/* Or set to null			*/
-			load_defaults();						/* Be sure they exist.			*/
-			write_defaults_to_file(dst);					/* Store the file.			*/
+			WL_load_defaults();						/* Be sure they exist.			*/
+			WL_write_defaults_to_file(dst);					/* Store the file.			*/
 			break;
 		}
 
@@ -683,7 +676,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 
 			if (argc == 2)							/* Change flags via menu options.	*/
 			{
-				load_defaults();
+				WL_load_defaults();
 				us_flags();
 				vwang_shut();
 			}
@@ -703,7 +696,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 		case P_VERSION:
 		{
 			printf("\n\n");
-			printf("WUSAGE: Version=[%s] Platform=[%s]\n",wisp_version(), WL_platform_name());
+			printf("WUSAGE: Version=[%s] Platform=[%s]\n\n",wisp_version(), WL_platform_name());
 			break;
 		}
 
@@ -779,21 +772,21 @@ static int us_ext(char* dst, char* src, int len)				/* Extract the value of a fi
 static void us_flags()
 {
 	char *field();									/* Field packing subroutine.		*/
-	char *screen;									/* Pointer to working screen routine.	*/
-	char function, lines, term[2], no_mod;						/* Working variables.			*/
-	char yn[2];
+	unsigned char *screen;								/* Pointer to working screen routine.	*/
+	unsigned char function, lines, no_mod;	 	      				/* Working variables.			*/
+	char yn[2], term[2];
 	int valid;
 	int	pos;									/* position on screen			*/
 	uint4	defs_flags;
 	int	i;
 	int	xcol[32], xrow[32];
 
-	yn[0] = ' ';									/* Init the field for wget function.	*/
+	yn[0] = ' ';									/* Init the field for WL_get_screen_text function.	*/
 	yn[1] = '\0';
 
 	if ((screen = malloc(1924+8)) == 0) exit(0);					/* Able to get memory?			*/
 
-	get_defs(DEFAULTS_FLAGS,&defs_flags);						/* Get the defaults flags		*/
+	WL_get_defs(DEFAULTS_FLAGS,&defs_flags);					/* Get the defaults flags		*/
 
 	/*
 	**	There will be 2 columns of 16 rows for a total of 32 possible flags.
@@ -810,120 +803,120 @@ static void us_flags()
 		xrow[i+NUMROWS] = i+ROWOFFSET;
 	}
 
-	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
-	wput(screen, 1,20,PLAIN_TEXT,"*** Set General Usage Flags ***");		/* Layout the screen.			*/
+	WL_wsc_init(screen,0,0);							/* Initialize the screen layout.	*/
+	WL_put_screen_text(screen, 1,20,PLAIN_TEXT,"*** Set General Usage Flags ***");	/* Layout the screen.			*/
 
 	/* (1) */
 	pos = 0;
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Help Screen");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ENABLED));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Help Screen");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ENABLED));
 	pos += 1;
 
 	/* (2) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET File Usage Constants");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_FILES));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET File Usage Constants");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_FILES));
 	pos += 1;
 
 	/* (3) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Print Mode Defaults");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PRINTER));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Print Mode Defaults");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PRINTER));
 	pos += 1;
 
 	/* (4) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Submit Procedure Defaults");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PROC));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Submit Procedure Defaults");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PROC));
 	pos += 1;
 
 	/* (5) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_FILES_LIBS));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_FILES_LIBS));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES (Modify)");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CHANGE_FILES_LIBS));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES (Modify)");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CHANGE_FILES_LIBS));
 	pos += 1;
 
 	/* (6) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage SYSTEM");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_SYSTEM));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage SYSTEM");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_SYSTEM));
 	pos += 1;
 
 	/* (7) */
 #ifdef unix
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage PRINT QUEUE");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_QUEUE));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage PRINT QUEUE");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_QUEUE));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage BATCH QUEUE");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_BATCH_QUEUE));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage BATCH QUEUE");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_BATCH_QUEUE));
 	pos += 1;
 #endif
 
 	/* (8) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Show ERROR LOG");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ERROR_LOG));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Show ERROR LOG");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ERROR_LOG));
 	pos += 1;
 
 	/* (9) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPLAY)");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPLAY));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPLAY)");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPLAY));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (EDIT)");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_EDIT));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (EDIT)");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_EDIT));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPRINT)");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPRINT));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPRINT)");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPRINT));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (KCSI)");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CRID));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (KCSI)");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CRID));
 	pos += 1;
 
 	/* (10) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Configure TERMINAL");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_TERMINAL));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Configure TERMINAL");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_TERMINAL));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PSEUDO blank characteristics");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SETPSB));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PSEUDO blank characteristics");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SETPSB));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CURSOR Characteristics");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SETCURCHAR));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CURSOR Characteristics");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SETCURCHAR));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SCREEN Characteristics");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SCREEN));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SCREEN Characteristics");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SCREEN));
 	pos += 1;
 
 	/* (11) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Enter COMMANDS");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_COMMANDS));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Enter COMMANDS");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_COMMANDS));
 	pos += 1;
 
 	/* (12) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SUBMIT Procedure");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SUBMIT));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SUBMIT Procedure");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SUBMIT));
 	pos += 1;
 
 	/* (13) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SAVE environment");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_USAGE_WRITE));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SAVE environment");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_USAGE_WRITE));
 	pos += 1;
 
 	/* (14) & (15) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PRINT Screens");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_SCREEN));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PRINT Screens");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_SCREEN));
 	pos += 1;
 
 	/* (16) */
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CANCEL Processing");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CANCEL));
+	WL_put_screen_text(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CANCEL Processing");
+	WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CANCEL));
 	pos += 1;
 
-	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (ENTER), (1) to exit.");
+	WL_put_screen_text(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (ENTER), (1) to exit.");
 
 disp_flags:
 
@@ -938,169 +931,169 @@ disp_flags:
 		pos = 0;
 
 		/* (1) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_ENABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_ENABLED);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (2) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_FILES;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_FILES);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (3) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_PRINTER;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_PRINTER);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (4) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_PROC;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_PROC);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (5) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_FILES_LIBS;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_FILES_LIBS);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_CHANGE_FILES_LIBS;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_CHANGE_FILES_LIBS);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (6) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_SYSTEM;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_SYSTEM);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (7) */
 #ifdef unix
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_PRINT_QUEUE;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_PRINT_QUEUE);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_BATCH_QUEUE;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_BATCH_QUEUE);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 #endif
 
 		/* (8) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_ERROR_LOG;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_ERROR_LOG);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (9) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_DISPLAY;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_DISPLAY);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_EDIT;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_EDIT);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_DISPRINT;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_DISPRINT);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_CRID;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_CRID);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (10) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_TERMINAL;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_TERMINAL);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SETPSB;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SETPSB);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SETCURCHAR;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SETCURCHAR);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SCREEN;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SCREEN);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (11) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_COMMANDS;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_COMMANDS);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (12) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SUBMIT;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SUBMIT);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (13) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_USAGE_WRITE;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_USAGE_WRITE);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (14) & (15) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_PRINT_SCREEN;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_PRINT_SCREEN);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		/* (16) */
-		wget(screen,xrow[pos],xcol[pos],yn);
+		WL_get_screen_text(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_CANCEL;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_CANCEL);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		else { valid = 0; WL_put_screen_text(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		set_defs(DEFAULTS_FLAGS,&defs_flags);					/* Set the defaults flags		*/
+		WL_set_defs(DEFAULTS_FLAGS,&defs_flags);				/* Set the defaults flags		*/
 
-		if (valid) save_defaults();						/* Write out the personality info.	*/
+		if (valid) WL_save_defaults();						/* Write out the personality info.	*/
 		else goto disp_flags;
 	}
 	free(screen);									/* Release the screen memory.		*/
 }
 
-static int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
+static int us_flmask(int argc, char* argv[])						/* Set the usage flags mask.		*/
 {
 	int i, j, setone, setfl, loopcnt;
 	int flmsk[32];
@@ -1152,7 +1145,7 @@ static int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*
 #define F_MODFILES	270
 #define F_KSCI		279
 
-	upper_string(argv[2]);
+	WL_upper_string(argv[2]);
 
 /*		    01234567890123456789012345678901234567890									*/
 	i = strpos("SET  ",argv[2]);							/* Look for a keyword.			*/
@@ -1161,8 +1154,8 @@ static int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*
 		case P_SET:								/* Process a SET command		*/
 		{
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
-			load_defaults();						/* First load in the constants.		*/
-			get_defs(DEFAULTS_FLAGS,&defs_flags);				/* Get the defaults flags		*/
+			WL_load_defaults();						/* First load in the constants.		*/
+			WL_get_defs(DEFAULTS_FLAGS,&defs_flags);			/* Get the defaults flags		*/
 			setone = us_flagequ(argc,argv,dst,src);				/* Parse out the equation.		*/
 			if (setone)
 			{
@@ -1384,8 +1377,8 @@ static int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*
 					}
 				} /* end of switch */
 			} /* end of for */
-			set_defs(DEFAULTS_FLAGS,&defs_flags);				/* Set the defaults flags		*/
-			save_defaults();						/* Write out the personality info.	*/
+			WL_set_defs(DEFAULTS_FLAGS,&defs_flags);			/* Set the defaults flags		*/
+			WL_save_defaults();						/* Write out the personality info.	*/
 			break;
 		} /* end of case SET */
 		default:
@@ -1397,93 +1390,96 @@ static int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*
 	return 0;
 }
 /*
-65201	%%WUSAGE-I-ENTRY Entry into WUSAGE
-65202	%%WUSAGE-E-ERROR Error parsing command
-65204	%%WUSAGE-E-MISSRC Missing Source item
-65206	%%WUSAGE-E-MISOBJ Missing Object
-65208	%%WUSAGE-E-INVSRC Invalid Source item
-65210	%%WUSAGE-E-INVOBJ Invalid Object item
-65212	%%WUSAGE-E-EXARGS Extra Arguments
-65214	%%WUSAGE-E-FILENOTFOUND Specified file not found - Used defaults
-65216	%%WUSAGE-E-INVFLAGOBJ Invalid flag object item 
-65218	%%WUSAGE-E-INVFLAG Invalid flag item
-65220	%%WUSAGE-E-INVFLAGLOG Invalid flag logical item
- */
+
+{WERRCODE(65202), "%%WUSAGE-E-ERROR Error parsing command"},
+{WERRCODE(65204), "%%WUSAGE-E-MISSRC Missing Source item"},
+{WERRCODE(65206), "%%WUSAGE-E-MISOBJ Missing Object"},
+{WERRCODE(65208), "%%WUSAGE-E-INVSRC Invalid Source item"},
+{WERRCODE(65210), "%%WUSAGE-E-INVOBJ Invalid Object item"},
+{WERRCODE(65212), "%%WUSAGE-E-EXARGS Extra Arguments"},
+{WERRCODE(65214), "%%WUSAGE-E-FILENOTFOUND Specified file not found - Used defaults"},
+{WERRCODE(65216), "%%WUSAGE-E-INVFLAGOBJ Invalid flag object item "},
+{WERRCODE(65218), "%%WUSAGE-E-INVFLAG Invalid flag item"},
+{WERRCODE(65220), "%%WUSAGE-E-INVFLAGLOG Invalid flag logical item"},
+
+*/
 static int errmsg(int num)
 {
 	switch(num)
 	{
-		case MISSING_SOURCE_ERROR:
+	case MISSING_SOURCE_ERROR:
 		{
-			werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65204),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case MISSING_OBJECT_ERROR:
+	case MISSING_OBJECT_ERROR:
 		{
-			werrlog(ERRORCODE(6),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65206),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case INVALID_SOURCE_ERROR:
+	case INVALID_SOURCE_ERROR:
 		{
-			werrlog(ERRORCODE(8),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65208),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case INVALID_OBJECT_ERROR:
+	case INVALID_OBJECT_ERROR:
 		{
-			werrlog(ERRORCODE(10),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65210),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case EXTRA_ARGS_ERROR:
+	case EXTRA_ARGS_ERROR:
 		{
-			werrlog(ERRORCODE(12),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65212),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case FILE_NOT_FOUND_ERROR:
+	case FILE_NOT_FOUND_ERROR:
 		{
-			werrlog(ERRORCODE(14),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65214),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case INVAL_FLAGS_OBJ_ERROR:
+	case INVAL_FLAGS_OBJ_ERROR:
 		{
-			werrlog(ERRORCODE(16),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65216),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case INVAL_FLAG_TYPE_ERROR:
+	case INVAL_FLAG_TYPE_ERROR:
 		{
-			werrlog(ERRORCODE(18),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65218),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case INVAL_FLAG_LOG_ERROR:
+	case INVAL_FLAG_LOG_ERROR:
 		{
-			werrlog(ERRORCODE(20),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65220),0,0,0,0,0,0,0,0);
 			break;
 		}
-		case CANNOT_ACCESS_TEMP_ERROR:
+	case CANNOT_ACCESS_TEMP_ERROR:
 		{
 			/*		 12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
 			fprintf(stderr, "WUSAGE: *** ERROR - UNABLE TO ACCESS TEMPORARY USAGE CONSTANTS *** \n");
 			fprintf(stderr, "        Wusage is not able to access the temporary usage constants when run \n");
 			fprintf(stderr, "        as the top level program. It is recommended you code wusage statments \n");
 			fprintf(stderr, "        within a BAT file then run the BAT file from a procedure.\n\n");
-			werrlog(104,"%%WUSAGE-F-ACCESS UNABLE TO ACCESS TEMPORARY USAGE CONSTANTS",0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog_error(WERRCODE(65200),"WUSAGE","ACCESS",
+				"UNABLE TO ACCESS TEMPORARY USAGE CONSTANTS");
 			break;
 		}
-		case WSHELL_ERROR:
+	case WSHELL_ERROR:
 		{
-			werrlog(104,"%WUSAGE-E-SHELL Program WSHELL Not Found",0,0,0,0,0,0,0);
+			WL_werrlog_error(WERRCODE(65200),"WUSAGE","SHELL",
+					"Program WSHELL Not Found");
 			break;
 		}
-		case GENERAL_ERROR:
-		default:
+	case GENERAL_ERROR:
+	default:
 		{
-			werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			WL_werrlog(WERRCODE(65202),0,0,0,0,0,0,0,0);
 			break;
 		}
 	}
 
-	vwang_shut();
-
 	fflush(stderr);
+
+	vwang_shut();
 	return num;
 }
 
@@ -1629,18 +1625,55 @@ static void helptext()
 #endif /* unix */
 
 }
+
 /*
 **	History:
 **	$Log: wusage.c,v $
-**	Revision 1.20.2.3  2003/02/12 19:57:10  gsl
+**	Revision 1.35  2003/02/12 19:57:35  gsl
 **	fix memory error in us_equ() was using an argv[] without checking argc to see
 **	if it is available
 **	
-**	Revision 1.20.2.2  2003/02/12 18:27:09  gsl
+**	Revision 1.34  2003/02/12 18:21:53  gsl
 **	restore the screen after displaying an error
 **	
-**	Revision 1.20.2.1  2003/02/10 20:08:44  gsl
+**	Revision 1.33  2003/02/10 20:05:53  gsl
 **	Add platform to version
+**	
+**	Revision 1.32  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.31  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.30  2002/12/10 17:09:11  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.29  2002/08/01 15:31:52  gsl
+**	type warning
+**	
+**	Revision 1.28  2002/08/01 15:07:34  gsl
+**	type warnings
+**	
+**	Revision 1.27  2002/07/18 21:04:25  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.26  2002/07/11 20:29:22  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.25  2002/07/11 14:33:55  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.24  2002/07/10 21:06:33  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.23  2002/07/09 04:13:48  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.22  2002/06/25 18:18:38  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.21  2002/06/21 20:49:35  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
 **	
 **	Revision 1.20  2002/04/03 22:03:03  gsl
 **	Remove the Library and Screen versions

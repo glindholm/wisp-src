@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		edeoldoc.c
@@ -17,13 +40,9 @@ static char rcsid[]="$Id:$";
 **
 */
 
-#ifdef MSDOS
-typedef long  		 int4;
-#else
 typedef int  		 int4;
-#endif
 
-extern int vre_window(char*, ...);
+extern int VL_vre_window(char*, ...);
 
 
 /*
@@ -63,7 +82,7 @@ void	*help_rc;		/*   4	bytes	*/
 /* #define STERLING */
 #ifdef STERLING
 
-#if defined(VMS) || defined(MF)
+#if  defined(MF)
 #define ON_LINE_DOC_RTN
 	SFREU041(cursor_pos, context, help_text, help_cnt, help_rc);
 #endif /* VMS or MF */
@@ -81,10 +100,10 @@ void	*help_rc;		/*   4	bytes	*/
 	parms[2] = help_text;	lens[2] = 642;
 	parms[3] = help_cnt;	lens[3] = 4;
 	parms[4] = help_rc;	lens[4] = 4;
-	call_acucobol(program,(int4)5,parms,lens,&rc);
+	WL_call_acucobol(program,(int4)5,parms,lens,&rc);
 	if (rc)
 	{
-		vre_window("%%EDE-E-EDEOLDOC Call to %s failed rc=%d",program,rc);
+		VL_vre_window("%%EDE-E-EDEOLDOC Call to %s failed rc=%d",program,rc);
 		*((int4 *)help_rc) = 1;  /* no help */
 	}
 #endif /* ACU */
@@ -93,7 +112,7 @@ void	*help_rc;		/*   4	bytes	*/
 /* #define RSS */
 #ifdef RSS 
 
-#if defined(VMS) || defined(MF)
+#if defined(MF)
 #define ON_LINE_DOC_RTN
 	UTDOCMNT(cursor_pos, context, help_text, help_cnt, help_rc);
 #endif /* VMS or MF */
@@ -111,10 +130,10 @@ void	*help_rc;		/*   4	bytes	*/
 	parms[2] = help_text;	lens[2] = 642;
 	parms[3] = help_cnt;	lens[3] = 4;
 	parms[4] = help_rc;	lens[4] = 4;
-	call_acucobol(program,(int4)5,parms,lens,&rc);
+	WL_call_acucobol(program,(int4)5,parms,lens,&rc);
 	if (rc)
 	{
-		vre_window("%%EDE-E-EDEOLDOC Call to %s failed rc=%d",program,rc);
+		VL_vre_window("%%EDE-E-EDEOLDOC Call to %s failed rc=%d",program,rc);
 		*((int4 *)help_rc) = 1;  /* no help */
 	}
 #endif /* ACU */
@@ -124,7 +143,7 @@ void	*help_rc;		/*   4	bytes	*/
 	/*
 	**	If a on-line doc routine has not been supplied then display an error message.
 	*/
-	vre_window("%%EDE-E-EDEOLDOC No on-line doc routine has been defined.");
+	VL_vre_window("%%EDE-E-EDEOLDOC No on-line doc routine has been defined.");
 #endif /* !ON_LINE_DOC_RTN */
 }
 
@@ -204,13 +223,28 @@ void EDECUSTX(void)
 	/*
 	**	If a custom menu item routine has not been supplied then display an error message.
 	*/
-	vre_window("%%EDE-E-EDECUSTX No custom menu item routine has been defined.");
+	VL_vre_window("%%EDE-E-EDECUSTX No custom menu item routine has been defined.");
 #endif
 }
 
 /*
 **	History:
 **	$Log: edeoldoc.c,v $
+**	Revision 1.13  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.12  2002/07/18 21:04:20  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.11  2002/07/15 20:16:05  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.10  2002/07/10 21:06:34  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/06/26 01:42:49  gsl
+**	Remove VMS code
+**	
 **	Revision 1.8  1997/06/10 19:18:17  gsl
 **	Change long to int4
 **	

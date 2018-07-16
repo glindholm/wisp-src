@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		statment.c
@@ -17,9 +30,6 @@ static char rcsid[]="$Id:$";
 **	Routines:	
 **	get_statement()		Load a statement
 **
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -175,8 +185,8 @@ NODE get_statement(void)
 **				[NOT] [ON] [SIZE] ERROR
 **				
 **
-**			Translate	FAC OF identifier		-> F-identifier
-**					ORDER-AREA OF identifier	-> O-A-identifier
+**			Translate	FAC OF identifier		-> FAC-OF-identifier
+**					ORDER-AREA OF identifier	-> ORDER-AREA-identifier
 **
 **
 **	Arguments:	None
@@ -480,7 +490,7 @@ NODE get_statement_fragment(void)
 			**	-[ORDER-AREA]-[OF]-[identifier]-
 			**
 			**	1) Unlink and delete the "OF" node.
-			**	2) Replace the "FAC" node token with a "F-identifier" token
+			**	2) Replace the "FAC" node token with a "FAC-OF-identifier" token
 			**	3) Move the identifer fluff onto the old "FAC" node.
 			**	4) Unlink and delete the old identifier node
 			*/
@@ -511,14 +521,14 @@ NODE get_statement_fragment(void)
 			temp_node = curr_node->next;				/* Point to the identifier node			*/
 			if (is_fac)
 			{
-				make_fac(buff,token_data(temp_node->token));	/* Create a F-identifier			*/
+				make_fac(buff,token_data(temp_node->token));	/* Create a FAC-OF-identifier			*/
 			}
 			else
 			{
-				make_oa(buff,token_data(temp_node->token));	/* Create a A-O-identifier			*/
+				make_oa(buff,token_data(temp_node->token));	/* Create a ORDER-AREA-identifier			*/
 			}
 
-			edit_token(curr_node->token,buff);			/* Replace the "FAC" node with "F-identifier"	*/
+			edit_token(curr_node->token,buff);			/* Replace the "FAC" node with "FAC-OF-identifier"	*/
 			curr_node->token->type = IDENTIFIER;
 
 			if (!curr_node->down)					/* Move the fluff to the new node		*/
@@ -579,7 +589,7 @@ NODE make_statement(char *line, void *the_context)
 	if (first)
 	{
 		first = 0;
-		if (rc = ring_open(&private_cache, sizeof(TOKEN), 50, 5, NULL, 0))
+		if ((rc = ring_open(&private_cache, sizeof(TOKEN), 50, 5, NULL, 0)))
 		{
 			write_log("WISP",'F',"RINGOPEN","Unable to open ring [private_cache] rc=%d [%s]",rc,ring_error(rc));
 			exit_with_err();
@@ -657,7 +667,7 @@ NODE first_non_fluff_node(NODE the_tree)
 		return the_tree;
 	}
 
-	if (the_node = first_non_fluff_node(the_tree->down))
+	if ((the_node = first_non_fluff_node(the_tree->down)))
 	{
 		return the_node;
 	}
@@ -681,6 +691,22 @@ NODE delint_statement(NODE start)
 	if (!start->token) return start;
 
 	if (lint_token(start->token))
+	{
+		free_token_from_node(start);
+	}
+	return start;
+}
+
+NODE depunct_statement(NODE start)
+{
+	if (!start) return start;
+
+	depunct_statement(start->down);
+	depunct_statement(start->next);
+
+	if (!start->token) return start;
+
+	if (PUNCT == start->token->type)
 	{
 		free_token_from_node(start);
 	}
@@ -972,7 +998,7 @@ NODE find_period_node(NODE the_statement)
 		return the_statement;
 	}
 	
-	if (period_node = find_period_node(the_statement->down))
+	if ((period_node = find_period_node(the_statement->down)))
 	{
 		return period_node;
 	}
@@ -1059,12 +1085,12 @@ NODE last_non_fluff_node(NODE the_tree)
 		return NULL;
 	}
 
-	if (last_node = last_non_fluff_node(the_tree->next))
+	if ((last_node = last_non_fluff_node(the_tree->next)))
 	{
 		return last_node;
 	}
 
-	if (last_node = last_non_fluff_node(the_tree->down))
+	if ((last_node = last_non_fluff_node(the_tree->down)))
 	{
 		return last_node;
 	}
@@ -1081,7 +1107,7 @@ NODE unhook_trailing_fluff(NODE the_tree)
 	NODE 	last_node;
 	NODE 	fluff_node;
 	
-	if (last_node = last_non_fluff_node(the_tree))
+	if ((last_node = last_non_fluff_node(the_tree)))
 	{
 		fluff_node = last_node->down;
 		last_node->down = NULL;
@@ -1096,9 +1122,24 @@ NODE unhook_trailing_fluff(NODE the_tree)
 /*
 **	History:
 **	$Log: statment.c,v $
-**	Revision 1.11  1998/12/15 19:24:50  gsl
-**	enhance get_statement_fragment() to recognize END-OF-PAGE clauses
+**	Revision 1.16  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
 **	
+**	Revision 1.15  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.14  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.13  2002/07/25 17:53:36  gsl
+**	Fix FAC-OF- prefix
+**	
+**	Revision 1.12  2002/05/16 21:37:03  gsl
+**	add depunct_statement()
+**	
+**	Revision 1.11  1998-12-15 14:24:50-05  gsl
+**	enhance get_statement_fragment() to recognize END-OF-PAGE clauses
+**
 **	Revision 1.10  1998-03-04 13:44:11-05  gsl
 **	Fix SIZE ERROR clause handling
 **	Add EXCEPTION clause handling

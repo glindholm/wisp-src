@@ -20,11 +20,11 @@
 extern "C" {
 #endif
 
-void initglbs(const char *);
-void vwang_title(const char *);
+void WL_initglbs(const char *);
+const char* vwang_title(const char *);
 
-void wvaset(int_32 *x);
-void wswap(int_32 *arg);
+void WL_set_va_count(int_32 x);
+void WL_wswap(int_32 *arg);
 
 void EXTRACT(char *keyword, void *receiver);
 
@@ -98,6 +98,7 @@ void LINKGARG(
 void LINKPARG();
 
 void LOGOFF();
+void SETRETCODE(const char code[3]);
 
 void PRINT(
    char   *file,
@@ -164,7 +165,7 @@ void PUTPARM(
    void *retcode);
 */
 
-void wrename(
+void RENAME(
    const char *type,
    char *file,
    char *library,
@@ -214,20 +215,20 @@ void SETSUBMIT(
 	int_16	*len8,
 	void	*arg8);
 
-int findrun(char *file, char *lib, char *vol, char *nativepath, char* linktype);
+int WL_findrun(char *file, char *lib, char *vol, char *nativepath, char* linktype);
 
-int runtype(char *nativepath);
+int WL_runtype(char *nativepath);
 
-int newlevel();
-int oldlevel();
+int WL_newlevel();
+int WL_oldlevel();
 
-int firstproc(char *a_proc_name);
+int WL_firstproc(char *a_proc_name);
 
-int wbackground();
+int WL_wbackground();
 
-int werrlog(int, ...);
+int WL_werrlog(int, ...);
 
-int werr_write(const char *s);
+int WL_werr_write(const char *s);
 
 const char *wispenvpath(void);
 const char *wispconfigdir(void);
@@ -244,6 +245,27 @@ void wispexit_cleanup(void);
 /*
 **	History:
 **	$Log: wisp_rts.h,v $
+**	Revision 1.21  2003/07/03 18:54:55  gsl
+**	Fix RETURN-CODE processing, call SETRETCODE before exiting
+**	
+**	Revision 1.20  2002/12/13 21:17:30  gsl
+**	vwang_title() fixes
+**	
+**	Revision 1.19  2002/07/23 21:24:55  gsl
+**	wrename -> RENAME
+**	
+**	Revision 1.18  2002/07/12 17:17:06  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.17  2002/07/10 21:06:29  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.16  2002/07/10 04:27:39  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.15  2002/07/09 04:14:04  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.14  2001/08/22 20:42:47  gsl
 **	fix gnu errors
 **	

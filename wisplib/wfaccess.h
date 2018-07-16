@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 /*
 	wfaccess.h 		Define status codes for wfaccess()
 */
@@ -30,7 +51,7 @@
 #define ACC_BADVOL	16
 #define ACC_UNKNOWN	99
 
-int wfaccess(char* native_path, int4* mode);
+int wisp_file_access(char* native_path, int is_output, int is_indexed);
 
 #endif
 
@@ -38,6 +59,12 @@ int wfaccess(char* native_path, int4* mode);
 /*
 **	History:
 **	$Log: wfaccess.h,v $
+**	Revision 1.12  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.11  2002/06/27 04:12:41  gsl
+**	Clean up status/mode bits
+**	
 **	Revision 1.10  1997/04/29 17:38:08  gsl
 **	Moved acc_message() to wfopen.c
 **	

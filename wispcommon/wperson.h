@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 /*
@@ -109,49 +129,48 @@ typedef struct	{
 
 #define MAX_TRANSLATE 60
 
-typedef struct	{
-			struct logical_id *next;					/* pointer to the next one		*/
+typedef struct logical_id_struct logical_id;
+
+struct logical_id_struct {
+			logical_id *next;					/* pointer to the next one		*/
 			char 	logical[6+1];						/* the logical name			*/
 			char	translate[MAX_TRANSLATE+1];				/* it's translation			*/
-		} logical_id;
+		};
 
 /*
 **	Function Prototypes
 */
 
-#define wpload WL_wpload
 void WL_wpload(void);
-int save_defaults(void);
-int load_defaults(void);
-int write_defaults_to_file(char *file);
-int read_defaults_from_file(char *file);
-void delete_defaults_temp(void);
+int  WL_save_defaults(void);
+int  WL_load_defaults(void);
+int  WL_write_defaults_to_file(char *file);
+int  WL_read_defaults_from_file(char *file);
+void WL_delete_defaults_temp(void);
 
-char *wforms(int num);
-char *getprmap(int num);
-char *wlpclass(char lpclass);
-int getscmapnice(char jobclass, int *nice_value);
-int getcqmap(char jobclass, char *queue_value);
+char *WL_wforms(int num);
+char *WL_getprmap(int num);
+char *WL_wlpclass(char lpclass);
+int WL_getscmapnice(char jobclass, int *nice_value);
+int WL_getcqmap(char jobclass, char *queue_value);
 
-int ttyid5(char *tty);
-void build_wisp_config_path(char *file, char *path);
-int opt_linkvectoroff(void);
-int opt_pqnp(void);
-int load_options(void);
+int  WL_ttyid5(char *tty);
+void WL_build_wisp_config_path(char *file, char *path);
+int  WL_opt_linkvectoroff(void);
+int  WL_load_options(void);
 
-int get_defs(int code, void *void_ptr);
-int set_defs(int code, void *void_ptr);
+int WL_get_defs(int code, void *void_ptr);
+int WL_set_defs(int code, const void *void_ptr);
 
-int clearprogsymb(void);
-int setprogdefs(char *progvol, char *proglib);
-int saveprogdefs(void);
-int restoreprogdefs(void);
+int WL_clear_progdefs(void);
+int WL_set_progdefs_env(char *progvol, char *proglib);
+int WL_save_progdefs(void);
+int WL_restore_progdefs(void);
 
-prt_id *get_prt_list(void);
+prt_id     *WL_get_lpmap_list(void);
+logical_id *WL_get_lgmap_list(void);
 
-logical_id *get_logical_list(void);
-
-int get_dispfac_char(unsigned char c_hex, unsigned char *facchar, int *font);
+int WL_get_dispfac_char(unsigned char c_hex, unsigned char *facchar, int *font);
 
 const char *wispprbdir(char *dir);
 const char *wisplinkdir(char *dir);
@@ -162,19 +181,60 @@ const char *wisp_temp_defaults_path(char *path);
 
 void USESOFTLINK(char *laststate);
 void USEHARDLINK(char *laststate);
-int softlink(void);
+int WL_softlink(void);
 
-int nativescreens(void);
-int pfkeys12(void);
-const char *get_wisp_option(const char *keyword);
+int wisp_nativescreens(void);
+int wisp_acu_nativescreens(void);
+int WL_pfkeys12(void);
+const char *WL_get_wisp_option(const char *keyword);
+const char *WL_get_wisp_option_env(const char *keyword);
+
+#define OPTION_IDNUMERIC	(NULL != WL_get_wisp_option("IDNUMERIC"))	/* UNIX EXTRACT ID returns Numeric user ID	*/
+#define OPTION_IDFIVE		(NULL != WL_get_wisp_option("IDFIVE"))		/* UNIX EXTRACT ID returns chars 5-7 user ID	*/
+#define OPTION_ALLSTATUSKEYS	(NULL != WL_get_wisp_option("ALLSTATUSKEYS"))	/* Pass All STATUS keys thru to user declaritive*/
+#define OPTION_SIGNALSOFF	(NULL != WL_get_wisp_option("SIGNALSOFF"))	/* Disable Unix signal trapping.		*/
+#define OPTION_CREATEVOLUMEON	(NULL != WL_get_wisp_option("CREATEVOLUMEON"))	/* UNIX auto create VOLUME if not found		*/
+#define OPTION_OUTPUTVERIFYOFF	(NULL != WL_get_wisp_option("OUTPUTVERIFYOFF"))	/* Turn off the PF3 to continue screens		*/
+#define OPTION_NULLISDOT	(NULL != WL_get_wisp_option("NULLISDOT"))	/* Set so NULLs will display as a dot.		*/
+
+const char* WL_batchqueue_name();
 
 #endif /* WPERSON_H */
 
 /*
 **	History:
 **	$Log: wperson.h,v $
-**	Revision 1.24.2.1  2002/11/12 16:00:19  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.34  2003/03/20 18:28:45  gsl
+**	Fix logical_id typedef
+**	
+**	Revision 1.33  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.32  2003/01/29 16:20:57  gsl
+**	change loadpadnull() and WL_set_defs() to use const for the source arg
+**	
+**	Revision 1.31  2002/12/03 22:15:11  gsl
+**	Replace the w_err_flag bitmask with wispdebug mode that can be set to "FULL"
+**	"ERRORS" or "NONE" to simplify.
+**	
+**	Revision 1.30  2002/11/27 20:09:31  gsl
+**	Add WL_get_wisp_option_env() which looks for option first in environment then
+**	in the OPTIONS file.
+**	
+**	Revision 1.29  2002/07/12 20:40:46  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.28  2002/07/12 19:10:25  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.27  2002/07/11 20:29:21  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.26  2002/07/10 21:06:36  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.25  2002/07/02 04:03:18  gsl
+**	Add wisp_acu_nativescreens()
 **	
 **	Revision 1.24  2001/10/31 20:26:05  gsl
 **	Add wisp_temp_defaults_path()

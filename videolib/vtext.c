@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -31,7 +52,7 @@ int vtext(int display,int row,int column,char *text,...)
 	va_start(args,text);
 	vsprintf(buffer,text,args);
 	
-	vbuffering_start();								/* Turn on logical buffering.		*/
+	VL_vbuffering_start();								/* Turn on logical buffering.		*/
 	if (display < 0)								/* Old rendition restored on exit?	*/
 	{
 		display = -display;							/* Convert to positive entity.		*/
@@ -39,19 +60,28 @@ int vtext(int display,int row,int column,char *text,...)
 		push_flag = TRUE;							/* Flag that we have to restore later.	*/
 	}
 	else push_flag = FALSE;								/* Flag that we don't have to restore.	*/
-	vcharset(vmaskc(display));							/* Select character set.		*/
-	vmode(vmaskm(display));								/* Select character rendition.		*/
+	vcharset(VL_vmaskc(display));							/* Select character set.		*/
+	VL_vmode(VL_vmaskm(display));								/* Select character rendition.		*/
 
 	vmove(row,column);
 	vprint(buffer);									/* Output the text.			*/
 	if (push_flag) vstate(RESTORE);							/* Do we have to restore?		*/
-	vbuffering_end();								/* Restore automatic buffering.		*/
+	VL_vbuffering_end();								/* Restore automatic buffering.		*/
 	va_end(args);
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 /*
 **	History:
 **	$Log: vtext.c,v $
+**	Revision 1.15  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.14  2002/07/17 21:06:05  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2002/07/15 20:16:15  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.12  1997/07/09 16:31:49  gsl
 **	Removed support for double height text
 **	

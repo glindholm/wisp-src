@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		vdispvsn.c 
 **
@@ -46,13 +59,14 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #include <fcntl.h>            /* if this is not found (BSD types) then it it is in <sys/file.h>..  */
-#endif
-#ifdef _MSC_VER
+#include <string.h>
+#ifdef WIN32
 #include <io.h>
 #endif
-#include <string.h>
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #include "idsistd.h"
 #include "werrlog.h"
@@ -63,6 +77,7 @@ static char rcsid[]="$Id:$";
 #include "visn3.h"         /* Acucobol Vision internals header */
 #include "wanguid.h"
 #include "wisplib.h"
+#include "screen.h"
 
 #define VDISPIDX_C
 #include "vdispidx.h"
@@ -519,13 +534,13 @@ char *keybuf;		  /* a pointer to the key buffer  in case  the user entered one *
 				term[0]=no_mod[0]='\0';
 				memset(filelibvol,' ',22);
 				memset(filelibvol,'#',2);
-				memcpy(&filelibvol[2],wanguid3(),3);
+				memcpy(&filelibvol[2],WL_wanguid3(),3);
 				memset(&filelibvol[5],' ',22-5); /* fix bug */
 
 				/* for screen print, we vwang read the screen, and hand it to di_write_file */
 				setup_oa((struct vwang_screen *)the_screen,(char)0,(char)0,(char)0,(char)0);
 				vwang(&vwang_fn_read,(char *)the_screen,&vwang_lines,vwang_fkeys,term,no_mod);
-				di_write_file(the_screen+4,1920,80,filelibvol,filelibvol);  
+				WL_di_write_file(the_screen+4,1920,80,filelibvol,filelibvol);  
 				SETSTATE(*status,VD_DO_NOTHING);    /* no need to read this time */
 			}
 		}
@@ -1389,7 +1404,7 @@ int status;
 	{
 		if (CHKFLAG(status,SEARCH_ANY))
 		{
-			if (!isalpha(*srchptr))
+			if (!isalpha((int)*srchptr))
 			{
 				srch_ch_map[*srchptr]=TRUE;
 			}
@@ -1575,6 +1590,24 @@ static int dummy_vdispidx;
 /*
 **	History:
 **	$Log: vdispidx.c,v $
+**	Revision 1.14  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.11  2002/07/18 21:04:28  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.10  2002/07/10 21:05:26  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.9  2002/06/21 03:10:42  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.8  1997/03/12 18:14:28  gsl
 **	Change to use WIN32
 **	

@@ -1,75 +1,111 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /* 
-	FILE_GETPARM    This routine will allow operator input of a filename, by one of two methods: WANG native or VAX/VMS/unix
-			native mode.
- 			File_getparm() was changed to file_getparm2() to add the 3 printer paramters.				
+	FILE_GETPARM    
+	
+		This routine will allow operator input of a filename, by one of two methods: 
+		WANG native or native mode.
+		file_getparm2() was changed to file_getparn3() to replace mode with flags.
+ 		File_getparm() was changed to file_getparm2() to add the 3 printer paramters.				
 */
 
 #include <stdio.h>
-#include <varargs.h>
+#include <string.h>
 
 #include "idsistd.h"
 #include "wcommon.h"
 #include "wangkeys.h"
 #include "wperson.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"											
 #include "wisplib.h"
+#include "vssubs.h"
 #include "idsisubs.h"
 #include "filgparm.h"
 
 #define WANG_MODE 0
 #define NATIVE_MODE !WANG_MODE
 
-#define GP	args.ptrs[cnt++] = (char *)
+#define GP	gp_args[cnt++] = (char *)
+#define	GPNUM(num)			GP &N[num]
+#define	GPLEN(len)			GPNUM(len)
+#define	GPAT(row,col)			GP "A";GPNUM(row);GP "A";GPNUM(col)
+#define	GPFLD(fld,len,row,col)		GP fld;GPLEN(len);GPAT(row,col)
+#define	GPTEXT(txt,ln,rw,cl)		GP "T";GPFLD(txt,ln,rw,cl)
+#define	GPCTEXT(txt,rw,cl)		GPTEXT(txt,(strlen(txt)),rw,cl)
+#define	GPKW(x,kw,rcv,ln,rw,cl,typ)	GP x;GP kw;GPFLD(rcv,ln,rw,cl);GP typ
+#define	GPID(pn,pf,mn,mi)		GP pn;GP pf;GP mn; GP mi
+#define	GPTYP(tp,rq)			GP tp;GP rq
+#define	GPTOP(tp,rq,pn,pf,mn,mi,mc)	GPTYP(tp,rq);GPID(pn,pf,mn,mi);GPLEN(mc);
+#define	GPSETUP()			init_gpint();gpcnt=0
+#define	GPSTD(pn,mi,mc)			GPTOP("I ","R",pn,gppfrcvr,"0001",mi,mc)
+#define GPRES(pn,mi,mc)                 GPTOP("R ","R",pn,gppfrcvr,"0001",mi,mc)
+#define GPMSG(ln)                       GP ln; GPLEN(strlen(ln))
 
-static char rval[4];									/* The place to put the return code.	*/
+#define	GPSYSNAME(sn,sr)		GPKW("SYSNAME ",sn,60,sr,3,"C")
+#define	GPPFS(x)			GP "P";GP x
+#define	GPENTER()			GP "E"
+#define	GPNOENTER()			GP "N"
 
 static	int4	N[255];
 static	int4	Ni=0;
-static	int4 	two=2;
 
-static char *inf_msg[] = 
+
+static void init_N(void)
 {
-	"(TO BE CREATED AS OUTPUT BY THE PROGRAM)",
-	"(TO BE UPDATED (SHARED) BY THE PROGRAM)",
-	"(TO BE USED AS INPUT BY THE PROGRAM)",
-	"(TO BE UPDATED (I-O) BY THE PROGRAM)",
-	0 
-};
+	if (!Ni) 
+	{
+		int i;
+		for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 
+		{
+			N[i]=(int4)i; 
+			WL_wswap(&N[i]);
+		}
+		++Ni;
+	}
+}
 
-void file_getparm2(
-		   int4 f_mode, 				/* wfopen mode		*/
-		   char file[8], char lib[8], char vol[6], 	/* Wang style file spec */
-		   const char prname[8], 			/* Prname[8]		*/
-		   char issuer[6], 				/* Issuer[6]		*/
-		   int4 *entry_mode, 				/* 0 = Wang style, 1 = Native style filepath */
-		   char getparm_type[2],
-		   char native_path[80],
-		   char *msg1, char *msg2, 
-		   char *pfkey_rcvr, 
-		   char intv_type,				/* 'R' - Rename PF3,  'E' - Everything else */
-		   char orig_file[8], 				/* Original Wang file name */
-		   char *prtclass, 
-		   int4 *form, 
-		   int4* copies
-		   )
+void WL_file_getparm3(
+	char *file, char *lib, char *vol, 	/* Wang style file spec */
+	const char *prname, 			/* Prname[8]		*/
+	const char *issuer, 			/* Issuer[6]		*/
+	int4 *entry_mode, 			/* 0 = Wang style, 1 = Native style filepath */
+	char *getparm_type,
+	char *native_path,
+	char *msg1, char *msg2, 
+	char *pfkey_rcvr, 
+	char intv_type,					/* 'R' - Rename PF3,  'E' - Everything else */
+	char *orig_file, 				/* Original Wang file name */
+	char *prtclass, 
+	int4 *form, 
+	int4 *copies,
+	int  is_output,
+	int  is_printer,
+	int  is_io,
+	int  is_shared)
 {                                                  
 #define		ROUTINE		18000
 
 	int4	pfkey;
-	int	i,inf;
 	char	*error_msg;
 	char	pf_footer[100];
 	char	temp[100];
@@ -78,8 +114,9 @@ void file_getparm2(
 	int	done, type_ID;
 	char	prtform[10], prtcopies[10];
 	int	exit_key;
+	char	*inf_msg_ptr = "";
 
-	struct argst { char *ptrs[160]; } args;
+	char* gp_args[GETPARM_MAX_ARGS];
 	int4	cnt;
 
 	wtrace("FILE_GETPARM","ENTRY","PRNAME=[%8.8s] ISSUER=[%6.6s] TYPE=[%2.2s] STYLE=[%s] [%c]",
@@ -92,32 +129,24 @@ void file_getparm2(
 	dispchars(vol,6);
 	dispchars(native_path,sizeof(filename));
 
-	if ((f_mode & IS_PRINTFILE) && (f_mode & IS_OUTPUT))				/* Is this a print file open for output	*/
+	if ((is_printer) && (is_output))				/* Is this a print file open for output	*/
 	{
-		sprintf(prtform,"%03ld",*form);
-		sprintf(prtcopies,"%05ld",*copies);
+		sprintf(prtform,"%03d",*form);
+		sprintf(prtcopies,"%05d",*copies);
 	}
 
 	error_msg = "YOU MUST ENTER THE NAME AND LOCATION OF THE FILE.           ";	/* Initialize the  the error msg.	*/
 
-	if (!Ni) 
-	{
-		for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 
-		{
-			N[i]=(int4)i; 
-			wswap(&N[i]);
-		}
-		++Ni;
-	}
+	init_N();
 
-	wpload();									/* Get user personality and defaults.	*/
+	WL_wpload();									/* Get user personality and defaults.	*/
 
 	if (intv_type == 'R') /* 'E' Error  'R' Rename (open output, file exists) */
 		pfkey = PFKEY_3_ENABLED|PFKEY_5_ENABLED|PFKEY_16_ENABLED;
 	else
 		pfkey = PFKEY_5_ENABLED|PFKEY_16_ENABLED;				/* Only two keys enabled.		*/
 
-	if (pfkeys12())
+	if (WL_pfkeys12())
 	{
 		pfkey |= PFKEY_12_ENABLED;
 		exit_key = 12;
@@ -127,17 +156,24 @@ void file_getparm2(
 		exit_key = 16;
 	}
 	
-	wswap( &pfkey );								/* Do system dependent swap		*/
+	WL_wswap( &pfkey );								/* Do system dependent swap		*/
 
-	if (f_mode & IS_IO)
+	if (is_io)
 	{
-		if (f_mode & IS_NOWRITE)
-			inf = 3;
-		else
-			inf = 1;
+		inf_msg_ptr = "(TO BE UPDATED (I-O) BY THE PROGRAM)";
 	}
-	else if (f_mode & IS_OUTPUT) inf = 0;
-	else inf=2;
+	else if (is_shared)
+	{
+		inf_msg_ptr = "(TO BE UPDATED (SHARED) BY THE PROGRAM)";
+	}
+	else if (is_output) 
+	{
+		inf_msg_ptr = "(TO BE CREATED AS OUTPUT BY THE PROGRAM)";
+	}
+	else 
+	{
+		inf_msg_ptr = "(TO BE USED AS INPUT BY THE PROGRAM)";
+	}
 
 	memcpy(filename, native_path, sizeof(filename));				/* Initialize filename.			*/
 
@@ -158,7 +194,7 @@ void file_getparm2(
 		GP msg2?"T":"t"; GP msg2;	GP &N[msg2?strlen(msg2):0];	GP "A";	GP &N[10];	GP "A";	GP &N[2];
 		GP "T";	GP "PLEASE ASSIGN ";	GP &N[14];			GP "A";	GP &N[12];	GP "A";	GP &N[2];
 		GP "T";	GP temp;		GP &N[strlen(temp)+1];		GP "A";	GP &N[12];	GP "A";	GP &N[16];
-		GP "T";	GP inf_msg[inf];	GP &N[strlen(inf_msg[inf])];	GP "A";	GP &N[12];	GP "A";	GP &N[32];
+		GP "T";	GP inf_msg_ptr;		GP &N[strlen(inf_msg_ptr)];	GP "A";	GP &N[12];	GP "A";	GP &N[32];
 		GP "T";	GP "TO ASSIGN THIS FILE TO A DISK FILE, PLEASE SPECIFY:"; GP &N[51];
 										GP "A";	GP &N[14];	GP "A";	GP &N[2];
 		if (*entry_mode == NATIVE_MODE)
@@ -180,7 +216,7 @@ void file_getparm2(
 		}
 
 
-		if ((f_mode & IS_PRINTFILE) && (f_mode & IS_OUTPUT))			/* Is this a print file open for output	*/
+		if ((is_printer) && (is_output))			/* Is this a print file open for output	*/
 		{
 			GP "T";	GP "PRINTER OPTIONS:";	GP &N[16];		GP "A";	GP &N[20];	GP "A";	GP &N[6];
 			GP "K";	GP "PRTCLASS";	GP prtclass;	GP &N[1];	GP "A";	GP &N[20];	GP "A";	GP &N[27]; GP "L";
@@ -200,8 +236,7 @@ void file_getparm2(
 		GP "P";	GP &pfkey;
 
 
-		wvaset(&two);
-		GETPARM(&args,&cnt);						/* Use the new method			*/
+		GETPARM2(gp_args,cnt);						/* Use the new method			*/
 
 
 		if (*entry_mode == NATIVE_MODE)
@@ -218,7 +253,7 @@ void file_getparm2(
 			if (*pfkey_rcvr == PFKEY_12_PRESSED || *pfkey_rcvr == PFKEY_16_PRESSED)
 			{
 				*pfkey_rcvr = PFKEY_16_PRESSED;
-				setretcode("016");
+				SETRETCODE("016");
 			}
 			continue;
 		}
@@ -235,7 +270,7 @@ void file_getparm2(
 	dispchars(vol,6);
 	dispchars(native_path,sizeof(filename));
 
-	if ((f_mode & IS_PRINTFILE) && (f_mode & IS_OUTPUT))			/* Is this a print file open for output	*/
+	if ((is_printer) && (is_output))			/* Is this a print file open for output	*/
 	{
 		sscanf(prtform,"%d",form);
 		sscanf(prtcopies,"%d",copies);
@@ -254,7 +289,7 @@ void file_getparm2(
 }
 
 /*
-**	ROUTINE:	password_getparm()
+**	ROUTINE:	WL_password_getparm()
 **
 **	FUNCTION:	Issue the PASSWORD and USERNAME GETPARM
 **
@@ -278,24 +313,15 @@ void file_getparm2(
 **	WARNINGS:	None
 **
 */
-int password_getparm(int initial, char* uservalue, int userlen, char* passvalue, int passlen, char* savevalue, char* messtext)
+int WL_password_getparm(int initial, char* uservalue, int userlen, char* passvalue, int passlen, char* savevalue, char* messtext)
 {
-	int	i;
-	struct argst { char *ptrs[160]; } args;
+	char* gp_args[GETPARM_MAX_ARGS];
 	int4	cnt;
 	char	pfkey_rcvr[1];
 	char	*prname, *issuer, *userkey, *passkey, *savekey, *endmess, *savemess, *savexxx;
 	char	*ut, *pt, *gt;
 	
-	if (!Ni) 
-	{
-		for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 
-		{
-			N[i]=(int4)i; 
-			wswap(&N[i]);
-		}
-		++Ni;
-	}
+	init_N();
 
 	*pfkey_rcvr = ENTER_KEY_PRESSED;					/* Default the reciever to '@'			*/
 
@@ -323,8 +349,7 @@ int password_getparm(int initial, char* uservalue, int userlen, char* passvalue,
 	GP "T";  GP endmess;  GP &N[strlen(endmess)];      GP "A"; GP &N[24]; GP "A"; GP &N[(80-strlen(endmess))/2];
 	GP "E";
 	
-	wvaset(&two);
-	GETPARM(&args,&cnt);
+	GETPARM2(gp_args, cnt);
 
 	/*
 	**	This getparm can only end with the ENTER key 
@@ -340,12 +365,140 @@ int password_getparm(int initial, char* uservalue, int userlen, char* passvalue,
 	}
 }
 
+/*
+**	Routine:	WL_display_util_options_getparm()
+**
+**	Function:	Issue the OPTIONS getparm and validate.
+**
+**	Description:	Put up the OPTIONS getparm for DISPLAY and validate all fields.
+**			Currently only the RECSIZE field supported.
+**
+**	Arguments:
+**	recsize		The records size (returned)
+**
+**	Globals:
+**	N		The wswaped numbers array.
+**
+**	Return:		Pfkey number
+**	0		Continue
+**
+**	Warnings:	None
+**
+*/
+int WL_display_util_options_getparm(int *recsize)
+{
+	char* gp_args[GETPARM_MAX_ARGS];
+	int4	cnt;
+
+	char	*gptype;
+	char	*messid,*mess1,*mess2,*mess3,*mess4,*blank;
+	char	*x_recsize;
+
+	char	recsize_field[3+1];
+
+	init_N();
+
+	gptype = "ID";
+	blank=" ";
+	mess1=mess2=mess3=mess4=blank;
+	
+	messid = "0000";
+
+	memcpy(recsize_field,	"0  ",  3);
+	recsize_field[3] = '\0';
+	
+	x_recsize =  "K";
+
+	for(;;)
+	{
+		int	row;
+		char	pfkey_recv[1];
+
+		pfkey_recv[0] = '@';
+
+		cnt = 0;
+		GP gptype; GP "R"; GP "OPTIONS "; GP pfkey_recv; GP messid; GP "DISP  "; GPNUM(4); 
+			GP mess1; GPNUM(strlen(mess1));
+			GP mess2; GPNUM(strlen(mess2));
+			GP mess3; GPNUM(strlen(mess3));
+			GP mess4; GPNUM(strlen(mess4));
+
+		row = 12;
+		GPKW(x_recsize,"RECSIZE ",recsize_field,3,row,13,"A");
+		GPCTEXT("(0=Variable)",row,34);
+		
+
+		GPENTER();
+
+		GETPARM2(gp_args,cnt);
+	
+		x_recsize =  "K";
+		gptype = "R ";
+
+		*recsize = 0;
+		sscanf(recsize_field,"%d", recsize);
+		if (*recsize < 0 || *recsize >256)
+		{
+			messid = "ER12";
+			mess1 = "\224SORRY\204- Invalid record size. (0, 1-256)";
+			x_recsize="R";
+			continue;
+		}
+
+		/*
+		**	Passed all the tests
+		*/
+		break;
+	}
+
+	return 0;
+}
+
 
 /*
 **	History:
 **	$Log: filgparm.c,v $
-**	Revision 1.14.2.1  2002/11/12 16:00:20  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.28  2003/02/20 23:14:35  gsl
+**	Add OPTIONS get to DISPLAY utility that gets the record size RECSIZE
+**	
+**	Revision 1.27  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.26  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.25  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.24  2003/01/31 17:33:56  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.23  2002/07/30 19:12:40  gsl
+**	SETRETCODE
+**	
+**	Revision 1.22  2002/07/29 21:13:26  gsl
+**	setretcode -> SETRETCODE
+**	
+**	Revision 1.21  2002/07/12 17:00:55  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.20  2002/07/11 20:29:08  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.19  2002/07/10 21:05:16  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.18  2002/07/02 21:15:24  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.17  2002/07/01 04:02:37  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.16  2002/06/26 04:25:04  gsl
+**	Cleanup mode/status bit fields
+**	
+**	Revision 1.15  2002/06/21 03:10:36  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.14  1997/10/20 21:16:46  gsl
 **	Add tracing

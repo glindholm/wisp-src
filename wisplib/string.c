@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		string.c
@@ -17,14 +38,14 @@ static char rcsid[]="$Id:$";
 */
 
 #include <ctype.h> 
-#include <varargs.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "idsistd.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wisplib.h"
+#include "wmalloc.h"
 
 static unsigned char ascii2ebcdic[256] =
 {
@@ -72,43 +93,52 @@ static unsigned char ebcdic2ascii[256] =
 **	Static Function Prototypes
 */
 
-void center_text(char *l_in_string, int4 l_len, char *l_out_string);
-void leftj_text(char *l_in_string, int4 l_len, char *l_out_string);
-void rightj_text(char *l_in_string, int4 l_len, char *l_out_string);
-void rev_text(char *l_in_string, int4 l_len, char *l_out_string);
-void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 l_ondx, int4 l_olen, char l_pad);
-void str_xlat(char func, char *in_string, char *out_string, int4 len, char *table);
+static void center_text(char *l_in_string, int4 l_len, char *l_out_string);
+static void leftj_text(char *l_in_string, int4 l_len, char *l_out_string);
+static void rightj_text(char *l_in_string, int4 l_len, char *l_out_string);
+static void rev_text(char *l_in_string, int4 l_len, char *l_out_string);
+static void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 l_ondx, int4 l_olen, char l_pad);
+static void str_xlat(char func, char *in_string, char *out_string, int4 len, char *table);
 					     						
-void STRING(va_alist)						                        /* Function uses variable arguments.	*/
-va_dcl											/* Parameter declaration.     		*/
+/*
+STRING (Function, variable number of parameters dependent on Function)
+STRING ("MV", Instr, Inlen, Outstr, Outlen, Pad)
+STRING ("MI", Instr, Inoff, Inlen, Outstr, Outoff, Outlen, Pad)
+STRING ("AE", Instr, Inlen, Outstr)
+STRING ("BI", Instr, Inlen, Outstr)
+STRING ("CT", Instr, Inlen, Outstr)
+STRING ("EA", Instr, Inlen, Outstr)
+STRING ("LJ", Instr, Inlen, Outstr)
+STRING ("RJ", Instr, Inlen, Outstr)
+STRING ("RV", Instr, Inlen, Outstr)
+STRING ("TT", Instr, Inlen, Trantab, Outstr)
+STRING ("TL", Instr, Inlen, Tranlist, Outstr)
+*/
+
+void STRING(char* func_type, char* in_string, ...)
 {
-#define		ROUTINE		63000
-	va_list the_args;								/* Declare variable to traverse list.	*/
-	char *func_type, *in_string, *out_string;					/* Declare pointers for the indiv. 	*/
+	va_list the_args;
+	char *out_string;
 	int4  ndx, ondx; 								/* items.				*/
         int  arg_count;									/* Number of int4words in arg. list.	*/
 	int4 len, olen, *plen, *pndx;							/* Local copy of lengths.		*/
 	char padc, *pc;
 	char *table;
 	
-	va_start(the_args);								/* Setup pointer to start of list.	*/
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
-	va_start(the_args);								/* Reset the pointer.			*/
+	va_start(the_args, in_string);							/* Setup pointer to start of list.	*/
+	arg_count = WL_va_count();							/* How many args are there ?		*/
 	if (arg_count < 3)
 	{
-		werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);					/* Invalid number of parameters.	*/
+		werrlog(WERRCODE(63004),0,0,0,0,0,0,0,0);					/* Invalid number of parameters.	*/
 		va_end(the_args);							/* Done with the args.			*/
 		return;
 	}
-	func_type    = va_arg(the_args, char*);  					/* Get addr. of first arg.		*/
-	in_string = va_arg(the_args, char*);						/* Get addr. of string to manipulate.	*/
 
+	/* ARG3 - Inlen (for all funcitons except "MI") */
+	plen = va_arg(the_args, int4*);							/* Get addr. of length parameter.	*/
+	len = WL_get_swap(plen);
 
-	plen = va_arg(the_args, int4*);					/* Get addr. of length parameter.	*/
-	GETBIN(&len,plen,4);						/* Put aligned value into local var.	*/
-	wswap(&len);							/* Swap the word order.			*/
-
-	if (wtracing())
+	if (WL_wtracing())
 	{
 		char	tbuf[44];
 
@@ -124,7 +154,7 @@ va_dcl											/* Parameter declaration.     		*/
 			strcat(tbuf,"...");
 		}
 
-		wtrace("STRING","ENTER", "Function=[%2.2s] Instr=[%s] Arg3=[%d]", func_type, tbuf, len);
+		wtrace("STRING","ENTRY", "Function=[%2.2s] Instr=[%s] Arg3=[%d] args=%d", func_type, tbuf, len, arg_count);
 	}
 
 	switch(*func_type)								/* Check first char in function type.	*/
@@ -156,7 +186,7 @@ va_dcl											/* Parameter declaration.     		*/
 			{								/* and pad with specified character.	*/
 				if (arg_count < 5)
 				{
-					werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);		/* Invalid number of parameters.	*/
+					werrlog(WERRCODE(63004),0,0,0,0,0,0,0,0);		/* Invalid number of parameters.	*/
 					va_end(the_args);				/* Done with the args.			*/
 					return;
 				}
@@ -165,14 +195,13 @@ va_dcl											/* Parameter declaration.     		*/
 
 				/* Now get the len */
 				plen = va_arg(the_args, int4*);				/* Get addr. of length parameter.	*/
-				GETBIN(&len,plen,4);					/* Put aligned value into local var.	*/
-				wswap(&len);						/* Swap the word order.			*/
+				len = WL_get_swap(plen);
 			}
 			else if (func_type[1] == 'V')					/* Move string and pad with specified	*/
 			{								/*  character.				*/
 				if (arg_count < 4)
 				{
-					werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);		/* Invalid number of parameters.	*/
+					werrlog(WERRCODE(63004),0,0,0,0,0,0,0,0);		/* Invalid number of parameters.	*/
 					va_end(the_args);				/* Done with the args.			*/
 					return;
 				}
@@ -181,7 +210,7 @@ va_dcl											/* Parameter declaration.     		*/
 			}
 			else
 			{
-				werrlog(ERRORCODE(2),func_type,0,0,0,0,0,0,0);		/* Function not implemented.		*/
+				werrlog(WERRCODE(63002),func_type,0,0,0,0,0,0,0);		/* Function not implemented.		*/
 				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
@@ -192,15 +221,13 @@ va_dcl											/* Parameter declaration.     		*/
 				if (arg_count > 5)					/* Get passed Output Index.		*/
 				{
 					pndx = va_arg(the_args, int4*);			/* Get addr. of output offset parameter.*/
-					GETBIN(&ondx,pndx,4);				/* Put aligned value into local var.	*/
-					wswap(&ondx);					/* Swap the word order.			*/
+					ondx = WL_get_swap(pndx);
 				}
 				else ondx = 0;						/* Start with beginning of out_string.	*/
 				if (arg_count > 6)					/* Get passed Output length.		*/
 				{
 					plen = va_arg(the_args, int4*);			/* Get addr. of output length parameter.*/
-					GETBIN(&olen,plen,4);				/* Put aligned value into local var.	*/
-					wswap(&olen);					/* Swap the word order.			*/
+					olen = WL_get_swap(plen);
 				}
 				else olen = len;					/* Use the in_string length.		*/
 				if (arg_count > 7)					/* Get the passed Pad Character.	*/
@@ -215,8 +242,7 @@ va_dcl											/* Parameter declaration.     		*/
 				if (arg_count > 4)					/* Get passed Output Length.		*/
 				{
 					plen = va_arg(the_args, int4*);			/* Get addr. of output length parameter.*/
-					GETBIN(&olen,plen,4);				/* Put aligned value into local var.	*/
-					wswap(&olen);					/* Swap the word order.			*/
+					olen = WL_get_swap(plen);
 				}
 				else olen = len;					/* Use the in_string length.		*/
 				if (arg_count > 5)					/* Get passed Pad Character.		*/
@@ -233,7 +259,7 @@ va_dcl											/* Parameter declaration.     		*/
 	        case 'E':
 			if (arg_count < 3)
 			{
-				werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
+				werrlog(WERRCODE(63004),0,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
 				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
@@ -257,7 +283,7 @@ va_dcl											/* Parameter declaration.     		*/
 			}
 			else
 			{
-				werrlog(ERRORCODE(2),func_type,0,0,0,0,0,0,0);		/* Function not implemented.		*/
+				werrlog(WERRCODE(63002),func_type,0,0,0,0,0,0,0);		/* Function not implemented.		*/
 				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
@@ -267,7 +293,7 @@ va_dcl											/* Parameter declaration.     		*/
 	        {
 			if (arg_count < 4)
 			{
-				werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
+				werrlog(WERRCODE(63004),0,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
 				va_end(the_args);					/* Done with the args.			*/
 				return;
 			}
@@ -286,20 +312,20 @@ va_dcl											/* Parameter declaration.     		*/
 		}
 		default:
 		{
-			werrlog(ERRORCODE(2),func_type,0,0,0,0,0,0,0);			/* Function not implemented.		*/
+			werrlog(WERRCODE(63002),func_type,0,0,0,0,0,0,0);			/* Function not implemented.		*/
 			break;
 		}
  	}
  	va_end(the_args);								/* Done with the args.			*/
 }
 
-void center_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Centera line of text.		*/
+static void center_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Centera line of text.		*/
 {
 	int  i, i_len, x;								/* Work variables.			*/
 	char *work_area;								/* Pointer to work area			*/
 	
       	i_len = l_len;									/* Save some time, fetch mem. once.	*/
-	work_area = malloc(i_len);							/* Allocate required memory.		*/
+	work_area = wisp_malloc(i_len);							/* Allocate required memory.		*/
 	--i_len;									/* Offsets start at 0.			*/
 	for (i = i_len; (l_in_string[i]==' ') && i; --i);				/* Where does it end.			*/
 	++i_len;									/* Restore to actual length.		*/
@@ -324,7 +350,7 @@ void center_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Centera
 	free(work_area);								/* Done with storage.			*/
 }
 											/* Left justify a line of text.		*/
-void leftj_text(char *l_in_string, int4 l_len, char *l_out_string)
+static void leftj_text(char *l_in_string, int4 l_len, char *l_out_string)
 {                                                                                                                                 
 	char *tmp;
 	char *src, *dest;
@@ -332,7 +358,7 @@ void leftj_text(char *l_in_string, int4 l_len, char *l_out_string)
 
 	tmp = (char *)calloc((int)(l_len+1),sizeof(char));
 	for (	src = l_in_string, len=0 ;						/*  skip leading white space		*/ 
-		isspace(*src) && len < l_len; 
+		isspace((int)*src) && len < l_len; 
 		++src, ++len);
 	for (	dest = tmp, outlen=0; 							/* copy relevant data			*/
 		len<l_len; 
@@ -343,7 +369,7 @@ void leftj_text(char *l_in_string, int4 l_len, char *l_out_string)
 	free(tmp);
 }
 
-void rightj_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right justify a line of text.	*/
+static void rightj_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right justify a line of text.	*/
 {
 	char *tmp;
 	char *src, *dest;
@@ -365,7 +391,7 @@ void rightj_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right j
 	free(tmp);
 }
 
-void rev_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right justify a line of text.	*/
+static void rev_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right justify a line of text.	*/
 {
 	char *src, *dest, *tmpbuf;
        	int i;
@@ -377,7 +403,7 @@ void rev_text(char *l_in_string, int4 l_len, char *l_out_string)			/* Right just
 	free(tmpbuf);
 }
 
-void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 l_ondx, int4 l_olen, char l_pad)
+static void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 l_ondx, int4 l_olen, char l_pad)
 											/* Move and pad with character.		*/
 {
 	char *st_pos, *cpy_pos;
@@ -396,7 +422,7 @@ void move_and_pad(char *l_in_str, int4 l_ndx, int4 l_len, char *l_out_str, int4 
 	for (i = cnt; i < l_olen; i++)  *cpy_pos++ = l_pad;				/* Pad character for remaining length.	*/
 }
 
-void str_xlat(char func, char *in_string, char *out_string, int4 len, char *table)
+static void str_xlat(char func, char *in_string, char *out_string, int4 len, char *table)
 {
 	char *tmp_outbuff;
 	register char *outp, *inp, *p;
@@ -434,6 +460,42 @@ void str_xlat(char func, char *in_string, char *out_string, int4 len, char *tabl
 /*
 **	History:
 **	$Log: string.c,v $
+**	Revision 1.25  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.24  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.23  2003/01/17 19:46:23  gsl
+**	Switch STRING to use stdarg.h
+**	
+**	Revision 1.22  2002/12/10 17:09:16  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.21  2002/12/09 21:09:32  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.20  2002/07/16 16:24:51  gsl
+**	Globals
+**	
+**	Revision 1.19  2002/07/12 19:10:17  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.18  2002/07/12 17:01:01  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.17  2002/07/11 20:29:14  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.16  2002/07/10 21:05:26  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/07/02 21:15:29  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.14  2002/06/25 15:21:53  gsl
+**	Change to use wmalloc()
+**	
 **	Revision 1.13  1998/10/20 14:27:12  gsl
 **	Add tracing
 **	

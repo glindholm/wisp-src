@@ -7,9 +7,9 @@
 #include <video.h>
 #include <vmodules.h>
 
-testl()
+int testl()
 {
-	extern int vlin_op;
+	extern int VL_vlin_op;
 	int i;
 
 	vstate(0);
@@ -39,7 +39,7 @@ testl()
 	vmove(23,75);
 	vline(VERTICAL,-24);
 
-	vlin_op = OFF;
+	VL_vlin_op = OFF;
 	vmove(0,0);
 	vprint("Next test - No optimization from (20,45) of length up 10     \n");
 	vprint("Depress any key to do it."); vgetc();
@@ -55,7 +55,7 @@ testl()
 	vmove(0,0);
 	vprint("Next - A set of some horizontal lines.                       \n");
 	vprint("Depress any key to do it."); vgetc();
-	vlin_op = ON;
+	VL_vlin_op = ON;
 
 	verase(FULL_SCREEN);
 	vmove(0,0);
@@ -64,7 +64,7 @@ testl()
 	vmove(23,0);
 	vline(HORIZONTAL,79);
 
-	vlin_op = OFF;
+	VL_vlin_op = OFF;
 	vmove(0,0);
 	vprint("Next test - No optimization from (15,40) of length left 30.      \n");
 	vprint("Depress any key to do it."); vgetc();
@@ -80,7 +80,7 @@ testl()
 	vmove(0,0);
 	vprint("Next - A set of some wide lines.                             \n");
 	vprint("Depress any key to do it."); vgetc();
-	vlin_op = ON;
+	VL_vlin_op = ON;
 
 	verase(FULL_SCREEN);
 
@@ -96,7 +96,7 @@ testl()
 	vmove(23,0);
 	vline(FAT_HORIZONTAL,79);
 
-	vlin_op = OFF;
+	VL_vlin_op = OFF;
 	vmove(0,0);
 	vprint("Next test - No optimization fat from (15,60) left 50.            \n");
 	vprint("Depress any key to do it."); vgetc();
@@ -106,7 +106,7 @@ testl()
 	vmove(0,0);
 	vprint("Next test - Some fun.                                            \n");
 	vprint("Depress any key to do it."); vgetc();
-	vbuffering_start();
+	VL_vbuffering_start();
 	for (i = 0; i < MAX_LINES_PER_SCREEN/2; i++)
 	{
 		vmove(i,(i*2));
@@ -118,8 +118,8 @@ testl()
 		vmove((22-i),(i*2));
 		vline(FAT_VERTICAL,((i*2)-22));
 	}
-	vbuffering_end();
-	vlin_op = ON;
+	VL_vbuffering_end();
+	VL_vlin_op = ON;
 
 	vset_cursor_off();
 	vmode(BOLD);

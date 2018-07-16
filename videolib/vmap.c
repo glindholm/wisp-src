@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -21,13 +42,13 @@ static char rcsid[]="$Id:$";
 #include "vdata.h"
 
 static void vmp_express();
-int vmp_x();
-int vmp_up();
-int vmp_down();
+static int vmp_x();
+static int vmp_up();
+static int vmp_down();
 
 /*						Subroutine entry point.								*/
 
-vmap(action,sl,sc,el,ec) int action,sl,sc,el,ec;					/* Perform action on screen map.	*/
+int VL_vmap(action,sl,sc,el,ec) int action,sl,sc,el,ec;					/* Perform action on screen map.	*/
 {
 	register int i, j;								/* Working registers.			*/
 
@@ -79,7 +100,7 @@ vmap(action,sl,sc,el,ec) int action,sl,sc,el,ec;					/* Perform action on screen
 
 /*				Do the requested action on a particular cell.							*/
 
-int vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
+static int vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
 {
 	register int k;									/* Working registers.			*/
 
@@ -92,7 +113,7 @@ int vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
 	}
 	if (action == TAG_AS_OLD)
 	{
-		if (!visible(vchr_map[k][j],vatr_map[k][j])) vmap_cng[k][j] = 0;	/* If not visible, all is ok...		*/
+		if (!VL_visible(vchr_map[k][j],vatr_map[k][j])) vmap_cng[k][j] = 0;	/* If not visible, all is ok...		*/
 		else vmap_cng[k][j] = VMAP_CNG_OLDDATA;					/*    else flag as old data.		*/
 	}
 	return(SUCCESS);								/* Return to the caller.		*/
@@ -101,15 +122,15 @@ int vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
 
 /*					Scroll the map up.									*/
 
-vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
+static int vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
 {
 	register int i,k0,k1;								/* Working registers.			*/
 
 	if ((sl == 0) && (el == MAX_LINES_PER_SCREEN-1))				/* Is this a full screen scroll?	*/
 	{
-		memset(&vchr_map[vmap_top][0],' ',vscr_wid);				/* Fill with spaces.			*/
-		memset(&vatr_map[vmap_top][0],'\0',vscr_wid);				/* No attributes set on the new line.	*/
-		memset(&vmap_cng[vmap_top][0],'\0',vscr_wid);				/* No changes on this character.	*/
+		memset(&vchr_map[vmap_top][0],' ',VL_vscr_wid);				/* Fill with spaces.			*/
+		memset(&vatr_map[vmap_top][0],'\0',VL_vscr_wid);				/* No attributes set on the new line.	*/
+		memset(&vmap_cng[vmap_top][0],'\0',VL_vscr_wid);				/* No changes on this character.	*/
 		vmap_top = vmap_top + 1;						/* Adjust the virtual map top.		*/
 		if (vmap_top == MAX_LINES_PER_SCREEN) vmap_top = 0;			/* Wrap around if necessary.		*/
 	}
@@ -121,16 +142,16 @@ vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
 		{
 			k1 = vml(i);							/* Get index into the table.		*/
 
-			memcpy(&vchr_map[k0][0],&vchr_map[k1][0],vscr_wid);		/* Shuffle the bytes.			*/
-			memcpy(&vatr_map[k0][0],&vatr_map[k1][0],vscr_wid);
-			memcpy(&vmap_cng[k0][0],&vmap_cng[k1][0],vscr_wid);
+			memcpy(&vchr_map[k0][0],&vchr_map[k1][0],VL_vscr_wid);		/* Shuffle the bytes.			*/
+			memcpy(&vatr_map[k0][0],&vatr_map[k1][0],VL_vscr_wid);
+			memcpy(&vmap_cng[k0][0],&vmap_cng[k1][0],VL_vscr_wid);
 
 			k0 = k1;
 		}
 											/* Now blank the bottom line.		*/
-		memset(&vchr_map[k0][0],' ',vscr_wid);					/* Fill with spaces.			*/
-		memset(&vatr_map[k0][0],'\0',vscr_wid);					/* No attributes set on the new line.	*/
-		memset(&vmap_cng[k0][0],'\0',vscr_wid);					/* No changes on this character.	*/
+		memset(&vchr_map[k0][0],' ',VL_vscr_wid);					/* Fill with spaces.			*/
+		memset(&vatr_map[k0][0],'\0',VL_vscr_wid);					/* No attributes set on the new line.	*/
+		memset(&vmap_cng[k0][0],'\0',VL_vscr_wid);					/* No changes on this character.	*/
 	}
 
 	return(SUCCESS);								/* What could possibly go wrong?	*/
@@ -138,7 +159,7 @@ vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
 
 /*					Scroll the map down.									*/
 
-vmp_down(sl,el) int sl,el;								/* From start line to end line.		*/
+static int vmp_down(sl,el) int sl,el;								/* From start line to end line.		*/
 {
 	register int i,k0,k1;								/* Working registers.			*/
 
@@ -146,9 +167,9 @@ vmp_down(sl,el) int sl,el;								/* From start line to end line.		*/
 	{
 		vmap_top = vmap_top - 1;						/* Adjust the virtual map top.		*/
 		if (vmap_top < 0) vmap_top = MAX_LINES_PER_SCREEN - 1;			/* Wrap around if necessary.		*/
-		memset(&vchr_map[vmap_top][0],' ',vscr_wid);				/* Fill with spaces.			*/
-		memset(&vatr_map[vmap_top][0],'\0',vscr_wid);				/* No attributes set on the new line.	*/
-		memset(&vmap_cng[vmap_top][0],'\0',vscr_wid);				/* No changes on this character.	*/
+		memset(&vchr_map[vmap_top][0],' ',VL_vscr_wid);				/* Fill with spaces.			*/
+		memset(&vatr_map[vmap_top][0],'\0',VL_vscr_wid);				/* No attributes set on the new line.	*/
+		memset(&vmap_cng[vmap_top][0],'\0',VL_vscr_wid);				/* No changes on this character.	*/
 	}
 
 	else										/* Not full screen, do the hard way.	*/
@@ -158,16 +179,16 @@ vmp_down(sl,el) int sl,el;								/* From start line to end line.		*/
 		{
 			k1 = vml(i);							/* Get index into the table.		*/
 
-			memcpy(&vchr_map[k0][0],&vchr_map[k1][0],vscr_wid);		/* Shuffle the bytes.			*/
-			memcpy(&vatr_map[k0][0],&vatr_map[k1][0],vscr_wid);
-			memcpy(&vmap_cng[k0][0],&vmap_cng[k1][0],vscr_wid);
+			memcpy(&vchr_map[k0][0],&vchr_map[k1][0],VL_vscr_wid);		/* Shuffle the bytes.			*/
+			memcpy(&vatr_map[k0][0],&vatr_map[k1][0],VL_vscr_wid);
+			memcpy(&vmap_cng[k0][0],&vmap_cng[k1][0],VL_vscr_wid);
 
 			k0 = k1;
 		}
 											/* Now blank the bottom line.		*/
-		memset(&vchr_map[k0][0],' ',vscr_wid);					/* Fill with spaces.			*/
-		memset(&vatr_map[k0][0],'\0',vscr_wid);					/* No attributes set on the new line.	*/
-		memset(&vmap_cng[k0][0],'\0',vscr_wid);					/* No changes on this character.	*/
+		memset(&vchr_map[k0][0],' ',VL_vscr_wid);					/* Fill with spaces.			*/
+		memset(&vatr_map[k0][0],'\0',VL_vscr_wid);					/* No attributes set on the new line.	*/
+		memset(&vmap_cng[k0][0],'\0',VL_vscr_wid);					/* No changes on this character.	*/
 	}
 
 	return(SUCCESS);								/* What could possibly go wrong?	*/
@@ -182,6 +203,21 @@ static void vmp_express()
 /*
 **	History:
 **	$Log: vmap.c,v $
+**	Revision 1.16  2003/06/20 15:48:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.15  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.14  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.13  2002/07/16 13:40:22  gsl
+**	VL_ globals
+**	
+**	Revision 1.12  2002/07/15 20:16:10  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.11  1998/10/13 18:51:14  gsl
 **	Change to use VMAP_CNG_OLDDATA
 **	

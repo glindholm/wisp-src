@@ -338,7 +338,7 @@ procedure_input::~procedure_input() {
    trace(object, "~procedure_input");
 }
 
-extern "C" int wbackground();
+extern "C" int WL_wbackground();
 
 void procedure_input::run() {
    screen_contents *saved_screen;
@@ -351,7 +351,7 @@ void procedure_input::run() {
 #endif
 
       saved_screen = NULL;
-      if (! user_options.compile() && !wbackground())
+      if (! user_options.compile() && !WL_wbackground())
       {
           saved_screen = new screen_contents(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -492,6 +492,9 @@ int state_file_input::destroy() {
 //
 //	History:
 //	$Log: input.cpp,v $
+//	Revision 1.9  2002/07/10 21:06:28  gsl
+//	Fix globals WL_ to make unique
+//	
 //	Revision 1.8  1998/08/31 19:13:52  gsl
 //	drcs update
 //	

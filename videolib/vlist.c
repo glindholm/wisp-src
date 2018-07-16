@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -24,7 +45,7 @@ static char rcsid[]="$Id:$";
 **	delete_col()
 **	resize_struct()
 **	define_func_keys()
-**	display_scan()
+**	VL_display_scan()
 **	disp_one_item()		Display one item in row
 **	display_header_footer()	Display the header and footer
 **	display_cols()		Display columns
@@ -43,8 +64,6 @@ static char rcsid[]="$Id:$";
 #include "vlist.h"
 
 /*						Data Definitions.								*/
-static char *idsi_copyright = 
-			" (c) 1988,89 International Digital Scientific Incorporated.";	/* Here so it shows up in object code.	*/
 
 /*                                              Global Variables								*/
 static int num_scr = MAX_LINES_PER_SCREEN;						/* Number of avail. lines in scroll reg.*/
@@ -72,6 +91,10 @@ static int get_function();
 static int generate_display();
 static int vlist_memory_err();
 
+static struct active_list *lookup();
+
+static struct column *display_cols(); 		/* Display columns.			*/
+
 /*
 **	Routine:	vlist()
 **
@@ -91,14 +114,14 @@ static int vlist_memory_err();
 **	mm/dd/yy	Written by SMC
 **
 */
-int vlist(function,list_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
+int VL_vlist(function,list_id,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10,item11,item12,item13,item14,item15,item16)
 unsigned char *function,*list_id,
 	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*item11,*item12,*item13,*item14,*item15,*item16;
 {
 	struct tmpst *tmp;								/* Ptr to struct containing temp stuff.	*/
 	long *fptr, vlist_func;
 
-	vcapload();
+	VL_vcapload();
 
 	fptr = (long *)function;
 	vlist_func = *fptr;								/* Assign the vlist function to perform.*/
@@ -122,7 +145,7 @@ unsigned char *function,*list_id,
 			rtrn_code = (long *)item7;					/* Assign ptr to return code.		*/
 			adjust_row = (int *)item8;					/* Assign ptr to adjust row values flag.*/
 
-			display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,1,adjust_row);
+			VL_display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,1,adjust_row);
 			break;
 		}
 		case NO_DISPLAY_LIST:							/* Do not re-display a list, allow	*/
@@ -142,7 +165,7 @@ unsigned char *function,*list_id,
 			rtrn_code = (long *)item7;					/* Assign ptr to return code.		*/
 			adjust_row = (int *)item8;					/* Assign ptr to adjust row values flag.*/
 
-			display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,0,adjust_row);
+			VL_display_scan(list_num,rst_row,rst_col,row_rtrn,col_rtrn,marked_rtrn,key_rtrn,rtrn_code,0,adjust_row);
 			break;
 		}
 		case DISP_ROW_ITEM:							/* Display an item in a given row and	*/
@@ -329,7 +352,7 @@ static int init_list(list_id,rows,retcd) long list_id, rows, *retcd;
 {
 	struct column *currcol, *ncol;
 	struct list *a_def;
-	struct active_list *lookup(), *newlist;
+	struct active_list *newlist;
 	register int i;									/* Working registers.			*/
 
 	if (headal == NULL)
@@ -390,7 +413,7 @@ static int init_list(list_id,rows,retcd) long list_id, rows, *retcd;
 
 static int free_list_memory(list_id,retcd) long list_id, *retcd;			/* Free the memory assigne to list.	*/
 {
-	struct active_list *prevl;
+	struct active_list *prevl = NULL;
 	struct column *currcol, *ncol;
 
 	if (!headal) return(SUCCESS);							/* No list to free.			*/
@@ -407,8 +430,24 @@ static int free_list_memory(list_id,retcd) long list_id, *retcd;			/* Free the m
 			return(FAILURE);						/* Return to the caller.		*/
 		}
 	}
-	if (currlist == headal)  headal = currlist->nextl;				/* Reset the head list ptr.		*/
-	else  prevl->nextl = currlist->nextl;						/* Relink front of list to back of list.*/
+	if (currlist == headal)  
+	{
+		headal = currlist->nextl;						/* Reset the head list ptr.		*/
+	}
+	else  
+	{
+		if (prevl != NULL)
+		{
+			prevl->nextl = currlist->nextl;					/* Relink front of list to back of list.*/
+		}
+		else
+		{
+			vre("vlist:free_list_memory: List is corrupt");
+			*retcd = -1;							/* Return code is -1 for failure.	*/
+			return(FAILURE);						/* Return to the caller.		*/
+		}
+
+	}
 	currcol = currlist->thedef->headcol;						/* Point to head of column list.	*/
 	while (currcol != NULL)								/* Free column memory.			*/
 	{
@@ -423,7 +462,7 @@ static int free_list_memory(list_id,retcd) long list_id, *retcd;			/* Free the m
 	return(SUCCESS);
 }
 
-struct active_list *lookup(list_id) long list_id;
+static struct active_list *lookup(list_id) long list_id;
 {
 	currlist = headal;								/* Set current ptr to head of list.	*/
 	if (headal == NULL) return (NULL);						/* There is no list.			*/
@@ -442,7 +481,6 @@ static int add_head_foot(function,list_id,num_items,tp,retcd)
 long function, list_id, num_items, *retcd;
 struct tmpst *tp;
 {
-	struct active_list *lookup();
 	struct list *a_def;
 	register int i;									/* Working registers.			*/
 
@@ -489,9 +527,9 @@ static int add_col(function,list_id,type,width,itemlist,length,col_num,retcd)		/
 long function, list_id, type, width, length, col_num, *retcd;
 unsigned char *itemlist;
 {
-	struct active_list *lookup();
-	struct list *a_def;
-	struct column *a_col, *currcol;
+	struct list *a_def = NULL;
+	struct column *a_col = NULL;
+	struct column *currcol = NULL;
 	long coln;
 
 	if ((currlist = lookup(list_id)) == NULL)					/* Returns a ptr to the list struct.	*/
@@ -576,7 +614,6 @@ unsigned char *itemlist;
 
 static int delete_col(list_id,col_num,retcd) long list_id, col_num, *retcd;
 {
-	struct active_list *lookup();
 	struct list *a_def;
 	struct column *currcol;
 	long coln;
@@ -624,7 +661,6 @@ static int delete_col(list_id,col_num,retcd) long list_id, col_num, *retcd;
 
 static int resize_struct(list_id,rows,retcd) long list_id, rows, *retcd;
 {
-	struct active_list *lookup();
 	struct list *a_def;
 
 	if ((currlist = lookup(list_id)) == NULL)					/* Returns a ptr to the list struct.	*/
@@ -643,7 +679,6 @@ static int define_func_keys(list_id,key_array,retcd)
 long list_id, *retcd;
 unsigned char *key_array;
 {
-	struct active_list *lookup();
 	struct available_keys *fkeys, *fnk;
 	register int i, j;								/* Working registers.			*/
 	int cont;
@@ -687,13 +722,12 @@ unsigned char *key_array;
 /* Bit mask will be a 1 if selected, 0 otherwise.										*/
 /********************************************************************************************************************************/
 
-int display_scan(list_id,rst_row,rst_col,cursor_row,cursor_col,result_list,key_val,retcd,disp_fl,adjust_flag)
+int VL_display_scan(list_id,rst_row,rst_col,cursor_row,cursor_col,result_list,key_val,retcd,disp_fl,adjust_flag)
 long list_id, *rst_row, *rst_col, *cursor_row, *cursor_col, *result_list, *key_val, *retcd;
 int disp_fl, *adjust_flag;									/* Flag to depict if redisplay or not.	*/
 {
-	struct active_list *lookup();
 	struct list *a_def;
-	struct column *hcol, *scr_col, *display_cols();
+	struct column *hcol, *scr_col;
 	struct available_keys *key_array;
 	long *ipt;									/* Ptr to a long integer.		*/
 	long ril;
@@ -936,7 +970,6 @@ static int disp_one_item(list_id,drow,col_num,itemlist,retcd)				/* Display one 
 long list_id, drow, col_num, *retcd;
 unsigned char *itemlist;
 {
-	struct active_list *lookup();
 	struct list *a_def;
 	struct column *currcol;
 	long coln, cwidth, clength;
@@ -1063,19 +1096,19 @@ long st_col;
 			vtext(rend,st_foot_scr + i,0,"%s",disp_text);			/* Print the footer.			*/
 		}
 	}
-	vmode(CLEAR);									/* Set rendition back to normal.	*/
+	VL_vmode(CLEAR);									/* Set rendition back to normal.	*/
 	vroll((int)st_scr,(int)(st_foot_scr - 1));					/* Set back to original scroll region.	*/
 	return(SUCCESS);
 }
 
-struct column *display_cols(cp,rinl,st_row,st_col,currpos,result_list,retcd) 		/* Display columns.			*/
+static struct column *display_cols(cp,rinl,st_row,st_col,currpos,result_list,retcd) 		/* Display columns.			*/
 struct column *cp;
 long rinl;
 long st_row, st_col, currpos, *retcd, *result_list;
 {
 	long coln;
 	long lin;
-	register j;
+	int j;
 
 	coln = 0L;									/* Init to beginning of columns.	*/
 	while ((coln != st_col) && (cp != NULL))
@@ -1124,7 +1157,7 @@ long currpos;
 		else									/* Set to scroll backward/up.		*/
 		{
 			drow = st_scr;							/* Assign the display row.		*/
-			vlinefeed(VLF_REVERSE);						/* Set for scrolling backward.		*/
+			VL_vlinefeed(VLF_REVERSE);						/* Set for scrolling backward.		*/
 			vprint("\n");							/* Linefeed forward first.		*/
 		}
 		row = currpos;								/* Set row to what it should be.	*/
@@ -1415,43 +1448,59 @@ static int get_function(in_key,key_array)
 int in_key;
 struct available_keys *key_array;
 {
-	short lfunc;
-	int cont, i;
+	int i;
 
-	cont = TRUE;
 	i = 0;
-	while (cont)
+	while (TRUE)
 	{										/* Get the number of available keys so	*/
 		if (!key_array[i].meta_key)						/*  can malloc the array of structures.	*/
 		{
 			if (!key_array[i].list_function)
 			{
-				lfunc = -1;						/* Assign a failure value.		*/
-				cont = FALSE;						/* Get out of loop.			*/
+				return -1;						/* Assign a failure value.		*/
 			}
 		}
 		else
 		{
 			if (key_array[i].meta_key == in_key)				/* Compare the input key with array val.*/
 			{
-				lfunc = key_array[i].list_function;			/* Assign the appropriate list function.*/
-				cont = FALSE;
+				return key_array[i].list_function;			/* Assign the appropriate list function.*/
 			}
 			else  i++;							/* Step to next array structure.	*/
 		}
 	}
-	return(lfunc);
 }
 
 static int vlist_memory_err()
 {
 	vre("Run-time error, unable to allocate memory for list structure");		/* Oops, cannot get memory.		*/
-	vexit();									/* Unconditionally fatal.		*/
+	VL_vexit();									/* Unconditionally fatal.		*/
 	return(1);
 }                                         
 /*
 **	History:
 **	$Log: vlist.c,v $
+**	Revision 1.18  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.17  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.16  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.15  2002/07/17 21:06:02  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/16 14:11:48  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2002/07/15 20:56:38  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.12  2002/07/15 20:16:10  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.11  1997/07/08 21:14:04  gsl
 **	change to use video.h new interfaces
 **	

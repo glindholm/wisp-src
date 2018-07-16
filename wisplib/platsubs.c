@@ -61,17 +61,17 @@ static struct platform_struct	platform_table[] =
 	/*			"12"	"12345678901234567890"	"1234567890"	*/
 	{PLATFORM_UNKNOWN,	"UK",	"Unknown",		"UNKNOWN"},
 
-	{PLATFORM_OSF1_ALPHA,	"A1",	"OSF1 Alpha (64)",	"OSF1_ALPHA"},	/* Tru64 Digital->Compaq->HP */
-	{PLATFORM_AIX,		"AX",	"AIX pSeries",		"AIX"},
-	{PLATFORM_AIX_64,	"A6",	"AIX pSeries (64)",	"AIX_64"},
+	{PLATFORM_OSF1_ALPHA,	"A1",	"Tru64 Alpha",		"OSF1_ALPHA"},	/* Tru64 Digital->Compaq->HP */
+	{PLATFORM_AIX,		"AX",	"AIX RS/6000 (32-bit)",	"AIX"},
+	{PLATFORM_AIX_64,	"A6",	"AIX RS/6000 (64-bit)",	"AIX_64"},
 	{PLATFORM_DGUX,		"DG",	"DG/UX Aviion",		"DGUX"},
 	{PLATFORM_DGUX_INTEL,	"DI",	"DG/UX Intel",		"DGUX_INTEL"},	
-	{PLATFORM_HPUX,		"HP",	"HP-UX PA-RISC",	"HPUX"},
-	{PLATFORM_HPUX_64,	"H6",	"HP-UX PA-RISC (64)",	"HPUX_64"},
+	{PLATFORM_HPUX,		"HP",	"HP-UX PA-RISC 32-bit",	"HPUX"},
+	{PLATFORM_HPUX_64,	"H6",	"HP-UX PA-RISC 64-bit",	"HPUX_64"},
 	{PLATFORM_LINUX,	"LX",	"LINUX Intel",		"LINUX"},
 	{PLATFORM_SCO,		"SC",	"SCO UNIX Intel",	"SCO"},
-	{PLATFORM_SOLARIS,      "SO",   "Solaris Sparc",	"SOLARIS"},
-	{PLATFORM_SOLARIS_64,   "S6",   "Solaris Sparc (64)",	"SOLARIS_64"},
+	{PLATFORM_SOLARIS,      "SO",   "Solaris Sparc 32-bit",	"SOLARIS"},
+	{PLATFORM_SOLARIS_64,   "S6",   "Solaris Sparc 64-bit",	"SOLARIS_64"},
 	{PLATFORM_SEQUENT,	"SQ",	"Sequent",		"SEQUENT"},
 	{PLATFORM_ULTRIX,	"UL",	"Ultrix (DEC RISC)",	"ULTRIX"},
 	{PLATFORM_UNIXWARE,	"UW",	"UNIXWARE Intel",	"UNIXWARE"},
@@ -461,9 +461,8 @@ void WL_putplattab(void)
 /*
 **	History:
 **	$Log: platsubs.c,v $
-**	Revision 1.11.2.2  2003/02/07 18:40:09  gsl
-**	sync with $HEAD
-**	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
+**	Revision 1.20  2003/05/19 18:53:52  gsl
+**	Add 32/64 bit to platform names
 **	
 **	Revision 1.19  2003/02/07 17:55:21  gsl
 **	Rework the platform routines and add AIX HPUX SOLARIS 64-bit

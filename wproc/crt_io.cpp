@@ -72,7 +72,7 @@ extern "C" void vwang_term2wang(unsigned char *new_text, int len);
 extern "C" void vwang_wang2ansi(unsigned char *new_text, int len);
 extern "C" void vwang_ansi2wang(unsigned char *new_text, int len);
 extern "C" void vwang_load_charmap(int force);
-extern "C" const char *get_wisp_option(const char *option);
+extern "C" const char *WL_get_wisp_option(const char *option);
 static int charmap_loaded = 0;
 static int nativecharmap = 0;
 static screen_contents *saved_screen = NULL;
@@ -99,7 +99,7 @@ void filtered_vtext(int attr, int row, int column, const char *text) {
 	{
 		charmap_loaded = 1;
 		vwang_load_charmap(0);
-		nativecharmap = (get_wisp_option("NATIVECHARMAP"))?1:0;
+		nativecharmap = (WL_get_wisp_option("NATIVECHARMAP"))?1:0;
 	}
 
 	if (nativecharmap)
@@ -117,7 +117,7 @@ void filtered_vtext(int attr, int row, int column, const char *text) {
 		}
 	}
 
-	vtext(attr, row, column, new_text);
+	VL_vtext(attr, row, column, new_text);
 
 	delete_string(new_text);
 }
@@ -132,23 +132,23 @@ void use_full_screen_io() {
    active_window.bottom = SCREEN_HEIGHT;
 
    if (! using_full_screen_io) {
-	if (wbackground())
+	if (WL_wbackground())
 	{
 		//	Got a problem, can't do screen IO in background!
 		char	buff[512];
 
 		sprintf(buff,"%%WPROC-F-SCREENIO Screen IO was attempted in background\nWPROC Input file = %s",
 			the_process->the_input_pathname);
-		werrlog(102,buff);
+		WL_werrlog(102,buff);
 		exit(1);
 	}
 	using_full_screen_io = true;
-	vstate(DEFAULT);
+	VL_vstate(DEFAULT);
 
       if (first_call) {
          // Erase entire screen so video can establish a screen map, otherwise
          // it won't know about the whole screen and cursor won't move properly
-         verase(FULL_SCREEN);
+         VL_verase(FULL_SCREEN);
          first_call = false;
       }
    }
@@ -171,7 +171,7 @@ void clear_screen() {
        active_window.top == 1 && active_window.bottom == SCREEN_HEIGHT &&
        default_attribute == VMODE_CLEAR)
    {
-      verase(FULL_SCREEN);
+      VL_verase(FULL_SCREEN);
       global_w4w_handler.clear_image();
    }
    else {
@@ -180,11 +180,11 @@ void clear_screen() {
       blanks[active_window.right - active_window.left + 1] = '\0';
       for (int i = active_window.top; i <= (int)(active_window.bottom); i++)
       {
-         vtext(default_attribute, i - 1, active_window.left - 1, blanks);
+         VL_vtext(default_attribute, i - 1, active_window.left - 1, blanks);
 	 global_w4w_handler.put_text(i-1, active_window.left -1, blanks);
       }
    }
-   vmove(active_window.top - 1, active_window.left - 1);
+   VL_vmove(active_window.top - 1, active_window.left - 1);
 #endif
 #endif
 }
@@ -195,7 +195,7 @@ void clear_to_eol() {
    clreol();
 #else
 #if WANG
-   verase(TO_EOL);
+   VL_verase(TO_EOL);
 #endif
 #endif
 }
@@ -229,13 +229,13 @@ void cursor_visible(Boolean visible) {
    _setcursortype(visible ? _NORMALCURSOR : _NOCURSOR);
 #else
 #if WANG
-   if (wbackground()) return;
+   if (WL_wbackground()) return;
    if (! using_full_screen_io)
       use_full_screen_io();
    if (visible)
-	vset_cursor_on();
+	VL_vset_cursor_on();
    else
-	vset_cursor_off();
+	VL_vset_cursor_off();
 #endif
 #endif
    the_process->cursor_off = BOOLEAN(visible == false);
@@ -456,15 +456,15 @@ void draw_box(
       clear_screen();
 
    if (style >= 2) {
-      vmode(default_attribute);
-      vmove(top - 1, left - 1);
-      vline(vertical_line, height);
-      vmove(top - 1, right - 1);
-      vline(vertical_line, height);
-      vmove(top - 1, left - 1);
-      vline(horizontal_line, width);
-      vmove(bottom - 1, left - 1);
-      vline(horizontal_line, width);
+      VL_vmode(default_attribute);
+      VL_vmove(top - 1, left - 1);
+      VL_vline(vertical_line, height);
+      VL_vmove(top - 1, right - 1);
+      VL_vline(vertical_line, height);
+      VL_vmove(top - 1, left - 1);
+      VL_vline(horizontal_line, width);
+      VL_vmove(bottom - 1, left - 1);
+      VL_vline(horizontal_line, width);
    }
 
    if (title) {
@@ -518,7 +518,7 @@ int get_key_pressed() {
 	if (! using_full_screen_io)
       		use_full_screen_io();
 
-   	the_char = vgetm();
+   	the_char = VL_vgetm();
 
 	if (the_char > 0 && the_char < 256)
 	{
@@ -548,7 +548,7 @@ void get_region(int left, int top, int right, int bottom, usign_8 *&a_region) {
 #if WANG
    if (! using_full_screen_io)
       use_full_screen_io();
-   a_region = vsss(top - 1, left - 1, bottom - top + 1, right - left + 1);
+   a_region = VL_vsss(top - 1, left - 1, bottom - top + 1, right - left + 1);
 #endif
 #endif
 }
@@ -575,10 +575,10 @@ void goto_xy(int x, int y) {
 #if WANG
    if (! using_full_screen_io)
       use_full_screen_io();
-   int save_verbose = verbose;
-   verbose = false;
-   vmove(y + active_window.top - 2, x + active_window.left - 2);
-   verbose = save_verbose;
+   int save_verbose = VL_verbose;
+   VL_verbose = false;
+   VL_vmove(y + active_window.top - 2, x + active_window.left - 2);
+   VL_verbose = save_verbose;
 #endif
 #endif
 }
@@ -613,7 +613,7 @@ Boolean key_pressed(int waittime) {
 	}
 	else
 	{
-		if ((c = vcheck())) vpushc(c);
+		if ((c = VL_vcheck())) VL_vpushc(c);
 	}
    	return BOOLEAN(c != 0);
 #endif
@@ -628,7 +628,7 @@ void normal_video() {
 #if WANG
    background_color = color_black;
    foreground_color = color_white;
-   vmode(VMODE_CLEAR);
+   VL_vmode(VMODE_CLEAR);
    default_attribute = VMODE_CLEAR;
 #endif
 #endif
@@ -643,7 +643,7 @@ void put_region(int left, int top, int right, int bottom, usign_8 *a_region) {
 #if WANG
 void put_region(usign_8 *a_region) {
    assert(using_full_screen_io);
-   vrss(a_region);
+   VL_vrss(a_region);
 }
 #endif
 #endif
@@ -664,8 +664,8 @@ void put_text(int column, int row, const char *text, usign_8 attribute) {
 #else
 #if WANG
    assert(using_full_screen_io);
-   int original_x = vcur_col;
-   int original_y = vcur_lin;
+   int original_x = VL_vcur_col;
+   int original_y = VL_vcur_lin;
 
    if (foreground_color == color_black && background_color == color_white)
       default_attribute = VMODE_REVERSE;
@@ -689,7 +689,7 @@ void put_text(int column, int row, const char *text, usign_8 attribute) {
    if (attribute == ATTR_UNDER_DIM || attribute == ATTR_UNDER_BRIGHT)
       attr |= VMODE_UNDERSCORE;
    filtered_vtext(attr, row - 1, column - 1, text);
-   vmove(original_y, original_x);
+   VL_vmove(original_y, original_x);
 #endif
 #endif
 }
@@ -701,8 +701,8 @@ void put_text(const char *text) {
 #else
 #if WANG
    if (foreground_color == color_black && background_color == color_white)
-      vmode(VMODE_REVERSE);
-   vprint((char *) text);
+      VL_vmode(VMODE_REVERSE);
+   VL_vprint((char *) text);
 #endif
 #endif
 }
@@ -726,14 +726,14 @@ char *read_stdin(int chars) {
 
 void restore_full_screen_state(Boolean hard_restore) {
 #if WANG
-   if (wbackground()) return;
+   if (WL_wbackground()) return;
    assert(saved_screen);
    use_full_screen_io();
    clear_screen();
    saved_screen->restore_screen();
-   vdefer_restore();
+   VL_vdefer_restore();
    if (hard_restore)
-      vrefresh(HARD_REFRESH);
+      VL_vrefresh(HARD_REFRESH);
    delete saved_screen;
    saved_screen = NULL;
 #endif
@@ -758,7 +758,7 @@ void ring_bell() {
    nosound();
 #else
    if (using_full_screen_io && isatty(fileno(stdin)))
-      vbell();
+      VL_vbell();
    else
       write_stdout("\a");
 #endif
@@ -767,7 +767,7 @@ void ring_bell() {
 
 void save_full_screen_state() {
 #if WANG
-   if (wbackground()) return;
+   if (WL_wbackground()) return;
 
    assert(! saved_screen);
    saved_screen = new screen_contents(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -809,10 +809,10 @@ void text_foreground(color a_color) {
 
 void use_standard_io() {
 #if WANG && ! DOS_HOST
-   if (video_inited) {
-      vmode(VMODE_CLEAR);
-      vonexit(0);
-      vexit();
+   if (VL_video_inited) {
+      VL_vmode(VMODE_CLEAR);
+      VL_vonexit(0);
+      VL_vexit();
    }
    using_full_screen_io = false;
 #endif
@@ -826,7 +826,7 @@ int where_x() {
 #if WANG
    if (! using_full_screen_io)
       use_full_screen_io();
-   return vcur_col - active_window.left + 2;
+   return VL_vcur_col - active_window.left + 2;
 #endif
 #endif
 }
@@ -839,7 +839,7 @@ int where_y() {
 #if WANG
    if (! using_full_screen_io)
       use_full_screen_io();
-   return vcur_lin - active_window.top + 2;
+   return VL_vcur_lin - active_window.top + 2;
 #endif
 #endif
 }
@@ -858,19 +858,19 @@ void write_stdout(const char* s) {
 #else
 #if WANG
    if (using_full_screen_io && isatty(fileno(stdin))) {
-      int save_verbose = verbose;
-      verbose = false;
-      vprint((char *) s);
-      verbose = save_verbose;
+      int save_verbose = VL_verbose;
+      VL_verbose = false;
+      VL_vprint((char *) s);
+      VL_verbose = save_verbose;
    }
    else {
       printf("%s", s);
       fflush(stdout);
    }
 
-   if (wbackground())
+   if (WL_wbackground())
    {
-        werr_write(s);
+        WL_werr_write(s);
    }
 #endif
 #endif
@@ -1129,6 +1129,24 @@ Boolean w4w_handler::w4w()
 //
 //	History:
 //	$Log: crt_io.cpp,v $
+//	Revision 1.26  2003/06/20 15:37:44  gsl
+//	VL_ globals
+//	
+//	Revision 1.25  2002/07/16 14:11:50  gsl
+//	VL_ globals
+//	
+//	Revision 1.24  2002/07/15 20:16:04  gsl
+//	Videolib VL_ gobals
+//	
+//	Revision 1.23  2002/07/15 17:52:52  gsl
+//	Videolib VL_ gobals
+//	
+//	Revision 1.22  2002/07/15 17:09:57  gsl
+//	Videolib VL_ gobals
+//	
+//	Revision 1.21  2002/07/10 21:06:27  gsl
+//	Fix globals WL_ to make unique
+//	
 //	Revision 1.20  2001/08/22 20:17:00  gsl
 //	fix missing type
 //	

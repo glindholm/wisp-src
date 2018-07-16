@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		customvw.c
 **
@@ -38,7 +57,7 @@ static char rcsid[]="$Id:$";
 /*
 **	ROUTINE:	use_custom_vwang()
 **
-**	FUNCTION:	DevTech stub for test if want to use custom screen handling.
+**	FUNCTION:	Stub to test if using custom screen handling.
 **
 **	DESCRIPTION:	Function will test if a custom screen handler should be
 **			used instead of the standard vwang() routine.
@@ -61,7 +80,7 @@ int use_custom_vwang(void)
 /*
 **	ROUTINE:	custom_vwang()
 **
-**	FUNCTION:	DevTech stub for custom screen handling routine.
+**	FUNCTION:	Stub for custom screen handling routine.
 **
 **	DESCRIPTION:	Pass in same parameters as vwang() but do own custom
 **			screen handling.  If set a functional return then 
@@ -84,8 +103,13 @@ int use_custom_vwang(void)
 **	WARNINGS:	None
 **
 */
-int custom_vwang(unsigned char *function,unsigned char *wsb,unsigned char *lines,unsigned char *terminate_list,
-        unsigned char *term,unsigned char *no_mod)
+int custom_vwang(
+	const	unsigned char function[1],
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+	const		 char *terminate_list,
+			 char term[2],
+		unsigned char no_mod[2])
 {
 	return(1);
 }
@@ -93,8 +117,20 @@ int custom_vwang(unsigned char *function,unsigned char *wsb,unsigned char *lines
 /*
 **	History:
 **	$Log: customvw.c,v $
+**	Revision 1.6  2003/02/05 15:50:12  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.5  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.4  2002/08/01 14:09:12  gsl
+**	type warnings
+**	
+**	Revision 1.3  2002/08/01 02:42:17  gsl
+**	fix type warning
+**	
 **	Revision 1.2  1995/07/06 07:43:23  scass
-**	Added routine comments for DevTech stubs for custom screen handler
+**	Added routine comments for stubs for custom screen handler
 **	(SFG enhancement request)
 **	
  * Revision 1.1  1995/07/05  15:38:17  scass

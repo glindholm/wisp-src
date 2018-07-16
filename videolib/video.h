@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1994-1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 /************************************************************************/
 /*	      VIDEO - Video Interactive Development Environment		*/
 /*			Copyright (c) 1988, 1989, 1990			*/
@@ -56,7 +75,7 @@
 /************************************************************************/
 
 #define	MAX_LINES_PER_SCREEN	24	/* Standard VT220 screen.	*/
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 #define MAX_COLUMNS_PER_LINE	80	/* Normally in 80 column mode.	*/
 #else	/* VMS and unix */
 #define MAX_COLUMNS_PER_LINE   132	/* Normally in 80 column mode.	*/
@@ -72,9 +91,9 @@
 #define VBUFF_START	1 /* Start buffered operation			*/
 #define VBUFF_END	2 /* End buffered operation			*/
 
-int vbuffering(int state);
-int vbuffering_start(void);
-int vbuffering_end(void);
+int VL_vbuffering_start(void);
+int VL_vbuffering_end(void);
+int VL_vbuffering_on (void);
 
 /************************************************************************/
 /*	verase and vrefresh parameters.					*/
@@ -84,7 +103,7 @@ int vbuffering_end(void);
 #define TO_EOS	      2			/* Erase to end of screen	*/
 #define TO_EOL        5			/* Erase to end of line		*/
 
-int verase(int control);
+#include "verase.h"
 
 
 #define HARD_REFRESH  6			/* Erase full screen (hard).	*/
@@ -92,7 +111,7 @@ int verase(int control);
 #define TOP_MENU      8			/* Erase the top menu level.	*/
 #define TO_BOTTOM_MENU 9		/* Erase all but bottom menu.	*/
 
-int vrefresh(int what);
+int VL_vrefresh(int what);
 
 
 /************************************************************************/
@@ -111,7 +130,8 @@ int vrefresh(int what);
 #define VMODE_BLINK      4			/* Blinking rendition	*/
 #define VMODE_REVERSE    8			/* Reverse video rend	*/
 
-int vmode(int control);
+#define vmode VL_vmode
+int VL_vmode(int control);
 
 /************************************************************************/
 /*	vcharset parameters						*/
@@ -128,26 +148,12 @@ int vmode(int control);
 #define VCS_ROM_GRAPHICS  64	/* Alternate ROM special grapics	*/
 #define VCS_DOWN_LOADED  128	/* Down loaded character set.		*/
 
-int vcharset(int char_set);
+int VL_vcharset(int char_set);
 
 /************************************************************************/
 /*	vline parameters						*/
 /************************************************************************/
-
-#define VERTICAL	0			/* Draw vertical line	*/
-#define	HORIZONTAL	3			/* Horizontal line.	*/
-#define FAT_VERTICAL    6			/* Reverse space vert.	*/
-#define FAT_HORIZONTAL  7			/* Reverse space horiz.	*/
-
-#define VLINE_VERTICAL		0		/* Draw vertical line	*/
-#define VLINE_HORIZONTAL	3		/* Horizontal line.	*/
-#define VLINE_FAT_VERTICAL	6		/* Reverse space vert.	*/
-#define VLINE_FAT_HORIZONTAL	7		/* Reverse space horiz.	*/
-
-#ifdef vline
-#undef vline
-#endif
-extern int vline (int type, int length);
+#include "vline.h"
 
 /************************************************************************/
 /*      vstate() parameter definitions.					*/
@@ -163,7 +169,8 @@ extern int vline (int type, int length);
 #define VSTATE_SAVE_STTY       -2	/* Save STTY state.		*/
 #define VSTATE_RESTORE_STTY	2	/* Restore a STTY state.	*/
 
-int vstate(int action);
+#define vstate	VL_vstate
+int VL_vstate(int action);
 
 
 /************************************************************************/
@@ -191,11 +198,17 @@ enum e_vdefer
 	VDEFER_RESTORE		= 1, 
 	VDEFER_MOTION_ONLY	= 2
 };
+
+#define vdefer		VL_vdefer
+#define vdefer_restore	VL_vdefer_restore
+#define vdefer_save	VL_vdefer_save
+#define vdeferred	VL_vdeferred
+
 	
-int vdefer(enum e_vdefer state);
-int vdefer_restore(void);
-int vdefer_save(void);
-enum e_vdefer vdeferred(void);
+int VL_vdefer(enum e_vdefer state);
+int VL_vdefer_restore(void);
+int VL_vdefer_save(void);
+enum e_vdefer VL_vdeferred(void);
 
 
 /************************************************************************/
@@ -217,10 +230,13 @@ enum e_vdefer vdeferred(void);
 
 #define VSET_TABLE_SIZE      	(VSET_CURSOR+1)
 
-int vset(int item, int state);
+#define vset		VL_vset
+#define vset_cursor_on	VL_vset_cursor_on
+#define vset_cursor_off	VL_vset_cursor_off
 
-int vset_cursor_on(void);
-int vset_cursor_off(void);
+int VL_vset(int item, int state);
+int VL_vset_cursor_on(void);
+int VL_vset_cursor_off(void);
 
 
 /************************************************************************/
@@ -232,15 +248,7 @@ int vset_cursor_off(void);
 #define	LIGHT		4			/* Set screen light.	*/
 #define DARK		8			/* Set screen dark.	*/
 
-#define VSCREEN_DEFAULT		0		/* Default narrow+dark	*/
-#define VSCREEN_NARROW		1		/* Set screen narrow.	*/
-#define VSCREEN_WIDE		2		/* Set screen wide.	*/
-#define VSCREEN_LIGHT		4		/* Set screen light.	*/
-#define VSCREEN_DARK		8		/* Set screen dark.	*/
-#define VSCREEN_NOOP		16		/* Clear first flags	*/
-
-int vscreen(int state);
-int vscreen_check(int state);
+#include "vscreen.h"
 
 /************************************************************************/
 /*	vnewline and vlinefeed definitions.				*/
@@ -255,8 +263,8 @@ enum e_vlf
 	VLF_REVERSE	= 8
 };
 
-int vnewline(enum e_vlf direction);
-int vlinefeed(enum e_vlf direction);
+int VL_vnewline(enum e_vlf direction);
+int VL_vlinefeed(enum e_vlf direction);
 
 /************************************************************************/
 /*	voptimize() control values.					*/
@@ -274,8 +282,11 @@ enum e_vop
 	VOP_DEFER_MODE	  		= 5	/* Deferred action optimization.	*/
 };
 
-enum e_vop voptimize(enum e_vop new_op);
-enum e_vop voptlevel(void);
+#define voptimize	VL_voptimize
+#define voptlevel	VL_voptlevel
+
+enum e_vop VL_voptimize(enum e_vop new_op);
+enum e_vop VL_voptlevel(void);
 
 /************************************************************************/
 /*	vterminal response parameters					*/
@@ -373,7 +384,8 @@ enum e_vop voptlevel(void);
 #define VONX_NORMALIZE		128			/* Normalize terminal.	*/
 #define VONX_MOVE_BOTTOM	256			/* Bottom (no scroll)	*/
 
-int vonexit(int newvalue);
+#define vonexit		VL_vonexit
+int VL_vonexit(int newvalue);
 
 /************************************************************************/
 /*	vmacro()							*/
@@ -383,14 +395,42 @@ int vonexit(int newvalue);
 #define END_SAVE	2		/* End saving keystroke macro.	*/
 #define START_RESTORE	3		/* Start restoring a macro.	*/
 
-int vmacro(int action);
+#define vmacro	VL_vmacro
+int VL_vmacro(int action);
 
 /* vutil */
-void vre_set_logfile(const char* filepath);
-unsigned char *vsss(int row, int col, int rows, int cols);				/* Save a screen segment.		*/
-int vrss(unsigned char *loc);								/* Restore a screen segment.		*/
-void vtitle(const char *titlestr);
+#define vsss	VL_vsss
+#define vrss	VL_vrss
 
+void VL_vre_set_logfile(const char* filepath);
+unsigned char *VL_vsss(int row, int col, int rows, int cols);				/* Save a screen segment.		*/
+int VL_vrss(unsigned char *loc);								/* Restore a screen segment.		*/
+void VL_vtitle(const char *titlestr);
+
+
+/*
+**	OLD Style defines
+*/
+
+#define vcontrol	VL_vcontrol
+#define vbell		VL_vbell
+#define vcharset	VL_vcharset
+#define vcheck		VL_vcheck
+
+#define vcut		VL_vcut
+#define vedge		VL_vedge
+#define vgetc		VL_vgetc
+#define vgetm		VL_vgetm
+#define vgrid		VL_vgrid
+#define vml		VL_vml
+#define vmove		VL_vmove
+#define vputc		VL_vputc
+#define vrelease	VL_vrelease
+#define vroll		VL_vroll
+#define vslew		VL_vslew
+#define vtext		VL_vtext
+
+#define gzones		VL_gzones
 /*
 **	MISC Function Prototypes
 */
@@ -399,59 +439,58 @@ extern int gcalend (void);
 extern int gclock (void);
 extern int gnotepad (void);
 extern int gpuzzle (void);
-extern int gzones (void);
+extern int VL_gzones (void);
 
-extern void libvideo_version (char *version);
+void VL_libvideo_version (char *version);
 
-extern int isdebug (void);
-extern void set_isdebug_false (void);
-extern void set_isdebug_true (void);
-extern void set_isdebug (void);
+int  VL_isdebug (void);
+void VL_set_isdebug_false (void);
+void VL_set_isdebug_true (void);
+void VL_set_isdebug (void);
 
-extern void set_vsharedscreen_true(void);
-extern int vsharedscreen(void);
+void VL_set_vsharedscreen_true(void);
+int  VL_vsharedscreen(void);
 
-extern int valert (char *message, char *option_enter, char *option_1, char *option_16);
-extern int vbell (void);
-extern int vbuffering (int state);
-extern int vbuffering_on (void);
-extern const char* vcapterm(void);
-extern int vcapload (void);
-extern int vcapnull (char *control_string, char *cap_string, int dispfl);
-extern int vcharset (int char_set);
-extern char vcheck (void);
-extern int vcontrol (char *string);
-extern int vcontrol_flush(void);
-extern int vcap_reset_terminal(void);
-extern int vcap_init_terminal(void);
-extern int vcut (char *string);
-extern int vedge (register int line);
-extern int verase (int control);
-extern void vexit (void);
-extern int vfnkey (int key);
-extern char vgetc (void);
-extern char vgetcto (int timer);
-extern int vgeterr (void);
-extern int vgetm (void);
-extern int vgetm_timed (int seconds, int *status);
-extern int vgoto (int nl, int nc, int ol, int oc, int op);
-extern int vgrid (int irow, int icol, int nrows, int ncols, int rden, int cden);
-extern int visible (char c, int a);
-extern void vlanguage (char *path);
-extern int vml (int y);
-extern int vmlx (int top, int y);
-extern int vmode (int control);
-extern int vmove (int line, int column);
-extern int vonexit (int newvalue);
-extern int vpaste (int max);
-extern int vpopscr (void);
-extern int vprint (char *format, ...);
-extern int vpushc (char char_to_be_pushed);
-extern void vpushscr (void);
-extern int vputc (char ch);
-extern int vputlen (char *outstr, char *instr, int length);
+int VL_valert (char *message, char *option_enter, char *option_1, char *option_16);
+int VL_vbell (void);
+const char* VL_vcapterm(void);
+int  VL_vcapload (void);
+int  VL_vcapnull (char *control_string, char *cap_string, int dispfl);
+char VL_vcheck (void);
+int  VL_vcontrol(char *string);
+int  VL_vcontrol_flush(void);
+
+extern int  VL_vcap_reset_terminal(void);
+extern int  VL_vcap_init_terminal(void);
+extern void VL_vcap_set_vcapfile(const char *vcappath, const char* termtype);
+
+int VL_vcut (char *string);
+int VL_vedge (register int line);
+void VL_vexit (void);
+int  VL_vfnkey (int key);
+char VL_vgetc (void);
+char VL_vgetcto (int timer);
+int  VL_vgeterr (void);
+int  VL_vgetm (void);
+int  VL_vgetm_timed (int seconds, int *status);
+int  VL_vgoto (int nl, int nc, int ol, int oc, int op);
+int  VL_vgrid (int irow, int icol, int nrows, int ncols, int rden, int cden);
+int  VL_visible (char c, int a);
+int  VL_vml (int y);
+int  VL_vmlx (int top, int y);
+int  VL_vmove (int line, int column);
+int  VL_vpaste (int max);
+int  VL_vpopscr (void);
+
+#include "vprint.h"
+
+int  VL_vpushc (char char_to_be_pushed);
+void VL_vpushscr (void);
+int  VL_vputc (char ch);
+int  VL_vputlen (char *outstr, char *instr, int length);
+
 extern void vraw_stty_restore (void);
-extern int vraw_stty_sane (void);
+extern int  vraw_stty_sane (void);
 extern void vraw_stty_save (void);
 extern void vraw_stty_sync (void);
 extern void vrawattribute(int atr);
@@ -459,26 +498,25 @@ extern void vrawmove(int row, int col);
 extern int vrawprint (char *buf);
 extern int vrawflush(void);
 extern int vrawputc (char ch);
-extern int vrefresh (int what);
-extern int vrelease (void);
-extern int vroll (int top, int bottom);
-extern int vscroll_frwd_avail(void);
-extern int vscroll_rvrs_avail(void);
-extern int vscreen (int state);
-extern int vset (int item, int state);
-extern void vseterr (int error);
-extern void vshut (void);
-extern int vslew (int nrows, int ncols);
-extern int vstate (int action);
-extern void vsynch (void);
-extern int vtext (int display, int row, int column, char *text, ...);
 extern int vrawntcn_get_mouse_position( int *row, int *col );
-extern void* vtty_alloc (void);
-extern int vtty_set (void* tt);
-extern int vtty_get (void* tt);
-extern void vcap_set_vcapfile(const char *vcappath, const char* termtype);
-extern char GetASCIIGraphicsChar(unsigned char graph_char);
-extern void vwait(int seconds, int hundredths);
+
+int  VL_vrelease (void);
+int  VL_vroll (int top, int bottom);
+int  VL_vscroll_frwd_avail(void);
+int  VL_vscroll_rvrs_avail(void);
+void VL_vseterr (int error);
+void VL_vshut (void);
+int  VL_vslew (int nrows, int ncols);
+void VL_vsynch (void);
+int  VL_vtext (int display, int row, int column, char *text, ...);
+
+void* VL_vtty_alloc (void);
+int   VL_vtty_set (void* tt);
+int   VL_vtty_get (void* tt);
+
+void VL_vwait(int seconds, int hundredths);
+char VL_GetASCIIGraphicsChar(unsigned char graph_char);
+int  IVS_vlanguage (const char *path);
 
 #ifndef VIDEO_META_DEFS
 #define VIDEO_META_DEFS
@@ -832,6 +870,42 @@ extern void vwait(int seconds, int hundredths);
 /*
 **	History:
 **	$Log: video.h,v $
+**	Revision 1.44  2003/06/20 15:37:44  gsl
+**	VL_ globals
+**	
+**	Revision 1.43  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.42  2002/07/18 21:04:21  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.41  2002/07/17 21:06:01  gsl
+**	VL_ globals
+**	
+**	Revision 1.40  2002/07/17 17:26:02  gsl
+**	fix vbuffering_end problem
+**	
+**	Revision 1.39  2002/07/16 14:11:49  gsl
+**	VL_ globals
+**	
+**	Revision 1.38  2002/07/15 20:56:38  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.37  2002/07/15 20:16:09  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.36  2002/07/15 17:52:54  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.35  2002/07/15 17:10:03  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.34  2002/07/15 13:29:02  gsl
+**	IVS_ globals
+**	
+**	Revision 1.33  2002/07/12 20:40:44  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.32  2001/10/15 13:27:08  gsl
 **	vutil proto
 **	

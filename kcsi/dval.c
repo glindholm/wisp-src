@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include "dbsc.h"
 #include "dglb.h"
 #include "shrthand.h"
@@ -9,7 +23,6 @@ static char rcsid[]="$Id:$";
 #include "dmnt.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)dval.c	1.1 6/27/92";
 
 static void val_one_fld(FIELD *fld);
 static void val_one_range(FIELD *fld);
@@ -111,8 +124,8 @@ static int chkval(char *mem1,char *mem2,int len)
 /*
 **	History:
 **	$Log: dval.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:24  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.6  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.5  2002/10/24 15:48:33  gsl
 **	Make globals unique

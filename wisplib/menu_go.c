@@ -1,11 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <string.h>
 
@@ -18,46 +31,36 @@ static char rcsid[]="$Id:$";
 #include "video.h"
 #include "vlocal.h"
 
-#ifdef VMS
-#include <descrip.h>
-#endif
 
-struct menu *menu_read();
-
-int menu_go(char* menuname, char* menuvalue)
+int WL_menu_go(char* menuname, char* menuvalue)
 {
-	static char command[200];
 	int result, action;
 	char progname[80];
 	char retval[81];
 	struct menu *themenu;
-	uint4 vms_status;
 
-#ifdef VMS
-	static $DESCRIPTOR(icom,command);							/* For DCL commands.		*/
-#endif
 	strcpy(menuvalue,"");
 
-	themenu = menu_read(menuname);
+	themenu = WL_menu_read(menuname);
 	if (themenu == (struct menu *) -1)
 	{
-		vmove(10,20);
-		vbell();
-		vprint("  Menu file %s Not found.  ",menuname); 
-		vmove(11,20);
-		vprint("              Press any key.       ");
-		vgetc();
+		VL_vmove(10,20);
+		VL_vbell();
+		VL_vprint("  Menu file %s Not found.  ",menuname); 
+		VL_vmove(11,20);
+		VL_vprint("              Press any key.       ");
+		VL_vgetc();
 		menuvalue[0] = '\0';								/* Set termination value null.	*/
 		menuvalue[1] = '\0';								/* Add for COBOL "LOW VALUES".	*/
 		menuvalue[2] = '\0';
  		return(-1);
 	}
 
-	init_screen();										/* Initialize the screen.	*/
+	vwang_init_screen();										/* Initialize the screen.	*/
 
 	for (;;)
 	{
-		result = menu_scan(themenu);
+		result = WL_menu_scan(themenu);
 
 		if (result == -1)								/* They pressed the exit key.	*/
 		{
@@ -76,10 +79,10 @@ int menu_go(char* menuname, char* menuvalue)
 #ifdef unix			
 			case 1:
 			      strcpy(progname,themenu->menulist[result].filename);
-				vexit();
+				VL_vexit();
 			      system(progname);
 
-				init_screen();
+				vwang_init_screen();
 				
 			      break;
 #endif
@@ -88,7 +91,6 @@ int menu_go(char* menuname, char* menuvalue)
 			{
 				strcpy(menuvalue,themenu->menulist[result].message);		/* Copy the result string.	*/
 				strcpy(progname,&(themenu->menulist[result].filename[0]));	/* Get the command string.	*/
-				spawn2 (action,progname,"Please wait...",&vms_status);		/* Spawn to do the command.	*/
 				themenu->menustat = 0;						/* Menu is not on the screen.	*/
 				break;
 			}
@@ -101,38 +103,56 @@ int menu_go(char* menuname, char* menuvalue)
 
 			case 8:
 			{									/* Display a new menu.		*/
-				menu_go( &(themenu->menulist[result].filename[0]) , retval);	/* Just do it again.		*/
+				WL_menu_go( &(themenu->menulist[result].filename[0]) , retval);	/* Just do it again.		*/
 				strcpy(menuvalue,retval);					/* We're Back!			*/
 				themenu->menustat = 0;						/* Signal this as a new menu.	*/
-				init_screen();							/* The screen is corrupted.	*/
+				vwang_init_screen();							/* The screen is corrupted.	*/
 				break;
 			}
 
 			case 9:									/* Terminate the program.	*/
 			{
-				vmove(23,0);
-				vprint("Exiting menu system . . .");
+				VL_vmove(23,0);
+				VL_vprint("Exiting menu system . . .");
 				wexit(0L);
 			}
 
 			case 10:								/* Log the user off.		*/
 			{
-#ifdef VMS
-				strcpy(command,"logoff");					/* VMS VERSION			*/
-				vmove(23,0);
-				vprint("\n");
-				lib$do_command(&icom);
-#endif
 			}
 		}										/* End of switch.		*/
-		vmove(23,0);									/* Clear status information	*/
-		vprint("                                                ");
+		VL_vmove(23,0);									/* Clear status information	*/
+		VL_vprint("                                                ");
 	}											/* Repeat forever...		*/
   
 }
 /*
 **	History:
 **	$Log: menu_go.c,v $
+**	Revision 1.18  2003/01/31 21:40:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.17  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.16  2002/07/16 14:11:47  gsl
+**	VL_ globals
+**	
+**	Revision 1.15  2002/07/15 20:16:01  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.14  2002/07/15 17:52:49  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/07/10 21:05:20  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.12  2002/07/09 04:13:59  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.11  2002/06/21 03:10:37  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.10  1996/08/19 22:32:29  gsl
 **	drcs update
 **	

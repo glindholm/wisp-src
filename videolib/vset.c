@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -25,10 +46,9 @@ static int vs(int vs_item, int vs_state, char *string);					/* vset output.				*
 
 /*						Subroutine entry point.								*/
 
-int vset(int item, int state)								/* Set item to given state.		*/
+int VL_vset(int item, int state)								/* Set item to given state.		*/
 {
-	extern int force_200;								/* Reference flag to force VT200 mode.	*/
-	register int ret;								/* Working registers.			*/
+	int ret= FAILURE;								/* Working registers.			*/
 
 	if ((state < 0) || (state > 1))							/* Is this a valid state code?		*/
 	{
@@ -147,6 +167,18 @@ static int vs(int vs_item, int vs_state, char *string)					/* vset output.				*/
 /*
 **	History:
 **	$Log: vset.c,v $
+**	Revision 1.16  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.15  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.14  2002/07/15 20:16:14  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/07/15 17:10:06  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.12  1997/07/09 16:23:52  gsl
 **	Add support for direct IO
 **	Add support for COSTAR on WIN32

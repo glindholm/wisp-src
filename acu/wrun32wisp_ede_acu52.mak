@@ -5,45 +5,58 @@
 #
 #################################################################
 #
-# Creating an Acucobol 5.2 runtime requires WISP and EDE 4.4.02
-# or later.
+# Use this makefile to build an Acucobol-GT 5.2 runtime 
+# with WISP and EDE 5.0.00.
+#
+# ACUDIR=C:\acucorp\acucbl520\acugt
 #
 # Follow these instructions carefully to build a custom Acucobol 
 # runtime that includes the WISP and EDE runtime routines.  You are
 # going to build the runtime from a temporary folder, that is a copy
-# of the Acucobol lib folder $(ACUDIR)\acugt\lib.  The Acucobol 
+# of the Acucobol lib folder $(ACUDIR)\lib.  The Acucobol 
 # runtime consists of two file, an exe and a dll. The custom WISP
 # version is named wrun32wispe.exe and wrun32wispe.dll.
 #
-# 1) Create the temporary folder $(ACUDIR)\acugt\bldwispe by copying
-#    and renaming the folder $(ACUDIR)\acugt\lib.  You can use
-#    Windows Explorer to do this by opening $(ACUDIR)\acugt and
+# 1) Create the temporary folder $(ACUDIR)\bldwispe by copying
+#    and renaming the folder $(ACUDIR)\lib.  You can use
+#    Windows Explorer to do this by opening $(ACUDIR) and
 #    selecting the lib folder then doing a Copy then Paste command.
 #
 # 2) Copy the needed WISP and EDE  files to the bldwispe folder. (You 
 #    will be replacing the sub85.c file with the one supplied by WISP.)
-#       Copy $(EDEDIR)\wrun32wisp_ede_acu52.mak 
-#            $(WISPDIR)\acu\sub85.c
-#            $(WISPDIR)\acu\wisprts.rc
-#            $(WISPDIR)\acu\wispicon.ico
 #
-#       to   $(ACUDIR)\acugt\bldwispe
+#       Copy $(EDEDIR)\wrun32wisp_ede_acu52.mak 
+#            $(WISPDIR)\acu\acu52\sub85.c
+#            $(WISPDIR)\acu\acu52\wisprts.rc
+#            $(WISPDIR)\acu\wisp_sub85_inc.c
+#            $(WISPDIR)\acu\wispicon.ico
+#       to   $(ACUDIR)\bldwispe
 #
 # 3) Edit this file and set WISPDIR and EDEDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP44xx
-#       EDEDIR=C:\EDE44xx
+#       WISPDIR=C:\WISPxxxx
+#       EDEDIR=C:\EDExxxx
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command.
-#       $ cd $(ACUDIR)\acugt\bldwispe
+#    (You may need to first run the VCVARS32.bat file that comes with MS 
+#    Visual C++ in order to run NMAKE from a command prompt.)
+#
+#       $ cd $(ACUDIR)\bldwispe
+#       $ "C:\Program Files\Microsoft Visual Studio\VC98\Bin\VCVARS32.BAT"
 #       $ NMAKE /f wrun32wisp_ede_acu52.mak
 #
 # 5) Copy the runtime files (wrun32wispe.exe and wrun32wispe.dll) to
 #    their run location.
-#       Copy $(ACUDIR)\acugt\bldwispe\wrun32wispe.exe
-#            $(ACUDIR)\acugt\bldwispe\wrun32wispe.dll 
 #
-#       to   $(ACUDIR)\acugt\bin
+#       Copy $(ACUDIR)\bldwispe\wrun32wispe.exe
+#            $(ACUDIR)\bldwispe\wrun32wispe.dll 
+#       to   $(ACUDIR)\bin
+#
+# 6) Copy and rename the Acucobol license file to match the new
+#    runtime name.
+#
+#       Copy $(ACUDIR)\bin\wrun32.alc
+#       to   $(ACUDIR)\bin\wrun32wispe.alc
 #
 #################################################################
 #
@@ -60,22 +73,19 @@
 # PMK: 0, 1
 #################################################################
 
-# Set the Acucobol directory here
-ACUDIR=C:\acucorp\acucbl520
-
 # Set the installed WISP and EDE directory here.
-WISPDIR=C:\WISP4407
-EDEDIR=C:\EDE4407
+WISPDIR=C:\WISP5000
+EDEDIR=C:\EDE5000
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispe
 
 ## WISP and EDE libraries
-WISP_LIBS=     $(EDEDIR)\edem.lib \
-               $(WISPDIR)\lib\wispm.lib \
-               $(WISPDIR)\lib\videom.lib
+WISP_LIBS=     $(EDEDIR)\ede.lib \
+               $(WISPDIR)\lib\wisp.lib \
+               $(WISPDIR)\lib\video.lib
 
-WISP_CFLAGS=
+WISP_CFLAGS= /DEDE
 
 #################################################################
 

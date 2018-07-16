@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include <ctype.h>
 #include "dtype.h"
@@ -16,7 +30,6 @@ LPI and MF use PACKED_C for positive values
 ACU_COBOL apparently uses packed F
 ------*/
 
-static char sccsid[]="@(#)rcvt.c	1.16 11/15/93";
 
 #define	PACKED_C_POSITIVE
 
@@ -33,6 +46,7 @@ Three different zoned sign schemes
 #ifdef KCSI_MFX
 #define	make_zoned_ascii	make_zoned_mf
 #endif
+static void make_zoned_ascii(int digit, int sign, char *dest);
 
 /*----
 Jan 25 1992 eutob() error assumes the machine is byte ordered 1234 and
@@ -172,7 +186,6 @@ static void utoeu(char *dest,char *src,int dlen,int slen,int dec);
 static void ehtob(char *dest,char *src,int dlen,int slen,int type);
 static void litcpy(char *dest,char *src,int len);
 static void cvt_illegal(DTYPE *dest,DTYPE *src);
-static void make_zoned_acu(int digit,int sign,char *dest);
 static int ptoilen(char *p,int len);
 static int format_index_toi(char *src);
 static int get_packed_h_num(int ch);
@@ -185,7 +198,6 @@ static int get_zoned_sign(int ch);
 static int make_zoned_sign(int digit,int sign,char *dest);
 static int get_zoned_l_digit(int ch);
 
-static void make_zoned_ascii(int digit, int sign, char *dest);
 static void btoeh(char *dest,char *src,int dlen,int slen,int type);
 
 static void eutob(char *dest,char *src,int dlen,int slen,int sdec,int type);
@@ -1830,7 +1842,7 @@ static void zatop(char *dest,char *src,int dlen,int slen,int sign_code)
 	sign = *save_sign;		/* should be the sign */
 	if(sign != '-')			/*make it one or t'uther*/
 		sign = '+';
-	if(!isdigit(*save_sign))	/*If there is a sign then shorten*/
+	if(!isdigit((int)*save_sign))	/*If there is a sign then shorten*/
 		--slen;
 	dest += (dlen - 1);		/* save sign at the end of dest */
 	make_l_packed(sign,dest);	/* into the low nybble */
@@ -1913,7 +1925,7 @@ static int force_nl_sign(char *str,int sign)
 		if(*str == '.')
 			continue;
 		else
-		if(isdigit(*str))
+		if(isdigit((int)*str))
 			continue;
 		else
 			break;
@@ -1934,7 +1946,7 @@ static void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 	sign = *src;
 	if(sign != '-')
 		sign = '+';
-	if(!isdigit(*src))
+	if(!isdigit((int)*src))
 		{
 		++src;
 		--slen;
@@ -1949,7 +1961,7 @@ static void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 static void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 
-	if(!isdigit(*src))
+	if(!isdigit((int)*src))
 		{
 		++src;
 		--slen;
@@ -1962,7 +1974,7 @@ static void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 static void zatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 
-	if(!isdigit(*src))
+	if(!isdigit((int)*src))
 		{
 		++src;
 		--slen;
@@ -2043,7 +2055,7 @@ static void zatoz(char *dest,char *src,int dlen,int slen,int sign_code)
 	sign = *save_sign;		/* create the sign */
 	if(sign != '-')
 		sign = '+';
-	if(!isdigit(*save_sign))	/* If it is a sign */
+	if(!isdigit((int)*save_sign))	/* If it is a sign */
 		{
 		--slen;
 		if(!sign_code)	/* Skip it if not trailing */
@@ -2063,7 +2075,7 @@ Skip any initial sign.
 ------*/
 static void zatou(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
-	if(!(isdigit(*src)))
+	if(!(isdigit((int)*src)))
 		{
 		++src;
 		--slen;
@@ -2116,7 +2128,7 @@ static void uatou(char *dest,char *src,int dlen,int slen)
 			--dlen;
 			}
 		else
-		if(!isdigit(*src))	/*Skip any non numerics */
+		if(!isdigit((int)*src))	/*Skip any non numerics */
 			{
 			--src;
 			--slen;
@@ -2369,7 +2381,7 @@ static int format_index_toi(char *src)
 
 	for(i = result = 0 ; i < 4 ; ++i)
 		{
-		if(isdigit(*src))
+		if(isdigit((int)*src))
 			{
 			result *= 10;
 			result += (*src - '0');
@@ -2680,6 +2692,7 @@ static int make_zoned_sign(int digit,int sign,char *dest)
 /*----
 in acucobol, only the negative values are modified
 ------*/
+#ifdef	KCSI_ACU
 static void make_zoned_acu(int digit,int sign,char *dest)
 {
 	if(digit == '0')
@@ -2692,16 +2705,20 @@ static void make_zoned_acu(int digit,int sign,char *dest)
 		digit += 0x19;	/* 31-39 = 4A-52 */
 	*dest = digit;
 }
+#endif
 /*----
 in MF, only the negative values are modified but differently
 ------*/
+#ifdef KCSI_MFX
 static void make_zoned_mf(int digit, int sign, char *dest)
 {
 	if(sign == '-')
 		digit += 0x40;		/* 30 - 39 = 70 - 79 */
 	*dest = digit;
 }
+#endif
 
+#ifdef NOT_USED
 static void make_zoned_lpi(digit,sign,dest)
 int digit,sign;
 char *dest;
@@ -2735,6 +2752,7 @@ char *dest;
 		digit += 0xc0;	/* 31-39 = F1-F9 */
 	*dest = digit;
 }
+#endif /* NOT_USED */
 
 static void make_h_packed(int ch,char *dest)
 {
@@ -2904,8 +2922,11 @@ static int get_zoned_sign(int ch)
 /*
 **	History:
 **	$Log: rcvt.c,v $
-**	Revision 1.9.2.1  2002/11/12 15:56:32  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.16  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.15  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.14  2002/10/23 20:39:07  gsl
 **	make global name unique

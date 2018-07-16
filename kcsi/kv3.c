@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifdef KCSI_ACU
 
@@ -31,7 +45,16 @@ void ksam_init()
 
 	if (first)
 	{
-		i_init();
+		/*
+		** The call to i_init() is not needed since KCSI is using
+		** the Acucobol runtime (vs standalone executables).
+		** Calling i_init() seems to be causing signal 11 errors
+		** when exiting the runtime. Show up when stepping out of
+		** ACULINK.
+		**
+		** i_init();
+		*/
+
 		first = 0;
 	}
 }
@@ -227,6 +250,12 @@ void ksam_read_next(KCSIO_BLOCK *kfb)
 	kcsi_acu_zero_f_errno();
 	i_next(kfb->_io_vector,kfb->_record);
 	kfb->_status = v_trans2(kcsi_acu_get_f_errno());
+
+	/* Unlock the record */
+	if (kfb->_status == 0)
+	{
+		i_unlock(kfb->_io_vector);
+	}
 }
 
 void ksam_read_previous(KCSIO_BLOCK *kfb)
@@ -235,6 +264,12 @@ void ksam_read_previous(KCSIO_BLOCK *kfb)
 	kcsi_acu_zero_f_errno();
 	i_previous(kfb->_io_vector,kfb->_record);
 	kfb->_status = v_trans2(kcsi_acu_get_f_errno());
+
+	/* Unlock the record */
+	if (kfb->_status == 0)
+	{
+		i_unlock(kfb->_io_vector);
+	}
 }
 
 
@@ -252,6 +287,12 @@ void ksam_read_keyed(KCSIO_BLOCK *kfb)
 	kcsi_acu_zero_f_errno();
 	i_read(kfb->_io_vector,kfb->_record,kfb->_io_key);
 	kfb->_status = v_trans(kcsi_acu_get_f_errno());
+
+	/* Unlock the record */
+	if (kfb->_status == 0)
+	{
+		i_unlock(kfb->_io_vector);
+	}
 }
 
 void ksam_hold_keyed(KCSIO_BLOCK *kfb)
@@ -561,8 +602,16 @@ static short kcsi_acu_get_f_errno(void)
 /*
 **	History:
 **	$Log: kv3.c,v $
-**	Revision 1.12.2.1  2002/11/12 15:56:30  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.18  2003/06/11 19:22:10  gsl
+**	add 4.0.01 updates to fix signal problem with acu
+**	
+**	Revision 1.17  2003/04/04 19:43:51  gsl
+**	For Acucobol READ was also locking the record.  so add an UNLOCK after
+**	every READ that doesn't want a lock.
+**	BUGZILLA 114
+**	
+**	Revision 1.16  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.15  2002/10/24 14:20:37  gsl
 **	Make globals unique

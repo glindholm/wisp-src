@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 Auxiliary routines for dmnt.c
 ------*/
@@ -14,7 +28,6 @@ Auxiliary routines for dmnt.c
 #include "dmnt.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)daux.c	1.8 11/15/93";
 
 static void move_one_to_screen(FIELD *fld);
 static void bld_data_types(FIELD *fld,DTYPE *etype,DTYPE *rtype,DTYPE *itype);
@@ -249,7 +262,7 @@ static void sum_this_field(FIELD *sum,FIELD *addend)
 	src  = addend->fld;
 	while(slen)
 		{
-		if(isdigit(*src))
+		if(isdigit((int)*src))
 			*wrk_ptr++ = *src++;
 		else
 			{
@@ -293,7 +306,7 @@ static void move_one_accumulator(FIELD *fld)
 	DTYPE scr_type,rec_type,i_type;
 	char wrk_fld[33];
 
-	sprintf(wrk_fld,"%lf",fld->accum_work);
+	sprintf(wrk_fld,"%f",fld->accum_work);
 
 	bld_data_types(fld,&scr_type,&rec_type,&i_type);
 	i_type._base = wrk_fld;
@@ -508,8 +521,11 @@ static void fac_one_prompt(FIELD *fld,int code)
 /*
 **	History:
 **	$Log: daux.c,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:21  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.10  2002/10/24 14:20:40  gsl
 **	Make globals unique

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			    Copyright (c) 1987				*/
@@ -49,15 +70,15 @@ static int move();
 
 /*						Subroutine Entry Point								*/
 
-int gpuzzle()
+int gpuzzle(void)
 {
 	unsigned char *vsss();
 	register int i, j, k;
 	int active;
 
-	vdetpos(0, &row, &col, rows, cols);
+	VL_vdetpos(0, &row, &col, rows, cols);
 	save = vsss(row,col,rows,cols);
-	vbuffering_start();
+	VL_vbuffering_start();
 	if (vscr_atr & LIGHT) 
 	{ 
 		emode = VMODE_BOLD; 
@@ -129,7 +150,7 @@ int gpuzzle()
 		}
 	}
 	vrss(save);
-	vbuffering_end();
+	VL_vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -142,7 +163,7 @@ static int display_grid()
 	top = row + 1;									/* Assign starting row of grid.		*/
 	left = col;									/* Assign starting column of grid.	*/
 
-	vmode(emode);									/* Turn on proper mode.			*/
+	VL_vmode(emode);									/* Turn on proper mode.			*/
 
 	vtext(emode, row, col, "   Good Puzzle   ");
 	vgrid(top,left,9,17,2,4);							/* Draw the board grid.			*/
@@ -334,7 +355,7 @@ static int move(nrows, ncols) int nrows, ncols;
 	while (row < 1) row++;
 	while (col < 0) col++;
 	while (row+rows > MAX_LINES_PER_SCREEN-1) row--;
-	while (col+cols > vscr_wid-1) col--;
+	while (col+cols > VL_vscr_wid-1) col--;
 
 	if ((orow == row) && (ocol == col)) vbell();
 	else
@@ -352,24 +373,42 @@ static int givehelp(void)
 	struct video_menu help;
 	int4 key;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"Good Puzzle Help - Page 1 - General", 0, NULL);
-	vmenuitem(&help,"", 0, NULL);
-	vmenuitem(&help,"PF2 will rescramble the puzzle.", 0, NULL);
-	vmenuitem(&help,"Arrow keys move the tile into the hole.", 0, NULL);
-	vmenuitem(&help,"If a tile cannot be moved, then the whole", 0, NULL);
-	vmenuitem(&help,"   puzzle is moved on the screen.", 0, NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"Good luck and have fun!", 0, NULL);
-	vmenuitem(&help,"Depress any key to exit...", 0, NULL);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"Good Puzzle Help - Page 1 - General", 0, NULL);
+	VL_vmenuitem(&help,"", 0, NULL);
+	VL_vmenuitem(&help,"PF2 will rescramble the puzzle.", 0, NULL);
+	VL_vmenuitem(&help,"Arrow keys move the tile into the hole.", 0, NULL);
+	VL_vmenuitem(&help,"If a tile cannot be moved, then the whole", 0, NULL);
+	VL_vmenuitem(&help,"   puzzle is moved on the screen.", 0, NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"Good luck and have fun!", 0, NULL);
+	VL_vmenuitem(&help,"Depress any key to exit...", 0, NULL);
 
-	key = vmenugo(&help);
+	key = VL_vmenugo(&help);
 	vset_cursor_off();
 	return(SUCCESS);
 }
 /*
 **	History:
 **	$Log: gpuzzle.c,v $
+**	Revision 1.16  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.15  2003/06/23 15:28:04  gsl
+**	VL_ global symbols
+**	
+**	Revision 1.14  2003/01/31 19:25:57  gsl
+**	Fix copyright header
+**	
+**	Revision 1.13  2002/07/17 21:06:00  gsl
+**	VL_ globals
+**	
+**	Revision 1.12  2002/07/16 13:40:23  gsl
+**	VL_ globals
+**	
+**	Revision 1.11  2002/07/15 20:16:06  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/07/08 20:18:53  gsl
 **	change to use new video.h interface
 **	

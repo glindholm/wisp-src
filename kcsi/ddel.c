@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include "dbsc.h"
 #include "dglb.h"
@@ -10,7 +24,6 @@ static char rcsid[]="$Id:$";
 #include "dmnt.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)ddel.c	1.4 1/30/93";
 
 static void delete_records_init(char *idx);
 static int delete_records_entry(char *idx);
@@ -27,6 +40,8 @@ static void delete_the_record(char *idx);
 int dte_delete_records(char *idx,char *mode)
 {
 	int pf;
+
+	kcsitrace(1, "DATENTRY", "DELETE", "Entry into Delete records");
 
 	while(1)
 		{
@@ -148,8 +163,11 @@ static void delete_the_record(char *idx)
 /*
 **	History:
 **	$Log: ddel.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:22  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.11  2003/04/04 19:42:02  gsl
+**	Add trace
+**	
+**	Revision 1.10  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/24 15:48:33  gsl
 **	Make globals unique

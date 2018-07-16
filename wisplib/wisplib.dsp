@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /W3 /GX /O2 /I "..\wispcommon" /I "..\videolib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /FR /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /I "..\videolib" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir ".\Debug"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /Z7 /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /c
-# ADD CPP /nologo /W3 /GX /Z7 /Od /I "..\wispcommon" /I "..\videolib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /FR /YX /FD /c
+# ADD CPP /nologo /MDd /W3 /GX /Z7 /Od /I "..\wispcommon" /I "..\videolib" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409
 # ADD RSC /l 0x409
 BSC32=bscmake.exe
@@ -217,10 +217,6 @@ SOURCE=.\gparmbld.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\greclen.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\hexunpk.c
 # End Source File
 # Begin Source File
@@ -233,19 +229,11 @@ SOURCE=.\initglbs.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\initscrn.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\initwisp.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\isexec.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\juster.c
 # End Source File
 # Begin Source File
 
@@ -325,10 +313,6 @@ SOURCE=.\nextfile.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\noconfig.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\onhelp.c
 # End Source File
 # Begin Source File
@@ -374,10 +358,6 @@ SOURCE=.\readfdr.c
 # Begin Source File
 
 SOURCE=.\readvtoc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\regexpr.c
 # End Source File
 # Begin Source File
 
@@ -477,10 +457,6 @@ SOURCE=.\upper.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vdispidx.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\vdisplay.c
 # End Source File
 # Begin Source File
@@ -518,14 +494,6 @@ SOURCE=.\wchain.c
 # Begin Source File
 
 SOURCE=.\wcmatch.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wdfinish.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wdinit.c
 # End Source File
 # Begin Source File
 
@@ -805,10 +773,6 @@ SOURCE=.\menu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\movebin.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\osddefs.h
 # End Source File
 # Begin Source File
@@ -834,10 +798,6 @@ SOURCE=..\wispcommon\prompt.h
 # Begin Source File
 
 SOURCE=..\wispcommon\putparm.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\regexpr.h
 # End Source File
 # Begin Source File
 
@@ -1020,5 +980,9 @@ SOURCE=..\wispcommon\wsysconf.h
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 # End Group
+# Begin Source File
+
+SOURCE=.\libwisp.umf
+# End Source File
 # End Target
 # End Project

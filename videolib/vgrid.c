@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -34,13 +55,13 @@ static void vgridpack();
 
 static unsigned char x, q, l, k, m, j, w, v, t, u, n;					/* ANSI DEC like short form ints.	*/
 
-vgrid(irow,icol,nrows,ncols,rden,cden) int irow,icol,nrows,ncols,rden,cden;
+int VL_vgrid(irow,icol,nrows,ncols,rden,cden) int irow,icol,nrows,ncols,rden,cden;
 {
 	char string[134];
 	register int i;
 	char graphstr[20];
 	
-	strcpy(graphstr,vcapvalue(GRAPHSTR));
+	strcpy(graphstr,VL_vcapvalue(GRAPHSTR));
 
 	x = graphstr[SINGLE_VERTICAL_BAR];					/* Define short forms to make it	*/
 	q = graphstr[SINGLE_HORIZONTAL_BAR];					/*   easier to work with.		*/
@@ -54,7 +75,7 @@ vgrid(irow,icol,nrows,ncols,rden,cden) int irow,icol,nrows,ncols,rden,cden;
 	u = graphstr[SINGLE_RIGHT_TEE];
 	n = graphstr[SINGLE_CROSS];
 
-	vbuffering_start();
+	VL_vbuffering_start();
 	vmove(irow,icol);
 
 	if (nrows+ncols)								/* Just a move unless we go somewhere.	*/
@@ -116,7 +137,7 @@ vgrid(irow,icol,nrows,ncols,rden,cden) int irow,icol,nrows,ncols,rden,cden;
 		}
 		vcharset(DEFAULT);
 	}
-	vbuffering_end();
+	VL_vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -145,6 +166,18 @@ static void vgridpack(string,sc,ic,ec,ncols,nden)
 /*
 **	History:
 **	$Log: vgrid.c,v $
+**	Revision 1.14  2003/01/31 20:35:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.13  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/17 21:06:01  gsl
+**	VL_ globals
+**	
+**	Revision 1.11  2002/07/15 20:16:09  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/07/08 21:00:25  gsl
 **	Change to use new video.h interfaces
 **	

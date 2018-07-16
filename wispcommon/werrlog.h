@@ -1,25 +1,36 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
-			/************************************************************************/
-			/*									*/
-			/*		WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
 /*
-**	File:		WERRLOG.h
+**	File:		werrlog.h
 **
-**	Purpose:	To ...
+**	Project:	WISP
 **
+**	RCS:		$Source:$
 **
-**	History:
-**	mm/dd/yy	Written by ...
+**	Purpose:	Error logging and runtime tracing
 **
 */
 
@@ -28,66 +39,69 @@
 
 #include "idsistd.h"
 
-/*				werrlog.h, common error logger for WISP system.							*/
+#define WISPDEBUG_NONE		0
+#define WISPDEBUG_ERRORS	1
+#define WISPDEBUG_FULL		2
 
-/* Flag bits in "w_errflag" are defined as follows:										*/
-/*																*/
-/*	Bit		Meaning													*/
-/*																*/
-/*	 0		1 : Enable Logging, 0 : Disable logging.								*/
-#define	    ENABLE_LOGGING		1
-/*	 1		1 : Logging to log file, 0 : No logging to log file.							*/
-#define	    LOG_LOGFILE			2
-/*	 2		1 : Logging to screen (stderr), 0 : No logging to stderr.						*/
-#define	    LOG_SCREEN			4
-/*	 3		1 : Log exceptions only. 0 : Log all errors.								*/
-#define	    LOG_EXCEPTIONS_ONLY		8
-/*	 4		1 : Log Subroutine entry messages. 0 : Don't log entry messages.					*/
-#define	    LOG_SUBROUTINE_ENTRY	16
+void WL_set_wispdebug(int mode);
+int  WL_get_wispdebug(void);
 
-#ifdef INIT_ERR
-#define INIT_ITEM_CLEAR	 = 0
-#define INIT_ITEM_SET	 = ENABLE_LOGGING
-#define DEFAULT_LOG_MODE = (ENABLE_LOGGING+LOG_LOGFILE+LOG_SCREEN+LOG_EXCEPTIONS_ONLY) /* 15 */
+void  wisp_set_werrlog_flag(uint4 i);
 
-#else
-#define INIT_ERR extern
-#define INIT_ITEM_CLEAR
-#define INIT_ITEM_SET
-#define DEFAULT_LOG_MODE
-#endif
-
-INIT_ERR uint4		w_err_flag	DEFAULT_LOG_MODE;
-INIT_ERR uint4		w_err_logged	INIT_ITEM_CLEAR;			/* Indicate no logs made to log file.		*/
-INIT_ERR uint4		w_err_code	INIT_ITEM_CLEAR;			/* Last error code reported.			*/
-
-#define ERRORCODE(x)	((int4)(ROUTINE + x))					/* The macro for reporting errors.		*/
+#define WERRCODE(x)	((int4)(x))			/* Source code marker for error codes		*/
 
 #include <errno.h>
 
-void werr_message_box(char *instr);
-void werrlog(uint4 id, ...);
-void werrset(void);
+#define werrlog	WL_werrlog
+void WL_werrlog(uint4 id, ...);
+void WL_werrlog_error(int errcode, const char* routine, const char* code, const char* format, ... /* args */);
+void WL_werrlog_warn(int errcode, const char* routine, const char* code, const char* format, ... /* args */);
+void WL_werr_message_box(const char *instr);
+void WL_werr_override(void);
+void WL_werr_write(const char* buff);							/* Write out a buffer to the error log.	*/
 
-void werr_write(const char* buff);								/* Write out a buffer to the error log.	*/
-
-void wtrace(const char* routine, const char* code, const char* format, ... /* args */);
-int wtracing(void);
-void wtrace_timestamp(const char *routine);
+#define wtrace WL_wtrace
+void WL_wtrace(const char* routine, const char* code, const char* format, ... /* args */);
+void WL_wtrace_entry(const char* routine);
+int  WL_wtracing(void);
+void WL_wtrace_timestamp(const char *routine);
 const char* WL_strerror(int errnum);
 
 #endif /* WERRLOG_H */
 /*
 **	History:
 **	$Log: werrlog.h,v $
-**	Revision 1.14.2.3  2003/02/13 16:45:06  gsl
-**	Use defines instead of numeric constants for error modes
+**	Revision 1.24  2003/04/04 15:32:38  gsl
+**	Remove old errlog flags stuff
+**	Fix trace for unlink()
 **	
-**	Revision 1.14.2.2  2002/11/12 16:00:18  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.23  2003/01/31 19:26:33  gsl
+**	Fix copyright header
 **	
-**	Revision 1.14.2.1  2002/10/09 19:48:08  gsl
-**	Added WL_strerror()
+**	Revision 1.22  2002/12/10 20:53:02  gsl
+**	remove ERRORCODE() replaced by WERRCODE()
+**	
+**	Revision 1.21  2002/12/10 17:08:06  gsl
+**	Add WL_wtrace_entry()
+**	
+**	Revision 1.20  2002/12/06 22:55:48  gsl
+**	add  WL_werrlog_error() and  WL_werrlog_warn()
+**	
+**	Revision 1.19  2002/12/05 22:04:42  gsl
+**	Add WERRCODE() macro as a marker
+**	
+**	Revision 1.18  2002/12/03 22:15:12  gsl
+**	Replace the w_err_flag bitmask with wispdebug mode that can be set to "FULL"
+**	"ERRORS" or "NONE" to simplify.
+**	
+**	Revision 1.17  2002/10/01 18:52:40  gsl
+**	Add WL_strerror() a replacement for strerror()
+**	
+**	Revision 1.16  2002/07/10 21:06:34  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/07/01 04:02:45  gsl
+**	Replaced globals with accessors & mutators
 **	
 **	Revision 1.14  1998/05/12 14:54:02  gsl
 **	Add wtrace_timestamp() and wtracing()

@@ -91,8 +91,6 @@ cp ${WISPDIR}/config/LPMAP	${WISPCONFIG}
 cp ${WISPDIR}/config/PRMAP	${WISPCONFIG}
 cp ${WISPDIR}/config/SCMAP	${WISPCONFIG}
 cp ${WISPDIR}/config/W4WMAP	${WISPCONFIG}
-cp ${WISPDIR}/config/wispmsg.dat	${WISPCONFIG}
-cp ${WISPDIR}/config/wispmsg.txt	${WISPCONFIG}
 cp ${WISPDIR}/config/wproc.msg	${WISPCONFIG}
 
 cat ${WISPDIR}/config/OPTIONS |sed "s|#PQLP|PQLP|"> ${WISPCONFIG}/OPTIONS
@@ -102,6 +100,7 @@ echo "VOLOUT ${WISPSRC}/testacu/volout"	>> ${WISPCONFIG}/LGMAP
 echo "VOLRUN ${WISPSRC}/testacu/volrun"	>> ${WISPCONFIG}/LGMAP
 echo "VOLSPL ${WISPSRC}/testacu/volspl"	>> ${WISPCONFIG}/LGMAP
 echo "VOLWRK ${WISPSRC}/testacu/volwrk"	>> ${WISPCONFIG}/LGMAP
+echo "TEST   ${WISPSRC}/testacu"	>> ${WISPCONFIG}/LGMAP
 
 
 # Create wrunconfig
@@ -117,13 +116,27 @@ ${WISPDIR}/bin/wsysconf
 
 echo FILE-STATUS-CODE 74 		                            > ${WISPCONFIG}/ACUCONFIG
 echo CODE-PREFIX ${WISPSRC}/testacu ${WISPDIR}/acu ${WISPDIR}/kcsiacu . >> ${WISPCONFIG}/ACUCONFIG
-echo "#V-VERSION 3"			                           >> ${WISPCONFIG}/ACUCONFIG
+echo ALTVARV4-VERSION 4			                           >> ${WISPCONFIG}/ACUCONFIG
 echo ALTVARV3-VERSION 3			                           >> ${WISPCONFIG}/ACUCONFIG
 echo ALTVARV2-VERSION 2			                           >> ${WISPCONFIG}/ACUCONFIG
 echo KEYSTROKE EXCEPTION=33 5		         >> ${WISPCONFIG}/ACUCONFIG
 echo KEYSTROKE EXCEPTION=34 6		         >> ${WISPCONFIG}/ACUCONFIG
 echo KEYSTROKE EXCEPTION=34 27		         >> ${WISPCONFIG}/ACUCONFIG
 echo SCREEN PROMPT=* PROMPT-ALL=YES	         >> ${WISPCONFIG}/ACUCONFIG
+
+# Copy license file
+echo Copy license file
+HOSTNAME=`hostname`
+HOSTLICENSE=${TESTDIR}/wisp.license.${HOSTNAME}
+if [ -f ${HOSTLICENSE} ]
+then
+	echo cp ${HOSTLICENSE} ${WISPCONFIG}/wisp.license
+	cp ${HOSTLICENSE} ${WISPCONFIG}/wisp.license
+else
+	echo
+	echo ${HOSTLICENSE} NOT FOUND
+	echo
+fi
 
 echo
 echo The '${WISPCONFIG}' ${WISPCONFIG} directory has been built.

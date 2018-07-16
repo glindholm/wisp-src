@@ -179,7 +179,7 @@ cDialogs::_General::Initialize ( )
 	}
 	else {
 		SetDlgItemText (
-			Dialogs.General.hGeneral, S01_WISPSORTMEM, "512" );
+			Dialogs.General.hGeneral, S01_WISPSORTMEM, " " );
 	}
 	if ( hKey != NULL ) 
 		RegCloseKey ( hKey );

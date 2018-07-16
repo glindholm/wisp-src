@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_delet.c
 **
@@ -32,7 +53,10 @@ static char rcsid[]="$Id:$";
 #include "wt_datad.h"
 #include "crt.h"
 
-static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char* decl_tag);
+#define OP_REWRITE 1
+#define OP_DELETE 2
+
+static NODE parse_local_common(NODE the_statement, NODE the_sentence, int op);
 
 /*
 **	DELETE file-mame [RECORD]
@@ -65,7 +89,7 @@ NODE parse_delete(NODE the_statement, NODE the_sentence)
 				  token_data(file_node->token));
 	}
 
-	return parse_local_common(the_statement, the_sentence, "DE");
+	return parse_local_common(the_statement, the_sentence, OP_DELETE);
 }
 
 
@@ -112,7 +136,7 @@ NODE parse_rewrite(NODE the_statement, NODE the_sentence)
 				  token_data(record_node->token));
 	}
 	
-	return parse_local_common(the_statement, the_sentence, "RW");
+	return parse_local_common(the_statement, the_sentence, OP_REWRITE);
 }
 
 /*
@@ -122,12 +146,12 @@ NODE parse_rewrite(NODE the_statement, NODE the_sentence)
 **
 **	DESCRIPTION:	These are standard VERB's with possible INVALID and END-xxx clauses.
 **			The only thing special to handle is the record locking logic.
-**			If manual_locking then ensure there is an END-xxxx clause.
+**			If opt_manual_locking then ensure there is an END-xxxx clause.
 **
 **	ARGUMENTS:	
 **	the_statement	The first fragment
 **	the_sentence 	The rest of the sentence
-**	decl_tag	The WISP-DECLARATIVE-STATUS tag "RW" or "DE"
+**	op		the operation REWRITE or DELETE
 **
 **	GLOBALS:	None
 **
@@ -136,7 +160,7 @@ NODE parse_rewrite(NODE the_statement, NODE the_sentence)
 **	WARNINGS:	None
 **
 */
-static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char* decl_tag)
+static NODE parse_local_common(NODE the_statement, NODE the_sentence, int op)
 {
 	int	col;
 	char	end_verb[40];
@@ -153,16 +177,28 @@ static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char
 	if (col < 12) col = 12;
 
 	tput_leading_fluff(the_statement);
-	tput_line_at(col, "MOVE \"%s\" TO WISP-DECLARATIVES-STATUS", decl_tag);
-	if (!manual_locking)
+	if (opt_nogetlastfileop)
+	{
+		if (op == OP_REWRITE)
+		{
+			/* tput_line_at(col,"MOVE \"RW\" TO WISP-DECLARATIVES-STATUS"); */
+			tput_line_at(col,"MOVE \"Rewrite\" TO WISP-LASTFILEOP");
+		}
+		else
+		{
+			/* tput_line_at(col,"MOVE \"DE\" TO WISP-DECLARATIVES-STATUS"); */
+			tput_line_at(col,"MOVE \"Delete\" TO WISP-LASTFILEOP");
+		}
+		tput_flush();
+	}
+	if (!opt_manual_locking)
 	{
 		clear_lock_holder_id(col);
 	}
 
-	tput_flush();
 
 	/*
-	**	Need to process the trailing fluff because the manual_locking 
+	**	Need to process the trailing fluff because the opt_manual_locking 
 	**	inserts logic at the end (before the trailing fluff).
 	*/
 	trailing_fluff_node = unhook_trailing_fluff(the_statement);
@@ -235,7 +271,7 @@ static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char
 	}
 	else
 	{
-		if (need_end_verb && manual_locking)
+		if (need_end_verb && opt_manual_locking)
 		{
 			/*
 			**	Insert an END-xxx if not already there so the locking
@@ -246,10 +282,10 @@ static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char
 		
 	}
 
-	if (manual_locking)
+	if (opt_manual_locking)
 	{
 		/*
-		**	For manual_locking we have to unlock the record after the statement.
+		**	For opt_manual_locking we have to unlock the record after the statement.
 		*/
 		unlock_record(col);
 	}
@@ -267,10 +303,27 @@ static NODE parse_local_common(NODE the_statement, NODE the_sentence, const char
 /*
 **	History:
 **	$Log: wt_delet.c,v $
-**	Revision 1.15  1998/06/09 17:14:28  gsl
+**	Revision 1.20  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.19  2003/03/06 21:47:10  gsl
+**	Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	
+**	Revision 1.18  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.17  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.16  2002/05/16 21:48:32  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.15  1998-06-09 13:14:28-04  gsl
 **	Combined DELETE and REWRITE logic into a common routine.
 **	Added support for manual record locking
-**	
+**
 **	Revision 1.14  1998-03-27 14:10:56-05  gsl
 **	Move OLD to old.c
 **

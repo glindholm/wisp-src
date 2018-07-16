@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 /* visint - internal structures for Vision v2 */
 
 #define	VISION_INTERNALS
@@ -48,7 +69,7 @@
 
 /* The following line is used to allow 80286 file to be moved to a 80386 */
 
-#if defined(WIN32) || defined(SCO) || defined(LINUX)	/* On Windows & SCO "Unsigned" is 2 bytes */
+#if defined(WIN32) || defined(SCO) || defined(LINUX)	/* On Windows & SCO & LINUX "Unsigned" is 2 bytes */
 #define INTEL
 #endif
 
@@ -319,8 +340,11 @@ extern	int		v_errno, v_supl_err;
 /*
 **	History:
 **	$Log: visint.h,v $
-**	Revision 1.10.2.1  2002/09/06 17:57:08  gsl
-**	LINUX and VISION2 files
+**	Revision 1.12  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.11  2003/01/24 18:28:49  gsl
+**	fix for LINUX and VISION2
 **	
 **	Revision 1.10  2002/01/09 22:12:58  gsl
 **	Update for SCO - THe Vision2 structs were all messed up.

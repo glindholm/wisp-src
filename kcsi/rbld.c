@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 This is the report writer portion of REPORT.
 On entry it is passed the information entered from the OPTIONS selection
@@ -33,9 +47,7 @@ From this point the basic logic flow is
 #include "cobioblk.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)rbld.c	1.9 6/8/93";
 
-static char ufb[1];
 
 static KCSIO_BLOCK skfb;
 static KCSIO_BLOCK *save_kfb;
@@ -305,7 +317,6 @@ static void build_new_field(RPT_NF *nf)
 {
 	RPT_NFO *nfo;
 	DTYPE *lop,*rop;
-	int op;
 
 	nfo = &nf->_o[0];
 
@@ -329,21 +340,24 @@ static void build_new_field(RPT_NF *nf)
 		lop->_len = rop->_len;
 	lop->_pos = 0;
 
-	while(op = nfo->_code)
-		{
+	while(nfo->_code != 0)
+	{
+		int op = nfo->_code;
 		++nfo;
 		if(nfo->_not_lit)
+		{
 			rop = *(nfo->_pnew);
+		}
 		else
-			{
+		{
 			rop = &nfo->_lit_op;
 /*
 			if(lop->_type & IS_NUM)
 				swapsign(rop);
 */
-			}
-		KCSI_rptcmb(lop,op,rop);
 		}
+		KCSI_rptcmb(lop,op,rop);
+	}
 	rop = *(nf->_pnew);
 	cvt_data(rop,lop);
 }
@@ -372,8 +386,11 @@ DTYPE *operand;
 /*
 **	History:
 **	$Log: rbld.c,v $
-**	Revision 1.2.2.1  2002/11/12 15:56:31  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.9  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.8  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.7  2002/10/24 15:48:31  gsl
 **	Make globals unique

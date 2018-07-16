@@ -1,19 +1,32 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /* Routines to wait for a record to become available.										*/
 
 /* wfwait - Wait for a hard lock to clear. The caller does not want to apply a lock, so only needs to check hard lock.		*/
 /*																*/
-/*	stat contains the COBOL status code.											*/
+/*	status contains the COBOL status code.											*/
 /*	timer is a 32 bit binary value and contains the time-out counter in 1/100ths of a second.				*/
 /*		If 0, time-out is not requested and no value is returned.							*/
 
@@ -21,56 +34,64 @@ static char rcsid[]="$Id:$";
 #include "wglobals.h"
 #include "wisplib.h"
 
-void wfwait(char* stat, int4* timer)					/* Wait for locks to clear.				*/
+void WFWAIT(char* status, int4* timer)					/* Wait for locks to clear.				*/
 {
 	uint4 delay;							/* Delay period.					*/
 
-	if (stat[0] == hardlock[0] && 
-	    stat[1] == hardlock[1]    ) 				/* A hard lock record lock				*/
+	if (0==memcmp(status, wisp_get_hardlock(), 2))			/* A hard lock record lock				*/
 	{
 		delay = 10;						/* Yes, then delay for 1/10 of a second.		*/
-		hpause(delay);
+		WL_hpause(delay);
+		if (*timer > 0)						/* Is timeout tracking requested?			*/
+		{
+			*timer -= delay;
+		}
+
+		if (*timer < 0) 
+		{
+			*timer = 0;					/* Yes, then decrement the timer but not below zero.	*/
+		}
 	}
 	else
 	{
 		*timer = 0;
-		return;		
 	}
 
-	if (*timer > 0)							/* Is timeout tracking requested?			*/
-	{
-		if ((*timer = (*timer - delay)) < 0) *timer = 0;	/* Yes, then decrement the timer but not below zero.	*/
-	}
 }
 
-/* wfswait - Wait for a soft or hard lock to clear. The caller is interested in applying a lock, and needs the record free.	*/
-
-void wfswait(char* stat, int4* timer)
+void SLEEPONE(void) /* Sleep one second */
 {
-	uint4 delay;							/* Delay period.					*/
-
-	if ( (stat[0] == hardlock[0] && stat[1] == hardlock[1]) ||	/* A hard lock record lock or				*/
-	     (stat[0] == softlock[0] && stat[1] == softlock[1])    )	/* a soft lock record lock				*/
-	{
-		delay = 10;						/* Yes, then delay for 1/10 of a second.		*/
-		hpause(delay);
-	}
-	else
-	{
-		*timer = 0;
-		return;		
-	}
-
-	if (*timer > 0)							/* Is timeout tracking requested?			*/
-	{
-		if ((*timer = (*timer - delay)) < 0) *timer = 0;	/* Yes, then decrement the timer but not below zero.	*/
-	}
+	WL_hpause(100);
 }
+
+
+
 /*
 **	History:
 **	$Log: wfwait.c,v $
+**	Revision 1.18  2003/03/10 22:41:59  gsl
+**	Add SLEEPONE to sleep one second as a replacement for WFWAIT
+**	
+**	Revision 1.17  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.16  2002/10/01 18:51:23  gsl
+**	rename status
+**	
+**	Revision 1.15  2002/07/19 22:07:14  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.14  2002/07/10 21:05:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.13  2002/07/01 04:02:43  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.12  2002/06/21 03:51:02  gsl
+**	Remove softlock
+**	
 **	Revision 1.11  2001/09/27 19:31:56  gsl
-**	Change to use hpause(10)
+**	Change to use WL_hpause(10)
 **	for 1/10 second delay
 **	
 **	Revision 1.10  1997-03-12 13:25:47-05  gsl

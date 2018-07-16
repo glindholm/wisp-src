@@ -1,11 +1,15 @@
 procedure qa0000.wps
 
-prompt center "QA0000:  Will setup the usage constants for QA";;;;;
-       center "Press (ENTER) to continue"
+declare &IL, &OL, &SL, &RL, &PL, &WL as string(8)
+declare &IV, &OV, &SV, &RV, &PV, &WV as string(8)
+declare &PM, &PC, &JC, &JQ as string(8)
+declare &FN, &PN, &LN as string(8)
+
+extract &PL=PROGLIB, &PV=PROGVOL
 
 set 		INLIB =LIBIN, 		INVOL   =VOLIN, 
 		OUTLIB=LIBOUT,		OUTVOL  =VOLOUT,
-		RUNLIB=LIBRUN,		RUNVOL  =VOLRUN,
+		RUNLIB=&PL,		RUNVOL  =&PV,
 		SPOOLLIB=LIBSPOOL, 	SPOOLVOL=VOLSPL,
 					WORKVOL =VOLWRK
 
@@ -18,7 +22,24 @@ set	PRNTMODE=P,
 	JOBQUEUE=R,
 	JOBLIMIT=3600+1380+45
 
-prompt center "QA0000:  Usage constants have been set";;;;
+EXTRACT &IL=INLIB, &OL=OUTLIB, &SL=SPOOLLIB, &RL=RUNLIB, &WL=WORKLIB
+EXTRACT &IV=INVOL, &OV=OUTVOL, &SV=SPOOLVOL, &RV=RUNVOL, &WV=WORKVOL
+EXTRACT &PM=PRNTMODE, &PC=PRTCLASS, &JC=JOBCLASS, &JQ=JOBQUEUE 
+EXTRACT &FN=FORM#, &PN=PRINTER, &LN=LINES
+
+prompt	center "QA0000:  Usage constants have been set";;;
+	center	"   RUNLIB   = ", &RL, "   RUNVOL   = ", &RV;;
+	center	"   INLIB    = ", &IL, "   INVOL    = ", &IV;
+	center	"   OUTLIB   = ", &OL, "   OUTVOL   = ", &OV;
+	center	"   SPOOLLIB = ", &SL, "   SPOOLVOL = ", &SV;
+	center	"   WORKLIB  = ", &WL, "   WORKVOL  = ", &WV;;
+	center	"   PRNTMODE = ", &PM;
+	center	"   PRTCLASS = ", &PC;
+        center	"   FORM#    = ", &FN;
+	center	"   PRINTER  = ", &PN;
+	center	"   LINES    = ", &LN;
+	center	"   JOBCLASS = ", &JC;
+	center	"   JOBQUEUE = ", &JQ;;
        center "Press (ENTER) to return"
 
 return

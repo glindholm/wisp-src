@@ -1,6 +1,19 @@
-static char crid85_copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char crid85_rcsid[]="$Id:$";
-static char crid85_sccsid[]="@(#)crid85.c	1.13 9/10/94";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 Entry routines for support for CONTROL REPORT INQUIRY and 
 DATENTRY. Acu-COBOL version 2.00 using Vision version 3 files.
@@ -340,6 +353,9 @@ int		initial;
 /*
 **	History:
 **	$Log: crid85.c,v $
+**	Revision 1.4  2003/02/04 19:19:09  gsl
+**	fix header
+**	
 **	Revision 1.3  1996/09/18 18:34:33  gsl
 **	Fix syntax error
 **	

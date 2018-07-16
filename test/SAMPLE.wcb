@@ -80,14 +80,15 @@
            05  SORT-DATE          PIC 9(6).
            05  SORT-NAME          PIC X(20).
            05  SORT-TYPE          PIC X.
+           05  SORT-SEQ           PIC BB9.
 
        FD  UNSORTED-FILE
            VALUE OF FILENAME IS "##USRT".
-       01  UNSORTED-REC           PIC X(27).
+       01  UNSORTED-REC           PIC X(30).
 
        FD  SORTED-FILE
            VALUE OF FILENAME IS "##SORT".
-       01  SORTED-REC           PIC X(27).
+       01  SORTED-REC           PIC X(30).
 
       *
       /*****************************************************************
@@ -159,18 +160,24 @@
                "SAMPLE: WISP QA TEST PROGRAMS".
            03  FILLER  PIC X(11) ROW 1 COL 60 VALUE
                "MAIN-SCREEN".
+           03  FILLER  PIC X(40) ROW 5 COL 20 VALUE
+               "(3)  FILE I/O TESTS.".
            03  FILLER  PIC X(40) ROW 7 COL 20 VALUE
-               "(3) FILE I/O TESTS.".
+               "(4)  SCREEN I/O TESTS.".
            03  FILLER  PIC X(40) ROW 9 COL 20 VALUE
-               "(4) SCREEN I/O TESTS.".
+               "(5)  WANG VSSUBS TESTS.".
            03  FILLER  PIC X(40) ROW 11 COL 20 VALUE
-               "(5) WANG VSSUBS TESTS.".
+               "(6)  COBOL TESTS.".
            03  FILLER  PIC X(40) ROW 13 COL 20 VALUE
-               "(6) COBOL TESTS.".
+               "(7)  PRINTING TESTS.".
            03  FILLER  PIC X(40) ROW 15 COL 20 VALUE
-               "(7) PRINTING TESTS.".
+               "(8)  WISP SUBROUTINE TESTS.".
            03  FILLER  PIC X(40) ROW 17 COL 20 VALUE
-               "(8) WISP SUBROUTINE TESTS.".
+               "(9)  WL0000 - LIBRARY TESTS".
+           03  FILLER  PIC X(40) ROW 19 COL 20 VALUE
+               "(10) WC0000 - COBOL TESTS".
+           03  FILLER  PIC X(40) ROW 21 COL 20 VALUE
+               "(11) WT0000 - TRANSLATOR TESTS.".
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
                "PRESS (16) TO EXIT".
 
@@ -232,26 +239,26 @@
            05  FILLER PIC X(40) ROW 3 COL 20 VALUE
                "SORT ASCENDING KEY SORT-TYPE SORT-DATE".
            05  FILLER PIC X(15) ROW 5 COL 2  VALUE "UNSORTED FILE".
-           05  FILLER PIC X(30) ROW 6 COL 2 VALUE 
-000000*         123456789012345678901234567890
-               "DATE  NAME                TYPE".
+           05  FILLER PIC X(33) ROW 6 COL 2 VALUE 
+000000*         123456789012345678901234567890123
+               "DATE  NAME             TYPE SQ".
            05  FILLER PIC X(15) ROW 5 COL 40  VALUE "SORTED FILE".
-           05  FILLER PIC X(30) ROW 6 COL 40 VALUE 
-               "DATE  NAME                TYPE".
+           05  FILLER PIC X(33) ROW 6 COL 40 VALUE 
+               "DATE  NAME             TYPE SQ".
            05  FILLER OCCURS 10 TIMES ROW 8.
-               10  FILLER PIC X(27) ROW 8 COL 2 
+               10  FILLER PIC X(30) ROW 8 COL 2 
                    SOURCE SCN-UNSORTED-REC.
            05  FILLER OCCURS 10 TIMES ROW 8.
-               10  FILLER PIC X(27) ROW 8 COL 40 
+               10  FILLER PIC X(30) ROW 8 COL 40 
                    SOURCE SCN-SORTED-REC.
            05  FILLER PIC X(60) ROW 24 COL 10
                VALUE "Verify the above are correct (ENTER) to continue".
        01  FILLER.
            05  FILLER OCCURS 10 TIMES.
-               10  SCN-UNSORTED-REC  PIC X(27).
+               10  SCN-UNSORTED-REC  PIC X(30).
        01  FILLER.
            05  FILLER OCCURS 10 TIMES.
-               10  SCN-SORTED-REC  PIC X(27).
+               10  SCN-SORTED-REC  PIC X(30).
 
 
        01  MY-RETURN-CODE  PIC 9(3) VALUE ZERO.
@@ -313,7 +320,7 @@
       
        LOOP-DISPLAY.
            DISPLAY AND READ MAIN-SCREEN ON CRT
-           PFKEYS 3, 4, 5, 6, 7, 8, 16.
+           PFKEYS 3, 4, 5, 6, 7, 8, 9, 10, 11 16.
 
            IF PF-KEY = "03" THEN
               PERFORM FILE-TESTS
@@ -327,6 +334,12 @@
               PERFORM PRINTING-TESTS
            ELSE IF PF-KEY = "08" THEN
               PERFORM WISPSUBS-TESTS
+           ELSE IF PF-KEY = "09" THEN
+              CALL "WL0000"
+           ELSE IF PF-KEY = "10" THEN
+              CALL "WC0000"
+           ELSE IF PF-KEY = "11" THEN
+              CALL "WT0000"
            ELSE IF PF-KEY = "16" THEN
               GO TO EXIT-PROGRAM.
 
@@ -401,26 +414,31 @@
            MOVE "900101" TO SORT-DATE.
            MOVE "FIRST678901234567890"  TO SORT-NAME.
            MOVE "A"      TO SORT-TYPE.
+           MOVE 2        TO SORT-SEQ.
            WRITE UNSORTED-REC FROM SORT-REC.
 
            MOVE "880501" TO SORT-DATE.
            MOVE "SECOND"  TO SORT-NAME.
            MOVE "B"      TO SORT-TYPE.
+           MOVE 4        TO SORT-SEQ.
            WRITE UNSORTED-REC FROM SORT-REC.
 
            MOVE "900501" TO SORT-DATE.
            MOVE "THIRD"  TO SORT-NAME.
            MOVE "A"      TO SORT-TYPE.
+           MOVE 3        TO SORT-SEQ.
            WRITE UNSORTED-REC FROM SORT-REC.
 
            MOVE "890701" TO SORT-DATE.
            MOVE "FORTH"  TO SORT-NAME.
            MOVE "B"      TO SORT-TYPE.
+           MOVE 5        TO SORT-SEQ.
            WRITE UNSORTED-REC FROM SORT-REC.
 
            MOVE "870101" TO SORT-DATE.
            MOVE "FIFTH"  TO SORT-NAME.
            MOVE "A"      TO SORT-TYPE.
+           MOVE 1        TO SORT-SEQ.
            WRITE UNSORTED-REC FROM SORT-REC.
 
            CLOSE UNSORTED-FILE.

@@ -1,21 +1,47 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
-
-/*	
-**	linksubs.c
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
 
-/*	LINKSUBS	Subroutines for Wang USERSUB LINK	*/
+/*
+**	File:		linksubs.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Subroutines for Wang USERSUB LINK
+**
+*/
+
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 
 #ifdef unix
 #include <ctype.h>
 #include <signal.h>
+#include <unistd.h>
 #endif
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <direct.h>
 #include <io.h>
 #include <process.h>
@@ -26,7 +52,6 @@ static char rcsid[]="$Id:$";
 #include "link.h"
 #include "wglobals.h"
 #include "wdefines.h"
-#include "movebin.h"
 #include "wisplib.h"
 #include "osddefs.h"
 #include "paths.h"
@@ -35,7 +60,6 @@ static char rcsid[]="$Id:$";
 #include "wanguid.h"
 
 #include "werrlog.h"
-#define ROUTINE		28000
 
 
 /*
@@ -43,15 +67,14 @@ static char rcsid[]="$Id:$";
 	because only used for true dynamic linking so reenterant
 	code is not required.
 
-	They are global because used in vmspargs.c. (VMS)
+	They are global because were used in vmspargs.c. (VMS)
 */
 
-char	g_link_pfiller[8];							/* Filler to test bug */
-char	g_link_parmfile[COB_FILEPATH_LEN + 1];					/* The key to the temp file name.		*/
-char	g_link_pname[80];							/* The PROGNAME to link to.			*/
-int4	g_link_parmcnt = 0;							/* The number of arguments passed (0-32)	*/
-char	*g_link_parmptr[MAX_LINK_PARMS];					/* The passed arguments				*/
-int4	g_link_parmlen[MAX_LINK_PARMS];						/* The lengths of the passed arguments		*/
+static char	g_link_parmfile[COB_FILEPATH_LEN + 1];	/* The key to the temp file name.		*/
+static char	g_link_pname[80];			/* The PROGNAME to link to.			*/
+static int4	g_link_parmcnt = 0;			/* The number of arguments passed (0-32)	*/
+static char	*g_link_parmptr[MAX_LINK_PARMS];	/* The passed arguments				*/
+static int4	g_link_parmlen[MAX_LINK_PARMS];		/* The lengths of the passed arguments		*/
 
 
 /*
@@ -60,16 +83,17 @@ int4	g_link_parmlen[MAX_LINK_PARMS];						/* The lengths of the passed arguments
 
 	Program "A" does a call "LINK" to link to "B", parameters are pass thru tempfile "X".
 
-	From program "A" LINK will call "writeunixlink" to create "X" then fork and exec "B".
+	From program "A" LINK will call "WL_writeunixlink" to create "X" then fork and exec "B".
 	Program "B" will call "ACUGARGS" to read then delete file "X".
-	Program "B" runs normally then at exit calls "ACUPARGS" to re-create "X" with updated values, then "B" exits.
-	LINK calls "readunixlink" to read then delete file "X" and update program "A"s data area.
+	Program "B" runs normally then at exit calls "ACUPARGS" to re-create "X" with updated values, 
+	then "B" exits.
+	LINK calls "WL_readunixlink" to read then delete file "X" and update program "A"s data area.
 	LINK finishes and program "A" continues.
 
 */
 
 /*
-**	ROUTINE:	writeunixlink()
+**	ROUTINE:	WL_writeunixlink()
 **
 **	FUNCTION:	Write the temp link parm file (used by unix and WIN32)
 **
@@ -83,19 +107,20 @@ int4	g_link_parmlen[MAX_LINK_PARMS];						/* The lengths of the passed arguments
 **	linkkey		The returned "key" to the temp parm file
 **
 */
-void writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, struct str_len *len_list, char *linkkey)
+void WL_writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, struct str_len *len_list, char *linkkey)
 {
 	FILE	*fp;
 	int4	size, i;
+	int4	l_CANEXITFLAG;
 
-	sprintf(linkkey,"%s%sLINK_%s_%u", wisplinkdir(NULL), DIR_SEPARATOR_STR, longuid(), (unsigned)getpid());		
-	makepath(linkkey);
+	sprintf(linkkey,"%s%sLINK_%s_%u", wisplinkdir(NULL), DIR_SEPARATOR_STR, WL_longuid(), (unsigned)getpid());		
+	WL_makepath(linkkey);
 
 	fp = fopen(linkkey,FOPEN_WRITE_BINARY);						/* Open the parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),linkkey,errno,"writeunixlink",0,0,0,0,0);
-		wexit(ERRORCODE(12));
+		WL_werrlog(WERRCODE(28012),linkkey,errno,"WL_writeunixlink",0,0,0,0,0);
+		WL_wexit(WERRCODE(28012));
 	}
 
 	size = strlen( pname );								/* Write the program to exec		*/
@@ -112,20 +137,22 @@ void writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, s
 	}
 
 	size = -1;
+	l_CANEXITFLAG = wisp_get_CANEXITFLAG();
+
 	fwrite( &size,		4, 1, fp );						/* Write the compcode			*/
 	fwrite( &size, 		4, 1, fp );						/* Write the returncode			*/
-	fwrite( &CANEXITFLAG,	4, 1, fp );						/* Write the Cancel-Exit flag		*/
+	fwrite( &l_CANEXITFLAG,	4, 1, fp );						/* Write the Cancel-Exit flag		*/
 	fwrite( &size,		4, 1, fp );						/* Write the LOGOFF flag		*/
 
 	fflush(fp);
 	fclose(fp);
 
-	wtrace("LINK","PARMFILE","Created PARMFILE [%s] pname=[%s] parmcnt=[%d]",
+	WL_wtrace("LINK","PARMFILE","Created PARMFILE [%s] pname=[%s] parmcnt=[%d]",
 	       linkkey, pname, parmcnt);
 }
 
 /*
-**	ROUTINE:	readunixlink()
+**	ROUTINE:	WL_readunixlink()
 **
 **	FUNCTION:	Read and delete the temp link parm file (used by unix and WIN32)
 **
@@ -150,53 +177,75 @@ void writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, s
 **
 **
 */
-void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_list, const char *linkkey, 
+void WL_readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_list, const char *linkkey, 
 		  int4 *compcode, int4 *returncode)
 {
 	FILE	*fp;
 	int4	size,i;
 	char	tempstr[80];
+	int4	l_LOGOFFFLAG = 0;
+	size_t	rc;
 
-	fp = fopen(linkkey,FOPEN_READ_BINARY);						/* Open the Parm file			*/
+	fp = fopen(linkkey,FOPEN_READ_BINARY);				/* Open the Parm file			*/
 	if ( !fp )
 	{
-		wtrace("LINK","PARMFILE","Remove: Unable to open PARMFILE [%s] for reading [errno=%d]", linkkey, errno);
+		WL_wtrace("LINK","PARMFILE","Remove: Unable to open PARMFILE [%s] for reading [errno=%d]", linkkey, errno);
 		
-		*compcode = 16;								/* File missing, program aborted.	*/
+		*compcode = 16;						/* File missing, program aborted.	*/
 		*returncode = 0;
-		LOGOFFFLAG = 0;
 		return;
 	}
 
-	fread( &size, 4, 1, fp );							/* Read the program path		*/
-	fread( tempstr, size, 1, fp );
+	/*
+	**	Each fread should return an rc==1 (1 full item read)
+	*/
+	rc = fread( &size, 4, 1, fp );					/* Read the program path		*/
+	if (1==rc){ rc = fread( tempstr, size, 1, fp );	}
 
-	fread( &size, 4, 1, fp );							/* Read the parmcnt			*/
+	if (1==rc){ rc = fread( &size, 4, 1, fp ); }			/* Read the parmcnt			*/
 
-	for ( i=0; i < parmcnt; i++ )							/* Read the parms			*/
+	for ( i=0; i < parmcnt; i++ )					/* Read the parms			*/
 	{
-		fread( &size, 4, 1, fp );
-		fread( parm_list->parm[i],size,1,fp);
+		if (1==rc){ rc = fread( &size, 4, 1, fp ); }
+		if (1==rc){ rc = fread( parm_list->parm[i],size,1,fp); }
 	}
 
-	fread( compcode,    4, 1, fp );							/* Read the comp code			*/
-	fread( returncode,  4, 1, fp );							/* Read the return code			*/
-	fread( tempstr,     4, 1, fp );							/* Read the Cancel-Exit flag		*/
-	fread( &LOGOFFFLAG, 4, 1, fp );							/* Read the LOGOFF flag		*/
+	if (1==rc){ rc = fread( compcode,    4, 1, fp ); }		/* Read the comp code			*/
+	if (1==rc){ rc = fread( returncode,  4, 1, fp ); }		/* Read the return code			*/
+	if (1==rc){ rc = fread( tempstr,     4, 1, fp ); }		/* Read the Cancel-Exit flag		*/
+	if (1==rc){ rc = fread( &l_LOGOFFFLAG, 4, 1, fp ); }		/* Read the LOGOFF flag			*/
+
+	if (rc != 1)
+	{
+		/*
+		**	Error reading the file
+		*/
+		WL_werrlog_error(WERRCODE(28020),"LINK","PARMFILE"
+			"Remove: Error reading PARMFILE [%s] [errno=%d]", linkkey, errno);
+		
+		*compcode = 16;	
+		*returncode = 0;
+	}
 
 	fclose(fp);
+	wisp_unlink(linkkey);						/* delete the tmp file			*/
 
-	unlink(linkkey);								/* delete the tmp file			*/
-
-	wtrace("LINK","PARMFILE","Removed PARMFILE [%s] compcode=[%d] retcode=[%d]",
-	       linkkey, *compcode, *returncode);
-
-	if ( *compcode == -1 ) 								/* Program didn't understand protocol.	*/
+	if (rc != 1)
 	{
-		*compcode = -1;
-		*returncode = -1;
-		LOGOFFFLAG = 0;
+		return;
 	}
+
+
+	if ( *compcode == -1 ) 						/* Program didn't understand protocol.	*/
+	{
+		*returncode = -1;
+		l_LOGOFFFLAG = 0;
+	}
+
+	wisp_set_LOGOFFFLAG(l_LOGOFFFLAG);
+
+	WL_wtrace("LINK","PARMFILE","Removed PARMFILE [%s] compcode=[%d] retcode=[%d] logoff=[%d]",
+	       linkkey, *compcode, *returncode, l_LOGOFFFLAG);
 }
 
 /*
@@ -225,7 +274,7 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 		*pname  = '\0';
 		return;
 	}
-	cstr2cobx(linkkey,ptr,COB_FILEPATH_LEN);
+	WL_cstr2cobx(linkkey,ptr,COB_FILEPATH_LEN);
 
 	ACUGARGS(linkkey,pname, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,p11,p12,p13,p14,p15,p16,
 				p17,p18,p19,p20,p21,p22,p23,p24,p25,p26,p27,p28,p29,p30,p31,p32);
@@ -235,7 +284,7 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 
 void ISRUNUSING(void)
 {
-	LINKPARM = 0;								/* Were coming from a RUN USING not a LINK 	*/
+	wisp_set_LINKPARM(0);	/* Were coming from a RUN USING not a LINK 	*/
 }
 
 void LINKPARG(void)
@@ -268,8 +317,10 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 	FILE	*fp;
 	int4	size,i;
 	char	tempstr[COB_FILEPATH_LEN];
+	int4	l_CANEXITFLAG;
+	size_t	rc;
 
-	LINKPARM = 1;									/* We are inside an ACU link		*/
+	wisp_set_LINKPARM(1);								/* We are inside an ACU link		*/
 
 	g_link_parmptr[0] = p1;								/* Save all the ptrs into ACU_COBOL	*/
 	g_link_parmptr[1] = p2;
@@ -304,41 +355,57 @@ char	*p17,*p18,*p19,*p20,*p21,*p22,*p23,*p24,*p25,*p26,*p27,*p28,*p29,*p30,*p31,
 	g_link_parmptr[30] = p31;
 	g_link_parmptr[31] = p32;
 
-	cobx2cstr(g_link_parmfile, linkkey, COB_FILEPATH_LEN);
+	WL_cobx2cstr(g_link_parmfile, linkkey, COB_FILEPATH_LEN);
 
 	fp = fopen(g_link_parmfile,FOPEN_READ_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),g_link_parmfile,errno,"LINKGARG",0,0,0,0,0);
-		wexit(ERRORCODE(12));
+		WL_werrlog(WERRCODE(28012),g_link_parmfile,errno,"LINKGARG",0,0,0,0,0);
+		WL_wexit(WERRCODE(28012));
 	}
 
 	memset ( pname,' ',80);
-	fread( &size, 4, 1, fp );							/* Read the program path		*/
-	fread( pname, size, 1, fp );
+	size = 0;
+	rc = fread( &size, 4, 1, fp );							/* Read the program path		*/
+	if (1==rc) { fread( pname, size, 1, fp ); }
 
 	memcpy(g_link_pname, pname, size );
 	g_link_pname[size] = '\0';
 
-	fread( &g_link_parmcnt, 4, 1, fp );						/* Read the parmcnt			*/
+	if (1==rc) { fread( &g_link_parmcnt, 4, 1, fp ); }				/* Read the parmcnt			*/
 
 	for ( i=0; i < g_link_parmcnt; i++ )						/* Read the parms			*/
 	{
-		fread( &g_link_parmlen[i], 4, 1, fp );
-		fread( g_link_parmptr[i],g_link_parmlen[i],1,fp);
+		if (1==rc) { fread( &g_link_parmlen[i], 4, 1, fp ); }
+		if (1==rc) { fread( g_link_parmptr[i],g_link_parmlen[i],1,fp); }
 	}
 
-	fread( &size,	4, 1, fp );							/* Read the comp code			*/
-	fread( &size,	4, 1, fp );							/* Read the return code			*/
-	fread( &CANEXITFLAG, 4, 1, fp );						/* Read the CANCEL-EXIT flag		*/
-	fread( tempstr,      4, 1, fp );						/* Read the LOGOFF flag			*/
+	l_CANEXITFLAG = wisp_get_CANEXITFLAG();
+
+	if (1==rc) { fread( &size,	4, 1, fp ); }			/* Read the comp code			*/
+	if (1==rc) { fread( &size,	4, 1, fp ); }			/* Read the return code			*/
+	if (1==rc) { fread( &l_CANEXITFLAG, 4, 1, fp );	}		/* Read the CANCEL-EXIT flag		*/
+	if (1==rc) { fread( tempstr,      4, 1, fp ); }			/* Read the LOGOFF flag			*/
+
+	if (rc != 1)
+	{
+		/*
+		**	Error reading the file
+		*/
+		WL_werrlog_error(WERRCODE(28020),"LINK","PARMFILE"
+			"Consume: Error reading PARMFILE [%s] [errno=%d]", 
+			g_link_parmfile, errno);		
+	}
+	else
+	{
+		WL_wtrace("LINK","PARMFILE","Consumed PARMFILE [%s] pname=[%s] parmcnt=[%d]",
+		       g_link_parmfile, g_link_pname, g_link_parmcnt);
+	}
 
 	fclose(fp);
 
-	unlink(g_link_parmfile);							/* Delete the temp file			*/
+	wisp_unlink(g_link_parmfile);					/* Delete the temp file			*/
 
-	wtrace("LINK","PARMFILE","Consumed PARMFILE [%s] pname=[%s] parmcnt=[%d]",
-	       g_link_parmfile, g_link_pname, g_link_parmcnt);
 }
 
 void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
@@ -348,8 +415,11 @@ void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 	FILE	*fp;
 	int4	size,i;
 	static	int	first=1;
+	int4	l_LINKCOMPCODE;
+	int4	l_LINKRETCODE;
+	int4	l_LOGOFFFLAG;
 
-	if (!LINKPARM) return;
+	if (!wisp_get_LINKPARM()) return;
 
 	if (!first) return;
 	first = 0;
@@ -357,8 +427,8 @@ void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 	fp = fopen(g_link_parmfile,FOPEN_WRITE_BINARY);					/* Open the Parm file			*/
 	if ( !fp )
 	{
-		werrlog(ERRORCODE(12),g_link_parmfile,errno,"LINKPARG",0,0,0,0,0);
-		wexit(ERRORCODE(12));
+		WL_werrlog(WERRCODE(28012),g_link_parmfile,errno,"LINKPARG",0,0,0,0,0);
+		WL_wexit(WERRCODE(28012));
 	}
 
 	size = strlen(g_link_pname);
@@ -373,16 +443,21 @@ void ACUPARGS()								/* This routine is call on the way back from a LINK 	*/
 		fwrite( g_link_parmptr[i],g_link_parmlen[i],1,fp);
 	}
 
+	l_LINKCOMPCODE = wisp_get_LINKCOMPCODE();
+	l_LINKRETCODE = wisp_get_LINKRETCODE();
 	size = -1;
-	fwrite( &LINKCOMPCODE, 4, 1, fp );						/* Write the comp code			*/
-	fwrite( &LINKRETCODE,  4, 1, fp );						/* Write the return code		*/
+	l_LOGOFFFLAG = wisp_get_LOGOFFFLAG();
+
+	fwrite( &l_LINKCOMPCODE, 4, 1, fp );						/* Write the comp code			*/
+	fwrite( &l_LINKRETCODE,  4, 1, fp );						/* Write the return code		*/
 	fwrite( &size,		4, 1, fp );						/* Write the CANCEL EXIT flag		*/
-	fwrite( &LOGOFFFLAG,   4, 1, fp );						/* Write the LOGOFF flag		*/
+	fwrite( &l_LOGOFFFLAG,   4, 1, fp );						/* Write the LOGOFF flag		*/
 
 	fclose(fp);
 
-	wtrace("LINK","PARMFILE","Restored PARMFILE [%s] pname=[%s] parmcnt=[%d] compcode=[%d] retcode=[%d]",
-	       g_link_parmfile, g_link_pname, g_link_parmcnt, LINKCOMPCODE, LINKRETCODE);
+	WL_wtrace("LINK","PARMFILE","Restored PARMFILE [%s] pname=[%s] parmcnt=[%d] compcode=[%d] retcode=[%d]",
+	       g_link_parmfile, g_link_pname, g_link_parmcnt, 
+	       l_LINKCOMPCODE, l_LINKRETCODE);
 }
 
 
@@ -395,30 +470,48 @@ void ACUNARGS( short* argcount )							/* Return the number of ARGs passed	*/
 }
 
 
-									/* This routine sets a WISP variable to a int4 value.	*/
-									/* although this could be used throughout the WISP.	*/
-									/* system, it is currently only used in the LINK.	*/
-									/* subsystem.  It should eventually be given a name.	*/
-									/* starting with a "w" and used from the WISP Library.	*/
-void swap_put ( int4* destination, int4 new_value )
-{
-	int4	use_value ;						/* temporary holder for the value needing WANGing.	*/
-
-	use_value = new_value ;						/* This will preserve the original value in new_value.	*/
-	wswap ( &use_value ) ;						/* swap the bits as needed for this machine to WANG.	*/
-	PUTBIN ( destination, &use_value, sizeof ( use_value ) ) ;	/* move the new value bit by bit to destination.	*/
-}
-
-
 /*	End of	link.c	*/
 /*
 **	History:
 **	$Log: linksubs.c,v $
+**	Revision 1.35  2003/07/02 18:06:15  gsl
+**	fix bug in LOGOFF flag passing across link levels
+**	
+**	Revision 1.34  2003/07/02 15:02:56  gsl
+**	fix bug in LOGOFF flag passing across link levels
+**	
+**	Revision 1.33  2003/01/31 17:17:42  gsl
+**	Fix Wall warnings and copyright
+**	
+**	Revision 1.32  2002/12/11 17:03:06  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.31  2002/12/10 17:09:18  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.30  2002/07/18 21:04:27  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.29  2002/07/12 17:00:58  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.28  2002/07/10 21:05:19  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.27  2002/07/10 04:27:37  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.26  2002/07/01 04:02:39  gsl
+**	Replaced globals with accessors & mutators
+**	
+**	Revision 1.25  2002/06/26 01:42:46  gsl
+**	Remove VMS code
+**	
 **	Revision 1.24  2001/11/08 16:47:32  gsl
 **	Add missing include
 **	
 **	Revision 1.23  2001-10-31 15:33:52-05  gsl
-**	replace mkdir() with makepath()
+**	replace mkdir() with WL_makepath()
 **
 **	Revision 1.22  2001-10-10 15:43:52-04  gsl
 **	Rename the LINK temp param file to LINK_userid_pid to help prevent

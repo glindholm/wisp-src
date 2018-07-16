@@ -633,7 +633,7 @@ void machine::exec_screen_io(opcode an_opcode) {
       // Display the screen
       Boolean read = BOOLEAN(an_opcode == prompt_op);
 
-      if (message_op == an_opcode && wbackground())
+      if (message_op == an_opcode && WL_wbackground())
       {
          // If in background then MESSAGE does not display
       }
@@ -774,6 +774,9 @@ void machine::exec_screen() {
 //
 //	History:
 //	$Log: e_scrnio.cpp,v $
+//	Revision 1.9  2002/07/10 21:06:28  gsl
+//	Fix globals WL_ to make unique
+//	
 //	Revision 1.8  1998/08/31 19:13:43  gsl
 //	drcs update
 //	

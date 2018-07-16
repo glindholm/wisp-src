@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #define	_VSEDSCR_C
 #include <stdio.h>
@@ -24,8 +39,8 @@ static char rcsid[]="$Id:$";
 #include "vsedmod.h"
 #include "vsemov.h"
 
-static char ed_func[]={03};
-static char ed_lines[]={24};
+static unsigned char ed_func[]={03};
+static unsigned char ed_lines[]={24};
 
 static char ed_menu1[]=
   "        (2)First (3)Last (4)Prev (5)Next  (6)Down  (7)Up   (8)Find     \254Display";
@@ -87,8 +102,8 @@ void vse_ed_scr(int pick)
 
 void d_and_r_ed(int tabs)
 {
-	char settab;
-	char write_all=1, read_all=2;
+	unsigned char settab;
+	unsigned char write_all=1, read_all=2;
 	
 	if (tabs)
 	{
@@ -195,8 +210,6 @@ static void vse_ed_scr_dispatch(void)
 
 void vse_save_pos(void)
 {
-	extern char ed_oa[];
-	
 	vse_save_row = ed_oa[OA_CURSOR_ROW];
 	vse_save_col = ed_oa[OA_COL];
 }
@@ -249,7 +262,7 @@ void vse_ed_load_full_lines(void)
 			{
 			spacecpy(ed_line[idx],txt->text,(int) vse_edit_width);
 			ed_txt[idx] = txt;
-			sprintf(ed_num[idx],"%06ld",txt->lineno);
+			sprintf(ed_num[idx],"%06ld",(long)txt->lineno);
 			if ( txt->modfld )
 				strcpy( ed_mod[idx], txt->modfld );
 			else
@@ -275,7 +288,7 @@ void vse_ed_load_lines(void)
 			{
 			spacecpy(ed_line[idx],txt->text,(int) vse_edit_width);
 			ed_txt[idx] = txt;
-			sprintf(ed_num[idx],"%06ld",txt->lineno);
+			sprintf(ed_num[idx],"%06ld",(long)txt->lineno);
 			txt=txt->next;
 			}
 		}
@@ -567,8 +580,6 @@ void file_bottom(void)
 
 void vse_sho_col(void)
 {
-	extern char ed_oa[];
-
 	sprintf(col_num,"%-2d",(ed_oa[OA_COL]<=1)?0:(ed_oa[OA_COL] + vse_edit_start_col - VSE_FIRST_SCREEN_COL));
 	vsescr(ed_showcol_fld,ed_scr);
 }
@@ -576,6 +587,18 @@ void vse_sho_col(void)
 /*
 **	History:
 **	$Log: vsedscr.c,v $
+**	Revision 1.14  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.12  2002/08/01 15:57:51  gsl
+**	type warnings
+**	
+**	Revision 1.11  2002/08/01 15:31:11  gsl
+**	type warnings
+**	
 **	Revision 1.10  1996/09/03 22:24:04  gsl
 **	drcs update
 **	

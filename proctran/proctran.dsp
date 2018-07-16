@@ -90,38 +90,6 @@ SOURCE=..\wispcommon\getopt.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\pgcblsrc.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgcommon.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgdefeqn.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgeqtns.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgextrct.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgglobal.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgkeyw.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pgstruct.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\ptcheck.c
 # End Source File
 # Begin Source File
@@ -203,6 +171,38 @@ SOURCE=..\wispcommon\wisp_pic.c
 # Begin Source File
 
 SOURCE=..\wispcommon\getopt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgcblsrc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgcommon.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgdefeqn.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgeqtns.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgextrct.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgglobal.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgkeyw.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\pgstruct.h
 # End Source File
 # Begin Source File
 

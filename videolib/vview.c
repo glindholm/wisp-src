@@ -49,10 +49,10 @@
    41           if (!vloadfd(infile))
    42           {
    43                   vbell();
-   44                   vre_window("view: file %s not found.",infile);                                  /* Report file not found.
+   44                   VL_vre_window("view: file %s not found.",infile);                                  /* Report file not found.
         */
    45                   verase(FULL_SCREEN);
-   46                   vexit();
+   46                   VL_vexit();
    47                   exit();
    48           }
    49       
@@ -90,7 +90,7 @@ NT   FORM    EXIT            ");
    69                                   if (j > form_count)
    70                                   {
    71                                           j--;
-   72                                           vre_window("Form %d is already the last form.",j);
+   72                                           VL_vre_window("Form %d is already the last form.",j);
    73                                   }
    74                                   else form++;
    75                                   break;
@@ -101,7 +101,7 @@ NT   FORM    EXIT            ");
    80                                   if (j < 1)
    81                                   {
    82                                           j++;
-   83                                           vre_window("Form %d is the first form.",j);
+   83                                           VL_vre_window("Form %d is the first form.",j);
    84                                   }
    85                                   else form--;
    86                                   break;
@@ -115,7 +115,7 @@ NT   FORM    EXIT            ");
    94           }   /* end while loop */
    95       
    96           verase(FULL_SCREEN);
-   97           vmove(23,0); vmode(0);
+   97           vmove(23,0); VL_vmode(0);
    98           vdefer(RESTORE);
-   99           vexit(); 
+   99           VL_vexit(); 
 		exit();

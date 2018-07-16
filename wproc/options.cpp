@@ -230,8 +230,8 @@ void show_usage() {
 //
 //	History:
 //	$Log: options.cpp,v $
-//	Revision 1.10.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.11  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.10  1998/09/08 18:50:22  gsl
 //	Fix the "only one options" allowed logic to not count debug

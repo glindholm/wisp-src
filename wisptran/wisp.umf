@@ -34,7 +34,7 @@ THE_LIB_D = wisptrand.a
 WISPTRAN = $(WISP_EXE)
 WISPFLAGS = -X
 ACU_COB = ccbl
-ACU_COBFLAGS = -da4 -zd -te 800 
+ACU_COBFLAGS = -Da4 -Gd -Za -Te 800 
 MF_COB = cob
 MF_COBFLAGS = 
 
@@ -267,11 +267,6 @@ $(THE_LIB)(wt_wsdiv.o): wt_datad.h
 #	WISPCOMMON
 #
 
-$(THE_LIB)(getopt.o): $(WC)/getopt.c
-	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
-	ar rv $@ $%
-	rm -f $%
-
 $(THE_LIB)(ring.o): $(WC)/ring.c $(WC)/ring.h
 	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
 	ar rv $@ $%
@@ -291,7 +286,7 @@ $(THE_LIB)(wisp_pic.o): $(WC)/wisp_pic.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wi
 #	Testing
 #
 cleantest:
-	rm -f *.xrf *.tab wc*.cpy *.dcl *.int *.gnt
+	rm -f *.xrf *.tab wc*.cpy *.dcl *.int *.gnt *.idy
 	rm -f test0???.cob t_*.cob 
 	rm -f TEST0???     T_*
 
@@ -359,8 +354,17 @@ testmfse:
 
 #
 #	$Log: wisp.umf,v $
-#	Revision 1.17.2.1  2002/11/07 22:53:55  gsl
-#	change to use WISPSRC variable
+#	Revision 1.21  2003/07/15 17:06:56  gsl
+#	clean *.idy
+#	
+#	Revision 1.20  2003/02/07 14:32:00  gsl
+#	remove empty files
+#	
+#	Revision 1.19  2002/11/22 18:56:22  gsl
+#	Fix and standardize the Acucoobl COBFLAGS
+#	
+#	Revision 1.18  2002/11/07 16:44:10  gsl
+#	Change to use variable $(WISPSRC)
 #	
 #	Revision 1.17  2002/03/21 23:28:14  gsl
 #	Add testmfse

@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		miscsubs.c
@@ -36,6 +59,9 @@ static char rcsid[]="$Id:$";
 #include "wanguid.h"
 #include "wdefines.h"
 #include "wisplib.h"
+#include "vssubs.h"
+#include "wperson.h"
+#include "filext.h"
 
 /*
 **	Structures and Defines
@@ -44,11 +70,6 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-
-int fexists(const char *path);
-const char *wisptmpdir(char *dir);
-int wgetpgrp(void);
-void setwfilext(char* ptr);
 
 /*
 **	Static Function Prototypes
@@ -86,13 +107,13 @@ char *globaldata()
 	{
 		first = 0;
 
-		if (!fexists(wisptmpdir(NULL)))
+		if (!WL_fexists(wisptmpdir(NULL)))
 		{
 			mkdir(wisptmpdir(NULL), 0777);
 			chmod(wisptmpdir(NULL), 0777);
 		}
 
-		sprintf(filepath,"%s/WPROC_%s_%u.gbl",wisptmpdir(NULL),longuid(),(unsigned)wgetpgrp());
+		sprintf(filepath,"%s/WPROC_%s_%u.gbl",wisptmpdir(NULL),WL_longuid(),(unsigned)WL_wgetpgrp());
 	}
 
 	return(filepath);
@@ -129,21 +150,19 @@ void delete_globaldata()
 void tempproc(char *file, char *lib, char *vol, char *filepath)
 {
 	int4	mode;
-	int4	argcnt;
 	char	ext[39];
 	char	*ptr;
 
 	memcpy(file,"##      ",8);
-	memcpy(&file[2],wanguid3(),3);
+	memcpy(&file[2],WL_wanguid3(),3);
 
 	memset(ext,' ',sizeof(ext));
 	memcpy(ext,"wps",3);
-	setwfilext(ext);
+	WSETFILEXT(ext);
 
 	memcpy(lib,"@SUBMIT@",8);
 	
-	argcnt=2;
-	wvaset(&argcnt);
+	WL_set_va_count(2);
 	EXTRACT("WV",vol);
 
 	/*
@@ -151,8 +170,8 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 	**	this into a work file (WV/WL) when it see the ## in the 
 	**	file name.
 	*/
-	mode = IS_OUTPUT | IS_PRINTFILE | IS_BACKFILL;
-	ptr = wfname(&mode,vol,lib,file,filepath);
+	mode = IS_OUTPUT | IS_PRINTFILE;
+	ptr = WL_wfname_backfill(&mode,vol,lib,file,filepath);
 	*ptr = (char)0;
 }
 
@@ -160,8 +179,43 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 /*
 **	History:
 **	$Log: miscsubs.c,v $
-**	Revision 1.19.2.1  2002/11/14 21:12:30  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.31  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.30  2003/02/04 18:50:26  gsl
+**	fix copyright header
+**	
+**	Revision 1.29  2002/07/29 15:46:54  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.28  2002/07/12 19:10:25  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.27  2002/07/12 17:17:05  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.26  2002/07/10 21:06:28  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.25  2002/07/10 04:27:40  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.24  2002/07/09 04:14:05  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.23  2002/06/28 04:03:01  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.22  2002/06/27 04:12:43  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.21  2002/06/25 18:18:41  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.20  2002/06/25 17:46:06  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
 **	
 **	Revision 1.19  2001/10/10 18:25:11  gsl
 **	Change globaldata() file name to WPROC_userid_pgid

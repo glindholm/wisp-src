@@ -1,5 +1,28 @@
-/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /* PGEXTRCT.H															*/
 /*		 Initialize the Extract specific keyword arrays									*/
 
@@ -91,6 +114,9 @@ EXT char *keyword_set_extract[];
 /*
 **	History:
 **	$Log: pgextrct.h,v $
+**	Revision 1.9  2003/02/04 21:51:16  gsl
+**	fix -Wall warnings
+**	
 **	Revision 1.8  1997/04/21 14:54:10  scass
 **	Corrected copyright.
 **	

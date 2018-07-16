@@ -1,5 +1,25 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /*
 **	File:		keywords.c
@@ -151,7 +171,6 @@ static char *reserved_keywords_defaults[] =
 	"DB",
 	"EMPTY",
 	"ID",
-	"LENGTH",
 	"MATCH", "MESSAGE",
 	"NAME",	"NO-ECHO",
 	"PROCESS",
@@ -555,9 +574,15 @@ int is_symbol(const char *name)
 /*
 **	History:
 **	$Log: keywords.c,v $
-**	Revision 1.13  1999/09/07 14:35:44  gsl
-**	Fix return type of load_change_words()
+**	Revision 1.15  2003/02/04 17:33:19  gsl
+**	fix copyright header
 **	
+**	Revision 1.14  2002/05/16 21:36:14  gsl
+**	remove LENGTH keyword
+**	
+**	Revision 1.13  1999-09-07 10:35:44-04  gsl
+**	Fix return type of load_change_words()
+**
 **	Revision 1.12  1998-03-27 13:37:36-05  gsl
 **	fix warning
 **

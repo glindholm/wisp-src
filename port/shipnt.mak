@@ -16,7 +16,6 @@ VHEADKIT=	$(KITDIR)\v
 
 wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\bin\hexed.exe	\
-		$(WISPKIT)\bin\makemsg.exe 	\
 		$(WISPKIT)\bin\proctran.exe 	\
 		$(WISPKIT)\bin\rexec.exe 	\
 		$(WISPKIT)\bin\vsedit.exe	\
@@ -35,20 +34,16 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\bin\wsort.exe	\
 		$(WISPKIT)\bin\wusage.exe	\
 		$(WISPKIT)\lib\video.lib	\
-		$(WISPKIT)\lib\videom.lib	\
 		$(WISPKIT)\lib\wisp.lib		\
-		$(WISPKIT)\lib\wispm.lib	\
 		$(WISPKIT)\etc\words.def	\
-		$(WISPKIT)\etc\disprint.wcb	\
+		$(WISPKIT)\etc\DISPRINT.wcb	\
 		$(WISPKIT)\etc\disprint.mak	\
-		$(WISPKIT)\etc\wispplat.wcb	\
-		$(WISPKIT)\etc\softlink.wcb	\
+		$(WISPKIT)\etc\WISPPLAT.wcb	\
+		$(WISPKIT)\etc\SOFTLINK.wcb	\
 		$(WISPKIT)\etc\wproc.txt	\
+		$(WISPKIT)\etc\wisp_packlist.txt	\
 		$(WISPKIT)\etc\wisp_relnotes.txt	\
 		$(WISPKIT)\etc\aqmwisp.txt	\
-		$(WISPKIT)\etc\nonascii.txt	\
-		$(WISPKIT)\etc\vcolors.txt	\
-		$(WISPKIT)\etc\nttelnet.txt	\
 		$(WISPKIT)\config\ACUCONFIG	\
 		$(WISPKIT)\config\CHARMAP	\
 		$(WISPKIT)\config\CQMAP		\
@@ -58,22 +53,17 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\config\OPTIONS	\
 		$(WISPKIT)\config\PRMAP		\
 		$(WISPKIT)\config\W4WMAP	\
-		$(WISPKIT)\config\wispmsg.dat	\
-		$(WISPKIT)\config\wispmsg.txt	\
 		$(WISPKIT)\config\wproc.msg	\
 		$(WISPKIT)\config\wrun.cfg	\
 		$(WISPKIT)\config\wsysconf.cfg 	\
 		$(WISPKIT)\config\videocap\wincon.vcap 	\
 		$(WISPKIT)\config\videocap\xterm.vcap 	\
 		$(WISPKIT)\config\videocap\ansi.vcap 	\
-		$(WISPKIT)\acu\aculink.wcb	\
-		$(WISPKIT)\acu\ACULINK		\
-		$(WISPKIT)\acu\acuusing.cob	\
-		$(WISPKIT)\acu\ACUUSING		\
-		$(WISPKIT)\acu\sub85.c		\
-		$(WISPKIT)\acu\wwruncbl.mak	\
-		$(WISPKIT)\acu\wrun32wisp_acu51.mak	\
-		$(WISPKIT)\acu\wrun32wisp_acu52.mak	\
+		$(WISPKIT)\acu\ACULINK.wcb	\
+		$(WISPKIT)\acu\ACULINK.acu		\
+		$(WISPKIT)\acu\ACUUSING.cob	\
+		$(WISPKIT)\acu\ACUUSING.acu		\
+		$(WISPKIT)\acu\wacu.mak			\
 		$(WISPKIT)\acu\WACUERROR.cob		\
 		$(WISPKIT)\acu\WACUDISPLAY.cob		\
 		$(WISPKIT)\acu\WACUFAC2SCREEN.cob	\
@@ -81,9 +71,34 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 		$(WISPKIT)\acu\WACUGETPFKEY.cob		\
 		$(WISPKIT)\acu\WACUHELP.cob		\
 		$(WISPKIT)\acu\WACUWSB.cob		\
-		$(WISPKIT)\acu\wispacn.txt		\
+		$(WISPKIT)\acu\WACUERROR.acu		\
+		$(WISPKIT)\acu\WACUDISPLAY.acu		\
+		$(WISPKIT)\acu\WACUFAC2SCREEN.acu	\
+		$(WISPKIT)\acu\WACUGETPARM.acu		\
+		$(WISPKIT)\acu\WACUGETPFKEY.acu		\
+		$(WISPKIT)\acu\WACUHELP.acu		\
+		$(WISPKIT)\acu\WACUWSB.acu		\
+		$(WISPKIT)\acu\wisp_sub85_inc.c		\
 		$(WISPKIT)\acu\wispicon.ico		\
-		$(WISPKIT)\acu\wisprts.rc		\
+		$(WISPKIT)\acu\acu50\sub85.c			\
+		$(WISPKIT)\acu\acu50\wisprts.rc			\
+		$(WISPKIT)\acu\acu50\wrun32wisp_acu50.mak	\
+		$(WISPKIT)\acu\acu51\sub85.c			\
+		$(WISPKIT)\acu\acu51\wisprts.rc			\
+		$(WISPKIT)\acu\acu51\wrun32wisp_acu51.mak	\
+		$(WISPKIT)\acu\acu52\sub85.c			\
+		$(WISPKIT)\acu\acu52\wisprts.rc			\
+		$(WISPKIT)\acu\acu52\wrun32wisp_acu52.mak	\
+		$(WISPKIT)\acu\acu52\run32wisp_acu52.mak	\
+		$(WISPKIT)\acu\acu60\build_wisp_acu60_rts.txt	\
+		$(WISPKIT)\acu\acu60\build_wisp_acu60atm_rts.txt	\
+		$(WISPKIT)\acu\acu60\run32.rc			\
+		$(WISPKIT)\acu\acu60\run32_wisp_acu60.mak	\
+		$(WISPKIT)\acu\acu60\run32_wisp_acu60.dsp	\
+		$(WISPKIT)\acu\acu60\sub85.c			\
+		$(WISPKIT)\acu\acu60\wrundll.rc			\
+		$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.mak	\
+		$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.dsp	\
 		$(WISPKIT)\demo\cursor.wps	\
 		$(WISPKIT)\demo\demo.wps	\
 		$(WISPKIT)\demo\dr.wps		\
@@ -99,11 +114,13 @@ wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
 
 ede_dist_list=	$(EDEKIT)\good.exe		\
 		$(EDEKIT)\ede.lib		\
-		$(EDEKIT)\edem.lib		\
 		$(EDEKIT)\edentsetup.txt	\
-		$(EDEKIT)\wwruncbl.mak		\
+		$(EDEKIT)\wrun32wisp_ede_acu50.mak	\
 		$(EDEKIT)\wrun32wisp_ede_acu51.mak	\
 		$(EDEKIT)\wrun32wisp_ede_acu52.mak	\
+		$(EDEKIT)\wrundll_ede_acu60.mak		\
+		$(EDEKIT)\wrundll_ede_acu60.dsp		\
+		$(EDEKIT)\build_ede_acu60_rts.txt	\
 		$(EDEKIT)\demo\helpmap.dat	\
 		$(EDEKIT)\demo\mcbbld.wcb	\
 		$(EDEKIT)\demo\mcbcpy1.wcb	\
@@ -141,16 +158,15 @@ kcsiacu_dist_list= \
 		$(KCSIACUKIT)\kcsi_sub85_inc.c	\
 		$(KCSIACUKIT)\ctlcnvrt.wcb	\
 		$(KCSIACUKIT)\rptcnvrt.wcb	\
+		$(KCSIACUKIT)\wrun32wisp_kcsi_acu50.mak	\
+		$(KCSIACUKIT)\wrun32wisp_kcsi_acu51.mak	\
 		$(KCSIACUKIT)\wrun32wisp_kcsi_acu52.mak	\
+		$(KCSIACUKIT)\build_kcsi_acu60_rts.txt	\
+		$(KCSIACUKIT)\wrundll_kcsi_acu60.mak	\
+		$(KCSIACUKIT)\wrundll_kcsi_acu60.dsp	\
 		$(KCSIACUKIT)\kcsi_relnotes.txt	\
 		$(KCSIACUKIT)\kcsi_packlist.txt	\
 		$(KCSIACUKIT)\kcsintsetup.txt	
-
-rts_dist_list= \
-		$(RTSKIT)\wwruncbl.exe		\
-		$(RTSKIT)\wwruncble.exe		\
-		$(RTSKIT)\wwruncblk.exe		\
-		$(RTSKIT)\wwruncblke.exe
 
 #
 #	targets
@@ -184,6 +200,10 @@ $(KITDIR):
 wispkit_dir_list= \
 	$(WISPKIT)			\
 	$(WISPKIT)\acu			\
+	$(WISPKIT)\acu\acu50		\
+	$(WISPKIT)\acu\acu51		\
+	$(WISPKIT)\acu\acu52		\
+	$(WISPKIT)\acu\acu60		\
 	$(WISPKIT)\bin			\
 	$(WISPKIT)\config		\
 	$(WISPKIT)\config\videocap	\
@@ -233,9 +253,6 @@ $(WISPKIT)\bin\display.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\bin\hexed.exe:	$(BASEDIR)\bin\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\bin\makemsg.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\bin\proctran.exe:	$(BASEDIR)\bin\$(@F)
@@ -292,52 +309,37 @@ $(WISPKIT)\bin\wsort.exe:	$(BASEDIR)\bin\$(@F)
 $(WISPKIT)\bin\wusage.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\bin\wwruncbl.exe:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
 $(WISPKIT)\lib\video.lib:	$(BASEDIR)\lib\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\lib\videom.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\lib\wisp.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\lib\wispm.lib:	$(BASEDIR)\lib\$(@F)
-	$(COPY) $** $@
-
 $(WISPKIT)\etc\words.def:	$(BASEDIR)\wisptran\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\disprint.wcb:	$(BASEDIR)\wisputils\$(@F)
+$(WISPKIT)\etc\DISPRINT.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\etc\disprint.mak:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\wispplat.wcb:	$(BASEDIR)\wisputils\$(@F)
+$(WISPKIT)\etc\WISPPLAT.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\etc\softlink.wcb:	$(BASEDIR)\wisputils\$(@F)
+$(WISPKIT)\etc\SOFTLINK.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\etc\wproc.txt:	$(BASEDIR)\doc\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\etc\wisp_packlist.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\etc\wisp_relnotes.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\etc\aqmwisp.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\nonascii.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\vcolors.txt:	$(BASEDIR)\doc\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\etc\nttelnet.txt:	$(BASEDIR)\doc\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\config\ACUCONFIG:	$(BASEDIR)\config\$(@F)
@@ -367,12 +369,6 @@ $(WISPKIT)\config\PRMAP:	$(BASEDIR)\config\$(@F)
 $(WISPKIT)\config\W4WMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\config\wispmsg.dat:	$(BASEDIR)\config\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\config\wispmsg.txt:	$(BASEDIR)\config\$(@F)
-	$(COPY) $** $@
-
 $(WISPKIT)\config\wproc.msg:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
@@ -391,28 +387,19 @@ $(WISPKIT)\config\videocap\xterm.vcap: $(BASEDIR)\config\videocap\$(@F)
 $(WISPKIT)\config\videocap\ansi.vcap: $(BASEDIR)\config\videocap\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\aculink.wcb:	$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\ACULINK.wcb:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\ACULINK:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\ACULINK.acu:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\acuusing.cob:	$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\ACUUSING.cob:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\ACUUSING:	$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\ACUUSING.acu:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\sub85.c:		$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\wrun32wisp_acu51.mak:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(WISPKIT)\acu\wrun32wisp_acu52.mak:	$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\wacu.mak:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\acu\WACUERROR.cob:		$(BASEDIR)\acu\$(@F)
@@ -436,13 +423,88 @@ $(WISPKIT)\acu\WACUHELP.cob:		$(BASEDIR)\acu\$(@F)
 $(WISPKIT)\acu\WACUWSB.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wispacn.txt:		$(BASEDIR)\doc\$(@F)
+$(WISPKIT)\acu\WACUERROR.acu:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\WACUDISPLAY.acu:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\WACUFAC2SCREEN.acu:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\WACUGETPARM.acu:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\WACUGETPFKEY.acu:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\WACUHELP.acu:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\WACUWSB.acu:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\wisp_sub85_inc.c:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\acu\wispicon.ico:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\acu\wisprts.rc:		$(BASEDIR)\acu\$(@F)
+$(WISPKIT)\acu\acu50\sub85.c:			$(BASEDIR)\acu\sub85_acu50.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu50\wisprts.rc:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu50\wrun32wisp_acu50.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu51\sub85.c:			$(BASEDIR)\acu\sub85_acu51.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu51\wisprts.rc:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu51\wrun32wisp_acu51.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu52\sub85.c:			$(BASEDIR)\acu\sub85_acu52.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu52\wisprts.rc:		$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu52\wrun32wisp_acu52.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu52\run32wisp_acu52.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\build_wisp_acu60_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\build_wisp_acu60atm_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\sub85.c:			$(BASEDIR)\acu\sub85_acu60.c
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\wrundll.rc:		$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\wrundll_wisp_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\run32.rc:			$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\run32_wisp_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(WISPKIT)\acu\acu60\run32_wisp_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
 
 $(WISPKIT)\demo\cursor.wps:	$(BASEDIR)\wproc\$(@F)
@@ -500,13 +562,22 @@ $(EDEKIT)\edem.lib:		$(BASEDIR)\ede\$(@F)
 $(EDEKIT)\edentsetup.txt:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\wwruncbl.mak:		$(BASEDIR)\acu\$(@F)
+$(EDEKIT)\wrun32wisp_ede_acu50.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
 $(EDEKIT)\wrun32wisp_ede_acu51.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
 $(EDEKIT)\wrun32wisp_ede_acu52.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(EDEKIT)\build_ede_acu60_rts.txt:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(EDEKIT)\wrundll_ede_acu60.mak:	$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(EDEKIT)\wrundll_ede_acu60.dsp:	$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
 
 $(EDEKIT)\demo\helpmap.dat:	$(BASEDIR)\ede\demo\$(@F)
@@ -619,7 +690,22 @@ $(KCSIACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 $(KCSIACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\$(@F)
 	$(COPY) $** $@
 
+$(KCSIACUKIT)\wrun32wisp_kcsi_acu50.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\wrun32wisp_kcsi_acu51.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
 $(KCSIACUKIT)\wrun32wisp_kcsi_acu52.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\build_kcsi_acu60_rts.txt:		$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\wrundll_kcsi_acu60.mak:		$(BASEDIR)\acu\acu60\$(@F)
+	$(COPY) $** $@
+
+$(KCSIACUKIT)\wrundll_kcsi_acu60.dsp:		$(BASEDIR)\acu\acu60\$(@F)
 	$(COPY) $** $@
 
 $(KCSIACUKIT)\kcsintsetup.txt:	$(BASEDIR)\kcsi\$(@F)
@@ -635,28 +721,10 @@ $(KCSIACUKIT)\kcsi_packlist.txt:	$(BASEDIR)\kcsi\$(@F)
 #
 #	WISPKIT components
 #
-$(RTSKIT)\wwruncbl.exe:		$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(RTSKIT)\wwruncble.exe:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(RTSKIT)\wwruncblk.exe:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
-
-$(RTSKIT)\wwruncblke.exe:	$(BASEDIR)\acu\$(@F)
-	$(COPY) $** $@
 
 #
 #	sample config components
 #
-$(BASEDIR)\config\wispmsg.dat:	$(BASEDIR)\config\wispmsg.txt
-	$(COPY) $(BASEDIR)\config\wispmsg.txt
-	$(BASEDIR)\bin\makemsg
-	$(COPY) wispmsg.dat $@
-
-$(BASEDIR)\config\wispmsg.txt: $(BASEDIR)\etc\$(@F)
-	$(COPY) $** $@
 
 $(BASEDIR)\config\options:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@

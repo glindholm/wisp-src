@@ -1,4 +1,4 @@
-Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
+Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
 All Rights Reserved.
 
 ====================================================================
@@ -8,7 +8,7 @@ Title:          KCSI PACKING LIST
 Document:       kcsi_packlist.lis
 Last Updated:   $Date:$
 Products:       KCSI
-Versions:       4.0.00
+Versions:       4.1.00
 
 Summary:        Packing list for the KCSI utilities shipping kit.
 
@@ -31,8 +31,8 @@ DATENTRY                - DATENTRY utility (ACUCOBOL object file)
 CREATE                  - CREATE   utility (ACUCOBOL object file)
 
 wruncbl.umf             - Makefile for building ACUCOBOL runtimes
-libkcsiacu.a            - KCSI library for building RTS
-kcsi_sub85_inc.c        - C include file for building RTS
+libkcsiacu.a            - KCSI library for building runtime
+kcsi_sub85_inc.c        - C include file for building runtime
 
 ctlcnvrt.wcb            - Source for control file conversion
 rptcnvrt.wcb            - Source for report file conversion
@@ -43,22 +43,29 @@ KCSI for ACUCOBOL on Windows (WIN32):
 
 This distribution includes:
 
-kcsi_packlist.txt       - This packing list
-kcsintsetup.txt         - Installation instructions
-kcsi_relnotes.txt       - Release notes for the latest version
+kcsi_packlist.txt         - This packing list
+kcsintsetup.txt           - Installation instructions
+kcsi_relnotes.txt         - Release notes for the latest version
 
-CONTROL                 - CONTROL  utility (ACUCOBOL object file)
-REPORT                  - REPORT   utility (ACUCOBOL object file)
-INQUIRY                 - INQUIRY  utility (ACUCOBOL object file)
-DATENTRY                - DATENTRY utility (ACUCOBOL object file)
-CREATE                  - CREATE   utility (ACUCOBOL object file)
+CONTROL                   - CONTROL  utility (ACUCOBOL object file)
+REPORT                    - REPORT   utility (ACUCOBOL object file)
+INQUIRY                   - INQUIRY  utility (ACUCOBOL object file)
+DATENTRY                  - DATENTRY utility (ACUCOBOL object file)
+CREATE                    - CREATE   utility (ACUCOBOL object file)
 
-wrun32wisp_kcsi_acu52.mak - Makefile for building ACUCOBOL 5.2 runtime
-kcsiacu.lib             - KCSI library for building RTS
-kcsi_sub85_inc.c        - C include file for building RTS
+wrun32wisp_kcsi_acu50.mak - Makefile for ACUCOBOL 5.0 runtime
+wrun32wisp_kcsi_acu51.mak - Makefile for ACUCOBOL 5.1 runtime
+wrun32wisp_kcsi_acu52.mak - Makefile for ACUCOBOL 5.2 runtime
 
-ctlcnvrt.wcb            - Source for control file conversion
-rptcnvrt.wcb            - Source for report file conversion
+build_kcsi_acu60_rts.txt  - Build instructions for ACUCOBOL 6.0
+wrundll_wisp_acu60.mak    - Makefile for ACUCOBOL 6.0 runtime
+wrundll_wisp_acu60.dsp    - Project file for ACUCOBOL 6.0 runtime
+
+kcsiacu.lib               - KCSI library for building runtime
+kcsi_sub85_inc.c          - C include file for building runtime
+
+ctlcnvrt.wcb              - Source for control file conversion
+rptcnvrt.wcb              - Source for report file conversion
 
 
 KCSI for MICRO FOCUS COBOL on UNIX:

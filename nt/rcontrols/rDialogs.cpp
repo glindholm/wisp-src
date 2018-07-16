@@ -1,3 +1,26 @@
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 //	Includes
 #include "rControls.h"
 #include "rResources.h"
@@ -289,3 +312,12 @@ rControls::_Dialogs::_SelectDirDlg::OKClicked ( HWND hDlg )
 	EndDialog ( hDlg, 1 );		//	Successful
 	return 0;
 }
+
+/*
+**	History:
+**	$Log: rDialogs.cpp,v $
+**	Revision 1.9  2003/06/18 16:43:07  gsl
+**	Add CVS header and history
+**	
+**
+*/

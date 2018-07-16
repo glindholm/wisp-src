@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -51,7 +72,7 @@ static int padout3(char *text, int width, int graphics_1st);				/* Output padded
 
 /*						Subroutine entry point.								*/
 
-int4 vmenugo(struct video_menu *mdata)							/* Display a menu.			*/
+int4 VL_vmenugo(struct video_menu *mdata)							/* Display a menu.			*/
 {
 	int4 choice;									/* Menu choice returned.		*/
 	int4 save_t, save_c, save_w;							/* Menu type save location.		*/
@@ -77,7 +98,7 @@ int4 vmenugo(struct video_menu *mdata)							/* Display a menu.			*/
 	return(choice);									/* Return the pointer.			*/
 }
 
-int4 vmenucont(struct video_menu *mdata)						/* Continue displaying menu's.		*/
+int4 VL_vmenucont(struct video_menu *mdata)						/* Continue displaying menu's.		*/
 {
 	int4 choice;									/* Menu choice returned.		*/
 	int4 save_t, save_c, save_w;							/* Menu type save location.		*/
@@ -105,7 +126,7 @@ up:	if (mdata->path != NULL) choice = vmcont(mdata->path);				/* Recurse until b
 	else if (mdata->save != NULL) choice = vmenuvector(1, mdata);			/* Should we really continue?		*/
 	else										/* This is an error.			*/
 	{
-		vre("vmenucont-Menu not active, cannot continue. Use vmenugo.");	/* Report the error.			*/
+		vre("VL_vmenucont-Menu not active, cannot continue. Use VL_vmenugo.");	/* Report the error.			*/
 		return(FAILURE);							/* Return with failure.			*/
 	}
 
@@ -121,7 +142,7 @@ up:	if (mdata->path != NULL) choice = vmcont(mdata->path);				/* Recurse until b
 	mdata->column = save_c;
 	mdata->width = save_w;
 	vmove(svcurlin,svcurcol);							/* Restore basic status.		*/
-	vmode(svcurmod);
+	VL_vmode(svcurmod);
 	vcharset(svchrset);
 	return(choice);									/* Return the pointer.			*/
 }
@@ -134,9 +155,9 @@ static int4 vmcont(struct video_menu *mdata)						/* Continuation search routine
 	return(choice);									/* Return the choice.			*/
 }
 
-void vdynalink(struct video_menu *mdroot, struct video_menu *mdlink)			/* Dynamically continue processing.	*/
+void VL_vdynalink(struct video_menu *mdroot, struct video_menu *mdlink)			/* Dynamically continue processing.	*/
 {
-	if (mdroot->path != NULL) vdynalink(mdroot->path, mdlink);			/* Link forward from the last level.	*/
+	if (mdroot->path != NULL) VL_vdynalink(mdroot->path, mdlink);			/* Link forward from the last level.	*/
 	else										/* Found where we are so...		*/
 	{
 		mdroot->link[mdroot->item] = mdlink;					/* Link in the control block.		*/
@@ -146,7 +167,7 @@ void vdynalink(struct video_menu *mdroot, struct video_menu *mdlink)			/* Dynami
 	}
 }
 
-void vdynaunlink(struct video_menu *md)							/* Unlink a dynamic linked structure.	*/
+void VL_vdynaunlink(struct video_menu *md)							/* Unlink a dynamic linked structure.	*/
 {
 	if (md->backlink != NULL)							/* Is there a backlink?			*/
 	{
@@ -166,7 +187,7 @@ static int disconnect(struct video_menu *md,int item)					/* Disconnect paths an
 
 static int4 vmenuvector(int state, struct video_menu *mdata)				/* Vector the correct menu type.	*/
 {
-	int4 choice;									/* Selection made.			*/
+	int4 choice = 0;									/* Selection made.			*/
 	int4 save_t, save_c, save_w;							/* Menu type save location.		*/
 
 	save_c = mdata->column;
@@ -213,37 +234,35 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 	int active;									/* Active menu flag.			*/
 	int loc[MAX_MENU_ITEMS];							/* Item location.			*/
 	int4 choice;									/* User selection.			*/
-	int reentry = FALSE;								/* Assume not a reentry on this bar.	*/
 	int bmode, imode;								/* Display mode.			*/
 	struct video_menu *next;							/* Pointer to next menu.		*/
 	int found;									/* Found string flag.			*/
-	int4 sv_type, sv_options, sv_row, sv_column;					/* Save next parameters storage.	*/
 
 	choice = 0;									/* No choice yet.			*/
 
 	if (state == 0)									/* Menu startup?			*/
 	{
-		if (md->save == NULL) md->save = vsss(0,0,1,vscr_wid);			/* Save the first line.			*/
+		if (md->save == NULL) md->save = vsss(0,0,1,VL_vscr_wid);			/* Save the first line.			*/
 		else
 		{
-			vre("vmenugo-F-Menu control block already in use and cannot be reused.");	/* Report in use.	*/
+			vre("VL_vmenugo-F-Menu control block already in use and cannot be reused.");	/* Report in use.	*/
 			return(FAILURE);								/* Don't continue.	*/
 		}
 	}
 
 	for (i = 0; i < MAX_MENU_ITEMS; i++) loc[i] = -1;				/* Assume no items.			*/
-	for (j = 0; j < vscr_wid; j++) barbuf[j] = ' ';					/* Fill the buffer with spaces.		*/
+	for (j = 0; j < VL_vscr_wid; j++) barbuf[j] = ' ';					/* Fill the buffer with spaces.		*/
 	barbuf[j] = 0;									/* Store a trailing null.		*/
 
-	for (i = 0, j = (int) md->column; (i < (int)md->items) && (j < vscr_wid); i++)	/* Initialize the menu buffer.		*/
+	for (i = 0, j = (int) md->column; (i < (int)md->items) && (j < VL_vscr_wid); i++)	/* Initialize the menu buffer.		*/
 	{
 		loc[i] = j;								/* Remember the position of this item.	*/
 		tx(temp,md->text[i]);							/* Set the string to a working value.	*/
-		for (k = 0; (temp[k] != 0) && (j < vscr_wid); k++) barbuf[j++] = temp[k];	/* Copy the items text.		*/
-		for (k = 0; (k < md->width) && (j < vscr_wid); k++) barbuf[j++] = ' ';	/* Add appropriate spacing.		*/
+		for (k = 0; (temp[k] != 0) && (j < VL_vscr_wid); k++) barbuf[j++] = temp[k];	/* Copy the items text.		*/
+		for (k = 0; (k < md->width) && (j < VL_vscr_wid); k++) barbuf[j++] = ' ';	/* Add appropriate spacing.		*/
 	}
 
-	bmode = vmaskm(md->options);							/* Get the desired background mode.	*/
+	bmode = VL_vmaskm(md->options);							/* Get the desired background mode.	*/
 	imode = VMODE_REVERSE;								/* Assume item displayed in reverse.	*/
 	adj(&bmode,&imode);								/* Adjust the modes.			*/
 
@@ -251,51 +270,51 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 	base_lin = vcur_lin;								/* Remember the base position.		*/
 	base_col = vcur_col;
 
-	vbuffering(VBUFF_START);							/* Start of a logical section.		*/
+	VL_vbuffering_start();							/* Start of a logical section.		*/
 	vmove(0,0);									/* Move to the menu bar line.		*/
 	vcharset(DEFAULT);								/* Default characters.			*/
 	vset_cursor_off();								/* Turn the cursor off.			*/
-	for (i = 0; i < vscr_wid; i++)							/* Loop through the full width.		*/
+	for (i = 0; i < VL_vscr_wid; i++)							/* Loop through the full width.		*/
 	{
 		if (loc[item] == i)							/* Are we on the field to be selected?	*/
 		{
-			vmode(imode);							/* Switch to black background.		*/
+			VL_vmode(imode);							/* Switch to black background.		*/
 			k = lx(md->text[item]);						/* Get the length of the field.		*/
 			for (j = 0; j < k; j++) vputc(barbuf[i+j]);			/* Output the selected function.	*/
 			i = i + k - 1;							/* Move past this field.		*/
 		}
 		else									/* Just the background.			*/
 		{
-			vmode(bmode);							/* Set the default menu bar.		*/
+			VL_vmode(bmode);							/* Set the default menu bar.		*/
 			vputc(barbuf[i]);						/* Output spaces.			*/
 		}
 	}
-	vbuffering(VBUFF_END);								/* End of logical section.		*/
+	VL_vbuffering_end();								/* End of logical section.		*/
 
 	active = TRUE;									/* Menu is now active.			*/
 	while (active)									/* Repeat while we are active.		*/
 	{
-		if (k = metapush) metapush = 0;						/* Get a pushed back character.		*/
-		else if (k = vmrest())							/* Are we restoring the menu.		*/
+		if ((k = metapush)) metapush = 0;						/* Get a pushed back character.		*/
+		else if ((k = vmrest()))							/* Are we restoring the menu.		*/
 		{
 			vmove(0,loc[item]);						/* Move to the start of the field.	*/
-			vmode(bmode);							/* Select for blank out.		*/
+			VL_vmode(bmode);							/* Select for blank out.		*/
 			j = lx(md->text[item]) + loc[item];				/* Determine length of the field.	*/
 			for (i = loc[item]; i < j; i++) vputc(barbuf[i]);		/* Output the reverse overtop.		*/
 			item = k - 1;							/* Select the item.			*/
 			vmove(0,loc[item]);						/* Move to the start of the field.	*/
-			vmode(imode);							/* Select for blank out.		*/
+			VL_vmode(imode);							/* Select for blank out.		*/
 			j = lx(md->text[item]) + loc[item];				/* Determine length of the field.	*/
 			for (i = loc[item]; i < j; i++) vputc(barbuf[i]);		/* Output the text.			*/
 			k = return_key;							/* Make the selection.			*/
 		}
 		else									/* Actually get a character.		*/
 		{
-			vmove(0,vscr_wid-1);						/* Move cursor to a pleasant place.	*/
+			vmove(0,VL_vscr_wid-1);						/* Move cursor to a pleasant place.	*/
 			k = vgetm();							/* Get a character.			*/
 		}
 
-		vbuffering(VBUFF_START);						/* Start of logical section.		*/
+		VL_vbuffering_start();						/* Start of logical section.		*/
 		if ((k == return_key) || (k == enter_key)) 				/* A return key?			*/
 		{
 			if ((md->link[item] == NULL) || (md->link[item] == DYNAMIC_LINK))	/* Is this a direct choice?	*/
@@ -310,9 +329,9 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 
 		else if (k == help_key) givehelp();					/* Give help?				*/
 
-		else if (pfkeys && vfnkey(k))						/* A function key?			*/
+		else if (pfkeys && VL_vfnkey(k))						/* A function key?			*/
 		{
-			choice = md->code[item] + (vfnkey(k) * 100000);			/* Yes, then code the functon too.	*/
+			choice = md->code[item] + (VL_vfnkey(k) * 100000);			/* Yes, then code the functon too.	*/
 			md->item = item;						/* No item either.			*/
 			md->path = NULL;						/* Not going any where.			*/
 			active = FALSE;							/* All done.				*/
@@ -332,6 +351,10 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 			else if (md->link[item] == DYNAMIC_LINK) metapush = return_key;	/* Dynamic, so emulate it.		*/
 			else								/* Yes, then menu again.		*/
 			{
+				int4 sv_type = 0;
+				int4 sv_options = 0;
+				int4 sv_row = 0;
+				int4 sv_column = 0;		/* Save next parameters storage.	*/
 				if (menumode == STATIC_MENU)				/* Save only if static.			*/
 				{
 					sv_type = next->type;				/* Save parameters we might change.	*/
@@ -345,11 +368,11 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 				if (!next->column)					/* Is a column specified.		*/
 				{
 					next->column = loc[item];			/* Try to put it right under the bar.	*/
-					while ((next->column + next->width + 2) > vscr_wid) next->column--;
+					while ((next->column + next->width + 2) > VL_vscr_wid) next->column--;
 				}
 				if (! ((next->options & LEFT_HANDED) && (next->options & RIGHT_HANDED)))	/* Handedness?	*/
 				{
-					if ((next->column + next->width) > (vscr_wid - (vscr_wid/4)))	/* Make right handed?	*/
+					if ((next->column + next->width) > (VL_vscr_wid - (VL_vscr_wid/4)))	/* Make right handed?	*/
 					{
 						next->options = next->options | LEFT_HANDED;		/* No, then go left.	*/
 					}
@@ -359,7 +382,7 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 				next->item = 0;						/* We are chaining down.		*/
 				vmove(0,loc[item]);					/* Move to the start of the field.	*/
 				md->path = next;					/* Remember the path.			*/
-				j4 = vmenugo(md->link[item]);				/* Call the menu.			*/
+				j4 = VL_vmenugo(md->link[item]);				/* Call the menu.			*/
 
 				if (menumode == STATIC_MENU)				/* Restore only if static.		*/
 				{
@@ -380,7 +403,7 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 				{
 					md->path = NULL;				/* No path above us now.		*/
 					vmove(0,loc[item]);				/* Move to the start of the field.	*/
-					vmode(imode);					/* Select for blank out.		*/
+					VL_vmode(imode);					/* Select for blank out.		*/
 					j = lx(md->text[item]) + loc[item];		/* Determine length of the field.	*/
 					for (i = loc[item]; i < j; i++) 		/* Reshow the selection.		*/
 					{
@@ -393,7 +416,7 @@ static int4 vbar(int state, struct video_menu *md)					/* Do a bar menu.			*/
 		else if ((k == right_arrow_key) || (k == ' ') || (k == tab_key))	/* Move to the right?			*/
 		{
 			vmove(0,loc[item]);						/* Move to the start of the field.	*/
-			vmode(bmode);							/* Select for blank out.		*/
+			VL_vmode(bmode);							/* Select for blank out.		*/
 			j = lx(md->text[item]) + loc[item];				/* Determine length of the field.	*/
 			for (i = loc[item]; i < j; i++) vputc(barbuf[i]);		/* Output the reverse overtop.		*/
 tx1:			item++;								/* Count the choice.			*/
@@ -401,7 +424,7 @@ tx1:			item++;								/* Count the choice.			*/
 			tx(temp,md->text[item]);					/* Create a working string.		*/
 			if (temp[0] == 0) goto tx1;					/* Empty field?				*/
 			vmove(0,loc[item]);						/* Move forward.			*/
-			vmode(imode);							/* Switch to black background.		*/
+			VL_vmode(imode);							/* Switch to black background.		*/
 			j = lx(md->text[item]) + loc[item];				/* Determine length of the field.	*/
 			for (i = loc[item]; i < j; i++) vputc(barbuf[i]);		/* Output the selected function.	*/
 		}
@@ -409,7 +432,7 @@ tx1:			item++;								/* Count the choice.			*/
 		else if (k == left_arrow_key)						/* Left arrow?				*/
 		{
 			vmove(0,loc[item]);						/* Move to the start of the field.	*/
-			vmode(bmode);							/* Select for blank out.		*/
+			VL_vmode(bmode);							/* Select for blank out.		*/
 			j = lx(md->text[item]) + loc[item];				/* Determine length of the field.	*/
 			for (i = loc[item]; i < j; i++) vputc(barbuf[i]);		/* Output the reverse overtop.		*/
 tx2:			item--;								/* Count the choice.			*/
@@ -418,7 +441,7 @@ tx2:			item--;								/* Count the choice.			*/
 			tx(temp,md->text[item]);					/* Make working copy.			*/
 			if (temp[0] == 0) goto tx2;					/* Empty field?				*/
 			vmove(0,loc[item]);						/* Move forward.			*/
-			vmode(imode);							/* Switch to black background.		*/
+			VL_vmode(imode);							/* Switch to black background.		*/
 			j = lx(md->text[item]) + loc[item];				/* Determine length of the field.	*/
 			for (i = loc[item]; i < j; i++) vputc(barbuf[i]);		/* Output the selected function.	*/
 		}
@@ -431,8 +454,8 @@ tx2:			item--;								/* Count the choice.			*/
 			while (!found && (i != item))					/* Loop around looking for the flag.	*/
 			{
 				j = k;							/* Get a value of the letter.		*/
-				if (islower(md->text[i][0])) j = tolower(k);		/* Make sure the cases match.		*/
-				if (isupper(md->text[i][0])) j = toupper(k);
+				if (islower((int)md->text[i][0])) j = tolower(k);		/* Make sure the cases match.		*/
+				if (isupper((int)md->text[i][0])) j = toupper(k);
 				if (md->text[i][0] == j) found = TRUE;			/* Does this match?			*/
 				else
 				{
@@ -443,23 +466,23 @@ tx2:			item--;								/* Count the choice.			*/
 			if (found)							/* Was it found?			*/
 			{
 				vmove(0,loc[item]);					/* Move to the start of the field.	*/
-				vmode(bmode);						/* Select for blank out.		*/
+				VL_vmode(bmode);						/* Select for blank out.		*/
 				j = lx(md->text[item]) + loc[item];			/* Determine length of the field.	*/
 				for (k = loc[item]; k < j; k++) vputc(barbuf[k]);	/* Output the reverse overtop.		*/
 				item = i;						/* Select the new item.			*/
 				vmove(0,loc[item]);					/* Move to the start of the field.	*/
-				vmode(imode);						/* Select for blank out.		*/
+				VL_vmode(imode);						/* Select for blank out.		*/
 				j = lx(md->text[item]) + loc[item];			/* Determine length of the field.	*/
 				for (k = loc[item]; k < j; k++) vputc(barbuf[k]);	/* Output the text.			*/
 			}
 			else vbell();							/* Not found so just beep.		*/
 		}
 		else vbell();								/* Anything else is invalid.		*/
-		vbuffering(VBUFF_END);							/* End of logical section.		*/
+		VL_vbuffering_end();							/* End of logical section.		*/
 	}
 
 	vmove(0,0);									/* Set some courtesy values.		*/
-	vmode(CLEAR);
+	VL_vmode(CLEAR);
 	vset_cursor_on();								/* Restore the cursor.			*/
 	if ((menumode == STATIC_MENU) || (choice == 0) || (choice == -1))		/* Eliminate the menu?			*/
 	{
@@ -484,7 +507,6 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 	struct video_menu *next;							/* Next menu item.			*/
 	int found;									/* Flagging variable.			*/
 	int4 save_row, save_column;							/* More save words.			*/
-	int4 sv_type, sv_options, sv_row, sv_column;					/* Save locations.			*/
 	int linking;									/* Linking detection flag.		*/
 
 	choice = 0;									/* No choice yet.			*/
@@ -509,11 +531,11 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 	if (col < 0) col = 0;								/* Don't go off the screen.		*/
 	cols = (int) md->width+3;							/* Leave room for the border.		*/
 
-	bmode = vmaskm(md->options);							/* Get the desired background mode.	*/
+	bmode = VL_vmaskm(md->options);							/* Get the desired background mode.	*/
 	imode = VMODE_REVERSE;								/* Assume item displayed in reverse.	*/
 	adj(&bmode,&imode);								/* Adjust for screen background.	*/
 
-	vbuffering(VBUFF_START);							/* Start of logical section.		*/
+	VL_vbuffering_start();							/* Start of logical section.		*/
 
 	if (state == 0)									/* First time?				*/
 	{
@@ -526,9 +548,9 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 	}
 
 	vset_cursor_off();								/* Turn the cursor off.			*/
-	vmode(bmode);									/* No renditions.			*/
+	VL_vmode(bmode);									/* No renditions.			*/
 	vcharset(0);									/* Default character set.		*/
-	varb(md->row,md->column,md->items,md->width+1);					/* Invalidate the map (WATCH OUT)!!	*/
+	VL_varb(md->row,md->column,md->items,md->width+1);				/* Invalidate the map (WATCH OUT)!!	*/
 
 	linking = 0;									/* Assume no links to other menus.	*/
 	for (i = 0; i < md->items; i++)							/* Loop through each item.		*/
@@ -539,8 +561,8 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 	for (i = 0; i < md->items; i++)							/* Loop through each item.		*/
 	{
 		vmove(row+i,md->column);						/* Move to the location.		*/
-		if (i == item) vmode(imode);						/* Select correct rendition.		*/
-		else vmode(bmode);							/* Background mode.			*/
+		if (i == item) VL_vmode(imode);						/* Select correct rendition.		*/
+		else VL_vmode(bmode);							/* Background mode.			*/
 		padout2(md->text[i],(int)md->width,linking,(int)md->options,md->link[i]);	/* Output the text.		*/
 	}
 
@@ -575,37 +597,37 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 	for (i = 0; i < md->items; i++)							/* Loop through each item.		*/
 	{
 		vmove(row+i,md->column);						/* Move to the location.		*/
-		if (i == item) vmode(imode);						/* Select correct rendition.		*/
-		else vmode(bmode);							/* Background mode.			*/
+		if (i == item) VL_vmode(imode);						/* Select correct rendition.		*/
+		else VL_vmode(bmode);							/* Background mode.			*/
 		padout2(md->text[i],md->width,linking,md->options,md->link[i]);		/* Output the text.			*/
 	}
 #endif
 
-	vbuffering(VBUFF_END);								/* End of logical section.		*/
+	VL_vbuffering_end();								/* End of logical section.		*/
 
 	active = TRUE;									/* Menu is now active.			*/
 	while (active)									/* Repeat while we are active.		*/
 	{
-		if (k = metapush) metapush = 0;						/* Get a pushed back character.		*/
-		else if (k = vmrest())							/* Are we restoring the menu.		*/
+		if ((k = metapush)) metapush = 0;						/* Get a pushed back character.		*/
+		else if ((k = vmrest()))							/* Are we restoring the menu.		*/
 		{
 			vmove(row+item,md->column);					/* Move to the current item.		*/
-			vmode(bmode);							/* Remove the current selection.	*/
+			VL_vmode(bmode);							/* Remove the current selection.	*/
 			padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 			item = k - 1;							/* Select the item.			*/
 			vmove(row+item,md->column);					/* Move to the current item.		*/
-			vmode(imode);							/* Remove the current selection.	*/
+			VL_vmode(imode);							/* Remove the current selection.	*/
 			padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 			k = return_key;							/* Make the selection.			*/
 		}
-		else if (k = metapush) metapush = 0;					/* Get a pushed back character.		*/
+		else if ((k = metapush)) metapush = 0;					/* Get a pushed back character.		*/
 		else									/* Get a character.			*/
 		{
-			vmove(0,vscr_wid-1);						/* Move to alternate home position.	*/
+			vmove(0,VL_vscr_wid-1);						/* Move to alternate home position.	*/
 			k = vgetm();							/* Get a character.			*/
 		}
 
-		vbuffering(VBUFF_START);						/* Start of logical section.		*/
+		VL_vbuffering_start();						/* Start of logical section.		*/
 
 		if ((k == return_key) || (k == enter_key)) 				/* A return key?			*/
 		{
@@ -621,9 +643,9 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 
 		else if (k == help_key) givehelp();					/* Give helpfull information.		*/
 
-		else if (pfkeys && vfnkey(k))						/* A function key?			*/
+		else if (pfkeys && VL_vfnkey(k))						/* A function key?			*/
 		{
-			choice = md->code[item] + (vfnkey(k) * 100000);			/* Yes, so no choice.			*/
+			choice = md->code[item] + (VL_vfnkey(k) * 100000);			/* Yes, so no choice.			*/
 			md->item = item;						/* Remember the item.			*/
 			md->path = NULL;						/* No path from here.			*/
 			active = FALSE;							/* All done.				*/
@@ -652,6 +674,11 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 			else if (md->link[item] == DYNAMIC_LINK) metapush = return_key;	/* Make it return a value.		*/
 			else								/* Yes, then call vmenu again.		*/
 			{
+				int4 sv_type = 0;
+				int4 sv_options = 0;
+				int4 sv_row = 0;
+				int4 sv_column = 0;		/* Save next parameters storage.	*/
+
 				next = md->link[item];					/* Point to the next item.		*/
 				if (menumode == STATIC_MENU)				/* Save?				*/
 				{
@@ -674,11 +701,11 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 					next->column = md->column + md->width - ((md->width/4)+1);
 					if (md->options & LEFT_HANDED) next->column = md->column - next->width-1 + ((md->width/4));
 					if (next->column < 2) next->column = 2;
-					while ((next->column + next->width + 2) > vscr_wid) next->column--;
+					while ((next->column + next->width + 2) > VL_vscr_wid) next->column--;
 				}
 				if (! ((next->options & LEFT_HANDED) && (next->options & RIGHT_HANDED)))
 				{
-					if ((next->column + next->width) > (vscr_wid-(vscr_wid/4)))
+					if ((next->column + next->width) > (VL_vscr_wid-(VL_vscr_wid/4)))
 					{
 						next->options = next->options | LEFT_HANDED;		/* No, then go left.	*/
 					}
@@ -688,7 +715,7 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 				next->item = 0;						/* Chaining down so start on 1st line.	*/
 				vmove(row+item,md->column);				/* Move to the current item.		*/
 				md->path = next;					/* Remember where we went.		*/
-				j4 = vmenugo(md->link[item]);				/* Call the menu.			*/
+				j4 = VL_vmenugo(md->link[item]);				/* Call the menu.			*/
 
 				if (menumode == STATIC_MENU)				/* Restore?				*/
 				{
@@ -708,7 +735,7 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 				{
 					md->path = NULL;				/* No path above now.			*/
 					vmove(row+item,md->column);			/* Move to the current item.		*/
-					vmode(imode);					/* Select for blank out.		*/
+					VL_vmode(imode);					/* Select for blank out.		*/
 					padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 				}
 			}
@@ -717,13 +744,13 @@ static int4 vmx(int state, struct video_menu *md)					/* Pull down menu processi
 		else if ((k == down_arrow_key) || (k == ' '))				/* A down arrow?			*/
 		{
 			vmove(row+item,md->column);					/* Move to the current item.		*/
-			vmode(bmode);							/* Remove the current selection.	*/
+			VL_vmode(bmode);							/* Remove the current selection.	*/
 			padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 tx3:			item++;								/* Select the next item.		*/
 			if (item >= md->items) item = 0;				/* Wrap around if necessary.		*/
 			if (md->text[item][0] == 0) goto tx3;				/* Empty field?				*/
 			vmove(row+item,md->column);					/* Move to the current item.		*/
-			vmode(imode);							/* Remove the current selection.	*/
+			VL_vmode(imode);							/* Remove the current selection.	*/
 			padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 		}
 
@@ -739,13 +766,13 @@ tx3:			item++;								/* Select the next item.		*/
 			else								/* Didn't go off the top so.		*/
 			{
 				vmove(row+item,md->column);				/* Move to the current item.		*/
-				vmode(bmode);						/* Remove the current selection.	*/
+				VL_vmode(bmode);						/* Remove the current selection.	*/
 				padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 tx4:				item--;							/* Select the next item.		*/
 				if (item < 0) item = (int) md->items-1;			/* Wrap around if necessary.		*/
 				if (md->text[item][0] == 0) goto tx4;			/* Empty field?				*/
 				vmove(row+item,md->column);				/* Move to the current item.		*/
-				vmode(imode);						/* Remove the current selection.	*/
+				VL_vmode(imode);						/* Remove the current selection.	*/
 				padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 			}
 		}
@@ -758,8 +785,8 @@ tx4:				item--;							/* Select the next item.		*/
 			while (!found && (i != item))					/* Loop around looking for the flag.	*/
 			{
 				j = k;							/* Make sure j isn't 0.			*/
-				if (islower(md->text[i][0])) j = tolower(k);		/* Make sure the cases match.		*/
-				if (isupper(md->text[i][0])) j = toupper(k);
+				if (islower((int)md->text[i][0])) j = tolower(k);		/* Make sure the cases match.		*/
+				if (isupper((int)md->text[i][0])) j = toupper(k);
 				if (md->text[i][0] == j) found = TRUE;			/* Does this match?			*/
 				else
 				{
@@ -770,11 +797,11 @@ tx4:				item--;							/* Select the next item.		*/
 			if (found)							/* Was it found?			*/
 			{
 				vmove(row+item,md->column);				/* Move to the current item.		*/
-				vmode(bmode);						/* Remove the current selection.	*/
+				VL_vmode(bmode);						/* Remove the current selection.	*/
 				padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 				item = i;						/* Select the item.			*/
 				vmove(row+item,md->column);				/* Move to the current item.		*/
-				vmode(imode);						/* Remove the current selection.	*/
+				VL_vmode(imode);						/* Remove the current selection.	*/
 				padout2(md->text[item],(int)md->width,linking,(int)md->options,md->link[item]);
 			}
 			else vbell();							/* Not found so just beep.		*/
@@ -782,7 +809,7 @@ tx4:				item--;							/* Select the next item.		*/
 
 		else vbell();								/* Anything else is invalid.		*/
 
-		vbuffering(VBUFF_END);							/* End of logical section.		*/
+		VL_vbuffering_end();							/* End of logical section.		*/
 	}
 
 	md->row = save_row;								/* Restore the initial positon.		*/
@@ -800,7 +827,7 @@ static int padout(char *text, int width, int do_line)					/* Output padded text.
 	register int i;									/* Working register.			*/
 	char buffer[MAX_COLUMNS_PER_LINE];						/* Working buffer.			*/
 
-	vbuffering(VBUFF_START);							/* Start of logical section.		*/
+	VL_vbuffering_start();							/* Start of logical section.		*/
 	tx(buffer,text);								/* Get a terminated copy.		*/
 
 	if (buffer[0] == '\0' && do_line)						/* Anything to output?			*/
@@ -819,7 +846,7 @@ static int padout(char *text, int width, int do_line)					/* Output padded text.
 		vprint("%s",buffer);							/* Now print it.			*/
 	}
 
-	vbuffering(VBUFF_END);								/* End of logical section.		*/
+	VL_vbuffering_end();								/* End of logical section.		*/
 
 	return(SUCCESS);
 }
@@ -834,7 +861,7 @@ static int vlff(int state, char *file)							/* Load menu data from file.		*/
 
 /*						Initialize a menu.								*/
 
-int vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w)			/* Get the menu data.			*/
+int VL_vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w)			/* Get the menu data.			*/
 {
 	int i;										/* Working registers.			*/
 	switch(t)									/* Validate the menu type.		*/
@@ -845,7 +872,7 @@ int vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w)			/* Get
 		case BAR_MENU:
 		case PULL_DOWN_MENU:
 		case POP_UP_MENU:	break;						/* Above this is ok.			*/
-		default:	{ vre("vmenuinit(%d)-Invalid menu type specified.", t); return(FAILURE); }
+		default:	{ vre("VL_vmenuinit(%d)-Invalid menu type specified.", t); return(FAILURE); }
 	}
 
 	md->backitem = 0;								/* No backitem.				*/
@@ -857,14 +884,14 @@ int vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w)			/* Get
 	md->options = o;								/* Initialize the options.		*/
 	if ((r) && ((r < 0) || (r >= MAX_LINES_PER_SCREEN-2))) 				/* Valid row specified?			*/
 	{
-		vre("vmenuinit(%d)-Invalid initial row specified.",r);			/* Report the error.			*/
+		vre("VL_vmenuinit(%d)-Invalid initial row specified.",r);			/* Report the error.			*/
 		return(FAILURE);							/* Cannot continue.			*/
 	}
 	md->row = r;									/* Load the row.			*/
 
 	if ((c) && ((c < 1) || (c > MAX_COLUMNS_PER_LINE-2)))				/* Valid column?			*/
 	{
-		vre("vmenuinit(%d)-Invalid initial column specified.",c);		/* Report the error.			*/
+		vre("VL_vmenuinit(%d)-Invalid initial column specified.",c);		/* Report the error.			*/
 		return(FAILURE);							/* Don't continue.			*/
 	}
 
@@ -872,7 +899,7 @@ int vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w)			/* Get
 
 	if (w && ((w < 1) || (w > MAX_MENU_WIDTH)))					/* In bounds?				*/
 	{
-		vre("vmenuinit(%d)-Invalid initial width specified.",w);		/* Report the error.			*/
+		vre("VL_vmenuinit(%d)-Invalid initial width specified.",w);		/* Report the error.			*/
 		return(FAILURE);
 	}
 	else if (w) md->width = w;							/* User gave a valid w.			*/
@@ -891,7 +918,7 @@ int vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w)			/* Get
 
 /*						Fill in item data.								*/
 
-int vmenuitem(struct video_menu *md, char *s, int v, struct video_menu *nm)
+int VL_vmenuitem(struct video_menu *md, char *s, int v, struct video_menu *nm)
 {
 	register int i,j,k;
 	char temp[MAX_COLUMNS_PER_LINE];
@@ -899,7 +926,7 @@ int vmenuitem(struct video_menu *md, char *s, int v, struct video_menu *nm)
 	md->items++;									/* Count this addition.			*/
 	if (md->items > MAX_MENU_ITEMS)
 	{
-		vre("vmenuitem(%d)-This item is too many.",md->items);			/* Report the error.			*/
+		vre("VL_vmenuitem(%d)-This item is too many.",md->items);			/* Report the error.			*/
 		return(FAILURE);
 	}
 
@@ -930,7 +957,7 @@ static int tx(char *out, char *in) 							/* Setup a string for C usage.		*/
 	register int k;									/* Working register.			*/
 	for (k = 0; k < MAX_MENU_WIDTH; k++) out[k] = in[k];				/* Copy the string.			*/
 	out[MAX_MENU_WIDTH-1] = 0;							/* Store a trailing null.		*/
-	vtrim(out);									/* Trim the string.			*/
+	VL_vtrim(out);									/* Trim the string.			*/
 	for (k = 0; k < MAX_MENU_WIDTH; k++)						/* Remove control characters.		*/
 	{
 		if (out[k] < 040) out[k] = 0;						/* Set funny characters to nulls.	*/
@@ -957,13 +984,13 @@ static int adj(int *bmode, int *imode)							/* Change the mode to match backgro
 	return 0;
 }
 
-int vmenumode(int mode)									/* Change the menu mode.		*/
+int VL_vmenumode(int mode)									/* Change the menu mode.		*/
 {
 	menumode = mode;								/* Make the change.			*/
 	return(SUCCESS);
 }
 
-/*						Display Only Menus.								*/
+/*						Display Only Menus.								*/
 
 static int vdo(int state, struct video_menu *md)					/* Pull down menu processing.		*/
 {
@@ -984,11 +1011,11 @@ static int vdo(int state, struct video_menu *md)					/* Pull down menu processin
 	if (col < 0) col = 0;								/* Don't go off the screen.		*/
 	cols = (int) md->width+2;							/* Leave room for the border.		*/
 
-	bmode = vmaskm(md->options);							/* Get the desired background mode.	*/
+	bmode = VL_vmaskm(md->options);							/* Get the desired background mode.	*/
 	imode = VMODE_REVERSE;								/* Assume item displayed in reverse.	*/
 	adj(&bmode,&imode);								/* Adjust for screen background.	*/
 
-	vbuffering(VBUFF_START);							/* Start of logical section.		*/
+	VL_vbuffering_start();							/* Start of logical section.		*/
 
 	if (state == 0)									/* First time?				*/
 	{
@@ -1000,7 +1027,7 @@ move:		if (md->save == NULL) md->save = vsss(row-1,col,rows,cols);		/* Save what
 		}
 	}
 
-	vmode(bmode);									/* No renditions.			*/
+	VL_vmode(bmode);									/* No renditions.			*/
 	vcharset(DEFAULT);								/* Default character set.		*/
 	for (i = 0; i < md->items; i++)							/* Loop through each item.		*/
 	{
@@ -1008,7 +1035,7 @@ move:		if (md->save == NULL) md->save = vsss(row-1,col,rows,cols);		/* Save what
 		padout(md->text[i],(int)md->width,0);					/* Output padded data.			*/
 	}
 
-	vmode(bmode);									/* No renditions.			*/
+	VL_vmode(bmode);									/* No renditions.			*/
 	vmove(row-1,col);
 	vline(VERTICAL,rows);
 	vmove(row-1,col+cols-1);
@@ -1017,12 +1044,12 @@ move:		if (md->save == NULL) md->save = vsss(row-1,col,rows,cols);		/* Save what
 	vline(HORIZONTAL,cols);
 	vmove(row+rows-2,col);
 	vline(HORIZONTAL,cols);
-	vmode(bmode);									/* No renditions.			*/
+	VL_vmode(bmode);									/* No renditions.			*/
 	vcharset(DEFAULT);								/* Default character set.		*/
 
-	if (vdl_lin >= 0) vmove(vdl_lin, vdl_col);					/* Move to the specified cursor pos.	*/
+	if (VL_vdl_lin >= 0) vmove(VL_vdl_lin, VL_vdl_col);				/* Move to the specified cursor pos.	*/
 	else vset_cursor_off();								/* Else set the cursor off.		*/
-	vmode(bmode);
+	VL_vmode(bmode);
 	vcharset(DEFAULT);
 
 	k = vgetm();									/* Get a character.			*/
@@ -1037,7 +1064,7 @@ move:		if (md->save == NULL) md->save = vsss(row-1,col,rows,cols);		/* Save what
 	else if (k == right_arrow_key)
 	{
 		col = col + 8;
-		if ((col + (int) md->width) >= vscr_wid-2) col = vscr_wid - (int) md->width - 2;
+		if ((col + (int) md->width) >= VL_vscr_wid-2) col = VL_vscr_wid - (int) md->width - 2;
 		i = TRUE;
 	}
 	else if (k == up_arrow_key)
@@ -1065,9 +1092,9 @@ move:		if (md->save == NULL) md->save = vsss(row-1,col,rows,cols);		/* Save what
 	vrss(md->save);									/* Restore the screen as it was.	*/
 	md->save = NULL;								/* Make menu control block available.	*/
 
-	if (vdl_lin >= 0) vdl_lin = -1;							/* Set the position invalid.		*/
+	if (VL_vdl_lin >= 0) VL_vdl_lin = -1;						/* Set the position invalid.		*/
 	else vset_cursor_on();								/* Else put the cursor back on.		*/
-	vbuffering(VBUFF_END);								/* End of logical section.		*/
+	VL_vbuffering_end();								/* End of logical section.		*/
 	return(k);									/* Return the choice.			*/
 }
 
@@ -1079,18 +1106,18 @@ static int detpos(int op, int4 *row, int4 *col, int width, int items)			/* Deter
 	if (op & CENTER_MENU)								/* Center the menu?			*/
 	{
 		*row = ((MAX_LINES_PER_SCREEN - (items+2)) / 2);
-		*col = ((vscr_wid - (width+2)) / 2);
+		*col = ((VL_vscr_wid - (width+2)) / 2);
 		return(SUCCESS);
 	}
 
-	if ((*col < 1) || (*col > vscr_wid-2)) vdetpos(0, &temp, &c, items+2, width+2);		/* Is a column given?	*/
-	if ((*row < 1) || (*row > MAX_LINES_PER_SCREEN)) vdetpos(0, &r, &temp, items+2, width+2);	/* Is a row given?	*/
+	if ((*col < 1) || (*col > VL_vscr_wid-2)) VL_vdetpos(0, &temp, &c, items+2, width+2);		/* Is a column given?	*/
+	if ((*row < 1) || (*row > MAX_LINES_PER_SCREEN)) VL_vdetpos(0, &r, &temp, items+2, width+2);	/* Is a row given?	*/
 	*col = c;
 	*row = r;
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-int vdetpos(int scrpos, int *r, int *c, int rs, int cs)					/* Suggest a row and column.		*/
+int VL_vdetpos(int scrpos, int *r, int *c, int rs, int cs)					/* Suggest a row and column.		*/
 {
 	int last_row, last_col;								/* Working variables.			*/
 	int mlps;
@@ -1105,7 +1132,7 @@ int vdetpos(int scrpos, int *r, int *c, int rs, int cs)					/* Suggest a row and
 	}
 
 	*r = ((mlps - rs) / 2);								/* Center by default.			*/
-	*c = ((vscr_wid - cs) / 2);
+	*c = ((VL_vscr_wid - cs) / 2);
 
 	if ((last_row == 0) && (last_col == 0));					/* Home?				*/
 	else
@@ -1121,28 +1148,28 @@ int vdetpos(int scrpos, int *r, int *c, int rs, int cs)					/* Suggest a row and
 			while (*r < 1) *r = *r + 1;					/* Normalize.				*/
 		}
 
-		if (last_col < vscr_wid/2)						/* In left half of screen?		*/
+		if (last_col < VL_vscr_wid/2)						/* In left half of screen?		*/
 		{
-			*c = (vscr_wid / 2) + ((vscr_wid - cs) / 2);			/* Move to right half.			*/
-			while ((*c + cs) >= vscr_wid) *c = *c - 1;			/* Normalize.				*/
+			*c = (VL_vscr_wid / 2) + ((VL_vscr_wid - cs) / 2);			/* Move to right half.			*/
+			while ((*c + cs) >= VL_vscr_wid) *c = *c - 1;			/* Normalize.				*/
 		}
 		else
 		{
-			*c = ((vscr_wid - cs) / 2) - (vscr_wid / 2);
+			*c = ((VL_vscr_wid - cs) / 2) - (VL_vscr_wid / 2);
 			while (*c < 0) *c = *c + 1;					/* Normalize.				*/
 		}
 	}
 	return(SUCCESS);
 }
 
-int vmenu_pfkeys(int state)
+int VL_vmenu_pfkeys(int state)
 {
 	if (state == ON) pfkeys = TRUE;
 	else pfkeys = FALSE;
 	return 0;
 }
 
-int vmenustatus(int *r1, int *r2)
+int VL_vmenustatus(int *r1, int *r2)
 {
 	*r1 = menumode;
 	*r2 = pfkeys;
@@ -1153,26 +1180,26 @@ static int givehelp(void)
 {
 	struct video_menu help;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"How Pull Down Menus Work", 0, NULL);
-	vmenuitem(&help,"", 0, NULL);
-	vmenuitem(&help,"Navigate to the appropriate selection and depress return.", 0, NULL);
-	vmenuitem(&help,"The arrow keys, space bar and return can be used for this", 0, NULL);
-	vmenuitem(&help,"purpose.  In addition,  you can move to the desired field", 0, NULL);
-	vmenuitem(&help,"by entering the first letter of the field description.", 0, NULL);
-	vmenuitem(&help,"", 0, NULL);
-	vmenuitem(&help,"Depress any key to exit...", 0, NULL);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"How Pull Down Menus Work", 0, NULL);
+	VL_vmenuitem(&help,"", 0, NULL);
+	VL_vmenuitem(&help,"Navigate to the appropriate selection and depress return.", 0, NULL);
+	VL_vmenuitem(&help,"The arrow keys, space bar and return can be used for this", 0, NULL);
+	VL_vmenuitem(&help,"purpose.  In addition,  you can move to the desired field", 0, NULL);
+	VL_vmenuitem(&help,"by entering the first letter of the field description.", 0, NULL);
+	VL_vmenuitem(&help,"", 0, NULL);
+	VL_vmenuitem(&help,"Depress any key to exit...", 0, NULL);
 
-	vmenugo(&help);
+	VL_vmenugo(&help);
 	vset_cursor_off();
 	return(SUCCESS);
 }
 
-int vmenusave(struct video_menu *md)							/* Save a menu's choice path.		*/
+int VL_vmenusave(struct video_menu *md)							/* Save a menu's choice path.		*/
 {
-	FILE *fp, *vopenf();								/* File handling definitions.		*/
+	FILE *fp;								/* File handling definitions.		*/
 
-	fp = vopenf("men","w");								/* Open a file for output.		*/
+	fp = VL_vopenf("men","w");								/* Open a file for output.		*/
 
 	fprintf(fp, "%d\n", md->item);							/* Write the data.			*/
 
@@ -1186,10 +1213,9 @@ int vmenusave(struct video_menu *md)							/* Save a menu's choice path.		*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-int vmenurestore(void) 									/* Restore a choice path.		*/
+int VL_vmenurestore(void) 									/* Restore a choice path.		*/
 {
-	FILE *vopenf();									/* File control stuff.			*/
-	restore = vopenf("men", "r");							/* Open the file.			*/
+	restore = VL_vopenf("men", "r");							/* Open the file.			*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
@@ -1225,7 +1251,7 @@ static int padout2(char *text, int width, int linking, int options, struct video
 	{
 		if (options & LEFT_HANDED)						/* Left handed link?			*/
 		{
-			temp[0] = vcapvalue(GRAPHSTR)[LEFT_POINTER];			/* Copy in a left pointer.		*/
+			temp[0] = VL_vcapvalue(GRAPHSTR)[LEFT_POINTER];			/* Copy in a left pointer.		*/
 			temp[1] = CHAR_NULL;						/* Keep the string null terminated.	*/
 			if ((temp[0] == CHAR_NULL) || (temp[0] == '<'))			/* Is a pointer defined?		*/
 			{
@@ -1246,7 +1272,7 @@ static int padout2(char *text, int width, int linking, int options, struct video
 			while(temp[i] != CHAR_NULL) i++;				/* Loop to the end.			*/
 			while(i <= width) temp[i++] = ' ';				/* Fill with spaces.			*/
 			temp[i] = CHAR_NULL;						/* Terminate.				*/
-			temp[--i] = vcapvalue(GRAPHSTR)[RIGHT_POINTER];			/* Insert the pointer.			*/
+			temp[--i] = VL_vcapvalue(GRAPHSTR)[RIGHT_POINTER];			/* Insert the pointer.			*/
 			if ((temp[i] == CHAR_NULL) || (temp[i] == '>'))			/* Use a graphics version?		*/
 			{
 				temp[i] = '>';						/* No, insert the no-grapics pointer.	*/
@@ -1274,7 +1300,7 @@ static int padout2(char *text, int width, int linking, int options, struct video
 	return(SUCCESS);
 }
 
-int vlastlevel(struct video_menu *md)							/* Return the current path level.	*/
+int VL_vlastlevel(struct video_menu *md)							/* Return the current path level.	*/
 {
 	struct video_menu *x;								/* Working pointer.			*/
 	int i;										/* Working integers.			*/
@@ -1289,7 +1315,7 @@ int vlastlevel(struct video_menu *md)							/* Return the current path level.	*/
 	return(i);									/* Return the level.			*/
 }
 
-int4 vlastitem(struct video_menu *md)							/* Return the current path level.	*/
+int4 VL_vlastitem(struct video_menu *md)							/* Return the current path level.	*/
 {
 	struct video_menu *x;								/* Working pointer.			*/
 	register int i;									/* Working integers.			*/
@@ -1304,7 +1330,7 @@ int4 vlastitem(struct video_menu *md)							/* Return the current path level.	*/
 	return(x->item);								/* Return this level's item.		*/
 }
 
-int vlastlink(struct video_menu *md)							/* Get if the last selection links.	*/
+int VL_vlastlink(struct video_menu *md)							/* Get if the last selection links.	*/
 {
 	struct video_menu *x;								/* Working pointer.			*/
 	register int i;									/* Working integers.			*/
@@ -1325,7 +1351,7 @@ static int padout3(char *text, int width, int graphics_1st)				/* Output padded 
 	register int i;									/* Working register.			*/
 	char buffer[MAX_COLUMNS_PER_LINE];						/* Working buffer.			*/
 
-	vbuffering(VBUFF_START);							/* Start of logical section.		*/
+	VL_vbuffering_start();							/* Start of logical section.		*/
 
 	if (graphics_1st)								/* Output the graphics 1st?		*/
 	{
@@ -1348,13 +1374,40 @@ static int padout3(char *text, int width, int graphics_1st)				/* Output padded 
 		vcharset(DEFAULT);							/* Put back to normal.			*/
 	}
 
-	vbuffering(VBUFF_END);								/* End of logical section.		*/
+	VL_vbuffering_end();								/* End of logical section.		*/
 
 	return(SUCCESS);
 }
 /*
 **	History:
 **	$Log: vmenu.c,v $
+**	Revision 1.22  2003/06/23 15:28:04  gsl
+**	VL_ global symbols
+**	
+**	Revision 1.21  2003/02/04 18:43:33  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.20  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.19  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.18  2002/07/17 21:06:02  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2002/07/16 13:40:22  gsl
+**	VL_ globals
+**	
+**	Revision 1.16  2002/07/15 20:56:39  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.15  2002/07/15 20:16:10  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.14  2002/07/15 17:10:04  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.13  1997/07/08 21:18:16  gsl
 **	change to use newe interface
 **	

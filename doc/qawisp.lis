@@ -1,4 +1,4 @@
-	Copyright (c) 1989-2002 by NeoMedia Technologies Inc. 
+	Copyright (c) 1989-2003 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	
 	====================================================================
@@ -185,14 +185,11 @@
 		___  Install KCSI
 
 		___  Build a COBOL Runtime system with WISP
-		     ___  Follow wrun32wisp_acu52.mak instructions.
 		___  Build a COBOL Runtime system with WISP & EDE
-		     ___  Follow wrun32wisp_ede_acu52.mak instructions.
 		___  Build a COBOL Runtime system with WISP & KCSI
-		     ___  Follow wrun32wisp_kcsi_acu52.mak instructions.
 
 		___  Share C:\WISPxxxx as share name "WISP"
-		___  Share C:\KCSIxxxx as share name "KCSI"
+		___  Share C:\KCSIACUxxxx as share name "KCSI"
 
 		___  Run WCONFIG.EXE
 		     ___  (RESET) if already configured
@@ -206,12 +203,12 @@
 	___	Share these directories: 
 		C:\DEV\WISP\SRC\TESTACU      as TESTACU
 		C:\DEV\WISP	             as WISPDEV
-                C:\Acucorp\Acucbl520\AcuGT   as ACUCOBOL
+                C:\Acucorp\Acucbl600\AcuGT   as ACUDIR
 
 	___   	Edit ...\TESTACU\SAMPLEACU.MAK
 
-		___ Set WISPDIR=C:\WISP44xx
-		___ Set COBOL=C:\Acucorp\Acucbl520\Acugt\BIN\CCBL32.EXE
+		___ Set WISPDIR=C:\WISPxxxx
+		___ Set COBOL=C:\Acucorp\Acucbl600\Acugt\BIN\CCBL32.EXE
 
 	Copy the config files.
 	___	Run CONFIGACU.BAT
@@ -222,7 +219,7 @@
 	___	LPMAP:	Edit it to ensure it is correct
 
 	___	OPTIONS: 
-		___ Set VUTIL=\\SERVER\ACUCOBOL\BIN\VUTIL32.EXE
+		___ Set VUTIL=\\SERVER\ACUDIR\BIN\VUTIL32.EXE
 		___ Set COSTARV2
 
 	___	ACUCONFIG: Edit CONFIG\ACUCONFIG and add the TESTACU share
@@ -233,10 +230,10 @@
 				  \\SERVER\KCSI
 
 	___	WRUN.CFG: Edit CONFIG\WRUN.CFG and correct the locations
-		of ACUCONFIG and WRUN32WISPK.EXE (KCSI Version).
+		of ACUCONFIG and WRUN32.EXE (KCSI Version).
 
 		    option=-b +e \\SERVER\TESTACU\acuerr.log -c \\SERVER\TESTACU\CONFIG\ACUCONFIG
-		    runcbl=\\SERVER\ACUCOBOL\BIN\WRUN32WISPK.EXE
+		    runcbl=\\SERVER\ACUDIR\BIN\WRUN32.EXE
 
 	___	WSYSCONF.CFG: Edit CONFIG\WSYSCONF.CFG and add the machine
 		name as workstation 100.
@@ -273,13 +270,13 @@
 		___ Edit \\SERVER\WISP\ETC\DISPRINT.MAK
 
 		    ___ SET WISPTRAN=..\BIN\WISP.EXE
-		    ___ SET CCBL=\\SERVER\ACUCOBOL\BIN\CCBL32.EXE
+		    ___ SET CCBL=\\SERVER\ACUDIR\BIN\CCBL32.EXE
 
-		___ Run NMAKE to build DISPRINT
+		___ Run NMAKE to build DISPRINT.acu
 		    C:...\ETC> nmake /f disprint.mak acu
 
-		___ Copy DISPRINT to ..\ACU
-		    COPY DISPRINT ..\ACU
+		___ Copy DISPRINT.acu to ..\ACU
+		    COPY DISPRINT.acu ..\ACU
 
 
 ################  This page is for all platforms  ####################
@@ -334,19 +331,12 @@
 
 	___	(5) Manage FILES/LIBRARIES
 
-	___	AIX:  (6) Manage SYSTEM
 
 	___	(14) PRINT PROGRAM Screen.
 		(15) PRINT COMMAND Screen.
 		Check the printouts for correctness.
 		Files are id#### LIBSPOOL VOLSPL.
 		Verify the file	has been submited to a print queue.
-
-	___	UNIX: (7) Manage PRINT QUEUE
-			If option (7) does not appear on the help screen, 
-			edit the OPTIONS file in the WISPCONFIG directory 
-			and uncomment the line:
-				PQUNIQUE
 
 		(9) Use UTILITIES
 	___	(2) DISPLAY a file
@@ -389,31 +379,78 @@
 	___	Double click on icon to start.
 		
 
+	(9) WL0000 - LIBRARY TESTS
+
+		Run each of the WLxxxx tests from the menu.
+
+	___	(01) WL0010  - WISPPLAT
+	___	(02) WL0011  - USESOFTLINK/USEHARDLINK
+	___	(03) WL0012  - BITPACK
+	___	(04) WL0013  - BITUNPK
+	___	(05) WL0014  - HEXPACK
+	___	(06) WL0015  - HEXUNPK
+	___	(07) WL0016  - DATE/DATE2/4/6
+	___	(08) WL0017  - DAY
+	___	(09) WL0018  - MESSAGE  (Takes a few seconds to finish)
+        ___          (1)  WL0018 (SINGLE USER)
+
+			The WL0018A & B test the MESSAGE routine automatically.
+			Each program opens a message port then they handshake and
+			send and receive 100 numbered messages.
+        ___          (2)  WL0018A (TWO USER - A)
+        ___          (3)  WL0018B (TWO USER - B)
+			Once both programs have started, press Enter on both
+			screens and they should run for a few seconds (10-15) then
+			report that they sent 100 messages.
+
+	___	(10) WL0019  - SEARCH
+	___	(11) WL0020  - SORT
+	___	(12) WL0021  - STRING
+	___	(13) WL0022  - SET/EXTRACT
+	___	(14) WL0023  - bit tests
+	___	(15) WL0024  - UPPER
+
+	___	(17) WL0025  - WGETCURPOS (w2rowcol)
+	___	(18) WL0026  - W99TOX (xx2byte)
+	___	(19) WL0027  - PUTPARM
+	___	(20) WL0028  - FILECOPY
+	___	(21) WL0029  - SCRATCH
+	___	(22) WL0030  - SUBMIT
+	___	(23) WL0031  - SETFILE
+	___	(24) WL0032  - RENAME
+	___	(25) WL0033  - FIND
+	___	(26) WL0034  - LINK
+	___	(27) WL0035  - READVTOC
+
+		(16) EXIT
+
+	(10) WC0000 - COBOL TESTS
+
+		Run each of the WCxxxx tests from the menu.
+
+	___	(01) WC0001  - Field Wrapping
+	___	(02) WC0002  - RETURN-CODE
+	___	(03) WC0003  - ACCEPT VERB
+	___	(04) WC0004  - ##TEMP FILES
+
+		(16) EXIT
+
+	(11) WT0000 - TRANSLATOR TESTS
+
+		Run each of the WTxxxx tests from the menu.
+
+	___	(02) WT0011  - ACCEPT DATE
+	___	(03) WT0012  - MAX SCREEN FIELDS
+
+		(16) EXIT
+
 	(6) COBOL TESTS
 
 	___	(1) DISPLAY VERB.	Should display a message.
 
-+	___	(2) RETURN-CODE.	Enter value then (16) exit program 
-					and qastart.wps will display it.
-
-	___	(3) SORT VERB.		Will sort a small file by the 
-					SORT verb, then display both
-					the unsorted & sorted file.
-					Verify the sorted file is sorted
-					by TYPE then DATE.
+	___	(3) SORT VERB.		Check SORTED FILE SQ field.
 
 	___	(4) CONDITIONAL TEST.	WISP_CODE conditions.  Press (ENTER).
-
-+	___	(5) ACCEPT VERB.	Enter the following (TAB to fields):
-					COMPANY  = This is the COMPANY
-					YEARCODE = 987654321
-					ACCESSCO = abc
-
-		___	COMPANY should be 20 bytes long.  Press (ENTER).
-
-		___	YEARCODE should be "4321".  Press (ENTER).
-
-		___	ACCESSCODE should be "a".  Press (ENTER).
 
 	___	(6) STOP VERB
 
@@ -431,7 +468,7 @@
 		(16) to EXIT  SAMPLE
 		(16) to EXIT  QASTART
 
-
+
 	UNIX:
 
 	___	$ wrun SAMPLE
@@ -471,14 +508,6 @@
 	___	(24) CLOSE SEQUENTIAL	    
 
 +	___	(6)  (again): At PF3 option FILE=SEQFILE1
-		(16) back to menu.
-
-	___	(6) (again): Use FILE=##AB to test temp filename generation.
- 		    Should use (worklib) VOLWRK. 
-	___	Do the above twice each time setting FILE=##AB to test temp
- 		    filename sequencing AB0000 AB0001 AB0002
-	___	Once more this time don't change FILE, it should NOT give
-		    you a file-getparm "PF3 to continue" because in WORKLIB.
 		(16) back to menu.
 
 +	___	(25) WRITE SEQUENTIAL	(ENTER) - File not OPEN
@@ -642,7 +671,9 @@
 		It was written with AFTER ADVANCING PAGE and 5 LINES.
 
 	___	(2) OPEN OUT PRINT WRITE CLOSE (again)
-		    At the PF3 screen change FILE=PRTFILE2.
+	            ********
+		    At the PF3 screen change FILE=PRTFILE2. (Needed later)
+		    ********
 
 	___	(3) OPEN OUTPUT PRINT FILE	(PF3 to continue)
 	___	(4) CLOSE PRINT FILE		
@@ -673,8 +704,6 @@
 
 		This section tests all the screen I/O functionality.
 
-	___	(20) ALL FACS TEST - see that facs display unique.
-
 +	___	(1) DISPLAY A COMPLEX SCREEN.
 		___  Enter XXX in NO-ECHO FIELD
 		___  Enter one valid and one invalid range.
@@ -682,36 +711,10 @@
 
 	___	(2) TRY THE PF KEYS.  		try all PF keys 1-32
          
-		(3) PIC ZZ AND MISC.
-
-		These test have been replaced by "qapic".
-	___	Exit out to the shell and run qapic from the wisputils
-		directory.
-
-+	___	(6) TEST REWRITE TO CRT. 	A message should flash
-       
-	___	(8) TEST COMPLEX MUTIPLE DIMENSIONS. (3D table)
+	___	(4) TEST COMPLEX MUTIPLE DIMENSIONS. (3D table)
 					Just see that it displays.
 
-		(11) TEST MONKEY BAR MENU.  
-	___	    TAB KEY should hit all fields
-	___	    SPACEBAR should hit only menu positions   
-	___	    "F" "T" "S" "M" should take you to menu positions
-	___	    ENTER at "THIRD MENU" to test the cursor position
-		    clause. 
-	___	    (16) to EXIT
-
-
-	___	(12) COLUMN TEST. 	Should display column twice.
-			Test the RANGE clause.
-				-100   *	(* = should fail)
-				-99
-				0
-				999
-				1000   *
-				(rest are blank)
-                 
-+		(13) DISPLAY AND READ TOTAL TEST.  This tests all the clauses
++		(7) DISPLAY AND READ TOTAL TEST.  This tests all the clauses
 		    of DISPLAY AND READ. It is run repeatedly from a loop.
 	___	    Press (1)	message NO MODS WERE MADE ON THIS SCREEN
 	___	    Rerun (2) 	message NO MODS WERE MADE ON THIS SCREEN
@@ -727,30 +730,23 @@
 	___	    (3) should end with 
 				message ON-PFKEY: PFKEY 03 WAS PRESSED
 		    (16) Exit loop
- 
-		**** NOTE ****	First change your pseudo blank to a 
-				character in "N" normal rendition. 
-				(something other then underline)
 
+	___	(8) MULTIPLE COLUMNS		Should display 4 double cols
 
-		(15) REWRITE & READ OF CRT.   
-		This does 4 rewrites & reads of the screen. The first 2
-		are with the MODIFIABLE clause, the second 2 with ALTERED.
-		Should be pseudo blanks in the first half of the last 2
-		lines only.
+	___	(9) ALL FACS TEST - see that facs display unique.
 
-		**** NOTE ****  Do not type over all of the pseudo blanks
-				as we need some on the screen to test
-				how the read handles them.
+	___	(10) COLUMN TEST. 	Should display column twice.
+			Test the RANGE clause.
+				-100   *	(* = should fail)
+				-99
+				0
+				999
+				1000   *
+				(rest are blank)
 
-	___	Enter stuff on all modifiable lines. This should test all
-		of the FAC's BLINK BOLD HIDDEN UNDERLINE DIM
-	___	"ENTER" the pseudo blanks should be replaced with spaces.
-	___	"ENTER" the pseudo blanks are back. 
-	___	"ENTER" the pseudo blanks are NOT replaced with spaces.
-		"ENTER" to end
+        ___     (12) ADDITIONAL TESTS - QASCRN2 
      
-+		(17) ROW REWRITE & READ Test ROW oriented screen I/O
++		(1) ROW REWRITE & READ Test ROW oriented screen I/O
 					This will write over top of the
 					existing screen.
 	___	At row 10 **** REWRITE TEST *** Cursor should be positioned
@@ -768,14 +764,50 @@
 	___	ENTER 
 		Screen should be repainted.
 
-	___	(18) MULTIPLE COLUMNS		Should display 4 double cols
+ 
+		**** NOTE ****	First change your pseudo blank to a 
+				character in "N" normal rendition. 
+				(something other then underline)
 
 
-	___	(19) EMBEDDED FAC TEST
+		(2) REWRITE & READ CRT (ALL FAC).   
+		This does 4 rewrites & reads of the screen. The first 2
+		are with the MODIFIABLE clause, the second 2 with ALTERED.
+		Should be pseudo blanks in the first half of the last 2
+		lines only.
+
+		**** NOTE ****  Do not type over all of the pseudo blanks
+				as we need some on the screen to test
+				how the read handles them.
+
+	___	Enter stuff on all modifiable lines. This should test all
+		of the FAC's BLINK BOLD HIDDEN UNDERLINE DIM
+	___	"ENTER" the pseudo blanks should be replaced with spaces.
+	___	"ENTER" the pseudo blanks are back. 
+	___	"ENTER" the pseudo blanks are NOT replaced with spaces.
+		"ENTER" to end
+
+
++	___	(6) REWRITE CRT with PAUSE. 	A message should flash
+       
+
+	___	(8) EMBEDDED FAC TEST
 		    Type over the +++++ then press (ENTER). What you typed
 		    should remain on screen.
 		    Press (ENTER) again to exit.
 
+		(11) TEST MONKEY BAR MENU.  
+	___	    TAB KEY should hit all fields
+	___	    SPACEBAR should hit only menu positions   
+	___	    "F" "T" "S" "M" should take you to menu positions
+	___	    ENTER at "THIRD MENU" to test the cursor position
+		    clause. 
+	___	    (16) to EXIT
+
+                 
+
+
+		(16) to exit SCRN2 tests
 		(16) to exit SCREEN tests
 
 
@@ -783,43 +815,6 @@
 
 		This section tests all of the Wang VSSUBS.
 
-	___	(32) AUTOTEST  (WL0000) - AUTOMATIC QA OF VSSUBS
-		Run each of the WLxxxx tests from the menu.
-
-	___	(01) WL0010  - WISPPLAT
-	___	(02) WL0011  - USESOFTLINK/USEHARDLINK
-	___	(03) WL0012  - BITPACK
-	___	(04) WL0013  - BITUNPK
-	___	(05) WL0014  - HEXPACK
-	___	(06) WL0015  - HEXUNPK
-	___	(07) WL0016  - DATE/DATE2
-	___	(08) WL0017  - DAY
-	___	(09) WL0018  - MESSAGE  (Takes a few seconds to finish)
-	___	(10) WL0019  - SEARCH
-	___	(11) WL0020  - SORT
-	___	(12) WL0021  - STRING
-	___	(13) WL0022  - SET/EXTRACT
-	___	(14) WL0023  - bit tests
-	___	(15) WL0024  - UPPER
-
-	___	(17) WL0025  - w2rowcol
-	___	(18) WL0026  - xx2byte
-	___	(19) WL0027  - PUTPARM
-
-		(16) EXIT
-
-
-	___	The WL0018A & B test the MESSAGE routine automatically.
-		Each program opens a message port then they handshake and
-		send and receive 100 numbered messages.
-
-		(8) Link to WL0018A in one session  AND...
-		(8) Link to WL0018B as a different user
-
-		Once both programs have started, press Enter on both
-		screens and they should run for a few seconds (10-15) then
-		report that they sent 100 messages.
-	
 
 		(1) READFDR tests
 
@@ -838,6 +833,10 @@
 					a getparm only.
 
 +	___	(6) SUBMIT  (cobol)    
+
+		*** If you only have a single user license then use 
+		*** from WSHELL (12) SUBMIT.
+
 			(ACU)	FILE=QABCKGRD  in TESTACU   on SOURCE
 			(MF)	FILE=QABCKGRD  in TESTMF    on SOURCE
 
@@ -891,19 +890,12 @@
 			didn't get changed by any of these background jobs.
 
 
-		(8) LINK	This will test LINK without parameters.
+		(8) LINK
 
 		Link testing each LINK-TYPE
 
 		FILE	 LIB	 VOL	 	TYPE
 		=======	 ======= ======  	====
-+	___	TRIGGER  (blank) (blank) 	(blank)
-		(16) to EXIT
-+	___	TRIGGER2 (blank) (blank) 	(blank)	NOT FOUND (8) (20)
-+	___	TRIGGER2 LIBEXE	 VOLRUN	 	P
-		(16) to EXIT
-+	___	TRIGGER3 (blank) (blank) 	S
-		(16) to EXIT
 
 	___	WSORT				S   
 
@@ -914,55 +906,6 @@
 		Link to a shell/batch
 +	___	UNIX:  PRTARGSH		TYPE=(blank)
 		WIN32: PRTARGNT
-
-		Link with Cancel-Exit
-	___	SAMPLE2  LIBRUN   VOLRUN    TYPE=P CANCEL=C
-		Now go to  (5) WANG VSSUBS TEST  (17) LOGOFF
-		this should take you to the LINK IS COMPLETE screen 
-		COMP=16 
-
-		Set CANCEL=(blank)
-
-	___	SAMPLE2  LIBRUN   VOLRUN    TYPE=P
-		In SAMPLE2 do a (3) FILE I/O, (24) CLOSE SEQUENTIAL
-		this will cause an error-getparm, do a (16) to EXIT
-		you should arrive back in SAMPLE at LINK IS COMPLETE
-		and COMPCODE = 16 
-
-		*** Next we test LINK with parameters.
-
-	___	FILE=SUB1  TYPE=(blank)
-		In SUB1 enter 	
-				LINKARG1 	AAAAA
-				LINKARG2	BBBBB
-				LINKARG3	CCCCC
-		ENTER to LINK from SUB1 to SUB3 (SUB1 sets the CANCEL FLAG)
-	___	In SUB3 the LINKARGs should have arrived.
-		Modify the args
-				LINKARG1 	XAAAA
-				LINKARG2	XBBBB
-				LINKARG3	XCCCC
-		ENTER to LINK from SUB3 to SAMPLE.
-		(16) to exit SAMPLE
-	___	Back in SUB3 the args should be as last modified.
-		ENTER to exit SUB3 back to SUB1
-	___	The args should be as modified in SUB3.
-		ENTER to exit SUB1 and return to SAMPLE - LINK IS COMPLETE
-		RETURN & COMP CODE should be 0
-
-		(8) LINK (with lots of parameter)
-+	___	FILE=XLINK    TYPE=(blank)
-		You should arrive in XLINK. 
-		Next link to module=XLINK1  arg count=18  L-TYPE=(blank)
-		There should be values into all 18 arguments.
-+	___	ENTER should take you to XLINK1
-		Ensure all args arrived.
-		Modify some args.
-		To go back to XLINK; Module should be set Module=(blank).
-+	___	ENTER should return to XLINK.
-		Ensure the modifications to the args arrived.
-		To go back to SAMPLE; Module should be set Module=(blank)
-+	___	ENTER should return to SAMPLE.
 
 
 
@@ -1052,17 +995,6 @@
 					of the field before pressing (2)
 					so you can see it pop back when
 					complete.
-
-		(15) SCRATCH
-	___	F-file  PRTFILE  in LIBSPOOL on VOLSPL
- 		(check the disk)
-	___	F-file  PRTFILE  in LIBSPOOL on VOLSPL     RC=20
-
-	___	L-Lib		    LIBSPOOL on VOLSPL     RC=0
-		(check the disk)
-	___	L-Lib		    LIBSPOOL on VOLSPL     RC=16
-
-
 		(19) GETPARM
 	___	Press (1) to SETUP for the tests.
 	___	Type="I " FORM=A PRNAME=XX1	(no display PF-KEY=A)
@@ -1081,17 +1013,6 @@
 
 	___	    The script will run DISPLAY on BFILEX3 (width=92)
 		    Order should be 3, 8, 2, 7, 6, 5, 4
-
-		(25) RENAME tests
-
-	___	Press (8) to run autotests.
-
-+	___	(27) READVTOC
-			OPTION=F    LIBRARY=LIBOUT   VOLUME=VOLOUT
-
-	___	(28) FILECOPY
-			OLD=	BFILE	LIBOUT  VOLOUT
-			NEW=	COPY    LIBRN   VOLOUT
 
 	___	WCOPY utility
 		(8) LINK to QACOPY
@@ -1127,18 +1048,16 @@
 
 	(7) PRINTING TESTS (SAMPLE)
 
-		(1) CREATE A PRINT FILE	Creates file PRFILE LIBSPOOL VOLSPL
-			Do this once for each of the following tests each
-			time go to HELP and change your print constants.
+		(1) CREATE A PRINT FILE
 
-		Pick a print CLASS=___ and a FORM=___ that is valid.
+	___	   (12) DISPRINT   - Delete PRFILE, PRFILE2, PRFILE3
 
-		      MODE 
-+	___		S    Should print & delete
-+	___		H    Should hold
-+	___		K    Getparm - change to PRFILE2
-+	___		P    Getparm - change to PRFILE3 class=Z
-
+	___	   (1) PRNTMODE=S  Should print & delete
+	___	   (2) PRNTMODE=H  Should hold
+	___	   (3) PRNTMODE=K  Getparm - change to PRFILE2
+	___	   (4) PRNTMODE=P  Getparm - change to PRFILE3 class=Z
+		
+		   (16) EXIT 
 
 		Set MODE = P
 

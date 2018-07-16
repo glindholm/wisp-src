@@ -1,12 +1,25 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include "kcsifunc.h"
 
 /*----
 Generic bubble sort
 ------*/
 
-static char sccsid[]="@(#)bub.c	1.1 4/14/93";
 
 static int changes;
 
@@ -79,8 +92,8 @@ static void pass_up(char *base,int nel,int len,int (*comp)(),int (*swap)())
 /*
 **	History:
 **	$Log: bub.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:19  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.5  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.4  2002/07/25 15:20:30  gsl
 **	Globals

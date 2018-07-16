@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		vmodules.h
@@ -19,6 +38,7 @@
 /*
 **	Includes
 */
+#include <stdio.h>
 
 #ifndef INTDEF_H
 #include "vintdef.h"
@@ -43,22 +63,15 @@
 **	Function Prototypes
 */
 
-extern int gcal2();
-extern int gcalculator();
-extern int gpreferences();
-extern int imemcpy();
-extern int imemset();
-extern void jredit();
-extern void vbldfilepath();
-extern int vdetpos();
-extern int vfblank();
-extern int vgrid();
-extern void vkeyhelp();
+extern int VL_gcal2();
+extern int VL_imemcpy();
+extern int VL_imemset();
+extern void VL_vbldfilepath();
+extern int VL_vdetpos();
+extern int VL_vgrid();
 
-extern int vmap();
-extern int vmacro();
-extern int4 vmenu();
-extern void vputlocal_error_message();
+extern int  VL_vmap();
+
 extern char vrawcheck();
 extern int vrawcursor();
 extern void vrawerase();
@@ -68,20 +81,39 @@ extern char vrawinput();
 extern int vrawscroll();
 extern void vrawsetcursor();
 extern void vrawsetscroll();
-extern int vscroll();
-extern void vtrace();
 extern void vrawtimeout();
 extern void vrawtimeout_set();
 extern void vrawtimeout_clear();
 extern int vrawtimeout_check();
-extern int vtrigger();
+
+extern int VL_vtrigger();
 extern void v_modeflag();
+
+FILE *VL_vopenf();
 
 #endif /* vmodules_H */
 
 /*
 **	History:
 **	$Log: vmodules.h,v $
+**	Revision 1.22  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.21  2002/07/18 21:04:22  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.20  2002/07/15 20:56:39  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.19  2002/07/15 20:16:11  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.18  2002/07/15 17:52:55  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.17  2002/07/15 17:10:04  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.16  1997/07/09 15:05:33  gsl
 **	Remove old routines
 **	

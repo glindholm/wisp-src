@@ -1,11 +1,35 @@
 procedure qa0001.wps
 
 declare &lib as string(8)
+declare &findfile as string(8) initial "        "
+declare &findlib as string(8) initial "?       "
+declare &scratchvol as string(6)
+declare &scratchlib as string(8)
+declare &findstart as integer initial 1
+declare &findcnt   as integer initial 1
+declare &findrecv  as string(22)
+
 extract &lib=proglib
 
-prompt center "QA0001: Will setup QA files";;;;
+prompt center "QA0001: Will initialize QA files";;;;
        center "Using PROGLIB = ", upper &lib ;;;;
        center "Press (ENTER) to continue"
+
+set PROGLIB=&LIB
+set PROGVOL="SOURCE"
+
+ASSIGN &scratchvol = "VOLRUN"
+CALL SCRATCHVOL
+ASSIGN &scratchvol = "VOLIN "
+CALL SCRATCHVOL
+ASSIGN &scratchvol = "VOLOUT"
+CALL SCRATCHVOL
+ASSIGN &scratchvol = "VOLSPL"
+CALL SCRATCHVOL
+ASSIGN &scratchvol = "VOLWRK"
+CALL SCRATCHVOL
+
+MESSAGE "COPYING INITIAL FILES"
 
 run copy
 	enter INPUT  FILE=SAMPLE,  LIBRARY=&lib,    VOLUME=SOURCE
@@ -23,7 +47,21 @@ run copy
 	enter OUTPUT FILE=XYZ,      LIBRARY=LIBIN,  VOLUME=VOLIN
 	enter EOJ 16
 
-prompt center "QA0001: QA test files have been copied";;;;
+prompt center "QA0001: QA test files have been initialized";;;;
        center "Press (ENTER) to return"
 
 return
+
+SCRATCHVOL: MESSAGE "SCRATCH LIBS ON VOLUME " !! &SCRATCHVOL
+
+NEXTLIB:
+ASSIGN &findcnt = 1
+RUN FIND USING &findfile, &findlib, &scratchvol, &findstart, 
+	&findcnt, &findrecv
+
+if &FINDCNT = 0 THEN END
+
+ASSSIGN &scratchlib = &findrecv(7,8)
+SCRATCH LIBRARY  &scratchlib  on &scratchvol
+
+GOTO NEXTLIB

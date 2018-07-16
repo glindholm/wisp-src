@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #define EXT extern
 #include "wisp.h"
@@ -19,7 +32,12 @@ static char rcsid[]="$Id:$";
 /*
 	p_accept:	Process the ACCEPT verb.
 
-			ACCEPT xxx FROM {DATE|DATE4|DAY|DAY-OF-WEEK|TIME}	- unchanged.
+			ACCEPT xxx FROM {DATE|DAY|DAY-OF-WEEK|TIME}	- unchanged.
+			ACCEPT xxx FROM DATE YYYYMMDD
+			ACCEPT xxx FROM DAY  YYYYDDD
+
+	(before)	ACCEPT xxx FROM DATE4
+	(after)		ACCEPT xxx FROM DATE YYYYMMDD
 
 	(before)	ACCEPT field1 field2 ... field16.
 
@@ -27,8 +45,8 @@ static char rcsid[]="$Id:$";
 			MOVE "field2" TO WISP-BUFF(2)
 			. . .
 			MOVE "fieldx" TO WISP-BUFF(x)
-			MOVE x TO WISP-LONGWORD					- Set the argument count
-			CALL "WACCEPT" USING WISP-LONGWORD WISP-BUFF(1)		- call WACCEPT
+			MOVE x TO WISP-ARGCNT					- Set the argument count
+			CALL "WACCEPT" USING WISP-ARGCNT WISP-BUFF(1)		- call WACCEPT
 			   WISP-BUFF(2) . . . WISP-BUFF(x)
 			UNSTRING WISP-BUFF(1) DELIMITED WISP-SYMB-0 INTO field1	- Unload the ACCEPTed values
 			UNSTRING WISP-BUFF(2) DELIMITED WISP-SYMB-0 INTO field2
@@ -113,26 +131,25 @@ NODE parse_accept(NODE the_statement)
 			/*
 			**	These are standard COBOL syntax.
 			*/
-			if (eq_token(curr_node->token, KEYWORD,"DATE") ||
-			    eq_token(curr_node->token, KEYWORD,"DAY") )
+			if (eq_token(curr_node->token, KEYWORD,"DATE"))
 			{
-				write_log("WISP",'W',"YEAR2000","ACCEPT FROM %s is not YEAR2000 compliant",
-					  token_data(curr_node->token));
+				if (eq_token(curr_node->next->token, IDENTIFIER,"YYYYMMDD"))
+				{
+					curr_node = curr_node->next;	/* Step over YYYYMMDD */
+				}
+			}	
+			else if (eq_token(curr_node->token, KEYWORD,"DAY"))
+			{
+				if (eq_token(curr_node->next->token, IDENTIFIER,"YYYYDDD"))
+				{
+					curr_node = curr_node->next;	/* Step over YYYYDDD */
+				}
 			}	
 			else if (eq_token(curr_node->token, IDENTIFIER,"DATE4"))
 			{
-				if (acu_cobol)
-				{
-					write_tlog(curr_node->token, "WISP",'I',"ACCEPT",
-						   "ACCEPT FROM DATE4 translated to CENTURY-DATE");
-					edit_token(curr_node->token,"CENTURY-DATE");
-				}
-				else /* mf_cobol - note this is also valid for Acucobol 5.x */
-				{
-					write_tlog(curr_node->token, "WISP",'I',"ACCEPT",
-						   "ACCEPT FROM DATE4 translated to ACCEPT FROM DATE YYYYMMDD");
-					edit_token(curr_node->token,"DATE YYYYMMDD");
-				}
+				write_tlog(curr_node->token, "WISP",'I',"ACCEPT",
+					   "ACCEPT FROM DATE4 translated to ACCEPT FROM DATE YYYYMMDD");
+				edit_token(curr_node->token,"DATE YYYYMMDD");
 			}
 
 			/*
@@ -189,9 +206,9 @@ NODE parse_accept(NODE the_statement)
 		curr_node = curr_node->next;
 	}
 
-	tput_line_at(col, "MOVE %d TO WISP-LONGWORD", item_cnt);
+	tput_line_at(col, "MOVE %d TO WISP-ARGCNT", item_cnt);
 
-	tput_line_at(col, "CALL \"WACCEPT\" USING WISP-LONGWORD");
+	tput_line_at(col, "CALL \"WACCEPT\" USING WISP-ARGCNT");
 	for(idx=1; idx<=item_cnt; idx++)	/* NOTE: loop 1 to N */
 	{
 		tput_clause(col+4, "WISP-BUFF(%d)", idx);
@@ -220,6 +237,17 @@ NODE parse_accept(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_acept.c,v $
+**	Revision 1.21  2003/03/28 16:08:19  gsl
+**	Add support for
+**	ACCEPTxxx FROM DATE YYYYMMDD and
+**	ACCEPTxxx FROM DAY YYYYDDD
+**	
+**	Revision 1.20  2003/03/10 22:39:42  gsl
+**	Remove WISP-LONGWORD usage
+**	
+**	Revision 1.19  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
 **	Revision 1.18  2001/09/13 18:40:16  gsl
 **	For MF ACCEPT FROM DATE4 now translated to ACCEPT FROM DATE YYYYMMDD
 **	

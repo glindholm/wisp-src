@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+#	$Id:$
+#
 #	File:		startupacu.sh
 #
 #	Usage:		$ cd .../wisp/src/testacu
@@ -46,6 +48,8 @@ then
 fi
 wusage set PROGVOL=SOURCE
 wusage set PROGLIB=TESTACU
+wusage set RUNVOL=SOURCE
+wusage set RUNLIB=TESTACU
 
 echo
 echo Switching to new shell for WISP QA

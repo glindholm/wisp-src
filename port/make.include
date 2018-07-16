@@ -171,7 +171,7 @@ SYSDEF = "Error SYSDEF not defined"
 #CC_SYS_FLAGS = -fsigned-char
 #
 # GNU C++
-#CCC = gcc
+#CCC = g++
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
 #
 #	AIX 4.1
@@ -179,13 +179,6 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC = xlC
 #CCC_SYS_FLAGS = -qchars=signed 
 #CCC_EXT = C
-#
-#	AIX 3.2 
-#
-#SYSDEF = -DAIX
-#CC_SYS_FLAGS = -qlanglvl=ansi
-#CCC = g++
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
 #
 
 #==================================================================
@@ -219,23 +212,44 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC_SYS_FLAGS = -ms
 #
 # GNU C++
-#CCC = gcc
+#CCC = g++
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall -mno-cix -mno-max -mno-bwx
+#CCC_SYS_LINK = 
+#
+# (using gcc instead of g++)
+#CCC = gcc
 #CCC_SYS_LINK =  /usr/local/cygnus/tru64-010710/H-alphaev56-dec-osf5.1/lib/libstdc++.a
 
 #==================================================================
 #	HP-UX
 #
-#	HP-UX 11.00
+#	HP-UX 11.00 (PA-RISC 1.1) (32-bit)
 #
 #SYSDEF = -DHPUX
+#
+## Using HP's C complier
 #CC_STD  = cc
 #CC_ANSI = cc
 #CC_SYS_FLAGS = +z +DAportable -lcurses
-#CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
-#CCC_SYS_LINK =  /usr/local/lib/libstdc++.a
 #
+## Using GNU C compiler
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = -Wall
+#
+#CCC = g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_LINK =
+#
+## Need on HP-UX 11.11 
+#CCC_SYS_LINK = -lpthread
+#
+## using gcc instead of g++
+#CCC = gcc
+#CCC_SYS_LINK = /usr/local/lib/libstdc++.a
+#
+#
+## OLD STUFF
 #	c89 is the ANSI compiler
 #	  - Needs -D_HPUX_SOURCE to allow HP extensions
 #	  - Does not allow 64 bit file routines
@@ -243,23 +257,17 @@ SYSDEF = "Error SYSDEF not defined"
 #CC_ANSI = c89
 #CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -lcurses
 #
-#	HP-UX 10.20 & 10.10
+
+#==================================================================
 #
-#CC_STD  = c89
-#CC_ANSI = c89
-#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -Wl,-a,archive
-#CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
-#CURSES_LINK = -lcur_colr
+#	HP-UX 11.00 (PA-RISC 2.0) (64-bit)
 #
-#Old CC flags:
-#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +ESsfc +DA1.0 +DS1.0 -Wl,-a,archive
-#	+z		Position independent code (PIC)
-#	-D_HPUX_SOURCE	Termio struct definitions (vrawunix)
-#	+ESsfc		???
-#	+DA1.0		Architecture PA-RISC 1.0
-#	+DS1.0		Optimize instruction scheduling for PA 1.0
-#	-W1,-a,archive	Linker use archive libraries not shared libraries
+#SYSDEF = -DHPUX -DHPUX_64 -DWISP_64BIT
+#
+#CC_STD  = cc
+#CC_ANSI = cc
+#CC_SYS_FLAGS = +z +DD64 -lcurses
+#
 
 #==================================================================
 #	SCO UNIX
@@ -270,6 +278,7 @@ SYSDEF = "Error SYSDEF not defined"
 #CC_STD  = gcc
 #CC_ANSI = gcc
 #CC_SYS_FLAGS = 
+#
 #CCC = gcc
 #CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
 #CCC_SYS_LINK = 
@@ -280,28 +289,39 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC_SYS_FLAGS = +.cpp +a1
 
 #==================================================================
-#	SUN Solaris
+#	SUN SPARC
+#
+#	Solaris (32-bit)
 #
 #  NOTE:  We have installed WorkShop which includes the proper
 #	  version of C so make sure it is included
 #	  on your path /opt/SUNWspro/bin
 #
+#  NOTE:  If CCC=g++ then it will not link statically even
+#   	  if -static option is specified. 
+#
 #	Solaris 8 (SunOS 5.8)
 #SYSDEF = -DSOLARIS 
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = 
+#CC_SYS_FLAGS = -Wall
 #CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char 
-#CCC_SYS_LINK = 
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_LINK = /usr/local/lib/libstdc++.a
 #
-# 	Solaris 2.5.1 (SunOS 5.5.1)
-#CDEBUG=
-#CC_STD  = c89
-#CC_ANSI = c89
-#CCC = CC
-#CCC_SYS_LINK = -nolib -lm -Bstatic -lC -lC_mtstubs -Bdynamic -lc
-#STRIP = echo STRIP not available
+
+#==================================================================
+#	SUN SPARC
+#
+#	Solaris 8 (64-bit)
+#
+#SYSDEF = -DSOLARIS -DSOLARIS_64 -DWISP_64BIT
+#CC_STD  = gcc
+#CC_ANSI = gcc
+#CC_SYS_FLAGS = -m64 -Wall
+#CCC = g++
+#CCC_SYS_FLAGS = -m64 -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_LINK = 
 
 #==================================================================
 #	Redhat LINUX 7.3 with glibc 2.2
@@ -309,37 +329,11 @@ SYSDEF = "Error SYSDEF not defined"
 #SYSDEF = -DLINUX
 #CC_STD  = gcc
 #CC_ANSI = gcc
-#CC_SYS_FLAGS = 
-#CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+#CC_SYS_FLAGS = -Wall
+#CCC = g++
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
 #CCC_SYS_LINK = 
 
-#==================================================================
-#	SUNOS
-#
-#
-#SYSDEF = -DSUNOS
-#
-#----	Standard Sun C compiler
-#CC_ANSI = cc -Bstatis -DNOPROTO
-#CC_SYS_FLAGS = -I/usr/5include
-#
-#----	GNU C compiler
-#CC_STD  = gcc
-#CC_ANSI = gcc -ansi -static
-#
-#----	New ACC compiler
-#CC_ANSI = acc
-#CC_SYS_FLAGS = -sys5 -Xa -Bstatic -I/usr/5include
-#
-#----	Common
-#CURSES_LINK=-L/usr/5lib -lcurses
-#RANLIB=ranlib
-#
-#----	C++
-#CCC = g++
-#CCC_SYS_FLAGS = -DNOCTYPE -fsigned-char
-#CCC_LINK = -L$(CCC_LIBS_DIR) -lg++ -liostream
 
 #==================================================================
 #	Data General - DG/UX Intel

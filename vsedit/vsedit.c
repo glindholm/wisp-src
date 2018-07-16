@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	       Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		vsedit.c
@@ -86,7 +101,7 @@ int vsedit(char *name)
 	if (-1 == nativecharmap)
 	{
 		nativecharmap = 0;
-		if (get_wisp_option("NATIVECHARMAP"))
+		if (WL_get_wisp_option("NATIVECHARMAP"))
 		{
 			nativecharmap = 1;
 			/*
@@ -173,7 +188,7 @@ Set up options for each of the possible languages.
 
 static void init_cobol(void)
 {
-	strcpy(vse_tab_setting,DEFAULT_COB_TAB_STRING);
+	strcpy((char*)vse_tab_setting,DEFAULT_COB_TAB_STRING);
 
         strcpy(vse_gp_defaults_tabs,COBOL_TAB_STRING);
         strcpy(vse_gp_defaults_mode,MODE_UPPER);
@@ -192,7 +207,7 @@ static void init_cobol(void)
 static void init_basic(void)
 {
 	init_hash();
-	strcpy(vse_tab_setting,DEFAULT_BASIC_TAB_STRING);
+	strcpy((char*)vse_tab_setting,DEFAULT_BASIC_TAB_STRING);
 
         strcpy(vse_gp_defaults_tabs,BASIC_TAB_STRING);
         strcpy(vse_gp_defaults_mode,MODE_UPPER);
@@ -210,7 +225,7 @@ static void init_basic(void)
 }
 static void init_proc(void)
 {
-	strcpy(vse_tab_setting,DEFAULT_PROC_TAB_STRING);
+	strcpy((char*)vse_tab_setting,DEFAULT_PROC_TAB_STRING);
 
         strcpy(vse_gp_defaults_tabs,PROC_TAB_STRING);
         strcpy(vse_gp_defaults_mode,MODE_UPLOW);
@@ -297,9 +312,7 @@ void int4_from_str2(char *str, int4 *value)
 }
 
 static void vse_menus(void)
-{
-	extern char ed_oa[];
-	
+{	
         scr_first = text_first;
         for(;;)
                 {
@@ -348,7 +361,7 @@ static int load_file(void)
         ff = fopen(vse_sysname,"r");
 	if (ff)
 	{
-	        if (rc = load_lines(ff))
+	        if ((rc = load_lines(ff)))
                 {
                         free_text();
 			if ( lang_type() == LANG_BASIC )
@@ -434,7 +447,7 @@ int load_txt_line(FILE *ff, TEXT **txtptr)
 
 		for( idx=0; idx < 6; idx++)
 		{
-			if (isdigit(num_ptr[idx]))
+			if (isdigit((int)num_ptr[idx]))
 			{
 				/*
 				**	If a digit then convert it from a character to a number.
@@ -543,7 +556,7 @@ static int load_lines(FILE *ff)
 
 	for(;;)
         {
-		if (rc = load_txt_line(ff,&txt))
+		if ((rc = load_txt_line(ff,&txt)))
 		{
 			return rc;
 		}
@@ -636,7 +649,7 @@ static int load_lines(FILE *ff)
 				return(1);
 			}
 
-			if (rc = validate_numincr(number_field, &number, incr_field, &incr))
+			if ((rc = validate_numincr(number_field, &number, incr_field, &incr)))
 			{
 				strcpy(gp_error, vse_err(rc));
 			}
@@ -762,11 +775,11 @@ static int4 save_lines(FILE *ff, int4 start, int4 end)
 				{
 					if (txt->modfld)
 					{
-						sprintf(outbuf, "%06ld%-66s%s", txt->lineno, txt->text, txt->modfld );
+						sprintf(outbuf, "%06ld%-66s%s", (long)txt->lineno, txt->text, txt->modfld );
 					}
 					else
 					{
-						sprintf(outbuf, "%06ld%s", txt->lineno, txt->text );
+						sprintf(outbuf, "%06ld%s", (long)txt->lineno, txt->text );
 					}
 				}
 				else if (lang_type()==LANG_PROC)
@@ -776,12 +789,12 @@ static int4 save_lines(FILE *ff, int4 start, int4 end)
 					mod = txt->modfld;
 					if (!mod) mod = "   ";
 
-					sprintf(outbuf, "%-71s%-3s%06ld",txt->text, mod, txt->lineno);
+					sprintf(outbuf, "%-71s%-3s%06ld",txt->text, mod, (long)txt->lineno);
 				}
                 	    	else if(vse_num_start_col == 1)
-                	    		sprintf(outbuf, "%06ld%s",txt->lineno,txt->text);
+                	    		sprintf(outbuf, "%06ld%s",(long)txt->lineno,txt->text);
 				else
-					sprintf(outbuf, "%-74s%06ld",txt->text,txt->lineno);
+					sprintf(outbuf, "%-74s%06ld",txt->text,(long)txt->lineno);
                 	}
                 	else
                 	{
@@ -904,7 +917,7 @@ int init_lang(char *lang_string)
 	int	type;
 	char	ext[20];
 
-	if (rc = check_lang(lang_string, &type, ext))
+	if ((rc = check_lang(lang_string, &type, ext)))
 	{
 		return rc;
 	}
@@ -922,7 +935,7 @@ int init_lang(char *lang_string)
 
 		g_lang_type = type;
 
-		strcpy(vse_tab_setting,DEFAULT_TAB_STRING);
+		strcpy((char*)vse_tab_setting,DEFAULT_TAB_STRING);
 	        strcpy(vse_gp_defaults_tabs,TEXT_TAB_STRING);
 	        strcpy(vse_gp_defaults_showmods,"NO ");
 
@@ -967,7 +980,7 @@ static int check_lang(char *lang_string, int *type, char *ext)
 
 	strncpy(the_lang_string,lang_string,VSE_LANGUAGE_LEN);
 	the_lang_string[VSE_LANGUAGE_LEN] = (char)0;
-	upper_string(the_lang_string);
+	WL_upper_string(the_lang_string);
 	trunc(the_lang_string);
 
 	sprintf(temp,"%s!",the_lang_string);
@@ -1097,6 +1110,24 @@ int set_wang_style(int style)
 /*
 **	History:
 **	$Log: vsedit.c,v $
+**	Revision 1.21  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.20  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.19  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.18  2002/08/01 16:00:54  gsl
+**	type warnings
+**	
+**	Revision 1.17  2002/07/11 14:34:00  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.16  2002/07/10 21:06:39  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.15  1997/12/19 21:51:38  gsl
 **	fix warnings
 **	

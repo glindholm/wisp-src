@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -27,11 +48,11 @@ static char rcsid[]="$Id:$";
 
 /*						Global data storage.								*/
 
-struct save_screen *vscrn_stack;							/* Reference to external variable.	*/
+struct save_screen *VL_vscrn_stack;							/* Reference to external variable.	*/
 
 /*						Push screen routine.								*/
 
-void vpushscr()										/* A function to save the screen addrs	*/
+void VL_vpushscr()										/* A function to save the screen addrs	*/
 											/* and variables.			*/
 {
 	struct save_screen *ss_ptr;							/* Point to the the save area.		*/
@@ -82,12 +103,21 @@ void vpushscr()										/* A function to save the screen addrs	*/
 	ss_ptr->xrol_bot = vrol_bot;
 	ss_ptr->xmap_top = vmap_top;
 
-	ss_ptr->prev_ptr = vscrn_stack;							/* Save the address of the prior screen	*/
-	vscrn_stack = ss_ptr;								/* Save addr. of the new top screen.	*/
+	ss_ptr->prev_ptr = VL_vscrn_stack;							/* Save the address of the prior screen	*/
+	VL_vscrn_stack = ss_ptr;								/* Save addr. of the new top screen.	*/
 }                                                                                       
 /*
 **	History:
 **	$Log: vpushscr.c,v $
+**	Revision 1.13  2003/06/20 15:48:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.12  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.11  2002/07/15 20:16:12  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.10  1997/07/09 15:56:11  gsl
 **	Change to use new video.h interfaces
 **	Remove line attribute handling

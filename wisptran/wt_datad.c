@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		wt_data.c
@@ -72,8 +85,6 @@ NODE delete_fd();
 NODE data_division(the_statement)
 NODE	the_statement;
 {
-	if (!comments) tput_blank();
-
 	if (eq_token(the_statement->next->token,KEYWORD,"DATA"))
 	{
 		write_log("WISP",'I',"DATADIV","Processing DATA DIVISION.");
@@ -276,22 +287,6 @@ get_next_statement:
 
 		prog_ftypes[g_curr_file_num] |= HAD_FD;				/* Flag the FD statement.			*/
 
-		if ( is_fd && (lpi_cobol || vax_cobol) )
-		{
-			/*
-			**	VAX:	VALUE OF ID IS N-filename
-			**	LPI:	VALUE OF FILE-ID IS N-filename
-			*/
-			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"VALUE")));
-			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"OF")));
-			if (lpi_cobol)
-				tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"FILE-ID")));
-			if (vax_cobol)
-				tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"ID")));
-			tie_bottom(file_name_node, maketoknode(make_token(KEYWORD,"IS")));
-			tie_bottom(file_name_node, maketoknode(make_token(IDENTIFIER,get_prog_nname(g_curr_file_num))));
-		}
-
 		curr_node = curr_node->next;					/* Advance past the filename node		*/
 		fd_parse_mode = 0;
 
@@ -313,7 +308,7 @@ get_next_statement:
 			else if ( eq_token(curr_node->token, KEYWORD, "RECORD") )
 			{
 				fd_parse_mode = FD_RECORD;
-				if (delrecon)
+				if (opt_delete_record_contains)
 				{
 					write_log("WISP",'I',"RECORDCONTAINS","Removing RECORD CONTAINS from FD.");
 				}
@@ -353,7 +348,16 @@ get_next_statement:
 				     eq_token(curr_node->next->token, KEYWORD, "RECORDS")  )
 				{
 					fd_parse_mode = FD_DATA;
-					curr_node->token->column_fixed = 1;
+					if (opt_deldatarecords)
+					{
+						write_tlog(curr_node->token, "WISP",'I',"DATARECORDS","Removing DATA RECORDS clause from FD.");
+						cleartoknode(curr_node);
+					}
+					else
+					{
+						write_tlog(curr_node->token, "WISP",'I',"DATARECORDS","Processing DATA RECORDS clause from FD.");
+						curr_node->token->column_fixed = 1;
+					}
 					curr_node = curr_node->next;		/* Skip over RECORD keyword			*/
 				}
 				curr_node->token->line   = 0;
@@ -388,7 +392,14 @@ get_next_statement:
 				break;
 
 			case FD_RECORD:
-				if (delrecon)
+				if (opt_delete_record_contains)
+				{
+					cleartoknode(curr_node);
+				}
+				break;
+
+			case FD_DATA:
+				if (opt_deldatarecords)
 				{
 					cleartoknode(curr_node);
 				}
@@ -451,8 +462,6 @@ get_next_statement:
 			curr_node = curr_node->next;
 		}
 
-		if (!comments) tput_blank();
-
 		if (is_dbfile(the_file)) 
 		{
 			dbfile_write_mark(the_file);
@@ -474,7 +483,6 @@ get_next_statement:
 		free_statement(file_name_node->next);				/* Free end of statement.			*/
 		file_name_node->next = maketoknode(make_token(PERIOD,"."));	/* Terminate "FD filename" with a period.	*/
 
-		if (!comments) tput_blank();
 		tput_statement(8,the_statement);				/* Write the dummy FD for the dummy CRT file	*/
 		free_statement(the_statement);					/* Free the FD statement, not needed		*/
 
@@ -766,7 +774,7 @@ NODE parse_crt_records()
 
 			if (picture_node)
 			{
-				dd_size = pic_size(picture_node->token->data);
+				dd_size = WL_pic_size(picture_node->token->data);
 			}
 
 			if (binary_node)
@@ -857,6 +865,25 @@ NODE the_statement;
 /*
 **	History:
 **	$Log: wt_datad.c,v $
+**	Revision 1.18  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.17  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.16  2002/10/14 19:08:02  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.15  2002/08/13 18:47:28  gsl
+**	#DELETE_DATA_RECORDS
+**	
+**	Revision 1.14  2002/07/10 21:06:36  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.13  2002/06/20 22:55:48  gsl
+**	remove obsolete code
+**	
 **	Revision 1.12  1998/12/15 19:26:22  gsl
 **	Add recognition of the LINAGE clause in an FD
 **	

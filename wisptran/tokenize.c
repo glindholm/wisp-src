@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		tokenize.c
 **
@@ -28,6 +49,9 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+
+#define EXT extern
+#include "wisp.h"
 
 #include "wmalloc.h"
 #include "token.h"
@@ -101,7 +125,6 @@ static char is_digit[256] =
 static int got_token(char *the_cache, TOKEN *tokptr);
 static void a_init_token_cache(char *the_cache);
 static int a_token_cache_que(char *the_cache, TOKEN *tokptr);
-static int token_cache_que(TOKEN *tokptr);
 static void init_token(TOKEN *tokptr, int the_absline, int the_line, void *the_context);
 
 
@@ -140,7 +163,7 @@ int tokenize(char *input_line, int linestatus)
 	if (first)
 	{
 		first = 0;
-		if (rc = ring_open(&token_cache, sizeof(TOKEN), 50, 5, NULL, 0))
+		if ((rc = ring_open(&token_cache, sizeof(TOKEN), 50, 5, NULL, 0)))
 		{
 			write_log("WISP",'F',"RINGOPEN","Unable to open ring [token_cache] rc=%d [%s]",rc,ring_error(rc));
 			exit_with_err();
@@ -218,6 +241,7 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 			int the_absline, int the_line, void *the_context, int dpcomma, int do_reswords)
 {
 	static int	picture_mode = 0;
+	static int	continued_literal = 0;
 	register char *ptr;
 	char	*start, *end;
 	int	col, startcol;
@@ -239,7 +263,7 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 	memcpy(temp,input_line,strlen(input_line));
 	temp[80] = (char)0;
 
-	while(ptr = strchr(temp,'\n')) *ptr = ' ';				/* Strip trailing newline			*/
+	while((ptr = strchr(temp,'\n'))) *ptr = ' ';				/* Strip trailing newline			*/
 
 	/*
 	**	Initialize the ptr and col vars.
@@ -247,6 +271,23 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 	col = 1;
 	ptr = &temp[col-1];
 	tokcnt = 0;
+
+	/*
+	**	Continued literal check
+	*/
+	if (continued_literal && '-' != ptr[6])
+	{
+		if (' ' == ptr[6])
+		{
+			ptr[6] = '-';
+			write_log("WISP",'W',"CONTINUATION","Added missing CONTINUATION character.");
+		}
+		else
+		{
+			write_log("WISP",'E',"CONTINUATION","Missing CONTINUATION character.");
+		}
+	}
+	continued_literal = 0;
 
 	/*
 	**	Handle a NOPROCESS && SPECIAL_COMMENT lines.
@@ -355,7 +396,6 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 	/*
 	**	Start tokenizing at col 8.
 	*/
-
 	start = NULL;
 	end = NULL;
 
@@ -466,8 +506,8 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 			ptr++;
 			col++;
 		}
-		else if ( '\"' == ptr[0] || '\'' == ptr[0] ||	       			/* QUOTED LITERAL			*/
-			( '\"' == ptr[1] && strchr("hHxX",ptr[0]) && col < 68 ) )	/* HEX LITERAL				*/
+		else if ( DOUBLE_QUOTE == ptr[0] || SINGLE_QUOTE == ptr[0] ||	       		/* QUOTED LITERAL			*/
+			( DOUBLE_QUOTE == ptr[1] && strchr("hHxX",ptr[0]) && col < 68 ) )	/* HEX LITERAL				*/
 		{
 			/*
 			**	NON-NUMERIC LITERAL
@@ -484,7 +524,7 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 
 			start = ptr;
 
-			if ('\"' == ptr[0] || '\'' == ptr[0])
+			if (DOUBLE_QUOTE == ptr[0] || SINGLE_QUOTE == ptr[0])
 			{
 				delimiter = *ptr;
 			}
@@ -495,7 +535,7 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 				**		- delimiter is always a quote
 				**		- skip past the lead-in char.
 				*/
-				delimiter = '\"';
+				delimiter = DOUBLE_QUOTE;
 				ptr++;
 				col++;
 			}
@@ -542,6 +582,7 @@ int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *
 			}
 
 			tmptoken.type = LITERAL;
+			continued_literal = ( delimiter == *end ) ? 0 : 1;
 			tmptoken.column_fixed = ( delimiter == *end ) ? 0 : 1;
 
 			ptr++;
@@ -995,7 +1036,7 @@ int a_token_cache_count(char *the_cache)
 		return 0;
 	}
 	
-	if (rc = ring_count(the_cache,&count))
+	if ((rc = ring_count(the_cache,&count)))
 	{
 		write_log("WISP",'F',"RINGCOUNT","Unable to count ring [a_token_cache] rc=%d [%s]",rc,ring_error(rc));
 		exit_with_err();
@@ -1043,11 +1084,6 @@ static int a_token_cache_que(char *the_cache, TOKEN *tokptr)
 		exit_with_err();
 	}
 	return rc;
-}
-
-static int token_cache_que(TOKEN *tokptr)
-{
-	return(a_token_cache_que(token_cache,tokptr));
 }
 
 int a_token_cache_get(char *the_cache, int num, TOKEN *tokptr)
@@ -1260,6 +1296,19 @@ int eq_token(TOKEN *tokptr, int the_type, const char *the_data)
  	return( 0 == strcmp(tokptr->data, the_data) );
 }
 
+int eq_token_literal(TOKEN *tokptr, const char *the_data_unquoted)
+{
+	unsigned int len = strlen(the_data_unquoted);
+
+	if (!tokptr) return(0);
+
+	if (tokptr->type != LITERAL) return(0);
+	
+ 	return( len+2 == strlen(tokptr->data) &&
+		0 == memcmp(&tokptr->data[1], the_data_unquoted, len) );
+}
+
+
 TOKEN *edit_token(TOKEN *tokptr, const char *the_data)
 {
 	if (tokptr->data) wfree(tokptr->data);
@@ -1400,6 +1449,24 @@ char *token_type_mess(TOKEN *tokptr)
 /*
 **	History:
 **	$Log: tokenize.c,v $
+**	Revision 1.17  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.16  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.15  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.14  2002/08/13 18:11:10  gsl
+**	Fix missing CONTINUATION
+**	
+**	Revision 1.13  2002/08/12 21:19:20  gsl
+**	Warn if missing CONTINUATION char
+**	
+**	Revision 1.12  2002/08/12 20:13:51  gsl
+**	quotes and literals
+**	
 **	Revision 1.11  2001/10/18 15:12:51  gsl
 **	Change to treat a blank line as a COMMENT token
 **	

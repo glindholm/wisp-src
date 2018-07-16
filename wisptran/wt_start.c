@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /* Routines to process the START statements.										*/
 
@@ -32,15 +45,13 @@ static char rcsid[]="$Id:$";
 **			the same as data-name-1 but can be any data item that starts at the same byte location
 **			as the active key (data-name-1 or primary).  This data-name-2 is not allowed in ANSI COBOL.
 **			To translate the KEY clause we assume that data-name-1 == data-name-2 and delete data-name-1
-**			if it was found.  On VAX we add the "REGARDLESS OF LOCK" clause.  Also add "CONTINUE" to 
+**			if it was found.   Also add "CONTINUE" to 
 **			the INVALID KEY clause if followed by a period.
 **
 **			WCB:	START file-name-1 [KEY [data-name-1] {IS = ...} data-name-2] 
 **
-**			COB:	MOVE "ST" TO WISP-DECLARATIVES-STATUS
+**			COB:	MOVE "Start" TO WISP-LASTFILEOP
 **				START file-name-1 [KEY {IS = ...} data-name-1]
-**
-**			VAX:	START file-name-1 [KEY {IS = ...} data-name-1] REGARDLESS OF LOCK
 **
 **	Arguments:	
 **	the_statement	The START statement
@@ -58,7 +69,7 @@ static char rcsid[]="$Id:$";
 NODE parse_start(NODE the_statement, NODE the_sentence)
 {
 	NODE	curr_node, verb_node, file_node;
-	int	col,fnum;
+	int	col;
 	NODE 	data_name_1_node = NULL;
 	NODE 	data_name_2_node = NULL;
 
@@ -97,19 +108,6 @@ NODE parse_start(NODE the_statement, NODE the_sentence)
 		edit_token(file_node->token,"");
 		tput_statement(col,the_statement);
 		return free_statement(the_statement);
-	}
-
-	if (vax_cobol)
-	{
-		fnum = file_index(token_data(file_node->token));
-
-		if (fnum == -1)								/* no file matched, error		*/
-		{
-			write_log("WISP",'F',"STARTFNF",
-				  "Error -- File %s, referenced by START statement but not Declared.",
-				  token_data(file_node->token));
-			exit_wisp(EXIT_WITH_ERR);
-		}
 	}
 
 	if (eq_token(curr_node->token,KEYWORD,"KEY"))
@@ -177,16 +175,15 @@ NODE parse_start(NODE the_statement, NODE the_sentence)
 		data_name_1_node = free_statement(data_name_1_node);
 	}
 
-	tput_line_at(col,"MOVE \"ST\" TO WISP-DECLARATIVES-STATUS");
-	tput_flush();
+	if (opt_nogetlastfileop)
+	{
+		/* tput_line_at(col,"MOVE \"ST\" TO WISP-DECLARATIVES-STATUS"); */
+		tput_line_at(col,"MOVE \"Start\" TO WISP-LASTFILEOP");
+		tput_flush();
+	}
 
 	tput_statement(col,the_statement);
 	the_statement = free_statement(the_statement);
-
-	if (vax_cobol && !(prog_ftypes[fnum] & AUTOLOCK))
-	{
-		tput_clause(col+4, "REGARDLESS OF LOCK");
-	}
 
 
 	/*
@@ -244,9 +241,26 @@ NODE parse_start(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_start.c,v $
-**	Revision 1.15  1998/03/03 20:16:06  gsl
-**	Changed flush to fixed
+**	Revision 1.20  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
 **	
+**	Revision 1.19  2003/03/06 21:47:10  gsl
+**	Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	
+**	Revision 1.18  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.17  2002/06/20 23:05:31  gsl
+**	remove obsolete code
+**	
+**	Revision 1.16  2002/05/16 21:53:21  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.15  1998-03-03 15:16:06-05  gsl
+**	Changed flush to fixed
+**
 **	Revision 1.14  1998-03-02 13:21:24-05  gsl
 **	Update for cobol-85
 **

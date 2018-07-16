@@ -1,16 +1,29 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
-	cisaminfo:	Returns readfdr info for cisam files.
+	WL_cisaminfo:	Returns readfdr info for cisam files.
 			Also supports Micro Focus 1.3 "FH ISAM" type files.  They look like cisam because they
 			use 2 files "file" and "file.idx".
 */
@@ -88,7 +101,6 @@ static char rcsid[]="$Id:$";
 		block x400. 
 		It is possible that other block sizes are supported.
 */
-
 #if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
 #define _LARGEFILE64_SOURCE
 #define USE_FILE64
@@ -102,6 +114,9 @@ static char rcsid[]="$Id:$";
 
 #ifdef WIN32
 #include <io.h>
+#endif
+#ifdef unix
+#include <unistd.h>
 #endif
 
 #ifndef O_BINARY
@@ -121,6 +136,8 @@ static char rcsid[]="$Id:$";
 #include "werrlog.h"
 #include "wmalloc.h"
 #include "paths.h"
+#include "vssubs.h"
+#include "wperson.h"
 
 #define CISAM_ROOT_BLOCKSIZE_S 		6
 #define CISAM_ROOT_NUM_KEYS_S 		8
@@ -158,7 +175,7 @@ static	int4	chars_to_int( unsigned char *cp, int sz );			/* Convert string from 
 
 static int cisamRC(const char* path, int4* cnt);				/* Return the record count for a cisam file.	*/
 
-int4 cisaminfo(				/* CISAM file system interface				*/
+int4 WL_cisaminfo(				/* CISAM file system interface				*/
 		const char *path,	/* File path						*/
 		const char *code,	/* Function code					*/
 		void	*raw_field)	/* Return info						*/
@@ -182,12 +199,13 @@ int4 cisaminfo(				/* CISAM file system interface				*/
 	if (fexists(path_idx))
 	{
 		is_idx = 1;						/* Has .idx file					*/
-		f = open( path_idx, O_RDONLY | O_BINARY | O_LARGEFILE );/* Open the .idx file					*/
+		/* Open the .idx file	*/
+		f = open( path_idx, O_RDONLY | O_BINARY | O_LARGEFILE);		
 	}
 	else
 	{
 		is_idx = 0;
-		f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE );	/* Open the file					*/
+		f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE);
 	}
 
 	if ( f == -1 )
@@ -439,7 +457,7 @@ static int cisamRC(const char* path, int4* cnt)			/* Return the record count for
 		 *	Find the next "Free List" index block
 		 */
 		pos = (nDataFreeList-1)*blocksize;
-		if (rc = fseek(fp,pos,0))
+		if ((rc = fseek(fp,pos,0)))
 		{
 			fclose(fp);
 			return( READFDR_RC_44_IO_ERROR );
@@ -501,7 +519,7 @@ static	int4	chars_to_int( unsigned char *cp, int sz )		/* Convert string from ci
 	return( val );							/* val holds the converted value of the characters.	*/
 }
 
-int unloadcisam(const char *inname, const char *outname, int4 recsize)
+int WL_unloadcisam(const char *inname, const char *outname, int4 recsize)
 {
 	FILE	*fpin, *fpout;
 	unsigned char	*buff;
@@ -532,7 +550,7 @@ int unloadcisam(const char *inname, const char *outname, int4 recsize)
 		return(-1);
 	}
 
-	buff = (unsigned char *)wmalloc((size_t)recsize+2);
+	buff = (unsigned char *)wisp_malloc((size_t)recsize+2);
 		
 	for(;;)
 	{
@@ -573,9 +591,10 @@ int unloadcisam(const char *inname, const char *outname, int4 recsize)
 }
 
 #ifdef WIN32
-int unloadfhisam(const char *inname, const char *outname, int4 recsize)
+int WL_unloadfhisam(const char *inname, const char *outname, int4 recsize)
 {
-	werrlog(102, "(unloadfhism) Not Implemented",0,0,0,0,0,0,0);
+	WL_werrlog_error(WERRCODE(104),"UNLOAD", "NOTSUPPORTED", 
+		"(unloadfhism) Not Implemented");
 	return 1;
 }
 #endif /* WIN32 */
@@ -591,14 +610,14 @@ static int unloadfhisam_fhconvert(const char *inname, const char *outname, int4 
 	char	indexversion[3];
 	char	recordtype;
 
-	if ( 0 != cisaminfo(inname, "IV", indexversion))
+	if ( 0 != WL_cisaminfo(inname, "IV", indexversion))
 	{
 		wtrace("UNLOAD","FAILED", "Unable to get Index Version for file=[%s]", inname);
 		return 1;
 	}
 	indexversion[2] = '\0';
 
-	if ( 0 != cisaminfo(inname, "RT", &recordtype))
+	if ( 0 != WL_cisaminfo(inname, "RT", &recordtype))
 	{
 		wtrace("UNLOAD","FAILED", "Unable to get Record Type for file=[%s]", inname);
 		return 1;
@@ -654,18 +673,18 @@ static int unloadfhisam_fhconvert(const char *inname, const char *outname, int4 
 
 	sprintf(cmd,"echo '%s' | fhconvert -e -c - ",parms);
 
-	unlink(outname);		/* Delete old output file */
+	wisp_unlink(outname);		/* Delete old output file */
 
-	run_unixcommand_silent(cmd);
+	WL_run_unixcommand_silent(cmd);
 
 	/* Delete temp .con files that fhconvert creates */
 	strcpy(buff,inname);
 	strcat(buff,".con");
-	unlink(buff);
+	wisp_unlink(buff);
 
 	strcpy(buff,outname);
 	strcat(buff,".con");
-	unlink(buff);
+	wisp_unlink(buff);
 
 	if (fexists(outname))
 	{
@@ -684,7 +703,7 @@ static int unloadfhisam_rebuild(const char *inname, const char *outname, int4 re
 	char	*intype;
 	char	indexversion[3];
 
-	if ( 0 != cisaminfo(inname, "IV", &indexversion))
+	if ( 0 != WL_cisaminfo(inname, "IV", &indexversion))
 	{
 		wtrace("UNLOAD","FAILED", "Unable to get Index Version for file=[%s]", inname);
 		return 1;
@@ -715,13 +734,15 @@ static int unloadfhisam_rebuild(const char *inname, const char *outname, int4 re
 
 	/*
 	**	rebuild {infile},{outfile} -o:{ind},seq -c:d0 -r:f{recsize}
+	**
+	**	Note: quote the file names as they may contain special characters (like '$')
 	*/
 	sprintf(cmd,"rebuild '%s,%s' -o:%s,seq -c:d0 -r:f%d ",
 		inname, outname, intype, recsize);
 
-	unlink(outname);		/* Delete old output file */
+	wisp_unlink(outname);		/* Delete old output file */
 
-	run_unixcommand_silent(cmd);
+	WL_run_unixcommand_silent(cmd);
 
 	if (fexists(outname))
 	{
@@ -734,7 +755,7 @@ static int unloadfhisam_rebuild(const char *inname, const char *outname, int4 re
 	}
 }
 
-int unloadfhisam(const char *inname, const char *outname, int4 recsize)
+int WL_unloadfhisam(const char *inname, const char *outname, int4 recsize)
 {
 #define UNLOAD_NOTSET		-1
 #define UNLOAD_MISSING		-2
@@ -745,12 +766,12 @@ int unloadfhisam(const char *inname, const char *outname, int4 recsize)
 	if (UNLOAD_NOTSET == unload_method) /* First time */
 	{
 		char buff[256];
-	  	if (!get_wisp_option("UNLOADREBUILD") &&
-		    0 == whichenvpath("fhconvert", buff))
+	  	if (!WL_get_wisp_option("UNLOADREBUILD") &&
+		    0 == WL_whichenvpath("fhconvert", buff))
 		{
 			unload_method = UNLOAD_FHCONVERT;
 		}
-		else if (0 == whichenvpath("rebuild", buff))
+		else if (0 == WL_whichenvpath("rebuild", buff))
 		{
 			unload_method = UNLOAD_REBUILD;
 		}
@@ -770,7 +791,8 @@ int unloadfhisam(const char *inname, const char *outname, int4 recsize)
 	}
 	else
 	{
-		werrlog(104,"%%UNLOAD-E-MISSING FHISAM Unload method missing (fhconvert or rebuild)",0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(104),"UNLOAD", "MISSING", 
+			"FHISAM Unload method missing (fhconvert or rebuild)");
 		return 1;
 	}
 }
@@ -780,19 +802,55 @@ int unloadfhisam(const char *inname, const char *outname, int4 recsize)
 /*
 **	History:
 **	$Log: wfcisam.c,v $
-**	Revision 1.21.2.1.2.2  2002/11/19 16:24:04  gsl
+**	Revision 1.36  2003/02/04 16:02:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.35  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.34  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.33  2003/01/29 21:50:08  gsl
+**	Switch to use vssubs.h
+**	
+**	Revision 1.32  2002/12/11 17:03:09  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.31  2002/12/09 19:15:36  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.30  2002/11/19 16:28:43  gsl
 **	Define O_LARGEFILE for ALPHA and SCO
 **	
-**	Revision 1.21.2.1.2.1  2002/10/09 21:03:04  gsl
-**	Huge file support
+**	Revision 1.29  2002/10/08 17:06:02  gsl
+**	Define _LARGEFILE64_SOURCE to define O_LARGEFILE on LINUX
 **	
-**	Revision 1.21.2.1  2002/08/19 15:31:04  gsl
-**	4403a
+**	Revision 1.28  2002/10/07 19:15:21  gsl
+**	Add O_LARGEFILE to open() options
 **	
-**	Revision 1.21  2001-11-12 17:42:19-05  gsl
+**	Revision 1.27  2002/10/07 19:06:49  gsl
+**	Add O_LARGEFILE to open() to support HUGE files
+**	
+**	Revision 1.26  2002/07/22 20:07:32  gsl
+**	Unix commands put filenames in 'quotes' because they can contain $
+**	
+**	Revision 1.25  2002/07/12 19:10:18  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.24  2002/07/11 14:33:57  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.23  2002/07/10 21:05:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.22  2002/07/02 21:15:32  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.21  2001/11/12 22:42:19  gsl
 **	OPEN file in O_BINARY mode
 **	(affects WIN32 only)
-**
+**	
 **	Revision 1.20  2001-11-08 12:05:51-05  gsl
 **	Add missing include
 **
@@ -800,7 +858,7 @@ int unloadfhisam(const char *inname, const char *outname, int4 recsize)
 **	fhconvert checks for compressed files and fails.
 **
 **	Revision 1.18  2001-10-26 16:15:57-04  gsl
-**	Add cisaminfo("IV") to get the index version.
+**	Add WL_cisaminfo("IV") to get the index version.
 **	Moved unloadcisam() and unloadfhisam() from wispsort.c
 **	Write unloadfhisam_rebuild()
 **

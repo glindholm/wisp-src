@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 	WACCEPT		This routine builds an ACCEPT getparm.
@@ -16,6 +29,7 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include "idsistd.h"
 #include "wisplib.h"
+#include "vssubs.h"
 
 static void nullterm(char* str, int len);
 
@@ -23,19 +37,19 @@ void WACCEPT(argcnt,item1,item2,item3,item4,item5,item6,item7,item8,item9,item10
 int4	*argcnt;
 char	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*item11,*item12,*item13,*item14,*item15,*item16;
 {
-	struct argst { char *ptrs[500]; } args;
+	char* gp_args[GETPARM_MAX_ARGS];
 	int4 	cnt;
 	char	tags[16][8];
 	char	*items[16];
 	int	i;
 	char	pfkeyrecvr[1];
 	int4 	N[256];
-	int4	pfkey, two;
+	int4	pfkey;
 
 	for (i=0; i<256; ++i) 
 	{
 		N[i]=i; 
-		wswap(&N[i]);
+		WL_wswap(&N[i]);
 	}
 
 	items[0] = item1;
@@ -62,38 +76,36 @@ char	*item1,*item2,*item3,*item4,*item5,*item6,*item7,*item8,*item9,*item10,*ite
 	}
 
 	cnt = 0;
-	args.ptrs[cnt++] = (char *) "I ";
-	args.ptrs[cnt++] = (char *) "R";
-	args.ptrs[cnt++] = (char *) "ACCEPT  ";
-	args.ptrs[cnt++] = (char *) pfkeyrecvr;
-	args.ptrs[cnt++] = (char *) "0001";
-	args.ptrs[cnt++] = (char *) "WISP  ";
-	args.ptrs[cnt++] = (char *) &N[1];
+	gp_args[cnt++] = (char *) "I ";
+	gp_args[cnt++] = (char *) "R";
+	gp_args[cnt++] = (char *) "ACCEPT  ";
+	gp_args[cnt++] = (char *) pfkeyrecvr;
+	gp_args[cnt++] = (char *) "0001";
+	gp_args[cnt++] = (char *) "WISP  ";
+	gp_args[cnt++] = (char *) &N[1];
 				   /*123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 */
-	args.ptrs[cnt++] = (char *) "                               Enter ACCEPT data                                ";
-	args.ptrs[cnt++] = (char *) &N[79];
+	gp_args[cnt++] = (char *) "                               Enter ACCEPT data                                ";
+	gp_args[cnt++] = (char *) &N[79];
 
 	for(i=0; i<*argcnt; i++)
 	{
-		args.ptrs[cnt++] = (char *) "K";
-		args.ptrs[cnt++] = (char *) tags[i];
-		args.ptrs[cnt++] = (char *) items[i];
-		args.ptrs[cnt++] = (char *) &N[68];
-		args.ptrs[cnt++] = (char *) "A";
-		args.ptrs[cnt++] = (char *) &N[9+i];
-		args.ptrs[cnt++] = (char *) "A";
-		args.ptrs[cnt++] = (char *) &N[2];
-		args.ptrs[cnt++] = (char *) "C";
+		gp_args[cnt++] = (char *) "K";
+		gp_args[cnt++] = (char *) tags[i];
+		gp_args[cnt++] = (char *) items[i];
+		gp_args[cnt++] = (char *) &N[68];
+		gp_args[cnt++] = (char *) "A";
+		gp_args[cnt++] = (char *) &N[9+i];
+		gp_args[cnt++] = (char *) "A";
+		gp_args[cnt++] = (char *) &N[2];
+		gp_args[cnt++] = (char *) "C";
 	}
 
-	args.ptrs[cnt++] = (char *) "E";
-	args.ptrs[cnt++] = (char *) "P";
-	args.ptrs[cnt++] = (char *) &pfkey;
+	gp_args[cnt++] = (char *) "E";
+	gp_args[cnt++] = (char *) "P";
+	gp_args[cnt++] = (char *) &pfkey;
 
-	two = 2;
 	pfkey = 0;
-	wvaset(&two);
-	GETPARM(&args,&cnt);								/* Use the new method			*/
+	GETPARM2(gp_args,cnt);								/* Use the new method			*/
 
 	for(i=0; i<*argcnt; i++)
 	{
@@ -119,6 +131,18 @@ static void nullterm(char* str, int len)
 /*
 **	History:
 **	$Log: waccept.c,v $
+**	Revision 1.12  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.11  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.10  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.9  2002/07/12 17:01:02  gsl
+**	Make WL_ global unique changes
+**	
 **	Revision 1.8  1996/08/19 22:33:06  gsl
 **	drcs update
 **	

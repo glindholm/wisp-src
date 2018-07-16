@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -18,7 +39,7 @@ static char rcsid[]="$Id:$";
 
 /*						Fast memory to memory integer copy.						*/
 
-int imemcpy(dst,src,count)								/* Fast memory to memory byte copy.	*/
+int VL_imemcpy(dst,src,count)								/* Fast memory to memory byte copy.	*/
 	register int *dst,*src;								/* Pointers to src and dest locatiions.	*/
 	register int count;								/* Count of how many bytes to copy.	*/
 {
@@ -29,7 +50,7 @@ int imemcpy(dst,src,count)								/* Fast memory to memory byte copy.	*/
 
 /*						Fast integer memory fill routine.						*/
 
-int imemset(dst,src,count)								/* Dest gets count bytes of src.	*/
+int VL_imemset(dst,src,count)								/* Dest gets count bytes of src.	*/
 	register int *dst,src;								/* Pointer to dest location, and src.	*/
 	register int count;								/* Count of how many bytes to fill.	*/
 {
@@ -39,6 +60,12 @@ int imemset(dst,src,count)								/* Dest gets count bytes of src.	*/
 /*
 **	History:
 **	$Log: vsystem.c,v $
+**	Revision 1.11  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.10  2002/07/15 17:10:07  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.9  1996/10/11 22:16:21  gsl
 **	drcs update
 **	

@@ -151,7 +151,7 @@ void process::prepare_for_link()
 	}
 }
 
-extern "C" int wgetpgrp(void);
+extern "C" int WL_wgetpgrp(void);
 
 void process::load_from_env()
 {
@@ -165,7 +165,7 @@ void process::load_from_env()
 		rc = sscanf(ptr,"%d",&gid);
 		if (rc != 1 || gid < 1 ) gid = -1;
 
-		if (gid != wgetpgrp())
+		if (gid != WL_wgetpgrp())
 		{
 			/*
 			**	RESET == true
@@ -199,7 +199,7 @@ void process::load_from_env()
 
 	if (-1 == gid)
 	{
-		sprintf(temp,"%s=%d",WPROC_TOPGID_ENV,wgetpgrp());
+		sprintf(temp,"%s=%d",WPROC_TOPGID_ENV,WL_wgetpgrp());
 		putenv(dup_string(temp));
 	}
 
@@ -229,6 +229,9 @@ void process::load_from_env()
 /*
 **	History:
 **	$Log: process.cpp,v $
+**	Revision 1.14  2002/07/10 21:06:28  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.13  1998/08/31 19:50:36  gsl
 **	drcs update
 **	
@@ -269,6 +272,9 @@ void process::load_from_env()
 //
 //	History:
 //	$Log: process.cpp,v $
+//	Revision 1.14  2002/07/10 21:06:28  gsl
+//	Fix globals WL_ to make unique
+//	
 //	Revision 1.13  1998/08/31 19:50:36  gsl
 //	drcs update
 //	

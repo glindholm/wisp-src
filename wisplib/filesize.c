@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*                                                                      */
-			/*              WISP - Wang Interchange Source Pre-processor            */
-			/*                     Copyright (c) 1988, 1989, 1990, 1991             */
-			/*       An unpublished work of International Digital Scientific Inc.   */
-			/*                          All rights reserved.                        */
-			/*                                                                      */
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **      filesize.c
@@ -48,22 +59,27 @@ long WL_filesize(const char* path)     /* Return the length of the file in bytes
 
 	if ( 0 != WL_stat_size_long(path, &stat_size) )
 	{
-		char errmsg[128];
-		sprintf(errmsg, "%%filesize-E-stat stat() failed path=[%s] errno=[%d] msg=[%s]", 
+		WL_werrlog_error(WERRCODE(65300),"FILESIZE", "STAT", 
+			"stat() failed path=[%s] errno=[%d] msg=[%s]", 
 			path, errno, WL_strerror(errno));
-		werrlog(104, errmsg, 0,0,0,0,0,0,0,0);
 		return( -1 );
 	}
 
-	wtrace("filesize","SIZE","path=[%s] size=[%ld]", path, stat_size);
+	WL_wtrace("FILESIZE","SIZE","path=[%s] size=[%ld]", path, stat_size);
 	return( stat_size );
 }
 
 /*
 **	History:
 **	$Log: filesize.c,v $
-**	Revision 1.10.2.1  2002/10/09 21:17:33  gsl
-**	Huge file support
+**	Revision 1.18  2003/01/31 17:33:56  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.17  2002/12/10 17:09:20  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.16  2002/12/09 19:15:31  gsl
+**	Change to use WL_werrlog_error()
 **	
 **	Revision 1.15  2002/10/04 21:00:55  gsl
 **	Change to use WL_stat_xxx() routines

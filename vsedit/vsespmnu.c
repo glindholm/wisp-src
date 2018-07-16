@@ -1,19 +1,35 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include "idsisubs.h"
 #include "paths.h"
 #include "vwang.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "wfiledis.h"
 
 #include "vseglb.h"
@@ -27,15 +43,14 @@ static char rcsid[]="$Id:$";
 #include "vsebasic.h"
 
 
-static char spc_scr[1924];
+static unsigned char spc_scr[1924];
 static char spc_pfs[65];
 static char set_pfs[]="010203X";
-static char spc_func[]={03};
-static char spc_lines[]={24};
+static unsigned char spc_func[]={03};
+static unsigned char spc_lines[]={24};
 static char spc_pfcode[3];
 static char set_pfcode[3];
-static char spc_status[3];
-static char input_message[81];
+static unsigned char spc_status[3];
 
 static VSESCR_FLDS(spc_flds) = {
 {LEN(0)	ROW(1)	COL(2)	VALUE(VSE_COPYRIGHT)},
@@ -142,8 +157,6 @@ static void vse_set_command_menu(void)
 
 static void init_special_menu(void)
 {
-	extern char ed_oa[];
-	
 	vse_save_row=ed_oa[OA_CURSOR_ROW];
 	vse_save_col=ed_oa[OA_COL];
 
@@ -163,7 +176,6 @@ static void init_special_menu(void)
 		vsescr(spc_renumber_flds,spc_scr);
 		strcat(spc_pfs,"07");
 	}
-#if defined(unix) || defined(MSDOS) || defined(VMS)
 	if (text_first)
 	{
 		if (0==strcmp(lang_ext(),"wcb"))
@@ -192,15 +204,12 @@ static void init_special_menu(void)
 		vsescr(spc_listing_flds,spc_scr);
 		strcat(spc_pfs,"12");
 	}
-#endif /* unix || MSDOS || VMS */
 
 	strcat(spc_pfs,"16X");
 }
 
 static void init_set_command_menu(void)
 {
-	extern char ed_oa[];
-	
 	vse_save_row=ed_oa[OA_CURSOR_ROW];
 	vse_save_col=ed_oa[OA_COL];
 
@@ -317,7 +326,7 @@ static void vse_set_dispatch(void)
 
 static int vse_create_file(void)
 {
-	char 	write_func=1;
+	unsigned char 	write_func=1;
 	int4	cnt,start,end;
 
 	char file[VSE_FILENAME_LEN+1];
@@ -344,7 +353,7 @@ static int vse_create_file(void)
 		return -1;
 	}
 
-	sprintf(vse_stat_message,"File %s created with %7ld records",sysname,cnt);
+	sprintf(vse_stat_message,"File %s created with %7ld records",sysname,(long)cnt);
 
 	if (vse_new_file)
 	{
@@ -368,7 +377,7 @@ static int vse_create_file(void)
 
 static int vse_replace_file(void)
 {
-	char write_func=1;
+	unsigned char write_func=1;
 	int4 cnt,start,end;
 	char sysname[VSE_SYSNAME_LEN+1];
 
@@ -427,7 +436,7 @@ static int vse_replace_file(void)
 
 	vse_file_changed = 0;
 
-	sprintf(vse_stat_message,"File %s written with %7ld records",sysname,cnt);
+	sprintf(vse_stat_message,"File %s written with %7ld records",sysname,(long)cnt);
 
 	return 0;
 }
@@ -594,7 +603,7 @@ static int vse_utilities(void)
 */
 static int vse_run_program(char file[8], char lib[8], char vol[6], char *message)
 {
-	int4	compcode, returncode, templong;
+	int4	compcode, returncode;
 
 
 	compcode = 0;								/* Initialize the comp & return codes	*/
@@ -605,33 +614,27 @@ static int vse_run_program(char file[8], char lib[8], char vol[6], char *message
 		/*
 		**	If volume or library specified then ONLY use that
 		*/
-		templong = 6;
-		wvaset(&templong);						/* Set the arg count to 4		*/
-
+		WL_set_va_count(6);						/* Set the arg count to 4		*/
 		LINK2(file,8,"P",1,lib,8,vol,6,&compcode,4,&returncode,4);	/* Do the LINK				*/
 
-		wswap(&compcode);						/* Un-swap the comp & return codes	*/
-		wswap(&returncode);
+		WL_wswap(&compcode);						/* Un-swap the comp & return codes	*/
+		WL_wswap(&returncode);
 	}
 	else
 	{
-		templong = 4;
-		wvaset(&templong);						/* Set the arg count to 4		*/
-
+		WL_set_va_count(4);						/* Set the arg count to 4		*/
 		LINK2(file,8," ",1,&compcode,4,&returncode,4);			/* Do the LINK				*/
 
-		wswap(&compcode);						/* Un-swap the comp & return codes	*/
-		wswap(&returncode);
+		WL_wswap(&compcode);						/* Un-swap the comp & return codes	*/
+		WL_wswap(&returncode);
 
 		if ( 8 == compcode && 20 == returncode )				/* If not found ...			*/
 		{
-			templong = 4;
-			wvaset(&templong);						/* Set the arg count to 4		*/
-	
+			WL_set_va_count(4);						/* Set the arg count to 4		*/
 			LINK2(file,8,"S",1,&compcode,4,&returncode,4);			/* Do the LINK				*/
 
-			wswap(&compcode);						/* Un-swap the comp & return codes	*/
-			wswap(&returncode);
+			WL_wswap(&compcode);						/* Un-swap the comp & return codes	*/
+			WL_wswap(&returncode);
 		}
 	}
 
@@ -657,7 +660,7 @@ static int vse_run_program(char file[8], char lib[8], char vol[6], char *message
 	}
 	else if ( 16 == compcode)
 	{
-		sprintf(message, "\204Program %8.8s was cancelled",file,(long)returncode);
+		sprintf(message, "\204Program %8.8s was cancelled",file);
 	}
 	else
 	{
@@ -703,7 +706,7 @@ static int vse_compile_command(void)
 	static	char	save_lang[20] = "xxx";
 	char	cmd[1024];
 	int	rc, err;
-	char 	write_func=1;
+	unsigned char 	write_func=1;
 
 	static VSESCR_FLDS(vse_compile_flds) = {
 		{LEN(0)	ROW(1)	COL(2)	VALUE(VSE_COPYRIGHT)},
@@ -741,14 +744,14 @@ static int vse_compile_command(void)
 	CLEAR_STRING(line2_field);
 	memcpy(line2_field,vse_sysname,strlen(vse_sysname));
 
-#if defined(MSDOS) || defined(WINNT)
+#ifdef WIN32 
 	{
 		char	*ext_ptr;
 
 		/*
 		**	For MSDOS we pass the extension as a separate arg.
 		*/
-		if (ext_ptr = osd_ext(vse_sysname))
+		if (ext_ptr = WL_osd_ext(vse_sysname))
 		{
 			line2_field[ ext_ptr - vse_sysname - 1 ] = ' ';
 		}
@@ -776,20 +779,14 @@ static int vse_compile_command(void)
 			memcpy(line1_field,"wac.sh",6);
 			memcpy(line3_field,"../obj",6);
 #endif
-#ifdef MSFS
+#ifdef WIN32
 			memcpy(line1_field,"WAC.BAT",7);
 			memcpy(line3_field,"..\\obj",6);
-#endif
-#ifdef VMS
-			memcpy(line1_field,"@wac.com",8);
-			memcpy(line3_field,"[-.obj]",7);
 #endif
 		}
 		if (0==strcmp(lang_ext(),"wps"))
 		{
-#if defined(unix) || defined(WINNT)
 			memcpy(line1_field,"wproc -s",8);
-#endif
 		}
 	}
 
@@ -853,18 +850,7 @@ static int vse_compile_command(void)
 
 			rc = vse_run_command_with_log(cmd,errfile_field);
 
-#ifdef VMS
-			if (rc == 1)
-			{
-				strcpy(vse_stat_message,"Compilation finished");
-			}
-			else
-			{
-				strcpy(vse_stat_message,"Compilation finished with errors");
-			}
-#else
 			sprintf(vse_stat_message,"Compilation finished with Exit Code = %d",rc);
-#endif
 
 			set_errfile_active(1);
 
@@ -904,13 +890,13 @@ static int vse_run_command_with_log(char *cmd, char *logfile)
 	rc = 0;
 
 	sprintf(fullcmd,"%s >%s 2>&1",cmd,logfile);
-	rc = wsystem(fullcmd);
+	rc = WL_wsystem(fullcmd);
 	WISPSYNC();
 	vwang_stty_sync();
 	return rc;
 }
 #endif
-#if defined(MSDOS) || defined(WINNT)
+#if defined(WIN32)
 static int vse_run_command_with_log(char *cmd, char *logfile)
 {
 	int	rc;
@@ -919,38 +905,9 @@ static int vse_run_command_with_log(char *cmd, char *logfile)
 	rc = 0;
 
 	sprintf(fullcmd,"%s >%s",cmd,logfile);
-	rc = wsystem(fullcmd);
+	rc = WL_wsystem(fullcmd);
 	WISPSYNC();
 	return rc;
-}
-#endif
-#ifdef VMS
-static int vse_run_command_with_log(char *cmd, char *logfile)
-{
-	char 	tempdcl[256];
-	FILE 	*stream;
-	char 	invoker[80];
-	int 	spawn_action;
-	int 	vms_return, vms_status, spawn2();
-
-	/*
-	**	Create a 2 line DCL script that redirects output to the logfile then
-	**	runs the command.
-	*/
-	sprintf(tempdcl,"SYS$LOGIN:%s.com",tmpnam(NULL));
-	stream = fopen(tempdcl, "w");
-	fprintf (stream, "$ define sys$output %s\n", logfile);
-	fprintf (stream, "$ %s\n", cmd);
-	fclose (stream);
-
-	sprintf (invoker, "@%s", tempdcl);
-
-	spawn_action = 4;  /* SPAWN_CMD_QUIET */
-	vms_return = spawn2( spawn_action, invoker, "", &vms_status );
-	WISPSYNC();
-
-	remove(tempdcl); 
-	return vms_status;
 }
 #endif
 
@@ -1102,8 +1059,35 @@ static int vse_display(char *filename)
 /*
 **	History:
 **	$Log: vsespmnu.c,v $
-**	Revision 1.16.2.1  2002/11/12 16:00:17  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.26  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.25  2003/02/05 21:47:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.24  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.23  2002/08/01 15:57:50  gsl
+**	type warnings
+**	
+**	Revision 1.22  2002/08/01 15:31:11  gsl
+**	type warnings
+**	
+**	Revision 1.21  2002/07/18 21:04:30  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.20  2002/07/12 17:17:08  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.19  2002/07/11 14:33:59  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.18  2002/07/10 21:06:39  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.17  2002/06/26 01:42:50  gsl
+**	Remove VMS code
 **	
 **	Revision 1.16  1998/10/15 14:07:44  gsl
 **	fix warning

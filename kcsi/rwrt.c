@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*-----
 This routine receives the first record ready to be formatted for printing.
 In order to preserve the WANG GETPARM etc logic, the actual printing is done
@@ -35,7 +49,6 @@ Mods:
 #define	PRINT_LEN	132
 #define	PRINT_MAX	(PRINT_LEN + 1)
 
-static char sccsid[]="@(#)rwrt.c	1.20 12/5/93";
 /*----
 Lots of space for all the record types.
 -------*/
@@ -49,11 +62,11 @@ static char *detail[]={detail_1,detail_2,detail_3};
 
 static char run_line[PRINT_MAX];
 static char blank_line[PRINT_MAX];
-static char title_line[PRINT_MAX];
+/* static char title_line[PRINT_MAX]; */
 static char break_1[PRINT_MAX],break_2[PRINT_MAX],break_3[PRINT_MAX];
 static char *break_line[]={break_1,break_2,break_3};
 
-static char total_line[PRINT_MAX] = "    Total value of Fields";
+/* static char total_line[PRINT_MAX] = "    Total value of Fields"; */
 static char max_line[PRINT_MAX]   = "    Maximum value of Fields";
 static char min_line[PRINT_MAX]   = "    Minimum value of Fields";
 static char avg_line[PRINT_MAX]   = "    Average value of Fields";
@@ -70,16 +83,6 @@ static int report_width;
 static long recs[6];		/*for each level*/
 static long trecs;              /* total recs */
 static int last_record;
-
-/*----
-Codes for passing to the COBOL printer
-------*/
-static char open_code[] = "OO";
-static char ff_code[] = "FF";
-static char wr_code[] = "WW";
-static char close_code[] = "CC";
-static char disp_code[] = "DD";
-static char keep_code[] = "KK"; 		/*   29-Mar-1990*/
 
 
 /*----
@@ -122,7 +125,7 @@ char **l;
 		}
 	TRACE_OUT("clear_lines");
 }
-static cmpfield(d,rfl)
+static int cmpfield(d,rfl)
 char *d;
 RPT_RFL *rfl;
 {
@@ -215,7 +218,7 @@ static void check_for_breaks()
 	TRACE_IN("check_for_breaks");
 	for(i=4, rcb = &rpt_rcb[4], breaking = 0; i >= 0; --i, --rcb)
 		{
-		if(rfl = rcb->_rfl)
+		if((rfl = rcb->_rfl) != NULL)
 			{
 /* If the count Option only is specified then all breaking is suppressed*/
 			if(rpt_record_count == 1)
@@ -262,7 +265,7 @@ static void set_new_breaks()
 	TRACE_IN("set_new_breaks");
 	for(idx = 4, rcb = &rpt_rcb[4], breaking = 0; idx >= 0; --idx, --rcb)
 		{
-		if(rfl = rcb->_rfl)
+		if((rfl = rcb->_rfl) != NULL)
 			{
 			cpyfield(rcb->_brk_val,rfl);
 			}
@@ -319,7 +322,7 @@ int line;
 	TRACE_IN("format_one_line");
 	seq = 0;
 
-	while(rfl = next_rfl(line+1,&seq))
+	while((rfl = next_rfl(line+1,&seq)) != NULL)
 		{
 		format_one_field(rfl,dtl,seq);
 		}
@@ -414,7 +417,7 @@ static double get_real_value(char* address, int dec, int ddec)
 	return(fl);
 }
 
-static there_is_a_break()
+static int there_is_a_break()
 {
 	int i,rc;
 	RPT_RCB *rcb;
@@ -613,7 +616,7 @@ int i;
 	TRACE_IN("bld_one_legend");
 	column = seq = 0;
 
-	while(rfl = next_rfl(i+1,&seq))
+	while((rfl = next_rfl(i+1,&seq)) != NULL)
 		{
 		if(seq > 97)
 			break;
@@ -796,7 +799,7 @@ char *atitle;
 	
 }
 
-static print_a_line_if(s)
+static int print_a_line_if(s)
 char *s;
 {
 	int rc;
@@ -974,7 +977,7 @@ static void print_lines()
 	TRACE_OUT("print_lines");
 }
 
-static print_one_line_if(s)
+static int print_one_line_if(s)
 char *s;
 {
 	int rc;
@@ -1366,8 +1369,11 @@ void rpt_write(int code)
 /*
 **	History:
 **	$Log: rwrt.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:37  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.11  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/24 15:48:31  gsl
 **	Make globals unique

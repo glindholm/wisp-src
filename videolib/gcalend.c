@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /************************************************************************/
 /*           VIDEO - Video Interactive Development Environment          */
 /*                          Copyright (c) 1987                          */
@@ -8,10 +29,8 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 
-#ifndef VMS     /* unix and MSDOS */
 #include <malloc.h>
 #include <sys/types.h>
-#endif
 
 #ifndef NOSTDLIB
 #include <stdlib.h>
@@ -29,7 +48,7 @@ static char rcsid[]="$Id:$";
 #define SECSINWEEK 604800L /* (7*24*60*60) */
 #define SECSINDAY  86400L  /*   (24*60*60) */
 
-#if defined(_MSC_VER)
+#if defined(WIN32)
 #define MAX_APT 64U
 #else
 #define MAX_APT 256
@@ -41,7 +60,7 @@ static char rcsid[]="$Id:$";
 
 static int row, col, rows, cols;
 static int emode, cmode, umode;
-static unsigned char *save, *save2, *save3;
+static unsigned char *save, *save2;
 static int date, leap;
 static time_t bintime;
 static struct tm *tval;
@@ -76,13 +95,13 @@ static int fdom();
 #define FEB  1
 #define DEC 11
 
-int gcalend()
+int gcalend(void)
 {
 	unsigned int i, j;
 	int k;
 	unsigned char *vsss();
 	int active;
-	FILE *fp, *vopenf();
+	FILE *fp;
 	char *fgets();
 	int last, found, freepage;
 
@@ -100,7 +119,7 @@ int gcalend()
 		initpage(tab+PAGE);
 	}
 
-	if ((fp = vopenf("cal","r")) == NULL) newcal = TRUE;
+	if ((fp = VL_vopenf("cal","r")) == NULL) newcal = TRUE;
 	else
 	{
 		newcal = FALSE;
@@ -124,12 +143,12 @@ int gcalend()
 		fclose(fp);
 	}
 
-	vbuffering_start();
+	VL_vbuffering_start();
 	row = 4;
 	col = 20;
 	rows = 15;
 	cols = 38;
-	vdetpos(0,&row,&col,rows,cols);
+	VL_vdetpos(0,&row,&col,rows,cols);
 	save2 = vsss(row+rows-2,col,2,cols);
 	save = vsss(row,col,rows-2,cols);
 
@@ -174,7 +193,7 @@ int gcalend()
 			else --i;
 
 			if (i < 0) vbell();
-			else if (gcal2(this_date,tab+PAGE)) strcpy(apt[i], this_date);
+			else if (VL_gcal2(this_date,tab+PAGE)) strcpy(apt[i], this_date);
 			else strcpy(apt[i],"               ");
 		}
 
@@ -325,7 +344,7 @@ la1:                            i = col;
 			{
 ra1:                            i = col;
 				col = col + 4;
-				if (col > vscr_wid-cols) col = vscr_wid-cols;
+				if (col > VL_vscr_wid-cols) col = VL_vscr_wid-cols;
 				if (col == (int) i) vbell();
 				else move();
 			}
@@ -367,10 +386,10 @@ ra1:                            i = col;
 
 	vrss(save);
 	vrss(save2);
-	vbuffering_end();
+	VL_vbuffering_end();
 
-	if (newcal) fp = vopenf("cal","w");
-	else fp = vopenf("cal","w");
+	if (newcal) fp = VL_vopenf("cal","w");
+	else fp = VL_vopenf("cal","w");
 
 	if (!fp)
 	{
@@ -401,22 +420,22 @@ static int givehelp()
 	struct video_menu help;
 	int4 key;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"Good Calendar Help - Page 1 - General",0,0);
-	vmenuitem(&help,"",0,0);
-	vmenuitem(&help,"Use TAB, SPACE or arrow keys to select a date.",0,0);
-	vmenuitem(&help,"Use PF1 to move to the next month.",0,0);
-	vmenuitem(&help,"Use PF2 to move to the previous month.",0,0);
-	vmenuitem(&help,"Use PF16 to exit.",0,0);
-	vmenuitem(&help,"Use RETURN or ENTER to open the current date.",0,0);
-	vmenuitem(&help,"Use HOME (FIND) to return to today's date.",0,0);
-	vmenuitem(&help,"The arrow keys will also move the window",0,0);
-	vmenuitem(&help,"    when the cursor is on an outside date. ",0,0);
-	vmenuitem(&help,"",0,0);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"Good Calendar Help - Page 1 - General",0,0);
+	VL_vmenuitem(&help,"",0,0);
+	VL_vmenuitem(&help,"Use TAB, SPACE or arrow keys to select a date.",0,0);
+	VL_vmenuitem(&help,"Use PF1 to move to the next month.",0,0);
+	VL_vmenuitem(&help,"Use PF2 to move to the previous month.",0,0);
+	VL_vmenuitem(&help,"Use PF16 to exit.",0,0);
+	VL_vmenuitem(&help,"Use RETURN or ENTER to open the current date.",0,0);
+	VL_vmenuitem(&help,"Use HOME (FIND) to return to today's date.",0,0);
+	VL_vmenuitem(&help,"The arrow keys will also move the window",0,0);
+	VL_vmenuitem(&help,"    when the cursor is on an outside date. ",0,0);
+	VL_vmenuitem(&help,"",0,0);
 
-	vmenuitem(&help,"Depress any key to exit...",0,0);
+	VL_vmenuitem(&help,"Depress any key to exit...",0,0);
 
-	key = vmenugo(&help);
+	key = VL_vmenugo(&help);
 	vset_cursor_off();
 	return(SUCCESS);
 }
@@ -426,7 +445,7 @@ static int showcalend()
 	register int i, j, k, m;
 	char wstr[156];
 
-	vbuffering_start();
+	VL_vbuffering_start();
 	vset_cursor_off();
 
 	tval = localtime(&bintime);
@@ -439,19 +458,19 @@ static int showcalend()
 	i = row+2;
 	vtext(emode,i++,col,"                                      ");
 	vmove(i++,col);
-	vmode(emode);
+	VL_vmode(emode);
 	vprint("  ");
 	k = 0;
 	j = 0;
 	while (j++ != m) vprint("     ");
 	for (j = m; j < 7; j++)
 	{
-		if (in_use(&wstr[k])) vmode(umode);
+		if (in_use(&wstr[k])) VL_vmode(umode);
 		vputc(' ');
 		vputc(wstr[k++]);
 		vputc(wstr[k++]);
 		vputc(wstr[k++]);
-		vmode(emode);
+		VL_vmode(emode);
 		vputc(' ');
 	}
 	vputc(' ');
@@ -461,16 +480,16 @@ static int showcalend()
 		vtext(emode,i++,col,"                                      ");
 
 		vmove(i++,col);
-		vmode(emode);
+		VL_vmode(emode);
 		vprint("  ");
 		for (j = 0; j < 7; j++)
 		{
-			if (in_use(&wstr[k])) vmode(umode);
+			if (in_use(&wstr[k])) VL_vmode(umode);
 			vputc(' ');
 			vputc(wstr[k++]);
 			vputc(wstr[k++]);
 			vputc(wstr[k++]);
-			vmode(emode);
+			VL_vmode(emode);
 			vputc(' ');
 		}
 		vputc(' ');
@@ -492,9 +511,9 @@ static int showcalend()
 	}
 
 	position(cmode);
-	vmode(CLEAR);
+	VL_vmode(CLEAR);
 	vcharset(DEFAULT);
-	vbuffering_end();
+	VL_vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -598,7 +617,7 @@ static int showdates()
 	register int i, j, k, m;
 	char wstr[156];
 
-	vbuffering_start();
+	VL_vbuffering_start();
 	vset_cursor_off();
 
 	tval = localtime(&bintime);
@@ -608,7 +627,7 @@ static int showdates()
 	outmonth();
 	getnow();
 
-	vmode(emode);
+	VL_vmode(emode);
 	i = row+3;
 	vmove(i++,col+2);
 	k = 0;
@@ -621,12 +640,12 @@ static int showdates()
 
 	for (j = m; j < 7; j++)
 	{
-		if (in_use(&wstr[k])) vmode(umode);
+		if (in_use(&wstr[k])) VL_vmode(umode);
 		vputc(' ');
 		vputc(wstr[k++]);
 		vputc(wstr[k++]);
 		vputc(wstr[k++]);
-		vmode(emode);
+		VL_vmode(emode);
 		vslew(0,1);
 	}
 	i++;
@@ -636,21 +655,21 @@ static int showdates()
 		vmove(i++,col+2);
 		for (j = 0; j < 7; j++)
 		{
-			if (in_use(&wstr[k])) vmode(emode|BOLD);
+			if (in_use(&wstr[k])) VL_vmode(emode|BOLD);
 			vputc(' ');
 			vputc(wstr[k++]);
 			vputc(wstr[k++]);
 			vputc(wstr[k++]);
-			vmode(emode);
+			VL_vmode(emode);
 			vslew(0,1);
 		}
 		i++;
 	}
 
 	position(cmode);
-	vmode(CLEAR);
+	VL_vmode(CLEAR);
 	vcharset(DEFAULT);
-	vbuffering_end();
+	VL_vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -752,6 +771,39 @@ static int in_use(wstr) char *wstr;
 /*
 **	History:
 **	$Log: gcalend.c,v $
+**	Revision 1.23  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.22  2003/06/23 15:28:04  gsl
+**	VL_ global symbols
+**	
+**	Revision 1.21  2003/01/31 20:18:47  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.20  2003/01/31 19:25:57  gsl
+**	Fix copyright header
+**	
+**	Revision 1.19  2002/07/18 21:04:20  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.18  2002/07/17 21:06:00  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2002/07/16 13:40:23  gsl
+**	VL_ globals
+**	
+**	Revision 1.16  2002/07/15 20:56:37  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.15  2002/07/15 20:16:06  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.14  2002/07/15 17:52:53  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/06/26 01:42:49  gsl
+**	Remove VMS code
+**	
 **	Revision 1.12  1998/05/21 15:44:14  gsl
 **	Don't use the fp file handle unless it is valid.
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	WISPSYNC	This is a special wisp COBOL interface to vwang_synch() that is to be inserted into wang cobol
 **			programs to let wisp and video known that the screen has been changed behind its back, so
@@ -30,6 +51,9 @@ void WISPSHUT(void)
 /*
 **	History:
 **	$Log: wispsync.c,v $
+**	Revision 1.10  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
 **	Revision 1.9  1996/08/19 22:33:18  gsl
 **	drcs update
 **	

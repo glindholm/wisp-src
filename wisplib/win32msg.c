@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		win32msg.c
 **
@@ -44,8 +65,8 @@ typedef struct win32msg_s {
 #define WIN32MSGERRCHK(cond, txt, arg) if (cond) { \
   char errtxt1[1024], *errtxt2;\
   sprintf(errtxt1,txt,arg);\
-  errtxt2=GetWin32Error(errtxt1);\
-  werrlog(104,errtxt2,0,0,0,0,0,0,0);\
+  errtxt2=WL_GetWin32Error(errtxt1);\
+  WL_werrlog_error(WERRCODE(104),"WIN32MSG","ERRCHK", "%s", errtxt2);\
   errno=EINVAL;\
   return -1;} 
 
@@ -53,7 +74,7 @@ typedef struct win32msg_s {
 **	Globals and Externals
 */
 const char *wispprbdir(char *dir);
-BOOL WL_fexists(const char *path);
+int WL_fexists(const char* name);
 static long nReadTimeoutMsecs=0;
 #define INC_READ_TIMEOUT_MSEC 100
 
@@ -67,7 +88,7 @@ static long nReadTimeoutMsecs=0;
 static void makemsgdatafile(key_t keyval, char *path);
 
 /*
-**	ROUTINE:	win32msgget()
+**	ROUTINE:	WL_win32msgget()
 **
 **	FUNCTION:	Get message queue identifier based on provided key 
 **
@@ -84,7 +105,7 @@ static void makemsgdatafile(key_t keyval, char *path);
 **	WARNINGS:	
 **
 */
-int win32msgget(key_t nTheKey, int nFlag)
+int WL_win32msgget(key_t nTheKey, int nFlag)
 {
 	HANDLE hTheFile;
 	char szFilePath[256];
@@ -100,25 +121,25 @@ int win32msgget(key_t nTheKey, int nFlag)
 				     NULL,CREATE_NEW,FILE_FLAG_RANDOM_ACCESS,NULL);
 		if (INVALID_HANDLE_VALUE == hTheFile)
 		{
-			WIN32MSGERRCHK(TRUE,"win32msgget: CreateFile failed (%s)",szFilePath);
+			WIN32MSGERRCHK(TRUE,"WL_win32msgget: CreateFile failed (%s)",szFilePath);
 			errno = ENOENT;
 			return -1;
 		}
 
 		nMagic = WIN32MAGIC;
 		bSuccess=WriteFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nBytesWritten, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgget: WriteFile failed (magic number %08X)",nMagic);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgget: WriteFile failed (magic number %08X)",nMagic);
 			
 		nMsgCount = 0;
 		bSuccess=WriteFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nBytesWritten, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgget: WriteFile failed (message count %d)",nMsgCount);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgget: WriteFile failed (message count %d)",nMsgCount);
 
 		nByteCount = 0;
 		bSuccess=WriteFile(hTheFile, (void*)&nByteCount, (DWORD)sizeof(nByteCount), &nBytesWritten, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgget: WriteFile failed (byte count %d)", nByteCount);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgget: WriteFile failed (byte count %d)", nByteCount);
 
 		CloseHandle(hTheFile);
-		WIN32MSGERRCHK(!bSuccess,"win32msgget: CloseHandle failed (%s)",szFilePath);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgget: CloseHandle failed (%s)",szFilePath);
 	}
 	else
 	{
@@ -126,11 +147,9 @@ int win32msgget(key_t nTheKey, int nFlag)
 		**	The data file should already exist, if it doesn't then it's an error.
 		*/
 		if (!WL_fexists(szFilePath))
-		{
-			char errtxt[256];
-			
-			sprintf(errtxt,"win32msgget: Message data file missing (%s)",szFilePath);
-			werrlog(104,errtxt,0,0,0,0,0,0,0);
+		{			
+			WL_werrlog_error(WERRCODE(104),"win32msgget", "FILEMISSING", 
+				"Message data file missing (%s)",szFilePath);
 			errno = ENOENT;
 			return -1;
 		}
@@ -187,7 +206,7 @@ static HANDLE OpenMsgFile(char* szFilePath)
 }
 
 /*
-**	ROUTINE:	win32msgsnd()
+**	ROUTINE:	WL_win32msgsnd()
 **
 **	FUNCTION:	send a message on the specified message queue
 **
@@ -206,7 +225,7 @@ static HANDLE OpenMsgFile(char* szFilePath)
 **
 */
 
-int win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
+int WL_win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
 {
 	DWORD nPassedType;
 	char *pData;
@@ -224,27 +243,27 @@ int win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
 	hTheFile = OpenMsgFile(szFilePath);
 	if (INVALID_HANDLE_VALUE == hTheFile)
 	{
-		WIN32MSGERRCHK(1,"win32msgsnd: Unable to open message data file (%s)",szFilePath);
+		WIN32MSGERRCHK(1,"WL_win32msgsnd: Unable to open message data file (%s)",szFilePath);
 		errno = EINVAL;
 		return -1;
 	}
 
 	bSuccess=ReadFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nRead, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: ReadFile failed (magic number)",0);
-	WIN32MSGERRCHK(nMagic != WIN32MAGIC, "win32msgsnd: ReadFile read invalid magic number %08X",nMagic);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: ReadFile failed (magic number)",0);
+	WIN32MSGERRCHK(nMagic != WIN32MAGIC, "WL_win32msgsnd: ReadFile read invalid magic number %08X",nMagic);
 
 	bSuccess=ReadFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nRead, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: ReadFile failed (message count)",0);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: ReadFile failed (message count)",0);
 	
 	bSuccess=ReadFile(hTheFile, (void*)&nByteCount, (DWORD)sizeof(nByteCount), &nRead, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: ReadFile failed (byte count)",0);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: ReadFile failed (byte count)",0);
 
 	/*
 	** position the pointer at the end of the file.. 
 	*/
 	nFilePos = SetFilePointer(hTheFile, (long)(sizeof(nMagic)+sizeof(nMsgCount)+sizeof(nByteCount) + nByteCount),
 				       NULL, FILE_BEGIN);
-	WIN32MSGERRCHK(nFilePos == WIN32BADFILEPOS,"win32msgsnd: SetFilePointer failed (%d)",
+	WIN32MSGERRCHK(nFilePos == WIN32BADFILEPOS,"WL_win32msgsnd: SetFilePointer failed (%d)",
 		       (long)(sizeof(nMagic)+sizeof(nMsgCount)+sizeof(nByteCount) + nByteCount));
 
 	/*
@@ -261,34 +280,34 @@ int win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
 	** now write the type, len, and data
 	*/
 	bSuccess = WriteFile(hTheFile, (void*)&nPassedType, sizeof(nPassedType), &nWritten, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: Writefile failed (message type %d)",nPassedType);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (message type %d)",nPassedType);
 	
 	bSuccess = WriteFile(hTheFile, (void*)&nPassedMsgLen, sizeof(nPassedMsgLen), &nWritten, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: Writefile failed (message length %d)",nPassedMsgLen);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (message length %d)",nPassedMsgLen);
 
 	bSuccess = WriteFile(hTheFile, (void*)pData, nPassedMsgLen, &nWritten, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: Writefile failed (message data)",0);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (message data)",0);
 
 	/*
 	** reposition the pointer to right after the magic to update the msgcount and bytecount
 	*/
 	nFilePos = SetFilePointer(hTheFile, (long)sizeof(nMagic),NULL, FILE_BEGIN);
-	WIN32MSGERRCHK(nFilePos == WIN32BADFILEPOS,"win32msgsnd: SetFilePointer failed (offset %d)",(long)sizeof(nMagic));
+	WIN32MSGERRCHK(nFilePos == WIN32BADFILEPOS,"WL_win32msgsnd: SetFilePointer failed (offset %d)",(long)sizeof(nMagic));
 	
 	++nMsgCount;
 	nByteCount += sizeof(nPassedType) + sizeof(nPassedMsgLen) + nPassedMsgLen;
 	bSuccess = WriteFile(hTheFile,(void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nWritten, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: Writefile failed (rewrite message count %d)",nMsgCount);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (rewrite message count %d)",nMsgCount);
 
 	bSuccess = WriteFile(hTheFile,(void*)&nByteCount, (DWORD)sizeof(nByteCount), &nWritten, NULL);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: Writefile failed (rewrite byte count %d)",nByteCount);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: Writefile failed (rewrite byte count %d)",nByteCount);
 
 	bSuccess = CloseHandle(hTheFile);
-	WIN32MSGERRCHK(!bSuccess,"win32msgsnd: CloseHandle failed (%s)",szFilePath);
+	WIN32MSGERRCHK(!bSuccess,"WL_win32msgsnd: CloseHandle failed (%s)",szFilePath);
 	return 0;
 }
 /*
-**	ROUTINE:	win32msgrcv()
+**	ROUTINE:	WL_win32msgrcv()
 **
 **	FUNCTION:	receive a message on the specified message queue
 **
@@ -307,7 +326,7 @@ int win32msgsnd(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nFlag)
 **	WARNINGS:	
 **
 */
-int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgType, int nFlag)
+int WL_win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgType, int nFlag)
 {
 	char *pData, *pDatap, *pSave;
 
@@ -348,17 +367,17 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 		hTheFile = OpenMsgFile(szFilePath);
 		if (INVALID_HANDLE_VALUE == hTheFile)
 		{
-			WIN32MSGERRCHK(1,"win32msgrcv: Unable to open message data file (%s)",szFilePath);
+			WIN32MSGERRCHK(1,"WL_win32msgrcv: Unable to open message data file (%s)",szFilePath);
 			errno = EINVAL;
 			return -1;
 		}
 		
 		bSuccess=ReadFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgrcv: ReadFile failed (magic number)",0);
-		WIN32MSGERRCHK(nMagic != WIN32MAGIC, "win32msgrcv: ReadFile read invalid magic number %08X",nMagic);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (magic number)",0);
+		WIN32MSGERRCHK(nMagic != WIN32MAGIC, "WL_win32msgrcv: ReadFile read invalid magic number %08X",nMagic);
 
 		nFileSize=GetFileSize(hTheFile,NULL);
-		WIN32MSGERRCHK(nFileSize == WIN32BADFILEPOS, "win32msgrcv: GetFileSize failed",0);
+		WIN32MSGERRCHK(nFileSize == WIN32BADFILEPOS, "WL_win32msgrcv: GetFileSize failed",0);
 
 		/*
 		** compute the size of the data area we need; it is the actual filesize reported
@@ -373,13 +392,13 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 		** now read the msgcount, bytecount, and message data
 		*/
 		bSuccess=ReadFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgrcv: ReadFile failed (message count)",0);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (message count)",0);
 
 		bSuccess=ReadFile(hTheFile, (void*)&nByteCount, (DWORD)sizeof(nByteCount), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgrcv: ReadFile failed (byte count)",0);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (byte count)",0);
 
 		bSuccess=ReadFile(hTheFile, (void*)pData, nAdjFileSize, &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgrcv: ReadFile failed (message data %d bytes)",nAdjFileSize);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: ReadFile failed (message data %d bytes)",nAdjFileSize);
 		bGotMsg = 0;
 
 		if (nMsgCount>0)
@@ -439,7 +458,7 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 			** so we can rewrite everything
 			*/
 			nFilePos = SetFilePointer(hTheFile, (long)sizeof(nMagic) ,NULL, FILE_BEGIN);
-			WIN32MSGERRCHK(nFilePos == WIN32BADFILEPOS,"win32msgrcv: SetFilePointer failed (offset %d)",(long)sizeof(nMagic));
+			WIN32MSGERRCHK(nFilePos == WIN32BADFILEPOS,"WL_win32msgrcv: SetFilePointer failed (offset %d)",(long)sizeof(nMagic));
 
 			/*
 			** nBytes will be the number of bytes of the message we got
@@ -460,14 +479,14 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 			nByteCount -= nBytes;
 			
 			bSuccess = WriteFile(hTheFile,(void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nWritten, NULL);
-			WIN32MSGERRCHK(!bSuccess,"win32msgrcv: Writefile failed (rewrite message count %d)",nMsgCount);
+			WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: Writefile failed (rewrite message count %d)",nMsgCount);
 
 			bSuccess = WriteFile(hTheFile,(void*)&nByteCount, (DWORD)sizeof(nByteCount), &nWritten, NULL);
-			WIN32MSGERRCHK(!bSuccess,"win32msgrcv: Writefile failed (rewrite byte count %d)",nByteCount);
+			WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: Writefile failed (rewrite byte count %d)",nByteCount);
 
 			nReadTimeoutMsecs=0;
 			bSuccess = WriteFile(hTheFile,(void*)pData, (DWORD)nByteCount, &nWritten, NULL);
-			WIN32MSGERRCHK(!bSuccess,"win32msgrcv: Writefile failed (rewrite data %d bytes)",nByteCount);
+			WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: Writefile failed (rewrite data %d bytes)",nByteCount);
 		}
 		else
 		{
@@ -483,7 +502,7 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 		*/
 		free(pData);
 		bSuccess = CloseHandle(hTheFile);
-		WIN32MSGERRCHK(!bSuccess,"win32msgrcv: CloseHandle failed (%s)",szFilePath);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgrcv: CloseHandle failed (%s)",szFilePath);
 
 		/*
 		** if nReadTimeoutMsecs is greater than zero, we are in a timed read;  so if we didn't
@@ -506,9 +525,9 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 	return nRetval;
 }
 /*
-**	ROUTINE:	win32msgtimeout()
+**	ROUTINE:	WL_win32msgtimeout()
 **
-**	FUNCTION:	setup timeout value for a subsequent call to win32msgrcv
+**	FUNCTION:	setup timeout value for a subsequent call to WL_win32msgrcv
 **
 **	ARGUMENTS:	int secs_to_wait   - obvious
 **
@@ -519,12 +538,12 @@ int win32msgrcv(int nTheKey, char *pMsg, size_t nPassedMsgLen, int nPassedMsgTyp
 **	WARNINGS:	
 **
 */
-void win32msgtimeout(int secs_to_wait)
+void WL_win32msgtimeout(int secs_to_wait)
 {
 	nReadTimeoutMsecs = secs_to_wait * 1000;
 }
 /*
-**	ROUTINE:	win32msgctl()
+**	ROUTINE:	WL_win32msgctl()
 **
 **	FUNCTION:	some control routines for the message queue
 **
@@ -541,7 +560,7 @@ void win32msgtimeout(int secs_to_wait)
 **	WARNINGS:	
 **
 */
-int win32msgctl(int nTheKey, int nFunction, struct msqid_ds *mctlbuf)
+int WL_win32msgctl(int nTheKey, int nFunction, struct msqid_ds *mctlbuf)
 {
 	BOOL bSuccess;
 	DWORD nMsgCount, nMagic, nRead;
@@ -562,28 +581,28 @@ int win32msgctl(int nTheKey, int nFunction, struct msqid_ds *mctlbuf)
 		
 	case IPC_STAT:
 		/*
-		** stat currently only retrieves the msgcount.. this can be expanded if other values
+		** STAT currently only retrieves the msgcount.. this can be expanded if other values
 		** are needed;  however currently the MESSAGE subroutine only uses the msgcount, and this
 		** code is only needed by MESSAGE
 		*/
 		hTheFile = OpenMsgFile(szFilePath);
 		if (INVALID_HANDLE_VALUE == hTheFile)
 		{
-			WIN32MSGERRCHK(1,"win32msgctl: Unable to open message data file (%s)",szFilePath);
+			WIN32MSGERRCHK(1,"WL_win32msgctl: Unable to open message data file (%s)",szFilePath);
 			errno = EINVAL;
 			return -1;
 		}
 
 		bSuccess=ReadFile(hTheFile, (void*)&nMagic, (DWORD)sizeof(nMagic), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgctl: ReadFile failed (magic number)",0);
-		WIN32MSGERRCHK(nMagic != WIN32MAGIC, "win32msgctl: ReadFile read invalid magic number %08X",nMagic);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgctl: ReadFile failed (magic number)",0);
+		WIN32MSGERRCHK(nMagic != WIN32MAGIC, "WL_win32msgctl: ReadFile read invalid magic number %08X",nMagic);
 
 		bSuccess=ReadFile(hTheFile, (void*)&nMsgCount, (DWORD)sizeof(nMsgCount), &nRead, NULL);
-		WIN32MSGERRCHK(!bSuccess,"win32msgctl: ReadFile failed (message count)",0);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgctl: ReadFile failed (message count)",0);
 
 		mctlbuf->msg_qnum = nMsgCount;
 		bSuccess=CloseHandle(hTheFile);
-		WIN32MSGERRCHK(!bSuccess,"win32msgctl: CloseHandle failed (%s)",szFilePath);
+		WIN32MSGERRCHK(!bSuccess,"WL_win32msgctl: CloseHandle failed (%s)",szFilePath);
 		break;
 	}
 	return 0;
@@ -622,12 +641,12 @@ static void makemsgdatafile(key_t keyval, char *szPath)
 }
 
 /*
-**	ROUTINE:	win32move()
+**	ROUTINE:	WL_win32move()
 **
 **	FUNCTION:	move a file
 **
 **	DESCRIPTION:	link not supported, so we use MoveFile.  MoveFile requires windows.h, so
-**                      win32move was included in this file instead of message.c
+**                      WL_win32move was included in this file instead of message.c
 **
 **	ARGUMENTS:	char *src, char *dest
 **
@@ -638,7 +657,7 @@ static void makemsgdatafile(key_t keyval, char *szPath)
 **	WARNINGS:	?
 **
 */
-int win32move(char *src, char *dest)
+int WL_win32move(char *src, char *dest)
 {
 	return MoveFile(src,dest) == TRUE ? 0 : -1;
 }
@@ -648,9 +667,20 @@ int win32move(char *src, char *dest)
 /*
 **	History:
 **	$Log: win32msg.c,v $
-**	Revision 1.4.2.1  2002/10/09 19:20:35  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.9  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.8  2002/12/09 19:15:36  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.7  2002/09/30 21:02:00  gsl
+**	update
+**	
+**	Revision 1.6  2002/07/10 21:05:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.5  2002/07/10 04:27:35  gsl
+**	Rename global routines with WL_ to make unique
 **	
 **	Revision 1.4  1997/05/19 18:00:26  gsl
 **	Fix the handling of message data files so MESSAGE works for WIN32.

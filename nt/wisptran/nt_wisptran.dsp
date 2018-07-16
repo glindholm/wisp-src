@@ -189,10 +189,6 @@ SOURCE=".\#Prototypes.h"
 # End Source File
 # Begin Source File
 
-SOURCE=..\rControls\Ctl3d.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\rControls\rControls.h
 # End Source File
 # Begin Source File

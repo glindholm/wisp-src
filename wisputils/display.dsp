@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "WINNT" /D "MSFS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -100,10 +100,6 @@ SOURCE=..\wispcommon\wispicon.rc
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
-# Begin Source File
-
-SOURCE=..\wispcommon\wispicon.ico
-# End Source File
 # End Group
 # End Target
 # End Project

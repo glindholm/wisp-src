@@ -1,5 +1,5 @@
 #!/bin/sh
-#
+# $Id:$
 # qautils.sh	This shell script runs the QA tests on some utilities.
 echo
 echo wexists file xyz libin volin

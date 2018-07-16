@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		wispsort.c
@@ -7,7 +28,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To hold the WANG/WISP interface to sortseqf()
 **
 **	Routines:	WISPSORT()		The SORTCALL replacement
-**			wangsort()		The underlining wang style sort interface (with stable sort option)
+**			WL_wangsort()		The underlining wang style sort interface (with stable sort option)
 **			addseqnum()		Add a sequence number to each record in a file
 **			delseqnum()		Remove the added sequence number
 **
@@ -118,13 +139,17 @@ static char rcsid[]="$Id:$";
 #define USE_FILE64
 #endif
 
-
 #include <stdio.h>
+#include <string.h>
 #include <fcntl.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #ifdef WIN32
 #include <io.h>
@@ -136,7 +161,6 @@ static char rcsid[]="$Id:$";
 #include "wcommon.h"
 #include "sortseqf.h"
 #include "wfname.h"
-#include "movebin.h"
 #include "osddefs.h"
 #include "wisplib.h"
 #include "wmalloc.h"
@@ -148,12 +172,9 @@ static char rcsid[]="$Id:$";
 #include "fcopy.h"
 
 #include "werrlog.h"
-#define		ROUTINE		80500
-
-
 
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
-void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode);
+void WL_wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode);
 
 static int addseqnum(char *infile, char *outfile, int recsize);
 static int delseqnum(char *infile, char *outfile, int recsize);
@@ -162,10 +183,10 @@ static int delseqnum(char *infile, char *outfile, int recsize);
 
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode)
 {
-	wangsort(sortparms,filetype,recsize,0,sortcode,returncode);
+	WL_wangsort(sortparms,filetype,recsize,0,sortcode,returncode);
 }
 
-void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode)
+void WL_wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode)
 {
 	int	l_sortcode, l_returncode, l_recsize;
 	char	l_filetype;
@@ -185,8 +206,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	inseqfile[0]	= '\0';							/* The infile with seq nums			*/
 	outseqfile[0]	= '\0';							/* The outfile with seq nums			*/
 
-	GETBIN(&l_recsize,recsize,sizeof(int));
-	wswap(&l_recsize);
+	l_recsize = WL_get_swap(recsize);
 
 	wtrace("WANGSORT", "ENTRY", "Infile=[%22.22s] Outfile=[%22.22s] Recsize=%d Filetype=%c", 
 	       &sortparms[0], &sortparms[22], l_recsize, *filetype);
@@ -215,7 +235,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		if ( l_recsize < 1 || l_recsize > 9999 ) /* Wang allows up to 2024 only */
 		{
 			sprintf(messstr,"Invalid record size [recsize = %d]",l_recsize);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 			l_returncode = 12;
 			goto return_label;
 		}
@@ -231,7 +251,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		break;
 	default:
 		sprintf(messstr,"Invalid file type [filetype = \'%c\']",*filetype);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 		l_returncode = 40;
 		goto return_label;
 	}
@@ -241,11 +261,11 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	*/
 
 	mode = 0;
-	ptr = wfname(&mode, &sortparms[16], &sortparms[8], &sortparms[0], infile);
+	ptr = WL_wfname(&mode, &sortparms[16], &sortparms[8], &sortparms[0], infile);
 	*ptr = '\0';
 
-	mode = IS_OUTPUT | IS_BACKFILL;
-	ptr = wfname(&mode, &sortparms[38], &sortparms[30], &sortparms[22], outfile);
+	mode = IS_OUTPUT;
+	ptr = WL_wfname_backfill(&mode, &sortparms[38], &sortparms[30], &sortparms[22], outfile);
 	*ptr = '\0';
 
 	makepath(outfile);							/* this is generate the intermediate dirs	*/
@@ -266,14 +286,14 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		**	For all Indexed files test against the actual file for the type.
 		*/
 
-		if (0 == visioninfo(infile,"IX",&ixtype) && 'V' == ixtype)
+		if (0 == WL_visioninfo(infile,"IX",&ixtype) && 'V' == ixtype)
 		{
 			/*
 			 *	V = Vision
 			 */
 			l_filetype = 'A';
 		}
-		else if (0 == cisaminfo(infile,"IX",&ixtype) && ('C'==ixtype || 'M'==ixtype))
+		else if (0 == WL_cisaminfo(infile,"IX",&ixtype) && ('C'==ixtype || 'M'==ixtype))
 		{
 			/*
 			 *	C = C-ISAM
@@ -312,7 +332,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	if ( l_filetype == 'A' )
 	{
 
-		rc = visioninfo(infile,"RS",&l_recsize);
+		rc = WL_visioninfo(infile,"RS",&l_recsize);
 		if ( rc )
 		{
 			l_returncode = 43;
@@ -320,10 +340,10 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		}
 
 		mode = IS_OUTPUT;
-		ptr = wfname(&mode, "      ", "        ", "##SORT  ", unloadfile);
+		ptr = WL_wfname(&mode, "      ", "        ", "##SORT  ", unloadfile);
 		*ptr = '\0';
 
-		rc = unloadvision(infile,unloadfile);
+		rc = WL_unloadvision(infile,unloadfile);
 		if ( rc )
 		{
 			l_returncode = 44;
@@ -340,7 +360,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 
 	if ( l_filetype == 'C' || l_filetype == 'M' )
 	{
-		rc = cisaminfo(infile,"RS",&l_recsize);
+		rc = WL_cisaminfo(infile,"RS",&l_recsize);
 		if ( rc )
 		{
 			l_returncode = 46;
@@ -348,12 +368,12 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		}
 
 		mode = IS_OUTPUT;
-		ptr = wfname(&mode, "      ", "        ", "##SORT  ", unloadfile);
+		ptr = WL_wfname(&mode, "      ", "        ", "##SORT  ", unloadfile);
 		*ptr = '\0';
 
 		if (l_filetype == 'C')
 		{
-			rc = unloadcisam(infile,unloadfile,l_recsize);
+			rc = WL_unloadcisam(infile,unloadfile,l_recsize);
 			if ( rc )
 			{
 				l_returncode = 47;
@@ -362,7 +382,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		}
 		else
 		{
-			rc = unloadfhisam(infile,unloadfile,l_recsize);
+			rc = WL_unloadfhisam(infile,unloadfile,l_recsize);
 			if ( rc )
 			{
 				l_returncode = 48;
@@ -474,7 +494,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 			break;
 		default:											      
 			sprintf(messstr,"Invalid data type [%c]",*ptr);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 			l_returncode = 16;
 			goto return_label;
 			break;
@@ -494,7 +514,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 			break;
 		default:
 			sprintf(messstr,"Invalid sort order [%c]",*ptr);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 			l_returncode = 16;
 			goto return_label;
 			break;
@@ -530,16 +550,16 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	 	if ('F' != l_filetype)							/* Only valid for Fixed len records	*/
 		{
 			sprintf(messstr,"Stable sort not supported for filetype=%c",l_filetype);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 			l_returncode = 40;
 			goto return_label;
 		}
 
 		mode = IS_OUTPUT;
-		ptr = wfname(&mode, "      ", "        ", "##SORT  ", inseqfile);	/* Temp file for adding sequence nums	*/
+		ptr = WL_wfname(&mode, "      ", "        ", "##SORT  ", inseqfile);	/* Temp file for adding sequence nums	*/
 		*ptr = '\0';
 
-		if (l_returncode = addseqnum(inptr,inseqfile,l_recsize))		/* Copy to inseqfile adding seq num	*/
+		if ((l_returncode = addseqnum(inptr,inseqfile,l_recsize)))		/* Copy to inseqfile adding seq num	*/
 		{
 			inseqfile[0] = '\0';
 			goto return_label;
@@ -555,14 +575,14 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 
 		if (unloadfile[0])							/* If temp file already active then	*/
 		{
-			unlink(unloadfile);						/* delete currect temp file		*/
+			wisp_unlink(unloadfile);						/* delete currect temp file		*/
 			unloadfile[0] = '\0';						/* Mark as not used			*/
 		}
 
 		inptr = inseqfile;							/* Point inptr to inseqfile		*/
 
 		mode = IS_OUTPUT;
-		ptr = wfname(&mode, "      ", "        ", "##SORT  ", outseqfile);	/* Temp file output (with seq nums)	*/
+		ptr = WL_wfname(&mode, "      ", "        ", "##SORT  ", outseqfile);	/* Temp file output (with seq nums)	*/
 		*ptr = '\0';
 
 		outptr = outseqfile;							/* Point outptr to outseqfile		*/
@@ -578,7 +598,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		{
 			sprintf(errbuff,"Copy failed infile=%s outfile=%s [errno=%d]",
 				inptr, outptr, errno);
-			werrlog(ERRORCODE(2),errbuff,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),errbuff,0,0,0,0,0,0,0);
 
 			l_sortcode = ERR_OPENOUTPUT;				/* this is the most likely reason for cp fail	*/
 			outptr[0] = '\0';
@@ -588,11 +608,32 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	else
 	{
 		int	memsizek = wispsortmemk();
-#ifdef TESTING
-printf("wispsort:memsizek = %d\n",memsizek);
-#endif
-		l_sortcode = sortseqf( inptr, outptr, NULL, memsizek, l_filetype, l_recsize, NULL, 
+		char	trace_keys[500];
+		int	i;
+
+		strcpy(trace_keys,"(Offset,Length,Direction,Type)");
+		for(i=0; i<numkeys; i++)
+		{
+			char x[40];
+			sprintf(x,"(%d,%d,%d,%d)", 
+				sortkeys[i].offset,
+				sortkeys[i].length,
+				sortkeys[i].direction,
+				sortkeys[i].type);
+			strcat(trace_keys,x);
+		}
+
+
+		wtrace("WANGSORT","sortseqf","In=[%s] Out=[%s] MemSizeK=[%d] FileType=[%c] RecSize=[%d] NumKeys=[%d] SortKeys=[%s]", 
+			inptr, outptr, memsizek, l_filetype, l_recsize, numkeys, trace_keys);
+
+		l_sortcode = WL_sortseqf( inptr, outptr, NULL, memsizek, l_filetype, l_recsize, NULL, 
 				      numkeys, sortkeys, 0, NULL, errbuff);
+
+		if (l_sortcode != 0)
+		{
+			wtrace("WANGSORT","sortseqf","Sortcode=[%ld] Message=[%s]", (long)l_sortcode, errbuff);
+		}
 	}
 
 	switch(l_sortcode)
@@ -639,7 +680,7 @@ printf("wispsort:memsizek = %d\n",memsizek);
 
 	case ERR_SIZEINT:		
 	case ERR_SIZEFLOAT:
-		werrlog(ERRORCODE(2),errbuff,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(80502),errbuff,0,0,0,0,0,0,0);
 		l_returncode = 20;
 		break;
 
@@ -657,16 +698,16 @@ printf("wispsort:memsizek = %d\n",memsizek);
 	*/
 	if (dupinorder && l_returncode == 0)
 	{
-		unlink(inseqfile);							/* Delete inseqfile first (make space)	*/
+		wisp_unlink(inseqfile);							/* Delete inseqfile first (make space)	*/
 		inseqfile[0] = '\0';
 
 		l_recsize -= sizeof(int4);
-		if (l_returncode = delseqnum(outseqfile,outfile,l_recsize))		/* Copy to outfile deleting seq num	*/
+		if ((l_returncode = delseqnum(outseqfile,outfile,l_recsize)))		/* Copy to outfile deleting seq num	*/
 		{
 			goto return_label;
 		}
 
-		unlink(outseqfile);							/* Delete outseqfile			*/
+		wisp_unlink(outseqfile);							/* Delete outseqfile			*/
 		outseqfile[0] = '\0';
 	}
 
@@ -676,20 +717,18 @@ printf("wispsort:memsizek = %d\n",memsizek);
 return_label:
 	if (unloadfile[0])
 	{
-		unlink(unloadfile);
+		wisp_unlink(unloadfile);
 	}
 	if (dupinorder)
 	{
-		if (inseqfile[0]) unlink(inseqfile);
-		if (outseqfile[0]) unlink(outseqfile);
+		if (inseqfile[0]) wisp_unlink(inseqfile);
+		if (outseqfile[0]) wisp_unlink(outseqfile);
 	}
 
 	wtrace("WANGSORT","RETURN","Sortcode=%ld Returncode=%ld", (long)l_sortcode, (long)l_returncode);
 	
-	wswap(&l_sortcode);
-	wswap(&l_returncode);
-	PUTBIN(sortcode,&l_sortcode,sizeof(int));
-	PUTBIN(returncode,&l_returncode,sizeof(int));
+	WL_put_swap(sortcode, l_sortcode);
+	WL_put_swap(returncode, l_returncode);
 }
 
 #ifdef USE_FILE64
@@ -712,19 +751,19 @@ static int addseqnum(char *infile, char *outfile, int recsize)
 	if (!(i_fp = FOPEN64(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
 	if (!(o_fp = FOPEN64(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 		fclose(i_fp);
 		return(41);
 	}
 
-	buff = (char *) wmalloc(recsize+4+2);
+	buff = (char *) wisp_malloc(recsize+4+2);
 
 	seq = 0;
 	while( fread(buff, recsize, 1, i_fp) )
@@ -734,11 +773,11 @@ static int addseqnum(char *infile, char *outfile, int recsize)
 		if (!fwrite(buff, recsize+sizeof(int4), 1, o_fp))
 		{
 			sprintf(messstr,"Write failed file=%s [errno=%d]",outfile,errno);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 			fclose(i_fp);
 			fclose(o_fp);
 			free(buff);
-			unlink(outfile);
+			wisp_unlink(outfile);
 			return(41);
 		}
 	}
@@ -763,30 +802,30 @@ static int delseqnum(char *infile, char *outfile, int recsize)
 	if (!(i_fp = FOPEN64(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
 	if (!(o_fp = FOPEN64(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 		fclose(i_fp);
 		return(41);
 	}
 
-	buff = (char *) wmalloc(recsize+4+2);
+	buff = (char *) wisp_malloc(recsize+4+2);
 
 	while( fread(buff, recsize+sizeof(int4), 1, i_fp) )
 	{
 		if (!fwrite(buff, recsize, 1, o_fp))
 		{
 			sprintf(messstr,"Write failed file=%s [errno=%d]",outfile,errno);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(80502),messstr,0,0,0,0,0,0,0);
 			fclose(i_fp);
 			fclose(o_fp);
 			free(buff);
-			unlink(outfile);
+			wisp_unlink(outfile);
 			return(41);
 		}
 	}
@@ -798,12 +837,50 @@ static int delseqnum(char *infile, char *outfile, int recsize)
 	return(0);
 }
 
-
 /*
 **	History:
 **	$Log: wispsort.c,v $
-**	Revision 1.34.2.1  2002/10/09 21:03:05  gsl
+**	Revision 1.48  2003/02/04 17:22:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.47  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.46  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.45  2002/12/11 17:03:10  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.44  2002/12/10 17:09:14  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.43  2002/10/07 21:07:59  gsl
 **	Huge file support
+**	
+**	Revision 1.42  2002/10/07 20:54:47  gsl
+**	Huge file support
+**	
+**	Revision 1.41  2002/08/19 21:03:36  gsl
+**	tracing
+**	
+**	Revision 1.40  2002/07/12 19:10:21  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.39  2002/07/12 17:01:04  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.38  2002/07/09 04:13:52  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.37  2002/07/02 21:15:34  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.36  2002/06/28 04:02:58  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.35  2002/06/27 04:12:40  gsl
+**	Clean up status/mode bits
 **	
 **	Revision 1.34  2001/11/08 18:09:33  gsl
 **	remove unused var
@@ -817,7 +894,7 @@ static int delseqnum(char *infile, char *outfile, int recsize)
 **
 **	Revision 1.31  2001-10-22 17:05:27-04  gsl
 **	Removed MSDOS.
-**	Call cisaminfo IX to determine if CISAM vs MF FHISAM file.
+**	Call WL_cisaminfo IX to determine if CISAM vs MF FHISAM file.
 **
 **	Revision 1.30  1998-09-09 15:49:53-04  gsl
 **	Add trace of keys

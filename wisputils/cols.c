@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /**
  **     cols.c          cols [-c#] [-w#] [-l#] [-i infile] [-o outfile]
  **                             -c#             Number of columns per page, default 2
@@ -10,6 +33,9 @@ static char rcsid[]="$Id:$";
  **
  **
  ** $Log: cols.c,v $
+ ** Revision 1.8  2003/02/04 18:50:26  gsl
+ ** fix copyright header
+ **
  ** Revision 1.7  1995/04/25 09:58:07  gsl
  ** drcs state V3_3_15
  **

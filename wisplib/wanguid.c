@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wanguid.c
 **
@@ -32,6 +53,7 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wisplib.h"
 #include "wmalloc.h"
+#include "wperson.h"
 
 /*
 **	Structures and Defines
@@ -51,12 +73,12 @@ static	int	first_wanguid3 = 1;
 */
 
 
-void reset_wanguid3(void)
+void WL_reset_wanguid3(void)
 {
 	first_wanguid3 = 1;
 }
 
-const char *wanguid3(void)								/* This routine returns the first 3 	*/
+const char *WL_wanguid3(void)								/* This routine returns the first 3 	*/
 {											/* characters in the user ID returned 	*/
 											/* by longuid().  Used in EXTRACT when	*/
 											/* keyword is ID.			*/
@@ -106,10 +128,10 @@ const char *wanguid3(void)								/* This routine returns the first 3 	*/
 		first_wanguid3 = 0;
 
 		uid3[0]=' '; uid3[1]=' '; uid3[2]=' ';
-		strcpy(tstr, longuid());
+		strcpy(tstr, WL_longuid());
 		x = 0;                                          			/* Initial values.			*/
 
-		if ( opt_idfive )
+		if ( OPTION_IDFIVE )
 		{
 			i = 4;								/* Get the 3 chars starting at pos 5,	*/
 		}
@@ -134,12 +156,12 @@ const char *wanguid3(void)								/* This routine returns the first 3 	*/
 }
 
 
-const char *numuid3(void)								/* This routine returns the last 3 	*/
+const char *WL_numuid3(void)								/* This routine returns the last 3 	*/
 {											/* numerals in the user ID returned 	*/
 											/* by getuid().  Used in EXTRACT when	*/
 											/* keyword is ID and the IDNUMERIC	*/
 											/* option is set in the OPTIONS file	*/
-											/* (opt_idnumeric = 1).			*/
+											/* (IDNUMERIC).				*/
 	static	char	numid3[4];
 	static	int	first = 1;
 
@@ -151,7 +173,7 @@ const char *numuid3(void)								/* This routine returns the last 3 	*/
 		first = 0;
 
 		uid = getuid();
-		sprintf( uid_str, "%08.8ld", uid );		/* Convert to an 8 digit string with leading zeros 	*/
+		sprintf( uid_str, "%08ld", uid );		/* Convert to an 8 digit string with leading zeros 	*/
 		memcpy( numid3, &uid_str[8-3], 3 );		/* Store the last 3 numerals of UID.			*/
 		numid3[3] = '\0';
 	}
@@ -160,7 +182,7 @@ const char *numuid3(void)								/* This routine returns the last 3 	*/
 }
 
 #ifdef unix
-const char *longuid(void)							/* This routine will return the long userid	*/
+const char *WL_longuid(void)							/* This routine will return the long userid	*/
 {										/* It's lenght is system dependant so the	*/
 										/* receiver has to be long enough. It will be	*/
 										/* null terminated and case sensitive.		*/
@@ -183,7 +205,7 @@ const char *longuid(void)							/* This routine will return the long userid	*/
 		{
 			sprintf(buf,"EUID=%d", (int)euid);
 		}
-		uid = wstrdup(buf);
+		uid = wisp_strdup(buf);
 	}
 
 	return uid ;
@@ -193,6 +215,27 @@ const char *longuid(void)							/* This routine will return the long userid	*/
 /*
 **	History:
 **	$Log: wanguid.c,v $
+**	Revision 1.20  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.19  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.18  2002/07/12 20:40:40  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.17  2002/07/11 20:29:16  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.16  2002/07/10 21:05:29  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/07/09 04:13:55  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.14  2002/07/02 21:15:32  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.13  2001/11/27 21:58:47  gsl
 **	Change longuid() to use geteuid()
 **	
@@ -206,7 +249,7 @@ const char *longuid(void)							/* This routine will return the long userid	*/
 **	fix for NT
 **
 **	Revision 1.9  1995-05-22 07:44:03-07  gsl
-**	Fixed problem with numuid3() which was causing sig 11 on BSD machines
+**	Fixed problem with WL_numuid3() which was causing sig 11 on BSD machines
 **	when used with the IDNUMERIC option.
 **
 **

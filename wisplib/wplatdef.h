@@ -98,9 +98,6 @@
 /*
 **	History:
 **	$Log: wplatdef.h,v $
-**	Revision 1.7.2.2  2003/02/07 18:19:55  gsl
-**	sync with head
-**	
 **	Revision 1.10  2003/02/07 17:55:21  gsl
 **	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
 **	

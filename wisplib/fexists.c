@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		fexists.c
@@ -31,6 +42,10 @@ static char rcsid[]="$Id:$";
 #include <sys/stat.h>
 #include <errno.h>
 
+#ifdef unix
+#include <unistd.h>
+#endif
+
 #ifdef WIN32
 #include <io.h>
 #endif
@@ -44,6 +59,7 @@ static char rcsid[]="$Id:$";
 
 #include "idsistd.h"
 #include "wisplib.h"
+#include "werrlog.h"
 
 #ifndef S_ISDIR
 #define S_ISFIFO(m)	(((m)&(_S_IFMT)) == (_S_IFIFO))
@@ -85,38 +101,42 @@ int WL_fexists(const char* name)
 		return 1;		/* File exists */
 	}
 
-	if (EOVERFLOW == errno)		/* Error but file does exist */
-	{
-		return 1;
-	}
-
-	return 0;
-#else
+#else /* !USE_FILE64 */
 	struct stat buf;
 
 	if (0==stat(name,&buf))
 	{
 		return 1;		/* File exists */
 	}
-
-#ifdef EOVERFLOW
-	if (EOVERFLOW == errno)		/* Large file exists */
-	{
-		return 1;
-	}
-#endif
-
-	return 0;
-#endif
-#endif
+#endif /* !USE_FILE64 */
+#endif /* unix */
 
 #ifdef WIN32
 	/*
 	 *	Use access() because stat() fails on a share name like "\\machine\share".
 	 */
 
-	return (0==access(name,000)) ? 1 : 0;
+	if (0==access(name,000))
+	{
+		return 1;
+	}
 #endif
+
+#ifdef EOVERFLOW
+	if (EOVERFLOW == errno)		/* Large file exists */
+	{
+		return 1;
+	}
+#endif /* EOVERFLOW */
+
+	/*
+	**	Report unexpected error only
+	*/
+	if (ENOENT != errno)
+	{
+		WL_wtrace("FEXISTS","NOTFOUND","File=[%s] errno=[%d]", name, errno);
+	}
+	return 0;
 }
 
 /*
@@ -350,12 +370,14 @@ int WL_stat_mode(const char* name, mode_t *mode)
 	struct stat64 buf;
 	if ( 0 != stat64(name,&buf) )
 	{
+		WL_wtrace("STAT64","FAILED","File=[%s] errno=[%d]", name, errno);
 		return -1;
 	}
 #else
 	struct stat buf;
 	if ( 0 != stat(name,&buf) )
 	{
+		WL_wtrace("STAT","FAILED","File=[%s] errno=[%d]", name, errno);
 		return -1;
 	}
 #endif
@@ -480,12 +502,20 @@ int WL_fcanread(const char* name)
 /*
 **	History:
 **	$Log: fexists.c,v $
-**	Revision 1.11.2.2  2002/11/19 16:24:07  gsl
-**	Define O_LARGEFILE for ALPHA and SCO
+**	Revision 1.24  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
 **	
-**	Revision 1.11.2.1  2002/10/09 19:20:29  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.23  2003/01/29 19:42:50  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.22  2002/12/11 21:09:19  gsl
+**	Only trace "odd" errors in fexists()
+**	
+**	Revision 1.21  2002/12/11 20:58:40  gsl
+**	Enhance tracing of runtype
+**	
+**	Revision 1.20  2002/11/19 16:28:44  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
 **	
 **	Revision 1.19  2002/10/08 15:44:39  gsl
 **	Change int8 to INT8 to avoid conficts

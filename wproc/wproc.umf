@@ -21,14 +21,15 @@ include $(WISPSRC)/port/make.include
 
 WPROC_EXE=wproc
 
-WPROC_VERSION=2000
+#	WPROC_VERSION=2000
+#	To change WPROC version number change WPROC_VERSION:
+#	wisp/src/wproc/product.cpp
+#	wisp/src/doc/wproc.txt
 
-WPROC_SHIP_DIR=wproc$(WPROC_VERSION).ship
-WPROC_DISTRIB_DIR=wproc.$(WPROC_VERSION)
 WPROC_DIST=$(WPROC_EXE) ../doc/wproc.txt wproc.msg
 WPROC_DEMOSTUFF=cursor.wps demo.wps dr.wps ed.wps environ.wps putparm.wps screen.wps test.wps video.wps
 
-WPROC_STD_FLAGS = -DWANG -DUNIX -I$(WC) -I$(VC) -DWPROC_VERSION=$(WPROC_VERSION)
+WPROC_STD_FLAGS = -DWANG -DUNIX -I$(WC) -I$(VC) 
 
 CFLAGS  = $(CFLAGS0)  $(WPROC_STD_FLAGS)
 CCFLAGS = $(CCFLAGS0) $(WPROC_STD_FLAGS)
@@ -66,7 +67,7 @@ default: header $(WPROC_EXE)
 
 header:
 	@echo
-	@echo ">>> Making WPROC $(WPROC_VERSION)"
+	@echo ">>> Making WPROC "
 	@echo ">>>"
 	@echo ">>> WISPSRC     = $(WISPSRC)"
 	@echo ">>>"
@@ -74,26 +75,6 @@ header:
 
 kit: header $(WPROC_DIST) $(WPROC_DEMOSTUFF)
 
-build_kit: kit
-	rm -r -f $(WPROC_SHIP_DIR)
-	mkdir $(WPROC_SHIP_DIR)
-	mkdir $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)
-	mkdir $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/demo
-	cp $(WPROC_DIST) 	$(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)
-	cp $(WPROC_DEMOSTUFF)	$(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/demo
-	date				> $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/Info
-	uname -s -r -v			>>$(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/Info
-	echo $(WPROC_DISTRIB_DIR)	>>$(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/Info
-	$(WPROC_EXE) -v			>>$(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/Info
-	find $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR) -type d -exec chmod 755 {} \;
-	find $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR) -type f -exec chmod 444 {} \;
-	chmod 555 $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/$(WPROC_EXE)
-	(cd $(WPROC_SHIP_DIR); tar -cvf - $(WPROC_DISTRIB_DIR)|compress>$(WPROC_DISTRIB_DIR).tar.Z)
-	chmod 644 $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR).tar.Z
-	cat $(WPROC_SHIP_DIR)/$(WPROC_DISTRIB_DIR)/Info
-
-#ed.wpr:	ed.wps
-#	(WISPCONFIG=. ./$(WPROC_EXE) -c ed.wps || exit 0)
 
 ed.wpr:
 	@echo
@@ -109,11 +90,9 @@ ed.wpr:
 	@echo
 	exit 1
 
-WPROC.$(WPROC_VERSION):
-	touch $@
-
 clean:
-	rm -r -f $(WPROC_EXE) $(WPROC_SHIP_DIR) *.o *~ core *.wpr WPROC.$(WPROC_VERSION)
+	rm -r -f $(WPROC_EXE) *.o *~ core *.wpr 
+
 
 WPROC_RUNTIME_OBJECTS = \
 args.o     \
@@ -360,7 +339,7 @@ procedur.o : procedur.$(CCC_EXT) procedur.hpp args.hpp exp.hpp object.hpp symbol
 process.o : process.$(CCC_EXT) process.hpp object.hpp symbols.hpp data.hpp pcode.hpp \
   stateobj.hpp environ.hpp assert.hpp opcodes.hpp scope.hpp colors.hpp debugaid.hpp \
   options.hpp memory.hpp envs.h
-product.o : product.$(CCC_EXT) product.hpp environ.hpp WPROC.$(WPROC_VERSION)
+product.o : product.$(CCC_EXT) product.hpp environ.hpp 
 range.o : range.$(CCC_EXT) range.hpp object.hpp token.hpp environ.hpp utility.hpp debugaid.hpp \
   options.hpp assert.hpp 
 reader.o : reader.$(CCC_EXT) reader.hpp object.hpp environ.hpp debugaid.hpp options.hpp \

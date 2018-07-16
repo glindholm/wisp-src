@@ -11,7 +11,7 @@
 #include <video.h>
 #include <vmodules.h>
 
-testt()
+int testt()
 {
 	register int i;
 

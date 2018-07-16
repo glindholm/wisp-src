@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #define EXT extern
 
@@ -28,39 +51,6 @@ void go_upper(char *strp)								/* Converts a string to upper case.	*/
 	{
 		*tmp_add = toupper(*tmp_add);						/* Upper case the keyword to compare.	*/
 		tmp_add++;
-	}
-}
-
-void write_log(facil,sever,rw,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)			/* write a log line to the current log	*/
-char *facil,sever,*mess, rw;								/* facility, severity, message, read/write*/
-char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for the text	*/
-{
-
-	if (logging)
-	{
-		if (sever != ' ')							/* if severity set to space, skip	*/
-		{
-			if (lncnt_type)							/* In reading in file.			*/
-			{								/* write facility, severity, message	*/
-				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_lineins);
-			}
-			else	fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_outlines);
-		}
-		fprintf(logfile,lform,p0,p1,p2,p3,p4,p5,p6,p7);				/* if logging, write it			*/
-		fprintf(logfile,"\n");
-	}
-	if (sever != 'I' && sever != ' ' && !logging)					/* if not informational only, report it	*/
-	{
-		if (sever != ' ')							/* if severity set to space, skip	*/
-		{
-			if (lncnt_type)							/* In reading in file.			*/
-			{								/* write facility, severity, message	*/
-				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_lineins);
-			}
-			else	fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_outlines);
-		}
-		printf(lform,p0,p1,p2,p3,p4,p5,p6,p7);					/* and the text				*/
-		printf("\n");
 	}
 }
 
@@ -805,9 +795,49 @@ int is_backref(void)									/* Determine if field is backwards	*/
 	if (*l_aptr == '&' || number(*l_aptr)) return (FALSE);
 	else return(TRUE);
 }
+
+void write_log(facil,sever,rw,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)			/* write a log line to the current log	*/
+char *facil,sever,*mess, rw;								/* facility, severity, message, read/write*/
+char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for the text	*/
+{
+
+	if (logging)
+	{
+		if (sever != ' ')							/* if severity set to space, skip	*/
+		{
+			if (lncnt_type)							/* In reading in file.			*/
+			{								/* write facility, severity, message	*/
+				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_lineins);
+			}
+			else	fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_outlines);
+		}
+		fprintf(logfile,lform,p0,p1,p2,p3,p4,p5,p6,p7);				/* if logging, write it			*/
+		fprintf(logfile,"\n");
+	}
+	if (sever != 'I' && sever != ' ' && !logging)					/* if not informational only, report it	*/
+	{
+		if (sever != ' ')							/* if severity set to space, skip	*/
+		{
+			if (lncnt_type)							/* In reading in file.			*/
+			{								/* write facility, severity, message	*/
+				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_lineins);
+			}
+			else	fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_outlines);
+		}
+		printf(lform,p0,p1,p2,p3,p4,p5,p6,p7);					/* and the text				*/
+		printf("\n");
+	}
+}
+
 /*
 **	History:
 **	$Log: ptutils.c,v $
+**	Revision 1.9  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.8  2003/01/28 20:08:56  gsl
+**	Move write_log() to end to avoid proto-typing warnings
+**	
 **	Revision 1.7  1999/09/13 19:50:41  gsl
 **	fix "==" vs. "="
 **	

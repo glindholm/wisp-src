@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <stdio.h>
 #include <string.h>
@@ -10,20 +31,46 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "wexit.h"
 
-void wswap(void *lword)		/* Preserved for backwards compatability */
+/*
+**	Routine:	WL_wswap()
+**
+**	Function:	swap the order of the half-words in a long-word item (for WANG routines to use)
+**
+**	Description:	Wang COBOL-74 used 2 x 2-byte Integer (BINARY) fields 
+**			in order to make up a 4-byte Integer field.
+**
+**			01 MY-4-BYTE-INT.
+**			   05  HIGH-2-BYTES  USAGE IS BINARY.
+**			   05  LOW-2-BYTES   USAGE IS BINARY.
+**			
+**			On Little-Endian machines the bytes within the word 
+**			need to be rearranged to form a native 32-bit integer.
+**			On Big-Endian machines this routine does nothing.
+**
+**	Arguments:
+**	lword		A Wang COBOL INT(4) field. 
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+*/
+void WSWAP(void *lword)
 {
 	WL_wswap(lword);
 }
 
-void WL_wswap(void *lword)			/* swap the order of the words in a longword item (for WANG routines to use)	*/
+void WL_wswap(void *lword)
 {
 	int2 *swords;
 	int2 temp;									/* used for the swap			*/
 
-	if (bytenormal()) return;
-	if (noswap_words) return;							/* Not supposed to do it.		*/
+	if (WL_bytenormal()) return;
+	if (wisp_get_noswap()) return;							/* Not supposed to do it.		*/
 
-	if (acu_cobol) 
+	if (wisp_acu_cobol()) 
 	{
 		/*
 		**	Acucobol keeps all binaries in big-endian order so 
@@ -31,7 +78,7 @@ void WL_wswap(void *lword)			/* swap the order of the words in a longword item (
 		**
 		**	Note: a 2+2 will come thru sub85.c frontend() unchanged because type is char.
 		*/
-		reversebytes(lword,4);
+		WL_reversebytes(lword,4);
 	}
 	else
 	{
@@ -46,10 +93,6 @@ void WL_wswap(void *lword)			/* swap the order of the words in a longword item (
 
 void WL_reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
 {
-	reversebytes(ptr, len);
-}
-void reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
-{
 	char	temp[80];
 	char   *lptr = (char*)ptr;
 	
@@ -62,10 +105,6 @@ void reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
 }	
 
 int WL_bytenormal(void)
-{
-	return bytenormal();
-}
-int bytenormal(void)
 {
 	static int first = 1;
 	static int normal;
@@ -96,7 +135,7 @@ int bytenormal(void)
 	return( normal );
 }
 
-int4 get_swap(const int4 *src)
+int4 WL_get_swap(const int4 *src)		/* Replacement for GETBIN(); wswap() */
 {
 	int4	temp;
 
@@ -106,7 +145,7 @@ int4 get_swap(const int4 *src)
 	return temp;
 }
 
-void put_swap(int4 *dest, int4 value)
+void WL_put_swap(void *dest, int4 value)	/* Replacement for wswap(); PUTBIN() */
 {
 	WL_wswap(&value);
 	memcpy((char*)dest, (char*)&value, 4);
@@ -137,7 +176,7 @@ void put_swap(int4 *dest, int4 value)
 */
 void WBB2B4(char* bb)
 {
-	if (!bytenormal() && !acu_cobol)
+	if (!WL_bytenormal() && !wisp_acu_cobol())
 	{
 		char b4[4];
 		
@@ -154,20 +193,35 @@ void WBB2B4(char* bb)
 /*
 **	History:
 **	$Log: wswap.c,v $
-**	Revision 1.15.2.2  2002/11/14 21:12:28  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.22  2003/07/11 16:58:31  gsl
+**	Add WSWAP() as a replacement for wswap()
 **	
-**	Revision 1.15.2.1  2002/11/12 16:00:30  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.21  2003/04/21 14:39:54  gsl
+**	comments
+**	
+**	Revision 1.20  2003/01/31 19:08:36  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.19  2002/07/12 17:01:07  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.18  2002/07/10 21:05:38  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.17  2002/07/02 04:00:36  gsl
+**	change acu_cobol and mf_cobol to wisp_acu_cobol() and wisp_mf_cobol()
+**	
+**	Revision 1.16  2002/07/01 04:02:45  gsl
+**	Replaced globals with accessors & mutators
 **	
 **	Revision 1.15  2002/03/28 20:43:14  gsl
 **	Add WBB2B4 to do a wswap() from cobol
 **	
 **	Revision 1.14  1998-11-04 10:04:49-05  gsl
-**	change get_swap() arg to const
+**	change WL_get_swap() arg to const
 **
 **	Revision 1.13  1997-10-17 11:41:18-04  gsl
-**	Add get_swap() and put_swap().
+**	Add WL_get_swap() and WL_put_swap().
 **	These are replacements for GETBIN()/PUTBIN() and swap used together.
 **
 **	Revision 1.12  1996-08-19 18:33:25-04  gsl

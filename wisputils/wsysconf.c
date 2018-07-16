@@ -43,8 +43,9 @@
 #include "platsubs.h"
 #include "wispvers.h"
 
-char *regex();
-char *regcmp();
+extern char *regex(char *pat, char *buf);
+extern char *regcmp(char *pat,char *dummy);
+
 static char *gmem(unsigned int nelem, unsigned int size);
 static char *nextfile(char * path, DIR **curdir, char *pattern);
 
@@ -518,7 +519,7 @@ static void build_disks()
 	char *devclass = "dv";
 	logical_id *p;
 
-	for (p=get_logical_list(); p; p=(logical_id *)p->next)
+	for (p=WL_get_lgmap_list(); p; p=p->next)
 	{
 		if (strcmp(p->logical,"."))
 		{
@@ -865,8 +866,11 @@ static void increment_devnum()
 /*
 **	History:
 **	$Log: wsysconf.c,v $
-**	Revision 1.20.2.1.2.3  2003/02/11 14:48:29  gsl
-**	Sync with $HEAD
+**	Revision 1.41  2003/03/20 18:28:45  gsl
+**	Fix logical_id typedef
+**	
+**	Revision 1.40  2003/02/24 20:19:23  gsl
+**	fix protos
 **	
 **	Revision 1.39  2003/02/11 14:26:44  gsl
 **	display version and plaftom

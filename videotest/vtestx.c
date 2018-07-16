@@ -14,9 +14,8 @@
 #include <vdata.h>
 #include <vmodules.h>
 
-testx()
+int testx()
 {
-	char vgetcto();									/* Internal get character function.	*/
 	char vcheck();									/* Internal check for char function.	*/
 	char c, da_string[48];								/* String for primary DA.		*/
 	int i;										/* Working register.			*/
@@ -29,9 +28,9 @@ testx()
 	count = 0;
 
 again:	vcontrol(chterm_esc);								/* What type of terminal are you?	*/
-	vcontrol_flush();
+	VL_vcontrol_flush();
 
-	for (i = 0; (i < 48) && ((da_string[i] = vgetcto(1)) != 'c') && (da_string[i] != 0); i++);
+	for (i = 0; (i < 48) && ((da_string[i] = VL_vgetcto(1)) != 'c') && (da_string[i] != 0); i++);
 
 	if (da_string[i] == 0) vprint("\nInput timed out, unable to give response string.");
 	else for (i = 0; (i < 48) && (da_string[i] != 'c'); i++)

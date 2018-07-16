@@ -14,7 +14,7 @@
 
 #include "video.h"
 
-testc()
+int testc()
 {
 	time_t the_time, end_time;
 
@@ -29,7 +29,7 @@ testc()
 	{
 		the_time = time(NULL);
 		vtext(VMODE_BOLD,14,10,"%s",ctime(&the_time));
-		vwait(1,0);
+		VL_vwait(1,0);
 	}
 	vset_cursor_on();
 	return(SUCCESS);

@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	selectpg.c	selectpg [-l#] start:end [infile]
 **				-l#		Number of lines per page, default is 66 lpp.
@@ -12,12 +35,14 @@ static char rcsid[]="$Id:$";
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 static int selectpages();
-static int printusage();
+static void  printusage();
 
 #define PROGNAME "selectpg"
 
-main(argc,argv)
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
@@ -33,7 +58,6 @@ char	*argv[];
 	int	lpp;
 	int	start, end;
 	FILE	*f_in;
-	FILE	*f_out;
 
 	char	message[80];
 	int	rc;
@@ -175,8 +199,7 @@ int	startpage, endpage, lpp;
 	return(0);
 }
 
-static printusage(message)
-char	*message;
+static void printusage(char* message)
 {
 	if (message)
 	{
@@ -191,6 +214,18 @@ char	*message;
 /*
 **	History:
 **	$Log: selectpg.c,v $
+**	Revision 1.12  2003/03/20 15:01:05  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.11  2003/03/12 18:18:11  gsl
+**	FIx -Wall warnings
+**	
+**	Revision 1.10  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.9  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
 **	Revision 1.8  1996/07/23 18:13:00  gsl
 **	drcs update
 **	

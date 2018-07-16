@@ -35,12 +35,18 @@ base_dist_list= \
 wisp_dist_list=	\
 	$(WISPKIT)	\
 	$(WISPKIT)/acu 	\
-	$(WISPKIT)/acu/aculink.wcb 	\
-	$(WISPKIT)/acu/acuusing.cob 	\
+	$(WISPKIT)/acu/ACULINK.wcb 	\
+	$(WISPKIT)/acu/ACULINK.acu 	\
+	$(WISPKIT)/acu/ACUUSING.cob 	\
+	$(WISPKIT)/acu/ACUUSING.acu 	\
 	$(WISPKIT)/acu/acu.rules 	\
 	$(WISPKIT)/acu/acucobol.include 	\
-	$(WISPKIT)/acu/sub85.c 	\
+	$(WISPKIT)/acu/sub85_acu50.c 	\
 	$(WISPKIT)/acu/sub85_acu51.c 	\
+	$(WISPKIT)/acu/sub85_acu52.c 	\
+	$(WISPKIT)/acu/sub85_acu60.c 	\
+	$(WISPKIT)/acu/wisp_sub85_inc.c 	\
+	$(WISPKIT)/acu/wacu.umf 	\
 	$(WISPKIT)/acu/WACUDISPLAY.cob 	\
 	$(WISPKIT)/acu/WACUERROR.cob 	\
 	$(WISPKIT)/acu/WACUFAC2SCREEN.cob 	\
@@ -48,14 +54,19 @@ wisp_dist_list=	\
 	$(WISPKIT)/acu/WACUGETPFKEY.cob 	\
 	$(WISPKIT)/acu/WACUHELP.cob 	\
 	$(WISPKIT)/acu/WACUWSB.cob 	\
-	$(WISPKIT)/acu/wispacn.txt 	\
+	$(WISPKIT)/acu/WACUDISPLAY.acu 	\
+	$(WISPKIT)/acu/WACUERROR.acu 	\
+	$(WISPKIT)/acu/WACUFAC2SCREEN.acu 	\
+	$(WISPKIT)/acu/WACUGETPARM.acu 	\
+	$(WISPKIT)/acu/WACUGETPFKEY.acu 	\
+	$(WISPKIT)/acu/WACUHELP.acu 	\
+	$(WISPKIT)/acu/WACUWSB.acu 	\
 	$(WISPKIT)/acu/wruncbl.umf 	\
-	$(WISPKIT)/acu/xterm.acu 	\
+	$(WISPKIT)/acu/xterm.a_termcap 	\
 	$(WISPKIT)/bin 	\
 	$(WISPKIT)/bin/bldmf 	\
 	$(WISPKIT)/bin/display 	\
 	$(WISPKIT)/bin/hexed 	\
-	$(WISPKIT)/bin/makemsg 	\
 	$(WISPKIT)/bin/proctran 	\
 	$(WISPKIT)/bin/selectpg 	\
 	$(WISPKIT)/bin/vcapkeys 	\
@@ -120,8 +131,6 @@ wisp_dist_list=	\
 	$(WISPKIT)/config/videocap/wincon.vcap 	\
 	$(WISPKIT)/config/videocap/wy_vt100.vcap 	\
 	$(WISPKIT)/config/videocap/xterm.vcap 	\
-	$(WISPKIT)/config/wispmsg.dat 	\
-	$(WISPKIT)/config/wispmsg.txt 	\
 	$(WISPKIT)/config/wproc.msg 	\
 	$(WISPKIT)/config/wrunconfig 	\
 	$(WISPKIT)/demo 	\
@@ -136,12 +145,12 @@ wisp_dist_list=	\
 	$(WISPKIT)/demo/video.wps 	\
 	$(WISPKIT)/etc 	\
 	$(WISPKIT)/etc/DISPRINT.wcb 	\
-	$(WISPKIT)/etc/softlink.wcb 	\
-	$(WISPKIT)/etc/wispplat.wcb 	\
+	$(WISPKIT)/etc/SOFTLINK.wcb 	\
+	$(WISPKIT)/etc/WISPPLAT.wcb 	\
 	$(WISPKIT)/etc/disprint.umf 	\
 	$(WISPKIT)/etc/make.include 	\
-	$(WISPKIT)/etc/nonascii.txt 	\
 	$(WISPKIT)/etc/wisp_install_unix.txt 	\
+	$(WISPKIT)/etc/wisp_packlist.txt 	\
 	$(WISPKIT)/etc/wisp_relnotes.txt 	\
 	$(WISPKIT)/etc/words.def 	\
 	$(WISPKIT)/etc/wproc.txt 	\
@@ -149,12 +158,12 @@ wisp_dist_list=	\
 	$(WISPKIT)/lib/libvideo.a 	\
 	$(WISPKIT)/lib/libwisp.a 	\
 	$(WISPKIT)/mf 	\
-	$(WISPKIT)/mf/mflink.cob 	\
+	$(WISPKIT)/mf/MFLINK.cob 	\
 	$(WISPKIT)/mf/mf.rules 	\
+	$(WISPKIT)/mf/wisp4400.c 	\
+	$(WISPKIT)/mf/wisp4400.o 	\
 	$(WISPKIT)/mf/wispmf.c 	\
 	$(WISPKIT)/mf/wispmf.o 	\
-	$(WISPKIT)/mf/wrunmf.c 	\
-	$(WISPKIT)/mf/wrunmf.o 	\
 	$(WISPKIT)/mf/wrunmf.umf
 
 ede_dist_list=	\
@@ -233,7 +242,6 @@ $(dist_dir_list):
 
 clean:
 	rm -r -f $(KITDIR)
-	rm -f $(SRCDIR)/etc/wispmsg.dat
 
 
 ##########################################################################
@@ -290,19 +298,24 @@ $(WISPKIT)/Info: $(PHASE1)
 	date 						>  $@
 	uname -s -r -v					>> $@
 	$(WISPKIT)/bin/wisp|grep Version=		>> $@
-	$(WISPKIT)/bin/wproc -v|grep '[Vv]ersion'	>> $@
 	@echo
 
 #
 #	$(WISPKIT)/acu
 #
 
+$(WISPKIT)/acu/ACULINK.wcb 	\
+$(WISPKIT)/acu/ACULINK.acu 	\
+$(WISPKIT)/acu/ACUUSING.cob 	\
+$(WISPKIT)/acu/ACUUSING.acu 	\
 $(WISPKIT)/acu/acu.rules 	\
 $(WISPKIT)/acu/acucobol.include 	\
-$(WISPKIT)/acu/sub85.c 	\
+$(WISPKIT)/acu/sub85_acu50.c 	\
 $(WISPKIT)/acu/sub85_acu51.c 	\
-$(WISPKIT)/acu/wruncbl.umf 	\
-$(WISPKIT)/acu/xterm.acu 	\
+$(WISPKIT)/acu/sub85_acu52.c 	\
+$(WISPKIT)/acu/sub85_acu60.c 	\
+$(WISPKIT)/acu/wisp_sub85_inc.c 	\
+$(WISPKIT)/acu/wacu.umf 	\
 $(WISPKIT)/acu/WACUDISPLAY.cob 	\
 $(WISPKIT)/acu/WACUERROR.cob 	\
 $(WISPKIT)/acu/WACUFAC2SCREEN.cob 	\
@@ -310,17 +323,18 @@ $(WISPKIT)/acu/WACUGETPARM.cob 	\
 $(WISPKIT)/acu/WACUGETPFKEY.cob 	\
 $(WISPKIT)/acu/WACUHELP.cob 	\
 $(WISPKIT)/acu/WACUWSB.cob 	\
+$(WISPKIT)/acu/WACUDISPLAY.acu 	\
+$(WISPKIT)/acu/WACUERROR.acu 	\
+$(WISPKIT)/acu/WACUFAC2SCREEN.acu 	\
+$(WISPKIT)/acu/WACUGETPARM.acu 	\
+$(WISPKIT)/acu/WACUGETPFKEY.acu 	\
+$(WISPKIT)/acu/WACUHELP.acu 	\
+$(WISPKIT)/acu/WACUWSB.acu 	\
+$(WISPKIT)/acu/wruncbl.umf 	\
+$(WISPKIT)/acu/xterm.a_termcap 	\
 : 	$(SRCDIR)/acu/$(@F)
 	$(COPY) $(SRCDIR)/acu/$(@F) $@
 
-$(WISPKIT)/acu/wispacn.txt: $(SRCDIR)/doc/$(@F)
-	$(COPY) $(SRCDIR)/doc/$(@F) $@
-
-$(WISPKIT)/acu/aculink.wcb:	$(SRCDIR)/acu/ACULINK.wcb
-	$(COPY) $(SRCDIR)/acu/ACULINK.wcb $@
-
-$(WISPKIT)/acu/acuusing.cob:	$(SRCDIR)/acu/ACUUSING.cob
-	$(COPY) $(SRCDIR)/acu/ACUUSING.cob $@
 
 #
 #	$(WISPKIT)/bin
@@ -329,7 +343,6 @@ $(WISPKIT)/acu/acuusing.cob:	$(SRCDIR)/acu/ACUUSING.cob
 $(WISPKIT)/bin/bldmf 	\
 $(WISPKIT)/bin/display 	\
 $(WISPKIT)/bin/hexed 	\
-$(WISPKIT)/bin/makemsg 	\
 $(WISPKIT)/bin/selectpg 	\
 $(WISPKIT)/bin/vcapkeys 	\
 $(WISPKIT)/bin/viewkey 	\
@@ -385,20 +398,12 @@ $(WISPKIT)/config/OPTIONS 	\
 $(WISPKIT)/config/PRMAP 	\
 $(WISPKIT)/config/SCMAP 	\
 $(WISPKIT)/config/W4WMAP 	\
-$(WISPKIT)/config/wispmsg.txt 	\
 $(WISPKIT)/config/wrunconfig 	\
 :	$(SRCDIR)/etc/$(@F)
 	$(COPY) $(SRCDIR)/etc/$(@F) $@
 
 $(WISPKIT)/config/wproc.msg:	$(SRCDIR)/wproc/$(@F)
 	$(COPY) $(SRCDIR)/wproc/$(@F) $@
-
-# Run makemsg in the etc dir to make wispmsg.dat
-$(WISPKIT)/config/wispmsg.dat: $(SRCDIR)/etc/wispmsg.dat
-	$(COPY) $(SRCDIR)/etc/wispmsg.dat $@
-
-$(SRCDIR)/etc/wispmsg.dat: $(SRCDIR)/etc/wispmsg.txt $(WISPKIT)/bin/makemsg
-	(cd $(SRCDIR)/etc; $(WISPKIT)/bin/makemsg)
 
 #
 #	$(WISPKIT)/config/videocap
@@ -454,21 +459,17 @@ $(WISPKIT)/demo/video.wps 	\
 #
 
 $(WISPKIT)/etc/DISPRINT.wcb 	\
+$(WISPKIT)/etc/SOFTLINK.wcb 	\
+$(WISPKIT)/etc/WISPPLAT.wcb 	\
 $(WISPKIT)/etc/disprint.umf 	\
 :	$(SRCDIR)/wisputils/$(@F)
 	$(COPY) $(SRCDIR)/wisputils/$(@F) $@
 
-$(WISPKIT)/etc/wispplat.wcb:	$(SRCDIR)/wisputils/WISPPLAT.wcb
-	$(COPY) $(SRCDIR)/wisputils/WISPPLAT.wcb $@
-
-$(WISPKIT)/etc/softlink.wcb:	$(SRCDIR)/wisputils/SOFTLINK.wcb
-	$(COPY) $(SRCDIR)/wisputils/SOFTLINK.wcb $@
-
 $(WISPKIT)/etc/make.include:	$(SRCDIR)/port/$(@F)
 	$(COPY) $(SRCDIR)/port/$(@F) $@
 
-$(WISPKIT)/etc/nonascii.txt 	\
 $(WISPKIT)/etc/wisp_install_unix.txt 	\
+$(WISPKIT)/etc/wisp_packlist.txt 	\
 $(WISPKIT)/etc/wisp_relnotes.txt 	\
 $(WISPKIT)/etc/wproc.txt 	\
 :	$(SRCDIR)/doc/$(@F)
@@ -490,18 +491,16 @@ $(WISPKIT)/lib/libwisp.a	\
 #	$(WISPKIT)/mf
 #
 
+$(WISPKIT)/mf/MFLINK.cob 	\
 $(WISPKIT)/mf/mf.rules 	\
+$(WISPKIT)/mf/wisp4400.c 	\
+$(WISPKIT)/mf/wisp4400.o \
 $(WISPKIT)/mf/wispmf.c 	\
 $(WISPKIT)/mf/wispmf.o \
-$(WISPKIT)/mf/wrunmf.c 	\
-$(WISPKIT)/mf/wrunmf.o \
 $(WISPKIT)/mf/wrunmf.umf \
 :	$(SRCDIR)/mf/$(@F)
 	$(COPY) $(SRCDIR)/mf/$(@F) $@
 
-
-$(WISPKIT)/mf/mflink.cob:	$(SRCDIR)/mf/MFLINK.cob
-	$(COPY) $(SRCDIR)/mf/MFLINK.cob $@
 
 ##########################################################################
 #	EDEKIT components

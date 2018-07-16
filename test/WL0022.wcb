@@ -1,4 +1,4 @@
-000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000100**   Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 000200**   $Id:$
 000300**
 000400**   File:       wl0022.wcb
@@ -15,324 +15,162 @@
 001300 Data Division.
 001400 Working-Storage Section.
 
-217000 01  SET-KW                     PIC X(02)  VALUE SPACES.
-217100 01  SET-VALX                   PIC X(20)  VALUE SPACES.
-217200 01  SET-VALB.
-217300     03  SET-VALB-1                BINARY  VALUE 0.
-217400     03  SET-VALB-2                BINARY  VALUE 0.
-217100 01  ORIG-VALX                   PIC X(20)  VALUE SPACES.
-217200 01  ORIG-VALB.
-217300     03  ORIG-VALB-1                BINARY  VALUE 0.
-217400     03  ORIG-VALB-2                BINARY  VALUE 0.
-180800 01  EXT-KW        PIC X(02) VALUE SPACES.
-180900 01  EXT-RECVR-1     PIC X(59) VALUE SPACES.
-181900 01  EXT-RECVR-2.
-182000     03  FILLER             BINARY    VALUE 0.
-182100     03  EXT-RECVR-2-X      BINARY.
+217000 01  THE-KW			PIC X(02)  VALUE SPACES.
+217100 01  SET-VALUE-ALPHA		PIC X(80)  VALUE SPACES.
+217200 01  SET-VALUE-INT.
+217300     03  SET-VALUE-INT-1          BINARY  VALUE 0.
+217400     03  SET-VALUE-INT-2          BINARY  VALUE 0.
+217100 01  ORIG-VALUE-ALPHA		PIC X(80)  VALUE SPACES.
+217200 01  ORIG-VALUE-INT.
+217300     03  ORIG-VALUE-INT-1         BINARY  VALUE 0.
+217400     03  ORIG-VALUE-INT-2         BINARY  VALUE 0.
+180900 01  EXT-RECVR-ALPHA		PIC X(80) VALUE SPACES.
+181900 01  EXT-RECVR-INT.
+182000     03  EXT-RECVR-INT-1		BINARY VALUE 0.
+182100     03  EXT-RECVR-INT-2		BINARY VALUE 0.
+       01  EXPECT-ALPHA			PIC X(80) VALUE SPACES.
+       01  EXPECT-INT.
+           03  EXPECT-INT-1		BINARY VALUE 0.
+           03  EXPECT-INT-2		BINARY VALUE 0.
 
        01  COMPLETION-STATUS          PIC 9(02)  VALUE 0.
 001600 Procedure Division.
 
-      *Keyword - "P#/PR"" 
-           MOVE "P#"       TO SET-KW.
-           MOVE LOW-VALUES TO SET-VALB.
-           MOVE 15         TO SET-VALB-2.
-           MOVE "P#"       TO EXT-KW.
-           MOVE LOW-VALUES TO EXT-RECVR-2.
-           PERFORM DO-SET-TEST-2.
-
+      *---------------------------------------------------------------
+       0000-MAIN SECTION.
+      *---------------------------------------------------------------
+       TEST-SET-SIMPLE.
       *Keyword - "FN" 
-           MOVE "FN"       TO SET-KW.
-           MOVE LOW-VALUES TO SET-VALB.
-           MOVE 25         TO SET-VALB-2.
-           MOVE "FN"       TO EXT-KW.
-           MOVE LOW-VALUES TO EXT-RECVR-2.
-           PERFORM DO-SET-TEST-2.
+           MOVE "FN"       TO THE-KW.
+           MOVE LOW-VALUES TO SET-VALUE-INT.
+           MOVE 25         TO SET-VALUE-INT-2.
+           PERFORM DO-SET-TEST-INTEGER-SIMPLE.
 
       *Keyword - "IL" 
-           MOVE "IL"       TO SET-KW.
-           MOVE "INPUTLIB" TO SET-VALX.
-           MOVE "IL"       TO EXT-KW.
-           PERFORM DO-SET-TEST-1.
+           MOVE "IL"       TO THE-KW.
+           MOVE "INPUTLIB" TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "IV" 
-           MOVE "IV"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "VOL100"   TO SET-VALX.
-           MOVE "IV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "IV"       TO THE-KW.
+           MOVE "VOL100"   TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "JC" 
-           MOVE "JC"       TO SET-KW.
-           MOVE "B"        TO SET-VALX.
-           MOVE "JC"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "JC"       TO THE-KW.
+           MOVE "B"        TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "JS" 
-           MOVE "JS"       TO SET-KW.
-           MOVE "H"        TO SET-VALX.
-           MOVE "JS"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "JS"       TO THE-KW.
+           MOVE "H"        TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "JL" 
-           MOVE "JL"       TO SET-KW.
-           MOVE LOW-VALUES TO SET-VALB.
-           MOVE 1000       TO SET-VALB-2.
-           MOVE "JL"       TO EXT-KW.
-           MOVE LOW-VALUES TO EXT-RECVR-2.
-           PERFORM DO-SET-TEST-2.
+           MOVE "JL"       TO THE-KW.
+           MOVE LOW-VALUES TO SET-VALUE-INT.
+           MOVE 1000       TO SET-VALUE-INT-2.
+           PERFORM DO-SET-TEST-INTEGER-SIMPLE.
 
       *Keyword - "LI" 
-           MOVE "LI"       TO SET-KW.
-           MOVE LOW-VALUES TO SET-VALB.
-           MOVE 20         TO SET-VALB-2.
-           MOVE "LI"       TO EXT-KW.
-           MOVE LOW-VALUES TO EXT-RECVR-2.
-           PERFORM DO-SET-TEST-2.
+           MOVE "LI"       TO THE-KW.
+           MOVE LOW-VALUES TO SET-VALUE-INT.
+           MOVE 20         TO SET-VALUE-INT-2.
+           PERFORM DO-SET-TEST-INTEGER-SIMPLE.
 
       *Keyword - "OL" 
-           MOVE "OL"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "OUTPUTLB" TO SET-VALX.
-           MOVE "OL"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "OL"       TO THE-KW.
+           MOVE "OUTPUTLB" TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "OV" 
-           MOVE "OV"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "OUTVOL"   TO SET-VALX.
-           MOVE "OV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "OV"       TO THE-KW.
+           MOVE "OUTVOL"   TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
+
+      *Keyword - "P#/PR"" 
+           MOVE "P#"       TO THE-KW.
+           MOVE LOW-VALUES TO SET-VALUE-INT.
+           MOVE 15         TO SET-VALUE-INT-2.
+           PERFORM DO-SET-TEST-INTEGER-SIMPLE.
 
       *Keyword - "PC" 
-           MOVE "PC"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "A"        TO SET-VALX.
-           MOVE "PC"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "PC"       TO THE-KW.
+           MOVE "A"        TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "PL" 
-           MOVE "PL"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "PROGLIBR" TO SET-VALX.
-           MOVE "PL"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "PL"       TO THE-KW.
+           MOVE "PROGLIBR" TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "PM" 
-           MOVE "PM"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "A"        TO SET-VALX.
-           MOVE "PM"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "PM"       TO THE-KW.
+           MOVE "A"        TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "PV" 
-           MOVE "PV"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "PRGVOL" TO SET-VALX.
-           MOVE "PV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "PV"       TO THE-KW.
+           MOVE "PRGVOL"   TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "RL" 
-           MOVE "RL"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "RUNLIBRY" TO SET-VALX.
-           MOVE "RL"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "RL"       TO THE-KW.
+           MOVE "RUNLIBRY" TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "RV" 
-           MOVE "RV"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "RUNVOL"   TO SET-VALX.
-           MOVE "RV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "RV"       TO THE-KW.
+           MOVE "RUNVOL"   TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "SL" 
-           MOVE "SL"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "SPOOLLIB" TO SET-VALX.
-           MOVE "SL"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "SL"       TO THE-KW.
+           MOVE "SPOOLLIB" TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "SV" 
-           MOVE "SV"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "SPOVOL"   TO SET-VALX.
-           MOVE "SV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "SV"       TO THE-KW.
+           MOVE "SPOVOL"   TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
       *Keyword - "WV" 
-           MOVE "WV"       TO SET-KW.
-           MOVE SPACES     TO SET-VALX.
-           MOVE "WORVOL"   TO SET-VALX.
-           MOVE "WV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-SET-TEST-1.
+           MOVE "WV"       TO THE-KW.
+           MOVE "WORVOL"   TO SET-VALUE-ALPHA.
+           PERFORM DO-SET-TEST-ALPHA-SIMPLE.
 
-      *Keyword - "CL" equal to RL
-           MOVE "RL"       TO EXT-KW.
-       	   CALL "EXTRACT" USING EXT-KW, ORIG-VALX.
-           MOVE "CL"       TO EXT-KW.
-       	   CALL "EXTRACT" USING EXT-KW, EXT-RECVR-1.
-       	   If ORIG-VALX NOT = EXT-RECVR-1 THEN
-	       PERFORM REPORT-ERROR.
-
-      *Keyword - "CV" 
-           MOVE "RV"       TO EXT-KW.
-       	   CALL "EXTRACT" USING EXT-KW, ORIG-VALX.
-           MOVE "CV"       TO EXT-KW.
-       	   CALL "EXTRACT" USING EXT-KW, EXT-RECVR-1.
-       	   If ORIG-VALX NOT = EXT-RECVR-1 THEN
-	       PERFORM REPORT-ERROR.
-
-      **Keyword - "E:" 
-      *     MOVE "E:"       TO EXT-KW.
-      *     MOVE LOW-VALUES TO EXT-RECVR-2.
-      *     PERFORM DO-EXTRACT-TEST-2.
-
-      **Keyword - "P:" 
-      *     MOVE "P:"       TO EXT-KW.
-      *     MOVE LOW-VALUES TO EXT-RECVR-2.
-      *     PERFORM DO-EXTRACT-TEST-2.
-
-      *Keyword - "W#" 
-           MOVE "W#"       TO EXT-KW.
-           MOVE LOW-VALUES TO EXT-RECVR-2.
-           PERFORM DO-EXTRACT-TEST-2.
+      *---------------------------------------------------------------
+       TEST-EXTRACT-SIMPLE.
 
       *Keyword - "TT" 
-           MOVE "TT"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-EXTRACT-TEST-1.
+           MOVE "TT"       TO THE-KW.
+           MOVE "F"        TO EXPECT-ALPHA
+           PERFORM DO-EXTRACT-TEST-ALPHA-SIMPLE.
 
       *Keyword - "XV" 
-           MOVE "XV"       TO EXT-KW.
-           MOVE SPACES     TO EXT-RECVR-1.
-           PERFORM DO-EXTRACT-TEST-1.
+           MOVE "XV"       TO THE-KW.
+           MOVE "IPLVOL"   TO EXPECT-ALPHA
+           PERFORM DO-EXTRACT-TEST-ALPHA-SIMPLE.
 
-           PERFORM CHECK-STATUS.
+      *---------------------------------------------------------------
+       TEST-EXTRACT-X1.
+      *Keyword - "CL" equal to RL
+           MOVE "RL"       TO THE-KW.
+       	   CALL "EXTRACT" USING THE-KW, ORIG-VALUE-ALPHA.
+           MOVE "CL"       TO THE-KW.
+       	   CALL "EXTRACT" USING THE-KW, EXT-RECVR-ALPHA.
+       	   If ORIG-VALUE-ALPHA NOT = EXT-RECVR-ALPHA THEN
+	       PERFORM REPORT-ERROR.
 
-388800 DO-SET-TEST-1.
-      *	   Save the original value
-       	   CALL "EXTRACT" USING SET-KW, ORIG-VALX.
-	   
-388900     CALL "SET" USING SET-KW, SET-VALX.
-           PERFORM DO-EXTRACT-TEST-1.
+      *Keyword - "CV" equal to RV
+           MOVE "RV"       TO THE-KW.
+       	   CALL "EXTRACT" USING THE-KW, ORIG-VALUE-ALPHA.
+           MOVE "CV"       TO THE-KW.
+       	   CALL "EXTRACT" USING THE-KW, EXT-RECVR-ALPHA.
+       	   If ORIG-VALUE-ALPHA NOT = EXT-RECVR-ALPHA THEN
+	       PERFORM REPORT-ERROR.
 
-      *    Restore the original value
-	   CALL "SET" USING SET-KW, ORIG-VALX.
-389000
-389100 DO-SET-TEST-2.
-      *	   Save the original value
-       	   CALL "EXTRACT" USING SET-KW, ORIG-VALB.
-
-389200     CALL "SET" USING SET-KW, SET-VALB.
-           PERFORM DO-EXTRACT-TEST-2.
-
-      *    Restore the original value
-	   CALL "SET" USING SET-KW, ORIG-VALB.
-389300
-       DO-EXTRACT-TEST-1.
-365500     CALL "EXTRACT" USING EXT-KW
-365600                          EXT-RECVR-1
-           IF EXT-KW = "IL" AND 
-             EXT-RECVR-1 NOT = "INPUTLIB" THEN
-             PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "IV" AND
-                  EXT-RECVR-1 NOT = "VOL100" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "JC" AND
-                  EXT-RECVR-1 NOT = "B" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "JS" AND
-                  EXT-RECVR-1 NOT = "H" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "OL" AND
-                  EXT-RECVR-1 NOT = "OUTPUTLB" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "OV" AND
-                  EXT-RECVR-1 NOT = "OUTVOL" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "PC" AND
-                  EXT-RECVR-1 NOT = "A" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "PL" AND
-                  EXT-RECVR-1 NOT = "PROGLIBR" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "PM" AND
-                  EXT-RECVR-1 NOT = "A" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "PV" AND
-                  EXT-RECVR-1 NOT = "PRGVOL" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "RL" AND
-                  EXT-RECVR-1 NOT = "RUNLIBRY" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "RV" AND
-                  EXT-RECVR-1 NOT = "RUNVOL" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "SL" AND
-                  EXT-RECVR-1 NOT = "SPOOLLIB" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "SV" AND
-                  EXT-RECVR-1 NOT = "SPOVOL" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "WV" AND
-                  EXT-RECVR-1 NOT = "WORVOL" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "CL" AND
-                  EXT-RECVR-1 NOT = "RUNLIBRY" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "CV" AND
-                  EXT-RECVR-1 NOT = "RUNVOL" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "TT" AND
-                  EXT-RECVR-1 NOT = "F" THEN
-                  PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "XV" AND
-                  EXT-RECVR-1 NOT = "IPLVOL" THEN
-                  PERFORM REPORT-ERROR.
-
-       DO-EXTRACT-TEST-2.
-366900     CALL "EXTRACT" USING EXT-KW,
-367000                          EXT-RECVR-2.
-           IF EXT-KW = "FN" AND EXT-RECVR-2-X NOT = 25 THEN
-             PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "JL" AND EXT-RECVR-2-X NOT = 1000 THEN
-             PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "LI" AND EXT-RECVR-2-X NOT = 20 THEN
-             PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "P#" AND EXT-RECVR-2-X NOT = 15 THEN
-             PERFORM REPORT-ERROR
-      *    ELSE IF EXT-KW = "E:" AND ( EXT-RECVR-2-X NOT > 0
-      *                          OR EXT-RECVR-2-X NOT < 200 ) THEN
-      *       PERFORM REPORT-ERROR
-      *    ELSE IF EXT-KW = "P:" AND ( EXT-RECVR-2-X NOT > 0
-      *                          OR EXT-RECVR-2-X NOT < 200 ) THEN
-      *       PERFORM REPORT-ERROR
-           ELSE IF EXT-KW = "W#" AND ( EXT-RECVR-2-X NOT > 0
-                                OR EXT-RECVR-2-X NOT < 255 ) THEN
-             PERFORM REPORT-ERROR
-             DISPLAY "Unknown terminal device number".
-
-
-       REPORT-ERROR.
-       	   ADD 1 TO COMPLETION-STATUS.
-       	   DISPLAY "SET/EXTRACT TEST FAILED KW=" EXT-KW.	    
-367100
-
+      *---------------------------------------------------------------
        CHECK-STATUS.
            IF  COMPLETION-STATUS = 0 THEN
                 DISPLAY "SET/EXTRACT completion successful."
@@ -340,9 +178,74 @@
                 DISPLAY "SET/EXTRACT failed. Status = " 
        	       	   COMPLETION-STATUS.
 
-            EXIT PROGRAM.
-            STOP RUN.
+      *---------------------------------------------------------------
+       9999-MAIN-END SECTION.
+      *---------------------------------------------------------------
+           EXIT PROGRAM.
+           STOP RUN.
 
+      *---------------------------------------------------------------
+       DO-SET-TEST-ALPHA-SIMPLE.
+      *	   Save the original value
+       	   CALL "EXTRACT" USING THE-KW, ORIG-VALUE-ALPHA.
+
+           CALL "SET"     USING THE-KW, SET-VALUE-ALPHA.
+
+	   MOVE SPACES TO EXT-RECVR-ALPHA.
+           CALL "EXTRACT" USING THE-KW, EXT-RECVR-ALPHA.
+
+           IF EXT-RECVR-ALPHA NOT = SET-VALUE-ALPHA 
+	   THEN
+               PERFORM REPORT-ERROR
+	   END-IF.
+
+      *    Restore the original value
+	   CALL "SET" USING THE-KW, ORIG-VALUE-ALPHA.
+
+      *---------------------------------------------------------------
+       DO-SET-TEST-INTEGER-SIMPLE.
+      *	   Save the original value
+       	   CALL "EXTRACT" USING THE-KW, ORIG-VALUE-INT.
+
+           CALL "SET"     USING THE-KW, SET-VALUE-INT.
+
+	   MOVE LOW-VALUES TO EXT-RECVR-INT.
+           CALL "EXTRACT" USING THE-KW, EXT-RECVR-INT.
+
+           IF (EXT-RECVR-INT-1 NOT = SET-VALUE-INT-1) OR
+	      (EXT-RECVR-INT-2 NOT = SET-VALUE-INT-2)
+	   THEN
+               PERFORM REPORT-ERROR
+	   END-IF.
+
+      *    Restore the original value
+	   CALL "SET" USING THE-KW, ORIG-VALUE-INT.
+
+      *---------------------------------------------------------------
+       DO-EXTRACT-TEST-ALPHA-SIMPLE.
+	   MOVE SPACES TO EXT-RECVR-ALPHA.
+           CALL "EXTRACT" USING THE-KW, EXT-RECVR-ALPHA.
+           IF EXT-RECVR-ALPHA NOT = EXPECT-ALPHA 
+	   THEN
+               PERFORM REPORT-ERROR
+	   END-IF.
+
+      *---------------------------------------------------------------
+       DO-EXTRACT-TEST-INTEGER-SIMPLE.
+	   MOVE LOW-VALUES TO EXT-RECVR-INT.
+           CALL "EXTRACT" USING THE-KW, EXT-RECVR-INT.
+           IF (EXT-RECVR-INT-1 NOT = EXPECT-INT-1) OR
+	      (EXT-RECVR-INT-2 NOT = EXPECT-INT-2)
+	   THEN
+               PERFORM REPORT-ERROR
+	   END-IF.
+
+
+      *---------------------------------------------------------------
+       REPORT-ERROR.
+       	   ADD 1 TO COMPLETION-STATUS.
+       	   DISPLAY "SET/EXTRACT TEST FAILED KW=" THE-KW.	    
+367100
 
 
 006600**   End of wl0022.wcb

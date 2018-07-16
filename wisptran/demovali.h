@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
+
 
 #ifdef unix
 #include <stdio.h>
@@ -79,11 +98,11 @@ static demoexit()
 /*
 **	History:
 **	$Log: demovali.h,v $
-**	Revision 1.11.2.2  2002/11/06 21:25:31  gsl
-**	Change address to Suite 402
+**	Revision 1.15  2003/02/04 17:33:20  gsl
+**	fix copyright header
 **	
-**	Revision 1.11.2.1  2002/10/10 12:56:44  gsl
-**	Huge file support
+**	Revision 1.14  2002/11/06 20:41:46  gsl
+**	Change address to Suite 402
 **	
 **	Revision 1.13  2002/10/04 21:00:56  gsl
 **	Change to use WL_stat_xxx() routines

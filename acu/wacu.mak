@@ -21,7 +21,7 @@
 #
 #		The following targets are recognized in this makefile.
 #
-#		acu		Build ACULINK and ACUUSING
+#		acu		Build ACULINK.acu and ACUUSING.acu
 #
 #		acn		Build Acucobol Native Screen routines
 #
@@ -39,14 +39,15 @@
 # WISPDIR	The installed WISP directory
 #
 #
-ACUDIR=C:\Acucorp\ACUCBL520\ACUGT
-WISPDIR=C:\WISP4407
+#ACUDIR=C:\Acucorp\ACUCBL520\ACUGT
+ACUDIR=C:\Acucorp\ACUCBL600\ACUGT
+WISPDIR=C:\WISP5000
 
 COBOL=$(ACUDIR)\bin\ccbl32.exe
-COBFLAGS = -da4 -zd -te 800 -C32 -Z32
+COBFLAGS = -Da4 -Gd -Te 800 -C50 -Z50
 
 WISPTRAN=$(WISPDIR)\bin\wisp.exe
-WISPFLAGS=-VACU
+WISPFLAGS=-VACU -u ACU50
 
 
 .wcb.cob:
@@ -89,9 +90,9 @@ $(COBOL):
 
 #============================================================================
 #
-#	ACULINK and ACUUSING
+#	ACULINK.acu and ACUUSING.acu
 #
-ACU_BLD = ACULINK ACULINK.cob ACUUSING 
+ACU_BLD = ACULINK.acu ACULINK.cob ACUUSING.acu
 
 acu:	acu_header $(ACU_BLD)
 	@echo "WISP Acucobol programs:"
@@ -105,20 +106,12 @@ acu_header: $(COBOL) $(WISPTRAN)
 	@echo "WISPTRAN =  $(WISPTRAN)"
 	@echo ""
 
-ACULINK: ACULINK.cob
-	$(COBOL) $(COBFLAGS) -o $@ ACULINK.cob
-
-ACULINK.cob: $(WISPTRAN) ACULINK.wcb
-	$(WISPTRAN) $*.wcb
-
-ACUUSING: ACUUSING.cob
-	$(COBOL) $(COBFLAGS) -o $@ ACUUSING.cob
 
 #============================================================================
 #
 #	ACUCOBOL Native Screens programs
 #
-#	$ nmake -f wwruncbl.mak acn
+#	$ nmake -f wacu.mak acn
 #
 
 ACN_BLD = 	WACUERROR.acu \
@@ -140,12 +133,14 @@ acn_header: $(COBOL)
 	@echo "COBOL  =  $(COBOL)"
 	@echo ""
 
+
+
 #============================================================================
 #
 #	clean
 
 clean:
-	del /Q $(ACN_BLD) $(ACU_BLD)
+	-del /Q $(ACN_BLD) $(ACU_BLD) wc*.cpy
 
 #
 # End of file

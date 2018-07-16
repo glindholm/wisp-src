@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -22,14 +43,9 @@ static char rcsid[]="$Id:$";
 
 static char filename[64];								/* Name of the file.			*/
 
-char *vfilename(ext) char *ext;								/* Make a video filename.		*/
+char *VL_vfilename(ext) char *ext;								/* Make a video filename.		*/
 {
 	char *ptr;									/* Temp char ptr			*/
-
-#ifdef VMS
-	strcpy(filename,"sys$login:video.");						/* Store the root name.			*/
-	strcat(filename,ext);								/* Add the extension.			*/
-#endif
 
 #ifdef unix
 	if (!(ptr=getenv("HOME")))							/* Get the HOME dir.			*/
@@ -41,15 +57,6 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 	strcat(filename,ext);								/* Add the extension.			*/
 #endif
 
-#ifdef MSDOS
-	if (!(ptr=getenv("HOME")))							/* Get the HOME dir.			*/
-	{
-		ptr = "C:";								/* If home not found use "C:"		*/
-	}
-	strcpy(filename,ptr);
-	strcat(filename,"\\video.");							/* Store in the root.			*/
-	strcat(filename,ext);
-#endif
 #ifdef WIN32
 	if (!(ptr=getenv("VIDEOHOME")))							/* Get the HOME dir.			*/
 	{
@@ -65,23 +72,15 @@ char *vfilename(ext) char *ext;								/* Make a video filename.		*/
 
 /*						Subroutine entry point.								*/
 
-FILE *vopenf(ext,how) char *ext, *how;
+FILE *VL_vopenf(ext,how) char *ext, *how;
 {
 
-#ifdef VMS
-	if ((how[0] == 'w') && (how[1] = '+')) 						/* Delete previous if open for update.	*/
-	{
-		delete(vfilename(ext));							/* Delete the file.			*/
-		how[1] = CHAR_NULL;							/* Don't do an update write.		*/
-	}
-#endif
-
-	return(fopen(vfilename(ext),how));						/* Open the file.			*/
+	return(fopen(VL_vfilename(ext),how));						/* Open the file.			*/
 }
 
 
 /*
-**	Routine:	vinfoname()
+**	Routine:	VL_vinfoname()
 **
 **	Function:	To construct an OSD name for a VIDEOINFO file.
 **
@@ -113,32 +112,28 @@ FILE *vopenf(ext,how) char *ext, *how;
 **	07/21/93	Written by GSL
 **
 */
-char *vinfoname(name)
+char *VL_vinfoname(name)
 char *name;
 {
 	static char s_vinfoname[80];
 	char	*vinfodir, vinfodirbuff[80];
 
-#ifdef VMS
-	strcpy(s_vinfoname,"V:");
-	strcat(s_vinfoname,name);
-#else
-	if (vinfodir = getenv("VIDEOINFO"))
+	if ((vinfodir = getenv("VIDEOINFO")))
 	{
 		/* Got the video info directory */
 	}
-	else if (vinfodir = getenv("VIDEOCAP"))
+	else if ((vinfodir = getenv("VIDEOCAP")))
 	{
 		/* Got the video info directory */
 	}
-	else if (vinfodir = getenv("WISPCONFIG"))
+	else if ((vinfodir = getenv("WISPCONFIG")))
 	{
-		vbldfilepath(vinfodirbuff,vinfodir,"videocap");
+		VL_vbldfilepath(vinfodirbuff,vinfodir,"videocap");
 		vinfodir = vinfodirbuff;
 	}
-	else if (vinfodir = getenv("OPEN3KCONFIG"))
+	else if ((vinfodir = getenv("OPEN3KCONFIG")))
 	{
-		vbldfilepath(vinfodirbuff,vinfodir,"videocap");
+		VL_vbldfilepath(vinfodirbuff,vinfodir,"videocap");
 		vinfodir = vinfodirbuff;
 	}
 	else
@@ -146,8 +141,7 @@ char *name;
 		vinfodir = VIDEOINFODIR;
 	}
 
-	vbldfilepath(s_vinfoname,vinfodir,name);
-#endif
+	VL_vbldfilepath(s_vinfoname,vinfodir,name);
 
 	return( s_vinfoname );
 }
@@ -155,6 +149,24 @@ char *name;
 /*
 **	History:
 **	$Log: vopenf.c,v $
+**	Revision 1.18  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.17  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/07/15 20:56:40  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.15  2002/07/15 20:16:12  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.14  2002/07/15 17:52:55  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/06/26 01:42:49  gsl
+**	Remove VMS code
+**	
 **	Revision 1.12  1998/05/21 15:44:58  gsl
 **	For WIN32 use the env VIDEOHOME for directory of ede files or default to C:
 **	

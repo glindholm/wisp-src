@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		osddefs.h
@@ -21,7 +42,7 @@
 #define FUNC_UNAME
 #endif
 
-#ifdef MSFS
+#ifdef WIN32
 #define FOPEN_READ_BINARY	"rb"
 #define FOPEN_WRITE_BINARY	"wb"
 #define FOPEN_READ_TEXT		"r"
@@ -38,6 +59,12 @@
 /*
 **	History:
 **	$Log: osddefs.h,v $
+**	Revision 1.4  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.3  2002/07/25 17:03:43  gsl
+**	MSFS->WIN32
+**	
 **	Revision 1.2  1996/07/11 23:20:55  gsl
 **	Share code with msdos for NT
 **	

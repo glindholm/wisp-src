@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		wsubmit.c
 **
@@ -22,11 +45,15 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
+#include "wisplib.h"
+#include "vssubs.h"
+#include "idsisubs.h"
 #include "wispvers.h"
 #include "intdef.h"
 
-#define EXT_FILEXT
 #include "filext.h"
 
 /*
@@ -34,28 +61,31 @@ static char rcsid[]="$Id:$";
 */
 static char rcs_revision[] = "$Revision:$";
 
+
+static void badusage();
+
 /*
 **	Usage:	$ wsubmit file [library [volume]] [USING parms1 - parm8]
 */
 
-main(argc,argv)
+int main(argc,argv)
 int	argc;
 char	*argv[];
 {
-	int4	argcount, retcode;
+	int4	retcode;
 	int	using;
 	char	file[20], lib[20], vol[20];
 	char	buff[80];
 
-	initglbs("WSUBMIT ");
+	WL_initglbs("WSUBMIT ");
 
 	if (argc < 2) badusage();
 
 	strcpy(buff, argv[1]);
-	upper_string(buff);
+	WL_upper_string(buff);
 	if ( strlen(buff)>8 ) badusage();
 
-	loadpad(file,buff,8);
+	WL_loadpad(file,buff,8);
 
 	using = 0;
 	strcpy(lib,"        ");
@@ -64,14 +94,14 @@ char	*argv[];
 	if (argc > 2)
 	{
 		strcpy(buff,argv[2]);
-		upper_string(buff);
+		WL_upper_string(buff);
 		if (0==strcmp(buff,"USING")) 
 		{
 			using = 3;
 		}
 		else
 		{
-			loadpad(lib, buff, 8);
+			WL_loadpad(lib, buff, 8);
 			if ( strlen(lib)>8 ) badusage();
 		}
 	}
@@ -79,14 +109,14 @@ char	*argv[];
 	if (argc > 3 && !using)
 	{
 		strcpy(buff,argv[3]);
-		upper_string(buff);
+		WL_upper_string(buff);
 		if (0==strcmp(buff,"USING")) 
 		{
 			using = 4;
 		}
 		else
 		{
-			loadpad(vol, buff, 6);
+			WL_loadpad(vol, buff, 6);
 			if ( strlen(vol)>6 ) badusage();
 		}
 	}
@@ -94,7 +124,7 @@ char	*argv[];
 	if (argc > 4 && !using)
 	{
 		strcpy(buff,argv[4]);
-		upper_string(buff);
+		WL_upper_string(buff);
 		if (0==strcmp(buff,"USING")) 
 		{
 			using = 5;
@@ -136,15 +166,14 @@ printf("len[%d]=%d, parm[%d]=%s\n",i,(int)len[i],i,parm[i]);
 #ifdef TESTING
 printf("SUBMIT file[%8.8s] lib[%8.8s] vol[%6.6s]\n",file,lib,vol);
 #endif
-	argcount = 4;
-	wvaset( &argcount );
+	WL_set_va_count(4);
 	SUBMIT( file, lib, vol, &retcode);
 
-	wswap(&retcode);
+	WL_wswap(&retcode);
 	exit(retcode);
 }
 
-badusage()
+static void badusage()
 {
 
 	printf("\n");
@@ -161,6 +190,30 @@ badusage()
 /*
 **	History:
 **	$Log: wsubmit.c,v $
+**	Revision 1.18  2003/02/04 21:05:36  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.17  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.16  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.15  2002/07/12 17:17:05  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.14  2002/07/11 14:52:52  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.13  2002/07/11 14:33:55  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.12  2002/07/10 21:06:32  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.11  2002/06/25 18:18:37  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.10  1997/06/10 19:48:54  scass
 **	Changed long to int4 for portability.
 **	

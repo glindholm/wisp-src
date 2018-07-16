@@ -7,6 +7,7 @@ KCSI 4.0.00
   KCSITRACE 1
 
 - CREATE dump will print to a ##CDBG file
+  export CREATE_DEBUG_REPORT=1
 
 NEW KCSI TRACING
 ================

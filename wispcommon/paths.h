@@ -1,16 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		paths.h
@@ -28,27 +40,45 @@
 #define DIR_SEPARATOR_STR "/"
 #endif
 
-#ifdef MSFS
+#ifdef WIN32
 #define PATH_SEPARATOR	';'
 #define DIR_SEPARATOR	'\\'
 #define DIR_SEPARATOR_STR "\\"
 #endif
 
-char *link_path_seg(int pathnum);
-char *env_path_seg(int pathnum);
-char *osd_ext(char *filepath);
-int whichenvpath(char *filename, char *fullpath);
-int whichlinkpath(char *filename, char *fullpath);
+#define link_path_seg	WL_link_path_seg
+#define env_path_seg	WL_env_path_seg
+#define osd_ext		WL_osd_ext
+#define whichenvpath	WL_whichenvpath
+#define whichlinkpath	WL_whichlinkpath
+
+char *WL_link_path_seg(int pathnum);
+char *WL_env_path_seg(int pathnum);
+char *WL_osd_ext(char *filepath);
+int   WL_whichenvpath(char *filename, char *fullpath);
+int   WL_whichlinkpath(char *filename, char *fullpath);
 
 #endif /* PATHS_H */
 /*
 **	History:
 **	$Log: paths.h,v $
+**	Revision 1.14  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.13  2002/07/25 17:03:41  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.12  2002/07/11 14:34:00  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.11  2002/07/09 04:14:04  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.10  1997/12/04 22:35:46  gsl
 **	added whichlinkpath()
 **	
 **	Revision 1.9  1997-12-04 15:38:35-05  gsl
-**	Split osd_path() into link_path_seg() and env_path_seg()
+**	Split osd_path() into WL_link_path_seg() and WL_env_path_seg()
 **
 **	Revision 1.8  1996-07-23 14:17:49-04  gsl
 **	drcs update

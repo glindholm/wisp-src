@@ -1,25 +1,11 @@
 #
-#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 #	$Id:$
-#
-#	/************************************************************************/
-#	/*									*/
-#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
-#	/*	 An unpublished work of International Digital Scientific Inc.	*/
-#	/*			    All rights reserved.			*/
-#	/*									*/
-#	/************************************************************************/
-#
 #
 #	File:		utils.umf
 #
 #	Function:	Generic makefile for the WISP utilities on all unix platforms.
 #
-# 	History:	
-#	06/04/92	Changed to use make.include GSL
-#	06/09/92	Removed copy stmts. GSL
-#       06/18/92        Added target for bldmf
-#	09/13/93	Added ulicense and uauthorize, removed ilp stuff. GSL
 #
 
 CDEBUG   =
@@ -39,11 +25,12 @@ UTILS_LIBS_LINK = $(WISP_LIBS_LINK) $(MATH_LINK) $(CURSES_LINK)
 ACU_LIBS_LINK = $(LIBACU)
 #VSNIDX=vsn_only.o
 
-ALL= 	bldmf display makemsg selectpg wcopy wdelay wdelwrk wexists wfind \
+ALL= 	bldmf display selectpg wcopy wdelay wdelwrk wexists wfind \
 	wputparm wrename wretcode wrun wscratch wsubmit wsysconf wsysinit wusage \
-	viewkey vsx wsort vcapkeys wlicense wdiag wshell wlictest qapic hexed
+	viewkey vsx wsort vcapkeys wlicense wdiag wshell wlictest qapic hexed \
+	testftok testints
 
-all:	$(ALL)
+all:	$(ALL) run_qapic
 
 debug:
 	$(MAKE) $(MAKEFLAGS) CDEBUG=-g L_WISP=wispd L_VIDEO=videod
@@ -51,18 +38,15 @@ debug:
 clean:
 	rm -f $(ALL) *.o core *~ bldmf_l.c
 
-bldmf: bldmf.c bldmf.h bldmf_l.o $(WISP_LIBS_PATHS)
-	$(CC) $(CFLAGS) -o $@ bldmf.c bldmf_l.o $(UTILS_LIBS_LINK) $(LEX_LINK)
+bldmf: bldmf.c bldmf.h regexpr.c regexpr.h bldmf_l.o $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ bldmf.c regexpr.c bldmf_l.o $(UTILS_LIBS_LINK) $(LEX_LINK)
 
 bldmf_l.c: bldmf_l.l bldmf.h
-	lex -t bldmf_l.l >bldmf_l.c 	
+	$(LEX) -t bldmf_l.l >bldmf_l.c 	
 
 display: display.c $(WC)/werrlog.h $(WC)/idsistd.h $(WC)/intdef.h $(WC)/vwang.h $(WC)/wisplib.h \
 		$(WC)/setenvst.h $(WC)/filext.h $(WISP_LIBS_PATHS) $(VSNIDX)
 	$(CC) $(CFLAGS) -o $@ display.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
-
-makemsg: makemsg.c $(WC)/intdef.h
-	$(CC) $(CFLAGS) -o $@ makemsg.c
 
 selectpg: selectpg.c
 	$(CC) $(CFLAGS) -o $@ selectpg.c
@@ -78,7 +62,8 @@ wdelay: wdelay.c
 wdelwrk: wdelwrk.c $(WC)/filext.h $(WC)/wcommon.h $(WC)/wperson.h wutils.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wdelwrk.c $(UTILS_LIBS_LINK)
 
-wdiag: wdiag.c $(WC)/filext.h $(WC)/paths.h $(WC)/wrunconf.h $(WC)/idsisubs.h $(WC)/idsistd.h $(WC)/intdef.h wutils.h
+wdiag: wdiag.c $(WC)/filext.h $(WC)/paths.h $(WC)/wrunconf.h $(WC)/idsisubs.h \
+	$(WC)/idsistd.h $(WC)/intdef.h wutils.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wdiag.c $(UTILS_LIBS_LINK)
 
 wexists: wexists.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
@@ -103,7 +88,7 @@ wretcode: wretcode.c $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wretcode.c $(UTILS_LIBS_LINK)
 
 wrun: wrun.c $(WC)/wrunconf.h $(WC)/wdefines.h $(WC)/link.h $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wcommon.h \
-	$(WC)/wispvers.h $(WC)/idsisubs.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/wispcfg.h saveterm.c \
+	$(WC)/wispvers.h $(WC)/idsisubs.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/wispcfg.h \
 	wutils.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wrun.c $(UTILS_LIBS_LINK)
 
@@ -118,9 +103,9 @@ wshell: wshell.c $(WC)/vwang.h $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wexit.h $(WC
 wsubmit: wsubmit.c $(WC)/wispvers.h $(WC)/filext.h wutils.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wsubmit.c $(UTILS_LIBS_LINK)
 
-wsysconf: wsysconf.c $(WC)/wperson.h $(WC)/filext.h $(WC)/wdefines.h $(WC)/wsysconf.h wutils.h \
+wsysconf: wsysconf.c regexpr.c regexpr.h $(WC)/wperson.h $(WC)/filext.h $(WC)/wdefines.h $(WC)/wsysconf.h wutils.h \
  	wsysinit.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wdefines.h $(WC)/filext.h $(WISP_LIBS_PATHS)
-	$(CC) $(CFLAGS) -o $@ wsysconf.c $(UTILS_LIBS_LINK)
+	$(CC) $(CFLAGS) -o $@ wsysconf.c regexpr.c $(UTILS_LIBS_LINK)
 
 wsysinit: wsysinit.c $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wsysinit.c $(UTILS_LIBS_LINK)
@@ -138,7 +123,7 @@ vsx: vsx.c $(WC)/idsistd.h $(WC)/intdef.h
 
 wsort: wsort.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/filext.h $(WC)/wcommon.h $(WC)/wperson.h \
  	$(WC)/wangkeys.h $(WC)/vssort.h $(WC)/wexit.h $(WC)/level.h $(WC)/wfname.h $(WC)/idsisubs.h \
- 	$(WC)/sysdev.h $(WC)/wispvers.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/vwang.h \
+ 	$(WC)/wispvers.h $(WC)/wisplib.h $(WC)/setenvst.h $(WC)/vwang.h \
 	$(WISP_LIBS_PATHS) $(VSNIDX)
 	$(CC) $(CFLAGS) -o $@ wsort.c $(UTILS_LIBS_LINK) $(ACU_LIBS_LINK) 
 
@@ -149,17 +134,8 @@ vcapkeys: vcapkeys.c
 	$(CC) $(CFLAGS) -o $@ vcapkeys.c $(SOCKET_LINK)
 
 wlicense: wlicense.c $(WC)/wlicense.h $(WC)/intdef.h $(WC)/idsisubs.h $(WC)/idsistd.h $(WC)/prompt.h \
-	$(WC)/platsubs.h $(WC)/machid.h prompt.o
+	$(WC)/platsubs.h $(WC)/machid.h prompt.o $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ wlicense.c prompt.o $(UTILS_LIBS_LINK)
-
-# ulicense: wlicense.c prompt.o licunique.o
-#	$(CC) $(CFLAGS) -o $@ wlicense.c prompt.o licunique.o $(UTILS_LIBS_LINK)
-
-wauthorize: wauthorize.c prompt.o $(WC)/wlicense.h $(WC)/intdef.h
-	$(CC) $(CFLAGS) -o $@ wauthorize.c prompt.o $(UTILS_LIBS_LINK)
-
-uauthorize: wauthorize.c prompt.o licunique.o
-	$(CC) $(CFLAGS) -o $@ wauthorize.c prompt.o licunique.o $(UTILS_LIBS_LINK)
 
 hexed: hexed.c $(VC)/vlocal.h $(VC)/video.h $(VC)/vcap.h $(VC)/vdata.h $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ hexed.c $(UTILS_LIBS_LINK)
@@ -169,3 +145,9 @@ wlictest: wlictest.c $(WISP_LIBS_PATHS)
 
 qapic: qapic.c $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) -o $@ $@.c -I ../wisplib $(UTILS_LIBS_LINK)
+
+run_qapic: qapic
+	@echo '*****'
+	@echo 'Running QAPIC tests'
+	qapic
+	@echo '*****'

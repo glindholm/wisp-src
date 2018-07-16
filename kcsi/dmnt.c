@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include <stdio.h>
 #include "dbsc.h"
 #include "dglb.h"
@@ -11,7 +25,6 @@ static char rcsid[]="$Id:$";
 #include "intdef.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)dmnt.c	1.2 2/22/93";
 
 static char scr22[]=" DATENTRYDATENTRY-SCREEN                 D          ";
 static char scr20[]=" DATENTRYDATENTRY-SCREEN                 ";
@@ -22,7 +35,6 @@ static void add_message();
 static void add_footer();
 static void add_fld_prompt(FIELD *fld);
 static void add_fld_item(FIELD *fld);
-static int add_edit_flags(FIELD *fld,char *edits);
 static void dmntl(char *mode,char *idx);
 static void add_dte_logo();
 static void end_main_screen();
@@ -302,6 +314,7 @@ This routine is not used at all in the current version and is probably
 not needed.
 No commas or dollars allowed.
 ------*/
+#ifdef NOT_USED
 static int add_edit_flags(FIELD *fld,char *edits)
 {
 	char *zedits;
@@ -371,6 +384,7 @@ static int add_edit_flags(FIELD *fld,char *edits)
 		}
        return(8);
 }
+#endif /* NOT_USED */
 
 /*----
 A prompt is a simple field containing no modifiable characteristics
@@ -395,8 +409,11 @@ static void add_prompt(int row,int col,char *prompt,char **fld,char **pfac)
 /*
 **	History:
 **	$Log: dmnt.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:23  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.14  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.12  2002/10/24 15:48:33  gsl
 **	Make globals unique

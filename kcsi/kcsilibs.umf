@@ -46,11 +46,13 @@ MAKEFILE=kcsilibs.umf
 #	wisp/src/kcsi/kcsi_acu_install.txt
 #	wisp/src/kcsi/kcsi_mf_install.txt
 #	wisp/src/kcsi/kcsi_packlist.txt
-#	wisp/src/doc/wisp_relnotes.lis
+#	wisp/src/doc/wisp_relnotes.txt
 #	wisp/src/acu/wruncbl.umf
+#	wisp/src/acu/wrun32wisp_kcsi_acu50.mak
+#	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 #
-KCSI_VERSION=4000
+KCSI_VERSION=4100
 
 #-----------------------------------------------------------------------
 #
@@ -77,7 +79,7 @@ WISPFLAGS =
 include $(WISPSRC)/acu/acucobol.include
 
 ACU_COBOL = ccbl
-ACU_FLAGS = -Da4 -C50 -Z50 -Za
+ACU_COBFLAGS = -Da4 -Za -C50 -Z50
 
 #-----------------------------------------------------------------------
 #
@@ -186,7 +188,6 @@ LIBC_ALL_O= \
 	$(LIBC_ALL_A)(rbld.o) \
 	$(LIBC_ALL_A)(rcal.o) \
 	$(LIBC_ALL_A)(rcmp.o) \
-	$(LIBC_ALL_A)(rcvp.o) \
 	$(LIBC_ALL_A)(rcvs.o) \
 	$(LIBC_ALL_A)(rcvt.o) \
 	$(LIBC_ALL_A)(rfmt.o) \
@@ -212,10 +213,8 @@ LIBC_ALL_O= \
 	$(LIBC_ALL_A)(vscrfile.o) \
 	$(LIBC_ALL_A)(vscrglb.o) \
 	$(LIBC_ALL_A)(vscrhelp.o) \
-	$(LIBC_ALL_A)(vscrkwfo.o) \
 	$(LIBC_ALL_A)(vscrout.o) \
-	$(LIBC_ALL_A)(vscrspky.o) \
-	$(LIBC_ALL_A)(vscrsqz.o) 
+	$(LIBC_ALL_A)(vscrspky.o) 
 
 
 #-----------------------------------------------------------------------
@@ -229,8 +228,8 @@ CFLAGS_CRID= $(CFLAGS) -DKCSI_UNIX -I ../wispcommon
 .SUFFIXES: .o .cbx .wcb
 
 .wcb.cbx:
-	$(WISPTRAN) -VACU $(WISPFLAGS) $*.wcb
-	$(ACU_COBOL) $(ACU_FLAGS) -o $*.cbx $*.cob
+	$(WISPTRAN) -VACU -u ACU50 $(WISPFLAGS) $*.wcb
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o $*.cbx $*.cob
 
 .wcb.o:
 	$(WISPTRAN) -VMF $(WISPFLAGS) $*.wcb
@@ -257,7 +256,7 @@ clean:
 	rm -f control report inquiry datentry create
 	rm -f CONTROL REPORT INQUIRY DATENTRY CREATE
 	rm -f wruncblk wruncblke 
-	rm -f wruncbl.umf *.alc sub.c sub85.c filetbl.c
+	rm -f wruncbl.umf *.alc sub.c sub85.c filetbl.c wisp_sub85_inc.c
 	rm -r -f kcsi*.ship
 
 header_acu:
@@ -266,7 +265,7 @@ header_acu:
 	@echo "== PWD=`pwd`"
 	@echo "== WISPSRC=$(WISPSRC)"
 	@echo "== ACUDIR=$(ACUDIR)"
-	@echo "== COBOL=$(ACU_COBOL) $(ACU_FLAGS)"
+	@echo "== COBOL=$(ACU_COBOL) $(ACU_COBFLAGS)"
 	@echo "=="
 
 header_mf: 
@@ -280,11 +279,11 @@ header_mf:
 	@echo "=="
 
 kcsi_mf: 
-	$(MAKE) -f $(MAKEFILE) CC=$(CC) CFLAGS="$(CFLAGS_CRID) -DKCSI_MFX" LIBC_ALL_A=$(LIBC_MFX_A) \
+	$(MAKE) -f $(MAKEFILE) CC="$(CC)" CFLAGS="$(CFLAGS_CRID) -DKCSI_MFX" LIBC_ALL_A=$(LIBC_MFX_A) \
 		WISPSRC=$(WISPSRC) kcsi_mf_go
 
 kcsi_acu:
-	$(MAKE) -f $(MAKEFILE) CC=$(CC) CFLAGS="$(CFLAGS_CRID) -DKCSI_ACU" LIBC_ALL_A=$(LIBC_ACU_A) \
+	$(MAKE) -f $(MAKEFILE) CC="$(CC)" CFLAGS="$(CFLAGS_CRID) -DKCSI_ACU" LIBC_ALL_A=$(LIBC_ACU_A) \
 		WISPSRC=$(WISPSRC) kcsi_acu_go
 
 kcsi_mf_go: header_mf required kcsi_mf_shipkit 
@@ -376,8 +375,8 @@ DATENTRY:	$(DATENTRY_WCB)
 	@echo $@ is UP-TO-DATE
 
 CREATE:	CREATE.wcb
-	$(WISPTRAN) -VACU $(WISPFLAGS) CREATE.wcb
-	$(ACU_COBOL) $(ACU_FLAGS) -o CREATE CREATE.cob
+	$(WISPTRAN) -VACU -u ACU50 $(WISPFLAGS) CREATE.wcb
+	$(ACU_COBOL) $(ACU_COBFLAGS) -o CREATE CREATE.cob
 	@echo $@ is UP-TO-DATE
 
 control_cbx:	header_acu $(CONTROL_CBX)

@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		reduce.c
@@ -29,9 +42,6 @@ static char rcsid[]="$Id:$";
 **	Routines:	
 **	reduce_data_item()	Reduce a common data item.
 **
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -92,9 +102,19 @@ NODE reduce_data_item(NODE start)
 		new_node = makenode(NODE_TOKEN,NULL,start->next,start->token);
 
 		temp_node = new_node;
-		while(temp_node->next && NODE_TOKEN==temp_node->next->type && 
-			(CONTINUATION==temp_node->next->token->type || LITERAL==temp_node->next->token->type))
+
+		while(	              temp_node->next && 
+			NODE_TOKEN==  temp_node->next->type &&
+			CONTINUATION==temp_node->next->token->type && 
+			              temp_node->next->next && 
+			NODE_TOKEN==  temp_node->next->next->type &&
+			LITERAL==     temp_node->next->next->token->type
+			)
 		{
+			/*
+			**	Reduce in pairs CONTINUATION - LITERAL 
+			*/
+			temp_node = temp_node->next;
 			temp_node = temp_node->next;
 		}
 
@@ -284,6 +304,17 @@ NODE reduce_one(NODE start)
 /*
 **	History:
 **	$Log: reduce.c,v $
+**	Revision 1.9  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.8  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.7  2003/01/20 21:39:22  gsl
+**	Fix reduce_data_item()
+**	Reduce LITERAL + (CONTINUATION + LITERAL)
+**	The  CONTINUATION + LITERAL  *MUST* occur in pairs.
+**	
 **	Revision 1.6  1996/08/31 01:56:08  gsl
 **	drcs update
 **	

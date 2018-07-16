@@ -1,0 +1,42 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       WL0034D.wcb
+      **
+      **   Project:    WISP/TEST - LIBRARY Routines
+      **
+      **   Purpose:    Test LINK routine 
+      **
+      **   Tests:	This program is called from WL0034 and 
+      **		calls LOGOFF
+      **
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. WL0034D.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       WORKING-STORAGE SECTION.
+
+      *==============================================================
+       PROCEDURE DIVISION. 
+       0000-MAIN SECTION.
+
+           CALL "LOGOFF".
+
+
+      *==============================================================
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+      **
+      **   End of WL0034D.wcb
+      **

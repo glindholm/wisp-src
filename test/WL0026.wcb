@@ -1,11 +1,11 @@
-000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000100**   Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 000200**   $Id:$
 000300**
 000400**   File:       wl0026.wcb
 000500**
 000600**   Project:    WISP/TEST
 000700**
-000800**   Purpose:    Test xx2byte routine.
+000800**   Purpose:    Test W99TOX routine.
 000900**
 001000**   Example:
 001100**
@@ -30,21 +30,21 @@
 
 
        	   MOVE 24         TO SOURCE-ITEM.
-           CALL "xx2byte" USING SOURCE-ITEM, DESTIN-ITEM.
+           CALL "W99TOX" USING SOURCE-ITEM, DESTIN-ITEM.
        	   IF DESTIN-ITEM NOT = DEC-24  THEN
                ADD 1     TO COMPLETION-STATUS.
 
        	   MOVE 14         TO SOURCE-ITEM.
-       	   CALL "xx2byte" USING SOURCE-ITEM, DESTIN-ITEM.
+       	   CALL "W99TOX" USING SOURCE-ITEM, DESTIN-ITEM.
        	   IF DESTIN-ITEM NOT = DEC-14  THEN
                ADD 1     TO COMPLETION-STATUS.
 
 
        CHECK-STATUS.
            IF  COMPLETION-STATUS = 0 THEN
-               DISPLAY "xx2byte completion successful."
+               DISPLAY "W99TOX completion successful."
            ELSE
-               DISPLAY "xx2byte failed.".
+               DISPLAY "W99TOX failed.".
 
             EXIT PROGRAM.
             STOP RUN.

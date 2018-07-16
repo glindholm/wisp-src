@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #include <ctype.h>
 #include <string.h>
@@ -16,6 +29,9 @@ static char rcsid[]="$Id:$";
 #define EXT extern
 #include "wisp.h"
 #include "cobfiles.h"
+
+static void compress_name(char *name, unsigned int len);
+
 
 int strpos(const char* src, const char* srch)
 {
@@ -58,12 +74,12 @@ int stredt(char* src, const char* srch, const char* repl)
 
 char* make_fac(char* fac, const char* src)		/* take a source variable name and make a FAC variable name		*/
 {
-	return gen_data_name(fac, "F-", src, NULL);
+	return gen_data_name(fac, FAC_OF_PREFIX, src, NULL);
 }
 
 char*  make_oa(char* oa, const char* src)		/* take a source variable name and make an ORDER-AREA variable name.	*/
 {
-	return gen_data_name(oa, "O-A-", src, NULL);
+	return gen_data_name(oa, ORDER_AREA_PREFIX, src, NULL);
 }
 
 #define MAX_COBOL_WORD_LEN	30
@@ -72,49 +88,18 @@ char*  make_oa(char* oa, const char* src)		/* take a source variable name and ma
 char* make_fld(char *dst, const char* src, const char* prfx)	
 {
 	return gen_data_name(dst, prfx, src, NULL);
-	
-#ifdef OLD
-	int i;
-	char	*ptr;
-
-	strcpy(dst,prfx);						/* start the string with the prefix			*/
-	strcat(dst,src);						/* add in the old field name				*/
-
-	if ((i = strpos(dst,"(")) == -1)				/* Make sure length is not counting possible (INDEX)	*/
-	{
-		i = strlen(dst);					/* count length of the variable name			*/
-	}
-
-	ptr = dst;
-	ptr += strlen(prfx);						/* move ptr to character after prefix			*/
-	for( i = i-MAX_COBOL_WORD_LEN; i > 0;)
-	{
-		if( 0 == stredt(ptr,"-",""))				/* remove dashes till right size			*/
-			i--;
-		else
-			break;
-	}
-
-	if ((i = strpos(dst,"(")) == -1)				/* Make sure length is not counting possible (INDEX)	*/
-	{
-		i = strlen(dst);					/* count length of the variable name			*/
-	}
-
-	while( i > MAX_COBOL_WORD_LEN )
-	{
-		dst[--i] = ' ';
-		stredt(dst," ","");
-	}
-	return dst;
-#endif /* OLD */
 }
 
 char* gen_data_name(char* dest, const char* prefix, const char* base, const char* suffix)
 {
+	static int depth = 0;	/* recursive depth */
 	const char* l_prefix = "";
 	const char* l_suffix = "";
+	char	l_base[80];
 	char	temp[80];
 	
+	depth++;
+
 	if (prefix)
 	{
 		l_prefix = prefix;
@@ -124,8 +109,12 @@ char* gen_data_name(char* dest, const char* prefix, const char* base, const char
 		l_suffix = suffix;
 	}
 
-	sprintf(temp,"%s%s%s", l_prefix, base, l_suffix);
+	strcpy(l_base, base);
+	compress_name(l_base, MAX_COBOL_WORD_LEN - strlen(l_prefix) - strlen(l_suffix));
 
+	sprintf(temp,"%s%s%s", l_prefix, l_base, l_suffix);
+
+#ifdef OLD
 	if (strlen(temp) > MAX_COBOL_WORD_LEN)
 	{
 		int	max_base_len;
@@ -182,23 +171,33 @@ char* gen_data_name(char* dest, const char* prefix, const char* base, const char
 		write_log("WISP",'I',"GENNAME", "Generated data name [%s] has been compress from [%s%s%s]",
 			  temp, l_prefix, base, l_suffix);
 	}
+#endif /* OLD */
 
 	/*
 	**	Ensure generated name doesn't conflict with a user symbol.
 	*/
 	if (is_symbol(temp))
 	{
-		/*
-		**	Make Unique with "-Q"
-		*/
-		gen_data_name(temp, l_prefix, &temp[strlen(l_prefix)], "-Q");
-
-		write_log("WISP",'I',"GENNAME", "Generated data name [%s] has been munged to not conflict with symbol [%s%s%s]",
-			  temp, l_prefix, base, l_suffix);
+		if (depth > 1)
+		{
+			write_log("WISP",'E',"GENNAME", "Error Generated Unique data name [%s] from [%s%s%s]",
+				  temp, l_prefix, base, l_suffix);
+		}
+		else
+		{
+			/*
+			**	Make Unique with "-Q"
+			*/
+			gen_data_name(temp, l_prefix, &temp[strlen(l_prefix)], "-Q");
+			write_log("WISP",'I',"GENNAME", "Generated data name [%s] has been munged to not conflict with symbol [%s%s%s]",
+				  temp, l_prefix, base, l_suffix);
+		}
 	}
 
 	strcpy(dest,temp);
 	
+	depth--;
+
 	return dest;
 }
 
@@ -223,15 +222,22 @@ int lowercase(char* str)								/* Shift string to uppercase		*/
 	return 0;
 }
 
-int paracmp(str,strtab,tabcnt)
-char	*str;
-char	strtab[MAX_PARAGRAPHS][40];
-int	tabcnt;
+int paracmp(const char *str, char strtab[MAX_PARAGRAPHS][40], int tabcnt)
 {
 	int	i;
 	for(i=0; i<tabcnt; i++)
 	{
 		if (0==strcmp(str,strtab[i])) return(1);
+	}
+	return(0);
+}
+
+int instrlist(const char *test_str, char* strlist[], int list_cnt)
+{
+	int	i;
+	for(i=0; i<list_cnt; i++)
+	{
+		if (0==strcmp(test_str, strlist[i])) return(1);
 	}
 	return(0);
 }
@@ -258,29 +264,58 @@ int strchrcnt(char *string,char chr)
 }
 
 /*
+**	Compress a cobol user defined name to len characters by
+**	remove "-" characters then truncating
+*/
+static void compress_name(char *name, unsigned int len)
+{
+	int shrink = strlen(name) - len;	/* Number of characters to be removed */
+
+	if (shrink > 0)
+	{
+		char *ptr;
+		
+		/* Remove "-" from the end */
+		while (shrink>0 && (ptr = strrchr(name, '-')) != NULL)
+		{
+			stredt(ptr, "-", "");
+			shrink--;
+		}
+
+		name[len] = '\0';	/* Truncate the rest */
+	}
+}
+
+/*
 **	Use make_prog_name() for all the get_prog_xxx() routines.
 **	This will truncate the results required length.
 **	Don't use gen_data_name() because these are required 
 **	before working-storage and the value gen_data_name() generates
 **	may be different after working-storage is loaded into symbol table.
 */
-static char *make_prog_name(char *new, int fnum, const char* prefix)
+static char *make_prog_name(char *the_name, int fnum, const char* prefix)
 {
-	char buff[80];
+	char fname[80];
 	
-	strcpy(buff,prefix);
-	strcat(buff,prog_files[fnum]);
-	buff[MAX_COBOL_WORD_LEN] = '\0';
-	strcpy(new,buff);
+	strcpy(fname,prog_files[fnum]);
 
-	return new;
+	if (strlen(fname)+strlen(prefix) > MAX_COBOL_WORD_LEN)
+	{
+		/* Shrink fname */
+		compress_name(fname, MAX_COBOL_WORD_LEN - strlen(prefix));
+	}
+
+	strcpy(the_name,prefix);
+	strcat(the_name,fname);
+
+	return the_name;
 }
 
 const char *get_prog_vname(int fnum)
 {
 	static char the_name[40];
 	
-	if ((prog_vnames[fnum][0] == '\"') || (!prog_vnames[fnum][0]))
+	if (is_literal(prog_vnames[fnum]) || (!prog_vnames[fnum][0]))
 	{
 		return make_prog_name(the_name, fnum, "V-");
 	}
@@ -295,7 +330,7 @@ const char *get_prog_lname(int fnum)
 {
 	static char the_name[40];
 	
-	if ((prog_lnames[fnum][0] == '\"') || (!prog_lnames[fnum][0]))
+	if (is_literal(prog_lnames[fnum]) || (!prog_lnames[fnum][0]))
 	{
 		return make_prog_name(the_name, fnum, "L-");
 	}
@@ -310,7 +345,7 @@ const char *get_prog_fname(int fnum)
 {
 	static char the_name[40];
 	
-	if ((prog_fnames[fnum][0] == '\"') || (!prog_fnames[fnum][0]))
+	if (is_literal(prog_fnames[fnum]) || (!prog_fnames[fnum][0]))
 	{
 		return make_prog_name(the_name, fnum, "F-");
 	}
@@ -339,12 +374,120 @@ const char *get_prog_status(int fnum)
 {
 	static char the_name[40];
 
-	return make_prog_name(the_name, fnum, "S-");
+	/* Status is an Attribute */
+	return make_prog_name(the_name, fnum, "ATTR-");
+	/* return make_prog_name(the_name, fnum, "S-"); */
+}
+
+void safemove(char *dest, const char *src, int len)				/* safemove (memcpy) handles overlapping move	*/
+{
+	if (dest > src)								/* will overlap so copy backwards from end      */
+	{
+		for(;len>0;--len)
+		{
+			dest[len-1] = src[len-1];				/* copy bytes offset len-1 through zero         */
+		}
+	}
+	else
+	{
+		for(;len>0;--len)						/* copy "frontwards" since no overlap will occur*/
+		{
+			*dest++ = *src++;
+		}
+	}
+}
+
+int is_quote(char data)
+{
+	if (DOUBLE_QUOTE == data || data == SINGLE_QUOTE)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int is_literal(const char* literal)
+{
+	unsigned int len = strlen(literal);
+
+	if (len >= 2 && is_quote(literal[0]))
+	{
+		if (literal[0] == literal[len-1]) /* Check that quotes match */
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/*
+**	Routine:	remove_quotes()
+**
+**	Function:	Remove the quotes from a literal
+**
+**	Description:	Remove the leading and trailing quotes if present.
+**			Either single or duoble quotes can be used.
+**			Quotes must be matched.
+**
+**	Arguments:	The literal
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**
+*/
+char *remove_quotes(char *literal)
+{
+	unsigned int len = strlen(literal);
+
+	if (len >= 2 && is_quote(literal[0]))
+	{
+		if (literal[0] == literal[len-1]) /* Check that quotes match */
+		{
+			literal[len-1] = '\0'; /* truncate off the trailing quote */
+			safemove(literal, &literal[1], len-1); 
+		}
+	}
+
+	return literal;
 }
 
 /*
 **	History:
 **	$Log: wt_utils.c,v $
+**	Revision 1.25  2003/03/06 21:51:09  gsl
+**	Change to use ATTR instead of MODE
+**	
+**	Revision 1.24  2003/03/03 22:08:39  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.23  2003/02/04 17:33:18  gsl
+**	fix copyright header
+**	
+**	Revision 1.22  2002/08/12 20:13:50  gsl
+**	quotes and literals
+**	
+**	Revision 1.21  2002/08/09 20:41:57  gsl
+**	Ensure last char of a generated name isn't a "-" char
+**	
+**	Revision 1.20  2002/07/25 17:53:34  gsl
+**	Fix FAC-OF- prefix
+**	
+**	Revision 1.19  2002/06/20 23:07:46  gsl
+**	native
+**	
+**	Revision 1.18  2002/06/19 22:50:00  gsl
+**	Gen ORDER-AREA-xxx instead of O-A-xxx
+**	
+**	Revision 1.17  2002/06/18 23:47:12  gsl
+**	Change FAC OF to FAC-OF-xxx instead of F-xxx
+**	
 **	Revision 1.16  1998/03/27 18:38:17  gsl
 **	fix warnings
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -32,14 +53,14 @@ static int ver_out(char* string, int sl, int sc, int el, int ec);			/* Do the op
 
 /*						Subroutine entry point.								*/
 
-int verase(int control)									/* Erase all or part of the screen.	*/
+int VL_verase(int control)									/* Erase all or part of the screen.	*/
 {
 	int ret;									/* Working registers.			*/
 
 	if ((control == ALL_MENUS) || (control == TOP_MENU) || (control == TO_BOTTOM_MENU))			/* Menus?	*/
 	{
-		vre("VIDEO-C-VERASEMENU Bad call to verase(), use verase_menu() to erase menus.");
-		vexit();
+		vre("VIDEO-C-VERASEMENU Bad call to VL_verase(), use VL_verase_menu() to erase menus.");
+		VL_vexit();
 	}
 
 /*						Screen Erase Code								*/
@@ -50,17 +71,7 @@ int verase(int control)									/* Erase all or part of the screen.	*/
 
 	if (control == FULL_SCREEN)							/* Is this a full screen erase?		*/
 	{
-		if (vclrhome)								/* Does cursor go home on screen clear?	*/
-		{
-			vcur_lin = 0;							/* Yes, then track where it went.	*/
-			vcur_col = 0;
-			if (out_flag)							/* Did we really do output?		*/
-			{
-				tcur_lin = 0;						/* Yes, then track the true values too.	*/
-				tcur_col = 0;
-			}
-		}
-		else vmove(0,0);							/* No, then force it home.		*/
+		vmove(0,0);							/* No, then force it home.		*/
 	}
 
 	return(ret);
@@ -86,7 +97,7 @@ static int ver_do(int control)								/* Erase all or part of the screen.	*/
 			{
 				if ((vrol_top != 0) || (vrol_bot != MAX_LINES_PER_SCREEN-1))		/* Reset scroll region?	*/
 				{
-					vrol_op = OFF;							/* Turn off scroll op.	*/
+					VL_vrol_op = OFF;							/* Turn off scroll op.	*/
 					vroll(vrol_top,vrol_bot);					/* Reset scroll region.	*/
 				}
 			}
@@ -108,7 +119,7 @@ static int ver_do(int control)								/* Erase all or part of the screen.	*/
 		default:
 		{
 			ret = FAILURE;							/* Oops, invalid control.		*/
-			vre("verase(%d)-Invalid control parameter.",control);		/* Report the condition.		*/
+			vre("VL_verase(%d)-Invalid control parameter.",control);		/* Report the condition.		*/
 		}
 	}
 	return(ret);									/* Return to the caller.		*/
@@ -118,7 +129,7 @@ static int ver_out(char* string, int sl, int sc, int el, int ec)			/* Do the ope
 {
 	register int ret;								/* Working register.			*/
 
-	if (VOP_OFF != voptlevel()) vmap(CLEAR,sl,sc,el,ec);				/* And clear out the maps too.		*/
+	if (VOP_OFF != voptlevel()) VL_vmap(CLEAR,sl,sc,el,ec);				/* And clear out the maps too.		*/
 
 #ifdef DIRECTVID
 	if (vrawdirectio())
@@ -140,7 +151,7 @@ static int ver_out(char* string, int sl, int sc, int el, int ec)			/* Do the ope
 
 /*						Subroutine entry point.								*/
 
-int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bottom menus.	*/
+int VL_verase_menu(int control, struct video_menu *md)					/* Erase all, top or bottom menus.	*/
 {
 	register int ret;								/* Working register (return code).	*/
 
@@ -153,7 +164,7 @@ int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bot
 		{
 			if (md->path != NULL) 						/* Is there another selected menu?	*/
 			{
-				ret = verase_menu(ALL_MENUS, md->path);			/* Recurse until no path found.		*/
+				ret = VL_verase_menu(ALL_MENUS, md->path);			/* Recurse until no path found.		*/
 				md->path = NULL;					/* Now there is no longer a path.	*/
 			}
 			if (md->save != NULL)						/* Anything to erase?			*/
@@ -169,7 +180,7 @@ int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bot
 		{
 			if (md->path != NULL) 						/* Is there another selected menu?	*/
 			{
-				ret = verase_menu(ALL_MENUS, md->path);			/* Recurse until no path found.		*/
+				ret = VL_verase_menu(ALL_MENUS, md->path);			/* Recurse until no path found.		*/
 				md->path = NULL;					/* Now there is no longer a path.	*/
 			}
 			break;								/* Finished.				*/
@@ -179,7 +190,7 @@ int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bot
 		{
 			if (md->path != NULL)						/* Is there another menu above us?	*/
 			{
-				ret = verase_menu(TOP_MENU, md->path);			/* Yes, then erase it.			*/
+				ret = VL_verase_menu(TOP_MENU, md->path);			/* Yes, then erase it.			*/
 				if (ret == SUCCESS) 					/* Did the top level just go?		*/
 				{
 					md->path = NULL;				/* Yes, then no path to it now.		*/
@@ -198,7 +209,7 @@ int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bot
 		default:
 		{
 			ret = FAILURE;							/* Oops, invalid control.		*/
-			vre("verase_menu(%d)-Invalid control parameter.",control);	/* Report the condition.		*/
+			vre("VL_verase_menu(%d)-Invalid control parameter.",control);	/* Report the condition.		*/
 		}
 	}
 
@@ -208,6 +219,21 @@ int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bot
 /*
 **	History:
 **	$Log: verase.c,v $
+**	Revision 1.17  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.16  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.15  2002/07/16 14:11:49  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/15 20:16:08  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.13  2002/07/15 17:10:03  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.12  1997/07/08 20:57:59  gsl
 **	Remove unused erase modes
 **	Add COSTAR for WIN32 logic

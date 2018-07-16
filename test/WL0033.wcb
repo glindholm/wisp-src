@@ -1,0 +1,581 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WL0033.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test FIND routine 
+000900**
+001000**   Example:    
+001050**   CALL "FIND" using FILE, LIB, VOL, START, COUNT, REC, [TOTAL, [TYPE]]. 
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     WL0033.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",  "DISPLAY".
+
+           SELECT BASE-FILE-UFB
+               ASSIGN TO "BASEFILE", "DISK",  NODISPLAY
+               ORGANIZATION    IS INDEXED
+	       RECORD KEY IS BASE-FIL-KEY.
+
+           SELECT SEQ-FILE-UFB
+               ASSIGN TO "SEQFILE", "DISK",  NODISPLAY.
+
+001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+
+       FD  BASE-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  BASE-FIL-RECORD.
+	   05 BASE-FIL-KEY     PIC X(10).
+	   05 BASE-FIL-DATA    PIC X(70).
+
+       FD  SEQ-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  SEQ-FIL-RECORD.
+	   05 SEQ-FIL-DATA    PIC X(80).
+       
+
+
+001400 Working-Storage Section.
+001500
+       01  QASUB	   PIC X(8) VALUE "FIND".
+       01  QAPROG	   PIC X(8) VALUE "WL0033".
+       
+       01  failed-cnt	   pic 99 value 0.
+
+       01  base-fil	   PIC X(8) VALUE "WL0033".
+       01  base-lib	   pic x(8) VALUE "WL0033".
+       01  base-vol	   pic x(6).
+
+       01  SEQ-FILE-EXTENSION PIC X(39) VALUE "seq".
+
+      *   CALL "FIND" using FILE, LIB, VOL, START, COUNT, REC, [TOTAL, [TYPE]]. 
+       01  FIND-FILE                  PIC X(8) VALUE SPACES.
+       01  FIND-LIB                   PIC X(8) VALUE SPACES.
+       01  FIND-VOL                   PIC X(6) VALUE SPACES.
+       01  FIND-START.
+           05 FIND-START-HIGH	BINARY.
+           05 FIND-START-BIN	BINARY.
+       01  FIND-START-NUM		PIC 9999.
+       01  FIND-COUNT.
+           05 FIND-COUNT-HIGH	BINARY.
+           05 FIND-COUNT-BIN	BINARY.
+       01  FIND-COUNT-NUM		PIC 9999.
+       01  FIND-REC.
+           05  FIND-REC-ITEM OCCURS 100.
+	       10  FIND-REC-VOL		PIC X(6).
+	       10  FIND-REC-LIB		PIC X(8).
+	       10  FIND-REC-FILE	PIC X(8).
+       01  FIND-TOTAL.
+           05 FIND-TOTAL-HIGH	BINARY.
+           05 FIND-TOTAL-BIN	BINARY.
+       01  FIND-TOTAL-NUM		PIC 9999.
+       01  FIND-TYPE			PIC X.
+       01  EXPECTED-COUNT-NUM		PIC 9999.
+       01  EXPECTED-TOTAL-NUM		PIC 9999.
+       01  EXPECTED-REC.
+	       10  EXPECTED-VOL		PIC X(6).
+	       10  EXPECTED-LIB		PIC X(8).
+	       10  EXPECTED-FILE	PIC X(8).
+
+       01  tst-fil	   PIC X(8).
+       01  tst-lib	   pic x(8).
+       01  tst-vol	   pic x(6).
+
+       01  rc-int4.
+           03 rc-high     BINARY  VALUE 0.
+           03 rc-bin      BINARY  value 0.
+       01  rc-num	   pic 999.
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  INLIB   PIC X(8).
+       01  INVOL   PIC X(6).
+       
+       01  TEST-NAME PIC X(8).
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01  CD-keyword PIC XX VALUE "CD".
+       01  CREATE-DATE PIC 9(8).
+       01  L-TYPE PIC X VALUE "L".
+       01  F-TYPE PIC X VALUE "F".
+
+       01  spaces-fil   pic x(8) values spaces.
+       01  find-start-cnt-int4.
+	   05  find-start-cnt-high binary value 0.
+	   05  find-start-cnt-bin  binary value 0.
+       01  find-cnt-int4.
+	   05  find-cnt-high binary value 0.
+	   05  find-cnt-bin  binary value 0.
+       01  find-receiver   pic x(22).	   
+	   
+  
+001600 Procedure Division.
+       
+      *============================================================	  
+       0000-init.
+	   move 0 to failed-cnt.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+	   MOVE INVOL    TO BASE-VOL.
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+
+      *============================================================	  
+      * CALL "FIND" using FILE, LIB, VOL, START, COUNT, REC, [TOTAL, [TYPE]]. 
+      *============================================================	  
+      * TEST: Find one file (no wildcards)
+       test001.
+	   MOVE "TEST001" TO TEST-NAME.
+	   
+	   move TEST-NAME	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil	to FIND-FILE.
+	   move base-lib	to FIND-LIB.
+	   move base-vol	to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 1		to EXPECTED-COUNT-NUM
+	   move 1		to EXPECTED-TOTAL-NUM
+	   move FIND-FILE	TO EXPECTED-FILE.
+	   move FIND-LIB	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+
+      * TEST: Don't find MISSING file (no wildcards)
+       test002.
+	   MOVE "TEST002" TO TEST-NAME.
+	   
+	   move "MISSING"  to FIND-FILE.
+	   move QAPROG     to FIND-LIB.
+	   move INVOL	   to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+	   move 0		to EXPECTED-COUNT-NUM
+	   move 0		to EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+
+      * TEST: Find 2 files with file wildcard '?'
+       test003.
+	   MOVE "TEST003" TO TEST-NAME.
+	   
+	   move TEST-NAME	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move "?"		to FIND-FILE.
+	   move QAPROG		to FIND-LIB.
+	   move INVOL		to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 2		to EXPECTED-COUNT-NUM
+	   move 2		to EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+
+      * TEST: Find 3 files with partial file wildcard
+       test004.
+	   MOVE "TEST004" TO TEST-NAME.
+	   
+	   move TEST-NAME	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move "T*ST?"		to FIND-FILE.
+	   move QAPROG		to FIND-LIB.
+	   move INVOL		to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+
+	   move 3		to EXPECTED-COUNT-NUM
+	   move 0		to EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-FIND-6ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+	   
+      * TEST: Find with File and Vol wildcard
+       test005.
+	   MOVE "TEST005" TO TEST-NAME.
+	   
+	   move TEST-NAME	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move "TEST***"	to FIND-FILE.
+	   move QAPROG		to FIND-LIB.
+	   move "?"		to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+
+	   move 4		to EXPECTED-COUNT-NUM
+	   move 0		to EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-FIND-6ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+	   
+      * TEST: Find one with wildcard
+       test006.
+	   MOVE "TEST006" TO TEST-NAME.
+	   	   
+	   move TEST-NAME	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move "T***006"	to FIND-FILE.
+	   move base-lib	to FIND-LIB.
+	   move base-vol	to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 1		to EXPECTED-COUNT-NUM
+	   move 1		to EXPECTED-TOTAL-NUM
+	   move TEST-NAME	TO EXPECTED-FILE.
+	   move FIND-LIB	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+	   
+      * TEST: Find one library
+       test007.
+	   MOVE "TEST007" TO TEST-NAME.
+
+	   move spaces		to FIND-FILE.
+	   move QAPROG		to FIND-LIB.
+	   move INVOL		to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+
+	   move 1		to EXPECTED-COUNT-NUM
+	   move 0		to EXPECTED-TOTAL-NUM
+	   move FIND-FILE	TO EXPECTED-FILE.
+	   move FIND-LIB	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+	   PERFORM CALL-FIND-6ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+	   
+      * TEST: Find one volume
+       test008.
+	   MOVE "TEST008" TO TEST-NAME.
+
+	   move spaces		to FIND-FILE.
+	   move space		to FIND-LIB.
+	   move INVOL		to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+
+	   move 1		to EXPECTED-COUNT-NUM
+	   move 0		to EXPECTED-TOTAL-NUM
+	   move FIND-FILE	TO EXPECTED-FILE.
+	   move FIND-LIB	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+	   PERFORM CALL-FIND-6ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+
+	   
+      * TEST: Find library wildcard
+       test009.
+	   MOVE "TEST009" TO TEST-NAME.
+	   move TEST-NAME	TO base-fil.
+	   move "WL0033A"	TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil	to FIND-FILE.
+	   move "WL0033?"	to FIND-LIB.
+	   move base-vol	to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 1		to EXPECTED-COUNT-NUM
+	   move 1		to EXPECTED-TOTAL-NUM
+	   move FIND-FILE	TO EXPECTED-FILE.
+	   move "WL0033A"	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+	   
+      * TEST: Find file & library wildcard (overflow)
+       test010.
+	   MOVE "TEST010" TO TEST-NAME.
+	   move TEST-NAME	TO base-fil.
+	   move "WL0033A"	TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-base-file.
+
+	   move "?"		to FIND-FILE.
+	   move "WL0033?"	to FIND-LIB.
+	   move base-vol	to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 4		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 4		to EXPECTED-COUNT-NUM
+	   move 7		to EXPECTED-TOTAL-NUM
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+
+      * TEST: FIND one file with extension (no wildcard)
+       test011.
+	   MOVE "TEST011" TO TEST-NAME.
+	   
+	   move TEST-NAME	TO base-fil.
+	   move QAPROG		TO base-lib.
+	   move INVOL		TO base-vol.
+	   perform create-seq-file.
+
+	   move base-fil	to FIND-FILE.
+	   move base-lib	to FIND-LIB.
+	   move base-vol	to FIND-VOL.
+	   move 1		to FIND-START-NUM
+	   move 10		to FIND-COUNT-NUM
+	   move "A"		TO FIND-TYPE
+
+	   move 1		to EXPECTED-COUNT-NUM
+	   move 1		to EXPECTED-TOTAL-NUM
+	   move FIND-FILE	TO EXPECTED-FILE.
+	   move FIND-LIB	TO EXPECTED-LIB.
+	   move FIND-VOL	TO EXPECTED-VOL.
+	   
+	   PERFORM CALL-FIND-8ARGS.
+	   PERFORM CHECK-FIND-SUCCESS.
+      
+      *============================================================	  
+       9999-done.
+           IF failed-cnt = 0   THEN
+                DISPLAY QASUB " completion successful."
+           ELSE 
+                DISPLAY QASUB " failed "
+	   END-IF.
+	   
+       9999-exit.
+            EXIT PROGRAM.
+       9999-stop.
+            STOP RUN.
+
+      *============================================================
+       CLEANUP-FILES.
+	   move QAPROG     TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+	   move "WL0033A"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+       
+      *============================================================
+       SCRATCH-BASE-LIB.
+	   move spaces	   TO base-fil.
+	   move INVOL	   TO base-vol.
+	   CALL "SCRATCH" USING 
+	       L-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, RC-int4.
+	       
+      *============================================================
+       CHECK-FIND-SUCCESS.
+	   if  (FIND-COUNT-NUM NOT = EXPECTED-COUNT-NUM) OR
+	       (FIND-TOTAL-NUM NOT = EXPECTED-TOTAL-NUM) THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME, " WRONG-CNTS"
+	   ELSE
+	       IF EXPECTED-COUNT-NUM = 1 THEN
+	           PERFORM CHECK-FIND-REC
+	       END-IF
+	   END-IF.
+       
+      *============================================================
+       CHECK-FIND-REC.
+	   if FIND-REC-ITEM(1) NOT = EXPECTED-REC THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME,
+	          " [", FIND-REC-ITEM(1), "] NOT = [",
+		  EXPECTED-REC, "]"
+           END-IF.
+
+	       
+		   
+      *============================================================
+
+      * CALL "FIND" using FILE, LIB, VOL, START, COUNT, REC, [TOTAL, [TYPE]]. 
+
+      *============================================================
+       CALL-FIND-PRECALL.
+	   MOVE 0		TO FIND-START-HIGH.
+	   MOVE FIND-START-NUM	TO FIND-START-BIN.
+
+	   MOVE 0		TO FIND-COUNT-HIGH.
+	   MOVE FIND-COUNT-NUM	TO FIND-COUNT-BIN.
+
+           MOVE SPACES		TO FIND-REC.
+
+	   MOVE 0		TO FIND-TOTAL-HIGH.
+	   MOVE 0		TO FIND-TOTAL-BIN.
+
+       CALL-FIND-POSTCALL.
+	   MOVE FIND-START-BIN	TO FIND-START-NUM.
+	   MOVE FIND-COUNT-BIN	TO FIND-COUNT-NUM.
+	   MOVE FIND-TOTAL-BIN	TO FIND-TOTAL-NUM.
+
+       CALL-FIND-8ARGS.
+	   PERFORM CALL-FIND-PRECALL.
+           CALL "FIND" USING FIND-FILE, FIND-LIB, FIND-VOL,
+				FIND-START, FIND-COUNT, FIND-REC,
+				FIND-TOTAL, FIND-TYPE.
+	   PERFORM CALL-FIND-POSTCALL.
+
+       CALL-FIND-6ARGS.
+	   PERFORM CALL-FIND-PRECALL.
+           CALL "FIND" USING FIND-FILE, FIND-LIB, FIND-VOL,
+				FIND-START, FIND-COUNT, FIND-REC.
+	   PERFORM CALL-FIND-POSTCALL.
+
+      *============================================================
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-FILE-MISSING.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 20  AND rc-bin NOT = 16 then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-MISSING FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-MISSING.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, tst-lib, tst-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-MISSING FAILED ",
+		   TEST-NAME,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-EXISTS.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, tst-lib, tst-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 1  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-EXISTS FAILED ",
+		   TEST-NAME,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+	       
+      *============================================================
+       CREATE-BASE-FILE.
+      * Create a file to copy.
+	   OPEN OUTPUT BASE-FILE-UFB.
+	   WRITE BASE-FIL-RECORD.
+	   CLOSE BASE-FILE-UFB.
+
+      * Ensure file exists.
+	   move base-fil to tst-fil.
+	   move base-lib to tst-lib.
+	   move base-vol to tst-vol.
+	   perform TEST-FILE-EXISTS.
+	   if rc-bin NOT = 0 THEN GO TO 9999-exit.
+
+	       
+      *============================================================
+       CREATE-SEQ-FILE.
+      * Create a file to copy.
+           CALL "WSETFILEXT" USING SEQ-FILE-EXTENSION.
+	   OPEN OUTPUT SEQ-FILE-UFB.
+	   WRITE SEQ-FIL-RECORD.
+	   CLOSE SEQ-FILE-UFB.
+
+  
+006600**   End of WL0033.wcb 

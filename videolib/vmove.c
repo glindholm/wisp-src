@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -36,7 +57,7 @@ static int vmv_traverse_scroll_region(int ol, int nl);					/* ol = old line,  nl
 
 /*						Subroutine entry point.								*/
 
-int vmove(int line, int column)								/* Move to a location on the screen.	*/
+int VL_vmove(int line, int column)								/* Move to a location on the screen.	*/
 {
 	int ret = OPTIMIZED;
 	enum e_vop vopt = voptlevel();
@@ -52,13 +73,13 @@ int vmove(int line, int column)								/* Move to a location on the screen.	*/
 		return FAILURE;
 	}
 
-	if (OFF == vmov_op)
+	if (OFF == VL_vmov_op)
 	{
 		/*
 		**     First time thru - no optimization
 		*/
 		vopt = VOP_OFF;
-		vmov_op = ON;								/* Optimization can now be done		*/
+		VL_vmov_op = ON;								/* Optimization can now be done		*/
 	}
 
 	switch(vopt)
@@ -107,12 +128,12 @@ static int vmv_do(int line, int col, int op)						/* Prep to do the move.			*/
 {
 	vdefer_restore();
 
-	return vgoto(line,col,vcur_lin,vcur_col,op);
+	return VL_vgoto(line,col,vcur_lin,vcur_col,op);
 }
 
 /*					Subroutine to do calculative moves.							*/
 
-int vgoto(int nl, int nc, int ol, int oc, int op)					/* Got to (nl,nc) from (ol,oc).		*/
+int VL_vgoto(int nl, int nc, int ol, int oc, int op)					/* Got to (nl,nc) from (ol,oc).		*/
 {
 	register int ret, i;								/* Working registers.			*/
 	enum e_vop save_op;
@@ -121,7 +142,7 @@ int vgoto(int nl, int nc, int ol, int oc, int op)					/* Got to (nl,nc) from (ol
 	i = MAX_LINES_PER_SCREEN;							/* Copy to make next line shorter.	*/
 	if ((nl >= i) || (nc >= vedge(nl)) || (ol >= i) || (oc >= vedge(ol)) || (nl < 0) || (nc < 0))	/* Valid position?	*/
 	{
-		vre("vgoto(%d,%d,%d,%d)-Position invalid, no move performed",nl,nc,ol,oc);	/* Tell user he messed up. 	*/
+		vre("VL_vgoto(%d,%d,%d,%d)-Position invalid, no move performed",nl,nc,ol,oc);	/* Tell user he messed up. 	*/
 		return FAILURE;
 	}
 	ret = SUCCESS;									/* Assume success.			*/
@@ -151,7 +172,7 @@ int vgoto(int nl, int nc, int ol, int oc, int op)					/* Got to (nl,nc) from (ol
 		}
 #endif
 		
-		vbuffering(VBUFF_START);						/* Turn on logical buffering.		*/
+		VL_vbuffering_start();						/* Turn on logical buffering.		*/
 
 		/*
 		**	Do not defer the following move so turn down the opitization level.
@@ -178,7 +199,7 @@ int vgoto(int nl, int nc, int ol, int oc, int op)					/* Got to (nl,nc) from (ol
 			voptimize(save_op);						/* Restore optimization			*/
 		}
 
-		vbuffering(VBUFF_END);							/* Restore automatic buffering.		*/
+		VL_vbuffering_end();							/* Restore automatic buffering.		*/
 	}
 
 	vcur_lin = nl;
@@ -186,8 +207,8 @@ int vgoto(int nl, int nc, int ol, int oc, int op)					/* Got to (nl,nc) from (ol
 
 	if (out_flag)									/* Was there actual output?		*/
 	{
-		tcur_lin = vcur_lin;							/* Yes, then update true position too.	*/
-		tcur_col = vcur_col;
+		VL_tcur_lin = vcur_lin;							/* Yes, then update true position too.	*/
+		VL_tcur_col = vcur_col;
 	}
 
 	return(ret);
@@ -202,8 +223,8 @@ static int vmv_move(int line, int column)						/* Do normal move.			*/
 	char *tparm();
 #define PARMFUNC tparm
 #else
-	char *vcparm();
-#define PARMFUNC vcparm
+	char *VL_vcparm();
+#define PARMFUNC VL_vcparm
 #endif
 
 #ifdef	DIRECTVID
@@ -214,7 +235,7 @@ static int vmv_move(int line, int column)						/* Do normal move.			*/
 	else
 #endif
 	{
-		vcontrol(PARMFUNC(vcapvalue(CURSOR_ADDRESS),line,column));		/* Move to the position.		*/
+		vcontrol(PARMFUNC(VL_vcapvalue(CURSOR_ADDRESS),line,column));		/* Move to the position.		*/
 	}
 	
 	out_flag=TRUE;
@@ -244,8 +265,8 @@ static int vmv_slew(int nl, int ol, int nc, int oc)					/* Slew by n rows and n 
 		return(SUCCESS);
 	}
 
-	temp = vb_pure;									/* Save the current pureness.		*/
-	vb_pure = TRUE;									/* Now actually output linefeeds.	*/
+	temp = VL_vb_pure;									/* Save the current pureness.		*/
+	VL_vb_pure = TRUE;									/* Now actually output linefeeds.	*/
 
 	if      (nrows ==  1) vmv_out("\n",0,0,0);					/* Going down 1 position.		*/
 	else if (nrows ==  2) vmv_out("\n\n",0,0,0);					/* Going down 2 positions?		*/
@@ -254,7 +275,7 @@ static int vmv_slew(int nl, int ol, int nc, int oc)					/* Slew by n rows and n 
 	{
 		vmv_move(nl,nc);							/* more than 1 positions.	*/
 	}
-	vb_pure = temp;									/* Now restore pureness state.		*/
+	VL_vb_pure = temp;									/* Now restore pureness state.		*/
 
 	return(SUCCESS);								/* Return that we did it.		*/
 }
@@ -304,8 +325,29 @@ static int vmv_traverse_scroll_region(int ol, int nl)					/* ol = old line,  nl 
 /*
 **	History:
 **	$Log: vmove.c,v $
+**	Revision 1.22  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.21  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.20  2002/07/17 21:06:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.19  2002/07/16 13:40:21  gsl
+**	VL_ globals
+**	
+**	Revision 1.18  2002/07/15 20:56:40  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.17  2002/07/15 20:16:11  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.16  2002/07/15 17:10:04  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.15  1997/07/12 21:34:43  gsl
-**	Fix vgoto() so that it didn't defer any move. This was done by
+**	Fix VL_vgoto() so that it didn't defer any move. This was done by
 **	reducing the optimization level.
 **	
 **	Revision 1.14  1997-07-09 11:46:29-04  gsl

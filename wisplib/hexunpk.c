@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		hexunpk.c
 **
@@ -21,7 +40,6 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 
 #include "idsistd.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wisplib.h"
 #include "hexunpk.h"
@@ -65,21 +83,17 @@ static char rcsid[]="$Id:$";
 */
 void HEXUNPK( char* source,  char* target, int4 *tlen )
 {
-#define		ROUTINE		23500
-
 	int4	len;
 	char	mask[17];
 	char	*src, *trg;
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
+	WL_wtrace("HEXUNPK","ENTRY","Entry into HEXUNPK");
 
 	src = source;
 	trg = target;
 	strcpy(mask, "0123456789ABCDEF");
 
-	GETBIN(&len,tlen,4);
-
-	wswap(&len);
+	len = WL_get_swap(tlen);
 
 	while( len-- > 0 )
 	{
@@ -112,22 +126,17 @@ void HEXUNPK( char* source,  char* target, int4 *tlen )
 */
 void HEXPACK(  char* source,  char* target, int4* tlen )
 {
-#undef		ROUTINE
-#define		ROUTINE		23000
-
 	int4	len, p1, p2;
 	char	mask[17], mask2[17];
 	char	s[2], *src, *trg;
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
+	WL_wtrace("HEXPACK","ENTRY","Entry into HEXPACK");
 
 	strcpy(mask,  "0123456789ABCDEF" );					/* Source may be upper or lowercase.		*/
 	strcpy(mask2, "0123456789abcdef" );
 	s[1] = 0;								/* Pre-Null terminate 1 char string.		*/
 
-	GETBIN(&len,tlen,4);
-
-	wswap(&len);
+	len = WL_get_swap(tlen);
 
 	src = source;
 	trg = target;
@@ -154,6 +163,15 @@ void HEXPACK(  char* source,  char* target, int4* tlen )
 /*
 **	History:
 **	$Log: hexunpk.c,v $
+**	Revision 1.13  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.12  2002/12/09 21:09:28  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.11  2002/07/12 17:00:56  gsl
+**	Make WL_ global unique changes
+**	
 **	Revision 1.10  1997/02/20 14:39:20  gsl
 **	Document and add header file
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wexith.c
 **
@@ -31,6 +52,7 @@ static char rcsid[]="$Id:$";
 #include "vwang.h"
 #include "sharemem.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "idsisubs.h"
 
 /*
@@ -40,8 +62,8 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-extern int message_unlink();
-int delete_worklib(void);
+extern int WL_message_unlink();
+int WL_delete_worklib(void);
 
 /*
 **	Static data
@@ -54,7 +76,7 @@ int delete_worklib(void);
 
 
 /*
-**	ROUTINE:	wexith()
+**	ROUTINE:	WL_wexith()
 **
 **	FUNCTION:	Exit handler - Pre-exit cleanup
 **
@@ -79,10 +101,10 @@ int delete_worklib(void);
 **			really exit after called.
 **
 */
-void wexith(void)									/* This is the WISP exit handler.	*/
+void WL_wexith(void)									/* This is the WISP exit handler.	*/
 {											/* It is installed by WFOPEN, and refed	*/
 	static int already = 0;								/* Already done?			*/
-	fstruct *temp_file;
+	wisp_fstruct *temp_file;
 
 	if (already) return;								/* Already been here.			*/
 	else	already = 1;
@@ -90,41 +112,39 @@ void wexith(void)									/* This is the WISP exit handler.	*/
 	/*
 	**	Delete all IS_SCRATCH files
 	*/
-	while(g_temp_file_list)
+	while(WL_g_temp_file_list)
 	{
 		int4 	rc;
-		int4	args;
 	
 		/*
 		**	Take this item of the list first before processing because
 		**	SCRATCH calls wfname() which can alter the list.
 		*/
-		temp_file = g_temp_file_list;
-		g_temp_file_list = g_temp_file_list->nextfile;
+		temp_file = WL_g_temp_file_list;
+		WL_g_temp_file_list = WL_g_temp_file_list->nextfile;
 
-		args=5;
-		wvaset(&args);
+		WL_set_va_count(5);
 		SCRATCH("F", temp_file->file, temp_file->lib, temp_file->vol, &rc);
 		free(temp_file);
 	}
 
-	wfclose("*");									/* Ask close routine to spool everything.*/
+	WFCLOSE("*");									/* Ask close routine to spool everything.*/
 
 
 	/*
 	**	This changes the link-level so place logic before or after this
 	**	point if it needs to know link-level.
 	*/
-	oldlevel();									/* Decrement the link-level		*/
-	ppunlink(linklevel());								/* Putparm UNLINK			*/
+	WL_oldlevel();									/* Decrement the link-level		*/
+	WL_ppunlink(WL_linklevel());								/* Putparm UNLINK			*/
 
 
 	/* 
 		Do PROGLIB and PROGVOL cleanup
 	*/
-	restoreprogdefs();
+	WL_restore_progdefs();
 
-	if (LINKPARM)
+	if (wisp_get_LINKPARM())
 	{
 		/* 
 			If came in from a LINK then restore args		
@@ -172,17 +192,17 @@ void wispexit_cleanup(void)
 	/* 
 	**	Delete message ports	
 	*/
-	message_unlink();
+	WL_message_unlink();
 
 	/*
 	**	When exiting the highest link level then delete the worklib
 	**	(unless the KEEPWORKLIB option is set).
 	*/
-	if (linklevel() < 1)
+	if (WL_linklevel() < 1)
 	{
-		if (!get_wisp_option("KEEPWORKLIB"))
+		if (!WL_get_wisp_option("KEEPWORKLIB"))
 		{
-			delete_worklib();
+			WL_delete_worklib();
 		}
 	}
 
@@ -191,16 +211,16 @@ void wispexit_cleanup(void)
 	**	If this is the top level process then delete
 	**	the temp files.
 	*/
-	if (getpid() == wgetpgrp()) /* If TOP level process */
+	if (getpid() == WL_wgetpgrp()) /* If TOP level process */
 	{
-		delete_defaults_temp();
-		delete_retcode();
+		WL_delete_defaults_temp();
+		WL_delete_retcode();
 	}
 #endif
 }
 
 /*
-**	ROUTINE:	delete_worklib()
+**	ROUTINE:	WL_delete_worklib()
 **
 **	FUNCTION:	Delete the worklib directory
 **
@@ -219,19 +239,18 @@ void wispexit_cleanup(void)
 **	WARNINGS:	None
 **
 */
-int delete_worklib(void)
+int WL_delete_worklib(void)
 {
 	char	workvol[7], worklib[9], workfile[9];
 	int4	retcode;
-	int4	args;
 
-	get_defs(DEFAULTS_WV,workvol);
-	get_defs(DEFAULTS_WL,worklib);
+	WL_get_defs(DEFAULTS_WV,workvol);
+	WL_get_defs(DEFAULTS_WL,worklib);
+	memset(workfile,' ',sizeof(workfile));
 
-	args=5;
-	wvaset(&args);
+	WL_set_va_count(5);
 	SCRATCH("L", workfile, worklib, workvol, &retcode);
-	wswap(&retcode);
+	WL_wswap(&retcode);
 	switch(retcode)
 	{
 	case 0:
@@ -246,6 +265,42 @@ int delete_worklib(void)
 /*
 **	History:
 **	$Log: wexith.c,v $
+**	Revision 1.34  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.33  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.32  2002/12/11 20:33:37  gsl
+**	Enhance tracing of runtype
+**	
+**	Revision 1.31  2002/07/23 02:57:51  gsl
+**	wfclose -> WFCLOSE
+**	
+**	Revision 1.30  2002/07/19 22:07:14  gsl
+**	Renaming cobol api routines for global uniqueness
+**	
+**	Revision 1.29  2002/07/12 19:10:18  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.28  2002/07/12 17:01:02  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.27  2002/07/11 20:29:16  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.26  2002/07/11 15:21:44  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.25  2002/07/10 21:05:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.24  2002/07/09 04:13:54  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.23  2002/07/01 04:02:42  gsl
+**	Replaced globals with accessors & mutators
+**	
 **	Revision 1.22  2001/11/27 20:46:31  gsl
 **	Remove VMS
 **	

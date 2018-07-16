@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 #ifndef _GP_H
 #define	_GP_H
 
@@ -50,7 +69,7 @@ PFKEY masks for building valid PFKEYS
 /*----
 A series of MACROs to shorten GETPARM definition
 ------*/
-#define	GP gparg.ptr[gpcnt++] = (char*)
+#define	GP gparg[gpcnt++] = (char*)
 
 #define	GPNUM(num)			GP &GPINT[num]
 #define	GPLEN(len)			GPNUM(len)
@@ -80,8 +99,6 @@ A series of MACROs to shorten GETPARM definition
 #define	GPNOENTER()			GP "N"
 
 
-typedef struct _gparg {char *ptr[500];}GPARG;
-
 /*----
 The functions
 ------*/
@@ -91,6 +108,12 @@ The functions
 /*
 **	History:
 **	$Log: vsegp.h,v $
+**	Revision 1.11  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.10  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.9  1996/09/03 22:24:06  gsl
 **	drcs update
 **	

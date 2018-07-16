@@ -2296,19 +2296,18 @@ EndRNotes
 #	wisp/src/kcsi/kcsi_acu_install.txt
 #	wisp/src/kcsi/kcsi_mf_install.txt
 #	wisp/src/kcsi/kcsi_packlist.txt
-#	wisp/src/doc/wisp_relnotes.lis
+#	wisp/src/doc/wisp_relnotes.txt
 #	wisp/src/acu/wruncbl.umf
+#	wisp/src/acu/wrun32wisp_kcsi_acu50.mak
+#	wisp/src/acu/wrun32wisp_kcsi_acu51.mak
 #	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#define KCSI_VERSION	4000
+#define KCSI_VERSION	4100
 
 /*
 **	Static data
 */
-static char ident[] = "@(#)CRID, NeoMedia Technologies, Inc. Version v" STRING_VERSION(KCSI_VERSION) DEBUG_STR;
 
-static char sccsid[]="@(#)cridvers.c  Version v" STRING_VERSION(KCSI_VERSION) DEBUG_STR "$Date:$";
-static char rcsid[]="$Id:$";
 
 /*
 **	ROUTINE:	crid_version()
@@ -2361,7 +2360,7 @@ static char compiler[]=
 /* CHANGE-COPYRIGHT-DATE */
 
 static char logoformat[]=
-"     %-9s %s.%s%s - (c) 1989-2002 KCSI/NEOM";
+"     %-9s %s.%s%s - (c) 1989-2003 KCSI/NEOM";
 
 static char logo[80];
 
@@ -2405,16 +2404,16 @@ void DATVERS(char *wvers,char *bin)
 	init_bin_test(bin);
 }
 
-static save_bin[1];
+static int save_bin = 0;
 
 static void init_bin_test(char *bin)
 {
-	save_bin[0] = bin[1];
+	save_bin = bin[1];
 }
 
-int KCSI_use_binary()
+int KCSI_use_binary()  /* NOT USED */
 {
-	return(save_bin[0]);
+	return(save_bin);
 }
 
 void KCSI_init_report_style(char *style)
@@ -2432,8 +2431,23 @@ void KCSI_init_report_style(char *style)
 /*
 **	History:
 **	$Log: cridvers.c,v $
-**	Revision 2.91.2.2  2002/11/12 15:56:20  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 2.108  2003/04/11 18:34:16  gsl
+**	Add support for Acucobol 5.0 and 5.1
+**	
+**	Revision 2.107  2003/03/17 21:39:24  gsl
+**	KCSI Version 4.1.00
+**	
+**	Revision 2.106  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 2.105  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 2.104  2003/02/04 19:19:09  gsl
+**	fix header
+**	
+**	Revision 2.103  2003/01/24 20:38:53  gsl
+**	Change year to 2003
 **	
 **	Revision 2.102  2002/10/22 17:59:01  gsl
 **	Combined KCSI
@@ -2488,7 +2502,6 @@ void KCSI_init_report_style(char *style)
 **	Change to NeoMedia Technologies
 **
 **	Revision 2.85  1996-12-12 13:42:05-05  gsl
-**	DevTech -> NeoMedia
 **
 **	Revision 2.84  1996-10-09 09:56:03-07  gsl
 **	add include stdlib

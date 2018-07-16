@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		link.h
@@ -25,9 +46,14 @@
 struct	str_parm	{ char *parm[MAX_LINK_PARMS]; };			/* Structure for *parm_list function argument.	*/
 struct	str_len		{ int4   len[MAX_LINK_PARMS]; };			/* Structure for  *len_list function argument.	*/
 
-void writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, struct str_len *len_list, char *linkkey);
-void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_list, const char *linkkey, 
+void WL_writeunixlink(const char *pname, int parmcnt, struct str_parm *parm_list, struct str_len *len_list, char *linkkey);
+void WL_readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_list, const char *linkkey, 
 		  int4 *compcode, int4 *returncode);
+
+void WL_call_acucobol(char* name, int parmcnt, char* parms[], int lens[], int* rc);
+void WL_call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *link_filespec);
+
+void WL_wwaitpid(int pid, int* rc);	/* Wait for process pid to complete		*/
 
 #endif /* LINK_H */
 
@@ -36,6 +62,15 @@ void readunixlink(int parmcnt, struct str_parm *parm_list, struct str_len *len_l
 /*
 **	History:
 **	$Log: link.h,v $
+**	Revision 1.11  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.10  2002/07/12 19:10:24  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.9  2002/07/10 21:06:34  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.8  1996/09/05 00:20:22  gsl
 **	moved softlink prototypes to wperson.h
 **	

@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*----
 Various general purpose getparm routines
@@ -17,6 +32,7 @@ Various general purpose getparm routines
 #include "vsegp.h"
 #include "vseglb.h"
 #include "wisplib.h"
+#include "vssubs.h"
 
 
 static int4 gppf_tran(int gppf);
@@ -34,7 +50,7 @@ void init_gpint(void)
 	for(idx = 0; idx < 255; ++idx)
 	{
 		GPINT[idx] = idx;
-		wswap(&GPINT[idx]);
+		WL_wswap(&GPINT[idx]);
 	}
 }
 
@@ -42,11 +58,8 @@ void init_gpint(void)
   Display and read a getparm, and return the translated PF code
   ------*/
 int4 display_and_read_gp(void)
-{
-	static int4 two = 2;
-	
-	wvaset(&two);
-	GETPARM(&gparg,&gpcnt);
+{	
+	GETPARM2(gparg,gpcnt);
 	gppfkey = gppf_tran(gppfrcvr[0]);
 
 	return gppfkey;
@@ -69,6 +82,18 @@ static int4 gppf_tran(int gppf)
 /*
 **	History:
 **	$Log: vsegp.c,v $
+**	Revision 1.14  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.13  2003/02/17 22:10:57  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/07/12 17:17:07  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.10  1996/09/03 22:24:05  gsl
 **	drcs update
 **	

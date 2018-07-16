@@ -10,7 +10,7 @@
 
 #include <video.h>
 
-testy()
+int testy()
 {
 	return(SUCCESS);
 }

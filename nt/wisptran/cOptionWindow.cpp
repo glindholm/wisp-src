@@ -1,3 +1,26 @@
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 //////////////////////////////////////////////////////////////////////////
 //
 //		This file contains the class member functions for the _OptionWindow
@@ -259,7 +282,7 @@ cWindows::_OptionWindow::UnDimWOptions ( )
 	EnableWindow ( WCtls.l_FromDir, TRUE );
 	EnableWindow ( WCtls._1, TRUE );
 	EnableWindow ( WCtls._4, TRUE );
-	EnableWindow ( WCtls._C, TRUE );
+	EnableWindow ( WCtls._F, TRUE );
 	EnableWindow ( WCtls._D, TRUE );
 	EnableWindow ( WCtls._e, TRUE );
 	EnableWindow ( WCtls._f, TRUE );
@@ -280,7 +303,7 @@ cWindows::_OptionWindow::UnDimWOptions ( )
 	EnableWindow ( WCtls._P, TRUE );
 	EnableWindow ( WCtls._PBrs, TRUE );
 	EnableWindow ( WCtls._q, TRUE );
-	EnableWindow ( WCtls._R, TRUE );
+	EnableWindow ( WCtls._G4, TRUE );
 	EnableWindow ( WCtls._S, TRUE );
 	EnableWindow ( WCtls._T, TRUE );
 	EnableWindow ( WCtls.l_V, TRUE );
@@ -513,7 +536,7 @@ cWindows::_OptionWindow::CreateWCtls ( )
 	WCtls._DirPath = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_DirPath );
 	WCtls._TargetBrs = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_TargetBrs );
 	WCtls._1 = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_1 );
-	WCtls._C = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_C );
+	WCtls._F = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_FF );
 	WCtls._x = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_x );
 	WCtls._X = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_X2 );
 	WCtls._q = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_q );
@@ -532,7 +555,7 @@ cWindows::_OptionWindow::CreateWCtls ( )
 	WCtls._l = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl__l );
 	WCtls._O = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_O );
 	WCtls._OBrs = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_OBrs );
-	WCtls._R = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_R );
+	WCtls._G4 = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_G4 );
 	WCtls._T = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_T );
 	WCtls._e = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_e );
 	WCtls._W = GetDlgItem ( cWnd.hWnd.hWISPOpWnd, ctl_W );
@@ -554,7 +577,7 @@ cWindows::_OptionWindow::CreateWCtls ( )
 	SendMessage ( WCtls._V, CB_ADDSTRING, 0, (LPARAM) "ACN" );
 	SendMessage ( WCtls._V, CB_ADDSTRING, 0, (LPARAM) "ACU" );
 	SendMessage ( WCtls._V, CB_ADDSTRING, 0, (LPARAM) "MF" );
-	//SendMessage ( WCtls._V, CB_ADDSTRING, 0, (LPARAM) "VAX" );
+	SendMessage ( WCtls._V, CB_ADDSTRING, 0, (LPARAM) "MFSE" );
 	SendMessage ( WCtls._V, CB_SETCURSEL, 1, 0 );
 
 	return 0;
@@ -595,9 +618,9 @@ cWindows::_OptionWindow::SetWISPOptions ( BOOL Exec )
 		cApp.CmdLine.WOptions->_4 = TRUE;
 	else cApp.CmdLine.WOptions->_4 = FALSE;
 	if ( SendMessage ( 
-			WCtls._C, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) 
-		cApp.CmdLine.WOptions->_C = TRUE;
-	else cApp.CmdLine.WOptions->_C = FALSE;
+			WCtls._F, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) 
+		cApp.CmdLine.WOptions->_F = TRUE;
+	else cApp.CmdLine.WOptions->_F = FALSE;
 	if ( SendMessage ( 
 			WCtls._D, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) 
 		cApp.CmdLine.WOptions->_D = TRUE;
@@ -631,9 +654,9 @@ cWindows::_OptionWindow::SetWISPOptions ( BOOL Exec )
 		cApp.CmdLine.WOptions->_q = TRUE;
 	else cApp.CmdLine.WOptions->_q = FALSE;
 	if ( SendMessage ( 
-			WCtls._R, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) 
-		cApp.CmdLine.WOptions->_R = TRUE;
-	else cApp.CmdLine.WOptions->_R = FALSE;
+			WCtls._G4, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) 
+		cApp.CmdLine.WOptions->_G4 = TRUE;
+	else cApp.CmdLine.WOptions->_G4 = FALSE;
 	if ( SendMessage ( 
 			WCtls._S, BM_GETCHECK, 0, 0 ) == BST_CHECKED ) 
 		cApp.CmdLine.WOptions->_S = TRUE;
@@ -993,3 +1016,18 @@ cWindows::_OptionWindow::CBClicked ( LPARAM lp )
 	cApp.CmdLine.Build ( FALSE, TC_Compile );
 	return 0;
 }
+
+/*
+**	History:
+**	$Log: cOptionWindow.cpp,v $
+**	Revision 1.13  2003/06/18 17:25:29  gsl
+**	pretty up the wisp options dialog
+**	
+**	Revision 1.12  2003/06/18 16:55:56  gsl
+**	Add /F remove /C (replace)
+**	
+**	Revision 1.11  2003/06/18 16:43:07  gsl
+**	Add CVS header and history
+**	
+**
+*/

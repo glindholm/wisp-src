@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /************************************************************************/
 /*	     VIDEO - Video Interactive Development Environment		*/
 /*			    Copyright (c) 1987				*/
@@ -64,7 +85,7 @@ static int arrow();
 static int givehelp();
 static int overflow();
 
-int gcalc()
+int gcalc(void)
 {
 	int k;
 	int active;
@@ -79,7 +100,7 @@ int gcalc()
 	col = 24;
 	rows = 13;
 	cols = 19;
-	vdetpos(0, &row, &col, rows, cols);
+	VL_vdetpos(0, &row, &col, rows, cols);
 
 	if (vscr_atr & LIGHT)
 	{
@@ -241,12 +262,12 @@ static int showcalc(m) int m;
 
 	mode = m;
 
-	vbuffering_start();
+	VL_vbuffering_start();
 
 	vtext(emode,row,col,"  Good Calculator  ");
 	vtext(emode,row+1,col," ");
-	vmode(cmode);  vprint("                 ");
-	vmode(emode);  vprint(" ");
+	VL_vmode(cmode);  vprint("                 ");
+	VL_vmode(emode);  vprint(" ");
 	i = row+2;
 		  vtext(emode,i++,col,"                   ");
 	if (mode) vtext(emode,i++,col,"   F   C   /   *   ");
@@ -287,13 +308,13 @@ static int showcalc(m) int m;
 	i++;
 	vmove(i++,col+1); vline(HORIZONTAL,17);
 
-	vmode(CLEAR);
+	VL_vmode(CLEAR);
 	vcharset(DEFAULT);
 
 	show_reg_display();
 	position();
 
-	vbuffering_end();
+	VL_vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -380,7 +401,7 @@ static int show_reg_display()
 		}
 	}
 	vtext(cmode,row+1,col+2,reg_display);
-	vmode(CLEAR);
+	VL_vmode(CLEAR);
 	return(SUCCESS);
 }
 
@@ -426,36 +447,36 @@ static int do_operation()
 		else ax = -lx;
 		if (ly >= 0.0) ay = ly;
 		else ay = -ly;
-	}
 
-	switch (operation)
-	{
-		case ADD:
+		switch (operation)
 		{
-			if ((ax > LIMIT) || (ay > LIMIT)) overflow();
-			else reg_x += reg_y;
-			break;
-		}
-		case SUBTRACT:
-		{
-			if ((ax > LIMIT) || (ay > LIMIT)) overflow();
-			else reg_x = reg_y - reg_x;
-			break;
-		}
-		case MULTIPLY:
-		{
-			if ((lx + ly) > LIMIT) overflow();
-			else if ((lx + ly) < -LIMIT) overflow();
-			else reg_x *= reg_y;
-			break;
-		}
-		case DIVIDE:
-		{
-			if (reg_x == 0.0) overflow();
-			else if ((ly - lx) >  LIMIT) overflow();
-			else if ((ly - lx) < -LIMIT) overflow();
-			else reg_x = reg_y / reg_x;
-			break;
+			case ADD:
+			{
+				if ((ax > LIMIT) || (ay > LIMIT)) overflow();
+				else reg_x += reg_y;
+				break;
+			}
+			case SUBTRACT:
+			{
+				if ((ax > LIMIT) || (ay > LIMIT)) overflow();
+				else reg_x = reg_y - reg_x;
+				break;
+			}
+			case MULTIPLY:
+			{
+				if ((lx + ly) > LIMIT) overflow();
+				else if ((lx + ly) < -LIMIT) overflow();
+				else reg_x *= reg_y;
+				break;
+			}
+			case DIVIDE:
+			{
+				if (reg_x == 0.0) overflow();
+				else if ((ly - lx) >  LIMIT) overflow();
+				else if ((ly - lx) < -LIMIT) overflow();
+				else reg_x = reg_y / reg_x;
+				break;
+			}
 		}
 	}
 	return(SUCCESS);
@@ -494,14 +515,14 @@ static int clear()
 
 static int overflow()
 {
-	char c, vgetc();
+	char c;
 
 	vbell();
 	vtext(cmode,row+1,col+2,"  * OVERFLOW * ");
 	clear();
 	position();
 	c = vgetc();
-	vpushc(c);
+	VL_vpushc(c);
 	error = TRUE;
 	return(SUCCESS);
 }
@@ -510,7 +531,7 @@ static int overkey(int m)
 {
 	mode = m;
 
-	vbuffering_start();
+	VL_vbuffering_start();
 	if (mode == PRIMARY)
 	{
 		vtext(emode,row+3,col+10," / ");
@@ -559,7 +580,7 @@ static int overkey(int m)
 		vtext(emode,row+11,col+3," EXIT ");
 		vtext(emode,row+11,col+10,"pi ");
 	}
-	vbuffering_end();
+	VL_vbuffering_end();
 	position();
 	return(SUCCESS);
 }
@@ -602,7 +623,7 @@ static int arrow(k) int k;
 	{
 		i = col;
 		col = col + 4;
-		if (col > vscr_wid-cols) col = vscr_wid-cols;
+		if (col > VL_vscr_wid-cols) col = VL_vscr_wid-cols;
 		if (col == i) vbell();
 		else move();
 		return(SUCCESS);
@@ -649,7 +670,7 @@ funa:	k = vgetm();
 
 	else if ((k == '/') || (k == fn3_key))
 	{
-		if (vpaste(0))
+		if (VL_vpaste(0))
 		{
 			reg_x = 0.0;
 			strcpy(reg_display,INIT_REG_DISPLAY);
@@ -702,75 +723,99 @@ static int givehelp(m) int m;
 	int4 key;
 
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"Calculator Help - Page 1 - General",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"This calculator operates like most hand-held",0,NULL);
-	vmenuitem(&help,"models. The screen layout matches the keypad",0,NULL);
-	vmenuitem(&help,"of most terminal keyboards although it might",0,NULL);
-	vmenuitem(&help,"not be perfectly one to one.  It should work",0,NULL);
-	vmenuitem(&help,"with any key layout. In general numeric keys",0,NULL);
-	vmenuitem(&help,"(0 1 etc.) are used for digits,  + - * / are",0,NULL);
-	vmenuitem(&help,"used for add, subtract etc. and = for equals.",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"For more information, depress the help key.",0,NULL);
-	vmenuitem(&help,"Any other key will exit help..",0,NULL);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"Calculator Help - Page 1 - General",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"This calculator operates like most hand-held",0,NULL);
+	VL_vmenuitem(&help,"models. The screen layout matches the keypad",0,NULL);
+	VL_vmenuitem(&help,"of most terminal keyboards although it might",0,NULL);
+	VL_vmenuitem(&help,"not be perfectly one to one.  It should work",0,NULL);
+	VL_vmenuitem(&help,"with any key layout. In general numeric keys",0,NULL);
+	VL_vmenuitem(&help,"(0 1 etc.) are used for digits,  + - * / are",0,NULL);
+	VL_vmenuitem(&help,"used for add, subtract etc. and = for equals.",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"For more information, depress the help key.",0,NULL);
+	VL_vmenuitem(&help,"Any other key will exit help..",0,NULL);
 
-	key = vmenugo(&help);
+	key = VL_vmenugo(&help);
 	if (key != help_key) return(SUCCESS);
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"Good Calculator Help - Page 2 - Keys",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"0 1 2 etc. are used for digits.",0,NULL);
-	vmenuitem(&help,"+ - * / are used for add, subtract, etc.",0,NULL);
-	vmenuitem(&help,"PF3 and PF4 double for * and /",0,NULL);
-	vmenuitem(&help,"= and the return key are used for equals.",0,NULL);
-	vmenuitem(&help,"PF1 or the F key selects function mode.",0,NULL);
-	vmenuitem(&help,"PF2 or the C key clear the display.",0,NULL);
-	vmenuitem(&help,"PF16 is used to exit the calculator.",0,NULL);
-	vmenuitem(&help,"The arrow keys move the calculator about.",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"For more information, depress the help key.",0,NULL);
-	vmenuitem(&help,"Any other key will exit help.",0,NULL);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"Good Calculator Help - Page 2 - Keys",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"0 1 2 etc. are used for digits.",0,NULL);
+	VL_vmenuitem(&help,"+ - * / are used for add, subtract, etc.",0,NULL);
+	VL_vmenuitem(&help,"PF3 and PF4 double for * and /",0,NULL);
+	VL_vmenuitem(&help,"= and the return key are used for equals.",0,NULL);
+	VL_vmenuitem(&help,"PF1 or the F key selects function mode.",0,NULL);
+	VL_vmenuitem(&help,"PF2 or the C key clear the display.",0,NULL);
+	VL_vmenuitem(&help,"PF16 is used to exit the calculator.",0,NULL);
+	VL_vmenuitem(&help,"The arrow keys move the calculator about.",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"For more information, depress the help key.",0,NULL);
+	VL_vmenuitem(&help,"Any other key will exit help.",0,NULL);
 
-	key = vmenugo(&help);
+	key = VL_vmenugo(&help);
 	if (key != help_key) return(SUCCESS);
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"Good Calculator Help - Page 3 - Functions",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"PF1 or the F key selects function mode.",0,NULL);
-	vmenuitem(&help,"When selected, the screen will be changed",0,NULL);
-	vmenuitem(&help,"to display what the functions are.  Thses",0,NULL);
-	vmenuitem(&help,"include sin, cos etc. and are obtained by",0,NULL);
-	vmenuitem(&help,"depressing the corresponding key.",0,NULL);
-	vmenuitem(&help,"For example, sin corresponds to 7.",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"For more information, depress the help key.",0,NULL);
-	vmenuitem(&help,"Any other key will exit help.",0,NULL);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"Good Calculator Help - Page 3 - Functions",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"PF1 or the F key selects function mode.",0,NULL);
+	VL_vmenuitem(&help,"When selected, the screen will be changed",0,NULL);
+	VL_vmenuitem(&help,"to display what the functions are.  Thses",0,NULL);
+	VL_vmenuitem(&help,"include sin, cos etc. and are obtained by",0,NULL);
+	VL_vmenuitem(&help,"depressing the corresponding key.",0,NULL);
+	VL_vmenuitem(&help,"For example, sin corresponds to 7.",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"For more information, depress the help key.",0,NULL);
+	VL_vmenuitem(&help,"Any other key will exit help.",0,NULL);
 
-	key = vmenugo(&help);
+	key = VL_vmenugo(&help);
 	if (key != help_key) return(SUCCESS);
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
-	vmenuitem(&help,"Good Calculator Help - Page 4 - Cut & Paste",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"In function mode, the calculator value can",0,NULL);
-	vmenuitem(&help,"be cut out for use in another program,  or",0,NULL);
-	vmenuitem(&help,"for later use by the calculator.",0,NULL);
-	vmenuitem(&help,"Similarily, a previously cut value can be",0,NULL);
-	vmenuitem(&help,"imported from another program.",0,NULL);
-	vmenuitem(&help,"",0,NULL);
-	vmenuitem(&help,"This is the last page of help.",0,NULL);
-	vmenuitem(&help,"Depress any key to exit...",0,NULL);
+	VL_vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
+	VL_vmenuitem(&help,"Good Calculator Help - Page 4 - Cut & Paste",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"In function mode, the calculator value can",0,NULL);
+	VL_vmenuitem(&help,"be cut out for use in another program,  or",0,NULL);
+	VL_vmenuitem(&help,"for later use by the calculator.",0,NULL);
+	VL_vmenuitem(&help,"Similarily, a previously cut value can be",0,NULL);
+	VL_vmenuitem(&help,"imported from another program.",0,NULL);
+	VL_vmenuitem(&help,"",0,NULL);
+	VL_vmenuitem(&help,"This is the last page of help.",0,NULL);
+	VL_vmenuitem(&help,"Depress any key to exit...",0,NULL);
 
-	key = vmenugo(&help);
+	key = VL_vmenugo(&help);
 	return(SUCCESS);
 }
 
 /*
 **	History:
 **	$Log: gcalc.c,v $
+**	Revision 1.19  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.18  2003/06/23 15:28:04  gsl
+**	VL_ global symbols
+**	
+**	Revision 1.17  2003/01/31 20:18:47  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.16  2003/01/31 19:25:57  gsl
+**	Fix copyright header
+**	
+**	Revision 1.15  2002/07/17 21:05:59  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/16 13:40:23  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2002/07/15 20:16:05  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.12  2002/07/15 17:52:53  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.11  1997/07/08 20:15:37  gsl
 **	Change to use new video.h defines
 **	

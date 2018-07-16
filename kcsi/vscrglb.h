@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifndef _VSCRGLB_H
 #define _VSCRGLB_H
@@ -100,11 +114,11 @@ int CR_block_is_done(CR_BLK *blk);
 /*
 **	History:
 **	$Log: vscrglb.h,v $
-**	Revision 1.3.2.2  2002/11/14 16:02:59  gsl
-**	Replace cr_debug the trace level
+**	Revision 1.8  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
-**	Revision 1.3.2.1  2002/11/12 15:56:41  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.7  2002/11/14 16:03:29  gsl
+**	Replace cr_debug the trace level
 **	
 **	Revision 1.6  2002/10/23 20:39:04  gsl
 **	make global name unique

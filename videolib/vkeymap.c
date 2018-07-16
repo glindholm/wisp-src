@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,8 +36,8 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Routines to provide keymapping.
 **
 **	Routines:	
-**	vkeymap()	Retrieve the metakey value based on component and function.
-**	vkeymap_path()	Generate the native path to the vkeymap file.
+**	VL_vkeymap()	Retrieve the metakey value based on component and function.
+**	VL_vkeymap_path()	Generate the native path to the vkeymap file.
 **	strtometakey()	Convert vkeymap key string into a metakey.
 **
 **
@@ -24,26 +45,26 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-
-#ifndef NOSTDLIB
 #include <stdlib.h>
+
+#ifdef unix
+#include <unistd.h>
 #endif
 
-#ifdef NOSIZE_T
-typedef unsigned int size_t;
+#ifdef WIN32
+#include <io.h>
 #endif
 
 #include "vkeymap.h"
 #include "vintdef.h"
 #include "vmodules.h"
 
-extern int access();
 static int4 strtometakey();
-char *upstring();
+static char *upstring(char *string);
 
 
 /*
-**	Routine:	vkeymap()
+**	Routine:	VL_vkeymap()
 **
 **	Function:	Retrieve the metakey value based on component and function.
 **
@@ -68,7 +89,7 @@ char *upstring();
 **	08/11/93	Written by GSL
 **
 */
-int vkeymap(component, function, rc_metakey)
+int VL_vkeymap(component, function, rc_metakey)
 char	*component;
 char	*function;
 int4	*rc_metakey;
@@ -97,7 +118,7 @@ int4	*rc_metakey;
 		char	path[256];
 		FILE	*fh;
 
-		if ( 0 != access(vkeymap_path(path),0))
+		if ( 0 != access(VL_vkeymap_path(path),0))
 		{
 			/*
 			**	VKEYMAP not found.
@@ -190,7 +211,7 @@ int4	*rc_metakey;
 }
 
 /*
-**	Routine:	vkeymap_path()
+**	Routine:	VL_vkeymap_path()
 **
 **	Function:	Generate the native path to the vkeymap file.
 **
@@ -213,28 +234,27 @@ int4	*rc_metakey;
 **	08/11/93	Written by GSL
 **
 */
-char *vkeymap_path(path)
+char *VL_vkeymap_path(path)
 char	*path;
 {
 	char	*ptr;
 
 	path[0] = (char)0;
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
-	if (ptr = getenv("VKEYMAP"))
+	if ((ptr = getenv("VKEYMAP")))
 	{
 		/*
 		**	If $VKEYMAP is set then it overrides all others.
 		*/
 		strcpy(path,ptr);
 	}
-	else if (ptr = getenv("HOME"))
+	else if ((ptr = getenv("HOME")))
 	{
 		/*
 		**	Check for a "personal" $HOME vkeymap file.
 		*/
 
-		vbldfilepath(path,ptr,VKEYMAP_HOME_FILE);
+		VL_vbldfilepath(path,ptr,VKEYMAP_HOME_FILE);
 		if ( 0 != access(path,0))
 		{
 			/* 
@@ -243,13 +263,12 @@ char	*path;
 			path[0] = (char)0;
 		}
 	}
-#endif /* unix || MSDOS || WIN32 */
 
 	if (!path[0])
 	{
-		char *vinfoname();
+		char *VL_vinfoname();
 
-		strcpy(path, vinfoname(VKEYMAP_FILE));
+		strcpy(path, VL_vinfoname(VKEYMAP_FILE));
 	}
 	return(path);
 }
@@ -288,26 +307,26 @@ char	*key;
 		int4	metakey;
 	} trantable[] = 
 		{
-			"X",		KM_NONE,
-			"UP",		KM_UP,
-			"DOWN",		KM_DOWN,
-			"LEFT",		KM_LEFT,
-			"RIGHT",	KM_RIGHT,
-			"ENTER",	KM_ENTER,
-			"PAGEUP",	KM_PAGEUP,
-			"PAGEDOWN",	KM_PAGEDOWN,
-			"HOME",		KM_HOME,
-			"END",		KM_END,
-			"INSERT",	KM_INSERT,
-			"DELETE",	KM_DELETE,
-			"BACKSPACE",	KM_BACKSPACE,
-			NULL,		0
+			{"X",		KM_NONE},
+			{"UP",		KM_UP},
+			{"DOWN",	KM_DOWN},
+			{"LEFT",	KM_LEFT},
+			{"RIGHT",	KM_RIGHT},
+			{"ENTER",	KM_ENTER},
+			{"PAGEUP",	KM_PAGEUP},
+			{"PAGEDOWN",	KM_PAGEDOWN},
+			{"HOME",	KM_HOME},
+			{"END",		KM_END},
+			{"INSERT",	KM_INSERT},
+			{"DELETE",	KM_DELETE},
+			{"BACKSPACE",	KM_BACKSPACE},
+			{NULL,		0}
 		};
 
 	/*
 	**	First look for function keys.
 	*/
-	if ('F' == key[0] && isdigit(key[1]))
+	if ('F' == key[0] && isdigit((int)key[1]))
 	{
 		i = atoi(&key[1]);
 		if (i < 0 || i > 63)
@@ -334,8 +353,7 @@ char	*key;
 	return(KM_UNKNOWN);
 }
 
-char *upstring(string)
-char *string;
+static char *upstring(char *string)
 {
 	char	*ptr;
 	for (ptr=string; *ptr; ptr++)
@@ -360,17 +378,38 @@ char	*argv[];
 		exit(0);
 	}
 
-	printf("vkeymap_path=[%s]\n",vkeymap_path(path));
+	printf("VL_vkeymap_path=[%s]\n",VL_vkeymap_path(path));
 
-	rc = vkeymap(argv[1], argv[2], &metakey);
+	rc = VL_vkeymap(argv[1], argv[2], &metakey);
 
-	printf("%d = vkeymap(\"%s\", \"%s\", 0x%08x)\n", rc, argv[1], argv[2], metakey);
+	printf("%d = VL_vkeymap(\"%s\", \"%s\", 0x%08x)\n", rc, argv[1], argv[2], metakey);
 	exit(0);
 }
 #endif /* MAIN */
 /*
 **	History:
 **	$Log: vkeymap.c,v $
+**	Revision 1.14  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.12  2003/01/31 20:35:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.11  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.10  2002/07/18 21:04:22  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.9  2002/07/15 20:56:38  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.8  2002/07/15 20:16:09  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.7  1996/10/11 22:16:07  gsl
 **	drcs update
 **	

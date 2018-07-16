@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **      File:           wdiag.c
@@ -14,7 +37,6 @@ static char rcsid[]="$Id:$";
 **                              LGMAP
 **                              wsysconfig
 **                              wrunconfig
-**                              wispmsg.dat
 **                              videocap
 **                              $VIDEOCAP
 **                              $WISPTERM
@@ -58,17 +80,12 @@ static char rcsid[]="$Id:$";
 #include <unistd.h>
 #endif
 
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 #include <process.h>
 #include <conio.h>
 #include <io.h>
 #endif
 
-#ifdef MSDOS
-#include <dos.h>
-#endif
-
-#define EXT_FILEXT
 #include "filext.h"
 
 #include "paths.h"
@@ -112,6 +129,8 @@ void print_config_file(const char* options_path);
 static void cat_file(const char* file_path);
 static void check_path(const char* path);
 static void test_int_sizes(void);
+
+static int define_mf();
 
 /*
 **	Global defines and data
@@ -212,7 +231,7 @@ static int print_envvar(const char* pszVar, int* pnError)
 		pszSeverity = "ERROR";
 	}
 	
-	if (cptr = getenv(pszVar))
+	if ((cptr = getenv(pszVar)))
 	{
 		if (cptr[0] == '\0')
 		{
@@ -269,7 +288,7 @@ int main(int argc, char* argv[], char* envp[])
 
 	test_int_sizes();
 
-	load_options();
+	WL_load_options();
 
 	printf("**********************************************************************\n");
 	printf("*                            WISP - WDIAG                            *\n");
@@ -321,10 +340,13 @@ int main(int argc, char* argv[], char* envp[])
 	**	Check for the videocap files
 	*/
 	print_access("videocapfile", wisptermfilepath(NULL), ACC_READ, &errsw);
-	print_access("wisptmpbase",  wisptmpbasedir(NULL),   ACC_FULL, &errsw);
-	print_access("wtmpdir",      wtmpdir(NULL),          ACC_FULL, &errsw);
+	print_access("WISPTMPDIR",   wisptmpbasedir(NULL),   ACC_FULL, &errsw);
+	print_access("SYSTMPDIR",    WL_systmpdir(NULL),     ACC_FULL, &errsw);
+#ifdef WIN32
+	print_access("WISPSHAREDIR", wispmsgsharedir(NULL),  ACC_FULL, NULL); /* warning */
+#endif
 
-	cptr = license_filepath();
+	cptr = WLIC_license_filepath();
 	if (print_access("licensefile", cptr, ACC_READ, &errsw) == 0)
 	{
 		cat_file(cptr);
@@ -361,7 +383,7 @@ int main(int argc, char* argv[], char* envp[])
 	if (print_access("LGMAP",buff,ACC_READ,&errsw) == 0)
 	{
 		logical_id	*logical_ptr;
-		logical_ptr = get_logical_list();
+		logical_ptr = WL_get_lgmap_list();
 
 		while(logical_ptr)
 		{
@@ -374,7 +396,7 @@ int main(int argc, char* argv[], char* envp[])
 				check_access(NULL,logical_ptr->translate,ACC_RX);
 			}
 
-			logical_ptr = (logical_id *)logical_ptr->next;
+			logical_ptr = logical_ptr->next;
 		}
 		print_nl();
 	}
@@ -394,9 +416,6 @@ int main(int argc, char* argv[], char* envp[])
 	buildfilepath(buff,wispconfigdir(),CFGFNAME);
 	print_access("WSYSCONF", buff, ACC_READ, &errsw);
 
-	buildfilepath(buff,wispconfigdir(),"wispmsg.dat");
-	print_access("WISPMSG", buff, ACC_READ, &errsw);
-
 	buildfilepath(buff,wispconfigdir(),"OPTIONS");
 	if (print_access("OPTIONS",buff,ACC_READ,&errsw) == 0)
 	{
@@ -412,18 +431,18 @@ int main(int argc, char* argv[], char* envp[])
 	/*
 	**	Check on wrun
 	*/
-	wrunconfig(&wrun_cfg);				/* Load wrunconfig options file		*/
+	WL_wrunconfig(&wrun_cfg);				/* Load wrunconfig options file		*/
 
 	print_pair_nl("WRUN COBOL",   wrun_cfg.wrun_cobtype);
 	print_pair_nl("WRUN RUNCBL",  wrun_cfg.wrun_runcbl);
 	print_pair_nl("WRUN OPTIONS", wrun_cfg.wrun_options);
 
-	if (0 == strcmp("ACU",wrun_cfg.wrun_cobtype))
+	if (0 == strcmp(WRUNCOBTYPE_ACU,wrun_cfg.wrun_cobtype))
 	{
 		nCobol = ACUCOBOL;
 		print_pair_nl("COBOL", "ACUCOBOL");
 	} 
-	else if (0 == strcmp("MF",wrun_cfg.wrun_cobtype))
+	else if (0 == strcmp(WRUNCOBTYPE_MF,wrun_cfg.wrun_cobtype))
 	{
 		nCobol = MFCOBOL;
 		print_pair_nl("COBOL", "MICRO FOCUS");
@@ -448,13 +467,13 @@ int main(int argc, char* argv[], char* envp[])
 	print_nl();
 
 	checklinkexe("WSHELL",  "wshell");
-	checklinkexe("PROC",     wprocexe());
+	checklinkexe("PROC",     WL_wprocexe());
 	checklinkexe("COPY",    "wcopy");
 	checklinkexe("SORT",    "wsort");
-	checklinkexe("EDITOR",   weditorexe());
-	if (custom_display_utility())
+	checklinkexe("EDITOR",   WL_weditorexe());
+	if (WL_custom_display_utility())
 	{
-		checklinkexe("DISPLAY", custom_display_utility());
+		checklinkexe("DISPLAY", WL_custom_display_utility());
 	}
 	else
 	{
@@ -465,14 +484,14 @@ int main(int argc, char* argv[], char* envp[])
 #ifdef unix
 	cptr = NULL;
 	
-	switch(opt_printqueue)
+	switch(WL_opt_printqueue)
 	{
 	case PQ_UNIQUE:
 	case PQ_ILP:
-		if (cptr = getenv("UNIQUE_PRINT"))
+		if ((cptr = getenv("UNIQUE_PRINT")))
 		{
 		}
-		else if (PQ_ILP == opt_printqueue)
+		else if (PQ_ILP == WL_opt_printqueue)
 		{
 			cptr = "ilp";
 		}
@@ -491,7 +510,7 @@ int main(int argc, char* argv[], char* envp[])
 		break;
 
 	case PQ_GENERIC:
-		cptr = get_wisp_option("PQCMD");
+		cptr = WL_get_wisp_option("PQCMD");
 		break;
 		
 	case PQ_DEFAULT:
@@ -508,27 +527,27 @@ int main(int argc, char* argv[], char* envp[])
 		print_pair_err_mess("PRINT","","ERROR", "NOT DEFINED");
 	}
 
-	if (opt_printqueue_manager)
+	if (WL_opt_printqueue_manager)
 	{
-		checklinkexe("PQMANAGER", opt_printqueue_manager);
+		checklinkexe("PQMANAGER", WL_opt_printqueue_manager);
 	}
 	else
 	{
 		print_pair_nl("PQMANAGER", "(none)");
 	}
 	
-	if (opt_batchqueue)
+	if (*(WL_batchqueue_name()) != '\0')
 	{
-		checklinkexe("BATCH",  batchqueue_name);
+		checklinkexe("BATCH",  WL_batchqueue_name());
 	}
 	else
 	{
 		print_pair_nl("BATCH", "(none)");
 	}
 	
-	if (opt_batchman)
+	if (WL_opt_batchman)
 	{
-		checklinkexe("BATCHMAN",  batchman_name);
+		checklinkexe("BATCHMAN",  WL_batchman_name);
 	}
 	else
 	{
@@ -637,15 +656,14 @@ int define_os(char* ut)
 #endif
 #ifdef WIN32
 	const char* pVersion;
+	char	buff[256];
 #endif
 
-	char	buff[256];
 	char	temp[256];
 	
 	char	*ptr;
 
 	/*	int	errsw=0; */
-
 #ifdef unix
 	/*
 	**       Check the basic unix shell environment
@@ -660,6 +678,33 @@ int define_os(char* ut)
 						unix_name.release,
 						unix_name.version,
 						unix_name.machine);
+
+#ifdef SCO
+		/*
+		**	Add extra SCO info
+		*/
+		{
+			struct scoutsname sco_buff;
+
+			if (-1 != __scoinfo(&sco_buff, sizeof(sco_buff)))
+			{
+				char os_release[sizeof(sco_buff.release)+1];
+				char os_kernelid[sizeof(sco_buff.kernelid)+1];
+
+				memcpy(os_release, sco_buff.release, sizeof(sco_buff.release));
+				os_release[sizeof(sco_buff.release)] = '\0';
+				strcat(temp," ");
+				strcat(temp,os_release);
+
+				memcpy(os_kernelid, sco_buff.kernelid, sizeof(sco_buff.kernelid));
+				os_kernelid[sizeof(sco_buff.kernelid)] = '\0';
+				strcat(temp," ");
+				strcat(temp,os_kernelid);
+			}
+
+		}
+#endif /* SCO */
+
 	}
 	else
 	{
@@ -676,15 +721,15 @@ int define_os(char* ut)
 	print_nl();
 	printf("WIN32 Environment\n");
 	printf("=================\n");
-	if (win32_nt())
+	if (WL_win32_nt())
 	{
 		pVersion = "NT";
 	}
-	else if (win32_98())
+	else if (WL_win32_98())
 	{
 		pVersion = "98";
 	}
-	else if (win32_95())
+	else if (WL_win32_95())
 	{
 		pVersion = "95";
 	}
@@ -692,13 +737,13 @@ int define_os(char* ut)
 	{
 		pVersion = "Unknown";
 	}
-	sprintf(buff, "%s %s", pVersion, win32_version());
+	sprintf(buff, "%s %s", pVersion, WL_win32_version());
 	print_pair_nl("WINDOWS", buff);
 #endif
 
 	print_access("HOME", wisphomedir(NULL), ACC_FULL, &errsw);
 
-	if (ptr = getenv("PATH"))
+	if ((ptr = getenv("PATH")))
 	{
 		print_pair_nl("PATH",ptr);
 		check_path(ptr);
@@ -710,7 +755,7 @@ int define_os(char* ut)
 	}
 
 #ifdef unix
-	if (ptr = getenv("SHELL") )
+	if ((ptr = getenv("SHELL")) )
 	{
 		print_pair("SHELL",ptr);
 		if (ptr[0] == '/')
@@ -746,7 +791,7 @@ int define_os(char* ut)
 	print_access("TEMP","/usr/tmp",ACC_FULL,&errsw);
 	print_access("TEMP","/tmp",    ACC_FULL,&errsw);
 
-	if (ptr = getenv("TMPDIR"))
+	if ((ptr = getenv("TMPDIR")))
 	{
 		print_access("TMPDIR", ptr, ACC_FULL, &errsw);
 	}
@@ -756,15 +801,15 @@ int define_os(char* ut)
 	}
 #endif
 
-	print_pair_nl("MACHID", (0==getmachineid(temp)) ? temp : "(unknown)");
+	print_pair_nl("MACHID", (0==WL_getmachineid(temp)) ? temp : "(unknown)");
 
-	print_pair_nl("COMPNAME", computername(NULL));
+	print_pair_nl("COMPNAME", WL_computername(NULL));
 
 	print_pair_nl("SERVER", wispserver());
 
 	print_pair_nl("ttyname", ttyname(0));
 
-	ttyid5(temp);
+	WL_ttyid5(temp);
 	print_pair_nl("ttyid5", temp);
 	
 
@@ -819,7 +864,7 @@ int define_acu(const char* rts)
 			a_config[0] = '\0';
 		}	
 	}
-	else if (acu = getenv("A_CONFIG"))
+	else if ((acu = getenv("A_CONFIG")))
 	{
 		if (print_access("A_CONFIG",acu,ACC_READ,&erracu) == 0)
 		{
@@ -834,8 +879,6 @@ int define_acu(const char* rts)
 
 	if ('\0' != a_config[0])
 	{
-		char 	aculink[256];
-		int	aculink_found = 0;
 		FILE 	*the_file;
 		char	inlin[512], keyword[80];
 		int	cnt,len;
@@ -869,7 +912,11 @@ int define_acu(const char* rts)
 
 			if (NULL != pszCodePrefix)
 			{
-				char* token;
+				char*	token = NULL;
+				int	aculink_found = 0;
+				int	acuusing_found = 0;
+				char 	aculink_path[256];
+				char 	acuusing_path[256];
 					
 				print_pair_nl("CODE-PREFIX",&pszCodePrefix[11]);
 				for(token = strtok(&pszCodePrefix[11]," \t"); 
@@ -881,22 +928,56 @@ int define_acu(const char* rts)
 
 					if (!aculink_found)
 					{
-						buildfilepath(aculink,token,"ACULINK");
-						if (0==access(aculink,ACC_READ))
+						buildfilepath(aculink_path,token,"ACULINK");
+						if (0==access(aculink_path,ACC_READ))
 						{
 							aculink_found = 1;
+						}
+					}
+					if (!aculink_found)
+					{
+						buildfilepath(aculink_path,token,"ACULINK.acu");
+						if (0==access(aculink_path,ACC_READ))
+						{
+							aculink_found = 1;
+						}
+					}
+					if (!acuusing_found)
+					{
+						buildfilepath(acuusing_path,token,"ACUUSING");
+						if (0==access(acuusing_path,ACC_READ))
+						{
+							acuusing_found = 1;
+						}
+					}
+					if (!acuusing_found)
+					{
+						buildfilepath(acuusing_path,token,"ACUUSING.acu");
+						if (0==access(acuusing_path,ACC_READ))
+						{
+							acuusing_found = 1;
 						}
 					}
 				}
 
 				if (aculink_found)
 				{
-					print_access("ACULINK",aculink,ACC_READ,&erracu);
+					print_access("ACULINK",aculink_path,ACC_READ,&erracu);
 				}
 				else
 				{
 					erracu++;
 					print_pair_err_mess("ACULINK","","ERROR","NOT FOUND");
+				}
+
+				if (acuusing_found)
+				{
+					print_access("ACUUSING",acuusing_path,ACC_READ,&erracu);
+				}
+				else
+				{
+					erracu++;
+					print_pair_err_mess("ACUUSING","","ERROR","NOT FOUND");
 				}
 			}
 			else
@@ -904,6 +985,7 @@ int define_acu(const char* rts)
 				erracu++;
 				print_pair_err_mess("CODE-PREFIX","","ERROR","NOT FOUND");
 				print_pair_nl("ACULINK","(Unknown)");
+				print_pair_nl("ACUUSING","(Unknown)");
 			}
 		}
 	}
@@ -911,12 +993,13 @@ int define_acu(const char* rts)
 	{
 		print_pair_nl("CODE-PREFIX","(Unknown)");
 		print_pair_nl("ACULINK","(Unknown)");
+		print_pair_nl("ACUUSING","(Unknown)");
 	}
 	
 
 	
 #ifdef unix
-	if (acu = getenv("A_TERMCAP"))
+	if ((acu = getenv("A_TERMCAP")))
 	{
 		print_access("A_TERMCAP",acu,ACC_READ,&erracu);
 	}
@@ -926,10 +1009,10 @@ int define_acu(const char* rts)
 	}
 #endif
 
-	if (0 == checkexe("VUTIL", acu_vutil_exe(), &erracu))
+	if (0 == checkexe("VUTIL", WL_acu_vutil_exe(), &erracu))
 	{
 #ifdef unix
-		sprintf(command, "%s -V", acu_vutil_exe());
+		sprintf(command, "%s -V", WL_acu_vutil_exe());
 		if (0 != run_command(command))
 		{
 			errmf++;
@@ -967,7 +1050,7 @@ int define_acu(const char* rts)
 **
 */
 
-int define_mf()
+static int define_mf()
 {
 	char    *mf,
 		*ptr;
@@ -994,7 +1077,7 @@ int define_mf()
 	print_envvar("COBSW",NULL);
 	print_envvar("COBOPT",NULL);
 
-	if (mf = getenv("COBPATH"))
+	if ((mf = getenv("COBPATH")))
 	{
 		print_pair_nl("COBPATH",mf);
 		check_path(mf);
@@ -1014,7 +1097,7 @@ int define_mf()
 		shared_lib_path_var = "SHLIB_PATH";
 #endif
 
-		if (mf = getenv(shared_lib_path_var))
+		if ((mf = getenv(shared_lib_path_var)))
 		{
 			print_pair_nl(shared_lib_path_var,mf);
 			check_path(mf);
@@ -1033,14 +1116,14 @@ int define_mf()
 	*	Server Express  - Use rebuild.   (fhconvert doesn't exist)
 	*/
 	ptr = "fhconvert";
-	if (0 == whichenvpath(ptr,file_path))
+	if (0 == WL_whichenvpath(ptr,file_path))
 	{
 		print_pair_mess(ptr,file_path,"[FOUND]");
 	}
 	else
 	{
 		ptr = "rebuild";
-		if (0 == whichenvpath(ptr,file_path))
+		if (0 == WL_whichenvpath(ptr,file_path))
 		{
 			print_pair_mess(ptr,file_path,"[FOUND]");
 		}
@@ -1056,7 +1139,7 @@ int define_mf()
 
 	ptr = "cob";
 
-	if (0 == whichenvpath(ptr,file_path))
+	if (0 == WL_whichenvpath(ptr,file_path))
 	{
 		print_pair_mess("cob",file_path,"[FOUND]");
 
@@ -1120,7 +1203,7 @@ int check_access(int* pnError, const char *ptr, int mode)
 	}
   
 
-	if (rc = access(ptr, mode))
+	if ((rc = access(ptr, mode)))
 	{
 		switch(errno)
 		{
@@ -1170,7 +1253,7 @@ int run_command(char *command)
 		{
 			char	*ptr;
 
-			if (ptr=strchr(buff,'\n'))
+			if ((ptr=strchr(buff,'\n')))
 			{
 				*ptr = '\0';
 			}
@@ -1185,7 +1268,7 @@ int run_command(char *command)
 		return 1;
 	}
 #endif
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 	system (command);
 #endif
 
@@ -1199,14 +1282,14 @@ int checkexe(const char *tag, const char *exe, int* pnError)
 	
 	strcpy(buff, exe);
 	
-#ifdef MSFS
-	upper_string(buff);
-	if (!osd_ext(buff))
+#ifdef WIN32
+	WL_upper_string(buff);
+	if (!WL_osd_ext(buff))
 	{
 		strcat(buff,".EXE");
 	}
 #endif
-	if (0 == whichenvpath(buff,file_path))
+	if (0 == WL_whichenvpath(buff,file_path))
 	{
 		print_pair_mess(tag,file_path,"[FOUND]");
 		return 0;
@@ -1228,26 +1311,26 @@ void checklinkexe(const char *tag, const char *exe)
 	/*
 	**	The exe sometimes includes arguments so terminate at the first space.
 	*/
-	if (ptr = strchr(buff,' '))
+	if ((ptr = strchr(buff,' ')))
 	{
 		*ptr = '\0';
 	}
 	
 	
-#ifdef MSFS
-	upper_string(buff);
-	if (!osd_ext(buff))
+#ifdef WIN32
+	WL_upper_string(buff);
+	if (!WL_osd_ext(buff))
 	{
 		strcat(buff,".EXE");
 	}
 #endif
-	if (0 == whichlinkpath(buff,file_path))
+	if (0 == WL_whichlinkpath(buff,file_path))
 	{
 		print_pair_mess(tag, file_path,"[FOUND]");
 		return;
 	}
 #ifdef WIN32
-	if (0 == whichenvpath(buff,file_path))
+	if (0 == WL_whichenvpath(buff,file_path))
 	{
 		print_pair_mess(tag, file_path,"[FOUND]");
 		return;
@@ -1270,7 +1353,7 @@ static void cat_file(const char* file_path)
 		{
 			char *ptr;
 			
-			if (ptr=strchr(inlin,'\n'))
+			if ((ptr=strchr(inlin,'\n')))
 			{
 				*ptr = '\0';
 			}
@@ -1392,33 +1475,33 @@ static void test_int_sizes(void)
 	*/
 	if (sizeof(t_int2) != 2)
 	{
-		printf("********************************* Size error int2 = %d\n", sizeof(t_int2));
+		printf("********************************* Size error int2 = %lu\n", (unsigned long)sizeof(t_int2));
 		rc = 1;
 	}
 	if (sizeof(t_uint2) != 2)
 	{
-		printf("********************************* Size error uint2 = %d\n", sizeof(t_uint2));
+		printf("********************************* Size error uint2 = %lu\n", (unsigned long)sizeof(t_uint2));
 		rc = 1;
 	}
 	if (sizeof(t_int4) != 4)
 	{
-		printf("********************************* Size error int4 = %d\n", sizeof(t_int4));
+		printf("********************************* Size error int4 = %lu\n", (unsigned long)sizeof(t_int4));
 		rc = 1;
 	}
 	if (sizeof(t_uint4) != 4)
 	{
-		printf("********************************* Size error uint4 = %d\n", sizeof(t_uint4));
+		printf("********************************* Size error uint4 = %lu\n", (unsigned long)sizeof(t_uint4));
 		rc = 1;
 	}
 #ifdef INT8_DEFINED
 	if (sizeof(t_int8) != 8)
 	{
-		printf("********************************* Size error INT8 = %d\n", sizeof(t_int8));
+		printf("********************************* Size error INT8 = %lu\n", (unsigned long)sizeof(t_int8));
 		rc = 1;
 	}
 	if (sizeof(t_uint8) != 8)
 	{
-		printf("********************************* Size error UINT8 = %d\n", sizeof(t_uint8));
+		printf("********************************* Size error UINT8 = %lu\n", (unsigned long)sizeof(t_uint8));
 		rc = 1;
 	}
 #endif
@@ -1485,20 +1568,87 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
-**	Revision 1.29.2.5  2003/02/14 18:14:43  gsl
-**	fix proto warning
+**	Revision 1.55  2003/07/29 13:41:25  gsl
+**	extra SCO info
 **	
-**	Revision 1.29.2.4  2003/02/14 16:55:25  gsl
-**	Add check to ensure $WISPCONFIG is set
+**	Revision 1.54  2003/05/19 19:08:26  gsl
+**	-Wall
 **	
-**	Revision 1.29.2.3  2003/02/07 21:18:48  gsl
-**	Add platform to version
+**	Revision 1.53  2003/05/06 18:27:25  gsl
+**	-Wall
 **	
-**	Revision 1.29.2.2  2002/11/08 18:19:31  gsl
+**	Revision 1.52  2003/03/20 18:29:05  gsl
+**	Fix logical_id typedef
+**	
+**	Revision 1.51  2003/02/14 16:28:43  gsl
+**	Check $WISPCONFIG is set
+**	
+**	Revision 1.50  2003/02/13 20:51:37  gsl
+**	fix warning
+**	
+**	Revision 1.49  2003/02/07 20:45:14  gsl
+**	Add platform to version display
+**	
+**	Revision 1.48  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.47  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.46  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.45  2002/12/11 14:08:44  gsl
+**	Removed wispmsg.dat/txt and makemsg
+**	
+**	Revision 1.44  2002/12/02 19:27:58  gsl
+**	Fix bug, not recognizing MF as a valid Cobol type
+**	
+**	Revision 1.43  2002/11/21 22:21:52  gsl
+**	Change to use ACULINK.acu and ACUUSING.acu
+**	Added .acu to all Acucobol object files
+**	
+**	Revision 1.42  2002/11/08 18:19:49  gsl
 **	Enlarge temp vars to prevent overflow
 **	
-**	Revision 1.29.2.1  2002/10/10 12:56:47  gsl
-**	Huge file support
+**	Revision 1.41  2002/10/16 20:34:50  gsl
+**	configure with environments variables vs registry on win32
+**	
+**	Revision 1.40  2002/10/11 20:39:50  gsl
+**	Detect runtime Cobol type without needing INITWISP call.
+**	For ACU set in sub85.c,
+**	For utils set via WRUNCONFIG
+**	Default to MF on UNIX
+**	
+**	Revision 1.39  2002/10/08 15:44:38  gsl
+**	Change int8 to INT8 to avoid conficts
+**	
+**	Revision 1.38  2002/10/04 20:55:15  gsl
+**	Add int8  tests
+**	
+**	Revision 1.37  2002/07/25 17:03:42  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.36  2002/07/18 21:04:23  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.35  2002/07/12 20:50:49  gsl
+**	fix WL_ change
+**	
+**	Revision 1.34  2002/07/12 20:40:45  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.33  2002/07/11 14:33:56  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.32  2002/07/10 21:06:30  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.31  2002/07/09 04:13:50  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.30  2002/06/25 18:18:35  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
 **	
 **	Revision 1.29  2002/03/27 16:20:24  gsl
 **	If found run VUTIL -V to get Acucobol Version number
@@ -1568,7 +1718,6 @@ static void test_int_sizes(void)
 **	Added support of Windows NT/95
 **
 **	Revision 1.12  1996-12-12 13:13:56-05  gsl
-**	DevTech -> NeoMedia
 **
 **	Revision 1.11  1996-09-10 09:14:07-07  gsl
 **	fix compiler warnings

@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	wfileext.c
@@ -35,6 +48,7 @@ void WSETFILEXT(const char* wispfilext)	/* setwfilext() setwispfilext() */		/* I
 	memcpy(WISPFILEXT,wispfilext,len);
 	for (i = len; i < WISP_FILE_EXT_SIZE; i++) WISPFILEXT[i] = ' ';			/* Pad with spaces.			*/
 }
+
 void WGETFILEXT(char* ptr)	/* getwfilext() */
 {
 	if (!initialized)
@@ -45,26 +59,24 @@ void WGETFILEXT(char* ptr)	/* getwfilext() */
 }
 
 /*
-** Old interfaces
-*/
-void setwfilext(const char* wispfilext)
-{
-	WSETFILEXT(wispfilext);
-}
-void setwispfilext(const char* wispfilext)
-{
-	WSETFILEXT(wispfilext);
-}
-void getwfilext(char* ptr)
-{
-	 WGETFILEXT(ptr);
-}
-
-/*
 **	History:
 **	$Log: wfileext.c,v $
-**	Revision 1.9.2.1  2002/11/14 21:12:27  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.14  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.13  2002/10/15 17:58:44  gsl
+**	Ensure file extension is initialized
+**	
+**	Revision 1.12  2002/07/29 15:46:49  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.11  2002/07/12 17:01:03  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.10  2002/06/25 17:46:05  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
 **	
 **	Revision 1.9  1996/08/19 22:33:15  gsl
 **	drcs update

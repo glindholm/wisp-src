@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #define EXT extern
 
 /* PG_EXTRACT.C	*/
@@ -400,6 +423,9 @@ static void process_back_ref(int* num_var, int* num_val)				/* Process the backw
 /*
 **	History:
 **	$Log: ptextrct.c,v $
+**	Revision 1.7  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
 **	Revision 1.6  1997/04/21 15:09:20  scass
 **	Corrected copyright.
 **	

@@ -86,6 +86,10 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
+SOURCE=..\wisplib\acustubs.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\wisplib\fexists.c
 # End Source File
 # Begin Source File
@@ -103,6 +107,10 @@ SOURCE=..\wisplib\machid.c
 # Begin Source File
 
 SOURCE=..\wisplib\makepath.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisplib\mfstubs.c
 # End Source File
 # Begin Source File
 

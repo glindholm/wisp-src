@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /*----
@@ -27,8 +41,6 @@ vscrffld.c	Data entry for defining a field from a file
 vscrbchk.c	Checks after each record processed from the
 		input specifications, whether the block
 		has reached its logical end.
-
-vscrsqz.c	Array squeezing routine.
 
 vscrspky.c	Routine for setting the global split key
 		variable.
@@ -100,6 +112,11 @@ EndRNotes
 #include "vscrglb.h"
 #include "kwisp.h"
 
+#ifdef KCSI_MFX
+extern int cobinit (void);
+#endif
+extern int CREATE(void);
+
 /*
 **	Structures and Defines
 */
@@ -108,16 +125,14 @@ EndRNotes
 **	Static data
 */
 
-static char applname[]="CREATE  ";
-
-
-
-#ifdef KCSI_MFX
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+#ifdef KCSI_MFX
 	cobinit();
 	CREATE();
+#endif
 #ifdef OLD
+static char applname[]="CREATE  ";
 	WL_initglbs(applname);
 
 	kcsi_create_main();
@@ -126,7 +141,6 @@ int main(int argc, char **argv)
 #endif /* OLD */
 	return 0;
 }
-#endif /* KCSI_MFX */
 
 #ifdef WIN32
 /*
@@ -150,7 +164,16 @@ short *Astdlib_f_errno() /* From ACU 5.2 sub.h */
 /*
 **	History:
 **	$Log: create.c,v $
-**	Revision 1.2.2.1  2002/11/14 16:02:59  gsl
+**	Revision 1.6  2003/05/07 17:52:53  gsl
+**	-Wall
+**	
+**	Revision 1.5  2003/02/07 15:03:38  gsl
+**	remove empty file
+**	
+**	Revision 1.4  2003/02/04 19:19:09  gsl
+**	fix header
+**	
+**	Revision 1.3  2002/11/14 16:03:30  gsl
 **	Replace cr_debug the trace level
 **	
 **	Revision 1.2  2002/10/24 17:30:38  gsl

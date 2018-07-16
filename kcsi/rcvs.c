@@ -1,10 +1,23 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <ctype.h>
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)rcvs.c	1.3 10/28/93";
 
 /*----
 Comparison and extraction routines.
@@ -71,8 +84,8 @@ int kcsi_atoilen(char* src, int len)
 /*
 **	History:
 **	$Log: rcvs.c,v $
-**	Revision 1.2.2.1  2002/11/12 15:56:32  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.4  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.3  2002/07/25 15:20:25  gsl
 **	Globals

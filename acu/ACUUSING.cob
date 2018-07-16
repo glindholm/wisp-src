@@ -21,7 +21,7 @@
       *                   changed if neccesary by changing this 
       *                   program, recompiling it.
       *
-      *                   $ ccbl -da4 -o ACUUSING acuusing.cob
+      *                   $ ccbl -da4 -o ACUUSING.acu ACUUSING.cob
       *
       ******************************************************************
       

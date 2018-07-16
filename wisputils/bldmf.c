@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1992-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **      File:           bldmf.c
 **
@@ -30,11 +53,6 @@ static char rcsid[]="$Id:$";
 **                      list_size()      return count of items on a list
 **                      compare_strs()   compare two strings
 **
-**      History:
-**                      06/17/92        Written by JEC
-**                      06/30/92        added -?, fixed loop on bad opt,
-**                                      added usage on bad opt, fixed errlog behavior
-**
 **
 **
 */
@@ -59,7 +77,6 @@ static char bldmf_version[80];
 /**************************************************************
 **  FUNCTION DECLARATIONS                                     
 **/
-#ifdef __STDC__
 
 /* local routines */
 int main( int argc, char* argv[] );
@@ -85,53 +102,19 @@ void add_node( LIST** listp, void* node );
 void sort_list( LIST* listp, int (*sortroutine)( const void* s1, const void* s2 ) );
 int compare_strs( const void *s1, const void *s2 );
 int list_size( LIST* listp );
+void make_version();
 
-extern char *nextfile( char* path, char** context );
-extern char *re_compile_pattern( char *regex, int regex_size, regexp_t compiled);
+extern void nextwcbfile();  /* in bldmf_l.l file */
+
+extern char *WL_nextfile( const char* path, char** context );
 extern int re_search(regexp_t compiled, char *string, int size, int startpos, 
                      int range, regexp_registers_t regs);
 extern void re_compile_fastmap(regexp_t compiled);
+extern char *re_compile_pattern(char *regex, int regex_size, regexp_t compiled);
 
 
 /* yylex from bldmf_l.l*/
 extern int yylex();
-#else
-
-/* local routines */
-int main();
-void parse_args();
-void bld_prog_list();
-void bld_deps();
-bool is_cobol_prog();
-LIST* makedepend();
-int search_line();
-char* make_runname();
-void matchopt();
-void write_makefile();
-void build_inc_dir_list();
-
-void usage();
-void upstring();
-void lowstring();
-void init_globals();
-void process_globals();
-char *my_strdup();
-int srch_fixed();
-char *gmem();
-void add_node();
-void sort_list();
-int compare_strs();
-int list_size();
-
-extern char *nextfile();
-extern char *re_compile_pattern();
-extern int re_search();
-extern void re_compile_fastmap();
-
-/* yylex from bldmf_l.l*/
-extern int yylex();
-
-#endif
 
 #ifndef LINUX
 extern char *sys_errlist[];
@@ -159,7 +142,7 @@ extern int errno;
 **      History:        06/17/92     written by JEC
 **
 */
- main(argc,argv)
+int main(argc,argv)
 int argc;
 char* argv[];
 {
@@ -209,8 +192,6 @@ LIST** plist;
         char *context=NULL;
         char *file;
         PROGNODE *prog;
-        void *calloc();
-        char *my_strdup();
         int ret;
 
         /* print status */
@@ -219,7 +200,7 @@ LIST** plist;
         
         column=0;
         /* read files from dir */
-        while (file = nextfile(path,&context))
+        while ((file = WL_nextfile(path,&context)))
         {
                 /* check to see if it is COBOL program */
                 ret=is_cobol_prog(file);
@@ -274,7 +255,7 @@ char *name;
         int lcnt, nlen;
         char buffer[100];
         int found;
-        char *re_stat, *re_compile_pattern();
+        char *re_stat;
         struct re_pattern_buffer the_pat;
         char fastmap[256];
         struct re_registers regs;
@@ -539,7 +520,6 @@ char *genpath(name,lib)
 char *name, *lib;
 {
         char buf[200], *good;
-        char *my_strdup();
         LIST *copydirs;
         extern LIST *inc_dir_list;
 
@@ -652,7 +632,6 @@ LIST **plist;
         char *p;
         char logerrstr[64];
         char output_name_old[256];
-	int saved;
 	
         /* if user wants an error log */
         strcpy(logerrstr,log_errors?" >>error.log 2>&1":"");
@@ -924,8 +903,8 @@ int *num,*type,*val;
 */
 void build_inc_dir_list()
 {
-        char *p, *strtok();
-        char *tmp_inc_dirs, *my_strdup();
+        char *p;
+        char *tmp_inc_dirs;
         
         inc_dir_list=NULL;
         if (strlen(include_dirs)) /* if user gave a list of inc dirs */
@@ -937,7 +916,7 @@ void build_inc_dir_list()
                 {
                         add_node(&inc_dir_list,(void*)p);
                         
-                } while (p = strtok(NULL,":"));
+                } while ((p = strtok(NULL,":")));
                 add_node(&inc_dir_list,(void*)".");   /* add '.' last of all */
         }
 }
@@ -961,11 +940,8 @@ void build_inc_dir_list()
 **      History:        06/11/92        Written by JEC
 **
 */
-char *gmem(size,cnt)
-int size,cnt;
+char *gmem(int size, int cnt)
 {
-        void *calloc();
-        
         return (char*)calloc(size,cnt);
 }
 
@@ -988,8 +964,7 @@ int size,cnt;
 **      History:        06/11/92        Written by JEC
 **
 */
-void upstring(str)
-char *str;
+void upstring(char* str)
 {
         while (*str) 
         {
@@ -1016,8 +991,7 @@ char *str;
 **      History:        06/11/92        Written by JEC
 **
 */
-void lowstring(str)
-char *str;
+void lowstring(char* str)
 {
         while (*str) 
         {
@@ -1046,8 +1020,7 @@ char *str;
 **      History:        06/11/92        Written by JEC
 **
 */
-char *my_strdup(str)
-char *str;
+char *my_strdup(char* str)
 {
         char *gmem();
         char *tmp;
@@ -1304,7 +1277,6 @@ void add_node(listp,node)
 LIST **listp; /* pointer to pointer to list head .. null if empty */
 void *node;   /* data for new node */
 {
-  char *gmem();
   LIST *tmp;
 
   if (*listp) /* is list pointer already valid? */
@@ -1354,7 +1326,6 @@ void *node;   /* data for new node */
 void sort_list( LIST* listp, int (*sortroutine)( const void* s1, const void* s2 ) )
 {
   void **ptrs;
-  char *gmem();
   int cnt, i;
   LIST *tmp;
   
@@ -1422,7 +1393,7 @@ int compare_strs(const void *s1, const void *s2)
         return strcmp( *((char **)s1), *((char **)s2) );
 }
 
-make_version()
+void make_version()
 {
 	char	buff[80];
 	
@@ -1445,8 +1416,29 @@ make_version()
 /*
 **	History:
 **	$Log: bldmf.c,v $
-**	Revision 1.15.2.1  2002/09/05 19:22:23  gsl
-**	LINUX
+**	Revision 1.23  2003/02/24 20:19:23  gsl
+**	fix protos
+**	
+**	Revision 1.22  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.21  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.20  2003/02/04 18:50:26  gsl
+**	fix copyright header
+**	
+**	Revision 1.19  2002/09/04 18:12:36  gsl
+**	LINUX sys_errlist
+**	
+**	Revision 1.18  2002/07/15 14:28:32  gsl
+**	globals
+**	
+**	Revision 1.17  2002/07/11 16:11:44  gsl
+**	Fix warnings
+**	
+**	Revision 1.16  2002/07/10 04:27:32  gsl
+**	Rename global routines with WL_ to make unique
 **	
 **	Revision 1.15  1998/10/13 19:05:08  gsl
 **	Fix sub arg to qsort)
@@ -1458,11 +1450,14 @@ make_version()
 **	Correct the usage/help message
 **
 **	Revision 1.12  1996-12-12 13:12:32-05  gsl
-**	DevTech -> NeoMedia
 **
 **	Revision 1.11  1996-07-23 11:12:48-07  gsl
 **	drcs update
 **
+**
+**      06/17/92        Written by JEC
+**      06/30/92        added -?, fixed loop on bad opt,
+**                      added usage on bad opt, fixed errlog behavior
 **
 **
 */

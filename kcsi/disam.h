@@ -1,4 +1,3 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
 /* $Id:$ */
 #ifndef _DISAM_H
 #define _DISAM_H
@@ -396,6 +395,9 @@ POTENTIAL BUG ERRORS, SET TO EBADFILE UNLESS #EXTENDED SET
 /*
 **	History:
 **	$Log: disam.h,v $
+**	Revision 1.3  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.2  1996/10/02 16:06:13  gsl
 **	Add standard headers
 **	

@@ -1,6 +1,26 @@
-/* 
-	Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
 
@@ -15,15 +35,20 @@
 #ifndef WRUNCONF_H
 #define WRUNCONF_H
 
-#ifdef unix
+#define WRUNCOBTYPE_ACU	"ACU"
+#define WRUNCOBTYPE_MF	"MF"
+
 #define WRUNOPTIONS_ENV "WRUNOPTIONS"
+
+#ifdef unix
 #define WRUNCONFIG	"wrunconfig"
+#define WRUNCOBTYPE_DEF	"MF"
 #endif /* unix */
 
-#ifdef MSFS
-#define WRUNOPTIONS_ENV "WRUNOPTS"
+#ifdef WIN32
 #define WRUNCONFIG	"wrun.cfg"
-#endif /* MSDOS */
+#define WRUNCOBTYPE_DEF	"ACU"
+#endif /* WIN32 */
 
 struct wruncfg
 {
@@ -32,13 +57,34 @@ struct wruncfg
 	char	wrun_cobtype[40];
 };
 
-int wrunconfig(struct wruncfg *cfg);
+int WL_wrunconfig(struct wruncfg *cfg);
 
 #endif /* WRUNCONF_H */
 
 /*
 **	History:
 **	$Log: wrunconf.h,v $
+**	Revision 1.18  2003/07/09 20:08:34  gsl
+**	for 5.0 both Unix and WIN32 use WRUNOPTIONS envvar
+**	
+**	Revision 1.17  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/10/11 20:39:52  gsl
+**	Detect runtime Cobol type without needing INITWISP call.
+**	For ACU set in sub85.c,
+**	For utils set via WRUNCONFIG
+**	Default to MF on UNIX
+**	
+**	Revision 1.15  2002/07/25 17:03:41  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.14  2002/07/18 21:04:23  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.13  2002/07/10 21:06:36  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.12  1997/02/20 20:44:01  gsl
 **	Increase the sizes for run options and rts path name
 **	

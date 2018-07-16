@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -21,18 +42,13 @@ static char rcsid[]="$Id:$";
 
 /*						Subroutine entry point.								*/
 
-vbell()
+int VL_vbell()
 {
 	enum e_vop temp;								/* Working register.			*/
 
 	vdefer_restore();								/* Bell is cause end deferred action.	*/
 	temp = voptimize(VOP_OFF);							/* Remember the optimization level.	*/
 
-#ifdef MSDOS
-	vcontrol_flush();								/* Dump the buffer.			*/
-	printf("\007");									/* Output a bell character.		*/
-	fflush( stdout );
-#endif
 #ifdef WIN32
 	if (vrawdirectio())
 	{
@@ -41,12 +57,12 @@ vbell()
 	else
 	{
 		vcontrol("\007");							/* Output a bell character.		*/
-		vcontrol_flush();							/* Dump the buffer.			*/
+		VL_vcontrol_flush();							/* Dump the buffer.			*/
 	}
 #endif
-#if defined(VMS) || defined(unix)
+#if  defined(unix)
 	vcontrol("\007");								/* Output a bell character.		*/
-	vcontrol_flush();								/* Dump the buffer.			*/
+	VL_vcontrol_flush();								/* Dump the buffer.			*/
 #endif	/* VMS and unix */
 
 	voptimize(temp);								/* Remember the optimization level.	*/
@@ -55,6 +71,24 @@ vbell()
 /*
 **	History:
 **	$Log: vbell.c,v $
+**	Revision 1.21  2003/01/31 20:18:47  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.20  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.19  2002/07/18 21:04:21  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.18  2002/07/17 21:06:00  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2002/07/15 20:16:06  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.16  2002/06/26 01:42:49  gsl
+**	Remove VMS code
+**	
 **	Revision 1.15  1999/05/26 14:56:45  gsl
 **	add vraw.h
 **	
@@ -66,7 +100,7 @@ vbell()
 **	Change to use new video.h interfaces
 **
 **	Revision 1.12  1996-11-13 20:29:38-05  gsl
-**	Use vcontrol_flush()
+**	Use VL_vcontrol_flush()
 **
 **	Revision 1.11  1996-11-11 15:02:14-08  jockc
 **	change -1 to 0xFFFFFFFF in MessageBeep call (as per MS online

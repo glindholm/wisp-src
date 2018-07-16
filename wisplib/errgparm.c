@@ -1,31 +1,43 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 	ERR_GETPARM ... 	This routine will put up the operator intervention error screen.
 */
+#include <string.h>
 
 #include "idsistd.h"
 #include "wangkeys.h"
 #include "wperson.h"
-#include "movebin.h"
 #include "werrlog.h"
 
 #include "wdefines.h"
 #include "wisplib.h"
+#include "vssubs.h"
 
 static	int4	N[255];
 static	int	Ni=0;
 
-void err_getparm(prname,messid,issuer,msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8)
+void WL_err_getparm(prname,messid,issuer,msg1,msg2,msg3,msg4,msg5,msg6,msg7,msg8)
 char 	prname[8], messid[4], issuer[6];
 char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 {                                                  
@@ -34,28 +46,27 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 	int4	pfkey;
 	char	pfkey_rcvr;
 	int	i;
-	int4 	two=2;
 	char	*cancel_msg;
 
-	struct argst { char *ptrs[100]; } args;
+	char* gp_args[GETPARM_MAX_ARGS];
 	int4	cnt;
-#define GP	args.ptrs[cnt++] = (char *)
+#define GP	gp_args[cnt++] = (char *)
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+	WL_wtrace("ERR_GETPARM","ENTRY","Entry into ERR_GETPARM");
 
 	if (!Ni) 
 	{
 		for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 
 		{
 			N[i]=i; 
-			wswap(&N[i]);
+			WL_wswap(&N[i]);
 		}
 		++Ni;
 	}
 
-	wpload();									/* Get user personality and defaults.	*/
+	WL_wpload();									/* Get user personality and defaults.	*/
 
-	if (pfkeys12())
+	if (WL_pfkeys12())
 	{
 		pfkey = PFKEY_12_ENABLED | PFKEY_16_ENABLED;
 		cancel_msg = "Press (12) to Cancel Processing    ";
@@ -67,7 +78,7 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 	}
 	
 
-	wswap( &pfkey );								/* Do system dependent swap		*/
+	WL_wswap( &pfkey );								/* Do system dependent swap		*/
 
 
 
@@ -86,14 +97,31 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 	GP "N";
 	GP "P";	GP  &pfkey;
 
-	wvaset(&two);
-	GETPARM(&args,&cnt);						/* Use the new method			*/
+	GETPARM2(gp_args,cnt);						/* Use the new method			*/
 
 }
 
 /*
 **	History:
 **	$Log: errgparm.c,v $
+**	Revision 1.17  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.16  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.15  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.14  2002/12/09 21:09:27  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.13  2002/07/12 17:00:55  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.12  2002/07/10 21:05:15  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.11  1997/09/24 20:11:55  gsl
 **	Add support for pfkeys12()
 **	

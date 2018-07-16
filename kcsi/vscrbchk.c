@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 #include <stdio.h>
@@ -17,14 +31,13 @@ static char rcsid[]="$Id:$";
 
 ------*/
 
-static char sccs_id[]="@(#)vscrbchk.c	1.2 3/19/94";
 
 static int file_is_done(CR_FLD *fld);
 static int ix_is_done(CR_FLD *fld);
 static int rel_is_done(CR_FLD *fld);
 
 
-static field_is_done(CR_FLD *fld)
+static int field_is_done(CR_FLD *fld)
 {
 	if(fld->type == CFIELD_PAD)
 		return(0);
@@ -99,8 +112,11 @@ int CR_block_is_done(CR_BLK *blk)
 /*
 **	History:
 **	$Log: vscrbchk.c,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:39  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.7  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.6  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.5  2002/10/23 20:39:05  gsl
 **	make global name unique

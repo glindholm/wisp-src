@@ -1,0 +1,199 @@
+$Id:$
+SyncSort_Wsort.txt
+
+
+ToDo:
+- test Packed-Decimal data types (cannot generate with CREATE)
+
+
+SSB Procedure Issues:
+- ELPBCHKM.WPS: FUNCTION=MERGE with REPLACE=YES
+- ELPBCHKM.WPS: Has "ENTER PAD" - unknown "PAD" getparm
+- The only field types I find are "C" and "P"
+
+Limitations:
+- Only INDEXED and FIXED files are supported FILETYPE=I or F
+- For FIXED filetype the RECSIZE must be supplied
+- For KEYS data types (TYPEx) code "D" is not supported.
+- Only Consecutive Fixed lenght output files are supported
+
+- OPTIONS: MEMORY=xxxx is ignored
+- OPTIONS: ADDROUT=YES is not supported
+- OPTIONS: KEYOUT=YES is not supported
+- OPTIONS: ALTSEQ=NONE is the only supported value
+- INPUT:   SHARED=YES is ignored
+- INPUT:   DEVICE=xxx is ignored
+- INPUT:   FILESEQ=x is ignored
+- INPUT:   RECORDS=xxx is ignored
+- SELECT:  FLDTYPx=D is not supported 
+- KEYS:    TYPEx=D is not supported
+- FORMAT:  Limited to 100 fields (MAXREFORMATFIELDS)
+- OUTPUT:  FILEORG=C is the only supported value
+- OUTPUT:  IPACK=xxx is ignored
+- OUTPUT:  DPACK=xxx is ignored
+- OUTPUT:  RECSIZE=xxxx cannot be modified (except by REFORMAT=YES)
+- OUTPUT:  RECTYPE=V is ignored (always creates Fixed length output)
+- OUTPUT:  COMPRESS=YES is ignored
+- OUTPUT:  DEVICE=xxx is ignored
+- OUTPUT:  FILESEQ=x is ignored
+
+Test Cases:
+
+QA Cases:
+	QASS000P: MAIN MENU
+	QASS001P: SORT NO-REFORMAT, NO-SELECT, 1-FILE
+	QASS002P: SORT NO-REFORMAT, SELECT, 1-FILE
+	QASS003P: SORT REFORMAT, SELECT, 1-FILE
+	QASS004P: SORT REFORMAT, SELECT, 2-FILES
+	QASS005P: SORT REFORMAT, SELECT, 2-FILES (all non-micro focus)
+	QASS006P: MERGE 2 CONSEC FILES
+	QASS007P: MERGE SELECT, 2 CONSEC FILES
+	QASS008P: SORT 1-FILE, REPLACE=YES
+	QASS009P: SORT 1-FILE with ##TEMP output name
+	QASS010P: SORT STABLE 1-FILE
+
+Log:
+5/22/2003 3.00 hours = 117.00 total
+	- documentation
+	- status report
+
+5/21/2003 4.00 hours = 114.00 total
+	- Build and test with WISP 4.4.06
+	- documentation
+
+
+5/20/2003 4.00 hours = 110.00 total
+	- QASS007P: MERGE SELECT, 2 CONSEC FILES
+	- Search SSB sample code for test cases
+	- QASS008P: SORT 1-FILE, REPLACE=YES
+	- QASS009P: SORT 1-FILE with ##TEMP output name
+	- QASS010P: SORT STABLE 1-FILE
+
+
+5/19/2003 2.00 hours = 106.00 total
+	- QASS006P: MERGE 2 CONSEC FILES
+
+
+5/16/2003 5.00 hours = 104.00 total
+	- QASS001P - add bytesize test
+	- QASS002P: SORT NO-REFORMAT, SELECT, 1-FILE
+	- QASS003P: SORT REFORMAT, SELECT, 1-FILE
+	- TIMING ERROR 
+	- QASS004P: SORT REFORMAT, SELECT, 2-FILES
+	- QASS005P: SORT REFORMAT, SELECT, 2-FILES (all non-micro focus)
+
+5/15/2003 4.00 hours = 99.00 total
+	- QASS000P: MAIN MENU
+	- QASS001P: SORT NO-REFORMAT, NO-SELECT, 1-FILE
+
+
+5/14/2003 5.00 hours = 95.00 total
+	- REFORMAT is not available with a MERGE
+	- Enable "debug" mode to be turned on with a -d flag or a envvar
+	- Rework the OUTPUT getparm recsize logic
+	- Constants for field sizes
+	- OUTPUT: FILEORG not displayed if REFORMAT=YES
+	- OUTPUT: RECTYPE=V not supported but no need to check
+	- FLOAT type can be either 4 or 8
+
+
+5/13/2003 4.00 hours = 90.00 total
+	- fix get_input() to work with wang_file_s struct.
+	- change output and input to work with wang_file_s struct.
+	- Rework the get_input() to do it all in one call
+	- For MERGE all files must be same record size
+
+
+5/12/2003 3.00 hours = 86.00 total 
+	- Re-install syncsort with new 14 day license
+	- Rework the OUTPUT getparm error handling logic
+	- OUTPUT: REPLACE option does not occur if there are multiple input files
+
+
+5/9/2003 5.00 hours = 83.00 total
+	- request new timed syncsort key
+	- ##TEMP files need the OVERWRITE clause
+	- Use OVERWRITE for OUTFILE when REPLACE=YES
+	- SELECT: check sizes based on field types 
+	- SELECT: test field positions and lengths against reclen
+	- SELECT: validate numeric test value literals
+	- KEYS: check sizes based on field types 
+	- KEYS: test field positions and lengths against reclen
+
+
+5/5/2003 7.50 hours = 78.00 total
+	- Rework for varstr support
+	- Add syncsort FORMAT options
+
+
+5/2/2003 6.50 hours = 70.50 total
+	- Shell escape '\\' '\n' '\'' '\"'
+	- Add syncsort SELECT options
+	- SELECT: TSTRELxx - test and store the relationship as an enum
+	- SELECT: VALUExx - split into tstval and tstpos fields
+
+5/1/2003 5.50 hours = 64.00 total
+	- execute the syncsort command with WL_run_unixcommand_silent();
+	- write debug info out to debug_ss.??? files
+	- On error display the output from syncsort
+	- Change bldcmd() to alloc the memory it needs
+
+4/30/2003 6 hours == 58.50 total
+	- drop support for NewLine files.
+	- Field TYPE=D can be either LS (Leading Sign) or TS (Trailing Sign) 
+	  or AN (Unsigned)
+		- Abort on a type "D"
+
+4/29/2003 7.50 hours == 52.50 total
+	- input.max_reclen is being reset by get_output()
+	- write out syncsort command to temp file to test syntax
+
+
+4/28/2003 2.00 hours
+	- Rework the OUTPUT getparm
+
+4/25/2003 7.50 hours
+	- Print out all the info collected by GETPARMS
+	- Write test procs to test all getparms
+	- Download and Install Syncsort on HPUX
+
+
+4/24/2003 7.00 hours
+	- document the use of non-public WISP API routines.
+	- options_getparm_s and input_getparms_s structions
+	- display results.
+
+4/23/2003 6.5 hours
+	- Code all the GETPARM's - finished
+	- Figure out the input record length for REFORMAT
+	- On the INPUT getparm the MOREFILE field is not presented for a MERGE
+	- On the INPUT getparm the text says "merged" instead of "sorted" for a MERGE
+
+4/22/2003 6.5 hours
+	- Code the REFORMAT=YES FORMAT getparms
+
+
+4/21/2003: 6.5 hours
+	- Change WL_wlgtrans() to FIND()
+	- Change WL_wfexists() to FIND()
+	- Change WL_get_defs() to EXTRACT
+	- Change WL_wfname_backfill() to WFNAME() and EXTRACT() -- TEMP files???
+	- remove WISP include files
+	- remove #include "idsistd.h"
+	- remove #include "filext.h"
+	- remove #include "level.h"
+	- remove #include "idsisubs.h"
+	- remove #include "wispvers.h"
+	- remove #include "vwang.h"
+	- remove #include "wperson.h"
+	- remove #include "wcommon.h"
+	- remove #include "wexit.h"
+	- remove #include "wfname.h"
+	- remove #include "vssubs.h"
+	- remove #include "wangkeys.h"
+	- remove #include "vssort.h"
+	- remove #include "wisplib.h"
+
+4/18/2003:  4.5 hours
+	- review proposal
+	- setup sswsort project

@@ -1,0 +1,6 @@
+echo lp $1
+lp $1
+LICENSEE=`grep Licensee $1 | sed s/Licensee//`
+LICENSEE=`echo $LICENSEE`
+MAILSUBJECT="WISP License: $LICENSEE"
+cat $1 | mailx -s "$MAILSUBJECT" support@neom.com

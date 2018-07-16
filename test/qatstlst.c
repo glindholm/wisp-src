@@ -5,7 +5,7 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
-			/*	        QATSTLST.C - Quality Assurance of vlist			*/
+			/*	        QATSTLST.C - Quality Assurance of VL_vlist			*/
 
 #include <v/video.h>
 #include <v/vlocal.h>
@@ -28,7 +28,7 @@ long tstrl[8];										/* Array to hold header & footer length.*/
 int tstrrnd[8];
 struct available_keys {
 			short meta_key;							/* VIDEO meta_key value.		*/
-			short list_function;						/* Value defined by vlist.		*/
+			short list_function;						/* Value defined by VL_vlist.		*/
 		};
 struct available_keys fn_keys[12];
 
@@ -49,7 +49,7 @@ QATSTLST()
 	function = INIT_LIST;
 	list_id = 28;
 	rows = 24;
-	vlist(&function,&list_id,&rows,&retcd);						/* Init the new list.			*/
+	VL_vlist(&function,&list_id,&rows,&retcd);						/* Init the new list.			*/
 	for (i = 0; i < MAXROW; i++)
 	{
 		titem[i][0] = '\0';							/* Init the data array.			*/
@@ -61,88 +61,88 @@ QATSTLST()
 	}
 	init_data(2);
 	function = ADD_HEADER;								 /* Add the header.			*/
-	vlist(&function,&list_id,&numh,&retcd,tstr[0],&tstrl[0],&tstrrnd[0],tstr[1],&tstrl[1],&tstrrnd[1],
+	VL_vlist(&function,&list_id,&numh,&retcd,tstr[0],&tstrl[0],&tstrrnd[0],tstr[1],&tstrl[1],&tstrrnd[1],
 					tstr[2],&tstrl[2],&tstrrnd[2]);
 	function = ADD_FOOTER;								/* Add the footer.			*/
-	vlist(&function,&list_id,&numf,&retcd,tstr[4],&tstrl[4],&tstrrnd[4],tstr[5],&tstrl[5],&tstrrnd[5],
+	VL_vlist(&function,&list_id,&numf,&retcd,tstr[4],&tstrl[4],&tstrrnd[4],tstr[5],&tstrl[5],&tstrrnd[5],
 					tstr[6],&tstrl[6],&tstrrnd[6],tstr[7],&tstrl[7],&tstrrnd[7]);
 	function = ADD_COLUMN;
 	type = TEXTIT;
 	width = 10;
 	length = 15;
 	icol = 0;									/* Is zero for add to end of list.	*/
-	vlist(&function,&list_id,&type,&width,titem,&length,&icol,&retcd);		/* Add a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,titem,&length,&icol,&retcd);		/* Add a column.			*/
 	function = ADD_COLUMN;
 	type = SEPARATOR;
 	width = 9;
 	length = 9;
 	strcpy(separator,"****!****");							/* Is the separator value.		*/
 	icol = 0;									/* Is zero for add to end of list.	*/
-	vlist(&function,&list_id,&type,&width,separator,&length,&icol,&retcd);		/* Add a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,separator,&length,&icol,&retcd);		/* Add a column.			*/
 	function = ADD_COLUMN;
 	type = ULONG;
 	width = 4;
 	length = 2;
 	icol = 0;									/* Is zero for add to end of list.	*/
-	vlist(&function,&list_id,&type,&width,days,&length,&icol,&retcd);		/* Add a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,days,&length,&icol,&retcd);		/* Add a column.			*/
 	function = ADD_COLUMN;
 	type = TEXTIT;
 	width = 19;
 	length = 20;
 	icol = 0;									/* Is zero for add to end of list.	*/
-	vlist(&function,&list_id,&type,&width,bday,&length,&icol,&retcd);		/* Add a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,bday,&length,&icol,&retcd);		/* Add a column.			*/
 	function = ADD_COLUMN;
 	type = TEXTIT;
 	width = 30;
 	length = 40;
 	icol = 0;									/* Is zero for add to end of list.	*/
-	vlist(&function,&list_id,&type,&width,descr,&length,&icol,&retcd);		/* Add a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,descr,&length,&icol,&retcd);		/* Add a column.			*/
 	function = INSERT_COLUMN;
 	type = RSHORT;
 	width = 3;
 	length = 2;
 	icol = 0;									/* Is zero so will add to head of list.	*/
-	vlist(&function,&list_id,&type,&width,num,&length,&icol,&retcd);		/* Insert a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,num,&length,&icol,&retcd);		/* Insert a column.			*/
 	function = INSERT_COLUMN;
 	type = SEPARATOR;
 	width = 12;
 	strcpy(csep,"!!");								/* Is the separator value.		*/
 	length = 2;
 	icol = 1;
-	vlist(&function,&list_id,&type,&width,csep,&length,&icol,&retcd);		/* Insert a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,csep,&length,&icol,&retcd);		/* Insert a column.			*/
 	init_fkeys();
 	function = SET_FUNCTIONS;	
-	vlist(&function,&list_id,fn_keys,&retcd);					/* Set function key definitions.	*/
+	VL_vlist(&function,&list_id,fn_keys,&retcd);					/* Set function key definitions.	*/
 	function = DISPLAY_LIST;
 	st_row = 0;
 	st_col = 0;
 	rrow = 0;
 	rcol = 0;
-	vlist(&function,&list_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd);	/* Display list.			*/
-	verase(FULL_SCREEN);
+	VL_vlist(&function,&list_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd);	/* Display list.			*/
+	VL_verase(FULL_SCREEN);
 	pfk_val = get_func_val(key);
-	vtext(CLEAR,3,5,"PF key pressed (Octal) = %o  Function = %d",key,pfk_val);
-	vtext(CLEAR,4,5,"Array row = %d  Column = %d",rrow,rcol);
-	vtext(CLEAR,7,1,"The next section will do a replace column function and reassign the start row value.");
-	vtext(CLEAR,8,1,"The list will then be re-displayed.");
-	vtext(CLEAR,23,1,"Push any key to continue.");
-	vmove(23,26);
-	i = vgetc();
+	VL_vtext(CLEAR,3,5,"PF key pressed (Octal) = %o  Function = %d",key,pfk_val);
+	VL_vtext(CLEAR,4,5,"Array row = %d  Column = %d",rrow,rcol);
+	VL_vtext(CLEAR,7,1,"The next section will do a replace column function and reassign the start row value.");
+	VL_vtext(CLEAR,8,1,"The list will then be re-displayed.");
+	VL_vtext(CLEAR,23,1,"Push any key to continue.");
+	VL_vmove(23,26);
+	i = VL_vgetc();
 	function = REPLACE_COLUMN;
 	type = USHORT;
 	width = 3;
 	length = 2;
 	icol = 2;
-	vlist(&function,&list_id,&type,&width,num,&length,&icol,&retcd);		/* Replace a column.			*/
+	VL_vlist(&function,&list_id,&type,&width,num,&length,&icol,&retcd);		/* Replace a column.			*/
 	function = DISPLAY_LIST;
 	st_row = 3;
 	st_col = 0;
 	rrow = 0;
 	rcol = 0;
-	vlist(&function,&list_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd);	/* Display list.			*/
+	VL_vlist(&function,&list_id,&st_row,&st_col,&rrow,&rcol,result_list,&key,&retcd);	/* Display list.			*/
 	function = FREE_LIST;
-	vlist(&function,&list_id,&retcd);						/* Free up memory taken by list.	*/
-	verase(FULL_SCREEN);
+	VL_vlist(&function,&list_id,&retcd);						/* Free up memory taken by list.	*/
+	VL_verase(FULL_SCREEN);
 }											/* Go back to cobol.			*/
 
 void init_data(cnt)

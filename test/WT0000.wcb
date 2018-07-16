@@ -1,0 +1,277 @@
+000010**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000020**   $Id:$
+000030**
+000040**   File:       WT0000.wcb
+000050**
+000060**   Project:    WISP QA
+000070**
+000080**   Purpose:    WISP Translator Tests: Main menu
+000090**
+000100
+000200/*****************************************************************
+000300*                                                                *
+000400*                       IDENTIFICATION DIVISION                  *
+000500*                                                                *
+000600******************************************************************
+000700*
+000800 IDENTIFICATION DIVISION.
+000900 PROGRAM-ID.
+001000     WT0000.
+001500/*****************************************************************
+001600*                                                                *
+001700*                         ENVIRONMENT DIVISION                   *
+001800*                                                                *
+001900******************************************************************
+002000*
+002100 ENVIRONMENT DIVISION.
+002200 CONFIGURATION SECTION.
+002300 SOURCE-COMPUTER.
+002400     WANG-VS.
+002500 OBJECT-COMPUTER.
+002600     WANG-VS.
+002700 FIGURATIVE-CONSTANTS.
+002800     BLINK-BIT IS "10"
+002900     PROTECT-BIT IS "04"
+003000     DIM-BIT IS "08"
+003100     TAB-STOP IS "86"
+003200     BLINKING-DISPLAY IS "94"
+003300     LOWER-FAC IS "80"
+003400     BRITE IS "84"
+003500     NO-ECHO IS "98"
+003600     PFK-NOT-SET IS "00"
+003700     PFK-SET IS "01"
+003800     HEX-00 IS "00", HEX-01 IS "01",
+003900     HEX-40 IS "40", HEX-80 IS "80", HEX-A0 IS "A0".
+004000
+004100/*****************************************************************
+004200*                                                                *
+004300*                         INPUT-OUTPUT SECTION                   *
+004400*                                                                *
+004500******************************************************************
+004600*
+004700 INPUT-OUTPUT SECTION.
+004800 FILE-CONTROL.
+004900*
+005000     SELECT CRT
+005100         ASSIGN TO "CRT",      "DISPLAY",
+005200         ORGANIZATION    IS SEQUENTIAL
+005300         ACCESS MODE     IS RANDOM
+005400         RELATIVE KEY    IS LINENUM
+005500         PFKEY           IS PF-KEY
+005600         CURSOR POSITION IS CURSOR-POS
+005700         FILE STATUS     IS FILSTAT.
+005800
+006800
+006900/*****************************************************************
+007000*                                                                *
+007100*                      DATA DIVISION - FILE SECTION              *
+007200*                                                                *
+007300******************************************************************
+007400*
+007500 DATA DIVISION.
+007600 FILE SECTION.
+007700*
+007800 FD  CRT
+007900     LABEL RECORDS ARE OMITTED.
+008000 01  CRTREC                         PIC X(1924).
+008100
+008800/*****************************************************************
+008900*                                                                *
+009000*                         WORKING STORAGE                        *
+009100*                                                                *
+009200******************************************************************
+009300*
+009400 WORKING-STORAGE SECTION.
+009500
+009600 01  INDEX-COUNTER                  PIC 9(5).
+009700 01  FILSTAT.
+009800     03  ERR-FLAG                   PIC X(01).
+009900     03  PFK-BYTE                   PIC X(01).
+010000
+010100 77  LINENUM                        PIC 9(02) VALUE 1.
+010200 77  PF-KEY                         PIC X(02) VALUE ZERO.
+010300
+010400 01  CURSOR-POS.
+010500     03  MOD-COL                    BINARY.
+010600     03  MOD-ROW                    BINARY.
+010700
+010800 01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+010900     03  FILLER                     PIC X(01).
+011000     03  CURS-COL                   PIC X(01).
+011100     03  FILLER                     PIC X(01).
+011200     03  CURS-ROW                   PIC X(01).
+011300
+010300
+238300 01  MAINMENU-SCREEN USAGE IS DISPLAY-WS.
+238400     03  FILLER  PIC X(35) ROW 1 COLUMN 2 VALUE
+238500         "WISP TRANSLATOR TESTS".
+238600     03  FILLER  PIC X(35) ROW 1 COLUMN 60 VALUE
+238700         "MAINMENU-SCREEN".  
+238800     03  FILLER  PIC X(35) ROW 3 COLUMN 2 VALUE 
+238900         "(1)  WT0010 (EMPTY)".
+239000     03  FILLER  PIC X(35) ROW 4 COLUMN 2 VALUE
+239100         "(2)  WT0011(ACCEPT DATE)".
+239200     03  FILLER  PIC X(35) ROW 5 COLUMN 2 VALUE
+239300         "(3)  WT0012 (MAX SCREEN FIELDS)".
+239400     03  FILLER  PIC X(35) ROW 6 COLUMN 2 VALUE
+239500         "(4)  ".
+239600     03  FILLER  PIC X(35) ROW 7 COLUMN 2 VALUE
+239700         "(5)  ".
+239800     03  FILLER  PIC X(35) ROW 8 COLUMN 2 VALUE
+239900         "(6)  ".
+240000     03  FILLER  PIC X(36) ROW 9 COLUMN 2 VALUE
+240100         "(7)  ".
+240200     03  FILLER  PIC X(35) ROW 10 COLUMN 2 VALUE
+240300         "(8)  ".
+240400     03  FILLER  PIC X(35) ROW 11 COLUMN 2 VALUE
+240500         "(9)  ".
+240600     03  FILLER  PIC X(35) ROW 12 COLUMN 2 VALUE
+240700         "(10) ".
+240800     03  FILLER  PIC X(35) ROW 13 COLUMN 2 VALUE
+240900         "(11) ".
+241000     03  FILLER  PIC X(35) ROW 14 COLUMN 2 VALUE
+241100         "(12) ".
+241200     03  FILLER  PIC X(35) ROW 15 COLUMN 2 VALUE
+241300         "(13) ".
+241400     03  FILLER  PIC X(35) ROW 16 COLUMN 2 VALUE
+241500         "(14) ".
+241600     03  FILLER  PIC X(35) ROW 17 COLUMN 2 VALUE
+241700         "(15) ".
+241800     03  FILLER  PIC X(35) ROW 19 COLUMN 2 VALUE
+241900         "(16) EXIT".
+242000     03  FILLER  PIC X(35) ROW 3 COLUMN 40 VALUE
+242100         "(17) ".
+242200     03  FILLER  PIC X(35) ROW 4 COLUMN 40 VALUE
+242300         "(18) ".
+242400     03  FILLER  PIC X(35) ROW 5 COLUMN 40 VALUE
+242500         "(19) ".
+242600     03  FILLER  PIC X(35) ROW 6 COLUMN 40 VALUE
+242700         "(20) ".
+242800     03  FILLER  PIC X(35) ROW 7 COLUMN 40 VALUE
+242900         "(21) ".
+243000     03  FILLER  PIC X(35) ROW 8 COLUMN 40 VALUE
+243100         "(22) ".
+243200     03  FILLER  PIC X(35) ROW 9 COLUMN 40 VALUE
+243300         "(23) ".
+243400     03  FILLER  PIC X(35) ROW 10 COLUMN 40 VALUE
+243500         "(24) ".
+243600     03  FILLER  PIC X(35) ROW 11 COLUMN 40 VALUE
+243700         "(25) ".
+243800     03  FILLER  PIC X(35) ROW 12 COLUMN 40 VALUE
+243900         "(26) ".
+244000     03  FILLER  PIC X(35) ROW 13 COLUMN 40 VALUE
+244100         "(27) ".
+244200     03  FILLER  PIC X(35) ROW 14 COLUMN 40 VALUE
+244300         "(28) ".
+244400     03  FILLER  PIC X(35) ROW 15 COLUMN 40 VALUE
+244500         "(29) ".
+244600     03  FILLER  PIC X(35) ROW 16 COLUMN 40 VALUE
+244700         "(30) ".
+244800     03  FILLER  PIC X(35) ROW 17 COLUMN 40 VALUE
+244900         "(31) ".
+245000     03  FILLER  PIC X(35) ROW 19 COLUMN 40 VALUE
+245100         "(32) ".
+245200     03  FILLER  PIC X(23) ROW 24 COLUMN 10 VALUE
+245300         "PRESS (16) TO EXIT".
+245400
+274600
+274700/*****************************************************************
+274800*                                                                *
+274900*                         PROCEDURE DIVISION                     *
+275000*                                                                *
+275100******************************************************************
+275200*
+275300 PROCEDURE DIVISION.
+275400
+275500 MAINMENU-LOOP.
+275600
+275700     DISPLAY AND READ MAINMENU-SCREEN ON CRT
+275800     PFKEYS  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+275900            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+276000            21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+276100            31, 32.
+276200
+276300     IF PF-KEY = "01" THEN
+276400        CALL "WT0010"
+276500        GO TO MAINMENU-LOOP
+276600     ELSE IF PF-KEY = "02" THEN
+276700        CALL "WT0011"
+276800        GO TO MAINMENU-LOOP
+276900     ELSE IF PF-KEY = "03" THEN
+277000        CALL "WT0012" 
+277100        GO TO MAINMENU-LOOP
+277200     ELSE IF PF-KEY = "04" THEN
+277300        CALL "WT0013"
+277400        GO TO MAINMENU-LOOP
+277500     ELSE IF PF-KEY = "05" THEN
+277600        CALL "WT0014"
+277700        GO TO MAINMENU-LOOP
+277800     ELSE IF PF-KEY = "06" THEN
+277900        CALL "WT0015" 
+278000        GO TO MAINMENU-LOOP
+278100     ELSE IF PF-KEY = "07" THEN
+278200        CALL "WT0016"
+278300        GO TO MAINMENU-LOOP
+278400     ELSE IF PF-KEY = "08" THEN
+278600        GO TO MAINMENU-LOOP
+278700     ELSE IF PF-KEY = "09" THEN
+278900        GO TO MAINMENU-LOOP
+279000     ELSE IF PF-KEY = "10" THEN
+279200        GO TO MAINMENU-LOOP
+279300     ELSE IF PF-KEY = "11" THEN
+279500        GO TO MAINMENU-LOOP
+279600     ELSE IF PF-KEY = "12" THEN
+279800        GO TO MAINMENU-LOOP
+279900     ELSE IF PF-KEY = "13" THEN
+280100        GO TO MAINMENU-LOOP
+280200     ELSE IF PF-KEY = "14" THEN
+280400        GO TO MAINMENU-LOOP
+280500     ELSE IF PF-KEY = "15" THEN
+280700        GO TO MAINMENU-LOOP
+280800     ELSE IF PF-KEY = "17" THEN
+281000        GO TO MAINMENU-LOOP
+281100     ELSE IF PF-KEY = "18" THEN
+281300        GO TO MAINMENU-LOOP
+281400     ELSE IF PF-KEY = "19" THEN
+281600        GO TO MAINMENU-LOOP
+281700     ELSE IF PF-KEY = "20" THEN
+281900        GO TO MAINMENU-LOOP
+282000     ELSE IF PF-KEY = "21" THEN
+282200        GO TO MAINMENU-LOOP
+282300     ELSE IF PF-KEY = "22" THEN
+282500        GO TO MAINMENU-LOOP
+282600     ELSE IF PF-KEY = "23" THEN
+282800        GO TO MAINMENU-LOOP
+282900     ELSE IF PF-KEY = "24" THEN
+283100        GO TO MAINMENU-LOOP
+283200     ELSE IF PF-KEY = "25" THEN
+283400        GO TO MAINMENU-LOOP
+283500     ELSE IF PF-KEY = "26" THEN
+284000        GO TO MAINMENU-LOOP
+283800     ELSE IF PF-KEY = "27" THEN
+284000        GO TO MAINMENU-LOOP
+284100     ELSE IF PF-KEY = "28" THEN
+284300        GO TO MAINMENU-LOOP
+284400     ELSE IF PF-KEY = "29" THEN
+284600        GO TO MAINMENU-LOOP
+284700     ELSE IF PF-KEY = "30" THEN
+284900        GO TO MAINMENU-LOOP
+285000     ELSE IF PF-KEY = "31" THEN
+285100        GO TO MAINMENU-LOOP
+285200     ELSE IF PF-KEY = "32" THEN
+285300        GO TO MAINMENU-LOOP
+285400     ELSE IF PF-KEY = "16" THEN
+285500        GO TO EXIT-PROGRAM.
+285600
+285700     GO TO MAINMENU-LOOP.
+285800
+399500******************************************************************
+399600* ALL DONE.
+399700******************************************************************
+399800
+399900 EXIT-PROGRAM.
+400000     EXIT PROGRAM.
+400100
+400200 STOP-RUN.
+400300     STOP RUN.
+

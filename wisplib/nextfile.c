@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	nextfile.c
@@ -15,7 +26,7 @@ static char rcsid[]="$Id:$";
 
 
 /*
-	nextfile()	This routine returns a pointer to the next entery in a directory (sorted).
+	WL_nextfile()	This routine returns a pointer to the next entery in a directory (sorted).
 
 			Context is a ptr to a ptr the point to a malloced struct that stores all the pointer and counter
 			associated with a given path.
@@ -56,17 +67,18 @@ struct context_struct
 #include <errno.h>
 #include "idsistd.h"
 #include "wdefines.h"
+#include "wmalloc.h"
 
 #ifdef NOCONST
 #define const
 #endif
 
-int q_strcmp(const void *str1, const void *str2)
+int WL_nexfile_q_strcmp(const void *str1, const void *str2)
 {
 	return(strcmp((const char *)str1,(const char *)str2));
 }
 
-char *nextfile(char* path, char** context)
+char *WL_nextfile(char* path, char** context)
 {
 	DIR 	*curdir;
 	char	*ptr;								/* temp ptr					*/
@@ -76,7 +88,7 @@ char *nextfile(char* path, char** context)
 
 	if ( *context == NULL )							/* IF NULL the alloc a CONTEXT			*/
 	{
-		*context = (char *)malloc( sizeof( struct context_struct ) );
+		*context = (char *)wisp_malloc( sizeof( struct context_struct ) );
 		if ( ! *context )
 		{
 			return(NULL);
@@ -111,7 +123,7 @@ char *nextfile(char* path, char** context)
 		}
 		CT->diropen_flag = TRUE;					/* Dir was opened.				*/
 
-		CT->slots = (char *)malloc( SLOT_CHUNK * FILENAMESIZE );	/* alloc  slots.				*/
+		CT->slots = (char *)wisp_malloc( SLOT_CHUNK * FILENAMESIZE );	/* alloc  slots.				*/
 		if ( ! CT->slots )
 		{
 			closedir(curdir);
@@ -160,7 +172,7 @@ char *nextfile(char* path, char** context)
 			CT->slots_used += 1;
 		}
 										/* Sort the table of dir entries		*/
-		qsort(CT->slots, CT->slots_used, FILENAMESIZE, q_strcmp);
+		qsort(CT->slots, CT->slots_used, FILENAMESIZE, WL_nexfile_q_strcmp);
 
 		CT->slots_returned = 0;
 		CT->ret_ptr = CT->slots;					/* Setup ret_ptr to begin returning		*/
@@ -183,7 +195,7 @@ char *nextfile(char* path, char** context)
 #endif	/* unix */
 
 #ifdef unix
-char *s_nextfile(char* path, int* first)
+char *WL_s_nextfile(const char* path, int* first)
 {
 	static DIR *curdir;
 	static struct dirent *dp;
@@ -215,194 +227,6 @@ char *s_nextfile(char* path, int* first)
 }
 #endif	/* unix */
 
-#ifdef MSDOS					/* Please note: this MSDOS section is different from the unix section above.	*/
-
-#include <dos.h>
-#include <errno.h>
-#include <malloc.h>
-#include <search.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-
-#include "wdefines.h"
-
-char *nextfile(char* path, char** context)
-{
-	char	*ptr;								/* temp ptr					*/
-
-#define FILENAMESIZE 13								/* NAME[8] + DOT[1] + EXTENSION[3] + NULL[1]	*/
-
-
-	if ( *context == NULL )							/* IF NULL the alloc a CONTEXT			*/
-	{
-		*context = (char *)malloc( sizeof( struct context_struct ) );
-		if ( ! *context )
-		{
-			return(NULL);
-		}
-		CT->diropen_flag   = FALSE;
-		CT->slots_used     = 0;
-		CT->slots          = NULL;
-		CT->slots_returned = 0;
-		CT->ret_ptr        = NULL;
-	}
-
-	if ( ! path )								/* If path=0 do all the cleanup		       	*/
-	{
-		if ( CT->diropen_flag )
-		{
-			free( CT->slots );
-		}
-		free( *context );
-		*context = NULL;
-		return(NULL);
-	}
-
-	if ( ! CT->diropen_flag )						/* Open the dir, Read into mem & Sort.		*/
-	{
-		char wildpath[256];						/* path + wild card (*.*) for directory search.	*/
-		struct find_t fi;						/* MSDOS Directory file info structure.		*/
-		int slots_alloced;						/* Number of memory slots available.		*/
-		int	len;
-
-										/* This MSDOS specific function starts a read	*/
-										/* of a directory.  Use an (OR)ing of these:	*/
-										/*						*/
-										/* Attribute	Description			*/
-										/*						*/
-										/* _A_NORMAL	Normal file without any read or	*/
-										/*		write restrictions.		*/
-										/* _A_RDONLY	File cannot be opened for write	*/
-										/*		operations.			*/
-										/* _A_HIDDEN	File will not show up on	*/
-										/*		directory search.		*/
-										/* _A_SYSTEM	File is marked as a system file	*/
-										/*		and will be excluded from	*/
-										/*		normal directory searches.	*/
-										/* _A_VOLID	Volume name; can exist only in	*/
-										/*		root directory.			*/
-										/* _A_SUBDIR	Subdirectory name (meaning the	*/
-										/*		file is a subdirectory).	*/
-										/* _A_ARCH	If set, file will be archived	*/
-										/*		by MS-DOS BACKUP command.  This	*/
-										/*		attribute is set after any	*/
-										/*		changes to the file.		*/
-		strcpy( wildpath, path );
-		len = strlen(wildpath);
-		if (len > 0 && wildpath[len-1] != '\\')
-		{
-			strcat( wildpath, "\\" );
-		}
-		strcat( wildpath, "*.*" );
-										/* Turbo C and C++ function name is "findfirst"	*/
-		if ( 0 != ( _dos_findfirst ( wildpath, _A_NORMAL | _A_RDONLY | _A_SUBDIR, &fi ) ) )
-		{
-			free( *context );
-			*context = NULL;
-			return(NULL);						/* unable to open.				*/
-		}
-		CT->diropen_flag = TRUE;					/* Dir was opened.				*/
-
-		CT->slots = (char *)malloc( SLOT_CHUNK * FILENAMESIZE );	/* alloc  slots.				*/
-		if ( ! CT->slots )
-		{
-			free( *context );
-			*context = NULL;
-			return(NULL);						/* Unable to alloc memory			*/
-		}
-		slots_alloced 	= SLOT_CHUNK;
-		CT->slots_used	= 0;
-
-		ptr = CT->slots;
-		for (;;)							/* read the whole dir into memory		*/
-		{
-			if ( CT->slots_used >= slots_alloced )
-			{
-				char	*tslots;
-
-				slots_alloced += SLOT_CHUNK;			/* Alloc another chuck of slots			*/
-				tslots = (char *)realloc( CT->slots, slots_alloced * FILENAMESIZE );
-				if ( ! tslots )
-				{
-					free( CT->slots );
-					free( *context );
-					*context = NULL;
-					return(NULL);				/* Can't get the space				*/
-				}
-				CT->slots = tslots;
-				ptr = &(CT->slots[ CT->slots_used * FILENAMESIZE ]); /* Reset ptr				*/
-
-			}
-
-			/* Copy the filename, truncate if needed */
-			strncpy(ptr, fi.name, FILENAMESIZE);
-			ptr[FILENAMESIZE-1] = (char)0;
-
-			ptr += FILENAMESIZE;
-			CT->slots_used += 1;
-										/* Turbo C and C++ function name is "findnext"	*/
-			if ( 0 != _dos_findnext ( &fi ) )			/* Read the next directory entry.		*/
-			{
-				break;
-			}	
-		}
-
-		qsort(CT->slots, CT->slots_used, FILENAMESIZE, (int(*)(const void*,const void*))(strcmp));
-										/* Sort the table of dir entries		*/
-
-		CT->slots_returned = 0;
-		CT->ret_ptr = CT->slots;					/* Setup ret_ptr to begin returning		*/
-	}
-
-	if ( CT->slots_returned >= CT->slots_used )				/* All entries returned.			*/
-	{
-		free(CT->slots);
-		free( *context );
-		*context = NULL;
-		return(NULL);
-	}
-
-	ptr = CT->ret_ptr;
-	CT->ret_ptr += FILENAMESIZE;
-	CT->slots_returned += 1;
-
-	return(ptr);
-}
-#endif	/* MSDOS */
-#ifdef MSDOS
-char *s_nextfile(char* path, int* first)
-{
-	char	wildpath[128];
-	static	char	file_name[13];
-	static	struct	find_t	fileinfo;
-
-	if ( *first )
-	{
-		*first = 0;
-
-		strcpy( wildpath, path );
-		strcat( wildpath, "\\*.*" );
-
-		if( 0 != _dos_findfirst( wildpath,
-			(_A_NORMAL | _A_RDONLY),				/* | _A_SUBDIR if directories also wanted.	*/
-			&fileinfo) )
-		{
-			return(NULL);
-		}
-
-		strcpy( file_name, fileinfo.name );
-		return( file_name );
-	}
-
-	if ( 0 != _dos_findnext( &fileinfo ) )
-	{
-		return(NULL);
-	}	
-	strcpy( file_name, fileinfo.name );
-	return( file_name );
-}
-#endif	/* MSDOS */
 
 #ifdef WIN32
 
@@ -414,8 +238,9 @@ char *s_nextfile(char* path, int* first)
 
 #include "wdefines.h"
 #include "paths.h"
+#include "wmalloc.h"
 
-char *nextfile(char* path, char** context)
+char *WL_nextfile(char* path, char** context)
 {
 	char	*ptr;								/* temp ptr					*/
 
@@ -424,7 +249,7 @@ char *nextfile(char* path, char** context)
 
 	if ( *context == NULL )							/* IF NULL the alloc a CONTEXT			*/
 	{
-		*context = (char *)malloc( sizeof( struct context_struct ) );
+		*context = (char *)wisp_malloc( sizeof( struct context_struct ) );
 		if ( ! *context )
 		{
 			return(NULL);
@@ -473,7 +298,7 @@ char *nextfile(char* path, char** context)
 		}
 		CT->diropen_flag = TRUE;					/* Dir was opened.				*/
 
-		CT->slots = (char *)malloc( SLOT_CHUNK * FILENAMESIZE );	/* alloc  slots.				*/
+		CT->slots = (char *)wisp_malloc( SLOT_CHUNK * FILENAMESIZE );	/* alloc  slots.				*/
 		if ( ! CT->slots )
 		{
 			free( *context );
@@ -546,7 +371,7 @@ char *nextfile(char* path, char** context)
 	return(ptr);
 }
 
-char *s_nextfile(char* path, int* first)
+char *WL_s_nextfile(const char* path, int* first)
 {
 	char	wildpath[128];
 	static	char	file_name[32];
@@ -595,6 +420,27 @@ getnextfile:
 /*
 **	History:
 **	$Log: nextfile.c,v $
+**	Revision 1.22  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.21  2002/07/12 19:10:14  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.20  2002/07/11 16:11:45  gsl
+**	Fix warnings
+**	
+**	Revision 1.19  2002/07/10 04:27:36  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.18  2002/07/02 21:15:27  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.17  2002/06/25 15:21:53  gsl
+**	Change to use wmalloc()
+**	
+**	Revision 1.16  2002/06/21 03:10:38  gsl
+**	Remove VMS & MSDOS
+**	
 **	Revision 1.15  1996/09/03 21:43:32  gsl
 **	For NT don't return files "." or ".." (just like on unix)
 **	

@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996-1997 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wispcfg.c
 **
@@ -92,7 +113,7 @@ const char* wisphomedir(char *dir)
 		ptr = getenv("HOME");
 		if (ptr && *ptr)
 		{
-			the_dir = wstrdup(ptr);
+			the_dir = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -108,7 +129,12 @@ const char* wisphomedir(char *dir)
 		char	usersdir[128];
 		char	homedir[128];
 		
-		ptr = wgetreg(REG_WISP, "USERSDIR");
+		ptr = getenv("WISPUSERSDIR");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/*	If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_WISP, "USERSDIR");
+		}
 		if (ptr && *ptr)
 		{
 			strcpy(usersdir,ptr);
@@ -118,10 +144,10 @@ const char* wisphomedir(char *dir)
 			strcpy(usersdir,"C:\\USERS");
 		}
 
-		buildfilepath( homedir, usersdir, longuid() );
+		buildfilepath( homedir, usersdir, WL_longuid() );
 		buildfilepath( homedir, homedir, "WISP" );
 		
-		the_dir = wstrdup(homedir);
+		the_dir = wisp_strdup(homedir);
 
 		/* Add a dummy file to call makepath */
 		buildfilepath( homedir, homedir, "dummy" );
@@ -146,8 +172,8 @@ const char* wisphomedir(char *dir)
 **
 **	FUNCTION:	Get path to WISP configuration directory
 **
-**	DESCRIPTION:	
-**			On others return environment variable $WISPCONFIG
+**	DESCRIPTION:	On Unix: Return environment variable $WISPCONFIG
+**			On WIN32: If $WISPCONFIG not set then get the registry value.
 **			If WISPCONFIG is not set it returns the string "$WISPCONFIG"
 **
 **	ARGUMENTS:	None
@@ -165,18 +191,20 @@ const char* wispconfigdir(void)
 
 	if (!wispconfig_dir)
 	{
-		char 	*ptr;
+		char 	*ptr = NULL;
 
-#ifdef unix
 		ptr = getenv( "WISPCONFIG" );
-#endif /* unix */
 #ifdef WIN32
-		ptr = wgetreg(REG_WISP, "WISPCONFIG");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/*	If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_WISP, "WISPCONFIG");
+		}
 #endif /* WIN32 */
 
 		if (ptr && *ptr)
 		{
-			wispconfig_dir = wstrdup(ptr);
+			wispconfig_dir = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -186,7 +214,7 @@ const char* wispconfigdir(void)
 			**	used then no error message needed.
 			*/
 			wispconfig_dir = WISPCONFIG_UNSET_VALUE;
-			wtrace("WISPCONFIG","NOTSET","$WISPCONFIG is not set");
+			WL_wtrace("WISPCONFIG","NOTSET","$WISPCONFIG is not set");
 		}
 	}
 	ASSERT(wispconfig_dir);
@@ -220,15 +248,18 @@ const char* wispserver(void)
 	{
 		char 	*ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_WISP, "SERVER");
-#else
 		ptr = getenv( "WISPSERVER" );
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/*	If envvar not set then use registry	*/
+			ptr = WL_wgetreg(REG_WISP, "SERVER");
+		}
 #endif
 
 		if (ptr && *ptr)
 		{
-			server = wstrdup(ptr);
+			server = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -271,7 +302,7 @@ const char* wispenvpath(void)
 
 		if (ptr && *ptr)
 		{
-			path = wstrdup(ptr);
+			path = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -306,14 +337,23 @@ const char* wisplinkpath(void)
 	if (!path)
 	{
 		const char *ptr;
+
+		ptr = getenv("WISPLINKPATH");
+
+		if (NULL == ptr || '\0' == *ptr)
+		{
 #ifdef WIN32
-		ptr = wgetreg(REG_WISP, "PATH");
+			/*	If envvar not set then use registry	*/
+			ptr = WL_wgetreg(REG_WISP, "PATH");
 #else
-		ptr = wispenvpath();
+			/*	If not set then use $PATH	*/
+			ptr = wispenvpath();
 #endif
+		}
+
 		if (ptr && *ptr)
 		{
-			path = wstrdup(ptr);
+			path = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -331,7 +371,7 @@ const char* wisplinkpath(void)
 **	FUNCTION:	Get the base directory for WISP temporary files and directories.
 **
 **	DESCRIPTION:	On unix this is "/usr/tmp"
-**			On WIN32 this is "C:\TMP"
+**			On WIN32 this is "C:\TEMP"
 **
 **	ARGUMENTS:	
 **	dir		The returned base directory or NULL
@@ -343,27 +383,38 @@ const char* wisplinkpath(void)
 **	WARNINGS:	None
 **
 */
-const char* wisptmpbasedir(char *dir)
+const char* wisptmpbasedir(char *dir)	/* /usr/tmp */
 {
 	static char *the_dir = NULL;
 
 	if (!the_dir)
 	{
-#ifdef unix
-		the_dir = "/usr/tmp";
-#endif
+		const char *ptr;
+		ptr = getenv("WISPTMPDIR");
 #ifdef WIN32
-		char *ptr;
-		ptr = wgetreg(REG_WISP, "TMPDIR");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_wgetreg(REG_WISP, "TMPDIR");
+		}
+#endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPTMPDIR");
+		}
+
 		if (ptr && *ptr)
 		{
-			the_dir = wstrdup(ptr);
+			the_dir = wisp_strdup(ptr);
 		}
 		else
 		{
-			the_dir = "C:\\TMP";
-		}
+#ifdef unix
+			the_dir = "/usr/tmp";
 #endif
+#ifdef WIN32
+			the_dir = "C:\\TEMP";
+#endif
+		}
 	}
 	ASSERT(the_dir);
 
@@ -379,13 +430,15 @@ const char* wisptmpbasedir(char *dir)
 }
 
 /*
-**	ROUTINE:	wtmpdir()
+**	ROUTINE:	WL_systmpdir()
 **
 **	FUNCTION:	Get the system temp directory
 **
 **	DESCRIPTION:	Uses envvar $TMPDIR if set.
 **			On UNIX default to "/tmp"
-**			On WIN32 default to "C:\TMP"
+**			On WIN32 default to "C:\TEMP"
+**
+**			Currently only used in WL_sortseqf()
 **
 **	ARGUMENTS:	
 **	dir		The returned tmp directory or NULL
@@ -397,29 +450,38 @@ const char* wisptmpbasedir(char *dir)
 **	WARNINGS:	None
 **
 */
-const char* wtmpdir(char *dir)
+const char* WL_systmpdir(char *dir)	/* /tmp */
 {
 	static char *the_dir = NULL;
 
 	if (!the_dir)
 	{
-		char *ptr;
+		const char *ptr;
+		ptr = getenv("WISPSYSTMPDIR");
+		if (NULL == ptr || '\0' == *ptr)
+		{
 #ifdef WIN32
-		ptr = wgetreg(REG_WISP, "TMPDIR");
+			ptr = WL_wgetreg(REG_WISP, "TMPDIR");
 #else
-		ptr = getenv("TMPDIR");
+			ptr = getenv("TMPDIR");
 #endif
+		}
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPSYSTMPDIR");
+		}
+
 		if (ptr && *ptr)
 		{
-			the_dir = wstrdup(ptr);
+			the_dir = wisp_strdup(ptr);
 		}
 		else
 		{
 #ifdef unix
 			the_dir = "/tmp";
 #endif
-#if defined(WIN32)
-			the_dir = "C:\\TMP";
+#ifdef WIN32
+			the_dir = "C:\\TEMP";
 #endif
 		}
 	}
@@ -442,7 +504,7 @@ const char* wtmpdir(char *dir)
 **	FUNCTION:	Get the memory size in K to use for file sorts.
 **
 **	DESCRIPTION:	If envvar $WISPSORTMEM is set then read it's value
-**			otherwise default to 512K.
+**			otherwise default to 2048K.
 **
 **	ARGUMENTS:	None
 **
@@ -460,13 +522,21 @@ int wispsortmemk(void)
 
 	if (!memsizek)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_WISP, "WISPSORTMEM");
-#else
 		ptr = getenv("WISPSORTMEM");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_WISP, "WISPSORTMEM");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPSORTMEM");
+		}
+
 		if (ptr && *ptr)
 		{
 			sscanf(ptr,"%ld",&memsizek);
@@ -474,7 +544,15 @@ int wispsortmemk(void)
 
 		if (memsizek <= 0)
 		{
-			memsizek = 512;
+			memsizek = 2048;
+		}
+		if (memsizek < 16)
+		{
+			memsizek = 16;
+		}
+		if (memsizek > 65535)
+		{
+			memsizek = 65535;
 		}
 		
 	}
@@ -507,19 +585,27 @@ const char* wispcpu(void)
 	
 	if (!ccmm)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_VS_EXTRACT, "WISPCPU");
-#else
 		ptr = getenv("WISPCPU");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_VS_EXTRACT, "WISPCPU");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPCPU");
+		}
+
 		if (ptr && *ptr)
 		{
 			int	len;
 			len = strlen(ptr);
 			
-			ccmm = wstrdup("    ");
+			ccmm = wisp_strdup("    ");
 			memcpy(ccmm, ptr, (len > 4) ? 4 : len);
 		}
 		else
@@ -555,19 +641,27 @@ const char* wispnetid(void)
 	
 	if (!netid)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_VS_EXTRACT, "WISPNETID");
-#else
 		ptr = getenv("WISPNETID");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_VS_EXTRACT, "WISPNETID");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPNETID");
+		}
+
 		if (ptr && *ptr)
 		{
 			int	len;
 			len = strlen(ptr);
 			
-			netid = wstrdup("        ");
+			netid = wisp_strdup("        ");
 			memcpy(netid, ptr, (len > 8) ? 8 : len);
 		}
 		else
@@ -581,7 +675,7 @@ const char* wispnetid(void)
 }
 
 /*
-**	ROUTINE:	weditorexe()
+**	ROUTINE:	WL_weditorexe()
 **
 **	FUNCTION:	Get the exe name of the editor.
 **
@@ -596,22 +690,29 @@ const char* wispnetid(void)
 **	WARNINGS:	None
 **
 */
-char* weditorexe(void)
+const char* WL_weditorexe(void)
 {
 	static char *exe = NULL;
 
 	if (!exe)
 	{
-		char *ptr;
+		const char *ptr;
+		ptr = getenv("WISPEDITOR");
 #ifdef WIN32
-		ptr = wgetreg(REG_WISPBIN, "WEDITOR");
-#else
-		ptr = getenv("WEDITOR");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_WISPBIN, "WEDITOR");
+		}
 #endif
-		
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPEDITOR");
+		}
+
 		if (ptr && *ptr)
 		{
-			exe = wstrdup(ptr);
+			exe = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -628,7 +729,7 @@ char* weditorexe(void)
 }
 
 /*
-**	ROUTINE:	wprocexe()
+**	ROUTINE:	WL_wprocexe()
 **
 **	FUNCTION:	Get the exe name of the procedure interpreter.
 **
@@ -643,22 +744,30 @@ char* weditorexe(void)
 **	WARNINGS:	None
 **
 */
-char* wprocexe(void)
+const char* WL_wprocexe(void)
 {
 	static char *wproc = NULL;
 
 	if (!wproc)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_WPROC, "WPROC");
-#else
 		ptr = getenv("WPROC");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_WPROC, "WPROC");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WPROC");
+		}
+
 		if (ptr && *ptr)
 		{
-			wproc = wstrdup(ptr);
+			wproc = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -675,7 +784,7 @@ char* wprocexe(void)
 }
 
 /*
-**	ROUTINE:	wprocflags()
+**	ROUTINE:	WL_wprocflags()
 **
 **	FUNCTION:	Get wproc debug flags
 **
@@ -690,17 +799,33 @@ char* wprocexe(void)
 **	WARNINGS:	None
 **
 */
-char* wprocflags(void)
+const char* WL_wprocflags(void)
 {
+	const char *ptr;
+
+	/*
+	**	Don't keep a static copy as these may change
+	*/
+	ptr = getenv("WPROCDEBUG");
+
 #ifdef WIN32
-	return wgetreg(REG_WPROC, "WPROCDEBUG");
-#else
-	return getenv("WPROCDEBUG");
+	if (NULL == ptr)
+	{
+		ptr = WL_wgetreg(REG_WPROC, "WPROCDEBUG");
+	}
 #endif
+
+	if (NULL == ptr || '\0' == *ptr)
+	{
+		ptr = WL_get_wisp_option("WPROCDEBUG");
+	}
+
+
+	return ptr;
 }
 
 /*
-**	ROUTINE:	acpconfigdir()
+**	ROUTINE:	WL_acpconfigdir()
 **
 **	FUNCTION:	Get the path to the ACP configuration directory (location of ACPMAP)
 **
@@ -715,22 +840,30 @@ char* wprocflags(void)
 **	WARNINGS:	None
 **
 */
-const char* acpconfigdir(void)
+const char* WL_acpconfigdir(void)
 {
 	static char *path = NULL;
 
 	if (!path)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_ACP, "ACPCONFIG");
-#else
 		ptr = getenv("ACPCONFIG");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_ACP, "ACPCONFIG");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("ACPCONFIG");
+		}
+
 		if (ptr && *ptr)
 		{
-			path = wstrdup(ptr);
+			path = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -743,7 +876,7 @@ const char* acpconfigdir(void)
 }
 
 /*
-**	ROUTINE:	acpmapfile()
+**	ROUTINE:	WL_acpmapfile()
 **
 **	FUNCTION:	Get the name of the ACP map file.
 **
@@ -758,22 +891,30 @@ const char* acpconfigdir(void)
 **	WARNINGS:	none
 **
 */
-const char* acpmapfile(void)
+const char* WL_acpmapfile(void)
 {
 	static char *file = NULL;
 
 	if (!file)
 	{
-		char *ptr;
+		const char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_ACP, "ACPMAP");
-#else
 		ptr = getenv("ACPMAP");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_ACP, "ACPMAP");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("ACPMAP");
+		}
+
 		if (ptr && *ptr)
 		{
-			file = wstrdup(ptr);
+			file = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -809,16 +950,28 @@ const char* wispscratchmode(void)
 	
 	if (!mode)
 	{
-		char *ptr;
+		const char *ptr;
+		ptr = getenv("WISPSCRATCHMODE");
+
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = getenv("WISP_SCRATCH_MODE"); /* OLD style */
+		}
 #ifdef WIN32
-		ptr = wgetreg(REG_VS_SCRATCH, "WISPSCRATCHMODE");
-#else
-		ptr = getenv("WISP_SCRATCH_MODE");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_VS_SCRATCH, "WISPSCRATCHMODE");
+		}
 #endif
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_get_wisp_option("WISPSCRATCHMODE");
+		}
 
 		if (ptr && *ptr)
 		{
-			mode = wstrdup(ptr);
+			mode = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -857,7 +1010,7 @@ char* wispshellexe(void)
 		
 		if (ptr && *ptr)
 		{
-			exe = wstrdup(ptr);
+			exe = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -897,10 +1050,17 @@ int wispdisplay8bit(void)
 
 		flag = 0;	/* Assume false */
 
+		ptr = getenv("WISPDISPLAY8BIT");
+		if (NULL == ptr)
+		{
+			ptr = getenv("WISP_DISPLAY_8BIT"); /* OLD Style */
+		}
 #ifdef WIN32
-		ptr = wgetreg(REG_DISPLAY, "WISPDISPLAY8BIT");
-#else
-		ptr = getenv("WISP_DISPLAY_8BIT");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/* If envvar not set then use registry.	*/
+			ptr = WL_wgetreg(REG_DISPLAY, "WISPDISPLAY8BIT");
+		}
 #endif
 
 		if (ptr)
@@ -910,7 +1070,11 @@ int wispdisplay8bit(void)
 				flag = 1;
 			}
 		}
-		else if (get_wisp_option("DISPLAY8BIT"))
+		else if (WL_get_wisp_option("WISPDISPLAY8BIT"))
+		{
+			flag = 1;
+		}
+		else if (WL_get_wisp_option("DISPLAY8BIT")) /* OLD Style */
 		{
 			flag = 1;
 		}
@@ -947,7 +1111,7 @@ const char* wispmenudir(void)
 
 		if ((ptr = getenv("WISPMENU")) && *ptr)
 		{
-			dir = wstrdup(ptr);
+			dir = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -985,29 +1149,31 @@ const char *wispterm(char *the_term)
 	{
 		char *ptr;
 
-#ifdef WIN32
-		if (wisptelnet())
-		{
-			/*
-			**	If no windows then don't use the registry for WISPTERM.
-			**	Use the env variables WISPTERM then TERM for telnet.
-			*/
-			ptr = getenv("WISPTERM");
-		}
-		else
-		{
-			ptr = wgetreg(REG_VIDEOCAP, "WISPTERM");
-		}
-#else
 		ptr = getenv("WISPTERM");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			if (wisptelnet())
+			{
+				/*
+				**	If no windows then don't use the registry for WISPTERM.
+				**	Use the env variables WISPTERM then TERM for telnet.
+				*/
+			}
+			else
+			{
+				/* If envvar not set then use registry.	*/
+				ptr = WL_wgetreg(REG_VIDEOCAP, "WISPTERM");
+			}
+		}
 #endif
 		if (ptr && *ptr)
 		{
-			term = wstrdup(ptr);
+			term = wisp_strdup(ptr);
 		}
 		else if ((ptr = getenv("TERM")) && *ptr)
 		{
-			term = wstrdup(ptr);
+			term = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -1053,21 +1219,23 @@ const char *wisptermdir(char *the_dir)
 	{
 		char *ptr;
 
-#ifdef WIN32
-		ptr = wgetreg(REG_VIDEOCAP, "VIDEOCAP");
-#else
 		ptr = getenv("VIDEOCAP");
+#ifdef WIN32
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_wgetreg(REG_VIDEOCAP, "VIDEOCAP");
+		}
 #endif
 		if (ptr && *ptr)
 		{
-			dir = wstrdup(ptr);
+			dir = wisp_strdup(ptr);
 		}
 		else
 		{
 			char	buff[256];
 			
 			buildfilepath( buff, wispconfigdir(), "videocap" );
-			dir = wstrdup(buff);
+			dir = wisp_strdup(buff);
 		}
 	}
 	ASSERT(dir);
@@ -1115,18 +1283,18 @@ const char* wisptermfilepath(char *the_path)
 			 * Check if the videocap file exists with then without ".vcap" ext.
 			 */
 			strcat(buff, ".vcap");
-			if (!fexists(buff))
+			if (!WL_fexists(buff))
 			{
 				/* Check without ext */
 				buff[strlen(buff) - 5] = '\0';
-				if (!fexists(buff))
+				if (!WL_fexists(buff))
 				{
 					/* Didn't find it so put ext back on */
 					strcat(buff, ".vcap");
 				}				
 			}
 			
-			path = wstrdup(buff);
+			path = wisp_strdup(buff);
 		}
 		else
 		{
@@ -1170,17 +1338,21 @@ const char* wispmsgsharedir(char *the_dir)
 	{
 		char *ptr;
 		
-		ptr = wgetreg(REG_VS_MESSAGE, "SHAREDIR");
+		ptr = getenv("WISPSHAREDIR");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			ptr = WL_wgetreg(REG_VS_MESSAGE, "SHAREDIR");
+		}
 		if (ptr && *ptr)
 		{
-			dir = wstrdup(ptr);
+			dir = wisp_strdup(ptr);
 		}
 		else
 		{
 			char	buff[128];
 			
 			buildfilepath(buff, wisptmpbasedir(NULL), "WISPMSG");
-			dir = wstrdup(buff);
+			dir = wisp_strdup(buff);
 		}
 	}
 	ASSERT(dir);
@@ -1195,7 +1367,7 @@ const char* wispmsgsharedir(char *the_dir)
 #endif
 
 /*
-**	ROUTINE:	acu_vutil_exe()
+**	ROUTINE:	WL_acu_vutil_exe()
 **
 **	FUNCTION:	Get the exe name of the Acucobol vutil utility
 **
@@ -1210,7 +1382,7 @@ const char* wispmsgsharedir(char *the_dir)
 **	WARNINGS:	None
 **
 */
-const char* acu_vutil_exe(void)
+const char* WL_acu_vutil_exe(void)
 {
 	static char *exe = NULL;
 
@@ -1224,7 +1396,7 @@ const char* acu_vutil_exe(void)
 		ptr = getenv("VUTIL");
 		if (ptr && *ptr)
 		{
-			exe = wstrdup(ptr);
+			exe = wisp_strdup(ptr);
 		}
 
 		/*
@@ -1232,11 +1404,11 @@ const char* acu_vutil_exe(void)
 		 */
 		if (NULL == exe)
 		{
-			ptr = get_wisp_option("VUTIL");
+			ptr = WL_get_wisp_option("VUTIL");
 			
 			if (ptr != NULL && *ptr != '\0')
 			{
-				exe = wstrdup(ptr);
+				exe = wisp_strdup(ptr);
 			}
 		}
 		
@@ -1268,7 +1440,7 @@ const char* acu_vutil_exe(void)
 **
 **	DESCRIPTION:	
 **			On Unix return environment variable $WISPDIR
-**			On WIN32 return registry entry
+**			On WIN32 return registry entry (allow envvar to override)
 **
 **			If WISPDIR is not set it returns a default path.
 **
@@ -1289,16 +1461,21 @@ const char* wispdir(void)
 	{
 		char 	*ptr;
 
-#ifdef unix
 		ptr = getenv( "WISPDIR" );
-#endif
+
 #ifdef WIN32
-		ptr = wgetreg(REG_WISP, "WISPDIR");
+		if (NULL == ptr || '\0' == *ptr)
+		{
+			/*
+			**	If envvar not set then use registry
+			*/
+			ptr = WL_wgetreg(REG_WISP, "WISPDIR");
+		}
 #endif
 
 		if (ptr && *ptr)
 		{
-			wisp_dir = wstrdup(ptr);
+			wisp_dir = wisp_strdup(ptr);
 		}
 		else
 		{
@@ -1314,7 +1491,7 @@ const char* wispdir(void)
 	
 	return wisp_dir;
 }
-const char *wispprbdir(char *dir)
+const char *wispprbdir(char *dir) /* /usr/tmp/wpparms */
 {
 	static char *the_dir = NULL;
 	
@@ -1322,7 +1499,7 @@ const char *wispprbdir(char *dir)
 	{
 		char	buff[128];
 		buildfilepath(buff, wisptmpbasedir(NULL), "wpparms");
-		the_dir = wstrdup(buff);
+		the_dir = wisp_strdup(buff);
 	}
 
 	if (dir)
@@ -1336,7 +1513,7 @@ const char *wispprbdir(char *dir)
 	}
 }
 
-const char *wisplinkdir(char *dir)
+const char *wisplinkdir(char *dir) /* /usr/tmp/wisplink */
 {
 	static char *the_dir = NULL;
 	
@@ -1344,7 +1521,7 @@ const char *wisplinkdir(char *dir)
 	{
 		char	buff[128];
 		buildfilepath(buff, wisptmpbasedir(NULL), "wisplink");
-		the_dir = wstrdup(buff);
+		the_dir = wisp_strdup(buff);
 	}
 
 	if (dir)
@@ -1358,7 +1535,7 @@ const char *wisplinkdir(char *dir)
 	}
 }
 
-const char *wisptmpdir(char *dir)
+const char *wisptmpdir(char *dir)  /* /usr/tmp/wisptmp */
 {
 	static char *the_dir = NULL;
 	
@@ -1366,7 +1543,7 @@ const char *wisptmpdir(char *dir)
 	{
 		char	buff[128];
 		buildfilepath(buff, wisptmpbasedir(NULL), "wisptmp");
-		the_dir = wstrdup(buff);
+		the_dir = wisp_strdup(buff);
 	}
 
 	if (dir)
@@ -1380,13 +1557,13 @@ const char *wisptmpdir(char *dir)
 	}
 }
 
-const char *wispdefdir(char *dir)
+const char *wispdefdir(char *dir) /* /usr/tmp/wisptmp */
 {
 	return wisptmpdir(dir);
 }
 
 /*
-**	ROUTINE:	no_windows()
+**	ROUTINE:	WL_no_windows()
 **
 **	FUNCTION:	Flag if windows are not available.
 **
@@ -1407,7 +1584,7 @@ const char *wispdefdir(char *dir)
 **	WARNINGS:	None
 **
 */
-int no_windows(void)
+int WL_no_windows(void)
 {
 #ifdef unix
 	return 1;		/* UNIX always returns "No Windows" */
@@ -1502,7 +1679,7 @@ int wisptelnet(void)
 		/*
 		 *	Variable WISPTELNET can force this flag on or off.
 		 */
-		if (ptr = getenv("WISPTELENT"))
+		if (ptr = getenv("WISPTELNET")) /* Pre 5.0 typo said "WISPTELENT" */
 		{
 			if ('1' == *ptr)
 			{
@@ -1550,10 +1727,10 @@ const char* wisprcfilepath(void)
 		char	file[40];
 		char	path[128];
 		
-		sprintf(file, "RC_%s_%u", longuid(), (unsigned)wgetpgrp());
+		sprintf(file, "RC_%s_%u", WL_longuid(), (unsigned)WL_wgetpgrp());
 		buildfilepath(path, wisptmpdir(NULL), file);
 
-		rcfilename = wstrdup(path);
+		rcfilename = wisp_strdup(path);
 
 		makepath(rcfilename);
 	}
@@ -1563,7 +1740,6 @@ const char* wisprcfilepath(void)
 
 
 #if defined(DEBUG) && defined(MAIN)
-#define EXT_FILEXT
 #include "filext.h"
 
 /*
@@ -1588,31 +1764,31 @@ static void validate_wispcfg(void)
 	char	buff[256];
 	
 #if defined(unix)
-	setenvstr("HOME=/home/user");
+	WL_setenvstr("HOME=/home/user");
 	ASSERT(0==strcmp(wisphomedir(buff),"/home/user"));
 	ASSERT(0==strcmp(buff,"/home/user"));
 
-	setenvstr("WISPCONFIG=/wisp/config");
+	WL_setenvstr("WISPCONFIG=/wisp/config");
 	ASSERT(0==strcmp(wispconfigdir(),"/wisp/config"));
 
-	setenvstr("PATH=path");
+	WL_setenvstr("PATH=path");
 	ASSERT(0==strcmp(wispenvpath(),"path"));
 
 	ASSERT(0==strcmp(wisptmpbasedir(buff),"/usr/tmp"));
 	ASSERT(0==strcmp(buff,"/usr/tmp"));
 
-	setenvstr("TMPDIR=tmpdir");
-	ASSERT(0==strcmp(wtmpdir(buff),"tmpdir"));
+	WL_setenvstr("TMPDIR=tmpdir");
+	ASSERT(0==strcmp(WL_systmpdir(buff),"tmpdir"));
 	ASSERT(0==strcmp(buff,"tmpdir"));
 
-	setenvstr("WISPSORTMEM=123");
+	WL_setenvstr("WISPSORTMEM=123");
 	ASSERT(wispsortmemk() == 123);
 
-	setenvstr("WISPTERM=wispterm");
+	WL_setenvstr("WISPTERM=wispterm");
 	ASSERT(0==strcmp(wispterm(buff),"wispterm"));
 	ASSERT(0==strcmp(buff,"wispterm"));
 	
-	setenvstr("VIDEOCAP=videocap");
+	WL_setenvstr("VIDEOCAP=videocap");
 	ASSERT(0==strcmp(wisptermdir(buff),"videocap"));
 	ASSERT(0==strcmp(buff,"videocap"));
 
@@ -1622,37 +1798,37 @@ static void validate_wispcfg(void)
 #endif /* unix */
 
 #ifndef WIN32
-	setenvstr("WISPCPU=12");
+	WL_setenvstr("WISPCPU=12");
 	ASSERT(0==strcmp(wispcpu(),"12  "));
 
-	setenvstr("WISPNETID=wispnet");
+	WL_setenvstr("WISPNETID=wispnet");
 	ASSERT(0==strcmp(wispnetid(),"wispnet "));
 
-	setenvstr("WEDITOR=weditor");
-	ASSERT(0==strcmp(weditorexe(),"weditor"));
+	WL_setenvstr("WEDITOR=weditor");
+	ASSERT(0==strcmp(WL_weditorexe(),"weditor"));
 
-	setenvstr("WPROC=test");
-	ASSERT(0==strcmp(wprocexe(),"test"));
+	WL_setenvstr("WPROC=test");
+	ASSERT(0==strcmp(WL_wprocexe(),"test"));
 
-	setenvstr("WPROCDEBUG=debug");
-	ASSERT(0==strcmp(wprocflags(),"debug"));
+	WL_setenvstr("WPROCDEBUG=debug");
+	ASSERT(0==strcmp(WL_wprocflags(),"debug"));
 
-	setenvstr("ACPCONFIG=acpconfig");
-	ASSERT(0==strcmp(acpconfigdir(),"acpconfig"));
+	WL_setenvstr("ACPCONFIG=acpconfig");
+	ASSERT(0==strcmp(WL_acpconfigdir(),"acpconfig"));
 
-	setenvstr("ACPMAP=acpmap");
-	ASSERT(0==strcmp(acpmapfile(),"acpmap"));
+	WL_setenvstr("ACPMAP=acpmap");
+	ASSERT(0==strcmp(WL_acpmapfile(),"acpmap"));
 
-	setenvstr("WISP_SCRATCH_MODE=");
+	WL_setenvstr("WISP_SCRATCH_MODE=");
 	ASSERT(0==strcmp(wispscratchmode(),"33"));
 
-	setenvstr("SHELL=shell");
+	WL_setenvstr("SHELL=shell");
 	ASSERT(0==strcmp(wispshellexe(),"shell"));
 
-	setenvstr("WISP_DISPLAY_8BIT=No");
+	WL_setenvstr("WISP_DISPLAY_8BIT=No");
 	ASSERT(wispdisplay8bit() == 0);
 
-	setenvstr("WISPMENU=wispmenu");
+	WL_setenvstr("WISPMENU=wispmenu");
 	ASSERT(0==strcmp(wispmenudir(),"wispmenu"));
 #endif
 }
@@ -1669,8 +1845,59 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
-**	Revision 1.24.2.1  2003/02/14 16:55:25  gsl
-**	Add check to ensure $WISPCONFIG is set
+**	Revision 1.38  2003/07/09 20:07:26  gsl
+**	type of "WISPTELNET"
+**	
+**	Revision 1.37  2003/02/14 16:12:07  gsl
+**	Define a value for testing is $WISPCONFIG is not set
+**	
+**	Revision 1.36  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.35  2002/12/04 20:52:16  gsl
+**	Add to OPTIONS file
+**	WPROC
+**	WPROCDEBUG
+**	ACPCONFIG
+**	ACPMAP
+**	WISP_SCRATCH_MODE/WISPSCRATCHMODE
+**	WISP_DISPLAY_8BIT/DISPLAY8BIT/WISPDISPLAY8BIT
+**	WISPSYSADMIN
+**	
+**	Revision 1.34  2002/12/04 18:52:03  gsl
+**	Add to OPTIONS file
+**	WISPTMPDIR
+**	WISPSYSTMPDIR
+**	WISPSORTMEM
+**	WISPCPU
+**	WISPNETID
+**	
+**	Revision 1.33  2002/10/16 21:02:40  gsl
+**	comments
+**	
+**	Revision 1.32  2002/10/16 20:34:52  gsl
+**	configure with environments variables vs registry on win32
+**	
+**	Revision 1.31  2002/10/15 21:21:54  gsl
+**	On WIN32 allow environment variables override registry settings
+**	
+**	Revision 1.30  2002/10/15 18:55:17  gsl
+**	Change Windows default to C:\TEMP
+**	
+**	Revision 1.29  2002/07/10 21:05:34  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.28  2002/07/10 04:27:33  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.27  2002/07/09 04:13:53  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.26  2002/07/02 21:15:33  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.25  2002/06/25 18:18:41  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
 **	
 **	Revision 1.24  2001/11/27 22:05:03  gsl
 **	Change to use longuid()
@@ -1690,7 +1917,7 @@ main()
 **	Remove VMS & MSDOS
 **
 **	Revision 1.19  1999-08-24 09:29:35-04  gsl
-**	Fixed acu_vutil_exe() to get the VUTIL path out of the OPTIONS file.
+**	Fixed WL_acu_vutil_exe() to get the VUTIL path out of the OPTIONS file.
 **	On WIN32 it was looking in the registry, however, the registry never was
 **	set. So now it check env $VUTIL first then VUTIL in OPTIONS then defaults.
 **
@@ -1725,7 +1952,7 @@ main()
 **	Added wispserver()
 **
 **	Revision 1.9  1996-12-11 19:48:48-05  gsl
-**	Add acu_vutil_exe() routine
+**	Add WL_acu_vutil_exe() routine
 **
 **	Revision 1.8  1996-12-11 13:25:47-08  gsl
 **	Fix buf with TMPDIR

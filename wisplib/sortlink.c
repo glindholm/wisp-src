@@ -1,29 +1,44 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
-	SORTLINK	This VSSUB is another interface to the Wang VS SORT utility.
-			It is used by some instead of SORTCALL.  It also allows access to the MERGE and SELECTION
-			features of the SORT utility.
+	SORTLINK	
+	
+	This VSSUB is another interface to the Wang VS SORT utility.
+	It is used by some instead of SORTCALL.  It also allows access to 
+	the MERGE and SELECTION features of the SORT utility.
 
-			This implementation will extract the parameters and issue a call the WISPSORT/SORTCALL.
-			None of the MERGE or SELECTION criteria is supported and will cause an error.
+	This implementation will extract the parameters and issue a call 
+	the WISPSORT/SORTCALL.
+	None of the MERGE or SELECTION criteria is supported and will cause an error.
 
-			RETURN CODES
-			51	Unable to decode arguments
-			52	Invalid argument count
-			54	Function not supported (only 'S' is supported)
-			56	Option not supported
+	RETURN CODES
+	51	Unable to decode arguments
+	52	Invalid argument count
+	54	Function not supported (only 'S' is supported)
+	56	Option not supported
 
-61501	%%SORTLINK-I-ENTRY Entry into SORTLINK
 61502	%%SORTLINK-F-ARGCNT Invalid argument count arg_count=%ld
 61504	%%SORTLINK-F-MERGE Function [%c] not supported
 61506	%%SORTLINK-F-OPTION %s=%c not supported
@@ -33,26 +48,24 @@ static char rcsid[]="$Id:$";
 */
 
 #include <stdio.h>
+#include <string.h>
 #include <ctype.h> 
-#include <varargs.h>
+#include <stdarg.h>
 
 #include "idsistd.h"
-#include "movebin.h"
 #include "werrlog.h"
-#include "cobrun.h"
 #include "wisplib.h"
+#include "vssubs.h"
 
-void SORTLINK(va_alist)						                        /* Function uses variable arguments.	*/
-va_dcl											/* Parameter declaration.     		*/
+void SORTLINK(char* function, char* sort_options, ...)
 {
-#define		ROUTINE		61500
 	va_list the_args;								/* Declare variable to traverse list.	*/
 	int4	total_arg_count;							/* Total number of arguments		*/
 	int4	arg_count;								/* Number of arguments			*/
 	char	*ptr;									/* Misc char pointer.			*/
 	int4	return_code;								/* The return code			*/
 	char	*return_ptr;								/* Ptr to return code			*/
-	int4	tlong;									/* Temp int4				*/
+	int4	tint4;									/* Temp int4				*/
 	char	sortparms[116];								/* SORTCALL parameter			*/
 	int4	keycount;								/* Number of sort keys			*/
 	int4	i;									/* temp counter				*/
@@ -65,39 +78,42 @@ va_dcl											/* Parameter declaration.     		*/
 	int4	*sortcode_ptr;								/* The sortcode pointer (from SORTINFO)	*/
 
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+	total_arg_count = WL_va_count();						/* How many args are there ?		*/
+	WL_wtrace("SORTLINK","ENTRY","Entry into SORTLINK Function=[%c] Sort_options=[%c] args=%d",
+		*function, *sort_options, total_arg_count);
+
+
+	arg_count = total_arg_count;
+	if (arg_count < 12 || arg_count > 500)
+	{
+		werrlog(WERRCODE(61502),arg_count,0,0,0,0,0,0,0);			/* Invalid number of parameters.	*/
+		return_code = 52;
+		goto return_label;
+	}
 
 	return_code = 0;
 	memset(sortparms,' ',116);
 
 	dupinorder = 0;									/* Duplicate are NOT in order		*/
 
-	va_start(the_args);								/* Setup pointer to start of list.	*/
-	total_arg_count = va_count(the_args);						/* How many args are there ?		*/
-	arg_count = total_arg_count;
-	if (arg_count < 12 || arg_count > 500)
-	{
-		werrlog(ERRORCODE(2),arg_count,0,0,0,0,0,0,0);				/* Invalid number of parameters.	*/
-		return_code = 52;
-		goto return_label;
-	}
-
-	va_start(the_args);								/* Reset the pointer.			*/
+	va_start(the_args, sort_options);
 
 	/*
 	**	Option Arguments Sequence
 	*/
 
-	ptr = va_arg(the_args, char*);  						/* Get the FUNCTION			*/
+	/* ptr = va_arg(the_args, char*);  */						/* Get the FUNCTION			*/
+	ptr = function;
 	arg_count--;
 	if ('S' != *ptr)
 	{
-		werrlog(ERRORCODE(4),*ptr,0,0,0,0,0,0,0);				/* Not Function=='S'			*/
+		werrlog(WERRCODE(61504),*ptr,0,0,0,0,0,0,0);				/* Not Function=='S'			*/
 		return_code = 54;
 		goto return_label;
 	}
 
-	ptr = va_arg(the_args, char*);							/* Get the SORT OPTIONS			*/
+	/* ptr = va_arg(the_args, char*); */						/* Get the SORT OPTIONS			*/
+	ptr = sort_options;
 	arg_count--;
 	if ('3' == *ptr)
 	{
@@ -105,7 +121,7 @@ va_dcl											/* Parameter declaration.     		*/
 	}
 	else if ('0' != *ptr)
 	{
-		werrlog(ERRORCODE(6),"Sort option",*ptr,0,0,0,0,0,0);			/* Unsupported option			*/
+		werrlog(WERRCODE(61506),"Sort option",*ptr,0,0,0,0,0,0);		/* Unsupported option			*/
 		return_code = 56;
 		goto return_label;
 	}
@@ -116,7 +132,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count < 10)
 	{
-		werrlog(ERRORCODE(10),"INPUT seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(WERRCODE(61510),"INPUT seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -125,7 +141,7 @@ va_dcl											/* Parameter declaration.     		*/
 	arg_count--;
 	if ('T' == *ptr)
 	{
-		werrlog(ERRORCODE(6),"Format option",*ptr,0,0,0,0,0,0);			/* Unsupported option			*/
+		werrlog(WERRCODE(61506),"Format option",*ptr,0,0,0,0,0,0);		/* Unsupported option			*/
 		return_code = 56;
 		goto return_label;
 	}
@@ -134,11 +150,10 @@ va_dcl											/* Parameter declaration.     		*/
 		ptr = va_arg(the_args, char*);						/* Get INPUT FILE COUNT			*/
 		arg_count--;
 	}
-	GETBIN(&tlong,ptr,4);
-	wswap(&tlong);
-	if (1 != tlong)									/* Only one file supported		*/
+	tint4 = WL_get_swap((int4*)ptr);
+	if (1 != tint4)									/* Only one file supported		*/
 	{
-		werrlog(ERRORCODE(8),"Input file count",tlong,0,0,0,0,0,0);		/* Unsupported option			*/
+		werrlog(WERRCODE(61508),"Input file count",tint4,0,0,0,0,0,0);		/* Unsupported option			*/
 		return_code = 56;
 		goto return_label;
 	}
@@ -161,18 +176,17 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count < 6)
 	{
-		werrlog(ERRORCODE(10),"SELECTION seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(WERRCODE(61510),"SELECTION seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
 
 	ptr = va_arg(the_args, char*);							/* Get SELECTION COUNT			*/
 	arg_count--;
-	GETBIN(&tlong,ptr,4);
-	wswap(&tlong);
-	if (0 != tlong)									/* Only one file supported		*/
+	tint4 = WL_get_swap((int4*)ptr);
+	if (0 != tint4)									/* Only one file supported		*/
 	{
-		werrlog(ERRORCODE(8),"Selection count",tlong,0,0,0,0,0,0);		/* Unsupported option			*/
+		werrlog(WERRCODE(61508),"Selection count",tint4,0,0,0,0,0,0);		/* Unsupported option			*/
 		return_code = 56;
 		goto return_label;
 	}
@@ -188,11 +202,10 @@ va_dcl											/* Parameter declaration.     		*/
 
 	ptr = va_arg(the_args, char*);							/* Get KEY COUNT			*/
 	arg_count--;
-	GETBIN(&keycount,ptr,4);
-	wswap(&keycount);
+	keycount = WL_get_swap((int4*)ptr);
 	if (keycount > 8 || keycount < 0)						/* Only one file supported		*/
 	{
-		werrlog(ERRORCODE(8),"Key count",keycount,0,0,0,0,0,0);			/* Unsupported option			*/
+		werrlog(WERRCODE(61508),"Key count",keycount,0,0,0,0,0,0);		/* Unsupported option			*/
 		return_code = 56;
 		goto return_label;
 	}
@@ -203,24 +216,22 @@ va_dcl											/* Parameter declaration.     		*/
 	{
 		if ( arg_count < ((keycount-i)*4 + 4) )
 		{
-			werrlog(ERRORCODE(10),"KEY seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+			werrlog(WERRCODE(61510),"KEY seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 			return_code = 51;
 			goto return_label;
 		}
 
 		ptr = va_arg(the_args, char*);						/* Get KEY POSITION			*/
 		arg_count--;
-		GETBIN(&tlong,ptr,4);
-		wswap(&tlong);
-		sprintf(buff,"%04ld",tlong);
+		tint4 = WL_get_swap((int4*)ptr);
+		sprintf(buff,"%04d",tint4);
 		memcpy(&sortparms[offset],buff,SIZE_POSITION);
 		offset += SIZE_POSITION;
 
 		ptr = va_arg(the_args, char*);						/* Get KEY LENGTH			*/
 		arg_count--;
-		GETBIN(&tlong,ptr,4);
-		wswap(&tlong);
-		sprintf(buff,"%03ld",tlong);
+		tint4 = WL_get_swap((int4*)ptr);
+		sprintf(buff,"%03d",tint4);
 		memcpy(&sortparms[offset],buff,SIZE_LENGTH);
 		offset += SIZE_LENGTH;
 
@@ -241,7 +252,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count < 4)
 	{
-		werrlog(ERRORCODE(10),"OUTPUT seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(WERRCODE(61510),"OUTPUT seq",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -264,7 +275,7 @@ va_dcl											/* Parameter declaration.     		*/
 		arg_count--;
 		if ('D' != *ptr)
 		{
-			werrlog(ERRORCODE(6),"Output format",*ptr,0,0,0,0,0,0);		/* Unsupported option			*/
+			werrlog(WERRCODE(61506),"Output format",*ptr,0,0,0,0,0,0);	/* Unsupported option			*/
 			return_code = 56;
 			goto return_label;
 		}
@@ -282,7 +293,7 @@ va_dcl											/* Parameter declaration.     		*/
 
 	if (arg_count != 1)
 	{
-		werrlog(ERRORCODE(10),"RETCODE",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
+		werrlog(WERRCODE(61510),"RETCODE",(int4)(total_arg_count-arg_count+1),0,0,0,0,0,0);
 		return_code = 51;
 		goto return_label;
 	}
@@ -299,14 +310,13 @@ return_label:
 
 	if ( return_code > 0 )
 	{
-		wswap(&return_code);
-		PUTBIN(return_ptr,&return_code,4);
+		WL_put_swap(return_ptr, return_code);
 		return;
 	}
 
-	getsortinfo(&filetype, &recsize, &sortcode_ptr);
+	WL_getsortinfo(&filetype, &recsize, &sortcode_ptr);
 
-	wangsort(sortparms,&filetype,&recsize,dupinorder,sortcode_ptr,(int4 *)return_ptr);
+	WL_wangsort(sortparms,&filetype,&recsize,dupinorder,sortcode_ptr,(int4 *)return_ptr);
 	return;
 }
 
@@ -331,10 +341,10 @@ void SORTINFO(char* filetype, int4* recsize, int4* sortcode)
 }
 
 /*
-	getsortinfo	This routine is call by SORTCALL and SORTLINK to get the extra info supplied by SORTINFO.
+	WL_getsortinfo	This routine is call by SORTCALL and SORTLINK to get the extra info supplied by SORTINFO.
 			It can only be called once, then it will reset the variable to an uninitialized state.
 */
-void getsortinfo(char* filetype, int4* recsize, int4** sortcode_ptr)
+void WL_getsortinfo(char* filetype, int4* recsize, int4** sortcode_ptr)
 {
 	if (' ' == sort_filetype)
 	{
@@ -356,6 +366,42 @@ void getsortinfo(char* filetype, int4* recsize, int4** sortcode_ptr)
 /*
 **	History:
 **	$Log: sortlink.c,v $
+**	Revision 1.20  2003/02/21 19:18:32  gsl
+**	Switch SORTLINK to stdarg.h
+**	
+**	Revision 1.19  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.18  2003/02/04 16:30:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.17  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/12/10 20:54:11  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.15  2002/12/09 21:09:32  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.14  2002/10/18 19:14:09  gsl
+**	Cleanup
+**	
+**	Revision 1.13  2002/07/16 16:24:52  gsl
+**	Globals
+**	
+**	Revision 1.12  2002/07/12 19:10:17  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.11  2002/07/12 17:01:01  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.10  2002/07/11 20:29:14  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.9  2002/07/10 21:05:25  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.8  1996/08/19 22:32:58  gsl
 **	drcs update
 **	

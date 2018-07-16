@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <string.h>
 #include "vseglb.h"
@@ -17,7 +32,7 @@ static char rcsid[]="$Id:$";
 Is passed an array of field values and a 1924 byte area for the blah blah blah
 screen, and build and displayable screen
 ------*/
-void vsescr(VSEFLD *fld, char *scr)
+void vsescr(VSEFLD *fld, unsigned char *scr)
 {
 	while(fld->src)
 		{
@@ -26,7 +41,7 @@ void vsescr(VSEFLD *fld, char *scr)
 		}
 }
 
-void vsescr_init(char *scr)
+void vsescr_init(unsigned char *scr)
 {
 	memset(scr+sizeof(vse_default_oa),0,1920);
 }
@@ -40,7 +55,7 @@ If the field ends in col 80 then a DIM_AC is not appended
 If the new fac would overlay an existing fac then a fac
 is not loaded.
 ------*/
-void vsefld(VSEFLD *fld, char *scr)
+void vsefld(VSEFLD *fld, unsigned char *scr)
 {
 	int offset,len,fac;
 
@@ -72,7 +87,7 @@ void vsefld(VSEFLD *fld, char *scr)
 }
 
 
-void vseunscr(VSEFLD *fld, char *scr)
+void vseunscr(VSEFLD *fld, unsigned char *scr)
 {
 	while(fld->src)
 		{
@@ -88,7 +103,7 @@ If the fac is 0 then a DIMFAC is assumed
 If the length is zero then strlen of the src is used
 If the field ends in col 80 then a DIM_FAC is not appended
 ------*/
-void vseunfld(VSEFLD *fld, char *scr)
+void vseunfld(VSEFLD *fld, unsigned char *scr)
 {
 	int offset,len,fac;
 
@@ -115,6 +130,12 @@ void vseunfld(VSEFLD *fld, char *scr)
 /*
 **	History:
 **	$Log: vsescr.c,v $
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/08/01 15:49:36  gsl
+**	type warnings
+**	
 **	Revision 1.10  1996/09/03 22:24:10  gsl
 **	drcs update
 **	

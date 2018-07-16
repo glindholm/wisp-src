@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1996 NeoMedia Technologies, All rights reserved.
+	Copyright (c) 1996-2002 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 /*
@@ -17,7 +17,7 @@ int wispmf()
 	return 0;
 }
 
-void shutexitcobol(exit_code)
+void WL_shutexitcobol(exit_code)
 int exit_code;
 {
 	cobtidy();
@@ -26,7 +26,7 @@ int exit_code;
 
 
 /*
-**	Routine:	call_mfcobol()
+**	Routine:	WL_call_mfcobol()
 **
 **	Function:	To "call" an MF COBOL routine from 'C'.
 **
@@ -47,7 +47,7 @@ int exit_code;
 **	Warnings:	None
 **
 */
-void call_mfcobol( filespec, parmcnt, parms, lens, rc )
+void WL_call_mfcobol( filespec, parmcnt, parms, lens, rc )
 char *filespec;
 int parmcnt;
 char *parms[];
@@ -64,21 +64,23 @@ int *rc;
 }
 
 /*
-**	Uncomment the define of OLD_WMEMCPY to translate
-**	the old wmemcpy into WMEMCPY.
+**	Routine:	wisp_mf_cobol()
+**
+**	Function:	To identify if we are in an Mico Focus RTS.
+**
+**	Description:	Two versions exist.
+**			The one in wispmf.c returns TRUE.
+**			The one in mfstubs.c returns FALSE.
+**
+**	Arguments:	None
+**
+**	Return:		
+**	1		TRUE	- in an Micro Focus RTS
+**	0		FALSE	- not in an Micro Focus RTS
+**
 */
-
-/* 
-#define OLD_WMEMCPY 
-*/
-#ifdef OLD_WMEMCPY
-void wmemcpy(dst, src, len)
-char *dst;
-char *src;
-short *len;
+int wisp_mf_cobol()
 {
-	extern void WMEMCPY();
-	WMEMCPY(dst,src,len);
+	return 1; /* TRUE */
 }
-#endif
 

@@ -94,9 +94,9 @@
 	   05  find-cnt-bin  binary value 0.
        01  find-receiver   pic x(22).
 
-       01  PAUSE-2-SECONDS.
+       01  PAUSE-SECONDS.
 	   05 filler binary value 0.
-	   05 filler binary value 200.
+	   05 filler binary value 500.
 	   
 001600 Procedure Division.
        
@@ -143,9 +143,9 @@
 	   PERFORM CHECK-SUBMIT-SUCCESS.
 
       *
-      *	   WAIT 2 seconds for the submitted proc to run
+      *	   Pause 5 seconds for the submitted proc to run
       *
-	   CALL "PAUSE" USING PAUSE-2-SECONDS.	
+	   CALL "PAUSE" USING PAUSE-SECONDS.	
  
 	   move "COPY"	   to tst-fil.
 	   move "WL0030"   to tst-lib.

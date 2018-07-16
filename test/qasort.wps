@@ -1,18 +1,26 @@
 procedure qasort.wps
 
+scratch BFILEX3 IN LIBOUT ON VOLOUT
+
+prompt center "QASORT";;;;;
+       center "SORT BFILE TO CREATE BFILEX3";;;;;;
+       center "Press (ENTER) to continue"
 
 run sort 
-	display input file=bfile, library=libout, volume=volout,
+	enter options
+	enter input file=bfile, library=libout, volume=volout,
 			filetype=I
-	display keys 
+	enter keys 
 		keys=2,
 		post1=5, length1=4, type1=c, order1=d,
 		post2=1, length2=4, type2=c, order2=a
 
-sortout: display output
+sortout: enter output
 		file=bfilex3, library=libout, volume=volout
 
 run display 
 	enter input (sortout)
+	enter options recsize=92
+
 
 

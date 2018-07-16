@@ -1,15 +1,27 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 	cobrun.h	Defines conditional on what COBOL this wisplib will link with.
@@ -18,35 +30,25 @@
 #ifndef COBRUN_H
 #define COBRUN_H
 
-#ifdef  EXT_COBRUN
-#define EXT_COBRUN_DEF
-#define INIT_ZERO   = 0
-#else
-#define EXT_COBRUN_DEF extern
-#define INIT_ZERO
-#endif
-
-#define COBOL_OTHER	0
-#define COBOL_VAX	1
-#define COBOL_LPI	2
-#define COBOL_ACU	3
-#define COBOL_AIX	4
-#define COBOL_MF	5
-
-EXT_COBRUN_DEF int	vax_cobol 	INIT_ZERO;
-EXT_COBRUN_DEF int	lpi_cobol 	INIT_ZERO;
-EXT_COBRUN_DEF int	acu_cobol	INIT_ZERO;
-EXT_COBRUN_DEF int	aix_cobol 	INIT_ZERO;
-EXT_COBRUN_DEF int	mf_cobol 	INIT_ZERO;
-EXT_COBRUN_DEF int	run_cobol	INIT_ZERO;
-
-#undef EXT_COBRUN_DEF
-#undef INIT_ZERO
+int wisp_acu_cobol();
+int wisp_mf_cobol();
 
 #endif /* COBRUN_H */
 /*
 **	History:
 **	$Log: cobrun.h,v $
+**	Revision 1.12  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.11  2002/10/18 19:14:11  gsl
+**	Cleanup
+**	
+**	Revision 1.10  2002/07/12 19:10:11  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.9  2002/07/02 04:01:30  gsl
+**	change acu_cobol and mf_cobol to wisp_acu_cobol() and wisp_mf_cobol()
+**	
 **	Revision 1.8  1996/08/19 22:32:14  gsl
 **	drcs update
 **	

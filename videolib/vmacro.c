@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -14,21 +35,19 @@ static char rcsid[]="$Id:$";
 #include "vdata.h"
 #include "vmodules.h"
 
-FILE *vopenf();
-
 /*						Subroutine entry point.								*/
 
-vmacro(action) int action;
+int VL_vmacro(action) int action;
 {
-	int ret;									/* Subroutine return code.		*/
+	int ret = FAILURE;									/* Subroutine return code.		*/
 
 	switch (action)									/* Select the action.			*/
 	{
 		case START_SAVE:							/* Start saving a macro?		*/
 		{
-			if ((macro_output == NULL) && (macro_input == NULL))		/* Don't save is already doing so.	*/
+			if ((VL_macro_output == NULL) && (VL_macro_input == NULL))		/* Don't save is already doing so.	*/
 			{
-				if ((macro_output = vopenf("mac","w+")) == NULL)		/* Did it work?				*/
+				if ((VL_macro_output = VL_vopenf("mac","w+")) == NULL)		/* Did it work?				*/
 				{
 					vre("vmacro(START_SAVE)-W-ERRONMACFILE Error opening macro save file.");
 					ret = FAILURE;
@@ -41,10 +60,10 @@ vmacro(action) int action;
 
 		case END_SAVE:								/* Terminate saving a macro.		*/
 		{
-			if (macro_output != NULL)					/* Don't close if not saving.		*/
+			if (VL_macro_output != NULL)					/* Don't close if not saving.		*/
 			{
-				fclose(macro_output);					/* Close the file.			*/
-				macro_output = NULL;					/* Null out the pointer.		*/
+				fclose(VL_macro_output);					/* Close the file.			*/
+				VL_macro_output = NULL;					/* Null out the pointer.		*/
 				ret = SUCCESS;						/* Return success.			*/
 			}
 			else ret = FAILURE;						/* Oops, they weren't saving one.	*/
@@ -53,9 +72,9 @@ vmacro(action) int action;
 
 		case START_RESTORE:							/* Input a keystroke macro.		*/
 		{
-			if ((macro_input == NULL) && (macro_output == NULL))		/* Are we already processing one?	*/
+			if ((VL_macro_input == NULL) && (VL_macro_output == NULL))		/* Are we already processing one?	*/
 			{
-				if ((macro_input = vopenf("mac","r")) == NULL)		/* Open the macro input file.		*/
+				if ((VL_macro_input = VL_vopenf("mac","r")) == NULL)		/* Open the macro input file.		*/
 				{
 					ret = FAILURE;					/* Didn't find one.			*/
 				}
@@ -70,6 +89,21 @@ vmacro(action) int action;
 /*
 **	History:
 **	$Log: vmacro.c,v $
+**	Revision 1.14  2003/01/31 20:58:40  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.13  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/15 20:56:39  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.11  2002/07/15 20:16:10  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.10  2002/07/15 17:10:04  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.9  1996/10/11 22:16:10  gsl
 **	drcs update
 **	

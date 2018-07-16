@@ -1,13 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
-			/************************************************************************/
-			/*           VIDEO - Video Interactive Development Environment          */
-			/*                      Copyright (c) 1987-1993                         */
-			/*      An unpublished work by International Digital Scientific Inc.    */
-			/*                        All rights reserved.                          */
-			/************************************************************************/
+
 
 /*
 	VRAWDOS.H - Definitions for video applications on MS-DOS.
@@ -192,6 +205,9 @@ EXTERN_DEF	int	mode_flag	INIT_ZERO;	/* Display flag?     */
 /*
 **	History:
 **	$Log: vrawdos.h,v $
+**	Revision 1.10  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
 **	Revision 1.9  1996/10/11 22:16:17  gsl
 **	drcs update
 **	

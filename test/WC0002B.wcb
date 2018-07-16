@@ -1,0 +1,40 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       WC0002B.wcb
+      **
+      **   Project:    WISP/TEST - WANG COBOL Functionality
+      **
+      **   Purpose:    RETURN-CODE special register processing
+      **
+      **   Tests:	This program is called from WC0002 and sets the
+      **		RETURN-CODE to '30'.
+      **
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. WC0002B.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       WORKING-STORAGE SECTION.
+
+      *==============================================================
+       PROCEDURE DIVISION.
+       0000-MAIN SECTION.
+
+           MOVE 30 TO RETURN-CODE.
+
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+      **
+      **   End of WC0002B.wcb
+      **

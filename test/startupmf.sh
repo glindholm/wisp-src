@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+#	$Id:$
+#
 #	File:		startupmf.sh
 #
 #	Usage:		$ cd .../wisp/src/testmf
@@ -55,6 +57,8 @@ then
 fi
 wusage set PROGVOL=SOURCE
 wusage set PROGLIB=TESTMF
+wusage set RUNVOL=SOURCE
+wusage set RUNLIB=TESTMF
 
 echo
 echo Switching to new shell for WISP QA

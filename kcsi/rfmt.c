@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*---- 
 Copyright (c) 1989-93 King Computer Services, Inc. 
@@ -36,7 +50,6 @@ Mods:
 #include "shrthand.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)rfmt.c	1.12 7/17/94";
 
 /*----
 Non-int functions
@@ -446,7 +459,7 @@ static char *format_numeric(RPT_RFL *rfl,char *d,int editing)
 		--dec;
 		}
 /* Round and set it in the work area */
-	sprintf(work_v,"%+016.0lf",fl);
+	sprintf(work_v,"%+016.0f",fl);
 /* Truncate if it got too big leaving the sign in position 0*/
 	while(strlen(work_v) > 16)
 		strcpy(&work_v[1],&work_v[2]);
@@ -696,7 +709,7 @@ static char *zero_supp(char* dest, int ch,int count,int editing)
         {
         if (end < dest)
             break;
-        if( isdigit(*end) )
+        if( isdigit((int)*end) )
             --count;
         --end;
         }
@@ -704,7 +717,7 @@ static char *zero_supp(char* dest, int ch,int count,int editing)
         return(dest);
 /* Set end to point to the first protected digit ignoring edit chars*/
     ++end;
-    while(! isdigit(*end))
+    while(! isdigit((int)*end))
         {
         if (!(*end))
             break;
@@ -729,7 +742,7 @@ static char *zero_supp(char* dest, int ch,int count,int editing)
 	    	*dest = ch;
 	    else
 		{
-		if(isdigit(*dest))
+		if(isdigit((int)*dest))
 			*dest = ch;
 		}
             }
@@ -766,7 +779,7 @@ static int is_zero(char *str)
 	rc = 1;
 	while(*str)
 		{
-		if(isdigit(*str))
+		if(isdigit((int)*str))
 			{
 			if(*str != '0')
 				{
@@ -922,8 +935,11 @@ static int myisblank(char *str)
 /*
 **	History:
 **	$Log: rfmt.c,v $
-**	Revision 1.6.2.1  2002/11/12 15:56:33  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.10  2002/10/24 14:20:35  gsl
 **	Make globals unique

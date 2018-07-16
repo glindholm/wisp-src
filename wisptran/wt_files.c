@@ -1,5 +1,39 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+#ifdef unix
+#include <unistd.h>
+#endif
+
+#ifdef WIN32
+#include <direct.h>
+#endif
 
 #define EXT extern
 #include "wisp.h"
@@ -11,49 +45,76 @@ static char rcsid[]="$Id:$";
 #include "input.h"
 #include "ring.h"
 
-#include <stdio.h>
 
-#include <sys/types.h>
-#include <fcntl.h>
-
-#ifdef unix
-#include <unistd.h>
-#endif
-
-#define WISP_OPTION_FILE	"wisp.opt"
-#define WISP_KEY_FILE		"wisp.key"
-
-ring_struct	*using_ufb_ring = 0;
-struct	using_ufb_struct
-{
-	char	name[40];
-} using_ufb_item;
-
-static int using_ufb_cmp(struct using_ufb_struct *p1, struct using_ufb_struct *p2);
 
 char *wfgets();
 
 
-static void p_optfile(void);							/* Read the option file.			*/
-static void p_keyfile(void);							/* Read the key file.				*/
 static void p_workfile(void);							/* Read the workfile.				*/
 static void set_rlist(const char *filename);					/* Add a copy file to the list of copy files 	*/
 
 
-open_io()									/* Parse and open the i/o files			*/
+static int hasext(const char *filepath)
+{
+	const char *ptr;
+
+	ptr = strrchr(filepath,'.');
+	if (!ptr) return(0);
+
+	if (0==strchr(ptr,DSS_CHAR)) return(1);
+
+	return(0);
+}
+
+
+int open_io()									/* Parse and open the i/o files			*/
 {
 	FILE *par_file;								/* The file to hold paragraph names.		*/
 	int	i;
-	if ( strpos( in_fname, "." ) == -1 )					/* If no extension then add .wcb		*/
+
+	if (NULL==getcwd( original_cwd, sizeof(original_cwd)-1 ))
+	{
+		printf("%%WISP-F-GETCWD Unable to get the current working directory [getcwd()].\n");
+		exit_wisp(EXIT_FAST);
+	}
+	strcpy(new_cwd, original_cwd);
+
+	if ( !hasext(in_fname) )		/* If no extension then add .wcb		*/
 	{
 		strcat( in_fname, ".wcb" );
 	}
-	if ( access( in_fname, 0 ) == -1 )					/* If file doesn't exist.			*/
+
+	if ( access( in_fname, 0 ) != -1 )	/* If file exists */
 	{
-		out_fname[0] = '\0';
-	}
-	else
-	{
+		char* last_slash;
+
+
+		/*
+		** If in_fname has a path component then chdir() to the location 
+		** and remove the path from in_fname.
+		*/
+		last_slash = strrchr(in_fname,DSS_CHAR);
+		if (NULL != last_slash)
+		{
+			*last_slash = '\0';
+			strcpy(new_cwd, in_fname);
+
+			if (0 != chdir(new_cwd))
+			{
+				printf("%%WISP-F-CHDIR Unable to change directory chdir(\"%s\").\n", new_cwd);
+				exit_wisp(EXIT_FAST);
+			}
+			strcpy(in_fname, ++last_slash);
+
+			/* safety check */
+			if ( access( in_fname, 0 ) == -1 )
+			{
+				printf("%%WISP-F-CHDIR Unable to access file [%s] in directory [%s].\n", 
+					new_cwd, in_fname);
+				exit_wisp(EXIT_FAST);
+			}
+		}
+
 		strcpy(out_fname,in_fname);					/* Assemble the output file name.		*/
 		out_fname[strpos(out_fname,".")] = '\0';
 		strcpy(par_fname,out_fname);					/* and the paragraph file name.			*/
@@ -65,14 +126,14 @@ open_io()									/* Parse and open the i/o files			*/
 		strcpy(crt_fname,out_fname);
 		strcpy(read_fname,out_fname);
 
-		if (do_keyfile == USE_GENERAL_FILE)
-			strcpy(key_fname,out_fname);				/* The key list file.				*/
+		if (opt_keyfile_flag == USE_GENERAL_FILE)
+			strcpy(opt_keyfile_fname,out_fname);			/* The key list file.				*/
 
-		if (do_optfile == USE_GENERAL_FILE)
-			strcpy(opt_fname,out_fname);				/* The options file.				*/
+		if (opt_optfile_flag == USE_GENERAL_FILE)
+			strcpy(opt_optfile_fname,out_fname);			/* The options file.				*/
 
-		if (copy_only)  	strcat(out_fname,".txt");		/* Create .TXT if only copying.			*/
-		else if (data_conv)	strcat(out_fname,".wdc");		/* od .WDC data conversion routine.		*/
+		if (opt_noprocess)  	strcat(out_fname,".txt");		/* Create .TXT if only copying.			*/
+		else if (opt_data_conv)	strcat(out_fname,".wdc");		/* od .WDC data conversion routine.		*/
 		else			strcat(out_fname,".cob");		/* or .COB if really translating.		*/
 		strcat(par_fname,".par");
 		strcat(dcl_fname,".dcl");					/* Declaratives copybook of non-decl		*/
@@ -83,10 +144,19 @@ open_io()									/* Parse and open the i/o files			*/
 		strcat(crt_fname,".ctp");
 		strcat(read_fname,".rtp");
 
-		if (do_keyfile == USE_GENERAL_FILE)
-			strcat(key_fname,".key");
-		if (do_optfile == USE_GENERAL_FILE)
-			strcat(opt_fname,".opt");
+		if (opt_keyfile_flag == USE_GENERAL_FILE)
+			strcat(opt_keyfile_fname,".key");
+		if (opt_optfile_flag == USE_GENERAL_FILE)
+			strcat(opt_optfile_fname,".opt");
+	}
+	else
+	{
+		/*
+		**	File does not exist.
+		**	- don't generate any of the output files
+		**	- fall thru and allow open_cob_context() to report error
+		*/
+		out_fname[0] = '\0';
 	}
 
 	write_log("WISP",'I',"OUTFILE","output file is %s",out_fname);
@@ -102,9 +172,9 @@ open_io()									/* Parse and open the i/o files			*/
 			i = strpos(proc_paras[proc_paras_cnt],"\n");
 			if (i) proc_paras[proc_paras_cnt][i] = '\0';		/* remove newlines.				*/
 
-			if (isdigit(proc_paras[proc_paras_cnt][0]))		/* Is it a number?				*/
+			if (isdigit((int)proc_paras[proc_paras_cnt][0]))	/* Is it a number?				*/
 			{
-				if ( (isdigit(proc_paras[proc_paras_cnt][1]) && !proc_paras[proc_paras_cnt][2]) || 
+				if ( (isdigit((int)proc_paras[proc_paras_cnt][1]) && !proc_paras[proc_paras_cnt][2]) || 
 					!proc_paras[proc_paras_cnt][1] )
 				{
 					sscanf(proc_paras[proc_paras_cnt],"%d",&i);
@@ -117,8 +187,6 @@ open_io()									/* Parse and open the i/o files			*/
 	}
 
 	p_workfile();								/* Process the work file.			*/
-	p_optfile();								/* Process the options file.			*/
-	p_keyfile();								/* Process the keylist file.			*/
 	return 0;
 }
 
@@ -179,9 +247,8 @@ char	*outfile;
 		if (context->infile)
 		{
 			set_rlist(infile);
-			cpy_seq = 0;						/* Reset the copy sequence counter.		*/
 
-			if (copylib)
+			if (opt_gen_copylib)
 			{
 				context->outfile = open_cob_file(outfile,FOR_OUTPUT,1);
 				if (!context->outfile) exit_with_err();
@@ -278,8 +345,7 @@ cob_file_context *get_curr_cob_context()
 	return(curr_cob_context);
 }
 
-copy_file(the_file)								/* just copy a file to the cob file		*/
-char *the_file;
+int copy_file(char* the_file)							/* just copy a file to the cob file		*/
 {
 	cob_file *cob_file_ptr;
 	char	input_line[128];
@@ -300,391 +366,6 @@ char *the_file;
 		write_log("WISP",'E',"ERRORCOPY","ERROR copying %s",the_file);
 	}
 	return 0;
-}
-
-static void p_optfile(void)							/* Read the option file.			*/
-{
-	int i,k,wisp_opt;
-	char tstr[133],*scn_ptr,*prm_ptr;
-	FILE *opt_file;								/* The option file.				*/
-
-	if (!do_optfile) return;
-
-	opt_file = fopen(opt_fname,"r");					/* Try the local option file.			*/
-
-	if (!opt_file)
-	{
-		write_log("WISP",'F',"CANTFINDOPT","Option file %s not found.",opt_fname);
-		exit_wisp(EXIT_WITH_ERR);
-	}
-
-	if (!opt_file)
-	{
-		opt_file = fopen(WISP_OPTION_FILE,"r");				/* Try the global option file.			*/
-	}
-
-
-
-scan_opt:
-	wisp_opt = 0;
-
-
-	if (!opt_file) return;							/* No option file.				*/
-
-	while (wfgets(tstr,132,opt_file))
-	{									/* Read the names of the paragraphs.		*/
-		scn_ptr = tstr;
-
-		for (i=0; i<MAX_PARMS; i++) o_parms[i][0] = (char)0;		/* Clear the o_parms				*/
-
-		i = 0;
-		do								/* scan the line and extract the parms		*/
-		{								/* skip over spaces, commas, newlines , tabs	*/
-			if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
-			{
-				scn_ptr++;
-			}
-			else							/* copy this parm				*/
-			{
-				prm_ptr = o_parms[i++];				/* Point to current parameter			*/
-				do
-				{						/* copy till next whitespace			*/
-					*prm_ptr++ = *scn_ptr++;
-				} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n') && (*scn_ptr != '\t'));
-				*prm_ptr = '\0';				/* null terminate				*/
-			}
-		} while (*scn_ptr);						/* till a null 					*/
-
-#define	COPY_DECLARATIVE	0
-#define COPY_PROCEDURE		18
-#define INCLUDE_FILE		34
-#define BLANK_WHEN_ZERO		48
-#define NO_FILE_STATUS		65
-#define KEEP_STOP_RUN		70
-#define DELETE_RECORD_CONTAINS	85
-#define NO_WS_BLANK_WHEN_ZERO	109
-#define TRAP_START_TIMEOUTS	132
-#define NO_WORD_SWAP		150
-#define NO_SEQ_SEQ_OPTIONAL	164
-#define NO_DISPLAY_PROCESSING	185
-#define SORTFILE		208
-#define USING_UFB 		219
-#define CHANGE_STOP_RUN		250
-#define DBFILE			267
-
-/*				      1         2         3         4         5         6         7				*/
-/*			    01234567890123456789012345678901234567890123456789012345678901234567890				*/
-		k = strpos("#COPY_DECLARATIVE #COPY_PROCEDURE #INCLUDE_WISP #BLANK_WHEN_ZERO #NO_FILE_STATUS ",o_parms[0]);
-		if (k == -1)
-		{		/*  7	      8		9	 100	   110	     120       130       140			*/
-/*				    01234567890123456789012345678901234567890123456789012345678901234567890			*/
-			k = strpos("#KEEP_STOP_RUN #DELETE_RECORD_CONTAINS #NO_WS_BLANK_WHEN_ZERO #TRAP_START_TIMEOUTS ",
-				   o_parms[0]);
-			if (k != -1) k += 70;
-		}
-
-		if (k == -1)
-		{		/* 150	     160       170	 180	   190	     200       210	 220			*/
-/*				    01234567890123456789012345678901234567890123456789012345678901234567890			*/
-			k = strpos("#NO_WORD_SWAP #NO_SEQ_SEQ_OPTIONAL #NO_DISPLAY_PROCESSING #SORT_FILE #USING_UFB ",o_parms[0]);
-			if (k != -1) k += 150;
-		}
-
-		if (k == -1)
-		{		/* 250	     260       270	 280	   290	     300       310	 320			*/
-/*				    01234567890123456789012345678901234567890123456789012345678901234567890			*/
-			k = strpos("#CHANGE_STOP_RUN #DBFILE ",o_parms[0]);
-			if (k != -1) k += 250;
-		}
-
-		switch (k)
-		{
-			case COPY_DECLARATIVE:
-			{
-				if (proc_performs_cnt == MAX_PARAGRAPHS)
-				{
-					write_log("WISP",'E',"MAXPARDECL","Maximum DECLARATIVES paragraphs to copy exceeded.");
-					break;
-				}
-
-				strcpy(proc_performs[proc_performs_cnt++],o_parms[1]);	
-										/* Save the name of the performed procedure.	*/
-				break;
-			}
-
-			case BLANK_WHEN_ZERO:
-			{
-				if (blank_count == MAX_BLANK_ITEMS)
-				{
-					write_log("WISP",'E',"MAXBLANKITEMS","Maximum number of BLANK WHEN ZERO items exceeded.");
-				}
-				else
-				{
-					strcpy(blank_item[blank_count++],o_parms[1]);	/* Save the name of the blanked item.	*/
-				}
-				break;
-			}
-
-			case NO_WS_BLANK_WHEN_ZERO:
-			{
-				ws_blank = 0;						/* Clear the flag.			*/
-				break;
-			}
-
-			case NO_FILE_STATUS:
-			{
-				if (nfs_count == MAX_STATUS_ITEMS)
-				{
-					write_log("WISP",'E',"MAXNFSTATITEMS","Maximum number of NO FILE STATUS items exceeded.");
-				}
-				else
-				{
-					strcpy(nfs_item[nfs_count++],o_parms[1]);	/* Save the name of the file.		*/
-				}
-				break;
-			}
-
-			case SORTFILE:
-			{
-				if (sf_count == MAX_SF_ITEMS)
-				{
-					write_log("WISP",'E',"MAXSFITEMS","Maximum number of #SORT_FILE items exceeded.");
-				}
-				else
-				{
-					strcpy(sf_item[sf_count++],o_parms[1]);		/* Save the name of the file.		*/
-				}
-				break;
-			}
-
-			case INCLUDE_FILE:
-			{
-				wisp_opt = 1;					/* Use the WISP option file.			*/
-				break;
-			}
-
-			case KEEP_STOP_RUN:
-			{
-				keepstop = 1;					/* Don't change STOP RUN statements.		*/
-				break;
-			}
-
-			case CHANGE_STOP_RUN:
-			{
-				changestop = 1;					/* Change STOP RUN statements to EXIT PROGRAM	*/
-				break;
-			}
-
-			case DELETE_RECORD_CONTAINS:				/* Delete the RECORD CONTAINS clause.		*/
-			{
-				delrecon = 1;
-				break;
-			}
-
-			case TRAP_START_TIMEOUTS:				/* Insert code to trap when START's time out.	*/
-			{
-#ifdef OLD
-				trap_start = 1;
-#endif
-				break;
-			}
-
-			case NO_WORD_SWAP:					/* Disable WSWAP function.			*/
-			{
-				swap_words = 0;
-				break;
-			}
-
-			case NO_SEQ_SEQ_OPTIONAL:				/* Disable OPTIONAL in SELECT statements.	*/
-			{
-				use_optional = 0;
-				break;
-			}
-
-			case NO_DISPLAY_PROCESSING:
-			{
-				proc_display = 0;				/* Disable processing of DISPLAY verb.		*/
-				break;
-			}
-
-			case USING_UFB:
-			{
-				int	rc;
-
-				if ('"' == o_parms[1][0])
-				{
-					strcpy(using_ufb_item.name,o_parms[1]);
-				}
-				else
-				{
-					sprintf(using_ufb_item.name,"\"%s\"",o_parms[1]);
-				}
-#ifdef TEST
-printf("USING_UFB=[%s]\n",using_ufb_item.name);
-#endif
-
-
-				if (!using_ufb_ring)
-				{
-					if(rc=ring_open((char **)&using_ufb_ring,sizeof(struct using_ufb_struct),5,5,
-							using_ufb_cmp,1))
-					{
-						write_log("WISP",'F',"RINGOPEN",
-							"Unable to open ring [using_ufb_ring] rc=%d [%s]",rc,ring_error(rc));
-						exit_wisp(EXIT_WITH_ERR);
-					}
-				}
-				
-				if (rc = ring_add(using_ufb_ring,0,&using_ufb_item))	/* Store the USING_UFB into the ring	*/
-				{
-					write_log("WISP",'F',"RINGADD",
-						"Unable to add to ring [using_ufb_ring] rc=%d [%s]",rc,ring_error(rc));
-					exit_wisp(EXIT_WITH_ERR);
-				}
-				break;
-			}
-
-			case DBFILE:
-			{
-				dbfile_add_item(o_parms[1], o_parms[2]);
-				break;
-			}
-
-			default:
-			{
-				write_log("WISP",'W',"OPTION_FILE","Error parsing option file, line is\n%s\n",tstr);
-				break;
-			}
-		}
-	}
-	fclose(opt_file);
-
-	if (wisp_opt)								/* Use the WISP option file too.		*/
-	{
-		opt_file = fopen(WISP_OPTION_FILE,"r");				/* Try the global option file.			*/
-		goto scan_opt;							/* Go do it.					*/
-	}
-}
-
-static void p_keyfile(void)							/* Read the key file.				*/
-{
-/*
-	The keyfile now has several different enteries.
-
-	#LEADING	keyname		- Correct keys with leading separate signs
-	#COMPUTATIONAL	keyname		- Change COMP keys to PIC X
-	#INCLUDE_WISP			- Include the global WISP key file
-*/
-
-
-	int i;
-	char tstr[133],*scn_ptr,*prm_ptr;
-	FILE *key_file;
-	int use_wisp;
-
-	if (!do_keyfile) return;						/* Skip it.					*/
-
-	key_file = fopen(key_fname,"r");					/* Try the local key file.			*/
-
-	if (!key_file && (do_keyfile == USE_SPECIFIC_FILE))
-	{
-		write_log("WISP",'F',"CANTFINDKEY","Key file %s not found.",key_fname);
-		exit_wisp(EXIT_WITH_ERR);
-	}
-
-scan_key:
-
-	use_wisp = 0;
-
-	if (!key_file) return;							/* No key file.					*/
-
-	while (wfgets(tstr,132,key_file))
-	{									/* Read the names of the fields.		*/
-		scn_ptr = tstr;
-		uppercase(tstr);						/* Shift whole string to uppercase		*/
-
-		i = 0;
-		do								/* scan the line and extract the parms		*/
-		{								/* skip over spaces, commas, newlines , tabs	*/
-			if ((*scn_ptr == ' ') || (*scn_ptr == ',') || (*scn_ptr == '\n') || (*scn_ptr == '\t'))
-			{
-				scn_ptr++;
-			}
-			else							/* copy this parm				*/
-			{
-				short tflag;
-				tflag = 0;
-
-				if ( *scn_ptr == '#' )
-				{
-					if      (  0==memcmp(scn_ptr,"#LEAD",5) )
-					{
-						key_list[kl_count].type = KL_LEAD;
-						tflag = 1;
-					}
-					else if (  0==memcmp(scn_ptr,"#COMP",5) )
-					{
-						key_list[kl_count].type = KL_COMP;
-						tflag = 1;
-					}
-					else if (  0==memcmp(scn_ptr,"#INCL",5) )
-					{
-						use_wisp = 1;			/* Set flag to INCLUDE wisp global keys file	*/
-					}
-					else
-					{
-						write_log("WISP",'F',"INVALIDKEYFILE",
-								"Unknown Control in Key file %5.5s.",scn_ptr);
-						exit_wisp(EXIT_WITH_ERR);
-					}
-				
-					if ( tflag )
-					{
-						for(scn_ptr +=5; 			/* Scan until white space		*/
-						    	((*scn_ptr != ' ' ) && 
-							 (*scn_ptr != ',' ) && 
-							 (*scn_ptr != '\n') && 
-							 (*scn_ptr != '\t'));  scn_ptr++);
-
-						for(scn_ptr++; 				/* Scan thru white space		*/
-						    	((*scn_ptr == ' ' ) || 
-							 (*scn_ptr == ',' ) || 
-							 (*scn_ptr == '\n') || 
-							 (*scn_ptr == '\t'));  scn_ptr++);
-
-					}
-				}
-				else						/* Assume old format & LEADING			*/
-				{
-					key_list[kl_count].type = KL_LEAD;
-					tflag = 1;
-				}
-
-				if (tflag)					/* If we have a key				*/
-				{
-					prm_ptr = key_list[kl_count].name;	/* Point to current parameter			*/
-					do
-					{					/* copy till next whitespace			*/
-						*prm_ptr++ = *scn_ptr++;
-					} while ((*scn_ptr) && (*scn_ptr != ' ') && (*scn_ptr != '\n') && (*scn_ptr != '\t'));
-					*prm_ptr = '\0';			/* null terminate				*/
-
-					key_list[kl_count].qual[0] = '\0';	/* Get the OF qual if any.			*/
-					sscanf(scn_ptr," OF %s",key_list[kl_count].qual);
-					*scn_ptr = '\0';
-					kl_count +=1;
-				}
-
-			}
-		} while (*scn_ptr);						/* till a null 					*/
-	}
-	fclose(key_file);
-
-	if (use_wisp)
-	{
-		key_file = fopen(WISP_KEY_FILE,"r");				/* Try the global key file.			*/
-		goto scan_key;
-	}
 }
 
 static void p_workfile(void)								/* Read the workfile.			*/
@@ -760,7 +441,7 @@ static void set_rlist(const char *filename)					/* Add a copy file to the list o
 
 	if (!rcpy_list_ring) 							/* There is no list.				*/
 	{
-		if ( rc = ring_open(&rcpy_list_ring,sizeof(struct rcpy_struct),10,10,rcpy_compare,1) )
+		if ( (rc = ring_open(&rcpy_list_ring,sizeof(struct rcpy_struct),10,10,rcpy_compare,1)) )
 		{
 			write_log("WISP",'F',"RINGOPEN","Unable to open ring [rcpy_list] rc=%d [%s]",rc,ring_error(rc));
 			exit_wisp(EXIT_WITH_ERR);
@@ -771,15 +452,14 @@ static void set_rlist(const char *filename)					/* Add a copy file to the list o
 	strcpy(rcpy_element.lib ,cpy_lib );
 	strcpy(rcpy_element.native ,filename );
 
-	if (rc = ring_add(rcpy_list_ring,0,&rcpy_element) )
+	if ((rc = ring_add(rcpy_list_ring,0,&rcpy_element)) )
 	{
 		write_log("WISP",'F',"RINGADD","Unable to add to ring [rcpy_list] rc=%d [%s]",rc,ring_error(rc));
 		exit_wisp(EXIT_WITH_ERR);
 	}
 }
 
-trimname(filename)								/* Trim the path etc off the file name.		*/
-char	*filename;
+int trimname(char* filename)								/* Trim the path etc off the file name.		*/
 {
 	char	buff[100];
 	int	pos;
@@ -792,7 +472,7 @@ char	*filename;
 	strcpy(buff,&filename[pos+1]);
 #endif
 
-#ifdef MSFS
+#ifdef WIN32
 	for ( pos = strlen(filename) - 1; pos >= 0; pos-- )
 	{
 		if ( filename[pos] == '\\' ) break;
@@ -804,25 +484,6 @@ char	*filename;
 	return 0;
 }
 
-
-static int using_ufb_cmp(struct using_ufb_struct *p1, struct using_ufb_struct *p2)
-{
-	int	cmp;
-
-	cmp = strcmp(p1->name, p2->name);
-	return(cmp);
-}
-
-int using_ufb_test(item)
-char	*item;
-{
-	int	rc;
-	if (!using_ufb_ring) return(0);
-
-	strcpy(using_ufb_item.name,item);
-	rc = ring_find(using_ufb_ring,&using_ufb_item,0,0);
-	return(!rc);
-}
 
 /*
 	wfgets		This is a frontend to fgets
@@ -892,7 +553,7 @@ int	copybook;
 				(FOR_INPUT==cob_file_ptr->is_open) ? "INPUT":"OUTPUT",
 				cob_file_ptr->a_file->name);
 
-	if (log_stats)
+	if (opt_log_stats)
 	{
 		printf("Opened file %s for %s %s.\n",
 					cob_file_ptr->a_file->name,
@@ -918,7 +579,7 @@ cob_file	*cob_file_ptr;
 				(FOR_INPUT==cob_file_ptr->is_open) ? "INPUT":"OUTPUT",
 				cob_file_ptr->a_file->name, cob_file_ptr->line_count);
 
-			if (log_stats)
+			if (opt_log_stats)
 			{
 				printf("Closed file %s for %s %s count=%d.\n",
 					cob_file_ptr->a_file->name,
@@ -956,9 +617,7 @@ struct dbfile_item_struct
 
 static struct dbfile_item_struct *dbfile_item_list = NULL;
 
-int dbfile_add_item(select_name, table_name)
-char	*select_name;
-char	*table_name;
+int dbfile_add_item(char* select_name, char* table_name)
 {
 	struct dbfile_item_struct *item;
 
@@ -1014,13 +673,69 @@ char	*select_name;
 /*
 **	History:
 **	$Log: wt_files.c,v $
-**	Revision 1.13.2.1  2002/09/05 19:22:31  gsl
-**	LINUX
+**	Revision 1.32  2003/03/11 19:25:07  gsl
+**	Move the load_option_file() and oad_key_file() calls to the main()
 **	
-**	Revision 1.13  2001/09/13 14:06:02  gsl
+**	Revision 1.31  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.30  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.29  2003/02/25 21:56:03  gsl
+**	cleanup some global "parm" variables
+**	
+**	Revision 1.28  2003/02/04 18:43:32  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.27  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.26  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.25  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.24  2003/01/15 18:23:33  gsl
+**	add #SIGN_TRAILING_SEPARATE support for MF
+**	
+**	Revision 1.23  2002/12/12 21:31:29  gsl
+**	When #NATIVE and Acubol then set the opt_native_acu and
+**	the opt_getlastfileop options flags
+**	
+**	Revision 1.22  2002/09/04 18:12:17  gsl
+**	LINUX unistd
+**	
+**	Revision 1.21  2002/08/13 18:47:28  gsl
+**	#DELETE_DATA_RECORDS
+**	
+**	Revision 1.20  2002/08/12 20:13:51  gsl
+**	quotes and literals
+**	
+**	Revision 1.19  2002/07/26 17:53:41  gsl
+**	FIx filename extension test.
+**	
+**	Revision 1.18  2002/07/25 17:03:41  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.17  2002/07/24 21:41:03  gsl
+**	Change directory to the location of the source file if a path is given.
+**	
+**	Revision 1.16  2002/06/21 20:49:33  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.15  2002/05/22 20:25:59  gsl
+**	#KEEP_CONFIG_COMPUTER and #TRANSLATE_CONFIG_COMPUTER options
+**	
+**	Revision 1.14  2002/05/16 21:49:13  gsl
+**	add new opt file options
+**	rework logic
+**	
+**	Revision 1.13  2001-09-13 10:06:02-04  gsl
 **	Remove VSM ifdefs
 **	add xtab file
-**	
+**
 **	Revision 1.12  1999-09-07 10:40:39-04  gsl
 **	Make local routines static and fix prototypes
 **

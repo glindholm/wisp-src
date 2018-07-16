@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_disp.c
 **
@@ -79,7 +92,7 @@ NODE parse_display(NODE the_statement, NODE the_sentence)
 		return parse_display_and_read(the_statement, the_sentence);
 	}
 	
-	if (!proc_display)
+	if (opt_nodisplay_processing)
 	{
 		write_log("WISP",'I',"SKIPDISP","Skipped processing of DISPLAY statement.");
 		tput_statement(12,the_statement);
@@ -322,7 +335,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 	{
 		if (acn_cobol)
 		{
-			write_tlog(curr_node->token, "WISP",'E',"NATIVE",
+			write_tlog(curr_node->token, "WISP",'W',"NATIVE",
 				   "ALTERED clause on DISPLAY AND READ not supported with Native Screens");
 		}
 
@@ -333,7 +346,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 	record_name = token_data(curr_node->token);
 	write_log("WISP",'I',"DISPANDREAD","DISPLAY AND READ statement of screen record %s.",record_name);
 
-	tput_scomment("*    DISPLAY AND READ %s.",record_name); 
+	tput_scomment("**** DISPLAY AND READ %s.",record_name); 
 
 											/* Try to find a match in the known	*/
 											/* screen list				*/
@@ -356,16 +369,21 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		scrn_flags[scrn_idx] |= SCRN_IN_PROCDIV;				/* Otherwise flag procedure division	*/
 	}
 
-	curr_node = curr_node->next;							/* skip to the ON keyword		*/
-	curr_node = curr_node->next;							/* skip to the file-name node		*/
+	curr_node = curr_node->next;							/* step to the ON keyword		*/
+	if (!eq_token(curr_node->token,KEYWORD,"ON"))
+	{
+		write_tlog(curr_node->token, "WISP",'F',"ONCRT","DISPLAY AND READ missing required ON crt clause.");
+		exit_with_err();
+	}
 
+	curr_node = curr_node->next;							/* step to the file-name node		*/
 	crt_name = token_data(curr_node->token);
 
 	crt_idx = crt_index(crt_name);
 	if (-1 == crt_idx)
 	{
-		write_log("WISP",'E',"NOTWS","DISPLAY AND READ on unknown Workstation file [%s]",crt_name);
-		crt_idx = 0;
+		write_tlog(curr_node->token, "WISP",'F',"NOTWS","DISPLAY AND READ on unknown Workstation file [%s]",crt_name);
+		exit_with_err();
 	}
 	scrn_crt[scrn_idx] = crt_idx;							/* Remember which one it was.		*/
 
@@ -532,7 +550,6 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 		{
 			tput_line_at(col, "IF WISP-ON-PF-KEYS(1:1) IS = \"*\" THEN");
 		}
-		tput_flush();
 
 		/*
 		**	curr_node should point to the NODE_END token of the first fragment.
@@ -545,6 +562,7 @@ NODE parse_display_and_read(NODE the_statement, NODE the_sentence)
 				   token_data(curr_node->token));
 		}
 
+		depunct_statement(trailing_fluff_node); 
 		tput_statement(col, trailing_fluff_node);
 		trailing_fluff_node = free_statement(trailing_fluff_node);
 
@@ -829,6 +847,25 @@ static NODE dnr_pfkeys_clause(NODE first_node, char* target, int col, int enter_
 /*
 **	History:
 **	$Log: wt_disp.c,v $
+**	Revision 1.29  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.28  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.27  2002/07/25 19:35:49  gsl
+**	DISPLAY AND READ ... ON crt clause is required. - add checking
+**	
+**	Revision 1.26  2002/06/20 23:07:09  gsl
+**	formatting
+**	
+**	Revision 1.25  2002/06/19 22:51:39  gsl
+**	Fix comments
+**	
+**	Revision 1.24  2002/06/18 23:49:32  gsl
+**	DISPLAY AND READ ALTERED
+**	Is a Warning for ACN instead of an Error
+**	
 **	Revision 1.23  1998/04/03 19:38:45  gsl
 **	Changed DISPLAY for ACN to call WACUDISPLAY routines
 **	

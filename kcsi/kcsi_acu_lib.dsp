@@ -217,10 +217,6 @@ SOURCE=.\rcmp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\rcvp.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\rcvs.c
 # End Source File
 # Begin Source File
@@ -321,19 +317,11 @@ SOURCE=.\vscrhelp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vscrkwfo.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\vscrout.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\vscrspky.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vscrsqz.c
 # End Source File
 # End Group
 # Begin Group "Header Files"

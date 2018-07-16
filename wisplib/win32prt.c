@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	Project:	WISPLIB 
 **
@@ -27,6 +48,8 @@ static char rcsid[]="$Id:$";
 #include "win32err.h"
 #include "wmalloc.h"
 
+#include "vssubs.h"
+
 #if defined(WIN32DEBUG)
 #include <stdarg.h>
 #endif
@@ -42,15 +65,14 @@ static char rcsid[]="$Id:$";
 
 /* calling video func in vrawntcn.. should fix this */
 extern HWND vraw_get_console_hWnd(void);
-extern int wbackground(void);
+extern int WL_wbackground(void);
 
-extern char *wforms(int formnum);
-extern char *getprmap(int num);
-extern char *wlpclass(char lpclass);
+extern char *WL_wforms(int formnum);
+extern char *WL_getprmap(int num);
+extern char *WL_wlpclass(char lpclass);
 extern int WL_fexists(char *file);
 extern int WL_fcanread(char *file);
-extern long WL_filesize(const char* path);
-
+extern long WL_filesize(const char *file);
 /*
 **	Static data
 */
@@ -122,7 +144,6 @@ static BOOL PrintRawFile(char* szPtrName, char* file);
 **	08/29/96	written by JEC
 **
 */
-#define ROUTINE 83500
 int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 printer, char *disposition, char mode)
 {
 
@@ -164,22 +185,22 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 
 	char lpszFace[32] = "Courier New";
 
-	nRC  = 0;
+	nRC  = PRINT_RC_0_SUCCESS;
 
 	if ( !WL_fexists(file) )								/* Does file exist?			*/
 	{
-		return( 20 );
+		return( PRINT_RC_20_FILE_NOT_FOUND );
 	}
 	if ( !WL_fcanread(file) )								/* Can we read the file?		*/
 	{
-		return( 28 );
+		return( PRINT_RC_28_ACCESS_DENIED );
 	}
 
 	switch(mode)
 	{
 	case 'H': /* Hold */
 	case 'K': /* Keep */
-		return(0);
+		return(PRINT_RC_0_SUCCESS);
 
 	case 'S': /* Spool and Delete */
 		bDeleteAfter = 1;
@@ -189,7 +210,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		break;
 
 	default:
-		return(60);
+		return(PRINT_RC_60_INVALID_MODE);
 	}
 
 	if (disposition)
@@ -207,14 +228,14 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		{
 			bDeleteAfter = 0;
 		}
-		else return(61);
+		else return(PRINT_RC_61_INVALID_DISP);
 	}
 
 	nSize = WL_filesize(file);
 	if ( nSize == 0 )
 	{
-		werrlog(ERRORCODE(5),file,0,0,0,0,0,0,0);
-		nRC =  24;
+		WL_wtrace("WIN32PRT","ZEROLEN","Zero lenght file not printed [%s]", file);
+		nRC =  PRINT_RC_24_INVALID_FILETYPE;
 		goto delete_after;
 	}                     
 
@@ -223,7 +244,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		goto delete_after;
 	}
 
-	szFormstr = wforms(formnum);
+	szFormstr = WL_wforms(formnum);
 	if (szFormstr && strlen(szFormstr))
 	{
 		wtrace("WIN32PRT","FORMS","Formnum=[%d] Formstr=[%s]", formnum, szFormstr);
@@ -242,8 +263,8 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		       (bLandscape)?" Landscape":"", (nDuplex)?" Duplex":"", (bWrapText)?" Wrap":"");
 	}
 	
-	szPrinterNum = getprmap(printer);
-	szPrinterCls = wlpclass(lpclass);
+	szPrinterNum = WL_getprmap(printer);
+	szPrinterCls = WL_wlpclass(lpclass);
 	
 	if (szPrinterNum && strlen(szPrinterNum))
 	{
@@ -262,9 +283,9 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		{
 			char errtxt1[1024], *errtxt2;
 			sprintf(errtxt1,"Error getting DC for default printer (%s)",szDefaultPrtName);
-			errtxt2 = GetWin32Error(errtxt1);
-			werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
-			nRC = 99;
+			errtxt2 = WL_GetWin32Error(errtxt1);
+			werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
+			nRC = PRINT_RC_99_QUEUE_NOT_AVAILABLE;
 			goto cleanup;
 		}
 		strcpy(szPrtName,szDefaultPrtName);
@@ -281,7 +302,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		{
 			if (! PrintRawFile(szPrtName, file) )
 			{
-				nRC = 99;
+				nRC = PRINT_RC_99_QUEUE_NOT_AVAILABLE;
 				goto cleanup;
 			}
 			
@@ -295,7 +316,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 	lpInitData = GetDEVMODE(szPrtName,&hPrinter);
 	if (lpInitData == NULL)
 	{
-		    nRC = 99;
+		    nRC = PRINT_RC_99_QUEUE_NOT_AVAILABLE;
 		    goto cleanup;
 	
 	}
@@ -319,20 +340,20 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 	{
 		char errtxt1[1024], *errtxt2;
 		sprintf(errtxt1,"Error creating DC for printer (%s)",szPrtName);
-		errtxt2=GetWin32Error(errtxt1);
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		errtxt2=WL_GetWin32Error(errtxt1);
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 
-		nRC = 99;
+		nRC = PRINT_RC_99_QUEUE_NOT_AVAILABLE;
 		goto cleanup;
 	}
 	
 	if ( SetAbortProc( hDC, AbortProc) == SP_ERROR )
 	{
 		char *errtxt;
-		errtxt = GetWin32Error("Error setting AbortProc");
-		werrlog(ERRORCODE(16),errtxt,0,0,0,0,0,0,0);
+		errtxt = WL_GetWin32Error("Error setting AbortProc");
+		werrlog(WERRCODE(83516),errtxt,0,0,0,0,0,0,0);
 
-		nRC = 98;
+		nRC = PRINT_RC_99_QUEUE_NOT_AVAILABLE;
 		goto cleanup;
 	}
 
@@ -343,7 +364,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 	infile = fopen(file,"r");
 	if (infile == NULL)
 	{
-		nRC = 95;
+		nRC = PRINT_RC_28_ACCESS_DENIED;
 		goto cleanup;
 	}
 	for (nIdx=0; nIdx<MAXPAGEHEIGHT; ++nIdx)
@@ -376,10 +397,10 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 delete_after:	
 	if ( bDeleteAfter )
 	{
-		nRC = unlink(file);
-		if ( nRC < 0 )
+		if ( 0 != unlink(file) )
 		{
-			werrlog(ERRORCODE(3),file,errno,0,0,0,0,0,0);
+			WL_wtrace("WIN32PRT","UNLINK","Unable to delete %s errno=%d",
+				file,errno);
 		}
 	}
 
@@ -445,7 +466,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -458,7 +479,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -471,7 +492,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -484,7 +505,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -497,7 +518,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -515,7 +536,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 				*lpnDuplex = DMDUP_VERTICAL;
 				break;
 			default:
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 				*lpnDuplex = DMDUP_SIMPLEX;
 				break;
 			}
@@ -530,7 +551,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -543,7 +564,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -556,7 +577,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -569,7 +590,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -581,7 +602,7 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
@@ -594,11 +615,11 @@ static void ParseFormstr(int formnum, char *lpszFormstr,int *lpnPageWidth,int *l
 			}
 			else
 			{
-				werrlog(ERRORCODE(10),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
+				werrlog(WERRCODE(83510),formnum,lpszKeyword,lpszValue,0,0,0,0,0);
 			}
 			continue;
 		}
-		werrlog(ERRORCODE(12),formnum,lpszKeyword,0,0,0,0,0,0);
+		werrlog(WERRCODE(83512),formnum,lpszKeyword,0,0,0,0,0,0);
 	}
 
 }
@@ -640,9 +661,9 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 		return FALSE;
 	}
 	nCopyIdx=0;
-	while (!isspace(CURCH) && CURCH!='=')
+	while (!isspace((int)CURCH) && CURCH!='=')
 	{
-		if (isalpha(CURCH))
+		if (isalpha((int)CURCH))
 		{
 			lpszKeywordBuffer[nCopyIdx] = tolower(CURCH);
 		}
@@ -657,7 +678,7 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 	SKIPWHITE;
 	if (CURCH != '=')
 	{
-		werrlog(ERRORCODE(14),formnum, *lpnPosition+3,0,0,0,0,0,0);
+		werrlog(WERRCODE(83514),formnum, *lpnPosition+3,0,0,0,0,0,0);
 		return FALSE;
 	}
 	NEXTCH;
@@ -681,7 +702,7 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 	}
 	else
 	{
-		while (!isspace(CURCH) && CURCH!= '\0')
+		while (!isspace((int)CURCH) && CURCH!= '\0')
 		{
 			lpszValueBuffer[nCopyIdx] = CURCH;
 			
@@ -693,7 +714,7 @@ static BOOL NextPair(int formnum, char *lpszFormStr, int *lpnPosition, char **lp
 	lpszValueBuffer[nCopyIdx] = '\0';
 	if (strlen(lpszKeywordBuffer)==0 || strlen(lpszValueBuffer)==0)
 	{
-		werrlog(ERRORCODE(14),formnum, *lpnPosition+3,0,0,0,0,0,0);
+		werrlog(WERRCODE(83514),formnum, *lpnPosition+3,0,0,0,0,0,0);
 		return FALSE;
 	}
 	*lppszKeyword=lpszKeywordBuffer;
@@ -790,24 +811,24 @@ static void SetupForm(HDC hDC,  int nReqCPI, int nReqLPI, LPCTSTR lpszFace, int 
 	if (hTheFont == NULL)
 	{
 		sprintf(errtxt1,"Error creating font \"%s\" [h:%d,w:%d]",lpszFace,nReqHeight,nReqWidth);
-		errtxt2 = GetWin32Error(errtxt1);
+		errtxt2 = WL_GetWin32Error(errtxt1);
 		
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 	}
 	selobjret = SelectObject(hDC, hTheFont);
 	if (selobjret == (HGDIOBJ)NULL || selobjret == (HGDIOBJ)GDI_ERROR)
 	{
 		sprintf(errtxt1,"Error calling SelectObject(%d,%d)",hDC,hTheFont);
-		errtxt2 = GetWin32Error(errtxt1);
+		errtxt2 = WL_GetWin32Error(errtxt1);
 		
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 	}
 	
 	bSuccess = GetTextMetrics(hDC, &current);
 	if (bSuccess==0)
 	{
-		errtxt2 =  GetWin32Error("GetTextMetrics");
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		errtxt2 =  WL_GetWin32Error("GetTextMetrics");
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 	}
 
 	wtrace("WIN32PRT","FONT", "TEXTMETRICS tmHeight=[%d] tmAveCharWidth=[%d] tmInternalLeading=[%d] tmExternalLeading=[%d]",
@@ -1254,8 +1275,8 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	if (!bSuccess)
 	{
 		char *errtxt2;
-		errtxt2 = GetWin32Error("GetVersionEx()");
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		errtxt2 = WL_GetWin32Error("GetVersionEx()");
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 		
 		goto gdm_cleanup;
 	}
@@ -1268,7 +1289,7 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	{
 	    dwEnumFlags = PRINTER_ENUM_LOCAL;
 	    obytes=sizeof(PRINTER_INFO_1);
-	    lpPrtEnumData = wmalloc(obytes);
+	    lpPrtEnumData = wisp_malloc(obytes);
 	    bSuccess = EnumPrinters(dwEnumFlags,NULL,(DWORD)1,lpPrtEnumData,
 				    (DWORD)obytes,&bytes,&count);
 	    /*
@@ -1278,15 +1299,15 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	    if (bytes > obytes)
 	    {
 		free(lpPrtEnumData);
-		lpPrtEnumData = wmalloc(bytes);
+		lpPrtEnumData = wisp_malloc(bytes);
 	    }
 	    bSuccess = EnumPrinters(dwEnumFlags,NULL,(DWORD)1,lpPrtEnumData,
 				    (DWORD)bytes,&bytes,&count);
 	    if ( !bSuccess )
 	    {
 		char *errtxt;
-		errtxt = GetWin32Error("EnumPrinters");
-		werrlog(ERRORCODE(16),errtxt,0,0,0,0,0,0,0);
+		errtxt = WL_GetWin32Error("EnumPrinters");
+		werrlog(WERRCODE(83516),errtxt,0,0,0,0,0,0,0);
 		
 		goto gdm_cleanup;
 	    }
@@ -1295,7 +1316,7 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	{
 	    dwEnumFlags = PRINTER_ENUM_CONNECTIONS|PRINTER_ENUM_LOCAL;
 	    obytes=sizeof(PRINTER_INFO_4);
-	    lpPrtEnumData = wmalloc(obytes);
+	    lpPrtEnumData = wisp_malloc(obytes);
 	    bSuccess = EnumPrinters(dwEnumFlags,NULL,(DWORD)4,lpPrtEnumData,
 				(DWORD)obytes,&bytes,&count);
 	    /*
@@ -1305,7 +1326,7 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	    if (bytes > obytes)
 	    {
 		free(lpPrtEnumData);
-		lpPrtEnumData = wmalloc(bytes);
+		lpPrtEnumData = wisp_malloc(bytes);
 	    }
 	    bSuccess = EnumPrinters(dwEnumFlags,NULL,(DWORD)4,lpPrtEnumData,
 				    (DWORD)bytes,&bytes,&count);
@@ -1313,8 +1334,8 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	    if ( !bSuccess )
 	    {
 		char *errtxt;
-		errtxt = GetWin32Error("EnumPrinters");
-		werrlog(ERRORCODE(16),errtxt,0,0,0,0,0,0,0);
+		errtxt = WL_GetWin32Error("EnumPrinters");
+		werrlog(WERRCODE(83516),errtxt,0,0,0,0,0,0,0);
 		
 		goto gdm_cleanup;
 	    }
@@ -1363,13 +1384,13 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	    {
 		char errtxt1[1024], *errtxt2;
 		sprintf(errtxt1,"OpenPrinter(%s)",lpEnumName);
-		errtxt2 = GetWin32Error(errtxt1);
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		errtxt2 = WL_GetWin32Error(errtxt1);
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 		
 		goto gdm_cleanup;
 	    }
 
-	    if (wbackground())
+	    if (WL_wbackground())
 	    {
 		    hWndParent = NULL;
 	    }
@@ -1383,19 +1404,19 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	    {
 		char errtxt1[1024],*errtxt2;
 		sprintf(errtxt1,"DocumentPropreties(structsize) printer(%s)",lpEnumName);
-		errtxt2=GetWin32Error(errtxt1);
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		errtxt2=WL_GetWin32Error(errtxt1);
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 		
 		goto gdm_cleanup;
 	    }
-	    retbuf = (DEVMODE *) wmalloc(nStructSize);
+	    retbuf = (DEVMODE *) wisp_malloc(nStructSize);
 	    bSuccess = DocumentProperties(hWndParent,*phPrinter,lpEnumName,retbuf,NULL,DM_OUT_BUFFER);
 	    if (bSuccess < 0)
 	    {
 		char errtxt1[1024],*errtxt2;
 		sprintf(errtxt1,"DocumentPropreties(structdata) printer(%s)",lpEnumName);
-		errtxt2=GetWin32Error(errtxt1);
-		werrlog(ERRORCODE(16),errtxt2,0,0,0,0,0,0,0);
+		errtxt2=WL_GetWin32Error(errtxt1);
+		werrlog(WERRCODE(83516),errtxt2,0,0,0,0,0,0,0);
 		
 		free(retbuf);
 		retbuf=NULL;
@@ -1406,7 +1427,7 @@ static DEVMODE *GetDEVMODE(char *printername, HANDLE *phPrinter)
 	{
 		char errtxt1[1024];
 		sprintf(errtxt1,"The printer name \"%s\" was not found.",printername);
-		werrlog(ERRORCODE(16),errtxt1,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),errtxt1,0,0,0,0,0,0,0);
 	}
 	
       gdm_cleanup:
@@ -1456,7 +1477,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 	if (!bSuccess || INVALID_HANDLE_VALUE==hPrinter)
 	{
 		sprintf(errtxt1,"OpenPrinter(%s)", szPtrName);
-		werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),WL_GetWin32Error(errtxt1),0,0,0,0,0,0,0);
 		return FALSE;
 	}
 
@@ -1471,7 +1492,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 	if (0 == dwJob)
 	{
 		sprintf(errtxt1,"StartDocPrinter(%s,1,\"RAW\")", szPtrName);
-		werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),WL_GetWin32Error(errtxt1),0,0,0,0,0,0,0);
 
 		ClosePrinter(hPrinter);	
 		return FALSE;
@@ -1483,7 +1504,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 	if ( ! StartPagePrinter( hPrinter ))
 	{
 		sprintf(errtxt1,"StartPagePrinter(%s)", szPtrName);
-		werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),WL_GetWin32Error(errtxt1),0,0,0,0,0,0,0);
 
 		EndDocPrinter( hPrinter );
 		ClosePrinter(hPrinter);	
@@ -1497,7 +1518,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 	if (!infile)
 	{
 		sprintf(errtxt1,"fopen(\"%s\",\"rb\") fialed errno=%d",file,errno);
-		werrlog(ERRORCODE(16),errtxt1,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(83516),errtxt1,0,0,0,0,0,0,0);
 		
 		EndDocPrinter( hPrinter );
 		ClosePrinter(hPrinter);	
@@ -1521,7 +1542,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 		if (ferror(infile))
 		{
 			sprintf(errtxt1,"fread(\"%s\") fialed errno=%d",file,errno);
-			werrlog(ERRORCODE(16),errtxt1,0,0,0,0,0,0,0);
+			werrlog(WERRCODE(83516),errtxt1,0,0,0,0,0,0,0);
 
 			fclose(infile);
 			EndDocPrinter( hPrinter );
@@ -1539,7 +1560,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 			if (! WritePrinter( hPrinter, &buff[offset], cnt, &dwBytesWritten))
 			{
 				sprintf(errtxt1,"WritePrinter(\"%s\",cnt=%d)", szPtrName, cnt);
-				werrlog(ERRORCODE(16),GetWin32Error(errtxt1),0,0,0,0,0,0,0);
+				werrlog(WERRCODE(83516),WL_GetWin32Error(errtxt1),0,0,0,0,0,0,0);
 
 				fclose(infile);
 				EndDocPrinter( hPrinter );
@@ -1569,15 +1590,38 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 /*
 **	History:
 **	$Log: win32prt.c,v $
-**	Revision 1.18.2.3  2002/10/09 21:43:02  gsl
-**	Huge file support
+**	Revision 1.29  2003/03/20 19:05:14  gsl
+**	Change references fo DATE to WISPDATE
 **	
-**	Revision 1.18.2.2  2002/10/09 21:17:33  gsl
-**	Huge file support
+**	Revision 1.28  2003/03/19 22:26:19  gsl
+**	Standardize PRINT RC defines
 **	
-**	Revision 1.18.2.1  2002/10/09 19:20:35  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.27  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.26  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.25  2002/12/10 17:09:14  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.24  2002/10/09 21:43:18  gsl
+**	update
+**	
+**	Revision 1.23  2002/10/04 20:55:59  gsl
+**	Change WL_filesize() to return a long
+**	
+**	Revision 1.22  2002/07/10 21:05:33  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.21  2002/07/10 04:27:34  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.20  2002/07/02 21:15:33  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.19  2002/06/26 01:42:46  gsl
+**	Remove VMS code
 **	
 **	Revision 1.18  2002/05/14 20:11:42  gsl
 **	Remove include of que_jobs.h
@@ -1637,7 +1681,7 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 **	page.
 **
 **	revision 1.5  1996-12-06 15:37:18-08  jockc                     
-**	include win32err.h for proto for GetWin32Error                  
+**	include win32err.h for proto for WL_GetWin32Error                  
 **	                                                                
 **	revision 1.4  1996-09-13 12:00:43-07  jockc                     
 **	replaced calls to perr (in vrawntcn) with calls to werrlog()..  

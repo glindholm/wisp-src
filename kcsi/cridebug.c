@@ -1,11 +1,25 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "kcsifunc.h"
 
@@ -18,44 +32,11 @@ To enable tracing set KCSITRACE=1.
 Tracing will be to $HOME/wisperr.log
 ------*/
 
-static char sccsid[]="@(#)cridebug.c	1.7 9/19/94";
 
 static int ktrace_enabled = -1;  /* -1 == not initialized */
 
-static char work_buf[101];
-
-static char *strnstr(char *str1,char *str2);
 static void mystrncpy(char *dest,char *src,int len);
-static void crid_trace(const char *str);
 static void build_in_spaces(void);
-
-/*----
-Returns a pointer to the first occurrence of str2 in str1 and is case
-insensitive. Returns NULL when not matched.
-------*/
-static char *strnstr(char *str1,char *str2)
-{
-	int ch1, ch2;
-	char *first;
-
-	for( ; *str1; ++str1)
-		{
-		first = str1;
-		for( ; *str2; ++str2, ++str1)
-			{
-			ch1 = tolower(*str1);
-			ch2 = tolower(*str2);
-			if(ch1 != ch2)
-				{
-				str1 = first;
-				break;
-				}
-			}
-		if(*str2 == 0)
-			return(first);
-		}
-	return(NULL);
-}
 
 /*----
 Copies src to dest for len bytes or until a NUL is encountered, and
@@ -107,7 +88,7 @@ void KTRACE(char *str)
 /*---
 Step in and out of levels providing in and out trace print
 ------*/
-static in_level;
+static int in_level;
 static char in_spaces[101];
 
 void static build_in_spaces(void)
@@ -150,8 +131,11 @@ void crid_func_trace_out(char *func)
 /*
 **	History:
 **	$Log: cridebug.c,v $
-**	Revision 1.9.2.1  2002/11/12 15:56:20  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.12  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.10  2002/07/25 15:20:30  gsl
 **	Globals

@@ -98,8 +98,8 @@ class token : public object {
 //
 //	History:
 //	$Log: token.hpp,v $
-//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.6  2003/02/11 19:05:27  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.5  1998/08/31 19:14:23  gsl
 //	drcs update

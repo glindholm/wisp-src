@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		vdisplay.c
 **
@@ -10,7 +31,7 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Replacement for Wang DISPLAY untility
 **
 **	Routines:	
-**	vdisplay()		Setup processing of file.
+**	WL_vdisplay()		Setup processing of file.
 **	get_line()		Compose an input line
 **	display_buffer()	Display correct size of buffer
 **	eof_trailer()		Write the start of file header
@@ -48,6 +69,10 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef unix
+#include <unistd.h>
+#endif
+
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
@@ -67,6 +92,8 @@ static char rcsid[]="$Id:$";
 #include "wispcfg.h"
 #include "vwang.h"
 #include "wsb.h"
+#include "wmalloc.h"
+#include "screen.h"
 
 #ifdef INCLUDE_VDISPIDX
 # include "vdispidx.h"
@@ -167,9 +194,8 @@ static void display_stat(int dwidth);							/* Display cursor row, col and width
 
 
 
-int vdisplay(const char *file_name,int record_size)					/* VIDEO file display subroutine.	*/
+int WL_vdisplay(const char *file_name,int record_size)					/* VIDEO file display subroutine.	*/
 {
-#define		ROUTINE		66500
 	char *lb, *lbuf[MAX_LINES_PER_SCREEN];						/* Pointer to the line input buffer.	*/
 	int bufsize;									/* Size of the line buffer.		*/
 	int eofile;									/* End of file flag.			*/
@@ -199,7 +225,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	int4	def_bgchange, def_bgcolor;
 	int	file_ok;
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
+	WL_wtrace("VDISPLAY","ENTRY","Entry into VDISPLAY File=[%s] Recsize=[%d]", file_name, record_size);
 
 	stream_active = FALSE;								/* Set default mode.			*/
 	status_active = FALSE;
@@ -212,7 +238,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	**	or in the "Wang" character set.
 	*/
 	vwang_load_charmap(0);
-	if (get_wisp_option("NATIVECHARMAP"))
+	if (WL_get_wisp_option("NATIVECHARMAP"))
 	{
 		nativecharmap = 1;
 	}
@@ -279,7 +305,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	type = vdisp_file_type(file_name);
 	if (type == VD_ERR_OPEN || type == VD_ERR_READ)
 	{
-		werrlog(ERRORCODE(6),file_name,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(66506),file_name,0,0,0,0,0,0,0);
 		return(FAILURE);							/* It is fatal so return with error.	*/
 	}
 	if (type!=VD_TYPE_TEXT)
@@ -290,62 +316,62 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	}
 #endif
 
-	if ((record_size < 0) || (record_size > 512))					/* Is record size valid.		*/
+	if (record_size < 0)								/* Is record size valid.		*/
 	{										/* Oops, invalid record size.		*/
-		werrlog(ERRORCODE(2),record_size,0,0,0,0,0,0,0);
-		vexit();								/* Unconditional exit.			*/
-		wexit(ERRORCODE(2));
+		werrlog(WERRCODE(66502),record_size,0,0,0,0,0,0,0);
+		VL_vexit();								/* Unconditional exit.			*/
+		wexit(WERRCODE(66502));
 	}
 
 	if (record_size > BUFFER_SIZE)							/* Is record size greater than buffer.	*/
 	{										/* Invalid buffer size.			*/
-		werrlog(ERRORCODE(4),BUFFER_SIZE,record_size,0,0,0,0,0,0,0);
-		vexit();								/* Unconditional exit.			*/
-		wexit(ERRORCODE(4));
+		werrlog(WERRCODE(66504),BUFFER_SIZE,record_size,0,0,0,0,0,0,0);
+		VL_vexit();								/* Unconditional exit.			*/
+		wexit(WERRCODE(66504));
 	}
 
-	vcapload();
+	VL_vcapload();
 
-	frwd_scroll_avail = vscroll_frwd_avail();
-	rvrs_scroll_avail = vscroll_rvrs_avail();
+	frwd_scroll_avail = VL_vscroll_frwd_avail();
+	rvrs_scroll_avail = VL_vscroll_rvrs_avail();
 
-	wpload();
+	WL_wpload();
 
 	first_time = TRUE;								/* First time only true the 1st time.	*/
-	op_save = voptimize(VOP_DEFER_MOTION_ONLY);					/* Select deferred optimization.	*/
+	op_save = VL_voptimize(VOP_DEFER_MOTION_ONLY);					/* Select deferred optimization.	*/
 
 newsize:
 	text_defined = FALSE;
 
-	vscreen(VSCREEN_NARROW);							/* Select a narrow screen unless VMS.	*/
+	VL_vscreen(VSCREEN_NARROW);							/* Select a narrow screen unless VMS.	*/
 	
 	/*
-	**	NOTE:	On UNIX and MSDOS the record_size will ALWAYS come in as 0 because
+	**	NOTE:	On UNIX and WIN32 the record_size will ALWAYS come in as 0 because
 	**		there is no "record size".  This is to indicate a "stream" file
 	**		that uses NewLines to determine record size.  In this case we always
 	**		set the buffer size to be the maximum.
 	*/
 
-	if (record_size) bufsize = record_size;						/* Determine the buffer size.		*/
-	else bufsize = BUFFER_SIZE;							/* Else, variable length.		*/
+ 	if (record_size != 0) bufsize = record_size;					/* Determine the buffer size.		*/
+ 	else bufsize = BUFFER_SIZE;							/* Else, variable length.		*/
 
-	get_defs(DEFAULTS_BGCHANGE,(char*)&def_bgchange);
+	WL_get_defs(DEFAULTS_BGCHANGE,(char*)&def_bgchange);
 	if (def_bgchange)								/* Set the screen background if		*/
 	{										/* not done already.			*/
-		get_defs(DEFAULTS_BGCOLOR,(char*)&def_bgcolor);
-		if (def_bgcolor) vscreen(VSCREEN_LIGHT);
-		else vscreen(VSCREEN_DARK);
+		WL_get_defs(DEFAULTS_BGCOLOR,(char*)&def_bgcolor);
+		if (def_bgcolor) VL_vscreen(VSCREEN_LIGHT);
+		else VL_vscreen(VSCREEN_DARK);
 	}
-	verase(FULL_SCREEN);
+	VL_verase(FULL_SCREEN);
 
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Allocate a screens worth of buffers. */
 	{
-		if ((lbuf[i] = malloc(bufsize+1+8)) == 0) mem_err();			/* Allocate a line buffer.		*/
+		if ((lbuf[i] = wisp_malloc(bufsize+1+8)) == 0) mem_err();		/* Allocate a line buffer.		*/
 	}
 
 	if ((input_file = fopen(file_name,FOPEN_READ_BINARY)) == NULL)		       	/* Did the file open?			*/
 	{                                                             
-		werrlog(ERRORCODE(6),file_name,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(66506),file_name,0,0,0,0,0,0,0);
 		return(FAILURE);							/* It is fatal so return with error.	*/
 	}
 
@@ -381,17 +407,17 @@ again:
 	lc = 0;										/* There are no lines in the table.	*/
 	scrl_col_cnt = 0;								/* Have not scrolled left or right yet. */
 
-	vbuffering_start();		       						/* Logical buffering on.		*/
-	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
-	vcharset(VCS_DEFAULT);								/* Default character set.		*/
-	vmove(0,0);									/* Home the cursor.			*/
-	vset_cursor_on();								/* Turn it on.				*/
+	VL_vbuffering_start();		       						/* Logical buffering on.		*/
+	VL_vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	VL_vcharset(VCS_DEFAULT);								/* Default character set.		*/
+	VL_vmove(0,0);									/* Home the cursor.			*/
+	VL_vset_cursor_on();								/* Turn it on.				*/
 
 	eofile = FALSE;									/* Not end of file yet.			*/
 	eorec = FALSE;									/* Assume not end of record yet.	*/
 	if (record_size > 0)								/* If record size specified.		*/
 	{
-		if (record_size <= vscr_wid) eorec = TRUE;				/* Record_size less then full screen.	*/
+		if (record_size <= VL_vscr_wid) eorec = TRUE;				/* Record_size less then full screen.	*/
 	}
 											/* Test first char to see what file type.*/
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Read in the first screen's worth.	*/
@@ -403,13 +429,13 @@ again:
 			if (*lbuf[i] != '\0')
 			{
 				display_buffer(lbuf[i]);				/* Display the line.			*/
-				if (i != MAX_LINES_PER_SCREEN-1) vprint("\n");		/* Move to the next line if appro.	*/
+				if (i != MAX_LINES_PER_SCREEN-1) VL_vprint("\n");		/* Move to the next line if appro.	*/
 			}
 			break;
 		}
 
 		display_buffer(lbuf[i]);						/* Display the line.			*/
-		if (i != MAX_LINES_PER_SCREEN-1) vprint("\n");				/* Move to the next line if appro.	*/
+		if (i != MAX_LINES_PER_SCREEN-1) VL_vprint("\n");				/* Move to the next line if appro.	*/
 	}
 
 	if (eofile)									/* End of file, so blank buffers.	*/
@@ -442,7 +468,7 @@ again:
 	win_just_removed = FALSE;							/* Window has not just been removed.	*/
 	err_just_removed = FALSE;							/* Error message not just removed.	*/
 
-	vmove(0,0);									/* Move to the start of the text.	*/
+	VL_vmove(0,0);									/* Move to the start of the text.	*/
 	frow = 0;									/* Init the file row and column.	*/
 	fcol = 0;
 	restart_requested = FALSE;							/* Assume restart will not be needed.	*/
@@ -455,7 +481,7 @@ again:
 			display_stat(bufsize);						/* Display cursor row, col and width.	*/
 		}
 
-		c = vgetm();								/* Get a character.			*/
+		c = VL_vgetm();								/* Get a character.			*/
 
 		/*
 		**	Translate pfkeys when in pfkeys12() mode.
@@ -471,7 +497,7 @@ again:
 		**	10 -> 15	Print file
 		**	11 -> help	Toggle to HELP
 		*/
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
 			if (c == fn12_key)
 			{
@@ -507,13 +533,13 @@ again:
 		if (errmsg_active)							/* Is there an error message visible?	*/
 		{
 			j = MAX_LINES_PER_SCREEN-1;					/* Determine the text location.		*/
-			vstate(VSTATE_SAVE);						/* Save what is going on.		*/
-			vmode(VMODE_CLEAR);						/* Clear the current mode.		*/
-			vcharset(VCS_DEFAULT);						/* Default character set.		*/
-			vmove(MAX_LINES_PER_SCREEN-1, 0);				/* Move to error area.			*/
+			VL_vstate(VSTATE_SAVE);						/* Save what is going on.		*/
+			VL_vmode(VMODE_CLEAR);						/* Clear the current mode.		*/
+			VL_vcharset(VCS_DEFAULT);						/* Default character set.		*/
+			VL_vmove(MAX_LINES_PER_SCREEN-1, 0);				/* Move to error area.			*/
 			lb = lbuf[j];							/* Get pointer to buffer.		*/
 			set_scroll_buffer(scrl_col_cnt,lb,bufsize);			/* Set ptr and display buffer.		*/
-			vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
+			VL_vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
 			errmsg_active = FALSE;						/* Now no error on the screen.		*/
 			err_just_removed = TRUE;					/* Error message just removed.		*/
 		}
@@ -522,24 +548,24 @@ again:
 		{
 			if (ssave != NULL)
 			{
-				vrss(ssave);
+				VL_vrss(ssave);
 				ssave = NULL;
 			}
 		}
 
 		if ((c == fn1_key) || (c == home_key))					/* Toggle home/reverse home.		*/
 		{
-			if (vcur_col == 0 && vcur_lin == 0)				/* If cursor in home position go oppsite*/
+			if (VL_vcur_col == 0 && VL_vcur_lin == 0)				/* If cursor in home position go oppsite*/
 			{
 				frow = frow + MAX_LINES_PER_SCREEN - 1;
-				fcol = fcol + vscr_wid - 1;
-				vmove(MAX_LINES_PER_SCREEN-1,vscr_wid-1);		/* Else go to reverse home.		*/
+				fcol = fcol + VL_vscr_wid - 1;
+				VL_vmove(MAX_LINES_PER_SCREEN-1,VL_vscr_wid-1);		/* Else go to reverse home.		*/
 			}
 			else
 			{
-				frow = frow - vcur_lin;
-				fcol = fcol - vcur_col;
-				vmove(0,0);						/* Home if not home.			*/
+				frow = frow - VL_vcur_lin;
+				fcol = fcol - VL_vcur_col;
+				VL_vmove(0,0);						/* Home if not home.			*/
 			}
 		}
 
@@ -547,9 +573,9 @@ again:
 
 		else if (c == down_arrow_key)						/* Down arrow?				*/
 		{
-			if (vcur_lin != MAX_LINES_PER_SCREEN-1)
+			if (VL_vcur_lin != MAX_LINES_PER_SCREEN-1)
 			{
-				vmove(vcur_lin+1,vcur_col);				/* Position cursor?		*/
+				VL_vmove(VL_vcur_lin+1,VL_vcur_col);				/* Position cursor?		*/
 				frow++;
 			}
 			else								/* No, so scroll a line.		*/
@@ -559,7 +585,7 @@ again:
 				if (eofile) derror("End of file encountered, no action performed.");
 				else if (!frwd_scroll_avail)				/* In no forward scroll then need to	*/
 				{							/* display manually.			*/
-					full_screen_refresh(lbuf,MAX_LINES_PER_SCREEN-1,vcur_col);
+					full_screen_refresh(lbuf,MAX_LINES_PER_SCREEN-1,VL_vcur_col);
 					frow++;
 				}
 				else frow++;
@@ -568,9 +594,9 @@ again:
 
 		else if (c == up_arrow_key)						/* Up arrow?				*/
 		{
-			if (vcur_lin != 0)
+			if (VL_vcur_lin != 0)
 			{
-				vmove(vcur_lin-1,vcur_col);				/* Move cursor?				*/
+				VL_vmove(VL_vcur_lin-1,VL_vcur_col);				/* Move cursor?				*/
 				frow--;
 			}
 			else if (fpos_tab[0] == 0) derror("Start of file encountered, no action performed.");
@@ -585,7 +611,7 @@ again:
                                           input_file,&tx,&lc,&eofile,scrl_col_cnt);
 				if (!rvrs_scroll_avail)					/* In no reverse scroll then need to	*/
 				{							/* display manually.			*/
-					full_screen_refresh(lbuf,0,vcur_col);		/* Move cursor to top of screen.	*/
+					full_screen_refresh(lbuf,0,VL_vcur_col);		/* Move cursor to top of screen.	*/
 				}
 				frow--;
 			}
@@ -593,9 +619,9 @@ again:
 
 		else if (c == left_arrow_key)						/* Left arrow?				*/
 		{
-			if (vcur_col != 0)
+			if (VL_vcur_col != 0)
 			{
-				vmove(vcur_lin,vcur_col-1);				/* Move cursor?				*/
+				VL_vmove(VL_vcur_lin,VL_vcur_col-1);				/* Move cursor?				*/
 				fcol--;
 			}
 			else if (scrl_col_cnt == 0) derror("Left edge of file encountered, no action performed.");
@@ -609,9 +635,9 @@ again:
 
 		else if (c == right_arrow_key)
 		{
-			if (vcur_col < vscr_wid-1)
+			if (VL_vcur_col < VL_vscr_wid-1)
 			{
-				vmove(vcur_lin,vcur_col+1);				/* Move cursor?				*/
+				VL_vmove(VL_vcur_lin,VL_vcur_col+1);				/* Move cursor?				*/
 				fcol++;
 			}
 			else if (eorec)
@@ -629,10 +655,10 @@ again:
 
 		else if (c == fn4_key)							/* Previous screen?			*/
 		{
-			if (fpos_tab[0] == 0 && vcur_lin == 0) derror("Already at start of file, no action performed.");
+			if (fpos_tab[0] == 0 && VL_vcur_lin == 0) derror("Already at start of file, no action performed.");
 			else if (fpos_tab[0] == 0)
 			{
-				vmove(0,vcur_col);					/* Move cursor to top of screen.	*/
+				VL_vmove(0,VL_vcur_col);					/* Move cursor to top of screen.	*/
 				frow = 0;
 			}
 			else if (lc == 0)						/* Anywhere to go?			*/
@@ -654,7 +680,7 @@ again:
 
 				if (!rvrs_scroll_avail)					/* In no reverse scroll then need to	*/
 				{							/* display manually.			*/
-					full_screen_refresh(lbuf,0,vcur_col);		/* Move cursor to top of screen.	*/
+					full_screen_refresh(lbuf,0,VL_vcur_col);		/* Move cursor to top of screen.	*/
 				}
 			}
 		}
@@ -673,14 +699,14 @@ again:
 
 				while (eofl < MAX_LINES_PER_SCREEN && 0<fpos_tab[eofl]) eofl++; /* Find last line in file.	*/
 				eofl -=1;						/* We are one line past end so backup	*/
-				if (vcur_lin == eofl) derror("At end of file, no action performed.");
+				if (VL_vcur_lin == eofl) derror("At end of file, no action performed.");
 				else
 				{
 					int cl;
 
-					cl = vcur_lin;					/* Save prior line position		*/
-					vmove(eofl,vcur_col);				/* Move cursor to end of file.		*/
-					frow = frow + (vcur_lin - cl);
+					cl = VL_vcur_lin;					/* Save prior line position		*/
+					VL_vmove(eofl,VL_vcur_col);				/* Move cursor to end of file.		*/
+					frow = frow + (VL_vcur_lin - cl);
 				}
 			}
 			else 
@@ -697,7 +723,7 @@ again:
 
 				if (!frwd_scroll_avail)
 				{
-					full_screen_refresh(lbuf,MAX_LINES_PER_SCREEN-1,vcur_col); /* Move cursor to bottom	*/
+					full_screen_refresh(lbuf,MAX_LINES_PER_SCREEN-1,VL_vcur_col); /* Move cursor to bottom	*/
 				}
 			}
 		}
@@ -707,16 +733,16 @@ again:
 		{
 			int cl;
 
-			cl = vcur_lin;
-			vmove(0,0);							/* Home before changing.		*/
-			vdefer_restore();						/* Restore from deferred actions.	*/
-			if (vscr_wid == 132) vscreen(VSCREEN_NARROW);			/* Set narrow?				*/
-			else vscreen(VSCREEN_WIDE);					/* No, then set wide.			*/
+			cl = VL_vcur_lin;
+			VL_vmove(0,0);							/* Home before changing.		*/
+			VL_vdefer_restore();						/* Restore from deferred actions.	*/
+			if (VL_vscr_wid == 132) VL_vscreen(VSCREEN_NARROW);			/* Set narrow?				*/
+			else VL_vscreen(VSCREEN_WIDE);					/* No, then set wide.			*/
 
 			sleep(1);							/* Delay to allow screen width change	*/
 
 			scr_refresh(lbuf,fpos_tab,MAX_LINES_PER_SCREEN,bufsize,scrl_col_cnt); /* Refresh the screen.	*/
-			vmove(0,0);							/* Home for consistency.		*/
+			VL_vmove(0,0);							/* Home for consistency.		*/
 			frow = frow - cl;
 			fcol = 0;
 		}
@@ -728,14 +754,14 @@ again:
 
 			if (c == fn7_key)						/* Define search text?			*/
 			{
-				vstate(VSTATE_SAVE);					/* Save where we are in the text.	*/
-				vmove(0,0);						/* Home.				*/
-				vmode(message_vmode);					/* Use the reverse rendition.		*/
-				vprint(" Search for: ");
-				vmode(edit_vmode);
-				vprint("                                                                ");
-				verase(TO_EOL);						/* Erase to the end of the line.	*/
-				vmove(0,13);						/* Move to the start of input area.	*/
+				VL_vstate(VSTATE_SAVE);					/* Save where we are in the text.	*/
+				VL_vmove(0,0);						/* Home.				*/
+				VL_vmode(message_vmode);					/* Use the reverse rendition.		*/
+				VL_vprint(" Search for: ");
+				VL_vmode(edit_vmode);
+				VL_vprint("                                                                ");
+				VL_verase(TO_EOL);						/* Erase to the end of the line.	*/
+				VL_vmove(0,13);						/* Move to the start of input area.	*/
 				i = gets0(search_text,SEARCH_TEXT_SIZE);		/* Get the string to search for.	*/
 				if (i == CHAR_CR) text_defined = TRUE;			/* The search text is now defined.	*/
 				else if (i == fn1_key || i == fn16_key)			/* Search was aborted			*/
@@ -748,9 +774,9 @@ again:
 				if (errmsg_active)					/* Is there an error message visible?	*/
 				{
 					j = MAX_LINES_PER_SCREEN-1;			/* Determine the text location.		*/
-					vmode(VMODE_CLEAR);				/* Clear the current mode.		*/
-					vcharset(VCS_DEFAULT);				/* Default character set.		*/
-					vmove(MAX_LINES_PER_SCREEN-1, 0);		/* Move to error area.			*/
+					VL_vmode(VMODE_CLEAR);				/* Clear the current mode.		*/
+					VL_vcharset(VCS_DEFAULT);				/* Default character set.		*/
+					VL_vmove(MAX_LINES_PER_SCREEN-1, 0);		/* Move to error area.			*/
 					lb = lbuf[j];					/* Get pointer to buffer.		*/
 					set_scroll_buffer(scrl_col_cnt,lb,bufsize);	/* Set ptr and display buffer.		*/
 					errmsg_active = FALSE;				/* Now no error on the screen.		*/
@@ -762,9 +788,9 @@ again:
 					lb = &search_text[0];				/* Point to the search text.		*/
 					while (*lb != CHAR_NULL)			/* Now convert to upper case.		*/
 					{
-						if (!isalpha(*lb))
+						if (!isalpha((int)*lb))
 						{
-							srch_ch_map[*lb]=TRUE;
+							srch_ch_map[(int)*lb]=TRUE;
 						}
 						else
 						{
@@ -775,12 +801,12 @@ again:
 						++lb;
 					}
 				}
-				vmove(0,0);						/* Return to the start of the line.	*/
-				vmode(VMODE_CLEAR);					/* Reset the clear rendition.		*/
+				VL_vmove(0,0);						/* Return to the start of the line.	*/
+				VL_vmode(VMODE_CLEAR);					/* Reset the clear rendition.		*/
 				lb = lbuf[0];						/* Get pointer to buffer.		*/
 				set_scroll_buffer(scrl_col_cnt,lb,bufsize);		/* Set ptr and display buffer.		*/
-				vstate(VSTATE_RESTORE);					/* Restore where we were.		*/
-				vcontrol_flush();					/* Show everything we've done.		*/
+				VL_vstate(VSTATE_RESTORE);					/* Restore where we were.		*/
+				VL_vcontrol_flush();					/* Show everything we've done.		*/
 			}
 
 			if (search_abort) { /* just fall through */ }
@@ -788,8 +814,10 @@ again:
 			else if (on_screen(search_text,lbuf,fpos_tab,postab,bufsize,	/* Is it on the current screen?		*/
 						input_file,&tx,&lc,&eofile,&eorec,&scrl_col_cnt));
 			else if (eofile) derror("Already at end of file, no action performed.");
-			else if (term_status = in_file(search_text,lbuf,fpos_tab,fpoff_tab,postab,pofftab,bufsize,input_file,
-                                                       &tx,&lc,&eofile,&eorec,&scrl_col_cnt))
+			else if ((term_status = 
+				  in_file(search_text,lbuf,fpos_tab,fpoff_tab,
+					  postab,pofftab,bufsize,input_file,
+                                          &tx,&lc,&eofile,&eorec,&scrl_col_cnt)))
 			{
 				if (term_status == 2) derror("Search aborted.");	/* Search function has been aborted.	*/
 			}
@@ -814,7 +842,7 @@ again:
 				aborted = FALSE;
 				on = 0;							/* Working counters.			*/
 				check_time = 0;
-				vset_cursor_off();					/* Don't need the cursor for a while.	*/
+				VL_vset_cursor_off();					/* Don't need the cursor for a while.	*/
 				while (!eofile)						/* Loop to find the end of the file.	*/
 				{
 					eofile = roll_up(lbuf,fpos_tab,fpoff_tab,postab,pofftab,
@@ -826,7 +854,7 @@ again:
 						check_time = 0;				/* Reset the counter.			*/
 						on = work_message(on);			/* Output flashing working message.	*/
 
-						if (vcheck() != 0)
+						if (VL_vcheck() != 0)
 						{
 							aborted = TRUE;
 							break;				/* Break out of working loop.		*/
@@ -838,10 +866,10 @@ again:
 
 				ff_flag = FALSE; /* Temp fix to misc highlighting bug */
 
-				vstate(VSTATE_SAVE);					/* Save what we're doing.		*/
+				VL_vstate(VSTATE_SAVE);					/* Save what we're doing.		*/
 				scr_refresh(lbuf,fpos_tab,MAX_LINES_PER_SCREEN,bufsize,scrl_col_cnt); /* Refresh screen.	*/
-				vstate(VSTATE_RESTORE);					/* Restore what we were doing.		*/
-				vset_cursor_on();					/* Now restore the flashing cursor.	*/
+				VL_vstate(VSTATE_RESTORE);					/* Restore what we were doing.		*/
+				VL_vset_cursor_on();					/* Now restore the flashing cursor.	*/
 
 				if (aborted) derror("Move to bottom of file aborted.  Positioned at aborted screen.");
 			}
@@ -854,9 +882,9 @@ again:
 			*/
 			if (scrl_col_cnt == 0)
 			{
-				if (vcur_col > 0 )
+				if (VL_vcur_col > 0 )
 				{
-					vmove(vcur_lin,0);				/* Move cursor to beginning of line.	*/
+					VL_vmove(VL_vcur_lin,0);				/* Move cursor to beginning of line.	*/
 					fcol = 0;
 				}
 				else derror("Already at left edge of file, no action performed.");
@@ -889,7 +917,7 @@ again:
 
 				hscrl_cnt = scrl_col_cnt;
 				scrl_col_cnt += PAGE_SCROLL_COLS;			/* Roll left defined number of cols.	*/
-				if (scrl_col_cnt > (bufsize - vscr_wid)) scrl_col_cnt = bufsize - vscr_wid;
+				if (scrl_col_cnt > (bufsize - VL_vscr_wid)) scrl_col_cnt = bufsize - VL_vscr_wid;
 				roll_left_right(lbuf,fpos_tab,bufsize,input_file,&eorec,scrl_col_cnt);
 				fcol = fcol + (scrl_col_cnt - hscrl_cnt);
 			}
@@ -898,18 +926,17 @@ again:
 		else if (c == fn11_key)							/* Change current buffer size?		*/
 		{									/*  (record length)			*/
 			int	cl;
-			int4	tsize;
 
-			cl = vcur_lin;
+			cl = VL_vcur_lin;
 			text_defined = FALSE;
-			vstate(VSTATE_SAVE);						/* Save where we are in the text.	*/
-			vmove(0,0);							/* Home.				*/
-			vmode(message_vmode);						/* Use the reverse rendition.		*/
-			vprint(" Enter record length: ");
-			vmode(edit_vmode);
-			vprint("                                                                ");
-			verase(TO_EOL);							/* Erase to the end of the line.	*/
-			vmove(0,23);							/* Move to the start of input area.	*/
+			VL_vstate(VSTATE_SAVE);						/* Save where we are in the text.	*/
+			VL_vmove(0,0);							/* Home.				*/
+			VL_vmode(message_vmode);						/* Use the reverse rendition.		*/
+			VL_vprint(" Enter record length: ");
+			VL_vmode(edit_vmode);
+			VL_vprint("                                                                ");
+			VL_verase(TO_EOL);							/* Erase to the end of the line.	*/
+			VL_vmove(0,23);							/* Move to the start of input area.	*/
 			i = gets0(search_num,SEARCH_NUM_SIZE);				/* Get the record length.		*/
 			if (i == CHAR_CR) text_defined = TRUE;				/* The value is now defined.		*/
 			else if (i == fn1_key || i == fn16_key)				/* Change was aborted			*/
@@ -921,35 +948,36 @@ again:
 			if (search_num[0] == CHAR_NULL) text_defined = FALSE;		/* Not defined if nothing entered.	*/
 			if ( text_defined )
 			{
+				int4	tsize;
 				if (field2int4(search_num, strlen(search_num), &tsize))
 				{
-					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
+					werrlog(WERRCODE(66514),search_num,0,0,0,0,0,0,0,0);
 				}
 				else if (tsize > BUFFER_SIZE || tsize < 0)		/* Zero is valid; means variable	*/
 				{
-					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
+					werrlog(WERRCODE(66514),search_num,0,0,0,0,0,0,0,0);
 				}
 				else if (strlen(search_num) > SEARCH_NUM_SIZE)
 				{
-					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
+					werrlog(WERRCODE(66514),search_num,0,0,0,0,0,0,0,0);
 				}
 				else
 				{
-					verase(FULL_SCREEN);				/* Make sure is really erased.		*/
+					VL_verase(FULL_SCREEN);				/* Make sure is really erased.		*/
 					record_size = tsize;				/* Set the new record size.		*/
 					viewing = FALSE;				/* Stop viewing.			*/
 					new_size_requested = TRUE;			/* Asked for a new record size.		*/
 				}
 			}
 
-			vmove(0,0);							/* Return to the start of the line.	*/
-			vmode(VMODE_CLEAR);						/* Reset the clear rendition.		*/
+			VL_vmove(0,0);							/* Return to the start of the line.	*/
+			VL_vmode(VMODE_CLEAR);						/* Reset the clear rendition.		*/
 			frow = frow - cl;				
 			fcol = 0;
 			lb = lbuf[0];							/* Get pointer to buffer.		*/
 			set_scroll_buffer(scrl_col_cnt,lb,bufsize);			/* Set ptr and display buffer.		*/
-			vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
-			vcontrol_flush();						/* Show everything we've done.		*/
+			VL_vstate(VSTATE_RESTORE);					/* Restore where we were.		*/
+			VL_vcontrol_flush();						/* Show everything we've done.		*/
 		}
 
 		else if (c == fn12_key)							/* Toggle the display of the status line*/
@@ -959,7 +987,7 @@ again:
 				status_active = FALSE;					/* If on then turn off.			*/
 				if (ssave != NULL)
 				{
-					vrss(ssave);						
+					VL_vrss(ssave);						
 					ssave = NULL;
 				}
 			}
@@ -990,10 +1018,10 @@ again:
 			char errstr[80], temp[5];
 			int	linesize;
 
-			linesize = (vscr_wid < bufsize) ? vscr_wid : bufsize;
+			linesize = (VL_vscr_wid < bufsize) ? VL_vscr_wid : bufsize;
 
 			size = ((linesize+1+8) * MAX_LINES_PER_SCREEN);			/* Compute the size.			*/
-			if ((text = malloc(size)) == 0) mem_err();			/* Allocate a screen buffer.		*/
+			if ((text = wisp_malloc(size)) == 0) mem_err();			/* Allocate a screen buffer.		*/
 
 			ttxt = text;
 			for (i = 0; i < MAX_LINES_PER_SCREEN; i++)			/* Init screen buffer to print. */
@@ -1012,10 +1040,10 @@ again:
 											/*  to the printer.			*/
 			memset(filelibvol,' ',22);
 			memset(filelibvol,'#',2);
-			memcpy(&filelibvol[2],wanguid3(),3);
+			memcpy(&filelibvol[2],WL_wanguid3(),3);
 			memset(&filelibvol[5],' ',22-5); /* fix bug */
 			retcd = 0;
-			retcd = di_write_file(text,size,linesize,filelibvol,filelibvol);
+			retcd = WL_di_write_file(text,size,linesize,filelibvol,filelibvol);
 			if (!retcd)
 			{
 				strcpy(errstr,"Current screen has been spooled to printer.");
@@ -1037,12 +1065,12 @@ again:
 			char	def_prt_mode, def_prt_class;
 			int4	def_prt_form;
 
-			get_defs(DEFAULTS_PM,&def_prt_mode);
-			get_defs(DEFAULTS_PC,&def_prt_class);
-			get_defs(DEFAULTS_FN,&def_prt_form);
+			WL_get_defs(DEFAULTS_PM,&def_prt_mode);
+			WL_get_defs(DEFAULTS_PC,&def_prt_class);
+			WL_get_defs(DEFAULTS_FN,&def_prt_form);
 
 			retcd = 0;
-			wprint(file_name,def_prt_mode,"DS",1,def_prt_class,def_prt_form,&retcd);
+			WL_wprint(file_name,def_prt_mode,"DS",1,def_prt_class,def_prt_form,&retcd);
 			if (!retcd)
 			{
 				strcpy(errstr,file_name);
@@ -1060,7 +1088,7 @@ again:
 			derror(errstr);
 		}
 
-		else if (c == fn17_key && pfkeys12())					/* Option screen 			*/
+		else if (c == fn17_key && WL_pfkeys12())				/* Option screen 			*/
 		{
 			show_help(file_name,1);
 			win_active = TRUE;
@@ -1081,10 +1109,10 @@ again:
 
 	if (ssave != NULL)
 	{
-		vrss(ssave);
+		VL_vrss(ssave);
 		ssave = NULL;
 	}
-	vbuffering_end();								/* Dump all buffers.			*/
+	VL_vbuffering_end();								/* Dump all buffers.			*/
 	if (restart_requested) goto again;						/* Start again if requested.		*/
 
 #ifdef NOT_YET
@@ -1093,15 +1121,15 @@ again:
 	fclose(input_file);								/* Close the file we were viewing.	*/
 
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++) free(lbuf[i]);			/* Loop through all screen lines.	*/
-	vmove(0,0);									/* Home before changing.		*/
-	vdefer_restore();								/* Restore from deferred states.	*/
+	VL_vmove(0,0);									/* Home before changing.		*/
+	VL_vdefer_restore();								/* Restore from deferred states.	*/
 	if (new_size_requested) goto newsize;						/* Start again with new record size.	*/
-	vscreen(VSCREEN_NARROW);							/* Restore to a narrow screen.		*/
+	VL_vscreen(VSCREEN_NARROW);							/* Restore to a narrow screen.		*/
 #ifdef unix
 	sleep(1);									/* Delay to allow screen width change	*/
 #endif
-	voptimize(op_save);								/* Restore optimization.		*/
-	vcontrol_flush();								/* Dump the buffer.			*/
+	VL_voptimize(op_save);								/* Restore optimization.		*/
+	VL_vcontrol_flush();								/* Dump the buffer.			*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
@@ -1129,7 +1157,7 @@ static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize
 	char 	*l_lb;
 	int	inpos, outpos, tcnt, num;
 	int	eoline, eofile;								/* End of line and file flags.		*/
-	int	c, cnt_off, i=0;
+	int	c, cnt_off;
 	unsigned char the_char;
 
 	eofile = FALSE;									/* Assume not end of file.		*/
@@ -1240,7 +1268,7 @@ static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize
 					}
 				}
 
-				if (terminal_control_char(the_char))
+				if (vwang_terminal_control_char(the_char))
 				{
 					/*
 					**	Control characters display as '.'
@@ -1275,27 +1303,27 @@ static void display_buffer(char *lb)							/* Display correct size of buffer.	*/
 	clb = lb;									/* Set to start of buffer.		*/
 	erasefl = FALSE;
 	np = 0;
-	for (pos = 0; pos < vscr_wid; pos++)						/* Do until at correct position for	*/
+	for (pos = 0; pos < VL_vscr_wid; pos++)						/* Do until at correct position for	*/
 	{										/* the current screen size.		*/
 		if (*clb++ == CHAR_NULL)
 		{
 			erasefl = TRUE;							/* Make sure erases to end of line.	*/
-			pos = vscr_wid;							/* Set so gets out of loop.		*/
+			pos = VL_vscr_wid;							/* Set so gets out of loop.		*/
 		}
 		else np++;
 	}
 	csave = lb[np];									/* Save the char at last pos on screen. */ 
 	lb[np] = CHAR_NULL;								/* Stuff a null so displays correctly.	*/
-	md_save = vcur_atr;								/* Save the current mode.		*/
+	md_save = VL_vcur_atr;								/* Save the current mode.		*/
 	if (ff_flag)
 	{
-		vmode(VMODE_BOLD);
+		VL_vmode(VMODE_BOLD);
 		ff_flag = FALSE;
 	}
-	vprint("%s",lb);								/* Display the line.			*/
-	if ((vcur_col < vscr_wid-1) || erasefl ) verase(TO_EOL);			/* Erase to the end of the line.	*/
+	VL_vprint("%s",lb);								/* Display the line.			*/
+	if ((VL_vcur_col < VL_vscr_wid-1) || erasefl ) VL_verase(TO_EOL);			/* Erase to the end of the line.	*/
 	lb[np] = csave;									/* Put character back into the buffer.	*/
-	vmode(md_save);									/* Put back to what it was.		*/
+	VL_vmode(md_save);									/* Put back to what it was.		*/
 }
 
 static void eof_trailer(const char *file_name)						/* Write the start of file header.	*/
@@ -1305,24 +1333,24 @@ static void eof_trailer(const char *file_name)						/* Write the start of file h
 	const char *prefix = "End of file: ";
 	char lb[256];
 
-	memset(lb,'-',vscr_wid);							/* Store spaces across the line.	*/
-	lb[vscr_wid] = '\0';
+	memset(lb,'-',VL_vscr_wid);							/* Store spaces across the line.	*/
+	lb[VL_vscr_wid] = '\0';
 
 	size = strlen(file_name) + strlen(prefix);
-	if (size >= (unsigned)vscr_wid)
+	if (size >= (unsigned)VL_vscr_wid)
 	{
 		pos = 2;
 	}
 	else
 	{
-		pos = (vscr_wid - size)/2;
+		pos = (VL_vscr_wid - size)/2;
 		pos = (pos < 2) ? 2 : pos;
 	}
 
 	str_insert(&lb[pos],prefix);							/* Insert header message.		*/
 	str_insert(&lb[pos+strlen(prefix)],file_name);					/* Insert the file name.		*/
-	lb[vscr_wid] = '\0';								/* Null terminate the string.		*/
-	vmode(VMODE_CLEAR);								/* Clear the rendition flag.		*/
+	lb[VL_vscr_wid] = '\0';								/* Null terminate the string.		*/
+	VL_vmode(VMODE_CLEAR);								/* Clear the rendition flag.		*/
 	display_buffer(lb);								/* Display the line.			*/
 }
 
@@ -1349,17 +1377,17 @@ static void show_help(const char *file_name, int options12)				/* Show the help 
 	strcpy(l_filen,file_name);							/* Copy file_name to local copy.	*/
 
 	columns = 62;									/* The help area is 62 columns wide.	*/
-	lhs = (vscr_wid - columns)/2;							/* Center the help screen.		*/
+	lhs = (VL_vscr_wid - columns)/2;							/* Center the help screen.		*/
 
-	vstate(VSTATE_SAVE);								/* Save the current screen state.	*/
-	vmove(WINDOW_TOP-1,lhs-1);							/* Draw the outline box.		*/
-	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
-	vmove(WINDOW_TOP-1,lhs-1+columns);
-	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
-	vmove(WINDOW_TOP-1,lhs-1);
-	vline(VLINE_HORIZONTAL,columns+1);
-	vmove(WINDOW_TOP+WINDOW_ROWS,lhs-1);
-	vline(VLINE_HORIZONTAL,columns+1);
+	VL_vstate(VSTATE_SAVE);								/* Save the current screen state.	*/
+	VL_vmove(WINDOW_TOP-1,lhs-1);							/* Draw the outline box.		*/
+	VL_vline(VLINE_VERTICAL,WINDOW_ROWS+2);
+	VL_vmove(WINDOW_TOP-1,lhs-1+columns);
+	VL_vline(VLINE_VERTICAL,WINDOW_ROWS+2);
+	VL_vmove(WINDOW_TOP-1,lhs-1);
+	VL_vline(VLINE_HORIZONTAL,columns+1);
+	VL_vmove(WINDOW_TOP+WINDOW_ROWS,lhs-1);
+	VL_vline(VLINE_HORIZONTAL,columns+1);
 
 	for (i = 0; i < 64; i++) string[i] = ' ';					/* Initialize the working string.	*/
 	str_insert(&string[2],"Displaying file");					/* Insert the file indicator.		*/
@@ -1374,73 +1402,73 @@ static void show_help(const char *file_name, int options12)				/* Show the help 
 
 	i = WINDOW_TOP;									/* Point the help area.			*/
 
-	vmode(high_message_vmode);							/* Do it in reverse underscore,		*/
+	VL_vmode(high_message_vmode);							/* Do it in reverse underscore,		*/
 
-	vmove(i++,lhs);
-	vprint("%s",string);								/* Print the file name.			*/
+	VL_vmove(i++,lhs);
+	VL_vprint("%s",string);								/* Print the file name.			*/
 
-	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
-	vmode(message_vmode);								/* Do it in reverse.			*/
+	VL_vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	VL_vmode(message_vmode);								/* Do it in reverse.			*/
 
-	vmove(i++,lhs);	vprint(				"  Use the arrow keys to scroll up, down, left and right.     ");
+	VL_vmove(i++,lhs);	VL_vprint(				"  Use the arrow keys to scroll up, down, left and right.     ");
 
 	if (options12)
 	{
-		vmove(i++,lhs);	vprint(			"   (1) - Home cursor   (2) - File top      (3) - Bottom      ");
-		vmove(i++,lhs);	vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (1) - Home cursor   (2) - File top      (3) - Bottom      ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
 		if (stream_active)
 		{
-			vmove(i++,lhs);	vprint(		"   (6) - Record size   (7) - Toggle status (8) - Record Mode ");
+			VL_vmove(i++,lhs);	VL_vprint(		"   (6) - Record size   (7) - Toggle status (8) - Record Mode ");
 		}
 		else
 		{
-			vmove(i++,lhs);	vprint(		"   (6) - Change width  (7) - Toggle status (8) - Stream Mode ");
+			VL_vmove(i++,lhs);	VL_vprint(		"   (6) - Change width  (7) - Toggle status (8) - Stream Mode ");
 		}
-		vmove(i++,lhs);	vprint(			"   (9) - Print screen (10) - Print file                      ");
-		vmove(i++,lhs);	vprint(			"  (11) - Options      (12) - Exit                            ");
-		vmove(i++,lhs);	vprint(			"                                                             ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (9) - Print screen (10) - Print file                      ");
+		VL_vmove(i++,lhs);	VL_vprint(			"  (11) - Options      (12) - Exit                            ");
+		VL_vmove(i++,lhs);	VL_vprint(			"                                                             ");
 	}
 	else
 	{
-		vmove(i++,lhs);	vprint(			"   (1) - Home cursor   (2) - File top       (3) - Bottom     ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (1) - Home cursor   (2) - File top       (3) - Bottom     ");
 #if defined(WIN32)
-		vmove(i++,lhs);	vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
 #else
-		if (vscr_wid == 132)
+		if (VL_vscr_wid == 132)
 		{
-			vmove(i++,lhs);	vprint(		"   (4) - Prev screen   (5) - Next screen    (6) - 80 col     ");
+			VL_vmove(i++,lhs);	VL_vprint(		"   (4) - Prev screen   (5) - Next screen    (6) - 80 col     ");
 		}
 		else 
 		{
-			vmove(i++,lhs);	vprint(		"   (4) - Prev screen   (5) - Next screen    (6) - 132 col    ");
+			VL_vmove(i++,lhs);	VL_vprint(		"   (4) - Prev screen   (5) - Next screen    (6) - 132 col    ");
 		}
 #endif
-		vmove(i++,lhs);	vprint(			"   (7) - Find string   (8) - Find next                       ");
-		vmove(i++,lhs);	vprint(			"   (9) - Scroll left  (10) - Scroll right                    ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (7) - Find string   (8) - Find next                       ");
+		VL_vmove(i++,lhs);	VL_vprint(			"   (9) - Scroll left  (10) - Scroll right                    ");
 
-		if (pfkeys12())
+		if (WL_pfkeys12())
 		{
-			vmove(i++,lhs);	vprint(		"  (11) - Options      (12) - Exit                            ");
-			vmove(i++,lhs);	vprint(		"                                                             ");
+			VL_vmove(i++,lhs);	VL_vprint(		"  (11) - Options      (12) - Exit                            ");
+			VL_vmove(i++,lhs);	VL_vprint(		"                                                             ");
 		}
 		else
 		{
 			if (stream_active)
 			{
-				vmove(i++,lhs);	vprint(	"  (11) - Record size  (12) - Toggle status (13) - Record Mode");
+				VL_vmove(i++,lhs);	VL_vprint(	"  (11) - Record size  (12) - Toggle status (13) - Record Mode");
 			}
 			else
 			{
-				vmove(i++,lhs);	vprint(	"  (11) - Change width (12) - Toggle status (13) - Stream Mode");
+				VL_vmove(i++,lhs);	VL_vprint(	"  (11) - Change width (12) - Toggle status (13) - Stream Mode");
 			}
-			vmove(i++,lhs);	vprint(		"  (14) - Print screen (15) - Print file    (16) - Exit       ");
+			VL_vmove(i++,lhs);	VL_vprint(		"  (14) - Print screen (15) - Print file    (16) - Exit       ");
 		}
 	}
 	
-	vmove(i++,lhs);	vprint(				"  Depress any key to remove this window.                     ");
-	vmove(i++,lhs);	vprint(				"  Use the HELP key to bring this window back.                ");
+	VL_vmove(i++,lhs);	VL_vprint(				"  Depress any key to remove this window.                     ");
+	VL_vmove(i++,lhs);	VL_vprint(				"  Use the HELP key to bring this window back.                ");
 
-	vstate(VSTATE_RESTORE);								/* Reset rendition to normal.		*/
+	VL_vstate(VSTATE_RESTORE);								/* Reset rendition to normal.		*/
 }
 
 static void rep_limit(void)								/* Report the limit of upward scroll.	*/
@@ -1450,45 +1478,45 @@ static void rep_limit(void)								/* Report the limit of upward scroll.	*/
 	register int i;									/* Working counter.			*/
 
 	columns = 60;									/* Width of the report area.		*/
-	vbell();									/* Let him/her have an audio alert.	*/
-	while (vcheck() != 0);								/* Flush all type ahead.		*/
+	VL_vbell();									/* Let him/her have an audio alert.	*/
+	while (VL_vcheck() != 0);								/* Flush all type ahead.		*/
 
-	lhs = (vscr_wid - columns)/2;							/* Center the help screen.		*/
+	lhs = (VL_vscr_wid - columns)/2;							/* Center the help screen.		*/
 
-	vstate(VSTATE_SAVE);								/* Save the current screen state.	*/
-	vmove(WINDOW_TOP-1,lhs-1);							/* Draw the outline box.		*/
-	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
-	vmove(WINDOW_TOP-1,lhs-1+columns);
-	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
-	vmove(WINDOW_TOP-1,lhs-1);
-	vline(VLINE_HORIZONTAL,columns+1);
-	vmove(WINDOW_TOP+WINDOW_ROWS,lhs-1);
-	vline(VLINE_HORIZONTAL,columns+1);
+	VL_vstate(VSTATE_SAVE);								/* Save the current screen state.	*/
+	VL_vmove(WINDOW_TOP-1,lhs-1);							/* Draw the outline box.		*/
+	VL_vline(VLINE_VERTICAL,WINDOW_ROWS+2);
+	VL_vmove(WINDOW_TOP-1,lhs-1+columns);
+	VL_vline(VLINE_VERTICAL,WINDOW_ROWS+2);
+	VL_vmove(WINDOW_TOP-1,lhs-1);
+	VL_vline(VLINE_HORIZONTAL,columns+1);
+	VL_vmove(WINDOW_TOP+WINDOW_ROWS,lhs-1);
+	VL_vline(VLINE_HORIZONTAL,columns+1);
 
 	i = WINDOW_TOP;									/* Point the help area.			*/
-	vmode(high_message_vmode);							/* Do it in reverse underscore,		*/
-	vmove(i++,lhs);
-	vprint("                Reverse Scroll Limit Reached               ");		/* Print the message header.		*/
+	VL_vmode(high_message_vmode);							/* Do it in reverse underscore,		*/
+	VL_vmove(i++,lhs);
+	VL_vprint("                Reverse Scroll Limit Reached               ");		/* Print the message header.		*/
 
-	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
-	vmode(message_vmode);								/* Do it in reverse.			*/
-	vmove(i++,lhs);
-	vprint("  It is not possible to scroll backwards beyond this point ");
-	vmove(i++,lhs);
-	vprint("  because the reverse movement limit has been reached.  In ");
-	vmove(i++,lhs);
-	vprint("  order to view text in front of this screen, use option 2 ");
-	vmove(i++,lhs);
-	vprint("  to go to the start of this file and then scroll forward. ");
-	vmove(i++,lhs);
-	vprint("                                                           ");
-	vmove(i++,lhs);
-	vprint("                                                           ");
-	vmove(i++,lhs);
-	vprint("                                                           ");
-	vmove(i++,lhs);
-	vprint("  Depress any key to remove this message...                ");
-	vstate(VSTATE_RESTORE);								/* Reset rendition to normal.		*/
+	VL_vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	VL_vmode(message_vmode);								/* Do it in reverse.			*/
+	VL_vmove(i++,lhs);
+	VL_vprint("  It is not possible to scroll backwards beyond this point ");
+	VL_vmove(i++,lhs);
+	VL_vprint("  because the reverse movement limit has been reached.  In ");
+	VL_vmove(i++,lhs);
+	VL_vprint("  order to view text in front of this screen, use option 2 ");
+	VL_vmove(i++,lhs);
+	VL_vprint("  to go to the start of this file and then scroll forward. ");
+	VL_vmove(i++,lhs);
+	VL_vprint("                                                           ");
+	VL_vmove(i++,lhs);
+	VL_vprint("                                                           ");
+	VL_vmove(i++,lhs);
+	VL_vprint("                                                           ");
+	VL_vmove(i++,lhs);
+	VL_vprint("  Depress any key to remove this message...                ");
+	VL_vstate(VSTATE_RESTORE);								/* Reset rendition to normal.		*/
 }
 
 static void clear_window(char *lbuf[],int roll_cnt,int bufsize)				/* Subroutine to clear the help area.	*/
@@ -1499,19 +1527,19 @@ static void clear_window(char *lbuf[],int roll_cnt,int bufsize)				/* Subroutine
 
 	if ((j = WINDOW_TOP - 1) >= MAX_LINES_PER_SCREEN) j = j - MAX_LINES_PER_SCREEN; /* Get the first line.			*/
 
-	vstate(VSTATE_SAVE);								/* Save all the event info.		*/
-	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
-	vcharset(VCS_DEFAULT);								/* Clear the current character set.	*/
+	VL_vstate(VSTATE_SAVE);								/* Save all the event info.		*/
+	VL_vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	VL_vcharset(VCS_DEFAULT);								/* Clear the current character set.	*/
 
 	for (i = WINDOW_TOP-1; i < WINDOW_TOP + WINDOW_ROWS + 1; i++)			/* Loop through the whole help area.	*/
 	{
-		vmove(i,0);								/* Move to the start of the line.	*/
+		VL_vmove(i,0);								/* Move to the start of the line.	*/
 		lb = lbuf[j];								/* Point to this line buffer.		*/
 		set_scroll_buffer(roll_cnt,lb,bufsize);					/* Set ptr and display buffer.		*/
 		j++;									/* Move to the next line.		*/
 		if (j >= MAX_LINES_PER_SCREEN) j = 0;					/* Did we wrap around?			*/
 	}
-	vstate(VSTATE_RESTORE);								/* Restore where we were.		*/
+	VL_vstate(VSTATE_RESTORE);								/* Restore where we were.		*/
 }
 
 /*
@@ -1529,42 +1557,42 @@ static void clear_window(char *lbuf[],int roll_cnt,int bufsize)				/* Subroutine
 static int work_message(int on)								/* Display the working message.		*/
 {
 	int lhs;									/* Left hand side of display.		*/
-	register int i;									/* Working register.			*/
+	register int i=0;								/* Working register.			*/
 
-	vstate(VSTATE_SAVE);								/* Save wher we are.			*/
+	VL_vstate(VSTATE_SAVE);								/* Save wher we are.			*/
 
-	lhs = (vscr_wid - 16)/2;							/* center the message			*/
+	lhs = (VL_vscr_wid - 16)/2;							/* center the message			*/
 
 	if (on == 0)									/* First time?				*/
 	{
-		vmove(WINDOW_TOP,lhs-2);						/* Draw the outline box.		*/
-		vline(VLINE_VERTICAL,3);
-		vmove(WINDOW_TOP,lhs+13);
-		vline(VLINE_VERTICAL,3);
-		vmove(WINDOW_TOP,lhs-2);
-		vline(VLINE_HORIZONTAL,16);
-		vmove(WINDOW_TOP+2,lhs-2);
-		vline(VLINE_HORIZONTAL,16);
+		VL_vmove(WINDOW_TOP,lhs-2);						/* Draw the outline box.		*/
+		VL_vline(VLINE_VERTICAL,3);
+		VL_vmove(WINDOW_TOP,lhs+13);
+		VL_vline(VLINE_VERTICAL,3);
+		VL_vmove(WINDOW_TOP,lhs-2);
+		VL_vline(VLINE_HORIZONTAL,16);
+		VL_vmove(WINDOW_TOP+2,lhs-2);
+		VL_vline(VLINE_HORIZONTAL,16);
 	}
 
 	if (on <= 0)
 	{
-		vmove(WINDOW_TOP+1,lhs-1);						/* Move to the clear area.		*/
-		vmode(VMODE_CLEAR);							/* Clear it out.			*/
-		vprint("              ");						/* Output spaces.			*/
+		VL_vmove(WINDOW_TOP+1,lhs-1);						/* Move to the clear area.		*/
+		VL_vmode(VMODE_CLEAR);							/* Clear it out.			*/
+		VL_vprint("              ");						/* Output spaces.			*/
 		i = 1;									/* Turn on next time.			*/
 	}
 
 	if (on >= 0)									/* On or off?				*/
 	{
-		vmove(WINDOW_TOP+1,lhs);						/* Move to the info area.		*/
-		vmode(message_vmode);							/* Select something noticeable.		*/
-		vprint(" Working... ");							/* Display the working message.		*/
+		VL_vmove(WINDOW_TOP+1,lhs);						/* Move to the info area.		*/
+		VL_vmode(message_vmode);							/* Select something noticeable.		*/
+		VL_vprint(" Working... ");							/* Display the working message.		*/
 		i = -1;									/* Turn off the next time.		*/
 	}
 
-	vstate(VSTATE_RESTORE);								/* Restore where we were.		*/
-	vcontrol_flush();								/* Show what is going on.		*/
+	VL_vstate(VSTATE_RESTORE);								/* Restore where we were.		*/
+	VL_vcontrol_flush();								/* Show what is going on.		*/
 	return(i);									/* Return the new state.		*/
 }
 
@@ -1602,14 +1630,14 @@ static int roll_up(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *
 	{
 		if (send_out)								/* Do they want output?			*/
 		{
-			vstate(VSTATE_SAVE);						/* Save where we are.			*/
+			VL_vstate(VSTATE_SAVE);						/* Save where we are.			*/
 			if (frwd_scroll_avail)
 			{
-				vmove(MAX_LINES_PER_SCREEN-1,vcur_col);			/* Move to the bottom line.		*/
-				vprint("\n");						/* Scroll forward.			*/
+				VL_vmove(MAX_LINES_PER_SCREEN-1,VL_vcur_col);			/* Move to the bottom line.		*/
+				VL_vprint("\n");						/* Scroll forward.			*/
 				set_scroll_buffer(roll_cnt,temp_line,bufsize);		/* Set ptr and display buffer.		*/
 			}
-			vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
+			VL_vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
 		}
 
 		pt[*tx] = fpos_tab[0];							/* Remember position of line off top.	*/
@@ -1639,11 +1667,11 @@ static void roll_down(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int
 
 	if (*lc != 0)									/* Can we still scroll backwards?	*/
 	{
-		vstate(VSTATE_SAVE);							/* Save where we were.			*/
+		VL_vstate(VSTATE_SAVE);							/* Save where we were.			*/
 		if (rvrs_scroll_avail)
 		{
-			vmove(0,0);							/* Move to the top of the screen.	*/
-			vnewline(VLF_REVERSE);						/* Scroll backwards.			*/
+			VL_vmove(0,0);							/* Move to the top of the screen.	*/
+			VL_vnewline(VLF_REVERSE);						/* Scroll backwards.			*/
 		}
 		*tx = *tx - 1;								/* Decrement the index.			*/
 		if (*tx < 0) *tx = POSITION_TABLE_SIZE-1;				/* Wrap around as appropriate.		*/
@@ -1655,7 +1683,7 @@ static void roll_down(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int
 
 		if (!e)									/* If was a successful seek.		*/
 		{
-			if ((temp_line = (char*)malloc(bufsize+1+8)) == 0) mem_err(); /* Allocate a line buffer	*/
+			if ((temp_line = (char*)wisp_malloc(bufsize+1+8)) == 0) mem_err(); /* Allocate a line buffer	*/
 			get_line(temp_line,&temp_position,&temp_pos_offset,bufsize,input_file); /* Get another line.		*/
 			if (rvrs_scroll_avail) set_scroll_buffer(roll_cnt,temp_line,bufsize); /* Set ptr and display buffer.	*/
 			adjust_buffers(lbuf,fpos_tab,fpoff_tab,2);			/* Adjust data buffers down one.	*/
@@ -1664,7 +1692,7 @@ static void roll_down(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int
 			fpos_tab[0] = temp_position;					/* Remember the new position.		*/
 			free(temp_line);
 		}
-		vstate(VSTATE_RESTORE);							/* Restore where we were.		*/
+		VL_vstate(VSTATE_RESTORE);							/* Restore where we were.		*/
 
 		e = fseek(input_file,temp_fp,0);					/* Reset to read bottom line again.	*/
 		*eofile = FALSE;							/* Cannot be at end of file anymore.	*/
@@ -1679,26 +1707,26 @@ static void roll_left_right(char *lbuf[], int4 fpos_tab[], int bufsize,FILE *inp
 	int sc,sl;									/* Variable to save current cursor pos. */
 	int cont;									/* Continue flag.			*/
 
-	sl = vcur_lin;									/* Save the current cursor position.	*/
-	sc = vcur_col;
+	sl = VL_vcur_lin;									/* Save the current cursor position.	*/
+	sc = VL_vcur_col;
 
 	*eorec = FALSE;									/* Assume not at end of record.		*/
 	cont = TRUE;
 	i = 0;										/* Set to current top of screen ptr.	*/
 	c = 0;
-	vbuffering_start();
+	VL_vbuffering_start();
 	while (cont)									/* Read in a new screen's worth.	*/
 	{
 		lb = lbuf[c];								/* Make a working copy.			*/
-		vmove(c,0);								/* Move to beginning of the line.	*/
+		VL_vmove(c,0);								/* Move to beginning of the line.	*/
 		set_scroll_buffer(roll_cnt,lb,bufsize);					/* Set ptr and display buffer.		*/
 		i++;									/* Increment current line counter.	*/
 		c++;									/* Increment # of lines scrolled.	*/
 		if ((c >= MAX_LINES_PER_SCREEN) || (fpos_tab[i] == -1)) cont = FALSE;
 	}
-	vmove(sl,sc);									/* Put cursor in original position.	*/
-	vbuffering_end();
-	if (roll_cnt >= bufsize - vscr_wid) *eorec = TRUE;				/* Set end of buffer/record.		*/
+	VL_vmove(sl,sc);									/* Put cursor in original position.	*/
+	VL_vbuffering_end();
+	if (roll_cnt >= bufsize - VL_vscr_wid) *eorec = TRUE;				/* Set end of buffer/record.		*/
 }
 
 static void set_scroll_buffer(int roll_cnt, char *lb, int bufsize)			/* Set pointer to buffer to be at the	*/
@@ -1746,8 +1774,8 @@ static int on_screen(char *search_text, char *lbuf[], int4 fpos_tab[],int4 *pt, 
 	int first_in;									/* Flag so will step past if first line.*/
 	int k;										/* Tab count so display cursor correctly*/
 
-	i = vcur_lin;									/* Set to the current line.		*/
-	j = *roll_cnt + vcur_col;							/* Set to the current column in buffer. */
+	i = VL_vcur_lin;									/* Set to the current line.		*/
+	j = *roll_cnt + VL_vcur_col;							/* Set to the current column in buffer. */
 	if ((j+1) >= bufsize)								/* At the edge of the buffer?		*/
 	{
 		j = 0;									/* Yes, so start on the next line.	*/
@@ -1770,25 +1798,25 @@ static int on_screen(char *search_text, char *lbuf[], int4 fpos_tab[],int4 *pt, 
 			int clin;
 
 			clin = j + k;							/* Assign position on current screen.	*/
-			if (clin >= *roll_cnt + vscr_wid)				/* Is to right of current screen.	*/
+			if (clin >= *roll_cnt + VL_vscr_wid)				/* Is to right of current screen.	*/
 			{								/* Set up scroll column count.		*/
-				while (clin >= *roll_cnt + vscr_wid) *roll_cnt = *roll_cnt + vscr_wid;
-				if (*roll_cnt > bufsize - vscr_wid) *roll_cnt = bufsize - vscr_wid;
+				while (clin >= *roll_cnt + VL_vscr_wid) *roll_cnt = *roll_cnt + VL_vscr_wid;
+				if (*roll_cnt > bufsize - VL_vscr_wid) *roll_cnt = bufsize - VL_vscr_wid;
 				roll_left_right(lbuf,fpos_tab,bufsize,input_file,eorec,*roll_cnt);
 				clin = clin - *roll_cnt;				/* Set cursor position on new screen.	*/
 			}
 			else if (clin < *roll_cnt)					/* Is to left of current screen.	*/
 			{								/* Set up scroll column count.		*/
-				while (clin < *roll_cnt) *roll_cnt = *roll_cnt - vscr_wid;
+				while (clin < *roll_cnt) *roll_cnt = *roll_cnt - VL_vscr_wid;
 				if (*roll_cnt < 0) *roll_cnt = 0;			/* Can only scroll to beg. of line.	*/
 				roll_left_right(lbuf,fpos_tab,bufsize,input_file,eorec,*roll_cnt);
 			}
-			if (clin > vscr_wid) clin = clin - *roll_cnt;			/* Set so is on current screen.		*/
+			if (clin > VL_vscr_wid) clin = clin - *roll_cnt;			/* Set so is on current screen.		*/
 
-			frow += i - vcur_lin;
+			frow += i - VL_vcur_lin;
 			fcol = *roll_cnt + clin;
 
-			vmove(i,clin);							/* Move to where the string is.		*/
+			VL_vmove(i,clin);							/* Move to where the string is.		*/
 			return(TRUE);							/* And we're all done.			*/
 		}
 		i++;									/* Move to the next line		*/
@@ -1800,8 +1828,8 @@ static int on_screen(char *search_text, char *lbuf[], int4 fpos_tab[],int4 *pt, 
 
 static int stx(char *string, char *mask)						/* Get string index in another string.	*/
 {
-	register m_idx, s_idx, cmpval;
-	register int m_len, s_len;
+	int m_idx, s_idx, cmpval;
+	int m_len, s_len;
 	int save;
 
 	m_len = srch_len - 1;
@@ -1821,7 +1849,7 @@ static int stx(char *string, char *mask)						/* Get string index in another str
 		if (m_idx < 0) return s_idx + 1;
 		else
 		{
-			while (srch_ch_map[string[s_idx]] && (save-s_idx < m_len)) --s_idx;
+			while (srch_ch_map[(int)string[s_idx]] && (save-s_idx < m_len)) --s_idx;
 			save = s_idx += m_len + 1;
 			m_idx = m_len;
 		}
@@ -1866,10 +1894,10 @@ static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[
 	tx_save = *tx;									/* Save the position table index.	*/
 	lc_save = *lc;									/* Save the position table counter.	*/
 	pos_save = get_pos(input_file);							/* Save where we are in the file.	*/
-	lin_save = vcur_lin;								/* Remember the cursor position.	*/
-	col_save = vcur_col;
+	lin_save = VL_vcur_lin;								/* Remember the cursor position.	*/
+	col_save = VL_vcur_col;
 
-	vset_cursor_off();								/* Don't need the cursor for a while.	*/
+	VL_vset_cursor_off();								/* Don't need the cursor for a while.	*/
 	on = 0;										/* Working counters.			*/
 	check_time = 0;
 	found = FALSE;									/* Haven't found the string yet.	*/
@@ -1916,7 +1944,7 @@ static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[
 					lines_scrolled = i;
 				}
 				scr_refresh(lbuf,fpos_tab,lines_read,bufsize,*roll_cnt);	/* Yes, then write the string.	*/
-				vmove(MAX_LINES_PER_SCREEN-(2+lines_scrolled),vscr_wid-1); /* Move to the end of previous line. */
+				VL_vmove(MAX_LINES_PER_SCREEN-(2+lines_scrolled),VL_vscr_wid-1); /* Move to the end of previous line. */
 				on_screen(search_text,lbuf,fpos_tab,pt,bufsize,input_file,
 						tx,lc,eofile,eorec,roll_cnt);
 			}
@@ -1928,7 +1956,7 @@ static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[
 					check_time = 0;					/* Reset the counter.			*/
 					on = work_message(on);				/* Output flashing working message.	*/
 
-					if (vcheck() != 0)				/* Check of a keypress interupt		*/
+					if (VL_vcheck() != 0)				/* Check of a keypress interupt		*/
 					{
 						for (i = 0; i < MAX_LINES_PER_SCREEN; i++) /* Restore the current data buffers. */
 						{
@@ -1940,7 +1968,7 @@ static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[
 						*tx = tx_save;				/* Restore the position table index.	*/
 						*lc = lc_save;				/* Restore the position table counter.	*/
 						fseek(input_file,pos_save,0);		/* Restore the file position pointer.	*/
-						vmove(lin_save,col_save);		/* Now move back to where we were.	*/
+						VL_vmove(lin_save,col_save);		/* Now move back to where we were.	*/
 						found = 2;				/* Set so will display correct message. */
 						break;					/* Break out of working loop.		*/
 					}
@@ -1958,13 +1986,13 @@ static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[
 			*tx = tx_save;							/* Restore the position table index.	*/
 			*lc = lc_save;							/* Restore the position table counter.	*/
 			fseek(input_file,pos_save,0);					/* Restore the file position pointer.	*/
-			vmove(lin_save,col_save);					/* Now move back to where we were.	*/
+			VL_vmove(lin_save,col_save);					/* Now move back to where we were.	*/
 			*eofile = FALSE;						/* No longer end of file.		*/
 		}
 	}
 
 	clear_window(lbuf,*roll_cnt,bufsize);						/* Clear away the area.			*/
-	vset_cursor_on();								/* Now restore the flashing cursor.	*/
+	VL_vset_cursor_on();								/* Now restore the flashing cursor.	*/
 	return(found);
 }
 
@@ -1979,21 +2007,21 @@ static void scr_refresh(char *lbuf[],int4 fpos_tab[],int lines,int bufsize,int r
 
 	if (lines < MAX_LINES_PER_SCREEN-1)						/* Write the whole screen?		*/
 	{
-		vmove(MAX_LINES_PER_SCREEN-1,0);					/* No so move to the bottom.		*/
-		for (i = 0; i < lines; i++) vprint("\n");				/* Scroll up.				*/
+		VL_vmove(MAX_LINES_PER_SCREEN-1,0);					/* No so move to the bottom.		*/
+		for (i = 0; i < lines; i++) VL_vprint("\n");				/* Scroll up.				*/
 		k = MAX_LINES_PER_SCREEN - lines;					/* Determine where to start.		*/
 		j = k;
 	}
 
 	for (i = k; i < MAX_LINES_PER_SCREEN; i++)					/* Now display the file.		*/
 	{
-		vmove(i,0);								/* Move to the start of the line.	*/
+		VL_vmove(i,0);								/* Move to the start of the line.	*/
 		lb = lbuf[j];								/* Get pointer to current buffer.	*/
 		set_scroll_buffer(roll_cnt,lb,bufsize);					/* Set pointer to current scroll column.*/
 		j++;									/* Move to the next line.		*/
 		if (j >= MAX_LINES_PER_SCREEN) j = 0;					/* Handle the wrap around.		*/
 	}
-	vmove(MAX_LINES_PER_SCREEN-1,vscr_wid-1);					/* Move to the standard cursor pos.	*/
+	VL_vmove(MAX_LINES_PER_SCREEN-1,VL_vscr_wid-1);					/* Move to the standard cursor pos.	*/
 }
 
 /*
@@ -2017,7 +2045,7 @@ static void scr_refresh(char *lbuf[],int4 fpos_tab[],int lines,int bufsize,int r
 */
 static void adjust_buffers(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int direction)
 {
-	register int i;
+	register int i=0;
 	char *tbufa;
 
 	if (direction == 1)								/* Move buffers forward one.		*/
@@ -2048,38 +2076,38 @@ static void adjust_buffers(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int dir
 static void full_screen_refresh(char *lbuf[], int row,int col)
 {
 	int	i;
-	verase(FULL_SCREEN);
+	VL_verase(FULL_SCREEN);
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Display screen's worth.		*/
 	{
 		display_buffer(lbuf[i]);						/* Display the line.			*/
-		if (i != MAX_LINES_PER_SCREEN-1) vprint("\n");				/* Move to next line if appro.	*/
+		if (i != MAX_LINES_PER_SCREEN-1) VL_vprint("\n");				/* Move to next line if appro.	*/
 	}
-	vmove(row,col);									/* Reposition the cursor		*/
+	VL_vmove(row,col);									/* Reposition the cursor		*/
 }
 
 static void derror(char *text)								/* Error message reporting routine	*/
 {
 	int col, lin, mod, set;								/* Save locations.			*/
 	
-	lin = vcur_lin;									/* Save what we're doing.		*/
-	col = vcur_col;
-	set = vchr_set;
-	mod = vcur_atr;
+	lin = VL_vcur_lin;									/* Save what we're doing.		*/
+	col = VL_vcur_col;
+	set = VL_vchr_set;
+	mod = VL_vcur_atr;
 
-	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
-	vmode(high_message_vmode);							/* Select the reverse rendition.	*/
-	vcharset(VCS_DEFAULT);								/* Assume the default position.		*/
-	vmove(MAX_LINES_PER_SCREEN-1,0);						/* Move to the error location.		*/
-	if (text[0] != ' ') vbell();							/* Ring the bells.			*/
-	vprint("%s",text);								/* Print the error message.		*/
+	VL_vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	VL_vmode(high_message_vmode);							/* Select the reverse rendition.	*/
+	VL_vcharset(VCS_DEFAULT);								/* Assume the default position.		*/
+	VL_vmove(MAX_LINES_PER_SCREEN-1,0);						/* Move to the error location.		*/
+	if (text[0] != ' ') VL_vbell();							/* Ring the bells.			*/
+	VL_vprint("%s",text);								/* Print the error message.		*/
 
-	while (vcur_col < vscr_wid-1) vprint(" ");					/* Space to the end of line.		*/
+	while (VL_vcur_col < VL_vscr_wid-1) VL_vprint(" ");					/* Space to the end of line.		*/
 
-	vmove(lin,col);									/* Restore where we were.		*/
-	vmode(mod);
-	vcharset(set);
+	VL_vmove(lin,col);									/* Restore where we were.		*/
+	VL_vmode(mod);
+	VL_vcharset(set);
 
-	while (vcheck() != 0);								/* Purge all type ahead.		*/
+	while (VL_vcheck() != 0);								/* Purge all type ahead.		*/
 	errmsg_active = TRUE;								/* Now we have an error message.	*/
 }
 
@@ -2095,26 +2123,26 @@ static int gets0(char *string, int count)
 
 	if (count)										/* Does he want any chars?	*/
 	{
-		vmode(VMODE_CLEAR);
-		vmode(edit_vmode);
+		VL_vmode(VMODE_CLEAR);
+		VL_vmode(edit_vmode);
 
 		while ((i < count) && !term)							/* Repeat until term or full.	*/
 		{
-			c = vgetm();								/* Get the meta character.	*/
+			c = VL_vgetm();								/* Get the meta character.	*/
 
 			if (errmsg_active)							/* Error message?		*/
 			{
-				lin = vcur_lin;							/* Save what we are doing.	*/
-				col = vcur_col;
-				set = vchr_set;
-				mod = vcur_atr;
-				vmove(MAX_LINES_PER_SCREEN-1,0);				/* Erase the error message.	*/
-				vmode(VMODE_CLEAR);
-				vcharset(VCS_DEFAULT);
-				verase(TO_EOL);
-				vmode(edit_vmode);
-				vcharset(set);
-				vmove(lin,col);
+				lin = VL_vcur_lin;							/* Save what we are doing.	*/
+				col = VL_vcur_col;
+				set = VL_vchr_set;
+				mod = VL_vcur_atr;
+				VL_vmove(MAX_LINES_PER_SCREEN-1,0);				/* Erase the error message.	*/
+				VL_vmode(VMODE_CLEAR);
+				VL_vcharset(VCS_DEFAULT);
+				VL_verase(TO_EOL);
+				VL_vmode(edit_vmode);
+				VL_vcharset(set);
+				VL_vmove(lin,col);
 			}
 
 			if (c == return_key || c == enter_key) term = c = CHAR_CR;		/* Return terminator.		*/
@@ -2123,7 +2151,7 @@ static int gets0(char *string, int count)
 			{
 				if (i)								/* Anything to rub out?		*/
 				{
-					vprint("\010 \010");					/* Rub out the last char.	*/
+					VL_vprint("\010 \010");					/* Rub out the last char.	*/
 					i = i - 1;						/* Set counter back one char.	*/
 				}
 			}
@@ -2142,7 +2170,7 @@ static int gets0(char *string, int count)
 			{
 				while (i)							/* Continue until all gone.	*/
 				{
-					vprint("\010 \010");					/* Rub out the last char.	*/
+					VL_vprint("\010 \010");					/* Rub out the last char.	*/
 					i = i - 1;						/* Set counter back one char.	*/
 				}
 			}
@@ -2154,7 +2182,7 @@ static int gets0(char *string, int count)
 
 			else
 			{
-				vputc((char)c);							/* Echo the character.		*/
+				VL_vputc((char)c);							/* Echo the character.		*/
 				string[i++] = (char)c;						/* Record the string.		*/
 			}
 		}
@@ -2177,16 +2205,14 @@ static int gets0(char *string, int count)
 
 static int4 get_pos(FILE *input_file)							/* Get the position of a record.	*/
 {
-	long ftell();									/* ftell returns a int4eger.	*/
-
 	return(ftell(input_file));							/* Return the record position.		*/
 }
 
 static void mem_err(void)								/* Memory error - could not allocate	*/
 {											/* the needed memory.			*/
-	werrlog(ERRORCODE(8),0,0,0,0,0,0,0,0);
-	vexit();									/* Unconditional exit.			*/
-	wexit(ERRORCODE(8));
+	werrlog(WERRCODE(66508),0,0,0,0,0,0,0,0);
+	VL_vexit();									/* Unconditional exit.			*/
+	wexit(WERRCODE(66508));
 }
 
 
@@ -2312,7 +2338,7 @@ static loadblock()
 		mallsize = (256 * 1024) - 100;						/* Next use 256K			*/
 	}
 
-	if (ptr = malloc(mallsize))							/* Malloc a memory block		*/
+	if (ptr = wisp_malloc(mallsize))							/* Malloc a memory block		*/
 	{
 		memblock[blocks_loaded].blockptr = ptr;
 	}
@@ -2361,7 +2387,7 @@ static int check_empty(const char *file_name)						/* See if the file is empty.	
 
 	if ((fh = fopen(file_name,FOPEN_READ_BINARY)) == NULL)				/* Did the file open?			*/
 	{
-		werrlog(ERRORCODE(6),file_name,0,0,0,0,0,0,0);
+		werrlog(WERRCODE(66506),file_name,0,0,0,0,0,0,0);
 		return(1);								/* It is fatal so return with error.	*/
 	}
 	fgetc(fh);
@@ -2379,24 +2405,83 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 
 	if (ssave == NULL)
 	{
-		ssave = vsss(MAX_LINES_PER_SCREEN-2, vscr_wid-dlen, 1, dlen);		/* Save what is on the screen.		*/
+		ssave = VL_vsss(MAX_LINES_PER_SCREEN-2, VL_vscr_wid-dlen, 1, dlen);		/* Save what is on the screen.		*/
 	}
 
-	vstate(VSTATE_SAVE);
-	vmode(message_vmode);								/* Select the reverse rendition.	*/
-	vcharset(VCS_DEFAULT);								/* Assume the default position.		*/
-	vmove(MAX_LINES_PER_SCREEN-2, vscr_wid - dlen);					/* Move to the status location.		*/
+	VL_vstate(VSTATE_SAVE);
+	VL_vmode(message_vmode);								/* Select the reverse rendition.	*/
+	VL_vcharset(VCS_DEFAULT);								/* Assume the default position.		*/
+	VL_vmove(MAX_LINES_PER_SCREEN-2, VL_vscr_wid - dlen);					/* Move to the status location.		*/
 	sprintf(tstr,"(%d,%d) %d",frow+1,fcol+1,dwidth);				/* Display as 1 based.			*/
-	vprint("%-14.14s",tstr);
-	vstate(VSTATE_RESTORE);
+	VL_vprint("%-14.14s",tstr);
+	VL_vstate(VSTATE_RESTORE);
 }
 
 /*
 **	History:
 **	$Log: vdisplay.c,v $
-**	Revision 1.45.2.1  2002/10/09 19:20:33  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.66  2003/06/20 15:37:45  gsl
+**	VL_ globals
+**	
+**	Revision 1.65  2003/04/07 15:56:57  gsl
+**	Unneed ftell() declaration
+**	
+**	Revision 1.64  2003/03/12 18:18:10  gsl
+**	FIx -Wall warnings
+**	
+**	Revision 1.63  2003/02/20 23:14:34  gsl
+**	Add OPTIONS get to DISPLAY utility that gets the record size RECSIZE
+**	
+**	Revision 1.62  2003/02/04 18:43:32  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.61  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.60  2003/02/04 16:02:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.59  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.58  2002/12/10 20:54:10  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.57  2002/12/10 17:09:15  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.56  2002/12/09 21:09:33  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.55  2002/07/17 17:26:01  gsl
+**	fix vbuffering_end problem
+**	
+**	Revision 1.54  2002/07/16 14:11:47  gsl
+**	VL_ globals
+**	
+**	Revision 1.53  2002/07/16 13:40:19  gsl
+**	VL_ globals
+**	
+**	Revision 1.52  2002/07/15 20:16:01  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.51  2002/07/15 17:52:50  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.50  2002/07/10 21:05:26  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.49  2002/07/10 04:27:35  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.48  2002/07/09 04:13:57  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.47  2002/07/02 21:15:30  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.46  2002/06/25 15:21:54  gsl
+**	Change to use wmalloc()
 **	
 **	Revision 1.45  2001/10/15 13:55:17  gsl
 **	change vwang_set_videocap() to vwang_init_video()
@@ -2417,7 +2502,7 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 **	testing if empty.
 **
 **	Revision 1.40  1998-05-21 13:26:40-04  gsl
-**	CHange to load costar vmode's dynamically
+**	CHange to load costar VL_vmode's dynamically
 **
 **	Revision 1.39  1998-04-22 15:51:37-04  gsl
 **	Fix warnings
@@ -2427,7 +2512,7 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 **	will assume Wang character set encoding
 **
 **	Revision 1.37  1997-12-19 10:34:56-05  gsl
-**	Change to use terminal_control_char() routines
+**	Change to use vwang_terminal_control_char() routines
 **
 **	Revision 1.36  1997-12-18 21:00:06-05  gsl
 **	Replace the DISPLAYCHARMAP with NATIVECHARMAP processing.
@@ -2452,14 +2537,14 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 **	Change to use new video.h interfaces
 **
 **	Revision 1.29  1997-01-11 18:21:37-05  gsl
-**	Add a verase(FULL_SCREEN) after the vscreen() because it may not
+**	Add a VL_verase(FULL_SCREEN) after the VL_vscreen() because it may not
 **	clear the screen.
 **
 **	Revision 1.28  1996-11-18 15:37:11-08  gsl
 **	Force scrolling off for WIN32 and MSDOS
 **
 **	Revision 1.27  1996-11-13 17:21:01-08  gsl
-**	changed to use vcontrol_flush()
+**	changed to use VL_vcontrol_flush()
 **
 **	Revision 1.26  1996-11-04 15:53:47-08  gsl
 **	Add a call to vwang_set_videocap()
@@ -2509,7 +2594,7 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
  * drcs state V3_3_14
  *
  * Revision 1.11  1995/04/06  08:04:43  gsl
- * change vmode() calls to work with costar
+ * change VL_vmode() calls to work with costar
  *
  * Revision 1.10  1995/04/05  13:38:32  gsl
  * change to use new video.h defines

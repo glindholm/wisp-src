@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		vwang.c
 **
@@ -11,30 +32,30 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	
 **	vwang()
-**	ws_fkey()
-**	ws_mod()
+**	vwang_ws_fkey()
+**	vwang_ws_mod()
 **	ws_clear()
-**	ws_bad_char()
-**	ws_sof()
-**	ws_eof()
-**	ws_erap()
-**	ws_help()
-**	wpushscr()
-**	wpopscr()
-**	ws80()
-**	ws132()
-**	wscharat()
+**	vwang_bad_char()
+**	vwang_ws_sof()
+**	vwang_ws_eof()
+**	vwang_ws_erap()
+**	vwang_help()
+**	vwang_wpushscr()
+**	vwang_wpopscr()
+**	WS80()
+**	WS132()
+**	vwang_charat()
 **	SETFACS()
 **	SET8BIT()
-**	valid_char_data()
-**	fac()
-**	unfac()
-**	fac_pre_vwang()
-**	unfac_pre_vwang()
+**	vwang_valid_char_data()
+**	vwang_fac()
+**	vwang_unfac()
+**	vwang_fac_pre_filter()
+**	vwang_unfac_pre_filter()
 **	vwang_aid()
-**	set_aid()
+**	vwang_set_aid()
 **	vwang_timeout()
-**	meta_aid()
+**	vwang_meta_aid()
 **	use_custom_vwang()
 **	custom_vwang()
 **      vwang_title()
@@ -73,7 +94,6 @@ static char rcsid[]="$Id:$";
 #include "vchinese.h"
 
 #include "idsistd.h"
-#include "cobrun.h"
 #include "wperson.h"									/* Include struct of personality file.	*/
 #include "vwang.h"									/* Include wisp/video interface defs.	*/
 #include "wglobals.h"									/* Include wisp globals.		*/
@@ -88,7 +108,6 @@ static char rcsid[]="$Id:$";
 #include "wispcfg.h"
 
 #include "werrlog.h"									/* Include error logging definitions.	*/
-#define ROUTINE		67000
 
 /*
 **	Structures and Defines
@@ -159,7 +178,7 @@ struct EDIT
 #define FAC_EDIT_UPPER 0xfd
 #define FAC_EDIT_UPLOW 0xfc
 
-#define DEFAULT_ATTR	(FAC_PROTECTED_ON | FAC_RENDITION_DIM)				/* Default attr_map value		*/
+#define DEFAULT_ATTR	(FAC_PROTECTED_ON | FAC_RENDITION_DIM)			/* Default attr_map value		*/
 #define IS_PRINTABLE_CHAR(the_char,the_max) \
         (   (EIGHT_BIT_DATA==the_max && the_char > 0 && the_char <= the_max) \
          || (SEVEN_BIT_DATA==the_max && the_char > 0 && the_char <= the_max && is_printable[the_char]) )
@@ -176,8 +195,8 @@ struct EDIT
 **	Globals and Externals
 */
 
-int rts_first = TRUE;									/* First time flag.			*/
-											/* next 'Wisp' screen data structure.	*/
+static int rts_first = TRUE;							/* First time flag.			*/
+										/* next 'Wisp' screen data structure.	*/
 
 /*
 **	Static data.
@@ -189,8 +208,8 @@ static unsigned char tt_term2wang[256];		/* Terminal character set to Wang chara
 static unsigned char tt_wang2term[128];		/* Wang character set to Terminal character set translation table */
 static signed char is_printable[128];		/* Which Wang characters are printable 0=no -1=yes */
 
-static int wcurwidth = WS_DEFAULT_COLUMNS_PER_LINE;					/* Current screen width.		*/
-static struct wscrn_struct *wscrn_stack = 0;						/* Global storage for the addr of the	*/
+static int wcurwidth = WS_DEFAULT_COLUMNS_PER_LINE;	/* Current screen width.		*/
+static struct wscrn_struct *wscrn_stack = 0;		/* Global storage for the addr of the	*/
 
 static int use_user_fac_table = FALSE;	  /* flag means use user's table in current vwang instance */
 static int restore_fac_table = TRUE;	  /* flag means restore the default table */
@@ -271,11 +290,15 @@ static int max_data_range = SEVEN_BIT_DATA;
 
 static struct EDIT *the_edit=NULL;
 
+#ifdef EDITWRAPDBG
 static char spaces[WSB_COLS]={' '};
-static int edit_window = FALSE;
 static FILE *foo=NULL;
+#endif
 
-static unsigned char dummy_term[2], dummy_no_mod[2];
+static int edit_window = FALSE;
+
+static char dummy_term[2];
+static unsigned char dummy_no_mod[2];
 
 static char *function_name[] = {
 		"ZERO",
@@ -302,13 +325,25 @@ static char	*costar_after_write_api = NULL;
 
 static int	w4w_tabstop_vmode = W4W_TABSTOP_VMODE;
 
+static int	opt_nullisdot = 0;
+
 /*
 **	Function Prototypes
 */
 
-static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, unsigned char *no_mod, int do_pseudo);
-static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned char *terminate_list,unsigned char *pfkey,
-			unsigned char *no_mod,int do_pseudo,int pseudo2space);
+static int ws_write(unsigned char *wsb, 
+		    unsigned char lines, 
+		    int do_mod_only, 
+		    unsigned char *no_mod, 
+		    int do_pseudo);
+static int ws_read(unsigned char *wsb,
+		   unsigned char lines,
+		   int read_mode,
+		   const char *terminate_list,
+		   char *pfkey,			
+		   unsigned char *no_mod,
+		   int do_pseudo,
+		   int pseudo2space);
 static int mod_pb(unsigned char c,unsigned char last_atr,int do_pseudo);
 static int ws_posit(int up, int right, int do_pseudo);
 static int ws_tag_alt(int alt_read, int row, int col, unsigned char *no_mod);		/* Set flags on altered fields.		*/
@@ -351,8 +386,9 @@ static int in_edit(int row, int col);
 static void edit_init_struct(void);
 static void edit_init_window(void);
 static void edit_erase_box(void);
-static void edit_main(int input,int row,int col,int *filling,unsigned char *terminate_list,
-		unsigned char *pfkey,unsigned char *no_mod);
+static void edit_main(int input,int row,int col,int *filling,
+		      const char *terminate_list,
+			char *pfkey,unsigned char *no_mod);
 static void edit_compute_pos(int row, int col);
 static void edit_putchar(int input);
 static void edit_wrap(int lineno, int direction, int line_space);
@@ -386,7 +422,74 @@ static int check_scrn(void);
 static int vwputc(int c);
 static int mousenonmod(void);
 
-
+
+void WS_REWRITE(
+		unsigned char *wsb, 
+	const	unsigned char lines[1], 
+		unsigned char no_mod[2])
+{
+	const	unsigned char function[1] = { WRITE_ALL };
+			 char term_pfkey[2];
+
+	no_mod[0] = ' ';	/* Clear the status with spaces */
+	no_mod[1] = ' ';
+	vwang(	function,
+		wsb,
+		lines,
+		"X",
+		term_pfkey,
+		no_mod);
+}
+
+void WS_READ(
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+			 char term_pfkey[2],
+		unsigned char no_mod[2])
+{
+	const	unsigned char function[1] = { READ_ALL };
+	const		 char *terminate_list = "A";
+
+	vwang(	function,
+		wsb,
+		lines,
+		terminate_list,
+		term_pfkey,
+		no_mod);
+}
+
+void WS_READ_ALT(
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+			 char term_pfkey[2],
+		unsigned char no_mod[2])
+{
+	const	unsigned char function[1] = { READ_ALTERED };
+	const		 char *terminate_list = "A";
+
+	vwang(	function,
+		wsb,
+		lines,
+		terminate_list,
+		term_pfkey,
+		no_mod);
+}
+
+void WS_CLOSE()
+{
+	unsigned char function[1] = { CLOSE_WORK_STATION };
+	unsigned char wsb[1924]; 
+	unsigned char lines[1] = { 24 };
+		 char term_pfkey[2];
+	unsigned char no_mod[2];
+
+	vwang(	function,
+		wsb,
+		lines,
+		"X",
+		term_pfkey,
+		no_mod);
+}
 
 /*
 	vwang		Emulate the wang workstation.
@@ -394,13 +497,13 @@ static int mousenonmod(void);
 			Note: On a close only "Function" is passed.
 */
 
-int vwang(function, wsb, lines, terminate_list, term, no_mod)
-unsigned char *function;
-unsigned char *wsb;
-unsigned char *lines;
-unsigned char *terminate_list;
-unsigned char *term;
-unsigned char *no_mod;
+int vwang(
+	const	unsigned char function[1],
+		unsigned char *wsb,
+	const	unsigned char lines[1],
+	const		 char *terminate_list,
+			 char term[2],
+		unsigned char no_mod[2])
 {
 	enum e_vop	op_save;							/* Save current level of optimization.	*/
 	char	def_psb_select;
@@ -416,12 +519,17 @@ unsigned char *no_mod;
 		{
 			char *ptr;
 			
-			costar_before_read_api  = (ptr = getenv("W4WPREREAD"))   ? wstrdup(ptr) : NULL;
-			costar_after_read_api   = (ptr = getenv("W4WPOSTREAD"))  ? wstrdup(ptr) : NULL;
-			costar_before_write_api = (ptr = getenv("W4WPREWRITE"))  ? wstrdup(ptr) : NULL;
-			costar_after_write_api  = (ptr = getenv("W4WPOSTWRITE")) ? wstrdup(ptr) : NULL;
+			costar_before_read_api  = (ptr = getenv("W4WPREREAD"))   ? wisp_strdup(ptr) : NULL;
+			costar_after_read_api   = (ptr = getenv("W4WPOSTREAD"))  ? wisp_strdup(ptr) : NULL;
+			costar_before_write_api = (ptr = getenv("W4WPREWRITE"))  ? wisp_strdup(ptr) : NULL;
+			costar_after_write_api  = (ptr = getenv("W4WPOSTWRITE")) ? wisp_strdup(ptr) : NULL;
 
 			w4w_tabstop_vmode = costar_tabstop_vmode();
+		}
+
+		if (OPTION_NULLISDOT)
+		{
+			opt_nullisdot = 1;
 		}
 
 		first = 0;
@@ -438,24 +546,85 @@ unsigned char *no_mod;
 	
 	
 	i = (int)*function;
-	wtrace("WVIDEO", "FUNCTION", "Function=%d %s", i, (i>=1 && i<=14) ? function_name[i] : "Unknown");
+	if (i >= 1 && i <= 14)
+	{
+		char tracebuff[200];
+		sprintf(tracebuff,"Function=%d %s", i, function_name[i]);
+
+		switch(i)
+		{
+		case CLOSE_WORK_STATION:
+		case TAB_MODE_OFF:
+		case LOAD_SUB_TABLE:
+		case INIT_DEFAULT_TABLE:
+			/* nothing else to trace */
+			break;
+
+		case SET_TABS:
+			sprintf(&tracebuff[strlen(tracebuff)], " Tabs=[%80.80s]", wsb);
+			break;
+
+		case DISPLAY_AND_READ:			/* Write then read screen?		*/
+		case DISPLAY_AND_READ_ALTERED:		/* Write then read altered fields?	*/
+		case READ_ALL:				/* Read the screen?			*/
+		case READ_ALL_PB:			/* Read the screen with pseudo blank	*/
+		case READ_ALTERED:			/* Read altered part of screen?		*/
+		case READ_MODIFIABLE:			/* Read MODIFIABLE part of screen?	*/
+			{
+				char ttermlist[200];
+				int term_idx;
+
+				for(term_idx=0;term_idx<sizeof(ttermlist)-1;term_idx++)
+				{
+					ttermlist[term_idx] = terminate_list[term_idx];
+					if ('A' == ttermlist[term_idx] || 'X' == ttermlist[term_idx] )
+					{
+						ttermlist[++term_idx] = '\0';
+						break;
+					}
+					if (!isdigit((int)ttermlist[term_idx]))
+					{
+						ttermlist[term_idx] = '\0';
+						strcat(ttermlist," (BAD)");
+						break;
+					}
+				}
+
+				sprintf(&tracebuff[strlen(tracebuff)], " TermList=[%s]", ttermlist);
+			}
+
+			/* FALL THROUGH to add "Lines" to trace */
+
+		case WRITE_ALL:				/* Write the full screen.		*/
+		case WRITE_ALL_PB:			/* Write the full screen with pseudo	*/
+		case WRITE_SELECTED:			/* Write selected (modified only) fields*/
+
+			sprintf(&tracebuff[strlen(tracebuff)], " Lines[%d]", (int)*lines);
+			break;
+		}
+		WL_wtrace("WVIDEO", "FUNCTION", "%s", tracebuff);
+	}
+	else
+	{
+		WL_wtrace("WVIDEO", "FUNCTION", "Function=%d UNKNOWN", i);
+	}
 
 	if (NULL == term) 	term   = dummy_term;
 	if (NULL == no_mod) 	no_mod = dummy_no_mod;
 
-	vgeterr();									/* Clear any pre-existing video error	*/
+	VL_vgeterr();									/* Clear any pre-existing video error	*/
 
 #ifdef unix
-	if (!ishelpactive() && vsharedscreen())
+	if (!WL_ishelpactive() && VL_vsharedscreen())
 	{
 		/*
-		**	This saves the current stty values so it can be restored by vstate(VSTATE_RESTORE_STTY);
+		**	This saves the current stty values so it can be restored by VL_vstate(VSTATE_RESTORE_STTY);
 		**	It then ensures the stty is in-sync with video's expectations in case the COBOL debugger has changed it.
 		**	It then force video to resynchronize it's maps and redraw the screen. We assume that
 		**	the debugger has filled the screen with source code etc. so each time in we want to
 		**	completely redraw the screen.
 		*/
-		vstate(VSTATE_SAVE_STTY);
+		VL_vstate(VSTATE_SAVE_STTY);
 		if (!rts_first)
 		{
 			if ( (	READ_ALL	== *function ||
@@ -470,9 +639,9 @@ unsigned char *no_mod;
 				**	Force a HARD REFRESH if we are doing a read or
 				**	if doing a partial screen write.
 				*/
-				vdefer_restore();
-				vrefresh(HARD_REFRESH);
-				vcontrol_flush();
+				VL_vdefer_restore();
+				VL_vrefresh(HARD_REFRESH);
+				VL_vcontrol_flush();
 				vwang_set_synch(FALSE);
 			}
 			else
@@ -488,36 +657,36 @@ unsigned char *no_mod;
 
 	if (rts_first)									/* First time in program?		*/
 	{
-		if (init_screen())							/* Initialize the screen.		*/
+		if (vwang_init_screen())						/* Initialize the screen.		*/
 		{
 			terminal_error = FALSE;						/* Initilization ok so no term error.	*/
 			if (wcurwidth != WS_DEFAULT_COLUMNS_PER_LINE)			/* Are we using the default width?	*/
 			{
-				if (wcurwidth == 80)  vscreen(VSCREEN_NARROW);		/* Are we now in 80 column mode?	*/
-				else vscreen(VSCREEN_WIDE);				/* No, then select wide screen.		*/
+				if (wcurwidth == 80)  VL_vscreen(VSCREEN_NARROW);		/* Are we now in 80 column mode?	*/
+				else VL_vscreen(VSCREEN_WIDE);				/* No, then select wide screen.		*/
 				vwang_set_synch(TRUE);					/* Now re-synchronize.			*/
 			}
 		}
 		else terminal_error = TRUE;
 	}
 	else if (check_scrn() == 0) terminal_error = TRUE;				/* Catch errors.			*/
-	else if (synch_required) ws_erap(FULL_SCREEN);					/* Somebody did something behind us.	*/
+	else if (VL_synch_required) vwang_ws_erap(FULL_SCREEN);				/* Somebody did something behind us.	*/
 
 	/*
 	**	Turn down the video optimization so that nothing
 	**	gets deferred because we use vrawprint().
 	*/
-	op_save = voptimize(VOP_DATA_AND_CONTROLS);					/* Turn optimization off (do it here).	*/
+	op_save = VL_voptimize(VOP_DATA_AND_CONTROLS);					/* Turn optimization off (do it here).	*/
 
-	get_defs(DEFAULTS_PSB_REN,&psb_rndt);						/* Init the pseudo blank rendition.	*/
-	get_defs(DEFAULTS_PSB_SET,&psb_chset);						/* Init the pseudo blank char set.	*/
-	get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);					/* Get the pb selection B,1,2,3,4	*/
-	get_psb_char(def_psb_select,&psb_char,&psb_select);				/* Get the real pseudo blank character.	*/
+	WL_get_defs(DEFAULTS_PSB_REN,&psb_rndt);					/* Init the pseudo blank rendition.	*/
+	WL_get_defs(DEFAULTS_PSB_SET,&psb_chset);					/* Init the pseudo blank char set.	*/
+	WL_get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);					/* Get the pb selection B,1,2,3,4	*/
+	WL_get_psb_char(def_psb_select,&psb_char,&psb_select);				/* Get the real pseudo blank character.	*/
 
-	get_defs(DEFAULTS_AUTOMOVE,&auto_move);						/* Init the auto move flag.		*/
-	get_defs(DEFAULTS_MP_CURSOR,&mp_cursor);					/* Init the menu pick cursor flag.	*/
-	get_defs(DEFAULTS_BGCHANGE,&bgchange);						/* Init the background change flag.	*/
-	get_defs(DEFAULTS_BGCOLOR,&bgcolor);						/* Init the background color.		*/
+	WL_get_defs(DEFAULTS_AUTOMOVE,&auto_move);					/* Init the auto move flag.		*/
+	WL_get_defs(DEFAULTS_MP_CURSOR,&mp_cursor);					/* Init the menu pick cursor flag.	*/
+	WL_get_defs(DEFAULTS_BGCHANGE,&bgchange);					/* Init the background change flag.	*/
+	WL_get_defs(DEFAULTS_BGCOLOR,&bgcolor);						/* Init the background color.		*/
 
 	fast_read = FALSE;								/* Default read to return data.		*/
 
@@ -543,8 +712,8 @@ unsigned char *no_mod;
 		case CLOSE_WORK_STATION:
 		{
 			/* Do not erase the screen in here!!!	*/
-			vdefer_restore();						/* Short cut, bring screen up to date.	*/
-			vshut();							/* Cancel pending input only.		*/
+			VL_vdefer_restore();						/* Short cut, bring screen up to date.	*/
+			VL_vshut();							/* Cancel pending input only.		*/
 			break;
 		}
 		case WRITE_ALL:								/* Write the full screen.		*/
@@ -625,21 +794,35 @@ unsigned char *no_mod;
 		}
 		default:								/* Everything else no good.		*/
 		{
-			werrlog(ERRORCODE(2),*function,0,0,0,0,0,0,0);			/* Invalid function			*/
-			voptimize(op_save);						/* Restore optimization level.		*/
+			werrlog(WERRCODE(67002),*function,0,0,0,0,0,0,0);			/* Invalid function			*/
+			VL_voptimize(op_save);						/* Restore optimization level.		*/
 			return(FAILURE);						/* Return to the caller.		*/
 		}
 	}
 
 #ifdef unix
-	if (!ishelpactive() && vsharedscreen())
+	if (!WL_ishelpactive() && VL_vsharedscreen())
 	{
-		vstate(VSTATE_RESTORE_STTY);						/* Restore the debugger term state.	*/
+		VL_vstate(VSTATE_RESTORE_STTY);						/* Restore the debugger term state.	*/
 	}
 #endif
 
-	voptimize(op_save);								/* Restore optimization level.		*/
+	VL_voptimize(op_save);								/* Restore optimization level.		*/
 	vwang_set_synch(FALSE);								/* A synch is not required now.		*/
+
+	
+
+	switch((int)*function)
+	{
+	case DISPLAY_AND_READ:			/* Write then read screen?		*/
+	case DISPLAY_AND_READ_ALTERED:		/* Write then read altered fields?	*/
+	case READ_ALL:				/* Read the screen?			*/
+	case READ_ALL_PB:			/* Read the screen with pseudo blank	*/
+	case READ_ALTERED:			/* Read altered part of screen?		*/
+	case READ_MODIFIABLE:			/* Read MODIFIABLE part of screen?	*/
+		WL_wtrace("WVIDEO", "RETURN", "READ Termkey=[%2.2s] Status=[%2.2s]", term, no_mod);
+		break;
+	}
 
 	return(SUCCESS);								/* Return that we were successful.	*/
 }
@@ -714,7 +897,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 
 	if ((start_row	< 1) || ((int)(start_row+lines-1) > WS_MAX_LINES_PER_SCREEN))	/* Test for valid values		*/
 	{
-		werrlog(ERRORCODE(4),start_row,lines,0,0,0,0,0,0);			/* Invalid Row	or Row+lines		*/
+		werrlog(WERRCODE(67004),start_row,lines,0,0,0,0,0,0);			/* Invalid Row	or Row+lines		*/
 		return(FAILURE);
 	}
 	start_row -= 1;									/* make row zero based			*/
@@ -723,14 +906,14 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 
 	if ((wcc & ROLL_UP) || (wcc & ROLL_DOWN))					/* Scroll the screen up or down?	*/
 	{
-		werrlog(ERRORCODE(6),0,0,0,0,0,0,0,0);					/* Scroll not implemented		*/
+		werrlog(WERRCODE(67006),0,0,0,0,0,0,0,0);					/* Scroll not implemented		*/
 		return(FAILURE);
 	}
 
 	crs_col = wsb[OA_CURSOR_COL];							/* Get the cursor column position.	*/
 	if ((wcc & POSITION_CURSOR) && (crs_col < 0 || crs_col > wcurwidth))
 	{
-		werrlog(ERRORCODE(16),crs_col,0,0,0,0,0,0,0);				/* Invalid column in order area.	*/
+		werrlog(WERRCODE(67016),crs_col,0,0,0,0,0,0,0);				/* Invalid column in order area.	*/
 		return(FAILURE);
 	}
 	crs_col -= 1;									/* Make zero based			*/
@@ -738,7 +921,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 	crs_row = wsb[OA_CURSOR_ROW];							/* Get the cursor line number.		*/
 	if ((wcc & POSITION_CURSOR) && (crs_row < 0 || crs_row > WS_MAX_LINES_PER_SCREEN))
 	{
-		werrlog(ERRORCODE(18),crs_row,0,0,0,0,0,0,0);				/* Invalid line in order area.		*/
+		werrlog(WERRCODE(67018),crs_row,0,0,0,0,0,0,0);				/* Invalid line in order area.		*/
 		return(FAILURE);
 	}
 	crs_row -= 1;									/* make line zerobased			*/
@@ -750,14 +933,14 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 	errset = FALSE;									/* No errors on the screen yet.		*/
 	lbcount = 0;									/* No characters in accumulator yet.	*/
 	lbdangle = 0;									/* No dangling spaces in accumulator.	*/
-	if (use_netroncap()) 
+	if (WLNC_use_netroncap()) 
 	{
 		do_pseudo = 0;								/* NetronCap screen do not have pseudos.*/
 	}
 
 	use_w4w_flag = use_w4w();
 
-	if (use_costar_flag = use_costar())
+	if ((use_costar_flag = use_costar()))
 	{
 		/*
 		**	Do not do pseudo blank processing with COSTAR
@@ -773,21 +956,21 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 
 	if (wcc & UNLOCK_KEYBOARD) 
 	{
-		set_aid(AID_UNLOCKED);
+		vwang_set_aid(AID_UNLOCKED);
 	}
 	else 
 	{
-		set_aid(AID_LOCKED);
+		vwang_set_aid(AID_LOCKED);
 	}
 
-	vbuffering(VBUFF_START);							/* Turn on buffering if not on.		*/
+	VL_vbuffering_start();								/* Turn on buffering if not on.		*/
 
 	if (bgchange)									/* Should we change the background?	*/
 	{
-		if      (bgcolor && !vscreen_check(VSCREEN_LIGHT)) vscreen(VSCREEN_LIGHT);	/* Change the screen color.	*/
-		else if (!bgcolor && !vscreen_check(VSCREEN_DARK)) vscreen(VSCREEN_DARK);
+		if      (bgcolor && !VL_vscreen_check(VSCREEN_LIGHT)) VL_vscreen(VSCREEN_LIGHT);	/* Change the screen color.	*/
+		else if (!bgcolor && !VL_vscreen_check(VSCREEN_DARK)) VL_vscreen(VSCREEN_DARK);
 
-		if (synch_required) ws_erap(FULL_SCREEN);				/* Somebody did something behind us.	*/
+		if (VL_synch_required) vwang_ws_erap(FULL_SCREEN);			/* Somebody did something behind us.	*/
 	}
 
 	if (wcc & ERASE_AND_PROTECT)							/* Erase and protect from cursor?	*/
@@ -795,7 +978,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 		if ((start_row+lines) != WS_MAX_LINES_PER_SCREEN)			/* Do we actually need to do it?	*/
 		{
 			wsmove(start_row,0);						/* Move to the specified location.	*/
-			ws_erap(TO_EOS);						/* Erase to the end of the screen.	*/
+			vwang_ws_erap(TO_EOS);						/* Erase to the end of the screen.	*/
 		}
 	}
 
@@ -820,7 +1003,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 			for (col_x=0;  col_x < wcurwidth; ++col_x)
 			{
 				scrbyte = wsb[row_actual*wcurwidth+col_x];
-				scrbyte = fac(scrbyte);
+				scrbyte = vwang_fac(scrbyte);
 				if (scrbyte == FAC_EDIT_END || scrbyte == FAC_EDIT_UPPER || scrbyte == FAC_EDIT_UPLOW)
 				{
 					if (!the_edit) edit_init_struct();
@@ -915,7 +1098,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 			/*
 			** 	c_mapfac will be the fac or 0 if this is not a fac
 			*/
-			c_mapfac = fac(c_orig);						/* map it using fac table.  all FAC ops */
+			c_mapfac = vwang_fac(c_orig);					/* map it using fac table.  all FAC ops */
 											/* must be done to c_mapfac, not c_orig */
 			if (use_costar_flag && new_row)
 			{
@@ -958,7 +1141,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 						**	characters if you want the facs to be visible.
 						**	This is used for "screen scraping".
 						*/
-						get_dispfac_char(c_orig,&facchar,&font);
+						WL_get_dispfac_char(c_orig,&facchar,&font);
 
 						ws_putbuff(facchar,row_x,col_x,VMODE_CLEAR,font); /* Put in output buffer.	*/
 						*dm = c_orig;				/* Record the data.			*/
@@ -1029,7 +1212,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 						**	NUL character is normally displayed as a space unless
 						**	the NULLISDOT option is set.
 						*/
-						if (opt_nulldisplay)	
+						if (opt_nullisdot)	
 						{
 							ws_putbuff('.',row_x,col_x,last_mode,VCS_DEFAULT);
 						}
@@ -1117,7 +1300,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 
 			if (new_row && lbdangle)					/* Are we dangling output?		*/
 			{
-				if ( !((*dm == ' ') || FAC_FAC(fac(*dm))) ) 
+				if ( !((*dm == ' ') || FAC_FAC(vwang_fac(*dm))) ) 
 					lbdangle = 0; 					/* Don't dangle if visible.		*/
 				else if (last_mode & (VMODE_REVERSE|VMODE_UNDERSCORE|VMODE_BLINK)) 
 					lbdangle = 0;					/* Visible whitespace too...		*/
@@ -1133,7 +1316,7 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 					lin_1st = row_x;
 					col_1st = col_x;
 				}
-				else if ( (fac(c_orig)==FAC_EDIT_UPPER) || (fac(c_orig)==FAC_EDIT_UPLOW) )
+				else if ( (vwang_fac(c_orig)==FAC_EDIT_UPPER) || (vwang_fac(c_orig)==FAC_EDIT_UPLOW) )
 				{
 					lin_1st = row_x;
 					col_1st = col_x;
@@ -1174,12 +1357,12 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 		else if ((crs_col == -1) && (lin_1st >= 0)) wsmove(lin_1st,col_1st);			/* Move to 1st field.	*/
 		else if ((crs_col >= 0) && (crs_row == -1) && (lin_1st >= 0)) wsmove(lin_1st,col_1st);	/* Ditto.		*/
 		else wsmove(0,0);									/* Else go home.	*/
-		old_line = vcur_lin;							/* Remember final position if moved.	*/
-		old_column = vcur_col;
+		old_line = VL_vcur_lin;							/* Remember final position if moved.	*/
+		old_column = VL_vcur_col;
 	}
 
-	if (wcc & SOUND_ALARM) vbell();							/* Did he want the bell?		*/
-	vbuffering(VBUFF_END);							/* Dump the buffer to show the screen.	*/
+	if (wcc & SOUND_ALARM) VL_vbell();						/* Did he want the bell?		*/
+	VL_vbuffering_end();							/* Dump the buffer to show the screen.	*/
 
 	if (use_costar_flag)
 	{
@@ -1196,15 +1379,22 @@ static int ws_write(unsigned char *wsb, unsigned char lines, int do_mod_only, un
 
 /*					Subroutine to read data.								*/
 
-static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned char *terminate_list,unsigned char *pfkey,
-			unsigned char *no_mod,int do_pseudo,int pseudo2space)
+static int ws_read(
+		   unsigned char *wsb,
+		   unsigned char lines,
+		   int read_mode,
+		   const char *terminate_list,
+		   char *pfkey,
+		   unsigned char *no_mod,
+		   int do_pseudo,
+		   int pseudo2space)
 {
 	unsigned char *wsbr;								/* Pointer to position return area.	*/
 	unsigned char *wsbo;								/* Pointer to original screen from Wang.*/
 	int	filling;								/* Flag to indicate screen is filling.	*/
 	int	row;									/* Row to start reading.		*/
 	int	at_edge;								/* Flag to indicate at edge of screen.	*/
-	register int the_meta_char;
+	int	the_meta_char = 0;
 	int	cached_meta_char = 0;
 	int	save_col;
 	unsigned char *dwsb;								/* Working character.			*/
@@ -1221,7 +1411,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 	int	use_costar_flag = 0;
 	int	use_w4w_flag = 0;
 
-	get_defs(DEFAULTS_AUTOTAB,&auto_tab);						/* Init the auto tab flag.		*/
+	WL_get_defs(DEFAULTS_AUTOTAB,&auto_tab);					/* Init the auto tab flag.		*/
 
 	if (read_mode == READ_ALTERED) alt_read = 1;					/* Set/clear altered flag.		*/
 	else			       alt_read = 0;
@@ -1235,7 +1425,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 	if ( row == 0 ) row = 1;							/* Correct for row = 0			*/
 	if ((row < 1) || ((int)(row + lines - 1) > WS_MAX_LINES_PER_SCREEN))		/* Validate values.			*/
 	{
-		werrlog(ERRORCODE(8),row,lines,0,0,0,0,0,0);				/* Invalid Row	or Row+lines		*/
+		werrlog(WERRCODE(67008),row,lines,0,0,0,0,0,0);				/* Invalid Row	or Row+lines		*/
 		return(FAILURE);
 	}
 	row -= 1;									/* Make row zero based			*/
@@ -1245,7 +1435,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 
 	use_w4w_flag = use_w4w();
 
-	if (use_costar_flag = use_costar())
+	if ((use_costar_flag = use_costar()))
 	{
 		/*
 		**	Setup for a costar read.  Enable the mouse.
@@ -1264,7 +1454,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 	menu_fl = check_mp(old_line,old_column,VMODE_BOLD,do_pseudo);			/* If a menu pick then BOLD it.		*/
 	if (mp_cursor)									/* If usage constant is set to display. */
 	{
-		vset_cursor_on();							/* Set cursor on.			*/
+		VL_vset_cursor_on();							/* Set cursor on.			*/
 		cursor_on_flag = TRUE;
 	}
 	filling = TRUE;									/* And now to fill the screen.		*/
@@ -1278,13 +1468,13 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 				{							/* off.					*/
 					if (!cursor_on_flag)
 					{
-						vset_cursor_on();			/* Turn the cursor on.			*/
+						VL_vset_cursor_on();			/* Turn the cursor on.			*/
 						cursor_on_flag = TRUE;			/* Cursor is on so set flag TRUE.	*/
 					}
 				}
 				else if (cursor_on_flag)				/* else make sure it is off.		*/
 				{
-					vset_cursor_off();				/* Turn the cursor off.			*/
+					VL_vset_cursor_off();				/* Turn the cursor off.			*/
 					cursor_on_flag = FALSE;				/* Cursor is off so set flag FALSE.	*/
 				}
 			}
@@ -1301,7 +1491,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 
 				if (seconds_remaining > 0)				/* If time remaining			*/
 				{							/* Do a timed read			*/
-					the_meta_char = vgetm_timed((int)seconds_remaining,&timed_out);	
+					the_meta_char = VL_vgetm_timed((int)seconds_remaining,&timed_out);	
 				}
 				else
 				{
@@ -1324,18 +1514,18 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			}
 			else	/* Do a normal non-timed read */
 			{
-				the_meta_char = vgetm();				/* Get a meta character.		*/
+				the_meta_char = VL_vgetm();				/* Get a meta character.		*/
 
 				the_meta_char = TERM2WANG(the_meta_char);
 			}
 
-			if (v_error = vgeterr())					/* Check if an error occured		*/
+			if ((v_error = VL_vgeterr()))					/* Check if an error occured		*/
 			{
-				werrlog(ERRORCODE(24),v_error,0,0,0,0,0,0,0);		/* Report error on video read		*/
-				wexit(ERRORCODE(24));					/* Exit the process			*/
+				werrlog(WERRCODE(67024),v_error,0,0,0,0,0,0,0);		/* Report error on video read		*/
+				wexit(WERRCODE(67024));					/* Exit the process			*/
 			}
 
-			if (outctx)							/* using a language translation file?	*/
+			if (IVS_outctx)							/* using a language translation file?	*/
 			{								/* if so, then keep track of any multi	*/
 											/* byte sequences that come thru the	*/
 											/* input stream				*/
@@ -1345,7 +1535,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 				{
 					/* check to see if its a valid byte in a multi sequence */
 					/* 0xff means not valid		*/
-					if ((outctx->indbuf)[the_meta_char+(multi_input_pos<<8)]==0xff)   
+					if ((IVS_outctx->indbuf)[the_meta_char+(multi_input_pos<<8)]==0xff)   
 					{
 						multi_input_pos=0;
 					}
@@ -1373,46 +1563,46 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			if (the_meta_char == 0)						/* A timeout?				*/
 			{
 				/*
-				**	This is to handle the case of vgetm() returning a NULL char.
+				**	This is to handle the case of VL_vgetm() returning a NULL char.
 				**	This will probably never happen but if it does it means a timeout has occurred.
 				*/
 				memcpy(pfkey,"	",2);					/* Set pfkey to BLANKS.			*/
 				filling = FALSE;					/* Done filling.			*/
 			}
-			else if (in_edit(vcur_lin,vcur_col))
+			else if (in_edit(VL_vcur_lin,VL_vcur_col))
 			{
-				edit_main(the_meta_char,vcur_lin,vcur_col,&filling,terminate_list,pfkey,no_mod);
+				edit_main(the_meta_char,VL_vcur_lin,VL_vcur_col,&filling,terminate_list,pfkey,no_mod);
 			}
 			else if (menu_fl && IS_PRINTABLE_CHAR(the_meta_char,max_data_range))
 			{								/* At menu pick and i is displayable.	*/
-				next_mp(vcur_lin,vcur_col,the_meta_char,do_pseudo);	/* Search next menu pick beg. with i.*/
+				next_mp(VL_vcur_lin,VL_vcur_col,the_meta_char,do_pseudo);	/* Search next menu pick beg. with i.*/
 			}
-			else if (auto_move && IS_PRINTABLE_CHAR(the_meta_char,max_data_range) && !ws_mod(vcur_lin,vcur_col))
+			else if (auto_move && IS_PRINTABLE_CHAR(the_meta_char,max_data_range) && !vwang_ws_mod(VL_vcur_lin,VL_vcur_col))
 			{
-				ws_next(vcur_lin,vcur_col,TAB_NORMAL,do_pseudo);
+				ws_next(VL_vcur_lin,VL_vcur_col,TAB_NORMAL,do_pseudo);
 			}
-			else if (IS_PRINTABLE_CHAR(the_meta_char,max_data_range) && ws_mod(vcur_lin,vcur_col))
+			else if (IS_PRINTABLE_CHAR(the_meta_char,max_data_range) && vwang_ws_mod(VL_vcur_lin,VL_vcur_col))
 			{								/* Displayable char in mod pos?		*/
 				at_edge = FALSE;					/* Not at edge.				*/
-				if (FAC_NUMERIC(*attr_map_ptr(vcur_lin,vcur_col)))	/* Digits only?				*/
+				if (FAC_NUMERIC(*attr_map_ptr(VL_vcur_lin,VL_vcur_col)))	/* Digits only?				*/
 				{
 					if (max_data_range == SEVEN_BIT_DATA || the_meta_char<=SEVEN_BIT_DATA)
 					{
-						if (isdigit(the_meta_char) || 
+						if (isdigit((int)the_meta_char) || 
 							(the_meta_char=='.') || 
 							(the_meta_char==',') || 
 							(the_meta_char=='+') || 
 							(the_meta_char=='-') || 
 							(the_meta_char==' ')	)
 						{
-							save_col = vcur_col;
-							ws_echo(the_meta_char,vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);
-							if ((vcur_col == vscr_wid-1) && (vcur_col == save_col))
+							save_col = VL_vcur_col;
+							ws_echo(the_meta_char,VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);
+							if ((VL_vcur_col == VL_vscr_wid-1) && (VL_vcur_col == save_col))
 								at_edge=TRUE; 
 						}
 						else 
 						{
-							ws_bad_char();					   /* Bells toll.*/
+							vwang_bad_char();		   /* Bells toll.*/
 						}
 					}
 					else
@@ -1424,32 +1614,32 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 							(the_meta_char == '-') || 
 							(the_meta_char == ' ')	)
 						{
-							save_col = vcur_col;
-							ws_echo(the_meta_char,vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);
-							if ((vcur_col == vscr_wid-1) && 
-							    (vcur_col == save_col)      )		/* At edge?	 */
+							save_col = VL_vcur_col;
+							ws_echo(the_meta_char,VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);
+							if ((VL_vcur_col == VL_vscr_wid-1) && 
+							    (VL_vcur_col == save_col)      ) /* At edge?	 */
 								at_edge=TRUE; 
 						}
 						else 
 						{
-							ws_bad_char();					   /* Bells toll.*/
+							vwang_bad_char();		/* Bells toll.*/
 						}
 					}
 				}
-				else										/* Ok insert.	*/
+				else							/* Ok insert.	*/
 				{
 					/* if user starts a multibyte, make sure there's room in the field */
-					if (multi_input_pos==1 && (ws_eof(vcur_lin,vcur_col) - vcur_col)<(outctx->srcsize-1))
+					if (multi_input_pos==1 && (vwang_ws_eof(VL_vcur_lin,VL_vcur_col) - VL_vcur_col)<(IVS_outctx->srcsize-1))
 					{
-						multiblock=outctx->srcsize;  /* setup to block the bytes */  
+						multiblock=IVS_outctx->srcsize;		/* setup to block the bytes */  
 					}
 					if (multiblock)					/* are we blocking a multi sequence?	*/
 					{
-						ws_bad_char();				/* yup, beep  */
+						vwang_bad_char();			/* yup, beep  */
 						--multiblock;				/* and decrement */
 						continue;
 					}
-					if (FAC_UPPER(*attr_map_ptr(vcur_lin,vcur_col)) && !multi_input_pos) 
+					if (FAC_UPPER(*attr_map_ptr(VL_vcur_lin,VL_vcur_col)) && !multi_input_pos) 
 					{
 						if (max_data_range == SEVEN_BIT_DATA || the_meta_char <= SEVEN_BIT_DATA)
 						{
@@ -1462,16 +1652,16 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 						}
 					}
 					
-					save_col = vcur_col;							/* Remember col */
-					ws_echo(the_meta_char,vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);
-					if ((vcur_col == vscr_wid-1) && 
-					    (vcur_col == save_col)      ) at_edge = TRUE;			/* At edge?	*/
+					save_col = VL_vcur_col;					/* Remember col */
+					ws_echo(the_meta_char,VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);
+					if ((VL_vcur_col == VL_vscr_wid-1) && 
+					    (VL_vcur_col == save_col)      ) at_edge = TRUE;	/* At edge?	*/
 				}
-				if (at_edge || FAC_FAC(*attr_map_ptr(vcur_lin,vcur_col)))			/* Full?	*/
+				if (at_edge || FAC_FAC(*attr_map_ptr(VL_vcur_lin,VL_vcur_col)))	/* Full?	*/
 				{
 					if (auto_tab) 
 					{
-						ws_next(vcur_lin,vcur_col,TAB_NORMAL,do_pseudo);		/* Yes,autotab. */
+						ws_next(VL_vcur_lin,VL_vcur_col,TAB_NORMAL,do_pseudo);/* Yes,autotab. */
 					}
 					else
 					{
@@ -1481,14 +1671,14 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			}
 			else if (the_meta_char == newline_key)					/* Hi the Wang EXECUTE key.	*/
 			{
-				ws_next(vcur_lin,vcur_col,TAB_NEWLINE,do_pseudo);
+				ws_next(VL_vcur_lin,VL_vcur_col,TAB_NEWLINE,do_pseudo);
 			}
 			else if ((the_meta_char == return_key) || 
 				 (the_meta_char == enter_key)    ) 
 			{
-				ws_fkey(0,&filling,terminate_list,pfkey,no_mod);
+				vwang_ws_fkey(0,&filling,terminate_list,pfkey,no_mod);
 			}
-			else if (vfnkey(the_meta_char))		ws_fkey(the_meta_char,&filling,terminate_list,pfkey,no_mod);
+			else if (VL_vfnkey(the_meta_char))		vwang_ws_fkey(the_meta_char,&filling,terminate_list,pfkey,no_mod);
 			else if (the_meta_char == up_arrow_key)		ws_posit(-1, 0,do_pseudo);
 			else if (the_meta_char == down_arrow_key)	ws_posit( 1, 0,do_pseudo);
 			else if (the_meta_char == left_arrow_key)	ws_posit( 0,-1,do_pseudo);
@@ -1501,50 +1691,57 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 					int cnt;
 					
 					/* compute offset to next tab stop */
-					for (cnt=1; tab_map[vcur_col+cnt] == ' ' && (vcur_col+cnt)<WSB_COLS ; ++cnt);
+					for (cnt=1; tab_map[VL_vcur_col+cnt] == ' ' && (VL_vcur_col+cnt)<WSB_COLS ; ++cnt);
 					/* call ws_posit to do the work */
-					if (vcur_col+cnt<WSB_COLS)
+					if (VL_vcur_col+cnt<WSB_COLS)
 						ws_posit( 0, cnt, do_pseudo);
 					else
 					{
 						/* wrap to start of next line */
 						for (cnt=0; tab_map[cnt] == ' ' && cnt < WSB_COLS ; ++cnt);
 						if (cnt<WSB_COLS)
-							ws_posit( 1, cnt - vcur_col, do_pseudo);
+							ws_posit( 1, cnt - VL_vcur_col, do_pseudo);
 					}
 				}
 				else
 				{
-					ws_next(vcur_lin,vcur_col,tab_type,do_pseudo);
+					ws_next(VL_vcur_lin,VL_vcur_col,tab_type,do_pseudo);
 				}
 			}
 			else if (the_meta_char == backtab_key)	
 			{
-				ws_last(vcur_lin,vcur_col,do_pseudo);
+				ws_last(VL_vcur_lin,VL_vcur_col,do_pseudo);
 			}
 			else if (the_meta_char == home_key)
 			{
-				check_mp(vcur_lin,vcur_col,VMODE_CLEAR,do_pseudo);	/* Clear bold rend if current menu pick.*/
+				check_mp(VL_vcur_lin,VL_vcur_col,VMODE_CLEAR,do_pseudo);	/* Clear bold rend if current menu pick.*/
 				ws_next(0,0,TAB_NORMAL,do_pseudo);
 			}
 			else if (the_meta_char == help_key)
 			{
-				if (ishelpactive())							/* Is help active?	*/
+				if (WL_ishelpactive())						/* Is help active?	*/
 				{
-					memcpy(pfkey, "FE", 2);						/* Return code FE.	*/
-					no_mod[1] = AID_HELP;						/* Mode code too.	*/
-					filling = FALSE;						/* Now we're done.	*/
+					memcpy(pfkey, "FE", 2);					/* Return code FE.	*/
+					no_mod[1] = AID_HELP;					/* Mode code too.	*/
+					filling = FALSE;					/* Now we're done.	*/
 				}
 				else 
 				{
 					if (use_costar_flag) costar_enable_mouse(0);		/* Disable the mouse		*/
 
-					ws_bar_menu(ON,vcur_lin,vcur_col,0,alt_read,no_mod,do_pseudo);
+					if (EDE_using())
+					{
+						ws_bar_menu(ON,VL_vcur_lin,VL_vcur_col,0,alt_read,no_mod,do_pseudo);
+					}
+					else
+					{
+						vwang_help(ON);
+					}
 
 					/* reset this flag that may be changed, Help style two will leave this 
 					 * set since it's menupick based instead of PFkey based.  
 					 */
-					menu_fl = check_mp(vcur_lin,vcur_col,VMODE_BOLD,do_pseudo); 
+					menu_fl = check_mp(VL_vcur_lin,VL_vcur_col,VMODE_BOLD,do_pseudo); 
 
 					if (use_costar_flag)
 					{
@@ -1555,36 +1752,39 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			}
 			else if (the_meta_char == clear_field_key)
 			{
-				ws_clearfield(vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);
+				ws_clearfield(VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);
 			}
 			else if (the_meta_char == clear_before_key) 
 			{
-				ws_clearbefore(vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);
+				ws_clearbefore(VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);
 			}
 			else if (the_meta_char == clear_after_key)
 			{
-				ws_clearafter(vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);
+				ws_clearafter(VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);
 			}
 			else if (the_meta_char == delete_key) 
 			{
-				ws_backspace(vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);	/* delete b4 cursor 		*/
+				ws_backspace(VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);	/* delete b4 cursor 		*/
 			}
 			else if (the_meta_char == insert_key) 
 			{
-				ws_insert(vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);		/* open-under-cursor		*/
+				ws_insert(VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);		/* open-under-cursor		*/
 			}
 			else if (the_meta_char == remove_key) 
 			{
-				ws_remove(vcur_lin,vcur_col,alt_read,no_mod,do_pseudo);		/* delete & closeup 		*/
+				ws_remove(VL_vcur_lin,VL_vcur_col,alt_read,no_mod,do_pseudo);		/* delete & closeup 		*/
 			}
 			else if ((the_meta_char == cancel_key) && errset)
 			{
 				ws_bloff(do_pseudo);					/* Go eliminate blinking fields.	*/
 				errset = FALSE;						/* Error fields are now gone.		*/
 			}
-			else if (use_netroncap() && the_meta_char == trigger1)
+			else if (WLNC_use_netroncap() && the_meta_char == trigger1)
 			{
-				nc_pop_menu(&filling,terminate_list,no_mod,pfkey);	/* Pop up window and get pfkey.		*/
+				if (EDE_using())
+				{
+					nc_pop_menu(&filling,terminate_list,no_mod,pfkey);	/* Pop up window and get pfkey.		*/
+				}
 			}
 			else if (v_mouse_click == the_meta_char && use_w4w_flag)
 			{
@@ -1611,9 +1811,9 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 					/*
 					**	If mouse was clicked in a modifiable location then move cursor.
 					*/
-					if (ws_mod(m_row,m_col) || tab_fac(m_row,m_col-1))
+					if (vwang_ws_mod(m_row,m_col) || tab_fac(m_row,m_col-1))
 					{
-						ws_posit((m_row-vcur_lin),(m_col-vcur_col),do_pseudo);
+						ws_posit((m_row-VL_vcur_lin),(m_col-VL_vcur_col),do_pseudo);
 					}
 					else if (!FAC_FAC(*attr_map_ptr(m_row,m_col)) && 
 						  FAC_NUMERIC(*attr_map_ptr(m_row,m_col)))
@@ -1623,7 +1823,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 						**	Position cursor to the tabstop
 						*/
 						for(;!tab_fac(m_row,m_col-1); m_col--) { /* Back up to just after the FAC */ }
-						ws_posit((m_row-vcur_lin),(m_col-vcur_col),do_pseudo);
+						ws_posit((m_row-VL_vcur_lin),(m_col-VL_vcur_col),do_pseudo);
 					}
 					else
 					{
@@ -1649,19 +1849,19 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 							*/
 							if (mousenonmod())
 							{
-								ws_posit((m_row-vcur_lin),(m_col-vcur_col),do_pseudo);
+								ws_posit((m_row-VL_vcur_lin),(m_col-VL_vcur_col),do_pseudo);
 							}
 						}
 					}
 				}
 				else
 				{
-					ws_bad_char();
+					vwang_bad_char();
 				}
 			}
 			else 
 			{
-				ws_bad_char();						/* Else beep.				*/
+				vwang_bad_char();					/* Else beep.				*/
 			}
 		}
 	}
@@ -1685,7 +1885,7 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 					{
 						c_mapfac = FAC_SET_BRIGHT(c_mapfac);
 					}
-					ufac = unfac(c_mapfac);				/* now unmap it back using user's table */
+					ufac = vwang_unfac(c_mapfac);		/* now unmap it back using user's table */
 					if (ufac == 0xff)			/* there is no fac in his table so use original */
 					{
 						ufac=c_orig;
@@ -1708,12 +1908,12 @@ static int ws_read(unsigned char *wsb,unsigned char lines,int read_mode,unsigned
 			}
 		}
 	}
-	old_line = vcur_lin;								/* Remember where we ended.		*/
-	old_column = vcur_col;
+	old_line = VL_vcur_lin;								/* Remember where we ended.		*/
+	old_column = VL_vcur_col;
 	check_mp(old_line,old_column,VMODE_CLEAR,do_pseudo);				/* If menu pick, clear before return.	*/
-	*wsbr++ = vcur_col + 1;								/* Return ending position to caller.	*/
-	*wsbr = vcur_lin + 1;
-	vset_cursor_off();								/* Turn the cursor off again.		*/
+	*wsbr++ = VL_vcur_col + 1;								/* Return ending position to caller.	*/
+	*wsbr = VL_vcur_lin + 1;
+	VL_vset_cursor_off();								/* Turn the cursor off again.		*/
 	cursor_on_flag = FALSE;								/* Set the flag.			*/
 	wsmode(VMODE_CLEAR);								/* Clear the mode and char set.		*/
 	wscset(VCS_DEFAULT);
@@ -1763,17 +1963,17 @@ static int ws_posit(int up, int right, int do_pseudo)					/* Position cursor.			
 {
 	register int row,col;								/* Working registers.			*/
 	
-	row = vcur_lin + up;								/* Take temp copy of position.		*/
+	row = VL_vcur_lin + up;								/* Take temp copy of position.		*/
 	if (row < 0) row = WS_MAX_LINES_PER_SCREEN - 1;					/* Wrapped up?				*/
 	else if (row >= WS_MAX_LINES_PER_SCREEN) row = 0;				/* Wrapped down?			*/
 
-	col = vcur_col + right;								/* Compute new column.			*/
+	col = VL_vcur_col + right;								/* Compute new column.			*/
 	if (col < 0) col = wcurwidth - 1;						/* Wrapped left?			*/
 	else if (col >= wcurwidth) col = 0;						/* Wrapped right?			*/
 
 	col = adjust_for_multibyte(row,col,up,right);
 
-	check_mp(vcur_lin,vcur_col,VMODE_CLEAR,do_pseudo);				/* Unbold current menu pick item.	*/
+	check_mp(VL_vcur_lin,VL_vcur_col,VMODE_CLEAR,do_pseudo);				/* Unbold current menu pick item.	*/
 	menu_fl = check_mp(row,col,VMODE_BOLD,do_pseudo);				/* Check if is a menu pick item.	*/
 
 	
@@ -1788,7 +1988,7 @@ static int ws_tag_alt(int alt_read, int row, int col, unsigned char *no_mod)		/*
 		{
 			if ((--col) < 0)						/* Move left one column.		*/
 			{
-				werrlog(ERRORCODE(10),0,0,0,0,0,0,0,0);			/* No FAC for current field		*/
+				werrlog(WERRCODE(67010),0,0,0,0,0,0,0,0);			/* No FAC for current field		*/
 				return(FAILURE);
 			}
 		}
@@ -1799,7 +1999,7 @@ static int ws_tag_alt(int alt_read, int row, int col, unsigned char *no_mod)		/*
 }
 
 /*** NOTE: this is not a static because it is also used in EDE (edenetc.c) ***/
-int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned char *pfkey,unsigned char *no_mod)
+int vwang_ws_fkey(int metachar_key,int *filling,const char *terminate_list,char *pfkey,unsigned char *no_mod)
 {
 	char temp[3];									/* Temporary working string.		*/
 	register int j;									/* Working register.			*/
@@ -1811,7 +2011,7 @@ int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned
 	/*
 	**	NOTE: If enter key then metachar_key has been dummied up with a 0.
 	*/
-	sprintf(temp,"%02d", vfnkey(metachar_key));					/* Convert to ascii representation.	*/
+	sprintf(temp,"%02d", VL_vfnkey(metachar_key));					/* Convert to ascii representation.	*/
 	
 	if (terminate_list[0] == 'A') *filling = FALSE;					/* 'A' means all keys allowed.		*/
 
@@ -1826,7 +2026,7 @@ int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned
 		}
 
 		if ( terminate_list[j] < '0' || terminate_list[j] > '3' ||		/* valid values are "00" - "33"		*/
-		     !isdigit(terminate_list[j+1]) )
+		     !isdigit((int)terminate_list[j+1]) )
 		{
 			invalid_list = 1;
 		}
@@ -1842,8 +2042,7 @@ int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned
 
 		if (invalid_list)
 		{
-			werrlog(ERRORCODE(26),terminate_list[j],terminate_list[j+1],0,0,0,0,0,0);
-			terminate_list[0] = 'A';					/* Reconstruct list to allow all	*/
+			werrlog(WERRCODE(67026),terminate_list[j],terminate_list[j+1],0,0,0,0,0,0);
 			return(FAILURE);
 		}
 		
@@ -1858,15 +2057,14 @@ int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned
 
 		if ( cnt++ > (33+10))							/* term list is too big (corrupt)	*/
 		{
-			werrlog(ERRORCODE(28),0,0,0,0,0,0,0,0);
-			terminate_list[0] = 'A';					/* Reconstruct list to allow all	*/
+			werrlog(WERRCODE(67028),0,0,0,0,0,0,0,0);
 			return(FAILURE);
 		}
 	}
 
 	if (*filling) 
 	{
-		ws_bad_char();								/* Not useable bell key.		*/
+		vwang_bad_char();							/* Not useable bell key.		*/
 	}
 	else
 	{
@@ -1874,16 +2072,16 @@ int ws_fkey(int metachar_key,int *filling,unsigned char *terminate_list,unsigned
 		pfkey[1] = temp[1];
 
 		if (metachar_key) /* metachar_key has been dummied up with a 0 for ENTER key */
-			no_mod[1] = meta_aid(metachar_key);				/* Return the correct AID byte value.	*/
+			no_mod[1] = vwang_meta_aid(metachar_key);			/* Return the correct AID byte value.	*/
 		else
 			no_mod[1] = AID_ENTER;
-		set_aid(no_mod[1]);							/* Set the AID char (lock keyboard)	*/
+		vwang_set_aid(no_mod[1]);						/* Set the AID char (lock keyboard)	*/
 	}
 
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-int ws_mod(int cursor_row, int cursor_col)						/* Determine if char is modifyable.	*/
+int vwang_ws_mod(int cursor_row, int cursor_col)					/* Determine if char is modifyable.	*/
 {
 	/*
 	**	If PROTECTED or on a FAC then not modifiable.
@@ -1911,9 +2109,9 @@ static int ws_backspace(int row,int col,int alt_read,unsigned char *no_mod,int d
 	int 	remove_size;
 	int	i;
 	
-	if ((col-1 < 0) || !ws_mod(row,col-1))
+	if ((col-1 < 0) || !vwang_ws_mod(row,col-1))
 	{
-		ws_bad_char();								/* Beep if nothing to delete.		*/
+		vwang_bad_char();							/* Beep if nothing to delete.		*/
 	}
 	else
 	{
@@ -1921,7 +2119,7 @@ static int ws_backspace(int row,int col,int alt_read,unsigned char *no_mod,int d
 
 		if (cursor_on_multibyte)	/* if cursor is on a multibyte, erase several bytes */
 		{
-			remove_size = outctx->srcsize;
+			remove_size = IVS_outctx->srcsize;
 
 			/*
 			**	Reset this flag
@@ -1999,7 +2197,7 @@ static void ws_clearbefore(int row,int col,int alt_read,unsigned char *no_mod,in
 	int	i1, i2;
 	unsigned char blank_char;
 
-	if ((sof_col = ws_sof(row,col)) && (eof_col = ws_eof(row,col)))			/* Should we delete left?		*/
+	if ((sof_col = vwang_ws_sof(row,col)) && (eof_col = vwang_ws_eof(row,col)))		/* Should we delete left?		*/
 	{
 		if (col == sof_col)
 		{
@@ -2045,7 +2243,7 @@ static void ws_clearbefore(int row,int col,int alt_read,unsigned char *no_mod,in
 		ws_tag_alt(alt_read,row,sof_col,no_mod);				/* Set altered flags.			*/
 
 	}
-	else ws_bad_char();								/* Can't delete so beep.		*/
+	else vwang_bad_char();								/* Can't delete so beep.		*/
 }
 
 /* Delete to the right of the cursor.	*/
@@ -2053,13 +2251,13 @@ static int ws_clearafter(int row,int col,int alt_read,unsigned char *no_mod,int 
 {
 	int 	eof_col;
 
-	if (eof_col = ws_eof(row,col))							/* Should we clear?			*/
+	if ((eof_col = vwang_ws_eof(row,col)))						/* Should we clear?			*/
 	{
 		ws_clearfieldcols(row,col,eof_col,do_pseudo);
 		wsmove(row,col);							/* Move to the start of the field.	*/
 		ws_tag_alt(alt_read,row,col,no_mod);					/* Set altered flags.			*/
 	}
-	else ws_bad_char();								/* Can't clear so beep.			*/
+	else vwang_bad_char();								/* Can't clear so beep.			*/
 
 	return(SUCCESS);
 }
@@ -2070,13 +2268,13 @@ static int ws_clearfield(int row, int col, int alt_read, unsigned char *no_mod, 
 	int	sof_col;								/* Start of field column		*/
 	int	eof_col;								/* End of field column			*/
 
-	if ((sof_col = ws_sof(row,col)) && (eof_col = ws_eof(row,col))) 		/* Are we in a mod field	*/
+	if ((sof_col = vwang_ws_sof(row,col)) && (eof_col = vwang_ws_eof(row,col))) 		/* Are we in a mod field	*/
 	{
 		ws_clearfieldcols(row,sof_col,eof_col,do_pseudo);
 		wsmove(row,sof_col);							/* Move to where to clear from.		*/
 		ws_tag_alt(alt_read, row, col, no_mod);					/* Set altered flags.			*/
 	}
-	else ws_bad_char();								/* Can't clear so beep.			*/
+	else vwang_bad_char();								/* Can't clear so beep.			*/
 
 	return(SUCCESS);
 }
@@ -2089,7 +2287,7 @@ static int ws_clearfield(int row, int col, int alt_read, unsigned char *no_mod, 
 **	Description:	This routine is called to move the cursor to the next available tab stop position.
 **			It has to handle three types of "tab" requests, a normal tab, a newline, and a spacebar on a menupick.
 **			It will search from the starting position down the screen and wrap back to the top of the screen.
-**			If there are no tabable fields it will call ws_bad_char().
+**			If there are no tabable fields it will call vwang_bad_char().
 **
 **
 **	Input:		start_row	The starting row
@@ -2163,7 +2361,7 @@ static int ws_next(int start_row, int start_col, int tab_type, int do_pseudo)	/*
 
 		if (x_col == start_col && x_row == start_row)			/* Back where we started			*/
 		{
-			ws_bad_char();
+			vwang_bad_char();
 			return(FAILURE);
 		}
 	}
@@ -2175,7 +2373,7 @@ static int ws_next(int start_row, int start_col, int tab_type, int do_pseudo)	/*
 **	Function:	To move cursor to the previous tabable field.
 **
 **	Description:	This routine is called to move the cursor to the previous available tab stop position.
-**			If there are no tabable fields it will call ws_bad_char().
+**			If there are no tabable fields it will call vwang_bad_char().
 **
 **
 **	Input:		start_row	The starting row
@@ -2250,7 +2448,7 @@ static int ws_last(int start_row, int start_col, int do_pseudo)			/* Move to the
 
 		if (x_col == start_col && x_row == start_row)			/* Back where we started			*/
 		{
-			ws_bad_char();
+			vwang_bad_char();
 			return(FAILURE);
 		}
 	}
@@ -2265,7 +2463,7 @@ static int ws_last(int start_row, int start_col, int do_pseudo)			/* Move to the
 **	Description:	This routine is called to move the cursor to the next menupick field that starts with the
 **			character pressed.
 **			It will search from the starting position down the screen and wrap back to the top of the screen.
-**			If there is no matching menupick it will call ws_bad_char().
+**			If there is no matching menupick it will call vwang_bad_char().
 **
 **
 **	Input:		start_row	The starting row
@@ -2330,7 +2528,7 @@ static int next_mp(int start_row, int start_col, int the_char, int do_pseudo)	/*
 
 		if (x_col == start_col && x_row == start_row)			/* Back where we started			*/
 		{
-			ws_bad_char();
+			vwang_bad_char();
 			return(FAILURE);
 		}
 	}
@@ -2347,17 +2545,17 @@ static int ws_insert(int cursor_row, int cursor_col, int alt_read, unsigned char
 
 	rowbuf = map_multibyte(data_map_ptr(cursor_row,0),NULL);		       /* map out multibyte chars on the line  */
 	
-	if (eof_col = ws_eof(cursor_row,cursor_col))				       /* Are we in a field?			*/
+	if ((eof_col = vwang_ws_eof(cursor_row,cursor_col)))			       /* Are we in a field?			*/
 	{
 		if (  *data_map_ptr(cursor_row,eof_col) != ' ' && 
 		      *data_map_ptr(cursor_row,eof_col) != '\0' &&
 		      *data_map_ptr(cursor_row,eof_col) != PSEUDO_BLANK_CHAR )
 		{
-			ws_bad_char();							/* Don't push chars out of the field.	*/
+			vwang_bad_char();						/* Don't push chars out of the field.	*/
 			return FAILURE;
 		}
 		wsmove(cursor_row,cursor_col);						/* Move to where to insert the space.	*/
-		vset_cursor_off();
+		VL_vset_cursor_off();
 		cursor_on_flag=FALSE;
 
 		memcpy(savedata,							/* save it */
@@ -2398,10 +2596,10 @@ static int ws_insert(int cursor_row, int cursor_col, int alt_read, unsigned char
 
 		wsmove(cursor_row,cursor_col);						/* Move back to insert pos		*/
 		ws_tag_alt(alt_read,cursor_row,cursor_col,no_mod);			/* Set altered flags.			*/
-		vset_cursor_on();
+		VL_vset_cursor_on();
 		cursor_on_flag=TRUE;
 	}
-	else ws_bad_char();								/* Not in field so just beep.		*/
+	else vwang_bad_char();								/* Not in field so just beep.		*/
 
 	return(SUCCESS);
 }
@@ -2427,11 +2625,11 @@ static int ws_remove(int cursor_row, int cursor_col, int alt_read, unsigned char
 	rowbuf = map_multibyte(data_map_ptr(cursor_row,0),NULL);			 /* map out multibyte chars on the line	 */
 	multi_value = rowbuf[cursor_col];
 	if (multi_value)
-		multi_idx = outctx->srcsize;
+		multi_idx = IVS_outctx->srcsize;
 	else
 		multi_idx = 1;
 
-	if (eof_col = ws_eof(cursor_row,cursor_col))					 /* Should we delete right?		*/
+	if ((eof_col = vwang_ws_eof(cursor_row,cursor_col)))				 /* Should we delete right?		*/
 	{
 		if (do_pseudo) mode = ws_trans_atr(*attr_map_ptr(cursor_row,cursor_col)) | psb_rndt;
 		else	       mode = ws_trans_atr(*attr_map_ptr(cursor_row,cursor_col));
@@ -2444,7 +2642,7 @@ static int ws_remove(int cursor_row, int cursor_col, int alt_read, unsigned char
 		       attr_map_ptr(cursor_row,cursor_col+multi_idx),
 		       eof_col-cursor_col-multi_idx+1);
 		
-		vset_cursor_off();
+		VL_vset_cursor_off();
 		cursor_on_flag=FALSE;
 
 		/* now reprint the line spacing out the removed character */
@@ -2470,27 +2668,27 @@ static int ws_remove(int cursor_row, int cursor_col, int alt_read, unsigned char
 
 		wsmove(cursor_row,cursor_col);						/* Move to the start of the field.	*/
 		ws_tag_alt(alt_read,cursor_row,cursor_col,no_mod);			/* Set altered flags.			*/
-		vset_cursor_on();
+		VL_vset_cursor_on();
 		cursor_on_flag=TRUE;
 	}
-	else ws_bad_char();								/* Can't delete so beep.		*/
+	else vwang_bad_char();								/* Can't delete so beep.		*/
 
 	return(SUCCESS);
 }
 
-int ws_bad_char(void)									/* Process invalid characters.		*/
+int vwang_bad_char(void)								/* Process invalid characters.		*/
 {
-	vbell();									/* Ring the bell.			*/
+	VL_vbell();									/* Ring the bell.			*/
 	ws_good = FALSE;								/* Character was not good.		*/
 	return 0;
 }
 
-int ws_cut(int row, int col)								/* Cut the current field.		*/
+int vwang_ws_cut(int row, int col)							/* Cut the current field.		*/
 {
 	int col_idx, sof_col, eof_col;							/* Working registers.			*/
 	char cutbuf[WS_MAX_COLUMNS_ON_A_LINE];						/* Working buffer.			*/
 
-	if ((sof_col = ws_sof(row,col)) && (eof_col = ws_eof(row,col)))			/* Are we in a field?			*/
+	if ((sof_col = vwang_ws_sof(row,col)) && (eof_col = vwang_ws_eof(row,col)))	/* Are we in a field?			*/
 	{
 		for (col_idx = sof_col; col_idx <= eof_col; col_idx++)			/* Copy the field.			*/
 		{
@@ -2500,32 +2698,32 @@ int ws_cut(int row, int col)								/* Cut the current field.		*/
 			}
 		}
 		cutbuf[col_idx-sof_col] = CHAR_NULL;					/* Terminate the string.		*/
-		vcut(cutbuf);								/* Output the result.			*/
+		VL_vcut(cutbuf);								/* Output the result.			*/
 	}
-	else vbell();									/* Oops, not in field so ring the bell.	*/
+	else VL_vbell();									/* Oops, not in field so ring the bell.	*/
 	return(SUCCESS);								/* Return.				*/
 }
 
-int ws_paste(int row, int col, int vr, int vc, int alt_read, unsigned char *no_mod, int do_pseudo)
+int vwang_ws_paste(int row, int col, int vr, int vc, int alt_read, unsigned char *no_mod, int do_pseudo)
 											/* Cut the current field.		*/
 {
 	register int sof_col, eof_col;
 	enum e_vop save_opt;
 
-	if (ws_mod(row,col))								/* Are we in a modifyable field?	*/
+	if (vwang_ws_mod(row,col))							/* Are we in a modifyable field?	*/
 	{
-		sof_col = ws_sof(row,col);
-		eof_col = ws_eof(row,col);						/* Are we in a field?			*/
-		vdefer_restore();							/* Restore from deferred actions.	*/
-		save_opt = voptimize(VOP_TRACKING_ONLY);				/* Turn off optimization for vwang.	*/
+		sof_col = vwang_ws_sof(row,col);
+		eof_col = vwang_ws_eof(row,col);					/* Are we in a field?			*/
+		VL_vdefer_restore();							/* Restore from deferred actions.	*/
+		save_opt = VL_voptimize(VOP_TRACKING_ONLY);				/* Turn off optimization for vwang.	*/
 		ws_clearfield(vr,vc,alt_read,no_mod,do_pseudo);				/* Clear the field.			*/
-		voptimize(save_opt);							/* Restore the optimization.		*/
-		vpaste(eof_col-sof_col+1);						/* Paste only the allowed fields.	*/
+		VL_voptimize(save_opt);							/* Restore the optimization.		*/
+		VL_vpaste(eof_col-sof_col+1);						/* Paste only the allowed fields.	*/
 		return(SUCCESS);							/* Return.				*/
 	}
 	else
 	{
-		vbell();								/* Not modifyable so just ring bell.	*/
+		VL_vbell();								/* Not modifyable so just ring bell.	*/
 		return(FAILURE);							/* Return to the caller.		*/
 	}
 }
@@ -2646,20 +2844,20 @@ static int menu_pick_combo_fac(int row, int col)					/* Determine if LOW PROT NU
 }
 
 /* Return the first column which is part of this field (0==Not a field) */
-int ws_sof(int cursor_row, int cursor_col)						/* Get start of current field.		*/ 
+int vwang_ws_sof(int cursor_row, int cursor_col)					/* Get start of current field.		*/ 
 {
 	if (cursor_col < 0) return(FAILURE);						/* Return failure if not in field.	*/
-	if (!ws_mod(cursor_row,cursor_col)) return(FAILURE);				/* If not modifiable then not in field	*/
-	while ((cursor_col > 0) && (ws_mod(cursor_row,cursor_col))) --cursor_col;	/* Loop until at start of the field.	*/
+	if (!vwang_ws_mod(cursor_row,cursor_col)) return(FAILURE);				/* If not modifiable then not in field	*/
+	while ((cursor_col > 0) && (vwang_ws_mod(cursor_row,cursor_col))) --cursor_col;	/* Loop until at start of the field.	*/
 	return(cursor_col+1);								/* Return the start of the field.	*/
 }
 
 /* Return the last column which is part of this field (0==Not a field) */
-int ws_eof(int cursor_row, int cursor_col)						/* Get end of current field.		*/
+int vwang_ws_eof(int cursor_row, int cursor_col)					/* Get end of current field.		*/
 {
 	if (cursor_col < 0) return(FAILURE);						/* Return failure if not in field.	*/
-	if (!ws_mod(cursor_row,cursor_col)) return(FAILURE);				/* If not modifiable then not in field	*/
-	while ((cursor_col < wcurwidth) && (ws_mod(cursor_row,cursor_col))) cursor_col++;/* Loop until at the end of the field.	*/
+	if (!vwang_ws_mod(cursor_row,cursor_col)) return(FAILURE);			/* If not modifiable then not in field	*/
+	while ((cursor_col < wcurwidth) && (vwang_ws_mod(cursor_row,cursor_col))) cursor_col++;/* Loop until at the end of the field.	*/
 	return(cursor_col-1);								/* Return the end of the field.		*/
 }
 
@@ -2702,7 +2900,7 @@ static int ws_trans_atr(fac_t the_fac)							/* Translate from Wang to VIDEO		*/
 
 	if (FAC_UNDERSCORED(the_fac)) 
 	{
-		v_mode |= VMODE_UNDERSCORE;					/* Or in underscore.			*/
+		v_mode |= VMODE_UNDERSCORE;						/* Or in underscore.			*/
 	}
 
 	if (2==use_costar_flag)
@@ -2725,7 +2923,7 @@ static int ws_bloff(int do_pseudo)							/* Turn blinking off.			*/
 
 	if (wbackground()) return(SUCCESS);						/* In background so don't do.		*/
 
-	vstate(VSTATE_SAVE);								/* Save state.				*/
+	VL_vstate(VSTATE_SAVE);								/* Save state.				*/
 	for (row = 0; row < WS_MAX_LINES_PER_SCREEN; row++)				/* Yes, so loop screen.			*/
 	{
 		for (col = 0; col < wcurwidth; col++)					/* Loop each character.			*/
@@ -2735,7 +2933,7 @@ static int ws_bloff(int do_pseudo)							/* Turn blinking off.			*/
 			{
 				*attr_map_ptr(row,col) = FAC_SET_BRIGHT(*attr_map_ptr(row,col));/* Yes, remove attrib.		*/
 
-				if (!ws_mod(row,col))					/* Modifyable field?			*/
+				if (!vwang_ws_mod(row,col))				/* Modifyable field?			*/
 				{
 					wsmode(ws_trans_atr(*attr_map_ptr(row,col)));	/* Select rendition.			*/
 				}
@@ -2748,11 +2946,11 @@ static int ws_bloff(int do_pseudo)							/* Turn blinking off.			*/
 					wsmode(ws_trans_atr(*attr_map_ptr(row,col)));	/* Field rendition.		*/
 				}
 				wsmove(row,col);					/* Move to location.		*/
-				vputc(*vchr_map_ptr(row,col));				/* Reoutput the char.			*/
+				VL_vputc(*vchr_map_ptr(row,col));				/* Reoutput the char.			*/
 			}
 		}
 	}
-	vstate(VSTATE_RESTORE);								/* Restore state.			*/
+	VL_vstate(VSTATE_RESTORE);								/* Restore state.			*/
 	return(SUCCESS);
 }
 
@@ -2775,10 +2973,10 @@ static void ws_echo(int the_char,int cursor_row,int cursor_col,int alt_read,unsi
 	if (multi_input_pos==1)								/* is this echo part of a multibyte?	*/
 	{
 											/* if so, need to clear 3 or more spaces*/
-		for (index=cursor_col, eofield=ws_eof(cursor_row, cursor_col);
-		     (index < cursor_col+outctx->srcsize) && (index < eofield) && !tmpval ; ++index)
+		for (index=cursor_col, eofield=vwang_ws_eof(cursor_row, cursor_col);
+		     (index < cursor_col+IVS_outctx->srcsize) && (index < eofield) && !tmpval ; ++index)
 		{
-			vprint(" ");
+			VL_vprint(" ");
 			*data_map_ptr(cursor_row,index) = ' ';
 			tmpval = rowbuf[index];
 		} 
@@ -2786,18 +2984,18 @@ static void ws_echo(int the_char,int cursor_row,int cursor_col,int alt_read,unsi
 		{									/* multi, which must now also be cleared*/
 			while (tmpval == rowbuf[index])
 			{
-				vprint(" ");
+				VL_vprint(" ");
 				*data_map_ptr(cursor_row,index) = ' ';
 				++index;
 			}
 		}
 		wsmove(cursor_row,cursor_col);
 	}
-	else if (tmpval = rowbuf[index = cursor_col])
+	else if ((tmpval = rowbuf[index = cursor_col]))
 	{
 		while (tmpval == rowbuf[index])
 		{
-			vprint(" ");
+			VL_vprint(" ");
 			*data_map_ptr(cursor_row,index) = ' ';
 			++index;
 		}
@@ -2809,12 +3007,12 @@ static void ws_echo(int the_char,int cursor_row,int cursor_col,int alt_read,unsi
 		if (do_pseudo)
 		{
 			wscset(psb_chset);						/* No, then echo a pseudo blank.	*/
-			vprint("%c",psb_char);
+			VL_vprint("%c",psb_char);
 			wscset(VCS_DEFAULT);
 		}
 		else
 		{
-			vprint(" ");
+			VL_vprint(" ");
 		}
 	}
 	else 
@@ -2952,14 +3150,14 @@ static void wsdmp_scrn(unsigned char *wsb, int type_d)
 	tstr[wcurwidth] = '\n';
 	tstr[wcurwidth+1] = '\0';
 
-	if (type_d == 0)									/* This is a bad condition.	*/
+	if (type_d == 0)								/* This is a bad condition.	*/
 	{
-		werrlog(ERRORCODE(22),terminal_error,0,0,0,0,0,0,0);				/* Something wrong with output	*/
+		werrlog(WERRCODE(67022),terminal_error,0,0,0,0,0,0,0);			/* Something wrong with output	*/
 		ptr = "%%VW-W-DUMPSCREEN Abnormal condition, dump of current screen is:\n\n";
 		printf(ptr);
-		if (w_err_flag & LOG_LOGFILE) werr_write(ptr);					/* write to error log		*/
+		if (WL_get_wispdebug() != WISPDEBUG_NONE) WL_werr_write(ptr);		/* write to error log		*/
 	}
-	else if (type_d == 1) vset(VSET_PRINTER,ON);						/* On printer for output.	*/
+	else if (type_d == 1) VL_vset(VSET_PRINTER,ON);					/* On printer for output.	*/
 	for (i=0; i<WS_MAX_LINES_PER_SCREEN; i++)
 	{
 		for (j = 0; j < wcurwidth; j++)
@@ -2968,117 +3166,117 @@ static void wsdmp_scrn(unsigned char *wsb, int type_d)
 			if (tstr[j] & (char)0x80) tstr[j] = ' ';
 		}
 		printf("%s",tstr);
-		if (w_err_flag & LOG_LOGFILE) werr_write(tstr);					/* write to error log		*/
+		if (WL_get_wispdebug() != WISPDEBUG_NONE) WL_werr_write(tstr);		/* write to error log		*/
 	}
-	if (type_d == 1) vset(VSET_PRINTER,OFF);						/* Turn the printer off.	*/
-	else wexit(ERRORCODE(22));								/* else unconditional exit.	*/
+	if (type_d == 1) VL_vset(VSET_PRINTER,OFF);					/* Turn the printer off.	*/
+	else wexit(WERRCODE(67000+22));							/* else unconditional exit.	*/
 }
 
-void ws_erap(int amount)									/* Erase & protect screen sect. */
+void vwang_ws_erap(int amount)								/* Erase & protect screen sect. */
 {
-	register int i,j;									/* Working registers.		*/
+	register int i,j;								/* Working registers.		*/
 	enum e_vop last_op;
 
 	if (wbackground()) return;
 	
-	last_op = voptimize(VOP_DATA_AND_CONTROLS);						/* Turn optimization down.	*/
+	last_op = VL_voptimize(VOP_DATA_AND_CONTROLS);					/* Turn optimization down.	*/
 
-	if (amount == FULL_SCREEN)								/* Erasing the full screen?	*/
+	if (amount == FULL_SCREEN)							/* Erasing the full screen?	*/
 	{
-		memset(data_map_ptr(0,0), ' ', SIZEOF_SCREEN_MAP);				/* Clear the data array.	*/
-		memset(attr_map_ptr(0,0), DEFAULT_ATTR, SIZEOF_SCREEN_MAP);			/* Initialize the attr array.	*/
+		memset(data_map_ptr(0,0), ' ', SIZEOF_SCREEN_MAP);			/* Clear the data array.	*/
+		memset(attr_map_ptr(0,0), DEFAULT_ATTR, SIZEOF_SCREEN_MAP);		/* Initialize the attr array.	*/
 	}
 
-	else if (amount == TO_EOS)								/* Erasing to end of screen?	*/
+	else if (amount == TO_EOS)							/* Erasing to end of screen?	*/
 	{
-		for (j = vcur_col; j < wcurwidth; j++)						/* Loop through the columns.	*/
+		for (j = VL_vcur_col; j < wcurwidth; j++)					/* Loop through the columns.	*/
 		{
-			*data_map_ptr(vcur_lin,j) = ' ';					/* Space out the item.		*/
-			*attr_map_ptr(vcur_lin,j) = DEFAULT_ATTR;				/* Protect the item.		*/
+			*data_map_ptr(VL_vcur_lin,j) = ' ';				/* Space out the item.		*/
+			*attr_map_ptr(VL_vcur_lin,j) = DEFAULT_ATTR;			/* Protect the item.		*/
 		}
-		for (i = vcur_lin+1; i < WS_MAX_LINES_PER_SCREEN; i++)				/* Do remaining lines.		*/
+		for (i = VL_vcur_lin+1; i < WS_MAX_LINES_PER_SCREEN; i++)			/* Do remaining lines.		*/
 		{
 			memset(data_map_ptr(i,0),' ',wcurwidth);
 			memset(attr_map_ptr(i,0),DEFAULT_ATTR,wcurwidth);
 		}
 	}
-	verase(amount);										/* Erase as much as specified.	*/
-	voptimize(last_op);									/* Restore optimization.	*/
+	VL_verase(amount);								/* Erase as much as specified.	*/
+	VL_voptimize(last_op);								/* Restore optimization.	*/
 }
 
 
 
-int ws_help(int curset)									/* Simulate Wang help function.		*/
+int vwang_help(int curset)								/* Simulate Wang help function.		*/
 {
 	int old_menu_exit_key;								/* Orig. menu exit key.			*/
 	enum e_vop optsave;
 
 	vwang_init_video();
 	
-	optsave=voptlevel();								/* need to save this.			*/
+	optsave=VL_voptlevel();								/* need to save this.			*/
 
-	old_menu_exit_key = menu_get_key(0);						/* What is the orig. menu exit key ?	*/
-	menu_set_key(0, fn1_key);							/* Give it a new value.			*/
+	old_menu_exit_key = WL_menu_get_key(0);						/* What is the orig. menu exit key ?	*/
+	WL_menu_set_key(0, fn1_key);							/* Give it a new value.			*/
 
-	if (ishelpactive())								/* Are we already in help.		*/
+	if (WL_ishelpactive())								/* Are we already in help.		*/
 	{
-		ws_bad_char();								/* Ring the bells.			*/
+		vwang_bad_char();								/* Ring the bells.			*/
 		return(FAILURE);							/* Return to the caller.		*/
 	}
-	else sethelpactive(TRUE);							/* Now help is active.			*/
+	else WL_sethelpactive(TRUE);							/* Now help is active.			*/
 
-	wpushscr();									/* Save all neccessary variables.	*/
+	vwang_wpushscr();								/* Save all neccessary variables.	*/
 
-	if (wcurwidth != 80)  ws80();							/* Put in 80 col mode for help screens. */
-	vdefer_restore();								/* Cannot be in deferred mode.		*/
+	if (wcurwidth != 80)  WS80();							/* Put in 80 col mode for help screens. */
+	VL_vdefer_restore();								/* Cannot be in deferred mode.		*/
 
-	wsh_help(1);									/* Output the selection menu.		*/
+	WL_wsh_help(1);									/* Output the selection menu.		*/
 	if (curset)
-		vset_cursor_on();
+		VL_vset_cursor_on();
 	else
-		vset_cursor_off();
+		VL_vset_cursor_off();
 	cursor_on_flag = curset;							/* Set the flag.			*/
 
-	vdefer_restore();								/* Restore from optimization.		*/
-	wpopscr();									/* Restore all saved variables.		*/
+	VL_vdefer_restore();								/* Restore from optimization.		*/
+	vwang_wpopscr();								/* Restore all saved variables.		*/
 
-	vdefer_restore();								/* Optimization terminates before exit. */
+	VL_vdefer_restore();								/* Optimization terminates before exit. */
 
-	sethelpactive(FALSE);								/* Now help is inactive.		*/
+	WL_sethelpactive(FALSE);							/* Now help is inactive.		*/
 	vwang_set_synch(FALSE);								/* A synch is not required.		*/
 
-	menu_set_key(0, old_menu_exit_key);						/* Reset the menu exit key.		*/
+	WL_menu_set_key(0, old_menu_exit_key);						/* Reset the menu exit key.		*/
 	
-	voptimize(optsave);								/* vwang expects a certain opt level	*/
+	VL_voptimize(optsave);								/* vwang expects a certain opt level	*/
 											/* that's not correctly set here	*/
 	return(SUCCESS);								/* All done.				*/
 }
 
-int wpushscr(void)									/* A function to save the screen addrs	*/
+int vwang_wpushscr(void)								/* A function to save the screen addrs	*/
 {											/* and variables of a 'Wisp' screen.	*/
 	typedef struct wscrn_struct wscrn_struct;
 	wscrn_struct *wscrn_struct_ptr;							/* Point to the the save area.		*/
 	int x;										/* A local, working variable.		*/
 
 	if (wbackground()) return(0);							/* Don't do if in background.		*/
-	if (rts_first)	init_screen();							/* If first push.			*/
+	if (rts_first)	vwang_init_screen();						/* If first push.			*/
 	x = sizeof(struct wscrn_struct);
-	wscrn_struct_ptr = (wscrn_struct *) wmalloc(x);					/* Alloc storage for the info to save.	*/
+	wscrn_struct_ptr = (wscrn_struct *) wisp_malloc(x);				/* Alloc storage for the info to save.	*/
 
 	x = SIZEOF_SCREEN_MAP;								/* Size for the data to store.		*/
-	wscrn_struct_ptr->saved_ws_atr = wmalloc(x);					/* Alloc. storage and save the addr.	*/
+	wscrn_struct_ptr->saved_ws_atr = wisp_malloc(x);				/* Alloc. storage and save the addr.	*/
 	memcpy(wscrn_struct_ptr->saved_ws_atr, attr_map_ptr(0,0), x);			/* Copy contents to the storage area.	*/
 
-	wscrn_struct_ptr->saved_ws_at2 = wmalloc(x);					/* Alloc. storage and save the addr.	*/
+	wscrn_struct_ptr->saved_ws_at2 = wisp_malloc(x);				/* Alloc. storage and save the addr.	*/
 	memcpy(wscrn_struct_ptr->saved_ws_at2, data_map_ptr(0,0), x);			/* Copy contents to the storage area.	*/
 
-	wscrn_struct_ptr->saved_fac_table = wmalloc(sizeof(fac_table));			/* Alloc. storage and save the addr.	*/
+	wscrn_struct_ptr->saved_fac_table = wisp_malloc(sizeof(fac_table));		/* Alloc. storage and save the addr.	*/
 	memcpy(wscrn_struct_ptr->saved_fac_table, fac_table, sizeof(fac_table));	/* Copy contents to the storage area.	*/
 
-	wscrn_struct_ptr->saved_toupper_table = wmalloc(sizeof(user_toupper_table));	/* Alloc. storage and save the addr.	*/
+	wscrn_struct_ptr->saved_toupper_table = wisp_malloc(sizeof(user_toupper_table));/* Alloc. storage and save the addr.	*/
 	memcpy(wscrn_struct_ptr->saved_toupper_table, user_toupper_table, sizeof(user_toupper_table));
 
-	wscrn_struct_ptr->saved_numeric_table = wmalloc(sizeof(user_numeric_table));
+	wscrn_struct_ptr->saved_numeric_table = wisp_malloc(sizeof(user_numeric_table));
 	memcpy(wscrn_struct_ptr->saved_numeric_table,user_numeric_table,
 	       sizeof(user_numeric_table));
 	
@@ -3098,14 +3296,14 @@ int wpushscr(void)									/* A function to save the screen addrs	*/
 	wscrn_stack = (wscrn_struct *) wscrn_struct_ptr;				/* Save addr. of the new top screen.	*/
 
 
-	vpushscr();									/* Save the corresponding video structs.*/
+	VL_vpushscr();									/* Save the corresponding video structs.*/
 
 	set_stop_time((time_t)0);
-	set_aid(AID_LOCKED);
+	vwang_set_aid(AID_LOCKED);
 	return(SUCCESS);
 }
 
-int wpopscr(void)									/* A function to restore the screen and */
+int vwang_wpopscr(void)									/* A function to restore the screen and */
 {											/* associated variables.		*/
 	struct wscrn_struct *wscrn_struct_ptr;						/* Local pointer to the save area.	*/
 	int x;										/* A working variable.			*/
@@ -3115,7 +3313,7 @@ int wpopscr(void)									/* A function to restore the screen and */
 											/* structure of pointers and variables. */
 	if (!wscrn_struct_ptr)								/* Are we pointing to never never land? */
 	{
-		werrlog(ERRORCODE(14),0,0,0,0,0,0,0,0);					/* Stack empty				*/
+		werrlog(WERRCODE(67014),0,0,0,0,0,0,0,0);					/* Stack empty				*/
 		return(0);								/* Outta here.				*/
 	}
 
@@ -3138,7 +3336,7 @@ int wpopscr(void)									/* A function to restore the screen and */
 	old_line = wscrn_struct_ptr->saved_old_line;
 	old_column = wscrn_struct_ptr->saved_old_column;
 	errset = wscrn_struct_ptr->saved_errset;
-	set_aid(wscrn_struct_ptr->saved_aid);
+	vwang_set_aid(wscrn_struct_ptr->saved_aid);
 	fast_read = wscrn_struct_ptr->saved_fast_read;
 	wcurwidth = wscrn_struct_ptr->saved_screen_width;
 	set_stop_time(wscrn_struct_ptr->saved_stop_time);
@@ -3148,12 +3346,12 @@ int wpopscr(void)									/* A function to restore the screen and */
 
 	free(wscrn_struct_ptr);								/* Free up the allocated area.		*/
 
-	if (vscr_wid != wcurwidth)							/* If need to reset screen width.	*/
+	if (VL_vscr_wid != wcurwidth)							/* If need to reset screen width.	*/
 	{
-		if (wcurwidth == 132) ws132();						/* Put back to what it was before.	*/
-		else ws80();
+		if (wcurwidth == 132) WS132();						/* Put back to what it was before.	*/
+		else WS80();
 	}
-	vpopscr();									/* Get the video structs.		*/
+	VL_vpopscr();									/* Get the video structs.		*/
 	vwang_set_synch(FALSE);								/* Synch is not required now.		*/
 
 	if (use_costar())
@@ -3167,7 +3365,7 @@ int wpopscr(void)									/* A function to restore the screen and */
 	return(SUCCESS);
 }
 
-int terminal_control_char(unsigned char the_char)
+int vwang_terminal_control_char(unsigned char the_char)
 {
 #ifdef WIN32
 	switch(the_char)
@@ -3221,13 +3419,13 @@ static void ws_putbuff(unsigned char the_char, int row, int col, int rendition, 
 	/*
 	**	Blank out control characters. 
 	*/
-	if (terminal_control_char(terminal_char))
+	if (vwang_terminal_control_char(terminal_char))
 	{
 		terminal_char = ' ';
 		font = VCS_DEFAULT;
 	}
 
-	if ((row != vcur_lin) || (col != vcur_col+lbcount) || (rendition != vcur_atr) || (font != vchr_set))
+	if ((row != VL_vcur_lin) || (col != VL_vcur_col+lbcount) || (rendition != VL_vcur_atr) || (font != VL_vchr_set))
 	{
 		ws_dumpbuff(row,FALSE);							/* Dump what is currently in buffer.	*/
 		wsmove(row,col);							/* Now move to where we want to be.	*/
@@ -3257,19 +3455,19 @@ static void ws_dumpbuff(int row,int eol)						/* Dump the current buffer.		*/
 		{
 			lbuf[lbcount] = '\000';						/* Yes, deposit a null.			*/
 			vrawprint(lbuf);						/* Print the string.			*/
-			memcpy(vchr_map_ptr(row,vcur_col),lbuf,lbcount);		/* Store data in video's maps.		*/
-			memset(vatr_map_ptr(row,vcur_col),lbattr,lbcount);		/* Store the attributes.		*/
-			vcur_col = vcur_col + lbcount;					/* Move the tracking counter.		*/
-			if (vcur_col >= wcurwidth)
+			memcpy(vchr_map_ptr(row,VL_vcur_col),lbuf,lbcount);		/* Store data in video's maps.		*/
+			memset(vatr_map_ptr(row,VL_vcur_col),lbattr,lbcount);		/* Store the attributes.		*/
+			VL_vcur_col = VL_vcur_col + lbcount;					/* Move the tracking counter.		*/
+			if (VL_vcur_col >= wcurwidth)
 			{
-				vcur_col = wcurwidth - 1;				/* At the edge?				*/
+				VL_vcur_col = wcurwidth - 1;				/* At the edge?				*/
 			}
 			lbcount = 0;							/* Reset the counter.			*/
 		}
 
 		if (eol && (lbdangle > 4)) 
 		{
-			verase(TO_EOL);							/* Erase to the end of the line.	*/
+			VL_verase(TO_EOL);						/* Erase to the end of the line.	*/
 		}
 		
 		lbdangle = 0;								/* Reset the dangle counter.		*/
@@ -3282,13 +3480,13 @@ static int check_mp(int row,int col,int rend,int do_pseudo)				/* See if it is a
 	{
 		if (cursor_on_flag)							/* If cursor is on then turn off while	*/
 		{									/*  rewriting the line.			*/
-			vset_cursor_off();
+			VL_vset_cursor_off();
 		}
 		rewrite_mp(row,col,rend,do_pseudo);					/* Re-write line with bold attribute.	*/
 		wsmove(row,col);							/* Put cursor back to where it was.	*/
 		if (cursor_on_flag)							/* If cursor was on then turn it back	*/
 		{									/* on.					*/
-			vset_cursor_on();
+			VL_vset_cursor_on();
 		}
 		return(TRUE);								/* Return TRUE, was a menu pick.	*/
 	}
@@ -3338,7 +3536,7 @@ static void rewrite_mp(int line, int col, int rend, int do_pseudo)			/* Rewrite 
 	fc = attr_map_ptr(line,col-1);							/* Get the FAC character.		*/
 	last_mode = ws_trans_atr(*fc);							/* Set the last mode.			*/
 
-	vbuffering(VBUFF_START);							/* Turn on buffering if not on.		*/
+	VL_vbuffering_start();								/* Turn on buffering if not on.		*/
 
 	for (col_idx = col; col_idx < wcurwidth; col_idx++)				/* Loop through each column.		*/
 	{
@@ -3396,7 +3594,7 @@ static void rewrite_mp(int line, int col, int rend, int do_pseudo)			/* Rewrite 
 		}
 	}
 	ws_dumpbuff(line,FALSE);							/* Dump the accumulated buffer.		*/
-	vbuffering(VBUFF_END);								/* Dump the buffer to show the screen.	*/
+	VL_vbuffering_end();								/* Dump the buffer to show the screen.	*/
 	wsmode(VMODE_CLEAR);								/* Clear out the renditions.		*/
 	wscset(VCS_DEFAULT);
 }
@@ -3444,24 +3642,24 @@ static fac_t *attr_map_ptr(int row, int col)
 
 static unsigned char *vchr_map_ptr(int row, int col)
 {
-	return &vchr_map[vml(row)][col];
+	return &VL_vchr_map[VL_vml(row)][col];
 }
 
 static unsigned char *vatr_map_ptr(int row, int col)
 {
-	return &vatr_map[vml(row)][col];
+	return &VL_vatr_map[VL_vml(row)][col];
 }
 
-int ws80(void)										/* Select 80 column screen.		*/
+int WS80(void)										/* Select 80 column screen.		*/
 {
-	if (rts_first)	init_screen();							/* If first time setting.		*/
+	if (rts_first)	vwang_init_screen();						/* If first time setting.		*/
 	wsetwid(VSCREEN_NARROW);							/* Set the screen width.		*/
 	return(SUCCESS);
 }
 
-int ws132(void)										/* Select a 132 column screen.		*/
+int WS132(void)										/* Select a 132 column screen.		*/
 {
-	if (rts_first)	init_screen();							/* If first time setting.		*/
+	if (rts_first)	vwang_init_screen();						/* If first time setting.		*/
 	wsetwid(VSCREEN_WIDE);								/* Select the screen width.		*/
 	return(SUCCESS);
 }
@@ -3472,20 +3670,20 @@ static int wsetwid(int wd)
 
 	if (wbackground()) return FAILURE;
 
-	op_save = voptimize(VOP_DATA_AND_CONTROLS);					/* Turn optimization down.		*/
-	vscreen(wd);									/* Select the screen width.		*/
+	op_save = VL_voptimize(VOP_DATA_AND_CONTROLS);					/* Turn optimization down.		*/
+	VL_vscreen(wd);									/* Select the screen width.		*/
 	if (wd == VSCREEN_WIDE) 
 		wcurwidth = 132;							/* Remember the current width.		*/
 	else	
 		wcurwidth = 80;
 	vwang_set_synch(TRUE);								/* Now force a synchronize.		*/
-	vdefer_restore();								/* Restore from any optimization.	*/
-	voptimize(op_save);								/* Restore optimization level.		*/
+	VL_vdefer_restore();								/* Restore from any optimization.	*/
+	VL_voptimize(op_save);								/* Restore optimization level.		*/
 
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-char wscharat(int r, int c)								/* Get a character from a row and col.	*/
+char vwang_charat(int r, int c)								/* Get a character from a row and col.	*/
 {
 	return(*data_map_ptr(r,c));							/* Get this character from the map.	*/
 	
@@ -3624,7 +3822,7 @@ static unsigned char *map_multibyte(unsigned char *rowdata,unsigned char *caller
 		rowbuf=my_rowbuf;
 		memset(my_rowbuf,0,sizeof(my_rowbuf));
 	}
-	if (outctx==NULL)
+	if (IVS_outctx==NULL)
 	{
 		return rowbuf;
 	}
@@ -3632,24 +3830,24 @@ static unsigned char *map_multibyte(unsigned char *rowdata,unsigned char *caller
 	mcounter=1;
 	for (rowind=0; rowind<wcurwidth; ++rowind)
 	{
-		if ((rowind > (vcur_col - multi_input_pos)) && 
-		    (rowind < vcur_col))
+		if ((rowind > (VL_vcur_col - multi_input_pos)) && 
+		    (rowind < VL_vcur_col))
 		{
 			++rowind;
 			continue;
 		}
-		for (mbyteind=0; mbyteind < (outctx->srcsize); ++mbyteind)
+		for (mbyteind=0; mbyteind < (IVS_outctx->srcsize); ++mbyteind)
 		{
-			if ((outctx->indbuf)[rptr[rowind+mbyteind]+(mbyteind<<8)]==0xff)
+			if ((IVS_outctx->indbuf)[rptr[rowind+mbyteind]+(mbyteind<<8)]==0xff)
 			{
 				break;
 			}
 		}
-		if (mbyteind == (outctx->srcsize))
+		if (mbyteind == (IVS_outctx->srcsize))
 		{
 			if (!caller_rowbuf)
 			{
-				for (mbyteind=0; mbyteind < (outctx->srcsize); ++mbyteind)
+				for (mbyteind=0; mbyteind < (IVS_outctx->srcsize); ++mbyteind)
 				{
 					rowbuf[rowind+mbyteind] = mcounter;
 				}
@@ -3657,12 +3855,12 @@ static unsigned char *map_multibyte(unsigned char *rowdata,unsigned char *caller
 			}
 			else
 			{
-				for (mbyteind=0; mbyteind < (outctx->srcsize); ++mbyteind)
+				for (mbyteind=0; mbyteind < (IVS_outctx->srcsize); ++mbyteind)
 				{
 					rowbuf[rowind+mbyteind] = 1;
 				}
 			}
-			rowind += (outctx->srcsize)-1;
+			rowind += (IVS_outctx->srcsize)-1;
 		}
 	}
 	return rowbuf;
@@ -3713,7 +3911,7 @@ int SETFACS(unsigned char *new_table,unsigned char *toupper_table,unsigned char 
 		{	/* Report the error.	*/
 			char	buff[128];
 			sprintf(buff,"SETFACS-F-Invalid value %d for FAC, table item %d.",new_table[i],i);
-			werr_message_box(buff);
+			WL_werr_message_box(buff);
 			use_user_fac_table=FALSE;
 			return 0;
 		}
@@ -3797,7 +3995,7 @@ void SET8BIT(unsigned char *faclist,unsigned char *lowuplist,unsigned char *numl
 	use_user_fac_table=TRUE;
 }
 /*
-**	Routine:	valid_char_data()
+**	Routine:	vwang_valid_char_data()
 **
 **	Function:	determine if given character is valid for 
 **			display
@@ -3814,7 +4012,7 @@ void SET8BIT(unsigned char *faclist,unsigned char *lowuplist,unsigned char *numl
 **	02/10/93	Written by JEC
 **
 */
-int valid_char_data(char value)
+int vwang_valid_char_data(char value)
 {
 	if (value >= ' ' && value < max_data_range)
 		return TRUE;
@@ -3822,7 +4020,7 @@ int valid_char_data(char value)
 		return FALSE;
 }
 /*
-**	Routine:	fac()
+**	Routine:	vwang_fac()
 **
 **	Function:	To convert a pseudo FAC into a true FAC
 **
@@ -3841,7 +4039,7 @@ int valid_char_data(char value)
 **	12/01/92	Written by JEC
 **
 */
-fac_t fac(fac_t pseudo_FAC)
+fac_t vwang_fac(fac_t pseudo_FAC)
 {
 	fac_t	the_fac;
 
@@ -3857,7 +4055,7 @@ fac_t fac(fac_t pseudo_FAC)
 	return the_fac;
 }
 /*
-**	Routine:	unfac()
+**	Routine:	vwang_unfac()
 **
 **	Function:	To convert a pseudo FAC back into a true FAC
 **
@@ -3876,7 +4074,7 @@ fac_t fac(fac_t pseudo_FAC)
 **	12/01/92	Written by JEC
 **
 */
-fac_t unfac(fac_t true_FAC)
+fac_t vwang_unfac(fac_t true_FAC)
 {
 	fac_t idx;
 	
@@ -3891,19 +4089,19 @@ fac_t unfac(fac_t true_FAC)
 }
 
 /*
-**	Routine:	fac_pre_vwang()
+**	Routine:	vwang_fac_pre_filter()
 **
 **	Function:	To convert a pseudo FAC into a true FAC
 **
 **	Description:	This routine examines the user_fac_table to convert
 **			a pseudo to a true FAC.	 This routine is called by
-**			wscreen() to convert its FAC values.  Wscreen cannot
+**			WSCREEN() to convert its FAC values.  WSCREEN cannot
 **			call fac() above because fac uses the actual FAC table
 **			which is not valid until a vwang call.	This routine
 **			converts the FACs based on the data passed in to this
 **			module using SET8BIT or SETFACS, and it can be called
 **			prior to the actual vwang().  This also applies to the routine
-**			unfac_pre_vwang().
+**			vwang_unfac_pre_filter().
 **
 **	Arguments:	pseudo_FAC  - the fake FAC
 **
@@ -3918,7 +4116,7 @@ fac_t unfac(fac_t true_FAC)
 **	02/23/93	Written by JEC
 **
 */
-fac_t fac_pre_vwang(fac_t pseudo_FAC)
+fac_t vwang_fac_pre_filter(fac_t pseudo_FAC)
 {
 	if ((pseudo_FAC)<128 || (pseudo_FAC)>255 || !use_user_fac_table)
 	{
@@ -3931,13 +4129,13 @@ fac_t fac_pre_vwang(fac_t pseudo_FAC)
 	}
 }
 /*
-**	Routine:	unfac_pre_vwang()
+**	Routine:	vwang_unfac_pre_filter()
 **
 **	Function:	To convert a pseudo FAC back into a true FAC
 **
 **	Description:	This routine examines the user FAC table to convert
 **			a pseudo back to a true FAC.. see description for
-**			fac_pre_vwang() above.
+**			vwang_fac_pre_filter() above.
 **
 **	Arguments:	true_FAC  - a real FAC value
 **
@@ -3951,7 +4149,7 @@ fac_t fac_pre_vwang(fac_t pseudo_FAC)
 **	2/23/93		Written by JEC
 **
 */
-fac_t unfac_pre_vwang(fac_t true_FAC)
+fac_t vwang_unfac_pre_filter(fac_t true_FAC)
 {
 	register fac_t idx;
 	
@@ -3978,7 +4176,7 @@ fac_t unfac_pre_vwang(fac_t true_FAC)
 **	Function:	To extract the current AID character.
 **
 **	Description:	This routine returns the current AID character.
-**			This AID character is set by the set_aid() routine.
+**			This AID character is set by the vwang_set_aid() routine.
 **
 **	Arguments:	None
 **
@@ -4037,9 +4235,9 @@ char vwang_aid_read_unlocked(void)
 		**	there are keystrokes waiting to be read and if so we do a 1 second Wait.
 		*/
 
-		if (c = (char)vcheck())							/* If available get next char		*/
+		if ((c = (char)VL_vcheck()))							/* If available get next char		*/
 		{
-			vpushc(c);							/* We got a char so push it back	*/
+			VL_vpushc(c);							/* We got a char so push it back	*/
 
 			vw_function[0] = READ_MODIFIABLE;
 			memset(vw_wsb,' ',WSB_LENGTH);
@@ -4056,7 +4254,7 @@ char vwang_aid_read_unlocked(void)
 }
 
 /*
-**	Routine:	set_aid()
+**	Routine:	vwang_set_aid()
 **
 **	Function:	To set the current AID character.
 **
@@ -4076,7 +4274,7 @@ char vwang_aid_read_unlocked(void)
 **	12/16/92	Written by GSL
 **
 */
-void set_aid(char aid)
+void vwang_set_aid(char aid)
 {
 	current_aid = aid;
 }
@@ -4207,7 +4405,7 @@ static void set_stop_time(time_t the_time)
 }
 
 /*
-**	Routine:	meta_aid()
+**	Routine:	vwang_meta_aid()
 **
 **	Function:	To convert a meta character into an AID char.
 **
@@ -4227,13 +4425,13 @@ static void set_stop_time(time_t the_time)
 **	12/17/92	Written by GSL
 **
 */
-char meta_aid(int metachar)
+char vwang_meta_aid(int metachar)
 {
 	int	pfk;
 	char	aid;
 
 	aid = (char)0;								/* Set AID to NULL				*/
-	pfk = vfnkey(metachar);							/* Change meta into a pfkey number 1-32		*/
+	pfk = VL_vfnkey(metachar);							/* Change meta into a pfkey number 1-32		*/
 	if (pfk)								/* If a Pfkey change to an AID			*/
 	{ 
 		aid = pfk + ((pfk > 16) ? 80 : 64);				/* Add offsets to change into AID		*/
@@ -4305,7 +4503,7 @@ static void edit_init_struct(void)
 {
 	int idx;
 	
-	the_edit=(struct EDIT *)wcalloc(1,sizeof(struct EDIT));			/* get the struct */
+	the_edit=(struct EDIT *)wisp_calloc(1,sizeof(struct EDIT));		/* get the struct */
 	the_edit->mode_ins = 1;							/* start in insert mode */
 	the_edit->mark_row =  -1;						/* mark == -1 means no active mark */
 	the_edit->top_row = the_edit->bottom_row =
@@ -4338,17 +4536,17 @@ static void edit_init_struct(void)
 static void edit_init_window(void)
 {
 
-	vmove(the_edit->top_row-1,the_edit->left_col-1);			/* first draw the box */
-	vline(VLINE_VERTICAL,the_edit->bottom_row - the_edit->top_row+3);
+	VL_vmove(the_edit->top_row-1,the_edit->left_col-1);			/* first draw the box */
+	VL_vline(VLINE_VERTICAL,the_edit->bottom_row - the_edit->top_row+3);
 
-	vmove(the_edit->top_row-1,the_edit->left_col-1);
-	vline(VLINE_HORIZONTAL,the_edit->right_col-the_edit->left_col+3);
+	VL_vmove(the_edit->top_row-1,the_edit->left_col-1);
+	VL_vline(VLINE_HORIZONTAL,the_edit->right_col-the_edit->left_col+3);
 
-	vmove(the_edit->bottom_row+1,the_edit->left_col-1);
-	vline(VLINE_HORIZONTAL,the_edit->right_col-the_edit->left_col+3);
+	VL_vmove(the_edit->bottom_row+1,the_edit->left_col-1);
+	VL_vline(VLINE_HORIZONTAL,the_edit->right_col-the_edit->left_col+3);
 
-	vmove(the_edit->top_row-1,the_edit->right_col+1);
-	vline(VLINE_VERTICAL,the_edit->bottom_row - the_edit->top_row+3);
+	VL_vmove(the_edit->top_row-1,the_edit->right_col+1);
+	VL_vline(VLINE_VERTICAL,the_edit->bottom_row - the_edit->top_row+3);
 
 	the_edit->width = the_edit->right_col - the_edit->left_col + 1;
 	the_edit->height = the_edit->bottom_row - the_edit->top_row + 1;
@@ -4415,7 +4613,7 @@ static void edit_erase_box(void)
 **	pfkey		same as wsread
 **	no_mod		same as wsread
 **
-**	Globals:	vcur_line, vcur_col
+**	Globals:	vcur_line, VL_vcur_col
 **			the_edit, max_data_range,
 **			keydefs from vdara.h
 **
@@ -4427,8 +4625,14 @@ static void edit_erase_box(void)
 **	02/04/93	written by JEC 
 **
 */
-static void edit_main(int input,int row,int col,int *filling,unsigned char *terminate_list,
-		unsigned char *pfkey,unsigned char *no_mod)
+static void edit_main(
+		      int input,
+		      int row,
+		      int col,
+		      int *filling,
+		      const char *terminate_list,			
+		      char *pfkey,
+		      unsigned char *no_mod)
 {
 	int do_pseudo=FALSE;
 	
@@ -4438,11 +4642,11 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 	{
 		edit_unmark();
 		edit_redraw();
-		ws_fkey(0,filling,terminate_list,pfkey,no_mod);			/* behave as a normal return */
+		vwang_ws_fkey(0,filling,terminate_list,pfkey,no_mod);		/* behave as a normal return */
 	}
-	else if (vfnkey(input))							/* function keys are also normal */
+	else if (VL_vfnkey(input))							/* function keys are also normal */
 	{
-		ws_fkey(input,filling,terminate_list,pfkey,no_mod);
+		vwang_ws_fkey(input,filling,terminate_list,pfkey,no_mod);
 	}
 	else if (input == up_arrow_key)						/* arrows move normally but may require	 */
 	{									/* hilite update */
@@ -4450,7 +4654,7 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		the_edit->wrapped_mid_word=FALSE;				/* clear the wrapped word flag */
 
 		ws_posit(-1, 0,do_pseudo);
-		edit_compute_pos(vcur_lin,vcur_col);				/* so compute new cpos */
+		edit_compute_pos(VL_vcur_lin,VL_vcur_col);				/* so compute new cpos */
 		edit_show_hilite();						/* and call the hilite showing routine */
 	}
 	else if (input == down_arrow_key)	
@@ -4458,7 +4662,7 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		the_edit->wrap_moved_curs = FALSE;
 		the_edit->wrapped_mid_word=FALSE;				/* clear the wrapped word flag */
 		ws_posit( 1, 0,do_pseudo);
-		edit_compute_pos(vcur_lin,vcur_col);
+		edit_compute_pos(VL_vcur_lin,VL_vcur_col);
 		edit_show_hilite();
 	}
 	else if (input == left_arrow_key)	
@@ -4466,7 +4670,7 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		the_edit->wrap_moved_curs = FALSE;
 		the_edit->wrapped_mid_word=FALSE;				/* clear the wrapped word flag */
 		ws_posit( 0,-1,do_pseudo);
-		edit_compute_pos(vcur_lin,vcur_col);
+		edit_compute_pos(VL_vcur_lin,VL_vcur_col);
 		edit_show_hilite();
 	}
 	else if (input == right_arrow_key)	
@@ -4474,7 +4678,7 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		the_edit->wrap_moved_curs = FALSE;
 		the_edit->wrapped_mid_word=FALSE;				/* clear the wrapped word flag */
 		ws_posit( 0, 1,do_pseudo);
-		edit_compute_pos(vcur_lin,vcur_col);
+		edit_compute_pos(VL_vcur_lin,VL_vcur_col);
 		edit_show_hilite();
 	}
 	else if (input == key_mark)						/* mark key pressed, mark the current cpos */
@@ -4517,7 +4721,7 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		the_edit->wrap_moved_curs = FALSE;
 		the_edit->wrapped_mid_word=FALSE;				/* clear the wrapped word flag */
 		edit_tab(row,col);						/* move the cursor to the next tabstop */
-		edit_compute_pos(vcur_lin,vcur_col);				/* compute new cpos */
+		edit_compute_pos(VL_vcur_lin,VL_vcur_col);				/* compute new cpos */
 		edit_show_hilite();						/* adjust hilited area if necessary */
 	}
 	else if (input == backtab_key)						/* backtab key is normal */
@@ -4528,13 +4732,23 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 	}
 	else if (input == help_key)						/* help is normal */
 	{
-		if (ishelpactive())						/* Is help active?	*/
+		if (WL_ishelpactive())						/* Is help active?	*/
 		{
 			strcpy((char *)pfkey,(char *)"FE");			/* Return code FE.	*/
 			no_mod[1] = AID_HELP;					/* Mode code too.	*/
 			*filling = FALSE;					/* Now we're done.	*/
 		}
-		else ws_bar_menu(ON,row,col,0,0,no_mod,do_pseudo);
+		else 
+		{
+			if (EDE_using())
+			{
+				ws_bar_menu(ON,row,col,0,0,no_mod,do_pseudo);
+			}
+			else
+			{
+				vwang_help(ON);
+			}
+		}
 	}
 	else if (input == clear_before_key)					/* these haven't been well tested */
 	{
@@ -4593,10 +4807,10 @@ static void edit_main(int input,int row,int col,int *filling,unsigned char *term
 		edit_paste_block();
 		edit_redraw();
 	}
-	else if (use_netroncap() && input == trigger1)				/* what does this do? */
+	else if (WLNC_use_netroncap() && input == trigger1)			/* what does this do? */
 	{
 	}
-	else ws_bad_char();							/* Else beep.				*/
+	else vwang_bad_char();							/* Else beep.				*/
 
 }
 /*
@@ -5144,7 +5358,7 @@ static void edit_tab(int row, int col)
 	for (newpos = adjcol+1; newpos % 5; ++newpos);				/* now loop till mod 5 is zero */
 
 	if (newpos > the_edit->width)						/* no tabbing past the end */
-	  ws_bad_char();
+	  vwang_bad_char();
 	else
 	  wsmove(row,newpos+the_edit->left_col);				/* ok move there */
 }
@@ -5240,7 +5454,7 @@ static void edit_delleft(void)
 		
 		if (row==0)
 		{
-			ws_bad_char();
+			vwang_bad_char();
 			return;
 		}
 		--row;
@@ -5369,7 +5583,7 @@ static void edit_delright(void)
 
 	if (col==(the_edit->width-1))					/* at end of data, can't delete */
 	{
-		ws_bad_char();
+		vwang_bad_char();
 	}
 	else
 	{
@@ -5403,7 +5617,7 @@ static void edit_redraw(void)
 {
 	register int row_idx, col_idx;
 	
-	vset_cursor_off();
+	VL_vset_cursor_off();
 	wsmode(VMODE_BOLD);
 	for (row_idx=col_idx=0; row_idx < the_edit->height; )			/* now loop through the shadow buf byte by byte */
 	{									/* output any differences */
@@ -5427,7 +5641,7 @@ static void edit_redraw(void)
 	wsmove(the_edit->top_row+the_edit->edit_row, the_edit->left_col+the_edit->edit_col);
 	edit_show_hilite();							/* now show hilite.. edit_show_hilite must */
 	wsmode(VMODE_CLEAR);
-	vset_cursor_on();
+	VL_vset_cursor_on();
 }
 /*
 **	Routine:	edit_show_hilite()
@@ -5504,7 +5718,7 @@ static void edit_show_hilite(void)
 
 #define ISHILITED(ch) (FAC_MODIFIED(ch) ? 1 : 0)				/* macro is for readability */
 
-	vset_cursor_off();							/* inviso cursor */
+	VL_vset_cursor_off();							/* inviso cursor */
 	for (row_idx=col_idx=0; row_idx <= the_edit->height; )			/* loop through the map */
 	{
 #ifdef EDITSHOWHI
@@ -5542,26 +5756,26 @@ static void edit_show_hilite(void)
 			++row_idx;
 		}
 	}			  
-	vset_cursor_on();							/* cursor back on */
+	VL_vset_cursor_on();							/* cursor back on */
 	wsmode(VMODE_BOLD);							/* mode normal */
 	wsmove(cursorrow+the_edit->top_row,cursorcol+the_edit->left_col);	/* put the cursor back where it started */
 }
 
-static int wsmode(int control)								/* Select character rendition.		*/
+static int wsmode(int control)							/* Select character rendition.		*/
 {
-	return vmode(control);
+	return VL_vmode(control);
 }
 
 
-static int wsmove(int line,int column)							/* Move to a location on the screen.	*/
+static int wsmove(int line,int column)						/* Move to a location on the screen.	*/
 {
-	return vmove(line,column);
+	return VL_vmove(line,column);
 }
 
 
-static int wscset(int char_set)								/* Switch to requested character set.	*/
+static int wscset(int char_set)							/* Switch to requested character set.	*/
 {
-	return vcharset(char_set);
+	return VL_vcharset(char_set);
 }
 
 /*
@@ -5605,7 +5819,7 @@ static void edit_unmark(void)
 			++row_idx;
 		}
 	}			  
-	the_edit->mark_row = -1;							/* clear the mark */
+	the_edit->mark_row = -1;						/* clear the mark */
 }
 /*
 **	Routine:	edit_init_data()
@@ -5689,7 +5903,7 @@ static void edit_copycut_block(int cutflag)
 	{
 		return;
 	}
-	if (the_edit->mark_row < the_edit->edit_row)					/* compute the start and end points */
+	if (the_edit->mark_row < the_edit->edit_row)	/* compute the start and end points */
 	{
 		start_row = the_edit->mark_row;
 		start_col = the_edit->mark_col;
@@ -5982,7 +6196,7 @@ static void edit_cut_data(int start_row, int start_col, int end_row, int end_col
 **
 **	Function:	Flush all pending video operations.
 **
-**	Description:	This is a front end to the video routine vdefer_restore()
+**	Description:	This is a front end to the video routine VL_vdefer_restore()
 **
 **	Arguments:	None
 **
@@ -5997,7 +6211,7 @@ void vwang_flush(void)
 {
 	if (!wbackground())
 	{
-		vdefer_restore();
+		VL_vdefer_restore();
 	}
 }
 
@@ -6021,18 +6235,18 @@ void vwang_write_bell(void)
 {
 	if (!wbackground())
 	{
-		char	function[1], lines[1];
+		unsigned char	function[1], lines[1];
 
 		function[0] = WRITE_ALL;
 		lines[0] = 0;
 
-		vwang(function,"\001\100\000\000",lines,"A",NULL,NULL);
+		vwang(function,(unsigned char*)"\001\100\000\000",lines,"A",NULL,NULL);
 	}
 }
 
 int vwang_set_synch(int synch)
 {
-	synch_required = synch;
+	VL_synch_required = synch;
 	return synch;
 }
 
@@ -6042,25 +6256,25 @@ void vwang_shut(void)
 	{
 		costar_errtext("");
 
-		vexit();
+		VL_vexit();
 	}
 }
 
 void vwang_clear_on_shut(void)
 {
-	vonexit( NORMALIZE | CLEAR_SCREEN );
+	VL_vonexit( NORMALIZE | CLEAR_SCREEN );
 }
 
 void vwang_noclear_on_shut(void)
 {
-	vonexit( NORMALIZE );
+	VL_vonexit( NORMALIZE );
 }
 
 void vwang_synch(void)
 {
 	if (!wbackground())
 	{
-		vsynch();
+		VL_vsynch();
 	}
 }
 
@@ -6095,18 +6309,18 @@ int vwang_set_reinitialize(int flag)
 void vwang_pre_init(void)
 {
 	/*
-		This is called the first time into initwisp() 
+		This is called the first time into initwisp2() 
 		when not in background.
 	*/
 	vwang_init_video();
-	set_isdebug();
+	VL_set_isdebug();
 }
 
 void vwang_init_term(void)
 {
 	if (!wbackground())
 	{
-		vstate(VSTATE_DEFAULT);
+		VL_vstate(VSTATE_DEFAULT);
 	}
 }
 
@@ -6121,7 +6335,7 @@ void vwang_bell(int cnt)
 	
 	while( cnt > 0 )
 	{
-		vbell();							/* Ring it bell_count times.			*/
+		VL_vbell();						/* Ring it bell_count times.			*/
 		cnt--;
 	}
 }
@@ -6132,11 +6346,11 @@ int vwang_keypressed(int discard)
 
 	if (wbackground()) return 0;
 	
-	if (inchar = vcheck())						/* See if there is a keypress in bufr.	*/
+	if ((inchar = VL_vcheck()))						/* See if there is a keypress in bufr.	*/
 	{
 		if (!discard)
 		{
-			vpushc((char)inchar);						/* Push the char.			*/
+			VL_vpushc((char)inchar);				/* Push the char.			*/
 		}
 		return 1;
 	}
@@ -6167,11 +6381,11 @@ void vwang_init_video(void)
 	
 	if (first)
 	{
-		vre_set_logfile(werrpath());	/* Set video to log errors to the wisperr.log file */
+		VL_vre_set_logfile(WL_werrpath());	/* Set video to log errors to the wisperr.log file */
 		
 		if (!wbackground())
 		{
-			vcap_set_vcapfile(wisptermfilepath(NULL), wispterm(NULL));
+			VL_vcap_set_vcapfile(wisptermfilepath(NULL), wispterm(NULL));
 		}
 		first = 0;
 	}
@@ -6372,9 +6586,9 @@ static int meta_pfkey(int pfkey)
 **	This came from initscrn.c
 */
 static int no_term = 0;
-extern char language_path[];									/* this is from wperson.c. it is*/
+extern const char *WL_language_path();								/* this is from wperson.c. it is*/
 
-int init_screen(void)
+int vwang_init_screen(void)
 {
 	static int term_type = VT300;								/* Default to VT100 terminal.	*/
 	static int kp_on = FALSE;								/* Assume keypad will be off.	*/
@@ -6394,36 +6608,36 @@ int init_screen(void)
 		int4	def_bgchange, def_excolor, def_bgcolor;
 
 		rts_first = FALSE;								/* No longer the 1st time.	*/
-		voptimize(VOP_DATA_AND_CONTROLS);						/* Select appropriate optimiz.	*/
+		VL_voptimize(VOP_DATA_AND_CONTROLS);						/* Select appropriate optimiz.	*/
 
-		vstate(DEFAULT);								/* Select default screen setup.	*/
-		if (vscr_wid == 80) vscreen(VSCREEN_NARROW);					/* Select dark narrow screen.	*/
-		else vscreen(VSCREEN_WIDE);							/* else dark wide screen.	*/
+		VL_vstate(DEFAULT);								/* Select default screen setup.	*/
+		if (VL_vscr_wid == 80) VL_vscreen(VSCREEN_NARROW);					/* Select dark narrow screen.	*/
+		else VL_vscreen(VSCREEN_WIDE);							/* else dark wide screen.	*/
 
-		get_defs(DEFAULTS_BGCHANGE,(char*)&def_bgchange);
-		get_defs(DEFAULTS_EXCOLOR,(char*)&def_excolor);
-		get_defs(DEFAULTS_BGCOLOR,(char*)&def_bgcolor);
+		WL_get_defs(DEFAULTS_BGCHANGE,(char*)&def_bgchange);
+		WL_get_defs(DEFAULTS_EXCOLOR,(char*)&def_excolor);
+		WL_get_defs(DEFAULTS_BGCOLOR,(char*)&def_bgcolor);
 
-		vonexit(NORMALIZE|CLEAR_SCREEN);						/* Clear the screen on exit	*/
-		if (def_bgchange && def_excolor) vonexit(NORMALIZE|CLEAR_SCREEN|LIGHT);
-		if (def_bgchange && !def_excolor) vonexit(NORMALIZE|CLEAR_SCREEN|DARK);
+		VL_vonexit(NORMALIZE|CLEAR_SCREEN);						/* Clear the screen on exit	*/
+		if (def_bgchange && def_excolor) VL_vonexit(NORMALIZE|CLEAR_SCREEN|LIGHT);
+		if (def_bgchange && !def_excolor) VL_vonexit(NORMALIZE|CLEAR_SCREEN|DARK);
 
 		if (def_bgchange)								/* Should we change background?	*/
 		{	
-			if (def_bgcolor) vscreen(VSCREEN_LIGHT);				/* Set the screen grey.		*/
-			else vscreen(VSCREEN_DARK);						/* Set the screen black.	*/
+			if (def_bgcolor) VL_vscreen(VSCREEN_LIGHT);				/* Set the screen grey.		*/
+			else VL_vscreen(VSCREEN_DARK);						/* Set the screen black.	*/
 		}
-		else vscreen(VSCREEN_NOOP);							/* Then leave it alone always.	*/
+		else VL_vscreen(VSCREEN_NOOP);							/* Then leave it alone always.	*/
 
-		if ( strlen(language_path) )							/* if language was specified,   */
-		  vlanguage( language_path );							/* use it and call vlanguage    */
+		if ( strlen(WL_language_path()) )						/* if language was specified,   */
+			IVS_vlanguage( WL_language_path() );					/* use it and call vlanguage    */
 	}
 
-	if ((term_type == VT100) && kp_on) vset(VSET_KEYPAD,APPLICATIONS);			/* Applications keypad on?	*/
-	else vset(VSET_KEYPAD,NORMAL);
-	vset_cursor_off();									/* Don't show the cursor.	*/
-	ws_erap(FULL_SCREEN);									/* Erase the full screen.	*/
-	vmode(VMODE_CLEAR);									/* Return to normal rendition.	*/
+	if ((term_type == VT100) && kp_on) VL_vset(VSET_KEYPAD,APPLICATIONS);			/* Applications keypad on?	*/
+	else VL_vset(VSET_KEYPAD,NORMAL);
+	VL_vset_cursor_off();									/* Don't show the cursor.	*/
+	vwang_ws_erap(FULL_SCREEN);									/* Erase the full screen.	*/
+	VL_vmode(VMODE_CLEAR);									/* Return to normal rendition.	*/
 
 	return(retcod);	       									/* Return to caller, all ok...	*/
 }
@@ -6435,6 +6649,7 @@ static int check_scrn(void)
 	if (no_term)	return(0);								/* Say no terminal.		*/
 	else		return(1);								/* Say yes terminal.		*/
 }
+
 /*
 **	ROUTINE:	vwang_title()
 **
@@ -6443,21 +6658,48 @@ static int check_scrn(void)
 **	DESCRIPTION:	currently implemented for WIN32 console titles
 **			and Costar.
 **
-**	ARGUMENTS:	const char *   the_title       desired title
+**			Pass NULL as the_title to retrieve the last 
+**			title without changing it.
 **
-**	GLOBALS:	
+**	ARGUMENTS:	
+**	the_title       desired title (or NULL)
 **
-**	RETURN:		
+**	GLOBALS:	None
+**
+**	RETURN:		The last title set (may be NULL)	
 **
 **	WARNINGS:	
 **
 */
-void vwang_title(const char *the_title)
+const char* vwang_title(const char *the_title)
 {
-	if (!wbackground() && !nativescreens() && !use_costar())
+	static char* last_title = NULL;
+
+	if (NULL != the_title)
 	{
-		vtitle(the_title);
+		WL_wtrace("WTITLE","SET","Title=[%s]", the_title);
+
+		if (NULL != last_title)
+		{
+			free(last_title);
+		}
+
+		last_title = wisp_strdup(the_title);
+		
+		if (!wbackground() && !wisp_nativescreens())
+		{
+			if (use_costar())
+			{
+				costar_title(last_title);
+			}
+			else
+			{
+				VL_vtitle(last_title);
+			}
+		}
 	}
+
+	return last_title;
 }
 
 /*
@@ -6477,12 +6719,12 @@ void vwang_title(const char *the_title)
 **	WARNINGS:	none
 **
 */
-void WTITLE(char *the_title)
+void WTITLE(const char the_title[WTITLE_TITLE_LEN])
 {
-	char	title[81];
+	char	title[WTITLE_TITLE_LEN+1];
 	int	i;
 
-	memcpy(title,the_title,80);
+	memcpy(title,the_title,WTITLE_TITLE_LEN);
 	title[80] = (char)0;
 	
 	for(i=strlen(title) - 1; i >=0 && ' '==title[i]; i--)
@@ -6490,15 +6732,7 @@ void WTITLE(char *the_title)
 		title[i] = (char)0;
 	}
 
-	if (use_costar())
-	{
-		costar_title(the_title);
-	}
-	else
-	{
-	        vwang_title(title);
-	}
-	
+	vwang_title(title);	
 }
 
 /*
@@ -6563,26 +6797,26 @@ void vwang_load_charmap(int force)
 		/*
 		**	Load the CHARMAP values
 		*/
-		if (ptr = getenv("CHARMAP"))
+		if ((ptr = getenv("CHARMAP")))
 		{
 			strcpy(charmap_path,ptr);
-			wtrace("CHARMAP", "LOAD", "Found environment variable CHARMAP=%s",charmap_path);
+			WL_wtrace("CHARMAP", "LOAD", "Found environment variable CHARMAP=%s",charmap_path);
 		}
 		else
 		{
-			build_wisp_config_path("CHARMAP",charmap_path);
+			WL_build_wisp_config_path("CHARMAP",charmap_path);
 		}
 		the_file = fopen(charmap_path,"r");
 		if (the_file)
 		{
-			wtrace("CHARMAP", "LOAD", "Loading from file CHARMAP=%s",charmap_path);
+			WL_wtrace("CHARMAP", "LOAD", "Loading from file CHARMAP=%s",charmap_path);
 
 			/*
 			**	WangChar (1-127) Ansichar (1-255) TermChar (1-255)
 			*/
 			while(fgets(inlin,sizeof(inlin)-1,the_file))
 			{
-				if (ptr = strchr(inlin, '\n')) 
+				if ((ptr = strchr(inlin, '\n'))) 
 				{
 					*ptr = '\0';
 				}
@@ -6593,47 +6827,47 @@ void vwang_load_charmap(int force)
 					
 					if ( 3 != cnt )
 					{
-						wtrace("CHARMAP", "LOAD", "Syntax error [%s]",inlin);
+						WL_wtrace("CHARMAP", "LOAD", "Syntax error [%s]",inlin);
 					}
 					else if (!IS_WANG_CHAR(wangchar))
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid WangChar=%d, outside range 1-127 [%s]",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid WangChar=%d, outside range 1-127 [%s]",
 						       wangchar, inlin);
 					}
 					else if (!IS_8BIT_CHAR(ansichar))
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid AnsiChar=%d, outside range 1-255 [%s]",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid AnsiChar=%d, outside range 1-255 [%s]",
 						       ansichar, inlin);
 					}
 					else if (!IS_8BIT_CHAR(termchar))
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid TermChar=%d, outside range 1-255 [%s]",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid TermChar=%d, outside range 1-255 [%s]",
 						       termchar, inlin);
 					}
 					else if (tt_ansi2wang[ansichar] != ansichar)
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid double-mapping of AnsiChar=%d (WangChar=%d)",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid double-mapping of AnsiChar=%d (WangChar=%d)",
 						       ansichar, wangchar);
 					}
 					else if (tt_wang2ansi[wangchar] != wangchar)
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid double-mapping of WangChar=%d (AnsiChar=%d)",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid double-mapping of WangChar=%d (AnsiChar=%d)",
 						       wangchar, ansichar);
 					}
 					else if (tt_term2wang[termchar] != termchar)
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid double-mapping of TermChar=%d (WangChar=%d)",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid double-mapping of TermChar=%d (WangChar=%d)",
 						       termchar, wangchar);
 					}
 					else if (tt_wang2term[wangchar] != wangchar)
 					{
-						wtrace("CHARMAP", "LOAD", "Invalid double-mapping of WangChar=%d (TermChar=%d)",
+						WL_wtrace("CHARMAP", "LOAD", "Invalid double-mapping of WangChar=%d (TermChar=%d)",
 						       wangchar, termchar);
 					}
 					else
 					{
-						wtrace("CHARMAP", "LOAD", "Mapping WangChar=%d AnsiChar=%d TermChar=%d",
-						       wangchar, ansichar, termchar);
+						/* WL_wtrace("CHARMAP", "LOAD", "Mapping WangChar=%d AnsiChar=%d TermChar=%d",
+						       wangchar, ansichar, termchar); */
 
 						tt_ansi2wang[ansichar] = wangchar; 
 						tt_wang2ansi[wangchar] = ansichar; 
@@ -6737,7 +6971,7 @@ void WWANG2ANSI(unsigned char *buff, int2 *len)
 
 static int vwputc(int c)
 {
-	return vputc((char)WANG2TERM(c));
+	return VL_vputc((char)WANG2TERM(c));
 }
 
 static int mousenonmod(void)
@@ -6746,7 +6980,7 @@ static int mousenonmod(void)
 
 	if (-1 == rc)
 	{
-		if (get_wisp_option("MOUSENONMOD"))
+		if (WL_get_wisp_option("MOUSENONMOD"))
 		{
 			rc = 1;
 		}
@@ -6763,6 +6997,109 @@ static int mousenonmod(void)
 /*
 **	History:
 **	$Log: vwang.c,v $
+**	Revision 1.136  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.135  2003/06/20 15:37:45  gsl
+**	VL_ globals
+**	
+**	Revision 1.134  2003/05/22 14:08:21  gsl
+**	Add WTITLE_TITLE_LEN
+**	
+**	Revision 1.133  2003/04/04 16:34:10  gsl
+**	Trace pfkeys
+**	
+**	Revision 1.132  2003/03/17 20:29:19  gsl
+**	Remove overly large and non-useful traces
+**	
+**	Revision 1.131  2003/03/12 18:18:10  gsl
+**	FIx -Wall warnings
+**	
+**	Revision 1.130  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.129  2003/02/04 17:05:01  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.128  2003/01/31 18:54:37  gsl
+**	Fix copyright header
+**	
+**	Revision 1.127  2002/12/13 21:17:30  gsl
+**	vwang_title() fixes
+**	
+**	Revision 1.126  2002/12/13 19:25:47  gsl
+**	In WTITLE() was cobol style parameter to costar_title() instead of null terminated C string.
+**	
+**	Revision 1.125  2002/12/10 20:54:09  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.124  2002/12/03 22:15:13  gsl
+**	Replace the w_err_flag bitmask with wispdebug mode that can be set to "FULL"
+**	"ERRORS" or "NONE" to simplify.
+**	
+**	Revision 1.123  2002/10/18 19:14:08  gsl
+**	Cleanup
+**	
+**	Revision 1.122  2002/08/01 15:07:35  gsl
+**	type warnings
+**	
+**	Revision 1.121  2002/08/01 14:45:10  gsl
+**	type warnings
+**	
+**	Revision 1.120  2002/08/01 14:09:10  gsl
+**	type warnings
+**	
+**	Revision 1.119  2002/08/01 02:46:29  gsl
+**	Replace vwang calls with WS_CLOSE WS_READ WS_READ_ALT WS_REWRITE
+**	
+**	Revision 1.118  2002/07/31 21:00:28  gsl
+**	globals
+**	
+**	Revision 1.117  2002/07/26 18:19:15  gsl
+**	wscreen -> WSCREEN
+**	
+**	Revision 1.116  2002/07/17 17:25:59  gsl
+**	fix vbuffering_end problem
+**	
+**	Revision 1.115  2002/07/16 14:11:45  gsl
+**	VL_ globals
+**	
+**	Revision 1.114  2002/07/16 13:40:17  gsl
+**	VL_ globals
+**	
+**	Revision 1.113  2002/07/15 20:16:02  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.112  2002/07/15 17:52:50  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.111  2002/07/15 17:09:59  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.110  2002/07/15 14:07:01  gsl
+**	vwang globals
+**	
+**	Revision 1.109  2002/07/15 13:29:00  gsl
+**	IVS_ globals
+**	
+**	Revision 1.108  2002/07/12 20:40:39  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.107  2002/07/11 20:29:15  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.106  2002/07/10 21:05:27  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.105  2002/07/09 04:13:55  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.104  2002/07/02 21:15:30  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.103  2002/07/01 04:02:40  gsl
+**	Replaced globals with accessors & mutators
+**	
 **	Revision 1.102  2001/10/15 13:56:34  gsl
 **	Change vwang_set_videocap() to vwang_init_video()
 **	Add setting the video error log file.
@@ -6838,16 +7175,16 @@ static int mousenonmod(void)
 **
 **	Revision 1.86  1998-03-16 11:45:32-05  gsl
 **	Now that HELP has been converted for Native screens, re-add the
-**	tests for ishelpactive() to the vsharedscreen() test
+**	tests for WL_ishelpactive() to the VL_vsharedscreen() test
 **
 **	Revision 1.85  1998-03-06 11:41:28-05  gsl
-**	Add the costar_after_write_api following a wpopscr()
+**	Add the costar_after_write_api following a vwang_wpopscr()
 **
 **	Revision 1.84  1998-01-15 15:58:52-05  gsl
 **	Fix ws_insert() to allow you to push a NULL off the end of a line
 **
 **	Revision 1.83  1997-12-19 10:42:49-05  gsl
-**	Add terminal_control_char() routine
+**	Add vwang_terminal_control_char() routine
 **
 **	Revision 1.82  1997-12-18 21:02:08-05  gsl
 **	Fix CHARMAP processing to understand Terminal character set
@@ -6859,7 +7196,7 @@ static int mousenonmod(void)
 **	Add support for non-ASCII characters thru CHARMAP character mapping
 **
 **	Revision 1.79  1997-11-21 16:36:58-05  gsl
-**	Fixed the vsharedscreen() logic to work from HELP
+**	Fixed the VL_vsharedscreen() logic to work from HELP
 **
 **	Revision 1.78  1997-10-27 14:30:39-05  gsl
 **	Allow 33=help in terminate_list
@@ -6868,7 +7205,7 @@ static int mousenonmod(void)
 **	Add nativescreens() support to vwang_title()
 **
 **	Revision 1.76  1997-09-22 13:14:19-04  gsl
-**	Change isdebug() into the more general vsharedscreen()
+**	Change isdebug() into the more general VL_vsharedscreen()
 **
 **	Revision 1.75  1997-08-25 16:11:46-04  gsl
 **	Add COSTAR pre & post, read & write hooks for customizing costar
@@ -6895,7 +7232,7 @@ static int mousenonmod(void)
 **	Removed ifdef OLD_VIDEO code
 **
 **	Revision 1.70  1997-04-16 08:23:09-04  gsl
-**	Change to use wtrace()
+**	Change to use WL_wtrace()
 **
 **	Revision 1.69  1997-03-24 22:24:50-05  gsl
 **	Fix rewrite_mp() as it was erasing to end-of-line when it wasn't
@@ -6914,8 +7251,8 @@ static int mousenonmod(void)
 **
 **	Revision 1.65  1997-01-11 12:40:43-08  gsl
 **	Did some cleanup to isolate video variables.
-**	wsmode() now simple calls vmode()
-**	wsmove() calls vmove()
+**	wsmode() now simple calls VL_vmode()
+**	wsmove() calls VL_vmove()
 **	wscset() calls vcharset()
 **
 **	Revision 1.64  1997-01-09 11:43:11-08  gsl
@@ -6933,7 +7270,7 @@ static int mousenonmod(void)
 **	Revision 1.60  1996-11-04 15:48:17-08  gsl
 **	Add vwang_init_video() routine which is called to tell video which
 **	videocap file to use.
-**	It is then called from vwang_pre_init(), vwang(), and init_screen(), it
+**	It is then called from vwang_pre_init(), vwang(), and vwang_init_screen(), it
 **	must be called before any video routines are called.
 **
 **	Revision 1.59  1996-08-16 14:46:36-07  gsl
@@ -6980,7 +7317,7 @@ static int mousenonmod(void)
 **	Fix signed vs unsigned char warnings
 **
 **	Revision 1.46  1996-07-09 17:00:34-07  gsl
-**	Add vwang_keypressed() as a frontend for vcheck()
+**	Add vwang_keypressed() as a frontend for VL_vcheck()
 **
 **	Revision 1.45  1996-06-28 16:52:10-07  gsl
 **	Add routine vwang_pre_init()

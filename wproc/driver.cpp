@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 
 #if WANG
    // Initialize full screen IO services
-   if (!wbackground()) 
+   if (!WL_wbackground()) 
    {
 	if (user_options.compile() || user_options.syntax_check())
 	{
@@ -174,6 +174,11 @@ int main(int argc, char *argv[]) {
    restore_video_state();
 
 #if WANG
+   {
+	   char buff[20];
+	   sprintf(buff,"%03d",rc);
+	   SETRETCODE(buff);
+   }
    wang_os_update_fetched_args();
 #endif
 
@@ -199,8 +204,14 @@ int main(int argc, char *argv[]) {
 //
 //	History:
 //	$Log: driver.cpp,v $
-//	Revision 1.13.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.16  2003/07/03 18:54:55  gsl
+//	Fix RETURN-CODE processing, call SETRETCODE before exiting
+//	
+//	Revision 1.15  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
+//	
+//	Revision 1.14  2002/07/10 21:06:28  gsl
+//	Fix globals WL_ to make unique
 //	
 //	Revision 1.13  1999/08/29 17:19:37  gsl
 //	Move the vwang_title() call out of wang_os_init() so it doesn't get

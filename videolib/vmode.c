@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -21,7 +42,7 @@ static int vmod_do();
 
 /*						Subroutine entry point.								*/
 
-int vmode(int control)									/* Select character rendition.		*/
+int VL_vmode(int control)									/* Select character rendition.		*/
 {
 	register int ret;								/* Return control flag.			*/
 
@@ -32,10 +53,10 @@ int vmode(int control)									/* Select character rendition.		*/
 		ret = FAILURE;								/* No, so tag the failure.		*/
 		vre("vmode(%d)-Invalid parameter.",control);				/* Report the error.			*/
 	}
-	else if ((!vmod_op) || (voptlevel() <= VOP_DATA_ONLY))				/* Op OFF, TRACKING_ONLY or DATA_ONLY?	*/
+	else if ((!VL_vmod_op) || (voptlevel() <= VOP_DATA_ONLY))				/* Op OFF, TRACKING_ONLY or DATA_ONLY?	*/
 	{
 		ret = vmod_do(control);							/* Perform the action.			*/
-		vmod_op = TRUE;								/* Reset for next time.			*/
+		VL_vmod_op = TRUE;								/* Reset for next time.			*/
 	}
 	else if (voptlevel() <= VOP_DEFER_MOTION_ONLY)					/* Check if data changing.		*/
 	{
@@ -80,6 +101,15 @@ static int vmod_do(int control)								/* Do the requested action.		*/
 /*
 **	History:
 **	$Log: vmode.c,v $
+**	Revision 1.15  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.13  2002/07/17 21:06:03  gsl
+**	VL_ globals
+**	
 **	Revision 1.12  1997/07/08 21:19:17  gsl
 **	Add COSTAR for WIN32 directio logic
 **	Change to use new video.h interfaces

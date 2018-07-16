@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*---
 brlio.c
 
@@ -30,7 +44,6 @@ cloned from relio.c
 #define O_BINARY 0
 #endif
 
-static char sccsid[]="@(#)brlio.c	1.1 3/19/94";
 
 static void do_open(KCSIO_BLOCK *kfb,int mode);
 static int isrec(const char *rec,int len);
@@ -38,7 +51,6 @@ static int isnull(const char *rec,int len);
 static void brel_key_seek(KCSIO_BLOCK *kfb);
 static int brel_key_ok(KCSIO_BLOCK *kfb);
 static int brel_key_not_ok(KCSIO_BLOCK *kfb);
-static void do_start(KCSIO_BLOCK *kfb,int mode);
 static void brel_commit(int fh);
 
 
@@ -445,10 +457,12 @@ void brel_start_last(KCSIO_BLOCK *kfb)
 /*----
 Executes a start and sets up a new _last_io_key.
 ------*/
+#ifdef NOT_USED
 static void do_start(KCSIO_BLOCK *kfb,int mode)
 {
 	kfb->_status = EBADARG;
 }
+#endif
 
 /*----
                <<<<<<<< WRITE REWRITE DELETE  >>>>>>>>>>>>
@@ -650,8 +664,11 @@ static void brel_commit(int fh)
 /*
 **	History:
 **	$Log: brlio.c,v $
-**	Revision 1.7.2.2.2.1  2002/11/12 15:56:19  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.19  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.18  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.17  2002/10/24 14:20:41  gsl
 **	Make globals unique

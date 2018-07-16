@@ -1,0 +1,92 @@
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          WISP Native Notes
+
+Document:       wisp_native.txt (RELNOTES)
+Last Updated:   $Date:$
+Products:       WISP
+
+Summary:        Notes on changes to support a move "native" style
+		on migration of Wang COBOL.
+
+====================================================================
+
+To Do:
+======
+- Change opt_getlastfileop to opt_native
+
+- "W@OPENFILE"
+- "W@PRINTFILE"
+
+
+Design:
+=======
+CALL "W@FILESTATUSCHECK" USING
+     LastFileOp,
+     FileStatus,
+     ExtendedFileStatus
+     FileAttributes,  /* S-xxx */
+     Vol,Lib,File,
+     NativePath
+     CobolFileName
+     CobolAppname,
+     DeclarativesFlag.
+
+- Change S-file (status) into FileAttributes String of Letters
+get_prog_status()
+Declaractives
+isaproc - obsolete
+X4DBFILE -> X4DBFILE2 
+WFOPEN3  -> WFOPEN4
+SETFILE  -> SETFILE2
+
+FAC OF:
+=======
+MOVE FAC OF / TO FAC OF
+SET FAC OF ON/OFF
+IF FAC OF [NOT] EQUAL
+Condition: figcon IN/OF FAC OF [NOT] ON/OFF
+Confition: FAC OF ALTERED
+
+ChangeLog:
+==========
+2003/3/06
+- Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP for all cobols
+- Change File Status (S-xxx) to FileAttribute (get_prog_status(x))
+	- SETFILE  -> SETFILE2
+	- X4DBFILE -> X4DBFILE2
+	- WFOPEN3  -> WFOPEN4
+	- WFILECHK2 -> WFILECHK3
+
+2002/10/11 
+- Change Cobol type detection so INITWISP2() doesn't need to set it.
+- Change filelock and hardlock based on cobol type, not set in INITWISP2()
+
+2002/08/01 
+- Remove setprogid() in front of EXTRACT()
+
+2002/07/01
+- Wrote "W@FILESTATUSCHECK"
+- IS_DECLARE - Doesn't need to be a FileAttribute, it can be an arg to
+  "W@FILESTATUSCHECK".
+- Split mode/staus bit mask into File Attributes and State flags
+	wfopen3, wfopen2
+	wfname
+	wfilechk (IS_NORESPECIFY)
+  
+
+2002/06/30
+- Replaced globals with accessors
+
+2002/06/27
+- Implemented "W@OPENFILE" as a call to "WFOPEN4".
+- Removed IS_LIB and IS_BACKFILL
+- Work on wfopen and wfname
+- Convert between mode and fileattr with:
+	wisp_mode2fileattr()
+	wisp_fileattr2mode()
+
+2002/06/19
+- "wfilechk2" -> "W@FILESTATUSCHECK"

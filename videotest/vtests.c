@@ -13,7 +13,7 @@
 #include <video.h>
 #include <vmodules.h>
 
-tests()
+int tests()
 {
 	int i;
 

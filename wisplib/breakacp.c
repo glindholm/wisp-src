@@ -1,5 +1,23 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /********************************************************************************************************************************
 *																*
@@ -13,30 +31,25 @@ static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "werrlog.h"
 
-#ifdef VMS
-void BREAKACP(rel_line,ret_code)
-
-int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
-int4	*ret_code;							/* WANG ACP return code.				*/
-
-{
-#define		ROUTINE		5000
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-
-	*ret_code = 0;							/* Initialize the return value.				*/
-}
-#endif
-
 #if defined(unix)
 void BREAKACP(int4* rel_line,int4 *ret_code)
 {
+	WL_wtrace("BREAKACP","ENTRY","Entry into BREAKACP");
 	return;
 }
 #endif
 /*
 **	History:
 **	$Log: breakacp.c,v $
+**	Revision 1.13  2003/01/31 17:23:49  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.12  2002/12/09 21:09:26  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.11  2002/06/26 01:42:45  gsl
+**	Remove VMS code
+**	
 **	Revision 1.10  1996/08/19 22:32:10  gsl
 **	drcs update
 **	

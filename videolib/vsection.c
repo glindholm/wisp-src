@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		vsection.c
 **
@@ -10,18 +31,19 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Control video output buffering
 **
 **	Routines:	
-**	vbuffering()
+**	VL_vbuffering()
 */
 
 /*
 **	Includes
 */
-#include <stdio.h>									/* Include the standard I/O system.	*/
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "video.h"									/* Reference WOW definitions.		*/
+#include "video.h"
 #include "vmodules.h"
+#include "vdata.h"
 
 /*
 **	Structures and Defines
@@ -30,42 +52,35 @@ static char rcsid[]="$Id:$";
 /*
 **	Globals and Externals
 */
-extern int vb_count;									/* Data in buffer counter.		*/
 
 /*
 **	Static data
 */
-static int holding_output = 0;								/* Output buffering control flag.	*/
+static int nesting_level = 0;			/* Output buffering control flag.	*/
 
 
 /*
 **	Static Function Prototypes
 */
+static int VL_vbuffering(int state);
 
-/*
- * int vbuffering_on():	This flag is non-zero when the higher layers of
- *			Video wish to postpone flushing output waiting in the
- *			buffer until a "logical sequence" of operations is
- *			complete.
-*/
-
-int vbuffering_start(void)
+int VL_vbuffering_start(void)
 {
-	return vbuffering(VBUFF_START);
+	return VL_vbuffering(VBUFF_START);
 }
-int vbuffering_end(void)
+int VL_vbuffering_end(void)
 {
-	return vbuffering(VBUFF_END);
+	return VL_vbuffering(VBUFF_END);
 }
 
 
 /*
-**	ROUTINE:	vbuffering()
+**	ROUTINE:	VL_vbuffering()
 **
 **	FUNCTION:	Turn buffering on or off.
 **
-**	DESCRIPTION:	Call vbuffering(VBUFF_START) to begin a series of video ouput commands
-**			then call vbuffering(VBUFF_END) to identify the end of the series.
+**	DESCRIPTION:	Call VL_vbuffering(VBUFF_START) to begin a series of video ouput commands
+**			then call VL_vbuffering(VBUFF_END) to identify the end of the series.
 **			The output commands between the start and end will output all together.
 **			You can nest the start and end calls but every start must have a
 **			matching end call.
@@ -83,7 +98,7 @@ int vbuffering_end(void)
 **	WARNINGS:	Every start must have a matching end.
 **
 */
-int vbuffering(int state)								/* Select type of buffering operation.	*/
+static int VL_vbuffering(int state)		/* Select type of buffering operation.	*/
 {
 	static int first = 1;
 	static int buffering = 1;
@@ -107,19 +122,19 @@ int vbuffering(int state)								/* Select type of buffering operation.	*/
 	
 	if (VBUFF_START == state) /* LOGICAL */
 	{
-		holding_output += 1;							/* Increment the holding control flag.	*/
+		nesting_level += 1;					/* Increment the holding control flag.	*/
 	}
-	else if (VBUFF_END == state) /* AUTOMATIC */					/* Are we in automatic operation.	*/
+	else if (VBUFF_END == state) /* AUTOMATIC */			/* Are we in automatic operation.	*/
 	{
-		holding_output -= 1;							/* Decrement the holding control flag.	*/
+		nesting_level -= 1;					/* Decrement the holding control flag.	*/
 
-		if ((holding_output == 0) && (vb_count != 0)) 				/* Did we get to zero?			*/
+		if ((nesting_level == 0) && (VL_vb_count != 0)) 	/* Did we get to zero?			*/
 		{
-			vcontrol_flush();	
+			VL_vcontrol_flush();
 		}
-		else if (holding_output < 0)						/* Did we go below zero?		*/
+		else if (nesting_level < 0)				/* Did we go below zero?		*/
 		{
-			vre("Internal error in vbuffering(), holding_output flag decremented below 0.");
+			vre("Internal error in vbuffering(), nesting_level flag decremented below 0.");
 			exit(FAILURE);
 		}
 	}
@@ -131,14 +146,34 @@ int vbuffering(int state)								/* Select type of buffering operation.	*/
 	return(SUCCESS);
 }
 
-int vbuffering_on(void)
+/*
+ * int VL_vbuffering_on():	
+ *			This flag is non-zero when the higher layers of
+ *			Video wish to postpone flushing output waiting in the
+ *			buffer until a "logical sequence" of operations is
+ *			complete.
+*/
+
+int VL_vbuffering_on(void)
 {
-	return holding_output;
+	return nesting_level;
 }
 
 /*
 **	History:
 **	$Log: vsection.c,v $
+**	Revision 1.17  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/07/17 21:06:04  gsl
+**	VL_ globals
+**	
+**	Revision 1.15  2002/07/16 13:40:20  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/15 17:52:56  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.13  1997/07/09 16:17:50  gsl
 **	Add new interface.
 **	

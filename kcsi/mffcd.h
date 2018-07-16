@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #ifndef	MFFCD_H
 #define	MFFCD_H
@@ -260,6 +274,9 @@ For Key Definition Area
 /*
 **	History:
 **	$Log: mffcd.h,v $
+**	Revision 1.10  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.9  1997/10/30 19:33:00  scass
 **	Changed pointer definitions to be 4 bytes so FCD structure
 **	will always be 100 bytes as defined in MF documentation.

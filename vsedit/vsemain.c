@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		vsemain.c
@@ -175,7 +198,6 @@ aborts.
 
 #include "idsistd.h"
 
-#define EXT_FILEXT
 #include "filext.h"
 
 #include "vsedit.h"
@@ -191,6 +213,7 @@ aborts.
 #include "vwang.h"
 #include "wisplib.h"
 #include "wexit.h"
+#include "filext.h"
 
 
 static void vse_init(void);
@@ -211,18 +234,18 @@ static int screen_error;
 
 static char applname[9]="VSEDIT  ";
 
-main(int argc,char **argv)
+int main(int argc,char **argv)
 {
 			   /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
 	strcpy(VSE_COPYRIGHT,
 	       "(c) 1994-" WISP_COPYRIGHT_YEAR_STR " NeoMedia - VSEDIT Integrated Program Development Editor - v 2.14");
 
-	wpload();
+	WL_wpload();
 	vsedit_globals();
-	initglbs(applname);
+	WL_initglbs(applname);
 	vse_init();
 	vwang_title("WISP VSEDIT");
-	init_screen();
+	vwang_init_screen();
 	if(screen_error)
 	{
 		goto cleanup_exit;
@@ -245,7 +268,7 @@ main(int argc,char **argv)
 			char	ext[40];
 
 			strcpy(ext, splitext(vse_sysname));
-			upper_string(ext);
+			WL_upper_string(ext);
 			if      (0==strcmp(ext,".WCB"))	strcpy(vse_gp_input_language,"WCB      ");
 			else if (0==strcmp(ext,".COB"))	strcpy(vse_gp_input_language,"COB      ");
 			else if (0==strcmp(ext,".WPS"))	strcpy(vse_gp_input_language,"WPS      ");
@@ -263,7 +286,7 @@ main(int argc,char **argv)
 	*/
 cleanup_exit:
 	vwang_shut();
-	wexit(0);
+	WL_wexit(0);
 	return 0;
 }
 
@@ -275,8 +298,8 @@ static void vse_init(void)
 	init_gpint();
 	strcpy(vse_gp_input_language,"WCB      ");
 
-	get_defs(DEFAULTS_IV,vse_gp_input_volume);
-	get_defs(DEFAULTS_IL,vse_gp_input_library);
+	WL_get_defs(DEFAULTS_IV,vse_gp_input_volume);
+	WL_get_defs(DEFAULTS_IL,vse_gp_input_library);
 }
 
 static void vse(void)
@@ -363,7 +386,7 @@ int translate_name(char *wang_file, char *wang_lib, char *wang_vol, char *native
 
 	WSETFILEXT(lang_ext());
 
-	wfname(&mode,wang_vol,wang_lib,wang_file,native_name);
+	WL_wfname(&mode,wang_vol,wang_lib,wang_file,native_name);
 	native_name[VSE_SYSNAME_LEN] = 0;
 
 	return 0;
@@ -487,8 +510,40 @@ int is_read_only(void)
 /*
 **	History:
 **	$Log: vsemain.c,v $
-**	Revision 1.25.2.1  2002/11/14 21:12:33  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.36  2003/02/05 21:47:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.35  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.34  2002/07/29 15:46:51  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.33  2002/07/12 19:10:26  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.32  2002/07/12 17:17:07  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.31  2002/07/11 14:34:00  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.30  2002/07/10 21:06:39  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.29  2002/07/09 04:14:05  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.28  2002/06/25 18:40:49  gsl
+**	fix include
+**	
+**	Revision 1.27  2002/06/25 18:18:42  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 1.26  2002/06/25 17:46:07  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
 **	
 **	Revision 1.25  2002/03/28 15:17:33  gsl
 **	used define for copyright year

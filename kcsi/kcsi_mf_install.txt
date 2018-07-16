@@ -1,4 +1,5 @@
-Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+Copyright (c) 2002-2003 by NeoMedia Technologies Inc. 
+All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +8,7 @@ Title:          Installation of KCSI for Micro Focus COBOL on UNIX
 Document:       kcsi_mf_install.txt
 Last Updated:   $Date:$
 Products:       KCSI Utilities
-Versions:       4.0.00
+Versions:       4.1.00
 
 Summary:        Installation instructions for the KCSI Utilities
                 using the Micro Focus COBOL compiler.

@@ -9,7 +9,7 @@
 #include <vlocal.h>
 #include <vdata.h>
 #include <vmodules.h>
-testw()
+int testw()
 {
 	unsigned char *vsss(), *remember;
 	register int i,j;
@@ -20,7 +20,7 @@ testw()
 
 	remember = vsss(irow,icol,irows,icols);
 
-	vbuffering_start();
+	VL_vbuffering_start();
 
 	vmode(REVERSE);
 	vmove(irow,icol);
@@ -41,7 +41,7 @@ testw()
 	vmove(irow+1,icol+2);
 	vprint("Screen segment saved %o.",remember);
 
-	vbuffering_end();
+	VL_vbuffering_end();
 	
 	vmove(irow+irows-2,icol+2);
 	vprint("Depress any key to continue...");

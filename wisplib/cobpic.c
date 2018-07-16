@@ -1,13 +1,23 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /*
 	cobpic.c
@@ -17,12 +27,9 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 
 #include "idsistd.h"
-#include "cobrun.h"
 #include "cobpic.h"
 #include "wisp_pic.h"
 
-extern char	char_decimal_point;							/* The decimal_point character		*/
-extern char	char_comma;								/* The comma character			*/
 
 static int cobpic_alphaedit( char *xobj, const char *source, const char *xpicture, int size );
 static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int p_size, int p_dp, 
@@ -36,13 +43,22 @@ static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx,
 #define PROT_FAC	0x8C
 
 
+static char	char_decimal_point = '.';	/* The decimal_point character		*/
+static char	char_comma = ',';		/* The comma character			*/
+
+void WL_set_char_decimal_point(char dp)	{ char_decimal_point = dp; }
+char WL_get_char_decimal_point()	{ return char_decimal_point; }
+
+void WL_set_char_comma(char comma)	{ char_comma = comma; }
+char WL_get_char_comma()		{ return char_comma; }
+
 /*
 	cobpic_edit:	COBOL PICTURE EDIT
 			This routine will move the source field into the object field performing picture editing.
 			The resulting object field will conform to the picture clause.
 			If invalid data is detected the errcode will be set to non-zero and the object field will not be modifed.
 			The source and picture fields are never modified.
-			The source and object fields MUST be of size pic_size(picture).
+			The source and object fields MUST be of size WL_pic_size(picture).
 			If picture clause is considered to be of type alphabetic, alphanumeric, alphaedit or numeric.
 			An alphabetic picture contains only A and B elements.
 			An alphanumeric picture contains only A, X, and 9 elements.
@@ -52,22 +68,22 @@ static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx,
 			All numeric pictures are treated a numeric-edited.
 			If the picture is alphanumeric or the size is greater then 80 no editing is performed.
 */
-void cobpic_edit(char* object, const char* source, const char* picture,int* errcode )
+void WL_cobpic_edit(char* object, const char* source, const char* picture,int* errcode )
 {
 	char	xpic[100], suppchar;
 	int	xflag, psize, pic_type, pic_dp, blankdecimal, suppidx, floatidx, psigned;
 
 	*errcode = 0;
 
-	parse_pic(picture, xpic, &xflag, &psize, &pic_type, &pic_dp, &blankdecimal, 
+	WL_parse_pic(picture, xpic, &xflag, &psize, &pic_type, &pic_dp, &blankdecimal, 
 						 &suppchar, &suppidx, &floatidx, &psigned);
 
-	cobxpic_edit(object, source, xpic, psize, pic_type, pic_dp, blankdecimal,
+	WL_cobxpic_edit(object, source, xpic, psize, pic_type, pic_dp, blankdecimal,
 						  suppchar, suppidx, floatidx, psigned, errcode);
 
 }
 
-void cobxpic_edit(
+void WL_cobxpic_edit(
 		  char	*object,		/* Input and Output areas */
 		  const char	*source, 
 		  const char	*xpicture,	/* The expanded picture (also adjusted picture for Numeric only) */
@@ -169,14 +185,14 @@ static int cobpic_alphaedit( char *xobj, const char *source, const char *xpictur
 		switch(*pic)
 		{
 		case 'A':					/* If not A-Z errcode					*/
-			if ( !isalpha(*src) && *src != ' ' )
+			if ( !isalpha((int)*src) && *src != ' ' )
 			{
 				return(1);
 			}
 			*obj++ = *src++;
 			break;
 		case '9':					/* If not 0,1-9 errcode					*/
-			if ( !isdigit(*src) )
+			if ( !isdigit((int)*src) )
 			{
 				return(1);
 			}
@@ -320,7 +336,7 @@ static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int 
 	/* Check if we have digits that make up a value */
 	for(value=0, e_idx=e_start; e_idx<e_end; e_idx++) 
 	{
-		if ( isdigit(source[e_idx]) && source[e_idx] != '0' ) 
+		if ( isdigit((int)source[e_idx]) && source[e_idx] != '0' ) 
 		{
 			value=1; 
 			break;
@@ -427,7 +443,7 @@ static void adjustpic(char *xpic, int size)
 {
 	char	*ptr1, *ptr2;
 
-	while(ptr1=strchr(xpic,'B'))
+	while((ptr1=strchr(xpic,'B')))
 	{
 		*ptr1 = 'b';
 	}
@@ -471,7 +487,7 @@ static int picedit_insert(char* pic, char* src, char* obj, int negative, int* in
 	case 'Z':
 	case '*':
 	case '#':
-		if ( isdigit(*src) || 
+		if ( isdigit((int)*src) || 
 		     ('*' == *pic && '*' == *src) )	/* Zero suppression */
 		{
 			*obj = *src;
@@ -720,9 +736,9 @@ static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx,
 }
 
 /*
-	parse_pic:	Parse the cobol picture and return all editing info.
+	WL_parse_pic:	Parse the cobol picture and return all editing info.
 */
-void parse_pic(const char *picture,	/* The COBOL picture clause. */
+void WL_parse_pic(const char *picture,	/* The COBOL picture clause. */
 	       char	*xpic,		/* The expanded picture (also adjusted picture for Numeric only) */
 	       int	*xflag,		/* Flag if xpic was created. */
 	       int	*psize,		/* The number of character positions in pic */
@@ -738,7 +754,7 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 	char	*ptr;
 
 	*xflag 		= 0;				/* Not expanded. */
-	*psize 		= pic_size(picture);
+	*psize 		= WL_pic_size(picture);
 	*pic_type 	= PIC_NOEDIT;			/* No edit */
 	*pic_dp		= *psize;			/* All chars */
 	*blankdecimal	= 1;				/* No '9' in decimal */
@@ -782,7 +798,7 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 	{
 		adjustpic(xpic,*psize);						/* Chg 'B' -> 'b' and float to '#'		*/
 
-		if ( ptr = strchr(xpic,char_decimal_point) )			/* Calc picture decimal point (p_dp).		*/
+		if ( (ptr = strchr(xpic,char_decimal_point)) )			/* Calc picture decimal point (p_dp).		*/
 		{
 			*pic_dp = ptr - xpic;
 		}
@@ -829,7 +845,7 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 
 		}
 
-		if (ptr = strchr(xpic,'#'))
+		if ((ptr = strchr(xpic,'#')))
 		{
 			for(idx = ptr-xpic-1; idx>=0; idx--)			/* Point to floating char.			*/
 			{
@@ -840,7 +856,7 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 			*floatidx = idx;					/* Set the float index.				*/
 		}
 
-		if (ptr = strpbrk(xpic,"+-CD"))
+		if ((ptr = strpbrk(xpic,"+-CD")))
 		{
 			switch(*ptr)
 			{
@@ -873,9 +889,28 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 }
 
 
+
 /*
 **	History:
 **	$Log: cobpic.c,v $
+**	Revision 1.23  2003/02/04 18:29:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.22  2003/01/31 21:24:13  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.21  2003/01/31 17:23:48  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.20  2002/10/18 19:14:11  gsl
+**	Cleanup
+**	
+**	Revision 1.19  2002/07/11 20:29:06  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.18  2002/07/10 21:05:15  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.17  2001/11/08 16:37:28  gsl
 **	Remove unused ptr.
 **	

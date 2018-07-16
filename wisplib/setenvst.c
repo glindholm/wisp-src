@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		setenvst.c
 **
@@ -22,7 +43,7 @@ static char rcsid[]="$Id:$";
 #include "werrlog.h"
 
 /*
-**	ROUTINE:	setenvstr()
+**	ROUTINE:	WL_setenvstr()
 **
 **	FUNCTION:	Set a environment string
 **
@@ -40,16 +61,14 @@ static char rcsid[]="$Id:$";
 **	WARNINGS:	None
 **
 */
-int setenvstr(const char* envstring)
+int WL_setenvstr(const char* envstring)
 {
-	wtrace("PUTENV","ENTER", "%s", envstring);
+	wtrace("PUTENV","ENTRY", "%s", envstring);
 
-	if ( 0 != putenv( wstrdup(envstring) ) )
+	if ( 0 != putenv( wisp_strdup(envstring) ) )
 	{
-		char buff[256];
-		
-		sprintf(buff, "%%PUTENV-E-FAILED putenv(\"%s\") failed errno=[%d]", envstring, errno);
-		werrlog(104,buff,0,0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(104),"PUTENV", "FAILED", 
+			"putenv(\"%s\") failed errno=[%d]", envstring, errno);
 		return(2);
 	}
 
@@ -59,6 +78,21 @@ int setenvstr(const char* envstring)
 /*
 **	History:
 **	$Log: setenvst.c,v $
+**	Revision 1.17  2003/01/31 18:54:38  gsl
+**	Fix copyright header
+**	
+**	Revision 1.16  2002/12/09 21:09:31  gsl
+**	Use WL_wtrace(ENTRY)
+**	
+**	Revision 1.15  2002/12/09 19:15:33  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.14  2002/07/09 04:13:58  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.13  2002/07/02 21:15:28  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.12  1998/12/09 15:46:24  gsl
 **	up buff to 256
 **	

@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 Function declarations for the support routines for CONTROL
 REPORT INQUIRY and DATENTRY
@@ -53,6 +67,9 @@ void RPTWOP();
 /*
 **	History:
 **	$Log: crid.h,v $
+**	Revision 1.5  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.4  1996/09/18 18:33:54  gsl
 **	Fix warnings
 **	

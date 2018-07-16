@@ -373,7 +373,7 @@ token *scanner::scan_token()
 #if WANG
             // No concept of pathname for Wang
 #else
-#if MSFS
+#if WIN32
             else if (c == '\\' || c == '.' || c == '*' || c == '?')
                state = state_pathname;
 #else
@@ -553,8 +553,11 @@ void scanner::ignore_rest_of_line()
 //
 //	History:
 //	$Log: scanner.cpp,v $
-//	Revision 1.7.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.9  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
+//	
+//	Revision 1.8  2002/07/25 17:03:43  gsl
+//	MSFS->WIN32
 //	
 //	Revision 1.7  1998/08/31 19:14:13  gsl
 //	drcs update

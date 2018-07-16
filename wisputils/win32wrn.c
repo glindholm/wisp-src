@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		win32wrun.c
 **
@@ -71,7 +94,7 @@ static void win32getargs(LPSTR lpszCommandLine, int *argc, char ***argv)
 	** is program name)
 	*/
 	argidx=1;
-	cmdptr = cmdcopy = wstrdup(lpszCommandLine);
+	cmdptr = cmdcopy = wisp_strdup(lpszCommandLine);
 	do
 	{
 		/*
@@ -113,7 +136,7 @@ static void win32getargs(LPSTR lpszCommandLine, int *argc, char ***argv)
 	/*
 	** now grab char ** array for the args we counted
 	*/
-	*argv = wcalloc(argidx, sizeof(char*));
+	*argv = wisp_calloc(argidx, sizeof(char*));
 
 	/*
 	** start the loop at 1 again (index zero is progname)
@@ -123,7 +146,7 @@ static void win32getargs(LPSTR lpszCommandLine, int *argc, char ***argv)
 	/*
 	** store the program name (wrun) as arg 0
 	*/
-	(*argv)[0] = wstrdup("wrun");
+	(*argv)[0] = wisp_strdup("wrun");
 
 	/*
 	** reinitialize the cmdptr
@@ -187,6 +210,12 @@ void wrun_message_box(char *line1, char *line2)
 /*
 **	History:
 **	$Log: win32wrn.c,v $
+**	Revision 1.6  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.5  2002/07/02 21:15:40  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.4  1999/09/13 19:55:43  gsl
 **	fix main() prototype
 **	

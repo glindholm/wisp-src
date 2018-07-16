@@ -115,9 +115,9 @@ static int ccsioerr(int status,char *io,char *name)
 {
 
 	char *sys_md(),*sys_hms();
-	char *err_msg,*io_msg;
+	const char *err_msg;
+	const char *io_msg;
 	int io_idx;
-	static char unknown_lit[]="Unknown";
 
 #ifndef LINUX
 	extern int sys_nerr;
@@ -161,18 +161,18 @@ static int ccsioerr(int status,char *io,char *name)
 		}
 	io_msg = io_lit[io_idx];
 /* A literal for the error */
-	if(status > 116)
-		err_msg = unknown_lit;
+	if(status >= 100 && status <= 116)
+	{
+		err_msg = err_lit[status - 100];	/* KSCI errors */
+	}
+	else if(status >= 0 && status <= sys_nerr)
+	{
+		err_msg = sys_errlist[status];		/* System errors */
+	}
 	else
-	if( status < 100)
-		{
-		if(status > sys_nerr)
-			err_msg = unknown_lit;
-		else
-			err_msg = sys_errlist[status];
-		}
-	else
-		err_msg = err_lit[status - 100];
+	{
+		err_msg = "Unknown";
+	}
 
 /* And append it to the log */
 	
@@ -262,8 +262,11 @@ static void add_mf_error(KFB *kfb)
 /*
 **	History:
 **	$Log: ccsioerr.c,v $
-**	Revision 1.8.2.3  2003/02/13 15:32:03  gsl
-**	sync with $HEAD
+**	Revision 1.16  2003/03/20 15:23:21  gsl
+**	FIx warning
+**	
+**	Revision 1.15  2003/03/20 15:01:05  gsl
+**	Fix -Wall warnings
 **	
 **	Revision 1.14  2003/02/13 15:30:12  gsl
 **	Only add MF error if KCSI_MFX defined

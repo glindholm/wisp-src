@@ -28,7 +28,7 @@
 #include "memory.hpp"
 #include "utility.hpp"
 
-extern "C" void ws_help(int);
+extern "C" void vwang_help(int);
 
 screen_info global_screen_info;
 
@@ -994,7 +994,7 @@ Boolean screen::handle_key(int a_key) {
       		}
 
 		saved_screen = new screen_contents(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
-	 	ws_help(1);
+	 	vwang_help(1);
           	saved_screen->restore_screen();
           	delete saved_screen;
 
@@ -1326,6 +1326,9 @@ void screen::init_fkey_map() {
 //
 //	History:
 //	$Log: screen.cpp,v $
+//	Revision 1.14  2002/07/11 20:29:23  gsl
+//	Fix WL_ globals
+//	
 //	Revision 1.13  1998/10/12 16:11:27  gsl
 //	moved costar version assignment out of condition
 //	

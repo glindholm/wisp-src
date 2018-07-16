@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 visn2.h
 Created from notes faxed by Greg Lindholm at IDSI. This is supposed
@@ -73,6 +87,9 @@ extern int v_errno;
 /*
 **	History:
 **	$Log: visn2.h,v $
+**	Revision 1.4  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
+**	
 **	Revision 1.3  1996/09/17 23:34:22  gsl
 **	drcs update
 **	

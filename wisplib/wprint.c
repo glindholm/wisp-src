@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wprint.c
 **
@@ -7,10 +28,10 @@ static char rcsid[]="$Id:$";
 **
 **	RCS:		$Source:$
 **
-**	Purpose:	All printing goes through the wprint() routine.
+**	Purpose:	All printing goes through the WL_wprint() routine.
 **
 **	Routines:	
-**	wprint()	
+**	WL_wprint()	
 **	
 */
 
@@ -29,6 +50,7 @@ static char rcsid[]="$Id:$";
 #include "wglobals.h"
 #include "wisplib.h"
 #include "wmalloc.h"
+#include "vssubs.h"
 
 #ifdef WIN32
 #include "win32spn.h"
@@ -55,7 +77,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 			 int4 printer, const char *disposition, char mode);
 
 /*
-**	Routine:	wprint()
+**	Routine:	WL_wprint()
 **
 **	Function:	Common frontend to WISP printing facilities.
 **
@@ -95,14 +117,12 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 **
 **
 */
-void wprint(const char* native_fname, char mode, const char* disposition, 
+void WL_wprint(const char* native_fname, char mode, const char* disposition, 
 	    int copies, char prt_class, int prt_form, int* return_code)
 {
-#define		ROUTINE		83500
-	int	deleteit = 0;
 	int4	printer;
 
-	wtrace("WPRINT", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d]",
+	WL_wtrace("WPRINT", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d]",
 	       (native_fname)?native_fname:"(null)", mode, (disposition)?disposition:"  ", copies, prt_class, prt_form);
 
 
@@ -111,22 +131,22 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 	*/
 	if (NULL == native_fname)
 	{
-		wtrace("WPRINT","ARGS", "File name is NULL");
-		*return_code = 40;
+		WL_wtrace("WPRINT","ARGS", "File name is NULL");
+		*return_code = PRINT_RC_40_INVALID_PARAM;
 		return;
 	}
 
 	if ( !fexists(native_fname) )
 	{
 		/* File does not exist */
-		*return_code = 20;
+		*return_code = PRINT_RC_20_FILE_NOT_FOUND;
 		return;
 	}
 	
 	switch(mode)
 	{
 	case 'K':	/* KEEP - don't print */	
-		*return_code = 0;
+		*return_code = PRINT_RC_0_SUCCESS;
 		return;
 
 	case 'S':	/* SPOOL */	
@@ -137,29 +157,29 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 		break;
 
 	default:
-		wtrace("WPRINT","ARGS", "Mode is invalid [%c]", mode);
-		*return_code = 40;
+		WL_wtrace("WPRINT","ARGS", "Mode is invalid [%c]", mode);
+		*return_code = PRINT_RC_40_INVALID_PARAM;
 		return;
 	}
 
 	if (copies < 1)
 	{
-		wtrace("WPRINT","ARGS", "Copies is less then 1 [%d]", copies);
-		*return_code = 40;
+		WL_wtrace("WPRINT","ARGS", "Copies is less then 1 [%d]", copies);
+		*return_code = PRINT_RC_40_INVALID_PARAM;
 		return;
 	}
 
 	if (prt_form < 0 || prt_form > 999)
 	{
-		wtrace("WPRINT","ARGS", "Form number is invalid [%d]", prt_form);
-		*return_code = 40;
+		WL_wtrace("WPRINT","ARGS", "Form number is invalid [%d]", prt_form);
+		*return_code = PRINT_RC_40_INVALID_PARAM;
 		return;
 	}
 
 	if (! (' ' == prt_class || (prt_class >= 'A' && prt_class <= 'Z'))) 
 	{
-		wtrace("WPRINT","ARGS", "Class is invalid [%c]",prt_class);
-		*return_code = 40;
+		WL_wtrace("WPRINT","ARGS", "Class is invalid [%c]",prt_class);
+		*return_code = PRINT_RC_40_INVALID_PARAM;
 		return;
 	}
 	
@@ -186,8 +206,8 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 		      0==memcmp("DX",disposition,2) || 
 		      0==memcmp("RS",disposition,2)   ))
 		{
-			wtrace("WPRINT","ARGS", "Disposition is invalid [%2.2s]", disposition);
-			*return_code = 40;
+			WL_wtrace("WPRINT","ARGS", "Disposition is invalid [%2.2s]", disposition);
+			*return_code = PRINT_RC_40_INVALID_PARAM;
 			return;
 		}
 	}
@@ -203,11 +223,11 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 	/*
 	**	Get the printer number
 	*/
-	get_defs(DEFAULTS_PR,&printer);
+	WL_get_defs(DEFAULTS_PR,&printer);
 	
 	if (printer < 0 || printer > 999)
 	{
-		wtrace("WPRINT","ARGS", "Printer number is invalid [%d] using 000", printer);
+		WL_wtrace("WPRINT","ARGS", "Printer number is invalid [%d] using 000", printer);
 		printer = 0;
 	}
 
@@ -215,7 +235,7 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 	**	Call the platform/print queue specific routine to print.
 	*/
 
-	switch(opt_printqueue)
+	switch(WL_opt_printqueue)
 	{
 	case PQ_GENERIC:
 		*return_code = generic_print( native_fname, copies, prt_form, prt_class, printer, disposition, mode);
@@ -268,10 +288,7 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 	char    modestr[64];
 	int del=0, re=0, hold=0;
 	
-#undef		ROUTINE
-#define		ROUTINE		46400
-
-	wtrace("unique_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
+	WL_wtrace("unique_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
 	       file, mode, disposition, copies, lpclass, formnum, printer);
 
 
@@ -285,7 +302,7 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 		break;
 
 	default:
-		return(60);
+		return(PRINT_RC_60_INVALID_MODE);
 	}
 
 	if      (0==memcmp(disposition,"DX",2))
@@ -302,7 +319,7 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 		re=0;
 		del=0;
 	}
-	else return(61);
+	else return(PRINT_RC_61_INVALID_DISP);
 
 	sprintf(l_form,"-f%03d",formnum);
 	sprintf(l_copies,"-n%d",copies?copies:1);
@@ -350,11 +367,11 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 		strcpy(modestr,"");
 	}
 
-	if (ptr = getenv("UNIQUE_PRINT"))
+	if ((ptr = getenv("UNIQUE_PRINT")))
 	{
 		strcpy(exe,ptr);
 	}
-	else if (PQ_ILP == opt_printqueue)
+	else if (PQ_ILP == WL_opt_printqueue)
 	{
 		strcpy(exe,"ilp");
 	}
@@ -372,14 +389,14 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 		l_printer,
 		file );
 
-	rc = run_unixcommand_silent( cmd );
+	rc = WL_run_unixcommand_silent( cmd );
 	if ( rc != 0 )
 	{
-		werrlog(ERRORCODE(4),exe,file,rc,errno,0,0,0,0,0); 
-		werrlog(102,cmd,0,0,0,0,0,0,0);
-		return( 62 );
+		werrlog(WERRCODE(46404),exe,file,rc,errno,0,0,0,0,0); 
+		WL_werrlog_error(WERRCODE(46404),"WPRINT", "CMD", "%s", cmd);
+		return( PRINT_RC_62_UNIQUE_ERROR );
 	}
-	return(rc);
+	return(PRINT_RC_0_SUCCESS);
 }
 
 /*
@@ -418,8 +435,6 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 static int lp_print( const char *file, int copies, int formnum, char lpclass, 
 		    int4 printer, const char *disposition, char mode)
 {
-#undef		ROUTINE
-#define		ROUTINE		46500
 	char	cmd[256];
 	int	rc, size, zerofile;
 	char	xcopies[20];
@@ -427,10 +442,10 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 	int	delete_after, respool;
 	char	*copies_flag, *base_command;
 
-	wtrace("lp_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
+	WL_wtrace("LP_PRINT", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
 	       file, mode, disposition, copies, lpclass, formnum, printer);
 
-	if (PQ_NP == opt_printqueue)
+	if (PQ_NP == WL_opt_printqueue)
 	{
 		/*
 		**	Support for the HP network printing product.
@@ -466,7 +481,7 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 		break;
 
 	default:
-		return(60);
+		return(PRINT_RC_60_INVALID_MODE);
 	}
 
 	if (disposition)
@@ -484,17 +499,17 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 		{
 			delete_after = 0;
 		}
-		else return(61);
+		else return(PRINT_RC_61_INVALID_DISP);
 	}
 
-	if ( !fexists(file) )								/* Does file exist?			*/
+	if ( !WL_fexists(file) )								/* Does file exist?			*/
 	{
-		return( 20 );
+		return( PRINT_RC_20_FILE_NOT_FOUND );
 	}
 	
 	if ( !WL_fcanread(file) )								/* Can we read the file?		*/
 	{
-		return( 28 );
+		return( PRINT_RC_28_ACCESS_DENIED );
 	}
 
 	rc  = 0;
@@ -503,7 +518,7 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 	size = WL_filesize(file);
 	if ( size == 0 )
 	{
-		werrlog(ERRORCODE(5),file,0,0,0,0,0,0,0);
+		WL_wtrace("LP_PRINT","ZEROLEN","Zero lenght file not printed [%s]", file);
 		zerofile = 1;
 	}                     
 
@@ -522,31 +537,39 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 		sprintf( cmd, "%s %s %s %s %s %s '%s'", 
 				base_command,
 				suppress_flag, 
-				wforms(formnum), 
-				wlpclass(lpclass), 
-				getprmap(printer),
+				WL_wforms(formnum), 
+				WL_wlpclass(lpclass), 
+				WL_getprmap(printer),
 				xcopies, 
 				file);
 
-		rc = run_unixcommand_silent( cmd );
+		rc = WL_run_unixcommand_silent( cmd );
 		if ( rc != 0 )
 		{
-			werrlog(ERRORCODE(2),file,rc,errno,0,0,0,0,0); 
-			werrlog(102,cmd,0,0,0,0,0,0,0);
-			return( 63 );
+			if (rc != -1)
+			{
+				/*
+				**	errno is only meaningful when rc == -1 so reset otherwise.
+				*/
+				errno = 0;
+			}
+			werrlog(WERRCODE(46502),file,rc,errno,0,0,0,0,0); 
+			WL_werrlog_error(WERRCODE(46502),"WPRINT", "CMD", "%s", cmd);
+			return( PRINT_RC_63_LP_ERROR );
 		}
 	}
 
 	if ( delete_after )
 	{
-		rc = unlink(file);
+		rc = wisp_unlink(file);
 		if ( rc < 0 )
 		{
-			werrlog(ERRORCODE(3),file,errno,0,0,0,0,0,0);
+			WL_wtrace("LP_PRINT","UNLINK","Unable to delete %s errno=%d",
+				file,errno);
 		}
 	}
 
-	if ( zerofile ) rc = 24;
+	if ( zerofile ) rc = PRINT_RC_24_INVALID_FILETYPE;
 
 	return( rc );
 }
@@ -583,8 +606,9 @@ static int subvar(char* buff, const char* var, const char* value)
 	*/
 	if (strpos(value, var) != -1)
 	{
-		sprintf(temp,"%%WPRINT-E-MACRO Print macro %s contains a recursive substitution [%s]", var, value);
-		werrlog(104,temp,0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(83504),"WPRINT", "MACRO", 
+			"Print macro %s contains a recursive substitution [%s]", 
+			var, value);
 		value = "";
 	}
 	
@@ -676,21 +700,20 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	const char *cptr;
 	char	sub[80];
 	int4	lines;
-	int4	args;
 	int	rc;
 	int	i;
 
 
-	wtrace("generic_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
+	WL_wtrace("generic_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
 	       file, mode, disposition, copies, lpclass, formnum, printer);
 
 	/*
 	**	Check for no hold option and return if hold.
 	*/
-	if ('H'==mode && get_wisp_option("PQNOHOLD"))
+	if ('H'==mode && WL_get_wisp_option("PQNOHOLD"))
 	{
-		wtrace("WPRINT","PQNOHOLD", "Hold (MODE=H) not supported, file not printed [%s]",file);
-		return 0;
+		WL_wtrace("WPRINT","PQNOHOLD", "Hold (MODE=H) not supported, file not printed [%s]",file);
+		return PRINT_RC_0_SUCCESS;
 	}
 
 	/*
@@ -698,12 +721,13 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	*/
 	if (NULL == pqcmd)
 	{
-		pqcmd = get_wisp_option("PQCMD");
+		pqcmd = WL_get_wisp_option("PQCMD");
 		if (NULL==pqcmd || '\0' == *pqcmd)
 		{
 			pqcmd = NULL;
-			werrlog(104,"%%WPRINT-E-PQCMD The PQCMD option has not been set in the OPTIONS file.",0,0,0,0,0,0,0);
-			return 44;
+			WL_werrlog_error(WERRCODE(83504),"WPRINT", "PQCMD", 
+				"The PQCMD option has not been set in the OPTIONS file.");
+			return PRINT_RC_99_QUEUE_NOT_AVAILABLE;
 		}
 	}
 	strcpy(cmd, pqcmd);
@@ -728,7 +752,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if (' ' != lpclass)
 	{
-		cptr = get_wisp_option("PQCLASSOPT");
+		cptr = WL_get_wisp_option("PQCLASSOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -742,7 +766,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if (1 != copies)
 	{
-		cptr = get_wisp_option("PQCOPIESOPT");
+		cptr = WL_get_wisp_option("PQCOPIESOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -756,7 +780,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if (0 != formnum)
 	{
-		cptr = get_wisp_option("PQFORMOPT");
+		cptr = WL_get_wisp_option("PQFORMOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -770,7 +794,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if (0 != printer)
 	{
-		cptr = get_wisp_option("PQPRTNUMOPT");
+		cptr = WL_get_wisp_option("PQPRTNUMOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -784,7 +808,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if ('H' == mode)
 	{
-		cptr = get_wisp_option("PQHOLDOPT");
+		cptr = WL_get_wisp_option("PQHOLDOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -798,7 +822,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if (0==memcmp("DX",disposition,2))
 	{
-		cptr = get_wisp_option("PQDELOPT");
+		cptr = WL_get_wisp_option("PQDELOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -812,7 +836,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	cptr = "";
 	if (0==memcmp("RS",disposition,2))
 	{
-		cptr = get_wisp_option("PQREQOPT");
+		cptr = WL_get_wisp_option("PQREQOPT");
 		if (NULL==cptr)
 		{
 			cptr = "";
@@ -830,9 +854,9 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	**	%FORMMAP%	FORMS file entry based on FORM_NUM
 	*/
 
-	subvar(cmd, "%LPMAP%", wlpclass(lpclass));
-	subvar(cmd, "%PRMAP%", getprmap(printer));
-	subvar(cmd, "%FORMMAP%", wforms(formnum));
+	subvar(cmd, "%LPMAP%",   WL_wlpclass(lpclass));
+	subvar(cmd, "%PRMAP%",   WL_getprmap(printer));
+	subvar(cmd, "%FORMMAP%", WL_wforms(formnum));
 
 
 	/*
@@ -878,106 +902,137 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	sub[1] = '\0';
 	subvar(cmd, "%MODE%", sub);
 
-	args=2;
-	wvaset(&args);
-	EXTRACT("LI",&lines);
-	wswap(&lines);
+	WL_set_va_count(2);
+	EXTRACT2("LI",&lines);
+	WL_wswap(&lines);
 	sprintf(sub,"%03d", lines);
 	subvar(cmd, "%LINES%", sub);
 
 	if (NULL==xid)
 	{
-		args=2;
-		wvaset(&args);
-		EXTRACT("ID",sub);
+		WL_set_va_count(2);
+		EXTRACT2("ID",sub);
 		sub[3] = '\0';
-		xid = wstrdup(sub);
+		xid = wisp_strdup(sub);
 	}
 	subvar(cmd, "%XID%", xid);
 
 	if (NULL==xna)
 	{
-		args=2;
-		wvaset(&args);
-		EXTRACT("NA",sub);
+		WL_set_va_count(2);
+		EXTRACT2("NA",sub);
 		sub[24] = '\0';
 		/* Remove trailing blanks from the name */
 		for(i=23; i>=0 && ' '==sub[i];i--)
 		{
 			sub[i] = '\0';
 		}
-		xna = wstrdup(sub);
+		xna = wisp_strdup(sub);
 	}
 	subvar(cmd, "%XNA%", xna);
 	
 #ifdef unix
-	rc = run_unixcommand_silent( cmd );
+	rc = WL_run_unixcommand_silent( cmd );
 #endif
 #ifdef WIN32
-	if (wtracing())
+	if (WL_wtracing())
 	{
-		rc = win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_CAPTURE_OUTPUT);
+		rc = WL_win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_CAPTURE_OUTPUT);
 	}
 	else
 	{
-		rc = win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+		rc = WL_win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
 	}
 #endif
 
 	if ( rc != 0 )
-	{
-		char buff[256];
-		
-		sprintf(buff, "%%WPRINT-E-FAILED Print of %s failed rc=%d errno=%d", file, rc, errno);
-		werrlog(104,buff,0,0,0,0,0,0,0);
-		werrlog(102,cmd,0,0,0,0,0,0,0);
-		return( 44 );
+	{		
+		WL_werrlog_error(WERRCODE(83504),"WPRINT", "FAILED", 
+			"Print of %s failed rc=%d errno=%d", file, rc, errno);
+		WL_werrlog_error(WERRCODE(83502),"WPRINT", "CMD", 
+			"%s", cmd);
+		return( PRINT_RC_99_QUEUE_NOT_AVAILABLE );
 	}
 
 	/*
 	**	Delete after, locally if disp="DX" and not hold.
 	*/
 	if (0==memcmp("DX",disposition,2) && 
-	    get_wisp_option("PQDELETELOCAL") &&
+	    WL_get_wisp_option("PQDELETELOCAL") &&
 	    'H' != mode)
 	{
-		wtrace("WPRINT","PQDELETELOCAL", "Print file deleted locally [%s]",file);
-		unlink(file);
+		WL_wtrace("WPRINT","PQDELETELOCAL", "Print file deleted locally [%s]",file);
+		wisp_unlink(file);
 	}
 	
-	return(rc);
+	return(PRINT_RC_0_SUCCESS);
 }
 
 
 /*
 **	History:
 **	$Log: wprint.c,v $
-**	Revision 1.19.2.1.2.2  2002/10/09 21:17:35  gsl
-**	Huge file support
+**	Revision 1.34  2003/03/28 20:15:57  gsl
+**	Add EXTRACT2
 **	
-**	Revision 1.19.2.1.2.1  2002/10/09 19:20:36  gsl
-**	Update fexists.c to match HEAD
-**	Rename routines WL_xxx for uniqueness
+**	Revision 1.33  2003/03/19 22:26:19  gsl
+**	Standardize PRINT RC defines
 **	
-**	Revision 1.19.2.1  2002/08/19 15:31:05  gsl
-**	4403a
+**	Revision 1.32  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
 **	
-**	Revision 1.19  2002-03-26 10:26:39-05  gsl
+**	Revision 1.31  2003/02/04 17:22:57  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.30  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.29  2002/12/12 20:48:23  gsl
+**	Fix bogus errno reports when LP fails
+**	
+**	Revision 1.28  2002/12/11 17:03:11  gsl
+**	use wisp_unlink()
+**	
+**	Revision 1.27  2002/12/10 17:09:13  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.26  2002/12/09 19:15:38  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.25  2002/07/22 20:32:34  gsl
+**	Unix commands put filenames in 'quotes' because they can contain $
+**	
+**	Revision 1.24  2002/07/12 20:40:41  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.23  2002/07/12 17:01:04  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.22  2002/07/10 21:05:36  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.21  2002/07/10 04:27:33  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.20  2002/07/02 21:15:36  gsl
+**	Rename wstrdup
+**	
+**	Revision 1.19  2002/03/26 15:26:39  gsl
 **	Fixed Mode=Hold to default to Disp=DX
 **	In WISP 4.3.02 Mode=Hold was incorrectly changed to default to Disp=DS
 **	Improved the tracing
-**
+**	
 **	Revision 1.18  2001-11-27 15:49:06-05  gsl
 **	Remove VMS & MSDOS
 **
 **	Revision 1.17  2001-11-01 10:49:22-05  gsl
-**	Replace wsystem() with run_unixcommand_silent() for unix
+**	Replace WL_wsystem() with run_unixcommand_silent() for unix
 **
 **	Revision 1.16  1998-10-23 11:10:32-04  gsl
 **	Implement the PQCMD generic print queue interface.
 **
 **	Revision 1.15  1998-01-05 15:46:30-05  gsl
-**	Add wtrace
+**	Add WL_wtrace
 **
 **	Revision 1.14  1996-09-05 13:53:50-04  jockc
 **	remove win32_printfile().. (now in win32_print

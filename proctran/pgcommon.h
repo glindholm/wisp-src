@@ -1,5 +1,28 @@
-/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /* PGCOMMON.H															*/
 /*		 Common variable definitions											*/
 
@@ -7,6 +30,11 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
+
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #define HT		'\t'								/* Define horizontal tab.		*/
 #define SP		' '								/* Define space character.		*/
@@ -270,6 +298,9 @@ void init_ppkw(void);									/* Standard init of putparm keyword.	*/
 /*
 **	History:
 **	$Log: pgcommon.h,v $
+**	Revision 1.9  2003/02/04 21:51:17  gsl
+**	fix -Wall warnings
+**	
 **	Revision 1.8  1997/04/21 14:49:03  scass
 **	Corrected copyright
 **	

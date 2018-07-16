@@ -1,7 +1,19 @@
-/* 
-	Copyright (c) 1996 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*
 **	File:		rptsrt.h
@@ -31,7 +43,7 @@ typedef struct _asort{
 	int _order;		/*D = decending A = acending*/
 	int _numeric;		/*1 = numeric (sign leading) 0 = char */
 	int _type;		/* As in WISPSORT */
-	}SORT;
+	}RPT_ASORT;
 
 typedef	struct _sort_file{
 	int _channel;		/*or vector below*/
@@ -43,13 +55,13 @@ typedef	struct _sort_file{
 	int _key_len;
 	}SORT_FILE;
 
-void rpt_sort_clear(SORT *sr);
-int  rpt_sort_init(SORT *sr,int rl);
-void rpt_sort_squeeze(SORT *srt);
+void rpt_sort_clear(RPT_ASORT *sr);
+int  rpt_sort_init(RPT_ASORT *sr,int rl);
+void rpt_sort_squeeze(RPT_ASORT *srt);
 void rpt_sort_release(char *r);
 int  rpt_sort_return(char *rec);
 
-void KCSI_call_ext_sort(SORT *sr,KCSIO_BLOCK *kfb);
+void KCSI_call_ext_sort(RPT_ASORT *sr,KCSIO_BLOCK *kfb);
 void KCSI_ext_sort_close(KCSIO_BLOCK *kfb);
 
 #endif /* rptsrt_H */
@@ -57,8 +69,11 @@ void KCSI_ext_sort_close(KCSIO_BLOCK *kfb);
 /*
 **	History:
 **	$Log: rptsrt.h,v $
-**	Revision 1.4.2.1  2002/11/12 15:56:35  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8  2003/02/17 22:05:58  gsl
+**	Fix ambiguous SORT reference
+**	
+**	Revision 1.7  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.6  2002/10/24 15:48:31  gsl
 **	Make globals unique

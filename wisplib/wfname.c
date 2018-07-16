@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		wfname.c
@@ -10,9 +31,8 @@ static char rcsid[]="$Id:$";
 **	Routines:	wfname()	Construct the real file name.
 **			wtname()	Generate temp names (##).
 **			vmsfilechars()	Translate VMS special file characters.
-**			wlgtrans()	LGMAP logical volume translation. (UNIX)
-**			wlgtrans()	LGMAP logical volume translation. (MSDOS)
-**			logworklib()	Log the work librarys generated.
+**			WL_wlgtrans()	LGMAP logical volume translation. 
+**			WL_logworklib()	Log the work librarys generated.
 **			matchnative()	Match native file spec to actual file.
 **
 */
@@ -38,18 +58,15 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef VMS
-#include <ssdef.h>
-#endif
-
-#ifndef VMS	/* unix or MSDOS */
 #include <sys/types.h>
-#include <fcntl.h>
-#endif
-
-#if defined(MSDOS) || defined(_MSC_VER)
 #include <sys/stat.h>
+#include <fcntl.h>
+
+#if defined(WIN32) 
 #include <io.h>
+#endif
+#ifdef unix
+#include <unistd.h>
 #endif
 
 #include "idsistd.h"
@@ -61,62 +78,110 @@ static char rcsid[]="$Id:$";
 #include "wfname.h"
 #include "wdefines.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "idsisubs.h"
 #include "paths.h"
 #include "filext.h"
 #include "wispcfg.h"
 
 
-#ifdef VMS
-#define  PRINT_FILE_EXT 	".LIS"
-#define  SUBMIT_FILE_EXT 	".COM"
-#define  DEFAULT_FILE_EXT	".DAT"								/* Used to be DATA_FILE_EXT	*/
-#endif	/* VMS */
 #ifdef unix
 #define  PRINT_FILE_EXT 	""
-#define  SUBMIT_FILE_EXT 	""
 #define  DEFAULT_FILE_EXT	""
 #endif	/* unix */
-#ifdef MSDOS
-#define  PRINT_FILE_EXT 	".LIS"
-#define  SUBMIT_FILE_EXT 	".BAT"
-#define  DEFAULT_FILE_EXT	".DAT"
-#endif	/* MSDOS */
 #ifdef WIN32
-#define  PRINT_FILE_EXT 	".LIS"
-#define  SUBMIT_FILE_EXT 	""
+#define  PRINT_FILE_EXT 	".lis"
 #define  DEFAULT_FILE_EXT	""
 #endif	/* WIN32 */
 
 static int wtname(char *wang_vol, char *wang_lib, char *wang_file, 
-		char *native_vol, char *native_lib, char *native_file, char *native_ext, 
-		int4 *mode);
+		char *native_vol, char *native_lib, char *native_file, char *native_ext);
 
-extern int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file, char *native_ext, int nomodext );
+static char *x_wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path, 
+		      int is_backfill, int is_lib);	
 
-#ifdef VMS
-static int vmsfilechars( char *instr, char *outstr, int inlen, int wildcard );
-#endif
+static void WL_logworklib( char *worklib );
 
-
-char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path)	/* generate a local file name		*/
-											/* returns ptr to next avail char pos	*/
+char *WL_wanglib2path(char *p_vol, char *p_lib, char *native_path)
 {
-#define ROUTINE 77500
+	int4 mode = 0; 
+	char l_file[SIZEOF_FILE];
+
+	memset(l_file, ' ', SIZEOF_FILE);
+
+	return x_wfname(&mode, p_vol, p_lib, l_file, native_path, 0, 1); /* IS_LIB */
+
+}
+
+char *WFNAME2(	char *attrstr,		/* File attributes (10 chars)		*/
+		char *vol,		/* the WANG volume name	(6 chars)	*/
+		char *lib,		/* The WANG library name (8 chars)	*/
+		char *file,		/* The file name	(8 chars)	*/
+		char *native_path)	/* The resultant name			*/
+{
+	int4 mode;
+	char* ptr;
+
+	wisp_fileattr2mode(attrstr, &mode);
+
+	ptr = WL_wfname_backfill(&mode, vol, lib, file, native_path);	/* IS_BACKFILL */
+
+	wisp_mode2fileattr(mode, attrstr);
+
+	return ptr;
+}
+
+#define IS_LIB		0x00000040 		/* Generate a LIB only.			*/
+#define IS_BACKFILL	0x00001000 		/* Backfill file/lib/vol.		*/
+
+char *WFNAME(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path)
+{
+	if (*mode & IS_LIB)
+	{
+		return WL_wanglib2path(p_vol, p_lib, native_path);
+	}
+
+	if (*mode & IS_BACKFILL)
+	{
+		return WL_wfname_backfill(mode, p_vol, p_lib, p_file, native_path);
+	}
+
+	return x_wfname(mode, p_vol, p_lib, p_file, native_path, 0, 0);
+}
+
+char *WL_wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path)
+{
+	return x_wfname(mode, p_vol, p_lib, p_file, native_path, 0, 0);
+}
+
+char *WL_wfname_backfill(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path)
+{
+	return x_wfname(mode, p_vol, p_lib, p_file, native_path, 1, 0);	/* IS_BACKFILL */
+}
+
+/* generate a local file name		*/
+/* returns ptr to next avail char pos	*/
+static char *x_wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path, 
+		      int is_backfill, int is_lib)	
+{
 	char wang_file[SIZEOF_FILE], wang_lib[SIZEOF_LIB], wang_vol[SIZEOF_VOL];	/* Wang format copies of file/lib/vol.	*/
 	char work_lib[SIZEOF_LIB], work_vol[SIZEOF_VOL];				/* WORKLIB and WORKVOL			*/
 	char native_file[20], native_lib[20], native_vol[80], native_ext[40];		/* Native format of file/lib/vol/ext.	*/
 	int i,len;
 	int	nomodext;								/* No modifcations of ext allowed	*/
 	char fileext[WISP_FILE_EXT_SIZE];
+	char attrstr[WISP_FILE_ATTR_SIZE];
+
 
 	/*
 	**	INITIALIZE
 	*/
 
-	wtrace("WFNAME","ENTRY", "vol=[%6.6s] lib=[%8.8s] file=[%8.8s] mode=[0x%08X]", p_vol, p_lib, p_file, *mode);
+	wisp_mode2fileattr(*mode, attrstr);
+	wtrace("WFNAME","ENTRY", "vol=[%6.6s] lib=[%8.8s] file=[%8.8s] Attr=[%10.10s]", 
+		p_vol, p_lib, p_file, attrstr);
 
-      	wpload();		 							/* load the usage constants		*/
+      	WL_wpload();		 							/* load the usage constants		*/
 
 	memset(native_path, ' ', COB_FILEPATH_LEN);					/* Clear out the 80 character filename.	*/
 
@@ -133,7 +198,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	leftjust(wang_lib,SIZEOF_LIB);
 	leftjust(wang_file,SIZEOF_FILE);
 
-	if (*mode & IS_LIB)								/* If IS_LIB then blank filename	*/
+	if (is_lib)									/* If IS_LIB then blank filename	*/
 	{
 		memset(wang_file, ' ', SIZEOF_FILE );
 	}
@@ -146,19 +211,15 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	{
 		if (*mode & IS_PRINTFILE)
 		{
-			get_defs(DEFAULTS_SV,wang_vol);
-		}
-		else if (*mode & IS_SUBMIT)
-		{
-			get_defs(DEFAULTS_PV,wang_vol);
+			WL_get_defs(DEFAULTS_SV,wang_vol);
 		}
 		else if (*mode & IS_OUTPUT)
 		{
-			get_defs(DEFAULTS_OV,wang_vol);
+			WL_get_defs(DEFAULTS_OV,wang_vol);
 		}
 		else /* INPUT */
 		{
-			get_defs(DEFAULTS_IV,wang_vol);
+			WL_get_defs(DEFAULTS_IV,wang_vol);
 		}
 		leftjust(wang_vol,SIZEOF_VOL);
 	}
@@ -167,19 +228,15 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	{
 		if (*mode & IS_PRINTFILE)
 		{
-			get_defs(DEFAULTS_SL,wang_lib);
-		}
-		else if (*mode & IS_SUBMIT)
-		{
-			get_defs(DEFAULTS_PL,wang_lib);
+			WL_get_defs(DEFAULTS_SL,wang_lib);
 		}
 		else if (*mode & IS_OUTPUT)
 		{
-			get_defs(DEFAULTS_OL,wang_lib);
+			WL_get_defs(DEFAULTS_OL,wang_lib);
 		}                                               
 		else /* INPUT */
 		{
-			get_defs(DEFAULTS_IL,wang_lib);
+			WL_get_defs(DEFAULTS_IL,wang_lib);
 		}
 		leftjust(wang_lib,SIZEOF_LIB);
 	}
@@ -205,15 +262,6 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	{
 		strcpy( native_ext, PRINT_FILE_EXT );
 	}
-	else if (*mode & IS_SUBMIT)							/* Use SUBMIT file extension		*/
-	{
-		strcpy( native_ext, SUBMIT_FILE_EXT );
-	}
-	else if (*mode == IS_NOEXTENSION)						/* Use No file extension		*/
-	{
-		native_ext[0] = '\0';
-		nomodext = 1;								/* No modification of ext allowed	*/
-	}
 	else										/* Use DEFAULT file extension		*/
 	{
 		strcpy( native_ext, DEFAULT_FILE_EXT );
@@ -221,7 +269,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 
 	WSETFILEXT(" ");								/* Always reset the file extension.	*/
 
-	if (*mode & IS_LIB)								/* If IS_LIB then blank the extension	*/
+	if (is_lib)									/* If IS_LIB then blank the extension	*/
 	{
 		native_ext[0] = '\0';
 	}
@@ -231,8 +279,8 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	**	HANDLE WORKFILES
 	*/
 
-	get_defs(DEFAULTS_WV,work_vol);
-	get_defs(DEFAULTS_WL,work_lib);
+	WL_get_defs(DEFAULTS_WV,work_vol);
+	WL_get_defs(DEFAULTS_WL,work_lib);
 
 	if ( memcmp(wang_lib,work_lib,SIZEOF_LIB) == 0 &&
 	     memcmp(wang_vol,work_vol,SIZEOF_VOL) == 0    )
@@ -274,7 +322,6 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	*/
 
 
-#if defined(unix) || defined(MSFS)
 	if ( wang_vol[0] == ' ' )							/* If volume is blank ....		*/
 	{
 		wang_vol[0] = '.';							/* Replace with dot.			*/
@@ -284,7 +331,6 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	{
 		wang_lib[0] = '.';							/* Replace with dot.			*/
 	}
-#endif	/* unix or MSFS */
 
 
 
@@ -293,34 +339,8 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	*/
 
 
-#ifdef VMS
-                                                                                                      
-	if ( vmsfilechars( wang_vol,  native_vol,  SIZEOF_VOL, 0 ) )			/* Trans volume (No Wildcards)		*/
-	{
-		werrlog(ERRORCODE(2), wang_vol,0,0,0,0,0,0,0);				/* Wildcard found.			*/
-		strcpy(native_vol, "");							/* Ignore volume.			*/
-	}
-	else if (native_vol[0])								/* If there is a volume, add ":"	*/
-	{
-		strcat(native_vol, ":");
-	}
 
-	{
-		char work_string[80];
-	
-		vmsfilechars( wang_lib,  work_string,  SIZEOF_LIB, 1 );			/* Trans lib	(Wildcards allowed)	*/
-
-		if (work_string[0])							/* If there is a library named...	*/
-			sprintf(native_lib,"[%s]",work_string);				/* Put it in brackets.			*/
-		else									/* Otherwise...				*/
-			native_lib[0] = '\0';						/* Make a null string.			*/
-	}
-	vmsfilechars( wang_file, native_file, SIZEOF_FILE, 1 );				/* Trans file	(Wildcards allowed)	*/
-
-#endif	/* VMS */
-
-#if defined(unix) || defined(MSFS)
-	wlgtrans( wang_vol, native_vol );					       	/* Load vol with translation.		*/
+	WL_wlgtrans( wang_vol, native_vol );					       	/* Load vol with translation.		*/
 
 	unloadpad(native_lib,  wang_lib,  SIZEOF_LIB);
 	unloadpad(native_file, wang_file, SIZEOF_FILE);
@@ -331,14 +351,10 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	if ( native_lib[0]  == '#' ) native_lib[0]  = '%';			       	/* Convert leading # -> %		*/
 	if ( native_file[0] == '#' ) native_file[0] = '%';				/* Convert leading # -> %		*/
 
-#endif  /* unix || MSFS */
 
 #ifdef unix
-	if ( ! (*mode & IS_CASE_SEN) )							/* Convert lib & file to lowercase	*/
-	{
-		lower_string(native_lib);
-		lower_string(native_file);
-	}
+	WL_lower_string(native_lib);							/* Convert lib & file to lowercase	*/
+	WL_lower_string(native_file);
 #endif	/* unix */
 	
 
@@ -346,29 +362,6 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	**	HANDLE SPECIAL CASES
 	*/
 
-#ifdef VMS
-	if ( memcmp(wang_lib,"$SCRATCH",8)==0 )						/* is it the $SCRATCH library?		*/
-	{	
-		strcpy(native_vol,"SYS$SCRATCH:");					/* put SYS$SCRATCH into VOLUME !!!!	*/
-		strcpy(native_lib,"");							/* clear library			*/
-		*mode |= IS_SCRATCH;
-	}
-
-	if (*mode & IS_PRINTFILE)							/* Printfiles may need LP: prefix	*/
-	{
-		char ext_pm[2];
-
-		get_defs(DEFAULTS_PM,ext_pm);
-		if (ext_pm[0] == 'O')							/* Printfiles may need LP: prefix	*/
-		{
-			int4	prtnum;
-			get_defs(DEFAULTS_PR,&prtnum);
-			sprintf(native_vol,"LP%d:",prtnum);				/* put LPxxx: into VOLUME		*/
-			strcpy(native_lib,"");						/* clear library			*/
-		}
-		
-	}
-#endif	                                                                                    
 
 	if (*mode & IS_PRINTFILE)							/* if it is a print file		*/
 	{
@@ -387,7 +380,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	{
 
 		wtname( wang_vol,   wang_lib,   wang_file,
-			native_vol, native_lib, native_file, native_ext, mode );	/* Grenerate native_file name.		*/
+			native_vol, native_lib, native_file, native_ext );		/* Grenerate native_file name.		*/
 
 		*mode |= IS_TEMP;
 
@@ -398,7 +391,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	**	ASSEMBLE THE FILE NAME
 	*/
 
-	matchnative(*mode, native_vol, native_lib, native_file, native_ext, nomodext );	/* Match the file specs to the disk.	*/
+	WL_matchnative(native_vol, native_lib, native_file, native_ext, nomodext, is_lib ); /* Match the file specs to the disk.	*/
 
 	sprintf(native_path,"%s%s%s%s", native_vol, native_lib, native_file, native_ext );
 
@@ -420,7 +413,7 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 			memcpy(last_work_lib, wang_lib, SIZEOF_LIB);
 			sprintf(native_worklib, "%s%s", native_vol, native_lib );
 
-			logworklib( native_worklib );
+			WL_logworklib( native_worklib );
 
 		}
 	}	
@@ -431,15 +424,16 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 	*/
 
 
-	if ( *mode & IS_BACKFILL )
+	if ( is_backfill )
 	{
 		memcpy(p_vol,wang_vol,SIZEOF_VOL);					/* Backfill the file/lib/vol.		*/
 		memcpy(p_lib,wang_lib,SIZEOF_LIB);
 		memcpy(p_file,wang_file,SIZEOF_FILE);
 	}
 
-	wtrace("WFNAME","RETURN", "Path=[%s] vol=[%6.6s] lib=[%8.8s] file=[%8.8s] mode=[0x%08X]", 
-	       native_path, p_vol, p_lib, p_file, *mode);
+	wisp_mode2fileattr(*mode, attrstr);
+	wtrace("WFNAME","RETURN", "Path=[%s] vol=[%6.6s] lib=[%8.8s] file=[%8.8s] Attr=[%10.10s]", 
+	       native_path, p_vol, p_lib, p_file, attrstr);
 
 	len = strlen(native_path);
 	native_path[len] = ' ';								/* Remove null-termination		*/
@@ -461,15 +455,14 @@ char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_pa
 */
 
 static int wtname(char *wang_vol, char *wang_lib, char *wang_file, 
-		char *native_vol, char *native_lib, char *native_file, char *native_ext, 
-		int4 *mode)
+		char *native_vol, char *native_lib, char *native_file, char *native_ext)
 {
 	char	prefix[5];								/* The up to 4 char prefix.		*/
 	char	tempname[20];
 	char	path[80];
 	char	*ptr, *fptr;
 	int	i;
-	int4	argcnt, starter, counter, filecount;
+	int4	starter, counter, filecount;
 	char	recv[22], rtype, template[8];
 	char	foundfile[8], foundseq[4];
 	int     tseq;									/* Tempfile sequence number.		*/
@@ -501,16 +494,15 @@ static int wtname(char *wang_vol, char *wang_lib, char *wang_file,
 	starter=1;									/* Call FIND to get filecount		*/
 	counter=1;
 	filecount=0;
-	wswap(&starter);
-	wswap(&counter);
-	wswap(&filecount);
+	WL_wswap(&starter);
+	WL_wswap(&counter);
+	WL_wswap(&filecount);
 	rtype = 'A';
 
-	argcnt = 8;
-	wvaset( &argcnt );
+	WL_set_va_count(8);
 	FIND( template, wang_lib, wang_vol, &starter, &counter, recv, &filecount, &rtype );
 
-	wswap(&filecount);
+	WL_wswap(&filecount);
 	if ( filecount == 0 ) 								/* If none then start at Zero.		*/
 	{
 		tseq = 0;
@@ -520,13 +512,13 @@ static int wtname(char *wang_vol, char *wang_lib, char *wang_file,
 		starter = filecount;							/* Get the last file****.		*/
 		counter = 1;
 		filecount = 0;
-		wswap(&starter);
-		wswap(&counter);
-		wswap(&filecount);
-		wvaset( &argcnt );
+		WL_wswap(&starter);
+		WL_wswap(&counter);
+		WL_wswap(&filecount);
+		WL_set_va_count( 8);
 		FIND( template, wang_lib, wang_vol, &starter, &counter, recv, &filecount, &rtype );
 
-		wswap(&filecount);
+		WL_wswap(&filecount);
 		if  ( filecount == 0 )							/* If error then start at Zero.	  	*/
 		{
 			tseq = 0;
@@ -543,7 +535,7 @@ static int wtname(char *wang_vol, char *wang_lib, char *wang_file,
 
 			for( i=3; i>=0; i-- )						/* Fill foundseq. 			*/
 			{
-				if ( ! isdigit(*fptr) )					/* If invalid then start at zero.	*/
+				if ( ! isdigit((int)*fptr) )					/* If invalid then start at zero.	*/
 				{
 					num = -1;
 					break;
@@ -580,12 +572,8 @@ static int wtname(char *wang_vol, char *wang_lib, char *wang_file,
 		memcpy( wang_file, tempname, strlen(tempname) );
 		strcpy( native_file, tempname );
 
-#ifdef VMS
-		vmsfilechars( tempname, native_file, SIZEOF_FILE, 1 );			/* Trans file	(Wildcards allowed)	*/
-#endif
 #ifdef unix
-		if ( ! (*mode & IS_CASE_SEN) )						/* Convert lib & file to lowercase	*/
-			lower_string( native_file );
+		WL_lower_string( native_file );						/* Convert lib & file to lowercase	*/
 #endif
 
 		sprintf(path,"%s%s%s%s", native_vol, native_lib, native_file, native_ext); /* create real path of temp file	*/
@@ -609,62 +597,10 @@ static int wtname(char *wang_vol, char *wang_lib, char *wang_file,
 	return 0;
 }
 
-#ifdef VMS
-static int vmsfilechars( char *instr, char *outstr, int inlen, int wildcard )		/* VMS file character translation	*/
-{
-	int	i,j,rc;
 
-	rc = 0;
 
-	for( i=0,j=0; i<inlen && instr[i] != ' ' && instr[i] != '\0'; i++)
-	{
-		if ( instr[i] == '#' )							/* Translate   # -> $  (was N_)		*/
-		{
-			/*
-			outstr[j++] = 'N';
-			outstr[j++] = '_';
-			*/
-			outstr[j++] = '$';
-		}
-		else if ( instr[i] == '@' )						/* Translate   @ -> _ (was A_)		*/
-		{
-			/*
-			outstr[j++] = 'A';
-			outstr[j++] = '_';
-			*/
-			outstr[j++] = '_';
-		}
-		else if ( instr[i] == '*' )						/* Translate   * -> %			*/
-		{
-			outstr[j++] = '%';
-			if ( ! wildcard )
-			{
-				rc = 1;
-			}
-		}
-		else if ( instr[i] == '?' )						/* Translate   ? -> *			*/
-		{
-			outstr[j++] = '*';
-			if ( ! wildcard )
-			{
-				rc = 1;
-			}
-		}
-		else
-		{
-			outstr[j++] = instr[i];
-		}
-	}
-
-	outstr[j] = '\0';								/* Null terminate it.			*/
-
-	return( rc );
-}
-#endif	/* VMS */
-
-#ifndef VMS
 /*
-	wlgtrans:	LOGICAL TRANSLATOR
+	WL_wlgtrans:	LOGICAL TRANSLATOR
 			- search the logical list for in_str and return translation in out_str.
 			- if no match found then move in_str to out_str.
 			- in_str is up to 6 chars and is not null terminated
@@ -672,12 +608,12 @@ static int vmsfilechars( char *instr, char *outstr, int inlen, int wildcard )		/
 			- the logicals are case sensitive
 			- out_str will be null terminated
 */
-int wlgtrans( char *in_str, char *out_str )
+int WL_wlgtrans( char *in_str, char *out_str )
 {
 	char	in_temp[SIZEOF_VOL+1];
 	logical_id	*logical_ptr;
 
-	logical_ptr = get_logical_list();
+	logical_ptr = WL_get_lgmap_list();
 
 	unloadpad(in_temp, in_str, SIZEOF_VOL);
 
@@ -697,14 +633,12 @@ int wlgtrans( char *in_str, char *out_str )
 			return(1);
 		}
 
-		logical_ptr = (logical_id *)logical_ptr->next;				/* follow down the list.	*/
+		logical_ptr = logical_ptr->next;				/* follow down the list.	*/
 	}
 }
-#endif	/* !VMS */
 
-void logworklib( char *worklib )
+static void WL_logworklib( char *worklib )
 {
-#if defined(unix) || defined(MSFS)
 	int	fd;
 	char	wf[128];
 
@@ -713,19 +647,18 @@ void logworklib( char *worklib )
 	fd = open( wf, O_WRONLY | O_CREAT | O_APPEND, 0666 );
 	if ( fd == -1 )
 	{
-		werrlog( ERRORCODE(4),wf, errno,0,0,0,0,0,0,0 );
+		werrlog(WERRCODE(77504),wf, errno,0,0,0,0,0,0,0 );
 		return;
 	}
 	write( fd, worklib, strlen(worklib) );
 	write( fd, "\n", 1 );
 	close( fd );
 	chmod(wf,0666);
-#endif	/* unix || MSFS */
 }
 
 
 /*
-**	Routine:	wfexists()
+**	Routine:	WL_wfexists()
 **
 **	Function:	To check if a file exists
 **
@@ -750,7 +683,7 @@ void logworklib( char *worklib )
 **	03/03/93	Written by GSL
 **
 */
-int wfexists(char *file, char *lib, char *vol)
+int WL_wfexists(char *file, char *lib, char *vol)
 {
 	int4	mode;
 	char	*ptr;
@@ -758,7 +691,7 @@ int wfexists(char *file, char *lib, char *vol)
 	int	outexists;
 
 	mode = 0;
-	ptr = wfname(&mode, vol, lib, file, filename);				/* Construct the filename.			*/
+	ptr = WL_wfname(&mode, vol, lib, file, filename);			/* Construct the filename.			*/
 	*ptr = (char)0;
 
 	outexists = 0;
@@ -766,7 +699,6 @@ int wfexists(char *file, char *lib, char *vol)
 	{
 		outexists = 1;
 	}
-#if defined(unix) || defined(MSFS)
 	if (!outexists && !hasext(filename))					/* Check if CISAM				*/
 	{
 		strcat(filename,".idx");
@@ -775,14 +707,151 @@ int wfexists(char *file, char *lib, char *vol)
 			outexists = 2;
 		}
 	}
-#endif
 	return outexists;
 }
+
+/*
+**	Convert between mode and new file attr string
+*/
+static struct 
+{
+	int4	mode;
+	char*	attr;
+} mode_attr_list[] =
+{
+	{IS_PRINTFILE,	IS_PRINTFILE_ATTR},
+	{IS_INDEXED,	IS_INDEXED_ATTR},
+	{IS_SEQSEQ,	IS_SEQSEQ_ATTR},
+	{IS_SEQDYN,	IS_SEQDYN_ATTR},
+	{IS_RELATIVE,	IS_RELATIVE_ATTR},
+	{IS_DBFILE,	IS_DBFILE_ATTR},
+	{IS_OUTPUT,	IS_OUTPUT_ATTR},
+	{IS_IO,		IS_IO_ATTR},
+	{IS_SORT,	IS_SORT_ATTR},
+	{IS_EXTEND,	IS_EXTEND_ATTR},
+	{IS_GETPARM,	IS_GETPARM_ATTR},
+	{IS_ERROR,	IS_ERROR_ATTR},
+	{IS_WORK,	IS_WORK_ATTR},
+	{IS_SCRATCH,	IS_SCRATCH_ATTR},
+	{IS_TEMP,	IS_TEMP_ATTR},
+	{IS_NORESPECIFY,IS_NORESPECIFY_ATTR},
+	{IS_DECLARE,	IS_DECLARE_ATTR},
+	{0, 0}
+};
+
+void wisp_fileattr2mode(const char *attrstr, int4 *mode)
+{
+	int i;
+	*mode = 0;
+
+	for(i=0; mode_attr_list[i].mode != 0; i++)
+	{
+		if (NULL != memchr(attrstr, *(mode_attr_list[i].attr), WISP_FILE_ATTR_SIZE))
+		{
+			*mode |= mode_attr_list[i].mode;
+		}
+	}
+}
+
+
+void wisp_mode2fileattr(int4 mode, char *attrstr)
+{
+	int i, j;
+	memset(attrstr, ' ', WISP_FILE_ATTR_SIZE);
+
+	j=0;
+	for(i=0; mode_attr_list[i].mode != 0; i++)
+	{
+		if (mode & mode_attr_list[i].mode)
+		{
+			attrstr[j++] = *(mode_attr_list[i].attr);
+		}
+	}
+}
+
+
 /*
 **	History:
 **	$Log: wfname.c,v $
-**	Revision 1.22.2.1  2002/11/14 21:12:27  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.48  2003/04/03 20:27:53  gsl
+**	WFNAME2()
+**	
+**	Revision 1.47  2003/03/20 18:28:45  gsl
+**	Fix logical_id typedef
+**	
+**	Revision 1.46  2003/03/19 21:11:44  gsl
+**	Remove USE_PVPL flag
+**	
+**	Revision 1.45  2003/03/06 21:37:52  gsl
+**	Change trace to show ATTR instead of MODE
+**	
+**	Revision 1.44  2003/02/17 22:07:17  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.43  2003/02/04 18:29:12  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.42  2003/02/04 16:02:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.41  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.40  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.39  2002/12/10 20:54:08  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.38  2002/07/29 15:46:49  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.37  2002/07/23 20:49:50  gsl
+**	globals
+**	
+**	Revision 1.36  2002/07/18 21:04:29  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.35  2002/07/12 19:10:19  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.34  2002/07/12 17:01:03  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.33  2002/07/11 20:29:17  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.32  2002/07/10 21:05:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.31  2002/07/10 04:27:35  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.30  2002/06/28 04:02:58  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.29  2002/06/27 04:12:41  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.28  2002/06/26 06:26:21  gsl
+**	Mode/status bit field changes
+**	
+**	Revision 1.27  2002/06/26 04:25:03  gsl
+**	Cleanup mode/status bit fields
+**	
+**	Revision 1.26  2002/06/25 17:46:05  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
+**	
+**	Revision 1.25  2002/06/25 03:47:58  gsl
+**	remove IS_CASE_SEN - never actually implemented
+**	
+**	Revision 1.24  2002/06/21 20:49:30  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.23  2002/06/21 03:10:44  gsl
+**	Remove VMS & MSDOS
 **	
 **	Revision 1.22  1999/01/30 00:02:06  gsl
 **	Fix the handling of work files to make a distiction between # and ## work

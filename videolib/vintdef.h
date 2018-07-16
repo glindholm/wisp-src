@@ -1,12 +1,25 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
-			/************************************************************************/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 /*
 **	File:		intdef.h
@@ -34,19 +47,9 @@ typedef  unsigned int   uint4;
 
 #endif /*ALPHA*/
 
-/* MSDOS Codebuilder has the following sizes: short:2, int:4, long:4 */
-#if defined(MSDOS)
-
-typedef short int2; 
-typedef long  int4;
-
-typedef  unsigned short  uint2;  
-typedef  unsigned long   uint4;
-
-#endif /*MSDOS*/
 
 /* everyone else seems to have:  short:2, int:4, long:4 */
-#if !defined(OSF1_ALPHA) && !defined(MSDOS)
+#if !defined(OSF1_ALPHA)
 
 typedef short int2; 
 typedef int   int4;
@@ -60,6 +63,12 @@ typedef  unsigned int      uint4;
 /*
 **	History:
 **	$Log: vintdef.h,v $
+**	Revision 1.8  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.7  2002/07/18 21:04:22  gsl
+**	Remove MSDOS code
+**	
 **	Revision 1.6  1996/10/11 22:16:06  gsl
 **	drcs update
 **	

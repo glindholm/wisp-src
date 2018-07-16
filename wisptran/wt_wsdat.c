@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	wisp_wsdat.c
@@ -26,6 +39,7 @@ int ws_init(void)
 {
 	register int i;
 	int4	fval;
+	char	fileAttrib[WISP_FILE_ATTR_SIZE+1];
 	char	COPY_WORKSTOR[40];
 	int	use_copy, output_copy;
 	cob_file	*cob_file_ptr;
@@ -34,29 +48,33 @@ int ws_init(void)
 	output_copy = 0;								/* Write the copy code.			*/
 
 	/*
+		Version	Revision Date		Wisp
+		--------------------------------------
+		 7	1.5			V3_3x12
+		 8	1.11	 1997/04/29	V4_2_00
+		 9	1.12     1998-02-10 
+		10	1.14     1998-03-17	4.2.02 
+		11	1.18	 2002/05/16	4.5.xx
+		--------------------------------------
 						      Copybook number ( 001=figcon, 002=Work-Stor )
-						      |COBOL (1=VAX, 2=ACUCOBOL etc)
+						      |COBOL (2=ACUCOBOL 5=MF)
 						      || Version 
 						      || |
 	*/
-	if      (vax_cobol) strcpy(COPY_WORKSTOR,"wc002110.cpy");
-	else if (acu_cobol) strcpy(COPY_WORKSTOR,"wc002210.cpy");
-	else if (lpi_cobol) strcpy(COPY_WORKSTOR,"wc002310.cpy");
-	else if (aix_cobol) strcpy(COPY_WORKSTOR,"wc002410.cpy");
-	else if (mf_cobol)  strcpy(COPY_WORKSTOR,"wc002510.cpy");
-	else if (dmf_cobol) strcpy(COPY_WORKSTOR,"wc002610.cpy");
-	else                strcpy(COPY_WORKSTOR,"wc002x10.cpy");
+	if      (acu_cobol) strcpy(COPY_WORKSTOR,"wc002211.cpy");
+	else if (mf_cobol)  strcpy(COPY_WORKSTOR,"wc002511.cpy");
+	else                strcpy(COPY_WORKSTOR,"wc002x11.cpy");
 
+	tput_blank();
 	tput_scomment		("*****************************************************************");
-	tput_scomment		("*  Special variables inserted by the WISP translator.");
-	tput_scomment		("*  Translated by WISP %s",WISP_VERSION);
+	tput_scomment		("**** Fields inserted by the WISP translator %s", WISP_VERSION);
 	tput_scomment		("*****************************************************************");
 
-	if ( writing_cob_main() || !copylib )						/* If not writing to a copybook file	*/
+	if ( writing_cob_main() || !opt_gen_copylib )					/* If not writing to a copybook file	*/
 	{
 		tput_line_at(12, "COPY \"%s\".",COPY_WORKSTOR);				/* Write the copy statement		*/
 		use_copy = 1;
-		if ( access(COPY_WORKSTOR,0) != 0 )					/* If copybook doesn't exist ...	*/
+		if ( opt_forcegenwispcpy || access(COPY_WORKSTOR,0) != 0 )			/* If copybook doesn't exist ...	*/
 		{
 			output_copy = 1;
 			cob_file_ptr = open_cob_file(COPY_WORKSTOR,FOR_OUTPUT,1);	/* open it and start writing.		*/
@@ -71,18 +89,10 @@ int ws_init(void)
 	if (output_copy)
 	{
 		tput_scomment		("*****************************************************************");
-		tput_scomment		("* WISP STANDARD WORKING STORAGE VARIABLES");
-		tput_scomment		("*");
-		tput_scomment		("* COPYBOOK FILE = %s",COPY_WORKSTOR);
-		if (acu_cobol)
-		{
-			tput_scomment	("* COBOL = ACUCOBOL");
-		}
-		else if (mf_cobol)
-		{
-			tput_scomment	("* COBOL = MICRO FOCUS COBOL");
-		}
-		tput_scomment		("*");
+		tput_scomment		("**** WISP STANDARD WORKING STORAGE VARIABLES");
+		tput_scomment		("****");
+		tput_scomment		("**** COPYBOOK FILE = %s",COPY_WORKSTOR);
+		tput_scomment		("****");
 		tput_scomment		("*****************************************************************");
 		tput_line		("       01  VWANG-WRITE-ALL           PIC X VALUE WISP-SYMB-1.");
 		tput_line		("       01  VWANG-READ-ALL            PIC X VALUE WISP-SYMB-2.");
@@ -128,15 +138,16 @@ int ws_init(void)
 
 		tput_blank();
 	
-		tput_line		("       01  WISP-LOCK-ID           PIC X(40) VALUE SPACES.");
-		tput_line		("       01  WISP-NEW-LOCK-ID       PIC X(40) VALUE SPACES.");
+		tput_line		("       01  WISP-LOCK-ID           PIC X(%d) VALUE SPACES.", COB_SELECT_NAME_SIZE);
+		tput_line		("       01  WISP-NEW-LOCK-ID       PIC X(%d) VALUE SPACES.", COB_SELECT_NAME_SIZE);
 
 		tput_line		("       01  WISP-BUFF-TABLE-16.");
 		tput_line		("           05  WISP-BUFF          PIC X(80) OCCURS 16.");
 
-		tput_line		("       01  WISP-LONGWORD          %s PIC S9(9).",bin4_type);
-		tput_line		("       01  WISP-LONGWORD-1        %s PIC S9(9).",bin4_type);
-		tput_line		("       01  WISP-LONGWORD-2        %s PIC S9(9).",bin4_type);
+		tput_line		("       01  WISP-ARGCNT            %s PIC S9(9).",bin4_type);
+/*		tput_line		("       01  WISP-LONGWORD          %s PIC S9(9).",bin4_type); */
+/*		tput_line		("       01  WISP-LONGWORD-1        %s PIC S9(9).",bin4_type); */
+/*		tput_line		("       01  WISP-LONGWORD-2        %s PIC S9(9).",bin4_type); */
 		tput_line		("       01  WISPX1                 %s PIC S9(9).",bin4_type);
 		tput_line		("       01  WISPX2                 %s PIC S9(9).",bin4_type);
 		tput_line		("       01  WISPX3                 %s PIC S9(9).",bin4_type);
@@ -150,49 +161,39 @@ int ws_init(void)
 		tput_line		("       01  WFOPEN-SPECIAL-INPUT %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_SPECIAL_INPUT);
 		tput_line		("       01  WFOPEN-I-O           %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_I_O);
 		tput_line		("       01  WFOPEN-SORT          %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_SORT);
-		tput_line		("       01  WISP-OUTPUT  %s PIC 9(9) VALUE %ld.",bin4_type,IS_OUTPUT);
-		tput_line		("       01  WISP-PRINT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_PRINTFILE);
-		tput_line		("       01  WISPSCRTCH   %s PIC 9(9) VALUE %ld.",bin4_type,IS_SCRATCH);
-		tput_line		("       01  WISPSUBMIT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_SUBMIT);
-		tput_line		("       01  WISP-PROC    %s PIC 9(9) VALUE %ld.",bin4_type,IS_SUBMIT);
-		tput_line		("       01  WISP-EXTEND  %s PIC 9(9) VALUE %ld.",bin4_type,IS_EXTEND);
-		tput_line		("       01  WISP-I-O     %s PIC 9(9) VALUE %ld.",bin4_type,IS_IO);
-		tput_line		("       01  WISP-SORT    %s PIC 9(9) VALUE %ld.",bin4_type,IS_SORT);
-		tput_line		("       01  WISP-S-OUT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_OUTPUT+IS_SORT);
-		tput_line		("       01  WISP-LIB     %s PIC 9(9) VALUE %ld.",bin4_type,IS_OUTPUT+IS_LIB);
-		tput_line		("       01  WISP-NORES   %s PIC 9(9) VALUE %ld.",bin4_type,IS_NORESPECIFY);
-		tput_line		("       01  WISP-NOWRITE %s PIC 9(9) VALUE %ld.",bin4_type,IS_NOWRITE);
-		tput_line		("       01  WISP-DECL    %s PIC 9(9) VALUE %ld.",bin4_type,IS_DECLARE);
-		tput_line		("       01  WISP-FILE-TIMEOUT      %s PIC S9(9) VALUE 9999.",bin4_type);
+
+/*		tput_line		("       01  WISP-OUTPUT  %s PIC 9(9) VALUE %ld.",bin4_type,IS_OUTPUT);  */
+/*		tput_line		("       01  WISP-PRINT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_PRINTFILE); */
+/*		tput_line		("       01  WISPSCRTCH   %s PIC 9(9) VALUE %ld.",bin4_type,IS_SCRATCH); */
+/*		tput_line		("       01  WISPSUBMIT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_USE_PVPL); */
+/*		tput_line		("       01  WISP-EXTEND  %s PIC 9(9) VALUE %ld.",bin4_type,IS_EXTEND); */
+/*		tput_line		("       01  WISP-I-O     %s PIC 9(9) VALUE %ld.",bin4_type,IS_IO); */
+/*		tput_line		("       01  WISP-SORT    %s PIC 9(9) VALUE %ld.",bin4_type,IS_SORT); */
+/*		tput_line		("       01  WISP-S-OUT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_OUTPUT+IS_SORT); */
+/*		tput_line		("       01  WISP-NORES   %s PIC 9(9) VALUE %ld.",bin4_type,IS_NORESPECIFY); */
+/*		tput_line		("       01  WISP-NOWRITE %s PIC 9(9) VALUE %ld.",bin4_type,IS_NOTSHARE); */
+/*		tput_line		("       01  WISP-PROC    %s PIC 9(9) VALUE %ld.",bin4_type, IS_USE_PVPL); */
+/*		tput_line		("       01  WISP-DECL    %s PIC 9(9) VALUE %ld.",bin4_type, IS_DECLARE); */
+
+		tput_line		("       01  WISP-LOCK-TIMEOUT %s PIC S9(9) VALUE 0.",bin4_type);
 	
 		tput_line		("       01  WISP-RELATIVE-KEY         PIC 9(8).");
 		tput_line		("       01  WISP-FILE-STATUS          PIC X(2).");
-		tput_line		("       01  WISP-DECLARATIVES-STATUS  PIC X(2).");
-		tput_line		("       01  WISP-DECLARATIVES-STATUS-ITEMS");
-		tput_line		("           REDEFINES WISP-DECLARATIVES-STATUS.");
-		tput_line		("           05  WISP-DECLARATIVES-STATUS-1 PIC X.");
-		tput_line		("           05  WISP-DECLARATIVES-STATUS-2 PIC X.");
-		if (vax_cobol)
-		{
-			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-1 PIC S9(9)");
-			tput_line	("           LEADING SEPARATE.");
-			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-2 PIC S9(9)");
-			tput_line	("           LEADING SEPARATE.");
-		}
-		else
-		{
-			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-1 PIC X(10).");
-			tput_line	("       01  WISP-EXTENDED-FILE-STATUS-2 PIC X(10).");
-		}
+		tput_line		("       01  WISP-SKIP-DECLARATIVES    PIC X.");
+		tput_line		("       01  WISP-HAS-DECLARATIVES     PIC X.");
+/*		tput_line		("       01  WISP-DECLARATIVES-STATUS  PIC X(2)."); */
+		tput_line		("       01  WISP-LASTFILEOP           PIC X(%d).", COB_FILEOP_SIZE);
+		tput_line		("       01  WISP-EXTENDED-FILE-STATUS PIC X(%d).", COB_EXTENDED_FILE_STATUS_SIZE);
+/*		tput_line		("       01  WISP-EXTENDED-FILE-STATUS-2 PIC X(10)."); */
 	
-		tput_line		("       01  WISPRUNNAME               PIC X(8)  VALUE SPACES.");
-		tput_line		("       01  WISP-CURRENT-FILE-ID      PIC X(40).");
+		tput_line		("       01  WISP-RUN-NAME             PIC X(8)  VALUE SPACES.");
+		tput_line		("       01  WISP-CURRENT-FILE-ID      PIC X(%d).",COB_SELECT_NAME_SIZE);
 		tput_line		("       01  WISP-SAVE-FILE-STATUS     PIC X(2).");
 		tput_line		("       01  WISP-PFKEY-VALUE          PIC 9(2).");
 		tput_line		("       01  WISP-SAVE-WCC             PIC X.");
 		tput_line		("       01  WISP-PROTECT-BIT          PIC X(1) VALUE WISP-SYMB-4.");
-		tput_line		("       01  WISP-XERROR-BIT           PIC X(1) VALUE WISP-SYMB-8.");
-		tput_line		("       01  WISP-ERROR-BIT            PIC X(1) VALUE WISP-SYMB-16.");
+/*		tput_line		("       01  WISP-XERROR-BIT           PIC X(1) VALUE WISP-SYMB-8."); */
+/*		tput_line		("       01  WISP-ERROR-BIT            PIC X(1) VALUE WISP-SYMB-16."); */
 		tput_line		("       01  WISP-MOD-BIT              PIC X(1) VALUE WISP-SYMB-64.");
 		tput_line		("       01  WISP-ALTERED-BIT          PIC X(1) VALUE WISP-SYMB-64.");
 		tput_blank();
@@ -212,7 +213,7 @@ int ws_init(void)
 
 		tput_blank();
 		tput_scomment		("*****************************************************************");
-		tput_scomment		("**             FIELDS USED FOR ON PFKEYS PFKEY-LIST      ********");
+		tput_scomment		("**** FIELDS USED FOR ON PFKEYS PFKEY-LIST");
 		tput_scomment		("*****************************************************************");
 		tput_blank();
 	
@@ -251,7 +252,7 @@ int ws_init(void)
 		tput_blank();
 	
 		tput_scomment		("*****************************************************************");
-		tput_scomment		("*              Scratch fields created by WISP program      ******");
+		tput_scomment		("**** Scratch fields ");
 		tput_scomment		("*****************************************************************");
 		tput_blank();
 			
@@ -290,26 +291,9 @@ int ws_init(void)
 
 		tput_blank();
 		tput_scomment		("*    WISP RETURN-CODE handling.");
-		if (acu_cobol || mf_cobol)
-		{
-			tput_line	("       01  WISPRETURNCODE            PIC XXX   VALUE \"000\".");
-			tput_line	("       01  KW-RETURN-CODE REDEFINES WISPRETURNCODE PIC 999.");
-			tput_blank();
-	
-			tput_line	("       01  WISPFILEXT                               PIC X(39).");
-			tput_line	("       01  WISP-FILE-EXTENSION REDEFINES WISPFILEXT PIC X(39).");
-			tput_blank();
-		}
-		else
-		{
-			tput_line	("       01  WISPRETURNCODE         EXTERNAL        PIC XXX.");
-			tput_line	("       01  KW-RETURN-CODE REDEFINES WISPRETURNCODE PIC 999.");
-			tput_blank();
-
-			tput_line	("       01  WISPFILEXT             EXTERNAL          PIC X(39).");
-			tput_line	("       01  WISP-FILE-EXTENSION REDEFINES WISPFILEXT PIC X(39).");
-			tput_blank();
-		}
+		tput_line		("       01  WISP-RETURN-CODE          PIC XXX   VALUE \"000\".");
+		tput_line		("       01  KW-RETURN-CODE REDEFINES WISP-RETURN-CODE PIC 999.");
+		tput_blank();
 
 		tput_blank();
 		tput_scomment		("*    WISP Workstation processing fields.");
@@ -336,7 +320,7 @@ int ws_init(void)
 		{
 			tput_blank();
 			tput_scomment( "*****************************************************************");
-			tput_scomment( "*    Native Screens fields");
+			tput_scomment( "**** Native Screens fields");
 			tput_scomment( "*****************************************************************");
 			tput_blank();
 	
@@ -427,6 +411,9 @@ int ws_init(void)
 			tput_line_at(8, "01  WISP-DNR-WCC-CURSOR-BIT  PIC X VALUE X\"20\".");
 			tput_line_at(8, "01  WISP-DNR-WCC-ALARM-BIT   PIC X VALUE X\"40\".");
 		}
+		tput_scomment		("*****************************************************************");
+		tput_scomment		("**** END OF COPYBOOK FILE = %s",COPY_WORKSTOR);
+		tput_scomment		("*****************************************************************");
 	}
 
 	if (use_copy && output_copy)
@@ -436,105 +423,120 @@ int ws_init(void)
 	}
 		
 
-	tput_line		("       01  WISP-TRAN-VERSION PIC X(20) VALUE \"%s\".",WISP_VERSION);
-	tput_line		("       01  WISP-LIB-VERSION          PIC X     VALUE WISP-SYMB-%d.",LIBRARY_VERSION);
-	tput_line		("       01  WISP-COBOL-TYPE           PIC X(3)  VALUE \"%s\".",cobol_type);
+	if (!opt_native)
+	{
+		tput_line	("       01  WISP-VERSION              PIC X(%d) VALUE \"%s\".",WISP_VERSION_SIZE, WISP_VERSION);
+		tput_line  	("       01  WISP-SWAP-ON              PIC S9(9) %s VALUE %s.",bin4_type,
+					(opt_no_word_swap) ? "0":"1" );
+	}
 	tput_line		("       01  WISP-APPLICATION-NAME     PIC X(8)  VALUE \"%-8.8s\".",prog_id);
-	tput_line		("       01  WISP-ERR-LOGGING          PIC S9(9) %s VALUE 0.",bin4_type);
-        if (swap_words)
-		tput_line  	("       01  WISP-SWAP-ON              PIC S9(9) %s VALUE 1.",bin4_type);
-	else
-		tput_line  	("       01  WISP-SWAP-ON              PIC S9(9) %s VALUE 0.",bin4_type); 
 
+	tput_blank();
 	tput_scomment		("*****************************************************************");
-	tput_scomment		("*    WISP Generated file name fields.                      ******");
+	tput_scomment		("**** Fields for file path translation");
 	tput_scomment		("*****************************************************************");
 
 	for (i=0; i<prog_cnt; i++)
 	{
 		tput_line("       01  %s PIC X(80) VALUE SPACES.", get_prog_nname(i));
 
-		if ((prog_fnames[i][0] == '\"') || (!prog_fnames[i][0]))		/* file name is a literal/null	*/
+		if (is_literal(prog_fnames[i]) || (!prog_fnames[i][0]))		/* file name is a literal/null	*/
 		{
-			strcpy(o_parms[0], get_prog_fname(i));
 			if (prog_fnames[i][0])
 			{
-				tput_line("       01  %s PIC X(8) VALUE %s.",o_parms[0],prog_fnames[i]);
+				tput_line("       01  %s PIC X(8) VALUE %s.",get_prog_fname(i),prog_fnames[i]);
 			}
 			else								/* it was a null, space it out	*/
 			{
-				tput_line("       01  %s PIC X(8) VALUE SPACES.",o_parms[0]);
+				tput_line("       01  %s PIC X(8) VALUE SPACES.",get_prog_fname(i));
 			}
 		}
 
-		if ((prog_lnames[i][0] == '\"') || (!prog_lnames[i][0]))		/* Library name is a literal/null */
+		if (is_literal(prog_lnames[i]) || (!prog_lnames[i][0]))		/* Library name is a literal/null */
 		{
-			strcpy(o_parms[0], get_prog_lname(i));
 			if (prog_lnames[i][0])
 			{
-				tput_line("       01  %s PIC X(8) VALUE %s.",o_parms[0],prog_lnames[i]);
+				tput_line("       01  %s PIC X(8) VALUE %s.",get_prog_lname(i),prog_lnames[i]);
 			}
 			else								/* it was a null, space it out	*/
 			{
-				tput_line("       01  %s PIC X(8) VALUE SPACES.",o_parms[0]);
+				tput_line("       01  %s PIC X(8) VALUE SPACES.",get_prog_lname(i));
 			}
 		}
-		if ((prog_vnames[i][0] == '\"') || (!prog_vnames[i][0]))		/* Volume name is a literal/null */
+		if (is_literal(prog_vnames[i]) || (!prog_vnames[i][0]))		/* Volume name is a literal/null */
 		{
-			strcpy(o_parms[0], get_prog_vname(i));
 			if (prog_vnames[i][0])
 			{
-				tput_line("       01  %s PIC X(6) VALUE %s.",o_parms[0],prog_vnames[i]);
+				tput_line("       01  %s PIC X(6) VALUE %s.",get_prog_vname(i),prog_vnames[i]);
 			}
 			else								/* it was a null, space it out	*/
 			{
-				tput_line("       01  %s PIC X(6) VALUE SPACES.",o_parms[0]);
+				tput_line("       01  %s PIC X(6) VALUE SPACES.",get_prog_vname(i));
 			}
 		}
 
 		tput_line("       01  %s PIC X(8) VALUE \"%-8s\".", get_prog_prname(i), prog_prname[i]);
 
-		fval = IS_PRNAME;							/* Flag that Prnames are in now.*/
+		fval = 0;
+		fileAttrib[0] = '\0';
 
 		if (prog_ftypes[i] & PRINTER_FILE)
 		{									/* init flags as a print file	*/
 			fval += IS_PRINTFILE;
+			strcat(fileAttrib, IS_PRINTFILE_ATTR);
 		}
 
 		if (prog_ftypes[i] & INDEXED_FILE)					/* Flag as indexed.		*/
 		{
 			fval += IS_INDEXED;
+			strcat(fileAttrib, IS_INDEXED_ATTR);
 		}
 
 		if (prog_ftypes[i] & SEQ_DYN)						/* File is SEQ/DYN.		*/
 		{
 			fval += IS_SEQDYN;
+			strcat(fileAttrib, IS_SEQDYN_ATTR);
 		}
 
 		if ((prog_ftypes[i] & SEQ_FILE) && !(prog_ftypes[i] & SEQ_DYN))		/* File is SEQ/SEQ		*/
 		{
 			fval += IS_SEQSEQ;
+			strcat(fileAttrib, IS_SEQSEQ_ATTR);
 		}
 
 		if (prog_ftypes[i] & NORESPECIFY)					/* File is NORESPECIFY.		*/
 		{
 			fval += IS_NORESPECIFY;
+			strcat(fileAttrib, IS_NORESPECIFY_ATTR);
+		}
+
+		if (prog_ftypes[i] & RELATIVE_FILE)					/* File is RELATIVE.		*/
+		{
+			fval += IS_RELATIVE;
+			strcat(fileAttrib, IS_RELATIVE_ATTR);
 		}
 
 		if (prog_ftypes[i] & DBFILE_FILE)					/* File is DATABASE.		*/
 		{
 			fval += IS_DBFILE;
+			strcat(fileAttrib, IS_DBFILE_ATTR);
 		}
 
-		tput_line("       01  %s %s PIC 9(9) VALUE %ld.", get_prog_status(i), bin4_type,fval);
+		/* tput_line("       01  %s %s PIC 9(9) VALUE %ld.", get_prog_status(i), bin4_type,fval); */
+		if (0==strlen(fileAttrib))
+		{
+			strcpy(fileAttrib," "); /* Acucobol warns about an empty "" string */
+		}
+		tput_line("       01  %s PIC X(%d) VALUE \"%s\".", 
+			get_prog_status(i), WISP_FILE_ATTR_SIZE, fileAttrib);
 	}
 
 	if (fig_count)
 	{
-		tput_scomment("*****************************************************************");
-		tput_scomment("*   2 byte FIGURATIVE-CONSTANTS relocated by WISP          ******");
-		tput_scomment("*****************************************************************");
 		tput_blank();
+		tput_scomment("*****************************************************************");
+		tput_scomment("**** 2 byte FIGURATIVE-CONSTANTS ");
+		tput_scomment("*****************************************************************");
 		for (i=0; i<fig_count; i++)
 		{
 			tput_line("       01  %s.",fig_cons[i]);
@@ -559,12 +561,81 @@ int ws_init(void)
 /*
 **	History:
 **	$Log: wt_wsdat.c,v $
-**	Revision 1.17.2.1  2002/11/12 16:00:32  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.40  2003/03/17 20:33:16  gsl
+**	remove commented old code
 **	
-**	Revision 1.17  1998/04/03 19:17:48  gsl
+**	Revision 1.39  2003/03/10 22:39:42  gsl
+**	Remove WISP-LONGWORD usage
+**	
+**	Revision 1.38  2003/03/10 18:55:44  gsl
+**	Added nosleep option and for ACU default to using C$SLEEP instead
+**	of WFWAIT on a READ with HOLD
+**	
+**	Revision 1.37  2003/03/07 20:11:37  gsl
+**	Use defines for all the field sizes passed from Cobol to C
+**	
+**	Revision 1.36  2003/03/06 21:50:55  gsl
+**	Change to use ATTR instead of MODE
+**	
+**	Revision 1.35  2003/02/28 21:49:04  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.34  2003/02/25 21:56:03  gsl
+**	cleanup some global "parm" variables
+**	
+**	Revision 1.33  2003/02/04 17:33:18  gsl
+**	fix copyright header
+**	
+**	Revision 1.32  2002/12/12 19:57:37  gsl
+**	comments
+**	
+**	Revision 1.31  2002/08/13 20:21:11  gsl
+**	Don't gen empty ATTR- values clause
+**	
+**	Revision 1.30  2002/08/12 20:13:50  gsl
+**	quotes and literals
+**	
+**	Revision 1.29  2002/07/30 22:00:48  gsl
+**	globals
+**	
+**	Revision 1.28  2002/07/30 19:12:38  gsl
+**	SETRETCODE
+**	
+**	Revision 1.27  2002/07/29 21:13:24  gsl
+**	
+**	Revision 1.26  2002/07/17 15:15:40  gsl
+**	MF doesn't like underscores in COBOL names
+**	
+**	Revision 1.25  2002/07/17 15:03:27  gsl
+**	MF doesn't like underscores in COBOL names
+**	
+**	Revision 1.24  2002/07/02 03:55:23  gsl
+**	Add WISP-SKIP-DECLARATIVES
+**	
+**	Revision 1.23  2002/06/28 04:02:56  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.22  2002/06/21 20:49:35  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.21  2002/06/21 03:46:58  gsl
+**	Comment out unneede IS_xxx bits
+**	
+**	Revision 1.20  2002/06/20 23:06:12  gsl
+**	Native
+**	
+**	Revision 1.19  2002/06/19 22:50:55  gsl
+**	Fix comments
+**	Remove obslete code
+**	Add opt_native changes
+**	
+**	Revision 1.18  2002/05/16 21:53:51  gsl
+**	add WISP-LASTFILEOP
+**	increment copybook version
+**	
+**	Revision 1.17  1998-04-03 14:17:48-05  gsl
 **	Add Id info to copybook
-**	
+**
 **	Revision 1.16  1998-03-26 14:26:41-05  gsl
 **	Change to use WISP-SYMB-xx
 **	Change to use WISP-CLR-xx

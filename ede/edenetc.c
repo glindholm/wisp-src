@@ -1,11 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /*						Include required header files.							*/
@@ -23,7 +40,7 @@ static char rcsid[]="$Id:$";
 #include "vwang.h"
 #include "wglobals.h"
 
-int test_end_window(char *cptr);							/* Test if end of footer area.		*/
+static int test_end_window(char *cptr);							/* Test if end of footer area.		*/
 
 /*						Static and Global Data Definitions.						*/
 static int netc_pfhelp = FALSE;								/* Flag to avoid reentrant help.	*/
@@ -32,9 +49,8 @@ static int netc_pfhelp = FALSE;								/* Flag to avoid reentrant help.	*/
 struct video_menu menu_ncpfkey;								/* The generated pfkey menu pop-up.	*/
 static int setptr_foot();
 
-int gen_ncpfkey(type,wsb,num_chars,st_win,end_win)					/* Generate the MCB from vwang screen.	*/
-int type, num_chars, *st_win, *end_win;							/* Flag if WSFNS or WSFNM call.		*/
-char **wsb;
+int gen_ncpfkey(int type, char** wsb, int num_chars, int* st_win, int* end_win)		/* Generate the MCB from vwang screen.	*/
+											/* Flag if WSFNS or WSFNM call.		*/
 {
 	static char tmp_scn[1924];
 	char *cptr, *ede_nc;
@@ -43,9 +59,9 @@ char **wsb;
 	int cnt, cont;
 
 
-	if (ede_nc = (char *) getenv("PFKEYWINDOW")) return(FALSE);			/* Shell var set so don't want pop-up.	*/
+	if ((ede_nc = (char *) getenv("PFKEYWINDOW"))) return(FALSE);			/* Shell var set so don't want pop-up.	*/
 
-	vmenuinit(&menu_ncpfkey, DISPLAY_ONLY_MENU, VMODE_REVERSE, 0, 0, 0);		/* Initialize the menu definition.	*/
+	VL_vmenuinit(&menu_ncpfkey, DISPLAY_ONLY_MENU, VMODE_REVERSE, 0, 0, 0);		/* Initialize the menu definition.	*/
 
 	memset(tmp_scn,' ',1924);							/* Set temp area to blank.		*/
 	cptr = *wsb;									/* Point to screen passed in.		*/
@@ -65,7 +81,7 @@ char **wsb;
 	while ( ((*cptr & FAC_CHARACTER) != FAC_CHARACTER) ||				/* Set ptr to underline FAC of footer.	*/
 		 ((*cptr & FAC_UNDERSCORE) != FAC_UNDERSCORE) )
 	{
-		*cptr++;
+		cptr++;
 		cnt++;									/* Increment number of characters used.	*/
 	}
 	*cptr++ = ' ';									/* Step past the FAC.			*/
@@ -91,7 +107,7 @@ char **wsb;
 			while ((*cptr != '(') && (cnt < num_chars) && (i < MAX_MENU_WIDTH)) /* Copy text to next PFkey def.	*/
 			{
 				if (!(cont = test_end_window(cptr))) break;		/* Test if end of footer area.		*/
-				if (valid_char_data(*cptr)) 				/* Char not in displayable range.	*/
+				if (vwang_valid_char_data(*cptr)) 			/* Char not in displayable range.	*/
 				{
 					*cptr = ' ';					/* So, set to a space.			*/
 				}
@@ -120,16 +136,16 @@ char **wsb;
 			}
 		}
 		*tptr = '\0';								/* Null terminate the string.		*/
-		vmenuitem(&menu_ncpfkey, temptxt, 0 , NULL);				/* Init the menu text.			*/
+		VL_vmenuitem(&menu_ncpfkey, temptxt, 0 , NULL);				/* Init the menu text.			*/
 	}
 	if (type) *end_win = 24 - ((num_chars - (cnt + 4))/80);				/* Set end line of pfkey window area.	*/ 
 	*wsb = tmp_scn;									/* Set so will display temp screen.	*/
 	return(TRUE);									/* Set to indicate pfkey window.	*/
 }
 
-int nc_pop_menu(filling,terminate_list,no_mod,pfkey)					/* Pop up the PFkey menu window and get	*/
-unsigned char *terminate_list, *no_mod, *pfkey;						/*  the pfkey pressed.			*/
-int *filling;
+/* Pop up the PFkey menu window and get	*/
+/*  the pfkey pressed.			*/
+int nc_pop_menu(int *filling, const char *terminate_list, unsigned char *no_mod, char *pfkey )
 {
 	enum e_vop op_save;								/* Optimization save word.		*/
 	int choice;									/* Menu choice.				*/
@@ -139,30 +155,30 @@ int *filling;
 
 	if (netc_pfhelp || (ede_nc = (char *) getenv("PFKEYWINDOW")))			/* Shell var set or already in pop-up.	*/
 	{
-		ws_bad_char();								/* Ring the bells.			*/
+		vwang_bad_char();								/* Ring the bells.			*/
 		return(FAILURE);							/* Return to the caller.		*/
 	}
 	else netc_pfhelp = TRUE;							/* Now Netroncap pfkey help is active.	*/
-	vdefer_restore();								/* Cannot be in deferred mode.		*/
+	VL_vdefer_restore();								/* Cannot be in deferred mode.		*/
 
 	row_current = vcur_lin+1;							/* Remember where on Wang screen.	*/
 	col_current = vcur_col+1;
 
 	op_save = voptimize(VOP_DEFER_MODE);						/* Make sure optimization is on.	*/
-	vmenustatus(&mdsave, &pfsave);							/* Get the menu status.			*/
-	vmenu_pfkeys(ON);								/* Turn PF key processing on.		*/
-	vmenumode(STATIC_MENU);								/* This is a static menu.		*/
-	choice = vmenugo(&menu_ncpfkey);						/* Display the menu.			*/
-	vmenu_pfkeys(pfsave);								/* Restore the PF keys.			*/
-	vmenumode(mdsave);								/* Restore the menu mode.		*/
+	VL_vmenustatus(&mdsave, &pfsave);							/* Get the menu status.			*/
+	VL_vmenu_pfkeys(ON);								/* Turn PF key processing on.		*/
+	VL_vmenumode(STATIC_MENU);								/* This is a static menu.		*/
+	choice = VL_vmenugo(&menu_ncpfkey);						/* Display the menu.			*/
+	VL_vmenu_pfkeys(pfsave);								/* Restore the PF keys.			*/
+	VL_vmenumode(mdsave);								/* Restore the menu mode.		*/
 
-	if (vfnkey(choice))								/* Is the key pressed a function key?	*/
+	if (VL_vfnkey(choice))								/* Is the key pressed a function key?	*/
 	{
-		ws_fkey(choice,filling,terminate_list,pfkey,no_mod);
+		vwang_ws_fkey(choice,filling,terminate_list,pfkey,no_mod);
 	}
 	voptimize(op_save);								/* Put the optimization back as it was.	*/
 	netc_pfhelp = FALSE;								/* Now Netroncap pfkey help is inactive.*/
-	synch_required = FALSE;								/* A synch is not required.		*/
+	VL_synch_required = FALSE;								/* A synch is not required.		*/
 
 	if (*filling) return(FAILURE);							/* Not a valid pfkey.			*/
 	else 	return(SUCCESS); 							/* All done.				*/
@@ -198,7 +214,7 @@ char **cptr;
 	}
 	return FALSE;
 }
-int test_end_window(char *cptr)								/* Test if end of footer area.		*/
+static int test_end_window(char *cptr)								/* Test if end of footer area.		*/
 {
 	char cmp_line[81];
 
@@ -216,6 +232,39 @@ int test_end_window(char *cptr)								/* Test if end of footer area.		*/
 /*
 **	History:
 **	$Log: edenetc.c,v $
+**	Revision 1.22  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.21  2003/06/23 17:28:54  gsl
+**	static func
+**	
+**	Revision 1.20  2003/06/23 15:28:04  gsl
+**	VL_ global symbols
+**	
+**	Revision 1.19  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.18  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.17  2002/08/01 15:07:37  gsl
+**	type warnings
+**	
+**	Revision 1.16  2002/07/15 20:16:05  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.15  2002/07/15 14:07:03  gsl
+**	vwang globals
+**	
+**	Revision 1.14  2002/07/12 20:40:38  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.13  2002/07/11 20:29:20  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.12  2002/07/09 04:14:07  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
 **	Revision 1.11  1997/07/08 20:12:09  gsl
 **	Change to use new video.h defines
 **	

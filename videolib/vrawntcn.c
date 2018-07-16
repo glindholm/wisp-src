@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1996-1999 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		vrawntcn.c
 **
@@ -20,7 +41,7 @@ static char rcsid[]="$Id:$";
 **	There are three mode of input:
 **	1) Read without waiting.  	vcheck() -> vrawcheck() -> xgetc_nw()
 **	2) Read with wait.		vgetm() -> vgetc() -> vrawinput() -> xgetc_w()
-**	3) Read with wait and timeout.	vgetm_timed() -> vrawtimeout()/vgetc() -> vrawinput() -> xgetc_w()/xgetc_nw()
+**	3) Read with wait and timeout.	VL_vgetm_timed() -> vrawtimeout()/vgetc() -> vrawinput() -> xgetc_w()/xgetc_nw()
 */
 
 #ifdef  WIN32
@@ -41,6 +62,7 @@ static char rcsid[]="$Id:$";
 
 #include "video.h"
 #include "vlocal.h"
+#include "vdata.h"
 #include "vmodules.h"
 #include "vraw.h"
 
@@ -81,26 +103,9 @@ extern int vcur_atr;
 /*
  * Globals whose storage is defined in other compilation units:
  *
- * int vb_pure:         This will be TRUE (non-zero) when the higher
- *                      layers are intending to write output that should
- *                      not be post processed. If this flag is FALSE. then
- *                      any line-feed ('\012') character seen in the output
- *                      stream will have a carriage return ('\015') character
- *                      pre-pended to it.
- *
- * int vb_count:        This is the count of how many characters are currently
- *                      in the output buffer. It is read by higher layers
- *                      of Video for optimization purposes.
- *
- * int debugging:       This is a debugging hook flag which will cause any
- *                      output data in the buffer owned by this compilation
- *                      unit to be flushed to the output device immediately.
  *
  */
-extern int vb_pure;
-extern int vb_count;
-extern int debugging;
-extern int video_inited;
+extern int VL_video_inited;
 
 /*
 **	Static data
@@ -322,7 +327,7 @@ static int vrawinit(void)
 		/*
 		**	Were done
 		*/
-		video_inited = TRUE;	
+		VL_video_inited = TRUE;	
 		vraw_init_flag = 1;
 
 		return SUCCESS;
@@ -372,10 +377,25 @@ static int vrawinit(void)
 			 */
 			hWispIcon = LoadIcon(hModule,"WISPICON");
 		}
+
+		if (NULL == hWispIcon)
+		{
+			/*
+			 *	Didn't find it in the EXE try looking in the DLL
+			 *	In Acucobol 6 the WISP icon is in the DLL.
+			 */
+			hModule = GetModuleHandle("wrun32.dll");
+			if (NULL != hModule)
+			{
+				hWispIcon = LoadIcon(hModule,"WISPICON");
+			}
+		}
+
 		if (NULL == hWispIcon)
 		{
 			hWispIcon = LoadIcon(NULL,IDI_WINLOGO);
 		}
+
 		if (NULL != hWispIcon)
 		{
 			SendMessage(vraw_get_console_hWnd(),
@@ -526,7 +546,7 @@ static int vrawinit(void)
 	/*
 	**	Set - video was initialized.
 	*/
-	video_inited = TRUE;	
+	VL_video_inited = TRUE;	
 	vraw_init_flag = 1;
 
 	/*
@@ -1072,7 +1092,7 @@ int vrawexit()
  * Procedure to shut down pending inputs in anticipation of the creation
  * of a sub process.
  */
-void vshut()
+void VL_vshut()
 {
 }
 
@@ -2094,7 +2114,7 @@ static void perr(PCHAR szFileName, int line, PCHAR szApiName, DWORD dwError)
 		strcat(szTemp, msgBuf);
 	}
 
-	vre_write_logfile(szTemp);
+	VL_vre_write_logfile(szTemp);
 	
 	
 	strcat(szTemp, "\n\nContinue execution?");
@@ -2335,7 +2355,7 @@ int vrawdirectio(void)
 			bTelnet = 1;
 		}
 		
-		if (ptr = getenv("WISPTELNET"))
+		if (ptr = getenv("WISPTELNET"))  /* Pre 5.0 typo said "WISPTELENT" */
 		{
 			/*
 			**	Setting WISPTELNET=1 will force directio off (without turning Costar on).
@@ -2458,6 +2478,27 @@ static void writelog(char *fmt,...)
 /*
 **	History:
 **	$Log: vrawntcn.c,v $
+**	Revision 1.71  2003/07/09 20:07:26  gsl
+**	type of "WISPTELNET"
+**	
+**	Revision 1.70  2003/06/20 15:37:44  gsl
+**	VL_ globals
+**	
+**	Revision 1.69  2003/05/28 18:06:26  gsl
+**	Acucobol 6.0 support, load WISPICON from the wrun32.dll
+**	
+**	Revision 1.68  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.67  2002/07/16 13:40:20  gsl
+**	VL_ globals
+**	
+**	Revision 1.66  2002/07/15 20:16:13  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.65  2002/07/15 17:10:05  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.64  2001/11/19 20:21:09  gsl
 **	FIx readStreamConsole() for telnet to use ReadConsoleInput().
 **	Previously used ReadFile() which was filtering out Escape chars on Win 2000

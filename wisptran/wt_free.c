@@ -1,13 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 
 /* Routines to process the FREE ALL and COMMIT statements.									*/
@@ -29,14 +42,14 @@ static char rcsid[]="$Id:$";
 **      PERFORM WISP-FREE-ALL
 **
 **      (on ERROR clause)
-**      MOVE "000" TO WISPRETURNCODE
-**      IF WISPRETURNCODE NOT = "000" THEN
+**      MOVE "000" TO WISP-RETURN-CODE
+**      IF WISP-RETURN-CODE NOT = "000" THEN
 **		statement-1
 **	END-IF
 **
 **      (NOT on ERROR clause)
-**      MOVE "000" TO WISPRETURNCODE
-**      IF WISPRETURNCODE  = "000" THEN
+**      MOVE "000" TO WISP-RETURN-CODE
+**      IF WISP-RETURN-CODE  = "000" THEN
 **		statement-2
 **	END-IF
 **
@@ -71,10 +84,10 @@ NODE parse_free(NODE the_statement, NODE the_sentence)
 		return free_statement(the_statement);
 	}
 
-	if (!do_locking && acu_cobol) /* /NODMS option */
+	if (!opt_gen_dms_locking && acu_cobol) /* /NODMS option */
 	{
-		write_log("WISP",'W',"FREEALL","FREE ALL changed to UNLOCK ALL.");
-		tput_scomment("*** FREE ALL changed to UNLOCK ALL. ***");
+		write_log("WISP",'I',"FREEALL","FREE ALL changed to UNLOCK ALL.");
+		/* tput_scomment("*** FREE ALL changed to UNLOCK ALL. ***"); */
 
 		edit_token(verb_node->token, "UNLOCK");
 	}
@@ -106,8 +119,8 @@ NODE parse_free(NODE the_statement, NODE the_sentence)
 	{
 		the_statement =  free_statement(the_statement);
 
-		tput_line_at(col, "MOVE \"000\" TO WISPRETURNCODE");
-		tput_line_at(col, "IF WISPRETURNCODE NOT = \"000\" THEN");
+		tput_line_at(col, "MOVE \"000\" TO WISP-RETURN-CODE");
+		tput_line_at(col, "IF WISP-RETURN-CODE NOT = \"000\" THEN");
 
 		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
@@ -128,8 +141,8 @@ NODE parse_free(NODE the_statement, NODE the_sentence)
 	{
 		the_statement =  free_statement(the_statement);
 
-		tput_line_at(col, "MOVE \"000\" TO WISPRETURNCODE");
-		tput_line_at(col, "IF WISPRETURNCODE = \"000\" THEN");
+		tput_line_at(col, "MOVE \"000\" TO WISP-RETURN-CODE");
+		tput_line_at(col, "IF WISP-RETURN-CODE = \"000\" THEN");
 
 		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
@@ -195,11 +208,11 @@ NODE parse_commit(NODE the_statement, NODE the_sentence)
 		the_statement = free_statement(the_statement);
 		curr_node = verb_node = NULL;
 	}
-	else if (acu_cobol && x4dbfile)
+	else if (acu_cobol && opt_x4dbfile)
 	{
 		/* Leave it as a COMMIT */
 	}
-	else if (!do_locking) /* /NODMS option */
+	else if (!opt_gen_dms_locking) /* /NODMS option */
 	{
 		if (acu_cobol) 
 		{
@@ -238,8 +251,8 @@ NODE parse_commit(NODE the_statement, NODE the_sentence)
 	{
 		the_statement =  free_statement(the_statement);
 
-		tput_line_at(col, "MOVE \"000\" TO WISPRETURNCODE");
-		tput_line_at(col, "IF WISPRETURNCODE NOT = \"000\" THEN");
+		tput_line_at(col, "MOVE \"000\" TO WISP-RETURN-CODE");
+		tput_line_at(col, "IF WISP-RETURN-CODE NOT = \"000\" THEN");
 
 		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
@@ -260,8 +273,8 @@ NODE parse_commit(NODE the_statement, NODE the_sentence)
 	{
 		the_statement =  free_statement(the_statement);
 
-		tput_line_at(col, "MOVE \"000\" TO WISPRETURNCODE");
-		tput_line_at(col, "IF WISPRETURNCODE = \"000\" THEN");
+		tput_line_at(col, "MOVE \"000\" TO WISP-RETURN-CODE");
+		tput_line_at(col, "IF WISP-RETURN-CODE = \"000\" THEN");
 
 		the_statement = parse_imperative_statements(the_statement, the_sentence);
 
@@ -289,6 +302,20 @@ NODE parse_commit(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_free.c,v $
+**	Revision 1.19  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.18  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.17  2002/08/13 18:45:49  gsl
+**	Change FREE ALL to an informational message
+**	
+**	Revision 1.16  2002/07/30 19:12:39  gsl
+**	SETRETCODE
+**	
+**	Revision 1.15  2002/07/29 21:13:24  gsl
+**	
 **	Revision 1.14  1998/12/03 20:44:25  gsl
 **	In parse_commit() if ACU4GL then leave it a COMMIT instead of
 **	changing to an UNLOCK ALL

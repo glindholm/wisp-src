@@ -42,8 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "..\wispcommon" /I "..\wisputils" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FD /c
-# SUBTRACT CPP /YX
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /I "..\wisputils" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -68,7 +67,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\wispcommon" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\wispcommon" /I "..\wisputils" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -84,6 +83,34 @@ LINK32=link.exe
 
 # Name "wauthorize - Win32 Release"
 # Name "wauthorize - Win32 Debug"
+# Begin Group "other"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\license.template
+# End Source File
+# Begin Source File
+
+SOURCE=.\PRINTLICENSE
+# End Source File
+# Begin Source File
+
+SOURCE=.\WAUTH
+# End Source File
+# Begin Source File
+
+SOURCE=.\wauth.umf
+# End Source File
+# Begin Source File
+
+SOURCE=.\WAUTHTAB
+# End Source File
+# Begin Source File
+
+SOURCE=.\wll
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\wisputils\prompt.c
@@ -91,6 +118,10 @@ SOURCE=..\wisputils\prompt.c
 # Begin Source File
 
 SOURCE=.\wauthorize.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisputils\wutils.h
 # End Source File
 # End Target
 # End Project

@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*---- 
 Copyright (c) 1989-93 King Computer Services, Inc. 
@@ -23,7 +37,6 @@ spin off file.
 #include "intdef.h"
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)iwrt.c	1.8 4/16/93";
 
 static KCSIO_BLOCK *ofb;
 
@@ -120,8 +133,8 @@ static void one_inq_record()
 /*
 **	History:
 **	$Log: iwrt.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:26  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.10  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.9  2002/10/24 15:48:32  gsl
 **	Make globals unique

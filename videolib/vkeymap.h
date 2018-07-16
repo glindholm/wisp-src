@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,11 +34,6 @@
 **	File:		vkeymap.h
 **
 **	Purpose:	To ...
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
-**
 */
 
 #ifndef vkeymap_H
@@ -57,12 +71,21 @@
 #define KM_BACKSPACE		0x0002000c
 #define KM_UNKNOWN		0x0002ffff
 
-char *vkeymap_path();
+char *VL_vkeymap_path();
 
 #endif /* vkeymap_H */
 /*
 **	History:
 **	$Log: vkeymap.h,v $
+**	Revision 1.9  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.8  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.7  2002/07/15 20:16:09  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.6  1996/10/11 22:16:07  gsl
 **	drcs update
 **	

@@ -1,21 +1,47 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
 
-static char sccsid[]="@(#)datentry.c	1.1 2/4/93";
+#ifdef KCSI_MFX
+extern int cobinit (void);
+#endif
 
-main()
+extern int DTEMAIN(void);
+
+
+int main(int argc, char *argv[])
 {
 #ifdef KCSI_MFX
 	cobinit();
 #endif
 
 	DTEMAIN();
+
+	return 0;
 }
 
 
 /*
 **	History:
 **	$Log: datentry.c,v $
+**	Revision 1.5  2003/05/07 17:52:53  gsl
+**	-Wall
+**	
+**	Revision 1.4  2003/02/04 19:19:09  gsl
+**	fix header
+**	
 **	Revision 1.3  1999/03/05 15:00:14  gsl
 **	Add cobinit() for MFX
 **	

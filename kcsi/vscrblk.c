@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 #include <stdio.h>
@@ -11,7 +25,6 @@ static char rcsid[]="$Id:$";
 
 static int fld_pf,blk_pf,blk_no,fld_no;
 
-static char sccs_id[]="@(#)vscrblk.c	1.4 3/19/94";
 
 static char msg_fld[81];
 
@@ -32,7 +45,6 @@ static void val_record_len(char *rec_len);
 static void val_file_exists(void);
 static int cr_get_lit_field(void);
 static int val_cr_get_lit(char *pos, char *len);
-static void val_cr_lit_pos(char *pos);
 static void val_cr_lit_len(char *len);
 static CR_FLD *save_cr_fld(void);
 static void save_cr_blk(void);
@@ -506,6 +518,7 @@ static int val_cr_get_lit(char *pos, char *len)
 		return(0);
 }
 
+#ifdef NOT_USED
 static void val_cr_lit_pos(char *pos)
 {
 	int value;
@@ -524,6 +537,7 @@ static void val_cr_lit_pos(char *pos)
 		}
 	CR_wfld.outpos = value;
 }
+#endif /* NOT_USED */
 
 static void val_cr_lit_len(char *len)
 {
@@ -694,7 +708,7 @@ static void val_cr_pad_pad(char *pad)
 		strcpy(msg_fld,"Hex value must be entered.");
 		return;
 		}
-	if( (*pad ==  ' ') || (isxdigit(*pad)) )
+	if( (*pad ==  ' ') || (isxdigit((int)*pad)) )
 		;
 	else
 		{
@@ -702,7 +716,7 @@ static void val_cr_pad_pad(char *pad)
 		return;
 		}
 	++pad;
-	if( (*pad ==  ' ') || (isxdigit(*pad)) )
+	if( (*pad ==  ' ') || (isxdigit((int)*pad)) )
 		;
 	else
 		{
@@ -1110,14 +1124,15 @@ static void cr_no_mem_exit(char *type)
 /*
 **	History:
 **	$Log: vscrblk.c,v $
-**	Revision 1.6.2.3  2002/11/13 23:01:07  gsl
+**	Revision 1.17  2003/02/20 19:29:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.16  2003/02/04 19:19:08  gsl
+**	fix header
+**	
+**	Revision 1.15  2002/11/14 13:57:37  gsl
 **	Fix memory problem, attempting to free() non-alloc-ed memory
-**	
-**	Revision 1.6.2.2  2002/11/13 16:45:11  gsl
 **	Remove atexit() processing - not needed
-**	
-**	Revision 1.6.2.1  2002/11/12 15:56:40  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
 **	
 **	Revision 1.14  2002/10/24 15:48:30  gsl
 **	Make globals unique

@@ -1,7 +1,20 @@
 /*
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-static char sccsid[]="@(#)cridtbl.c	1.9 9/10/94";
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
+/*
  ** CONTROL, REPORT, INQUIRY and DATENTRY table entries for
  ** sub85.c.
  ** For Acu_COBOL version 2.00 using Vision version 3 files.
@@ -31,6 +44,9 @@ static char sccsid[]="@(#)cridtbl.c	1.9 9/10/94";
 /*
 **	History:
 **	$Log: cridtbl.c,v $
+**	Revision 1.4  2003/02/04 19:19:09  gsl
+**	fix header
+**	
 **	Revision 1.3  1996/09/18 18:35:07  gsl
 **	Fix syntax error
 **	

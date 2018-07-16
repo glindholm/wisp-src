@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			 Copyright (c) 1988 - 1993			*/
@@ -20,7 +41,7 @@ static char rcsid[]="$Id:$";
 #include "vmodules.h"
 
 /*
-**	Routine:	valert()
+**	Routine:	VL_valert()
 **
 **	Function:	To display an ALERT window with up to 3 options.
 **
@@ -46,14 +67,13 @@ static char rcsid[]="$Id:$";
 **	03/31/93	Written by GSL
 **
 */
-int valert(message,option_enter,option_1,option_16)
+int VL_valert(message,option_enter,option_1,option_16)
 char	*message;
 char	*option_enter;
 char	*option_1;
 char	*option_16;
 {
 #define LINESIZE 64
-	extern int verbose;								/* Verbosity flag.			*/
 	int	row,col,rows,cols;
 	char	*messlines[24];
 	int	lines,cnt,i;
@@ -63,7 +83,7 @@ char	*option_16;
 	char	buff[256];
 	int	rc,optcnt;
 
-	if (!verbose) return(-1);							/* Return to the caller.		*/
+	if (!VL_verbose) return(-1);							/* Return to the caller.		*/
 
 	opt0[0] = (char)0;
 	opt1[0] = (char)0;
@@ -97,7 +117,7 @@ char	*option_16;
 		messlines[lines] = malloc(LINESIZE+1);
 		memset(messlines[lines],' ',LINESIZE);
 
-		if (ptr = strchr(mess,'\n'))
+		if ((ptr = strchr(mess,'\n')))
 		{
 			cnt = (int) (ptr - mess);
 		}
@@ -121,11 +141,11 @@ char	*option_16;
 	rows = lines + 3;								/* Number of rows (including border)	*/
 	cols = LINESIZE + 2;								/* Number of cols (including border)	*/
 
-	vbuffering_start();								/* Start buffering.			*/
+	VL_vbuffering_start();								/* Start buffering.			*/
 	save = vsss(row, col, rows, cols);						/* Save the window area.		*/
 	vbell();									/* Let the bells ring.			*/
 
-	vmode(VMODE_BOLD|VMODE_REVERSE);						/* Select the background.		*/
+	VL_vmode(VMODE_BOLD|VMODE_REVERSE);						/* Select the background.		*/
 	vcharset(VCS_DEFAULT);								/* Default character set.		*/
 
 	for (i = 0; i < lines; i++)
@@ -134,7 +154,7 @@ char	*option_16;
 		free(messlines[i]);
 	}
 	vtext(VMODE_BOLD|VMODE_REVERSE,row+i+1,col+1,lastline);
-	vgrid(row,col,rows,cols,0,0);							/* Outline the window.			*/
+	VL_vgrid(row,col,rows,cols,0,0);							/* Outline the window.			*/
 	vmove(row+i+1,col+32);								/* Move to an appropriate position.	*/
 	for(rc = -1; rc == -1;)
 	{
@@ -148,13 +168,31 @@ char	*option_16;
 	}
 
 	vrss(save);									/* Restore the memory area.		*/
-	vbuffering_end();
+	VL_vbuffering_end();
 
 	return(rc);
 }
 /*
 **	History:
 **	$Log: valert.c,v $
+**	Revision 1.14  2003/01/31 20:18:47  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.13  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.12  2002/07/17 21:06:00  gsl
+**	VL_ globals
+**	
+**	Revision 1.11  2002/07/15 20:16:06  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.10  2002/07/15 17:52:54  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.9  2002/07/15 17:10:02  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.8  1997/07/08 20:24:53  gsl
 **	Change to use new video.h interfaces
 **	

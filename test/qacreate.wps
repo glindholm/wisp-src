@@ -1,5 +1,11 @@
 procedure qacreate
 
+scratch library CREATE ON VOLOUT
+
+prompt center "QACREATE - TEST1";;;;;
+       center "CREATE INDEXED FILE - I2";;;;;;
+       center "Press (ENTER) to continue"
+
 run create
 OUT1:	enter output file=i2, library=CREATE, volume=volout,
 			type=I, recsize=80
@@ -11,7 +17,7 @@ OUT1:	enter output file=i2, library=CREATE, volume=volout,
 			position=1, length=10
 	enter input 16
 	enter input 16
-	display eoj
+	enter eoj 16
 
 run sort
 	enter options
@@ -21,6 +27,11 @@ SORT1:	enter output file=##SORT
 
 run display
 	enter input (SORT1)
+	enter options recsize=80
+
+prompt center "QACREATE - TEST2";;;;;
+       center "CREATE ALTERNATE INDEXED FILE - A3";;;;;;
+       center "Press (ENTER) to continue"
 
 run create
 OUT2:	enter output file=a3, library=CREATE, volume=volout,
@@ -42,7 +53,7 @@ OUT2:	enter output file=a3, library=CREATE, volume=volout,
 	enter pad pad=X, position=31, length=50
 	enter input 16
 	enter input 16
-	display eoj
+	enter eoj 16
 
 run sort
 	enter options
@@ -52,6 +63,11 @@ SORT2:	enter output file=##SORT
 
 run display
 	enter input (SORT2)
+	enter options recsize=80
+
+prompt center "QACREATE - TEST3";;;;;
+       center "CREATE RELATIVE FILE - R4";;;;;;
+       center "Press (ENTER) to continue"
 
 run create
 OUT3:	enter output file=r4, library=CREATE, volume=volout,
@@ -67,10 +83,16 @@ OUT3:	enter output file=r4, library=CREATE, volume=volout,
 	enter pad pad="?", position=31, length=50
 	enter input 16
 	enter input 16
-	display eoj
+	enter eoj 16
 
 run display
 	enter input (OUT3)
+	enter options recsize=80
+
+
+prompt center "QACREATE - TEST4";;;;;
+       center "CREATE CONSECUTIVE FILE - C5";;;;;;
+       center "Press (ENTER) to continue"
 
 run create
 OUT4:	enter output file=c5, library=CREATE, volume=volout,
@@ -86,10 +108,15 @@ OUT4:	enter output file=c5, library=CREATE, volume=volout,
 	enter pad pad=".", position=31, length=50
 	enter input 16
 	enter input 16
-	display eoj
+	enter eoj 16
 
 run display
 	enter input (OUT4)
+
+prompt center "QACREATE - TEST5";;;;;
+       center "CREATE BINARY CONSECUTIVE FILE - B6";;;;;;
+       center "Press (ENTER) to continue"
+
 
 run create
 OUT5:	enter output file=b6, library=CREATE, volume=volout,
@@ -105,8 +132,9 @@ OUT5:	enter output file=b6, library=CREATE, volume=volout,
 	enter pad pad=".", position=31, length=50
 	enter input 16
 	enter input 16
-	display eoj
+	enter eoj 16
 
 run display
 	enter input (OUT5)
+	enter options recsize=80
 

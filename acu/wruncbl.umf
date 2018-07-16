@@ -4,6 +4,11 @@
 #
 #	File:	wruncbl.umf
 #
+#	Versions:
+#		Acucobol-GT	6.0, 5.2, 5.1, 5.0
+#		WISP		5.0.00
+#		KCSI		4.1.00
+#
 #	Function:
 #		The UNIX makefile for building the ACUCOBOL runtime
 #		systems that include the WISP runtime routines.
@@ -20,15 +25,10 @@
 #
 #		wruncblke	The KCSI + EDE version of the runtime.
 #
-#		acn		The ACUCOBOL Native Screens programs
 #
 #	Instructions:
 #		Edit the file acucobol.include and follow the instructions
 #		to select the version of ACUCOBOL you are using.
-#
-#		If you are using ACUCOBOL 5.1 or earlier then 
-#		rename the file sub85_acu51.c to sub85.c. See the
-#		instructions in sub85_acu51.c.
 #
 #		To create an ACUCOBOL runtime system position to 
 #		the wisp/acu directory and run the "make" utility 
@@ -39,7 +39,7 @@
 #		done using the variables WISPDIR and ACUDIR.
 #
 #			WISPDIR = The installed WISP directory
-#			ACUDIR  = The ACUCOBOL directory
+#			ACUDIR  = The ACUCOBOL-GT directory
 #
 #		There are two methods of providing this information.
 #
@@ -115,6 +115,7 @@
 #			$ cd $WISPDIR/acu
 #			$ make -f wruncbl.umf -e RTSE=wrunkcsi kcsi
 #
+#
 #	NOTE:	This makefile supports different versions of ACUCOBOL.
 #		Depending on the version of ACUCOBOL you are using you
 #		may have to modifiy the file acucobol.include found in the
@@ -132,7 +133,7 @@
 #
 # WISPDIR	The installed WISP directory
 # ACUDIR	The ACUCOBOL directory
-# ACU_LIBDIR	The ACOCOBOL lib directory
+# ACU_LIBDIR	The ACUCOBOL lib directory
 #
 WISPDIR=/usr/local/wisp
 ACUDIR=/usr/local/acucobol
@@ -142,8 +143,8 @@ ACU_LIBDIR=$(ACUDIR)/lib
 # EDEDIR	The EDE lib directory
 # KCSIDIR	The KCSI directory
 # 
-EDEDIR=$(WISPDIR)/ede_4407
-KCSIDIR=$(WISPDIR)/kcsi_acu_4000
+EDEDIR=$(WISPDIR)/ede_5000
+KCSIDIR=$(WISPDIR)/kcsi_acu_4100
 
 #============================================================================
 #
@@ -162,26 +163,12 @@ WISP_LIBDIR=$(WISPDIR)/lib
 # system you must uncomment the appropriate definition of LIBCURSES.
 #
 LIBCURSES= -lcurses
-#
-# Uncomment the following for HP-UX 10.10 and 10.20 
-#LIBCURSES= -lcur_colr
-#
 
 #============================================================================
 #
 # Standard CC flags
 #
-#    HP-UX may need "-Ae +DAportable" added to the CFLAGS
-#
 CFLAGS= -g -Dunix
-#
-# **** CHANGE CC HERE ****
-#
-#	Some systems require an ANSI C compiler, if CC is not ansi then you
-#	may need to uncomment CC=c89.
-#CC=c89
-#
-
 
 #============================================================================
 #
@@ -244,8 +231,8 @@ ACUFILES=$(ACUSRCDIR)/sub.c \
 WISPFILES=$(WISP_LIBDIR)/$(LIBWISP) \
 	$(WISP_LIBDIR)/$(LIBVIDEO) \
 	$(WISP_LIBDIR)/$(LIBEDE) \
-	$(WISPDIR)/acu/sub85.c 
-
+	$(WISPDIR)/acu/sub85.c \
+	$(WISPDIR)/acu/wisp_sub85_inc.c 
 
 #============================================================================
 #
@@ -357,16 +344,6 @@ $(ACUFILES):
 	@echo ">>>>"
 	@exit 1
 
-$(COBOL):
-	@echo ">>>> ERROR: An ACUCOBOL configuration error was detected!"
-	@echo ">>>>"
-	@echo ">>>> The ACUCOBOL file $@ was not found."
-	@echo ">>>>"
-	@echo ">>>> Using ACUDIR    = $(ACUDIR)"
-	@echo ">>>> Using ACUSRCDIR = $(ACUSRCDIR)"
-	@echo ">>>>"
-	@exit 1
-
 $(WISPFILES):
 	@echo ">>>> ERROR: An WISP configuration error was detected!"
 	@echo ">>>>"
@@ -415,7 +392,7 @@ $(RTS): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS)
 	@echo ">>>> RTS     = " $@ has been built.
 
 $(RTSE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
+	$(CC) -DEDE $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
@@ -425,20 +402,23 @@ $(RTSK): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS) $(KCSI_LIB_PATH)
 	@echo ">>>> RTS     = " $@ has been built.
 
 $(RTSKE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH)
-	$(CC) $(CFLAGS) $(KCSI_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
+	$(CC) -DEDE $(CFLAGS) $(KCSI_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(KCSI_LIB_PATH) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
 CP=cp -f
 
-sub.c: $(ACUSRCDIR)/sub.c
+sub.c: $(ACUSRCDIR)/sub.c sub85.c wisp_sub85_inc.c
 	cmp -s $(ACUSRCDIR)/sub.c $@ || $(CP) $(ACUSRCDIR)/sub.c $@
 
 filetbl.c: $(ACUSRCDIR)/filetbl.c
 	cmp -s $(ACUSRCDIR)/filetbl.c $@ || $(CP) $(ACUSRCDIR)/filetbl.c $@
 
-sub85.c: $(WISPDIR)/acu/sub85.c
-	cmp -s $(WISPDIR)/acu/sub85.c $@ || $(CP) $(WISPDIR)/acu/sub85.c $@
+sub85.c: $(WISPDIR)/acu/$(SUB85ACU)
+	cmp -s $(WISPDIR)/acu/$(SUB85ACU) $@ || $(CP) $(WISPDIR)/acu/$(SUB85ACU) $@
+
+wisp_sub85_inc.c: $(WISPDIR)/acu/wisp_sub85_inc.c
+	cmp -s $(WISPDIR)/acu/wisp_sub85_inc.c $@ || $(CP) $(WISPDIR)/acu/wisp_sub85_inc.c $@
 
 $(RTSALC):
 	@echo WARNING $(RTSALC) NOT FOUND
@@ -453,56 +433,6 @@ $(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc : $(RTSALC)
 
 #============================================================================
 #
-#	ACUCOBOL Native Screens programs
-#
-#	$ make -f wruncbl.umf acn
-#
-
-COBFLAGS = -da4 -zd -te 800 
-ACN_OBJS = 	WACUERROR \
-		WACUDISPLAY \
-		WACUFAC2SCREEN \
-		WACUGETPARM \
-		WACUGETPFKEY \
-		WACUHELP \
-		WACUWSB
-
-acn: acn_header $(COBOL) $(ACN_OBJS)
-	@echo ">>>>"
-	@echo ">>>> $(ACN_OBJS)"
-	@echo ">>>> Programs are up-to-date."
-	@echo ">>>>"
-
-acn_header: $(ACUDIR)
-	@echo ">>>> BUILDING ACUCOBOL Native Screens Programs"
-	@echo ">>>>"
-	@echo ">>>> ACUDIR  = " $(ACUDIR)
-	@echo ">>>>"
-
-WACUERROR: WACUERROR.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUERROR.cob
-
-WACUDISPLAY: WACUDISPLAY.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUDISPLAY.cob
-
-WACUFAC2SCREEN: WACUFAC2SCREEN.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUFAC2SCREEN.cob
-
-WACUGETPARM: WACUGETPARM.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUGETPARM.cob
-
-WACUGETPFKEY: WACUGETPFKEY.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUGETPFKEY.cob
-
-WACUHELP: WACUHELP.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUHELP.cob
-
-WACUWSB: WACUWSB.cob
-	$(COBOL) $(COBFLAGS) -o $@ WACUWSB.cob
-
-
-#============================================================================
-#
 #	Clean up
 #
 
@@ -511,8 +441,8 @@ WACUWSB: WACUWSB.cob
 # makefile and can be deleted.
 #
 CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) \
-	$(ACN_OBJS) *.alc \
-	sub.o sub.c filetbl.o filetbl.c
+	*.alc \
+	sub.o sub.c filetbl.o filetbl.c sub85.c
 
 clean:	
 	rm -f $(CLEANUP) core *~

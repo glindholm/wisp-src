@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1997 NeoMedia Technologies, Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		kcsit.c
@@ -79,7 +93,7 @@ static char rcsid[]="$Id:$";
 **	Warnings:	None
 **
 */
-void kcsitrace(int sever, char *routine, char *mess, char *lform, ...)
+void kcsitrace(int sever, const char *routine, const char *mess, const char *lform, ...)
 {
 	va_list add_ptr;
 
@@ -112,12 +126,12 @@ void kcsitrace(int sever, char *routine, char *mess, char *lform, ...)
 
 		if (sever == 4)								/* if will effect processing, report it	*/
 		{
-			werrlog(104,msg);
+			WL_werrlog(WERRCODE(104),msg);
 		}
 		else
 		{
 			strcat(msg,"\n");
-			werr_write(msg);
+			WL_werr_write(msg);
 		}
 	}
 }
@@ -132,15 +146,22 @@ int kcsi_tracelevel(void)
 		const char *ptr;
 		first = 0;
 		
-		if ( ptr = getenv("KCSITRACE") )			       		/* Test if an environment var exists.   */
+		if ( (ptr = getenv("KCSITRACE")) != NULL )			       		/* Test if an environment var exists.   */
 		{
 			sscanf(ptr,"%d", &tracing_level);
 		}
 		else
 		{
-			if (ptr = get_wisp_option("KCSITRACE"))
+			if ((ptr = WL_get_wisp_option("KCSITRACE")) != NULL)
 			{
 				sscanf(ptr,"%d", &tracing_level);
+			}
+			else
+			{
+				if (WL_get_wispdebug() == WISPDEBUG_FULL)
+				{
+					tracing_level = 1;
+				}
 			}
 		}
 
@@ -171,14 +192,26 @@ void kcsi_exit(int num)
 /*
 **	History:
 **	$Log: kcsit.c,v $
-**	Revision 1.6.2.3  2002/11/14 15:23:33  gsl
-**	Change wexit() to WL_wexit()
+**	Revision 1.15  2003/06/12 13:36:24  gsl
+**	WISPDEBUG=FULL now sets KCSITRACE=1
 **	
-**	Revision 1.6.2.2  2002/11/13 22:50:42  gsl
+**	Revision 1.14  2003/03/20 15:21:18  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.13  2003/02/20 19:29:55  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.12  2003/02/04 19:19:09  gsl
+**	fix header
+**	
+**	Revision 1.11  2002/12/10 20:54:16  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.10  2002/11/14 14:51:56  gsl
+**	kcsi_exit() calls WL_wexit()
+**	
+**	Revision 1.9  2002/11/14 13:55:32  gsl
 **	set trace level with get_wisp_option("KCSITRACE")
-**	
-**	Revision 1.6.2.1  2002/11/12 15:56:28  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
 **	
 **	Revision 1.8  2002/10/17 21:22:42  gsl
 **	cleanup

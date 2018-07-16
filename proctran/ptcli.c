@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1995-97 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		ptcli.c
 **
@@ -19,11 +42,6 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 
-#ifdef VMS
-#include <descrip.h>
-#include <climsgdef.h>
-#include <ssdef.h>
-#endif
 
 #include "pgcommon.h"
 #include "pgglobal.h"
@@ -41,24 +59,7 @@ EXT char cli_infile[200];								/* The initial input file name		*/
 /*
 **	Static data
 */
-static char cli_listfile[200];								/* The file for conversion info listing	*/
 
-#ifdef VMS
-
-/* These are the descriptors for the parameters which could be returned by switches from DCL					*/
-/* the cli_xxfile variables are defined in PTMAIN.C										*/
-
-$DESCRIPTOR(cli_name,cli_infile);
-$DESCRIPTOR(cli_listname,cli_listfile);
-
-/* These are the descriptors for the various DCL switches allowed in the PROCTRAN command					*/
-
-$DESCRIPTOR(cli_list,"LIST");
-$DESCRIPTOR(cli_flag,"FLAG");
-$DESCRIPTOR(cli_slink,"SLINK");
-$DESCRIPTOR(cli_ccall,"CALL");
-$DESCRIPTOR(cli_display,"DISPLAY");
-#endif
 
 static int show_flags;
 
@@ -85,71 +86,14 @@ static void showflags();
 */
 void get_cli(int argc,char *argv[])							/* Note: argc, argv used for unix code.*/
 {
-#ifdef VMS
-	int status,i;
-
-	status = cli$present(&cli_list);
-	if (status == CLI$_PRESENT)							/* The /LIST switch is present		*/
-	{
-		logging = 1;								/* enable logging			*/
-
-		status = cli$get_value(&cli_list,&cli_listname);
-		if ((cli_listfile[0] == '\0') || (cli_listfile[0] == ' '))		/* No file provided though, use crt..	*/
-		{
-			logfile = stdout;
-		}
-		else									/* try to open the file			*/
-		{
-			cli_listfile[strpos(cli_listfile," ")] = '\0';			/* null terminate.			*/
-
-			if (strpos(cli_listfile,".") == -1)				/* needs a .type			*/
-			{
-				strcat(cli_listfile,".LOG");
-			}
-			logfile = fopen(cli_listfile,"w");				/* open it now				*/
-			if (!logfile)							/* Some error.				*/
-			{
-				printf("%%PROCTRAN-F-NOLOGFILE Unable to open log file.\n");
-				perror(0);
-				exit(1);
-			}
-		}
-	}
-	else	logging = 0;								/* Disable logging			*/
-
-	status = cli$present(&cli_slink);
-	if (status == CLI$_PRESENT)							/* The /SLINK switch is present		*/
-	{
-		genslink = 1;								/* enable convert to "S" type link	*/
-	}
-	else	genslink = 0;								/* Disable "S" type link		*/
-
-	status = cli$present(&cli_ccall);
-	if (status == CLI$_PRESENT)							/* The /CALL switch is present		*/
-	{
-		genccall = 1;								/* enable generate CALL verify logic 	*/
-	}										/*  as a comment.			*/
-	else	genccall = 0;								/* Generate CALL logic verification	*/
-											/*  as compile error.			*/
-	status = cli$present(&cli_display);
-	if (status == CLI$_PRESENT)							/* The /DISPLAY switch is present	*/
-	{
-		gendisplay = 1;								/* enable generate DISPLAY of error for	*/
-	}										/*  subroutines.			*/
-	else	gendisplay = 0;								/* Do not generate DISPLAY statements	*/
-											/*  for errors on subroutines.		*/
-
-	status = cli$present(&cli_flag);
-	if (status == CLI$_PRESENT)							/* The /FLAG switch is present		*/
-	{
-		show_flags = 1;
-	}
-	else	show_flags = 0;								/* Do not display flags set.		*/
-
-#else /* !VMS */
 	int	i,c;
+
+	/*
 	extern	char	*optarg;
-	extern	int	optind,opterr;
+	extern	int	optind;
+	extern	int	opterr;
+	*/
+
 	/*
 		Set Defaults
 	*/
@@ -197,21 +141,16 @@ void get_cli(int argc,char *argv[])							/* Note: argc, argv used for unix code
 				break;
 		}
 	}
-#endif /* !VMS */
 	strcpy( cli_infile, argv[argc-1] );						/* Get the input file name.		*/
 	i = strpos(cli_infile," ");
 	if (i != -1) cli_infile[i] = '\0';						/* NUll terminate			*/
-	if (i = strpos(cli_infile,".") == -1)						/* needs a .type			*/
+	if ((i = strpos(cli_infile,".")) == -1)						/* needs a .type			*/
 	{
 		strcat(cli_infile,".wps");						/* Add default type.			*/
 	}
 	else										/* Make sure type in NOT .WCB		*/
 	{
-#ifdef unix
 		i = strpos(cli_infile,"wcb");
-#else /* !unix */
-		i = strpos(cli_infile,"WCB");
-#endif /* !unix */
 		if (i != -1 && i != 0)
 		{
 			write_log(util,'F','R',"INVALIDTYPE","Invalid file type. Cannot use <file>.WCB");
@@ -270,6 +209,18 @@ static void showflags()
 /*
 **	History:
 **	$Log: ptcli.c,v $
+**	Revision 1.11  2003/03/20 15:01:05  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.10  2003/02/05 21:15:03  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.9  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.8  2002/06/26 01:42:50  gsl
+**	Remove VMS code
+**	
 **	Revision 1.7  1997/04/21 15:03:54  scass
 **	Corrected copyright.
 **	

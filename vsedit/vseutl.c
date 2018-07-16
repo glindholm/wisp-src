@@ -1,26 +1,35 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
 
 /*----
 General utilties and routines for miscellaneous field
 and file manipulation.
 ------*/
 
-#ifndef VMS
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
-#ifdef VMS
-#include <stat.h>
-#endif
 #include <ctype.h>
 #include <string.h>
 
@@ -146,6 +155,12 @@ void vse_untabify(char *str, int size)
 /*
 **	History:
 **	$Log: vseutl.c,v $
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/06/26 01:42:51  gsl
+**	Remove VMS code
+**	
 **	Revision 1.10  1996/09/03 22:24:13  gsl
 **	drcs update
 **	

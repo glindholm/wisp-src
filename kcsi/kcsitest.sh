@@ -17,7 +17,7 @@
 #			for KCSI and Micro Focsu COBOL with the
 #			use of the extended file format EXTFH().
 #
-#       Desciption:     This routine is run after the ${WISPCONFIG}
+#       Desciption:     This routine is run after the $WISPCONFIG
 #                       directory is built for testing Micro Focus
 #			COBOL.  startup.mf must be executed and
 #			make sure that samplemf.umf has also been
@@ -25,7 +25,7 @@
 #			has been run to set up the usage constants.
 #
 #
-#       Input:          ${WISPSRC}/...   The ported WISP.
+#       Input:          ${WISPSRC}/...  The WISP source directory.
 #
 #       Output:         ${WISPSRC}/testmf/volin/kcsictl/...
 #                               The CONTROL data file directory.

@@ -1,4 +1,4 @@
-	Copyright (c) 1997-1998 by NeoMedia Technologies Inc. 
+	Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	
 	====================================================================
@@ -54,10 +54,10 @@
 
 	Unix:
 	    $ cd $WISPDIR/acu
-	    $ make -f wruncbl.umf acn
+	    $ make -f wacu.umf acn
 
 	Windows:
-	    C:\wisp\acu> nmake /f wwruncbl.mak acn
+	    C:\wisp\acu> nmake /f wacu.mak acn
 
 
 	OVERVIEW
@@ -109,7 +109,7 @@
 	using the "-1" (conversion method) flag.
 
 	    $ wisp -VACN -1 sample.wcb
-	    $ ccbl -da4 -zd -za -o SAMPLE sample.cob
+	    $ ccbl -Da4 -Gd -Za -o SAMPLE.acu sample.cob
 
 	Other WISP and ccbl flags may be required.
 

@@ -1,13 +1,25 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /*
 **	File:		dataconv.c
@@ -88,14 +100,12 @@ void gen_data_conv (void)
 	**	Set options to include comments etc.
 	**	Remember we are generating Wang COBOL code.
 	*/
-	copy_only = 1;
-	comments = 1;
-	blanklines = 1;
+	opt_noprocess = 1;
 
 	/*
 	**	Pass through everything up to FILE-CONTROL.
 	*/
-	while(the_statement = get_statement())
+	while((the_statement = get_statement()))
 	{
 		if (eq_token(the_statement->next->token,KEYWORD,"FILE-CONTROL")) break;
 
@@ -241,7 +251,7 @@ static NODE dcv_process_selects (void)
 		if (eq_token(curr_node->token,KEYWORD,"ASSIGN")) 	curr_node = curr_node->next;
 		if (eq_token(curr_node->token,KEYWORD,"TO")) 		curr_node = curr_node->next;
 		curr_node = curr_node->next;
-		if (eq_token(curr_node->token,LITERAL,"\"DISPLAY\""))
+		if (eq_token_literal(curr_node->token,"DISPLAY"))
 		{
 			/*
 			**	Don't convert "DISPLAY" device files.
@@ -396,7 +406,7 @@ static NODE dcv_process_fd ( NODE the_statement )
 			fd_statements = makenode(NODE_STATEMENT,the_statement,NULL,NULL);
 			curr_statement = fd_statements;
 
-			while(the_statement = get_statement())
+			while((the_statement = get_statement()))
 			{
 				curr_node = the_statement->next;
 
@@ -735,12 +745,12 @@ static int dcv_gen_procedure (void)
 **
 **	Function:	To report if WISP is in data conversion mode.
 **
-**	Description:	To return data_conv.
+**	Description:	To return opt_data_conv.
 **
 **	Arguments:	None
 **
 **	Globals:
-**	data_conv	The data converion mode flag.
+**	opt_data_conv	The data converion mode flag.
 **
 **	Return:		None
 **
@@ -752,7 +762,7 @@ static int dcv_gen_procedure (void)
 */
 int is_data_conv (void)
 {
-	return(data_conv);
+	return(opt_data_conv);
 }
 
 /*
@@ -796,6 +806,18 @@ static int seq_name ( char *outname, char *inname )
 /*
 **	History:
 **	$Log: dataconv.c,v $
+**	Revision 1.13  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.12  2003/02/04 18:02:20  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 17:33:20  gsl
+**	fix copyright header
+**	
+**	Revision 1.10  2002/08/12 20:13:53  gsl
+**	quotes and literals
+**	
 **	Revision 1.9  1999/09/07 14:51:03  gsl
 **	Change dataconv to use SEQxxxx as the PRNAME for the sequential files.
 **	

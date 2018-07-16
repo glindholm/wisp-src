@@ -1,0 +1,178 @@
+      **   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+      **   $Id:$
+      **
+      **   File:       WC0002.wcb
+      **
+      **   Project:    WISP/TEST - WANG COBOL Functionality
+      **
+      **   Purpose:    RETURN-CODE special register processing
+      **
+      **   Tests:	1) COBOL CALL COBOL
+      **		2) COBOL LINK COBOL
+      **		3) COBOL LINK PROC
+      **		4) PROC LINK COBOL
+      **
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. WC0002.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS CRT-RELKEY
+               PFKEY           IS CRT-PFKEY
+               CURSOR POSITION IS CRT-CURSOR-POS
+               FILE STATUS     IS CRT-FILE-STATUS.
+
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-RECORD                         PIC X(1924).
+
+       WORKING-STORAGE SECTION.
+
+      *==============================================================
+       01  QAPROG		PIC X(8)  VALUE "WC0002".
+       01  QANAME		PIC X(20) VALUE "RETURN-CODE".
+       01  TOTAL-CNT		PIC 99 VALUE 0.
+       01  PASSED-CNT		PIC 99 VALUE 0.
+       01  FAILED-CNT		PIC 99 VALUE 0.
+       01  TEST-NAME		PIC X(8).
+      *==============================================================
+
+      *
+      *   CRT FILE VARIABLES
+      *
+       77  CRT-RELKEY  PIC 9(02) VALUE 1.
+       77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+       01  CRT-CURSOR-POS.
+           03  CRT-CURSOR-POS-COL  BINARY.
+           03  CRT-CURSOR-POS-ROW  BINARY.
+       01  CRT-FILE-STATUS.
+           03  CRT-FILE-STATUS-ERR        PIC X(01).
+           03  CRT-FILE-STATUS-AID        PIC X(01).
+
+
+      *==============================================================
+       01  RETURN-CODE-NUM		PIC 9(3).
+       01  EXPECTED-RETURN-CODE		PIC 9(3).
+
+       01  LINK-PROGNAME		PIC X(8).
+       01  LINK-CC.
+           05 LINK-CC-HIGH	BINARY.
+	   05 LINK-CC-BIN	BINARY.
+       01  LINK-RC.
+           05 LINK-RC-HIGH	BINARY.
+	   05 LINK-RC-BIN	BINARY.
+
+      *==============================================================
+       PROCEDURE DIVISION.
+       0000-MAIN SECTION.
+	   MOVE 0 TO FAILED-CNT.
+	   MOVE 0 TO PASSED-CNT.
+	   MOVE 0 TO TOTAL-CNT.
+
+      *==============================================================
+      * COBOL CALLING COBOL
+      *	WC0002A will set the RETURN-CODE to 20.
+       TEST001.
+	   MOVE "TEST001" TO TEST-NAME.
+
+           MOVE 10 TO RETURN-CODE.
+	   MOVE 20 TO EXPECTED-RETURN-CODE.
+	   CALL "WC0002A".
+	   CALL "RETCODE" USING RETURN-CODE.
+	   PERFORM CHECK-RESULT.
+
+      *==============================================================
+      * COBOL LINK TO COBOL
+      *	WC0002B will set the RETURN-CODE to 30.
+       TEST002.
+	   MOVE "TEST002" TO TEST-NAME.
+
+           MOVE 10 TO RETURN-CODE.
+	   MOVE 30 TO EXPECTED-RETURN-CODE.
+	   MOVE "WC0002B" TO LINK-PROGNAME.
+	   CALL "LINK" USING LINK-PROGNAME, LINK-CC, LINK-RC.
+	   IF LINK-CC-BIN NOT = 0 THEN
+		DISPLAY "LINK TO " LINK-PROGNAME " FAILED"
+		ADD 1 TO FAILED-CNT
+	   ELSE
+	        MOVE LINK-RC-BIN TO RETURN-CODE
+		PERFORM CHECK-RESULT
+	   END-IF.
+
+      *==============================================================
+      * COBOL LINK TO PROC
+      *	WC0002C.wps will set the RETURN-CODE to 40.
+       TEST003.
+	   MOVE "TEST003" TO TEST-NAME.
+
+           MOVE 10 TO RETURN-CODE.
+	   MOVE 40 TO EXPECTED-RETURN-CODE.
+	   MOVE "WC0002C" TO LINK-PROGNAME.
+	   CALL "LINK" USING LINK-PROGNAME, LINK-CC, LINK-RC.
+	   IF LINK-CC-BIN NOT = 0 THEN
+		DISPLAY "LINK TO " LINK-PROGNAME " FAILED"
+		ADD 1 TO FAILED-CNT
+	   ELSE
+		CALL "RETCODE" USING RETURN-CODE
+		PERFORM CHECK-RESULT
+	   END-IF.
+
+      *==============================================================
+      * COBOL -> PROC -> COBOL
+      *	
+      * WC0002D.wps runs WC0002E (cob) which sets RETURN-CODE to 50
+       TEST004.
+	   MOVE "TEST004" TO TEST-NAME.
+
+           MOVE 10 TO RETURN-CODE.
+	   MOVE 50 TO EXPECTED-RETURN-CODE.
+	   MOVE "WC0002D" TO LINK-PROGNAME.
+	   CALL "LINK" USING LINK-PROGNAME, LINK-CC, LINK-RC.
+	   IF LINK-CC-BIN NOT = 0 THEN
+		DISPLAY "LINK TO " LINK-PROGNAME " FAILED"
+		ADD 1 TO FAILED-CNT
+	   ELSE
+	        MOVE LINK-RC-BIN TO RETURN-CODE
+		PERFORM CHECK-RESULT
+	   END-IF.
+      
+      *============================================================	  
+       9999-done.
+           IF FAILED-CNT = 0   THEN
+                DISPLAY QANAME " Tests completed successful."
+           ELSE 
+                DISPLAY QANAME " Tests failed "
+	   END-IF.
+
+      *============================================================	  
+       9999-END SECTION.
+       9999-EXIT.
+           EXIT PROGRAM.
+       9999-STOP.
+           STOP RUN.
+
+      *============================================================	 
+       CHECK-RESULT.
+           MOVE RETURN-CODE TO RETURN-CODE-NUM.
+	   IF RETURN-CODE NOT = EXPECTED-RETURN-CODE THEN
+		   ADD 1 TO FAILED-CNT
+		   DISPLAY QANAME " FAILED ", TEST-NAME,
+			" RC=", RETURN-CODE-NUM,
+			" EXPECTED=", EXPECTED-RETURN-CODE
+	   END-IF.
+        
+      *============================================================	  
+
+      **
+      **   End of WC0002.wcb
+      **

@@ -42,6 +42,9 @@ void assert_error(char *source_file, int line_number) {
 //
 //	History:
 //	$Log: assert.cpp,v $
+//	Revision 1.9  2003/02/05 15:40:14  gsl
+//	Fix copyright headers
+//	
 //	Revision 1.8  1998/08/31 19:13:32  gsl
 //	drcs update
 //	
@@ -66,11 +69,9 @@ void assert_error(char *source_file, int line_number) {
 //	----------------------------
 //	revision 1.7
 //	date: 1996-12-12 13:25:48-05;  author: gsl;  state: V4_3_00;  lines: +1 -1
-//	DevTech -> NeoMedia
 //	----------------------------
 //	revision 1.6
 //	date: 1996-07-25 19:43:00-04;  author: gsl;  state: Exp;  lines: +1 -1
-//	Change IDSI to DevTech
 //	----------------------------
 //	revision 1.5
 //	date: 1996-07-25 14:14:18-04;  author: gsl;  state: Exp;  lines: +0 -0

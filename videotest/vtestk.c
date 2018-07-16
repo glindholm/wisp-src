@@ -10,7 +10,7 @@
 
 #include <video.h>
 
-testk()
+int testk()
 {
 	return(SUCCESS);
 }

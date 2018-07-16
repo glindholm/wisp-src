@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		operator.c
@@ -15,14 +26,17 @@ static char rcsid[]="$Id:$";
 **	Purpose:	To hold routines dealing with operator privledges.
 **
 **	Routines:	
-**	woperator()	Tests if currect process is an operator.
+**	WL_woperator()	Tests if currect process is an operator.
 **
 **
 */
 
 #ifdef unix
+#include <sys/types.h>
+#include <unistd.h>
+
 /*
-**	Routine:	woperator()
+**	Routine:	WL_woperator()
 **
 **	Function:	Tests if currect process is an operator.
 **
@@ -46,7 +60,7 @@ static char rcsid[]="$Id:$";
 **
 */
 
-int woperator()
+int WL_woperator(void)
 {
 	if (0==getuid() || 0==geteuid())
 	{
@@ -61,6 +75,18 @@ int woperator()
 /*
 **	History:
 **	$Log: operator.c,v $
+**	Revision 1.9  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.8  2003/01/31 18:25:18  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.7  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.6  2002/07/12 19:10:14  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.5  1996/08/19 22:32:37  gsl
 **	drcs update
 **	

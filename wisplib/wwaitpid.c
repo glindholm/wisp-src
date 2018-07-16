@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	wwaitpid.c
@@ -8,10 +29,9 @@ static char rcsid[]="$Id:$";
 #ifdef unix
 #include <stdio.h>
 #include <sys/types.h>
-
-#if !defined(ATT3B2) && !defined(NCR32)
+#include <signal.h>
 #include <sys/wait.h>
-#endif
+
 #include "idsistd.h"
 
 #ifndef WEXITSTATUS
@@ -22,9 +42,7 @@ static char rcsid[]="$Id:$";
 
 #endif
 
-wwaitpid(pid,rc)								/* Wait for process pid to complete		*/
-int *rc,pid;
-
+void WL_wwaitpid(int pid, int* rc)	/* Wait for process pid to complete		*/
 {
 	int	stat_loc;
 
@@ -35,11 +53,6 @@ int *rc,pid;
 
         *rc=WEXITSTATUS(stat_loc);
 
-#ifdef TESTING
-printf("\n\r wait (stat_loc = %8x) (rc = %d)\n\r",stat_loc, *rc);
-getchar();
-#endif
-
 }
 
 #endif
@@ -47,6 +60,15 @@ getchar();
 /*
 **	History:
 **	$Log: wwaitpid.c,v $
+**	Revision 1.12  2003/02/04 16:02:02  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.11  2003/01/31 19:08:36  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.10  2002/07/12 19:10:22  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.9  1996/01/02 15:40:38  gsl
 **	*** empty log message ***
 **	

@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1997 NeoMedia Technologoes, Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		kcsimem.c
@@ -107,8 +121,8 @@ void HeapMem__CheckForLeaks()
 /*
 **	History:
 **	$Log: kcsimem.c,v $
-**	Revision 1.2.2.1  2002/11/12 15:56:27  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.4  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.3  2002/10/17 21:22:42  gsl
 **	cleanup

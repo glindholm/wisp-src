@@ -1,8 +1,21 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #include "kcsifunc.h"
 
-static char sccsid[]="@(#)valflv.c	1.6 1/27/93";
 
 /*----
 Validate file, library
@@ -144,8 +157,8 @@ static int validch(int ch, char *valch)
 /*
 **	History:
 **	$Log: valflv.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:38  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.7  2002/10/24 15:48:30  gsl
 **	Make globals unique

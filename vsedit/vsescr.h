@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 #ifndef _VSESCR_H
 #define _VSESCR_H
 
@@ -55,16 +74,22 @@ typedef struct	_vsefld
 #define BRIGHT(x)		x,NULL,BRITE_FAC
 #define LASTITEM		0,0,0,NULL,NULL,0
 
-void vsescr(VSEFLD *fld, char *scr);
-void vsescr_init(char *scr);
-void vsefld(VSEFLD *fld, char *scr);
-void vseunscr(VSEFLD *fld, char *scr);
-void vseunfld(VSEFLD *fld, char *scr);
+void vsescr(VSEFLD *fld, unsigned char *scr);
+void vsescr_init(unsigned char *scr);
+void vsefld(VSEFLD *fld, unsigned char *scr);
+void vseunscr(VSEFLD *fld, unsigned char *scr);
+void vseunfld(VSEFLD *fld, unsigned char *scr);
 
 #endif	/* _VSESCR_H */
 /*
 **	History:
 **	$Log: vsescr.h,v $
+**	Revision 1.12  2003/02/05 15:40:14  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.11  2002/08/01 15:49:36  gsl
+**	type warnings
+**	
 **	Revision 1.10  1996/09/03 22:24:10  gsl
 **	drcs update
 **	

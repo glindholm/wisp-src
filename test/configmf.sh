@@ -88,8 +88,6 @@ cp ${WISPDIR}/config/LPMAP	${WISPCONFIG}
 cp ${WISPDIR}/config/PRMAP	${WISPCONFIG}
 cp ${WISPDIR}/config/SCMAP	${WISPCONFIG}
 cp ${WISPDIR}/config/W4WMAP	${WISPCONFIG}
-cp ${WISPDIR}/config/wispmsg.dat	${WISPCONFIG}
-cp ${WISPDIR}/config/wispmsg.txt	${WISPCONFIG}
 cp ${WISPDIR}/config/wproc.msg	${WISPCONFIG}
 
 cat ${WISPDIR}/config/OPTIONS |sed "s|#PQLP|PQLP|"> ${WISPCONFIG}/OPTIONS
@@ -99,6 +97,7 @@ echo "VOLOUT ${WISPSRC}/testmf/volout"	>> ${WISPCONFIG}/LGMAP
 echo "VOLRUN ${WISPSRC}/testmf/volrun"	>> ${WISPCONFIG}/LGMAP
 echo "VOLSPL ${WISPSRC}/testmf/volspl"	>> ${WISPCONFIG}/LGMAP
 echo "VOLWRK ${WISPSRC}/testmf/volwrk"	>> ${WISPCONFIG}/LGMAP
+echo "TEST   ${WISPSRC}/testmf"		>> ${WISPCONFIG}/LGMAP
 
 # Create wrunconfig
 echo "cobol=MF"				>  ${WISPCONFIG}/wrunconfig
@@ -109,6 +108,20 @@ echo Loading ${WISPCONFIG}/videocap
 cp ${WISPDIR}/config/videocap/* ${WISPCONFIG}/videocap
 
 ${WISPDIR}/bin/wsysconf
+
+# Copy license file
+echo Copy license file
+HOSTNAME=`hostname`
+HOSTLICENSE=${TESTDIR}/wisp.license.${HOSTNAME}
+if [ -f ${HOSTLICENSE} ]
+then
+	echo cp ${HOSTLICENSE} ${WISPCONFIG}/wisp.license
+	cp ${HOSTLICENSE} ${WISPCONFIG}/wisp.license
+else
+	echo
+	echo ${HOSTLICENSE} NOT FOUND
+	echo
+fi
 
 echo
 echo The '${WISPCONFIG}' ${WISPCONFIG} directory has been built.

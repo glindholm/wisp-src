@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			 Copyright (c) 1987-1991			*/
@@ -35,7 +56,7 @@ static int is_gr(int row, int col);				/* Routine to see if a position is a line
 
 /*						Subroutine entry point.								*/
 
-int vline(int type, int length)								/* Draw a line.				*/
+int VL_vline(int type, int length)								/* Draw a line.				*/
 {
 	static int first = 1;
 	register int ret;								/* Working registers.			*/
@@ -46,7 +67,7 @@ int vline(int type, int length)								/* Draw a line.				*/
 		
 		first = 0;
 		
-		strcpy(graphstr,vcapvalue(GRAPHSTR));
+		strcpy(graphstr,VL_vcapvalue(GRAPHSTR));
 		
 		x = graphstr[SINGLE_VERTICAL_BAR];
 		q = graphstr[SINGLE_HORIZONTAL_BAR];
@@ -160,7 +181,7 @@ int vline(int type, int length)								/* Draw a line.				*/
 			end_col = vcur_col + length;					/* Determine end position of line.	*/
 			if (length < 0)	end_col++;					/* Adjust for direction.		*/
 			else end_col--;
-			if ((end_col < 0) || (end_col >= vscr_wid))			/* Still on the screen?			*/
+			if ((end_col < 0) || (end_col >= VL_vscr_wid))			/* Still on the screen?			*/
 			{
 				vre("vline(%d,%d)-Length too long, drawing from line %d.",type,length,vcur_lin);
 				ret = FAILURE;
@@ -191,7 +212,7 @@ static int do_vert(int type, int length, int end_line)					/* Draw vertical line
 	int  upper, lower, here, cvalue;						/* work vars				*/
 	register int i, j0, k0, m0, n0;							/* Working registers.			*/
 
-	vbuffering(VBUFF_START);							/* Turn on logical buffering.		*/
+	VL_vbuffering_start();							/* Turn on logical buffering.		*/
 
 	j0 = vcur_lin;									/* Assume we start at current line.	*/
 	m0 = vcur_col;
@@ -199,14 +220,14 @@ static int do_vert(int type, int length, int end_line)					/* Draw vertical line
 
 	if (end_line < vcur_lin)							/* Where to start?			*/
 	{
-		if (vlin_op) j0 = end_line;						/* If optimizing, start at end of line.	*/
+		if (VL_vlin_op) j0 = end_line;						/* If optimizing, start at end of line.	*/
 		else k0 = -1;								/* No, then go in reverse direction.	*/
 		length = -length;							/* Get absolute value of length.	*/
 	}
 
 	cs_save = vchr_set;								/* Remember the old character set.	*/
 	md_save = vcur_atr;								/* Remember the old rendition.		*/
-	if (type == VLINE_FAT_VERTICAL) vmode(VMODE_REVERSE | (vcur_atr & VMODE_BOLD));	/* Remove all rendition except bold.	*/
+	if (type == VLINE_FAT_VERTICAL) VL_vmode(VMODE_REVERSE | (vcur_atr & VMODE_BOLD));	/* Remove all rendition except bold.	*/
 	else vcharset(GRAPHICS);							/* Or go into graphics mode.		*/
 
 	for (i = 0; i < length; i++)							/* Loop...				*/
@@ -227,7 +248,7 @@ static int do_vert(int type, int length, int end_line)					/* Draw vertical line
 
 			cvalue = 16;							/* Table char value is 16		*/
 			if (((k0 == -1) && (i < (length-1))) ||
-				(upper != -1) && is_gr(upper,vcur_col))			/* Hit by a line from above		*/
+			   ((upper != -1) && is_gr(upper,vcur_col)))			/* Hit by a line from above		*/
 			{
 				tchar = vchr_map[upper][vcur_col];			/* Get the character map element.	*/
 				if (((k0 == -1) && (i < (length-1))) ||
@@ -264,7 +285,7 @@ static int do_vert(int type, int length, int end_line)					/* Draw vertical line
 					cvalue += 8;					/* Flag it.				*/
 				}
 			}
-			else if ((vchr_map[here][vcur_col] == q) && (vcur_col >= vscr_wid-2)) cvalue += 8;	/* Edge?	*/
+			else if ((vchr_map[here][vcur_col] == q) && (vcur_col >= VL_vscr_wid-2)) cvalue += 8;	/* Edge?	*/
 
 			cross = ctable[cvalue];						/* Get the character.			*/
 			vputc(cross);							/* Print it out.			*/
@@ -273,11 +294,11 @@ static int do_vert(int type, int length, int end_line)					/* Draw vertical line
 	}
 
 	vcharset(cs_save);								/* Restore the old character set.	*/
-	vmode(md_save);									/* Restore the old mode.		*/
+	VL_vmode(md_save);									/* Restore the old mode.		*/
 	vmove(end_line,m0);								/* Move to the end of the line.		*/
-	vbuffering(VBUFF_END);								/* Dump the buffer as appropriate.	*/
-	if (vlin_op) return(OPTIMIZED);							/* Return optimized if we did.		*/
-	vlin_op = TRUE;									/* Line optimization on.		*/
+	VL_vbuffering_end();								/* Dump the buffer as appropriate.	*/
+	if (VL_vlin_op) return(OPTIMIZED);							/* Return optimized if we did.		*/
+	VL_vlin_op = TRUE;									/* Line optimization on.		*/
 	return(SUCCESS);								/* Return just success.			*/
 }
 /*					Subroutine to draw horizontal lines.							*/
@@ -290,7 +311,7 @@ static int do_horiz(int type, int length, int end_col)					/* Draw a horizontal 
 	int  upper, lower, here, cvalue;						/* work vars				*/
 	register int i, j0, k0, m0, n0;							/* Working registers.			*/
 
-	vbuffering(VBUFF_START);							/* Turn on logical buffering.		*/
+	VL_vbuffering_start();							/* Turn on logical buffering.		*/
 
 	j0 = vcur_col;									/* Assume we start at current column.	*/
 	m0 = vcur_lin;
@@ -298,14 +319,14 @@ static int do_horiz(int type, int length, int end_col)					/* Draw a horizontal 
 
 	if (end_col < vcur_col)								/* Where to start?			*/
 	{
-		if (vlin_op) j0 = end_col;						/* If optimizing, start at end of line.	*/
+		if (VL_vlin_op) j0 = end_col;						/* If optimizing, start at end of line.	*/
 		else k0 = -1;								/* No, then go in reverse direction.	*/
 		length = -length;							/* Get absolute value of length.	*/
 	}
 
 	cs_save = vchr_set;								/* Remember the old character set.	*/
 	md_save = vcur_atr;
-	if (type == VLINE_FAT_HORIZONTAL) vmode(VMODE_REVERSE | (vcur_atr & VMODE_BOLD));/* Remove all rendition except bold.	*/
+	if (type == VLINE_FAT_HORIZONTAL) VL_vmode(VMODE_REVERSE | (vcur_atr & VMODE_BOLD));/* Remove all rendition except bold.	*/
 	else vcharset(GRAPHICS);							/* Or go into graphics mode.		*/
 
 	if (vcur_lin > 0)  upper = vml(vcur_lin-1);					/* Get array position of upper line.	*/
@@ -372,11 +393,11 @@ static int do_horiz(int type, int length, int end_col)					/* Draw a horizontal 
 	}
 
 	vcharset(cs_save);								/* Restore the old character set.	*/
-	vmode(md_save);									/* Restore old mode.			*/
+	VL_vmode(md_save);									/* Restore old mode.			*/
 	vmove(m0,end_col);								/* Move to the end of the line.		*/
-	vbuffering(VBUFF_END);								/* Restore automatic buffer dumpint.	*/
-	if (vlin_op) return(OPTIMIZED);							/* Return optimized if we did.		*/
-	vlin_op = TRUE;									/* Line optimization on.		*/
+	VL_vbuffering_end();								/* Restore automatic buffer dumpint.	*/
+	if (VL_vlin_op) return(OPTIMIZED);							/* Return optimized if we did.		*/
+	VL_vlin_op = TRUE;									/* Line optimization on.		*/
 	return(SUCCESS);								/* Return just success.			*/
 }
 
@@ -387,17 +408,38 @@ static int is_gr(int row, int col)				/* Routine to see if a position is a line 
 	if (VMAP_CNG_OLDDATA == vmap_cng[row][col]) return(FALSE);			/* Is it NOT old data?			*/
 	if (!(vatr_map[row][col] & GRAPHICS)) return(FALSE);				/* And if new, is it a graphics char?	*/
 	tchar = vchr_map[row][col];
-	if (0==strchr(vcapvalue(GRAPHSTR),(char)tchar)) return(FALSE);			/* Is it in the graphics list?		*/
+	if (0==strchr(VL_vcapvalue(GRAPHSTR),(char)tchar)) return(FALSE);			/* Is it in the graphics list?		*/
 	return(SUCCESS);								/* It is a graphics character.		*/
 }
 /*
 **	History:
 **	$Log: vline.c,v $
+**	Revision 1.18  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2003/02/05 15:23:59  gsl
+**	Fix -Wall warnings
+**	
+**	Revision 1.16  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.15  2002/07/17 21:06:02  gsl
+**	VL_ globals
+**	
+**	Revision 1.14  2002/07/16 13:40:22  gsl
+**	VL_ globals
+**	
+**	Revision 1.13  2002/07/15 20:16:09  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.12  2002/07/15 17:52:55  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.11  1998/10/13 18:49:53  gsl
 **	Change to use VMAP_CNG_OLDDATA
 **	
 **	Revision 1.10  1997-07-08 17:12:10-04  gsl
-**	change to using vcapvalue()
+**	change to using VL_vcapvalue()
 **	use new video.h defines
 **
 **	Revision 1.9  1996-03-12 08:22:50-05  gsl

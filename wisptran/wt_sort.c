@@ -1,13 +1,35 @@
-static char copyright[]="Copyright (c) 1995-1999 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 #define EXT extern
 #include "wisp.h"
+#include "wcommon.h"
 #include "cobfiles.h"
 #include "statment.h"
 #include "reduce.h"
 #include "wt_procd.h"
-static void tput_sort_fwopen(NODE curr_node, int col, const char *openmode);
+static void tput_sort_fwopen(NODE curr_node, int col, int open_mode);
 
 /*
 **	SORT file-name-1 {ON {ASCENDING|DESCENDING} KEY {data-name-1}...}...
@@ -50,7 +72,7 @@ NODE parse_sort(NODE the_statement, NODE the_sentence)
 
 	curr_node = verb_node->next;
 
-	tput_sort_fwopen(curr_node, col, "WFOPEN-SORT");
+	tput_sort_fwopen(curr_node, col, WFOPEN_SORT);
 	
 	/*
 	**	Scan for a "USING" and "GIVING" clauses
@@ -64,7 +86,7 @@ NODE parse_sort(NODE the_statement, NODE the_sentence)
 			     curr_node->token && IDENTIFIER == curr_node->token->type;
 			     curr_node = curr_node->next)
 			{
-				tput_sort_fwopen(curr_node, col, "WFOPEN-INPUT");
+				tput_sort_fwopen(curr_node, col, WFOPEN_INPUT);
 
 				using_files[using_files_cnt] = wdupstr(token_data(curr_node->token));
 				using_files_cnt++;
@@ -94,7 +116,7 @@ NODE parse_sort(NODE the_statement, NODE the_sentence)
 				*/
 				if (idx != -1)
 				{
-					tput_sort_fwopen(curr_node, col, "WFOPEN-SORT");
+					tput_sort_fwopen(curr_node, col, WFOPEN_SORT);
 				}
 			}
 		}
@@ -104,8 +126,12 @@ NODE parse_sort(NODE the_statement, NODE the_sentence)
 		}
 	}
 	
-	tput_line_at(col,"MOVE \"SO\" TO WISP-DECLARATIVES-STATUS");
-	tput_flush();
+	if (opt_nogetlastfileop)
+	{
+		/* tput_line_at(col,"MOVE \"SO\" TO WISP-DECLARATIVES-STATUS"); */
+		tput_line_at(col,"MOVE \"Sort\" TO WISP-LASTFILEOP");
+		tput_flush();
+	}
 	tput_statement(col,the_statement);
 	the_statement = free_statement(the_statement);
 
@@ -120,7 +146,7 @@ NODE parse_sort(NODE the_statement, NODE the_sentence)
 	return the_statement;
 }
 
-static void tput_sort_fwopen(NODE curr_node, int col, const char *openmode)
+static void tput_sort_fwopen(NODE curr_node, int col, int open_mode)
 {
 	int	fnum;
 	char	file_name[40];
@@ -134,25 +160,51 @@ static void tput_sort_fwopen(NODE curr_node, int col, const char *openmode)
 		return;
 	}
 	
-	tput_line_at(col, "CALL \"wfopen3\" USING");
-	tput_clause(col+4,  "%s,", get_prog_status(fnum));	/* STATUS	*/
-	tput_clause(col+4,  "%s,", get_prog_vname(fnum));	/* VOLUME	*/
-	tput_clause(col+4,  "%s,", get_prog_lname(fnum));	/* LIBRARY	*/
-	tput_clause(col+4,  "%s,", get_prog_fname(fnum));	/* FILE		*/
-	tput_clause(col+4,  "%s,", get_prog_nname(fnum));	/* NATIVE	*/
-	tput_clause(col+4,  "WISP-APPLICATION-NAME,");		/* Application	*/
-	tput_clause(col+4,  "%s,", get_prog_prname(fnum));	/* PRNAME	*/
-	tput_clause(col+4,  "%s", openmode);			/* open mode	*/
+	gen_wfopen(col, fnum, open_mode);
 }
 
 
 /*
 **	History:
 **	$Log: wt_sort.c,v $
-**	Revision 1.14  1999/01/05 19:55:11  gsl
+**	Revision 1.24  2003/03/17 17:21:17  gsl
+**	Change to use  WFOPEN4
+**	
+**	Revision 1.23  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.22  2003/03/06 21:48:19  gsl
+**	Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	Change WFOPEN3 to WISP_FILEOPEN
+**	
+**	Revision 1.21  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.20  2002/07/29 14:47:19  gsl
+**	wfopen2 ->WFOPEN2
+**	wfopen3 ->WFOPEN3
+**	
+**	Revision 1.19  2002/07/17 15:03:27  gsl
+**	MF doesn't like underscores in COBOL names
+**	
+**	Revision 1.18  2002/06/28 04:02:56  gsl
+**	Work on native version of wfopen and wfname
+**	
+**	Revision 1.17  2002/06/21 20:49:34  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.16  2002/06/20 23:07:32  gsl
+**	native
+**	
+**	Revision 1.15  2002/05/16 21:53:09  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.14  1999-01-05 14:55:11-05  gsl
 **	Fix so if USING and GIVING files are the same then don't generate wfopen() fo
 **	for the GIVING, this prevents PF3 screen.
-**	
+**
 **	Revision 1.13  1998-03-20 17:38:36-05  gsl
 **	moved OLD to old.c
 **

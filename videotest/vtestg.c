@@ -12,7 +12,7 @@
 #include <video.h>
 #include <vmodules.h>
 
-testg()
+int testg()
 {
 	register int i,j, k,col;
 										/* On 2nd pass, show all renditions only.	*/
@@ -79,7 +79,7 @@ testg()
 			{
 				vmove(i,col);
 				
-				if (0==memcmp(vcapterm(),"vt",2))
+				if (0==memcmp(VL_vcapterm(),"vt",2))
 				{
 					if (k <= 0240) vputc(' ');
 					else vputc((char)k);
@@ -125,7 +125,7 @@ testg()
 			for (k = 0200; k <= 0277; k++,col++)
 			{
 				vmove(i,col);
-				if (0==memcmp(vcapterm(),"vt",2))
+				if (0==memcmp(VL_vcapterm(),"vt",2))
 				{
 					if (k <= 0240) vputc(' ');
 					else vputc((char)k);
@@ -145,7 +145,7 @@ testg()
 				vputc((char)k);
 			}
 			
-			vcontrol_flush();
+			VL_vcontrol_flush();
 		}
 		vtext(0,23,0,"Page %d done. ",j+1);
 		vprint("Depress any key to continue..."); vgetc();

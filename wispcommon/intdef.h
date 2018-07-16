@@ -1,16 +1,28 @@
-/* 
-	Copyright (c) 1995-2002 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
 
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		intdef.h
@@ -60,8 +72,8 @@ typedef unsigned __int64	UINT8;
 /*
 **	History:
 **	$Log: intdef.h,v $
-**	Revision 1.5.2.1  2002/10/09 19:18:24  gsl
-**	Add INT8
+**	Revision 1.9  2003/01/31 19:26:33  gsl
+**	Fix copyright header
 **	
 **	Revision 1.8  2002/10/08 15:44:38  gsl
 **	Change int8 to INT8 to avoid conficts

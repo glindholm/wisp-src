@@ -1,15 +1,30 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
+
 /*
 **	File:		keywords.h
 **
 **	Purpose:	To ...
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -32,6 +47,12 @@ extern void add_user_symbol(const char* name);
 /*
 **	History:
 **	$Log: keywords.h,v $
+**	Revision 1.11  2003/02/05 15:40:13  gsl
+**	Fix copyright headers
+**	
+**	Revision 1.10  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
 **	Revision 1.9  1999/09/07 14:34:07  gsl
 **	Fix prototype of load_change_words)(
 **	

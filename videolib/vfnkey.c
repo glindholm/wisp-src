@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -11,7 +32,7 @@ static char rcsid[]="$Id:$";
 #include "vlocal.h"
 #include "vdata.h"
 
-int vfnkey(key) int key;							/* Return the numeric value of a function key.	*/
+int VL_vfnkey(key) int key;							/* Return the numeric value of a function key.	*/
 {
 	if (key == fn1_key) return(1);						/* Return the value of the function key.	*/
 	if (key == fn2_key) return(2);
@@ -50,6 +71,12 @@ int vfnkey(key) int key;							/* Return the numeric value of a function key.	*/
 /*
 **	History:
 **	$Log: vfnkey.c,v $
+**	Revision 1.11  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.10  2002/07/15 20:16:08  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.9  1996/10/11 22:16:04  gsl
 **	drcs update
 **	

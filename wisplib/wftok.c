@@ -72,14 +72,14 @@ static key_t myftok(char *file, char x)
 
 #define WISP_FTOK_PREFIX 0xd5
 /*
-	wftok()		Wisp File TO Key: Create the key from the file inode.
+	WL_wftok()		Wisp File TO Key: Create the key from the file inode.
 */
-key_t wftok(char* file)
+key_t WL_wftok(const char* file)
 {
 #ifdef USE_MYFTOK
 	return( myftok(file,(char)WISP_FTOK_PREFIX) );
 #else
-	return( ftok(file,(int)WISP_FTOK_PREFIX) );
+	return( ftok((char*)file,(int)WISP_FTOK_PREFIX) );
 #endif
 }
 
@@ -87,6 +87,15 @@ key_t wftok(char* file)
 /*
 **	History:
 **	$Log: wftok.c,v $
+**	Revision 1.14  2003/02/12 15:40:25  gsl
+**	fix const warning
+**	
+**	Revision 1.13  2003/02/07 14:11:24  gsl
+**	wftok() -> WL_wftok()
+**	
+**	Revision 1.12  2003/02/06 19:17:26  gsl
+**	sync
+**	
 **	Revision 1.8.2.1  2003/02/06 19:08:23  gsl
 **	Remove AIX and SCO stuff, document
 **	

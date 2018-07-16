@@ -5,7 +5,7 @@ COBOLTYPE = ACU
 WISPTRAN  = wisp
 WISPFLAGS =  -V$(COBOLTYPE)
 COBOL     = ccbl
-COBFLAGS  =  -da4 -Zd
+COBFLAGS  =  -Da4 -Gd -Za
 RUNDIR    = ..
 
 all:	$(RUNDIR)/EZTOMNU

@@ -1,0 +1,8 @@
+# ACU6 Build on Solaris 8 32-bit 
+#
+cc -xO3   -DNO_ACUSQL=1 -DUSE_XML=1   -c -o sub.o sub.c
+cc -xO3   -DNO_ACUSQL=1 -DUSE_XML=1   -c -o filetbl.o filetbl.c
+cc -s -o runcbl amain.o sub.o filetbl.o axml.o ./libruncbl.a \
+        ./libclnt.a ./libacvt.a ./libfsi.a ./libacuterm.a ./libvision.a \
+	./libexpat.a    ./libsocks.a ./libmessage.a ./libcfg.a ./liblib.a \
+	./libstdlib.a ./libmemory.a -lnsl -lsocket -ldl  ./libz.a -lm

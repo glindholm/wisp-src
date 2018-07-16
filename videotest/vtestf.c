@@ -11,5 +11,5 @@
 
 void testf()
 {
-	vre_window("Test F has been moved to a separate program called 'view'.");
+	VL_vre_window("Test F has been moved to a separate program called 'view'.");
 }

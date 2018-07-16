@@ -19,12 +19,12 @@
 #
 
 WISPDIR=$(WISPSRC)/QA/wisp
-WISPTRAN=wisp
+WISPTRAN=$(WISPDIR)/bin/wisp
 WISPLANG=ACU
 WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
 
-COBOL=ccbl
-COBFLAGS=-Gd -Zi -Za -Da4 -Te 800
+COBOL = ccbl
+COBFLAGS = -Da4 -Gd -Za -Te 800
 
 .SUFFIXES: .acu .cob .wcb
 
@@ -46,62 +46,84 @@ COBFLAGS=-Gd -Zi -Za -Da4 -Te 800
 	$(COBOL) $(COBFLAGS) -o $* $*.cob
 
 WISP_COBOL_OBJS= \
-	ACULINK \
-	ACUUSING \
-	DISPRINT
+	ACULINK.acu \
+	ACUUSING.acu \
+	DISPRINT.acu
 
-SAMPLE_COBOL_OBJS= \
-	DISPFILE.acu \
-	LESWAP.acu \
-	QABCKGRD.acu \
-	QAFILEIO.acu \
+SAMPLE_COBOL_WCBS= \
+	DISPFILE.wcb \
+	LESWAP.wcb \
+	QABCKGRD.wcb \
+	QAFILEIO.wcb \
 	QAFILE2.acu \
-	QANETCAP.acu \
-	QAPRINT.acu \
-	QASCREEN.acu \
-	QASCRN2.acu \
-	QASUBS.acu \
-	QASY000M.acu \
-	QASYS99.acu \
-	QAWSFNM.acu \
-	QAWSFNS.acu \
-	QAWSUBS.acu \
-	QADPCOMA.acu \
-	QAWSXIO.acu \
-	SAMPLE.acu \
-	SUB1.acu \
-	SUB3.acu \
-	TRIGGER.acu \
-	WL0000.acu \
-	WL0010.acu \
-	WL0011.acu \
-	WL0012.acu \
-	WL0013.acu \
-	WL0014.acu \
-	WL0015.acu \
-	WL0016.acu \
-	WL0017.acu \
-	WL0018.acu \
-	WL0018A.acu \
-	WL0018B.acu \
-	WL0019.acu \
-	WL0020.acu \
-	WL0021.acu \
-	WL0022.acu \
-	WL0023.acu \
-	WL0024.acu \
-	WL0025.acu \
-	WL0026.acu \
-	WL0027.acu \
-	WL0028.acu \
-	WL0029.acu \
-	WL0030.acu \
-	WL0031.acu \
-	WL0032.acu \
-	XLINK.acu \
-	XLINK1.acu 
+	QAMESSAG.wcb \
+	QANETCAP.wcb \
+	QAPRINT.wcb \
+	QASCREEN.wcb \
+	QASCRN2.wcb \
+	QASUBS.wcb \
+	QASY000M.wcb \
+	QASYS99.wcb \
+	QAWSFNM.wcb \
+	QAWSFNS.wcb \
+	QAWSUBS.wcb \
+	QADPCOMA.wcb \
+	QAWSXIO.wcb \
+	SAMPLE.wcb \
+	SUB1.wcb \
+	SUB3.wcb \
+	TRIGGER.wcb \
+	WC0000.wcb \
+	WC0001.wcb \
+	WC0002.wcb \
+	WC0002A.wcb \
+	WC0002B.wcb \
+	WC0002E.wcb \
+	WC0003.wcb \
+	WC0003B.wcb \
+	WC0004.wcb \
+	WL0000.wcb \
+	WL0010.wcb \
+	WL0011.wcb \
+	WL0012.wcb \
+	WL0013.wcb \
+	WL0014.wcb \
+	WL0015.wcb \
+	WL0016.wcb \
+	WL0017.wcb \
+	WL0018.wcb \
+	WL0018A.wcb \
+	WL0018B.wcb \
+	WL0019.wcb \
+	WL0020.wcb \
+	WL0021.wcb \
+	WL0022.wcb \
+	WL0023.wcb \
+	WL0024.wcb \
+	WL0025.wcb \
+	WL0026.wcb \
+	WL0027.wcb \
+	WL0028.wcb \
+	WL0029.wcb \
+	WL0030.wcb \
+	WL0031.wcb \
+	WL0032.wcb \
+	WL0033.wcb \
+	WL0034.wcb \
+	WL0034C.wcb \
+	WL0034D.wcb \
+	WL0035.wcb \
+	WT0000.wcb \
+	WT0010.wcb \
+	WT0011.wcb \
+	WT0012.wcb \
+	XLINK.wcb \
+	XLINK1.wcb
+
+SAMPLE_COBOL_OBJS= $(SAMPLE_COBOL_WCBS:.wcb=.acu)
 
 ALL_COBOL_OBJS= $(WISP_COBOL_OBJS) $(SAMPLE_COBOL_OBJS)
+ALL_COBOL_COBS= $(ALL_COBOL_OBJS:.acu=.cob)
 
 TEST_DIRS= volrun volin volout volspl volwrk
 
@@ -119,6 +141,9 @@ clean:
 	rm -rf $(TEST_DIRS)
 	rm -f $(WISPACU_SRC) $(DISPRINT_SRC)
 	rm -f *.cob prtargs wc*.cpy *~ core *.log *.err 
+
+# Recreate the .cob files if $(WISPTRAN) is newer
+$(ALL_COBOL_COBS): $(WISPTRAN)
 
 all_cobol_objs: $(ALL_COBOL_OBJS)
 
@@ -159,7 +184,7 @@ unix_stuff:	prtargs
 win32_stuff:	prtargs.exe
 
 
-DISPRINT: $(DISPRINT_SRC)
+DISPRINT.acu: $(DISPRINT_SRC)
 	$(MAKE) -f disprint.umf -e $(WISPLANG)
 
 $(DISPRINT_SRC): $(WISPDIR)/etc
@@ -167,19 +192,9 @@ $(DISPRINT_SRC): $(WISPDIR)/etc
 	cp $(WISPDIR)/etc/$@ $@ 
 	chmod +w $@
 
-#$(WISPACU_SRC): $(WISPDIR)/acu
-#	rm -f $@
-#	cp $(WISPDIR)/acu/$@ $@ 
-#	chmod +w $@
-
-ACULINK.wcb: $(WISPDIR)/acu/aculink.wcb
+$(WISPACU_SRC): $(WISPDIR)/acu
 	rm -f $@
-	cp $(WISPDIR)/acu/aculink.wcb $@ 
-	chmod +w $@
-
-ACUUSING.cob: $(WISPDIR)/acu/acuusing.cob
-	rm -f $@
-	cp $(WISPDIR)/acu/acuusing.cob $@ 
+	cp $(WISPDIR)/acu/$@ $@ 
 	chmod +w $@
 
 $(WISPDIR)/etc \
@@ -191,17 +206,60 @@ $(WISPDIR)/acu:
 #
 #	History:
 #	$Log: sampleacu.umf,v $
-#	Revision 1.28.2.4  2003/02/10 14:59:02  gsl
-#	Add autotests from $HEAD
+#	Revision 1.51  2003/07/07 20:38:09  gsl
+#	WL0035 READVTOC tests
 #	
-#	Revision 1.28.2.3  2002/11/07 22:53:47  gsl
-#	change to use WISPSRC variable
+#	Revision 1.50  2003/07/07 19:39:54  gsl
+#	WC0004 ##TEMP file tests
 #	
-#	Revision 1.28.2.2  2002/10/09 17:27:56  gsl
-#	Fix ACULINK.wcb and ACUUSING.cob
+#	Revision 1.49  2003/07/07 17:58:27  gsl
+#	WL0034 LINK tests
 #	
-#	Revision 1.28.2.1  2002/10/08 19:54:08  gsl
-#	Updated from HEAD
+#	Revision 1.48  2003/07/07 14:29:44  gsl
+#	WC0003 ACCEPT VERB tests
+#	
+#	Revision 1.47  2003/07/03 18:53:55  gsl
+#	RETURN-CODE tests
+#	
+#	Revision 1.46  2003/07/02 21:18:30  gsl
+#	Add WL0033 FIND auto tests
+#	
+#	Revision 1.45  2003/07/01 19:28:52  gsl
+#	QA
+#	
+#	Revision 1.44  2003/03/10 19:22:10  gsl
+#	Use WISPTRAN from WISPDIR and make *.cob a dependancy of WISPTRAN
+#	
+#	Revision 1.43  2003/02/27 19:06:55  gsl
+#	Move the QA MESSAGE logic out of QASUBS into new file QAMESSAG
+#	
+#	Revision 1.42  2003/01/30 19:43:45  gsl
+#	Add WL0032 to autotest RENAME
+#	
+#	Revision 1.41  2003/01/20 20:14:19  gsl
+#	Add WL0031 auto tests for SETFILE
+#	
+#	Revision 1.40  2003/01/20 17:02:28  gsl
+#	Add WL0030 auto test for SUBMIT
+#	
+#	Revision 1.39  2003/01/17 15:31:40  gsl
+#	Added WL0029 SCRATCH autotest
+#	
+#	Revision 1.38  2003/01/16 17:25:39  gsl
+#	Add FILECOPY tests
+#	
+#	Revision 1.37  2002/11/26 21:52:02  gsl
+#	Add WC0001.wcb to test Horz Repeating fields
+#	
+#	Revision 1.36  2002/11/22 18:56:22  gsl
+#	Fix and standardize the Acucoobl COBFLAGS
+#	
+#	Revision 1.35  2002/11/21 22:21:51  gsl
+#	Change to use ACULINK.acu and ACUUSING.acu
+#	Added .acu to all Acucobol object files
+#	
+#	Revision 1.34  2002/11/07 16:44:05  gsl
+#	Change to use variable $(WISPSRC)
 #	
 #	Revision 1.33  2002/07/24 14:14:50  gsl
 #	Fix cleanup and test for $(WISPDIR) dirs

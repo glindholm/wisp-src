@@ -1,13 +1,24 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 
 /*
 **	File:		paths.c
@@ -15,21 +26,25 @@ static char rcsid[]="$Id:$";
 **	Purpose:	Routines to search paths
 **
 **	Routines:	
-**	env_path_seg()	Get segment of the env PATH
-**	link_path_seg()	Get segment of the LINK PATH
-**	osd_ext()	Get the extension of a file
-**	whichpath()	Find a file on the PATH
+**	WL_env_path_seg()	Get segment of the env PATH
+**	WL_link_path_seg()	Get segment of the LINK PATH
+**	WL_osd_ext()		Get the extension of a file
+**	WL_whichenvpath()	Find a file on the $PATH
+**	WL_whichlinkpath()	Find a file on the LINK path
 */
 
 
-#if defined(unix) || defined(MSFS)
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <io.h>
+#endif
+
+#ifdef unix
+#include <unistd.h>
 #endif
 
 #include "idsisubs.h"
@@ -38,7 +53,7 @@ static char rcsid[]="$Id:$";
 #include "wmalloc.h"
 
 /*
-**	Routine:	link_path_seg()
+**	Routine:	WL_link_path_seg()
 **
 **	Function:	Return a directory on the path.
 **
@@ -64,7 +79,7 @@ static char rcsid[]="$Id:$";
 **	08/03/94	Documented. GSL
 **
 */
-char *link_path_seg(int pathnum)
+char *WL_link_path_seg(int pathnum)
 {
 	static	int	first=1;
 	static	int	totalcnt=1;							/* Number of dirs in $PATH		*/
@@ -80,8 +95,8 @@ char *link_path_seg(int pathnum)
 			return NULL;
 		}
 		
-		fullpath = wstrdup(ptr);
-		nullpath = wstrdup(ptr);
+		fullpath = wisp_strdup(ptr);
+		nullpath = wisp_strdup(ptr);
 
 		for( i=0; fullpath[i]; i++ )
 		{
@@ -115,7 +130,7 @@ char *link_path_seg(int pathnum)
 
 	return( NULL );									/* This should never occur.		*/
 }
-char *env_path_seg(int pathnum)
+char *WL_env_path_seg(int pathnum)
 {
 	static	int	first=1;
 	static	int	totalcnt=1;							/* Number of dirs in $PATH		*/
@@ -131,8 +146,8 @@ char *env_path_seg(int pathnum)
 			return NULL;
 		}
 		
-		fullpath = wstrdup(ptr);
-		nullpath = wstrdup(ptr);
+		fullpath = wisp_strdup(ptr);
+		nullpath = wisp_strdup(ptr);
 
 		for( i=0; fullpath[i]; i++ )
 		{
@@ -168,7 +183,7 @@ char *env_path_seg(int pathnum)
 }
 
 /*
-**	Routine:	osd_ext()
+**	Routine:	WL_osd_ext()
 **
 **	Function:	Find the extension within a filename.
 **
@@ -189,7 +204,7 @@ char *env_path_seg(int pathnum)
 **	08/03/94	Documented and moved to paths.c. GSL
 **
 */
-char *osd_ext(char *filepath)
+char *WL_osd_ext(char *filepath)
 {
 	int	k;
 
@@ -204,8 +219,8 @@ char *osd_ext(char *filepath)
 }
 
 /*
-**	Routine:	whichenvpath()
-**			whichlinkpath()
+**	Routine:	WL_whichenvpath()
+**			WL_whichlinkpath()
 **
 **	Function:	Find the path of a program by searching the env PATH or LINK PATH
 **
@@ -224,19 +239,19 @@ char *osd_ext(char *filepath)
 **	Warnings:	None
 **
 */
-int whichenvpath(char *filename, char *fullpath)
+int WL_whichenvpath(char *filename, char *fullpath)
 {
 	char	testname[256];
 	int	pathcnt;
 	int	not_found;
 
 	not_found = 1;
-	for(pathcnt=1; not_found && env_path_seg(pathcnt); pathcnt++)		/* while not found & more paths		*/
+	for(pathcnt=1; not_found && WL_env_path_seg(pathcnt); pathcnt++)	/* while not found & more paths		*/
 	{
 		/*
 		**	Build test filepath
 		*/
-		buildfilepath( testname, env_path_seg(pathcnt), filename);
+		buildfilepath( testname, WL_env_path_seg(pathcnt), filename);
 		if (0 == access(testname,0))
 		{
 			not_found = 0;
@@ -246,19 +261,19 @@ int whichenvpath(char *filename, char *fullpath)
 	return(not_found);
 
 }
-int whichlinkpath(char *filename, char *fullpath)
+int WL_whichlinkpath(char *filename, char *fullpath)
 {
 	char	testname[256];
 	int	pathcnt;
 	int	not_found;
 
 	not_found = 1;
-	for(pathcnt=1; not_found && link_path_seg(pathcnt); pathcnt++)		/* while not found & more paths		*/
+	for(pathcnt=1; not_found && WL_link_path_seg(pathcnt); pathcnt++)	/* while not found & more paths		*/
 	{
 		/*
 		**	Build test filepath
 		*/
-		buildfilepath( testname, link_path_seg(pathcnt), filename);
+		buildfilepath( testname, WL_link_path_seg(pathcnt), filename);
 		if (0 == access(testname,0))
 		{
 			not_found = 0;
@@ -269,10 +284,28 @@ int whichlinkpath(char *filename, char *fullpath)
 
 }
 
-#endif
+
 /*
 **	History:
 **	$Log: paths.c,v $
+**	Revision 1.14  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.13  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.12  2002/07/18 21:04:27  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.11  2002/07/11 14:33:57  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.10  2002/07/09 04:13:59  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.9  2002/07/02 21:15:27  gsl
+**	Rename wstrdup
+**	
 **	Revision 1.8  1997/12/04 23:09:50  gsl
 **	Split the path routines into two; one for the env PATH and
 **	on for the LINK PATH.

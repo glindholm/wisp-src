@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_opcls.c
 **
@@ -39,13 +60,15 @@ static char rcsid[]="$Id:$";
 */
 
 
-static char *open_mode_name[] = { "",	"WFOPEN-INPUT",
-					"WFOPEN-SHARED",
-					"WFOPEN-OUTPUT",
-					"WFOPEN-EXTEND",
-					"WFOPEN-SPECIAL-INPUT",
-					"WFOPEN-I-O",
-					"WFOPEN-SORT"};
+static char *open_mode_name[] = { 
+	"",			/* 0 based array	*/
+	"WFOPEN-INPUT",		/* WFOPEN_INPUT		*/
+	"WFOPEN-SHARED",	/* WFOPEN_SHARED	*/
+	"WFOPEN-OUTPUT",	/* WFOPEN_OUTPUT	*/
+	"WFOPEN-EXTEND",	/* WFOPEN_EXTEND	*/
+	"WFOPEN-SPECIAL-INPUT", /* WFOPEN_SPECIAL_INPUT */
+	"WFOPEN-I-O",		/* WFOPEN_I_O		*/
+	"WFOPEN-SORT"};		/* WFOPEN_SORT		*/
 
 /*
 **	Static Function Prototypes
@@ -73,11 +96,9 @@ NODE parse_open(NODE the_statement)
 	NODE	curr_node, open_node, file_node, access_node;
 	NODE	trailing_fluff_node = NULL;
 	int	col, fnum;
-	int	is_crt;
-	int	found_crt = 0;
 	int	file_cnt = 0;
 	int	with_no_rewind = 0;
-	int	open_mode;
+	int	open_mode = WFOPEN_UNKNOWN;
 
 	curr_node = first_token_node(the_statement);
 
@@ -171,9 +192,8 @@ NODE parse_open(NODE the_statement)
 			*/
 
 			file_node = curr_node;
-			is_crt = 0;
 
-			if (do_xtab)
+			if (opt_xtab)
 			{
 				char tabData[80];	/* FILE \t ACCESS */
 				sprintf(tabData,"%s\t%s", 
@@ -186,9 +206,11 @@ NODE parse_open(NODE the_statement)
 
 			if (-1 != crt_index(token_data(file_node->token)))
 			{
-				is_crt = 1;
-				found_crt = 1;
+				/* CRT File */
 
+				tput_scomment("**** OPEN %s %s (Removed)", 
+					token_data(access_node->token), 
+					token_data(file_node->token)); 
 				tput_line_at(col,"CONTINUE");
 			}
 			else if (-1 != (fnum = file_index(token_data(file_node->token))))
@@ -274,30 +296,17 @@ NODE parse_open(NODE the_statement)
 					open_access = "I-O";
 				}
 
-				if (acu_cobol||vax_cobol)
+				if (acu_cobol)
 				{
 					open_lock = "ALLOWING ALL";
 				}
 				      
-				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
-				{
-					write_log("WISP",'W',"AUTOLOCK","File %s OPEN SHARED using AUTOLOCK.",
-						  token_data(file_node->token));
-				}
 				break;
 				
 			case WFOPEN_SPECIAL_INPUT:
 				open_access = "INPUT";
 
-				if (lpi_cobol||mf_cobol)
-				{
-					open_lock = "";
-				}
-				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
-				{
-					open_lock = "";
-				}
-				else
+				if (acu_cobol)
 				{
 					open_lock = "ALLOWING ALL";
 				}
@@ -306,69 +315,66 @@ NODE parse_open(NODE the_statement)
 			case WFOPEN_I_O:
 				open_access = "I-O";
 
-				if (lpi_cobol||mf_cobol)
+				if (mf_cobol)
 					open_lock = "WITH LOCK";
-				else if ((vax_cobol || acu_cobol) && (prog_ftypes[fnum] & OPENIOX_FILE))
+				else if (acu_cobol && (prog_ftypes[fnum] & OPENIOX_FILE))
 					open_lock = "ALLOWING NO OTHERS";	/* OPEN I-O exclusive		*/
-				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
-					open_lock = "";
 				else
 					open_lock = "ALLOWING READERS";		/* Manual record locking	*/
-										/* Vax needs readers - READFDR	*/
 				break;
 				
 			case WFOPEN_INPUT:
 				open_access = "INPUT";
 
-				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
-					open_lock = "";
-				else if (vax_cobol || acu_cobol)		/* Manual record locking	*/
+				if (acu_cobol)		/* Manual record locking	*/
+				{
 					open_lock = "ALLOWING READERS";
+				}
 				break;
 				
 			case WFOPEN_OUTPUT:
 				open_access = "OUTPUT";
 
-				if (lpi_cobol||mf_cobol)
+				if (mf_cobol)
 					open_lock = "WITH LOCK";
-				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
-					open_lock = "";
 				else
 					open_lock = "ALLOWING NO OTHERS";
-#ifdef OLD
-					/*
-					**	The "ALLOWING READERS" clause on the VAX was causing
-					**	it to be very slow.  On the Wang an OPEN OUTPUT is exclusive,
-					**	so the only reason for this must have been the "READFDR" problem.
-					*/
-				else
-					open_lock = "ALLOWING READERS";
-#endif
 				break;
 				
 			case WFOPEN_EXTEND:
 				open_access = "EXTEND";
 
-				if (lpi_cobol||mf_cobol)
+				if (mf_cobol)
 					open_lock = "WITH LOCK";
-				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
-					open_lock = "";
 				else
 					open_lock = "ALLOWING READERS";
 				break;
 				
+			case WFOPEN_UNKNOWN:
+				write_log("WISP",'F',"OPEN","Missing OPEN mode for file %s",
+					  token_data(file_node->token));
+				exit_with_err();
+				break;
+
 			default:
 				write_log("WISP",'F',"OPEN","Invalid OPEN mode %d for file %s",open_mode,
 					  token_data(file_node->token));
+				exit_with_err();
 				break;
 			}
 
-			if (isaproc)							/* Was the procedure flag set?		*/
+			tput_scomment("**** OPEN %s %s %s", 
+				token_data(access_node->token), 
+				token_data(file_node->token),
+				(prog_ftypes[fnum] & NORESPECIFY)?"(NORESPECIFY)":""); 
+
+			if (isaproc)	/* Was the procedure flag set?	$WANG_PROC	*/
 			{
-				tput_line_at(col, "MOVE ZERO      TO WISP-BIT-CLEAR");
-				tput_line_at(col, "MOVE WISP-PROC TO WISP-BIT-SET");
-				tput_line_at(col, "CALL \"wsetstat\" USING WISP-BIT-SET,");
-				tput_clause(col+4, "WISP-BIT-CLEAR, %s",get_prog_status(fnum));
+				/* Obsolete feature removed */
+ 				/* tput_line_at(col, "MOVE ZERO      TO WISP-BIT-CLEAR"); */
+ 				/* tput_line_at(col, "MOVE WISP-PROC TO WISP-BIT-SET"); */
+ 				/* tput_line_at(col, "CALL \"wsetstat\" USING WISP-BIT-SET,"); */
+ 				/* tput_clause(col+4, "WISP-BIT-CLEAR, %s",get_prog_status(fnum)); */
 			}
 
 			if (prog_ftypes[fnum] & PRINTER_FILE)
@@ -377,7 +383,7 @@ NODE parse_open(NODE the_statement)
 				{
 					tput_line_at(col, "MOVE SPACES TO %s",get_prog_fname(fnum));
 				}
-				else if (prog_fnames[fnum][0] == '\"')		/* If FD FILENAME is literal then...		*/
+				else if (is_literal(prog_fnames[fnum]))		/* If FD FILENAME is literal then...		*/
 				{
 					tput_line_at(col, "MOVE %s TO %s", prog_fnames[fnum], get_prog_fname(fnum));
 				}
@@ -390,28 +396,24 @@ NODE parse_open(NODE the_statement)
 				col += 4;
 			}
 
-			tput_line_at(col, "MOVE \"OP\" TO WISP-DECLARATIVES-STATUS");
+			if (opt_nogetlastfileop)
+			{
+				/* tput_line_at(col, "MOVE \"OP\" TO WISP-DECLARATIVES-STATUS"); */
+				tput_line_at(col,"MOVE \"Open\" TO WISP-LASTFILEOP");
+			}
 
-			if (x4dbfile && (prog_ftypes[fnum] & INDEXED_FILE))
+			if (opt_x4dbfile && (prog_ftypes[fnum] & INDEXED_FILE))
 			{
 				/*
-				**	If an INDEXED  file and the x4dbfile flag set then
+				**	If an INDEXED  file and the opt_x4dbfile flag set then
 				**	add runtime logic to set the IS_DBFILE flag.
 				*/
-				tput_line_at(col, "CALL \"x4dbfile\" USING");
+				tput_line_at(col, "CALL \"X4DBFILE2\" USING");
 				tput_clause(col+4, "\"%s\",", token_data(file_node->token));
 				tput_clause(col+4, "%s", get_prog_status(fnum));
 			}
 
-			tput_line_at(col, "CALL \"wfopen3\" USING");
-			tput_clause(col+4,  "%s,", get_prog_status(fnum));	/* STATUS	*/
-			tput_clause(col+4,  "%s,", get_prog_vname(fnum));	/* VOLUME	*/
-			tput_clause(col+4,  "%s,", get_prog_lname(fnum));	/* LIBRARY	*/
-			tput_clause(col+4,  "%s,", get_prog_fname(fnum));	/* FILE		*/
-			tput_clause(col+4,  "%s,", get_prog_nname(fnum));	/* NATIVE	*/
-			tput_clause(col+4,  "WISP-APPLICATION-NAME,");		/* Application	*/
-			tput_clause(col+4,  "%s,", get_prog_prname(fnum));	/* PRNAME	*/
-			tput_clause(col+4,  "%s", open_mode_name[open_mode]);	/* open mode	*/
+			gen_wfopen(col, fnum, open_mode);
 
 			tput_line_at(col, "OPEN %s", open_access);
 
@@ -438,14 +440,11 @@ NODE parse_open(NODE the_statement)
 
 			tput_clause(col+4,  "%s", open_lock);
 
-			if (vax_cobol)
+			if (opt_nogetlastfileop)
 			{
-				tput_line_at(col, "CALL \"wdellock\" USING");
-				tput_clause(col+4,  "%s", get_prog_status(fnum));	/* STATUS	*/
-				tput_clause(col+4,  "%s", get_prog_nname(fnum));	/* NATIVE	*/
+				/* tput_line_at(col, "MOVE SPACES TO WISP-DECLARATIVES-STATUS"); */
+				tput_line_at(col,"MOVE SPACES TO WISP-LASTFILEOP");
 			}
-
-			tput_line_at(col, "MOVE SPACES TO WISP-DECLARATIVES-STATUS");
 
 			if (!(prog_ftypes[fnum] & NORESPECIFY))				/* Was the NORESPECIFY flag set?	*/
 			{
@@ -534,6 +533,11 @@ NODE parse_close(NODE the_statement)
 
 			if (acn_cobol)
 			{
+				/* CRT File */
+
+				tput_scomment("**** CLOSE %s (Removed)", 
+					token_data(file_node->token)); 
+
 				write_log("WISP",'I',"NATIVE","Workstation CLOSE %s removed for Native Screens",
 					  token_data(file_node->token));
 				tput_line_at(col, "CONTINUE");
@@ -659,7 +663,11 @@ NODE parse_close(NODE the_statement)
 
 	if (file_cnt)
 	{
-		tput_line_at(col,"MOVE \"CL\" TO WISP-DECLARATIVES-STATUS");
+		if (opt_nogetlastfileop)
+		{
+			/* tput_line_at(col,"MOVE \"CL\" TO WISP-DECLARATIVES-STATUS"); */
+			tput_line_at(col,"MOVE \"Close\" TO WISP-LASTFILEOP");
+		}
 	}
 	else
 	{
@@ -677,7 +685,7 @@ NODE parse_close(NODE the_statement)
 
 	if (found_crt)
 	{
-		tput_line_at(col,"CALL \"vwang\" USING VWANG-CLOSE-WS");
+		tput_line_at(col,"CALL \"WS_CLOSE\" ");
 		tput_clause(col, "END-CALL");
 	}
 
@@ -695,8 +703,12 @@ NODE parse_close(NODE the_statement)
 		fnum = file_index(token_data(printer_list->down->token));
 		if (-1 != fnum)
 		{
-			tput_line_at(col, "CALL \"wfclose\" USING %s", get_prog_nname(fnum));
-			tput_clause(col,  "END-CALL");
+			if (!opt_native)
+			{
+				tput_line_at(col, "CALL \"WFCLOSE\" ");
+				tput_clause(col+4,    "USING %s", get_prog_nname(fnum));
+				tput_clause(col,  "END-CALL");
+			}
 		}
 		else
 		{
@@ -720,15 +732,92 @@ NODE parse_close(NODE the_statement)
 	
 }
 
+void gen_wfopen(int col, int fnum, int open_mode)
+{
+	if (opt_native)
+	{
+		tput_line_at(col, "CALL \"W@OPENFILE\" USING");
+	}
+	else
+	{
+		tput_line_at(col, "CALL \"WFOPEN4\" USING");
+	}
+	tput_clause(col+4,  "%s,", get_prog_status(fnum));	/* STATUS	*/
+	tput_clause(col+4,  "%s,", get_prog_vname(fnum));	/* VOLUME	*/
+	tput_clause(col+4,  "%s,", get_prog_lname(fnum));	/* LIBRARY	*/
+	tput_clause(col+4,  "%s,", get_prog_fname(fnum));	/* FILE		*/
+	tput_clause(col+4,  "%s,", get_prog_nname(fnum));	/* NATIVE	*/
+	tput_clause(col+4,  "WISP-APPLICATION-NAME,");		/* Application	*/
+	tput_clause(col+4,  "%s,", get_prog_prname(fnum));	/* PRNAME	*/
+	tput_clause(col+4,  "%s", open_mode_name[open_mode]);	/* open mode	*/
+
+}
+
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
-**	Revision 1.24.2.1  2002/11/12 16:00:31  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.42  2003/06/10 14:44:09  gsl
+**	Fix abort when missing OPEN mode
 **	
-**	Revision 1.24  2002/03/21 23:26:40  gsl
+**	Revision 1.41  2003/03/17 17:21:17  gsl
+**	Change to use  WFOPEN4
+**	
+**	Revision 1.40  2003/03/11 19:23:01  gsl
+**	With #NATIVE don't gen WFCLOSE calls
+**	
+**	Revision 1.39  2003/03/07 17:00:07  gsl
+**	For ACU default to using "C$GETLASTFILEOP" to retrieve the last file op.
+**	Add option #NOGETLASTFILEOP to use if not C$GETLASTFILEOP is
+**	not available.
+**	
+**	Revision 1.38  2003/03/06 21:48:19  gsl
+**	Change WISP-DECLARATIVES-STATUS to WISP-LASTFILEOP
+**	Change WFOPEN3 to WISP_FILEOPEN
+**	
+**	Revision 1.37  2003/02/28 21:49:04  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.36  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.35  2002/08/12 20:13:50  gsl
+**	quotes and literals
+**	
+**	Revision 1.34  2002/08/01 02:46:28  gsl
+**	Replace vwang calls with WS_CLOSE WS_READ WS_READ_ALT WS_REWRITE
+**	
+**	Revision 1.33  2002/07/29 14:47:19  gsl
+**	wfopen2 ->WFOPEN2
+**	wfopen3 ->WFOPEN3
+**	
+**	Revision 1.32  2002/07/25 14:06:26  gsl
+**	x4dbfile -> X4DBFILE
+**	
+**	Revision 1.31  2002/07/23 02:57:49  gsl
+**	wfclose -> WFCLOSE
+**	
+**	Revision 1.30  2002/07/17 15:03:28  gsl
+**	MF doesn't like underscores in COBOL names
+**	
+**	Revision 1.29  2002/07/10 03:23:41  gsl
+**	comment
+**	
+**	Revision 1.28  2002/06/21 20:49:33  gsl
+**	Rework the IS_xxx bit flags and the WFOPEN_mode flags
+**	
+**	Revision 1.27  2002/06/21 03:47:25  gsl
+**	Comment
+**	
+**	Revision 1.26  2002/06/20 23:08:44  gsl
+**	remove obsolete code
+**	add native
+**	
+**	Revision 1.25  2002/05/16 21:52:39  gsl
+**	getlastfileop logic
+**	
+**	Revision 1.24  2002-03-21 18:26:40-05  gsl
 **	FIx format
-**	
+**
 **	Revision 1.23  2002-03-21 17:05:20-05  gsl
 **	Add MFSE open sharing clause and MFOC warning on a OPEN SHARED seq-file.
 **

@@ -1,5 +1,24 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		find.c
 **
@@ -26,6 +45,9 @@ static char rcsid[]="$Id:$";
 #ifdef WIN32
 #include <io.h>
 #endif
+#ifdef unix
+#include <unistd.h>
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -33,13 +55,13 @@ static char rcsid[]="$Id:$";
 
 #include "idsistd.h"
 #include "wfiles.h"
-#include "movebin.h"
 #include "werrlog.h"
 #include "wdefines.h"
 #include "wfname.h"
 #include "idsisubs.h"
 #include "wexit.h"
 #include "wisplib.h"
+#include "vssubs.h"
 #include "filext.h"
 #include "wperson.h"
 #include "paths.h"
@@ -69,8 +91,6 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec);
 static void pass_back( char* vol, char* lib, char* fil);
 
-#define		ROUTINE		19000
-
 
 void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *counter, char* receiver, ...)
 {
@@ -88,16 +108,14 @@ void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *cou
 
 	va_start(the_args, receiver);							/* Point to the top of the stack.	*/
 
-	arg_count = va_count(the_args);							/* How many args are there ?		*/
+	arg_count = WL_va_count();							/* How many args are there ?		*/
 	if (arg_count < 6 || arg_count > 8)
 	{
-		char buff[80];
-		
-		sprintf(buff, "%%FIND-F-ARGS Invalid number of arguments [%d] expecting 6-8", arg_count);
-		werrlog(104,buff,0,0,0,0,0,0,0);
+		WL_werrlog_error(WERRCODE(19004), "FIND", "ARGS", 
+			"Invalid number of arguments [%d] expecting 6-8", arg_count);
 
 		va_end(the_args);
-		wexit(ROUTINE+4);
+		wexit(WERRCODE(19004));
 	}
 	
 
@@ -114,14 +132,14 @@ void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *cou
 		if ( *receiver_type=='F' )
 		{
 			va_end(the_args);
-			werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);				/* Not yet supported.			*/
-			wexit(ERRORCODE(2));
+			werrlog(WERRCODE(19002),0,0,0,0,0,0,0,0);				/* Not yet supported.			*/
+			wexit(WERRCODE(19002));
 		}
 	}
 	va_end(the_args);
 
-	l_starter = get_swap(starter);
-	l_counter = get_swap(counter);
+	l_starter = WL_get_swap(starter);
+	l_counter = WL_get_swap(counter);
 
 	wtrace("FIND","ARGS","File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] Start=%ld Cnt=%ld",
 	       the_file, the_lib, the_vol, (long)l_starter, (long)l_counter);
@@ -144,11 +162,11 @@ void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *cou
 
 	wtrace("FIND","RETURN", "Files returned=%ld  Files found=%ld", (long)l_counter, (long)l_file_count); 
 
-	put_swap(counter,l_counter);
+	WL_put_swap(counter,l_counter);
 	
 	if ( file_count )								/* If supplied this argument in list.	*/
 	{
-		put_swap(file_count,l_file_count);
+		WL_put_swap(file_count,l_file_count);
 	}
 }
 
@@ -159,7 +177,7 @@ void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *cou
 */
 
 static char *rec_ptr;									/* Ptr to reciever area			*/
-static char find_ext[39];								/* FIND copy of WISPFILEXT		*/
+static char find_ext[WISP_FILE_EXT_SIZE];						/* FIND copy of file extension		*/
 
 #define LISTFILES 0
 #define LISTLIBS 1
@@ -175,9 +193,13 @@ static	int4	item_start;								/* First match to return		*/
 static	int4	item_count;								/* Current match position		*/
 
 
-static void osd_find(char* the_file,char* the_lib,char* the_vol,
-		     int4 l_starter, int4* l_counter_p,
-		     char* receiver, int4* l_file_count_p)
+static void osd_find(char* the_file,
+		     char* the_lib,
+		     char* the_vol,
+		     int4 l_starter, 
+		     int4* l_counter_p,
+		     char* receiver, 
+		     int4* l_file_count_p)	/* FLAG - Do we get a total count ? */
 {
 	char *fspec;									/* pointers to the "passed" strings	*/
 	char *lspec;
@@ -186,6 +208,11 @@ static void osd_find(char* the_file,char* the_lib,char* the_vol,
 	char passed_file[50];								/* possible extension			*/
 	char passed_vol[9];
 	char passed_lib[9];
+
+	wtrace("FIND","OSD","FILE=[%-8.8s] LIB=[%-8.8s] VOL=[%-6.6s], START=[%ld], CNT=[%ld] GET_TOTAL=%c",
+	       the_file, the_lib, the_vol, 
+	       (long)l_starter, (long)*l_counter_p, 
+	       ((*l_file_count_p == 0) ? 'N' : 'Y'));
 
 	search_mode 	= 0;
 	found_count 	= 0;
@@ -204,7 +231,7 @@ static void osd_find(char* the_file,char* the_lib,char* the_vol,
 		stop_count = l_starter + *l_counter_p - 1;				/* Calculate stopping point		*/
 	}
 
-	wpload();
+	WL_wpload();
 
 	memset(passed_vol,(char)0,sizeof(passed_vol));
 	memset(passed_file,(char)0,sizeof(passed_file));
@@ -227,6 +254,7 @@ static void osd_find(char* the_file,char* the_lib,char* the_vol,
 	WGETFILEXT(find_ext);								/* grab a copy of file extension	*/
 	if ( find_ext[0] != ' ' )							/* If ext then add to fspec.		*/
 	{
+		*(strchr(find_ext,' ')) = NULL_CHAR;					/* Make find_ext null terminated	*/
 		strcat(fspec,".");
 		strcat(fspec,find_ext);
 	}
@@ -254,14 +282,21 @@ static void build_list(char* vspec, char* lspec, char* fspec)				/* the VOLUMES.
 	if ( haswc(vspec) )
 	{
 											/* MATCH THE VOLUME			*/
-		for (p=get_logical_list(); p; p=(logical_id *)p->next)			/* for loop to find matching volume 	*/
+		for (p=WL_get_lgmap_list(); p; p=p->next)				/* for loop to find matching volume 	*/
 		{
 			vol      = p->logical;
 			vol_path = p->translate;
+
+			if (*vol == '(' || *vol == '.')
+			{
+				/*
+				**	Don't match the pseudo volumes like "(ROOT)" and "(HOME)"
+				**	or "."
+				*/
+				continue;
+			}
 											/* Compare to logical list (LGMAP) 	*/
-											/* Volume '.' will only match vspec '.' */
-											/* it does not match wildcards.		*/
-			if ( strcmp(vol,".")!=0 && wcmatch(vspec,vol,FALSE,'*','?') )
+			if (WL_wcmatch(vspec,vol,FALSE,'*','?') )
 			{
 
 				if (search_mode==LISTVOLS)
@@ -282,7 +317,7 @@ static void build_list(char* vspec, char* lspec, char* fspec)				/* the VOLUMES.
 	{
 		char	vol_buf[80];
 
-		wlgtrans(vspec,vol_buf);
+		WL_wlgtrans(vspec,vol_buf);
 
 		if ( fexists(vol_buf) )							/* See if it exists			*/
 		{
@@ -322,7 +357,7 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 		char	lib_buf[40];
 
 		strcpy(lib_buf,lspec);
-		lower_string(lib_buf);
+		WL_lower_string(lib_buf);
 
 		buildfilepath(tmpbuf,vol_path,lib_buf);					/* Concat the vol and lib		*/
 
@@ -339,7 +374,7 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 			}
 		}
 	}
-	else while ((libname = nextfile(vol_path,&vol_context)) != NULL)
+	else while ((libname = WL_nextfile(vol_path,&vol_context)) != NULL)
 	{
 											/* Lib "." does not match wildcards	*/
 											/* Lib ".." never matches		*/
@@ -348,9 +383,9 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 		     ( strlen(libname) <= 8 &&
 		       strcmp(libname,".")!=0 && 
 		       strcmp(libname,"..")!=0 && 
-		       wcmatch(lspec,libname,FALSE,'*','?') )               )
+		       WL_wcmatch(lspec,libname,FALSE,'*','?') )               )
 		{
-			buildfilepath(tmpbuf,vol_path,libname);				/* Make path to call stat		*/
+			buildfilepath(tmpbuf,vol_path,libname);				/* Make path				*/
 			if ( WL_isadir(tmpbuf) )					/* Check if a directory			*/
 			{
 				if (search_mode==LISTLIBS)				/* If were looking for libs		*/
@@ -367,7 +402,7 @@ static void build_lib_list( char* vol, char* vol_path, char* lspec, char* fspec)
 		}
 
 	}
-	nextfile(NULL,&vol_context);							/* Reset nextfile for reading dir	*/
+	WL_nextfile(NULL,&vol_context);							/* Reset nextfile for reading dir	*/
 }
 
 											/* Build list of FILEs under LIB	*/
@@ -390,7 +425,7 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 	lastfile[0] = (char)0;
 
 	buildfilepath(dirpath,vol_path,lib);
-	while ((filename = nextfile(dirpath,&lib_context)) != NULL)
+	while ((filename = WL_nextfile(dirpath,&lib_context)) != NULL)
 	{
 
 											/* FILE "." and ".." never match	*/
@@ -400,7 +435,7 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 		}
 
 		strcpy(file_noext,filename);						/* Strip the file extention.		*/
-		ptr = osd_ext(file_noext);						/* Point to the ext (after the dot (.))	*/
+		ptr = WL_osd_ext(file_noext);						/* Point to the ext (after the dot (.))	*/
 		if ( ptr ) 
 		{
 			/*
@@ -419,13 +454,13 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 		}
 		strcpy(lastfile,file_noext);
 
-		if ( find_ext[0] == NULL_CHAR )						/* If no file extension			*/
+		if ( find_ext[0] == ' ' )						/* If no file extension			*/
 			cmp_file = file_noext;						/*    then Match any extension.		*/
 		else
 			cmp_file = filename;						/*    Else Match found extension	*/
 
 
-		if ( wcmatch(fspec,cmp_file,FALSE,'*','?') )
+		if ( WL_wcmatch(fspec,cmp_file,FALSE,'*','?') )
 		{
 			buildfilepath(tmpbuf,dirpath,filename);				/* Make path 				*/
 			if ( WL_isafile(tmpbuf) )			    		/* Check if a file			*/
@@ -438,10 +473,10 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 			}
 		}
 	}
-	nextfile(NULL,&lib_context);							/* Reset nextfile for reading dir	*/
+	WL_nextfile(NULL,&lib_context);							/* Reset nextfile for reading dir	*/
 }
 
-static void pass_back( char* vol, char* lib, char* fil)								/* Load the results into reciever	*/
+static void pass_back( char* vol, char* lib, char* fil)					/* Load the results into reciever	*/
 {
 #define REC struct receiver_struct
 struct receiver_struct {
@@ -450,7 +485,7 @@ struct receiver_struct {
 	char file[8];
 	};
 
-	wtrace("FIND","FOUND","vol=[%6.6s] lib=[%8.8s] fil=[%8.8s]", vol, lib, fil);
+	wtrace("FIND","FOUND","vol=[%-6.6s] lib=[%-8.8s] fil=[%-8.8s]", vol, lib, fil);
 
 	item_count += 1;
 	if ( item_count >= item_start && returned_count < requested_count )
@@ -481,11 +516,71 @@ static int haswc(char* p)
 /*
 **	History:
 **	$Log: find.c,v $
-**	Revision 1.18.2.2  2002/11/14 21:12:22  gsl
-**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	Revision 1.39  2003/07/02 18:34:28  gsl
+**	Don't return Pseudo volumes like "(ROOT)" on a volume wildcard
 **	
-**	Revision 1.18.2.1  2002/10/09 21:03:00  gsl
-**	Huge file support
+**	Revision 1.38  2003/07/02 18:07:25  gsl
+**	fix FIND bug with file with extension and no wildcard.
+**	The test for no extension was C style instead of COBOL style
+**	
+**	Revision 1.37  2003/03/20 18:29:05  gsl
+**	Fix logical_id typedef
+**	
+**	Revision 1.36  2003/02/17 22:07:18  gsl
+**	move VSSUB prototypes to vssubs.h
+**	
+**	Revision 1.35  2003/01/31 18:48:36  gsl
+**	Fix  copyright header and -Wall warnings
+**	
+**	Revision 1.34  2003/01/31 17:33:56  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.33  2002/12/10 20:54:15  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.32  2002/12/09 19:15:31  gsl
+**	Change to use WL_werrlog_error()
+**	
+**	Revision 1.31  2002/10/15 17:15:29  gsl
+**	tracing
+**	
+**	Revision 1.30  2002/10/07 18:41:40  gsl
+**	In build_file_list() change check for NOT a Dir into is a file.
+**	
+**	Revision 1.29  2002/10/01 18:57:01  gsl
+**	Replace calls to stat() with WL_isadir()
+**	
+**	Revision 1.28  2002/08/08 19:54:45  gsl
+**	fix extension handling
+**	
+**	Revision 1.27  2002/08/08 19:40:14  gsl
+**	add tracing
+**	
+**	Revision 1.26  2002/07/29 15:46:50  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.25  2002/07/16 16:24:56  gsl
+**	Globals
+**	
+**	Revision 1.24  2002/07/12 17:00:55  gsl
+**	Make WL_ global unique changes
+**	
+**	Revision 1.23  2002/07/11 20:29:08  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.22  2002/07/11 14:33:59  gsl
+**	Fix WL_ unique globals
+**	
+**	Revision 1.21  2002/07/10 21:05:16  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.20  2002/07/10 04:27:38  gsl
+**	Rename global routines with WL_ to make unique
+**	
+**	Revision 1.19  2002/06/25 17:46:04  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
 **	
 **	Revision 1.18  2001/11/07 21:30:31  gsl
 **	Remove VMS * MSDOS code

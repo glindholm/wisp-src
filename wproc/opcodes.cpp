@@ -21,7 +21,6 @@
 // (none)
 
 
-
 char *opcode_name(opcode an_opcode) {
    switch (an_opcode) {
       case add_op                      : return "add_op";
@@ -121,8 +120,8 @@ char *opcode_name(opcode an_opcode) {
 //
 //	History:
 //	$Log: opcodes.cpp,v $
-//	Revision 1.6.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.7  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.6  1998/08/31 19:13:59  gsl
 //	drcs update

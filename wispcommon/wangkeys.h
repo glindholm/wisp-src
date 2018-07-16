@@ -1,7 +1,28 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 
 /*** WANG_PFKEYS.H ... 	An include file to define the bit masks to be or'd with pfkey mask that gets passed to VWANG and defs	*/
 /***			for the AID character representation of the PFKEY pressed.						*/
@@ -76,6 +97,9 @@
 /*
 **	History:
 **	$Log: wangkeys.h,v $
+**	Revision 1.9  2003/01/31 19:26:33  gsl
+**	Fix copyright header
+**	
 **	Revision 1.8  1996/07/23 18:17:54  gsl
 **	drcs update
 **	

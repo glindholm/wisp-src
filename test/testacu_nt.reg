@@ -3,11 +3,11 @@ REGEDIT4
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP]
 "SERVER"="(LOCAL)"
-"WISPDIR"="c:\\dev\\wisp\\src"
+"WISPDIR"="c:\\dev\\wisp\\src\\kit\\wisp"
 "WISPCONFIG"="c:\\dev\\wisp\\src\\test\\config_nt"
-"PATH"="c:\\dev\\wisp\\src\\bin"
+"PATH"="C:\\dev\\WISP\\src\\kit\\wisp\\bin;C:\\dev\\WISP\\src\\kit\\wisp\\acu;C:\\dev\\WISP\\src\\test;C:\\dev\\WISP\\src\\test\\volrun\\ONPATH;C:\\dev\\WISP\\src\\kit\\kcsiacu;C:\\WINNT"
 "TMPDIR"="C:\\temp"
-"WISPSORTMEM"="512"
+"WISPSORTMEM"=""
 "USERSDIR"="C:\\users"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\VIDEOCAP]
@@ -21,48 +21,28 @@ REGEDIT4
 "WISPNETID"="        "
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\VSSUBS\MESSAGE]
-"SHAREDIR"="c:\\dev\\wisp\\src\\message"
+"SHAREDIR"="c:\\dev\\wisp\\src\\test\\message"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\VSSUBS\SCRATCH]
 "WISPSCRATCHMODE"="33"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\License]
-"FILE"="c:\\dev\\wisp\\src\\license.txt"
+"FILE"="c:\\dev\\wisp\\src\\kit\\wisp\\license.txt"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\Versions]
 "WISP"=""
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin]
-"WISP"="c:\\dev\\wisp\\src\\bin\\wisp.exe"
-"WEDITOR"="c:\\dev\\wisp\\src\\bin\\vsedit.exe"
-"DISPLAY"="c:\\dev\\wisp\\src\\bin\\display.exe"
+"WISP"="c:\\dev\\wisp\\src\\kit\\wisp\\bin\\wisp.exe"
+"WEDITOR"="c:\\dev\\wisp\\src\\kit\\wisp\\bin\\vsedit.exe"
+"DISPLAY"="c:\\dev\\wisp\\src\\kit\\wisp\\bin\\display.exe"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin\DISPLAY]
 "WISPDISPLAY8BIT"="NO"
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin\WPROC]
-"WPROC"="c:\\dev\\wisp\\src\\bin\\wproc.exe"
+"WPROC"="c:\\dev\\wisp\\src\\kit\\wisp\\bin\\wproc.exe"
 "WPROCDEBUG"=""
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin\WISPTRAN]
-"HSize"=""
-"VSize"=""
-"WorkDir"=""
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin\WISPTRAN\COBOL]
-"Language"=""
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin\WISPTRAN\COBOL\ACUCOBOL]
-"COB"=""
-"COBFLAGS"=""
-"OUTDIR"=""
-"OBJEXT"=""
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\WISPBin\WISPTRAN\COBOL\MFCOBOL]
-"COB"=""
-"COBFLAGS"=""
-"OUTDIR"=""
-"OBJEXT"=""
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\NeoMedia\WISP\ACP]
 "ACPCONFIG"="c:\\dev\\wisp\\src\\test\\config_nt"

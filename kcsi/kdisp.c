@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 Interface between REPORT INQUIRY and CONTROL to new
 IDSI WISP display.
@@ -9,7 +23,6 @@ IDSI WISP display.
 #include "kcsifunc.h"
 
 
-static char sccsid[]="@(#)kdisp.c	1.2 1/27/93";
 
 #define	FILE_NAME		0
 #define	FILE_LIB		8
@@ -25,6 +38,7 @@ static char sccsid[]="@(#)kdisp.c	1.2 1/27/93";
 #define Set_return(y)		memcpy(rc,y,2);
 
 static void do_display(char *name,char *rc);
+char *WL_wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path);
 
 static FILE *kdf;
 /*----
@@ -47,7 +61,7 @@ void KDISP(char* fspec,char* type, char* rc)
 		}
 /* Build the name */
 	mode = IS_PRINTFILE;
-	eoname = wfname(&mode,
+	eoname = WL_wfname(&mode,
 		&fspec[FILE_VOL],
 		&fspec[FILE_LIB],
 		&fspec[FILE_NAME],
@@ -81,8 +95,8 @@ static void do_display(char *name,char *rc)
 /*
 **	History:
 **	$Log: kdisp.c,v $
-**	Revision 1.5.2.1  2002/11/12 15:56:28  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.9  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.8  2002/07/12 19:10:24  gsl
 **	Global unique WL_ changes

@@ -45,17 +45,83 @@ COBFLAGS= -i -a
 
 TEST_DIRS= volrun volin volout volspl volwrk
 
-all:	int prtargs $(TEST_DIRS) DISPRINT.int
+SAMPLE_COBOL_WCBS= \
+	DISPFILE.wcb \
+	LESWAP.wcb \
+	QABCKGRD.wcb \
+	QAFILEIO.wcb \
+	QAFILE2.wcb \
+	QAMESSAG.wcb \
+	QANETCAP.wcb \
+	QAPRINT.wcb \
+	QASCREEN.wcb \
+	QASCRN2.wcb \
+	QASUBS.wcb \
+	QASY000M.wcb \
+	QASYS99.wcb \
+	QAWSFNM.wcb \
+	QAWSFNS.wcb \
+	QAWSUBS.wcb \
+	QADPCOMA.wcb \
+	QAWSXIO.wcb \
+	SAMPLE.wcb \
+	SUB1.wcb \
+	SUB3.wcb \
+	TRIGGER.wcb \
+	WC0000.wcb \
+	WC0001.wcb \
+	WC0002.wcb \
+	WC0002A.wcb \
+	WC0002B.wcb \
+	WC0002E.wcb \
+	WC0003.wcb \
+	WC0003B.wcb \
+	WC0004.wcb \
+	WL0000.wcb \
+	WL0010.wcb \
+	WL0011.wcb \
+	WL0012.wcb \
+	WL0013.wcb \
+	WL0014.wcb \
+	WL0015.wcb \
+	WL0016.wcb \
+	WL0017.wcb \
+	WL0018.wcb \
+	WL0018A.wcb \
+	WL0018B.wcb \
+	WL0019.wcb \
+	WL0020.wcb \
+	WL0021.wcb \
+	WL0022.wcb \
+	WL0023.wcb \
+	WL0024.wcb \
+	WL0025.wcb \
+	WL0026.wcb \
+	WL0027.wcb \
+	WL0028.wcb \
+	WL0029.wcb \
+	WL0030.wcb \
+	WL0031.wcb \
+	WL0032.wcb \
+	WL0033.wcb \
+	WL0034.wcb \
+	WL0034C.wcb \
+	WL0034D.wcb \
+	WL0035.wcb \
+	WT0000.wcb \
+	WT0010.wcb \
+	WT0011.wcb \
+	WT0012.wcb \
+	XLINK.wcb \
+	XLINK1.wcb
 
-int: 	SAMPLE.int QAFILEIO.int QAFILE2.int QANETCAP.int QAPRINT.int \
-	QASCREEN.int QASCRN2.int QASUBS.int QAWSUBS.int \
-	QAWSFNM.int QAWSFNS.int QASY000M.int QASYS99.int \
-	SUB1.int SUB3.int XLINK.int XLINK1.int TRIGGER.int \
-	QABCKGRD.int QADPCOMA.int QAWSXIO.int MFLINK.int DISPFILE.int LESWAP.int \
-	WL0000.int WL0010.int WL0011.int WL0012.int WL0013.int WL0014.int \
-	WL0015.int WL0016.int WL0017.int WL0018.int WL0018A.int WL0018B.int WL0019.int WL0020.int \
-	WL0021.int WL0022.int WL0023.int WL0024.int WL0025.int WL0026.int WL0027.int \
-	WL0028.int WL0029.int WL0030.int WL0031.int WL0032.int 
+SAMPLE_COBOL_INTS= $(SAMPLE_COBOL_WCBS:.wcb=.int)
+SAMPLE_COBOL_GNTS= $(SAMPLE_COBOL_WCBS:.wcb=.gnt)
+SAMPLE_COBOL_IDYS= $(SAMPLE_COBOL_WCBS:.wcb=.idy)
+
+all:	int prtargs $(TEST_DIRS) DISPRINT.int MFLINK.int
+
+int: 	$(SAMPLE_COBOL_INTS)
 	@echo
 	@echo 'All sample (int) are up-to-date'
 	@echo
@@ -64,9 +130,9 @@ int: 	SAMPLE.int QAFILEIO.int QAFILE2.int QANETCAP.int QAPRINT.int \
 SAMPLE.cob: SAMPLE.wcb
 	$(WISPTRAN) -V $(WISPLANG) $(WISPFLAGS) -O samopt.opt $*.wcb
 
-MFLINK.cob: $(WISPDIR)/mf/mflink.cob
+MFLINK.cob: $(WISPDIR)/mf/MFLINK.cob
 	rm -f $@
-	cp $(WISPDIR)/mf/mflink.cob $@
+	cp $(WISPDIR)/mf/MFLINK.cob .
 	chmod +w $@
 
 MFLINK.int: MFLINK.cob

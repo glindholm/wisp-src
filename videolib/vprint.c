@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*					Include required header files.								*/
 
@@ -28,12 +49,12 @@ static int vpr_true(void);
 
 /*					Subroutine entry point.									*/
 
-int vputc(char ch)									/* Put a single character.		*/
+int VL_vputc(char ch)									/* Put a single character.		*/
 {
-	return(vprint("%c",ch));							/* Return after printing.		*/
+	return(VL_vprint("%c",ch));							/* Return after printing.		*/
 }
 
-int vprint(char *format, ...)
+int VL_vprint(char *format, ...)
 {
 	va_list args;
 	
@@ -61,8 +82,8 @@ int vprint(char *format, ...)
 		**	may be deferred.
 		*/
 
-		vbuffering_start();							/* Turn on logical buffering.		*/
-		synch_required = TRUE;							/* Now output has been done.		*/
+		VL_vbuffering_start();							/* Turn on logical buffering.		*/
+		VL_synch_required = TRUE;							/* Now output has been done.		*/
 
 		/*
 		**	Start deferring motion  (Doesn't matter what voptlevel() we're at.)
@@ -129,7 +150,7 @@ int vprint(char *format, ...)
 		}
 		
 
-		vbuffering_end();
+		VL_vbuffering_end();
 	}
 
 	return SUCCESS;
@@ -157,7 +178,7 @@ static int vpr_put_map(char c, char* holdbuf)
 		vpr_inc_col(vcur_lin, &vcur_col);					/* Increment the column number.		*/
 	}
 
-	else if (!visible(c,vcur_atr) && !visible(*chr,*atr))				/* Visible now and before?		*/
+	else if (!VL_visible(c,vcur_atr) && !VL_visible(*chr,*atr))				/* Visible now and before?		*/
 	{
 		dumpbuf(holdbuf);
 
@@ -219,7 +240,7 @@ static int vpr_nl_map(void)
 	{
 		vcur_lin += 1;								/* Set to start of next line.		*/
 
-		if (!vb_pure) 
+		if (!VL_vb_pure) 
 		{
 			vcur_col = 0;							/* Is \n a line-feed or a new-line?	*/
 		}
@@ -237,15 +258,15 @@ static void vpr_scroll(int sl, int el)							/* Scroll the map.			*/
 	vcur_col = 0;
 	vdefer_restore();
 
-	if (vscroll_frwd_avail())
+	if (VL_vscroll_frwd_avail())
 	{
-		vmap(SCROLL_UP,sl,0,el,0);						/* Now scroll the map up		*/
+		VL_vmap(SCROLL_UP,sl,0,el,0);						/* Now scroll the map up		*/
 		vrawputc('\n');								/* Output new-line or line-feed.	*/
 	}
 	else
 	{
-		vmap(SCROLL_UP,sl,0,el,0);						/* Now scroll the map up		*/
-		vrefresh(HARD_REFRESH);
+		VL_vmap(SCROLL_UP,sl,0,el,0);						/* Now scroll the map up		*/
+		VL_vrefresh(HARD_REFRESH);
 	}
 
 	vpr_true();
@@ -261,7 +282,7 @@ static int tab_stop(int c)
 	if ((c == 40) || (c == 48) || (c == 56) || (c == 64)) return(TRUE);		/*  modulo 8.				*/
 	if ((c == 72) || (c == 80) || (c == 88) || (c == 96)) return(TRUE);
 	if ((c == 104) || (c == 112) || (c == 120) || (c == 128)) return(TRUE);
-	if (c >= (vscr_wid-1)) return(TRUE);						/* Assume a tab at edge of screen.	*/
+	if (c >= (VL_vscr_wid-1)) return(TRUE);						/* Assume a tab at edge of screen.	*/
 	return(FALSE);	
 }
 
@@ -279,8 +300,8 @@ static int vpr_inc_col(int row, int* pCol)
 
 static int vpr_true(void)
 {
-	tcur_lin = vcur_lin;								/* No, then remember that the current	*/
-	tcur_col = vcur_col;								/*   position is the true position.	*/
+	VL_tcur_lin = vcur_lin;								/* No, then remember that the current	*/
+	VL_tcur_col = vcur_col;								/*   position is the true position.	*/
 
 	return(SUCCESS);
 }
@@ -288,6 +309,27 @@ static int vpr_true(void)
 /*
 **	History:
 **	$Log: vprint.c,v $
+**	Revision 1.27  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.26  2002/07/17 21:06:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.25  2002/07/16 13:40:21  gsl
+**	VL_ globals
+**	
+**	Revision 1.24  2002/07/15 20:16:12  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.23  2002/07/15 17:52:55  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.22  2002/07/15 17:10:05  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.21  2002/07/12 20:40:44  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.20  1998/04/16 16:06:13  gsl
 **	Only do the vdefer_restore if op level doesn't defer motion.
 **	This is to fix problem Harte reported trk#403 where screens

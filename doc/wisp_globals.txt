@@ -1,0 +1,56 @@
+wisp_globals.txt
+================
+
+WISP COBOL API Routines
+-----------------------
+[x] wpause	-> PAUSE
+[x] wrename	-> RENAME
+
+[x] bit_off	-> BIT_OFF
+[x] bit_on	-> BIT_ON
+[x] bit_test	-> BIT_TEST
+getparmbuild 
+[x] getwfilext	-> WGETFILEXT
+[x] initwisp2	-> INITWISP2
+[x] lbit_off	-> LBIT_OFF
+[x] lbit_on	-> LBIT_ON
+[x] lbit_test	-> (removed - unused)
+[x] mwconv	-> MWCONV
+[x] setprogid	-> SETPROGID (obsolete)
+[x] setretcode	-> SETRETCODE
+[x] setwfilext	-> WSETFILEXT
+[x] setwispfilext->WSETFILEXT
+vwang 
+[x] w2rowcol	-> WGETCURPOS
+[x] wexith	-> WISPEXIT
+[x] wfclose	-> WFCLOSE
+[x] wfilechk	-> WFILECHK (obsolete)
+[x] wfilechk2   -> WFILECHK2
+[x] wfname	-> WFNAME
+[x] wfopen	-> WFOPEN (obsolete)
+[x] wfopen2	-> WFOPEN2 (obsolete)
+[x] wfopen3	-> WFOPEN3
+[x] wfswait	-> (removed, VMS soft locks only)
+[x] wfwait	-> WFWAIT
+[x] wmemcpy	-> WMEMCPY (obsolete)
+[x] wscreen	-> WSCREEN
+[x] wsetstat	-> WSETSTAT (obsolete)
+[x] wvaset	-> WVASET
+[x] xx2byte	-> W99TOX
+[x] ws80	-> WS80 (obsolete)
+[x] ws132	-> WS132 (obsolete)
+
+VIDEO COBOL API Routines
+------------------------
+vexit		-> (removed)
+
+EDE COBOL API Routines
+----------------------
+gcalc();
+gcalend();
+gclock();
+gen_ncpfkey();
+gnotepad();
+gpuzzle();
+nc_pop_menu();
+ws_bar_menu();

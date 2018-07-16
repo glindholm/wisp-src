@@ -1,15 +1,26 @@
-/* 
-	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
-	$Id:$
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+
 
 /*
 **	File:		wispfile.h
@@ -37,7 +48,7 @@
 #define	DSS_STR		"/"							/* Directory String Seperator (string)		*/
 #define PSS_CHAR	':'							/* Path String Seperator (char)			*/
 #endif
-#ifdef MSFS
+#ifdef WIN32
 #define DSS_CHAR	'\\'							/* Directory String Seperator (char)		*/
 #define	DSS_STR		"\\"							/* Directory String Seperator (string)		*/
 #define PSS_CHAR	';'							/* Path String Seperator (char)			*/
@@ -82,23 +93,26 @@ typedef struct cob_file_context_struct cob_file_context;
 EXT cob_file_context *main_cob_context;						/* The MAIN cobol file context			*/
 EXT cob_file_context *curr_cob_context;						/* The current file context			*/
 
+EXT char original_cwd[MAX_FNAME];	/* Original working directory */
+EXT char new_cwd[MAX_FNAME];		/* New working directory */
+
 EXT char in_fname[MAX_FNAME];							/* the name of the primary input file		*/
 EXT char out_fname[MAX_FNAME];							/* the name of the primary output file		*/
-EXT char key_fname[MAX_FNAME];							/* The file with key info.			*/
 EXT char xref_fname[MAX_FNAME];							/* The file to receive cross ref information.	*/
 EXT char xtab_fname[MAX_FNAME];							/* The file to receive cross ref tab file.	*/
 EXT char dtp_fname[MAX_FNAME];							/* The file to hold DECLARATIVES copied paras.	*/
 EXT char dcl_fname[MAX_FNAME];							/* The name of the file to hold copied paras.	*/
 EXT char par_fname[MAX_FNAME];							/* The name of the file that has the para list.	*/
-EXT char opt_fname[MAX_FNAME];							/* The name of the option file used.		*/
 EXT char work_fname[MAX_FNAME];							/* The name of the work file.			*/
 EXT char crt_fname[MAX_FNAME];							/* The name of the crt temp file		*/
 EXT char read_fname[MAX_FNAME];							/* The name of the read temp file		*/
 
 EXT char cpy_lib[18],cpy_file[18];						/* Current copy lib, file.			*/
 
-EXT char cli_ildir[MAX_PATH];							/* the Directory name for INLIB			*/
-EXT char cli_prefixpath[MAX_PATH];						/* -P prefixpath, used to find "lib/file"	*/
+EXT char opt_optfile_fname[MAX_FNAME];		/* The name of the option file used.		*/
+EXT char opt_keyfile_fname[MAX_FNAME];		/* The file with key info.			*/
+EXT char opt_cli_ildir[MAX_PATH];		/* the Directory name for INLIB			*/
+EXT char opt_cli_prefixpath[MAX_PATH];		/* -P prefixpath, used to find "lib/file"	*/
 
 EXT struct rcpy_struct
 {
@@ -126,6 +140,18 @@ cob_file_context *open_cob_context();
 /*
 **	History:
 **	$Log: wispfile.h,v $
+**	Revision 1.11  2003/03/03 22:08:40  gsl
+**	rework the options and OPTION file handling
+**	
+**	Revision 1.10  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.9  2002/07/25 17:03:41  gsl
+**	MSFS->WIN32
+**	
+**	Revision 1.8  2002/07/24 21:41:02  gsl
+**	Change directory to the location of the source file if a path is given.
+**	
 **	Revision 1.7  2001/09/13 14:00:37  gsl
 **	Add support for xtab -X file
 **	

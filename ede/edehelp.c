@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1997 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 /*
 **	File:		edehelp.c
@@ -42,9 +65,6 @@ static char rcsid[]="$Id:$";
 extern void EDEOLDOC();
 extern int EDECUSTM(char custtitle[64]);
 extern void EDECUSTX();
-
-
-extern unsigned char *vsss();
 	
 
 /*						Static and Global Data Definitions.						*/
@@ -140,7 +160,7 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 	int row_current, col_current;							/* Current screen locations.		*/
 	char temp[MAX_COLUMNS_PER_LINE];						/* Working storage.			*/
 	int mdsave, pfsave;								/* Menu state save words.		*/
-	int r, c, k;
+	int r, c, k = 0;
 	struct cursor_position 
 	{ 
 		short int sc; 
@@ -149,13 +169,13 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 	unsigned char *ssave;								/* Screen save.				*/
 	char	custtitle[64];
 
-	if (ishelpactive())								/* Are we already in help.		*/
+	if (WL_ishelpactive())								/* Are we already in help.		*/
 	{
-		ws_bad_char();								/* Ring the bells.			*/
+		vwang_bad_char();								/* Ring the bells.			*/
 		return(FAILURE);							/* Return to the caller.		*/
 	}
-	else sethelpactive(TRUE);							/* Now help is active.			*/
-	vdefer_restore();								/* Cannot be in deferred mode.		*/
+	else WL_sethelpactive(TRUE);							/* Now help is active.			*/
+	VL_vdefer_restore();								/* Cannot be in deferred mode.		*/
 
 	row_current = vcur_lin+1;							/* Remember where on Wang screen.	*/
 	col_current = vcur_col+1;
@@ -164,37 +184,37 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 	hl_txt = (help_text *) 0;
 	hl_buf = (help_buf *) 0;
 	memset(blankline,' ',HLP_LINE_SIZE);
-	op_save = voptimize(VOP_DEFER_MODE);						/* Make sure optimization is on.	*/
+	op_save = VL_voptimize(VOP_DEFER_MODE);						/* Make sure optimization is on.	*/
 
-	vmenuinit(&menu_bar, BAR_MENU, VMODE_REVERSE, 0, 3, 3);				/* Initialize the menu definition.	*/
-	vmenuitem(&menu_bar, "Help", HELP_CODE, DYNAMIC_LINK);				/* Add the help selection.		*/
-	vmenuitem(&menu_bar, "Environment", WANG_CODE, DYNAMIC_LINK);			/* Add the environment selection.	*/
+	VL_vmenuinit(&menu_bar, BAR_MENU, VMODE_REVERSE, 0, 3, 3);				/* Initialize the menu definition.	*/
+	VL_vmenuitem(&menu_bar, "Help", HELP_CODE, DYNAMIC_LINK);				/* Add the help selection.		*/
+	VL_vmenuitem(&menu_bar, "Environment", WANG_CODE, DYNAMIC_LINK);			/* Add the environment selection.	*/
 	if (EDECUSTM(custtitle))
 	{
 		/*
 		**	If the user has specified a custom memu item then add it here.
 		*/
-		vmenuitem(&menu_bar, custtitle, EDECUSTOM_CODE, NULL);
+		VL_vmenuitem(&menu_bar, custtitle, EDECUSTOM_CODE, NULL);
 	}
-	vmenuitem(&menu_bar, "Goodies", GOOD_CODE, &menu_good);				/* Add the goodies selection.		*/
-	vmenuinit(&menu_good, 0, VMODE_REVERSE, 0, 0, 0);				/* Add the exit menu.			*/
-	vmenuitem(&menu_good, "Clock", CLOCK_CODE, NULL);				/* Add the items.			*/
-	vmenuitem(&menu_good, "Calculator", CALC_CODE, NULL);
-	vmenuitem(&menu_good, "Calendar", CALEND_CODE, NULL);
-	vmenuitem(&menu_good, "Notepad", NOTE_CODE, NULL);
-	vmenuitem(&menu_good, "Puzzle", PUZZLE_CODE, NULL);
-	vmenuitem(&menu_bar, "Cut", CUT_CODE, NULL);
-	vmenuitem(&menu_bar, "Paste", PASTE_CODE, NULL);
-	vmenuitem(&menu_bar, "Exit", EXIT_CODE, &menu_exit);				/* Add the exit selection.		*/
-	vmenuinit(&menu_exit, 0, VMODE_REVERSE, 0, 0, 0);				/* Add the exit menu.			*/
-	vmenuitem(&menu_exit, "Return to program", EXIT_CODE, NULL);			/* Add the single item.			*/
+	VL_vmenuitem(&menu_bar, "Goodies", GOOD_CODE, &menu_good);				/* Add the goodies selection.		*/
+	VL_vmenuinit(&menu_good, 0, VMODE_REVERSE, 0, 0, 0);				/* Add the exit menu.			*/
+	VL_vmenuitem(&menu_good, "Clock", CLOCK_CODE, NULL);				/* Add the items.			*/
+	VL_vmenuitem(&menu_good, "Calculator", CALC_CODE, NULL);
+	VL_vmenuitem(&menu_good, "Calendar", CALEND_CODE, NULL);
+	VL_vmenuitem(&menu_good, "Notepad", NOTE_CODE, NULL);
+	VL_vmenuitem(&menu_good, "Puzzle", PUZZLE_CODE, NULL);
+	VL_vmenuitem(&menu_bar, "Cut", CUT_CODE, NULL);
+	VL_vmenuitem(&menu_bar, "Paste", PASTE_CODE, NULL);
+	VL_vmenuitem(&menu_bar, "Exit", EXIT_CODE, &menu_exit);				/* Add the exit selection.		*/
+	VL_vmenuinit(&menu_exit, 0, VMODE_REVERSE, 0, 0, 0);				/* Add the exit menu.			*/
+	VL_vmenuitem(&menu_exit, "Return to program", EXIT_CODE, NULL);			/* Add the single item.			*/
 
-	vmenustatus(&mdsave, &pfsave);							/* Get the menu status.			*/
-	vmenu_pfkeys(OFF);								/* Turn PF key processing off.		*/
-	vmenumode(STATIC_MENU);								/* This is a static menu.		*/
-	choice = vmenugo(&menu_bar);							/* Display the menu.			*/
-	vmenu_pfkeys(pfsave);								/* Restore the PF keys.			*/
-	vmenumode(mdsave);								/* Restore the menu mode.		*/
+	VL_vmenustatus(&mdsave, &pfsave);							/* Get the menu status.			*/
+	VL_vmenu_pfkeys(OFF);								/* Turn PF key processing off.		*/
+	VL_vmenumode(STATIC_MENU);								/* This is a static menu.		*/
+	choice = VL_vmenugo(&menu_bar);							/* Display the menu.			*/
+	VL_vmenu_pfkeys(pfsave);								/* Restore the PF keys.			*/
+	VL_vmenumode(mdsave);								/* Restore the menu mode.		*/
 
 	switch (choice)
 	{
@@ -206,7 +226,7 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 				c = col_current;
 				if (r > 14) r = row_current - 12;
 				if (col_current <= 1) c = 3;
-				while ((c + 70) > vscr_wid-1) c = c-1;
+				while ((c + 70) > VL_vscr_wid-1) c = c-1;
 
 				hl_txt = (help_text *)malloc(sizeof(help_text));
 				hl_txt->txt_end = 0;
@@ -214,7 +234,7 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 				curspos.sc = col_current;
                                 hl_rtn = 0;
 
-				ssave = vsss(0,0,MAX_LINES_PER_SCREEN,vscr_wid);
+				ssave = VL_vsss(0,0,MAX_LINES_PER_SCREEN,VL_vscr_wid);
 				EDEOLDOC(&curspos,odptr,hl_txt,&hl_cnt,&hl_rtn);
 				/*
 				**	A return code (hl_rtn) of
@@ -223,85 +243,85 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 				**		2	Don't draw a box, help takes full screen
 				**			(was drawn by EDEOLDOC ?)
 				*/
-				vrss(ssave);
+				VL_vrss(ssave);
 
-	                        if (hl_rtn != 2) vmenuinit(&olh, DISPLAY_ONLY_MENU, VMODE_REVERSE, r, c, 0);
+	                        if (hl_rtn != 2) VL_vmenuinit(&olh, DISPLAY_ONLY_MENU, VMODE_REVERSE, r, c, 0);
 				if (ol_doc && !hl_rtn)
 				{
 					if (	strncmp(hl_txt->hlp_line_0,blankline,HLP_LINE_SIZE) ||
 					    	strncmp(hl_txt->hlp_line_1,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_0, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_0, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_1,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_2,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_1, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_1, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_2,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_3,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_2, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_2, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_3,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_4,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_3, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_3, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_4,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_5,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_4, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_4, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_5,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_6,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_5, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_5, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_6,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_7,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_6, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_6, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_7,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_8,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_7, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_7, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_8,blankline,HLP_LINE_SIZE) ||
 						strncmp(hl_txt->hlp_line_9,blankline,HLP_LINE_SIZE) 	)
-						vmenuitem(&olh, hl_txt->hlp_line_8, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_8, 0, 0);
 
 					if (	strncmp(hl_txt->hlp_line_9,blankline,HLP_LINE_SIZE)	)
-						vmenuitem(&olh, hl_txt->hlp_line_9, 0, 0);
+						VL_vmenuitem(&olh, hl_txt->hlp_line_9, 0, 0);
 
 		                        if (hl_txt) free(hl_txt);
 				}
 				else if (hl_rtn != 2)
 				{
-					sprintf((char *) temp, "On-line quick help for program %s", wisp_progname);
-					vmenuitem(&olh, temp, 0, 0);
-					vmenuitem(&olh, "", 0, 0);
-					vmenuitem(&olh, "Sorry, help is not currently available for", 0, 0);
-					vmenuitem(&olh, "this field.  Please see your administrator", 0, 0);
-					vmenuitem(&olh, "to have it added.  Thank you.", 0, 0);
-					vmenuitem(&olh, "", 0, 0);
-					vmenuitem(&olh, "Use the arrow keys to move this window", 0, 0);
-					vmenuitem(&olh, "", 0, 0);
-					vmenuitem(&olh, "Depress any other key to continue...", 0, 0);
+					sprintf((char *) temp, "On-line quick help for program %s", wisp_get_progname());
+					VL_vmenuitem(&olh, temp, 0, 0);
+					VL_vmenuitem(&olh, "", 0, 0);
+					VL_vmenuitem(&olh, "Sorry, help is not currently available for", 0, 0);
+					VL_vmenuitem(&olh, "this field.  Please see your administrator", 0, 0);
+					VL_vmenuitem(&olh, "to have it added.  Thank you.", 0, 0);
+					VL_vmenuitem(&olh, "", 0, 0);
+					VL_vmenuitem(&olh, "Use the arrow keys to move this window", 0, 0);
+					VL_vmenuitem(&olh, "", 0, 0);
+					VL_vmenuitem(&olh, "Depress any other key to continue...", 0, 0);
 				}
 
-				vdl_lin = row_current - 1;				/* Set where we want the cursor.	*/
-				vdl_col = col_current - 1;
+				VL_vdl_lin = row_current - 1;				/* Set where we want the cursor.	*/
+				VL_vdl_col = col_current - 1;
 
-				if (hl_rtn != 2) k = vmenugo(&olh);
+				if (hl_rtn != 2) k = VL_vmenugo(&olh);
 
 				if ((ol_doc) && (k == help_key) && !hl_rtn)
 				{
 					curspos.sr = row_current;
 					curspos.sc = col_current;
-					wpushscr();
+					vwang_wpushscr();
 					EDEOLDOC(&curspos,odptr,hl_txt,&hl_cnt,&hl_rtn);
-					wpopscr();
+					vwang_wpopscr();
 				}
 			}
 
 			else
 			{
-				k = vml(row_current-1);
-				filehelp(k+1,ws_sof(row_current-1,col_current-1)+1);
+				k = VL_vml(row_current-1);
+				filehelp(k+1,vwang_ws_sof(row_current-1,col_current-1)+1);
 			}
 
 			break;
@@ -313,12 +333,12 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 		case NOTE_CODE:		{ gnotepad(); break; }
 		case PUZZLE_CODE:	{ gpuzzle(); break; }
 		case ZONE_CODE:		{ gzones(); break; }
-		case CUT_CODE:		{ ws_cut(row_current-1,col_current-1); break; }
-		case PASTE_CODE:	{ ws_paste(row_current-1,col_current-1,vr,vc,ar,nm,dp); break; }
+		case CUT_CODE:		{ vwang_ws_cut(row_current-1,col_current-1); break; }
+		case PASTE_CODE:	{ vwang_ws_paste(row_current-1,col_current-1,vr,vc,ar,nm,dp); break; }
 		case WANG_CODE:
 		{
-			sethelpactive(FALSE);						/* Turn off the active help.		*/
-			ws_help(curset);						/* Go to environment processing.	*/
+			WL_sethelpactive(FALSE);						/* Turn off the active help.		*/
+			vwang_help(curset);						/* Go to environment processing.	*/
 			break;
 		}
 		case EDECUSTOM_CODE:
@@ -327,15 +347,15 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 			**	Process the custom menu item by calling EDECUSTX() routine.
 			**	This acts like the EDEOLDOC so we need to push and pop the screen.
 			*/
-			wpushscr();
+			vwang_wpushscr();
 			EDECUSTX();
-			wpopscr();
+			vwang_wpopscr();
 		}
 	}
 
-	voptimize(op_save);								/* Put the optimization back as it was.	*/
-	sethelpactive(FALSE);								/* Now help is inactive.		*/
-	synch_required = FALSE;								/* A synch is not required.		*/
+	VL_voptimize(op_save);								/* Put the optimization back as it was.	*/
+	WL_sethelpactive(FALSE);								/* Now help is inactive.		*/
+	VL_synch_required = FALSE;								/* A synch is not required.		*/
 	return(SUCCESS); 								/* All done.				*/
 }
 
@@ -383,9 +403,7 @@ int ws_bar_menu(int curset, int vr, int vc, int dummy, int ar, unsigned char* nm
 **
 **
 */
-void A_WSLINK(ets_link_program_definition, on_line_doc_passing_values)
-unsigned char *ets_link_program_definition;
-unsigned char *on_line_doc_passing_values;
+void A_WSLINK(unsigned char *ets_link_program_definition, unsigned char *on_line_doc_passing_values)
 {
 	elptr = ets_link_program_definition;						/* Remember where the link params are.	*/
 	odptr = on_line_doc_passing_values;						/* Remember where the doc values are.	*/
@@ -397,11 +415,10 @@ unsigned char *on_line_doc_passing_values;
 	openhelpmap:	This routine opens the HELPMAP file.
 			The first time in it constructs the native path to HELPMAP.
 
-				VMS	WISP$CONFIG:HELPMAP.DAT
 				unix	$(WISPCONFIG)/HELPMAP
-				MSDOS	$(WISPCONFIG)\\HELPMAP.DAT
+				WIN32	$(WISPCONFIG)\\HELPMAP.DAT
 */
-#if defined(VMS) || defined(MSFS)
+#ifdef WIN32 
 #define HELPFILE	"HELPMAP.DAT"
 #endif
 #ifdef unix
@@ -418,7 +435,7 @@ char *type;
 	if (first)
 	{
 		first = 0;
-		build_wisp_config_path(HELPFILE,helpmapbuff);
+		WL_build_wisp_config_path(HELPFILE,helpmapbuff);
 		helpmap = helpmapbuff;
 	}
 	
@@ -437,7 +454,7 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 
 	if ((hf = openhelpmap("r")) == NULL) 						/* Open the help file.			*/
 	{
-		vre_window("Help-F-File %s not found or access denied.",HELPFILE);
+		VL_vre_window("Help-F-File %s not found or access denied.",HELPFILE);
 		return(FAILURE);							/* Game over...				*/
 	}
 
@@ -454,7 +471,7 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 			sscanf(&temp[k+1],"%d %d %d",&sr, &sc, &ec);			/* Decode the screen position.		*/
 			ec = (sc + ec) - 1;						/* Set to end col rather than LENGTH.	*/
 										/***** ADD VALIDITY CHECKING HERE *****/
-			for (i = 0; i <= ec-sc; i++) sub_progname[i] = wscharat(sr-1,sc-1+i);	/* Get the sub prog name.	*/
+			for (i = 0; i <= ec-sc; i++) sub_progname[i] = vwang_charat(sr-1,sc-1+i);	/* Get the sub prog name.	*/
 			sub_progname[i] = CHAR_NULL;					/* Null terminate.			*/
 			trim(sub_progname);
 		}
@@ -466,17 +483,17 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 			sscanf(&temp[k+1],"%d %d %d",&sr, &sc, &ec);			/* Decode the screen position.		*/
 			ec = (sc + ec) - 1;						/* Set to end col rather than LENGTH.	*/
 										/***** ADD VALIDITY CHECKING HERE *****/
-			for (i = 0; i <= ec-sc; i++) sub_screen[i] = wscharat(sr-1,sc-1+i);	/* Get the sub prog name.	*/
+			for (i = 0; i <= ec-sc; i++) sub_screen[i] = vwang_charat(sr-1,sc-1+i);	/* Get the sub prog name.	*/
 			sub_screen[i] = CHAR_NULL;					/* Null terminate.			*/
 			trim(sub_screen);
 		}
 	}
 	fclose(hf);									/* Close for later.			*/
 
-	if (wisp_progname[0] != CHAR_NULL) strcpy(sub_progname,wisp_progname);		/* Copy in the program name.		*/
-	if (wisp_screen[0] != CHAR_NULL) strcpy(sub_screen,wisp_screen);		/* Copy in the screen name.		*/
+	if (*(wisp_get_progname())) strcpy(sub_progname, wisp_get_progname());		/* Copy in the program name.		*/
+	if (*(wisp_get_screenname())) strcpy(sub_screen, wisp_get_screenname());	/* Copy in the screen name.		*/
 
-	if (ws_mod(r-1,c-1))								/* Is cursor in a mod field?		*/
+	if (vwang_ws_mod(r-1,c-1))							/* Is cursor in a mod field?		*/
 	{
 		sprintf( (char *) temp, "%s_%s_%d_%d", sub_progname, sub_screen, r, c);
 		if (disphelp(temp)) return(SUCCESS);
@@ -490,7 +507,7 @@ static int filehelp(r,c) int r,c;							/* Give help using the help files.	*/
 	sprintf( (char *) temp, "%s", sub_progname);
 	if (disphelp(temp)) return(SUCCESS);
 	if (disphelp("GENERAL_HELP")) return(SUCCESS);
-	vre_window("No more help available. ID: %s_%s_%d_%d", sub_progname, sub_screen, r, c);
+	VL_vre_window("No more help available. ID: %s_%s_%d_%d", sub_progname, sub_screen, r, c);
 	return(SUCCESS);
 }
 
@@ -498,7 +515,7 @@ static int disphelp(help_descriptor) char *help_descriptor;				/* Display the he
 {
 	FILE *hf, *hm;								/* Open a file.				*/
 	struct video_menu help_window;							/* Help window structure.		*/
-	register int i, j, k;								/* Working registers.			*/
+	register int i, j, k = 0;								/* Working registers.			*/
 	char temp[256];
 	int found;									/* Entry found flag.			*/
 
@@ -524,22 +541,22 @@ static int disphelp(help_descriptor) char *help_descriptor;				/* Display the he
 	if ((hf = fopen(&temp[k],"r")) == NULL)						/* Can we open the actual help file?	*/
 	{
 		k--;									/* Set pointer to beginning of temp.	*/
-		vre_window("Help-F-File %s not found or not accessable (privs).",&temp[k]);
+		VL_vre_window("Help-F-File %s not found or not accessable (privs).",&temp[k]);
 		return(FAILURE);
 	}
 
-	vmenuinit(&help_window, DISPLAY_ONLY_MENU, VMODE_REVERSE, 0, 0, 0);		/* Init the help window.		*/
+	VL_vmenuinit(&help_window, DISPLAY_ONLY_MENU, VMODE_REVERSE, 0, 0, 0);		/* Init the help window.		*/
 
 	i = 0;										/* Now read the file.			*/
 	while ((fgets(temp,132,hf) != NULL) && (i < 14))				/* Read the file.			*/
 	{
 		trim(temp);								/* Trim the string.			*/
-		vmenuitem(&help_window, temp, 0, NULL);					/* Put it in the menu.			*/
+		VL_vmenuitem(&help_window, temp, 0, NULL);					/* Put it in the menu.			*/
 	}
 	fclose(hf);									/* Close the file.			*/
-	vmenuitem(&help_window,"",0,NULL);						/* Final indicator.			*/
-	vmenuitem(&help_window,"Depress HELP for more info, any other key to continue...",0,NULL);
-	i = vmenugo(&help_window);							/* Display the help.			*/
+	VL_vmenuitem(&help_window,"",0,NULL);						/* Final indicator.			*/
+	VL_vmenuitem(&help_window,"Depress HELP for more info, any other key to continue...",0,NULL);
+	i = VL_vmenugo(&help_window);							/* Display the help.			*/
 	if (i == help_key) return(FAILURE);						/* More help is requested.		*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
@@ -564,6 +581,45 @@ static int trim(temp) char *temp;							/* Trim a string.			*/
 /*
 **	History:
 **	$Log: edehelp.c,v $
+**	Revision 1.26  2003/06/27 15:54:03  gsl
+**	fix EDE API
+**	
+**	Revision 1.25  2003/06/23 15:28:04  gsl
+**	VL_ global symbols
+**	
+**	Revision 1.24  2003/02/05 21:47:53  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.23  2003/02/04 18:57:01  gsl
+**	fix copyright header
+**	
+**	Revision 1.22  2002/07/16 13:40:24  gsl
+**	VL_ globals
+**	
+**	Revision 1.21  2002/07/15 20:16:04  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.20  2002/07/15 17:09:58  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.19  2002/07/15 14:07:03  gsl
+**	vwang globals
+**	
+**	Revision 1.18  2002/07/12 20:40:37  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.17  2002/07/11 20:29:20  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.16  2002/07/10 21:06:33  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.15  2002/07/09 04:14:07  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.14  2002/06/26 01:42:48  gsl
+**	Remove VMS code
+**	
 **	Revision 1.13  1997/07/08 20:10:58  gsl
 **	Change to use new video.h defines
 **	
@@ -572,7 +628,7 @@ static int trim(temp) char *temp;							/* Trim a string.			*/
 **
 **	Revision 1.11  1996-09-13 10:52:58-07  gsl
 **	mod for NT
-**	Changed to use build_wisp_config_path() to create helpmap path
+**	Changed to use WL_build_wisp_config_path() to create helpmap path
 **
 **
 **

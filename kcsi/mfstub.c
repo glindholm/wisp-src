@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*---
 mfstub.c
 
@@ -36,7 +50,7 @@ int ISDBFILE(char *select_name, int4 l1, char *answer, int4 l2)
 }
 
 /*
-**      Routine:        x4dbfile()
+**      Routine:        X4DBFILE()
 **
 **      Function:       Stub for routine used by ACUCOBOL port.
 **
@@ -51,11 +65,8 @@ int ISDBFILE(char *select_name, int4 l1, char *answer, int4 l2)
 **      Warnings:       None
 **
 **
-**      History:
-**      07/11/97        Written by SMC
-**
 */
-int x4dbfile(char *select_name, int4 l1, int4 *select_status, int4 l2)
+int X4DBFILE(char *select_name, int4 l1, int4 *select_status, int4 l2)
 {
 	extern void WL_setdbfile(int4 *mode, int flag);
 	
@@ -63,12 +74,23 @@ int x4dbfile(char *select_name, int4 l1, int4 *select_status, int4 l2)
 
         return 0;
 }
+int X4DBFILE2(char *select_name, int4 l1, char *file_attributes, int4 l2)
+{
+	extern void WL_setdbfile_attr(char *file_attributes, int flag);
+	
+        WL_setdbfile_attr(file_attributes,0);
+
+        return 0;
+}
 
 /*
 **	History:
 **	$Log: mfstub.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:31  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.7  2003/03/06 21:33:50  gsl
+**	Add X4DBFILE2() for use with file ATTR
+**	
+**	Revision 1.6  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.5  2002/07/25 14:06:27  gsl
 **	x4dbfile -> X4DBFILE

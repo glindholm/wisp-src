@@ -749,8 +749,8 @@ opcode machine::execute() {
 //
 //	History:
 //	$Log: execute.cpp,v $
-//	Revision 1.11.2.1  2003/02/11 18:52:00  gsl
-//	Removed unneeded #ifdef code for AIX and DEBUG
+//	Revision 1.12  2003/02/11 19:05:26  gsl
+//	Remove unneeded #ifdef's for DEBUG
 //	
 //	Revision 1.11  1998/09/08 18:08:30  gsl
 //	For call_exp_op had to save the current offset then calculate the

@@ -1,5 +1,19 @@
-/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
-/* $Id:$ */
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 #ifndef _GP_H
 #define	_GP_H
 #include "intdef.h"
@@ -44,7 +58,7 @@ PFKEY masks for building valid PFKEYS
 /*----
 A series of MACROs to shorten GETPARM definition
 ------*/
-#define	GP GP_arg.ptr[GP_cnt++] = (char*)
+#define	GP GP_arg[GP_cnt++] = (char*)
 
 #define	GPNUM(num)			GP &GP_INT[num]
 #define	GPLEN(len)			GPNUM(len)
@@ -96,8 +110,6 @@ A series of MACROs to shorten GETPARM definition
 #define	GP_ROW_01			9
 
 
-typedef struct _gparg {char *ptr[500];}GPARG;
-
 /*----
 The functions
 ------*/
@@ -114,7 +126,7 @@ int4	GP_display_and_read();
 #endif
 
 EXTERN_DEF	int4	GP_INT[255];
-EXTERN_DEF	GPARG	GP_arg;
+EXTERN_DEF	char*	GP_arg[500];
 EXTERN_DEF	int4	GP_cnt;
 EXTERN_DEF	int4	GP_pfkeys;
 EXTERN_DEF	int4	GP_pfkey;
@@ -125,8 +137,11 @@ EXTERN_DEF	char	GP_pfrcvr[1];
 /*
 **	History:
 **	$Log: gp.h,v $
-**	Revision 1.6.2.1  2002/11/12 15:56:25  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.9  2003/02/19 22:16:13  gsl
+**	Add GETPARM2() the 2 arg interface to GETPARM()
+**	
+**	Revision 1.8  2003/02/05 15:50:11  gsl
+**	Fix copyright headers
 **	
 **	Revision 1.7  2002/10/24 14:20:39  gsl
 **	Make globals unique

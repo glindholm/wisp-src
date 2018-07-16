@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			 Copyright (c) 1988 - 1991			*/
@@ -37,10 +58,15 @@ static char rcsid[]="$Id:$";
 #define DISPLAY_LINE 2
 
 static char vre_logfile[128] = "videoerr.log"; 	/* Log ver() errors to this file. */
+
+static int rvis_space = VMODE_REVERSE|VMODE_UNDERSCORE|VMODE_BLINK|VMODE_BOLD;		/* Visible on reverse screen in these cases.	*/
+static int vis_space = VMODE_REVERSE|VMODE_UNDERSCORE|VMODE_BLINK;			/* Visible on normal screen in these cases.	*/
+
+
 /*
  *	Set the log file
  */
-void vre_set_logfile(const char* filepath)
+void VL_vre_set_logfile(const char* filepath)
 {
 	if (NULL == filepath)
 	{
@@ -55,7 +81,7 @@ void vre_set_logfile(const char* filepath)
 /*
  *	Write to the log file
  */
-void vre_write_logfile(const char* buff)						/* Write out a buffer to the error log.	*/
+void VL_vre_write_logfile(const char* buff)						/* Write out a buffer to the error log.	*/
 {
 	int created_log = 0;
 	FILE *efile;									/* Pointer to error log file.		*/
@@ -96,10 +122,9 @@ void vre_write_logfile(const char* buff)						/* Write out a buffer to the error
 
 
 /*					Report internal errors if verbose.							*/
-int vre(char *text, ...)
+int VL_vre(char *text, ...)
 {
 	static int already_in_vre = 0;
-	extern int verbose;								/* Verbosity control.			*/
 	char string[PRINT_BUFFER_SIZE];
 	va_list args;
 	
@@ -117,11 +142,11 @@ int vre(char *text, ...)
 
 	already_in_vre = 1;
 
-	if (verbose)									/* Don't report unless verbose.		*/
+	if (VL_verbose)									/* Don't report unless verbose.		*/
 	{
 		vsprintf(string, text,args);						/* Format the message.			*/
 
-		vre_write_logfile(string);						/* Log the message			*/
+		VL_vre_write_logfile(string);						/* Log the message			*/
 		
 		vrawerror(string);							/* Display message			*/
 	}
@@ -130,9 +155,8 @@ int vre(char *text, ...)
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-int vre_window(char *text, ...)
+int VL_vre_window(char *text, ...)
 {
-	extern int verbose;								/* Verbosity flag.			*/
 	char string[PRINT_BUFFER_SIZE];
 	register int i;
 	int linesize;									/* Chars of text per line.		*/
@@ -144,7 +168,7 @@ int vre_window(char *text, ...)
 
 	va_start(args,text);
 
-	if (!verbose) return(FAILURE);							/* Return to the caller.		*/
+	if (!VL_verbose) return(FAILURE);							/* Return to the caller.		*/
 	vsprintf(string, text,args);							/* Display the text.			*/
 
 	row = 4;									/* Determine where to put the window.	*/
@@ -154,13 +178,13 @@ int vre_window(char *text, ...)
 	rows = ((strlen(string)+linesize-1) / linesize) + 3;				/* Number of rows (including border)	*/
 	cols = linesize + 2;								/* Number of cols (including border)	*/
 
-	if (!state_active) { vstate(0); verase(FULL_SCREEN); }				/* Initialize if not already done.	*/
+	if (!VL_state_active) { vstate(0); verase(FULL_SCREEN); }				/* Initialize if not already done.	*/
 
-	vbuffering(VBUFF_START);					       		/* Start buffering.			*/
+	VL_vbuffering_start();					       		/* Start buffering.			*/
 	save = vsss(row, col, rows, cols);						/* Save the window area.		*/
 	vbell();									/* Let the bells ring.			*/
 
-	vmode(VMODE_BOLD|VMODE_REVERSE);						/* Select the background.		*/
+	VL_vmode(VMODE_BOLD|VMODE_REVERSE);						/* Select the background.		*/
 	vcharset(VCS_DEFAULT);								/* Default character set.		*/
 	eot = FALSE;									/* Not at end of text yet.		*/
 	currrow = 0;
@@ -186,14 +210,14 @@ int vre_window(char *text, ...)
 	vgetm();									/* Wait for a key.			*/
 
 	vrss(save);									/* Restore the memory area.		*/
-	vbuffering(VBUFF_END);
+	VL_vbuffering_end();
 
 	return(SUCCESS);
 }
 
 
 /*					Calculate the array position in screen map.						*/
-int vml(int y)										/* Calculate the virtual map line no.	*/
+int VL_vml(int y)										/* Calculate the virtual map line no.	*/
 {
 	extern int vmap_top;								/* Reference to current map top.	*/
 	register int i;									/* Working register.			*/
@@ -204,7 +228,7 @@ int vml(int y)										/* Calculate the virtual map line no.	*/
 }
 /*					Calculate the array position in screen map.						*/
 /* This is the same as vml() except you must supply the top arg.								*/
-int vmlx(int top, int y)								/* Calculate the virtual map line no.	*/
+int VL_vmlx(int top, int y)								/* Calculate the virtual map line no.	*/
 {
 	register int i;									/* Working register.			*/
 
@@ -216,7 +240,7 @@ int vmlx(int top, int y)								/* Calculate the virtual map line no.	*/
 
 /*					Adjust for false movement to home position.						*/
 
-int vha(void)										/* Move to vcur_lin and vcur_col.	*/
+int VL_vha(void)									/* Move to vcur_lin and vcur_col.	*/
 {
 	extern int vcur_lin, vcur_col;							/* Current postion.			*/
 	register int i, j;								/* Working registers.			*/
@@ -231,9 +255,8 @@ int vha(void)										/* Move to vcur_lin and vcur_col.	*/
 
 /*					Subroutine to determine if data is visible.						*/
 
-int visible(char c, int a)								/* Check char c with attributes a.	*/
+int VL_visible(char c, int a)								/* Check char c with attributes a.	*/
 {
-	extern int vis_space, rvis_space;						/* Reference visible blank renditions.	*/
 	if (c != ' ') return(TRUE);							/* As space?				*/
 	if ((vscr_atr & VSCREEN_LIGHT) && (a & (rvis_space))) return(TRUE);		/* Is space visible?			*/
 	if ((vscr_atr & VSCREEN_DARK ) && (a & ( vis_space))) return(TRUE);
@@ -242,12 +265,12 @@ int visible(char c, int a)								/* Check char c with attributes a.	*/
 
 /*					SubroutineS to adjust global change tracking flags.					*/
 
-int vmaskc(int cset)									/* Mask all but character set bits.	*/
+int VL_vmaskc(int cset)									/* Mask all but character set bits.	*/
 {
 	return(cset & (VCS_GRAPHICS|VCS_ROM_STANDARD|VCS_ROM_GRAPHICS|VCS_DOWN_LOADED));/* Return the value.			*/
 }
 
-int vmaskm(int mode)									/* Mask all but rendition bits.		*/
+int VL_vmaskm(int mode)									/* Mask all but rendition bits.		*/
 {
 	return(mode & (VMODE_BOLD|VMODE_UNDERSCORE|VMODE_BLINK|VMODE_REVERSE));		/* Return the value.			*/
 }
@@ -261,7 +284,7 @@ unsigned char *vsss(int row, int col, int rows, int cols)				/* Save a screen se
 	unsigned char *save, *s;							/* Memory allocation pointers.		*/
 	int savesize;
 
-	vbuffering(VBUFF_START);							/* This is all one section.		*/
+	VL_vbuffering_start();							/* This is all one section.		*/
 	vdefer_restore();								/* Restore from any deferred states.	*/
 
 	savesize = 9 + (rows*cols*2);
@@ -302,19 +325,19 @@ unsigned char *vsss(int row, int col, int rows, int cols)				/* Save a screen se
 		}
 	}
 
-	vbuffering(VBUFF_END);								/* End of the logical section.		*/
+	VL_vbuffering_end();								/* End of the logical section.		*/
 	return(save);									/* Return the pointer.			*/
 }
 
 /*						Restore screen section.								*/
 
-int vrss(unsigned char *loc)								/* Restore a screen segment.		*/
+int VL_vrss(unsigned char *loc)								/* Restore a screen segment.		*/
 {
 	register int i, j, m;								/* Working registers.			*/
 	unsigned char *s;								/* Memory allocation pointers.		*/
 	int row,col,rows,cols;								/* Position information.		*/
 
-	vbuffering(VBUFF_START);							/* This is all one section.		*/
+	VL_vbuffering_start();							/* This is all one section.		*/
 	vdefer_restore();								/* Restore from any deferred states.	*/
 
 	s = loc;									/* Initialize working pointer.		*/
@@ -329,8 +352,8 @@ int vrss(unsigned char *loc)								/* Restore a screen segment.		*/
 		vmove(i,col);								/* Move to the start location.		*/
 		for (j = col; j < col+cols; j++)					/* Loop through the columns.		*/
 		{
-			if ((m = vmaskm(*s)) != vcur_atr) vmode(m);			/* Select the mode.			*/
-			if ((m = vmaskc(*s++)) != vchr_set) vcharset(m);		/* Select the character set.		*/
+			if ((m = VL_vmaskm(*s)) != vcur_atr) VL_vmode(m);			/* Select the mode.			*/
+			if ((m = VL_vmaskc(*s++)) != vchr_set) vcharset(m);		/* Select the character set.		*/
 			vputc(*s++);							/* Output the character.		*/
 		}
 	}
@@ -339,7 +362,7 @@ int vrss(unsigned char *loc)								/* Restore a screen segment.		*/
 	j = (int) *s++;
 	vmove(i,j);									/* Restore it.				*/
 	i = (int) *s++;
-	vmode(i);									/* Restore the rendition and char set.	*/
+	VL_vmode(i);									/* Restore the rendition and char set.	*/
 	i = (int) *s++;
 	vcharset(i);
 	i = (int) *s++;									/* Make the cursor visible again.	*/
@@ -350,13 +373,13 @@ int vrss(unsigned char *loc)								/* Restore a screen segment.		*/
 
 	free(loc);									/* Free the memory.			*/
 	loc = NULL;									/* Now set the pointer to a null.	*/
-	vbuffering(VBUFF_END);								/* End of the logical section.		*/
+	VL_vbuffering_end();								/* End of the logical section.		*/
 	return(SUCCESS);								/* Return the pointer.			*/
 }
 
 /*			Invalidate a section of the map (assume caller knows what he is doing!)					*/
 
-void varb(int row, int col, int rows, int cols)						/* Invalidate map section.		*/
+void VL_varb(int row, int col, int rows, int cols)						/* Invalidate map section.		*/
 {
 	register int i, j, k;								/* Working registers.			*/
 
@@ -367,7 +390,7 @@ void varb(int row, int col, int rows, int cols)						/* Invalidate map section.	
 	}
 }
 
-void vtitle(const char *titlestr)
+void VL_vtitle(const char *titlestr)
 {
 	vrawtitle(titlestr);
 }
@@ -376,6 +399,18 @@ void vtitle(const char *titlestr)
 /*
 **	History:
 **	$Log: vutil.c,v $
+**	Revision 1.19  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.18  2002/07/17 21:06:05  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2002/07/15 20:16:16  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.16  2002/07/15 17:10:07  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.15  2001/10/12 20:06:53  gsl
 **	Add logging of vre() messages
 **	

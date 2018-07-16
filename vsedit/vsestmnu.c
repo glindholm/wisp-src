@@ -1,13 +1,28 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include <stdio.h>
 #include <string.h>
@@ -19,12 +34,12 @@ static char rcsid[]="$Id:$";
 
 #include "vwang.h"
 
-static char std_scr[1924];
+static unsigned char std_scr[1924];
 static char std_pfs[]="01020304050607080910111213141516X";
-static char std_func[]={03};
-static char std_lines[]={24};
+static unsigned char std_func[]={03};
+static unsigned char std_lines[]={24};
 static char std_pfcode[3];
-static char std_status[3];
+static unsigned char std_status[3];
 
 static VSESCR_FLDS(std_flds) = {
 {LEN(0)	ROW(1)	COL(2)	VALUE(VSE_COPYRIGHT)},
@@ -111,7 +126,7 @@ static void init_standard_menu(void)
 void vse_top_messages(void)
 {
 	sprintf(vse_lines_message,
-		"There are %6ld lines in the edited text.   %s",vse_lines,
+		"There are %6ld lines in the edited text.   %s",(long)vse_lines,
 		vse_file_changed?"(The file has been modified.)":"");
 	if(vse_new_file)
 	{
@@ -165,6 +180,15 @@ static void vse_standard_dispatch(void)
 /*
 **	History:
 **	$Log: vsestmnu.c,v $
+**	Revision 1.13  2003/02/05 21:47:54  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.12  2003/02/04 18:57:00  gsl
+**	fix copyright header
+**	
+**	Revision 1.11  2002/08/01 15:31:11  gsl
+**	type warnings
+**	
 **	Revision 1.10  1996/09/03 22:24:12  gsl
 **	drcs update
 **	

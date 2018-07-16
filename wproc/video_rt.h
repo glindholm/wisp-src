@@ -27,41 +27,41 @@ extern "C" {
 #include "vdata.h"
 
 
-char vcheck();
+char VL_vcheck();
 
-int verase(int control);
+int VL_verase(int control);
 
-void vexit();
+void VL_vexit();
 
 void vrawtimeout(int time);
 int  vrawtimeout_check();
 void vrawtimeout_clear();
 
-char vgetc();
+char VL_vgetc();
 
-int vgetm();
+int VL_vgetm();
 
-int vline(int type, int length);
+int VL_vline(int type, int length);
 
-int vmode(int control);
+int VL_vmode(int control);
 
-int vmove(int line, int column);
+int VL_vmove(int line, int column);
 
-int vonexit(int option);
+int VL_vonexit(int option);
 
-int vprint(char *text, ...);
+int VL_vprint(char *text, ...);
 
-int vrefresh(int what);
+int VL_vrefresh(int what);
 
-int vrss(unsigned char *region);
+int VL_vrss(unsigned char *region);
 
-int vset(int item, int state);
+int VL_vset(int item, int state);
 
-unsigned char *vsss(int row, int col, int rows, int cols);
+unsigned char *VL_vsss(int row, int col, int rows, int cols);
 
-int vstate(int action);
+int VL_vstate(int action);
 
-int vtext(int display, int row, int column, char *text, ...);
+int VL_vtext(int display, int row, int column, char *text, ...);
 
 #ifdef __cplusplus
 }
@@ -74,6 +74,15 @@ int vtext(int display, int row, int column, char *text, ...);
 /*
 **	History:
 **	$Log: video_rt.h,v $
+**	Revision 1.12  2002/07/16 14:11:49  gsl
+**	VL_ globals
+**	
+**	Revision 1.11  2002/07/15 20:16:04  gsl
+**	Videolib VL_ gobals
+**	
+**	Revision 1.10  2002/07/15 17:52:53  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.9  1998/08/31 19:50:40  gsl
 **	drcs update
 **	

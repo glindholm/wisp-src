@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_locks.c
 **
@@ -29,10 +50,10 @@ static char rcsid[]="$Id:$";
 **	WISP defaults to using automatic for ACUCOBOL and MF (VMS only uses MANUAL).
 **	On the Wang a locked record is only released on a DELETE, REWRITE, CLOSE, 
 **	FREE ALL, or another READ WITH HOLD.
-**	If -M (manual_locking) is specified then we need to do an explicit UNLOCK
+**	If -M (opt_manual_locking) is specified then we need to do an explicit UNLOCK
 **	after a DELETE or a REWRITE in order to properly emulate the Wang.
 **	The READ WITH HOLD alway does an UNLOCK and CLOSE and FREE ALL also unlock.
-**	For manual_locking we us the WITH LOCK ON MULTIPLE RECORDS clause 
+**	For opt_manual_locking we us the WITH LOCK ON MULTIPLE RECORDS clause 
 **	even though only one record is ever held, this is done to prevent the
 **	READ and WRITE from automaticaly unlocking the record.
 */
@@ -43,7 +64,7 @@ int gen_unlocks(void)									/* Generate UNLOCK logic for reads.	*/
 {
 	int i;
 
-	if (!do_locking)
+	if (!opt_gen_dms_locking)
 	{
 		/* ACUCOBOL does an UNLOCK ALL instead of a PERFORM WISP-FREE-ALL so doesn't need the paragraph */
 		if (!acu_cobol)	
@@ -64,7 +85,7 @@ int gen_unlocks(void)									/* Generate UNLOCK logic for reads.	*/
 	
 	if (acu_cobol)
 	{
-		if (x4dbfile)
+		if (opt_x4dbfile)
 		{
 			tput_line		("           COMMIT."); 		/* Unlock all locks.			*/
 		}
@@ -109,18 +130,8 @@ int gen_unlocks(void)									/* Generate UNLOCK logic for reads.	*/
 				continue;
 			tput_blank();
 			tput_line		("       WISP-RECORD-UNLOCK-%d.\n",i+1);
-			if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-			{
-				/*
-				**	Don't neet to UNLOCK if AUTOLOCK is used and on same file.
-				*/
-				tput_line	("           IF WISP-LOCK-ID = WISP-NEW-LOCK-ID THEN");
-				tput_line	("               GO TO WISP-RECORD-LOCK-CLEANUP.\n");
-			}
 			tput_line		("           MOVE %s TO WISP-SAVE-FILE-STATUS.\n",prog_fstats[i]);
-			if (vax_cobol)	
-				tput_line	("           UNLOCK %s ALL.\n",prog_files[i]);
-			else	tput_line	("           UNLOCK %s.\n",prog_files[i]);
+			tput_line		("           UNLOCK %s.\n",prog_files[i]);
 			tput_line		("           MOVE WISP-SAVE-FILE-STATUS TO %s.\n",prog_fstats[i]);
 			tput_line		("           GO TO WISP-RECORD-LOCK-CLEANUP.\n");
 		}
@@ -144,9 +155,7 @@ static int gen_nolocking_free_all(void)
 			continue;
 		}
 		tput_line		("           MOVE %s TO WISP-SAVE-FILE-STATUS.\n",prog_fstats[i]);
-		if (vax_cobol)	
-			tput_line	("           UNLOCK %s ALL.\n",prog_files[i]);
-		else	tput_line	("           UNLOCK %s.\n",prog_files[i]);
+		tput_line		("           UNLOCK %s.\n",prog_files[i]);
 		tput_line		("           MOVE WISP-SAVE-FILE-STATUS TO %s.\n",prog_fstats[i]);
 		tput_blank();
 	}
@@ -155,7 +164,7 @@ static int gen_nolocking_free_all(void)
 
 void set_lock_holder_id(int fnum, int col)
 {
-	if (!do_locking) return;
+	if (!opt_gen_dms_locking) return;
 
 	if ( fnum >= 0 )
 	{
@@ -185,7 +194,7 @@ void set_lock_holder_id(int fnum, int col)
 */
 void if_file_clear_lock_holder_id(int fnum, int col)
 {
-	if (!do_locking) return;
+	if (!opt_gen_dms_locking) return;
 
 	if (fnum < 0) return;
 
@@ -205,9 +214,10 @@ void if_file_clear_lock_holder_id(int fnum, int col)
 */
 void clear_lock_holder_id(int col)
 {
-	if (!do_locking) return;
+	if (!opt_gen_dms_locking) return;
 
 	tput_line_at(col, "MOVE SPACES TO WISP-LOCK-ID");
+	tput_flush();
 }
 
 /*
@@ -217,7 +227,7 @@ void clear_lock_holder_id(int col)
 */
 void unlock_record(int col)
 {
-	if (!do_locking) return;
+	if (!opt_gen_dms_locking) return;
 
 	tput_line_at(col,"PERFORM WISP-FREE-ALL");
 	lock_clear_para = 1;
@@ -226,10 +236,22 @@ void unlock_record(int col)
 /*
 **	History:
 **	$Log: wt_locks.c,v $
-**	Revision 1.15  1998/12/03 20:32:41  gsl
+**	Revision 1.19  2003/02/28 21:49:05  gsl
+**	Cleanup and rename all the options flags opt_xxx
+**	
+**	Revision 1.18  2003/02/04 17:33:19  gsl
+**	fix copyright header
+**	
+**	Revision 1.17  2002/06/20 23:04:47  gsl
+**	remove obsolete code
+**	
+**	Revision 1.16  2002/05/16 21:52:03  gsl
+**	add flush
+**	
+**	Revision 1.15  1998-12-03 15:32:41-05  gsl
 **	Change the WISP-LOCK-START logic to use COMMIT instead of UNLOCK ALL if
 **	translating for ACU4GL.
-**	
+**
 **	Revision 1.14  1998-06-09 13:13:31-04  gsl
 **	Rewrote most of this.
 **	Fixed headers

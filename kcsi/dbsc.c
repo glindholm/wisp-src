@@ -1,5 +1,19 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*----
 This includes the entry point for the DATENTRY entry screens.
 ------*/
@@ -12,7 +26,6 @@ This includes the entry point for the DATENTRY entry screens.
 #include "dbsc.h"
 
 
-static char sccsid[]="@(#)dbsc.c	1.5 1/27/93";
 
 /*----
 Mods:
@@ -693,8 +706,8 @@ static int is_within(FIELD *outer,FIELD *inner)
 /*
 **	History:
 **	$Log: dbsc.c,v $
-**	Revision 1.6.2.1  2002/11/12 15:56:22  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.13  2003/02/04 19:19:09  gsl
+**	fix header
 **	
 **	Revision 1.12  2002/10/24 14:20:40  gsl
 **	Make globals unique

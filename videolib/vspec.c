@@ -8,7 +8,7 @@
 /*			Include standard header files.										*/
 
 #include <stdio.h>										/* Reference standard I/O.	*/
-#include <v/video.h>										/* Reference video defs.	*/
+#include "video.h"										/* Reference video defs.	*/
 
 /*			Prototype all internal routines.									*/
 

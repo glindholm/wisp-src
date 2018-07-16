@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 /*
 **	File:		wt_wsdiv.c
 **
@@ -72,8 +93,6 @@ NODE working_storage_section(NODE the_statement)
 {
 	fd_check();
 
-	if (!comments) tput_blank();
-
 	if (eq_token(the_statement->next->token,KEYWORD,"WORKING-STORAGE"))
 	{
 		write_log("WISP",'I',"WSSECT","Processing WORKING-STORAGE SECTION.");
@@ -122,7 +141,7 @@ NODE working_storage_section(NODE the_statement)
 				"WISP",'F',"PARSEWS","Expecting LINKAGE SECTION, or PROCEDURE DIVISION found %s.",
 				token_data(the_statement->next->token));
 		exit_with_err();
-		exit(0);
+		exit(0); /* Never reached */
 	}
 }
 
@@ -186,7 +205,7 @@ NODE linkage_section(NODE the_statement)
 				"WISP",'F',"PARSELINK","Expecting PROCEDURE DIVISION found %s.",
 				token_data(the_statement->next->token));
 		exit_with_err();
-		exit(0);
+		exit(0); /* Never reached */
 	}
 }
 
@@ -239,7 +258,7 @@ get_next_statement:
 		{
 			if ( NUMBER == curr_node->token->type )
 			{
-				if ( eq_token(curr_node->token, NUMBER, "77") )
+				if ( eq_token(curr_node->token, NUMBER, "77") && opt_change_level77 )
 				{
 					/*
 					**	Wang allows 77's anywhere in working-storage,
@@ -252,6 +271,14 @@ get_next_statement:
 
 				level_node = curr_node;
 				sscanf(level_node->token->data,"%d",&curr_level);
+
+				if (!opt_dont_force_area_a_levels && 
+				    (1 == curr_level || 77 == curr_level)  &&
+				    level_node->token->column != 8)
+				{
+					level_node->token->column = 8;
+				}
+
 			}
 			else
 			{
@@ -267,8 +294,8 @@ get_next_statement:
 		{
 			if ( eq_token(curr_node->token, KEYWORD, "FILLER") )
 			{
-				if ( (WORKING_STORAGE_SECTION==division && !wsfiller) ||
-				               (DATA_DIVISION==division && !fdfiller)    )
+				if ( (WORKING_STORAGE_SECTION==division && !opt_wsfiller) ||
+				               (DATA_DIVISION==division && !opt_fdfiller) )
 				{
 					edit_token(curr_node->token,next_filler());
 				}
@@ -386,7 +413,7 @@ get_next_statement:
 		add_to_record_list(data_name_node->token->data);
 	}
 
-	if (blank_node && !ws_blank)
+	if (blank_node && opt_no_ws_blank_when_zero)
 	{
 		/*
 		**	Remove:	BLANK [WHEN] ZERO
@@ -483,7 +510,7 @@ get_next_statement:
 
 		add_the_picture = 0;
 
-		if (was_level77)
+		if (77==curr_level || was_level77)
 		{
 			curr_level = 77;
 			next_level = 0;
@@ -659,7 +686,9 @@ binary_add_picture:
 				else if (LITERAL==temp_node->token->type)
 				{
 					int	value;
-					if (1 == sscanf(temp_node->token->data,"\"%d\"",&value))
+					strcpy(buff, temp_node->token->data);
+					remove_quotes(buff);
+					if (1 == sscanf(buff,"%d",&value))
 					{
 						sprintf(buff,"\"%02d\"",value);
 						edit_token(temp_node->token,buff);
@@ -747,7 +776,9 @@ binary_add_picture:
 				else if (LITERAL==temp_node->token->type)
 				{
 					int	value;
-					if (1 == sscanf(temp_node->token->data,"\"%d\"",&value))
+					strcpy(buff, temp_node->token->data);
+					remove_quotes(buff);
+					if (1 == sscanf(buff,"%d",&value))
 					{
 						sprintf(buff,"\"%02d\"",value);
 						edit_token(temp_node->token,buff);
@@ -858,7 +889,7 @@ binary_add_picture:
 
 				/*	Construct new picture and filler clause values. */
 				strcpy(old_pic,picture_node->token->data);
-				picture_size = pic_size(old_pic);
+				picture_size = WL_pic_size(old_pic);
 				filler_size = picture_size - ((picture_size + 2) / 2);
 				if ('S' == toupper(old_pic[0]))	
 				{
@@ -926,9 +957,31 @@ char *next_filler(void)
 /*
 **	History:
 **	$Log: wt_wsdiv.c,v $
-**	Revision 1.17  1999/09/07 14:42:22  gsl
-**	fix compiler warning becuase of not "exit" after call to exit_with_err()
+**	Revision 1.24  2003/02/28 21:49:04  gsl
+**	Cleanup and rename all the options flags opt_xxx
 **	
+**	Revision 1.23  2003/02/04 17:33:18  gsl
+**	fix copyright header
+**	
+**	Revision 1.22  2002/10/14 19:08:03  gsl
+**	Remove the -c options as obsolete since comments are now always
+**	included in the output.
+**	
+**	Revision 1.21  2002/08/12 20:13:49  gsl
+**	quotes and literals
+**	
+**	Revision 1.20  2002/07/31 20:24:24  gsl
+**	globals
+**	
+**	Revision 1.19  2002/07/10 21:06:37  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.18  2002/05/16 21:54:32  gsl
+**	opt_change_level77
+**	
+**	Revision 1.17  1999-09-07 10:42:22-04  gsl
+**	fix compiler warning becuase of not "exit" after call to exit_with_err()
+**
 **	Revision 1.16  1998-08-28 10:40:07-04  gsl
 **	Fixed next_filler() to allow more then ZZ fields.
 **	Change to WISP-FILL-xx format

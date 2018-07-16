@@ -1,8 +1,27 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
+
 #include "idsistd.h"
 
-void binary_to_packed(int4 *src, unsigned char *dest)		                           
+void WL_binary_to_packed(int4 *src, unsigned char *dest)		                           
 {
 
 	int4 x, val;
@@ -59,7 +78,7 @@ void binary_to_packed(int4 *src, unsigned char *dest)
 	}
 }
 
-void packed_to_binary(unsigned char *src, int4 *dest)		                           
+void WL_packed_to_binary(unsigned char *src, int4 *dest)		                           
 {
     	int4 val;
 	unsigned char *source, y;
@@ -93,6 +112,12 @@ void packed_to_binary(unsigned char *src, int4 *dest)
 /*
 **	History:
 **	$Log: packer.c,v $
+**	Revision 1.11  2003/01/31 17:33:55  gsl
+**	Fix  copyright header
+**	
+**	Revision 1.10  2002/07/12 19:10:15  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.9  1996/08/19 22:32:38  gsl
 **	drcs update
 **	

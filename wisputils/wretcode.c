@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /*
 **	File:		wretcode.c
 **
@@ -20,11 +43,15 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-#define EXT_FILEXT
+#include "wisplib.h"
+#include "vssubs.h"
+
 #include "filext.h"
 
-main()
+int main()
 {
 	int retval;
 	char mtxt[4];
@@ -36,7 +63,7 @@ main()
 	else
 	  retval = (mtxt[0]-0x30) * 100 + (mtxt[1]-0x30) * 10 + (mtxt[2]-0x30);
 	printf("%d",retval);	
-	
+	return 0;
 }
 
 #include "wutils.h"
@@ -47,6 +74,15 @@ main()
 /*
 **	History:
 **	$Log: wretcode.c,v $
+**	Revision 1.12  2003/02/04 20:42:49  gsl
+**	fix -Wall warnings
+**	
+**	Revision 1.11  2003/02/04 18:50:25  gsl
+**	fix copyright header
+**	
+**	Revision 1.10  2002/06/25 18:18:36  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
 **	Revision 1.9  1996/07/26 17:49:37  gsl
 **	Fix undefined
 **	

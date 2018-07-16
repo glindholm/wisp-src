@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -27,7 +48,7 @@ static int vre_hard();
 
 /*						Subroutine entry point.								*/
 
-int vrefresh(int what)									/* Refresh screen from maps.		*/
+int VL_vrefresh(int what)									/* Refresh screen from maps.		*/
 {
 	register int ret;								/* Return code.				*/
 
@@ -61,22 +82,22 @@ static int vre_hard()
 	
 	state(STATE_SAVE);								/* Save everything.			*/
 	old_op = voptimize(VOP_OFF);							/* Now we don't want any optimization.	*/
-	vbuffering(VBUFF_START);							/* Turn on logical buffering.		*/
+	VL_vbuffering_start();							/* Turn on logical buffering.		*/
 
 	vmove(0,0);									/* Avoid cursor dashing.		*/
 	for (i = 0; i < VSET_TABLE_SIZE; i++) vset(i,vcur_set[i]);			/* Restore the current settings.	*/
 	vscreen(vscr_atr);								/* Reset screen, note may clear screen.	*/
 	verase(FULL_SCREEN);
 
-	vmov_op = OFF;									/* Force no optimization 1st time.	*/
-	vchs_op = OFF;
-	vmod_op = OFF;
+	VL_vmov_op = OFF;									/* Force no optimization 1st time.	*/
+	VL_vchs_op = OFF;
+	VL_vmod_op = OFF;
 
 	vdefer_restore();
 	voptimize(VOP_DATA_AND_CONTROLS);
-	vbuffering(VBUFF_END);
+	VL_vbuffering_end();
 
-	vbuffering(VBUFF_START);
+	VL_vbuffering_start();
 
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Yes so loop through every line.	*/
 	{
@@ -89,7 +110,7 @@ static int vre_hard()
 				vatr_map[k][j] = 0;
 				vchr_map[k][j] = ' ';
 			}
-			if (((i == 0) && (j == 0)) || visible(vchr_map[k][j],vatr_map[k][j]))		/* No, is this visible?	*/
+			if (((i == 0) && (j == 0)) || VL_visible(vchr_map[k][j],vatr_map[k][j]))		/* No, is this visible?	*/
 			{
 				vmove(i,j);						/* Yes so move to it.			*/
 				c = vchr_map[k][j];					/* Get the character in the map.	*/
@@ -98,8 +119,8 @@ static int vre_hard()
 					c = ' ';					/* Yes character should be space.	*/
 					vatr_map[k][j] = 0;				/* And attributes are no longer valid.	*/
 				}
-				vcharset(vmaskc(vatr_map[k][j]));			/* Select the character set.		*/
-				vmode(vmaskm(vatr_map[k][j]));				/* Select the rendition.		*/
+				vcharset(VL_vmaskc(vatr_map[k][j]));			/* Select the character set.		*/
+				VL_vmode(VL_vmaskm(vatr_map[k][j]));				/* Select the rendition.		*/
 				vchr_map[k][j] = 0;					/* Force vprint to output it.		*/
 				vputc(c);						/* Output the character.		*/
 			}
@@ -111,7 +132,7 @@ static int vre_hard()
 	vroll(vrol_top,vrol_bot);							/* Reset the scrolling region.		*/
 	state(STATE_RESTORE);								/* Restore where we were.		*/
 	voptimize(old_op);								/* Put optimization back on too.	*/
-	vbuffering(VBUFF_END);								/* Restore automatic buffering.		*/
+	VL_vbuffering_end();								/* Restore automatic buffering.		*/
 	return(SUCCESS);								/* And we're done.			*/
 }
 
@@ -131,7 +152,7 @@ static int state(int action)								/* Perform specified action.		*/
 
 		case STATE_RESTORE:							/* Restore old setup and status.	*/
 		{
-			vmode(save_atr);						/* Restore old character rendition.	*/
+			VL_vmode(save_atr);						/* Restore old character rendition.	*/
 			vcharset(save_chs);						/* Restore character set.		*/
 			vmove(save_lin,save_col);					/* Restore old position.		*/
 			break;
@@ -143,6 +164,18 @@ static int state(int action)								/* Perform specified action.		*/
 /*
 **	History:
 **	$Log: vrefresh.c,v $
+**	Revision 1.20  2003/06/20 15:04:28  gsl
+**	VL_ globals
+**	
+**	Revision 1.19  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.18  2002/07/17 21:06:04  gsl
+**	VL_ globals
+**	
+**	Revision 1.17  2002/07/15 20:16:14  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.16  1998/10/13 18:53:18  gsl
 **	Change to use VMAP_CNG_OLDDATA
 **	

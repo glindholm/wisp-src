@@ -1,5 +1,26 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 /* these go in video.h I guess */
 #define UNIMODE_WANG 1
 #define UNIMODE_NORM 2
@@ -10,8 +31,8 @@ int vrun_unique(mode) int mode;								/* Visual mode (Wang, normal etc.	*/
 	int	pid, rc;
 	int	st;
 
-	vpushscr();									/* Save the current screen.		*/
-	vexit();									/* Shut video down.			*/
+	VL_vpushscr();									/* Save the current screen.		*/
+	VL_vexit();									/* Shut video down.			*/
 
 	signal(SIGCLD,  SIG_DFL);							/* Use Default DEATH-OF-CHILD signal	*/
 
@@ -33,7 +54,7 @@ int vrun_unique(mode) int mode;								/* Visual mode (Wang, normal etc.	*/
 	signal(SIGCLD,  SIG_IGN);							/* Ignore DEATH-OF-CHILD signal		*/
 
 	vstate(0);									/* Start up video again.		*/
-	vpopscr();									/* Restore the screen that was there.	*/
+	VL_vpopscr();									/* Restore the screen that was there.	*/
 
 	if (rc)
 	{
@@ -41,17 +62,17 @@ int vrun_unique(mode) int mode;								/* Visual mode (Wang, normal etc.	*/
 		{
 			case 1:
 			{
-				vre_window("Unique Print Queue Daemon not running.");
+				VL_vre_window("Unique Print Queue Daemon not running.");
 				break;
 			}
 			case 9:
 			{
-				vre_window("Cannot find the UniQue queue management program \"unique\".");
+				VL_vre_window("Cannot find the UniQue queue management program \"unique\".");
 				break;
 			}
 			default:
 			{
-				vre_window("Error code %d when trying to run \"unique\".                    Contact system administrator",rc);
+				VL_vre_window("Error code %d when trying to run \"unique\".                    Contact system administrator",rc);
 				break;
 			}
 		}
@@ -184,6 +205,15 @@ int *rc,pid;
 /*
 **	History:
 **	$Log: vuip.c,v $
+**	Revision 1.9  2003/01/31 19:25:55  gsl
+**	Fix copyright header
+**	
+**	Revision 1.8  2002/07/16 14:11:48  gsl
+**	VL_ globals
+**	
+**	Revision 1.7  2002/07/15 20:16:15  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.6  1996/10/11 22:16:23  gsl
 **	drcs update
 **	

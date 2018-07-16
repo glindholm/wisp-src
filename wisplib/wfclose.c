@@ -1,13 +1,25 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 
 /*
@@ -22,40 +34,38 @@ static char rcsid[]="$Id:$";
 
 #include "wdefines.h"
 #include "wglobals.h"
+#include "werrlog.h"
 
-void wfclose(const char* fname)
-{
-	WFCLOSE(fname);
-}
+
 void WFCLOSE(const char* fname)								/* This routine is called after COBOL*/
 {											/* closes the file.			*/
-
 	int retcd;
-	
-	pstruct *lptr;									/* A local pointer into the structure.	*/
+	wisp_pstruct *lptr;								/* A local pointer into the structure.	*/
 	char	def_prt_mode;
 
-	if (g_print_file_list)								/* if any files opened print/hold	*/
+	if (WL_g_print_file_list)								/* if any files opened print/hold	*/
 	{
-		wpload();
-		get_defs(DEFAULTS_PM,&def_prt_mode);
+		WL_wpload();
+		WL_get_defs(DEFAULTS_PM,&def_prt_mode);
 		if (fname[0] == '*')							/* '*' means dump them all.		*/
 		{
+			WL_wtrace("WFCLOSE","ENTRY","Entry into WFCLOSE(*)");
+
 			/*
 			**	Print everything in the list and free the list.
 			**	This is called from wexith.
 			*/
-			while(g_print_file_list)
+			while(WL_g_print_file_list)
 			{
-				lptr = g_print_file_list;
+				lptr = WL_g_print_file_list;
 				if (lptr->name[0])
 				{
-					wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
+					WL_wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
 							lptr->class,lptr->form,&retcd);
 
 					lptr->name[0] = '\0';				/* Say we have already processed it.	*/
 				}
-				g_print_file_list = lptr->nextfile;
+				WL_g_print_file_list = lptr->nextfile;
 				free(lptr);
 			}
 		}
@@ -64,8 +74,9 @@ void WFCLOSE(const char* fname)								/* This routine is called after COBOL*/
 			char trim_fname[COB_FILEPATH_LEN + 1];
 
 			cobx2cstr(trim_fname, fname, COB_FILEPATH_LEN);
+			WL_wtrace("WFCLOSE","ENTRY","Entry into WFCLOSE(%s)", trim_fname);
 			
-			lptr = g_print_file_list;
+			lptr = WL_g_print_file_list;
 			do
 			{
 				if (!strcmp(lptr->name,trim_fname))			/* Is the name the same?		*/
@@ -77,22 +88,44 @@ void WFCLOSE(const char* fname)								/* This routine is called after COBOL*/
 
 			if (lptr)							/* If there was a match, spool it.	*/
 			{
-				wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
+				WL_wprint(lptr->name,def_prt_mode,NULL,lptr->numcopies,
 						lptr->class,lptr->form,&retcd);
 				lptr->name[0] = '\0';					/* Say we have already processed it.	*/
 			}
 
 		}
 	}
+	else
+	{
+		WL_wtrace("WFCLOSE","NOFILES","No open print files.");
+	}
 }
 /*
 **	History:
 **	$Log: wfclose.c,v $
-**	Revision 1.12.2.1  2002/11/12 16:00:23  gsl
-**	Applied global unique changes to be compatible with combined KCSI
+**	Revision 1.19  2003/01/31 19:08:37  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.18  2002/12/10 20:54:08  gsl
+**	use WERRCODE()
+**	
+**	Revision 1.17  2002/12/10 17:09:14  gsl
+**	Use WL_wtrace for all warning messages (odd error codes)
+**	
+**	Revision 1.16  2002/07/23 02:57:51  gsl
+**	wfclose -> WFCLOSE
+**	
+**	Revision 1.15  2002/07/11 20:29:16  gsl
+**	Fix WL_ globals
+**	
+**	Revision 1.14  2002/07/10 21:05:31  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.13  2002/07/01 04:02:42  gsl
+**	Replaced globals with accessors & mutators
 **	
 **	Revision 1.12  1998/10/22 18:12:42  gsl
-**	change to use g_print_file_list
+**	change to use WL_g_print_file_list
 **	Fix "*" processing to free and null the list
 **	
 **	Revision 1.11  1998-08-03 17:16:49-04  jlima

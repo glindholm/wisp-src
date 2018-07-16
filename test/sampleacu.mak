@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-1996 NeoMedia Migrations, All rights reserved.
+#	Copyright (c) 1988-2003 NeoMedia Migrations, All rights reserved.
 #	$Id:$
 #
 #
@@ -21,13 +21,13 @@
 default: all
 
 
-WISPDIR   = ..
+WISPDIR   = ..\kit\wisp
 WISPTRAN  = $(WISPDIR)\bin\wisp.exe
 WISPLANG  = ACU
-WISPFLAGS = -V $(WISPLANG) -I..\wisputils -M
+WISPFLAGS = -V $(WISPLANG) -I..\wisputils -M -u FORCEGENWISPCPY
 
-COBOL    = c:\acucorp\acucbl520\acugt\bin\ccbl32.exe
-COBFLAGS = -Gd -Zi -Za -Da4 -Te 800
+COBOL    = c:\acucorp\acucbl600\acugt\bin\ccbl32.exe
+COBFLAGS = -Da4 -Gd -Za -Te 800
 
 CFLAGS = -DWIN32 -DMSFS
 
@@ -54,58 +54,80 @@ COPY=copy
 
 WISP_COBOL_OBJS= \
 	ACULINK.acu \
-	ACUUSING.acu 
+	ACUUSING.acu \
+	DISPRINT.acu
 
-SAMPLE_COBOL_OBJS= \
-	DISPFILE.acu \
-	LESWAP.acu \
-	QABCKGRD.acu \
-	QAFILEIO.acu \
+SAMPLE_COBOL_WCBS= \
+	DISPFILE.wcb \
+	LESWAP.wcb \
+	QABCKGRD.wcb \
+	QAFILEIO.wcb \
 	QAFILE2.acu \
-	QANETCAP.acu \
-	QAPRINT.acu \
-	QASCREEN.acu \
-	QASCRN2.acu \
-	QASUBS.acu \
-	QASY000M.acu \
-	QASYS99.acu \
-	QAWSFNM.acu \
-	QAWSFNS.acu \
-	QAWSUBS.acu \
-	QADPCOMA.acu \
-	QAWSXIO.acu \
-	SAMPLE.acu \
-	SUB1.acu \
-	SUB3.acu \
-	TRIGGER.acu \
-	WL0000.acu \
-	WL0010.acu \
-	WL0011.acu \
-	WL0012.acu \
-	WL0013.acu \
-	WL0014.acu \
-	WL0015.acu \
-	WL0016.acu \
-	WL0017.acu \
-	WL0018.acu \
-	WL0018A.acu \
-	WL0018B.acu \
-	WL0019.acu \
-	WL0020.acu \
-	WL0021.acu \
-	WL0022.acu \
-	WL0023.acu \
-	WL0024.acu \
-	WL0025.acu \
-	WL0026.acu \
-	WL0027.acu \
-	WL0028.acu \
-	WL0029.acu \
-	WL0030.acu \
-	WL0031.acu \
-	WL0032.acu \
-	XLINK.acu \
-	XLINK1.acu
+	QAMESSAG.wcb \
+	QANETCAP.wcb \
+	QAPRINT.wcb \
+	QASCREEN.wcb \
+	QASCRN2.wcb \
+	QASUBS.wcb \
+	QASY000M.wcb \
+	QASYS99.wcb \
+	QAWSFNM.wcb \
+	QAWSFNS.wcb \
+	QAWSUBS.wcb \
+	QADPCOMA.wcb \
+	QAWSXIO.wcb \
+	SAMPLE.wcb \
+	SUB1.wcb \
+	SUB3.wcb \
+	TRIGGER.wcb \
+	WC0000.wcb \
+	WC0001.wcb \
+	WC0002.wcb \
+	WC0002A.wcb \
+	WC0002B.wcb \
+	WC0002E.wcb \
+	WC0003.wcb \
+	WC0003B.wcb \
+	WC0004.wcb \
+	WL0000.wcb \
+	WL0010.wcb \
+	WL0011.wcb \
+	WL0012.wcb \
+	WL0013.wcb \
+	WL0014.wcb \
+	WL0015.wcb \
+	WL0016.wcb \
+	WL0017.wcb \
+	WL0018.wcb \
+	WL0018A.wcb \
+	WL0018B.wcb \
+	WL0019.wcb \
+	WL0020.wcb \
+	WL0021.wcb \
+	WL0022.wcb \
+	WL0023.wcb \
+	WL0024.wcb \
+	WL0025.wcb \
+	WL0026.wcb \
+	WL0027.wcb \
+	WL0028.wcb \
+	WL0029.wcb \
+	WL0030.wcb \
+	WL0031.wcb \
+	WL0032.wcb \
+	WL0033.wcb \
+	WL0034.wcb \
+	WL0034C.wcb \
+	WL0034D.wcb \
+	WL0035.wcb \
+	WT0000.wcb \
+	WT0010.wcb \
+	WT0011.wcb \
+	WT0012.wcb \
+	XLINK.wcb \
+	XLINK1.wcb
+
+SAMPLE_COBOL_OBJS= $(SAMPLE_COBOL_WCBS:.wcb=.acu)
 
 ALL_COBOL_OBJS= $(WISP_COBOL_OBJS) $(SAMPLE_COBOL_OBJS)
 ALL_COBOL_COBS= $(ALL_COBOL_OBJS:.acu=.cob)
@@ -130,9 +152,10 @@ header:
 
 
 clean:
-	-del /Q $(ALL_COBOL_OBJS)
-	-del /Q $(TEST_DIRS)
-	-del /Q *.cob *.acu *.cpy *.obj
+	-del /Q /F $(ALL_COBOL_OBJS)
+	-del /Q /F $(TEST_DIRS)
+	-del /Q /F DISPRINT.wcb
+	-del /Q /F *.cob *.acu *.cpy *.obj
 
 # Recreate the .cob files if $(WISPTRAN) is newer
 $(ALL_COBOL_COBS): $(WISPTRAN)
@@ -144,11 +167,18 @@ $(ALL_COBOL_COBS): $(WISPTRAN)
 SAMPLE.cob: SAMPLE.wcb
 	$(WISPTRAN)  $(LANG) $(WISPFLAGS) -O samopt.opt SAMPLE
 
-ACULINK.wcb: ..\acu\ACULINK.wcb
-	$(COPY) "..\acu\ACULINK.wcb" .
+ACULINK.acu: $(WISPDIR)\acu\ACULINK.acu
+	$(COPY) "$(WISPDIR)\acu\ACULINK.acu" .
 
-ACUUSING.cob: ..\acu\ACUUSING.cob
-	$(COPY) "..\acu\ACUUSING.cob" .
+ACUUSING.acu: $(WISPDIR)\acu\ACUUSING.acu
+	$(COPY) "$(WISPDIR)\acu\ACUUSING.acu" .
+
+
+DISPRINT.acu: DISPRINT.wcb
+
+DISPRINT.wcb: $(WISPDIR)\etc\DISPRINT.wcb
+	$(COPY) $(WISPDIR)\etc\$@ $@ 
+
 
 #
 #==============================================================
@@ -190,7 +220,6 @@ WISPCONFIGFILES= $(WC)\ACUCONFIG \
 	$(WC)\OPTIONS \
 	$(WC)\PRMAP \
 	$(WC)\W4WMAP \
-	$(WC)\wispmsg.dat \
 	$(WC)\wproc.msg \
 	$(WC)\wrun.cfg \
 	$(WC)\wsysconf.cfg
@@ -226,9 +255,6 @@ $(WC)\PRMAP:			$(WISPDIR)\config\$(@F)
 $(WC)\W4WMAP:			$(WISPDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WC)\wispmsg.dat:		$(WISPDIR)\config\$(@F)
-	$(COPY) $** $@
-
 $(WC)\wproc.msg:		$(WISPDIR)\config\$(@F)
 	$(COPY) $** $@
 
@@ -244,14 +270,69 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
-#	Revision 1.13.2.3  2003/02/10 14:59:02  gsl
-#	Add autotests from $HEAD
+#	Revision 1.38  2003/07/07 20:38:09  gsl
+#	WL0035 READVTOC tests
 #	
-#	Revision 1.13.2.2  2002/11/12 20:21:35  gsl
-#	Use -del
+#	Revision 1.37  2003/07/07 19:39:54  gsl
+#	WC0004 ##TEMP file tests
 #	
-#	Revision 1.13.2.1  2002/10/08 19:54:09  gsl
-#	Updated from HEAD
+#	Revision 1.36  2003/07/07 17:58:27  gsl
+#	WL0034 LINK tests
+#	
+#	Revision 1.35  2003/07/07 14:29:44  gsl
+#	WC0003 ACCEPT VERB tests
+#	
+#	Revision 1.34  2003/07/03 18:53:55  gsl
+#	RETURN-CODE tests
+#	
+#	Revision 1.33  2003/07/02 21:18:30  gsl
+#	Add WL0033 FIND auto tests
+#	
+#	Revision 1.32  2003/07/01 19:28:52  gsl
+#	QA
+#	
+#	Revision 1.31  2003/06/30 20:23:39  gsl
+#	fix disprint
+#	
+#	Revision 1.30  2003/06/26 16:18:35  gsl
+#	version numbers
+#	
+#	Revision 1.29  2003/03/07 20:05:08  gsl
+#	Add #FORCEGENWISPCPY option
+#	
+#	Revision 1.28  2003/02/28 18:19:00  gsl
+#	update
+#	
+#	Revision 1.27  2003/02/27 19:06:55  gsl
+#	Move the QA MESSAGE logic out of QASUBS into new file QAMESSAG
+#	
+#	Revision 1.26  2003/01/30 19:43:45  gsl
+#	Add WL0032 to autotest RENAME
+#	
+#	Revision 1.25  2003/01/20 20:14:18  gsl
+#	Add WL0031 auto tests for SETFILE
+#	
+#	Revision 1.24  2003/01/20 17:02:28  gsl
+#	Add WL0030 auto test for SUBMIT
+#	
+#	Revision 1.23  2003/01/17 15:31:40  gsl
+#	Added WL0029 SCRATCH autotest
+#	
+#	Revision 1.22  2003/01/16 17:25:39  gsl
+#	Add FILECOPY tests
+#	
+#	Revision 1.21  2002/12/11 14:08:43  gsl
+#	Removed wispmsg.dat/txt and makemsg
+#	
+#	Revision 1.20  2002/11/26 21:52:02  gsl
+#	Add WC0001.wcb to test Horz Repeating fields
+#	
+#	Revision 1.19  2002/11/22 18:56:21  gsl
+#	Fix and standardize the Acucoobl COBFLAGS
+#	
+#	Revision 1.18  2002/10/11 18:44:11  gsl
+#	Change DEL to -DEL
+#	Remove clean from default target
 #	
 #	Revision 1.17  2002/07/31 01:31:29  gsl
 #	update

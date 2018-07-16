@@ -1,7 +1,26 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
+
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1993				*/
@@ -13,7 +32,7 @@
 #ifndef VCAP_HEADER
 #define VCAP_HEADER
 
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 /*
 **	Don't ever ever change this as \035 is hardcoded into the internal msdos vcap definitions.
 */
@@ -53,7 +72,7 @@
 
 /*	The defines for video CAPABILITIES ***** Only add to the end. Don't delete any. *****					*/
 
-#define BACKSPACE 		1
+#define VCAP_BACKSPACE 		1
 #define AUTO_MARGINS 		2
 #define HAS_HW_TABS 		3
 #define NL_IGN_AFTER_WRAP 	4
@@ -62,11 +81,11 @@
 #define RESET_TERMINAL 		7
 #define ENTER_KP_XMIT 		8
 #define EXIT_KP_XMIT 		9
-#define TAB 			10
+#define VCAP_TAB 		10
 #define VIRTUAL_TERM_NUM 	11
 #define SAVE_CURSOR 		12
 #define RESTORE_CURSOR 		13
-#define BELL 			14
+#define VCAP_BELL 		14
 #define BACK_TAB 		15
 #define CARRIAGE_RETURN 	16
 #define CHANGE_SCROLL_REGION 	17
@@ -109,18 +128,18 @@
 #define INSERT_CHAR 		54
 #define INSERT_LINE 		55
 #define OTHER_KEYS 		56
-#define NEWLINE 		57
+#define VCAP_NEWLINE 		57
 #define SCROLL_REVERSE 		58
-#define COLUMNS 		59
-#define LINES 			60
+#define VCAP_COLUMNS 		59
+#define VCAP_LINES 		60
 #define SO_BLANKS 		61
 #define US_BLANKS 		62
 #define GRAPHSTR                63
 #define ENTER_GRAPHICS_MODE     64
 #define EXIT_GRAPHICS_MODE      65
-#define PAD                     66
+#define VCAP_PAD                66
 #define PSEUDO_BLANKS           67
-#define INDEX                   68
+#define VCAP_INDEX              68
 #define REVERSE_INDEX           69
 #define WIDE_MODE               70
 #define NARROW_MODE             71
@@ -144,7 +163,7 @@
 */
 #define DEF_GENERIC_MOUSE	"\376@"
 
-extern int vcap_padding;
+extern int VL_vcap_padding;
 
 #define VCAP_NEED_NOWRAP      0x00000008
 #define VCAP_NEED_FKEYS1_10   0x00000010
@@ -159,26 +178,41 @@ extern int vcap_padding;
 #define VCAP_WARN_NOWCONFIG   0x00000008
 
 
-#define PBLANK1 vcapvalue(PSEUDO_BLANKS)[0]
-#define PBLANK2 vcapvalue(PSEUDO_BLANKS)[1]
-#define PBLANK3 vcapvalue(PSEUDO_BLANKS)[2]
-#define PBLANK4 vcapvalue(PSEUDO_BLANKS)[3]
+#define PBLANK1 VL_vcapvalue(PSEUDO_BLANKS)[0]
+#define PBLANK2 VL_vcapvalue(PSEUDO_BLANKS)[1]
+#define PBLANK3 VL_vcapvalue(PSEUDO_BLANKS)[2]
+#define PBLANK4 VL_vcapvalue(PSEUDO_BLANKS)[3]
 #define PSEUDO_BLANKS_LEN 4
 
 /*
 **	Functions and Prototypes
 */
 
-char* vkeyvalue(int key);
-char* vcapvalue(int cap);
+char* VL_vkeyvalue(int key);
+char* VL_vcapvalue(int cap);
 
 #endif /* VCAP_HEADER */
 
 /*
 **	History:
 **	$Log: vcap.h,v $
+**	Revision 1.27  2003/06/20 15:48:03  gsl
+**	VL_ globals
+**	
+**	Revision 1.26  2003/01/31 19:25:56  gsl
+**	Fix copyright header
+**	
+**	Revision 1.25  2003/01/28 21:39:52  gsl
+**	Change vcap.h defines to make unique BELL -> VCAP_BELL etc.
+**	
+**	Revision 1.24  2002/07/18 21:04:21  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.23  2002/07/15 20:16:07  gsl
+**	Videolib VL_ gobals
+**	
 **	Revision 1.22  1997/07/08 20:50:14  gsl
-**	change to use vcapvalue()
+**	change to use VL_vcapvalue()
 **	Add new prototypes
 **	Remove non-global data variables
 **	

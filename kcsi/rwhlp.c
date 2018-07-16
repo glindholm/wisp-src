@@ -1,10 +1,23 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+**
+** KCSI - King Computer Services Inc.
+**
+** $Id:$
+**
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 #include "gp.h"
 #include "kcsifunc.h"
 
-static char sccs_id[] = "@(#)rwhlp.c	1.5 3/31/93";
 
 
 void rpt_full_gp_text(char *text[])
@@ -119,8 +132,8 @@ void KCSI_rptphlp()
 /*
 **	History:
 **	$Log: rwhlp.c,v $
-**	Revision 1.3.2.1  2002/11/12 15:56:36  gsl
-**	Sync with $HEAD Combined KCSI 4.0.00
+**	Revision 1.8  2003/02/04 19:19:08  gsl
+**	fix header
 **	
 **	Revision 1.7  2002/10/24 14:20:33  gsl
 **	Make globals unique

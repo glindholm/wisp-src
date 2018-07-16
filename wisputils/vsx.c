@@ -1,5 +1,32 @@
-static char copyright[]="Copyright (c) 1991-1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
+/* CHANGE-COPYRIGHT-DATE */
+static char vsx_copyright[]="Copyright (c) 1991-2003 NeoMedia Technologies, All rights reserved.";
+static char vsx_rcsid[]="$Id:$";
+
 /*
 **	File:		vsx.c
 **
@@ -20,7 +47,7 @@ static char rcsid[]="$Id:$";
 **          rawmode              set tty to raw mode
 **          normalmode           set tty to cooked mode
 **          lower                convert a string to lower case
-**          pushname             push a filename onto a stack
+**          savetmpname             push a filename onto a stack
 **          skipbytes            skip over a certain number of bytes on tape
 **          writefixed           write a fixed block
 **          nulls2spaces         convert nulls to spaces in the buffer
@@ -34,10 +61,9 @@ static char rcsid[]="$Id:$";
 **
 */
 
-static char idsi_copyright[] = "Copyright 1991,1992,1993,1994 International Digital Scientific, Inc. All Rights Reserved.";
 
-static char VERSION[5];
-static char MODDATE[20];
+static char vsx_version[20];
+static char vsx_moddate[20];
 
 #ifdef AIX
 /*
@@ -100,6 +126,8 @@ static char MODDATE[20];
 #include <fcntl.h>
 #include <errno.h>
 
+#include <stdarg.h>
+
 #ifdef WIN32
 #include "win32std.h"
 #endif
@@ -109,6 +137,12 @@ static char MODDATE[20];
 #define DDS	'\\'
 #else
 #define DDS	'/'
+#endif
+
+#ifdef WIN32
+#define EOL_STR "\r\n"
+#else
+#define EOL_STR "\n"
 #endif
 
 #ifdef FALSE
@@ -127,35 +161,19 @@ static char MODDATE[20];
 #define O_LARGEFILE 0
 #endif
 
-
-#ifdef SCO					/* This must be define in the .umf file on SCO machines with CFLAGS = -DSCO	*/
-#define TAPEDEV "//dev/rct0"
-#endif
-#ifdef ULTRIX
-#define TAPEDEV "//dev/rmt0h"
-#endif
-#ifdef DGUX
-#define TAPEDEV "//dev/rmt/0"
-#endif
-#ifdef NCR486
-#define TAPEDEV "//dev/rmt/c0s0"
-#endif
-#ifdef WIN32
-#define TAPEDEV "TAPE"
-#endif
-#ifndef TAPEDEV
-#define TAPEDEV "//dev/rmt0"
-#endif
-
 static int skip_lib=0;
+
+#define ENDOFFILE_MARKER ((unsigned int)0xffff0090)
+#define FILEBLOCK_SIZE	0x800
+#define BIGBLOCK_SIZE	0x20000
 
 #define TAPE_BUFSZ 5120*20
 static unsigned char tapebuf[TAPE_BUFSZ];
 static unsigned char workbuf[TAPE_BUFSZ];
 
-static char dest_dir[100];
-static char arch_file[100];
-static char norwd_file[100]={0};
+static char dest_dir[256];
+static char arch_file[256]  = "";
+static char norwd_file[256] = "";
 
 #define RT_UNKNOWN	0
 #define RT_COMPRESSED 	1
@@ -205,12 +223,13 @@ static char *orgtypeext[]=
 static int dont_unload_file = 0;
 static int unload_all = 0;
 static int needs_postprocessing = 0;
+static int saved_tmp_name_cnt = 0;
 
 static unsigned short seq_num;
 
 static int spec_rec_type = RT_COMPRESSED;
 
-static int use_vol_name = 0;
+static int use_vol_name = TRUE;
 
 
 #define FT_SRC 		0
@@ -249,8 +268,7 @@ static char norm_ext[16];
 #define CASE_LOWER 1
 #define CASE_UPPER 2
 
-static int lname_case= CASE_LOWER;
-static int fname_case= CASE_LOWER;
+static int name_case=CASE_UPPER;
 
 #define ACT_EXTRACT 1
 #define ACT_INDEX 2
@@ -304,8 +322,7 @@ static char **arg_list;
 static struct optstruct optlist[]=
 {
 	{ "-d", OPT_STRING, dest_dir, 0 },
-	{ "-lnu", OPT_INT, (char *)&lname_case, CASE_UPPER },
-	{ "-fnu", OPT_INT, (char *)&fname_case, CASE_UPPER },
+	{ "-lc", OPT_INT, (char *)&name_case, CASE_LOWER },
 	{ "-es", OPT_STRING, src_ext, 0 },
 	{ "-en", OPT_STRING, norm_ext, 0 },
 	{ "-El", OPT_INT, (char *)&src_ext_flag, EXT_ASK_L },
@@ -331,14 +348,14 @@ static struct optstruct optlist[]=
 	{ "-tmp", OPT_INT, (char*)&process_tmps, TRUE },
 	{ "-bs", OPT_STRING, tape_rq_str, 0 },
 	{ "-nrw", OPT_STRING, norwd_file, 0 },
-	{ "-v", OPT_INT, (char *)&use_vol_name, TRUE },
+	{ "-nv", OPT_INT, (char *)&use_vol_name, FALSE },
 #ifdef SOLARIS
 	{ "-3480", OPT_INT, (char*)&tape3480, TRUE },
 #endif
 	{ NULL, 0, NULL, 0 }
 };
 
-
+/* sizeof(tapeheader) = 144 */
 struct tapeheader {
 	unsigned char encfhdr[4];		/* x00 Always "ENCF" */
 	unsigned char vol1[6];			/* x04 */
@@ -346,7 +363,7 @@ struct tapeheader {
 	unsigned char filler1[4];		/* x0D */
 	unsigned char sysversion[3];		/* x11 */
 	unsigned char backupversion[3];		/* x14 */
-	unsigned char budate[3];		/* x17 */
+	unsigned char budate[3];		/* x17 */ /* Packed YYDDD+ */
 	unsigned char srcvol[6];		/* x1A */
 	unsigned char srclib[8];		/* x22 */
 	unsigned char seqnum[2];		/* x24 */
@@ -379,12 +396,12 @@ struct tapeheader {
 	unsigned char fdr1x1ptr[2];
 	unsigned char fdr1filename[8];	
 	unsigned char fdr1filesection[1];
-	unsigned char fdr1credate[3];
-	unsigned char fdr1moddate[3];
-	unsigned char fdr1expdate[3];
+	unsigned char fdr1credate[3];	/* Packed YYDDD+ */
+	unsigned char fdr1moddate[3];	/* Packed YYDDD+ */
+	unsigned char fdr1expdate[3];	/* Packed YYDDD+ */
 	unsigned char fdr1fpclass[1];
 	unsigned char fdr1creator[3];
-	unsigned char fdr1blksize[2];
+	unsigned char fdr1blksize[2];	/* Expect x0800 (2048) */
 	unsigned char fdr1secext[2];
 	unsigned char fdr1x1strt[3];
 	unsigned char fdr1x1end[3];
@@ -394,9 +411,8 @@ struct tapeheader {
 	unsigned char fdr1x3end[3];
 
 	unsigned char fdr1spare2[2];
-	unsigned char fdr1nrecs[4];
-	unsigned char fdr1recsize[2];
-
+	unsigned char fdr1nrecs[4];	/* RECORD COUNT */
+	unsigned char fdr1recsize[2];	/* RECORD SIZE */
 
 	unsigned char fdr1spare3[1];
 	unsigned char fdr1eblk[3];
@@ -405,12 +421,12 @@ struct tapeheader {
 
 	unsigned char fdr1chain[4];
 
-	unsigned char filler8[5];
+	unsigned char filler8a[2];
+	unsigned char fileblockcnt[3];	/* File Block Count (2048 byte blocks) */
 
 	unsigned char tapevol[6];
 	unsigned char trailer[5];
 };
-#define BLANKSPACE 1908
 
 struct tapetrailer 
 {
@@ -430,14 +446,8 @@ struct tapetrailer
 
 };
 
-struct stack_node
-{
-	struct stack_node *prev;
-	unsigned char *name;
-};
-struct stack_node *head=NULL, *stackp;
-
 struct tapeheader *tapehdr;
+static struct tapeheader tapehdr_buf;
 
 
 #define ST_START 0
@@ -483,7 +493,7 @@ extern char *sys_errlist[];
 /*--- END vsx.h ----*/
 
 
-struct my_header
+struct vsx_tmp_header
 {
 	unsigned int rectype;
 	unsigned int filetype;
@@ -498,7 +508,7 @@ static int tapebytes =0;
 static int usage (void);
 static void setord (void);
 static int savemode (void);
-static void parseopts (int c, char **v);
+static int parseopts (int c, char **v);
 static int postprocess (void);
 static int setdebuginfo (void);
 static int load (void);
@@ -509,7 +519,7 @@ static int chk_valid_hdr (void);
 static int rawmode (void);
 static int normalmode (void);
 static int lower (char *p);
-static int pushname (char *str);
+static int savetmpname (const char *str);
 static int skipbytes (int cnt);
 static int writefixed (unsigned char *buf, int recs, unsigned int size, FILE *f);
 static int nulls2spaces (unsigned char *buf);
@@ -517,6 +527,8 @@ static void matchopt (char *opt, int *num, int *type, char **destval, int *val);
 static int readtape(unsigned char *buf, int bytesrq, int command);
 static int digest (char *name);
 static void getbin(unsigned char *dest, unsigned char *src, int cnt);
+static unsigned int uint3(const unsigned char *var);
+static void printTapeHeader(void);
 
 #ifdef NOSTRDUP
 static char *strdup(char *str)
@@ -532,6 +544,12 @@ static char *strdup(char *str)
 #ifdef SOLARIS
 static void load3480(char *tapedev, int cartridge);
 #endif
+
+static void printerr(const char* format, ... /* args */);
+static void printlog(const char* format, ... /* args */);
+static void printdebug(const char* format, ... /* args */);
+
+static FILE *stdlog = NULL;
 
 /*
 **	Routine:	main()
@@ -561,30 +579,23 @@ int main(int argc, char **argv)
 	** make a version and date stamp
 	**
 	*/
-        memset(VERSION,0,sizeof(VERSION));
-        p=strchr(rcsid,' ');
+        memset(vsx_version,0,sizeof(vsx_version));
+        p=strchr(vsx_rcsid,' '); /* "$Id:$" */
         p=strchr(++p,' ');
         e=strchr(++p,' ');
         
-        memcpy(VERSION,p,e-p);
-        memset(MODDATE,0,sizeof(MODDATE));
+        memcpy(vsx_version,p,e-p);
+        memset(vsx_moddate,0,sizeof(vsx_moddate));
         p=strchr(++e,' ');
-        memcpy(MODDATE,e,p-e);
-
-        setbuf(stderr,NULL);
-        
+        memcpy(vsx_moddate,e,p-e);
+       
 	/*
 	** print usage info if necessary or else print version info and continue
 	**
 	**/
         if (argc>=2 && argv[1][0]=='-' && (argv[1][1]=='?'||argv[1][1]=='h')) 
 	{
-		usage();
-	}
-        else
-	{
-		printf("VSX Release V%s %s - 'vsx -h' for help\n",VERSION,MODDATE);
-		printf("%s\n",copyright);
+		usage(); /* print usage then exit */
 	}
 
 	/*
@@ -601,7 +612,10 @@ int main(int argc, char **argv)
 	** now look at what options we have
 	**
 	**/
-        parseopts(argc,argv);
+        if (0 != parseopts(argc,argv) )
+	{
+		usage(); /* print usage then exit */
+	}
 
 	/*
 	** if we are in eightmilx mode set eightmil flag too.
@@ -610,8 +624,18 @@ int main(int argc, char **argv)
 	**
 	**/
 	if (eightmilx)
-	  eightmil = TRUE;
-	
+	{
+		eightmil = TRUE;
+	}
+
+	/*
+	** Open up the log file
+	*/
+	stdlog = FOPEN64("vsx.log","w");
+
+	printlog("VSX Release V%s %s - 'vsx -h' for help\n",vsx_version,vsx_moddate);
+	printlog("%s\n",vsx_copyright);
+
 	/*
 	** check for -tmp flag.. if we have it we just do a postprocess (no tape load) phase
 	**
@@ -621,33 +645,40 @@ int main(int argc, char **argv)
 		arg_list = ++argv;
 		postprocess();
 		handler(0);
+		exit(0); /* Never reached */
 	}
+
+	/*
+	** print some info for user
+	**
+	**/
+	if (strlen(norwd_file) > 0)
+	{
+		printlog("\nArchive file: %s\n",norwd_file);
+	}
+	else if (strlen(arch_file) > 0)
+	{
+		printlog("\nArchive file: %s\n",arch_file);
+	}
+	else
+	{
+		printerr("ERROR: You must specify a source with -f or -nrw or -tmp\n");
+		usage(); /* print usage then exit */
+	}
+
+#ifdef SOLARIS
+	if (tape3480)
+	{
+		printerr("Make sure 3480 tape unit is in AUTO mode.\n");
+	}
+#endif
 
 	/*
 	** check for debug info request 
 	**
 	**/
         setdebuginfo();
-        if (debug_level) { printf("debug level %d: files %d thru %d\n",debug_level,debug_start,debug_end);}
-
-	/*
-	** print some info for user
-	**
-	**/
-	if (strlen(norwd_file))
-	{
-		fprintf(stdout,"\nArchive file: %s\n",norwd_file);
-	}
-	else
-	{
-		fprintf(stdout,"\nArchive file: %s\n",arch_file);
-	}
-#ifdef SOLARIS
-	if (tape3480)
-	{
-		fprintf(stderr,"Make sure 3480 tape unit is in AUTO mode.\n");
-	}
-#endif
+        if (debug_level) { printdebug("debug level %d: files %d thru %d\n",debug_level,debug_start,debug_end);}
 
 	/*
 	** setup int handler
@@ -659,26 +690,45 @@ int main(int argc, char **argv)
 #ifdef SIGEMT
 	signal(SIGEMT,  handler );
 #endif
-#ifdef unix
+#ifdef SIGBUS
         signal(SIGBUS,  handler );
+#endif
+#ifdef SIGQUIT
         signal(SIGQUIT, handler );
 #endif
+
 	/*
 	** perform load phase
 	**
 	*/
         load();
-        printf("end of archive reached..\f\npostprocessing:\n");
+
+	if (tape_fd != -1) 
+	{
+		close(tape_fd);
+		tape_fd = -1;
+	}
+
+        printlog("\nEnd of archive reached...\n");
 	fflush(stdout);
 	fflush(stderr);
+	if (stdlog) 
+	{		
+		fflush(stdlog);
+	}
+	
 
 	/*
 	** perform postprocessing phase
 	**
 	*/
-        postprocess();
+	if (action==ACT_EXTRACT)
+	{
+		printlog("Postprocessing %d tmp files...\n\n", saved_tmp_name_cnt);
+		postprocess();
+	}
         handler( 0 );
-        /*NOTREACHED*/
+	exit(0); /* Never reached */
 }
 /*
 **	Routine:	handler()
@@ -703,9 +753,21 @@ int main(int argc, char **argv)
 
 void handler(int sig)
 {
-        fprintf(stderr,"\nVSX exiting.\n");
-	if (tape_fd != -1)
+	if (sig != 0) 
+	{
+		printerr("\nExiting VSX after trapping signal(%d)\n",sig);
+	}
+	else 
+	{
+		printlog("\nVSX Completed.\n");
+	}
+
+	if (tape_fd != -1) 
+	{
 		close(tape_fd);
+		tape_fd = -1;
+	}
+	
         exit(0);
 }
 /*
@@ -726,30 +788,30 @@ void handler(int sig)
 **	Output:		loads bytes into buf
 **			
 **
-**	Return:		None
+**	Return:		Number of bytes read.
+**			0 = EOF
+**			-1 = error
 **
-**	Warnings:	None
-**
-**	History:	at EOF
 **
 */
 static int readtape(unsigned char *buf, int bytesrq, int command)
 {
         static int bufpos = 0;
-        int stat, bytes;
-        static int tapepos=0;
+        int bytes;
 	static int fileseq= -1;
 	static int eots=0;
 #ifdef SOLARIS
 	static int tapenum3480=0;
 #endif
+	char *archive_filename = "";
+	
 
 	/*
 	** printing debug info if needed
 	**
 	*/	
 	DD{
-		fprintf(stderr,"readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
+		printerr("readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
 			bytesrq,
 			command==RT_SKIPTOEND?"skip to end":
 			command==RT_GETBLOCK?"get block":
@@ -758,7 +820,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			tapebytes,bufpos,tape_blocksz);
 	}
 	DDD{
-		fprintf(stderr,"readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
+		printerr("readtape(buf,bytesrq=%d,mode=%s) tapebytes=%d, bufpos=%d/%d\n",
 			bytesrq,
 			command==RT_SKIPTOEND?"skip to end":
 			command==RT_GETBLOCK?"get block":
@@ -781,17 +843,18 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 	*/
         if(command==RT_SKIPTOEND) 
         { 
+		int status = 0;
                 tapebytes=0;
 
                 do 
                 { 
-                        stat=read(tape_fd,tapebuf,tape_blocksz); 
+                        status=read(tape_fd,tapebuf,tape_blocksz); 
 			DDD{
-				printf("skipping %d %c%c%c%c\n",stat,tapebuf[0],tapebuf[1],tapebuf[2],tapebuf[3]); 
+				printdebug("skipping %d %c%c%c%c\n",status,tapebuf[0],tapebuf[1],tapebuf[2],tapebuf[3]); 
 			}
-                } while (stat); 
+                } while (status > 0); 
 
-                return 0;     
+                return status;     
         }
 	/*
 	** GETBLOCK returns a block of data, size unimportant.  it is called
@@ -820,20 +883,25 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
                 else
                 {
                         tapebytes = read(tape_fd,tapebuf,tape_blocksz);
-                        memcpy(buf,tapebuf,tapebytes);
+			if (tapebytes > 0)
+			{
+				memcpy(buf,tapebuf,tapebytes);
+			}
                         ret=tapebytes;
 			tapebytes=0;
                 }
                 return ret;
         }
+
 	/*
 	** at this point we either have a GETBYTES or a SKIPBYTES command.
 	** the basic actions are the same so most of the code is shared
 	**
 	*/
 	/*
-	** first setup a loop, bytes is the number returned so far, bytesrq is the number
-	** needed.
+	** first setup a loop, 
+	**	bytes	- is the number returned so far, 
+	**	bytesrq - is the number requested.
 	**
 	*/
         for (bytes=0; bytes < bytesrq; )
@@ -845,7 +913,8 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
                 if (tape_fd == -1)
                 {
 		      openloop:
-			
+			archive_filename = (strlen(norwd_file))?norwd_file:arch_file;
+
 			/*
 			** eightmilx lets a read a series of files named file1 file2 file3 etc.
 			** the files must have been loaded from an 8mil or 9 track tape
@@ -862,14 +931,15 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			*/
 			if (tape3480)
 			{
-				load3480((strlen(norwd_file))?norwd_file:arch_file,tapenum3480);
+				load3480(archive_filename,tapenum3480);
 			}
 #endif
 			/*
 			** now open it and set eotape flag false
 			**
 			*/
-                        tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
+			printlog("Opening tape archive [%s]\n", archive_filename);			
+                        tape_fd = open(archive_filename,O_RDONLY|O_BINARY|O_LARGEFILE);
 			eotape=FALSE;
 			/*
 			** handle error condition
@@ -877,8 +947,6 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			*/
                         if (tape_fd<0) 
                         {
-			/*      openloop:    8/16/94-JEC-dunno why this label was here*/
-				
 				/*
 				** ENXIO seems to indicate dev is offline.. this is of course
 				** only returned by tape devices that have off and on line states
@@ -886,16 +954,17 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 				*/
 				if (errno==ENXIO)
 				{
-					fprintf(stderr,"Place device %s ONLINE and press Return.\n",
+					printerr("Place device %s ONLINE and press Return.\n",
 						arch_file);
 					getchar();
 					goto openloop;
 				}
 				else
 				{
-					fprintf(stderr,"Error opening %s: %s (errno=%d)\n",
+					printerr("Error opening %s: %s (errno=%d)\n",
 						arch_file,sys_errlist[errno],errno);
 					handler(0);
+					exit(0); /* Never reached */
 				}
                         }
                 }
@@ -914,7 +983,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			*/
                         tapebytes = read(tape_fd,tapebuf,tape_blocksz);
 			DDD{
-				fprintf(stderr,"read %d bytes, bytes rqd is %d\n",tapebytes,bytesrq);
+				printerr("read %d bytes, bytes rqd is %d\n",tapebytes,bytesrq);
 			}                       
 
 				
@@ -923,16 +992,6 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			**
 			*/
 				
-#ifdef ATT3B2
-			/*
-			** end of file reached, set tapebytes to zero 
-			**
-			*/
-			if (tapebytes<0 && errno == ENXIO)
-			{
-				tapebytes=0;
-			}
-#endif
 #ifdef DGUX
 			/*
 			** end of file reached, set tapebytes to zero 
@@ -948,12 +1007,20 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			}
 #endif
 			/*
+			**	Fix END-OF-TAPE conditions
+			*/
+			if (tapebytes<0 && (eotape || eots))
+			{
+				tapebytes=0;
+			}
+			
+			/*
 			** real error on the tape read
 			**
 			*/
                         if (tapebytes<0) 
                         {
-                                fprintf(stderr,"Error reading %s: %s (errno=%d)\n",
+                                printerr("Error reading %s: %s (errno=%d)\n",
 					arch_file,sys_errlist[errno],errno);
                                 exit(1);
                         }
@@ -981,14 +1048,14 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					*/
 					if (eots==0)
 					{
-						fprintf(stdout,"\nEnd of tape encountered.\n");
+						printlog("\nEnd of tape encountered.\n");
 						eotape=TRUE;
 						++eots;
 						/*
 						** might need to close and reopen the file
 						**
 						*/
-						if (strlen(norwd_file))
+						if (strlen(norwd_file) > 0)
 						{
 							close(tape_fd);
 							tape_fd =  -1; 
@@ -996,7 +1063,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 						/*
 						** now read the eot
 						*/
-						geteot();
+						geteot(); /* Recursively calls readtape() */
 						eots=0;
 #ifdef SOLARIS
 						++tapenum3480;
@@ -1013,30 +1080,29 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					** no EOT block found
 					**
 					*/
-					fprintf(stderr,"\nMissing EOT block.  Check tape or try running\n");
-					fprintf(stderr,"VSX again using the no-rewind device.\n");
-					fprintf(stderr,"\n");
+					printlog("\nNo EOT block found.\n");
 					return -1;
 				}
 				/*
 				** now close and rewind
 				**
 				**/
-				fprintf(stderr,"Rewinding tape\n");
+				printerr("Rewinding tape\n");
 				tapebytes=0;
 				close(tape_fd);
+				tape_fd =  -1; 
 				/*
 				** tape we've been using is norewind, so we have to rewind it 
 				** another way
 				**
 				*/
-				if (strlen(norwd_file))
+				if (strlen(norwd_file) > 0)
 				{
 					/*
 					** just open and close the normal tape dev 
 					**
 					*/
-					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
+					if (strlen(arch_file) > 0)
 					{
 						int  rwd;
 						rwd=open(arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
@@ -1048,7 +1114,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 						** otherwise, request that the  user specify the 
 						** rewind tape too 
 						*/
-						fprintf(stderr,
+						printerr(
 							"Unable to rewind.  When using -nrw <tape>, specify the\n"
 							"rewind on close device as -f <tape>.\n");
 					}
@@ -1069,8 +1135,8 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 				if (!eotape)
 				{
 					eotape=TRUE;
-					fprintf(stderr,"\nEnd of tape encountered.\n");
-					geteot();
+					printerr("\nEnd of tape encountered.\n");
+					geteot(); /* Recursively calls readtape() */
 				}
 				else
 				{
@@ -1078,16 +1144,17 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					** complain
 					**
 					*/
-					fprintf(stderr,"\nMissing EOT block.  Verify tape and try again.\n");
-					fprintf(stderr,"\n");
+					printerr("\nMissing EOT block.  Verify tape and try again.\n");
+					printerr("\n");
 				}
-				fprintf(stderr,"Rewinding tape\n");
+				printerr("Rewinding tape\n");
 				tapebytes=0;
 				close(tape_fd);
+				tape_fd =  -1; 
 #ifdef REV_1_64_1_1
 				if (strlen(norwd_file))
 				{
-					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
+					if (strlen(arch_file))
 					{
 						int  rwd;
 						rwd=open(arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
@@ -1095,7 +1162,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					}
 					else
 					{
-						fprintf(stderr,"Unable to rewind.  When using -nrw <tape>, specify the\n"
+						printerr("Unable to rewind.  When using -nrw <tape>, specify the\n"
 							"rewind on close device as -f <tape>.\n");
 					}
 				}
@@ -1107,6 +1174,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			if (eightmil && tapebytes == 0)
 			{
 				close(tape_fd);
+				tape_fd =  -1; 
 				tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
 				goto loop;
 			}
@@ -1156,12 +1224,8 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
                         tapebytes=0;
                 }
         }
-	/*
-	** update the byte position on the tape and return it
-	**
-	*/
-        tapepos += bytesrq;
-        return tapepos;
+
+        return bytes;
 }
 /*
 **	Routine:	geteot()
@@ -1203,7 +1267,8 @@ static int geteot(void)
 		st = readtape((unsigned char*)&x,sizeof(x),RT_GETBYTES);
 		if (st== -1)
 		{
-			fprintf(stderr,"Bad EOT block\n");
+			printlog("No EOT block processing performed.\n");
+			printlog("Continuing...\n\n");
 			eoarchive=TRUE;
 			return 0;
 		}
@@ -1249,7 +1314,7 @@ static int geteot(void)
 		** increment the expected tape seq and set a continuation flag
 		**
 		*/
-		fprintf(stderr,"Backup continued on tape volume %6.6s\n",expected_vol);
+		printerr("Backup continued on tape volume %6.6s\n",expected_vol);
 	}
 	else
 	{
@@ -1303,7 +1368,6 @@ static int load(void)
 	** newlib  - new library (directory) is needed
 	** out     - FILE * to output file
 	** saverecs- used to initialize recs index (for spanned files)
-	** dfpos   - used to track position on tape 
 	**
 	*/
         unsigned int recs,fileeof,reccnt;
@@ -1319,13 +1383,16 @@ static int load(void)
         int newlib;
         FILE *out;
 	static int saverecs;
-        int dfpos;
+        int rc;
 	int bHasAcl = FALSE;
+	unsigned int expectedblockcnt;
+	unsigned int actualblockcnt;
+	int found_endoffile_marker;
         
 	/* 
 	** setup the header pointer so we can examine its contents
 	*/
-        tapehdr=(struct tapeheader *)workbuf;
+        tapehdr = &tapehdr_buf;
 
 	/*
 	** initialize counters and flags.
@@ -1336,7 +1403,7 @@ static int load(void)
         big=sizeof(struct tapeheader); 
 	bigextra= 0x800-big;
 
-        med=newlib=eoarchive=0;
+        med=newlib=0;
         small=smallextra=skip_lib=0;
         eoarchive=FALSE;
         recbuf=NULL;
@@ -1359,7 +1426,7 @@ static int load(void)
 				** if its 3480, just inform user we will mount next
 				**
 				*/
-				fprintf(stderr,"Mounting next backup tape (volume: %6.6s).\n", expected_vol);
+				printerr("Mounting next backup tape (volume: %6.6s).\n", expected_vol);
 			}
 			else
 			{
@@ -1377,18 +1444,41 @@ static int load(void)
 			prompt_new_tape();
 #endif
 		}
+
 		/*
 		** now grab the tape header
-		**
 		*/
-                dfpos= getbytes(sizeof(struct tapeheader));
+                rc = getbytes(sizeof(struct tapeheader));
+		if (rc == -1)
+		{
+			break;	/* EOF */
+		}
+
+                if (rc != sizeof(struct tapeheader))
+		{
+			printerr("\nERROR read tapeheader (rc=%d expect=%d)\n", rc, (int)sizeof(struct tapeheader));
+			continue;
+		}
+
+		/*
+		**	Save the last tape header
+		*/
+		memcpy(&tapehdr_buf, workbuf, sizeof(struct tapeheader));
+
+
+		if (bVerbose)
+		{
+			printTapeHeader();
+		}
+
 		/*
 		** check for a valid header
 		**
 		*/
-                if (dfpos== -1 || chk_valid_hdr()== -1)
+                if (chk_valid_hdr()== -1)
 		{
-			continue;
+			printerr("\nERROR invalid tapeheader\n");
+			break;
 		}
 		/*
 		** update big counter (big is the number of valid bytes left in the big block 
@@ -1402,6 +1492,8 @@ static int load(void)
                 getbin((unsigned char *)&recsz,   (unsigned char *)tapehdr->fdr1recsize,SHORT);
                 getbin((unsigned char *)&reccnt,  (unsigned char *)tapehdr->fdr1nrecs,LONG);
                 getbin((unsigned char *)&seq_num, (unsigned char *)tapehdr->seqnum,SHORT);
+		expectedblockcnt = uint3((unsigned char *)tapehdr->fileblockcnt);
+		actualblockcnt = 0;
 
 		/*
 		** determine the file organization
@@ -1487,16 +1579,23 @@ static int load(void)
 		*/
 		switch(tapehdr->fdr1filesection[0])
 		{
-		case '1':	/* This is the default expected value */
+		case '1':	/* x'31' This is the default expected value */
+		case 0xB1:	/* x'31' + x'80'	 DMS/TX no ACL */
+		case 0xF1:	/* x'31' + x'80' + x'40' DMS/TX no ACL */
 			bHasAcl = FALSE;
 			break;
-		case '5':	/* This file has an ACL */
+
+		case '5':	/* x'35' This file has an ACL */
+		case 0xB5:	/* x'35' + x'80'	DMS/TX with ACL */
+		case 0xF5:	/* x'35' + x'80' +x'40' DMS/TX with ACL */
 			bHasAcl = TRUE;
 			break;
+
 		default:	/* Don't know what this is */
 			bHasAcl = FALSE;
-			fprintf(stderr, "\nUnrecognized fdr1filesection = \"%c\", expecting \"1\" or \"5\"\n",
-				tapehdr->fdr1filesection[0]);
+			printerr( "%6.6s  %8.8s  %8.8s:",tapehdr->srcvol, tapehdr->srclib, tapehdr->fdr1filename);
+			printerr( "Unrecognized fdr1filesection = \"0x%02x\"\n",
+				(unsigned int)(tapehdr->fdr1filesection[0]));
 			break;
 		}
 
@@ -1540,20 +1639,34 @@ static int load(void)
                 if (s) *s=(char)0;
 
 		DD{
-			printf("header=%s\n",tapehdr->encfhdr); 
-			fflush(stdout);
+			printdebug("header=%s\n",tapehdr->encfhdr); 
 		}
 		D{
-			printf("header=%4.4s backsection=%1.1d volseq=%2.2d\n",
-			       tapehdr->encfhdr,tapehdr->backsection[1],tapehdr->volseq[1]); fflush(stdout);
+			printdebug("header=%4.4s backsection=%1.1d volseq=%2.2d\n",
+			       tapehdr->encfhdr,tapehdr->backsection[1],tapehdr->volseq[1]); 
 		}
 
                 if (use_vol_name && action==ACT_EXTRACT)
 		{
                         if (0 != strcmp(vol,oldvol))
 			{
-				mkdir(vol,0777);
-				chmod(vol,0777);
+				char casevol[7];
+				strcpy(casevol, vol);
+				if (name_case==CASE_LOWER) 
+				{
+					lower(casevol);
+				}
+
+				if (-1 == mkdir(casevol,0777))
+				{
+					if (errno != EEXIST)
+					{
+						printerr("mkdir(\"%s\") failed\n",casevol);
+						exit(1);
+					}
+				}
+				chmod(casevol,0777);
+
 				strcpy(oldvol,vol);
 			}
 		}
@@ -1650,8 +1763,7 @@ static int load(void)
 		*/
                 if (skip_lib!=FALSE)
 		{
-			fprintf(stderr,".");
-			fflush(stderr);
+			printerr(".");
 		}
 		
 
@@ -1659,12 +1771,12 @@ static int load(void)
                 {
 			if (((seq_num-1) % 55) == 0)
 			{
-				printf("\f\n");
-				printf("VOLUME  LIBRARY   FILE       FSEQ  FORG  RECFM  TYPE    LRECL  NRECS  Org,Flg\n");
-				printf("------  --------  --------   ----  ----  -----  ------  -----  -----  -------\n");
+				printlog("\f\n");
+				printlog("VOLUME  LIBRARY   FILE       FSEQ  FORG  RECFM  TYPE    LRECL  NRECS  Org,Flg\n");
+				printlog("------  --------  --------   ----  ----  -----  ------  -----  -----  -------\n");
 			}
 
-			printf("%-6s  %-8s  %-8s  %5d  %-6s  %s    %-6s   %4d  %5d  (%02X,%02X)",
+			printlog("%-6s  %-8s  %-8s  %5d  %-6s  %s    %-6s   %4d  %5d  (%02X,%02X)",
 			       vol, lib, file, seq_num, 
 			       orgtypename[org_type], rectypename[spec_rec_type], filetypename[act_file_type], 
 			       recsz, reccnt,
@@ -1672,7 +1784,7 @@ static int load(void)
 
 			if (action != ACT_EXTRACT)
 			{
-				printf("\n");
+				printlog("\n");
 			}
 		}
 		
@@ -1688,13 +1800,11 @@ static int load(void)
 			/*
 			** usually we want to lower case all the names
 			*/
-			if (lname_case==CASE_LOWER) 
-			{
-				lower(lib);
-			}
-                        if (fname_case==CASE_LOWER)
+			if (name_case==CASE_LOWER) 
 			{
 				lower(file);
+				lower(lib);
+				lower(vol);
 			}
 
 			if (use_vol_name)
@@ -1706,7 +1816,14 @@ static int load(void)
 				strcpy(outpath,lib);
 			}
 			
-			mkdir(outpath,0777);
+			if (-1 == mkdir(outpath,0777))
+			{
+				if (errno != EEXIST)
+				{
+					printerr("mkdir(\"%s\") failed\n",outpath);
+					exit(1);
+				}
+			}
 			chmod(outpath,0777);
 			
 			/*
@@ -1715,8 +1832,11 @@ static int load(void)
 			*/
 			needs_postprocessing = 0;
 			
-			if (dont_unload_file)
+			if (ORG_PROG == org_type || ORG_INDEX == org_type || ORG_REL == org_type)
 			{
+				/*
+				**	Don't know how to decode these ones so don't worry if compressed
+				*/
 				use_ext = orgtypeext[org_type];
 			}
                         else if (spec_rec_type == RT_COMPRESSED || spec_rec_type == RT_VARIABLE)
@@ -1757,7 +1877,7 @@ static int load(void)
 			*/
                         if (needs_postprocessing)
 			{
-				pushname(outpath);
+				savetmpname(outpath);
 			}
 			/*
 			** if its continued, print a message about it
@@ -1765,7 +1885,7 @@ static int load(void)
 			*/
 			if (file_continued)
 			{
-				printf("Continuing %s...\n",outpath);
+				printlog("Continuing %s...\n",outpath);
 			}
 			/*
 			** if it isn't index, print the name and info for the user to watch.
@@ -1774,14 +1894,14 @@ static int load(void)
 			*/
 			if (dont_unload_file)
 			{
-				printf("   ==> *** SKIPPED ***\n");
+				printlog("   ==> *** SKIPPED ***\n");
 			}
 			else
 			{
-				printf("   ==> %s\n", outpath);
+				printlog("   ==> %s\n", outpath);
 			}
 			DD{
-				printf("top %08x : big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",dfpos,
+				printdebug("top: big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",
 				       big,big,bigextra,bigextra,med,med,small,small,smallextra,smallextra);
 			}
                 }
@@ -1816,7 +1936,7 @@ static int load(void)
                 if (spec_rec_type != RT_FIXED  && out!=NULL && action==ACT_EXTRACT
 			&& !file_continued) /* stamp an info struct for post-processing */
                 {
-                        struct my_header mh;
+                        struct vsx_tmp_header mh;
                   
 			/*
 			** include record type, (max) size, and count
@@ -1828,9 +1948,9 @@ static int load(void)
 			mh.recsz    = recsz;		/* normalize_byteorder(tmpu4 = recsz); */
 			mh.reccnt   = reccnt;		/* normalize_byteorder(tmpu4 = reccnt); */
 
-                        if (1 != fwrite(&mh,sizeof(struct my_header),1,out))
+                        if (1 != fwrite(&mh,sizeof(struct vsx_tmp_header),1,out))
 			{
-				fprintf(stderr,"\nERROR write of temp file header failed: %s [errno=%d]\n",outpath,errno);
+				printerr("\nERROR write of temp file header failed: %s [errno=%d]\n",outpath,errno);
 				perror("Writing temp file header");
 				errno = 0;
 			}
@@ -1853,12 +1973,14 @@ static int load(void)
 		** now loop, reading and writing file data until EOF or EOT
 		**
 		*/
+		found_endoffile_marker = 0;
                 while (!fileeof && !file_continued)
                 {
                         DD{
-                                printf("toploop %08x r%d: big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",dfpos,recs,
+                                printdebug("toploop r%d: big=%x/%d, bigextra=%x/%d, med=%x/%d, small=%x/%d, %x/%d\n",recs,
                                        big,big,bigextra,bigextra,med,med,small,small,smallextra,smallextra);
                         }
+
                         do
                         {
 				/*
@@ -1878,10 +2000,18 @@ static int load(void)
 						** in the big block
 						**
 						*/
-                                                if (bigextra) skipbytes(bigextra);
-                                                if (getbytes(LONG)<0) 
+                                                if (bigextra) 
 						{
-							continue;
+							skipbytes(bigextra);
+						}
+                                                if (getbytes(LONG) != LONG) 
+						{
+							if (eoarchive || eotape)
+							{
+								continue;  /* EOF */
+							}
+							printerr("\nERROR: reading big block size\n");
+							return 1;
 						}
                                                 
 						/*
@@ -1895,9 +2025,14 @@ static int load(void)
 						** four more (the four bytes we just read above)
 						**
 						*/
+						if (big > (0x20000 - 4))
+						{
+							printerr("\nERROR: invalid big block size %d\n",big);
+							return 1;
+						}
                                                 bigextra = 0x20000-big-4;
                                                 DD{
-                                                        printf("index: got big %x %x\n",big,bigextra);
+                                                        printdebug("index: got big %x %x\n",big,bigextra);
                                                 }
                                         }
 					/*
@@ -1906,11 +2041,22 @@ static int load(void)
 					*/
                                         if (med==0)
                                         {
-                                                getbytes(LONG);
+						if (big < LONG)
+						{
+							printerr("\nERROR: Getting med block size, big block too small %d\n", big);
+							return 1;
+						}
+
+                                                if (getbytes(LONG) != LONG) 
+						{
+							printerr("\nERROR: reading med block size\n");
+							return 1;
+						}
                                                 getbin((unsigned char *)&med,workbuf,LONG);
+
                                                 big-=LONG;
                                                 DD{
-                                                        printf("index: got med %x\n",med);
+                                                        printdebug("index: got med %x\n",med);
                                                 }
                                                 
 						/*
@@ -1921,9 +2067,15 @@ static int load(void)
                                                 eofword=med;
                                         }
 
-                                        if (med == 0xffff0090) 
+                                        if (med == ENDOFFILE_MARKER) 
 					{
-						/* end of file marker */
+						/* 
+						**	End of file marker ???
+						**	This might actually be a "NEXT FILE MARKER"
+						**	as it does not seem to be present after the
+						**	last file.
+						*/
+						found_endoffile_marker = 1;
 						med = 0;
 						break;
 					}
@@ -1933,8 +2085,15 @@ static int load(void)
 					** placed continues, this error is caught at a later point
 					** not here, hence the continue
 					**/
-					if (getbytes(med)<0)
+					if (big < med)
 					{
+						printerr("\nERROR: Getting med block (%d) , big block too small %d\n", med, big);
+						return 1;
+					}
+
+					if (getbytes(med) != (int) med)
+					{
+						printerr("\nERROR: Getting med block (%d) \n", med);
 						continue;
 					}
 					/*
@@ -1965,11 +2124,24 @@ static int load(void)
 						}
 						if (bHasAcl)
 						{
-							fprintf(stderr, 
+							printerr( 
 							   "\nError processing ACL header expecting \"TACL\" found \"%4.4s\"\n",
 								workbuf);
 						}
 					}
+
+					/*
+					**	med should be a multiple of 2048
+					*/
+					if (med % FILEBLOCK_SIZE != 0)
+					{
+						printerr("\nERROR med block size not multiple of 2048 (%d)\n", med);
+					}
+
+					/*
+					**	Keep track of how many 2048 byte blocks are in this file.
+					*/
+					actualblockcnt += (med / FILEBLOCK_SIZE);
 
 					/*
 					** stacked if follows:
@@ -2017,7 +2189,7 @@ static int load(void)
 							**/
                                                         if (fwrite(workbuf,1,med,out) != med)
 							{
-								fprintf(stderr,"\nERROR write to temp file failed: %s [errno=%d]\n"
+								printerr("\nERROR write to temp file failed: %s [errno=%d]\n"
 									,outpath,errno);
 								perror("Writing temp file");
 								errno = 0;
@@ -2031,7 +2203,7 @@ static int load(void)
 					*/
                                         med=0;
                                 }
-                                else
+                                else /* eightmil */
                                 {
 					/* 
 					** 8 mil tapes (USUALLY) have no big and medium blocking junk.
@@ -2056,10 +2228,10 @@ static int load(void)
 						}
 						else
 						{
-							fprintf(stderr, 
+							printerr( 
 							   "\nError processing ACL header expecting \"TACL\" found \"%4.4s\"\n",
 								workbuf);
-							fprintf(stderr, "Use the -A option to turn off ACL processing.\n");
+							printerr( "Use the -A option to turn off ACL processing.\n");
 						}
 					}
 
@@ -2120,18 +2292,18 @@ static int load(void)
 								*/
 								if (fwrite(workbuf,1,recsz,out) != recsz)
 								{
-									fprintf(stderr,"\nERROR write failed: [errno=%d]\n",errno);
+									printerr("\nERROR write failed: [errno=%d]\n",errno);
 									perror("Writing out file");
 									errno = 0;
 								}
 								
 								if (add_lf==ADDLF)
 								{
-									fprintf(out,"\n");
+									fprintf(out,EOL_STR);
 								}
 								else if (add_lf==GUESSLF && recsz==80)
 								{
-									fprintf(out,"\n");
+									fprintf(out,EOL_STR);
 								}
 							}
                                                 }
@@ -2161,7 +2333,7 @@ static int load(void)
 							{
                                           			if (fwrite(workbuf,1,cnt,out) != (size_t)cnt)
 								{
-									fprintf(stderr,"\nERROR write failed: [errno=%d]\n",errno);
+									printerr("\nERROR write failed: [errno=%d]\n",errno);
 									perror("Writing out file");
 									errno = 0;
 								}
@@ -2172,21 +2344,45 @@ static int load(void)
 					/*
 					** force the eofword value
 					*/
-                                        eofword = 0xffff0090;
+                                        eofword = ENDOFFILE_MARKER;
                                         
-                                }
+                                } /* eightmil */
 
 			      endloop: ;
 				
-                        } while (eofword != 0xffff0090 && !eoarchive && !eotape);
+                        } while (eofword != ENDOFFILE_MARKER && !eoarchive && !eotape);
 
 			/* ^^
-			** keep looping until that med count is ffff0090 (or a tape mark  on an 8mil)
+			** keep looping until that med count is 0xffff0090 (or a tape mark  on an 8mil)
 			** or end of archive or end of tape
 			*/
 
+			if (!eightmil)
+			{
+				/*
+				**	Only keeping track of this for (!eightmil)
+				**
+				**	- If the END OF FILE MARKER is found then assume all is well.
+				**	- Expected block count is funky for INDEX and PRINT files
+				**	  and if record is zero.
+				*/
+
+				if (!found_endoffile_marker)
+				{
+					if (reccnt != 0 &&
+					    org_type != ORG_INDEX &&
+					    org_type != ORG_PRINT &&
+					    actualblockcnt != expectedblockcnt)
+					{
+						printerr("\nERROR: File Block Count: Expecting %d blocks, found %d blocks\n",
+							expectedblockcnt, actualblockcnt);
+
+						printTapeHeader();
+					}
+				}
+			}
+
                         ++fileeof;
-                        continue;
                 }
 		/*
 		** fclose the output file if we have one 
@@ -2288,18 +2484,20 @@ static char *reptstr(int ch, int cnt)
 }
 
 /*
-**	Routine:	buildrec()
+**	Routine:	uncompressRecord()
 **
 **	Function:	To uncompress a compressed record
 **
 **	Input:		src    - compressed record
 **			dest   - receiving buffer
 **                      size   - number of bytes in src
+**			expectsize - the expected size of the uncompress record 
 **
 **	Output:		uncompressed record left in dest
 **			
 **
-**	Return:		None
+**	Return:		The number of uncompressed bytes in the record
+**			0 = overflow (uncompressed size is greater then expectedsize).
 **
 **	Warnings:	it's a state machine
 **
@@ -2308,15 +2506,16 @@ static char *reptstr(int ch, int cnt)
 */
 
 /* need to redo states START COMP0 COMP and NEXTCOMP */
-static int bldrec(unsigned char *src, unsigned char *dest, unsigned int size)       
+static unsigned int uncompressRecord(unsigned char *src, unsigned char *dest, 
+				     unsigned int size, unsigned int expectsize)       
 {
 	/*
 	** in_i  - input index
 	** ch    - current character
 	** next  - next character
 	*/
-        register unsigned int in_i,ch,cnt,next,out_i;
-        register int state;
+        unsigned int in_i,ch,cnt=0,next,out_i;
+        int state;
 
 
 	/*
@@ -2352,7 +2551,7 @@ static int bldrec(unsigned char *src, unsigned char *dest, unsigned int size)
 
                 switch (state)
                 {
-                      case ST_START:
+                case ST_START:
                         if (ch>=0x80)
                         {
                                 cnt=ch-0x80+1;
@@ -2365,12 +2564,16 @@ static int bldrec(unsigned char *src, unsigned char *dest, unsigned int size)
                         }
                         ++in_i;
                         break;
-                      case ST_NORMAL:
-                        dest[out_i]=ch;
+		case ST_NORMAL:
+			if (out_i+1 > expectsize)
+			{
+				return 0; /* ERROR */
+			}
+			dest[out_i]=ch;
                         ++out_i;
                         ++in_i;
                         break;
-                      case ST_COMP0:
+		case ST_COMP0:
                         if (ch>=0x80)
                         {
                                 cnt=ch-0x80+1;
@@ -2383,14 +2586,18 @@ static int bldrec(unsigned char *src, unsigned char *dest, unsigned int size)
                         }
                         ++in_i;
                         break;
-                      case ST_COMP:
+		case ST_COMP:
+			if (out_i+cnt > expectsize)
+			{
+				return 0; /* ERROR */
+			}
                         memcpy(&dest[out_i],reptstr(ch,cnt),cnt);
                         ++in_i;
                         out_i += cnt;
                         if (src[in_i]>=0x80) state=ST_COMP0;
                         else state=ST_NEXTCOMP;
                         break;
-                      case ST_NEXTCOMP:
+		case ST_NEXTCOMP:
                         next=ch+1;
                         state=ST_NORMAL;
                         ++in_i;
@@ -2401,7 +2608,7 @@ static int bldrec(unsigned char *src, unsigned char *dest, unsigned int size)
                 else --next;
         }
 
-	return 0;
+	return out_i;
 }
 /*
 ** call readtape to load data into workbuf
@@ -2445,38 +2652,49 @@ static int lower(char *p)
 ** parse the options
 **
 */
-static void parseopts(int c, char **v)
+static int parseopts(int c, char **v)
 {
         int i,num,type,val;
         char *destval;
 
 
-	strcpy(arch_file,TAPEDEV);
         strcpy(src_ext,DEF_SRC_EXT);
         strcpy(norm_ext,DEF_NORM_EXT);
         
         for (i=1;i<c;)
         {
                 matchopt(v[i],&num,&type,&destval,&val);
-		if (num == -1 && process_tmps) return;
-                if (num == -1) fprintf(stderr,"bad option \"%s\"\n",v[i]);
-                if (type==OPT_INT) *((int*)destval)=val;
+		if (num == -1 && process_tmps) 
+		{
+			return 0;
+		}
+
+                if (num == -1) 
+		{
+			printerr("ERROR: bad option \"%s\"\n",v[i]);
+			return -1;
+		}
+
+                if (type==OPT_INT) 
+		{
+			*((int*)destval)=val;
+		}
                 else if (type==OPT_STRING) 
                 {
-                        if (strlen(v[i])!=strlen(optlist[num].opt)) strcpy(destval,v[i]+strlen(optlist[num].opt));
-                        else strcpy(destval,v[++i]);
+                        if (strlen(v[i])!=strlen(optlist[num].opt)) 
+				strcpy(destval,v[i]+strlen(optlist[num].opt));
+                        else 
+				strcpy(destval,v[++i]);
                 }
                 ++i;
         }
+
 	if (strlen(tape_rq_str))
 	{
 		tape_blocksz=atoi(tape_rq_str);
 	}
-#ifdef ATT3B2
-	if (tape_blocksz>5120) 
-	  tape_blocksz=5120;
-#endif
 
+	return 0;
 }
 /*
 ** match a single option
@@ -2536,30 +2754,29 @@ static void setord(void)
 
 static int usage(void)
 {
-	fprintf(stderr,"VSX Release V%s %s\n",VERSION,MODDATE);
-	fprintf(stderr,"%s\n",copyright);
-        fprintf(stderr,"\nusage:\nvsx [-f <device or file>] [ -nrw <norewind file> ] [-e.ext] [-i] [-lnu] [-fnu]\n");
-        fprintf(stderr,"   -f <archive> specify device or file containing archive (default: %s)\n",TAPEDEV);
-        fprintf(stderr,"   -nrw <tape>  specify no-rewind device file\n");
-        fprintf(stderr,"   -es.ext      append .ext to all source files created (normally .wcb)\n");
-        fprintf(stderr,"   -en.ext      append .ext to all normal files created (normally .seq)\n");
-        fprintf(stderr,"   -i           generate list of files in archive (do not extract)\n");
-        fprintf(stderr,"   -lnu         generate uppercase directory names\n");
-        fprintf(stderr,"   -fnu         generate uppercase file names\n");
-        fprintf(stderr,"   -tl          query for filetype (source vs. nonsource) per library\n");
-        fprintf(stderr,"   -q           query before restoring each library\n");
-        fprintf(stderr,"   -8           archive is an 8 millimeter tape or 9-track reel tape\n");
-        fprintf(stderr,"   -null        examine cobol source for embedded null values and fix\n");
-        fprintf(stderr,"   -tmp <*.tmp> process .tmp files left over in case of vsx premature abort\n");
-        fprintf(stderr,"   -lf          add linefeeds between records on all files\n");
-        fprintf(stderr,"   -nolf        do not add linefeeds to any files\n");
-        fprintf(stderr,"                (vsx normally adds linefeeds only to files with 80 byte records)\n");
-        fprintf(stderr,"   -trim        trim spaces and modcodes from COBOL source\n");
-        fprintf(stderr,"   -bs <size>   specify blocksize for tape reads\n");
-        fprintf(stderr,"   -ua          unload all files including Indexed and Prog files\n");
-        fprintf(stderr,"   -v           include volume name in output file path\n");
+	printerr("VSX Release V%s %s\n",vsx_version,vsx_moddate);
+	printerr("%s\n",vsx_copyright);
+        printerr("\n");
+        printerr("usage: vsx [options...]\n");
+        printerr("   -f <archive> specify device or file containing archive (e.g. /dev/rmt0 )\n");
+        printerr("   -nrw <tape>  specify no-rewind device file\n");
+        printerr("   -es.ext      append .ext to all source files created (normally .wcb)\n");
+        printerr("   -en.ext      append .ext to all normal files created (normally .seq)\n");
+        printerr("   -i           generate list of files in archive (do not extract)\n");
+        printerr("   -lc          generate lowercase file names (default is uppercase)\n");
+        printerr("   -tl          query for filetype (source vs. nonsource) per library\n");
+        printerr("   -q           query before restoring each library\n");
+        printerr("   -8           archive is an 8 millimeter tape or 9-track reel tape\n");
+        printerr("   -null        examine cobol source for embedded null values and fix\n");
+        printerr("   -tmp <*.tmp> process .tmp files left over in case of vsx premature abort\n");
+        printerr("   -lf          add linefeeds between records on all files\n");
+        printerr("   -nolf        do not add linefeeds to any files\n");
+        printerr("                (vsx normally adds linefeeds to files with 80 byte records)\n");
+        printerr("   -bs <size>   specify blocksize for tape reads\n");
+        printerr("   -ua          unload all files including Indexed and Prog files\n");
+        printerr("   -nv          do not include volume name in output file path\n");
 #ifdef SOLARIS
-	fprintf(stderr,"   -3480        tape device is a Wang 3480\n");
+	printerr("   -3480        tape device is a Wang 3480\n");
 #endif
         exit(1);
 	return 0;
@@ -2632,22 +2849,43 @@ static int setdebuginfo(void)
         }               
 }
 
-static int pushname(char *str)
+struct stack_node
+{
+	struct stack_node *prev;
+	unsigned char *name;
+};
+static struct stack_node *stackp = NULL;
+static struct stack_node *last_name_node = NULL;
+
+static int savetmpname(const char *str)
 {
         struct stack_node *new_node;
         
-        if (head==NULL)
-        {
-                new_node=stackp=head=(struct stack_node *)calloc(1,sizeof(struct stack_node));
-                head->prev = NULL;
-        }
-        else
-        {
-                new_node=(struct stack_node *)calloc(1,sizeof(struct stack_node));
-                new_node->prev = stackp;
-        }
+	saved_tmp_name_cnt++;
+
+	/*
+	**	Allocate a new node and set the name.
+	*/
+        new_node=(struct stack_node *)calloc(1,sizeof(struct stack_node));
         new_node->name = (unsigned char*) strdup(str);
-        stackp = new_node;
+        new_node->prev = NULL;
+
+	/*
+	**	Hook the new node into the list
+	*/
+	if (stackp == NULL)
+	{
+		stackp = new_node;
+		last_name_node = stackp;
+	}
+	else
+	{
+		/*
+		**	Add to the end of the list
+		*/
+		last_name_node->prev = new_node;
+		last_name_node = new_node;
+	}
 
 	return 0;
 }
@@ -2659,7 +2897,18 @@ static char *getname(void)
 
         if (!process_tmps)
 	{
-		if (stackp==NULL) return NULL;
+		if (stackp==NULL) 
+		{
+			if (saved_tmp_name_cnt != 0)
+			{
+				printerr("\nERROR: Saved tmp name count != 0\n");
+			}
+
+			return NULL;
+		}
+
+		saved_tmp_name_cnt--;
+
 		tmp = (char*)stackp->name;
 		save = stackp;
 		stackp = stackp->prev;
@@ -2676,11 +2925,12 @@ static char *getname(void)
 
 static int postprocess(void)
 {
-        char *inname,*getname(void);
+        char *inname;
         
         while (NULL != (inname=getname()))
         {
 #ifdef unix
+		/* fork before decomp to tolerate corrupt files. */
 	        int dummy;
                 if (fork()) 
 		{
@@ -2701,7 +2951,7 @@ static int postprocess(void)
 
 void baddata(int sig)
 {
-        fprintf(stderr," file appears corrupted\n");
+        printerr(" file appears corrupted\n");
         exit(1);
 }
 /*
@@ -2726,12 +2976,13 @@ static int digest(char *name)
 {
         char *p;
 	unsigned char *recbuf;
-        struct my_header foo;
+        struct vsx_tmp_header foo;
         FILE *in,*out;
         char outname[100];
         unsigned short small, smallextra, curlen;
-        int recs, recsz,reccnt, the_size;
-	int	rc;
+        int recs, recsz,reccnt;
+	size_t the_size;
+	size_t rc;
 
         signal(SIGINT,  baddata );
         signal(SIGILL,  baddata );
@@ -2739,23 +2990,24 @@ static int digest(char *name)
 #ifdef SIGEMT
         signal(SIGEMT,  baddata );
 #endif
-#ifdef unix
+#ifdef SIGBUS
         signal(SIGBUS,  baddata );
+#endif
+#ifdef SIGQUIT
         signal(SIGQUIT, baddata );
 #endif
 	if (use_vol_name)
 	{
-		printf("%-29s",name); 
+		printlog("%-29s",name); 
 	}
 	else
 	{
-		printf("%-22s",name); 
+		printlog("%-22s",name); 
 	}
-	fflush(stderr);
 
 	if ((in=FOPEN64(name,"rb")) == NULL)
 	{
-                fprintf(stderr,"\nERROR cannot open temp file: %s [errno=%d]\n",name,errno);
+                printerr("\nERROR cannot open temp file: %s [errno=%d]\n",name,errno);
 		perror("Opening temp file for reading");
 		errno = 0;
 		return 1;
@@ -2765,15 +3017,15 @@ static int digest(char *name)
         p=strchr(outname,'.');
         if (!p)
         {
-                fprintf(stderr,"\nERROR bad temp filename: %s\n",outname);
+                printerr("\nERROR bad temp filename: %s\n",outname);
                 fclose(in);
 		return 1;
         }
 
-        rc = fread(&foo,sizeof(struct my_header),1,in);
+        rc = fread(&foo,sizeof(struct vsx_tmp_header),1,in);
 	if (1 != rc)
 	{
-                fprintf(stderr,"\nERROR read of temp file header failed: %s [errno=%d]\n",name,errno);
+                printerr("\nERROR read of temp file header failed: %s [errno=%d]\n",name,errno);
 		perror("Reading temp file header");
 		errno = 0;
                 fclose(in);
@@ -2782,8 +3034,8 @@ static int digest(char *name)
 	
         spec_rec_type 	= foo.rectype;		/* normalize_byteorder(foo.rectype); */
         act_file_type 	= foo.filetype;		/* normalize_byteorder(foo.filetype); */
-        recsz 		= foo.recsz;		/* normalize_byteorder(foo.recsz); */
         reccnt 		= foo.reccnt;		/* normalize_byteorder(foo.reccnt); */
+        recsz 		= foo.recsz;		/* normalize_byteorder(foo.recsz); */
 
         recbuf=(unsigned char *)calloc(recsz+1,1);
         
@@ -2794,24 +3046,26 @@ static int digest(char *name)
 
 	if (use_vol_name)
 	{
-		printf(" ==>  \n%-31s : ",outname); 
+		printlog(" ==>  %-31s : ",outname); 
 	}
 	else
 	{
-		printf(" ==>  %-24s : ",outname); 
+		printlog(" ==>  %-24s : ",outname); 
 	}
 	
 	fflush(stdout);
         
         if ((out = FOPEN64(outname,"wb"))==NULL)
         {
-                fprintf(stderr,"\nERROR cannot open output: %s [errno=%d]\n",outname,errno);
+                printerr("\nERROR cannot open output: %s [errno=%d]\n",outname,errno);
 		perror("Opening output file for writing");
 		errno = 0;
 		fclose(in);
 	        free(recbuf);
 		return 1;
         }
+
+	errno = 0;
 
         recs=small=smallextra=0;
         while (recs<reccnt)
@@ -2824,22 +3078,17 @@ static int digest(char *name)
 				rc = fread(workbuf,1,the_size,in);
 				if (rc != the_size)
 				{
-					fprintf(stderr, "\nERROR read failed: %s [errno=%d] (smallextra)\n",name,errno);
+					printerr( "\nERROR read failed: %s [errno=%d] (smallextra)\n",name,errno);
 					if (feof(in))
 					{
-						fprintf(stderr, "Premature EOF\n");
+						printerr( "Premature EOF\n");
 					}
 					else
 					{
 						perror("Reading temp file");
 						errno = 0;
-						fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
-							recs, reccnt,small,smallextra,rc,the_size);
 					}
-					fclose(in);
-					fclose(out);
-				        free(recbuf);
-					return 1;
+					goto digest_exit;
 				}
 
 			}
@@ -2847,22 +3096,17 @@ static int digest(char *name)
                         rc = fread(workbuf,1,the_size,in);
 			if (rc != the_size)
 			{
-				fprintf(stderr, "\nERROR read failed: %s [errno=%d] (first bin)\n",name,errno);
+				printerr( "\nERROR read failed: %s [errno=%d] (first bin)\n",name,errno);
 				if (feof(in))
 				{
-					fprintf(stderr, "Premature EOF\n");
+					printerr( "Premature EOF\n");
 				}
 				else
 				{
 					perror("Reading temp file");
 					errno = 0;
-					fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
-						recs, reccnt,small,smallextra,rc,the_size);
 				}
-				fclose(in);
-				fclose(out);
-			        free(recbuf);
-				return 1;
+				goto digest_exit;
 			}
                         getbin((unsigned char *)&small,workbuf,2);
                         smallextra = 0x800 - small;
@@ -2873,56 +3117,64 @@ static int digest(char *name)
                 rc = fread(workbuf,1,the_size,in);
 		if (rc != the_size)
 		{
-			fprintf(stderr, "\nERROR read failed: %s [errno=%d] (second bin)\n",name,errno);
+			printerr( "\nERROR read failed: %s [errno=%d] (second bin)\n",name,errno);
 			if (feof(in))
 			{
-				fprintf(stderr, "Premature EOF\n");
+				printerr( "Premature EOF\n");
 			}
 			else
 			{
 				perror("Reading temp file");
 				errno = 0;
-				fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
-						recs, reccnt,small,smallextra,rc,the_size);
 			}
-			fclose(in);
-			fclose(out);
-		        free(recbuf);
-			return 1;
+			goto digest_exit;
 		}
                 getbin((unsigned char *)&curlen,workbuf,2);
+                small -= curlen;
+
+		if (curlen < 2)
+		{
+			printerr("\nERROR decoding: %s invalid (second bin) curlen=%u\n", 
+				name, (unsigned int)curlen);
+			goto digest_exit;
+		}
 
 		the_size = curlen-2;
                 rc = fread(workbuf,1,the_size,in);
 		if (rc != the_size)
 		{
-			fprintf(stderr, "\nERROR read failed: %s [errno=%d] (record)\n",name,errno);
+			printerr( "\nERROR read failed: %s [errno=%d] (record)\n",name,errno);
 			if (feof(in))
 			{
-				fprintf(stderr, "Premature EOF\n");
+				printerr( "Premature EOF\n");
 			}
 			else
 			{
 				perror("Reading temp file");
 				errno = 0;
-				fprintf(stderr, "recs=%d reccnt=%d small=%d smallextra=%d rc=%d the_size=%d\n",
-					recs, reccnt,small,smallextra,rc,the_size);
 			}
-			fclose(in);
-			fclose(out);
-		        free(recbuf);
-			return 1;
+			goto digest_exit;
 		}
-                small -= curlen;
                 if (spec_rec_type == RT_COMPRESSED) 
 		{
-			bldrec(workbuf,recbuf,curlen-2);
+			unsigned int gotsize;
+			gotsize = uncompressRecord(workbuf, recbuf, curlen-2, recsz);
+
+			if (0 == gotsize)
+			{
+				/*
+				**	ERROR - Overflow on uncompressing
+				*/
+				printerr("\nERROR decoding: %s OVERFLOW uncompressing comprecsize=%d recsize=%d\n",
+					name, curlen-2,  recsz);
+				goto digest_exit;
+			}
 		}
                 else 
 		{
 			memcpy(recbuf,workbuf,recsz);
-			recbuf[recsz]=(char)0;
 		}
+		recbuf[recsz]=(char)0;
 		
                 ++recs;
 
@@ -2942,33 +3194,42 @@ static int digest(char *name)
                 rc = fwrite(recbuf, 1, the_size, out);
 		if (rc != the_size)
 		{
-	                fprintf(stderr,"\nERROR write failed: %s [size=%d] [errno=%d] [rc=%d] [recs=%d]\n",
+	                printerr("\nERROR write failed: %s [size=%d] [errno=%d] [rc=%d] [recs=%d]\n",
 				outname,the_size,errno,rc,recs);
 			perror("Writing output file");
 			errno = 0;
-			fclose(in);
-			fclose(out);
-		        free(recbuf);
-			return 1;
+			goto digest_exit;
 		}
 
                 if ((add_lf==ADDLF) ||
 		    (add_lf==GUESSLF && act_file_type == FT_SRC && recsz==80) ||
 		    (act_file_type == FT_PRT))
 		{
-                	fprintf(out,"\n");
+                	fprintf(out,EOL_STR);
 		}
 
         }
-        printf("%5d recs of %4d bytes\n",reccnt,recsz);
-        
+
+digest_exit:
         fclose(in);
 	fclose(out);
         free(recbuf);
+
+	if (recs < reccnt)
+	{
+		printerr( "Record %d of %d Recsz=%d Rectype=%s Filetype=%s (small=%d smallextra=%d rc=%lu the_size=%lu)\n",
+			recs, reccnt, recsz, rectypename[spec_rec_type], filetypename[act_file_type],
+			small, smallextra, (unsigned long)rc, (unsigned long)the_size);
+		return 1;
+	}
+
+        printlog("%5d recs of %4d bytes\n",reccnt,recsz);
+        
         unlink(name);
 
 	return 0;
 }
+
 
 static int writefixed(unsigned char *buf, int recs, unsigned int size, FILE *f)
 {
@@ -2978,7 +3239,7 @@ static int writefixed(unsigned char *buf, int recs, unsigned int size, FILE *f)
 		
                 if (fwrite(buf,1,size,f) != size)
 		{
-			fprintf(stderr,"\nERROR write failed: [errno=%d]\n",errno);
+			printerr("\nERROR write failed: [errno=%d]\n",errno);
 		}
                 buf += size;
                 --recs;
@@ -2988,24 +3249,29 @@ static int writefixed(unsigned char *buf, int recs, unsigned int size, FILE *f)
 		    (add_lf==GUESSLF && act_file_type == FT_SRC && size==80) ||
 		    (act_file_type == FT_PRT))
 		{
-                	fprintf(f,"\n");
+			fprintf(f, EOL_STR);
 		}
         }
 
 	return 0;
 }
 
-static const char *hexstring(const char *string, int len)
+static const char *hexstring(const unsigned char *string, int len)
 {
 	static char hex[200];
 	int	i;
 	
 	for(i=0; i<len; i++)
 	{
-		sprintf(&hex[i*2],"%02X", (int) string[i]);
+		sprintf(&hex[i*2],"%02X", (unsigned int) string[i]);
 	}
 	hex[len*2] = '\0';
 	return hex;
+}
+
+static unsigned int uint3(const unsigned char *var)
+{
+	return (unsigned int)(var[0] * 0x00010000 + var[1] * 0x00000100 + var[2]);
 }
 
 static void PrintVerboseVariable(const char *name, const unsigned char *var, int len)
@@ -3055,18 +3321,13 @@ static void PrintVerboseVariable(const char *name, const unsigned char *var, int
 	}
 	
 	
-	printf("%-25s[%d] = x[%s] %s\n",
-	       name, len, hexstring((const char *)var, len), string);
+	printlog("%-25s[%d] = x[%s] %s\n",
+	       name, len, hexstring((const unsigned char *)var, len), string);
 }
 
-
-static int chk_valid_hdr(void)
+static void printTapeHeader(void)
 {
-	int vsxdump;
-
-	if (bVerbose)
-	{
-		printf("\n\f");
+		printlog("\n");
 		PrintVerboseVariable("tapehdr->encfhdr", tapehdr->encfhdr, 4);
 		PrintVerboseVariable("tapehdr->vol1",    tapehdr->vol1, 6);
 		PrintVerboseVariable("tapehdr->userid1",    tapehdr->userid1, 3);
@@ -3103,70 +3364,51 @@ static int chk_valid_hdr(void)
 		PrintVerboseVariable("tapehdr->fdr1x3end",     tapehdr->fdr1x3end, 3);
 
 		PrintVerboseVariable("tapehdr->fdr1spare2",    tapehdr->fdr1spare2, 2);
-		PrintVerboseVariable("tapehdr->fdr1nrecs",    tapehdr->fdr1nrecs, 4);
+		PrintVerboseVariable("tapehdr->fdr1nrecs",	tapehdr->fdr1nrecs, 4);
 		PrintVerboseVariable("tapehdr->fdr1recsize",    tapehdr->fdr1recsize, 2);
-		PrintVerboseVariable("tapehdr->fdr1spare3",    tapehdr->fdr1spare3, 1);
-		PrintVerboseVariable("tapehdr->fdr1eblk",    tapehdr->fdr1eblk, 3);
-		PrintVerboseVariable("tapehdr->fdr1erec",    tapehdr->fdr1erec, 2);
-		PrintVerboseVariable("tapehdr->fdr1spare4",    tapehdr->fdr1spare4, 12);
-		PrintVerboseVariable("tapehdr->fdr1chain",    tapehdr->fdr1chain, 4);
+		PrintVerboseVariable("tapehdr->fdr1spare3",	tapehdr->fdr1spare3, 1);
+		PrintVerboseVariable("tapehdr->fdr1eblk",	tapehdr->fdr1eblk, 3);
+		PrintVerboseVariable("tapehdr->fdr1erec",	tapehdr->fdr1erec, 2);
+		PrintVerboseVariable("tapehdr->fdr1spare4",	tapehdr->fdr1spare4, 12);
+		PrintVerboseVariable("tapehdr->fdr1chain",	tapehdr->fdr1chain, 4);
 
-		PrintVerboseVariable("tapehdr->filler8",    tapehdr->filler8, 5);
+		PrintVerboseVariable("tapehdr->filler8a",	tapehdr->filler8a, 2);
+		PrintVerboseVariable("tapehdr->fileblockcnt",   tapehdr->fileblockcnt, 3);
+
 		PrintVerboseVariable("tapehdr->tapevol",    tapehdr->tapevol, 6);
 		PrintVerboseVariable("tapehdr->trailer",    tapehdr->trailer, 5);
-	}
-	
+}
 
-	if (strncmp("ENCF",(char *)tapehdr->encfhdr,4))
+static int chk_valid_hdr(void)
+{
+	if (0 != memcmp("ENCF",(char *)tapehdr->encfhdr,4))
 	{
-		close(tape_fd);
-		tape_fd= -1;
-		tapebytes=0;
-		vsxdump=open(".vsxdump",O_WRONLY|O_CREAT|O_BINARY|O_LARGEFILE|0666);
-		write(vsxdump,tapebuf,tapebytes);
-		close(vsxdump);
-		if (new_vol)
-		{
-			fprintf(stderr,"Volume header appears to be bad.\n");
-			return -1;
-		}
-		else
-		{
-			fprintf(stderr,"Bad file header.\n");
-			postprocess();
-			handler(0);
-		}
-	}
-	if (strlen(expected_vol)==0)
-	  return 1;
-	if (new_vol && strncmp(expected_vol,(char *)tapehdr->vol1,6))
-	{
-		fprintf(stderr,"Warning: Incorrect volume label. [%6.6s/%6.6s/%6.6s]\n",
-			tapehdr->vol1,tapehdr->tapevol,expected_vol);
-	}
-	else new_vol=FALSE;
-	return 1;
-#ifdef NOT_USED
-	char volseq;
-	volseq = tapehdr->backsection[0];
-	if (volseq != expected_seq)
-	{
-		close(tape_fd);
-		tape_fd= -1;
-		tapebytes=0;
-		fprintf(stderr,"Tape appears to have incorrect sequence number (%d).  Expected %d.\n",
-			volseq, expected_seq);
 		return -1;
 	}
+
+	if (strlen(expected_vol)==0)
+	{
+		return 1;
+	}
+
+	if (new_vol && strncmp(expected_vol,(char *)tapehdr->vol1,6))
+	{
+		printerr("Warning: Incorrect volume label. [%6.6s/%6.6s/%6.6s]\n",
+			tapehdr->vol1,tapehdr->tapevol,expected_vol);
+	}
+	else 
+	{
+		new_vol=FALSE;
+	}
+
 	return 1;
-#endif
 }
 
 static int prompt_new_tape(void)
 {
-	fprintf(stderr,"Insert next backup tape (volume: %6.6s).\n",
+	printerr("Insert next backup tape (volume: %6.6s).\n",
 		expected_vol);
-	fprintf(stderr,"Press return when ready\n");
+	printerr("Press return when ready\n");
 	getchar();
 	new_vol=TRUE;
 
@@ -3183,10 +3425,10 @@ static void load3480(char *tapedev, int cartridge)
 	if ((fd = open(tapedev, O_RDONLY|O_BINARY|O_LARGEFILE)) < 0) {
 		if (errno == EIO) {
 #if 0
-			fprintf(stderr, "%s: no tape loaded or drive offline\n", 
+			printerr( "%s: no tape loaded or drive offline\n", 
 				tapedev);
 #endif
-			fprintf(stderr,"Please LOAD the first tape in the sequence and press Return.\n");
+			printerr("Please LOAD the first tape in the sequence and press Return.\n");
 			getchar();
 			goto quickkludge;
 		}
@@ -3267,16 +3509,162 @@ static void load3480(char *tapedev, int cartridge)
 #endif
 }
 #endif
+
+
+static void printerr(const char* format, ... /* args */)
+{
+	va_list ap;
+	char	buff[1024];
+
+	va_start(ap, format);
+	vsprintf(buff, format, ap);
+	va_end(ap);
+
+	fflush(stdout); /* Ensure everything is outout before printing error */
+
+	if (stdlog) 
+	{		
+		fprintf(stdlog, "%s", buff);
+		fflush(stdlog);
+	}
+	fprintf(stderr, "%s", buff);
+	fflush(stderr);
+}
+
+static void printlog(const char* format, ... /* args */)
+{
+	va_list ap;
+	char	buff[1024];
+
+	va_start(ap, format);
+	vsprintf(buff, format, ap);
+	va_end(ap);
+
+	printf("%s", buff);
+	if (stdlog) 
+	{
+		fprintf(stdlog, "%s", buff);
+	}
+}
+
+static void printdebug(const char* format, ... /* args */)
+{
+	va_list ap;
+	char	buff[1024];
+
+	va_start(ap, format);
+	vsprintf(buff, format, ap);
+	va_end(ap);
+
+	fprintf(stdout, "%s", buff);
+	fflush(stdout);
+}
+
 /*
  * $Log: vsx.c,v $
- * Revision 1.96.2.3  2002/11/19 16:24:08  gsl
+ * Revision 1.126  2003/07/25 14:02:50  gsl
+ * no message
+ *
+ * Revision 1.125  2003/07/24 20:35:33  gsl
+ * error checking
+ *
+ * Revision 1.124  2003/07/23 17:26:59  gsl
+ * fix version display
+ *
+ * Revision 1.123  2003/07/23 15:41:39  gsl
+ * no message
+ *
+ * Revision 1.122  2003/07/23 13:54:00  gsl
+ * no message
+ *
+ * Revision 1.121  2003/07/22 21:42:44  gsl
+ * more error checking and reporting
+ *
+ * Revision 1.120  2003/07/22 15:28:38  gsl
+ * fix tmp file processing error messages
+ *
+ * Revision 1.119  2003/04/07 15:31:18  gsl
+ * Fix bogus EOT errors
+ *
+ * Revision 1.118  2003/03/12 18:18:11  gsl
+ * FIx -Wall warnings
+ *
+ * Revision 1.117  2003/02/12 17:35:01  gsl
+ * fix version number
+ *
+ * Revision 1.116  2003/02/05 15:40:13  gsl
+ * Fix copyright headers
+ *
+ * Revision 1.115  2003/02/04 20:42:49  gsl
+ * fix -Wall warnings
+ *
+ * Revision 1.114  2003/02/04 19:18:44  gsl
+ * fix copyright header
+ *
+ * Revision 1.113  2003/02/04 18:50:25  gsl
+ * fix copyright header
+ *
+ * Revision 1.112  2003/01/28 19:31:39  gsl
+ * fix c++ style comments
+ *
+ * Revision 1.111  2003/01/24 20:38:52  gsl
+ * Change year to 2003
+ *
+ * Revision 1.110  2002/11/19 16:28:45  gsl
  * Define O_LARGEFILE for ALPHA and SCO
  *
- * Revision 1.96.2.2  2002/10/10 12:56:45  gsl
- * Huge file support
+ * Revision 1.109  2002/10/10 12:46:43  gsl
+ * Use FOPEN64
  *
- * Revision 1.96.2.1  2002/09/05 19:22:24  gsl
- * LINUX
+ * Revision 1.108  2002/10/08 17:08:05  gsl
+ * Define _LARGEFILE64_SOURCE to define O_LARGEFILE on LINUX
+ *
+ * Revision 1.107  2002/10/07 19:19:46  gsl
+ * Add O_LARGEFILE to open() options
+ *
+ * Revision 1.106  2002/10/04 20:58:34  gsl
+ * rename status
+ *
+ * Revision 1.105  2002/09/04 18:13:28  gsl
+ * LINUX sys_errlist and SIGEMT
+ *
+ * Revision 1.104  2002/06/18 15:18:08  gsl
+ * reorder digest header fields to match struct
+ *
+ * Revision 1.103  2002/06/06 22:06:24  gsl
+ * Fix up tape closing and exit logic
+ * Still working on end of archive stuff
+ *
+ * Revision 1.102  2002/06/06 21:49:07  gsl
+ * Work in progress on fixing END OF ARCHIVE logic
+ * keeps reprocessing the end of the tape.
+ *
+ * Revision 1.101  2002/06/06 15:19:23  gsl
+ * Fix END-OF-TAPE error conditions
+ *
+ * Revision 1.100  2002/06/04 17:03:27  gsl
+ * VSX now defaults to creating uppercase file names. Use the "-lc"
+ * option to create lowercase names.
+ *
+ * VSX now defaults to including the Volume name in the path. Use the
+ * "-nv" to not include the volume name.
+ *
+ * VSX now logs all messages to the file vsx.log in the current
+ * directory.
+ *
+ * VSX no longer uses a default tape device, you must supply the input
+ * device for file.
+ *
+ * Revision 1.99  2002/06/03 21:18:43  gsl
+ * Change to default to uppercase names
+ *
+ * Revision 1.98  2002/05/22 19:43:48  gsl
+ * Fi x the ACL detection
+ *
+ * Revision 1.97  2002/05/21 21:15:57  gsl
+ * Fix unrecognized FDR1FILESECTION variable as DMX/TX
+ * Fix EOL for WIN32
+ * Fix Copyright
  *
  * Revision 1.96  2001/11/07 19:54:24  gsl
  * main() returns int
@@ -3361,14 +3749,14 @@ static void load3480(char *tapedev, int cartridge)
  * fix copyright
  *
  * Revision 1.72  1995/02/02  11:06:22  gsl
- * fixed the copyright messages to Devtech
+ * fixed the copyright messages to 
  * and fixed some compiler warnings
  *
  * Revision 1.71  1995/02/02  10:44:19  gsl
  * fix duplicate copyright
  *
  * Revision 1.70  1995/02/01  00:45:30  gsl
- * added devtech copyright
+ * added  copyright
  *
  * Revision 1.69  1995/01/31  23:08:48  gsl
  * Merged in the 1.64.1.1 changes that JEC made at SFG.
@@ -3495,7 +3883,7 @@ static void load3480(char *tapedev, int cartridge)
  * org byte & 0x03 == 0x02 means index file)
  *
  * Revision 1.34  1991/04/23  00:13:06  jec
- * fixed harte bug.  uninitialized var next in bldrec
+ * fixed harte bug.  uninitialized var next in uncompressRecord
  * was sending us into comp0 state at loops end
  *
  * Revision 1.1  1991/04/18  23:35:12  jockc
@@ -3518,7 +3906,7 @@ static void load3480(char *tapedev, int cartridge)
  * fixed datavantage extra bytes thing
  * 
  * D 1.27 91/02/01 16:05:39 root 27 26  00059/00025/00688
- * fixed aptech bug (bldrec state table.. needed to allow for NEXTCOMP instead of COMP0 )
+ * fixed aptech bug (uncompressRecord state table.. needed to allow for NEXTCOMP instead of COMP0 )
  * fixed 2/4 byte reccnt bug
  * 
  * D 1.26 91/01/25 10:48:54 root 26 25  00001/00001/00712
