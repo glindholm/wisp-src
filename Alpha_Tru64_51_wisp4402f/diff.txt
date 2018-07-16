@@ -1,0 +1,187 @@
+
+acu/wruncbl.umf
+381c381
+< header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDE_LIB_PATH)
+---
+> header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDEDIR)
+385c385
+< 	@echo ">>>> EDELIB  = " $(EDE_LIB_PATH)
+---
+> 	@echo ">>>> EDEDIR  = " $(EDEDIR)
+
+ivslib/vchinese.c
+26d25
+< #include <string.h>
+248,250d246
+< 
+< 	return 0;
+< 	
+293c289
+< 	  return 0;
+---
+> 	  return;
+428c424
+< 	  return 0;
+---
+> 	  return;
+435,437d430
+< 
+< 	return 0;
+< 	
+449,451d441
+< 
+< 	return 0;
+< 	
+465,467d454
+< 
+< 	return 0;
+< 	
+485,487d471
+< 
+< 	return 0;
+< 	
+
+kcsi/create/createunix.umf
+153c153
+< 	$(L)(kexists.o) $(L)(kcsit.o)
+---
+> 	$(L)(kexists.o)
+
+port/make.include
+190,193c190,192
+< SYSDEF = -DOSF1_ALPHA -D_USE_OLD_TTY
+< #SYSDEF = -DOSF1_ALPHA
+< CC_STD  = c89
+< CC_ANSI = c89
+---
+> #SYSDEF = -DOSF1_ALPHA -D_USE_OLD_TTY
+> #CC_STD  = c89
+> #CC_ANSI = c89
+197,200d195
+< 
+< CCC = gcc
+< CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+< CCC_SYS_LINK =  /usr/local/cygnus/tru64-010710/H-alphaev56-dec-osf5.1/lib/libstdc++.a
+
+port/maketail.sh
+1c1
+< make $1>> make.err 2>&1 &
+---
+> make >> make.err 2>&1 &
+
+port/makewisp.umf
+82d81
+< 		@echo Making $@
+86d84
+< 		@echo Making $@
+90d87
+< 		@echo Making $@
+95d91
+< 		@echo Making $@
+100d95
+< 		@echo Making $@
+105d99
+< 		@echo Making $@
+110d103
+< 		@echo Making $@
+115d107
+< 		@echo Making $@
+120d111
+< 		@echo Making $@
+125d115
+< 		@echo Making $@
+130d119
+< 		@echo Making $@
+137d125
+< 		@echo Making $@
+142d129
+< 		@echo Making $@
+149,150c136
+< 		@echo Making $@
+< 		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. EDE_LIB_PATH=../lib/libede.a ACUDIR=$(ACUDIR) ede)
+---
+> 		(cd $(WISP)/src/acu;		$(MAKE) -f wruncbl.umf WISPDIR=.. ACUDIR=$(ACUDIR) ede)
+154,155c140
+< 		@echo Making $@
+< 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. EDE_LIB_PATH=../lib/libede.a COBDIR=$(COBDIR) ede)
+---
+> 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. COBDIR=$(COBDIR) ede)
+159,160c144
+< 		@echo Making $@
+< 		(cd $(WISP)/src/acu; 		$(MAKE) -f wruncbl.umf  WISPDIR=.. clean)
+---
+> 		(cd $(WISP)/src/acu; 		$(MAKE) -f wruncbl.umf  clean)
+
+testacu/sample.umf
+28c28
+< mfse:
+---
+> mf:
+
+videolib/vrawunix.c
+70d69
+< #include <string.h>
+
+wisplib/submit.c
+533c533,535
+< #if defined(BSD) || defined(_BSD) || defined(OSF1_ALPHA)
+---
+> #ifdef OSF1_ALPHA
+> 				setpgrp(); 						/* Set the PROCESS GROUP ID		*/
+> #elif defined(BSD) || defined(_BSD)
+
+wisplib/wsystem.c
+13d12
+< #include <string.h>
+86c85
+< 			size_t i;
+---
+> 			int i;
+
+wisptran/wt_cli.c
+280c280
+< 					printf("%%WISP-F-BADCOMPILER Invalid compiler flag (-V %s).\n",optarg);
+---
+> 					printf("%WISP-F-BADCOMPILER Invalid compiler flag (-V %s).\n",optarg);
+
+wisputils/vcapkeys.c
+16d15
+< #include <string.h>
+
+wisputils/wexists.c
+23d22
+< #include <string.h>
+
+wisputils/wfind.c
+19d18
+< #include <string.h>
+
+wisputils/wrename.c
+19d18
+< #include <string.h>
+
+wisputils/wscratch.c
+21d20
+< #include <string.h>
+
+wisputils/wsysconf.c
+95,96c95,96
+< #define WSNAME2 ".*"
+< #define WSPATH2 "/dev/pts"
+---
+> #define WSNAME2	"pty..*"
+> #define WSPATH2	"/dev"
+358c358
+< 			fprintf(stderr,"Unable to remove existing file %s\n\n", cfgpath);
+---
+> 			fprintf(stderr,"Unable to remove existing file %s\n\n");
+
+wisputils/wsysinit.c
+36d35
+< #include "wperson.h"
+
+wproc/utility.cpp
+831c831
+<    sprintf(a_string, "%d", an_int_32);
+---
+>    sprintf(a_string, "%ld", an_int_32);

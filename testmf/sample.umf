@@ -14,19 +14,19 @@ default:
 
 ACU \
 acu:
-	$(MAKE) -f sampleacu.umf WISPLANG=ACU
+	$(MAKE) -f sampleacu.umf -e WISPLANG=ACU
 
 ACN \
 acn:
-	$(MAKE) -f sampleacu.umf WISPLANG=ACN
+	$(MAKE) -f sampleacu.umf -e WISPLANG=ACN
 
 MF \
 mf:	
-	$(MAKE) -f samplemf.umf WISPLANG=MF
+	$(MAKE) -f samplemf.umf -e WISPLANG=MF
 
 MFSE \
 mfse:
-	$(MAKE) -f samplemf.umf WISPLANG=MFSE
+	$(MAKE) -f samplemf.umf -e WISPLANG=MFSE
 
 clean:
 	$(MAKE) -f sampleacu.umf clean
