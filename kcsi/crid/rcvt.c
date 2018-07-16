@@ -2473,7 +2473,7 @@ void btoeh(char *dest,char *src,int dlen,int slen,int type)
 
 	sprintf(format,"%%0%dlx",dlen);
 	sprintf(work,format,result);
-	strupr(work);
+	kstrupr(work);
 	while((int)strlen(work) > dlen)
 		{
 		strcpy(work,&work[1]);
@@ -2938,6 +2938,9 @@ static int get_zoned_sign(int ch)
 /*
 **	History:
 **	$Log: rcvt.c,v $
+**	Revision 1.7  2000-03-13 14:15:09-05  gsl
+**	Change strupr() to kstrupr()
+**
 **	Revision 1.6  1999-09-13 15:51:47-04  gsl
 **	fix double to long conversion
 **

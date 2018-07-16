@@ -1590,7 +1590,7 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
-	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-1999  NeoMedia Technologies Incorporated");
+	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-2000  NeoMedia Technologies Incorporated");
 	wsb_add_text(hWsb, 6, 0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
 	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
@@ -3897,6 +3897,9 @@ int wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.73  2000-03-16 10:26:15-05  gsl
+**	2000
+**
 **	Revision 1.72  1999-09-13 15:56:53-04  gsl
 **	update copyrights
 **

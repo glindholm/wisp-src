@@ -461,7 +461,9 @@ static struct termio old,new;
 #define RT_GETBYTES 3
 #define RT_SKIPBYTES 4
 
+#ifndef WIN32
 extern char *sys_errlist[];
+#endif
 
 /*--- END vsx.h ----*/
 
@@ -3248,6 +3250,9 @@ static void load3480(char *tapedev, int cartridge)
 #endif
 /*
  * $Log: vsx.c,v $
+ * Revision 1.95  2000-03-13 14:16:03-05  gsl
+ * fix WIN32 warning
+ *
  * Revision 1.94  1999-08-30 18:27:28-04  gsl
  * Trim spaces off the volume. This was a bug, it was constructing the
  * file name with embedded spaces.

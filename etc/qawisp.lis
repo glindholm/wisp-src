@@ -200,36 +200,44 @@
 		___  Run WLICENSE.EXE
 		___  Build a COBOL Runtime system
 		     ___  Edit ACU\WWRUNCBL.MAK
-			  ___ Set ACUDIR and WISPDIR so correct
+			  Set 
+			      ___ ACUDIR
+			      ___ WISPDIR
+			      ___ CRIDDIR
 			  ___ Set the Acucobol version stuff so correct
 		     ___  Open MSDOS box
 		     ___  cd C:>WISPxxxx\ACU
-		     ___  nmake /f wwruncbl.mak rts
+		     ___  nmake /f wwruncbl.mak crid
 
 +	SETUP $WISPCONFIG DIRECTORY
 
 	___	Share these directories: 
-		D:\PROJECTS\WISP\SRC\TESTACU as TESTACU
-		D:\PROJECTS\WISP	     as WISPDEV
+		C:\DEV\WISP\SRC\TESTACU as TESTACU
+		C:\DEV\WISP	        as WISPDEV
 
 	___   	Edit ...\TESTACU\SAMPLEACU.MAK
 
-		___ Set WISPDIR so it is correct
+		___ Set WISPDIR=\\SERVER\WISP
+		___ Set COBOL=\\SERVER\ACUCOBOL\BIN\CCBL32.EXE
 
 	Copy the config files.
-	___	 D:\testacu> nmake -f sampleacu.mak wispconfigsetup
-
+	___	Run CONFIGACU.BAT
+		 (nmake -f sampleacu.mak wispconfigsetup)
 
 	___	LGMAP:	Edit it to ensure it is correct.
 
 	___	LPMAP:	Edit it to ensure it is correct
 
-	___	OPTIONS: Set VUTIL
+	___	OPTIONS: 
+		___ Set VUTIL=\\SERVER\ACUCOBOL\BIN\VUTIL32.EXE
+		___ Set COSTARV2
 
 	___	ACUCONFIG: Edit CONFIG\ACUCONFIG and add the TESTACU share
 		name to the CODE-PREFIX.
 
-		    CODE-PREFIX . \\SERVER\TESTACU \\SERVER\WISP\ACU
+		    CODE-PREFIX . \\SERVER\TESTACU 
+				  \\SERVER\WISP\ACU
+				  \\SERVER\CRID
 
 	___	WRUN.CFG: Edit CONFIG\WRUN.CFG and correct the locations
 		of ACUCONFIG and WWRUNCBLK.EXE. (Use KCSI version.)
@@ -251,27 +259,35 @@
 		       \\SERVER\WISP\ACU;
 		       \\SERVER\TESTACU;
 		       \\SERVER\TESTACU\VOLRUN\ONPATH;
+		       \\SERVER\CRID;
 		       C:\WIN
 		- MESSAGE (TAB)
 		SHAREDIR = \\SERVER\TESTACU\MESSAGE
 
 	___	Test configuration:
 
-		C:\WISPxxx\BIN> wdiag | more
+		C:\WISPxxx\BIN> wdiag.bat
 
 
 +	BUILD SAMPLE
 
 	___	Build the SAMPLE programs.
 
-		C:...\TESTACU> nmake /f sampleacu.mak
+		SAMPLEACU.BAT
+		  (nmake /f sampleacu.mak)
 
 	___	Build DISPRINT.
 
-		Copy DISPRINT.WCB and DISPRINT.mak from C:\WISPxxxx\ETC to the
-		TESTACU directory.
+		___ Edit \\SERVER\WISP\ETC\DISPRINT.MAK
 
-		C:...\TESTACU> nmake /f disprint.mak acu
+		    ___ SET WISPTRAN=..\BIN\WISP.EXT
+		    ___ SET CCBL=\\SERVER\ACUCOBOL\BIN\CCBL32.EXE
+
+		___ Run NMAKE to build DISPRINT
+		    C:...\ETC> nmake /f disprint.mak acu
+
+		___ Copy DISPRINT to ..\ACU
+		    COPY DISPRINT ..\ACU
 
 
 ################  This page is for all platforms  ####################
@@ -541,7 +557,7 @@
 		(16) to EXIT program.
 
 
-	Run SAMPLE and (3) FILE I/O TESTS
+	Run SAMPLE and (3) FILE I/O TESTS  (wproc qastart)
 
 		RECORD & FILE LOCKING TESTS
 	
@@ -671,8 +687,9 @@
 	___	(20) ALL FACS TEST - see that facs display unique.
 
 +	___	(1) DISPLAY A COMPLEX SCREEN.
-	___	Test the NEWLINE (^fn) & BACKTAB (^f^i) key. These keys
-		are also mapped on the VT220 to NEXT-SCRN PREV-SCRN.
+		___  Enter XXX in NO-ECHO FIELD
+		___  Enter one valid and one invalid range.
+		___  Enter a letter in a numeric field
 
 	___	(2) TRY THE PF KEYS.  		try all PF keys 1-32
          
@@ -1018,7 +1035,7 @@
 	Run SAMPLE & (5) WANG VSSUBS TESTS (QASUBS)
 
 
-		(12) PRINT   file PRTFILE in LIBSPOOL on VOLSPL
+		(12) PRINT   file PRTFILE2 in LIBSPOOL on VOLSPL
 	
 		Do twice:
 
@@ -1050,9 +1067,9 @@
 					complete.
 
 		(15) SCRATCH
-	___	F-file  PRTFILE2 in LIBSPOOL on VOLSPL
+	___	F-file  PRTFILE  in LIBSPOOL on VOLSPL
  		(check the disk)
-	___	F-file  PRTFILE2 in LIBSPOOL on VOLSPL     RC=20
+	___	F-file  PRTFILE  in LIBSPOOL on VOLSPL     RC=20
 
 	___	L-Lib		    LIBSPOOL on VOLSPL     RC=0
 		(check the disk)

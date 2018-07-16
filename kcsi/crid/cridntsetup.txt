@@ -1,112 +1,115 @@
-	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
-	
-	====================================================================
-	
-	Title:		CRID for Acucobol NT/95 Setup
-	
-	Document:	cridntsetup.txt
-	Last Updated:	4 April 1997
-	Products:	CRID for Acucobol NT/95
-	Versions:	2.83 (AND LATER)
-	
-	Summary:	Quick setup steps for CRID on NT/95.
+Copyright (c) 1997-2000 by NeoMedia Technologies Inc. 
+All Rights Reserved.
 
-	====================================================================
-	
+====================================================================
 
-	CRID for Acucobol NT/95 Setup
-	=============================
-	
-	This document describes the steps for installing and setting up
-	the CONTROL, REPORT, INQUIRY, and DATENTRY programs for Acucobol
-	on MicroSoft Windows NT/95.
+Title:          CRID for Acucobol NT/9x Setup
+
+Document:       cridntsetup.txt
+Last Updated:   $Date:$
+Products:       CRID for Acucobol NT/9x
+Versions:       2.98 (AND LATER)
+
+Summary:        Quick setup steps for CRID on NT/9x.
+
+====================================================================
 
 
-	Overview
-	--------
+CRID for Acucobol NT/9x Setup
+=============================
 
-	1) Ensure WISP is installed first.
-	2) Uninstall previous versions of CRID.
-	3) Install CRID for Acucobol.
-	4) Build WWRUNCBLK the Acucobol Runtime System.
-	5) Setup the WRUN.CFG configuration file.
-	6) Ensure ACUCONFIG is setup.
+This document describes the steps for installing and setting up
+the CONTROL, REPORT, INQUIRY, and DATENTRY programs for Acucobol
+on MicroSoft Windows NT/9x.
 
 
-	The Steps
-	---------
+Overview
+--------
 
-	1) Ensure WISP is installed first.
+1) Ensure WISP is installed first.
+2) Install CRID for Acucobol.
+3) Build the Acucobol Runtime System.
+4) Setup the WRUN.CFG configuration file.
+5) Ensure ACUCONFIG is setup.
 
-	    WISP must be installed first before you can install CRID.
-	    Ensure you have WISP installed and configured before
-	    continuing.
 
-	2) Uninstall previous versions of CRID.
+The Steps
+---------
 
- 	    If CRID is already installed on this machine then first
-	    uninstall the previous verion.  Use "Add/Remove programs" from
-	    the Control Panel to remove the previous version.
+1) Ensure WISP is installed first.
 
-	3) Install CRID for Acucobol.
+    WISP must be installed first before you can install CRID.
+    Ensure you have WISP installed and configured before
+    continuing.
 
-	    a) Insert Disk 1 into floppy drive A:
-	    b) Run A:SETUP
+2) Install CRID for Acucobol.
 
-	    IMPORTANT: Install CRID into the same directory where WISP is
-	    installed.  This will default to "C:\WISP".
+    a) Insert Disk 1 into floppy drive A:
+    b) Run A:SETUP
 
-	    The following instructions assume you have installed WISP in
-	    directory C:\WISP .  If you have installed WISP into a
-	    different location the adjust the instructions accordingly.
+    The following instructions assume you have installed CRID in
+    directory C:\CRIDACU298.  If you have installed CRID into a
+    different location the adjust the instructions accordingly.
 
-	4) Build WWRUNCBLK the Acucobol Runtime System.
+3) Build the Acucobol Runtime System.
 
-	    a) Ensure ACUCOBOL-GT V3.1 is installed and the Acucobol BIN
-	       directory is on the PATH.
+    a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
+       Acucobol BIN directory is on the PATH.
 
-	          PATH %PATH%;C:\ACUCBL31\BIN
+          PATH %PATH%;C:\ACUCBL42\acugt\BIN
 
-	    b) Ensure MicroSoft Visual C++ 4 is installed.
-	    c) Create an MSDOS/COMMAND prompt window
-	    d) Run C:\Msdev\Bin\Vcvars32.bat from Visual C++ to enable you
-	       to build from the command prompt.
-	    e) Change to the CRID directory: cd C:\WISP\CRIDACU.283
-	    f) Edit WWRUNCBL.MAK 
+    b) Ensure Microsoft Visual C++ 5 or 6 (or later) is installed.
 
-	       Change ACUDIR to the location where Acucobol was installed.
+    c) Create an MSDOS/COMMAND prompt window
 
-	           ACUDIR=C:\ACUCBL31
+    d) In the MSDOS/COMMAND prompt window run the bat file
+       Vcvars32.bat that came with MS Visual C++. This bat
+       file enables you to compile and link C programs from
+       the command prompt. 
+       (Substitute path to Vcvars32.bat with the location used by
+       Visual C++) 
 
-	       Change KCSIDIR to the location where the CRID directory.
+       MSVC++ 5.x:
+          C:> "C:\Program Files\DevStudio\VC\bin\Vcvars32.bat" x86  
 
-		   KCSIDIR=C:\WISP\CRIDACU.283
+       MSVC++ 6.x:
+          C:> "C:\Program Files\DevStudio\VC98\bin\Vcvars32.bat" x86  
 
-	    g) Issue the commands to build the Runtime.
+       NOTE: If you get an out-of-space message, click on the
+             properties button on the toolbar, go to the Memory tab,
+             set the Initial Environment size to 4096, click OK, close
+             the MSDOS/Command window, reopen and try again.
 
-	           C:> nmake /f wwruncbl.mak kcsi
+    e) Build the Acucobol runtime by following the instructions in
+       the makefile.
 
-	    h) The Runtime System WWRUNCBLK.EXE will have been created.
+       If you are using ACUCOBOL-GT 4.3 then follow the instructions
+       in file C:\CRIDACU298\WRUN32WISP_CRID.MAK.
 
-	5) Setup the WRUN.CFG configuration file.
+       If you are using ACUCOBOL-GT 4.2 or ealier then follow the
+       instructions in C:\CRIDACU298\WWRUNCBL.MAK.
 
-	    Edit the WRUN.CFG configuration file in the WISPCONFIG
-	    directory and change the RUNCBL= option to point to the new
-	    runtime system.
 
-	           RUNCBL=\\SERVER01\WISP\CRIDACU.283\WWRUNCBLK.EXE
+4) Setup the WRUN.CFG configuration file.
 
-	    Substitute the actual server name inplace of "SERVER01" in the
-	    above example.
+    Edit the WRUN.CFG configuration file in the WISPCONFIG
+    directory and change the RUNCBL= option to point to the new
+    runtime system.
 
-	6) Ensure ACUCONFIG is setup.
+           RUNCBL=\\SERVER01\WISP\ACU\WWRUNCBLK.EXE
 
-	    The Acucobol object files CONTROL, REPORT, INQUIRY, and
-	    DATENTRY will be installed in the WISP\ACU directory.
+    Substitute the actual server name inplace of "SERVER01" in the
+    above example.
 
-	    Ensure that the ACUCONFIG configuration file in the WISPCONFIG
-	    directory has the WISP\ACU directory on the CODE-PREFIX.
+5) Ensure ACUCONFIG is setup.
 
-                   CODE-PREFIX . \\SERVER01\WISP\ACU ...
+    The Acucobol object files CONTROL, REPORT, INQUIRY, and
+    DATENTRY will be installed in the C:\CRIDACU298 directory.
 
-	========================= END OF DOCUMENT ==========================
+    Ensure that the CRID directory is on Acucobols CODE-PREFIX
+    or copy the four program files to a directory that is already
+    on the CODE-PREFIX.
+
+           CODE-PREFIX . \\SERVER01\CRIDACU298 ...
+
+========================= END OF DOCUMENT ==========================

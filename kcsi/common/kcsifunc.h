@@ -171,7 +171,7 @@ int isnblank(char *mem,int len);
 void vax_inq_globals();
 void INIDIO(char *blk);
 void PARSEINQ(char *rpt_rfl,char *rpt_dl,char *res_flds,char *scr_flds,char *msg,char *ret_code);
-char *strupr(char* str);
+char *kstrupr(char* str);
 int first_inq_tkn();
 int next_inq_tkn();
 char *get_inq_tkn_str(int tkn);
@@ -319,6 +319,9 @@ void setwispfilext(char* wispfilext);
 /*
 **	History:
 **	$Log: kcsifunc.h,v $
+**	Revision 1.10  2000-03-13 14:13:33-05  gsl
+**	Change strupr() to kstrupr()
+**
 **	Revision 1.9  1997-10-30 15:55:12-05  scass
 **	Corrected type.
 **

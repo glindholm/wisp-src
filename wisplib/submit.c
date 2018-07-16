@@ -597,7 +597,9 @@ static int unix_submit(
 						wexit(ERRORCODE(4));
 					}
 				}
-#if defined(BSD) || defined(_BSD)
+#ifdef OSF1_ALPHA
+				setpgrp(); 						/* Set the PROCESS GROUP ID		*/
+#elif defined(BSD) || defined(_BSD)
 				setpgrp(pid,pid); 					/* Set the PROCESS GROUP ID		*/
 #else
 				setpgrp(); 						/* Set the PROCESS GROUP ID		*/
@@ -1353,6 +1355,9 @@ const char* submit_err(int error)
 /*
 **	History:
 **	$Log: submit.c,v $
+**	Revision 1.33  1999-09-27 09:09:51-04  gsl
+**	FIx call to setpgrp() for OSF1 (Digital UNIX)
+**
 **	Revision 1.32  1999-01-19 17:06:25-05  gsl
 **	For BSD check add defines BSD and _BSD
 **

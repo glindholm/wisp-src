@@ -77,5 +77,53 @@ CFG=cridacu - Win32 Release
 
 !ENDIF 
 
+# Begin Group "ACU"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\crid.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\crid85.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\cridtbl.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\acu\wrun32wisp_crid.mak
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\acu\wwruncbl.mak
+# End Source File
+# End Group
+# Begin Group "ETC"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\ctlcnvrt.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\rptcnvrt.wcb
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\cridntsetup.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\packlist.lis
+# End Source File
+# Begin Source File
+
+SOURCE=.\release.lis
+# End Source File
 # End Target
 # End Project

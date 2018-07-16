@@ -111,13 +111,12 @@
 	Building InstallShield Disks
 	----------------------------
 
-	Move the "wisp\src\kit" directory to "wisp\kit".  Copy the
-	InstallShield files to "wisp\kit".
+	Copy the InstallShield files to "c:\dev\wisp".
 
-		wisp\kit\wisp4304.iwz
-		wisp\kit\ede4304.iwz
-		wisp\kit\crida296.iwz
-		wisp\kit\creata34.iwz
+		wisp\wisp4305.iwz
+		wisp\ede4305.iwz
+		wisp\crida297.iwz
+		wisp\creata34.iwz
 
 	Double click on the ".iwz" file to start InstallShield.  Follow
 	the instructions to build diskettes.

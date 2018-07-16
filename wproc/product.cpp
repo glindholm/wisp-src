@@ -55,7 +55,7 @@ char *product_copyright() {
    sprintf(wproc_version," version %s    (WL=%s)\n", product_version_str(), wisp_version());
    strcat(notice, wproc_version);
    strcat(notice, "Copyright (c) 1991-1993 Lexical Software. All rights reserved.\n");
-   strcat(notice, "Copyright (c) 1994-1999 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
+   strcat(notice, "Copyright (c) 1994-2000 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
 #endif
    return notice;
 }
@@ -102,6 +102,9 @@ char *demo_notice() {
 //
 //	History:
 //	$Log: product.cpp,v $
+//	Revision 1.15  2000-03-16 10:33:18-05  gsl
+//	2000
+//
 //	Revision 1.14  1999-09-23 13:42:02-04  gsl
 //	change copyright
 //

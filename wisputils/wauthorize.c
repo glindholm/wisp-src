@@ -37,7 +37,9 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wisplib.h"
 
+#ifndef WIN32
 extern char	*sys_errlist[];
+#endif
 
 #define DOCTEMPLATE	"license.template"
 
@@ -1969,6 +1971,9 @@ werrlog()
 /*
 **	History:
 **	$Log: wauthorize.c,v $
+**	Revision 1.12  2000-03-13 14:16:29-05  gsl
+**	Fix WIN32 warnings
+**
 **	Revision 1.11  1999-05-20 09:42:37-04  gsl
 **	Add the first pass of CGI enabling.
 **	This is a work in progress and is not complete.

@@ -1,7 +1,7 @@
 static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 static char rcs_revision[]="$Revision:$";
-static char rcs_state[]="$State: V4_3_05 $";
+static char rcs_state[]="$State: V4_3_06 $";
 
 static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 

@@ -27,7 +27,7 @@ Free Software Foundation.
 Emacs-specific code and syntax table code is almost directly borrowed
 from GNU regexp.
 
-$Header: /disk1/neomedia/RCS/wisp/lib/regexpr.c,v 1.9 1997-07-18 14:50:12-04 gsl V4_3_05 $
+$Header: /disk1/neomedia/RCS/wisp/lib/regexpr.c,v 1.10 2000-03-13 14:12:32-05 gsl V4_3_06 $
 
 */
 
@@ -39,11 +39,11 @@ $Header: /disk1/neomedia/RCS/wisp/lib/regexpr.c,v 1.9 1997-07-18 14:50:12-04 gsl
 #endif
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "idsistd.h"
 #include "regexpr.h"
 
-void free();
 
 static short temp_short;
 
@@ -1745,6 +1745,9 @@ int main()
 /*
 **	History:
 **	$Log: regexpr.c,v $
+**	Revision 1.10  2000-03-13 14:12:32-05  gsl
+**	fix win32 warning
+**
 **	Revision 1.9  1997-07-18 14:50:12-04  gsl
 **	Fix warning
 **

@@ -39,9 +39,9 @@ CFG=acu - Win32 Release
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir ".\Release"
 # PROP Intermediate_Dir ".\Release"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. both acn"
+# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. acu"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File "acu\wwruncbl.exe"
+# PROP Target_File "acu\ACULINK"
 # PROP Bsc_Name "acu\acu.bsc"
 # PROP Target_Dir "."
 
@@ -58,7 +58,7 @@ CFG=acu - Win32 Release
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir ".\Debug"
 # PROP Intermediate_Dir ".\Debug"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak L_WISP=wispd L_VIDEO=videod L_EDE=eded WISPDIR=.. EXTRA_LINK=msvcrtd.lib both acn"
+# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. acu"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "acu\wwruncbl.exe"
 # PROP Bsc_Name "acu\acu.bsc"
@@ -82,7 +82,19 @@ CFG=acu - Win32 Release
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
+SOURCE=.\aculink.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\acuusing.cob
+# End Source File
+# Begin Source File
+
 SOURCE=.\sub85.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrun32wisp.mak
 # End Source File
 # Begin Source File
 

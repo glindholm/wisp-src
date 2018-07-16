@@ -39,7 +39,7 @@ CFG=wwruncble - Win32 Debug
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. ede"
+# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. EDEDIR=..\ede ede"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "wwruncble.exe"
 # PROP Bsc_Name "wwruncble.bsc"
@@ -58,7 +58,7 @@ CFG=wwruncble - Win32 Debug
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak L_WISP=wispd L_VIDEO=videod L_EDE=eded WISPDIR=.. EXTRA_LINK=msvcrtd.lib ede"
+# PROP Cmd_Line "NMAKE /f wwruncbl.mak L_WISP=wispd L_VIDEO=videod L_EDE=eded WISPDIR=.. EDEDIR=..\ede EXTRA_LINK=msvcrtd.lib ede"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "wwruncble.exe"
 # PROP Bsc_Name "wwruncble.bsc"

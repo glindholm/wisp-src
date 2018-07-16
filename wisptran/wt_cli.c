@@ -1,5 +1,5 @@
 /* CHANGE-COPYRIGHT-DATE */
-static char copyright[]="Copyright (c) 1989-1999 NeoMedia Technologies Inc., All rights reserved.";
+static char copyright[]="Copyright (c) 1989-2000 NeoMedia Technologies Inc., All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wt_cli.c
@@ -1024,6 +1024,9 @@ static void showflags(void)
 /*
 **	History:
 **	$Log: wt_cli.c,v $
+**	Revision 1.19  2000-03-16 10:27:40-05  gsl
+**	2000
+**
 **	Revision 1.18  1999-09-13 15:57:06-04  gsl
 **	update copyrights
 **

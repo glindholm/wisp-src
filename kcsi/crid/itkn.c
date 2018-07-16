@@ -134,7 +134,7 @@ int next_inq_tkn()
 
 /* Now we try to identify it */
 	if (! isinquotes)
-		strupr(inq_tokens);
+		kstrupr(inq_tokens);
 	inq_token = which_tkn(inq_tokens);
 /* If we got a NOT then we must pull the next token */
 	if(inq_token == NOT_TKN)
@@ -377,7 +377,7 @@ static int isoccurs(char *str)
 	return(1);
 }
 
-char* strupr(char* str)
+char* kstrupr(char* str)
 {
 	char *rc;
 	rc = str;
@@ -393,6 +393,9 @@ char* strupr(char* str)
 /*
 **	History:
 **	$Log: itkn.c,v $
+**	Revision 1.3  2000-03-13 14:14:33-05  gsl
+**	Change strupr() to kstrupr()
+**
 **	Revision 1.2  1996-09-17 19:45:39-04  gsl
 **	drcs update
 **

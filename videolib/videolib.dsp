@@ -133,15 +133,7 @@ SOURCE=.\vcap.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vcap.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vcharset.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vchinese.h
 # End Source File
 # Begin Source File
 
@@ -161,10 +153,6 @@ SOURCE=.\vcut.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vdata.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vdefer.c
 # End Source File
 # Begin Source File
@@ -174,10 +162,6 @@ SOURCE=.\vedge.c
 # Begin Source File
 
 SOURCE=.\verase.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\verase.h
 # End Source File
 # Begin Source File
 
@@ -201,15 +185,7 @@ SOURCE=.\vgrid.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\video.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vinput.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vintdef.h
 # End Source File
 # Begin Source File
 
@@ -221,15 +197,7 @@ SOURCE=.\vkeymap.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vkeymap.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vline.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vline.h
 # End Source File
 # Begin Source File
 
@@ -237,15 +205,7 @@ SOURCE=.\vlist.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vlist.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vloadch.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vlocal.h
 # End Source File
 # Begin Source File
 
@@ -261,23 +221,11 @@ SOURCE=.\vmenu.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vmenu.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vmode.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vmodules.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vmove.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmove.h
 # End Source File
 # Begin Source File
 
@@ -309,10 +257,6 @@ SOURCE=.\vprint.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vprint.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vpushscr.c
 # End Source File
 # Begin Source File
@@ -325,19 +269,11 @@ SOURCE=.\vrawdos.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vrawdos.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vrawntcn.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\vrawunix.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vrawunix.h
 # End Source File
 # Begin Source File
 
@@ -362,10 +298,6 @@ SOURCE=.\vroll.c
 # Begin Source File
 
 SOURCE=.\vscreen.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vscreen.h
 # End Source File
 # Begin Source File
 
@@ -413,10 +345,6 @@ SOURCE=.\vtrim.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vtrim.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vuip.c
 # End Source File
 # Begin Source File
@@ -429,10 +357,6 @@ SOURCE=.\vutil.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\vutil.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\vwait.c
 # End Source File
 # End Group
@@ -441,7 +365,83 @@ SOURCE=.\vwait.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
 # Begin Source File
 
+SOURCE=.\vcap.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vchinese.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vdata.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\verase.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\video.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vintdef.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vkeymap.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vline.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vlist.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vlocal.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vmenu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vmodules.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vmove.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vprint.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\vraw.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vrawdos.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vrawunix.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vscreen.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vtrim.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\vutil.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

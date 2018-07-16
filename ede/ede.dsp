@@ -77,5 +77,129 @@ CFG=ede - Win32 Debug
 
 !ENDIF 
 
+# Begin Group "DEMO"
+
+# PROP Default_Filter "wcb; hlp"
+# Begin Source File
+
+SOURCE=.\helpmap.dat
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbbld.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbcode.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbcol.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbcpy1.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbcpy2.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbcpy3.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbdisp.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbedit.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbedit.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbicnt.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbname.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbopts.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbrow.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbtext.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbtype.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbvalue.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\mcbwidth.hlp
+# End Source File
+# Begin Source File
+
+SOURCE=.\menudefs.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\menudemo.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\menudemo.opt
+# End Source File
+# Begin Source File
+
+SOURCE=.\menudemo.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\menudisp.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\menulogo.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\menumcbs.wcb
+# End Source File
+# Begin Source File
+
+SOURCE=.\menuvect.wcb
+# End Source File
+# End Group
+# Begin Group "ACU"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\acu\wrun32wisp_ede.mak
+# End Source File
+# Begin Source File
+
+SOURCE=..\acu\wwruncbl.mak
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\edentsetup.txt
+# End Source File
 # End Target
 # End Project
