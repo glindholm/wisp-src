@@ -1,0 +1,58 @@
+#ifdef OLD
+
+	replaced by VIDEOCAP
+
+
+			/************************************************************************/
+			/*	      VIDEO - Video Interactive Development Environment		*/
+			/*			Copyright (c) 1988, 1989, 1990			*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/************************************************************************/
+
+
+/*						Include standard header files.							*/
+
+#include "video.h"									/* Include video definitions.		*/
+#include "vlocal.h"									/* Include internal video definitions.	*/
+
+/*						Subroutine entry point.								*/
+
+int vgetm()										/* Get a meta character.		*/
+{
+	extern int gold_key, grey_key, pink_key, blue_key;				/* Colored processing control flags.	*/
+	extern int meta_substitute[SUBSTITUTION_TABLE_SIZE][2];				/* Reference substitution table.	*/
+	extern char vgetc();								/* Reference vgetc routine.		*/
+	int color_mask;									/* Color mask.				*/
+	int sub_done;									/* Flag to indicate substitution done.	*/
+	register int i, j;								/* Working register.			*/
+
+	color_mask = 0;									/* No color bits set.			*/
+#ifdef MSDOS
+again:	if ((i = vgetc() & 0377) == 0200) i = vescape();				/* Process escape sequences if needed.	*/
+#else	/* VMS or unix */
+again:	if ((i = vgetc() & 0377) == 033) i = vescape();					/* Process escape sequences if needed.	*/
+#endif	/* VMS or unix */
+
+	if (i == 0) return(0);								/* It was a timed read.			*/
+
+	sub_done = FALSE;								/* No substitution done yet.		*/
+	for (j = 0; (j < SUBSTITUTION_TABLE_SIZE) && !sub_done; j++)			/* Perform substitutions.		*/
+	{
+		if (i == meta_substitute[j][0]) 					/* Substitute as appropriate.		*/
+		{
+			i = meta_substitute[j][1];					/* Do the substitution.			*/
+			sub_done = TRUE;						/* No more substitution.		*/
+		}
+	}
+
+	if (i == gold_key) {color_mask = GOLD_BIT; goto again;}				/* A gold key?				*/
+	if (i == grey_key) {color_mask = GREY_BIT; goto again;}				/* A grey key?				*/
+	if (i == pink_key) {color_mask = PINK_BIT; goto again;}				/* A pink key?				*/
+	if (i == blue_key) {color_mask = BLUE_BIT; goto again;}				/* A blue key?				*/
+
+	return(i|color_mask);								/* Return the meta character.		*/
+}
+
+#endif
+

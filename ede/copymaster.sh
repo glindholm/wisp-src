@@ -1,0 +1,11 @@
+	dcp -c -v 'scalos::scs$wisp:[ede.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[ede.master.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[ede.master.build]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[good.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[good.master.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[good.master.build]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[menudemo.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[menudemo.master.include]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[menudemo.master.build]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.master.source]*.*' .
+	dcp -c -v 'scalos::scs$wisp:[common.master.include]*.*' .

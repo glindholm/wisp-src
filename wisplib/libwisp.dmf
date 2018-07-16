@@ -1,0 +1,390 @@
+#
+# Generic makefile for the wisp library on MSDOS platforms.
+#
+#
+
+LIB=WISP.LIB
+USELIB=E:\LIB\$(LIB)
+
+
+V = E:\include\v
+
+.PRECIOUS:      $(LIB) 
+
+.c.OBJ: 
+	@CCLIB $(LIB) $* 
+
+.COB.OBJ:
+	COBOL $* /NOANIM /OMF "OBJ" /OPT "2" /WARNING "3" /OBJ;
+	LIB /NOL /NOI $(LIB) -+$*.OBJ;
+
+all: $(USELIB)
+
+$(USELIB): $(LIB)
+	COPY $(LIB) $(USELIB)
+
+$(LIB): \
+	acpmap.OBJ \
+	asgnstng.OBJ \
+	backgrnd.OBJ \
+	bell.OBJ \
+	bit_x.OBJ \
+	bits.OBJ \
+	breakacp.OBJ \
+	btransl.OBJ \
+	cancel.OBJ \
+	cexit.OBJ \
+	cgetneg.OBJ \
+	checkacp.OBJ \
+	closeacp.OBJ \
+	coblink.OBJ \
+	cobpic.OBJ \
+	COBTIDY.OBJ \
+	date.OBJ \
+	dateset.OBJ \
+	day.OBJ \
+	delete.OBJ \
+	DOSSTUBS.OBJ \
+	DOSWCLNK.OBJ \
+	dummy.OBJ \
+	edestubs.OBJ \
+	errgparm.OBJ \
+	extract.OBJ \
+	filesize.OBJ \
+	filgparm.OBJ \
+	find.OBJ \
+	FINDEXTS.OBJ \
+	FINDCASE.OBJ \
+	fixerr.OBJ \
+	get_name.OBJ \
+	getparm.OBJ \
+	gparmbld.OBJ \
+	greclen.OBJ \
+	hexunpk.OBJ \
+	idsisubs.OBJ \
+	initglbs.OBJ \
+	initscrn.OBJ \
+	initwisp.OBJ \
+	isexec.OBJ \
+	juster.OBJ \
+	kbmap.OBJ \
+	link.OBJ \
+	linkproc.OBJ \
+	linksubs.OBJ \
+	logoff.OBJ \
+	LONGARG.OBJ  \
+	makepath.OBJ \
+	memxxx.OBJ \
+	menu_go.OBJ \
+	menu_key.OBJ \
+	menuread.OBJ \
+	menuscan.OBJ \
+#       message.OBJ \
+	mount.OBJ \
+	MSDOSFNS.OBJ \
+	msname.OBJ \
+	mstime.OBJ \
+	msvalue.OBJ \
+	mvspaces.OBJ \
+	mwconv.OBJ \
+	nextfile.OBJ \
+	noconfig.OBJ \
+	onhelp.OBJ \
+	openacp.OBJ \
+	packer.OBJ \
+	pbset.OBJ \
+	print.OBJ \
+	protect.OBJ \
+	putparm.OBJ \
+	pwdname.OBJ \
+	que_jobs.OBJ \
+	quemgmt.OBJ \
+	readacp.OBJ \
+	readfdr.OBJ \
+#       readvtoc.OBJ \
+	rename.OBJ \
+	retcode.OBJ \
+	rtransl.OBJ \
+	scratch.OBJ \
+	screen.OBJ \
+	search.OBJ \
+	set.OBJ \
+	setenvst.OBJ \
+	setfile.OBJ \
+	setprgid.OBJ \
+	setrcode.OBJ \
+	settrigp.OBJ \
+	setupqm.OBJ \
+	sharemem.OBJ \
+	shellvar.OBJ \
+#       shutexit.OBJ \
+	sort.OBJ \
+#       sortcall.OBJ \
+	sortseqf.OBJ \
+	spawn.OBJ \
+	string.OBJ \
+	submit.OBJ \
+	sysinf.OBJ \
+	updatfdr.OBJ \
+#       upper.OBJ \
+	vdisplay.OBJ \
+	vmspargs.OBJ \
+	vwang.OBJ \
+	waltmap.OBJ \
+	wangmenu.OBJ \
+	wanguid.OBJ \
+	wchain.OBJ \
+	wchkstrt.OBJ \
+	wcmatch.OBJ \
+	wdelfile.OBJ \
+	wdellock.OBJ \
+	wdfinish.OBJ \
+	wdinit.OBJ \
+	wdisplay.OBJ \
+	werrlog.OBJ \
+	werrpath.OBJ \
+	werrvre.OBJ \
+	wexit.OBJ \
+	wexith.OBJ \
+	wfaccess.OBJ \
+	wfcisam.OBJ \
+	wfclose.OBJ \
+	wfilechk.OBJ \
+	wfiledis.OBJ \
+	wfileext.OBJ \
+	wfname.OBJ \
+	wfopen.OBJ \
+	wformmnt.OBJ \
+	wfstatus.OBJ \
+	wfvision.OBJ \
+	wfwait.OBJ \
+	wgetpgrp.OBJ \
+	wglobals.OBJ \
+	wisp_pcb.OBJ \
+	wisp_pic.OBJ \
+	wisp_prb.OBJ \
+	WISPDMF.OBJ \
+	wispexit.OBJ \
+	wispsort.OBJ \
+	wispsync.OBJ \
+	wpause.OBJ \
+	wperson.OBJ \
+	wprint.OBJ \
+	writeacp.OBJ \
+	wrunconf.OBJ \
+	wsclose.OBJ \
+	wscreen.OBJ \
+	wscset.OBJ \
+	wsfnm.OBJ \
+	wsfns.OBJ \
+	wshelp.OBJ \
+	wsmode.OBJ \
+	wsmove.OBJ \
+	wspawn.OBJ \
+	wswap.OBJ \
+	wsxio.OBJ \
+	wtransl.OBJ \
+	wvaset.OBJ \
+	wvuserx.OBJ \
+	wwaitpid.OBJ \
+	XDEBUG.OBJ
+
+DOSWCLNK.OBJ:   DOSWCLNK.COB
+COBTIDY.OBJ:    COBTIDY.COB
+
+acpmap.OBJ: acpmap.c acp.h werrlog.h
+asgnstng.OBJ: asgnstng.c
+backgrnd.OBJ: backgrnd.c wperson.h werrlog.h wdefines.h
+bell.OBJ: bell.c movebin.h werrlog.h
+bit_x.OBJ: bit_x.c cobrun.h
+bits.OBJ: bits.c werrlog.h
+breakacp.OBJ: breakacp.c
+btransl.OBJ: btransl.c
+cancel.OBJ: cancel.c werrlog.h
+cexit.OBJ: cexit.c werrlog.h
+cgetneg.OBJ: cgetneg.c
+checkacp.OBJ: checkacp.c
+closeacp.OBJ: closeacp.c acp.h werrlog.h
+coblink.OBJ: coblink.c cobrun.h
+cobpic.OBJ: cobpic.c cobrun.h
+date.OBJ: date.c movebin.h werrlog.h
+dateset.OBJ: dateset.c
+day.OBJ: day.c movebin.h werrlog.h
+delete.OBJ: delete.c
+DOSSTUBS.OBJ: DOSSTUBS.c
+dummy.OBJ: dummy.c
+edestubs.OBJ: edestubs.c
+errgparm.OBJ: errgparm.c wangkeys.h wperson.h movebin.h werrlog.h
+errgparm.OBJ: wdefines.h
+extract.OBJ: extract.c wsysconf.h wdefines.h wperson.h movebin.h
+extract.OBJ: werrlog.h wglobals.h wfiles.h
+filesize.OBJ: filesize.c werrlog.h
+filgparm.OBJ: filgparm.c wcommon.h wangkeys.h wperson.h movebin.h
+filgparm.OBJ: werrlog.h wdefines.h
+find.OBJ: find.c wfiles.h movebin.h werrlog.h wdefines.h
+find.OBJ: wperson.h wdefines.h
+FINDCASE.OBJ: FINDCASE.c
+findexts.OBJ: findexts.c wdefines.h
+fixerr.OBJ: fixerr.c
+get_name.OBJ: get_name.c
+getparm.OBJ: getparm.c movebin.h werrlog.h wangkeys.h wcommon.h
+getparm.OBJ: scnfacs.h wshmem.h wglobals.h wfiles.h
+gparmbld.OBJ: gparmbld.c werrlog.h wdefines.h
+greclen.OBJ: greclen.c
+hexunpk.OBJ: hexunpk.c movebin.h werrlog.h
+idsisubs.OBJ: idsisubs.c wdefines.h
+initglbs.OBJ: initglbs.c wglobals.h wfiles.h filext.h cobrun.h
+initscrn.OBJ: initscrn.c $(V)\video.h $(V)\vlocal.h $(V)\vdata.h
+initscrn.OBJ: wperson.h
+initwisp.OBJ: initwisp.c werrlog.h wdefines.h wcommon.h cobrun.h
+initwisp.OBJ: wglobals.h wfiles.h filext.h
+isexec.OBJ: isexec.c wdefines.h
+juster.OBJ: juster.c werrlog.h
+kbmap.OBJ: kbmap.c
+link.OBJ: link.c wrunconf.h wglobals.h wfiles.h wdefines.h
+link.OBJ: movebin.h werrlog.h wperson.h wfiles.h wcommon.h
+link.OBJ: cobrun.h $(V)\video.h
+linkproc.OBJ: linkproc.c $(V)\video.h wdefines.h movebin.h
+linkproc.OBJ: werrlog.h wperson.h wfiles.h wcommon.h
+linksubs.OBJ: linksubs.c wglobals.h wfiles.h wdefines.h werrlog.h
+linksubs.OBJ: movebin.h
+logoff.OBJ: logoff.c wdefines.h
+LONGARG.OBJ:    LONGARG.c  WGLOBALS.H
+makepath.OBJ: makepath.c
+memxxx.OBJ: memxxx.c
+menu_go.OBJ: menu_go.c menu.h $(V)\video.h $(V)\vlocal.h
+menu_key.OBJ: menu_key.c
+menuread.OBJ: menuread.c menu.h
+menuscan.OBJ: menuscan.c menu.h wperson.h $(V)\video.h
+menuscan.OBJ: $(V)\vlocal.h $(V)\vdata.h
+message.OBJ: message.c werrlog.h wdefines.h movebin.h
+mount.OBJ: mount.c
+MSDOSFNS.OBJ: MSDOSFNS.c
+msname.OBJ: msname.c
+mstime.OBJ: mstime.c
+msvalue.OBJ: msvalue.c
+mvspaces.OBJ: mvspaces.c
+mwconv.OBJ: mwconv.c cobrun.h
+nextfile.OBJ: nextfile.c wdefines.h
+noconfig.OBJ: noconfig.c
+onhelp.OBJ: onhelp.c wperson.h
+openacp.OBJ: openacp.c acp.h
+packer.OBJ: packer.c
+pbset.OBJ: pbset.c
+print.OBJ: print.c wcommon.h wperson.h movebin.h werrlog.h
+protect.OBJ: protect.c
+putparm.OBJ: putparm.c movebin.h werrlog.h wshmem.h wdefines.h
+putparm.OBJ: wglobals.h wfiles.h
+pwdname.OBJ: pwdname.c
+que_jobs.OBJ: que_jobs.c werrlog.h
+quemgmt.OBJ: quemgmt.c werrlog.h
+readacp.OBJ: readacp.c acp.h movebin.h
+readfdr.OBJ: readfdr.c wcommon.h movebin.h cobrun.h werrlog.h
+readvtoc.OBJ: readvtoc.c werrlog.h
+rename.OBJ: rename.c wfiles.h wcommon.h movebin.h wperson.h
+rename.OBJ: werrlog.h cobrun.h
+retcode.OBJ: retcode.c werrlog.h wdefines.h
+rtransl.OBJ: rtransl.c
+scratch.OBJ: scratch.c $(V)\video.h wcommon.h wdefines.h
+scratch.OBJ: movebin.h cobrun.h
+screen.OBJ: screen.c vwang.h wcommon.h vwang.h werrlog.h
+screen.OBJ: wperson.h wdefines.h movebin.h
+search.OBJ: search.c movebin.h werrlog.h wdefines.h
+set.OBJ: set.c wperson.h werrlog.h wglobals.h wfiles.h
+setenvst.OBJ: setenvst.c
+setfile.OBJ: setfile.c wfiles.h
+setprgid.OBJ: setprgid.c wglobals.h wfiles.h
+setrcode.OBJ: setrcode.c werrlog.h wdefines.h
+settrigp.OBJ: settrigp.c wfiles.h wcommon.h werrlog.h
+setupqm.OBJ: setupqm.c
+sharemem.OBJ: sharemem.c werrlog.h wshmem.h wdefines.h
+shellvar.OBJ: shellvar.c
+shutexit.OBJ: shutexit.c
+sort.OBJ: sort.c werrlog.h
+sortcall.OBJ: sortcall.c
+sortseqf.OBJ: sortseqf.c sortseqf.h
+spawn.OBJ: spawn.c
+string.OBJ: string.c movebin.h werrlog.h
+submit.OBJ: submit.c que_jobs.h wcommon.h wperson.h movebin.h
+submit.OBJ: werrlog.h wdefines.h wrunconf.h
+sysinf.OBJ: sysinf.c wglobals.h wfiles.h werrlog.h
+updatfdr.OBJ: updatfdr.c werrlog.h
+upper.OBJ: upper.c
+vdisplay.OBJ: vdisplay.c $(V)\video.h $(V)\vlocal.h $(V)\vdata.h
+vdisplay.OBJ: $(V)\vcap.h werrlog.h wperson.h scnfacs.h
+vmspargs.OBJ: vmspargs.c wglobals.h wfiles.h wdefines.h werrlog.h
+vwang.OBJ: vwang.c $(V)\video.h $(V)\vlocal.h $(V)\vdata.h
+vwang.OBJ: sub_char.h wperson.h wscrn.h werrlog.h vwang.h
+vwang.OBJ: wglobals.h wfiles.h
+waltmap.OBJ: waltmap.c
+wangmenu.OBJ: wangmenu.c
+wanguid.OBJ: wanguid.c wdefines.h
+wchain.OBJ: wchain.c $(V)\video.h werrlog.h wcommon.h wrunconf.h
+wchkstrt.OBJ: wchkstrt.c $(V)\video.h werrlog.h
+wcmatch.OBJ: wcmatch.c wdefines.h
+wdelfile.OBJ: wdelfile.c
+wdellock.OBJ: wdellock.c
+wdfinish.OBJ: wdfinish.c $(V)\video.h
+wdinit.OBJ: wdinit.c $(V)\video.h
+wdisplay.OBJ: wdisplay.c $(V)\video.h vwang.h
+werrlog.OBJ: werrlog.c wperson.h werrlog.h wdefines.h wglobals.h
+werrlog.OBJ: wfiles.h
+werrpath.OBJ: werrpath.c wdefines.h wglobals.h wfiles.h
+werrvre.OBJ: werrvre.c
+wexit.OBJ: wexit.c werrlog.h wglobals.h wfiles.h
+wexith.OBJ: wexith.c que_jobs.h wperson.h wfiles.h wglobals.h
+wexith.OBJ: wfiles.h filext.h $(V)\video.h
+wfaccess.OBJ: wfaccess.c wdefines.h wcommon.h wfaccess.h cobrun.h
+wfcisam.OBJ: wfcisam.c
+wfclose.OBJ: wfclose.c wperson.h wfiles.h
+wfilechk.OBJ: wfilechk.c werrlog.h wcommon.h cobrun.h wdefines.h
+wfiledis.OBJ: wfiledis.c wperson.h $(V)\video.h wfiles.h
+wfiledis.OBJ: wcommon.h wangkeys.h wfaccess.h werrlog.h
+wfileext.OBJ: wfileext.c filext.h
+wfname.OBJ: wfname.c wperson.h wfiles.h wcommon.h werrlog.h
+wfname.OBJ: cobrun.h
+wfopen.OBJ: wfopen.c wperson.h wangkeys.h wcommon.h wfaccess.h
+wfopen.OBJ: cobrun.h wglobals.h wfiles.h filext.h
+wformmnt.OBJ: wformmnt.c
+wfstatus.OBJ: wfstatus.c
+wfvision.OBJ: wfvision.c visint.h visn2.h
+wfwait.OBJ: wfwait.c wglobals.h wfiles.h
+wgetpgrp.OBJ: wgetpgrp.c wdefines.h
+wglobals.OBJ: wglobals.c wglobals.h wfiles.h cobrun.h
+wisp_pcb.OBJ: wisp_pcb.c
+wisp_pic.OBJ: wisp_pic.c
+wisp_prb.OBJ: wisp_prb.c
+WISPDMF.OBJ:  WISPDMF.c
+wispexit.OBJ: wispexit.c cobrun.h
+wispsort.OBJ: wispsort.c wcommon.h sortseqf.h movebin.h werrlog.h
+wispsync.OBJ: wispsync.c
+wpause.OBJ: wpause.c movebin.h werrlog.h
+wperson.OBJ: wperson.c $(V)\video.h wperson.h werrlog.h
+wperson.OBJ: wdefines.h wglobals.h wfiles.h
+wprint.OBJ: wprint.c que_jobs.h wperson.h werrlog.h wglobals.h
+wprint.OBJ: wfiles.h
+writeacp.OBJ: writeacp.c acp.h
+wrunconf.OBJ: wrunconf.c wrunconf.h wdefines.h
+wsclose.OBJ: wsclose.c
+wscreen.OBJ: wscreen.c $(V)\video.h wcommon.h movebin.h cobrun.h
+wscreen.OBJ: werrlog.h
+wscset.OBJ: wscset.c $(V)\video.h $(V)\vlocal.h $(V)\vdata.h
+wscset.OBJ: $(V)\vcap.h
+wsfnm.OBJ: wsfnm.c $(V)\video.h vwang.h werrlog.h
+wsfns.OBJ: wsfns.c $(V)\video.h vwang.h werrlog.h
+wshelp.OBJ: wshelp.c $(V)\video.h $(V)\vlocal.h $(V)\vcap.h
+wshelp.OBJ: menu.h wperson.h vwang.h wscrn.h scnfacs.h wglobals.h
+wshelp.OBJ: wfiles.h license.h wdefines.h
+wsmode.OBJ: wsmode.c $(V)\video.h $(V)\vlocal.h $(V)\vdata.h
+wsmode.OBJ: $(V)\vcap.h
+wsmove.OBJ: wsmove.c $(V)\video.h $(V)\vlocal.h $(V)\vdata.h
+wsmove.OBJ: $(V)\vcap.h
+wspawn.OBJ: wspawn.c
+wswap.OBJ: wswap.c cobrun.h wglobals.h wfiles.h
+wsxio.OBJ: wsxio.c $(V)\video.h vwang.h
+wtransl.OBJ: wtransl.c
+wvaset.OBJ: wvaset.c
+wvuserx.OBJ: wvuserx.c
+wwaitpid.OBJ: wwaitpid.c
+XDEBUG.OBJ: XDEBUG.c
+

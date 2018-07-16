@@ -1,0 +1,384 @@
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QAWSUBS.
+       AUTHOR.
+           GREG LINDHOLM.
+       DATE-WRITTEN.
+           01/25/90.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           NO-ECHO IS "98".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  INDEX-COUNTER                  PIC 9(5).
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  MY-EXT                         PIC X(39).
+
+      ******************************************************************
+
+       01  IS-OUTPUT     PIC X VALUE SPACES.
+       01  IS-PRINTFILE  PIC X VALUE SPACES.
+       01  IS-SCRATCH    PIC X VALUE SPACES.
+       01  IS-SUBMIT     PIC X VALUE SPACES.
+       01  IS-IO         PIC X VALUE SPACES.
+       01  IS-LIB        PIC X VALUE SPACES.
+       01  IS-CASE-SEN   PIC X VALUE SPACES.
+       01  IS-BACKFILL   PIC X VALUE SPACES.
+
+      ******************************************************************
+
+       01  WFNAME-FILE                  PIC X(8) VALUE SPACES.
+       01  WFNAME-LIB                   PIC X(8) VALUE SPACES.
+       01  WFNAME-VOL                   PIC X(6) VALUE SPACES.
+       01  WFNAME-NAME                  PIC X(80) VALUE SPACES.
+       01  WFNAME-MODE          BINARY  PIC 9(9) VALUE ZERO.
+       01  WFNAME-TITLE                 PIC X(40) VALUE SPACES.
+
+       01  WFNAME-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(40) ROW 2 COL 20 VALUE
+              "     *** TESTING THE wfname SUB ***".
+
+           03  FILLER PIC X(40) ROW 4 COL 20 SOURCE WFNAME-TITLE.
+
+           03  FILLER PIC X(4) ROW 6 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 6 COL 20 
+               SOURCE WFNAME-FILE OBJECT WFNAME-FILE.
+
+           03  FILLER PIC X(7) ROW 6 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 6 COL 38                                  
+               SOURCE WFNAME-LIB OBJECT WFNAME-LIB.
+
+           03  FILLER PIC X(6) ROW 6 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 6 COL 55 
+               SOURCE WFNAME-VOL OBJECT WFNAME-VOL.
+
+           03  FILLER PIC X(10) ROW 8 COL 20 VALUE "WISPFILEXT".
+           03  FILLER PIC X(39) ROW 8 COL 32 
+               SOURCE MY-EXT OBJECT MY-EXT.
+
+           03  FILLER PIC X(15) ROW 10 COL 5 VALUE "IS_OUTPUT".
+           03  FILLER PIC X     ROW 10 COL 20
+               SOURCE IS-OUTPUT OBJECT IS-OUTPUT.
+
+           03  FILLER PIC X(15) ROW 10 COL 25 VALUE "IS_PRINTFILE".
+           03  FILLER PIC X     ROW 10 COL 40
+               SOURCE IS-PRINTFILE OBJECT IS-PRINTFILE.
+
+           03  FILLER PIC X(15) ROW 10 COL 45 VALUE "IS_SCRATCH".
+           03  FILLER PIC X     ROW 10 COL 60
+               SOURCE IS-SCRATCH OBJECT IS-SCRATCH.
+
+           03  FILLER PIC X(15) ROW 12 COL 5 VALUE "IS_SUBMIT".
+           03  FILLER PIC X     ROW 12 COL 20
+               SOURCE IS-SUBMIT OBJECT IS-SUBMIT.
+
+           03  FILLER PIC X(15) ROW 12 COL 25 VALUE "IS_IO".
+           03  FILLER PIC X     ROW 12 COL 40
+               SOURCE IS-IO OBJECT IS-IO.
+
+           03  FILLER PIC X(15) ROW 12 COL 45 VALUE "IS_LIB".
+           03  FILLER PIC X     ROW 12 COL 60
+               SOURCE IS-LIB OBJECT IS-LIB.
+
+           03  FILLER PIC X(15) ROW 14 COL 5 VALUE "IS_CASE_SEN".
+           03  FILLER PIC X     ROW 14 COL 20
+               SOURCE IS-CASE-SEN OBJECT IS-CASE-SEN.
+
+           03  FILLER PIC X(15) ROW 14 COL 25 VALUE "IS_BACKFILL".
+           03  FILLER PIC X     ROW 14 COL 40
+               SOURCE IS-BACKFILL OBJECT IS-BACKFILL.
+
+           03  FILLER PIC X(79) ROW 20 COL 2 SOURCE WFNAME-NAME.
+
+           03  FILLER PIC X(40) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 EXIT".
+
+      ******************************************************************
+
+       01  RETCOD.
+           05  B4          BINARY VALUE 0.
+           05  RET-CODE BINARY VALUE 0.
+
+      ******************************************************************
+
+       01  FLV-TITLE                      PIC X(40) VALUE SPACES.
+       01  FLV-FILE                       PIC X(8) VALUE SPACES.
+       01  FLV-LIB                        PIC X(8) VALUE SPACES.
+       01  FLV-VOL                        PIC X(6) VALUE SPACES.
+
+      ******************************************************************
+
+       01  FILE-NAME PIC X(8) value "JIMNME".
+       01  FILE-LIB  PIC X(8) value "JTWPRT".
+
+      ******************************************************************
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+
+      ******************************************************************
+
+       01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 5 COL 20
+               SOURCE FLV-TITLE.
+
+           03  FILLER PIC X(4) ROW 12 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 12 COL 20 
+               SOURCE FLV-FILE OBJECT FLV-FILE.
+
+           03  FILLER PIC X(7) ROW 12 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 12 COL 38 
+               SOURCE FLV-LIB OBJECT FLV-LIB.
+
+           03  FILLER PIC X(6) ROW 12 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 12 COL 55 
+               SOURCE FLV-VOL OBJECT FLV-VOL.
+
+      ******************************************************************
+
+
+       01  WISPSUBS-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(15) ROW 1 COL 60 VALUE
+               "WISPSUBS-SCREEN".
+           03  FILLER  PIC X(10) ROW 3 COL 2 VALUE
+               " 1) wfname".
+           03  FILLER  PIC X(25) ROW 5 COL 2 VALUE
+               " 2) NetronCAP subroutines".
+           03  FILLER  PIC X(12) ROW 7 COL 2 VALUE
+               " 3) PRNTNAME".
+           03  FILLER  PIC X(04) ROW 9 COL 2 VALUE
+               " 4) ".
+           03  FILLER  PIC X(04) ROW 11 COL 2 VALUE
+               " 5) ".
+           03  FILLER  PIC X(04) ROW 13 COL 2 VALUE
+               " 6) ".
+           03  FILLER  PIC X(04) ROW 15 COL 2 VALUE
+               " 7) ".
+           03  FILLER  PIC X(04) ROW 17 COL 2 VALUE
+               " 8) ".
+           03  FILLER  PIC X(04) ROW 19 COL 2 VALUE
+               " 9) ".
+           03  FILLER  PIC X(04) ROW 21 COL 2 VALUE
+               "10) ".
+           03  FILLER  PIC X(03) ROW 3 COL 40 VALUE
+               "11)".
+           03  FILLER  PIC X(03) ROW 5 COL 40 VALUE
+               "12)".
+           03  FILLER  PIC X(03) ROW 7 COL 40 VALUE
+               "13)".
+           03  FILLER  PIC X(03) ROW 9 COL 40 VALUE
+               "14)".
+           03  FILLER  PIC X(03) ROW 11 COL 40 VALUE
+               "15)".
+           03  FILLER  PIC X(08) ROW 13 COL 40 VALUE
+               "16) EXIT".
+           03  FILLER  PIC X(03) ROW 15 COL 40 VALUE
+               "17)".
+           03  FILLER  PIC X(03) ROW 17 COL 40 VALUE
+               "18)".
+           03  FILLER  PIC X(03) ROW 19 COL 40 VALUE
+               "19)".
+           03  FILLER  PIC X(03) ROW 21 COL 40 VALUE
+               "20)".
+           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+
+      ******************************************************************
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       WISPSUBS-TESTS.
+
+           DISPLAY AND READ WISPSUBS-SCREEN ON CRT
+           PFKEYS  1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+                  11, 12, 13, 14, 15, 16, 17, 18, 19, 20.
+
+           IF PF-KEY = "01" THEN
+              PERFORM WFNAME-CALL THRU WFNAME-CALL-EXIT
+              GO TO WISPSUBS-TESTS
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM WSFNS-WSFNM-CALL
+              GO TO WISPSUBS-TESTS
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM PRNTNAME-CALL
+              GO TO WISPSUBS-TESTS
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO WISPSUBS-TESTS.
+
+      ******************************************************************
+
+       WFNAME-CALL.
+
+           MOVE WISPFILEXT TO MY-EXT.
+
+           DISPLAY AND READ WFNAME-SCREEN ON CRT PFKEYS 16.
+
+           MOVE MY-EXT TO WISPFILEXT.
+ 
+           IF PF-KEY = "16" THEN
+              GO TO WFNAME-CALL-EXIT.
+
+           MOVE 0 TO WFNAME-MODE.
+
+           IF IS-OUTPUT NOT = " " THEN
+              ADD   1  TO  WFNAME-MODE.
+
+           IF IS-PRINTFILE NOT = " " THEN
+              ADD   2  TO  WFNAME-MODE.
+
+           IF IS-SCRATCH NOT = " " THEN
+              ADD   4  TO  WFNAME-MODE.
+
+           IF IS-SUBMIT NOT = " " THEN
+              ADD   8  TO  WFNAME-MODE.
+
+           IF IS-IO NOT = " " THEN
+              ADD  16  TO  WFNAME-MODE.
+
+           IF IS-LIB NOT = " " THEN
+              ADD  64  TO  WFNAME-MODE.
+
+           IF IS-CASE-SEN NOT = " " THEN
+              ADD 512  TO  WFNAME-MODE.
+
+           IF IS-BACKFILL NOT = " " THEN
+              ADD 4096  TO  WFNAME-MODE.
+
+
+           CALL "setwispfilext" USING WISPFILEXT.
+
+           CALL "wfname" USING  WFNAME-MODE,
+                                WFNAME-VOL,
+                                WFNAME-LIB,
+                                WFNAME-FILE,
+                                WFNAME-NAME.
+
+           GO TO WFNAME-CALL.
+
+       WFNAME-CALL-EXIT.
+           EXIT.
+
+       WSFNS-WSFNM-CALL.
+           CALL "QANETCAP".
+
+      ******************************************************************
+
+       PRNTNAME-CALL.
+           DISPLAY FILE-NAME.
+           ACCEPT FILE-NAME.
+           IF FILE-NAME = "EXIT"
+               STOP RUN.
+
+      *    CALL "PRNTNAME" USING FILE-NAME FILE-LIB.
+           DISPLAY FILE-NAME.
+
+      ******************************************************************
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.
+

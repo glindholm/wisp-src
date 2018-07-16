@@ -1,0 +1,150 @@
+# Update the VIDEO library for MSDOS
+#
+
+VLIB    = VIDEO.LIB
+LIBDIR  = E:\LIB
+USELIB  = $(LIBDIR)\$(VLIB)
+
+.PRECIOUS:      $(VLIB)
+
+.c.OBJ:
+	@CCLIB $(VLIB) $*
+
+$(USELIB): $(VLIB)
+	copy $(VLIB) $(LIBDIR)
+
+$(VLIB):        \
+	gcal2.OBJ \
+	gcalc.OBJ \
+	gcalend.OBJ \
+	gclock.OBJ \
+	gnotepad.OBJ \
+	gpuzzle.OBJ \
+	gzones.OBJ \
+#        memxxx.OBJ \
+#        vbarup.OBJ \
+	vbell.OBJ \
+	vcap.OBJ \
+	vcharset.OBJ \
+	vcommand.OBJ \
+	vcontrol.OBJ \
+	vcut.OBJ \
+	vdefer.OBJ \
+	vedge.OBJ \
+	verase.OBJ \
+#        vescape.OBJ \
+	vexit.OBJ \
+	vfnkey.OBJ \
+	vgets0.OBJ \
+#        vgetterm.OBJ \
+	vgrid.OBJ \
+	vinput.OBJ \
+#        vkbmap.OBJ \
+	vline.OBJ \
+	vlist.OBJ \
+	vloadch.OBJ \
+	vmacro.OBJ \
+	vmap.OBJ \
+	vmenu.OBJ \
+#        vmeta.OBJ \
+	vmode.OBJ \
+	vmove.OBJ \
+	vnewline.OBJ \
+	vonexit.OBJ \
+	vop.OBJ \
+	vopenf.OBJ \
+	vpaste.OBJ \
+	vpopscr.OBJ \
+	vprint.OBJ \
+	vpushscr.OBJ \
+	vputc.OBJ \
+	vrawdos.OBJ \
+#        vrawunix.OBJ \
+	vrefresh.OBJ \
+	vrelease.OBJ \
+	vroll.OBJ \
+	vscreen.OBJ \
+	vsection.OBJ \
+	vset.OBJ \
+	vsize.OBJ \
+	vslew.OBJ \
+	vstate.OBJ \
+	vsynch.OBJ \
+	vsystem.OBJ \
+	vtext.OBJ \
+	vtrace.OBJ \
+	vtrigger.OBJ \
+	vtrim.OBJ \
+	vuserex.OBJ \
+	vutil.OBJ \
+	vwait.OBJ 
+
+
+gcal2.OBJ: gcal2.c video.h vlocal.h vdata.h vmenu.h
+gcalc.OBJ: gcalc.c video.h vlocal.h vdata.h vmenu.h
+gcalend.OBJ: gcalend.c video.h vlocal.h vdata.h vmenu.h
+gclock.OBJ: gclock.c video.h vlocal.h vdata.h
+gnotepad.OBJ: gnotepad.c video.h vlocal.h vdata.h vmenu.h
+gpuzzle.OBJ: gpuzzle.c video.h vlocal.h vdata.h vmenu.h
+gzones.OBJ: gzones.c
+memxxx.OBJ: memxxx.c
+vbarup.OBJ: vbarup.c video.h vmenu.h vlocal.h vdata.h
+vbell.OBJ: vbell.c video.h vlocal.h vdata.h
+vcap.OBJ: vcap.c video.h vcap.h
+vcharset.OBJ: vcharset.c video.h vlocal.h vdata.h vcap.h
+vcommand.OBJ: vcommand.c
+vcontrol.OBJ: vcontrol.c video.h vcap.h
+vcut.OBJ: vcut.c video.h
+vdefer.OBJ: vdefer.c video.h vlocal.h
+vedge.OBJ: vedge.c video.h
+verase.OBJ: verase.c video.h vlocal.h vdata.h vcap.h vmenu.h
+vescape.OBJ: vescape.c
+vexit.OBJ: vexit.c video.h vlocal.h vcap.h vdata.h
+vfnkey.OBJ: vfnkey.c video.h vlocal.h vdata.h
+vgets0.OBJ: vgets0.c video.h
+vgetterm.OBJ: vgetterm.c
+vgrid.OBJ: vgrid.c video.h vlocal.h vdata.h vcap.h
+vinput.OBJ: vinput.c video.h vlocal.h vcap.h vdata.h
+vkbmap.OBJ: vkbmap.c
+vline.OBJ: vline.c video.h vlocal.h vdata.h vcap.h
+vlist.OBJ: vlist.c video.h vlist.h vlocal.h vdata.h
+vloadch.OBJ: vloadch.c video.h vlocal.h
+vmacro.OBJ: vmacro.c video.h vlocal.h vdata.h
+vmap.OBJ: vmap.c video.h vlocal.h
+vmenu.OBJ: vmenu.c video.h vlocal.h vdata.h vcap.h vmenu.h
+vmeta.OBJ: vmeta.c
+vmode.OBJ: vmode.c video.h vlocal.h vdata.h vcap.h
+vmove.OBJ: vmove.c video.h vlocal.h vdata.h vcap.h
+vnewline.OBJ: vnewline.c video.h vlocal.h vdata.h vcap.h
+vonexit.OBJ: vonexit.c video.h vlocal.h
+vop.OBJ: vop.c video.h
+vopenf.OBJ: vopenf.c video.h vlocal.h vdata.h
+vpaste.OBJ: vpaste.c video.h vlocal.h vdata.h
+vpopscr.OBJ: vpopscr.c video.h vlocal.h
+vprint.OBJ: vprint.c video.h vlocal.h
+vpushscr.OBJ: vpushscr.c video.h vlocal.h
+vputc.OBJ: vputc.c video.h
+vrawdos.OBJ: vrawdos.c vrawdos.h
+vrawunix.OBJ: vrawunix.c video.h vlocal.h vrawunix.h
+vrefresh.OBJ: vrefresh.c video.h vlocal.h vdata.h vcap.h
+vrelease.OBJ: vrelease.c video.h
+vroll.OBJ: vroll.c video.h vlocal.h vdata.h vcap.h
+vscreen.OBJ: vscreen.c video.h vlocal.h vdata.h vcap.h
+vsection.OBJ: vsection.c video.h
+vset.OBJ: vset.c video.h vlocal.h vdata.h vcap.h
+vsize.OBJ: vsize.c video.h vlocal.h vdata.h
+vslew.OBJ: vslew.c video.h
+vstate.OBJ: vstate.c video.h vlocal.h vdata.h vcap.h
+vsynch.OBJ: vsynch.c video.h vlocal.h
+vsystem.OBJ: vsystem.c video.h
+vtext.OBJ: vtext.c video.h vlocal.h
+vtrace.OBJ: vtrace.c
+vtrigger.OBJ: vtrigger.c video.h
+vtrim.OBJ: vtrim.c video.h
+vuserex.OBJ: vuserex.c video.h vlocal.h
+vutil.OBJ: vutil.c video.h vlocal.h vdata.h
+vwait.OBJ: vwait.c video.h
+
+
+
+

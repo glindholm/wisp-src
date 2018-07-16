@@ -1,0 +1,722 @@
+      ******************************************************************
+      * International Digital Scientific, Incorporated
+      * Extended Development Environment
+      ******************************************************************      
+
+      * Menu maintanence program that provides add, update, delete and
+      * reporting functions for EDE dynamic menu management.
+000100******************************************************************
+000200*                                                                *
+000300*                       IDENTIFICATION DIVISION                  *
+000400*                                                                *
+000500******************************************************************
+000600*
+000700 IDENTIFICATION DIVISION.
+
+000800 PROGRAM-ID.
+000900     MENUMGR.
+
+001100 AUTHOR.
+001200     John Kiesler.
+001300 DATE-WRITTEN.
+001400     09/15/91.
+
+002100/*****************************************************************
+002200*                                                                *
+002300*                         ENVIRONMENT DIVISION                   *
+002400*                                                                *
+002500******************************************************************
+002600*
+002700 ENVIRONMENT DIVISION.
+002800 CONFIGURATION SECTION.
+002900 SOURCE-COMPUTER.
+003000     WANG-VS.
+003100 OBJECT-COMPUTER.
+003200     WANG-VS.
+003300 FIGURATIVE-CONSTANTS.
+           LOWER-CASE IS "80",
+003400     BRITE      IS "84",
+003500     HIDE       IS "9C",
+003600     HIMOD      IS "80",
+003700     HIMODUL    IS "A0",
+003800     HIMODUPR   IS "81",
+003900     HIMODUPRUL IS "A1",
+004000     HIMODNUM   IS "82",
+004100     HIMODNUMUL IS "A2",
+004200     HIPROUL    IS "A4",
+004300     HIPROUPR   IS "85",
+004400     HIPROUPRUL IS "A5",
+004500     HIPRONUM   IS "86",
+004600     HIPRONUMUL IS "A6",
+004700     LOMOD      IS "88",
+004800     LOMODUL    IS "A8",
+004900     LOMODUPR   IS "89",
+005000     LOMODUPRUL IS "A9",
+005100     LOMODNUM   IS "8A",
+005200     LOMODNUMUL IS "AA",
+005300     LOPRO      IS "8C",
+005400     LOPROUL    IS "AC",
+005500     LOPROUPR   IS "8D",
+005600     LOPROUPRUL IS "AD",
+005700     LOPRONUM   IS "8E",
+005800     LOPRONUMUL IS "AE",
+005900     FLMOD      IS "90",
+006000     FLMODUL    IS "B0",
+006100     FLMODUPR   IS "91",
+006200     FLMODUPRUL IS "B1",
+006300     FLMODNUM   IS "92",
+006400     FLMODNUMUL IS "B2",
+006500     FLPRO      IS "94",
+006600     FLPROUL    IS "B4",
+006700     FLPROUPR   IS "95",
+006800     FLPROUPRUL IS "B5",
+006900     FLPRONUM   IS "96",
+007000     FLPRONUMUL IS "B6",
+007100     SUMOD      IS "98",
+007200     SUMODUL    IS "B8",
+007300     SUMODUPR   IS "99",
+007400     SUMODUPRUL IS "B9",
+007500     SUMODNUM   IS "9A",
+007600     SUMODNUMUL IS "BA",
+007700     SUPROUL    IS "BC",
+007800     SUPROUPR   IS "9D",
+007900     SUPROUPRUL IS "BD",
+008000     SUPRONUM   IS "9E",
+008100     SUPRONUMUL IS "BE",
+008200     SOLIDS     IS "0B",
+008300     POS-CURSOR IS "A0",
+008400     SOUNDALARM IS "C0",
+008500     ONE        IS "01",
+008600     OEIGHT     IS "08",
+008700     OTEN       IS "0A",
+008800     OTWELVE    IS "0C",
+008900     OFOURTEEN  IS "0E",
+009000     OSIXTEEN   IS "10",
+009100     OEIGHTEEN  IS "12",
+009200     OTWENTY    IS "14",
+009300     TWENTYSIX  IS "1A",
+009400     FORTYSEVEN IS "2F",
+009500     ERASEREST  IS "02".
+009600/*****************************************************************
+009700*                                                                *
+009800*                    INPUT-OUTPUT SECTION                        *
+009900*                                                                *
+010000******************************************************************
+010100*
+010200 INPUT-OUTPUT SECTION.
+010300 FILE-CONTROL.
+010400*
+010500     SELECT CRT
+010600         ASSIGN TO "CRT",      "DISPLAY",
+010700         ORGANIZATION    IS SEQUENTIAL
+010800         ACCESS MODE     IS RANDOM
+010900         RELATIVE KEY    IS LINENUM
+011000         PFKEY           IS PF-KEY
+011100         CURSOR POSITION IS CURSOR-POS
+011200         FILE STATUS     IS CRT-FILSTAT.
+011300*
+011400     COPY MENUCPY1.
+011500 
+011600     SELECT PRINTER
+011700         ASSIGN TO "PRINTER", "PRINTER",
+011800         ORGANIZATION IS SEQUENTIAL
+011900         ACCESS MODE  IS SEQUENTIAL
+012000         FILE STATUS  IS PRT-FILSTAT.
+012100
+012200/*****************************************************************
+012300*                                                                *
+012400*                      DATA DIVISION - FILE SECTION              *
+012500*                                                                *
+012600******************************************************************
+012700*
+012800 DATA DIVISION.
+012900 FILE SECTION.
+013000*
+013100 FD  CRT
+013200     LABEL RECORDS ARE OMITTED.
+
+013300 01  CRTREC                         PIC X(1924).
+
+
+013400*
+014100     COPY MENUCPY2.
+014200
+
+
+014300 FD  PRINTER
+014400     LABEL RECORDS ARE OMITTED.
+
+014500 01  PRTREC                         PIC X(132).
+014600
+014700/*****************************************************************
+014800*                                                                *
+014900*                         WORKING STORAGE                        *
+015000*                                                                *
+015100******************************************************************
+015200*
+015300 WORKING-STORAGE SECTION.
+015400 01  DATE-INFO.
+015500     03  DATEIN                     PIC 9(06).
+015600     03  DATEGROUP                  REDEFINES DATEIN.
+015700         05  YEAR-DIGITS            PIC 9(02).
+015800         05  MONTH-DIGITS           PIC 9(02).
+015900         05  DAY-DIGITS             PIC 9(02).
+016000     03  RPT-DATE.
+016100         05  RPT-MONTH              PIC 9(02).
+016200         05  FILLER                 PIC X(01)  VALUE "/".
+016300         05  RPT-DAY                PIC 9(02).
+016400         05  FILLER                 PIC X(01)  VALUE "/".
+016500         05  RPT-YEAR               PIC 9(02).
+
+016600******************************************************************
+016700*                   FILE CONTROL STATUS SWITCHES                 *
+016800******************************************************************
+016900
+016900 01  CRT-FILSTAT                    PIC X(02).
+
+016900 01  PRT-FILSTAT                    PIC X(02).
+
+016900 01  FILSTAT.
+017000     03  ERR-FLAG                   PIC X(01).
+017100     03  PFK-BYTE                   PIC X(01).
+
+017200 01  MENU-DATA-FILE-STATUS            PIC X(1)  VALUE "0".
+017300     88 MORE-MENU-DATA-FILE               VALUE "0".
+017400     88 RECORD-FOUND-ON-MENU-DATA-FILE    VALUE "0".
+017500     88 NO-MORE-MENU-DATA-FILE            VALUE "1".
+017600     88 NO-RECORD-FOR-MENU-DATA-FILE      VALUE "2".
+017700     88 DUPLICATE-ON-MENU-DATA-FILE       VALUE "2".
+
+017800******************************************************************
+017900*               EXTERNAL FILE LOCATION DEFINITIONS               *
+018000******************************************************************
+018100 01  REC-COUNT                   PIC 9(4)  VALUE 500.
+018200*01  FIL-FOR-FIELD               PIC X(8)  VALUE SPACES.
+018300*01  LIB-FOR-FIELD               PIC X(8)  VALUE SPACES.
+018400*01  VOL-FOR-FIELD               PIC X(6)  VALUE SPACES.
+
+       01  FILE-CONTROL-NAMES.
+           03  MENU-FILE               PIC X(8)  VALUE "MENUFILE".
+           03  MENU-LIBRARY            PIC X(8)  VALUE "        ".
+           03  MENU-VOLUME             PIC X(8)  VALUE "        ". 
+
+
+
+018500******************************************************************
+018600*             WORKSTATION FILE CONTROL DESCRIPTIONS              *
+018700******************************************************************
+018800 01  LINENUM                        PIC 9(02) VALUE 1.
+018900 01  PF-KEY                         PIC 9(02) VALUE 0.
+
+019000 01  CURSOR-POS.
+019100     03  MOD-COL                    BINARY.
+019200     03  MOD-ROW                    BINARY.
+019300 01  REDEF-CURS-POS   
+              REDEFINES CURSOR-POS.
+019400     03  FILLER                     PIC X(01).
+019500     03  CURS-COL                   PIC X(01).
+019600     03  FILLER                     PIC X(01).
+019700     03  CURS-ROW                   PIC X(01).
+019800
+019900 01  WS-ORDERAREA.
+020000     03  ROW-AREA                   PIC X(01).
+020100     03  WRITE-CONTROL-CHARACTER    PIC X(01).
+020200     03  COLUMN-ADDRESS             PIC X(01).
+020300     03  ROW-ADDRESS                PIC X(01).
+041100
+041600 01  NORM-ORDER-AREA.
+041700     03  FILLER                     PIC X(01) VALUE ONE.
+041800     03  FILLER                     PIC X(01) VALUE POS-CURSOR.
+041900     03  S-BYTE4                    PIC X(02) VALUE LOW-VALUES.
+020800
+036600 01  WS-TYPE-PRINT                  PIC X(14) VALUE SPACES.
+036700 01  LNE03-S                        PIC X(45) VALUE SPACES.
+036800 01  WS-GETNEXTITEM                 PIC 9(02) VALUE 0.
+036900
+037000 01  WS-RESPONSE                    PIC X(01) VALUE SPACES.
+025000 01  WS-LINE23                      PIC X(78) VALUE SPACES.
+025000 01  WS-LINE24                      PIC X(78) VALUE           
+024600                          "<ENTER> RETURN & UPDATE, <PF-05> PRINT,
+      -                         " <PF-16> EXIT".
+025100
+026000 01  NDX                            PIC 9(05) VALUE ZERO.
+026200 01  TEMP-NDX                       PIC 9(04) VALUE ZERO.
+026300 01  START-POINT-FOUND              PIC X(03) VALUE "NO".
+041000 01  INDX                           PIC 9(05) VALUE ZEROES.
+
+020855/
+020900******************************************************************
+021000*                                                                *
+021100*                   DISPLAY DEFINITIONS                          *
+021200*                                                                *
+021300******************************************************************
+021400*
+021500 01  DISPLAY-REC1    USAGE IS DISPLAY-WS.
+021600     05  FILLER                         PIC X(20)
+021700             ROW 01  COLUMN 25
+021800                 VALUE "Menu Maintanence".
+021900     05  FILLER                         PIC X(14)
+022000             ROW 03  COLUMN 03
+022100                 VALUE "Menu No.".   
+023200     05  S1-WS-MENUNO                   PIC Z(04)
+023300             ROW 03  COLUMN 18
+023400                 SOURCE IS MENU-IDENTIFIER
+023500                 OBJECT IS MENU-IDENTIFIER.
+023600     05  FILLER                         PIC X(09)
+023700             ROW 05  COLUMN 08
+023800                 VALUE "Type ".
+023900     05  S1-WS-TYPE                     PIC Z9(01)
+024000             ROW 05  COLUMN 18
+024100                 SOURCE IS MENU-TYPE
+024200                 OBJECT IS MENU-TYPE.
+021900     05  FILLER                         PIC X(09)
+022000             ROW 07  COLUMN 08
+022100                 VALUE "Option  ".   
+023200     05  S1-MENU-OPTION                 PIC ZZZ9(01) 
+023300             ROW 07  COLUMN 18
+023400                 SOURCE IS MENU-OPTIONS
+023500                 OBJECT IS MENU-OPTIONS. 
+023600     05  FILLER                         PIC X(09)
+023700             ROW 09  COLUMN 08
+023800                 VALUE "Row  ".
+023900     05  S1-MENU-ROW                    PIC Z9(01)
+024000             ROW 09  COLUMN 18
+024100                 SOURCE IS MENU-ROW  
+024200                 OBJECT IS MENU-ROW. 
+021900     05  FILLER                         PIC X(09)
+022000             ROW 11  COLUMN 08
+022100                 VALUE "Column  ". 
+023200     05  S1-MENU-COLUMN                 PIC ZZZ9(01)
+023300             ROW 11  COLUMN 18
+023400                 SOURCE IS MENU-COLUMN
+023500                 OBJECT IS MENU-COLUMN. 
+023600     05  FILLER                         PIC X(09)
+023700             ROW 13  COLUMN 08
+023800                 VALUE "Width".
+023900     05  S1-MENU-WIDTH                  PIC ZZZ9(01)
+024000             ROW 13  COLUMN 18
+024100                 SOURCE IS MENU-WIDTH
+024200                 OBJECT IS MENU-WIDTH.
+021900     05  FILLER                         PIC X(09)
+022000             ROW 15  COLUMN 08
+022100                 VALUE "No Items". 
+023200     05  S1-MENU-NOITEMS                PIC ZZZ9(01)
+023300             ROW 15  COLUMN 18
+023400                 SOURCE IS MENU-ITEMS
+023500                 OBJECT IS MENU-ITEMS.
+024500     05  LINE23A                        PIC X(78) 
+                   ROW 23 COLUMN 02
+024600                 SOURCE IS WS-LINE23.
+024500     05  LINE24A                        PIC X(78) 
+                   ROW 24 COLUMN 02
+024600                 VALUE IS "<ENTER> UPDATE, <PF-02> ITEM DESCRIPTIO
+      -                         "NS, <PF-05> PRINT, <PF-16> EXIT".
+024800
+      /                                                                    *
+026400******************************************************************
+026500*                                                                *
+026600*              DISPLAY DEFINITION FOR DISPLAY-REC 2              *
+026700*                                                                *
+026800******************************************************************
+026900*
+027000 01  DISPLAY-REC2 USAGE IS DISPLAY-WS.
+027100     05  FILLER                  PIC X(26) 
+                  ROW 01 COLUMN 25
+027200                VALUE IS "Menu Maintanence".
+028700     05  FILLER                  PIC X(09) 
+                  ROW 03 COLUMN 03
+028800                VALUE IS "Menu No".
+028900     05  MENU-NUMBER             PIC X(04)
+                  ROW 03 COLUMN 11
+029000                SOURCE IS MENU-IDENTIFIER.
+
+028700     05  FILLER                  PIC X(06) 
+                  ROW 05 COLUMN 02
+028800                VALUE IS "Text ".
+028700     05  FILLER                  PIC X(06) 
+                  ROW 05 COLUMN 66
+028800                VALUE IS "Code ".
+028700     05  FILLER                  PIC X(06) 
+                  ROW 05 COLUMN 73
+028800                VALUE IS "Value".
+
+           05  FILLER OCCURS 16 TIMES ROW 06.
+028900          07  MENU-ITEM-1A            PIC X(64)
+                      ROW 06 COLUMN 02
+029000                  SOURCE IS MENU-ITEM-TEXT
+029000                  OBJECT IS MENU-ITEM-TEXT.
+028900          07  MENU-ITEM-1B            PIC 9(04) 
+                      ROW 06 COLUMN 66
+029000                  SOURCE IS MENU-ITEM-CODE
+029000                  OBJECT IS MENU-ITEM-CODE.
+028900          07  MENU-ITEM-1C            PIC 9(04)
+                      ROW 06 COLUMN 73
+029000                  SOURCE IS MENU-ITEM-LINK
+029000                  OBJECT IS MENU-ITEM-LINK.
+
+024500     05  LINE23B                 PIC X(78) 
+                  ROW 23 COLUMN 02
+024600                 SOURCE IS WS-LINE23.
+035500     05  LINE24B                 PIC X(78) 
+                  ROW 24 COLUMN 02
+                       SOURCE IS WS-LINE24.
+024600***              VALUE IS "<ENTER> RETURN, <PF-01> UPDATE, <PF-05> 
+      ***-                      " PRINT, <PF-16> EXIT".
+
+042000/
+042100******************************************************************
+042200*                                                                *
+042300*                        PRINTER RECORDS                         *
+042400*                                                                *
+042500******************************************************************
+042600
+042700 01  LINE001.
+042800     03  FILLER                PIC X(02)       VALUE SPACES.
+042900     03  P-REPORT-DATE         PIC X(08)       VALUE SPACES.
+043000     03  FILLER                PIC X(47)       VALUE SPACES.
+043100     03  FILLER                PIC X(19)       VALUE
+043200         "EDE MENU STRUCTURES".
+043300     03  FILLER                PIC X(48)       VALUE SPACES.
+043400     03  FILLER                PIC X(05)       VALUE "PAGE ".
+043500     03  P-PAGE                PIC ZZ9         VALUE ZEROES.
+043600
+043700 01  LINE002.
+043800     03  FILLER                PIC X(09)       VALUE
+                "MENU NO: ".
+043900     03  L2-MENU-NO            PIC 9(04).
+043900     03  FILLER                PIC X(03)       VALUE SPACES.
+043900     03  FILLER                PIC X(06)       VALUE
+044000          "TYPE: ".
+044100     03  L2-MENU-TYPE          PIC 9(02).
+043900     03  FILLER                PIC X(03)       VALUE SPACES.
+043800     03  FILLER                PIC X(08)       VALUE
+                "OPTION: ".
+043900     03  L2-MENU-OPTION        PIC 9(04).
+043900     03  FILLER                PIC X(03)       VALUE SPACES.
+043900     03  FILLER                PIC X(05)       VALUE
+044000          "ROW: ".
+044100     03  L2-MENU-ROW           PIC 9(02).
+043900     03  FILLER                PIC X(03)       VALUE SPACES.
+043800     03  FILLER                PIC X(08)       VALUE
+                "COLUMN: ".
+043900     03  L2-MENU-COLUMN        PIC 9(04).
+043900     03  FILLER                PIC X(03)       VALUE SPACES.
+043900     03  FILLER                PIC X(07)       VALUE
+044000          "WIDTH: ".
+044100     03  L2-MENU-WIDTH         PIC 9(02).
+043900     03  FILLER                PIC X(03)       VALUE SPACES.
+043800     03  FILLER                PIC X(10)       VALUE
+                "NO ITEMS: ".
+043900     03  L2-MENU-NOITEMS       PIC 9(04).
+044200
+044300 01  LINE003.
+044400     03  FILLER                PIC X(16)       VALUE SPACES.
+044500     03  FILLER                PIC X(06)       VALUE
+044600         "TEXT: ".
+044700     03  FILLER                PIC X(61)       VALUE SPACES.
+044800     03  FILLER                PIC X(06)       VALUE
+044900         "CODE: ".
+045000     03  FILLER                PIC X(1)        VALUE SPACES.
+045100     03  FILLER                PIC X(07)       VALUE
+045200         "VALUE: ".
+045700
+047300 01  LINE004.
+047400     03  FILLER                PIC X(16)        VALUE SPACES.
+047500     03  L4-MENU-TEXT          PIC X(64)        VALUE SPACES.
+047600     03  FILLER                PIC X(03)        VALUE SPACES.
+047700     03  L4-MENU-CODE          PIC X(04)        VALUE SPACES.
+047800     03  FILLER                PIC X(03)        VALUE SPACES.
+047900     03  L4-MENU-VALUE         PIC X(04)        VALUE SPACES.
+048400
+048500 01  PRINT-LINENUM             PIC 9(02)        VALUE 55.
+048600 01  WS-PAGE-NUM               PIC 9(03)        VALUE 0.
+048700/
+048702* VARIABLES NEEDED FOR WANG'S "STRING" UTILITY
+048704 01  WLLNMNO-OUT                    PIC X(43) VALUE SPACES.
+048706 01  FNCT-RJ                        PIC X(2)   VALUE "RJ".
+048708 01  FNCT-LJ                        PIC X(2)   VALUE "LJ".
+048710 01  STR-LGTH-32.
+048712     03  FILLER                     BINARY     VALUE 0.
+048714     03  STR-LENGTH-32              BINARY     VALUE 32.
+048716 01  STR-LGTH-39.
+048718     03  FILLER                     BINARY     VALUE 0.
+048720     03  STR-LENGTH-39              BINARY     VALUE 39.
+048722 01  STR-LGTH-43.
+048724     03  FILLER                     BINARY     VALUE 0.
+048726     03  STR-LENGTH-43              BINARY     VALUE 43.
+048728 01  ADJ-WELLNAME                   PIC X(32)  VALUE SPACES.
+048730 01  ADJ-WLLNMNO1.
+048732     03  ADJ-WLLNM1                 PIC X(32)  VALUE SPACES.
+048734     03  HOLD-A-SPACE               PIC X(1)   VALUE "?".
+048736     03  ADJ-WLLNO1                 PIC X(6)   VALUE SPACES.
+048750
+048800/*****************************************************************
+048900*                                                                *
+049000*                         PROCEDURE DIVISION                     *
+049100*                                                                *
+049200******************************************************************
+049300*
+049400 PROCEDURE DIVISION.
+049500 START-PROGRAM.
+049600     PERFORM INITIALIZATION.
+049700     PERFORM MAIN-PROCESS-SECTION
+049800       UNTIL  PF-KEY = 16.
+049900     CLOSE CRT.
+050000     CLOSE MENU-DATA-FILE.
+
+050100     STOP RUN.
+       
+       START-PROGRAM-EXIT.
+           EXIT.
+
+
+050200/
+050300 INITIALIZATION-SECTION SECTION.
+050300 INITIALIZATION.
+050400     MOVE ONE TO ROW-AREA.
+050500     MOVE BRITE TO FAC OF LINE24A
+                                LINE24B.
+050800     MOVE HIDE TO FAC OF LINE23A 
+                               LINE23B.
+050900     ACCEPT DATEIN FROM DATE.
+051000     MOVE YEAR-DIGITS TO RPT-YEAR.
+051100     MOVE MONTH-DIGITS TO RPT-MONTH.
+051200     MOVE DAY-DIGITS TO RPT-DAY.
+           MOVE SPACES TO MENU-DATA-REC1.
+           MOVE 001 TO MENU-IDENTIFIER.
+
+051300     OPEN I-O CRT.
+051400     OPEN I-O MENU-DATA-FILE.
+
+051900     MOVE "00" TO MENU-DATA-FILE-STATUS.
+052400     MOVE ZERO TO NDX.
+
+055100     PERFORM TRY-GENERIC-LOOKUP-SECTION.
+
+ 
+       INITIALIZE-EXIT.
+           EXIT.
+
+051500/
+051600 MAIN-PROCESS-SECTION SECTION.
+051600 MAIN-PROCESS.
+
+           IF PF-KEY = 0 OR 05
+             OR MENU-IDENTIFIER NOT EQUAL NDX 
+052000        MOVE LOW-VALUES TO ROW-ADDRESS
+                                 COLUMN-ADDRESS
+052100        MOVE POS-CURSOR TO WRITE-CONTROL-CHARACTER
+052200        MOVE WS-ORDERAREA TO ORDER-AREA OF DISPLAY-REC1
+052400        MOVE MENU-IDENTIFIER TO NDX
+052600        PERFORM DISPLAY-AND-READ-REC1
+              IF PF-KEY = 0
+                 PERFORM REWRITE-MENU-DATA-FILE-SECTION
+               ELSE
+052700           IF PF-KEY = 02
+                    MOVE BRITE TO FAC OF LINE24B
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (01)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (02)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (03)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (04)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (05)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (06)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (07)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (08)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (09)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (10)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (11)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (12)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (13)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (14)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (15)
+                    MOVE LOWER-CASE TO FAC OF MENU-ITEM-1A (16)
+052000              MOVE LOW-VALUES TO ROW-ADDRESS
+                                       COLUMN-ADDRESS
+052100              MOVE POS-CURSOR TO WRITE-CONTROL-CHARACTER
+052200              MOVE WS-ORDERAREA TO ORDER-AREA OF DISPLAY-REC2
+052600              PERFORM DISPLAY-AND-READ-REC2
+                    IF PF-KEY = 0
+                       PERFORM REWRITE-MENU-DATA-FILE-SECTION
+                       MOVE 99 TO NDX.
+              
+052700     IF PF-KEY = 05
+052800        PERFORM PRINT-CONTROLLER-SECTION.
+
+052900     IF PF-KEY NOT EQUAL 05 AND 16
+             AND NDX NOT EQUAL MENU-IDENTIFIER
+051900        MOVE "0" TO MENU-DATA-FILE-STATUS
+              MOVE SPACES TO WS-LINE23
+055100        PERFORM TRY-GENERIC-LOOKUP-SECTION.
+
+061400 MAIN-PROCESS-EXIT.
+061500     EXIT.
+055300*
+055400 TRY-GENERIC-LOOKUP-SECTION SECTION.
+055400 TRY-GENERIC-LOOKUP.
+
+056200     PERFORM START-MENU-DATA-FILE. 
+056300     IF RECORD-FOUND-ON-MENU-DATA-FILE
+               PERFORM READ-NEXT-MENU-DATA-FILE
+056300         IF NOT RECORD-FOUND-ON-MENU-DATA-FILE
+                   PERFORM SET-DEFAULT-VALUES-SECTION
+056400             MOVE "  ***** NOT FOUND IN FILE *****" TO WS-LINE23
+056500             MOVE BRITE TO FAC OF LINE23A
+                                        LINE23B
+056800          ELSE
+057100            MOVE HIDE TO FAC OF LINE23A
+                                      LINE23B
+056800      ELSE
+056300        IF NOT RECORD-FOUND-ON-MENU-DATA-FILE
+                  PERFORM SET-DEFAULT-VALUES-SECTION
+056400            MOVE "  ***** NOT FOUND IN FILE *****" TO WS-LINE23
+056500            MOVE BRITE TO FAC OF LINE23A
+                                       LINE23B.
+
+057400 TRY-GENERIC-EXIT.
+057500     EXIT.
+      *
+       SET-DEFAULT-VALUES-SECTION  SECTION.
+       SET-DEFAULT-VALUES.
+
+           MOVE MENU-IDENTIFIER TO TEMP-NDX.
+           MOVE SPACES TO MENU-DATA-REC1.
+           MOVE TEMP-NDX TO MENU-IDENTIFIER.
+           MOVE 0 TO MENU-TYPE
+                     MENU-OPTIONS
+                     MENU-ROW
+                     MENU-COLUMN
+                     MENU-WIDTH
+                     MENU-ITEMS.
+           
+       SET-DEFAULT-VALUES-EXIT.
+           EXIT.
+
+      / 
+078200*
+078700 START-MENU-DATA-FILE-SECTION SECTION.
+078700 START-MENU-DATA-FILE.
+
+078800     MOVE "0" TO MENU-DATA-FILE-STATUS.
+078900     START MENU-DATA-FILE
+079000        KEY IS EQUAL TO MENU-IDENTIFIER
+079100         INVALID KEY
+079200             MOVE ERR-FLAG TO MENU-DATA-FILE-STATUS.
+079300*
+081600 READ-NXT-MNU-DAT-FIL-SECTION SECTION.
+081600 READ-NEXT-MENU-DATA-FILE.
+
+081700     READ MENU-DATA-FILE
+081800       NEXT RECORD
+081900         AT END
+082000             MOVE ERR-FLAG TO MENU-DATA-FILE-STATUS.
+      *
+       WRITE-MENU-DATA-FILE-SECTION SECTION.
+       WRITE-MENU-DATA-FILE.
+
+          WRITE MENU-DATA-REC1
+               INVALID KEY
+                 MOVE ERR-FLAG TO MENU-DATA-FILE-STATUS.
+
+                  
+      *
+       REWRITE-MENU-DATA-FILE-SECTION SECTION.
+       REWRITE-MENU-DATA-FILE.
+
+           IF NOT RECORD-FOUND-ON-MENU-DATA-FILE
+              PERFORM WRITE-MENU-DATA-FILE
+            ELSE
+              IF MENU-IDENTIFIER NOT EQUAL NDX         
+                 PERFORM WRITE-MENU-DATA-FILE
+               ELSE
+                 REWRITE MENU-DATA-REC1.
+
+071400/
+071500 PRINT-CONTROLLER-SECTION SECTION.
+071500 PRINT-CONTROLLER.
+
+073100     OPEN OUTPUT PRINTER.
+
+073200***  MOVE LOW-VALUES TO FELDCTL-RECORD.
+073300***  MOVE "              ** IN PROGRESS **"  TO LNE03-S.
+073400***  MOVE WAIT-ORDER-AREA TO ORDER-AREA OF DISPLAY-REC3.
+073500***  PERFORM DISPLAY-AND-READ-DISPLAY-REC3.
+073600
+           MOVE 001 TO MENU-IDENTIFIER.
+           PERFORM TRY-GENERIC-LOOKUP-SECTION.
+074000***  PERFORM START-MENU-DATA-FILE.
+074100***  PERFORM READ-NEXT-MENU-DATA-FILE.
+074200     PERFORM PRINT-CONT
+074300         UNTIL NOT RECORD-FOUND-ON-MENU-DATA-FILE.
+
+           MOVE "***** PRINTING COMPLETE ******" TO LINE23A.
+074400     MOVE 55 TO PRINT-LINENUM.
+074500     MOVE 0 TO WS-PAGE-NUM.
+074600     CLOSE PRINTER.
+           MOVE 001 TO MENU-IDENTIFIER.
+           PERFORM TRY-GENERIC-LOOKUP-SECTION.
+           MOVE 99 TO NDX.
+
+074700 PRINT-CONTROL-EXIT.
+           EXIT.
+074800*
+074900 PRINT-CONT-SECTION SECTION.
+074900 PRINT-CONT.
+
+075400     PERFORM WRITE-A-PRINT-LINE.
+075500     PERFORM READ-NEXT-MENU-DATA-FILE.
+      *
+082200 WRITE-A-PRINT-LINE-SECTION SECTION.
+082200 WRITE-A-PRINT-LINE.
+
+082300     ADD 2 TO PRINT-LINENUM.
+082400     IF PRINT-LINENUM > 55
+082500        PERFORM PRINT-PAGE-HEADERS.
+           MOVE MENU-IDENTIFIER TO L2-MENU-NO.
+           MOVE MENU-TYPE TO L2-MENU-TYPE.
+           MOVE MENU-OPTIONS TO L2-MENU-OPTION.
+           MOVE MENU-ROW TO L2-MENU-ROW.
+           MOVE MENU-COLUMN TO L2-MENU-COLUMN.
+           MOVE MENU-WIDTH TO L2-MENU-WIDTH.
+           MOVE MENU-ITEMS TO L2-MENU-NOITEMS.
+083400     WRITE PRTREC FROM LINE002 AFTER ADVANCING 2 LINE.
+           ADD 2 TO PRINT-LINENUM.
+083500     WRITE PRTREC FROM LINE003 AFTER ADVANCING 1 LINES.
+           ADD 1 TO PRINT-LINENUM.
+082600     PERFORM WRITE-L4-PRINT-LINE
+              VARYING INDX FROM 1 BY 1
+                UNTIL INDX > 16.
+082700*
+082100*
+082200 WRITE-L4-PRINT-LINE-SECTION SECTION.
+082200 WRITE-L4-PRINT-LINE.
+
+082300     ADD 1 TO PRINT-LINENUM.
+082400     IF PRINT-LINENUM > 55
+082500        PERFORM PRINT-PAGE-HEADERS.
+           MOVE MENU-ITEM-TEXT (INDX) TO L4-MENU-TEXT.
+           MOVE MENU-ITEM-CODE (INDX) TO L4-MENU-CODE.
+           MOVE MENU-ITEM-LINK (INDX) TO L4-MENU-VALUE.
+082600     WRITE PRTREC FROM LINE004 AFTER ADVANCING 1 LINES.
+082700*
+082800 PRINT-PAGE-HEADERS-SECTION SECTION.
+082800 PRINT-PAGE-HEADERS.
+082900     MOVE RPT-DATE TO P-REPORT-DATE
+083000     ADD 1 TO WS-PAGE-NUM.
+083100     MOVE WS-PAGE-NUM TO P-PAGE.
+083200     MOVE 5 TO PRINT-LINENUM.
+083300     WRITE PRTREC FROM LINE001 AFTER ADVANCING PAGE.
+      /
+075600*
+077400*
+077500 DISPLAY-AND-READ-REC1-SECTION SECTION.
+077500 DISPLAY-AND-READ-REC1.
+
+077600     DISPLAY AND READ DISPLAY-REC1 ON CRT
+077700           PFKEY 01 02 05 16.
+077800*
+077800*
+077900 DISPLAY-AND-READ-REC2-SECTION SECTION.
+077900 DISPLAY-AND-READ-REC2.
+
+078000     DISPLAY AND READ DISPLAY-REC2 ON CRT
+078100           PFKEY 01 05 16.

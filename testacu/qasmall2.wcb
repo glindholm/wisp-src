@@ -1,0 +1,17 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QASMALL.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           01/25/91.
+       ENVIRONMENT DIVISION.
+       PROCEDURE DIVISION.
+
+       MAIN-PARA.
+
+           DISPLAY "THIS IS A SMALL (2) PROGRAM".
+
+       THE-END.
+           STOP RUN.
+

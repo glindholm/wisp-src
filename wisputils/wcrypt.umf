@@ -1,0 +1,16 @@
+#
+# makefile for the wisp utilities.
+#
+
+FILE=wcrypt
+
+DIR=/usr/bin/wispbin
+LIBS= 
+LIBA= 
+
+$(DIR)/$(FILE): $(FILE)
+	cp $(FILE) $(DIR)
+
+$(FILE): $(FILE).c $(LIBA)
+	cc -o $(FILE) $(FILE).c $(LIBS)
+

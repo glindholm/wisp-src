@@ -1,0 +1,16 @@
+#
+# makefile for the wisp utilities FXZONE.
+#
+
+FILE=fxzone
+
+DIR=/u/wisp/aix/src
+LIBS=
+LIBA=
+
+$(DIR)/$(FILE): $(FILE)
+	cp $(FILE).o $(DIR)
+
+$(FILE): $(FILE).c $(LIBA)
+	cc -c -o $(FILE) $(FILE).c $(LIBS)
+

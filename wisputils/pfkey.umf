@@ -1,0 +1,2 @@
+pfkey: pfkey.c
+	cc -o pfkey pfkey.c -lcurses

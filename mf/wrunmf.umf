@@ -1,0 +1,56 @@
+#/************************************************************************/
+#/*									 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*	 An unpublished work of International Digital Scientific Inc.	 */
+#/*			    All rights reserved.			 */
+#/*									 */
+#/************************************************************************/
+#
+#
+#	File:		wrunmf.umf
+#
+#	Function:	The UNIX makefile for building the Micro Focus
+#			COBOL/2  runtime systems that include the WISP 
+#			runtime routines.
+#
+#	Description:	This makefile can generate the following versions
+#			of the runtime system.
+#
+#			wrunmf		The standard runtime
+#
+#			wrunmfe		The EDE version of the runtime.
+#
+#	Instructions:	To create a runtime system follow the
+#			instructions in Appendix A of the WISP Manual
+#			"Building a Micro Focus COBOL/2 runtime system".
+#
+#			To build wrunmf:
+#				$ make -f wrunmf.umf
+#
+#			To build wrunmfe:
+#				$ make -f wrunmf.umf wrunmfe
+#
+#
+#	LIBPATH:	If your libraries reside in a directory other then
+#			/usr/lib then change LIBPATH to there correct
+#			location.
+#
+
+CFLAGS= -O
+
+#	wispmf.o	- Micro Focus specific WISP routines.
+#	wrunmf.c	- WISP routine list.
+SUBS=wrunmf.o wispmf.o
+
+LIBPATH=/usr/lib
+LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libilp.a $(LIBPATH)/libvideo.a
+LIBS=-lwisp -lilp -lvideo -lm
+
+all:	wrunmf
+
+wrunmf: $(SUBS) $(LIBPATHS)
+	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) $(LIBS)
+
+wrunmfe: $(SUBS) $(LIBPATHS) $(LIBPATH)/libede.a
+	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) -lede $(LIBS)
+

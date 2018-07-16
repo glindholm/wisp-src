@@ -1,0 +1,641 @@
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QANETCAP.
+       AUTHOR.
+           SUZETTE BORON.
+       DATE-WRITTEN.
+           08/09/90.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           NO-ECHO IS "98"
+           MENU-PICK        IS "05"
+           DEGEN-DIM        IS "08"
+           DEGEN-PSB        IS "0B"
+           DEGEN-FLASHING   IS "10"
+           DEGEN-HIPRO      IS "84"
+           DEGEN-HIPRONUM   IS "86"
+           DEGEN-LOPRO      IS "8C"
+           DEGEN-LOPRONUM   IS "8E"
+           DEGEN-FLPRO      IS "94"
+           DEGEN-HIMOD      IS "A1"
+           UNDERLN-BIT      IS "AD".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       01  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+      ******************************************************************
+
+       01 Z1-REC.
+          05 FILLER PIC X(1) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(53) VALUE
+             "QANETCAP#Z1              Test NetronCAP WSFNS routine".
+          05 FILLER PIC X(20) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(6) VALUE "SAMPLE".
+          05 FILLER PIC X(113) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(8) VALUE "Province".
+          05 FILLER PIC X(120) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(79) VALUE
+             "------------------------- Federal Tax Rates --------------
+      -      "---------------------".
+          05 FILLER PIC X(67) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(13) VALUE "Screen 1 of 1".
+          05 FILLER PIC X(11) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(21) VALUE "Income    Tax     Tax".
+          05 FILLER PIC X(60) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(22) VALUE "Range   Rate  Constant".
+          05 FILLER PIC X(84) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(15) VALUE "Tax Credit Rate".
+          05 FILLER PIC X(65) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(27) VALUE "Annual Tax Credit Allowance".
+          05 FILLER PIC X(53) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(27) VALUE "Additional Annual Allowance".
+          05 FILLER PIC X(151) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(19) VALUE "Rate      Threshold".
+          05 FILLER PIC X(43) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(16) VALUE "Federal Surtax 1".
+          05 FILLER PIC X(79) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(1) VALUE "2".
+          05 FILLER PIC X(45) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(14) VALUE "Amount    Rate".
+          05 FILLER PIC X(48) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(14) VALUE "Lump Sum Tax 1".
+          05 FILLER PIC X(79) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(1) VALUE "2".
+          05 FILLER PIC X(23) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(26) VALUE "Special Tax Rate Increment".
+          05 FILLER PIC X(30) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(1) VALUE "3".
+          05 FILLER PIC X(145) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(1) VALUE UNDERLN-BIT.
+          05 FILLER PIC X(81) VALUE SPACES. 
+          05 FILLER PIC X(38) VALUE
+             "This is the SECOND line of the footer.".
+          05 FILLER PIC X(90) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(26) VALUE
+             "Push <RETURN> to continue.".
+          05 FILLER PIC X(06) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(36) VALUE
+             "THIS IS THE LAST LINE OF THE FOOTER!".
+          05 FILLER PIC X(42) VALUE DEGEN-LOPRO.
+
+      ******************************************************************
+
+       01 Z2-REC.
+          05 FILLER PIC X(1) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(53) VALUE
+             "QANETCAP#Z2              Test NetronCAP WSFNM routine".
+          05 FILLER PIC X(20) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(6) VALUE "SAMPLE".
+          05 FILLER PIC X(6) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(19) VALUE "ENTER YOU INITIALS:".
+          05 FILLER PIC X(01) VALUE DEGEN-HIMOD.
+          05 SCN2-ID PIC X(3) VALUE SPACES.
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(79) VALUE
+             "----------------------------- END OF SCREEN HEADER -------
+      -      "--------------------".
+          05 FILLER PIC X(67) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(13) VALUE "Screen 1 of 2".
+          05 FILLER PIC X(45) VALUE
+             "This is the SECOND line of the scroll region.".
+          05 FILLER PIC X(35) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 3 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 4 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 5 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 6 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 7 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 8 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(28) VALUE "Line 9 of the scroll region.".
+          05 FILLER PIC X(52) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 10 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 11 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 12 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 13 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 14 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 15 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "Line 16 of the scroll region.".
+          05 FILLER PIC X(51) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(29) VALUE "LINE 17 OF THE SCROLL REGION.".
+          05 FILLER PIC X(31) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(20) VALUE "Screen 1, END scroll".
+          05 FILLER PIC X(67) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(13) VALUE "Screen 2 of 2".
+          05 FILLER PIC X(57) VALUE
+             "This is the SECOND line of scroll region on screen 2.".
+          05 FILLER PIC X(23) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 3 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 4 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 5 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 6 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 7 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 8 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(42) VALUE
+             "Line 9 of the scroll region on screen two.".
+          05 FILLER PIC X(38) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 10 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 11 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 12 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 13 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 14 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 15 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "Line 16 of the scroll region on screen two.".
+          05 FILLER PIC X(37) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(43) VALUE
+             "LINE 17 OF THE SCROLL REGION ON SCREEN two.".
+          05 FILLER PIC X(17) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(20) VALUE "Screen 2, END scroll".
+          05 FILLER PIC X(1) VALUE UNDERLN-BIT.
+          05 FILLER PIC X(84) VALUE SPACES. 
+          05 FILLER PIC X(60) VALUE
+             " Push <RETURN> next screen   PF2 - Top   PF30 - Start ove
+      -      "r ".
+          05 FILLER PIC X(21) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(50) VALUE
+             "Any other PFkey will be returned to COBOL program ".
+          05 FILLER PIC X(15) VALUE
+             "for processing.".
+          05 FILLER PIC X(10) VALUE DEGEN-LOPRO.
+          05 FILLER PIC X(36) VALUE
+             "THIS IS THE LAST LINE OF THE FOOTER!".
+          05 FILLER PIC X(44) VALUE DEGEN-LOPRO.
+
+      /*****************************************************************
+
+000272 01  S1-LINE            BINARY VALUE ZERO.
+000272 01  S1-POS             BINARY VALUE 1.
+000272 01  S1-SIZE            BINARY VALUE 80.
+000272 77  S1-FN              PIC XX.
+000272 77  S1-BEEPFLAG        PIC X         VALUE SPACE.       
+000272 77  S1-BEEP            PIC X         VALUE "B".
+000272 01  S1-ROW             BINARY VALUE ZERO.
+000272 01  S1-COL             BINARY VALUE ZERO.
+000272 01  S1-PF              BINARY VALUE 35.
+000272 01  S1-PF-DISP         PIC 99 VALUE ZERO.
+
+       01  MP-REC.
+           05 FILLER PIC X(1) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(55) VALUE
+           "QANETCAP               Test of NetronCAP with Menu Pick".
+           05 FILLER PIC X(18) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(6) VALUE
+           "MENUPK".
+           05 FILLER PIC X(170) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(01) VALUE DEGEN-HIPRONUM.
+           05 FILLER PIC X(01) VALUE DEGEN-PSB.
+           05 FILLER PIC X(21) VALUE
+           " ONE menu item   PF 1".
+           05 FILLER PIC X(10) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(01) VALUE DEGEN-HIPRONUM.
+           05 FILLER PIC X(01) VALUE DEGEN-PSB.
+           05 FILLER PIC X(23) VALUE
+           " Menu item on same line".
+           05 FILLER PIC X(137) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(01) VALUE DEGEN-HIPRONUM.
+           05 FILLER PIC X(01) VALUE DEGEN-PSB.
+           05 FILLER PIC X(21) VALUE
+           " TWO menu item   PF 2".
+           05 FILLER PIC X(132) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(01) VALUE DEGEN-HIPRONUM.
+           05 FILLER PIC X(01) VALUE DEGEN-PSB.
+           05 FILLER PIC X(23) VALUE
+           " THREE menu item  PF 3 ".
+           05 FILLER PIC X(135) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(01) VALUE DEGEN-HIPRONUM.
+           05 FILLER PIC X(01) VALUE DEGEN-PSB.
+           05 FILLER PIC X(22) VALUE
+           " FOUR menu item   PF 4".
+           05 FILLER PIC X(141) VALUE DEGEN-LOPRO.
+           05 FILLER PIC X(01) VALUE DEGEN-HIPRONUM.
+           05 FILLER PIC X(01) VALUE DEGEN-PSB.
+           05 FILLER PIC X(22) VALUE
+           " FIVE menu item   PF 5".
+           05 FILLER PIC X(947) VALUE DEGEN-LOPRO.
+       01  FILLER REDEFINES MP-REC.
+           05 MP-ROWX OCCURS 24.
+              10 MP-COLX PIC X OCCURS 80.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+       01  WSFNS-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(34) ROW 2 COL 20 VALUE
+              "     *** TESTING THE wsfns SUB ***".
+
+           03  FILLER PIC X(26) ROW 04 COL 2 VALUE
+               "FUNCTION (DS,AS,DI,AI,PF):".
+           03  FILLER PIC X(02) ROW 04 COL 30
+               SOURCE Z1-FN OBJECT Z1-FN.
+           03  FILLER PIC X(44) ROW 04 COL 35 VALUE
+               "NOTE: A call to DS must precede a call to AS".
+
+           03  FILLER PIC X(20) ROW 05 COL 2 VALUE
+               "CURSOR ROW POSITION:".
+           03  FILLER PIC 9(02) ROW 05 COL 30
+               SOURCE Z1-LINE OBJECT Z1-LINE.
+
+           03  FILLER PIC X(20) ROW 06 COL 2 VALUE
+               "CURSOR COL POSITION:".
+           03  FILLER PIC 9(02) ROW 06 COL 30
+               SOURCE Z1-POS OBJECT Z1-POS.
+
+           03  FILLER PIC X(10) ROW 07 COL 2 VALUE "BEEP FLAG:".
+           03  FILLER PIC X(01) ROW 07 COL 30
+               SOURCE Z1-BEEPFLAG OBJECT Z1-BEEPFLAG.
+
+           03  FILLER PIC X(12) ROW 09 COL 2 VALUE "CURRENT ROW:".
+           03  FILLER PIC 9(02) ROW 09 COL 30
+               SOURCE Z1-ROW.
+
+           03  FILLER PIC X(12) ROW 10 COL 2 VALUE "CURRENT COL:".
+           03  FILLER PIC 9(02) ROW 10 COL 30
+               SOURCE Z1-COL.
+
+           03  FILLER PIC X(07) ROW 11 COL 2 VALUE "PF-KEY:".
+           03  FILLER PIC 9(02) ROW 11 COL 30
+               SOURCE Z1-PF.
+           03  FILLER PIC X(41) ROW 11 COL 35 VALUE
+               "A call to PF will return the PFkey value.".
+
+           03  FILLER PIC X(07) ROW 12 COL 2 VALUE "STATUS:".
+           03  FILLER PIC X(02) ROW 12 COL 30
+               SOURCE Z1-FILESTATUS.
+
+           03  FILLER PIC X(30) ROW 15 COL 30
+               SOURCE WSFNS-STATUS.
+
+           03  FILLER PIC X(35) ROW 24 COL 20 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 EXIT".
+
+       01  Z1-FN              PIC XX VALUE SPACES.
+       01  Z1-LINE            BINARY VALUE ZERO.
+       01  Z1-POS             BINARY VALUE 1.
+       01  Z1-BEEPFLAG        PIC X  VALUE "B".
+       01  Z1-PF              BINARY VALUE 35.
+       01  Z1-ROW             BINARY VALUE ZERO.
+       01  Z1-COL             BINARY VALUE ZERO.
+       01  Z1-FILESTATUS      PIC XX VALUE SPACES.
+       01  WSFNS-STATUS       PIC X(30) VALUE SPACES.
+
+      ******************************************************************
+
+       01  WSFNM-SCREEN USAGE IS DISPLAY-WS.
+           03 FILLER PIC X(34) ROW 2 COL 20 VALUE
+              "     *** TESTING THE wsfnm SUB ***".
+
+           03  FILLER PIC X(20) ROW 04 COL 5 VALUE
+               "FUNCTION (OM,AM,PM):".
+           03  FILLER PIC X(02) ROW 04 COL 30
+               SOURCE Z2-FN OBJECT Z2-FN.
+
+           03  FILLER PIC X(44) ROW 04 COL 35 VALUE
+               "NOTE: A call to OM must precede a call to AM".
+
+           03  FILLER PIC X(20) ROW 05 COL 5 VALUE
+               "CURSOR ROW POSITION:".
+           03  FILLER PIC 9(02) ROW 05 COL 30
+               SOURCE Z2-LINE OBJECT Z2-LINE.
+
+           03  FILLER PIC X(20) ROW 06 COL 5 VALUE
+               "CURSOR COL POSITION:".
+           03  FILLER PIC 9(02) ROW 06 COL 30
+               SOURCE Z2-POS OBJECT Z2-POS.
+
+           03  FILLER PIC X(10) ROW 07 COL 5 VALUE "BEEP FLAG:".
+           03  FILLER PIC X(01) ROW 07 COL 30
+               SOURCE Z2-BEEPFLAG OBJECT Z2-BEEPFLAG.
+
+           03  FILLER PIC X(12) ROW 09 COL 5 VALUE "CURRENT ROW:".
+           03  FILLER PIC 9(02) ROW 09 COL 30
+               SOURCE Z2-ROW.
+
+           03  FILLER PIC X(12) ROW 10 COL 5 VALUE "CURRENT COL:".
+           03  FILLER PIC 9(04) ROW 10 COL 30
+               SOURCE Z2-COL.
+
+           03  FILLER PIC X(07) ROW 11 COL 5 VALUE "PF-KEY:".
+           03  FILLER PIC 9(02) ROW 11 COL 30
+               SOURCE Z2-PF.
+
+           03  FILLER PIC X(18) ROW 12 COL 5 VALUE
+               "# LINES IN SCREEN:".
+           03  FILLER PIC 9(02) ROW 12 COL 30
+               SOURCE Z2-SCREENLINES.
+
+           03  FILLER PIC X(13) ROW 13 COL 5 VALUE "START SCROLL:".
+           03  FILLER PIC 9(02) ROW 13 COL 30
+               SOURCE Z2-SFIRST.
+
+           03  FILLER PIC X(11) ROW 14 COL 5 VALUE "END SCROLL:".
+           03  FILLER PIC 9(02) ROW 14 COL 30
+               SOURCE Z2-SLAST.
+
+           03  FILLER PIC X(08) ROW 15 COL 5 VALUE "MESSAGE:".
+           03  FILLER PIC X(80) ROW 15 COL 1
+               SOURCE Z2-MESSAGE.
+
+           03  FILLER PIC X(30) ROW 17 COL 30
+               SOURCE WSFNM-STATUS.
+
+           03  FILLER PIC X(35) ROW 24 COL 28 VALUE 
+               "PRESS RETURN TO CONTINUE, PF16 EXIT".
+
+       01  Z2-FN              PIC XX VALUE SPACES.
+       01  Z2-LINE            BINARY VALUE ZERO.
+       01  Z2-POS             BINARY VALUE 1.
+       01  Z2-BEEPFLAG        PIC X  VALUE "B".
+       01  Z2-SCREENLINES     BINARY VALUE 41.
+       01  Z2-SFIRST          BINARY VALUE 4.
+       01  Z2-SLAST           BINARY VALUE 37.
+       01  Z2-PF              BINARY VALUE 35.
+       01  Z2-ROW             BINARY VALUE ZERO.
+       01  Z2-COL             BINARY VALUE ZERO.
+       01  Z2-MESSAGE         PIC X(80) VALUE SPACES.
+       01  Z2-MESSAGELINE     BINARY VALUE ZERO.
+       01  WSFNM-STATUS       PIC X(30) VALUE SPACES.
+
+      ******************************************************************
+
+       01  NETRONCAP-SUBS-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(21) ROW 1 COL 57 VALUE
+               "NetronCAP-SUBS-SCREEN".
+           03  FILLER  PIC X(25) ROW 3 COL 20 VALUE
+               " 1) Generate a WSFNS call".
+           03  FILLER  PIC X(25) ROW 5 COL 20 VALUE
+               " 2) Generate a WSFNM call".
+           03  FILLER  PIC X(34) ROW 7 COL 20 VALUE
+               " 3) WSFNS (NISSI NetronCap screen)".
+           03  FILLER  PIC X(34) ROW 9 COL 20 VALUE
+               " 4) WSFNM (NISSI NetronCap screen)".
+           03  FILLER  PIC X(34) ROW 11 COL 20 VALUE
+               " 5) Test NetronCap with monkeybar".
+           03  FILLER  PIC X(08) ROW 13 COL 20 VALUE
+               "16) EXIT".
+           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       NETRONCAP-SUBS-TESTS.
+
+           DISPLAY AND READ NETRONCAP-SUBS-SCREEN ON CRT
+           PFKEYS  1, 2, 3, 4, 5, 16.
+
+           IF PF-KEY = "01" THEN
+              PERFORM WSFNS-CALL
+              GO TO NETRONCAP-SUBS-TESTS
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM WSFNM-CALL
+              GO TO NETRONCAP-SUBS-TESTS
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM WSFNS-NETRONCAP-CALL
+              GO TO NETRONCAP-SUBS-TESTS
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM WSFNM-NETRONCAP-CALL
+              GO TO NETRONCAP-SUBS-TESTS
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM WSFNS-NETRONCAP-MP
+              GO TO NETRONCAP-SUBS-TESTS
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO NETRONCAP-SUBS-TESTS.
+
+      ******************************************************************
+
+       WSFNS-CALL SECTION.
+       WSFNS-CALL-PAR.
+
+           DISPLAY AND READ WSFNS-SCREEN ON CRT
+           PFKEYS 16.
+ 
+           IF PF-KEY = "16" THEN
+              GO TO WSFNS-CALL-EXIT
+           ELSE
+             IF Z1-FN = "DS" OR Z1-FN = "AS" OR
+                   Z1-FN = "DI" OR Z1-FN = "AI" THEN
+              CALL "WSFNS" USING Z1-FN,
+                                 Z1-REC,
+                                 Z1-LINE,
+                                 Z1-POS,
+                                 Z1-BEEPFLAG
+               MOVE "Call complete." TO WSFNS-STATUS
+           ELSE IF Z1-FN = "PF" THEN
+             CALL "WSFNS" USING Z1-FN,
+                                Z1-PF,
+                                Z1-ROW,
+                                Z1-COL
+             MOVE "PF call complete." TO WSFNS-STATUS
+           ELSE IF Z1-FN = "ST" THEN
+             CALL "WSFNS" USING Z1-FN,
+                                Z1-PF,
+                                Z1-FILESTATUS
+             MOVE "ST call complete." TO WSFNS-STATUS
+           ELSE
+             MOVE "INVALID FUNCTION TYPE         " TO WSFNS-STATUS.
+
+           GO TO WSFNS-CALL.
+
+       WSFNS-CALL-EXIT.
+           EXIT.
+
+      ******************************************************************
+
+       WSFNM-CALL SECTION.
+       WSFNM-CALL-PAR.
+
+           DISPLAY AND READ WSFNM-SCREEN ON CRT
+           PFKEYS 16.
+ 
+           IF PF-KEY = "16" THEN
+              GO TO WSFNM-CALL-EXIT
+           ELSE IF Z2-FN = "AM" THEN
+             CALL "WSFNM" USING Z2-FN,
+                                Z2-REC,
+                                Z2-LINE,
+                                Z2-POS,
+                                Z2-BEEPFLAG
+             MOVE "AM call complete." TO WSFNM-STATUS
+           ELSE IF Z2-FN = "OM" THEN
+             MOVE "THIS IS A TEST MESSAGE." TO Z2-MESSAGE
+             CALL "WSFNM" USING Z2-FN,
+                                Z2-SCREENLINES,
+                                Z2-SFIRST,
+                                Z2-SLAST,
+                                Z2-MESSAGE
+                                Z2-MESSAGELINE
+             MOVE "OM call complete." TO WSFNM-STATUS
+           ELSE IF Z2-FN = "PM" THEN
+             CALL "WSFNM" USING Z2-FN,
+                                Z2-PF,
+                                Z2-ROW,
+                                Z2-COL
+             MOVE "PM call complete." TO WSFNM-STATUS
+           ELSE
+             MOVE "INVALID FUNCTION TYPE         " TO WSFNM-STATUS.
+
+           GO TO WSFNM-CALL.
+
+      ******************************************************************
+
+       WSFNS-NETRONCAP-CALL.
+           CALL "QAWSFNS".
+
+      ******************************************************************
+
+       WSFNM-NETRONCAP-CALL.
+           CALL "QAWSFNM".
+
+      ******************************************************************
+
+       WSFNS-NETRONCAP-MP.
+000272     MOVE "DS" TO S1-FN.
+000272     CALL "WSFNS" USING S1-FN MP-REC S1-LINE
+000272                        S1-POS S1-BEEPFLAG.
+000272     MOVE "AS" TO S1-FN.
+000272     CALL "WSFNS" USING S1-FN MP-REC S1-LINE
+000272                        S1-POS S1-BEEPFLAG.
+000272     MOVE SPACE TO S1-BEEPFLAG.
+
+      ******************************************************************
+
+       WSFNM-CALL-EXIT.
+           EXIT.
+
+       ALL-DONE SECTION.
+       ALL-DONE-PAR.
+           EXIT.
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.
+

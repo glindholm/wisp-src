@@ -1,0 +1,52 @@
+
+
+	International Digital Scientific Incorporated
+	---------------------------------------------
+	Extended Development Environment
+	--------------------------------
+
+	Release Notes for EDE V1.0
+
+	IDSI is pleased to release EDE V1.0. There are some changes
+	from the pre-release and field-test versions of the product
+	which require that programs written to use EDE be changed.
+
+	These include:
+
+    1.	The menu type, if defined as 0, used to default to be a
+	pop-up menu. This has been changed, the default menu type
+	is now what ever the appropriate root menu is for the
+	target environment. On character cell terminals, the
+	default type is a bar menu.
+
+	If programs were written to default to pop-up, then they
+	must be changed to explicitly specify pop-up.
+
+    2.	The maximum number of menu items has been increased from
+	16 to 20. Therefore, programs that have allocated menu
+	control blocks with room for only 16 items must be
+	increased to provide for 20.
+
+	NOTE: FAILURE TO INCREASE MCB STORAGE TO 20 CAN RESULT
+	IN UNPREDICTABLE CRASHES OF THE PROGRAM.
+
+    3.	PF key responses are now biased by 100,000, rather than
+	10,000. When decomposing PF keys from menu values, use the
+	new 100,000 factor. I.e. RESPONSE = (PFKEY*100000)+VALUE.
+
+    4.	A number of useful routines such as MENUINFO have been
+	added to make the use of dynamic menus much easier.
+
+    5.	On-line help has been changed such that rather than
+	encoding a file name directly from the row, column,
+	screen and program, it is now vectored through a file.
+	This change is not significant for SFREU041 based
+	systems (special customer code).
+
+    6.	An extensive demo of the menuing and on-line help, including
+	COBOL source code, is now included with EDE.
+
+    7.	Routines for saving and restoring screen areas have been
+	added and are preferable to using VPUSHSCR and VPOPSCR
+	in that they use the optimizer and do not clear the
+	screen unless necessary.

@@ -1,0 +1,35 @@
+verbose
+case
+nmap $1.$2;$3 $1.$2
+cr
+cd scs$video:[lib.master.build]
+mget *.bat;0
+cd scs$video:[lib.qahold.build]
+mget *.bat;0
+cd scs$video:[lib.master.misc]
+mget *.*;0
+cd scs$video:[lib.qahold.misc]
+mget *.*;0
+cd scs$video:[lib.master.include]
+mget *.*;0
+nmap $1.$2;$3 /u/c600/include/v/$1.$2
+mget *.h;0
+nmap $1.$2;$3 $1.$2
+cd scs$video:[lib.qahold.include]
+mget *.*;0
+nmap $1.$2;$3 /u/c600/include/v/$1.$2
+mget *.h;0
+nmap $1.$2;$3 $1.$2
+cd scs$video:[lib.master.source]
+mget *.*;0
+cd scs$video:[lib.qahold.source]
+mget *.*;0
+cd scs$video:[cap.master.source]
+nmap $1.$2;$3 $1
+mget ansidos.vcap;0
+mget stddef.vcap;0
+cd scs$video:[cap.qahold.source]
+mget ansidos.vcap;0
+mget stddef.vcap;0
+nmap $1.$2;$3 $1.$2
+quit

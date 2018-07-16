@@ -1,0 +1,273 @@
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QABCKGRD.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           12/08/89.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           NO-ECHO IS "98".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT PRINT-FILE
+               ASSIGN TO "PRTFILE", "PRINTER",  NODISPLAY,
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+       FD  PRINT-FILE
+           VALUE OF FILENAME IS PRINT-FILE-NAME
+                    LIBRARY  IS PRINT-LIBRARY
+                    VOLUME   IS PRINT-VOLUME.
+
+       01  PRINT-RECORD   PIC X(132).
+       01  PRINT-RECORD-CHAR.
+           03  PRINT-CHAR OCCURS 132 TIMES PIC X.
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  X132                           PIC X(132) VALUE SPACES.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       01  FILE-SEQ-STAT                  PIC X(2).
+
+       01  RETCOD.
+           05  B4          BINARY VALUE 0.
+           05  RET-CODE BINARY VALUE 0.
+
+       01  PRINT-FILE-NAME                PIC X(8) VALUE "##BACK".
+       01  PRINT-LIBRARY                  PIC X(8) VALUE SPACES.
+       01  PRINT-VOLUME                   PIC X(6) VALUE SPACES.
+       01  PRINT-RECORD-SHORT             PIC X(40) VALUE SPACES.
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+      ******************************************************************
+
+       01  EX-FUNC             PIC X(2) VALUE SPACES.
+
+       01  TERMNUM.
+           03  TERMNUM-B1      BINARY VALUE ZERO.
+           03  TERMNUM-B2      BINARY VALUE ZERO.
+
+       01  FORMNUM.
+           03  FORMNUM-B1      BINARY VALUE ZERO.
+           03  FORMNUM-B2      BINARY VALUE ZERO.
+
+       01  EX-LINE0.
+           03  FILLER          PIC X(15) VALUE "   TASKTYPE".
+           03  TASKTYPE        PIC X(1) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   TERMNUM".
+           03  TERMNUM-PIC     PIC ----9 VALUE ZERO.
+           03  FILLER          PIC X(15) VALUE "   FORMNUM".
+           03  FORMNUM-PIC     PIC 999   VALUE ZERO.
+
+       01  EX-LINE1.
+           03  FILLER          PIC X(15) VALUE "   INLIB".
+           03  INLIB           PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   INVOL".
+           03  INVOL           PIC X(6) VALUE SPACES.
+
+       01  EX-LINE2.
+           03  FILLER          PIC X(15) VALUE "   OUTLIB".
+           03  OUTLIB              PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   OUTVOL".
+           03  OUTVOL              PIC X(6) VALUE SPACES.
+
+       01  EX-LINE3.
+           03  FILLER          PIC X(15) VALUE "   PROGLIB".
+           03  PROGLIB             PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   PROGVOL".
+           03  PROGVOL             PIC X(6) VALUE SPACES.
+
+       01  EX-LINE4.
+           03  FILLER          PIC X(15) VALUE "   SPOOLLIB".
+           03  SPOOLLIB            PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   SPOOLVOL".
+           03  SPOOLVOL            PIC X(6) VALUE SPACES.
+
+       01  EX-LINE5.
+           03  FILLER          PIC X(15) VALUE "   WORKLIB".
+           03  WORKLIB             PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   WORKVOL".
+           03  WORKVOL             PIC X(6) VALUE SPACES.
+
+       01  EX-LINE6.
+           03  FILLER          PIC X(15) VALUE "   IPLLIB".
+           03  IPLLIB              PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   IPLVOL".
+           03  IPLVOL              PIC X(6) VALUE SPACES.
+
+       01  EX-LINE7.
+           03  FILLER          PIC X(15) VALUE "   RUNLIB".
+           03  RUNLIB              PIC X(8) VALUE SPACES.
+           03  FILLER          PIC X(15) VALUE "   RUNVOL".
+           03  RUNVOL              PIC X(6) VALUE SPACES.
+
+
+       01  KW-PM    PIC X(2) VALUE "PM".
+       01  VALUE-P  PIC X(1) VALUE "P".
+       01  KW-SL    PIC X(2) VALUE "SL".
+       01  VALUE-L  PIC X(8) VALUE "LIBSPOOL".
+       01  KW-SV    PIC X(2) VALUE "SV".
+       01  VALUE-V  PIC X(6) VALUE "VOLSPL".
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       DO-PRINT-FILE.
+
+           MOVE "IL" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC INLIB.
+           MOVE "IV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC INVOL.
+
+           MOVE "OL" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC OUTLIB.
+           MOVE "OV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC OUTVOL.
+
+           MOVE "PL" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC PROGLIB.
+           MOVE "PV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC PROGVOL.
+
+           MOVE "RL" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC RUNLIB.
+           MOVE "RV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC RUNVOL.
+
+           MOVE "SL" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC SPOOLLIB.
+           MOVE "SV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC SPOOLVOL.
+
+           MOVE "WL" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC WORKLIB.
+           MOVE "WV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC WORKVOL.
+
+           MOVE "XL" TO EX-FUNC.
+      *    CALL "EXTRACT" USING EX-FUNC IPLLIB.
+           MOVE "XV" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC IPLVOL.
+
+           MOVE "TT" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC TASKTYPE.
+
+           MOVE "W#" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC TERMNUM.
+           MOVE TERMNUM-B2 TO TERMNUM-PIC.
+
+           MOVE "FN" TO EX-FUNC.
+           CALL "EXTRACT" USING EX-FUNC FORMNUM.
+           MOVE FORMNUM-B2 TO FORMNUM-PIC.
+
+           CALL "SET" USING KW-PM, VALUE-P.
+           CALL "SET" USING KW-SL, VALUE-L.
+           CALL "SET" USING KW-SV, VALUE-V.
+
+           OPEN OUTPUT PRINT-FILE.
+
+           WRITE PRINT-RECORD FROM EX-LINE0.
+           WRITE PRINT-RECORD FROM EX-LINE1.
+           WRITE PRINT-RECORD FROM EX-LINE2.
+           WRITE PRINT-RECORD FROM EX-LINE3.
+           WRITE PRINT-RECORD FROM EX-LINE4.
+           WRITE PRINT-RECORD FROM EX-LINE5.
+           WRITE PRINT-RECORD FROM EX-LINE6.
+           WRITE PRINT-RECORD FROM EX-LINE7.
+
+           CLOSE PRINT-FILE.
+
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

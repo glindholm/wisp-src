@@ -1,0 +1,4 @@
+mstime()
+{
+	return(0);
+}

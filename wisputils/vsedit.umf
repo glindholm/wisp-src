@@ -1,0 +1,25 @@
+#  Make file for VSEDIT Utility
+
+CFLAGS = -g -I../inc 
+#WLIBS= -lx -lwtest -lwisp -lilp -lvideo -lsocket  
+WLIBS=  -lwisp -lilp -lvideo  
+OBJECTS=vsemain.o vseglb.o vsegp.o vseinp.o vseutl.o vsedit.o \
+	vsestmnu.o vsespmnu.o vsescr.o vsenaf.o vsetxt.o \
+	vsedscr.o vsedmod.o vsedins.o vsedel.o vsecre.o \
+	vsedfnd.o
+
+DOSBKU=c:/usr/mjb/vse
+
+all: vse
+
+vse: $(OBJECTS)
+	cc $(CFLAGS) -o vse $(OBJECTS) $(WLIBS) 
+
+vseglb.o:	vseglb.h
+
+vsedscr.o:	vsedscr.c vsedscr.h
+
+backup:
+	bku $(DOSBKU) *.c *.h *.dsn Makefile
+
+

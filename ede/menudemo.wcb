@@ -1,0 +1,343 @@
+      * International Digital Scientific Incorporated.
+      * Extended Development Environment.
+      * Pull-down menu demonstration.
+
+      * Note, this demonstration uses static menu linkages
+      * for simplicity. For an example of dynamic menu
+      * linkages, see the menudisp.cob program.
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. MENUDEMO.
+
+       ENVIRONMENT DIVISION.
+       INPUT-OUTPUT SECTION.
+
+       DATA DIVISION.
+       FILE SECTION.
+
+       WORKING-STORAGE SECTION.
+
+           COPY "MENUDEFS".
+           COPY "MENUMCBS".
+
+       01 O          PIC 9(9) BINARY VALUE  0.
+       01 ONE        PIC 9(9) BINARY VALUE  1.
+       01 TWO        PIC 9(9) BINARY VALUE  2.
+       01 THREE      PIC 9(9) BINARY VALUE  3.
+       01 FOUR       PIC 9(9) BINARY VALUE  4.
+       01 FIVE       PIC 9(9) BINARY VALUE  5.
+       01 SIX        PIC 9(9) BINARY VALUE  6.
+       01 TEN        PIC 9(9) BINARY VALUE 10.
+       01 SIXTEEN    PIC 9(9) BINARY VALUE 16.
+       01 SEVENTEEN  PIC 9(9) BINARY VALUE 17.
+       01 TWENTY     PIC 9(9) BINARY VALUE 20.
+
+       01 DOP   PIC 9(9)  BINARY.
+       01 LNK   PIC S9(9) BINARY.
+
+       01 BOLD-ONLY PIC S9(9) BINARY VALUE 1.
+
+       01 SAVE-AREA PIC 9(9) BINARY.
+
+       PROCEDURE DIVISION.
+
+       START-MENU-PROCESSING.
+
+           PERFORM LOAD-MENU-CONTROL-BLOCKS.
+           PERFORM DISPLAY-BACKGROUND-SCREEN.
+           CALL "MENUMODE" USING DYNAMIC-LINK.
+           CALL "MENUGO" USING MCB(1), MENU-CHOICE.
+
+       CONTINUE-MENU-PROCESSING.
+
+           IF MENU-CHOICE = 99999 GO TO TERMINATE-MENU-PROCESSING.
+           IF MENU-CHOICE <  ZERO GO TO TERMINATE-MENU-PROCESSING.
+
+           IF MENU-CHOICE = 1 PERFORM NOT-IMPLEMENTED
+
+           ELSE IF MENU-CHOICE = 10 CALL "gclock"
+           ELSE IF MENU-CHOICE = 11 CALL "gcalc"
+           ELSE IF MENU-CHOICE = 12 CALL "gcalend"
+           ELSE IF MENU-CHOICE = 13 CALL "gnotepad"
+           ELSE IF MENU-CHOICE = 14 CALL "gpuzzle"
+
+           ELSE IF MENU-CHOICE = 20 PERFORM GIVE-HELP
+           ELSE IF MENU-CHOICE = 21 PERFORM DISPLAY-INTRO-WINDOW
+
+           ELSE IF MENU-CHOICE = 31
+                   CALL "PUSHSCRN" USING SAVE-AREA
+                   CALL "MCBBLD"
+                   CALL "POPAREA" USING SAVE-AREA
+
+           ELSE IF MENU-CHOICE = 32
+                   CALL "PUSHSCRN" USING SAVE-AREA
+                   CALL "MCBEDIT"
+                   CALL "POPAREA" USING SAVE-AREA
+
+           ELSE IF MENU-CHOICE = 100
+                   CALL "PUSHSCRN" USING SAVE-AREA
+                   CALL "MENUDISP"
+                   CALL "POPAREA" USING SAVE-AREA
+
+           ELSE PERFORM NOT-IMPLEMENTED.
+
+           CALL "MENUCONT" USING MCB(1), MENU-CHOICE.
+           GO TO CONTINUE-MENU-PROCESSING.
+
+       TERMINATE-MENU-PROCESSING.
+
+           CALL "MENUKILL" USING MCB(1), ALL-MENUS.
+           CALL "EDEXIT".
+           EXIT PROGRAM.
+           STOP RUN.
+
+       NOT-IMPLEMENTED.
+
+           CALL "MENULOAD" USING MCB(12),DISPLAY-ONLY-MENU,DOP,O,O,O.
+           MOVE "So sorry..." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "The function you have requested is not implemented."
+                TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "Depress any key to continue..." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+
+           CALL "MENUGO" USING MCB(12), MENU-CHOICE.
+           CALL "MENUKILL" USING MCB(12), ALL-MENUS.
+
+       DISPLAY-BACKGROUND-SCREEN.
+
+           CALL "EDLOAD".
+           CALL "EDCLRSCR".
+           CALL "MENULOGO".
+           CALL "VIDMODE" USING BOLD-ONLY.
+           CALL "VIDMOVE" USING FOUR, SIXTEEN.
+           MOVE "Extended Development Environment Demonstration"
+                 TO ITEM-TEXT.
+           MOVE  46 TO ITEM-LENGTH.
+           CALL "VIDTEXT" USING ITEM-TEXT, ITEM-LENGTH.
+           CALL "VIDMOVE" USING SIX, TWENTY.
+           MOVE "Select Directions for more information."
+                 TO ITEM-TEXT.
+           MOVE  39 TO ITEM-LENGTH.
+           CALL "VIDTEXT" USING ITEM-TEXT, ITEM-LENGTH.
+           CALL "VIDMODE" USING O.
+
+       LOAD-MENU-CONTROL-BLOCKS.
+
+           MOVE STATIC-LINK TO LNK.
+           MOVE REVERSE-TEXT TO DOP.
+
+           MOVE 1 TO ITEM-CODE.
+
+           CALL "MENULOAD" USING MCB(1),BAR-MENU,DOP,O,TWO,THREE.
+
+           MOVE "Directions" TO ITEM-TEXT.
+           MOVE 1 TO ITEM-CODE.
+           CALL "MENUITEM" USING MCB(1), ITEM-TEXT, LNK, MCB(2).
+             CALL "MENULOAD" USING MCB(2),O,DOP,O,O,O.
+             MOVE "Help" TO ITEM-TEXT.
+             MOVE 20 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(2),ITEM-TEXT,ITEM-CODE,O.
+             MOVE 21 TO ITEM-CODE.
+             MOVE "Instructions" TO ITEM-TEXT.
+             CALL "MENUITEM" USING MCB(2),ITEM-TEXT,ITEM-CODE,O.
+             MOVE 1 TO ITEM-CODE.
+
+           MOVE "Menu Management" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(1), ITEM-TEXT, LNK, MCB(3).
+             CALL "MENULOAD" USING MCB(3),O,DOP,O,O,O.
+             MOVE "Create empty menu control file" TO ITEM-TEXT.
+             MOVE 31 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(3),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Add to or edit menu control file" TO ITEM-TEXT.
+             MOVE 32 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(3),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Dynamically display menu control file"
+                  TO ITEM-TEXT.
+             MOVE 100 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(3),ITEM-TEXT,ITEM-CODE,O.
+             MOVE 1 TO ITEM-CODE.
+
+           MOVE "Long Chain" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(1),ITEM-TEXT,LNK,MCB(4).
+             CALL "MENULOAD" USING MCB(4),O,DOP,O,O,O.
+             MOVE "Selection 1" TO ITEM-TEXT.
+             CALL "MENUITEM" USING MCB(4),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Selection 2" TO ITEM-TEXT.
+             CALL "MENUITEM" USING MCB(4),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Selection 3" TO ITEM-TEXT.
+             CALL "MENUITEM" USING MCB(4),ITEM-TEXT,LNK,MCB(5).
+               CALL "MENULOAD" USING MCB(5),O,DOP,O,O,O.
+               MOVE "Selection 11" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,ITEM-CODE,O.
+               MOVE "Selection 12" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,ITEM-CODE,O.
+               MOVE "Selection 13" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,ITEM-CODE,O.
+               MOVE "Selection 14" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,LNK,MCB(6).
+                 CALL "MENULOAD" USING MCB(6),O,DOP,O,O,O.
+                 MOVE "Selection 101" TO ITEM-TEXT.
+                 CALL "MENUITEM" USING MCB(6),ITEM-TEXT,ITEM-CODE,O.
+                 MOVE "Selection 102" TO ITEM-TEXT.
+                 CALL "MENUITEM" USING MCB(6),ITEM-TEXT,LNK,MCB(7).
+                   CALL "MENULOAD" USING MCB(7),O,DOP,O,O,O.
+                   MOVE "Selection 1001" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1002" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1003" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1004" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1005" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1006" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1007" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1008" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,LNK,MCB(8).
+                     CALL "MENULOAD" USING MCB(8),O,DOP,O,O,O.
+                     MOVE "This is the last level" TO ITEM-TEXT.
+                     CALL "MENUITEM" USING MCB(8),ITEM-TEXT,ITEM-CODE,O.
+                     MOVE SPACES TO ITEM-TEXT.
+                     CALL "MENUITEM" USING MCB(8),ITEM-TEXT,ITEM-CODE,O.
+                     MOVE "Selection 5001" TO ITEM-TEXT.
+                     CALL "MENUITEM" USING MCB(8),ITEM-TEXT,ITEM-CODE,O.
+                     MOVE "Selection 5002" TO ITEM-TEXT.
+                     CALL "MENUITEM" USING MCB(8),ITEM-TEXT,ITEM-CODE,O.
+                     MOVE "Selection 5003" TO ITEM-TEXT.
+                     CALL "MENUITEM" USING MCB(8),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1009" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1010" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1011" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                   MOVE "Selection 1012" TO ITEM-TEXT.
+                   CALL "MENUITEM" USING MCB(7),ITEM-TEXT,ITEM-CODE,O.
+                 MOVE "Selection 103" TO ITEM-TEXT.
+                 CALL "MENUITEM" USING MCB(6),ITEM-TEXT,ITEM-CODE,O.
+                 MOVE "Selection 104" TO ITEM-TEXT.
+                 CALL "MENUITEM" USING MCB(6),ITEM-TEXT,ITEM-CODE,O.
+                 MOVE "Selection 105" TO ITEM-TEXT.
+                 CALL "MENUITEM" USING MCB(6),ITEM-TEXT,ITEM-CODE,O.
+               MOVE "Selection 15" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,ITEM-CODE,O.
+               MOVE "Selection 16" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,ITEM-CODE,O.
+               MOVE "Selection 17" TO ITEM-TEXT.
+               CALL "MENUITEM" USING MCB(5),ITEM-TEXT,ITEM-CODE,O.
+
+           MOVE "System" TO ITEM-TEXT.
+           MOVE 1 TO ITEM-CODE.
+           CALL "MENUITEM" USING MCB(1), ITEM-TEXT, ITEM-CODE, O.
+
+           MOVE "Goodies" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(1), ITEM-TEXT, LNK, MCB(9).
+             CALL "MENULOAD" USING MCB(9),O,DOP,O,O,O.
+             MOVE "Clock" TO ITEM-TEXT.
+             MOVE 10 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(9),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Calculator" TO ITEM-TEXT.
+             MOVE 11 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(9),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Calendar" TO ITEM-TEXT.
+             MOVE 12 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(9),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Notepad" TO ITEM-TEXT.
+             MOVE 13 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(9),ITEM-TEXT,ITEM-CODE,O.
+             MOVE "Puzzle" TO ITEM-TEXT.
+             MOVE 14 TO ITEM-CODE.
+             CALL "MENUITEM" USING MCB(9),ITEM-TEXT,ITEM-CODE,O.
+             MOVE 1 TO ITEM-CODE.
+
+           MOVE "Exit" TO ITEM-TEXT.
+           MOVE 99999 TO ITEM-CODE.
+           CALL "MENUITEM" USING MCB(1), ITEM-TEXT, ITEM-CODE, O.
+
+       GIVE-HELP.
+
+           CALL "MENULOAD" USING MCB(12),DISPLAY-ONLY-MENU,DOP,O,O,O.
+           MOVE "EDE Menu Demonstration Help" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "Use the arrow keys to move to the" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "desired selection and depress the" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "return key to activate your choice." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "Alternatively, the first character" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "of the desired selection can be" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "utilized to position directly to" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "the item." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "For more information, use the help" TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "key (control-E)." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "Depress any key to continue..." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           CALL "MENUGO" USING MCB(12), MENU-CHOICE.
+           CALL "MENUKILL" USING MCB(12), ALL-MENUS.
+
+       DISPLAY-INTRO-WINDOW.
+
+           CALL "MENULOAD" USING MCB(12),DISPLAY-ONLY-MENU,DOP,O,O,O.
+           MOVE "This program is a composite demonstration of various"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "features of EDE. The first screen demonstrates pull-"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "down menus that are statically linked. It also shows"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "how to use varous other general features including"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "converted Wang VS COBOL programs." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "The menu editor is one such converted program which"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "is used to create data files for the dynamic menu"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "demonstration program. The menu editor has a full"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "field oriented on-line help as well." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "The final program is the dynamic menu demonstration"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "which dynamically displays the menu control file"
+                                                       TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "produced by the menu editor." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE SPACES TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           MOVE "Depress any key to exit..." TO ITEM-TEXT.
+           CALL "MENUITEM" USING MCB(12),ITEM-TEXT,O,O.
+           CALL "MENUGO" USING MCB(12), MENU-CHOICE.
+           CALL "MENUKILL" USING MCB(12), ALL-MENUS.

@@ -1,0 +1,26 @@
+#  Makefile to create new version of "texmenu.int"
+
+# include aix.rules
+
+RUNDIR    = /usr/bin/wispbin
+
+WISP      = wisp
+WISPFLAGS = -I//u/wisp/utils/src -z -1 
+COBOL     = cob
+COBFLAGS  = -i -C warning=2  
+LANG      = -VAIX
+ext       =.int
+MV        = mv
+cext      =.cob
+wext      =.wcb
+pext      =.cpy
+
+all:	$(RUNDIR)/textmenu$(ext)
+
+$(RUNDIR)/textmenu$(ext): textmenu$(wext)
+	echo '****** Processing textmenu.wcb' >>error.log 2>&1 
+	$(WISP) $(WISPFLAGS) $(LANG) textmenu$(wext) >>error.log 2>&1 
+	$(COBOL) $(COBFLAGS) textmenu$(cext)  >>error.log 2>&1 
+
+cleanup:
+	rm -f *.errs

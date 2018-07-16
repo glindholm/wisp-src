@@ -1,0 +1,167 @@
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+      *$LINKMAIN
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           SUB3.
+       AUTHOR.
+           Doug and Bob.
+       DATE-WRITTEN.
+           11/17/89.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           NO-ECHO IS "98".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+       01  INDEX-COUNTER                  PIC 9(5).
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       01  CURSOR-POS.
+           03  MOD-COL  BINARY.
+           03  MOD-ROW  BINARY.
+
+       77  PF-KEY   PIC X(02) VALUE ZERO.
+       77  LINENUM  PIC 9(02) VALUE 1.
+
+      ******************************************************************
+
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+
+       01  WELCOME-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(47) ROW 5 COL 20
+               VALUE 
+               "Welcome to SUB3 You made it!!!!".
+
+           03  FILLER PIC X(8)  ROW 10 COL 30 VALUE "LINKARG1".
+           03  FILLER PIC X(10) ROW 10 COL 40 
+               SOURCE LINKARG1 OBJECT LINKARG1.
+
+           03  FILLER PIC X(8)  ROW 12 COL 30 VALUE "LINKARG2".
+           03  FILLER PIC X(10) ROW 12 COL 40 
+               SOURCE LINKARG2 OBJECT LINKARG2.
+
+           03  FILLER PIC X(8)  ROW 14 COL 30 VALUE "LINKARG3".
+           03  FILLER PIC X(10) ROW 14 COL 40 
+               SOURCE LINKARG3 OBJECT LINKARG3.
+
+           03  FILLER PIC X(30) ROW 23 COL 20
+               VALUE
+               "Press RETURN to TAKE OFF!".
+
+       01 LINK-PRG PIC X(8)  VALUE "SAMPLE  ".
+       01 LINK-TYPE PIC X    VALUE " ".
+       01 LINK-CC.
+          05 FILLER BINARY VALUE ZERO.
+          05 FILLER BINARY VALUE ZERO.
+       01 LINK-RC.
+          05 FILLER BINARY VALUE ZERO.
+          05 FILLER BINARY VALUE ZERO.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - LINKAGE SECTION           *
+      *                                                                *
+      ******************************************************************
+      *
+       LINKAGE SECTION.
+
+       01  LINKARG1 PIC X(10).
+       01  LINKARG2 PIC X(10).
+       01  LINKARG3 PIC X(10).
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION USING LINKARG1 LINKARG2 LINKARG3.
+
+       WELCOME-DISPLAY.
+           DISPLAY AND READ WELCOME-SCREEN ON CRT
+           PFKEY 16.
+
+           CALL "LINK" USING LINK-PRG, LINK-TYPE, LINK-CC, LINK-RC.
+
+           DISPLAY AND READ WELCOME-SCREEN ON CRT
+           PFKEY 16.
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

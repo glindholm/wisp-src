@@ -1,0 +1,1032 @@
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QASCRN2.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           12/07/89.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           A-0-BYTE IS "00"
+           A-1-BYTE IS "01"
+           A-160-BYTE IS "A0"
+           HEXFF IS "FF"
+           HEX-00 IS "00"
+           HEX-01 IS "01"
+           HEX-02 IS "02"
+           HEX-0A IS "0A"
+           HEX-0B IS "0B"
+           HEX-10 IS "10"
+           HEX-28 IS "28"
+           HEX-80 IS "80"
+           HEX-84 IS "84"
+           HEX-88 IS "88"
+           HEX-8C IS "8C"
+           HEX-90 IS "90"
+           HEX-94 IS "94"
+           HEX-98 IS "98"
+           HEX-9C IS "9C"
+           HEX-A0 IS "A0"
+           HEX-A4 IS "A4"
+           HEX-A8 IS "A8"
+           HEX-AC IS "AC"
+           HEX-B0 IS "B0"
+           HEX-B4 IS "B4"
+           HEX-B8 IS "B8"
+           HEX-BC IS "BC"
+           WSXIO-READ IS "40"
+           WSXIO-WRITE IS "80"
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           BRITE-MOD-ALL IS "80"
+           DIM-PROT-ALL IS "8C"
+           NO-ECHO IS "98"
+           SUB-1 IS "01"
+           SUB-2 IS "02"
+           SUB-3 IS "03"
+           SUB-4 IS "04"
+           SUB-5 IS "05"
+           SUB-6 IS "06"
+           SUB-7 IS "07"
+           SUB-8 IS "08"
+           SUB-9 IS "09"
+           SUB-10 IS "0A"
+           SUB-11 IS "0B"
+           SUB-12 IS "0C"
+           SUB-13 IS "0D"
+           SUB-14 IS "0E"
+           SUB-15 IS "0F"
+           SUB-16 IS "10"
+           SUB-17 IS "11"
+           SUB-18 IS "12"
+           SUB-19 IS "13"
+           SUB-20 IS "14"
+           SUB-21 IS "15"
+           SUB-22 IS "16"
+           SUB-23 IS "17"
+           SUB-24 IS "18"
+           SUB-25 IS "19"
+           SUB-26 IS "1A"
+           SUB-27 IS "1B"
+           SUB-28 IS "1C"
+           SUB-29 IS "1D"
+           SUB-30 IS "1E"
+           SUB-31 IS "1F"
+           SUB-96 IS "60"
+           MENU-PICK IS "8E".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT CRT-ROW
+               ASSIGN TO "CRTROW",    "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT CRT-OA
+               ASSIGN TO "CRTOA",    "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               FILE STATUS     IS FILSTAT.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA                    PIC X(4).
+           03  CRTREC-MAPPING-AREA          PIC X(1920).
+
+       FD  CRT-ROW
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-ROW-REC.
+           03  CRT-ROW-REC-OA.
+               05  CRT-ROW-OA-1             PIC X.
+               05  CRT-ROW-OA-2             PIC X.
+               05  CRT-ROW-OA-3             PIC X.
+               05  CRT-ROW-OA-4             PIC X.
+           03  CRT-ROW-REC-MAP.
+               05  FILLER                   PIC X(80).
+           03  CRT-ROW-REC-MAP-X REDEFINES CRT-ROW-REC-MAP.
+               05  CRT-ROW-X OCCURS 80 TIMES PIC X.
+
+       FD  CRT-OA
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-OA-REC.
+               05  CRT-OA-1             PIC X.
+               05  CRT-OA-2             PIC X.
+               05  CRT-OA-3             PIC X.
+               05  CRT-OA-4             PIC X.
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+      ******************************************************************
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  MY-INDEX                       PIC 9(5).
+       01  THE-PASS                       PIC X(6).
+       01  ACCEPT-FIELD                   PIC X(6).
+       01  START-VAL                      PIC X(4) VALUE "0000".
+
+
+       01  SCREEN-OCC-1.
+           03  FILLER OCCURS 3 TIMES.
+
+               10  FILLER OCCURS 1 TIMES.
+                   15  ACCOUNT-FIELD       PIC X(25).
+                   15  ACCOUNT-DESC-FIELD  PIC X(30).
+                   15  DIST-PCT-FIELD      PIC 999.99-.
+                   15  AMOUNT-FIELD        PIC 99999.99.
+
+               10  FILLER OCCURS 1 TIMES.
+
+                   15  SRC-TAG-FIELD       PIC X(7).
+                   15  SOURCE-FIELD        PIC X(10).
+                   15  PROJ-TAG-FIELD      PIC X(8).
+                   15  PROJECT-FIELD       PIC X(10).
+                   15  PROJ-DESC-FIELD     PIC X(30).
+
+       01  REWRITE-TEST.
+           03  FILLER               PIC X(746) VALUE SPACES.
+           03  FILLER               PIC X      VALUE BRITE.
+           03  FILLER               PIC X(30)  VALUE
+           "THIS IS A TEST OF REWRITE".
+
+       01  CRTREC2.
+           05  CRTREC2-FULL         PIC X(1924) VALUE SPACES.
+           05  FILLER REDEFINES CRTREC2-FULL.
+               10  CRTREC2-OA.
+                   15  CRTREC2-OA-1   PIC X.
+                   15  CRTREC2-OA-2   PIC X.
+                   15  CRTREC2-OA-3   PIC X.
+                   15  CRTREC2-OA-4   PIC X.
+               10  CRTREC2-24-ROWS.
+                   15  CRTREC2-ROW  OCCURS 24 TIMES.
+                       20 CRTREC2-X OCCURS 80 TIMES PIC X.
+
+       01  XMISC-PIC9-5         PIC 9(5)      VALUE 12345.
+       01  XMISC-PICS9-3V2      PIC S999V99   VALUE 0.
+       01  XMISC-PIC9-2V3       PIC 99V999    VALUE 0.
+       01  XMISC-PICS9-5V2      PIC S99999V99 VALUE -1.
+       01  XMISC-PIC9-2         PIC 9(2)      VALUE ZERO.
+       01  XMISC-UPLOW          PIC X(50)     VALUE
+           "This is a TEST of UPlow.".
+
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+       01  SCREEN-TOTAL USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(30) ROW 1 COL 25
+               VALUE "DISPLAY & READ TOTAL TEST".
+           03  FILLER PIC X(10) ROW 3 COL 5 VALUE "FLOAT KEY".
+           03  FILLER PIC 99 ROW 3 COL 17 SOURCE FLOAT-KEY.
+           03  FILLER PIC X(18) ROW 5 COL 5 VALUE "RANGE (YES ,NO)".
+           03  FILLER PIC X(3)  ROW 5 COL 25 
+               SOURCE IS YES-NO OBJECT IS YES-NO
+      *$RANGE_COUNT 2
+               RANGE IS YN-TABLE.
+           03  FILLER PIC X(30) ROW 23 COL 25 
+               VALUE "ONLY PFKEY 1, 2, 3, FLOAT-KEY".
+           03  FILLER PIC X(30) ROW 24 COL 25 
+               VALUE "ON   PFKEY       3, FLOAT-KEY".
+
+       01  FLOAT-KEY PIC 99 VALUE 4.
+       01  YES-NO    PIC XXX VALUE "YES".
+
+       01  T1.
+           03  ENTRIES.
+               05  FILLER PIC XXX VALUE "YES".
+               05  FILLER PIC XXX VALUE "NO ".
+           03  FILLER REDEFINES ENTRIES.
+               05  YN-TABLE OCCURS 2 TIMES PIC XXX.
+
+
+
+       01  MISC-SCREEN-2 USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(25)     ROW 1 COL 28  VALUE
+               "* * * MISC-SCREEN-2 * * *".
+
+           03  FILLER PIC X(60) ROW 4 COL 10 VALUE
+               "This test does 2 DISPLAY AND READs of a 9 element".
+           03  FILLER PIC X(60) ROW 5 COL 10 VALUE
+               "vertical matrix with a PIC Z(7).ZZ- and a RANGE of".
+           03  FILLER PIC X(60) ROW 6 COL 10 VALUE
+               "-99 to 999.".
+
+
+           03  SC1-MATRIX-DAT OCCURS 9 TIMES ROW 12.
+               05  SC1-COL-QTY-FAC PIC Z(7).ZZ- ROW 12 COL 25
+                   RANGE -99 TO 999
+                   SOURCE SC1-COL-QTY
+                   OBJECT SC1-COL-QTY.
+
+           03  FILLER PIC X(25)
+                      ROW 24 COL 27
+                      VALUE "PRESS RETURN TO CONTINUE.".
+
+       01 SC1-DATA-ITEM.
+           03  SC1-COL-QTY PIC S9(7)V99 OCCURS 9 TIMES.
+
+
+       01  SCREEN-SUBT USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(23) 
+                      ROW 1 COL 20
+                      VALUE "Test Substitution Table".
+
+           03  FILLER PIC X(156) ROW 3 COL 1 VALUE
+               "This screen contains some characters with values in the
+      -    "non-printable range.    The substitution table will be used
+      -    "to display a graphics/default character.".
+
+           03  FILLER PIC X(44)
+                      ROW 6 COL 1 VALUE
+               "Display the default substitution characters:".
+
+           03  FILLER PIC X(79)
+                      ROW 9 COL 1 VALUE
+               "  1   2   3   4   5   6   7   8   9  10  11  12  13  14
+      -    " 15  16  17  18  19  20".
+   
+           03  TEST-ITEM-1 PIC X(79) ROW 10 COLUMN 1
+               SOURCE SUB-LINE-1.
+
+           03  FILLER PIC X(47)
+                      ROW 12 COL 1 VALUE
+               " 21  22  23  24  25  26  27  28  29  30  31  96".
+   
+           03  TEST-ITEM-2 PIC X(47) ROW 13 COLUMN 1
+               SOURCE SUB-LINE-2.
+
+           03  TEST-ITEM-3 PIC X(7) ROW 16 COLUMN 20
+               SOURCE SUB-LINE-3.
+           03  TEST-ITEM-4 PIC X(7) ROW 17 COLUMN 20
+               SOURCE SUB-LINE-4.
+           03  TEST-ITEM-5 PIC X(7) ROW 18 COLUMN 20
+               SOURCE SUB-LINE-5.
+           03  TEST-ITEM-6 PIC X(7) ROW 19 COLUMN 20
+               SOURCE SUB-LINE-4.
+           03  TEST-ITEM-7 PIC X(7) ROW 20 COLUMN 20
+               SOURCE SUB-LINE-6.
+
+           03  FILLER PIC X(25)
+                      ROW 24 COL 27
+                      VALUE "PRESS RETURN TO CONTINUE.".
+
+       01  SCREEN-MB-1 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(20) 
+                      ROW 1 COL 20
+                      VALUE "Test Menu Option One".
+
+           03  FILLER PIC X(63) ROW 3 COL 1 VALUE
+               "When this screen comes up then you have chosen menu opti
+      -    "on ONE.".
+
+           03  FILLER PIC X(25)
+                      ROW 24 COL 27
+                      VALUE "PRESS RETURN TO CONTINUE.".
+
+       01  SCREEN-MB-2 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(20) 
+                      ROW 1 COL 20
+                      VALUE "Test Menu Option Two".
+
+           03  FILLER PIC X(63) ROW 3 COL 1 VALUE
+               "When this screen comes up then you have chosen menu opti
+      -    "on TWO.".
+
+           03  FILLER PIC X(25)
+                      ROW 24 COL 27
+                      VALUE "PRESS RETURN TO CONTINUE.".
+
+       01  SCREEN-MB-3 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(22) 
+                      ROW 1 COL 20
+                      VALUE "Test Menu Option Three".
+
+           03  FILLER PIC X(65) ROW 3 COL 1 VALUE
+               "When this screen comes up then you have chosen menu opti
+      -    "on THREE.".
+
+           03  FILLER PIC X(25)
+                      ROW 24 COL 27
+                      VALUE "PRESS RETURN TO CONTINUE.".
+
+       01  SCREEN-MB-4 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(21) 
+                      ROW 1 COL 20
+                      VALUE "Test Menu Option Four".
+
+           03  FILLER PIC X(64) ROW 3 COL 1 VALUE
+               "When this screen comes up then you have chosen menu opti
+      -    "on FOUR.".
+
+           03  FILLER PIC X(25)
+                      ROW 24 COL 27
+                      VALUE "PRESS RETURN TO CONTINUE.".
+
+
+       01  MONKEYBAR-MENU-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(27) ROW 1 COL 20 VALUE
+               "MONKEY BAR MENU TEST SCREEN".
+           03  MENU-ITEM-1 PIC X(19) ROW 3 COL 10
+               SOURCE MB-ITEM-1.
+
+           03  MENU-ITEM-2 PIC X(20) ROW 3 COL 35
+               SOURCE MB-ITEM-2.
+
+           03  MOD-ITEM-1 PIC X(3) ROW 3 COL 60
+               SOURCE MB-MOD1
+               OBJECT MB-MOD1.
+
+           03  MENU-ITEM-3 PIC X(19) ROW 5 COL 10
+               SOURCE MB-ITEM-3.
+
+           03  MOD-ITEM-2 PIC X(3) ROW 5 COL 60
+               SOURCE MB-MOD2
+               OBJECT MB-MOD2.
+
+           03  MENU-ITEM-4 PIC X(20) ROW 7 COL 10
+               SOURCE MB-ITEM-4.
+
+           03  MOD-ITEM-3 PIC 9(3) ROW 7 COL 60
+               SOURCE MB-MOD3.
+
+           03  MB-MESG PIC X(43) ROW 10 COL 5
+               SOURCE MB-MESG-TEXT.
+
+           03  MB-END-SCREEN-MESG PIC X(25) ROW 24 COL 10
+               SOURCE MB-END-MESG.
+
+       01  SUB-LINE-1.
+           03  FILLER    PIC X(2) VALUE SPACES.
+           03  SUB-COL1  PIC X    VALUE SUB-1.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL2  PIC X VALUE SUB-2.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL3  PIC X VALUE SUB-3.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL4  PIC X VALUE SUB-4.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL5  PIC X VALUE SUB-5.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL6  PIC X VALUE SUB-6.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL7  PIC X VALUE SUB-7.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL8  PIC X VALUE SUB-8.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL9  PIC X VALUE SUB-9.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL10 PIC X VALUE SUB-10.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL11 PIC X VALUE SUB-11.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL12 PIC X VALUE SUB-12.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL13 PIC X VALUE SUB-13.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL14 PIC X VALUE SUB-14.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL15 PIC X VALUE SUB-15.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL16 PIC X VALUE SUB-16.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL17 PIC X VALUE SUB-17.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL18 PIC X VALUE SUB-18.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL19 PIC X VALUE SUB-19.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL20 PIC X VALUE SUB-20.
+
+       01  SUB-LINE-2.
+           03  FILLER    PIC X(2) VALUE SPACES.
+           03  SUB-COL21 PIC X VALUE SUB-21.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL22 PIC X VALUE SUB-22.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL23 PIC X VALUE SUB-23.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL24 PIC X VALUE SUB-24.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL25 PIC X VALUE SUB-25.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL26 PIC X VALUE SUB-26.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL27 PIC X VALUE SUB-27.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL28 PIC X VALUE SUB-28.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL29 PIC X VALUE SUB-29.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL30 PIC X VALUE SUB-30.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL31 PIC X VALUE SUB-31.
+           03  FILLER    PIC X(3) VALUE SPACES.
+           03  SUB-COL21 PIC X VALUE SUB-96.
+
+       01  SUB-LINE-3.
+           03  BT3-COL1   PIC X VALUE SUB-20.
+           03  BT3-COL2   PIC X VALUE SUB-7.
+           03  BT3-COL3   PIC X VALUE SUB-7.
+           03  BT3-COL4   PIC X VALUE SUB-28.
+           03  BT3-COL5   PIC X VALUE SUB-7.
+           03  BT3-COL6   PIC X VALUE SUB-7.
+           03  BT3-COL7   PIC X VALUE SUB-19.
+
+       01  SUB-LINE-4.
+           03  BT4-COL1   PIC X VALUE SUB-6.
+           03  FILLER     PIC X(2) VALUE SPACES.
+           03  BT4-COL4   PIC X VALUE SUB-6.
+           03  FILLER     PIC X(2) VALUE SPACES.
+           03  BT4-COL7   PIC X VALUE SUB-6.
+
+       01  SUB-LINE-5.
+           03  BT-COL1   PIC X VALUE SUB-24.
+           03  BT-COL2   PIC X VALUE SUB-7.
+           03  BT-COL3   PIC X VALUE SUB-7 .
+           03  BT-COL4   PIC X VALUE SUB-14.
+           03  BT-COL5   PIC X VALUE SUB-7.
+           03  BT-COL6   PIC X VALUE SUB-7.
+           03  BT-COL7   PIC X VALUE SUB-25.
+
+       01  SUB-LINE-6.
+           03  BT-COL1   PIC X VALUE SUB-21.
+           03  BT-COL2   PIC X VALUE SUB-7.
+           03  BT-COL3   PIC X VALUE SUB-7.
+           03  BT-COL4   PIC X VALUE SUB-27.
+           03  BT-COL5   PIC X VALUE SUB-7.
+           03  BT-COL6   PIC X VALUE SUB-7.
+           03  BT-COL7   PIC X VALUE SUB-18.
+
+
+       01  MB-ITEM-1.
+           03  SUB-COL1 PIC X VALUE MENU-PICK.
+           03  SUB-COL2 PIC X VALUE SUB-5.
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "FIRST MENU ITEM.".
+
+       01  MB-ITEM-2.
+           03  SUB-COL1 PIC X VALUE MENU-PICK.
+           03  SUB-COL2 PIC X VALUE SUB-5.
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(17) VALUE
+               "SECOND MENU ITEM.".
+
+       01  MB-ITEM-3.
+           03  SUB-COL1 PIC X VALUE MENU-PICK.
+           03  SUB-COL2 PIC X VALUE SUB-5.
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(16) VALUE
+               "THIRD MENU ITEM.".
+
+       01  MB-ITEM-4.
+           03  SUB-COL1 PIC X VALUE MENU-PICK.
+           03  SUB-COL2 PIC X VALUE SUB-5.
+           03  FILLER   PIC X VALUE SPACES.
+           03  FILLER   PIC X(17) VALUE
+               "FOURTH MENU ITEM.".
+
+       01  MB-MOD1 PIC 9(3) VALUE ZEROES.
+       01  MB-MOD2 PIC X(3) VALUE SPACES.
+       01  MB-MOD3.
+           03  FILLER                     PIC X(01) VALUE MENU-PICK.
+           03  CURS-COL                   PIC 9(02) VALUE 12.
+       01  MB-MESG-TEXT PIC X(43) VALUE SPACES.
+       01  MB-END-MESG  PIC X(25) VALUE SPACES.
+
+       01  VWANG-SCREEN132 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(34) ROW 3 COL 25 VALUE
+           "*** TEST VWANG COLUMN MODE 132 ***".
+
+           03  FILLER PIC X(50) ROW 8 COL 10
+               SOURCE VW-SCN-STATUS.
+           03  FILLER PIC X(132) ROW 12 COL 1 VALUE
+           "123456789012345678901234567890123456789012345678901234567890
+      -    "123456789012345678901234567890123456789012345678901234567890
+      -    "123456789012".
+           03  FILLER PIC X(132) ROW 13 COL 1 VALUE
+           "         1         2         3         4         5         6 
+      -    "         7         8         9         0         1         2
+      -    "         3".
+           03  FILLER PIC X(132) ROW 14 COL 1 VALUE
+           "                                                            
+      -    "                                       1".
+           03 FILLER PIC X(184) ROW 16 COL 80 VALUE
+              "EXTENSIVE WORK WOULD NEED TO BE DONE TO  HAVE THE TRANSLA
+      -    "TOR MAKE THE CORRECTIONS NEEDED FOR THE SCREEN DISPLAY IN 13
+      -    "2 MODE!".
+           03 FILLER PIC X(132) ROW 18 COL 80 VALUE
+              "UNTIL FURTHER NOTICE, CHANGE YOUR NATIVE COBOL SOURCES GE
+      -    "NERATED BY WISP!!".
+           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
+           "PRESS RETURN TO CONTINUE.".
+
+       01  VWANG-SCREEN80 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(33) ROW 3 COL 25 VALUE
+           "*** TEST VWANG COLUMN MODE 80 ***".
+
+           03  FILLER PIC X(50) ROW 8 COL 10
+               SOURCE VW-SCN-STATUS.
+           03  FILLER PIC X(80) ROW 12 COL 1 VALUE
+           "123456789012345678901234567890123456789012345678901234567890
+      -    "12345678901234567890".
+           03  FILLER PIC X(80) ROW 13 COL 1 VALUE
+           "         1         2         3         4         5         6 
+      -    "         7         8".
+           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
+           "PRESS RETURN TO CONTINUE.".
+
+       01 VW-SCN-STATUS       PIC X(50)     VALUE SPACES.
+
+
+
+123456*    This is a screen from RHS that wasn't working
+
+000001 01  MESSAGE-SUMMARY USAGE DISPLAY-WS.
+           05  SUMMARY-LINE-1 COLUMN 20 PIC X(50)
+               SOURCE MESSAGE-SUMMARY-TOPLINE.
+           05  FILLER ROW 2 OCCURS 23.
+            10 FILLER ROW 2 COLUMN 02 PIC X(19) SOURCE SUMMARY-COLUMN-1.
+            10 FILLER ROW 2 COLUMN 22 PIC X(19) SOURCE SUMMARY-COLUMN-2.
+            10 FILLER ROW 2 COLUMN 42 PIC X(19) SOURCE SUMMARY-COLUMN-3.
+            10 FILLER ROW 2 COLUMN 62 PIC X(19) SOURCE SUMMARY-COLUMN-4.
+
+000001 01  MESSAGE-SUMMARY-TOPLINE.
+           05  FILLER PIC X(50) VALUE 
+               "MULTIPLE COLUMNS 4 x 23 = 92 ELEMENTS".
+
+000001 77  TOTAL-MESSAGE-COUNT PIC 9(5) COMP.
+       01  SUMMARY-COLUMNS.
+           05  SUMMARY-ELEMENT OCCURS 92.
+            10 SUMMARY-ELEMENT-ID      PIC XXX.
+            10 SUMMARY-ELEMENT-GRP REDEFINES SUMMARY-ELEMENT-ID PIC XX.
+            10 SUMMARY-ELEMENT-TO      PIC ZZZ9.
+            10 SUMMARY-ELEMENTTO       PIC XXXX.    %   VALUE " TO;".
+            10 SUMMARY-ELEMENT-BY      PIC ZZZ9.
+            10 SUMMARY-ELEMENTBY       PIC XXXX.    %   VALUE " BY".
+            10 J1                      PIC 9999 COMP.
+            10 J2                      PIC 9999 COMP.
+       01  FILLER REDEFINES SUMMARY-COLUMNS.
+           05  SUMMARY-COLUMN-1 PIC X(25) OCCURS 23.
+           05  SUMMARY-COLUMN-2 PIC X(25) OCCURS 23.
+           05  SUMMARY-COLUMN-3 PIC X(25) OCCURS 23.
+           05  SUMMARY-COLUMN-4 PIC X(25) OCCURS 23.
+
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       LINKAGE SECTION.
+       01  PF-KEY-ARG  PIC X(2).
+
+       PROCEDURE DIVISION USING PF-KEY-ARG.
+
+       SCREEN-TESTS.
+      
+           MOVE PF-KEY-ARG TO PF-KEY.
+
+
+           IF PF-KEY = "11" THEN
+              PERFORM DO-MONKEYBAR-SCREEN
+              PERFORM DO-MONKEYBAR-OPT-SCREEN
+
+           ELSE IF PF-KEY = "12" THEN
+              PERFORM DISPLAY-MISC-2
+
+           ELSE IF PF-KEY = "13" THEN
+              PERFORM DISPLAY-TOTAL
+
+           ELSE IF PF-KEY = "14" THEN
+              PERFORM VWANG-TEST-132-80
+
+           ELSE IF PF-KEY = "15" THEN
+              PERFORM REWRITE-READ-CRT
+
+           ELSE IF PF-KEY = "17" THEN
+              PERFORM ROW-REWRITE-READ
+
+           ELSE IF PF-KEY = "18" THEN
+              PERFORM RHS-TEST.
+
+
+           GO TO EXIT-PROGRAM.
+
+
+      ******************************************************************
+
+       DISPLAY-MISC-2.
+           MOVE 1 TO SC1-COL-QTY(1).
+           MOVE 2 TO SC1-COL-QTY(2).
+           MOVE 3 TO SC1-COL-QTY(3).
+           MOVE 4 TO SC1-COL-QTY(4).
+           MOVE 5 TO SC1-COL-QTY(5).
+           MOVE 6 TO SC1-COL-QTY(6).
+           MOVE 7 TO SC1-COL-QTY(7).
+           MOVE 8 TO SC1-COL-QTY(8).
+           MOVE 9 TO SC1-COL-QTY(9).
+
+           DISPLAY AND READ MISC-SCREEN-2 ON CRT.
+
+           DISPLAY AND READ MISC-SCREEN-2 ON CRT.
+
+       INITIALIZE-SCREEN-OCC-1.
+
+           PERFORM INIT-THE-ARRAY VARYING MY-INDEX FROM 1 BY 1 UNTIL
+                   MY-INDEX IS > 3.
+
+       INIT-THE-ARRAY.
+           MOVE "BLANK" TO ACCOUNT-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO ACCOUNT-DESC-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO SRC-TAG-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO SOURCE-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO PROJ-TAG-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO PROJECT-FIELD (MY-INDEX,1).
+           MOVE "BLANK" TO PROJ-DESC-FIELD (MY-INDEX,1).
+
+           MOVE 1 TO DIST-PCT-FIELD (MY-INDEX,1).
+           MOVE 2 TO AMOUNT-FIELD  (MY-INDEX,1).
+
+        END-INIT-SCREEN.
+
+      ******************************************************************
+
+      ******************************************************************
+
+       DO-MONKEYBAR-SCREEN.
+           MOVE SPACES TO MB-MESG-TEXT.
+           MOVE "PRESS PF KEY 16 TO EXIT  " TO MB-END-MESG.
+           DISPLAY AND READ MONKEYBAR-MENU-SCREEN ON CRT
+           PFKEYS 16.
+
+           IF PF-KEY IS NOT = "16" THEN
+             IF MOD-ROW = 3 AND MOD-COL = 11 THEN
+               PERFORM DO-MB-MENU1
+               GO TO DO-MONKEYBAR-SCREEN
+             ELSE IF MOD-ROW = 3 AND MOD-COL = 36 THEN
+               PERFORM DO-MB-MENU2
+               GO TO DO-MONKEYBAR-SCREEN
+             ELSE IF MOD-ROW = 5 AND MOD-COL = 11 THEN
+               PERFORM DO-MB-MENU3
+               GO TO DO-MONKEYBAR-SCREEN
+             ELSE IF MOD-ROW = 7 AND MOD-COL = 11 THEN
+               PERFORM DO-MB-MENU4
+               GO TO DO-MONKEYBAR-SCREEN
+             ELSE
+               GO TO DO-MONKEYBAR-SCREEN.
+
+       DO-MONKEYBAR-OPT-SCREEN.
+           MOVE "TEST TO SEE IF OPTIMIZATION WORKS CORRECTLY"
+             TO MB-MESG-TEXT.
+           MOVE "PUSH <RETURN> TO CONTINUE" TO MB-END-MESG.
+           DISPLAY AND READ MONKEYBAR-MENU-SCREEN ON CRT.
+
+       DO-MB-MENU1.
+           DISPLAY AND READ SCREEN-MB-1 ON CRT.
+
+       DO-MB-MENU2.
+           DISPLAY AND READ SCREEN-MB-2 ON CRT.
+
+       DO-MB-MENU3.
+           DISPLAY AND READ SCREEN-MB-3 ON CRT.
+
+       DO-MB-MENU4.
+           DISPLAY AND READ SCREEN-MB-4 ON CRT.
+
+      ******************************************************************
+
+       DISPLAY-TOTAL.
+
+           MOVE 4 TO FLOAT-KEY.
+
+           DISPLAY AND READ ALTERED SCREEN-TOTAL ON CRT
+           ONLY PFKEY 1, 2, 3, FLOAT-KEY
+           ON PFKEY FLOAT-KEY, 3
+                PERFORM ON-PFKEY-PARA
+           NO-MOD 
+                PERFORM NO-MOD-PARA.
+
+       ON-PFKEY-PARA.
+           DISPLAY "ON-PFKEY: PFKEY " PF-KEY " WAS PRESSED".
+       NO-MOD-PARA.
+           DISPLAY "NO MODS WERE MADE ON THIS SCREEN".
+
+      ******************************************************************
+
+       VWANG-TEST-132-80.
+
+           MOVE "THE SCREEN SHOULD BE IN 80 COLUMN MODE"
+             TO VW-SCN-STATUS.
+           DISPLAY AND READ VWANG-SCREEN80 ON CRT.
+           CALL "ws132".
+           MOVE "THE SCREEN SHOULD BE IN 132 COLUMN MODE"
+             TO VW-SCN-STATUS.
+           DISPLAY AND READ VWANG-SCREEN132 ON CRT.
+           CALL "ws80".
+           MOVE "THE SCREEN SHOULD NOW BE BACK IN 80 COLUMN MODE"
+             TO VW-SCN-STATUS.
+           DISPLAY AND READ VWANG-SCREEN80 ON CRT.
+
+      ******************************************************************
+       REWRITE-READ-CRT.
+           MOVE 1 TO LINENUM.
+           MOVE SPACES TO CRTREC2.
+           MOVE HEX-80 TO CRTREC2-OA-2
+
+           MOVE "BRITE  MOD   ALL   NOLINE   [80]" TO CRTREC2-ROW (2).
+           MOVE HEX-80 TO CRTREC2-X (2,40).
+           MOVE HEX-8C TO CRTREC2-X (2,75).
+
+           MOVE "BRITE  PROT  ALL   NOLINE   [84]" TO CRTREC2-ROW (3).
+           MOVE HEX-84 TO CRTREC2-X (3,40).
+           MOVE HEX-8C TO CRTREC2-X (3,75).
+
+           MOVE "DIM    MOD   ALL   NOLINE   [88]" TO CRTREC2-ROW (4).
+           MOVE HEX-88 TO CRTREC2-X (4,40).
+           MOVE HEX-8C TO CRTREC2-X (4,75).
+
+           MOVE "DIM    PROT  ALL   NOLINE   [8C]" TO CRTREC2-ROW (5).
+           MOVE HEX-8C TO CRTREC2-X (5,40).
+           MOVE HEX-8C TO CRTREC2-X (5,75).
+
+           MOVE "BLINK  MOD   ALL   NOLINE   [90]" TO CRTREC2-ROW (6).
+           MOVE HEX-90 TO CRTREC2-X (6,40).
+           MOVE HEX-8C TO CRTREC2-X (6,75).
+
+           MOVE "BLINK  PROT  ALL   NOLINE   [94]" TO CRTREC2-ROW (7).
+           MOVE HEX-94 TO CRTREC2-X (7,40).
+           MOVE HEX-8C TO CRTREC2-X (7,75).
+
+           MOVE "BLANK  MOD   ALL   NOLINE   [98]" TO CRTREC2-ROW (8).
+           MOVE HEX-98 TO CRTREC2-X (8,40).
+           MOVE HEX-8C TO CRTREC2-X (8,75).
+
+           MOVE "BLANK  PROT  ALL   NOLINE   [9C]" TO CRTREC2-ROW (9).
+           MOVE HEX-9C TO CRTREC2-X (9,40).
+           MOVE HEX-8C TO CRTREC2-X (9,75).
+
+           MOVE "BRITE  MOD   ALL   LINE     [A0]" TO CRTREC2-ROW (10).
+           MOVE HEX-A0 TO CRTREC2-X (10,40).
+           MOVE HEX-8C TO CRTREC2-X (10,75).
+
+           MOVE "BRITE  PROT  ALL   LINE     [A4]" TO CRTREC2-ROW (11).
+           MOVE HEX-A4 TO CRTREC2-X (11,40).
+           MOVE HEX-8C TO CRTREC2-X (11,75).
+
+           MOVE "DIM    MOD   ALL   LINE     [A8]" TO CRTREC2-ROW (12).
+           MOVE HEX-A8 TO CRTREC2-X (12,40).
+           MOVE HEX-8C TO CRTREC2-X (12,75).
+
+           MOVE "DIM    PROT  ALL   LINE     [AC]" TO CRTREC2-ROW (13).
+           MOVE HEX-AC TO CRTREC2-X (13,40).
+           MOVE HEX-8C TO CRTREC2-X (13,75).
+
+           MOVE "BLINK  MOD   ALL   LINE     [B0]" TO CRTREC2-ROW (14).
+           MOVE HEX-B0 TO CRTREC2-X (14,40).
+           MOVE HEX-8C TO CRTREC2-X (14,75).
+
+           MOVE "BLINK  PROT  ALL   LINE     [B4]" TO CRTREC2-ROW (15).
+           MOVE HEX-B4 TO CRTREC2-X (15,40).
+           MOVE HEX-8C TO CRTREC2-X (15,75).
+
+           MOVE "BLANK  MOD   ALL   LINE     [B8]" TO CRTREC2-ROW (16).
+           MOVE HEX-B8 TO CRTREC2-X (16,40).
+           MOVE HEX-8C TO CRTREC2-X (16,75).
+
+           MOVE "BLANK  PROT  ALL   LINE     [BC]" TO CRTREC2-ROW (17).
+           MOVE HEX-BC TO CRTREC2-X (17,40).
+           MOVE HEX-8C TO CRTREC2-X (17,75).
+
+           MOVE "BRITE  MOD   ALL   NOLINE   [80]" TO CRTREC2-ROW (18).
+           MOVE HEX-80 TO CRTREC2-X (18,40).
+           MOVE HEX-8C TO CRTREC2-X (18,75).
+
+           MOVE "BRITE  MOD   ALL   LINE     [A0]" TO CRTREC2-ROW (19).
+           MOVE HEX-A0 TO CRTREC2-X (19,40).
+           MOVE HEX-8C TO CRTREC2-X (19,75).
+
+           MOVE HEX-0B TO CRTREC2-X (18,41)
+                          CRTREC2-X (18,42)
+                          CRTREC2-X (18,43)
+                          CRTREC2-X (18,44)
+                          CRTREC2-X (18,45)
+                          CRTREC2-X (18,46)
+                          CRTREC2-X (18,47)
+                          CRTREC2-X (18,48)
+                          CRTREC2-X (18,49)
+                          CRTREC2-X (18,50).
+
+           MOVE HEX-0B TO CRTREC2-X (19,41)
+                          CRTREC2-X (19,42)
+                          CRTREC2-X (19,43)
+                          CRTREC2-X (19,44)
+                          CRTREC2-X (19,45)
+                          CRTREC2-X (19,46)
+                          CRTREC2-X (19,47)
+                          CRTREC2-X (19,48)
+                          CRTREC2-X (19,49)
+                          CRTREC2-X (19,50).
+
+
+           MOVE "           REWRITE & READ MODIFIABLE (1)" 
+                TO CRTREC2-ROW (1).
+
+           REWRITE CRTREC FROM CRTREC2.
+
+           READ CRT MODIFIABLE INTO CRTREC2.
+
+           MOVE "           REWRITE & READ MODIFIABLE (2)" 
+                TO CRTREC2-ROW (1).
+
+           REWRITE CRTREC FROM CRTREC2.
+
+           READ CRT MODIFIABLE INTO CRTREC2.
+
+
+           MOVE HEX-0B TO CRTREC2-X (18,41)
+                          CRTREC2-X (18,42)
+                          CRTREC2-X (18,43)
+                          CRTREC2-X (18,44)
+                          CRTREC2-X (18,45)
+                          CRTREC2-X (18,46)
+                          CRTREC2-X (18,47)
+                          CRTREC2-X (18,48)
+                          CRTREC2-X (18,49)
+                          CRTREC2-X (18,50).
+
+           MOVE HEX-0B TO CRTREC2-X (19,41)
+                          CRTREC2-X (19,42)
+                          CRTREC2-X (19,43)
+                          CRTREC2-X (19,44)
+                          CRTREC2-X (19,45)
+                          CRTREC2-X (19,46)
+                          CRTREC2-X (19,47)
+                          CRTREC2-X (19,48)
+                          CRTREC2-X (19,49)
+                          CRTREC2-X (19,50).
+
+
+           MOVE "           REWRITE & READ ALTERED (1)" 
+                TO CRTREC2-ROW (1).
+
+           REWRITE CRTREC FROM CRTREC2.
+
+           READ CRT ALTERED INTO CRTREC2.
+
+           MOVE "           REWRITE & READ ALTERED (2)" 
+                TO CRTREC2-ROW (1).
+
+           REWRITE CRTREC FROM CRTREC2.
+
+           READ CRT ALTERED INTO CRTREC2.
+
+      ******************************************************************
+       ROW-REWRITE-READ.
+           MOVE 10 TO LINENUM.
+           MOVE "      ***** REWRITE TEST ***** (cursor 10,2)" 
+               TO CRT-ROW-REC-MAP.
+           MOVE HEX-84 TO CRT-ROW-X (5).
+           MOVE HEX-A0 TO CRT-ROW-OA-2.
+           MOVE HEX-02 TO CRT-ROW-OA-3.
+           MOVE HEX-0A TO CRT-ROW-OA-4.
+           REWRITE CRT-ROW-REC.
+
+           MOVE 11 TO LINENUM.
+           MOVE "     XXXXX BRITE MOD ALL NOLINE XXXXXXX" 
+               TO CRT-ROW-REC-MAP.
+           MOVE HEX-80 TO CRT-ROW-X (5).
+           MOVE HEX-8C TO CRT-ROW-X (40).
+           REWRITE CRT-ROW-REC.
+
+           READ CRT-ROW.
+
+           MOVE 12 TO LINENUM.
+           MOVE HEX-8C TO CRT-ROW-X (5).
+           REWRITE CRT-ROW-REC.
+
+           READ CRT-ROW.
+
+           MOVE 16 TO LINENUM.
+           MOVE "         ALARM & CENTER CURSOR" TO CRT-ROW-REC-MAP.
+           MOVE HEX-94 TO CRT-ROW-X (1).
+           REWRITE CRT-ROW-REC AFTER ALARM CURSOR COLUMN 40 ROW 12.
+
+           READ CRT-ROW.
+
+           MOVE HEX-01 TO CRT-OA-1
+           MOVE HEX-A0 TO CRT-OA-2.
+           MOVE HEX-28 TO CRT-OA-3.
+           MOVE HEX-01 TO CRT-OA-4.
+           REWRITE CRT-OA-REC.
+
+           READ CRT-ROW.
+
+       RHS-TEST.
+           PERFORM RHS-SETUP VARYING TOTAL-MESSAGE-COUNT FROM 1 BY 1
+                             UNTIL TOTAL-MESSAGE-COUNT > 92.
+           PERFORM RHS-DR.
+
+       RHS-DR.
+           DISPLAY AND READ MESSAGE-SUMMARY ON CRT.
+
+       RHS-SETUP.
+           MOVE "(( " TO SUMMARY-ELEMENT-ID ( TOTAL-MESSAGE-COUNT ).
+           MOVE " ) (" TO SUMMARY-ELEMENTTO ( TOTAL-MESSAGE-COUNT ).
+           MOVE " )) " TO SUMMARY-ELEMENTBY ( TOTAL-MESSAGE-COUNT ).
+           MOVE TOTAL-MESSAGE-COUNT TO
+                SUMMARY-ELEMENT-TO ( TOTAL-MESSAGE-COUNT )
+                SUMMARY-ELEMENT-BY ( TOTAL-MESSAGE-COUNT )
+                J1 ( TOTAL-MESSAGE-COUNT )
+                J2 ( TOTAL-MESSAGE-COUNT ).
+
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

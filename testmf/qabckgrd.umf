@@ -1,0 +1,9 @@
+qabckgrd: qabckgrd.o
+	ldcobol -o qabckgrd qabckgrd.o -lwisp -lvideo -lPW
+
+qabckgrd.o: qabckgrd.cob
+	lpicobol -fsc74 qabckgrd.cob
+
+qabckgrd.cob: qabckgrd.wcb
+	wisp qabckgrd
+

@@ -1,0 +1,980 @@
+000100/*****************************************************************
+000200*                                                                *
+000300*                       IDENTIFICATION DIVISION                  *
+000400*                                                                *
+000500******************************************************************
+000600*
+000700 IDENTIFICATION DIVISION.
+000800 PROGRAM-ID.
+000900     EZMAKE.
+001000 AUTHOR.
+001100     IDSI CONVERSION TEAM JTW.
+001200 DATE-WRITTEN.
+001300     03/30/90.
+001400/*****************************************************************
+001500*                                                                *
+001600*                         ENVIRONMENT DIVISION                   *
+001700*                                                                *
+001800******************************************************************
+001900*
+002000 ENVIRONMENT DIVISION.
+002100 CONFIGURATION SECTION.
+002200 SOURCE-COMPUTER.
+002300     WANG-VS.
+002400 OBJECT-COMPUTER.
+002500     WANG-VS.
+002600 FIGURATIVE-CONSTANTS.
+002700     HIMOD      IS "80",
+002800     HIMODUL    IS "A0",
+002900     HIMODUPR   IS "81",
+003000     HIMODUPRUL IS "A1",
+003100     HIMODNUM   IS "82",
+003200     HIMODNUMUL IS "A2",
+003300     HIPRO      IS "84",
+003400     HIPROUL    IS "A4",
+003500     HIPROUPR   IS "85",
+003600     HIPROUPRUL IS "A5",
+003700     HIPRONUM   IS "86",
+003800     HIPRONUMUL IS "A6",
+003900     LOMOD      IS "88",
+004000     LOMODUL    IS "A8",
+004100     LOMODUPR   IS "89",
+004200     LOMODUPRUL IS "A9",
+004300     LOMODNUM   IS "8A",
+004400     LOMODNUMUL IS "AA",
+004500     LOPRO      IS "8C",
+004600     LOPROUL    IS "AC",
+004700     LOPROUPR   IS "8D",
+004800     LOPROUPRUL IS "AD",
+004900     LOPRONUM   IS "8E",
+005000     LOPRONUMUL IS "AE",
+005100     FLMOD      IS "90",
+005200     FLMODUL    IS "B0",
+005300     FLMODUPR   IS "91",
+005400     FLMODUPRUL IS "B1",
+005500     FLMODNUM   IS "92",
+005600     FLMODNUMUL IS "B2",
+005700     FLPRO      IS "94",
+005800     FLPROUL    IS "B4",
+005900     FLPROUPR   IS "95",
+006000     FLPROUPRUL IS "B5",
+006100     FLPRONUM   IS "96",
+006200     FLPRONUMUL IS "B6",
+006300     SUMOD      IS "98",
+006400     SUMODUL    IS "B8",
+006500     SUMODUPR   IS "99",
+006600     SUMODUPRUL IS "B9",
+006700     SUMODNUM   IS "9A",
+006800     SUMODNUMUL IS "BA",
+006900     SUPRO      IS "9C",
+007000     SUPROUL    IS "BC",
+007100     SUPROUPR   IS "9D",
+007200     SUPROUPRUL IS "BD",
+007300     SUPRONUM   IS "9E",
+007400     SUPRONUMUL IS "BE",
+007500     SOLIDS     IS "0B",
+007600     POS-CURSOR IS "A0",
+007700     SOUNDALARM IS "E0",
+007800     HEX-06     IS "06",
+007900     HEX-01     IS "01",
+008000     HEX-72     IS "48",
+008100     HEX-02     IS "02",
+008100     HEX-43     IS "2B",
+008200     HEX-03     IS "03",
+008300     HEX-24     IS "18",
+008400     HEX-80     IS "50",
+008500     HEX-60     IS "3C",
+008600     HEX-05     IS "05",
+           CHAR-22      IS "22".
+008700
+008800/*****************************************************************
+008900*                                                                *
+009000*                         INPUT-OUTPUT SECTION                   *
+009100*                                                                *
+009200******************************************************************
+009300*
+009400 INPUT-OUTPUT SECTION.
+009500 FILE-CONTROL.
+009600*
+010800     SELECT SCRNFILE
+010900         ASSIGN TO "SCRNFILE",  "DISK",     NODISPLAY,
+011000         ORGANIZATION    IS SEQUENTIAL
+011100         ACCESS MODE     IS SEQUENTIAL
+011200         FILE STATUS     IS FILSTAT.
+011300
+010800     SELECT SRCETEXT
+010900         ASSIGN TO "SRCETEXT",  "DISK",     NODISPLAY,
+011000         ORGANIZATION    IS SEQUENTIAL
+011100         ACCESS MODE     IS SEQUENTIAL
+011200         FILE STATUS     IS FILSTAT.
+011300
+011400/*****************************************************************
+011500*                                                                *
+011600*                      DATA DIVISION - FILE SECTION              *
+011700*                                                                *
+011800******************************************************************
+011900*
+012000 DATA DIVISION.
+012100 FILE SECTION.
+012200*
+012900 FD  SCRNFILE
+013000     LABEL RECORDS ARE STANDARD
+013100     RECORD CONTAINS   2000 CHARACTERS
+013200     VALUE OF SPACE    IS REC-COUNT
+013300     VALUE OF FILENAME IS FIL-FOR-SCRNFILE
+013400              LIBRARY  IS LIB-FOR-SCRNFILE
+013500              VOLUME   IS VOL-FOR-SCRNFILE.
+013600 01  SCRN-RECORD.
+           03  SCRN-ORDER-AREA            PIC X(004).
+013700     03  SCRN-LINE OCCURS 24 TIMES.
+013800         05  SCRN-80-LINE           PIC X(080).
+           03  SCRN-FILLER                PIC X(076).
+
+012900 FD  SRCETEXT
+013000     LABEL RECORDS ARE STANDARD
+013100     RECORD CONTAINS   80 CHARACTERS
+013200     VALUE OF SPACE    IS COPY-REC-COUNT
+013300     VALUE OF FILENAME IS FIL-FOR-SRCETEXT
+013400              LIBRARY  IS LIB-FOR-SRCETEXT
+013500              VOLUME   IS VOL-FOR-SRCETEXT.
+013600 01  SRCE-RECORD.
+013700     03  COPY-O1                         PIC X(007).
+013800     03  COPY-O8                         PIC X(065).
+           03  COPY-73                         PIC X(008).
+      *
+013900/*****************************************************************
+014000*                                                                *
+014100*                         WORKING STORAGE                        *
+014200*                                                                *
+014300******************************************************************
+014400*
+014500 WORKING-STORAGE SECTION.
+      *
+      ******************************************************************
+      * SOURCE CODE AREA                                               *
+      ******************************************************************
+      *
+        01  LINE001   PIC X(30) VALUE
+            "       01  DISPLAY-REC.     ".
+        01  LINE002   PIC X(53) VALUE
+            "           05  LIB-VERSION PIC X VALUE DEC-BYTE-11.".
+        01  LINE003   PIC X(53) VALUE
+            "           05  FILLER PIC X(8) VALUE SPACES.       ".
+        01  LINE004.
+            05  FILLER PIC X(39) VALUE
+            "           05  FILLER PIC X(32) VALUE ".
+            05  FILLER PIC X VALUE CHAR-22.
+            05  FILER  PIC X(32) VALUE
+                             "DISPLAY-REC                     ".
+            05  FILLER PIC X VALUE CHAR-22.
+            05  FILLER PIC X VALUE ".".
+       01  WSA-COBOL-1     PIC X(23) VALUE
+           "           05  FILLER.".
+
+       01  WSA-COBOL-2.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-OCCURS-VERTICAL-1     ".
+           05  FILLER      PIC X(25) VALUE
+               "PIC X VALUE DEC-BYTE-0.".
+
+       01  WSA-COBOL-3.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-OCCURS-VERTICAL-0     ".
+           05  FILLER      PIC X(25) VALUE
+               "PIC X VALUE DEC-BYTE-0.".
+
+       01  WSA-COBOL-4.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-VERTICAL-OFFSET       ".
+           05  FILLER      PIC X(25) VALUE
+               "PIC X VALUE DEC-BYTE-1.".
+
+       01  WSA-COBOL-5.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-OCCURS-HORIZONTAL     ".
+           05  FILLER      PIC X(25) VALUE
+               "PIC X VALUE DEC-BYTE-0.".
+
+       01  WSA-COBOL-6.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-ROW-POSITION          ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  ROW-BYTE-POS  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-7.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-COLUMN-POSITION       ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  COLUMN-BYTE-POS  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-8.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-ITEM-LENGTH   COMP    ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC 9999 VALUE ".
+           05  FIELD-LENGTH-POS  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-9.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-ITEM-DECIMAL-POINT    ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  ITEM-DEC-POINT  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-10.
+           05  FILLER      PIC X(47) VALUE
+               "               10  DISP-ITEM-EDIT-MASK.    ".
+
+       01  WSA-COBOL-11.
+           05  FILLER      PIC X(47) VALUE
+               "                   15  FILLER              ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  FILLER-15-1  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-12.
+           05  FILLER      PIC X(47) VALUE
+               "                   15  FILLER              ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  FILLER-15-2  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-13.
+           05  FILLER      PIC X(47) VALUE
+               "                   15  FILLER              ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  FILLER-15-3  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-14.
+           05  FILLER      PIC X(47) VALUE
+               "                   15  FILLER              ".
+           05  FILLER      PIC X(21) VALUE
+               "PIC X VALUE DEC-BYTE-".
+           05  FILLER-15-4  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-15.
+           05  FILLER      PIC X(15) VALUE
+               "           05  ".
+           05  FIELD-FAC-NAME  PIC X(30) VALUE SPACES.
+
+       01  WSA-COBOL-16.
+           05  FILLER      PIC X(36) VALUE
+               "               PIC X VALUE DEC-BYTE-".
+           05  FIELD-FAC-BYTE  PIC X(3) VALUE SPACES.
+           05  FILLER      PIC X VALUE ".".
+
+       01  WSA-COBOL-17.
+           05  FILLER      PIC X(15) VALUE
+               "           05  ".
+           05  FIELD-NAME  PIC X(30) VALUE SPACES.
+           05  FILLER      PIC X(4) VALUE "PIC ".
+           05  FIELD-PICTURE PIC X(20) VALUE SPACES.
+
+       01  WSA-COBOL-18.
+           05  FILLER      PIC X(22) VALUE
+               "                VALUE ".
+           05  FILLER      PIC X VALUE CHAR-22.
+           05  FIELD-VALUE PIC X(57) VALUE SPACES.
+
+       01  WSA-COBOL-19.
+           05  FILLER      PIC X(12) VALUE
+               "      -     ".
+           05  FILLER      PIC X VALUE CHAR-22.
+           05  FIELD-VALUE-CONT PIC X(50) VALUE SPACES.
+
+
+014600******************************************************************
+014700*                   FILE CONTROL STATUS SWITCHES                 *
+014800******************************************************************
+014900 01  FILSTAT.
+015000     03  ERR-FLAG                   PIC X(01).
+015100     03  PFK-BYTE                   PIC X(01).
+015700******************************************************************
+015800*               EXTERNAL FILE LOCATION DEFINITIONS               *
+015900******************************************************************
+016000 01  REC-COUNT                      PIC 9(4)  VALUE 3300.
+016000 01  COPY-REC-COUNT                 PIC 9(4)  VALUE 3300.
+016400 01  FIL-FOR-SCRNFILE                PIC X(8)  VALUE SPACES.
+016500 01  LIB-FOR-SCRNFILE                PIC X(8)  VALUE SPACES.
+016600 01  VOL-FOR-SCRNFILE                PIC X(6)  VALUE SPACES.
+001640 01  FIL-FOR-SRCETEXT               PIC X(8)  VALUE SPACES.
+016500 01  LIB-FOR-SRCETEXT               PIC X(8)  VALUE SPACES.
+016600 01  VOL-FOR-SRCETEXT               PIC X(6)  VALUE SPACES.
+       01  INPUT-STRING                   PIC X(79) VALUE SPACES.
+       01  OUTPUT-STRING                  PIC X(79) VALUE SPACES.
+       01  STRING-KEY                     PIC X(2) VALUE SPACES.
+       01  STRING-LENGTH.
+           05  S-LEN-1                    BINARY VALUE 0.
+           05  S-LEN-2                    BINARY VALUE 80.
+ 
+016700******************************************************************
+016800*             WORKSTATION FILE CONTROL DESCRIPTIONS              *
+016900******************************************************************
+017000 01  ORDERAREA.
+017100     03  ROW-NUMBER                 PIC X(1).
+017200     03  WRITE-CONTROL              PIC X(1).
+017300     03  CURSOR-COLUMN              PIC X(1).
+017400     03  CURSOR-ROW                 PIC X(1).
+017500
+       01  PROT-SCREEN                    PIC X.
+017600 01  LINENUM                        PIC 9(02) VALUE 1.
+017700 01  PF-KEY                         PIC 9(02) VALUE 0.
+017800     88  CONFIRM                    VALUE 0.
+           88  USE-OLD                    VALUE 0.
+           88  CREATE-NEW                 VALUE 01.
+019300     88  HELP                       VALUE 02.
+           88  SHOW-POS                   VALUE 03.
+           88  MOVE-UP                    VALUE 04.
+           88  MOVE-DOWN                  VALUE 05.
+           88  COPY-UP                    VALUE 06.
+           88  COPY-DOWN                  VALUE 07.
+           88  ROLL-UP                    VALUE 08.
+           88  ROLL-DOWN                  VALUE 09.
+           88  CENTER-LINE                VALUE 10.
+018800     88  REFRESH                    VALUE 11.
+           88  SHOW-SCREEN                VALUE 14.
+019400     88  SAVE-FILE                  VALUE 15.
+019600     88  DONE                       VALUE 16.
+020100     88  FINISHED                   VALUE 32.
+020500 01  HOLD-MOD-ROW                    BINARY.
+020500 01  HOLD-MOD-COL                    BINARY.
+020200
+      *$WANG_CODE
+020300 01  CURSOR-POS.
+020400     03  MOD-COL                    BINARY.
+020500     03  MOD-ROW                    BINARY.
+020600 01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+020700     03  FILLER                     PIC X(01).
+020800     03  CURS-COL                   PIC X(01).
+020900     03  FILLER                     PIC X(01).
+021000     03  CURS-ROW                   PIC X(01).
+      *$WANG_END
+      *$VAX_CODE
+020300*01  CURSOR-POS.
+020400*    03  MOD-COL                    PIC S9(4) COMP.
+020500*    03  MOD-ROW                    PIC S9(4) COMP.
+020600*01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+020800*    03  CURS-COL                   PIC X(01).
+020700*    03  FILLER                     PIC X(01).
+021000*    03  CURS-ROW                   PIC X(01).
+020900*    03  FILLER                     PIC X(01).
+      *$VAX_END 
+
+036400 01  WSA-DATE-AREA.
+036500     05  WSA-DATE            PIC 9(6) VALUE 0.
+036600     05  WSA-DATE-X REDEFINES WSA-DATE.
+036700         10  WSA-YY PIC X(2).
+036800         10  WSA-MM PIC X(2).
+036900         10  WSA-DD PIC X(2).
+037000
+037100 01  WSA-TIME-AREA.
+037200     05  WSA-TIME          PIC 9(8) VALUE 0.
+037300     05  WSA-TIME-X REDEFINES WSA-TIME PIC X(8).
+037400
+037800 01  WSA-DOC-NAME   PICTURE IS  X(20)       VALUE SPACES.
+038300
+038400 01  WSA-EDIT-AREA.
+038500     05  WSA-EDIT-LINES OCCURS 24 TIMES.
+038600         10  WSA-LINE            PIC  X(80).
+038700
+051000 01  WSA-DONE                PIC X VALUE "N".
+051000 01  ON-LINE-ONE             PIC X VALUE "N".
+051100 01  WSA-RECORD-COUNT        PIC 9(10) VALUE 0.
+051200 01  WSA-PAGE-IND            PIC 99 VALUE 0.
+051300 01  WSA-MOVE-IND            PIC 99 VALUE 0.
+051400 01  WSA-CLEAR-IND           PIC 99 VALUE 0.
+051500 01  WSA-BOTTOM-LINE         PIC 99 VALUE 0.
+051600 01  WSA-TOP-LINE            PIC 99 VALUE 0.
+051700 01  WSA-SCREEN-IND          PIC 99 VALUE 0.
+051800 01  WSA-LINE-IND            PIC 99 VALUE 0.
+051800 01  WSA-COPY-LINE-IND       PIC 99 VALUE 0.
+051800 01  WSA-COPY-PAGE-IND       PIC 99 VALUE 0.
+051900 01  WSA-LAST-PAGE           PIC 99 VALUE 0.
+052000 01  WSA-LAST-BLANK          PIC S99 VALUE 0.
+052100 01  WSA-COMPUTE-LAST        PIC 99V9(15) VALUE 0.
+052200 01  WSA-FAC-1               PIC X  VALUE SPACES.
+052300 01  WSA-ERROR               PIC X(50) VALUE SPACES.
+       01  WSA-DO-COPY             PIC X     VALUE "N".
+052400 01  WSA-ERROR-1             PIC X(60) VALUE SPACES.
+052500 01  WSA-HOLD-LINE           PIC 99 VALUE 00.
+052600 01  WSA-HOLD-PAGE           PIC 99 VALUE 00.
+052700 01  WSA-RENAME              PIC X VALUE SPACES.
+052800 01  WSA-IND-1               PIC 999 VALUE 0.
+052900 01  WSA-IND-2               PIC 999 VALUE 0.
+053000 01  WSA-IND-3               PIC 999 VALUE 0.
+053100 01  WSA-IND-4               PIC 999 VALUE 0.
+053200
+053300/*****************************************************************
+053400* FIND PARAM.
+053500******************************************************************
+053600 01  STARTER.
+053700     05  FILLER  USAGE IS BINARY VALUE 0.
+053800     05  START-INTEGER USAGE IS BINARY VALUE 1.
+053900 01  COUNTER.
+054000     05  FILLER  USAGE IS BINARY VALUE 0.
+054100     05  COUNT-INTEGER USAGE IS BINARY VALUE 1.
+054200 01  RECEIVER         PIC X(22) VALUE SPACES.
+054300 01  ENTRIES.
+054400     05  FILLER        USAGE IS BINARY VALUE 0.
+054500     05  ENTRY-COUNT   USAGE IS BINARY VALUE 0.
+054600
+054700* SCRATCH DATA.
+054800 01  SCRATCH-TYPE        PIC X(1) VALUE "F".
+054900 01  SCRATCH-FILE        PIC X(8) VALUE SPACES.
+055000 01  SCRATCH-LIB         PIC X(8) VALUE SPACES.
+055100 01  SCRATCH-VOL         PIC X(6) VALUE SPACES.
+055200 01  SCRATCH-RTN.
+055300     05  SCRATCH-1       BINARY VALUE 0.
+055400     05  SCRATCH-RETURN  BINARY VALUE 0.
+055500
+055600 01  RENAME-RTN.
+055700     05  RENAME-1       BINARY VALUE 0.
+055800     05  RENAME-RETURN  BINARY VALUE 0.
+055900 01  RENAME-TYPE         PIC X  VALUE SPACES.
+056000 01  WSA-NEW-OPEN        PIC X VALUE "N".
+056100 01  WSA-OLD-OPEN        PIC X VALUE "N".
+       01  WSA-PROCESS-LINE.
+           05  WSA-PROCESS-BYTE OCCURS 80 TIMES.
+               10  WSA-P-B             PIC X.
+       01  WSA-PROCESS-IND      PIC 99 VALUE 0.
+       01  WSA-HOLD-FIELD.
+           05  WSA-HOLD-BYTE OCCURS 80 TIMES.
+               10  WSA-H-B             PIC X.
+       01  WSA-HOLD-IND            PIC 99.
+       01  WSA-VALUE-IND            PIC 99.
+       01  WSA-HOLD-LENGTH         PIC 99.
+       01  WSA-FIRST-BYTE          PIC X.
+       01  WSA-FIELD-ROW           PIC 99.
+       01  WSA-NUMBER-AREA.
+           05  WSA-DEC-NUMBER      PIC 999.
+           05  WSA-NUMBER-3 REDEFINES WSA-DEC-NUMBER.
+               10  WSA-THREE       PIC XXX.
+           05  WSA-NUMBER-2 REDEFINES WSA-DEC-NUMBER.
+               10  FILLER-N-1     PIC X.
+               10  WSA-TWO        PIC XX.
+           05  WSA-NUMBER-1 REDEFINES WSA-DEC-NUMBER.
+               10  FILLER-N-2      PIC XX.
+               10  WSA-ONE         PIC X.
+       01  WSA-HOLD-DEC            PIC XXX.
+       01  WSA-TEMP-FAC.
+           05  FILLER              PIC X(5) VALUE "F-ROW".
+           05  WSA-FAC-ROW         PIC X(2) VALUE SPACES.
+           05  FILLER              PIC X(4) VALUE "-COL".
+           05  WSA-FAC-COL         PIC X(2) VALUE SPACES.
+       01  WSA-TEMP-NAME.
+           05  FILLER              PIC X(3) VALUE "ROW".
+           05  WSA-NAME-ROW         PIC X(2) VALUE SPACES.
+           05  FILLER              PIC X(4) VALUE "-COL".
+           05  WSA-NAME-COL         PIC X(2) VALUE SPACES.
+       01  WSA-HOLD-MASK             PIC 999 VALUE 0.
+       01  WSA-HOLD-TEST             PIC 999 VALUE 0.
+       01  WSA-HOLD-TEST-1           PIC 999 VALUE 0.
+       01  WSA-HOLD-TEST-2           PIC 999 VALUE 0.
+       01  WSA-PIC-X-TALLY           PIC 99 VALUE 0.
+       01  WSA-PIC-XX-TALLY          PIC 99 VALUE 0.
+       01  WSA-PIC-Z-TALLY           PIC 99 VALUE 0.
+       01  WSA-PIC-9-TALLY           PIC 99 VALUE 0.
+       01  WSA-PIC-MINUS-TALLY       PIC 99 VALUE 0.
+       01  WSA-PIC-PLUS-TALLY        PIC 99 VALUE 0.
+       01  WSA-PIC-COMMA-TALLY       PIC 99 VALUE 0.
+       01  WSA-PIC-PERIOD-TALLY      PIC 99 VALUE 0.
+       01  WSA-PIC-VALUE             PIC X  VALUE "N".
+       01  WSA-PIC-VALUE-CONT        PIC X  VALUE "N".
+       01  WSA-PIC-X.
+           05  FILLER         PIC X(3) VALUE "X (".
+           05  WSA-PIC-FIELD  PIC X(3) VALUE SPACES. 
+           05  FILLER         PIC X    VALUE ")".
+           05  WSA-PERIOD     PIC X    VALUE SPACES.
+
+       01  WSA-PIC-VALUE-AREA.
+           02  WSA-TOP-VALUE.
+               05  WSA-PIC-A OCCURS  81 TIMES.
+                   10  WSA-PIC-B      PIC X.
+           02  WSA-FULL-VALUE REDEFINES WSA-TOP-VALUE.
+               05  WSA-FIRST-LINE-VALUE  PIC X(49).
+               05  WSA-SECOND-LINE-VALUE PIC X(32).
+
+       01  FILLER        PIC X(1000) VALUE SPACES.  
+
+       01  WSA-MASK-AREA.
+           05 WSA-MASK-TOP.
+               10  WSA-MASK-A OCCURS 32 TIMES.
+                   15  WSA-MASK-B     PIC X.
+           05 WSA-MASK-BOTTOM REDEFINES WSA-MASK-TOP.
+               10  WSA-MASK-1         PIC X(8).
+               10  WSA-MASK-2         PIC X(8).
+               10  WSA-MASK-3         PIC X(8).
+               10  WSA-MASK-4         PIC X(8).
+       01 WSA-BINARY.
+           05  WSA-BINARY-1     OCCURS 8 TIMES.
+               10  WSA-BIN-1     PIC 9.
+056200
+       LINKAGE SECTION.
+037500 01  WSA-IN-FILE-NAME   PICTURE IS  X(256)       VALUE SPACES.
+037500 01  WSA-OUT-FILE-NAME  PICTURE IS  X(256)       VALUE SPACES.
+
+056900 PROCEDURE DIVISION USING WSA-IN-FILE-NAME, 
+                                WSA-OUT-FILE-NAME.
+057000 START-PROGRAM.
+057100     ACCEPT WSA-TIME FROM TIME.
+           MOVE  000       TO RETURN-CODE.
+057800     PERFORM INITIALIZATION.
+057900     PERFORM MAIN-PROCESS.
+058000     PERFORM TERMINATION.
+058200
+060300 INITIALIZATION.
+           MOVE SPACES        TO SCRN-RECORD.
+           MOVE "N"           TO PROT-SCREEN.
+065300
+066500 TERMINATION.
+           PERFORM ZZ-ALL-DONE.
+
+065800 MAIN-PROCESS.
+075700     PERFORM W-READ-RECORD.
+075700     PERFORM Y-WRITE-RECORD.
+           PERFORM ZZ-PROCESS-LINE THRU ZZ-EXIT VARYING
+             WSA-LINE-IND FROM 1 BY 1 UNTIL WSA-LINE-IND > 24.
+           CLOSE SRCETEXT.
+088900
+       W-READ-RECORD.
+      *$WANG_CODE 
+           OPEN INPUT SCRNFILE.
+      *$WANG_END
+      *$VAX_CODE
+      *    MOVE "00"             TO FILSTAT.
+      *    MOVE WSA-IN-FILE-NAME TO N-SCRNFILE.
+      *    IF WSA-IN-FILE-NAME = SPACES
+      *       DISPLAY "%-F- Make file error No FILE NAME"
+      *    ELSE
+      *       OPEN INPUT SCRNFILE ALLOWING NO OTHERS.
+      *    IF FILSTAT NOT = "00"
+      *       DISPLAY "%-E- Make file error Invalid FILE NAME".
+      *$VAX_END
+
+           PERFORM READ-A-REC-FROM-SCRNFILE.
+           CLOSE SCRNFILE.
+
+137600 READ-A-REC-FROM-SCRNFILE.
+137700     READ SCRNFILE
+137800       AT END
+               MOVE  SPACES  TO SCRN-RECORD.
+
+138100     MOVE  SPACES      TO WSA-EDIT-AREA.
+138100     MOVE  SCRN-RECORD TO WSA-EDIT-AREA.
+
+198700 Y-WRITE-RECORD.
+           MOVE VOL-FOR-SCRNFILE TO VOL-FOR-SRCETEXT.
+           MOVE "SCRNSRCE"       TO LIB-FOR-SRCETEXT.
+           MOVE FIL-FOR-SCRNFILE TO FIL-FOR-SRCETEXT.
+      *$VAX_CODE
+      *    MOVE "COB"       TO WISPFILEXT.
+      *$VAX_END
+      *$WANG_CODE 
+           OPEN OUTPUT SRCETEXT.
+      *$WANG_END
+      *$VAX_CODE
+      *    MOVE "00"             TO FILSTAT.
+      *    MOVE WSA-OUT-FILE-NAME TO N-SRCETEXT.
+      *    IF WSA-IN-FILE-NAME = SPACES
+      *       DISPLAY "%-F- Make file error No FILE NAME"
+      *    ELSE
+      *       OPEN OUTPUT SRCETEXT ALLOWING NO OTHERS.
+      *    IF FILSTAT NOT = "00"
+      *       DISPLAY "%-E- Make file error Invalid FILE NAME".
+      *$VAX_END
+
+           MOVE SPACES    TO SRCE-RECORD.
+           MOVE LINE001   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES    TO SRCE-RECORD.
+           MOVE LINE002   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES    TO SRCE-RECORD.
+           MOVE LINE003   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES    TO SRCE-RECORD.
+           MOVE LINE004   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+
+       Z-WRITE-RECORD.  
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-1   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-2   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-3   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-4   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-5   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-6   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-7   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-8   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-9   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-10 TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-11 TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-12   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-13   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-14   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-15   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-16   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-17   TO SRCE-RECORD.
+           WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-18   TO SRCE-RECORD.
+           IF  WSA-PIC-VALUE = "Y"
+               WRITE SRCE-RECORD.
+           MOVE SPACES       TO SRCE-RECORD.
+           MOVE WSA-COBOL-19   TO SRCE-RECORD.
+           IF  WSA-PIC-VALUE-CONT = "Y"
+               WRITE SRCE-RECORD.
+
+       ZZ-PROCESS-LINE.
+           MOVE WSA-LINE(WSA-LINE-IND)   TO WSA-PROCESS-LINE.
+           MOVE 1                        TO WSA-PROCESS-IND.
+
+       ZZ-NEW-FIELD.
+           MOVE SPACES TO WSA-HOLD-FIELD
+                          WSA-PIC-VALUE-AREA.
+           MOVE 1      TO WSA-HOLD-IND.
+           MOVE 0      TO WSA-HOLD-LENGTH.
+           MOVE "N"    TO WSA-FIRST-BYTE
+                          WSA-PIC-VALUE-CONT
+                          WSA-PIC-VALUE.         
+           MOVE 0      TO WSA-FIELD-ROW
+                          WSA-DEC-NUMBER
+                          WSA-HOLD-TEST
+                          WSA-HOLD-TEST-1
+                          WSA-HOLD-TEST-2
+                          WSA-PIC-Z-TALLY
+                          WSA-PIC-9-TALLY
+                          WSA-PIC-PLUS-TALLY
+                          WSA-PIC-MINUS-TALLY
+                          WSA-PIC-COMMA-TALLY
+                          WSA-PIC-PERIOD-TALLY
+                          WSA-PIC-X-TALLY
+                          WSA-PIC-XX-TALLY.
+           MOVE SPACES TO ITEM-DEC-POINT.
+           MOVE "00000000000000000000000000000000000" TO 
+                 WSA-MASK-AREA.
+           PERFORM  ZZA-PROCESS-BYTE THRU ZZA-EXIT.
+
+           IF  WSA-HOLD-FIELD NOT = SPACES OR
+               WSA-FIELD-ROW > 1
+               PERFORM ZZB-DO-ROW
+               PERFORM ZZB-DO-COL
+               PERFORM ZZB-DO-SIZE
+               PERFORM ZZB-DO-PIC THRU ZZB-DO-PIC-EXIT
+               PERFORM ZZB-DO-VALUE
+               PERFORM Z-WRITE-RECORD
+               IF WSA-PROCESS-IND < 80
+                  GO TO ZZ-NEW-FIELD.
+
+       ZZ-EXIT.
+           EXIT.
+
+       ZZA-PROCESS-BYTE.
+           IF WSA-P-B(WSA-PROCESS-IND) = SPACES
+              IF WSA-PROCESS-IND > 79 OR WSA-FIRST-BYTE = "Y"
+                 GO TO ZZA-EXIT
+              ELSE
+                 ADD 1                  TO WSA-PROCESS-IND
+                 GO TO ZZA-PROCESS-BYTE.
+
+           IF  WSA-FIRST-BYTE = "N"
+               MOVE "Y"                  TO WSA-FIRST-BYTE
+               MOVE WSA-PROCESS-IND      TO WSA-FIELD-ROW.
+
+           MOVE WSA-P-B(WSA-PROCESS-IND) TO WSA-H-B(WSA-HOLD-IND).
+           IF WSA-PROCESS-IND > 79
+              GO TO ZZA-EXIT
+           ELSE
+              ADD 1                         TO WSA-HOLD-IND
+              ADD 1                         TO WSA-HOLD-LENGTH        
+              ADD 1                         TO WSA-PROCESS-IND
+              GO TO ZZA-PROCESS-BYTE.
+
+       ZZA-EXIT.
+           EXIT.
+
+       ZZ-ALL-DONE.
+094500        EXIT PROGRAM.
+
+       ZZB-DO-VALUE.
+           MOVE SPACES  TO WSA-PIC-VALUE-AREA.
+           IF  WSA-PIC-VALUE = "Y"
+               PERFORM  ZZC-PUT-IN-VALUE THRU ZZC-EXIT
+               VARYING WSA-HOLD-IND FROM 1 BY 1 UNTIL 
+               WSA-HOLD-IND > 80.
+           MOVE  WSA-FIRST-LINE-VALUE  TO FIELD-VALUE.
+           MOVE  WSA-SECOND-LINE-VALUE TO FIELD-VALUE-CONT.
+           INSPECT FIELD-VALUE REPLACING ALL "_" BY
+           " ".
+
+       ZZB-DO-PIC.
+           MOVE "N"         TO  WSA-PIC-VALUE.
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-X-TALLY
+           FOR ALL "X".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-XX-TALLY
+           FOR ALL "x".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-Z-TALLY
+           FOR ALL "Z".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-9-TALLY
+           FOR ALL "9".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-PLUS-TALLY
+           FOR ALL "+".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-MINUS-TALLY
+           FOR ALL "-".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-COMMA-TALLY
+           FOR ALL ",".
+
+           INSPECT  WSA-HOLD-FIELD TALLYING WSA-PIC-PERIOD-TALLY
+           FOR ALL ".".
+
+           COMPUTE  WSA-HOLD-TEST-1 = WSA-PIC-PERIOD-TALLY + 
+                                      WSA-PIC-COMMA-TALLY + 
+                                      WSA-PIC-MINUS-TALLY +
+                                      WSA-PIC-PLUS-TALLY +
+                                      WSA-PIC-9-TALLY + 
+                                      WSA-PIC-Z-TALLY.
+ 
+           COMPUTE  WSA-HOLD-TEST-2 = WSA-PIC-PERIOD-TALLY + 
+                                      WSA-PIC-COMMA-TALLY + 
+                                      WSA-PIC-MINUS-TALLY +
+                                      WSA-PIC-PLUS-TALLY +
+                                      WSA-PIC-Z-TALLY.
+ 
+           IF  WSA-HOLD-TEST-2 = WSA-HOLD-LENGTH OR
+               WSA-HOLD-TEST-1 = WSA-HOLD-LENGTH
+               GO TO  ZZB-PIC-NUMBER.
+
+           IF  WSA-HOLD-LENGTH = WSA-PIC-XX-TALLY OR
+               WSA-HOLD-LENGTH = WSA-PIC-X-TALLY
+               MOVE "N"         TO  WSA-PIC-VALUE
+               MOVE "."         TO  WSA-PERIOD
+               MOVE "0  "       TO  ITEM-DEC-POINT
+                                    FILLER-15-1
+                                    FILLER-15-2
+                                    FILLER-15-3
+                                    FILLER-15-4
+               MOVE "129"       TO  FIELD-FAC-BYTE
+               MOVE  WSA-HOLD-LENGTH TO  WSA-DEC-NUMBER
+               MOVE  WSA-NUMBER-3    TO  WSA-PIC-FIELD
+               MOVE  WSA-PIC-X       TO  FIELD-PICTURE
+               GO TO ZZB-DO-PIC-EXIT
+           ELSE
+               MOVE "141"       TO  FIELD-FAC-BYTE
+               MOVE "0  "       TO  ITEM-DEC-POINT
+                                    FILLER-15-1
+                                    FILLER-15-2
+                                    FILLER-15-3
+                                    FILLER-15-4
+               MOVE SPACES           TO  WSA-PERIOD
+               MOVE "Y"              TO  WSA-PIC-VALUE
+               MOVE  WSA-HOLD-LENGTH TO  WSA-DEC-NUMBER
+               MOVE  WSA-NUMBER-3    TO  WSA-PIC-FIELD
+               MOVE  WSA-PIC-X       TO  FIELD-PICTURE
+               GO TO ZZB-DO-PIC-EXIT.
+
+       ZZB-PIC-NUMBER.
+           MOVE "131"       TO  FIELD-FAC-BYTE
+           IF  WSA-PIC-PLUS-TALLY > 0 OR WSA-PIC-MINUS-TALLY > 0
+              COMPUTE  WSA-HOLD-TEST = WSA-HOLD-TEST + 64. 
+
+           IF  WSA-PIC-Z-TALLY = 0
+              COMPUTE  WSA-HOLD-TEST = WSA-HOLD-TEST + 128.
+
+           IF  WSA-H-B(1)  = "-" OR WSA-H-B(1) = "+"
+              COMPUTE  WSA-HOLD-TEST = WSA-HOLD-TEST + 32.
+
+           IF  WSA-PIC-PERIOD-TALLY = 0
+              COMPUTE  WSA-HOLD-TEST = WSA-HOLD-TEST + WSA-PIC-9-TALLY        
+              COMPUTE  WSA-HOLD-TEST = WSA-HOLD-TEST + WSA-PIC-Z-TALLY
+           ELSE
+               PERFORM  ZZC-COUNT-DEC THRU ZZC-COUNT-DEC-EXIT
+               VARYING WSA-HOLD-IND FROM 1 BY 1 UNTIL 
+               WSA-HOLD-IND > WSA-HOLD-LENGTH.
+
+           MOVE  WSA-HOLD-TEST TO  WSA-DEC-NUMBER.
+           PERFORM  ZZZ-DO-NUMBER.
+           MOVE  WSA-HOLD-DEC  TO ITEM-DEC-POINT.
+           MOVE SPACE TO WSA-PIC-VALUE-AREA.
+           PERFORM  ZZC-PUT-IN-PIC THRU ZZC-PIC-EXIT
+                VARYING WSA-HOLD-IND FROM 1 BY 1 UNTIL 
+                WSA-HOLD-IND > 80.
+           MOVE  WSA-PIC-VALUE-AREA TO FIELD-PICTURE.
+           PERFORM  ZZC-PUT-IN-MASK THRU ZZC-MASK-EXIT
+                VARYING WSA-HOLD-IND FROM 1 BY 1 UNTIL 
+                WSA-HOLD-IND > 32.
+           MOVE 0     TO WSA-HOLD-MASK.
+           MOVE WSA-MASK-1   TO WSA-BINARY.
+           PERFORM  ZZC-DO-BINARY.
+           MOVE  WSA-HOLD-DEC  TO FILLER-15-4.
+           MOVE 0     TO WSA-HOLD-MASK.
+           MOVE WSA-MASK-2   TO WSA-BINARY.
+           PERFORM  ZZC-DO-BINARY.
+           MOVE  WSA-HOLD-DEC  TO FILLER-15-3.
+           MOVE 0     TO WSA-HOLD-MASK.
+           MOVE WSA-MASK-3   TO WSA-BINARY.
+           PERFORM  ZZC-DO-BINARY.
+           MOVE  WSA-HOLD-DEC  TO FILLER-15-2.
+           MOVE 0     TO WSA-HOLD-MASK.
+           MOVE WSA-MASK-4   TO WSA-BINARY.
+           PERFORM  ZZC-DO-BINARY.
+           MOVE  WSA-HOLD-DEC  TO FILLER-15-1.
+ 
+       ZZB-DO-PIC-EXIT.
+           EXIT.
+
+       ZZB-DO-ROW.
+           MOVE  SPACES        TO WSA-FAC-ROW                   
+                                  WSA-NAME-ROW.
+           MOVE  WSA-LINE-IND TO  WSA-DEC-NUMBER.
+           PERFORM  ZZZ-DO-NUMBER.
+           MOVE  WSA-HOLD-DEC  TO ROW-BYTE-POS.                  
+           MOVE  WSA-TWO       TO WSA-FAC-ROW                   
+                                  WSA-NAME-ROW.
+
+       ZZB-DO-COL.
+           MOVE  SPACES        TO WSA-FAC-COL                   
+                                  WSA-NAME-COL.
+           MOVE  WSA-FIELD-ROW TO  WSA-DEC-NUMBER.
+           ADD   1             TO  WSA-DEC-NUMBER.
+           PERFORM  ZZZ-DO-NUMBER.
+           MOVE  WSA-HOLD-DEC  TO COLUMN-BYTE-POS.
+           MOVE  WSA-TWO       TO WSA-FAC-COL                   
+                                  WSA-NAME-COL.
+           MOVE  WSA-TEMP-NAME  TO FIELD-NAME.
+           MOVE  WSA-TEMP-FAC   TO FIELD-FAC-NAME.
+
+       ZZB-DO-SIZE.
+           MOVE  WSA-HOLD-LENGTH TO  WSA-DEC-NUMBER.
+           PERFORM  ZZZ-DO-NUMBER.
+           MOVE  WSA-HOLD-DEC  TO FIELD-LENGTH-POS.
+
+       ZZC-DO-BINARY.
+           COMPUTE WSA-HOLD-MASK = (WSA-BIN-1(1) * 128) +
+                                   (WSA-BIN-1(2) * 64) +
+                                   (WSA-BIN-1(3) * 32) +
+                                   (WSA-BIN-1(4) * 16) +
+                                   (WSA-BIN-1(5) * 8) +
+                                   (WSA-BIN-1(6) * 4) +
+                                   (WSA-BIN-1(7) * 2) +
+                                   (WSA-BIN-1(8) * 1).
+           MOVE  WSA-HOLD-MASK   TO  WSA-DEC-NUMBER.
+           PERFORM  ZZZ-DO-NUMBER.
+
+       ZZC-PUT-IN-VALUE.
+           MOVE  WSA-HOLD-IND TO WSA-VALUE-IND.
+           IF  WSA-HOLD-IND > 48
+               MOVE "Y"    TO WSA-PIC-VALUE-CONT
+           ELSE
+               MOVE "N"    TO WSA-PIC-VALUE-CONT.
+           IF  WSA-H-B(WSA-HOLD-IND) NOT = SPACES
+               MOVE WSA-H-B(WSA-HOLD-IND) TO 
+                    WSA-PIC-B(WSA-VALUE-IND)
+           ELSE
+              IF  WSA-HOLD-IND = 49 OR 
+                  WSA-HOLD-IND = 50
+                  MOVE SPACES  TO WSA-PIC-B(WSA-VALUE-IND)
+                  ADD 1          TO WSA-VALUE-IND
+                  MOVE "."       TO WSA-PIC-B(WSA-VALUE-IND)
+                  MOVE 81        TO WSA-HOLD-IND
+               ELSE
+                  MOVE CHAR-22   TO WSA-PIC-B(WSA-VALUE-IND)
+                  ADD 1          TO WSA-VALUE-IND
+                  MOVE "."       TO WSA-PIC-B(WSA-VALUE-IND)
+                  MOVE 81        TO WSA-HOLD-IND.
+
+       ZZC-EXIT.
+           EXIT.
+
+       ZZC-PUT-IN-PIC.
+           MOVE  WSA-HOLD-IND TO WSA-VALUE-IND.
+           IF  WSA-H-B(WSA-HOLD-IND) NOT = SPACES
+               MOVE WSA-H-B(WSA-HOLD-IND) TO 
+                    WSA-PIC-B(WSA-VALUE-IND)
+           ELSE
+              MOVE "."       TO WSA-PIC-B(WSA-VALUE-IND)
+              MOVE 81        TO WSA-HOLD-IND.
+
+       ZZC-PIC-EXIT.
+           EXIT.
+
+       ZZC-PUT-IN-MASK.
+           MOVE  WSA-HOLD-IND TO WSA-VALUE-IND.
+           IF  WSA-H-B(WSA-HOLD-IND) = ","
+               MOVE "1" TO 
+                    WSA-MASK-B(WSA-VALUE-IND)
+            ELSE
+               MOVE "0" TO 
+                    WSA-MASK-B(WSA-VALUE-IND).
+           
+       ZZC-MASK-EXIT.
+           EXIT.
+
+       ZZC-COUNT-DEC.
+           IF  WSA-H-B(WSA-HOLD-IND) = "."
+              MOVE  WSA-HOLD-LENGTH TO WSA-HOLD-IND
+           ELSE
+           IF  WSA-H-B(WSA-HOLD-IND) = "9" OR
+               WSA-H-B(WSA-HOLD-IND) = "Z"
+                  COMPUTE  WSA-HOLD-TEST = WSA-HOLD-TEST + 1.
+
+       ZZC-COUNT-DEC-EXIT.
+           EXIT.
+
+       ZZZ-DO-NUMBER.
+           MOVE SPACES         TO WSA-HOLD-DEC.
+           IF  FILLER-N-2 = "00"
+               MOVE WSA-ONE    TO WSA-HOLD-DEC
+           ELSE
+           IF  FILLER-N-1 = "0"
+               MOVE WSA-TWO    TO WSA-HOLD-DEC
+           ELSE
+               MOVE WSA-THREE  TO WSA-HOLD-DEC.

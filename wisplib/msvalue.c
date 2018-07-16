@@ -1,0 +1,5 @@
+
+msvalue()
+{
+	return(0);
+}

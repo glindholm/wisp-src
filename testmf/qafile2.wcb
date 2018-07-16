@@ -1,0 +1,949 @@
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QAFILE2.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           12/07/90.
+
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           LF IS "0A"
+           NO-ECHO IS "98".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+           SELECT LOG-FILE
+               ASSIGN TO "LOGFILE", "DISK", NODISPLAY,
+               ORGANIZATION  IS SEQUENTIAL
+               ACCESS MODE   IS DYNAMIC
+               FILE STATUS   IS FILSTAT.
+
+           SELECT PRINT-FILE
+               ASSIGN TO "PRTFIL", "PRINTER", DISPLAY,
+               FILE STATUS     IS FILE-PRT-STAT.
+
+005000     SELECT SCRFILE
+005100         ASSIGN TO "SCRFILE",  "PRINTER"
+005200         ORGANIZATION    IS SEQUENTIAL
+005300         ACCESS MODE     IS SEQUENTIAL
+005400         FILE STATUS     IS FSTAT.
+
+           SELECT FILE-C
+               ASSIGN TO "CFILE",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS FILE-C-STAT.
+
+           SELECT FILE-D
+               ASSIGN TO "DFILE",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS INDEXED
+               ACCESS MODE     IS DYNAMIC
+               RECORD KEY      IS FILE-D-KEY1
+               FILE STATUS     IS FILE-D-STAT.
+
+           SELECT CMPFILE
+               ASSIGN TO "CMPFILE",  "PRINTER"
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS FILE-CMP-FSTAT.
+
+           SELECT LARGE-FILE
+               ASSIGN TO "LARGE", "DISK",  NODISPLAY,
+               FILE STATUS     IS FILSTAT.
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+
+       FD  LOG-FILE
+           VALUE OF FILENAME IS LOG-FIL,
+                    LIBRARY  IS LOG-LIB,
+                    VOLUME   IS LOG-VOL.
+
+       01  LOG-RECORD.
+           05  LOG-HEADER           PIC X(8).
+           05  LOG-DATA             PIC X(71).
+           05  LOG-NEWLINE          PIC X(1).
+
+       FD  PRINT-FILE
+           VALUE OF FILENAME IS PRT-FILE-NAME
+                    LIBRARY  IS PRT-LIBRARY
+                    VOLUME   IS PRT-VOLUME.
+
+       01  PRT-RECORD   PIC X(80).
+
+007700 FD  SCRFILE
+007800     RECORD CONTAINS 90 CHARACTERS
+007900     LABEL RECORDS OMITTED
+008000     VALUE OF FILENAME IS W001-FILE
+008100              LIBRARY  IS W001-LIB
+008200              VOLUME   IS W001-VOL.
+008400
+008500 01  PRINT-LINE.
+008600     05  FILLER                  PIC X(090).
+
+       FD  FILE-C
+           RECORD CONTAINS 41 TO 81 COMPRESSED CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-C
+                    LIBRARY  IS LIB-FOR-FILE-C
+                    VOLUME   IS VOL-FOR-FILE-C.
+
+       01  FILE-C-REC41.
+           03  TYPE-C-REC1                   PIC X(1).
+           03  C-VALUE-1                     PIC X(40).
+       01  FILE-C-REC81.
+           03  TYPE-C-REC2                   PIC X(1).
+           03  C-TEXT-1                      PIC X(40).
+           03  C-TEXT-2                      PIC X(40).
+
+       FD  FILE-D
+           RECORD CONTAINS 41 TO 81 COMPRESSED CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-D
+                    LIBRARY  IS LIB-FOR-FILE-D
+                    VOLUME   IS VOL-FOR-FILE-D.
+
+       01  FILE-D-REC41.
+           03  FILE-D-KEY1                   PIC X(1).
+           03  D-VALUE-1                     PIC X(40).
+       01  FILE-D-REC81.
+           03  FILE-D-KEY2                   PIC X(1).
+           03  D-TEXT-1                      PIC X(40).
+           03  D-TEXT-2                      PIC X(40).
+
+       FD  CMPFILE
+      *    RECORD CONTAINS 500 COMPRESSED CHARACTERS
+           LABEL RECORDS OMITTED
+           VALUE OF FILENAME IS CMP-FILE-NAME
+                    LIBRARY  IS CMP-LIBRARY
+                    VOLUME   IS CMP-VOLUME.
+
+       01  CMP-PRINT-LINE.
+           05  FILLER                  PIC X(200).
+
+       FD  LARGE-FILE
+           VALUE OF FILENAME IS "LARGE".
+
+       01  LARGE-RECORD.
+           05  LARGE-CNT      PIC 999999.
+           05  LARGE-DATA     PIC X(74).
+
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+
+       WORKING-STORAGE SECTION.
+
+       01  INDEX-COUNTER                  PIC 9(5).
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       01  FILE-C-STAT                    PIC X(2).
+       01  FILE-D-STAT                    PIC X(2).
+       01  FILE-PRT-STAT                  PIC X(2).
+       01  FILE-CMP-FSTAT                 PIC X(2).
+
+      ******************************************************************
+
+       01  RETCOD.
+           05  B4          BINARY VALUE 0.
+           05  RET-CODE BINARY VALUE 0.
+       01  RNUM   PIC 9(10).
+
+       01  FIL-FOR-FILE-C                 PIC X(8) VALUE "CFILE".
+       01  LIB-FOR-FILE-C                 PIC X(8) VALUE SPACES.
+       01  VOL-FOR-FILE-C                 PIC X(6) VALUE SPACES.
+       01  C-SCREEN-TITLE                 PIC X(40) VALUE SPACES.
+
+       01  FIL-FOR-FILE-D                 PIC X(8) VALUE "DFILE".
+       01  LIB-FOR-FILE-D                 PIC X(8) VALUE SPACES.
+       01  VOL-FOR-FILE-D                 PIC X(6) VALUE SPACES.
+       01  D-SCREEN-TITLE                 PIC X(40) VALUE SPACES.
+
+       01  FLV-TITLE                      PIC X(40) VALUE SPACES.
+       01  FLV-FOOTER                     PIC X(40) VALUE SPACES.
+       01  FLV-FILE                       PIC X(8) VALUE SPACES.
+       01  FLV-LIB                        PIC X(8) VALUE SPACES.
+       01  FLV-VOL                        PIC X(6) VALUE SPACES.
+
+       01  PRT-FILE-NAME                  PIC X(8) VALUE "PRTFILE".
+       01  PRT-LIBRARY                    PIC X(8) VALUE SPACES.
+       01  PRT-VOLUME                     PIC X(6) VALUE SPACES.
+
+       01  CMP-FILE-NAME                  PIC X(8) VALUE "CMPFILE".
+       01  CMP-LIBRARY                    PIC X(8) VALUE SPACES.
+       01  CMP-VOLUME                     PIC X(6) VALUE SPACES.
+       01  CMP-SCREEN-TITLE               PIC X(40) VALUE SPACES.
+
+       01  REC-FLAG                       PIC X.
+           88  NO-MORE-RECORDS            VALUE "N".
+           88  MORE-RECORDS               VALUE "Y".
+
+       01  SORT-FILE-NAME                 PIC X(8) VALUE "SFILE   ".
+
+       01  EXT-PM                         PIC X(2) VALUE "PM".
+       01  SAVE-PM                        PIC X.
+       01  KEEP-MODE                      PIC X VALUE "K".
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  LOG-FIL                        PIC X(8) VALUE "@TRNSLOG".
+       01  LOG-LIB                        PIC X(8) VALUE "@LOGFIL@".
+       01  LOG-VOL                        PIC X(6) VALUE SPACES.
+       01  HL                             PIC X(2) VALUE "HL".
+
+       01  SAMPLE-PROG                    PIC X(8) VALUE "SAMPLE  ".
+       01  DISPLAY-PROG                   PIC X(8) VALUE "DISPLAY ".
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  THE-PASS                       PIC X(6).
+       01  MY-INDEX                       PIC 9(5).
+       01  ACCEPT-FIELD                   PIC X(6).
+       01  START-VAL                      PIC X(4) VALUE "0000".
+
+       01  FILE-C-RECORD.
+           03  FILE-C-LINE1               PIC X(40).
+           03  FILE-C-LINE2               PIC X(40).
+
+       01  FILE-D-RECORD.
+           03  FILE-D-LINE1               PIC X(40).
+           03  FILE-D-LINE2               PIC X(40).
+
+      ******************************************************************
+
+006300 01  FSTAT                    PIC XX.
+006400*01  SCREEN-FIELDS.
+006500 01  W001-STATUS          PIC X       VALUE "C".
+006600 01  W001-ADDRESS         PIC X       VALUE SPACE.
+006700 01  W001-FUNCTION-TYPE   PIC X       VALUE "P".
+006800 01  W001-LOCATION.
+006900     05  W001-FILE        PIC X(8).
+007000     05  W001-LIB         PIC X(8).
+007100     05  W001-VOL         PIC X(6).
+007200*
+007300 01  EXTRACT-FIELDS.
+007400     05  W002-PM              PIC X(2)     VALUE "PM".
+007500     05  W002-PRINT-MODE      PIC X        VALUE SPACE.
+007400     05  W002-ID              PIC X(2)     VALUE "ID".
+007500     05  W002-USER-ID         PIC X(3)     VALUE SPACE.
+007600
+007700 01  SET-FIELDS.
+007800     05  W003-PM              PIC XX       VALUE "PM".
+007900     05  W003-PMH             PIC X        VALUE SPACE.
+
+       01  W004-MODE                PIC X
+                                    VALUE "S".
+       01  W004-DISP                PIC X(2)
+                                    VALUE "DX".
+
+007700 01  DATE-FIELDS.
+007800     05  W005-HL              PIC XX       VALUE "HL".
+007900     05  W005-DATE-TIME       PIC X(45)    VALUE SPACE.
+
+008000
+       01 W-PRINT-LINE.
+          05   FILLER               PIC X(05)    VALUE SPACES.
+          05   FILLER               PIC X(07)    VALUE "User : ".
+          05   W-PRINT-USER         PIC X(3).
+          05   FILLER               PIC X(10)    VALUE SPACES.
+          05   FILLER               PIC X(13)    VALUE "Printed on : ".
+          05   W-PRINT-DATE         PIC X(45).
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+
+       01  LARGE-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(60) ROW 4 COL 20 VALUE
+           "This test will write 15,000 records of 80 bytes each".
+           03  FILLER PIC X(60) ROW 5 COL 20 VALUE
+           "to file LARGE in (OUTLIB) on (OUTVOL). This is mainly".
+           03  FILLER PIC X(60) ROW 6 COL 20 VALUE
+           "a time/performance test so note how long it takes.".
+           03  FILLER PIC X(40) ROW 9 COL 30 SOURCE LARGE-MESSAGE.
+           03  FILLER PIC X(10) ROW 15 COL 30 VALUE "START".
+           03  FILLER PIC ZZ,ZZ,ZZ,ZZ  ROW 15 COL 40
+               SOURCE LARGE-START. 
+           03  FILLER PIC X(10) ROW 16 COL 30 VALUE "END".
+           03  FILLER PIC ZZ,ZZ,ZZ,ZZ  ROW 16 COL 40 SOURCE LARGE-END. 
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  LARGE-MESSAGE   PIC X(40).
+       01  LARGE-START     PIC 9(8).
+       01  LARGE-END       PIC 9(8).
+
+       01  LOG-SCREEN-1 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 8 COL 20 VALUE
+           "SEQ/DYN LOG FILE    (OPEN)    FILSTAT".
+           03  FILLER PIC X(2)  ROW 8 COL 60 SOURCE FILSTAT.
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  LOG-SCREEN-2 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 8 COL 20 VALUE
+           "SEQ/DYN LOG FILE    (WRITE)   FILSTAT".
+           03  FILLER PIC X(2)  ROW 8 COL 60 SOURCE FILSTAT.
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  LOG-SCREEN-3 USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 8 COL 20 VALUE
+           "SEQ/DYN LOG FILE    (CLOSE)   FILSTAT".
+           03  FILLER PIC X(2)  ROW 8 COL 60 SOURCE FILSTAT.
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  FILE-LIB-VOL USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 5 COL 20
+               SOURCE FLV-TITLE.
+
+           03  FILLER PIC X(4) ROW 12 COL 15 VALUE "FILE".
+           03  FILLER PIC X(8) ROW 12 COL 20 
+               SOURCE FLV-FILE OBJECT FLV-FILE.
+
+           03  FILLER PIC X(7) ROW 12 COL 30 VALUE "LIBRARY".
+           03  FILLER PIC X(8) ROW 12 COL 38 
+               SOURCE FLV-LIB OBJECT FLV-LIB.
+
+           03  FILLER PIC X(6) ROW 12 COL 48 VALUE "VOLUME".
+           03  FILLER PIC X(6) ROW 12 COL 55 
+               SOURCE FLV-VOL OBJECT FLV-VOL.
+
+           03  FILLER PIC X(25) ROW 24 COL 10 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+           03  FILLER PIC X(40) ROW 24 COL 40 SOURCE FLV-FOOTER.
+
+
+       01  FILE-C-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 1 COL 20 VALUE
+               "* * * FILE-C-SCREEN * * *".
+
+           03  FILLER PIC X(40) ROW 3 COL 20
+               SOURCE C-SCREEN-TITLE.
+
+           03  FILLER PIC X(14) ROW  9 COL  5 VALUE "C-RECORD-LINE1".
+           03  FILLER PIC X(40) ROW  9 COL 20 
+               SOURCE FILE-C-LINE1 OBJECT FILE-C-LINE1.
+
+           03  FILLER PIC X(14) ROW 11 COL  5 VALUE "C-RECORD-LINE2".
+           03  FILLER PIC X(40) ROW 11 COL 20 
+               SOURCE FILE-C-LINE2 OBJECT FILE-C-LINE2.
+
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "FILE-C-STAT".
+           03  FILLER PIC X(02) ROW 22 COL 47
+               SOURCE FILE-C-STAT OBJECT FILE-C-STAT.
+
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  FILE-D-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 1 COL 20 VALUE
+               "* * * FILE-D-SCREEN * * *".
+
+           03  FILLER PIC X(40) ROW 3 COL 20
+               SOURCE D-SCREEN-TITLE.
+
+           03  FILLER PIC X(14) ROW  9 COL  5 VALUE "D-RECORD-LINE1".
+           03  FILLER PIC X(40) ROW  9 COL 20 
+               SOURCE FILE-D-LINE1 OBJECT FILE-D-LINE1.
+
+           03  FILLER PIC X(14) ROW 11 COL  5 VALUE "D-RECORD-LINE2".
+           03  FILLER PIC X(40) ROW 11 COL 20 
+               SOURCE FILE-D-LINE2 OBJECT FILE-D-LINE2.
+
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "FILE-D-STAT".
+           03  FILLER PIC X(02) ROW 22 COL 47
+               SOURCE FILE-D-STAT OBJECT FILE-D-STAT.
+
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  CMP-RECORD-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER PIC X(40) ROW 1 COL 20 VALUE
+               "* * * CMPFILE SCREEN * * *".
+
+           03  FILLER PIC X(40) ROW 3 COL 20
+               SOURCE CMP-SCREEN-TITLE.
+
+           03  FILLER PIC X(15) ROW  9 COL  5 VALUE "CMPFILE-RECORD:".
+           03  FILLER PIC X(200) ROW 10 COL  1 
+               SOURCE CMP-PRINT-LINE.
+
+           03  FILLER PIC X(14) ROW 22 COL 35 VALUE "FILE-CMP-FSTAT".
+           03  FILLER PIC X(02) ROW 22 COL 47
+               SOURCE FILE-CMP-FSTAT.
+
+           03  FILLER PIC X(25) ROW 24 COL 30 VALUE
+               "PRESS RETURN TO CONTINUE.".
+
+       01  FILE-SCREEN-2 USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(11) ROW  1 COL 20 VALUE
+               "TRY THINGS:".
+           03  FILLER  PIC X(11) ROW  1 COL 60 VALUE
+               "FILE-SCREEN".
+           03  FILLER  PIC X(35) ROW  3 COL  2 VALUE
+               "01) SEQ/DYN LOGGING.".
+           03  FILLER  PIC X(35) ROW  4 COL  2 VALUE
+               "02) OPEN OUT PRINT, WRITE, CLOSE".
+           03  FILLER  PIC X(35) ROW  5 COL  2 VALUE
+               "03) OPEN OUTPUT PRINT FILE".
+           03  FILLER  PIC X(35) ROW  6 COL  2 VALUE
+               "04) CLOSE PRINT FILE".
+           03  FILLER  PIC X(35) ROW  7 COL  2 VALUE
+               "05) OPEN EXTEND PRINT FILE".
+           03  FILLER  PIC X(35) ROW  8 COL  2 VALUE
+               "06) OPEN EXT PRINT, WRITE, CLOSE".
+           03  FILLER  PIC X(35) ROW  9 COL  2 VALUE
+               "07) SUBS SCREEN/PRINT EXTEND".
+           03  FILLER  PIC X(33) ROW 10 COL  2 VALUE
+               "08) CREATE FILE-C (SEQ VARIABLE).".
+           03  FILLER  PIC X(38) ROW 11 COL  2 VALUE
+               "09) CREATE FILE-D (INDEXED VARIABLE).".
+           03  FILLER  PIC X(35) ROW 12 COL  2 VALUE
+               "10) CREATE COMPRESSED PRINT FILE".
+           03  FILLER  PIC X(35) ROW 13 COL  2 VALUE
+               "11) READ COMPRESSED PRINT FILE".
+           03  FILLER  PIC X(35) ROW 14 COL  2 VALUE
+               "12) WRITE COMPRESSED PRINT RCORD".
+           03  FILLER  PIC X(35) ROW 15 COL  2 VALUE
+               "13) CREATE A LARGE FILE".
+           03  FILLER  PIC X(35) ROW 16 COL  2 VALUE
+               "14) ".
+           03  FILLER  PIC X(35) ROW 17 COL  2 VALUE
+               "15) ".
+           03  FILLER  PIC X(35) ROW 20 COL  2 VALUE
+               "16) EXIT".
+
+           03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
+               "17) ".
+           03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
+               "18) ".
+           03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
+               "19) ".
+           03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
+               "20) ".
+           03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
+               "21) ".
+           03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
+               "22) ".
+           03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
+               "23) ".
+           03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
+               "24) ".
+           03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+               "25) ".
+           03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+               "26) ".
+           03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
+               "27) ".
+           03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
+               "28) ".
+           03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
+               "29) ".
+           03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
+               "30) ".
+           03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
+               "31) ".
+           03  FILLER  PIC X(35) ROW 20 COL 40 VALUE
+               "32) NEXT SCREEN".
+
+           03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       LINKAGE SECTION.
+       01 PF-KEY-ARG  PIC X(2).
+       PROCEDURE DIVISION USING PF-KEY-ARG.
+
+
+       FILE-TESTS-2.
+
+           DISPLAY AND READ FILE-SCREEN-2 ON CRT
+           PFKEYS  1,  2 , 3,  4,  5,  6,  7,  8,  9, 10,
+                  11, 12, 13, 14, 15, 16  17, 18, 19, 20,
+                  21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                  31, 32.
+
+           MOVE PF-KEY TO PF-KEY-ARG.
+
+           IF PF-KEY = "01" THEN
+              PERFORM SEQ-DYN-LOGGING THRU SEQ-DYN-LOGGING-EXIT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "02" THEN
+              PERFORM DO-PRINT-FILE
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "03" THEN
+              PERFORM OPEN-OUTPUT-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "04" THEN
+              PERFORM CLOSE-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "05" THEN
+              PERFORM OPEN-EXTEND-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "06" THEN
+              PERFORM WRITE-EXTEND-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "07" THEN
+              PERFORM A-START-PROGRAM THRU A-START-PROGRAM-EXIT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "08" THEN
+              PERFORM CREATE-FILE-C
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "09" THEN
+              PERFORM CREATE-FILE-D
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "10" THEN
+              PERFORM CREATE-COMPRESSED-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "11" THEN
+              PERFORM READ-COMPRESSED-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "12" THEN
+              PERFORM WRITE-COMPRESSED-PRINT
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "13" THEN
+              PERFORM CREATE-LARGE-FILE
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "14" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "15" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "17" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "18" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "19" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "20" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "21" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "22" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "23" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "24" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "25" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "26" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "27" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "28" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "29" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "30" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "31" THEN
+              GO TO FILE-TESTS-2
+           ELSE IF PF-KEY = "32" THEN
+              GO TO EXIT-PROGRAM
+           ELSE IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO FILE-TESTS-2.
+
+
+      ******************************************************************
+      * NOW DO SOME FILE WORK.
+      ******************************************************************
+
+
+       SEQ-DYN-LOGGING.
+           MOVE "SEQ/DYN FILE LOGGING" TO FLV-TITLE.
+           MOVE "PF16-EXIT" TO FLV-FOOTER.
+           MOVE LOG-FIL  TO FLV-FILE.
+           MOVE LOG-LIB  TO FLV-LIB.
+           MOVE LOG-VOL  TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT PFKEY 16.
+           MOVE SPACES TO FLV-FOOTER.
+           IF PF-KEY = 16 THEN GO TO SEQ-DYN-LOGGING-EXIT.
+
+           MOVE FLV-FILE TO LOG-FIL.
+           MOVE FLV-LIB  TO LOG-LIB.
+           MOVE FLV-VOL  TO LOG-VOL.
+
+           OPEN SHARED LOG-FILE.
+
+           DISPLAY AND READ LOG-SCREEN-1 ON CRT.
+
+           MOVE "LOG" TO LOG-HEADER.
+           MOVE LF TO LOG-NEWLINE.
+           CALL "DATE" USING HL LOG-DATA.
+           WRITE LOG-RECORD.
+
+           DISPLAY AND READ LOG-SCREEN-2 ON CRT.
+
+           CLOSE LOG-FILE.
+
+           DISPLAY AND READ LOG-SCREEN-3 ON CRT.
+           GO TO SEQ-DYN-LOGGING.
+       SEQ-DYN-LOGGING-EXIT.
+           EXIT.
+
+       OPEN-OUTPUT-PRINT.
+           OPEN OUTPUT PRINT-FILE.
+
+       OPEN-EXTEND-PRINT.
+           OPEN EXTEND PRINT-FILE.
+
+       CLOSE-PRINT.
+           CLOSE PRINT-FILE.
+
+       WRITE-EXTEND-PRINT.
+           OPEN EXTEND PRINT-FILE.
+
+           MOVE "AN NOW WE WILL DO AN OPEN EXTEND OF THE PRINT FILE"
+            TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "          =========================" TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "                                   " TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "THIS IS THE END OF THE OPEN EXTEND." TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "          =========================" TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "   ***  END OF REPORT  ***" TO PRT-RECORD.
+           WRITE PRT-RECORD.
+
+           CLOSE PRINT-FILE.
+
+       DO-PRINT-FILE.
+
+           MOVE "PRINT FILE TO OPEN" TO FLV-TITLE.
+           MOVE PRT-FILE-NAME             TO FLV-FILE.
+           MOVE PRT-LIBRARY               TO FLV-LIB.
+           MOVE PRT-VOLUME                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEY 16.
+
+           MOVE FLV-FILE  TO PRT-FILE-NAME.
+           MOVE FLV-LIB   TO PRT-LIBRARY.
+           MOVE FLV-VOL   TO PRT-VOLUME.
+
+           OPEN OUTPUT PRINT-FILE.
+
+           MOVE "(PAGE)    THIS IS A TEST PRINT FILE" TO PRT-RECORD.
+           WRITE PRT-RECORD AFTER PAGE.
+           MOVE "          =========================" TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "(5 LINES) THIS IS A TEST REPORT."    TO PRT-RECORD.
+           WRITE PRT-RECORD AFTER ADVANCING 5 LINES.
+           MOVE "          ======================"    TO PRT-RECORD.
+           WRITE PRT-RECORD.
+           MOVE "(PAGE)    ***  END OF REPORT  ***"   TO PRT-RECORD.
+           WRITE PRT-RECORD AFTER PAGE.
+
+           CLOSE PRINT-FILE.
+
+           MOVE "PRINT FILE CREATED." TO FLV-TITLE.
+           MOVE PRT-FILE-NAME             TO FLV-FILE.
+           MOVE PRT-LIBRARY               TO FLV-LIB.
+           MOVE PRT-VOLUME                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEY 16.
+
+      ******************************************************************
+
+009100 A-START-PROGRAM SECTION.
+009200 A010.
+009300      CALL "EXTRACT" USING W002-PM,
+009400                           W002-PRINT-MODE,
+009500                           W002-ID,
+                                 W002-USER-ID.
+
+009300      CALL "DATE" USING W005-HL,
+009400                        W005-DATE-TIME.
+
+            MOVE W002-USER-ID TO W-PRINT-USER.
+            MOVE W005-DATE-TIME TO W-PRINT-DATE.   
+
+009600      MOVE "K" TO W003-PMH.
+009700      CALL "SET" USING W003-PM,
+009800                       W003-PMH.
+009900
+010000      CALL "SCREEN" USING W001-STATUS,
+010100                          W001-ADDRESS,
+010200                          W001-FUNCTION-TYPE,
+010300                          W001-LOCATION.
+
+            OPEN EXTEND SCRFILE.
+            MOVE SPACES TO PRINT-LINE.
+            WRITE PRINT-LINE.
+            WRITE PRINT-LINE.
+            MOVE W-PRINT-LINE TO PRINT-LINE.
+            WRITE PRINT-LINE.
+            CLOSE SCRFILE.  
+
+            CALL "PRINT" USING W001-FILE,
+                               W001-LIB,
+                               W001-VOL,
+                               W004-MODE,
+                               W004-DISP.
+010400
+010500      MOVE W002-PRINT-MODE TO W003-PMH.
+010600      CALL "SET" USING W003-PM,
+010700                       W003-PMH.
+
+       A-START-PROGRAM-EXIT.
+
+      ******************************************************************
+
+       CREATE-FILE-C.
+           OPEN OUTPUT FILE-C.
+
+           MOVE SPACES TO FILE-C-LINE1.
+           MOVE SPACES TO FILE-C-LINE2.
+           MOVE "OPEN OUTPUT - WRITE RECORD 1, LENGTH 41"
+                TO C-SCREEN-TITLE.
+
+           DISPLAY AND READ FILE-C-SCREEN ON CRT.
+
+           MOVE "4" TO TYPE-C-REC1.
+           MOVE FILE-C-LINE1 TO C-VALUE-1.
+           WRITE FILE-C-REC41.
+
+           MOVE SPACES TO FILE-C-LINE1.
+           MOVE SPACES TO FILE-C-LINE2.
+           MOVE "OPEN OUTPUT - WRITE RECORD 2, LENGTH 81"
+                TO C-SCREEN-TITLE.
+
+           DISPLAY AND READ FILE-C-SCREEN ON CRT.
+
+           MOVE "8" TO TYPE-C-REC2.
+           MOVE FILE-C-LINE1 TO C-TEXT-1.
+           MOVE FILE-C-LINE2 TO C-TEXT-2.
+           WRITE FILE-C-REC81.
+
+           CLOSE FILE-C.
+
+      ******************************************************************
+
+       CREATE-FILE-D.
+           OPEN OUTPUT FILE-D.
+
+           MOVE SPACES TO FILE-D-LINE1.
+           MOVE SPACES TO FILE-D-LINE2.
+           MOVE "OPEN OUTPUT - WRITE RECORD 1, LENGTH 41"
+                TO D-SCREEN-TITLE.
+
+           DISPLAY AND READ FILE-D-SCREEN ON CRT.
+
+           MOVE "4" TO FILE-D-KEY1.
+           MOVE FILE-D-LINE1 TO D-VALUE-1.
+           WRITE FILE-D-REC41
+             INVALID KEY
+             MOVE "*** INVALID KEY ***" TO D-SCREEN-TITLE.
+
+           MOVE SPACES TO FILE-D-LINE1.
+           MOVE SPACES TO FILE-D-LINE2.
+           MOVE "OPEN OUTPUT - WRITE RECORD 2, LENGTH 81"
+                TO D-SCREEN-TITLE.
+
+           DISPLAY AND READ FILE-D-SCREEN ON CRT.
+
+           MOVE "8" TO FILE-D-KEY2.
+           MOVE FILE-D-LINE1 TO D-TEXT-1.
+           MOVE FILE-D-LINE2 TO D-TEXT-2.
+           WRITE FILE-D-REC81
+             INVALID KEY
+             MOVE "*** INVALID KEY ***" TO D-SCREEN-TITLE.
+
+           CLOSE FILE-D.
+
+      ******************************************************************
+
+       CREATE-COMPRESSED-PRINT.
+           MOVE "PRINT COMPRESSED FILE TO OPEN" TO FLV-TITLE.
+           MOVE CMP-FILE-NAME             TO FLV-FILE.
+           MOVE CMP-LIBRARY               TO FLV-LIB.
+           MOVE CMP-VOLUME                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEY 16.
+
+           MOVE FLV-FILE  TO CMP-FILE-NAME.
+           MOVE FLV-LIB   TO CMP-LIBRARY.
+           MOVE FLV-VOL   TO CMP-VOLUME.
+
+           OPEN OUTPUT CMPFILE.
+
+           MOVE "     THIS IS A TEST COMPRESSED PRINT FILE RECORD 1"
+                TO CMP-PRINT-LINE.
+           WRITE CMP-PRINT-LINE.
+           MOVE "OK SO THIS IS THE SECOND LINE OF THE PRINT FILE - RECOR
+      -    "D 2" TO CMP-PRINT-LINE.
+           WRITE CMP-PRINT-LINE.
+           MOVE " " TO CMP-PRINT-LINE.
+           WRITE CMP-PRINT-LINE.
+           MOVE "AND THIS IS THE THIRD.   RECORD 4" TO CMP-PRINT-LINE.
+           WRITE CMP-PRINT-LINE.
+
+           CLOSE CMPFILE.
+
+           MOVE "COMPRESSED PRINT FILE CREATED." TO FLV-TITLE.
+           MOVE CMP-FILE-NAME             TO FLV-FILE.
+           MOVE CMP-LIBRARY               TO FLV-LIB.
+           MOVE CMP-VOLUME                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEY 16.
+
+      ******************************************************************
+
+       READ-COMPRESSED-PRINT.
+           MOVE "READ COMPRESSED FILE RECORD" TO FLV-TITLE.
+           MOVE CMP-FILE-NAME             TO FLV-FILE.
+           MOVE CMP-LIBRARY               TO FLV-LIB.
+           MOVE CMP-VOLUME                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEY 16.
+
+           MOVE FLV-FILE  TO CMP-FILE-NAME.
+           MOVE FLV-LIB   TO CMP-LIBRARY.
+           MOVE FLV-VOL   TO CMP-VOLUME.
+
+           OPEN I-O CMPFILE.
+
+           MOVE "Y" TO REC-FLAG.
+           PERFORM READ-CMP-RECORD UNTIL NO-MORE-RECORDS.
+           CLOSE CMPFILE.
+
+       READ-CMP-RECORD.
+           READ CMPFILE NEXT AT END MOVE "N" TO REC-FLAG.
+
+           DISPLAY AND READ CMP-RECORD-SCREEN ON CRT
+           PFKEY 16.
+
+      ******************************************************************
+      
+       WRITE-COMPRESSED-PRINT.
+           MOVE "WRITE COMPRESSED FILE RECORD" TO FLV-TITLE.
+           MOVE CMP-FILE-NAME             TO FLV-FILE.
+           MOVE CMP-LIBRARY               TO FLV-LIB.
+           MOVE CMP-VOLUME                TO FLV-VOL.
+
+           DISPLAY AND READ FILE-LIB-VOL ON CRT
+           PFKEY 16.
+
+           MOVE FLV-FILE  TO CMP-FILE-NAME.
+           MOVE FLV-LIB   TO CMP-LIBRARY.
+           MOVE FLV-VOL   TO CMP-VOLUME.
+
+           OPEN EXTEND CMPFILE.
+
+           MOVE "AND THIS IS THE NEXT.   RECORD 5" TO CMP-PRINT-LINE.
+           WRITE CMP-PRINT-LINE.
+
+           CLOSE CMPFILE.
+
+      ******************************************************************
+       CREATE-LARGE-FILE.
+
+           MOVE SPACES TO LARGE-MESSAGE.
+           MOVE 0 TO LARGE-START.
+           MOVE 0 TO LARGE-END.
+           DISPLAY AND READ LARGE-SCREEN ON CRT.
+
+           MOVE "  THIS IS A LARGE RECORD" TO LARGE-DATA.
+           OPEN OUTPUT LARGE-FILE.
+           ACCEPT LARGE-START FROM TIME.
+           PERFORM WRITE-LARGE VARYING LARGE-CNT FROM 1 BY 1
+                               UNTIL LARGE-CNT > 15000.
+           ACCEPT LARGE-END FROM TIME.
+           CLOSE LARGE-FILE.
+
+           MOVE "***** DONE *****" TO LARGE-MESSAGE.
+           DISPLAY AND READ LARGE-SCREEN ON CRT.
+
+       WRITE-LARGE.
+
+           WRITE LARGE-RECORD.
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

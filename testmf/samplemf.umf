@@ -1,0 +1,70 @@
+#/************************************************************************/
+#/*									 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*	 An unpublished work of International Digital Scientific Inc.	 */
+#/*			    All rights reserved.			 */
+#/*									 */
+#/************************************************************************/
+#
+#
+#	File:		samplemf.umf
+#
+#	Function:	The UNIX makefile for SAMPLE/MF
+#
+#	Desciption:	This makefile will build SAMPLE for MF
+#
+#			To build int files:
+#				make -f samplemf.umf
+#
+#			To build gnt files:
+#				make -f samplemf.umf gnt
+#
+#			To build exe files:
+#				make -f samplemf.umf exe
+#			
+#
+
+CDEBUG=-g
+
+include $(WISP)/src/port/make.include
+
+include mf.rules
+
+all:	int prtargs
+
+int: 	sample.int qafileio.int qafile2.int qanetcap.int qaprint.int \
+	qascreen.int qascrn2.int qasubs.int qawsubs.int \
+	qawsfnm.int qawsfns.int qasy000m.int qasys99.int \
+	sub1.int sub3.int xlink.int xlink1.int trigger.int \
+	qabckgrd.int qadpcoma.int
+	@echo
+	@echo 'All sample (INT) are up-to-date'
+	@echo
+
+gnt: 	sample.gnt qafileio.gnt qafile2.gnt qanetcap.gnt qaprint.gnt \
+	qascreen.gnt qascrn2.gnt qasubs.gnt qawsubs.gnt \
+	qawsfnm.gnt qawsfns.gnt qasy000m.gnt qasys99.gnt \
+	sub1.gnt sub3.gnt xlink.gnt xlink1.gnt trigger.gnt \
+	qabckgrd.gnt qadpcoma.int
+	@echo
+	@echo 'All sample (GNT) are up-to-date'
+	@echo
+
+exe: 	sample sub1 sub3 xlink xlink1 trigger qabckgrd qadpcoma
+	@echo
+	@echo 'All sample (EXE) are up-to-date'
+	@echo
+
+sample.cob: sample.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) -O samopt.opt sample
+
+
+LIBPATHS=$(STDLIB)/libwisp.a $(STDLIB)/libvideo.a $(STDLIB)/libilp.a
+LIBS=-lwtest -lwisp -lilp -lvideo
+OBJS= 	sample.o qafileio.o qafile2.o qanetcap.o qaprint.o qascreen.o \
+	qascrn2.o qasubs.o qawsubs.o qawsfnm.o qawsfns.o qasy000m.o \
+	qasys99.o $(LDFILES)
+
+sample:	$(OBJS) $(LIBPATHS)
+	$(COBOL) -g $(EXE) $(COBFLAGS) -o $@ $(OBJS) $(LIBS)
+

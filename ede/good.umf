@@ -1,0 +1,35 @@
+#	/************************************************************************/
+#	/*									*/
+#	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
+#	/*	 An unpublished work of International Digital Scientific Inc.	*/
+#	/*			    All rights reserved.			*/
+#	/*									*/
+#	/************************************************************************/
+#
+#
+#	File:		good.umf
+#
+#	Function:	Generic makefile for the GOOD utility on all unix platforms.
+#
+# 	History:	
+#			06/04/92	Changed to use make.include GSL
+#			06/09/92	Removed the copy. GSL
+#
+
+#CDEBUG = -g
+CDEBUG = -O
+
+GOOD = good
+
+include $(WISP)/src/port/make.include
+
+
+all: 	$(GOOD)
+
+OBJS=good.o
+LIBPATHS=$(STDLIB)/libvideo.a $(STDLIB)/libede.a
+LIBS= $(LIBCFLAGS) -lvideo -lede -lm
+
+$(GOOD): $(OBJS) $(LIBPATHS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+

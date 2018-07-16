@@ -1,0 +1,53 @@
+#	MSDOS.DMF	- MSDOS template Dos Make File.
+#			Requires the script cclib or CCLIB.BAT
+#			which will "cc" compile and add to the library.
+#
+#	Build the NAME library
+#
+
+#	The following 5 lines are for MSDOS only:
+LIB = NAME.LIB
+USELIB = E:\LIB\$(LIB)
+CP = COPY
+O = OBJ  
+V = E:\C600\INCLUDE\V\ 
+
+##############################################################################
+#
+#	To make this usable for unix, comment the above, and uncommment below:
+#	The following 5 lines are for unix only:
+# LIB = libname.a
+# USELIB = /usr/lib/$(LIB)
+# CP = cp
+# O = o  
+# V = /usr/include/v/ 
+#
+#	unix may need the following, although it could be in the cclib script:
+#
+# CFLAGS = -O
+#
+##############################################################################
+
+.PRECIOUS:	$(LIB)
+
+.c.$(O):
+	@cclib $(LIB) $*
+
+all:	$(USELIB)
+
+$(USELIB):	$(LIB)
+	$(CP) $(LIB) $(USELIB)
+
+#
+#	Use lowercase names below for unix and MSDOS compatability:
+#
+
+$(LIB):	\
+	file1.$(O) \
+	file2.$(O) \
+	filen.$(0)
+
+file1.$(O):	file1.c head1.h
+file2.$(O):	file2.c head1.h head2.h
+filen.$(O):	filen.c head1.h headn.h
+

@@ -1,0 +1,795 @@
+000100/*****************************************************************        
+000200*                                                                *        
+000300*                       IDENTIFICATION DIVISION                  *        
+000400*                                                                *        
+000500******************************************************************        
+000600*                                                                         
+000700 IDENTIFICATION DIVISION.                                                 
+000800 PROGRAM-ID.                                                              
+000900     DISPRINT.                                                           
+001000 AUTHOR.                                                                  
+001100     IDSI CONVERSION TEAM                                                 
+001200 DATE-WRITTEN.                                                            
+001300     08/02/89.                                                            
+001400/*****************************************************************        
+001500*                                                                *        
+001600*                         ENVIRONMENT DIVISION                   *        
+001700*                                                                *        
+001800******************************************************************        
+001900*                                                                         
+002000 ENVIRONMENT DIVISION.                                                    
+002100 CONFIGURATION SECTION.                                                   
+002200 SOURCE-COMPUTER.                                                         
+002300     WANG-VS.                                                             
+002400 OBJECT-COMPUTER.                                                         
+002500     WANG-VS.                                                             
+002600 FIGURATIVE-CONSTANTS.                                                    
+002900     HIMODUPR   IS "81",                                                  
+003000     HIMODUPRUL IS "A1",                                                  
+003100     HIMODNUM   IS "82",                                                  
+003300     HIPRO      IS "84",                                                  
+003700     HIPRONUM   IS "86",                                                  
+007600     POS-CURSOR IS "A0",
+           HEX-0      IS "00",
+           HEX-9      IS "09",
+           HEX-5      IS "05",
+007700     SOUNDALARM IS "E0".                                                  
+007800/*****************************************************************        
+007900*                                                                *        
+008000*                         INPUT-OUTPUT SECTION                   *        
+008100*                                                                *        
+008200******************************************************************        
+008300*                                                                         
+008400 INPUT-OUTPUT SECTION.                                                    
+008500 FILE-CONTROL.                                                            
+008600*                                                                         
+008700     SELECT CRT                                                           
+008800         ASSIGN TO "CRT",      "DISPLAY",                                 
+008900         ORGANIZATION    IS SEQUENTIAL                                    
+009000         ACCESS MODE     IS RANDOM                                        
+009100         RELATIVE KEY    IS LINENUM                                       
+009200         PFKEY           IS PF-KEY                                        
+009300         CURSOR POSITION IS CURSOR-POS                                    
+009400         FILE STATUS     IS FILSTAT.                                      
+009500*                                                                         
+010200/*****************************************************************        
+010300*                                                                *        
+010400*                      DATA DIVISION - FILE SECTION              *        
+010500*                                                                *        
+010600******************************************************************        
+010700*                                                                         
+010800 DATA DIVISION.                                                           
+010900 FILE SECTION.                                                            
+011000*                                                                         
+011100 FD  CRT                                                                  
+011200     LABEL RECORDS ARE OMITTED.                                           
+011300 01  CRTREC.
+           05  CRTREC-FULL          PIC X(1924).                          
+           05  FILLER REDEFINES CRTREC-FULL.
+               10  CRTREC-OA.
+                   15  CRTREC-OA-1  PIC X.
+                   15  CRTREC-OA-2  PIC X.
+                   15  CRTREC-OA-3  PIC X.
+                   15  CRTREC-OA-4  PIC X.
+               10  CRTREC-SCN       PIC X(1920).
+011400*                                                                         
+011900/*****************************************************************        
+012000*                                                                *        
+012100*                         WORKING STORAGE                        *        
+012200*                                                                *        
+012300******************************************************************        
+012400*                                                                         
+012500 WORKING-STORAGE SECTION.                                                 
+012600 01  DATE-INFO.                                                           
+012700     03  DATEIN                     PIC 9(06).                            
+012800     03  DATEGROUP                  REDEFINES DATEIN.                     
+012900         05  YEAR-DIGITS            PIC 9(02).                            
+013000         05  MONTH-DIGITS           PIC 9(02).                            
+013100         05  DAY-DIGITS             PIC 9(02).                            
+013800******************************************************************        
+013900*                   FILE CONTROL STATUS SWITCHES                 *        
+014000******************************************************************        
+014100 01  FILSTAT.                                                             
+014200     03  ERR-FLAG                   PIC X(01).                            
+014300     03  PFK-BYTE                   PIC X(01).                            
+014400 77  LIST-STATUS                    PIC X(1)  VALUE "0".                  
+014500     88 MORE-LIST                   VALUE "0".                            
+014600     88 RECORD-FOUND-ON-LIST        VALUE "0".                            
+014700     88 NO-MORE-LIST                VALUE "1".                            
+014800     88 NO-RECORD-FOR-LIST          VALUE "2".                            
+014900     88 DUPLICATE-ON-LIST           VALUE "2".                            
+015000******************************************************************        
+015100*               EXTERNAL FILE LOCATION DEFINITIONS               *        
+015200******************************************************************        
+015300 77  REC-COUNT                      PIC 9(4)  VALUE 500.                  
+015400 77  FIL-FOR-LIST                   PIC X(8)  VALUE SPACES.               
+015500 77  LIB-FOR-LIST                   PIC X(8)  VALUE SPACES.               
+015600 77  VOL-FOR-LIST                   PIC X(6)  VALUE SPACES.               
+015700******************************************************************        
+015800*             WORKSTATION FILE CONTROL DESCRIPTIONS              *        
+015900******************************************************************        
+016000 77  LINENUM                        PIC 9(02) VALUE 1.                    
+016100 77  PF-KEY                         PIC 9(02) VALUE 01.                   
+016200 01  CURSOR-POS.                                                          
+016300     03  MOD-COL                    BINARY.                               
+016400     03  MOD-ROW                    BINARY.                               
+016500 01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.                 
+016600     03  FILLER                     PIC X(01).                            
+016700     03  CURS-COL                   PIC X(01).                            
+016800     03  FILLER                     PIC X(01).                            
+016900     03  CURS-ROW                   PIC X(01).                            
+       01  OA-SAVE.
+           05  OA-SAVE-ROW                PIC X(01).
+           05  OA-SAVE-WCC                PIC X(01).
+           05  OA-SAVE-CC                 PIC X(01).
+           05  OA-SAVE-CR                 PIC X(01).
+       01  SL                             PIC X(2) VALUE "SL".
+       01  SV                             PIC X(2) VALUE "SV". 
+017000/*****************************************************************        
+017100*                                                                *        
+017200*                   DISPLAY DEFINITIONS                          *        
+017300*                                                                *        
+017400******************************************************************        
+017500*                                                                         
+017600 01  SCREEN-1 USAGE IS DISPLAY-WS.                                     
+017700     05  FILLER         PICTURE IS  X(30)       ROW 01 COLUMN 25          
+017800         VALUE IS "LIBRARY DISPLAY PRINT UTILITY".                      
+018300     05  FILLER         PICTURE IS  X(14)       ROW 03 COLUMN 07          
+018400         VALUE IS "Your library, ".                       
+018500     05  ROW03-COL17    PICTURE IS  X(08)       ROW 03 COLUMN 22          
+018600         SOURCE IS DSK-LIB        OBJECT IS DSK-LIB       .               
+018700     05  FILLER         PICTURE IS  X(04)       ROW 03 COLUMN 31          
+018800         VALUE IS " on ".                                            
+018900     05  ROW03-COL31    PICTURE IS  X(06)       ROW 03 COLUMN 36          
+019000         SOURCE IS DSK-VOL       OBJECT IS DSK-VOL       . 
+           05  FILLER         PIC X(42)               ROW 03 COLUMN 43
+               VALUE "contains the following files:".
+018300     05  FILLER         PICTURE IS  X(1)        ROW 04 COLUMN 07          
+018400         VALUE IS "(".                       
+           05  ROW04-COL04    PIC ZZZ                 ROW 04 COLUMN 09
+               SOURCE DIS-COUNT         OBJECT DIS-COUNT.
+018300     05  FILLER         PICTURE IS  X(2)        ROW 04 COLUMN 13          
+018400         VALUE IS "of".                       
+           05  ROW04-COL11    PIC ZZZ                 ROW 04 COLUMN 16
+               SOURCE TOT-COUNT         OBJECT TOT-COUNT.
+           05  FILLER         PIC X(55)               ROW 04 COLUMN 20
+           VALUE "shown). Position the cursor to the file name. (via TAB
+      -          ")".
+           05  FILLER         PIC X(72)               ROW 06 COLUMN 5
+           VALUE "PF 1 - DISPLAY   PF 2 - PRINT   PF 3 - DELETE   PF 4 -
+      -          "PRINT (NO DELETE)".
+
+123456*8901234567890123456789012345678901234567890123456789012345678901234567890
+           05  FILLER   PIC X(35)                     ROW 08 COLUMN 03
+               VALUE "Copies  Filename   Records  Created".
+           05  FILLER   PIC X(35)                     ROW 08 COLUMN 43
+               VALUE "Copies  Filename   Records  Created".
+           05  FILLER   OCCURS 12 TIMES.
+               10  DISP-COL05       PIC ZZ            ROW 09 COLUMN 05
+                   SOURCE L-P-COPY  OBJECT L-P-COPY.
+
+               10  DISP-COL11       PIC X(8)          ROW 09 COLUMN 11
+                   SOURCE L-P-PROGRAM  OBJECT L-P-PROGRAM.
+
+               10  DISP-COL22       PIC Z(7)          ROW 09 COLUMN 22
+                   SOURCE L-P-RECS  OBJECT L-P-RECS.
+
+               10  DISP-COL30       PIC X(8)          ROW 09 COLUMN 30
+                   SOURCE L-P-DATE  OBJECT L-P-DATE.
+
+               10  DISP-COL45       PIC ZZ            ROW 09 COLUMN 45
+                   SOURCE R-P-COPY  OBJECT R-P-COPY.
+
+               10  DISP-COL51       PIC X(8)          ROW 09 COLUMN 51
+                   SOURCE R-P-PROGRAM  OBJECT R-P-PROGRAM.
+
+               10  DISP-COL62       PIC Z(7)          ROW 09 COLUMN 62
+                   SOURCE R-P-RECS  OBJECT R-P-RECS.
+
+               10  DISP-COL70       PIC X(8)          ROW 09 COLUMN 70
+                   SOURCE R-P-DATE  OBJECT R-P-DATE.
+
+
+019500     05  ROW22-COL20    PICTURE IS  X(50)       ROW 22 COLUMN 20          
+019600     VALUE IS "Press PF16 to Exit -or- ENTER for First/Next Page".
+019700     05  ROW24-COL11    PICTURE IS  X(60)       ROW 24 COLUMN 11          
+019800         SOURCE IS WSA-ERROR OBJECT IS WSA-ERROR.                         
+019900                                                                          
+       01  DIS-COUNT                 PIC  9(5)        VALUE 0.
+       01  TOT-COUNT                 PIC  9(5)        value 0.
+020000 01  DSK-FILE                  PIC  X(08)       VALUE SPACES.             
+020100 01  DSK-LIB                   PIC  X(08)       VALUE SPACES.             
+020200 01  DSK-VOL                   PIC  X(06)       VALUE SPACES.             
+020500 01  WSA-ERROR                 PIC X(60)        VALUE SPACES.             
+
+       01  PREV-EC                   USAGE BINARY.
+       01  DISP-IND                  USAGE BINARY.
+       01  IND-CNT                   USAGE BINARY.
+       01  CURR-IND                  USAGE BINARY.
+       01  START-IND                 USAGE BINARY.
+       01  END-IND                   USAGE BINARY.
+       01  ADJ-DEC.
+           03  ADJ-INT               PIC S99.
+           03  ADJ-REM               PIC 99.
+       01  ST-DEL-IND                USAGE BINARY.
+
+       01  WSA-PROGRAM-TABLE.
+           03  WSA-PROGRAM-AREA.
+               05  WSA-PROGRAM-TOP OCCURS 24 TIMES.
+                   10  WSA-P-COPY        PIC 99.
+                   10  WSA-PFNUM         PIC 99.
+                   10  WSA-P-PROGRAM     PIC X(8).
+                   10  WSA-P-RECS        PIC 9(7).
+                   10  WSA-P-DATE        PIC X(8).
+           03  WSA-PROGRAM-SCREEN REDEFINES WSA-PROGRAM-AREA.
+               05  WSA-SCREEN-L OCCURS 12 TIMES.
+                   10  L-P-COPY        PIC 99.                  
+                   10  L-PFNUM         PIC 99.
+                   10  L-P-PROGRAM     PIC X(8).
+                   10  L-P-RECS        PIC 9(7).
+                   10  L-P-DATE        PIC X(8).
+               05  WSA-SCREEN-R OCCURS 12 TIMES.
+                   10  R-P-COPY        PIC 99.
+                   10  R-PFNUM         PIC 99.
+                   10  R-P-PROGRAM     PIC X(8).
+                   10  R-P-RECS        PIC 9(7).
+                   10  R-P-DATE        PIC X(8).
+025300/*****************************************************************        
+025400*                                                                *        
+025500*                   DEFINITIONS FOR LINK CALL(S)                 *        
+025600*                                                                *        
+025700******************************************************************        
+025800*                                                                         
+025900 01  LINK-TO-NAME                   PIC X(08) VALUE SPACES.               
+026000 01  LINK-TYPE                      PIC X(01) VALUE SPACE.                
+026100 01  LINK-LIBRARY                   PIC X(08) VALUE SPACES.               
+026200 01  LINK-VOLUME                    PIC X(06) VALUE SPACES.               
+026300 01  LINK-PCOUNT.                                                         
+026400     03  FILLER                     BINARY    VALUE ZERO.                 
+026500     03  LINK-PCOUNT-NO             BINARY    VALUE 1.                    
+026600 01  LINK-CEXIT-FLAG                PIC X(01) VALUE " ".                  
+026700 01  LINK-CEXIT-MSG                 PIC X(27) VALUE SPACES.               
+026800 01  LINK-CEXIT-MSG-LEN.                                                  
+026900     03  FILLER                     BINARY    VALUE ZERO.                 
+027000     03  FILLER                     BINARY    VALUE ZERO.                 
+027100 01  LINK-HELP-FLAG                 PIC X(1)  VALUE SPACE.                
+027200 01  LINK-PFKEY-MASK                PIC X(02) VALUE LOW-VALUES.           
+027300 01  LINK-CANCEL-RCVR               PIC X(128) VALUE SPACES.              
+027400 01  LINK-CANCEL-RCVR-LEN.                                                
+027500     03  FILLER                     BINARY    VALUE ZERO.                 
+027600     03  FILLER                     BINARY    VALUE 128.                  
+027700 01  LINK-CODE.                                                           
+027800     03  FILLER                     BINARY    VALUE ZERO.                 
+027900     03  LINK-CODE-VAL              BINARY    VALUE ZERO.                 
+028000 01  LINK-RETURN-CODE.                                                    
+028100     03  FILLER                     BINARY    VALUE ZERO.                 
+028200     03  LINK-RTN-CODE-VAL          BINARY    VALUE ZERO.                 
+       01  LINK-RTN-CODE-ZZZ              PIC ZZZZZ.
+028300                                                                          
+028400/*****************************************************************        
+028500* FIND PARAM.                                                             
+028600******************************************************************        
+028700 01  STARTER.                                                             
+028800     05  FILLER  USAGE IS BINARY VALUE 0.                                 
+028900     05  START-INTEGER USAGE IS BINARY VALUE 1.                           
+029000 01  COUNTER.                                                             
+029100     05  FILLER  USAGE IS BINARY VALUE 0.                                 
+029200     05  COUNT-INTEGER USAGE IS BINARY VALUE 1.                           
+029300 01  RECEIVER         PIC X(8800) VALUE SPACES.                           
+029400 01  REC-AREA.                                                            
+029500     05  REC-FILL OCCURS 400 TIMES.
+029600         10  FILE-VOLUME       PIC X(6).                                  
+029700         10  FILE-LIBRARY      PIC X(8).                                  
+029800         10  FILE-NAME         PIC X(8).                                  
+029900     05  REC-FILE-1 OCCURS 400 TIMES.
+030000         10  FILE-RECS         PIC 9(7).                                  
+               10  FILE-DATE         PIC X(8).                                  
+       01  WSA-NUM-FILES     PIC S9(5) COMP.
+030300 01  ENTRIES.                                                             
+030400     05  FILLER        USAGE IS BINARY VALUE 0.                           
+030500     05  ENTRY-COUNT   USAGE IS BINARY VALUE 0.                           
+030600                                                                          
+030700/**********************                                                   
+030800* READ FDR INFO********                                                   
+030900***********************                                                   
+031000 01  FDR-FILE            PIC X(8).                                        
+031100 01  FDR-LIB             PIC X(8).                                        
+031200 01  FDR-VOL             PIC X(6).                                        
+031300 01  FDR-FUNCTION.                                                        
+031400     05  FILLER  USAGE IS BINARY VALUE 0.                                 
+031500     05  FDR-FUNCTION-CODE USAGE IS BINARY VALUE 0.                       
+
+       01  FDR-CD               PIC X(2) VALUE "CD".
+       01  FDR-DATE.
+           05  FDR-YY           PIC X(2).
+           05  FDR-MM           PIC X(2).
+           05  FDR-DD           PIC X(2).
+       01  FDR-F-DATE.
+           05  FDR-F-MM         PIC X(2).
+           05  FILLER           PIC X VALUE "/".
+           05  FDR-F-DD         PIC X(2).
+           05  FILLER           PIC X VALUE "/".
+           05  FDR-F-YY         PIC X(2).
+031600 01  FDR-RECORD-SIZE     PIC X(2) VALUE "RS".                             
+031700 01  FDR-SIZE.                                                            
+031800     05  FILLER       USAGE IS BINARY VALUE 0.                            
+031900     05  FDR-REC-SIZE USAGE IS BINARY VALUE 0.                            
+032000 01  FDR-RECORD-NUM     PIC X(2) VALUE "RC".                              
+032100 01  FDR-NUM.                                                             
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  FDR-REC-NUM USAGE IS BINARY VALUE 0.                             
+032400 01  FDR-RTN.                                                             
+032500     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032600     05  FDR-RTN-NUM USAGE IS BINARY VALUE 0.                             
+032700                                                                          
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                         PUTPARM DEFINITIONS                    *        
+034700*                                                                *        
+034800******************************************************************
+       01  TY-PE            PIC X VALUE "E".
+       01  C-FUNC           PIC X VALUE "C".
+       01  PRNAME           PIC X(8) VALUE "INPUT".
+       01  P-FILE           PIC X(8) VALUE SPACES.
+       01  P-COUNT.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  FILLER       USAGE IS BINARY VALUE 3.                            
+       01  U-COUNT.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  FILLER       USAGE IS BINARY VALUE 0.                            
+       01  P-RETURN.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  P-RTN        USAGE IS BINARY VALUE 0.                            
+       01  LENGTH-1.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  FILLER       USAGE IS BINARY VALUE 8.                            
+       01  KEYWORD-1        PIC X(8) VALUE "FILE".        
+       01  LENGTH-2.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  FILLER       USAGE IS BINARY VALUE 8.                            
+       01  KEYWORD-2        PIC X(8) VALUE "LIBRARY".        
+       01  LENGTH-3.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  FILLER       USAGE IS BINARY VALUE 6.                            
+       01  KEYWORD-3        PIC X(8) VALUE "VOLUME".
+       01  P-KEY            PIC X VALUE "@".
+       01  C-LABEL          PIC X(1) VALUE " ".        
+       01  P-LABEL          PIC X(8) VALUE "        ".        
+
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                        SCRATCH DEFINITION                      *        
+034700*                                                                *        
+034800******************************************************************        
+       01  E-CHECK            PIC X VALUE "B".
+       01  S-TYPE             PIC X VALUE "F".
+       01  S-FILE             PIC X(8).
+       01  S-ACCESS           PIC X VALUE SPACES.
+       01  S-RETURN.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  S-RTN        USAGE IS BINARY VALUE 0.                            
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                         PRINT DEFINITIONS                      *        
+034700*                                                                *        
+034800******************************************************************        
+       01  PR-FILE            PIC X(8).
+       01  PR-MODE            PIC X VALUE "S".
+       01  PR-DISP            PIC XX VALUE SPACES.
+       01  PR-COPY.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  P-COPY       USAGE IS BINARY VALUE 1.
+       01  PR-CLASS            PIC X VALUE SPACES.
+       01  PC-KEY              PIC XX VALUE "PC".                            
+       01  PR-FORM.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  P-FORM       USAGE IS BINARY VALUE 0.
+       01  FN-KEY           PIC XX VALUE "FN".
+       01  PR-RETURN.
+032200     05  FILLER       USAGE IS BINARY VALUE 0.                            
+032300     05  PR-RTN        USAGE IS BINARY VALUE 0.
+034400/*****************************************************************        
+034500*                                                                *        
+034600*                         PROCEDURE DIVISION                     *        
+034700*                                                                *        
+034800******************************************************************        
+034900*                                                                         
+035000 PROCEDURE DIVISION.                                                      
+035100 START-PROGRAM.                                                           
+035200     PERFORM INITIALIZATION.                                              
+035300     PERFORM MAIN-PROCESS.                                                
+035400     PERFORM TERMINATION.                                                 
+035500                                                                          
+035600 EXIT-PROGRAM.                                                            
+035700     STOP RUN.                                                            
+035800                                                                          
+035900******************************************************************        
+036000*                         INITIALIZATION                         *        
+036100******************************************************************        
+036200*                                                                         
+036300 INITIALIZATION.                                                          
+036400     ACCEPT DATEIN FROM DATE.                                             
+           CALL "EXTRACT" USING SL DSK-LIB
+                                SV DSK-VOL
+                                PC-KEY PR-CLASS
+                                FN-KEY PR-FORM.
+
+           MOVE SPACES    TO WSA-PROGRAM-TABLE.
+           PERFORM X-INIT.
+           MOVE 0         TO START-IND
+                             CURR-IND.
+    
+036800     OPEN I-O    CRT.                                                     
+037000                                                                          
+037100******************************************************************        
+037200*                         MAIN PROCESS                           *        
+037300******************************************************************        
+037400*                                                                         
+037500 MAIN-PROCESS.                                                            
+037700     PERFORM INIT-FAC.                                                    
+           PERFORM D-FIND-FILE.
+           MOVE ENTRY-COUNT TO END-IND.
+           IF ENTRY-COUNT > 0 AND ENTRY-COUNT <= 400
+             PERFORM LOAD-TABLE.  
+037800     PERFORM DISPLAY-AND-READ-SCREEN-1 THRU 
+             DISPLAY-EXIT.                                
+040000     GO TO TERMINATION.                                                   
+040100                                                                          
+040200                                                                          
+040300 A-GET-INFO.                                                              
+040500 
+040600         MOVE FILE-NAME(IND-CNT)    TO  FDR-FILE                          
+040700         MOVE FILE-LIBRARY(IND-CNT) TO FDR-LIB                            
+040800         MOVE FILE-VOLUME(IND-CNT)  TO FDR-VOL                            
+040900         MOVE 0                     TO FDR-FUNCTION-CODE                  
+041000         MOVE 0                     TO FDR-REC-SIZE                       
+041100         MOVE 0                     TO FDR-REC-NUM                        
+041200         MOVE 0                     TO FDR-RTN-NUM                        
+041300         MOVE SPACES                TO FDR-DATE
+      *$VAX_CODE
+      *        MOVE "LIS "    TO WISPFILEXT
+      *$VAX_END  
+041500         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,                 
+041600              FDR-FUNCTION, FDR-CD, FDR-DATE, FDR-RTN                     
+
+               MOVE FDR-MM TO FDR-F-MM
+               MOVE FDR-DD TO FDR-F-DD
+               MOVE FDR-YY TO FDR-F-YY
+               MOVE FDR-F-DATE     TO  FILE-DATE(IND-CNT)
+      *$VAX_CODE
+      *        MOVE "LIS "    TO WISPFILEXT
+      *$VAX_END  
+041500         CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,                 
+041600              FDR-FUNCTION, FDR-RECORD-NUM, FDR-NUM, FDR-RTN                     
+
+               MOVE FDR-REC-NUM     TO  FILE-RECS(IND-CNT).
+
+042200 A-EXIT.                                                                  
+042300     EXIT.                                                                
+042400                                                                          
+047100******************************************************************        
+047200*                          TERMINATION                           *        
+047300******************************************************************        
+047400*                                                                         
+047500 TERMINATION.                                                             
+047600     CLOSE CRT.                                                           
+047800     STOP RUN.                                                            
+047900/*****************************************************************        
+048000*                                                                *        
+048100*                       INPUT OUTPUT ROUTINES                    *        
+048200*                                                                *        
+048300******************************************************************        
+048400*                                                                         
+048500******************************************************************        
+048600*                     DISPLAY AND READ DISPLAY REC               *        
+048700******************************************************************        
+048800*                                                                         
+048900 DISPLAY-AND-READ-SCREEN-1.                                            
+049000     DISPLAY AND READ SCREEN-1  ON CRT                                 
+049100           PFKEY 0,1,2,3,4,16.
+
+           MOVE CRTREC-OA TO OA-SAVE.
+           MOVE POS-CURSOR TO OA-SAVE-WCC.
+           MOVE OA-SAVE TO ORDER-AREA OF SCREEN-1.
+
+049200     IF PF-KEY = 16 
+              STOP RUN.                                                
+
+           IF PF-KEY = 00
+              PERFORM DISPLAY-OVER.
+
+049200     IF PF-KEY = 01
+              PERFORM D-DISPLAY-FILE.
+
+049200     IF PF-KEY = 02 
+              PERFORM D-PRINT-FILE.
+
+049200     IF PF-KEY = 03 
+              PERFORM D-DELETE-FILE.
+
+049200     IF PF-KEY = 04 
+              PERFORM D-PRINT-NO-DEL-FILE.
+
+           GO TO DISPLAY-AND-READ-SCREEN-1.
+
+        DISPLAY-EXIT.
+           EXIT.
+049600*                                                                         
+050800/*****************************************************************        
+049600*                                                                         
+049600*                                                                         
+050800/*****************************************************************        
+       LOAD-TABLE.
+           MOVE ENTRY-COUNT TO TOT-COUNT.
+           IF END-IND >= ENTRY-COUNT
+              MOVE 1   TO START-IND
+           ELSE
+              ADD 1     TO END-IND
+              MOVE END-IND TO START-IND.
+           PERFORM X-INIT.
+           MOVE START-IND TO CURR-IND.
+           PERFORM LOAD-CURR-INFO VARYING IND-CNT FROM 1 BY 1 
+             UNTIL IND-CNT > 24 OR CURR-IND > ENTRY-COUNT.
+           PERFORM CHECK-FAC VARYING IND-CNT FROM 1 BY 1 UNTIL
+             IND-CNT > 12.
+           IF CURR-IND > 1
+             COMPUTE DISP-IND = CURR-IND - 1.
+           MOVE DISP-IND   TO END-IND.
+           MOVE DISP-IND   TO DIS-COUNT.
+
+       LOAD-CURR-INFO.
+           IF FILE-NAME(CURR-IND) NOT = SPACES
+             MOVE 1 TO WSA-P-COPY(IND-CNT).
+           MOVE FILE-NAME(CURR-IND) TO WSA-P-PROGRAM(IND-CNT).
+           MOVE FILE-RECS(CURR-IND) TO WSA-P-RECS(IND-CNT).
+           MOVE FILE-DATE(CURR-IND) TO WSA-P-DATE(IND-CNT).
+           ADD 1     TO CURR-IND.
+
+       MOVE-CURR-INFO-UP.
+           MOVE FILE-NAME(CURR-IND) TO FILE-NAME(IND-CNT).
+           MOVE FILE-RECS(CURR-IND) TO FILE-RECS(IND-CNT).
+           MOVE FILE-DATE(CURR-IND) TO FILE-DATE(IND-CNT).
+           ADD 1     TO CURR-IND.
+          
+050800/*****************************************************************        
+050900*                                                                *        
+051000*                    LINK TO LIBCOPY  ROUTINE                    *        
+051100*                                                                *        
+051200******************************************************************        
+051300*                                                                         
+051400 LINK-TO-DISPLAY.                                                         
+051500     MOVE "DISPLAY"                     TO  LINK-TO-NAME.                 
+051600     MOVE " "                           TO  LINK-TYPE.                    
+051700     MOVE "        "                    TO  LINK-LIBRARY.                 
+051800     MOVE "      "                      TO  LINK-VOLUME.                  
+051900     MOVE  0                            TO  LINK-PCOUNT-NO.               
+052000     MOVE "C"                           TO  LINK-CEXIT-FLAG.              
+052100     MOVE "RETURN TO LIBCOB           " TO  LINK-CEXIT-MSG.               
+052200     MOVE "H"                           TO  LINK-HELP-FLAG.               
+052300     CALL "LINK" USING LINK-TO-NAME,                                      
+052400                       LINK-TYPE, LINK-LIBRARY, LINK-VOLUME,              
+052500                       LINK-PCOUNT,                                       
+052700                       LINK-CODE, LINK-RETURN-CODE.                       
+052800     IF LINK-RTN-CODE-VAL IS GREATER THAN ZERO
+              MOVE LINK-RTN-CODE-VAL TO LINK-RTN-CODE-ZZZ 
+052900        DISPLAY "RETURN CODE FROM LINK IS ", LINK-RTN-CODE-ZZZ.           
+053000                                                                          
+053100 INIT-FAC.                                                               
+           MOVE HIPRO     TO FAC OF ROW04-COL04
+                             FAC OF ROW04-COL11
+                             FAC OF ROW22-COL20
+                             FAC OF ROW24-COL11.
+           MOVE HIMODUPR  TO FAC OF ROW03-COL17
+                             FAC OF ROW03-COL31.
+           PERFORM INIT-SCREEN-FAC VARYING IND-CNT FROM 1 BY 1
+                   UNTIL IND-CNT > 12.
+
+       INIT-SCREEN-FAC.
+           MOVE HIPRO         TO FAC OF DISP-COL05(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL45(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL11(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL51(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL22(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL62(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL30(IND-CNT).
+           MOVE HIPRO         TO FAC OF DISP-COL70(IND-CNT).
+
+       D-FIND-FILE.
+           MOVE "?" TO DSK-FILE.
+037900     MOVE 400 TO COUNT-INTEGER.                                           
+038000     MOVE SPACES  TO RECEIVER, REC-AREA.                                  
+038100     MOVE 1        TO START-INTEGER.                                      
+038200     MOVE 0        TO ENTRY-COUNT WSA-NUM-FILES.                 
+038300                                                                          
+038400     CALL "FIND" USING DSK-FILE, DSK-LIB, DSK-VOL, STARTER,               
+038500                     COUNTER, RECEIVER, ENTRIES.                          
+038600     MOVE  RECEIVER TO REC-AREA.                                 
+           IF ENTRY-COUNT > 400                                     
+              MOVE "          TOO MANY FILES HIT ENTER TO CONTINUE 16 TO 
+      -           " EXIT" TO WSA-ERROR                 
+           ELSE
+           IF ENTRY-COUNT < 1                                      
+              MOVE "          NO FILES FOUND HIT ENTER TO CONTINUE 16 TO
+      -           " EXIT" TO WSA-ERROR
+           ELSE
+039400       PERFORM A-GET-INFO THRU A-EXIT VARYING IND-CNT FROM 1 BY 1
+039500         UNTIL IND-CNT > ENTRY-COUNT.
+
+       X-INIT.
+           MOVE SPACES    TO WSA-PROGRAM-TABLE.
+           PERFORM X-INIT-TABLE VARYING IND-CNT FROM 1 BY 1 UNTIL
+                   IND-CNT > 24.
+           PERFORM X-INIT-RECS VARYING IND-CNT FROM 1 BY 1 UNTIL
+                   IND-CNT > 24.
+           PERFORM X-INIT-COPY VARYING IND-CNT FROM 1 BY 1 UNTIL
+                   IND-CNT > 24.
+
+       X-INIT-TABLE.
+           MOVE 0       TO WSA-PFNUM(IND-CNT).
+       X-INIT-RECS.
+           MOVE 0       TO WSA-P-RECS(IND-CNT).
+       X-INIT-COPY.
+           MOVE 0       TO WSA-P-COPY(IND-CNT).
+
+       CHECK-FAC.
+           IF  L-P-PROGRAM(IND-CNT) = SPACES
+               MOVE HIPRO     TO FAC OF DISP-COL05(IND-CNT)
+           ELSE    
+               MOVE HIMODNUM  TO FAC OF DISP-COL05(IND-CNT).
+
+           IF  R-P-PROGRAM(IND-CNT) = SPACES
+               MOVE HIPRO     TO FAC OF DISP-COL45(IND-CNT)
+           ELSE    
+               MOVE HIMODNUM  TO FAC OF DISP-COL45(IND-CNT).
+       
+       X-DEL-FILE.
+           CALL "SCRATCH" USING S-TYPE, S-FILE, DSK-LIB, DSK-VOL,
+                                E-CHECK, S-ACCESS, S-RETURN.
+
+       DISPLAY-OVER.
+           MOVE SPACES    TO WSA-ERROR.                                         
+           IF DSK-VOL = SPACES 
+             MOVE HIMODUPRUL  TO FAC OF ROW03-COL31
+             MOVE "                     VOLUME CANNOT BE BLANK"
+                  TO WSA-ERROR
+           ELSE
+           IF DSK-LIB = SPACES 
+             MOVE HIMODUPRUL  TO FAC OF ROW03-COL17
+             MOVE "                     LIBRARY CANNOT BE BLANK"
+                  TO WSA-ERROR
+           ELSE
+             PERFORM DO-ENTER-KEY.
+
+       D-DISPLAY-FILE.
+           PERFORM COMPUTE-POSITION.
+           IF WSA-P-PROGRAM(CURR-IND) NOT = SPACES
+             MOVE  WSA-P-PROGRAM(CURR-IND) TO P-FILE
+             CALL "PUTPARM" USING TY-PE, PRNAME, P-COUNT,
+               KEYWORD-1, P-FILE, LENGTH-1,
+               KEYWORD-2, DSK-LIB, LENGTH-2,
+               KEYWORD-3, DSK-VOL, LENGTH-3,
+               P-RETURN
+             PERFORM LINK-TO-DISPLAY
+             CALL "PUTPARM" USING C-FUNC, P-LABEL, P-RETURN.
+
+       D-PRINT-FILE.
+           PERFORM COMPUTE-POSITION.
+           IF WSA-P-PROGRAM(CURR-IND) NOT = SPACES
+             MOVE WSA-P-PROGRAM(CURR-IND) TO PR-FILE
+             PERFORM CHECK-COPY
+             MOVE "DX" TO PR-DISP
+             CALL "PRINT" USING PR-FILE, DSK-LIB, DSK-VOL,
+               PR-MODE, PR-DISP, PR-COPY, PR-CLASS,
+               PR-FORM, PR-RETURN
+             MOVE 1  TO WSA-P-COPY(CURR-IND).
+
+       D-DELETE-FILE.
+           PERFORM COMPUTE-POSITION.
+           IF WSA-P-PROGRAM(CURR-IND) NOT = SPACES
+             MOVE  WSA-P-PROGRAM(CURR-IND) TO S-FILE
+             PERFORM X-DEL-FILE
+             PERFORM REMOVE-FILE-FROM-TABLE.
+
+       D-PRINT-NO-DEL-FILE.
+           PERFORM COMPUTE-POSITION.
+           IF WSA-P-PROGRAM(CURR-IND) NOT = SPACES
+             MOVE WSA-P-PROGRAM(CURR-IND) TO PR-FILE
+             PERFORM CHECK-COPY
+             MOVE "DS" TO PR-DISP
+             CALL "PRINT" USING PR-FILE, DSK-LIB, DSK-VOL,
+               PR-MODE, PR-DISP, PR-COPY, PR-CLASS,
+               PR-FORM, PR-RETURN
+             MOVE 1  TO WSA-P-COPY(CURR-IND).
+
+       DO-ENTER-KEY.
+           MOVE ENTRY-COUNT TO PREV-EC.
+           PERFORM D-FIND-FILE.
+           IF ENTRY-COUNT < 1                                      
+             MOVE 0 TO START-IND
+             MOVE 0 TO END-IND
+             PERFORM X-INIT
+             PERFORM SET-OA
+           ELSE
+           IF ENTRY-COUNT NOT > 400                                     
+             PERFORM LOAD-TABLE
+             PERFORM SET-OA.  
+
+       CHECK-COPY.
+           IF  WSA-P-COPY(CURR-IND) < 1
+               MOVE 1   TO P-COPY
+           ELSE
+               MOVE WSA-P-COPY(CURR-IND) TO P-COPY.
+
+       COMPUTE-POSITION.
+           IF MOD-ROW > 8 AND MOD-ROW < 21
+              COMPUTE CURR-IND = MOD-ROW - 8.
+           IF MOD-COL > 42                                 
+              COMPUTE CURR-IND = (MOD-ROW - 8) + 12.
+
+       SET-OA.
+           IF ENTRY-COUNT < 1
+             MOVE HEX-0 TO OA-SAVE-CR
+             MOVE HEX-0 TO OA-SAVE-CC
+             MOVE OA-SAVE TO ORDER-AREA OF SCREEN-1
+           ELSE IF (PF-KEY = 00) OR
+                   (PF-KEY = 03 AND ST-DEL-IND = PREV-EC)
+             MOVE HEX-9 TO OA-SAVE-CR
+             MOVE HEX-5 TO OA-SAVE-CC
+             MOVE OA-SAVE TO ORDER-AREA OF SCREEN-1.
+
+       REMOVE-FILE-FROM-TABLE.
+           MOVE ENTRY-COUNT TO PREV-EC.
+           COMPUTE ENTRY-COUNT = ENTRY-COUNT - 1.
+           MOVE ENTRY-COUNT TO TOT-COUNT.
+           IF ENTRY-COUNT < 1                                      
+               MOVE 0   TO START-IND
+               PERFORM X-INIT
+               PERFORM CHECK-FAC VARYING IND-CNT FROM 1 BY 1 UNTIL
+                 IND-CNT > 12
+038800         MOVE "          NO FILES FOUND HIT ENTER TO CONTINUE 16 TO
+      -             "EXIT" TO WSA-ERROR                 
+               PERFORM SET-OA
+           ELSE
+               MOVE CURR-IND TO IND-CNT
+               PERFORM ADJUST-CURR-INDEX
+               MOVE CURR-IND TO ST-DEL-IND
+               ADD 1     TO CURR-IND
+               PERFORM LOAD-CURR-INFO VARYING IND-CNT FROM IND-CNT BY 1 
+                 UNTIL IND-CNT > 24 OR CURR-IND > PREV-EC
+               PERFORM CLEAR-LAST-SCREEN-TABLE
+               PERFORM SET-OA
+               MOVE ST-DEL-IND TO CURR-IND
+               MOVE CURR-IND TO IND-CNT
+               ADD 1     TO CURR-IND
+               PERFORM MOVE-CURR-INFO-UP VARYING IND-CNT FROM IND-CNT
+                 BY 1 UNTIL CURR-IND > PREV-EC
+               PERFORM CLEAR-LAST-FILE-TABLE.
+
+           IF DISP-IND > TOT-COUNT
+             COMPUTE DISP-IND = DISP-IND - 1.
+           MOVE DISP-IND   TO DIS-COUNT.
+
+       CLEAR-LAST-FILE-TABLE.
+             MOVE SPACES TO FILE-VOLUME(CURR-IND).
+             MOVE SPACES TO FILE-LIBRARY(CURR-IND).
+             MOVE SPACES TO FILE-NAME(CURR-IND).
+             MOVE 0      TO FILE-RECS(CURR-IND).
+             MOVE SPACES TO FILE-DATE(CURR-IND).
+
+       CLEAR-LAST-SCREEN-TABLE.
+           IF IND-CNT < 25 THEN
+             IF CURR-IND > ENTRY-COUNT THEN
+               MOVE 0      TO WSA-PFNUM(IND-CNT)
+               MOVE 0      TO WSA-P-COPY(IND-CNT)
+               MOVE SPACES TO WSA-P-PROGRAM(IND-CNT)
+               MOVE 0      TO WSA-P-RECS(IND-CNT)
+               MOVE 0      TO FILE-RECS(CURR-IND)
+               MOVE SPACES TO WSA-P-DATE(IND-CNT)
+               PERFORM CHECK-FAC VARYING IND-CNT FROM 1
+                 BY 1 UNTIL IND-CNT > 12.
+
+       ADJUST-CURR-INDEX.
+           IF DISP-IND > 24
+               DIVIDE DISP-IND BY 24 GIVING ADJ-INT
+                 REMAINDER ADJ-REM
+               COMPUTE CURR-IND = CURR-IND + (24 * ADJ-INT).

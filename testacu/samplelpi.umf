@@ -1,0 +1,132 @@
+#/************************************************************************/
+#/*									 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*	 An unpublished work of International Digital Scientific Inc.	 */
+#/*			    All rights reserved.			 */
+#/*									 */
+#/************************************************************************/
+#
+#
+#	File:		samplelpi.umf
+#
+#	Function:	The UNIX makefile for SAMPLE/LPI
+#
+#	Desciption:	This makefile will build SAMPLE for LPI
+#
+#			To build:
+#				make -f samplelpi.umf
+#
+
+CDEBUG=-g
+
+include $(WISP)/src/port/make.include
+
+WISPTRAN=wisp
+WISPFLAGS=-VLPI
+COBOL=lpicobol
+COBFLAGS=-fsc74 -deb -noopt
+
+
+LIBPATHS=$(STDLIB)/libwisp.a $(STDLIB)/libvideo.a $(STDLIB)/libilp.a
+LIBS= $(LIBCFLAGS) -lwtest -lwisp -lilp -lvideo -lPW
+OBJS= 	sample.o qafileio.o qafile2.o qanetcap.o qaprint.o qascreen.o \
+	qascrn2.o qasubs.o qawsubs.o qawsfnm.o qawsfns.o qasy000m.o \
+	qasys99.o 
+
+all: 	sample trigger qabckgrd qadpcoma prtargs
+	@echo
+	@echo sample is up-to-date
+	@echo
+
+sample:	$(OBJS) $(LIBPATHS)
+	ldcobol -o $@ $(OBJS) $(LIBS)
+
+trigger: trigger.o $(LIBPATHS)
+	ldcobol -o $@ trigger.o $(LIBS)
+
+qabckgrd: qabckgrd.o $(LIBPATHS)
+	ldcobol -o $@ qabckgrd.o $(LIBS)
+
+qadpcoma: qadpcoma.o $(LIBPATHS)
+	ldcobol -o $@ qadpcoma.o $(LIBS)
+
+#
+#=========================================
+#
+
+sample.o: sample.cob
+	$(COBOL) $(COBFLAGS) sample.cob
+
+trigger.o: trigger.cob
+	$(COBOL) $(COBFLAGS) trigger.cob
+
+qabckgrd.o: qabckgrd.cob
+	$(COBOL) $(COBFLAGS) qabckgrd.cob
+
+qadpcoma.o: qadpcoma.cob
+	$(COBOL) $(COBFLAGS) qadpcoma.cob
+
+qafileio.o: qafileio.cob
+	$(COBOL) $(COBFLAGS) qafileio.cob
+
+qafile2.o: qafile2.cob
+	$(COBOL) $(COBFLAGS) qafile2.cob
+
+qanetcap.o: qanetcap.cob
+	$(COBOL) $(COBFLAGS) qanetcap.cob
+
+qaprint.o: qaprint.cob
+	$(COBOL) $(COBFLAGS) qaprint.cob
+
+qascreen.o: qascreen.cob
+	$(COBOL) $(COBFLAGS) qascreen.cob
+
+qascrn2.o: qascrn2.cob
+	$(COBOL) $(COBFLAGS) qascrn2.cob
+
+qasubs.o: qasubs.cob
+	$(COBOL) $(COBFLAGS) qasubs.cob
+
+qawsubs.o: qawsubs.cob
+	$(COBOL) $(COBFLAGS) qawsubs.cob
+
+#
+#================================================
+#
+
+sample.cob: sample.wcb
+	$(WISPTRAN) $(WISPFLAGS) -O samopt.opt sample
+
+trigger.cob: trigger.wcb
+	$(WISPTRAN) $(WISPFLAGS) trigger
+
+qabckgrd.cob: qabckgrd.wcb
+	$(WISPTRAN) $(WISPFLAGS) qabckgrd
+
+qadpcoma.cob: qadpcoma.wcb
+	$(WISPTRAN) $(WISPFLAGS) qadpcoma
+
+qafileio.cob: qafileio.wcb
+	$(WISPTRAN) $(WISPFLAGS) qafileio
+
+qafile2.cob: qafile2.wcb
+	$(WISPTRAN) $(WISPFLAGS) qafile2
+
+qanetcap.cob: qanetcap.wcb
+	$(WISPTRAN) $(WISPFLAGS) qanetcap
+
+qaprint.cob: qaprint.wcb
+	$(WISPTRAN) $(WISPFLAGS) qaprint
+
+qascreen.cob: qascreen.wcb
+	$(WISPTRAN) $(WISPFLAGS) qascreen
+
+qascrn2.cob: qascrn2.wcb
+	$(WISPTRAN) $(WISPFLAGS) qascrn2
+
+qasubs.cob: qasubs.wcb
+	$(WISPTRAN) $(WISPFLAGS) qasubs
+
+qawsubs.cob: qawsubs.wcb
+	$(WISPTRAN) $(WISPFLAGS) qawsubs
+

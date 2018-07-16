@@ -1,0 +1,49 @@
+      * International Digital Scientific Corporation
+      * Extended Development Environment
+      * COBOL 85 copy member to define menu parameters.
+
+      * Menu Type Definitions
+
+       01 LOAD-FROM-FILE    PIC 9(9) BINARY VALUE 1.
+       01 NUMERIC-MENU      PIC 9(9) BINARY VALUE 2.
+       01 ALPHABETIC-MENU   PIC 9(9) BINARY VALUE 3.
+       01 HIGHLIGHTED-MENU  PIC 9(9) BINARY VALUE 4.
+       01 BAR-MENU          PIC 9(9) BINARY VALUE 5.
+       01 PULL-DOWN-MENU    PIC 9(9) BINARY VALUE 6.
+       01 POP-UP-MENU       PIC 9(9) BINARY VALUE 7.
+       01 DISPLAY-ONLY-MENU PIC 9(9) BINARY VALUE 8.
+
+      * Menu option definitions (these can be added together to yield
+      * composite option selections.
+
+       01 BOLD-TEXT         PIC 9(9) BINARY VALUE 1.
+       01 UNDERSCORE-TEXT   PIC 9(9) BINARY VALUE 2.
+       01 REVERSE-TEXT      PIC 9(9) BINARY VALUE 8.
+       01 LEFT-HANDED       PIC 9(9) BINARY VALUE 512.
+       01 RIGHT-HANDED      PIC 9(9) BINARY VALUE 1024.
+       01 EXIT-RIGHT        PIC 9(9) BINARY VALUE 2048.
+       01 CENTER-MENU       PIC 9(9) BINARY VALUE 2049.
+
+      * Menu link definitions.
+
+       01 DYNAMIC-LINK PIC S9(9) BINARY VALUE -1.
+       01 STATIC-LINK  PIC S9(9) BINARY VALUE -2.
+
+      * Menu erase & kill definitions.
+
+       01 ALL-MENUS      PIC 9(9) BINARY VALUE 7.
+       01 TOP-MENU       PIC 9(9) BINARY VALUE 8.
+       01 TO-BOTTOM-MENU PIC 9(9) BINARY VALUE 9.
+
+      * Menu state control parameters.
+
+       01 MENU-START-SAVE    PIC 9(9) BINARY VALUE 1.
+       01 MENU-END-SAVE      PIC 9(9) BINARY VALUE 2.
+       01 MENU-START-RESTORE PIC 9(9) BINARY VALUE 3.
+
+      * Miscellaneous working variables.
+
+       01 MENU-CHOICE PIC S9(9) BINARY VALUE 0.
+       01 ITEM-CODE PIC 9(9) BINARY VALUE 0.
+       01 ITEM-TEXT PIC X(64).
+       01 ITEM-LENGTH PIC 9(9) BINARY VALUE 64.

@@ -1,0 +1,12 @@
+A: 
+	banner=no 
+	ff=after
+
+B: 
+	banner=yes 
+	ff=both
+
+C: 
+	banner=no 
+	ff=neither
+

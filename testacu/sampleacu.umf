@@ -1,0 +1,161 @@
+#/************************************************************************/
+#/*									 */
+#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
+#/*	 An unpublished work of International Digital Scientific Inc.	 */
+#/*			    All rights reserved.			 */
+#/*									 */
+#/************************************************************************/
+#
+#
+#	File:		sampleacu.umf
+#
+#	Function:	The UNIX makefile for SAMPLE/ACUCOBOL
+#
+#	Desciption:	This makefile will build SAMPLE for ACUCOBOL.
+#
+#			make -f sampleacu.umf
+#			
+#
+
+CFLAGS= -g
+WISPTRAN=wisp
+COBOL=ccbl
+COBFLAGS=-Zd -Da4
+
+all: 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
+	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
+	TRIGGER XLINK XLINK1 QADPCOMA prtargs
+	@echo
+	@echo SAMPLE is up-to-date
+	@echo
+
+SAMPLE: sample.cob
+	$(COBOL) $(COBFLAGS) -o $@ sample.cob
+
+QAFILEIO: qafileio.cob
+	$(COBOL) $(COBFLAGS) -o $@ qafileio.cob
+
+QAFILE2: qafile2.cob
+	$(COBOL) $(COBFLAGS) -o $@ qafile2.cob
+
+QANETCAP: qanetcap.cob
+	$(COBOL) $(COBFLAGS) -o $@ qanetcap.cob
+
+QAPRINT: qaprint.cob
+	$(COBOL) $(COBFLAGS) -o $@ qaprint.cob
+
+QASCREEN: qascreen.cob
+	$(COBOL) $(COBFLAGS) -o $@ qascreen.cob
+
+QASCRN2: qascrn2.cob
+	$(COBOL) $(COBFLAGS) -o $@ qascrn2.cob
+
+QASUBS: qasubs.cob
+	$(COBOL) $(COBFLAGS) -o $@ qasubs.cob
+
+QASY000M: qasy000m.cob
+	$(COBOL) $(COBFLAGS) -o $@ qasy000m.cob
+
+QASYS99: qasys99.cob
+	$(COBOL) $(COBFLAGS) -o $@ qasys99.cob
+
+QAWSFNM: qawsfnm.cob
+	$(COBOL) $(COBFLAGS) -o $@ qawsfnm.cob
+
+QAWSFNS: qawsfns.cob
+	$(COBOL) $(COBFLAGS) -o $@ qawsfns.cob
+
+QAWSUBS: qawsubs.cob
+	$(COBOL) $(COBFLAGS) -o $@ qawsubs.cob
+
+QABCKGRD: qabckgrd.cob
+	$(COBOL) $(COBFLAGS) -o $@ qabckgrd.cob
+
+TRIGGER: trigger.cob
+	$(COBOL) $(COBFLAGS) -o $@ trigger.cob
+
+SUB1: sub1.cob
+	$(COBOL) $(COBFLAGS) -o $@ sub1.cob
+
+SUB3: sub3.cob
+	$(COBOL) $(COBFLAGS) -o $@ sub3.cob
+
+XLINK: xlink.cob
+	$(COBOL) $(COBFLAGS) -o $@ xlink.cob
+
+XLINK1: xlink1.cob
+	$(COBOL) $(COBFLAGS) -o $@ xlink1.cob
+
+QADPCOMA: qadpcoma.cob
+	$(COBOL) $(COBFLAGS) -o $@ qadpcoma.cob
+
+#
+#==============================================================
+#
+
+sample.cob: sample.wcb
+	$(WISPTRAN) -O samopt.opt sample
+
+qafileio.cob: qafileio.wcb
+	$(WISPTRAN) qafileio
+
+qafile2.cob: qafile2.wcb
+	$(WISPTRAN) qafile2
+
+qanetcap.cob: qanetcap.wcb
+	$(WISPTRAN) qanetcap
+
+qaprint.cob: qaprint.wcb
+	$(WISPTRAN) qaprint
+
+qascreen.cob: qascreen.wcb
+	$(WISPTRAN) qascreen
+
+qascrn2.cob: qascrn2.wcb
+	$(WISPTRAN) qascrn2
+
+qasubs.cob: qasubs.wcb
+	$(WISPTRAN) qasubs
+
+qasy000m.cob: qasy000m.wcb
+	$(WISPTRAN) qasy000m  
+
+qasys99.cob: qasys99.wcb
+	$(WISPTRAN) qasys99
+
+qawsfnm.cob: qawsfnm.wcb
+	$(WISPTRAN) qawsfnm
+
+qawsfns.cob: qawsfns.wcb
+	$(WISPTRAN) qawsfns
+
+qawsubs.cob: qawsubs.wcb
+	$(WISPTRAN) qawsubs  
+
+qabckgrd.cob: qabckgrd.wcb
+	$(WISPTRAN) qabckgrd
+
+sub1.cob: sub1.wcb
+	$(WISPTRAN) sub1
+
+sub3.cob: sub3.wcb
+	$(WISPTRAN) sub3
+
+trigger.cob: trigger.wcb
+	$(WISPTRAN) trigger
+
+xlink.cob: xlink.wcb
+	$(WISPTRAN) xlink
+
+xlink1.cob: xlink1.wcb
+	$(WISPTRAN) xlink1
+
+qadpcoma.cob: qadpcoma.wcb
+	$(WISPTRAN) qadpcoma
+
+
+
+
+
+
+

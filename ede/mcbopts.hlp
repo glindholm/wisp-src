@@ -1,0 +1,10 @@
+Menu Options
+------------
+The menu option field defines the various options that
+can be used with each menu as follows:
+
+       1 - Bold Rendition    512 - Left-handed
+       8 - Reverse Video    1048 - Right-handed
+
+Options can be added together to form composite values.
+Most often, only option 8, reverse video, is used.

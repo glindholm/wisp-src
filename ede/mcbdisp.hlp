@@ -1,0 +1,17 @@
+Extended Development Environment
+Menu Control File Editor Program
+Menu Control Block  Entry Screen
+
+On this screen, the general parameters of a menu control
+block (MCB) can be entered.    Each menu specified in an
+MCB can return either a value, or link to another MCB.
+
+Although each MCB field can filled out completely, it is
+usually best to leave most blank.  The menu manager will
+pick appropriate ones which will yield results that are
+"visually independent" from the calling program.
+
+It is usually necessary to fill in only the menu number,
+number of items, and the item data. In addition, a value
+of 8 is usually selected for the options so that reverse
+text is produced.

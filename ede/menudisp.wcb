@@ -1,0 +1,210 @@
+      **************************************************
+      * International Digital Scientific Incorporated. *
+      * Extended Development Environment.              *
+      * Pull-down menu demonstration.                  *
+      *                                                *
+      * Revised October 1, 1991                        *
+      *                                                *
+      * Note, this demonstration uses dynamic links    *
+      * and drives the menus from a menu control file. *
+      **************************************************
+
+      **************************************************
+      * Identification Division                        *
+      **************************************************
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. MENUDISP.
+
+      **************************************************
+      * Environment Division                           *
+      **************************************************
+
+       ENVIRONMENT DIVISION.
+
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+           COPY "MCBCPY1".
+
+      /*************************************************
+      * Data Division                                  *
+      **************************************************
+
+       DATA DIVISION.
+
+       FILE SECTION.
+
+           COPY "MCBCPY2".
+
+       WORKING-STORAGE SECTION.
+
+           COPY "MCBCPY3".
+
+
+           COPY "MENUDEFS".
+           COPY "MENUMCBS".
+
+       01 O     PIC 9(9) BINARY VALUE 0.
+       01 ONE   PIC 9(9) BINARY VALUE 1.
+       01 TWO   PIC 9(9) BINARY VALUE 2.
+       01 THREE PIC 9(9) BINARY VALUE 3.
+       01 I     PIC S9(9) BINARY.
+       01 DOP   PIC  9(9) BINARY.
+       01 LNK   PIC S9(9) BINARY.
+       01 LEVEL PIC  9(9) BINARY.
+
+       01 LAST-LEVEL  PIC 9(9) BINARY.
+       01 LAST-ITEM   PIC 9(9) BINARY.
+       01 LAST-LINK   PIC 9(9) BINARY.
+       01 SAVE-AREA   PIC 9(9) BINARY.
+       01 TABLE-INDEX PIC 9(9) BINARY.
+
+      * The item table provides storage for 12 levels
+      * at 20 items per level.
+
+       01 ITEM-TABLE-STORAGE.
+          02 ITEM-TABLE OCCURS 240 TIMES.
+             03 TABLE-ENTRY  PIC X(8).
+
+       01 TYP                PIC S9(9) BINARY.
+       01 OPT                PIC S9(9) BINARY.
+       01 ROW-NO             PIC S9(9) BINARY.
+       01 COL-NO             PIC S9(9) BINARY.
+       01 WID                PIC S9(9) BINARY.
+       01 CNT                PIC S9(9) BINARY.
+
+       01 SELECTED-CHOICE PIC X(8).
+       01 SELECTED-PFKEY  PIC 9(2).
+
+      /*************************************************
+      * Procedure Division                             *
+      **************************************************
+
+       PROCEDURE DIVISION.
+
+       START-MENU-PROCESSING.
+
+           PERFORM GENERAL-INITIALIZATION.
+           PERFORM DISPLAY-BACKGROUND-SCREEN.
+
+           PERFORM INITIALIZE-MENU-CONTROL-BLOCKS
+                   VARYING I FROM 1 BY 1 UNTIL I > MAX-LEVELS.
+ 
+           OPEN INPUT MENU-DATA-FILE.
+           PERFORM DYNAMICALLY-LOAD-AN-MCB.
+
+           CALL "MENUMODE" USING DYNAMIC-LINK.
+           CALL "MENUGO" USING MCB(1), MENU-CHOICE.
+
+       CONTINUE-MENU-PROCESSING.
+
+      * If the menu link is zero, then this is a terminal value
+      * so go do what is required. If menu link is non-zero, then
+      * do a dynamic link to the next menu level.
+
+           PERFORM DETERMINE-MENU-RESPONSE.
+           IF SELECTED-PFKEY  =    16  GO TO TERMINATE-MENU-PROCESSING.
+           IF SELECTED-CHOICE = "EXIT" GO TO TERMINATE-MENU-PROCESSING.
+           IF SELECTED-CHOICE = "Exit" GO TO TERMINATE-MENU-PROCESSING.
+           IF SELECTED-CHOICE = "exit" GO TO TERMINATE-MENU-PROCESSING.
+           IF MENU-CHOICE < ZERO GO TO TERMINATE-MENU-PROCESSING.
+
+           IF LAST-LINK = ZERO
+              CALL "PUSHSCRN" USING SAVE-AREA
+              CALL "MENUVECT" USING SELECTED-CHOICE,
+                                    SELECTED-PFKEY
+              CALL "POPAREA" USING SAVE-AREA
+
+           ELSE
+              PERFORM UNLINK-HIGHER-LEVELS VARYING
+                      I FROM LEVEL BY -1 UNTIL I = LAST-LEVEL
+              MOVE LAST-LEVEL TO LEVEL
+              MOVE TABLE-ENTRY(MENU-CHOICE) TO MENU-IDENTIFIER
+              COMPUTE LEVEL = (LEVEL + 1)
+              PERFORM DYNAMICALLY-LOAD-AN-MCB
+              CALL "DYLINK" USING MCB(1), MCB(LEVEL).
+
+           CALL "MENUCONT" USING MCB(1), MENU-CHOICE.
+           GO TO CONTINUE-MENU-PROCESSING.
+
+       TERMINATE-MENU-PROCESSING.
+
+           CALL "NOPFKEYS".
+           CALL "MENUEXIT" USING MCB(1).
+           CALL "EDEXIT".
+           CLOSE MENU-DATA-FILE.
+           EXIT PROGRAM.
+           STOP RUN.
+
+       GENERAL-INITIALIZATION.
+
+           MOVE DYNAMIC-LINK TO LNK.
+           MOVE REVERSE-TEXT TO DOP.
+           MOVE "ROOTMENU" TO MENU-IDENTIFIER.
+           MOVE 1 TO LEVEL.
+           MOVE "0" TO MENU-DATA-FILE-STATUS.
+           MOVE "mcbfile" TO N-MENU-DATA-FILE.
+           CALL "PFKEYSON".
+
+       DISPLAY-BACKGROUND-SCREEN.
+
+           CALL "EDLOAD".
+           CALL "EDCLRSCR".
+           CALL "MENULOGO".
+
+       INITIALIZE-MENU-CONTROL-BLOCKS.
+
+           CALL "MENULOAD" USING MCB(I),O,DOP,O,O,O.
+
+       DYNAMICALLY-LOAD-AN-MCB.
+
+           CALL "MENUKILL" USING MCB(LEVEL), ALL-MENUS.
+           PERFORM READ-MENU-CONTROL-FILE.
+           CALL "MENULOAD" USING MCB(LEVEL),TYP,OPT,ROW-NO,COL-NO,WID.
+           PERFORM LOAD-ITEMS VARYING I FROM 1 BY 1 UNTIL I > CNT.
+
+       LOAD-ITEMS.
+
+           MOVE MENU-ITEM-TEXT(I) TO ITEM-TEXT.
+           COMPUTE TABLE-INDEX = ((LEVEL - 1) * 12) + I.
+           MOVE MENU-ITEM-VALUE(I) TO TABLE-ENTRY(TABLE-INDEX).
+           MOVE TABLE-INDEX TO ITEM-CODE.
+           IF MENU-ITEM-TYPE(I) = "M"
+              CALL "MENUITEM" USING MCB(LEVEL), ITEM-TEXT,
+                                    DYNAMIC-LINK, ITEM-CODE
+           ELSE
+              CALL "MENUITEM" USING MCB(LEVEL),ITEM-TEXT,ITEM-CODE,O.
+
+       READ-MENU-CONTROL-FILE.
+
+           MOVE "0" TO MENU-DATA-FILE-STATUS.
+
+           START MENU-DATA-FILE
+                 KEY IS EQUAL TO MENU-IDENTIFIER
+                 INVALID KEY MOVE ERR-FLAG TO MENU-DATA-FILE-STATUS.
+
+           READ MENU-DATA-FILE
+                NEXT RECORD
+                AT END MOVE ERR-FLAG TO MENU-DATA-FILE-STATUS.
+
+           MOVE MENU-TYPE TO TYP.
+           MOVE MENU-OPTIONS TO OPT.
+           MOVE MENU-ROW TO ROW-NO.
+           MOVE MENU-COLUMN TO COL-NO.
+           MOVE MENU-WIDTH TO WID.
+           MOVE MENU-ITEMS TO CNT.
+
+       UNLINK-HIGHER-LEVELS.
+
+           CALL "DYUNLINK" USING MCB(I).
+
+       DETERMINE-MENU-RESPONSE.
+
+           CALL "MENUINFO" USING MCB(1), LAST-LEVEL,
+                                 LAST-ITEM, LAST-LINK.
+
+           COMPUTE I = MENU-CHOICE / 100000.
+           MOVE I TO SELECTED-PFKEY.
+           COMPUTE MENU-CHOICE = MENU-CHOICE - (I * 100000).
+           MOVE TABLE-ENTRY(MENU-CHOICE) TO SELECTED-CHOICE.

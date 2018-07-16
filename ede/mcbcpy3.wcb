@@ -1,0 +1,31 @@
+      ****************************************************************
+      *International Digital Scientific, Incorporated
+      *Extended Development Environment
+      ****************************************************************
+
+      *Copy member for the dynamic menu data file.
+      *Created 10/6/91.
+
+       01 MENU-DATA-CONTROL.
+
+          03 MENU-FILE-OPEN-FLAG             PIC 9(01) VALUE 0.
+             88 MENU-FILE-CLOSED                   VALUE 0.
+             88 MENU-FILE-OPENED                   VALUE 1.
+             88 MENU-FILE-PREVIOUSLY-OPENED        VALUE 9.
+
+016900    03 MENU-FILSTAT.
+017000       05  ERR-FLAG                    PIC X(01).
+017100       05  PFK-BYTE                    PIC X(01).
+
+017200    03 MENU-DATA-FILE-STATUS           PIC X(1)  VALUE "0".
+017300        88 MORE-MENU-DATA-FILE               VALUE "0".
+017400        88 RECORD-FOUND-ON-MENU-DATA-FILE    VALUE "0".
+017500        88 NO-MORE-MENU-DATA-FILE            VALUE "1".
+017600        88 NO-RECORD-FOR-MENU-DATA-FILE      VALUE "2".
+017700        88 DUPLICATE-ON-MENU-DATA-FILE       VALUE "2".
+
+          03 MENU-CONTROL-NAMES.
+             05  MENU-FILE                   PIC X(8) VALUE "MCBFILE ".
+             05  MENU-LIBRARY                PIC X(8) VALUE "        ".
+             05  MENU-VOLUME                 PIC X(8) VALUE "        ". 
+

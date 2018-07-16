@@ -1,0 +1,39 @@
+			/************************************************************************/
+			/*									*/
+			/*	     VIDEO - Video Interactive Development Environment		*/
+			/*									*/
+			/*			    Copyright (c) 1987				*/
+			/*									*/
+			/*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
+			/*									*/
+			/************************************************************************/
+#ifdef OLD
+int memcpy(dst,src,count)								/* Fast memory to memory byte copy.	*/
+	register char *dst,*src;							/* Pointers to src and dest locatiions.	*/
+	register int count;								/* Count of how many bytes to copy.	*/
+{
+	while (count--) *(dst++) = *(src++);						/* Copy it.				*/
+	return(1);									/* And return that all is well.		*/
+}
+
+
+int memset(dst,src,count)								/* Dest gets count bytes of src.	*/
+	register char *dst,src;								/* Pointer to dest location, and src.	*/
+	register int count;								/* Count of how many bytes to fill.	*/
+{
+	while (count--) *(dst++) = src;							/* Fill it.				*/
+	return(1);									/* Return that all is fine.		*/
+}
+
+
+int memcmp(src1,src2,num)								/* Compare num bytes.			*/
+	register char *src1,*src2;							/* Pointers to the two strings.		*/
+	register int num;								/* Number of bytes to compare.		*/
+{
+	while (num--)									/* Repeat until all counted.		*/
+	{
+		if (*(src1++) != *(src2++)) return(-1);					/* Return -1 if not the same.		*/
+	}
+	return(0);									/* Return 0 if they are.		*/
+}
+#endif 

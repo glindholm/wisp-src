@@ -1,0 +1,12 @@
+lp0:
+	lp=/dev/null
+	class=ABC
+
+lp3:
+	lp=/dev/null
+	class=DEF
+	form=foobar
+
+lp5:
+	lp=/dev/null
+	class=X

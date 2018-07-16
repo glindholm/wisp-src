@@ -1,0 +1,4 @@
+protect()
+{
+	return(0);
+}

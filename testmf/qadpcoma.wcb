@@ -1,0 +1,432 @@
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           QADPCOMA.
+       AUTHOR.
+           Greg Lindholm.
+       DATE-WRITTEN.
+           03/12/92.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       SPECIAL-NAMES.
+           DECIMAL-POINT IS COMMA.
+       FIGURATIVE-CONSTANTS.
+           A-0-BYTE IS "00"
+           A-1-BYTE IS "01"
+           A-160-BYTE IS "A0"
+           HEXFF IS "FF"
+           HEX-00 IS "00"
+           HEX-01 IS "01"
+           HEX-02 IS "02"
+           HEX-0A IS "0A"
+           HEX-0B IS "0B"
+           HEX-10 IS "10"
+           HEX-28 IS "28"
+           HEX-80 IS "80"
+           HEX-84 IS "84"
+           HEX-88 IS "88"
+           HEX-8C IS "8C"
+           HEX-90 IS "90"
+           HEX-94 IS "94"
+           HEX-98 IS "98"
+           HEX-9C IS "9C"
+           HEX-A0 IS "A0"
+           HEX-A4 IS "A4"
+           HEX-A8 IS "A8"
+           HEX-AC IS "AC"
+           HEX-B0 IS "B0"
+           HEX-B4 IS "B4"
+           HEX-B8 IS "B8"
+           HEX-BC IS "BC"
+           WSXIO-READ IS "40"
+           WSXIO-WRITE IS "80"
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           BRITE-MOD-ALL IS "80"
+           DIM-PROT-ALL IS "8C"
+           NO-ECHO IS "98"
+           SUB-1 IS "01"
+           SUB-2 IS "02"
+           SUB-3 IS "03"
+           SUB-4 IS "04"
+           SUB-5 IS "05"
+           SUB-6 IS "06"
+           SUB-7 IS "07"
+           SUB-8 IS "08"
+           SUB-9 IS "09"
+           SUB-10 IS "0A"
+           SUB-11 IS "0B"
+           SUB-12 IS "0C"
+           SUB-13 IS "0D"
+           SUB-14 IS "0E"
+           SUB-15 IS "0F"
+           SUB-16 IS "10"
+           SUB-17 IS "11"
+           SUB-18 IS "12"
+           SUB-19 IS "13"
+           SUB-20 IS "14"
+           SUB-21 IS "15"
+           SUB-22 IS "16"
+           SUB-23 IS "17"
+           SUB-24 IS "18"
+           SUB-25 IS "19"
+           SUB-26 IS "1A"
+           SUB-27 IS "1B"
+           SUB-28 IS "1C"
+           SUB-29 IS "1D"
+           SUB-30 IS "1E"
+           SUB-31 IS "1F"
+           SUB-96 IS "60"
+           MENU-PICK IS "8E".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA                    PIC X(4).
+           03  CRTREC-MAPPING-AREA          PIC X(1920).
+
+
+      *
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+      ******************************************************************
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+
+
+       01  MISC-SCREEN USAGE IS DISPLAY-WS.
+
+           03  FILLER PIC X(40)     ROW 1 COL 20  VALUE
+               "* * * DECIMAL IS COMMA TEST * * *".
+
+           03  FILLER PIC X(9)                   ROW  3 COL 1
+               VALUE      "PIC 9(5)".
+           03  MISC-ROW03  PIC 9(5)              ROW  3 COL 36
+               SOURCE XMISC-PIC9-5
+               OBJECT XMISC-PIC9-5.
+
+           03  FILLER PIC X(9)                   ROW  4 COL 1
+               VALUE      "PIC Z(5)".
+           03  MISC-ROW04  PIC Z(5)              ROW  4 COL 36
+               SOURCE XMISC-PICZ-5
+               OBJECT XMISC-PICZ-5.
+
+           03  FILLER PIC X(9)                   ROW  5 COL 1
+               VALUE      "PIC -(6)".
+           03  MISC-ROW05  PIC -(6)              ROW  5 COL 35
+               SOURCE XMISC-PICS--6
+               OBJECT XMISC-PICS--6.
+
+           03  FILLER PIC X(12)                  ROW  6 COL 1
+               VALUE        "PIC ----,--".
+           03  MISC-ROW06    PIC ----,--         ROW  6 COL 37
+               SOURCE XMISC-PICS9-3V2
+               OBJECT XMISC-PICS9-3V2.
+
+           03  FILLER PIC X(15)                  ROW  7 COL 1
+               VALUE         "PIC 9.99.99,99+".
+           03  MISC-ROW07     PIC 9.99.99,99+     ROW  7 COL 35
+               SOURCE XMISC-PICS9-5V2
+               OBJECT XMISC-PICS9-5V2.
+
+           03  FILLER PIC X(20)                  ROW  8 COL 1
+               VALUE          "PIC $ZZ.ZZZ,ZZB-".
+           03  MISC-ROW08      PIC $ZZ.ZZZ,ZZB-  ROW  8 COL 34
+               SOURCE XMISC-PICSZ-5V2
+               OBJECT XMISC-PICSZ-5V2.
+
+           03  FILLER PIC X(9)                   ROW 9 COL 1
+               VALUE           "PIC +Z(9)".
+           03  MISC-ROW09       PIC +Z(9)        ROW 9 COL 31
+               SOURCE XMISC-PICZ9
+               OBJECT XMISC-PICZ9.
+
+           03  FILLER PIC X(20)                  ROW 10 COL 1
+               VALUE      "PIC $B***.***.***BCR".
+           03  MISC-ROW10  PIC $B***.***.***BCR  ROW 10 COL 30
+               SOURCE XMISC-PIC9Z
+               OBJECT XMISC-PIC9Z.
+
+           03  FILLER PIC X(20)                  ROW 11 COL 1
+               VALUE       "PIC $$.$$$B,B$$BDB".
+           03  MISC-ROW11   PIC $$.$$$B,B$$BDB   ROW 11 COL 35
+               SOURCE XMISC-PICS9-4V2
+               OBJECT XMISC-PICS9-4V2.
+
+           03  FILLER PIC X(17)                  ROW 12 COL 1
+               VALUE      "PIC +++.+++,99/99".
+           03  MISC-ROW12  PIC +++.+++,99/99     ROW 12 COL 34
+               SOURCE XMISC-PICS9-5V4
+               OBJECT XMISC-PICS9-5V4.
+
+           03  FILLER PIC X(20)                  ROW 13 COL 1
+               VALUE         "PIC -$B**.***,**".
+           03  MISC-ROW13     PIC -$B**.***,**   ROW 13 COL 32
+               SOURCE XMISC-PICS232
+               OBJECT XMISC-PICS232.
+
+           03  FILLER PIC X(15)                  ROW 14 COL 1
+               VALUE          "PIC ZZZBZZBZZZZ".
+           03  MISC-ROW14      PIC ZZZBZZBZZZZ   ROW 14 COL 30
+               SOURCE XMISC-PIC9
+               OBJECT XMISC-PIC9.
+
+           03  FILLER PIC X(15)                  ROW 15 COL 1
+               VALUE           "PIC ZZZ/ZZ/ZZZZ".
+           03  MISC-ROW15       PIC ZZZ/ZZ/ZZZZ  ROW 15 COL 30
+               SOURCE XMISC-PICE9
+               OBJECT XMISC-PICE9.
+
+           03  FILLER PIC X(20)                  ROW 16 COL 1
+               VALUE       "PIC ZZZZ.ZZZ.ZZZ.ZZZ".
+           03  MISC-ROW16   PIC ZZZZ.ZZZ.ZZZ.ZZZ ROW 16 COL 25
+               SOURCE XMISC-PICZ13
+               OBJECT XMISC-PICZ13.
+
+           03  FILLER PIC X(10)                  ROW 17 COL 1
+               VALUE     "PIC A(10)".
+           03  MISC-ROW17 PIC A(10)              ROW 17 COL 25
+               SOURCE XMISC-PICA10
+               OBJECT XMISC-PICA10.
+
+           03  FILLER PIC X(12)                  ROW 18 COL 1
+               VALUE     "PIC AABAABAA".
+           03  MISC-ROW18 PIC AABAABAA           ROW 18 COL 25
+               SOURCE XMISC-PICAB8
+               OBJECT XMISC-PICAB8-X.
+
+           03  FILLER PIC X(05)                  ROW 18 COL 40
+               VALUE     "---->".
+           03  FILLER     PIC X(8)               ROW 18 COL 50
+               SOURCE XMISC-PICAB8-X.
+
+           03  FILLER PIC X(11)                  ROW 19 COL 1
+               VALUE     "PIC A9AB9A9".
+           03  MISC-ROW19 PIC A9AB9A9            ROW 19 COL 25
+               SOURCE XMISC-PICA9B7
+               OBJECT XMISC-PICA9B7-X.
+
+           03  FILLER PIC X(05)                  ROW 19 COL 40
+               VALUE     "---->".
+           03  FILLER     PIC X(8)               ROW 19 COL 50
+               SOURCE XMISC-PICA9B7-X.
+
+           03  FILLER PIC X(12)                  ROW 20 COL 1
+               VALUE     "PIC AA/XX/99".
+           03  MISC-ROW20 PIC AA/XX/99           ROW 20 COL 25
+               SOURCE XMISC-PICAX8
+               OBJECT XMISC-PICAX8-X.
+
+           03  FILLER PIC X(05)                  ROW 20 COL 40
+               VALUE     "---->".
+           03  FILLER     PIC X(8)               ROW 20 COL 50
+               SOURCE XMISC-PICAX8-X.
+
+           03  FILLER PIC X(12)                  ROW 21 COL 1
+               VALUE     "PIC XXB00BXX".
+           03  MISC-ROW21 PIC XXB00BXX           ROW 21 COL 25
+               SOURCE XMISC-PICXB8
+               OBJECT XMISC-PICXB8-X.
+
+           03  FILLER PIC X(05)                  ROW 21 COL 40
+               VALUE     "---->".
+           03  FILLER     PIC X(8)               ROW 21 COL 50
+               SOURCE XMISC-PICXB8-X.
+
+           03  FILLER PIC X(14)                 ROW 22 COL 1
+               VALUE     "PIC Z(3) 1-199".
+           03  MISC-ROW22 PIC Z(3)              ROW 22 COL 25
+               RANGE 1 TO 199
+               SOURCE XMISC-PICZ3
+               OBJECT XMISC-PICZ3.
+
+           03  FILLER PIC X(20)                 ROW 23 COL 1 
+               VALUE "PIC X(50) (UPLOW):".
+           03  MISC-ROW23 PIC X(50)             ROW 23 COL 25
+               SOURCE XMISC-UPLOW OBJECT XMISC-UPLOW.
+
+123456*8901234567890123456789012345678901234567890123456789012345678901234567890
+
+           03  FILLER PIC X(40)
+                      ROW 24 COL 20
+                      VALUE "PRESS RETURN TO CONTINUE; PF16-EXIT".
+
+       01  XMISC-PIC9-5         PIC 9(5)      VALUE 0.
+       01  XMISC-PICZ-5         PIC 9(5)      VALUE 0.
+       01  XMISC-PICS--6        PIC S9(5)     VALUE 0.
+       01  XMISC-PICS9-3V2      PIC S999V99   VALUE 0.
+       01  XMISC-PICS9-5V2      PIC S99999V99 VALUE 0.
+       01  XMISC-PICSZ-5V2      PIC S99999V99 VALUE 0.
+       01  XMISC-PICZ9          PIC S9(9)     VALUE 0.
+       01  XMISC-PIC9Z          PIC S9(9)     VALUE 0.
+       01  XMISC-PICS9-4V2      PIC S9999V99  VALUE 0.
+       01  XMISC-PICS9-5V4      PIC S9(5)V9(4)  VALUE 0.
+       01  XMISC-PICS232        PIC S99999V99   VALUE 0.
+       01  XMISC-PIC9           PIC  9(9)       VALUE 0.
+       01  XMISC-PICE9          PIC  9(9)       VALUE 0.
+       01  XMISC-PICZ13         PIC S9(13) COMP VALUE 0.
+       01  XMISC-PICA10         PIC X(10) VALUE SPACES.
+       01  XMISC-PICAB8         PIC X(8)  VALUE SPACES.
+       01  XMISC-PICAB8-X       PIC X(8)  VALUE SPACES.
+       01  XMISC-PICA9B7        PIC X(7)  VALUE SPACES.
+       01  XMISC-PICA9B7-X      PIC X(7)  VALUE SPACES.
+       01  XMISC-PICAX8         PIC X(8)  VALUE SPACES.
+       01  XMISC-PICAX8-X       PIC X(8)  VALUE SPACES.
+       01  XMISC-PICXB8         PIC X(8)  VALUE SPACES.
+       01  XMISC-PICXB8-X       PIC X(8)  VALUE SPACES.
+       01  XMISC-PICZ3          PIC  999  VALUE 0.
+       01  XMISC-UPLOW          PIC X(50) VALUE
+           "This is a TEST of UPlow.".
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       SCREEN-TESTS.
+      
+
+       DISPLAY-MISC.
+           SET PROTECT-BIT IN FAC OF MISC-ROW03 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW04 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW05 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW06 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW07 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW08 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW09 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW10 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW11 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW12 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW13 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW14 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW15 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW16 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW17 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW18 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW19 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW20 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW21 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW22 OFF.
+           SET PROTECT-BIT IN FAC OF MISC-ROW23 OFF.
+           MOVE BRITE-MOD-ALL TO FAC OF MISC-ROW23.
+
+           DISPLAY AND READ MISC-SCREEN ON CRT PFKEY 16.
+           IF PF-KEY = 16 THEN GO TO DISPLAY-MISC-EXIT.
+
+           SET PROTECT-BIT IN FAC OF MISC-ROW03 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW04 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW05 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW06 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW07 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW08 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW09 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW10 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW11 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW12 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW13 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW14 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW15 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW16 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW17 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW18 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW19 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW20 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW21 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW22 ON.
+           SET PROTECT-BIT IN FAC OF MISC-ROW23 ON.
+           MOVE DIM-PROT-ALL TO FAC OF MISC-ROW23.
+
+           DISPLAY AND READ MISC-SCREEN ON CRT PFKEY 16.
+           IF PF-KEY NOT = "16" THEN GO TO DISPLAY-MISC.
+       DISPLAY-MISC-EXIT.
+           EXIT.
+
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

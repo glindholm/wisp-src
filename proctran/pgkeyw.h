@@ -1,0 +1,200 @@
+/* PGKEYW.H															*/
+/*		 Initialization of keyword arrays										*/
+
+#ifdef INIT_COMMON
+
+EXT char *proc_keywords[] = {	"ASSIGN",
+				"BACKUP",
+				"CALL",
+				"COPY",
+				"DECLARE",
+				"DELACL",
+				"DESTROY",
+				"DISKINIT",
+				"DISMOUNT",
+				"END",
+				"EZFORMAT",
+				"EXTRACL",
+				"EXTRACT",
+				"GOTO",
+				"IF",
+				"LINKER",
+				"LISTVTOC",
+				"LOGOFF",
+				"MESSAGE",
+				"MOUNT",
+				"OPERATOR",
+				"OPTION",
+				"OPTIONS",
+				"PRINT",
+				"PROMPT",
+				"PROTECT",
+				"RENAME",
+				"RETURN",
+				"RUN",
+				"SCRATCH",
+				"SET",
+				"SETACL",
+				"SORT",
+				"SUBMIT",
+				"TRACE",
+				"PROCEDURE",
+				"PROC",
+				""
+			};
+
+EXT char *run_clause[] = {	"CODE",
+				"DISPLAY",
+				"ENTER",
+				"ERROR",
+				"CANCEL",
+				""
+			};
+
+EXT char *print_keyword[] = {	"CLASS",
+				"DISP",
+				""
+			};
+
+EXT char *submit_keyword[] = {	"CLASS",
+				"DISP",
+				"STATUS",
+				"DUMP",
+				"CPULIMIT",
+				"ACTION",
+				"ENVIRONMENT",
+				"GLOBALS",
+				""
+			};
+
+EXT char *link_keywords[] = {	"USING",
+				"INTEGER",
+				"STRING",
+				""
+			};
+
+EXT char *declare_keywords[] = {	"USING",
+					"INTEGER",
+					"STRING",
+					"INITIAL",
+					"INIT",
+					"GLOBAL",
+					""
+				};
+
+EXT char *program_keywords[] = {	"USING",
+					"IN",
+					"ON",
+					""
+				};
+
+EXT char *extract_keywords[] = {	"USED",
+					"IN",
+					"ON",
+					"USE",
+					""
+				};
+
+EXT char *if_keywords[] = {	"AND",
+				"OR",
+				"NOT",
+				"EXISTS",
+				"FILE",
+				"LIBRARY",
+				"VOLUME",
+				"IN",
+				"ON",
+				"LT",
+				"GT",
+				"NE",
+				"EQ",
+				"GE",
+				"LE",
+				"NEQ",
+				"NLT",
+				"NGT",
+				""
+			};
+
+EXT char *rs_keywords[] = {	"LIBRARY",
+				"IN",
+				"ON",
+
+				"TO",
+				"LIB",
+				""
+			};
+
+EXT char *screen_keywords[] = {		"CENTER",
+					"BLANK",
+					"BLINK",
+					"BRIGHT",
+					"DIM",
+					"LINE",
+					"NUMERIC",
+					"TAB",
+					"UPLOW",
+					"UPPER",
+					"ROW",
+					"PFKEY",
+					"CURCOL",
+					"CURROW",
+					"ALARM",
+					"ERASE",
+					""
+				};
+
+EXT char *built_in_funcs[] = {	"&BYTE",
+				"&COPY",
+				"&DATE",
+				"&INDEX",
+				"&LABEL",
+				"&LENGTH",
+				"&MAX",
+				"&MIN",
+				"&MOD",
+				"&RANK",
+				"&TIME",
+				"&TRANSLATE",
+				"&VERIFY",
+				""
+			};
+
+EXT char *vs_sys_util[] = {	"BACKUP",
+				"COPY",
+				"DISKINIT",
+				"DISMOUNT",
+				"EZFORMAT",
+				"LINKER",
+				"LISTVTOC",
+				"MOUNT",
+				"PROTECT",
+				"SORT",
+				"TRACE",
+				""
+			};
+
+EXT char *trace_keywords[] = {	"RESOURCES",
+				"SCRATCH",
+				"STATEMENTS",
+				"VARIABLES",
+				""
+			};
+#else
+
+EXT char *proc_keywords[];
+EXT char *run_clause[];
+EXT char *print_keyword[];
+EXT char *submit_keyword[];
+EXT char *link_keywords[];
+EXT char *program_keywords[];
+EXT char *extract_keywords[];
+EXT char *if_keywords[];
+EXT char *rs_keywords[];
+EXT char *screen_keywords[];
+EXT char *declare_keywords[];
+EXT char *built_in_funcs[];
+EXT char *vs_sys_util[];
+EXT char *trace_keywords[];
+
+#endif

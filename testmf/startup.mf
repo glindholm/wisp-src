@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+#	File:		startup.mf
+#
+#	Usage:		$ . startup.mf
+#
+#	Function:	To setup env variables needed to QA WISP
+#			using Micro Focus COBOL/2.
+#
+QA=$WISP/src/testmf
+WISPCONFIG=$QA/config
+export QA WISPCONFIG
+
+COBSW=-F
+COBPATH=.
+export COBSW COBPATH
+

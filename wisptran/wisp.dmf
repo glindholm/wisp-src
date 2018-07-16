@@ -1,0 +1,119 @@
+#
+# makefile for the wisp translator
+#
+# creation, 89.09.26, gsl
+#
+# Uncomment for u3b2
+#CFLAGS = -Wp,-I ./ -O
+#CFLAGS = -Wp,-I./ -g
+#
+# Uncomment for ULTRIX
+#CFLAGS = -O
+#
+# Uncomment for RS6000
+#CFLAGS = -O
+
+# Uncomment for HP/UX
+#   - optimization caused problems with screens, so
+#     turn off for safety sake.
+#CFLAGS = 
+
+#
+# Uncomment for ULTRIX & RS6000 & others
+#LDSTART = /lib/crt0.o
+#LDEND = -lc
+
+#
+# Uncomment for u3b2
+#LDSTART = crt1.o
+#LDEND = -L/usr/lib/fp -lc -lg /usr/lib/fp/crtn.o
+
+# Uncomment for unix
+#DIR=/usr/bin/wispbin
+#WISP=wisp
+
+# Uncomment for MS-DOS
+#CFLAGS = -O -AL
+CFLAGS = -AL /Zi /Gt3 /nologo /G2
+LINKFL =  /NOE /ST:12288 /SE:256 /CO /NOL
+
+# Uncomment for MS-DOS
+DIR=\wispbin
+WISP=wisp.exe
+LIB=tran.lib
+CLIB=E:\c600\lib\llibce.lib
+
+$(DIR)/$(WISP): $(WISP)
+	copy $(WISP) $(DIR)
+
+
+OBJS= msdosfns.obj wisp_pic.obj wt_call.obj wt_cli.obj wt_crtrw.obj \
+	wt_datad.obj wt_decl.obj wt_delet.obj wt_disp.obj wt_divs.obj \
+	wt_files.obj wt_free.obj wt_ident.obj wt_if.obj wt_input.obj \
+	wt_io.obj wt_locks.obj wt_opcls.obj wt_procd.obj wt_read.obj \
+	wt_scrn.obj wt_sort.obj wt_start.obj wt_utils.obj wt_write.obj \
+	wt_wsdat.obj wt_wsdiv.obj msdosfns.obj
+
+$(WISP): wisp.obj $(LIB)
+	cl -o $(WISP) wisp.obj /link $(LINKFL) $(LIB) $(CLIB)
+
+$(LIB): $(OBJS)
+	rm $(LIB)
+	lib /NOI /NOL $(LIB);
+	lib /NOI /NOL $(LIB) +msdosfns.obj;
+	lib /NOI /NOL $(LIB) +wisp_pic.obj;
+	lib /NOI /NOL $(LIB) +wt_call.obj;
+	lib /NOI /NOL $(LIB) +wt_cli.obj;
+	lib /NOI /NOL $(LIB) +wt_crtrw.obj;
+	lib /NOI /NOL $(LIB) +wt_datad.obj;
+	lib /NOI /NOL $(LIB) +wt_decl.obj;
+	lib /NOI /NOL $(LIB) +wt_delet.obj;
+	lib /NOI /NOL $(LIB) +wt_disp.obj;
+	lib /NOI /NOL $(LIB) +wt_divs.obj;
+	lib /NOI /NOL $(LIB) +wt_files.obj;
+	lib /NOI /NOL $(LIB) +wt_free.obj;
+	lib /NOI /NOL $(LIB) +wt_ident.obj;
+	lib /NOI /NOL $(LIB) +wt_if.obj;
+	lib /NOI /NOL $(LIB) +wt_input.obj;
+	lib /NOI /NOL $(LIB) +wt_io.obj;
+	lib /NOI /NOL $(LIB) +wt_locks.obj;
+	lib /NOI /NOL $(LIB) +wt_opcls.obj;
+	lib /NOI /NOL $(LIB) +wt_procd.obj;
+	lib /NOI /NOL $(LIB) +wt_read.obj;
+	lib /NOI /NOL $(LIB) +wt_scrn.obj;
+	lib /NOI /NOL $(LIB) +wt_sort.obj;
+	lib /NOI /NOL $(LIB) +wt_start.obj;
+	lib /NOI /NOL $(LIB) +wt_utils.obj;
+	lib /NOI /NOL $(LIB) +wt_write.obj;
+	lib /NOI /NOL $(LIB) +wt_wsdat.obj;
+	lib /NOI /NOL $(LIB) +wt_wsdiv.obj;
+	
+wisp.obj: wisp.c wisp.h wcommon.h
+
+msdosfns.obj: msdosfns.c
+wisp_pic.obj: wisp_pic.c
+wt_call.obj: wt_call.c wisp.h wcommon.h
+wt_cli.obj: wt_cli.c wisp.h wcommon.h
+wt_crtrw.obj: wt_crtrw.c wisp.h wcommon.h
+wt_datad.obj: wt_datad.c wisp.h wcommon.h
+wt_decl.obj: wt_decl.c wisp.h wcommon.h
+wt_delet.obj: wt_delet.c wisp.h wcommon.h
+wt_disp.obj: wt_disp.c wisp.h wcommon.h
+wt_divs.obj: wt_divs.c wisp.h wcommon.h
+wt_files.obj: wt_files.c wisp.h wcommon.h
+wt_free.obj: wt_free.c wisp.h wcommon.h
+wt_ident.obj: wt_ident.c wisp.h wcommon.h
+wt_if.obj: wt_if.c wisp.h wcommon.h
+wt_input.obj: wt_input.c wisp.h wcommon.h
+wt_io.obj: wt_io.c wisp.h wcommon.h
+wt_locks.obj: wt_locks.c wisp.h wcommon.h
+wt_opcls.obj: wt_opcls.c wisp.h wcommon.h
+wt_procd.obj: wt_procd.c wisp.h wcommon.h
+wt_read.obj: wt_read.c wisp.h wcommon.h
+wt_scrn.obj: wt_scrn.c wisp.h wcommon.h
+wt_sort.obj: wt_sort.c wisp.h wcommon.h
+wt_start.obj: wt_start.c wisp.h wcommon.h
+wt_utils.obj: wt_utils.c wisp.h wcommon.h
+wt_write.obj: wt_write.c wisp.h wcommon.h
+wt_wsdat.obj: wt_wsdat.c wisp.h wcommon.h
+wt_wsdiv.obj: wt_wsdiv.c wisp.h wcommon.h

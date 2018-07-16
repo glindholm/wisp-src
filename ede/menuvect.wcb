@@ -1,0 +1,104 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           MENUVECT.
+       AUTHOR.
+           GREG ADAMS BASED ON WORK DONE BY GREG LINDHOLM.
+       DATE-WRITTEN.
+           9/27/91.
+
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           BRITE IS "84"
+           W-NO-ECHO IS "98".
+
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+      *
+           SELECT CRT
+               ASSIGN TO "CRT", "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS LINENUM
+               PFKEY           IS PF-KEY
+               CURSOR POSITION IS CURSOR-POS
+               FILE STATUS     IS FILSTAT.
+      *
+       DATA DIVISION.
+       FILE SECTION.
+      *
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC                         PIC X(1924).
+      *
+       WORKING-STORAGE SECTION.
+
+       01  INDEX-COUNTER                  PIC 9(5).
+       01  FILSTAT.
+           03  ERR-FLAG                   PIC X(01).
+           03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  MY-EXT                         PIC X(39).
+
+       01  RETCOD.
+           05  B4       BINARY VALUE 0.
+           05  RET-CODE BINARY VALUE 0.
+
+       01  MENUVECT-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(15) ROW 1 COL 60 VALUE
+               "MENUVECT-SCREEN".
+           03  FILLER  PIC X(17) ROW 10 COL 30 VALUE
+               "Program name is ".
+           03  FILLER  PIC X(8) ROW 10 COL 48 VALUE
+               SELECTED-PROGRAM.
+           03  FILLER  PIC X(19) ROW 14 COL 30 VALUE
+               "Selected PF key is ".
+           03  FILLER  PIC X(2) ROW 14 COL 52 VALUE
+               SELECTED-PFKEY.
+           03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
+               "PRESS PF KEY 16 TO EXIT".
+
+       LINKAGE SECTION.
+
+       01 SELECTED-PROGRAM PIC X(8).
+       01 SELECTED-PFKEY   PIC 9(2).
+
+       PROCEDURE DIVISION USING SELECTED-PROGRAM, SELECTED-PFKEY.
+
+       MENUVECT-TESTS.
+
+           DISPLAY AND READ MENUVECT-SCREEN ON CRT PFKEYS 16.
+
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           GO TO MENUVECT-TESTS.
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.
+

@@ -1,0 +1,29 @@
+# build the WTEST library
+#
+
+# The following 4 lines are for MSDOS only:
+LIB = wtest.lib
+USELIB = E:\LIB\$(LIB)
+O = OBJ
+V = E:\C600\INCLUDE\V\  
+
+
+.PRECIOUS:      $(LIB)
+
+.c.$(O):
+	@cclib $(LIB) $*
+
+$(USELIB): $(LIB)
+	copy $(LIB) $(USELIB)
+
+
+$(LIB): qamisc.$(O) \
+	qascroll.$(O) \
+	qatstlst.$(O) \
+	qagp255.$(O)
+
+
+qamisc.$(O):   qamisc.c
+qascroll.$(O): qascroll.c $(V)video.h
+qatstlst.$(O): qatstlst.c $(V)video.h $(V)vlocal.h $(V)vdata.h 
+qagp255.$(O):  qagp255.c
