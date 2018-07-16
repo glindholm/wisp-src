@@ -112,8 +112,10 @@ static int ccsioerr(int status,char *io,char *name)
 	static char vax_err_lit[]="File Error";
 
 #ifndef KCSI_VAX
+#ifndef LINUX
 	extern int sys_nerr;
 	extern char *sys_errlist[];
+#endif
 #endif /* not KCSI_VAX */
 
 	if((Streq(io,READ_RECORD)) && (status == ENOREC))
@@ -251,9 +253,12 @@ static void add_mf_error(KFB *kfb)
 /*
 **	History:
 **	$Log: ccsioerr.c,v $
-**	Revision 1.8  2002-04-23 15:56:25-04  gsl
+**	Revision 1.8.2.1  2002/09/05 19:22:28  gsl
+**	LINUX
+**	
+**	Revision 1.8  2002/04/23 19:56:25  gsl
 **	9/067
-**
+**	
 **	Revision 1.7  2002-04-23 13:30:15-04  gsl
 **	Add MF error status text
 **
