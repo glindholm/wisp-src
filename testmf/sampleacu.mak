@@ -17,10 +17,10 @@
 #			nmake -f sampleacu.mak
 #			
 #
-WISPDIR=c:\wisp4400
+WISPDIR=c:\wisp4402
 WISPTRAN=$(WISPDIR)\bin\wisp
 WISPFLAGS= -I..\wisputils -M
-COBOL=c:\acucorp\acucbl510\acugt\bin\ccbl32.exe
+COBOL=c:\acucorp\acucbl520\acugt\bin\ccbl32.exe
 COBFLAGS=-Zd -Da4
 LANG=-VACU
 CFLAGS=-DWIN32 -DMSFS
@@ -40,7 +40,7 @@ CFLAGS=-DWIN32 -DMSFS
 ALL= 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
 	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING \
-	DISPFILE
+	DISPFILE LESWAP 
 
 AUTOQA=	WL0000.cbx WL0010.cbx WL0011.cbx WL0012.cbx WL0013.cbx \
 	WL0014.cbx WL0015.cbx WL0016.cbx WL0017.cbx \
@@ -130,6 +130,10 @@ ACULINK: aculink.cob
 
 ACUUSING: acuusing.cob
 	$(COBOL) $(COBFLAGS) -o $@ acuusing.cob
+
+LESWAP: leswap.cob
+	$(COBOL) $(COBFLAGS) -o $@ leswap.cob
+
 #
 #==============================================================
 #
@@ -236,6 +240,9 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
+#	Revision 1.13  2002-05-15 14:35:32-04  gsl
+#	update
+#
 #	Revision 1.12  2001-11-26 11:24:49-05  gsl
 #	Add target for testdirs
 #

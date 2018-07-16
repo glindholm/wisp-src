@@ -171,14 +171,14 @@ EXT int  vax_cobol 	INIT_FALSE;							/* VAX COBOL				*/
 EXT int  lpi_cobol 	INIT_FALSE;							/* LPI COBOL				*/
 EXT int  acu_cobol 	INIT_FALSE;							/* ACUCOBOL 				*/
 EXT int  acn_cobol 	INIT_FALSE;							/* ACUCOBOL (NATIVE)			*/
-EXT int  native_cobol 	INIT_FALSE;							/* NATIVE SCREENS			*/
 EXT int  aix_cobol 	INIT_FALSE;							/* AIX VS COBOL 			*/
 EXT int  mf_cobol 	INIT_FALSE;							/* Micro Focus COBOL 			*/
+EXT int  mfoc_cobol 	INIT_FALSE;							/* Micro Focus Object COBOL		*/
+EXT int  mfse_cobol 	INIT_FALSE;							/* Micro Focus Server Express COBOL 	*/
 EXT int  dmf_cobol 	INIT_FALSE;							/* Micro Focus MSDOS COBOL 		*/
 EXT int  unix_cobol 	INIT_FALSE;							/* Any UNIX COBOL 			*/
 EXT int  dos_cobol 	INIT_FALSE;							/* Any DOS COBOL 			*/
 EXT int  nt_cobol 	INIT_FALSE;							/* Any NT COBOL 			*/
-EXT int  mf_aix 	INIT_FALSE;							/* Micro Focus (or AIX) COBOL 		*/
 EXT char cobol_type[4];									/* The type of COBOL			*/
 
 EXT int init_move INIT_FALSE;								/* don't change move spaces to initial	*/
@@ -210,6 +210,9 @@ EXT int  wrote_special_names INIT_FALSE;						/* Was SPECIAL-NAMES written		*/
 /*
 **	History:
 **	$Log: wisp.h,v $
+**	Revision 1.16  2002-03-21 17:02:44-05  gsl
+**	Add mfoc_cobol and mfse_cobol
+**
 **	Revision 1.15  2001-09-13 09:58:49-04  gsl
 **	Add do_xtab -X flag
 **

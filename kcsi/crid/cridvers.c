@@ -2361,9 +2361,10 @@ static char compiler[]=
 "x";
 #endif
 
+/* CHANGE-COPYRIGHT-DATE */
 
 static char logoformat[]=
-"     %-9s %s.%s%s - (c) 1989-2001 KCSI/NEOM";
+"     %-9s %s.%s%s - (c) 1989-2002 KCSI/NEOM";
 
 static char logo[80];
 
@@ -2434,6 +2435,9 @@ void init_report_style(char *style)
 /*
 **	History:
 **	$Log: cridvers.c,v $
+**	Revision 2.91  2002-03-19 13:28:39-05  gsl
+**	Change copyright date
+**
 **	Revision 2.90  2001-09-04 16:47:40-04  gsl
 **	Change to 9.9.99 style version number
 **

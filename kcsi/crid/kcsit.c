@@ -21,10 +21,11 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef unix
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <sys/types.h>
-#include <time.h>
 
 #include "intdef.h"
 #include "kcsit.h"
@@ -40,6 +41,10 @@ static char rcsid[]="$Id:$";
 /*
 **	Function Prototypes
 */
+
+void werr_write(const char* buff); 		/* Write out a buffer to the error log $HOME/wisperr.log from werrlog.c.	*/
+void werrlog(uint4 id, const char* msg);	/* Use werrlog(104,msg) for errors.						*/
+
 
 /*
 **	Routine:	kcsitrace()
@@ -76,33 +81,19 @@ static char rcsid[]="$Id:$";
 void kcsitrace(int sever, char *routine, char *mess, char *lform, ...)
 {
 	va_list add_ptr;
-	static int first = 1;
-	static int tracing_level;
-	static FILE *logfile;
-	static char tracefile[120];
 
-	if (first)
+	int tracing_level = kcsi_tracelevel();
+
+	/* Restrict sever to 1-4 */
+	if (sever > 4)
 	{
-		char *ptr;
-		int4 status;
-
-		first = 0;
-		tracing_level = 4;
-		*tracefile = '\0';
-		logfile = NULL;
-		
-		if ( ptr = getenv("KCSITRACE") )			       		/* Test if an environment var exists.   */
-		{
-			sscanf(ptr,"%d", &tracing_level);
-		}
-
-		ptr = getenv("HOME");
-		if (!ptr) ptr = ".";
-		
-		buildfilepath(tracefile, ptr, "kcsitrace.log");
+		sever = 4;
+	}
+	else if (sever < 1)
+	{
+		sever = 1;
 	}
 
-	va_start(add_ptr, lform);
 
 	/*
 	**	If serverity is greater then the tracing level then 
@@ -110,60 +101,71 @@ void kcsitrace(int sever, char *routine, char *mess, char *lform, ...)
 	*/
 	if ( sever >= tracing_level )
 	{
-		if (!logfile)
-		{
-			/*
-			**	Open the tracefile the first time in.
-			*/
-			logfile = fopen(tracefile,"a");
-			if (!logfile)
-			{
-				/*
-				**	If You can open the trace file use stderr.
-				*/
-				logfile = stderr;
-				fprintf(logfile,"%%%s-%d-%s ","KCSITRACE", 4, "Unable to open trace file, using stderr\n");
-			}
-		}
+		char	buff[1024], msg[1024];
 
-		if (sever == 1) 
-		{
-			fprintf(logfile,"1  %%%s-%d-%s ",routine,sever,mess);
-		}
-		else 
-		{
-			time_t	the_clock;
-			the_clock = time(0);
-			if (sever >= 4) fprintf(logfile,"****\n");
-			fprintf(logfile,"-  %s",ctime(&the_clock));
-			fprintf(logfile,"%d  %%%s-%d-%s ",sever,routine,sever,mess);
-		}
-		vfprintf(logfile,lform,add_ptr);
-		fprintf(logfile,"\n");
-		if (sever >= 4) fprintf(logfile,"****\n");
+		va_start(add_ptr, lform);
+		vsprintf(buff,lform,add_ptr);
+		va_end(add_ptr);
 
-		fflush(logfile);
-	}
+		sprintf(msg,"(KCSI) %s-%d-%s %s",routine,sever,mess, buff);
 
-	if (sever >= 4)									/* if will effect processing, report it	*/
-	{
-		fprintf(stderr,"\r\n********************************************************************************\r\n");
-		fprintf(stderr,"%%%s-%d-%s ",routine,sever,mess);
-		vfprintf(stderr,lform,add_ptr);
-		fprintf(stderr,"\r\n********************************************************************************\r\n");
-		
-		if ( isatty(2) ) 
+		if (sever == 4)								/* if will effect processing, report it	*/
 		{
-			fprintf(stderr, "(Pausing ...)\r\n");
-			sleep( 2 );
+			werrlog(104,msg);
+		}
+		else
+		{
+			strcat(msg,"\n");
+			werr_write(msg);
 		}
 	}
-	va_end(add_ptr);
 }
+
+int kcsi_tracelevel(void)
+{
+	static int first = 1;
+	static int tracing_level = 4;
+
+	if (first)
+	{
+		char *ptr;
+		first = 0;
+		
+		if ( ptr = getenv("KCSITRACE") )			       		/* Test if an environment var exists.   */
+		{
+			sscanf(ptr,"%d", &tracing_level);
+		}
+
+		/* Restrict tracing_level to 1-4 */
+		if (tracing_level > 4)
+		{
+			tracing_level = 4;
+		}
+		else if (tracing_level < 1) 
+		{
+			/* Turn tracing off with KCSITRACE=0 which sets it to default=4 */
+			tracing_level = 4; 
+		}		
+	}
+	
+	return tracing_level;	
+}
+
 
 /*
 **	History:
 **	$Log: kcsit.c,v $
+**	Revision 1.6  2002-05-14 17:46:45-04  gsl
+**	ifdef unix include
+**	remove unused status var
+**
+**	Revision 1.4  2002-04-23 13:34:13-04  gsl
+**	Drop the % symbol from the front of messages
+**
+**	Revision 1.3  2002-04-22 14:28:36-04  gsl
+**	Rework the tracing to use werr_write() and werrlog(104,msg)
+**	Added kcsi_tracelevel()
+**
 **	Revision 1.2  1997-08-01 14:10:07-04  scass
 **	Removed include filepaths.h
 **

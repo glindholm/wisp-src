@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------
-#	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1998-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #	File:		cridmake.mak
@@ -40,7 +40,7 @@ MAKEFILE=cridmake.mak
 # To change the version for CRID, change it here. 
 # Change copyright date in "cridvers.c"
 #
-CRID_VERSION=3000
+CRID_VERSION=3003
 
 #-----------------------------------------------------------------------
 #
@@ -49,7 +49,7 @@ WISPTRAN=..\..\bin\wisp.exe
 #
 # 	ACUCOBOL
 #
-ACUDIR= C:\acucorp\ACUCBL510\acugt
+ACUDIR= C:\acucorp\ACUCBL520\acugt
 ACU_COBOL = $(ACUDIR)\bin\ccbl32.exe
 ACU_FLAGS = -Da4 -C32 -Z32 -Za
 CBLUTIL= $(ACUDIR)\bin\cblutl32.exe

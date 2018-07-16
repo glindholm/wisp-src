@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -14,9 +14,9 @@
 #
 #		wruncbl		The standard runtime for ACUCOBOL.
 #
-#		wruncble	The EDE version of the runtime.
-#
 #		wruncblk	The CRID version of the runtime.
+#
+#		wruncble	The EDE version of the runtime.
 #
 #		wruncblke	The CRID + EDE version of the runtime.
 #
@@ -29,15 +29,16 @@
 #		acn		The ACUCOBOL Native Screens programs
 #
 #	Instructions:
+#		Edit the file acucobol.include and follow the instructions
+#		to select the version of ACUCOBOL you are using.
+#
+#		If you are using ACUCOBOL 5.1 or earlier then 
+#		rename the file sub85_acu51.c to sub85.c. See the
+#		instructions in sub85_acu51.c.
+#
 #		To create an ACUCOBOL runtime system position to 
 #		the wisp/acu directory and run the "make" utility 
 #		using this file as input.
-#
-#		NOTE:	You do not need to move the wisp libraries
-#			to /usr/lib as specified in earlier 
-#			instructions.  You also do not need to
-#			move the wisp/acu/* file to the ACUCOBOL
-#			directory.
 #
 #		This makefile requires instructions on how to find
 #		the WISP libraries and the ACUCOBOL files. This is
@@ -60,9 +61,9 @@
 #			$ cd $WISPDIR/acu
 #			$ make -f wruncbl.umf
 #
-#		To build a EDE runtime:
+#		To build a CRID runtime:
 #			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf ede
+#			$ make -f wruncbl.umf crid
 #
 #
 #		Method B:
@@ -79,9 +80,9 @@
 #			$ cd $WISPDIR/acu
 #			$ make -f wruncbl.umf -e
 #
-#		To build a EDE runtime:
+#		To build a CRID runtime:
 #			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf -e ede
+#			$ make -f wruncbl.umf -e crid
 #
 #	Targets:
 #		When running the make utility you can specify what "targets"
@@ -98,19 +99,17 @@
 #				Runtime = wruncbl
 #				Macro   = RTS
 #
-#		ede		The EDE runtime.
-#				Runtime = wruncble
-#				Macro   = RTSE
-#
 #		crid		The CRID runtime.
 #				Runtime = wruncblk
 #				Macro   = RTSK
 #
+#		ede		The EDE runtime.
+#				Runtime = wruncble
+#				Macro   = RTSE
+#
 #		cride		The CRID + EDE runtime.
 #				Runtime = wruncblke
 #				Macro   = RTSKE
-#
-#		both		Create both rts and ede targets.
 #
 #		oracle7		The Acu4GL for ORACLE runtime.
 #				The environment variable $ORACLE_HOME must
@@ -136,10 +135,10 @@
 #			$ cd $WISPDIR/acu
 #			$ make -f wruncbl.umf oracle7
 #
-#		(2) Build the EDE runtime using the name "wrunede". (Method B)
+#		(2) Build the CRID runtime using the name "wruncrid". (Method B)
 #
 #			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf -e RTSE=wrunede ede
+#			$ make -f wruncbl.umf -e RTSE=wruncrid crid
 #
 #
 #	NOTE:	This makefile supports different versions of ACUCOBOL.
@@ -164,7 +163,7 @@
 # ORACLE_HOME	The ORACLE home directory (optional)
 #
 WISPDIR=/usr/local/wisp
-ACUDIR=/usr/local/ACUCOBOL
+ACUDIR=/usr/local/acucobol
 ACU_LIBDIR=$(ACUDIR)/lib
 ACU4GLDIR=/usr/local/acu4gl
 ORACLE_HOME=/usr/local/ORACLE
@@ -173,8 +172,8 @@ ORACLE_HOME=/usr/local/ORACLE
 # EDEDIR	The EDE lib directory
 # CRIDDIR	The CRID directory
 # 
-EDEDIR=$(WISPDIR)/lib
-CRIDDIR=$(WISPDIR)/CRIDACU.3000
+EDEDIR=$(WISPDIR)/ede_4402
+CRIDDIR=$(WISPDIR)/crid_acu_3003
 
 #============================================================================
 #
@@ -210,7 +209,8 @@ CFLAGS= -g -Dunix
 #
 # **** CHANGE CC HERE ****
 #
-#	SOLARIS 2 requires an ANSI C compiler (c89).
+#	SOLARIS 2 requires an ANSI C compiler, if CC is not ansi then you
+#	may need to uncomment CC=c89.
 #CC=c89
 #
 
@@ -517,8 +517,6 @@ rtske:	header_crid_ede $(RTSKE) $(RTSKE).alc
 	@echo ">>>> The WISP + CRID + EDE runtime RTSKE=" $(RTSKE) is up to date.
 	@echo
 
-both:	rts ede
-
 crid:	rtsk
 
 cride:	rtske
@@ -527,56 +525,55 @@ oracle7:  $(RTSORA7) $(RTSORA7).alc
 
 informix: $(RTSINFORMIX) $(RTSINFORMIX).alc
 
-$(RTS): $(ACUSUBS:.o=.c) $(WISP_LIBS_PATHS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+$(RTS): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSE): $(ACUSUBS:.o=.c) $(WISPEDE_LIBS_PATHS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+$(RTSE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSK): $(ACUSUBS:.o=.c) $(WISP_LIBS_PATHS) $(CRID_LIB_PATH)
-	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+$(RTSK): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS) $(CRID_LIB_PATH)
+	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(CRID_LIB_PATH) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSKE): $(ACUSUBS:.o=.c) $(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH)
-	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) \
+$(RTSKE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH)
+	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
 		$(CRID_LIB_PATH) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSORA7): header $(ACUSUBS:.o=.c) $(ORA7ACUSUBS) $(WISP_LIBS_PATHS) $(ORA7LIBS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) $(ORA7ACUSUBS) \
+$(RTSORA7): header $(ACUSUBS:.o=.c) sub85.c $(ORA7ACUSUBS) $(WISP_LIBS_PATHS) $(ORA7LIBS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) $(ORA7ACUSUBS) \
 		$(ACULIBS) $(ORA7LIBS) \
 		$(WISP_LIBS_PATHS) $(OTHER_LINK) $(ORA7_LINK) $(MILI)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSINFORMIX): header $(ACUSUBS:.o=.c) $(INFORMIXACUSUBS) $(WISP_LIBS_PATHS) $(INFORMIXLIBS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUSUBS:.o=.c) $(INFORMIXACUSUBS) \
+$(RTSINFORMIX): header $(ACUSUBS:.o=.c) sub85.c $(INFORMIXACUSUBS) $(WISP_LIBS_PATHS) $(INFORMIXLIBS)
+	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) $(INFORMIXACUSUBS) \
 		$(ACULIBS) $(INFORMIXLIBS) \
 		$(WISP_LIBS_PATHS) $(OTHER_LINK) $(INFORMIX_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-#sub.o: sub.c sub85.c $(ACUSRCDIR)/config85.c $(ACUSRCDIR)/direct.c
-#	$(CC) $(CFLAGS) -c sub.c
+CP=cp -f
 
-sub.c: $(ACUSRCDIR)/sub.c sub85.c
-	cmp -s $(ACUSRCDIR)/sub.c $@ || cp $(ACUSRCDIR)/sub.c $@
+sub.c: $(ACUSRCDIR)/sub.c
+	cmp -s $(ACUSRCDIR)/sub.c $@ || $(CP) $(ACUSRCDIR)/sub.c $@
 
 filetbl.c: $(ACUSRCDIR)/filetbl.c
-	cmp -s $(ACUSRCDIR)/filetbl.c $@ || cp $(ACUSRCDIR)/filetbl.c $@
+	cmp -s $(ACUSRCDIR)/filetbl.c $@ || $(CP) $(ACUSRCDIR)/filetbl.c $@
 
 sub85.c: $(WISPDIR)/acu/sub85.c
-	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp $(WISPDIR)/acu/sub85.c $@
+	cmp -s $(WISPDIR)/acu/sub85.c $@ || $(CP) $(WISPDIR)/acu/sub85.c $@
 
 $(RTSALC):
 	@echo WARNING $(RTSALC) NOT FOUND
 
 $(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc $(RTSORA7).alc $(RTSINFORMIX).alc: $(RTSALC)
 	@if [ -f $(RTSALC) ] ; then \
-		cmp -s $(RTSALC) $@ || cp $(RTSALC) $@ ; \
+		cmp -s $(RTSALC) $@ || $(CP) $(RTSALC) $@ ; \
 	else \
 		echo WARNING $@ NOT CREATED ; \
 	fi

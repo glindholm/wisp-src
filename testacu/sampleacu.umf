@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-1996 NeoMedia Migrations, All rights reserved.
+#	Copyright (c) 1988-2002 NeoMedia Migrations, All rights reserved.
 #	$Id:$
 #
 #
@@ -19,8 +19,8 @@
 #
 
 WISPTRAN=wisp
-VLANG=-VACU
-WISPFLAGS= $(VLANG) -I$(WISPDIR)/etc -M
+WISPLANG=ACU
+WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
 COBOL=ccbl
 COBFLAGS=-Gd -Zd -Da4 -Te 800
 
@@ -39,7 +39,7 @@ COBFLAGS=-Gd -Zd -Da4 -Te 800
 ACU_COBOL_OBJS= SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
 	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING \
-	DISPFILE DISPRINT \
+	DISPFILE DISPRINT LESWAP \
 	WL0000 WL0010 WL0011 WL0012 WL0013 WL0014 WL0015 WL0016 WL0017 \
 	WL0018 WL0019 WL0020 WL0021 WL0022 WL0023 WL0024 WL0025 WL0026 \
 	WL0027 WL0018A WL0018B
@@ -138,6 +138,9 @@ ACULINK: aculink.cob
 
 ACUUSING: acuusing.cob
 	$(COBOL) $(COBFLAGS) -o $@ acuusing.cob
+
+LESWAP: leswap.cob
+	$(COBOL) $(COBFLAGS) -o $@ leswap.cob
 #
 #==============================================================
 #
@@ -255,7 +258,7 @@ win32_stuff:	prtargs.exe
 
 
 DISPRINT: $(DISPRINT_SRC)
-	$(MAKE) -f disprint.umf acu
+	$(MAKE) -f disprint.umf $(WISPLANG)
 
 $(DISPRINT_SRC):
 	rm -f $@
@@ -264,6 +267,12 @@ $(DISPRINT_SRC):
 #
 #	History:
 #	$Log: sampleacu.umf,v $
+#	Revision 1.28  2002-03-28 17:21:07-05  gsl
+#	Add LESWAP
+#
+#	Revision 1.27  2002-03-26 16:09:57-05  gsl
+#	Change VLANG to WISPLANG
+#
 #	Revision 1.26  2001-11-05 15:40:38-05  gsl
 #	Tweak to run without Acucobol compiler
 #

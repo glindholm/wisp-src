@@ -28,6 +28,7 @@ static char rcsid[]="$Id:$";
 #include <direct.h>
 #endif
 
+#include "wcommon.h"
 #include "wlicense.h"
 #include "idsisubs.h"
 #include "prompt.h"
@@ -492,12 +493,11 @@ static void assistance()
 
 static void putheader()
 {
-	/* CHANGE-COPYRIGHT-DATE */
 /*		123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567890				*/
 	printf("\n");
 	printf("\n");
 	printf("                   **** %s LICENSE INSTALLATION TOOL ****\n",product_name());
-	printf("         Copyright (c) 1992-2001 by NeoMedia Technologies Incorporated\n");
+	printf("         Copyright (c) 1992-" WISP_COPYRIGHT_YEAR_STR " by NeoMedia Technologies Incorporated\n");
 	printf("                             (941) 337-3434\n");
 	printf("\n");
 	printf("\n");
@@ -570,6 +570,12 @@ void wtrace()
 /*
 **	History:
 **	$Log: wlicense.c,v $
+**	Revision 1.22  2002-03-28 10:09:37-05  gsl
+**	use define for copyright year
+**
+**	Revision 1.21  2002-03-26 16:50:19-05  gsl
+**	(C) 2002
+**
 **	Revision 1.20  2001-09-05 14:46:10-04  gsl
 **	change copyright date
 **

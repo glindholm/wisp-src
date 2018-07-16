@@ -36,6 +36,7 @@ static char rcsid[]="$Id:$";
 #include "platsubs.h"
 #include "idsisubs.h"
 #include "wisplib.h"
+#include "wanguid.h"
 
 #ifndef WIN32
 extern char	*sys_errlist[];
@@ -45,6 +46,8 @@ extern char	*sys_errlist[];
 
 static int g_bCGI = 0;	/* Flag, are we running in a CGI ? */
 static const char *g_cgi_query_string = NULL;
+
+static const char *operatorId();
 
 static void gen_key(void);
 static void gen_val(int useglobals);
@@ -850,7 +853,7 @@ static void logkeyinfo(const char *custname,
 
 	fprintf(fp,"*******************\n");
 	fprintf(fp,"<LICENSE-KEY-ENTRY>\n");
-	fprintf(fp,"OPERATOR           %s\n",cuserid(NULL));
+	fprintf(fp,"OPERATOR           %s\n",operatorId());
 	fprintf(fp,"TIME               %s\n",f_time);
 	fprintf(fp,"CUSTOMER-NAME      %s\n",custname);
 	fprintf(fp,"CUSTOMER-NUMBER    %06d\n",custnum);
@@ -924,7 +927,7 @@ static void logvalinfo(const char* custname,
 
 	fprintf(fp,"*******************\n");
 	fprintf(fp,"<VALIDATION-CODE-ENTRY>\n");
-	fprintf(fp,"OPERATOR           %s\n",cuserid(NULL));
+	fprintf(fp,"OPERATOR           %s\n",operatorId());
 	fprintf(fp,"TIME               %s\n",f_time);
 	fprintf(fp,"CUSTOMER-NAME      %s\n",custname);
 	fprintf(fp,"CUSTOMER-NUMBER    %06d\n",custnum);
@@ -1063,6 +1066,17 @@ static 	void printkeydoc(const char* custname,
 	system(buff);
 }
 
+static const char *operatorId()
+{
+#ifdef unix
+	return cuserid(NULL);
+#endif
+#ifdef WIN32
+	return longuid();
+#endif
+}
+
+
 static const char* tabfilepath()
 {
 	static int first=1;
@@ -1108,7 +1122,7 @@ static void logtabfile(const char* r_type,		/* "VALCODE" or "LICKEY" */
 
 	fprintf(fp, "%s\t%s\t%s\t%s\t%06d\t%s\t%s [%d]\t%8.8s\t%8.8s\t%s\t%s\t%s\n",
 			       r_type,
-			       cuserid(NULL),
+			       operatorId(),
 			       f_time,
 			       f_custname,
 			       custnum,
@@ -1971,6 +1985,9 @@ werrlog()
 /*
 **	History:
 **	$Log: wauthorize.c,v $
+**	Revision 1.13  2002-05-14 16:11:03-04  gsl
+**	On Win32 use longuid() instead of cuserid()
+**
 **	Revision 1.12  2000-03-13 14:16:29-05  gsl
 **	Fix WIN32 warnings
 **

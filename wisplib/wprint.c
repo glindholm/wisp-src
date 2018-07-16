@@ -103,13 +103,8 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 	int4	printer;
 
 	wtrace("WPRINT", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d]",
-	       (native_fname)?native_fname:"(nil)", mode, (disposition)?disposition:"??", copies, prt_class, prt_form);
+	       (native_fname)?native_fname:"(null)", mode, (disposition)?disposition:"  ", copies, prt_class, prt_form);
 
-	if (mode == 'K')
-	{
-		*return_code = 0;							/* Don't print if KEEP mode.		*/
-		return;
-	}
 
 	/*
 	**	Validate all the parameters.
@@ -128,6 +123,25 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 		return;
 	}
 	
+	switch(mode)
+	{
+	case 'K':	/* KEEP - don't print */	
+		*return_code = 0;
+		return;
+
+	case 'S':	/* SPOOL */	
+		break;
+	case 'H':	/* HOLD */
+		break;
+	case 'P':	/* PRINT and save */
+		break;
+
+	default:
+		wtrace("WPRINT","ARGS", "Mode is invalid [%c]", mode);
+		*return_code = 40;
+		return;
+	}
+
 	if (copies < 1)
 	{
 		wtrace("WPRINT","ARGS", "Copies is less then 1 [%d]", copies);
@@ -154,15 +168,16 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 		/*
 		**	Set the disposition based on mode.
 		**	   Mode 'S' means print and delete. "DX"
+		**	   Mode 'H' means hold, print and delete. "DX"
 		**	   Mode 'P' means print and save. "DS"	
 		*/
-		if ('S' == mode)
+		if ('P' == mode)
 		{
-			disposition = "DX";
+			disposition = "DS";
 		}
 		else
 		{
-			disposition = "DS";
+			disposition = "DX";
 		}
 	}
 	else
@@ -177,21 +192,13 @@ void wprint(const char* native_fname, char mode, const char* disposition,
 		}
 	}
 	
-	switch(mode)
+	if ('P' == mode )
 	{
-	case 'S':	
-		break;
-	case 'H':
-		break;
-	case 'P':
+		/* 
+		 *  Mode=P is only used to set the disposition, switch back to 'S'.
+		 */
 		mode = 'S';
-		break;
-	default:
-		wtrace("WPRINT","ARGS", "Mode is invalid [%c]", mode);
-		*return_code = 40;
-		return;
 	}
-
 
 	/*
 	**	Get the printer number
@@ -264,46 +271,42 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 #undef		ROUTINE
 #define		ROUTINE		46400
 
-	werrlog(ERRORCODE(1),file,copies,formnum,0,0,0,0,0);
+	wtrace("unique_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
+	       file, mode, disposition, copies, lpclass, formnum, printer);
+
 
 	switch(mode)
 	{
 	case 'H':
 		hold=1;
-		del=1;
 		break;
-	case 'K':
-		return(0);
+
 	case 'S':
-		del=1;
 		break;
-	case 'P':									/* SPOOL it.				*/
-		break;
+
 	default:
 		return(60);
 	}
 
-	if (disposition)
+	if      (0==memcmp(disposition,"DX",2))
 	{
-		if      (0==memcmp(disposition,"DX",2))
-		{
-			del=1;								/* Delete after printing.	*/
-		}
-		else if (0==memcmp(disposition,"RS",2)) 
-		{
-			re=1;								/* respool */
-			del=0;
-		}
-		else if (0==memcmp(disposition,"DS",2))
-		{
-			re=0;
-			del=0;
-		}
-		else return(61);
+		del=1;								/* Delete after printing.	*/
 	}
+	else if (0==memcmp(disposition,"RS",2)) 
+	{
+		re=1;								/* respool */
+		del=0;
+	}
+	else if (0==memcmp(disposition,"DS",2))
+	{
+		re=0;
+		del=0;
+	}
+	else return(61);
 
 	sprintf(l_form,"-f%03d",formnum);
 	sprintf(l_copies,"-n%d",copies?copies:1);
+
 	if (lpclass!=' ')
 	{
 		sprintf(l_class,"-C%c",lpclass);
@@ -312,7 +315,8 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 	{
 		strcpy(l_class,"");
 	}
-	if (printer)
+
+	if (printer != 0)
 	{
 		sprintf(l_printer,"-P%d",printer);
 	}
@@ -422,8 +426,9 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 	char	*suppress_flag;
 	int	delete_after, respool;
 	char	*copies_flag, *base_command;
-                                                
-	werrlog(ERRORCODE(1),file,copies,formnum,delete_after,0,0,0,0);
+
+	wtrace("lp_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
+	       file, mode, disposition, copies, lpclass, formnum, printer);
 
 	if (PQ_NP == opt_printqueue)
 	{
@@ -674,6 +679,10 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	int4	args;
 	int	rc;
 	int	i;
+
+
+	wtrace("generic_print", "ENTRY", "File=[%s] Mode=[%c] Disp=[%2.2s] Copies=[%d] Class=[%c] Form=[%d] Printer=[%d]",
+	       file, mode, disposition, copies, lpclass, formnum, printer);
 
 	/*
 	**	Check for no hold option and return if hold.
@@ -943,6 +952,11 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 /*
 **	History:
 **	$Log: wprint.c,v $
+**	Revision 1.19  2002-03-26 10:26:39-05  gsl
+**	Fixed Mode=Hold to default to Disp=DX
+**	In WISP 4.3.02 Mode=Hold was incorrectly changed to default to Disp=DS
+**	Improved the tracing
+**
 **	Revision 1.18  2001-11-27 15:49:06-05  gsl
 **	Remove VMS & MSDOS
 **

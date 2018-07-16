@@ -239,9 +239,11 @@ NODE parse_open(NODE the_statement)
 		if (-1 != fnum)
 		{
 			char 	*open_access;
+			char	*open_sharing_phrase;
 			char	*open_lock;
 
 			open_access = "UNKNOWN";
+			open_sharing_phrase = "";
 			open_lock = "";
 			
 			switch(open_mode)
@@ -249,22 +251,34 @@ NODE parse_open(NODE the_statement)
 			case OPEN_SHARED:
 				if (prog_ftypes[fnum] & (SEQ_DYN + SEQ_FILE))
 				{
+					/*
+					 *  	A SEQ file OPEN SHARED is only allowed to WRITE to the end.
+					 *	This is the same as OPEN EXTEND allowing multiple writers.
+					 */
 					open_access = "EXTEND";
+
+					if (mfse_cobol)
+					{
+						open_sharing_phrase = "SHARING ALL";
+					}
+
+					if (mfoc_cobol)
+					{
+						write_log("WISP",'W',"OPEN-SHARED-SEQ",
+							  "Micro Focus Object Cobol does not support shared access on SEQUENTIAL files. [OPEN SHARED %s]", 
+							  token_data(file_node->token));
+					}
 				}
 				else
 				{
 					open_access = "I-O";
 				}
 
-				if (lpi_cobol||mf_aix)
-				{
-					open_lock = "";
-				}
-				else
+				if (acu_cobol||vax_cobol)
 				{
 					open_lock = "ALLOWING ALL";
 				}
-
+				      
 				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
 				{
 					write_log("WISP",'W',"AUTOLOCK","File %s OPEN SHARED using AUTOLOCK.",
@@ -275,7 +289,7 @@ NODE parse_open(NODE the_statement)
 			case OPEN_SPECIAL_INPUT:
 				open_access = "INPUT";
 
-				if (lpi_cobol||mf_aix)
+				if (lpi_cobol||mf_cobol)
 				{
 					open_lock = "";
 				}
@@ -292,7 +306,7 @@ NODE parse_open(NODE the_statement)
 			case OPEN_I_O:
 				open_access = "I-O";
 
-				if (lpi_cobol||mf_aix)
+				if (lpi_cobol||mf_cobol)
 					open_lock = "WITH LOCK";
 				else if ((vax_cobol || acu_cobol) && (prog_ftypes[fnum] & OPENIOX_FILE))
 					open_lock = "ALLOWING NO OTHERS";	/* OPEN I-O exclusive		*/
@@ -315,7 +329,7 @@ NODE parse_open(NODE the_statement)
 			case OPEN_OUTPUT:
 				open_access = "OUTPUT";
 
-				if (lpi_cobol||mf_aix)
+				if (lpi_cobol||mf_cobol)
 					open_lock = "WITH LOCK";
 				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
 					open_lock = "";
@@ -335,7 +349,7 @@ NODE parse_open(NODE the_statement)
 			case OPEN_EXTEND:
 				open_access = "EXTEND";
 
-				if (lpi_cobol||mf_aix)
+				if (lpi_cobol||mf_cobol)
 					open_lock = "WITH LOCK";
 				else if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
 					open_lock = "";
@@ -400,6 +414,12 @@ NODE parse_open(NODE the_statement)
 			tput_clause(col+4,  "%s", open_mode_name[open_mode]);	/* open mode	*/
 
 			tput_line_at(col, "OPEN %s", open_access);
+
+			if (strlen(open_sharing_phrase) > 0)
+			{
+				tput_clause(col+4, "%s", open_sharing_phrase);
+			}
+			
 			tput_clause(col+4,  "%s", token_data(file_node->token));
 
 			if (with_no_rewind)
@@ -703,6 +723,12 @@ NODE parse_close(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
+**	Revision 1.24  2002-03-21 18:26:40-05  gsl
+**	FIx format
+**
+**	Revision 1.23  2002-03-21 17:05:20-05  gsl
+**	Add MFSE open sharing clause and MFOC warning on a OPEN SHARED seq-file.
+**
 **	Revision 1.22  2001-09-13 10:14:04-04  gsl
 **	Add xtab_log of OPEN statements
 **

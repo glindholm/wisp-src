@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-2002 NeoMedia Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		initwisp.c
@@ -13,11 +13,11 @@ static char rcsid[]="$Id:$";
 **	initwisp2()	The COBOL called routine to do initialization.
 */
 
-#if !(defined(unix) || defined(VMS) || defined(MSDOS) || defined(WIN32))
+#if !(defined(unix) || defined(WIN32))
 
-#error	'This will not compile as unix || VMS || MSDOS || WIN32 are not defined!!!'
-#error	'This will not compile as unix || VMS || MSDOS || WIN32 are not defined!!!'
-#error	'This will not compile as unix || VMS || MSDOS || WIN32 are not defined!!!'
+#error	'This will not compile as unix || WIN32 are not defined!!!'
+#error	'This will not compile as unix || WIN32 are not defined!!!'
+#error	'This will not compile as unix || WIN32 are not defined!!!'
 
 #endif
 
@@ -30,22 +30,7 @@ static char rcsid[]="$Id:$";
 #include <time.h>
 #include <varargs.h>
 #include <string.h>
-
-#ifdef VMS
-#include <ssdef.h>
-#endif
-
-#if defined(unix) || defined(_MSC_VER)
 #include <sys/types.h>
-#endif
-
-#ifdef MSDOS
-#include <process.h>
-#include <DOS.H>
-#ifdef DMF
-#define EXT_FILEXT
-#endif /* DMF */
-#endif /* MSDOS */
 
 #include "idsistd.h"
 #include "werrlog.h"
@@ -75,27 +60,13 @@ static char rcsid[]="$Id:$";
 /*
 **	Static data
 */
-#ifdef VMS
-static struct {
-		int4 flink;								/* The forward link (VMS only)		*/
-		char *exproc;								/* The pointer to the proc.		*/
-		int4 argcnt;								/* The arg count (0)			*/
-		int4 *condit;								/* Pointer to the condition value.	*/
-	      } exit_handler;
-
-static int4 conval;									/* A place to hold the condition value	*/
-static uint4 status;
-#endif	/* VMS */
 
 /*
 **	Static Function Prototypes
 */
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 static int license_checked(int set);
 void license_warning(void);
-#endif
-
 
 
 /*
@@ -136,10 +107,6 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 #define		ROUTINE		24000
 
 	static  int 	already = 0;							/* Have we already done it?		*/
-
-#ifdef WATCOM
-	init_watcom();
-#endif
 
 	werrset();									/* get runtime w_err_flag override.	*/
 
@@ -288,21 +255,6 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 	}
 	werrset();									/* get runtime w_err_flag override.	*/
 
-#ifdef VMS
-	exit_handler.exproc = (char *)wexith;						/* Install the exit handler on VMS.	*/
-	exit_handler.argcnt = 0;
-	exit_handler.condit = &conval;
-	status = sys$dclexh(&exit_handler);
-	if (status != SS$_NORMAL) werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);		/* Error installing exit handler (VMS)	*/
-#endif
-
-#ifdef MSDOS
-	license_warning();
-#endif
-
-#if defined(unix) || defined(WIN32)
-
-
 	license_warning();								/* Check the WISP license		*/
 
 	saveprogdefs();									/* Save PROGLIB/PROGVOL values		*/
@@ -311,13 +263,11 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 	**	Set up the standard wisp signal handling
 	*/
 	wisp_signal_handler();
-#endif
 
 	wtrace_timestamp("INITWISP2");
 }
 
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 /*
 **	Routine:	license_warning()
 **
@@ -367,9 +317,8 @@ void license_warning(void)
 	curcol = 0;
 	hWsb = wsb_new();
 
-	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
-	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-2001 NeoMedia Technologies Inc.");
+	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Inc.");
 	wsb_add_text(hWsb,4,0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
 	switch (code)
@@ -450,7 +399,6 @@ static int license_checked(int set)
 	char	buff[128];
 	char	mid[80];
 
-#if defined(unix) || defined(WIN32)
 	{
 		int	gid;
 		int4	mask;
@@ -502,22 +450,6 @@ static int license_checked(int set)
 
 		sprintf(mid,"%d",mask-gid);
 	}
-#endif
-#if defined(MSDOS)
-	getmachineid(mid);							/* Get the machine id				*/
-
-	{
-		int	i, len;
-		/*
-		**	Mung the machine id so can't be easily figured out by a hacker.
-		*/
-		len = strlen(mid);
-		for(i=0; i<len; i++)
-		{
-			mid[i] += 96;
-		}
-	}
-#endif
 
 	if (set)
 	{
@@ -535,11 +467,17 @@ static int license_checked(int set)
 	}
 }
 
-#endif /* unix || MSDOS || WIN32 */
 
 /*
 **	History:
 **	$Log: initwisp.c,v $
+**	Revision 1.31  2002-03-28 09:44:57-05  gsl
+**	Use define for copyright year
+**
+**	Revision 1.30  2002-03-26 16:33:34-05  gsl
+**	(C) 2002
+**	Remove VMS and MSDOS
+**
 **	Revision 1.29  2001-09-05 14:43:09-04  gsl
 **	Change copyright date
 **

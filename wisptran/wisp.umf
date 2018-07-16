@@ -341,9 +341,27 @@ testmf:
 		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
 	done ;
 
+testmfse:
+	@for testwcb in test0???.wcb t_*.wcb; do \
+		echo ; \
+		echo ---------------------------------------- ; \
+		echo Testing file $$testwcb ; \
+		noext=`echo $$testwcb | cut -f 1 -d .` ; \
+		NOEXT=`echo $$noext | tr '[a-z]' '[A-Z]'` ; \
+		CMD="$(WISP_EXE) -VMFSE $(WISPFLAGS) $$testwcb" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+		CMD="$(MF_COB) $(MF_COBFLAGS) $$noext.cob" ; \
+		echo $$CMD ; \
+		(eval $$CMD || echo FAILED WITH RC=$$?) ; \
+	done ;
+
 
 #
 #	$Log: wisp.umf,v $
+#	Revision 1.17  2002-03-21 18:28:14-05  gsl
+#	Add testmfse
+#
 #	Revision 1.16  2001-09-13 15:17:21-04  gsl
 #	Add cleantest target that cleans all the test files.
 #

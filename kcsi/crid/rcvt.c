@@ -181,7 +181,6 @@ static void utoeu(char *dest,char *src,int dlen,int slen,int dec);
 static void ehtob(char *dest,char *src,int dlen,int slen,int type);
 static void litcpy(char *dest,char *src,int len);
 static void cvt_illegal(DTYPE *dest,DTYPE *src);
-static void cvt_error(char *str);
 static void make_zoned_acu(int digit,int sign,char *dest);
 static int ptoilen(char *p,int len);
 static int format_index_toi(char *src);
@@ -330,9 +329,6 @@ void cvt_data(DTYPE *dest,DTYPE *src)
 			cvt_illegal(dest,src);
 			break;
 		}
-/*mjbmjbmjb FOR DEBUG
-	rcvt_pair(dest,src);
-*/
 }
 
 static void cvt_from_double(DTYPE *dest,DTYPE *src)
@@ -2572,17 +2568,12 @@ static void litcpy(char *dest,char *src,int len)
 }
 static void cvt_illegal(DTYPE *dest,DTYPE *src)
 {
-	static char err_buf[81];
-	static char hex_buf[64];
-	static char str_buf[20];
+	char hex_buf[64];
+	char str_buf[20];
 	char *cvt_type();
 	char *base;
 	int stridx, hexidx,ch;
 
-	sprintf(err_buf,"Illegal conversion from %s to %s",
-		cvt_type(src),
-		cvt_type(dest) );
-	cvt_error(err_buf);
 	base = SRC_ADDRESS;
 	hexidx = 0;
 	for(stridx = 0 ; stridx < 16 ; ++stridx)
@@ -2597,29 +2588,9 @@ static void cvt_illegal(DTYPE *dest,DTYPE *src)
 	hex_buf[hexidx] = 0;
 	str_buf[stridx] = 0;
 
-	sprintf(err_buf,"%s - %s len %d",str_buf,hex_buf,src->_len);
-	cvt_error(err_buf);
-	
+	kcsitrace(4,"DATA","CONVERSION","Illegal conversion from %s to %s, %s - %s len %d",
+		  cvt_type(src), cvt_type(dest), str_buf, hex_buf, src->_len);
 }
-static void cvt_error(char *str)
-{
-	crid_error_trace(str);
-}
-/*
-static FILE *illF = NULL;
-cvt_error(src)
-char *src;
-{
-	if(!illF)
-		{
-		illF=fopen("CVT.ERR","w");
-		printf("Conversion Errors\n");
-		}
-
-	fprintf(illF,"%s\n",src);
-	fflush(illF);
-}
-*/
 
 struct _type_table{
 	int type;
@@ -2938,6 +2909,12 @@ static int get_zoned_sign(int ch)
 /*
 **	History:
 **	$Log: rcvt.c,v $
+**	Revision 1.9  2002-04-22 11:36:02-04  gsl
+**	replace crid_error_trace() with kcsitrace()
+**
+**	Revision 1.8  2002-04-19 16:14:31-04  gsl
+**	Remove ifdefed code
+**
 **	Revision 1.7  2000-03-13 14:15:09-05  gsl
 **	Change strupr() to kstrupr()
 **

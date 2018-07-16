@@ -1526,13 +1526,14 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	curcol = 0;
 	hWsb = wsb_new();
 
-	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
-	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-2001  NeoMedia Technologies Incorporated");
+	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  NeoMedia Technologies Incorporated");
 	wsb_add_text(hWsb, 6, 0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
+	wsb_add_text(hWsb, 7, 0,"Web: www.neom.com   Email: support@neom.com");
 
-	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
+/*	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION); */
+	sprintf(buff,"Version=[%s]", wisp_version());
 	wsb_add_text(hWsb, 22, 0,buff);
 
 	whatplat(platname,platcode);
@@ -3791,6 +3792,13 @@ int wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.79  2002-03-28 09:42:06-05  gsl
+**	Use define for cpoyright year
+**
+**	Revision 1.78  2002-03-26 16:40:03-05  gsl
+**	(C) 2002
+**	Remove the Library and Screen versions
+**
 **	Revision 1.77  2001-10-31 15:44:06-05  gsl
 **	Change the (29) env screen to include the RETCODE file path, the temp defaults
 **	path and the sharedmem control path

@@ -1,4 +1,4 @@
-Copyright (c) 1997-2001 by NeoMedia Technologies Inc. 
+Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
 All Rights Reserved.
 
 ====================================================================
@@ -8,7 +8,7 @@ Title:          CRID for Acucobol on Windows (WIN32) Setup
 Document:       cridntsetup.txt
 Last Updated:   $Date:$
 Products:       CRID/WIN32 for Acucobol
-Versions:       3.0.00 (AND LATER)
+Versions:       3.0.03 (AND LATER)
 
 Summary:        Quick setup steps for CRID on Windows.
 
@@ -36,9 +36,9 @@ Overview
 The Steps
 ---------
 
-1) Ensure WISP 4.4.00 is installed first.
+1) Ensure WISP 4.4.02 is installed first.
 
-    WISP 4.4.00 must be installed first before you can install CRID.
+    WISP 4.4.02 must be installed first before you can install CRID.
     Ensure you have WISP installed and configured before
     continuing.
 
@@ -48,15 +48,15 @@ The Steps
     b) Run A:SETUP
 
     The following instructions assume you have installed CRID in
-    directory C:\CRIDACU3000.  If you have installed CRID into a
+    directory C:\CRIDACU3003.  If you have installed CRID into a
     different location the adjust the instructions accordingly.
 
 3) Build the Acucobol Runtime System.
 
-    a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
+    a) Ensure ACUCOBOL-GT V5.2 (or later) is installed and the
        Acucobol BIN directory is on the PATH.
 
-          PATH %PATH%;C:\Acucorp\Acucbl510\acugt\bin
+          PATH %PATH%;C:\Acucorp\Acucbl520\acugt\bin
 
     b) Ensure Microsoft Visual C++ 6 (or later) is installed.
 
@@ -80,13 +80,7 @@ The Steps
 
 
     e) Build the Acucobol runtime by following the instructions in
-       the makefile.
-
-       If you are using ACUCOBOL-GT 5.0 or later then follow the
-       instructions in file C:\CRIDACU3000\WRUN32WISP_CRID.MAK.
-
-       If you are using ACUCOBOL-GT 4.2 or ealier then follow the
-       instructions in C:\CRIDACU3000\WWRUNCBL.MAK.
+       the makefile C:\CRIDACU3003\WRUN32WISP_CRID_ACU52.MAK.
 
 
 4) Setup the WRUN.CFG configuration file.
@@ -104,12 +98,12 @@ The Steps
 5) Ensure ACUCONFIG is setup.
 
     The Acucobol object files CONTROL, REPORT, INQUIRY, and
-    DATENTRY will be installed in the C:\CRIDACU3000 directory.
+    DATENTRY will be installed in the C:\CRIDACU3003 directory.
 
     Ensure that the CRID directory is on Acucobols CODE-PREFIX
     or copy the four program files to a directory that is already
     on the CODE-PREFIX.
 
-           CODE-PREFIX . \\SERVER01\CRIDACU3000 ...
+           CODE-PREFIX . \\SERVER01\CRIDACU3003 ...
 
 ========================= END OF DOCUMENT ==========================

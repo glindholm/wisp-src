@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1992-1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 /*
 **	File:		vsemain.c
@@ -190,6 +182,7 @@ aborts.
 #include "vseglb.h"
 #include "vseutl.h"
 
+#include "wcommon.h"
 #include "wperson.h"
 #include "wfname.h"
 #include "idsisubs.h"
@@ -220,9 +213,9 @@ static char applname[9]="VSEDIT  ";
 
 main(int argc,char **argv)
 {
-	/* CHANGE-COPYRIGHT-DATE */
 			   /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
-	strcpy(VSE_COPYRIGHT,"(c) 1994-2001 NeoMedia - VSEDIT Integrated Program Development Editor - v 2.13");
+	strcpy(VSE_COPYRIGHT,
+	       "(c) 1994-" WISP_COPYRIGHT_YEAR_STR " NeoMedia - VSEDIT Integrated Program Development Editor - v 2.14");
 
 	wpload();
 	vsedit_globals();
@@ -495,6 +488,12 @@ int is_read_only(void)
 /*
 **	History:
 **	$Log: vsemain.c,v $
+**	Revision 1.25  2002-03-28 10:17:33-05  gsl
+**	used define for copyright year
+**
+**	Revision 1.24  2002-03-26 16:27:48-05  gsl
+**	(C) 2002
+**
 **	Revision 1.23  2001-11-16 10:18:03-05  gsl
 **	Change copyright date.
 **

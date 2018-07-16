@@ -3,15 +3,15 @@ procedure qa0000.wps
 prompt center "QA0000:  Will setup the usage constants for QA";;;;;
        center "Press (ENTER) to continue"
 
-set 		INLIB =LIBIN, 	INVOL   =VOLIN, 
-		OUTLIB=LIBOUT,	OUTVOL  =VOLOUT,
-		RUNLIB=LIBRUN,	RUNVOL  =VOLRUN,
-		SPOOLLIB=" ",	SPOOLVOL=VOLSPL,
-				WORKVOL =VOLWRK
+set 		INLIB =LIBIN, 		INVOL   =VOLIN, 
+		OUTLIB=LIBOUT,		OUTVOL  =VOLOUT,
+		RUNLIB=LIBRUN,		RUNVOL  =VOLRUN,
+		SPOOLLIB=LIBSPOOL, 	SPOOLVOL=VOLSPL,
+					WORKVOL =VOLWRK
 
 set	PRNTMODE=P,
 	PRTCLASS=A,
-	FORM#="000",
+	FORM#="016",
 	PRINTER="000",
 	LINES=55,
 	JOBCLASS=A,

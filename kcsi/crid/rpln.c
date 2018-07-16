@@ -76,21 +76,18 @@ char *p_file,*p_lib,*p_vol,*mode;
 	if(*mode)
 		{
 		wargs(2L);
-		EXTRACT("PM",user_mode);
-		if(user_mode[0] == 'S')
-			{
-			SET("PM",mode);
-			}
+		EXTRACT("PM",user_mode);	/* Save current PM */
+		SET("PM",mode);			/* Change PM */
 		}
 	wfclose(tpname);
 	if(*mode)
-		SET("PM",user_mode);
+		SET("PM",user_mode);		/* Restore PM */
 	
 }
 static void keep_printer_file(p_file,p_lib,p_vol)
 char *p_file,*p_lib,*p_vol;
 {
-	close_printer_file(p_file,p_lib,p_vol,"H");
+	close_printer_file(p_file,p_lib,p_vol,"K");
 }
 void display_file()
 {
@@ -126,6 +123,9 @@ void rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol)
 /*
 **	History:
 **	$Log: rpln.c,v $
+**	Revision 1.5  2002-03-28 12:16:37-05  gsl
+**	FIx the logic for closing a print file in KEEP mode
+**
 **	Revision 1.4  1997-10-23 13:56:09-04  gsl
 **	Change to use link_display()
 **

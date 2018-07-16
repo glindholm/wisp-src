@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1989-2002 NeoMedia Technologies Inc., All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -19,8 +11,6 @@ static char rcsid[]="$Id:$";
 #include "wexit.h"
 
 
-static int	BYTESWAP = -1;			/* Is this a byte swap machine (-1 == uninitialized)				*/
-
 void wswap(void *lword)				/* swap the order of the words in a longword item (for WANG routines to use)	*/
 {
 	int2 *swords;
@@ -31,15 +21,23 @@ void wswap(void *lword)				/* swap the order of the words in a longword item (fo
 
 	if (acu_cobol) 
 	{
+		/*
+		**	Acucobol keeps all binaries in big-endian order so 
+		**	simply reverse to make into little-endian.
+		**
+		**	Note: a 2+2 will come thru sub85.c frontend() unchanged because type is char.
+		*/
 		reversebytes(lword,4);
-		return;
 	}
+	else
+	{
+		swords = (int2 *)lword;
 
-	swords = (int2 *)lword;
-
-	temp = swords[0];								/* get high order word			*/
-	swords[0] = swords[1];								/* move low to high			*/
-	swords[1] = temp;								/* move high to low			*/
+		temp = swords[0];							/* get high order word			*/
+		swords[0] = swords[1];							/* move low to high			*/
+		swords[1] = temp;							/* move high to low			*/
+	}
+	
 }
 
 void reversebytes(void *ptr, int len) 							/* Reverse the bytes.			*/
@@ -104,8 +102,49 @@ void put_swap(int4 *dest, int4 value)
 
 
 /*
+**	ROUTINE:	WBB2B4()
+**
+**	FUNCTION:	Convert a Wang Style int(2)+int(2) to int(4)
+**
+**	DESCRIPTION:	On a bytenormal machines do nothing.
+**
+**			On Acucobol all binary fields are stored in
+**			big-endian order so do nothing.
+**			
+**			On a little-endian machines with MF:
+**
+**			0x01020304 will be stored as 02,01,04,03
+**			flip the half words to be    04,03,02,01
+**
+**	ARGUMENTS:	
+**	bb		Wang Style 2*int(2)
+**			01 BB.
+**			   05 B1 BINARY.
+**			   05 B2 BINARY.
+**
+*/
+void WBB2B4(char* bb)
+{
+	if (!bytenormal() && !acu_cobol)
+	{
+		char b4[4];
+		
+		b4[0] = bb[2];
+		b4[1] = bb[3];
+		b4[2] = bb[0];
+		b4[3] = bb[1];
+
+		memcpy(bb, b4, 4);
+	}
+}
+
+
+/*
 **	History:
 **	$Log: wswap.c,v $
+**	Revision 1.15  2002-03-28 15:43:14-05  gsl
+**	Add WBB2B4 to do a wswap() from cobol
+**
 **	Revision 1.14  1998-11-04 10:04:49-05  gsl
 **	change get_swap() arg to const
 **

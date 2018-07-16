@@ -1,5 +1,14 @@
 static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
+/*
+
+  DEBUG
+
+  I think this was only used for debugging.
+
+
+ */
+
 #include <stdio.h>
 #include "dtype.h"
 #include "kcsifunc.h"
@@ -51,7 +60,7 @@ DTYPE *dt;
 	rcvtidx += 2;
 	as_hex(dt->_base + dt->_pos,dt->_len);
 	sprintf(&rcvtbuf[rcvtidx],"dec=%d ",dt->_dec);
-	crid_str(rcvtbuf);
+	kcsitrace(1,"RCVP","PRINTONE", rcvtbuf);
 }
 static void print_pair(dest,src)
 DTYPE *dest,*src;
@@ -72,6 +81,12 @@ void rcvt_pair(DTYPE *dest,DTYPE *src)
 /*
 **	History:
 **	$Log: rcvp.c,v $
+**	Revision 1.4  2002-04-22 14:26:34-04  gsl
+**	Use kcsitrace
+**
+**	Revision 1.3  2002-04-19 16:56:28-04  gsl
+**	change tracing
+**
 **	Revision 1.2  1996-09-17 19:45:44-04  gsl
 **	drcs update
 **

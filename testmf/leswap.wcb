@@ -1,0 +1,41 @@
+      *
+      *    LESWAP: Little Endian - Swap
+      *
+      *    Swap 2 2-Byte BINARY field's into a 4-byte BINARY.
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. LESWAP.
+      
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  TEST-2-BY-2.
+           05  TEST-B1     BINARY           VALUE 0.
+           05  TEST-B2     BINARY           VALUE 1.
+       01  TEST-2-BY-2-AS-BIN4 
+                           REDEFINES TEST-2-BY-2
+                           BINARY PIC S9(9).
+       01  TEST-BIN4       BINARY PIC S9(9) VALUE 1.
+      
+       01  TEMP-BINARY     BINARY.
+      
+       LINKAGE SECTION.
+       01  ARG1.
+           05  ARG1-2-BY-2.
+               10  ARG1-B1     BINARY.
+               10  ARG1-B2     BINARY.
+           05  ARG1-BIN4       REDEFINES ARG1-2-BY-2
+                               BINARY PIC S9(9).
+      
+       PROCEDURE DIVISION USING ARG1.
+      
+       MAIN-PARA.
+
+      *    Test if binary fields are stored in little-endian order. 
+           IF TEST-2-BY-2-AS-BIN4 NOT = TEST-BIN4 THEN
+               MOVE ARG1-B1     TO TEMP-BINARY
+               MOVE ARG1-B2     TO ARG1-B1
+               MOVE TEMP-BINARY TO ARG1-B2
+           END-IF.
+      
+       EXIT-PARA.
+           EXIT PROGRAM.

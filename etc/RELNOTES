@@ -1,13 +1,13 @@
-Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
 
 ====================================================================
 
 Title:          RELEASE NOTES FOR WISP VERSION 4.4
 
-Document:       v44_relnotes.lis (RELNOTES)
+Document:       wisp_relnotes.txt (RELNOTES)
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       4.4.01
+Versions:       4.4.02
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
@@ -25,6 +25,59 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         FAQ   http://www.neom.com/support/wispfaq.htm
         Ftp   ftp://support.neom.com/public/wisp
 
+
+
+CHANGES FROM 4.4.01 TO 4.4.02
+=============================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit from release 4.4.01 to release 4.4.02.
+
+The version numbers of utilities that are released with this version
+or WISP are:
+
+    CRID   v3.0.02
+    CREATE v3.5.01
+
+Added support for Acucobol-GT 5.2.
+
+For Acucobol users the distribution file $WISPDIR/acu/sub85.c is now
+specifically for use with Acucobol-GT 5.2 and is incompatible with
+earlier versions of Acucobol. A new file $WISPDIR/acu/sub85_acu51.c is
+provided for use with Acucobol 5.1 and earlier, it will need to be
+renamed to sub85.c before it can be used.  The instructions are
+provided in the file.
+
+Added COBOL language options "-V MFSE" to the WISP translator for
+Micro Focus Server Express (MFSE).  The language option "-V MF" will
+now refer specifically to Micro Focus Object Cobol (MFOC).  Micro
+Focus Server Express has language syntax that is not available in
+MFOC.
+
+When translating with "-V MFSE" an "OPEN SHARED" for a sequential file
+will now support shared access.  When translating with "-V MF" a
+warning will be issued noting that Micro Focus Object Cobol does not
+support shared access to sequential files.
+
+Corrected a problem when printing from COBOL with Mode=HOLD; the
+disposition was incorrectly defaulting to "DS" (SAVE).  Fixed to
+default disposition "DX" (DELETE AFTER).  This problem was introduced
+in WISP 4.3.02 and applies only to printing from COBOL, it does not
+affect printing with the PRINT vssub.
+
+On WIN32 made fixes to the WISPtran Graphical interface to the
+translator and compiler.  Fixed the problem on Windows 2000 of
+asterisks being display in place of the output text.  Fixed the
+mismatched background colors. Add the option flag to the option
+text. Added WISP options /X and /M. Fixed issue with truncated
+output. Incremented the version number to 1.4. 
+
+Fixed the WDIAG utility for Micro Focus to check the correct variable
+for the shared libray path.  On AIX it uses $LIBPATH, on HP-UX it uses
+$SHLIB_PATH on all other Unix systems it uses $LD_LIBRARY_PATH.
+
+Enhanced the WDIAG utility for Acucobol to display the vesrion of the
+VUTIL utility.  This allows WDIAG to report the Acucobol version even
+if the runtime has not been successfully built.
 
 
 CHANGES FROM 4.4.00 TO 4.4.01
@@ -2240,6 +2293,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        4.4.02          04/01/02        Acucobol 5.2
         4.4.01          11/27/01        4.4 patch 1
         4.4.00          11/02/01        Major Release
         4.3.06          03/16/00        WIN32 Acucobol 4.3 support

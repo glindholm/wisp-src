@@ -94,11 +94,15 @@ SOURCE=..\etc\nttelnet.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\v44_relnotes.lis
+SOURCE=..\etc\vcolors.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\vcolors.txt
+SOURCE=..\etc\wisp_install_unix.txt
+# End Source File
+# Begin Source File
+
+SOURCE=..\etc\wisp_relnotes.txt
 # End Source File
 # Begin Source File
 

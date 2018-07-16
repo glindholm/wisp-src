@@ -1,40 +1,53 @@
 #
-#	Copyright (c) 1998 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1998-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #	disprint.umf
 #
-#	Usage: make -f disprint.umf {acu|mf}
+#	Usage: make -f disprint.umf {ACU|ACN|MF|MFSE}
 #
 WISP=wisp
 
 default:
 	@echo
-	@echo 'Usage: make -f disprint.umf {acu|acn|mf}'
+	@echo 'Usage: make -f disprint.umf {ACU|ACU|MF|MFSE}'
 	@echo
 	@echo 'To make DISPRINT for Acucobol enter the command:'
-	@echo '    $$ make -f disprint.umf acu'
+	@echo '    $$ make -f disprint.umf ACU'
 	@echo
 	@echo 'To make DISPRINT for Acucobol Native Screens enter the command:'
-	@echo '    $$ make -f disprint.umf acn'
+	@echo '    $$ make -f disprint.umf ACN'
 	@echo
-	@echo 'To make DISPRINT for Micro Focus enter the command:'
-	@echo '    $$ make -f disprint.umf mf'
+	@echo 'To make DISPRINT for Micro Focus Object Cobol enter the command:'
+	@echo '    $$ make -f disprint.umf MF'
+	@echo
+	@echo 'To make DISPRINT for Micro Focus Server Express enter the command:'
+	@echo '    $$ make -f disprint.umf MFSE'
 	@echo
 
+ACU \
 acu:	disprint.wcb
 	rm -f disprint.cob DISPRINT
 	$(WISP) -VACU disprint.wcb
 	ccbl -da4 -o DISPRINT disprint.cob
 
+ACN \
 acn:	disprint.wcb
 	rm -f disprint.cob DISPRINT
 	$(WISP) -VACN disprint.wcb
 	ccbl -da4 -o DISPRINT disprint.cob
 
+MF \
 mf:	disprint.wcb
 	rm -f disprint.cob DISPRINT.int
 	$(WISP) -VMF disprint.wcb
+	cob -i disprint.cob
+	mv disprint.int DISPRINT.int
+
+MFSE \
+mfse:	disprint.wcb
+	rm -f disprint.cob DISPRINT.int
+	$(WISP) -VMFSE disprint.wcb
 	cob -i disprint.cob
 	mv disprint.int DISPRINT.int
 
@@ -43,3 +56,7 @@ disprint.wcb:
 	@echo The file disprint.wcb was not found.
 	@echo Unable to make DISPRINT utility.
 	@exit 1
+
+clean:
+	rm -rf disprint.cob disprint.int DISPRINT.int DISPRINT
+

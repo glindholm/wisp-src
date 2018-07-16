@@ -21,7 +21,6 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 
 #include "idsistd.h"
-#include "que_jobs.h"
 #include "wperson.h"
 #include "werrlog.h"
 #include "wglobals.h"
@@ -1569,6 +1568,10 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 /*
 **	History:
 **	$Log: win32prt.c,v $
+**	Revision 1.18  2002-05-14 16:11:42-04  gsl
+**	Remove include of que_jobs.h
+**	obsolete
+**
 **	Revision 1.17  2001-11-09 15:41:17-05  gsl
 **	Fix trk# 507
 **	In GetPage() the "erase last page" logic only erased the nPageHeight
@@ -1617,6 +1620,10 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 **
 **	Revision 1.7  1996-12-11 18:44:51-05  jockc
 **	added missing history (forgot to add $Log: win32prt.c,v $
+**	added missing history (forgot to add Revision 1.18  2002-05-14 16:11:42-04  gsl
+**	added missing history (forgot to add Remove include of que_jobs.h
+**	added missing history (forgot to add obsolete
+**	added missing history (forgot to add
 **	added missing history (forgot to add Revision 1.17  2001-11-09 15:41:17-05  gsl
 **	added missing history (forgot to add Fix trk# 507
 **	added missing history (forgot to add In GetPage() the "erase last page" logic only erased the nPageHeight

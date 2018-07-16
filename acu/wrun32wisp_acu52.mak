@@ -1,52 +1,56 @@
-# wrun32wisp_crid.mak
+# wrun32wisp_acu52.mak
 #
-# THIS FILE HAS BEEN MODIFIED TO ADD THE WISP AND CRID ROUTINES TO  
-# THE ACUCOBOL RUNTIME.
+# THIS FILE HAS BEEN MODIFIED TO ADD THE WISP ROUTINES TO THE 
+# ACUCOBOL RUNTIME.
 #
 #################################################################
 #
-# Creating an Acucobol 5.1 runtime requires WISP 4.4.00 and CRID 3.0.00.
+# Creating an Acucobol 5.2 runtime requires WISP 4.4.02 or later
 #
 # Follow these instructions carefully to build a custom Acucobol 
-# runtime that includes the WISP and CRID runtime routines.  You are 
-# going to build the runtime from a temporary folder, that is a copy
+# runtime that includes the WISP runtime routines.  You are going
+# to build the runtime from a temporary folder, that is a copy
 # of the Acucobol lib folder $(ACUDIR)\acugt\lib.  The Acucobol 
 # runtime consists of two file, an exe and a dll. The custom WISP
-# version is named wrun32wispc.exe and wrun32wispc.dll.
+# version is named wrun32wisp.exe and wrun32wisp.dll.
 #
-# 1) Create the temporary folder $(ACUDIR)\acugt\bldwispc by copying
+# 1) Create the temporary folder $(ACUDIR)\acugt\bldwisp by copying
 #    and renaming the folder $(ACUDIR)\acugt\lib.  You can use
 #    Windows Explorer to do this by opening $(ACUDIR)\acugt and
 #    selecting the lib folder then doing a Copy then Paste command.
 #
-# 2) Copy the needed WISP and CRID files to the bldwispc folder. (You  
-#    will be replacing the sub85.c file with the one supplied by WISP.)
-#       Copy $(CRIDDIR)\wrun32wisp_crid.mak 
-#            $(CRIDDIR)\crid.h
-#            $(CRIDDIR)\cridtbl.c
-#            $(CRIDDIR)\crid85.c
+# 2) Copy the needed WISP files to the bldwisp folder. (You will be 
+#    replacing the sub85.c file with the one supplied by WISP.)
+#       Copy $(WISPDIR)\acu\wrun32wisp_acu52.mak 
 #            $(WISPDIR)\acu\sub85.c
 #            $(WISPDIR)\acu\wisprts.rc
 #            $(WISPDIR)\acu\wispicon.ico
 #
-#       to   $(ACUDIR)\acugt\bldwispc
+#       to   $(ACUDIR)\acugt\bldwisp
 #
-# 3) Edit this file $(ACUDIR)\acugt\bldwispc\wrun32wisp_crid.mak and set 
-#    WISPDIR and CRIDDIR to the correct directory.
+# 3) Edit this file and set WISPDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4400
-#       CRIDDIR=C:\CRIDACU3000
+#       WISPDIR=C:\WISP4402
 #
-# 4) From a COMMAND/MSDOS window issue the NMAKE command.
-#       $ cd $(ACUDIR)\acugt\bldwispc
-#       $ NMAKE /f wrun32wisp_crid.mak
+# 4) From a COMMAND/MSDOS window issue the NMAKE command. 
+#    (You may need to first run the VCVARS32.bat file that comes with MS 
+#    Visual C++ in order to run NMAKE from a command prompt.)
 #
-# 5) Copy the runtime files (wrun32wispc.exe and wrun32wispc.dll) to
+#       $ cd $(ACUDIR)\acugt\bldwisp
+#       $ "C:\Program Files\Microsoft Visual Studio\VC98\Bin\VCVARS32.BAT"
+#       $ NMAKE /f wrun32wisp_acu52.mak
+#
+# 5) Copy the runtime files (wrun32wisp.exe and wrun32wisp.dll) to
 #    their run location.
-#       Copy $(ACUDIR)\acugt\bldwispc\wrun32wispc.exe
-#            $(ACUDIR)\acugt\bldwispc\wrun32wispc.dll 
+#       Copy $(ACUDIR)\acugt\bldwisp\wrun32wisp.exe
+#            $(ACUDIR)\acugt\bldwisp\wrun32wisp.dll 
 #
 #       to   $(ACUDIR)\acugt\bin
+#
+# 6) Copy and rename the Acucobol license file to match the new
+#    runtime name.
+#       Copy $(ACUDIR)\acugt\bin\wrun32.alc
+#       to   $(ACUDIR)\acugt\bin\wrun32wisp.alc
 #
 #################################################################
 #
@@ -59,26 +63,24 @@
 #   For AcuServer clients add : CLIENT=
 # Make sure your path for wsock32.lib is set to the correct location
 
-# Distributed with ACUCOBOL-GT version 5.1.0.2
+# Distributed with ACUCOBOL-GT version 5.2.0
 # PMK: 0, 1
 #################################################################
 
 # Set the Acucobol directory here
-ACUDIR=C:\acucorp\acucbl510
+ACUDIR=C:\acucorp\acucbl520
 
-# Set the installed WISP and CRID directory here.
-WISPDIR=C:\WISP4400
-CRIDDIR=C:\CRIDACU3000
+# Set the installed WISP directory here.
+WISPDIR=C:\WISP4402
 
 #  Set the runtime name here. (Do not include a file extension.)
-WRUN32=wrun32wispc
+WRUN32=wrun32wisp
 
-## WISP and CRID libraries
-WISP_LIBS=     $(CRIDDIR)\cridacum.lib \
-               $(WISPDIR)\lib\wispm.lib \
-               $(WISPDIR)\lib\videom.lib
+## WISP libraries
+WISP_LIBS=      $(WISPDIR)\lib\wispm.lib \
+                $(WISPDIR)\lib\videom.lib
 
-WISP_CFLAGS= /DCRID 
+WISP_CFLAGS=
 
 #################################################################
 
@@ -106,14 +108,6 @@ DLLRCFILE=wrundll.rc
 
 EXTRA_CFLAGS=-DNO_CLIENT=1
 
-CLIENT_LIBS=
-
-!ifdef  CLIENT
-# AcuServer client version
-EXTRA_CFLAGS=-DNO_CLIENT=0 
-CLIENT_LIBS=wclnt32.lib $(CLIENT_LIBS)
-!endif  # CLIENT #
-
 ACUCONNECT_C = conc32.lib
 ACUCONNECT_S = cons32.lib
 
@@ -122,11 +116,10 @@ SUBS=   \
 	mswinsub.obj
 
 LIBS=   \
-	$(CLIENT_LIBS) \
 	wrun32.lib \
-	wcpp32.lib \
+	wcvt32.lib \
 	wfsi32.lib \
-	wvis32.lib \
+	avision4.lib \
 	acme.lib \
 	plugin32.lib
 
@@ -142,7 +135,7 @@ PLUGINRCFILE=plugin32.rc
 #  For building the Windowing version
 WSUBS=sub.obj $(SUBS)
 ## Added WISP libraries
-WLIBS=wterm32.lib $(LIBS) $(WISP_LIBS)
+WLIBS=atermmgr.lib thin.obj thinapp.obj wininit.obj $(LIBS) $(WISP_LIBS)
 
 # MFC application class
 MFCAPP =	\
@@ -157,6 +150,7 @@ MFCNPDLL =	\
 MFCSTAT = \
 	wcpp32.lib \
 	wstatapp.obj
+
 
 ## Added WISP CFLAGS
 CLFLAGS=$(cflags) $(cvars) $(DEBUG_CFLAGS) -nologo -D_WINDOWS -DWINNT \
@@ -183,8 +177,7 @@ $(WRUN32).dll: $(MFCDLL) $(WSUBS) $(DLLRBJFILE) $(WLIBS) $(ACUCONNECT_C)
 
 
 $(WRUN32).exe: $(MFCAPP) $(WRUN32).dll wcpp32.lib $(RBJFILE)
-	$(link) $(LDFLAGS) /out:$@ $(MFCAPP) wcpp32.lib \
-		$(WRUNDLL_LIB) $(RBJFILE)
+	$(link) $(LDFLAGS) /out:$@ $(MFCAPP) $(WRUNDLL_LIB) $(RBJFILE)
 
 acuthread.exe: $(MFCSTAT) $(WSUBS) $(RBJFILE) $(WLIBS)
 	$(cc) $(CLFLAGS) -DACUCONNECT_SRV sub.c

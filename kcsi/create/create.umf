@@ -197,10 +197,10 @@ $(WISPFILES):
 #-----------------------------------------------------------------
 
 sub.c: $(ACUSRCDIR)/sub.c sub85.c
-	cmp -s $(ACUSRCDIR)/sub.c $@ || cp $(ACUSRCDIR)/sub.c $@
+	cmp -s $(ACUSRCDIR)/sub.c $@ || cp -f $(ACUSRCDIR)/sub.c $@
 
 filetbl.c: $(ACUSRCDIR)/filetbl.c
-	cmp -s $(ACUSRCDIR)/filetbl.c $@ || cp $(ACUSRCDIR)/filetbl.c $@
+	cmp -s $(ACUSRCDIR)/filetbl.c $@ || cp -f $(ACUSRCDIR)/filetbl.c $@
 
 sub85.c: $(WISPDIR)/acu/sub85.c
-	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp $(WISPDIR)/acu/sub85.c $@
+	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp -f $(WISPDIR)/acu/sub85.c $@

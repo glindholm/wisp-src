@@ -1,4 +1,4 @@
-Copyright (c) 2001 by NeoMedia Migrations Inc. All Rights Reserved.
+Copyright (c) 2002 by NeoMedia Migrations Inc. All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +7,7 @@ Title:          WISP for Windows (WIN32) Quick Set-Up Steps
 Document:       wispntsetup.txt
 Last Updated:   $Date:$
 Products:       WISP/WIN32
-Versions:       4.4.00
+Versions:       4.4.02
 
 Summary:        WISP for WIN32 installation and setup steps
 
@@ -49,8 +49,8 @@ The Steps
 
 1) Install WISP/WIN32 on the server machine
 
-    a) Insert Disk 1 into floppy drive A:
-    b) Run A:SETUP
+    a) Insert CD into drive D:
+    b) Run D:\INSTALL\SETUP.EXE
 
     The following instructions assume you have installed WISP in
     directory C:\WISP44xx .  If you have installed WISP into a
@@ -136,7 +136,7 @@ The Steps
     a) Ensure ACUCOBOL-GT V4.0 (or later) is installed and the
        Acucobol BIN directory is on the PATH.
 
-          PATH %PATH%;C:\Acucorp\Acucbl510\Acugt\bin
+          PATH %PATH%;C:\Acucorp\Acucbl520\Acugt\bin
 
     b) Ensure MicroSoft Visual C++ 6 or later is installed.
 
@@ -161,8 +161,11 @@ The Steps
     e) Build the Acucobol runtime by following the instructions in
        the makefile.
 
-       If you are using ACUCOBOL-GT 5.0 or later then follow the
-       instructions in file C:\WISP44xx\ACU\WRUN32WISP.MAK.
+       If you are using ACUCOBOL-GT 5.2 then follow the
+       instructions in file C:\WISP44xx\ACU\WRUN32WISP_ACU52.MAK.
+
+       If you are using ACUCOBOL-GT 5.1 then follow the
+       instructions in file C:\WISP44xx\ACU\WRUN32WISP_ACU51.MAK.
 
        If you are using ACUCOBOL-GT 4.2 or ealier then follow the
        instructions in C:\WISP44xx\ACU\WWRUNCBL.MAK.
@@ -172,7 +175,7 @@ The Steps
    Follow the instructions in Appendix B of the WISP manual.
 
    Share the Acucobol installation directory. (E.g. Share
-   "C:\Acucorp\acucbl510" as "ACUCOBOL".)  
+   "C:\Acucorp\acucbl520" as "ACUCOBOL".)  
 
    Edit the WRUN.CFG configuration file in the WISPCONFIG
    directory and change the RUNCBL= option to point to the new

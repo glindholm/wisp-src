@@ -46,15 +46,13 @@ static void do_open(KFB* kfb, int mode);
 static FCD* fcd_new();
 static char* mfkblock_new();
 static void init_for_open(KFB* kfb);
-static int init_for_open_io(KFB* kfb);
 static void init_for_open_output(KFB* kfb);
 static void release_fcd(KFB* kfb);
 static void store_number(char* dest, void* src, int len);
 static void retrieve_number(char* src, void* dest, int len);
-static int local_file_info(KFB* kfb);
+static void local_file_info(KFB* kfb);
 static void mf_x_status(KFB* kfb, FCD* user_fcd);
 static int2 mf_trans(FCD* user_fcd);
-static int test_open_mode(int mode );
 static void set_local_key_info(KFB* kfb);
 static void do_start(KFB* kfb, int mode);
 
@@ -93,18 +91,11 @@ static void call_ixfile(int io_op_type, int io, KFB* kfb)
 		first = 0;
 	}
 	
-	kcsitrace(1, "call_ixfile()", "enter", "Entering subroutine ...");
-
 	user_fcd = set_mfio( kfb );
 	op_code[0] = io_op_type;
 	op_code[1] = io;
-	kcsitrace(2, "call_ixfile()", "info", "Call ExtFH: op code = [%x], filename = [%s]", io,kfb->_sys_name);
+	kcsitrace(2, "kmf:call_ixfile()", "info", "Call ExtFH: op code = [%x], filename = [%s]", io,kfb->_sys_name);
 	KCSEXTFH( op_code, user_fcd, kfb->_record, kfb->_sys_name, kfb->_mfkblock );
-	if ( strncmp(user_fcd->status,"00",2) )
-	{
-		kcsitrace(2, "call_ixfile()", "info", "File Status set: status key1 = [%x], key2 = [%x]",
-			  user_fcd->status[0], user_fcd->status[1]);
-	}
 
 	kfb->_status = mf_trans( user_fcd );
 	mf_x_status(kfb, user_fcd);
@@ -137,7 +128,7 @@ ksam_file_space(KFB* kfb)
 	char rc[4];
 	int idx;
 
-	kcsitrace(1, "ksam_file_space()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:ksam_file_space()", "enter", "%s", kfb->_sys_name);
 
 	kfb->_space = 1;
 }
@@ -174,8 +165,7 @@ does not.
 */
 ksam_open_shared(KFB* kfb)
 {
-	kcsitrace(1, "ksam_open_shared()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_open_shared()", "enter", "%s", kfb->_sys_name);
 	ksam_open_io( kfb );
 }
 
@@ -201,8 +191,7 @@ ksam_open_shared(KFB* kfb)
 */
 ksam_open_input(KFB* kfb)
 {
-	kcsitrace(1, "ksam_open_input()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_open_input()", "enter", "%s", kfb->_sys_name);
 	do_open(kfb, MFIO_OPEN_INPUT);
 }
 
@@ -228,8 +217,7 @@ ksam_open_input(KFB* kfb)
 */
 ksam_open_io(KFB* kfb)
 {
-	kcsitrace(1, "ksam_open_io()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_open_io()", "enter", "%s", kfb->_sys_name);
 	do_open(kfb, MFIO_OPEN_IO);
 }
 
@@ -256,8 +244,6 @@ ksam_open_io(KFB* kfb)
 static FCD* fcd_new()
 {
 	FCD* new;
-
-	kcsitrace(1, "fcd_new()", "enter", "Entering subroutine ...");
 
 	new = (FCD*) MALLOCT( FCD );
 	memset(new, 0x00, sizeof(FCD));
@@ -295,7 +281,6 @@ static char* mfkblock_new()
 	char* new;
 	int2 size;
 
-	kcsitrace(1, "mfkblock_new()", "enter", "Entering subroutine ...");
 /*
 		Commpute the largest possible length of the Key Definition Block:
 		Add  the length of the GIA, then add the Length of the KDA multiplied
@@ -334,7 +319,7 @@ static void release_fcd(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "release_fcd()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:release_fcd()", "enter", "%s", kfb->_sys_name);
 
 	FREE( kfb->_mfkblock );
 	kfb->_mfkblock = NULL;
@@ -370,60 +355,39 @@ static void do_open(KFB* kfb, int mode)
 {
 	FCD* user_fcd;
 	
-	kcsitrace(1, "do_open()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:do_open()", "enter", "mode=%d %s", mode, kfb->_sys_name);
 
-	if ( !test_open_mode( mode ) )
+	if ( mode == MF_OPEN_INPUT ||		
+	     mode == MF_OPEN_OUTPUT ||
+	     mode == MF_OPEN_IO ||
+	     mode == MF_OPEN_EXTEND )
 	{
-		kcsitrace(4, "do_open()", "error", "Invalid OPEN mode [%d]", mode);
+		/* OK */
+	}
+	else
+	{
+		kcsitrace(4, "kmf:do_open()", "error", "Invalid OPEN mode [%d]", mode);
 	}
 
-	if ( !init_for_open_io( kfb ) )
-	{
-		kcsitrace(4, "do_open()", "error", "Have I/O error status key1 = [%x], key2 = [%x]",
-			user_fcd->status[0], user_fcd->status[1]);
-		return;
-	}
-	user_fcd = (FCD*) kfb->_fcd;
-	user_fcd->access_mode |= MF_DYNAMIC_ACCESS;
-
-	call_ixfile(NORMAL_COBOL_IO, mode, kfb);
-	kfb->_open_status = 1;
-}
-
-/*
-**      Routine:        init_for_open_io()
-**
-**      Function:	Set the appropriate fileds for doing an OPEN of a file
-**			with I/O
-**
-**      Description:
-**
-**      Arguments:
-**      kfb
-**	user_fcd
-**
-**      Globals:        None
-**
-**      Return:		None
-**
-**      Warnings:       None
-**
-**      History:
-**      08/01/97        Written by MoB
-**
-*/
-static int init_for_open_io(KFB* kfb)
-{
-	FCD* user_fcd;
-
-	kcsitrace(1, "init_for_open_io()", "enter", "Entering subroutine ...");
-
+	/* Init the FCD */
 	user_fcd = fcd_new();
-
 	user_fcd->org = UNKNOWN_FT;
 	kfb->_fcd = (char*) user_fcd;
 	init_for_open( kfb );
-	return( local_file_info( kfb ) );
+
+	/* Get the file info */
+	local_file_info( kfb );
+
+	user_fcd->access_mode |= MF_DYNAMIC_ACCESS;
+
+	if (mode == MF_OPEN_INPUT)
+	{
+		/* If INPUT then don't care about locked records. */
+		user_fcd->flags |= MF_NODETECTLOCK;		
+	}	
+
+	call_ixfile(NORMAL_COBOL_IO, mode, kfb);
+	kfb->_open_status = 1;
 }
 
 /*
@@ -450,7 +414,7 @@ static void init_for_open_output(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "init_for_open_output()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:init_for_open_output()", "enter", "%s", kfb->_sys_name);
 
 	user_fcd = fcd_new();
 
@@ -468,7 +432,7 @@ static void init_for_open_output(KFB* kfb)
 	}
 	else
 	{
-		kcsitrace(3, "init_for_open_output()", "error", "Invalid file organization");
+		kcsitrace(3, "kmf:init_for_open_output()", "error", "Invalid file organization");
 	}
 
 	user_fcd->format = kfb->_format;
@@ -503,7 +467,7 @@ static void init_for_open(KFB* kfb)
 	FCD* user_fcd;
 	int2 len;
 
-	kcsitrace(1, "init_for_open()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:init_for_open()", "enter", "%s", kfb->_sys_name);
 
 	user_fcd = (FCD*) kfb->_fcd;
 	user_fcd->access_mode = MF_USER_STATUS;
@@ -542,7 +506,7 @@ static void init_for_open(KFB* kfb)
 */
 ksam_unlock(KFB* kfb)
 {
-	kcsitrace(1, "ksam_unlock()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:ksam_unlock()", "enter", "%s", kfb->_sys_name);
 
 	/* nothing to do */
 }
@@ -573,7 +537,7 @@ ksam_open_output(KFB* kfb)
 	register int idx;
 	int2 l_nkeys;
 
-	kcsitrace(1, "ksam_open_output()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:ksam_open_output()", "enter", "%s", kfb->_sys_name);
 
 	init_for_open_output( kfb );
 	set_local_key_info( kfb );
@@ -604,7 +568,7 @@ ksam_open_output(KFB* kfb)
 */
 ksam_close(KFB* kfb)
 {
-	kcsitrace(1, "ksam_close()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:ksam_close()", "enter", "%s", kfb->_sys_name);
 
 	/*
 	 *  If the file is already closed, then just return.
@@ -615,6 +579,18 @@ ksam_close(KFB* kfb)
 	}
 
 	call_ixfile(NORMAL_COBOL_IO, MFIO_CLOSE, kfb);
+
+	if (kfb->_status == ENOTOPEN)
+	{
+		/*
+		 *	File was already closed so just reset the status code to 0.
+		 *
+		 *	MFOC 4.1 will close a file when you do a ksam_file_info().
+		 */
+		kcsitrace(3, "kmf:ksam_close()", "NOTOPEN", "File not open %s", kfb->_sys_name);
+		kfb->_status = 0;
+	}
+	
 	kfb->_open_status = 0;
 	release_fcd( kfb );
 }
@@ -649,7 +625,7 @@ ksam_close(KFB* kfb)
 */
 ksam_read(KFB* kfb)
 {
-	kcsitrace(1, "ksam_read()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:ksam_read()", "enter", "%s", kfb->_sys_name);
 
 	kfb->_io_key = 0;			/* Set to read along the primary key path */
 	ksam_read_keyed( kfb );
@@ -685,8 +661,7 @@ ksam_read(KFB* kfb)
 */
 ksam_hold(KFB* kfb)
 {
-	kcsitrace(1, "ksam_hold()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_hold()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;		/* Set to read along the primary key path */
 	ksam_hold_keyed( kfb );
 }
@@ -715,8 +690,6 @@ ksam_hold(KFB* kfb)
 static FCD* set_mfio(KFB* kfb)
 {
 	FCD* user_fcd;
-
-	kcsitrace(1, "set_mfio()", "enter", "Entering subroutine ...");
 
 	user_fcd = (FCD*) kfb->_fcd;
 #ifdef DEBUG
@@ -751,10 +724,10 @@ ksam_read_next(KFB* kfb)
 	FCD* user_fcd;
 	int io;
 
-	kcsitrace(1, "ksam_read_next()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_read_next()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
-	call_ixfile(NORMAL_COBOL_IO, MFIO_SEQ_READ_NO_LOCK, kfb);
+	call_ixfile(NORMAL_COBOL_IO, MFIO_SEQ_READ_NO_LOCK, kfb); 
+
 }
 
 /*
@@ -782,8 +755,7 @@ ksam_read_previous(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_read_previous()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_read_previous()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	call_ixfile(NORMAL_COBOL_IO, MFIO_READ_PREV_NO_LOCK, kfb);
 }
@@ -812,8 +784,7 @@ ksam_hold_next(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_hold_next()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_hold_next()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	call_ixfile(NORMAL_COBOL_IO, MFIO_SEQ_READ_LOCK, kfb);
 }
@@ -842,8 +813,7 @@ ksam_read_keyed(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_read_keyed()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_read_keyed()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	store_number(user_fcd->keynum, &kfb->_io_key, 2);	/* Set so specifies prime key */
 	call_ixfile(NORMAL_COBOL_IO, MFIO_RNDM_READ, kfb);
@@ -874,8 +844,7 @@ ksam_hold_keyed(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_hold_kyed()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_hold_kyed()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	store_number(user_fcd->keynum, &kfb->_io_key, 2);
 	call_ixfile(NORMAL_COBOL_IO, MFIO_RNDM_READ_LOCK, kfb);
@@ -904,8 +873,7 @@ ksam_hold_keyed(KFB* kfb)
 */
 ksam_start_eq(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_eq()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_eq()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	do_start(kfb, MFIO_START_EQ);
 }
@@ -932,8 +900,7 @@ ksam_start_eq(KFB* kfb)
 */
 ksam_start_nlt(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_nlt()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_nlt()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	do_start(kfb, MFIO_START_NLT);
 }
@@ -960,8 +927,7 @@ ksam_start_nlt(KFB* kfb)
 */
 ksam_start_gt(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_gt()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_gt()", "enter", "%s", kfb->_sys_name);
 	kfb->_io_key = 0;
 	do_start(kfb, MFIO_START_GT);
 }
@@ -988,8 +954,7 @@ ksam_start_gt(KFB* kfb)
 */
 ksam_start_eq_keyed(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_eq_keyed()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_eq_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb, MFIO_START_EQ);
 }
 
@@ -1015,8 +980,7 @@ ksam_start_eq_keyed(KFB* kfb)
 */
 ksam_start_nlt_keyed(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_nlt_keyed()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_nlt_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb, MFIO_START_NLT);
 }
 
@@ -1042,8 +1006,7 @@ ksam_start_nlt_keyed(KFB* kfb)
 */
 ksam_start_gt_keyed(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_gt_keyed()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_gt_keyed()", "enter", "%s", kfb->_sys_name);
 	do_start(kfb, MFIO_START_NLT);
 }
 
@@ -1069,8 +1032,7 @@ ksam_start_gt_keyed(KFB* kfb)
 */
 ksam_start_last(KFB* kfb)
 {
-	kcsitrace(1, "ksam_start_last()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_start_last()", "enter", "%s", kfb->_sys_name);
 	kfb->_status = EBADARG;
 }
 
@@ -1099,8 +1061,7 @@ static void do_start(KFB* kfb, int mode)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "do_start()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:do_start()", "enter", "%s mode=%d", kfb->_sys_name, mode);
 	user_fcd = set_mfio( kfb );
 	call_ixfile(NORMAL_COBOL_IO, mode, kfb);
 }
@@ -1137,8 +1098,7 @@ ksam_write(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_write()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_write()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	call_ixfile(NORMAL_COBOL_IO, MFIO_WRITE, kfb);
 }
@@ -1167,8 +1127,7 @@ ksam_rewrite(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_rewrite()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_rewrite()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	call_ixfile(NORMAL_COBOL_IO, MFIO_REWRITE, kfb);
 }
@@ -1197,8 +1156,7 @@ ksam_delete(KFB* kfb)
 {
 	FCD* user_fcd;
 
-	kcsitrace(1, "ksam_delete()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_delete()", "enter", "%s", kfb->_sys_name);
 	user_fcd = set_mfio( kfb );
 	call_ixfile(NORMAL_COBOL_IO, MFIO_DELETE, kfb);
 }
@@ -1227,8 +1185,7 @@ ksam_delete(KFB* kfb)
 */
 ksam_table_info(KFB* kfb)
 {
-	kcsitrace(1, "ksam_table_info()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_table_info()", "enter", "%s", kfb->_sys_name);
 	ksam_file_info( kfb );
 }
 
@@ -1256,8 +1213,7 @@ ksam_table_info(KFB* kfb)
 */
 ksam_file_info(KFB* kfb)
 {
-	kcsitrace(1, "ksam_file_info()", "enter", "Entering subroutine ...");
-
+	kcsitrace(1, "kmf:ksam_file_info()", "enter", "%s", kfb->_sys_name);
 	local_file_info( kfb );
 }
 
@@ -1284,7 +1240,7 @@ ksam_file_info(KFB* kfb)
 **      08/05/97        Written by SMC
 **
 */
-static int local_file_info(KFB* kfb)
+static void local_file_info(KFB* kfb)
 {
 	register int	idx;
 	static char info_code[2]= {0x00,0x06};	/* Special opcode Returns info on file and keys in KDB */
@@ -1296,7 +1252,7 @@ static int local_file_info(KFB* kfb)
 	char*   parms[5];
 	unsigned char hold_open_mode;
 
-	kcsitrace(1, "local_file_info()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:local_file_info()", "enter", "%s", kfb->_sys_name);
 
 	user_fcd = set_mfio( kfb );
 
@@ -1314,7 +1270,7 @@ static int local_file_info(KFB* kfb)
 	
 	if ( user_fcd->status[0] == 9 && (unsigned char)(user_fcd->status[1]) == (unsigned char)161 )
 	{
-		kcsitrace(2, "local_file_info()", "info", "Found a fixed-length sequential file");
+		kcsitrace(2, "kmf:local_file_info()", "info", "Found a fixed-length sequential file");
 		user_fcd->org = MF_SEQUENTIAL;
 		call_ixfile(info_code[0], info_code[1], kfb);
       	}
@@ -1390,8 +1346,6 @@ static int local_file_info(KFB* kfb)
 			kfb->_key[idx].k_flags = ISDUPS;
 		}
 	}
-
-	return( TRUE );
 }
 
 /*
@@ -1424,7 +1378,7 @@ static void set_local_key_info(KFB* kfb)
 	MFKDA*	mkey;
 	int2	l_nkeys, l_kdb_len, l_offset;
 
-	kcsitrace(1, "set_local_key_info()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:set_local_key_info()", "enter", "%s", kfb->_sys_name);
 
 	if ( kfb->_org[0] != 'I' )
 	{
@@ -1516,7 +1470,9 @@ static void set_local_key_info(KFB* kfb)
 */
 static int2 mf_trans(FCD* user_fcd)
 {
-	kcsitrace(1, "mf_trans()", "enter", "Entering subroutine ...");
+	kcsitrace(1, "kmf:mf_trans()", "enter", "File status = [%c%c] (hex=%x,%x)", 
+		  user_fcd->status[0], user_fcd->status[1], 
+		  user_fcd->status[0], user_fcd->status[1]);
 
 	switch( user_fcd->status[0] )
 	{
@@ -1526,8 +1482,6 @@ static int2 mf_trans(FCD* user_fcd)
 			return(EENDFILE);
 		case '2':
 		{
-			kcsitrace(3, "mf_trans()", "error", "File status set: status key1 = 2, key2=[%x]", user_fcd->status[1]);
-
 			switch( user_fcd->status[1] )
 			{
 				default:
@@ -1542,8 +1496,6 @@ static int2 mf_trans(FCD* user_fcd)
 		}
 		case '3':
 		{
-			kcsitrace(3, "mf_trans()", "error", "File status set: status key1 = 3, key2 = [%x]", user_fcd->status[1]);
-
 			switch( user_fcd->status[1] )
 			{
 				default:
@@ -1559,8 +1511,6 @@ static int2 mf_trans(FCD* user_fcd)
 		}
 		case '4':
 		{
-			kcsitrace(3, "mf_trans()", "error", "File status set: status key1 = 4, key2=[%x]", user_fcd->status[1]);
-
 			switch( user_fcd->status[1] )
 			{
 				default:
@@ -1573,13 +1523,18 @@ static int2 mf_trans(FCD* user_fcd)
 		}
 		case '9':
 		{
-			kcsitrace(3, "mf_trans()", "error", "File status set: status key1 = 9, key2 = [%x]", user_fcd->status[1]);
-			return(EBADFILE);
+			switch( user_fcd->status[1] )
+			{
+			case 67: /* 9/067 - 9C */
+				return(ENOTOPEN);
+			case 68: /* 9/068 - 9D */
+				return(ELOCKED);
+			default:
+				return(EBADFILE);
+			}
 		}
 		default:
 		{
-			kcsitrace(3, "mf_trans()", "error", "File status set: status key1 = [%x], key2 = [%x]",
-				user_fcd->status[0], user_fcd->status[1]);
 			return(EBADFILE);
 		}
 	}
@@ -1608,25 +1563,20 @@ static int2 mf_trans(FCD* user_fcd)
 */
 static void mf_x_status(KFB* kfb, FCD* user_fcd)
 {
-	kcsitrace(1, "mf_x_status()", "enter", "Entering subroutine ...");
-
-	kcsitrace(2, "mf_x_status()", "info", "File status set: status key1 = [%x], key2=[%x]",
-		user_fcd->status[0], user_fcd->status[1]);
-
 	if(user_fcd->status[0] != '9')
 	{
 		sprintf(kfb->_x_status,"%c%c",
 			user_fcd->status[0],
 			user_fcd->status[1]);
-		kcsitrace(2, "mf_x_status()", "info", "Set KFB->_x_status to [%s]", kfb->_x_status);
 	}
 	else
 	{
 		sprintf(kfb->_x_status,"%c/%03d",
 			user_fcd->status[0],
 			user_fcd->status[1]);
-		kcsitrace(2, "mf_x_status()", "info", "Set KFB->_x_status to [%s]", kfb->_x_status);
 	}
+
+	kcsitrace(2, "kmf:mf_x_status()", "info", "Set KFB->_x_status to [%s]", kfb->_x_status);
 }
 
 /*
@@ -1655,15 +1605,13 @@ static void mf_x_status(KFB* kfb, FCD* user_fcd)
 */
 static void store_number(char* dest, void* src, int len)
 {
-	kcsitrace(1, "store_number()", "enter", "Entering subroutine ...");
-
 	if ( len == 2 || len == 4)
 	{
 		memcpy(dest, src, len);
 	}
 	else
 	{
-		kcsitrace(4,"store_number()", "error", "Invalid length (%d)",len);
+		kcsitrace(4,"kmf:store_number()", "error", "Invalid length (%d)",len);
 		return;
 	}
 
@@ -1699,8 +1647,6 @@ static void store_number(char* dest, void* src, int len)
 */
 static void retrieve_number(char* src, void* dest, int len)
 {
-	kcsitrace(1, "retrieve_number()", "enter", "Entering subroutine ...");
-
 	if ( len == 2 || len == 4)
 	{
 		memcpy(dest, src, len);
@@ -1711,54 +1657,34 @@ static void retrieve_number(char* src, void* dest, int len)
 	}
 	else
 	{
-		kcsitrace(4,"retrieve_number()", "error", "Invalid length (%d)",len);
+		kcsitrace(4,"kmf:retrieve_number()", "error", "Invalid length (%d)",len);
 	}
 }
 
-/*
-**      Routine:        test_open_mode()
-**
-**      Function:	Confirm that mode is a valid OPEN operation
-**
-**      Description:
-**
-**      Arguments:
-**      mode		The mode to test
-**
-**      Globals:        None
-**
-**      Return:		None
-**
-**      Warnings:       None
-**
-**      History:
-**      08/07/97        Written by SMC
-**
-*/
-static int test_open_mode(int mode )
-{
-	int stat;
-
-	kcsitrace(1, "test_open_mode()", "enter", "Entering subroutine ...");
-
-	if ( mode == MF_OPEN_INPUT ||		
-	     mode == MF_OPEN_OUTPUT ||
-	     mode == MF_OPEN_IO ||
-	     mode == MF_OPEN_EXTEND )
-	{
-		stat = TRUE;
-	}
-	else
-	{
-		stat = FALSE;
-	}
-
-	return( stat );
-} 
 
 /*
 **	History:
 **	$Log: kmf.c,v $
+**	Revision 1.26  2002-04-24 11:35:04-04  gsl
+**	Tracing
+**
+**	Revision 1.25  2002-04-23 16:48:26-04  gsl
+**	Return 9/067 means file not open (MF4.1)
+**	In ksam_close() if get a ENOTOPEN just log message and set status to OK
+**
+**	Revision 1.24  2002-04-23 13:31:17-04  gsl
+**	In do_open() if open for INPUT then set the MF_NODETECTLOCK bit
+**	so we will ingore locked records.
+**
+**	Revision 1.23  2002-04-22 16:57:58-04  gsl
+**	Fix status checking for locked record
+**	Fixed kcsitrace
+**	NOT COMPLETE
+**	MF LOCKED RECORD
+**
+**	Revision 1.22  2002-03-18 17:56:54-05  gsl
+**	Fix the logging of status codes to make easier to read.
+**
 **	Revision 1.21  1999-03-04 19:17:53-05  gsl
 **	Fix to call cobinit() before first call to a cobol module.
 **	Micro Focus requires this (get an error on AIX but not on HP)

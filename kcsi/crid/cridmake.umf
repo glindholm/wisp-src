@@ -40,11 +40,17 @@ MAKEFILE=cridmake.umf
 #
 # To change the version for CRID, change it here. 
 #	wisp/kcsi/crid/cridmake.umf
-#	wisp/kcsi/crid/release.txt
+#	wisp/kcsi/crid/crid_relnotes.txt
+#	wisp/kcsi/crid/cridntsetup.txt
+#	wisp/kcsi/crid/crid_acu_install.txt
+#	wisp/kcsi/crid/crid_mf_install.txt
+#	wisp/kcsi/crid/crid_packlist.txt
 #	wisp/doc/v44_relnotes.lis
-#	wisp/acucobol/wruncbl.umf
+#	wisp/acu/wruncbl.umf
+#	wisp/acu/wrun32wisp_crid_acu51.mak
+#	wisp/acu/wrun32wisp_crid_acu52.mak
 #
-CRID_VERSION=3000
+CRID_VERSION=3003
 
 #-----------------------------------------------------------------------
 #
@@ -85,16 +91,16 @@ MF_FLAGS = -C warnings=2 -C LINKCOUNT=5000
 #
 #	Distribution lists
 #
-STDDIST=ctlcnvrt.wcb rptcnvrt.wcb packlist.txt release.txt
+STDDIST=ctlcnvrt.wcb rptcnvrt.wcb crid_packlist.txt crid_relnotes.txt
 
 ACUDIST=libcrid.a crid.h cridtbl.c crid85.c wruncbl.umf \
 	CONTROL REPORT INQUIRY DATENTRY \
-	install_crid_acu.txt $(STDDIST)
+	crid_acu_install.txt $(STDDIST)
 
 MFXDIST=control report inquiry datentry \
 	control.o report.o inquiry.o datentry.o \
 	cridmfx.umf libmfxcrid.a libmfxcridwcb.a \
-	install_crid_mf.txt $(STDDIST)
+	crid_mf_install.txt $(STDDIST)
 
 #-----------------------------------------------------------------------
 #
@@ -273,14 +279,16 @@ crid_acu:
 crid_mf_go: header_mf required crid_mfx_shipkit 
 	@echo CRID $(CRID_VERSION) for MICRO FOCUS is UP-TO-DATE.
 
-crid_acu_go: header_acu required crid_acu_shipkit wruncblk
+crid_acu_go: header_acu required crid_acu_shipkit wruncblk_rts
 	@echo CRID $(CRID_VERSION) for ACUCOBOL is UP-TO-DATE.
 
-ACUSHIPDIR=cridacu$(CRID_VERSION).ship
-ACUDISTDIR=cridacu.$(CRID_VERSION)
+ACUSHIPDIR=crid_acu_$(CRID_VERSION).ship
+ACUDISTDIR=crid_acu_$(CRID_VERSION)
+ACUDISTTAZ=crid_acu_$(CRID_VERSION).tar.Z
 
-MFXSHIPDIR=cridmfx$(CRID_VERSION).ship
-MFXDISTDIR=cridmfx.$(CRID_VERSION)
+MFXSHIPDIR=crid_mf_$(CRID_VERSION).ship
+MFXDISTDIR=crid_mf_$(CRID_VERSION)
+MFXDISTTAZ=crid_mf_$(CRID_VERSION).tar.Z
 
 
 crid_acu_shipkit: $(ACUSHIPDIR)
@@ -293,8 +301,12 @@ $(ACUSHIPDIR): $(ACUDIST)
 	mkdir $(ACUSHIPDIR)/$(ACUDISTDIR)
 	chmod a+rwx $(ACUSHIPDIR)/$(ACUDISTDIR)
 	cp $(ACUDIST) $(ACUSHIPDIR)/$(ACUDISTDIR)
-	chmod 444 $(ACUSHIPDIR)/$(ACUDISTDIR)/*
-	(cd $(ACUSHIPDIR); tar -cvf - $(ACUDISTDIR)|compress>$(ACUDISTDIR).tar.Z)
+	chmod a=r $(ACUSHIPDIR)/$(ACUDISTDIR)/*
+	chmod a+w $(ACUSHIPDIR)/$(ACUDISTDIR)/*.umf
+	(cd $(ACUSHIPDIR); tar -cvf - $(ACUDISTDIR)|compress>$(ACUDISTTAZ))
+	cp crid_relnotes.txt $(ACUSHIPDIR)
+	cp crid_acu_install.txt $(ACUSHIPDIR)
+	chmod a+r *
 	@echo "== SHIPPING KIT $@ HAS BEEN BUILT"
 
 crid_mfx_shipkit: $(MFXSHIPDIR)
@@ -308,9 +320,13 @@ $(MFXSHIPDIR): $(MFXDIST)
 	chmod a+rwx $(MFXSHIPDIR)/$(MFXDISTDIR)
 	cp $(MFXDIST) $(MFXSHIPDIR)/$(MFXDISTDIR)
 	(cd $(MFXSHIPDIR)/$(MFXDISTDIR); $(STRIP) control report inquiry datentry)
-	chmod 444 $(MFXSHIPDIR)/$(MFXDISTDIR)/*
-	(cd $(MFXSHIPDIR)/$(MFXDISTDIR); chmod 555 control report inquiry datentry)
-	(cd $(MFXSHIPDIR); tar -cvf - $(MFXDISTDIR)|compress>$(MFXDISTDIR).tar.Z)
+	chmod a=r $(MFXSHIPDIR)/$(MFXDISTDIR)/*
+	chmod a+w $(MFXSHIPDIR)/$(MFXDISTDIR)/*.umf
+	(cd $(MFXSHIPDIR)/$(MFXDISTDIR); chmod a=rx control report inquiry datentry)
+	(cd $(MFXSHIPDIR); tar -cvf - $(MFXDISTDIR)|compress>$(MFXDISTTAZ))
+	cp crid_relnotes.txt $(MFXSHIPDIR)
+	cp crid_mf_install.txt $(MFXSHIPDIR)
+	chmod a+r *
 	@echo "== SHIPPING KIT $@ HAS BEEN BUILT"
 
 
@@ -378,11 +394,12 @@ $(LIBC_ACU_A): $(LIBC_ALL_O) $(LIBC_ACU_ONLY_O)
 	$(RANLIB) $@
 	@echo $@ is UP-TO-DATE
 
-wruncblk: $(LIBC_ACU_A) wruncbl.umf
+# Use fake name to force rts make to be run
+wruncblk_rts: $(LIBC_ACU_A) wruncbl.umf
 	$(MAKE) -f wruncbl.umf WISPDIR=$(WISPDIR) ACUDIR=$(ACUDIR) CRIDDIR=. crid
 
 wruncbl.umf: $(WISP)/src/acu/wruncbl.umf
-	cp $(WISP)/src/acu/wruncbl.umf $@
+	cp -f $(WISP)/src/acu/wruncbl.umf $@
 
 #-----------------------------------------------------------------------
 #
@@ -399,7 +416,7 @@ datentry: control.o report.o inquiry.o datentry.o  $(LIBWCB_MFX_A) $(LIBC_MFX_A)
 	$(MAKE) -f cridmfx.umf WISPDIR=$(WISPDIR) $@
 
 $(WISPDIR)/etc/make.include: $(WISP)/src/port/make.include
-	cp $(WISP)/src/port/make.include $@
+	cp -f $(WISP)/src/port/make.include $@
 
 LIBC_MFX_ONLY_O= \
 	$(LIBC_MFX_A)(kmf.o) \

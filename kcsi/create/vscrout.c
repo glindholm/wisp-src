@@ -46,7 +46,8 @@ AKEY	blank_akey = { "     ", "   ", " "};
 /*
 **	Static data
 */
-static char app[]="CREATE Utility - Version %s.%s (c) 1993-2001 KCSI/NEOM";
+/* CHANGE-COPYRIGHT-DATE */
+static char app[]="CREATE Utility - Version %s.%s (c) 1993-2002 KCSI/NEOM";
 static char logo[81], message_field[81], m1_field[31], m2_field[31];
 static char recsize[5], errlist[4], output_org[2], output_format[2];
 static int screen_error;
@@ -861,7 +862,7 @@ static int alt_keys_screen(void)
 		GPKW(duplit[idx],akey[idx].dup,1,idx + 9,34,"U");
 		}
 	GPCTEXT("   D = duplicates allowed",12,50);
-	GPCTEXT("  Press PF1 to respecify",20,50);
+	GPCTEXT("  Press (1) to respecify",20,50);
 	GPCTEXT("     output parameters",21,50);
 	GPCTEXT("  (13) Help",22,50);
 	GPCTEXT(m1_field,23,50);
@@ -1026,6 +1027,12 @@ static int isblank(char *str, int len)
 /*
 **	History:
 **	$Log: vscrout.c,v $
+**	Revision 1.13  2002-03-28 09:19:02-05  gsl
+**	FIx PF1 -> (1) tag
+**
+**	Revision 1.12  2002-03-27 16:08:45-05  gsl
+**	(C) 2002
+**
 **	Revision 1.11  2001-09-06 11:41:13-04  gsl
 **	Remove the FORMAT output field for Acucobol
 **

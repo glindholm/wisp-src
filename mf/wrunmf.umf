@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -97,8 +97,6 @@
 #		ede		The EDE runtime.
 #				Runtime = wrunmfe
 #				Macro   = RTSE
-#
-#		both		Create both rts and ede targets.
 #
 #		clean		This target is used to remove any files 
 #				created by this makefile.
@@ -395,8 +393,6 @@ WISPEDE_ENTRY = $(WISP_ENTRY) $(EDE_ENTRY)
 #
 
 default: rts
-
-both:	rts ede
 
 clean:	
 	rm -f $(RTS) $(RTSE) core $(WISPSUBS) *~

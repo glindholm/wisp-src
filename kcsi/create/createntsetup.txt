@@ -1,4 +1,4 @@
-Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +7,7 @@ Title:          CREATE for Acucobol on Windows (WIN32) Setup
 Document:       createntsetup.txt
 Last Updated:   $Date:$
 Products:       CREATE/WIN32 for Acucobol
-Versions:       3.5.00 (AND LATER)
+Versions:       3.5.01 (AND LATER)
 
 Summary:        Quick setup steps for CREATE on Windows.
 
@@ -32,9 +32,9 @@ Overview
 The Steps
 ---------
 
-1) Ensure WISP 4.4.00 is installed first.
+1) Ensure WISP 4.4.02 is installed first.
 
-    WISP 4.4.00 must be installed first before you can install
+    WISP 4.4.02 must be installed first before you can install
     CREATE. Ensure you have WISP installed and configured before 
     continuing.
 
