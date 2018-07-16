@@ -149,10 +149,10 @@ static void tput_sort_fwopen(NODE curr_node, int col, const char *openmode)
 /*
 **	History:
 **	$Log: wt_sort.c,v $
-**	Revision 1.14  1999-01-05 14:55:11-05  gsl
+**	Revision 1.14  1999/01/05 19:55:11  gsl
 **	Fix so if USING and GIVING files are the same then don't generate wfopen() fo
 **	for the GIVING, this prevents PF3 screen.
-**
+**	
 **	Revision 1.13  1998-03-20 17:38:36-05  gsl
 **	moved OLD to old.c
 **

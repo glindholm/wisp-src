@@ -2906,11 +2906,11 @@ const char *get_wisp_option(const char *keyword)
 /*
 **	History:
 **	$Log: wperson.c,v $
-**	Revision 1.53  2001-10-31 15:39:09-05  gsl
+**	Revision 1.53  2001/10/31 20:39:09  gsl
 **	Added wisp_temp_defaults_path()
 **	Rework the logic to build parent_path and temp_person_path now uses
 **	wisptmpdir() /usr/tmp/wisptmp/DEFS_ as a prefix
-**
+**	
 **	Revision 1.52  2001-09-07 11:56:03-04  gsl
 **	Remove all the VMS and MSDOS ifdefs
 **

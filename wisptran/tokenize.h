@@ -44,9 +44,9 @@ extern char *token_type_mess(TOKEN *tokptr);
 /*
 **	History:
 **	$Log: tokenize.h,v $
-**	Revision 1.6  1998-03-23 13:54:53-05  gsl
+**	Revision 1.6  1998/03/23 18:54:53  gsl
 **	update
-**
+**	
 **	Revision 1.5  1996-08-30 21:56:11-04  gsl
 **	drcs update
 **

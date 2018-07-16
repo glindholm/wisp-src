@@ -116,9 +116,9 @@ Boolean machine::variable_reference() {
 //
 //	History:
 //	$Log: e_varref.cpp,v $
-//	Revision 1.8  1998-08-31 15:13:45-04  gsl
+//	Revision 1.8  1998/08/31 19:13:45  gsl
 //	drcs update
-//
+//	
 //
 
 //	

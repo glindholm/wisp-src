@@ -57,9 +57,9 @@ va_dcl
 /*
 **	History:
 **	$Log: gparmbld.c,v $
-**	Revision 1.10  1996-08-19 18:32:22-04  gsl
+**	Revision 1.10  1996/08/19 22:32:22  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -79,9 +79,9 @@ void *wrealloc(void *ptr, int size)
 /*
 **	History:
 **	$Log: wmalloc.c,v $
-**	Revision 1.7  1998-03-20 17:39:10-05  gsl
+**	Revision 1.7  1998/03/20 22:39:10  gsl
 **	Add wrealloc() and make const args const
-**
+**	
 **	Revision 1.6  1996-08-30 21:56:12-04  gsl
 **	drcs update
 **

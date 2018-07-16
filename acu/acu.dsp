@@ -39,9 +39,9 @@ CFG=acu - Win32 Release
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir ".\Release"
 # PROP Intermediate_Dir ".\Release"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. acu"
+# PROP Cmd_Line "NMAKE /f wacu.mak WISPDIR=.. acu"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File "acu\ACULINK"
+# PROP Target_File "ACU"
 # PROP Bsc_Name "acu\acu.bsc"
 # PROP Target_Dir "."
 
@@ -58,7 +58,7 @@ CFG=acu - Win32 Release
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir ".\Debug"
 # PROP Intermediate_Dir ".\Debug"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. acu"
+# PROP Cmd_Line "NMAKE /f wacu.mak WISPDIR=.. acu"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "acu\wwruncbl.exe"
 # PROP Bsc_Name "acu\acu.bsc"
@@ -94,6 +94,10 @@ SOURCE=.\sub85.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\wacu.mak
+# End Source File
+# Begin Source File
+
 SOURCE=.\wrun32wisp_acu51.mak
 # End Source File
 # Begin Source File
@@ -121,5 +125,17 @@ SOURCE=.\wrun32wisp_ede_acu52.mak
 SOURCE=.\wwruncbl.mak
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\acucobol.include
+# End Source File
+# Begin Source File
+
+SOURCE=.\AcucobolLicenses.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\wruncbl.umf
+# End Source File
 # End Target
 # End Project

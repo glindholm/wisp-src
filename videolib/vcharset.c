@@ -123,11 +123,11 @@ static int vchs_do(int char_set)							/* Actually do the selection.		*/
 /*
 **	History:
 **	$Log: vcharset.c,v $
-**	Revision 1.10  1997-07-08 16:31:11-04  gsl
+**	Revision 1.10  1997/07/08 20:31:11  gsl
 **	added vrawdirectio() logic around the vcontrol()
 **	Reworked so optimization logic makes sense.
 **	Use new video.h defines
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:00-04  gsl
 **	drcs update
 **

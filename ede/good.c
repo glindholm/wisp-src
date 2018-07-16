@@ -77,9 +77,9 @@ main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
 /*
 **	History:
 **	$Log: good.c,v $
-**	Revision 1.8  1996-09-13 14:02:43-04  gsl
+**	Revision 1.8  1996/09/13 18:02:43  gsl
 **	Fix headers and warnings for NT
-**
+**	
 **
 **
 */

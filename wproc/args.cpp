@@ -190,9 +190,9 @@ int arguments::count() {
 //
 //	History:
 //	$Log: args.cpp,v $
-//	Revision 1.7  1998-08-31 15:12:08-04  gsl
+//	Revision 1.7  1998/08/31 19:12:08  gsl
 //	Add log
-//
+//	
 //
 
 //	

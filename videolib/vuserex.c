@@ -24,9 +24,9 @@ void vuserexit()									/* Dummy user exit stubs.		*/
 /*
 **	History:
 **	$Log: vuserex.c,v $
-**	Revision 1.9  1996-10-11 18:16:24-04  gsl
+**	Revision 1.9  1996/10/11 22:16:24  gsl
 **	drcs update
-**
+**	
 **
 **
 */

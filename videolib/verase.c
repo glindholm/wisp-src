@@ -208,10 +208,10 @@ int verase_menu(int control, struct video_menu *md)					/* Erase all, top or bot
 /*
 **	History:
 **	$Log: verase.c,v $
-**	Revision 1.12  1997-07-08 16:57:59-04  gsl
+**	Revision 1.12  1997/07/08 20:57:59  gsl
 **	Remove unused erase modes
 **	Add COSTAR for WIN32 logic
-**
+**	
 **	Revision 1.11  1996-10-11 18:16:03-04  gsl
 **	drcs update
 **

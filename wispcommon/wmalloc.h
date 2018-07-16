@@ -23,22 +23,28 @@
 /*
 **	Structures and Defines
 */
+#define wmalloc wisp_malloc
+#define wcalloc wisp_calloc
+#define wstrdup wisp_strdup
 
 /*
 **	Function Prototypes
 */
-extern void *wmalloc(size_t size);
-extern void *wcalloc(size_t nelem, size_t elsize);
-extern char *wstrdup(const char *string);
+extern void *wisp_malloc(size_t size);
+extern void *wisp_calloc(size_t nelem, size_t elsize);
+extern char *wisp_strdup(const char *string);
 
 #endif /* wmalloc_H */
 
 /*
 **	History:
 **	$Log: wmalloc.h,v $
-**	Revision 1.4  1996-11-06 12:31:46-05  jockc
+**	Revision 1.4.2.1  2002/10/03 13:55:11  gsl
+**	Change wstrdup() -> wisp_strdup()
+**	
+**	Revision 1.4  1996/11/06 17:31:46  jockc
 **	Move from wisp/lib to wisp/common
-**
+**	
 **	Revision 1.3  1996-07-17 14:57:18-07  gsl
 **	Add wmalloc() wcalloc() and wstrdup() prototrypes
 **	and removed the define malloc() macro

@@ -1,0 +1,307 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		Co*STAR for WISP NT/95 Design Document
+	
+	Document:	costarntdd.txt
+	Last Updated:	24 July 1997
+	Products:	WISP for NT/95
+	Versions:	4.1
+	
+	Summary:	Scope of Co*STAR for NT project
+			Design goals, deliverables
+			Project tasks
+
+	====================================================================
+	
+
+	Co*STAR for WISP NT/95 Design Document
+	======================================
+	
+	This document describes the Co*STAR for NT project.
+
+
+	Project Description
+	===================
+
+	Enhance WISP for NT/95 so that it works with Co*STAR 32 using
+	"console" mode screen capture.
+
+
+	Design Goals
+	============
+
+	Provide the equivalent level of support for Co*STAR with WISP for
+	NT/95 as is available with WISP for UNIX.
+
+
+	Project Scope
+	=============
+
+	Changes to WISP needed to accomplish design goals.
+
+	This project will include any generic changes to WISP needed to
+	upgrade to the latest version of Co*STAR.
+
+	Changing of product name from the old "WISP for Windows" to the
+	new "Co*STAR for WISP".
+
+
+	Deliverables
+	============
+
+Done	A new release and shipping kit of WISP for NT/95 (version 4.1)
+	which contains support for Co*STAR 32. 
+
+Done	Modified technical documentation that includes how to install,
+	configure, and use Co*STAR 32 with WISP for NT/95, and has the
+	name changed to "Co*STAR for WISP".
+
+	Updated WISP manual that includes above documentation.
+
+Dwight	Updated "Co*STAR for WISP" Software Product Overview - sales
+	collateral. 
+
+Done	A Co*STAR for WISP master shipping kit. This would include custom
+	installation script, custom config file, modified splash screen
+	graphics that say "Co*STAR for WISP", the above tech docs, and
+	instructions for creating Co*STAR 32 for WISP shipping kits that
+	may include scripts to automate the process.
+
+Dwight	Diskette label graphics which say "Co*STAR for WISP".
+
+Done	Update Clearview with master shipping kit diskettes.
+
+
+	Overview of Project
+	===================
+	
+	WISP for NT/95 currently uses console-mode I/O for its screen I/O. 
+	Co*STAR 32 can not handle console-mode screen I/O as it is not
+	re-directable on Windows.
+
+	We will modify WISP for NT/95 so that if COSTAR is being used it
+	will use a stream I/O method similare to WISP on UNIX.
+
+	The stream I/O method will communicate with COSTAR by sending and
+	recieving vt100 escape sequences through the stdin and stdout I/O
+	handles. 
+
+	All of the higher level "direct I/O" routines that are currently
+	hardcoded for NT/95 will need to be soft-coded conditional on if
+	COSTAR is active.  This may include adding a layer of indirection
+	which handles the differences between "direct" and "stream" I/O.
+
+	The VWANG COSTAR support is hard-coded inactive on NT/95, this
+	will have to be changed.
+
+	
+	Tasks
+	=====
+	BUG: LINK to a windows program and the window is hidden.
+
+	BUG: If message dir is not writable then program hangs and window
+	     disappears. 
+
+	Windows Title bar macro.
+
+	COSTAR BUG: Error message text disappears.
+
+	COSTAR BUG: ASSERT() and MessageBox() dialog boxes do not appear
+		    and they hang the program.
+
+	COSTAR BUG: Installing to a long filename directory fails.
+
+	Add the additional builtin function keys to vcap.c that vt220
+	Costar uses.
+
+	Perform a WISP QA on UNIX to ensure no regression bugs.
+
+	Update the WISP maunal.
+
+	Update the "Co*STAR for WISP" Software Product Overview.
+
+	Create Diskette labels.
+
+
+	Log of completed Tasks
+	======================
+	Test the Master shipping kit as returned from Clearview.
+	- Completed 7/22/97
+
+	Internal Memo to salesreps regarding different versions of Co*STAR
+	vs Co*STAR 32.
+	- Completed 7/18/97
+
+	Update Clearview with new masker diskettes for shipping kits.
+	- Completed 7/18/97
+
+	Update INSTALL.INF for Co*STAR v1.4n
+	- Completed 7/18/97
+
+	Make backups of w4w shipping kits.
+	- Completed 7/17/97
+
+	Build WISP for NT/95 4.1.00 shipping kit.
+	- Completed 7/17/97
+
+	Update the VT220.KBD and COLORS.INI file in the COSTAR kit.
+	- Completed 7/17/97
+
+	COSTAR colors - correct the blink
+	- Complete 7/17/97
+
+	Perform a WISP QA without COSTAR on NT/95 to ensure no regression
+	bugs. 
+	- Completed 7//17/97
+
+	Perform a WISP QA using COSTAR on NT/95 as the terminal interface
+	to ensure all method of screen I/O work correctly.
+	- Completed 7/17/97
+
+	BUG: Timed terminal reads failing to timeout. (MESSAGE, WSXIO)
+	- Completed 7/17/97
+
+	BUG: Spawn to vutil() is overwriting the screen. (WISPSORT)
+	- Completed 7/16/97
+
+	BUG: Processes not maintaining GID across LINK calls.  Duplicate
+	environment variables corrected.
+	- Completed 7/16/97
+
+	Update install.inf installation file.
+	- Completed 7/14/97
+
+	Create README20.txt instructions for creating the shipping kit.
+	- Completed 7/14/97
+
+	Change WISP FOR WINDOWS to COSTAR FOR WISP in documentation and in
+	COSTAR screens.
+	- Completed 7/14/97
+
+	Update w4w.cnf config file. Change to "Co*STAR for WISP".
+	- Completed 7/14/97
+
+	Create costar.bmp and costar16.bmp splash screen to says "Co*STAR
+	for WISP".
+	- Completed 7/14/97 (by Dwight)
+
+	Update the W4W.LIS document to say Co*STAR for WISP and add the
+	support for WISP for NT/95.
+	- Completed 7/14/97
+
+	Ensure the ESC key which currently maps to the HELP key does not
+	conflict with vt100 pfkey escape codes.  Changed the default
+	videocap so the ESC key is not available as the help key.
+	- Completed 7/14/97
+
+	Wrote/updated the release notes for WISP 4.1.
+	- Completed 7/12/97
+
+	Test starting programs using WRUN, WPROC, WSHELL.
+	- Completed 7/11/97
+
+	Handle MessageBox() windows message boxes.
+	- Completed 7/11/97
+
+	Fix the extra console windows on linking.
+	- Completed 7/11/97
+
+	Began testing - Fix the double echo character stuff
+	- Completed 7/9/97
+
+	Modify the use_costar() routine so that it works correctly on
+	NT/95.
+	- Completed 7/9/97
+
+	Soft-code the VWANG COSTAR logic so that it is available on NT/95.
+	- Completed 7/9/97
+
+	Setup the W4W configuration files for use with Costar32.
+	- Completed 7/8/97
+
+	Create a new WINCON.VCAP with both the vt220 capabilities (not
+	used with direct IO) and both sets of key values (PC and vt220
+	keys).
+	- Completed 7/8/97
+
+	The pseudo_blank and graphstr capabilities are incompatible
+	between Console and Vt220. Resolved by allowing to default and the
+	default logic will pick values that are valid with or without
+	costar. 
+	- Completed 7/8/97
+
+	Fix the 8-bit test code for vt220 (all vt) terminals. Wrote
+	vcapterm() routine to retieve the type of terminal being used.
+	- Completed 7/8/97
+
+	Add the vt220 videocap values to the internal default.
+	- Completed 7/7/97
+
+	Routines which use vraw_get_console_hWnd() will need to be
+	reworked.  
+	- Completed 7/7/97
+
+	Remove the bRedirected logic in vrawntcn.c as it is mostly not
+	used with stream I/O.
+	- Completed 7/3/97
+
+	Ensure all the direct I/O logic is properly wrapped around the
+	vcontrol() calls so that it doesn't mess with the deferred logic. 
+	- Completed 7/3/97
+
+	I'm seeing excessive "character set" and "exit graphics mode"
+	escape sequences in the output stream.
+	- Completed 7/2/97
+
+	Vmove() does not seem to be properly positioning using stream
+	mode. On UNIX I see CR & LF together in the output stream and on
+	NT I'm only seeing LF.
+	- Completed 7/2/97
+
+	Videocap capabilites are incorrecty being used with direct mode
+	I/O.  Find out where and correct.
+	- Completed 6/30/97
+
+	Build and test HEXED as I made big changes to vgets0() which is
+	used by HEXED.
+	- Complete 6/26/97 : 1/4 hr
+
+	Search all the #ifdef unix, MSDOS, WIN32, VMS, MSFS for any
+	assumptions about the type of I/O being done.
+	- Complete 6/26/97: 4 hr
+
+	Find all the hard-coded "direct I/O" logic and soft-code it based
+	on if costar is active. "DIRECTVID"
+	- Completed 6/26/97 : 4 hr
+
+	Create a routine vrawdirectio() which is usable within video and
+	reports if we are using direct I/O or stream I/O.  For NT this
+	will depend on it COSTAR is active for non-NT it will always
+	report false.
+	- Completed 6/24/97 : 2 hr
+
+	Consolidate the vraw*.h header files into a single vraw.h.
+	- Completed 6/24/97 : 1 hr
+
+	Create design document for this project.
+	- Complete 6/23/97 : 3 hr
+
+	Download and install the latest version of Co*STAR 32 from
+	Clearview. 
+	- Install failed
+	- Call Mike Rego, re-download
+	- Install failed
+	- Couldn't handle long filenames in install location.
+	- Complete 6/23/97 : 2 hr
+
+	Discuss with Mark Sweeney of Clearview the technical
+	implementation of Co*STAR 32 console screen capture facility.
+	How to enhance WISP to work with Co*STAR.
+	- Discussed ANSI.SYS dos I/O methods
+	- Create a separate screen I/O method that communicates using
+	  vt100 style escape sequences.
+	- Complete 6/20/97 : 1 hr
+
+	========================= END OF DOCUMENT ==========================

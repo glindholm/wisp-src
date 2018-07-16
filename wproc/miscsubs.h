@@ -40,9 +40,9 @@ extern "C" void tempproc(char *file, char *lib, char *vol, char *filepath);
 /*
 **	History:
 **	$Log: miscsubs.h,v $
-**	Revision 1.6  1998-08-31 15:50:35-04  gsl
+**	Revision 1.6  1998/08/31 19:50:35  gsl
 **	drcs update
-**
+**	
 **	Revision 1.5  1998-08-31 15:13:57-04  gsl
 **	drcs update
 **

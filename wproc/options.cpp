@@ -232,9 +232,9 @@ void show_usage() {
 //
 //	History:
 //	$Log: options.cpp,v $
-//	Revision 1.10  1998-09-08 14:50:22-04  gsl
+//	Revision 1.10  1998/09/08 18:50:22  gsl
 //	Fix the "only one options" allowed logic to not count debug
-//
+//	
 //	Revision 1.9  1998-09-02 17:28:59-04  gsl
 //	changed processing of the debug (-d) switch to allow multiple flags.
 //	you can now say -dkos instead of -dk -do -ds this was needed to

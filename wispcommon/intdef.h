@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1995-2002 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 
@@ -18,8 +18,6 @@
 **	Purpose:	To define int sizes for all platforms.
 **                      Basically we want to provide defs for two byte and four byte ints.
 **
-**	History:
-**	07/08/93	Written by JEC
 **
 */
 
@@ -27,52 +25,56 @@
 #ifndef INTDEF_H
 #define INTDEF_H
 
-/* ALPHA has the following sizes: short:2, int:4, long:8 */
-#if defined(OSF1_ALPHA)
-
-typedef short int2; 
-typedef int   int4;
-
-typedef  unsigned short uint2;  
-typedef  unsigned int   uint4;
-
 #define ATOI4(x) atoi((x))
 
-#endif /*ALPHA*/
+typedef short		int2; 
+typedef unsigned short	uint2;  
 
-/* MSDOS Codebuilder has the following sizes: short:2, int:4, long:4 */
-#if defined(MSDOS)
+typedef int		int4;
+typedef unsigned int	uint4;
 
-typedef short int2; 
-typedef long  int4;
+#ifdef OSF1_ALPHA
+#define INT8_DEFINED
+typedef	long		INT8;
+typedef	unsigned long	UINT8;
+#endif
 
-typedef  unsigned short  uint2;  
-typedef  unsigned long   uint4;
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define INT8_DEFINED
+typedef	long long		INT8;
+typedef	unsigned long long	UINT8;
+#endif
 
-#define ATOI4(x) atol((x))
+#ifdef WIN32
+#define INT8_DEFINED
+typedef __int64			INT8;
+typedef unsigned __int64	UINT8;
+#endif
 
-#endif /*MSDOS*/
-
-/* everyone else seems to have:  short:2, int:4, long:4 */
-#if !defined(OSF1_ALPHA) && !defined(MSDOS)
-
-typedef short int2; 
-typedef int   int4;
-
-typedef  unsigned short    uint2;  
-typedef  unsigned int      uint4;
-
-#define ATOI4(x) atoi((x))
-
-#endif /*CATCHALL*/
+/*
+**	NOTE: SCO 5.02 does not have a 8 byte (64-bit) integer type.
+*/
 
 #endif /*INTDEF_H*/
+
 /*
 **	History:
 **	$Log: intdef.h,v $
-**	Revision 1.5  1996-07-23 14:17:48-04  gsl
+**	Revision 1.5.2.1  2002/10/09 19:18:24  gsl
+**	Add INT8
+**	
+**	Revision 1.8  2002/10/08 15:44:38  gsl
+**	Change int8 to INT8 to avoid conficts
+**	
+**	Revision 1.7  2002/10/04 20:54:45  gsl
+**	Add int8 for 64-bit integers
+**	
+**	Revision 1.6  2002/07/18 21:04:23  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.5  1996/07/23 18:17:48  gsl
 **	drcs update
-**
+**	
 **
 **
 */

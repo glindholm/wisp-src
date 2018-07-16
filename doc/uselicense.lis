@@ -1,0 +1,49 @@
+	**** COMPANY CONFIDENTIAL ****			uselicense.lis
+							05/28/92
+
+
+	WISP RUNTIME LICENSE TRACKING - USER GUIDE AND INSTALLATION
+	===========================================================
+
+	The WISP runtime license system is installed in directory
+	"/idsi/WispLicense" on ZAPHOD.
+
+	To run it use the shell scrip "WAUTH" this will setup the
+	directory etc. then run "wauthorize".
+
+
+	LICENSE DOCUMENTS
+	=================
+
+	When you generate a LICENSE KEY the wauthorize program will
+	automatically print a WISP license document that is sent
+	out to the customer.  The license document is written to
+	a file in directory "/idsi/WispLicense/doc".  It is then
+	sent to ILP with a FORM=LICENSE and a CLASS=L.
+
+	The file name for each document has the following form:
+
+		NNNNNN.PPV
+
+		NNNNNN	- the 6 digit customer number
+		PP	- the platform code
+		V	- a unique version number
+
+	E.g   	/idsi/WispLicense/doc/001003.AX1
+
+		This would be the license document for customer 1003
+		for the AIX RISC (AX).
+
+
+	INSTALLATION
+	============
+
+	/usr/local/bin/WAUTH			Script to run wauthorize
+	/idsi/WispLicense			The WISP license directory
+	/idsi/WispLicense/wauthorize		The wauthorize program
+	/idsi/WispLicense/wauthorize.log	The log file
+	/idsi/WispLicense/license.template	The license template
+	/idsi/WispLicense/doc/*			The license documents
+
+
+12/14/93 - updated to correct locations

@@ -1452,9 +1452,9 @@ static int vlist_memory_err()
 /*
 **	History:
 **	$Log: vlist.c,v $
-**	Revision 1.11  1997-07-08 17:14:04-04  gsl
+**	Revision 1.11  1997/07/08 21:14:04  gsl
 **	change to use video.h new interfaces
-**
+**	
 **	Revision 1.10  1996-10-11 18:16:08-04  gsl
 **	drcs update
 **

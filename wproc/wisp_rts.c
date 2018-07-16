@@ -15,9 +15,9 @@
 /*
 **	History:
 **	$Log: wisp_rts.c,v $
-**	Revision 1.10  1998-09-02 11:52:42-04  gsl
+**	Revision 1.10  1998/09/02 15:52:42  gsl
 **	Removed all the stubs, not used in building
-**
+**	
 **	Revision 1.9  1998-08-31 15:31:34-04  gsl
 **	Fixed
 **

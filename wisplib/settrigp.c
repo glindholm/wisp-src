@@ -51,9 +51,9 @@ char *file;										/* The file name	(8 chars)	*/
 /*
 **	History:
 **	$Log: settrigp.c,v $
-**	Revision 1.9  1996-08-19 18:32:55-04  gsl
+**	Revision 1.9  1996/08/19 22:32:55  gsl
 **	drcs update
-**
+**	
 **
 **
 */

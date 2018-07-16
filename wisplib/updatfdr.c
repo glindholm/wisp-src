@@ -19,9 +19,9 @@ void UPDATFDR()
 /*
 **	History:
 **	$Log: updatfdr.c,v $
-**	Revision 1.9  1996-08-19 18:33:02-04  gsl
+**	Revision 1.9  1996/08/19 22:33:02  gsl
 **	drcs update
-**
+**	
 **
 **
 */

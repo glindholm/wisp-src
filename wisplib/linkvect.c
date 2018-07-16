@@ -357,9 +357,9 @@ struct str_parm *parm_list;
 /*
 **	History:
 **	$Log: linkvect.c,v $
-**	Revision 1.11  1999-09-08 19:42:53-04  gsl
+**	Revision 1.11  1999/09/08 23:42:53  gsl
 **	Add READFDR4
-**
+**	
 **	Revision 1.10  1999-09-08 15:39:36-04  gsl
 **	Add DATE4
 **

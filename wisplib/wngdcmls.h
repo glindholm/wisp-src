@@ -218,9 +218,9 @@
 /*
 **	History:
 **	$Log: wngdcmls.h,v $
-**	Revision 1.8  1996-08-19 18:33:19-04  gsl
+**	Revision 1.8  1996/08/19 22:33:19  gsl
 **	drcs update
-**
+**	
 **
 **
 */

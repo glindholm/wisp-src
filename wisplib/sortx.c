@@ -18,9 +18,9 @@ static int dummy_sortx;
 /*
 **	History:
 **	$Log: sortx.c,v $
-**	Revision 1.5  1996-08-19 18:32:58-04  gsl
+**	Revision 1.5  1996/08/19 22:32:58  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -34,9 +34,9 @@ char *path;
 /*
 **	History:
 **	$Log: vchstubs.c,v $
-**	Revision 1.6  1996-10-11 18:16:01-04  gsl
+**	Revision 1.6  1996/10/11 22:16:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

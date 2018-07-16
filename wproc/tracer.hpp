@@ -98,9 +98,9 @@ class tracer : public object {
 //
 //	History:
 //	$Log: tracer.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:24-04  gsl
+//	Revision 1.5  1998/08/31 19:14:24  gsl
 //	drcs update
-//
+//	
 //
 
 //	

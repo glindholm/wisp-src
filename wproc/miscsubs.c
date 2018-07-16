@@ -163,9 +163,9 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 /*
 **	History:
 **	$Log: miscsubs.c,v $
-**	Revision 1.19  2001-10-10 14:25:11-04  gsl
+**	Revision 1.19  2001/10/10 18:25:11  gsl
 **	Change globaldata() file name to WPROC_userid_pgid
-**
+**	
 **	Revision 1.18  1998-10-13 15:47:42-04  gsl
 **	Add missing include sys/stat.h
 **

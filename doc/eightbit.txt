@@ -1,0 +1,231 @@
+WISP Multinational Support Patch                    RELEASE NOTES
+
+1. OVERVIEW
+
+In this document the term "Screen Manager" will be used to refer to
+the portion of the WISP runtime library that emulates the Wang
+workstation.  
+
+Functionality has been added to the WISP Screen Manager to allow
+display and input of 8-bit characters.  Due to the conflict between
+8-bit data and FAC characters, the user must provide FAC remapping
+information.  The user provided information tells the Screen
+Manager which 8-bit values to use as FACs, and the actual FAC which is
+represented by each value.  All other 8-bit values (those not
+specified as FACs by the user) are treated as data.
+
+If the Screen Manager attempts to pass back a FAC value for which the
+user has provided no mapping information (ie, the user remapped the
+"BRIGHT MODIFY ALL NOLINE" FAC but did not remap the "BRIGHT ALTERED
+ALL NOLINE" FAC), the Screen Manager will pass back the original FAC
+value from the user's screen.
+
+There are two routines provided which allow the user to specify the
+FAC remapping information.  The routine SET8BIT can be called from
+COBOL.  SET8BIT must be called before each of the following:
+
+    DISPLAY
+    DISPLAY AND READ  
+    READ CRT
+    REWRITE CRT 
+
+Note that this 8-bit functionality cannot currently be used with the
+following:
+
+    ACCEPT
+    GETPARM
+    Data type DISPLAY-WS with RANGE clause
+
+The routine SETFACS can be called from C.  SETFACS must be called
+before each call to the vwang subroutine when 8-bit capability is
+needed (Refer to the WISP manual for information on the vwang
+subroutine).
+
+
+
+2. Using the WISP Multinational facility from COBOL.
+
+2.1 Calling SET8BIT.
+
+From COBOL, the user must call SET8BIT before each screen I/O activity
+(as described above).  SET8BIT should be called with three arguments.
+The arguments passed to SET8BIT will be used only one time, on the
+next screen I/O. The reason for this approach is that the WISP runtime
+system itself makes extensive use of the Screen Manager.  A permanent
+FAC map would disrupt the GETPARM mechanism and others WISP components
+that make use of the Screen Manager.
+
+The three arguments required are as follows:
+
+     1.  The FAC substitution list.
+     2.  The lower/upper mapping list.
+     3.  The numeric list.
+
+2.2 Description of the arguments used by SET8BIT.
+
+2.2.1 The FAC substitution list.
+
+The FAC substition list consists of paired byte values terminated by a
+hex zero.  The first byte in the pair indicates the FAC value you wish
+to redefine.  The second byte in the pair indicates the value you wish
+to use for the indicated FAC.  For example, the pair 0x80 0xff would
+remap the FAC "BRIGHT MODIFY ALL NOLINE" to 0xff.  The value 0x80
+would be available for use as data on the screen. The caller would
+then use 0xff for the "BRIGHT MODIFY ALL NOLINE" FAC.  
+
+If both values in the pair are the same, the indicated value will not
+be remapped, but will simply be treated as data by vwang.  For
+example, the pair 0x90 0x90 would make the value 0x90 available as
+actual data.  The actual FAC "BLINK MODIFY ALL NOLINE" would be
+unavailable to the progam.
+
+2.2.2 The lower/upper mapping list.
+
+The lower/upper mapping list consists of paired byte values terminated
+by a hex zero.  The first byte in the pair indicates an 8-bit value
+that is considered lowercase.  The second byte in the pair specifies
+the upper case equivalent.  Vwang will use this information to map
+lowercase 8-bit values to uppercase when they are entered in an
+Uppercase only field.
+
+2.2.3 The numeric list.
+
+The numeric list consists of a byte values terminate by a hex zero.
+Each byte in the list specifies an 8-bit value that is considered to
+be numeric.  
+
+2.3 Sample Program using SET8BIT.
+
+A COBOL program is provided with your shipping kit which demonstrates
+the use of SET8BIT.  The program is designed for use with a terminal
+that uses the DEC method of mapping foreign characters.  The name of the
+program is "mnltest.wcb" and it is in the etc/ directory.
+
+
+
+
+3. Using the WISP Multinational facility from C.
+
+To access the Screen Manager from C, the programmer must call the vwang 
+subroutine.  See the WISP manual for information on using the
+vwang subroutine.
+
+3.1 Calling SETFACS.
+
+From C, the user must call SETFACS before each call to vwang.  SETFACS
+should be called with three arguments.  As with SET8BIT, the arguments
+will be used only once.
+
+The three arguments are as follows:
+
+     1.  The FAC substitution table
+     2.  The lower/upper mapping table
+     3.  The numeric table
+
+If both of the last two arguments are NULL, SETFACS will use defaults
+that are appropriate for DEC terminals.  The arguments are described
+below.  Note that the format of the arguments is different from that
+of the corresponding SET8BIT arguments.
+
+3.2 Description of the arguments used by SETFACS.
+
+3.2.1 The FAC substitution table.
+
+The FAC substitution table is an array of 128 bytes.  It represents a
+map of the upper 128 bytes, from 128 to 255. (This range is normally
+used by vwang for FAC characters.)  Vwang examines the table any time
+it encounters an 8-bit value in the screen map.  The 8-bit value from
+the screen map is used as an index into the table (128 is subtracted
+from the 8-bit value to get the index value).  The value found at the
+computed index is used by vwang.  A zero at any position in the FAC
+table means that vwang should treat the value as data, not as a FAC.
+A nonzero value at any position in the FAC table is used by vwang as
+the actual FAC value.
+
+3.2.2 The lower/upper mapping table.
+
+The lower/upper mapping table is an array of 128 bytes.  Vwang uses the 
+lower/upper mapping table to convert lowercase international
+characters to uppercase.  For each lowercase international character
+in the upper 128 range, insert the appropriate value for the
+corresponding uppercase character.
+
+3.2.3 The numeric table.
+
+The numeric table is an array of 128 bytes.  The numeric table is used
+to determine which characters in the upper 128 range are allowed in
+numeric fields.  Insert a nonzero value into the appropriate position
+in the table for each value that is to be allowed in numeric fields.
+
+3.3 Simple example in C.
+
+The following code fragment will illustrate how to use SETFACS with vwang.
+
+
+
+	unsigned char factable[128];
+	unsigned char lowuptable[128];
+	unsigned char numtable[128];
+	int index;
+
+	for (index= 128; index<256; ++index)  /* this maps each value to */
+		factable[index-128]=index;    /* itself.. ie, every value */
+                                              /* in the table is a FAC */
+
+	for (index= 0; index<128; ++index)
+	{
+		lowuptable[index]=0;
+		numtable[index]=0;
+	}
+
+#define equote	      0xE9
+#define icircum	      0xEE
+#define ecircum	      0xEA
+#define ebquote	      0xE8
+#define Equote	      0xC9
+#define Icircum	      0xCE
+#define Ecircum	      0xCA
+#define Ebquote	      0xC8
+
+#define MyDimFAC      0xFF   /* I use this value in my screens */
+#define ActualDimFAC  0x88   /* vwang uses this: Noline, Dim, Modify, All */
+#define MyDimMFac     0xFE   /* I use this value in my screens */
+#define ActualDimMFac 0xC8   /* Noline, Dim, Modify, All, Modified */
+
+	/* tell vwang which values are data, not FACs */
+        /* vwang will ignore these values in the screen record */
+	factable[equote-128]=0;    /* on vt series terminals, this is e + ' */ 
+	factable[icircum-128]=0;   /* i + ^ */
+	factable[ecircum-128]=0;   /* e + ^ */
+	factable[ebquote-128]=0;   /* e + ` */
+
+	factable[Equote-128]=0;    /* on vt series terminals, this is E + ' */ 
+	factable[Icircum-128]=0;   /* I + ^ */
+	factable[Ecircum-128]=0;   /* E + ^ */
+	factable[Ebquote-128]=0;   /* E + ` */
+
+	/* now tell vwang that I'm substituting 0xff and 0xfe for 0x88 and 0xC8 */
+   	/* in my screen, I'll use 0xff and 0xfe instead of the real FAC values */
+
+ 	factable[ActualDimFAC-128]=0;
+	factable[MyDimFAC-128] = ActualDimFAC;
+
+	factable[ActualDimMFAC-128]=0;  /* displays as E + ' */
+	factable[MyDimMFAC-128] = ActualDimMFAC;
+
+	lowuptable[equote-128] = Equote;
+	lowuptable[icircum-128] = Icircum;
+	lowuptable[ecircum-128] = Ecircum;
+	lowuptable[ebquote-128] = Ebquote;
+
+	SETFACS(factable,lowuptable,numtable);
+
+  	/* (the arguments to vwang were initialized somewhere else) */
+	vwang( &display_and_read,
+	       edit_screen,  /* remember that 0xff and 0xfe are used in the screen */
+	                     /* wherever 0x88 and 0xC8 would have been. */
+               edit_lines,
+               edit_pfkeys,
+               edit_pfcode,
+               edit_status);
+

@@ -400,9 +400,9 @@ static void process_back_ref(int* num_var, int* num_val)				/* Process the backw
 /*
 **	History:
 **	$Log: ptextrct.c,v $
-**	Revision 1.6  1997-04-21 11:09:20-04  scass
+**	Revision 1.6  1997/04/21 15:09:20  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.5  1996-09-12 19:16:52-04  gsl
 **	Fix prototypes
 **

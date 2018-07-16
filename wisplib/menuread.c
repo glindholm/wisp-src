@@ -133,9 +133,9 @@ struct menu *menu_read(char* pmenufile)
 /*
 **	History:
 **	$Log: menuread.c,v $
-**	Revision 1.11  1996-10-08 20:22:05-04  gsl
+**	Revision 1.11  1996/10/09 00:22:05  gsl
 **	Replace getenv() with wispmenudir()
-**
+**	
 **	Revision 1.10  1996-08-19 15:32:30-07  gsl
 **	drcs update
 **

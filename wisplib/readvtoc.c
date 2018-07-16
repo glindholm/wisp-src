@@ -196,9 +196,9 @@ static int4 do_vtoc_find( char *lib, char *vol, int4 *start, int4 *count, char *
 /*
 **	History:
 **	$Log: readvtoc.c,v $
-**	Revision 1.14  1998-07-31 15:43:37-04  gsl
+**	Revision 1.14  1998/07/31 19:43:37  gsl
 **	Changed NAME_LENGTH to COB_FILEPATH_LEN
-**
+**	
 **	Revision 1.13  1997-05-01 16:38:49-04  gsl
 **	Remove unneeded buff
 **

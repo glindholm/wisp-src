@@ -127,9 +127,9 @@ char *nw_user_login_name() {
 //
 //	History:
 //	$Log: network.cpp,v $
-//	Revision 1.8  1998-08-31 15:13:57-04  gsl
+//	Revision 1.8  1998/08/31 19:13:57  gsl
 //	drcs update
-//
+//	
 //
 
 //	

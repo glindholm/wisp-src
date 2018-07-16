@@ -9,9 +9,9 @@ static int dummy_initscrn_c;
 /*
 **	History:
 **	$Log: initscrn.c,v $
-**	Revision 1.10  1996-08-19 18:32:24-04  gsl
+**	Revision 1.10  1996/08/19 22:32:24  gsl
 **	drcs update
-**
+**	
 **
 **
 */

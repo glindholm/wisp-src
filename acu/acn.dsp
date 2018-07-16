@@ -39,8 +39,9 @@ CFG=acn - Win32 Debug
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. acn"
+# PROP Cmd_Line "NMAKE /f wacu.mak WISPDIR=.. acn"
 # PROP Rebuild_Opt "/a"
+# PROP Target_File "ACN"
 # PROP Bsc_Name "acn.bsc"
 # PROP Target_Dir ""
 
@@ -57,7 +58,7 @@ CFG=acn - Win32 Debug
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "NMAKE /f wwruncbl.mak WISPDIR=.. acn"
+# PROP Cmd_Line "NMAKE /f wacu.mak WISPDIR=.. acn"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "ACN"
 # PROP Bsc_Name "acn.bsc"
@@ -76,6 +77,10 @@ CFG=acn - Win32 Debug
 
 !ENDIF 
 
+# Begin Source File
+
+SOURCE=.\wacu.mak
+# End Source File
 # Begin Source File
 
 SOURCE=.\wacuerror.cob
@@ -99,10 +104,6 @@ SOURCE=.\wacuhelp.cob
 # Begin Source File
 
 SOURCE=.\wacuwsb.cob
-# End Source File
-# Begin Source File
-
-SOURCE=.\wwruncbl.mak
 # End Source File
 # End Target
 # End Project

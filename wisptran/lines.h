@@ -41,9 +41,9 @@ char 	*wfgets();
 /*
 **	History:
 **	$Log: lines.h,v $
-**	Revision 1.5  1996-08-30 21:56:05-04  gsl
+**	Revision 1.5  1996/08/31 01:56:05  gsl
 **	drcs update
-**
+**	
 **
 **
 */

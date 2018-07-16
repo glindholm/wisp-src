@@ -102,9 +102,9 @@ int4 vlastitem(struct video_menu *md);							/* Return the current path level.	*
 /*
 **	History:
 **	$Log: vmenu.h,v $
-**	Revision 1.12  1997-07-09 12:40:30-04  gsl
+**	Revision 1.12  1997/07/09 16:40:30  gsl
 **	Add include of vintdef.h
-**
+**	
 **	Revision 1.11  1996-10-11 18:16:12-04  gsl
 **	drcs update
 **

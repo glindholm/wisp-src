@@ -41,9 +41,9 @@ int vslew(nrows, ncols) int nrows, ncols;						/* Slew by nrows and ncols.		*/
 /*
 **	History:
 **	$Log: vslew.c,v $
-**	Revision 1.9  1996-10-11 18:16:20-04  gsl
+**	Revision 1.9  1996/10/11 22:16:20  gsl
 **	drcs update
-**
+**	
 **
 **
 */

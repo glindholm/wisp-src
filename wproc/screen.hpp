@@ -281,11 +281,11 @@ class screen : public object {
 //
 //	History:
 //	$Log: screen.hpp,v $
-//	Revision 1.6  1998-10-02 15:26:12-04  gsl
+//	Revision 1.6  1998/10/02 19:26:12  gsl
 //	Add a saved_w4w_handler to the screen_contents class.
 //	Change screen::handle_key() to return true if a function key was press.
 //	This is needed because a mouse click (key) can simulate a pfkey.
-//
+//	
 //	Revision 1.5  1998-08-31 15:14:15-04  gsl
 //	drcs update
 //

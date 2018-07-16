@@ -96,9 +96,9 @@ int wgetpgrp(void)
 /*
 **	History:
 **	$Log: wgetpgrp.c,v $
-**	Revision 1.11  1997-07-16 15:09:57-04  gsl
+**	Revision 1.11  1997/07/16 19:09:57  gsl
 **	Add wtrace() for GID
-**
+**	
 **	Revision 1.10  1996-08-22 20:22:43-04  gsl
 **	Faked a getpgrp() for systems that don't have one - namely WIN32 MSDOS and VMS
 **

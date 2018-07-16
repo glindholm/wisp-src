@@ -25,10 +25,10 @@ int vedge(int line)									/* Determine edge of screen.		*/
 /*
 **	History:
 **	$Log: vedge.c,v $
-**	Revision 1.10  1997-07-08 16:55:57-04  gsl
+**	Revision 1.10  1997/07/08 20:55:57  gsl
 **	Removed the double width logic so vedge()
 **	now returns the screen width
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:03-04  gsl
 **	drcs update
 **

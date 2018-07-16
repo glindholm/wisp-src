@@ -771,9 +771,9 @@ static int givehelp(m) int m;
 /*
 **	History:
 **	$Log: gcalc.c,v $
-**	Revision 1.11  1997-07-08 16:15:37-04  gsl
+**	Revision 1.11  1997/07/08 20:15:37  gsl
 **	Change to use new video.h defines
-**
+**	
 **	Revision 1.10  1997-01-08 16:36:42-05  gsl
 **	Change strpos() calls to strstr()
 **

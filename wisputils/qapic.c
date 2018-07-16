@@ -337,9 +337,9 @@ int main()
 /*
 **	History:
 **	$Log: qapic.c,v $
-**	Revision 1.8  2001-11-08 13:32:16-05  gsl
+**	Revision 1.8  2001/11/08 18:32:16  gsl
 **	remove unused vars
-**
+**	
 **	Revision 1.7  2001-09-26 15:19:32-04  gsl
 **	add tests
 **

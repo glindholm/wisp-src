@@ -47,9 +47,10 @@ extern int wbackground(void);
 extern char *wforms(int formnum);
 extern char *getprmap(int num);
 extern char *wlpclass(char lpclass);
-extern int fexists(char *file);
-extern int fcanread(char *file);
-extern int filesize(char *file);
+extern int WL_fexists(char *file);
+extern int WL_fcanread(char *file);
+extern long WL_filesize(const char* path);
+
 /*
 **	Static data
 */
@@ -165,11 +166,11 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 
 	nRC  = 0;
 
-	if ( !fexists(file) )								/* Does file exist?			*/
+	if ( !WL_fexists(file) )								/* Does file exist?			*/
 	{
 		return( 20 );
 	}
-	if ( !fcanread(file) )								/* Can we read the file?		*/
+	if ( !WL_fcanread(file) )								/* Can we read the file?		*/
 	{
 		return( 28 );
 	}
@@ -209,7 +210,7 @@ int win32_printfile(char *file, int copies, int formnum, char lpclass, int4 prin
 		else return(61);
 	}
 
-	nSize = filesize(file);
+	nSize = WL_filesize(file);
 	if ( nSize == 0 )
 	{
 		werrlog(ERRORCODE(5),file,0,0,0,0,0,0,0);
@@ -1568,10 +1569,20 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 /*
 **	History:
 **	$Log: win32prt.c,v $
-**	Revision 1.18  2002-05-14 16:11:42-04  gsl
+**	Revision 1.18.2.3  2002/10/09 21:43:02  gsl
+**	Huge file support
+**	
+**	Revision 1.18.2.2  2002/10/09 21:17:33  gsl
+**	Huge file support
+**	
+**	Revision 1.18.2.1  2002/10/09 19:20:35  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
+**	Revision 1.18  2002/05/14 20:11:42  gsl
 **	Remove include of que_jobs.h
 **	obsolete
-**
+**	
 **	Revision 1.17  2001-11-09 15:41:17-05  gsl
 **	Fix trk# 507
 **	In GetPage() the "erase last page" logic only erased the nPageHeight
@@ -1619,57 +1630,6 @@ static BOOL PrintRawFile(char* szPtrName, char* file)
 **	added code to support carriage return overstrike
 **
 **	Revision 1.7  1996-12-11 18:44:51-05  jockc
-**	added missing history (forgot to add $Log: win32prt.c,v $
-**	added missing history (forgot to add Revision 1.18  2002-05-14 16:11:42-04  gsl
-**	added missing history (forgot to add Remove include of que_jobs.h
-**	added missing history (forgot to add obsolete
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.17  2001-11-09 15:41:17-05  gsl
-**	added missing history (forgot to add Fix trk# 507
-**	added missing history (forgot to add In GetPage() the "erase last page" logic only erased the nPageHeight
-**	added missing history (forgot to add number of lines. If previous page has overstrikes then nPageHeight may
-**	added missing history (forgot to add be exceeded and lines are left uncleared.
-**	added missing history (forgot to add Change to erase MAXPAGEHEIGHT
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.16  1998-08-28 15:55:39-04  gsl
-**	added missing history (forgot to add Fix the way top margins are handled and overstrikes.
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.15  1998-08-25 10:56:24-04  gsl
-**	added missing history (forgot to add Big enhancements: Fix LPI & CPI so acurate.
-**	added missing history (forgot to add Add FORMS fields tm,lm,face,points,wrap
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.14  1998-04-21 11:39:47-04  gsl
-**	added missing history (forgot to add Added support for "RAW" printing on NT/95.
-**	added missing history (forgot to add In the FORMS file you would specify "raw=1" as the only option.
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.13  1998-01-22 10:22:37-05  gsl
-**	added missing history (forgot to add If in background then don't call vraw_get_console_hWnd()
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.12  1998-01-06 09:48:14-05  gsl
-**	added missing history (forgot to add Add trace statements
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.11  1997-04-30 14:54:31-04  jockc
-**	added missing history (forgot to add code added for WIN95 vs. WINNT, because WIN95 didn't support
-**	added missing history (forgot to add EnumPrinters with PRINTER_INFO_4 structs.. using INFO_1 for 95.
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.10  1997-04-29 17:24:30-04  jockc
-**	added missing history (forgot to add revised logic.  call to open printer/document properties was moved
-**	added missing history (forgot to add to a separate function, and is preceeded by call to enumprinters
-**	added missing history (forgot to add to get a list of valid printers.
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.9  1997-03-24 20:55:30-05  gsl
-**	added missing history (forgot to add Fixed bug - it wasn't closing the file so the unlink() was always failing.
-**	added missing history (forgot to add Reorganized win32_printfile() to make it easier to follow.
-**	added missing history (forgot to add Centralized the cleanup and exit code.
-**	added missing history (forgot to add Rearranged logic to first validate all the parameters before opening
-**	added missing history (forgot to add the device contexts.
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.8  1997-03-10 10:01:31-05  jockc
-**	added missing history (forgot to add renamed some vars for clarity.. fixed support for CR overstrike
-**	added missing history (forgot to add
-**	added missing history (forgot to add Revision 1.8  1997-03-03 10:31:19-05  jockc
-**	added missing history (forgot to add added code to support carriage return overstrike
-**	added missing history (forgot to add until 1.6)
 **
 **	Revision 1.6  1996-12-11 15:36:16-08  jockc
 **	moved selectobject (font) to inside of startpage-draw-endpage loop.

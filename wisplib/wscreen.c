@@ -1257,9 +1257,9 @@ static void close_open_occurs( int this_level, struct v_struct *v1, struct v_str
 /*
 **	History:
 **	$Log: wscreen.c,v $
-**	Revision 1.21  2001-09-25 11:01:59-04  gsl
+**	Revision 1.21  2001/09/25 15:01:59  gsl
 **	Remove unnneded ifdefs
-**
+**	
 **	Revision 1.20  1999-09-13 15:56:27-04  gsl
 **	Fix return codes from load_item_table22()
 **

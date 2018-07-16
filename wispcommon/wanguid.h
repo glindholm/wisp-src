@@ -34,9 +34,9 @@ const char *longuid(void);
 /*
 **	History:
 **	$Log: wanguid.h,v $
-**	Revision 1.8  2001-11-27 16:40:23-05  gsl
+**	Revision 1.8  2001/11/27 21:40:23  gsl
 **	Remove reset uid
-**
+**	
 **	Revision 1.7  1996-10-25 17:06:24-04  gsl
 **	Fix wanguid3(), numuid3(),and longuid() to return a const ptr.
 **

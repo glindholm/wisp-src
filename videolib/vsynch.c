@@ -38,10 +38,10 @@ void vsynch()						/* Warn video et all that something has	gone on behind its ba
 /*
 **	History:
 **	$Log: vsynch.c,v $
-**	Revision 1.11  1997-07-09 12:30:21-04  gsl
+**	Revision 1.11  1997/07/09 16:30:21  gsl
 **	Removed externs
 **	Removed obsolete items
-**
+**	
 **	Revision 1.10  1996-10-11 18:16:21-04  gsl
 **	drcs update
 **

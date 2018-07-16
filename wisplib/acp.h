@@ -197,9 +197,9 @@ extern struct matchstruc  stopbval[];
 /*
 **	History:
 **	$Log: acp.h,v $
-**	Revision 1.9  1996-10-08 20:18:07-04  gsl
+**	Revision 1.9  1996/10/09 00:18:07  gsl
 **	Removed unneeded defines and moved cfgpath[] to openacp.c
-**
+**	
 **	Revision 1.8  1996-08-19 15:32:07-07  gsl
 **	drcs update
 **

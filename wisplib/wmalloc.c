@@ -61,7 +61,7 @@ static char rcsid[]="$Id:$";
 **	RETURN:		Pointer to malloced data.
 **
 */
-void *wmalloc(size_t size)
+void *wisp_malloc(size_t size)
 {
 	void	*ptr;
 	
@@ -73,12 +73,8 @@ void *wmalloc(size_t size)
 	
 	return NULL;
 }
-void *wisp_malloc(size_t size)
-{
-	return wmalloc(size);
-}
 
-void *wcalloc(size_t nelem, size_t elsize)
+void *wisp_calloc(size_t nelem, size_t elsize)
 {
 	void	*ptr;
 	
@@ -91,22 +87,25 @@ void *wcalloc(size_t nelem, size_t elsize)
 	return NULL;
 }
 
-char *wstrdup(const char *string)
+char *wisp_strdup(const char *string)
 {
 	if (NULL == string)
 	{
 		return NULL;
 	}
 	
-	return strcpy(wmalloc(strlen(string)+1), string);
+	return strcpy(wisp_malloc(strlen(string)+1), string);
 }
 	
 /*
 **	History:
 **	$Log: wmalloc.c,v $
-**	Revision 1.5  1998-10-21 08:42:42-04  gsl
+**	Revision 1.5.2.1  2002/10/03 13:55:11  gsl
+**	Change wstrdup() -> wisp_strdup()
+**	
+**	Revision 1.5  1998/10/21 12:42:42  gsl
 **	In wstrdup() if a NULL is passed then a NULL will be returned.
-**
+**	
 **	Revision 1.4  1996-07-17 17:55:25-04  gsl
 **	Changed wisp_malloc() to wmalloc() and added wcalloc() and wdupstr()
 **	These routines ensure that memory is allocated or they exit with

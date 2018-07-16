@@ -1176,9 +1176,9 @@ static void convert_greg_style(char intype, char outtype, char* indate, char* ou
 /*
 **	History:
 **	$Log: date.c,v $
-**	Revision 1.22  1999-09-24 18:58:48-04  gsl
+**	Revision 1.22  1999/09/24 22:58:48  gsl
 **	Fix gettimeofday() hsec calc.
-**
+**	
 **	Revision 1.21  1999-09-24 09:02:46-04  gsl
 **	Fix the SCO define as it turns out SCO uses the BSD style of gettimeofday()
 **

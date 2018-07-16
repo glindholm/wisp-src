@@ -157,9 +157,9 @@ int trim(string) char string[];									/* Trim trailing blanks.	*/
 /*
 **	History:
 **	$Log: linecnt.c,v $
-**	Revision 1.8  1996-07-23 14:12:54-04  gsl
+**	Revision 1.8  1996/07/23 18:12:54  gsl
 **	drcs update
-**
+**	
 **
 **
 */

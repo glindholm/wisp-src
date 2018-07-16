@@ -826,9 +826,9 @@ void dqw_strcat(char *dest, const char *src)
 /*
 **	History:
 **	$Log: idsisubs.c,v $
-**	Revision 1.15  1998-11-02 15:51:09-05  gsl
+**	Revision 1.15  1998/11/02 20:51:09  gsl
 **	Fix assert test so OK by boundschecker
-**
+**	
 **	Revision 1.14  1998-08-03 16:49:03-04  jlima
 **	Support Long Volume Translation to long file names containing eventual embedded blanks.
 **

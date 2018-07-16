@@ -65,9 +65,9 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence);
 /*
 **	History:
 **	$Log: wt_procd.h,v $
-**	Revision 1.6  1998-03-03 16:20:15-05  gsl
+**	Revision 1.6  1998/03/03 21:20:15  gsl
 **	update
-**
+**	
 **	Revision 1.5  1996-08-30 21:56:23-04  gsl
 **	drcs update
 **

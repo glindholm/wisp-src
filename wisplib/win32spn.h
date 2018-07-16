@@ -44,9 +44,9 @@ void win32SetNewEnv(char *envstr);
 /*
 **	History:
 **	$Log: win32spn.h,v $
-**	Revision 1.5  1998-05-05 17:36:22-04  gsl
+**	Revision 1.5  1998/05/05 21:36:22  gsl
 **	Add HIDDEN_CMD mode flag
-**
+**	
 **	Revision 1.4  1998-05-05 13:53:33-04  gsl
 **	Reworked mode flags
 **

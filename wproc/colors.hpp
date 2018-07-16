@@ -60,9 +60,9 @@ void colors_cleanup();
 //
 //	History:
 //	$Log: colors.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:35-04  gsl
+//	Revision 1.5  1998/08/31 19:13:35  gsl
 //	drcs update
-//
+//	
 //
 
 //	

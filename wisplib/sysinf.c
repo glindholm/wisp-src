@@ -430,9 +430,9 @@ char latname[32],portname[32];
 /*
 **	History:
 **	$Log: sysinf.c,v $
-**	Revision 1.10  1996-08-26 20:09:07-04  gsl
+**	Revision 1.10  1996/08/27 00:09:07  gsl
 **	fix prototype
-**
+**	
 **	Revision 1.9  1996-08-19 15:33:01-07  gsl
 **	drcs update
 **

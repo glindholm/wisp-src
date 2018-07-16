@@ -59,9 +59,9 @@ void object::operator delete(void* p) {
 //
 //	History:
 //	$Log: object.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:58-04  gsl
+//	Revision 1.6  1998/08/31 19:13:58  gsl
 //	drcs update
-//
+//	
 //
 
 //	

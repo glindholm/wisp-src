@@ -94,9 +94,9 @@ char *msg1,*msg2,*msg3,*msg4,*msg5,*msg6,*msg7,*msg8;
 /*
 **	History:
 **	$Log: errgparm.c,v $
-**	Revision 1.11  1997-09-24 16:11:55-04  gsl
+**	Revision 1.11  1997/09/24 20:11:55  gsl
 **	Add support for pfkeys12()
-**
+**	
 **	Revision 1.10  1996-08-19 18:32:17-04  gsl
 **	drcs update
 **

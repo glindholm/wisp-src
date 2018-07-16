@@ -1,0 +1,40 @@
+		/****************************************************************************************
+		*	WSFNS.C	- Emulation of NetronCAP system subroutine for NISSI			*
+		*                                                                    			*
+		*    This routine is used to handle all screen I/O for NISSI Technologies.		*
+		*    WSFNS function used by CAPscreen:							*
+		*	DS (Display Screen)		Saves the screen image for use with PF30	*
+		*					restart/refress function.			*
+		*	AS (Accept Screen)		Displays the stored screen, and accepts the	*
+		*					modified screen.				*
+		*	PF				Returns the cursor position and the PFkey	*
+		*					pressed by the user.				*
+		*    Other WSFNS functions:								*
+		*	DI (Display immediate)		Puts up a screen then returns to processing	*
+		*					without waiting for user to press a PFkey.	*
+		*	AI (Accept immediate)		Accepts the screen without first rewriting it.	*
+		*	ST (Start CRT)			Checks to see if a PFkey has been pressed.  If	*
+		*					it has, its value will be returned in Z1-PF.	*
+		*					If not, a -1 will be returned. -2 is keyboard	*
+		*					locked by rewrite, -3 is HELP, or -10 is 	*
+		*					screen damage alert.				*
+		*											*
+		*    The calling format from COBOL programs is as follows:				*
+		*                                                      TYPE  LEN  			*
+		*	For functions DS, AS, DI, AI -							*
+		*	CALL "WSFNS" using 	Z1-FN,		   	C     2   function to perform	*
+		*				Z1-REC,			C    1920 screen record image	*
+		*				Z1-LINE,		B     2   posn cursor at row	*
+		*				Z1-POS,			B     2   posn cursor at column *
+		*				Z1-BEEPFLAG		C     1   id to beep or not.	*
+		*	For function PF -								*
+		*	CALL "WSFNS" using 	Z1-FN,		   	C     2   function to perform	*
+		*				Z1-PF,			B     2   return PFkey pressed	*
+		*				Z1-ROW,			B     2   current cursor row	*
+		*				Z1-COL,			B     2   current cursor column *
+		*	For function ST -								*
+		*	CALL "WSFNS" using 	Z1-FN,		   	C     2   function to perform	*
+		*				Z1-PF,			B     2   return PFkey pressed	*
+		*				Z1-FILESTATUS,		C     2   file status on start	*
+		*                                                                    			*
+		****************************************************************************************/

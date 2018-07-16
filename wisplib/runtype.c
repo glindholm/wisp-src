@@ -68,7 +68,6 @@ int runtype(const char* filespec)
 	char	buff[256];
 	int	i, rc;
 	int	fh;
-	struct	stat	filestat;
 
 	if (!fexists(filespec)) return(RUN_ACCESS);
 
@@ -108,19 +107,22 @@ int runtype(const char* filespec)
 	/*
 	**	If the 'x' bit is not set then assume not executable.
 	*/
-	if (0 != stat(filespec,&filestat))
 	{
-		return(RUN_UNKNOWN);
-	}
-	if (   (filestat.st_mode & S_IXUSR)
-	    || (filestat.st_mode & S_IXGRP)
-	    || (filestat.st_mode & S_IXOTH) )
-	{
-		/* The execute bit is set so we will assume it is executable */
-	}
-	else
-	{
-		return RUN_NOT;
+		mode_t mode;
+		if (0 != WL_stat_mode(filespec,&mode))
+		{
+			return(RUN_UNKNOWN);
+		}
+		if (   (mode & S_IXUSR)
+		    || (mode & S_IXGRP)
+		    || (mode & S_IXOTH) )
+		{
+			/* The execute bit is set so we will assume it is executable */
+		}
+		else
+		{
+			return RUN_NOT;
+		}
 	}
 
 	/*
@@ -206,6 +208,9 @@ int runtype(const char* filespec)
 /*
 **	History:
 **	$Log: runtype.c,v $
+**	Revision 1.13.2.1.2.1  2002/10/09 21:43:02  gsl
+**	Huge file support
+**	
 **	Revision 1.13.2.1  2002/08/20 17:56:39  gsl
 **	Add support for Micro Focus Shared Object files .so/.sl
 **	V4_4_04

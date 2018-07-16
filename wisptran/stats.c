@@ -71,9 +71,9 @@ int increment_main_line_count()
 /*
 **	History:
 **	$Log: stats.c,v $
-**	Revision 1.5  1996-08-30 21:56:10-04  gsl
+**	Revision 1.5  1996/08/31 01:56:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

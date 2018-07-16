@@ -52,9 +52,9 @@ class scanner : public object {
 //
 //	History:
 //	$Log: scanner.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:13-04  gsl
+//	Revision 1.5  1998/08/31 19:14:13  gsl
 //	drcs update
-//
+//	
 //
 
 //	

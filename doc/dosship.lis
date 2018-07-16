@@ -1,0 +1,52 @@
+	Copyright (c) 1994 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		CREATING MS-DOS SHIPPING KITS
+	
+	Document:	DOSSHIP.LIS
+	Last Updated:	13 DEC 94
+	Products:	WISP/MS-DOS, EDE/MS-DOS
+	Versions:	3.3x12 (AND LATER)
+	
+	Summary:	This document describes how to create WISP and
+			EDE shipping kits for MS-DOS.
+
+	====================================================================
+	
+
+	CREATING MS-DOS SHIPPING KITS
+	=============================
+	
+	To create a WISP or EDE shipping kit for MS-DOS go onto JUNIOR the
+	DOS machine and follow these instructions.
+
+	1) Get a supply of formatted clean floppy diskettes:
+
+		WISP	5 Diskettes
+		EDE	1 Diskette
+
+	2) Change directory to the latest shipping kit.
+
+		C:\> E:
+		E:\> cd \WISP3312\SHIP3312
+		E:\WISP3312\SHIP3312>
+
+	3) Run the batch file that zips and loads the kit onto the
+	   diskettes.
+
+		WISP	shipwisp.bat
+		EDE	shipede.bat
+
+	4) Print the installation instructions to send along with the
+	   diskettes.  These files are placed onto the first diskette
+	   but a printed copy is also sent.
+
+		WISP	README.DOS  (SCS INIT WISP DOC)
+		EDE	README.EDE  (SCS INIT WISP EDE)
+
+	5) Create a WISP LICENSE KEY, this is needed for the WISP software
+	   to run.
+
+		
+	========================= END OF DOCUMENT ==========================

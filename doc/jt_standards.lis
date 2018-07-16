@@ -1,0 +1,110 @@
+	Copyright (c) 1994 by International Digital Scientific Incorporated.
+	All Rights Reserved.
+
+	====================================================================
+	
+	Title:		USING JOBTRACK and STANDARDS
+	
+	Document:	JT_STANDARDS.LIS
+	Last Updated:	17 MAY 94
+	Products:	VMS Mail Utility
+	Versions:
+	
+	Summary:	This document describes the IDSI standards for
+			using the JOBTRACK account on SCALOS as a job
+			tracking facility.
+
+			ENTERING A JOBTRACK
+			FOLLOW-UP OF A JOBTRACK
+
+
+	====================================================================
+	
+
+	IDSI does not have a third part package for tracking problems,
+	suggestions or enhancements.  So, to maintain some sort of control,
+	the VMS MAIL utility is currently being used.
+
+
+	ENTERING A JOBTRACK
+	===================
+	
+	When entering a jobtrack, there is a front end facility that David
+	Young wrote.  It is used by typing jt at the DCL prompt.
+
+		$ jt <RETURN>
+
+	First enter the company name of the client who is reporting the
+	job/problem.  The Job Tracker will use the VAX editor and a jobtrack
+	form will be available for editing.  Fill it in with as much detail
+	as you can.  If you have a specific file that you want to referance,
+	state where is is located AND provide a sample of the code in the
+	jobtrack form.  It is possible that when the jobtrack is finally
+	addressed, the file may not be on-line anymore.  Once you have
+	completed the form, you need to exit the editor.  You will then be
+	prompted for the title of the job.  This should be fairly
+	distinguishable so the reviewers of the jobtracks don't have trouble
+	telling jobs apart.  A copy of the jobtrack will be mailed to the
+	jobtrack account and the user who entered it.
+
+	Once the jobtrack has been entered, sombody will review it and assign
+	it to a technical person.  To see what has been assigned to you,
+	refer to your directory in the mail account of user JOBTRACK.  Refer
+	to the above info. for more instructions on how to get there.
+
+	
+	FOLLOW-UP OF A JOBTRACK
+	=======================
+
+	To do maintenance on an OPEN problem, logon to SCALOS using the
+	username JOBTRACK with the password JOBTRACK.
+
+		$ SET HOST SCALOS
+
+			Welcome to SCALOS:: © Running OpemVMS VAX V6.0
+		Username:  JOBTRACK
+		Password:  JOBTRACK
+
+		$ MAIL <RETURN>
+
+	This will put you into the jobtrack mail account. To see available
+	folders: type dir/folder.  To change folders type dir and the folder
+	name.
+
+		$ dir wisplib <RETURN>
+
+	If you have been assigned specific tasks then there should be a folder
+	with your user id.
+
+	It is each technical persons responsibility to review your folder
+	in the jobtrack account on a weekly basis.  Once the task has been
+	completed, you must notify the jobtrack system.  To do this, read the
+	completed mail message which will set the mail pointer to the needed
+	entry.  Then type forward/edit.  For the To: entry use JOBTRACK.  For
+	the subject field, use the original text with [C]: appended to the
+	beginning of the text.  Sometimes a job is not really a problem and
+	thus is cancelled.  Append [CANCELLED]: to the beginning of the text
+	in this case.
+
+		MAIL> read #
+		MAIL> forward/edit
+		To:     JOBTRACK
+		Subj:   [C]: <original subject text>
+
+	The editor will be run with the jobtrack indicated.  Fill in the
+	bottom portion of the jobtrack form as completely as possible.
+	Indicate the date of the correspondance and give your initials, so
+	if there are any questions.  Exit the editor and the edited version
+	of the jobtrack mail will be mailed to JOBTRACK.  Note that the
+	original jobtrack mail will still be in your folder so you must then
+	delete it.
+
+		MAIL> delete #
+	Exit the jobtrack mail:
+
+		MAIL> exit
+
+	Once you have exited mail, then log off of SCALOS so you are not
+	working in the JOBTRACK account.
+
+	========================= END OF DOCUMENT ==========================

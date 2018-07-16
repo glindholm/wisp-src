@@ -17,9 +17,9 @@ char *path;
 /*
 **	History:
 **	$Log: delete.c,v $
-**	Revision 1.9  1999-01-29 14:30:03-05  gsl
+**	Revision 1.9  1999/01/29 19:30:03  gsl
 **	This is obsolete and is MSDOS only
-**
+**	
 **	Revision 1.8  1996-08-19 18:32:16-04  gsl
 **	drcs update
 **

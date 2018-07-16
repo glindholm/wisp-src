@@ -677,9 +677,9 @@ static void add_decl(char* keyword_lbl, int* num_val,int* num_var)			/* If have 
 /*
 **	History:
 **	$Log: ptpdiv.c,v $
-**	Revision 1.6  1997-04-21 11:17:42-04  scass
+**	Revision 1.6  1997/04/21 15:17:42  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.5  1996-09-12 19:17:36-04  gsl
 **	fix prototypes
 **

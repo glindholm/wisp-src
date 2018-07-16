@@ -94,10 +94,10 @@
 /*
 **	History:
 **	$Log: wdefines.h,v $
-**	Revision 1.20  2001-10-31 15:24:41-05  gsl
+**	Revision 1.20  2001/10/31 20:24:41  gsl
 **	Remove VMS and MSDOS
 **	Remove the WISP_TEMP_PERSON_PREFIX
-**
+**	
 **	Revision 1.19  1998-10-14 14:01:30-04  gsl
 **	Move isexec() defines to runtype.h
 **

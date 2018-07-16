@@ -1102,9 +1102,9 @@ static int vse_display(char *filename)
 /*
 **	History:
 **	$Log: vsespmnu.c,v $
-**	Revision 1.16  1998-10-15 10:07:44-04  gsl
+**	Revision 1.16  1998/10/15 14:07:44  gsl
 **	fix warning
-**
+**	
 **	Revision 1.15  1998-05-21 09:39:36-04  gsl
 **	Fix warning
 **

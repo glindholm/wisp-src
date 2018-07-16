@@ -38,9 +38,9 @@ void COBLINK(const char *progname)
 /*
 **	History:
 **	$Log: coblink.c,v $
-**	Revision 1.11  1997-10-23 16:06:16-04  gsl
+**	Revision 1.11  1997/10/23 20:06:16  gsl
 **	Make progname a "const"
-**
+**	
 **	Revision 1.10  1996-08-19 18:32:13-04  gsl
 **	drcs update
 **

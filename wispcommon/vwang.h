@@ -243,9 +243,9 @@ extern int custom_vwang(unsigned char *function,unsigned char *wsb,unsigned char
 /*
 **	History:
 **	$Log: vwang.h,v $
-**	Revision 1.41  2001-10-15 09:48:40-04  gsl
+**	Revision 1.41  2001/10/15 13:48:40  gsl
 **	Change vwang_set_videocap() to vwang_init_video()
-**
+**	
 **	Revision 1.40  1997-12-19 10:00:57-05  gsl
 **	Add terminal_control_character
 **

@@ -1,0 +1,61 @@
+							relparts.lis
+							07/20/92
+
+	WISP RELEASE PARTS LIST
+	=======================
+
+	This document is a list of parts thats are used in the porting
+	of WISP.
+
+
+	DOCUMENTS		(SCS WISP DOC)
+	=========
+
+	relparts.lis		List of port related files.
+
+	relsteps.lis		Outline of release steps
+
+	cutover.lis		Guideline for a source cutover.
+
+	wispdirs.lis		NEW WISP directory structure on UNIX.
+
+	sourcekit.lis		Guideline for building a WISP source kit.
+
+	portunix.lis		Guideline for porting WISP to UNIX
+
+	portvms.lis		Guideline for porting WISP to VAX/VMS
+
+	distrib.lis		The distribution list of wisp components.
+
+	qawisp.lis		The WISP QA checklist.
+	
+	wispitem.lis		The list of items that are sent out that
+				comprize a kit.
+
+
+	FILES
+	=====
+
+	bkdsrckit.sh		Build a NEW style source kit on hammer.
+				Shell script that uses DCP commands.
+
+	make.include		Standard make include file for WISP
+
+	makewisp.umf		The super-make used to build all of WISP.
+
+	bldshipkit.sh		Build the WISP ship kit after it has
+				been built.
+
+	installqa.sh		Install a QA version of WISP. $WISP/wisp.QA.
+
+	UPDLOGS.COM		DCL script to update SCS change.log files
+
+	GENKIT_FILES.COM	Builds WISP and creates VMS shipping kit.
+
+	UPDATE.COM		Installs WISP on VMS
+
+	BUILD_QA.COM		Builds SAMPLE on VMS
+
+	DEFS_WISPQA.COM		Set up WISP logicals for SAMPLE on VMS
+
+	RESTART_QA.COM		Does everything to restart a QA on VMS

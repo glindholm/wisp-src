@@ -36,9 +36,9 @@ void libvideo_version(char *version)
 /*
 **	History:
 **	$Log: version.c,v $
-**	Revision 1.4  1996-10-11 18:35:03-04  gsl
+**	Revision 1.4  1996/10/11 22:35:03  gsl
 **	Fix rcsid and copyright
-**
+**	
 **	Revision 1.3  1996-10-11 15:16:04-07  gsl
 **	drcs update
 **

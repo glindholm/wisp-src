@@ -123,9 +123,9 @@ int findcase(char* o_name, char* c_name)
 /*
 **	History:
 **	$Log: findcase.c,v $
-**	Revision 1.9  1996-08-19 18:32:21-04  gsl
+**	Revision 1.9  1996/08/19 22:32:21  gsl
 **	drcs update
-**
+**	
 **
 **
 */

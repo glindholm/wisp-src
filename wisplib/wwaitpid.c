@@ -47,9 +47,9 @@ getchar();
 /*
 **	History:
 **	$Log: wwaitpid.c,v $
-**	Revision 1.9  1996-01-02 10:40:38-05  gsl
+**	Revision 1.9  1996/01/02 15:40:38  gsl
 **	*** empty log message ***
-**
+**	
 **
 **
 */

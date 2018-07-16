@@ -259,9 +259,9 @@ unsigned char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8, *arg9, *ar
 /*
 **	History:
 **	$Log: wsxio.c,v $
-**	Revision 1.14  1998-07-10 11:31:10-04  gsl
+**	Revision 1.14  1998/07/10 15:31:10  gsl
 **	Initialize the no_mod field to vwang()
-**
+**	
 **	Revision 1.13  1996-07-15 13:25:11-04  gsl
 **	Fix for NT
 **

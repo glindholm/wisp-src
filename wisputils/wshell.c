@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
 /*
 **	History:
 **	$Log: wshell.c,v $
-**	Revision 1.5  1997-04-15 18:06:55-04  gsl
+**	Revision 1.5  1997/04/15 22:06:55  gsl
 **	Removed the setting of w_err_flag as it is now done in initglbs()
-**
+**	
 **	Revision 1.4  1997-03-21 10:36:02-05  gsl
 **	Add call to license_warning() so that wshell checks if licensed
 **

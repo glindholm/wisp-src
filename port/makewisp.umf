@@ -1,5 +1,5 @@
 #
-#	Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.
+#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -13,19 +13,24 @@
 #				$ make -f makewisp.umf
 #
 
+WISPVER=4405
 
 
 include $(WISP)/src/port/make.include
 
-all:		wisp ede kcsi
+all:		wisp ede kcsi shipkit
 		@echo "ALL is up-to-date."
 
-all_acu:	wisp_base rts_acu ede_base rts_acu_ede kcsi_acu
+all_acu:	wisp_acu ede_acu kcsi_acu shipkit
 		@echo "ALL (ACU) is up-to-date."
 
-all_mf:		wisp_base rts_mf ede_base rts_mf_ede kcsi_mf
+all_mf:		wisp_mf ede_mf kcsi_mf shipkit
 		@echo "ALL (MF) is up-to-date."
 
+shipkit:	wisp_base ede_base
+		@echo Making $@
+		$(MAKE) -f wispship.umf WISPVER=$(WISPVER)
+		@echo "shipkit is up-to-date."
 
 #
 #	Products
@@ -33,13 +38,25 @@ all_mf:		wisp_base rts_mf ede_base rts_mf_ede kcsi_mf
 
 wisp:		wisp_base rts
 
+wisp_acu:	wisp_base rts_acu
+		@echo "WISP (ACU) is up-to-date."
+
+wisp_mf:	wisp_base rts_mf
+		@echo "WISP (MF) is up-to-date."
+
 wisp_base:	video wisplib wisptran wisputils proctran mfsubs vsedit ivslib wproc
-		@echo WISP is up-to-date.
+		@echo "WISP is up-to-date."
 
 ede:		ede_base rts_ede
 
+ede_acu:	ede_base rts_acu_ede
+		@echo "EDE (ACU) is up-to-date."
+
+ede_mf:		ede_base rts_mf_ede
+		@echo "EDE (MF) is up-to-date."
+
 ede_base:	edelib good
-		@echo EDE is up-to-date.
+		@echo "EDE is up-to-date."
 
 kcsi:		kcsi_acu kcsi_mf
 		@echo KCSI is up-to-date.
@@ -55,6 +72,7 @@ video:		videolib videotest
 		@echo VIDEO is up-to-date.
 
 wproc:		wisplib videolib
+		@echo Making $@
 		(cd $(WISP)/src/wproc; 		$(MAKE) -f wproc.umf kit)
 
 kcsi_acu:	crid_acu create_acu
@@ -64,19 +82,24 @@ kcsi_mf:	crid_mf create_mf
 		@echo KCSI for Micro Focus is up-to-date.
 
 amu_all:
+		@echo Making $@
 		(cd $(WISP)/src/amu;		$(MAKE) -f amuunix.umf "WISPTRAN=../wisptran/wisp" both)
 
 crid_mf:	wisptran wisplib videolib
-		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridmake.umf WISPDIR=../.. crid_mf)
+		@echo Making $@
+		(cd $(WISP)/src/kcsi;		$(MAKE) -f cridmake.umf WISPDIR=.. crid_mf)
 
 crid_acu:	wisptran wisplib videolib
-		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridmake.umf WISPDIR=../.. crid_acu)
+		@echo Making $@
+		(cd $(WISP)/src/kcsi;		$(MAKE) -f cridmake.umf WISPDIR=.. crid_acu)
 
 create_mf:	wisplib videolib
-		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf WISPDIR=../.. mfx_all)
+		@echo Making $@
+		(cd $(WISP)/src/kcsi;		$(MAKE) -f createunix.umf WISPDIR=.. mfx_all)
 
 create_acu:	wisplib videolib
-		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf WISPDIR=../.. acu_all)
+		@echo Making $@
+		(cd $(WISP)/src/kcsi;		$(MAKE) -f createunix.umf WISPDIR=.. acu_all)
 
 edelib:	
 		@echo Making $@
@@ -154,7 +177,7 @@ rts_mf_ede:	wisplib videolib edelib
 		@echo Making $@
 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf WISPDIR=.. EDE_LIB_PATH=../lib/libede.a COBDIR=$(COBDIR) ede)
 		@echo MICRO FOCUS RTS is up-to-date.
-
+		
 clean:
 		@echo Making $@
 		(cd $(WISP)/src/acu; 		$(MAKE) -f wruncbl.umf  WISPDIR=.. clean)
@@ -162,13 +185,13 @@ clean:
 		(cd $(WISP)/src/ede; 		$(MAKE) -f libede.umf   clean)
 		(cd $(WISP)/src/ede; 		$(MAKE) -f good.umf     clean)
 		(cd $(WISP)/src/ivslib;		$(MAKE) -f libivs.umf	clean)
-		(cd $(WISP)/src/kcsi/create;	$(MAKE) -f createunix.umf clean)
-		(cd $(WISP)/src/kcsi/crid;	$(MAKE) -f cridmake.umf clean)
-		rm -f $(WISP)/src/lib/*.a 
+		(cd $(WISP)/src/kcsi;		$(MAKE) -f createunix.umf clean)
+		(cd $(WISP)/src/kcsi;		$(MAKE) -f cridmake.umf clean)
+		rm -rf $(WISP)/src/lib
 		(cd $(WISP)/src/mf;		$(MAKE) -f wrunmf.umf 	clean)
 		(cd $(WISP)/src/proctran;	$(MAKE) -f proctran.umf clean)
-		(cd $(WISP)/src/testacu;	$(MAKE) -f sampleacu.umf clean)
-		(cd $(WISP)/src/testmf;		$(MAKE) -f samplemf.umf  clean)
+		rm -rf $(WISP)/src/testacu
+		rm -rf $(WISP)/src/testmf
 		(cd $(WISP)/src/vsedit;		$(MAKE) -f vsedit.umf   clean)
 		(cd $(WISP)/src/videolib;	$(MAKE) -f libvideo.umf clean)
 		(cd $(WISP)/src/videotest;	$(MAKE) -f vtest.umf    clean)
@@ -176,16 +199,54 @@ clean:
 		(cd $(WISP)/src/wisptran;	$(MAKE) -f wisp.umf     clean)
 		(cd $(WISP)/src/wisputils;	$(MAKE) -f utils.umf    clean)
 		(cd $(WISP)/src/wproc;		$(MAKE) -f wproc.umf     clean)
+		$(MAKE) -f wispship.umf WISPVER=$(WISPVER) clean
 		@echo All is CLEAN.
+
 #
 # 	History:
 #	$Log: makewisp.umf,v $
-#	Revision 1.23.2.1  2002/08/16 21:42:14  gsl
-#	Alpha Port 4402f
+#	Revision 1.23.2.1.2.3  2002/10/09 18:17:01  gsl
+#	WISP 4.4.05
 #	
-#	Revision 1.23  2002-04-01 14:27:23-05  gsl
+#	Revision 1.23.2.1.2.2  2002/10/08 18:22:51  gsl
+#	Fix version back to 4404 from last update
+#	
+#	Revision 1.23.2.1.2.1  2002/10/08 18:06:53  gsl
+#	Updated from HEAD
+#	
+#	Revision 1.33  2002/10/03 20:06:12  gsl
+#	update
+#	
+#	Revision 1.32  2002/07/24 15:25:12  gsl
+#	Clean up lib
+#	
+#	Revision 1.31  2002/07/18 20:25:22  gsl
+#	add WISPVER to clean
+#	
+#	Revision 1.30  2002/07/18 19:49:52  gsl
+#	Add WISPVER
+#	
+#	Revision 1.29  2002/07/18 18:50:16  gsl
+#	Add wisp and ede shipkit to ALL
+#	
+#	Revision 1.28  2002/07/09 19:56:46  gsl
+#	Fix clean target
+#	
+#	Revision 1.27  2002/06/26 19:22:59  gsl
+#	Echo what target we are making
+#	
+#	Revision 1.26  2002/06/13 19:15:20  gsl
+#	fix cleanup
+#	
+#	Revision 1.25  2002/06/03 20:13:41  gsl
+#	Fixed CRID and CREATE to now be directly in the kcsi dir
+#	
+#	Revision 1.24  2002/06/03 20:09:13  gsl
+#	Fix build of EDE RTS
+#	
+#	Revision 1.23  2002/04/01 19:27:23  gsl
 #	change to add targets "all_acu" and "all_mf"
-#
+#	
 #	Revision 1.22  2002-03-19 16:10:13-05  gsl
 #	Split the rts target into rts and rts_ede
 #

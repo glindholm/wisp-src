@@ -42,9 +42,9 @@
 //
 //	History:
 //	$Log: ext.hpp,v $
-//	Revision 1.6  1998-08-31 15:13:48-04  gsl
+//	Revision 1.6  1998/08/31 19:13:48  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -1,0 +1,83 @@
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		KCSI/UNIX UTILITIES INSTALLATION
+	
+	Document:	kcsi_install_unix.lis
+	Last Updated:	15 JUNE 95
+	Products:	CRID, CREATE
+	Versions:	All
+	
+	Summary:	How to install CONTROL, REPORT, INQUIRY, DATENTRY,
+			and CREATE from the distribution media.
+
+	====================================================================
+	
+
+	KCSI/UNIX UTILITIES INSTALLATION
+	================================
+
+	The KCSI distribution kits are named as follows with the "VVV"
+	representing the version number.
+
+	cridacu.VVV	  CONTROL,REPORT,INQUIRY,DATENTRY for ACUCOBOL.
+	cridmf.VVV	  CONTROL,REPORT,INQUIRY,DATENTRY for Micro Focus.
+	createacu.VVV	  CREATE for ACUCOBOL-85.
+	createmf.VVV	  CREATE for Micro Focus.
+
+
+	The KCSI utilities are normally distributed on tape or floppy
+	diskettes.  Follow these instructions to unload the kit from
+	the distribution media.
+
+	1) Create a directory where you want to install the utilities
+	   and then change directory to that location.
+
+	    Ex.
+		$ mkdir /usr/local/crid268
+		$ cd /usr/local/crid268
+
+	    Substitute your directory for "/usr/local/crid268" in the 
+	    above example.
+
+	2) Unload the distribution files from the media using the unix
+	   tar command.
+
+		$ tar -xvf /dev/rfd0
+
+	    If your device is different then /dev/rfd0 substitute the 
+	    correct value.
+
+	3) If the above command creates a compressed distribution file
+	   then that file will need to be unloaded, this step is
+	   normally done for floppy disk distributions.
+
+	    The compressed distribution file will be similar to one of
+	    the following:
+
+		cridacu268.cpio.Z	- Compressed cpio file
+		cridacu268.tar.Z	- Compressed tar file
+
+	    Use the appropriate command to unload the distribution files.
+
+	    For a compress cpio file use:
+
+		$ uncompress -c cridacu268.cpio.Z | cpio -icvd
+
+	    For a compress tar file use:
+
+		$ uncompress -c cridacu268.tar.Z | tar -xvf -
+
+	    Substitute the actual file name for "cridacu268.tar.Z" in
+	    the above examples.
+
+	4) Finish the installation by following the Install.xxx
+	   instructions in the distribution kit.
+
+		cridacu.VVV/Install.acu
+		cridmf.VVV/Install.mf
+		createacu.VVV/Install.acu
+		createmf.VVV/Install.mf
+
+	========================= END OF DOCUMENT ==========================

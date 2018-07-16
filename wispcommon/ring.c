@@ -795,9 +795,9 @@ char *ring_error(int rc)
 /*
 **	History:
 **	$Log: ring.c,v $
-**	Revision 1.9  1996-07-23 14:17:50-04  gsl
+**	Revision 1.9  1996/07/23 18:17:50  gsl
 **	drcs update
-**
+**	
 **
 **
 */

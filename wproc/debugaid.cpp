@@ -197,9 +197,9 @@ void debug_trace_level_restore() {
 //
 //	History:
 //	$Log: debugaid.cpp,v $
-//	Revision 1.11  2001-08-22 16:17:50-04  gsl
+//	Revision 1.11  2001/08/22 20:17:50  gsl
 //	fix missing type
-//
+//	
 //	Revision 1.10  1999-09-13 15:46:39-04  gsl
 //	remove odd debug if statement
 //

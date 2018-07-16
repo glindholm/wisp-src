@@ -8,7 +8,7 @@
 #		The WIN32 makefile for building the ACUCOBOL-GT runtime
 #		systems that include the WISP runtime routines.
 #
-#		This file supports ACUCOBOL-GT 2.4 through 4.2.
+#		This file supports ACUCOBOL-GT 3.2 through 4.2.
 #
 #		For ACUCOBOL-GT 5.2 use:
 #			wrun32wisp_acu52.mak
@@ -55,9 +55,9 @@
 #		Edit this file and change WISPDIR and ACUDIR to 
 #		point to the correct locations.
 #
-#			WISPDIR=C:\WISP4402
+#			WISPDIR=C:\WISP44xx
 #			ACUDIR=C:\ACUCBL42\ACUGT
-#			EDEDIR=C:\EDE4402
+#			EDEDIR=C:\EDE44xx
 #			CRIDDIR=C:\CRIDACU3003
 #
 #		To build a standard runtime:
@@ -116,8 +116,6 @@
 #
 #		both		Create both rts and ede targets.
 #
-#		acu		Build the ACULINK and ACUUSING objects.
-#
 #		clean		This target is used to remove any files 
 #				created by this makefile.
 #
@@ -163,9 +161,9 @@ ACURPCDIR=C:\ACUFTP
 # Uncomment for Acuserver client enabled runtime.
 #CLIENT=1
 
-WISPDIR=C:\WISP4402
-EDEDIR=C:\EDE4402
-CRIDDIR=C:\CRIDACU3003
+WISPDIR=C:\WISP4405
+EDEDIR=C:\EDE4405
+CRIDDIR=C:\CRIDACU3004
 
 OUTDIR=.
 
@@ -181,8 +179,6 @@ OUTDIR=.
 WISPLIBSDIR=$(WISPDIR)\lib
 ACULIBSDIR=$(ACUDIR)\lib
 
-WISPTRAN=$(WISPDIR)\bin\wisp.exe
-COBOL=$(ACUDIR)\bin\ccbl32.exe
 
 #============================================================================
 #
@@ -248,55 +244,10 @@ RCFLAGS=
 # Different versions of ACUCOBOL use different sets of
 # libraries and subroutines.
 #
-# 4	ACUCOBOL Version 2.4 - 2.4.2
-# 5	ACUCOBOL Version 3.1
 # 6	ACUCOBOL Version 3.2 - 3.2.1
 # 7	ACUCOBOL Version 3.2.2
 # 8	ACUCOBOL Version 4.0.0 - 4.2.0
 #
-#####################################################
-## 4
-ACULIBS4=$(ACULIBSDIR)\wruncbl.lib $(ACULIBSDIR)\wacuterm.lib $(ACULIBSDIR)\wvision.lib
-ACUSUBS4=filetbl.obj mswinsub.obj
-ACUVISN4=$(ACUDIR)\lib\wvision.lib $(ACUDIR)\lib\wruncbl.lib
-ACUTEST4=$(ACULIBSDIR)\wruncbl.lib
-ACUBLD4 = $(guilibs) netapi32.lib
-
-#####################################################
-## 5
-!ifdef CLIENT
-ACULIBS5=$(ACULIBSDIR)\wterm32.lib \
-	$(ACULIBSDIR)\wclnt32.lib \
-	$(ACULIBSDIR)\wrun32.lib \
-	$(ACULIBSDIR)\wfsi32.lib \
-	$(ACULIBSDIR)\wvis32.lib \
-	$(ACULIBSDIR)\wmsg32.lib \
-	$(ACULIBSDIR)\wmem32.lib \
-	$(ACULIBSDIR)\wstd32.lib \
-	rpc4w32.lib \
-	wsock32.lib
-ACUSUBS5=filetbl.obj \
-	mswinsub.obj
-!else
-ACULIBS5=$(ACULIBSDIR)\wterm32.lib \
-	$(ACULIBSDIR)\wrun32.lib \
-	$(ACULIBSDIR)\wfsi32.lib \
-	$(ACULIBSDIR)\wvis32.lib \
-	$(ACULIBSDIR)\wmsg32.lib \
-	$(ACULIBSDIR)\wmem32.lib \
-	$(ACULIBSDIR)\wstd32.lib
-ACUSUBS5=filetbl.obj \
-	mswinsub.obj \
-	$(ACULIBSDIR)\clntstub.obj \
-	$(ACULIBSDIR)\netstub.obj
-!endif
-ACUVISN5=$(ACULIBSDIR)\wfsi32.lib \
-	$(ACULIBSDIR)\wvis32.lib \
-	$(ACULIBSDIR)\wmem32.lib \
-	$(ACULIBSDIR)\wstd32.lib
-ACUTEST5=$(ACULIBSDIR)\wrun32.lib
-ACUBLD5 = $(guilibs) netapi32.lib
-
 #####################################################
 ## 6
 !ifdef CLIENT
@@ -425,26 +376,6 @@ ACUBLD8 = $(guilibs) wsock32.lib netapi32.lib comctl32.lib winmm.lib
 # version of ACUCOBOL you are using.
 #
 #
-# 4	ACUCOBOL Version 2.4 - 2.4.2
-#
-# ACULIBS=$(ACULIBS4)
-# ACUSUBS=$(ACUSUBS4)
-# ACUTEST=$(ACUTEST4)
-# ACUVISN=$(ACUVISN4)
-# ACUBLD=$(ACUBLD4)
-# ACUSRCDIR=$(ACUDIR)\lib
-# ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp
-#
-# 5	ACUCOBOL Version 3.1
-#
-# ACULIBS=$(ACULIBS5)
-# ACUSUBS=$(ACUSUBS5)
-# ACUTEST=$(ACUTEST5)
-# ACUVISN=$(ACUVISN5)
-# ACUBLD=$(ACUBLD5)
-# ACUSRCDIR=$(ACUDIR)\lib
-# ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp
-#
 # 6	ACUCOBOL Version 3.2 - 3.2.1
 #
 # ACULIBS=$(ACULIBS6)
@@ -559,9 +490,11 @@ CRID_DEP = crid.h crid85.c cridtbl.c
 #
 CREATE	=$(OUTDIR)\create.exe
 CREATEDIR=C:\CREATEACU3501
+L_CREATE=createacu
+CREATEACULIB=$(CREATEDIR)\$(L_CREATE).lib
 CREATEACUSUB=$(CREATEDIR)\vscrmain.obj
 CREATESUBS=$(CREATEACUSUB) filetbl.obj
-CREATELIBS=$(ACUVISN) $(CREATEDIR)\createacu.lib $(WISP_LIBS_PATHS)
+CREATELIBS=$(ACUVISN) $(CREATEACULIB) $(WISP_LIBS_PATHS)
 
 #============================================================================
 #
@@ -578,7 +511,7 @@ CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) \
 # TARGETS:
 #
 
-default: rts acu
+default: rts
 
 header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
 	@echo ">>>> BUILDING ACUCOBOL RUNTIME"
@@ -657,16 +590,6 @@ $(ACUFILES):
 	@echo ">>>>"
 	@exit_with_error
 
-$(COBOL):
-	@echo ">>>> ERROR: An ACUCOBOL configuration error was detected!"
-	@echo ">>>>"
-	@echo ">>>> The ACUCOBOL file $@ was not found."
-	@echo ">>>>"
-	@echo ">>>> Using ACUDIR    = $(ACUDIR)"
-	@echo ">>>> Using ACUSRCDIR = $(ACUSRCDIR)"
-	@echo ">>>>"
-	@exit_with_error
-
 $(WISPFILES):
 	@echo ">>>> ERROR: An WISP configuration error was detected!"
 	@echo ">>>>"
@@ -683,15 +606,6 @@ $(EDEFILES):
 	@echo ">>>>"
 	@echo ">>>> Using WISPDIR = $(WISPDIR)"
 	@echo ">>>> Using EDEDIR  = $(EDEDIR)"
-	@echo ">>>>"
-	@exit_with_error
-
-$(WISPTRAN):
-	@echo ">>>> ERROR: An WISP configuration error was detected!"
-	@echo ">>>>"
-	@echo ">>>> The WISP file $@ was not found."
-	@echo ">>>>"
-	@echo ">>>> Using WISPDIR = $(WISPDIR)"
 	@echo ">>>>"
 	@exit_with_error
 
@@ -888,70 +802,8 @@ $(CRID_DEP): $(CRIDDIR)\$(@F)
 #
 
 $(CREATEACUSUB):
-	$(cc) $(CLFLAGS) /Fo$@ $*.c
+	$(cc) $(CLFLAGS) -I ..\wispcommon /Fo$@ $*.c
 
-#
-#	ACULINK and ACUUSING
-#
-acu:	$(COBOL) ACULINK ACUUSING
-	@echo "Target $@ is up-to-date."
-
-ACULINK: aculink.cob
-	$(COBOL) -da4 -zd -o $@ aculink.cob
-
-aculink.cob: $(WISPTRAN) aculink.wcb
-	$(WISPTRAN) $*.wcb
-
-ACUUSING: acuusing.cob
-	$(COBOL) -da4 -zd -o $@ acuusing.cob
-
-#============================================================================
-#
-#	ACUCOBOL Native Screens programs
-#
-#	$ nmake -f wwruncbl.mak acn
-#
-
-COBFLAGS = -da4 -zd -te 800 
-ACN_OBJS = 	WACUERROR \
-		WACUDISPLAY \
-		WACUFAC2SCREEN \
-		WACUGETPARM \
-		WACUGETPFKEY \
-		WACUHELP \
-		WACUWSB
-
-acn: acn_header $(COBOL) $(ACN_OBJS)
-	@echo "Native Screens programs:"
-	@echo "$(ACN_OBJS)"
-	@echo "are up-to-date."
-
-acn_header: $(ACUDIR)
-	@echo "BUILDING ACUCOBOL Native Screens Programs"
-	@echo " "
-	@echo "ACUDIR  =  $(ACUDIR)"
-	@echo ""
-
-WACUERROR: wacuerror.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
-
-WACUDISPLAY: wacudisplay.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacudisplay.cob
-
-WACUFAC2SCREEN: wacufac2screen.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
-
-WACUGETPARM: wacugetparm.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
-
-WACUGETPFKEY: wacugetpfkey.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
-
-WACUHELP: wacuhelp.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuhelp.cob
-
-WACUWSB: wacuwsb.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
 
 #
 # End of file

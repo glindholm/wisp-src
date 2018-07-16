@@ -214,10 +214,10 @@ char *authlogfile(void)
 /*
 **	History:
 **	$Log: licwisp.c,v $
-**	Revision 1.8  1997-03-21 10:24:58-05  gsl
+**	Revision 1.8  1997/03/21 15:24:58  gsl
 **	Changed the license_filepath() for WIN32 to point to the share name WISP
 **	on the SERVER.
-**
+**	
 **	Revision 1.7  1997-03-14 10:32:54-05  gsl
 **	Add license_filepath() logic for WIN32
 **

@@ -44,9 +44,9 @@ int unloadvision(const char *inname, const char *outname);
 /*
 **	History:
 **	$Log: wfvision.h,v $
-**	Revision 1.3  2001-11-12 16:26:50-05  gsl
+**	Revision 1.3  2001/11/12 21:26:50  gsl
 **	VISION2 has 2 magic numbers (Big Endian & Little Endian)
-**
+**	
 **	Revision 1.2  2001-10-30 15:20:53-05  gsl
 **	Add defines for VISION magic numbers
 **	rename to visioninfo()

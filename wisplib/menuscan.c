@@ -369,9 +369,9 @@ static int vcurrtime(int irow, int icol)
 /*
 **	History:
 **	$Log: menuscan.c,v $
-**	Revision 1.14  2001-11-27 17:07:54-05  gsl
+**	Revision 1.14  2001/11/27 22:07:54  gsl
 **	Change to use longuid()
-**
+**	
 **	Revision 1.13  1997-10-03 13:36:07-04  gsl
 **	YEAR2000 fix
 **

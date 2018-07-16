@@ -35,9 +35,9 @@ int	getopt( int argc, char *const argv[], const char *flags);
 /*
 **	History:
 **	$Log: getopt.h,v $
-**	Revision 1.2  1997-02-17 10:49:46-05  gsl
+**	Revision 1.2  1997/02/17 15:49:46  gsl
 **	Fixed prototype so same as ansi standard
-**
+**	
 **	Revision 1.1  1996-06-21 12:26:29-04  gsl
 **	Initial revision
 **

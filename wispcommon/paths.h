@@ -44,9 +44,9 @@ int whichlinkpath(char *filename, char *fullpath);
 /*
 **	History:
 **	$Log: paths.h,v $
-**	Revision 1.10  1997-12-04 17:35:46-05  gsl
+**	Revision 1.10  1997/12/04 22:35:46  gsl
 **	added whichlinkpath()
-**
+**	
 **	Revision 1.9  1997-12-04 15:38:35-05  gsl
 **	Split osd_path() into link_path_seg() and env_path_seg()
 **

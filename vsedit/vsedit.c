@@ -1097,9 +1097,9 @@ int set_wang_style(int style)
 /*
 **	History:
 **	$Log: vsedit.c,v $
-**	Revision 1.15  1997-12-19 16:51:38-05  gsl
+**	Revision 1.15  1997/12/19 21:51:38  gsl
 **	fix warnings
-**
+**	
 **	Revision 1.14  1997-12-18 20:15:54-05  gsl
 **	Fix CHARMAP translation
 **

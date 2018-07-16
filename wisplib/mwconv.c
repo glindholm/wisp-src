@@ -190,9 +190,9 @@ static int c_just(char* src, char* idst, char* fdst, int len)
 /*
 **	History:
 **	$Log: mwconv.c,v $
-**	Revision 1.10  1996-08-19 18:32:35-04  gsl
+**	Revision 1.10  1996/08/19 22:32:35  gsl
 **	drcs update
-**
+**	
 **
 **
 */

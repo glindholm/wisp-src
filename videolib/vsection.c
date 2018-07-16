@@ -139,9 +139,9 @@ int vbuffering_on(void)
 /*
 **	History:
 **	$Log: vsection.c,v $
-**	Revision 1.13  1997-07-09 12:17:50-04  gsl
+**	Revision 1.13  1997/07/09 16:17:50  gsl
 **	Add new interface.
-**
+**	
 **	Revision 1.12  1996-11-13 20:32:17-05  gsl
 **	use vcontrol_flush()
 **

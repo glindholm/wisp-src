@@ -835,9 +835,9 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 /*
 **	History:
 **	$Log: symbols.cpp,v $
-**	Revision 1.17  1998-10-02 15:37:39-04  gsl
+**	Revision 1.17  1998/10/02 19:37:39  gsl
 **	Fix a debug trace of symbols flag
-**
+**	
 **	Revision 1.16  1998-09-08 14:06:13-04  gsl
 **	Fixed the debug trace message for insert
 **
@@ -879,9 +879,9 @@ symbol *symbol_table::global_lookup(const char *a_name) {
 //
 //	History:
 //	$Log: symbols.cpp,v $
-//	Revision 1.17  1998-10-02 15:37:39-04  gsl
+//	Revision 1.17  1998/10/02 19:37:39  gsl
 //	Fix a debug trace of symbols flag
-//
+//	
 //	Revision 1.16  1998-09-08 14:06:13-04  gsl
 //	Fixed the debug trace message for insert
 //

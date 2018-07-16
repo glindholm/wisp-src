@@ -120,9 +120,9 @@ void table::set_none_seen() {
 //
 //	History:
 //	$Log: tables.cpp,v $
-//	Revision 1.7  1998-08-31 15:14:21-04  gsl
+//	Revision 1.7  1998/08/31 19:14:21  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -112,9 +112,9 @@ void wexit(int4 num)
 /*
 **	History:
 **	$Log: wexit.c,v $
-**	Revision 1.15  1998-05-12 10:53:36-04  gsl
+**	Revision 1.15  1998/05/12 14:53:36  gsl
 **	Added wtrace_timestamp()
-**
+**	
 **	Revision 1.14  1997-05-02 20:03:32-04  gsl
 **	Add wtrace()
 **

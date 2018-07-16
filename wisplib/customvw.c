@@ -93,10 +93,10 @@ int custom_vwang(unsigned char *function,unsigned char *wsb,unsigned char *lines
 /*
 **	History:
 **	$Log: customvw.c,v $
-**	Revision 1.2  1995-07-06 03:43:23-04  scass
+**	Revision 1.2  1995/07/06 07:43:23  scass
 **	Added routine comments for DevTech stubs for custom screen handler
 **	(SFG enhancement request)
-**
+**	
  * Revision 1.1  1995/07/05  15:38:17  scass
  * Initial revision
  *

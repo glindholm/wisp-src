@@ -112,9 +112,9 @@ class message_reader : public reader {
 //
 //	History:
 //	$Log: reader.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:11-04  gsl
+//	Revision 1.5  1998/08/31 19:14:11  gsl
 //	drcs update
-//
+//	
 //
 
 //	

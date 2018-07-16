@@ -29,8 +29,8 @@ void shutdown_cobol_screen_handler()
 /*
 **	History:
 **	$Log: cobscrn.c,v $
-**	Revision 1.1  1998-03-13 16:44:06-05  gsl
+**	Revision 1.1  1998/03/13 21:44:06  gsl
 **	Initial revision
-**
+**	
 **
 */

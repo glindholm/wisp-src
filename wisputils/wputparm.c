@@ -672,12 +672,12 @@ char	*n_argv[];
 /*
 **	History:
 **	$Log: wputparm.c,v $
-**	Revision 1.13  1997-07-29 11:03:17-04  gsl
+**	Revision 1.13  1997/07/29 15:03:17  gsl
 **	Fix problem with link-level in wputparm()
 **	It was incorrectly incrementing the link-level in initglbs()
 **	which caused the putparm to be marked with the wrong link-link
 **	which caused the putparm to be deleted at the wrong "unlink".
-**
+**	
 **	Revision 1.12  1997-06-10 14:57:28-04  scass
 **	?Changed long to int4 for portability.
 **

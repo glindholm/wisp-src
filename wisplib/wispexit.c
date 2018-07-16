@@ -41,9 +41,9 @@ void WISPEXIT(void)
 /*
 **	History:
 **	$Log: wispexit.c,v $
-**	Revision 1.12  1998-05-18 14:43:32-04  gsl
+**	Revision 1.12  1998/05/18 18:43:32  gsl
 **	Add trace
-**
+**	
 **	Revision 1.11  1996-08-26 20:09:42-04  gsl
 **	Documented and moved pre-exit logic to wexith()
 **

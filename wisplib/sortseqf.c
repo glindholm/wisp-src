@@ -11,6 +11,10 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	
 */
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
 
 #include <stdio.h>
 #ifdef unix
@@ -21,7 +25,7 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <stdlib.h>
 
-#if defined(WATCOM) || defined(_MSC_VER)
+#if defined(WIN32)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -42,6 +46,10 @@ static char rcsid[]="$Id:$";
 #endif
 #ifndef O_TEXT
 #define O_TEXT 0
+#endif
+
+#if defined(WIN32)
+#define O_LARGEFILE 0
 #endif
 
 
@@ -464,7 +472,7 @@ printf("sortseqf:l_memsizek=%d\n",l_memsizek);
 	**	Open input file
 	*/
 
-	f_infile = open(infile,O_RDONLY|O_BINARY,0400);				/* Open infile.					*/
+	f_infile = open(infile,O_RDONLY|O_BINARY|O_LARGEFILE,0400);		/* Open infile.					*/
 
 	if (f_infile == -1)
 	{
@@ -604,7 +612,7 @@ printf("sortseqf:g_recindex_bytes=%d\n",g_recindex_bytes);
 				break;
 			}
 
-			f_outfile = open(outfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0666); /* Open outfile.			*/
+			f_outfile = open(outfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY|O_LARGEFILE,0666); /* Open outfile.			*/
 
 			if (f_outfile == -1)
 			{
@@ -653,7 +661,7 @@ printf("qsort: %d items\n",g_numelements);
 		else if (!fully_loaded && !tmpfile_active)			/* (2) First chunk				*/
 		{
 
-			f_tmpfile = open(tmpfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0666); /* Open tmpfile for output.		*/
+			f_tmpfile = open(tmpfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY|O_LARGEFILE,0666); /* Open tmpfile for output.		*/
 
 			if (f_tmpfile == -1)
 			{
@@ -674,7 +682,7 @@ printf("qsort: %d items\n",g_numelements);
 		}
 		else if (!fully_loaded && tmpfile_active)			/* (3) Middle chunk				*/
 		{
-			f_tmpfile = open(tmpfile,O_RDONLY|O_BINARY,0400);		/* Open tmpfile for input.		*/
+			f_tmpfile = open(tmpfile,O_RDONLY|O_BINARY|O_LARGEFILE,0400);		/* Open tmpfile for input.		*/
 
 			if (f_tmpfile == -1)
 			{
@@ -682,7 +690,7 @@ printf("qsort: %d items\n",g_numelements);
 				return(reporterr(ERR_OPENINPUT,messstr));
 			}
 
-			f_mrgfile = open(mrgfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,0666); /* Open mrgfile for output.		*/
+			f_mrgfile = open(mrgfile,O_WRONLY|O_CREAT|O_TRUNC|O_BINARY|O_LARGEFILE,0666); /* Open mrgfile for output.		*/
 
 			if (f_mrgfile == -1)
 			{
@@ -713,7 +721,7 @@ printf("qsort: %d items\n",g_numelements);
 		}
 		else if (fully_loaded && tmpfile_active)			/* (4) Last chunk				*/
 		{
-			f_tmpfile = open(tmpfile,O_RDONLY|O_BINARY,0400);		/* Open tmpfile for input.		*/
+			f_tmpfile = open(tmpfile,O_RDONLY|O_BINARY|O_LARGEFILE,0400);	/* Open tmpfile for input.		*/
 
 			if (f_tmpfile == -1)
 			{
@@ -2329,7 +2337,25 @@ static int ssbytenormal(void)
 /*
 **	History:
 **	$Log: sortseqf.c,v $
-**	Revision 1.18  1999-03-24 13:12:53-05  gsl
+**	Revision 1.18.2.1  2002/10/09 21:03:03  gsl
+**	Huge file support
+**	
+**	Revision 1.23  2002/10/08 17:05:10  gsl
+**	Define _LARGEFILE64_SOURCE to define O_LARGEFILE on LINUX
+**	
+**	Revision 1.22  2002/10/07 19:15:22  gsl
+**	Add O_LARGEFILE to open() options
+**	
+**	Revision 1.21  2002/07/18 21:04:28  gsl
+**	Remove MSDOS code
+**	
+**	Revision 1.20  2002/07/10 21:05:25  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.19  2002/07/09 04:13:58  gsl
+**	Rename global WISPLIB routines WL_ for uniqueness
+**	
+**	Revision 1.18  1999/03/24 18:12:53  gsl
 **	Fixed a problem in mergemem() where leftover was not being properly
 **	calculated.  This could result in an infinite loop where it is creating
 **	the merged file, it would run until the size of the file grew until
@@ -2339,7 +2365,7 @@ static int ssbytenormal(void)
 **	record and the short records had to sort together so the tmprec buffer
 **	would contain 3 or more complete records.  The logic had a flaw that
 **	assumed there was never more the 2 complete records in the buffer.
-**
+**	
 **	Revision 1.17  1998-09-08 16:40:54-04  gsl
 **	Add support for key YY based on YYPIVOTYEAR
 **
@@ -2347,7 +2373,7 @@ static int ssbytenormal(void)
 **	Free ptr after call to tempnam()
 **
 **	Revision 1.15  1996-10-08 17:25:53-07  gsl
-**	replaced getenv() with wtmpdir() call
+**	replaced getenv() with WL_systmpdir() call
 **
 **	Revision 1.14  1996-09-26 10:14:21-07  gsl
 **	Change MAX_NUMKEYS to SSF_MAX_NUMKEYS and move to header

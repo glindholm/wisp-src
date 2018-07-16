@@ -35,9 +35,9 @@ int win32_message_box(char *instr);
 /*
 **	History:
 **	$Log: win32err.h,v $
-**	Revision 1.2  1997-07-14 08:31:55-04  gsl
+**	Revision 1.2  1997/07/14 12:31:55  gsl
 **	Add win32_message_box()
-**
+**	
 **	Revision 1.1  1996-12-06 18:35:55-05  jockc
 **	Initial revision
 **

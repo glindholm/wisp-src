@@ -514,9 +514,9 @@ exit
 #
 #	History:
 #	$Log: bldsrckit.sh,v $
-#	Revision 1.50  2002-04-10 10:47:32-04  gsl
+#	Revision 1.50  2002/04/10 14:47:32  gsl
 #	Change wisp/acucobol to wisp/acu
-#
+#	
 #	Revision 1.49  2002-04-09 17:01:48-04  gsl
 #	Stream line
 #

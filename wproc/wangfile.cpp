@@ -60,9 +60,9 @@ wang_filename::wang_filename(const char *s) {
 //
 //	History:
 //	$Log: wangfile.cpp,v $
-//	Revision 1.6  1998-08-31 15:50:41-04  gsl
+//	Revision 1.6  1998/08/31 19:50:41  gsl
 //	drcs update
-//
+//	
 //	Revision 1.5  1998-08-31 15:14:28-04  gsl
 //	drcs update
 //

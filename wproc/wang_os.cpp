@@ -992,9 +992,9 @@ void wang_os_first_procedure_name(char *a_name) {
 /*
 **	History:
 **	$Log: wang_os.cpp,v $
-**	Revision 1.27  2001-08-22 16:42:14-04  gsl
+**	Revision 1.27  2001/08/22 20:42:14  gsl
 **	fix gnu errors
-**
+**	
 **	Revision 1.26  1999-08-29 13:21:10-04  gsl
 **	Move the vwang_title() call to driver.cpp so it doesn't get called
 **	if just checking the version.
@@ -1067,9 +1067,9 @@ void wang_os_first_procedure_name(char *a_name) {
 //
 //	History:
 //	$Log: wang_os.cpp,v $
-//	Revision 1.27  2001-08-22 16:42:14-04  gsl
+//	Revision 1.27  2001/08/22 20:42:14  gsl
 //	fix gnu errors
-//
+//	
 //	Revision 1.26  1999-08-29 13:21:10-04  gsl
 //	Move the vwang_title() call to driver.cpp so it doesn't get called
 //	if just checking the version.

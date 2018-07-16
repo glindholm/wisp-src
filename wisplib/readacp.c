@@ -481,9 +481,9 @@ int	*ret_code;
 /*
 **	History:
 **	$Log: readacp.c,v $
-**	Revision 1.11  1997-06-05 12:08:42-04  scass
+**	Revision 1.11  1997/06/05 16:08:42  scass
 **	Moved return outside of #ifdef to resolve warning.
-**
+**	
 **	Revision 1.10  1996-08-19 18:32:46-04  gsl
 **	drcs update
 **

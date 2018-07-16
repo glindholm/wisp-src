@@ -108,10 +108,10 @@ void convert_day_to_number(char inday[], int4* outnum)
 /*
 **	History:
 **	$Log: day.c,v $
-**	Revision 1.12  1997-05-20 09:49:14-04  scass
+**	Revision 1.12  1997/05/20 13:49:14  scass
 **	Changed convert_day_to_number() to use a local
 **	variable.
-**
+**	
 **	Revision 1.11  1997-05-20 07:45:46-04  scass
 **	Moved some code into a seperate routine so could call
 **	from date.c

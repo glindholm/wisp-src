@@ -38,9 +38,9 @@
 /*
 **	History:
 **	$Log: vrawunix.h,v $
-**	Revision 1.15  1997-06-24 10:55:33-04  gsl
+**	Revision 1.15  1997/06/24 14:55:33  gsl
 **	This routine has been replaced by a generic vraw.h
-**
+**	
 **	Revision 1.14  1996-11-13 20:43:39-05  gsl
 **	Added vrawflush() now external
 **

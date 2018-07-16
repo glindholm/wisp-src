@@ -192,9 +192,9 @@ EXTERN_DEF	int	mode_flag	INIT_ZERO;	/* Display flag?     */
 /*
 **	History:
 **	$Log: vrawdos.h,v $
-**	Revision 1.9  1996-10-11 18:16:17-04  gsl
+**	Revision 1.9  1996/10/11 22:16:17  gsl
 **	drcs update
-**
+**	
 **
 **
 */

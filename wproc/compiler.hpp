@@ -303,9 +303,9 @@ class compiler : public object {
 //
 //	History:
 //	$Log: compiler.hpp,v $
-//	Revision 1.9  1998-08-31 15:13:36-04  gsl
+//	Revision 1.9  1998/08/31 19:13:36  gsl
 //	drcs update
-//
+//	
 //
 
 //	

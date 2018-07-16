@@ -220,9 +220,9 @@ NODE parse_accept(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_acept.c,v $
-**	Revision 1.18  2001-09-13 14:40:16-04  gsl
+**	Revision 1.18  2001/09/13 18:40:16  gsl
 **	For MF ACCEPT FROM DATE4 now translated to ACCEPT FROM DATE YYYYMMDD
-**
+**	
 **	Revision 1.17  1998-03-26 14:23:30-05  gsl
 **	Change to use WISP-SYMB-xx
 **

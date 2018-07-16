@@ -745,9 +745,9 @@ void lastacufilestat(char *buff)
 /*
 **	History:
 **	$Log: wfilechk.c,v $
-**	Revision 1.13  1998-08-03 17:18:28-04  jlima
+**	Revision 1.13  1998/08/03 21:18:28  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
-**
+**	
 **	Revision 1.12  1997-10-21 10:18:06-04  gsl
 **	removed WISPPROGID
 **

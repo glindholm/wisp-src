@@ -244,9 +244,9 @@ NODE parse_start(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_start.c,v $
-**	Revision 1.15  1998-03-03 15:16:06-05  gsl
+**	Revision 1.15  1998/03/03 20:16:06  gsl
 **	Changed flush to fixed
-**
+**	
 **	Revision 1.14  1998-03-02 13:21:24-05  gsl
 **	Update for cobol-85
 **

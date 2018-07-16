@@ -38,9 +38,9 @@ va_dcl
 /*
 **	History:
 **	$Log: wvaset.c,v $
-**	Revision 1.9  1996-08-19 18:33:26-04  gsl
+**	Revision 1.9  1996/08/19 22:33:26  gsl
 **	drcs update
-**
+**	
 **
 **
 */

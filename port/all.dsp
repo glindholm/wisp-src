@@ -79,7 +79,7 @@ CFG=all - Win32 Debug
 
 # Begin Source File
 
-SOURCE=..\etc\portwin32.txt
+SOURCE=..\doc\portwin32.txt
 # End Source File
 # End Target
 # End Project

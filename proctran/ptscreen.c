@@ -541,9 +541,9 @@ static void concat_screen_field(int *slen)						/* Now add the current field to 
 /*
 **	History:
 **	$Log: ptscreen.c,v $
-**	Revision 1.6  1997-04-21 11:21:31-04  scass
+**	Revision 1.6  1997/04/21 15:21:31  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.5  1996-09-12 19:18:01-04  gsl
 **	Fix prototypes
 **

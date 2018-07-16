@@ -37,9 +37,9 @@ void BREAKACP(int4* rel_line,int4 *ret_code)
 /*
 **	History:
 **	$Log: breakacp.c,v $
-**	Revision 1.10  1996-08-19 18:32:10-04  gsl
+**	Revision 1.10  1996/08/19 22:32:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

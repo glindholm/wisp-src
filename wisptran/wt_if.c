@@ -407,9 +407,9 @@ NODE parse_if(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_if.c,v $
-**	Revision 1.14  1998-03-03 13:03:18-05  gsl
+**	Revision 1.14  1998/03/03 18:03:18  gsl
 **	change flush into fixed
-**
+**	
 **	Revision 1.13  1998-02-25 09:57:01-05  gsl
 **	Update for cobol-85 and to fully handle the statement
 **

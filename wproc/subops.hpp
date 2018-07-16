@@ -122,9 +122,9 @@ enum submit_opcode {
 //
 //	History:
 //	$Log: subops.hpp,v $
-//	Revision 1.5  1998-08-31 15:14:18-04  gsl
+//	Revision 1.5  1998/08/31 19:14:18  gsl
 //	drcs update
-//
+//	
 //
 
 //	

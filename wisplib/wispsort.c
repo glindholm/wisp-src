@@ -10,7 +10,6 @@ static char rcsid[]="$Id:$";
 **			wangsort()		The underlining wang style sort interface (with stable sort option)
 **			addseqnum()		Add a sequence number to each record in a file
 **			delseqnum()		Remove the added sequence number
-**			copyfile()		Copy a file
 **
 **
 */
@@ -114,6 +113,11 @@ static char rcsid[]="$Id:$";
 					48	Unable to unload FH ISAM file (check for fhconvert)
 */
 
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
+
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -141,6 +145,7 @@ static char rcsid[]="$Id:$";
 #include "wfcisam.h"
 #include "wfvision.h"
 #include "assert.h"
+#include "fcopy.h"
 
 #include "werrlog.h"
 #define		ROUTINE		80500
@@ -152,7 +157,6 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 
 static int addseqnum(char *infile, char *outfile, int recsize);
 static int delseqnum(char *infile, char *outfile, int recsize);
-static int copyfile(char *infile, char *outfile);
 
 
 
@@ -570,8 +574,12 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 
 	if (0 == numkeys)							/* Special case: No keys then copy file		*/
 	{
-		if (copyfile(inptr,outptr))
+		if (wisp_fcopy(inptr,outptr))
 		{
+			sprintf(errbuff,"Copy failed infile=%s outfile=%s [errno=%d]",
+				inptr, outptr, errno);
+			werrlog(ERRORCODE(2),errbuff,0,0,0,0,0,0,0);
+
 			l_sortcode = ERR_OPENOUTPUT;				/* this is the most likely reason for cp fail	*/
 			outptr[0] = '\0';
 		}
@@ -684,6 +692,12 @@ return_label:
 	PUTBIN(returncode,&l_returncode,sizeof(int));
 }
 
+#ifdef USE_FILE64
+#define FOPEN64 fopen64
+#else
+#define FOPEN64 fopen
+#endif
+
 /*
 	addseqnum	Copy records from infile to outfile adding a sequence number to the end of each record.
 			A non-zero return code indicates an error.
@@ -695,14 +709,14 @@ static int addseqnum(char *infile, char *outfile, int recsize)
 	int4	seq;
 	char	messstr[80];
 
-	if (!(i_fp = fopen(infile,FOPEN_READ_BINARY)))
+	if (!(i_fp = FOPEN64(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
-	if (!(o_fp = fopen(outfile,FOPEN_WRITE_BINARY)))
+	if (!(o_fp = FOPEN64(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -746,14 +760,14 @@ static int delseqnum(char *infile, char *outfile, int recsize)
 	char	*buff;
 	char	messstr[80];
 
-	if (!(i_fp = fopen(infile,FOPEN_READ_BINARY)))
+	if (!(i_fp = FOPEN64(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
-	if (!(o_fp = fopen(outfile,FOPEN_WRITE_BINARY)))
+	if (!(o_fp = FOPEN64(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -784,56 +798,16 @@ static int delseqnum(char *infile, char *outfile, int recsize)
 	return(0);
 }
 
-/*
-	copyfile	Copy infile to outfile.
-			A non-zero return code indicates an error.
-*/
-static int copyfile(char *infile, char *outfile)
-{
-	FILE	*i_fp, *o_fp;
-	int	c;
-	char	messstr[80];
-
-	if (!(i_fp = fopen(infile,FOPEN_READ_BINARY)))
-	{
-		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
-		return(41);
-	}
-
-	if (!(o_fp = fopen(outfile,FOPEN_WRITE_BINARY)))
-	{
-		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
-		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
-		fclose(i_fp);
-		return(41);
-	}
-
-	while( EOF != (c=getc(i_fp)))
-	{
-		if (EOF == putc(c, o_fp))
-		{
-			sprintf(messstr,"Write failed file=%s [errno=%d]",outfile,errno);
-			werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
-			fclose(i_fp);
-			fclose(o_fp);
-			unlink(outfile);
-			return(41);
-		}
-	}
-	
-	fclose(i_fp);
-	fclose(o_fp);
-
-	return(0);
-}
 
 /*
 **	History:
 **	$Log: wispsort.c,v $
-**	Revision 1.34  2001-11-08 13:09:33-05  gsl
+**	Revision 1.34.2.1  2002/10/09 21:03:05  gsl
+**	Huge file support
+**	
+**	Revision 1.34  2001/11/08 18:09:33  gsl
 **	remove unused var
-**
+**	
 **	Revision 1.33  2001-10-30 15:22:14-05  gsl
 **	versionvesrion() replaced by visioninfo()
 **	unloadvision() moved to wfvision.c

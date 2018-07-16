@@ -82,31 +82,31 @@ CFG=wispkit - Win32 Debug
 # PROP Default_Filter "txt;lis"
 # Begin Source File
 
-SOURCE=..\etc\aqmwisp.txt
+SOURCE=..\doc\aqmwisp.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\nonascii.txt
+SOURCE=..\doc\nonascii.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\nttelnet.txt
+SOURCE=..\doc\nttelnet.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\vcolors.txt
+SOURCE=..\doc\vcolors.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\wisp_install_unix.txt
+SOURCE=..\doc\wisp_install_unix.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\wisp_relnotes.txt
+SOURCE=..\doc\wisp_relnotes.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\wispacn.txt
+SOURCE=..\doc\wispacn.txt
 # End Source File
 # Begin Source File
 
@@ -114,11 +114,11 @@ SOURCE=..\etc\wispmsg.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\wispntdoc.txt
+SOURCE=..\doc\wispntdoc.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\wispntsetup.txt
+SOURCE=..\doc\wispntsetup.txt
 # End Source File
 # End Group
 # End Target

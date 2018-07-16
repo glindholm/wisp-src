@@ -151,9 +151,9 @@ extern w4w_handler global_w4w_handler;
 //
 //	History:
 //	$Log: crt_io.hpp,v $
-//	Revision 1.8  1998-10-12 12:13:02-04  gsl
+//	Revision 1.8  1998/10/12 16:13:02  gsl
 //	FIxed w4w_handler problems on DGUX
-//
+//	
 //	Revision 1.7  1998-10-02 15:36:46-04  gsl
 //	Add w4w_handler class to handle all aspects of W4W processing
 //

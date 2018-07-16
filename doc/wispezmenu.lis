@@ -1,0 +1,556 @@
+
+	Copyright (c) 1994 by International Digital Scientific Incorporated.  
+	All Rights Reserved.
+
+	====================================================================
+
+	Title:          WISPEZMENU Users Guide     
+
+	Document:       WISPEZMENU.LIS
+	Last Updated:   09 JUNE 94
+	Products:       EZTOMNU, EZONEMNU & TEXTMENU        
+	Versions:       V1.1 for WISP 3.3x7 and LATER
+
+	Summary:  1. This manual describes the EZFORMAT replacement 
+		     utilities, WISPEZMENU. 
+	  	  2. the WISPEZMENU kit.
+
+	====================================================================
+
+
+	GENERAL OVERVIEW
+	================
+
+	This  manual  describes the  WISPEZMENU Utilities.  This is
+	a software product designed to provide a solution that replaces
+	the Wang VS EZFORMAT Menu system.  This replacement allows
+	displaying and processing menu requests in the VAX/VMS, Unix and
+	DOS environments.
+
+
+	Release information:
+
+	   This manual refers to version 1.1 of the EZTOMNU, EZONEMNU 
+  	   and the TEXTMENU Utilities.  See the  WISP Release Notes 
+	   for information on subsequent versions.
+
+
+	Software Version:
+	   EZTOMNU V1.1   -   menu translator for menu libraries
+	   EZONEMNU V1.1  -   menu translator for a single menu
+	   TEXTMENU V1.1  -   menu display/interpreter
+
+
+		
+
+
+
+	Intended Audience:
+
+	   This manual is intended for system managers, programmers
+	   and software developers  who are using the  WISPEZMENU
+	   utilities.  It provides the information necessary to
+	   install and use the utilities.
+
+
+	   Some basic experience with the following is assumed:
+
+		-   general aspects of the VAX filesystem, including
+		    directories and file protection
+
+		-   general  aspects of the Unix filesystem, including
+		    directories and file permissions/modes
+
+		-   general aspects of the DOS filesystem, including
+	   	    directories and file permissions/modes
+
+
+
+	  Scope of Document:
+
+	   This manual is divided into three chapters and two appendices.
+
+	   Chapter 1      Introduction  to  the  EZTOMNU, EZONEMNU and  
+			  TEXTMENU Utilities.
+
+	   Chapter 2      Describes how to use the EZTOMNU, EZONEMNU and 
+			  TEXTMENU Utilities.
+
+	   Chapter 3      Describes the installation and setup procedure.
+
+	   Appendix A     Provides troubleshooting information for some
+			  common problems.
+
+	   Appendix B     Examples of DCL procedures and a Unix script
+			  to initiate menu displays.
+
+
+
+
+
+
+
+
+
+	1. INTRODUCTION
+	   ------------
+	  
+	  This chapter introduces the EZTOMNU, EZONEMNU and TEXTMENU 
+	  Utilities.
+
+
+			  
+
+	  1.1 Background
+
+
+	   The  Wang  VS operating  system  provides  a utility  called
+	   EZFORMAT which can produce menus or COBOL applications. 
+
+	   The IDSI WISPEZMENU system provides for EZFORMAT menu
+	   conversion and displaying of the menus.
+
+
+
+	  1.2 WISPEZMENU
+
+
+	   The WISPEZMENU system utilitzes three utility programs written
+	   in COBOL to convert and display the EZFORMAT menus.
+		   
+	   The EZTOMNU and EZONEMNU utilities are only a menu conversion
+	   solution for EZFORMAT menus' and only if they exist as EZFORMAT
+	   menu sources.  The EZTOMNU and EZONEMNU Utilities will only
+	   convert the two (2) record source format of Wang EZFORMAT. The
+	   EZFORMAT menu file is a sequential data file brought from the
+	   Wang VS and it is two records long totaling 3840 bytes in size. 
+	   The first record contains the menu screen layout, and it
+	   represents a 1920 byte screen of 80 character wide rows by 24
+           rows deep.  The secound record contains a table of PFKEY values
+	   and an PFKEY associated menu, program or procedure name.
+
+	   When EZTOMNU is converting  a library of menu files, it will
+	   generate a set of text style ".MNU" files.
+
+	   The EZONEMNU utiltiy will convert a single EZFORMAT menu file
+	   to a text ".MNU" file.
+
+
+	   These menu text files will then be used by the TEXTMENU Utility.
+	   TEXTMENU will display  the menu and  initiate a "LINK" to
+	   programs, procedures or DISPLAY the next menu.  
+
+
+
+	1.3 Manual .MNU generation
+
+
+	   You can generate a .mnu file from scratch by using any text
+	   editor.  It is not required that you convert from a Wang
+	   EZFORMAT menu file.  
+
+
+
+
+
+
+
+
+	 2. USAGE
+	    -----
+
+	   This  section describes how to use the EZTOMNU, EZONEMNU 
+	   and TEXTMENU Utilities.
+
+
+
+	  2.1  How EZTOMNU works.
+
+
+	   Run EZTOMNU and EZTOMNU will display a screen as follows:           
+
+
+	 ********************Begin Screen Example*************************
+	 SCA                                             PROGRAM: EZTOMNU
+
+	   This  utility will  convert  EZFORMAT MENU  files into  text
+	   files  that can be used  with the TEXTMENU utility.  It will
+	   convert ALL files in the source library.
+
+	   NOTE:  There is a file limit of 500 files per library.
+
+					
+
+		   ENTER LOCATION OF EZFORMAT MENU FILES
+
+
+		  LIBRARY:  ________        VOLUME:  ______
+
+
+		   ENTER LOCATION TO CREATE TEXT FILES
+
+
+		  LIBRARY:  ________        VOLUME:  ______
+
+
+
+		   ---------------------------------------            
+	   
+
+
+		   PRESS <ENTER> TO CONTINUE, PF16 TO EXIT
+	  *******************End Screen Example**************************
+
+
+	   EZTOMNU generates a file with the same name as the Wang menu
+	   file with a .mnu extension.  The .mnu file is a line sequential
+	   text file with 80 byte records.  
+		   
+	   The EZTOMNU  utility will try to convert all files within the
+	   identified library (ie directory). 
+		   
+
+
+
+
+
+	   The following is an example of a .mnu file generated by
+	   EZTOMNU and MODIFIED with an editor: 
+
+
+	 ********************Sample Text .MNU File*************************
+
+			QA EZFORMAT .MNU file test
+
+				   
+
+		  (press the selected PFkey option)          
+
+		  1)   SAMPLE  ............... (SAMPLE)            
+
+		  2)   TEST Menu.............. (menu#2)
+
+		  8)   Trigger.................(TRIGGER)
+					  
+		 16)   EXIT                                        
+	
+
+
+
+
+
+
+
+				 
+	  ,Remember line 24 is reserved for messages             ,
+	  >NN PPPPPPPP T LLLLLLLL VVVVVV <----ALIGNMENTS (added by EZTOMNU)
+	  P01 SAMPLE                                                       
+	  P02 MENU2    M ezmnulib volezf    <--added with editor
+	  P08 TRIGGER  P testlib  volrun    <--added with editor
+	  P16 EXIT                                                         
+	  *******************End Sample .MNU File*************************
+				   
+
+	   Each displayable menu may contain up to 24 lines of menu
+	   item text.  If the menu item text is less than 24 lines the
+	   rest of the screen is filled with blank lines.  
+
+	   EZTOMNU should only need  to be EXECUTED ONCE for each menu
+	   (sequential data file) library.   Any modifications to the 
+	   generated ".mnu" files should then be made directly with a 
+	   text editor upon the corresponding ".mnu" text file.
+
+	   Note, under VMS this text file must be 80 character records.
+              
+	   NOTE: As soon  as 24 lines of menu text or the first PFKEY
+	   number line, (ie."P"...statement line) is reached in the Wang
+	   menu file, the program will generate an ALIGNMENT line in the
+	   .mnu file so the user can more easily edit the PFKEY portion
+	   of the .mnu file.  Then the program will generate "P" records
+	   that describe the PFKEY number and program/menu file name that
+	   was used in the Wang menu file.
+
+
+	   Be aware that if you are running an executable program (ie. C 
+	   program) then it must be in the current directory or you must  
+	   create a Unix script or VMS DCL procedure to invoke the 
+	   actual program through the correct system path.  This is caused
+	   by the Wang EZFORMAT menu files not supplying the VOLUME or
+	   LIBRARY information.
+
+	  
+	      			    OR
+
+	   To add VOLUME and LIBRARY information see below:
+ 
+	   You can edit the .mnu menu text file and add in TYPE, LIBRARY
+	   and VOLUME information, so that the program TEXTMENU can run
+	   the program or menu file from the correct path. Where TYPE is:
+
+		M = menu
+		P = program or procedure or unix script
+
+	   NOTE: a. if no type is specified, type PROGRAM is assumed.
+
+		 b. column alignment in the PFKEY area is important.
+
+
+
+	  2.2  How EZONEMNU works.
+		   
+	   EZONEMNU uses the two (2) record source format files that the
+	   Wang EZFORMAT utility produces. EZONEMNU generates a file with
+	   the same name as the  Wang menu file with a .mnu extension.
+	   The .mnu file is a line sequential text file with 80 byte
+	   records.  
+
+	   The EZONEMNU  utility will convert ONE Wang menu file in
+	   the identified library (ie. directory) for each file name
+	   entered. 
+
+	   Run EZONEMNU and it will display a screen simular to
+	   the screen display for EZTOMENU, and request a file name
+	   as well as input and output libraries and volumes.
+
+	   Any modifications to the generated ".mnu" file should then 
+	   be made directly with a text editor upon the corresponding 
+	   ".mnu" text file.
+
+	   Refer to section 2.1 above for further information.
+
+
+	  2.3  How TEXTMENU works.
+
+
+	   The TEXTMENU program is like any other COBOL program within
+	   the application system.  It uses the .mnu file as an input 
+	   data file to generate a menu display and to decide what 
+	   program or procedure to CALL "LINK" too or which  menu 
+	   file to read and display.
+
+	   If TEXTMENU is the first program run (ie. menu) within a 
+	   application system, then the link levels are  generated from  
+	   TEXTMENU  and thus  return to  TEXTMENU before exiting.
+
+
+	   TEXTMENU  requires 4 parameters to  be passed in the linkage
+	   section:  file name of the .mnu file, library where the .mnu
+	   file is located and the volume where the .mnu file is located. 
+	   
+	   The 4th parameter identifies a company name to be displayed at  
+	   the top of the menu.  This parameter is used if you want a 
+	   standard header on all of the menus. It provides for the users
+	   id, menu name and a 40 character company name or description.
+
+	   If this parameter is spaces, then the full  24 lines of the
+	   original menu screen are available for display use from the
+	   .mnu file.
+
+ 	   If a company name is included, the  first  2 lines  of each
+	   menu  will display a standard header with the company name
+	   included.  This effectively shortens the menu in the .mnu
+	   file to 22 lines, TEXMENU drops lines 23 & 24 if present.
+
+	   The standard menu header looks like the description below:
+	   ***************************************************************
+
+	    SMC                                          MENU: <menu name>
+			    [Company name centered]
+	   ***************************************************************
+
+
+	   Use  a Unix script or DCL procedure to invoke the TEXTMENU
+	   Utility with the correct command line paramenters.  Refer to
+	   examples in Appendix B on how to pass the needed parameters.
+	   The command line execution under Unix looks as follows:
+
+	      wrun TEXTMENU using jakmenu menulib voltest "IDSI company"
+
+	     or
+
+	      wrun TEXTMENU using jakmenu menulib voltest " "
+
+
+
+
+
+
+
+	3. INSTALLATION
+	   ------------
+
+
+	  This  section  describes how  to  setup  and configure  your
+	  system for the use of EZTOMNU, EZTOMNU and TEXTMENU.
+
+
+
+	  3.1 Distribution
+
+
+	   The  standard WISPEZMENU distribution should contain the 
+	   following files:
+
+														 
+	   (WISPEZMENU programs)
+
+	   eztomnu.wcb           Source file for EZXTOMNU Utility.
+		   
+	   ezonemnu.wcb          Source file for EZXONEMNU Utility.
+
+	   textmenu.wcb          Source file for TEXTMENU Utility.
+
+
+
+	   (Unix makefiles - Unix only kits)                                    
+
+	   ezfacu.umf           Make file for ACUCOBOL utilities
+
+	   ezfmf.umf            Make file for Micro Focus utilities.
+
+
+
+	   (VMS build files - VMS only kits)
+
+	   build_eztomnu.com     WISP and compile commands.
+		   
+	   build_ezonemnu.com    WISP and compile commands.
+
+	   build_textmenu.com    WISP and compile commands.
+
+	   link_eztomnu.com      Link command for EZTOMNU Utility.
+		   
+	   link_ezonemnu.com     Link command for EZONE Utility.
+
+	   link_textmenu.com     Link command for TEXTMENU Utility
+
+
+
+	  3.2 Overview
+
+
+	   Use the Unix Make files (ie. .umf) or VMS build files (ie. .com)
+	   to generate the COBOL object files for the EZTOMNU, EZONEMNU
+	   and TEXTMENU utilities.
+
+	   These executables or COBOL objects should then be placed 
+	   within the system object directory  or on the access PATH for 
+	   the COBOL configuration.
+
+
+
+
+
+
+	APPENDICES
+	==========
+
+
+	  APPENDIX A -  Troubleshooting
+
+
+
+		problem -  can not find any data files to convert.
+
+		solution - make sure the system  setup (VOLUME
+			   variables/logicals) is complete and correct.
+
+
+	   
+
+
+
+	  APPENDIX B -  Sample DCL and Unix script files
+
+
+	  Note: for VMS you must set up a foreign command for
+	        execution of the following script. 
+
+		example - $TEXTMENU = "$DISK:[LIB]TEXTMENU.EXE"
+
+
+	  (VAX/VMS procedure)
+	  *****************************************************************
+
+	  $!Test DCL to call TEXTMENU with the TMSAMPLE.MNU file.
+	  
+
+	  $!To be compatible  with COBOL the symbol length must be
+	  $!declared as indicated.
+	  $
+	  $!First specify the name of the .MNU file to use.
+	  $!Needs to be 8 char long
+	  $RFILE = "TMSAMPLE"
+	  $
+	  $!Specify the library location of the .MNU file to use.
+	  $!Needs to be 8 char long
+	  $RLIB  = "SRC     "
+	  $
+	  $!Specify the volume location of the .MNU file to use.
+	  $!Needs to be 6 char long
+	  $RVOL  = "TEST  "
+	  $
+	  $!Note if the COMPANY symbol is left as 40 spaces then the two
+	  $!line header for the menu will not be used, otherwise TEXTMENU 
+	  $!will use the indicated name in the two line header.
+	  $
+	  $!Needs to be 40 chars long.
+	  $COMPANY == "  International Digital Scientific, Inc." 
+	  $
+	  $
+	  $TEXTMENU RFILE RLIB RVOL COMPANY
+
+
+	  NOTE: if company name is spaces if must be 40 characters long.
+
+	 
+
+
+
+
+
+		 
+	  (UNIX script)
+	  *****************************************************************
+	  
+	  #!/bin/sh
+	  #Test script to call TEXTMENU with the tmsample.mnu file.
+
+	  #To be compatible with COBOL the shell variables must be
+	  #declared as indicated.
+
+	  #First specify the name of the .mnu file to use.
+	  #Needs to be 8 char long.
+	  RFILE="tmsample"
+
+	  #Specify the library location of the .mnu file to use.
+	  #Needs to be 8 char long.
+	  RLIB="SEAOBJ  "
+
+	  #Specify the volume location of the .mnu file to use.
+	  #Needs to be 6 char long.
+	  RVOL="VOL444"
+
+	  #Note if the COMPANY symbol is left as 40 spaces, then the two
+	  #line header for the menu will not be used, otherwise TEXTMENU 
+	  #will use the indicated name in the two line header.
+	  
+	  #Needs to be 40 chars long.
+	  COMPANY="  International Digital Scientific, Inc."
+
+
+
+	  wrun TEXTMENU using $RFILE $RLIB $RVOL "$COMPANY"
+
+
+
+	  NOTE: if company name is spaces if must be at least one
+		character long and enclosed in quotes.
+
+	  wrun TEXTMENU using $RFILE $RLIB $RVOL " "
+	  *****************************************************************
+
+
+
+	========================= END OF DOCUMENT ==========================
+

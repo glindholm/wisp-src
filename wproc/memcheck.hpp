@@ -49,9 +49,9 @@ unsigned long cm; // current memory
 //
 //	History:
 //	$Log: memcheck.hpp,v $
-//	Revision 1.8  1998-08-31 15:13:55-04  gsl
+//	Revision 1.8  1998/08/31 19:13:55  gsl
 //	drcs update
-//
+//	
 //
 
 //	

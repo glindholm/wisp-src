@@ -257,9 +257,9 @@ void spaceout(char *str, int4 len)
 /*
 **	History:
 **	$Log: vsedmod.c,v $
-**	Revision 1.12  1996-09-03 18:24:03-04  gsl
+**	Revision 1.12  1996/09/03 22:24:03  gsl
 **	drcs update
-**
+**	
 **
 **
 */

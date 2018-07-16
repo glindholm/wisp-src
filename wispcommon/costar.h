@@ -65,9 +65,9 @@ int w4w_hotspot_vmode(void);
 /*
 **	History:
 **	$Log: costar.h,v $
-**	Revision 1.21  2001-09-25 11:00:02-04  gsl
+**	Revision 1.21  2001/09/25 15:00:02  gsl
 **	Remove unneeded ifdefs
-**
+**	
 **	Revision 1.20  1999-05-11 12:48:49-04  gsl
 **	Add costar_title()
 **

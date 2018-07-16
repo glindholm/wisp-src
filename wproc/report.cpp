@@ -747,9 +747,9 @@ void report_status(const char *msg1, const char *msg2, const char *msg3) {
 //
 //	History:
 //	$Log: report.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:11-04  gsl
+//	Revision 1.6  1998/08/31 19:14:11  gsl
 //	drcs update
-//
+//	
 //
 
 //	

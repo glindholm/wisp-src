@@ -331,9 +331,9 @@ void machine::exec_using() {
 //
 //	History:
 //	$Log: e_run.cpp,v $
-//	Revision 1.11  2001-09-24 09:39:14-04  gsl
+//	Revision 1.11  2001/09/24 13:39:14  gsl
 //	Fix warnings
-//
+//	
 //	Revision 1.10  1998-08-31 15:13:43-04  gsl
 //	drcs update
 //

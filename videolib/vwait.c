@@ -86,10 +86,10 @@ void vwait(int seconds, int hundredths)
 /*
 **	History:
 **	$Log: vwait.c,v $
-**	Revision 1.13  2002-02-14 10:48:55-05  gsl
+**	Revision 1.13  2002/02/14 15:48:55  gsl
 **	Merged the SCO changes for 4.4.01
 **	SCO does not have usleep() so use old method to simulate
-**
+**	
 **	Revision 1.12  2001-10-03 14:59:12-04  gsl
 **	Solaris 2.5.1 doesn't define useconds_t so cast to unsigned
 **

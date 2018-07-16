@@ -69,10 +69,10 @@ void wfswait(char* stat, int4* timer)
 /*
 **	History:
 **	$Log: wfwait.c,v $
-**	Revision 1.11  2001-09-27 15:31:56-04  gsl
+**	Revision 1.11  2001/09/27 19:31:56  gsl
 **	Change to use hpause(10)
 **	for 1/10 second delay
-**
+**	
 **	Revision 1.10  1997-03-12 13:25:47-05  gsl
 **	changed to use WIN32 define
 **

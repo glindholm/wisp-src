@@ -1,0 +1,263 @@
+
+IDSI Print Queue Release Notes         PRINTQ.DOC $Revision:$
+
+1.0 INTRODUCTION.
+
+    This document describes the IDSI Print Queue.  
+
+1.1 OVERVIEW.
+    The IDSI Print Queue is based on the client/server model.
+    The program idaemon runs in the background and acts
+    as the server.  Programs such as ilp and ilpman act as
+    clients of the daemon.  The clients send requests to
+    the server to do various things, such as queueing a file,
+    or modifying an existing queue entry.  The daemon
+    should be run at system startup.  Once it is running,
+    the ilp and ilpman programs can be used.
+
+2.0 FILES INCLUDED IN DISTRIBUTION.
+
+    The following files are part of the IDSI Print Queue:
+
+    file	      description         location in distribution
+    ----	      -----------         ------------------------
+    idaemon	      program             wisp/bin
+    ilp		      program             wisp/bin
+    ilpman	      program             wisp/bin
+    ishut	      program             wisp/bin
+    libilp.a	      object archive      wisp/lib
+    iprintcap.sam     text file           wisp/config
+
+    These files are described below.
+
+2.1 IDAEMON.
+
+    The spooling daemon runs as a background process.  It
+    should be moved to /usr/lib.  It must be owned by root
+    (chown root idaemon), and it must have the setuid bit
+    set (chmod u+s idaemon).  (The commands should be run in
+    that order, as the program must be owned by root
+    before setting the setuid bit.)  To run it, use the
+    command "/usr/lib/idaemon" at the shell prompt or from
+    a startup file.  (Note: WISPed software will
+    automatically start up the daemon if someone attempts
+    to print a file from a COBOL program or access the
+    queue manager from the help screen.)
+ 
+2.1 ISHUT.
+
+    This program is used to shut down the background spooler.  It
+    must be run by the root user.  
+
+    Note regarding this release: 
+      - Information such as current printer settings is still
+        lost if spooler is shut down.  However, queue'd 
+	files are still in the queue if spooler is shut
+        down.  On subsequent daemon startup, all queue'd files
+        are placed on hold.
+
+    In future releases: 
+      - printer settings will be saved.  Printer configuration
+        will be done from the ilpman program, not in /etc/iprintcap.
+
+2.2 ILP.
+
+    This program is used to send print requests to the daemon.  The
+    daemon must be running to receive requests.  Running this command
+    with the -h flag will print a usage screen.  Briefly, here are 
+    the available options:
+
+        -d printer         job destination (printer name)
+        -r start:end       range of pages to print
+        -f form            name of form to use
+        -C class           printer class (a single letter)
+        -n copies          specify number of copies
+        -M mode[,mode...]  specify job mode:
+                           hold  - queue file but hold
+                           del   - delete after print
+                           re    - after file is printed, requeue
+                                   it in hold mode
+                           nb    - don't print a banner page
+
+    The last argument must be the name of the file to print.
+
+    Notes regarding this release:
+       - Multiple files per ILP command (ie, wildcards) are not 
+         supported.  
+
+       - The ILP command does not make a temporary copy of the 
+         file to be printed.  Thus, changes to a file after it 
+	 is spooled but before it is printed will be reflected 
+         in the printout.
+
+
+    In future releases: 
+       - Multiples files can be specified on the ILP command line 
+         will allow many files to be queued at once with the same
+         options
+
+       - ILP will have an option which specifies whether or not
+         a temporary copy should be made.
+
+2.3 ILPMAN.
+
+    This program is used to manage the queue.  It currently allows 
+    the following actions:
+
+    - modifying print jobs in the following ways:
+
+      hold/release, change class, change destination, change
+      form, change start or end page, change number of copies,
+      deletion (removal from queue and deletion of file),
+      removal  (removal from queue, file is saved),
+      stop and start an already printing job, displaying the 
+      file
+
+    - modifying printers in the following ways:
+
+      change classes, change mounted form, send alignment lines
+      clearing error conditions
+      
+    Notes regarding this release:
+       - Limited support is given for printer management.  As
+         described below, printers and their characteristics
+         are specified in the /etc/iprintcap file
+
+       - No support is given for management of Class and Form 
+         characteristics.  This information is currently stored
+         in /usr/spool/iprint/classes and /usr/spool/iprint/forms,
+         respectively.  This is described in detail below.
+
+       - Limited support of "Operator" type privilege checking.
+         Currently, only the root user is considered as
+         having operator privilege.  Root can modify other 
+         user's jobs.   Normal users can only modify their 
+         own jobs. Anyone can modify a printer (ie, change form). 
+
+       - The Delete function now deletes the file from the file
+         system.  Remove only removes it from the queue.
+
+
+    In future releases: 
+       - The iprintcap file will be not be used.  ILPMAN will
+         allow creation and deletion of printers, and full
+         control over their characteristics.  Printer configuration
+         information will be stored in spool area.
+
+       - ILPMAN will have screens for changing Form and Class
+         characteristics.  Form characteristics will include
+         stock type (paper type), lines per page, and lines/chars 
+         per inch.  The Form and Class configuration will be stored 
+         in the spool area.
+
+2.4 IPRINTCAP.SAM.
+
+    An example of the /etc/iprintcap file.
+
+3.0 CONFIGURATION.
+
+    The files used by the IDSI Print Queue for configuration 
+    are as follows:
+
+    file(s)			  purpose
+    ----			  -------
+    /etc/iprintcap		  description of printers
+    /usr/spool/iprint/forms/*	  description of forms
+    /usr/spool/iprint/classes/*	  description of classes
+
+    The formats of these configuration files are described below.
+
+3.1 CONFIG FILE /etc/iprintcap. 
+
+    Printer entries consist of a name followed by a colon.
+    Information for a printer is given by a 'name=value' line.
+    The following example illustrates this:
+
+       lp0:
+             lp=/dev/tty10
+             class=ABCDE
+             baud=2400
+             form=001
+
+    In this example, printer lp0 uses device /dev/tty10 at 2400 
+    baud.  Default classes are ABCDE (in that order), and the
+    starting form type is 001.
+
+3.2 CONFIG DIRECTORY /usr/spool/iprint.
+
+    This directory is used as a work directory by the Print Queue.
+    If it does not exist, it is created by idaemon when it starts.
+    The files used by idaemon in /usr/spool/iprint are as follows:
+
+    name                 purpose
+    ----                 -------
+    errs                 daemon error log
+    LOCKFILE             used by daemon and clients for 
+                         synchronizing some operations
+    daemon_pid           process id of the current idaemon
+    forms                directory containing form defs
+    classes              directory containing class defs
+
+3.3 CONFIG FILE /usr/spool/iprint/forms/*.
+
+    The files in /usr/spool/iprint/forms describe the various 
+    forms recognized by the spooler.
+
+    Each form has a 1-8 character name (3 digit Wang style
+    names are OK).  Information for a given form is stored in
+    the file that has the same name as the form.  The file
+    must have two lines. The first line contains the number
+    of lines per page.  The second line contains an init
+    string to send to the printer to put it in the desired
+    mode for that form.  The init string is sent literally as
+    it appears in the file, so you will probably need to use
+    the ^V from vi (^Q from GNUemacs) to insert characters
+    such as the Escape key.  If no file is found, the form
+    defaults to 66 lines per page and no init string.
+
+    Starting with release 1.5 of the print queue (included
+    in 3.0 release of wisp), an optional third line 
+    can contain filters for the output file.  A filter is
+    a program that processes the output file before it
+    is sent to the printer.  (Any number of filter programs
+    can be combined using the '|' character as in standard
+    Unix commands.)  This can be useful for printing page
+    headers and/or skipping page perforation.
+
+    The following is an example of a form called 
+    l8c18 (lines 8 chars 18):
+
+    file /usr/spool/iprint/forms/18c8l contains:
+
+    1st line> 88
+    2nd line> ^[[13w^[[2z
+    3rd line> pr -l$l -h '  file: $n   user: $u   '
+
+    The init string shown is for putting a DEC LQ324 printer into
+    18 cpi and 8 lpi mode.  You will need to consult your printer
+    manual for the proper sequence for a given mode.
+
+    The third line specifies that the pr program be used as a 
+    filter program.  In the filter command, lines per page,
+    filename, and username, will be substituted for the $l, $n, 
+    and $u, respectively.  The filter command receives the
+    printfile as standard input, and output from the filter 
+    command is sent directly to the printer.
+
+    Consult the standard Unix man page for information on the 
+    pr program.
+
+3.4 CONFIG FILE /usr/spool/iprint/classes/*.
+
+    The files in /usr/spool/iprint/classes describe the various 
+    classes recognized by the spooler.
+
+    Each class has a 1 character case sensitive alphabetic
+    name. Information for a given class is stored in the
+    file that has the same name as the class.  The file
+    must contain either an ASCII '1' or '0'.  If the value
+    is '1', printing of the header page is suppressed for
+    jobs of that class.  If the value is '0' (or if the
+    file for a given class does not exist) the header page
+    is printed.
+

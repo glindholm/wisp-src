@@ -74,9 +74,9 @@ unsigned sleep(unsigned secs)
 /*
 **	History:
 **	$Log: sleepdos.c,v $
-**	Revision 1.8  1997-07-08 16:20:17-04  gsl
+**	Revision 1.8  1997/07/08 20:20:17  gsl
 **	Add sleep() routine for WIN32
-**
+**	
 **	Revision 1.7  1996-10-11 18:15:56-04  gsl
 **	drcs update
 **

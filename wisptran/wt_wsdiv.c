@@ -926,9 +926,9 @@ char *next_filler(void)
 /*
 **	History:
 **	$Log: wt_wsdiv.c,v $
-**	Revision 1.17  1999-09-07 10:42:22-04  gsl
+**	Revision 1.17  1999/09/07 14:42:22  gsl
 **	fix compiler warning becuase of not "exit" after call to exit_with_err()
-**
+**	
 **	Revision 1.16  1998-08-28 10:40:07-04  gsl
 **	Fixed next_filler() to allow more then ZZ fields.
 **	Change to WISP-FILL-xx format

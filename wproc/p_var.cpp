@@ -158,9 +158,9 @@ int compiler::parse_variable(symbol *a_symbol, range &a_range) {
 //
 //	History:
 //	$Log: p_var.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:05-04  gsl
+//	Revision 1.6  1998/08/31 19:14:05  gsl
 //	drcs update
-//
+//	
 //
 
 //	

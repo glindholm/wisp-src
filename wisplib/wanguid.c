@@ -193,9 +193,9 @@ const char *longuid(void)							/* This routine will return the long userid	*/
 /*
 **	History:
 **	$Log: wanguid.c,v $
-**	Revision 1.13  2001-11-27 16:58:47-05  gsl
+**	Revision 1.13  2001/11/27 21:58:47  gsl
 **	Change longuid() to use geteuid()
-**
+**	
 **	Revision 1.12  1998-03-31 13:48:00-05  gsl
 **	Move NISEEAST patch from EXTRACT ID to here
 **

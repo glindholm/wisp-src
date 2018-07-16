@@ -216,9 +216,9 @@ class machine : public object {
 //
 //	History:
 //	$Log: machine.hpp,v $
-//	Revision 1.7  1998-09-08 14:05:32-04  gsl
+//	Revision 1.7  1998/09/08 18:05:32  gsl
 //	Rename the stack_state return offset
-//
+//	
 //	Revision 1.6  1998-08-31 15:13:55-04  gsl
 //	drcs update
 //

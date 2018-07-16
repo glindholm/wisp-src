@@ -334,9 +334,9 @@ void save_declare_var(int *num_asn,int *num_var,int *num_val, int *num_cmds)		/*
 /*
 **	History:
 **	$Log: ptdecl.c,v $
-**	Revision 1.8  1999-09-13 15:50:20-04  gsl
+**	Revision 1.8  1999/09/13 19:50:20  gsl
 **	fix "==" vs. "="
-**
+**	
 **	Revision 1.7  1997-04-21 11:05:19-04  scass
 **	Corrected copyright.
 **

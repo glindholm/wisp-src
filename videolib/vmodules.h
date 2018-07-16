@@ -82,9 +82,9 @@ extern void v_modeflag();
 /*
 **	History:
 **	$Log: vmodules.h,v $
-**	Revision 1.16  1997-07-09 11:05:33-04  gsl
+**	Revision 1.16  1997/07/09 15:05:33  gsl
 **	Remove old routines
-**
+**	
 **	Revision 1.15  1997-01-08 16:38:49-05  gsl
 **	Remove strpos() as all have been replaced with strstr()
 **

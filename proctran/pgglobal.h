@@ -57,9 +57,9 @@ EXT int lcnt;
 /*
 **	History:
 **	$Log: pgglobal.h,v $
-**	Revision 1.9  1997-04-21 10:55:44-04  scass
+**	Revision 1.9  1997/04/21 14:55:44  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.8  1996-09-12 19:22:33-04  gsl
 **	Add drcs headers
 **

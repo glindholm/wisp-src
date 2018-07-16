@@ -143,9 +143,9 @@ static int state(int action)								/* Perform specified action.		*/
 /*
 **	History:
 **	$Log: vrefresh.c,v $
-**	Revision 1.16  1998-10-13 14:53:18-04  gsl
+**	Revision 1.16  1998/10/13 18:53:18  gsl
 **	Change to use VMAP_CNG_OLDDATA
-**
+**	
 **	Revision 1.15  1997-07-09 12:08:25-04  gsl
 **	Change to use new video.h interfaces
 **

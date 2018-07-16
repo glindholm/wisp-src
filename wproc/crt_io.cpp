@@ -1129,9 +1129,9 @@ Boolean w4w_handler::w4w()
 //
 //	History:
 //	$Log: crt_io.cpp,v $
-//	Revision 1.20  2001-08-22 16:17:00-04  gsl
+//	Revision 1.20  2001/08/22 20:17:00  gsl
 //	fix missing type
-//
+//	
 //	Revision 1.19  1999-02-17 15:38:51-05  gsl
 //	Removed the vrawtimeout logic in the key_pressed() because the waittime
 //	option was never used in the wisp world.

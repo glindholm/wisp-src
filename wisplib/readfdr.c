@@ -88,7 +88,6 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 	char 	filespec[132];
 	int4 	wfname_mode;
 	int	rc;
-	struct stat sbuf;
 	struct tm *tm_ptr;
 	char 	tmp[20];
 	char 	tmp_bs[19];
@@ -137,7 +136,13 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 
 		if (0==memcmp(l_field,"BS",2))				/* Byte size PIC 9(18) */
 		{
-			rc=stat(filespec,&sbuf);
+#ifdef INT8_DEFINED
+			INT8 stat_size;
+			rc = WL_stat_size_int8(filespec, &stat_size);
+#else
+			long stat_size;
+			rc = WL_stat_size_long(filespec, &stat_size);
+#endif
 
 			if ( rc != 0 )
 			{
@@ -145,9 +150,19 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 			}
 			else
 			{
-				l_long = sbuf.st_size;
 				memset(tmp_bs,0,sizeof(tmp_bs));
-				sprintf(tmp_bs,"%018d",l_long);
+#if defined(WIN32)
+				sprintf(tmp_bs,"%018I64d",stat_size);
+#else
+				if (sizeof(stat_size) == sizeof(long))
+				{
+					sprintf(tmp_bs,"%018ld",stat_size);
+				}
+				else
+				{
+					sprintf(tmp_bs,"%018lld",stat_size);
+				}
+#endif
 				strncpy(temp_ptr,tmp_bs,18);
 				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%18.18s]", l_field, temp_ptr);
 			}
@@ -155,7 +170,8 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		else if (0==memcmp(l_field,"CD",2) ||			/* Creation date.	    YYMMDD	*/
 			 0==memcmp(l_field,"CX",2)   )			/* Creation date extended.  YYYYMMDD	*/
 		{
-			rc=stat(filespec,&sbuf);
+			time_t create_time;
+			rc=WL_stat_ctime(filespec,&create_time);
 
 			if ( rc != 0 )
 			{
@@ -164,7 +180,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 			else
 			{
 				
-				tm_ptr=localtime(&(sbuf.st_ctime));
+				tm_ptr=localtime(&create_time);
 
 				if ('D' == l_field[1] && !bFromReadfdr4)
 				{
@@ -226,7 +242,8 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		else if (0==memcmp(l_field,"MD",2) ||			/* Mod date YYMMDD 			*/
 			 0==memcmp(l_field,"MX",2))			/* Mod date YYYYMMDD 			*/
 		{
-			rc=stat(filespec,&sbuf);
+			time_t mod_time;
+			rc=WL_stat_mtime(filespec,&mod_time);
 
 			if ( rc != 0 )
 			{
@@ -234,7 +251,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 			}
 			else
 			{
-				tm_ptr=localtime(&(sbuf.st_mtime));
+				tm_ptr=localtime(&mod_time);
 
 				if ('D' == l_field[1] && !bFromReadfdr4)
 				{
@@ -443,15 +460,22 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 	{
 		if (1==style)
 		{
-			struct stat sbuf;
+			int rc;
+#ifdef INT8_DEFINED
+			INT8 stat_size;
+			rc = WL_stat_size_int8(path, &stat_size);
+#else
+			long stat_size;
+			rc = WL_stat_size_long(path, &stat_size);
+#endif
 
-			if ( 0 != stat(path,&sbuf) )
+			if ( 0 != rc)
 			{
 				return READFDR_RC_32_STAT_ERROR;
 			}
 			else
 			{
-				*size = (sbuf.st_size >= 1) ? 1 : 0;	/* return 1 or 0					*/
+				*size = (stat_size >= 1) ? 1 : 0;	/* return 1 or 0					*/
 				return READFDR_RC_0_SUCCESS;
 			}
 			
@@ -510,9 +534,12 @@ static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_
 /*
 **	History:
 **	$Log: readfdr.c,v $
-**	Revision 1.22  2001-11-08 11:53:20-05  gsl
+**	Revision 1.22.2.1  2002/10/09 21:03:02  gsl
+**	Huge file support
+**	
+**	Revision 1.22  2001/11/08 16:53:20  gsl
 **	fix warnings
-**
+**	
 **	Revision 1.21  2001-10-30 15:26:16-05  gsl
 **	change acuvision() to visioninfo()
 **

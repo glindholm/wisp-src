@@ -28,9 +28,9 @@ char *wisp_version(void)
 /*
 **	History:
 **	$Log: wispvers.c,v $
-**	Revision 1.1  1995-06-14 11:05:53-04  gsl
+**	Revision 1.1  1995/06/14 15:05:53  gsl
 **	Initial revision
-**
+**	
 **
 **
 */

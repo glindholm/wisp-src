@@ -53,9 +53,9 @@ struct header2 shead2;
 /*
 **	History:
 **	$Log: vsload.h,v $
-**	Revision 1.7  1996-07-23 14:13:03-04  gsl
+**	Revision 1.7  1996/07/23 18:13:03  gsl
 **	drcs update
-**
+**	
 **
 **
 */

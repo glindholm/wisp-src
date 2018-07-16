@@ -39,9 +39,9 @@ vpaste(max) int max;
 /*
 **	History:
 **	$Log: vpaste.c,v $
-**	Revision 1.9  1996-10-11 18:16:15-04  gsl
+**	Revision 1.9  1996/10/11 22:16:15  gsl
 **	drcs update
-**
+**	
 **
 **
 */

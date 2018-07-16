@@ -2458,11 +2458,11 @@ static void writelog(char *fmt,...)
 /*
 **	History:
 **	$Log: vrawntcn.c,v $
-**	Revision 1.64  2001-11-19 15:21:09-05  gsl
+**	Revision 1.64  2001/11/19 20:21:09  gsl
 **	FIx readStreamConsole() for telnet to use ReadConsoleInput().
 **	Previously used ReadFile() which was filtering out Escape chars on Win 2000
 **	and filtering out Newline chars 0x0a on all systems.
-**
+**	
 **	Revision 1.63  2001-11-12 15:13:03-05  gsl
 **	Change default title
 **

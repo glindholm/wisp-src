@@ -242,9 +242,9 @@ symbol *compiler::declare_label(const char *a_name, Boolean is_subroutine) {
 //
 //	History:
 //	$Log: p_decl.cpp,v $
-//	Revision 1.7  1998-08-31 15:14:02-04  gsl
+//	Revision 1.7  1998/08/31 19:14:02  gsl
 //	drcs update
-//
+//	
 //
 
 //	

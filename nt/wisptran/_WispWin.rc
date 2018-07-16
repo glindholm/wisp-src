@@ -1,0 +1,312 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+dlgSelectSingleDir DIALOGEX 0, 0, 239, 169
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Directory"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,67,148,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,148,50,14
+    CONTROL         "Tree1",TV_AvailDirs,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
+                    7,18,225,115,WS_EX_CLIENTEDGE
+    LTEXT           "Available Directories :",IDC_STATIC,7,7,71,8
+    LTEXT           "",ctlRetPath,7,136,228,8
+END
+
+DlgSelectDir DIALOGEX 20, 20, 355, 162
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Select Directories"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,126,141,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,179,141,50,14
+    PUSHBUTTON      "Add",ctlAddBtn,147,37,57,15,BS_CENTER | BS_VCENTER
+    PUSHBUTTON      "Remove",ctlRemoveBtn,147,54,57,15,BS_CENTER | 
+                    BS_VCENTER
+    PUSHBUTTON      "Move Up",ctlMUpBtn,147,80,57,15,BS_CENTER | BS_VCENTER
+    PUSHBUTTON      "Move Down",ctlMDownBtn,147,97,57,15,BS_CENTER | 
+                    BS_VCENTER
+    CONTROL         "Tree1",TV_AvailDirs,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
+                    3,18,140,115,WS_EX_CLIENTEDGE
+    LISTBOX         LB_SelectedDirs,208,18,140,115,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Available Directories :",IDC_STATIC,7,7,71,8
+    LTEXT           "Selected Directories :",StaticText1,188,7,68,8
+    LTEXT           "",ctlRetPath,7,133,113,8,NOT WS_VISIBLE
+END
+
+WISPSheet DIALOGEX 4, 13, 391, 155
+STYLE WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        ctl_TargetFile,83,2,88,127,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Select Files to Convert",ctl_TargetBrs,2,2,78,12
+    CONTROL         "Use CONVERSION Method (/1)",ctl_1,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,18,118,8
+    CONTROL         "Generate COPY Files (/C)",ctl_C,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,28,100,8
+    CONTROL         "Generate a Cross Reference (/x)",ctl_x,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,38,118,8
+    CONTROL         "Generate data conversion program (/q)",ctl_q,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,48,136,8
+    CONTROL         "Do not add DMS style locking (/S)",ctl_S,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,58,120,8
+    CONTROL         "Add ""IS INITIAL"" clause (/D)",ctl_D,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,68,108,8
+    CONTROL         "Chg MOVE SPACES to INITIALIZE (/m)",ctl_m,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,78,139,8
+    CONTROL         "Convert FD FILLERS to fields (/f)",ctl_f,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,88,126,8
+    CONTROL         "Convert WD FILLERS to fields (/w)",ctl__w,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,98,124,8
+    CONTROL         "Detail Listing (/L)",ctl_L,"Button",BS_AUTOCHECKBOX | 
+                    WS_DISABLED | WS_TABSTOP,2,108,81,8
+    CONTROL         "No keyword processing (/R)",ctl_R,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,118,104,8
+    CONTROL         "No warning messages (/e)",ctl_e,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,148,18,106,8
+    CONTROL         "Log statistics (/l)",ctl__l,"Button",BS_AUTOCHECKBOX | 
+                    WS_DISABLED | WS_TABSTOP,148,28,68,8
+    CONTROL         "Create a .TXT file (/T)",ctl_T,"Button",BS_AUTOCHECKBOX | 
+                    WS_DISABLED | WS_TABSTOP,273,18,84,8
+    CONTROL         "Check for database files (/4)",ctl_4,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,273,28,109,8
+    EDITTEXT        ctl_I,230,38,140,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_IBrs,373,38,13,11,WS_DISABLED
+    EDITTEXT        ctl_K,230,52,140,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_KBrs,373,52,13,11,WS_DISABLED
+    EDITTEXT        ctl_P,230,66,140,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_PBrs,373,66,13,11,WS_DISABLED
+    EDITTEXT        ctl_O,230,80,140,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_OBrs,373,80,13,11,WS_DISABLED
+    EDITTEXT        ctl_W,230,94,140,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_WBrs,373,94,13,11,WS_DISABLED
+    COMBOBOX        ctl_V,197,111,56,49,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "From Directory :",ctl_FromDir,178,3,49,8,WS_DISABLED
+    LTEXT           "Input copybook path (/I):",ctll_I,148,39,80,8,
+                    WS_DISABLED
+    LTEXT           "Use KEY_FILE (/K):",ctll_K,148,53,64,8,WS_DISABLED
+    LTEXT           "Prefix path for libs (/P):",ctll_P,148,67,72,8,
+                    WS_DISABLED
+    LTEXT           "Use OPTION file (/O):",ctll_O,148,81,70,8,WS_DISABLED
+    LTEXT           "Use WORD file (/W):",ctll_W,148,95,68,8,WS_DISABLED
+    LTEXT           "Language (/V):",ctll_V,148,113,49,8,WS_DISABLED
+    EDITTEXT        ctl_DirPath,231,3,155,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_DISABLED | NOT WS_BORDER | NOT WS_TABSTOP,
+                    WS_EX_STATICEDGE
+    CONTROL         "Manual Locking (/M)",ctl_M2,"Button",BS_AUTOCHECKBOX | 
+                    WS_DISABLED | WS_TABSTOP,2,128,103,8
+    CONTROL         "Cross Reference table (/X)",ctl_X2,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,2,138,103,8
+END
+
+COBOLSheet DIALOGEX 4, 13, 391, 131
+STYLE WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "COBOL Language",ctl_CLang,2,2,133,24,WS_TABSTOP,
+                    WS_EX_TRANSPARENT
+    COMBOBOX        ctl_TargetFile,60,31,71,92,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Select Files",ctl_TargetBrs,134,31,50,12
+    EDITTEXT        ctl_PathToComp,34,45,177,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_CompBrs,214,45,13,11,WS_DISABLED
+    EDITTEXT        ctl_CFlags,25,58,186,12,ES_AUTOHSCROLL | WS_DISABLED
+    EDITTEXT        ctl_OutputDir,59,71,152,12,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "...",ctl_OutputDirBrs,214,71,13,11,WS_DISABLED
+    EDITTEXT        ctl_ObjExt,62,84,149,12,ES_AUTOHSCROLL | WS_DISABLED
+    CONTROL         "ACUCOBOL",ctl_AcuBtn,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,7,13,55,10
+    CONTROL         "MicroFocus",ctl_MFBtn,"Button",BS_AUTORADIOBUTTON,78,13,
+                    53,10
+    LTEXT           "File(s) to compile :",ctll_TargetFile,2,33,57,8,
+                    WS_DISABLED
+    LTEXT           "Compiler :",ctll_PathToComp,2,47,31,8,WS_DISABLED
+    LTEXT           "Flags :",ctll_CFlags,2,60,22,8,WS_DISABLED
+    LTEXT           "Output Directory :",ctll_OutputDir,2,73,56,8,
+                    WS_DISABLED
+    LTEXT           "Object Extension :",ctll_ObjExt,2,86,58,8,WS_DISABLED
+    LTEXT           "From Directory :",ctll_FromDir,187,33,50,8,WS_DISABLED
+    EDITTEXT        ctl_DirPath,239,33,147,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_DISABLED | NOT WS_BORDER | NOT WS_TABSTOP,
+                    WS_EX_STATICEDGE
+END
+
+WISPOutput DIALOGEX 0, 155, 421, 104
+STYLE WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Command Line :",IDC_STATIC,1,2,52,8
+    EDITTEXT        ctlWCmdLine,53,0,367,12,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",ctlWOutput,"RICHEDIT",ES_MULTILINE | ES_LOWERCASE | 
+                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,3,14,411,89,
+                    WS_EX_CLIENTEDGE
+END
+
+COBOLOutput DIALOGEX 0, 155, 421, 104
+STYLE WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    LTEXT           "Command Line :",IDC_STATIC,1,2,52,8
+    EDITTEXT        ctlCCmdLine,53,0,367,12,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",ctlCOutput,"RICHEDIT",ES_MULTILINE | ES_LOWERCASE | 
+                    ES_AUTOHSCROLL | ES_READONLY | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,2,14,419,89,
+                    WS_EX_CLIENTEDGE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MNU_Full MENU DISCARDABLE 
+BEGIN
+    POPUP "File"
+    BEGIN
+        MENUITEM "Translate",                   mnu_Translate, GRAYED
+        MENUITEM "Compile",                     mnu_Compile, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Clear Output",                mnu_ClearOutput, GRAYED
+        MENUITEM "Print Output...",             mnu_Print, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "Settings"
+        BEGIN
+            POPUP "Save"
+            BEGIN
+                MENUITEM "Directory",                   mnu_Set_Save_Dir
+                , GRAYED
+                MENUITEM "File",                        mnu_Set_Save_File
+                , GRAYED
+            END
+            POPUP "Retrieve"
+            BEGIN
+                MENUITEM "Directory",                   mnu_Set_Ret_Dir
+                , GRAYED
+                MENUITEM "File",                        mnu_Set_Ret_File
+                , GRAYED
+            END
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Exit",                        mnu_Exit
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    DlgSelectDir, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 348
+        TOPMARGIN, 7
+    END
+
+    WISPSheet, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 386
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 153
+    END
+
+    COBOLSheet, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 389
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 129
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+MainIcon                ICON    DISCARDABLE     "wisp.ico"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

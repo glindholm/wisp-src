@@ -560,9 +560,9 @@ void screen_print(void)
 /*
 **	History:
 **	$Log: screen.c,v $
-**	Revision 1.21  1998-12-09 09:39:57-05  gsl
+**	Revision 1.21  1998/12/09 14:39:57  gsl
 **	Use FOPEN mode defines
-**
+**	
 **	Revision 1.20  1998-01-09 16:01:58-05  gsl
 **	Fix screen print
 **

@@ -41,8 +41,11 @@ clean:
 
 install: $(STDLIB)/$(THE_LIB)
 
-$(STDLIB)/$(THE_LIB): $(THE_LIB)
+$(STDLIB)/$(THE_LIB): $(THE_LIB) $(STDLIB)
 	cp $(THE_LIB) $@
+
+$(STDLIB):
+	mkdir -p $@
 
 $(THE_LIB):	$(THE_LIB)(gcal2.o) \
 	$(THE_LIB)(gcalc.o) \

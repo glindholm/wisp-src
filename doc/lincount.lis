@@ -1,0 +1,55 @@
+
+
+
+
+
+
+				Using LINCOUNT on Wang VS
+
+	Overview
+	--------
+
+	LINCOUNT is a simple utility used to count the number of COBOL
+	lines in a Wang VS source library.  LINCOUNT creates a report
+	on SPOOLVOL in the users #???PRT library, listing totals by
+	library:
+
+		Total COBOL lines	 Total non-COBOL lines
+					 (i.e. blanks, comments, etc.)
+
+		Total Lines of code
+
+		Grand total for all libraries.
+
+	Using LINCOUNT
+	--------------
+
+	1.  For MS DOS formatted diskettes:  To upload LINCOUNT to the
+	    Wang VS run VSPC928 and transfer the file in VSDMS mode.  
+
+	    - or -
+
+	    Run LINCOUNT from the diskette or load LINCOUNT onto the
+	    Wang VS using BACKUP/RESTORE.
+
+
+	2.  The display screen will ask for the VOLUME and LIBRARY of
+	    the COBOL source.
+
+	3.  When the process for the current library is complete, you
+	    can indicate the next library.  The results will be appended
+	    to the generated report file.  Press PF16 to exit the utility.
+
+
+	NOTE:
+	-----
+
+	Please be sure to include any COPY libraries that are associated
+	with the programs to be migrated. 
+
+
+	For More Information:
+	---------------------
+
+	If you need assistance, please feel free to contact our technical
+	support group at:  (800) 733-8832.

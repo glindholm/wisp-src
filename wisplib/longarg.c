@@ -84,9 +84,9 @@ int	longargtest(char *ptr, int sigbytes)
 /*
 **	History:
 **	$Log: longarg.c,v $
-**	Revision 1.9  1996-08-19 18:32:28-04  gsl
+**	Revision 1.9  1996/08/19 22:32:28  gsl
 **	drcs update
-**
+**	
 **
 **
 */

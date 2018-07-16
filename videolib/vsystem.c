@@ -39,9 +39,9 @@ int imemset(dst,src,count)								/* Dest gets count bytes of src.	*/
 /*
 **	History:
 **	$Log: vsystem.c,v $
-**	Revision 1.9  1996-10-11 18:16:21-04  gsl
+**	Revision 1.9  1996/10/11 22:16:21  gsl
 **	drcs update
-**
+**	
 **
 **
 */

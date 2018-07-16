@@ -576,9 +576,9 @@ void vse_sho_col(void)
 /*
 **	History:
 **	$Log: vsedscr.c,v $
-**	Revision 1.10  1996-09-03 18:24:04-04  gsl
+**	Revision 1.10  1996/09/03 22:24:04  gsl
 **	drcs update
-**
+**	
 **
 **
 */

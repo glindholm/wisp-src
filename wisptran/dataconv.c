@@ -796,9 +796,9 @@ static int seq_name ( char *outname, char *inname )
 /*
 **	History:
 **	$Log: dataconv.c,v $
-**	Revision 1.9  1999-09-07 10:51:03-04  gsl
+**	Revision 1.9  1999/09/07 14:51:03  gsl
 **	Change dataconv to use SEQxxxx as the PRNAME for the sequential files.
-**
+**	
 **	Revision 1.8  1998-07-07 09:42:35-04  gsl
 **	FIx SEQENTIAL -> SEQUENTIAL
 **

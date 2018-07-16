@@ -324,9 +324,9 @@ EXTERN_DEF int4 vse_file_changed INIT_ZERO;
 /*
 **	History:
 **	$Log: vseglb.h,v $
-**	Revision 1.11  1996-09-03 18:24:05-04  gsl
+**	Revision 1.11  1996/09/03 22:24:05  gsl
 **	drcs update
-**
+**	
 **
 **
 */

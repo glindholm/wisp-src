@@ -555,9 +555,9 @@ int is_symbol(const char *name)
 /*
 **	History:
 **	$Log: keywords.c,v $
-**	Revision 1.13  1999-09-07 10:35:44-04  gsl
+**	Revision 1.13  1999/09/07 14:35:44  gsl
 **	Fix return type of load_change_words()
-**
+**	
 **	Revision 1.12  1998-03-27 13:37:36-05  gsl
 **	fix warning
 **

@@ -37,11 +37,11 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "videolibm___Win32_Release"
-# PROP Intermediate_Dir "videolibm___Win32_Release"
+# PROP Output_Dir ".\ReleaseM"
+# PROP Intermediate_Dir ".\ReleaseM"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "MSFS" /D "WINNT" /D "DIRECTVID" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "MSFS" /D "WINNT" /D "DIRECTVID" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -60,11 +60,11 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "Debug"
-# PROP Intermediate_Dir "Debug"
+# PROP Output_Dir ".\DebugM"
+# PROP Intermediate_Dir ".\DebugM"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "MSFS" /D "WINNT" /D "DIRECTVID" /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Gi /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "MSFS" /D "WINNT" /D "DIRECTVID" /FR /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -117,10 +117,6 @@ SOURCE=.\sleepdos.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\strpos.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\valert.c
 # End Source File
 # Begin Source File
@@ -138,10 +134,6 @@ SOURCE=.\vcharset.c
 # Begin Source File
 
 SOURCE=.\vchstubs.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vcommand.c
 # End Source File
 # Begin Source File
 
@@ -314,10 +306,6 @@ SOURCE=.\vsystem.c
 # Begin Source File
 
 SOURCE=.\vtext.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vtrace.c
 # End Source File
 # Begin Source File
 

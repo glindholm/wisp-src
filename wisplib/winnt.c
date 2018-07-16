@@ -565,9 +565,9 @@ const char* win32_version(void)
 /*
 **	History:
 **	$Log: winnt.c,v $
-**	Revision 1.17  2001-11-27 16:46:07-05  gsl
+**	Revision 1.17  2001/11/27 21:46:07  gsl
 **	Replace cuserid() with longuid()
-**
+**	
 **	Revision 1.16  2001-11-27 16:29:16-05  gsl
 **	Add wispusername()
 **

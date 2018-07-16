@@ -35,9 +35,9 @@ int vgoto(int nl, int nc, int ol, int oc, int op);					/* Got to (nl,nc) from (o
 /*
 **	History:
 **	$Log: vmove.h,v $
-**	Revision 1.2  1997-07-09 11:06:29-04  gsl
+**	Revision 1.2  1997/07/09 15:06:29  gsl
 **	Remove static routines
-**
+**	
 **	Revision 1.1  1996-03-28 17:23:41-05  gsl
 **	Initial revision
 **

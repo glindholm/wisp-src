@@ -25,6 +25,11 @@ then
 fi
 
 echo
+echo Available WISP shipping kits:
+echo
+ls -d $WISP/src/wisp_*.ship
+
+echo
 echo "Enter the WISP version number (e.g. 4400) ?"
 read ANS
 if [ "$ANS" = "" ]
@@ -106,46 +111,60 @@ cd ${WISPDIR}
 uncompress -c ${SHIPEDETARZ} | tar -xvpf - 
 ln -s ${EDE_VER} ede
 
-#cp ede/good     bin
-
 echo
 echo 'Adding CRID for Acucobol'
-CRIDSHIP=$WISP/src/kcsi/crid/crid_acu_*.ship
+CRIDSHIP=$WISP/src/kcsi/crid_acu_*.ship
 if [ -d $CRIDSHIP ]
 then
 	cd ${WISPDIR}
 	uncompress -c $CRIDSHIP/crid_acu_*.tar.Z|tar -xvpf -
 	ln -s crid_acu_* cridacu
+else
+	echo
+	echo '**** CRID ACU NOT INSTALLED ****'
+	echo
 fi
 
 echo
 echo 'Adding CRID for Micro Focus'
-CRIDSHIP=$WISP/src/kcsi/crid/crid_mf_*.ship
+CRIDSHIP=$WISP/src/kcsi/crid_mf_*.ship
 if [ -d $CRIDSHIP ]
 then
 	cd ${WISPDIR}
 	uncompress -c $CRIDSHIP/crid_mf_*.tar.Z|tar -xvpf -
 	ln -s crid_mf_* cridmfx
+else
+	echo
+	echo '**** CRID MF NOT INSTALLED ****'
+	echo
 fi
 
 echo
 echo 'Adding CREATE for Acucobol'
-CREATESHIP=$WISP/src/kcsi/create/create_acu_*.ship
+CREATESHIP=$WISP/src/kcsi/create_acu_*.ship
 if [ -d $CREATESHIP ]
 then
 	cd ${WISPDIR}
 	uncompress -c $CREATESHIP/create_acu_*.tar.Z|tar -xvpf -
 	ln -s create_acu_* createacu
+else
+	echo
+	echo '**** CREATE ACU NOT INSTALLED ****'
+	echo
 fi
 
 echo
 echo 'Adding CREATE for Micro Focus'
-CREATESHIP=$WISP/src/kcsi/create/create_mf_*.ship
+CREATESHIP=$WISP/src/kcsi/create_mf_*.ship
 if [ -d $CREATESHIP ]
 then
 	cd ${WISPDIR}
 	uncompress -c $CREATESHIP/create_mf_*.tar.Z|tar -xvpf -
 	ln -s create_mf_* createmfx
+else
+	echo
+	echo '**** CREATE MF NOT INSTALLED ****'
+	echo
 fi
 
 
@@ -161,10 +180,17 @@ make ACUDIR=${ACUDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wruncbl.umf ed
 echo
 echo 'Building Micro Focus runtime systems'
 echo 
+if [ -d $COBDIR ]
+then
+	cd ${WISPDIR}/mf
+	make COBDIR=${COBDIR} WISPDIR=${WISPDIR} -f wrunmf.umf
+	make COBDIR=${COBDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wrunmf.umf ede
+else
+	echo
+	echo '**** MF COBOL NOT AVAILBALE ****'
+	echo
+fi
 
-cd ${WISPDIR}/mf
-make COBDIR=${COBDIR} WISPDIR=${WISPDIR} -f wrunmf.umf
-make COBDIR=${COBDIR} WISPDIR=${WISPDIR} EDEDIR=${WISPDIR}/ede -f wrunmf.umf ede
 
 if [ -f ${WISPDIR}/cridacu/wruncbl.umf ]
 then
@@ -181,5 +207,5 @@ else
 fi
 
 echo
-echo '*** DONE ***'
+echo '*** INSTALL QA DONE ***'
 

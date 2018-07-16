@@ -1,0 +1,21 @@
+*
+*	t1	Test parameter passing across link levels and between
+*		procedures and cobol.
+*
+*	Usage: 	wproc t1x1
+*
+procedure t1x1.wps
+	declare &x1L1 string(8) initial "x1L1-1"
+	declare &x1G1 global string(8) initial "x1G1-1"
+
+	prompt "Begining of t1x1.wps"
+
+	run t1x2 using "arg1", &x1L1
+
+	if &x1L1 NE "x1L1-4" then 
+		prompt "ERR &x1L1 = ", &x1L1
+
+	if &x1G1 NE "x1G1-4" then
+		prompt "ERR global not correct &x1G1 = ", &x1G1
+
+	prompt "End of t1x1.wps"

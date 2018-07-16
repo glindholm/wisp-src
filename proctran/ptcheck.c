@@ -267,9 +267,9 @@ int chk_num1(char *instr)								/* Return FALSE if instr contains 	*/
 /*
 **	History:
 **	$Log: ptcheck.c,v $
-**	Revision 1.9  1997-04-21 11:02:46-04  scass
+**	Revision 1.9  1997/04/21 15:02:46  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.8  1996-09-12 19:14:27-04  gsl
 **	Remove unused data items
 **

@@ -179,10 +179,10 @@ va_dcl
 /*
 **	History:
 **	$Log: setfile.c,v $
-**	Revision 1.13  1998-10-22 14:11:57-04  gsl
+**	Revision 1.13  1998/10/22 18:11:57  gsl
 **	change to use g_print_file_list
 **	fix werrlog processing
-**
+**	
 **	Revision 1.12  1998-08-03 17:11:39-04  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
 **

@@ -100,9 +100,9 @@ void state_object::restore(char *&a_string) {
 //
 //	History:
 //	$Log: stateobj.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:17-04  gsl
+//	Revision 1.6  1998/08/31 19:14:17  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -313,9 +313,9 @@ void compiler::using_stmt() {
 //
 //	History:
 //	$Log: p_run.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:03-04  gsl
+//	Revision 1.6  1998/08/31 19:14:03  gsl
 //	drcs update
-//
+//	
 //
 
 //	

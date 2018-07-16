@@ -103,9 +103,9 @@ int vcap_init_terminal(void)
 /*
 **	History:
 **	$Log: vcontrol.c,v $
-**	Revision 1.13  1997-07-12 17:32:31-04  gsl
+**	Revision 1.13  1997/07/12 21:32:31  gsl
 **	Add missing includes
-**
+**	
 **	Revision 1.12  1997-07-08 16:52:07-04  gsl
 **	Add vcap_reset_terminal() and vcap_init_terminal()
 **	Fix for vrawdirectio() and COSTAR

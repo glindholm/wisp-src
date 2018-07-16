@@ -3539,9 +3539,9 @@ char* addsuffix(const char* fld, const char* suff)
 /*
 **	History:
 **	$Log: wt_scrn.c,v $
-**	Revision 1.28  1999-09-07 10:41:53-04  gsl
+**	Revision 1.28  1999/09/07 14:41:53  gsl
 **	Fix prototypes and return codes
-**
+**	
 **	Revision 1.27  1998-04-13 10:53:04-04  gsl
 **	Test for invalid row and column values
 **

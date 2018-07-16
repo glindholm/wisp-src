@@ -677,9 +677,9 @@ static int vmssort_err(int vms_status, char *routine, int4 *wangcode, int4 *errc
 /*
 **	History:
 **	$Log: vmssort.c,v $
-**	Revision 1.5  1996-08-19 18:33:06-04  gsl
+**	Revision 1.5  1996/08/19 22:33:06  gsl
 **	drcs update
-**
+**	
 **
 **
 */

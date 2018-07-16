@@ -224,7 +224,7 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 	if (wcc_byte || row_node || column_node)
 	{
 		tput_line_at	(col, "MOVE 4 TO WISP-LONGWORD");
-		tput_line_at	(col, "CALL \"wmemcpy\" USING %s,",crt_record[crt_num]);
+		tput_line_at	(col, "CALL \"WMEMCPY\" USING %s,",crt_record[crt_num]);
 		tput_clause	(col+4, "WISP-CRT-O-A, WISP-LONGWORD");
 	}
 
@@ -267,10 +267,13 @@ NODE parse_rewrite_crt(int crt_num, NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_crtrw.c,v $
-**	Revision 1.18  1998-03-26 14:24:21-05  gsl
+**	Revision 1.18.2.1  2002/10/03 13:49:49  gsl
+**	Change wmemcpy to WMEMCPY
+**	
+**	Revision 1.18  1998/03/26 19:24:21  gsl
 **	Change to use WISP-SYMB-xx
 **	Moved OLD to old.c
-**
+**	
 **	Revision 1.17  1998-03-04 15:23:05-05  gsl
 **	set write control byte per the wang manual
 **

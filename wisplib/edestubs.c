@@ -115,9 +115,9 @@ static int edemissing(doexit) int doexit;
 /*
 **	History:
 **	$Log: edestubs.c,v $
-**	Revision 1.12  1996-08-19 18:32:17-04  gsl
+**	Revision 1.12  1996/08/19 22:32:17  gsl
 **	drcs update
-**
+**	
 **
 **
 */

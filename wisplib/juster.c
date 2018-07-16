@@ -330,9 +330,9 @@ int flag;
 /*
 **	History:
 **	$Log: juster.c,v $
-**	Revision 1.10  1996-08-19 18:32:25-04  gsl
+**	Revision 1.10  1996/08/19 22:32:25  gsl
 **	drcs update
-**
+**	
 **
 **
 */

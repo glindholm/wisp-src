@@ -8,9 +8,9 @@ protect()
 /*
 **	History:
 **	$Log: protect.c,v $
-**	Revision 1.8  1996-08-19 18:32:40-04  gsl
+**	Revision 1.8  1996/08/19 22:32:40  gsl
 **	drcs update
-**
+**	
 **
 **
 */

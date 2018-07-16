@@ -30,9 +30,9 @@ void GENVEC(
 /*
 **	History:
 **	$Log: genvec.c,v $
-**	Revision 1.8  1996-09-13 13:54:33-04  gsl
+**	Revision 1.8  1996/09/13 17:54:33  gsl
 **	Fix warnings for NT
-**
+**	
 **
 **
 */

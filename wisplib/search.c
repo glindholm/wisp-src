@@ -133,9 +133,9 @@ static int4 bsrch(char* table, int4 n_elem, int4 e_len, char* s_item, int4 s_len
 /*
 **	History:
 **	$Log: search.c,v $
-**	Revision 1.10  1996-08-19 18:32:53-04  gsl
+**	Revision 1.10  1996/08/19 22:32:53  gsl
 **	drcs update
-**
+**	
 **
 **
 */

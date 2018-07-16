@@ -32,9 +32,9 @@ extern NODE parse_display_and_read(NODE the_statement, NODE the_sentence);
 /*
 **	History:
 **	$Log: wt_disp.h,v $
-**	Revision 1.6  1998-03-03 15:36:20-05  gsl
+**	Revision 1.6  1998/03/03 20:36:20  gsl
 **	update
-**
+**	
 **	Revision 1.5  1996-08-30 21:56:17-04  gsl
 **	drcs update
 **

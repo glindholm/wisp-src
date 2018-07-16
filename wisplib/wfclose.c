@@ -85,10 +85,10 @@ void wfclose(char* fname)								/* This routine is called after COBOL*/
 /*
 **	History:
 **	$Log: wfclose.c,v $
-**	Revision 1.12  1998-10-22 14:12:42-04  gsl
+**	Revision 1.12  1998/10/22 18:12:42  gsl
 **	change to use g_print_file_list
 **	Fix "*" processing to free and null the list
-**
+**	
 **	Revision 1.11  1998-08-03 17:16:49-04  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
 **

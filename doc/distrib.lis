@@ -1,0 +1,226 @@
+
+	WISP DISTRIBUTION LIST					distrib.lis
+	======================					07/20/92
+
+
+	PORTING ENGINEER: _____________________________	   DATE: ___/___/___
+
+	PLATFORM: _____________________________________	VERSION: ___________
+
+	COMMENTS: __________________________________________________________
+
+	____________________________________________________________________
+
+
+	UNIX					VMS
+
+===========================================================================
+
+	BIN					WISPKIT.BCK
+	===					===========
+
+	[ ] wisp/bin/bldmf			[ ] MAKEBUILD.COM
+	[ ] wisp/bin/display			[ ] DISPLAY.OBJ
+						[ ] LINK_DISPLAY.COM
+	[ ] wisp/bin/idaemon
+	[ ] wisp/bin/ilp
+	[ ] wisp/bin/ilpman
+	[ ] wisp/bin/ishut       
+						[ ] LINECNT.OBJ
+						[ ] LINK_LINECNT.COM
+	[ ] wisp/bin/makemsg			[ ] MAKEMSG.OBJ
+						[ ] LINK_MAKEMSG.COM
+	[ ] wisp/bin/proctran			[ ] PG_MAIN.OBJ
+						[ ] PROCTRAN.CLD
+						[ ] LINK_PROCTRAN.COM
+	[ ] wisp/bin/selectpg
+						[ ] TRIM.OBJ
+						[ ] LINK_TRIM.COM
+	[ ] wisp/bin/vcapkeys
+	[ ] wisp/bin/viewkey
+	[ ] wisp/bin/vsload (Only on AT&T)	[ ] VSLOAD.COM
+	[ ] wisp/bin/vsx
+	[ ] wisp/bin/vtest			[ ] VTEST0.OBJ
+						[ ] LINK_VTEST.COM
+	[ ] wisp/bin/wcopy
+	[ ] wisp/bin/wdelay
+	[ ] wisp/bin/wdelwrk
+	[ ] wisp/bin/wdiag
+	[ ] wisp/bin/wexists
+	[ ] wisp/bin/wfind
+	[ ] wisp/bin/wisp			[ ] WISPTRAN.OLB
+						[ ] WISP.CLD
+						[ ] WISP.HLP
+						[ ] LINK_WISP.COM
+	[ ] wisp/bin/wlicense
+	[ ] wisp/bin/wputparm			[ ] WPUTPARM.OBJ
+						[ ] LINK_WPUTPARM.COM
+	[ ] wisp/bin/wrename
+	[ ] wisp/bin/wretcode
+	[ ] wisp/bin/wrun
+	[ ] wisp/bin/wscratch
+	[ ] wisp/bin/wshell
+	[ ] wisp/bin/wsort			[ ] WSORT.OBJ
+						[ ] LINK_WSORT.COM
+
+	[ ] wisp/bin/wsubmit
+	[ ] wisp/bin/wsysconf
+	[ ] wisp/bin/wsysinit
+	[ ] wisp/bin/wusage			[ ] WUSAGE.OBJ
+						[ ] LINK_WUSAGE.COM
+
+	LIB
+	===
+
+	[ ] wisp/lib/libilp.a
+						[ ] PROCTRANLIB.OLB
+	[ ] wisp/lib/libvideo.a			[ ] VLIB.OLB
+						[ ] VTEST.OLB
+	[ ] wisp/lib/libwisp.a			[ ] WISPLIB.OLB
+
+
+	ETC
+	===
+
+	[ ] wisp/etc/RELNOTES			[ ] RELNOTES.LIS
+	[ ] wisp/etc/classdef.sam
+	[ ] wisp/etc/disprint.wcb		[ ] DISPRINT.OBJ
+	[ ] wisp/etc/disprntacu.umf		[ ] LINK_DISPRINT.COM
+	[ ] wisp/etc/disprntmf.umf
+	[ ] wisp/etc/formdef.sam
+	[ ] wisp/etc/ilpdef.sam
+	[ ] wisp/etc/ilpremote.sam
+	[ ] wisp/etc/ilpsrv.sam
+	[ ] wisp/etc/make.include
+	[ ] wisp/etc/prtdef.sam
+	[ ] wisp/etc/which
+	[ ] wisp/etc/words.def			[ ] WORDS.DEF
+
+	CONFIG
+	======
+
+	[ ] wisp/config/FORMS
+	[ ] wisp/config/LGMAP		
+	[ ] wisp/config/LPMAP			[ ] LPMAP.DAT
+						[ ] MTMAP.DAT
+	[ ] wisp/config/OPTIONS			[ ] OPTIONS.DAT
+						[ ] PQMAP.DAT
+	[ ] wisp/config/PRMAP
+	[ ] wisp/config/SCMAP
+						[ ] TTMAP.DAT
+	[ ] wisp/config/wispmsg.txt		[ ] WISPMSG.TXT
+	[ ] wisp/config/wispmsg.dat		[ ] WISPMSG.DAT
+	[ ] wisp/config/wrunconfig
+
+	[ ] wisp/config/videocap/aix_xterm	[ ] AIX_XTERM.VCAP
+	[ ] wisp/config/videocap/aixterm	[ ] AIXTERM.VCAP
+	[ ] wisp/config/videocap/ansi		[ ] ANSI.VCAP
+	[ ] wisp/config/videocap/ansidos	[ ] ANSIDOS.VCAP
+	[ ] wisp/config/videocap/att605		[ ] ATT605.VCAP
+	[ ] wisp/config/videocap/dg_xterm	[ ] DG_XTERM.VCAP
+	[ ] wisp/config/videocap/ibm3151	[ ] IBM3151.VCAP
+	[ ] wisp/config/videocap/ibm8514	[ ] IBM8514.VCAP
+	[ ] wisp/config/videocap/qvt101p	[ ] QVT101P.VCAP
+	[ ] wisp/config/videocap/sco_xterm	[ ] SCO_XTERM.VCAP
+	[ ] wisp/config/videocap/stddef		[ ] STDDEF.VCAP
+	[ ] wisp/config/videocap/sun_cmd	[ ] SUN_CMD.VCAP
+	[ ] wisp/config/videocap/uterm		[ ] UTERM.VCAP
+	[ ] wisp/config/videocap/vt100		[ ] VT100.VCAP
+	[ ] wisp/config/videocap/vt220		[ ] VT220.VCAP
+	[ ] wisp/config/videocap/wy_vt100	[ ] WY_VT100.VCAP
+	[ ] wisp/config/videocap/xterm		[ ] XTERM.VCAP
+
+
+
+	ACU - ACUCOBOL
+	==============
+
+	[ ] wisp/acu/acu.rules
+	[ ] wisp/acu/aculink.wcb
+	[ ] wisp/acu/acuusing.cob
+	[ ] wisp/acu/sub85.c
+	[ ] wisp/acu/wruncbl.umf
+	[ ] wisp/acu/xterm.acu
+
+	MF - MICRO FOCUS
+	================
+
+	[ ] wisp/mf/mf.rules
+	[ ] wisp/mf/mflink.cob
+	[ ] wisp/mf/wispmf.c
+	[ ] wisp/mf/wispmf.o
+	[ ] wisp/mf/wrunmf.c
+	[ ] wisp/mf/wrunmf.o
+	[ ] wisp/mf/wrunmf.umf
+
+						VAX/VMS COBOL
+						=============
+						[ ] UPDATE.COM
+						[ ] VMSLINKMAIN.OBJ
+						[ ] VMSLINKSUB.OBJ
+						[ ] VMSLINKSUB.WCB
+						[ ] VMS$START$LINK.COM
+						[ ] WISP$LINK.OPT
+						[ ] WISP$SHARE.OPT
+						[ ] WISP_INIT.COM
+						[ ] WISP_SYMBOLS.COM
+						[ ] WISP_SHARE.COM
+						[ ] WISP_USING_MAIN.OBJ
+						[ ] WISP_USING_SUB.OBJ
+
+===========================================================================
+
+
+
+===========================================================================
+
+	EDE					EDEKIT.BCK
+	===					==========
+
+	[ ] ede/good				[ ] GOOD.OBJ
+						[ ] LINK_GOOD.COM
+	[ ] ede/libede.a			[ ] WISPLIB.OLB  ** EDE **
+						[ ] INSTALL_EDE.COM
+	[ ] ede/demo/HELPMAP			[ ] HELPMAP.DAT
+
+	[ ] ede/demo/mcbbld.wcb			[ ] MCBBLD.WCB
+	[ ] ede/demo/mcbcode.hlp		[ ] MCBCODE.HLP
+	[ ] ede/demo/mcbcol.hlp			[ ] MCBCOL.HLP
+	[ ] ede/demo/mcbcpy1.wcb		[ ] MCBCPY1.WCB
+	[ ] ede/demo/mcbcpy2.wcb		[ ] MCBCPY2.WCB
+	[ ] ede/demo/mcbcpy3.wcb		[ ] MCBCPY3.WCB
+	[ ] ede/demo/mcbdisp.hlp		[ ] MCBDISP.HLP
+	[ ] ede/demo/mcbedit.hlp		[ ] MCBEDIT.HLP
+	[ ] ede/demo/mcbedit.wcb		[ ] MCBEDIT.WCB
+	[ ] ede/demo/mcbicnt.hlp		[ ] MCBICNT.HLP
+	[ ] ede/demo/mcbname.hlp		[ ] MCBNAME.HLP
+	[ ] ede/demo/mcbopts.hlp		[ ] MCBOPTS.HLP
+	[ ] ede/demo/mcbrow.hlp			[ ] MCBROW.HLP
+	[ ] ede/demo/mcbtext.hlp		[ ] MCBTEXT.HLP
+	[ ] ede/demo/mcbtype.hlp		[ ] MCBTYPE.HLP
+	[ ] ede/demo/mcbvalue.hlp		[ ] MCBVALUE.HLP
+	[ ] ede/demo/mcbwidth.hlp		[ ] MCBWIDTH.HLP
+
+	[ ] ede/demo/menudefs.wcb		[ ] MENUDEFS.WCB
+	[ ] ede/demo/menudemo.opt		[ ] MENUDEMO.OPT
+	[ ] ede/demo/menudemo.umf		[ ] BUILD_MENUDEMO.COM
+						[ ] LINK_MENUDEMO.COM
+	[ ] ede/demo/menudemo.wcb		[ ] MENUDEMO.WCB
+	[ ] ede/demo/menudemomf.umf
+	[ ] ede/demo/menudisp.wcb		[ ] MENUDISP.WCB
+	[ ] ede/demo/menulogo.wcb		[ ] MENULOGO.WCB
+	[ ] ede/demo/menumcbs.wcb		[ ] MENUMCBS.WCB
+	[ ] ede/demo/menuvect.wcb		[ ] MENUVECT.WCB
+
+===========================================================================
+
+	RTS	These are for customers unable to build their own run-time.
+	===	Run-time must be purchased by the customer from ACUCOBOL.
+
+  	[ ] rts/wruncbl		ACUCOBOL runtime system.
+  	[ ] rts/wruncble	ACUCOBOL runtime system with EDE.
+
+  	[ ] rts/wruncblk	ACUCOBOL runtime system with KING subs.
+  	[ ] rts/wruncblek	  and EDE
+
+===========================================================================

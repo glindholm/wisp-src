@@ -6,9 +6,9 @@ static char rcsid[]="$Id:$";
 /*
 **	History:
 **	$Log: vputc.c,v $
-**	Revision 1.11  1997-07-10 13:06:45-04  gsl
+**	Revision 1.11  1997/07/10 17:06:45  gsl
 **	Moved vputc() in with vprintc.c
-**
+**	
 **	Revision 1.10  1996-10-11 18:16:16-04  gsl
 **	drcs update
 **

@@ -62,9 +62,9 @@ typedef struct Token TOKEN;
 /*
 **	History:
 **	$Log: token.h,v $
-**	Revision 1.6  1996-08-30 21:56:10-04  gsl
+**	Revision 1.6  1996/08/31 01:56:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

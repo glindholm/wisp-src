@@ -1,0 +1,279 @@
+#
+#	Copyright (c) 1988-2002 NeoMedia Migrations, All rights reserved.
+#	$Id:$
+#
+#
+#
+#	File:		sampleacu.umf
+#
+#	Project:	WISP/SAMPLE
+#
+#	RCS:		$Source:$
+#
+#	Function:	The UNIX makefile for SAMPLE/ACUCOBOL
+#
+#	Desciption:	This makefile will build SAMPLE for ACUCOBOL.
+#
+#			make -f sampleacu.umf
+#			
+#
+
+WISPDIR=$(WISP)/QA/wisp
+WISPTRAN=wisp
+WISPLANG=ACU
+WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
+
+COBOL=ccbl
+COBFLAGS=-Gd -Zi -Za -Da4 -Te 800
+
+.SUFFIXES: .acu .cob .wcb
+
+.wcb.cob:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+
+.wcb.acu:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+	$(COBOL) $(COBFLAGS) -o $*.acu $*.cob
+
+.cob.acu:
+	$(COBOL) $(COBFLAGS) -o $*.acu $*.cob
+
+.wcb:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+	$(COBOL) $(COBFLAGS) -o $* $*.cob
+
+.cob:
+	$(COBOL) $(COBFLAGS) -o $* $*.cob
+
+WISP_COBOL_OBJS= \
+	ACULINK \
+	ACUUSING \
+	DISPRINT
+
+SAMPLE_COBOL_OBJS= \
+	DISPFILE.acu \
+	LESWAP.acu \
+	QABCKGRD.acu \
+	QAFILEIO.acu \
+	QAFILE2.acu \
+	QANETCAP.acu \
+	QAPRINT.acu \
+	QASCREEN.acu \
+	QASCRN2.acu \
+	QASUBS.acu \
+	QASY000M.acu \
+	QASYS99.acu \
+	QAWSFNM.acu \
+	QAWSFNS.acu \
+	QAWSUBS.acu \
+	QADPCOMA.acu \
+	QAWSXIO.acu \
+	SAMPLE.acu \
+	SUB1.acu \
+	SUB3.acu \
+	TRIGGER.acu \
+	WL0000.acu \
+	WL0010.acu \
+	WL0011.acu \
+	WL0012.acu \
+	WL0013.acu \
+	WL0014.acu \
+	WL0015.acu \
+	WL0016.acu \
+	WL0017.acu \
+	WL0018.acu \
+	WL0018A.acu \
+	WL0018B.acu \
+	WL0019.acu \
+	WL0020.acu \
+	WL0021.acu \
+	WL0022.acu \
+	WL0023.acu \
+	WL0024.acu \
+	WL0025.acu \
+	WL0026.acu \
+	WL0027.acu \
+	XLINK.acu \
+	XLINK1.acu 
+
+ALL_COBOL_OBJS= $(WISP_COBOL_OBJS) $(SAMPLE_COBOL_OBJS)
+
+TEST_DIRS= volrun volin volout volspl volwrk
+
+DISPRINT_SRC=DISPRINT.wcb disprint.umf
+
+WISPACU_SRC=ACULINK.wcb ACUUSING.cob
+
+all:	all_cobol_objs test_dirs prtargs
+	@echo
+	@echo SAMPLE is up-to-date
+	@echo
+
+clean:
+	rm -f $(ALL_COBOL_OBJS)
+	rm -rf $(TEST_DIRS)
+	rm -f $(WISPACU_SRC) $(DISPRINT_SRC)
+	rm -f *.cob prtargs wc*.cpy *~ core *.log *.err 
+
+all_cobol_objs: $(ALL_COBOL_OBJS)
+
+test_dirs: $(TEST_DIRS)
+
+acuqa:	acuqa.tar.Z
+
+acuqa.tar.Z: $(ALL_COBOL_OBJS)
+	tar -cvf - $(ALL_COBOL_OBJS) | compress > $@
+
+#
+#==============================================================
+#
+
+SAMPLE.cob: SAMPLE.wcb
+	$(WISPTRAN) $(WISPFLAGS) -O samopt.opt $*
+
+
+volrun:
+	mkdir volrun
+	mkdir volrun/librun
+	mkdir volrun/libexe
+volin:
+	mkdir volin
+	mkdir volin/libin
+
+volout:
+	mkdir volout
+
+volspl:
+	mkdir volspl
+
+volwrk:
+	mkdir volwrk
+
+unix_stuff:	prtargs
+
+win32_stuff:	prtargs.exe
+
+
+DISPRINT: $(DISPRINT_SRC)
+	$(MAKE) -f disprint.umf -e $(WISPLANG)
+
+$(DISPRINT_SRC): $(WISPDIR)/etc
+	rm -f $@
+	cp $(WISPDIR)/etc/$@ $@ 
+	chmod +w $@
+
+#$(WISPACU_SRC): $(WISPDIR)/acu
+#	rm -f $@
+#	cp $(WISPDIR)/acu/$@ $@ 
+#	chmod +w $@
+
+ACULINK.wcb: $(WISPDIR)/acu/aculink.wcb
+	rm -f $@
+	cp $(WISPDIR)/acu/aculink.wcb $@ 
+	chmod +w $@
+
+ACUUSING.cob: $(WISPDIR)/acu/acuusing.cob
+	rm -f $@
+	cp $(WISPDIR)/acu/acuusing.cob $@ 
+	chmod +w $@
+
+$(WISPDIR)/etc \
+$(WISPDIR)/acu:
+	@echo
+	@echo WISPDIR direcory $@ not found
+	exit 1
+
+#
+#	History:
+#	$Log: sampleacu.umf,v $
+#	Revision 1.28.2.2  2002/10/09 17:27:56  gsl
+#	Fix ACULINK.wcb and ACUUSING.cob
+#	
+#	Revision 1.28.2.1  2002/10/08 19:54:08  gsl
+#	Updated from HEAD
+#	
+#	Revision 1.33  2002/07/24 14:14:50  gsl
+#	Fix cleanup and test for $(WISPDIR) dirs
+#	
+#	Revision 1.32  2002/07/24 14:01:09  gsl
+#	Default WISPDIR to the QA install dir
+#	
+#	Revision 1.31  2002/07/23 20:50:16  gsl
+#	building sample
+#	
+#	Revision 1.30  2002/07/18 13:51:04  gsl
+#	Changes for uppercase .wcb files
+#	
+#	Revision 1.29  2002/06/05 17:38:22  gsl
+#	Changes for uppercase cobol files from the WISP kit
+#	Also add rules to copy in the ACULINK & ACUUSING files
+#	
+#	Revision 1.28  2002/03/28 22:21:07  gsl
+#	Add LESWAP
+#	
+#	Revision 1.27  2002-03-26 16:09:57-05  gsl
+#	Change VLANG to WISPLANG
+#
+#	Revision 1.26  2001-11-05 15:40:38-05  gsl
+#	Tweak to run without Acucobol compiler
+#
+#	Revision 1.25  2001-11-05 15:32:37-05  gsl
+#	Add acuqa target to tar.Z up all the ACU object files
+#
+#	Revision 1.24  2001-11-02 11:01:50-05  gsl
+#	add DISPFILE
+#
+#	Revision 1.23  2001-11-02 09:06:42-05  gsl
+#	Add build DISPRINT
+#
+#	Revision 1.22  2001-10-23 16:40:01-04  gsl
+#	Compile with debugger info -Gd
+#
+#	Revision 1.21  2001-10-19 11:21:18-04  gsl
+#	make and clean volumes
+#
+#	Revision 1.20  2001-10-19 10:55:44-04  gsl
+#	Add more to clean
+#
+#	Revision 1.19  1999-08-20 09:55:08-04  gsl
+#	Change the LANG macro to VLANG as it conflicted with the LANG environment
+#	variable when the -e option was used
+#
+#	Revision 1.18  1998-06-26 11:20:28-04  gsl
+#	Add WL0027 to build
+#
+#	Revision 1.17  1998-06-15 15:06:45-04  gsl
+#	Add manual locking l=flag
+#
+#	Revision 1.16  1998-04-03 16:28:22-05  gsl
+#	Fix the wispplat include dir
+#
+#	Revision 1.15  1998-04-03 16:22:55-05  gsl
+#	Fix the LANG flag for WISP
+#
+#	Revision 1.14  1998-03-27 15:45:07-05  gsl
+#	Update WL00xx stuff
+#
+#	Revision 1.13  1998-03-23 12:23:45-05  gsl
+#	Update
+#
+#	Revision 1.12  1997-08-28 14:37:49-04  gsl
+#	Fix and simplify so qabckgrd builds properly
+#
+#	Revision 1.11  1997-07-23 10:14:56-04  scass
+#	Moved .SUFFIXES to be above rules so make
+#	works properly on DEC Alpha
+#
+#	Revision 1.10  1997-05-20 16:23:15-04  gsl
+#	Add WL0018A and WL0018B for extra MESSAGE tests
+#
+#	Revision 1.9  1997-05-01 09:24:21-04  gsl
+#	Add all the WL00xx automatic tests
+#
+#	Revision 1.8  1996-12-13 14:47:37-05  gsl
+#	Update so will work on NT as well as unix
+#
+#
+#
+#
+

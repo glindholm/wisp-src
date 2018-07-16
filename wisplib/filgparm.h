@@ -41,9 +41,9 @@ int password_getparm(int initial, char* uservalue, int userlen, char* passvalue,
 /*
 **	History:
 **	$Log: filgparm.h,v $
-**	Revision 1.2  1997-08-22 17:39:24-04  gsl
+**	Revision 1.2  1997/08/22 21:39:24  gsl
 **	Finished PASSWORD getparm
-**
+**	
 **	Revision 1.1  1997-08-19 17:11:24-04  gsl
 **	Initial revision
 **

@@ -123,9 +123,9 @@ class pcode_emitter : public pcode_access {
 //
 //	History:
 //	$Log: pcode.hpp,v $
-//	Revision 1.6  2001-08-22 16:14:20-04  gsl
+//	Revision 1.6  2001/08/22 20:14:20  gsl
 //	add friend class keyword
-//
+//	
 //	Revision 1.5  1998-08-31 15:14:07-04  gsl
 //	drcs update
 //

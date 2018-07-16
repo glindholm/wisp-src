@@ -30,7 +30,7 @@
 #
 # 3) Edit this file and set WISPDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4402
+#       WISPDIR=C:\WISP44xx
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command. 
 #    (You may need to first run the VCVARS32.bat file that comes with MS 
@@ -71,7 +71,7 @@
 ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP directory here.
-WISPDIR=C:\WISP4402
+WISPDIR=C:\WISP4405
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wisp

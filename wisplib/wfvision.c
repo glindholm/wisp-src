@@ -9,6 +9,10 @@ static char rcsid[]="$Id:$";
 			/*									*/
 			/************************************************************************/
 
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
 
 #include "idsistd.h"
 
@@ -28,6 +32,10 @@ static char rcsid[]="$Id:$";
 #endif
 #ifndef O_TEXT
 #define O_TEXT 0
+#endif
+
+#if defined(WIN32)
+#define O_LARGEFILE 0
 #endif
 
 #include "wisplib.h"
@@ -139,7 +147,7 @@ int visioninfo( const char* path, const char* code, void* raw_field )
 	int	header_len;
 	int	f;							/* File handle						*/
 
-	f = open( path, O_RDONLY|O_BINARY );				/* Open the file					*/
+	f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE );		/* Open the file					*/
 
 	if ( f == -1 )
 	{
@@ -414,6 +422,9 @@ int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBO
 /*
 **	History:
 **	$Log: wfvision.c,v $
+**	Revision 1.21.2.1.2.1  2002/10/09 21:03:05  gsl
+**	Huge file support
+**	
 **	Revision 1.21.2.1  2002/08/19 15:31:05  gsl
 **	4403a
 **	

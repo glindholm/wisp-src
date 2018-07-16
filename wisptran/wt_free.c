@@ -289,10 +289,10 @@ NODE parse_commit(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_free.c,v $
-**	Revision 1.14  1998-12-03 15:44:25-05  gsl
+**	Revision 1.14  1998/12/03 20:44:25  gsl
 **	In parse_commit() if ACU4GL then leave it a COMMIT instead of
 **	changing to an UNLOCK ALL
-**
+**	
 **	Revision 1.13  1998-03-27 14:11:25-05  gsl
 **	Move OLD to old.c
 **

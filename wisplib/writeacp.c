@@ -129,9 +129,9 @@ int	*ret_code;							/* WANG ACP return code.				*/
 /*
 **	History:
 **	$Log: writeacp.c,v $
-**	Revision 1.10  1996-08-19 18:33:21-04  gsl
+**	Revision 1.10  1996/08/19 22:33:21  gsl
 **	drcs update
-**
+**	
 **
 **
 */

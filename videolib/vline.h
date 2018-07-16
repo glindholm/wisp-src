@@ -37,8 +37,8 @@ int vline(int type, int length);							/* Draw a line.				*/
 /*
 **	History:
 **	$Log: vline.h,v $
-**	Revision 1.1  1996-03-28 16:20:26-05  gsl
+**	Revision 1.1  1996/03/28 21:20:26  gsl
 **	Initial revision
-**
+**	
 **
 */

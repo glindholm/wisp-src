@@ -1,0 +1,46 @@
+							v30notice.vms
+
+
+	WISP VERSION 3.0 DISTRIBUTION NOTICE
+	====================================
+
+	The enclosed media contains your WISP Version 3.0 distribution.
+
+	The distribution contains the release notes.
+
+		RELNOTES.LIS	- release notes
+
+	If this is your first installation, please refer to the WISP
+	documentation Appendix A-2 for setup instructions.
+
+	You will need to backup the WISP saveset to your hard disk:
+
+	First set your default to an empty directory.
+
+	$ MOUNT/FOREIGN <device>:
+	$ BACKUP/VERIFY/LOG/REWIND <device>:WISPV30.BCK/SAVE *.*
+	$ DISMOUNT/UNLOAD <device>:
+
+	Next, execute the command procedure UPDATE that will move the
+	files to their appropriate directories and build the utilities:
+
+	$ @UPDATE
+
+	NOTE:  The WISP.CLD command has been modified as well as WISP.HLP
+	       Refer to the installation instruction in the WISP documentation
+	       Appendix A-2 to update these files.
+	
+
+
+
+
+
+
+	If you require any assistance please call:
+
+			International Digital Scientific, Inc.
+			   25050 Avenue Kearny,  Suite 203
+				Valencia, CA  91355
+
+			Phone:   (805) 295-1155
+			Fax:	 (805) 295-8755

@@ -48,9 +48,9 @@ EXT int  crt_record_count INIT_ZERO;
 /*
 **	History:
 **	$Log: crt.h,v $
-**	Revision 1.5  1996-08-30 21:56:02-04  gsl
+**	Revision 1.5  1996/08/31 01:56:02  gsl
 **	drcs update
-**
+**	
 **
 **
 */

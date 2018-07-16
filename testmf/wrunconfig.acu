@@ -1,3 +1,0 @@
-cobol=ACU
-options=-b +e acuerr.log
-runcbl=wruncblk

@@ -102,9 +102,9 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 /*
 **	History:
 **	$Log: closeacp.c,v $
-**	Revision 1.10  1996-08-19 18:32:12-04  gsl
+**	Revision 1.10  1996/08/19 22:32:12  gsl
 **	drcs update
-**
+**	
 **
 **
 */

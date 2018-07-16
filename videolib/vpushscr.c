@@ -88,10 +88,10 @@ void vpushscr()										/* A function to save the screen addrs	*/
 /*
 **	History:
 **	$Log: vpushscr.c,v $
-**	Revision 1.10  1997-07-09 11:56:11-04  gsl
+**	Revision 1.10  1997/07/09 15:56:11  gsl
 **	Change to use new video.h interfaces
 **	Remove line attribute handling
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:16-04  gsl
 **	drcs update
 **

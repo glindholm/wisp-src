@@ -1372,6 +1372,10 @@ static void test_int_sizes(void)
 	uint2	t_uint2;
 	int4	t_int4;
 	uint4	t_uint4;
+#ifdef INT8_DEFINED
+	INT8	t_int8;
+	UINT8	t_uint8;
+#endif
 	int	rc = 0;
 
 	/*
@@ -1397,6 +1401,18 @@ static void test_int_sizes(void)
 		printf("********************************* Size error uint4 = %d\n", sizeof(t_uint4));
 		rc = 1;
 	}
+#ifdef INT8_DEFINED
+	if (sizeof(t_int8) != 8)
+	{
+		printf("********************************* Size error INT8 = %d\n", sizeof(t_int8));
+		rc = 1;
+	}
+	if (sizeof(t_uint8) != 8)
+	{
+		printf("********************************* Size error UINT8 = %d\n", sizeof(t_uint8));
+		rc = 1;
+	}
+#endif
 
 	/*
 	**	Check the signs
@@ -1433,6 +1449,23 @@ static void test_int_sizes(void)
 		rc = 1;
 	}
 
+#ifdef INT8_DEFINED
+	t_int8 = 0;
+	t_uint8 = 0;
+	t_int8--;
+	t_uint8--;
+	if ( !(t_int8 < 0 && -1 == t_int8) )
+	{
+		printf("********************************* Sign error on int8\n");
+		rc = 1;
+	}
+	if ( !(t_uint8 > 0) )
+	{
+		printf("********************************* Sign error on uint8\n");
+		rc = 1;
+	}
+#endif
+
 	if (rc)
 	{
 		printf("\n\n\n\n*****    Integer sign errors    ****\n\n\n");
@@ -1443,10 +1476,13 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
-**	Revision 1.29  2002-03-27 11:20:24-05  gsl
+**	Revision 1.29.2.1  2002/10/10 12:56:47  gsl
+**	Huge file support
+**	
+**	Revision 1.29  2002/03/27 16:20:24  gsl
 **	If found run VUTIL -V to get Acucobol Version number
 **	Missing cob is only a warning
-**
+**	
 **	Revision 1.28  2002-03-27 10:10:47-05  gsl
 **	FIxed MF shared library path
 **

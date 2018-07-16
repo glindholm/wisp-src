@@ -2727,9 +2727,9 @@ Procedure EPROP(fprec, dprec, lprec) int fprec, dprec, lprec; {}
 /*
 **	History:
 **	$Log: enquire.c,v $
-**	Revision 1.7  1996-07-23 14:12:52-04  gsl
+**	Revision 1.7  1996/07/23 18:12:52  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -59,9 +59,9 @@ int fixerr(int code)
 /*
 **	History:
 **	$Log: fixerr.c,v $
-**	Revision 1.10  1996-08-19 18:32:21-04  gsl
+**	Revision 1.10  1996/08/19 22:32:21  gsl
 **	drcs update
-**
+**	
 **
 **
 */

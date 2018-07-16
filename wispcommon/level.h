@@ -36,9 +36,9 @@ extern int setlevel(int level);
 /*
 **	History:
 **	$Log: level.h,v $
-**	Revision 1.5  1996-07-23 14:17:48-04  gsl
+**	Revision 1.5  1996/07/23 18:17:48  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -124,9 +124,9 @@ void wglobals();
 /*
 **	History:
 **	$Log: wglobals.h,v $
-**	Revision 1.16  1998-10-22 14:06:30-04  gsl
+**	Revision 1.16  1998/10/22 18:06:30  gsl
 **	Change the flist and plist to g_temp_file_list and g_print_file_list.
-**
+**	
 **	Revision 1.15  1998-10-21 10:10:44-04  gsl
 **	change print queue options
 **

@@ -30,9 +30,9 @@ class wang_filename : public object {
 //
 //	History:
 //	$Log: wangfile.hpp,v $
-//	Revision 1.4  1998-08-31 15:14:29-04  gsl
+//	Revision 1.4  1998/08/31 19:14:29  gsl
 //	drcs update
-//
+//	
 //
 
 //	

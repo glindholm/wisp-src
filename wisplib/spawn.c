@@ -118,9 +118,9 @@ uint4 *status;
 /*
 **	History:
 **	$Log: spawn.c,v $
-**	Revision 1.10  1997-07-09 12:42:09-04  gsl
+**	Revision 1.10  1997/07/09 16:42:09  gsl
 **	Change to use new video.h intefaces
-**
+**	
 **	Revision 1.9  1996-08-19 18:32:59-04  gsl
 **	drcs update
 **

@@ -89,6 +89,11 @@ static char rcsid[]="$Id:$";
 		It is possible that other block sizes are supported.
 */
 
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -106,12 +111,17 @@ static char rcsid[]="$Id:$";
 #define O_TEXT 0
 #endif
 
+#if defined(WIN32)
+#define O_LARGEFILE 0
+#endif
+
 #include "idsistd.h"
 #include "wisplib.h"
 #include "osddefs.h"
 #include "wfvision.h"
 #include "werrlog.h"
 #include "wmalloc.h"
+#include "paths.h"
 
 #define CISAM_ROOT_BLOCKSIZE_S 		6
 #define CISAM_ROOT_NUM_KEYS_S 		8
@@ -173,12 +183,12 @@ int4 cisaminfo(				/* CISAM file system interface				*/
 	if (fexists(path_idx))
 	{
 		is_idx = 1;						/* Has .idx file					*/
-		f = open( path_idx, O_RDONLY|O_BINARY );		/* Open the .idx file					*/
+		f = open( path_idx, O_RDONLY | O_BINARY | O_LARGEFILE );/* Open the .idx file					*/
 	}
 	else
 	{
 		is_idx = 0;
-		f = open( path, O_RDONLY|O_BINARY );			/* Open the file					*/
+		f = open( path, O_RDONLY | O_BINARY | O_LARGEFILE );	/* Open the file					*/
 	}
 
 	if ( f == -1 )
@@ -771,6 +781,9 @@ int unloadfhisam(const char *inname, const char *outname, int4 recsize)
 /*
 **	History:
 **	$Log: wfcisam.c,v $
+**	Revision 1.21.2.1.2.1  2002/10/09 21:03:04  gsl
+**	Huge file support
+**	
 **	Revision 1.21.2.1  2002/08/19 15:31:04  gsl
 **	4403a
 **	

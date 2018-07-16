@@ -485,7 +485,7 @@ extern wfopen3();
 extern wfclose();
 extern wfwait();
 extern wfswait();
-extern wmemcpy();
+extern WMEMCPY();
 extern wvaset();
 extern setwfilext();
 extern getwfilext();
@@ -685,7 +685,7 @@ struct	PROCTABLE WISPTABLE[] = {
 	{ "SETRETCODE", setretcode },
 	{ "WEXITH",     wexith },
 	{ "WFSWAIT",    wfswait },
-	{ "WMEMCPY",    wmemcpy },
+	{ "WMEMCPY",    WMEMCPY },
 	{ "WPAUSE",     wpause },
 	{ "WANSI2WANG", WANSI2WANG },	
 	{ "WWANG2ANSI", WWANG2ANSI },	

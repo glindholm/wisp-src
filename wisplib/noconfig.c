@@ -12,9 +12,9 @@ static char rcsid[]="$Id:$";
 /*
 **	History:
 **	$Log: noconfig.c,v $
-**	Revision 1.10  1996-10-08 20:23:02-04  gsl
+**	Revision 1.10  1996/10/09 00:23:02  gsl
 **	Remove OLD code
-**
+**	
 **	Revision 1.9  1996-08-19 15:32:36-07  gsl
 **	drcs update
 **

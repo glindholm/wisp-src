@@ -1,0 +1,51 @@
+								wispbeta.lis
+
+
+	To:	Beta Test sites of WISP Version 3.2
+
+	From:	International Digital Scientific Inc.
+		28460 Ave Stanford Suite 100
+		Valencia  CA 91355
+		(805) 295-1155
+
+
+
+	
+	I would first like to thank you for participating in our beta
+	test program for WISP Version 3.2.  Your help is needed for IDSI
+	to produce a polished product.  We appreciate any comments and 
+	suggestions you care to make.
+
+	The goal of the beta test program is to raise the quality of
+	our software.  This is done by subjecting WISP to the rigors of
+	field sites where problems may be detected that did not show up 
+	during our normal quality assurance testing procedures. Any problems
+	detected can then be corrected before the software is widely
+	distributed.  This is a two week program.  If no major problems are
+	reported within two weeks we will consider the beta test program
+	completed.  If there are problems the program will be extented.
+
+	If for any reason you do not wish to participate in our beta test
+	program, or you can not shortly begin using the beta test WISP 
+	Version 3.2, please let us know immediately.
+
+	To install this release of WISP follow the instructions in the
+	WISP manual Appendix A.  The release notes are included as a file 
+	in the distribution kit:
+
+		UNIX:	wisp/etc/RELNOTES
+		VMS:	RELNOTES.LIS
+
+	Please print them out and read them before using this release.
+
+	If you discover any problems or have any suggestions please
+	contact us immediately.  
+	
+
+
+
+
+	John Kiesler  -- Director of Operations
+	Greg Lindholm -- Principal Software Engineer
+	Phone: (805) 295-1155
+	Fax:   (805) 295-8755

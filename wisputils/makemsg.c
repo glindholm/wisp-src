@@ -144,9 +144,9 @@ main()
 /*
 **	History:
 **	$Log: makemsg.c,v $
-**	Revision 1.10  1996-07-23 21:16:10-04  gsl
+**	Revision 1.10  1996/07/24 01:16:10  gsl
 **	Fix for NT
-**
+**	
 **	Revision 1.9  1996-07-23 11:12:55-07  gsl
 **	drcs update
 **

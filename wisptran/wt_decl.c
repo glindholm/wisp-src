@@ -310,9 +310,9 @@ void gen_dexit(void)									/* Generate the EXIT paragraph for decl.*/
 /*
 **	History:
 **	$Log: wt_decl.c,v $
-**	Revision 1.12  1998-03-27 14:10:26-05  gsl
+**	Revision 1.12  1998/03/27 19:10:26  gsl
 **	Remove ref to linein in error
-**
+**	
 **	Revision 1.11  1998-03-03 15:49:11-05  gsl
 **	Rewrote for cobol-85 changes
 **

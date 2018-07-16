@@ -19,9 +19,9 @@ void wdfinish()
 /*
 **	History:
 **	$Log: wdfinish.c,v $
-**	Revision 1.9  1997-07-09 12:43:09-04  gsl
+**	Revision 1.9  1997/07/09 16:43:09  gsl
 **	Change to use new video.h intefaces
-**
+**	
 **	Revision 1.8  1996-08-19 18:33:10-04  gsl
 **	drcs update
 **

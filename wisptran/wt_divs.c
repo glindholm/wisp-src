@@ -233,9 +233,9 @@ int fd_check(void)									/* Check for SELECT's with no FD's.	*/
 /*
 **	History:
 **	$Log: wt_divs.c,v $
-**	Revision 1.15  1998-03-27 13:37:57-05  gsl
+**	Revision 1.15  1998/03/27 18:37:57  gsl
 **	fix warning
-**
+**	
 **	Revision 1.14  1998-03-19 14:23:28-05  gsl
 **	Change to use get_prog_status().
 **	Move OLD to old.c

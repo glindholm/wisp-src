@@ -1,0 +1,59 @@
+							scslibs.lis
+
+	List of all SCS librarys that compose WISP
+	==========================================
+
+	wisp	acucobol		ACUCOBOL files
+	wisp	common			Common files
+	wisp	dataconv		Data Conversion .COM files
+	wisp	doc			Documentation
+	wisp	ede			EDE files
+	wisp	etc			Misc. (Sample config files)
+	wisp	lib			WISP Library
+	wisp	menudemo		EDE menu demo 
+	wisp	mf			Micro Focus COBOL/2 and AIX VS COBOL
+	wisp	msdos			MSDOS files
+	wisp	port			Porting scripts and files for unix
+	wisp	proctran		Procedure Translator
+	wisp	sample			WISP QA routines
+	wisp	tran			WISP translator
+	wisp	utils			Misc utilities
+	wisp	vms			VMS COBOL files
+
+	video	cap			Videocap files
+	video	common			Common files
+	video	doc			Documentation
+	video	lib			VIDEO Library
+	video	test			VTEST video test utility
+
+	printq	common			Common files (Not used)
+	printq	unix			Unix print queue
+
+
+
+	UNIX directory structure
+	========================
+
+	wisp/acu/src
+	wisp/configacu
+	wisp/configmf
+	wisp/ede/src
+	wisp/etc/src
+	wisp/lib/src
+	wisp/mf/src
+	wisp/msdos/src
+	wisp/port/src
+	wisp/printq/src
+	wisp/proctran/src
+	wisp/ship.v99A
+	wisp/test/src
+	wisp/test/testacu/src
+	wisp/test/testmf/src
+	wisp/tran/src
+	wisp/utils/src
+
+	video/cap/src
+	video/lib/src
+	video/test/src
+
+	/usr/bin/wispbin

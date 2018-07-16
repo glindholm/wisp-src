@@ -69,9 +69,9 @@ static int4 gppf_tran(int gppf)
 /*
 **	History:
 **	$Log: vsegp.c,v $
-**	Revision 1.10  1996-09-03 18:24:05-04  gsl
+**	Revision 1.10  1996/09/03 22:24:05  gsl
 **	drcs update
-**
+**	
 **
 **
 */

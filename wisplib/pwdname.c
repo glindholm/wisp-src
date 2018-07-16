@@ -14,6 +14,7 @@ static char rcsid[]="$Id:$";
 */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "idsistd.h"
 #include "wisplib.h"
@@ -53,9 +54,12 @@ void passwdname(char* name)
 /*
 **	History:
 **	$Log: pwdname.c,v $
-**	Revision 1.14  2001-11-27 17:02:19-05  gsl
+**	Revision 1.14.2.1  2002/10/03 13:54:25  gsl
+**	missing include
+**	
+**	Revision 1.14  2001/11/27 22:02:19  gsl
 **	Change to use longuid()
-**
+**	
 **	Revision 1.13  2001-11-20 10:58:35-05  gsl
 **	Change cuserid(NULL) to getpwuid(geteuid()))
 **

@@ -47,9 +47,9 @@ main()
 /*
 **	History:
 **	$Log: wpfkey.c,v $
-**	Revision 1.8  1996-07-26 13:20:09-04  gsl
+**	Revision 1.8  1996/07/26 17:20:09  gsl
 **	fix video includes
-**
+**	
 **	Revision 1.7  1996-07-23 11:13:10-07  gsl
 **	drcs update
 **

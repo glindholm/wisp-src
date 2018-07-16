@@ -58,9 +58,7 @@ static char rcsid[]="$Id:$";
 
 int getmachineid(char* machineid)
 {
-	struct stat 	stat_buf;
 	struct utsname 	uname_s;
-	int4	inode;
 
 	*machineid = '\0';							/* Init machineid to NULL string		*/
 
@@ -113,13 +111,13 @@ int getmachineid(char* machineid)
 	*/
 	if (! *machineid)
 	{
-		if (stat(license_filepath(),&stat_buf))
+		long	inode = WL_inode(license_filepath());
+		if (0==inode)
 		{
 			return(1);
 		}
 
-		inode = (int4) stat_buf.st_ino;
-		sprintf(machineid,"I%d",inode);
+		sprintf(machineid,"I%ld", inode);
 	}
 
 	upper_string(machineid);						/* Shift to upper case just in case alphas	*/
@@ -600,9 +598,15 @@ main()
 /*
 **	History:
 **	$Log: machid.c,v $
-**	Revision 1.15  2001-09-27 10:13:06-04  gsl
+**	Revision 1.15.2.2  2002/10/10 13:12:53  gsl
+**	Huge file support
+**	
+**	Revision 1.15.2.1  2002/10/09 21:43:01  gsl
+**	Huge file support
+**	
+**	Revision 1.15  2001/09/27 14:13:06  gsl
 **	Add hardware machine id support for SOLARIS, SCO, and UNIXWARE
-**
+**	
 **	Revision 1.14  1998-07-08 09:26:37-04  gsl
 **	Fix computername() to truncate the name at the first period.
 **

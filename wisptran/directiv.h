@@ -49,9 +49,9 @@ EXT int linkmain	INIT_FALSE;			/* $LINKMAIN			Flag to add LINK frontend stuff		*
 /*
 **	History:
 **	$Log: directiv.h,v $
-**	Revision 1.6  1996-08-30 21:56:03-04  gsl
+**	Revision 1.6  1996/08/31 01:56:03  gsl
 **	drcs update
-**
+**	
 **
 **
 */

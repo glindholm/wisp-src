@@ -564,9 +564,9 @@ static int trim(temp) char *temp;							/* Trim a string.			*/
 /*
 **	History:
 **	$Log: edehelp.c,v $
-**	Revision 1.13  1997-07-08 16:10:58-04  gsl
+**	Revision 1.13  1997/07/08 20:10:58  gsl
 **	Change to use new video.h defines
-**
+**	
 **	Revision 1.12  1997-01-02 17:08:23-05  gsl
 **	Add custom menu item logic for STERLING
 **

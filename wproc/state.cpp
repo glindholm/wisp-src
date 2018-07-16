@@ -110,9 +110,9 @@ Boolean state::restore_state(char *a_filename) {
 //
 //	History:
 //	$Log: state.cpp,v $
-//	Revision 1.6  1998-08-31 15:14:16-04  gsl
+//	Revision 1.6  1998/08/31 19:14:16  gsl
 //	drcs update
-//
+//	
 //
 
 //	

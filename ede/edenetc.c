@@ -216,9 +216,9 @@ int test_end_window(char *cptr)								/* Test if end of footer area.		*/
 /*
 **	History:
 **	$Log: edenetc.c,v $
-**	Revision 1.11  1997-07-08 16:12:09-04  gsl
+**	Revision 1.11  1997/07/08 20:12:09  gsl
 **	Change to use new video.h defines
-**
+**	
 **	Revision 1.10  1996-09-13 13:54:03-04  gsl
 **	fix warnings for NT
 **

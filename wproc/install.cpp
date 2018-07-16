@@ -138,9 +138,9 @@ Boolean runtime_demo_ok(const char *source_name) {
 //
 //	History:
 //	$Log: install.cpp,v $
-//	Revision 1.9  1998-08-31 15:13:52-04  gsl
+//	Revision 1.9  1998/08/31 19:13:52  gsl
 //	drcs update
-//
+//	
 //
 
 //	

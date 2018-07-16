@@ -27,9 +27,9 @@ const char* getprogid(void)
 /*
 **	History:
 **	$Log: setprgid.c,v $
-**	Revision 1.10  1997-10-21 10:16:32-04  gsl
+**	Revision 1.10  1997/10/21 14:16:32  gsl
 **	Removed global WISPPROGID and addded getprogid()
-**
+**	
 **	Revision 1.9  1996-08-19 18:32:54-04  gsl
 **	drcs update
 **

@@ -35,9 +35,9 @@ const char* getprogid(void);
 /*
 **	History:
 **	$Log: setprgid.h,v $
-**	Revision 1.1  1997-10-21 10:17:07-04  gsl
+**	Revision 1.1  1997/10/21 14:17:07  gsl
 **	Initial revision
-**
+**	
 **
 **
 */

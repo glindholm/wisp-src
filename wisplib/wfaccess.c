@@ -388,9 +388,9 @@ static int x_wfaccess(char* filename, int4* mode)
 /*
 **	History:
 **	$Log: wfaccess.c,v $
-**	Revision 1.15  1998-08-03 17:15:25-04  jlima
+**	Revision 1.15  1998/08/03 21:15:25  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
-**
+**	
 **	Revision 1.14  1998-05-12 13:52:31-04  gsl
 **	Add wtrace() logig
 **

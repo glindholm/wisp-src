@@ -997,7 +997,7 @@ ARGEND:	/* END OF ARGUMENTS */
 
 	if (native_substitute)
 	{
-		if ( isafile(progname_str) )
+		if ( WL_isafile(progname_str) )
 		{
 			strcpy(link_filespec, progname_str);
 			not_found = 0;
@@ -1029,7 +1029,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		p = wfname(&mode,l_vol,l_lib,l_file,link_filespec);
 		*p = (char)0;
 
-		if ( isafile(link_filespec) )
+		if ( WL_isafile(link_filespec) )
 		{
 			not_found = 0;
 		}
@@ -1052,7 +1052,7 @@ ARGEND:	/* END OF ARGUMENTS */
 		memcpy(l_lib,".       ",SIZEOF_LIB);
 		p = wfname(&mode,l_vol,l_lib,l_file,link_filespec);			/* expand the name 			*/
 		*p = (char)0;
-		if ( isafile(link_filespec) )
+		if ( WL_isafile(link_filespec) )
 		{
 			not_found = 0;							/* found it				*/
 		}
@@ -2369,7 +2369,7 @@ int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], c
 		mode = IS_SUBMIT;
 		ptr = wfname(&mode,l_vol,l_lib,l_file,native);				/* expand the name 			*/
 		*ptr = (char)0;
-		if (isafile(native))							/* Check if found			*/
+		if (WL_isafile(native))							/* Check if found			*/
 		{
 			return(0);							/* FOUND				*/
 		}
@@ -2394,14 +2394,14 @@ int findrun(char file[SIZEOF_FILE],char lib[SIZEOF_LIB], char vol[SIZEOF_VOL], c
 	mode = IS_SUBMIT;
 	ptr = wfname(&mode,l_vol,l_lib,l_file,native);
 	*ptr = (char)0;
-	if (isafile(native)) return(0);							/* If found then return			*/
+	if (WL_isafile(native)) return(0);							/* If found then return			*/
 
 	memcpy(l_vol,".     ",SIZEOF_VOL);						/* Try the current dir			*/
 	memcpy(l_lib,".       ",SIZEOF_LIB);
 	mode = IS_SUBMIT;
 	ptr = wfname(&mode,l_vol,l_lib,l_file,native);
 	*ptr = (char)0;
-	if (isafile(native)) return(0);							/* If found then return			*/
+	if (WL_isafile(native)) return(0);							/* If found then return			*/
 
 	linktype[0] = 'S';								/* Try searching the $PATH		*/
 	return(searchpath(l_filename,native));						/* Return if it was found or not	*/
@@ -2445,6 +2445,10 @@ int firstproc(char* filepath)
 /*
 **	History:
 **	$Log: link.c,v $
+**	Revision 1.61.2.2.2.1  2002/10/09 19:20:30  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
 **	Revision 1.61.2.2  2002/08/20 18:22:16  gsl
 **	Add support for Micro Focus Shared Object files .so/.sl
 **	V4_4_04

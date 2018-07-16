@@ -75,9 +75,9 @@ $DESCRIPTOR(icom,command);								/* For DCL commands.			*/
 /*
 **	History:
 **	$Log: wdelwrk.c,v $
-**	Revision 1.9  1997-06-10 15:52:29-04  scass
+**	Revision 1.9  1997/06/10 19:52:29  scass
 **	Changed long to int4 for portability.
-**
+**	
 **	Revision 1.8  1996-07-23 14:13:07-04  gsl
 **	drcs update
 **

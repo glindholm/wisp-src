@@ -55,9 +55,9 @@ vbell()
 /*
 **	History:
 **	$Log: vbell.c,v $
-**	Revision 1.15  1999-05-26 10:56:45-04  gsl
+**	Revision 1.15  1999/05/26 14:56:45  gsl
 **	add vraw.h
-**
+**	
 **	Revision 1.14  1999-03-03 15:28:35-05  gsl
 **	Fix to use windows bell
 **	Fix to send ^G when using costar

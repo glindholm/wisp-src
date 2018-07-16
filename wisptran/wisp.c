@@ -750,10 +750,10 @@ void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *
 /*
 **	History:
 **	$Log: wisp.c,v $
-**	Revision 1.21  2001-09-13 10:07:24-04  gsl
+**	Revision 1.21  2001/09/13 14:07:24  gsl
 **	Remove VMS and DEMO ifdefs
 **	Add xtab_log() support
-**
+**	
 **	Revision 1.20  1998-06-09 10:09:10-04  gsl
 **	fixed prototypes and added new header
 **

@@ -376,9 +376,9 @@ void pcode_emitter::resume_emission() {
 //
 //	History:
 //	$Log: pcode.cpp,v $
-//	Revision 1.10  2000-08-28 10:12:47-04  gsl
+//	Revision 1.10  2000/08/28 14:12:47  gsl
 //	Fix test is pcode::resize_code_buffer() for 64K limit on code size.
-//
+//	
 //	Revision 1.9  1998-08-31 15:50:35-04  gsl
 //	drcs update
 //

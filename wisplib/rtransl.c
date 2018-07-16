@@ -140,9 +140,9 @@ rtransl()
 /*
 **	History:
 **	$Log: rtransl.c,v $
-**	Revision 1.9  1996-08-19 18:32:50-04  gsl
+**	Revision 1.9  1996/08/19 22:32:50  gsl
 **	drcs update
-**
+**	
 **
 **
 */

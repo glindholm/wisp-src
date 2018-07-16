@@ -247,9 +247,9 @@ void MENUINFO(struct video_menu *mcb, int4 *level, int4 *item, int4 *link)		/* R
 /*
 **	History:
 **	$Log: edehli.c,v $
-**	Revision 1.8  1996-09-13 13:53:50-04  gsl
+**	Revision 1.8  1996/09/13 17:53:50  gsl
 **	Add missing includes
-**
+**	
 **	Revision 1.7  1996-03-28 14:50:03-08  gsl
 **	Removed all the (cast *)'ing.
 **	Fix all the prototypes

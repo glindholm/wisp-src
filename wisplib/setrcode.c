@@ -7,9 +7,9 @@ static char rcsid[]="$Id:$";
 /*
 **	History:
 **	$Log: setrcode.c,v $
-**	Revision 1.10  1996-08-19 18:32:54-04  gsl
+**	Revision 1.10  1996/08/19 22:32:54  gsl
 **	drcs update
-**
+**	
 **
 **
 */

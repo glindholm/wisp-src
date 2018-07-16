@@ -1,0 +1,324 @@
+	Copyright (c) 1995 by DevTech Migrations Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP SUPPORT FOR ACU4GL
+	
+	Document:	acu4gl.lis
+	Last Updated:	18 MAY 95
+	Products:	WISP/UNIX
+	Versions:	3.3x2 and later
+	
+	Summary:	WISP support for Acu4GL
+
+	====================================================================
+	
+
+	WISP Support for Acu4GL
+	=======================
+
+	This document describes the process of using WISP to convert Wang
+	COBOL programs to AcuCOBOL/Acu4GL.  It describes the enhancements 
+	made to WISP to support	the Acu4GL interface to database management 
+	systems (DBMS's).
+
+
+	Terminology
+	===========
+
+	The following table shows corresponding terminology between COBOL
+	and DBMS's.
+
+		COBOL		DATABASE
+		=====		========
+		Directory	Database	- contains files/tables
+		File		Table		- contains records/rows
+		Record		Row		- contains fields/columns
+		Field		Column		- contains a data element
+
+
+	Acu4GL
+	======
+
+	"The essence of the Acu4GL interface is that standard
+	 COBOL I/O statements are used to access databases."
+
+					- Acu4GL User's Guide
+
+	Acu4GL is a product written by AcuCOBOL to allow standard COBOL
+	programs to use databases for their indexed file system instead
+	of Vision (AcuCOBOL's standard indexed file system.)
+
+	To use Acu4GL you compile your COBOL program with the "-Zx" option
+	to generates a ".xfd" (Extended FD) file.  The XFD file is used
+	to map each indexed file's FD to a database table.  You then
+	identify which index files are to be database tables and which
+	are to remain Vision files, this is done in the AcuCOBOL config
+	file (ACUCONFIG) with the "xxx-HOST" option.  Identify which
+	database to use with the "DATABASE" option.  You then run your
+	COBOL programs using a runtime system which was built with the 
+	Acu4GL interface.
+
+		- Create the XFD files.
+		- Identify which files are database tables.
+		- Identify the database to use.
+		- Build a runtime with the Acu4GL interface.
+
+
+	NOTE:	See the Acu4GL User's Guide for a full desrciption
+		of the process.
+
+
+	Converting Wang COBOL to AcuCOBOL/Acu4GL
+	========================================
+
+	Using WISP to convert Wang COBOL to AcuCOBOL/Acu4GL there
+	are a couple of issues that need to be addressed.  These issues
+	fall into two main catagories.  The first is the generation of
+	the XFD files, the second concerns routines that expect to find
+	a physical file e.g. FIND, READFDR.
+
+		- Generating XFD files.
+		- Wang style OPEN logic.
+		- File handling VSSUBS.
+		- File location via GETPARM/PUTPARM.
+
+
+	NOTE:	The issues discussed here are specific to using Wang
+		COBOL code converted by WISP.  There are a number of
+		general issues/considerations in using Acu4GL that are
+		discussed in the Acu4GL User's Guide.  These general
+		Acu4GL issues are not discussed in this document.
+
+
+	Generating XFD Files
+	====================
+
+	In order to successfully generate the XFD files you need to 
+	identify to WISP which files are database tables.  WISP will then
+	insert the proper AcuCOBOL XFD NAME directive before the FD 
+	statement.
+
+		$XFD NAME=table-name
+		 FD select-name...
+
+	The XFD NAME directive tells AcuCOBOL what to name the XFD file
+	which is used as the database table name.
+
+	(See "Identifing Database Files to WISP" below.)
+
+
+	Wang Style OPEN Logic
+	=====================
+
+	WISP inserts logic around an OPEN statement in order to emulate
+	the behavour of the Wang.  This logic would normally generate a
+	native file path, test for the existence of the file, and check 
+	access privledges.  These actions are not applicable to a 
+	database table.
+
+	The Acu4GL interface doesn't use a native file path to locate
+	the table.  It uses the database identified by the "DATABASE"
+	option in the config file (ACUCONFIG) and the table name from
+	the XFD file.  Also the existence of the table and the access
+	to it is only available from the DBMS.
+
+	The files you identify to WISP as database tables are tagged in the
+	generated COBOL with a bit in the status word.  This tag causes
+	the call to "wfopen3" to bypass the file access checking logic.
+	The "wfopen3" routine will still perform the normal file name 
+	generation logic including the OPEN hidden GETPARM but the name
+	that is generated will be ignored (see above.)
+
+	Many software systems allow the user to select the "data set" they
+	will be using, this could be the year, or company, or division etc.
+	This is commonly done by issuing PUTPARM's which set the LIBRARY and
+	VOLUME where the files reside.  Since Acu4GL does not use the
+	native file path to locate the database tables this code will not
+	work.  Under Acu4GL each "data set" would be equivalent to a
+	database and you would have to code AcuCOBOL specific logic to
+	set your DATABASE option to point to a different database.
+
+		*$ACU_CODE
+		*   SET ENVIRONMENT "DATABASE" TO NEW-DATABASE-NAME.
+		*$ACU_END
+
+	If the COBOL OPEN statement fails you will get a GETPARM with
+	the file status codes as supplied by AcuCOBOL.  However changing
+	the values on the GETPARM will NOT correct the problem as the
+	native file path is not used by the COBOL.
+
+	Doing an OPEN OUPUT will not give you a PF3 GETPARM warning you
+	the file already exists.  If the database table exists it will
+	be deleted without warning.
+
+
+	File Operations With VSSUBS
+	===========================
+
+	When using Acu4GL your data is stored in tables within a database.
+	There is not a physical file on the disk like there is when using
+	the Vision file system.  Since there isn't a file on disk your
+	software can not use any VSSUBS to manipulate indexed files.
+
+	The following VSSUBS are commonly used to manipulate indexed files:
+
+		FIND
+		RENAME
+		SCRATCH
+		READFDR
+		READVTOC
+		SORTCALL/WISPSORT/WSORT
+		WCOPY
+
+	The portion of the logic that uses these VSSUBS must be rewritten
+	to behave properly in a database environment.
+
+
+	Identifing Database Files to WISP
+	=================================
+
+	WISP has been enhanced to allow you to identify which of the
+	indexed files are database tables.  There are two ways
+	to identify the files, with the "#DBFILE" options file option or 
+	the "*$DBFILE" directive.
+
+	The "#DBFILE" options file option allows you to specify database
+	tables by the COBOL select name and assign an optional database
+	table name.  If a table name is not specified it will use the
+	select name as the table name.
+
+	Options file:	#DBFILE Select-name [Table-name]
+
+			Select-name	The COBOL select name
+			Table-name	Database table name (optional)
+
+	Example:	#DBFILE MASTER-CUST-FILE customer_master
+			#DBFILE BILLING-MASTER
+			#DBFILE ACCT-INVOICE-DAILY daily_invoice
+
+	The "*$DBFILE" directive allows you to specify database tables
+	by placing this directive immediately before a SELECT statement.
+
+	Directive:	*$DBFILE [Table-name]
+
+	Example:	*$DBFILE customer_master
+			 SELECT MASTER-CUST-FILE ...
+
+			*$DBFILE 
+			 SELECT BILLING-MASTER ...
+
+
+	AcuCOBOL Istructions
+	====================
+
+	To generate the XFD file you compile the COBOL program with
+	the "-Zx" option.
+
+	You must identify to AcuCOBOL which files are database files.
+	This is done with the "xxx-HOST" options in the configuration
+	file (ACUCONFIG).  You need to set a default host (DEFAULT-HOST)
+	for indexed and relative files.  The default host is normally
+	"vision".  If you want all or the majority of your indexed files
+	to be Informix then set the DEFAULT-HOST to be informix and 
+	individually list the rest.
+
+		DEFAULT-HOST 	informix
+		DAILY-LOG-HOST 	vision
+		MYFILE-HOST 	vision
+
+	The database name is also identified in the configuration file.
+
+		DATABASE	acme_ca_1993
+
+	The database must be created before tables can be added to it.
+	This is done through the DBMS (e.g. ISQL with Informix) or with
+	the AcuCOBOL supplied program "sql.acu".
+
+	NOTE:	The Acu4GL instructions here are condensed and are only
+		meant as an outline.  You absolutely must read the Acu4GL
+		manuals in order to be successful.
+
+			"Acu4GL User's Guide"
+			"Acu4GL Interface to Informix-xxx"
+
+
+	Checklist For Converting To Acu4GL
+	==================================
+
+	- Identify to WISP which files are database files. (DBFILE option.)
+	- Correct any "file manipulation" logic, i.e. calls to "FIND" etc.
+	- Translate the COBOL with WISP.
+	- Compile with "-Zx" to create the XFD files.
+	- Identify to AcuCOBOL which files are database files. (xxx-HOST)
+	- Identify the database to use. (DATABASE)
+	- Create the database.
+	- Create an Acu4GL runtime.
+	- Run your programs.
+
+
+	Lost Wang Functionality
+	=======================
+
+	- PF3 to delete on OPEN output.
+	- READFDR for record count.
+	- Redirecting files with PUTPARM's.
+	- File SORT's
+
+	---------------------------------------------------------------------
+
+	ADDENDUM:
+
+	Runtime Checking for Database Files
+	===================================
+
+	In order to support a single source set for applications that want
+	the option of using Acu4GL or VISION files WISP has been enhanced
+	to perform runtime checking of the files "HOST" (i.e. VISION or
+	INFORMIX).  This allows you to create applications that can be
+	configured at runtime to use either Acu4GL or VISION or both.
+
+	To have the runtime checking for database files logic added to your
+	programs you must translate them with WISP using the "-4" option
+	(/X4DBFILE on VMS).  This option causes WISP to add a call to the
+	routine "x4dbfile" before every OPEN statement for an indexed file.
+	The routine "x4dbfile" checks the AcuCOBOL configuration file
+	(ACUCONFIG) for the "xxx-HOST" entry and sets the tag in the status 
+	word that indicates to "wfopen3" whether this is a database file.  
+	If there is no host specified for the file it uses the "DEFAULT-HOST" 
+	entry.
+
+		$ wisp -4 myprog
+
+	A new routine "ISDBFILE" is provided that allows the developer to
+	test if a given file is a database file.  This allows the developer
+	to code logic that is conditional based on whether a file is a
+	regular VISION file or a database file.  This is useful for VSSUBS 
+	like "FIND", "RENAME", "SCRATCH" etc. that are only valid on regular
+	files.
+
+	ISDBFILE
+	========
+
+	Usage		CALL "ISDBFILE" USING FILE-NAME FILE-STATUS.
+
+	Description	This routine test if a file is database file or 
+			a regular file by examining the "xxx-HOST" fields
+			in the AcuCOBOL configuration file.
+	Parameters
+
+	FILE-NAME	Alpha(var)	The name of the file from the SELECT
+					statement. The field should be blank
+					padded.
+
+	FILE-STATUS	Alpha(1)	The result.
+					"Y"	- a database file
+					"N"	- a regular file
+
+	Example
+
+		CALL "ISDBFILE" USING "CUSTOMER-MASTER", CHECK-FILE.
+		IF CHECK-FILE = "Y" THEN
+			... database file logic ...
+
+	========================= END OF DOCUMENT ==========================

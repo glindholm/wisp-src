@@ -423,9 +423,9 @@ char *find_valid_input_file(char *a_name) {
 //
 //	History:
 //	$Log: fileinfo.cpp,v $
-//	Revision 1.13  1998-08-31 15:50:33-04  gsl
+//	Revision 1.13  1998/08/31 19:50:33  gsl
 //	drcs update
-//
+//	
 //	Revision 1.12  1998-08-31 15:13:49-04  gsl
 //	drcs update
 //

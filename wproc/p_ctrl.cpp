@@ -741,9 +741,9 @@ void compiler::while_stmt() {
 //
 //	History:
 //	$Log: p_ctrl.cpp,v $
-//	Revision 1.7  1998-08-31 15:14:01-04  gsl
+//	Revision 1.7  1998/08/31 19:14:01  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -45,9 +45,9 @@ int vse_file_changed_gp(char *sysname);
 /*
 **	History:
 **	$Log: vsegps.h,v $
-**	Revision 1.5  1996-09-03 18:24:07-04  gsl
+**	Revision 1.5  1996/09/03 22:24:07  gsl
 **	drcs update
-**
+**	
 **
 **
 */

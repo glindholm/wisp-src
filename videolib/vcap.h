@@ -177,11 +177,11 @@ char* vcapvalue(int cap);
 /*
 **	History:
 **	$Log: vcap.h,v $
-**	Revision 1.22  1997-07-08 16:50:14-04  gsl
+**	Revision 1.22  1997/07/08 20:50:14  gsl
 **	change to use vcapvalue()
 **	Add new prototypes
 **	Remove non-global data variables
-**
+**	
 **	Revision 1.21  1997-05-21 12:52:29-04  gsl
 **	Move the metakey defines to video.h
 **

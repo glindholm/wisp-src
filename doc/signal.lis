@@ -1,0 +1,102 @@
+								signal.lis
+								12/03/93
+	SIGNALS: Killing Processes on UNIX
+	==================================
+
+	This applies to UNIX only.
+
+	This document describes the use of signals and the kill command
+	for terminating processes on UNIX.
+
+	On unix the way you cause a process to terminate is to send it
+	a "signal".  This can be done by typing the interrupt (^C) or the
+	quit (^\) character at the keyboard or by using the "kill" command.
+	The normal action for a program when it receives a signal is to 
+	terminate.  However, you can code a program to "catch" a signal
+	and perform other actions or to "ignore" a signal.  Usually when a 
+	program catches a signal it will perform cleanup actions then exit.
+
+	There are many different signals, each is know by a name and a number.
+	Here are some common ones:
+
+		SIGHUP	 01	Hangup		- terminal line goes down
+		SIGINT	 02	Interrupt	- keyboard ^C
+		SIGQUIT	 03	Quit		- keyboard ^\
+		SIGKILL	 09	KILL		- cannot be caught or ignored
+		SIGBUS	 10	Bus error
+		SIGSEGV  11	Segmentation violation
+		SIGTERM  15	Termination	- default kill signal
+
+	Normally in a production environment you don't want a user to be
+	able to kill a running program with a keyboard interrupt.  You want
+	them to exit the program normally so all your shutdown and cleanup
+	code gets executed.  You can disable keyboard interrupts with the
+	stty command.
+
+		$ stty -isig		Disable keyboard interrupts
+
+	It is highly recommended that you include the above command in
+	your users .profile file.
+
+
+	How to Terminating a Running Process
+	====================================
+
+	If a terminal gets hung up or for some other reason you need to
+	terminate a running process the root user can run the "kill" command
+	to send a signal to the process.
+
+		$ kill 12345		Send signal 15 to process 12345.
+					Doesn't always work.
+
+	This sends signal 15 to the process.  Signal 15 is the software
+	termination signal (SIGTERM) and is the default signal that is
+	used by the kill command.  We have found that signal 15 doesn't
+	interrupt a pending I/O so doesn't always work, the process sticks
+	around until the I/O completes.  If it is a terminal I/O and the
+	terminal is hung or not available then the I/O never completes
+	and the process doesn't terminate.
+
+		$ kill -9 12345		Send signal 9 to process 12345
+					Dangerous, no cleanup is performed.
+
+	To alway kill a process you can use signal 9 (SIGKILL).  This is
+	dangerous to use as this signal can not be caught by the program
+	so the program has no chance to do any cleanup.
+
+		$ kill -1 12345		Send signal 1 to process 12345
+					Recommended for use with WISP.
+
+	It is recommended you use signal 1 (SIGHUP) for killing WISP
+	converted programs.  This signal works well and gives WISP and
+	AcuCOBOL an opportunity to close files and exit gracefully.
+
+	When killing a running program always start with the lowest process
+	in the chain and work up.  With WISP when you run a program you
+	will normally start several processes.  In the following example
+	the program MAINMENU was run which then did a call "LINK" to the
+	program "SUBSYS01".
+
+	Example:
+
+		# ps -ef|grep me		list processes owned by "me"
+
+		USER   PID  PPID  TTY    CMD
+		me   20019 13531  pts/3  wrun MAINMENU
+		me   35256 20019  pts/3  wruncbl -b MAINMENU
+		me   35478 35256  pts/3  wruncbl -b ACULINK ... SUBSYS01
+
+		# kill -1 35478			kill the lowest level process
+		# kill -1 35256			kill the next lowest
+		# kill -1 20019			kill the highest process
+
+	It is possible that as you kill your way up the stack of processes,
+	a higher level process will "free up" and begin responding.  It is
+	also possible that the higher level processes will "die" before you
+	get a chance to kill them.
+
+	If a process just will not die then try using "kill -9" on it but
+	be aware that no cleanup will be done by the process before it dies.
+
+
+	==== End ====

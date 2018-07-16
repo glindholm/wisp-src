@@ -21,9 +21,9 @@
 /*
 **	History:
 **	$Log: runtype.h,v $
-**	Revision 1.5  1998-08-31 15:50:36-04  gsl
+**	Revision 1.5  1998/08/31 19:50:36  gsl
 **	drcs update
-**
+**	
 **	Revision 1.4  1998-08-31 15:14:12-04  gsl
 **	drcs update
 **

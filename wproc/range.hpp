@@ -45,9 +45,9 @@ class range : public object {
 //
 //	History:
 //	$Log: range.hpp,v $
-//	Revision 1.7  1998-08-31 15:14:10-04  gsl
+//	Revision 1.7  1998/08/31 19:14:10  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -41,9 +41,9 @@ char *pathname;
 /*
 **	History:
 **	$Log: vsn_only.c,v $
-**	Revision 1.4  1996-07-23 14:13:03-04  gsl
+**	Revision 1.4  1996/07/23 18:13:03  gsl
 **	drcs update
-**
+**	
 **
 **
 */

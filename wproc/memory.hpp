@@ -37,9 +37,9 @@ void show_memory(char *kind, void* ptr, size_t size);
 //
 //	History:
 //	$Log: memory.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:56-04  gsl
+//	Revision 1.5  1998/08/31 19:13:56  gsl
 //	drcs update
-//
+//	
 //
 
 //	

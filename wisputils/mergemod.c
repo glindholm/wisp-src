@@ -386,9 +386,9 @@ struct rec_s *find_rec(struct rec_s *top, struct rec_s *curr, long num)
 /*
 **	History:
 **	$Log: mergemod.c,v $
-**	Revision 1.4  1996-07-23 14:12:55-04  gsl
+**	Revision 1.4  1996/07/23 18:12:55  gsl
 **	drcs update
-**
+**	
 **
 **
 */

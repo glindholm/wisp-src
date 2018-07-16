@@ -30,9 +30,9 @@ void WSPAWN(short *action,char *progname,short *name_len,char *msg,short *msg_le
 /*
 **	History:
 **	$Log: wspawn.c,v $
-**	Revision 1.9  1996-08-19 18:33:24-04  gsl
+**	Revision 1.9  1996/08/19 22:33:24  gsl
 **	drcs update
-**
+**	
 **
 **
 */

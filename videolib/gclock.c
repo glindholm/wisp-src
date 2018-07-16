@@ -96,9 +96,9 @@ int gclock()
 /*
 **	History:
 **	$Log: gclock.c,v $
-**	Revision 1.10  1997-07-08 16:17:28-04  gsl
+**	Revision 1.10  1997/07/08 20:17:28  gsl
 **	Change to use new video.h interface
-**
+**	
 **	Revision 1.9  1996-10-11 18:15:55-04  gsl
 **	drcs update
 **

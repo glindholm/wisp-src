@@ -279,9 +279,9 @@ void message_reader::position_to(int a_message_number) {
 //
 //	History:
 //	$Log: reader.cpp,v $
-//	Revision 1.7  1998-08-31 15:14:10-04  gsl
+//	Revision 1.7  1998/08/31 19:14:10  gsl
 //	drcs update
-//
+//	
 //
 
 //	

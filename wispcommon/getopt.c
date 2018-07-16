@@ -187,9 +187,9 @@ static int dummy_getopt;
 /*
 **	History:
 **	$Log: getopt.c,v $
-**	Revision 1.7  1997-02-17 10:49:07-05  gsl
+**	Revision 1.7  1997/02/17 15:49:07  gsl
 **	Fixed prototype so same as ansi C standard
-**
+**	
 **	Revision 1.6  1996-09-12 19:11:11-04  gsl
 **	change WINNT to WIN32
 **

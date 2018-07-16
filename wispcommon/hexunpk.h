@@ -35,9 +35,9 @@ void HEXPACK( char* source,  char* target, int4* tlen );
 /*
 **	History:
 **	$Log: hexunpk.h,v $
-**	Revision 1.1  1997-02-20 09:40:14-05  gsl
+**	Revision 1.1  1997/02/20 14:40:14  gsl
 **	Initial revision
-**
+**	
 **
 **
 **

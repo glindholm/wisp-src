@@ -1096,9 +1096,9 @@ NODE unhook_trailing_fluff(NODE the_tree)
 /*
 **	History:
 **	$Log: statment.c,v $
-**	Revision 1.11  1998-12-15 14:24:50-05  gsl
+**	Revision 1.11  1998/12/15 19:24:50  gsl
 **	enhance get_statement_fragment() to recognize END-OF-PAGE clauses
-**
+**	
 **	Revision 1.10  1998-03-04 13:44:11-05  gsl
 **	Fix SIZE ERROR clause handling
 **	Add EXCEPTION clause handling

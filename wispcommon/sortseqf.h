@@ -81,9 +81,9 @@ int sortseqf( char *infile, char *outfile, char *tmpdir, int memsizek, char file
 /*
 **	History:
 **	$Log: sortseqf.h,v $
-**	Revision 1.12  1998-09-08 16:32:26-04  gsl
+**	Revision 1.12  1998/09/08 20:32:26  gsl
 **	Add new key value for a YY pivot year
-**
+**	
 **	Revision 1.11  1996-09-26 13:13:45-04  gsl
 **	Add defined SSF_MAX_NUMKEYS
 **

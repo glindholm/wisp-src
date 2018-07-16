@@ -41,9 +41,9 @@ void free_one_text(TEXT *txt);
 /*
 **	History:
 **	$Log: vsetxt.h,v $
-**	Revision 1.5  1996-09-03 18:24:12-04  gsl
+**	Revision 1.5  1996/09/03 22:24:12  gsl
 **	drcs update
-**
+**	
 **
 **
 */

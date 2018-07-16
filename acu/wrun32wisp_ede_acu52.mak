@@ -31,8 +31,8 @@
 #
 # 3) Edit this file and set WISPDIR and EDEDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4402
-#       EDEDIR=C:\EDE4402
+#       WISPDIR=C:\WISP44xx
+#       EDEDIR=C:\EDE44xx
 #
 # 4) From a COMMAND/MSDOS window issue the NMAKE command.
 #       $ cd $(ACUDIR)\acugt\bldwispe
@@ -64,8 +64,8 @@
 ACUDIR=C:\acucorp\acucbl520
 
 # Set the installed WISP and EDE directory here.
-WISPDIR=C:\WISP4402
-EDEDIR=C:\EDE4402
+WISPDIR=C:\WISP4405
+EDEDIR=C:\EDE4405
 
 #  Set the runtime name here. (Do not include a file extension.)
 WRUN32=wrun32wispe

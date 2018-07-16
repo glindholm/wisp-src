@@ -25,9 +25,9 @@
 /*
 **	History:
 **	$Log: trmdef.h,v $
-**	Revision 1.8  1996-08-19 18:33:01-04  gsl
+**	Revision 1.8  1996/08/19 22:33:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

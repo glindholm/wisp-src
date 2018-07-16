@@ -84,9 +84,9 @@ void report_status(
 //
 //	History:
 //	$Log: report.hpp,v $
-//	Revision 1.6  1998-08-31 15:14:12-04  gsl
+//	Revision 1.6  1998/08/31 19:14:12  gsl
 //	drcs update
-//
+//	
 //
 
 //	

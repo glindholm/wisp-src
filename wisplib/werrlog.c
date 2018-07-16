@@ -443,13 +443,63 @@ void wtrace_timestamp(const char *routine)
 	}
 }
 
+/*
+**	ROUTINE:	WL_strerror()
+**
+**	FUNCTION:	Get the errno message string
+**
+**	DESCRIPTION:	strerror() is not thread-safe on some systems
+**
+**	ARGUMENTS:	
+**	errnum		the errno to get message for
+**
+**	RETURN:		Message string
+**
+**	WARNINGS:	none
+**
+*/
+const char* WL_strerror(int errnum)
+{
+	const char* ptr = NULL;
+
+#ifdef unix
+#ifndef LINUX
+	extern char *sys_errlist[];
+	extern int   sys_nerr;
+#endif
+
+	if (errnum >= 0 &&
+	    errnum < sys_nerr) 
+	{
+		ptr = sys_errlist[errnum];
+	}
+#endif
+
+#ifdef WIN32
+	ptr =  strerror(errnum);
+#endif
+
+	if (NULL == ptr)
+	{
+		static char mess[30];
+		sprintf(mess,"Unknown errno=[%d]", errnum);
+		ptr = mess;
+	}
+
+	return ptr;
+}
+
+
 
 /*
 **	History:
 **	$Log: werrlog.c,v $
-**	Revision 1.18  1998-12-09 09:42:40-05  gsl
+**	Revision 1.18.2.1  2002/10/09 19:48:08  gsl
+**	Added WL_strerror()
+**	
+**	Revision 1.18  1998/12/09 14:42:40  gsl
 **	Use FOPEN mode defines
-**
+**	
 **	Revision 1.17  1998-05-12 10:57:15-04  gsl
 **	Add wtracing() and wtrace_timestamp()
 **

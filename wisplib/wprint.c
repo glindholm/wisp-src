@@ -492,7 +492,7 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 		return( 20 );
 	}
 	
-	if ( !fcanread(file) )								/* Can we read the file?		*/
+	if ( !WL_fcanread(file) )								/* Can we read the file?		*/
 	{
 		return( 28 );
 	}
@@ -500,7 +500,7 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 	rc  = 0;
 	zerofile = 0;
 
-	size = filesize(file);
+	size = WL_filesize(file);
 	if ( size == 0 )
 	{
 		werrlog(ERRORCODE(5),file,0,0,0,0,0,0,0);
@@ -952,6 +952,13 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 /*
 **	History:
 **	$Log: wprint.c,v $
+**	Revision 1.19.2.1.2.2  2002/10/09 21:17:35  gsl
+**	Huge file support
+**	
+**	Revision 1.19.2.1.2.1  2002/10/09 19:20:36  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
 **	Revision 1.19.2.1  2002/08/19 15:31:05  gsl
 **	4403a
 **	

@@ -26,37 +26,35 @@ default:
 	@echo
 
 ACU \
-acu:	disprint.wcb
-	rm -f disprint.cob DISPRINT
-	$(WISPTRAN) -VACU disprint.wcb
-	ccbl -da4 -o DISPRINT disprint.cob
+acu:	DISPRINT.wcb
+	rm -f DISPRINT.cob DISPRINT
+	$(WISPTRAN) -VACU DISPRINT.wcb
+	ccbl -da4 -o DISPRINT DISPRINT.cob
 
 ACN \
-acn:	disprint.wcb
-	rm -f disprint.cob DISPRINT
-	$(WISPTRAN) -VACN disprint.wcb
-	ccbl -da4 -o DISPRINT disprint.cob
+acn:	DISPRINT.wcb
+	rm -f DISPRINT.cob DISPRINT
+	$(WISPTRAN) -VACN DISPRINT.wcb
+	ccbl -da4 -o DISPRINT DISPRINT.cob
 
 MF \
-mf:	disprint.wcb
-	rm -f disprint.cob DISPRINT.int
-	$(WISPTRAN) -VMF disprint.wcb
-	cob -i disprint.cob
-	mv disprint.int DISPRINT.int
+mf:	DISPRINT.wcb
+	rm -f DISPRINT.cob DISPRINT.int
+	$(WISPTRAN) -VMF DISPRINT.wcb
+	cob -i DISPRINT.cob
 
 MFSE \
-mfse:	disprint.wcb
-	rm -f disprint.cob DISPRINT.int
-	$(WISPTRAN) -VMFSE disprint.wcb
-	cob -i disprint.cob
-	mv disprint.int DISPRINT.int
+mfse:	DISPRINT.wcb
+	rm -f DISPRINT.cob DISPRINT.int
+	$(WISPTRAN) -VMFSE DISPRINT.wcb
+	cob -i DISPRINT.cob
 
-disprint.wcb:
+DISPRINT.wcb:
 	@echo
-	@echo The file disprint.wcb was not found.
+	@echo The file DISPRINT.wcb was not found.
 	@echo Unable to make DISPRINT utility.
 	@exit 1
 
 clean:
-	rm -rf disprint.cob disprint.int DISPRINT.int DISPRINT
+	rm -rf DISPRINT.cob DISPRINT.int DISPRINT
 

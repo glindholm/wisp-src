@@ -63,9 +63,9 @@ int	flag;
 /*
 **	History:
 **	$Log: dbfile.c,v $
-**	Revision 1.5  1996-08-19 18:32:16-04  gsl
+**	Revision 1.5  1996/08/19 22:32:16  gsl
 **	drcs update
-**
+**	
 **
 **
 */

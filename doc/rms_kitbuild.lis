@@ -1,0 +1,79 @@
+						(rms_kitbuild.lis)
+
+8/3/92
+
+
+The following is a description of how to create RMS_EXPERT shipping
+kits;
+
+- Determine which format the kit needs to be built on 
+  (9-track tape or TK50 tape cartridge
+
+- Mount the tape on the appropriate device
+
+     If mounting a TK50, make sure red button is "out" and the
+     green light is on prior to removing an existing cartridge that
+     might be in place.  Insert cartridge, close door and press the
+     red button (never force the door).
+
+     When mounting a 9-track tape, insert the tape, close the door
+     and press the load and on-line buttons.
+
+- Log on to PRIDE
+
+- Set priviliges on with the following command:
+  $ PRIVS
+  If PRIVS is not set up for your account, you will get an error
+  at this point.  If so, contact the System Manager.
+
+- Set the default directory path for RMS_EXPERT:
+  $ SET DEF SHIPPING$DISK:[SHIPPING.RMX]
+
+- Begin creating the kit by entering the appropriate statement:
+  $ @RMXKIT MSA0 (this statement builds the kit on 9-track tape)
+  $ @RMXKIT MUA0 (this statement builds the kit on a TK50)
+  
+After starting the program, a series of prompts will appear. 
+Answer them as follows;
+  
+    Are you ready (Y/N)? 
+
+Check to see that the tape drive has started up OK.  If there are
+lights blinking on the device you are using, wait a minute before
+proceeding.  If all is OK, key in a "Y" and press RETURN.
+
+    Are there already savesets on this tape (Y/N)?
+
+Enter an "N"
+
+    Do you wish to initialize this tape (Y/N)?
+
+Enter a "Y"
+
+
+
+
+
+
+
+
+At this point the program will begin processing and will display a
+number of messages which require no response.  When complete (after
+about 5 - 10 minutes), the following message will appear;
+
+     Is there another saveset to create (Y/N)?
+ 
+Enter a "N" 
+
+If the kit build went OK, you'll get the following message:
+
+     Kit Build Completed Successfully
+
+If you don't get this message, get an engineer involved.
+
+- Dismount the tape.  If dismounting a 9-track tape, press ON-LINE
+  and the UNLOAD button, wait for the tape to unload before
+  removing.  If dismounting a TK50, press the red button, wait for 
+ the green light to come on, open the door and remove the   
+  cartridge. 
+

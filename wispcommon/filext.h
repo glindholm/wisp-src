@@ -40,9 +40,9 @@ EXTERN_DEF char	WISPRETURNCODE[3];							/* Define the return code field.	*/
 /*
 **	History:
 **	$Log: filext.h,v $
-**	Revision 1.8  1996-07-23 14:17:46-04  gsl
+**	Revision 1.8  1996/07/23 18:17:46  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1400,9 +1400,9 @@ char *token_type_mess(TOKEN *tokptr)
 /*
 **	History:
 **	$Log: tokenize.c,v $
-**	Revision 1.11  2001-10-18 11:12:51-04  gsl
+**	Revision 1.11  2001/10/18 15:12:51  gsl
 **	Change to treat a blank line as a COMMENT token
-**
+**	
 **	Revision 1.10  1998-03-27 10:40:13-05  gsl
 **	change_words
 **

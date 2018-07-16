@@ -47,9 +47,9 @@ main()
 /*
 **	History:
 **	$Log: saveterm.c,v $
-**	Revision 1.8  1996-07-23 14:24:58-04  gsl
+**	Revision 1.8  1996/07/23 18:24:58  gsl
 **	Fix redefinition
-**
+**	
 **	Revision 1.7  1996-07-23 11:13:00-07  gsl
 **	drcs update
 **

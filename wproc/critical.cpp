@@ -110,9 +110,9 @@ Boolean drive_ready(int drive) {
 //
 //	History:
 //	$Log: critical.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:37-04  gsl
+//	Revision 1.6  1998/08/31 19:13:37  gsl
 //	drcs update
-//
+//	
 //
 
 //	

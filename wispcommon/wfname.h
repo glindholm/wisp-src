@@ -37,9 +37,9 @@ extern int wfexists(char *file, char *lib, char *vol);
 /*
 **	History:
 **	$Log: wfname.h,v $
-**	Revision 1.6  1996-07-23 14:17:57-04  gsl
+**	Revision 1.6  1996/07/23 18:17:57  gsl
 **	drcs update
-**
+**	
 **
 **
 */

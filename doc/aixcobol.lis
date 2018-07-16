@@ -1,0 +1,66 @@
+								aixcobol.lis
+
+	WISP using AIX VS COBOL 
+	=======================
+
+	Dynamic call "LINK" with parameters
+
+		*$LINKMAIN
+		COPY "wisplink.cpy" REPLACING "PROGNAME" BY "SAMPLEX".
+
+	Compiler flags
+
+		-C warning=2		no info messages
+		-C "override(NAME) == (XNAME)"	change reserved words
+		-x			compile to a.out format
+		-xc			compile to .o
+		-u			compile to .gnt
+		-i 			compile to .int
+
+	Compiling to statically linked executables.
+
+		$ cob -x main.cob suba.cob subb.cob ...  subx.cob \
+		>   wispaix.o -lwisp -lilp -lvideo
+
+	Compiling to .int and .gnt format.
+
+		$ cob -xc sample.cob		(sample.o)
+		$ cob -i sample.cob		(sample.int)
+		$ cob -u sample.cob		(sample.gnt)
+
+		Must use uppercase filenames i.e.   SAMPLE.int
+
+	Making a RTS that includes WISP routines.
+
+		$ cob -xe "" -o wrunaix wrunaix.c wispaix.o -lwtest -lwisp \
+		>  -lilp -lvideo
+
+	Runtime considerations.
+
+		COBSW=-F	Allow space in numeric
+
+		wrunconfig	runcbl=wrunaix
+				cobol=AIX
+
+		COBPATH=.:dir:dir:dir
+
+		Alternate File Status Table  COBSW=+Q
+
+	Running programs
+
+		a.out			$ sample
+
+		.int or .gnt		$ wrun sample
+					$ wrun SAMPLE
+					$ wrun SAMPLE.int
+					$ wrun SAMPLE.gnt
+
+
+	File list.
+
+		wisplink.cpy		link frontend 
+		wispaix.c		AIX specific routines
+		wrunaix.c		AIX RTS with WISP code
+		aix.rules		Make rules for AIX
+
+

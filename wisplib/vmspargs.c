@@ -83,9 +83,9 @@ void VMSPARGS(void)							/* This routine is call on the way back from a LINK 	*
 /*
 **	History:
 **	$Log: vmspargs.c,v $
-**	Revision 1.10  1998-12-09 10:41:56-05  gsl
+**	Revision 1.10  1998/12/09 15:41:56  gsl
 **	Update global names
-**
+**	
 **	Revision 1.9  1996-08-19 18:33:05-04  gsl
 **	drcs update
 **

@@ -36,8 +36,8 @@ int vputlen(char *outstr, char *instr, int length);					/* Opposite of vtrimlen.
 /*
 **	History:
 **	$Log: vtrim.h,v $
-**	Revision 1.1  1996-03-28 16:42:52-05  gsl
+**	Revision 1.1  1996/03/28 21:42:52  gsl
 **	Initial revision
-**
+**	
 **
 */

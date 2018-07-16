@@ -304,10 +304,10 @@ static int vmv_traverse_scroll_region(int ol, int nl)					/* ol = old line,  nl 
 /*
 **	History:
 **	$Log: vmove.c,v $
-**	Revision 1.15  1997-07-12 17:34:43-04  gsl
+**	Revision 1.15  1997/07/12 21:34:43  gsl
 **	Fix vgoto() so that it didn't defer any move. This was done by
 **	reducing the optimization level.
-**
+**	
 **	Revision 1.14  1997-07-09 11:46:29-04  gsl
 **	Fix the directio logic to work with COSTAR on WIN32.
 **	Localize a lot of the data and routines.

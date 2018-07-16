@@ -774,9 +774,9 @@ void machine::exec_screen() {
 //
 //	History:
 //	$Log: e_scrnio.cpp,v $
-//	Revision 1.8  1998-08-31 15:13:43-04  gsl
+//	Revision 1.8  1998/08/31 19:13:43  gsl
 //	drcs update
-//
+//	
 //
 
 //	

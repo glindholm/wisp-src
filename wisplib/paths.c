@@ -273,11 +273,11 @@ int whichlinkpath(char *filename, char *fullpath)
 /*
 **	History:
 **	$Log: paths.c,v $
-**	Revision 1.8  1997-12-04 18:09:50-05  gsl
+**	Revision 1.8  1997/12/04 23:09:50  gsl
 **	Split the path routines into two; one for the env PATH and
 **	on for the LINK PATH.
 **	On unix these are the same but different on NT/95
-**
+**	
 **	Revision 1.7  1996-10-08 20:24:04-04  gsl
 **	replace getenv() with wispenvpath() calls
 **

@@ -782,9 +782,9 @@ static void track_call(const char *pname, c_list *tptr)					/* Keep track of the
 /*
 **	History:
 **	$Log: wt_call.c,v $
-**	Revision 1.26  2001-09-13 10:08:23-04  gsl
+**	Revision 1.26  2001/09/13 14:08:23  gsl
 **	Add xtab_log tracking of CALL statements
-**
+**	
 **	Revision 1.25  1999-09-08 19:59:36-04  gsl
 **	Add READFDR4 to vararg list
 **

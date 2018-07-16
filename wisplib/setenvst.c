@@ -59,9 +59,9 @@ int setenvstr(const char* envstring)
 /*
 **	History:
 **	$Log: setenvst.c,v $
-**	Revision 1.12  1998-12-09 10:46:24-05  gsl
+**	Revision 1.12  1998/12/09 15:46:24  gsl
 **	up buff to 256
-**
+**	
 **	Revision 1.11  1998-12-09 10:45:44-05  gsl
 **	Add tracing and error checking
 **

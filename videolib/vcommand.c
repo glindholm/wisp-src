@@ -218,9 +218,9 @@ static int vcommand_dummy;
 /*
 **	History:
 **	$Log: vcommand.c,v $
-**	Revision 1.11  1997-06-24 16:21:02-04  gsl
+**	Revision 1.11  1997/06/24 20:21:02  gsl
 **	Change defines so that it is clear that this is only VMS
-**
+**	
 **	Revision 1.10  1996-10-11 18:16:01-04  gsl
 **	drcs update
 **

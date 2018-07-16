@@ -780,12 +780,12 @@ int wfexists(char *file, char *lib, char *vol)
 /*
 **	History:
 **	$Log: wfname.c,v $
-**	Revision 1.22  1999-01-29 19:02:06-05  gsl
+**	Revision 1.22  1999/01/30 00:02:06  gsl
 **	Fix the handling of work files to make a distiction between # and ## work
 **	files.  Only the single # files get the IS_SCRATCH flag and will be deleted
 **	when the link-level terminates. ## files will be deleted when the worklib
 **	is deleted when the highest link-level terminates.
-**
+**	
 **	Revision 1.21  1998-05-15 09:23:18-04  gsl
 **	Fixed bug 518.  When checking if a work file it incorrect was checking
 **	if the lib or the vol was equal to the work lib and vol. It should have

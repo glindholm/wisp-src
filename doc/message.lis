@@ -1,0 +1,82 @@
+	Copyright (c) 1993 by International Digital Scientific Incorporated.  
+	All Rights Reserved.
+	====================================================================
+
+	Title:		CHANGES TO MESSAGE SUBROUTINE ON UNIX
+	
+	Document:	MESSAGE.LIS
+	Last Updated:	2 DEC 93
+	Products:	WISP/UNIX
+	Versions:	AFTER 3.3C
+	
+	Summary:	Automatic deletion of MESSAGE ports.
+			Deleting "dangling" MESSAGE ports.
+			MESSAGE and workstation I/O.
+
+	====================================================================
+
+
+	CHANGES TO MESSAGE SUBROUTINE ON UNIX
+	=====================================
+
+	These changes apply only to the unix version of WISP, and
+	will be contained in releases following 3.3c.
+
+		o Automatic deletion on message ports.
+		o Proper interaction with workstation I/O.
+		o Support of "binary" port names.
+		o Support of "KEEP" option on create.
+		o Improved return codes for create option.
+		o Root can delete ports.
+		o Check with no wait.
+
+
+	Details:
+	--------
+
+	MESSAGE now keeps track of which ports the current task has created
+	and deletes them on exit unless the KEEP option was specified.
+	If the KEEP option was specified it is up to the user to destroy
+	the port as WISP will not.  If the user logs off without issueing
+	a destroy on that port you will get a dangling message port.
+
+	A dangling message port can only be destroyed by the root user
+	(throught MESSAGE), or by deleting the "key file" in /usr/tmp/wpparms.
+
+		/usr/tmp/wpparms/MSG_xxxx	- key file for port "xxxx"
+
+	A message check of type "K" or "B" which waits for a message to
+	be received or a PFkey to be pressed now properly interacts with
+	workstation I/O.  The workstation keyboard *MUST* be unlocked before
+	before you issue one of these checks.  These checks will, in a loop,
+	test for an incoming message and if none will issues a 1 second 
+	timed read of the workstation.	This will continue until either
+	a message is received, or a PFkey (AID character) is pressed, or
+	optionally a timeout occurs.  During this time the user may enter
+	data at the workstation as during a normal workstation read.  If the
+	user presses a PFkey this will lock the workstation keyboard and
+	terminate the MESSAGE routine. A subsequent read of the workstation
+	will return immediately without further user intervention as the
+	keyboard is already locked.
+
+	MESSAGE uses the port name to create the key file name.	 If the port
+	name contains SPACE, SLASH, or NULL (' ', '/', 0x00) the offending
+	character is translated to a HASH ('#') when generating the key
+	file name.  This allows the use of binary data in the port name,
+	however it is still recommended that this practice be avoided as
+	there is some slight possiblity of ambiquous key file names.
+
+	The create (CR) functions now provides better diagnostic return
+	codes.
+
+		 0	Port was created
+		 4	Another task is using this port
+		 8	This task is already using this port
+		24	System is out of message queues
+		64	Unknown system error
+
+	The timeout value on a check (CH) with timeout is rounded to the
+	nearest second.	 A timeout of less then 1/2 a second now does a
+	check with no wait.
+
+	========================= END OF DOCUMENT ==========================

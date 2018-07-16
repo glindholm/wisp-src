@@ -1,0 +1,64 @@
+
+	WISP SYSTEM PORTING LIST			      portinglist.lis
+	========================
+
+	PORTING ENGINEER: _________________________________
+
+	PLATFORM :_________________________________________	DATE __/__/__
+
+
+	MAJOR CHANGES :______________________________________________________
+
+	_____________________________________________________________________
+
+
+	COMMENTS: ___________________________________________________________
+
+	_____________________________________________________________________
+
+	_____________________________________________________________________
+
+
+	VIDEO
+	=====
+
+	[ ]  __/__/__	libvideo.a		[ ]  __/__/__	vtest
+	[ ]  __/__/__	/usr/include/v/*.h	[ ]  __/__/__	videocap/*
+
+	WISP
+	====
+
+	[ ]  __/__/__	wisp			[ ]  __/__/__	SAMPLE
+	[ ]  __/__/__	libwisp.a		[ ]  __/__/__	ACULINK
+	[ ]  __/__/__	libwtest.a		[ ]  __/__/__	ACUUSING
+	[ ]  __/__/__	libilp.a (printq)	[ ]  __/__/__	wruncbl
+	[ ]  __/__/__   libede.a			
+
+	UTILITIES
+	=========
+
+	[ ]  __/__/__	display			[ ]  __/__/__	wrename
+	[ ]  __/__/__	makemsg			[ ]  __/__/__   wretcode 
+	[ ]  __/__/__	selectpg		[ ]  __/__/__   wrun     
+	[ ]  __/__/__	trim	 		[ ]  __/__/__   wscratch 
+	[ ]  __/__/__	wcopy			[ ]  __/__/__   wsubmit  
+	[ ]  __/__/__	wdelay			[ ]  __/__/__   wsysconf 
+	[ ]  __/__/__	wdelwrk			[ ]  __/__/__   wsysinit 
+	[ ]  __/__/__	wexists			[ ]  __/__/__   wusage   
+	[ ]  __/__/__	wfind			[ ]  __/__/__   viewkey  
+	[ ]  __/__/__	wputparm		[ ]  __/__/__	vsx
+	[ ]  __/__/__	wsort			[ ]  __/__/__ 	vcapkeys
+	[ ]  __/__/__	wpfkey
+	
+	EXTRAS
+	======
+
+	[ ]  __/__/__	wispmsg.dat
+	[ ]  __/__/__	bldmf			
+	[ ]  __/__/__	proctran
+	[ ]  __/__/__	perl
+	[ ]  __/__/__	printq (idaemon,ilp,ilpman,ishut)
+	[ ]  __/__/__	good
+	[ ]  __/__/__	disprint
+	[ ]  __/__/__   vsload (AT&T)
+

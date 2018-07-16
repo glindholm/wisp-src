@@ -723,9 +723,9 @@ NODE parse_close(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
-**	Revision 1.24  2002-03-21 18:26:40-05  gsl
+**	Revision 1.24  2002/03/21 23:26:40  gsl
 **	FIx format
-**
+**	
 **	Revision 1.23  2002-03-21 17:05:20-05  gsl
 **	Add MFSE open sharing clause and MFOC warning on a OPEN SHARED seq-file.
 **

@@ -211,9 +211,9 @@ long	 *starter, *counter, *filecount;
 /*
 **	History:
 **	$Log: prntname.c,v $
-**	Revision 1.8  1996-07-23 14:12:56-04  gsl
+**	Revision 1.8  1996/07/23 18:12:56  gsl
 **	drcs update
-**
+**	
 **
 **
 */

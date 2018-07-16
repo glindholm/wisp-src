@@ -47,10 +47,10 @@ void wisp_assert(char *cond, char *file, int line);
 /*
 **	History:
 **	$Log: assert.h,v $
-**	Revision 1.3  1997-08-27 15:04:01-04  gsl
+**	Revision 1.3  1997/08/27 19:04:01  gsl
 **	If _DEBUG is defined then define DEBUG
 **	Windows uses _DEBUG instead of DEBUG
-**
+**	
 **	Revision 1.2  1996-07-10 12:03:50-04  gsl
 **	Renamed from wassert.h to assert.h
 **

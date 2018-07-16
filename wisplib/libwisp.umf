@@ -37,8 +37,11 @@ clean:
 
 install: $(STDLIB)/$(THE_LIB)
 
-$(STDLIB)/$(THE_LIB): $(THE_LIB)
+$(STDLIB)/$(THE_LIB): $(THE_LIB) $(STDLIB)
 	cp $(THE_LIB) $@
+
+$(STDLIB):
+	mkdir -p $@
 
 $(THE_LIB): $(THE_LIB)(acpmap.o) \
 	$(THE_LIB)(acustubs.o) \
@@ -1752,9 +1755,12 @@ $(VALLIST): $(THE_LIB)
 
 #	History:
 #	$Log: libwisp.umf,v $
-#	Revision 1.41  2001-11-27 15:49:49-05  gsl
+#	Revision 1.41.2.1  2002/10/08 19:00:16  gsl
+#	update from HEAD
+#	
+#	Revision 1.41  2001/11/27 20:49:49  gsl
 #	Remove VMS que stuff
-#
+#	
 #	Revision 1.40  2001-11-27 10:12:53-05  gsl
 #	Update dependancies
 #

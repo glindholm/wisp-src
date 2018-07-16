@@ -32,9 +32,9 @@ void UPPER(char *line, int4 *len)
 /*
 **	History:
 **	$Log: upper.c,v $
-**	Revision 1.10  1996-08-19 18:33:02-04  gsl
+**	Revision 1.10  1996/08/19 22:33:02  gsl
 **	drcs update
-**
+**	
 **
 **
 */

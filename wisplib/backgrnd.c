@@ -110,9 +110,9 @@ int wbackground()
 /*
 **	History:
 **	$Log: backgrnd.c,v $
-**	Revision 1.12  1999-05-26 10:59:47-04  gsl
+**	Revision 1.12  1999/05/26 14:59:47  gsl
 **	fix const warning
-**
+**	
 **	Revision 1.11  1999-05-20 15:08:20-04  gsl
 **	Enhanced the detection of background.
 **	On unix if stdin is not a tty then assume background.

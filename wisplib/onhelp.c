@@ -34,9 +34,9 @@ void NOHELP(void)									/* Turn help off.				*/
 /*
 **	History:
 **	$Log: onhelp.c,v $
-**	Revision 1.9  1996-08-19 18:32:36-04  gsl
+**	Revision 1.9  1996/08/19 22:32:36  gsl
 **	drcs update
-**
+**	
 **
 **
 */

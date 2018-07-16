@@ -211,9 +211,9 @@ void EDECUSTX(void)
 /*
 **	History:
 **	$Log: edeoldoc.c,v $
-**	Revision 1.8  1997-06-10 15:18:17-04  gsl
+**	Revision 1.8  1997/06/10 19:18:17  gsl
 **	Change long to int4
-**
+**	
 **	Revision 1.7  1997-01-02 18:59:42-05  gsl
 **	Removed the include <vutil.h> as the customer would not have the
 **	header files source.

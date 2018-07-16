@@ -229,9 +229,9 @@ void process::load_from_env()
 /*
 **	History:
 **	$Log: process.cpp,v $
-**	Revision 1.13  1998-08-31 15:50:36-04  gsl
+**	Revision 1.13  1998/08/31 19:50:36  gsl
 **	drcs update
-**
+**	
 **	Revision 1.12  1998-08-31 15:14:08-04  gsl
 **	drcs update
 **
@@ -269,9 +269,9 @@ void process::load_from_env()
 //
 //	History:
 //	$Log: process.cpp,v $
-//	Revision 1.13  1998-08-31 15:50:36-04  gsl
+//	Revision 1.13  1998/08/31 19:50:36  gsl
 //	drcs update
-//
+//	
 //	Revision 1.12  1998-08-31 15:14:08-04  gsl
 //	drcs update
 //

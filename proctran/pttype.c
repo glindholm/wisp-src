@@ -121,9 +121,9 @@ void save_link_var(int* num_link_var)							/* Save the variable in link_item.	*
 /*
 **	History:
 **	$Log: pttype.c,v $
-**	Revision 1.5  1997-04-21 11:22:45-04  scass
+**	Revision 1.5  1997/04/21 15:22:45  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.4  1996-09-12 19:18:08-04  gsl
 **	Fix prototypes
 **

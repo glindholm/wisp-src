@@ -49,9 +49,9 @@ void vtitle(const char *titlestr);
 /*
 **	History:
 **	$Log: vutil.h,v $
-**	Revision 1.4  2001-10-15 09:12:55-04  gsl
+**	Revision 1.4  2001/10/15 13:12:55  gsl
 **	Add proto's
-**
+**	
 **	Revision 1.3  1997-07-09 12:38:37-04  gsl
 **	Removed obsolete routines
 **

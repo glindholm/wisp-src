@@ -145,9 +145,9 @@ void token::dump() const {
 //
 //	History:
 //	$Log: token.cpp,v $
-//	Revision 1.7  1998-09-02 17:28:21-04  gsl
+//	Revision 1.7  1998/09/02 21:28:21  gsl
 //	Changed to use trace() instead of printf()
-//
+//	
 //	Revision 1.6  1998-08-31 15:14:22-04  gsl
 //	drcs update
 //

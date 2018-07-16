@@ -204,9 +204,9 @@ void do_start_screen(void)
 /*
 **	History:
 **	$Log: ptscrdef.c,v $
-**	Revision 1.5  1997-04-21 11:20:28-04  scass
+**	Revision 1.5  1997/04/21 15:20:28  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.4  1996-09-12 19:17:53-04  gsl
 **	fix prototypes
 **

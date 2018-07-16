@@ -53,9 +53,9 @@ struct header2 shead2;
 /*
 **	History:
 **	$Log: readtape.h,v $
-**	Revision 1.7  1996-07-23 14:12:58-04  gsl
+**	Revision 1.7  1996/07/23 18:12:58  gsl
 **	drcs update
-**
+**	
 **
 **
 */

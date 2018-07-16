@@ -97,9 +97,9 @@ int vse_input(char *emsg)
 /*
 **	History:
 **	$Log: vseinp.c,v $
-**	Revision 1.11  1996-09-03 18:24:07-04  gsl
+**	Revision 1.11  1996/09/03 22:24:07  gsl
 **	drcs update
-**
+**	
 **
 **
 */

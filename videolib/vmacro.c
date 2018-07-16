@@ -70,9 +70,9 @@ vmacro(action) int action;
 /*
 **	History:
 **	$Log: vmacro.c,v $
-**	Revision 1.9  1996-10-11 18:16:10-04  gsl
+**	Revision 1.9  1996/10/11 22:16:10  gsl
 **	drcs update
-**
+**	
 **
 **
 */

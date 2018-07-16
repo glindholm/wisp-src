@@ -232,7 +232,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	/*
 	**	Check if the file exists and is a regular file.
 	*/
-	file_ok = (isafile(file_name) && fcanread(file_name));
+	file_ok = (WL_isafile(file_name) && WL_fcanread(file_name));
 
 
 	if (!file_ok || check_empty(file_name))					/* Check to see if empty file.		*/
@@ -2394,9 +2394,13 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 /*
 **	History:
 **	$Log: vdisplay.c,v $
-**	Revision 1.45  2001-10-15 09:55:17-04  gsl
+**	Revision 1.45.2.1  2002/10/09 19:20:33  gsl
+**	Update fexists.c to match HEAD
+**	Rename routines WL_xxx for uniqueness
+**	
+**	Revision 1.45  2001/10/15 13:55:17  gsl
 **	change vwang_set_videocap() to vwang_init_video()
-**
+**	
 **	Revision 1.44  2001-09-25 12:19:25-04  gsl
 **	Remove unneeded ifdefs
 **

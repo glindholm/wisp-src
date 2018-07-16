@@ -34,9 +34,9 @@
 /*
 **	History:
 **	$Log: vrawntcn.h,v $
-**	Revision 1.6  1997-06-24 10:56:02-04  gsl
+**	Revision 1.6  1997/06/24 14:56:02  gsl
 **	This header has been replaced by a generic vraw.h
-**
+**	
 **	Revision 1.5  1997-01-11 18:36:59-05  gsl
 **	Add vrawerror() prototype
 **

@@ -123,9 +123,9 @@ static int rec_disp_start = 0;
 /*
 **	History:
 **	$Log: vdispidx.h,v $
-**	Revision 1.5  1996-08-19 18:33:03-04  gsl
+**	Revision 1.5  1996/08/19 22:33:03  gsl
 **	drcs update
-**
+**	
 **
 **
 */

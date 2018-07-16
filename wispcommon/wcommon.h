@@ -23,13 +23,17 @@
 
 /*
 	Change WISP_VERSION:
-	- wcommon.h
-	- wisp_relnotes.txt
-	- wisp_install_unix.txt
-	- wispntsetup.txt
-	- edentsetup.txt
+	- wispcommon/wcommon.h
+	- port/makewisp.umf
+	- doc/wisp_relnotes.txt
+	- doc/wisp_install_unix.txt
+	- doc/wispntsetup.txt
+	- ede/edentsetup.txt
+	- acu/wruncbl.umf
+	- acu/wwruncbl.mak
+	- acu/wrun32wisp_XXX.mak
 */
-#define WISP_VERSION "V4.4.04"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.4.05"			 					/* WISPTRAN version (char[20])		*/
 
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
@@ -86,6 +90,9 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.44.2.2.2.1  2002/10/09 18:17:00  gsl
+**	WISP 4.4.05
+**	
 **	Revision 1.44.2.2  2002/08/20 18:12:24  gsl
 **	Add support for Micro Focus Shared Object files .so/.sl
 **	V4_4_04

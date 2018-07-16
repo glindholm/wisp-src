@@ -11,7 +11,7 @@
 **      RCS change log:
 **
 **      $Log: bldmf.h,v $
-**      Revision 1.6  1996-07-23 14:12:49-04  gsl
+**      Revision 1.6  1996/07/23 18:12:49  gsl
 **      drcs update
 **
 **      Revision 1.5  1995-04-25 02:57:58-07  gsl

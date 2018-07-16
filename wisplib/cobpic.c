@@ -876,9 +876,9 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 /*
 **	History:
 **	$Log: cobpic.c,v $
-**	Revision 1.17  2001-11-08 11:37:28-05  gsl
+**	Revision 1.17  2001/11/08 16:37:28  gsl
 **	Remove unused ptr.
-**
+**	
 **	Revision 1.16  2001-09-26 15:20:29-04  gsl
 **	Fix '*' zero suppression to the right of the decimal.
 **	IN parse_pic() for non-NUMERIC pictures set the numeric only fields to -1

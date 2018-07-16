@@ -137,10 +137,10 @@ static int vcrlfx(enum e_vlf direction,int do_cr)					/* Move up or down a line.
 /*
 **	History:
 **	$Log: vnewline.c,v $
-**	Revision 1.14  1997-07-12 17:36:35-04  gsl
+**	Revision 1.14  1997/07/12 21:36:35  gsl
 **	Fix to handle reverse scroll with COSTAR on WIN32.
 **	Corrected optimization to not use VOP_OFF
-**
+**	
 **	Revision 1.13  1997-07-09 11:48:35-04  gsl
 **	change to use the new video.h interfaces
 **

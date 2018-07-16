@@ -64,9 +64,9 @@ EXT int  prog_dscnt INIT_FALSE;								/* How many need their SELECT deleted.	*/
 /*
 **	History:
 **	$Log: cobfiles.h,v $
-**	Revision 1.6  1996-08-30 21:56:01-04  gsl
+**	Revision 1.6  1996/08/31 01:56:01  gsl
 **	drcs update
-**
+**	
 **
 **
 */

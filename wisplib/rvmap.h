@@ -34,9 +34,9 @@ int remote_volume(const char *local_path, char *remote_path);
 /*
 **	History:
 **	$Log: rvmap.h,v $
-**	Revision 1.2  1996-01-03 06:35:00-05  gsl
+**	Revision 1.2  1996/01/03 11:35:00  gsl
 **	Finished
-**
+**	
  * Revision 1.1  1996/01/03  10:52:52  gsl
  * Initial revision
  *

@@ -210,9 +210,9 @@ EXT int  wrote_special_names INIT_FALSE;						/* Was SPECIAL-NAMES written		*/
 /*
 **	History:
 **	$Log: wisp.h,v $
-**	Revision 1.16  2002-03-21 17:02:44-05  gsl
+**	Revision 1.16  2002/03/21 22:02:44  gsl
 **	Add mfoc_cobol and mfse_cobol
-**
+**	
 **	Revision 1.15  2001-09-13 09:58:49-04  gsl
 **	Add do_xtab -X flag
 **

@@ -1668,9 +1668,9 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
-**	Revision 1.24  2001-11-27 17:05:03-05  gsl
+**	Revision 1.24  2001/11/27 22:05:03  gsl
 **	Change to use longuid()
-**
+**	
 **	Revision 1.23  2001-11-08 11:47:58-05  gsl
 **	add missing include
 **

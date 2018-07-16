@@ -1,0 +1,32 @@
+procedure t1x3.wps
+	using &argx3 string(8)
+	declare &x3L1 as string(8) initial "x3L1-1"
+	declare &x3G1 global string(8) initial "x3G1-1"
+
+	prompt "Begining of t1x3.wps"
+
+	if &argx3 NE "x1L1-1" then
+		prompt "ERR formal not correct &argx3 = ", &argx3
+	assign &argx3 = "x1L1-2"
+
+	if &x1G1 NE "x1G1-1" then
+		prompt "ERR global not correct &x1G1 = ", &x1G1
+	assign &x1G1 = "x1G1-2"
+
+	run t1x4 using &x3L1, &argx3
+
+	if &x3L1 NE "x3L1-2" then 
+		prompt "ERR &x3L1 = ", &x3L1
+
+	if &argx3    NE "x1L1-3" then 
+		prompt "ERR &argx3 = ", &argx3
+	assign &argx3 = "x1L1-4"
+
+	if &x3G1 NE "x3G1-2" then
+		prompt "ERR global not correct &x3G1 = ", &x3G1
+
+	if &x1G1 NE "x1G1-3" then
+		prompt "ERR global not correct &x1G1 = ", &x1G1
+	assign &x1G1 = "x1G1-4"
+
+	prompt "End of t1x3.wps"

@@ -99,7 +99,6 @@ int display_util_getparms(char *filename)
 	int4 native_mode;
 	char getparm_type[3];
 	char pf_key;
-	FILE *fh;
 
 	wpload();									/* Load personality stuff.		*/
 	native_mode = 0L;                                           			/* Start off in WANG_VS mode.		*/
@@ -152,9 +151,9 @@ int display_util_getparms(char *filename)
 			}
 		}
 
-		if (*filename && (fh = fopen(filename,"r")))			/* See if we can open file		*/
+		if (WL_fcanread(filename))	/* See if we can read the file */
 		{
-			fclose(fh);						/* Success - we have access		*/
+			/* Success - we have access		*/
 
 			/*
 			**	Update the PRB for backwards referencing.
@@ -454,9 +453,12 @@ const char* custom_display_utility(void)
 /*
 **	History:
 **	$Log: wfiledis.c,v $
-**	Revision 1.17  1999-02-23 16:58:53-05  gsl
+**	Revision 1.17.2.1  2002/10/09 21:03:04  gsl
+**	Huge file support
+**	
+**	Revision 1.17  1999/02/23 21:58:53  gsl
 **	moved the no_windows() routine to wispcfg.c
-**
+**	
 **	Revision 1.16  1999-02-23 15:38:34-05  gsl
 **	Add no_windows() routine which returns true on unix and when using
 **	telnet on windows NT.

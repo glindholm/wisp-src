@@ -34,9 +34,9 @@ int setenvstr(const char* envstring);
 /*
 **	History:
 **	$Log: setenvst.h,v $
-**	Revision 1.1  1996-10-14 12:20:57-04  gsl
+**	Revision 1.1  1996/10/14 16:20:57  gsl
 **	Initial revision
-**
+**	
 **
 **
 */

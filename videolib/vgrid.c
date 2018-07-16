@@ -145,9 +145,9 @@ static void vgridpack(string,sc,ic,ec,ncols,nden)
 /*
 **	History:
 **	$Log: vgrid.c,v $
-**	Revision 1.10  1997-07-08 17:00:25-04  gsl
+**	Revision 1.10  1997/07/08 21:00:25  gsl
 **	Change to use new video.h interfaces
-**
+**	
 **	Revision 1.9  1996-10-11 18:16:05-04  gsl
 **	drcs update
 **

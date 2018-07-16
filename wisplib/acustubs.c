@@ -37,9 +37,9 @@ void call_acucobol()
 /*
 **	History:
 **	$Log: acustubs.c,v $
-**	Revision 1.6  1996-08-19 18:32:08-04  gsl
+**	Revision 1.6  1996/08/19 22:32:08  gsl
 **	drcs update
-**
+**	
 **
 **
 */

@@ -1219,9 +1219,9 @@ static NODE parse_read_crt(NODE the_statement, NODE the_sentence)
 /*
 **	History:
 **	$Log: wt_read.c,v $
-**	Revision 1.20  1998-08-28 10:56:03-04  gsl
+**	Revision 1.20  1998/08/28 14:56:03  gsl
 **	Add support for READ PREVIOUS
-**
+**	
 **	Revision 1.19  1998-06-09 13:09:29-04  gsl
 **	Add support for manual record locking
 **

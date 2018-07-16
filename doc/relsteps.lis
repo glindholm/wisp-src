@@ -1,0 +1,58 @@
+								relsteps.lis
+								07/20/92
+
+	STEPS OF A WISP RELEASE
+	=======================
+	- pre-cutover
+	- CUTOVER
+	- Build source kit
+	- port WISP
+	- build ship kit
+	- install WISP
+	- send to beta test sites
+
+	PRE-CUTOVER
+	===========
+	- do a test build
+	- reconstruct umf files
+
+	CUTOVER
+	=======
+	- warn all users
+	- ensure all files are logged into SCS
+	- change version numbers
+	- lock SCS
+	- backup SCS
+	- move QAHOLD to MASTER			SCS RELEASE
+	- rename change.log files		@UPDLOGS.COM
+	- write release notes
+
+	BUILD SOURCE KIT
+	================
+	- build source kit on hammer		$ bldsrckit.sh
+	- ensure version numbers correct
+	- ensure make.include is generic
+
+	PORT WISP
+	=========
+	- follow steps in 			portunix.lis/portvms.lis
+	- build a QA ship kit			bldshipkit.sh
+	- install a QA WISP			installqa.sh
+	- QA test WISP				qawisp.lis
+
+	BUILD SHIP KIT
+	==============
+
+	Follow instructions in portunix.lis/portvms.lis under
+		CREATE THE REAL WISP SHIP KIT
+
+	INSTALL WISP
+	============
+
+	Install the real ship kit following the WISP manual.
+
+	SEND OUT BETA TEST KITS
+	=======================
+
+	Send out BETA TEST kits to BETA sites.
+

@@ -35,9 +35,9 @@ extern int search_parm_area(char *dest, char *key, int4 maxlen, SHMH *parm_a);
 /*
 **	History:
 **	$Log: putparm.h,v $
-**	Revision 1.6  1996-07-23 14:17:49-04  gsl
+**	Revision 1.6  1996/07/23 18:17:49  gsl
 **	drcs update
-**
+**	
 **
 **
 */

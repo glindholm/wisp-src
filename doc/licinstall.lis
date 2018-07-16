@@ -1,0 +1,59 @@
+	Copyright (c) 1992,1997 by NeoMedia Technologies Inc. 
+	All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		Installing a WISP License on UNIX
+	
+	Document:	licinstall.lis
+	Last Updated:	13 July 1992
+	Products:	WISP/UNIX
+	Versions:	3.2 (AND LATER)
+	
+	Summary:	Instruction for installing the WISP license.
+
+	====================================================================
+	
+
+	Installing a WISP License Key on UNIX
+	=====================================
+
+	The WISP runtime system will now require that the system it is
+	running on be licenced.  This document describes how to install a
+	WISP license onto a UNIX system.
+
+	If your system is not licensed for WISP you will get a warning
+	message each time you run a WISP converted program.  The warning
+	message will state that you are running on a unlicensed system.
+
+	Included with your WISP release will be a document entitled "WISP
+	Runtime License Key".  On this document is your License Key.  You
+	will require this key to install a WISP license on your system.
+
+	Installation Steps:
+
+	INSTALL WISP
+
+		Use the normal procedure as described in the WISP manual 
+		Appendix A to install WISP on the system.
+
+	RUN WLICENSE
+
+		Run the program "wlicense".  You will need to be the ROOT
+		user to run "wlicense".  It will request information from
+		the "WISP Runtime License Key" document.  If you purchased
+		a SINGLE machine license you will also require a
+		validation code.  Follow the instructions given by
+		"wlicense" to acquire a validation code.
+
+	The file "/lib/wisp.license" will be created to store the license 
+	information.  This file will be checked by running programs to
+	verify that the system is licensed.
+
+	If you have purchased an UNLIMITED runtime license for a given
+	platform you can license additional machines of the same type by 
+	repeating the above procedure on each system, or you can simply
+	copy the license file "/lib/wisp.license" to each machine.
+
+
+	========================= END OF DOCUMENT ==========================

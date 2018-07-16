@@ -1,0 +1,84 @@
+	Copyright (c) 1994 by International Digital Scientific Incorporated.
+	All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		WISP SUPPORT FOR NP THE HP NETWORK PRINT FACILITY
+	
+	Document:	PQNP.LIS
+	Last Updated:	28 SEPT 94
+	Products:	WISP/UNIX
+	Versions:	3.3x10 (AND LATER)
+	
+	Summary:	Configuring WISP to use NP for printing on HP/UX.
+
+	====================================================================
+	
+
+	WISP SUPPORT FOR NP THE HP NETWORK PRINT FACILITY
+	=================================================
+	
+	This document describes the WISP support for NP the HP/UX network
+	printing facility.  WISP can now be configured to use NP for all
+	its printing.
+	
+	NP is part of the HP/UX OpenSpool product and it is designed as a
+	replacement for LP.  NP is very similar in operation to LP, except
+	that the option flags are different.
+
+
+	Configuring WISP to Use NP
+	--------------------------
+	A new option has been added to the WISP OPTIONS file to instruct 
+	WISP to use NP for printing.
+
+	Uncomment (or add) the option "PQNP" to the file $WISPCONFIG/OPTIONS.
+	When the PQNP option is used WISP will use "np" instead of "lp" when
+	it is building the print command.  It will also ensure that any
+	options it internally adds to the "np" command are correct.
+
+	$WISPCONFIG/OPTIONS Example:
+		...
+		IDSIPRINTOFF		- Turn off UNIQUE
+		PQNP			- Use NP instead of LP
+		...
+
+	Configuring Printing Options
+	----------------------------
+	To configure the printing options for NP you use the exact same
+	configuration files as with LP.  These files are used to "map"
+	the Wang style print options to NP command line options.  The files
+	used are, FORMS to map the form number, LPMAP to map the print
+	class, and PRMAP to map the printer number.
+
+	FORMS example:
+		001 -P form1
+		005 -P legal -F Times
+		132 -P wide -F Courier
+
+	LPMAP example:
+		A -p high
+		B -p normal
+		C -p low
+
+	PRMAP example:
+		001 -q laserqueue
+		002 -q salesroom
+		003 -q dotmatix
+
+	Using the above examples, if file "/home/bill/timecard" was printed
+	with PRTCLASS=B, FORM_NUM=005, COPIES=2 (and PRINTER=000) the 
+	following NP command would be issued:
+
+		np -s -P legal -F Times -p normal -c 2 /home/bill/timecard
+		  (1) (2)               (3)       (4) 
+
+	(1) The "-s" option is always added to suppress screen output.
+	(2) The FORMS file mapping for FORM_NUM=005
+	(3) The LPMAP file mapping for PRTCLASS=B
+	(4) The "-c 2" option is added because COPIES=2 was requested.
+
+	See the WISP Manual page 7-22 for a complete description of the
+	configuration files FORMS, LPMAP, and PRMAP.
+
+	========================= END OF DOCUMENT ==========================

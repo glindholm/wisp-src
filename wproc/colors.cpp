@@ -101,9 +101,9 @@ char *number_to_color(int number) {
 //
 //	History:
 //	$Log: colors.cpp,v $
-//	Revision 1.6  1998-08-31 15:13:35-04  gsl
+//	Revision 1.6  1998/08/31 19:13:35  gsl
 //	drcs update
-//
+//	
 //
 
 //	

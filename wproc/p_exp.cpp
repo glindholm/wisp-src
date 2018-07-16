@@ -675,9 +675,9 @@ Boolean compiler::parse_filename() {
 //
 //	History:
 //	$Log: p_exp.cpp,v $
-//	Revision 1.7  1998-08-31 15:14:02-04  gsl
+//	Revision 1.7  1998/08/31 19:14:02  gsl
 //	drcs update
-//
+//	
 //
 
 //	

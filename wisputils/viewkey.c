@@ -120,9 +120,9 @@ int sig;
 /*
 **	History:
 **	$Log: viewkey.c,v $
-**	Revision 1.9  1996-07-26 18:14:16-04  gsl
+**	Revision 1.9  1996/07/26 22:14:16  gsl
 **	Fix includes for termio.h and termios.h
-**
+**	
 **	Revision 1.8  1996-07-23 11:13:02-07  gsl
 **	drcs update
 **

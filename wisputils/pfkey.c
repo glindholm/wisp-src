@@ -79,9 +79,9 @@ fixup()
 /*
 **	History:
 **	$Log: pfkey.c,v $
-**	Revision 1.7  1996-07-23 14:12:56-04  gsl
+**	Revision 1.7  1996/07/23 18:12:56  gsl
 **	drcs update
-**
+**	
 **
 **
 */

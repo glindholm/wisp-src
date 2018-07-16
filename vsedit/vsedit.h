@@ -65,9 +65,9 @@ int vse_input(char *emsg);
 /*
 **	History:
 **	$Log: vsedit.h,v $
-**	Revision 1.6  1996-09-03 18:24:02-04  gsl
+**	Revision 1.6  1996/09/03 22:24:02  gsl
 **	drcs update
-**
+**	
 **
 **
 */

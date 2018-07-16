@@ -1,0 +1,25 @@
+procedure t1x4.wps
+	using &p1 string(8), &p2 string(8)
+	declare &gt1x4 global string(8) initial "t1x4"
+
+	prompt "Begining of t1x4.wps"
+
+	if &p1 NE "x3L1-1" then
+		prompt "ERR formal not correct &p1 = ", &p1
+	assign &p1 = "x3L1-2"
+
+	if &p2 NE "x1L1-2" then
+		prompt "ERR formal not correct &p2 = ", &p2
+	assign &p2 = "x1L1-3"
+
+	if &x1G1 NE "x1G1-2" then
+		prompt "ERR global not correct &x1G1 = ", &x1G1
+	assign &x1G1 = "x1G1-3"
+
+	if &x3G1 NE "x3G1-1" then
+		prompt "ERR global not correct &x3G1 = ", &x3G1
+	assign &x3G1 = "x3G1-2"
+
+	run t1x5
+
+	prompt "End of t1x4.wps"

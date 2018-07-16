@@ -156,9 +156,9 @@ char new_name[255], fdl_name[255];							/*Passed vaules name, fdl name.		*/
 /*
 **	History:
 **	$Log: getezname.c,v $
-**	Revision 1.8  1997-06-10 15:44:18-04  scass
+**	Revision 1.8  1997/06/10 19:44:18  scass
 **	Changed long to int4 for portability.
-**
+**	
 **	Revision 1.7  1996-07-23 14:12:54-04  gsl
 **	drcs update
 **

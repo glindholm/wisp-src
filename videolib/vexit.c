@@ -52,9 +52,9 @@ void vexit()
 /*
 **	History:
 **	$Log: vexit.c,v $
-**	Revision 1.12  1997-07-08 16:59:08-04  gsl
+**	Revision 1.12  1997/07/08 20:59:08  gsl
 **	Change to use new video.h defines and interfaces
-**
+**	
 **	Revision 1.11  1996-11-13 20:30:02-05  gsl
 **	Use vcontrol_flush()
 **

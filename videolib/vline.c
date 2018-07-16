@@ -393,9 +393,9 @@ static int is_gr(int row, int col)				/* Routine to see if a position is a line 
 /*
 **	History:
 **	$Log: vline.c,v $
-**	Revision 1.11  1998-10-13 14:49:53-04  gsl
+**	Revision 1.11  1998/10/13 18:49:53  gsl
 **	Change to use VMAP_CNG_OLDDATA
-**
+**	
 **	Revision 1.10  1997-07-08 17:12:10-04  gsl
 **	change to using vcapvalue()
 **	use new video.h defines

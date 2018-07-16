@@ -529,9 +529,9 @@
 //
 //	History:
 //	$Log: keyboard.hpp,v $
-//	Revision 1.7  1998-08-31 15:13:54-04  gsl
+//	Revision 1.7  1998/08/31 19:13:54  gsl
 //	drcs update
-//
+//	
 //
 
 //	

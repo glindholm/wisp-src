@@ -29,9 +29,9 @@ void BELL(int4 *bell_count)							/* WANG BELL function				*/
 /*
 **	History:
 **	$Log: bell.c,v $
-**	Revision 1.11  1997-10-23 16:05:55-04  gsl
+**	Revision 1.11  1997/10/23 20:05:55  gsl
 **	Add missing  include
-**
+**	
 **	Revision 1.10  1997-10-17 14:07:01-04  gsl
 **	Add nativescreens() conditionals
 **

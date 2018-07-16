@@ -55,9 +55,9 @@ void screen_print(void);
 /*
 **	History:
 **	$Log: screen.h,v $
-**	Revision 1.1  1997-12-18 09:04:07-05  gsl
+**	Revision 1.1  1997/12/18 14:04:07  gsl
 **	Initial revision
-**
+**	
 **
 **
 **

@@ -50,9 +50,9 @@ int vfnkey(key) int key;							/* Return the numeric value of a function key.	*/
 /*
 **	History:
 **	$Log: vfnkey.c,v $
-**	Revision 1.9  1996-10-11 18:16:04-04  gsl
+**	Revision 1.9  1996/10/11 22:16:04  gsl
 **	drcs update
-**
+**	
 **
 **
 */

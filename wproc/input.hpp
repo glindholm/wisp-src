@@ -128,9 +128,9 @@ input *create_input_object(const char *a_filename, arguments *args);
 //
 //	History:
 //	$Log: input.hpp,v $
-//	Revision 1.5  1998-08-31 15:13:52-04  gsl
+//	Revision 1.5  1998/08/31 19:13:52  gsl
 //	drcs update
-//
+//	
 //
 
 //	

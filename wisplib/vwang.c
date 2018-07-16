@@ -6763,10 +6763,10 @@ static int mousenonmod(void)
 /*
 **	History:
 **	$Log: vwang.c,v $
-**	Revision 1.102  2001-10-15 09:56:34-04  gsl
+**	Revision 1.102  2001/10/15 13:56:34  gsl
 **	Change vwang_set_videocap() to vwang_init_video()
 **	Add setting the video error log file.
-**
+**	
 **	Revision 1.101  2001-09-25 11:08:05-04  gsl
 **	Remove unneeded ifdefs
 **

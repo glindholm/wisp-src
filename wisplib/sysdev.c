@@ -96,9 +96,9 @@ uint4 osd_freeblocks(char *cur_dev)							/* Return the free blocks on device	*/
 /*
 **	History:
 **	$Log: sysdev.c,v $
-**	Revision 1.5  1996-08-19 18:33:00-04  gsl
+**	Revision 1.5  1996/08/19 22:33:00  gsl
 **	drcs update
-**
+**	
 **
 **
 */

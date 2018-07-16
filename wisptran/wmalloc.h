@@ -34,9 +34,9 @@ void *wrealloc(void *ptr, int size);
 /*
 **	History:
 **	$Log: wmalloc.h,v $
-**	Revision 1.7  1998-03-20 17:39:42-05  gsl
+**	Revision 1.7  1998/03/20 22:39:42  gsl
 **	update
-**
+**	
 **	Revision 1.6  1996-08-30 21:56:13-04  gsl
 **	drcs update
 **

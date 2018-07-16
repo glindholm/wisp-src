@@ -3,7 +3,7 @@
  *
  *
  * $Log: bldscr.c,v $
- * Revision 1.7  1995-04-25 05:57:59-04  gsl
+ * Revision 1.7  1995/04/25 09:57:59  gsl
  * drcs state V3_3_15
  *
  * Revision 1.6  1995/04/17  11:50:28  gsl

@@ -390,9 +390,9 @@ static void blank_msg_line()									/* Call VWANG to erase message line.	*/
 /*
 **	History:
 **	$Log: wsfnm.c,v $
-**	Revision 1.15  1996-07-15 13:21:43-04  gsl
+**	Revision 1.15  1996/07/15 17:21:43  gsl
 **	Fix argument warning
-**
+**	
 **	Revision 1.14  1996-07-11 16:56:10-07  gsl
 **	fix includes and return values for NT
 **

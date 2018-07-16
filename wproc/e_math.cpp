@@ -182,9 +182,9 @@ void machine::integer_subtract() {
 //
 //	History:
 //	$Log: e_math.cpp,v $
-//	Revision 1.8  1998-08-31 15:13:42-04  gsl
+//	Revision 1.8  1998/08/31 19:13:42  gsl
 //	drcs update
-//
+//	
 //
 
 //	

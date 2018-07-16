@@ -47,6 +47,17 @@ static char MODDATE[20];
 #define _LARGE_FILES
 #endif
 
+#if defined(AIX) || defined(HPUX) || defined(SOLARIS) || defined(LINUX)
+#define _LARGEFILE64_SOURCE
+#define USE_FILE64
+#endif
+
+#ifdef USE_FILE64
+#define FOPEN64 fopen64
+#else
+#define FOPEN64 fopen
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -112,6 +123,11 @@ static char MODDATE[20];
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
+
+#if defined(WIN32)
+#define O_LARGEFILE 0
+#endif
+
 
 #ifdef SCO					/* This must be define in the .umf file on SCO machines with CFLAGS = -DSCO	*/
 #define TAPEDEV "//dev/rct0"
@@ -854,7 +870,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			** now open it and set eotape flag false
 			**
 			*/
-                        tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY|O_BINARY);
+                        tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
 			eotape=FALSE;
 			/*
 			** handle error condition
@@ -1024,7 +1040,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
 					{
 						int  rwd;
-						rwd=open(arch_file,O_RDONLY|O_BINARY);
+						rwd=open(arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
 						close(rwd);
 					}
 					else
@@ -1075,7 +1091,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 					if (strlen(arch_file) && strcmp(arch_file, TAPEDEV))
 					{
 						int  rwd;
-						rwd=open(arch_file,O_RDONLY|O_BINARY);
+						rwd=open(arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
 						close(rwd);
 					}
 					else
@@ -1092,7 +1108,7 @@ static int readtape(unsigned char *buf, int bytesrq, int command)
 			if (eightmil && tapebytes == 0)
 			{
 				close(tape_fd);
-				tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY|O_BINARY);
+				tape_fd = open((strlen(norwd_file))?norwd_file:arch_file,O_RDONLY|O_BINARY|O_LARGEFILE);
 				goto loop;
 			}
 #endif /* REV_1_64_1_1 */
@@ -1208,7 +1224,7 @@ static int geteot(void)
 	*/
 	getbin((unsigned char*)&seq,x.fileseq,SHORT);
 #if EOTLOG
-	eotlog = fopen("eotlog","a");
+	eotlog = FOPEN64("eotlog","a");
 	fprintf(eotlog,"BEOT     [%4.4s]\n",x.beot);
 	fprintf(eotlog,"TAPEVOL  [%6.6s]\n",x.tapevol);
 	fprintf(eotlog,"ORIGVOL  [%6.6s]\n",x.origvol);
@@ -1786,7 +1802,7 @@ static int load(void)
 		*/
                 if(action==ACT_EXTRACT && skip_lib==FALSE && !file_continued) 
 		{
-			out=fopen(outpath,"wb");
+			out=FOPEN64(outpath,"wb");
 		}
                 fileeof=0;
 
@@ -2738,7 +2754,7 @@ static int digest(char *name)
 	}
 	fflush(stderr);
 
-	if ((in=fopen(name,"rb")) == NULL)
+	if ((in=FOPEN64(name,"rb")) == NULL)
 	{
                 fprintf(stderr,"\nERROR cannot open temp file: %s [errno=%d]\n",name,errno);
 		perror("Opening temp file for reading");
@@ -2788,7 +2804,7 @@ static int digest(char *name)
 	
 	fflush(stdout);
         
-        if ((out = fopen(outname,"wb"))==NULL)
+        if ((out = FOPEN64(outname,"wb"))==NULL)
         {
                 fprintf(stderr,"\nERROR cannot open output: %s [errno=%d]\n",outname,errno);
 		perror("Opening output file for writing");
@@ -3107,7 +3123,7 @@ static int chk_valid_hdr(void)
 		close(tape_fd);
 		tape_fd= -1;
 		tapebytes=0;
-		vsxdump=open(".vsxdump",O_WRONLY|O_CREAT|O_BINARY|0666);
+		vsxdump=open(".vsxdump",O_WRONLY|O_CREAT|O_BINARY|O_LARGEFILE|0666);
 		write(vsxdump,tapebuf,tapebytes);
 		close(vsxdump);
 		if (new_vol)
@@ -3165,7 +3181,7 @@ static void load3480(char *tapedev, int cartridge)
 	struct mtop mt_command;
 
 	quickkludge:
-	if ((fd = open(tapedev, O_RDONLY|O_BINARY)) < 0) {
+	if ((fd = open(tapedev, O_RDONLY|O_BINARY|O_LARGEFILE)) < 0) {
 		if (errno == EIO) {
 #if 0
 			fprintf(stderr, "%s: no tape loaded or drive offline\n", 
@@ -3254,6 +3270,9 @@ static void load3480(char *tapedev, int cartridge)
 #endif
 /*
  * $Log: vsx.c,v $
+ * Revision 1.96.2.2  2002/10/10 12:56:45  gsl
+ * Huge file support
+ *
  * Revision 1.96.2.1  2002/09/05 19:22:24  gsl
  * LINUX
  *

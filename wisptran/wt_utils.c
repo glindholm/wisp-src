@@ -345,9 +345,9 @@ const char *get_prog_status(int fnum)
 /*
 **	History:
 **	$Log: wt_utils.c,v $
-**	Revision 1.16  1998-03-27 13:38:17-05  gsl
+**	Revision 1.16  1998/03/27 18:38:17  gsl
 **	fix warnings
-**
+**	
 **	Revision 1.15  1998-03-26 09:25:17-05  gsl
 **	Changed the get_prog_xxx() routines to not use the gen_data_name()
 **	because these need to word before working-storage is processed.

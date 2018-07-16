@@ -213,9 +213,9 @@ typedef unsigned char fac_t;
 /*
 **	History:
 **	$Log: scnfacs.h,v $
-**	Revision 1.10  1998-01-07 10:27:57-05  gsl
+**	Revision 1.10  1998/01/07 15:27:57  gsl
 **	Add common field defines
-**
+**	
 **	Revision 1.9  1997-10-29 11:30:13-05  gsl
 **	Add a bunch of missing FAC defines
 **	Add all the FAC macros from vwang.h

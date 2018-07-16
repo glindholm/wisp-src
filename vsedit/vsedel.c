@@ -160,9 +160,9 @@ int vse_ed_del_range(int4 start_line, int4 end_line)
 /*
 **	History:
 **	$Log: vsedel.c,v $
-**	Revision 1.11  1996-09-03 18:24:00-04  gsl
+**	Revision 1.11  1996/09/03 22:24:00  gsl
 **	drcs update
-**
+**	
 **
 **
 */

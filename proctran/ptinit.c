@@ -562,9 +562,9 @@ static void memerr(void)								/* Memory error.			*/
 /*
 **	History:
 **	$Log: ptinit.c,v $
-**	Revision 1.5  1997-04-21 11:13:49-04  scass
+**	Revision 1.5  1997/04/21 15:13:49  scass
 **	Corrected copyright.
-**
+**	
 **	Revision 1.4  1996-09-12 19:17:20-04  gsl
 **	fix prototypes
 **

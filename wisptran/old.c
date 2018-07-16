@@ -3432,9 +3432,9 @@ p_delete()
 /*
 **	History:
 **	$Log: old.c,v $
-**	Revision 1.4  1998-03-27 14:11:52-05  gsl
+**	Revision 1.4  1998/03/27 19:11:52  gsl
 **	updated
-**
+**	
 **	Revision 1.3  1998-03-26 12:09:57-05  gsl
 **	update
 **

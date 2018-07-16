@@ -46,9 +46,9 @@ extern void split_token_to_dtp_file(int mincol, TOKEN *tokptr);
 /*
 **	History:
 **	$Log: output.h,v $
-**	Revision 1.7  1999-09-07 10:34:45-04  gsl
+**	Revision 1.7  1999/09/07 14:34:45  gsl
 **	Fix prototypes.
-**
+**	
 **	Revision 1.6  1998-03-03 16:04:52-05  gsl
 **	Add tput_leading_fluff()
 **

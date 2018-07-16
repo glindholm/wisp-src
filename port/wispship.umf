@@ -1,0 +1,559 @@
+#
+#	wispship.umf
+#
+
+COPY=cp -f
+
+SRCDIR=$(WISP)/src
+
+WISPVER=9999
+
+WISPNAME=wisp_$(WISPVER)
+EDENAME=ede_$(WISPVER)
+
+KITDIR=		$(SRCDIR)/$(WISPNAME).ship
+WISPKIT=	$(KITDIR)/$(WISPNAME)
+EDEKIT=		$(KITDIR)/$(EDENAME)
+
+dist_dir_list= \
+	$(WISPKIT)	\
+	$(WISPKIT)/acu 	\
+	$(WISPKIT)/bin 	\
+	$(WISPKIT)/config 	\
+	$(WISPKIT)/config/videocap 	\
+	$(WISPKIT)/demo 	\
+	$(WISPKIT)/etc 	\
+	$(WISPKIT)/lib 	\
+	$(WISPKIT)/mf 	\
+	$(EDEKIT)	\
+	$(EDEKIT)/demo
+
+base_dist_list= \
+	$(KITDIR)/wisp_install_unix.txt \
+	$(KITDIR)/wisp_relnotes.txt
+
+wisp_dist_list=	\
+	$(WISPKIT)	\
+	$(WISPKIT)/acu 	\
+	$(WISPKIT)/acu/aculink.wcb 	\
+	$(WISPKIT)/acu/acuusing.cob 	\
+	$(WISPKIT)/acu/acu.rules 	\
+	$(WISPKIT)/acu/acucobol.include 	\
+	$(WISPKIT)/acu/sub85.c 	\
+	$(WISPKIT)/acu/sub85_acu51.c 	\
+	$(WISPKIT)/acu/wacudisplay.cob 	\
+	$(WISPKIT)/acu/wacuerror.cob 	\
+	$(WISPKIT)/acu/wacufac2screen.cob 	\
+	$(WISPKIT)/acu/wacugetparm.cob 	\
+	$(WISPKIT)/acu/wacugetpfkey.cob 	\
+	$(WISPKIT)/acu/wacuhelp.cob 	\
+	$(WISPKIT)/acu/wacuwsb.cob 	\
+	$(WISPKIT)/acu/wispacn.txt 	\
+	$(WISPKIT)/acu/wruncbl.umf 	\
+	$(WISPKIT)/acu/xterm.acu 	\
+	$(WISPKIT)/bin 	\
+	$(WISPKIT)/bin/bldmf 	\
+	$(WISPKIT)/bin/display 	\
+	$(WISPKIT)/bin/hexed 	\
+	$(WISPKIT)/bin/makemsg 	\
+	$(WISPKIT)/bin/proctran 	\
+	$(WISPKIT)/bin/selectpg 	\
+	$(WISPKIT)/bin/vcapkeys 	\
+	$(WISPKIT)/bin/viewkey 	\
+	$(WISPKIT)/bin/vsedit 	\
+	$(WISPKIT)/bin/vsx 	\
+	$(WISPKIT)/bin/vtest 	\
+	$(WISPKIT)/bin/wac.sh 	\
+	$(WISPKIT)/bin/wcopy 	\
+	$(WISPKIT)/bin/wdelay 	\
+	$(WISPKIT)/bin/wdelwrk 	\
+	$(WISPKIT)/bin/wdiag 	\
+	$(WISPKIT)/bin/wexists 	\
+	$(WISPKIT)/bin/wfind 	\
+	$(WISPKIT)/bin/wisp 	\
+	$(WISPKIT)/bin/wlicense 	\
+	$(WISPKIT)/bin/wproc 	\
+	$(WISPKIT)/bin/wputparm 	\
+	$(WISPKIT)/bin/wrename 	\
+	$(WISPKIT)/bin/wretcode 	\
+	$(WISPKIT)/bin/wrun 	\
+	$(WISPKIT)/bin/wscratch 	\
+	$(WISPKIT)/bin/wshell 	\
+	$(WISPKIT)/bin/wsort 	\
+	$(WISPKIT)/bin/wsubmit 	\
+	$(WISPKIT)/bin/wsysconf 	\
+	$(WISPKIT)/bin/wsysinit 	\
+	$(WISPKIT)/bin/wusage 	\
+	$(WISPKIT)/config 	\
+	$(WISPKIT)/config/CHARMAP 	\
+	$(WISPKIT)/config/FORMS 	\
+	$(WISPKIT)/config/LGMAP 	\
+	$(WISPKIT)/config/LPMAP 	\
+	$(WISPKIT)/config/OPTIONS 	\
+	$(WISPKIT)/config/PRMAP 	\
+	$(WISPKIT)/config/SCMAP 	\
+	$(WISPKIT)/config/W4WMAP 	\
+	$(WISPKIT)/config/videocap 	\
+	$(WISPKIT)/config/videocap/aix_xterm.vcap 	\
+	$(WISPKIT)/config/videocap/aixterm.vcap 	\
+	$(WISPKIT)/config/videocap/ansi.vcap 	\
+	$(WISPKIT)/config/videocap/ansidos.vcap 	\
+	$(WISPKIT)/config/videocap/att605.vcap 	\
+	$(WISPKIT)/config/videocap/decterm.vcap 	\
+	$(WISPKIT)/config/videocap/dg_xterm.vcap 	\
+	$(WISPKIT)/config/videocap/ibm3151.vcap 	\
+	$(WISPKIT)/config/videocap/ibm8514.vcap 	\
+	$(WISPKIT)/config/videocap/ipx_sun.vcap 	\
+	$(WISPKIT)/config/videocap/ipx_xterm.vcap 	\
+	$(WISPKIT)/config/videocap/msdos.vcap 	\
+	$(WISPKIT)/config/videocap/qvt101p.vcap 	\
+	$(WISPKIT)/config/videocap/rflvt220.vcap 	\
+	$(WISPKIT)/config/videocap/sco_xterm.vcap 	\
+	$(WISPKIT)/config/videocap/stddef.vcap 	\
+	$(WISPKIT)/config/videocap/sun_cmd.vcap 	\
+	$(WISPKIT)/config/videocap/uterm.vcap 	\
+	$(WISPKIT)/config/videocap/uw_xterm.vcap 	\
+	$(WISPKIT)/config/videocap/vt100.vcap 	\
+	$(WISPKIT)/config/videocap/vt220.vcap 	\
+	$(WISPKIT)/config/videocap/vt510.vcap 	\
+	$(WISPKIT)/config/videocap/w4w_vt220.vcap 	\
+	$(WISPKIT)/config/videocap/wincon.vcap 	\
+	$(WISPKIT)/config/videocap/wy_vt100.vcap 	\
+	$(WISPKIT)/config/videocap/xterm.vcap 	\
+	$(WISPKIT)/config/wispmsg.dat 	\
+	$(WISPKIT)/config/wispmsg.txt 	\
+	$(WISPKIT)/config/wproc.msg 	\
+	$(WISPKIT)/config/wrunconfig 	\
+	$(WISPKIT)/demo 	\
+	$(WISPKIT)/demo/cursor.wps 	\
+	$(WISPKIT)/demo/demo.wps 	\
+	$(WISPKIT)/demo/dr.wps 	\
+	$(WISPKIT)/demo/ed.wps 	\
+	$(WISPKIT)/demo/environ.wps 	\
+	$(WISPKIT)/demo/putparm.wps 	\
+	$(WISPKIT)/demo/screen.wps 	\
+	$(WISPKIT)/demo/test.wps 	\
+	$(WISPKIT)/demo/video.wps 	\
+	$(WISPKIT)/etc 	\
+	$(WISPKIT)/etc/DISPRINT.wcb 	\
+	$(WISPKIT)/etc/softlink.wcb 	\
+	$(WISPKIT)/etc/wispplat.wcb 	\
+	$(WISPKIT)/etc/disprint.umf 	\
+	$(WISPKIT)/etc/make.include 	\
+	$(WISPKIT)/etc/nonascii.txt 	\
+	$(WISPKIT)/etc/wisp_install_unix.txt 	\
+	$(WISPKIT)/etc/wisp_relnotes.txt 	\
+	$(WISPKIT)/etc/words.def 	\
+	$(WISPKIT)/etc/wproc.txt 	\
+	$(WISPKIT)/lib 	\
+	$(WISPKIT)/lib/libvideo.a 	\
+	$(WISPKIT)/lib/libwisp.a 	\
+	$(WISPKIT)/mf 	\
+	$(WISPKIT)/mf/mflink.cob 	\
+	$(WISPKIT)/mf/mf.rules 	\
+	$(WISPKIT)/mf/wispmf.c 	\
+	$(WISPKIT)/mf/wispmf.o 	\
+	$(WISPKIT)/mf/wrunmf.c 	\
+	$(WISPKIT)/mf/wrunmf.o 	\
+	$(WISPKIT)/mf/wrunmf.umf
+
+ede_dist_list=	\
+	$(EDEKIT) 	\
+	$(EDEKIT)/demo 	\
+	$(EDEKIT)/demo/HELPMAP 	\
+	$(EDEKIT)/demo/mcbbld.wcb 	\
+	$(EDEKIT)/demo/mcbcode.hlp 	\
+	$(EDEKIT)/demo/mcbcol.hlp 	\
+	$(EDEKIT)/demo/mcbcpy1.wcb 	\
+	$(EDEKIT)/demo/mcbcpy2.wcb 	\
+	$(EDEKIT)/demo/mcbcpy3.wcb 	\
+	$(EDEKIT)/demo/mcbdisp.hlp 	\
+	$(EDEKIT)/demo/mcbedit.hlp 	\
+	$(EDEKIT)/demo/mcbedit.wcb 	\
+	$(EDEKIT)/demo/mcbicnt.hlp 	\
+	$(EDEKIT)/demo/mcbname.hlp 	\
+	$(EDEKIT)/demo/mcbopts.hlp 	\
+	$(EDEKIT)/demo/mcbrow.hlp 	\
+	$(EDEKIT)/demo/mcbtext.hlp 	\
+	$(EDEKIT)/demo/mcbtype.hlp 	\
+	$(EDEKIT)/demo/mcbvalue.hlp 	\
+	$(EDEKIT)/demo/mcbwidth.hlp 	\
+	$(EDEKIT)/demo/menudefs.wcb 	\
+	$(EDEKIT)/demo/menudemo.opt 	\
+	$(EDEKIT)/demo/menudemo.umf 	\
+	$(EDEKIT)/demo/menudemo.wcb 	\
+	$(EDEKIT)/demo/menudemomf.umf 	\
+	$(EDEKIT)/demo/menudisp.wcb 	\
+	$(EDEKIT)/demo/menulogo.wcb 	\
+	$(EDEKIT)/demo/menumcbs.wcb 	\
+	$(EDEKIT)/demo/menuvect.wcb 	\
+	$(EDEKIT)/good 	\
+	$(EDEKIT)/libede.a 	
+
+wisp_dist_list2 = \
+	$(WISPKIT)/Info
+
+wisp_dist_list3 = \
+	$(KITDIR)/$(WISPNAME).tar.Z
+
+ede_dist_list3 = \
+	$(KITDIR)/$(EDENAME).tar.Z
+
+
+PHASE1 = \
+	$(base_dist_list) \
+	$(wisp_dist_list) \
+	$(ede_dist_list)
+
+PHASE2 = \
+	$(wisp_dist_list2)
+
+PHASE3 = \
+	$(wisp_dist_list3) \
+	$(ede_dist_list3)
+
+#
+#	targets
+#
+default: clean allkits
+	@echo '****'
+	@echo '****' Shipping kit $(KITDIR) is up-to-date!
+	@echo '****'
+
+allkits: makedirs $(PHASE1) $(PHASE2) $(PHASE3)
+
+makedirs: $(dist_dir_list)
+
+$(dist_dir_list):
+	mkdir -p $@
+
+
+##########################################################################
+#	CLEAN
+
+clean:
+	rm -r -f $(KITDIR)
+	rm -f $(SRCDIR)/etc/wispmsg.dat
+
+
+##########################################################################
+#	SRCDIR components
+
+$(KITDIR)/wisp_install_unix.txt \
+$(KITDIR)/wisp_relnotes.txt \
+: 	$(SRCDIR)/doc/$(@F)
+	$(COPY) $(SRCDIR)/doc/$(@F) $@
+	chmod a=r $@
+
+$(KITDIR)/$(WISPNAME).tar.Z: $(PHASE1) $(PHASE2)
+	@echo
+	@echo BUILDING $@
+	@echo
+	find $(WISPKIT) -type f -print | xargs chmod a=r
+	find $(WISPKIT) -type d -print | xargs chmod u=rwx,go=rx
+	chmod a+x $(WISPKIT)/bin/*
+	chmod a+w $(WISPKIT)/acu/acucobol.include
+	chmod a+w $(WISPKIT)/*/*.umf
+	chmod a+w $(WISPKIT)/*/*.rules
+	chmod a+w $(WISPKIT)/config
+	chmod a+w $(WISPKIT)/config/*
+	chmod a+w $(WISPKIT)/mf/*.o
+	rm -f $@
+	(cd $(KITDIR); tar -cf - $(WISPNAME) | compress > $@)
+	chmod a=r $@
+	ls -l $@
+	@echo
+
+$(KITDIR)/$(EDENAME).tar.Z: $(PHASE1) $(PHASE2)
+	@echo
+	@echo BUILDING $@
+	@echo
+	find $(EDEKIT) -type f -print | xargs chmod a=r
+	find $(EDEKIT) -type d -print | xargs chmod u=rwx,go=rx
+	chmod a+x $(EDEKIT)/good
+	chmod a+w $(EDEKIT)/demo/*.umf
+	rm -f $@
+	(cd $(KITDIR); tar -cf - $(EDENAME) | compress > $@)
+	chmod a=r $@
+	ls -l $@
+	@echo
+
+
+##########################################################################
+#	WISPKIT components
+
+$(WISPKIT)/Info: $(PHASE1)
+	@echo
+	@echo BUILDING $@
+	@echo
+	rm -f $@
+	date 						>  $@
+	uname -s -r -v					>> $@
+	$(WISPKIT)/bin/wisp|grep Version=		>> $@
+	$(WISPKIT)/bin/wproc -v|grep '[Vv]ersion'	>> $@
+	@echo
+
+#
+#	$(WISPKIT)/acu
+#
+
+$(WISPKIT)/acu/acu.rules 	\
+$(WISPKIT)/acu/acucobol.include 	\
+$(WISPKIT)/acu/sub85.c 	\
+$(WISPKIT)/acu/sub85_acu51.c 	\
+$(WISPKIT)/acu/wacudisplay.cob 	\
+$(WISPKIT)/acu/wacuerror.cob 	\
+$(WISPKIT)/acu/wacufac2screen.cob 	\
+$(WISPKIT)/acu/wacugetparm.cob 	\
+$(WISPKIT)/acu/wacugetpfkey.cob 	\
+$(WISPKIT)/acu/wacuhelp.cob 	\
+$(WISPKIT)/acu/wacuwsb.cob 	\
+$(WISPKIT)/acu/wruncbl.umf 	\
+$(WISPKIT)/acu/xterm.acu 	\
+: 	$(SRCDIR)/acu/$(@F)
+	$(COPY) $(SRCDIR)/acu/$(@F) $@
+
+$(WISPKIT)/acu/wispacn.txt: $(SRCDIR)/doc/$(@F)
+	$(COPY) $(SRCDIR)/doc/$(@F) $@
+
+$(WISPKIT)/acu/aculink.wcb:	$(SRCDIR)/acu/ACULINK.wcb
+	$(COPY) $(SRCDIR)/acu/ACULINK.wcb $@
+
+$(WISPKIT)/acu/acuusing.cob:	$(SRCDIR)/acu/ACUUSING.cob
+	$(COPY) $(SRCDIR)/acu/ACUUSING.cob $@
+
+#
+#	$(WISPKIT)/bin
+#
+
+$(WISPKIT)/bin/bldmf 	\
+$(WISPKIT)/bin/display 	\
+$(WISPKIT)/bin/hexed 	\
+$(WISPKIT)/bin/makemsg 	\
+$(WISPKIT)/bin/selectpg 	\
+$(WISPKIT)/bin/vcapkeys 	\
+$(WISPKIT)/bin/viewkey 	\
+$(WISPKIT)/bin/vsx 	\
+$(WISPKIT)/bin/wcopy 	\
+$(WISPKIT)/bin/wdelay 	\
+$(WISPKIT)/bin/wdelwrk 	\
+$(WISPKIT)/bin/wdiag 	\
+$(WISPKIT)/bin/wexists 	\
+$(WISPKIT)/bin/wfind 	\
+$(WISPKIT)/bin/wlicense 	\
+$(WISPKIT)/bin/wputparm 	\
+$(WISPKIT)/bin/wrename 	\
+$(WISPKIT)/bin/wretcode 	\
+$(WISPKIT)/bin/wrun 	\
+$(WISPKIT)/bin/wscratch 	\
+$(WISPKIT)/bin/wshell 	\
+$(WISPKIT)/bin/wsort 	\
+$(WISPKIT)/bin/wsubmit 	\
+$(WISPKIT)/bin/wsysconf 	\
+$(WISPKIT)/bin/wsysinit 	\
+$(WISPKIT)/bin/wusage 	\
+:	$(SRCDIR)/wisputils/$(@F)
+	$(COPY) $(SRCDIR)/wisputils/$(@F) $@
+
+$(WISPKIT)/bin/wisp:	$(SRCDIR)/wisptran/$(@F)
+	$(COPY) $(SRCDIR)/wisptran/$(@F) $@
+
+$(WISPKIT)/bin/wproc:	$(SRCDIR)/wproc/$(@F)
+	$(COPY) $(SRCDIR)/wproc/$(@F) $@
+
+$(WISPKIT)/bin/proctran:	$(SRCDIR)/proctran/$(@F)
+	$(COPY) $(SRCDIR)/proctran/$(@F) $@
+
+$(WISPKIT)/bin/vsedit:	$(SRCDIR)/vsedit/$(@F)
+	$(COPY) $(SRCDIR)/vsedit/$(@F) $@
+
+$(WISPKIT)/bin/wac.sh:	$(SRCDIR)/vsedit/$(@F)
+	$(COPY) $(SRCDIR)/vsedit/$(@F) $@
+
+$(WISPKIT)/bin/vtest:	$(SRCDIR)/videotest/$(@F)
+	$(COPY) $(SRCDIR)/videotest/$(@F) $@
+
+
+#
+#	$(WISPKIT)/config
+#
+$(WISPKIT)/config/CHARMAP 	\
+$(WISPKIT)/config/FORMS 	\
+$(WISPKIT)/config/LGMAP 	\
+$(WISPKIT)/config/LPMAP 	\
+$(WISPKIT)/config/OPTIONS 	\
+$(WISPKIT)/config/PRMAP 	\
+$(WISPKIT)/config/SCMAP 	\
+$(WISPKIT)/config/W4WMAP 	\
+$(WISPKIT)/config/wispmsg.txt 	\
+$(WISPKIT)/config/wrunconfig 	\
+:	$(SRCDIR)/etc/$(@F)
+	$(COPY) $(SRCDIR)/etc/$(@F) $@
+
+$(WISPKIT)/config/wproc.msg:	$(SRCDIR)/wproc/$(@F)
+	$(COPY) $(SRCDIR)/wproc/$(@F) $@
+
+# Run makemsg in the etc dir to make wispmsg.dat
+$(WISPKIT)/config/wispmsg.dat: $(SRCDIR)/etc/wispmsg.dat
+	$(COPY) $(SRCDIR)/etc/wispmsg.dat $@
+
+$(SRCDIR)/etc/wispmsg.dat: $(SRCDIR)/etc/wispmsg.txt $(WISPKIT)/bin/makemsg
+	(cd $(SRCDIR)/etc; $(WISPKIT)/bin/makemsg)
+
+#
+#	$(WISPKIT)/config/videocap
+#
+
+$(WISPKIT)/config/videocap/aix_xterm.vcap 	\
+$(WISPKIT)/config/videocap/aixterm.vcap 	\
+$(WISPKIT)/config/videocap/ansi.vcap 	\
+$(WISPKIT)/config/videocap/ansidos.vcap 	\
+$(WISPKIT)/config/videocap/att605.vcap 	\
+$(WISPKIT)/config/videocap/decterm.vcap 	\
+$(WISPKIT)/config/videocap/dg_xterm.vcap 	\
+$(WISPKIT)/config/videocap/ibm3151.vcap 	\
+$(WISPKIT)/config/videocap/ibm8514.vcap 	\
+$(WISPKIT)/config/videocap/ipx_sun.vcap 	\
+$(WISPKIT)/config/videocap/ipx_xterm.vcap 	\
+$(WISPKIT)/config/videocap/msdos.vcap 	\
+$(WISPKIT)/config/videocap/qvt101p.vcap 	\
+$(WISPKIT)/config/videocap/rflvt220.vcap 	\
+$(WISPKIT)/config/videocap/sco_xterm.vcap 	\
+$(WISPKIT)/config/videocap/stddef.vcap 	\
+$(WISPKIT)/config/videocap/sun_cmd.vcap 	\
+$(WISPKIT)/config/videocap/uterm.vcap 	\
+$(WISPKIT)/config/videocap/uw_xterm.vcap 	\
+$(WISPKIT)/config/videocap/vt100.vcap 	\
+$(WISPKIT)/config/videocap/vt220.vcap 	\
+$(WISPKIT)/config/videocap/vt510.vcap 	\
+$(WISPKIT)/config/videocap/w4w_vt220.vcap 	\
+$(WISPKIT)/config/videocap/wincon.vcap 	\
+$(WISPKIT)/config/videocap/wy_vt100.vcap 	\
+$(WISPKIT)/config/videocap/xterm.vcap 	\
+: 	$(SRCDIR)/videocap/$(@F)
+	$(COPY) $(SRCDIR)/videocap/$(@F) $@
+
+#
+#	$(WISPKIT)/demo
+#
+
+$(WISPKIT)/demo/cursor.wps 	\
+$(WISPKIT)/demo/demo.wps 	\
+$(WISPKIT)/demo/dr.wps 	\
+$(WISPKIT)/demo/ed.wps 	\
+$(WISPKIT)/demo/environ.wps 	\
+$(WISPKIT)/demo/putparm.wps 	\
+$(WISPKIT)/demo/screen.wps 	\
+$(WISPKIT)/demo/test.wps 	\
+$(WISPKIT)/demo/video.wps 	\
+:	$(SRCDIR)/wproc/$(@F)
+	$(COPY) $(SRCDIR)/wproc/$(@F) $@
+
+#
+#	$(WISPKIT)/etc
+#
+
+$(WISPKIT)/etc/DISPRINT.wcb 	\
+$(WISPKIT)/etc/disprint.umf 	\
+:	$(SRCDIR)/wisputils/$(@F)
+	$(COPY) $(SRCDIR)/wisputils/$(@F) $@
+
+$(WISPKIT)/etc/wispplat.wcb:	$(SRCDIR)/wisputils/WISPPLAT.wcb
+	$(COPY) $(SRCDIR)/wisputils/WISPPLAT.wcb $@
+
+$(WISPKIT)/etc/softlink.wcb:	$(SRCDIR)/wisputils/SOFTLINK.wcb
+	$(COPY) $(SRCDIR)/wisputils/SOFTLINK.wcb $@
+
+$(WISPKIT)/etc/make.include:	$(SRCDIR)/port/$(@F)
+	$(COPY) $(SRCDIR)/port/$(@F) $@
+
+$(WISPKIT)/etc/nonascii.txt 	\
+$(WISPKIT)/etc/wisp_install_unix.txt 	\
+$(WISPKIT)/etc/wisp_relnotes.txt 	\
+$(WISPKIT)/etc/wproc.txt 	\
+:	$(SRCDIR)/doc/$(@F)
+	$(COPY) $(SRCDIR)/doc/$(@F) $@
+
+$(WISPKIT)/etc/words.def:	$(SRCDIR)/wisptran/$(@F)
+	$(COPY) $(SRCDIR)/wisptran/$(@F) $@
+
+#
+#	$(WISPKIT)/lib
+#
+
+$(WISPKIT)/lib/libvideo.a	\
+$(WISPKIT)/lib/libwisp.a	\
+:	$(SRCDIR)/lib/$(@F)
+	$(COPY) $(SRCDIR)/lib/$(@F) $@
+
+#
+#	$(WISPKIT)/mf
+#
+
+$(WISPKIT)/mf/mf.rules 	\
+$(WISPKIT)/mf/wispmf.c 	\
+$(WISPKIT)/mf/wispmf.o \
+$(WISPKIT)/mf/wrunmf.c 	\
+$(WISPKIT)/mf/wrunmf.o \
+$(WISPKIT)/mf/wrunmf.umf \
+:	$(SRCDIR)/mf/$(@F)
+	$(COPY) $(SRCDIR)/mf/$(@F) $@
+
+
+$(WISPKIT)/mf/mflink.cob:	$(SRCDIR)/mf/MFLINK.cob
+	$(COPY) $(SRCDIR)/mf/MFLINK.cob $@
+
+##########################################################################
+#	EDEKIT components
+
+#
+#	$(EDEKIT)
+#
+
+$(EDEKIT)/good:		$(SRCDIR)/ede/$(@F)
+	$(COPY) $(SRCDIR)/ede/$(@F) $@
+
+$(EDEKIT)/libede.a:	$(SRCDIR)/lib/$(@F)
+	$(COPY) $(SRCDIR)/lib/$(@F) $@
+
+#
+#	$(EDEKIT)/demo
+#
+
+$(EDEKIT)/demo/mcbbld.wcb 	\
+$(EDEKIT)/demo/mcbcode.hlp 	\
+$(EDEKIT)/demo/mcbcol.hlp 	\
+$(EDEKIT)/demo/mcbcpy1.wcb 	\
+$(EDEKIT)/demo/mcbcpy2.wcb 	\
+$(EDEKIT)/demo/mcbcpy3.wcb 	\
+$(EDEKIT)/demo/mcbdisp.hlp 	\
+$(EDEKIT)/demo/mcbedit.hlp 	\
+$(EDEKIT)/demo/mcbedit.wcb 	\
+$(EDEKIT)/demo/mcbicnt.hlp 	\
+$(EDEKIT)/demo/mcbname.hlp 	\
+$(EDEKIT)/demo/mcbopts.hlp 	\
+$(EDEKIT)/demo/mcbrow.hlp 	\
+$(EDEKIT)/demo/mcbtext.hlp 	\
+$(EDEKIT)/demo/mcbtype.hlp 	\
+$(EDEKIT)/demo/mcbvalue.hlp 	\
+$(EDEKIT)/demo/mcbwidth.hlp 	\
+$(EDEKIT)/demo/menudefs.wcb 	\
+$(EDEKIT)/demo/menudemo.opt 	\
+$(EDEKIT)/demo/menudemo.umf 	\
+$(EDEKIT)/demo/menudemo.wcb 	\
+$(EDEKIT)/demo/menudemomf.umf 	\
+$(EDEKIT)/demo/menudisp.wcb 	\
+$(EDEKIT)/demo/menulogo.wcb 	\
+$(EDEKIT)/demo/menumcbs.wcb 	\
+$(EDEKIT)/demo/menuvect.wcb 	\
+:	$(SRCDIR)/ede/demo/$(@F)
+	$(COPY) $(SRCDIR)/ede/demo/$(@F) $@
+
+$(EDEKIT)/demo/HELPMAP:	$(SRCDIR)/ede/demo/helpmap.unix
+	$(COPY) $(SRCDIR)/ede/demo/helpmap.unix $@
+
+
+#
+# END OF FILE
+#
+

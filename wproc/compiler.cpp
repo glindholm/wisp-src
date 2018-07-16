@@ -550,9 +550,9 @@ void compiler::compile_statements(int_32 how_many) {
 //
 //	History:
 //	$Log: compiler.cpp,v $
-//	Revision 1.12  1998-08-31 15:13:36-04  gsl
+//	Revision 1.12  1998/08/31 19:13:36  gsl
 //	drcs update
-//
+//	
 //
 
 //	

@@ -172,9 +172,9 @@ const char *get_wisp_option(const char *keyword);
 /*
 **	History:
 **	$Log: wperson.h,v $
-**	Revision 1.24  2001-10-31 15:26:05-05  gsl
+**	Revision 1.24  2001/10/31 20:26:05  gsl
 **	Add wisp_temp_defaults_path()
-**
+**	
 **	Revision 1.23  2001-09-07 15:29:51-04  gsl
 **	Removed VMS code
 **	Added HELP_ERROR_LOG and HELP_BATCH_QUEUE

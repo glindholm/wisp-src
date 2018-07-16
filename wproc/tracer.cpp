@@ -760,9 +760,9 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 /*
 **	History:
 **	$Log: tracer.cpp,v $
-**	Revision 1.10  1998-08-31 15:50:38-04  gsl
+**	Revision 1.10  1998/08/31 19:50:38  gsl
 **	drcs update
-**
+**	
 **	Revision 1.9  1998-08-31 15:14:23-04  gsl
 **	drcs update
 **
@@ -786,9 +786,9 @@ char *tracer::symbol_data(symbol &a_symbol, int array_index) {
 //
 //	History:
 //	$Log: tracer.cpp,v $
-//	Revision 1.10  1998-08-31 15:50:38-04  gsl
+//	Revision 1.10  1998/08/31 19:50:38  gsl
 //	drcs update
-//
+//	
 //	Revision 1.9  1998-08-31 15:14:23-04  gsl
 //	drcs update
 //

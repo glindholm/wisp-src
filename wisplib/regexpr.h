@@ -144,9 +144,9 @@ int re_exec();
 /*
 **	History:
 **	$Log: regexpr.h,v $
-**	Revision 1.6  1996-08-19 18:32:49-04  gsl
+**	Revision 1.6  1996/08/19 22:32:49  gsl
 **	drcs update
-**
+**	
 **
 **
 */

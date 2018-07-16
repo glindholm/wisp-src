@@ -44,9 +44,9 @@ char	*argv[];
 /*
 **	History:
 **	$Log: fdump.c,v $
-**	Revision 1.7  1996-07-23 14:12:53-04  gsl
+**	Revision 1.7  1996/07/23 18:12:53  gsl
 **	drcs update
-**
+**	
 **
 **
 */

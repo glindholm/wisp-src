@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "wisplibm___Win32_Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /I "..\videolib" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "WINNT" /D "MSFS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /I "..\videolib" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -85,10 +85,6 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\acpmap.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\acustubs.c
 # End Source File
 # Begin Source File
@@ -113,19 +109,11 @@ SOURCE=.\breakacp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\btransl.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\cancel.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\cexit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\cgetneg.c
 # End Source File
 # Begin Source File
 
@@ -161,19 +149,11 @@ SOURCE=.\date.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\dateset.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\day.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\dbfile.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\delete.c
 # End Source File
 # Begin Source File
 
@@ -218,10 +198,6 @@ SOURCE=.\findcase.c
 # Begin Source File
 
 SOURCE=.\findexts.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\fixerr.c
 # End Source File
 # Begin Source File
 
@@ -337,26 +313,6 @@ SOURCE=.\mngfile.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\mount.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\msname.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\mstime.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\msvalue.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\mvspaces.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\mwconv.c
 # End Source File
 # Begin Source File
@@ -397,10 +353,6 @@ SOURCE=.\print.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\protect.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\putparm.c
 # End Source File
 # Begin Source File
@@ -430,10 +382,6 @@ SOURCE=.\rename.c
 # Begin Source File
 
 SOURCE=.\retcode.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\rtransl.c
 # End Source File
 # Begin Source File
 
@@ -473,27 +421,11 @@ SOURCE=.\setprgid.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\setrcode.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\setsymb.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\settrigp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\setupqm.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\sharemem.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\shellvar.c
 # End Source File
 # Begin Source File
 
@@ -517,27 +449,11 @@ SOURCE=.\sortseqf.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\sortx.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\spawn.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\string.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\submit.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\sysdev.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\sysinf.c
 # End Source File
 # Begin Source File
 
@@ -558,14 +474,6 @@ SOURCE=.\vdispidx.c
 # Begin Source File
 
 SOURCE=.\vdisplay.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmspargs.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmssort.c
 # End Source File
 # Begin Source File
 
@@ -602,14 +510,6 @@ SOURCE=.\wchain.c
 # Begin Source File
 
 SOURCE=.\wcmatch.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wdelfile.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wdellock.c
 # End Source File
 # Begin Source File
 
@@ -674,10 +574,6 @@ SOURCE=.\wfname.c
 # Begin Source File
 
 SOURCE=.\wfopen.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wfstatus.c
 # End Source File
 # Begin Source File
 
@@ -793,14 +689,6 @@ SOURCE=.\wshelp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wsmove.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wspawn.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\wswap.c
 # End Source File
 # Begin Source File
@@ -810,10 +698,6 @@ SOURCE=.\wsxio.c
 # Begin Source File
 
 SOURCE=.\wsystem.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wtransl.c
 # End Source File
 # Begin Source File
 
@@ -885,11 +769,7 @@ SOURCE=.\p2x386.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\que_jobs.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\quemgmt.h
+SOURCE=..\wispcommon\prompt.h
 # End Source File
 # Begin Source File
 
@@ -946,10 +826,6 @@ SOURCE=.\visn2.h
 # Begin Source File
 
 SOURCE=.\visn3.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\vmssort.h
 # End Source File
 # Begin Source File
 

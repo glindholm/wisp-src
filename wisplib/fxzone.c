@@ -240,9 +240,9 @@ static void do_conv_pos(unsigned char *lang,unsigned char *cptr)		/* Do converti
 /*
 **	History:
 **	$Log: fxzone.c,v $
-**	Revision 1.7  1996-08-19 18:32:22-04  gsl
+**	Revision 1.7  1996/08/19 22:32:22  gsl
 **	drcs update
-**
+**	
 **
 **
 */

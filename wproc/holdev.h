@@ -66,9 +66,9 @@ void setrestscr( int flag );
 /*
 **	History:
 **	$Log: holdev.h,v $
-**	Revision 1.5  1998-08-31 15:50:34-04  gsl
+**	Revision 1.5  1998/08/31 19:50:34  gsl
 **	drcs update
-**
+**	
 **	Revision 1.4  1998-08-31 15:13:51-04  gsl
 **	drcs update
 **

@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir ".\Release"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "WINNT" /D "MSFS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\wispcommon" /D "NDEBUG" /D "WIN32" /D "_CONSOLE" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -65,7 +65,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir ".\Debug"
 # PROP Target_Dir "."
 # ADD BASE CPP /nologo /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /YX /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\wispcommon" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "WINNT" /D "MSFS" /YX /FD /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\wispcommon" /D "_DEBUG" /D "WIN32" /D "_CONSOLE" /D "WINNT" /D "MSFS" /FR /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -86,23 +86,7 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 # Begin Source File
 
-SOURCE=.\cobfiles.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\crt.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\dataconv.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\demovali.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\directiv.h
 # End Source File
 # Begin Source File
 
@@ -114,23 +98,7 @@ SOURCE=.\input.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\input.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\keylist.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\keywords.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\keywords.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\lines.h
 # End Source File
 # Begin Source File
 
@@ -138,19 +106,7 @@ SOURCE=.\node.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\node.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\output.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\output.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\proto.h
 # End Source File
 # Begin Source File
 
@@ -158,15 +114,7 @@ SOURCE=.\reduce.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\reduce.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\wispcommon\ring.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\scrn.h
 # End Source File
 # Begin Source File
 
@@ -174,23 +122,11 @@ SOURCE=.\statment.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\statment.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\stats.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\token.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\tokenize.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\tokenize.h
 # End Source File
 # Begin Source File
 
@@ -202,23 +138,11 @@ SOURCE=.\wisp.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wisp.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\wispcommon\wisp_pic.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wispfile.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\wmalloc.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wmalloc.h
 # End Source File
 # Begin Source File
 
@@ -242,10 +166,6 @@ SOURCE=.\wt_datad.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wt_datad.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\wt_debug.c
 # End Source File
 # Begin Source File
@@ -259,10 +179,6 @@ SOURCE=.\wt_delet.c
 # Begin Source File
 
 SOURCE=.\wt_disp.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\wt_disp.h
 # End Source File
 # Begin Source File
 
@@ -306,10 +222,6 @@ SOURCE=.\wt_procd.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\wt_procd.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\wt_read.c
 # End Source File
 # Begin Source File
@@ -346,7 +258,55 @@ SOURCE=.\wt_wsdiv.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl;fi;fd"
 # Begin Source File
 
+SOURCE=.\cobfiles.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\crt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\demovali.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\directiv.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\wispcommon\getopt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\input.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\keylist.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\keywords.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\lines.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\node.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\output.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\proto.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\reduce.h
 # End Source File
 # Begin Source File
 
@@ -354,7 +314,47 @@ SOURCE=..\wispcommon\ring.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\scrn.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\statment.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\token.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\tokenize.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wisp.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\wispcommon\wisp_pic.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wispfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wmalloc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wt_datad.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wt_disp.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\wt_procd.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"
