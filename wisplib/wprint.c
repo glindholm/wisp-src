@@ -363,7 +363,7 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 		strcpy(exe,"ulp -q");
 	}
 
-	sprintf( cmd, "%s %s %s %s %s %s %s", 
+	sprintf( cmd, "%s %s %s %s %s %s '%s'", 
 		exe,
 		modestr,
 		l_class,
@@ -519,7 +519,7 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 		}
 
 
-		sprintf( cmd, "%s %s %s %s %s %s %s", 
+		sprintf( cmd, "%s %s %s %s %s %s '%s'", 
 				base_command,
 				suppress_flag, 
 				wforms(formnum), 

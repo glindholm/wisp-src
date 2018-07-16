@@ -277,7 +277,7 @@ int get_cli(int argc, char *argv[])
 				}
 				else
 				{
-					printf("%%WISP-F-BADCOMPILER Invalid compiler flag (-V %s).\n",optarg);
+					printf("%WISP-F-BADCOMPILER Invalid compiler flag (-V %s).\n",optarg);
 					perror(0);
 					exit_wisp(EXIT_FAST);
 				}						

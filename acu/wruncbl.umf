@@ -378,11 +378,11 @@ header_crid: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(CRIDDIR)
 	@echo ">>>> CFLAGS  = " $(CFLAGS)
 	@echo ">>>>"
 
-header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDEDIR)
+header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDE_LIB_PATH)
 	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+EDE"
 	@echo ">>>>"
 	@echo ">>>> WISPDIR = " $(WISPDIR)
-	@echo ">>>> EDEDIR  = " $(EDEDIR)
+	@echo ">>>> EDELIB  = " $(EDE_LIB_PATH)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
 	@echo ">>>> PWD     = " `pwd`
 	@echo ">>>> CC      = " `which $(CC)`

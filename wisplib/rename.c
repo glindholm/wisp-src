@@ -587,7 +587,7 @@ static int unix_shell_move(const char* old_filename, const char* new_filename)
 {
 	char	cmd[256];
 
-	sprintf(cmd,"mv \"%s\" \"%s\" >/dev/null 2>&1",old_filename,new_filename);
+	sprintf(cmd,"mv '%s' '%s' >/dev/null 2>&1",old_filename,new_filename);
 	return (wsystem(cmd));
 }
 #endif /* unix */

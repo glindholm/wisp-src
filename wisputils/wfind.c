@@ -16,6 +16,7 @@ static char rcsid[]="$Id:$";
 #ifdef unix
 
 #include <stdio.h>
+#include <string.h>
 
 #define EXT_FILEXT
 #include "filext.h"

@@ -10,7 +10,6 @@ static char rcsid[]="$Id:$";
 			/************************************************************************/
 
 #include <stdio.h>
-#include <string.h>
 #include "wisplib.h"
 #include "werrlog.h"
 
@@ -83,7 +82,7 @@ int run_unixcommand_silent(const char* command)
 		char	buff[1024];
 		while (fgets(buff, sizeof(buff), pipe) != NULL)
 		{
-			size_t i;
+			int i;
 			i = strlen(buff);
 			if (i > 0 && '\n' == buff[i-1]) 
 			{

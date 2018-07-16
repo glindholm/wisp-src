@@ -150,7 +150,7 @@ $(L):	$(L)(vscrglb.o) $(L)(version.o) $(L)(vscrhelp.o) $(L)(vscrout.o) \
 	$(L)(vscrspky.o) $(L)(vscrsqz.o) $(L)(vscrkwfo.o) \
 	$(L)(ll.o) $(L)(gp.o) $(L)(valflv.o) \
 	$(L)(vcsio.o) $(L)(ccsioerr.o) $(L)(cridebug.o) \
-	$(L)(kexists.o)
+	$(L)(kexists.o) $(L)(kcsit.o)
 
 $(IOL):	$(IOL)(kv3.o) $(IOL)(brlio.o) $(IOL)(seqio.o)
 

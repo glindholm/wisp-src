@@ -1540,7 +1540,7 @@ static void select_edit(const char* file)
 		}
 		else
 		{
-			sprintf(cmd,"\"%s\" \"%s\"",weditorexe(),file);			/* Double quote wrap file		*/
+			sprintf(cmd,"'%s' '%s'",weditorexe(),file);			/* quote wrap file		*/
 			rc = wsystem_interactive(cmd);
 
 			if (rc)

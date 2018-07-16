@@ -643,7 +643,7 @@ static int unloadfhisam_fhconvert(const char *inname, const char *outname, int4 
 		sprintf(parms,"IN %s\nIT %s\nON %s\nOT S0\nOF %d\n",inname, filetype, outname, recsize);
 	}
 
-	sprintf(cmd,"echo \"%s\" | fhconvert -e -c - ",parms);
+	sprintf(cmd,"echo '%s' | fhconvert -e -c - ",parms);
 
 	unlink(outname);		/* Delete old output file */
 
@@ -707,7 +707,7 @@ static int unloadfhisam_rebuild(const char *inname, const char *outname, int4 re
 	/*
 	**	rebuild {infile},{outfile} -o:{ind},seq -c:d0 -r:f{recsize}
 	*/
-	sprintf(cmd,"rebuild %s,%s -o:%s,seq -c:d0 -r:f%d ",
+	sprintf(cmd,"rebuild '%s,%s' -o:%s,seq -c:d0 -r:f%d ",
 		inname, outname, intype, recsize);
 
 	unlink(outname);		/* Delete old output file */

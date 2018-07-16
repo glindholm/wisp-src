@@ -828,7 +828,7 @@ void int_32_to_ascii(int_32 an_int_32, char *a_string) {
 #if DOS
    ltoa(an_int_32, a_string, 10);
 #else
-   sprintf(a_string, "%d", an_int_32);
+   sprintf(a_string, "%ld", an_int_32);
 #endif
 }
 
