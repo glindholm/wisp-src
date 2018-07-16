@@ -1,0 +1,26 @@
+000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       softlink.wcb
+000500**
+000600**   Project:    WISP/UTILS
+000700**
+000800**   Purpose:    Copybook to assist in using the routines
+000900**               USESOFTLINK and USEHARDLINK.
+001000**
+001100**   Example:
+001200**
+001300**   COPY SOFTLINK.
+001400**
+001500**   CALL "USESOFTLINK" USING WISPLINK-TYPE.
+001600**   CALL "LINK" USING ...
+001700**   IF WISP-HARDLINK THEN
+001800**       CALL "USEHARDLINK".
+001900**
+002000**
+002100 01  WISPLINK-TYPE    PIC X.
+002200     88  WISP-SOFTLINK       VALUE 'S'.
+002300     88  WISP-HARDLINK       VALUE 'H'.
+002400**
+002500**   End of softlink.wcb
+002600**

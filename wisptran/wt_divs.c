@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -10,10 +12,6 @@
 /*
 **	wisp_divs.c
 */
-
-#ifdef MSDOS
-#include <string.h>
-#endif
 
 #define EXT extern
 #include "wisp.h"
@@ -56,6 +54,7 @@ check_decl()										/* Examine the tables of PERFORMs in	*/
 		new_para();								/* Generate a new .PAR file.		*/
 	}
 	decl_performs_cnt = 0;								/* reset table for use in proc div.	*/
+	return 0;
 }
 
 new_para()										/* Generate a new .PAR file with a list	*/
@@ -86,6 +85,7 @@ new_para()										/* Generate a new .PAR file with a list	*/
 	fclose(the_file);
 	need_to_rerun("Relocate paragraphs into the DECLARATIVES.\n");
 	exit_wisp(EXIT_AND_RUN); 							/* Now run WISP again, resolve the list.*/
+	return 0;
 }
 
 
@@ -99,11 +99,12 @@ check_section()										/* Examine the current line, which should*/
 	}
 	else
 	{
-		tput_line("%s", inline);			       			/* Write out their section.		*/
+		tput_line("%s", linein);			       			/* Write out their section.		*/
 		tput_line_at(8, "WISP-START-PROGRAM.");					/* Always start programs with our stuff.*/
 		call_initwisp();
 		get_line();								/* And fetch a new one.			*/
 	}
+	return 0;
 }
 
 static call_initwisp()
@@ -116,17 +117,40 @@ static call_initwisp()
 	tput_line("                                  WISPRUNNAME,");
 	tput_line("                                  WISP-SWAP-ON,");
 	tput_line("                                  WISP-ERR-LOGGING.");
+	return 0;
 }
 
 
-g_wfilechk(i,end_str)									/* generate a call to wfilechk.		*/
-int i;
-char *end_str;
+/*
+**	ROUTINE:	g_wfilechk()
+**
+**	FUNCTION:	Generate the call to "wfilechk2" as part of declaritives handling.
+**
+**	DESCRIPTION:	Generate the code to get the extended file status then
+**			generate the call to "wfilechk2" to check the file status
+**			code.
+**
+**	ARGUMENTS:	
+**	i		The index for the file in the prog_xxx[i] tables.
+**	end_str		The string to use to terminate the CALL statement e.g ".\n"
+**
+**	GLOBALS:	?
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+int g_wfilechk(int i, char* end_str)
 {
 	char tstr[40];
 
 	tput_line_at(12, "MOVE \"%s\" TO",prog_files[i]);
 	tput_clause (16, "WISP-CURRENT-FILE-ID");
+
+	/*
+	**	Get the extended file status code
+	*/
 	if (vax_cobol)
 	{
 		tput_line_at(12, "MOVE RMS-STS OF %s",prog_files[i]);
@@ -136,13 +160,7 @@ char *end_str;
 	}
 	else if (acu_cobol)
 	{
-		tput_line_at(12, "CALL \"C$RERR\" USING WISP-EXTENDED-FILE-STATUS");
-		tput_line_at(12, "MOVE 0 TO WISP-EXTENDED-FILE-STATUS-2");
-	}
-	else
-	{
-		tput_line_at(12, "MOVE 0 TO WISP-EXTENDED-FILE-STATUS-1");
-		tput_line_at(12, "MOVE 0 TO WISP-EXTENDED-FILE-STATUS-2");
+		tput_line_at(12, "CALL \"C$RERR\" USING WISP-EXTENDED-FILE-STATUS-1");
 	}
 
 	if (prog_ftypes[i] & HAS_DECLARATIVES)						/* If it has a DECLARATIVE, set bit.	*/
@@ -153,18 +171,23 @@ char *end_str;
 		tput_clause (16, "%s,",tstr);
 	}
 
-	tput_line_at(12,	"CALL \"wfilechk\" USING");
-	tput_clause (16,	"WISP-DECLARATIVES-STATUS,");
-	tput_clause (16,	"%s,",prog_fstats[i]);
-	if (acu_cobol)
-	{
-		tput_clause(16, "WISP-EXTENDED-FILE-STATUS,");
-	}
-	else
-	{
-		tput_clause(16, "WISP-EXTENDED-FILE-STATUS-1,");
-	}
-	tput_clause(16,		"WISP-EXTENDED-FILE-STATUS-2,");
+	/*
+	**	CALL "wfilechk2" using  WISP-DECLARATIVES-STATUS,
+	**				file-status,
+	**				WISP-EXTENDED-FILE-STATUS-1,
+	**				WISP-EXTENDED-FILE-STATUS-2,
+	**				S-filename,
+	**				vol-name, lib-name, file-name
+	**				N-filename,
+	**				WISP-CURRENT-FILE-ID,
+	**				WISP-APPLICATION-NAME.
+	*/
+
+	tput_line_at(12,	"CALL \"wfilechk2\" USING");
+	tput_clause(16,		    "WISP-DECLARATIVES-STATUS,");
+	tput_clause(16,		    "%s,",prog_fstats[i]);
+	tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS-1,");
+	tput_clause(16,		    "WISP-EXTENDED-FILE-STATUS-2,");
 
 	make_fld(tstr,prog_files[i],"S-");						/* Generate the S- field.		*/
 	tput_clause(16,        "%s,",tstr);
@@ -203,7 +226,7 @@ char *end_str;
 	tput_clause(16,        "%s,",tstr);
 	tput_clause(16,        "WISP-CURRENT-FILE-ID,");
 	tput_clause(16,        "WISP-APPLICATION-NAME%s",end_str);
-
+	return 0;
 }
 
 											/* Generate DECLARATIVES for files that	*/
@@ -229,6 +252,7 @@ gen_defdecl()										/* don't have any.			*/
 		tput_line_at(8,  "%s.",fld);
  		tput_line_at(12, "EXIT.");
 	}
+	return 0;
 }
 
 fd_check()										/* Check for SELECT's with no FD's.	*/
@@ -236,7 +260,6 @@ fd_check()										/* Check for SELECT's with no FD's.	*/
 	int i;										/* Generate a file with their names, and*/
 	FILE *the_file;									/* re-run WISP, who will then delete the*/
 											/* SELECT statements.			*/
-	int	del_count;
 
 	if (!prog_cnt) return(0);							/* Already did it, or no files.		*/
 
@@ -280,62 +303,83 @@ char	*dst, *src;
 		if (src[i] != '.' && src[i] != ',' && src[i] != ';') dst[j++] = src[i];
 	}
 	dst[j] = '\0';
+	return 0;
 }
 
 
-check_proc_div()
+int check_proc_div()
 {
 	/*
 	**	This was extracted out of check_div() for use in PROCEDURE DIVISION only.
 	*/
 
 	int i,j;
-	char tstr[80],tstr1[80], *ptr;
 	char	token[80];
 
-		if (!in_decl) return(0);						/* no divisions after proc. & declare.	*/
+	if (!in_decl) return(0);						/* no divisions after proc. & declare.	*/
 
-											/* Must be in DECLARATIVES.		*/
-		nopunct(token,parms[1]);
-		if (!strcmp(parms[0],"END") && !strcmp(token,"DECLARATIVES"))		/* look for end of declaratives		*/
-		{									/* Found it, add our entries.		*/
-			gen_dexit();							/* First terminate any unfinished one.	*/
+										/* Must be in DECLARATIVES.		*/
+	nopunct(token,parms[1]);
+	if (!strcmp(parms[0],"END") && !strcmp(token,"DECLARATIVES"))		/* look for end of declaratives		*/
+	{									/* Found it, add our entries.		*/
+		gen_dexit();							/* First terminate any unfinished one.	*/
 
-			tput_line_at(8,  "WISP-DECLARATIVES-DISPLAY SECTION.");
-			tput_line_at(12, "USE AFTER STANDARD ERROR PROCEDURE ON WISP-DECLARATIVES-FILE.");
+		tput_line_at(8,  "WISP-DECLARATIVES-DISPLAY SECTION.");
+		tput_line_at(12, "USE AFTER STANDARD ERROR PROCEDURE ON WISP-DECLARATIVES-FILE.");
 
-			if (proc_paras_cnt)						/* Were there any paragraphs to copy?	*/
-			{								/* If there were, include a COPY state-	*/
-				tput_line_at(12, "COPY \"%s\".",dcl_fname);		/* ment for the wisp-generated LIB file.*/
-				decl_stop_exit = 1;					/* Just in case copybook has stop/exit	*/
-			}
-			scrn_para();							/* Now generate the screens used in DECL*/
-			tput_line_at(8, "END-WISP-DECLARATIVES.");
-			if (decl_stop_exit) d_wisp_exit_para();
-											/* Now see if the paragraphs to be	*/
-			for (i=0; i<proc_performs_cnt; i++)				/* copied to the PROCEDURE DIVISION	*/
-			{								/* really exist (from .OPT file)	*/
-				for (j=0; j<decl_paras_cnt; j++)			/* These are paragraphs which exist in	*/
-				{							/* DECL, but are performed by proc div.	*/
-					if (!strcmp(proc_performs[i],decl_paras[j]))	/* See if they match. if they do, we	*/
-					{						/* can skip the loop.		 	*/
-						break;					/* and stop looking for this one.	*/
-					}
-				}
-				if (j == decl_paras_cnt) proc_performs[i][0] = '\0';	/* Wasn't in the list, delete it.	*/
-			}
-			if (decl_performs_cnt) check_decl();				/* If there are any unaccounted for	*/
-											/* performs, examine the declaratives	*/
-											/* table.				*/
-
-			if (prog_cnt -prog_sort)					/* If there were valid files...		*/
-			{
-				gen_defdecl();						/* Generate declaratives for files with	*/
-			}								/* no declaratives.			*/
-			tput_line("%s", inline);	       				/* Put the END DECLARATIVES out.	*/
-			get_line();							/* Get a new line.			*/
-			check_section();						/* See if it's in a section		*/
-			in_decl = 0;
+		if (proc_paras_cnt)						/* Were there any paragraphs to copy?	*/
+		{								/* If there were, include a COPY state-	*/
+			tput_line_at(12, "COPY \"%s\".",dcl_fname);		/* ment for the wisp-generated LIB file.*/
+			decl_stop_exit = 1;					/* Just in case copybook has stop/exit	*/
 		}
+		gen_screen_paras();						/* Now generate the screens used in DECL*/
+		tput_line_at(8, "END-WISP-DECLARATIVES.");
+		if (decl_stop_exit) d_wisp_exit_para();
+										/* Now see if the paragraphs to be	*/
+		for (i=0; i<proc_performs_cnt; i++)				/* copied to the PROCEDURE DIVISION	*/
+		{								/* really exist (from .OPT file)	*/
+			for (j=0; j<decl_paras_cnt; j++)			/* These are paragraphs which exist in	*/
+			{							/* DECL, but are performed by proc div.	*/
+				if (!strcmp(proc_performs[i],decl_paras[j]))	/* See if they match. if they do, we	*/
+				{						/* can skip the loop.		 	*/
+					break;					/* and stop looking for this one.	*/
+				}
+			}
+			if (j == decl_paras_cnt) proc_performs[i][0] = '\0';	/* Wasn't in the list, delete it.	*/
+		}
+		if (decl_performs_cnt) check_decl();				/* If there are any unaccounted for	*/
+										/* performs, examine the declaratives	*/
+										/* table.				*/
+
+		if (prog_cnt -prog_sort)					/* If there were valid files...		*/
+		{
+			gen_defdecl();						/* Generate declaratives for files with	*/
+		}								/* no declaratives.			*/
+		tput_line("%s", linein);	       				/* Put the END DECLARATIVES out.	*/
+		get_line();							/* Get a new line.			*/
+		check_section();						/* See if it's in a section		*/
+		in_decl = 0;
+		return(1); /* input stream has changed */
+	}
+	else
+	{
+		return(0);
+	}
 }
 
+/*
+**	History:
+**	$Log: wt_divs.c,v $
+**	Revision 1.12  1997-09-09 17:53:58-04  gsl
+**	Cange scrn_para() to gen_screen_paras() as part of ACN code
+**
+**	Revision 1.11  1997-04-29 12:54:53-04  gsl
+**	Change to all wfilechk2() which uses the longer extended file status
+**	codes needed for acu4gl
+**
+**	Revision 1.10  1996-08-30 21:56:17-04  gsl
+**	drcs update
+**
+**
+**
+*/

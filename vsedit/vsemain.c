@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1992-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,16 +17,14 @@
 **	Routines:	
 **	main()
 **	process_args()
-**	ignoring()
 **	vse_init()
 **	vse()
-**	build_system_name()
 **	val_inputs()
 **	val_language()
 **	val_file()
 **	val_sysname()
 **	val_vs_name()
-**	val_sysname_file_exists()
+**	val_file_exists()
 **	init_input_fields()
 **
 **
@@ -35,9 +35,7 @@
 /*----
 Invoke as
 
-vsedit	or	vsedit filename	or vsedit filename language
-where language can be
--cobol -c -text -shell
+vsedit	or	vsedit filename
 
 The keys to the kingdom
 
@@ -172,39 +170,11 @@ vseutl.c	A collection of odd utility routines to truncate and
 /*----
 Missing pieces are many
 
-1.	There should be some checking of the file at load up
-time to verify that it seems to match the language type requested.
-Particulary for COBOL where line numbers are needed. WANG does this
-with a BADNUMS screen letting the user know that expected line numbers
-were not found. At the moment it just loads up and does
-automatic numbering if it hits any problems.
-
-2.	At close time, the user may only Create if a new file was
-created, or save over an old fiel if an old file was edited. It
-should allow an old file to be edited, and new one created on output.
-
 3.	The output screen does not look like the Wang screen.
-
-4.	During insertion, when trying to insert between two lines
-that are one digit apart, the Wang stops and tells you that the file
-needs to be renumbered before further insertions can take place. IF
-the user requests renumbering it is then done. THis editor just
-automatically renumbers.
 
 5.	Since the work space is creating by Mallocing, there should
 be a message that space can not be allocated. This version just
 aborts.
-
-6.	Bunch of functions missing
-	a.	Delete by text range as well a lline number
-	b.	Copy block of text
-	c.	Move Block of text
-	d.	External Copy.
-	e.	Set tabs, case and search style
-
-7.	If this is used in WANG environment, it should issue
-	a set of default default getparms that can be responded to
-	by putparms to allow customizing the edit space.
 
 
 ------*/
@@ -212,212 +182,222 @@ aborts.
 #include <stdio.h>
 
 #include "idsistd.h"
-#include "vseglb.h"
-char *build_system_name();
 
-static int ignoring();
-static int val_inputs();
-static int val_language();
-static int val_sysname();
-static int val_vs_name();
+#define EXT_FILEXT
+#include "filext.h"
+
+#include "vsedit.h"
+#include "vseglb.h"
+#include "vseutl.h"
+
+#include "wperson.h"
+#include "wfname.h"
+#include "idsisubs.h"
+#include "level.h"
+#include "sharemem.h"
+#include "vwang.h"
+#include "wisplib.h"
+#include "wexit.h"
+
+
+static void vse_init(void);
+static void vse(void);
+static void val_inputs(void);
+static int val_language(void);
+static void val_file(void);
+static void val_sysname(void);
+static void val_vs_name(void);
+static int val_file_exists(char *sysname);
+static void init_input_fields(void);
+static int set_read_only(int flag);
+
+
 
 static char error_message[81];
 static int screen_error;
 
 static char applname[9]="VSEDIT  ";
-char WISPRETURNCODE[4]="000";
 
-main(argc,argv)
-int argc;
-char **argv;
+main(int argc,char **argv)
 {
+			   /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
+	strcpy(VSE_COPYRIGHT,"(c) 1994-1997 NeoMedia - VSEDIT Integrated Program Development Editor - v 2.13");
+
+	wpload();
 	vsedit_globals();
 	initglbs(applname);
 	vse_init();
-	process_args(argc,argv);
-	
+	vwang_title("WISP VSEDIT");
 	init_screen();
 	if(screen_error)
-		return;
-	if(vse_sysname[0] > ' ')
-		vsedit(vse_sysname,vse_gp_input_language);
-	else
-		vse();
-	vexit();
-#ifdef VMS
-	exit(1);
-#else
-	exit(0);
-#endif
+	{
+		goto cleanup_exit;
+	}
+
+	if (argc > 1)
+	{
+		/*
+		**	This handles a filename on the command line.
+		*/
+		strcpy(vse_sysname,argv[1]);		
+		vse_native = 1;
+		strcpy(vse_gp_input_language,"         ");
+
+		/*
+		**	Set the language based on the extension
+		*/
+		if (hasext(vse_sysname))
+		{
+			char	ext[40];
+
+			strcpy(ext, splitext(vse_sysname));
+			upper_string(ext);
+			if      (0==strcmp(ext,".WCB"))	strcpy(vse_gp_input_language,"WCB      ");
+			else if (0==strcmp(ext,".COB"))	strcpy(vse_gp_input_language,"COB      ");
+			else if (0==strcmp(ext,".WPS"))	strcpy(vse_gp_input_language,"WPS      ");
+			else if (0==strcmp(ext,".BAS"))	strcpy(vse_gp_input_language,"BAS      ");
+		}
+	}
+
+	/*
+	**	Run the editor.
+	*/
+	vse();
+
+	/*
+	**	Cleanup and exit
+	*/
+cleanup_exit:
+	vwang_shut();
+	wexit(0);
+	return 0;
 }
 
-process_args(argc,argv)
-int argc;
-char **argv;
+static void vse_init(void)
 {
-	int argi;
-	char *argstr;
-
-	for(argi=1;argi < argc; ++argi)
-		{
-/* If anything was on the command line, than we are in native mode */
-		vse_native = 1;
-		argstr = argv[argi];
-		if(*argstr == '-')
-			{
-			++argstr;
-			if(vse_gp_input_language[0] > ' ')
-				ignoring(argstr);
-			else
-				strcpy(vse_gp_input_language,argstr);
-			}
-		else
-			{
-			if(vse_sysname[0] > ' ')
-				ignoring(argstr);
-			else
-				strcpy(vse_sysname,argstr);
-			}
-		}
-
-/* Validate the choices */
-/* If its nothing, make it COBOL */
-	trunc(vse_gp_input_language);
-	if(vse_gp_input_language[0] == 0)
-		strcpy(vse_gp_input_language,COBOL_LANGUAGE);
-	else
-		vse_native = 1;
-	strupr(vse_gp_input_language);
-	untrunc(vse_gp_input_language,VSE_LANGUAGE_LEN);
-	if(!(val_language()))
-		{
-		screen_error = 1;
-		printf("%s\n",error_message);
-		return;
-		}
-/* 
-   If a file was named on the command line, then the first screen
-   will be skipped. The file is either new or existing.
- */
-	if(vse_sysname[0])
-		{
-		if(val_sysname_file_exists())
-			;
-		else
-			vse_new_file = 1;
-		}
 	screen_error = 0;
-}
+	strcpy(error_message,"");
 
-static ignoring(str)
-char *str;
-{
-	printf("Extra input <%s> ignored\n",str);
-}
-
-vse_init()
-{
 	init_gpint();
+	strcpy(vse_gp_input_language,"WCB      ");
+
+	get_defs(DEFAULTS_IV,vse_gp_input_volume);
+	get_defs(DEFAULTS_IL,vse_gp_input_library);
 }
 
-vse()
+static void vse(void)
 {
 	for(;;)
-		{
-		screen_error = 0;
+	{
 		vse_input(error_message);
+		screen_error = 0;
 		strcpy(error_message,"");
 		if(vse_input_pick == 16)
-			{
+		{
 			break;
-			}
+		}
 		if( (vse_input_pick == 5) &&
 		    (!vse_native)          )
-			{
-			build_system_name();
-			}
+		{
+			translate_name(vse_gp_input_file, vse_gp_input_library, vse_gp_input_volume, vse_sysname);
+			trunc(vse_sysname);
+		}
 			
 		if(vse_input_pick == 0)
-			{
+		{
 			val_inputs();
 			if(!screen_error)
+			{
+				if (vsedit(vse_sysname))
 				{
-				vsedit(vse_sysname,vse_gp_input_language);
-				if(vse_special_pick == 16)
-					break;
+					screen_error = 1;
+					strcpy(error_message,"Unable to LOAD file");
+				}
+				else if (vse_special_pick == 16)
+					return;
 				else
 					init_input_fields();
-				}
-			}
-		if(vse_input_pick == 5)
-			{
-			vse_native = vse_native?0:1;
 			}
 		}
+		if(vse_input_pick == 5)
+		{
+			vse_native = vse_native?0:1;
+		}
+	}
 }
 
-char *build_system_name()
+/*
+**	Routine:	translate_name()
+**
+**	Function:	Translates a wang style name to a native filepath.
+**
+**	Description:	This is a frontend to wfname.  If the file name is
+**			blank then it returns a blank native_name;
+**			The file extention is set based on the language.
+**
+**	Arguments:
+**	wang_file	The 8 char wang file name
+**	wang_lib	The 8 char wang lib name
+**	wang_vol	The 6 char wang vol name
+**	wang_native	The returned native path name blank padded with a null in the last position.
+**
+**	Globals:	None
+**
+**	Return:
+**	0		Got a native name
+**	1		File name was blank and native name is blank.
+**
+**	Warnings:	None
+**
+**	History:
+**	03/11/94	Written by GSL
+**
+*/
+int translate_name(char *wang_file, char *wang_lib, char *wang_vol, char *native_name)
 {
-extern 	char WISPFILEXT[39];								/* GLOBAL file extension value.		*/
-	int4 mode;
-	char *wfname(),*eoname;
+	int4 	mode;
 
 	mode = 0;
 
-	if(isblank(vse_gp_input_file,VSE_FILENAME_LEN))
-		{
-		CLEAR_GLOBAL(vse_sysname);
-		return(vse_sysname);
-		}
+	memset(native_name,' ',VSE_SYSNAME_LEN);
+	native_name[VSE_SYSNAME_LEN] = 0;
 
-	if(isblank(vse_gp_input_ext,VSE_EXT_LEN))
+	if(isblankstr(wang_file,VSE_FILENAME_LEN))
 	{
-		WISPFILEXT[0] = (char)0;
-	}
-	else
-	{
-		memcpy(WISPFILEXT,vse_gp_input_ext,VSE_EXT_LEN);
+		return 1;
 	}
 
-	eoname = wfname(&mode,vse_gp_input_volume,vse_gp_input_library,
-		vse_gp_input_file,vse_sysname);
+	memset(WISPFILEXT,' ',sizeof(WISPFILEXT));
+	memcpy(WISPFILEXT,lang_ext(),strlen(lang_ext()));
 
-#ifdef OLD
-	if(isblank(vse_gp_input_ext,VSE_EXT_LEN))
-		return;
-	*eoname = '.';
-	++eoname;
-	memcpy(eoname,vse_gp_input_ext,VSE_EXT_LEN);
-#endif
+	wfname(&mode,wang_vol,wang_lib,wang_file,native_name);
+	native_name[VSE_SYSNAME_LEN] = 0;
+
+	return 0;
 }
 
-static val_inputs()
+static void val_inputs(void)
 {
 	val_language();
 	if(!screen_error)
+	{
 		val_file();
+	}
 }
 
-static val_language()
+static int val_language(void)
 {
-	if(!(strcmp(vse_gp_input_language,COBOL_LANGUAGE)))
+	if (0 == init_lang(vse_gp_input_language) )
+	{
 		return(1);
-	if(!(strcmp(vse_gp_input_language,TEXT_LANGUAGE)))
-		return(1);
-	if(!(strcmp(vse_gp_input_language,C_LANGUAGE)))
-		return(1);
-	if(!(strcmp(vse_gp_input_language,SHELL_LANGUAGE)))
-		return(1);
+	}
 
-	/* Added by CIS for BASIC language support 07/09/93 AJA */
-	if(!(strcmp(vse_gp_input_language,BASIC_LANGUAGE)))
-		return(1);
 	screen_error = 1;
-	strcpy(error_message,"Invalid Language selected");
+	strcpy(error_message,"The LANGUAGE specified is unknown or not supported");
 	return(0);
 }
 
-val_file()
+static void val_file(void)
 {
 	if(vse_native)
 		val_sysname();
@@ -425,50 +405,111 @@ val_file()
 		val_vs_name();
 }
 
-static val_sysname()
+static void val_sysname(void)
 {
-	if(isblank(vse_sysname,VSE_SYSNAME_LEN))
-		{
+	if(isblankstr(vse_sysname,VSE_SYSNAME_LEN))
+	{
 		vse_new_file = 1;
 		return;
-		}
+	}
 	else
 		vse_new_file = 0;
 
-	val_sysname_file_exists();
+	val_file_exists(vse_sysname);
 }	
 		
-static val_vs_name()
+static void val_vs_name(void)
 {
 
-	if(isblank(vse_gp_input_file,VSE_FILENAME_LEN))
-		{
+	if(isblankstr(vse_gp_input_file,VSE_FILENAME_LEN))
+	{
 		vse_new_file = 1;
 		return;
-		}
+	}
 	else
 		vse_new_file = 0;
 
-	build_system_name();
-	val_sysname_file_exists();
+	translate_name(vse_gp_input_file, vse_gp_input_library, vse_gp_input_volume, vse_sysname);
+	trunc(vse_sysname);
+	val_file_exists(vse_sysname);
 }
 
-val_sysname_file_exists()
+static int val_file_exists(char *sysname)
 {
-
-	trunc(vse_sysname);
-	if(!exists(vse_sysname))
-		{
+	if(!exists(sysname))
+	{
 		screen_error = 1;
-		strcpy(error_message,"File not Found");
+		strcpy(error_message,"The file was NOT FOUND.");
+	}
+
+	if (!screen_error)
+	{
+		FILE	*ff;
+
+		ff = fopen(sysname,"r");
+		if (ff)
+		{
+			fclose(ff);
 		}
-	untrunc(vse_sysname,VSE_SYSNAME_LEN);
+		else
+		{
+			screen_error = 1;
+			strcpy(error_message,"File can not be read.");
+		}
+	}
+
+	if (!screen_error)
+	{
+		FILE	*ff;
+
+		ff = fopen(sysname,"r+");
+		if (ff)
+		{
+			fclose(ff);
+			set_read_only(0);
+		}
+		else
+		{
+			set_read_only(1);
+		}
+	}
 	return(!screen_error);
 }
 
-init_input_fields()
+static void init_input_fields(void)
 {
-	CLEAR_GLOBAL(vse_gp_input_file);
-	CLEAR_GLOBAL(vse_sysname);
+	CLEAR_FIELD(vse_gp_input_file);
+	CLEAR_FIELD(vse_sysname);
 }
 
+static int read_only_flag = 0;
+static int set_read_only(int flag)
+{
+	return(read_only_flag = flag);
+}
+int is_read_only(void)
+{
+	return(read_only_flag);
+}
+/*
+**	History:
+**	$Log: vsemain.c,v $
+**	Revision 1.21  1997-12-19 15:36:49-05  gsl
+**	Fix copyright
+**	change version to 2.13
+**
+**	Revision 1.20  1996-12-12 13:21:53-05  gsl
+**	DTMI -> NeoMedia
+**
+**	Revision 1.19  1996-11-18 16:18:47-08  jockc
+**	added call to vwang_title to set screen title
+**
+**	Revision 1.18  1996-11-11 12:04:06-08  gsl
+**	Changed to use wexit() so proper cleanup is done
+**
+**	Revision 1.17  1996-09-03 15:24:08-07  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include <stdio.h>
 
 main(c,v)
@@ -44,3 +46,12 @@ int c;
 		
 	}
 }
+/*
+**	History:
+**	$Log: dumphdr.c,v $
+**	Revision 1.5  1996-07-23 14:12:51-04  gsl
+**	drcs update
+**
+**
+**
+*/

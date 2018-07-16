@@ -1,0 +1,90 @@
+000100     05  CH-RECORD.
+000200         10  CH-FILLER-1                 PIC X(2).
+000300         10  CH-KEY                      PIC X(8).
+000400         10  CH-FILE-TYPE                PIC X.
+000500             88  CH-FILE-IS-FIXED        VALUE "F".
+000600             88  CH-FILE-IS-VARIABLE     VALUE "V".
+000700             88  CH-FILE-IS-COMPRESSED   VALUE "C".
+000800         10  CH-PRIMARY-KEY              PIC X(8).
+000900         10  CH-REPORT-ALLOWED           PIC 9.
+001000         10  CH-UPDATE-ALLOWED           PIC 9.
+001100         10  CH-DELETE-ALLOWED           PIC 9.
+001200         10  CH-RECORD-LEN               PIC 9(4).
+001300         10  CH-TIMEOUT-VALUE            PIC 9(3).
+001400         10  CH-USER-EXIT                PIC X(8).
+001500         10  CH-ALTKEY-COUNT             PIC 99.
+001600         10  FILLER                      PIC X(8).
+001700         10  CH-DATAENTRY-SPACING        PIC 9(1).
+001800* ORG IS I,R OR (C OR SP) OPEN IS Y FOR SHARED
+000000* ORG becomes Indexed if ORG = space (new CONTROL)
+001900         10  CH-FILE-ORG                 PIC X.
+002000         10  CH-DEF-OPEN-MODE            PIC X.
+002100         10  CH-DATA-FILE                PIC X(8).
+002200         10  CH-DATA-LIBRARY             PIC X(8).
+002300         10  CH-DATA-VOLUME              PIC X(6).
+002400
+002500     05  CA1-RECORD.
+002600         10  CA1-FILLER-1                PIC X(2).
+002700         10  CA1-KEY                     PIC X(8).
+002800         10  CA1-TABLE.
+002900             15  CA1-ENTRY        OCCURS 8 TIMES.
+003000                 20  CA1-KEYNAME         PIC X(8).
+003100                 20  CA1-DUPS-ALLOWED    PIC X.
+003200         10  FILLER REDEFINES CA1-TABLE.
+003300             15  CA1-KEYNAME1            PIC X(8).
+003400             15  CA1-DUPS1               PIC X.
+003500             15  CA1-KEYNAME2            PIC X(8).
+003600             15  CA1-DUPS2               PIC X.
+003700             15  CA1-KEYNAME3            PIC X(8).
+003800             15  CA1-DUPS3               PIC X.
+003900             15  CA1-KEYNAME4            PIC X(8).
+004000             15  CA1-DUPS4               PIC X.
+004100             15  CA1-KEYNAME5            PIC X(8).
+004200             15  CA1-DUPS5               PIC X.
+004300             15  CA1-KEYNAME6            PIC X(8).
+004400             15  CA1-DUPS6               PIC X.
+004500             15  CA1-KEYNAME7            PIC X(8).
+004600             15  CA1-DUPS7               PIC X.
+004700             15  CA1-KEYNAME8            PIC X(8).
+004800             15  CA1-DUPS8               PIC X.
+004900
+005000     05  CA2-RECORD.
+005100         10  CA2-FILLER-1                PIC X(2).
+005200         10  CA2-KEY                     PIC X(8).
+005300         10  CA2-TABLE.
+005400             15  CA2-ENTRY        OCCURS 8 TIMES.
+005500                 20  CA2-KEYNAME         PIC X(8).
+005600                 20  CA2-DUPS-ALLOWED    PIC X.
+005700         10  FILLER REDEFINES CA2-TABLE.
+005800             15  CA2-KEYNAME1            PIC X(8).
+005900             15  CA2-DUPS1               PIC X.
+006000             15  CA2-KEYNAME2            PIC X(8).
+006100             15  CA2-DUPS2               PIC X.
+006200             15  CA2-KEYNAME3            PIC X(8).
+006300             15  CA2-DUPS3               PIC X.
+006400             15  CA2-KEYNAME4            PIC X(8).
+006500             15  CA2-DUPS4               PIC X.
+006600             15  CA2-KEYNAME5            PIC X(8).
+006700             15  CA2-DUPS5               PIC X.
+006800             15  CA2-KEYNAME6            PIC X(8).
+006900             15  CA2-DUPS6               PIC X.
+007000             15  CA2-KEYNAME7            PIC X(8).
+007100             15  CA2-DUPS7               PIC X.
+007200             15  CA2-KEYNAME8            PIC X(8).
+007300             15  CA2-DUPS8               PIC X.
+007400
+007500     05  CC1-RECORD.
+007600         10  CC1-FILLER-1                PIC X(2).
+007700         10  CC1-KEY                     PIC X(8).
+007800         10  CC1-COMMENT                 PIC X(60).
+007900
+008000     05  CC2-RECORD.
+008100         10  CC2-FILLER-1                PIC X(2).
+008200         10  CC2-KEY                     PIC X(8).
+008300         10  CC2-COMMENT                 PIC X(60).
+008400
+008500     05  CC3-RECORD.
+008600         10  CC3-FILLER-1                PIC X(2).
+008700         10  CC3-KEY                     PIC X(8).
+008800         10  CC3-COMMENT                 PIC X(60).
+008900

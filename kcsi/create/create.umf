@@ -1,0 +1,272 @@
+#
+#--------------------------------------------------------------------
+# @(#)create.umf	1.8 9/12/95
+#--------------------------------------------------------------------
+# Please Read carefully! The instructions have changed from
+# previous releases, and it is necessary to edit
+# this make file to establish the locations of the pieces to be linked.
+#--------------------------------------------------------------------
+
+# Standard CC flags
+#
+
+include $(WISP)/src/port/make.include
+
+CDEBUG=-g
+CFLAGS= $(CFLAGS0)
+
+#=================================================================
+# Standard COBOL flags
+#	Note: remove -x because causing problems on Pyramid port
+COBFLAGS=-g
+
+#============================================================================
+#
+# **** CHANGE LIBCURSES HERE ****
+#
+# LIBCURSES is normally set to use the standard curses library. However on
+# some systems the curses library is located or named differently. On these
+# system you must uncomment the appropriate definition of LIBCURSES.
+#
+LIBCURSES= -lcurses
+# Uncomment the following for Ultrix
+#LIBCURSES= -lcursesX
+# Uncomment the following for SunOS 4.1.3
+#LIBCURSES= /usr/5lib/libcurses.a
+# Uncomment the following for Solaris
+#LIBCURSES=-ltermlib
+# Other possibles
+#LIBCURSES=-lcurses -ltermlib
+#----------------------------------------------------------------
+
+#=================================================================
+# Standard WISP libraries
+#
+
+# The path to the WISP libraries libwisp.a, libvideo.a
+# and the optional library libede.a
+#
+# WISPDIR       The installed WISP directory
+
+WISPDIR=/usr/local/wisp
+WISP_LIBDIR=$(WISPDIR)/lib
+
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+LIBWISP=lib$(L_WISP).a
+LIBVIDEO=lib$(L_VIDEO).a
+LIBEDE=lib$(L_EDE).a
+
+WISP_LIB_PATH  		= $(WISP_LIBDIR)/$(LIBWISP)
+VIDEO_LIB_PATH 		= $(WISP_LIBDIR)/$(LIBVIDEO)
+EDE_LIB_PATH   		= $(WISP_LIBDIR)/$(LIBEDE)
+
+WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+
+OTHER_LINK		= -lm $(LIBCURSES)
+
+WISP_LIBS_PATHS=$(WISP_LIBDIR)/$(LIBWISP) $(WISP_LIBDIR)/$(LIBVIDEO)
+
+#============================================================================
+ACUDIR=/usr/local/acucobol
+ACU_LIBDIR=$(ACUDIR)/lib
+
+#============================================================================
+# ACUCOBOL version information
+#
+#  NOTE:  $(WISPDIR)/acu/acucobol.include may require modifications to indicate
+#         the version of ACUCOBOL that is installed on your system.
+
+include $(WISPDIR)/acu/acucobol.include
+
+#============================================================================
+#
+# ACUFILES is a list of any files which could be found in the ACUCOBOL 
+# directory.  It is used ONLY for detecting and displaying an error
+# message if the file is not found.
+#
+ACUFILES=$(ACUSRCDIR)/sub.c \
+	$(ACUSRCDIR)/filetbl.c \
+	$(ACUSRCDIR)/clntstub.o
+
+#============================================================================
+#
+# WISPFILES is a list of any files which could be found in the WISP
+# directory.  It is used ONLY for detecting and displaying an error
+# message if the file is not found.
+#
+WISPFILES=$(WISP_LIBDIR)/$(LIBWISP) \
+        $(WISP_LIBDIR)/$(LIBVIDEO) \
+        $(WISP_LIBDIR)/$(LIBEDE) \
+        $(WISPDIR)/acu/sub85.c
+
+#-----------------------------------------------------------------
+# The complete path and file name of libcrid.a, the  run time
+# linkable archive library for the KCSI Utilities.
+CRIDA=../kcsi/crid/libcrid.a
+#-----------------------------------------------------------------
+# For C-ISAM versions only.
+# The complete path and file name of the C-ISAM library to be linked
+# to the run time. The C-ISAM library provided by INFORMIX is usually
+# named libisam.a. The D-ISAM library by Byte Designs (a C-ISAM work
+# alike library) is named libdisam.a.
+CISAMLIB=/usr/lib/libdisam.a
+#-----------------------------------------------------------------
+# For C-ISAM versions only.
+# The complete path and file name of cisam.o, provided by Acu-COBOL
+# to allow calls into the C-ISAM library.
+CISAMO=./cisam.o
+
+#=================================================================
+# End of User modifiable values.
+#=================================================================
+
+#-----------------------------------------------------------------
+# Edit this to reflect the correct path on which to locate mfisam.a
+# For making a distribution kit uncomment following
+MFISAMPATH=../crid
+MFISAMLIB=$(MFISAMPATH)/libmfisam.a
+#--------------------------------------------------------------------
+
+L=vscrmain.o create.a acuio.a
+MFL= vscrmain.o mfcreate.a mfio.a
+MFXL= vscrmain.o mfxcreate.a mfxio.a
+
+#-----------------------------------------------------------------
+# The actual Make routines
+#-----------------------------------------------------------------
+
+acucreate: create
+	@echo 'Target create is up to date.'
+
+create: cflags $(ACUSUBS) $(L) $(WISP_LIBS_PATHS)
+	@echo 'COMPILING create ...'
+	$(CC) $(CFLAGS) -I ../disam -o create $(ACUSUBS) $(L) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+
+acucreatee: cflags filetbl.o createe
+	@echo 'Target createe is up to date.'
+
+createe: $(ACUSUBS) $(L) $(WISPEDE_LIBS_PATHS)
+	@echo 'COMPILING createe ...'
+	$(CC) $(CFLAGS) -I ../disam -o createe $(ACUSUBS) $(L) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
+
+mfcreate: header create.mf
+	@echo 'Target create.mf is up to date.'
+
+create.mf:  $(MFL) $(WISP_LIBS_PATHS) $(MFISAMLIB)
+	@echo 'COMPILING create.mf ...'
+	cob $(COBFLAGS) -v -o create.mf $(MFL) $(WISP_LIBS_PATHS) $(MFISAMLIB) $(OTHER_LINK)
+
+mfcreatee: header createe.mf
+	@echo 'Target createe.mf is up to date.'
+
+createe.mf: $(MFL) $(WISPEDE_LIBS_PATHS) $(MFISAMLIB)
+	@echo 'COMPILING createe.mf ...'
+	cob $(COBFLAGS) -o createe.mf $(MFL) $(WISPEDE_LIBS_PATHS) $(MFISAMLIB) $(OTHER_LINK)
+
+mfxcreate: header create.mfx
+	@echo 'Target create.mfx is up to date.'
+
+create.mfx: $(WISP_LIBS_PATHS) $(MFXL)
+	@echo 'COMPILING create.mfx ...'
+	cob $(COBFLAGS) -o create.mfx $(MFXL) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+
+#-----------------------------------------------------------------
+# Display Flags Make routines
+#-----------------------------------------------------------------
+
+header:
+	@echo " "
+	@echo ">>>> BUILDING Micro Focus VERSION OF CREATE UTILITY"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> COBDIR  = " $(COBDIR)
+	@echo ">>>>"
+
+cflags:
+	@echo " "
+	@echo Ensure your CFLAGS are set correctly
+	@echo " "
+	@echo Currently    CFLAGS = $(CFLAGS)
+	@echo " "
+	@echo ">>>> BUILDING ACUCOBOL VERSION OF CREATE UTILITY"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>>"
+
+$(WISPDIR):
+	@echo ">>>> ERROR: The WISP directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = " $(WISPDIR)
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting WISPDIR."
+	@echo ">>>>"
+	@exit 1
+
+$(ACUDIR):
+	@echo ">>>> ERROR: The ACUCOBOL directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR = $(ACUDIR)"
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting ACUDIR."
+	@echo ">>>>"
+	@exit 1
+
+$(ACUTEST):
+	@echo ">>>> ERROR: A configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ACUCOBOL file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR = $(ACUDIR)"
+	@echo ">>>>"
+	@echo ">>>> This makefile may be configured for a different version"
+	@echo ">>>> of ACUCOBOL then the one you are using."
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on changing the version settings."
+	@echo ">>>>"
+	@exit 1
+
+$(ACUFILES):
+	@echo ">>>> ERROR: An ACUCOBOL configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ACUCOBOL file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR = $(ACUDIR)"
+	@echo ">>>>"
+	@exit 1
+
+$(WISPFILES):
+	@echo ">>>> ERROR: An WISP configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The WISP file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = $(WISPDIR)"
+	@echo ">>>>"
+	@exit 1
+
+#-----------------------------------------------------------------
+# Utility Make pieces
+#-----------------------------------------------------------------
+
+sub.o: sub.c sub85.c
+	$(CC) $(CFLAGS) -c -I$(ACUSRCDIR) sub.c
+
+filetbl.o: filetbl.c
+	$(CC) $(CFLAGS) -c -I$(ACUSRCDIR) filetbl.c
+
+sub.c: $(ACUSRCDIR)/sub.c
+	cp $(ACUSRCDIR)/sub.c .
+
+filetbl.c: $(ACUSRCDIR)/filetbl.c
+	cp $(ACUSRCDIR)/filetbl.c .
+
+sub85.c: $(WISPDIR)/acu/sub85.c
+	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp $(WISPDIR)/acu/sub85.c $@
+
+
+

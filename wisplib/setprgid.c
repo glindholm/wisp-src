@@ -1,27 +1,38 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	setprogid()
 */
 
-#ifdef MSDOS
-#include <memory.h>
-#endif
+#include <string.h>
+#include "setprgid.h"
 
-#include "idsistd.h"
-#include "wglobals.h"
+static char WISPPROGID[9];
 
-setprogid(wisp_application_name)						/* Set global variable to current program id.	*/
-char *wisp_application_name;
+/* Set global variable to current program id.	*/
+void setprogid(const char *wisp_application_name)
 {
 	memcpy(WISPPROGID,wisp_application_name,8);
+	WISPPROGID[8] = '\0';
+}
+
+const char* getprogid(void)
+{
+	return WISPPROGID;
 }
 
 
+
+/*
+**	History:
+**	$Log: setprgid.c,v $
+**	Revision 1.10  1997-10-21 10:16:32-04  gsl
+**	Removed global WISPPROGID and addded getprogid()
+**
+**	Revision 1.9  1996-08-19 18:32:54-04  gsl
+**	drcs update
+**
+**
+**
+*/

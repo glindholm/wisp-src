@@ -1,9 +1,15 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /*
 	wfaccess.h 		Define status codes for wfaccess()
 */
 
 #ifndef WFACCESS_DEF
 #define WFACCESS_DEF
+
+#include "intdef.h"
 
 #define ACC_ALLOWED	0
 #define ACC_DENIED	1
@@ -24,6 +30,20 @@
 #define ACC_BADVOL	16
 #define ACC_UNKNOWN	99
 
+int wfaccess(char* native_path, int4* mode);
+
 #endif
 
                 
+/*
+**	History:
+**	$Log: wfaccess.h,v $
+**	Revision 1.10  1997-04-29 13:38:08-04  gsl
+**	Moved acc_message() to wfopen.c
+**
+**	Revision 1.9  1996-08-19 18:33:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

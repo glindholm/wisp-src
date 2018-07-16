@@ -1,3 +1,7 @@
+# 
+#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	$Id:$
+#
 #	/************************************************************************/
 #	/*									*/
 #	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
@@ -16,189 +20,191 @@
 #			06/04/92	Changed to use make.include GSL
 #
 
-#CDEBUG = -g
-CDEBUG = -O
+CDEBUG_D = -g
+CDEBUG   = -O
 
-#LIB = libvideod.a
-LIB = libvideo.a
+L_VIDEO=video
+
+THE_LIB   = lib$(L_VIDEO).a
 
 include $(WISP)/src/port/make.include
 
-.PRECIOUS:	$(LIB) 
+.PRECIOUS:	$(THE_LIB) 
 
-all: $(STDLIB)/$(LIB)
+all: $(THE_LIB)
 
-$(STDLIB)/$(LIB): $(LIB)
-	cp $(LIB) $@
+debug:
+	$(MAKE) $(MAKEFLAGS) L_VIDEO=videod CDEBUG=$(CDEBUG_D)
 
-$(LIB):	$(LIB)(gcal2.o) \
-	$(LIB)(gcalc.o) \
-	$(LIB)(gcalend.o) \
-	$(LIB)(gclock.o) \
-	$(LIB)(gnotepad.o) \
-	$(LIB)(gpuzzle.o) \
-	$(LIB)(gzones.o) \
-	$(LIB)(strpos.o) \
-	$(LIB)(valert.o) \
-	$(LIB)(vbarup.o) \
-	$(LIB)(vbell.o) \
-	$(LIB)(vcap.o) \
-	$(LIB)(vcharset.o) \
-	$(LIB)(vchstubs.o) \
-	$(LIB)(vclosefo.o) \
-	$(LIB)(vclosete.o) \
-	$(LIB)(vcommand.o) \
-	$(LIB)(vcontrol.o) \
-	$(LIB)(vcut.o) \
-	$(LIB)(vdefer.o) \
-	$(LIB)(vedge.o) \
-	$(LIB)(verase.o) \
-	$(LIB)(verrmsg.o) \
-	$(LIB)(vexit.o) \
-	$(LIB)(vfielded.o) \
-	$(LIB)(vfnkey.o) \
-	$(LIB)(vform.o) \
-	$(LIB)(vgetbuff.o) \
-	$(LIB)(vgetfiel.o) \
-	$(LIB)(vgetnext.o) \
-	$(LIB)(vgets0.o) \
-	$(LIB)(vgrid.o) \
-	$(LIB)(vinput.o) \
-	$(LIB)(visdebug.o) \
-	$(LIB)(vkeymap.o) \
-	$(LIB)(vline.o) \
-	$(LIB)(vlist.o) \
-	$(LIB)(vloadch.o) \
-	$(LIB)(vloadfor.o) \
-	$(LIB)(vmacro.o) \
-	$(LIB)(vmap.o) \
-	$(LIB)(vmenu.o) \
-	$(LIB)(vmode.o) \
-	$(LIB)(vmove.o) \
-	$(LIB)(vnewline.o) \
-	$(LIB)(vonexit.o) \
-	$(LIB)(vop.o) \
-	$(LIB)(vopenf.o) \
-	$(LIB)(vopenfor.o) \
-	$(LIB)(vopenter.o) \
-	$(LIB)(vpaste.o) \
-	$(LIB)(vplus.o) \
-	$(LIB)(vpopscr.o) \
-	$(LIB)(vprint.o) \
-	$(LIB)(vprintfo.o) \
-	$(LIB)(vpushscr.o) \
-	$(LIB)(vputbuff.o) \
-	$(LIB)(vputc.o) \
-	$(LIB)(vputwind.o) \
-	$(LIB)(vrawunix.o) \
-	$(LIB)(vreadfie.o) \
-	$(LIB)(vrefresh.o) \
-	$(LIB)(vrelease.o) \
-	$(LIB)(vroll.o) \
-	$(LIB)(vscreen.o) \
-	$(LIB)(vsection.o) \
-	$(LIB)(vset.o) \
-	$(LIB)(vsetkeyl.o) \
-	$(LIB)(vshowfor.o) \
-	$(LIB)(vsize.o) \
-	$(LIB)(vslew.o) \
-	$(LIB)(vstate.o) \
-	$(LIB)(vsynch.o) \
-	$(LIB)(vsystem.o) \
-	$(LIB)(vtext.o) \
-	$(LIB)(vtrace.o) \
-	$(LIB)(vtrigger.o) \
-	$(LIB)(vtrim.o) \
-	$(LIB)(vuserex.o) \
-	$(LIB)(vutil.o) \
-	$(LIB)(vwait.o)
-	$(RANLIB) $(LIB)
-	@echo lib $(LIB) is now up-to-date
+clean:
+	rm -f libvideo*.a *.o core *~
+
+install: $(STDLIB)/$(THE_LIB)
+
+$(STDLIB)/$(THE_LIB): $(THE_LIB)
+	cp $(THE_LIB) $@
+
+$(THE_LIB):	$(THE_LIB)(gcal2.o) \
+	$(THE_LIB)(gcalc.o) \
+	$(THE_LIB)(gcalend.o) \
+	$(THE_LIB)(gclock.o) \
+	$(THE_LIB)(gnotepad.o) \
+	$(THE_LIB)(gpuzzle.o) \
+	$(THE_LIB)(gzones.o) \
+	$(THE_LIB)(strpos.o) \
+	$(THE_LIB)(valert.o) \
+	$(THE_LIB)(vbell.o) \
+	$(THE_LIB)(vcap.o) \
+	$(THE_LIB)(vcharset.o) \
+	$(THE_LIB)(vchstubs.o) \
+	$(THE_LIB)(vcommand.o) \
+	$(THE_LIB)(vcontrol.o) \
+	$(THE_LIB)(vcut.o) \
+	$(THE_LIB)(vdefer.o) \
+	$(THE_LIB)(vedge.o) \
+	$(THE_LIB)(verase.o) \
+	$(THE_LIB)(vexit.o) \
+	$(THE_LIB)(vfnkey.o) \
+	$(THE_LIB)(vgets0.o) \
+	$(THE_LIB)(vgrid.o) \
+	$(THE_LIB)(vinput.o) \
+	$(THE_LIB)(visdebug.o) \
+	$(THE_LIB)(vkeymap.o) \
+	$(THE_LIB)(vline.o) \
+	$(THE_LIB)(vlist.o) \
+	$(THE_LIB)(vloadch.o) \
+	$(THE_LIB)(vmacro.o) \
+	$(THE_LIB)(vmap.o) \
+	$(THE_LIB)(vmenu.o) \
+	$(THE_LIB)(vmode.o) \
+	$(THE_LIB)(vmove.o) \
+	$(THE_LIB)(vnewline.o) \
+	$(THE_LIB)(vonexit.o) \
+	$(THE_LIB)(vop.o) \
+	$(THE_LIB)(vopenf.o) \
+	$(THE_LIB)(vpaste.o) \
+	$(THE_LIB)(vpopscr.o) \
+	$(THE_LIB)(vprint.o) \
+	$(THE_LIB)(vpushscr.o) \
+	$(THE_LIB)(vputc.o) \
+	$(THE_LIB)(vrawunix.o) \
+	$(THE_LIB)(vrefresh.o) \
+	$(THE_LIB)(vrelease.o) \
+	$(THE_LIB)(vroll.o) \
+	$(THE_LIB)(vscreen.o) \
+	$(THE_LIB)(vsection.o) \
+	$(THE_LIB)(vset.o) \
+	$(THE_LIB)(vsize.o) \
+	$(THE_LIB)(vslew.o) \
+	$(THE_LIB)(vstate.o) \
+	$(THE_LIB)(vsynch.o) \
+	$(THE_LIB)(vsystem.o) \
+	$(THE_LIB)(vtext.o) \
+	$(THE_LIB)(vtrace.o) \
+	$(THE_LIB)(vtrigger.o) \
+	$(THE_LIB)(vtrim.o) \
+	$(THE_LIB)(vuserex.o) \
+	$(THE_LIB)(vutil.o) \
+	$(THE_LIB)(vwait.o) \
+	$(THE_LIB)(version.o)
+	$(RANLIB) $(THE_LIB)
+	@echo lib $(THE_LIB) is now up-to-date
 
 
-$(LIB)(gcal2.o): gcal2.c video.h vlocal.h vdata.h vmenu.h
-$(LIB)(gcalc.o): gcalc.c video.h vlocal.h vdata.h vmenu.h
-$(LIB)(gcalend.o): gcalend.c video.h vlocal.h vdata.h vmenu.h
-$(LIB)(gclock.o): gclock.c video.h vlocal.h vdata.h
-$(LIB)(gnotepad.o): gnotepad.c video.h vlocal.h vdata.h vmenu.h
-$(LIB)(gpuzzle.o): gpuzzle.c video.h vlocal.h vdata.h vmenu.h
-$(LIB)(gzones.o): gzones.c
-$(LIB)(sleepdos.o): sleepdos.c
-$(LIB)(strpos.o): strpos.c
-$(LIB)(valert.o): valert.c video.h vlocal.h vdata.h
-$(LIB)(vbarup.o): vbarup.c video.h vmenu.h vlocal.h vdata.h
-$(LIB)(vbell.o): vbell.c video.h vlocal.h vdata.h
-$(LIB)(vcap.o): vcap.c video.h vcap.h vlocal.h
-$(LIB)(vcharset.o): vcharset.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vchstubs.o): vchstubs.c vchinese.h
-$(LIB)(vclosefo.o): vclosefo.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vclosete.o): vclosete.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vcommand.o): vcommand.c
-$(LIB)(vcontrol.o): vcontrol.c video.h vcap.h
-$(LIB)(vcut.o): vcut.c video.h
-$(LIB)(vdefer.o): vdefer.c video.h vlocal.h
-$(LIB)(vedge.o): vedge.c video.h
-$(LIB)(verase.o): verase.c video.h vlocal.h vdata.h vcap.h vmenu.h
-$(LIB)(verrmsg.o): verrmsg.c video.h vform.h
-$(LIB)(vexit.o): vexit.c video.h vlocal.h vcap.h vdata.h
-$(LIB)(vfielded.o): vfielded.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vfnkey.o): vfnkey.c video.h vlocal.h vdata.h
-$(LIB)(vform.o): vform.c video.h vlocal.h vdata.h vform.h
-$(LIB)(vgetbuff.o): vgetbuff.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vgetfiel.o): vgetfiel.c video.h vform.h
-$(LIB)(vgetnext.o): vgetnext.c video.h vintdef.h vplus.h vform.h
-$(LIB)(vgets0.o): vgets0.c video.h
-$(LIB)(vgrid.o): vgrid.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vinput.o): vinput.c video.h vlocal.h vcap.h vdata.h
-$(LIB)(visdebug.o): visdebug.c video.h vlocal.h vcap.h vdata.h
-$(LIB)(vline.o): vline.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vlist.o): vlist.c video.h vlist.h vlocal.h vdata.h
-$(LIB)(vloadch.o): vloadch.c video.h vlocal.h
-$(LIB)(vloadfor.o): vloadfor.c video.h vlocal.h
-$(LIB)(vmacro.o): vmacro.c video.h vlocal.h vdata.h
-$(LIB)(vmap.o): vmap.c video.h vlocal.h
-$(LIB)(vmenu.o): vmenu.c video.h vlocal.h vdata.h vcap.h vmenu.h
-$(LIB)(vmode.o): vmode.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vmove.o): vmove.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vnewline.o): vnewline.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vonexit.o): vonexit.c video.h vlocal.h
-$(LIB)(vop.o): vop.c video.h
-$(LIB)(vopenf.o): vopenf.c video.h vlocal.h vdata.h
-$(LIB)(vopenfor.o): vopenfor.c video.h vintdef.h vplus.h vform.h
-$(LIB)(vopenter.o): vopenter.c video.h vintdef.h vplus.h
-$(LIB)(vpaste.o): vpaste.c video.h vlocal.h vdata.h
-$(LIB)(vplus.o): vplus.c video.h vform.h vintdef.h vplus.h vlocal.h vdata.h
-$(LIB)(vpopscr.o): vpopscr.c video.h vlocal.h
-$(LIB)(vprint.o): vprint.c video.h vlocal.h
-$(LIB)(vprintfo.o): vprintfo.c video.h vlocal.h
-$(LIB)(vpushscr.o): vpushscr.c video.h vlocal.h
-$(LIB)(vputbuff.o): vputbuff.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vputc.o): vputc.c video.h
-$(LIB)(vputwind.o): vputwind.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vrawdos.o): vrawdos.c
-$(LIB)(vrawunix.o): vrawunix.c video.h vlocal.h vrawunix.h vchinese.h
-$(LIB)(vrawvms1.o): vrawvms1.c
-$(LIB)(vrawvms2.o): vrawvms2.c
-$(LIB)(vreadfie.o): vreadfie.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vrefresh.o): vrefresh.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vrelease.o): vrelease.c video.h
-$(LIB)(vroll.o): vroll.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vscreen.o): vscreen.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vsection.o): vsection.c video.h
-$(LIB)(vset.o): vset.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vsetkeyl.o): vsetkeyl.c video.h vlocal.h vdata.h vform.h
-$(LIB)(vsetkeyl.o): vintdef.h vplus.h
-$(LIB)(vshowfor.o): vshowfor.c video.h vform.h vintdef.h vplus.h
-$(LIB)(vsize.o): vsize.c video.h vlocal.h vdata.h
-$(LIB)(vslew.o): vslew.c video.h
-$(LIB)(vstate.o): vstate.c video.h vlocal.h vdata.h vcap.h
-$(LIB)(vsynch.o): vsynch.c video.h vlocal.h
-$(LIB)(vsystem.o): vsystem.c video.h
-$(LIB)(vtext.o): vtext.c video.h vlocal.h
-$(LIB)(vtrace.o): vtrace.c
-$(LIB)(vtrigger.o): vtrigger.c video.h
-$(LIB)(vtrim.o): vtrim.c video.h
-$(LIB)(vuserex.o): vuserex.c video.h vlocal.h
-$(LIB)(vutil.o): vutil.c video.h vlocal.h vdata.h
-$(LIB)(vwait.o): vwait.c video.h
-
+$(THE_LIB)(gcal2.o): gcal2.c video.h vlocal.h vdata.h vintdef.h vmenu.h
+$(THE_LIB)(gcal2.o): vmodules.h
+$(THE_LIB)(gcalc.o): gcalc.c video.h vlocal.h vdata.h vintdef.h vmenu.h
+$(THE_LIB)(gcalc.o): vmodules.h
+$(THE_LIB)(gcalend.o): gcalend.c video.h vlocal.h vdata.h vintdef.h
+$(THE_LIB)(gcalend.o): vmenu.h vmodules.h
+$(THE_LIB)(gclock.o): gclock.c video.h vlocal.h vdata.h vintdef.h
+$(THE_LIB)(gclock.o): vmodules.h
+$(THE_LIB)(gnotepad.o): gnotepad.c video.h vlocal.h vdata.h vintdef.h
+$(THE_LIB)(gnotepad.o): vmenu.h vmodules.h
+$(THE_LIB)(gpuzzle.o): gpuzzle.c video.h vlocal.h vdata.h vintdef.h
+$(THE_LIB)(gpuzzle.o): vmenu.h vmodules.h
+$(THE_LIB)(gzones.o): gzones.c
+$(THE_LIB)(sleepdos.o): sleepdos.c
+$(THE_LIB)(strpos.o): strpos.c
+$(THE_LIB)(valert.o): valert.c video.h vlocal.h vintdef.h vdata.h
+$(THE_LIB)(valert.o): vmodules.h
+$(THE_LIB)(vbell.o): vbell.c video.h vlocal.h vintdef.h vdata.h
+$(THE_LIB)(vbell.o): vmodules.h
+$(THE_LIB)(vcap.o): vcap.c video.h vlocal.h vcap.h vintdef.h vmodules.h
+$(THE_LIB)(vcharset.o): vcharset.c video.h vlocal.h vdata.h vcap.h
+$(THE_LIB)(vcharset.o): vmodules.h vintdef.h
+$(THE_LIB)(vchstubs.o): vchstubs.c vchinese.h
+$(THE_LIB)(vcommand.o): vcommand.c
+$(THE_LIB)(vcontrol.o): vcontrol.c video.h vcap.h vintdef.h vmodules.h
+$(THE_LIB)(vcut.o): vcut.c video.h
+$(THE_LIB)(vdefer.o): vdefer.c video.h vlocal.h vintdef.h vdata.h
+$(THE_LIB)(vdefer.o): vmodules.h
+$(THE_LIB)(vedge.o): vedge.c video.h
+$(THE_LIB)(verase.o): verase.c video.h vlocal.h vdata.h vcap.h
+$(THE_LIB)(verase.o): vintdef.h vmenu.h vmodules.h
+$(THE_LIB)(vexit.o): vexit.c video.h vlocal.h vcap.h vintdef.h vdata.h
+$(THE_LIB)(vexit.o): vmodules.h
+$(THE_LIB)(vfnkey.o): vfnkey.c video.h vlocal.h vdata.h
+$(THE_LIB)(vgets0.o): vgets0.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vgrid.o): vgrid.c video.h vlocal.h vdata.h vcap.h vmodules.h
+$(THE_LIB)(vgrid.o): vintdef.h
+$(THE_LIB)(vinput.o): vinput.c video.h vlocal.h vcap.h vdata.h
+$(THE_LIB)(vinput.o): vmodules.h vintdef.h
+$(THE_LIB)(visdebug.o): visdebug.c video.h
+$(THE_LIB)(vkeymap.o): vkeymap.c vkeymap.h vintdef.h vmodules.h
+$(THE_LIB)(vline.o): vline.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vline.o): vdata.h vcap.h
+$(THE_LIB)(vlist.o): vlist.c vlist.h video.h vlocal.h vdata.h
+$(THE_LIB)(vlist.o): vmodules.h vintdef.h
+$(THE_LIB)(vloadch.o): vloadch.c video.h vlocal.h
+$(THE_LIB)(vmacro.o): vmacro.c video.h vlocal.h vdata.h vmodules.h
+$(THE_LIB)(vmacro.o): vintdef.h
+$(THE_LIB)(vmap.o): vmap.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vmenu.o): vmenu.c video.h vlocal.h vdata.h vcap.h vintdef.h
+$(THE_LIB)(vmenu.o): vmenu.h vmodules.h
+$(THE_LIB)(vmode.o): vmode.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vmode.o): vdata.h vcap.h
+$(THE_LIB)(vmove.o): vmove.c video.h vlocal.h vdata.h vcap.h vmodules.h
+$(THE_LIB)(vmove.o): vintdef.h
+$(THE_LIB)(vnewline.o): vnewline.c video.h vlocal.h vdata.h vcap.h
+$(THE_LIB)(vnewline.o): vmodules.h vintdef.h
+$(THE_LIB)(vonexit.o): vonexit.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vop.o): vop.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vopenf.o): vopenf.c video.h vlocal.h vdata.h vmodules.h
+$(THE_LIB)(vopenf.o): vintdef.h
+$(THE_LIB)(vpaste.o): vpaste.c video.h vlocal.h vdata.h
+$(THE_LIB)(vpopscr.o): vpopscr.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vprint.o): vprint.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vpushscr.o): vpushscr.c video.h vlocal.h vintdef.h
+$(THE_LIB)(vpushscr.o): vmodules.h
+$(THE_LIB)(vputc.o): vputc.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vrawdos.o): vrawdos.c
+$(THE_LIB)(vrawunix.o): vrawunix.c
+$(THE_LIB)(vrawvms1.o): vrawvms1.c
+$(THE_LIB)(vrawvms2.o): vrawvms2.c
+$(THE_LIB)(vrefresh.o): vrefresh.c video.h vlocal.h vdata.h vcap.h
+$(THE_LIB)(vrefresh.o): vmodules.h vintdef.h
+$(THE_LIB)(vrelease.o): vrelease.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vroll.o): vroll.c video.h vlocal.h vdata.h vcap.h vmodules.h
+$(THE_LIB)(vroll.o): vintdef.h
+$(THE_LIB)(vscreen.o): vscreen.c video.h vlocal.h vdata.h vcap.h
+$(THE_LIB)(vscreen.o): vmodules.h vintdef.h
+$(THE_LIB)(vsection.o): vsection.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vset.o): vset.c video.h vlocal.h vdata.h vcap.h vmodules.h
+$(THE_LIB)(vset.o): vintdef.h
+$(THE_LIB)(vsize.o): vsize.c video.h vlocal.h vdata.h vmodules.h
+$(THE_LIB)(vsize.o): vintdef.h
+$(THE_LIB)(vslew.o): vslew.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vstate.o): vstate.c video.h vlocal.h vdata.h vcap.h
+$(THE_LIB)(vstate.o): vmodules.h vintdef.h
+$(THE_LIB)(vsynch.o): vsynch.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vsystem.o): vsystem.c video.h
+$(THE_LIB)(vtext.o): vtext.c video.h vlocal.h vmodules.h vintdef.h
+$(THE_LIB)(vtrace.o): vtrace.c vmodules.h vintdef.h
+$(THE_LIB)(vtrigger.o): vtrigger.c video.h
+$(THE_LIB)(vtrim.o): vtrim.c video.h vmodules.h vintdef.h
+$(THE_LIB)(vuserex.o): vuserex.c video.h vlocal.h
+$(THE_LIB)(vutil.o): vutil.c video.h vlocal.h vdata.h vmodules.h
+$(THE_LIB)(vutil.o): vintdef.h
+$(THE_LIB)(vwait.o): vwait.c video.h
+$(THE_LIB)(version.o): version.c

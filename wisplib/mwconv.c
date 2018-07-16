@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -8,9 +10,6 @@
 			/************************************************************************/
 
 #include <string.h>
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
 
 #include <ctype.h>
 #include "idsistd.h"
@@ -19,14 +18,14 @@
 /* Do a WANG style MOVE WITH CONVERSION.											*/
 
 static char *signch;
-static int c_just();
+static int c_just(char* src, char* idst, char* fdst, int len);
 
-void mwconv(src,idst,fdst,len,retval)
-char *src;									/* the source string				*/
-char *idst;									/* the integer destination string.		*/
-char *fdst;									/* The fractional destination string.		*/
-char *len;									/* the length of the string			*/
-int4 *retval;									/* The field for the return value.		*/
+void mwconv(
+	char *src,	/* the source string				*/
+	char *idst,	/* the integer destination string.		*/
+	char *fdst,	/* The fractional destination string.		*/
+	char *len,	/* the length of the string			*/
+	int4 *retval)	/* The field for the return value.		*/
 {
 
 	int l_len;
@@ -53,14 +52,9 @@ int4 *retval;									/* The field for the return value.		*/
 
 
 
-static int c_just(src,idst,fdst,len)
-char *src;
-char *idst;
-char *fdst;
-int len;
+static int c_just(char* src, char* idst, char* fdst, int len)
 {
-	int 	dpos;
-	int 	tcnt,dpoff,i;
+	int 	tcnt,i;
 	int 	neg, signfound, decimalfound, nullfound;
 	char 	temp[80];								/* scratch string			*/
 
@@ -193,3 +187,12 @@ int len;
 	}
 	return(0);
 }
+/*
+**	History:
+**	$Log: mwconv.c,v $
+**	Revision 1.10  1996-08-19 18:32:35-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,11 @@
+for i in $*
+do
+echo $i 
+done | sed "
+	s;\.c;.o;g
+	s;^;	\$(THE_LIB)(;
+	s;$;) \\\;
+">.c
+
+
+

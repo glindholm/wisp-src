@@ -1,0 +1,34 @@
+*
+*	tstglb1		Test GLOBAL variables
+*
+*			This proc declares some global varibles
+*			then runs proc TSTGLB2 which can modify
+*			the variables, then runs COBOL program SUB3
+*			using arg1,arg2,arg3 which can be modified.
+*
+procedure tstglb1
+
+declare &arg1 as global string(10) initial "ARG1"
+declare &arg2 as global string(10) initial "ARG2"
+declare &arg3 as global string(10) initial "ARG3"
+declare &arg4 as global string(10) initial "ARG4"
+declare &arg5 as global string(10) initial "ARG5"
+declare &arg6           string(10) initial "ARG6"
+
+prompt 	center "TSTGBL1 (before run tstglb2)";;
+	center " arg1=",bright uplow &arg1;
+        center " arg2=",bright uplow &arg2;
+        center " arg3=",bright uplow &arg3;
+	center " arg4=",bright uplow &arg4;
+	center " arg5=",bright uplow &arg5;
+	center " arg6=",bright uplow &arg6
+
+run tstglb2
+
+prompt 	center "TSTGBL1 (after run tstglb2)";;
+	center " arg1=",bright uplow &arg1;
+        center " arg2=",bright uplow &arg2;
+        center " arg3=",bright uplow &arg3;
+	center " arg4=",bright uplow &arg4;
+	center " arg5=",bright uplow &arg5;
+	center " arg6=",bright uplow &arg6

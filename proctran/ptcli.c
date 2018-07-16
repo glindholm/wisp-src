@@ -1,12 +1,21 @@
-#define EXT extern
-			/************************************************************************/
-			/*	    PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995-97 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		ptcli.c
+**
+**	Project:	wisp/proctran
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	???
+**
+**	Routines:	
+**	get_cli()
+**	showflags()
+**
+*/
 
-/* PG_CLI.C	*/
+#define EXT extern
 
 #include <stdio.h>
 
@@ -18,9 +27,21 @@
 
 #include "pgcommon.h"
 #include "pgglobal.h"
+#include "getopt.h"
 
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
 EXT char cli_infile[200];								/* The initial input file name		*/
-EXT char cli_listfile[200];								/* The file for conversion info listing	*/
+
+/*
+**	Static data
+*/
+static char cli_listfile[200];								/* The file for conversion info listing	*/
 
 #ifdef VMS
 
@@ -40,11 +61,29 @@ $DESCRIPTOR(cli_display,"DISPLAY");
 #endif
 
 static int show_flags;
-static int showflags();
 
-get_cli(argc,argv)									/* Note: argc, argv used for unix code.*/
-int	argc;
-char	*argv[];
+/*
+**	Static Function Prototypes
+*/
+static void showflags();
+
+/*
+**	ROUTINE:	get_cli()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void get_cli(int argc,char *argv[])							/* Note: argc, argv used for unix code.*/
 {
 #ifdef VMS
 	int status,i;
@@ -186,7 +225,23 @@ char	*argv[];
 	}
 }
 
-static showflags()
+/*
+**	ROUTINE:	showflags()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void showflags()
 {
 	printf("The Following PROCTRAN Options are in use;\n\n");
 
@@ -211,3 +266,19 @@ static showflags()
 	else
 		printf("     no -d	/NODISPLAY		Do not generate DISPLAY logic for errors on subroutines.\n");
 }
+
+/*
+**	History:
+**	$Log: ptcli.c,v $
+**	Revision 1.7  1997-04-21 11:03:54-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.6  1996-09-12 19:14:51-04  gsl
+**	Fix prototypes
+**
+**	Revision 1.5  1995-09-22 07:12:52-07  scass
+**	Added DTMI standard headers.
+**
+**
+**
+*/

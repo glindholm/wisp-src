@@ -1,6 +1,8 @@
 101	%%COBOL-I-ENTRY PROGRAM-ID %8.8s TIME %s
 102	%%TEXT "%s"
 103	%%TEXT "%s"
+104	%s
+105	%s
 2001	%%BELL-I-ENTRY Entry into BELL
 3001	%%BITPACK-I-ENTRY Entry into BITPACK
 3501	%%BITUNPK-I-ENTRY Entry into BITUNPK
@@ -15,6 +17,8 @@
 10002	%%COBLINK-E-NOTYET COBLINK not yet implemented on Unix
 11001	%%DATE-I-ENTRY Entry into DATE
 11002	%%DATE-E-NOTYET Function %c%c not implemented
+11101	%%DATE2-I-ENTRY Entry into DATE2
+11102	%%DATE2-E-NOTYET Function %c%c not implemented
 12001	Entry into DATESET ??? what is this routine??? really DATETEST
 13001	%%DAY-I-ENTRY Entry into DAY
 13002	%%DAY-E-INVALID invalid date [%s]
@@ -73,6 +77,7 @@
 28016	%%LINK-E-RECURSIVE Recursive LINK to file %.60s
 28018	%%LINK-E-FORK Fork failed [errno=%d]
 28020	%%LINK-E-ERROR %s
+28022	%%LINK-E-FRONTEND COBOL frontend %s to LINK failed
 28501	%%LINKPROC-I-ENTRY Entry into LINK
 28502	%%LINKPROC-F-PARMCNT Invalid parmcnt %d
 28503	%%LINKPROC-I-NOTFOUND File not found %.60s
@@ -110,6 +115,7 @@
 46005	%%PRINT-I-DISP Dispostion (%2.2s) Not Supported
 46401	%%UNIX_PRINT-I-ENTRY-ILP File=%s copies=%d form=%d
 46402	%%UNIX_PRINT-E-ILP System call failed to ILP %s rc=%d errno=%d
+46404	%%UNIX_PRINT-E-PRINTQUEUE System call failed to %s file=%s rc=%d errno=%d
 46501	%%UNIX_PRINT-I-ENTRY File=%s copies=%d form=%d
 46502	%%UNIX_PRINT-E-LP System call failed to LP %s rc=%d errno=%d
 46503	%%UNIX_PRINT-W-UNLINK Unable to delete %s errno=%d
@@ -176,7 +182,7 @@
 51001	%%READFDR-I-ENTRY Entry into READFDR
 51002	%%READFDR-E-BLOCK Block request mode not supported
 51004	%%READFDR-E-NOTSUP Field ID of %2.2s is NOT SUPPORTED
-52001	%%READVTOC-I-ENTRY Entry into READVTOC
+52001	%%READVTOC-I-ENTRY Entry into READVTOC(%c, %8.8s, %6.6s, ...)
 52002	%%READVTOC-E-NOTYET Option (%c) Not Yet Implemented
 52004	%%READVTOC-E-NOTSUPP Option (%c) Not Supported
 53001	%%RENAME-I-ENTRY Entry into RENAME
@@ -347,10 +353,19 @@
 83014	%%WPERSON-F-FORMS Line too long
 83016	%%WPERSON-F-LPMAP Line too long
 83018	%%WPERSON-E-OPTIONS %s: [%s]
+83019	%%WPERSON-W-OPTIONS %s: [%s]
 83020	%%WPERSON-E-FOPEN %s unable to open %s [errno=%d]
 83022	%%WPERSON-E-FWRITE %s unable to write to %s [errno=%d]
 83024	%%WPERSON-F-LOAD %s Line too long
+83026	%%WPERSON-W-LOAD %s Found invalid FAC character [%x] - Ignored
+83028	%%WPERSON-F-LOAD %s Line too short
+83030	%%WPERSON-F-LOAD %s Printer number 000 not allowed.
 83501	%%WPRINT-I-ENTRY Entry into WPRINT
+83503	%%WPRINT-I-NOTSUPP Disposition RS not supported, Will print %s using DS
+83510   %%WIN32_PRINTFILE-O-FORMS form %d bad value for '%s': '%s'
+83512   %%WIN32_PRINTFILE-O-FORMS form %d bad keyword '%s'
+83514   %%WIN32_PRINTFILE-O-FORMS form %d bad syntax near position %d
+83516   %%WIN32_PRINTFILE-E-SYS System error: %s
 84001	Entry into WRITEACP
 85001	%%WSCREEN-I-ENTRY Entry into WSCREEN
 85002	%%WSCREEN-F-SCRVERSION Screen version mismatch %d [Current=%d]
@@ -380,3 +395,4 @@
 90001	Entry into WVASET
 91001	%%MANAGEFILES-I-ENTRY Entry into Manage Files
 91002	%%MANAGEFILES-F-RING [%s] [%s]
+92001	%%OSD_FREEBLOCKS-I-ENTRY Entry into OSD_FREEBLOCKS 

@@ -117,6 +117,7 @@ generic_up             =key_up_arrow
 generic_down           =key_down_arrow
 generic_left           =key_left_arrow
 generic_right          =key_right_arrow
+generic_newline        ="\E[6~"
 generic_tab            =key_tab
 generic_backtab        ="\E^I"
 generic_delete         =key_backspace

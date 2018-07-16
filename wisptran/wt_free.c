@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,7 +17,7 @@
 
 p_free()
 {
-	int on_err,is_comit;
+	int is_comit;
 
 	ptype = get_param(o_parms[0]);							/* get next parameter (should be FREE)	*/
 
@@ -41,12 +43,12 @@ p_free()
 
 	if (is_comit)
 	{
-		stredt(inline," COMMIT"," ");						/* Remove COMMIT.			*/
+		stredt(linein," COMMIT"," ");						/* Remove COMMIT.			*/
 	}
 	else
 	{
-		stredt(inline," FREE "," ");						/* Remove FREE.				*/
-		stredt(inline," ALL"," ");						/* Remove ALL.				*/
+		stredt(linein," FREE "," ");						/* Remove FREE.				*/
+		stredt(linein," ALL"," ");						/* Remove ALL.				*/
 	}
 
 	ptype = get_param(o_parms[0]);							/* Looking for a possible ON ERROR.	*/
@@ -59,10 +61,19 @@ p_free()
 		tput_line("                   IF WISPRETURNCODE = \"000\" THEN\n");
 		tput_line("                       CONTINUE\n");
 		tput_line("                   ELSE\n");
-		stredt(inline," ON "," ");						/* Remove ON				*/
-		stredt(inline," ERROR"," ");						/* Remove ERROR				*/
+		stredt(linein," ON "," ");						/* Remove ON				*/
+		stredt(linein," ERROR"," ");						/* Remove ERROR				*/
 	}
 
 	hold_line();									/* Hold line, then quit.		*/
 }
 
+/*
+**	History:
+**	$Log: wt_free.c,v $
+**	Revision 1.10  1996-08-30 21:56:19-04  gsl
+**	drcs update
+**
+**
+**
+*/

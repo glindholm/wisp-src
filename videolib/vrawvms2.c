@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #ifdef VMS
 			/************************************************************************/
 			/*									*/
@@ -40,6 +42,7 @@ static struct {	short syi_len;								/* The length of the buffer for GETSYI.	*/
 		short *syi_ret;								/* The address for the return length.	*/
 	      } syi_desc;
 
+static struct two_longs {long t1; long t2;};						/* The I/O status block.		*/
 static char *outbuf;									/* Pointer to current output buffer.	*/
 static char *bufbase;									/* Pointer to the base of buffer area.	*/
 static int bufsize = 0;									/* Size of each buffer area.		*/
@@ -56,20 +59,24 @@ static int minout = 0;									/* Minimum size of output.		*/
 
 /*						Subroutine entry point.								*/
 
-int vrawprint(a_line) unsigned char *a_line;						/* String passed by reference.		*/
+int vrawflush(void)
+{
+	return vrawprint(NULL);
+}
+
+int vrawprint(char* a_line)								/* String passed by reference.		*/
 {
 	register int i;									/* Working registers.			*/
 	register char a_char;								/* Working character storage.		*/
 	extern int vb_pure;								/* flag to control pure lf or new line.	*/
 	extern int debugging;								/* Debugging control flag reference.	*/
-	extern int holding_output;							/* Flag to indicate if output is held.	*/
 
 	if (first)
 	{
 		initialize();								/* First time in this routine?		*/
 		video_inited = TRUE;							/* Set because video is initialized.	*/
 	}
-	if (a_line == DUMP_OUTPUT) return(start_output());				/* Does he want buffer dumped?		*/
+	if (a_line == NULL) return(start_output());					/* Does he want buffer dumped?		*/
 
 	if (vb_count == 0) wait_for_buffer();						/* At start, wait for buff to be free.	*/
 
@@ -84,7 +91,7 @@ int vrawprint(a_line) unsigned char *a_line;						/* String passed by reference.
 		check_end();								/* See if buffer is full.		*/
 	}
 
-	if (debugging || !holding_output) start_output();				/* Start the output as appropriate.	*/
+	if (debugging || !vbuffering_on()) start_output();				/* Start the output as appropriate.	*/
 
 	return(1);									/* Return with unconditional success.	*/
 }
@@ -236,8 +243,8 @@ int vrawputc(c) char c;									/* Output character c.			*/
 
 /*					Subroutine to synchronize with QIO's and timers.					*/
 
-int vr_sync(in_efn,in_iosb) long in_efn;						/* Event flag number.			*/
-struct {long t1; long t2;} *in_iosb;							/* The I/O status block.		*/
+void vr_sync(in_efn,in_iosb) long in_efn;						/* Event flag number.			*/
+struct two_longs *in_iosb;								/* The I/O status block.		*/
 {
 	sys$synch(in_efn,in_iosb);							/* Wait for the QIO.			*/
 }
@@ -254,3 +261,18 @@ signal_msg()										/* Signal to MESSAGE.			*/
 
 #endif
 
+/*
+**	History:
+**	$Log: vrawvms2.c,v $
+**	Revision 1.11  1996-11-13 20:44:25-05  gsl
+**	Added vrawflush()
+**
+**	Revision 1.10  1996-07-26 09:23:24-07  gsl
+**	Remove unsigned from vrawprint
+**
+**	Revision 1.9  1996-03-12 05:33:42-08  gsl
+**	chnage to use vbuffering_on()
+**
+**
+**
+*/

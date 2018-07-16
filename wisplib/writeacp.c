@@ -1,3 +1,6 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+#if defined(unix) || defined(VMS)
 /********************************************************************************************************************************
 *																*
 *	writeacp.c	Transmit data on specified telecommunications line.							*
@@ -122,4 +125,13 @@ int	*ret_code;							/* WANG ACP return code.				*/
 		}
 	}
 }
-
+#endif /* unix || VMS */
+/*
+**	History:
+**	$Log: writeacp.c,v $
+**	Revision 1.10  1996-08-19 18:33:21-04  gsl
+**	drcs update
+**
+**
+**
+*/

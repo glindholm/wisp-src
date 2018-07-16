@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /********************************************************************************************************************************
 *																*
 *	SETFILE.C -- Subroutine to emulate modification of WANG User File Blocks.						*
@@ -30,14 +32,23 @@
 	*        V            ALPHA (6)       NAME OF VOLUME                 *
 	*                                                                    *
 	*********************************************************************/
+
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef MSDOS
 #include <math.h>
-#include <stdlib.h>
 #endif
 
 #include <varargs.h>
 #include "idsistd.h"
 #include "wfiles.h"
+#include "wisplib.h"
+#include "werrlog.h"
+#include "wfname.h"
+#include "idsisubs.h"
+
+
 #define	KEYLIMIT    16									/* Maximum number of key values.	*/
 #define FILENAMELEN  8									/* Length of WANG file name.		*/
 #define LIBRARYLEN   8									/* Length of WANG library name.		*/
@@ -47,7 +58,7 @@
 
 extern pstruct *plist;									/* pointer to printer files		*/
 
-SETFILE(va_alist)	  								/* Function uses variable arguments.	*/
+void SETFILE(va_alist)	  								/* Function uses variable arguments.	*/
 
 va_dcl
 
@@ -78,8 +89,8 @@ va_dcl
 	}
 	else
 	{
-		vre("%%SETFILE-E-ERROR Insufficient parameters supplied in call to SETFILE, call ignored.");
-		return(0);
+		werr_message_box("%%SETFILE-E-ERROR Insufficient parameters supplied in call to SETFILE, call ignored.");
+		return;
 	}
 
 	while (arg_count > 1)							/* While still at least 2 parameters.		*/
@@ -95,8 +106,8 @@ va_dcl
 		{
 		    if (!plist)							/* If no print files are presently open.	*/
 		    {
-			vre("%%SETFILE-E-ERROR SETFILE called with no open print file, call ignored.");
-			return(0);
+			werr_message_box("%%SETFILE-E-ERROR SETFILE called with no open print file, call ignored.");
+			return;
 		    }
 		    mode = 2;							/* mode for wfname representing print file.	*/
 										/* Use wfname instead of wfopen because wfopen	*/
@@ -114,8 +125,8 @@ va_dcl
 
 		    if (!lptr)							/* If we never found the right name.		*/
 		    {
-			vre("%%SETFILE-E-ERROR SETFILE called to set print attributes for non print file, call ignored.");
-			return(0);
+			werr_message_box("%%SETFILE-E-ERROR SETFILE called to set print attributes for non print file, call ignored.");
+			return;
 		    }
 		}								/* Here, lptr points to the correct pstruct.	*/
 
@@ -163,3 +174,12 @@ va_dcl
 		}
 	}
 }
+/*
+**	History:
+**	$Log: setfile.c,v $
+**	Revision 1.11  1996-08-19 18:32:54-04  gsl
+**	drcs update
+**
+**
+**
+*/

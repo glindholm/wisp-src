@@ -1,9 +1,5 @@
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		pttype.c
@@ -27,10 +23,8 @@
 #include "pgglobal.h"
 #include "pgstruct.h"
 
-p_link_kw(tndx,num_link_var)								/* Process link keywords.		*/
-int tndx, *num_link_var;
+void p_link_kw(int tndx, int* num_link_var)						/* Process link keywords.		*/
 {
-	register int i;
 	char *cstr, curlen[FLDLEN];
 
 	*curlen = '\0';									/* Init the current length to not found.*/
@@ -93,8 +87,7 @@ int tndx, *num_link_var;
 	}
 }
 
-save_link_var(num_link_var)								/* Save the variable in link_item.	*/
-int *num_link_var;
+void save_link_var(int* num_link_var)							/* Save the variable in link_item.	*/
 {
 	char *cstr;
 
@@ -125,3 +118,15 @@ int *num_link_var;
 		cur_link = hld_link;							/* Put ptr to end of link list.		*/
 	}
 }
+/*
+**	History:
+**	$Log: pttype.c,v $
+**	Revision 1.5  1997-04-21 11:22:45-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.4  1996-09-12 19:18:08-04  gsl
+**	Fix prototypes
+**
+**
+**
+*/

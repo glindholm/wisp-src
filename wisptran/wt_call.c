@@ -1,520 +1,587 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		wt_call.c
+**
+**	Project:	wisp/tran
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Subroutine to process CALL statements in Wang COBOL.
+**
+**	Routines:	
+*/
 
-/* Subroutine to process CALL statements in Wang COBOL. */
+/*
+**	Includes
+*/
 
+#include <stdlib.h>
+#include <string.h>
 
 #define EXT extern
 #include "wisp.h"
 #include "cobfiles.h"
 #include "wmalloc.h"
+#include "reduce.h"
+#include "statment.h"
+#include "input.h"
 
-static int get_call();
-static int track_call();
-static int _p_call();
-static int put_callmflink();
-static int _put_getparm();
+/*
+**	Structures and Defines
+*/
 
-#define PTR1	((char *)1)
-#define CALL_BUFFER_SIZE	256
+/*
+**	Globals and Externals
+*/
 
-static int add_wvaset;
+/*
+**	Static data
+*/
 
-p_call()
+static int add_wvaset;		/* Do we need to add a call to wvaset() before the call flag */
+
+/*
+**	Static Function Prototypes
+*/
+
+static void put_wvaset(int argcnt, int col);
+static void track_call(const char *pname, c_list *tptr);
+
+/*
+**	ROUTINE:	parse_call()
+**
+**	FUNCTION:	Handle a CALL statement.
+**
+**	DESCRIPTION:	
+**
+**	ARGUMENTS:	
+**	the_statement	The CALL statement tree
+**
+**	GLOBALS:	
+**	add_wvaset	Flag to add call to "wvaset"
+**
+**	RETURN:		NULL or the unprocessed statement
+**
+**	WARNINGS:	None
+**
+*/
+
+NODE parse_call(NODE the_statement)
 {
-	int i,itype;
-	char buf[CALL_BUFFER_SIZE];
-	char tstr[80],src[40];
+	NODE	call_node, program_node, temp_node, using_node, first_node, last_node;
+	int	col;
+	char	program_name[80];
+	int	argcnt;
+	int	cnt;
+	int	found_period;
 
-	if (vax_cobol || acu_cobol) add_wvaset = 0;
-	else add_wvaset = 1;
+	call_node = the_statement->next;
 
-	track_call(parms[1],xref_ptr);							/* Track it.				*/
-
-
-											/* If the subroutine is a VARARGS type	*/
-											/* call, just call "_p_call(buf)" and	*/
-											/* It will be taken care of.		*/
-											/* If it requires editing, call		*/
-											/* "get_call(sub_name, new_name, repl_kw*/
-											/* buf);				*/
-											/* Where:				*/
-											/* sub_name - is the original name of	*/
-											/*            the subroutine. ex. PAUSE	*/
-											/* new_name - The name to use instead.	*/
-											/*	      ex. WPAUSE.		*/
-											/* repl_kw -  A keyword to replace in	*/
-											/* 	      the parm list. A dummy 	*/
-											/* 	      field will be put in its 	*/
-											/*	      place.			*/
-											/*	      Usefull for UFB's.	*/
-											/* buf -      A buffer to use.		*/
-											/* It returns the number of parms found.*/
-											/* Then call put_call(buf,num_args);	*/
-	if (!strcmp(parms[1],"\"COBLINK\""))
-	{										/* call COBLINK 			*/
-		write_log("WISP",'I',"COBLINKFOUND","CALL to COBLINK Detected.");
-		_p_call(buf);								/* Really do it.			*/
+	if (!eq_token(call_node->token,VERB,"CALL"))
+	{
+		write_log("WISP",'E',"CALL","Not a CALL statement.");
+		return(the_statement);
 	}
-	else if (!strcmp(parms[1],"\"LINK\""))
-	{										/* call LINK 				*/
-		write_log("WISP",'I',"LINKFOUND","CALL to LINK Detected.");
+
+	write_log("WISP",'I',"CALL","Processing CALL %s statement.",token_data(call_node->next->token));
+
+        add_wvaset = (vax_cobol || acu_cobol) ? 0 : 1;
+
+	/* Get the column of the CALL token */
+	col = call_node->token->column;
+
+	/* Point to the program name node */
+	program_node = call_node->next;
+
+	/* Reduce the program name, it is usually a literal but can be a data name */
+	reduce_data_item(program_node);
+
+	/* Point to USING node */
+	using_node = program_node->next;
+
+	/* Reduce and count the arguments */
+	argcnt = 0;
+	found_period = 0;
+	if ( eq_token(using_node->token,KEYWORD,"USING"))
+	{
+		for(temp_node=using_node->next; 
+		    temp_node && NODE_END != temp_node->type && (temp_node->token && PERIOD != temp_node->token->type); 
+		    temp_node=temp_node->next)
+		{
+			reduce_data_item(temp_node);
+			argcnt++;
+		}
+
+		if (temp_node && temp_node->token && PERIOD == temp_node->token->type)
+		{
+			found_period = 1;
+		}
+
+		/* Point to the first argument */
+		first_node = using_node->next;
+	}
+
+	if (program_node->down->token->type != LITERAL)
+	{
+		write_log("WISP",'I',"CALL","Non-literal CALL statement.");
+
+		/*
+		**	For a non-literal call always add a wvaset() because we don't
+		**	know what is being called and it may need it.
+		*/
+		put_wvaset(argcnt,col);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+
+	/* Get the program name */
+	strcpy(program_name,token_data(program_node->down->token));
+
+	/* Track it for the cross reference table */
+	track_call(program_name,xref_ptr);
+	
+	/*
+	**	Take care of CALLs that need vaset() calls only
+	*/
+	if (0==strcmp(program_name,"\"CHECKACP\"") ||
+	    0==strcmp(program_name,"\"COBLINK\"") ||
+	    0==strcmp(program_name,"\"FILECOPY\"") ||
+	    0==strcmp(program_name,"\"FIND\"") ||
+	    0==strcmp(program_name,"\"LINKPROC\"") ||
+	    0==strcmp(program_name,"\"MESSAGE\"") ||
+	    0==strcmp(program_name,"\"PRINT\"") ||
+	    0==strcmp(program_name,"\"PUTPARM\"") ||
+	    0==strcmp(program_name,"\"READACP\"") ||
+	    0==strcmp(program_name,"\"READFDR\"") ||
+	    0==strcmp(program_name,"\"SCRATCH\"") ||
+	    0==strcmp(program_name,"\"SCREEN\"") ||
+	    0==strcmp(program_name,"\"SEARCH\"") ||
+	    0==strcmp(program_name,"\"SET\"") ||
+	    0==strcmp(program_name,"\"SORT\"") ||
+	    0==strcmp(program_name,"\"SORTINFO\"") ||
+	    0==strcmp(program_name,"\"SORTLINK\"") ||
+	    0==strcmp(program_name,"\"STRING\"") ||
+	    0==strcmp(program_name,"\"SUBMIT\"") ||
+	    0==strcmp(program_name,"\"UPDATFDR\"") ||
+	    0==strcmp(program_name,"\"WSFNM\"") ||
+	    0==strcmp(program_name,"\"WSFNS\""))
+	{
+		if (acn_cobol)
+		{
+			if (0==strcmp(program_name,"\"SCREEN\""))
+			{
+				write_log("WISP",'W',"NATIVE","Call %s not supported with Native Screens",program_name);
+			}
+			else if (0==strcmp(program_name,"\"MESSAGE\""))
+			{
+				write_log("WISP",'W',"NATIVE",
+					  "Features of %s are not compatible with Native Screens",program_name);
+			}
+			else if (0==strcmp(program_name,"\"WSFNM\"") ||
+				 0==strcmp(program_name,"\"WSFNS\""))
+			{
+				write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
+			}
+		}
+
+		if (0==strcmp(program_name,"\"READFDR\""))
+		{
+			write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name);
+		}
+
+		put_wvaset(argcnt,col);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"BELL\"") && acn_cobol)
+	{
+		write_log("WISP",'W',"NATIVE","Call %s changed to DISPLAY OMITTED BELL.",program_name);
+
+		/*
+		**	Morph:	CALL    "BELL"  USING arg1	...
+		**		|	|	|     |		|	
+		**	into:	DISPLAY OMITTED BELL  (delete)	...
+		*/
+		if (1 == argcnt)
+		{
+			edit_token(call_node->token,"DISPLAY");
+			edit_token(program_node->down->token,"OMITTED");
+			edit_token(using_node->token,"BELL");
+			free_statement(first_node->down);
+			first_node->down = NULL;
+
+			decontext_statement(the_statement);
+		}
+		else
+		{
+			write_log("WISP",'W',"CALL","Call %s invalid argument count (%d).", program_name, argcnt);
+		}
+		
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"DATE\"") ||
+		 0==strcmp(program_name,"\"DAY\"")	)
+	{
+		write_log("WISP",'W',"YEAR2000","Features of %s are not YEAR2000 compliant",program_name);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"EXTRACT\""))
+	{
+		write_log("WISP",'I',"CALL","Call %s proceeded by Call \"setprogid\".",program_name);
+		tput_line_at(col, "CALL \"setprogid\" USING WISP-APPLICATION-NAME");
+		tput_flush();
+		put_wvaset(argcnt,col);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"GETPARM\""))
+	{
+		/*
+		**	CALL "GETPARM" with more then 62 args need to be split
+		**	into multiple calls to "getparmbuild".
+		*/
+
+#define		MAX_GETPARM_ARGS	62
+
+		if (vax_cobol || argcnt <= MAX_GETPARM_ARGS)
+		{
+			put_wvaset(argcnt,col);
+			tput_statement(12,the_statement);
+			return(free_statement(the_statement));
+		}
+
+		/*
+		**	Split into multiple calls to "getparmbuild"
+		*/
+		write_log("WISP",'I',"CALL","Call %s split into multiple Call \"getparmbuild\".",program_name);
+
+		/* Point at the first argument */
+		first_node = using_node->next;
+
+		/* Break the statement after the USING node */
+		using_node->next = NULL;
+
+		/* Throw away the beginning of the statement */
+		free_statement(the_statement);
+
+		while(argcnt > 0)
+		{
+			/*
+			**	Find the first and last args in the chunk.
+			*/
+			for(temp_node=first_node, cnt=1; 
+			    cnt<argcnt && cnt<MAX_GETPARM_ARGS; 
+			    cnt++, temp_node=temp_node->next) {/* empty */};
+			
+			/* last_node now points at the last arg in the chunk */
+			last_node = temp_node;
+
+			/* temp_node points to the first arg in the next chunk */
+			temp_node = last_node->next;
+
+			/* break the statement after the last arg */
+			last_node->next = NULL;
+
+
+			/* print this chunk */
+			put_wvaset(cnt,col);
+			tput_line_at(col, "CALL \"getparmbuild\" USING");
+			tput_flush();
+			tput_statement(12, first_node);
+
+			/* Free this used part of the statement */
+			free_statement(first_node);
+
+			/* Setup for next loop thru */
+			first_node = temp_node;
+			argcnt -= cnt;
+		}
+
+		/* Print the final zero arg call to getparmbuild */
+		put_wvaset(0,col);
+		tput_line_at(col, "CALL \"getparmbuild\"");
+
+		/* Print what left of the statement, possible PERIOD plus fluff tokens */
+		tput_statement(12, first_node);
+		return(free_statement(first_node));
+	}
+	else if (0==strcmp(program_name,"\"LINK\""))
+	{
 		if (vax_cobol && do_dlink)
 		{
-			write_log("WISP",'I',"LINKDESC","Call \"LINK\" changed to \"LINKDESC\".");
-			strcpy(src,parms[1]);
-			i = get_call(src,"\"LINKDESC\"",NULL,buf);			/* Count and fixup the line.		*/
-			stredt(buf,"USING","USING BY DESCRIPTOR");
-			put_call(buf,i);
+			write_log("WISP",'I',"CALL","Call %s changed to \"LINKDESC\".",program_name);
+
+			edit_token(program_node->down->token,"\"LINKDESC\"");
+			edit_token(using_node->token,"USING BY DESCRIPTOR");
+			tput_statement(12,the_statement);
+			return(free_statement(the_statement));
 		}
-		else if (aix_cobol)
+		else if (aix_cobol || mf_cobol || dmf_cobol)
 		{
-			write_log("WISP",'I',"LINKAIX","Call \"LINK\" changed to \"LINKAIX\".");
-			strcpy(src,parms[1]);
-			i = get_call(src,"\"LINKAIX\"",NULL,buf);			/* Count and fixup the line.		*/
-			put_callmflink(buf,i);
+			write_log("WISP",'I',"CALL","Call %s changed to \"LINKMF\".",program_name);
+
+			edit_token(program_node->down->token,"\"LINKMF\"");
+			put_wvaset(argcnt,col);
+
+			/* Point at the first argument */
+			first_node = using_node->next;
+
+			/* Break the statement after the USING node */
+			using_node->next = NULL;
+
+			/* Print the first part of the statement */
+			tput_statement(12,the_statement);
+			
+			free_statement(the_statement);
+
+			/*
+			**	For each argument print:
+			**
+			**	REFERENCE arg1	VALUE LENGTH OF arg1
+			**	REFERENCE arg2	VALUE LENGTH OF arg2
+			*/
+			for(temp_node = first_node, cnt=0; 
+			    cnt<argcnt; 
+			    cnt++, temp_node=temp_node->next)
+			{
+				decontext_statement(temp_node->down);
+				delint_statement(temp_node->down);
+
+				tput_flush();
+
+				tput_clause(col+4, "REFERENCE");
+				tput_statement(col+4, temp_node->down);
+
+				tput_clause(col+4, "VALUE LENGTH OF");
+				tput_statement(col+4, temp_node->down);
+			}
+
+			/* Print any trailing stuff */
+			decontext_statement(temp_node);				
+			tput_statement(col+4, temp_node);
+			return(free_statement(first_node));
 		}
-		else if (mf_cobol || dmf_cobol)
+		else
 		{
-			write_log("WISP",'I',"LINKMF","Call \"LINK\" changed to \"LINKMF\".");
-			strcpy(src,parms[1]);
-			i = get_call(src,"\"LINKMF\"",NULL,buf);			/* Count and fixup the line.		*/
-			put_callmflink(buf,i);
-		}
-		else 
-		{
-			_p_call(buf);							/* Really do it.			*/
+			put_wvaset(argcnt,col);
+			tput_statement(12,the_statement);
+			return(free_statement(the_statement));
 		}
 	}
-	else if (!strcmp(parms[1],"\"WSXIO\""))
-	{										/* call WSXIO				*/
-		write_log("WISP",'I',"WSXIOCALL","Call to WSXIO detected.");
-		strcpy(src,parms[1]);
-		i = get_call(src,src,PTR1,buf);						/* Count and fixup the line.		*/
-		put_call(buf,i);
+	else if (0==strcmp(program_name,"\"PAUSE\""))
+	{
+		write_log("WISP",'I',"CALL","Call %s changed to \"wpause\".",program_name);
+		edit_token(program_node->down->token,"\"wpause\"");
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
 	}
-	else if (!strcmp(parms[1],"\"SETFILE\"") || !strcmp(parms[1],"\"FILESET\""))
-	{										/* call SETFILE.			*/
-		strcpy(src,parms[1]);
-		itype = get_call(src,src,NULL,buf);					/* Count and fixup the line.  		*/
+	else if (0==strcmp(program_name,"\"RENAME\""))
+	{
+		write_log("WISP",'I',"CALL","Call %s changed to \"wrename\".",program_name);
+		edit_token(program_node->down->token,"\"wrename\"");
+		put_wvaset(argcnt,col);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"SETFILE\""))
+	{
+		/*
+		**	The first arg is a UFB which we convert into 4 args
+		**	which are the Volume, Library, File, and Status names
+		**
+		**	CALL "SETFILE" USING MYFILE, x, y, ...
+		**
+		**	CALL "SETFILE" USING V-MYFILE, L-MYFILE, F-MYFILE, S-MYFILE, x, y, ...
+		*/
+		int	idx;
+		char	ufb_name[80];
+		char	ufb_vol[80], ufb_lib[80], ufb_file[80], ufb_status[80];
+		
+		write_log("WISP",'I',"CALL","Call %s corrected.",program_name);
 
-		for (i = name_count-1; i > 0; i--)					/* Move names forward 3			*/
+		/* Point to the first arg - the UFB name */
+		first_node = using_node->next;
+		strcpy(ufb_name, token_data(first_node->down->token));
+		idx = file_index(ufb_name);
+		if (-1 == idx)
 		{
-			strcpy(name_list[i+3],name_list[i]);				/* Copy each one.			*/
-		}									/* But skip the first one.		*/
-		name_count = name_count+3;						/* Count them.				*/
-
-		i = file_index(name_list[0]);						/* search for the file			*/
-
-		if (-1 == i)
-		{
-			write_log("WISP",'F',"SETFILE","SETFILE call, file %s not found.",name_list[0]);
+			write_log("WISP",'F',"CALL","Call \"SETFILE\", file %s not found.",ufb_name);
 			exit_wisp(EXIT_WITH_ERR);
 		}
 
-
-		if ((prog_vnames[i][0] == '"') || (!prog_vnames[i][0]))			/* Volume name is a literal/null 	*/
+		if ((prog_vnames[idx][0] == '"') || (!prog_vnames[idx][0]))		/* Volume name is a literal/null 	*/
 		{
-			make_fld(name_list[0],prog_files[i],"V-");			/* put the V on				*/
+			make_fld(ufb_vol,prog_files[idx],"V-");				/* put the V on				*/
 		}
 		else
 		{
-			strcpy(name_list[0],prog_vnames[i]);				/* Use the actual field.		*/
+			strcpy(ufb_vol,prog_vnames[idx]);				/* Use the actual field.		*/
 		}
 
-		if ((prog_lnames[i][0] == '"') || (!prog_lnames[i][0]))			 /* Library name is a literal/null	 */
+		if ((prog_lnames[idx][0] == '"') || (!prog_lnames[idx][0]))		/* Library name is a literal/null	 */
 		{
-			make_fld(name_list[1],prog_files[i],"L-");			/* put the L on				*/
+			make_fld(ufb_lib,prog_files[idx],"L-");				/* put the L on				*/
 		}
 		else
 		{
-			strcpy(name_list[1],prog_lnames[i]);				/* Use the actual field.		*/
+			strcpy(ufb_lib,prog_lnames[idx]);				/* Use the actual field.		*/
 		}
 
-		if ((prog_fnames[i][0] == '"') || (!prog_fnames[i][0]))			/* file name is a literal/null		*/
+		if ((prog_fnames[idx][0] == '"') || (!prog_fnames[idx][0]))		/* file name is a literal/null		*/
 		{
-			make_fld(name_list[2],prog_files[i],"F-");			/* put the F on				*/
+			make_fld(ufb_file,prog_files[idx],"F-");			/* put the F on				*/
 		}
 		else
 		{
-			strcpy(name_list[2],prog_fnames[i]);				/* Use the actual field.		*/
+			strcpy(ufb_file,prog_fnames[idx]);				/* Use the actual field.		*/
 		}
-		make_fld(name_list[3],prog_files[i],"S-");				/* put the S on				*/
 
-		put_call(buf,itype);
+		make_fld(ufb_status,prog_files[idx],"S-");				/* put the S on				*/
+
+		/* We are replacing the first arg with 4 args so add 3 to the argcnt */
+		argcnt += 3;
+		put_wvaset(argcnt,col);
+
+		/* Print out the first part of the statement up to the USING */
+		using_node->next = NULL;
+		tput_statement(12,the_statement);
+		free_statement(the_statement);
+		
+		/* Print the 4 generated args */
+		tput_clause(col+4,"%s,", ufb_vol);
+		tput_clause(col+4,"%s,", ufb_lib);
+		tput_clause(col+4,"%s,", ufb_file);
+		tput_clause(col+4,"%s,", ufb_status);
+
+		/* Print the remaining args after the first one. */
+		tput_statement(col+4,first_node->next);
+		return(free_statement(first_node));
 	}
-	else if (!strcmp(parms[1],"\"SCREEN\""))
-	{										/* call SCREEN				*/
-		write_log("WISP",'I',"SCREENCALL","Call to SCREEN detected.");
-		strcpy(src,parms[1]);
-		i = get_call(src,src,PTR1,buf);						/* Count and fixup the line.		*/
-		if (add_wvaset)
-		{
-			tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
-			tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");
-		}
-		put_call(buf,i);
-	}
-	else if (!strcmp(parms[1],"\"PAUSE\""))
-	{										/* call PAUSE				*/
-		write_log("WISP",'I',"PAUSEFIX","PAUSE call altered.");
-		strcpy(src,parms[1]);
-		i = get_call(src,"\"wpause\"",NULL,buf);				/* Count and fixup the line.		*/
-		put_call(buf,i);
-	}
-	else if (!strcmp(parms[1],"\"RENAME\""))
-	{										/* call RENAME				*/
-		if (add_wvaset)
-		{
-			strcpy(src,parms[1]);
-			i = get_call(src,"\"wrename\"",NULL,buf);			/* Count and fixup the line.		*/
-			tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
-			tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");	/* Set the varargs for UNIX.	*/
-			put_call(buf,i);						/* Write out the buffer now.		*/
-			write_log("WISP",'I',"RENAMEFIX","RENAME call altered.");
-		}
-		else
-		{
-			stredt(inline,"RENAME","wrename");				/* Fix the name.			*/
-			tput_line("%s", inline);					/* No processing needed.		*/
-		}
-	}
-	else if (!strcmp(parms[1],"\"CHECKACP\""))
+	else if (0==strcmp(program_name,"\"SPECLIO\""))
 	{
-		_p_call(buf);								/* Really do it.			*/
-	}
-	else if (!strcmp(parms[1],"\"FIND\""))
-	{
-		_p_call(buf);								/* Really do it.			*/
-	}
-	else if (!strcmp(parms[1],"\"GETPARM\""))
-	{
-		if (!vax_cobol)
+		/*
+		**	CALL "SPECLIO" USING myfile
+		**
+		**	OPEN SPECIAL-INPUT myfile
+		*/
+		char	buf[80];
+		
+		write_log("WISP",'W',"CALL","Call %s can be replaced with OPEN SPECIAL-INPUT.",program_name);
+
+		/* Point to the first arg - the UFB name */
+		first_node = using_node->next;
+
+		memset(buf,' ',12);
+		sprintf(&buf[12], "OPEN SPECIAL-INPUT %s", token_data(first_node->down->token));
+		if (found_period)
 		{
+			strcat(buf,".");
+		}
 
-			strcpy(src,parms[1]);
+		/*
+		**	Hold this line so it can be re-processed
+		*/
+		hold_this_line(buf);
 
-			i = get_call(src,src,"",buf);					/* Count and fixup the line.		*/
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"WSCLOSE\"")  ||
+		 0==strcmp(program_name,"\"EDLOAD\"")   ||
+		 0==strcmp(program_name,"\"MENULOAD\"") ||
+		 0==strcmp(program_name,"\"W4WAPI\"")     )
+	{
+		if (acn_cobol)
+		{
+			write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
+		}
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"@WSCLOSE\""))
+	{
+		write_log("WISP",'W',"CALL","@WSCLOSE can be replaced with a CLOSE crt statement.");
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"@WSOPEN\""))
+	{
+		write_log("WISP",'W',"CALL","@WSOPEN not required - it can be removed.");
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"@WSTIME\"") ||
+		 0==strcmp(program_name,"\"@MSNAME\"") ||
+		 0==strcmp(program_name,"\"@MSTIME\"") ||
+		 0==strcmp(program_name,"\"@MSVALUE\""))
+	{
+		write_log("WISP",'W',"CALL","Call %s routine not supplied by WISP", program_name);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
+	}
+	else if (0==strcmp(program_name,"\"WSXIO\"") ||
+		 using_ufb_test(program_name))
+	{
+		write_log("WISP",'I',"CALL","Call %s fixing UFB arguments.",program_name);
 
-			if ( name_count < 63 )
+		if (acn_cobol)
+		{
+			if (0==strcmp(program_name,"\"WSXIO\""))
 			{
-				if (add_wvaset)
-				{
-											/* Set the varargs for UNIX.		*/
-					tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
-
-					tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");
-				}
-				put_call(buf,i);					/* Write out the buffer now.		*/
+				write_log("WISP",'W',"NATIVE","Call %s uses WISP Screens",program_name);
 			}
-			else								/* Too many parms for LPI, do this up.	*/
+		}
+
+		/* Point to the first arg */
+		first_node = using_node->next;
+
+		/* Search the args for UFB names and replace */
+		for(temp_node = first_node, cnt=0; 
+		    cnt<argcnt; 
+		    cnt++, temp_node=temp_node->next)
+		{
+			/*
+			**	Test for CRT and non-CRT files
+			*/
+			if (-1 != crt_index (token_data(temp_node->down->token)) ||
+			    -1 != file_index(token_data(temp_node->down->token))    )
 			{
-				_put_getparm(buf,i);					/* Do it for GETPARM.			*/
+				edit_token(temp_node->down->token,"WISP-SCRATCH-BYTE-1");
 			}
-			write_log("WISP",'I',"GETPARMFIX","GETPARM call altered.");
 		}
-		else
-		{
-			_p_call(buf);							/* Normal for VMS			*/
-		}
-	}
-	else if (!strcmp(parms[1],"\"MESSAGE\""))
-	{
-		_p_call(buf);								/* Really do it.			*/
-	}
-	else if (!strcmp(parms[1],"\"LINKPROC\""))
-	{
-		_p_call(buf);								/* Really do it.			*/
-	}
-	else if (!strcmp(parms[1],"\"EXTRACT\""))
-	{
-		tput_line_at(12, "CALL \"setprogid\" USING WISP-APPLICATION-NAME"); 	/* Move name of current appl.		*/
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"FILECOPY\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"PRINT\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"PUTPARM\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"READACP\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"READFDR\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SCRATCH\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SET\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SEARCH\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SUBMIT\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"UPDATFDR\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SORT\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SORTINFO\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SORTLINK\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"STRING\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"WSFNS\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"WSFNM\""))
-	{
-		_p_call(buf);
-	}
-	else if (!strcmp(parms[1],"\"SPECLIO\""))
-	{										/* call SPECLIO				*/
-		ptype = get_param(o_parms[1]);
-		i = get_ppos();
-
-		memset(tstr,' ',i);
-		tstr[i] = '\0';
-
-		skip_param(2);								/* skip CALL SPECLIO USING		*/
-		ptype = get_param(o_parms[1]);						/* Get the file name.			*/
-
-		sprintf(inline,"%sOPEN SPECIAL-INPUT %s",tstr,o_parms[1]);
-		if (strlen(inline) > 72)						/* Too long, fix it.			*/
-		{
-			sprintf(inline,"           OPEN SPECIAL-INPUT %s",tstr,o_parms[1]);
-		}
-		ptype = get_param(o_parms[1]);						/* Get the parameter name.		*/
-
-		if (ptype == -1)
-			strcat(inline,".\n");
-		else
-			strcat(inline,"\n");
-		hold_line();								/* Hold the line to be re-parmed.	*/
-		write_log("WISP",'I',"SPECLIOFIX","SPECLIO call altered.");
-	}
-	else if (!strcmp(parms[1],"\"@WSOPEN\""))
-	{										/* call WSOPEN 				*/
-		skip_param(5);								/* skip CALL WSOPEN USING, CRT, STATUS	*/
-		ptype = get_param(o_parms[1]);
-		if (ptype == -1)
-			tput_line_at(14, "CONTINUE.");
-		else
-			tput_line_at(14, "CONTINUE,");
-		write_log("WISP",'I',"WSOPENFIX","WSOPEN call altered.");
-	}
-	else if (!strcmp(parms[1],"\"@WSCLOSE\""))
-	{										/* Call WSCLOSE.			*/
-		tput_line_at(18, "CALL \"vwang\" USING VWANG-CLOSE-WS,");
-		skip_param(4);
-		ptype = get_param(o_parms[1]);
-		if (ptype == -1)
-			tput_line_at(14, "CONTINUE.");
-		else
-			tput_line_at(14, "CONTINUE,");
-		write_log("WISP",'I',"WSCLOSEFIX","WSCLOSE call altered.");
-	}
-	else if (!strcmp(parms[1],"\"@WSTIME\""))
-	{										/* call WSTIME 				*/
-		skip_param(3);								/* skip CALL @WSTIME USING		*/
-
-		do
-		{
-			ptype = get_param(o_parms[0]);					/* get parms and see if they are	*/
-		}									/* last or a keyword			*/
-		while ((ptype != -1) && !proc_keyword(o_parms[0]));
-		if (proc_keyword(o_parms[0]))						/* was a keyword			*/
-			hold_line();							/* save it				*/
-
-		if (ptype != -1)
-			tput_line_at(20, "CONTINUE,");
-		else
-			tput_line_at(20, "CONTINUE.");
-
-		write_log("WISP",'I',"WSTIMEFIX","WSTIME call altered.");
-	}
-	else if (!strcmp(parms[1],"\"@MSNAME\""))
-	{										/* call MSNAME				*/
-		stredt(inline,"@MSNAME","dummy");
-		tput_line("%s", inline);
-		write_log("WISP",'I',"MSNAMEFIX","MSNAME call altered.");
-	}
-	else if (!strcmp(parms[1],"\"@MSTIME\""))
-	{										/* call MSTIME 				*/
-		stredt(inline,"@MSTIME","dummy");
-		tput_line("%s", inline);
-		write_log("WISP",'I',"MSTIMEFIX","MSTIME call altered.");
-	}
-	else if (!strcmp(parms[1],"\"@MSVALUE\""))
-	{										/* call MSVALUE 			*/
-		stredt(inline,"@MSVALUE","dummy");
-		tput_line("%s", inline);
-		write_log("WISP",'I',"MSVALUEFIX","MSVALUE call altered.");
-	}
-	else if (using_ufb_test(parms[1]))
-	{
-		write_log("WISP",'I',"USINGUFB","Call to a USING-UFB routine detected.");
-		strcpy(src,parms[1]);
-		i = get_call(src,src,PTR1,buf);						/* Count and fixup the line.		*/
-		put_call(buf,i);
+		
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
 	}
 	else
 	{
-		tput_line("%s", inline);
+		tput_statement(12,the_statement);
+		return(free_statement(the_statement));
 	}
-
+	
+	
 }
 
-/*
-	get_call:	This routine loads up a CALL "program" USING args.. into buf.  In the process it substitutes the
-			program name (sname) with the translated name (tname).  It also searches the arguments for subval
-			and replaces any found with WISP-SCRATCH-BYTE-1.  This is useful for relacing UFB parameters.
-			Subval can be NULL -- no substitution.  Subval==1 means workstation UFBs.
-
-*/
-static int get_call(sname,tname,subval,buf)						/* Count and fixup the line.		*/
-char *sname;										/* The subroutine name in quotes.	*/
-char *tname;										/* The translated name in quotes.	*/
-char *subval;										/* A field name to substitute for.	*/
-char *buf;										/* The call buffer			*/
+static void put_wvaset(int argcnt, int col)
 {
-	char *tptr;
-	char *svbuf;
-	int rtype;
-	int	substituted;
-
-	rtype = 0;									/* Return type (ptype) is 0 for now.	*/
-	svbuf = buf;
-	name_count = 0;									/* Set count of names = 0.		*/
-
-	skip_param(3);									/* skip CALL "SCREEN" USING		*/
-	tptr = "           CALL ";
-	while (*tptr) *buf++ = *tptr++;							/* Append the call			*/
-	tptr = tname;
-	while (*tptr) *buf++ = *tptr++;							/* Append the name			*/
-	tptr = " USING\n";
-	while (*tptr) *buf++ = *tptr++;							/* Append the USING			*/
-	*buf = '\0';									/* null terminate the buffer.		*/
-
-	do
+	if (add_wvaset)
 	{
-		ptype = get_param(o_parms[0]);						/* get first parm			*/
-		if (ptype == -1 && !o_parms[0][0])					/* A detached period!!			*/
-		{									/* Just skip it.			*/
-			rtype = ptype;							/* Save the type.			*/
-		}
-		else if (proc_keyword(o_parms[0]))					/* is it a keyword?			*/
-		{									/* it is keyword, quit parsing		*/
-			ptype = 9;							/* signal keyword found			*/
-		}
-		else
-		{
-			if (name_count == MAX_NAME_LIST)
-			{
-				write_log("WISP",'F',"CALLTOOLONG","Maximum CALL buffer size exceeded.");
-				exit_wisp(EXIT_WITH_ERR);
-			}
-
-			substituted = 0;
-			if (subval)							/* test for argument substitution	*/
-			{
-				if ( 1==(long)subval )					/* test UFB substitution		*/
-				{
-					if (-1 != crt_index(o_parms[0]) ||		/* test for CRT files			*/
-					    -1 != file_index(o_parms[0])  )		/* test for non-CRT files		*/
-					{
-						substituted = 1;
-					}
-				}
-				else if ( !strcmp(o_parms[0],subval) )			/* test for explicit substitution	*/
-				{
-					substituted = 1;
-				}
-
-				if (substituted)					/* Do the substitution			*/
-				{
-					strcpy(name_list[name_count],"WISP-SCRATCH-BYTE-1");
-				}
-			}
-
-			if (!substituted)
-			{
-				strcpy(name_list[name_count],o_parms[0]);		/* Save it in the list.			*/
-				if (strpos(o_parms[0],"(") != -1)			/* It has a subscript.			*/
-				{
-					if (o_parms[0][0] == '(')			/* All by itself.			*/
-					{
-						name_count--;				/* It belongs on the previous item.	*/
-						strcat(name_list[name_count],o_parms[0]);/* Add it on.				*/
-					}
-
-					while(strpos(o_parms[0],")") == -1)		/* Copy till we see the closing paren.	*/
-					{
-						ptype = get_param(o_parms[0]);		/* Get another parm.			*/
-						strcat(name_list[name_count],o_parms[0]);/* Add it on.				*/
-					}
-				}
-			}
-			name_count++;							/* Count it.				*/
-			rtype = ptype;							/* Save return type.			*/
-		}
-	} while ((ptype != -1) && (ptype != 9));					/* quit if period (or keyword)		*/
-
-
-	if ((buf - svbuf) > CALL_BUFFER_SIZE)
-	{
-		write_log("WISP",'F',"CALLTOOLONG","Maximum CALL buffer size exceeded.");
-		exit_wisp(EXIT_WITH_ERR);
+		tput_line_at(col, "MOVE %d TO WISP-LONGWORD",argcnt);
+		tput_line_at(col, "CALL \"wvaset\" USING WISP-LONGWORD");
+		tput_flush();
 	}
-
-	if (ptype == 9) hold_line();							/* keyword found, save the line		*/
-
-	return(rtype);									/* Return the count.			*/
 }
 
-static track_call(pname,tptr)								/* Keep track of the modules called.	*/
-char *pname;
-c_list *tptr;
+static void track_call(const char *pname, c_list *tptr)					/* Keep track of the modules called.	*/
 {
 	int i;
 	char tstr[40];
 
-	if (!do_xref) return(0);							/* Skip it.				*/
+	if (!do_xref) return;								/* Skip it.				*/
 
-	if (tptr == xref_ptr && pname[0] != '"') return(0);				/* First level call with no ""		*/
+	if (tptr == xref_ptr && pname[0] != '"') return;				/* First level call with no ""		*/
 
 	strcpy(tstr,pname);
 
@@ -561,122 +628,58 @@ c_list *tptr;
 	}
 }
 
-static _p_call(buf)									/* General count and process of a call	*/
-char *buf;
-{
-	int i,j;
-	char tstr[80],src[40];
 
-	if (add_wvaset)
-	{
-		strcpy(src,parms[1]);
-
-		j = get_call(src,src,NULL,buf);						/* Count and fixup the line.		*/
-		tput_line_at(20, "MOVE %d TO WISP-LONGWORD",name_count);
-
-		tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");		/* Set the varargs for UNIX.		*/
-		put_call(buf,j);
-	}
-	else
-	{
-		tput_line("%s", inline);
-	}
-}
-
-put_call(buf,rtype)
-char *buf;
-int rtype;
-{
-	int i;
-
-	tput_block(buf);								/* Write out the call buffer now.	*/
-
-	for (i = 0; i < (name_count-1); i++)						/* Now do the list of parms.		*/
-	{
-		tput_clause(20, "%s,",name_list[i]);
-	}
-
-	if (i < name_count)
-	{
-		tput_clause(20, "%s",name_list[i]);
-	}
-
-	if (rtype == -1)								/* Need a period?			*/
-	{
-		tput_clause(20, ".");
-	}
-}
-
-static put_callmflink(buf,rtype)
-char *buf;
-int rtype;
-{
-	int i;
-
-	tput_line_at(12, "MOVE %d TO WISP-LONGWORD",name_count);
-	tput_line_at(12, "CALL \"wvaset\" USING WISP-LONGWORD");
-
-	tput_block(buf);								/* Write out the call buffer now.	*/
-
-	for (i = 0; i < name_count; i++)						/* Now do the list of parms.		*/
-	{
-		tput_line_at(16, "REFERENCE       %s",name_list[i]);
-		tput_line_at(16, "VALUE LENGTH OF %s",name_list[i]);
-	}
-
-	if (rtype == -1) tput_clause(12,".");						/* Need a period?			*/
-}
-
-static _put_getparm(buf,rtype)
-char *buf;
-int rtype;
-{
-	int i,j;
-	int plmt;
-
-	if      (lpi_cobol) plmt = 62;
-	else if (acu_cobol) plmt = 62;
-	else if (aix_cobol) plmt = 62;
-	else if (mf_cobol)  plmt = 62;
-	else if (dmf_cobol) plmt = 62;
-	else                plmt = 32;
-
-	for (	i = 0, j = plmt;
-		name_count != 0;)							/* Now do the list of parms.		*/
-	{
-		if (j == plmt)
-		{
-			if (add_wvaset)
-			{
-				tput_line_at(20, "MOVE %d TO WISP-LONGWORD", (name_count > plmt) ? plmt : name_count);
-
-				tput_line_at(20, "CALL \"wvaset\" USING WISP-LONGWORD");
-			}
-			tput_line_at        (20, "CALL \"getparmbuild\" USING");
-			j = 0;
-		}
-		else
-		{
-			tput_line_at(24, "%s",name_list[i]);
-			i++;
-			j++;
-			name_count--;
-		}
-	}
-
-	if (add_wvaset)
-	{
-		tput_line("                   MOVE 0 TO WISP-LONGWORD\n");
-
-		tput_line("                   CALL \"wvaset\" USING WISP-LONGWORD\n");
-	}
-
-	if (rtype == -1)								/* Need a period?			*/
-	{
-		tput_line("                   CALL \"getparmbuild\".\n");
-	}
-	else
-	{
-		tput_line("                   CALL \"getparmbuild\"\n");
-	}
-}
+/*
+**	History:
+**	$Log: wt_call.c,v $
+**	Revision 1.20  1997-09-30 10:56:18-04  gsl
+**	Add headers to fix warnings
+**
+**	Revision 1.19  1997-09-24 15:47:07-04  gsl
+**	Add YEAR2000 warnings for DATE, DAY, and READFDR.
+**	Remove native screens warnings from GETPARM
+**
+**	Revision 1.18  1997-09-18 16:07:03-04  gsl
+**	Fix the native screens warning messages
+**
+**	Revision 1.17  1997-09-18 15:36:29-04  gsl
+**	Add more native screens warnings
+**
+**	Revision 1.16  1997-09-18 12:08:10-04  gsl
+**	Removed all the old p_call() code.
+**	Add Native Screens stuff.
+**
+**	Revision 1.15  1997-09-17 17:11:43-04  gsl
+**	Complete rewrite to use the token/node logic
+**
+**	Revision 1.14  1997-09-12 15:49:50-04  gsl
+**	fix native screens warnings
+**
+**	Revision 1.13  1997-09-12 14:00:08-04  gsl
+**	Add warnings for Native Screens with SCREEN and WSXIO
+**
+**	Revision 1.12  1996-12-12 20:14:43-05  gsl
+**	Fixed some OLD TIME wisp translator "crap".
+**	The CALL processing logic was recognizing and doing special processing
+**	on the following routines.  It now issues a warning and recommends an action
+**	to fix.
+**	"SPECLIO" was being changed to an OPEN SPECIAL-INPUT.
+**	"@WSOPEN" was being removed
+**	"@WSCLOSE" was being changed to a CLOSE crt
+**	"@WSTIME" was being removed
+**	"@MSNAME" was changed to "dummy"
+**	"@MSVALUE" was changed to "dummy"
+**	"@MSTIME" was changed to "dummy"
+**
+**	Revision 1.11  1996-06-24 11:11:49-07  gsl
+**	remove unused data items
+**	\.
+**
+**	Revision 1.10  1995-08-03 06:23:36-07  gsl
+**	Fixed problem where a CALL with >500 args would exceed internal limit.
+**	Changed name_list to carg_list and and malloc or realloc it as needed
+**	so there is now no limit on the number of args a call can have.
+**
+**
+**
+*/

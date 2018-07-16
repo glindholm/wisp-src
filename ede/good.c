@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -10,7 +12,10 @@
 
 #include <ctype.h>										/* Get character type macros.	*/
 #include <stdio.h>										/* Reference standard I/O.	*/
-#include <v/video.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <video.h>
 
 /*						Entry point.									*/
 
@@ -20,7 +25,7 @@ main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
 	{
 		printf("Usage: good <selection>\n");
 		printf("Valid selections are: calc, calend, clock, notepad or puzzle.\n");
-		exit();
+		exit(0);
 	}
 
 	vstate(DEFAULT);
@@ -67,4 +72,14 @@ main(argc,argv) int argc; char *argv[];								/* Determine which goodie.	*/
 		vprint("\n");
 	}
 	vexit();
+	return 0;
 }
+/*
+**	History:
+**	$Log: good.c,v $
+**	Revision 1.8  1996-09-13 14:02:43-04  gsl
+**	Fix headers and warnings for NT
+**
+**
+**
+*/

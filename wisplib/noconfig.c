@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -6,14 +8,16 @@
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
-#include <stdio.h>
-#include "idsistd.h"
-#include "wdefines.h"
 
-no_wispconfig()
-{
-	vonexit( 0 );
-	printf("\n\r %%STARTUP-F-WISPCONFIG %s is undefined.\n\r\n\r\n\r",WISP_CONFIG_ENV);
-	wexit(1L);
-}
-
+/*
+**	History:
+**	$Log: noconfig.c,v $
+**	Revision 1.10  1996-10-08 20:23:02-04  gsl
+**	Remove OLD code
+**
+**	Revision 1.9  1996-08-19 15:32:36-07  gsl
+**	drcs update
+**
+**
+**
+*/

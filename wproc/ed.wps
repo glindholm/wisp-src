@@ -1,0 +1,574 @@
+* Copyright (c) 1992 Lexical Software
+procedure ed.wps
+   using &initial_filename string = ""
+
+screen cursor off
+message center "Initializing " !! &proc_name
+
+declare &first_row     integer = 1   [screen / window dimensions]
+declare &last_row      integer = 20
+declare &page_size     integer = &last_row - &first_row - 3
+declare &screen_width  integer = 80
+declare &currow        integer = 1
+declare &curcol        integer = 1
+
+declare &line_length   integer = 100
+declare &min_last_line integer = 0    [ text buffer dimensions ]
+declare &max_last_line integer = 1000
+declare &text          array(&max_last_line) of string (&line_length)
+declare &current_line  integer
+declare &last_line     integer
+declare &top_line      integer = 1
+
+declare &blank_line    string(&line_length)
+declare &clip_line     string(&line_length)
+declare &message       string(&line_length)
+
+declare &current_filename string(40)
+declare &filename         string(40)
+declare &key           integer
+declare &i             integer
+
+declare &enter_key     integer = 0
+declare &insert_key    integer = 1
+declare &delete_key    integer = 2
+declare &cut_key       integer = 2 + 16
+declare &copy_key      integer = 3
+declare &paste_key     integer = 17
+declare &load_key      integer = 6 + 16
+declare &save_key      integer = 6
+declare &run_key       integer = 8
+declare &help_key      integer = 9
+declare &quit_key      integer = 10
+declare &page_up_key   integer = 4
+declare &page_down_key integer = 5
+declare &syntax_key    integer = 7
+declare &escape_key    integer = 1
+
+* Ask subroutine variables
+declare &ask_message1  string
+declare &ask_message2  string
+declare &ask_action    string
+declare &ask_ok        integer
+
+declare &load_last_line integer
+
+
+if &initial_filename <> "" then
+   begin
+      assign &filename = &initial_filename
+      message center "Reading " !! &filename(1,*)
+      call Do_Load_1
+   end
+
+screen cursor on
+
+DISPLAY:
+
+message
+   facs = no,
+   erase = no,
+   corner = (1, &last_row+1, 80, 24),
+   &copy(&byte(205), 80);
+   "(1) Insert/Paste  (2) Delete/Cut    (3) Copy  (4) Prev   (5) Next";
+   "(6) Save/Load     (8) Run text as a procedure (9) Help  (10) Quit";
+   bright &message(1,&screen_width);
+
+prompt
+   erase = no,
+   facs = no,
+   pfkey = &key,
+   corner = (1, 1, 80, &last_row),
+   enable = (0, &insert_key, &delete_key, &cut_key, &copy_key,
+             &paste_key, &load_key, &save_key, &help_key, &quit_key,
+             &page_up_key, &page_down_key, &run_key),
+   modchar = " ",
+   cursor = (&curcol, &currow),
+   currow = &currow,
+   curcol = &curcol,
+   restrict = NO,
+   dim uplow &text(&top_line)(1,&screen_width);
+   dim uplow &text(&top_line + 1)(1,&screen_width);
+   dim uplow &text(&top_line + 2)(1,&screen_width);
+   dim uplow &text(&top_line + 3)(1,&screen_width);
+   dim uplow &text(&top_line + 4)(1,&screen_width);
+   dim uplow &text(&top_line + 5)(1,&screen_width);
+   dim uplow &text(&top_line + 6)(1,&screen_width);
+   dim uplow &text(&top_line + 7)(1,&screen_width);
+   dim uplow &text(&top_line + 8)(1,&screen_width);
+   dim uplow &text(&top_line + 9)(1,&screen_width);
+   dim uplow &text(&top_line + 10)(1,&screen_width);
+   dim uplow &text(&top_line + 11)(1,&screen_width);
+   dim uplow &text(&top_line + 12)(1,&screen_width);
+   dim uplow &text(&top_line + 13)(1,&screen_width);
+   dim uplow &text(&top_line + 14)(1,&screen_width);
+   dim uplow &text(&top_line + 15)(1,&screen_width);
+   dim uplow &text(&top_line + 16)(1,&screen_width);
+   dim uplow &text(&top_line + 17)(1,&screen_width);
+   dim uplow &text(&top_line + 18)(1,&screen_width);
+   dim uplow &text(&top_line + 19)(1,&screen_width);
+
+* Calculate current_line and last_line
+assign &current_line = &currow + &top_line - 1
+assign &message = ""
+
+case &key
+   when &enter_key
+      [ move cursor to beginning of next row ]
+      assign &curcol = 1
+      if &currow < &last_row then
+         assign &currow += 1
+      else
+         [ move cursor to top of window ]
+         assign &currow = &first_row
+
+   when &insert_key
+      [ insert a blank line at the current line]
+      call Calc_Last_Line
+      if &last_line < &max_last_line then
+         begin
+            call Insert_Line
+            assign &text(&current_line) = &blank_line
+         end
+      else
+         begin
+            call &alarm  [can't insert any more lines]
+            assign &message = "No room to insert"
+         end
+
+   when &delete_key
+      [ delete the current line, if possible]
+      call Calc_Last_Line
+      if &last_line > &min_last_line [there's anything to delete] and
+         &current_line <= &last_line [cursor is on a real line] then
+            call Delete_Line
+      else
+         begin
+            call &alarm  [can't delete any line]
+            assign &message = "No line to delete"
+         end
+
+   when &cut_key
+      [ copy current line to the clip line; delete the current line]
+      assign &clip_line = &text(&current_line)
+      assign &message = &clip_line
+      call Calc_Last_Line
+      if &last_line > &min_last_line [there's anything to delete] and
+         &current_line <= &last_line [cursor is on a real line] then
+            call Delete_Line
+
+   when &copy_key
+      [ copy the current line to the clip line ]
+      assign &clip_line = &text(&current_line)
+      assign &message = &clip_line
+
+   when &paste_key
+      [ insert the clip line at the current line ]
+      call Calc_Last_Line
+      if &last_line < &max_last_line then
+         begin
+            call Insert_Line
+            assign &text(&current_line) = &clip_line
+         end
+      else
+         begin
+            call &alarm  [can't insert any more lines]
+            assign &message = "No room to paste"
+         end
+
+   when &load_key
+      call Do_Load
+
+   when &save_key
+      call Do_Save
+
+   when &run_key
+      call Do_Run
+
+   when &help_key
+     call Do_Help
+
+   when &quit_key
+     call Do_Quit
+
+   when &page_up_key
+      assign &top_line -= &page_size
+      if &top_line < 1 then
+         assign &top_line = 1
+
+   when &page_down_key
+      call Calc_Last_Line
+      assign &top_line += &page_size
+      if &top_line > &last_line then
+         assign &top_line = &last_line
+      if &top_line + &last_row > &max_last_line then
+         assign &top_line = &max_last_line - &last_row
+      if &top_line < 1 then
+         assign &top_line = 1
+
+   when &syntax_key
+     call Do_Syntax
+end
+
+goto DISPLAY
+
+
+
+subroutine Insert_Line
+* Move all lines >= current line "down" 1 line
+
+   for &i = &last_line to &current_line by -1 loop
+      assign &text(&i+1) = &text(&i)
+   end
+
+end
+
+
+subroutine Delete_Line
+* Move all lines >= current line "up" 1 line
+
+   if &current_line <= &last_line then
+      for &i = &current_line to &last_line-1 loop
+         assign &text(&i) = &text(&i+1)
+      end
+      assign &text(&last_line) = &blank_line
+   end
+
+end
+
+
+subroutine Calc_Last_Line
+* Update the value of variable last_line
+* Assumes the value can never change by +/- 1
+
+   declare &start integer = &last_line + &page_size - 1
+
+   if &start > &max_last_line then
+      assign &start = &max_last_line
+
+   for &i = &start to &min_last_line by -1 loop
+      if &i = 0 then
+         begin
+            assign &last_line = &i
+            exit
+         end
+      if &text(&i)(1,*) <> "" then
+         begin
+            assign &last_line = &i
+            exit
+         end
+   end
+
+end
+
+
+subroutine Ask
+* display ask_message and get a yes/no response
+   screen cursor off
+   prompt
+      pfkey = &key,
+      corner = (0, 0),
+      screencolor=(black,white),
+      border = 3,
+      restore = yes,
+      enable = (0, &escape_key),
+      &trim(&ask_message1 !! "  " !! &ask_message2);
+      "Press Enter to " !! &ask_action !! " (F1 to cancel)."
+   screen cursor on
+
+   assign &ask_ok = (&key = 0)
+   assign &ask_message1 = ""
+   assign &ask_message2 = ""
+end
+
+
+subroutine Do_Load
+* Do load command
+
+   call Calc_Last_Line
+   if &last_line > &min_last_line then
+      begin
+         assign &ask_message1 =
+            "You will lose your current text if you Load."
+         assign &ask_action = "load"
+         call Ask
+         if not &ask_ok then
+            begin
+               assign &message = "Load cancelled."
+               leave
+            end
+      end
+
+   prompt
+      pfkey = &key,
+      corner = (0, 0),
+      screencolor=(black,white),
+      border = 3,
+      restore = yes,
+      enable = (0, &escape_key),
+      "Type name of a file to load and press Enter (F1 to cancel)";
+      "File = ", uplow &filename
+
+   if &key = &escape_key then
+      assign &message = "Load cancelled."
+   else
+      call Do_Load_1
+end
+
+
+subroutine Do_Load_1
+* Try to load file &filename
+
+   if &file_exists(&filename) then
+      begin
+         assign &load_last_line = &file_lines (&filename)
+
+         if &Load_last_line > &max_last_line then
+            begin
+               assign &ask_message1 =
+                  "This file is too big to load completely."
+               assign &ask_message2 =
+                  "It will be truncated when loaded."
+               assign &ask_action = "load"
+               call Ask
+               if not &ask_ok then
+                  begin
+                     assign &message = "Load cancelled."
+                     leave
+                  end
+               assign &load_last_line = &max_last_line
+               assign &message = "File " !! &filename(1,*) !!
+                  " truncated while loaded."
+            end
+         else
+           assign &message = "File " !! &filename(1,*) !!
+              " (" !! &load_last_line !!
+              " lines) loaded for editing."
+
+         open &filename for reading
+         for &i = 1 to &load_last_line loop
+            read line &text(&i) from &filename
+         end
+         close &filename
+
+         if &load_last_line < 1 then
+            assign &load_last_line = 1
+
+         for &i = &load_last_line to &last_line loop
+            assign &text(&i) = ""
+         end
+
+         assign &currow = 1
+         assign &curcol = 1
+         assign &current_filename = &filename
+         assign &last_line = &load_last_line
+         call Calc_Last_Line  [to be sure]
+      end
+   else
+      begin
+         call &alarm
+         assign &message =
+            "File " !! &filename(1,*) !! " does not exist."
+      end
+
+end
+
+
+
+subroutine Do_Save
+* do save command
+
+   call Calc_Last_Line
+   if &last_line = &min_last_line then
+      begin
+         assign &ask_message1 = "There is no text to save."
+         assign &ask_message2 = "The file will be empty."
+         assign &ask_action = "save"
+         call Ask
+         if not &ask_ok then
+            begin
+               assign &message = "Save cancelled."
+               leave
+            end
+      end
+
+   assign &filename = &current_filename
+   prompt
+      pfkey = &key,
+      corner = (0, 0),
+      screencolor=(black,white),
+      border = 3,
+      restore = yes,
+      enable = (0, &escape_key),
+      "Type a file name to be saved and press Enter (F1 to cancel)";
+      "File = ", uplow &filename
+
+   if &key = &escape_key then
+      assign &message = "Save cancelled."
+   else
+      begin
+         if &file_exists(&filename) then
+            begin
+               assign &ask_message1 = "This file already exists."
+               assign &ask_message2 = "It will be overwritten."
+               assign &ask_action = "overwrite"
+               call Ask
+               if not &ask_ok then
+                  begin
+                     assign &message = "Save cancelled."
+                     leave
+                  end
+
+              system "rm " !! &filename
+            end
+
+         assign &current_filename = &filename
+         call Do_Save_1
+      end
+end
+
+
+subroutine Do_Save_1
+* Save the text as &filename
+
+   SAVEOPEN: open &filename for writing
+   if SAVEOPEN > 0 then
+      begin
+         assign &message = "File could not be opened"
+         call &alarm
+         leave
+      end
+
+   for &i = 1 to &last_line loop
+      write line &trim(&text(&i)) to &filename
+   end
+   close &filename
+
+   assign &message = "Text saved as file " !! &filename(1,*) !! "."
+end
+
+
+subroutine Do_Syntax
+* Do syntax check command
+
+   call Calc_Last_Line
+   screen clear
+
+   assign &filename = &unique !! ".wps"
+   call Do_Save_1
+
+   SYNTAXRC: run "wproc" using "-s " !! &filename
+      cancel exit is STXCANCL
+      error exit is STXERROR
+
+   assign &message =
+      "Syntax check completed with return code " !! SYNTAXRC
+
+   STXCLNUP:
+   system "rm " !! &filename
+   call Wait_For_Key
+   leave
+
+   STXCANCL:
+   assign &message = "Syntax check was cancelled"
+   goto STXCLNUP
+
+   STXERROR:
+   assign &message = "Syntax check could not be done"
+   goto STXCLNUP
+
+end
+
+
+
+subroutine Do_Run
+* Do run command
+
+   call Calc_Last_Line
+   assign &filename = &unique !! ".wps"
+   message center "Running " !! &filename(1,*)
+   call Do_Save_1
+
+   RUNRC: run &filename
+      cancel exit is RUNCANCL
+      error exit is RUNERROR
+
+   assign &message = "Run completed with return code " !! RUNRC
+
+   RUNCLNUP:
+   system "rm " !! &filename
+   call Wait_For_Key
+   leave
+
+   RUNCANCL:
+   assign &message = "Run was cancelled"
+   goto RUNCLNUP
+
+   RUNERROR:
+   assign &message = "Run could not be done"
+   goto RUNCLNUP
+
+end
+
+
+subroutine Do_Quit
+* do quit command
+
+   call Calc_Last_Line
+   if &last_line > &min_last_line then
+      begin
+         assign &ask_message1 =
+            "If you have not saved the text you are editing, " !!
+            "your changes will be lost."
+         assign &ask_message2 = ""
+         assign &ask_action = "quit"
+         call Ask
+         if not &ask_ok then
+            begin
+               assign &message = "Quit cancelled."
+               leave
+            end
+      end
+
+   screen clear
+   return
+
+end
+
+
+subroutine Do_Help
+   screen cursor off
+   prompt
+      pfkey=&key, border=5, restore=yes, enable=(&help_key),
+      corner=(1,1,80,20), title=" Editor Help Screen ",
+      "This editor was written in procedure language " !!
+      "as a demonstration of wproc";
+      ;
+      "ENTER moves the cursor down one line";
+      "F1  - Insert one line above the line the cursor is on";
+      "F2  - Delete the line the cursor is on";
+      "F3  - Copy the line the cursor is on so it can be pasted";
+      "F4  - Previous page of text";
+      "F5  - Next page of text";
+      "F6  - Save the file being edited";
+*     "F7  - Syntax check the procedure being edited";
+      "F8  - Run the text being edited as a procedure";
+      "F9  - Help on the editor (this screen)";
+      "F10 - Quit editing";
+      ;
+      "SHIFTED FUNCTION KEYS";
+      "F17 - Paste (insert) a line Cut or Copied to the line " !!
+      " above the cursor";
+      "F18 - Cut (delete) the line the cursor is on, but save " !!
+      "it for pasting";
+      "F22 - Load a new file to be edited"; 
+      center reverse " Press F9 when done viewing this screen "
+   screen cursor on
+end
+
+
+subroutine Wait_For_Key
+   write line ""
+   write "Press any key to return to editor"
+   call &get_key
+end

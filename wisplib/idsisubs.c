@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 **	General C subroutines used at IDSI
 **	==================================
@@ -9,15 +11,15 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "idsistd.h"
+#include "idsisubs.h"
+#include "paths.h"
 
 #ifndef FALSE
 #define FALSE 0
 #define TRUE !FALSE
 #endif
 
-char *upper_string(str)									/* Convert a string to uppercase.	*/
-char *str;
+char *upper_string(char *str)								/* Convert a string to uppercase.	*/
 {
 	for (; *str; str++)
 	{
@@ -26,9 +28,7 @@ char *str;
 	return( str );
 }
 
-char *upper_mem(str,cnt)								/* Convert a string to uppercase.	*/
-char *str;
-int   cnt;
+char *upper_mem(char *str, int cnt)							/* Convert a string to uppercase.	*/
 {
 	for (; cnt; str++, cnt--)
 	{
@@ -37,8 +37,7 @@ int   cnt;
 	return( str );
 }
 
-char *lower_string(str)									/* Convert a string to lowercase.	*/
-char *str;
+char *lower_string(char *str)								/* Convert a string to lowercase.	*/
 {
 	for (; *str; str++)
 	{
@@ -47,9 +46,7 @@ char *str;
 	return( str );
 }
 
-char *lower_mem(str,cnt)								/* Convert a string to lowercase.	*/
-char *str;
-int   cnt;
+char *lower_mem(char *str, int cnt)							/* Convert a string to lowercase.	*/
 {
 	for (; cnt; str++, cnt--)
 	{
@@ -58,8 +55,8 @@ int   cnt;
 	return( str );
 }
 
-char *compressit(str)								/* Compress out spaces.				*/
-char *str;									/* " AB  C   D  " -> "ABCD"			*/
+char *compressit(char *str)							/* Compress out spaces.				*/
+										/* " AB  C   D  " -> "ABCD"			*/
 {
 	char *tmp, *p;
 	char buf[80];
@@ -75,9 +72,7 @@ char *str;									/* " AB  C   D  " -> "ABCD"			*/
 	return(str);
 }
 
-int upcase(ptr,cnt)								/* Change cnt bytes of mem to uppercase.	*/
-char *ptr;
-int cnt;
+int upcase(char *ptr, int cnt)							/* Change cnt bytes of mem to uppercase.	*/
 {
 	register int ch;
 
@@ -87,11 +82,10 @@ int cnt;
 		*ptr = toupper(ch);
 		++ptr; --cnt;
 	}
+	return 0;
 }
 
-int unnull(ptr,cnt)								/* Change nulls to spaces in cnt bytes of mem	*/
-char *ptr;
-int cnt;
+int unnull(char *ptr, int cnt)							/* Change nulls to spaces in cnt bytes of mem	*/
 {
 	register int ch;
 
@@ -101,22 +95,20 @@ int cnt;
 		if (ch==(char)0) *ptr=' ';
 		++ptr; --cnt;
 	}
+	return 0;
 }
 
-int dispchars(ptr,cnt)						/* Change non-display characters to spaces in cnt bytes of mem	*/
-unsigned char *ptr;
-int cnt;
+int dispchars(char *ptr, int cnt)			/* Change non-display characters to spaces in cnt bytes of mem	*/
 {
 	while (cnt) 
 	{
-		if (*ptr < (unsigned char) ' ' ||
-		    *ptr > (unsigned char) '~'    ) *ptr=' ';
+		if (*ptr < ' ' || *ptr > '~') *ptr=' ';
 		++ptr; --cnt;
 	}
+	return 0;
 }
 
-int isspaces(p)									/* Is this string all spaces.			*/
-register char *p;
+int isspaces(char *p)								/* Is this string all spaces.			*/
 {
 	if (*p == (char)0) return TRUE;
 	while (*p) 
@@ -126,10 +118,7 @@ register char *p;
 	return TRUE;
 }
 
-int memccpyx(dest,src,ch,cnt)							/* Copies cnt bytes or up to ch character	*/
-char *dest, *src;
-char ch;
-int cnt;
+int memccpyx(char *dest, const char *src, char ch, int cnt)			/* Copies cnt bytes or up to ch character	*/
 {
 	int i;									/* Return number of char copied.		*/
 
@@ -144,11 +133,8 @@ int cnt;
 }
 
 
-void leftjust(ptr,cnt)									/* Left justify char strings. 	*/
-char	*ptr;
-int	cnt;
+void leftjust(char *ptr, int cnt)							/* Left justify char strings. 	*/
 {
-	char	*p1, *p2;
 	int	i,j;
 
 	if ( *ptr != ' ' ) return;
@@ -163,9 +149,7 @@ int	cnt;
 }
 
 
-safemove(dest,src,len)								/* safemove (memcpy) handles overlapping move	*/
-char	*dest, *src;
-int4	len;
+void safemove(char *dest, const char *src, int len)				/* safemove (memcpy) handles overlapping move	*/
 {
 	if (dest > src)								/* will overlap so copy backwards from end      */
 	{
@@ -188,10 +172,7 @@ int4	len;
 	loadpad		Load dest with src and pad with spaces up to size.
 			Src can be null terminated or space padded.
 */
-loadpad(dest,src,size)
-char	*dest;
-char	*src;
-int	size;
+void loadpad(char *dest, const char *src, int size)
 {
 	for(;size>0 && *src && *src != ' ';size-- ) *dest++ = *src++;
 
@@ -202,10 +183,7 @@ int	size;
 	unloadpad	Load dest with src and null terminate.
 			Src is at most size bytes int4, it can be null terminated or space padded.
 */
-unloadpad(dest,src,size)
-char	*dest;
-char	*src;
-int	size;
+void unloadpad(char *dest, const char *src, int size)
 {
 	for(;size>0 && *src && *src != ' ';size-- ) *dest++ = *src++;
 	*dest = '\0';
@@ -213,11 +191,11 @@ int	size;
 
 
 
-int strpos(src,srch)							/* search a string for the occurence of another string	*/
-char *src,*srch;							/* src is the string to search, srch is the match	*/
+int strpos(const char *src, const char *srch)				/* search a string for the occurence of another string	*/
+									/* src is the string to search, srch is the match	*/
 {
 	int i;
-	char *tsrc,*tsrch;
+	const char *tsrc,*tsrch;
 
 	i = 0;									/* start position counter			*/
 	do
@@ -239,8 +217,8 @@ char *src,*srch;							/* src is the string to search, srch is the match	*/
 }
 	
 
-int stredt(src,srch,repl)								/* Edit a source line, find the search	*/
-char *src,*srch,*repl;									/* string and replace it with *repl	*/
+int stredt(char *src, const char *srch, const char *repl)				/* Edit a source line, find the search	*/
+											/* string and replace it with *repl	*/
 {
 	int i;
 	char tstring[512];
@@ -280,27 +258,15 @@ char *src,*srch,*repl;									/* string and replace it with *repl	*/
 **
 */
 
-char *splitpath(filepath)
-char *filepath;
+char *splitpath(const char *filepath)
 {
 static	char	buff[256];
 	char	*ptr;
 
 	strcpy(buff,filepath);
 
-#ifdef unix
-	ptr = strrchr(buff, '/');
-	if (ptr)
-	{
-		*ptr = '\0';								/* NULL the last slash			*/
-	}
-	else
-	{
-		buff[0] = '\0';
-	}
-#endif
-#ifdef MSDOS
-	ptr = strrchr(buff, '\\');
+#if defined(unix) || defined(MSFS)
+	ptr = strrchr(buff, DIR_SEPARATOR);
 	if (ptr)
 	{
 		*ptr = '\0';								/* NULL the last slash			*/
@@ -354,25 +320,13 @@ static	char	buff[256];
 **
 */
 
-char *splitname(filepath)
-char *filepath;
+char *splitname(char *filepath)
 {
 static	char	buff[256];
 	char	*ptr;
 
-#ifdef unix
-	ptr = strrchr(filepath, '/');
-	if (ptr)
-	{
-		ptr++;									/* point after the last slash		*/
-	}
-	else
-	{
-		ptr = filepath;
-	}
-#endif
-#ifdef MSDOS
-	ptr = strrchr(buff, '\\');
+#if defined(unix) || defined(MSFS)
+	ptr = strrchr(filepath, DIR_SEPARATOR);
 	if (ptr)
 	{
 		ptr++;									/* point after the last slash		*/
@@ -383,10 +337,14 @@ static	char	buff[256];
 	}
 #endif
 #ifdef VMS
-	ptr = strrchr(buff,']');
-	if (!ptr)
+	ptr = strrchr(filepath,']');
+	if (ptr)
 	{
-		ptr = strrchr(buff,':');
+		ptr++;
+	}
+	else
+	{
+		ptr = strrchr(filepath,':');
 		if (!ptr)
 		{
 			ptr = filepath;
@@ -426,27 +384,16 @@ static	char	buff[256];
 **
 */
 
-char *splitext(filepath)
-char *filepath;
+char *splitext(char *filepath)
 {
 static	char	buff[64];
 	char	*ptr;
 
 	ptr = strrchr(filepath,'.');
-#ifdef unix
+#if defined(unix) || defined(MSFS)
 	if (ptr)
 	{
-		if (strchr(ptr,'/')) ptr = "";
-	}
-	else
-	{
-		ptr = "";
-	}
-#endif
-#ifdef MSDOS
-	if (ptr)
-	{
-		if (strchr(ptr,'\\')) ptr = "";
+		if (strchr(ptr,DIR_SEPARATOR)) ptr = "";
 	}
 	else
 	{
@@ -487,19 +434,15 @@ static	char	buff[64];
 **
 */
 
-int hasext(filepath)
-char *filepath;
+int hasext(char *filepath)
 {
 	char	*ptr;
 
 	ptr = strrchr(filepath,'.');
 	if (!ptr) return(0);
 
-#ifdef unix
-	if (0==strchr(ptr,'/')) return(1);
-#endif
-#ifdef MSDOS
-	if (0==strchr(ptr,'\\')) return(1);
+#if defined(unix) || defined(MSFS)
+	if (0==strchr(ptr,DIR_SEPARATOR)) return(1);
 #endif
 #ifdef VMS
 	if (0==strchr(ptr,']')) return(1);
@@ -534,10 +477,7 @@ char *filepath;
 **	12/28/92	Written by GSL
 **
 */
-char *buildfilepath(dest,path,file)
-char *dest;
-char *path;
-char *file;
+char *buildfilepath(char *dest, const char *path, const char *file)
 {
 	/*
 	**	If dest and path are the same then we are concatinating to path so don't copy.
@@ -562,15 +502,142 @@ char *file;
 	*/
 	if (dest[0])
 	{
-#ifdef unix
-		strcat(dest,"/");
-#endif /* unix */
-#ifdef MSDOS
-		strcat(dest,"\\");
-#endif /* MSDOS */
+#if defined(unix) || defined(MSFS)
+		strcat(dest,DIR_SEPARATOR_STR);
+#endif
 	}
 
 	strcat(dest,file);
 
 	return dest;
 }
+
+/*
+**	Routine:	numeric2int4()
+**
+**	Function:	Convert a numeric (PIC 9) to int4.
+**
+**	Description:	Convert a COBOL style PIC 9(x) numeric into an int4.
+**			The source must consist of only '0' - '9' characters.
+**
+**	Arguments:
+**	result		The int4 value returned
+**	source		The numeric source
+**	sourcelen	The lenght of source
+**
+**	Globals:	None
+**
+**	Return:
+**	0		Success
+**	1		Invalid source
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/16/94	Written by GSL
+**
+*/
+int numeric2int4(int4 *result, char *source, int sourcelen)
+{
+	int	idx;
+	int4	value;
+
+	*result = 0;
+	value = 0;
+
+	for(idx=0; idx<sourcelen; idx++)
+	{
+		if (source[idx] < '0' || source[idx] > '9') return 1;
+
+		value = (value * 10) + (source[idx] - '0');
+	}
+
+	*result = value;
+
+	return 0;
+}
+
+/*
+**	Routine:	field2int4()
+**
+**	Function:	Convert a user entered number into an int4.
+**
+**	Description:	Handles only unsigned number.
+**			Can have both leading and trailing spaces.
+**
+**	Arguments:
+**	field		The input field
+**	len		The field length
+**	num		The returned value of the field
+**
+**	Globals:	None
+**
+**	Return:
+**	0		Success
+**	1		Invalid input
+**
+**	Warnings:	None
+**
+**	History:	
+**	09/19/94	Written by GSL
+**
+*/
+int field2int4(char *str, int len, int4 *num)
+{
+	int	idx;
+
+	*num = 0;
+
+	/*
+	**	Skip over leading spaces;
+	*/
+	for(idx=0; idx<len && ' '==str[idx]; idx++);
+
+	/*
+	**	Empty field
+	*/
+	if (idx == len) return 1;
+
+	/*
+	**	Load up the number
+	*/
+	for(; idx<len && ' ' != str[idx]; idx++)
+	{
+		if (str[idx] >= '0' && str[idx] <= '9')
+		{
+			*num = (*num * 10) + (str[idx] - '0');
+		}
+		else
+		{
+			return 1;
+		}
+	}
+
+	/*
+	**	Ensure that only spaces remain
+	*/
+	for(; idx<len; idx++)
+	{
+		if (' ' != str[idx])
+		{
+			return 1;
+		}
+	}
+
+	return 0;
+}
+/*
+**	History:
+**	$Log: idsisubs.c,v $
+**	Revision 1.13  1997-08-18 15:52:48-04  gsl
+**	Change prototypes to add const keyword where needed
+**
+**	Revision 1.12  1996-08-23 16:59:42-04  gsl
+**	buildfilepath() madepath and file parms const
+**
+**	Revision 1.11  1996-08-19 15:32:23-07  gsl
+**	drcs update
+**
+**
+**
+*/

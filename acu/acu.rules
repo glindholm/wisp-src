@@ -51,9 +51,12 @@
 WISPTRAN=wisp
 WISPFLAGS=
 COBOL=ccbl
-COBFLAGS=-da4
+COBDEBUG=-Zd -Zi -Za
+COBFLAGS=-da4 $(COBDEBUG)
 LN=ln
 LANG=-VACU
+
+.SUFFIXES: .cob .wcb
 
 .wcb.cob:
 	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
@@ -67,4 +70,3 @@ LANG=-VACU
 	$(COBOL) $(COBFLAGS) -o $* $*.cob
 	$(LN) $* `echo $* | tr '[a-z]' '[A-Z]'`
 
-.SUFFIXES: .cob .wcb

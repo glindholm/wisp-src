@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -29,7 +31,10 @@
 #include <string.h>
 #include <sys/types.h>
 
-static int printhelp();
+#include "idsistd.h"
+#include "prompt.h"
+
+static void printhelp(char* help);
 static char *upstr();
 
 /*
@@ -235,7 +240,7 @@ int prompt_num(message,defstr,help,outnum)
 char	*message;
 char	*defstr;
 char	*help;
-long	*outnum;
+int4	*outnum;
 {
 	char	prompt[256], instr[256];
 
@@ -276,7 +281,7 @@ long	*outnum;
 		{
 			char	*ptr;
 
-			*outnum = (long) strtol(instr,&ptr,10);
+			*outnum = (int4) strtol(instr,&ptr,10);
 			if (ptr == instr || (!isspace(*ptr) && *ptr !='\0'))
 			{
 				printf("\nInvalid number.\nPlease enter a number.\n\n");
@@ -309,8 +314,7 @@ long	*outnum;
 **
 */
 
-static printhelp(help)
-char	*help;
+static void printhelp(char* help)
 {
 	if (help)
 	{
@@ -352,3 +356,15 @@ char *str;
 	}
 	return( str );
 }
+/*
+**	History:
+**	$Log: prompt.c,v $
+**	Revision 1.7  1996-07-24 19:36:46-04  gsl
+**	Fix warnings for NT
+**
+**	Revision 1.6  1996-07-23 11:12:57-07  gsl
+**	drcs update
+**
+**
+**
+*/

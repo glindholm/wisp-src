@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
+/* $Id:$ */
 /*
 **      File:           bldmf.h
 **
@@ -9,6 +11,18 @@
 **      RCS change log:
 **
 **      $Log: bldmf.h,v $
+**      Revision 1.6  1996-07-23 14:12:49-04  gsl
+**      drcs update
+**
+**      Revision 1.5  1995-04-25 02:57:58-07  gsl
+**      drcs state V3_3_15
+**
+ * Revision 1.4  1995/04/17  11:50:27  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.3  1995/01/27  23:30:33  gsl
+ * drcs load
+ *
  * Revision 1.2  1992/12/23  19:49:37  jockc
  * added lines flag for headcnt and new state for state machine to handle
  * quoted copy name
@@ -96,9 +110,10 @@ EXT char output_name[MAX_OUTPUT_NAME];
 EXT char wisp_path[MAX_WISP_PATH];
 EXT char cobol_type[MAX_COBOL_TYPE];
 
-EXT char runext[4];
+EXT char runext[5];
 
 EXT int cob_type;
+EXT int line_number;
 
 EXT int warn_missing ;
 EXT int delete_cobs  ;

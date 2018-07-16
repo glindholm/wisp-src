@@ -1,0 +1,8 @@
+IN ctlseq
+IT S0
+IF 130
+ON kcsiidx
+OE
+OT I0
+OF 130
+PK (2:8:CHARTYPE)

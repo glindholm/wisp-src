@@ -1,3 +1,8 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+
+#if defined(unix) || defined(VMS)
+
 /********************************************************************************************************************************
 *																*
 *	closeacp.c	Terminate and break logical connection between application program and TC device.  Use input		*
@@ -18,7 +23,7 @@
 extern struct termio otermacp;
 #endif
 
-CLOSEACP(rel_line,ret_code)
+void CLOSEACP(rel_line,ret_code)
 
 int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
 int4	*ret_code;							/* WANG ACP return code.				*/
@@ -40,7 +45,7 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 	{
 		*ret_code = 22;						/* 22 = Invalid relative line number.			*/
 		wswap(ret_code);					/* Swap words so the WANG can read it.			*/
-		return(0);						/* Return to application program.			*/
+		return;							/* Return to application program.			*/
 	}
 
 	i = l_rel_line - 1;						/* Set array index, point to requested line.		*/
@@ -52,9 +57,6 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 	ioctl(acp_ch[i],TCSETA,&otermacp);
 	status = close(acp_ch[i]);
 #endif     
-#ifdef MSDOS
-	status = 0;							/* MSDOS - just set status to 0 for now...		*/
-#endif
 
 	switch (status)							/* Finish processing according to possible statuses.	*/
 	{
@@ -62,9 +64,6 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 		case SS$_NORMAL:					/* I/O channel successfully deassigned.			*/
 #endif
 #ifdef unix
-	        case 0:
-#endif		
-#ifdef MSDOS
 	        case 0:
 #endif		
 	        {
@@ -99,4 +98,13 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 		}
 	}
 }
-
+#endif /* unix || VMS */
+/*
+**	History:
+**	$Log: closeacp.c,v $
+**	Revision 1.10  1996-08-19 18:32:12-04  gsl
+**	drcs update
+**
+**
+**
+*/

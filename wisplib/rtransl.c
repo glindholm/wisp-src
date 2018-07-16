@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #ifdef VMS
 #include <stdio.h>
@@ -131,7 +133,16 @@ rtransl(in_string,lay_out,num_flds,eb_as,rtn)
 #ifdef unix
 rtransl()
 {
-	vre("rtransl: Not Supported");
+	werr_message_box("rtransl: Not Supported");
 }
 #endif
 											
+/*
+**	History:
+**	$Log: rtransl.c,v $
+**	Revision 1.9  1996-08-19 18:32:50-04  gsl
+**	drcs update
+**
+**
+**
+*/

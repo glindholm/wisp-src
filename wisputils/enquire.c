@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* Everything you wanted to know about your machine and C compiler,
    but didn't know who to ask. */
 
@@ -2722,3 +2724,12 @@ Procedure EPROP(fprec, dprec, lprec) int fprec, dprec, lprec; {}
 #include FILENAME  /* if this line fails to compile, define NO_FILE */
 #endif
 #endif /* PASS */
+/*
+**	History:
+**	$Log: enquire.c,v $
+**	Revision 1.7  1996-07-23 14:12:52-04  gsl
+**	drcs update
+**
+**
+**
+*/

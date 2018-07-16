@@ -1,0 +1,27 @@
+procedure CURSOR.SRC demonstrates reading and setting the cursor
+
+screen cursor off
+screen clear
+write line "Use the arrow keys to move the $ around."
+write "The box in the middle of the screen shows the "
+write line "$'s column and row."
+write line "Press 'q' to quit."
+write line ""
+
+declare &row string(2) = &currow
+declare &col string(2) = &curcol
+
+loop
+   message erase=no, corner=(0,0), border=2, &col !! "," !! &row
+   call &cursor(&col, &row)
+   write "$"
+
+   case &get_key
+      when [right arrow] 333 assign &col = &mod(&col, 80) + 1
+      when [left arrow ] 332 assign &col = &mod(&col - 2, 80) + 1
+      when [up arrow   ] 330 assign &row = &mod(&row - 2, 24) + 1
+      when [down arrow ] 331 assign &row = &mod(&row, 24) + 1
+      when [escape     ] &rank("q") write line "" return
+   end
+end
+

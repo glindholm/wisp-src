@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -52,11 +56,15 @@ struct Token
 };
 typedef struct Token TOKEN;
 
-char *token_data();
-char *token_type_mess();
-TOKEN *dup_token();
-TOKEN *edit_token();
-TOKEN *make_token();
-TOKEN *get_token();
+#include "tokenize.h"
 
 #endif /* TOKEN_H */
+/*
+**	History:
+**	$Log: token.h,v $
+**	Revision 1.6  1996-08-30 21:56:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

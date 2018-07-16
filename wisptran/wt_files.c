@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -14,6 +16,8 @@
 #include "cobfiles.h"
 #include "keylist.h"
 #include "wmalloc.h"
+#include "input.h"
+#include "ring.h"
 
 #include <stdio.h>
 
@@ -33,12 +37,13 @@
 #define WISP_KEY_FILE		"wisp.key"
 #endif
 
-char	*using_ufb_ring = 0;
+ring_struct	*using_ufb_ring = 0;
 struct	using_ufb_struct
 {
 	char	name[40];
 } using_ufb_item;
-int using_ufb_cmp();
+
+static int using_ufb_cmp(struct using_ufb_struct *p1, struct using_ufb_struct *p2);
 
 char *wfgets();
 
@@ -166,7 +171,7 @@ open_io()									/* Parse and open the i/o files			*/
 	p_workfile();								/* Process the work file.			*/
 	p_optfile();								/* Process the options file.			*/
 	p_keyfile();								/* Process the keylist file.			*/
-
+	return 0;
 }
 
 /*
@@ -346,6 +351,7 @@ char *the_file;
 	{
 		write_log("WISP",'E',"ERRORCOPY","ERROR copying %s",the_file);
 	}
+	return 0;
 }
 
 p_optfile()									/* Read the option file.			*/
@@ -555,7 +561,6 @@ scan_opt:
 			case USING_UFB:
 			{
 				int	rc;
-				char	ufb_buf[40];
 
 				if ('"' == o_parms[1][0])
 				{
@@ -565,14 +570,14 @@ scan_opt:
 				{
 					sprintf(using_ufb_item.name,"\"%s\"",o_parms[1]);
 				}
-#ifdef DEBUG
+#ifdef TEST
 printf("USING_UFB=[%s]\n",using_ufb_item.name);
 #endif
 
 
 				if (!using_ufb_ring)
 				{
-					if(rc=ring_open(&using_ufb_ring,sizeof(struct using_ufb_struct),5,5,using_ufb_cmp,1))
+					if(rc=ring_open((char **)&using_ufb_ring,sizeof(struct using_ufb_struct),5,5,using_ufb_cmp,1))
 					{
 						write_log("WISP",'F',"RINGOPEN",
 							"Unable to open ring [using_ufb_ring] rc=%d [%s]",rc,ring_error(rc));
@@ -622,7 +627,7 @@ p_keyfile()									/* Read the key file.				*/
 */
 
 
-	int i,k;
+	int i;
 	char tstr[133],*scn_ptr,*prm_ptr;
 	FILE *key_file;
 	int use_wisp;
@@ -734,7 +739,7 @@ scan_key:
 
 p_workfile()										/* Read the workfile.			*/
 {
-	int i,k;
+	int i;
 	char tstr[133],*scn_ptr,*prm_ptr;
 	FILE *wrk_file;
 
@@ -848,7 +853,7 @@ char	*filename;
 	strcpy(buff,&filename[pos+1]);
 #endif
 
-#ifdef MSDOS
+#ifdef MSFS
 	for ( pos = strlen(filename) - 1; pos >= 0; pos-- )
 	{
 		if ( filename[pos] == '\\' ) break;
@@ -857,11 +862,11 @@ char	*filename;
 #endif
 
 	strcpy(filename,buff);
+	return 0;
 }
 
 
-int using_ufb_cmp(p1,p2)
-struct using_ufb_struct *p1, *p2;
+static int using_ufb_cmp(struct using_ufb_struct *p1, struct using_ufb_struct *p2)
 {
 	int	cmp;
 
@@ -1025,9 +1030,11 @@ char	*table_name;
 	uppercase(item->select);
 	item->table = wdupstr(table_name);
 	dbfile_item_list = item;
+	return 0;
 }
 
 struct dbfile_item_struct *get_dbfile_item(select_name)
+char *select_name;
 {
 	struct dbfile_item_struct *item;
 
@@ -1065,3 +1072,12 @@ char	*select_name;
 		}
 	}
 }
+/*
+**	History:
+**	$Log: wt_files.c,v $
+**	Revision 1.11  1996-08-30 21:56:18-04  gsl
+**	drcs update
+**
+**
+**
+*/

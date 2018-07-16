@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 	wcrypt		A file encryption and decryption utility. This file is linked (ln) to two entry points "wencyypt" and
 			"wdecrypt".
@@ -35,17 +37,17 @@ char	*argv[];
 	char	outfile[256];
 	int	klen1, klen2, offset1, offset2, c, x, fcnt, flen, i, rc;
 	int	WENCRYPT, parity, bytecnt;
-	int	DEBUG;
+	int	TESTING;
 	char	*ptr;
 
-	DEBUG=0;
-	ptr = getenv( "DEBUG" );
+	TESTING=0;
+	ptr = getenv( "TESTING" );
 	if ( ptr )
 	{
 		if (0==strcmp(ptr,"ON")) 
 		{
-			DEBUG=1;
-			printf("\n**** DEBUG=ON ****\n\n");
+			TESTING=1;
+			printf("\n**** TESTING=ON ****\n\n");
 		}
 	}
 
@@ -78,7 +80,7 @@ char	*argv[];
 
 	if ( klen1 == klen2 ) printusage(9,0);
 
-	if (DEBUG)
+	if (TESTING)
 	{
 		printf("%s=%s [len=%d]\n",KEY1,kp1,klen1);
 		printf("%s=%s [len=%d]\n",KEY2,kp2,klen2);
@@ -89,7 +91,7 @@ char	*argv[];
 	for ( i=0; i<klen2; i++ ) parity += (int) kp2[i];
 	parity = parity % 128;
 
-	if (DEBUG)
+	if (TESTING)
 	{
 		printf("parity=%d [%x]\n",parity,parity);
 	}
@@ -138,7 +140,7 @@ char	*argv[];
 			if (WENCRYPT)	x = (c + 256 + kp1[offset1] - kp2[offset2]) % 256;
 			else		x = (c + 256 - kp1[offset1] + kp2[offset2]) % 256;
 
-			if (DEBUG)
+			if (TESTING)
 			{
 				printf("[%08d] c=0x%08x kp1[%02d]=0x%08x kp2[%02d]=0x%08x x=0x%08x\n",
 					bytecnt,c,offset1,kp1[offset1],offset2,kp2[offset2],x);
@@ -216,3 +218,12 @@ wcrypt()
 }
 
 
+/*
+**	History:
+**	$Log: wcrypt.c,v $
+**	Revision 1.8  1996-07-23 14:13:06-04  gsl
+**	drcs update
+**
+**
+**
+*/

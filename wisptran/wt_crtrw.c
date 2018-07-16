@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -50,7 +52,7 @@ int crt_num;										/* the crt-file number being rewritten	*/
 	 	                        /*  0123456789012345678901234567890123456789012345678901234567890			*/
 				kword = strpos("ALARM SETTING CURSOR COLUMN ROW LINE ROLL ERASE FROM AFTER",templine);
 
-				if (kword != -1) stredt(inline,templine,"");		/* Remove it from the input.		*/
+				if (kword != -1) stredt(linein,templine,"");		/* Remove it from the input.		*/
 
 				switch (kword)						/* do the appropriate thing		*/
 				{
@@ -80,7 +82,7 @@ int crt_num;										/* the crt-file number being rewritten	*/
 					case PROC_COLUMN:				/* Process "COLUMN"			*/
 					{
 						ptype = get_param(col_field);		/* Actually read in the COLUMN value	*/
-						stredt(inline,col_field,"");		/* Remove it.				*/
+						stredt(linein,col_field,"");		/* Remove it.				*/
 						stredt(col_field,".","");
 						write_log("WISP",'I',"COLUMN","COLUMN found.");
 						break;
@@ -89,7 +91,7 @@ int crt_num;										/* the crt-file number being rewritten	*/
 					case PROC_FROM:					/* Process "FROM"			*/
 					{
 						ptype = get_param(from_item);		/* Actually read in the FROM item	*/
-						stredt(inline,templine,"");		/* Remove it.				*/
+						stredt(linein,templine,"");		/* Remove it.				*/
 
 						write_log("WISP",'I',"FROMITM","FROM item found, %s.",from_item);
 						break;
@@ -99,7 +101,7 @@ int crt_num;										/* the crt-file number being rewritten	*/
 					case PROC_LINE:					/* or "LINE"				*/
 					{
 						ptype = get_param(row_field);		/* Actually read in a ROW value		*/
-						stredt(inline,row_field,"");		/* Remove it.				*/
+						stredt(linein,row_field,"");		/* Remove it.				*/
 						stredt(row_field,".","");		/* Fixup possible period.		*/
 						write_log("WISP",'I',"ROW","ROW found.");
 						break;
@@ -108,7 +110,7 @@ int crt_num;										/* the crt-file number being rewritten	*/
 					case PROC_ROLL:					/* Process "ROLL"			*/
 					{
 						ptype = get_param(templine);		/* Actually read in the UP/DOWN value	*/
-						stredt(inline,templine,"");		/* Remove it.				*/
+						stredt(linein,templine,"");		/* Remove it.				*/
 						write_log("WISP",'I',"ROLL","ROLL found.");
 						break;
 					}
@@ -116,7 +118,7 @@ int crt_num;										/* the crt-file number being rewritten	*/
 					case PROC_ERASE:				/* Process "ERASE"			*/
 					{
 						ptype = get_param(templine);		/* Actually read in PROTECT/MODIFY	*/
-						stredt(inline,templine,"");		/* Remove it.				*/
+						stredt(linein,templine,"");		/* Remove it.				*/
 						write_log("WISP",'I',"ERASE","ERASE found.");
 						break;
 					}
@@ -127,6 +129,11 @@ int crt_num;										/* the crt-file number being rewritten	*/
 
 
 	write_log("WISP",'I',"CRTREWRITE","REWRITE of %s repaired.",crt_record[crt_num]); 	/* now fix it			*/
+
+	if (acn_cobol)
+	{
+		write_log("WISP",'W',"NATIVE","Workstation REWRITE %s uses WISP Screens",crt_record[crt_num]);
+	}
 
 											/* Go till we go beyond it.		*/
 	for ( cur_crt=0; cur_crt<crt_fcount; cur_crt++) 
@@ -214,6 +221,26 @@ int crt_num;										/* the crt-file number being rewritten	*/
 	}
 
 	if ((ptype == 1) || (kword == -1)) hold_line();						/* Ended on a new line		*/
+	return 0;
 }
 
 
+/*
+**	History:
+**	$Log: wt_crtrw.c,v $
+**	Revision 1.13  1997-09-15 13:57:38-04  gsl
+**	fix warning
+**
+**	Revision 1.12  1997-09-12 14:02:52-04  gsl
+**	make
+**	change native warning
+**
+**	Revision 1.11  1997-09-12 13:24:38-04  gsl
+**	Add Native Screens warning for WS REWRITE
+**
+**	Revision 1.10  1996-08-30 21:56:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

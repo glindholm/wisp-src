@@ -1,0 +1,25 @@
+000100
+000200 01  FILE-STATUS-CODE-TABLE.
+000300     03  NULL-STATUS                     PIC X(2)  VALUE SPACES.
+000400     03  I-O-OK                          PIC X(2)  VALUE "00".
+000500     03  RECORD-ON-FILE                  PIC X(2)  VALUE "00".
+000600     03  DUP-RECORD-OK                   PIC X(2)  VALUE "02".
+000700     03  AT-END                          PIC X(2)  VALUE "10".
+000800     03  INVALID-KEY                     PIC X(2)  VALUE "21".
+000900     03  DUPLICATE-KEY                   PIC X(2)  VALUE "22".
+001000     03  RECORD-NOT-FOUND                PIC X(2)  VALUE "23".
+001100     03  BOUNDARY-ERROR                  PIC X(2)  VALUE "24".
+001200     03  HARDWARE-ERROR                  PIC X(2)  VALUE "30".
+001300     03  BOUNDARY-SEQUENCE-ERROR         PIC X(2)  VALUE "34".
+001400     03  RECORD-LOCKED                   PIC X(2)  VALUE "70".
+001500     03  INVALID-FUNCTION                PIC X(2)  VALUE "95".
+001600     03  FILE-NOT-FOUND                  PIC X(2)  VALUE "96".
+001700     03  ACCESS-DENIED                   PIC X(2)  VALUE "85".
+001800     03  RECORD-NOT-AVAILABLE            PIC X(2)  VALUE "AO".
+001900
+002800 01  SAVE-RECORD                         PIC X(2024).
+002900 01  SAVE-FILE-SPACE                     PIC 9(08) VALUE ZEROES.
+003000
+003100 01  FILE-IS-CLOSED                      PIC 9(01) VALUE ZEROES.
+003200 01  FILE-IS-OPEN                        PIC 9(01) VALUE 1.
+003300

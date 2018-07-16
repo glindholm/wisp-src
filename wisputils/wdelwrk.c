@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -17,7 +19,7 @@
  ** Copyright 1990  International Digital Scientific, Inc.
  **
  **/
-static char *_copyright = "(c)1993 Int'l Digital Scientific, Inc.";
+static char *idsi_copyright = "(c)1993 International Digital Scientific, Inc.";
 
 #include <stdio.h>
 
@@ -25,6 +27,7 @@ static char *_copyright = "(c)1993 Int'l Digital Scientific, Inc.";
 #include "filext.h"
 #include "wcommon.h"
 #include "wperson.h"
+#include "intdef.h"
 
 #ifdef VMS
 #include <descrip.h>
@@ -37,7 +40,7 @@ main()
 	char fullpath[100],tempfile[8],cmd[100];					/* work buffers */
 	char	def_workvol[6], def_worklib[8];
 	char *end_ptr;
-	long mode;
+	int4 mode;
 #ifdef VMS
 	char command[200];
 $DESCRIPTOR(icom,command);								/* For DCL commands.			*/
@@ -69,3 +72,15 @@ $DESCRIPTOR(icom,command);								/* For DCL commands.			*/
 #include "wutils.h"
 #endif
 
+/*
+**	History:
+**	$Log: wdelwrk.c,v $
+**	Revision 1.9  1997-06-10 15:52:29-04  scass
+**	Changed long to int4 for portability.
+**
+**	Revision 1.8  1996-07-23 14:13:07-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /************************************************************************/
 /*	     VIDEO - Video Interactive Development Environment		*/
 /*			    Copyright (c) 1987				*/
@@ -7,11 +9,16 @@
 #include <stdio.h>
 #include <math.h>
 #include <errno.h>
+#include <string.h>
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
 #include "vintdef.h"
 #include "vmenu.h"
+#include "vmodules.h"
+
+static int overkey();
+static int funcalc();
 
 #define DISPLAY_SIZE 15
 #define REG_SIZE     64
@@ -59,10 +66,9 @@ static int overflow();
 
 int gcalc()
 {
-	int i, j, k;
+	int k;
 	int active;
 	unsigned char *vsss();
-	char c;
 
 	reg_x = 0.0;
 	reg_y = 0.0;
@@ -77,13 +83,13 @@ int gcalc()
 
 	if (vscr_atr & LIGHT)
 	{
-		emode = BOLD;
-		cmode = REVERSE|BOLD;
+		emode = VMODE_BOLD;
+		cmode = VMODE_REVERSE|VMODE_BOLD;
 	}
 	else
 	{
-		emode = REVERSE;
-		cmode = CLEAR|BOLD;
+		emode = VMODE_REVERSE;
+		cmode = VMODE_CLEAR|VMODE_BOLD;
 	}
 
 	save = vsss(row,col,rows,cols);
@@ -235,7 +241,7 @@ static int showcalc(m) int m;
 
 	mode = m;
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 
 	vtext(emode,row,col,"  Good Calculator  ");
 	vtext(emode,row+1,col," ");
@@ -287,7 +293,7 @@ static int showcalc(m) int m;
 	show_reg_display();
 	position();
 
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -333,23 +339,22 @@ static int position()
 
 static int display()
 {
-	int i;
-
 	memset(reg_display,(char)0,sizeof(reg_display));
 	sprintf(reg_display,"%15.15g",reg_x);
 
-	if (strpos(reg_display,"e") >= 0)
+	if (strstr(reg_display,"e") != NULL)
 	{
 		if (reg_x >= 0.0) sprintf(reg_display,"%15.9e",reg_x);
 		else sprintf(reg_display,"%15.8e",reg_x);
 	}
-	else if (strpos(reg_display,".") >= 0)
+	else if (strstr(reg_display,".") != NULL)
 	{
 		while (reg_display[DISPLAY_SIZE-1] == '0') shuffle(RIGHT);
 		if ((reg_display[DISPLAY_SIZE-1] == '.') && !period) shuffle(RIGHT);
 	}
 	reg_display[DISPLAY_SIZE] = CHAR_NULL;
 	show_reg_display();
+	return 0;
 }
 
 static int show_reg_display()
@@ -468,6 +473,7 @@ static int standard_op(k) int k;
 	reg_y = reg_x;
 	xpend = TRUE;
 	last = k;
+	return 0;
 }
 
 static int clear()
@@ -488,7 +494,7 @@ static int clear()
 
 static int overflow()
 {
-	unsigned char c, vgetc();
+	char c, vgetc();
 
 	vbell();
 	vtext(cmode,row+1,col+2,"  * OVERFLOW * ");
@@ -500,11 +506,11 @@ static int overflow()
 	return(SUCCESS);
 }
 
-overkey(m) int m;
+static int overkey(int m)
 {
 	mode = m;
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	if (mode == PRIMARY)
 	{
 		vtext(emode,row+3,col+10," / ");
@@ -553,13 +559,14 @@ overkey(m) int m;
 		vtext(emode,row+11,col+3," EXIT ");
 		vtext(emode,row+11,col+10,"pi ");
 	}
+	vbuffering_end();
 	position();
 	return(SUCCESS);
 }
 
 static int arrow(k) int k;
 {
-	int i, j;
+	int i;
 
 	if (k == up_arrow_key)
 	{
@@ -603,9 +610,9 @@ static int arrow(k) int k;
 	return(FAILURE);
 }
 
-funcalc()
+static int funcalc()
 {
-	int i, j, k;
+	int i, k;
 
 	last = 'F';
 	errno = 0;
@@ -692,10 +699,10 @@ xit:	overkey(PRIMARY);
 static int givehelp(m) int m;
 {
 	struct video_menu help;
-	int key;
+	int4 key;
 
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Calculator Help - Page 1 - General",0,NULL);
 	vmenuitem(&help,"",0,NULL);
 	vmenuitem(&help,"This calculator operates like most hand-held",0,NULL);
@@ -712,7 +719,7 @@ static int givehelp(m) int m;
 	key = vmenugo(&help);
 	if (key != help_key) return(SUCCESS);
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Calculator Help - Page 2 - Keys",0,NULL);
 	vmenuitem(&help,"",0,NULL);
 	vmenuitem(&help,"0 1 2 etc. are used for digits.",0,NULL);
@@ -729,7 +736,7 @@ static int givehelp(m) int m;
 
 	key = vmenugo(&help);
 	if (key != help_key) return(SUCCESS);
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Calculator Help - Page 3 - Functions",0,NULL);
 	vmenuitem(&help,"",0,NULL);
 	vmenuitem(&help,"PF1 or the F key selects function mode.",0,NULL);
@@ -745,7 +752,7 @@ static int givehelp(m) int m;
 	key = vmenugo(&help);
 	if (key != help_key) return(SUCCESS);
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Calculator Help - Page 4 - Cut & Paste",0,NULL);
 	vmenuitem(&help,"",0,NULL);
 	vmenuitem(&help,"In function mode, the calculator value can",0,NULL);
@@ -761,3 +768,18 @@ static int givehelp(m) int m;
 	return(SUCCESS);
 }
 
+/*
+**	History:
+**	$Log: gcalc.c,v $
+**	Revision 1.11  1997-07-08 16:15:37-04  gsl
+**	Change to use new video.h defines
+**
+**	Revision 1.10  1997-01-08 16:36:42-05  gsl
+**	Change strpos() calls to strstr()
+**
+**	Revision 1.9  1996-10-11 15:15:54-07  gsl
+**	drcs update
+**
+**
+**
+*/

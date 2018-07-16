@@ -1,0 +1,206 @@
+	Copyright (c) 1995-1998 by NeoMedia Technologies Inc. 
+	All Rights Reserved.
+	====================================================================
+	
+	Title:		WISP PORTING INSTRUCTIONS FOR UNIX
+	
+	Document:	PORTUNIX.LIS
+	Last Updated:	$Date:$
+	Products:	WISP/UNIX, EDE, KCSI
+	Versions:	4.2.00 (AND LATER)
+	
+	Summary:	How it port WISP (and others) for unix.
+			Building a shipping kit.
+
+	====================================================================
+	
+
+	WISP PORTING INSTRUCTIONS FOR UNIX
+	==================================
+
+	This document describes the action needed to port WISP to a
+	UNIX platform.
+
+
+	NEEDED COMPONENTS
+	=================
+
+	The following components are required to port WISP.
+
+	[ ]	WISP source kit  e.g.  wisp3991.src.tar.Z
+
+	[ ] 	Acucobol COBOL compiler
+
+	[ ] 	Micro Focus COBOL compiler
+
+	[ ]	C++ compiler for WPROC
+
+
+	INSTALL THE COBOL
+	=================
+
+	If COBOL is not already on the system then install it.
+
+	[ ]	Install ACUCOBOL.
+	[ ]	Install Micro Focus COBOL.
+
+
+	LOAD THE WISP SOURCE KIT
+	========================
+
+	[ ]	CREATE THE WISP DIRECTORY
+
+		Make a base WISP directory to hold all the WISP related
+		files. (If a WISP directory already exists don't recreate.)
+
+		Example:
+			$ mkdir /usr2/wisp
+
+	[ ]	RENAME THE OLD SOURCE DIRECTORY
+
+		If a previous port of WISP exists on this machine then
+		rename or delete the old source directory.
+
+			$ mv src src.v3990
+
+	[ ]	LOAD THE NEW SOURCE KIT
+
+	 	Load the source kit from external media using tar.
+		Then uncompress it and un-tar it to create the "src"
+		directory.
+
+			$ cd wisp
+			$ uncompress -c wisp3991.src.tar.Z | tar -xvf -
+
+	[ ]	SET ENVIRONMENT VARIABLES
+
+		Set ACUDIR to the ACUCOBOL directory.
+		Set COBDIR to the Micro Focus directory
+
+		Change directory to the wisp/src/port and run portenvs.sh
+		to set the WISP and WISPDIR variables.
+
+			$ cd wisp/src/port
+			$ portenvs.sh
+
+		This will set the variable WISP equal to the WISP
+		directory and Set WISPDIR to $WISP/src.
+
+				*** IMPORTANT *** 
+		You will need the variable WISP set for the whole porting 
+		process.  Alway ensure that it is set correctly.
+
+			$ WISP=/usr2/wisp 
+			$ WISPDIR=$WISP/src
+			$ ACUDIR=/usr2/acucobol
+			$ COBDIR=/usr2/mf30
+			$ export WISP WISPDIR ACUDIR COBDIR
+
+
+	MODIFIY WISP SYSTEM DEPENDENT FILES
+	===================================
+
+	There are a couple of files which will have to change when you
+	do a port, these contain system dependent information.
+
+
+	[ ]	$WISP/src/port/make.include
+		Uncomment the correct system flags or create a new
+		entry if this is a new port.
+
+	[ ]	$WISP/src/acu/acucobol.include
+		Uncomment the correct entries for the version of ACUCOBOL
+		that is being used.
+
+
+	The following are only done on a port to a new platform. You
+	will probably need to get everything else working first before
+	modifying these files.
+
+	[ ]	$WISP/src/wisplib/isexec.c		** NEW PORT **
+		Add a system dependent EXECMAGIC entry.
+
+	[ ]	$WISP/src/wisputils/wsysconf.c		** NEW PORT **
+		Add system configuration device info.
+
+
+	BUILD ALL WISP COMPONENTS
+	=========================
+
+	Change to the port directory and start the super-make that will
+	start all the makefiles to build all the components.  This however
+	does not build the COBOL runtime systems or SAMPLE.
+
+	[ ]	$ cd $WISP/src/port
+		$ make >>make.err 2>&1 &	# make and log errors
+		$ tail -f make.err		# show progress on screen
+
+	[ ]	$ vi make.err			# ensure no errors
+
+	On any error you will have to fix the problem and re-issue the
+	above command.
+
+
+	BUILD THE WISP SHIP KIT
+	=======================
+
+	Build a temporary ship kit under the "src" directory that will be
+	used for testing WISP and when done will become the real ship kit.
+	The script "bldshipkit.sh" will move all the components from the
+	built source kit into "$WISP/src/wispXXXX.ship" and it will build
+	the correct directory structure.
+
+	[ ] 	$ cd $WISP/src/port
+		$ bldshipkit.sh
+
+
+	INSTALL WISP (QA)
+	=================
+
+	Install the new version of WISP so you can test in an installed
+	environment.  We will install under the name $WISP/wisp.QA so as 
+	not to disturb others who are using the currently installed version.
+
+	[ ]	*** Install to $WISP/wisp.QA ***
+		$ cd $WISP/src/port
+		$ installqa.sh
+
+
+	QA TEST WISP
+	============
+
+	Perform the QA testing of WISP through the building and running
+	of the program SAMPLE.  If any errors are found and corrected
+	then move the modified source files to their appropriate source
+	directories and repeat the above steps starting at the BUILD step.
+
+	[ ]	Follow "qawisp.lis" checklist to test WISP.
+
+
+	UPDATED DRCS WITH MODIFIED FILES
+	================================
+
+	All modified source files need to be returned to DRCS.  Keep a
+	list of all files that changed.
+
+	[ ]	UPDATE DRCS
+		____________________________________________
+		____________________________________________
+		____________________________________________
+		____________________________________________
+		____________________________________________
+		____________________________________________
+
+
+	INSTALL THE NEW WISP
+	====================
+
+	Install the new fully QA'ed version of WISP.
+	Write protect everything.
+
+	[ ]	$ cd $WISP
+		$ mv wisp.QA /usr/local/wisp.XXXX
+		$ ln -s /usr/local/wisp.XXXX /usr/local/wisp
+
+
+	========================= END OF DOCUMENT ==========================

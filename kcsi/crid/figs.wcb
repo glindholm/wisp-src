@@ -1,0 +1,179 @@
+000100****************************************************************          
+000200*    THESE FIGURATIVE CONSTANTS MAY BE COPIED INTO THE CODE    *          
+000300*    BUT REQUIRE THAT THE PARAGRAPH NAME BE INCLUDED IN THE    *          
+000400*    CODE. THIS ALLOWS ANY ADDITIONAL SPECIAL ONE-TIME FIGCONS *          
+000500*    TO BE SET UP ABOVE THIS CODE. EX:                         *          
+000600*                                                              *          
+000700*FIGURATIVE-CONSTANTS.                                         *          
+000800*    SPECIAL-CONSTANT  "0F"                                    *          
+000900*    COPY FIGS.                                                *          
+001000****************************************************************          
+001100                                                                          
+001200                                                                          
+001300****************************************************************          
+001400*    FAC BIT VALUES                                            *          
+001500****************************************************************          
+001600                                                                          
+001700     MOD-BIT             IS "40"    PROTECT-BIT         IS "04"           
+001800     FAC-BIT             IS "80"    ERROR-BIT           IS "10"           
+001900     BLINK-BIT           IS "10"    BLANK-BIT           IS "18"           
+002000     ULINE-BIT           IS "20"    DIM-BIT             IS "08"           
+002100     UPPER-BIT           IS "01"    NUMERIC-BIT         IS "02"
+002200                                                                          
+002300****************************************************************          
+002400*    FAC VALUES                                                *          
+002500****************************************************************          
+002600     TABSTOP             IS "86"    UPPER-ENTRY-FAC     IS "81"           
+002700     UPLOW-ENTRY-FAC     IS "80"    NUMERIC-ENTRY-FAC   IS "82"           
+002800     BLINKING-FAC        IS "94"    DISPLAY-FAC         IS "8C"           
+002900     DISPLAY-HI-FAC      IS "84"    BLINKING-HI-FAC     IS "94"           
+003000     UNDERLINE-FAC       IS "AC"    HIDE-FAC            IS "9C"           
+003100     DISPLAY-LOW-FAC     IS "8C"    DIM-FAC             IS "8C"           
+003200     HI-UNDERLINE-FAC    IS "A4"                                          
+003300                                                                          
+003400****************************************************************          
+003500*    WRITE CONTROL CHARACTERS                                  *          
+003600****************************************************************          
+003700                                                                          
+003800     LOCK-KEYBOARD       IS "00"    UNLOCK-KEYBOARD     IS "80"           
+003900     POSITION-CURSOR     IS "A0"    SOUND-THE-ALARM     IS "C0"           
+004000     ERASE-SCREEN        IS "04"    ERASE-PROTECT-SCREEN IS "02"          
+004100     SOUND-THE-ALARM-LOCKED IS "40"                                       
+004200                                                                          
+004300                                                                          
+004400****************************************************************          
+004500*    MISCELLANEOUS FILLERS                                     *          
+004600****************************************************************          
+004700     HYPHENS             IS "2D"    PSEUDO-BLANKS       IS "0B"           
+004800     UNDERLINES          IS "5F"    ALL-NINES           IS "39"           
+004900     EQUAL-SIGNS         IS "3D"    DOTS                IS "2E"           
+005000     ASTERISKS           IS "2A"    QUESTION-MARKS      IS "3F"           
+005100     SINGLE-QUOTES       IS "27"    DOUBLE-QUOTES       IS "22"           
+005200     ALL-X               IS "58"                                          
+005300                                                                          
+005400****************************************************************          
+005500*    HEX VALUES - MAY BE USED FOR CURSOR POSITIONING           *          
+005600****************************************************************          
+005700                                                                          
+005800     VAL01 "01" VAL02 "02" VAL03 "03" VAL04 "04" VAL05 "05"               
+005900     VAL06 "06" VAL07 "07" VAL08 "08" VAL09 "09" VAL10 "0A"               
+006000     VAL11 "0B" VAL12 "0C" VAL13 "0D" VAL14 "0E" VAL15 "0F"               
+006100     VAL16 "10" VAL17 "11" VAL18 "12" VAL19 "13" VAL20 "14"               
+006200     VAL21 "15" VAL22 "16" VAL23 "17" VAL24 "18" VAL25 "19"               
+006300     VAL26 "1A" VAL27 "1B" VAL28 "1C" VAL29 "1D" VAL30 "1E"               
+006400     VAL31 "1F" VAL32 "20" VAL33 "21" VAL34 "22" VAL35 "23"               
+006500     VAL36 "24" VAL37 "25" VAL38 "26" VAL39 "27" VAL40 "28"               
+006600     VAL41 "29" VAL42 "2A" VAL43 "2B" VAL44 "2C" VAL45 "2D"               
+006700     VAL46 "2E" VAL47 "2F" VAL48 "30" VAL49 "31" VAL50 "32"               
+006800     VAL51 "33" VAL52 "34" VAL53 "35" VAL54 "36" VAL55 "37"               
+006900     VAL56 "38" VAL57 "39" VAL58 "3A" VAL59 "3B" VAL60 "3C"               
+007000     VAL61 "3D" VAL62 "3E" VAL63 "3F" VAL64 "40" VAL65 "41"               
+007100     VAL66 "42" VAL67 "43" VAL68 "44" VAL69 "45" VAL70 "46"               
+007200     VAL71 "47" VAL72 "48" VAL73 "49" VAL74 "4A" VAL75 "4B"               
+007300     VAL76 "4C" VAL77 "4D" VAL78 "4E" VAL79 "4F" VAL80 "50"               
+007400                                                                          
+007500     HEX00 IS "00" HEX01 IS "01" HEX02 IS "02" HEX03 IS "03"              
+007600     HEX04 IS "04" HEX05 IS "05" HEX06 IS "06" HEX07 IS "07"              
+007700     HEX08 IS "08" HEX09 IS "09" HEX0A IS "0A" HEX0B IS "0B"              
+007800     HEX0C IS "0C" HEX0D IS "0D" HEX0E IS "0E" HEX0F IS "0F"              
+007900     HEX10 IS "10" HEX11 IS "11" HEX12 IS "12" HEX13 IS "13"              
+008000     HEX14 IS "14" HEX15 IS "15" HEX16 IS "16" HEX17 IS "17"              
+008100     HEX18 IS "18" HEX19 IS "19" HEX1A IS "1A" HEX1B IS "1B"              
+008200     HEX1C IS "1C" HEX1D IS "1D" HEX1E IS "1E" HEX1F IS "1F"              
+008300     HEX20 IS "20" HEX21 IS "21" HEX22 IS "22" HEX23 IS "23"              
+008400     HEX24 IS "24" HEX25 IS "25" HEX26 IS "26" HEX27 IS "27"              
+008500     HEX28 IS "28" HEX29 IS "29" HEX2A IS "2A" HEX2B IS "2B"              
+008600     HEX2C IS "2C" HEX2D IS "2D" HEX2E IS "2E" HEX2F IS "2F"              
+008700     HEX30 IS "30" HEX31 IS "31" HEX32 IS "32" HEX33 IS "33"              
+008800     HEX34 IS "34" HEX35 IS "35" HEX36 IS "36" HEX37 IS "37"              
+008900     HEX38 IS "38" HEX39 IS "39" HEX3A IS "3A" HEX3B IS "3B"              
+009000     HEX3C IS "3C" HEX3D IS "3D" HEX3E IS "3E" HEX3F IS "3F"              
+009100     HEX40 IS "40" HEX41 IS "41" HEX42 IS "42" HEX43 IS "43"              
+009200     HEX44 IS "44" HEX45 IS "45" HEX46 IS "46" HEX47 IS "47"              
+009300     HEX48 IS "48" HEX49 IS "49" HEX4A IS "4A" HEX4B IS "4B"              
+009400     HEX4C IS "4C" HEX4D IS "4D" HEX4E IS "4E" HEX4F IS "4F"              
+009500     HEX50 IS "50" HEX51 IS "51" HEX52 IS "52" HEX53 IS "53"              
+009600     HEX54 IS "54" HEX55 IS "55" HEX56 IS "56" HEX57 IS "57"              
+009700     HEX58 IS "58" HEX59 IS "59" HEX5A IS "5A" HEX5B IS "5B"              
+009800     HEX5C IS "5C" HEX5D IS "5D" HEX5E IS "5E" HEX5F IS "5F"              
+009900     HEX60 IS "60" HEX61 IS "61" HEX62 IS "62" HEX63 IS "63"              
+010000     HEX64 IS "64" HEX65 IS "65" HEX66 IS "66" HEX67 IS "67"              
+010100     HEX68 IS "68" HEX69 IS "69" HEX6A IS "6A" HEX6B IS "6B"              
+010200     HEX6C IS "6C" HEX6D IS "6D" HEX6E IS "6E" HEX6F IS "6F"              
+010300     HEX70 IS "70" HEX71 IS "71" HEX72 IS "72" HEX73 IS "73"              
+010400     HEX74 IS "74" HEX75 IS "75" HEX76 IS "76" HEX77 IS "77"              
+010500     HEX78 IS "78" HEX79 IS "79" HEX7A IS "7A" HEX7B IS "7B"              
+010600     HEX7C IS "7C" HEX7D IS "7D" HEX7E IS "7E" HEX7F IS "7F"              
+010700     HEX80 IS "80" HEX81 IS "81" HEX82 IS "82" HEX83 IS "83"              
+010800     HEX84 IS "84" HEX85 IS "85" HEX86 IS "86" HEX87 IS "87"              
+010900     HEX88 IS "88" HEX89 IS "89" HEX8A IS "8A" HEX8B IS "8B"              
+011000     HEX8C IS "8C" HEX8D IS "8D" HEX8E IS "8E" HEX8F IS "8F"              
+011100     HEX90 IS "90" HEX91 IS "91" HEX92 IS "92" HEX93 IS "93"              
+011200     HEX94 IS "94" HEX95 IS "95" HEX96 IS "96" HEX97 IS "97"              
+011300     HEX98 IS "98" HEX99 IS "99" HEX9A IS "9A" HEX9B IS "9B"              
+011400     HEX9C IS "9C" HEX9D IS "9D" HEX9E IS "9E" HEX9F IS "9F"              
+011500     HEXA0 IS "A0" HEXA1 IS "A1" HEXA2 IS "A2" HEXA3 IS "A3"              
+011600     HEXA4 IS "A4" HEXA5 IS "A5" HEXA6 IS "A6" HEXA7 IS "A7"              
+011700     HEXA8 IS "A8" HEXA9 IS "A9" HEXAA IS "AA" HEXAB IS "AB"              
+011800     HEXAC IS "AC" HEXAD IS "AD" HEXAE IS "AE" HEXAF IS "AF"              
+011900     HEXB0 IS "B0" HEXB1 IS "B1" HEXB2 IS "B2" HEXB3 IS "B3"              
+012000     HEXB4 IS "B4" HEXB5 IS "B5" HEXB6 IS "B6" HEXB7 IS "B7"              
+012100     HEXB8 IS "B8" HEXB9 IS "B9" HEXBA IS "BA" HEXBB IS "BB"              
+012200     HEXBC IS "BC" HEXBD IS "BD" HEXBE IS "BE" HEXBF IS "BF"              
+012300     HEXC0 IS "C0" HEXC1 IS "C1" HEXC2 IS "C2" HEXC3 IS "C3"              
+012400     HEXC4 IS "C4" HEXC5 IS "C5" HEXC6 IS "C6" HEXC7 IS "C7"              
+012500     HEXC8 IS "C8" HEXC9 IS "C9" HEXCA IS "CA" HEXCB IS "CB"              
+012600     HEXCC IS "CC" HEXCD IS "CD" HEXCE IS "CE" HEXCF IS "CF"              
+012700     HEXD0 IS "D0" HEXD1 IS "D1" HEXD2 IS "D2" HEXD3 IS "D3"              
+012800     HEXD4 IS "D4" HEXD5 IS "D5" HEXD6 IS "D6" HEXD7 IS "D7"              
+012900     HEXD8 IS "D8" HEXD9 IS "D9" HEXDA IS "DA" HEXDB IS "DB"              
+013000     HEXDC IS "DC" HEXDD IS "DD" HEXDE IS "DE" HEXDF IS "DF"              
+013100     HEXE0 IS "E0" HEXE1 IS "E1" HEXE2 IS "E2" HEXE3 IS "E3"              
+013200     HEXE4 IS "E4" HEXE5 IS "E5" HEXE6 IS "E6" HEXE7 IS "E7"              
+013300     HEXE8 IS "E8" HEXE9 IS "E9" HEXEA IS "EA" HEXEB IS "EB"              
+013400     HEXEC IS "EC" HEXED IS "ED" HEXEE IS "EE" HEXEF IS "EF"              
+013500     HEXF0 IS "F0" HEXF1 IS "F1" HEXF2 IS "F2" HEXF3 IS "F3"              
+013600     HEXF4 IS "F4" HEXF5 IS "F5" HEXF6 IS "F6" HEXF7 IS "F7"              
+013700     HEXF8 IS "F8" HEXF9 IS "F9" HEXFA IS "FA" HEXFB IS "FB"              
+013800     HEXFC IS "FC" HEXFD IS "FD" HEXFE IS "FE" HEXFF IS "FF"              
+013900                                                                          
+014000****************************************************************          
+014100*    ASSORTED OTHER VALUES                                     *          
+014200****************************************************************          
+014300                                                                          
+014400     LOWER-CASE-BIT          IS "20"                                      
+014500     NO-BITS                 IS "00"                                      
+014600     LETTER-N                IS "4E"    LETTER-Y        IS "59"           
+014700     LETTER-X                IS "58"                                      
+014800*----------------------------------------------------------------         
+014900* FIGURATIVE CONSTANTS FOR MANIPULATING THE UFB                           
+015000*----------------------------------------------------------------         
+015100     UFB-CONSECUTIVE-BIT     IS "01" UFB-INDEXED-BIT    IS "02"           
+015200     UFB-VARIABLE-BIT        IS "20" UFB-PRINT-BIT      IS "40"           
+015300     UFB-SPECIAL-IO-BIT      IS "02" UFB-COMPRESSED-BIT IS "40"           
+015400     UFB-ALT-INDEXES-BIT     IS "10" UFB-KEYED-BIT      IS "04"           
+015500     UFB-HOLD-BIT            IS "01" UFB-RELATIVE-BIT   IS "02"           
+015600     UFB-SHARED-BIT          IS "04" UFB-START-EQ       IS "01"           
+015700     UFB-START-GT            IS "02" UFB-START-NLT      IS "03"           
+015800     AXD1-KEY-COMPRESSION    IS "40" AXD1-SIGN-BIT      IS "80"           
+015900     AXD1-DUPLICATES-ALLOWED IS "80"                                      
+016000*----------------------------------------------------------------         
+016100* FIGURATIVE CONSTANTS FOR MANIPULATING GETPARM PFKEY MASKS               
+016200*----------------------------------------------------------------         
+016300     PF-01-BIT   IS  "80"      PF-02-BIT   IS  "40"                       
+016400     PF-03-BIT   IS  "20"      PF-04-BIT   IS  "10"                       
+016500     PF-05-BIT   IS  "08"      PF-06-BIT   IS  "04"                       
+016600     PF-07-BIT   IS  "02"      PF-08-BIT   IS  "01"                       
+016700     PF-09-BIT   IS  "80"      PF-10-BIT   IS  "40"                       
+016800     PF-11-BIT   IS  "20"      PF-12-BIT   IS  "10"                       
+016900     PF-13-BIT   IS  "08"      PF-14-BIT   IS  "04"                       
+017000     PF-15-BIT   IS  "02"      PF-16-BIT   IS  "01"                       
+017100     PF-17-BIT   IS  "80"      PF-18-BIT   IS  "40"                       
+017200     PF-19-BIT   IS  "20"      PF-20-BIT   IS  "10"                       
+017300     PF-21-BIT   IS  "08"      PF-22-BIT   IS  "04"                       
+017400     PF-23-BIT   IS  "02"      PF-24-BIT   IS  "01"                       
+017500     PF-25-BIT   IS  "80"      PF-26-BIT   IS  "40"                       
+017600     PF-27-BIT   IS  "20"      PF-28-BIT   IS  "10"                       
+017700     PF-29-BIT   IS  "08"      PF-30-BIT   IS  "04"                       
+017800     PF-31-BIT   IS  "02"      PF-32-BIT   IS  "01"                       
+017900     ALL-BITS    IS "FF".                                                 

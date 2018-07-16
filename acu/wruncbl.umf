@@ -1,74 +1,514 @@
-#/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
-#/************************************************************************/
+#	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+#	$Id:$
 #
 #
-#	File:		wruncbl.umf
+#	File:	wruncbl.umf
 #
-#	Function:	The UNIX makefile for building the Acucobol runtime
-#			systems that include the WISP runtime routines.
+#	Function:
+#		The UNIX makefile for building the ACUCOBOL runtime
+#		systems that include the WISP runtime routines.
 #
-#	Description:	This makefile can generate the following versions
-#			of the Acucobol runtime system.
+#	Description:
+#		This makefile can generate the following versions
+#		of the ACUCOBOL runtime system.
 #
-#			wruncbl		The standard runtime for Acucobol
-#					version 2 and up.
+#		wruncbl		The standard runtime for ACUCOBOL.
 #
-#			wruncble	The EDE version of the runtime.
+#		wruncble	The EDE version of the runtime.
 #
-#			wruncbl1	The Acucobol version 1.5 runtime.
-#					(Only used if running an old version
-#					of Acucobol.)
+#		wruncbl1	The ACUCOBOL version 1.5 runtime.
+#				(Only used if running an old version
+#				of ACUCOBOL.)
 #
-#	Instructions:	To create an Acucobol runtime system follow the
-#			instructions in Appendix A of the WISP Manual
-#			"Building an ACUCOBOL runtime system".
+#		wruncbl_oracle7	The ACUCOBOL runtime with Acu4GL
+#				for Oracle 7.
 #
-#			To build wruncbl:
-#				$ make -f wruncbl.umf
+#		wruncbl_informix The ACUCOBOL runtime with Acu4GL
+#				for Informix.
 #
-#			To build wruncble:
-#				$ make -f wruncbl.umf wruncble
+#		acn		The ACUCOBOL Native Screens programs
+#
+#	Instructions:
+#		To create an ACUCOBOL runtime system position to 
+#		the wisp/acu directory and run the "make" utility 
+#		using this file as input.
+#
+#		NOTE:	You do not need to move the wisp libraries
+#			to /usr/lib as specified in earlier 
+#			instructions.  You also do not need to
+#			move the wisp/acu/* file to the ACUCOBOL
+#			directory.
+#
+#		This makefile requires instructions on how to find
+#		the WISP libraries and the ACUCOBOL files. This is
+#		done using the variables WISPDIR and ACUDIR.
+#
+#			WISPDIR = The installed WISP directory
+#			ACUDIR  = The ACUCOBOL directory
+#
+#		There are two methods of providing this information.
+#
+#		Method A:
+#		---------
+#		Edit this file and change WISPDIR and ACUDIR to 
+#		point to the correct locations.
+#
+#			WISPDIR=/usr/local/wisp
+#			ACUDIR=/usr/local/ACUCOBOL
+#
+#		To build a standard runtime:
+#			$ cd $WISPDIR/acu
+#			$ make -f wruncbl.umf
+#
+#		To build a EDE runtime:
+#			$ cd $WISPDIR/acu
+#			$ make -f wruncbl.umf ede
 #
 #
-#	LIBPATH:	If your libraries reside in a directory other then
-#			/usr/lib then change LIBPATH to there correct
-#			location.
+#		Method B:
+#		---------
+#		Set WISPDIR and ACUDIR as environment variables
+#		then use the "-e" flag with make. (The -e flag causes the
+#		environment variables to override the internal variables.)
 #
+#			$ WISPDIR=/usr/local/wisp
+#			$ ACUDIR=/usr/local/ACUCOBOL
+#			$ export WISPDIR ACUDIR
+#
+#		To build a standard runtime:
+#			$ cd $WISPDIR/acu
+#			$ make -f wruncbl.umf -e
+#
+#		To build a EDE runtime:
+#			$ cd $WISPDIR/acu
+#			$ make -f wruncbl.umf -e ede
+#
+#	Targets:
+#		When running the make utility you can specify what "targets"
+#		to create.  You specify a target by adding it to the end
+#		of the make command.
+#
+#		Usage:	make -f wruncbl.umf [-e] [targets...]
+#
+#		The following targets are recognized in this makefile.
+#		Each target that builds a runtime has a corresponding macro 
+#		which can be used to change the name of the runtime.
+#
+#		rts		The default WISP + ACUCOBOL runtime.
+#				Runtime = wruncbl
+#				Macro   = RTS
+#
+#		ede		The EDE runtime.
+#				Runtime = wruncble
+#				Macro   = RTSE
+#
+#		both		Create both rts and ede targets.
+#
+#		rts1		The version 1.5 ACUCOBOL runtime
+#				Runtime = wruncbl1
+#				Macro   = RTS1
+#
+#		oracle7		The Acu4GL for ORACLE runtime.
+#				The environment variable $ORACLE_HOME must
+#				be set to use this target.
+#				(NOTE: The macro ORA7OBJS may need to be
+#				adjusted based on your configuration.)
+#				Also need to confirm setting of MILI
+#				depending on environment - see below
+#				Runtime = wruncbl_oracle7
+#				Macro   = RTSORA7
+#
+#		informix	The Acu4GL for INFORMIX runtime.
+#				Runtime = wruncbl_informix
+#				Macro   = RTSINFORMIX
+#
+#		clean		This target is used to remove any files 
+#				created by this makefile.
+#
+#		Examples:
+#
+#		(1) Build the ORACLE runtime. (Method A)
+#
+#			$ cd $WISPDIR/acu
+#			$ make -f wruncbl.umf oracle7
+#
+#		(2) Build the EDE runtime using the name "wrunede". (Method B)
+#
+#			$ cd $WISPDIR/acu
+#			$ make -f wruncbl.umf -e RTSE=wrunede ede
+#
+#
+#	NOTE:	This makefile supports different versions of ACUCOBOL.
+#		Depending on the version of ACUCOBOL you are using you
+#		may have to modifiy the file acucobol.include found in the
+#		acu directory of the WISP Toolkit.  See the section on
+#		changing version settings located in acucobol.include.
+#
+#	NOTE:	On some systems the curses library is located in a different
+#		location, see LIBCURSES below.
+#			
+#============================================================================
+#
+# **** CHANGE WISPDIR AND ACUDIR HERE ****
+#
+# These macros represent environment variables.
+#
+# WISPDIR	The installed WISP directory
+# ACUDIR	The ACUCOBOL directory
+# ACU4GLDIR	The Acu4GL directory (optional)
+# ORACLE_HOME	The ORACLE home directory (optional)
+#
+WISPDIR=/usr/local/wisp
+ACUDIR=/usr/local/ACUCOBOL
+ACU4GLDIR=/usr/local/acu4gl
+ORACLE_HOME=/usr/local/ORACLE
 
-CFLAGS= -O -Dunix
-LDFLAGS= -s
+ACU_LIBDIR=$(ACUDIR)/lib
 
-SUBS1=sub.o
-SUBS2=sub.o filetbl.o
+#============================================================================
+#
+# WISP_LIBDIR points to the directory of the WISP libraries.  This is built
+# based on WISPDIR, however it can be overridden if the libraries have been
+# moved out of the installed WISP directory tree.
+#
+WISP_LIBDIR=$(WISPDIR)/lib
 
+#============================================================================
+#
+# **** CHANGE LIBCURSES HERE ****
+#
+# LIBCURSES is normally set to use the standard curses library. However on
+# some systems the curses library is located or named differently. On these
+# system you must uncomment the appropriate definition of LIBCURSES.
+#
 LIBCURSES= -lcurses
-
-# Uncomment for Ultrix
+# Uncomment the following for Ultrix
 #LIBCURSES= -lcursesX
+# Uncomment the following for SunOS 4.1.3
+#LIBCURSES= /usr/5lib/libcurses.a
+# Uncomment the following for HP-UX 10.20
+#LIBCURSES= -lcur_colr
 
-# Uncomment for SunOS
-#LIBCURSES= -L/usr/5lib -lcurses
+#============================================================================
+#
+# Standard WISP libraries
+#
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+LIBWISP=lib$(L_WISP).a
+LIBVIDEO=lib$(L_VIDEO).a
+LIBEDE=lib$(L_EDE).a
 
-LIBPATH=/usr/lib
-LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libvideo.a
-LIBS=-lwisp -lvideo -lm $(LIBCURSES)
+WISP_LIB_PATH  		= $(WISP_LIBDIR)/$(LIBWISP)
+VIDEO_LIB_PATH 		= $(WISP_LIBDIR)/$(LIBVIDEO)
+EDE_LIB_PATH   		= $(WISP_LIBDIR)/$(LIBEDE)
 
-all:	wruncbl
+WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 
-wruncbl: $(SUBS2) $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) $(LIBS)
+OTHER_LINK		= -lm $(LIBCURSES)
 
-wruncble: $(SUBS2) $(LIBPATHS) $(LIBPATH)/libede.a
-	$(CC) $(CFLAGS) -o $@ $(SUBS2) runcbl.a -L$(LIBPATH) -lede $(LIBS)
+#============================================================================
+#
+# Default RTS names
+#
+RTS=wruncbl
+RTSE=wruncble
+RTS1=wruncbl1
 
-wruncbl1: $(SUBS1) $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ $(SUBS1) runcbl.a -L$(LIBPATH) $(LIBS)
+#============================================================================
+#
+# Standard CC flags
+#
+CFLAGS= -g -Dunix
 
-sub.o: sub.c sub85.c
+#============================================================================
+# ACUCOBOL version information
+#
+#  NOTE:  $(WISPDIR)/acu/acucobol.include may require modifications to indicate
+#         the version of ACUCOBOL that is installed on your system.
 
+include $(WISPDIR)/acu/acucobol.include
+
+#============================================================================
+#
+# ACUFILES is a list of any files which could be found in the ACUCOBOL 
+# directory.  It is used ONLY for detecting and displaying an error
+# message if the file is not found.
+#
+ACUFILES=$(ACUSRCDIR)/sub.c \
+	$(ACUSRCDIR)/filetbl.c \
+	$(ACUSRCDIR)/clntstub.o
+
+#============================================================================
+#
+# WISPFILES is a list of any files which could be found in the WISP
+# directory.  It is used ONLY for detecting and displaying an error
+# message if the file is not found.
+#
+WISPFILES=$(WISP_LIBDIR)/$(LIBWISP) \
+	$(WISP_LIBDIR)/$(LIBVIDEO) \
+	$(WISP_LIBDIR)/$(LIBEDE) \
+	$(WISPDIR)/acu/sub85.c
+
+#============================================================================
+#
+# ACU4GL for ORACLE
+#
+#	RTSORA7		The name of the RTS
+#	ORA7ACUSUBS	Acu4GL subs for ORACLE
+#	ORA7LIBS	ORACLE libs
+#	ORA7_LINK	ORACLE link flags
+#	MILI		Shared library entry points for AIX
+#
+RTSORA7=wruncbl_oracle7
+
+ORA7ACUSUBS=$(ACU4GLDIR)/lib/oracle.o $(ACU4GLDIR)/lib/cur.o
+
+ORA7LIBS=$(ORACLE_HOME)/lib/libsql.a \
+	$(ORACLE_HOME)/lib/osntab.o \
+	$(ORACLE_HOME)/lib/libsqlnet.a \
+	$(ORACLE_HOME)/lib/libora.a \
+	$(ORACLE_HOME)/lib/libnetv2.a \
+	$(ORACLE_HOME)/lib/libnetwork.a \
+	$(ORACLE_HOME)/lib/libcv6.a \
+	$(ORACLE_HOME)/lib/libnlsrtl.a \
+	$(ORACLE_HOME)/lib/libcore.a
+
+ORA7_LINK= -lld
+
+#============================================================================
+#
+#  NOTE:
+#	Will need to uncomment MILI if running under AIX
+#	and using the Acu4GL interface.
+#	Will pull in the shared library routines.
+
+#MILI=$(ORACLE_HOME)/lib/mili.exp
+MILI=
+
+#============================================================================
+#
+# ACU4GL for INFORMIX
+#
+#	RTSINFORMIX		The name of the RTS
+#	INFORMIXACUSUBS		Acu4GL subs for INFORMIX
+#	INFORMIXLIBS		INFORMIX libs
+#	INFORMIX_LINK		INFORMIX link flags
+#
+RTSINFORMIX=wruncbl_informix
+
+INFORMIXACUSUBS=$(ACU4GLDIR)/informix.o
+INFORMIXLIBS=$(ACU4GLDIR)/libsql.a
+INFORMIX_LINK=
+
+#============================================================================
+#
+# CLEANUP is a list of files that are created by this
+# makefile and can be deleted.
+#
+CLEANUP=$(RTS) $(RTSE) $(RTSORA7) $(RTSINFORMIX) sub.o filetbl.o
+
+#============================================================================
+#
+# TARGETS:
+#
+
+default: rts
+
+header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>>"
+
+$(WISPDIR):
+	@echo ">>>> ERROR: The WISP directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = " $(WISPDIR)
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting WISPDIR."
+	@echo ">>>>"
+	@exit 1
+
+$(ACUDIR):
+	@echo ">>>> ERROR: The ACUCOBOL directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR    = $(ACUDIR)"
+	@echo ">>>> Using ACUSRCDIR = $(ACUSRCDIR)"
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting ACUDIR."
+	@echo ">>>>"
+	@exit 1
+
+$(ACUTEST):
+	@echo ">>>> ERROR: A configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ACUCOBOL file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR    = $(ACUDIR)"
+	@echo ">>>> Using ACUSRCDIR = $(ACUSRCDIR)"
+	@echo ">>>>"
+	@echo ">>>> This makefile may be configured for a different version"
+	@echo ">>>> of ACUCOBOL then the one you are using."
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on changing the version settings."
+	@echo ">>>>"
+	@exit 1
+
+$(ACUFILES):
+	@echo ">>>> ERROR: An ACUCOBOL configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ACUCOBOL file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR    = $(ACUDIR)"
+	@echo ">>>> Using ACUSRCDIR = $(ACUSRCDIR)"
+	@echo ">>>>"
+	@exit 1
+
+$(COBOL):
+	@echo ">>>> ERROR: An ACUCOBOL configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ACUCOBOL file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ACUDIR    = $(ACUDIR)"
+	@echo ">>>> Using ACUSRCDIR = $(ACUSRCDIR)"
+	@echo ">>>>"
+	@exit 1
+
+$(WISPFILES):
+	@echo ">>>> ERROR: An WISP configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The WISP file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = $(WISPDIR)"
+	@echo ">>>>"
+	@exit 1
+
+$(ORA7LIBS):
+	@echo ">>>> ERROR: An ORACLE configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ORACLE file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ORACLE_HOME = $(ORACLE_HOME)"
+	@echo ">>>>"
+	@echo ">>>> Check your ORACLE configuration, if it appears to be"
+	@echo ">>>> configured properly you may need to edit this makefile"
+	@echo ">>>> and remove the above file from the ORA7OBJS marco."
+	@echo ">>>>"
+	@exit 1
+
+$(ORA7ACUSUBS) $(INFORMIXACUSUBS):
+	@echo ">>>> ERROR: An ACU4GL configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The ACU4GL file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using ACU4GLDIR = $(ACU4GLDIR)"
+	@echo ">>>>"
+	@exit 1
+
+rts:	$(RTS)
+
+ede:	$(RTSE)
+
+both:	rts ede
+
+rts1:	$(RTS1)
+
+oracle7:  $(RTSORA7)
+
+informix: $(RTSINFORMIX)
+
+clean:	
+	rm -f $(CLEANUP) core
+
+$(RTS): header $(ACUSUBS) $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+	@echo
+	@echo ">>>> RTS     = " $@ is up to date.
+	@echo
+
+$(RTSE): header $(ACUSUBS) $(WISPEDE_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
+	@echo
+	@echo ">>>> RTS     = " $@ is up to date.
+	@echo
+
+$(RTSORA7): header $(ACUSUBS) $(ORA7ACUSUBS) $(WISP_LIBS_PATHS) $(ORA7LIBS)
+	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(ORA7ACUSUBS) $(ACULIBS) $(ORA7LIBS) \
+				$(WISP_LIBS_PATHS) $(OTHER_LINK) $(ORA7_LINK) \
+				$(MILI)
+	@echo
+	@echo ">>>> RTS     = " $@ is up to date.
+	@echo
+
+$(RTSINFORMIX): header $(ACUSUBS) $(INFORMIXACUSUBS) $(WISP_LIBS_PATHS) $(INFORMIXLIBS)
+	$(CC) $(CFLAGS) -o $@ $(ACUSUBS) $(INFORMIXACUSUBS) $(ACULIBS) $(INFORMIXLIBS) \
+				$(WISP_LIBS_PATHS) $(OTHER_LINK) $(INFORMIX_LINK)
+	@echo
+	@echo ">>>> RTS     = " $@ is up to date.
+	@echo
+
+$(RTS1): header $(ACUSUBS1) $(WISP_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $(ACUSUBS1) $(ACULIBS1) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+	@echo
+	@echo ">>>> RTS     = " $@ is up to date.
+	@echo
+
+sub.o: sub.c sub85.c $(ACUSRCDIR)/config85.c $(ACUSRCDIR)/direct.c
+	$(CC) $(CFLAGS) -c -I$(ACUSRCDIR) sub.c
+
+sub.c: $(ACUSRCDIR)/sub.c
+	cmp -s $(ACUSRCDIR)/sub.c $@ || cp $(ACUSRCDIR)/sub.c $@
+
+filetbl.c: $(ACUSRCDIR)/filetbl.c
+	cmp -s $(ACUSRCDIR)/filetbl.c $@ || cp $(ACUSRCDIR)/filetbl.c $@
+
+sub85.c: $(WISPDIR)/acu/sub85.c
+	cmp -s $(WISPDIR)/acu/sub85.c $@ || cp $(WISPDIR)/acu/sub85.c $@
+
+
+#============================================================================
+#
+#	ACUCOBOL Native Screens programs
+#
+#	$ make -f wruncbl.umf acn
+#
+
+COBFLAGS = -da4 -zd -te 800 
+ACN_OBJS = WACUGETPFKEY WACUFAC2SCREEN WACUHELP WACUERROR WACUGETPARM WACUWSB
+
+acn: acn_header $(COBOL) $(ACN_OBJS)
+	@echo ">>>>"
+	@echo ">>>> $(ACN_OBJS)"
+	@echo ">>>> Programs are up-to-date."
+	@echo ">>>>"
+
+acn_header: $(ACUDIR)
+	@echo ">>>> BUILDING ACUCOBOL Native Screens Programs"
+	@echo ">>>>"
+	@echo ">>>> ACUDIR  = " $(ACUDIR)
+	@echo ">>>>"
+
+WACUGETPFKEY: wacugetpfkey.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
+
+WACUHELP: wacuhelp.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuhelp.cob
+
+WACUFAC2SCREEN: wacufac2screen.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
+
+WACUERROR: wacuerror.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
+
+WACUGETPARM: wacugetparm.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
+
+WACUWSB: wacuwsb.cob
+	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
 

@@ -1,12 +1,7 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+/* 
+	Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.
+	$Id:$
+*/
 
 #ifdef unix
 #include <stdio.h>
@@ -28,7 +23,7 @@ static int demovalidate()							/* 1-Success 0-Failure				*/
 
 	time(&now);
 
-	ptr = (char *) getenv("HOME");						/* Build lock file name				*/
+	ptr = wisphomedir();						/* Build lock file name				*/
 	if (!ptr) ptr = ".";
 	sprintf(keyfile,"%s/%s",ptr,DEMOUSRLOCK);
 
@@ -72,14 +67,32 @@ static demoexit()
 {
 		printf("Your EVALUATION copy of WISP has timed out.\n\n");
 		printf("For assistance contact:\n\n");
-		printf("                 International Digital Scientific Incorporated\n");
-		printf("                        25050 Avenue Kearny, Suite 203,\n");
-		printf("                              Valencia CA 91355\n");
-		printf("                            Phone: (805) 295-1155\n");
-		printf("                            Fax:   (805) 295-8755\n\n");
+		printf("                       NeoMedia Migrations Incorporated\n");
+		printf("                          2201 2nd Street, Suite 600,\n");
+		printf("                              Fort Myers FL 33901\n");
+		printf("                            Phone: (941) 337-3434\n");
+		printf("                            Fax:   (941) 337-3668\n\n");
 
 		exit(0);
 }
 
 
 
+/*
+**	History:
+**	$Log: demovali.h,v $
+**	Revision 1.11  1997-02-18 08:46:13-05  gsl
+**	Change address
+**
+**	Revision 1.10  1996-10-09 12:29:01-04  gsl
+**	replace getenv() with wisphomedir()
+**
+**	Revision 1.9  1996-10-08 10:24:32-07  gsl
+**	Move from wisp/common to wisp/tran
+**
+**	Revision 1.8  1996-07-23 11:17:46-07  gsl
+**	drcs update
+**
+**
+**
+*/

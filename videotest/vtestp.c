@@ -9,14 +9,19 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
+#include <string.h>
+#include <video.h>
+#include <vmodules.h>
+
+static int testp1();
 
 testp()
 {
 	testp1();
 	return(SUCCESS);
 }
-testp1()
+
+static int testp1()
 {
 	register int i;
 	int j;
@@ -35,7 +40,11 @@ testp1()
 
 	vprint("The following two lines should appear identical\n");
 	vprint("This is a test i=%d, c=%c, s=%s, j=%d\n",i,c,s,j);
+#ifdef OLD
 	b1sub("This is a test i=%d, c=%c, s=%s, j=%d\n",i,c,s,j);
+#else
+	vprint("---- TEST IS DISABLED ----\n");
+#endif
 	vprint("Were the above two lines the same? ");
 	c = vgetc(); vprint("%c\n",c);
 	if ((c == 'y') || (c == 'Y'))
@@ -49,14 +58,18 @@ testp1()
 		return(FAILURE);
 	}
 }
-
-b1sub(format,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p)
+#ifdef OLD
+/*
+	This does not work!
+	You can not pass pointers into ints, they don't fit.
+*/
+static int b1sub(format,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p)
 	char format[];
 	int a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
 {
 	char work[256];
-	register int ii;
 	sprintf(work,format,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p);
 	vprint("%s",work);
 	return(SUCCESS);
 }
+#endif

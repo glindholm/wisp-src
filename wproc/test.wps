@@ -1,0 +1,9 @@
+procedure
+*run wsort
+*return
+run "/usr2/lexical/demo/demo"
+return
+write line &args
+write line '"' !! &arg(1) !! '"'
+write line '"' !! &arg(2) !! '"'
+write line '"' !! &arg(3) !! '"'

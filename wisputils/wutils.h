@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
+/* $Id:$ */
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -16,12 +18,6 @@
 #ifndef WUTILS_DEF
 #define WUTILS_DEF
 
-werrvre(buff)
-char	*buff;
-{
-	vre("%s",buff,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
-	return(0);
-}
 
 int vre(text,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) 
 char *text; 
@@ -33,19 +29,32 @@ char *arg1, *arg2, *arg3, *arg4, *arg5, *arg6, *arg7, *arg8;
 	return(0);
 }
 
+werrvre(buff)
+char	*buff;
+{
+	vre("%s",buff,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+	return(0);
+}
+
+werr_message_box(char *buff)
+{
+	werrvre(buff);
+	return(0);
+}
+
 vexit()
 {
-	return;
+	return 0;
 }
 
-vonexit()
+void vwang_set_videocap()
 {
 	return;
 }
 
+
 #ifdef VMS
-wexit(num)
-int num;
+void wexit(int num)
 {
 	int	rc;
 
@@ -54,13 +63,32 @@ int num;
 	exit(rc);
 }
 #else /* !VMS */
-wexit(num)
-int num;
+void wexit(int num)
 {
 	exit(num);
 }
 #endif /* !VMS */
 
+void set_vsharedscreen_true(void)
+{
+}
+
+
 #endif /* WUTILS_DEF */
 
 
+/*
+**	History:
+**	$Log: wutils.h,v $
+**	Revision 1.11  1997-09-30 14:04:30-04  gsl
+**	Add set_vsharedscreen_true()
+**
+**	Revision 1.10  1996-11-04 18:57:56-05  gsl
+**	Add a dummy vwang_set_videocap()
+**
+**	Revision 1.9  1996-07-23 11:13:14-07  gsl
+**	drcs update
+**
+**
+**
+*/

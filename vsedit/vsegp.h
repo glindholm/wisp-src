@@ -1,5 +1,14 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 #ifndef _GP_H
 #define	_GP_H
+
+#include "idsistd.h"
+
+void init_gpint(void);
+int4 display_and_read_gp(void);
 
 /*----
 PFKEY masks for building valid PFKEYS
@@ -49,6 +58,8 @@ A series of MACROs to shorten GETPARM definition
 #define	GPFLD(fld,len,row,col)		GP fld;GPLEN(len);GPAT(row,col)
 #define	GPTEXT(txt,ln,rw,cl)		GP "T";GPFLD(txt,ln,rw,cl)
 #define	GPCTEXT(txt,rw,cl)		GPTEXT(txt,(strlen(txt)),rw,cl)
+#define	GPTEXTU(txt,ln,rw,cl)		GP "U";GPFLD(txt,ln,rw,cl)
+#define	GPCTEXTU(txt,rw,cl)		GPTEXTU(txt,(strlen(txt)),rw,cl)
 #define	GPKW(kw,rcv,ln,rw,cl,typ)	GP "K";GP kw;GPFLD(rcv,ln,rw,cl);GP typ
 #define	GPRESP(kw,rcv,ln,rw,cl,typ)	GP "R";GP kw;GPFLD(rcv,ln,rw,cl);GP typ
 #define	GPID(pn,pf,mn,mi)		GP pn;GP pf;GP mn; GP mi
@@ -57,13 +68,13 @@ A series of MACROs to shorten GETPARM definition
 #define	GPSETUP()			init_gpint();gpcnt=0
 #define	GPSTD(pn,mi,mc)			GPTOP("I ","R",pn,gppfrcvr,"0001",mi,mc)
 #define GPRES(pn,mi,mc)                 GPTOP("R ","R",pn,gppfrcvr,"0001",mi,mc)
+#define GPHIDDEN(pn,mi,mc)              GPTOP("ID","R",pn,gppfrcvr,"0001",mi,mc)
 #define GPMSG(ln)                       GP ln; GPLEN(strlen(ln))
-#define	GPFILE(fn,fr,fc)		GPKW("FILE    ",fn,8,fr,fc,"C")
-#define	GPLIB(ln,lr,lc)			GPKW("LIBRARY ",ln,8,lr,lc,"C")
-#define	GPVOL(vn,vr,vc)			GPKW("VOLUME  ",vn,6,vr,vc,"C")
-#define	GPEXT(xn,xr,xc)			GPKW("FILEXT  ",xn,3,xr,xc,"C")
+#define	GPFILE(fn,fr,fc)		GPKW("FILE    ",fn,8,fr,fc,"U")
+#define	GPLIB(ln,lr,lc)			GPKW("LIBRARY ",ln,8,lr,lc,"U")
+#define	GPVOL(vn,vr,vc)			GPKW("VOLUME  ",vn,6,vr,vc,"U")
 #define	GPFLV(fn,ln,vn,fr)	GPFILE(fn,fr,3);GPLIB(ln,fr,24);GPVOL(vn,fr,45)
-#define	GPSYSNAME(sn,sr)		GPKW("SYSNAME ",sn,60,sr,3,"C")
+#define	GPSYSNAME(sn,sr)		GPKW("SYSNAME ",sn,60,sr,2,"C")
 #define	GPPFS(x)			GP "P";GP x
 #define	GPENTER()			GP "E"
 #define	GPNOENTER()			GP "N"
@@ -77,3 +88,12 @@ The functions
 
 #endif	/* _GP_H */
 
+/*
+**	History:
+**	$Log: vsegp.h,v $
+**	Revision 1.9  1996-09-03 18:24:06-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,11 +1,23 @@
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		filecopy.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	???
+**
+**	Routines:	
+**	xxx()		???
+*/
 
 /* FILECOPY.C ... This routine allows the copying of a file to another file.							*/
+
+/*
+**	Includes
+*/
 
 #ifdef VMS
 #include <rmsdef.h>
@@ -13,6 +25,7 @@
 #include <ssdef.h>
 #include <fab.h>
 #include <lnmdef.h>
+#include <climsgdef.h>
 #include "spawn.h"
 #endif
 
@@ -28,8 +41,10 @@
 #include "werrlog.h"
 #include "cobrun.h"
 #include "filext.h"
-
-char *splitext();
+#include "paths.h"
+#include "wfname.h"
+#include "idsisubs.h"
+#include "wisplib.h"
 
 /*
 	FILECOPY( infile, inlib, invol, outfile, [outlib, [outvol]], retcode )
@@ -42,17 +57,12 @@ va_dcl
 	va_list the_args;								/* A pointer to traverse the stack.	*/
 	int arg_count;
 	int4 *return_code;
-	uint4 filecopy_status;								/* Status from the lib call.		*/
-	uint4 vms_status;
-	char *rtype,*the_item, *ptr;							/* Pointers to passed arguments.	*/
+	int4 filecopy_status;								/* Status from the lib call.		*/
+	char  *ptr;							/* Pointers to passed arguments.	*/
 	char file[9],lib[9],vol[7],new_file[9],new_lib[9],new_vol[7];
 	char old_filename[256], new_filename[256];					/* Strings to contain the filenames.	*/
-	int existence_status, x, i;
 	int4 mode;
-	char *name_end, *wfname();							/* build filename from wang parts	*/
-	char *strchr();									/* return pointer to char in string	*/
-	char cmd[255];									/* buffer to hold cmd string 		*/
-	char null_str[1];
+	char *name_end;									/* build filename from wang parts	*/
 	int nvalid;									/* Not Valid call flag.			*/
 	int dat_done, has_ext;
 
@@ -60,6 +70,8 @@ va_dcl
 #include "filecopy.d"
 	struct FAB fab1; 								/* Structure point to File ATT Block.	*/
 	int rms_status;
+	char cmd[255];									/* buffer to hold cmd string 		*/
+	uint4 vms_status;
 #endif
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
@@ -175,16 +187,20 @@ va_dcl
 		goto filecopy_return;
 	}
 
+	if (check_existence(new_filename))						/* New file already exists		*/
+	{
+		filecopy_status = 52;
+		goto filecopy_return;
+	}
+
 	o_desc.dsc$w_length = strlen(old_filename);
 	fab1 = cc$rms_fab;								/* Initialize fab to rms file.		*/
-	fab1.fab$b_fac = FAB$M_PUT;							/* File to be copied.			*/
 	fab1.fab$l_fna = old_filename;							/* Name of file.			*/
-	fab1.fab$b_fns = sizeof(old_filename) -1;					/* Size of file name.			*/
-	fab1.fab$l_fop = 0;								/* Set file option to create.		*/
+	fab1.fab$b_fns = strlen(old_filename);						/* Size of file name.			*/
 	fab1.fab$b_shr = FAB$M_NIL;							/* Set file to no share.		*/
 											/* Open file with name from wfanme.	*/
 	rms_status = sys$open(&fab1);
-	if (rms_status == RMS$_FLK || rms_status == RMS$_ACT || rms_status == RMS$_BUSY) /* Is the file in use?			*/
+	if (rms_status == RMS$_ACT || rms_status == RMS$_BUSY) 				/* Is the file in use?			*/
 	{
 		filecopy_status=32;							/* Do not copy the file and return	*/
 		sys$close(&fab1);							/* a status of 32.  Close the file.	*/
@@ -193,18 +209,66 @@ va_dcl
 	sys$close(&fab1);								/* Close the file.			*/
 
 	makepath(new_filename);								/* Ensure directories are created	*/
-	sprintf(cmd,"COPY %s %s",old_filename,new_filename);
+	sprintf(cmd,"BACKUP/IGNORE=INTERLOCK %s %s",old_filename,new_filename);
 	filecopy_status = spawn2(SPAWN_CMD_QUIET,cmd,"", &vms_status);
 
-	if (filecopy_status != SS$_NORMAL)
+	if (filecopy_status != SS$_NORMAL)						/* IF spawn failed ...			*/
 	{
 		if (filecopy_status == SS$_ACCVIO) filecopy_status = 24;		/* Access violation. No update access.	*/
 		else filecopy_status = 48;						/* An I/O error occured.		*/
 	}
-	else filecopy_status = 0;							/* Set to 0 for successful.		*/
+	else
+	{
+		if (vms_status != SS$_NORMAL && vms_status != 268435457)		/* IF spawned command failed ...	*/
+		{
+			if (vms_status == 279150708)					/* Insufficient privs or file protection*/
+			{								/*  violation.				*/
+				filecopy_status = 24;
+			}
+			else	filecopy_status = 48;
+		}
+		else
+		{
+			filecopy_status = 0;						/* Set to 0 for successful.		*/
+		}
+	}
 #endif
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
+
+	/*
+	**	Make sure the file extensions are the same.
+	*/
+	{
+		char	*ext_old, *ext_new;
+
+		ext_old = osd_ext(old_filename);
+		ext_new = osd_ext(new_filename);
+
+		if ( 	(ext_old && ext_new && 0 != strcmp(ext_old,ext_new)) ||
+			(ext_old && !ext_new) ||
+			(!ext_old && ext_new)   )
+		{
+			/*
+			**	Remove extension from new filename
+			*/
+			if (ext_new)
+			{
+				ext_new--;
+				*ext_new = (char)0;
+			}
+
+			/*
+			**	If old filename has an extension then copy it to the new filename.
+			*/
+			if (ext_old)
+			{
+				strcat(new_filename,".");
+				strcat(new_filename,ext_old);
+			}
+		}
+	}
+
 	if (0!=makepath(new_filename))							/* Ensure directories are created	*/
 	{
 		filecopy_status=24;
@@ -231,11 +295,18 @@ va_dcl
 
 	if (fexists(old_filename))							/* file exist in this form		*/
 	{
+		if (fexists(new_filename))						/* Does new file already exists?	*/
+		{
+			filecopy_status = 52;
+			goto filecopy_return;
+		}
+
 		if (fcopy(old_filename,new_filename))
 		{
 			filecopy_status=24;
 			goto filecopy_return;
 		}
+
 		dat_done = 1;
 	}
 	else if (has_ext) 								/* does it already have extension?	*/
@@ -288,10 +359,38 @@ va_dcl
 		goto filecopy_return;
 	}
 
-#endif /* unix || MSDOS */
+#endif /* unix || MSDOS || WIN32 */
                                
 filecopy_return:
 	wswap(&filecopy_status);
 	PUTBIN(return_code,&filecopy_status,sizeof(int4));
 }                                                         
 
+
+/*
+**	History:
+**	$Log: filecopy.c,v $
+**	Revision 1.11  1997-03-12 12:55:00-05  gsl
+**	Changed define to WIN32
+**
+**	Revision 1.10  1996-07-08 12:50:05-04  gsl
+**	fix warning
+**
+**	Revision 1.9  1996-06-27 17:13:27-07  gsl
+**	Reuse the unix and MSDOS code for NT.
+**
+**	Revision 1.8  1995-04-27 08:51:29-07  gsl
+**	Check if the new file already exists and return 52 if it does.
+**
+ * Revision 1.7  1995/04/25  09:52:41  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.6  1995/04/17  11:46:05  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.5  1995/03/10  13:48:38  gsl
+ * fix header
+ *
+**
+**
+*/

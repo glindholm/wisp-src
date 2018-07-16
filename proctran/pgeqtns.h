@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
+/* $Id:$ */
 /* PGEQTNS.H															*/
 /*		 Initialization of the equation specific arrays									*/
 
@@ -62,3 +64,15 @@ EXT char *search_run_equations[];
 EXT char *search_numbers[];
 
 #endif
+/*
+**	History:
+**	$Log: pgeqtns.h,v $
+**	Revision 1.8  1997-04-21 10:53:09-04  scass
+**	Corr4ected copyright.
+**
+**	Revision 1.7  1996-09-12 19:22:12-04  gsl
+**	Add drcs headers
+**
+**
+**
+*/

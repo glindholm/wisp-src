@@ -9,25 +9,27 @@
 /************************************************************************/
 
 #include <stdio.h>
+#include <sys/types.h>
 #include <time.h>
-#include <v/video.h>
+
+#include "video.h"
 
 testc()
 {
-/*	long time();	*/
-	char *ctime();
-	long time_data;
-	register int i;
+	time_t the_time, end_time;
 
+	end_time = time(NULL) + 30;
+	
 	verase(FULL_SCREEN);
-	vset(CURSOR,OFF);
-	vtext(DOUBLE_HEIGHT|BOLD,10,10,"The Atomic Clock");
+	vset_cursor_off();
+	vtext(VMODE_BOLD,10,10,"The Atomic Clock");
 
-	for (i = 0; (i < 2000) && !vcheck(); i++)
+	while(the_time < end_time && 0==vcheck())
 	{
-		time_data = time(NULL);
-		vtext(DOUBLE_HEIGHT|BOLD,14,10,"%s",ctime(&time_data));
+		the_time = time(NULL);
+		vtext(VMODE_BOLD,14,10,"%s",ctime(&the_time));
+		vwait(1,0);
 	}
-	vset(CURSOR,ON);
+	vset_cursor_on();
 	return(SUCCESS);
 }

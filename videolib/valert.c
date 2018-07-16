@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			 Copyright (c) 1988 - 1993			*/
@@ -9,15 +11,13 @@
 
 #include <stdio.h>
 #include <string.h>
-
-#ifndef NOSTDLIB
 #include <stdlib.h>
-#endif
 
 #include "video.h"
 #include "vlocal.h"
+#include "vintdef.h"
 #include "vdata.h"
-
+#include "vmodules.h"
 
 /*
 **	Routine:	valert()
@@ -58,7 +58,7 @@ char	*option_16;
 	char	*messlines[24];
 	int	lines,cnt,i;
 	char	*mess, *ptr;
-	unsigned char *vsss(), *save;							/* Memory save pointer.			*/
+	unsigned char *save;								/* Memory save pointer.			*/
 	char	lastline[80],opt0[80],opt1[80],opt2[80];
 	char	buff[256];
 	int	rc,optcnt;
@@ -74,7 +74,7 @@ char	*option_16;
 	if (option_1)		{ sprintf(opt1,"(1) %s ",option_1); optcnt++; }
 	if (option_16)		{ sprintf(opt2,"(16) %s",option_16); optcnt++; }
 
-	if (strlen(opt0)+strlen(opt1)+strlen(opt2) > LINESIZE)
+	if ((strlen(opt0)+strlen(opt1)+strlen(opt2)) > LINESIZE)
 	{
 		opt0[LINESIZE/optcnt] = (char)0;
 		opt1[LINESIZE/optcnt] = (char)0;
@@ -99,7 +99,7 @@ char	*option_16;
 
 		if (ptr = strchr(mess,'\n'))
 		{
-			cnt = ptr - mess;
+			cnt = (int) (ptr - mess);
 		}
 		else
 		{
@@ -121,19 +121,19 @@ char	*option_16;
 	rows = lines + 3;								/* Number of rows (including border)	*/
 	cols = LINESIZE + 2;								/* Number of cols (including border)	*/
 
-	vbuffering(LOGICAL);								/* Start buffering.			*/
+	vbuffering_start();								/* Start buffering.			*/
 	save = vsss(row, col, rows, cols);						/* Save the window area.		*/
 	vbell();									/* Let the bells ring.			*/
 
-	vmode(BOLD|REVERSE);								/* Select the background.		*/
-	vcharset(DEFAULT);								/* Default character set.		*/
+	vmode(VMODE_BOLD|VMODE_REVERSE);						/* Select the background.		*/
+	vcharset(VCS_DEFAULT);								/* Default character set.		*/
 
 	for (i = 0; i < lines; i++)
 	{
-		vtext(BOLD|REVERSE,row+i+1,col+1,messlines[i]);
+		vtext(VMODE_BOLD|VMODE_REVERSE,row+i+1,col+1,messlines[i]);
 		free(messlines[i]);
 	}
-	vtext(BOLD|REVERSE,row+i+1,col+1,lastline);
+	vtext(VMODE_BOLD|VMODE_REVERSE,row+i+1,col+1,lastline);
 	vgrid(row,col,rows,cols,0,0);							/* Outline the window.			*/
 	vmove(row+i+1,col+32);								/* Move to an appropriate position.	*/
 	for(rc = -1; rc == -1;)
@@ -148,7 +148,19 @@ char	*option_16;
 	}
 
 	vrss(save);									/* Restore the memory area.		*/
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 
 	return(rc);
 }
+/*
+**	History:
+**	$Log: valert.c,v $
+**	Revision 1.8  1997-07-08 16:24:53-04  gsl
+**	Change to use new video.h interfaces
+**
+**	Revision 1.7  1996-10-11 18:15:57-04  gsl
+**	drcs update
+**
+**
+**
+*/

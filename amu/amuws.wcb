@@ -1,0 +1,214 @@
+      **************************************************************
+      *                                                            *
+      *    Menu file record definitions for AMU.                   *
+      **************************************************************
+000001 01  MFILE-STAT                     PIC X(2).
+       01  FIL-FOR-MFILE                  PIC X(08) VALUE SPACES.
+       01  LIB-FOR-MFILE                  PIC X(08) VALUE SPACES.
+       01  VOL-FOR-MFILE                  PIC X(06) VALUE SPACES.
+
+       01  FH-RECORD                         PIC X(2012).
+       01  FILE-OPTIONS-RECORD.
+           03  USER-MESSAGE-PORT             PIC X(04).
+           03  FUNC-KEY-FILE                 PIC X(08).
+           03  FUNC-KEY-LIB                  PIC X(08).
+           03  FUNC-KEY-VOL                  PIC X(06).
+           03  USER-DEF-FILE                 PIC X(08).
+           03  USER-DEF-LIB                  PIC X(08).
+           03  USER-DEF-VOL                  PIC X(06).
+           03  ENTRY-PROC-FILE               PIC X(08).
+           03  ENTRY-PROC-LIB                PIC X(08).
+           03  ENTRY-PROC-VOL                PIC X(06).
+           03  ENTRY-PROC-PAR-OPT            PIC X(16).        
+           03  EXIT-PROC-FILE                PIC X(08).
+           03  EXIT-PROC-LIB                 PIC X(08).
+           03  EXIT-PROC-VOL                 PIC X(06).
+           03  EXIT-PROC-PAR-OPT             PIC X(16).
+           03  PW-MAINTAIN-FILE              PIC X(08).
+           03  FILE-OPTION-ACCESS            PIC X(06).
+           03  PW-RUN-ALL-MENUS              PIC X(08).
+           03  PW-FILE-OPTIONS               PIC X(08).
+           03  WA-FILE-OPTIONS               PIC X(01).
+           03  PW-WINDOW-SPECS               PIC X(08).
+           03  WA-WINDOW-SPECS               PIC X(01).
+           03  PW-DEF-MENU-OPTS              PIC X(08).
+           03  WA-DEF-MENU-OPTS              PIC X(01).
+           03  PW-RUNTIME-VARS               PIC X(08).
+           03  WA-RUNTIME-VARS               PIC X(01).
+           03  ENTRY-PROC-DHK                PIC X(01).
+           03  ENTRY-PROC-WIP                PIC X(01).
+           03  EXIT-PROC-DHK                 PIC X(01).
+           03  EXIT-PROC-WIP                 PIC X(01).
+           03  ACTIVITY-LOG-FILE             PIC X(08).
+           03  ACTIVITY-LOG-LIB              PIC X(08).
+           03  ACTIVITY-LOG-VOL              PIC X(06).
+           03  ACTIVITY-LOG-RECS             PIC 9(06).
+           03  LOGGING-ERR-PORT              PIC X(04).
+           03  FILLER                        PIC X(1794).
+
+       01  MENU-OPTS-RECORD.
+           03  FILLER                        PIC X(02).
+           03  DEF-MO-FORMAT.
+               05  MO-PF-CUR                 PIC X(01).     
+               05  MS-COLUMNS                PIC X(01).     
+           03  DEF-MO-TITLE                  PIC X(40).
+           03  MENU-TITLE REDEFINES DEF-MO-TITLE.
+               05  MTITLE-CHAR     OCCURS 40 TIMES.
+                   07  FILLER                PIC X(01).
+           03  FILLER                        PIC X(40).
+           03  DEF-MO-VERSION                PIC X(08).
+           03  MODIFIED-BY-USER              PIC X(03).
+           03  FILLER                        PIC X(05).
+           03  MODIFIED-ON-DATE              PIC X(08).
+           03  USER-DEF-MENU-FILE            PIC X(08).
+           03  USER-DEF-MENU-LIB             PIC X(08).
+           03  USER-DEF-MENU-VOL             PIC X(06).
+           03  ENTRY-PROC-MENU-FILE          PIC X(08).
+           03  ENTRY-PROC-MENU-LIB           PIC X(08).
+           03  ENTRY-PROC-MENU-VOL           PIC X(06).
+           03  ENTRY-PROC-MENU-PAR-OPT       PIC X(16).        
+           03  EXIT-PROC-MENU-FILE           PIC X(08).
+           03  EXIT-PROC-MENU-LIB            PIC X(08).
+           03  EXIT-PROC-MENU-VOL            PIC X(06).
+           03  EXIT-PROC-MENU-PAR-OPT        PIC X(16).
+           03  PW-RUN-MENU                   PIC X(08).
+           03  PW-MAINTAIN-MENU              PIC X(08).
+           03  ACCESS-METHOD                 PIC X(06).
+           03  USER-REC-REQUIRED             PIC X(01).
+           03  PRIMARY-INSTRUCT-WIN          PIC 9(01).
+           03  SECURITY-CLASS                PIC X(01).
+           03  FUNC-NAME-ON-MENU             PIC X(01).
+           03  DATE-FORMAT                   PIC X(03).
+           03  TIME-FORMAT                   PIC X(01).
+           03  TIME-UPDATE                   PIC 9(02).
+           03  TIMEOUT-LIMIT                 PIC 9(02).
+           03  TIMEOUT-ACTION                PIC X(01).
+           03  ENTRY-PROC-MENU-DHK           PIC X(01).
+           03  FILLER                        PIC X(01).
+           03  ENTRY-PROC-MENU-WIP           PIC X(01).
+           03  EXIT-PROC-MENU-DHK            PIC X(01).
+           03  EXIT-PROC-MENU-WIP            PIC X(01).
+           03  NO-YES-PARM                   PIC X(01).
+           03  FILLER                        PIC X(137).
+           03  MS-RECORD-DEFINITION.
+               05  REC-FILLER                PIC X(92).
+               05  MS-DEFINITION  OCCURS 15 TIMES.
+                   07  MS-SEQ                PIC X(03).
+                   07  MS-POSN               PIC X(02).
+                   07  MS-FUNC               PIC X(08).
+                   07  MS-FUNC-STR REDEFINES MS-FUNC.
+                       09  FUNC-MENU-ID-CHAR OCCURS 8 TIMES.
+                           10  FUNC-CHAR     PIC X(01).
+                   07  MS-DESC               PIC X(60).
+                   07  MS-OPTIONAL-DEFINITION PIC X(55).
+                   07  MS-PGM-PROC-FIELDS REDEFINES
+                         MS-OPTIONAL-DEFINITION.
+                       09  MS-LIB            PIC X(08).
+                       09  MS-VOL            PIC X(06).
+                       09  FILLER            PIC X(02).
+                       09  MS-PP-PFKEY       PIC X(02).
+                       09  MS-PP-PW          PIC X(08).
+                       09  MS-PP-SC          PIC X(01).
+                       09  MS-DHK            PIC X(01).
+                       09  MS-QRC            PIC X(03).
+                       09  MS-PP-PAR-OPT     PIC X(16).
+                       09  MS-SLP            PIC X(01).
+                       09  FILLER            PIC X(07).
+                   07  MS-MENU-SETPOS-FIELDS REDEFINES
+                           MS-OPTIONAL-DEFINITION.
+                       09  FILLER            PIC X(16).
+                       09  MS-SC-PFKEY       PIC X(02).
+                       09  FILLER            PIC X(13).
+                       09  MS-SECUR-CLASSES.
+                           10  MS-S-CLASSES    OCCURS 16 TIMES.
+                               15  SC-CHAR       PIC X(01).
+                       09  FILLER            PIC X(08).
+                   07  MS-EXIT-AND-APP-FIELDS REDEFINES
+                           MS-OPTIONAL-DEFINITION.
+                       09  FILLER            PIC X(16).
+                       09  MS-EA-PFKEY       PIC X(02).
+                       09  MS-EA-PW          PIC X(08).
+                       09  MS-EA-SC          PIC X(01).
+                       09  FILLER            PIC X(04).
+                       09  MS-EA-PAR-OPT     PIC X(16).
+                       09  FILLER            PIC X(08).
+                   07  MS-DFTEXT-FIELDS REDEFINES
+                           MS-OPTIONAL-DEFINITION.
+                       09  DFTEXT-DESC.
+                           10  DF-WIDTH      PIC X(01).
+                           10  DF-JUSTIFY    PIC X(01).
+                           10  DF-LINE       PIC X(01).
+                           10  DF-VIDEO      PIC X(01).
+                       09  FILLER            PIC X(27).
+                       09  MS-DF-PAR-OPT     PIC X(16).
+                       09  FILLER            PIC X(08).
+                   07  MS-SETPOS-FIELDS REDEFINES
+                           MS-OPTIONAL-DEFINITION.
+                       09  FILLER            PIC X(31).
+                       09  MS-SP-PAR-OPT     PIC X(16).
+                       09  FILLER            PIC X(08).
+
+       01  RUNTIME-VARS-RECORD.
+           03  FILLER                        PIC X(12).
+           03  RT-VAR-DEFINITION  OCCURS 25 TIMES.
+               05  RT-VAR-SEQ                PIC 9(03).
+               05  RT-VAR-LABEL              PIC X(05).
+               05  RT-VAR-DESC               PIC X(39).
+               05  RT-VAR-FILE               PIC X(08).
+               05  RT-VAR-LIB                PIC X(08).
+               05  RT-VAR-VOL                PIC X(06).
+               05  RT-VAR-MOD                PIC X(01).
+               05  FILLER                    PIC X(10).
+
+       01  WINDOW-SPECS-WS-RECORD.
+           03  FILLER                        PIC 9(14).
+           03  CURSOR-INSTRUCT-1-PF16        PIC X(08).
+           03  CURSOR-INSTRUCT-1-PF32        PIC X(08).
+           03  CURSOR-INSTRUCT-2-PF16        PIC X(08).
+           03  CURSOR-INSTRUCT-2-PF32        PIC X(08).
+           03  FILLER                        PIC X(94).
+           03  WINDOW-SPEC-TITLE OCCURS 8 TIMES.
+               05  SCN-TITLE                 PIC X(78).
+           03  CURSOR-INSTRUCT-1 OCCURS 8 TIMES.
+               05  CI-WINDOW-1               PIC X(78).
+           03  CURSOR-INSTRUCT-2 OCCURS 8 TIMES.
+               05  CI-WINDOW-2               PIC X(78).
+
+       01  WINDOW-SPECS-WP-RECORD.
+           03  FILLER                        PIC X(764).
+           03  PFKEYS-INSTRUCT-1 OCCURS 8 TIMES.
+               05  PFI-WINDOW-1              PIC X(78).
+           03  PFKEYS-INSTRUCT-2 OCCURS 8 TIMES.
+               05  PFI-WINDOW-2              PIC X(78).
+
+       01  PK-RECORD.
+           03  DEFAULT-ID                    PIC X(03).
+           03  FILLER                        PIC X(25).
+           03  PF-DEF-FIELDS  OCCURS 31 TIMES.
+               05  PF-FUNC                   PIC X(08).
+               05  PF-LIB                    PIC X(08).
+               05  PF-VOL                    PIC X(06).
+               05  FILLER                    PIC X(40).
+           03  FILLER                        PIC X(62).
+
+       01  SF-RECORD.                     
+           03  USER-NAME                     PIC X(24).
+           03  USER-START-MENU               PIC X(06).
+           03  DISABLE-HELP-KEY              PIC X(01).
+           03  ACCESS-RIGHTS                 PIC X(26).
+           03  ACCESS-TO-TABLE REDEFINES ACCESS-RIGHTS.
+               05  ACCESS-TO-LINE  OCCURS 13 TIMES.
+                   07  ACCESS-1              PIC X(01).
+                   07  ACCESS-2              PIC X(01).
+           03  USER-PARAMETERS               PIC X(48).
+           03  USER-DATE-FORMAT              PIC X(03).
+           03  USER-TIME-FORMAT              PIC X(01).
+           03  USER-UPDATE-TIME              PIC X(02).
+           03  USER-TIMEOUT-LIMIT            PIC X(02).
+           03  USER-TIMEOUT-ACTION           PIC X(01).
+           03  FILLER                        PIC X(1898).
+
+       01  SC-RECORD.                     
+           03  FUNCTIONAL-DESC-TABLE  OCCURS 26 TIMES.
+               05  F-DESC                    PIC X(30).
+           03  FILLER                        PIC X(1232).

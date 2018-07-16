@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -30,10 +32,13 @@
 #include <ssdef.h>
 #include <fab.h>
 #endif
+
+#include <stdio.h>
 #include <string.h>
 #include <varargs.h>                                                                    /* This routine uses a variable number	*/
 											/* of arguments.			*/
 #include "idsistd.h"
+#include "wfname.h"
 #include "wfiles.h"
 #include "wcommon.h"
 #include "movebin.h"
@@ -41,10 +46,11 @@
 #include "werrlog.h"
 #include "cobrun.h"
 #include "idsisubs.h"
+#include "wisplib.h"
+#include "filext.h"
 
-extern char WISPFILEXT[39];
 
-wrename(va_alist)
+void wrename(va_alist)
 va_dcl
 {
 #define	ROUTINE		53000
@@ -53,12 +59,8 @@ va_dcl
 	int4 rename_status;								/* Status from the lib call.		*/
 	char *rtype,*the_item, *file, *lib, *vol, *new_file, *new_lib;			/* Pointers to passed arguments.	*/
 	char old_filename[132], new_filename[132];					/* Strings to contain the filenames.	*/
-	int existence_status, x, i;
 	int4 mode;
-	char *name_end, *wfname();							/* build filename from wang parts	*/
-	char *strchr();									/* return pointer to char in string	*/
-	char null_str[1];
-	int4 flags;
+	char *name_end;									/* build filename from wang parts	*/
 	int nvalid;									/* Not Valid call flag.			*/
 	int dat_done, has_ext;
 	char *ptr;
@@ -68,9 +70,11 @@ va_dcl
 #include "rename1.d"
 	struct FAB fab1; 							/* Structure point to File ATT Block.		*/
 	int rms_status;
+	int existence_status, x, i;
+	int4 flags;
+	char null_str[1];
 #endif
 
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 	rename_status = 0;
 	lib_rename = 0;
 
@@ -81,26 +85,33 @@ va_dcl
 	nvalid = 0;
 	rtype = va_arg(the_args, char*);						/* Get the rename type code.		*/
 	arg_count--;									/* One less argument.			*/
+
 	if (!strrchr("FLG",*rtype))							/* Check to see if fund type is valid.	*/
 	{
 		nvalid = 1;								/* Set not valid so doesn't try.	*/
 		rename_status = 44;							/* Invalid func type.			*/
 	}
+
 	file = va_arg(the_args, char*);							/* Get addr. of the file.		*/
 	arg_count--;									/* One less argument.			*/
+
 	if (*rtype == 'F' && !strncmp(file,"        ",8))				/* If file rename and file not specified*/
 	{
 		nvalid = 1;								/* Set to invalid call.			*/
 		rename_status = 20;
 	}
+
 	lib = va_arg(the_args, char*);							/* Get addr. of the lib.		*/
 	arg_count--;									/* One less argument.			*/
+
 	if (!strncmp(lib,"        ",8))							/* If the library is not specified	*/
 	{										/* then use defualt INLIB.		*/
 		get_defs(DEFAULTS_IL,lib);
 	}
+
 	vol = va_arg(the_args, char*);	   						/* Get addr. of the vol.		*/
  	arg_count--;									/* One less argument.			*/
+
 	if (!strncmp(vol,"      ",6))							/* If the volume is not specified	*/
 	{										/* then use defualt INVOL.		*/
 		get_defs(DEFAULTS_IV,vol);
@@ -115,17 +126,13 @@ va_dcl
 	{
 		new_file = va_arg(the_args, char*);					/* Get addr. of the new file name.	*/
 		arg_count--;								/* One less argument.			*/
+
 		if (*rtype == 'F')
 		{
 			if (!strncmp(new_file,"        ",8))				/* If the new file is not specified.	*/
 			{								/* Must specify file if type F.		*/
 				nvalid = 3;
 				rename_status = 56;					/* New file is invalid.			*/
-			}
-			else if (!strncmp(file,new_file,8))				/* Did not specify a diff new file name.*/
-			{
-				nvalid = 3;
-				rename_status = 52;
 			}
 		}
 		else if (!strncmp(new_file,"        ",8)) new_file = file;		/* If the new file is not specified.	*/
@@ -136,6 +143,7 @@ va_dcl
 	{
 		new_lib = va_arg(the_args, char*);					/* Get addr. of the new library name.	*/
 		arg_count--;								/* One less arg.			*/
+
 		if (*rtype == 'L')
 		{
 			if (!strncmp(new_lib,"        ",8))				/* If the new lib is not specified.	*/
@@ -143,7 +151,7 @@ va_dcl
 				nvalid = 3;
 				rename_status = 44;					/* New lib is invalid.			*/
 			}
-			else if (*rtype == 'L' && !strncmp(lib,new_lib,8))		/* Did not specify a diff new lib name.	*/
+			else if (!strncmp(lib,new_lib,8))				/* Did not specify a diff new lib name.	*/
 			{
 				nvalid = 3;
 				rename_status = 52;
@@ -160,6 +168,9 @@ va_dcl
 	}
 
 	return_code = va_arg(the_args, int*);						/* Get the addr. of the return code.	*/
+
+	wtrace("RENAME", "ARGS", "(resolved) Type=[%c] File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s] NFile=[%8.8s] NLib=[%8.8s]",
+				*rtype, file, lib, vol, new_file, new_lib);
 
 	if (nvalid)
 	{
@@ -405,13 +416,14 @@ va_dcl
 #endif /* !VMS */
                                
 rename_return:
+	wtrace("RENAME", "RETURN", "Return code = %ld", (long)rename_status);
+	
 	wswap(&rename_status);
 	PUTBIN(return_code,&rename_status,sizeof(int4));
 }                                                         
 
 #ifdef unix
-int file_rename(old_filename,new_filename)
-char	*old_filename, *new_filename;
+int file_rename(char* old_filename, char* new_filename)
 {
 	char	cmd[256];
 
@@ -419,13 +431,13 @@ char	*old_filename, *new_filename;
 	return (wsystem(cmd));
 }
 #endif /* unix */
-#ifdef MSDOS
-int file_rename(old_filename,new_filename)
-char	*old_filename, *new_filename;
+
+#if defined(MSDOS) || defined(WIN32)
+int file_rename(char* old_filename, char* new_filename)
 {
 	return (rename(old_filename,new_filename));
 }
-#endif /* MSDOS */
+#endif /* MSDOS || WIN32 */
 
 #ifdef VMS
 check_existence(filename)								/* Check to see if a file exists.	*/
@@ -453,7 +465,6 @@ char *filename;
 create_dir(nlib, vol)									/* Create a new directory.		*/
 char *nlib, *vol;
 {
-	extern char *wfname();
 	char dir_spec[132], file[9];
 	int4 wfname_mode;
 	int mkdir_status;
@@ -467,3 +478,21 @@ char *nlib, *vol;
  	mkdir_status = LIB$CREATE_DIR(&d_desc);
 }
 #endif
+/*
+**	History:
+**	$Log: rename.c,v $
+**	Revision 1.15  1997-05-01 16:39:50-04  gsl
+**	Remove unneeded errbuff
+**
+**	Revision 1.14  1997-04-15 23:10:20-04  gsl
+**	Update to use wtrace()
+**
+**	Revision 1.13  1997-03-12 13:11:43-05  gsl
+**	change to use WIN32 define
+**
+**	Revision 1.12  1996-08-19 18:32:49-04  gsl
+**	drcs update
+**
+**
+**
+*/

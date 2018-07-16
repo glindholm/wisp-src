@@ -16,20 +16,26 @@
 #			06/09/92	Removed the copy. GSL
 #
 
-#CDEBUG = -g
-CDEBUG = -O
+CDEBUG = 
 
-GOOD = good
+L_EDE = ede
+L_VIDEO = video
 
 include $(WISP)/src/port/make.include
 
+CFLAGS  = $(CFLAGS0) -I$(VIDEO_INC_DIR)
 
-all: 	$(GOOD)
+GOOD_EXE 	= good
+GOOD_OBJS 	= good.o
 
-OBJS=good.o
-LIBPATHS=$(STDLIB)/libvideo.a $(STDLIB)/libede.a
-LIBS= $(LIBCFLAGS) -lvideo -lede -lm $(LIBCURSES)
 
-$(GOOD): $(OBJS) $(LIBPATHS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
+all: 	$(GOOD_EXE)
 
+clean:
+	rm -f $(GOOD_EXE) $(GOOD_OBJS) core
+
+GOOD_LIBS_PATHS = $(VIDEO_LIB_PATH) $(EDE_LIB_PATH)
+GOOD_LIBS_LINK = $(GOOD_LIBS_PATHS) $(MATH_LINK) $(CURSES_LINK)
+
+$(GOOD_EXE): $(GOOD_OBJS) $(GOOD_LIBS_PATHS)
+	$(CC) $(CFLAGS) -o $@ $(GOOD_OBJS) $(GOOD_LIBS_LINK)

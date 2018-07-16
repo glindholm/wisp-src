@@ -1,0 +1,34 @@
+#
+#	disprint.umf
+#
+#	Usage: make -f disprint.umf {acu|mf}
+#
+WISP=wisp
+
+default:
+	@echo
+	@echo 'Usage: make -f disprint.umf {acu|mf}'
+	@echo
+	@echo 'To make DISPRINT for Acucobol enter the command:'
+	@echo '    $$ make -f disprint.umf acu'
+	@echo
+	@echo 'To make DISPRINT for Micro Focus enter the command:'
+	@echo '    $$ make -f disprint.umf mf'
+	@echo
+
+acu:	disprint.wcb
+	rm -f disprint.cob DISPRINT
+	$(WISP) -VACU disprint.wcb
+	ccbl -da4 -o DISPRINT disprint.cob
+
+mf:	disprint.wcb
+	rm -f disprint.cob DISPRINT.int
+	$(WISP) -VMF disprint.wcb
+	cob -i disprint.cob
+	mv disprint.int DISPRINT.int
+
+disprint.wcb:
+	@echo
+	@echo The file disprint.wcb was not found.
+	@echo Unable to make DISPRINT utility.
+	@exit 1

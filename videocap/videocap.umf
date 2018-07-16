@@ -1,0 +1,57 @@
+# 
+#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	$Id:$
+#
+#	File:		videocap.umf
+#
+#	Project:	VIDEO/CAP
+#
+#	RCS:		$Source:$
+#
+#	Function:	build videocap targets
+#
+#
+
+MAKEFILE=videocap.umf
+
+TARZ  = $(OPEN3K)/src/port/tarz
+CPDIR = $(OPEN3K)/src/port/cpdir
+
+#
+# Component lists
+#
+BUILDLIST = videocap.tar
+
+#
+#	TARGETS
+#
+#	default		- Build videocap.tar
+#	clean		- Remove all build stuff
+#
+
+default: videocap.tar
+	@echo videocap.tar is UP-TO-DATE
+
+videocap.tar:
+	rm -r -f videocap
+	mkdir videocap
+	for f in *.vcap ; do \
+		new=`basename $$f .vcap`; \
+		cp $$f videocap/$$new; \
+	done;
+	chmod 444 videocap/*
+	tar -cf $@ videocap
+	
+
+clean:
+	rm -f -r videocap videocap.tar
+
+#
+#	History:
+#	$Log: videocap.umf,v $
+#	Revision 1.1  1996-05-21 13:06:51-04  gsl
+#	Initial revision
+#
+#
+# 	03/17/95	Written by SMC
+#

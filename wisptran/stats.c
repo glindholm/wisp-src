@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -66,3 +68,12 @@ int increment_main_line_count()
 }
 
 
+/*
+**	History:
+**	$Log: stats.c,v $
+**	Revision 1.5  1996-08-30 21:56:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

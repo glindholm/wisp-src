@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -47,27 +49,29 @@
 		****************************************************************************************/
 
 #include <stdio.h>									/* Allow standard I/O.			*/
-#include <varargs.h>									/* Allow variable number of arguments	*/
-
-#ifndef unix	/* VMS or MSDOS */
 #include <stdlib.h>
-#endif
-#ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
-#endif
+#include <varargs.h>									/* Allow variable number of arguments	*/
+#include <ctype.h>
+#include <string.h>
 
-#include <v/video.h>
 #include "idsistd.h"
 #include "vwang.h"
 #include "werrlog.h"
 #include "wglobals.h"
-
-char	*getenv();
-static int save_screen();
-static int get_screen();
+#include "wsfns.h"
+#include "wisplib.h"
+#include "wexit.h"
+#include "level.h"
 
 char NC_pfkey[3], NC_order_area[4];							/* Define global so accessible by all	*/
-int netroncap = 0;									/* Flag so vwang knows the origin.	*/
+int wsfns_toggle = 0;									/*   Flag to indicate toggle function.	*/
+char cur_toggle_val;									/*   Var to hold current toggle value.	*/
+
+static void save_screen();
+static void get_screen();
+
+static int netroncap = 0;								/*   Flag so vwang knows the origin.	*/
+static int wsfns_first = 1;								/*   Flag for first time in.		*/
 
 static unsigned char *dsptr;								/* Ptr to holding screen before mods.	*/
 static int mem_allocated = 0;								/* Memory not allocated yet.		*/
@@ -91,8 +95,10 @@ va_dcl
 	char 		vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
 
 	werrlog(ERRORCODE(1),"?",0,0,0,0,0,0,0);					/* Say we are here.			*/
-	*wisp_progname = CHAR_NULL;							/* Set the progname name to spaces.	*/
-	*wisp_screen = CHAR_NULL;							/* Set the screen name to spaces.	*/
+
+	check_first_time_netroncap();							/* Check environment if first time in.	*/
+	*wisp_progname = (char)0;							/* Set the progname name to spaces.	*/
+	*wisp_screen = (char)0;								/* Set the screen name to spaces.	*/
 	one_short = 1;
 	terminate_list = (unsigned char *)"A";						/* Assign A for ALL PFkeys.		*/
 	va_start(the_args);								/* Set pointer to top of stack.		*/
@@ -108,10 +114,10 @@ va_dcl
 	for (i = 0; i < 2; i++)  func_type[i] = *z1_fn++;				/* Copy function to variable.		*/
 	func_type[i] = '\0';								/* Null terminate the string.		*/
 	werrlog(ERRORCODE(1),func_type,0,0,0,0,0,0,0);					/* Say we are here.			*/
-	if ( 	(strcmp(func_type,"DS") == 0) ||					/* Is it function WSFNS Display Screen?	*/
-		(strcmp(func_type,"AS") == 0) ||					/*	Accept Screen?			*/
-		(strcmp(func_type,"DI") == 0) ||					/*	Display Immediate?		*/
-		(strcmp(func_type,"AI") == 0) )						/*	Accept Immediate?		*/
+	if ( 	(memcmp(func_type,"DS",2) == 0) ||					/* Is it function WSFNS Display Screen?	*/
+		(memcmp(func_type,"AS",2) == 0) ||					/*	Accept Screen?			*/
+		(memcmp(func_type,"DI",2) == 0) ||					/*	Display Immediate?		*/
+		(memcmp(func_type,"AI",2) == 0) )					/*	Accept Immediate?		*/
 	{
 		if (arg_count < 4)
 		{
@@ -135,7 +141,7 @@ va_dcl
 		if (arg_count > 4)							/* Extra parameters passed from WSFNM.	*/
 		{
 			short *short_ptr;
-			if (strcmp(func_type,"DS") == 0)
+			if (memcmp(func_type,"DS",2) == 0)
 			{
 				short_ptr = va_arg(the_args, short *);			/* Get the number of lines in screen.	*/
 				l_slen = (unsigned char) *short_ptr;
@@ -156,12 +162,12 @@ va_dcl
 			l_slen = 24;
 			call_fl = 0;							/* Was called from COBOL.		*/
 		}
-		if (strcmp(func_type,"DS") == 0)
+		if (memcmp(func_type,"DS",2) == 0)
 		{
 			save_screen(z1_rec,(int)l_slen);				/* Save screen so if want to start over.*/
 			return(0);							/* Return to COBOL caller.		*/
 		}
-		wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;				/* Assign Write Control Character	*/
+		wcc = (char)(UNLOCK_KEYBOARD | POSITION_CURSOR);			/* Assign Write Control Character	*/
 		if (*z1_beepfl != ' ')  wcc |= SOUND_ALARM;				/* If not blank then beep.		*/
 		netroncap = 1;								/* Set so vwang won't use pseudo blanks.*/
 restart:										/* Start position if PF30 (start over)	*/
@@ -174,8 +180,14 @@ restart:										/* Start position if PF30 (start over)	*/
 		for (i = 0; i < 4; i++) save_oa[i] = ldispa[i];				/* Save 4 bytes of program data area.	*/
 	 	for (i = 0; i < 4; i++) ldispa[i] = NC_order_area[i];			/* Concatenate order area with screen.	*/
 
-		if (strcmp(func_type,"AS") == 0)					/* Accept Screen WSFNS function.	*/
+		if (memcmp(func_type,"AS",2) == 0)					/* Accept Screen WSFNS function.	*/
 		{
+			if (wsfns_toggle && !call_fl)					/* If toggle processing and not WSFNM.	*/
+			{
+				ldispa[4] = cur_toggle_val;				/* Move current toggle value into 	*/
+				ldispa[1923] = cur_toggle_val;				/*  (1,1) and (24,80) posn's on screen.	*/
+				set_toggle_value();					/* Toggle the value.			*/
+			}
 			if (call_fl)							/* Just want to write and read scroll	*/
 			{								/*  region from WSFNM call.		*/
 				function = WRITE_ALL;
@@ -188,8 +200,10 @@ restart:										/* Start position if PF30 (start over)	*/
 				unsigned char *hlddispa, *cptr;
 				int st_win,end_win;					/* Start and end of pfkey window.	*/
                                          
+				st_win = 0;
+				end_win = 0;
 				hlddispa = ldispa;					/* Save the current local screen pntr.	*/
-				gen_ncpfkey(1,&ldispa,1924,&st_win,&end_win);		/* Generate pop up pfkey window with	*/
+				gen_ncpfkey(1,(char**)&ldispa,1924,&st_win,&end_win);	/* Generate pop up pfkey window with	*/
 											/* a temp screen to display.		*/
 				function = DISPLAY_AND_READ_ALTERED;
 				vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);
@@ -207,12 +221,18 @@ restart:										/* Start position if PF30 (start over)	*/
 				}
 			}
 		}
-		else if (strcmp(func_type,"DI") == 0)					/* Display Immediate WSFNS function.	*/
+		else if (memcmp(func_type,"DI",2) == 0)					/* Display Immediate WSFNS function.	*/
 		{
+			if (wsfns_toggle)						/* If toggle processing set.		*/
+			{
+				ldispa[4] = cur_toggle_val;				/* Move current toggle value into 	*/
+				ldispa[1923] = cur_toggle_val;				/*  (1,1) and (24,80) posn's on screen.	*/
+				set_toggle_value();					/* toggle the value.			*/
+			}
 			function = WRITE_ALL;
 			vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);
 		}
-		else if (strcmp(func_type,"AI") == 0)					/* Accept Immediate WSFNS function.	*/
+		else if (memcmp(func_type,"AI",2) == 0)					/* Accept Immediate WSFNS function.	*/
 		{
 			function = READ_ALL;
 			vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);
@@ -221,18 +241,18 @@ restart:										/* Start position if PF30 (start over)	*/
 		for (i = 0; i < 4; i++) NC_order_area[i] = ldispa[i];			/* Save the returned vwang order area.	*/
 		for (i = 0; i < 4; i++) ldispa[i] = save_oa[i];				/* Restore program data area.		*/
 
-		if (strcmp(NC_pfkey,"30") == 0)						/* Want to start input over.		*/
+		if (memcmp(NC_pfkey,"30",2) == 0)					/* Want to start input over.		*/
 		{
 			get_screen(z1_rec,(int)l_numl);					/* Get the orig. starting screen.	*/
 			goto restart;							/* Call VWANG again will no mods.	*/
 		}
-		if (strcmp(NC_pfkey,"31") == 0)						/* Spawn a process.			*/
+		if (memcmp(NC_pfkey,"31",2) == 0)					/* Spawn a process.			*/
 		{
 			COBLINK("DOCPROG ");
 		}
 		netroncap = 0;								/* Set back for normal screens.		*/
 	}
-	else if (strcmp(func_type,"PF") == 0)						/* Is it function PF?			*/
+	else if (memcmp(func_type,"PF",2) == 0)						/* Is it function PF?			*/
 	{										/* Return cursor position and PFkey.	*/
 		if (arg_count != 3)
 		{
@@ -246,12 +266,12 @@ restart:										/* Start position if PF30 (start over)	*/
 		*z1_pf  = (short)i_pf;							/* Put value into return cobol ptr.	*/
 		*z1_col = (short)NC_order_area[CURSOR_COL_BYTE];			/* Init for cobol return column.	*/
 		*z1_row = (short)NC_order_area[CURSOR_ROW_BYTE];			/* Init for cobol return row.		*/
-		return(SUCCESS);
+		return(0);
 	}
-	return(SUCCESS);
+	return(0);
 }
 
-static save_screen(save_rec,scn_len)							/* Save the starting screen config.	*/
+static void save_screen(save_rec,scn_len)							/* Save the starting screen config.	*/
 unsigned char *save_rec;
 int 	scn_len;
 {
@@ -275,16 +295,69 @@ int 	scn_len;
 	memcpy(dsptr,save_rec,nchr);							/* Save screen record.			*/
 }
 
-static get_screen(curr_rec,num_lines)							/* Copy saved screen to current screen.	*/
+static void get_screen(curr_rec,num_lines)							/* Copy saved screen to current screen.	*/
 unsigned char *curr_rec;
 int num_lines;
 {
 	int 	cnt;
 
-	if (!mem_allocated) vbell();							/* Beep if no screen to refresh.	*/
+	if (!mem_allocated) vwang_bell(1);							/* Beep if no screen to refresh.	*/
 	else
 	{
 		cnt = num_lines * 80;							/* Set # lines on current screen	*/
 		memcpy((char *)curr_rec,(char *)dsptr,cnt);				/* Copy current screen only.		*/
 	}
 }
+
+
+void check_first_time_netroncap()							/* Check environment if first time in.	*/
+{
+	char		*tptr;								/* Ptr to toggle environment variable.	*/
+
+	if (wsfns_first)								/* If first time in then see if env.	*/
+	{										/* variable is set.			*/
+		tptr = getenv("WSFNS_DISPLAY_TOGGLE");
+		if (tptr)								/* If environment var exists...		*/
+		{
+			if (strcmp(tptr,"YES") == 0)					/* If environment var = YES		*/
+			{
+				wsfns_toggle = 1;					/* Set flag so will toggle on display.	*/
+				set_toggle_value();
+			}
+			else	wsfns_toggle = 0;					/* Don't toggle or display lower or 	*/
+		}									/*  upper.				*/
+		else	wsfns_toggle = 0;						/* Don't toggle or display lower or 	*/
+		wsfns_first = 0;							/*  upper.				*/
+	}
+}
+
+void set_toggle_value()									/* Set the toggle value according to	*/
+{											/*  the current link level.		*/
+	char toggle_mask[27];
+	int cllevel;									/* Var for current link level.		*/
+	char save_toggle_val;
+
+	save_toggle_val = cur_toggle_val;						/* Save original value.			*/
+	strcpy(toggle_mask,"abcdefghijklmnopqrstuvwxyz");
+	cllevel = linklevel();								/* Set the current link level.		*/
+	cllevel--;									/* Subtract one so is 0 based.		*/
+	cur_toggle_val = toggle_mask[cllevel];
+	if (islower(save_toggle_val))							/* Now toggle the value.		*/
+	{
+		cur_toggle_val = toupper(cur_toggle_val);
+	}
+}
+
+int use_netroncap(void)
+{
+	return netroncap;
+}
+/*
+**	History:
+**	$Log: wsfns.c,v $
+**	Revision 1.16  1996-08-19 18:33:23-04  gsl
+**	drcs update
+**
+**
+**
+*/

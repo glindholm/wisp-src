@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -6,9 +8,6 @@
 			/*			    All rights reserved.			*/
 			/*									*/
 			/************************************************************************/
-#ifdef MSDOS
-#include <string.h>
-#endif
 
 #define EXT extern
 #include "wisp.h"
@@ -16,9 +15,8 @@
 
 p_write()
 {
-	int 	i,j,hold,fnum,inv_key,n_alt;
+	int 	i,j,fnum,inv_key;
 	int	lock_clause;
-	char 	tstr[132];
 	char	recname[40];
 	int	fd;
 	char	fdname[40];
@@ -69,7 +67,7 @@ p_write()
 	{
 		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
 
-		if (o_parms[0][0]) stredt(inline,o_parms[0],"");			/* Remove it from the input line	*/
+		if (o_parms[0][0]) stredt(linein,o_parms[0],"");			/* Remove it from the input line	*/
 		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
 
 		if (ptype == 1)								/* first parm on a new line		*/
@@ -80,12 +78,12 @@ p_write()
 		if (!strcmp(o_parms[0],"BEFORE") || !strcmp(o_parms[0],"AFTER"))	/* Look for BEFORE or AFTER ADVANCING.	*/
 		{
 			strcpy(o_parms[9],o_parms[0]);
-			stredt(inline,o_parms[9]," ");					/* remove the word			*/
+			stredt(linein,o_parms[9]," ");					/* remove the word			*/
 			ptype = get_param(o_parms[0]);					/* get "ADVANCING"			*/
 
 			if (!strcmp(o_parms[0],"ADVANCING"))				/* Was it?				*/
 			{
-				stredt(inline," ADVANCING","");				/* remove it.				*/
+				stredt(linein," ADVANCING","");				/* remove it.				*/
 				ptype = get_param(o_parms[0]);				/* Get it.				*/
 			}
 
@@ -118,14 +116,14 @@ p_write()
 		}
 		else if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
 		{
-			stredt(inline," INVALID"," ");					/* remove INVALID			*/
+			stredt(linein," INVALID"," ");					/* remove INVALID			*/
 			if (ptype != -1)
 			{
 				peek_param(o_parms[7]);					/* get "KEY"				*/
 				if (!strcmp(o_parms[7],"KEY"))				/* Was it KEY?				*/
 				{
 					ptype = get_param(o_parms[0]);			/* Get it, and remove it.		*/
-					stredt(inline," KEY"," ");			/* remove KEY				*/
+					stredt(linein," KEY"," ");			/* remove KEY				*/
 				}
 
 			}
@@ -203,10 +201,13 @@ p_write()
 		else if ( !(prog_ftypes[fd] & AUTOLOCK) )
 		{
 			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS\n",prog_fstats[fd]);
+			tput_line("           UNLOCK %s\n", fdname );
+#ifdef OLD
 			if ( !(prog_ftypes[fd] & SEQ_FILE) || (prog_ftypes[fd] & SEQ_DYN) ) 
 				tput_line("           UNLOCK %s\n", fdname );
 			else
 				tput_line("           UNLOCK %s ALL\n", fdname );
+#endif
 			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s\n",prog_fstats[fd]);
 		}
 	}
@@ -219,6 +220,15 @@ p_write()
 	if (ptype != -1) hold_line();
 
 	write_log("WISP",'I',"WRITEDONE","Completed WRITE analysys");
-
+	return 0;
 }
 
+/*
+**	History:
+**	$Log: wt_write.c,v $
+**	Revision 1.10  1996-08-30 21:56:26-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -41,3 +45,12 @@ EXT int  crt_record_count INIT_ZERO;
 
 
 #endif /* CRT_H */
+/*
+**	History:
+**	$Log: crt.h,v $
+**	Revision 1.5  1996-08-30 21:56:02-04  gsl
+**	drcs update
+**
+**
+**
+*/

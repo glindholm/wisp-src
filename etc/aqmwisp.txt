@@ -1,0 +1,390 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		Using AQM and WISP
+	
+	Document:	aqmwisp.txt
+	Last Updated:	26 Aug 1997
+	Products:	WISP for NT/95
+	Versions:	4.1.02 (AND LATER)
+	
+	Summary:	Usage and configuration information for using AQM
+			with WISP.
+
+	====================================================================
+	
+	Overview
+	========
+
+	Argent Queue Manager (AQM) ia a batch queue management software
+	package which runs on Windows NT.  The WISP SUBMIT vssub can be
+	configured to issue the AQM QSUBMIT command to submit jobs to the
+	AQM batch queue.
+
+	There are two issues with the AQM QSUBMIT command which need to be
+	understood in order to configure WISP correctly.  The first is
+	that the QSUBMIT command requires a username and a password.  The
+	second issue is that the QSUBMIT command can only be run from
+	Windows NT, to submit from Windows 95 the QSUBMIT command must be
+	remotely executed on a Windows NT server.
+
+	The WISP SUBMIT vssub has been enhanced to accept a username and
+	password either from the OPTIONS file or via a GETPARM.  See the
+	"Username and Password Strategies" section below for complete
+	information.
+
+	To submit from Windows 95 you need an additional software package
+	which gives you remote execution (rexec) capability.  We have
+	tested a very inexpensive shareware package "Ataman TCP Remote
+	Logon Services" (ATRLS) from Ataman Software, Inc.  See below for
+	complete information.
+
+
+	SUBMIT Configuration
+	====================
+
+	The WISP SUBMIT vssub configuration options have been greatly
+	enhanced. The goal is to provide maximum configurability so that
+	future changes to AQM, Windows or ATRLS can be accommodated
+	through configuration changes and not require coding changes.  The
+	configuration is flexible enough that other batch queue, or remote
+	execution systems could be supported.  All of the configuration is
+	done through the OPTIONS and CQMAP files.
+
+	WISP Runtime OPTIONS File
+	-------------------------
+	The following BATCH options are used to configure the SUBMIT vssub
+	command for WISP for NT/95.
+
+	    Option	     	Description
+	    ------		-----------
+	    BATCHQUEUE 		Is a batch queue being used?
+	    BATCHCMD		The batch command template.
+	    BATCHCMD95		The command template for Windows 95.
+	    BATCHLOGVOL		The batch log file volume.
+	    BATCHLOGLIB		The batch log file library.
+	    BATCHPASS		The server password.
+	    BATCHUSER		The server username.
+	    BATCHSERVER		The batch queue server machine name.
+	    BATCHHOLD		The submit for "HOLD" options string.
+	    BATCHRUN		The submit for "RUN" options string.
+
+	All options are optional and default values will be used if the
+	option is not specified.
+
+	Each option is discussed in detail below:
+
+	BATCHQUEUE AQM
+
+	The BATCHQUEUE option indicates if a batch queue management system
+	is being used.  The valid values are "AQM" and "none".  If "none"
+	is specified then the rest of the BATCH options are ignored.  The
+	default value is "none" so this should be set to AQM.
+	
+	BATCHCMD {qsubmit command ...}
+
+	The BATCHCMD option allows you to specify a template for the batch
+	command.  This is the command that will be issued to submit your
+	job to the batch queue management system.  With AQM this would be
+	the QSUBMIT command.  The command you specify here is a template
+	which includes macros (eg. %SERVER%) which get expanded to create
+	the actual command.  The default BATCHCMD value is:
+
+	    QSUBMIT %SUBFILE% %CQMAP% /NAME=%SUBNAME% /NONOTIFY
+	        /PARAMS="%SUBPARAMS%" /LOG_FILE=%BATCHLOG% %SUBSTAT%
+	        /USER=%BATCHUSER% /PASSWORD=%BATCHPASS% 
+
+	The available macros are described later in this document.
+
+	BATCHCMD95 {remote execute command}
+
+	The BATCHCMD95 option allows you to specify a template for the
+	remote execution command for Windows 95.  This is the command that
+	will be issued from Windows 95 to remotely execute the QSUBMIT
+	command on the Windows NT server.  This command can include all
+	the macros that BATCHCMD uses plus the macro %BATCHCMD% which
+	expands to the value of the BATCHCMD option.  The default value of
+	BATCHCMD95 is:
+
+	    REXEC.EXE %SERVER% -l %BATCHUSER% -p %BATCHPASS% %BATCHCMD%
+
+	BATCHLOGVOL volume
+
+	The BATCHLOGVOL option specifies the Wang style volume to use when
+	generating the batch log file for the %BATCHLOG% macro.  If
+	BATCHLOGVOL is not specified then the usage constant SPOOLVOL is
+	used.  This volume must be valid from the server machine where the
+	submitted job will be run.
+
+	BATCHLOGLIB library
+
+	The BATCHLOGLIB option specifies the Wang style library to use
+	when generating the batch log file for the %BATCHLOG% macro. The
+	default value is "SUBMIT".
+
+	BATCHPASS password
+
+	The BATCHPASS option specifies the password for the %BATCHPASS%
+	macro.  There is no default value.  If BATCHPASS is not specified
+	then the SUBMIT vssub will issue a GETPARM for the password and
+	username. 
+
+	BATCHUSER username
+
+	The BATCHUSER option specifies the username for the %BATCHUSER%
+	macro.  If BATCHUSER is not specified then the username will
+	default to the name the user logged on with.
+
+	BATCHSERVER server
+
+	The BATCHSERVER option specifies the server name for the %SERVER%
+	macro.  If not specified the SERVER value from the WCONFIG program
+	is used.
+
+	BATCHHOLD {hold option string}
+
+	The BATCHHOLD option specifies the value for the %SUBSTAT% macro
+	when the SUBMIT status equals "H" (HOLD).  The default value is
+	"/AFTER=+365" which causes the submitted job to be held for 365
+	days. 
+
+	BATCHRUN {run option string}
+
+	The BATCHRUN option specifies the value for the %SUBSTAT% macro
+	when the SUBMIT status equals "R" (RUN).  The default value is an
+	empty string ("").
+
+
+	CQMAP - Class Queue MAP File
+	----------------------------
+	The CQMAP file is used to map the SUBMIT class letter to the
+	%CQMAP% macro.  This allows specific options to be associated with
+	each class.  It is suggested that you include the "/QUEUE=" option
+	for each class to associate a class with an AQM queue.
+
+	The first character of each line in the CQMAP file is a SUBMIT
+	class letter.  The rest of each line is the string value to use in
+	the %CQMAP% macro.  If the SUBMIT class is not found in the CQMAP
+	file then the %CQMAP% will be set to an empty string.
+
+	Example CQMAP file:
+
+	    A /SERVER=SERVER1 /QUEUE=DEFAULT
+	    M /SERVER=SERVER1 /QUEUE=MIDNIGHT /AFTER=23:59
+	    P /SERVER=SERVER2 /QUEUE=DAILY /EVERY=24:00
+
+
+	BATCH Macros
+	------------
+	The following macros are available for use in the batch command.
+	
+	    Macro		Description
+	    -----		-----------
+	    %SUBFILE%		The SUBMIT file executable path.
+	    %SUBPARAMS%		The SUBMIT file run parameters.
+	    %CQMAP%		The SUBMIT class translation from CQMAP 
+	    %SUBNAME%		The SUBMIT job name
+	    %BATCHLOG%		The log file path
+	    %SUBSTAT%		The "HOLD" or "RUN" options
+	    %BATCHUSER%		The username
+	    %BATCHPASS%		The password
+	    %SERVER%		The server name
+	    %BATCHCMD%		The batch command (for BATCHCMD95 only)
+
+	The %SUBFILE% macro is the native file path of the executable file
+	that was submitted with the SUBMIT vssub.  If a procedure was
+	submitted then this will be the file path for procedure
+	interpreter WPROC.EXE.  If a COBOL program was submitted then this
+	will be the path to the COBOL runtime system.  
+
+	The %SUBPARAMS% macro is the command line parameters for
+	%SUBFILE%.  If a procedure is submitted this would be the path to
+	the procedure file plus any options.  The AQM QSUBMIT command uses
+	the /PARAMS= options to pass parameters, and the parameters need
+	to be enclosed in quotes.  On the BATCHCMD params are specified as 
+	/PARAMS="%SUBPARAMS%" .
+
+	The %CQMAP% macro contains the option string from the CQMAP file
+	based on the SUBMIT class used.
+
+	The %SUBNAME% macro contains the job name as specified in the
+	SUBMIT vssub.  If the job name was not specified then this will be
+	set to the file name in the SUBMIT vssub.  The AQM QSUBMIT command
+	uses the /NAME= option to specify a job name.  On the BATCHCMD the
+	job name is specified as /NAME=%SUBNAME%.
+
+	The %BATCHLOG% macro contains the native file path for the batch
+	log file.  This is constructed from the Wang style volume
+	BATCHLOGVOL, library BATCHLOGLIB and file name %SUBNAME%.  The
+	BATCHCMD specifies the log file with the QSUBMIT option
+	/LOG_FILE=%BATCHLOG%. 
+
+	The %SUBSTAT% macro contains the string value of BATCHHOLD when
+	the job was submitted with a status of "H" (HOLD) and it contains
+	the string value of BATCHRUN when the status is "R" (RUN).
+
+	The %BATCHUSER% macro contains the username from the BATCHUSER
+	option or from the PASSWORD GETPARM.  The BATCHCMD specifies the
+	username with the QSUBMIT option /USER=%BATCHUSER%.
+
+	The %BATCHPASS% macro contains the password from the BATCHPASS
+	option or from the PASSWORD GETPARM.  The BATCHCMD specifies the
+	password with the QSUBMIT option /PASSWORD=%BATCHPASS%.
+
+	The %SERVER% macro contains the server name from the BATCHSERVER
+	option. 
+
+	The %BATCHCMD% macro contains the batch command from the BATCHCMD
+	option.  It is only valid within the BATCHCMD95 option.
+
+
+	Username and Password Strategies
+	================================
+
+	There are two main strategies for usernames and passwords.  The
+	first is to have each user run their batch jobs on the server
+	using their own username and password.  The second is to create a
+	special "batch" user and have it run all batch jobs.
+
+	The first strategy offers greater security but requires much
+	greater configuration overhead.  Each user will have to enter
+	their password at the PASSWORD GETPARM before a SUBMIT vssub.
+	Windows NT maintains separate configuration information for each
+	user so the server would need to be configured individually for
+	each user's logon.
+
+	The second strategy is much easier to configure.  Create a special
+	user for running batch jobs and configure the server once.  Set
+	the BATCHUSER and BATCHPASS in the OPTIONS file and all jobs will
+	be run as this user and you will never see a PASSWORD GETPARM.
+
+	The strategy you choose will be based on your security and
+	configuration needs.
+
+
+	SUBMIT: Additional Notes
+	========================
+
+	Network File Paths
+	------------------
+	It is important to remember that the submitted programs will be
+	running on the server machine.  All file paths must therefore be
+	valid from the server.  It is recommended that you always use UNC
+	file names in the LGMAP to ensure the file path is valid from the
+	server.
+
+	The default BATCHCMD and BATCHCMD95 commands assume that QSUBMIT
+	and REXEC are on you directory path.  You will need to either put
+	them on your path or modify BATCHCMD and BATCHCMD95 to include a
+	full file path.  
+
+	With Windows 95 the QSUBMIT command will be remotely executed on
+	the server so the path on the server may need to be set.  You can
+	check your path on the server by rexec'ing the PATH command:
+
+	   C:> REXEC {server} -l {username} -p {password} PATH
+
+
+	SUBMIT vssub Return Codes and Errors
+	------------------------------------
+	The SUBMIT vssub will validate all arguments and if there is any
+	problems it will fail with documented return code.  If all the
+	arguments are valid the SUBMIT vssub will execute either the
+	QSUBMIT or REXEC programs.  If either of these programs completes
+	with a non-zero exit code then the SUBMIT return code will be set
+	to the exit code plus 10000 to prevent conflict with other return
+	code values.  
+
+	It has been found that QSUBMIT does not reliably set the exit code
+	when it fails so it is possible for SUBMIT to return with 0 return
+	code when QSUBMIT failed.  When QSUBMIT fails it writes an error
+	message to stdout which is redirected into the WISP error log.
+	You will need to check the WISP error log to debug any errors with
+	QSUBMIT or REXEC.
+
+	If an invalid username or password is given then the SUBMIT vssub
+	will fail with a return code (probably 10001), no opportunity is
+	given to re-enter the password.
+
+
+
+	Remote Execution using ATRLS
+	============================
+
+	To use AQM from Windows 95 you need "remote execute" capability.
+	Remote execution capability does not currently come with Windows
+	95 or Windows NT.
+
+	We tested and recommend you use the "Ataman TCP Remote Logon
+	Services" package from Ataman Software Inc.  It is inexpensive
+	shareware which works well.  ATRLS can be downloaded from their
+	web site.
+
+	    Ataman Software, Inc.
+	    5832 S. College Ave., Suite C
+	    Fort Collins, CO 80525 USA
+
+	    Phone: (970) 225-9131
+	    Fax:   (970) 225-0335
+
+	    Email: info@ataman.com
+	    WEB:   www.ataman.com
+
+	Ataman Software, Inc. is not associated with NeoMedia
+	Technologies, Inc.  If you choose to use ATRLS then you must
+	license it from Ataman Software, Inc.
+
+	Download ATRLS for Windows NT (x86 architecture) and print the
+	user manual to get the installation instructions.  Install ATRLS
+	onto the Windows NT server where AQM is running.  You will need to
+	add users for each user that will need to remotely execute the
+	QSUBMIT command (See "Username and Password Strategies" above).
+	No special configuration options are required.
+
+	Remote execution requires two components, a remote execution
+	server (called "Rexecd") which runs on the server and a remote
+	execution client (call "Rexec") which runs on the client.  ATRLS
+	runs on the Windows NT server and provides the rexecd service.
+	The WISP toolkit provides the REXEC.EXE client which will run on
+	Windows 95.
+
+	The WISP\BIN\REXEC.EXE program which comes with the WISP toolkit
+	was built from the REXEC.C source code from the ATRLS kit.  It
+	contains the following copyright and disclaimer information:
+
+	# Copyright (c) 1994-1996 Ataman Software, Inc.  All rights
+	# reserved. 
+	#
+	# Redistribution and use in source and binary forms, with or
+	# without modification, are permitted provided that the following
+	# conditions are met:
+	# 1. Redistributions of source code must retain the above
+	#    copyright notice, this list of conditions and the following
+	#    disclaimer. 
+	# 2. Redistributions in binary form must reproduce the above
+	#    copyright notice, this list of conditions and the following
+        #    disclaimer in the documentation and/or other materials
+        #    provided with the distribution.
+        # 3. All advertising materials mentioning features or use of this
+	#    software must display the following acknowledgement: This
+	#    product includes software developed by Ataman Software, Inc.
+	# 4. The name of Ataman Software, Inc. may not may be used to
+	#    endorse or promote products derived from this software
+	#    without specific prior written permission.
+	#
+	# THIS SOFTWARE IS PROVIDED BY ATAMAN SOFTWARE, INC. ``AS IS'' AND
+	# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+	# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+	# PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL ATAMAN
+	# SOFTWARE, INC. BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+	# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+	# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+	# USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+	# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+	# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+	# IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+	# THE POSSIBILITY OF SUCH DAMAGE.
+
+
+	========================= END OF DOCUMENT ==========================

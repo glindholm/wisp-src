@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -16,6 +18,15 @@
 
 /*						Subroutine entry point.								*/
 
-vuserexit()										/* Dummy user exit stubs.		*/
+void vuserexit()									/* Dummy user exit stubs.		*/
 {
 }											/* User to supply his/her own.		*/
+/*
+**	History:
+**	$Log: vuserex.c,v $
+**	Revision 1.9  1996-10-11 18:16:24-04  gsl
+**	drcs update
+**
+**
+**
+*/

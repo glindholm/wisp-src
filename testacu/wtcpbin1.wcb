@@ -1,0 +1,3 @@
+000100 01  CURSOR-POS-COPY.
+000200     03  MOD-COL                    BINARY.
+000300     03  MOD-ROW                    BINARY.

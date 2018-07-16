@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
@@ -8,7 +10,7 @@
 #ifdef VMS				/* This entire source file is in this #ifdef and is only valid on the VMS system	*/
 
 #include <ssdef.h>
-#include <quidef.h>
+#include "quidef.h"
 #include <jbcmsgdef.h>
 
 #include "wdefines.h"
@@ -16,11 +18,14 @@
 #include "werrlog.h"
 #include "quemgmt.h"
 
+#define MAX_TOTAL_QUEUES	200
+#define QUENAME_LEN		32
+
 static char *quenameptr;
 static long numq, orig_numq;
 static struct que {									/* Array of queue names and class.	*/
 		char class;
-		char name[32];
+		char name[QUENAME_LEN];
 	};
 
 int strcmp();
@@ -43,8 +48,8 @@ setup_qm()										/* Sets up all parameters passed to the	*/
 sort_que_names()									/* If called from WISP then use LPMAP	*/
 {											/* and PQMAP data files else no		*/
 	int i, j, contfl;								/* restrictions on queues and pass null	*/
-	char *tcpt, quename[100][32];
-	struct que qd[100];
+	char *tcpt, quename[MAX_TOTAL_QUEUES][QUENAME_LEN];
+	struct que qd[MAX_TOTAL_QUEUES];
 	prt_id *prt_ptr;								/* Local ptrs to WISP$CONFIG data.	*/
 	pq_id *pq_ptr;
 
@@ -82,23 +87,23 @@ sort_que_names()									/* If called from WISP then use LPMAP	*/
 	}
 	if (numq > 1)									/* If more than one queue.		*/
 	{
-		qsort(quename,numq,32,strcmp);						/* Sort the array.			*/
+		qsort(quename,numq,QUENAME_LEN,strcmp);					/* Sort the array.			*/
 		for (i = 0; i < (numq-1); i++)						/* Check for duplicates.		*/
 		{
 			while (strcmp(quename[i],quename[i+1]) == 0)			/* If two are the same.			*/
 			{
 				strcpy(quename[i+1],"zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-				qsort(quename,numq,32,strcmp);				/* Sort the array.			*/
+				qsort(quename,numq,QUENAME_LEN,strcmp);			/* Sort the array.			*/
 				numq--;							/* Decrement number of queues.		*/
 			}
 		}
 	}
-	if (!(quenameptr = calloc(numq,32*sizeof(char))))				/* Get some memory for the array.	*/
+	if (!(quenameptr = calloc(numq,QUENAME_LEN*sizeof(char))))			/* Get some memory for the array.	*/
 	{
-		werrlog(ERRORCODE(2),32*numq,0,0,0,0,0,0,0);
+		werrlog(ERRORCODE(2),QUENAME_LEN*numq,0,0,0,0,0,0,0);
 		vexit();								/* Unconditional exit.			*/
 	}
-	memset(quenameptr,' ',32*numq);							/* Init the array to spaces.		*/
+	memset(quenameptr,' ',QUENAME_LEN*numq);					/* Init the array to spaces.		*/
 	tcpt = quenameptr;
 	for ( i = 0; i < numq; i++)							/* Copy queues into contiquous memory.	*/
 	{
@@ -111,7 +116,7 @@ sort_que_names()									/* If called from WISP then use LPMAP	*/
 		{
 			*tcpt++ = quename[i][j];					/* Copy queue name into array.		*/
 		}
-		for (k = j+used; k < 31; k++)  *tcpt++ = ' ';				/* Pad with spaces.			*/
+		for (k = j+used; k < QUENAME_LEN-1; k++)  *tcpt++ = ' ';	     	/* Pad with spaces.			*/
 	}
 	return;
 }
@@ -125,11 +130,11 @@ char *qname;										/* Return TRUE if it does.		*/
 		long fill;								/* Condition value returned.		*/
 	} iosb;
 	int ret, i;
-	char	srchname[32];								/* Search queue specifier.		*/
+	char	srchname[QUENAME_LEN];							/* Search queue specifier.		*/
 	long 	stat_ss, stat_qui, flgs;
 
 	ret = TRUE;									/* Assume success.			*/
-	for (i = 0; i < 31; i++) srchname[i] = *qname++;				/* Copy name into variable.		*/
+	for (i = 0; i < QUENAME_LEN-1; i++) srchname[i] = *qname++;			/* Copy name into variable.		*/
 	srchname[i] = '\0';								/* Null terminate the string.		*/
 
 	quibuf[0].item_code = QUI$_SEARCH_NAME;						/* Init the buffer structure.		*/
@@ -202,3 +207,15 @@ struct que *qd;
 #else	/* VMS */
 static int dummy_setupqm;
 #endif
+/*
+**	History:
+**	$Log: setupqm.c,v $
+**	Revision 1.10  1997-07-01 13:14:15-04  gsl
+**	Make change to allow more then 100 queues on VMS (now 200)
+**
+**	Revision 1.9  1996-08-19 18:32:56-04  gsl
+**	drcs update
+**
+**
+**
+*/

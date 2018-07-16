@@ -296,9 +296,9 @@
                    SOURCE SC1-COL-QTY
                    OBJECT SC1-COL-QTY.
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01 SC1-DATA-ITEM.
            03  SC1-COL-QTY PIC S9(7)V99 OCCURS 9 TIMES.
@@ -344,9 +344,9 @@
            03  TEST-ITEM-7 PIC X(7) ROW 20 COLUMN 20
                SOURCE SUB-LINE-6.
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01  SCREEN-MB-1 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(20) 
@@ -357,9 +357,9 @@
                "When this screen comes up then you have chosen menu opti
       -    "on ONE.".
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01  SCREEN-MB-2 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(20) 
@@ -370,9 +370,9 @@
                "When this screen comes up then you have chosen menu opti
       -    "on TWO.".
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01  SCREEN-MB-3 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(22) 
@@ -383,9 +383,9 @@
                "When this screen comes up then you have chosen menu opti
       -    "on THREE.".
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01  SCREEN-MB-4 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(21) 
@@ -396,9 +396,9 @@
                "When this screen comes up then you have chosen menu opti
       -    "on FOUR.".
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
 
        01  MONKEYBAR-MENU-SCREEN USAGE IS DISPLAY-WS.
@@ -430,7 +430,7 @@
            03  MB-MESG PIC X(43) ROW 10 COL 5
                SOURCE MB-MESG-TEXT.
 
-           03  MB-END-SCREEN-MESG PIC X(25) ROW 24 COL 10
+           03  MB-END-SCREEN-MESG PIC X(40) ROW 24 COL 10
                SOURCE MB-END-MESG.
 
        01  SUB-LINE-1.
@@ -570,7 +570,7 @@
            03  FILLER                     PIC X(01) VALUE MENU-PICK.
            03  CURS-COL                   PIC 9(02) VALUE 12.
        01  MB-MESG-TEXT PIC X(43) VALUE SPACES.
-       01  MB-END-MESG  PIC X(25) VALUE SPACES.
+       01  MB-END-MESG  PIC X(40) VALUE SPACES.
 
        01  VWANG-SCREEN132 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(34) ROW 3 COL 25 VALUE
@@ -596,8 +596,8 @@
            03 FILLER PIC X(132) ROW 18 COL 80 VALUE
               "UNTIL FURTHER NOTICE, CHANGE YOUR NATIVE COBOL SOURCES GE
       -    "NERATED BY WISP!!".
-           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
-           "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(40) ROW 24 COL 27 VALUE
+           "PRESS (ENTER) TO CONTINUE.".
 
        01  VWANG-SCREEN80 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(33) ROW 3 COL 25 VALUE
@@ -611,8 +611,8 @@
            03  FILLER PIC X(80) ROW 13 COL 1 VALUE
            "         1         2         3         4         5         6 
       -    "         7         8".
-           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
-           "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(40) ROW 24 COL 27 VALUE
+           "PRESS (ENTER) TO CONTINUE.".
 
        01 VW-SCN-STATUS       PIC X(50)     VALUE SPACES.
 
@@ -736,7 +736,7 @@
 
        DO-MONKEYBAR-SCREEN.
            MOVE SPACES TO MB-MESG-TEXT.
-           MOVE "PRESS PF KEY 16 TO EXIT  " TO MB-END-MESG.
+           MOVE "PRESS (ENTER) TO SELECT (16) TO EXIT  " TO MB-END-MESG.
            DISPLAY AND READ MONKEYBAR-MENU-SCREEN ON CRT
            PFKEYS 16.
 
@@ -759,7 +759,7 @@
        DO-MONKEYBAR-OPT-SCREEN.
            MOVE "TEST TO SEE IF OPTIMIZATION WORKS CORRECTLY"
              TO MB-MESG-TEXT.
-           MOVE "PUSH <RETURN> TO CONTINUE" TO MB-END-MESG.
+           MOVE "PRESS (ENTER) TO CONTINUE" TO MB-END-MESG.
            DISPLAY AND READ MONKEYBAR-MENU-SCREEN ON CRT.
 
        DO-MB-MENU1.
@@ -909,14 +909,15 @@
                           CRTREC2-X (19, 50).
 
 
-           MOVE "           REWRITE & READ MODIFIABLE (1)" 
+           MOVE "           REWRITE & READ MODIFIABLE <1>" 
                 TO CRTREC2-ROW (1).
+           MOVE "PRESS (ENTER) TO CONTINUE." TO CRTREC2-ROW (24).
 
            REWRITE CRTREC FROM CRTREC2.
 
            READ CRT MODIFIABLE INTO CRTREC2.
 
-           MOVE "           REWRITE & READ MODIFIABLE (2)" 
+           MOVE "           REWRITE & READ MODIFIABLE <2>" 
                 TO CRTREC2-ROW (1).
 
            REWRITE CRTREC FROM CRTREC2.
@@ -947,14 +948,14 @@
                           CRTREC2-X (19, 50).
 
 
-           MOVE "           REWRITE & READ ALTERED (1)" 
+           MOVE "           REWRITE & READ ALTERED <1>" 
                 TO CRTREC2-ROW (1).
 
            REWRITE CRTREC FROM CRTREC2.
 
            READ CRT ALTERED INTO CRTREC2.
 
-           MOVE "           REWRITE & READ ALTERED (2)" 
+           MOVE "           REWRITE & READ ALTERED <2>" 
                 TO CRTREC2-ROW (1).
 
            REWRITE CRTREC FROM CRTREC2.

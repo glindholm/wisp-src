@@ -1,14 +1,12 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
 			/*	An unpublished work by International Digital Scientific Inc.	*/
 			/*			  All rights reserved.				*/
 			/************************************************************************/
-#ifdef unix
-static int vcommand_dummy;
-#else
-#ifdef MSDOS
-#else
+#ifdef VMS
 			/************************************************************************/
 			/*									*/
 			/*	Get a user's command line (DEC style).				*/
@@ -211,5 +209,21 @@ static strtrm(string,size)
 	return;
 }
 
-#endif
-#endif
+#else /* !VMS */
+
+static int vcommand_dummy;
+
+#endif /* !VMS */
+
+/*
+**	History:
+**	$Log: vcommand.c,v $
+**	Revision 1.11  1997-06-24 16:21:02-04  gsl
+**	Change defines so that it is clear that this is only VMS
+**
+**	Revision 1.10  1996-10-11 18:16:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

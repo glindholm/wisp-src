@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -42,13 +44,14 @@
 #include "wperson.h"
 #include "werrlog.h"
 #include "wglobals.h"
+#include "wisplib.h"
 
 #define NOT_SUPP 	{werrlog(ERRORCODE(2),keyword,0,0,0,0,0,0,0);}
 #define NOT_YET		{werrlog(ERRORCODE(4),keyword,0,0,0,0,0,0,0);}
 
 #define		ROUTINE		58000
 
-SET(va_alist)										/* emulate the WANG VS SET usersub	*/
+void SET(va_alist)									/* emulate the WANG VS SET usersub	*/
 
 va_dcl
 
@@ -59,10 +62,6 @@ va_dcl
 	char	*value;                            
 	int4    long_value;
 	int	to_do;
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
-
-	wpload();
 
 	va_start(the_args);
 	to_do = va_count(the_args);
@@ -75,6 +74,19 @@ va_dcl
 		to_do--;
 		value = va_arg(the_args, char*);
 		to_do--;
+
+		if ( 'V' == keyword[1] && strchr("IOCPRSW", keyword[0]))		/* VOLUME */
+		{
+			wtrace("SET", "KEYWORD", "Keyword=%2.2s Value=[%6.6s]", keyword, value);
+		}
+		else if ( 'L' == keyword[1] && strchr("IOCPRS", keyword[0]))		/* LIBRARY */
+		{
+			wtrace("SET", "KEYWORD", "Keyword=%2.2s Value=[%8.8s]", keyword, value);
+		}
+		else
+		{
+			wtrace("SET", "KEYWORD", "Keyword=%2.2s", keyword);
+		}
 
 		switch(keyword[0])							/* set what?				*/
 		{
@@ -98,7 +110,7 @@ va_dcl
 			case 'I':
 				switch(keyword[1])
 				{
-#ifdef MSDOS
+#if defined(MSDOS)
 					case 'D':					/* MSDOS Set the users ID (3 chars)	*/
 						set_cuserid(value,3);
 						break;
@@ -235,9 +247,29 @@ va_dcl
 
 	}										/* End of WHILE				*/
 
+	va_end(the_args);
+
 	if (to_do != 0)
 	{
 		werrlog(ERRORCODE(6),0,0,0,0,0,0,0,0);
 	}
+
 }       
 
+/*
+**	History:
+**	$Log: set.c,v $
+**	Revision 1.13  1997-07-16 15:07:57-04  gsl
+**	Improve wtrace() to report the value for LIB and VOL
+**
+**	Revision 1.12  1997-04-15 23:11:34-04  gsl
+**	Update to use wtrace()
+**
+**	Revision 1.11  1997-04-03 20:00:58-05  gsl
+**	Changed the trace so that it shows the key word
+**
+**	Revision 1.10  1996-08-19 17:53:42-04  gsl
+**	Fix set_cuserid() code to be MSDOS only - not NT
+**
+**
+*/

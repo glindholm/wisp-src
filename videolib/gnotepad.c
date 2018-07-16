@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /************************************************************************/
 /*	     VIDEO - Video Interactive Development Environment		*/
 /*			    Copyright (c) 1991				*/
@@ -6,11 +8,13 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
 #include "vintdef.h"
 #include "vmenu.h"
+#include "vmodules.h"
 
 #define PAGES  10
 #define WIDTH  32
@@ -36,15 +40,15 @@ int gnotepad()
 	unsigned char c;
 	FILE *pf, *vopenf();
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	row = 4;
 	col = 20;
 	rows = LENGTH+3;
 	cols = WIDTH+2;
 	vdetpos(0, &row, &col, rows, cols);
 	save = vsss(row,col,rows,cols);
-	if (vscr_atr & LIGHT) { emode = BOLD;    cmode = REVERSE|BOLD; }
-	else                  { emode = REVERSE; cmode = CLEAR|BOLD;   }
+	if (vscr_atr & LIGHT) { emode = VMODE_BOLD;    cmode = VMODE_REVERSE|VMODE_BOLD; }
+	else                  { emode = VMODE_REVERSE; cmode = VMODE_CLEAR  |VMODE_BOLD;   }
 
 	for (i = 0; i < PAGES; i++)
 	{
@@ -267,7 +271,7 @@ int gnotepad()
 	}
 
 	vrss(save);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 
 	if (newpad) pf = vopenf("pad","w");
 	else pf = vopenf("pad","r+");
@@ -280,12 +284,12 @@ int gnotepad()
 	return(SUCCESS);
 }
 
-static int givehelp(m) int m;
+static int givehelp(void)
 {
 	struct video_menu help;
-	register int key;
+	int4 key;
 
-	vmenuinit(&help,DISPLAY_ONLY_MENU,REVERSE,0,0,0);
+	vmenuinit(&help,DISPLAY_ONLY_MENU,VMODE_REVERSE,0,0,0);
 	vmenuitem(&help,"Good Notepad Help - Page 1 - General",0,NULL);
 	vmenuitem(&help,"",0,NULL);
 	vmenuitem(&help,"PF1 moves to the next page.",0,NULL);
@@ -306,9 +310,9 @@ static int givehelp(m) int m;
 
 static int showpad()
 {
-	register int i, j, k;
+	register int i, j;
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 
 	i = row;
 
@@ -323,7 +327,7 @@ static int showpad()
 	vmove(row+2+line, col+1+column);
 	vmode(CLEAR);
 	vcharset(DEFAULT);
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	return(SUCCESS);
 }
 
@@ -347,3 +351,15 @@ static int nextcol()
 	}
 	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: gnotepad.c,v $
+**	Revision 1.10  1997-07-08 16:18:14-04  gsl
+**	Change to use new video.h interface
+**
+**	Revision 1.9  1996-10-11 18:15:55-04  gsl
+**	drcs update
+**
+**
+**
+*/

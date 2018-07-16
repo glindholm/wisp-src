@@ -1,10 +1,6 @@
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 #define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 /* PG_EXTRACT.C	*/
 
@@ -15,10 +11,9 @@
 #include "pgstruct.h"
 #include "pgextrct.h"
 
-static int process_back_ref();
+static void process_back_ref(int* num_var, int* num_val);				/* Process the backwards reference	*/
 
-p_extract_kw(tndx)										/* Process the extract code.	*/
-int tndx;
+void p_extract_kw(int tndx)								/* Process the extract code.	*/
 {
 	switch(tndx)
 	{
@@ -52,8 +47,12 @@ int tndx;
 	}
 }
 
-save_set_ext_var(num_var,num_val,num_asn,filler_num,current_row,num_cmds)
-int *num_var, *num_val, *num_asn, *filler_num, *current_row, *num_cmds;
+void save_set_ext_var(int* num_var,
+		      int* num_val,
+		      int* num_asn,
+		      int* filler_num,
+		      int* current_row,
+		      int* num_cmds)
 {
 	char *cstr, *l_aptr;
 	int nvar;
@@ -188,12 +187,11 @@ int *num_var, *num_val, *num_asn, *filler_num, *current_row, *num_cmds;
 			*cstr = '\0';							/* Null terminate the string.		*/
 		}
 		next_ptr = aptr;
-		if (aptr - inline >= WPLMAX) break;					/* Don't process past MOD code.		*/
+		if (aptr - linein >= WPLMAX) break;					/* Don't process past MOD code.		*/
 	}
 }
 
-p_readfdr(num_var,num_val)
-int *num_var, *num_val;
+void p_readfdr(int* num_var,int* num_val)
 {
 	char *cstr, *ctype, *scstr;
 	int i, done, onf, nf, filefl;
@@ -353,7 +351,7 @@ int *num_var, *num_val;
 			next_ptr = aptr;						/* Set so nexttok functions properly.	*/
 			nexttok();
 
-			if (aptr - inline >= WPLMAX) done = TRUE;			/* Don't process past MOD code.		*/
+			if (aptr - linein >= WPLMAX) done = TRUE;			/* Don't process past MOD code.		*/
 			if ((*aptr == '\0' || *aptr == LNFD) && onf ) done = TRUE;	/* Set so get out of loop.		*/
 		}
 	}
@@ -365,8 +363,8 @@ int *num_var, *num_val;
 	setflag();
 }
 
-static process_back_ref(num_var,num_val)						/* Process the backwards reference	*/
-int *num_var, *num_val;									/*  on the SET statement.		*/
+static void process_back_ref(int* num_var, int* num_val)				/* Process the backwards reference	*/
+											/*  on the SET statement.		*/
 {
 	char *cstr, temp [FLDLEN];
 	set_extract_item *hld_set_ext;
@@ -399,3 +397,15 @@ int *num_var, *num_val;									/*  on the SET statement.		*/
 	if (found) cur_set_extr->br_flag = 2;						/* Set to indicate using backwards ref.	*/
 	else cur_set_extr->br_flag = 1;							/*  2 means don't issue putparm.	*/
 }
+/*
+**	History:
+**	$Log: ptextrct.c,v $
+**	Revision 1.6  1997-04-21 11:09:20-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.5  1996-09-12 19:16:52-04  gsl
+**	Fix prototypes
+**
+**
+**
+*/

@@ -1,42 +1,29 @@
-/**
- ** Program: hexed
- **  Module: $RCSfile: hexed.c,v $
- ** 
- ** $Log: hexed.c,v $
- * Revision 1.4  1991/08/26  20:22:10  jockc
- * did newfile, reread and write keys, find hex, f9 and f10 movement
- * check bounds
- *
- * Revision 1.3  1991/04/29  18:27:14  jockc
- * fixed new find behavior
- *
- * Revision 1.2  1991/04/29  18:09:03  jockc
- * changing behavior of search:
- *  searches from the current byte plus one
- *  search string positioned at 0,0 on screen
- *
- * Revision 1.1  1991/04/18  23:15:26  jockc
- * Initial revision
- *
- **
- **/
+static char copyright[]="Copyright (c) 1991-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 #include <stdio.h>
-#include <v/vlocal.h>
-#include <v/video.h>
-#include <v/vcap.h>
-#include <v/vdata.h>
+#include <stdlib.h>
+#include <string.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
-static char copyright[] = "Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-static char rcsid[] = "$Id:$";
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
+#include "vlocal.h"
+#include "video.h"
+#include "vcap.h"
+#include "vdata.h"
+#include "intdef.h"
+
 #define RCSVERS "$Revision:$"
 #define RCSDATE "$Date:$"
 
 static char VERSION[5];
 static char MODDATE[20];
+static int display_8bit = 0;
 
 #define D_LINES 20
 #define D_COLS 16
@@ -51,6 +38,41 @@ char linebuf[200],
 #define REL_OFS 1
 #define END_OFS 2
 
+
+extern int vgets0(char* string, int count);
+
+void dopage(void);
+int doedit(void);
+
+int mv_left();
+int mv_right();
+int mv_down();
+int mv_up();
+int getyn(char* str);
+int goto_ofs();
+unsigned int xtoi(char* tmp);
+int hexdig(char pch);
+int errstatus(char* str);
+void clear_errstatus();
+int bldline();
+int memsetnull(char* buf,int ch,int cnt);
+void title();
+int noimp(void);
+void show_cmds();
+void decode_desc();
+void ver_status();
+int hexed_status(void);
+void memrcpy(char *dest, char *src, int cnt);
+int getsize(char *p);
+int modbuffer(int data);
+int next_screen(void);
+void gethexpat(char *pat);
+void getascpat(char *pat);
+void do_find(char *pattern);
+int match(unsigned char *buf, unsigned char *pat);
+
+static int write_allowed = 0;
+
 struct cmd 
 {
 	int ch;
@@ -58,47 +80,25 @@ struct cmd
 	char *desc;
 };
 
-int	find(), 
-	toggle_verify(),
-	new_file(),
-	quit_hexed(),
-	goto_ofs(),
-	toggle_hex_asc(), 
-	help_screen(),
-	next_screen(),
-	prev_screen(),
-	start_line(),
-	end_line(),
-	mv_left(),
-	mv_right(),
-	mv_up(),
-	mv_down(),
-        print_screen(),
-  write_buf(), read_buf();
+int	find(void), 
+	toggle_verify(void),
+	toggle_8bit(void),
+	new_file(void),
+	quit_hexed(void),
+	goto_ofs(void),
+	toggle_hex_asc(void), 
+	help_screen(void),
+	prev_screen(void),
+	start_line(void),
+	end_line(void),
+	mv_left(void),
+	mv_right(void),
+	mv_up(void),
+	mv_down(void),
+        print_screen(void),
+  write_buf(void), read_buf(void);
  
 #define CTRL(x) ((x)&0x1f)
-#if 0
-struct cmd cmds[]=
-{
-	{ CTRL('a'), start_line, "" },
-	{ CTRL('e'), end_line, "" },	      
-	{ CTRL('h'), mv_left, "" },
-	{ CTRL('j'), mv_down, "" },
-	{ CTRL('k'), mv_up, "" },
-	{ CTRL('l'), mv_right, "" },
-	{ CTRL('f'), find, "^F\\ind" },
-	{ CTRL('v'), toggle_verify, "^V\\erify" },
-	{ CTRL('n'), new_file, "^N\\ewFile" },
-	{ CTRL('g'), goto_ofs, "^G\\oto" },
-	{ CTRL('i'), toggle_hex_asc, "" },
-	{ CTRL('h'), help_screen, "" },
-	{ '=', next_screen, "" },
-	{ '-', prev_screen, "" },
-	{ CTRL('d'), print_screen, "^D\\umpScreen" },
-	{ CTRL('x'), quit_hexed, "^X\\ to quit" },
-	{ 0,0,0 }
-};
-#endif
 struct cmd cmds[]=
 {
 	{ GENERIC_PF1+VMBIAS, read_buf, "F1\\-ReRead" },
@@ -111,6 +111,7 @@ struct cmd cmds[]=
 	{ GENERIC_PF4+VMBIAS, goto_ofs, "F4\\-Goto" },
 	{ GENERIC_PF5+VMBIAS, toggle_verify, "F5\\-Verify" },
 	{ GENERIC_PF7+VMBIAS, new_file, "F7\\-NewFile" },
+	{ GENERIC_PF8+VMBIAS, toggle_8bit, "F8\\-8Bit" },
 	{ CTRL('i'), toggle_hex_asc, "TAB\\-Hex/Ascii" },
 	{ GENERIC_TAB+VMBIAS, toggle_hex_asc, "" },
 /*	{ CTRL('h'), help_screen, "^H\\elp" },*/
@@ -131,9 +132,9 @@ struct cmd *cmdptr;
 #define N_LOW 1
 
 unsigned long filepos=0;
-long filesize;
+unsigned long filesize;
 
-long ofilepos= -1;
+unsigned long ofilepos= 999999; /* Start at an arbitrary and unlikely position. */
 int scrx,scry,nib;
 int quitflag=0;
 int verify=1;
@@ -151,10 +152,9 @@ int edl,edc;
 #define TRUE !FALSE
 #endif
 
-main(c,v)
-char **v;
+main(int c, char **v)
 {
-	char *p,*e,*strchr();
+	char *p,*e;
 	
 	memset(VERSION,0,sizeof(VERSION));
 	p=strchr(rcsid,' ');
@@ -174,10 +174,19 @@ char **v;
 	
 	strcpy(curfile,v[1]);
 	fil=fopen(v[1],"rb+");
-	if (!fil) 
+	if (fil)
 	{
-		printf("hexed: Unable to open %s for update\n",v[1]);
-		exit(1);
+		write_allowed = 1;
+	}
+	else
+	{
+		write_allowed = 0;
+		fil=fopen(v[1],"rb");
+		if (!fil) 
+		{
+			printf("hexed: Unable to open %s\n",v[1]);
+			exit(1);
+		}
 	}
 	filesize=getsize(curfile);
 	
@@ -210,40 +219,48 @@ char **v;
 		}	
 		vmove(edl,edc);
 	}
-	vexit(0);
+	vexit();
 	fclose(fil);
-
-	exit(0);
+	return(0);
+	
 }
-write_buf()
+write_buf(void)
 {
 	int inkey;
+
+	if (!write_allowed) 
+	{
+		vmove(23,60);
+		vmode(VMODE_BOLD);
+		vprint("READ ONLY!");
+		vmode(VMODE_CLEAR);
+		return 1;
+	}
 	
 	if (verify)	
 	{
 		inkey=getyn("write buffer? (y/n)");
-		if (inkey=='y'||inkey=='Y')
-		{
-			fseek(fil,ofilepos,ABS_OFS);
-			fwrite(filebuf,sizeof(filebuf),1,fil);
-		}
 	}
-	else
+	
+	if (!verify || inkey=='y' || inkey=='Y')
 	{
 		fseek(fil,ofilepos,ABS_OFS);
 		fwrite(filebuf,sizeof(filebuf),1,fil);
 	}
+
 	bufmod=FALSE;
+	return 0;
 }
-read_buf()
+read_buf(void)
 {
 	memset(filebuf,0,sizeof(filebuf));
 	fseek(fil,filepos,ABS_OFS);
 	fread(filebuf,sizeof(filebuf),1,fil);
 	bufmod=FALSE;
 	ofilepos=filepos;
+	return 0;
 }
-dopage()
+void dopage(void)
 {
 	register int i;
 	
@@ -254,13 +271,14 @@ dopage()
 		vprint(linebuf);
 	}
 }
-doedit()
+int doedit(void)
 {
 	int key,data;
 
 	vmove(edl,edc);
 	key=vgetm();
-
+	if (key >='a' && key <='z')
+		key = tolower(key);
 	data=1;
 	for (cmdptr=cmds; cmdptr->ch; ++cmdptr)
 	{
@@ -276,21 +294,23 @@ doedit()
 	else return FALSE;
 
 }
-next_screen()
+int next_screen(void)
 {
 	if (filepos + D_LINES*D_COLS >filesize) 
 	{
 		vbell();
-		return;
+		return 0;
 	}
 	filepos+= D_LINES*D_COLS;
+	return 0;
 }
-prev_screen()
+prev_screen(void)
 {
 	filepos-=  D_LINES*D_COLS;
 	if (filepos&0x80000000) filepos=0;
+	return 0;
 }
-print_screen()
+print_screen(void)
 {
 	char fname[100];
 	static int seq=0;
@@ -305,7 +325,7 @@ print_screen()
 #if 0	
 	if (fname[strlen(fname)-1]=='+') ++skip;
 #endif
-	out=fopen(fname,"wb");
+	out=fopen(fname,"w");
 	for (x=0;x<24;++x)
 	{
 		for (i=0;i<80;++i) if (!vchr_map[x][i]) vchr_map[x][i]=' ';
@@ -315,21 +335,24 @@ print_screen()
 		  fprintf(out,"\n");
 	}
 	fclose(out);
+	return 0;
 }
-toggle_hex_asc()
+toggle_hex_asc(void)
 {
 	hexasc=1-hexasc;
+	return 0;
 }	      
-start_line()
+start_line(void)
 {
 	scrx=0;
+	return 0;
 }
-end_line()
+end_line(void)
 {
 	scrx=15;
+	return 0;
 }
-modbuffer(data)
-int data;
+int modbuffer(int data)
 {
 	int val;
 
@@ -338,7 +361,7 @@ int data;
 		data=toupper(data);
 		if (data>='0'&&data<='9') val=data-'0';
 		else if (data>='A'&&data<='F') val=data-'A'+10;
-		else return;
+		else return 0;
 		if (nib==N_HIGH) 
 		{
 			filebuf[scry*16+scrx] &= 0x0f;
@@ -357,13 +380,13 @@ int data;
 		bufmod=TRUE;
 	}
 }
-find()
+find(void)
 {
 	int ch;
 	static char pat[64];
 	static int havepat=FALSE;
 	
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vmove(D_LINES+2,0);
 	verase(TO_EOL);
 loop:	vprint("Find (F3=repeat, H=Hex, A=ASCII, X=abort) ->");
@@ -385,22 +408,20 @@ loop:	vprint("Find (F3=repeat, H=Hex, A=ASCII, X=abort) ->");
 		  break;
 		case 'x': case 'X':
 		  show_cmds();
-		  return;
+		  return 0;
 		case GENERIC_PF3+VMBIAS:
 		  break;
 		default:
 		  vbell();
 		  goto loop;
-		  return;
+		  return 0;
 	}
 	show_cmds();
 	if (havepat) do_find(pat);
 }
-do_find(pattern)
-char *pattern;
+void do_find(char *pattern)
 {
 	int searching=1,spos;
-	int clear_errstatus();
 	int sfilepos,sspos,sscry,sscrx;
 	int sedl,sedc;
 	
@@ -422,7 +443,7 @@ char *pattern;
 				dopage();
 				scry = spos / 16;
 				scrx = spos % 16;
-				return;
+				return ;
 			}
 			else ++spos;
 		}
@@ -439,20 +460,19 @@ char *pattern;
 			read_buf();
 			dopage();
 			errstatus("pattern not found");
-#ifdef unix
+#ifdef unix			
 			signal(SIGALRM,clear_errstatus);
 			alarm(3);
-#endif /* unix */
+#endif
 			
-			return;
+			return ;
 		}
 		filepos+= D_COLS*D_LINES;
 		read_buf();
 		spos=0;
 	}
 }
-match(buf,pat)
-unsigned char *buf,*pat;
+int match(unsigned char *buf, unsigned char *pat)
 {
 	for (;*pat;++pat,++buf)
 	{
@@ -461,24 +481,22 @@ unsigned char *buf,*pat;
 	}
 	return 1;
 }
-gethexpat(pat)
-char *pat;
+void gethexpat(char *pat)
 {
 	char tmp[64],*p=tmp, *patsav=pat;
-	int _nib=N_HIGH,i;
+	int _nib=N_HIGH;
 	char d1,d2,v1,v2;
 	int bad=FALSE;
 	
-int clear_errstatus();
 	
 	vmove(D_LINES+2,0); verase(TO_EOL);
-	vprint("Enter Hex pattern [??=wildcard]->");
+	vprint("Enter Hex pattern [\?\?=wildcard]->");
 /*                        1         2         3         4         5         6         7     */
 /*              01234567890123456789012345678901234567890123456789012345678901234567890123456789*/
 	vmove(D_LINES+2,33);
 	vgets0(tmp,63);
 	vmove(D_LINES+2,0); verase(TO_EOL);
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vmove(edl,edc);
 	while (*p)
 	{
@@ -490,7 +508,7 @@ int clear_errstatus();
 		    d1!='?' && d2=='?' ) { bad=TRUE; break; }
 		if (d1=='?' && d2=='?')
 		{
-			*pat++ = 0xff;
+			*pat++ = (char)0xff;
 		}
 		else
 		{
@@ -507,20 +525,19 @@ int clear_errstatus();
 #ifdef unix
 		signal(SIGALRM,clear_errstatus);
 		alarm(3);
-#endif /* unix */
+#endif
 		*patsav=0;
 	}
 	else *pat=0;
 	
 }
-getascpat(pat)
-char *pat;
+void getascpat(char *pat)
 {
-	int case_sens,done,i,ch;
-	char *strchr();
-	char string[64];
+	int done,i,ch;
+	char *strchr(const char *, int);
 
 #if 0	
+	int case_sens;
 	vmove(D_LINES+2,0);
 	vprint("Case sensitive search? (y/n):");
 	
@@ -529,7 +546,7 @@ char *pat;
 	{
 		vmove(D_LINES+2,0);
 		verase(TO_EOL);
-		vmode(CLEAR);
+		vmode(VMODE_CLEAR);
 		vmove(edl,edc);
 		return;
 	}
@@ -550,10 +567,10 @@ char *pat;
 			++done;
 			break;
 		      case 0x06:
-			pat[i++]=0xff;
-			vmode(REVERSE);
+			pat[i++]=(char)0xff;
+			vmode(VMODE_REVERSE);
 			vprint("*");
-			vmode(CLEAR);
+			vmode(VMODE_CLEAR);
 			break;
 		      case 0x7f: case 0x08:
 			if (i)
@@ -576,22 +593,30 @@ char *pat;
 	}
 	pat[i]=(char)0;
 	vmove(D_LINES+2,0); verase(TO_EOL);
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vmove(edl,edc);
 }
-toggle_verify()
+int toggle_verify(void)
 {
 	verify=1-verify;
 	ver_status();
+	return 0;
 }
-new_file()
+int toggle_8bit(void)
+{
+	display_8bit = 1-display_8bit;
+	dopage();
+	
+	return 0;
+}
+
+int  new_file(void)
 {
 	char save[100];
-	int clear_errstatus();
 	
 	strcpy(save,curfile);
 
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vmove(D_LINES+2,0);
 	verase(TO_EOL);
 
@@ -601,17 +626,17 @@ new_file()
 	vmove(D_LINES+2,0);
 	verase(TO_EOL);
 	show_cmds();
-	close(fil);
+	fclose(fil);
 	if ((fil=fopen(curfile,"rb+"))==NULL)
 	{
 		errstatus("can't open file");
 #ifdef unix
 		signal(SIGALRM,clear_errstatus);
 		alarm(3);
-#endif /* unix */
+#endif
 		strcpy(curfile,save);
 		fil=fopen(curfile,"rb+");
-		return;
+		return 0;
 	}
 	filesize=getsize(curfile);
 	edl=0;edc=10;
@@ -621,13 +646,14 @@ new_file()
 	title();
 	dopage();
 	hexed_status();
+	return 0;
 }	
-mv_left()
+int  mv_left(void)
 {
 	if (hexasc==0)
 	{
-		if (nib==N_LOW) { nib=N_HIGH; return; }
-		if (scrx==0) { scrx = 15; nib=N_LOW; mv_up(); return; }
+		if (nib==N_LOW) { nib=N_HIGH; return 0; }
+		if (scrx==0) { scrx = 15; nib=N_LOW; mv_up(); return 0; }
 		--scrx; nib=N_LOW;
 	}
 	else
@@ -635,13 +661,14 @@ mv_left()
 		if (scrx==0) { scrx=15; mv_up(); }
 		else --scrx;
 	}
+	return 0;
 }
-mv_right()
+int  mv_right(void)
 {
 	if (hexasc==0)
 	{
-		if (nib==N_HIGH) { nib=N_LOW; return; }
-		if (scrx==15) { scrx = 0; nib=N_HIGH; mv_down(); return; }
+		if (nib==N_HIGH) { nib=N_LOW; return 0; }
+		if (scrx==15) { scrx = 0; nib=N_HIGH; mv_down(); return 0; }
 		++scrx; nib=N_HIGH;
 	}
 	else
@@ -649,46 +676,55 @@ mv_right()
 		if (scrx==15) { scrx=0; mv_down(); }
 		else ++scrx;
 	}
+	return 0;
 }
-mv_down()
+mv_down(void)
 {
 	scry = scry==(D_LINES-1)?0:scry+1;
+	return 0;
 }
-mv_up()
+mv_up(void)
 {
 	scry = scry==0?D_LINES-1:scry-1;
+	return 0;
 }
-quit_hexed()
+quit_hexed(void)
 {
+/*
 	int ch;
 
-	ch=getyn("      quit? (y/n):  ");
-	if (ch=='y' || ch=='Y') ++quitflag;
+	ch=getyn("      quit? (y/n):  "); 
+	if (ch=='y' || ch=='Y') 
+*/
+	{
+		++quitflag;
+	}
+	
+	return 0;
 }
 
-getyn(str)
-char *str;
+getyn(char *str)
 {
 	int ch;
 	vmove(23,60);
-	vmode(BOLD);
+	vmode(VMODE_BOLD);
 	vprint(str);
 	vmove(23,79);
 	ch=vgetc();
 	vmove(23,60);
 	vprint("                    ");
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vmove(edl,edc);
 	return ch;
 }
-goto_ofs()
+goto_ofs(void)
 {
 	char kbuf[20],tmp[20];
-	unsigned int xtoi();
+	unsigned int xtoi(char *tmp);
 	int relofs;
 	
 	vmove(23,56);
-	vmode(BOLD);
+	vmode(VMODE_BOLD);
 	vprint("position: ");
 	vmove(23,66);
 	vgets0(kbuf,12);
@@ -722,12 +758,12 @@ goto_ofs()
 	
 	vmove(23,56);
 	vprint("                    ");
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	hexed_status();
 	vmove(edl,edc);
+	return 0;
 }
-unsigned int xtoi(tmp)
-char *tmp;
+unsigned int xtoi(char *tmp)
 {
 	char *p;
 	int l;
@@ -744,8 +780,7 @@ char *tmp;
 	}
 	return res;
 }       
-hexdig(pch)
-char pch;
+hexdig(char pch)
 {
 	int ch;
 	
@@ -755,34 +790,36 @@ char pch;
 
 	return -1;
 }
-toggle_mode()
+toggle_mode(void)
 {
 	noimp();
+	return 0;
 }
-help_screen()
+help_screen(void)
 {
 	noimp();
+	return 0;
 }
-noimp()
+int noimp(void)
 {
-	int clear_errstatus();
 	
 	errstatus("Not implemented yet");
 #ifdef unix
 	signal(SIGALRM,clear_errstatus);
 	alarm(3);
-#endif /* unix */
+#endif
+	return 0;
 }	
-errstatus(str)
-char *str;
+int errstatus(char *str)
 {
 	vmove(23,60);
-	vmode(BOLD);
+	vmode(VMODE_BOLD);
 	vprint(str);
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vmove(edl,edc);
+	return 0;
 }
-clear_errstatus()
+void clear_errstatus(void)
 {
 	extern int vcur_col, vcur_lin;
 	int sc,sl;
@@ -790,16 +827,14 @@ clear_errstatus()
 	sl=vcur_lin;
 	
 	vmove(23,60);
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	vprint("                   ");
 	vmove(sl,sc);
-	vdefer(RESTORE);
+	vdefer_restore();
 	
 }
-#define FIX(x) ((((x)>31)&&((x)<0x7f))?(x):'.')
-bldline(addr,data,buf)
-int addr;
-unsigned char *data,*buf;
+
+bldline(int addr, unsigned char *data, unsigned char *buf)
 {
 	int i;
 	
@@ -815,40 +850,53 @@ unsigned char *data,*buf;
 	{
 		char chbuf[3];
 		
-		if ( data[i]=='%' ) strcpy(chbuf,"%%");
+		if ( data[i]=='%' ) 
+		{
+			strcpy(chbuf,"%%");
+		}
 		else
 		{
-			if ( data[i] > 31 && data[i] < 0x7f ) chbuf[0]=data[i];
+			if ( data[i] >= 0x20 && data[i] < 0x7f ) 
+			{
+				chbuf[0]=data[i];
+			}
+			else if (display_8bit && data[i] >= 0x80 )
+			{
+				chbuf[0]=data[i];
+			}
 			else
-			  chbuf[0]='.';
+			{
+				chbuf[0]='.';
+			}
+
 			chbuf[1]=(char)0;
 		}
 		strcat(tmpbuf,chbuf);
 	}
 	
 	memcpy(buf+59,tmpbuf,strlen(tmpbuf));
+	return 0;
 }
-memsetnull(buf,ch,cnt)
-char *buf;
-int ch,cnt;
+int memsetnull(char *buf, int ch, int cnt)
 {
 	memset(buf,ch,cnt);
 	*(buf+cnt)=(char)0;
+	return 0;
 }
-title()
+void title(void)
 {
-	char out[200],*reptstr();
+	char out[200],*reptstr(int cnt, int ch);
 	
 /*	sprintf(out,"--%s-HexEd: %s %s",bufmod?"**":"--",curfile,reptstr(68-strlen(curfile),'-'));*/
-	sprintf(out,"--%s-HexEd V%s: %s  size: %d %s",
+	sprintf(out,"--%s-HexEd V%s: %s  size: %ld %s",
 		bufmod?"**":"--",
-		VERSION,curfile,filesize,reptstr(80,'-'));
+		VERSION,curfile,(long)filesize,reptstr(80,'-'));
 	out[80]=0;
 	
 	vmove(D_LINES,0);
-	vmode(REVERSE);
+	vmode(VMODE_REVERSE);
 	vprint(out);
-	vmode(CLEAR);
+	vmode(VMODE_CLEAR);
 	                                               /*  ddd 0xXX oooo */
                                                        /*  ddddd 0xXXXX 0oooooo */
                                                        /*  dddddddddd 0xXXXXXXXX 0ooooooooooo */
@@ -868,7 +916,7 @@ title()
 	ver_status();
 	hexed_status();
 }
-show_cmds()
+void show_cmds(void)
 {
 	int x,y,newx,highx,normx;
 	char high[32], norm[32];
@@ -885,7 +933,7 @@ show_cmds()
 			vmode(CLEAR); vmove(y,normx);
 			vprint(norm);
 			++cmdptr;
-			if (cmdptr->ch && 78-newx > strlen(high)+strlen(norm))
+			if (cmdptr->ch && 78-newx > (int)(strlen(high)+strlen(norm)))
 			  x=newx;
 			else
 			{
@@ -898,11 +946,9 @@ show_cmds()
 	}
 	
 }
-decode_desc(str,pos,newpos,highpos,normpos,highstr,normstr)
-char *str,*highstr,*normstr;
-int pos, *newpos,*highpos, *normpos;
+void decode_desc(char *str, int pos, int *newpos, int *highpos, int *normpos, char *highstr, char *normstr)
 {
-	char *p,*strchr();
+	char *p,*strchr(const char *, int);
 	char tmp[64];
 	
 	strcpy(tmp,str);
@@ -914,7 +960,7 @@ int pos, *newpos,*highpos, *normpos;
 	*normpos = pos+strlen(highstr);
 	*newpos = pos+strlen(highstr)+strlen(normstr)+2;
 }	
-ver_status()
+void ver_status(void)
 {
 	vmode(CLEAR);
 	vmode(BOLD);
@@ -924,12 +970,13 @@ ver_status()
 	vmode(CLEAR);
 	vmove(edl,edc);
 }
-hexed_status()
+hexed_status(void)
 {
 	short tmpshort;
 	int tmpint;
 	
-	vmode(CLEAR); vmode(REVERSE);
+	vmode(VMODE_CLEAR); 
+	vmode(VMODE_REVERSE);
 	vmove(D_LINES,2);
 	if (bufmod) vprint("**");
 	else vprint("--");
@@ -939,23 +986,22 @@ hexed_status()
 	sprintf(tmpbuf,"%8.8d 0x%08X",filepos+scry*16+scrx,filepos+scry*16+scrx);
 	vprint(tmpbuf);
 	vmove(D_LINES+1,38);
-	memrcpy(&tmpshort,&filebuf[scry*16+scrx],2);
-	memrcpy(&tmpint,&filebuf[scry*16+scrx],4);
+	memrcpy((char*)&tmpshort,&filebuf[scry*16+scrx],2);
+	memrcpy((char*)&tmpint,&filebuf[scry*16+scrx],4);
 	sprintf(tmpbuf,"% 4d % 6d % 11d ",filebuf[scry*16+scrx],tmpshort,tmpint);
 	vprint(tmpbuf);
 	vmode(CLEAR);
 	vmove(edl,edc);
+	return 0;
 }
-char *reptstr(cnt,ch)
+char *reptstr(int cnt, int ch)
 {
 	static char repbuf[1024];
 	
 	memsetnull(repbuf,ch,cnt);
 	return repbuf;
 }
-memrcpy(dest,src,cnt)
-char *dest,*src;
-int cnt;
+void memrcpy(char *dest, char *src, int cnt)
 {
 	--cnt;
 	while (cnt>=0)
@@ -965,11 +1011,68 @@ int cnt;
 	}
 }
 
-getsize(p)
-char *p;
+int getsize(char *p)
 {
 	struct stat statbuf;
 	
 	if (stat(p,&statbuf)<0) return 0;
 	else return statbuf.st_size;
 }
+
+/**
+ ** Program: hexed
+ **  Module: $RCSfile: hexed.c,v $
+ ** 
+ ** $Log: hexed.c,v $
+ ** Revision 1.13  1997-12-05 09:44:25-05  gsl
+ ** Add support for displaying 8bit characters
+ **
+ ** Revision 1.12  1997-07-12 18:57:10-04  gsl
+ ** Removed obsolete codde
+ ** change to use new video.h interface
+ ** fixed all compiler warnings
+ ** Changed so you can view a read-only file.
+ ** Changed so doesn't verify Quit command
+ **
+ ** Revision 1.11  1997-06-10 15:43:44-04  scass
+ ** Changed long to int4
+ **
+ ** Revision 1.10  1996-09-10 12:13:34-04  gsl
+ ** Fix some compiler warnings
+ **
+ ** Revision 1.9  1996-07-19 17:04:42-07  gsl
+ ** Fix for NT
+ **
+ ** Revision 1.8  1995-04-25 02:58:20-07  gsl
+ ** drcs state V3_3_15
+ **
+ * Revision 1.7  1995/04/17  11:50:45  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.6  1995/02/06  15:19:36  gsl
+ * fixed copyrights
+ * ,
+ *
+ * Revision 1.5  1995/01/27  23:30:37  gsl
+ * drcs load
+ *
+ * Revision 1.6  1994/03/15  20:05:06  jockc
+ * synch hexed.c with SCS version
+ *
+ * Revision 1.4  1991/08/26  20:22:10  jockc
+ * did newfile, reread and write keys, find hex, f9 and f10 movement
+ * check bounds
+ *
+ * Revision 1.3  1991/04/29  18:27:14  jockc
+ * fixed new find behavior
+ *
+ * Revision 1.2  1991/04/29  18:09:03  jockc
+ * changing behavior of search:
+ *  searches from the current byte plus one
+ *  search string positioned at 0,0 on screen
+ *
+ * Revision 1.1  1991/04/18  23:15:26  jockc
+ * Initial revision
+ *
+ **
+ **/

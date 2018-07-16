@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -7,6 +9,7 @@
 			/*									*/
 			/************************************************************************/
 
+#include <string.h>
 #include "wmalloc.h"
 
 /*
@@ -59,3 +62,12 @@ int maxsize;
 	wfree(tmpbuf);
 	return 0;
 }
+/*
+**	History:
+**	$Log: untabstr.c,v $
+**	Revision 1.6  1996-08-30 21:56:11-04  gsl
+**	drcs update
+**
+**
+**
+*/

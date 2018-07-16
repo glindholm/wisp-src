@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -22,6 +24,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define EXT_FILEXT
@@ -29,8 +32,13 @@
 #include "wcommon.h"
 #include "wperson.h"
 #include "wangkeys.h"
+#include "wfname.h"
+#include "wexit.h"
+#include "wisplib.h"
+#include "level.h"
+#include "idsisubs.h"
+#include "vwang.h"
 
-char *wfname();
 static int vscopy();
 static int get_options();
 static int get_failed();
@@ -40,18 +48,23 @@ static int get_output();
 static int get_eoj();
 static int get_dummy();
 
-int wfexists();
 
 static void badusage();
 static void copy();
 
-static	char 	*COPY_VERSION = "WISP Copy Program - Version 1.00.00";
-static	long	N[255];
-static	long 	two=2;
+static	char 	*COPY_VERSION = "WISP Copy Program - Version 1.01.00";
+static	int4	N[255];
+static	int4 	two=2;
 
 #define GP	gp_args.ptrs[gp_cnt++] = (char *)
 static struct { char *ptrs[160]; } gp_args;
 static int gp_cnt;
+
+static char *terminate_text;
+static int4 terminate_key_enabled;
+static char terminate_key_pressed;
+static int  terminate_key;
+static char terminate_buff[80];
 
 /*
 **	Routine:	main()
@@ -83,12 +96,39 @@ main(argc,argv)
 int	argc;
 char	*argv[];
 {
+#ifdef unix
 	int	retcode;
 	char	key[20], type[1];
 	char	oldfile[20], oldlib[20], oldvol[20];
 	char	newfile[20], newlib[20], newvol[20];
+#endif
 
+        /*********** PATCH FOR ALPHA/OPENVMS *************/
+        /* patch needed since argc is allways 2 on alpha */
+        /* , even if no parms passed to main.  So check  */
+        /* if argc = 2 and argv[1] = null, set argc to 1.*/
+        if (2 == argc && !argv[1])
+        {
+           argc=1;
+        }
+        /*************************************************/
+	vwang_title("WISP COPY");
 	initglbs("WCOPY   ");
+
+	if (pfkeys12())
+	{
+		terminate_text = "Press (12) to end COPY processing";
+		terminate_key_enabled = PFKEY_12_ENABLED | PFKEY_16_ENABLED;
+		terminate_key_pressed = PFKEY_12_PRESSED;
+		terminate_key = 12;
+	}
+	else
+	{
+		terminate_text = "Press (16) to end COPY processing";
+		terminate_key_enabled = PFKEY_16_ENABLED;
+		terminate_key_pressed = PFKEY_16_PRESSED;
+		terminate_key = 16;
+	}
 
 	if (argc == 1)
 	{
@@ -137,11 +177,13 @@ char	*argv[];
  
 	retcode = 0;
 
+
 	copy(type, oldfile, oldlib, oldvol,
                    newfile, newlib, newvol, &retcode);
 
 	exit(retcode);
 #endif /* unix */
+	return 0;
 }
 
 #ifdef unix
@@ -152,9 +194,8 @@ int	*status;
 {
 	char old_filename[132], new_filename[132];					/* Strings to contain the filenames.	*/
 	char libpath[80];
-	long mode, savemode;
+	int4 mode, savemode;
 	char *name_end;
-	char *strchr();									/* return pointer to char in string	*/
 	char cmd[100];									/* buffer to hold cmd string 		*/
 	int found, has_ext;
 
@@ -320,13 +361,9 @@ static int vscopy()
 	char	message[80];
 	char	*messid;
 	int	pfkey;
-	long	i;
-	int	savelevel;
-	long	vacnt;
-	long	retcode;
-
-	savelevel = linklevel();						/* Save the link-level				*/
-	newlevel();								/* Increment the link-level			*/
+	int4	i;
+	int4	vacnt;
+	int4	retcode;
 
 	for (i=0; i<(sizeof(N)/sizeof(N[0])); ++i) 				/* Initialize a swapped numbers array		*/
 	{
@@ -386,9 +423,6 @@ static int vscopy()
 		}
 	}
 
-	setlevel(savelevel);							/* Restore the link-level			*/
-	ppunlink(savelevel);							/* Putparm UNLINK				*/
-	
 	return(0);
 }
 
@@ -422,10 +456,10 @@ char	*ilib, *ivol, *olib, *ovol;
 {
 	int	copycnt;
 	int	remaining;
-	long	start;
-	long	count;
-	long	vacnt;
-	long	retcode;
+	int4	start;
+	int4	count;
+	int4	vacnt;
+	int4	retcode;
 	char	reciever[2200];
 	char	ifile[9], ofile[9];
 	char	*fileptr;
@@ -542,11 +576,12 @@ char	*ilib, *ivol, *olib, *ovol;
 static int get_input(ifile,ilib,ivol,copy)
 char *ifile, *ilib, *ivol, *copy;
 {
-	long	pfkey_mask;
+	int4	pfkey_mask;
 	char	*gptype;
 	char	*message;
 	char	*messid;
 	char	*xf,*xl,*xv,*xc;
+	int	done;
 
 	xf = xl = xv = xc = "K";
 
@@ -554,15 +589,17 @@ char *ifile, *ilib, *ivol, *copy;
 	get_defs(DEFAULTS_IL,ilib);
 	get_defs(DEFAULTS_IV,ivol);
 
-	pfkey_mask = PFKEY_16_ENABLED;
+	pfkey_mask = terminate_key_enabled;
 	wswap(&pfkey_mask);
 	gptype = "I ";
 	message = COPY_VERSION;
 	messid = "0001";
 
+	done = 0;
+
 	for(;;)
 	{
-		long	len;
+		int4	len;
 		char	pfkey_recv[1];
 		char	copyx[8];
 
@@ -580,14 +617,20 @@ char *ifile, *ilib, *ivol, *copy;
 		GP "U"; GP "Specify the desired copy option:X"; GP &N[32]; GP "A"; GP &N[14]; GP "A"; GP &N[3];
 		GP xc;  GP "COPY    ";	GP copy;	GP &N[7];	   GP "A"; GP &N[16]; GP "A"; GP &N[6]; GP "L";
 		GP "T"; GP "(Options = FILE, or LIBRARY)X"; GP &N[28];     GP "A"; GP &N[16]; GP "A"; GP &N[33];
-		GP "T"; GP "Press PF16 to end COPY processing"; GP &N[33]; GP "A"; GP &N[22]; GP "C"; GP &N[0]; 
+		GP "T"; GP terminate_text; GP &N[33]; GP "A"; GP &N[22]; GP "C"; GP &N[0]; 
 		GP "E";
 		GP "P";	GP &pfkey_mask;
 
 		wvaset(&two);
 		GETPARM(&gp_args,&gp_cnt);
 
-		if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
+		    pfkey_recv[0] == terminate_key_pressed) 
+		{
+			return 16;
+		}
+
+		if (done) return 0;
 
 		gptype = "R ";
 		xf = xl = xv = xc = "K";
@@ -637,11 +680,11 @@ char *ifile, *ilib, *ivol, *copy;
 		**	Check if voloume and library exists
 		*/
 		{
-			long	vacnt, start, count;
+			int4	vacnt, start, count;
 			char	recvr[22];
 			char	buff[80];
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSFS)
 			if (0==wlgtrans(ivol,buff))
 			{
 				messid = "0010";
@@ -662,7 +705,7 @@ char *ifile, *ilib, *ivol, *copy;
 			if (count == 0)
 			{
 				messid = "0011";
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSFS)
 				message = "LIBRARY not found, please respecify";
 				xl = "R";
 #else
@@ -676,10 +719,19 @@ char *ifile, *ilib, *ivol, *copy;
 
 		if (copy[0] == 'L')						/* Library was found				*/
 		{
-			return 0;
+			use_last_prb();						/* back fill the getparm			*/
+			gptype = "RD";
+			done = 1;
+			continue;
 		}
 		
-		if (wfexists(ifile,ilib,ivol)) return 0;			/* File exists so return			*/
+		if (wfexists(ifile,ilib,ivol)) 					/* File exists so return			*/
+		{
+			use_last_prb();						/* back fill the getparm			*/
+			gptype = "RD";	
+			done = 1;
+			continue;
+		}
 
 		messid = "R014";
 		message = "FILE not found, please respecify";
@@ -722,13 +774,13 @@ static int get_output(ofile,olib,ovol,ifile,ilib,ivol,copy)
 char *ofile, *olib, *ovol;
 char *ifile, *ilib, *ivol, *copy;
 {
-	long	pfkey_mask;
+	int4	pfkey_mask;
 	char	*gptype;
 	char	*message;
 	char	*messid;
 	char	*xf,*xl,*xv;
-	long	vacnt;
-	long	retcode;
+	int4	vacnt;
+	int4	retcode;
 	char	buff[80];
 
 	xf = xl = xv = "K";
@@ -737,7 +789,7 @@ char *ifile, *ilib, *ivol, *copy;
 	get_defs(DEFAULTS_OL,olib);
 	get_defs(DEFAULTS_OV,ovol);
 
-	pfkey_mask = PFKEY_16_ENABLED;
+	pfkey_mask = terminate_key_enabled;
 	wswap(&pfkey_mask);
 	gptype = "I ";
 	message = COPY_VERSION;
@@ -753,6 +805,8 @@ char *ifile, *ilib, *ivol, *copy;
 
 		if (copy[0] == 'F')
 		{
+			sprintf(terminate_buff,"    (%d)     Exit                     ",terminate_key);
+			
 			gp_cnt = 0;
 			GP gptype; GP "R"; GP "OUTPUT  "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
 				GP message; GP &N[strlen(message)];
@@ -765,7 +819,7 @@ char *ifile, *ilib, *ivol, *copy;
 			GP xv;  GP "VOLUME  ";	GP ovol;	GP &N[6];	        GP &N[0];	GP &N[1]; GP "L";
 			GP "U"; GP "Press:"; GP &N[6]; 					GP "A"; GP &N[20]; GP "A"; GP &N[6];
 			GP "T"; GP "   (ENTER)   To create the output file"; GP &N[38]; GP "A"; GP &N[21]; GP "A"; GP &N[6];
-			GP "T"; GP "    (16)     Exit                     "; GP &N[38]; GP "A"; GP &N[22]; GP "A"; GP &N[6];
+			GP "T"; GP terminate_buff; GP &N[38]; GP "A"; GP &N[22]; GP "A"; GP &N[6];
 			GP "E";
 			GP "P";	GP &pfkey_mask;
 		}
@@ -779,7 +833,7 @@ char *ifile, *ilib, *ivol, *copy;
 			GP xl;  GP "LIBRARY ";	GP olib;	GP &N[8];	GP "A";	GP &N[13];	GP "A"; GP &N[16]; GP "L";
 			GP "T";	GP "on";	GP &N[2];			        GP &N[0];	GP &N[1];
 			GP xv;  GP "VOLUME  ";	GP ovol;	GP &N[6];	        GP &N[0];	GP &N[1]; GP "L";
-			GP "T"; GP "Press PF16 to end COPY processing"; GP &N[33]; GP "A"; GP &N[22]; GP "C"; GP &N[0]; 
+			GP "T"; GP terminate_text; GP &N[33]; GP "A"; GP &N[22]; GP "C"; GP &N[0]; 
 			GP "E";
 			GP "P";	GP &pfkey_mask;
 		}
@@ -787,11 +841,15 @@ char *ifile, *ilib, *ivol, *copy;
 		wvaset(&two);
 		GETPARM(&gp_args,&gp_cnt);
 
-		if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
+		    pfkey_recv[0] == terminate_key_pressed) 
+		{
+			return 16;
+		}
 
 		gptype = "R ";
 		xf = xl = xv = "K";
-		pfkey_mask = PFKEY_16_ENABLED;
+		pfkey_mask = terminate_key_enabled;
 		wswap(&pfkey_mask);
 
 		leftjust(ovol,6);
@@ -824,7 +882,7 @@ char *ifile, *ilib, *ivol, *copy;
 			}
 		}
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSFS)
 		/*
 		**	Check if volume exists
 		*/
@@ -873,7 +931,7 @@ char *ifile, *ilib, *ivol, *copy;
 				messid = "A004";
 				message = "\204File already exists.  Respecify or press (3) to scratch it.";
 				xf = "R";
-				pfkey_mask = PFKEY_3_ENABLED | PFKEY_16_ENABLED;
+				pfkey_mask = PFKEY_3_ENABLED | terminate_key_enabled;
 				wswap(&pfkey_mask);
 				continue;
 			}
@@ -913,28 +971,34 @@ static int get_eoj(message,messid)
 char *message;
 char *messid;
 {
-	long	pfkey_mask;
+	int4	pfkey_mask;
 	char	*gptype;
 	char	pfkey_recv[1];
 
-	pfkey_mask = PFKEY_1_ENABLED | PFKEY_16_ENABLED;
+	pfkey_mask = PFKEY_1_ENABLED | terminate_key_enabled;
 	wswap(&pfkey_mask);
 	gptype = "I ";
 
 	pfkey_recv[0] = '@';
 
+	sprintf(terminate_buff,"Select (ENTER) or (%d) to End   the program ",terminate_key);
+
 	gp_cnt = 0;
 	GP gptype; GP "R"; GP "EOJ     "; GP pfkey_recv; GP messid; GP "WCOPY "; GP &N[1]; 
 		GP message; GP &N[strlen(message)];
-	GP "T"; GP "Select ENTER or PF16 to End   the program "; GP &N[42]; GP "A"; GP &N[9]; GP "A"; GP &N[2];
-	GP "T"; GP "             or PF1  to rerun the program."; GP &N[42]; GP "A"; GP &N[10]; GP "A"; GP &N[2];
+	GP "T"; GP terminate_buff; GP &N[44]; GP "A"; GP &N[9]; GP "A"; GP &N[2];
+	GP "T"; GP "               or (1)  to rerun the program."; GP &N[44]; GP "A"; GP &N[10]; GP "A"; GP &N[2];
 	GP "E";
 	GP "P";	GP &pfkey_mask;
 
 	wvaset(&two);
 	GETPARM(&gp_args,&gp_cnt);
 
-	if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+	if (pfkey_recv[0] == PFKEY_16_PRESSED || 
+	    pfkey_recv[0] == terminate_key_pressed) 
+	{
+		return 16;
+	}
 	if (pfkey_recv[0] == PFKEY_1_PRESSED) return 1;
 	return 0;
 }
@@ -1027,19 +1091,19 @@ char *ifile, *ilib, *ivol;
 char *ofile, *olib, *ovol;
 char *option;
 {
-	long	pfkey_mask;
+	int4	pfkey_mask;
 	char	*gptype;
 	char	*message;
 	char	*messid;
 	char	*xo, *xn;
-	long	vacnt;
-	long	retcode;
+	int4	vacnt;
+	int4	retcode;
 	char	buff[80];
 	char	newname[9];
 
 	xn = xo = "K";
 
-	pfkey_mask = PFKEY_16_ENABLED;
+	pfkey_mask = terminate_key_enabled;
 	wswap(&pfkey_mask);
 	gptype = "I ";
 	message = COPY_VERSION;
@@ -1082,7 +1146,7 @@ char *option;
 
 		GP "T"; GP "(for option R and C)"; GP &N[20]; GP "A"; GP &N[21]; GP "A"; GP &N[30];
 
-		GP "T"; GP "Press PF16 to end COPY processing"; GP &N[33]; GP "A"; GP &N[24]; GP "C"; GP &N[0]; 
+		GP "T"; GP terminate_text; GP &N[33]; GP "A"; GP &N[24]; GP "C"; GP &N[0]; 
 		GP "E";
 		GP "P";	GP &pfkey_mask;
 
@@ -1090,11 +1154,15 @@ char *option;
 		wvaset(&two);
 		GETPARM(&gp_args,&gp_cnt);
 
-		if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+		if (pfkey_recv[0] == PFKEY_16_PRESSED || 
+		    pfkey_recv[0] == terminate_key_pressed) 
+		{
+			return 16;
+		}
 
 		gptype = "R ";
 		xo = xn = "K";
-		pfkey_mask = PFKEY_16_ENABLED;
+		pfkey_mask = terminate_key_enabled;
 		wswap(&pfkey_mask);
 
 		/*
@@ -1204,19 +1272,20 @@ char *option;
 static int get_failed(ifile,ilib,ivol,ofile,olib,ovol,retcode)
 char *ifile, *ilib, *ivol;
 char *ofile, *olib, *ovol;
-long retcode;
+int4 retcode;
 {
-	long	pfkey_mask;
+	int4	pfkey_mask;
 	char	*gptype;
 	char	message[80];
 	char	*messid;
 	char	pfkey_recv[1];
 
-	pfkey_mask = PFKEY_16_ENABLED;
+	pfkey_mask = terminate_key_enabled;
 	wswap(&pfkey_mask);
 	gptype = "I ";
 	messid = "F001";
 	sprintf(message,"\204Copy failed with return code = %04d",retcode);
+	sprintf(terminate_buff, "    (%d)     Exit    ", terminate_key);
 
 	pfkey_recv[0] = '@';
 
@@ -1240,7 +1309,7 @@ long retcode;
 
 	GP "U"; GP "Press:"; GP &N[6]; 					GP "A"; GP &N[20]; GP "A"; GP &N[6];
 	GP "T"; GP "   (ENTER)   Continue"; GP &N[21]; 			GP "A"; GP &N[21]; GP "A"; GP &N[6];
-	GP "T"; GP "    (16)     Exit    "; GP &N[21]; 			GP "A"; GP &N[22]; GP "A"; GP &N[6];
+	GP "T"; GP terminate_buff; GP &N[21]; 			GP "A"; GP &N[22]; GP "A"; GP &N[6];
 
 	GP "E";
 	GP "P";	GP &pfkey_mask;
@@ -1248,8 +1317,42 @@ long retcode;
 	wvaset(&two);
 	GETPARM(&gp_args,&gp_cnt);
 
-	if (pfkey_recv[0] == PFKEY_16_PRESSED) return 16;
+	if (pfkey_recv[0] == PFKEY_16_PRESSED || 
+	    pfkey_recv[0] == terminate_key_pressed) 
+	{
+		return 16;
+	}
 
 	return 0;
 }
 
+/*
+**	History:
+**	$Log: wcopy.c,v $
+**	Revision 1.16  1997-09-24 17:56:12-04  gsl
+**	Add support for pfkeys12()
+**
+**	Revision 1.15  1997-06-10 14:51:16-04  scass
+**	/changed long to int4 for portability.
+**
+**	Revision 1.14  1996-12-17 12:05:46-05  gsl
+**	Fix short string in getparm message
+**
+**	Revision 1.13  1996-11-18 15:53:49-08  jockc
+**	added call to vwang_title to set screen title
+**
+**	Revision 1.12  1996-08-29 17:15:24-07  gsl
+**	Removed the link-level logic as it is now handled in initglbs()
+**
+**	Revision 1.11  1996-07-26 10:46:34-07  gsl
+**	fix long vs int4 warnings
+**
+**	Revision 1.10  1996-07-24 15:09:54-07  gsl
+**	Fix for NT
+**
+**	Revision 1.9  1996-07-23 11:13:05-07  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -267,7 +267,12 @@
                05  YN-TABLE OCCURS 2 TIMES PIC XXX.
 
        01  FILLER.
-           05  NUM-ANS   PIC X(5) OCCURS 3 TIMES.
+           03  NUM-ANS-EXPANDED.
+               05  FILLER PIC X(5) VALUE "ONE".
+               05  FILLER PIC X(5) VALUE "TWO".
+               05  FILLER PIC X(5) VALUE "THREE".
+           03  FILLER REDEFINES NUM-ANS-EXPANDED.
+               05  NUM-ANS   PIC X(5) OCCURS 3 TIMES.
 
        01  T2.
            03  ENTRIES.
@@ -285,7 +290,13 @@
                05  NUM-TABLE OCCURS 10 TIMES PIC X(5).
 
        01  FILLER.
-           05  t3 pic s9(4)v99 occurs 5 times.
+           05  t3-x.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+               10 filler pic s9(4)v99 value 0.
+           05  t3 redefines t3-x pic s9(4)v99 occurs 5 times.
 
 
        01  FILLER.
@@ -323,7 +334,7 @@
                        OBJECT MATRIX-GROUP-SOURCE.
 
            03  MATRIX-LINE-24 PIC X(38) LINE 24 COL 02 VALUE
-               "THIS IS THE LAST LINE ON THE SCREEN...".
+               "Press (ENTER) to continue.".
                                                         
        01  SYNC-SCREEN1 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(24) ROW 3 COL 28 VALUE
@@ -334,24 +345,24 @@
            "screen to cleanup (SYNC) after an external routine is".
            03  FILLER PIC X(60) ROW 10 COL 10 VALUE
            "called that changes the contents of the screen.".
-           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
-           "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(40) ROW 24 COL 27 VALUE
+           "PRESS (ENTER) TO CONTINUE.".
 
        01  SYNC-SCREEN2 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 13 COL 20 VALUE
            "The screen should be messed up.".
-           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
-           "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(40) ROW 24 COL 27 VALUE
+           "PRESS (ENTER) TO CONTINUE.".
 
        01  SYNC-SCREEN3 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(25) ROW 8 COL 30 VALUE
            "  DID WISPSYNC WORK ?  ".
-           03  FILLER PIC X(25) ROW 24 COL 27 VALUE
-           "PRESS RETURN TO CONTINUE.".
+           03  FILLER PIC X(40) ROW 24 COL 27 VALUE
+           "PRESS (ENTER) TO CONTINUE.".
 
        01  KEYBOARD-TEST-SCREEN USAGE IS DISPLAY-WS.
-           03  FILLER PIC X(29) ROW 2 COL 20
-               VALUE "PRESS A PFKEY, ENTER TO EXIT.".
+           03  FILLER PIC X(40) ROW 2 COL 20
+               VALUE "PRESS A PFKEY, (ENTER) TO QUIT".
 
            03  FILLER PIC X(18) ROW 12 COL 10
                VALUE "YOU PRESSED PF KEY".
@@ -512,9 +523,9 @@
 
 123456*8901234567890123456789012345678901234567890123456789012345678901234567890
 
-           03  FILLER PIC X(40)
+           03  FILLER PIC X(50)
                       ROW 24 COL 20
-                      VALUE "PRESS RETURN TO CONTINUE; PF16-EXIT".
+                      VALUE "PRESS (ENTER) TO CONTINUE, (16) EXIT".
 
        01  XMISC-PIC9-5         PIC 9(5)      VALUE 0.
        01  XMISC-PICZ-5         PIC 9(5)      VALUE 0.
@@ -606,7 +617,8 @@
       *$RANGE_COUNT 10
                RANGE IS NUM-TABLE.
 
-           03  FILLER PIC Z(4).ZZ- OCCURS 5 TIMES ROW 20 COLUMN 10
+	   03  FILLER PIC X(17) ROW 20 COL 5 VALUE "RANGE (-99 - 175)".
+           03  FILLER PIC Z(4).ZZ- OCCURS 5 TIMES ROW 20 COLUMN 25
                RANGE -99 to 175 SOURCE t3 OBJECT t3.
 
            03  FILLER PIC X(19) ROW 22 COL 4
@@ -617,9 +629,9 @@
            03  PFKEY-ITEM PIC X(27) ROW 22 COL 35
                SOURCE PRINT-FLAG.
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01  EMBED-SCREEN USAGE IS DISPLAY-WS.
            03  EMBEDDED-ITEM PIC X(60) ROW 12 COL 10
@@ -673,9 +685,9 @@
            03  TEST-ITEM-7 PIC X(7) ROW 20 COLUMN 20
                SOURCE SUB-LINE-6.
 
-           03  FILLER PIC X(25)
+           03  FILLER PIC X(40)
                       ROW 24 COL 27
-                      VALUE "PRESS RETURN TO CONTINUE.".
+                      VALUE "PRESS (ENTER) TO CONTINUE.".
 
        01  SCREEN-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(11) ROW 1 COL 20 VALUE
@@ -683,69 +695,69 @@
            03  FILLER  PIC X(13) ROW 1 COL 60 VALUE
                "SCREEN-SCREEN".
            03  FILLER  PIC X(35) ROW  3 COL 02 VALUE
-               " 1) DISPLAY A COMPLEX SCREEN.".
+               " (1) DISPLAY A COMPLEX SCREEN.".
            03  FILLER  PIC X(35) ROW  4 COL 02 VALUE
-               " 2) TRY THE PF KEYS.".
+               " (2) TRY THE PF KEYS.".
            03  FILLER  PIC X(35) ROW  5 COL 02 VALUE
-               " 3) PIC ZZ AND MISC.".
+               " (3) PIC ZZ AND MISC.".
            03  FILLER  PIC X(35) ROW  6 COL 02 VALUE
-               " 4) QASCROLL (DISABLED).".
+               " (4) ".
            03  FILLER  PIC X(35) ROW  7 COL 02 VALUE
-               " 5) DISPLAY TEST LIST (DISABLED).".
+               " (5) ".
            03  FILLER  PIC X(35) ROW  8 COL 02 VALUE
-               " 6) TEST REWRITE TO CRT.".
+               " (6) TEST REWRITE TO CRT.".
            03  FILLER  PIC X(35) ROW  9 COL 02 VALUE
-               " 7) TEST WISPSYNC (DISABLED).".
-           03  FILLER  PIC X(35) ROW 10 COL 02 VALUE
-               " 8) TEST COMPLX MUTIPLE DIMENSIONS.".
+               " (7) ".
+           03  FILLER  PIC X(37) ROW 10 COL 02 VALUE
+               " (8) TEST COMPLX MUTIPLE DIMENSIONS.".
            03  FILLER  PIC X(35) ROW 11 COL 02 VALUE
-               " 9) TEST WSXIO WRITE/TIMED READ.".
+               " (9) ".
            03  FILLER  PIC X(35) ROW 12 COL 02 VALUE
-               "10) TEST SUBSTITUTION TABLE.".
+               "(10) TEST SUBSTITUTION TABLE.".
            03  FILLER  PIC X(35) ROW 13 COL 02 VALUE
-               "11) TEST MONKEY BAR MENU.".
+               "(11) TEST MONKEY BAR MENU.".
            03  FILLER  PIC X(35) ROW 14 COL 02 VALUE
-               "12) COLUMN TEST.".
+               "(12) COLUMN TEST.".
            03  FILLER  PIC X(35) ROW 15 COL 02 VALUE
-               "13) DISPLAY AND READ TOTAL TEST.".
+               "(13) DISPLAY AND READ TOTAL TEST.".
            03  FILLER  PIC X(35) ROW 16 COL 02 VALUE
-               "14) TEST VWANG 132/80 COLUMN MODE.".
+               "(14) TEST VWANG 132/80 COLUMN MODE.".
            03  FILLER  PIC X(35) ROW 17 COL 02 VALUE
-               "15) REWRITE & READ OF CRT.".
+               "(15) REWRITE & READ OF CRT.".
            03  FILLER  PIC X(35) ROW 19 COL 02 VALUE
-               "16) EXIT".
+               "(16) EXIT".
            03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
-               "17) ROW REWRITE & READ".
+               "(17) ROW REWRITE & READ".
            03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
-               "18) MULTIPLE COLUMNS".
+               "(18) MULTIPLE COLUMNS".
            03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
-               "19) EMBEDDED FAC TEST".
+               "(19) EMBEDDED FAC TEST".
            03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
-               "20) ".
+               "(20) ALL FACs TEST".
            03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
-               "21) ".
+               "(21) ".
            03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
-               "22) ".
+               "(22) ".
            03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
-               "23) ".
+               "(23) ".
            03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
-               "24) ".
+               "(24) ".
            03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
-               "25) ".
+               "(25) ".
            03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
-               "26) ".
+               "(26) ".
            03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
-               "27) ".
+               "(27) ".
            03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
-               "28) ".
+               "(28) ".
            03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
-               "29) ".
+               "(29) ".
            03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
-               "30) ".
+               "(30) ".
            03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
-               "31) ".
+               "(31) ".
            03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
        01  SUB-LINE-1.
            03  FILLER    PIC X(2) VALUE SPACES.
@@ -883,8 +895,52 @@
            05 FILLER PIC X(1) VALUE DIM-PROT-ALL.
            05 FILLER PIC X(1640) VALUE SPACES.
 
+       01  ALL-FAC-SCREEN USAGE IS DISPLAY-WS.
+           05  FILLER PIC X(30)     ROW 1 COL 25  VALUE
+               "  * * * ALL-FAC-SCREEN * * *".
 
+           05  FILLER PIC X(02) ROW  4 COL  2 VALUE "80".
+           05  AF-80  PIC X(30) ROW  4 COL  6 VALUE "NOLINE BRIGHT".
+           05  FILLER PIC X(02) ROW  4 COL 42 VALUE "84".
+           05  AF-84  PIC X(30) ROW  4 COL 46 VALUE "NOLINE BRIGHT".
 
+           05  FILLER PIC X(02) ROW  6 COL  2 VALUE "88".
+           05  AF-88  PIC X(30) ROW  6 COL  6 VALUE "NOLINE DIM".
+           05  FILLER PIC X(02) ROW  6 COL 42 VALUE "8C".
+           05  AF-8C  PIC X(30) ROW  6 COL 46 VALUE "NOLINE DIM".
+
+           05  FILLER PIC X(02) ROW  8 COL  2 VALUE "90".
+           05  AF-90  PIC X(30) ROW  8 COL  6 VALUE "NOLINE BLINK".
+           05  FILLER PIC X(02) ROW  8 COL 42 VALUE "94".
+           05  AF-94  PIC X(30) ROW  8 COL 46 VALUE "NOLINE BLINK".
+
+           05  FILLER PIC X(02) ROW 10 COL  2 VALUE "98".
+           05  AF-98  PIC X(30) ROW 10 COL  6 VALUE "NOLINE BLANK".
+           05  FILLER PIC X(02) ROW 10 COL 42 VALUE "9C".
+           05  AF-9C  PIC X(30) ROW 10 COL 46 VALUE "NOLINE BLANK".
+
+           05  FILLER PIC X(02) ROW 12 COL  2 VALUE "A0".
+           05  AF-A0  PIC X(30) ROW 12 COL  6 VALUE "  LINE BRIGHT".
+           05  FILLER PIC X(02) ROW 12 COL 42 VALUE "A4".
+           05  AF-A4  PIC X(30) ROW 12 COL 46 VALUE "  LINE BRIGHT".
+
+           05  FILLER PIC X(02) ROW 14 COL  2 VALUE "A8".
+           05  AF-A8  PIC X(30) ROW 14 COL  6 VALUE "  LINE DIM".
+           05  FILLER PIC X(02) ROW 14 COL 42 VALUE "AC".
+           05  AF-AC  PIC X(30) ROW 14 COL 46 VALUE "  LINE DIM".
+
+           05  FILLER PIC X(02) ROW 16 COL  2 VALUE "B0".
+           05  AF-B0  PIC X(30) ROW 16 COL  6 VALUE "  LINE BLINK".
+           05  FILLER PIC X(02) ROW 16 COL 42 VALUE "B4".
+           05  AF-B4  PIC X(30) ROW 16 COL 46 VALUE "  LINE BLINK".
+
+           05  FILLER PIC X(02) ROW 18 COL  2 VALUE "B8".
+           05  AF-B8  PIC X(30) ROW 18 COL  6 VALUE "  LINE BLANK".
+           05  FILLER PIC X(02) ROW 18 COL 42 VALUE "BC".
+           05  AF-BC  PIC X(30) ROW 18 COL 46 VALUE "  LINE BLANK".
+
+           05  FILLER PIC X(40) ROW 24 COL 25 VALUE 
+               "PRESS (ENTER) TO CONTINUE".
 
       /*****************************************************************
       *                                                                *
@@ -897,7 +953,7 @@
        SCREEN-TESTS.
       
            DISPLAY AND READ SCREEN-SCREEN ON CRT
-           PFKEYS 1, 2, 3,       6,    8, 9, 10, 11, 12, 13, 14, 15, 16,
+           PFKEYS 1, 2, 3,       6,    8,  10, 11, 12, 13, 14, 15, 16,
                   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
                   30, 31, 32.
 
@@ -930,13 +986,16 @@
               PERFORM DO-MATRIX
               GO TO SCREEN-TESTS
            ELSE IF PF-KEY = "09" THEN
-              PERFORM DO-WSXIO
+
               GO TO SCREEN-TESTS
            ELSE IF PF-KEY = "10" THEN
               PERFORM DO-SCREEN-SUBTEST
               GO TO SCREEN-TESTS
            ELSE IF PF-KEY = "19" THEN
               PERFORM EMBEDDED-FAC-TEST
+              GO TO SCREEN-TESTS
+           ELSE IF PF-KEY = "20" THEN
+              PERFORM ALL-FAC-TEST
               GO TO SCREEN-TESTS
            ELSE IF PF-KEY = "16" THEN
               GO TO EXIT-PROGRAM.
@@ -1006,7 +1065,7 @@
       ******************************************************************
 
            MOVE HEX-9C TO FAC OF BLPRO-ITEM.
-           MOVE "Push PF14 to print screen." TO PRINT-FLAG.
+           MOVE "Push (14) to print screen." TO PRINT-FLAG.
 
       ******************************************************************
       * NOW DISPLAY THE FIRST SCREEN
@@ -1068,10 +1127,12 @@
                  GO TO TRY-PF-KEYS.
 
        PRINT-SCREEN.
+           move spaces to print-recvr.
            CALL "SCREEN" USING PRINT-STATUS,
                                PRINT-UFB-ADD,
                                PRINT-FUNC,
                                PRINT-RECVR.
+           display "Print file =" PRINT-RECVR.
 
        DISPLAY-MISC.
            SET PROTECT-BIT IN FAC OF MISC-ROW03 OFF.
@@ -1097,8 +1158,9 @@
            SET PROTECT-BIT IN FAC OF MISC-ROW23 OFF.
            MOVE BRITE-MOD-ALL TO FAC OF MISC-ROW23.
 
-           DISPLAY AND READ MISC-SCREEN ON CRT PFKEY 16.
-           IF PF-KEY = 16 THEN GO TO DISPLAY-MISC-EXIT.
+           DISPLAY AND READ MISC-SCREEN ON CRT 
+               PFKEY 16
+               ON PFKEY 16 GO TO DISPLAY-MISC-EXIT.
 
            SET PROTECT-BIT IN FAC OF MISC-ROW03 ON.
            SET PROTECT-BIT IN FAC OF MISC-ROW04 ON.
@@ -1123,7 +1185,10 @@
            SET PROTECT-BIT IN FAC OF MISC-ROW23 ON.
            MOVE DIM-PROT-ALL TO FAC OF MISC-ROW23.
 
-           DISPLAY AND READ MISC-SCREEN ON CRT PFKEY 16.
+           DISPLAY AND READ MISC-SCREEN ON CRT 
+               PFKEY 16
+               ON PFKEY 16 GO TO DISPLAY-MISC-EXIT.
+
            IF PF-KEY NOT = "16" THEN GO TO DISPLAY-MISC.
        DISPLAY-MISC-EXIT.
            EXIT.
@@ -1304,6 +1369,28 @@
            DISPLAY AND READ EMBED-SCREEN ON CRT.
 
       ******************************************************************
+       ALL-FAC-TEST.
+           MOVE HEX-80 TO FAC OF AF-80.
+           MOVE HEX-84 TO FAC OF AF-84.
+           MOVE HEX-88 TO FAC OF AF-88.
+           MOVE HEX-8C TO FAC OF AF-8C.
+
+           MOVE HEX-90 TO FAC OF AF-90.
+           MOVE HEX-94 TO FAC OF AF-94.
+           MOVE HEX-98 TO FAC OF AF-98.
+           MOVE HEX-9C TO FAC OF AF-9C.
+
+           MOVE HEX-A0 TO FAC OF AF-A0.
+           MOVE HEX-A4 TO FAC OF AF-A4.
+           MOVE HEX-A8 TO FAC OF AF-A8.
+           MOVE HEX-AC TO FAC OF AF-AC.
+
+           MOVE HEX-B0 TO FAC OF AF-B0.
+           MOVE HEX-B4 TO FAC OF AF-B4.
+           MOVE HEX-B8 TO FAC OF AF-B8.
+           MOVE HEX-BC TO FAC OF AF-BC.
+
+           DISPLAY AND READ ALL-FAC-SCREEN ON CRT.
 
       ******************************************************************
 

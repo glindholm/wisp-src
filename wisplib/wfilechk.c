@@ -1,19 +1,26 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
-	wfilechk	WISP FILE STATUS CHECK (called from declaratives)
+**	File:		wfilechk.c
+**
+**	Project:	WISPLIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	WISP FILE STATUS CHECK (called from declaratives)
+** 			Check file status in declaratives, and take appropriate actions.
+**
+**	Routines:	
+**	wfilechk()
+**	wfilechk2()
 */
 
-/* Check file status in declaratives, and take appropriate actions.	*/
+/*
+**	Includes
+*/
 
 #include <errno.h>
+#include <string.h>
 
 #include "idsistd.h"
 #include "werrlog.h"
@@ -21,6 +28,9 @@
 #include "cobrun.h"
 #include "wdefines.h"
 #include "wglobals.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "wexit.h"
 
 #define ROUTINE	77000
 
@@ -30,52 +40,179 @@ static char msgtxt[260];
 static $DESCRIPTOR(msgdsc,msgtxt);
 #endif
 
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+
 extern int werrno;									/* Wisp errno field.			*/
-extern uint4 wextstat1;								/* Global place to put extended status.	*/
+extern uint4 wextstat1;									/* Global place to put extended status.	*/
 extern uint4 wextstat2;
 extern char wfilestat[2];								/* Global file status			*/
 extern char WISPRUNNAME[8];
-extern char WISPPROGID[8];
-extern char ACUFILESTAT[4];
-
 extern int4 LINKCOMPCODE;
 extern int4 LINKRETCODE;
 
-static char *msg_filestat();
-char *strchr();
+void wfilechk2(char   decl_stat[2], 
+	       char   file_stat[2],
+	       char   x_stat1[10],
+	       char   x_stat2[10],
+	       uint4* sflag,
+	       char   vol[6],
+	       char   lib[8],
+	       char   fil[8],
+	       char   fname[80],
+	       char   f_id[40],
+	       char   appl[8]);
 
-wfilechk(decl_stat,file_stat,x_stat1,x_stat2,sflag,vol,lib,fil,fname,f_id,appl)
-char *decl_stat;									/* X(2) wisp-declaratives-status	*/
-char *file_stat;									/* X(2) the file status field.		*/
-char *x_stat1;										/* S9(9) L.S. Extended file status 1	*/
-											/* (for ACUCOBOL pic x(4) )		*/
-char *x_stat2;										/* S9(9) L.S. Extended file status 1	*/
-uint4 *sflag;										/* Status flag.				*/
-char *vol;										/* Volume name.				*/
-char *lib;										/* Library name.			*/
-char *fil;										/* File name.				*/
-char *fname;										/* Complete filename.			*/
-char *f_id;										/* File ID in select statement.		*/
-char *appl;										/* The name of this application.	*/
+/*
+**	Static data
+*/
+static char acufilestat[11] = "0000";
+
+/*
+**	Static Function Prototypes
+*/
+
+static char *msg_filestat(char* file_stat, char* x_stat);
+
+
+
+/*
+**	ROUTINE:	wfilechk()
+**
+**	FUNCTION:	A front-end to wfilechk2()
+**
+**	DESCRIPTION:	Convert the older format for the extended file statuses
+**			then call wfilechk2().
+**
+**	ARGUMENTS:	See wfilechk2()
+**
+**	GLOBALS:	See wfilechk2()
+**
+**	RETURN:		See wfilechk2()
+**
+**	WARNINGS:	See wfilechk2()
+**
+*/
+void wfilechk( char   decl_stat[2], 
+	       char   file_stat[2],
+	       char*  x_stat1,
+	       char*  x_stat2,
+	       uint4* sflag,
+	       char   vol[6],
+	       char   lib[8],
+	       char   fil[8],
+	       char   fname[80],
+	       char   f_id[40],
+	       char   appl[8])
+{
+	char	x_stat_x1[10], x_stat_x2[10];
+	
+	memset(x_stat_x1, ' ', sizeof(x_stat_x1));
+	memset(x_stat_x2, ' ', sizeof(x_stat_x2));
+	
+	if (acu_cobol)
+	{
+		memcpy(x_stat_x1, x_stat1, 4);	/* PIC X(4) */
+	}
+	else if (vax_cobol)
+	{
+		memcpy(x_stat_x1, x_stat1, 10); /* PIC S9(9) LEADING SEPARATE */
+		memcpy(x_stat_x2, x_stat2, 10); /* PIC S9(9) LEADING SEPARATE */
+	}
+
+	wfilechk2(decl_stat,file_stat,x_stat_x1,x_stat_x2,sflag,vol,lib,fil,fname,f_id,appl);
+	
+}
+
+/*
+**	ROUTINE:	wfilechk2()
+**
+**	FUNCTION:	Check file status codes as part of declaratives handling.
+**
+**	DESCRIPTION:	?
+**
+**	ARGUMENTS:	
+**	decl_stat	Coded I/O operation
+**				OP	OPEN
+**				RD	READ
+**				RW	REWRITE
+**				DE	DELETE
+**				ST	START
+**				WR	WRITE
+**				CL	CLOSE
+**				SO	SORT
+**	file_stat	The file status code 
+**	x_stat1		The extended file status code(s)
+**	x_stat2		The extended file status code(s)
+**	sflag		The S-filename status flag
+**	vol		The volume name
+**	lib		The library name
+**	fil		The file name
+**	fname		The native filepath
+**	f_id		The SELECT name
+**	appl		The application name
+**
+**	GLOBALS:	?
+**
+**	RETURN:		?
+**
+**	WARNINGS:	?
+**
+*/
+void wfilechk2(char   decl_stat[2], 
+	       char   file_stat[2],
+	       char   x_stat1[10],
+	       char   x_stat2[10],
+	       uint4* sflag,
+	       char   vol[6],
+	       char   lib[8],
+	       char   fil[8],
+	       char   fname[80],
+	       char   f_id[40],
+	       char   appl[8])
 {
 	char tstr1[120];
-	int i;
-	char	*ptr;
-	uint4 status;
-	short msglen;
-	unsigned char info[4];
 	short	wang_filestatus, open_error, reportit, force_error;
 	int	temp_errno;
 	char	msg1[80],msg2[80],msg3[80],msg4[80],msg5[80],msg6[80],msg7[80],msg8[80];
-
+#ifdef VMS
+	unsigned char info[4];
+	uint4 status;
+	int i;
+	short msglen;
+#endif
 	setprogid(appl);								/* Set the PROGID global variable.	*/
 	temp_errno = errno;
-	werrlog(ERRORCODE(1),file_stat,x_stat1,x_stat2,vol,lib,fil,fname,f_id);		/* Log the entry.			*/
+
+	wtrace("WFILECHK2", "ENTRY", "%2.2s %8.8s (%8.8s in %8.8s on %6.6s) in %8.8s Status=%2.2s Xstat=%10.10s",
+	       decl_stat, f_id, fil, lib, vol, appl, file_stat, x_stat1);
+
 	wfilestat[0] = file_stat[0];							/* And store it away for 'C'.		*/
 	wfilestat[1] = file_stat[1];
 	if ( acu_cobol )
 	{
-		memcpy(ACUFILESTAT, x_stat1, 4);					/* Save the acucobol extended filestat */
+		/* Save the acucobol extended filestat as a string */
+		char *ptr;
+		
+		memcpy(acufilestat, x_stat1, 10);
+		acufilestat[10] = '\0';
+		if (ptr = strchr(acufilestat,' '))
+		{
+			*ptr = '\0';
+		}
+		/* Minimum 4 chars, pad with spaces */
+		if (strlen(acufilestat) < 4)
+		{
+			strcat(acufilestat,"    ");
+			acufilestat[4] = '\0';
+		}
+		
 	}
 	wang_filestatus = TRUE;								/* Assume a WANG file status.		*/
 	reportit = TRUE;								/* Always report non-wang errors.	*/
@@ -188,7 +325,6 @@ char *appl;										/* The name of this application.	*/
 			{
 			case '0':
 			case '1':							/* "91" File Not Open			*/
-			case '6':							/* "96" Undefined record ptr		*/
 			case '7':							/* "97" Invalid rec len			*/
 			case '8':							/* "98" Index is corrupt		*/
 			case 'A':							/* "9A" Out of memory on SORT		*/
@@ -205,6 +341,9 @@ char *appl;										/* The name of this application.	*/
 			case '5':							/* "95" OPEN No space on device.	*/
 				force_error = TRUE;					/* OPEN cannot recover.			*/
 				wang_filestatus = FALSE;
+				break;
+			case '6':							/* "96" Undefined record ptr		*/
+				wang_filestatus = TRUE;
 				break;
 			default:
 				wang_filestatus = FALSE;
@@ -242,7 +381,7 @@ char *appl;										/* The name of this application.	*/
 	/*
 	**	Special code for record locked status codes.
 	**	If one occurs on a READ it should be returned to the COBOL.
-	**		RE READ		Return to COBOL
+	**		RD READ		Return to COBOL
 	**		RW REWRITE	Declaratives
 	**		DE DELETE	Declaratives
 	**		OP OPEN		N/A
@@ -255,7 +394,7 @@ char *appl;										/* The name of this application.	*/
 	if (file_stat[0] == hardlock[0] &&
 	    file_stat[1] == hardlock[1]   )						/* If a record lock on a ...		*/
 	{
-		if (0==memcmp("RE",decl_stat,2))					/* READ					*/
+		if (0==memcmp("RD",decl_stat,2))					/* READ					*/
 		{
 			wang_filestatus = FALSE;					/*	return to COBOL			*/
 			reportit = FALSE;
@@ -352,9 +491,9 @@ char *appl;										/* The name of this application.	*/
 		sprintf( msg2, "ERROR DETECTED AND USER ERROR EXIT NOT IN USE");
 		if ( acu_cobol )
 		{
-			sprintf( msg3, "FILE STATUS = %c%c [%c%c]   (%s)", 
-				file_stat[0], file_stat[1], x_stat1[2], x_stat1[3], verb);
-			strcpy(  msg4, msg_filestat(file_stat,&x_stat1[2]) );
+			sprintf( msg3, "FILE STATUS = %c%c [%s]   (%s)", 
+				file_stat[0], file_stat[1], &acufilestat[2], verb);
+			strcpy(  msg4, msg_filestat(file_stat,&acufilestat[2]) );
 		}
 		else if (mf_cobol || aix_cobol)
 		{
@@ -409,9 +548,7 @@ char *appl;										/* The name of this application.	*/
 
 }
 
-static char *msg_filestat(file_stat,x_stat)
-char	*file_stat;
-char	*x_stat;
+static char *msg_filestat(char* file_stat, char* x_stat)
 {
 	char *ptr;
 
@@ -597,3 +734,28 @@ char	*x_stat;
 
 	return(ptr);
 }
+
+void lastacufilestat(char *buff)
+{
+	strcpy(buff, acufilestat);
+}
+
+
+/*
+**	History:
+**	$Log: wfilechk.c,v $
+**	Revision 1.12  1997-10-21 10:18:06-04  gsl
+**	removed WISPPROGID
+**
+**	Revision 1.11  1997-04-29 13:42:05-04  gsl
+**	Renamed wfilechk() to wfilechk2() and added support for long file
+**	status codes from acucobol. Wrote wfilechk() as a frontend to wfilechk2()
+**	which changes to use long file status codes.
+**	Documented the routines.
+**
+**	Revision 1.10  1996-08-19 18:33:14-04  gsl
+**	drcs update
+**
+**
+**
+*/

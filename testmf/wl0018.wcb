@@ -1,0 +1,323 @@
+
+000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wl0018.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test MESSAGE routine
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     wl0018.
+001300 Data Division.
+001400 Working-Storage Section.
+
+       01  T-RETURN-CODE.
+           03 FILLER                  BINARY     VALUE 0.
+           03 RETURN-CODE-BIN         BINARY.
+       01  COMPLETION-STATUS          PIC 9(02)  VALUE 0.
+001500 01  FUNCTION-TYPE              PIC X(02).
+       01  PORT-NAME                  PIC X(4).
+       01  MESSAGE-STRING             PIC X(65).
+       01  BUFSIZE.
+            03 FILLER                 BINARY     VALUE 0.
+            03 BUFSIZE-BIN            BINARY.
+       01  MESSLEN.
+           03 FIRST-BIN               BINARY     VALUE 0.
+           03 MESSLEN-BIN             BINARY.
+       01  TIME-IN-SEC.
+           03 FIRST-BIN               BINARY     VALUE 0.
+           03 TIME-IN-SEC-BIN         BINARY.
+       01  KEEP-FLAG                  PIC X(01)  VALUE "N".
+       01  CHECK-TYPE                 PIC X(01).
+       01  NOHELP-FLAG                PIC X(01).
+
+001600 Procedure Division.
+
+       DELETE-PORT.
+           MOVE  "DE" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 8  AND
+                RETURN-CODE-BIN NOT = 4  AND 
+                RETURN-CODE-BIN NOT = 0   THEN
+               ADD 1           TO COMPLETION-STATUS.
+       DELETE-PORT-EXIT.
+           EXIT.
+
+      *"CR" - function.
+       CREATE-PORT.
+           MOVE  "CR" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 BUFSIZE,
+                                 KEEP-FLAG,
+                                 T-RETURN-CODE.
+           IF  PORT-NAME NOT =  "test" OR
+               RETURN-CODE-BIN NOT = 0     THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 BUFSIZE,
+                                 KEEP-FLAG,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 8     THEN
+               ADD 1           TO COMPLETION-STATUS.
+       CREATE-PORT-EXIT.
+           EXIT.
+      *END "CR"
+
+      *"DE" - function.
+       DELETE-PORT-AGAIN.
+           MOVE  "DE" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 T-RETURN-CODE.
+           IF  PORT-NAME NOT =  "test" OR
+               RETURN-CODE-BIN NOT = 0     THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 8     THEN
+               ADD 1           TO COMPLETION-STATUS.
+       DELETE-PORT-AGAIN-EXIT.
+           EXIT.
+      *END "DE"
+
+      *"XM" - function.
+        TRANSMIT-MESSAGE.
+           MOVE  "XM" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE "THIS IS A TEST" TO MESSAGE-STRING.
+           MOVE  LOW-VALUES    TO MESSLEN.
+           MOVE  14            TO MESSLEN-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 MESSAGE-STRING,
+                                 MESSLEN,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 4     THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+           MOVE  "CR" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 BUFSIZE,
+                                 KEEP-FLAG,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 0 OR 
+                PORT-NAME NOT = "test"    THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+           MOVE  "XM" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE "THIS IS A TEST" TO MESSAGE-STRING.
+           MOVE  LOW-VALUES    TO MESSLEN.
+           MOVE  14            TO MESSLEN-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 MESSAGE-STRING,
+                                 MESSLEN,
+                                 T-RETURN-CODE.
+           IF  PORT-NAME NOT =  "test" OR 
+               MESSAGE-STRING NOT = "THIS IS A TEST" OR
+               RETURN-CODE-BIN NOT = 0     THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+        TRANSMIT-MESSAGE-EXIT.
+           EXIT. 
+      *END "XM"
+           
+      *     PERFORM DELETE-PORT.
+
+      *"XW" - function.
+      *     MOVE  "XW" TO FUNCTION-TYPE.
+      *     MOVE  "test"        TO PORT-NAME.
+      *     MOVE  LOW-VALUES    TO T-RETURN-CODE.
+      *     MOVE  0             TO RETURN-CODE-BIN.
+      *     MOVE "THIS IS A TEST" TO MESSAGE-STRING.
+      *     MOVE  LOW-VALUES    TO MESSLEN.
+      *     MOVE  14            TO MESSLEN-BIN.
+      *     CALL  "MESSAGE" USING FUNCTION-TYPE,
+      *                           PORT-NAME,
+      *                           MESSAGE-STRING,
+      *                           MESSLEN,
+      *                           T-RETURN-CODE.
+      *     IF   RETURN-CODE-BIN NOT = 4     THEN
+      *         ADD 1           TO COMPLETION-STATUS.
+
+      *     MOVE  "CR" TO FUNCTION-TYPE.
+      *     MOVE  "test"        TO PORT-NAME.
+      *     MOVE  LOW-VALUES    TO T-RETURN-CODE.
+      *     MOVE  0             TO RETURN-CODE-BIN.
+      *     CALL  "MESSAGE" USING FUNCTION-TYPE,
+      *                           PORT-NAME,
+      *                           BUFSIZE,
+      *                           KEEP-FLAG,
+      *                           T-RETURN-CODE.
+      *     IF   RETURN-CODE-BIN NOT = 0 OR
+      *          PORT-NAME NOT = "test"    THEN
+      *         ADD 1           TO COMPLETION-STATUS.
+
+      *     MOVE  "XW" TO FUNCTION-TYPE.
+      *     MOVE  "test"        TO PORT-NAME.
+      *     MOVE  LOW-VALUES    TO T-RETURN-CODE.
+      *     MOVE  0             TO RETURN-CODE-BIN.
+      *     MOVE "THIS IS A TEST" TO MESSAGE-STRING.
+      *     MOVE  LOW-VALUES    TO MESSLEN.
+      *     MOVE  14            TO MESSLEN-BIN.
+      *     CALL  "MESSAGE" USING FUNCTION-TYPE,
+      *                           PORT-NAME,
+      *                           MESSAGE-STRING,
+      *                           MESSLEN,
+      *                           T-RETURN-CODE.
+      *     IF  PORT-NAME NOT =  "test" OR
+      *         MESSAGE-STRING NOT = "THIS IS A TEST" OR
+      *         RETURN-CODE-BIN NOT = 0     THEN
+      *         ADD 1           TO COMPLETION-STATUS.
+
+      *END "XW"
+
+      *"CH" - function.
+        CHECK-MESSAGE.
+           PERFORM DELETE-PORT.
+           MOVE  "CR" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 BUFSIZE,
+                                 KEEP-FLAG,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 0 OR 
+                PORT-NAME NOT = "test"    THEN
+               ADD 1           TO COMPLETION-STATUS.
+           MOVE  "CH" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE  SPACES        TO MESSAGE-STRING.
+           MOVE  LOW-VALUES    TO MESSLEN.
+           MOVE  0            TO MESSLEN-BIN.
+           MOVE  LOW-VALUES    TO TIME-IN-SEC.
+           MOVE  0500          TO TIME-IN-SEC-BIN.
+           MOVE "T"            TO CHECK-TYPE.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 CHECK-TYPE,
+                                 TIME-IN-SEC,
+                                 MESSAGE-STRING,
+                                 MESSLEN,
+                                 NOHELP-FLAG,
+                                 T-RETURN-CODE.
+           IF   RETURN-CODE-BIN NOT = 8     THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+           MOVE  "XM" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE "THIS IS A TEST" TO MESSAGE-STRING.
+           MOVE  LOW-VALUES    TO MESSLEN.
+           MOVE  14            TO MESSLEN-BIN.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 MESSAGE-STRING,
+                                 MESSLEN,
+                                 T-RETURN-CODE.
+           IF  PORT-NAME NOT =  "test" OR 
+               MESSAGE-STRING NOT = "THIS IS A TEST" OR
+               RETURN-CODE-BIN NOT = 0     THEN
+               ADD 1           TO COMPLETION-STATUS.
+
+           MOVE  "CH" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE  LOW-VALUES    TO MESSLEN.
+           MOVE  14            TO MESSLEN-BIN.
+           MOVE  LOW-VALUES    TO TIME-IN-SEC.
+           MOVE  0500          TO TIME-IN-SEC-BIN.
+           MOVE "T"            TO CHECK-TYPE.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 CHECK-TYPE,
+                                 TIME-IN-SEC,
+                                 MESSAGE-STRING,
+                                 MESSLEN,
+                                 NOHELP-FLAG,
+                                 T-RETURN-CODE.
+
+           IF   RETURN-CODE-BIN NOT = 0 THEN 
+               ADD 1           TO COMPLETION-STATUS.
+
+           PERFORM DELETE-PORT.
+
+           MOVE  "CH" TO FUNCTION-TYPE.
+           MOVE  "test"        TO PORT-NAME.
+           MOVE  LOW-VALUES    TO T-RETURN-CODE.
+           MOVE  0             TO RETURN-CODE-BIN.
+           MOVE "THIS IS A TEST" TO MESSAGE-STRING.
+           MOVE  LOW-VALUES    TO MESSLEN.
+           MOVE  14            TO MESSLEN-BIN.
+           MOVE  LOW-VALUES    TO TIME-IN-SEC.
+           MOVE  0500          TO TIME-IN-SEC-BIN.
+           MOVE "T"            TO CHECK-TYPE.
+           CALL  "MESSAGE" USING FUNCTION-TYPE,
+                                 PORT-NAME,
+                                 CHECK-TYPE,
+                                 TIME-IN-SEC,
+                                 MESSAGE-STRING,
+                                 MESSLEN,
+                                 NOHELP-FLAG,
+                                 T-RETURN-CODE.
+
+           IF   RETURN-CODE-BIN NOT = 16 THEN 
+               ADD 1           TO COMPLETION-STATUS.
+
+        CHECK-MESSAGE-EXIT.
+           EXIT. 
+      *END "CH"
+
+        CHECK-STATUS.
+           IF  COMPLETION-STATUS = 0 THEN
+                DISPLAY "MESSAGE completion successful."
+           ELSE
+                DISPLAY "MESSAGE failed.".
+
+            EXIT PROGRAM.
+            STOP RUN.
+
+006600**   End of wl0018.wcb
+

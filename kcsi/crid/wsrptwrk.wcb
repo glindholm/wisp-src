@@ -1,0 +1,78 @@
+000100*---------------------------------------------------------------
+000200* RECORD LAYOUTS FOR REPORT SORTS TWO RECORDS CONTAINING
+000300* 8 SORT LIMITS THE FIRST RECORD USES ALL 6 OF THE ARRAY ELEMENTS
+000400* WHILE THE SECOND ONLY USES THE FIRST TWO
+000500*---------------------------------------------------------------
+000000 01  RPT-WORK-RECORDS.
+000600     05  RST-IDX                        BINARY.
+000700     05  RST-RECORD.
+000800         10  RST-KEY                    PIC X(13).
+000900         10  RST-SORTS.
+001000             15  RST-SORT OCCURS 6 TIMES.
+001100                 20  RST-NAME           PIC X(8).
+001200                 20  RST-OCCURRENCE     PIC 99.
+001300                 20  RST-OCCURRENCE-A REDEFINES
+001400                     RST-OCCURRENCE     PIC XX.
+001500                 20  RST-ORDER          PIC X.
+001600*        10  FILLER                     PIC X(8).
+001700*---------------------------------------------------------------
+001800* RECORD LAYOUT FOR DATA LIMITS
+001900* RECORD CODES ARE 'C' THRU 'L' WITH THE RECORD NUMBER BEING
+002000* 0 THRU 3. THIS ALLOWS 10 RECORD SETS WITH UP TO 4 RECORDS
+002100* IN EACH SET.
+002200*---------------------------------------------------------------
+002300     05  RDL-RECORD.
+002400         10  RDL-KEY.
+002500             15  RDL-RECORD-CODE        PIC X.
+002600             15  RDL-NAME               PIC X(8).
+002700             15  RDL-OCCURRENCE         PIC 99.
+002800             15  RDL-OCCURRENCE-A REDEFINES
+002900                 RDL-OCCURRENCE         PIC XX.
+003000             15  RDL-ORIGIN             PIC 9.
+003100             15  RDL-RECORD-NUMBER      PIC 9.
+003200         10  RDL-ENTRIES PIC X(69).
+003300         10  FILLER REDEFINES RDL-ENTRIES.
+003400             15  RDL-ENTRY OCCURS 3 TIMES.
+003500                 20  RDL-OP-CODE         PIC XX.
+003600                 20  RDL-LIT-20          PIC X(20).
+003700                 20  FILLER REDEFINES RDL-LIT-20.
+003800                     25  RDL-OP-NAME         PIC X(8).
+003900                     25  RDL-OP-OCCURRENCE   PIC XXXX.
+004000                     25  RDL-OP-OCCURRENCE-A REDEFINES
+004100                         RDL-OP-OCCURRENCE   PIC XXXX.
+004200                     25  RDL-OP-ORIGIN       PIC 9.
+004300                     25  FILLER              PIC X(6).
+004400                     25  RDL-NOT-LIT-CODE    PIC X.
+004500                 20  RDL-CONNECTOR        PIC X.
+004600         10  RDL-SET-CONNECTOR          PIC X.
+004700*        10  FILLER                     PIC X(4).
+004800*---------------------------------------------------------------
+004900* RECORD LAYOUT FOR NEW FIELDS. A REPORT DEFINITION CAN
+005000* ONLY INCLUDE 10 NEW FIELDS.
+005100* EACH NEW FIELD CAN REQUIRE FOUR RECORDS
+005200* FOR ITS DEFINITION THUS CREATING 4 * 10 RECORDS = 40
+005300* THE ARRAY IS LOADED FROM THE RECORD AT LOAD TIME
+005400*---------------------------------------------------------------
+005500     05  RNF-ENTRY-IDX                  BINARY.
+005600     05  RNF-RECORD.
+005700         10  RNF-KEY.
+005800             15  RNF-RECORD-TYPE        PIC X.
+005900             15  RNF-NAME               PIC X(8).
+006000             15  RNF-RECORD-NUMBER      PIC 99.
+006100             15  RNF-SEQ                PIC 999 COMP.
+006200         10  RNF-ENTRIES                PIC X(63).
+006300         10  FILLER REDEFINES RNF-ENTRIES.
+006400             15  RNF-ENTRY OCCURS 3 TIMES.
+006500                 20  RNF-LIT-20         PIC X(20).
+006600                 20  FILLER REDEFINES RNF-LIT-20.
+006700                     25  RNF-OP-NAME         PIC X(8).
+006800                     25  RNF-OP-OCCURRENCE   PIC X(4).
+006900                     25  RNF-OP-ORIGIN       PIC 9.
+007000                     25  FILLER              PIC X(6).
+007100                     25  RNF-NOT-LIT-CODE    PIC X.
+007200                 20  RNF-OP-CODE         PIC X.
+007300         10  RNF-TYPE                    PIC X.
+007400         10  RNF-LEN                     PIC 999 COMP.
+007500         10  RNF-DEC                     PIC 9.
+007600*        10  FILLER                      PIC X(7).
+007700

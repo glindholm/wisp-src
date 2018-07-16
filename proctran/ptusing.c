@@ -1,12 +1,7 @@
-#define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 
-/* PG_PRGCNST.C	*/
+#define EXT extern
 
 #include <stdio.h>
 #include <string.h>
@@ -17,8 +12,7 @@
 #include "pgeqtns.h"
 #include "pgkeyw.h"
 
-p_prg_kw(tndx,num_var,num_val)								/* Process program keywords.		*/
-int tndx, *num_var, *num_val;
+void p_prg_kw(int tndx, int* num_var, int* num_val)					/* Process program keywords.		*/
 {
 	char *hptr, *cstr;
 
@@ -142,8 +136,7 @@ int tndx, *num_var, *num_val;
 	}
 }
 
-save_using_item(num_asn,num_var,filler_num,current_row,num_val)				/* Process using item.			*/
-int *num_asn, *num_var, *filler_num, *current_row, *num_val;
+void save_using_item(int* num_asn,int* num_var,int* filler_num,int* current_row,int* num_val)	/* Process using item.		*/
 {
 	char *cstr, name_buf[FLDLEN];
 	int cont, tndx;
@@ -225,3 +218,15 @@ int *num_asn, *num_var, *filler_num, *current_row, *num_val;
 		if (!tststrt(aptr)) cont = FALSE;
 	}
 }
+/*
+**	History:
+**	$Log: ptusing.c,v $
+**	Revision 1.5  1997-04-21 11:23:51-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.4  1996-09-12 19:18:14-04  gsl
+**	Fix prototypes
+**
+**
+**
+*/

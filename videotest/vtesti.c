@@ -9,9 +9,16 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
+#include <video.h>
+#include <vmodules.h>
+
+static testi1();
+static testi2();
+static testi3();
+
 testi()
 {
+	extern int line();
 	verase(FULL_SCREEN);
 	vmove(0,0);
 	testi1();
@@ -23,7 +30,8 @@ testi()
 	vprint("\n\nDepress any character to continue..."); vgetc();
 	return(SUCCESS);
 }
-testi1()
+
+static testi1()
 {
 	char c;
 
@@ -35,7 +43,7 @@ testi1()
 	return(SUCCESS);
 }
 
-testi2()
+static testi2()
 {
 	char c;
 
@@ -51,7 +59,8 @@ testi2()
 	vprint("The character was %c.\n",c);
 	return(SUCCESS);
 }
-testi3()
+
+statictesti3()
 {
 	char c;
 	char x;

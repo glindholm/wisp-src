@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -10,13 +12,60 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include <varargs.h>
+
+
+#ifdef unix
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <termio.h>
+#endif
+
+#if defined(unix) || defined(WIN32)
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <signal.h>
+#include <time.h>
+#endif
+
+#ifdef WIN32
+#include <signal.h>
+#include <direct.h>
+#include <io.h>
+#include "wperson.h"
+#include "win32msg.h"
+#include "wispnt.h"
+#include "wispcfg.h"
+
+#define msgget win32msgget
+#define msgsnd win32msgsnd
+#define msgrcv win32msgrcv
+#define msgctl win32msgctl
+#endif
+
+
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wdefines.h"
 #include "vwang.h"
+#include "wmalloc.h"
+#include "wperson.h"
+#include "movebin.h"
+#include "wisplib.h"
 
 #define		ROUTINE		35000
+
+#define PORTNAME_SIZE   4
+
+/* Message port buffer defn's */
+#define MIN_MSG_BUFSIZE 1
+#define MAX_MSG_BUFSIZE 2014
+#define DEF_MSG_BUFSIZE 2014
+
+
 
 #ifdef VMS
 
@@ -25,16 +74,18 @@
 #include <psldef.h>
 #include <iodef.h>
 #include <lnmdef.h>
-#include <v/video.h>
-#include <v/vlocal.h>
+
+#include "video.h"
+#include "vlocal.h"
+
 
 extern int DestroyAllPorts();								/* Declare the exit handler routine.	*/
 
 static struct {
 		int4 flink;								/* The forward link (VMS only)		*/
 		char *exproc;								/* The pointer to the proc.		*/
-		int4 argcnt;							/* The arg count (0)			*/
-		int4 *condit;							/* Pointer to the condition value.	*/
+		int4 argcnt;								/* The arg count (0)			*/
+		int4 *condit;								/* Pointer to the condition value.	*/
 	      } exit_handler;
 
 static unsigned int mbx_ef, timr_ef;							/* The event flags.			*/
@@ -50,13 +101,7 @@ static int4 conval;									/* A place to hold the condition value	*/
 #define MIN_ARGS  3
 #define TIMR_REQID 39
 
-/* Message port buffer defn's */
-#define MIN_BUFSIZE 1
-#define MAX_BUFSIZE 2014
-#define DEF_BUFSIZE 2014
-
 /* Various field length defn's */
-#define PORTNAME_SIZE   4
 #define MBX_STRLENGTH  12
 #define PREFIX_LENGTH   8
 
@@ -114,7 +159,13 @@ struct mbx_iosb_blk {
                     };
 
 	/* #ifdef VMS	*/
-void message( va_alist )
+
+int CheckMessages( char *port_name, char check_type, int time_interval,
+                  char *msg, unsigned int *msg_size, char disable_keys );
+
+int create_message_port( char *port_name, unsigned int buf_size, char keep_flag);
+
+void MESSAGE( va_alist )
 va_dcl
 {
 
@@ -157,7 +208,7 @@ va_dcl
 		}
 		else
 		{
-			l_bufsiz = 2014;						/* Otherwise, set default.		*/
+			l_bufsiz = DEF_MSG_BUFSIZE;					/* Otherwise, set default.		*/
 		}
 
 		if (argc > CR_nargs + 1)						/* Also included keep flag.		*/
@@ -167,7 +218,7 @@ va_dcl
 
 		keep_flag = "N";
 	        return_code = va_arg(argp, int*);
-	        *return_code = CreateMessagePort( port_name, l_bufsiz, *keep_flag);
+	        *return_code = create_message_port( port_name, l_bufsiz, *keep_flag);
 		wswap(return_code);
 	}
 
@@ -185,7 +236,7 @@ va_dcl
 		}
 
 	        return_code = va_arg(argp, int*);
-	        *return_code = DestroyMessagePort( port_name );
+	        *return_code = destroy_message_port( port_name );
 		wswap(return_code);
 	}
 
@@ -255,7 +306,9 @@ va_dcl
 
 
 	/* #ifdef VMS	*/
-int CreateMessagePort( char *port_name, unsigned int buf_size, char keep_flag)
+int AddtoPortList ( char *port_name, short chan, struct dsc$descriptor_s *lognam );
+
+int create_message_port( char *port_name, unsigned int buf_size, char keep_flag)
 {
     	unsigned char prmflg = '\0';								/* Temporary mailbox 		*/
     	unsigned short chan;
@@ -282,8 +335,8 @@ int CreateMessagePort( char *port_name, unsigned int buf_size, char keep_flag)
         	return(SS_ERROR);
     	}
 
-    	if (buf_size < MIN_BUFSIZE || buf_size > MAX_BUFSIZE )
-        	maxmsg = DEF_BUFSIZE;
+    	if (buf_size < MIN_MSG_BUFSIZE || buf_size > MAX_MSG_BUFSIZE )
+        	maxmsg = DEF_MSG_BUFSIZE;
     	else
         	maxmsg = buf_size;
     	bufquo = maxmsg;
@@ -311,7 +364,7 @@ int CreateMessagePort( char *port_name, unsigned int buf_size, char keep_flag)
 
 
 	/* #ifdef VMS	*/
-int DestroyMessagePort( char *port_name )
+int destroy_message_port( char *port_name )
 {
     	struct mbx_list *ptr;
     	unsigned int status;
@@ -429,7 +482,7 @@ int CheckMessages( char *port_name, char check_type, int time_interval,
 	
 	wait_time[0] = -time_interval*100000;						/* Initialize the wait time.		*/
 	wait_time[1] = 0xffffffff;
-	temp = (char *)malloc(*msg_size+1);    						/* Setup temp buffer to hold message.	*/
+	temp = (char *)wmalloc(*msg_size+1);    					/* Setup temp buffer to hold message.	*/
 
 	if (LookUpPort(port_name, &ptr) != MYPORT)
 	        return(NOTMYPORT);							/* This isn't our port to check 	*/
@@ -507,11 +560,10 @@ check_k:
 			return_status = KEYBDLOCK;					/* Yes, so return it.			*/
 			break;
 		}
-		else if (inchar = vcheck())						/* See if there is a keypress in bufr.	*/
+		else if (vwang_keypressed(0))						/* See if there is a keypress in bufr.	*/
 		{
 			char	aid;
 			
-			vpushc(inchar);						/* Push the char.			*/
 			inchar = vgetm();					/* Get its meta value.			*/
 			aid = meta_aid(inchar);					/* Translate to AID char		*/
 			if (aid)						/* If it is an AID char then set it	*/
@@ -575,11 +627,10 @@ check_b:
 			return_status = KEYBDLOCK;					/* Yes, so return it.			*/
 			break;
 		}
-		else if (inchar = vcheck())						/* See if there is a keypress in bufr.	*/
+		else if (vwang_keypressed(0))						/* See if there is a keypress in bufr.	*/
 		{
 			char	aid;
 			
-			vpushc(inchar);						/* Push the char.			*/
 			inchar = vgetm();					/* Get its meta value.			*/
 			aid = meta_aid(inchar);					/* Translate to AID char		*/
 			if (aid)						/* If it is an AID char then set it	*/
@@ -668,7 +719,7 @@ wait_b:
 		memcpy(msg, temp, iosb.byte_count);					/* copy message into user buffer	*/
 		msg_size = (unsigned int *)iosb.byte_count;				/* set message size to actual		*/
 		free(temp);
-		return(0);							/* bytes read				*/
+		return(0);								/* bytes read				*/
 	}
 
         free(temp);
@@ -684,18 +735,18 @@ int AddtoPortList ( char *port_name, short chan,
     	struct mbx_list *newmbx;
     	char *newport;
 
-    	newmbx = (struct mbx_list *)malloc(sizeof(struct mbx_list));				/* grab new mbx list struct */
+    	newmbx = (struct mbx_list *)wmalloc(sizeof(struct mbx_list));				/* grab new mbx list struct */
 
 /* Stuff portname, channel, and logical name into new structure */
 
-    	newmbx->port_name = (char *)malloc(PORTNAME_SIZE);
+    	newmbx->port_name = (char *)wmalloc(PORTNAME_SIZE);
     	strncpy(newmbx->port_name, port_name, PORTNAME_SIZE);
     	newmbx->chan = chan;
-    	newmbx->lognam = (struct dsc$descriptor_s *)malloc(sizeof(struct dsc$descriptor_s));
+    	newmbx->lognam = (struct dsc$descriptor_s *)wmalloc(sizeof(struct dsc$descriptor_s));
     	newmbx->lognam->dsc$w_length = lognam->dsc$w_length;
     	newmbx->lognam->dsc$b_dtype = lognam->dsc$b_dtype;
     	newmbx->lognam->dsc$b_class = lognam->dsc$b_class;
-    	newmbx->lognam->dsc$a_pointer = (char *)malloc(lognam->dsc$w_length);
+    	newmbx->lognam->dsc$a_pointer = (char *)wmalloc(lognam->dsc$w_length);
     	strncpy(newmbx->lognam->dsc$a_pointer, lognam->dsc$a_pointer,
             lognam->dsc$w_length);
 
@@ -815,19 +866,8 @@ int RemovePort( struct mbx_list *node)
 
 #endif	/* #ifdef VMS	*/
 
-#ifdef unix
+#if defined(unix) || defined(WIN32)
 
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
-#include <termio.h>
-#include "movebin.h"
-
-char *funcs[] = { "CR", "DE", "XM", "XW", "CH", 0 };
 
 #define M_CREATE 0
 #define M_DELETE 1
@@ -836,190 +876,455 @@ char *funcs[] = { "CR", "DE", "XM", "XW", "CH", 0 };
 #define M_CHECK 4
 #define M_INV -1
 
-#define SUCCESS 0
-#define FAILURE 64
-#define CR_PORT_BUSY 4
-#define CR_PORT_OURS 8
-#define DE_MSG_LOST 4
-#define DE_NO_PORT 8
-#define XM_NO_PORT 4
-#define XM_PORT_FULL 8
-#define XM_PORT_PRIV 12
+#define SUCCESS 	0
+#define FAILURE 	64
+
+#define CR_PORT_BUSY 	4
+#define CR_PORT_OURS 	8
+#define CR_NO_SPACE	24
+
+#define DE_MSG_LOST 	4
+#define DE_NO_PORT 	8
+
+#define XM_NO_PORT 	4
+#define XM_PORT_FULL 	8
+#define XM_PORT_PRIV 	12
+
 #define CH_PORT_TIMEOUT 8
-#define CH_NO_PORT 16
+#define CH_NO_PORT 	16
 #define CH_PORT_FKEYLOCK 12
 
-#define WMSGMAX 2014
 #define MSGTYPE 1L
 
 static int timeout;
-int msqid;
-struct {
+
+static struct {
 	long mtype;
-	char mtext[WMSGMAX];
+	char mtext[MAX_MSG_BUFSIZE];
 } msg;
-struct msqid_ds mctlbuf;
-static struct termio t_save,t_new;
-static int creport();
-static int delport();
-static int sndmsg();
-static int get_msg();
-static int makemsgpath();
-static int functype();
-static void timed_out();
-static key_t keyval();
+static struct msqid_ds mctlbuf;
+
+static int create_message_port(char port_name[PORTNAME_SIZE], int4 buf_size, char keep_flag);
+static int destroy_message_port(char port_name[PORTNAME_SIZE]);
+static int transmit_message(char portname[PORTNAME_SIZE], char* mtext, int4 mlen, int4 wait);
+static int check_message(char port_name[PORTNAME_SIZE],
+			 char check_t,
+			 int4 time_int,
+			 int4 *mess_len,
+			 char *receiver);
+
+static key_t keyval(char p[PORTNAME_SIZE], int create);
+static void makemsgkeyfile(char port[PORTNAME_SIZE], char* path);
+static int portownergid(char port[PORTNAME_SIZE]);
+static int functype(char* func);
+
+static void signal_timed_out(int sig);
+
+extern void WSXIO(char*, ...);
+
+struct port_s
+{
+	struct port_s	*next;
+	char		port_name[5];
+};
+static struct port_s	*port_list = NULL;
+
+/*
+	MESSAGE	("CR", Port, [Bufsize, [Keep,]] Retcode)
+		("DE", Port, Retcode)
+		("XM", Port, Message, Messlen, Retcode)
+		("XW", Port, Message, Messlen, Retcode)
+		("CH", Port, Chtype, Time, Message, Messlen, [Nohelp,] Retcode)
+
+	Func	Alpha(2)	
+			"CR"	Create message port
+			"DE"	Destroy message port
+			"XM"	Transmit a message
+			"XW"	Transmit a message (wait if port full)
+			"CH"	Check for message
+
+	Port	Alpha(4)
+			Port name
+
+	Bufsize	Int(4)
+			Max bytes port can hold until checked
+
+	Keep	Alpha(1)
+			Keep port on unlink
+			"Y"	Yes
+			"N"	No
+			" "	Default (No)
+
+	Message	Alpha(var)
+	MessLen	Int(4)
+	Chtype	Alpha(1)
+			Type of check
+			"W"	Wait until message received
+			"T"	Wait until message received or time-out
+			"K"	Wait until message received or PFkey pressed
+			"B"	Wait until message received or time-out or PFkey pressed
+
+	Time	Int(4)
+			Time to wait in hundreds of seconds
+
+	Nohelp	Alpha(1)
+			Disable help
+	Retcode	Int(4)
+			Return code
+			"CR"
+				0	port created
+				4	Another task is using this port
+				8	This task is using this port
+			"DE"
+				0	Port destroyed
+				4	Port destroyed (messages lost)
+				8	No such port was created by this task
+			"XM", "XW"
+				0	Message queued
+				4	Port not created
+				8	Buffer full ("XM" only)
+				12	Port is privileged
+			"CH"
+				0	Message received
+				8	Time-out
+				12	Keyboard locked
+				16	No such port was created by this task
+*/
 
 void MESSAGE( va_alist )
 va_dcl
 {
 	va_list arg_list;
-	int arg_count;
-	char *chptr, *intptr;
-	char funcstr[3], prname[5];
-	int4 wait, func, ourret, *retcode;
-	char *receiver;
-	int4 check_t, time_int, mess_len;
-	int4 *time_int_p, *mess_len_p;
-	char *mtext;
+	int 	arg_count;
+	char 	*chptr;
+	char 	funcstr[3], portname[5];
+	int4 	wait, ourret, *retcode;
+	int	i=0;
+
+	wait = 0;
 
 	va_start(arg_list);
 	arg_count = va_count(arg_list);
 	va_start(arg_list);
 
-	wait = 0;
-	memset(funcstr,0,sizeof(funcstr));						/* init char arrays			*/
-	memset(prname,0,sizeof(prname));
-	chptr = va_arg(arg_list,char *);						/* get function and prname		*/
-	strncpy(funcstr,chptr,2);
-	chptr = va_arg(arg_list,char *);
-	strncpy(prname,chptr,4);
-	arg_count -= 2;
+	/*
+	**	Get the Function
+	*/
+	chptr = va_arg(arg_list,char *);						/* get function and portname		*/
+	funcstr[0] = chptr[0];
+	funcstr[1] = chptr[1];
+	funcstr[2] = (char)0;
+	arg_count -= 1;
 
-	func = functype(funcstr);							/* get integer function type		*/
-	switch (func)
+	/*
+	**	Get the port name and correct any unusable characters
+	*/
+	chptr = va_arg(arg_list,char *);
+	memcpy(portname, chptr, PORTNAME_SIZE);
+	portname[PORTNAME_SIZE] = (char)0;
+	arg_count -= 1;
+
+#ifdef unix
+	for(i=0; i<PORTNAME_SIZE; i++)
 	{
-		case M_CREATE:	while (arg_count > 1) 
-				{
-					chptr = va_arg(arg_list,char*), --arg_count;	/* ignore all but return code		*/
-				}
-				retcode	= va_arg(arg_list,int4 *);			/* get retcode pointer			*/
-				ourret	= creport(prname);				/* dispatch 				*/
-				break;
-		case M_DELETE:	retcode	= va_arg(arg_list,int4 *);			/* get retcode pointer			*/
-				ourret	= delport(prname);				/* dispatch to handler			*/
-				break;
-		case M_XMTWT:	wait = TRUE;						/* set wait flag, then do normal xmit	*/
-		case M_XMIT:	mtext	= va_arg(arg_list,char *); 			/* get text pointer			*/
-				mess_len_p= va_arg(arg_list,int4 *);			/* and length				*/
-				GETBIN(&mess_len,mess_len_p,sizeof(int4));
-				wswap(&mess_len);
-				retcode	= va_arg(arg_list,int4 *);			/* and retcode				*/
-				ourret	= sndmsg(prname,mtext,mess_len,wait);		/* call handler for message send op	*/
-				break;	
-		case M_CHECK:	check_t    = *va_arg(arg_list,char*);			/* get check type			*/
-				time_int_p = va_arg(arg_list,int4 *);			/* and timeout value			*/
-				GETBIN(&time_int,time_int_p,sizeof(int4));		/* copy to our int 			*/
-				wswap(&time_int);					/* swap if necessary			*/
-				receiver   = va_arg(arg_list,char*);			/* pointer to receiving area		*/
-				mess_len_p = va_arg(arg_list,int4 *); 			/* pointer to message len		*/
-				arg_count -= 4;
-				if (arg_count == 2) chptr = va_arg(arg_list,char*);	/* if two args left ignore first	*/
-				retcode    = va_arg(arg_list,int4 *);
-				ourret     = get_msg(prname,check_t,time_int,mess_len_p,receiver);	/* get the message	*/
-				break;
-		case M_INV:	ourret = FAILURE;
-				break;
-		default:	break;
+		if (' ' == chptr[i] || '/' == chptr[i] || (char)0 == chptr[i])
+		{
+			/*
+			**	SPACE, NULL and SLASH are invalid characters for a portname, 
+			**	replace with '#'.
+			*/
+			portname[i] = '#';
+		}
 	}
+#endif
+
+	wtrace("MESSAGE","ENTRY","Function=[%2.2s] Port=[%4.4s]", funcstr, portname);
+
+	switch(functype(funcstr))
+	{
+	case M_CREATE:
+		{
+			int4	l_bufsize;
+			char	l_keep;
+			int4	*buffer_size;
+
+			l_bufsize = DEF_MSG_BUFSIZE;
+			l_keep = 'N';
+
+			if (arg_count > 1)
+			{
+				buffer_size = va_arg(arg_list, int4 *);
+				arg_count -= 1;
+				l_bufsize = get_swap(buffer_size);
+
+				if (l_bufsize < MIN_MSG_BUFSIZE || l_bufsize >MAX_MSG_BUFSIZE)
+				{
+					l_bufsize = DEF_MSG_BUFSIZE;
+				}
+			}
+
+			if (arg_count > 1)
+			{
+				l_keep = *(va_arg(arg_list, char *));
+				arg_count -= 1;
+
+				if (l_keep != 'Y')
+				{
+					l_keep = 'N';
+				}
+			}
+
+			retcode	= va_arg(arg_list,int4 *);
+			ourret	= create_message_port(portname,l_bufsize,l_keep);
+		}
+		break;
+
+	case M_DELETE:
+		retcode	= va_arg(arg_list,int4 *);				/* get retcode pointer			*/
+		ourret	= destroy_message_port(portname);			/* dispatch to handler			*/
+		break;
+
+	case M_XMTWT:
+		wait = TRUE;							/* set wait flag, then do normal xmit	*/
+	case M_XMIT:
+		{
+			char 	*mtext;
+			int4 	mess_len, *mess_len_p;
+
+			mtext = va_arg(arg_list,char *); 			/* get text pointer			*/
+			mess_len_p = va_arg(arg_list,int4 *);			/* and length				*/
+			mess_len = get_swap(mess_len_p);
+			retcode	= va_arg(arg_list,int4 *);			/* and retcode				*/
+			ourret = transmit_message(portname,mtext,mess_len,wait);/* call handler for message send op	*/
+		}
+		break;	
+
+	case M_CHECK:
+		{
+			char	check_t;
+			char 	*receiver;
+			int4 	time_int, *time_int_p;
+			int4 	mess_len, *mess_len_p;
+
+			check_t    = *va_arg(arg_list,char*);			/* get check type			*/
+			time_int_p = va_arg(arg_list,int4 *);			/* and timeout value			*/
+			time_int   = get_swap(time_int_p);
+			receiver   = va_arg(arg_list,char*);			/* pointer to receiving area		*/
+			mess_len_p = va_arg(arg_list,int4 *); 			/* pointer to message len		*/
+			mess_len   = get_swap(mess_len_p);
+			arg_count -= 4;
+			if (arg_count == 2) chptr = va_arg(arg_list,char*);	/* if two args left ignore first	*/
+			retcode    = va_arg(arg_list,int4 *);
+			ourret     = check_message(portname,check_t,time_int,&mess_len,receiver);	/* get the message	*/
+
+			if (SUCCESS == ourret)
+			{
+				PUTBIN(mess_len_p,&mess_len,sizeof(int4))
+				wswap(mess_len_p);
+			}
+		}
+		break;
+
+	case M_INV:
+		ourret = FAILURE;
+		break;
+
+	default:
+		break;
+	}
+
 	PUTBIN(retcode,&ourret,sizeof(int4));						/* copy our ret code to their area*/
 	wswap(retcode);									/* swap bytes if necessary	*/
 }
-static creport(portname)
-char *portname;
-{
-	key_t port_key, keyval();
-	char	tmpbuf[80];
 
-	makemsgpath(portname,tmpbuf);
-	if ( fexists(tmpbuf) )
+static int create_message_port(char port_name[PORTNAME_SIZE], int4 buf_size, char keep_flag)
+{
+	key_t 	port_key;
+	char	keyfilepath[256];
+	int    	msqid;
+
+try_again:
+	makemsgkeyfile(port_name,keyfilepath);
+	if ( fexists(keyfilepath) )
 	{
-		return CR_PORT_BUSY;
+		if (wgetpgrp() == portownergid(port_name))
+		{
+			return CR_PORT_OURS;
+		}
+		else
+		{
+			return CR_PORT_BUSY;
+		}
 	}
 
-	port_key = keyval(portname,1);
+	port_key = keyval(port_name,1);
 	if (port_key == (key_t) -1)
 	{
+		unlink(keyfilepath);
 		return FAILURE;
 	}
 	msqid = msgget(port_key,IPC_EXCL|IPC_CREAT|0777);				/* get and create		*/
 	if (msqid == -1)								/* system call failed		*/
 	{
-		if (errno==EEXIST)							/* exists already		*/
+		if (EEXIST==errno)
 		{
-			msqid = msgget(port_key,0);					/* get id for queue		*/
-			/*if (msqid < 0) return CR_PORT_BUSY;*/				/* couldn't get id, not owner	*/
-			/*else return CR_PORT_OURS;*/					/* must be ours			*/
-			return CR_PORT_BUSY;
+			/*
+			**	We hit a dangling message queue. 
+			**	Don't mess with it!
+			**	Just rename the keyfile so no one else uses this inode,
+			**	then we try again (with a new inode/key).
+			*/
+
+#ifdef unix			
+			char	newbuf[80];
+			struct	stat sbuf;
+
+			stat(keyfilepath,&sbuf);
+			sprintf(newbuf,"%s/i%d",wispprbdir(NULL),sbuf.st_ino);
+			if (-1 == link(keyfilepath,newbuf))
+			{
+				return CR_PORT_BUSY;
+			}
+			if (-1 == unlink(keyfilepath))
+			{
+				return CR_PORT_BUSY;
+			}
+#endif
+			goto try_again;
+		}
+		else if (ENOSPC==errno)
+		{
+			unlink(keyfilepath);
+			return CR_NO_SPACE;
 		}
 		else
-			return FAILURE;							/* generic failure		*/
+		{
+			unlink(keyfilepath);
+			return FAILURE;
+		}
 	}
-	else
-		return SUCCESS;
+
+	if ('Y' != keep_flag)
+	{
+		/*
+		**	Add the port to the list of ports to be deleted.
+		*/
+		struct port_s	*port_ptr;
+
+		port_ptr = (struct port_s *)wmalloc(sizeof(struct port_s));
+		port_ptr->next = port_list;
+		memcpy(port_ptr->port_name,port_name,5);
+		port_list = port_ptr;
+	}
+
+	return SUCCESS;
 }
-static int delport(portname)
-char *portname;
+
+static int destroy_message_port(char port_name[PORTNAME_SIZE])
 {
-	key_t port_key, keyval();
-	char tmpbuf[80];
+	key_t 	port_key;
+	char 	keyfilepath[256];
+	int 	msqid;
 	
-	makemsgpath(portname,tmpbuf);
-	if ( !fexists(tmpbuf) )
+	makemsgkeyfile(port_name,keyfilepath);
+	if ( !fexists(keyfilepath) )
 	{
 		return DE_NO_PORT;
 	}
-	port_key = keyval(portname,0);							/* get key for this ipc structure	*/
+#ifdef unix	
+	else if (woperator())
+	{
+		/* Allow operator to delete port */
+	}
+#endif	
+	else if (wgetpgrp() != portownergid(port_name))
+	{
+		return DE_NO_PORT;
+	}
+
+	{
+		/*
+		**	Remove this port from the delete list.
+		*/
+		struct port_s	*port_ptr;
+
+		port_ptr = port_list;
+		while(port_ptr)
+		{
+			if (0==strcmp(port_ptr->port_name,port_name))
+			{
+				/*
+				**	Found port in the list.
+				**	"Remove" it by nulling the name.
+				**	We don't muck with the list as message_unlink() may be doing this.
+				*/
+				port_ptr->port_name[0] = (char)0;
+				break;
+			}
+			port_ptr = port_ptr->next;
+		}
+	}
+
+	port_key = keyval(port_name,0);							/* get key for this ipc structure	*/
 	if (port_key == (key_t) -1)
 	{
-		return DE_NO_PORT;
+		/*
+		**	There is a problem, but if we can delete the keyfile
+		**	assume were OK else report failure.
+		*/
+		if (0==unlink(keyfilepath)) return SUCCESS;
+		return FAILURE;
 	}
+
 	msqid = msgget(port_key,0);							/* get identifier for queue		*/
 	if (msqid == -1) 
 	{
-		unlink(tmpbuf);
-		return DE_NO_PORT;							/* queue not exist			*/
+		/*
+		**	There is a problem, but if we can delete the keyfile
+		**	assume were OK else report failure.
+		*/
+		if (0==unlink(keyfilepath)) return SUCCESS;
+		return FAILURE;								/* queue not exist			*/
 	}
 
 	if (msgctl(msqid,IPC_STAT,&mctlbuf) == -1)					/* cannot stat, not owner		*/
 	{
-		unlink(tmpbuf);
-		return DE_NO_PORT;
+		/*
+		**	There is a problem, but if we can delete the keyfile
+		**	assume were OK else report failure.
+		*/
+		if (0==unlink(keyfilepath)) return SUCCESS;
+		return FAILURE;
 	}
 
 	if (msgctl(msqid,IPC_RMID,0) == -1) 						/* only the owner can delete.		*/
 	{
+#ifdef unix		
 		char	newbuf[80];
 		struct	stat sbuf;
 
-		stat(tmpbuf,&sbuf);
-		strcpy(newbuf,tmpbuf);							/* Rename file to inode			*/
-		sprintf(newbuf,"%s/i%d",WISP_PRB_DIR,sbuf.st_ino);
-		link(tmpbuf,newbuf);
+		/*
+		**	We couldn't remove the message queue so we will 
+		**	rename the keyfile (same inode) so no one else
+		**	will run into a dangling message queue.
+		*/
+		stat(keyfilepath,&sbuf);
+		sprintf(newbuf,"%s/i%d",wispprbdir(NULL),sbuf.st_ino);
+		link(keyfilepath,newbuf);
+#endif
 	}
 
-	unlink(tmpbuf);
-
+	if (0!=unlink(keyfilepath)) return FAILURE;
 	if (mctlbuf.msg_qnum) return DE_MSG_LOST;					/* deleted, but msgs on queue lost	*/
 	else return SUCCESS;								/* normal deletion			*/
 }
-static sndmsg(prname,mtext,mlen,wait)
-char 	*prname, *mtext;
-int4	mlen;
-int4	wait;
-{
-	key_t port_key, keyval();
 
-	port_key = keyval(prname,0);
+static int transmit_message(char portname[PORTNAME_SIZE], char* mtext, int4 mlen, int4 wait)
+{
+	key_t 	port_key;
+	int 	msqid;
+
+	port_key = keyval(portname,0);
 	if (port_key == (key_t) -1)
 	{
 		return XM_NO_PORT;
@@ -1031,7 +1336,7 @@ int4	wait;
 	}
 
 	memset(&msg,0,sizeof(msg));							/* zed message struct			*/
-	mlen = (mlen > WMSGMAX) ? WMSGMAX : mlen;					/* Trim the length to max		*/
+	mlen = (mlen > MAX_MSG_BUFSIZE) ? MAX_MSG_BUFSIZE : mlen;			/* Trim the length to max		*/
 	memcpy(msg.mtext,mtext,mlen);							/* copy callers message into our struct	*/
 	msg.mtype = (long)MSGTYPE;							/* assign arbitrary type		*/
 
@@ -1047,7 +1352,12 @@ int4	wait;
 	{
 		do
 		{
-			sleep(1); 
+#ifdef unix
+			sleep(1);
+#endif
+#ifdef WIN32
+			hsleep(100);
+#endif
 			msgctl(msqid,IPC_STAT,&mctlbuf); 
 
 		} while (mctlbuf.msg_qnum); 
@@ -1055,194 +1365,499 @@ int4	wait;
 	return SUCCESS;
 }
 
-static get_msg(prname,check_t,time_int,mess_len,receiver)
-char *prname, *receiver;
-int4 check_t,time_int,*mess_len;
+static int check_message(char port_name[PORTNAME_SIZE],
+			 char check_t,
+			 int4 time_int,
+			 int4 *mess_len,
+			 char *receiver)
 {
-	key_t port_key, keyval();
-	int wait_time, wait_key, gotmsg; 
-	void timed_out(); 
-	int status, sav_errno, key;
-	int4 mlen, len_read;
+	key_t 	port_key;
+	int 	wait_time, wait_key, gotmsg, gotlen, gotkey;
+	int	rc;
+	int4	secs_to_wait;
+	char	keyfilepath[256];
+	int msqid;
 
-	key = wait_time = wait_key = timeout = gotmsg = 0;
-	GETBIN(&mlen,mess_len,sizeof(int4));
-	port_key = keyval(prname,0);
-	if (port_key == (key_t) -1)
+	timeout = gotkey = gotmsg = 0;
+
+	makemsgkeyfile(port_name,keyfilepath);
+	if ( !fexists(keyfilepath) )
 	{
+		/*
+		**	Port doesn't exist.
+		*/
 		return CH_NO_PORT;
 	}
+	else if (wgetpgrp() != portownergid(port_name))
+	{
+		/*
+		**	Port exists but not created by this task.
+		*/
+		return CH_NO_PORT;
+	}
+
+	port_key = keyval(port_name,0);
+	if (port_key == (key_t) -1)
+	{
+		/*
+		**	Port is corrupted.
+		*/
+		unlink(keyfilepath);
+		return FAILURE;
+	}
+
 	msqid = msgget(port_key,0);							/* get identifier for queue		*/
-	if (msqid == -1) return CH_NO_PORT;						/* queue not exist			*/
+	if (msqid == -1)
+	{
+		/*
+		**	Associated message queue not found.
+		**	Port is corrupted.
+		*/
+		unlink(keyfilepath);
+		return FAILURE;								/* queue not exist			*/
+	}
+
 	memset(&msg,0,sizeof(msg));							/* zed message struct			*/
+
 	switch (check_t)
 	{
-		case 'T': 
-			++wait_time;
-			break;	
-		case 'K': 	
-			++wait_key;
-			break;
-		case 'B': 
-			++wait_time;
-			++wait_key;
-			break;
-		case 'W': 
-		default:
-			break;
+	case 'T': 
+		wait_time = 1;
+		wait_key = 0;
+		break;	
+	case 'K': 	
+		wait_time = 0;
+		wait_key = 1;
+		break;
+	case 'B': 
+		wait_time = 1;
+		wait_key = 1;
+		break;
+	case 'W': 
+	default:
+		wait_time = 0;
+		wait_key = 0;
+		break;
 	}
+
+	/*
+	**	Keyboard interaction is not supported with native screens
+	*/
+	if (wait_key && nativescreens())
+	{
+		char	msg[80];
+
+		sprintf(msg, "%%MESSAGE-F-NATIVE MESSAGE check type '%c' not supported with Native Screens", check_t);
+		werrlog(104,msg,0,0,0,0,0,0,0);
+		wait_key = 0;
+		wait_time = 1;
+		time_int = 0;
+	}
+
 	if (wait_time) 
 	{
-		time_int /= 100;							/* figure actual seconds		*/
-		signal(SIGALRM,timed_out);						/* setup to catch alarm signal		*/
-		alarm(time_int+1);							/* turn on alarm			*/
+		/*
+		**	Calc the number of seconds to wait. 
+		**	If less the 1/2 then don't wait.
+		*/
+		if (time_int < 50)
+		{
+			secs_to_wait = 0;
+			timeout = 1;
+		}
+		else
+		{
+			/*
+			**	Round up to a minimum of 1 sec.
+			*/
+			secs_to_wait = (time_int+50) / 100;
+		}
 	}
+
 	if (wait_key)
 	{
-#ifdef OLD
-		int keybd;
+		/*
+		**	Loop until a message received
+		**		or a aid-key is pressed
+		**		[or a timeout occurs]
+		*/
 
-		keybd = open("/dev/tty",O_RDONLY|O_NDELAY);				/* open the tty 			*/
-		if (keybd<0) 
+		time_t	curr_time, stop_time;
+
+		if (wait_time)
 		{
-			werrvre("Error reading tty for keypress [%d]\n",errno);
-			return FAILURE;
+			/*
+			**	Calculate the stop time for a timeout.
+			*/
+			time(&curr_time);
+			stop_time = curr_time + secs_to_wait;
 		}
-		raw_mode(keybd);
-#endif /* OLD */
-		do
+
+		for(;;)
 		{
-			status = msgrcv(msqid,&msg,WMSGMAX,MSGTYPE,IPC_NOWAIT); 	/* call with nodelay on			*/
-			if (key = vcheck())						/* look for keypress			*/
+			/*
+			**	Check for a message (nodelay)
+			*/
+			rc = msgrcv(msqid,&msg,MAX_MSG_BUFSIZE,MSGTYPE,IPC_NOWAIT); 	/* call with nodelay on			*/
+
+			if (rc >= 0)
 			{
-				int	c;
-				char	aid;
+				/*
+				**	Got a message
+				*/
+				gotlen = rc;
+				gotmsg = 1;
+				timeout = 0;
+				break;
+			}
 
-				vpushc(key);
-				c=vgetm();
-
-				aid = meta_aid(c);
-
-				if (aid)
+			if (wait_time)
+			{
+				time(&curr_time);
+				if (curr_time >= stop_time)
 				{
-					set_aid(aid);
+					/*
+					**	A timeout occurred
+					*/
+					timeout = 1;
+					break;
 				}
 			}
-			else
+
+			/*
+			**	We are waiting for a AID key to be pressed.
+			**	The workstation MUST be unlocked.
+			**	This WSXIO/WAIT call will do a 1 sec timed read.
+			**	This will allow the user to also enter regular data on the screen.
+			*/
 			{
-				sleep(1);
+				int4	one_sec = 100;
+				int4	four_args = 4;
+				char	iosw[8];
+
+				wswap(&one_sec);
+				memset(iosw,' ',8);
+
+				wvaset(&four_args);
+				WSXIO("W", 0, &one_sec, iosw);
+
+				if (0 != memcmp(iosw,"        ",8))
+				{
+					/*
+					**	A AID key was pressed
+					*/
+					gotkey = 1;
+					break;
+				}
 			}
-		} while (status<0 && (key==0) && !timeout);				/* loop till bytes read || key press || */
-											/* time out				*/
-		if (status>0) ++gotmsg;							/* status is actually bytes read	*/
-#ifdef OLD
-		no_raw_mode(keybd);							/* normal mode				*/
-#endif /* OLD */
+		} 
+	}
+	else if (wait_time && 0==secs_to_wait)
+	{
+		/*
+		**	Check for a message with nowait
+		*/
+		rc = msgrcv(msqid,&msg,MAX_MSG_BUFSIZE,MSGTYPE,IPC_NOWAIT);
+		if (rc >= 0)
+		{
+			gotlen = rc;
+			gotmsg = 1;
+			timeout = 0;
+		}
 	}
 	else
 	{
-		if ((status = msgrcv(msqid,&msg,WMSGMAX,MSGTYPE,0))<0) sav_errno = errno;	/* get message			*/
-		else gotmsg=TRUE;							/* no timeout occurred			*/
+		/*
+		**	Check for a message and wait for it to arrive.
+		**	(may be interrupted by a timeout)
+		*/
+
+		if (wait_time && secs_to_wait)
+		{
+#ifdef unix
+			signal(SIGALRM,signal_timed_out);				/* setup to catch alarm signal		*/
+			alarm(secs_to_wait);						/* turn on alarm			*/
+#endif
+#ifdef WIN32
+			win32msgtimeout(secs_to_wait);
+#endif
+		}
+
+		rc = msgrcv(msqid,&msg,MAX_MSG_BUFSIZE,MSGTYPE,0);
+		if (rc >= 0)
+		{
+			gotlen = rc;
+			gotmsg = 1;
+			timeout = 0;
+		}
+#ifdef WIN32
+		/*
+		** WIN32 does not support the SIGALRM, so we can't rely on the sighandler
+		** to set this flag for us.  However a -1 return from msgrcv on a timed read
+		** means the read timed out (or an actual fatal error occurred, in which
+		** case it probably no longer matters if we misinterperet it as a timeout)
+		*/
+		if (rc == -1 )
+		{
+			timeout = 1;
+		}
+#endif
+
+		if (wait_time && secs_to_wait)
+		{
+#ifdef unix			
+			alarm(0);							/* kill any pending alarm		*/
+			signal(SIGALRM,SIG_DFL);					/* and reset sig table			*/
+#endif			
+		}
 	}
-	if (wait_time)
+
+	if (gotmsg)
 	{
-		alarm(0);								/* kill any pending alarm		*/
-		signal(SIGALRM,SIG_DFL);						/* and reset sig table			*/
-	}
-	if (timeout && !gotmsg) return CH_PORT_TIMEOUT;
-	if (key!=0 && !gotmsg) return CH_PORT_FKEYLOCK;
+		if (gotlen < *mess_len)
+		{
+			*mess_len = gotlen;						/* get actual length			*/
+		}
 
-	if (status < mlen)
+		memcpy(receiver,msg.mtext,*mess_len);					/* copy message to receiver		*/
+
+		return SUCCESS;
+	}
+	else if (gotkey) 
 	{
-		mlen = status;								/* get actual length			*/
-		PUTBIN(mess_len,&mlen,sizeof(int4));					/* pass length back			*/
-		wswap(mess_len);
+		return CH_PORT_FKEYLOCK;
+	}
+	else if (timeout) 
+	{
+		return CH_PORT_TIMEOUT;
 	}
 
-	memcpy(receiver,msg.mtext,mlen);						/* copy message to receiver		*/
+	return FAILURE;
+}
 
-	return SUCCESS;
-}
-static void timed_out(sig)
-int sig;
+/*
+**	Routine:	message_unlink()
+**
+**	Function:	Delete all the message ports created by this task.
+**
+**	Description:	Step thru the port_list and delete each port and free the list.
+**
+**	Arguments:	None
+**
+**	Globals:
+**	port_list	The pointer to the list of ports to be deleted.
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	11/30/93	Written by GSL
+**
+*/
+int message_unlink(void)
 {
-	++timeout;
+	struct port_s	*port_ptr;
+
+	while(port_list)
+	{
+		port_ptr = port_list;
+		if (port_ptr->port_name[0])
+		{
+			char	port_name[PORTNAME_SIZE+1];
+
+			/*
+			**	Move port_name to a tmp variable because destroy_message_port
+			**	will manipulate the port_list, and null the port_name.
+			*/
+			memcpy(port_name,port_ptr->port_name,PORTNAME_SIZE+1);
+			destroy_message_port(port_name);
+		}
+		port_list = port_ptr->next;
+		free(port_ptr);
+	}
+	return 0;
 }
-static key_t keyval(p,create)
-char *p;
-int create;
+
+#ifdef unix
+static void signal_timed_out(int sig)
 {
-	key_t tmp,wftok();
-	char keypath[64];
-	FILE *keyfile;
+	timeout=1;
+}
+#endif
+
+static key_t keyval(char p[PORTNAME_SIZE], int create)
+{
+	key_t 	wftok();
+	char 	keypath[256];
+	FILE 	*keyfile;
+#ifdef WIN32
+	int4   thekey;
+#endif
 		
-	makemsgpath(p,keypath);
+	makemsgkeyfile(p,keypath);
 	if (!create && !fexists(keypath)) return (key_t) -1;
 	
-	keyfile=fopen(keypath,"w");
-	if( !keyfile )
+	if (create)
 	{
-		werrlog(ERRORCODE(16),"create",keypath,0,0,0,0,0,0);
-		return( -1 );
+		keyfile=fopen(keypath,"w");
+		if( !keyfile )
+		{
+			werrlog(ERRORCODE(16),"create",keypath,0,0,0,0,0,0);
+			return( -1 );
+		}
+		fprintf(keyfile,"%d\n",wgetpgrp());
+		fclose(keyfile);
+		chmod(keypath,0666);
 	}
-	fprintf(keyfile,"\n");
-	fclose(keyfile);
-	chmod(keypath,0666);
-	tmp=wftok(keypath);
-#if 0	
-	PUTBIN(&tmp,p,sizeof(key_t));
+#ifdef unix
+	return wftok(keypath);
 #endif
-	return tmp;
+#ifdef WIN32
+	memcpy((void *)&thekey,(void *)p,sizeof(thekey));
+	return (key_t)thekey;
+#endif
 }
-static makemsgpath(port,path)
-char *port,*path;
-{
-	char tmpbuf[5];
-	
-	memcpy(tmpbuf,port,4);
-	tmpbuf[4]=(char)0;
-	sprintf(path,"%s/MSG_%s",WISP_PRB_DIR,tmpbuf);
 
-	if (!fexists(WISP_PRB_DIR))
+static void makemsgkeyfile(char port[PORTNAME_SIZE], char* path)
+{
+#ifdef unix
+	const char *msgdir = wispprbdir(NULL);
+	char tmpbuf[PORTNAME_SIZE+1];
+
+	memcpy(tmpbuf,port,PORTNAME_SIZE);
+	tmpbuf[PORTNAME_SIZE]=(char)0;
+	sprintf(path,"%s/MSG_%s",msgdir,tmpbuf);
+#endif	
+#ifdef WIN32
+	const char *msgdir = wispmsgsharedir(NULL);
+	long portval;
+
+	memcpy(&portval, port, PORTNAME_SIZE);
+	sprintf(path,"%s\\M_%08X.mkey",msgdir,portval);
+#endif
+	if (!fexists(msgdir))
 	{
 		/* 
-		**	If the /usr/tmp/wpparms directory doesn't exist then create it here.
+		**	If the PRB directory doesn't exist then create it here.
 		**	(This is kind of sloppy but any error will be picked up later when we go to use it.)
 		*/
-		mkdir(WISP_PRB_DIR,0777);
-		chmod(WISP_PRB_DIR,0777);
+		mkdir(msgdir,0777);
+		chmod(msgdir,0777);
 	}
 }
-static functype(ptr)
-char *ptr;
-{
-	int i;
 
-	for ( i=0; funcs[i]; ++i)
-		if (!strcmp(ptr,funcs[i])) return i;
-	return M_INV;
-}
-static raw_mode(f)
-int f;
+/*
+**	Routine:	portownergid()
+**
+**	Function:	Get the gid of the owner of the port.
+**
+**	Description:	This routine reads the PORT key file which contains
+**			the GID of the owner of the port and returns it.
+**
+**	Arguments:
+**	port		The 4 char port name.
+**
+**	Globals:	None
+**
+**	Return:		The GID from the port key file (Owner's gid) or
+**			-1 if an error.
+**
+**	Warnings:	None
+**
+**	History:	
+**	11/30/93	Written by GSL
+**
+*/
+static int portownergid(char port[PORTNAME_SIZE])
 {
-	ioctl(f,TCGETA,&t_save);							/* save tty settings			*/
-	ioctl(f,TCGETA,&t_new);								/* and get a copy we can muck with	*/
-	t_new.c_lflag &= ~ICANON;							/* turn off canonical mode		*/
-	t_new.c_cc[VMIN] = 0;								/* get '1' char at a time		*/
-	t_new.c_cc[VTIME] = 0;								/* or after 0 ms (immediately)		*/
-	ioctl(f,TCSETA,&t_new);								/* put message in this mode		*/
+	char	path[256];
+	FILE	*keyfile;
+	int	gid;
+
+	makemsgkeyfile(port,path);
+
+	gid = -1;
+
+	if ( fexists(path) )
+	{
+		keyfile=fopen(path,"r");
+		if( !keyfile )
+		{
+			return( -1 );
+		}
+		fscanf(keyfile,"%d\n",&gid);
+		fclose(keyfile);
+		return gid;
+	}
+	return -1;
 }
-static no_raw_mode(f)
-int f;
+
+static int functype(char* func)
 {
-	ioctl(f,TCSETA,&t_save);							/* restore previous settings		*/
+	if      (0==strcmp(func,"CR")) return M_CREATE;
+	else if (0==strcmp(func,"DE")) return M_DELETE;
+	else if (0==strcmp(func,"XM")) return M_XMIT;
+	else if (0==strcmp(func,"XW")) return M_XMTWT;
+	else if (0==strcmp(func,"CH")) return M_CHECK;
+	else			       return M_INV;
 }
 #endif	/* #ifdef unix	*/
-#ifdef MSDOS
-MESSAGE()
+
+#if defined(MSDOS) 
+void MESSAGE()
 {
 	werrlog(102,"MESSAGE: Not Yet Implemented",0,0,0,0,0,0,0);
 }
 #endif /* MSDOS */
 
 
+/*
+**	History:
+**	$Log: message.c,v $
+**	Revision 1.24  1997-12-04 18:12:59-05  gsl
+**	changed to wispnt.h
+**
+**	Revision 1.23  1997-10-17 17:00:10-04  gsl
+**	Add nativescreens() logic
+**	Replace the GETBIN()s with get_swap()
+**
+**	Revision 1.22  1997-05-21 08:30:03-04  gsl
+**	fix a warning message
+**
+**	Revision 1.21  1997-05-19 13:58:21-04  gsl
+**	Fix for WIN32
+**	Prototyped all the routines.
+**	Add wtrace() call
+**	Fix to use #defines instead of hardcoded numbers
+**	Fix the creation of the key file for WIN32
+**
+**	Revision 1.20  1997-02-17 10:40:12-05  gsl
+**	Fix initialization of const var msgdir
+**
+**	Revision 1.19  1996-11-11 17:48:14-05  jockc
+**	a few small changes for message.c
+**
+**	Revision 1.18  1996-11-11 09:04:25-08  jockc
+**	changed WIN32 to use wispmsgsharedir() for message file dir
+**
+**	Revision 1.17  1996-11-04 17:08:25-08  gsl
+**	Fix the order of the include files and move them all
+**	to the top of the file
+**
+**	Revision 1.16  1996-10-30 15:11:40-08  jockc
+**	change mkdir call back to unix style.. redef is in win32std.h
+**
+**	Revision 1.15  1996-10-15 16:12:10-07  jockc
+**	support for windows 32.. reused as much existing code as
+**	possible by emulating the unix message queues with win32msg.c ..
+**
+**	Revision 1.14  1996-08-23 14:02:41-07  gsl
+**	Changed to use wispprbdir()
+**
+**	Revision 1.13  1996-08-19 15:32:31-07  gsl
+**	drcs update
+**
+**
+**
+*/

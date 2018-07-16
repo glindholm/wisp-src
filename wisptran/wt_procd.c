@@ -1,14 +1,23 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-#ifdef MSDOS
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+
+/*
+**	File:		wt_procd.c
+**
+**	Project:	WISP/TRAN
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Main PROCEDURE DIVISION routines
+**
+**	Routines:	
+*/
+
+/*
+**	Includes
+*/
+
 #include <string.h>
-#endif
 
 #define EXT extern
 #include "wisp.h"
@@ -16,13 +25,40 @@
 #include "crt.h"
 #include "cobfiles.h"
 #include "wispfile.h"
+#include "statment.h"
+#include "wt_disp.h"
+#include "wt_procd.h"
+#include "reduce.h"
 
-NODE get_statement();
-NODE get_verb_statement();
-static int exit_copy_mode();
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
 
 extern int unterminated_if;
 int	mwconv_flag=0;
+
+NODE find_verb_node(NODE the_statement);
+NODE parse_else(NODE the_statement);
+NODE parse_goto(NODE the_statement);
+NODE parse_perform(NODE the_statement);
+NODE parse_call(NODE the_statement);
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+static void exit_copy_mode();
+static int p_proc();
+static void stmt_unsupported();
+static void p_rewrite();
 
 /*
 **	Routine:	procedure_division()
@@ -46,7 +82,7 @@ int	mwconv_flag=0;
 **	06/02/93	Written by GSL
 **
 */
-procedure_division(the_statement)
+void procedure_division(the_statement)
 NODE	the_statement;
 {
 	if (eq_token(the_statement->next->token,KEYWORD,"PROCEDURE"))
@@ -72,7 +108,7 @@ NODE	the_statement;
 
 	get_line();								/* get a new line.			*/
 
-	if (strpos(inline,"DECLARATIVES") == -1)				/* no declaratives			*/
+	if (strpos(linein,"DECLARATIVES") == -1)				/* no declaratives			*/
 	{
 		int i;
 
@@ -109,12 +145,28 @@ NODE	the_statement;
 		if (strcmp(area_a,"    "))					/* If area_a is not empty then there	*/
 		{
 			tput_flush();
+
 			exit_copy_mode();
-			check_proc_div();
+
+			if (in_decl)
+			{
+				/*
+				**	If in DECLARATIVES then check for and process END DECLARATIVES.
+				*/
+				if (check_proc_div())
+				{
+					hold_line();
+					continue;
+				}
+			}
 										/* If in the procedure division, when	*/
 										/* something is in area a, it has to	*/
-			chk_dpar();						/* be a paragraph, or declarative sect.	*/
-	
+			if (chk_dpar())						/* be a paragraph, or declarative sect.	*/
+			{
+				hold_line();
+				continue;
+			}
+
 		}
 
 		p_proc();
@@ -123,7 +175,7 @@ NODE	the_statement;
 
 int sect_num = 0;
 
-static exit_copy_mode()
+static void exit_copy_mode()
 {
 	extern int sect_num;								/* Current SECTION number.		*/
 
@@ -156,98 +208,14 @@ static exit_copy_mode()
 
 }
 
-p_proc()
+static int p_proc()
 {
-	int i,j,hold,fnum,inv_key,n_alt,ml,mwc_len;
-	char tstr[132],pstr[256],outline[132];
-	int	startpos;
+	int i;
 	NODE	the_statement;
+	char	test_keyword[80];
 
-	if ( !strcmp(parms[0],"DISPLAY") && !strcmp(parms[1],"AND"))
-	{
-		/*
-			DISPLAY AND READ [ALTERED] record-name ON crt-file
-				[ [ONLY] {PFKEY|PFKEYS} {ident} [ident ...]                  ]
-				[ [ON    {PFKEY|PFKEYS} {ident} [ident ...] imperative-stmt] ]
-				[ [NO-MOD imperative-stmt]                                   ]
-		*/
+	sprintf(test_keyword,"%s ",parms[0]);
 
-		skip_param(3);								/* skip forward 3 parameters		*/
-		get_param(templine);							/* get next parameter			*/
-		if (!strcmp(templine,"ALTERED"))					/* was an ALTERED parm, skip it		*/
-		{
-			get_param(templine);						/* Get the screen definition name	*/
-		}
-		write_log("WISP",'I',"DISPANDREAD","DISPLAY AND READ statement of screen record %s.",templine);
-
-		tput_scomment("**** DISPLAY AND READ %s.",templine); 
-
-		scount = 0;
-											/* Try to find a match in the known	*/
-											/* screen list				*/
-		while ( strcmp(templine,scrn_name[scount]) && (scount < num_screens)) scount++;
-		if (scount == num_screens)						/* Didn't find one.... error		*/
-		{
-			write_log("WISP",'F',"DISPANDRDERR","Error in DISPLAY AND READ Statement, Input line is;");
-			write_log(" ",' '," ","%s",inline);
-			write_log("WISP",'F',"CANTFINDSCRN","Could not find screen named %s",templine);
-			exit_with_err();
-		}
-
-		if (in_decl)								/* if we are currently in declaratives	*/
-		{
-			scrn_flags[scount] |= SCRN_IN_DECLARATIVES;			/* flag it as such			*/
-		}
-		if (!in_decl || copy_to_dtp_file)					/* If not, or copying.			*/
-		{
-			scrn_flags[scount] |= SCRN_IN_PROCDIV;				/* Otherwise flag procedure division	*/
-		}
-
-		if (pmode == DISPLAY)							/* Nested DISPLAY AND READ		*/
-		{
-			write_log("WISP",'F',"ERRNESTDISP","Error -- NESTED DISPLAY AND READ Statement, Input line is;");
-			write_log(" ",'M'," ","%s",inline);
-			exit_with_err();
-		}
-					
-		this_item = screen_item[scount];					/* point to first item in the list for	*/
-											/* this screen				*/
-		last_item = this_item;
-
-		ptype = get_param(templine);						/* skip over the ON keyword		*/
-
-		ptype = get_param(templine);						/* skip over the CRT keyword		*/
-											/* Find out which crt it is.		*/
-		cur_crt = crt_index(templine);
-		if (-1 == cur_crt)
-		{
-			write_log("WISP",'E',"NOTWS","DISPLAY AND READ on unknown Workstation file [%s]",templine);
-			cur_crt = 0;
-		}
-		scrn_crt[scount] = cur_crt;						/* Remember which one it was.		*/
-
-		d_period = 0;								/* no period found			*/
-		pfkeys = 0;								/* PFKEYS not found yet			*/
-		on_pfkeys = 0;								/* haven't found ON PFKEYS		*/
-		no_mod = 0;								/* nor have we seen NO-MOD		*/
-
-											/* Found a period			*/
-		if (ptype == -1) 							/* No other parms			*/
-		{									/* finish up DISPLAY AND READ		*/
-			n_pfkeys(1);							/* write an empty pfkey phrase w/period	*/
-		}
-		else
-		{
-			pmode = DISPLAY;						/* set the mode and continue		*/
-			pf_str[0] = 0;							/* PFKEYS phrase string = 0		*/
-			nm_str[0] = 0;							/* NO-MOD phrase is null		*/
-			wd_scan();							/* scan for the parts			*/
-		}
-	}
-	else if (pmode == DISPLAY)							/* a DISPLAY parse is in progress	*/
-	{
-		wd_scan();								/* just scan for the parts		*/
-	}										/* end of DISPLAY AND READ PROCESING	*/
 
 #define PROC_MOVE	0
 #define PROC_OPEN 	5
@@ -271,23 +239,31 @@ p_proc()
 
 /*       0         1         2         3         4         5         6         7         8         9         0  	*/
 /*       01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456	*/
-	else if ((i = strpos(
+	if ((i = strpos(
         "MOVE OPEN CLOSE WRITE REWRITE READ SET START CALL EXIT PERFORM STOP IF GO SORT ACCEPT DISPLAY DELETE ELSE ",
-			parms[0])) != -1)
+			test_keyword)) != -1)
 	{
 		switch (i)
 		{
+			case PROC_CALL:
+			case PROC_DISPLAY:
+			case PROC_ELSE:
+			case PROC_EXIT:
+			case PROC_GOTO:
+			case PROC_IF:
 			case PROC_MOVE:
+			case PROC_PERFORM:
+			case PROC_SET:
+			case PROC_START:
+			case PROC_STOP:
 			{
 				hold_line();
 				get_line();
+
 				the_statement = get_verb_statement();
-				
-				parse_move(the_statement);
+				parse_verb_statement(the_statement);
 
-				free_statement(the_statement);
 				hold_token_cache();
-
 				break;
 			}
 
@@ -322,9 +298,9 @@ p_proc()
 				}
 				else							/* it was a CRT record, look for parms	*/
 				{
-					stredt(inline,"REWRITE","");			/* Remove REWRITE statement.		*/
+					stredt(linein,"REWRITE","");			/* Remove REWRITE statement.		*/
 					ptype = get_param(o_parms[1]);			/* Actually get the name.		*/
-					stredt(inline,o_parms[1],"");			/* Remove file name.			*/
+					stredt(linein,o_parms[1],"");			/* Remove file name.			*/
 					crt_rewrite(i);					/* call a proc to do it			*/
 				}
 				break;
@@ -342,100 +318,6 @@ p_proc()
 				break;
 			}
 
-			case PROC_SET: 								/* A SET statement		*/
-			{
-
-				ptype = get_param(o_parms[0]);					/* Get the SET keyword.		*/
-				strcpy(outline,inline);						/* Save the line.		*/
-				ml = 0;								/* Not multi line yet.		*/
-
-				ptype = get_param(o_parms[0]);					/* Get the source keyword.	*/
-				if (ptype == 1) ml = 1;						/* Check if multi line.		*/
-
-				ptype = get_param(o_parms[2]);					/* Get the IN or OF keyword.	*/
-				if (ptype == 1) ml = 1;						/* Check if multi line.		*/
-
-				if (!strcmp(o_parms[2],"IN") || !strcmp(o_parms[2],"OF"))	/* It is a set statement	*/
-				{
-					get_param(o_parms[1]);					/* get name of variable to set	*/
-
-					if (!strcmp(o_parms[2],"OF"))				/* If OF phrase, may need FAC.	*/
-					{
-						if (find_item(o_parms[1]))			/* see if this is a screen item.*/
-						{
-							strcpy(o_parms[9],o_parms[1]);		/* It is, make a fac now.	*/
-							make_fac(o_parms[1],o_parms[9]);
-						}
-					}
-
-					ptype = get_param(o_parms[2]);				/* will be ON or OFF		*/
-
-
-					for (i=0;i<10;i++)					/* Try 10 words.		*/
-					{							/* if not ON or OFF		*/
-						if (strcmp(o_parms[2],"ON") && strcmp(o_parms[2],"OFF")) /* must be a subscript	*/
-						{
-							strcat(o_parms[1]," ");			/* add a space			*/
-							strcat(o_parms[1],o_parms[2]);		/* then the item		*/
-							ptype = get_param(o_parms[2]);		/* try again			*/
-						}
-						else
-						{						/* Change to lower case.	*/
-							if (!strcmp(o_parms[2],"ON"))	strcpy(o_parms[2],"on");
-							else				strcpy(o_parms[2],"off");
-
-							break;
-						}
-					}
-
-					write_log("WISP",'I',"PROCSETBIT","Processing SET BITS %s.",o_parms[2]);
-
-					tput_line_at(16, "MOVE %s TO WISP-SET-BYTE",o_parms[0]);
-
-											/* Can't call with indexed vars		*/
-											/* When using acu cobol.		*/
-					if (acu_cobol)
-					{
-						tput_line_at(16, "MOVE %s",o_parms[1]);
-						tput_clause (20, "TO WISP-TEST-BYTE");
-					}
-
-					tput_line_at(16, "CALL \"bit_%s\" USING WISP-SET-BYTE,",o_parms[2]);
-
-					if (acu_cobol)
-						tput_clause(20, "WISP-TEST-BYTE");
-					else
-						tput_clause(20, "%s",o_parms[1]);
-
-					if (acu_cobol)
-					{
-						tput_line_at(16, "MOVE WISP-TEST-BYTE TO");
-						tput_clause (20, "%s",o_parms[1]);
-					}
-
-					if (ptype == -1)					/* end of statement		*/
-					{
-						tput_clause(16, ".");				/* write a period		*/
-					}
-
-					write_log("WISP",'I',"SETBITDONE","Done processing SET BITS command");
-				}
-				else
-				{	if (ml)
-					{							/* A multi line parse.		*/
-
-						tput_block(outline);				/* Ouput the starting line.	*/
-						hold_line();					/* hold the second line.	*/
-					}
-					else
-					{
-						tput_line("%s", inline);			/* Singular line.		*/
-					}
-				}
-				break;
-			}
-
-
 			case PROC_SORT:								/* Process SORT statements.	*/
 			{
 				write_log("WISP",'I',"SORTFOUND","SORT statement being processed.");
@@ -443,191 +325,9 @@ p_proc()
 				break;
 			}
 
-			case PROC_START:							/* START statements		*/
-			{
-#ifdef OLD
-				write_log("WISP",'I',"FOUNDSTART","START statement found.");
-				p_start();
-				break;
-#endif
-
-				hold_line();
-				get_line();
-				the_statement = get_verb_statement();
-				
-				parse_start(the_statement);
-
-				free_statement(the_statement);
-				hold_token_cache();
-
-				break;
-			}
-
-			case PROC_CALL:							/* CALL statements			*/
-			{
-				p_call();						/* Go process it.			*/
-				break;
-			}
-
-			case PROC_PERFORM:							/* PERFORM statement		*/
-			{
-				if (in_decl)							/* is it in the declaratives?	*/
-				{
-					strcpy(pstr,parms[1]);					/* get the name.		*/
-					stredt(pstr,".","");
-
-					if (paracmp(pstr,proc_paras,proc_paras_cnt))		/* Found it.			*/
-					{							/* now process it.		*/
-						make_fld(tstr,pstr,"D-");
-						stredt(inline,pstr,tstr);			/* replace it in the line.	*/
-					}
-					else							/* Otherwise save the name for	*/
-					{							/* later analysis.		*/
-						add_perf(pstr);
-					}
-				}
-				else if (copy_to_dcl_file)					/* Are we copying paragraphs?	*/
-				{
-					strcpy(pstr,parms[1]);					/* get the name.		*/
-					stredt(pstr,".","");
-
-					if (!paracmp(pstr,proc_paras,proc_paras_cnt))	
-					{
-						add_perf(pstr);					/* Not found, add to list	*/
-					}
-				}
-				else if (proc_performs_cnt)					/* Check to see if it is a ref	*/
-				{								/* to a paragraph in the DECLAR	*/
-					strcpy(pstr,parms[1]);					/* get the name.		*/
-					stredt(pstr,".","");
-
-					if (paracmp(pstr,proc_performs,proc_performs_cnt))
-					{
-						make_fld(tstr,pstr,"D-");			/* If found, make the new name.	*/
-						stredt(inline,pstr,tstr);			/* Then change the statement.	*/
-					}
-				}
-				tput_line("%s", inline);
-				break;
-			}
-
-			case PROC_GOTO:								/* GO TO statement		*/
-			{
-				if (in_decl)							/* is it in the declaratives?	*/
-				{
-					strcpy(pstr,parms[2]);					/* get the name.		*/
-					stredt(pstr,".","");
-
-					if (paracmp(pstr,proc_paras,proc_paras_cnt))		/* Found it			*/
-					{							/* now process it.		*/
-						make_fld(tstr,pstr,"D-");
-						stredt(inline,pstr,tstr);			/* replace it in the line.	*/
-					}
-					else							/* Otherwise save the name for	*/
-					{							/* later analysis.		*/
-						add_perf(pstr);
-					}
-
-				}
-				else if (copy_to_dcl_file)					/* Are we copying paragraphs?	*/
-				{
-					strcpy(pstr,parms[2]);					/* get the name.		*/
-					stredt(pstr,".","");
-
-					if (!paracmp(pstr,proc_paras,proc_paras_cnt))		/* If not found			*/
-					{
-						add_perf(pstr);					/* Add to list			*/
-					}
-				}
-				else if (proc_performs_cnt)					/* Check to see if it is a ref	*/
-				{								/* to a paragraph in the DECLAR	*/
-					strcpy(pstr,parms[2]);					/* get the name.		*/
-					stredt(pstr,".","");
-
-					if (paracmp(pstr,proc_performs,proc_performs_cnt))
-					{
-						make_fld(tstr,pstr,"D-");			/* If found, make the new name.	*/
-						stredt(inline,pstr,tstr);			/* Then change the statement.	*/
-					}
-				}
-				tput_line("%s", inline);
-				break;
-			}
-
-			case PROC_EXIT:							/* EXIT statement		*/
-			{
-				hold_line();
-				get_line();
-				the_statement = get_verb_statement();
-				
-				parse_exit(the_statement);
-
-				free_statement(the_statement);
-				hold_token_cache();
-
-				break;
-			}
-
-			case PROC_STOP:							/* process STOP statements		*/
-			{
-				hold_line();
-				get_line();
-				the_statement = get_verb_statement();
-				
-				parse_stop(the_statement);
-
-				free_statement(the_statement);
-				hold_token_cache();
-
-				break;
-			}
-
-			case PROC_IF:
-			{								/* Process IF's for ALTERED and BIT IN.	*/
-				unterminated_if = 0;					/* Clear flag, next ELSE belongs to	*/
-											/* this IF stmt.			*/
-				hold_line();
-				get_line();
-				the_statement = get_verb_statement();
-				
-				parse_if(the_statement);
-
-				free_statement(the_statement);
-				hold_token_cache();
-
-				break;
-			}
-
-			case PROC_ELSE:
-			{
-				if (unterminated_if)					/* If wisp generated an unterminated	*/
-				{							/* "IF" stmt then need to terminate it	*/
-											/* before we output this "ELSE".	*/
-					unterminated_if = 0;
-					tput_line("           END-IF");			/* Close the IF				*/
-				}
-
-				tput_line("%s", inline);
-				break;
-			}
-
 			case PROC_ACCEPT:						/* Process ACCEPT statements		*/
 			{
 				p_accept();
-				break;
-			}
-
-			case PROC_DISPLAY:
-			{
-				hold_line();
-				get_line();
-				the_statement = get_verb_statement();
-				
-				parse_display(the_statement);
-
-				free_statement(the_statement);
-				hold_token_cache();
-
 				break;
 			}
 
@@ -639,7 +339,7 @@ p_proc()
 
 			default:
 			{
-				tput_line("%s", inline);
+				tput_line("%s", linein);
 				break;
 			}
 		}									/* end of switch			*/
@@ -652,7 +352,7 @@ p_proc()
 
 			/*    0         1         2         3         4         5	  6	    7	      8			*/
 			/*    012345678901234567890123456789012345678901234567890123456789012345678901234567890			*/
-	else if ((i = strpos(" FREE COMMIT HOLD ROLLBACK BEGIN ", parms[0])) != -1)
+	else if ((i = strpos(" FREE COMMIT HOLD ROLLBACK BEGIN ", test_keyword)) != -1)
 	{
 		switch (i)
 		{
@@ -665,12 +365,15 @@ p_proc()
 			{
 				write_log("WISP",'W',"FREEALL","FREE ALL changed to UNLOCK ALL.");
 				tput_scomment("*** FREE ALL changed to UNLOCK ALL. ***");
-				stredt(inline,"FREE","UNLOCK");
-				tput_line("%s", inline);
+				stredt(linein,"FREE","UNLOCK");
+				tput_line("%s", linein);
 			}
 			else 
 			{
-				stmt_unsupported("FREE");
+				write_log("WISP",'W',"FREEALL","FREE ALL changed to UNLOCKs.");
+				stredt(linein,"FREE","PERFORM");
+				stredt(linein,"ALL","WISP-FREE-ALL");
+				tput_line("%s", linein);
 			}
 			break;
 		case PROC_COMMIT:
@@ -682,8 +385,8 @@ p_proc()
 			{
 				write_log("WISP",'W',"COMMIT","COMMIT changed to UNLOCK ALL.");
 				tput_scomment("*** COMMIT changed to UNLOCK ALL. ***");
-				stredt(inline,"COMMIT","UNLOCK ALL");
-				tput_line("%s", inline);
+				stredt(linein,"COMMIT","UNLOCK ALL");
+				tput_line("%s", linein);
 			}
 			else
 			{
@@ -700,38 +403,162 @@ p_proc()
 			stmt_unsupported("BEGIN");
 			break;
 		default:
-			tput_line("%s", inline);
+			tput_line("%s", linein);
 			break;
 		}
 	}
 	else
 	{
-		tput_line("%s",inline);							/* For now, just copy it.		*/
-	}
+#ifdef OLD
+		tput_line("%s",linein);							/* For now, just copy it.		*/
+#endif
+		hold_line();
+		get_line();
 
+		the_statement = get_verb_statement();
+		parse_verb_statement(the_statement);
+
+		hold_token_cache();
+	}
+	return 0;
 }
 
-stmt_unsupported(verb)
+/*
+**	Routine:	parse_verb_statement()
+**
+**	Function:	Handle one verb statement.
+**
+**	Description:	
+**
+**	Arguments:
+**	the_statement	A verb statement.
+**
+**	Globals:	None
+**
+**	Return:		NULL
+**
+**	Warnings:	None
+**
+**	History:	
+**	07/22/94	Written by gsl
+**
+*/
+NODE parse_verb_statement(NODE the_statement)
+{
+	NODE	verb_node;
+
+	if (!the_statement) return(the_statement);
+
+	verb_node = find_verb_node(the_statement);
+
+	if(!verb_node)
+	{
+		tput_statement(12,the_statement);
+		return( free_statement(the_statement) );
+	}
+
+	if (eq_token(verb_node->token,VERB,"MOVE"))
+	{
+		the_statement = parse_move(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"START"))
+	{
+		parse_start(the_statement);
+		the_statement = free_statement(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"CALL"))
+	{
+		the_statement = parse_call(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"EXIT"))
+	{
+		the_statement = parse_exit(the_statement);
+	}
+	else if (eq_token(verb_node->token,KEYWORD,"ELSE"))	/* NOTE: ELSE is a KEYWORD not a VERB */
+	{
+		the_statement = parse_else(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"GO"))
+	{
+		the_statement = parse_goto(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"PERFORM"))
+	{
+		the_statement = parse_perform(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"STOP"))
+	{
+		the_statement = parse_stop(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"IF"))
+	{
+		unterminated_if = 0;							/* Clear flag, next ELSE belongs to	*/
+											/* this IF stmt.			*/
+		parse_if(the_statement);
+		the_statement = free_statement(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"DISPLAY"))
+	{
+		the_statement = parse_display(the_statement);
+	}
+	else if (eq_token(verb_node->token,VERB,"SET"))
+	{
+		the_statement = parse_set(the_statement);
+	}
+	else
+	{
+		/*
+		**	Unrecognized VERB, just print it out.
+		*/
+		tput_statement(12,the_statement);
+		the_statement = free_statement(the_statement);
+	}
+
+	if (the_statement)
+	{
+		/*
+		**	If there is a statement then just print it.
+		*/
+		tput_statement(12,the_statement);
+		the_statement = free_statement(the_statement);
+	}
+
+	return the_statement;
+}
+
+static void stmt_unsupported(verb)
 char	*verb;
 {
 	tput_scomment("****** WISP: Verb [%s] is not supported. ******",verb);
 	write_log("WISP",'E',"UNSUPPORTED","Verb [%s] is not supported.",verb);
-	tput_line("%s",inline);
+	tput_line("%s",linein);
 }
 
-p_rewrite()
+static void p_rewrite()
 {
 
-	int i,j,hold,fnum,inv_key,n_alt;
-	char tstr[132];
+	int i,fnum,inv_key;
 	char	recname[40];
 	int	lock_clause;
+	int	fd;
+	char	fdname[40];
 
 	i = 0;
 	o_parms[5][0] = '\0';								/* no status field yet			*/
 
 	peek_param(recname);
 	if (strchr(recname,'.')) *((char *)strchr(recname,'.')) = 0;
+
+	fd = fd_record( recname );
+	if (fd == -1)
+	{
+		write_log("WISP",'E',"REWRITE","Unknown Record Name [%s]",recname);
+		strcpy(fdname,"Unknown-Record-Name");
+	}
+	else
+	{
+		strcpy(fdname, prog_files[fd]);
+	}
 
 	fnum = -1;									/* set fnum to error status		*/
 
@@ -748,7 +575,7 @@ p_rewrite()
 	{
 		tput_clause(12, "%s",o_parms[0]);					/* output parm				*/
 
-		if (o_parms[0][0]) stredt(inline,o_parms[0],"");			/* Remove it from the input line	*/
+		if (o_parms[0][0]) stredt(linein,o_parms[0],"");			/* Remove it from the input line	*/
 		ptype = get_param(o_parms[0]);						/* get a new parm....			*/
 
 		if (ptype == 1)								/* first parm on a new line		*/
@@ -758,18 +585,18 @@ p_rewrite()
 
 		if (!strcmp(o_parms[0],"INVALID"))					/* INVALID KEY phrase?			*/
 		{
-			stredt(inline," INVALID"," ");					/* remove INVALID			*/
+			stredt(linein," INVALID"," ");					/* remove INVALID			*/
 			if (ptype != -1)
 			{
 				peek_param(o_parms[7]);					/* get "KEY"				*/
 				if (!strcmp(o_parms[7],"KEY"))				/* Was it KEY?				*/
 				{
 					ptype = get_param(o_parms[0]);			/* Get it, and remove it.		*/
-					stredt(inline," KEY"," ");			/* remove KEY				*/
+					stredt(linein," KEY"," ");			/* remove KEY				*/
 				}
 			}
 
-			if (vax_cobol && !lock_clause)
+			if (vax_cobol && !lock_clause && !(prog_ftypes[fd] & AUTOLOCK))
 			{
 				tput_line("               ALLOWING NO OTHERS");
 				lock_clause = 1;
@@ -801,7 +628,7 @@ p_rewrite()
 		tput_line("                   %s\n",o_parms[0]); 
 	}
 
-	if ( vax_cobol && !lock_clause )
+	if (vax_cobol && !lock_clause && !(prog_ftypes[fd] & AUTOLOCK))
 	{
 		tput_line("               ALLOWING NO OTHERS\n");
 		lock_clause = 1;
@@ -810,32 +637,18 @@ p_rewrite()
 
 	if ( vax_cobol )
 	{
-		int	fd;
-		char	fdname[40];
-
-		fd = fd_record( recname );
-		if (fd == -1)
-		{
-			write_log("WISP",'E',"REWRITE-UNLOCK","Unknown Record Name");
-			strcpy(fdname,"????");
-		}
-		else
-		{
-			strcpy(fdname, prog_files[fd]);
-		}
-
 		if (inv_key)
 		{
 			tput_line("           IF WISP-TEST-BYTE = \"N\" THEN");
 			tput_line("               MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fd]);
-			tput_line("               UNLOCK %s ALL", fdname );
+			tput_line("               UNLOCK %s", fdname );
 			tput_line("               MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fd]);
 			tput_line("           ELSE");
 		}
 		else
 		{
 			tput_line("           MOVE %s TO WISP-SAVE-FILE-STATUS",prog_fstats[fd]);
-			tput_line("           UNLOCK %s ALL", fdname );
+			tput_line("           UNLOCK %s", fdname );
 			tput_line("           MOVE WISP-SAVE-FILE-STATUS TO %s",prog_fstats[fd]);
 		}
 	}
@@ -852,101 +665,25 @@ p_rewrite()
 
 }
 
-wd_scan()										/* scan for the parts of D & R		*/
-{
-	ptype = get_param(templine);							/* get the next parm			*/
-	if (!pfkeys && (pmode == DISPLAY)) t_pfkeys(templine);				/* test for PFKEYS			*/
-	if (!on_pfkeys && (pmode == DISPLAY)) t_onpfkeys(templine);			/* test for ON PFKEYS			*/
-	if (!no_mod && (pmode == DISPLAY)) t_nomod(templine);				/* test for NO-MOD			*/
-	t_d_exit(templine);								/* test for exit of display procs	*/
-}
-
-
-add_perf(the_name)									/* add a paragraph name to the perform	*/
+void add_perf(the_name)									/* add a paragraph name to the perform	*/
 char *the_name;
 {
 	if (!paracmp(the_name,decl_performs,decl_performs_cnt))				/* If not in table add it.		*/
 	{
 		strcpy(decl_performs[decl_performs_cnt++],the_name);	
 	}
-	return(0);
 }
 
-parse_display(the_statement)
-NODE the_statement;
-{
-	NODE	curr_node, display_node, period_node;
-	int	col;
-
-	curr_node = the_statement->next;
-
-	if (!eq_token(curr_node->token,VERB,"DISPLAY"))
-	{
-		tput_statement(12,the_statement);
-		return(0);
-	}
-
-	write_log("WISP",'I',"PROCDISP","Processing DISPLAY statement.");
-
-	display_node = curr_node;
-
-	if (!proc_display)
-	{
-		write_log("WISP",'I',"SKIPDISP","Skipped processing of DISPLAY statement.");
-		tput_statement(12,the_statement);
-		return(0);
-	}
-
-	col = display_node->token->column;
-	if (col < 12) col = 12;
-	else if (col > 24) col = 24;
-
-	tput_line_at(col,"MOVE SPACES TO WISP-CRT-SCREEN-AREA");
-	edit_token(display_node->token,"STRING");
-	display_node->token->column = col;
-
-	curr_node = curr_node->next;
-	for(period_node=NULL; NODE_END != curr_node->type; curr_node=curr_node->next)
-	{
-		if (PERIOD==curr_node->token->type)
-		{
-			period_node = curr_node;
-			free_token_from_node(period_node);
-			break;
-		}
-	}
-
-	tput_statement(12,the_statement);
-
-	tput_line_at(col+4, "DELIMITED BY SIZE INTO");
-	tput_clause (col+8, "WISP-CRT-SCREEN-AREA");
-	tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");
-	tput_clause (col+4, "WISP-SCREEN-LINE(24)");
-	tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");
-	tput_clause (col+4, "WISP-CRT-ORDER-AREA");
-	tput_line_at(col,   "CALL \"WDISPLAY\" USING WISP-CRT-RECORD");
-
-	if (period_node)
-	{
-		tput_clause(col,".");
-	}
-	tput_flush();
-
-	return(0);
-}
-
-parse_stop(the_statement)
-NODE the_statement;
+NODE parse_stop(NODE the_statement)
 {
 	NODE	curr_node, stop_node, period_node;
 	int	col;
 
-	curr_node = the_statement->next;
+	curr_node = find_verb_node(the_statement);
 
 	if (!eq_token(curr_node->token,VERB,"STOP"))
 	{
-		tput_statement(12,the_statement);
-		return(0);
+		return(the_statement);
 	}
 
 	stop_node = curr_node;
@@ -973,7 +710,7 @@ NODE the_statement;
 		curr_node->token->type = IDENTIFIER;
 
 		tput_statement(12,the_statement);
-		return(0);
+		return(free_statement(the_statement));
 	}
 
 	/*
@@ -985,7 +722,7 @@ NODE the_statement;
 	{
 		write_log("WISP",'I',"SKIPSTOP","Skipped processing of STOP statement.");
 		tput_statement(12,the_statement);
-		return(0);
+		return(free_statement(the_statement));
 	}
 
 	col = stop_node->token->column;
@@ -993,6 +730,7 @@ NODE the_statement;
 	else if (col > 24) col = 24;
 
 	tput_line_at(col,"MOVE SPACES TO WISP-CRT-SCREEN-AREA");
+	tput_flush();
 	edit_token(stop_node->token,"STRING");
 	stop_node->token->column = col;
 
@@ -1018,11 +756,7 @@ NODE the_statement;
 
 	tput_line_at(col+4, "DELIMITED BY SIZE INTO");
 	tput_clause (col+8, "WISP-CRT-SCREEN-AREA");
-	tput_line_at(col,   "MOVE \"Press RETURN to proceed.\" TO");
-	tput_clause (col+4, "WISP-SCREEN-LINE(24)");
-	tput_line_at(col,   "MOVE WISP-FULL-SCREEN-ORDER-AREA TO");
-	tput_clause (col+4, "WISP-CRT-ORDER-AREA");
-	tput_line_at(col,   "CALL \"WDISPLAY\" USING WISP-CRT-RECORD");
+	tput_line_at(col,   "CALL \"WSTOP\" USING WISP-CRT-SCREEN-AREA");
 
 	if (period_node)
 	{
@@ -1030,20 +764,19 @@ NODE the_statement;
 	}
 	tput_flush();
 
-	return(0);
+	return(free_statement(the_statement));
 }
 
-parse_exit(the_statement)
+NODE parse_exit(the_statement)
 NODE the_statement;
 {
 	NODE	curr_node, exit_node;
 
-	curr_node = the_statement->next;
+	curr_node = find_verb_node(the_statement);
 
 	if (!eq_token(curr_node->token,VERB,"EXIT"))
 	{
-		tput_statement(12,the_statement);
-		return(0);
+		return(the_statement);
 	}
 
 	exit_node = curr_node;
@@ -1070,26 +803,24 @@ NODE the_statement;
 		curr_node->token->type = IDENTIFIER;
 
 		tput_statement(12,the_statement);
-		return(0);
+		return(free_statement(the_statement));
 	}
 
 	tput_statement(12,the_statement);
-	return(0);
+	return(free_statement(the_statement));
 }
 
-parse_move(the_statement)
+NODE parse_move(the_statement)
 NODE the_statement;
 {
-	NODE	curr_node, move_node, temp_node, ident_node;
+	NODE	curr_node, move_node, ident_node;
 	int	col;
 
-	curr_node = the_statement->next;
+	curr_node = find_verb_node(the_statement);
 
 	if (!eq_token(curr_node->token,VERB,"MOVE"))
 	{
-		write_log("WISP",'W',"NOTMOVE","NOT A MOVE Statement. STATEMENT NOT PROCESSED");
-		tput_statement(12,the_statement);
-		return(0);
+		return(the_statement);
 	}
 
 	move_node = curr_node;
@@ -1141,7 +872,7 @@ NODE the_statement;
 			write_log("WISP",'E',"MOVEWC","Error parsing MOVE WITH CONVERSION, expecting keyword \"TO\" found [%s]",
 							token_data(curr_node->next->token));
 			tput_statement(12,the_statement);
-			return(0);
+			return(free_statement(the_statement));
 		}
 
 		if (col < 12) col = 12;
@@ -1192,6 +923,7 @@ NODE the_statement;
 			tput_line_at(col,   "    MOVE ZERO TO");
 			tput_statement(col+4,ident_node);			/* Write identifier-2				*/
 			curr_node = curr_node->next;
+			unterminated_if = 1;					/* Cause an END-IF to be added if needed.	*/
 		}
 		tput_statement(col,curr_node);					/* Write trailing nodes (I.e. PERIOD)		*/
 	}
@@ -1227,5 +959,298 @@ NODE the_statement;
 		tput_statement(12, the_statement);
 	}
 
-	return(0);
+	return(free_statement(the_statement));
 }
+
+NODE parse_set(the_statement)
+NODE the_statement;
+{
+	NODE	curr_node, verb_node, target_node, figcon_node;
+	int	col;
+
+	verb_node = find_verb_node(the_statement);
+
+	if (!eq_token(verb_node->token,VERB,"SET"))
+	{
+		return(the_statement);
+	}
+
+	write_log("WISP",'I',"SET","SET statement being processed.");
+
+	col = verb_node->token->column;
+
+	figcon_node = verb_node->next;
+	curr_node = figcon_node->next;
+
+	if (isafigcon1(token_data(figcon_node->token)) &&
+		( eq_token(curr_node->token,KEYWORD,"IN") || 
+		  eq_token(curr_node->token,KEYWORD,"OF")    ) )
+	{
+		char	*bit_xxx;
+
+		/*
+		**	[SET figcon IN FAC OF target {ON|OFF}]
+		**	SET figcon IN      F-target {ON|OFF}
+		**	SET figcon OF        target {ON|OFF}
+		**
+		**	MOVE figcon TO WISP-SET-BYTE
+		**	CALL "bit_on" USING WISP-SET-BYTE, target
+		**
+		** (ACU)
+		**	MOVE figcon TO WISP-SET-BYTE
+		**	MOVE target TO WISP-TEST-BYTE
+		**	CALL "bit_on" USING WISP-SET-BYTE, WISP-TEST-BYTE
+		**	MOVE WISP-TEST-BYTE TO target
+		*/
+
+		target_node = curr_node->next;
+
+		if (eq_token(curr_node->token,KEYWORD,"OF"))
+		{
+			/*
+			**	May need to make target into a FAC (f-target)
+			*/
+			if (find_item(token_data(target_node->token)))
+			{
+				/*
+				**	It is a screen item do make into a FAC
+				*/
+				char	fac[50];
+
+				make_fac(fac,token_data(target_node->token));
+				edit_token(target_node->token,fac);
+			}
+		}
+
+		reduce_data_item(target_node);
+
+		curr_node = target_node->next;
+		if (eq_token(curr_node->token,KEYWORD,"ON"))
+		{
+			bit_xxx = "bit_on";
+		}
+		else if (eq_token(curr_node->token,KEYWORD,"OFF"))
+		{
+			bit_xxx = "bit_off";
+		}
+		else
+		{
+			write_log("WISP",'E',"SET","Error in SET stmt, expecting ON or OFF found %s.",
+				token_data(curr_node->token));
+			tput_statement(col,the_statement);
+			return( free_statement(the_statement) );
+		}
+
+		curr_node = curr_node->next;
+
+		decontext_statement(the_statement);
+
+		tput_line_at(col,"MOVE %s TO WISP-SET-BYTE",token_data(figcon_node->token));
+
+		if (acu_cobol)
+		{
+			tput_line_at  (col,   "MOVE");
+			tput_statement(col+4,      target_node->down);
+			tput_clause   (col+4,     "TO WISP-TEST-BYTE");
+			tput_line_at  (col,   "CALL \"%s\" USING WISP-SET-BYTE, WISP-TEST-BYTE",bit_xxx);
+			tput_line_at  (col,   "MOVE WISP-TEST-BYTE TO");
+			tput_statement(col+4,      target_node->down);
+		}
+		else
+		{
+			tput_line_at(col, "CALL \"%s\" USING WISP-SET-BYTE,",bit_xxx);
+			tput_statement(col+4,target_node->down);
+		}
+
+		tput_statement(col,curr_node);
+		the_statement = free_statement(the_statement);
+	}
+	else
+	{
+		tput_statement(col,the_statement);
+		the_statement = free_statement(the_statement);
+	}
+
+	return the_statement;
+}
+
+NODE parse_else(NODE the_statement)
+{
+	if (unterminated_if)					/* If wisp generated an unterminated	*/
+	{							/* "IF" stmt then need to terminate it	*/
+								/* before we output this "ELSE".	*/
+		unterminated_if = 0;
+		tput_line("           END-IF");			/* Close the IF				*/
+		tput_flush();
+	}
+
+	tput_statement(12,the_statement);
+	return(free_statement(the_statement));
+}
+
+NODE find_verb_node(NODE the_statement)
+{
+	NODE	verb_node, curr_node;
+
+	curr_node = the_statement;
+	if (NODE_START == curr_node->type) 
+	{
+		curr_node = curr_node->next;
+	}
+
+	verb_node = curr_node;
+
+	/*
+	**	We should probably do some checking here to ensure we really have the verb.
+	*/
+
+	return verb_node;
+}
+
+NODE parse_goto(NODE the_statement)
+{
+	NODE	verb_node, curr_node;
+
+	verb_node = find_verb_node(the_statement);
+	if (!eq_token(verb_node->token,VERB,"GO"))
+	{
+		return(the_statement);
+	}
+	curr_node = verb_node->next;
+
+	if (eq_token(curr_node->token,KEYWORD,"TO"))
+	{
+		curr_node = curr_node->next;
+	}
+
+	while(curr_node && curr_node->type != NODE_END)
+	{
+		if (eq_token(curr_node->token,KEYWORD,"DEPENDING")) break;
+
+		if (curr_node->token && IDENTIFIER == curr_node->token->type)
+		{
+			char	procedure_name[80], buff[80];
+
+			strcpy(procedure_name,token_data(curr_node->token));
+
+			if (in_decl)								/* is it in the declaratives?	*/
+			{
+				if (paracmp(procedure_name,proc_paras,proc_paras_cnt))		/* Found it			*/
+				{								/* now process it.		*/
+					make_fld(buff,procedure_name,"D-");
+					edit_token(curr_node->token,buff);			/* replace it in the line.	*/
+				}
+				else								/* Otherwise save the name for	*/
+				{								/* later analysis.		*/
+					add_perf(procedure_name);
+				}
+
+			}
+			else if (copy_to_dcl_file)						/* Are we copying paragraphs?	*/
+			{
+				if (!paracmp(procedure_name,proc_paras,proc_paras_cnt))		/* If not found			*/
+				{
+					add_perf(procedure_name);				/* Add to list			*/
+				}
+			}
+			else if (proc_performs_cnt)						/* Check to see if it is a ref	*/
+			{									/* to a paragraph in the DECLAR	*/
+
+				if (paracmp(procedure_name,proc_performs,proc_performs_cnt))
+				{								/* now process it.		*/
+					make_fld(buff,procedure_name,"D-");
+					edit_token(curr_node->token,buff);			/* replace it in the line.	*/
+				}
+			}
+
+		}		
+		curr_node = curr_node->next;
+	}
+
+	tput_statement(12,the_statement);
+	return(free_statement(the_statement));
+}
+
+NODE parse_perform(NODE the_statement)
+{
+	NODE	verb_node, curr_node;
+
+	verb_node = find_verb_node(the_statement);
+	if (!eq_token(verb_node->token,VERB,"PERFORM"))
+	{
+		return(the_statement);
+	}
+	curr_node = verb_node->next;
+
+	/*
+	**	Handle the paragraph relocating stuff.
+	**
+	**	NOTE:	Currently paragraph relocating doesn't deal with PERFORM THRU logic.
+	*/
+	if (curr_node && curr_node->token && IDENTIFIER == curr_node->token->type)
+	{
+			char	procedure_name[80], buff[80];
+
+			strcpy(procedure_name,token_data(curr_node->token));
+
+			if (in_decl)								/* is it in the declaratives?	*/
+			{
+				if (paracmp(procedure_name,proc_paras,proc_paras_cnt))		/* Found it			*/
+				{								/* now process it.		*/
+					make_fld(buff,procedure_name,"D-");
+					edit_token(curr_node->token,buff);			/* replace it in the line.	*/
+				}
+				else								/* Otherwise save the name for	*/
+				{								/* later analysis.		*/
+					add_perf(procedure_name);
+				}
+
+			}
+			else if (copy_to_dcl_file)						/* Are we copying paragraphs?	*/
+			{
+				if (!paracmp(procedure_name,proc_paras,proc_paras_cnt))		/* If not found			*/
+				{
+					add_perf(procedure_name);				/* Add to list			*/
+				}
+			}
+			else if (proc_performs_cnt)						/* Check to see if it is a ref	*/
+			{									/* to a paragraph in the DECLAR	*/
+
+				if (paracmp(procedure_name,proc_performs,proc_performs_cnt))
+				{								/* now process it.		*/
+					make_fld(buff,procedure_name,"D-");
+					edit_token(curr_node->token,buff);			/* replace it in the line.	*/
+				}
+			}
+
+	}
+
+	tput_statement(12,the_statement);
+	return(free_statement(the_statement));
+}
+
+/*
+**	History:
+**	$Log: wt_procd.c,v $
+**	Revision 1.14  1997-09-24 15:29:37-04  gsl
+**	Remove STOP verb native screen warning
+**
+**	Revision 1.13  1997-09-18 13:43:32-04  gsl
+**	Added STOP verb native screens warning
+**
+**	Revision 1.12  1997-09-17 17:10:47-04  gsl
+**	Change CALL verb to parse_call()
+**
+**	Revision 1.11  1997-05-08 15:39:11-04  gsl
+**	Changed STOP verb to call WSTOP instead of WDISPLAY
+**
+**	Revision 1.10  1996-06-24 14:18:59-04  gsl
+**	fix return codes and unused data items
+**
+**	Revision 1.9  1995-05-09 04:32:04-07  gsl
+**	Fixed SET verb to test for isafigcon1().
+**	This corrects the SET condition TO TRUE. bug.
+**
+**
+**
+*/

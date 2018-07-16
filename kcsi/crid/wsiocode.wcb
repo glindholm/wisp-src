@@ -1,0 +1,32 @@
+000100*---------------------------------------------------------------
+000200* STANDARD IO CODES CAN BE USED FOR PHYSICAL OR LOGICAL IO
+000300*---------------------------------------------------------------
+000400 01  FILE-IO-TYPES.
+000500     05  OPEN-SHARED               PIC XX VALUE "OS".
+000600     05  OPEN-OUTPUT               PIC XX VALUE "OO".
+000700     05  OPEN-INPUT                PIC XX VALUE "OI".
+000800     05  OPEN-IO                   PIC XX VALUE "OX".
+000900     05  CLOSE-FILE                PIC XX VALUE "CL".
+001000     05  READ-RECORD               PIC XX VALUE "RD".
+001100     05  READ-NEXT-RECORD          PIC XX VALUE "RN".
+001200     05  HOLD-RECORD               PIC XX VALUE "HL".
+001300     05  HOLD-NEXT-RECORD          PIC XX VALUE "HN".
+001400     05  WRITE-RECORD              PIC XX VALUE "WR".
+001500     05  REWRITE-RECORD            PIC XX VALUE "RW".
+001600     05  DELETE-RECORD             PIC XX VALUE "DL".
+001700     05  START-EQ                  PIC XX VALUE "SE".
+001800     05  START-NLT                 PIC XX VALUE "SN".
+001900     05  START-GT                  PIC XX VALUE "SG".
+002000     05  TEST-FOR-FILE             PIC XX VALUE "TF".
+002100     05  FILE-INFO                 PIC XX VALUE "FI".
+002200     05  FILE-SET                  PIC XX VALUE "FS".
+002300* THESE FIELDS ARE USED TO INDICATE IO ON OTHER THAN
+002400* THE PRIMARY KEY.
+002500     05  READ-KEYED                PIC XX VALUE "RK".
+002600     05  HOLD-KEYED                PIC XX VALUE "HK".
+002700     05  START-EQ-KEYED            PIC XX VALUE "KE".
+002800     05  START-NLT-KEYED           PIC XX VALUE "KN".
+002900     05  START-GT-KEYED            PIC XX VALUE "KG".
+003000* ADDED 11/13/93 to handle MF bug 
+003100* Like FIle info, but a special handling for tables.
+003100     05  TABLE-INFO                PIC XX VALUE "TI".

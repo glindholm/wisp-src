@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -25,6 +27,7 @@
 #include "node.h"
 #include "token.h"
 #include "wmalloc.h"
+#include "statment.h"
 
 static	int	ioc_found;								/* Was I-O-CONTROL found		*/
 
@@ -403,6 +406,12 @@ get_next_statement:
 	if (is_dbfile(token_data(name_node->token))) 
 	{
 		prog_ftypes[prog_cnt] |= DBFILE_FILE;
+	}
+
+	if (openioxfile || openioxall)
+	{
+		prog_ftypes[prog_cnt] |= OPENIOX_FILE;
+		openioxfile = 0;
 	}
 
 	curr_node = curr_node->next;
@@ -987,6 +996,7 @@ char	*the_qual;
 static write_sel(printer,this_file,org,accmod,optional_found)				/* Write initial part of SELECT.	*/
 int printer,this_file,org,accmod, optional_found;
 {
+#ifdef OLD
 	if (prog_ftypes[this_file] & AUTOLOCK)
 	{
 		if ( !(prog_ftypes[this_file] & SEQ_SEQ) )				/* If not SEQ/SEQ then			*/
@@ -996,6 +1006,7 @@ int printer,this_file,org,accmod, optional_found;
 		}
 
 	}
+#endif
 
 	if (!comments) tput_blank();
 
@@ -1047,6 +1058,7 @@ int printer,this_file,org,accmod, optional_found;
 		tput_block(selecttext);
 		selecttext[0] = '\0';
 	}
+	return 0;
 }
 
 static int del_sel(the_file)								/* Determine if delete current SELECT.	*/
@@ -1115,6 +1127,7 @@ gen_io_control()									/* Add an I-O-CONTROL section and insert*/
 	{
 		tput_clause(12,".");
 	}
+	return 0;
 }
 
 /*
@@ -1148,7 +1161,6 @@ char	*reckey;
 char	*reckeyqual;
 char	**splitkey;
 {
-	int	ptype, o_ptype;
 	char	buff[80];
 
 	reckeyqual[0] = '\0';							/* Initialize these variables			*/
@@ -1212,7 +1224,6 @@ char	*name;
 		if (0==strcmp(crt_file[i],name)) 
 		{
 			return(i);							/* Found it in the list			*/
-			break;
 		}
 	}
 
@@ -1232,7 +1243,6 @@ char	*name;
 		if (0==strcmp(prog_files[i],name)) 
 		{
 			return(i);							/* Found it in the list			*/
-			break;
 		}
 	}
 
@@ -1253,3 +1263,12 @@ char	*dataname;
 	}
 	return(0);
 }
+/*
+**	History:
+**	$Log: wt_input.c,v $
+**	Revision 1.10  1996-08-30 21:56:20-04  gsl
+**	drcs update
+**
+**
+**
+*/

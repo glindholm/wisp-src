@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -35,8 +37,7 @@
 
 #include "token.h"
 #include "node.h"
-
-NODE reduce_parens();
+#include "reduce.h"
 
 /*
 **	Routine:	reduce_data_item()
@@ -68,8 +69,7 @@ NODE reduce_parens();
 **	06/02/93	Added Figurative Constants. GSL
 **
 */
-NODE reduce_data_item(start)
-NODE start;
+NODE reduce_data_item(NODE start)
 {
 	NODE	new_node, temp_node;
 
@@ -197,8 +197,7 @@ NODE start;
 **
 */
 
-NODE reduce_parens(start)
-NODE start;
+NODE reduce_parens(NODE start)
 {
 	NODE	new_node, temp_node;
 
@@ -265,8 +264,7 @@ NODE start;
 **
 */
 
-NODE reduce_one(start)
-NODE start;
+NODE reduce_one(NODE start)
 {
 	if (start)
 	{
@@ -283,3 +281,12 @@ NODE start;
 	}
 }
 
+/*
+**	History:
+**	$Log: reduce.c,v $
+**	Revision 1.6  1996-08-30 21:56:08-04  gsl
+**	drcs update
+**
+**
+**
+*/

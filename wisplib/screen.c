@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,17 +15,12 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>                                                                             /* Include time definitions.    */
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
 #include <varargs.h>
-
-#ifdef VMS
-#include <stdlib.h>
-#else
-#include <malloc.h>
-#endif
 
 #ifdef MSDOS
 #include <io.h>
@@ -40,10 +37,11 @@
 #include "wdefines.h"
 #include "movebin.h"
 #include "wanguid.h"
+#include "wfname.h"
+#include "wisplib.h"
+#include "wmalloc.h"
+#include "screen.h"
 
-char	*wfname();
-											
-#define USF_BIT	0x80								        /* Underscore FAC bit set.		*/
 
 #define ROUTINE		57000
 
@@ -53,11 +51,13 @@ struct CPOS_STRUCT
 	int4 col;
 };
 
+/* 
+**	SCREEN(status, ufb_addr, func_type, output_rcvr, cpos) 
+*/
 void SCREEN(va_alist)
 va_dcl
 {
 	va_list	the_args;	
-	/* SCREEN(status, ufb_addr, func_type, output_rcvr, cpos) */
 	char 	*status, *ufb_addr, *func_type, *output_rcvr;
 	struct CPOS_STRUCT *cpos;
 
@@ -66,16 +66,13 @@ va_dcl
 		char order_area[4];							/* First 4 bytes are the order area.	*/
 		char screen_area[1920];							/* 80 columns X 24 rows = 1920 bytes.	*/
 	} crt_record;	       								/* Allocate storage automatically.	*/
-	int file_stat;									/* Value returned by UNIX OPEN func.	*/
 	unsigned char vwfunc;								/* Funxtion performed by VWANG.		*/
 	unsigned char nlines;
-	int4 screen_size;
-	char filename[81],								/* Local storage for VAX filename.	*/
-	     pfkey[2],									/* Receive the PFKEY value from VWANG.	*/
+	int screen_size;
+	char pfkey[2],									/* Receive the PFKEY value from VWANG.	*/
 	     vwang_status[2],								/* Returned status from VWANG.		*/
 	     *work_area;   								/* Dynamically allocated storage.	*/
 	char print_file[9];
-	va_list screen_args;
 	int s_arg_cnt=0;
 	int retcd;
 	
@@ -106,12 +103,25 @@ va_dcl
 	
 
 	crt_record.order_area[0] = 1;							/* Initialize order area just like a	*/
-	crt_record.order_area[1] = 160;							/* WISP/COBOL program would when 	*/
+	crt_record.order_area[1] = (char)(POSITION_CURSOR|UNLOCK_KEYBOARD);		/* WISP/COBOL program would when 	*/
 	crt_record.order_area[2] = 0;							/* reading the entire screen.		*/
 	crt_record.order_area[3] = 0;
 
+	if (nativescreens())
+	{
+		/*
+		**	For Native screens a blank screen area is returned.
+		*/
+		memset(crt_record.screen_area, ' ', sizeof(crt_record.screen_area));
+		crt_record.order_area[OA_CURSOR_COL] = 1;
+		crt_record.order_area[OA_CURSOR_ROW] = 1;
+	}
+	else
+	{
 											/* Call VWANG to read entire screen.	*/
-	vwang(&vwfunc, (unsigned char *)&crt_record, &nlines, "00X", pfkey, vwang_status);
+		vwang(&vwfunc, (unsigned char *)&crt_record, &nlines, "00X", pfkey, vwang_status);
+	}
+	
 	retcd = 0;
 	switch (*func_type)
 	{                      		
@@ -122,15 +132,15 @@ va_dcl
 		}
 		case 'N':								/* Return printable image of screen	*/
 		{
-			strip_facs(crt_record.screen_area, screen_size,0);		/* Remove all FAC characters.		*/
+			strip_facs(crt_record.screen_area, screen_size,WANG_TYPE);	/* Remove all FAC characters.		*/
 											/* Open up and output file.		*/
 			retcd = di_write_file(crt_record.screen_area, 1920, 80, output_rcvr, print_file);	
 			break;								/* Done with case action.		*/
 		}
 		case 'P':								/* Create a printable image w/ borders.	*/
 		{
-			strip_facs(crt_record.screen_area, screen_size,0);              /* Remove non-printing characters.	*/
-			work_area = malloc(3060);	/* 3060 = (80+10)*(24+10) */	/* Allocate neccessary space for image.	*/
+			strip_facs(crt_record.screen_area, screen_size,WANG_TYPE);      /* Remove non-printing characters.	*/
+			work_area = wmalloc(3060);	/* 3060 = (80+10)*(24+10) */	/* Allocate neccessary space for image.	*/
 			border_screen(work_area, crt_record.screen_area, 80, 80, 24);	/* Border it up.			*/
 			retcd = di_write_file(work_area, 3060, 90, output_rcvr, print_file); /* Open and output file.		*/
 			break;								/* Done with case action.		*/
@@ -148,36 +158,28 @@ va_dcl
 
 	if (s_arg_cnt==5)
 	{
-		extern int vcur_lin, vcur_col;
-		int lin,col;
+		int4 row,col;
 		
-		lin=vcur_lin+1;
-		col=vcur_col+1;
-		PUTBIN(&(cpos->row),&lin,sizeof(int4));
+		col = crt_record.order_area[OA_CURSOR_COL];				/* reading the entire screen.		*/
+		row = crt_record.order_area[OA_CURSOR_ROW];
+		PUTBIN(&(cpos->row),&row,sizeof(int4));
 		PUTBIN(&(cpos->col),&col,sizeof(int4));
 	}
 }                                                     
-
-
-
-#define	FAC_BIT		0x80
-#define PROTECT_BIT	0x04
-#define	LINE_BIT	0x20
-
 											/* Remove all FAC characters, replacing	*/
-strip_facs(string_addr, string_len,type)						/*  with a space.			*/
-char *string_addr;						                        /* Address of string to be stripped.	*/
-int4 string_len;									/* Length of that string.		*/
-int type;		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
+void strip_facs(		/*  with a space.			*/
+	char *string_addr,	/* Address of string to be stripped.	*/
+	int string_len,		/* Length of that string.		*/
+	int type)		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
 {
-	unsigned char *l_string_addr, *pos;						/* Local copy of the string address.	*/
-	int4 i, usfl, blfl, pbfl;							/* Keeps the count.			*/
+	unsigned char *l_string_addr;							/* Local copy of the string address.	*/
+	int i, usfl, blfl, pbfl;							/* Keeps the count.			*/
 	unsigned char psb_char, psb_select;						/* Pseudo blank character.		*/
 	char	def_psb_select;
-
+	
 	wpload();
 	get_defs(DEFAULTS_PSB_CHAR,&def_psb_select);
-	get_psb_char(def_psb_select,&psb_char,&psb_select);
+	get_psb_char(def_psb_select,(char*)&psb_char,(char*)&psb_select);
 
 	l_string_addr = (unsigned char *)string_addr;					/* Get the passed value.		*/
 	i = string_len;		     							/* Ditto.				*/
@@ -187,49 +189,39 @@ int type;		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
 	pbfl = FALSE;									/* Pseudo blank flag			*/
 	while (i) 
 	{
-		if (*l_string_addr == PSEUDO_BLANK_CHAR) *l_string_addr = '*';		/* PSB? Yes.  Replace with an asterisk.	*/
-		else if (*l_string_addr == '\0') *l_string_addr = ' ';			/* NULL? Yes.  Replace with a space.	*/
-	 	else if ((*l_string_addr & (unsigned char)FAC_BIT) || 
-			 (*l_string_addr == WANG_MENU_PICK)          )			/* Is it a FAC character ?		*/
+		if (*l_string_addr == PSEUDO_BLANK_CHAR) 
 		{
-			pos = l_string_addr;						/* Set pos for clarity.			*/
-
-#ifdef OLD
-			if ( ((*pos >= 0x98) && (*pos <= 0x9E)) ||			/* Is it a BLANK FAC?			*/
-			     ((*pos >= 0xB8) && (*pos <= 0xBE)) )
-#endif
-			if ( (*pos & (unsigned char)0x10) &&
-			     (*pos & (unsigned char)0x08)   )
-			{
-				blfl = TRUE;						/* Yes, set flag for the nondisplay.	*/
-			}
-			else	blfl = FALSE;
-
-			if ( *pos & (unsigned char)LINE_BIT )				/* Is it a LINE FAC?			*/
-			{
-				usfl = TRUE;						/* Yes, set flag for the underscore.	*/
-			}
-			else usfl = FALSE;
-
-			if ( !(*pos & (unsigned char)PROTECT_BIT) )			/* Is it not protect (MODIFY FAC)	*/
-			{
-				pbfl = TRUE;						/* Yes, set flag for the pseudo blank.	*/
-			}
-			else pbfl = FALSE;
-
-			*pos = ' ';							/* Replace FAC with a space.		*/
+			*l_string_addr = '*';						/* PSB? Yes.  Replace with an asterisk.	*/
 		}
-		else if (!type && (usfl || blfl || pbfl))				/* Test if uderscore and type P scn func*/
+		else if (*l_string_addr == '\0') 
+		{
+			*l_string_addr = ' ';						/* NULL? Yes.  Replace with a space.	*/
+		}
+	 	else if (WANG_TYPE==type && FAC_FAC(*l_string_addr))			/* Is it a FAC character ?		*/
+		{
+			blfl = FAC_BLANK(*l_string_addr);				/* Set BLANK FAC flag			*/
+			usfl = FAC_UNDERSCORED(*l_string_addr);				/* Set UNDERSCORED FAC flag		*/
+			pbfl = !FAC_PROTECTED(*l_string_addr);				/* Set pseudo blank flag		*/
+
+			*l_string_addr = ' ';						/* Replace FAC with a space.		*/
+		}
+		else if (WANG_TYPE==type && (usfl || blfl || pbfl))			/* Test if uderscore and type P scn func*/
 		{									/* or blank flag or pseudo blank.	*/
-			if (blfl) *l_string_addr = ' ';					/* If BLANK FAC set then no display.	*/
-			else if (usfl && ' ' == *l_string_addr) *l_string_addr = '_';	/* Replace with underscore		*/
+			if (blfl) 
+			{
+				*l_string_addr = ' ';					/* If BLANK FAC set then no display.	*/
+			}
+			else if (usfl && ' ' == *l_string_addr) 
+			{
+				*l_string_addr = '_';					/* Replace with underscore		*/
+			}
 			else if (pbfl)
 			{
 				if ( ' ' == *l_string_addr )
 					*l_string_addr = '*'; 				/* Replace with Asterisk		*/
 			}
 		}
-		else if ( type && ' ' != *l_string_addr && psb_char == *l_string_addr )
+		else if ( VIDEO_TYPE==type && ' ' != *l_string_addr && psb_char == *l_string_addr )
 		{
 			*l_string_addr = '*';
 		}
@@ -244,32 +236,38 @@ int type;		/* 0=Wang screen map (with FACs & 0x0b), 1=vchr_map */
 			blfl = FALSE;
 		}
 	}
+
+	/*
+	**	Perform subtable and CHARMAP substitutions.
+	*/
+	if (WANG_TYPE==type)
+	{
+		vwang_subtable((unsigned char*)string_addr, string_len);
+		vwang_wang2ansi((unsigned char*)string_addr, string_len);
+	}
+
 }                                                                                                                                 
 											/* WRITE_FILE.C ... 			*/
-int di_write_file(text, text_len, rec_len, filelibvol, def_filename)			/* Open up a printer output file.	*/
-char *filelibvol; 									/* Pointer to the file to be opened.	*/
-char *text;										/* Pointer to the stuff to be printed.	*/
-char *def_filename;									/* Pointer to the default file name.	*/
-int  text_len, rec_len;									/* Length values.			*/
+int di_write_file(			/* Open up a printer output file.	*/
+	char *text,			/* Pointer to the stuff to be printed.	*/
+	int  text_len,			/* Length values.			*/
+	int  rec_len,			/* Length values.			*/
+	char *filelibvol, 		/* Pointer to the file to be opened.	*/
+	char *def_filename)		/* Pointer to the default file name.	*/
 {
 	char volume[7], library[9], file[9];						/* VS like file specification.		*/
 	char *l_filelibvol;    	     							/* Local copy of the filename pointer.	*/
 	char *l_text;									/* Local copy of the text pointer.	*/
 	int x;                                                                          /* Just a working variable.		*/
-/*	int out_file_stat;	*/							/* Keeps track of the output file.	*/
 	FILE	*out_file;
-	char	out_buf[256];
-	int write_stat;	   								/* Status from the write function.	*/
+	unsigned char	out_buf[256];
       	int4 mode;									/* Argument for the wfopen macro.	*/
 	char native_filename[81];						       	/* Constructed VAX filename.		*/
-	char alq_text[11], mrs_text[11];						/* Arguments for dynamic setting.	*/
 	int retcd, i, us_fl;
 	char us_buf[255];								/* Buffer for Underscore characters.	*/
-	char *longuid(), id[32], tty_str[5];						/* Vars for extract.			*/
-	int4 tty_num, argcnt;
-        char *ctime();                                                                  /* Time request data.                   */
+	char id[32];						/* Vars for extract.			*/
         time_t time_data;
-        char *hpos, head_line_1[80], head_line_2[80];                                   /* Header lines work area.              */
+        char head_line_1[80], head_line_2[80];                                   /* Header lines work area.              */
 	char *scratchp;
 	char	def_prt_mode;
 	char	def_prt_class;
@@ -283,12 +281,7 @@ int  text_len, rec_len;									/* Length values.			*/
         strcpy(head_line_2, ctime(&time_data));                                         /* Set up header lines.                 */
 
 	strcpy(id,longuid());								/* Get the user id.			*/
-	wswap(&tty_num);
-	argcnt=2;
-	wvaset(&argcnt);
-	EXTRACT("W#",&tty_num);								/* Get the tty number from TTMAP.	*/
-	wswap(&tty_num);
-        sprintf(head_line_1, "WORKSTATION  %4d -  USER %3s - %s",tty_num,wanguid3(),id);
+        sprintf(head_line_1, "WORKSTATION  %4ld -  USER %3s - %s",(long) workstation(),wanguid3(),id);
 
 	wpload();
 	retcd = 0;									/* Init return code to success.		*/
@@ -345,15 +338,10 @@ int  text_len, rec_len;									/* Length values.			*/
 		{
 			out_buf[i] = l_text[i];
 			us_buf[i] = ' ';						/* Otherwise set to a space.		*/
-			if (out_buf[i] & USF_BIT)					/* If the high bit is set then set to	*/
-			{								/* display an underscore.		*/
-				us_buf[i] = DEC_MENU_PICK;
-				us_fl = TRUE;						/* Set so will write print buffer.	*/
-				out_buf[i] -= USF_BIT;					/* Turn the high bit off for display.	*/
-			}
-			else if (!out_buf[i])						/* CHange NULL into space		*/
+
+			if (out_buf[i] < ' ')						/* Change controls to '.'		*/
 			{
-				out_buf[i] = ' ';
+				out_buf[i] = '.';
 			}
 		}
 		out_buf[rec_len] = (char)0;						/* NULL terminate print line		*/
@@ -387,7 +375,7 @@ int  text_len, rec_len;									/* Length values.			*/
 	}
 #endif /* VMS */
 
-	wprint(native_filename,def_prt_mode,0,1,def_prt_class,def_prt_form,&retcd);
+	wprint(native_filename,def_prt_mode,NULL,1,def_prt_class,def_prt_form,&retcd);
 
 #ifdef VMS
 	wdellock(&mode,native_filename);
@@ -397,12 +385,12 @@ int  text_len, rec_len;									/* Length values.			*/
 
                                              						/* BORDER_SCREEN.C ... 			*/
 											/* Take a screen and create borders.	*/
-border_screen(work_area, screen_image, image_rec_size, screen_rec_size, screen_rec_count)
-char *work_area,   									/* Address of destination.		*/
-     *screen_image;									/* Address of screen image.		*/
-int  image_rec_size,									/* Size of the image on the screen.	*/
-     screen_rec_size,									/* The size of the screen records.	*/
-     screen_rec_count;									/* The number of records. (screen rows)	*/
+void border_screen(
+	char *work_area,   	/* Address of destination.		*/
+	char *screen_image,	/* Address of screen image.		*/
+	int  image_rec_size,	/* Size of the image on the screen.	*/
+	int  screen_rec_size,	/* The size of the screen records.	*/
+	int  screen_rec_count)	/* The number of records. (screen rows)	*/
 {
 	char *l_work_area,   								/* Local copies of above arguments.	*/
 	     *l_screen_image;
@@ -418,14 +406,8 @@ int  image_rec_size,									/* Size of the image on the screen.	*/
 
 	work_area_size = bordered_line_length * bordered_lines;				/* Compute amount of space needed for	*/
 			 								/* final image.	    			*/
-	num_line_1 = malloc(bordered_line_length);					/* Allocate required space.		*/
-	num_line_2 = malloc(bordered_line_length);					/* Allocate required space.		*/
-
-	if (num_line_1 == 0 || num_line_2 == 0)						/* Were we able to allocate the space ?	*/
-	{
-		werrlog(ERRORCODE(6),bordered_line_length,0,0,0,0,0,0,0);
-		return(0);								/* Exit out.				*/
-	}
+	num_line_1 = wmalloc(bordered_line_length);					/* Allocate required space.		*/
+	num_line_2 = wmalloc(bordered_line_length);					/* Allocate required space.		*/
 
         memset(num_line_1, ' ', image_rec_size); 					/* Initialize the string to spaces.	*/
 	memset(num_line_2, ' ', image_rec_size);					/* Ditto.				*/
@@ -559,3 +541,50 @@ int  image_rec_size,									/* Size of the image on the screen.	*/
 
 	memset(l_work_area, '*', bordered_line_length);					/* Insert a full line of asterisks.	*/
 }
+
+void screen_print(void)
+{
+	char	status[1];
+	int4	ufb = 0;
+	char	filelibvol[40];
+	int4	cnt;
+	
+	sprintf(filelibvol,"##%3.3s                 ",wanguid3());
+
+	cnt = 4;
+	wvaset(&cnt);
+	SCREEN(status, &ufb, "P", filelibvol);
+	
+}
+
+/*
+**	History:
+**	$Log: screen.c,v $
+**	Revision 1.20  1998-01-09 16:01:58-05  gsl
+**	Fix screen print
+**
+**	Revision 1.19  1997-12-18 20:59:29-05  gsl
+**	FIx CHARMAP processing
+**
+**	Revision 1.18  1997-12-18 09:12:57-05  gsl
+**	add screen_print() from wshelp.c
+**
+**	Revision 1.17  1997-12-15 13:07:49-05  gsl
+**	Add support for non-ascii CHAPMAP and subtable support when printing
+**	the screen.
+**
+**	Revision 1.16  1997-10-17 15:07:47-04  gsl
+**	For Native screens always return a blank screen without calling vwang()
+**
+**	Revision 1.15  1996-09-04 20:21:27-04  gsl
+**	Removed external references to video variables vcur_lin and vcur_col
+**
+**	Revision 1.14  1996-08-26 17:13:11-07  gsl
+**	Changed to call workstation() directly
+**
+**	Revision 1.13  1996-08-19 15:32:52-07  gsl
+**	drcs update
+**
+**
+**
+*/

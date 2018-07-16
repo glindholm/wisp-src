@@ -1,0 +1,174 @@
+* Copyright (c) 1992 Lexical Software
+procedure DEMO.WPS is a Wang WP / Wang Office style menu
+
+declare &row, &pfkey integer
+declare &message string(80)
+declare &demo
+declare &format integer
+declare &tracing integer = &false
+declare &f, &l string(8)
+declare &v string(6)
+
+extract &l=RUNLIB
+extract &v=RUNVOL
+
+screen clear
+
+message corner=(1,11), screencolor=(black,white), facs=no, border=3,
+   center "This demonstration";
+   center "was produced";
+   center line "entirely", " in";
+   center "procedure language";
+   center "by ", bright "Lexical Software"
+
+show_menu:
+prompt
+   restrict = yes,
+   facs = no,
+   erase = no,
+   enable = (0, 1, 2, 16),
+   currow = &row,
+   pfkey  = &pfkey,
+   row 3
+   center "Today is " !! &date(&format);;
+   center reverse " DevTech Procedure Interpreter Demo Menu ";;
+   center "Select a demo by pressing the space bar, TAB, arrow keys";
+   center "or the ", line "f",
+          "irst letter of the demo name and then press ENTER";;
+   center tab " Directory browser procedure ";
+   center tab " Editor procedure            ";
+   center tab " Run a program               ";
+   center tab " Video attributes            ";
+   center tab " Overlapping windows         ";
+   center tab " Environment information     ";
+   center tab " Cursor control              ";
+   center tab " Putparms (Display & Enter)  ";;;
+   center bright blink &center(&message);;;;
+   center "(1) Change date format  (2) Enable/disable tracing  ",
+          "(16) Quit"
+  
+   assign &message = ""
+ 
+	case &pfkey
+		when 0
+         case &row
+            when 10
+               assign &demo = "dr.wps"
+               call run_demo
+            when 11
+               assign &demo = "ed"
+               call run_demo
+            when 12
+               call run_any_program    
+            when 13
+               assign &demo = "video.wps"
+               call run_demo
+            when 14
+               assign &demo = "screen.wps"
+               call run_demo
+            when 15
+               assign &demo = "environ.wps"
+               call run_demo
+            when 16
+               assign &demo = "cursor.wps"
+               call run_demo
+            when 17
+               assign &demo = "putparm.wps"
+               call run_demo
+         end
+      when 1
+         message corner=(0,3), "                              "
+	      assign &format += 1
+         assign &format = &mod(&format, 37)
+      when 2
+         assign &tracing = not &tracing
+         if &tracing begin
+            trace begin
+            call &delay(0) 
+* You are now tracing this demo.  Use F1 to step through   
+* it one statement at a time.  You can disable tracing by 
+* pressing F2 again when the demo menu is displayed, but 
+* tracing will not stop until you step back into this code
+* and execute the "trace end" statement below.           
+            end
+         else
+            trace end
+      when 16
+         screen clear
+         return
+	end
+
+goto show_menu
+
+
+subroutine run_demo
+   run &demo     
+      cancel exit is demo_cancelled
+      error  exit is demo_error
+
+   leave
+      
+   demo_cancelled:
+   screen clear
+   assign &message = &demo !! " was cancelled"
+   leave
+ 
+   demo_error:
+   assign &message = "Could not run " !! &demo
+   leave
+end
+
+
+subroutine run_any_program
+   declare &pf as integer
+   declare &f_ok integer = &true
+   declare &l_ok integer = &true
+   declare &v_ok integer = &true
+ 
+SPECIFY:
+
+   prompt
+      border = 3,
+      corner = (0, 0),
+      restore = yes,
+      enable = (0, 16),
+      pfkey = &pf,
+      screencolor=(black,white),
+      center "Specify a program and press ENTER (PF16 to exit)";
+      ;
+      center "FILE =",      blink when(not &f_ok) upper &f, 
+             "  LIBRARY =", blink when(not &l_ok) upper &l,
+             "  VOLUME =",  blink when(not &v_ok) upper &v
+
+   if &pf = 16 then
+      leave
+
+   assign &f_ok = &true
+   assign &l_ok = &true
+   assign &v_ok = &true
+ 
+   if not exists volume &v then
+         assign &v_ok = &false
+   if not exists library &l on &v then
+         assign &l_ok = &false
+   if not exists file &f in &l on &v then
+         assign &f_ok = &false
+
+   if not (&f_ok and &l_ok and &v_ok) then
+      goto SPECIFY
+ 
+   run &f in &l on &v
+      cancel exit is run_cancelled
+      error exit is run_error
+ 
+   screen clear
+   leave
+    
+   run_cancelled:
+   assign &message = "Program " !! &f(1,*) !! " was cancelled"
+   leave
+ 
+   run_error:
+   assign &message = "Could not run program " !! &f(1,*)
+   leave
+end

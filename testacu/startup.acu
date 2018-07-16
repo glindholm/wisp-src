@@ -7,13 +7,25 @@
 #	Function:	To setup env variables needed to QA WISP
 #			using ACUCOBOL.
 #
-QA=$WISP/src/testacu
+QA=`pwd`
+WISPDIR=../../wisp.QA
+if [ ! -d $WISPDIR ]
+then
+	echo "**** WISPDIR=$WISPDIR NOT FOUND"
+	WISPDIR=/usr/local/wisp
+	echo "**** USING WISPDIR=$WISPDIR"
+else
+	cd $WISPDIR
+	WISPDIR=`pwd`
+	cd $QA
+fi
 WISPCONFIG=$QA/config
 A_CONFIG=$WISPCONFIG/ACUCONFIG
-PATH=$WISP/wisp.QA/bin:.:/usr/local/bin:/bin:/usr/bin:/etc:/usr/ucb:$HOME/bin
-export QA WISPCONFIG A_CONFIG PATH
+PATH=$WISPDIR/bin:$QA/volrun/onpath:$PATH:$ACUDIR/bin:$ACUDIR
+export QA WISPCONFIG A_CONFIG PATH WISPDIR
 echo
 echo "**** SETTING UP FOR ACUCOBOL ****"
+echo "WISPDIR      = $WISPDIR"
 echo "PATH         = $PATH"
 echo "QA           = $QA"
 echo "WISPCONFIG   = $WISPCONFIG"

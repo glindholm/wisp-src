@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -24,14 +26,20 @@
 **
 */
 
-#ifdef DACU
 #include "idsistd.h"
+#include "werrlog.h"
 
 void call_acucobol()
 {
 	werrlog(102,"STUB: call_acucobol()",0,0,0,0,0,0,0);
 	return;
 }
-#else /* DACU */
-static int dummy_acustub;  /* to prevent compiler warning */
-#endif
+/*
+**	History:
+**	$Log: acustubs.c,v $
+**	Revision 1.6  1996-08-19 18:32:08-04  gsl
+**	drcs update
+**
+**
+**
+*/

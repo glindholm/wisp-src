@@ -9,18 +9,22 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
-#include <v/vlocal.h>			/* Normal user wouldn't do this.*/
+#include <video.h>
+#include <vlocal.h>			/* Normal user wouldn't do this.*/
+#include <vmodules.h>
+
+static int testo1();
 
 testo()
 {
 	testo1();
 	return(SUCCESS);
 }
-testo1()
+
+static int testo1()
 {
 	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];
-	register int i,j;
+	register int i;
 
 	vmove(0,0);
 	for (i = 0; i < 100; i++)

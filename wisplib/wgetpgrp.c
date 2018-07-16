@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,28 +15,42 @@
 			This is to solve problem of using ksh or csh.
 */
 
-#ifdef MSDOS
+#include <stdio.h>
 #include <stdlib.h>
+
+#ifdef WIN32
+#include <process.h>
+#endif
+#ifdef VMS
+#include <unixlib.h>
 #endif
 
 #include "idsistd.h"
 #include "wdefines.h"
+#include "werrlog.h"
+#include "wexit.h"
+#include "wisplib.h"
 
-int wgetpgrp()
+int wgetpgrp(void)
 {
 	static	int	gid = -1;
 	int	rc;
 	char	*ptr;
 
-	if (gid < 0)								/* First time thru				*/
+	if (-1 == gid)
 	{
-		if (ptr=(char *)getenv(WISP_GID_ENV))				/* Use the WISPGID variable if available	*/
+		/*
+		**	First time thru set gid.
+		*/
+
+		if (ptr=getenv(WISP_GID_ENV))					/* Use the WISPGID variable if available	*/
 		{
 			rc = sscanf(ptr,"%d",&gid);
-			if (rc != 1 || gid < 1 ) gid = -1;
+			if (rc != 1) gid = -1;
+			wtrace("WGETPGRP","GID","Environment variable [%s=%s] GID=[%d]",WISP_GID_ENV,ptr,gid);
 		}
 
-		if (gid < 1)
+		if (-1 == gid)
 		{
 #ifdef unix
 #ifndef OSF1_ALPHA
@@ -42,12 +58,53 @@ int wgetpgrp()
 #else
 			gid = getpgrp();
 #endif			
-#else
-			gid = 1;						/* For MSDOS default to a group id of "1"	*/
-#endif
+#endif /* unix */
+#if defined(MSDOS) || defined(VMS) || defined(WIN32)
+
+			/*
+			**	These systems do not support getpgrp().
+			**	Since wgetpgrp() is used to get a unique number
+			**	for the process group we will use getpid() and 
+			**	ensure that this routine is called very early
+			**	in every process so gid gets set.
+			*/
+			gid = getpid();
+			{
+				/*
+				**	Now that we have picked a gid - set it
+				**	in the environment so linked-to processes
+				**	will inherit it.
+				*/
+				char	envstring[40];
+				sprintf(envstring,"%s=%d",WISP_GID_ENV,gid);
+				if (setenvstr(envstring))
+				{
+					werrlog(102,"%%wgetpgrp-F-ERROR setenvstr() Failed",0,0,0,0,0,0,0);
+					wexit(102);
+				}
+			}
+#endif /* MSDOS || VMS || WIN32 */
+
+			ptr=getenv(WISP_GID_ENV);
+			wtrace("WGETPGRP","GID","Environment variable [%s=%s] GID=[%d]",WISP_GID_ENV,(ptr)?ptr:"(nil)",gid);
 		}
 	}
 
 	return( gid );
 }
 
+/*
+**	History:
+**	$Log: wgetpgrp.c,v $
+**	Revision 1.11  1997-07-16 15:09:57-04  gsl
+**	Add wtrace() for GID
+**
+**	Revision 1.10  1996-08-22 20:22:43-04  gsl
+**	Faked a getpgrp() for systems that don't have one - namely WIN32 MSDOS and VMS
+**
+**	Revision 1.9  1996-08-19 15:33:17-07  gsl
+**	drcs update
+**
+**
+**
+*/

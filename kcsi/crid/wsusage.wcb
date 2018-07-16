@@ -1,0 +1,14 @@
+000100*-----------------------------------------------
+000200* WORKING STORAGE TO EXTRACT USAGE CONSTANTS
+000300*-----------------------------------------------
+000400 01  USER-ID-KW            PIC XX VALUE "ID".
+000500 01  INVOL-KW              PIC XX VALUE "IV".
+000600 01  USER-ID               PIC X(8) VALUE SPACE.
+000700 01  INVOL                 PIC X(6) VALUE SPACE.
+000800 01  INLIB-KW              PIC XX VALUE "IL".
+000900 01  INLIB                 PIC X(8) VALUE SPACE.
+000000 01  OUTLIB-KW             PIC XX VALUE "OL".
+000000 01  OUTLIB                PIC X(8) VALUE SPACE.
+000000 01  OUTVOL-KW             PIC XX VALUE "OV".
+000000 01  OUTVOL                PIC X(6) VALUE SPACE.
+

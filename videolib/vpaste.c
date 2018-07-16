@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -34,3 +36,12 @@ vpaste(max) int max;
 	else result = FAILURE;								/* Oops, no cut file available.		*/
 	return(result);									/* Return the result.			*/
 }
+/*
+**	History:
+**	$Log: vpaste.c,v $
+**	Revision 1.9  1996-10-11 18:16:15-04  gsl
+**	drcs update
+**
+**
+**
+*/

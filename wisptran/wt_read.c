@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -22,16 +24,14 @@ int	unterminated_if = 0;
 static char rd_str[STRING_BUFFER_SIZE];							/* Buffer for READ statements.		*/
 static char tm_str[STRING_BUFFER_SIZE];							/* Buffer for TIMEOUT statements.	*/
 static int adjcol();
-static int vaxlock();
-static int addnolock();
+static void addlockclause();
 
 p_read()
 {
-	int i,j,hold,fnum,invkey_clause,atend_clause,n_alt,t_out,t_flag,is_crt,did_nolock,did_man_lock;
+	int i,j,hold,fnum,invkey_clause,atend_clause,t_out,t_flag,is_crt,did_lockclause,indexed_file;
 	char  	*crt_type;
 	char  	tstr[132],into_rec[40];
-	char 	t_mktemp[40];
-	int	rd_cnt, tm_cnt, col, savecol, maincol, addnl, savenl;
+	int	col, savecol, maincol, addnl, savenl;
 	static  int readnum = 0;							/* current paragraph number for READ's	*/
 
 	char hstr[40];									/* Holder-ID string.			*/
@@ -51,14 +51,19 @@ p_read()
 
 	if (is_crt)									/* is it a crt record?			*/
 	{
+		if (acn_cobol)
+		{
+			write_log("WISP",'W',"NATIVE","Workstation READ %s uses WISP Screens",crt_file[cur_crt]);
+		}
+		
 		write_log("WISP",'I',"FIXREAD","READ of %s repaired.",crt_file[cur_crt]); /* yes, fix it			*/
 		ptype = get_param(o_parms[1]);						/* Really get it now.			*/
 
 		crt_type = "VWANG-READ-ALL";						/* Set type of read to READ-ALL.	*/
 		into_rec[0] = 0;
 
-		stredt(inline,"READ","");
-		stredt(inline,o_parms[1],"");
+		stredt(linein,"READ","");
+		stredt(linein,o_parms[1],"");
 
 		j = ptype;
 
@@ -178,15 +183,16 @@ p_read()
 		atend_clause = 0;							/* no AT END yet...			*/
 		t_out = 0;								/* No TIMEOUT phrase...			*/
 		t_flag = 0;								/* Global flag for timeout phrase.	*/
-		did_nolock = 0;								/* Flag for LPI.			*/
-		did_man_lock = 0;							/* Wrote the manual locking clause	*/
+		did_lockclause = 0;							/* Wrote the locking clause		*/
 		addnl = 0;
 
 
 		if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))			/* If using automatic record locking	*/
 		{									/* then don't supply an "ALLOWING" 	*/
-			did_man_lock = 1;						/* clause. (Trick it into not writing	*/
+			did_lockclause = 1;						/* clause. (Trick it into not writing	*/
 		}									/* the ALLOWING clause.)		*/
+
+		indexed_file = (prog_ftypes[fnum] & INDEXED_FILE);
 
 		do
 		{
@@ -199,7 +205,7 @@ p_read()
 				add2buff(rd_str,o_parms[0],col+4,addnl);
 			}
 
-			if (o_parms[0][0]) stredt(inline,o_parms[0],"");		/* Remove it from the input line	*/
+			if (o_parms[0][0]) stredt(linein,o_parms[0],"");		/* Remove it from the input line	*/
 			ptype = get_param(o_parms[0]);					/* get a new parm....			*/
 			adjcol(ptype,&col,&addnl);
 
@@ -230,18 +236,14 @@ p_read()
 
 			if (!strcmp(o_parms[0],"WITH") || !strcmp(o_parms[0],"HOLD"))
 			{
-				stredt(inline,o_parms[0],"");
+				stredt(linein,o_parms[0],"");
 				o_parms[0][0] = 0;					/* clear it				*/
 				write_log("WISP",'I',"FIXWITHHOLD","Corrected WITH HOLD in READ.");
 				hold = 1;						/* flag it				*/
-				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))	/* If using automatic record locking	*/
-				{
-					write_log("WISP",'E',"AUTOLOCK","File %s READ WITH HOLD.",prog_files[fnum]);
-				}
 			}
 			else if (t_out && !strcmp(o_parms[0],"NEXT"))			/* Handle NEXT SENTENCE in timeout	*/
 			{
-				if (o_parms[0][0]) stredt(inline,o_parms[0],"");	/* Remove it from the input line	*/
+				if (o_parms[0][0]) stredt(linein,o_parms[0],"");	/* Remove it from the input line	*/
 				ptype = get_param(o_parms[0]);				/* get a new parm....			*/
 				adjcol(ptype,&col,&addnl);
 				if ( !strcmp(o_parms[0],"SENTENCE") )
@@ -262,21 +264,20 @@ p_read()
 			{								/* it is in the procedure division	*/
 											/* keyword list and will exit the while.*/
 				stredt(o_parms[0],"N"," N");				/* Just put a space in, it won't match	*/
-			}								/* the keyword list any more!		*/
+											/* the keyword list any more!		*/
+			}
 			else if (!strcmp(o_parms[0],"INTO"))				/* handle INTO special because		*/
 			{								/* it signals a NO LOCK for LPI		*/
-				if ((lpi_cobol || acu_cobol) && !hold && !did_nolock)
+				if (lpi_cobol || acu_cobol)
 				{							/* NO LOCK must precede INTO.		*/
-					add2buff(rd_str,"NO LOCK",col+8,0);
-					did_nolock = 1;
+					addlockclause(&did_lockclause,indexed_file,hold,rd_str,col+8);
 				}
 			}
 			else if (!strcmp(o_parms[0],"INVALID"))				/* INVALID KEY phrase?			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,savecol+8);
-				vaxlock(&did_man_lock,hold,rd_str,savecol+8);
+				addlockclause(&did_lockclause,indexed_file,hold,rd_str,savecol+8);
 
-				stredt(inline," INVALID"," ");				/* remove INVALID			*/
+				stredt(linein," INVALID"," ");				/* remove INVALID			*/
 				if (ptype != -1)
 				{
 					peek_param(o_parms[7]);				/* get "KEY"				*/
@@ -285,7 +286,7 @@ p_read()
 						ptype = get_param(o_parms[0]);		/* Get it, and remove it.		*/
 						adjcol(ptype,&col,&addnl);
 						if (addnl) { savenl = 1; savecol = col; }
-						stredt(inline," KEY"," ");		/* remove KEY				*/
+						stredt(linein," KEY"," ");		/* remove KEY				*/
 					}
 				}
 
@@ -310,17 +311,16 @@ p_read()
 			}
 			else if (!strcmp(o_parms[0],"AT") || !strcmp(o_parms[0],"END")) /* AT END phrase?			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,savecol+8);
-				vaxlock(&did_man_lock,hold,rd_str,savecol+8);
+				addlockclause(&did_lockclause,indexed_file,hold,rd_str,savecol+8);
 
 				if (o_parms[0][0] == 'A')
 				{
-					stredt(inline," AT "," ");			/* remove AT				*/
+					stredt(linein," AT "," ");			/* remove AT				*/
 					ptype = get_param(o_parms[0]);			/* get "END"				*/
 					adjcol(ptype,&col,&addnl);
 					if (addnl) { savenl = 1; savecol = col; }
 				}
-				stredt(inline," END"," ");				/* remove END				*/
+				stredt(linein," END"," ");				/* remove END				*/
 				if (ptype == -1)					/* Prematur period.			*/
 				{
 					write_log("WISP",'I',"BADATEND",
@@ -342,16 +342,15 @@ p_read()
 			}
 			else if (!strcmp(o_parms[0],"TIMEOUT"))				/* TIMEOUT phrase?			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,savecol+8);
-				vaxlock(&did_man_lock,hold,rd_str,savecol+8);
+				addlockclause(&did_lockclause,indexed_file,hold,rd_str,savecol+8);
 
 				write_log("WISP",'I',"READWTIME","READ with TIMEOUT modified.");
-				stredt(inline," TIMEOUT"," ");				/* remove TIMEOUT			*/
+				stredt(linein," TIMEOUT"," ");				/* remove TIMEOUT			*/
 				ptype = get_param(timstr);				/* Get the timeout value.		*/
 				adjcol(ptype,&col,&addnl);
 				if (!strcmp(timstr,"OF"))
 				{							/* Skip over OF keyword.		*/
-					stredt(inline,"OF","");
+					stredt(linein,"OF","");
 					ptype = get_param(timstr);
 					adjcol(ptype,&col,&addnl);
 				}
@@ -364,12 +363,12 @@ p_read()
 			}
 			else if (!strcmp(o_parms[0],"HOLDER-ID"))			/* HOLDER-ID phrase?			*/
 			{
-				stredt(inline," HOLDER-ID"," ");			/* remove HOLDER-ID			*/
+				stredt(linein," HOLDER-ID"," ");			/* remove HOLDER-ID			*/
 				ptype = get_param(hstr);				/* Get the holder field.		*/
 				if (!addnl) adjcol(ptype,&col,&addnl);
 				if (!strcmp(hstr,"IN"))
 				{							/* Skip over IN keyword.		*/
-					stredt(inline,"IN","");
+					stredt(linein,"IN","");
 					ptype = get_param(hstr);
 					if (!addnl) adjcol(ptype,&col,&addnl);
 				}
@@ -381,16 +380,15 @@ p_read()
 			}
 			else if (!strcmp(o_parms[0],"KEY"))				/* Handle KEY phrase.			*/
 			{
-				addnolock(&did_nolock,hold,rd_str,col+8);
-				vaxlock(&did_man_lock,hold,rd_str,col+8);
+				addlockclause(&did_lockclause,indexed_file,hold,rd_str,col+8);
 
-				stredt(inline,o_parms[0],"");				/* Remove "KEY" from line		*/
+				stredt(linein,o_parms[0],"");				/* Remove "KEY" from line		*/
 				ptype = get_param(o_parms[0]);
 				adjcol(ptype,&col,&addnl);
 				if (!strcmp(o_parms[0],"IS"))
 				{
 					if (addnl) { savenl = 1; savecol = col; }
-					stredt(inline,o_parms[0],"");			/* Remove "IS" from line		*/
+					stredt(linein,o_parms[0],"");			/* Remove "IS" from line		*/
 					ptype = get_param(o_parms[0]);
 					adjcol(ptype,&col,&addnl);
 				}
@@ -420,9 +418,7 @@ p_read()
 		{	
 			add2buff(rd_str,tstr,col+4,addnl);				/* Put out the last parameter		*/
 
-			addnolock(&did_nolock,hold,rd_str,col+8);
-
-			vaxlock(&did_man_lock,hold,rd_str,col+8);
+			addlockclause(&did_lockclause,indexed_file,hold,rd_str,col+8);
 
 		}
 
@@ -496,7 +492,7 @@ p_read()
 					readnum++;				/* increment the counter		*/
 				}
 			}
-			else							/* No INVALID KEY, use inline PERFORM.	*/
+			else							/* No INVALID KEY, use linein PERFORM.	*/
 			{
 				tput_line  	("           PERFORM WITH");
 			}
@@ -555,7 +551,7 @@ p_read()
 
 		if (ptype != -1) hold_line();
 
-		if (!vax_cobol && hold && did_nolock)
+		if (!vax_cobol && hold && did_lockclause)
 		{
 			write_log("WISP",'F',"READERR","NO LOCK inserted when HOLD was specified, Keywords out of order.");
 		}
@@ -580,18 +576,18 @@ int	newline;						/* Force to a new line.						*/
 
 	len = strlen(addstr);
 
-	if (len < 1) return;
+	if (len < 1) return 0;
 
 	for ( size = 0, i = strlen(buff)-1; i >= 0 && buff[i] != '\n'; size++, i--);
 
+	if ( col + len > 71 )
+	{
+		col = 12;
+	}
 
 	if ( newline || (size + len + 1 > 71) )
 	{
 		strcat(buff,"\n");							/* Start a new line			*/
-		if ( col + len > 71 )
-		{
-			col = 12;
-		}
 		memset(spaces,' ',col-1);
 		spaces[col-1] = '\0';
 	}
@@ -625,34 +621,59 @@ int	*addnl;
 	{
 		*addnl = 0;
 	}
+	return 0;
 }
 
-
-static vaxlock(did_man_lock,hold,buff,col)
-int	*did_man_lock;
+static void addlockclause(did_lockclause,indexed_file,hold,buff,col)
+int	*did_lockclause;
+int	indexed_file;
 int	hold;
 char	*buff;
 int	col;
 {
-	if ( vax_cobol && !(*did_man_lock) )						/* Manual record locking		*/
+	if ( *did_lockclause )
+	{
+		return;
+	}
+
+	if ( vax_cobol )
 	{
 		if ( hold ) add2buff(buff,"ALLOWING NO OTHERS",col,0);
 		else	    add2buff(buff,"REGARDLESS OF LOCK",col,0);
-		*did_man_lock = 1;
+		*did_lockclause = 1;
 	}
-}
-
-static addnolock(did_nolock,hold,buff,col)
-int	*did_nolock;
-int	hold;
-char	*buff;
-int	col;
-{
-	if (!vax_cobol && !hold && !(*did_nolock))
+	else
 	{
-		add2buff(buff,"NO LOCK",col,0);
-		*did_nolock = 1;
+		if (!hold)
+		{
+			if (mf_cobol && indexed_file)
+			{
+				add2buff(buff,"IGNORE LOCK",col,0);
+				*did_lockclause = 1;
+			}
+			else
+			{
+				add2buff(buff,"NO LOCK",col,0);
+				*did_lockclause = 1;
+			}
+		}
 	}
 }
-
-
+/*
+**	History:
+**	$Log: wt_read.c,v $
+**	Revision 1.13  1997-09-15 13:57:09-04  gsl
+**	fix warning
+**
+**	Revision 1.12  1997-09-12 14:02:13-04  gsl
+**	change native warning
+**
+**	Revision 1.11  1997-09-12 13:19:18-04  gsl
+**	Add warning for Native Screens with WOrkstation READ
+**
+**	Revision 1.10  1996-08-30 21:56:23-04  gsl
+**	drcs update
+**
+**
+**
+*/

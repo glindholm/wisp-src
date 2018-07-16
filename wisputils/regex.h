@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1996 DevTech Migrations, All rights reserved. */
+/* $Id:$ */
 /* Definitions for data structures callers pass the regex library.
    Copyright (C) 1985, 1989 Free Software Foundation, Inc.
 
@@ -183,3 +185,12 @@ extern int re_exec ();
 #ifdef SYNTAX_TABLE
 extern char *re_syntax_table;
 #endif
+/*
+**	History:
+**	$Log: regex.h,v $
+**	Revision 1.6  1996-07-23 14:13:00-04  gsl
+**	drcs update
+**
+**
+**
+*/

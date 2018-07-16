@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /*
 **	File:		vdispidx.h
 **
@@ -116,3 +120,12 @@ static int at_eof_flag=FALSE, at_first=TRUE;
 static int rec_disp_start = 0;
 
 #endif
+/*
+**	History:
+**	$Log: vdispidx.h,v $
+**	Revision 1.5  1996-08-19 18:33:03-04  gsl
+**	drcs update
+**
+**
+**
+*/

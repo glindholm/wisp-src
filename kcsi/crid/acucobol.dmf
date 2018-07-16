@@ -1,0 +1,29 @@
+
+#------------------------------------------------------------------
+# @(#)acucobol.dmf	1.2 1/17/93
+# Make for a single acucobol module for DOS
+#------------------------------------------------------------------
+
+CCBLFLAGS=-w -Da4
+CCBLDBG=
+CCBL=ccbl
+MV=rename
+RM=del
+
+.SUFFIXES:	.cbo .wcb .wcb~
+
+.wcb.cbo:
+	wisp -VACU $*.wcb
+	$(CCBL) $(CCBLFLAGS) $(CCBLDBG) -o $*.cbo $*.cob
+	if exist cridtemp.1 $(CCBL) -lib -o cridtemp.2 cridtemp.1 $*.cbo
+	if not exist cridtemp.1 $(CCBL) -lib -o cridtemp.2 $*.cbo
+	if exist cridtemp.1 $(RM) cridtemp.1
+	$(MV) cridtemp.2 cridtemp.1
+	$(RM) $*.cob
+
+.wcb~.cbo:
+	$(GET) $(GFLAGS) $<
+	wisp -VACU $*.wcb
+	$(CCBL) $(CCBLFLAGS) $(CCBLDBG) -o $*.cbo $*.cob
+	rm -f $*.cob
+	rm -f $*.wcb

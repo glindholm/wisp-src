@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -21,9 +25,20 @@
 #ifndef REDUCE_H
 #define REDUCE_H
 
-NODE reduce_data_item();
-NODE reduce_parens();
-NODE reduce_one();
+#include "node.h"
+
+extern NODE reduce_data_item(NODE start);
+extern NODE reduce_parens(NODE start);
+extern NODE reduce_one(NODE start);
 
 
 #endif /* REDUCE_H */
+/*
+**	History:
+**	$Log: reduce.h,v $
+**	Revision 1.6  1996-08-30 21:56:09-04  gsl
+**	drcs update
+**
+**
+**
+*/

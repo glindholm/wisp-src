@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*           VIDEO - Video Interactive Development Environment          */
 			/*                      Copyright (c) 1987-1993                         */
@@ -14,6 +16,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -26,11 +29,21 @@
 
 #include "video.h"
 #include "vlocal.h"
+#include "vmodules.h"
 
 #define EXT_VRAWDOS
 #include "vrawdos.h"
 
-static void vtimeout_set();
+static void initcolors();
+static int xdebug();
+static void xclock();
+static int x_lastline();
+static int xdo_debug();
+static void xd_put_menu();
+static int xd_mp();
+static int xd_not_available();
+static int xd_invalid();
+static void xd_clr_menu();
 
 #define EXT_PREFIX ((unsigned char)29)          /* Extended character set prefix        */
 
@@ -55,17 +68,11 @@ static void vtimeout_set();
  *                      output data in the buffer owned by this compilation
  *                      unit to be flushed to the output device immediately.
  *
- * int holding_output:  This flag is non-zero when the higher layers of
- *                      Video wish to postpone flushing output waiting in the
- *                      buffer until a "logical sequence" of operations is
- *                      complete.
  */
 extern int vb_pure;
 extern int vb_count;
 extern int debugging;
-extern int holding_output;
 extern int video_inited;
-extern int abort_character;
 
 #ifdef  NO_ERRNO
 extern  int     errno ;
@@ -98,6 +105,9 @@ extern  int     errno ;
 
 static unsigned char vrawgetc(int);
 static void xputc();
+static int xchin();
+extern int getch();
+extern int putch();
 
 /*
  * vraw_init_flag:      This flag is non-zero after the routine "vrawinit()" has
@@ -158,9 +168,6 @@ static unsigned char vraw_buffer[VRAW_BUFSIZ];
  */
 static int vrawinit()
 {
-	int     i;
-	char    cpr[12];                                                                /* Cursor Position Report string.       */
-
 	fflush(stdout);                                                                 /* Flush all pending output on the      */
 	fflush(stderr);                                                                 /* stdout and stderr channels. Then grab*/
 											/* the fileno for the stdout file and   */
@@ -221,7 +228,7 @@ static int vrawinit()
  *                      some error  occured.
  *
  */
-unsigned char vrawinput()
+char vrawinput()
 {
 	if (!vraw_init_flag) vrawinit();
 	return (vrawgetc(TRUE));        /* Get a character and wait for it */
@@ -261,7 +268,7 @@ unsigned char vrawinput()
  *                      to read the character.)
  *
  */
-unsigned char vrawcheck()
+char vrawcheck()
 {
 	if (!vraw_init_flag) vrawinit();
 	return (vrawgetc(FALSE));       /* Check for a char, don't wait */
@@ -335,11 +342,16 @@ int vrawprint(buf) unsigned char *buf;          /* Do raw output.       */
 
 	if (!vraw_init_flag) vrawinit();        /* Init if not done.    */
 	p = buf;                                /* Init fast pointer.   */
-	if (p != DUMP_OUTPUT)                   /* Anything to do?      */
+	if (p)                   		/* Anything to do?      */
 	{
 		while (*p) xputc(*p++);         /* Output pure string.  */
 	}
 	return (SUCCESS);                       /* Success always.      */
+}
+
+int vrawflush()
+{
+	return(SUCCESS);
 }
 
 int vrawputc(ch) char ch;                       /* Output single char.  */
@@ -392,7 +404,7 @@ int vrawexit()
 {
 	int error = 0;
 
-#ifdef _INTELC32_
+#if defined(_INTELC32_) || defined(WATCOM)
 	_clearscreen(_GCLEARSCREEN);
 #endif
 	vrawcursor(1);
@@ -441,7 +453,7 @@ int vrawerrno()
  * Procedure to shut down pending inputs in anticipation of the creation
  * of a sub process.
  */
-vshut()
+void vshut()
 {
 }
 
@@ -521,7 +533,7 @@ static  unsigned        char    xgetc_w()
 				*/
 				if ( time(NULL) >= stop_time )
 				{
-					vtimeout_set();
+					vrawtimeout_set();
 					/*
 					**	Return a NULL char to indicate
 					**	a timeout.  Any real NULLs will
@@ -565,7 +577,10 @@ static  unsigned        char    xgetc_w()
 
 static  int     xchin()                 /* Check for available input    */
 {
+
+#ifndef WATCOM								/* WATCOM does not support _strtime; researching strftime */
 	xclock();
+#endif
 
 	AH = I21H_CHIN ;
 	intdos ( &regs, &regs ) ;
@@ -580,12 +595,14 @@ static  int     xchin()                 /* Check for available input    */
 	}
 }
 
-xclock()                                /* Display a clock on the screen. */
+static void xclock()					/* Display a clock on the screen. */
 {
 	char    time_buf[9];
 	int     save_row, save_col, save_atr;
 
+#if defined(_MSC_VER) || defined(_INTELC32_)
 	_strtime( time_buf );
+#endif
 	save_row = out_row;
 	save_col = out_col;
 	save_atr = out_atr;
@@ -655,11 +672,11 @@ char ch;
 **	01/26/93	Written by GSL
 **
 */
-static initcolors()
+static void initcolors()
 {
 	char	*ptr, buff[3];
 	int	i,j;
-	long	attr;
+	int	attr;
 
 	if (ptr = getenv("VCOLORS"))
 	{
@@ -709,11 +726,10 @@ static initcolors()
 **	01/25/93	Written by GSL
 **
 */
-vrawsetattributes(attrs)
-long	attrs[];
+void vrawsetattributes(attrs) int attrs[];
 {
 	int	i;
-	long	temp;
+	int	temp;
 
 	for(i=0;i<16;i++)
 	{
@@ -725,54 +741,33 @@ long	attrs[];
 	}
 }
 
-vrawattribute( atr )
-int     atr;
+void vrawattribute(atr) int atr;
 {
 	out_atr = attributes[atr%16];
 }
 
-vrawmove( row, col )
-int     row, col;
+void vrawmove(row,col) int row, col;
 {
 	out_row = row % DOS_ROWS;
 	out_col = col % DOS_COLS;
 }
 
-vrawsetcursor()
+void vrawsetcursor()
 {
 	_settextposition( (1 + out_row), (1 + out_col) );                       /* Position the cursor to the current location. */
 }
 
-vrawerasetype( type )
-int     type;
+void vrawerasetype(type) int type;
 {
 	int     fr, fc, tr, tc;                         /* from/to row/column   */
 
 	switch( type )
 	{
-	case FROM_BOS:                                          /* From Top Of Screen.          */
-		fr = 0;
-		fc = 0;
-		tr = out_row;
-		tc = 79;
-		break;
 	case TO_EOS:                                            /* To End Of Screen.            */
 		fr = out_row;
 		fc = 0;
 		tr = 23;
 		tc = 79;
-		break;
-	case CURRENT_LINE:                                      /* Erase Entire Current Line.   */
-		fr = out_row;
-		fc = 0;
-		tr = out_row;
-		tc = 79;
-		break;
-	case FROM_BOL:                                          /* From Beginning Of Line.      */
-		fr = out_row;
-		fc = 0;
-		tr = out_row;
-		tc = out_col;
 		break;
 	case TO_EOL:                                            /* To End Of Line.              */
 		fr = out_row;
@@ -792,10 +787,9 @@ int     type;
 	vrawerase( fr, fc, tr, tc );
 }
 
-vrawerase( fr, fc, tr, tc )
-int     fr, fc, tr, tc;                         /* from/to row/column   */
+void vrawerase(fr,fc,tr,tc) int fr,fc,tr,tc;					/* from/to row/column   */
 {
-	int     save_row, save_col;
+	int save_row, save_col;
 
 	if( !(tc < DOS_COLS) )
 	{
@@ -814,8 +808,7 @@ int     fr, fc, tr, tc;                         /* from/to row/column   */
 	out_col = save_col;
 }
 
-vrawsetscroll( top, bottom )
-int     top, bottom;
+void vrawsetscroll(top,bottom) int top, bottom;
 {
 	int     hold_it;
 										/* Make sure top is not greater than bottom:    */
@@ -845,13 +838,12 @@ int     top, bottom;
 	}
 }
 
-vrawscroll( dir )
-int     dir;
+int vrawscroll(dir) int dir;
 {
 	int     save_row;
 	int     top, bottom, lines, mid, count, move_to, move_from, fill_top;
 
-	if( 0 == dir )                                                                          /* dir must not be 0.           */
+	if (0 == dir)                                                                          /* dir must not be 0.           */
 	{
 		return( 0 );
 	}
@@ -895,10 +887,11 @@ int     dir;
 	while( out_row < (fill_top + lines))  							/* For each row to be filled.   */
 	{
 		out_row++;
-		vrawerasetype( CURRENT_LINE );							/* Erase the line.              */
+		vrawerase( out_row, 0, out_row, 79 );						/* Erase the line.              */
 	}
 
 	out_row = save_row;                                                                     /* Reset out_row value.         */
+	return 0;
 }
 
 vrawcursor( state )
@@ -941,7 +934,7 @@ static  char    *xm_mm[MM_ROWS] =
 	""
 };
 
-xdebug()
+static xdebug()
 {
 	int     ch;
 
@@ -955,7 +948,7 @@ xdebug()
 	return( ch );
 }
 
-static  xdo_debug()
+static int xdo_debug()
 {
 	int     ch=0;
 
@@ -1013,9 +1006,7 @@ static  xdo_debug()
 	return( ch );
 }
 
-static  xd_put_menu( rows, menu )
-int     rows;
-char    *menu[];
+static void xd_put_menu(rows,menu) int rows; char *menu[];
 {
 	int     i, col;
 
@@ -1030,9 +1021,7 @@ char    *menu[];
 	}
 }
 
-static  xd_clr_menu( rows, menu )
-int     rows;
-char    *menu[];
+static void xd_clr_menu(rows,menu) int rows; char *menu[];
 {
 	int     i, j, col;
 
@@ -1042,15 +1031,15 @@ char    *menu[];
 		{
 			col = 40 - ( strlen( menu[i] ) / 2 );
 			_settextposition( (i + 1 ), col );
-			for( j = 0 ; j < strlen( menu[i] ) ; ++j )
+			for(j = 0; j < (int) strlen(menu[i]); ++j)
 			{
-				putch( ' ' );
+				putch(' ');
 			}
 		}
 	}
 }
 
-static  xd_mp()
+static int xd_mp()
 {
 	int     ch;
 
@@ -1085,7 +1074,7 @@ static  xd_invalid()
 	return( ch );
 }
 
-static  xd_not_available()
+static int xd_not_available()
 {
 	int     ch;
 
@@ -1098,8 +1087,7 @@ static  xd_not_available()
 	return( ch );
 }
 
-x_lastline( str )
-char    str[];
+static int x_lastline(str) char str[];
 {
 	int     save_row, save_col, save_atr;
 	int     ch, i;
@@ -1131,7 +1119,7 @@ char    str[];
 	out_row = 24;
 	out_col = 2;
 
-	for( i = 0 ; i < strlen( str ) ; ++i )  /* Clear bottom line    */
+	for( i = 0 ; i < (int) strlen( str ) ; ++i )  /* Clear bottom line    */
 	{
 		xputc( ' ' );
 	}
@@ -1167,7 +1155,7 @@ char    str[];
 
 	_settextposition( 25, 3 );
 
-	for( i = 0 ; i < strlen( str ) ; ++i )  /* Clear bottom line    */
+	for( i = 0 ; i < (int) strlen( str ) ; ++i )  /* Clear bottom line    */
 	{
 		putch( ' ' );
 	}
@@ -1175,8 +1163,7 @@ char    str[];
 	return( ch );
 }
 
-v_modeflag( bg, fg, ch )
-int     bg, fg, ch;
+extern void v_modeflag(int bg, int fg, int ch)
 {
 	if( mode_flag )
 	{
@@ -1187,9 +1174,9 @@ int     bg, fg, ch;
 put_lastline( str )
 char    str[];
 {
-	int     ch, i;
+	int i;
 
-	if( strlen( str ) > 66 )                /* Set maximum length   */
+	if (strlen( str ) > 66)                 /* Set maximum length   */
 	{
 		str[66] = '\0';
 	}
@@ -1221,48 +1208,65 @@ clear_lastline()
 }
 
 /*
- * vtimeout:  set the timeout value (if any) for normal "blocked" reads
+ * vrawtimeout:  set the timeout value (if any) for normal "blocked" reads
  *
  */
-vtimeout(seconds)
-int seconds;
+void vrawtimeout(seconds) int seconds;
 {
 	vtimeout_value = seconds;
-	vtimeout_clear();
+	vrawtimeout_clear();
 }
 /*
- * vtimeout_clear:  clear the "timed out" status
+ * vrawtimeout_clear:  clear the "timed out" status
  *
  */
-vtimeout_clear()
+void vrawtimeout_clear()
 {
 	vread_timed_out_flag = FALSE;
 }
 /*
- * vtimeout_check: return TRUE if time out occured on last read
+ * vrawtimeout_check: return TRUE if time out occured on last read
  *                 FALSE otherwise
  *
  */
-vtimeout_check()
+int vrawtimeout_check()
 {
 	return vread_timed_out_flag;
 }
 
-static void vtimeout_set()
+void vrawtimeout_set()
 {
 	vread_timed_out_flag = TRUE;
 }
 
-vraw_stty_save()
+void vraw_stty_save()
 {
 }
 
-vraw_stty_restore()
+void vraw_stty_restore()
 {
 }
 
-vraw_stty_sync()
+void vraw_stty_sync()
 {
 }
 
 #endif  /* MS-DOS */
+/*
+**	History:
+**	$Log: vrawdos.c,v $
+**	Revision 1.12  1997-07-09 11:57:16-04  gsl
+**	Remove unsupported erase codes
+**
+**	Revision 1.11  1996-11-14 11:44:00-05  jockc
+**	changed vtimeout* to vrawtimeout*
+**
+**	Revision 1.10  1996-11-13 17:44:47-08  gsl
+**	Added vrawflush() instead of vrawprint(NULL)
+**
+**	Revision 1.9  1996-03-12 05:33:16-08  gsl
+**	Remove reference to holding_output
+**
+**
+**
+*/

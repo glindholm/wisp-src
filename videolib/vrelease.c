@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -13,14 +15,22 @@
 
 #include "video.h"									/* Include video definitions.		*/
 
-
 /*						Subroutine entry point.								*/
 
-vrelease()										/* Release from optimization.		*/
+int vrelease(void)									/* Release from optimization.		*/
 {
-	extern int new_screen;								/* Reference release control flag.	*/
-
-	vdefer(RESTORE);								/* Restore from current optimization.	*/
-	new_screen = TRUE;								/* Flag that next screen is new.	*/
+	vdefer_restore();								/* Restore from current optimization.	*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
+/*
+**	History:
+**	$Log: vrelease.c,v $
+**	Revision 1.10  1997-07-09 12:09:23-04  gsl
+**	Removed the BLOCK_MODE support so now is the same as vdefer_restore()
+**
+**	Revision 1.9  1996-10-11 18:16:19-04  gsl
+**	drcs update
+**
+**
+**
+*/

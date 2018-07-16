@@ -7,14 +7,26 @@
 #	Function:	To setup env variables needed to QA WISP
 #			using Micro Focus COBOL/2.
 #
-QA=$WISP/src/testmf
+QA=`pwd`
+WISPDIR=../../wisp.QA
+if [ ! -d $WISPDIR ]
+then
+	echo "**** WISPDIR=$WISPDIR NOT FOUND"
+	WISPDIR=/usr/local/wisp
+	echo "**** USING WISPDIR=$WISPDIR"
+else
+	cd $WISPDIR
+	WISPDIR=`pwd`
+	cd $QA
+fi
 WISPCONFIG=$QA/config
 COBSW=-F
 COBPATH=:$QA
-PATH=$WISP/wisp.QA/bin:.:/usr/local/bin:/bin:/usr/bin:/etc:/usr/ucb:$HOME/bin
+PATH=$WISPDIR/bin:$QA/volrun/onpath:$PATH
 export QA WISPCONFIG COBSW COBPATH PATH
 echo
 echo '**** SETTING UP FOR MICRO FOCUS ****'
+echo "WISPDIR    = $WISPDIR"
 echo "PATH       = $PATH"
 echo "QA         = $QA"
 echo "WISPCONFIG = $WISPCONFIG"

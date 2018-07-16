@@ -1,7 +1,9 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /************************************************************************/
-/*	     VIDEO - Video Interactive Development Environment		*/
-/*			    Copyright (c) 1987				*/
-/*	An unpublished work by Greg L. Adams.  All rights reserved.	*/
+/*           VIDEO - Video Interactive Development Environment          */
+/*                          Copyright (c) 1987                          */
+/*      An unpublished work by Greg L. Adams.  All rights reserved.     */
 /************************************************************************/
 
 #include <stdio.h>
@@ -12,6 +14,8 @@
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
+#include "vintdef.h"
+#include "vmodules.h"
 
 int gclock()
 {
@@ -30,14 +34,22 @@ int gclock()
 	vdetpos(0, &row, &col, rows, cols);
 	active = TRUE;
 
-	if (vscr_atr & LIGHT) { emode = BOLD; cmode = REVERSE|BOLD; }
-	else { emode = REVERSE; cmode = CLEAR|BOLD; }
+	if (vscr_atr & LIGHT) 
+	{ 
+		emode = VMODE_BOLD; 
+		cmode = VMODE_REVERSE|VMODE_BOLD; 
+	}
+	else 
+	{ 
+		emode = VMODE_REVERSE; 
+		cmode = VMODE_CLEAR|VMODE_BOLD; 
+	}
 
 	while(active)
 	{
 		save = vsss(row,col,rows,cols);
 
-		vset(CURSOR,OFF);
+		vset_cursor_off();
 		vtext(emode,row,col,"          Good Clock          ");
 		vtext(emode,row+1,col,"  ");
 		vmode(cmode);
@@ -49,7 +61,7 @@ int gclock()
 		{
 			time_data = time(NULL);
 			vtext(cmode,row+1,col+3,"%s",ctime(&time_data));
-			vwait(0,0,0,20);
+			vwait(0,20);
 		}
 
 		if (c)
@@ -81,3 +93,15 @@ int gclock()
 	}
 	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: gclock.c,v $
+**	Revision 1.10  1997-07-08 16:17:28-04  gsl
+**	Change to use new video.h interface
+**
+**	Revision 1.9  1996-10-11 18:15:55-04  gsl
+**	drcs update
+**
+**
+**
+*/

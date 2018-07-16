@@ -1,0 +1,30 @@
+000010
+000020*    TABLE OCCURS CONST-CF-OCCURS=501 TIMES
+000030
+000100 01  CF-T2-TABLE.
+000200     03  CF-T2-DATA.
+000300     05  CF-T2                     OCCURS 501 TIMES
+000400         INDEXED BY CF-T2-INDEX.
+000500         10  CF-NAME               PIC X(8).
+000600         10  CF-TYPE               PIC X.
+000700         10  CF-VALIDATION         PIC XX.
+000800         10  CF-TABLE-NAME         PIC X(6).
+000900         10  CF-LO-RANGE           PIC X(16).
+001000         10  CF-HI-RANGE           PIC X(16).
+001100         10  CF-CUMMULATIVE-NAME   PIC X(8).
+001200         10  CF-ALIAS              PIC X(31).
+001300         10  CF-DEFAULT-FAC        PIC X.
+001400         10  FILLER                PIC X(7).
+001500     03  T2-DATA REDEFINES CF-T2-DATA.
+001600     05  T2                     OCCURS 501 TIMES.
+001800         10  T2-NAME               PIC X(8).
+001900         10  T2-TYPE               PIC X.
+002000         10  T2-VALIDATION         PIC XX.
+002100         10  T2-TABLE-NAME         PIC X(6).
+002200         10  T2-LO-RANGE           PIC X(16).
+002300         10  T2-HI-RANGE           PIC X(16).
+002400         10  T2-CUMMULATIVE-NAME   PIC X(8).
+002500         10  T2-ALIAS              PIC X(31).
+002600         10  T2-DEFAULT-FAC        PIC X.
+002700         10  FILLER                PIC X(7).
+002800

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -25,8 +27,21 @@
 #define	EXT_COBRUN
 #include "cobrun.h"
 
+#ifdef __ALPHA
+#define EXT_FILEXT
+#include "filext.h"
+#endif
 void wglobals()
 {
 	return;	
 }
 
+/*
+**	History:
+**	$Log: wglobals.c,v $
+**	Revision 1.9  1996-08-19 18:33:17-04  gsl
+**	drcs update
+**
+**
+**
+*/

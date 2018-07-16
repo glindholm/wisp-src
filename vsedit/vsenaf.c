@@ -1,4 +1,19 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 #include <stdio.h>
+#include <string.h>
+
+#include "vwang.h"
+
 #include "vseglb.h"
 #include "vsescr.h"
 
@@ -15,45 +30,15 @@ static VSESCR_FLDS(naf_flds) = {
 {LASTITEM}
 };
 
-static VSESCR_FLDS(cnaf_flds) = {
-{LEN(0)	ROW(9)	COL(16)	VALUE("Create not available when editing existing files")},
-{LEN(0)	ROW(11)	COL(28)	VALUE("Press (ENTER) to continue")},
-{LASTITEM}
-};
-static VSESCR_FLDS(snaf_flds) = {
-{LEN(0)	ROW(9)	COL(16)	VALUE("Save not available when editing new files")},
-{LEN(0)	ROW(11)	COL(28)	VALUE("Press (ENTER) to continue")},
-{LASTITEM}
-};
-static VSESCR_FLDS(enaf_flds) = {
-{LEN(0)	ROW(9)	COL(22)	VALUE("Requested function is only available")},
-{LEN(0) ROW(11) COL(25)	VALUE("from the EDIT-DISPLAY screen.")},
-{LEN(0)	ROW(13)	COL(25)	VALUE("Press (ENTER) to continue. . .")},
-{LASTITEM}
-};
+static void init_anaf(VSEFLD *flds);
+static void vse_anaf(VSEFLD *flds);
 
-vse_naf()
+void vse_naf(void)
 {
 	vse_anaf(naf_flds);
 }
-	
-vse_enaf()
-{
-	vse_anaf(enaf_flds);
-}
-	
-vse_cnaf()
-{
-	vse_anaf(cnaf_flds);
-}
-	
-vse_snaf()
-{
-	vse_anaf(snaf_flds);
-}
 
-vse_anaf(flds)
-VSEFLD *flds;
+static void vse_anaf(VSEFLD *flds)
 {
 	memcpy(naf_scr,vse_default_oa,sizeof(vse_default_oa));
 	vsescr_init(naf_scr);
@@ -61,9 +46,17 @@ VSEFLD *flds;
 	vwang(naf_func,naf_scr,naf_lines,naf_pfs,naf_pfcode,naf_status);
 }
 
-init_anaf(flds)
-VSEFLD *flds;
+static void init_anaf(VSEFLD *flds)
 {
 	vsescr(flds,naf_scr);
 }
 
+/*
+**	History:
+**	$Log: vsenaf.c,v $
+**	Revision 1.10  1996-09-03 18:24:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

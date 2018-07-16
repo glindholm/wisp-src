@@ -1,10 +1,24 @@
+static char copyright[]="Copyright (c) 1995-97 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		ptdoit.c
+**
+**	Project:	wisp/proctran
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	???
+**
+**	Routines:	
+**	doit()
+**	check_after_bump()	Write COBOL source to output file
+**	initialize()
+**	process_linein()	Process the input line
+**	write_str_int_type()	Write out the working storage source depending on the variable type
+**	write_link_type()	Write out working storage source depending on the var type
+*/
+
 #define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
@@ -16,26 +30,57 @@
 #include "pgkeyw.h"
 #include "pgeqtns.h"
 
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
 EXT char cli_infile[STRBUFF];								/* Wang Procedure Language file name.	*/
 EXT char out_fname[STRBUFF];								/* VMS COBOL generated output file name.*/
-static int max_cobline = 55;
-static int initialize();
-static int process_inline();
-static int write_str_int_type();
-static int write_link_type();
-static int write_proc_link_src();
-static int write_screen_info();
-static int write_environ_vars();
-static int kw_assign();
-static int skip_comment();
-static int p_putparm_keys();
-static int check_write_string();
-  
-int pcnt;										/* Position count of chars in inline.	*/
 
-int doit()										/* Do the COBOL generation.		*/
+int pcnt;										/* Position count of chars in linein.	*/
+
+/*
+**	Static data
+*/
+static int max_cobline = 55;
+
+/*
+**	Static Function Prototypes
+*/
+static void initialize(int *num_cmds,int *num_var,int *scn_num,int *filler_num,int *current_row,int *num_link_var);
+static void process_linein(int *num_cmds,int *num_var,int *scn_num,int *filler_num,int *current_row,int *num_link_var);
+static void write_str_int_type();
+static void write_link_type();
+static void write_proc_link_src();
+static void write_screen_info();
+static void write_environ_vars();
+static int kw_assign();
+static void skip_comment();
+static void p_putparm_keys(int *num_var,int *num_val);
+static void check_write_string();
+  
+/*
+**	ROUTINE:	doit()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+int doit(void)										/* Do the COBOL generation.		*/
 {
-	int out_wks, num_par;
+	int num_par;
 	int i, num_cmds, num_var, num_link_var;
 	int scn_num, filler_num, current_row;
 	char *cstr;
@@ -44,19 +89,19 @@ int doit()										/* Do the COBOL generation.		*/
 	initialize(&num_cmds,&num_var,&scn_num,&filler_num,&current_row,&num_link_var);	/* Initialize all of the flags and vars.*/
 	while (fgets(rline,STRBUFF,infile))						/* Read in STRBUFF chars until EOF.	*/
 	{
-		num_inlines++;
-		if (*rline == LNFD || *rline == '\0') *inline = '\0';			/* If an empty line.			*/
+		num_lineins++;
+		if (*rline == LNFD || *rline == '\0') *linein = '\0';			/* If an empty line.			*/
 		else
 		{
-			strcpy(inline,rline);						/* Copy in local variables.		*/
-			cstr = inline;
+			strcpy(linein,rline);						/* Copy in local variables.		*/
+			cstr = linein;
 			if (*cstr == ' ') cstr++;					/* If is a comment line.		*/
-			if (*cstr == '*') *inline = '\0';
+			if (*cstr == '*') *linein = '\0';
 			else
 			{
-				cstr = inline;
-				setup_line(cstr);					/* Put inline into expected format.	*/
-				process_inline(&num_cmds,&num_var,&scn_num,&filler_num,&current_row,&num_link_var);
+				cstr = linein;
+				setup_line(cstr);					/* Put linein into expected format.	*/
+				process_linein(&num_cmds,&num_var,&scn_num,&filler_num,&current_row,&num_link_var);
 			}
 		}
 	}
@@ -178,40 +223,54 @@ int doit()										/* Do the COBOL generation.		*/
 	if (got_submit)
 	{
 		check_after_bump(call_submit,"Perform Call SUBMIT");			/* Write out COBOL source.		*/
-		if (gendisplay) check_after_bump(&call_submit[12],"DISPLAY error for SUBMIT");
+		if (gendisplay) check_after_bump(&call_submit[11],"DISPLAY error for SUBMIT");
 	}
 	if (got_set)	check_after_bump(call_set,"Call SET");
 	if (got_extract) check_after_bump(call_extract,"Call EXTRACT");
 	if (got_print)
 	{
 		check_after_bump(call_print,"Perform Call PRINT");
-		if (gendisplay) check_after_bump(&call_print[11],"DISPLAY error for PRINT");
+		if (gendisplay) check_after_bump(&call_print[10],"DISPLAY error for PRINT");
 	}
 	if (got_find)	check_after_bump(call_find,"Perform Call FIND");
 	if (got_logoff)	check_after_bump(call_logoff,"Perform Call LOGOFF");
 	if (got_scratch)
 	{
 		check_after_bump(call_scratch,"Perform Call SCRATCH");
-		if (gendisplay) check_after_bump(&call_scratch[10],"DISPLAY error for SCRATCH");
+		if (gendisplay) check_after_bump(&call_scratch[9],"DISPLAY error for SCRATCH");
 	}
 	if (got_rename)
 	{
 		check_after_bump(call_rename,"Perform Call RENAME");
-		if (gendisplay) check_after_bump(&call_rename[10],"DISPLAY error for RENAME");
+		if (gendisplay) check_after_bump(&call_rename[9],"DISPLAY error for RENAME");
 	}
 	if (got_readfdr)
 	{
 		check_after_bump(call_readfdr,"Perform Call READFDR");
-		if (gendisplay) check_after_bump(&call_readfdr[9],"DISPLAY error for READFDR");
+		if (gendisplay) check_after_bump(&call_readfdr[8],"DISPLAY error for READFDR");
 	}
 
 	fclose(outfile);								/* Close the output file.		*/
 	return(0);
 }
 
-check_after_bump(value,text_info)							/* Write COBOL source to output file.	*/
-char **value;
-char *text_info;
+/*
+**	ROUTINE:	check_after_bump()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void check_after_bump(char **value,char *text_info)					/* Write COBOL source to output file.	*/
 {
 	int i;
 
@@ -225,12 +284,27 @@ char *text_info;
 	}
 }
 
-static initialize(num_cmds,num_var,scn_num,filler_num,current_row,num_link_var)		/* Init all of the flags and var so can	*/
-int *num_cmds, *num_var, *scn_num, *filler_num, *current_row, *num_link_var;		/*  begin the generation.		*/
+/*
+**	ROUTINE:	initialize()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	Init all of the flags and var so can begin the generation.
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void initialize(int *num_cmds,int *num_var,int *scn_num,int *filler_num,int *current_row,int *num_link_var)
 {
 	setflag();									/* Set all "in" flags to zero.		*/
 	setgot();									/* Set all "got" flags to zero.		*/
-	num_inlines = 0;								/* Set to 0 lines read.			*/
+	num_lineins = 0;								/* Set to 0 lines read.			*/
 	num_outlines = 0;								/* Set to 0 lines written.		*/
 	lncnt_type = 1;									/* Set to display read in lines cnt.	*/
 	*num_var = 0;									/* Set counter to zero.			*/
@@ -247,8 +321,23 @@ int *num_cmds, *num_var, *scn_num, *filler_num, *current_row, *num_link_var;		/*
 	cnt_sf = 0;
 }
 
-static process_inline(num_cmds,num_var,scn_num,filler_num,current_row,num_link_var)	/* Process the input line.		*/
-int *num_cmds, *num_var, *scn_num, *filler_num, *current_row, *num_link_var;
+/*
+**	ROUTINE:	process_linein()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void process_linein(int *num_cmds,int *num_var,int *scn_num,int *filler_num,int *current_row,int *num_link_var)
 {
 	int num_par, tndx, num_val;
 	char *start_ptr, *cstr;
@@ -258,13 +347,13 @@ int *num_cmds, *num_var, *scn_num, *filler_num, *current_row, *num_link_var;
 	captr = (char *)0;
 	num_par = 0;									/* Init number of parameters.		*/
 	num_val = 0;
-	start_ptr = inline;								/* Save starting pos of inline.		*/
-	aptr = inline;
-	pcnt = 0;									/* Set to first position in inline.	*/
-	next_ptr = inline;
+	start_ptr = linein;								/* Save starting pos of linein.		*/
+	aptr = linein;
+	pcnt = 0;									/* Set to first position in linein.	*/
+	next_ptr = linein;
 	while ( nexttok() )								/* While a token then process it.	*/
 	{
-		pcnt = aptr - inline;							/* Calculate position in inline.	*/
+		pcnt = aptr - linein;							/* Calculate position in linein.	*/
 		if (pcnt >= WPLMAX) break;						/* Don't process past meaningful column.*/
 		if (in_trace)								/* Process keywords for TRACE, if given.*/
 		{
@@ -626,8 +715,24 @@ int *num_cmds, *num_var, *scn_num, *filler_num, *current_row, *num_link_var;
 	}
 }
 
-static write_str_int_type()								/* Write out the working storage source	*/
-{											/*  depending on the variable type.	*/
+/*
+**	ROUTINE:	write_str_int_type()
+**
+**	FUNCTION:	Write out the working storage source depending on the variable type.
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void write_str_int_type()
+{
 	int i, len;
 	char *cstr;
 
@@ -639,9 +744,11 @@ static write_str_int_type()								/* Write out the working storage source	*/
 	else	strcat(cobline,cur_decl->field1);
 	len = strlen(cobline);								/* Get the current length of buffer.	*/
 	cstr = &cobline[len];								/* Point to end of curr output buffer.	*/
-	for (i = len; i < 31; i++) *cstr++ = ' ';					/* Space out to 40 char to match code.	*/
+	if (*cur_decl->type != 'I')
+	{
+		for (i = len; i < 31; i++) *cstr++ = ' ';				/* Space out to 40 char to match code.	*/
+	}
 	*cstr = '\0';									/* Make sure has NULL at end of buffer.	*/
-
 	if (*cur_decl->type == 'S')
 	{
 		int spfl;
@@ -691,15 +798,48 @@ static write_str_int_type()								/* Write out the working storage source	*/
 	}
 	if (*cur_decl->type == 'I')
 	{
-		strcat(cobline,"           BINARY VALUE ");
+		end_prt_line(1);							/* Add end of line stuff and write line.*/
+		strcpy(cobline,"           03 FILLER                      BINARY VALUE 0");
+		end_prt_line(1);
+		strcpy(cobline,"           03 ");
+		if (cur_decl->type[1] == 'R')
+		{
+			concat_var_prefix(cur_decl->type[1]);				/* Concatenate the variable prefix.	*/
+			if (*cur_decl->field1 == '&') strcat(cobline,&cur_decl->field1[1]);/* Load the name.			*/
+			else	strcat(cobline,cur_decl->field1);
+			strcat(cobline,"-2");
+			len = strlen(cobline);						/* Get the current length of buffer.	*/
+			cstr = &cobline[len];						/* Point to end of curr output buffer.	*/
+			for (i = len; i < 42; i++) *cstr++ = ' ';			/* Space out to match code.		*/
+			*cstr = '\0';							/* Make sure has NULL at end of buffer.	*/
+		}
+		else	strcat(cobline,"FILLER                      ");
+
+		strcat(cobline,"BINARY VALUE ");
 		if (*cur_decl->value) strcat(cobline,cur_decl->value);			/* Load the initial clause		*/
 		else strcat(cobline,"0");						/* Init to 0.				*/
 	}
 	end_prt_line(1);								/* Add end of line stuff and write line.*/
 }
 
-static write_link_type()								/* Write out working storage source	*/
-{											/*  depending on the var type.		*/
+/*
+**	ROUTINE:	write_link_type()
+**
+**	FUNCTION:	Write out working storage source depending on the var type.
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void write_link_type()
+{
 	int i, len;
 	char *cstr;
 
@@ -726,7 +866,10 @@ static write_link_type()								/* Write out working storage source	*/
 		}
 		else if (*cur_decl->type == 'I')
 		{
-			strcat(cobline,"           BINARY VALUE 0");
+			end_prt_line(1);						/* Add end of line stuff and write line.*/
+			strcat(cobline,"           03 FILLER           BINARY VALUE 0.");
+			end_prt_line(1);
+			strcat(cobline,"           03 FILLER           BINARY VALUE 0");
 			end_prt_line(1);						/* Add end of line stuff and write line.*/
 		}
 		else	write_log(util,'E','W',"ERRTYPE",
@@ -736,7 +879,23 @@ static write_link_type()								/* Write out working storage source	*/
 	cur_link = hld_link;								/* Put the pointer back if multiple.	*/
 }
 
-static write_proc_link_src()
+/*
+**	ROUTINE:	write_proc_link_src()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+static void write_proc_link_src()
 {
 	write_log(util,'I','W',"WRITE","Writing procedure division USING COBOL source beginning.");
 
@@ -763,7 +922,7 @@ static write_proc_link_src()
 	check_after_bump(&proc_div[2],"Procedure Division Header end");			/* Write out rest of proc. div header .	*/
 }
 
-static write_screen_info()								/* Write out the COBOL source for	*/
+static void write_screen_info()								/* Write out the COBOL source for	*/
 {											/*  the screen information.		*/
 	char scrn_num[FLDLEN];
 
@@ -895,7 +1054,7 @@ static write_screen_info()								/* Write out the COBOL source for	*/
 	}
 }
 
-static write_environ_vars()								/* Write out all ACCEPT vars FROM	*/
+static void write_environ_vars()							/* Write out all ACCEPT vars FROM	*/
 {											/*  ENVIRONMENT for undeclared vars.	*/
 	int uf, csize;									/* Flag if need unix_code flags.	*/
 
@@ -955,7 +1114,7 @@ static int kw_assign()									/* Return TRUE if keyword assignment	*/
 	else return(FALSE);
 }
 
-static skip_comment()									/* Don't process the comment.		*/
+static void skip_comment()								/* Don't process the comment.		*/
 {
 	int cnt;
 
@@ -978,13 +1137,11 @@ static skip_comment()									/* Don't process the comment.		*/
 }
 
 
-static p_putparm_keys(num_var,num_val)							/* Process the putparm keywords.	*/
-int *num_var, *num_val;
+static void p_putparm_keys(int *num_var,int *num_val)					/* Process the putparm keywords.	*/
 {
 	char *cstr, len[10], *lptr;
 	char *hptr, *tptr, temp[FLDLEN];
 	char tlbl[FLDLEN];
-	register int i, j;
 	int full_br, is_string;
 
 	full_br = FALSE;								/* Assume is not full backwards ref.	*/
@@ -1007,7 +1164,7 @@ int *num_var, *num_val;
 		*cstr = '\0';								/* Null terminate the string.		*/
 		aptr++;									/* Step over the closing paren.		*/
 	}
-	else if (*aptr == '(')	write_log(util,'E','R',"NOTEXPECT","Not expecting a ( symbol.  Notify IDSI");
+	else if (*aptr == '(')	write_log(util,'E','R',"NOTEXPECT","Not expecting a ( symbol.  Notify NeoMedia Migrations");
 
 	if (full_br)									/* Set the file, lib and volume params.	*/
 	{
@@ -1017,7 +1174,7 @@ int *num_var, *num_val;
 		strcpy(cur_pp_key->val,tlbl);
 		strcat(cur_pp_key->val,"-FILE");					/* Set the file field.			*/
 		cur_pp_key->len = 8;
-		get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'A');
+		get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'A');
 
 		init_ppkw();								/* Get memory for values.		*/
 		cur_pp_key->br_flag = 1;						/* Set to indicate field uses back ref.	*/
@@ -1025,7 +1182,7 @@ int *num_var, *num_val;
 		strcpy(cur_pp_key->val,tlbl);
 		strcat(cur_pp_key->val,"-LIBRARY");					/* Set the file field.			*/
 		cur_pp_key->len = 8;
-		get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'A');
+		get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'A');
 
 		init_ppkw();								/* Get memory for values.		*/
 		cur_pp_key->br_flag = 1;						/* Set to indicate field uses back ref.	*/
@@ -1033,7 +1190,7 @@ int *num_var, *num_val;
 		strcpy(cur_pp_key->val,tlbl);
 		strcat(cur_pp_key->val,"-VOLUME");					/* Set the file field.			*/
 		cur_pp_key->len = 6;
-		get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'A');
+		get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'A');
 
 		return;
 	}
@@ -1108,7 +1265,7 @@ int *num_var, *num_val;
 
 			write_log(util,'I','W',"SUBSCRIPT","Processing subscript variable (%s).",cur_pp_key->val);
 			cur_prg->sub_flag = 1;						/* Get the type of the variable.	*/
-			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'T');
+			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'T');
 			strcat(cur_pp_key->val,"-");
 			*aptr++;							/* Step over open paren.		*/
 			cstr = temp;
@@ -1125,7 +1282,7 @@ int *num_var, *num_val;
 			len = atoi(temp);						/* Convert the length to integer.	*/
 			cur_pp_key->len = len;
 			cur_pp_key->sub_flag = 1;
-			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'C');
+			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'C');
 			next_ptr = aptr;						/* Set so processes correctly.		*/
 		}
 		else if (is_string)							/* Have & symbol in a string so set	*/
@@ -1135,14 +1292,14 @@ int *num_var, *num_val;
 		}
 		else if (*cur_pp_key->val == '&')
 		{									/* Get the type and size of variable.	*/
-			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'T');
-			get_type_len(cur_pp_key->val,len,num_var,&num_val,'S');
+			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'T');
+			get_type_len(cur_pp_key->val,len,num_var,num_val,'S');
 			cur_pp_key->len = len_to_int(len);				/* Convert length to integer.		*/
 		}
 		else if (cur_pp_key->br_flag == 1)
 		{									/* Add the field to DECLARE list var.	*/
-			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,&num_val,'A');
-			get_type_len(cur_pp_key->val,len,num_var,&num_val,'S');
+			get_type_len(cur_pp_key->val,cur_pp_key->type,num_var,num_val,'A');
+			get_type_len(cur_pp_key->val,len,num_var,num_val,'S');
 			cur_pp_key->len = len_to_int(len);				/* Convert length to integer.		*/
 		}
 		else
@@ -1175,8 +1332,8 @@ int *num_var, *num_val;
 		*cstr = '\0';								/* Null terminate the string.		*/
 		if (*cur_pp_key->val2 == '&')
 		{									/* Get the type and size of variable.	*/
-			get_type_len(cur_pp_key->val2,cur_pp_key->type2,num_var,&num_val,'T');
-			get_type_len(cur_pp_key->val2,len,num_var,&num_val,'S');
+			get_type_len(cur_pp_key->val2,cur_pp_key->type2,num_var,num_val,'T');
+			get_type_len(cur_pp_key->val2,len,num_var,num_val,'S');
 			cur_pp_key->len2 = len_to_int(len);				/* Convert length to integer.		*/
 		}
 		else cur_pp_key->len2 = strlen(cur_pp_key->val2);			/* Get length of string.		*/
@@ -1185,7 +1342,7 @@ int *num_var, *num_val;
 	}
 }
 
-static check_write_string()								/* Check if need to write the STRING 	*/
+static void check_write_string()							/* Check if need to write the STRING 	*/
 {											/*  before displaying screen.		*/
 	if (!cur_scn_fld->str_params) return;						/* Are no STRING parameters.		*/
 
@@ -1221,3 +1378,24 @@ static check_write_string()								/* Check if need to write the STRING 	*/
 	strcat(cobline,&cur_scn_fld->screen_fld[1]);
 	end_prt_line(1);								/* Add end of line stuff and write line.*/
 }
+
+/*
+**	History:
+**	$Log: ptdoit.c,v $
+**	Revision 1.9  1997-04-21 11:06:17-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.8  1996-12-12 13:36:36-05  gsl
+**	\]devtech -. NeoMedia
+**
+**	Revision 1.7  1996-09-12 16:15:20-07  gsl
+**	All the calls to get_type_len() were passing &num_val as the 4th arg
+**	when they should have been passing num_val (int* vs int**)
+**	Fixed prototypes
+**
+**	Revision 1.6  1995-10-11 00:17:00-07  scass
+**	Added prototyping.
+**
+**
+**
+*/

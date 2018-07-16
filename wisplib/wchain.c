@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -11,22 +13,22 @@
 #include <descrip.h>
 #endif
 
-#include <v/video.h>
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wcommon.h"
 #include "wdefines.h"
+#include "wfname.h"
+#include "filext.h"
 
 #ifdef unix
 #include "wrunconf.h"
 #endif
 
-extern char WISPFILEXT[39];
-char *wfname();
-
 
 #ifdef VMS
-int WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
+#define WCHAIN_DEFINED
+
+void WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
 char	*volname, *libname, *filename;
 {
 #define		ROUTINE		70000
@@ -47,7 +49,7 @@ char	*volname, *libname, *filename;
 	*end_name = '\0';
 
 	path_desc.dsc$w_length = strlen(path);
-	vexit();
+	vwang_shut();
 	savelevel = linklevel();						/* Save the link-level in case RUN fails	*/
 	zerolevel();								/* Set link-level to zero.			*/
 	LIB$RUN_PROGRAM( &path_desc );
@@ -56,7 +58,7 @@ char	*volname, *libname, *filename;
 	**	If we get to this point then the whain() has failed.
 	*/
 	setlevel(savelevel);							/* Restore link-level.				*/
-	vsynch();								/* ReSync Video.				*/
+	vwang_synch();								/* ReSync Video.				*/
 
 	werrlog(ERRORCODE(3),path,errno,0,0,0,0,0,0);
 	return;
@@ -64,8 +66,9 @@ char	*volname, *libname, *filename;
 #endif	/* VMS */
 
 #ifdef unix
+#define WCHAIN_DEFINED
 
-int WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
+void WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
 char	*volname, *libname, *filename;
 {
 #define		ROUTINE		70000
@@ -98,7 +101,7 @@ char	*volname, *libname, *filename;
 		return;
 	}
 
-	vexit();								/* reset the terminal				*/
+	vwang_shut();								/* reset the terminal				*/
 
 	savelevel = linklevel();						/* Save the link-level in case RUN fails	*/
 	zerolevel();								/* Set link-level to zero.			*/
@@ -107,7 +110,7 @@ char	*volname, *libname, *filename;
 	{
 		execle( path, path, (char *)0, environ );
 
-		vsynch();							/* ReSync Video.				*/
+		vwang_synch();							/* ReSync Video.				*/
 	
 		werrlog(ERRORCODE(6),path,errno,0,0,0,0,0,0);
 		setlevel(savelevel);						/* Restore the link-level			*/
@@ -117,7 +120,7 @@ char	*volname, *libname, *filename;
 	if (ftyp == ISACU)
 	{
 		struct wruncfg cfg;
-		char	options[80];
+		char	options[sizeof(cfg.wrun_options)];
 		char	*eptr, *optr;
 		int	arg;
 		char	*sh_parm[64];
@@ -147,7 +150,7 @@ char	*volname, *libname, *filename;
 
 		execvp(sh_parm[0],sh_parm);
 
-		vsynch();								/* ReSync Video.			*/
+		vwang_synch();								/* ReSync Video.			*/
 
 		werrlog(ERRORCODE(8),cfg.wrun_runcbl,options,path,errno,0,0,0,0);
 		setlevel(savelevel);						/* Restore the link-level			*/
@@ -155,16 +158,15 @@ char	*volname, *libname, *filename;
 	}
 }
 
-int wchain( volname, libname, filename )						/* Lower case equivalent.		*/
+void wchain( volname, libname, filename )						/* Lower case equivalent.		*/
 char	*volname, *libname, *filename;
 {
 	WCHAIN( volname, libname, filename );
 }
 #endif	/* unix */
 
-#ifdef MSDOS
-
-void WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
+#ifndef WCHAIN_DEFINED
+void WCHAIN( volname, libname, filename )
 char	*volname, *libname, *filename;
 {
 #define		ROUTINE		70000
@@ -172,5 +174,20 @@ char	*volname, *libname, *filename;
 	werrlog(ERRORCODE(1),volname, libname, filename,0,0,0,0,0);
 	werrlog(102,"(WCHAIN) Function NOT-SUPPORTED",0,0,0,0,0,0,0);
 }
+#endif	/* not defined */
 
-#endif	/* MSDOS */
+/*
+**	History:
+**	$Log: wchain.c,v $
+**	Revision 1.14  1997-03-12 13:18:04-05  gsl
+**	CHange to use a standard not-defined routine if WCHAIN_DEFINED is not defined
+**
+**	Revision 1.13  1997-02-25 09:51:53-05  gsl
+**	Correct options size
+**
+**	Revision 1.12  1996-08-19 18:33:08-04  gsl
+**	drcs update
+**
+**
+**
+*/

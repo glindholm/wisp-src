@@ -1,0 +1,3 @@
+SOURCE=`echo $1|sed 's/\.tar\.Z//'`
+SOURCE=$SOURCE.tar.Z
+uncompress -c $SOURCE|tar -xvpf -

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include <stdio.h>										/* Reference standard I/O.	*/
 extern char WISPFILEXT[39];
 
@@ -5,7 +7,7 @@ extern char WISPFILEXT[39];
 
 main(argc,argv) int argc; char *argv[];
 {
-	long mode;										/* Mode for wfname.		*/
+	int4 mode;										/* Mode for wfname.		*/
 	int i;
 	char *end_name, *end_name1, *wfname();							/* Pointers for wfname.		*/
  	char in_name[256];									/* Vax style input name.	*/
@@ -151,3 +153,15 @@ char new_name[255], fdl_name[255];							/*Passed vaules name, fdl name.		*/
 			d--;								/*Decriment the index down by one.	*/
 	}
 }
+/*
+**	History:
+**	$Log: getezname.c,v $
+**	Revision 1.8  1997-06-10 15:44:18-04  scass
+**	Changed long to int4 for portability.
+**
+**	Revision 1.7  1996-07-23 14:12:54-04  gsl
+**	drcs update
+**
+**
+**
+*/

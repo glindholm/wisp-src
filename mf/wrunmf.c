@@ -1,7 +1,7 @@
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
+			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1994	*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
 			/*			    All rights reserved.			*/
 			/*									*/
@@ -11,8 +11,6 @@
 	wrunmf:		This routine is used to build a Micro Focus COBOL/2 
 			Run Time System (RTS or RTE).
 
-
-		$ cob -xe "" -o wrunmf wrunmf.c wispmf.o -lwtest -lwisp -lilp -lvideo
 */
 
 /*
@@ -22,18 +20,14 @@
 
 		ACP	 The Wang ACP routines.
 		NETCAP	 The Netron Cap routines.
-		WISPTEST Wisp test routines.
 		EDE	 The EDE routines.
+		W4W	 The WISP FOR WINDOWS routines.
 */
 
 #define ACP
 #define NETCAP
-
-/*
- *	#define WISPTEST
- */
-
 #define EDE
+#define W4W
 
 
 /*
@@ -103,15 +97,17 @@ wrunmf()
 	SUBMIT();
 	UPDATFDR();
 	UPPER();
+	USEHARDLINK();
+	USESOFTLINK();
 	WACCEPT();
 	WCHAIN();
 	WDISPLAY();
 	WISPEXIT();
+	WISPPLAT();
 	WISPSHUT();
 	WISPSYNC();
 	WISPSORT();
 	WSXIO();
-	menu();
 	wrename();
 	w2rowcol();
 	wscreen();
@@ -128,8 +124,8 @@ wrunmf()
 	wfopen2();
 	wfopen3();
 	wfclose();
-	wdinit();
-	wdfinish();
+/*	wdinit();	*/
+/*	wdfinish();	*/
 	wfwait();
 	wfswait();
 	wmemcpy();
@@ -151,6 +147,9 @@ wrunmf()
 	ws80();
 	ws132();
 
+	WANSI2WANG();
+	WWANG2ANSI();
+	
 /*
 ** The following routines are ACP routines
 */
@@ -230,5 +229,19 @@ wrunmf()
 	 GENVEC();
 	nc_pop_menu();
 	gen_ncpfkey();
+#endif
+
+/*
+** The following are W4W routines
+*/
+#ifdef W4W
+	W4WAPI();
+#endif /* W4W */
+
+/*
+** The OLD WISP menu system (obsolete)
+*/
+#ifdef ORIGMENU
+	menu();
 #endif
 }

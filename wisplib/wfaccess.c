@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -35,26 +37,34 @@
 
 #include <stdio.h>									/* Standard I/O include file.		*/
 #include <errno.h>
+#include <string.h>
+
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>                          
+#endif
 
 #include "idsistd.h"
 #include "wdefines.h"
 #include "wcommon.h"
 #include "wfaccess.h"
 #include "cobrun.h"
+#include "idsisubs.h"
+#include "wisplib.h"
 
 extern char wfilestat[2];								/* Last filestat form wfilechk		*/
-extern char ACUFILESTAT[4];								/* Acucobol extended file status	*/
 
 #ifdef VMS
 #include <file.h>	    								/* File definition include file.	*/
 #include <rms.h>
 #include <descrip.h>
-#include <string.h>
 
-int wfaccess(native_path, mode)	                                               		/* Gotta know where the args are.	*/
-
-char *native_path;									/* Addr. of file name and open mode arg */
-int4 *mode;
+int wfaccess(char* native_path, int4* mode)
 {
 
 	char 	filename[81];			 					/* Pre allocated storage for file name.	*/
@@ -241,13 +251,7 @@ report_in_access:
 }
 #endif	/* VMS */
 
-#if defined(unix) || defined(MSDOS)
-
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>                          
-#include <memory.h>
-
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 /*
 **	Routine:	wfaccess()
 **
@@ -282,14 +286,11 @@ report_in_access:
 **	04/26/93	Changed to use fexists() instead of access() to check if file exists. GSL
 **
 */
-int wfaccess(native_path, mode)
-char native_path[80];
-int4 *mode;
+int wfaccess(char* native_path, int4* mode)
 {
 	char 	filename[81];			 				/* The filename (null terminated string)	*/
 	char	fileidx[81];							/* Filename with .idx extension			*/
 	int  	file_desc;
-	char	*ptr;
 
 	unloadpad(filename,native_path,80);  					/* Move the filename in.			*/
 	strcpy(fileidx,filename);						/* Construct fileidx				*/
@@ -348,179 +349,25 @@ int4 *mode;
 		}
 		return(ACC_MISSING);						/* File was not found				*/
 
-#ifdef OLD
-		return_stat = access( filename, 00 );				/* check if file exists				*/
-		if (return_stat != 0)
-		{
-			if (*mode & IS_INDEXED)					/* CISAM uses .idx for INDEXED			*/
-			{
-				return_stat = access( fileidx, 00 );		/* check if idx file exists			*/
-			}
-			if (return_stat != 0)
-			{
-				return(ACC_MISSING);				/* File was not found				*/
-			}
-			else
-			{
-				strcpy(filename,fileidx);			/* Perpare to use filename as the name		*/
-			}
-		}
-
-		if ( 0 != access(filename,04) )					/* Check READ access				*/
-		{
-			switch(errno)
-			{
-			case EACCES:	return(ACC_DENIED);
-			case ENOENT:	return(ACC_MISSING);
-			}
-			return(ACC_UNKNOWN);
-		}
-
-		if (*mode & IS_IO)						/* If IO then also check WRITE access		*/
-		{
-			if ( 0 != access(filename,02) )				/* Check WRITE access				*/
-			{
-				switch(errno)
-				{
-				case EACCES:	return(ACC_DENIED);
-				case ENOENT:	return(ACC_MISSING);
-				}
-				return(ACC_UNKNOWN);
-			}
-		}
-
-		return(ACC_ALLOWED);
-#endif /* OLD */
 	}                                                                                                                         
 }
-#endif	/* unix  || MSDOS */
+#endif	/* unix  || MSDOS || WIN32 */
 
-#ifdef OLD
-int eaccess(file,mode)									/* Check Effective Access		*/
-char *file;
-int4 mode;
-{
-	int our_euid, file_uid, our_egid, file_gid;
-	ushort amode;
-	struct stat statbuf;
-	int	rc;
-
-	rc = stat(file,&statbuf);
-	if ( rc )
-	{
-		switch( errno )
-		{
-		case ENOTDIR:	return( ACC_BADDIR );
-		case ENOENT:	return( ACC_MISSING );
-		case EACCES:	return( ACC_DENIED );
-		case EFAULT:	return( ACC_BADDIR );
-		case EINTR:	return( ACC_UNKNOWN );
-		}
-		return( ACC_UNKNOWN );
-	}
-
-	if (statbuf.st_mode & S_IFDIR) return( ACC_BADDIR );
-
-	amode = statbuf.st_mode;							/* get file's access mode		*/
-	file_uid = (int)statbuf.st_uid;							/* and owner 				*/
-	file_gid = (int)statbuf.st_gid;							/* / group info				*/
-	our_euid = geteuid();								/* get our effective uid		*/
-	our_egid = getegid();								/* and effective gid			*/
-	if ( (file_uid == our_euid) &&
-		( (amode & 0700 & (mode << 6)) == (mode << 6) ) ) return(ACC_ALLOWED);	/* if we own file, check file's u bits	*/
-	if ( (file_gid == our_egid) && 
-		( (amode & 070 & (mode << 3)) == (mode << 3))) return(ACC_ALLOWED);	/* if we are same grp, chk g bits	*/
-	if ((amode & 07 & mode) == mode) return(ACC_ALLOWED);				/* compare other bits			*/
-	return(ACC_DENIED);
-}
-#endif /* OLD */
-
-acc_message(access_status,msgbuf)
-int	access_status;
-char   *msgbuf;
-{
-	switch( access_status )
-	{
-	case ACC_DENIED:
-		strcpy(msgbuf,"READ OR WRITE ACCESS DENIED FOR SPECIFIED FILE.");
-		break;
-	case ACC_NOFILE:
-		strcpy(msgbuf,"SPECIFIED FILE DOES NOT EXIST.");
-		break;
-	case ACC_NODIR:                                                    
-		strcpy(msgbuf,"UNABLE TO CREATE DIRECTORY FOR SPECIFIED FILE.");
-		break;
-	case ACC_LOCKED:
-		strcpy(msgbuf,"SPECIFIED FILE IS LOCKED BY ANOTHER USER.");
-		break;
-	case ACC_NOLOCK:
-		strcpy(msgbuf,"UNABLE TO LOCK SPECIFIED FILE.");
-		break;
-	case ACC_NOLINK:
-		strcpy(msgbuf,"UNABLE TO PHYSICALLY ACCESS SPECIFIED FILE.");
-		break;
-	case ACC_BADDIR:                                                             
-		strcpy(msgbuf,"INVALID DIRECTORY IN PATH OF SPECIFIED FILE.");
-		break;
-	case ACC_READONLY:
-		strcpy(msgbuf,"WRITE ACCESS REQUESTED ON READ-ONLY DEVICE.");
-		break;
-	case ACC_INUSE:
-		strcpy(msgbuf,"SPECIFIED FILE IN USE BY ANOTHER USER.");
-		break;
-	case ACC_EXISTS:
-		strcpy(msgbuf,"SPECIFIED FILE ALREADY EXISTS, NO WRITE ACCESS.");
-		break;
-	case ACC_SYSLIMIT:
-		strcpy(msgbuf,"A SYSTEM LIMIT HAS BEEN EXCEEDED.");
-		break;
-	case ACC_MISSING:
-		strcpy(msgbuf,"SPECIFIED FILE OR DIRECTORY PATH DOES NOT EXIST.");
-		break;
-	case ACC_BADDEV:
-		strcpy(msgbuf,"UNABLE TO ACCESS SPECIFIED DEVICE.");
-		break;
-	case ACC_BADVOL:
-		strcpy(msgbuf,"VOLUME NOT FOUND.");
-		break;
-	case ACC_OUTEXISTS:
-		strcpy(msgbuf,"FILE EXISTS, RENAME OR PRESS PF3 TO CONTINUE.");
-		break;
-	case ACC_ERROPEN:
-		strcpy(msgbuf,"OPEN FAILED WITH FILE STATUS ");
-		{
-			char	fsbuf[40];
-			if ((mf_cobol || aix_cobol) && wfilestat[0] == '9')
-			{
-				sprintf(fsbuf,"[9/RT%03d]",(unsigned)wfilestat[1]);
-			}
-			else
-			{
-				sprintf(fsbuf,"[%2.2s]", wfilestat);
-			}
-			strcat(msgbuf,fsbuf);
-		}
-		if (acu_cobol)
-		{
-			char acustring[40];
-
-			if ( ACUFILESTAT[2] < ' ' || ACUFILESTAT[2] > '~' ||			/* If status not printable	*/
-			     ACUFILESTAT[3] < ' ' || ACUFILESTAT[3] > '~' ) 
-			{
-				sprintf(acustring,"[0x%02x,0x%02x]",(unsigned int)(ACUFILESTAT[2]),(unsigned int)(ACUFILESTAT[3]));
-			}
-			else
-			{
-				sprintf(acustring,"[%c%c]",ACUFILESTAT[2],ACUFILESTAT[3]);
-			}
-			strcat(msgbuf,acustring);
-		}
-		break;
-	case ACC_UNKNOWN:
-		strcpy(msgbuf,"UNABLE TO OPEN SPECIFIED FILE. (REASON UNKNOWN)");
-		break;
-	default:
-		strcpy(msgbuf,"UNABLE TO OPEN SPECIFIED FILE. (REASON UNAVAILABLE)");
-		break;
-	}
-}
+/*
+**	History:
+**	$Log: wfaccess.c,v $
+**	Revision 1.13  1997-04-29 13:39:02-04  gsl
+**	Move acc_message() to wfopen.c
+**
+**	Revision 1.12  1997-03-12 13:19:48-05  gsl
+**	Changed to use WIN32 define
+**
+**	Revision 1.11  1996-09-10 11:48:27-04  gsl
+**	combine include code
+**
+**	Revision 1.10  1996-08-19 15:33:12-07  gsl
+**	drcs update
+**
+**
+**
+*/

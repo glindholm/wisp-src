@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -31,10 +33,11 @@
 
 #include "idsistd.h"
 #include "wglobals.h"
+#include "wisplib.h"
 
-int	longargtest(ptr,sigbytes)
-char	*ptr;			/* pointer to the argument.									*/
-int	sigbytes;		/* the number of significant bytes (1,2 or 3) it can't tell if all 4 bytes are significant	*/
+int	longargtest(char *ptr, int sigbytes)
+	/* ptr		pointer to the argument.								*/
+	/* sigbytes	the number of significant bytes (1,2 or 3) it can't tell if all 4 bytes are significant	*/
 {
 
 	if (sigbytes < 1 || sigbytes > 3) return(-1);
@@ -78,3 +81,12 @@ int	sigbytes;		/* the number of significant bytes (1,2 or 3) it can't tell if al
 
 
 
+/*
+**	History:
+**	$Log: longarg.c,v $
+**	Revision 1.9  1996-08-19 18:32:28-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,195 @@
+000100*---------------------------------------------------------------
+000200* WORKING LAYOUTS FOR THE BASIC RECORD TYPES IN A REPORT.
+000300* FILLERS AT THE END OF RECORDS ARE COMMENTED OUT BUT LEFT
+000400* IN THE CODE FOR DOCUMENTATION.
+000500* REPORT HEADER.
+000600*---------------------------------------------------------------
+000700 01  RPT-RECORDS.
+000800     05  RHD-RECORD                     PIC X(30).
+000000     05  FILLER REDEFINES RHD-RECORD.
+000900         10  RHD-KEY                    PIC X(13).
+001000         10  RHD-SEC-FILE               PIC 9.
+001100         10  RHD-SORT                   PIC 9.
+001200         10  RHD-DATA-LIMIT             PIC 9.
+001300         10  RHD-CONTROL-FIELDS         PIC 9.
+001400         10  RHD-COLUMN-SUBS            PIC 9.
+001500         10  RHD-NEW-FIELDS             PIC 9.
+001600         10  RHD-LINE-1-LEN             PIC 999 COMP.
+001700         10  RHD-FIELD-COUNT            PIC 99 COMP.
+001800         10  RHD-PRINT-FIELD-COUNT      PIC 99 COMP.
+001900         10  RHD-LINE-2-LEN             PIC 999 COMP.
+002000         10  RHD-LINE-3-LEN             PIC 999 COMP.
+002100         10  RHD-USER-EXIT              PIC 9.
+002200*        10  FILLER                     PIC X(57).
+002300*---------------------------------------------------------------
+002400* RECORD LAYOUT FOR REPORT DATA FILES RECORD
+002500*---------------------------------------------------------------
+002600     05  RDF-RECORD                     PIC X(67).
+000000     05  FILLER REDEFINES RDF-RECORD.
+002700         10  RDF-KEY                    PIC X(13).
+002800         10  RDF-PRIM-FILE              PIC X(8).
+002900         10  RDF-PRIM-LIBRARY           PIC X(8).
+003000         10  RDF-PRIM-VOLUME            PIC X(6).
+003100         10  RDF-SEC-FILE               PIC X(8).
+003200         10  RDF-SEC-LIBRARY            PIC X(8).
+003300         10  RDF-SEC-VOLUME             PIC X(6).
+003400         10  RDF-KEY-TO-SEC             PIC X(8).
+003500         10  RDF-KEY-OCCURRENCE         PIC 99.
+003600         10  RDF-KEY-OCCURRENCE-A REDEFINES
+003700             RDF-KEY-OCCURRENCE         PIC XX.
+003800*        10  FILLER                     PIC X(20).
+003900*---------------------------------------------------------------
+004000* RECORD LAYOUT FOR REPORT CONTROL FILES RECORD
+004100*---------------------------------------------------------------
+004200     05  RCF-RECORD.
+004300         10  RCF-KEY                    PIC X(13).
+004400         10  RCF-PRIM-FILE              PIC X(8).
+004500         10  RCF-PRIM-LIBRARY           PIC X(8).
+004600         10  RCF-PRIM-VOLUME            PIC X(6).
+004700         10  RCF-SEC-FILE               PIC X(8).
+004800         10  RCF-SEC-LIBRARY            PIC X(8).
+004900         10  RCF-SEC-VOLUME             PIC X(6).
+005000*        10  FILLER                     PIC X(30).
+005100     05  ST-IDX                         BINARY.
+005200     05  ST-SORTS                  PIC X(88).
+005300     05  FILLER REDEFINES ST-SORTS.
+005400         10  ST-SORT OCCURS 8 TIMES.
+005500             15  ST-NAME           PIC X(8).
+005600             15  ST-OCCURRENCE     PIC 99.
+005700             15  ST-OCCURRENCE-A REDEFINES
+005800                 ST-OCCURRENCE     PIC XX.
+005900             15  ST-ORDER          PIC X.
+006000*---------------------------------------------------------------
+006100* RECORD LAYOUT FOR CONTROL BREAK INFORMATION
+006200*---------------------------------------------------------------
+006300     05  RCB-IDX                         BINARY.
+006400     05  RCB-RECORD.
+006500         10  RCB-KEY                     PIC X(13).
+006600         10  RCB-ENTRIES                 PIC X(70).
+006700         10  FILLER REDEFINES RCB-ENTRIES.
+006800             15  RCB-ENTRY OCCURS 5 TIMES.
+006900                 20  RCB-NAME                PIC X(8).
+007000                 20  RCB-OCCURRENCE          PIC 99.
+007100                 20  RCB-OCCURRENCE-A REDEFINES
+007200                     RCB-OCCURRENCE          PIC XX.
+007300                 20  RCB-ACTION-CODE         PIC XX.
+007400                 20  RCB-ORIGIN              PIC 9.
+007500                 20  RCB-REPEAT-CODE         PIC 9.
+007600*        10  FILLER                      PIC X(4).
+007700*---------------------------------------------------------------
+007800* RECORD LAYOUTS FOR TITLES 6 RECORDS CONTAINING KEY VALUES
+007900* " H1-TITLE    " THRU " H3-TITLE    " AND
+008000* " H4-PAGEH    " THRU " H6-PAGEH    "
+008100*---------------------------------------------------------------
+008200     05  RTT-IDX                        BINARY.
+008300     05  RTT-RECORDS                    PIC X(438).
+008400     05  FILLER REDEFINES RTT-RECORDS.
+008500      07  RTT-RECORD OCCURS 6 TIMES.
+008600         10  RTT-KEY                    PIC X(13).
+008700         10  RTT-TITLE                  PIC X(60).
+008800*        10  FILLER                     PIC X(14).
+008900*---------------------------------------------------------------
+009000* RECORD LAYOUT FOR CONTROL BREAK DESCRIPTORS.
+009100* 5 RECORDS WITH KEY VALUES " HC1CNTRL    " THRU " HC5CNTRL    "
+009200*---------------------------------------------------------------
+009300     05  RCD-IDX                        BINARY.
+009400     05  RCD-RECORDS                    PIC X(280).
+009500     05  FILLER REDEFINES RCD-RECORDS.
+009600      07  RCD-RECORD OCCURS 5 TIMES.
+009700         10  RCD-KEY                    PIC X(13).
+009800         10  RCD-BREAK                  PIC X(40).
+009900         10  RCD-COL                    PIC 999.
+010000*        10  FILLER                     PIC X(31).
+000000*$LPI_CODE  PROCESS
+010100*    05  DL-IDX                        BINARY.
+010200*    05  DL-ENTRY-IDX                  BINARY.
+010300*    05  DL-FIELDS                     PIC X(2420).
+010400*    05  FILLER REDEFINES DL-FIELDS.
+010500*        10  DL-DATA OCCURS 10 TIMES.
+000000*$LPI_ELSE PROCESS
+010100     05  DL-IDX                        BINARY.
+010200     05  DL-ENTRY-IDX                  BINARY.
+010300     05  DL-FIELDS                     PIC X(24200).
+010400     05  FILLER REDEFINES DL-FIELDS.
+010500         10  DL-DATA OCCURS 100 TIMES.
+000000*$LPI_END
+010600             15  DL-NAME               PIC X(8).
+010700             15  DL-OCCURRENCE         PIC 99.
+010800             15  DL-OCCURRENCE-A REDEFINES
+010900                 DL-OCCURRENCE         PIC XX.
+011000             15  DL-ORIGIN             PIC 9.
+011100             15  DL-ENTRIES.
+011200                 20  DL-ENTRY OCCURS 10 TIMES.
+011300                     25  DL-OP-CODE         PIC XX.
+011400                     25  DL-LIT-20          PIC X(20).
+011500                     25  FILLER REDEFINES DL-LIT-20.
+011600                         30  DL-OP-NAME         PIC X(8).
+011700                         30  DL-OP-OCCURRENCE   PIC XXXX.
+011800                         30  DL-OP-OCCURRENCE-A REDEFINES
+011900                             DL-OP-OCCURRENCE   PIC XXXX.
+012000                         30  DL-OP-ORIGIN       PIC 9.
+012100                         30  FILLER             PIC X(6).
+012200                         30  DL-NOT-LIT-CODE    PIC X.
+012300                     25  DL-CONNECTOR           PIC X.
+012400             15  DL-SET-CONNECTOR          PIC X.
+012500
+012600*---------------------------------------------------------------
+012700* ONLY 10 OF THE TWELVE POSSIBLE ENTRY FIELDS ARE USED
+012800*---------------------------------------------------------------
+012900     05  NF-IDX                          BINARY.
+013000     05  NF-ENTRY-IDX                    BINARY.
+013100     05  NF-FIELDS                       PIC X(2220).
+013200     05  FILLER REDEFINES NF-FIELDS.
+013300      07  NF-DATA OCCURS 10 TIMES.
+013400         10  NF-NAME                     PIC X(8).
+013500         10  NF-ENTRIES                  PIC X(210).
+013600         10  FILLER REDEFINES NF-ENTRIES.
+013700             15  NF-ENTRY OCCURS 10 TIMES.
+013800                 20  NF-LIT-20              PIC X(20).
+013900                 20  FILLER REDEFINES NF-LIT-20.
+014000                     25  NF-OP-NAME         PIC X(8).
+014100                     25  NF-OP-OCCURRENCE   PIC X(4).
+014200                     25  NF-OP-ORIGIN       PIC 9.
+014300                     25  FILLER             PIC X(6).
+014400                     25  NF-NOT-LIT-CODE    PIC X.
+014500                 20  NF-OP-CODE         PIC X.
+014600         10  NF-TYPE                    PIC X.
+014700         10  NF-LEN                     PIC 999 COMP.
+014800         10  NF-DEC                     PIC 9.
+014900
+015000*---------------------------------------------------------------
+015100* FIELD DESCRIPTOR RECORDS ARE THE FIELDS AS THEY WILL APPEAR
+015200* ON THE REPORT AND AS MENTIONED THERE CAN BE 80 OF THESE.
+000000* THE 81st IS LOADED WITH THE KEY TO THE SECONDARY (IF NEEDED)
+000000* BY RPTCLD. (ONLY IF ALL 80 FIELDS ARE DEFINED)
+015300* THE LAST TWO BYTE FILLER IS SUPPOSEDLY ZEROES BUT IS UNUSED
+015400*---------------------------------------------------------------
+015500     05  RFL-IDX                    BINARY.
+015600     05  RFL-RECORDS                PIC X(6885).
+000000     05  FILLER REDEFINES RFL-RECORDS.
+015700      07  RFL-RECORD OCCURS 81 TIMES.
+015800         10  RFL-KEY.
+015900             15  RFL-LINE-CODE      PIC X.
+016000             15  RFL-SEQ            PIC 99.
+016100             15  RFL-NAME           PIC X(8).
+016200             15  RFL-OCCURRENCE     PIC 99.
+016300             15  RFL-OCCURRENCE-A REDEFINES
+016400                 RFL-OCCURRENCE     PIC XX.
+016500         10  RFL-COL-HEAD           PIC X(25).
+016600         10  RFL-COL-SUB-HEAD       PIC X(25).
+016700         10  RFL-SPACES             PIC 99 COMP.
+016800         10  RFL-EXT-SIZE           PIC 999 COMP.
+016900         10  RFL-ZERO-SUPPRESS      PIC XX.
+017000         10  RFL-SIGN-CONTROL       PIC XX.
+017100         10  RFL-DECIMAL-CARRY      PIC X.
+017200         10  RFL-INSERTS.
+017300             15  RFL-INSERT         PIC XX
+017400                 OCCURS 3 TIMES.
+017500         10  RFL-DOLLAR-SIGN        PIC 9.
+017600         10  RFL-COMMA-CODE         PIC 9.
+017700         10  RFL-TOTAL-CODE         PIC X.
+017800         10  RFL-MAXIMUM-CODE       PIC X.
+017900         10  RFL-MINIMUM-CODE       PIC X.
+018000         10  RFL-AVERAGE-CODE       PIC X.
+018100         10  RFL-ORIGIN             PIC 9.
+018200*        10  FILLER                 PIC 99.

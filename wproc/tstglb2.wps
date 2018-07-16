@@ -1,0 +1,33 @@
+*
+*	tstglb2		Test GLOBAL variables
+*
+*			This is run from tstglb1.  It override global 
+*			arg5 with a local and declares local arg6.
+*			It also re-declares global arg4.
+*
+procedure tstglb2
+
+
+* declare &arg4 as global string(10)  --  Causes bug
+declare &arg5           string(10)
+declare &arg6           string(10)
+
+prompt 	center "TSTGBL2 (before run sub3)";;
+	center " arg1=",bright uplow &arg1;
+        center " arg2=",bright uplow &arg2;
+        center " arg3=",bright uplow &arg3;
+	center " arg4=",bright uplow &arg4;
+	center " arg5=",bright uplow &arg5;
+	center " arg6=",bright uplow &arg6
+
+run sub3 using &arg1, &arg2, &arg3
+
+prompt 	center "TSTGBL2 (after run sub3)";;
+	center " arg1=",bright uplow &arg1;
+        center " arg2=",bright uplow &arg2;
+        center " arg3=",bright uplow &arg3;
+	center " arg4=",bright uplow &arg4;
+	center " arg5=",bright uplow &arg5;
+	center " arg6=",bright uplow &arg6
+
+

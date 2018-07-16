@@ -1,12 +1,7 @@
-			/************************************************************************/
-			/*									*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSDOS) || defined(WIN32)
 
 /*
 **	File:		wauthsub.c
@@ -25,10 +20,6 @@
 **			validate_license()	Read the license file and validate the license.
 **			check_timeout()		Check if the license has timed-out
 **
-**	History:
-**	05/26/92	Written GSL
-**	09/25/92	Added LICENSE_CLUSTER logic. GSL
-**	09/13/93	Generalized for UniQue. GSL
 **
 */
 
@@ -38,6 +29,10 @@
 #include <sys/utsname.h>
 #endif
 
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
@@ -45,6 +40,13 @@
 
 #include "idsistd.h"
 #include "wlicense.h"
+#include "platsubs.h"
+#include "idsisubs.h"
+#include "machid.h"
+#include "wispcfg.h"
+
+static int get_license_info(char* flickey, char* valcode);
+
 
 /*
 **	Routine:	entran()
@@ -77,8 +79,7 @@ static	char	*tt_tran = "QAZ9CX1EU2GR3IO4YL5MJN6PH7SFT8VDWKB";	/* WISP */
 static	char	*tt_tran = "YL5MJN6PH7SFT8VDWKBQAZ9CX1EU2GR3IO4";	/* UniQue */
 #endif
 
-char	entran(innum)
-int	innum;
+char	entran(int innum)
 {
 	char	*tt_tran = lic_trantable();
 	if (innum >= 0 && innum <= 34)
@@ -112,8 +113,7 @@ int	innum;
 **	09/13/93	Generalized to use lic_trantable(). GSL
 */
 
-int	detran(inchar)
-char	inchar;
+int	detran(char inchar)
 {
 	char	*ptr;
 	char	*tt_tran = lic_trantable();
@@ -150,18 +150,16 @@ char	inchar;
 **
 */
 
-int	checksummem(instr,size,mod)
-unsigned char	*instr;
-int	size;
-int	mod;
+int	checksummem(char* instr, int size, int mod)
 {
 	int	i;
 	int	cs;
+	unsigned char* ptr = (unsigned char*)instr;
 
 	cs = 0;
 	for (i=0; i<size; i++)
 	{
-		cs = (int)(cs + instr[i]) % mod;
+		cs = (int)(cs + ptr[i]) % mod;
 	}
 
 	return(cs);
@@ -200,19 +198,30 @@ int	mod;
 #define MONTHDAYS	31
 #define MAXPACKYEARS	127
 
-int packdate(yyyymmdd,ymd)
-char	*yyyymmdd;
-char	*ymd;
+int packdate(char* yyyymmdd, char* ymd)
 {
 	int	i;
 	int	year, month, day;
-
+	int thdig, hudig, tedig, odig;
+	
 	for(i=0;i<8;i++)
 	{
 		if (!isdigit(yyyymmdd[i])) return(1);
 	}
 
-	year =  (yyyymmdd[0]-'0')*1000 + (yyyymmdd[1]-'0')*100 + (yyyymmdd[2]-'0')*10 + (yyyymmdd[3]-'0');
+	/* 
+	 * the following kludge was added courtesy of a broken C compiler on 
+	 * SCO unix, which was unable to handle the previous form of this simple
+	 * formula.
+	 * 
+	 */
+	thdig = (int)(yyyymmdd[0]-'0');
+	hudig = (int)(yyyymmdd[1]-'0');
+	tedig = (int)(yyyymmdd[2]-'0');
+	odig  = (int)(yyyymmdd[3]-'0');
+
+	year = thdig*1000 + hudig*100 + tedig*10 + odig;
+
 	if (year < BASEYEAR) return(1);
 	year -= BASEYEAR;
 	if (year > MAXPACKYEARS) return(1);
@@ -251,11 +260,8 @@ char	*ymd;
 **
 */
 
-int unpkdate(yyyymmdd,ymd)
-char	*yyyymmdd;
-char	*ymd;
+int unpkdate(char* yyyymmdd,char* ymd)
 {
-	int	i;
 	int	year, month, day;
 	char	buff[20];
 
@@ -298,22 +304,23 @@ char	*ymd;
 **
 */
 
-char *lictypename(lictype)
-int	lictype;
+char *lictypename(int lictype)
 {
 static	char	*l_single	= "SINGLE";
 static	char	*l_unlimited	= "UNLIMITED";
 static	char	*l_timed	= "TIMED";
 static	char	*l_cluster	= "CLUSTER";
+static	char	*l_network	= "NETWORK";
 static	char	*l_invalid	= "INVALID";
 
 	switch(lictype)
 	{
-	case LICENSE_SINGLE:	return(l_single);	break;
-	case LICENSE_UNLIMITED:	return(l_unlimited);	break;
-	case LICENSE_TIMED:	return(l_timed);	break;
-	case LICENSE_CLUSTER:	return(l_cluster);	break;
-	default:		return(l_invalid);	break;
+	case LICENSE_SINGLE:	return(l_single);
+	case LICENSE_UNLIMITED:	return(l_unlimited);
+	case LICENSE_TIMED:	return(l_timed);
+	case LICENSE_CLUSTER:	return(l_cluster);
+	case LICENSE_NETWORK:	return(l_network);
+	default:		return(l_invalid);
 	}
 }
 
@@ -341,7 +348,7 @@ static	char	*l_invalid	= "INVALID";
 **
 */
 
-int create_license_file()
+int create_license_file(void)
 {
 	FILE	*fh;
 
@@ -358,13 +365,8 @@ int create_license_file()
 		}
 		else									/* Rename the temp file			*/
 		{
-#ifdef unix
-			link(x_license_filepath(),license_filepath());			/* link the temp file to license file	*/
-			unlink(x_license_filepath());					/* Remove the temp file link		*/
-#endif
-#ifdef MSDOS
 			rename(x_license_filepath(),license_filepath());
-#endif
+
 			if ( 0 != access(license_filepath(),0000) )			/* Make sure it worked			*/
 			{
 				return(1);
@@ -374,78 +376,6 @@ int create_license_file()
 
 	return(0);
 }
-
-
-/*
-**	Routine:	getmachineid()
-**
-**	Function:	To get the MACHINE ID.
-**
-**	Description:	This routine will return the MACHINE ID if one is available.  If there is no MACHINE ID it will
-**			"fake it" by returning the inode number of the license file.
-**
-**	Input:		None
-**			
-**
-**	Output:		machineid	The MACHINE ID (or inode number)
-**			
-**
-**	Return:		0 = success
-**			1 = no machine id and the stat failed on the license file.
-**
-**	Warnings:	Ensure that the license file in created first before calling this routine.
-**			Machineid must be large enough to hold the result.
-**
-**	History:	05/26/92	Written by GSL
-**
-*/
-
-#ifdef unix
-int getmachineid(machineid)
-char	*machineid;
-{
-	struct stat 	stat_buf;
-	struct utsname 	uname_s;
-	int4	inode;
-
-	*machineid = '\0';							/* Init machineid to NULL string		*/
-
-#ifdef AIX
-	if (uname(&uname_s))
-	{
-		return(1);
-	}
-
-	strcpy(machineid,uname_s.machine);
-#endif
-#ifdef HPUX
-	if (uname(&uname_s))
-	{
-		return(1);
-	}
-
-	strcpy(machineid,uname_s.__idnumber);
-#endif
-
-	/*
-	**	If no machine id use the inode.
-	*/
-	if (! *machineid)
-	{
-		if (stat(license_filepath(),&stat_buf))
-		{
-			return(1);
-		}
-
-		inode = (int4) stat_buf.st_ino;
-		sprintf(machineid,"I%d",inode);
-	}
-
-	upper_string(machineid);						/* Shift to upper case just in case alphas	*/
-	return(0);
-
-}
-#endif /* unix */
 
 /*
 **	Routine:	write_license()
@@ -490,16 +420,15 @@ char	*machineid;
 **
 */
 
-int write_license(custname,custnum,platform,licensekey,lictype,licdate,expdate,machineid,valcode)
-char	*custname;
-int4	custnum;
-char	platform[2];
-char	licensekey[LICENSE_KEY_SIZE];
-int	lictype;
-char	licdate[8];
-char	expdate[8];
-char	*machineid;
-char	valcode[VALIDATION_CODE_SIZE];
+int write_license(char	*custname,
+		int4	custnum,
+		char	platform[2],
+		char	*licensekey,
+		int	lictype,
+		char	licdate[8],
+		char	expdate[8],
+		char	*machineid,
+		char	*valcode)
 {
 	FILE	*fp;
 	char	flickey[80];
@@ -560,7 +489,6 @@ char	valcode[VALIDATION_CODE_SIZE];
 	return(0);
 }
 
-
 /*
 **	Routine:	validate_license()
 **
@@ -587,7 +515,7 @@ char	valcode[VALIDATION_CODE_SIZE];
 **
 */
 
-int validate_license()
+int validate_license(void)
 {
 	int4	custnum;
 	char	platform[3];
@@ -595,62 +523,22 @@ int validate_license()
 	char	licensedate[20];
 	char	expdate[20];
 	char	licensekey[80];
-	char	machineid[80];
+	char	machineid[256];
 	char	valcode[80];
 
-	FILE	*fp;
-	char	buff[256];
 	char	flickey[80];
 	int	rc;
 
-	/*
-	**	Check if license file exists
-	*/
-
-	if (0 != access(license_filepath(),0000))
-	{
-		return(LICENSE_MISSING);
-	}
 
 	/*
-	**	Open license file for reading
+	**	Get the LICENSE KEY and VALIDATION CODE
 	*/
-	fp = fopen(license_filepath(),"r");
-	if (!fp)
+	rc = get_license_info(flickey, valcode);
+	if (rc)
 	{
-		return(LICENSE_UNKNOWN);
+		return rc;
 	}
-
-	/*
-	**	Read thru the file extracting the LICENSE KEY and the VALIDATION CODE
-	*/
-
-	flickey[0] = '\0';
-	valcode[0] = '\0';
-	while(fgets(buff,sizeof(buff),fp))
-	{
-		if (0 == memcmp(buff,"LICENSE-KEY ",12))
-		{
-			rc = sscanf(buff,"LICENSE-KEY %s",flickey);
-			if (rc != 1) return(LICENSE_UNKNOWN);
-		}
-		else if (0 == memcmp(buff,"VALIDATION-CODE ",16))
-		{
-			rc = sscanf(buff,"VALIDATION-CODE %s",valcode);
-			if (rc != 1) return(LICENSE_UNKNOWN);
-		}
-	}
-	fclose(fp);
-
-	/*
-	**	Check if a LICENSE KEY was found
-	*/
-
-	if (!flickey[0])
-	{
-		return(LICENSE_UNKNOWN);
-	}
- 
+	
 	/*
 	**	Check if the LICENSE KEY is a valid key
 	*/
@@ -735,12 +623,131 @@ int validate_license()
 		}
 		break;
 
+#ifdef WIN32
+	case LICENSE_NETWORK:
+		/*
+		**	If on the server then validate normally.
+		**	If on a client then validate using the server name as the machine id.
+		*/
+
+		/*
+		**	Check if a VALIDATION CODE was found
+		*/
+		if (! valcode[0]) return(LICENSE_UNKNOWN);
+
+		/*
+		**	Get the MACHINE ID
+		*/
+		if (rc = getmachineid(machineid))
+		{
+			return(LICENSE_UNKNOWN);
+		}
+
+		/*
+		**	If running on a CLIENT then the machineid is 
+		**	generated from the SERVER name.
+		*/
+		if (0 != strcmp(wispserver(), computername(NULL)) &&
+		    0 != strcmp(wispserver(), DEF_WISPSERVER)        )
+		{
+			encodemachid(wispserver(), machineid);
+		}
+		
+		/*
+		**	Check if the VALIDATION CODE is valid
+		*/
+		upper_string(valcode);
+		if (VALIDATION_CODE_SIZE != strlen(valcode) ||
+		    0 != ckvalcode(licensekey,machineid,valcode))
+		{
+			return(LICENSE_INVALID);
+		}
+		break;
+#endif /* WIN32 */
+		
 	default:
 		return(LICENSE_INVALID);
-		break;
 	}
 
 	return(LICENSE_OK);
+}
+
+/*
+**	ROUTINE:	get_license_info()
+**
+**	FUNCTION:	Get the stored license information.
+**
+**	DESCRIPTION:	Read the license file to get the LICENSE KEY and VALIDATION CODE
+**
+**	ARGUMENTS:	
+**	flickey		The returned LICENSE KEY
+**	valcode		The returned VALIDATION CODE (may be empty string if not found)
+**
+**	GLOBALS:	None
+**
+**	RETURN:		
+**	0		Successfully returned license info
+**	LICENSE_MISSING	License info was missing
+**	LICENSE_UNKNOWN	Unable to get license info
+**
+**	WARNINGS:	None
+**
+*/
+static int get_license_info(char* flickey, char* valcode)
+{
+	FILE	*fp;
+	char	buff[256];
+	int	rc;
+
+	/*
+	**	Check if license file exists
+	*/
+
+	if (0 != access(license_filepath(),0000))
+	{
+		return(LICENSE_MISSING);
+	}
+
+	/*
+	**	Open license file for reading
+	*/
+	fp = fopen(license_filepath(),"r");
+	if (!fp)
+	{
+		return(LICENSE_UNKNOWN);
+	}
+
+	/*
+	**	Read thru the file extracting the LICENSE KEY and the VALIDATION CODE
+	*/
+
+	flickey[0] = '\0';
+	valcode[0] = '\0';
+	while(fgets(buff,sizeof(buff),fp))
+	{
+		if (0 == memcmp(buff,"LICENSE-KEY ",12))
+		{
+			rc = sscanf(buff,"LICENSE-KEY %s",flickey);
+			if (rc != 1) return(LICENSE_UNKNOWN);
+		}
+		else if (0 == memcmp(buff,"VALIDATION-CODE ",16))
+		{
+			rc = sscanf(buff,"VALIDATION-CODE %s",valcode);
+			if (rc != 1) return(LICENSE_UNKNOWN);
+		}
+	}
+	fclose(fp);
+
+	/*
+	**	Check if a LICENSE KEY was found
+	*/
+
+	if (!flickey[0])
+	{
+		return(LICENSE_UNKNOWN);
+	}
+
+	return 0;
 }
 
 /*
@@ -767,11 +774,8 @@ int validate_license()
 **
 */
 
-int check_timeout(lowdate,highdate)
-char	lowdate[8];
-char	highdate[8];
+int check_timeout(char lowdate[8], char highdate[8])
 {
-	int	rc;
 	char	low_ymd[3], high_ymd[3];
 	struct tm *l_tm;
 	time_t	now;
@@ -807,4 +811,23 @@ char	highdate[8];
 
 	return(0);
 }
-#endif /* unix || MSDOS */
+#endif /* unix || MSDOS || WIN32 */
+/*
+**	History:
+**	$Log: wauthsub.c,v $
+**	Revision 1.12  1997-03-21 10:29:55-05  gsl
+**	Split the retrieval of the LICENSE_KEY and VALICATION_CODE into a separate
+**	routine in preparation of storing the info in the registry for WIN32
+**
+**	Revision 1.11  1997-03-17 11:58:29-05  gsl
+**	Add logic for NETWORK license
+**
+**	Revision 1.10  1996-08-19 18:33:07-04  gsl
+**	drcs update
+**
+**	05/26/92	Written GSL
+**	09/25/92	Added LICENSE_CLUSTER logic. GSL
+**	09/13/93	Generalized for UniQue. GSL
+**
+**
+*/

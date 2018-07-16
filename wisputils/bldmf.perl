@@ -9,7 +9,16 @@
 # author: Jock Cooper IDSI 805-295-1155
 # Copyright IDSI 1990,1991
 # 
-# $Log: bldmf,v $
+# $Log: bldmf.perl,v $
+# Revision 1.6  1995-04-25 05:57:58-04  gsl
+# drcs state V3_3_15
+#
+# Revision 1.5  1995/04/17  11:50:27  gsl
+# drcs state V3_3_14
+#
+# Revision 1.4  1995/01/27  23:04:20  gsl
+# drcs load
+#
 # Revision 1.2  1991/10/11  17:36:17  jockc
 # unknown changes
 #

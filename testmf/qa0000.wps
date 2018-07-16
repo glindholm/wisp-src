@@ -1,0 +1,13 @@
+procedure qa0000.wps
+
+prompt center "QA0001 Will setup the usage constants for QA"
+
+set 		INLIB =LIBIN, 	INVOL   =VOLIN, 
+		OUTLIB=LIBOUT,	OUTVOL  =VOLOUT,
+		RUNLIB=LIBRUN,	RUNVOL  =VOLRUN,
+		SPOOLLIB=" ",	SPOOLVOL=VOLSPL,
+				WORKVOL =VOLWRK
+
+prompt center "Usage constants have been set"
+
+return

@@ -1,30 +1,31 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
-**	NAME:	werrlog.c 
+**	File:		werrlog.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Standard error reporting routines
+**
+**	Routines:	
 */
 
-#define INIT_ERR
+/*
+**	Includes
+*/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 #ifndef VMS	/* unix or MSDOS */
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
 
-#ifndef unix	/* VMS or MSDOS */
-#include <stdlib.h>
-#endif
-
-#ifdef MSDOS
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <io.h>
 #endif
 
@@ -33,26 +34,46 @@
 
 #include "idsistd.h"
 #include "wperson.h"
-#include "werrlog.h"
 #include "wdefines.h"
 #include "wglobals.h"
+#include "osddefs.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "wispcfg.h"
 
-char *getenv();
+#define INIT_ERR
+#include "werrlog.h"
 
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
 static char emsg[512] = { 0 };								/* The error message.			*/
 static char eform[256] = { 0 };						       		/* The formatting string.		*/
-static uint4 last_dbid = 0;							/* The last message from the database.	*/
-static int write_err();
-static int print_err();
-static int form_error();
-static int find_msg();
+static uint4 last_dbid = 0;								/* The last message from the database.	*/
 
-extern char WISPRUNNAME[8];
+/*
+**	Function Prototypes
+*/
+static int write_err(void);								/* Write error to log file.		*/
+static int print_err(void);
+static int find_msg(uint4 id);								/* Find the message in the message db.	*/
 
-void werrlog(id,p1,p2,p3,p4,p5,p6,p7,p8)
-uint4 id;                                                 
-char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
+
+
+
+void werrlog(uint4 id, ...)
 {
+	va_list ap;
+	
+	static	int	in_use = 0;
 	int log_it;
 
 	wglobals();									/* Pull in wglobals for VMS		*/
@@ -67,15 +88,6 @@ char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
 
 	w_err_code = id;								/* Copy the error code.			*/
 
-	w_err_p1 = p1;									/* And all the parms.			*/
-	w_err_p2 = p2;
-	w_err_p3 = p3;
-	w_err_p4 = p4;
-	w_err_p5 = p5;
-	w_err_p6 = p6;
-	w_err_p7 = p7;
-	w_err_p8 = p8;
-
 	if (!(w_err_flag & ENABLE_LOGGING)) return;					/* Logging is off.			*/
 
 	if (w_err_flag & LOG_EXCEPTIONS_ONLY)
@@ -89,28 +101,48 @@ char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
 
 	if (!log_it) return;
 
-	form_error(id,p1,p2,p3,p4,p5,p6,p7,p8);						/* Form the error message.		*/
+	if (in_use)
+	{
+		/*
+		**	werrlog is already in use - we have recursively entered this routine.
+		**	While reporting an error we generated another error - just break out.
+		*/
+		return;
+	}
+	else
+	{
+		in_use = 1;
 
-	if (w_err_flag & LOG_LOGFILE) write_err();					/* Write error to log file.		*/
+		/* Form the error message.		*/
 
-	if (w_err_flag & LOG_SCREEN) print_err();					/* Print error to stdout.		*/
+		if (!find_msg(id))							/* Is there a message for this error?	*/
+		{
+			sprintf(emsg,"%%WISP-E-NOMSG WISP error, message number %ld. ",id);	/* No message found.		*/
+		}
+		else
+		{
+			va_start(ap, id);
+			
+			vsprintf(emsg, eform, ap);					/* Generate the message.		*/
 
+			va_end(ap);
+		}
+
+		if (w_err_flag & LOG_LOGFILE) write_err();				/* Write error to log file.		*/
+
+		if (w_err_flag & LOG_SCREEN) print_err();				/* Print error to stdout.		*/
+
+		in_use = 0;
+	}
 }
 
-void werr_write(buff)									/* Write out a buffer to the error log.	*/
-char *buff;
+void werr_write(char* buff)								/* Write out a buffer to the error log.	*/
 {
+	static int first = 1;
 	FILE *efile;									/* Pointer to error log file.		*/
-	static	int	first=1;
 
-	if (first)									/* Need to get the file name.		*/
-	{
-		first=1; 								/* Don't undo first yet.		*/
-		werrpath();								/* Init werrlog_path			*/
-	}
-
-	efile = fopen(werrlog_path,"a");						/* First try to append.			*/
-	if (!efile) efile = fopen(werrlog_path,"w");					/* Doesn't exist, create it.		*/
+	efile = fopen(werrpath(),"a");							/* First try to append.			*/
+	if (!efile) efile = fopen(werrpath(),"w");					/* Doesn't exist, create it.		*/
 
 	if (!efile)									/* If can't open then use stderr	*/
 	{
@@ -125,12 +157,12 @@ char *buff;
 	if ( first )
 	{
 		first = 0;								/* Now turn off first.			*/
-		chmod(werrlog_path, 0666);						/* Allow all to write.			*/
+		chmod(werrpath(), 0666);						/* Allow all to write.			*/
 	}
 
 }
 
-static int write_err()									/* Write error to log file.		*/
+static int write_err(void)								/* Write error to log file.		*/
 {
 	time_t clock;
 	char	buff[512];
@@ -147,62 +179,42 @@ static int write_err()									/* Write error to log file.		*/
 	return(1);
 }
 
-static int print_err()									/* Write error to stdout		*/
+static int print_err(void)								/* Write error to stdout		*/
 {
 
 	if ( wbackground() ) printf("\n\r%s\n\r",emsg);					/* Pretty easy.				*/
 	else
 	{
 		emsg[255] = '\0';
-		werrvre(emsg);
+		werr_message_box(emsg);
 	}
 	return(1);
 }
 
-static int form_error(id,p1,p2,p3,p4,p5,p6,p7,p8)					/* Format the error message.		*/
-uint4 id;
-char *p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
-{
-	int i;
 
-	if (!find_msg(id))								/* Is there a message for this error?	*/
-	{
-		sprintf(emsg,"%%WISP-E-NOMSG WISP error, message number %ld. ",id);	/* No message found.			*/
-	}
-	else
-	{
-		sprintf(emsg,eform,p1,p2,p3,p4,p5,p6,p7,p8);				/* Generate the message.		*/
-	}
-}
-
 static char msgfname[256] = { 0 };
 
-static int find_msg(id)									/* Find the message in the message db.	*/
-uint4 id;
+static int find_msg(uint4 id)								/* Find the message in the message db.	*/
 {
 static	int	msgfile_not_found = 0;
-	FILE *msgfile, *fopen();
-	char *ptr;
-	uint4 lo_id, hi_id, cur_id, lo_idx, hi_idx, cur_idx, msg_idx, num_msgs, idx_diff;
+	FILE *msgfile;
+	uint4 cur_id, lo_idx, hi_idx, cur_idx, msg_idx, num_msgs, idx_diff;
 
 	if (msgfile_not_found) return(0);
 	if (last_dbid == id) return(1);							/* already got it in buffer.		*/
 
 	if (!msgfname[0])								/* Need to get the name of the msg file	*/
 	{
-		char	*path;
+		const char	*path = wispconfigdir();
 
-#ifdef VMS
-		path = "WISP$CONFIG:";
-#else	/* !VMS */
-		path = getenv( WISP_CONFIG_ENV );
-		if (!path)
+#ifndef VMS
+		if (0 == strcmp(path,"$WISPCONFIG"))
 		{
 			/*
 			**	WISPCONFIG is not set.
 			*/
 			msgfile_not_found = 1;
-			sprintf(emsg,"%%WERRLOG-E-WISPCONFIG %s is undefined",WISP_CONFIG_ENV);
+			strcpy(emsg,"%%WERRLOG-E-WISPCONFIG WISPCONFIG is undefined.");
 			print_err();
 			return(0);
 		}
@@ -211,11 +223,7 @@ static	int	msgfile_not_found = 0;
 		buildfilepath(msgfname, path, WISP_MESSAGE_FILE);
 	}
 
-#ifndef ultrix
-	msgfile = fopen(msgfname,"rb");							/* Open the indexed file.		*/
-#else
-	msgfile = fopen(msgfname,"r");							/* Open the indexed file.		*/
-#endif
+	msgfile = fopen(msgfname,FOPEN_READ_BINARY);					/* Open the indexed file.		*/
 
 	if (!msgfile)									/* Unable to open message file		*/
 	{
@@ -298,11 +306,11 @@ static	int	msgfile_not_found = 0;
 }
 
 #ifdef VMS
-void werrset()
+void werrset(void)
 {
 }
 #else /* !VMS */
-void werrset()
+void werrset(void)
 {
 	char	*ptr;
 	char	buff[50];
@@ -316,15 +324,97 @@ void werrset()
 
 	if ( strcmp(buff,"FULL") == 0 )
 	{
-		w_err_flag = 19;
+		w_err_flag = ENABLE_LOGGING + LOG_LOGFILE + LOG_SUBROUTINE_ENTRY; /* 19 */
 		return;
 	}	
 
 	if ( strcmp(buff,"ENTRY") == 0 )
 	{
-		w_err_flag = 27;
+		w_err_flag = ENABLE_LOGGING + LOG_LOGFILE + LOG_SUBROUTINE_ENTRY + LOG_EXCEPTIONS_ONLY; /* 27 */
 		return;
 	}	
 }
 #endif	/* !VMS */
 
+/*
+**	ROUTINE:	wtrace()
+**
+**	FUNCTION:	Write a trace message to the wisp error log (wisperr.log)
+**
+**	DESCRIPTION:	%%ROUTINE-T-CODE format ..
+**
+**	ARGUMENTS:	
+**	routine		The routine name
+**	code		A code for header
+**	format		A printf() style format message
+**	...		arguments for the format message
+**
+**	GLOBALS:	
+**	w_err_flag	The error flag mask	
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void wtrace(const char* routine, const char* code, const char* format, ... /* args */)
+{
+	va_list ap;
+	char	buff[1024], msg[1024];
+
+
+	if (!(w_err_flag & ENABLE_LOGGING) 	 ||
+	    !(w_err_flag & LOG_SUBROUTINE_ENTRY) ||
+	    !(w_err_flag & LOG_LOGFILE) 	    ) return;
+
+	va_start(ap, format);
+			
+	vsprintf(buff, format, ap);
+
+	va_end(ap);
+
+	sprintf(msg, "(WTRACE) %%%s-T-%s %s\n", routine, code, buff);
+
+	werr_write(msg);
+}
+
+/*
+**	History:
+**	$Log: werrlog.c,v $
+**	Revision 1.16  1997-04-15 22:44:40-04  gsl
+**	Add wtrace() for tracing to wisperr.log
+**
+**	Revision 1.15  1996-10-08 20:27:51-04  gsl
+**	replaced getenv() with wispconfigdir()
+**
+**	Revision 1.14  1996-09-04 17:22:27-07  gsl
+**	Removed extern var
+**
+**	Revision 1.13  1996-07-10 16:56:35-07  gsl
+**	change to use werrpath() and fix includes and prototypes for NT
+**
+**	Revision 1.12  1996-07-08 11:15:40-07  gsl
+**	Fix to use stdargs and use vsprintf() to form error message
+**
+**	Revision 1.11  1995-09-25 10:04:41-07  gsl
+**	changed fopen() to use FOPEN_READ_BINARY
+**	added include of osddefs.h
+**
+ * Revision 1.10  1995/04/25  09:54:40  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.9  1995/04/17  11:47:42  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.8  1995/02/17  13:07:11  gsl
+ * change to use werr_message_box()
+ *
+ * Revision 1.7  1995/02/17  12:06:42  gsl
+ * change to use vwang_message_box() instead of werrvre()
+ *
+# Revision 1.5  1995/02/14  15:59:00  gsl
+# *** empty log message ***
+#
+**
+**
+*/

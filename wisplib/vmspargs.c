@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,9 +17,8 @@
 
 #include <stdio.h>
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <io.h>
-#include <errno.h>
 #endif
 
 #include "idsistd.h"
@@ -25,6 +26,7 @@
 #include "wdefines.h"
 #include "werrlog.h"
 #include "link.h"
+#include "wexit.h"
 
 #define ROUTINE		28000
 
@@ -35,22 +37,21 @@ extern	int4	LINKPARMCNT;							/* The number of arguments passed (0-32)	*/
 extern	char	*LINKPARMPTR[MAX_LINK_PARMS];					/* The passed arguments				*/
 extern	int4	LINKPARMLEN[MAX_LINK_PARMS];					/* The lengths of the passed arguments		*/
 
-VMSPARGS()								/* This routine is call on the way back from a LINK 	*/
+void VMSPARGS(void)							/* This routine is call on the way back from a LINK 	*/
 									/* with VMSCOBOL. It writes the LINKAGE parameters	*/
 									/* from the linked program to the tmp file.		*/
 {
 	FILE	*fp;
 	int4	size,i;
-	char	tempstr[80];
 	static	int	first=1;
 
-	if (!LINKPARM) return(0);
+	if (!LINKPARM) return;
 
-	if (!first) return(0);
+	if (!first) return;
 	first = 0;
 
 	if ( 0 == access ( LINKPARMKEY, 0 ) )						/* If it already exists;		*/
-		delete ( LINKPARMKEY ) ;						/* Delete it before opening		*/
+		unlink( LINKPARMKEY ) ;						/* Delete it before opening		*/
 
 	fp = fopen(LINKPARMKEY,"w");							/* Open the Parm file			*/
 	if ( !fp )
@@ -79,3 +80,12 @@ VMSPARGS()								/* This routine is call on the way back from a LINK 	*/
 
 	fclose(fp);
 }
+/*
+**	History:
+**	$Log: vmspargs.c,v $
+**	Revision 1.9  1996-08-19 18:33:05-04  gsl
+**	drcs update
+**
+**
+**
+*/

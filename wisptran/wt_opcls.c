@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -50,7 +52,6 @@ p_open()
 	int  o_write[MAX_FILES];							/* Allow writers.			*/
 	int  o_omode[MAX_FILES];
 	int  o_count;									/* a count of the file names saved	*/
-	char o_next[40];
 	int i,done,is_crt,allow_write;
 	int open_mode,syntax_ok;
 
@@ -61,7 +62,7 @@ p_open()
 	syntax_ok = 0;									/* Not sure if the syntax is ok yet.	*/
 
 	ptype = get_param(o_parms[0]);							/* skip the OPEN verb			*/
-	stredt(inline,o_parms[0],"");							/* Remove the word.			*/
+	stredt(linein,o_parms[0],"");							/* Remove the word.			*/
 
 	o_parms[5][0] = '\0';								/* Clear the OPEN MODE string		*/
 	o_parms[6][0] = '\0';								/* And the trailing MODE string		*/
@@ -148,7 +149,9 @@ p_open()
 						strcpy(o_allow[o_count]," ALLOWING ALL");	/* And the trailing mode	*/
 
 					if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
-						write_log("WISP",'E',"AUTOLOCK","File %s OPEN SHARED.",o_parms[0]);
+					{
+						write_log("WISP",'W',"AUTOLOCK","File %s OPEN SHARED using AUTOLOCK.",o_parms[0]);
+					}
 
 				}							/* Handle other modes			*/
 				else if (open_mode == OPEN_SPECIAL_INPUT)		/* handle SPECIAL-INPUT phrase		*/
@@ -167,6 +170,8 @@ p_open()
 
 					if (lpi_cobol||mf_aix)
 						strcpy(o_allow[o_count]," WITH LOCK");	/* LPI needs it locked.			*/
+					else if ((vax_cobol || acu_cobol) && (prog_ftypes[i] & OPENIOX_FILE))
+						strcpy(o_allow[o_count]," ALLOWING NO OTHERS");	/* OPEN I-O exclusive		*/
 					else if (vax_cobol && (prog_ftypes[i] & AUTOLOCK))
 						strcpy(o_allow[o_count]," ");		/* Automatic record locking.		*/
 					else
@@ -218,7 +223,7 @@ p_open()
 			}
 		}									/* not found, i = prog_cnt		*/
 		if ((ptype == -1) || (i == -1)) done = 1;				/* period or no file name means done.	*/
-		if (!done) stredt(inline,o_parms[0],"");				/* Remove the last word.		*/
+		if (!done) stredt(linein,o_parms[0],"");				/* Remove the last word.		*/
 	} while (!done);								/* continue till done			*/
 											/* If we ended on a keyword, then we set*/
 	if (i == -1) ptype = 1;								/* up as if we ended on a new line.	*/
@@ -273,6 +278,17 @@ p_open()
 
 			make_fld(o_parms[9],o_fnames[i],"S-");				/* create the status byte		*/
 			tput_line_at(16, "MOVE \"OP\" TO WISP-DECLARATIVES-STATUS\n");	/* Signal an open.		*/
+
+			if (x4dbfile && prog_ftypes[o_fref[i]] & INDEXED_FILE)
+			{
+				/*
+				**	If an INDEXED file and the x4dbfile flag set then
+				**	add runtime logic to set the IS_DBFILE flag.
+				*/
+				tput_line_at(16, "CALL \"x4dbfile\" USING \"%s\",",o_fnames[i]);
+				tput_clause (20, "%s", o_parms[9]);
+			}
+
 			tput_line_at(16, "CALL \"wfopen3\" USING %s,\n",o_parms[9]);	/* start with the status byte	*/
 
 									/* literal or null volume, pass the created field */
@@ -351,9 +367,10 @@ p_open()
 
 	if (!syntax_ok)
 	{
-		write_log("WISP",'F',"OPNSYN","Syntax Error in OPEN statement, No file name.\n%s",inline);
+		write_log("WISP",'F',"OPNSYN","Syntax Error in OPEN statement, No file name.\n%s",linein);
 		exit_wisp(EXIT_WITH_ERR);
 	}
+	return 0;
 }
 
 			/* Process CLOSE statements for possible multiple file names amd CRT file closes	*/
@@ -369,7 +386,7 @@ p_close()
 	done = 0;									/* not done yet				*/
 
 	ptype = get_param(o_parms[0]);							/* skip the CLOSE verb		*/
-	stredt(&inline[7],o_parms[0],"");
+	stredt(&linein[7],o_parms[0],"");
 
 	do
 	{
@@ -384,7 +401,17 @@ p_close()
 		if (is_crt)								/* delete CRT file closes		*/
 		{
 			write_log("WISP",'I',"DELCRTCLOSE","Fixed CLOSE of crt file, %s.",crt_file[cur_crt]);
-			tput_line("                 CALL \"vwang\" USING VWANG-CLOSE-WS,\n");
+			if (acn_cobol)
+			{
+				write_log("WISP",'W',"NATIVE","Workstation CLOSE %s removed for Native Screens",
+					  crt_file[cur_crt]);
+				tput_scomment("*>>> Workstation CLOSE removed for Native Screens.");
+				tput_scomment("*    CLOSE %s\n",crt_file[cur_crt]);
+			}
+			else
+			{
+				tput_line_at(16,"CALL \"vwang\" USING VWANG-CLOSE-WS,\n");
+			}
 		}
 		else									/* see if it is a file name		*/
 		{
@@ -409,12 +436,12 @@ p_close()
 
 		if (!done) 
 		{
-			stredt(&inline[7],o_parms[0],"");
+			stredt(&linein[7],o_parms[0],"");
 		}
 
 		if (ptype == -1) 
 		{
-			stredt(&inline[7],".","");
+			stredt(&linein[7],".","");
 			done = 1;
 		}
 
@@ -460,5 +487,24 @@ p_close()
 	}
 
 	hold_line();
+	return 0;
 }
 
+/*
+**	History:
+**	$Log: wt_opcls.c,v $
+**	Revision 1.13  1997-09-15 11:36:54-04  gsl
+**	Removed CLOSE workstation for native screens
+**
+**	Revision 1.12  1997-09-12 14:03:42-04  gsl
+**	change native warning
+**
+**	Revision 1.11  1997-09-12 13:28:02-04  gsl
+**	Native screens warning for WS CLOSE
+**
+**	Revision 1.10  1996-08-30 21:56:22-04  gsl
+**	drcs update
+**
+**
+**
+*/

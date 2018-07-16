@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*                                                                      */
 			/*              WISP - Wang Interchange Source Pre-processor            */
@@ -11,22 +13,16 @@
 **      filesize.c
 */
 
-#ifndef VMS
+#if defined(unix) || defined(WIN32) || defined(MSDOS)
 
-#ifdef unix
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
-#ifdef MSDOS
-#include <sys\types.h>
-#include <sys\stat.h>
-#endif
 #include <errno.h>
+
 #include "idsistd.h"
 #include "werrlog.h"
 
-int4 filesize(path)                                             /* Return the length of the file in bytes.                      */
-char    *path;
+int4 filesize(char* path)                                             /* Return the length of the file in bytes.                      */
 {
 #undef          ROUTINE
 #define         ROUTINE         65300
@@ -44,3 +40,15 @@ char    *path;
 }
 
 #endif
+/*
+**	History:
+**	$Log: filesize.c,v $
+**	Revision 1.10  1996-09-10 11:42:45-04  gsl
+**	fix some of the ifdefs
+**
+**	Revision 1.9  1996-08-19 15:32:20-07  gsl
+**	drcs update
+**
+**
+**
+*/

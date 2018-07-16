@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -13,11 +15,11 @@
 #include <rms.h>
 #include <types.h>
 #include <stat.h>
+#include <statbuf.h>
 
-int greclen(file_name) unsigned char *file_name;				/* Get record length of fixed_size record file. */
+int greclen(char* file_name)							/* Get record length of fixed_size record file. */
 {
 	struct stat stbuf;							/* This structure describes the file descriptor. */
-	extern int stat();							/* This is C run_time library routine. 		*/
 	int status;								/* Status will be returned from STAT here.	*/
 	unsigned int reclen=0;							/* This will contain function return value.	*/
 
@@ -36,9 +38,21 @@ int greclen(file_name) unsigned char *file_name;				/* Get record length of fixe
 }
 #else /* unix and MSDOS */
 
-int greclen(file_name) unsigned char *file_name;				/* Get record length of fixed_size record file. */
+int greclen(char* file_name)							/* Get record length of fixed_size record file. */
 {
 	int tmp=0;
 	return(tmp);
 }
 #endif		
+/*
+**	History:
+**	$Log: greclen.c,v $
+**	Revision 1.10  1996-09-04 20:02:09-04  gsl
+**	fix def of stat()
+**
+**	Revision 1.9  1996-08-19 15:32:23-07  gsl
+**	drcs update
+**
+**
+**
+*/

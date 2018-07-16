@@ -90,14 +90,17 @@ then
 fi
 
 echo Loading $WISPCONFIG
-cp $ETC/forms		$WISPCONFIG/FORMS
-cp $ETC/lpmap		$WISPCONFIG/LPMAP
-cp $ETC/prmap		$WISPCONFIG/PRMAP
-cp $ETC/scmap		$WISPCONFIG/SCMAP
+cp $ETC/CHARMAP		$WISPCONFIG
+cp $ETC/FORMS		$WISPCONFIG
+cp $ETC/LPMAP		$WISPCONFIG
+cp $ETC/PRMAP		$WISPCONFIG
+cp $ETC/SCMAP		$WISPCONFIG
+cp $ETC/W4WMAP		$WISPCONFIG
 cp $ETC/wispmsg.dat	$WISPCONFIG
 cp $ETC/wispmsg.txt	$WISPCONFIG
+cp ../wproc/wproc.msg	$WISPCONFIG
 
-cat $ETC/options.dat | sed "s|#IDSIPRINTON|IDSIPRINTON|" > $WISPCONFIG/OPTIONS
+cat $ETC/OPTIONS |sed "s|#PQUNIQUE|PQUNIQUE|"> $WISPCONFIG/OPTIONS
 cat $TESTDIR/lgmap.mf | sed "s|_WISP_|$WISP|g" > $WISPCONFIG/LGMAP
 cp $TESTDIR/wrunconfig.mf $WISPCONFIG/wrunconfig
 
@@ -113,6 +116,5 @@ $WU/wsysconf
 
 echo
 echo The '$WISPCONFIG' $WISPCONFIG directory has been built.
-echo The following files are still needed:
 echo
 echo

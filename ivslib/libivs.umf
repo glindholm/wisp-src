@@ -1,3 +1,7 @@
+#
+#	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+#	$Id:$
+#
 #	/************************************************************************/
 #	/*									*/
 #	/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
@@ -15,22 +19,28 @@
 #
 
 #CDEBUG = -g
-CDEBUG = -O
+CDEBUG = 
 
-#LIB = libivsd.a
-LIB = libivs.a
+L_VIDEO = video
 
 include $(WISP)/src/port/make.include
 
-.PRECIOUS:	$(LIB) 
+CFLAGS  = $(CFLAGS0) -I$(VIDEO_INC_DIR)
 
-all: $(STDLIB)/$(LIB)
+IVS_LIB = libivs.a
 
-$(STDLIB)/$(LIB): $(LIB)
-	cp $(LIB) $(STDLIB)/$(LIB)
+.PRECIOUS:	$(IVS_LIB) 
 
-$(LIB):	$(LIB)(vchinese.o)
-	$(RANLIB) $(LIB)
-	@echo lib $(LIB) is now up-to-date
+all: $(STD_LIB_DIR)/$(IVS_LIB)
 
-$(LIB)(vchinese.o): $(STDINC)/v/vchinese.h
+clean:
+	rm -f $(IVS_LIB) *.o core *~
+
+$(STD_LIB_DIR)/$(IVS_LIB): $(IVS_LIB)
+	cp $(IVS_LIB) $(STD_LIB_DIR)/$(IVS_LIB)
+
+$(IVS_LIB):	$(IVS_LIB)(vchinese.o)
+	$(RANLIB) $(IVS_LIB)
+	@echo lib $(IVS_LIB) is now up-to-date
+
+$(IVS_LIB)(vchinese.o): $(VIDEO_INC_DIR)/vchinese.h

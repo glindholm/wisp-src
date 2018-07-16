@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -12,7 +14,8 @@
 #include <stdio.h>
 #include <descrip.h>
 #include <stsdef.h>
-#include <v/video.h>
+
+#include "video.h"
 
 #include "idsistd.h"
 #include "spawn.h"
@@ -78,8 +81,8 @@ uint4 *status;
 			vmove(22,0);						/* Move to line 22.				*/
 			verase(TO_EOS);						/* Erase some lines.				*/
 			vprint("%s\n",message);					/* Print the message.				*/
-			vset(CURSOR,VISIBLE);					/* make the cursor visible.			*/
-			vdefer(RESTORE);					/* Restore deferred mode.			*/
+			vset_cursor_on();					/* make the cursor visible.			*/
+			vdefer_restore();					/* Restore deferred mode.			*/
 		}
 
 		retstat = lib$spawn(comptr,0,0,0,0,0,status,0,0,0,&prompt);	/* Now Spawn a sub process.			*/
@@ -112,3 +115,15 @@ uint4 *status;
 	return(-1);
 }
 #endif	/* unix or MSDOS */
+/*
+**	History:
+**	$Log: spawn.c,v $
+**	Revision 1.10  1997-07-09 12:42:09-04  gsl
+**	Change to use new video.h intefaces
+**
+**	Revision 1.9  1996-08-19 18:32:59-04  gsl
+**	drcs update
+**
+**
+**
+*/

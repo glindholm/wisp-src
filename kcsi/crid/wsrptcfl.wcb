@@ -1,0 +1,40 @@
+000100                                                                          
+000110*01  CONST-RPT-CTL-SCREENS         BINARY VALUE 12.
+000120*01  CONST-RPT-CTL-FIELDS          BINARY VALUE 504.
+000130*01  CONST-RPT-CTL-SCREEN-FIELDS   BINARY VALUE 42.
+000140
+000200 01  RPT-CTL-FIELDS.                                                      
+000300     05  CTL-FIELDS-TABLE.                                                
+000400         07  WALLAH-WALLAH       PIC X(6552).                             
+000401*                                      6552 = 504 * 13
+000402*                                      6552 = Fields * FieldSize
+000500         07  FILLER1 REDEFINES WALLAH-WALLAH OCCURS 504 TIMES.            
+000501*                                                   ^^^ = CONST-RPT-CTL-FIELDS
+000600             09  CTL-FIELD-LINE.                                          
+000700                 11  CTL-ID-FIELD.                                        
+000800                     13  CTL-FIELD-NAME  PIC X(08).                       
+000900                     13  LFT-PAREN       PIC X(01).                       
+001000                     13  OCCURS-OR-NOT   PIC X(02).                       
+001100                     13  FILLER REDEFINES OCCURS-OR-NOT.                  
+001200                         15 NO-IN-PARENS PIC 9(02).                       
+001300                     13  RT-PAREN        PIC X(01).                       
+001400                 11  CTL-FIELD-SEL   PIC X(01).                           
+001500         07  FILLER2 REDEFINES WALLAH-WALLAH OCCURS 12 TIMES.             
+001501*                                                   ^^= CONST-RPT-CTL-SCREENS
+001600             09  SCREEN-OF-CTL-FIELDS.                                    
+001700                 11  FILLER          PIC X(546).                          
+001710*                                          546 = 42 * 13
+001720*                                          546 = FieldsPerScreen * FieldSize
+001800     05  CTL-FIELDS-INDEXES.                                              
+001900         07  CTLIDX                      PIC 9(03).                       
+002000         07  CTR                         PIC 9(02).                       
+002100     05  CTL-TYPE-TABLE.                                                  
+002200         07  CTL-FIELDS-TYPE         PIC X(01) OCCURS 80 TIMES.           
+002300     05  CTL-EDIT-TABLE.                                                  
+002400         07  CTL-FIELDS-EDIT         PIC 9(02) OCCURS 80 TIMES.           
+002500     05  CTL-FIELDS-TO-EDIT          PIC 9(02).                           
+002600     05  CTL-AKA-TABLE.                                                   
+002700         07  CTL-FIELDS-AKA          PIC X(08) OCCURS 80 TIMES.           
+002800     05  CTL-DECIMAL-TABLE.                                               
+002900         07  CTL-FIELDS-DECIMAL      PIC 9(01) OCCURS 80 TIMES.           
+003000                                                                          

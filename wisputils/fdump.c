@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <errno.h>
 
@@ -39,3 +41,12 @@ char	*argv[];
 
 
 
+/*
+**	History:
+**	$Log: fdump.c,v $
+**	Revision 1.7  1996-07-23 14:12:53-04  gsl
+**	drcs update
+**
+**
+**
+*/

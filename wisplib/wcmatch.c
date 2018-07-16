@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -132,3 +134,12 @@ int wcmatch(pat, str, sex, MATCHONE, MATCHMANY)
 
 
 
+/*
+**	History:
+**	$Log: wcmatch.c,v $
+**	Revision 1.8  1996-08-19 18:33:08-04  gsl
+**	drcs update
+**
+**
+**
+*/

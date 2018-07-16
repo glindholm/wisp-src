@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <fcntl.h>
 
@@ -71,3 +73,12 @@ int ifd,ofd;
 		memset(buf,0,sizeof(buf));
 	}
 }
+/*
+**	History:
+**	$Log: addlf.c,v $
+**	Revision 1.4  1996-07-23 14:12:46-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,149 @@
+#/************************************************************************/
+#/*                                                                      */
+#/*              Copyright (c) 1994, 1995, 1997       			 */
+#/*              An unpublished work of NeoMedia Technologies Inc.	 */
+#/*                         All rights reserved.                         */
+#/*                                                                      */
+#/************************************************************************/
+#
+#
+#       File:           amuunix.umf
+#
+#       Function:       The UNIX makefile for AMU
+#
+#       Desciption:     This makefile will build AMU for ACUCOBOL or Micro Focus COBOL.
+#
+#                       make -f amuunix.umf
+#
+#
+
+#Edit VER, REL, and PATCH to reflect the version being made.
+#  Also edit version.wcb for AMU-VERSION text string.
+VER=1
+REL=1
+PATCH=0
+
+include $(WISP)/src/port/make.include
+
+include $(WISP)/src/acu/acu.rules
+
+ACUDIST=   AMU AMUROOT AMUEDIT AMUMDM AMUFKM AMUUDM CAMUMENU
+MFDIST=    AMU.int AMUROOT.int AMUEDIT.int AMUMDM.int AMUFKM.int AMUUDM.int CAMUMENU.int
+
+make:
+	@echo
+	@echo "AMU Make utility. Build"
+	@echo
+	@echo " 1.  For Micro Focus
+	@echo " 2.  For AcuCOBOL
+	@echo " 3.  Both and source
+	@echo " "
+	@echo " 0.  Exit"
+	@read build ; \
+	here=`pwd` ; \
+	case $$build in \
+		1) make -f amuunix.umf "WISPTRAN=$(WISPTRAN)" mf_all ;;\
+		2) make -f amuunix.umf "WISPTRAN=$(WISPTRAN)" acu_all ;; \
+		3) make -f amuunix.umf "WISPTRAN=$(WISPTRAN)" both ;; \
+		0) make -f amuunix.umf nothing ;; \
+		*) make -f amuunix.umf nothing ;; \
+	esac
+
+nothing:
+	@echo "Exiting make"
+
+both:	quiet_clean delete_kit source_all mf_all acu_all
+	-@distdir=amu.$(VER)$(REL) ; \
+	shipdir=amu$(VER)$(REL).ship ; \
+	info=$$shipdir/$$distdir/Info ; \
+	echo Building Info file for $$info ; \
+	date					>$$info ; \
+	uname -s -r -v				>>$$info ; \
+	echo AMU Version $(VER).$(REL).$(PATCH)	>>$$info ; \
+	chmod 444 $$info ; \
+	echo ; \
+	echo "     Creating compressed tar file ..." ; \
+	cd $$shipdir ; \
+	tar -cvf - $$distdir|compress>$$distdir.tar.Z ; \
+	chmod 644 $$distdir.tar.Z
+
+delete_kit:
+	@shipdir=amu$(VER)$(REL).ship ; \
+	rm -rf $$shipdir
+
+source_all:
+	-@distdir=amu.$(VER)$(REL) ; \
+	shipdir=amu$(VER)$(REL).ship ; \
+	mkdir -p $$shipdir/$$distdir/source ; \
+	cp amu.lis $$shipdir/$$distdir ; \
+	cp *.wcb *.umf $$shipdir/$$distdir/source ; \
+	cd $$shipdir ; \
+	find . -type f -exec chmod 444 {} \; ; \
+	find . -type d -exec chmod 755 {} \;
+
+mf_all:
+	@rm -f *.cob
+	@rm -f *.cpy
+	make -f amumf.umf "WISPTRAN=$(WISPTRAN)"
+	make -f amuunix.umf mfdist
+
+acu_all:
+	@rm -f *.cob
+	@rm -f *.cpy
+	make -f amuacu.umf "WISPTRAN=$(WISPTRAN)"
+	make -f amuunix.umf acudist
+
+quiet_clean:
+	@make -f amuunix.umf "QUIET=@" clean
+clean:
+	$(QUIET)rm -f $(ACUDIST)
+	$(QUIET)rm -f $(MFDIST)
+	$(QUIET)rm -f *.int
+	$(QUIET)rm -f *.cob
+	$(QUIET)rm -f *.cpy
+	rm -rf amu*.ship
+	rm -f *~ core *.o
+
+acudist: $(ACUDIST)	
+	@if [ $(VER)$(REL) ] ; then \
+		make -f amuunix.umf amuacu.$(VER)$(REL) ; \
+	else \
+		echo "Must make acudist VER=nn RELEASE=nn " ; \
+	fi
+
+amuacu.$(VER)$(REL):
+	-@distdir=amuacu.$(VER)$(REL) ; \
+	shipdir=amu$(VER)$(REL).ship ; \
+	subdir=amu.$(VER)$(REL) ; \
+	rm -rf $$shipdir/$$subdir/$$distdir ; \
+	echo ; \
+	echo Creating AcuCOBOL distribution - $$shipdir/$$subdir/$$distdir ;\
+	echo "          Please wait ..." ; \
+	echo ; \
+	mkdir -p $$shipdir/$$subdir/$$distdir ; \
+	cp $(ACUDIST) $$shipdir/$$subdir/$$distdir ; \
+	cd $$shipdir ; \
+	find . -type f -exec chmod 666 {} \; ; \
+	find . -type d -exec chmod 755 {} \;
+
+mfdist: $(MFDIST)
+	@if [ $(VER)$(REL) ] ; then \
+		make -f amuunix.umf amumf.$(VER)$(REL) ; \
+	else \
+		echo "Must make mfdist VER=nn RELEASE=nn " ; \
+	fi
+
+amumf.$(VER)$(REL):
+	-@distdir=amumf.$(VER)$(REL) ; \
+	shipdir=amu$(VER)$(REL).ship ; \
+	subdir=amu.$(VER)$(REL) ; \
+	rm -rf $$shipdir/$$subdir/$$distdir ; \
+	echo ; \
+	echo Creating Micro Focus COBOL distribution - $$shipdir/$$subdir/$$distdir ;\
+	echo "          Please wait ..." ; \
+	echo ; \
+	mkdir -p $$shipdir/$$subdir/$$distdir ; \
+	cp $(MFDIST) $$shipdir/$$subdir/$$distdir ; \
+	cd $$shipdir ; \
+	find . -type f -exec chmod 666 {} \; ; \
+	find . -type d -exec chmod 755 {} \;

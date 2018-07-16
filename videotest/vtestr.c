@@ -9,15 +9,21 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
+#include <string.h>
+#include <video.h>
+#include <vmodules.h>
 
-	static char l1[80],l2[80],l3[80],l4[80],l5[80],l6[80];
+static char l1[80],l2[80],l3[80],l4[80],l5[80],l6[80];
+static void draw_form();
+static void set_input();
+static void draw_input();
+static void reset_input();
 
 testr()
 {
-	int sav_op;
+	enum e_vop sav_op;
 
-	sav_op = voptimize(BLOCK_MODE);
+	sav_op = voptimize(VOP_DEFER_MODE);
 
 	vstate(0);
 	verase(FULL_SCREEN);
@@ -53,7 +59,7 @@ testr()
 	return(SUCCESS);
 }
 
-draw_form()
+static void draw_form()
 {
 	vmove(0,30);
 	vmode(REVERSE);
@@ -81,7 +87,7 @@ draw_form()
 }
 
 
-draw_input()
+static void draw_input()
 {
 
 	vmode(UNDERSCORE);
@@ -109,7 +115,7 @@ draw_input()
 }
 
 
-set_input()
+static void set_input()
 {
 	strcpy(l1,"123456.00");
 	strcpy(l2,"freddy.dat");
@@ -119,7 +125,7 @@ set_input()
 	strcpy(l6,"The End");
 }
 
-reset_input()
+static void reset_input()
 {
 	strcpy(l1,"         ");
 	strcpy(l2,"noname.dat");

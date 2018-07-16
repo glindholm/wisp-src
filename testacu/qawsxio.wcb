@@ -134,69 +134,69 @@
            03  FILLER  PIC X(13) ROW 1 COL 60 VALUE
                "WSXIO-SCREEN".
            03  FILLER  PIC X(35) ROW  3 COL 02 VALUE
-               " 1) WSXIO WRITE READ.".
+               "(1) WSXIO WRITE READ.".
            03  FILLER  PIC X(35) ROW  4 COL 02 VALUE
-               " 2) WSXIO AID.".
+               "(2) WSXIO AID.".
            03  FILLER  PIC X(35) ROW  5 COL 02 VALUE
-               " 3) WSXIO WRITE READ AID".
+               "(3) WSXIO WRITE READ AID".
            03  FILLER  PIC X(35) ROW  6 COL 02 VALUE
-               " 4) IOSW[3]".
+               "(4) IOSW[3]".
            03  FILLER  PIC X(35) ROW  7 COL 02 VALUE
-               " 5) WRITE READ TIMED(10)".
+               "(5) WRITE READ TIMED(10)".
            03  FILLER  PIC X(35) ROW  8 COL 02 VALUE
-               " 6) WRITE READ TIMED(10) AID".
+               "(6) WRITE READ TIMED(10) AID".
            03  FILLER  PIC X(35) ROW  9 COL 02 VALUE
-               " 7) DISPLAY AID".
+               "(7) DISPLAY AID".
            03  FILLER  PIC X(35) ROW 10 COL 02 VALUE
-               " 8) WSXIO WRITE WAIT READ AID".
+               "(8) WSXIO WRITE WAIT READ AID".
            03  FILLER  PIC X(35) ROW 11 COL 02 VALUE
-               " 9) WSXIO UPDATE".
+               "(9) WSXIO UPDATE".
            03  FILLER  PIC X(35) ROW 12 COL 02 VALUE
-               "10) ".
+               "(10) ".
            03  FILLER  PIC X(35) ROW 13 COL 02 VALUE
-               "11) ".
+               "(11) ".
            03  FILLER  PIC X(35) ROW 14 COL 02 VALUE
-               "12) ".
+               "(12) ".
            03  FILLER  PIC X(35) ROW 15 COL 02 VALUE
-               "13) ".
+               "(13) ".
            03  FILLER  PIC X(35) ROW 16 COL 02 VALUE
-               "14) ".
+               "(14) ".
            03  FILLER  PIC X(35) ROW 17 COL 02 VALUE
-               "15) ".
+               "(15) ".
            03  FILLER  PIC X(35) ROW 19 COL 02 VALUE
-               "16) EXIT".
+               "(16) EXIT".
            03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
-               "17) ".
+               "(17) ".
            03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
-               "18) ".
+               "(18) ".
            03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
-               "19) ".
+               "(19) ".
            03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
-               "20) ".
+               "(20) ".
            03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
-               "21) ".
+               "(21) ".
            03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
-               "22) ".
+               "(22) ".
            03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
-               "23) ".
+               "(23) ".
            03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
-               "24) ".
+               "(24) ".
            03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
-               "25) ".
+               "(25) ".
            03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
-               "26) ".
+               "(26) ".
            03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
-               "27) ".
+               "(27) ".
            03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
-               "28) ".
+               "(28) ".
            03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
-               "29) ".
+               "(29) ".
            03  FILLER  PIC X(35) ROW 16 COL 40 VALUE
-               "30) ".
+               "(30) ".
            03  FILLER  PIC X(35) ROW 17 COL 40 VALUE
-               "31) ".
+               "(31) ".
            03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
 
        01  WSXIO-COMMAND PIC X VALUE "T".

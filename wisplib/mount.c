@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -43,6 +45,7 @@ va_dcl
 	int4	device,vsid,sysuse,*retcod;
 	char	*volume,*label,*usage,*dtype,*bypass,*msg,*disp,*addr,dname[MAX_DEVICE_NAME_LENGTH];
 	char 	volnam[7];
+	char	errbuff[256];
 	/********************************************************
 	*	Receive variable number of arguments		*
 	********************************************************/
@@ -157,7 +160,8 @@ va_dcl
 
 	if (status == SS$_NORMAL) return;						/* Success.				*/
 
-	vre("MOUNT error, device=%s, vol=%s, status=%x (hex)",dname,volnam,status);
+	sprintf(errbuff,"MOUNT error, device=%s, vol=%s, status=%x (hex)",dname,volnam,status);
+	werr_message_box(errbuff);
 }
 
 
@@ -202,6 +206,7 @@ load_dv()										/* Load the device list.		*/
 	char *prm_ptr,*scn_ptr,tempc,inline[133];
 	int flag;
 	FILE *the_file;
+	char	errbuff[256];
 
 	if (devlist) return(1);								/* Already did.				*/
 
@@ -209,7 +214,8 @@ load_dv()										/* Load the device list.		*/
 
 	if (!the_file)									/* Error opening file.			*/
 	{
-		vre("WISPLIB error (get_dvname). Error opening file %s",WISP_TAPE_FILE);
+		sprintf(errbuff,"WISPLIB error (get_dvname). Error opening file %s",WISP_TAPE_FILE);
+		werr_message_box(errbuff);
 		return(0);
 	}
 
@@ -289,10 +295,19 @@ load_dv()										/* Load the device list.		*/
 	fclose(the_file);							/* close the term file			*/
 
 }
-#endif
-#ifdef unix
-MOUNT()
+#else
+#include "werrlog.h"
+void MOUNT()
 {
-	vre("MOUNT: Not Supported");
+	werr_message_box("MOUNT: Not Supported");
 }
 #endif
+/*
+**	History:
+**	$Log: mount.c,v $
+**	Revision 1.11  1996-08-19 18:32:32-04  gsl
+**	drcs update
+**
+**
+**
+*/

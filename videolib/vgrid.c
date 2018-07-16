@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -20,10 +22,15 @@
 			/*									*/
 			/************************************************************************/
 
+#include <string.h>
+
 #include "video.h"
 #include "vlocal.h"
 #include "vdata.h"
 #include "vcap.h"
+#include "vmodules.h"
+
+static void vgridpack();
 
 static unsigned char x, q, l, k, m, j, w, v, t, u, n;					/* ANSI DEC like short form ints.	*/
 
@@ -31,20 +38,23 @@ vgrid(irow,icol,nrows,ncols,rden,cden) int irow,icol,nrows,ncols,rden,cden;
 {
 	char string[134];
 	register int i;
+	char graphstr[20];
+	
+	strcpy(graphstr,vcapvalue(GRAPHSTR));
 
-	x = vcapdef[GRAPHSTR][SINGLE_VERTICAL_BAR];					/* Define short forms to make it	*/
-	q = vcapdef[GRAPHSTR][SINGLE_HORIZONTAL_BAR];					/*   easier to work with.		*/
-	l = vcapdef[GRAPHSTR][SINGLE_UPPER_LEFT_CORNER];
-	k = vcapdef[GRAPHSTR][SINGLE_UPPER_RIGHT_CORNER];
-	m = vcapdef[GRAPHSTR][SINGLE_LOWER_LEFT_CORNER];
-	j = vcapdef[GRAPHSTR][SINGLE_LOWER_RIGHT_CORNER];
-	w = vcapdef[GRAPHSTR][SINGLE_UPPER_TEE];
-	v = vcapdef[GRAPHSTR][SINGLE_LOWER_TEE];
-	t = vcapdef[GRAPHSTR][SINGLE_LEFT_TEE];
-	u = vcapdef[GRAPHSTR][SINGLE_RIGHT_TEE];
-	n = vcapdef[GRAPHSTR][SINGLE_CROSS];
+	x = graphstr[SINGLE_VERTICAL_BAR];					/* Define short forms to make it	*/
+	q = graphstr[SINGLE_HORIZONTAL_BAR];					/*   easier to work with.		*/
+	l = graphstr[SINGLE_UPPER_LEFT_CORNER];
+	k = graphstr[SINGLE_UPPER_RIGHT_CORNER];
+	m = graphstr[SINGLE_LOWER_LEFT_CORNER];
+	j = graphstr[SINGLE_LOWER_RIGHT_CORNER];
+	w = graphstr[SINGLE_UPPER_TEE];
+	v = graphstr[SINGLE_LOWER_TEE];
+	t = graphstr[SINGLE_LEFT_TEE];
+	u = graphstr[SINGLE_RIGHT_TEE];
+	n = graphstr[SINGLE_CROSS];
 
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	vmove(irow,icol);
 
 	if (nrows+ncols)								/* Just a move unless we go somewhere.	*/
@@ -106,11 +116,11 @@ vgrid(irow,icol,nrows,ncols,rden,cden) int irow,icol,nrows,ncols,rden,cden;
 		}
 		vcharset(DEFAULT);
 	}
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	return(SUCCESS);
 }
 
-vgridpack(string,sc,ic,ec,ncols,nden)
+static void vgridpack(string,sc,ic,ec,ncols,nden)
 
 	char string[];									/* String of up to 132 characters.	*/
 	char sc;									/* The first character of the string	*/
@@ -119,7 +129,7 @@ vgridpack(string,sc,ic,ec,ncols,nden)
 	int ncols;									/* The length of the string		*/
 	int nden;									/* The spacing of intersecting chars	*/
 {
-	register int i;
+	int i;
 
 	for (i = 0; i < 132; i++) string[i] = q;
 
@@ -131,6 +141,16 @@ vgridpack(string,sc,ic,ec,ncols,nden)
 	string[ncols-1] = ec;								/* Insert the ending character.		*/
 	string[0] = sc;									/* Insert the starting character	*/
 	string[ncols] = CHAR_NULL;							/* Terminate with a null		*/
-
-	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: vgrid.c,v $
+**	Revision 1.10  1997-07-08 17:00:25-04  gsl
+**	Change to use new video.h interfaces
+**
+**	Revision 1.9  1996-10-11 18:16:05-04  gsl
+**	drcs update
+**
+**
+**
+*/

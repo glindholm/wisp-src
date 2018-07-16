@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -11,20 +13,27 @@
 
 /*						Include standard header files.							*/
 
+#include <string.h>
+
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"									/* Include local definitions.		*/
+#include "vmodules.h"
+#include "vdata.h"
 
+static void vmp_express();
+int vmp_x();
+int vmp_up();
+int vmp_down();
 
 /*						Subroutine entry point.								*/
 
 vmap(action,sl,sc,el,ec) int action,sl,sc,el,ec;					/* Perform action on screen map.	*/
 {
-	extern int optimization;							/* Master optimization control.		*/
 	register int i, j;								/* Working registers.			*/
 
 	if ((action == CLEAR) || (action == TAG_AS_OLD))
 	{
-		if (optimization == 0) return(FAILURE);					/* Cannot do if not tracking.		*/
+		if (voptlevel() == VOP_OFF) return(FAILURE);				/* Cannot do if not tracking.		*/
 
 		if ((action == CLEAR) && (sl+sc == 0) && (el == MAX_LINES_PER_SCREEN-1) && (ec == MAX_COLUMNS_PER_LINE-1))
 		{
@@ -70,11 +79,8 @@ vmap(action,sl,sc,el,ec) int action,sl,sc,el,ec;					/* Perform action on screen
 
 /*				Do the requested action on a particular cell.							*/
 
-vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
+int vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
 {
-	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference the character map.		*/
-	extern char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference the attribute map.		*/
-	extern char vmap_cng[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference the change map.		*/
 	register int k;									/* Working registers.			*/
 
 	k = vml(i);									/* Get the table index.			*/
@@ -89,36 +95,18 @@ vmp_x(action,i,j) int action,i,j;							/* Perform the requested action.	*/
 		if (!visible(vchr_map[k][j],vatr_map[k][j])) vmap_cng[k][j] = 0;	/* If not visible, all is ok...		*/
 		else vmap_cng[k][j] = -1;						/*    else flag as old data.		*/
 	}
-	vdc(i);										/* Decrement the global counts.		*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
 
-/*					Clear global counts on a line.								*/
-
-vmp_clr(line) int line;									/* Clear global counts on a line.	*/
-{
-	extern int vscr_cng, vlin_cng[MAX_LINES_PER_SCREEN];				/* Reference global count data.		*/
-
-	vlin_cng[line] = 0;								/* And now no changes on this line.	*/
-	return(SUCCESS);								/* Return to the caller.		*/
-}
-
 /*					Scroll the map up.									*/
 
 vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
 {
-	extern int vcur_col, vcur_lin, vrol_bot, vscr_wid, vmap_top;			/* Reference VIDEO data base.		*/
-	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference character map.		*/
-	extern char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference attribute map.		*/
-	extern char vmap_cng[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference change map.		*/
-	extern int vlin_cng[MAX_LINES_PER_SCREEN];					/* Reference line change table.		*/
-	extern int vlin_atr[MAX_LINES_PER_SCREEN];					/* Reference line attribute table.	*/
-	register int i,j,k0,k1;								/* Working registers.			*/
+	register int i,k0,k1;								/* Working registers.			*/
 
 	if ((sl == 0) && (el == MAX_LINES_PER_SCREEN-1))				/* Is this a full screen scroll?	*/
 	{
-		vmp_clr(0);								/* Clear global counts.			*/
 		memset(&vchr_map[vmap_top][0],' ',vscr_wid);				/* Fill with spaces.			*/
 		memset(&vatr_map[vmap_top][0],'\0',vscr_wid);				/* No attributes set on the new line.	*/
 		memset(&vmap_cng[vmap_top][0],'\0',vscr_wid);				/* No changes on this character.	*/
@@ -143,17 +131,7 @@ vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
 		memset(&vchr_map[k0][0],' ',vscr_wid);					/* Fill with spaces.			*/
 		memset(&vatr_map[k0][0],'\0',vscr_wid);					/* No attributes set on the new line.	*/
 		memset(&vmap_cng[k0][0],'\0',vscr_wid);					/* No changes on this character.	*/
-		vmp_clr(i);								/* Clear global counts.			*/
 	}
-
-	for (j = sl; j < el; j++)							/* Now copy the line attributes.	*/
-	{
-		vlin_atr[j] = vlin_atr[j+1];						/* Scroll attribute table.		*/
-		vlin_cng[j] = vlin_cng[j+1];						/* Scroll the change table.		*/
-	}
-
-	vlin_atr[el] = SINGLE_WIDTH;							/* Now the line is single width again.	*/
-	vlin_cng[el] = 0;								/* And the line is now unchanged.	*/
 
 	return(SUCCESS);								/* What could possibly go wrong?	*/
 }
@@ -162,17 +140,10 @@ vmp_up(sl,el) int sl,el;								/* From start line to end line.		*/
 
 vmp_down(sl,el) int sl,el;								/* From start line to end line.		*/
 {
-	extern int vcur_col, vcur_lin, vrol_bot, vscr_wid, vmap_top;			/* Reference VIDEO data base.		*/
-	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference character map.		*/
-	extern char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference attribute map.		*/
-	extern char vmap_cng[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference change map.		*/
-	extern int vlin_cng[MAX_LINES_PER_SCREEN];					/* Reference line change table.		*/
-	extern int vlin_atr[MAX_LINES_PER_SCREEN];					/* Reference line attribute table.	*/
-	register int i,j,k0,k1;								/* Working registers.			*/
+	register int i,k0,k1;								/* Working registers.			*/
 
 	if ((sl == 0) && (el == MAX_LINES_PER_SCREEN-1))				/* Is this a full screen scroll?	*/
 	{
-		vmp_clr(23);								/* Clear global counts.			*/
 		vmap_top = vmap_top - 1;						/* Adjust the virtual map top.		*/
 		if (vmap_top < 0) vmap_top = MAX_LINES_PER_SCREEN - 1;			/* Wrap around if necessary.		*/
 		memset(&vchr_map[vmap_top][0],' ',vscr_wid);				/* Fill with spaces.			*/
@@ -194,35 +165,31 @@ vmp_down(sl,el) int sl,el;								/* From start line to end line.		*/
 			k0 = k1;
 		}
 											/* Now blank the bottom line.		*/
-		vmp_clr(i);								/* Clear global counts.			*/
 		memset(&vchr_map[k0][0],' ',vscr_wid);					/* Fill with spaces.			*/
 		memset(&vatr_map[k0][0],'\0',vscr_wid);					/* No attributes set on the new line.	*/
 		memset(&vmap_cng[k0][0],'\0',vscr_wid);					/* No changes on this character.	*/
 	}
 
-	for (j = el; j > el; j--)							/* Now copy the line attributes.	*/
-	{
-		vlin_atr[j] = vlin_atr[j-1];						/* Scroll attribute table.		*/
-		vlin_cng[j] = vlin_cng[j-1];						/* Scroll the change table.		*/
-	}
-
-	vlin_atr[sl] = SINGLE_WIDTH;							/* Now the line is single width again.	*/
-	vlin_cng[sl] = 0;								/* And the line is now unchanged.	*/
-
 	return(SUCCESS);								/* What could possibly go wrong?	*/
 }
-vmp_express()
-{
-	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference the character map.		*/
-	extern char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference the attribute map.		*/
-	extern char vmap_cng[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference the change map.		*/
-	extern int vscr_cng, vlin_cng[MAX_LINES_PER_SCREEN];				/* Reference the global change counts.	*/
-	register int i;									/* Working register.			*/
 
+static void vmp_express()
+{
 	memset(vchr_map, ' ',MAX_LINES_PER_SCREEN*MAX_COLUMNS_PER_LINE);		/* Clear the maps...			*/
 	memset(vatr_map,'\0',MAX_LINES_PER_SCREEN*MAX_COLUMNS_PER_LINE);
 	memset(vmap_cng,'\0',MAX_LINES_PER_SCREEN*MAX_COLUMNS_PER_LINE);
-	imemset(vlin_cng, 0 ,MAX_LINES_PER_SCREEN);
-	vscr_cng = 0;									/* Set the global counts to 0;		*/
-	return(SUCCESS);								/* Return to the caller.		*/
 }
+/*
+**	History:
+**	$Log: vmap.c,v $
+**	Revision 1.10  1997-07-08 17:16:11-04  gsl
+**	Removed the line attribure logic as double width never used
+**	and not supported on must terminals.
+**	Included vdata.h and removed lots of externs
+**
+**	Revision 1.9  1996-10-11 18:16:11-04  gsl
+**	drcs update
+**
+**
+**
+*/

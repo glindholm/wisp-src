@@ -1,0 +1,137 @@
+// Copyright (c) Lexical Design, 1991
+//
+// Module : token.cpp
+// Author : George Soules
+// Date   : 28 January 1991
+
+// Specification
+#include "token.hpp"
+
+// Classes
+#if DEBUG
+#ifdef EXT_COUT
+#include <iostream.h>
+#endif
+#endif
+
+// Definitions and subprograms
+#include <stdio.h>
+#include <string.h>
+#include "debugaid.hpp"
+#include "environ.hpp"
+#include "memory.hpp"
+
+
+token::token(token &a_token) {
+   the_kind         = a_token.the_kind;
+   the_lexeme_size  = a_token.the_lexeme_size;
+   the_lexeme       = dup_string(a_token.the_lexeme);
+   the_row          = a_token.the_row;
+   the_column       = a_token.the_column;
+   the_error_number = 0;
+   next             = a_token.next;
+}
+
+
+token::token(token &token1, token &token2) {
+   the_kind         = tk_other;
+   the_lexeme_size  = token1.the_lexeme_size + token2.the_lexeme_size;
+   the_lexeme       = new_string(the_lexeme_size + 1);
+   strcpy(the_lexeme, token1.the_lexeme);
+   strcat(the_lexeme, token2.the_lexeme);
+   the_row          = token1.the_row;
+   the_column       = token1.the_column;
+   the_error_number = 0;
+   next             = NULL;
+}
+
+
+token::token(
+   token_kind a_kind,
+   usign_16   a_row,
+   usign_16   a_column,
+   char      *a_lexeme,
+   usign_8    an_error_number)
+{
+   the_kind         = a_kind;
+   the_lexeme       = dup_string(a_lexeme);
+   the_lexeme_size  = strlen(the_lexeme);
+   the_row          = a_row;
+   the_column       = a_column;
+   the_error_number = an_error_number;
+   next             = NULL;
+}
+
+
+token::~token() {
+   delete_string(the_lexeme);
+}
+
+
+usign_16 token::last_column() {
+   usign_16 last = the_column + the_lexeme_size - 1;
+   if (the_kind == tk_string)
+      last += 2; // for quotes
+   return last;
+}
+
+
+#if DEBUG
+
+char *kind_string(token_kind the_kind) {
+   switch (the_kind) {
+      case tk_comma      : return "tk_comma";
+      case tk_colon      : return "tk_colon";
+      case tk_concat     : return "tk_concat";
+      case tk_delimiter  : return "tk_delimiter";
+      case tk_div        : return "tk_div";
+#if WANG
+      case tk_dot        : return "tk_dot";
+#endif
+      case tk_eof        : return "tk_eof";
+      case tk_eq         : return "tk_eq";
+      case tk_ge         : return "tk_ge";
+      case tk_gt         : return "tk_gt";
+      case tk_identifier : return "tk_identifier";
+      case tk_integer    : return "tk_integer";
+      case tk_label      : return "tk_label";
+      case tk_le         : return "tk_le";
+      case tk_lt         : return "tk_lt";
+      case tk_minus      : return "tk_minus";
+      case tk_mult       : return "tk_mult";
+      case tk_ne         : return "tk_ne";
+      case tk_other      : return "tk_other";
+      case tk_parenleft  : return "tk_parenleft";
+      case tk_parenright : return "tk_parenright";
+      case tk_pathname   : return "tk_pathname";
+      case tk_plus       : return "tk_plus";
+      case tk_semicolon  : return "tk_semicolon";
+      case tk_string     : return "tk_string";
+      case tk_undefined  : return "tk_undefined";
+      case tk_variable   : return "tk_variable";
+      default                   : return "tk_UNKNOWN";
+   }
+}
+
+void token::dump() const {
+   print_trace_id("scanner");
+#ifdef EXT_COUT
+   cout << "row " << the_row << ", col " << (int) the_column
+        << ", size " << the_lexeme_size
+        << ", " << kind_string(the_kind);
+   if (the_kind == tk_string)
+      cout << " \"" << the_lexeme << "\"\n";
+   else
+      cout << " " << the_lexeme << "\n";
+   cout.flush();
+#else
+	printf("row %d, col %d, size %d, %s", the_row, (int) the_column, the_lexeme_size, kind_string(the_kind));
+   	if (the_kind == tk_string)
+		printf(" \"%s\"\n", the_lexeme);
+	else
+		printf(" %s\n", the_lexeme);
+	fflush(stdout);
+#endif
+}
+
+#endif

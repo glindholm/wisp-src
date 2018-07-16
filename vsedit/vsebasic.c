@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*****************************************************************************
                  C. I. S.   P R O G R A M   M O D U L E
           (c)Copyright 1991 Corporate Information Systems, Inc.
@@ -26,20 +28,35 @@
  	DATE		WHO		DESCRIPTION
  	--------	----	----------------------------------------------
 	08/10/93	AJA		Initial version
+	11/11/93	AJA		Fixed bug where ON GOTO/GOSUB #, #, # : the last number
+						before th colon was not getting recognized, also if a
+						line needs to be split and it starts with a *, the new
+						line must start with a *
+	11/12/93	AJA		Compare prev_ptr->line to current->line in update_
+						linenum instead of comparing linenos since two
+						different lines can have the same line number during
+						renumbering and this will cause info of the wrong line
+						to be altered
+	12/13/93	AJA		Implemented a simple hash to speed up renumbering
+						process
 
 ==============================================================================
                M O D U L E   B E G I N S   H E R E
 *****************************************************************************/
 
 #include <stdio.h>
-#include "vseglb.h"
+#include <string.h>
+#include "vsebasic.h"
+#include "vsetxt.h"
 
 #define SPACES	"                                                                                "
 #define ZERO			48
 #define NUM_LEN			30
-#define MAX_LINE_LEN	vse_text_width+1
+#define HASH_LIMIT		1000
+#define MAX_LINE_LEN	vse_edit_width+1
 
 static char start_state=0;	/* Starting state of machine depending on context */
+static line_num *hash[HASH_LIMIT];	/* Hash table of elements */
 
 /* Array "machine" is a representation of a state machine that will recognize
    a line number in a BASIC program given the context of line numbers
@@ -322,21 +339,26 @@ static char machine[][128]=
 		  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{36,36,36,36,36,36,36,36,36,45,36,36,36,36,36,36,36,36,36,36,36,36,36,
 		 36,36,36,36,36,36,36,36,36,45,61,36,36,36,36,36,36,36,36,36,36,34,36,
-/* 45 */ 36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,
+/* 45 */ 36,36,36,36,36,36,36,36,36,36,36,36,44,36,36,36,36,36,36,36,36,36,36,
 		 36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,
 		 36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,36,
 		 36,36,36,36,36,36,36,36,36,36,36,36,36}
 	};
 
-void find_linenum( TEXT *txt );
-void add_linenum( TEXT *txt, char state, int start, int len, long line_number );
-void update_linenum( long from, long to );
-void split_linenum( line_num *old );
-void delete_linenum( long lineno );
-void itoa( char *s, long n );
-void update_branch();
-void free_linenum();
+static void add_linenum( TEXT *txt, char state, int start, int len, int4 line_number );
+static void split_linenum( line_num *old );
+static void int_to_string( char *s, int4 n );
 
+/* init_hash initializes hash to NULL */
+
+void init_hash(void)
+
+{
+	int i;	/* Index */
+
+	for ( i = 0; i < HASH_LIMIT; i++ )
+		hash[i] = NULL;
+}
 
 /* find_linenum will use "machine" to find line numbers in txt->text */
 
@@ -348,13 +370,13 @@ void find_linenum( TEXT *txt )
 	char start_pos=0;	/* Position in line where line number starts */
 	char i=0;			/* Counter */
 
-	long line_number=0;	/* Holds line number */
+	int4 line_number=0;	/* Holds line number */
 
 	state = init_state = start_state;
 	start_state = 0;
 
 	/* This is the driver loop for "machine" */
-	for ( i = 0; txt->text[i] != NULL; i++ )
+	for ( i = 0; txt->text[i]; i++ )
 	{
 		state = machine[state][txt->text[i]];
 		switch ( state )
@@ -390,7 +412,7 @@ void find_linenum( TEXT *txt )
 			   a continuation occurs */
 			case   50:
 			case   51:
-			case   52:	if ( i == (vse_text_width - 1) )
+			case   52:	if ( i == (vse_edit_width - 1) )
 							switch ( state )
 							{
 								case	50:	start_state = 6;
@@ -407,7 +429,7 @@ void find_linenum( TEXT *txt )
 			case   53:
 			case   54:
 			case   55:
-			case   56:	if ( i == (vse_text_width - 1) )
+			case   56:	if ( i == (vse_edit_width - 1) )
 							switch ( state )
 							{
 								case	53:	start_state = 22;
@@ -425,7 +447,7 @@ void find_linenum( TEXT *txt )
 						break;
 
 			case   57:
-			case   58:	if ( i == (vse_text_width - 1) )
+			case   58:	if ( i == (vse_edit_width - 1) )
 						{
 							if ( state == 57 )
 								start_state = 31;
@@ -437,7 +459,7 @@ void find_linenum( TEXT *txt )
 
 			/* In states 60 and 61, if the exclamation mark is in the correct
 			   position, we have a valid line number, otherwise, it is junk */
-			case   60:	if ( i == (vse_text_width - 1) )
+			case   60:	if ( i == (vse_edit_width - 1) )
 						{
 							add_linenum( txt, init_state, start_pos,
 								i - start_pos, line_number );
@@ -446,7 +468,7 @@ void find_linenum( TEXT *txt )
 						state = 0;
 						break;
 
-			case   61:	if ( i == (vse_text_width - 1) )
+			case   61:	if ( i == (vse_edit_width - 1) )
 						{
 							add_linenum( txt, init_state, start_pos,
 								i - start_pos, line_number );
@@ -479,42 +501,47 @@ void find_linenum( TEXT *txt )
 
 /* add_linenum will add an entry for the line number into the list */
 
-void add_linenum( TEXT *txt, char state, int start, int len, long line_number )
+static void add_linenum( TEXT *txt, char state, int start, int len, int4 line_number )
 
 {
 	line_num *tmp=NULL;		/* Temporary pointer to line_num element */
 
 	tmp = (line_num *) malloc( sizeof( line_num ));
+	tmp->last = NULL;
 	tmp->line = txt;
 	tmp->start_state = state;
 	tmp->start_pos = start;
 	tmp->length = len;
 	tmp->branch = line_number;
 	tmp->old_branch = line_number;
-	tmp->next = head_linenum;
-	head_linenum = tmp;
+	tmp->next = hash[line_number%HASH_LIMIT];
+	if ( hash[line_number%HASH_LIMIT] )
+		hash[line_number%HASH_LIMIT]->last = tmp;
+	hash[line_number%HASH_LIMIT] = tmp;
 }
 
 
 /* update_linenum will update a line number referenced in a BASIC statement
    to a new value when renumbering occurs */
 
-void update_linenum( long from, long to )
+void update_linenum( int4 from, int4 to )
 
 {
+	int i;							/* Index */
 	int white_space=0;				/* Position of first non space from end of
 									   the string */
 	char *build;					/* New string with updated line numbers */
 	char *str_to;					/* String representation of "to" */
 	char *str_from;					/* String representation of "from" */
 
-	line_num *current=head_linenum;	/* Pointer to list */
+	line_num *current=hash[from%HASH_LIMIT];	/* Pointer to list */
 	line_num *prev_ptr=NULL;		/* Pointer to elements preceding current */
+	line_num *next_ptr=NULL;		/* Pointer to next element */
 
 	str_to = (char *) calloc( NUM_LEN, sizeof( char ) );
 	str_from = (char *) calloc( NUM_LEN, sizeof( char ) );
-	itoa( str_to, to );
-	itoa( str_from, from );
+	int_to_string( str_to, to );
+	int_to_string( str_from, from );
 
 	while ( current )
 	{
@@ -525,10 +552,14 @@ void update_linenum( long from, long to )
 			/* Copy chars from text up to line number into build */
 			strncpy( build, current->line->text, current->start_pos );
 
-			if ( (current->length >= strlen( str_to )) ||
-				((current->length < strlen( str_to )) &&
-				((strlen( current->line->text ) +
-				strlen( str_to ) - current->length) < vse_text_width)) )
+			/* If the current length of the line number is greater than or
+			   equal to the length of the new line number or if the new line
+			   number's length is greater than the current length and the
+			   new line number can fit on the line, insert it */
+			if ( (current->length >= (int)strlen( str_to )) ||
+				((current->length < (int)strlen( str_to )) &&
+				((int)(strlen( current->line->text ) +
+				 strlen( str_to ) - current->length) < vse_edit_width)) )
 			{
 
 				/* Add string rep. of new line number to build */
@@ -536,7 +567,7 @@ void update_linenum( long from, long to )
 
 				/* If the current length is greater than the length of the new
 				   line number, i.e. 0400 changed to 500, pad with spaces */
-				if ( current->length > strlen( str_to ) )
+				if ( current->length > (int)strlen( str_to ) )
 					strncat( build, SPACES, current->length - strlen( str_to ) );
 
 				/* Skip over old line number in the text and add the rest
@@ -546,34 +577,70 @@ void update_linenum( long from, long to )
 			 		strlen( &(current->line->text
 					[current->start_pos+current->length]) ) );
 				over_text( current->line, build );
-				if ( current->length < strlen( str_to ) )
+				if ( current->length < (int)strlen( str_to ) )
 				{
-					for ( prev_ptr = head_linenum; prev_ptr != current;
-						  prev_ptr = prev_ptr->next )
-						if ( prev_ptr->line->lineno == current->line->lineno )
-							prev_ptr->start_pos += (strlen( str_to ) - current->length);
+					for ( i = 0; i < HASH_LIMIT; i++ )
+					{
+						prev_ptr = hash[i];
+						while ( prev_ptr )
+						{
+							if ( (prev_ptr->line == current->line) &&
+								 (prev_ptr->start_pos > current->start_pos) )
+								prev_ptr->start_pos += (strlen( str_to ) -
+									current->length);
+							prev_ptr = prev_ptr->next;
+						}
+					}
 					current->length = strlen( str_to );
 				}
 				current->branch = to;
-				current = current->next;
+				next_ptr = current->next;
+
+				/* If the two hash values are equal, there is no need to move
+				   the element */
+				if ( (from%HASH_LIMIT) != (to%HASH_LIMIT) )
+				{
+
+					/* Remove the element from the current hash value */
+					if ( current->next )
+						current->next->last = current->last;
+					if ( current->last )
+						current->last->next = current->next;
+					else
+						hash[from%HASH_LIMIT] = current->next;
+
+					/* Insert the element into the new hash value */
+					current->last = NULL;
+					current->next = hash[to%HASH_LIMIT];
+					if ( hash[to%HASH_LIMIT] )
+						hash[to%HASH_LIMIT]->last = current;
+					hash[to%HASH_LIMIT] = current;
+				}
+
+				/* Set current to the next element in the current hash value */
+				current = next_ptr;
 			}
+
+			/* The new line number may not fit without splitting the line, so
+			   see if there are enough white spaces to accomodate the new line
+			   number, if so insert it, if not split the line */
 			else
 			{
-				if ( strlen( current->line->text ) == vse_text_width )
+				if ( (int)strlen( current->line->text ) == vse_edit_width )
 				{
 
 					/* Find out how many white spaces are at the end of the
 					   line */
-					if ( current->line->text[vse_text_width-1] == '!' )
-						for ( white_space = vse_text_width;
+					if ( current->line->text[vse_edit_width-1] == '!' )
+						for ( white_space = vse_edit_width;
 							(current->line->text[white_space-2] == ' ') &&
 							(white_space > 2); white_space-- );
 					else
-						for ( white_space = vse_text_width;
+						for ( white_space = vse_edit_width;
 							(current->line->text[white_space-1] == ' ') &&
 							white_space; white_space-- );
-					if ( vse_text_width - white_space >=
-						 strlen( str_to ) - current->length )
+					if ( vse_edit_width - white_space >=
+						 (int)strlen( str_to ) - current->length )
 					{
 
 						/* Added line number to build */
@@ -588,38 +655,71 @@ void update_linenum( long from, long to )
 							(strlen( str_to ) - current->length) );
 
 						/* Added the exclamation mark to the end of build */
-						if ( current->line->text[vse_text_width-1] == '!' )
-							build[vse_text_width-1] = '!';
+						if ( current->line->text[vse_edit_width-1] == '!' )
+							build[vse_edit_width-1] = '!';
 						over_text( current->line, build );
-						for ( prev_ptr = head_linenum; prev_ptr != current;
-							  prev_ptr = prev_ptr->next )
-							if ( prev_ptr->line->lineno == current->line->lineno )
+						for ( i = 0; i < HASH_LIMIT; i++ )
+						{
+							prev_ptr = hash[i];
+							while ( prev_ptr )
 							{
-								if ( (prev_ptr->start_pos+prev_ptr->length) ==
-									vse_text_width )
-									prev_ptr->length -= ( strlen( str_to ) -
-										current->length );
-								prev_ptr->start_pos += (strlen( str_to ) - current->length);
+								if ( (prev_ptr->line == current->line) &&
+									 (prev_ptr->start_pos > current->start_pos) )
+								{
+									
+									if ( (prev_ptr->start_pos+prev_ptr->length) == vse_edit_width )
+										prev_ptr->length -= ( strlen( str_to ) -
+											current->length );
+									prev_ptr->start_pos += (strlen( str_to ) -
+										current->length);
+								}
+								prev_ptr = prev_ptr->next;
 							}
+						}
 						current->length = strlen( str_to );
 						current->branch = to;
-						current = current->next;
+						next_ptr = current->next;
+
+						/* If the two hash values are equal, there is no need
+						   to move the element */
+						if ( (from%HASH_LIMIT) != (to%HASH_LIMIT) )
+						{
+
+							/* Remove the element from the current hash value */
+							if ( current->next )
+								current->next->last = current->last;
+							if ( current->last )
+								current->last->next = current->next;
+							else
+								hash[from%HASH_LIMIT] = current->next;
+
+							/* Insert the element into the new hash value */
+							current->last = NULL;
+							current->next = hash[to%HASH_LIMIT];
+							if ( hash[to%HASH_LIMIT] )
+								hash[to%HASH_LIMIT]->last = current;
+							hash[to%HASH_LIMIT] = current;
+						}
+
+						/* Set current to the next element in the current hash
+						   value */
+						current = next_ptr;
 					}
 
 					/* Not enough white spaces to acommodate line number */
 					else
 					{
 						split_linenum( current );
-						current = head_linenum;
+						current = hash[from%HASH_LIMIT];
 					}
 				}
 
 				/* New line number will push the length of line past
-				   vse_text_width */
+				   vse_edit_width */
 				else
 				{
 					split_linenum( current );
-					current = head_linenum;
+					current = hash[from%HASH_LIMIT];
 				}
 			}
 
@@ -636,14 +736,13 @@ void update_linenum( long from, long to )
 
 
 /* split_linenum will split a line in two if the new line number forces the
-   length of the line to exceed vse_text_width */
+   length of the line to exceed vse_edit_width */
 
-void split_linenum( line_num *old )
+static void split_linenum( line_num *old )
 
 {
 	TEXT *first_part=old->line;		/* Fisrt part of text */
 	TEXT *second_part;				/* Second part of text */
-	TEXT *new_text();
 
 	char *first;					/* First string */
 	char *second;					/* Second string */
@@ -651,19 +750,23 @@ void split_linenum( line_num *old )
 	first = (char *) calloc( MAX_LINE_LEN, sizeof( char ) );
 	second = (char *) calloc( MAX_LINE_LEN, sizeof( char ) );
 
+	/* If the original line starts with a *, the new line must also */
+	if ( old->line->text[0] == '*' )
+		strcpy ( second, "* " );
+
 	/* Build the new string */
-	if ( old->line->text[vse_text_width-1] == '!' )
+	if ( old->line->text[vse_edit_width-1] == '!' )
 	{
 		strncat( second, &(old->line->text[old->start_pos]),
 			strlen( &(old->line->text[old->start_pos]) )-1 );
-		strncat( second, SPACES, vse_text_width-strlen( second )-1 );
-		second[vse_text_width-1] = '!';
+		strncat( second, SPACES, vse_edit_width-strlen( second )-1 );
+		second[vse_edit_width-1] = '!';
 	}
 	else
 	{
 		strncat( second, &(old->line->text[old->start_pos]),
 			strlen( &(old->line->text[old->start_pos]) ) );
-		strncat( second, SPACES, vse_text_width-strlen( second ) );
+		strncat( second, SPACES, vse_edit_width-strlen( second ) );
 	}
 	second_part = new_text( second );
 
@@ -678,8 +781,8 @@ void split_linenum( line_num *old )
 	/* Modify the original string to contain everything up to the position
 	   of the embedded line number */
 	strncat( first, old->line->text, old->start_pos );
-	strncat( first, SPACES, vse_text_width-strlen( first )-1 );
-	first[vse_text_width-1] = '!';
+	strncat( first, SPACES, vse_edit_width-strlen( first )-1 );
+	first[vse_edit_width-1] = '!';
 	over_text( first_part, first );
 
 	/* Delete the old references for the line and look at the two new lines
@@ -694,37 +797,39 @@ void split_linenum( line_num *old )
 /* delete_linenum will delete an entry if the line number of BASIC code that
    contains a line number reference is deleted */
 
-void delete_linenum( long lineno )
+void delete_linenum( int4 lineno )
 
 {
-	line_num *last=NULL;			/* Pointer to last looked at element of
-									   list */
-	line_num *current=head_linenum;	/* Pointer to current element of list */
+	int i;							/* Index */
+	line_num *current=NULL;			/* Pointer to current element of list */
 	line_num *next=NULL;			/* Pointer to next element in list */
 
-	while ( current )
+	for ( i = 0; i < HASH_LIMIT; i++ )
 	{
-		if ( current->line->lineno == lineno )
+		current = hash[i];
+		while ( current )
 		{
-			if ( last )
-				last->next = current->next;
+			if ( current->line->lineno == lineno )
+			{
+				if ( current->next )
+					current->next->last = current->last;
+				if ( current->last )
+					current->last->next = current->next;
+				else
+					hash[i] = current->next;
+				next = current->next;
+				free( current );
+				current = next;
+			}
 			else
-				head_linenum = current->next;
-			next = current->next;
-			free( current );
-			current = next;
-		}
-		else
-		{
-			last = current;
-			current = current->next;
+				current = current->next;
 		}
 	}
 }
 
-/* itoa converts a integer into it's string representation */
+/* int_to_string converts a integer into it's string representation */
 
-void itoa( char *s, long n ) 
+static void int_to_string( char *s, int4 n ) 
 
 {
 	int i;				/* Counter */
@@ -752,29 +857,50 @@ void itoa( char *s, long n )
    that when renumbering occurs again, it will look for the correct line
    numbers */
 
-void update_branch()
+void update_branch(void)
 
 {
-	line_num *current=head_linenum;		/* Pointer into list */
+	int i;						/* Index */
+	line_num *current=NULL;		/* Pointer into list */
 
-	while ( current )
+	for ( i = 0; i < HASH_LIMIT; i++ )
 	{
-		current->old_branch = current->branch;
-		current = current->next;
+		current = hash[i];
+		while ( current )
+		{
+			current->old_branch = current->branch;
+			current = current->next;
+		}
 	}
 }
 
 /* free_linenum will delete the list and free it's memory */
 
-void free_linenum()
+void free_linenum(void)
 
 {
+	int i;							/* Index */
+	line_num *current=NULL;			/* Pointer to current element */
 	line_num *next=NULL;			/* Pointer to next element in list */
 
-	while ( head_linenum )
+	for ( i = 0; i < HASH_LIMIT; i++ )
 	{
-		next = head_linenum->next;
-		free( head_linenum );
-		head_linenum = next;
+		current = hash[i];
+		while ( current )
+		{
+			next = current->next;
+			free( current );
+			current = next;
+		}
+		hash[i] = NULL;
 	}
 }
+/*
+**	History:
+**	$Log: vsebasic.c,v $
+**	Revision 1.7  1996-09-03 18:23:59-04  gsl
+**	drcs update
+**
+**
+**
+*/

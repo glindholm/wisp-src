@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -5,10 +7,16 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
+#include <string.h>
+
 #include "idsistd.h"
 #include "menu.h"
-#include <v/video.h>
-#include <v/vlocal.h>
+#include "wexit.h"
+#include "vwang.h"
+#include "wisplib.h"
+
+#include "video.h"
+#include "vlocal.h"
 
 #ifdef VMS
 #include <descrip.h>
@@ -16,7 +24,7 @@
 
 struct menu *menu_read();
 
-int menu_go(menuname,menuvalue) char *menuname,*menuvalue;
+int menu_go(char* menuname, char* menuvalue)
 {
 	static char command[200];
 	int result, action;
@@ -122,3 +130,12 @@ int menu_go(menuname,menuvalue) char *menuname,*menuvalue;
 	}											/* Repeat forever...		*/
   
 }
+/*
+**	History:
+**	$Log: menu_go.c,v $
+**	Revision 1.10  1996-08-19 18:32:29-04  gsl
+**	drcs update
+**
+**
+**
+*/

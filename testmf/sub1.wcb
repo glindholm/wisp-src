@@ -95,11 +95,26 @@
       ******************************************************************
       *
 
+       01  MAIN-TITLE PIC X(50).
+       01  MAIN-FOOTER PIC X(50).
 
        01  WELCOME-SCREEN USAGE IS DISPLAY-WS.
-           03  FILLER PIC X(47) ROW 5 COL 20
-               VALUE 
-               "Welcome to SUB1 - we are going to LINK to sub3".
+           03  FILLER PIC X(50) ROW 2 COL 15 SOURCE MAIN-TITLE.
+
+           03  FILLER PIC X(6)  ROW  7 COL  5 VALUE "FILE =".
+           03  FILLER PIC X(6)  ROW  7 COL 23 VALUE "TYPE =".
+           03  FILLER PIC X(9)  ROW  7 COL 34 VALUE "LIBRARY =".
+           03  FILLER PIC X(8)  ROW  7 COL 55 VALUE "VOLUME =".
+
+           03  FILLER PIC X(8) ROW  7 COL 12 
+               SOURCE LINK-PRG OBJECT LINK-PRG.
+           03  FILLER PIC X(1) ROW  7 COL 30 
+               SOURCE LINK-TYPE OBJECT LINK-TYPE.
+           03  FILLER PIC X(8) ROW  7 COL 44 
+               SOURCE LINK-LIB OBJECT LINK-LIB.
+           03  FILLER PIC X(6) ROW  7 COL 64 
+               SOURCE LINK-VOL OBJECT LINK-VOL.
+
 
            03  FILLER PIC X(8)  ROW 10 COL 30 VALUE "LINKARG1".
            03  FILLER PIC X(10) ROW 10 COL 40 
@@ -121,9 +136,7 @@
            03  FILLER PIC 9(5)  ROW 18 COL 15
                SOURCE LINK-RC-99999.
 
-           03  FILLER PIC X(30) ROW 23 COL 20
-               VALUE
-               "Press RETURN to TAKE OFF!".
+           03  FILLER PIC X(50) ROW 23 COL 15 SOURCE MAIN-FOOTER.
 
        01 LINKARG1 PIC X(10) VALUE SPACES. 
        01 LINKARG2 PIC X(10) VALUE SPACES. 
@@ -157,6 +170,11 @@
        PROCEDURE DIVISION.
 
        WELCOME-DISPLAY.
+           MOVE "Welcome to SUB1 - we are going to LINK to sub3"
+                TO MAIN-TITLE.
+           MOVE "Press (ENTER) to call LINK"
+                TO MAIN-FOOTER.
+
            DISPLAY AND READ WELCOME-SCREEN ON CRT
            PFKEY 16.
 
@@ -168,6 +186,9 @@
 
            MOVE LINK-CC-B TO LINK-CC-99999.
            MOVE LINK-RC-B TO LINK-RC-99999.
+
+           MOVE "We have returned from the LINK" to MAIN-TITLE.
+           MOVE "Press (ENTER) to EXIT" to MAIN-FOOTER.
 
            DISPLAY AND READ WELCOME-SCREEN ON CRT
            PFKEY 16.

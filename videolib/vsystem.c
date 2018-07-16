@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -34,3 +36,12 @@ int imemset(dst,src,count)								/* Dest gets count bytes of src.	*/
 	while (count--) *(dst++) = src;							/* Fill it.				*/
 	return(SUCCESS);								/* Return that all is fine.		*/
 }
+/*
+**	History:
+**	$Log: vsystem.c,v $
+**	Revision 1.9  1996-10-11 18:16:21-04  gsl
+**	drcs update
+**
+**
+**
+*/

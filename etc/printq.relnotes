@@ -1,0 +1,169 @@
+You must relink your wruncbl using the new libilp.a in 
+the distribution.  Make sure that the new libilp.a has
+been copied to the right place.
+
+Consult the WISP manual for detailed instructions on 
+rebuilding wruncbl.  
+
+NOTE:  This release of the Print Queue (V2.21) is incom-
+patible with previous releases.  You must make sure that 
+all of your users are running the latest version of the 
+Print Queue software, including the wruncbl you create 
+using the V2.21 libilp.a provided in this distribution.
+
+IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT
+If you are running AIX version 3.2.0 through 3.2.3, you 
+must set the following shell variable just before running 
+idaemon:
+
+    # MALLOCTYPE=3.1
+    # export MALLOCTYPE
+
+This should fix up any remaining idaemon crash problems
+under AIX 3.2
+
+------------------------------------------------------
+
+    Print Queue Release notes for V2.21
+
+    BUGS FIXED
+
+    - Occasionally the queue and/or printer list would
+      blank out.  Also, sometimes a message would be printed 
+      saying an incompatible version of the idaemon was running.
+      These two were related and have been fixed.
+
+    - Occasionally, the idaemon would lose client requests
+      (this would usually happen when queuing several files
+      at once, ie, "ilp -dlp0 *.c").  This has been fixed.
+
+    - Error handling and reporting when using printers
+      that are "type=program" has been improved slightly.
+
+    NEW FEATURES
+
+    - Print Queue performance should be noticeably better
+      as of release 2.21.  
+
+    - A new version of ilpremote is included which makes
+      use of the new macros that were made available as
+      of version 2.17.  This ilpremote does not require
+      an ilpsrv process on the remote system.  It passes
+      the form name and printer name to the remote system.
+      Instructions on how to use the new ilpremote are 
+      found at the beginning of ilpremote itself.  Edit the
+      file or print it to see these instructions.
+
+------------------------------------------------------
+
+    Print Queue Release notes for V2.20
+
+    BUGS FIXED
+
+    - Under AIX 3.2 idaemon would randomly shut down
+      with a signal 11 error message in the errs file.  This
+      has been fixed.
+
+    NEW FEATURES
+
+    - Ilp now supports copy of file before printing.  This
+      is the default behavior if internet addressing is
+      used.  
+
+      This allows ilp and ilpman clients to correctly
+      interact with an idaemon running on a server 
+      machine (in an HP Cluster).
+
+      Two flags were added to ilp:
+
+          -c    force file copy when not using Internet
+                addressing.
+          -N    override file copy when using Internet 
+                addressing.
+
+    - A new field was added to the classdef file.  It 
+      allows the user to specify that a formfeed should
+      be printed between copies of a multiple copy 
+      print job.  To enable this functionality, insert
+      the following line into the definition for the 
+      appropriate class:
+
+            ff=between
+
+      If you already have a line for formfeed behavior,
+      leave it in the definition.  Multiple "ff=" lines
+      are allowed.
+
+    - If the user does not assign a class to a particular
+      print job, that job will be given a class when it
+      is printed.  The class given to the job is the first 
+      class in the printer's class list.
+    
+------------------------------------------------------
+
+
+    Print Queue Release notes for V2.18
+    
+    BUGS FIXED
+
+    - Printer type=program status now handled better.
+      If the program exits with a non zero status code,
+      idaemon will flag the printer with an error 
+      status.
+
+    - All/mine behavior was sometimes unpredictable.
+
+    NEW FEATURES
+
+    - Support for Internet addressing
+
+      To use this functionality, add the following 
+      line to the ilpdef file on the server machine
+      (the machine on which idaemon will run):
+
+      ip_port=<number>
+
+      <number> must be a number larger than 5000.  It
+      does not matter what number is used, as long as
+      it does not conflict with any other TCP/IP processes
+      on the system.  Look in the /etc/services file to
+      see which ports are already in use.
+
+    - Maximum length for printer and filter commands 
+      has been changed to 1024
+
+--------------------------------------------------------
+
+    Print Queue Release notes for V2.17
+    
+    BUGS FIXED
+    
+    - Move item in queue now works properly.  
+    
+    - Intermittent idaemon shutdown fixed
+    
+    - Printer handshaking is done properly
+    
+    NEW FEATURES
+    
+    - New macros added for filter strings and
+      printer type=program strings.  Macros added:
+    
+      $filename - name (without full path) of file
+      $fullpath - full path of file
+      $pagelen  - pagelen in lines of current form 
+      $userid   - name of user who submitted job
+      $username -     "    "     "     "
+      $usernid  - numeric id of user who submitted job
+      $printer  - name of printer
+      $form     - name of form for this job
+      $class    - class of this job
+      $copies   - copies for this job
+      $stpage   - start page number
+      $endpage  - end page number
+      
+      $n, $u, and $l are still the same.
+    
+    - Ilpman now asks for confirmation on PF8 Delete or
+      PF12 remove
+

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #ifdef VMS
 /********************************************************************************************************************************
 *																*
@@ -112,35 +114,35 @@ static int vtimeout_value = 0;
  * vtimeout:  set the timeout value (if any) for normal "blocked" reads
  *
  */
-vtimeout(seconds)
+vrawtimeout(seconds)
 int seconds;
 {
 	input_itemlist.mod2=vtimeout_value = seconds;
-	vtimeout_clear();
+	vrawtimeout_clear();
 }
 /*
- * vtimeout_clear:  clear the "timed out" status
+ * vrawtimeout_clear:  clear the "timed out" status
  *
  */
-vtimeout_clear()
+vrawtimeout_clear()
 {
 	vread_timed_out_flag = FALSE;
 }
 /*
- * vtimeout_check: return TRUE if time out occured on last read
+ * vrawtimeout_check: return TRUE if time out occured on last read
  *                 FALSE otherwise
  *
  */
-vtimeout_check()
+vrawtimeout_check()
 {
 	return vread_timed_out_flag;
 }
 /*
-** Routine: vtimeout_set()
+** Routine: vrawtimeout_set()
 **
 ** Purpose:	To set a flag that says the ALARM signal was recieved.
 */
-static void vtimeout_set()
+static void vrawtimeout_set()
 {
 	vread_timed_out_flag = TRUE;
 }
@@ -362,7 +364,7 @@ static int get_vbuf()									/* Get a buffer.			*/
 		if (itemlist_len == 36)							/* It was the users timer, signal them.	*/
 		{
 			vinput_buf[vinput_iosb.len++] = 0;				/* Add a zero to the buffer.		*/
-			vtimeout_set();
+			vrawtimeout_set();
 		}
 	}										/* Otherwise, just proceed.		*/
 	else if (vinput_iosb.status == SS$_PARTESCAPE)					/* Allowed errors, just return to callr	*/
@@ -407,6 +409,7 @@ static int exit_proc()
 
 /************* Also , do any ctrl-c trapping, see the macro stuff for info.		*********				*/
 
+	return(1);
 }
 
 
@@ -435,7 +438,7 @@ int vshut()										/* Shut down video i/o's		*/
 }
 
 
-static int ctrl_c_ast()
+static void ctrl_c_ast()
 {
 	ctrl_c_flag = 1;								/* Flag it.				*/
 	set_ctrl_c();
@@ -455,12 +458,12 @@ static int set_ctrl_c()
 
 }
 
-static int vraw_err(format,p1,p2,p3,p4,p5,p6,p7,p8)
-char *format,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
+static int vraw_err(format,p1,p2,p3,p4,p5,p6,p7,p8) char *format,*p1,*p2,*p3,*p4,*p5,*p6,*p7,*p8;
 {
 	printf("\n         ");
 	printf(format,p1,p2,p3,p4,p5,p6,p7,p8);						/* Print the message.			*/
 	printf("      \n");
+	return(1);
 }
 
 unsigned long osd_ttype()								/* Return terminal type -- VMS.		*/
@@ -506,3 +509,15 @@ vraw_stty_restore()
 
 #endif
 
+/*
+**	History:
+**	$Log: vrawvms1.c,v $
+**	Revision 1.10  1996-11-14 11:44:10-05  jockc
+**	changed vtimeout* to vrawtimeout*
+**
+**	Revision 1.9  1996-10-11 15:16:18-07  gsl
+**	drcs update
+**
+**
+**
+*/

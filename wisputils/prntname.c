@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include "wperson.h"
 #include "wfiles.h"
 #include "wcommon.h"
@@ -34,7 +36,7 @@ char *wang_lib, *wang_file;
 	tseq = 0;
 	ptr = wang_file;								/* Skip over leading #'s		*/
         memset(wang_vol,'\0',7);
-	memcpy(wang_vol, defaults.spoolvol, 6);
+	get_defs(DEFAULTS_SV,wang_vol);
 	vol = wang_file;
 	evol=(char *)strchr(wang_file,' ');
 	if (evol)
@@ -206,3 +208,12 @@ long	 *starter, *counter, *filecount;
 		wswap(filecount);
 	}
 }
+/*
+**	History:
+**	$Log: prntname.c,v $
+**	Revision 1.8  1996-07-23 14:12:56-04  gsl
+**	drcs update
+**
+**
+**
+*/

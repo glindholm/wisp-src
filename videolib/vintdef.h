@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
 			/*	 An unpublished work of International Digital Scientific Inc.	*/
@@ -53,3 +57,12 @@ typedef  unsigned int      uint4;
 #endif /*CATCHALL*/
 
 #endif /*INTDEF_H*/
+/*
+**	History:
+**	$Log: vintdef.h,v $
+**	Revision 1.6  1996-10-11 18:16:06-04  gsl
+**	drcs update
+**
+**
+**
+*/

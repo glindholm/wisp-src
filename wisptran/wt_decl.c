@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,12 +17,9 @@
 static int decl_exnum = 0;								/* Used to remember which exit.		*/
 static int decl_parsing = 0;								/* Indicates currently parsing a decl.	*/
 static char decl_sname[40];								/* The SECTION name of this one.	*/
-chk_dpar()										/* Check for DECLARATIVES para's.	*/
+int chk_dpar()										/* Check for DECLARATIVES para's.	*/
 {
-	int i;
 	char tstr[40];
-	char wstr[40];
-	char hline[88];
 
 	if (in_decl)
 	{
@@ -47,6 +46,7 @@ chk_dpar()										/* Check for DECLARATIVES para's.	*/
 		if (!strncmp(parms[1],"SECTION",7))					/* See if it's a section.		*/
 		{
 			p_use();							/* Process the USE procedure.		*/
+			return(1);  /* input stream has changed. */
 		}
 	}
 	else										/* We are in the procedure division.	*/
@@ -63,6 +63,7 @@ chk_dpar()										/* Check for DECLARATIVES para's.	*/
 			}
 		}
 	}
+	return(0);
 }
 
 p_use()
@@ -82,7 +83,7 @@ p_use()
 	if (strcmp(tstr,"USE"))								/* Not a USE phrase.			*/
 	{
 		write_log("WISP",'F',"ERRINUSE","Error parsing USE statement. USE missing.");
-		write_log("",' ',"","%s\n",inline);
+		write_log("",' ',"","%s\n",linein);
 		exit_wisp(EXIT_WITH_ERR);
 	}
 
@@ -96,7 +97,7 @@ p_use()
 	if (!strcmp(tstr,"DEADLOCK"))							/* If DEADLOCK, not valid, delete it.	*/
 	{
 		write_log("WISP",'E',"DEADLOCK","USE AFTER DEADLOCK is not supported (DELETED).");
-		inline[0] = '\0';
+		linein[0] = '\0';
 		del_use = 1;								/* Set a flag to make it delete it.	*/
 		return(0);
 	}
@@ -113,7 +114,7 @@ p_use()
 	if (strcmp(tstr,"PROCEDURE"))
 	{
 		write_log("WISP",'F',"ERRINUSE","Error parsing USE statement, PROCEDURE missing.");
-		write_log("",' ',"","%s\n",inline);
+		write_log("",' ',"","%s\n",linein);
 		exit_wisp(EXIT_WITH_ERR);
 	}
 
@@ -126,14 +127,14 @@ p_use()
 
 	if (!strcmp(tstr,"SHARED") || !strcmp(tstr,"SPECIAL-INPUT"))			/* If it's SHARED or SPECIAL-INPUT.	*/
 	{										/* Then remove it.			*/
-		inline[0] = '\0';							/* Empty string.			*/
+		linein[0] = '\0';							/* Empty string.			*/
 		del_use = 1;								/* Set a flag to make it delete it.	*/
 		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s is Invalid (DELETED).",tstr);
 		return(0);
 	}
 	else if (!strcmp(tstr,"INPUT") || !strcmp(tstr,"OUTPUT") || !strcmp(tstr,"I-O") || !strcmp(tstr,"EXTEND"))
 	{										/* It's not a specific file.		*/
-		inline[0] = '\0';							/* Empty string.			*/
+		linein[0] = '\0';							/* Empty string.			*/
 		write_log("WISP",'E',"USEAFTER","USE AFTER ERROR ON %s not supported, causes conflict.",tstr);
 		tput_line("%s", hline);							/* Write the SECTION name.		*/
 		gen_use(rstr,tstr);							/* Generate the USE procedure.		*/
@@ -227,14 +228,14 @@ p_use()
 	strcpy(decl_sname,tstr);							/* Save this section name.		*/
 	decl_parsing = 1;								/* Set a flag saying we did this.	*/
 
-	inline[0] = '\0';								/* Empty string.			*/
+	linein[0] = '\0';								/* Empty string.			*/
 }
 
-gen_use(reason,filename)
-char *reason,*filename;
+int gen_use(char *reason,char *filename)
 {
 	tput_line_at(12, "USE AFTER %s PROCEDURE ON",reason);
 	tput_clause (16, "%s.",filename);
+	return 0;
 }
 
 gen_dexit()										/* Generate the EXIT paragraph for decl.*/
@@ -248,3 +249,12 @@ gen_dexit()										/* Generate the EXIT paragraph for decl.*/
 	tput_line_at(12, "EXIT.");
 	decl_parsing = 0;								/* Clear the flag.			*/
 }
+/*
+**	History:
+**	$Log: wt_decl.c,v $
+**	Revision 1.10  1996-08-30 21:56:15-04  gsl
+**	drcs update
+**
+**
+**
+*/

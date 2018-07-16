@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -9,20 +11,22 @@
 
 /*						Local data definitions								*/
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>									/* Include character typing functions.	*/
-#include <v/video.h>									/* Include the VIDEO definitions.	*/
-#ifdef unix
-#include <memory.h>
-#endif
 #include <string.h>
+
 #include "idsistd.h"
 #include "wcommon.h"
 #include "movebin.h"
 #include "cobrun.h"
 #include "werrlog.h"
+#include "wexit.h"
+#include "vwang.h"
+#include "cobpic.h"
+#include "wisplib.h"
+#include "wperson.h"
 
-
-#define ERROR_BIT 16
 #define MOD_BIT   64
 
 extern char wisp_progname[9];								/* The name of the current program.	*/
@@ -31,22 +35,14 @@ extern char wisp_screen[33];								/* The name of the current screen.	*/
 static int  ver20;
 static int  ver21;
 static int  ver22;
+static int  ver90;									/* 5-BYTE FACs				*/
+
+static int  size_of_fac;								/* 1 (normal) or 5 (ver90)		*/
 
 static int	static_screen;
-static unsigned char *reserved_space;
+static const unsigned char *reserved_space;
 
-static int wputscr22();
-static int wgetscr22();
-static int wgetfac22();
-static int calcdata();
-static int wputscr();
-static int wgetscr();
-static int wgetfac();
-static int load_item_table22();
-static int putfacdata();
-static int getfacdata();
-static int loadbytes_long();
-static int close_open_occurs();
+static int nativecharmap = -1;		/* Flag to do automatic CHARMAP translation to native charset */
 
 char	char_decimal_point = '.';							/* The decimal_point character		*/
 char	char_comma = ',';								/* The comma character			*/
@@ -103,6 +99,23 @@ struct screen_block
 	unsigned char scrn[1920];					/* and the screen data area,			*/
 };									/* in the screen block.				*/
 
+
+static void wputscr22(struct screen_block *block);
+static int wgetscr22(struct screen_block *block);
+static void wgetfac22(struct screen_block *block);
+static void putfacdata(int item, int xv1, int xv2, int xh, unsigned char *scrn);
+static int getfacdata(int item, int xv1, int xv2, int xh, unsigned char *scrn);
+static void calcdata(int item, int xv1, int xv2, int xh, 
+		     fac_t **fac_ptr, unsigned char **data_ptr, 
+		     int *o_row, int *o_col, int *o_pos, int *x_size);
+static void wputscr();
+static int wgetscr();
+static int wgetfac();
+static loadbytes_long( void *vdst, const void *vsrc );
+static load_item_table22(unsigned char *screen);
+static void close_open_occurs( int this_level, struct v_struct *v1, struct v_struct *v2);
+
+
 #define	ROUTINE		85000
 
 /*
@@ -115,25 +128,32 @@ struct screen_block
 */
 
 /********************************************************************************************************************************/
-wscreen(screen,function,block,lines,pfkeys,on_pfkeys,pfkey_ret,file_stat)
-
-	unsigned char *screen;								/* Pointer to the screen structure.	*/
-	unsigned char *function;							/* Function to execute (for vwang)	*/
-	struct	screen_block	*block;							/* Screen structure block.		*/
-	unsigned char *lines;								/* Number of lines to write.		*/
-	unsigned char *pfkeys;								/* Termination PF key string.		*/
-	unsigned char *on_pfkeys;							/* pfkeys used in ON PFKEY		*/
-	unsigned char *pfkey_ret;							/* Place to return key in.		*/
-	unsigned char *file_stat;							/* place to return file status.		*/
-
+void wscreen(
+	unsigned char *screen,								/* Pointer to the screen structure.	*/
+	unsigned char *function,							/* Function to execute (for vwang)	*/
+	struct	screen_block *block,							/* Screen structure block.		*/
+	unsigned char *lines,								/* Number of lines to write.		*/
+	unsigned char *pfkeys,								/* Termination PF key string.		*/
+	unsigned char *on_pfkeys,							/* pfkeys used in ON PFKEY		*/
+	unsigned char *pfkey_ret,							/* Place to return key in.		*/
+	unsigned char *file_stat)							/* place to return file status.		*/
 {
 	int key_exit,s_err,i;
 
-#ifdef	MSDOS										/* Debug hook for MS-DOS.		*/
-	v_modeflag( 3, 15, 'S' );							/* Cyan box, white 'S'.			*/
-#endif
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
+	/* First time thru set nativecharmap flag */
+	if (-1 == nativecharmap)
+	{
+		nativecharmap = 0;
+		if (get_wisp_option("NATIVECHARMAP"))
+		{
+			nativecharmap = 1;
+			/*
+			**	If using NATIVECHARMP then ensure the charmap is loaded
+			*/
+			vwang_load_charmap(0);
+		}
+	}
 											/* We will continue to support screen	*/
 											/* version 20 & 21.			*/
 											/* Except on MSDOS; support starts at	*/
@@ -141,28 +161,37 @@ wscreen(screen,function,block,lines,pfkeys,on_pfkeys,pfkey_ret,file_stat)
 	ver20 = (*screen == 20);		/* DISP-ITEM-LENGTH  COMP PIC 9999 						*/
 	ver21 = (*screen == 21);		/* DISP-ITEM-LENGTH  PIC X							*/
 	ver22 = (*screen == 22);		/* New Method  "L5R1C1O2P{X(20)};"						*/
+	ver90 = (*screen == 90);		/* Custom 5-BYTE FACs								*/
 
-
-#ifdef MSDOS
-	if ( !ver22 )									/* Is there a version match?		*/
+#if defined(unix) || defined(VMS)
+	if ( !ver20 && !ver21 && !ver22 && !ver90 )					/* Is there a version match?		*/
 #else
-	if ( !ver20 && !ver21 && !ver22 )						/* Is there a version match?		*/
+	if ( !ver22 && !ver90 )								/* Is there a version match?		*/
 #endif
 	{
 		werrlog(ERRORCODE(2),*screen,SCREEN_VERSION,0,0,0,0,0,0);
 		wexit(ERRORCODE(2));							/* Take fatal error.			*/
 	}
 
-	if ( ver22 )
+	size_of_fac = (ver90) ? 5 : 1;
+
+	if ( ver22 || ver90 )
 	{
+		wtrace("WSCREEN","ENTER","Prog=[%8.8s] Screen=[%32.32s]", &screen[1], &screen[9]);
+
 		load_item_table22(screen);
 	}
-
-	if ( ver22 )
+	else
 	{
-		wputscr22(screen,block);
+		wtrace("WSCREEN","ENTER","Old screen version=%d",(int)*screen);
 	}
-#ifndef	MSDOS		/* if NOT MSDOS	*/						/* MSDOS only supports ver22.		*/
+	
+
+	if ( ver22 || ver90 )
+	{
+		wputscr22(block);
+	}
+#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
 	else
 	{
 		wputscr(screen,block);							/* Move structure into the block.	*/
@@ -195,11 +224,11 @@ wscreen(screen,function,block,lines,pfkeys,on_pfkeys,pfkey_ret,file_stat)
 
 		if (!key_exit)								/* not exiting, do the moves		*/
 		{
-			if ( ver22 )
+			if ( ver22 || ver90 )
 			{
-				s_err = wgetscr22(block,screen);			/* Copy screen into the structure.	*/
+				s_err = wgetscr22(block);				/* Copy screen into the structure.	*/
 			}
-#ifndef MSDOS			/* if NOT MSDOS	*/					/* MSDOS only supports ver22.		*/
+#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
 			else
 			{
 				s_err = wgetscr(block,screen);				/* Copy screen into the structure.	*/
@@ -214,11 +243,11 @@ wscreen(screen,function,block,lines,pfkeys,on_pfkeys,pfkey_ret,file_stat)
 		}
 		else
 		{									/* a key was found, tell COBOL		*/
-			if ( ver22 )
+			if ( ver22 || ver90 )
 			{
-				wgetfac22(block,screen);				/* Tailor the FAC's			*/
+				wgetfac22(block);					/* Tailor the FAC's			*/
 			}
-#ifndef MSDOS			/* if NOT MSDOS	*/					/* MSDOS only supports ver22.		*/
+#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
 			else
 			{
 				wgetfac(block,screen);					/* Tailor the FAC's			*/
@@ -230,16 +259,78 @@ wscreen(screen,function,block,lines,pfkeys,on_pfkeys,pfkey_ret,file_stat)
 	}
 	while (s_err != 0);								/* and check for errors			*/
 
-#ifdef	MSDOS										/* Debug hook for MS-DOS.		*/
-	v_modeflag( 6, 11, 'C' );							/* Gold box, cyan 'C'.			*/
-#endif
 }
 
+/*
+	ver90	This is a custom mod for RSS to support there 5 byte FAC fields.
+		We treat a ver90 just like a ver22 except we use these two
+		routines to translate between the one byte fac in the vwang
+		screen block and the 5 byte fac in the wscreen data structure.
+*/
+
+struct five_byte_fac_s
+{
+	char	altered_byte;		/* 0-off 1-on				*/
+	char	underline_byte;		/* 0-off 1-on				*/
+	char	rendition_byte;		/* 0-bright 1-dim 2-error(blink) 3-hide */
+	char	protect_byte;		/* 0-off 1-on 				*/
+	char	input_byte;		/* 0-all 1-uppercase 2-numeric 		*/
+};
+
+fac_t wscreen2fac(unsigned char *ptr)
+{
+	fac_t fac;
+	struct five_byte_fac_s *five_byte;
+
+	if (ver90)
+	{
+		five_byte = (struct five_byte_fac_s *)ptr;
+
+		fac = FAC_FAC_ON;
+		if ( '1' == five_byte->altered_byte )	fac |= FAC_MODIFIED_ON;
+		if ( '1' == five_byte->underline_byte )	fac |= FAC_UNDERSCORED_ON;
+		if ( '1' == five_byte->rendition_byte )	fac |= FAC_RENDITION_DIM;
+		if ( '2' == five_byte->rendition_byte )	fac |= FAC_RENDITION_BLINK;
+		if ( '3' == five_byte->rendition_byte )	fac |= FAC_RENDITION_BLANK;
+		if ( '1' == five_byte->protect_byte )	fac |= FAC_PROTECTED_ON;
+		if ( '1' == five_byte->input_byte )	fac |= FAC_DATATYPE_UPPER;
+		if ( '2' == five_byte->input_byte )	fac |= FAC_DATATYPE_NUMERIC;
+		
+	}
+	else
+	{
+		fac = *ptr;
+	}
+
+	return fac;
+}
+
+void fac2wscreen(unsigned char *ptr, fac_t fac)
+{
+	struct five_byte_fac_s *five_byte;
+
+	if (ver90)
+	{
+		memset(ptr, '0', 5);
+		five_byte = (struct five_byte_fac_s *)ptr;
+
+		if ( FAC_MODIFIED(fac) ) 	five_byte->altered_byte   = '1';
+		if ( FAC_UNDERSCORED(fac) ) 	five_byte->underline_byte = '1';
+		if ( FAC_DIM(fac) ) 		five_byte->rendition_byte = '1';
+		if ( FAC_BLINK(fac) ) 		five_byte->rendition_byte = '2';
+		if ( FAC_BLANK(fac) ) 		five_byte->rendition_byte = '3';
+		if ( FAC_PROTECTED(fac) ) 	five_byte->protect_byte   = '1';
+		if ( FAC_UPPER(fac) ) 		five_byte->input_byte     = '1';
+		if ( FAC_NUMERIC(fac) ) 	five_byte->input_byte     = '2';
+	}
+	else
+	{
+		*ptr = fac;
+	}
+}
 
 /********************************************************************************************************************************/
-static wputscr22(screen,block)							/* Copy a screen structure into a block		*/
-unsigned char *screen;								/* a pointer to the screen structure		*/
-struct	screen_block	*block;							/* Screen structure block.			*/
+static void wputscr22(struct	screen_block	*block)				/* Copy a screen structure into a block		*/
 {
 	int	item, xv1, xv2, xh;
 
@@ -263,9 +354,7 @@ struct	screen_block	*block;							/* Screen structure block.			*/
 
 
 /********************************************************************************************************************************/
-static int wgetscr22(block,screen)						/* Copy a block into a screen structure 	*/
-struct	screen_block	*block;							/* Screen structure block.			*/
-unsigned char *screen;								/* a pointer to the screen structure		*/
+static int wgetscr22(struct	screen_block	*block)				/* Copy a block into a screen structure 	*/
 {
 	int	item, xv1, xv2, xh, errcode, rc;
 
@@ -293,14 +382,13 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 
 
 /********************************************************************************************************************************/
-static wgetfac22(block,screen)							/* Copy the FAC's from a block into a structure.*/
-struct	screen_block	*block;							/* Screen structure block.			*/
-unsigned char *screen;								/* a pointer to the screen structure		*/
+static void wgetfac22(struct screen_block *block)				/* Copy the FAC's from a block into a structure.*/
 {
 	int	item, xv1, xv2, xh;
 	int	o_row, o_col, o_pos;
 	int	x_size;
-	unsigned char *fac_ptr, *data_ptr;
+	fac_t *fac_ptr;
+	unsigned char *data_ptr;
 
 	for( item=0; item<num_items; item++)					/* loop for each item in the table.		*/
 	{
@@ -314,7 +402,7 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 
 					if ( o_col != 0 )
 					{
-						*fac_ptr = block->scrn[o_pos-1]; /* Copy out the FAC				*/
+						fac2wscreen(fac_ptr, block->scrn[o_pos-1]);	/* Copy out the FAC		*/
 					}
 				}
 			}
@@ -327,30 +415,37 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 /*
 	putfacdata:	Insert into a 1920 byte area the FAC and DATA plus the trailing FAC.
 */
-static putfacdata(item, xv1, xv2, xh, scrn)
-int item, xv1, xv2, xh;
-unsigned char *scrn;
+static void putfacdata(int item, int xv1, int xv2, int xh, unsigned char *scrn)
 {
 	int	o_row, o_col, o_pos;
 	int	x_size;
-	unsigned char *fac_ptr, *data_ptr;
+	fac_t *fac_ptr;
+	unsigned char *data_ptr;
 
 	calcdata(item, xv1, xv2, xh, &fac_ptr, &data_ptr, &o_row, &o_col, &o_pos, &x_size);
 
 	if ( o_col != 0 )
 	{
-		scrn[o_pos-1] = *fac_ptr;					/* Insert the FAC before the DATA		*/
+		scrn[o_pos-1] = wscreen2fac(fac_ptr);				/* Insert the FAC before the DATA		*/
 	}
 
 	memcpy(scrn+o_pos, data_ptr, x_size);					/* Copy in the DATA				*/
 
+	if (nativecharmap)
+	{
+		/*
+		**	Translate ansi charset into wang charset in preparation of vwang call.
+		*/
+		vwang_ansi2wang(scrn+o_pos, x_size);
+	}
+
 	o_pos += x_size;							/* Point to end-fac				*/
-	o_col = (o_col + x_size) % 80;						/* Point to ending col				*/
+	o_col = (o_col + x_size) % WSB_COLS;					/* Point to ending col				*/
 
 	if ( o_pos < 1920 && o_col != 0 && 
-	    !(fac_pre_vwang(scrn[o_pos]) & '\200') )				/* if !eod-of-scrn && col!=0 && not-fac then	*/
+	    !FAC_FAC(fac_pre_vwang(scrn[o_pos])) )				/* if !eod-of-scrn && col!=0 && not-fac then	*/
 	{
-		scrn[o_pos] = unfac_pre_vwang((unsigned char)'\214');
+		scrn[o_pos] = unfac_pre_vwang(FAC_PROT_DIM);
 	}
 }
 
@@ -359,16 +454,14 @@ unsigned char *scrn;
 /*
 	getfacdata:	Extract from a 1920 byte area the FAC and DATA.
 */
-static int getfacdata(item, xv1, xv2, xh, scrn)
-int item, xv1, xv2, xh;
-unsigned char *scrn;
+static int getfacdata(int item, int xv1, int xv2, int xh, unsigned char *scrn)
 {
 	int	o_row, o_col, o_pos;
 	int	x_size,i;
-	unsigned char 	*fac_ptr, *data_ptr;
-	unsigned char	mod_fac, a_byte, b_byte;
+	unsigned char	*data_ptr;
+	fac_t 	*fac_ptr;
+	unsigned char	mod_fac;
 	int	errcode;
-	struct mask_struct mask;
 
 	mod_fac = 0;
 	errcode = 0;
@@ -377,16 +470,16 @@ unsigned char *scrn;
 
 	if ( o_col != 0 )
 	{
-		mod_fac = fac(scrn[o_pos-1]) & MOD_BIT;	                        /* Was field modified ?				*/ 
-		*fac_ptr = scrn[o_pos-1];					/* Copy out the FAC				*/
+		mod_fac = FAC_MODIFIED(fac(scrn[o_pos-1]));                     /* Was field modified ?				*/ 
+		fac2wscreen(fac_ptr, scrn[o_pos-1]);				/* Copy out the FAC				*/
 	}
 
 	if ( !mod_fac )							/* If there are any embedded facs that have the	*/
 	{								/* mod bit set (0xC0 = 0x80 + 0x40) then turn	*/
 		for(i=0;i<x_size;i++)					/* on the mod flag and process the data.	*/
 		{
-			if ( (unsigned char)(fac(scrn[o_pos+i]) & 0xC0) == 
-			     (unsigned char)(fac((unsigned char)0xC0)))
+			if ( (fac_t)(fac(scrn[o_pos+i]) & 0xC0) == 
+			     (fac_t)(fac((fac_t)0xC0)))
 			{
 				mod_fac = 1;
 				break;
@@ -396,8 +489,7 @@ unsigned char *scrn;
 
 	if (mod_fac)
 	{
-
-		cobxpic_edit(data_ptr,scrn+o_pos,
+		cobxpic_edit((char *)data_ptr,(char *)(scrn+o_pos),
 				item_table[item].it_ps.ps_xpic,
 				item_table[item].it_ps.ps_size,
 				item_table[item].it_ps.ps_type,
@@ -409,9 +501,17 @@ unsigned char *scrn;
 				item_table[item].it_ps.ps_signed,
 				&errcode);
 
+		if (nativecharmap)
+		{
+			/*
+			**	Translate wang charset into ansi charset following a vwang read.
+			*/
+			vwang_wang2ansi(data_ptr, x_size);
+		}
+
 		if ( errcode )
 		{
-			scrn[o_pos-1] |= ERROR_BIT;
+			scrn[o_pos-1] |= FAC_RENDITION_BLINK;
 		}
 
 	}
@@ -419,10 +519,9 @@ unsigned char *scrn;
 }
 
 /********************************************************************************************************************************/
-static calcdata(item, xv1, xv2, xh, fac_ptr, data_ptr, o_row, o_col, o_pos, x_size)
-int	item, xv1, xv2, xh;
-unsigned char **fac_ptr, **data_ptr;
-int	*o_row, *o_col, *o_pos, *x_size;
+static void calcdata(int item, int xv1, int xv2, int xh, 
+		     fac_t **fac_ptr, unsigned char **data_ptr, 
+		     int *o_row, int *o_col, int *o_pos, int *x_size)
 {
 	int	o_idx, elmts;
 
@@ -433,8 +532,8 @@ int	*o_row, *o_col, *o_pos, *x_size;
 		xv2 * item_table[item].it_h +
 		xh;
 
-	*fac_ptr  = item_table[item].it_dataptr + o_idx;
-	*data_ptr = item_table[item].it_dataptr + elmts + (o_idx * item_table[item].it_size);
+	*fac_ptr  = item_table[item].it_dataptr + (o_idx * size_of_fac);
+	*data_ptr = item_table[item].it_dataptr + (elmts * size_of_fac) + (o_idx * item_table[item].it_size);
 
 	*o_row = item_table[item].it_row +					/* Calc the row offset (0-23)			*/
 		 xv1 * item_table[item].it_v1_off +
@@ -445,17 +544,17 @@ int	*o_row, *o_col, *o_pos, *x_size;
 		xh * (item_table[item].it_size + 1) - 1;
 	*o_col = (*o_col < 0 || *o_col > 79) ? 1 : *o_col;
 
-	*o_pos = *o_row * 80 + *o_col;						/* Calc the offset into block->scrn		*/
+	*o_pos = *o_row * WSB_COLS + *o_col;					/* Calc the offset into block->scrn		*/
 
 										/* Calc the actual size.			*/
 	*x_size = (*o_pos + item_table[item].it_size > 1920) ? (1920-*o_pos) : item_table[item].it_size;
 }
 
 /********************************************************************************************************************************/
-#ifndef MSDOS			/* if NOT MSDOS	*/					/* MSDOS only supports ver22.		*/
+#if defined(unix) || defined(VMS)							/* MSDOS only supports ver22.		*/
 /********************************************************************************************************************************/
 
-static wputscr(screen,block)							/* Copy a screen structure into a block		*/
+static void wputscr(screen,block)						/* Copy a screen structure into a block		*/
 unsigned char *screen;								/* a pointer to the screen structure		*/
 struct	screen_block	*block;							/* Screen structure block.			*/
 {
@@ -695,8 +794,9 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 							juster(&block->scrn[cpos], screen, &a_byte, &b_byte,&mask,&jret);
 
 							if (jret != 0)
-							{				/* error in conversion			*/
-								block->scrn[cpos-1] |= ERROR_BIT;	/* set the error bit	*/
+							{	/* error in conversion			*/
+								/* set the error bit	*/
+								block->scrn[cpos-1] |= FAC_RENDITION_BLANK;	
 								errstat = -1;			/* return there is an error	*/
 							}
 						}
@@ -820,9 +920,13 @@ unsigned char *screen;								/* a pointer to the screen structure		*/
 }
 
 /********************************************************************************************************************************/
-static loadbytes_long( dst, src )
-char *dst, *src;
+static loadbytes_long( void *vdst, const void *vsrc )
 {
+	char *dst;
+	const char *src;
+	
+	dst = (char*)vdst;
+	src = (const char*)vsrc;
 											/* WISP generates the codes swaped so	*/
 											/* if on a byte-swapped machine then	*/
 											/* just load them. Else we must un-swap */
@@ -845,11 +949,10 @@ char *dst, *src;
 
 
 /********************************************************************************************************************************/
-#endif		/* Above section is only for NOT MSDOS systems.	*/
+#endif		/* Above section is only for unix || VMS systems.	*/
 /********************************************************************************************************************************/
-static unsigned char *getnumber(ptr,num)			/* Load in an integer number starting at ptr. Return after ptr */
-unsigned char *ptr;
-int  *num;
+/* Load in an integer number starting at ptr. Return after ptr */
+static unsigned char *getnumber(unsigned char *ptr, int *num)	
 {
 	int	i;
 
@@ -887,10 +990,9 @@ int  *num;
 
 
 */
-static load_item_table22(screen)
-unsigned char *screen;
+static load_item_table22(unsigned char *screen)
 {
-	static unsigned char *last_screen;
+	static const unsigned char *last_screen;
 
 	struct v_struct v1, v2;
 
@@ -902,11 +1004,10 @@ unsigned char *screen;
 
 	int	curr_row, curr_col;				/* The current calculated row & col.				*/
 
-	unsigned char	*scrn_ptr;				/* Ptr to current position in screen.				*/
+	unsigned char *scrn_ptr;				/* Ptr to current position in screen.				*/
 	unsigned char	*u_ptr;					/* Temp ptr.							*/
 	char	*ptr;
 
-	struct mask_struct mask;
 
 	if ( static_screen && screen == last_screen ) return(0);		/* Check if already loaded.			*/
 
@@ -1087,7 +1188,7 @@ unsigned char *screen;
 			scrn_ptr += item_table[num_items].it_v1 * 
 				    item_table[num_items].it_v2 * 
 				    item_table[num_items].it_h  *
-				    (item_table[num_items].it_size + 1);
+				    (item_table[num_items].it_size + size_of_fac);
 
 			num_items += 1;
 			if ( num_items >= MAX_ITEM_TABLE )
@@ -1104,9 +1205,7 @@ unsigned char *screen;
 	last_screen = screen;							/* Save screen pointer.				*/
 }
 
-static close_open_occurs( this_level, v1, v2 )
-int	this_level;
-struct v_struct *v1, *v2;
+static void close_open_occurs( int this_level, struct v_struct *v1, struct v_struct *v2)
 {
 	int	offset;
 
@@ -1132,3 +1231,31 @@ struct v_struct *v1, *v2;
 		v1->v_occurs = 0;							/* Finished with v1 occurs.		*/
 	}
 }
+/*
+**	History:
+**	$Log: wscreen.c,v $
+**	Revision 1.18  1998-01-18 15:03:33-05  gsl
+**	Fix prototype errors
+**
+**	Revision 1.17  1997-12-18 21:00:53-05  gsl
+**	FIx CHARMAP processing
+**
+**	Revision 1.16  1997-12-18 09:13:26-05  gsl
+**	fix getnumber() prototype
+**
+**	Revision 1.15  1997-12-17 20:44:09-05  gsl
+**	Fix test for NATIVECHARMAP option
+**
+**	Revision 1.14  1997-12-17 19:58:23-05  gsl
+**	Add support for NATIVECHARMAP option
+**	Fix prototypes
+**
+**	Revision 1.13  1997-05-08 16:37:43-04  gsl
+**	Changed to use wtrace()
+**
+**	Revision 1.12  1996-08-19 18:33:22-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,7 +17,6 @@
 **	Routines:	
 **
 **	vsedit()	The main entry point once the filename is known.
-**	init_lang()
 **	init_cobol()	Initialize for COBOL
 **	init_c()	Initialize for C
 **	init_text()	Initialize for TEXT
@@ -33,7 +34,6 @@
 **	save_file()
 **	save_lines()
 **	myfgets()	Reads the file and messages the input.
-**	numb()
 */
 
 #include <stdio.h>
@@ -41,123 +41,241 @@
 #ifdef unix
 #include <fcntl.h>
 #endif
-#include "vseglb.h"
+
 #include "idsistd.h"
+
+#include "vsedit.h"
+#include "vseglb.h"
+#include "vsebasic.h"
+#include "vsedfnd.h"
+#include "vsegps.h"
+#include "vsemov.h"
+#include "vsetxt.h"
+#include "vseutl.h"
+#include "vwang.h"
+#include "wperson.h"
+
+static int nativecharmap = -1;		/* Flag to do automatic CHARMAP translation to native charset */
+
+
+static void restart_all(void);
+static void init_cobol(void);
+static void init_basic(void);
+static void init_proc(void);
+static void init_c(void);
+static void init_text(void);
+static void init_shell(void);
+static void convert_tabs(void);
+static void vse_menus(void);
+static int load_file(void);
+static void init_lastnum(void);
+static int load_lines(FILE *ff);
+static int vse_badnums(void);
+static int4 save_lines(FILE *ff, int4 start, int4 end);
+static int check_lang(char *lang_string, int *type, char *ext);
+
+
 /*----
 Passed values are a system file name and an
 upper case language, at the moment, COBOL C SHELL and TEXT are all
 valid. The fields should be null terminated
 ------*/
-vsedit(name,lang)
-char *name;
-char *lang;
+int vsedit(char *name)
 {  
-	char settab;
-	
+	/* First time thru set nativecharmap flag */
+	if (-1 == nativecharmap)
+	{
+		nativecharmap = 0;
+		if (get_wisp_option("NATIVECHARMAP"))
+		{
+			nativecharmap = 1;
+			/*
+			**	If using NATIVECHARMP then ensure the charmap is loaded
+			*/
+			vwang_load_charmap(0);
+		}
+	}
+
+	restart_all();
+
         strcpy(vse_sysname,name);
-        strcpy(vse_gp_input_language,lang);
-	if(!(strcmp(vse_gp_input_language,COBOL_LANGUAGE)))
-	  strcpy(vse_tab_setting,DEFAULT_COB_TAB_STRING);
-	
-	/* Added by CIS for BASIC language support 07/09/93 AJA */
-	else if(!(strcmp(vse_gp_input_language,BASIC_LANGUAGE)))
-	  strcpy(vse_tab_setting,DEFAULT_BASIC_TAB_STRING);
-	else
-	  strcpy(vse_tab_setting,DEFAULT_C_TAB_STRING);
-        init_lang();
+
         init_lastnum();
         vse_menu=EDIT_MENU;
         vse_lines = 0;
         vse_loading_menu();
-        if(load_file() == -1)
-                return;
-        else
-                vse_menus();
+
+	if (is_read_only())
+	{
+		if (vse_readonly_gp())
+		{
+			return(0);
+		}
+	}
+
+	switch( load_file() )
+	{
+	case 0:
+		vse_defaults_gp(1);
+		vse_options_gp(1);
+		vse_menus();
+		return(0);
+
+	case 1:
+		return(0);
+
+	case -1:
+		return(1);
+	}
+
+	return(0);
 }
+
+static void restart_all(void)
+{
+	vse_file_changed = 0;
+	vse_save_row=VSE_FIRST_SCREEN_ROW;
+	vse_save_col=VSE_FIRST_SCREEN_COL;
+
+	myfgets(NULL,0,NULL);	/* reset */
+
+	restart_find();
+
+	set_errfile_active(0);
+
+	set_wang_style(!vse_native);
+}
+
 /*----
 Set up options for each of the possible languages.
 ------*/
-init_lang()
-{
-        int len;
-        len = strlen(vse_gp_input_language);
-        if(!(memcmp(vse_gp_input_language,COBOL_LANGUAGE,len)))
-                init_cobol();
-        if(!(memcmp(vse_gp_input_language,C_LANGUAGE,len)))
-                init_c();
-        if(!(memcmp(vse_gp_input_language,TEXT_LANGUAGE,len)))
-                init_text();
-        if(!(memcmp(vse_gp_input_language,SHELL_LANGUAGE,len)))
-                init_shell();
 
-		/* Added by CIS for BASIC language support 07/09/93 AJA */
-        if(!(memcmp(vse_gp_input_language,BASIC_LANGUAGE,len)))
-                init_basic();
-        convert_tabs();
-        convert_cols();
-}
-init_cobol()
+#define MODE_UPPER	"UPPER"
+#define MODE_UPLOW	"UPLOW"
+
+#define CASE_ANY	"ANY  "
+#define CASE_EXACT	"EXACT"
+
+#define	COBOL_TAB_STRING	"08 12 16 20 24 28 32 36 40 72"
+#define BASIC_TAB_STRING	"10 20 30 40 50 60 70 72      "
+#define PROC_TAB_STRING		"10 16 36 71                  "
+#define	TEXT_TAB_STRING		"09 17 25 33 41 49 57 65 72   "
+
+/*					            1         2         3         4         5         6         7         8 */
+/*					  123456 78901234567890123456789012345678901234567890123456789012345678901234567890 */
+#define DEFAULT_COB_TAB_STRING  	"         X   X   X   X   X   X   X   X   X                               X      "
+#define DEFAULT_BASIC_TAB_STRING	"           X         X         X         X         X         X         X X      "
+
+/*						          1         2         3         4         5         6         7         8 */
+/*					  xxxxxx 12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
+#define DEFAULT_PROC_TAB_STRING		"                 X     X                   X                                  X "
+#define DEFAULT_TAB_STRING		"                X       X       X       X       X       X       X       X      X" 
+
+static void init_cobol(void)
 {
+	strcpy(vse_tab_setting,DEFAULT_COB_TAB_STRING);
+
         strcpy(vse_gp_defaults_tabs,COBOL_TAB_STRING);
-        strcpy(vse_gp_defaults_columns,COBOL_COL_STRING);
-        vse_text_col = 7;
-        vse_num_col = 1;
-        vse_numbering = 1;
-        strcpy(vse_gp_defaults_mode,COBOL_CASE_MODE);
-        strcpy(vse_gp_defaults_case,COBOL_MATCH_MODE);
-		strcpy( vse_defaults_modcol, COBOL_MOD_COL_STRING );
+        strcpy(vse_gp_defaults_mode,MODE_UPPER);
+        strcpy(vse_gp_defaults_case,CASE_EXACT);
+        strcpy(vse_gp_defaults_columns,"07 72");
+
+	vse_line_width     = 80;
+        vse_edit_start_col =  7;
+	vse_edit_end_col   = 72;
+	vse_edit_width     = 66; /* vse_edit_end_col - vse_edit_start_col + 1; */
+        vse_mod_start_col  = 73;
+	vse_mod_end_col    = 80;
+	vse_mod_width      =  8; /* vse_mod_end_col - vse_mod_start_col + 1; */
+        vse_num_start_col  =  1;
 }
-init_c()
+static void init_basic(void)
 {
-        strcpy(vse_gp_defaults_tabs,C_TAB_STRING);
-        strcpy(vse_gp_defaults_columns,C_COL_STRING);
-        vse_text_col = 1;
-        vse_num_col = 0;
-        vse_numbering =0;
-        strcpy(vse_gp_defaults_mode,C_CASE_MODE);
-        strcpy(vse_gp_defaults_case,C_MATCH_MODE);
-		strcpy( vse_defaults_modcol, C_MOD_COL_STRING );
+	init_hash();
+	strcpy(vse_tab_setting,DEFAULT_BASIC_TAB_STRING);
+
+        strcpy(vse_gp_defaults_tabs,BASIC_TAB_STRING);
+        strcpy(vse_gp_defaults_mode,MODE_UPPER);
+        strcpy(vse_gp_defaults_case,CASE_EXACT);
+        strcpy(vse_gp_defaults_columns,"07 72");
+
+	vse_line_width     = 80;
+        vse_edit_start_col =  7;
+	vse_edit_end_col   = 72;
+	vse_edit_width     = 66; /* vse_edit_end_col - vse_edit_start_col + 1; */
+        vse_mod_start_col  = 73;
+	vse_mod_end_col    = 80;
+	vse_mod_width      =  8; /* vse_mod_end_col - vse_mod_start_col + 1; */
+        vse_num_start_col  =  1;
 }
-init_text()
+static void init_proc(void)
 {
-        strcpy(vse_gp_defaults_tabs,TEXT_TAB_STRING);
-        strcpy(vse_gp_defaults_columns,TEXT_COL_STRING);
-        vse_text_col = 1;
-        vse_num_col = 0;
-        vse_numbering =0;
-        strcpy(vse_gp_defaults_mode,TEXT_CASE_MODE);
-        strcpy(vse_gp_defaults_case,TEXT_MATCH_MODE);
-		strcpy( vse_defaults_modcol, TEXT_MOD_COL_STRING );
+	strcpy(vse_tab_setting,DEFAULT_PROC_TAB_STRING);
+
+        strcpy(vse_gp_defaults_tabs,PROC_TAB_STRING);
+        strcpy(vse_gp_defaults_mode,MODE_UPLOW);
+        strcpy(vse_gp_defaults_case,CASE_ANY);
+        strcpy(vse_gp_defaults_columns,"01 71");
+
+	vse_line_width     = 80;
+        vse_edit_start_col =  1;
+	vse_edit_end_col   = 71;
+	vse_edit_width     = 71; /* vse_edit_end_col - vse_edit_start_col + 1; */
+        vse_mod_start_col  = 72;
+	vse_mod_end_col    = 74;
+	vse_mod_width      =  3; /* vse_mod_end_col - vse_mod_start_col + 1; */
+        vse_num_start_col  = 75;
 }
-init_shell()
+static void init_c(void)
 {
-        strcpy(vse_gp_defaults_tabs,SHELL_TAB_STRING);
-        strcpy(vse_gp_defaults_columns,SHELL_COL_STRING);
-        vse_text_col = 1;
-        vse_num_col = 0;
-        vse_numbering =0;
-        strcpy(vse_gp_defaults_mode,SHELL_CASE_MODE);
-        strcpy(vse_gp_defaults_case,SHELL_MATCH_MODE);
-		strcpy( vse_defaults_modcol, SHELL_MOD_COL_STRING );
+        strcpy(vse_gp_defaults_mode,MODE_UPLOW);
+        strcpy(vse_gp_defaults_case,CASE_ANY);
+        strcpy(vse_gp_defaults_columns,"01 72");
+
+	vse_line_width     = 72;
+        vse_edit_start_col =  1;
+	vse_edit_end_col   = 72;
+	vse_edit_width     = 72; /* vse_edit_end_col - vse_edit_start_col + 1; */
+        vse_mod_start_col  = 0;
+	vse_mod_end_col    = 0;
+	vse_mod_width      = 0;
+        vse_num_start_col  = 0;
+}
+static void init_text(void)
+{
+        strcpy(vse_gp_defaults_mode,MODE_UPLOW);
+        strcpy(vse_gp_defaults_case,CASE_ANY);
+        strcpy(vse_gp_defaults_columns,"01 72");
+
+	vse_line_width     = 72;
+        vse_edit_start_col =  1;
+	vse_edit_end_col   = 72;
+	vse_edit_width     = 72; /* vse_edit_end_col - vse_edit_start_col + 1; */
+        vse_mod_start_col  = 0;
+	vse_mod_end_col    = 0;
+	vse_mod_width      = 0;
+        vse_num_start_col  = 0;
+}
+static void init_shell(void)
+{
+        strcpy(vse_gp_defaults_mode,MODE_UPLOW);
+        strcpy(vse_gp_defaults_case,CASE_ANY);
+        strcpy(vse_gp_defaults_columns,"01 72");
+
+	vse_line_width     = 72;
+        vse_edit_start_col =  1;
+	vse_edit_end_col   = 72;
+	vse_edit_width     = 72; /* vse_edit_end_col - vse_edit_start_col + 1; */
+        vse_mod_start_col  = 0;
+	vse_mod_end_col    = 0;
+	vse_mod_width      = 0;
+        vse_num_start_col  = 0;
 }
 
-/* Added by CIS for BASIC language support 07/09/93 AJA */
-init_basic()
-{
-		head_linenum = NULL;	
-        strcpy(vse_gp_defaults_tabs,BASIC_TAB_STRING);
-        strcpy(vse_gp_defaults_columns,BASIC_COL_STRING);
-        vse_text_col = 7;
-        vse_num_col = 1;
-        vse_numbering = 1;
-        strcpy(vse_gp_defaults_mode,BASIC_CASE_MODE);
-        strcpy(vse_gp_defaults_case,BASIC_MATCH_MODE);
-		strcpy( vse_defaults_modcol, BASIC_MOD_COL_STRING );
-}
 /*----
 Convert all tab entries to values
 ------*/
-convert_tabs()
+static void convert_tabs(void)
 {
         int idx;
         for(idx=0; idx < NO_OF_TABS; ++idx)
@@ -165,27 +283,11 @@ convert_tabs()
                 int4_from_str2(&vse_gp_defaults_tabs[idx *3],&vse_tab[idx]);
                 }
 }
-/*----
-Convert 2 column string entries
-------*/
-convert_cols()
-{
-        int4_from_str2(&vse_gp_defaults_columns[0],&vse_column[0]);
-        int4_from_str2(&vse_gp_defaults_columns[3],&vse_column[1]);
-        vse_text_width = (vse_column[1] - vse_column[0]) + 1;
 
-		/* Set the text width if mod codes are displayed.
-		   Added by CIS: 07/23/93 AJA */
-        int4_from_str2(&vse_defaults_modcol[0],&vse_column[0]);
-        int4_from_str2(&vse_defaults_modcol[3],&vse_column[1]);
-        vse_mod_text_width = (vse_column[1] - vse_column[0]) + 1;
-}
 /*---
 Convert next 2 bytes of str to int4 pointed to by value
 ------*/
-int4_from_str2(str,value)
-char *str;
-int4 *value;
+void int4_from_str2(char *str, int4 *value)
 {
         char buf[3];
         memcpy(buf,str,2);
@@ -193,7 +295,8 @@ int4 *value;
         *value = 0;
         *value = ATOI4(buf);
 }
-vse_menus()
+
+static void vse_menus(void)
 {
 	extern char ed_oa[];
 	
@@ -213,137 +316,348 @@ vse_menus()
                         }
                 }
 }
-load_file()
+
+/*
+**	Routine:	load_file()
+**
+**	Function:	Loads the input file.
+**
+**	Description:	{Full detailed description}...
+**
+**	Arguments:	None
+**
+**	Globals:	Lots
+**
+**	Return:
+**	0		File loaded OK
+**	1		Load was aborted
+**	-1		Error while loading
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/15/94	Modified by GSL
+**
+*/
+static int load_file(void)
 {
         FILE *ff;
         int rc;
         if(vse_new_file)
                 return(0);
-        trunc(vse_sysname);
         ff = fopen(vse_sysname,"r");
-        untrunc(vse_sysname,sizeof(vse_sysname)-1);
-	if (numb(ff))
-	  init_cobol();
+	if (ff)
+	{
+	        if (rc = load_lines(ff))
+                {
+                        free_text();
+			if ( lang_type() == LANG_BASIC )
+			{
+				free_linenum();
+			}
+                }
+
+	        fclose(ff);
+	}
 	else
-	  init_c();
-        rc = load_lines(ff);
-        fclose(ff);
+	{
+		rc = -1;
+	}
         return(rc);
 }
 static int4 lastnum;
-init_lastnum()
+static void init_lastnum(void)
 {
         lastnum = 0;
 }
-load_lines(ff)
-FILE *ff;
+
+/*
+**	Routine:	load_txt_line()
+**
+**	Function:	Loads one line from the file into a text struct.
+**
+**	Description:	Loads a single line from the open file.
+**			It uses the global language constants to extract
+**			the line number and modcode plus editable portion
+**			of the text.
+**			On EOF a NULL txtptr is returned.
+**
+**			An invalid linenumber will be returned as -1.
+**
+**	Arguments:
+**	ff		The open file pointer.
+**	txtptr		The text struct to return
+**
+**	Globals:	Language specific constants
+**
+**	Return:
+**	0		OK
+**	-1		out_of_space
+**
+**	Warnings:	This does not validate line numbering.
+**
+**	History:	
+**	03/22/94	Written by GSL
+**
+*/
+int load_txt_line(FILE *ff, TEXT **txtptr)
 {
-        char buf[256],*bptr;
-		char *mod_code=NULL;
-        int4 num,next_lineno();
-        TEXT *txt;
-        int myfgets();
+        char 	buf[256];
+	char 	*mod_code;
+	long	linenumber;
+	int	len;
+
+	*txtptr = NULL;
+
+	if ( -1 == myfgets( buf, (int) vse_line_width, ff ) )
+	{
+		return(0);
+	}
+
+	len = strlen(buf);
+
+	/*
+	**	Extract the linenumber
+	*/
+	linenumber = -1;
+	if(vse_num_start_col && len >= vse_num_start_col+6-1)
+	{
+		char	*num_ptr;
+		long	num_calc;
+		int	idx;
+		int	the_digit;
+
+/*		sscanf(&buf[vse_num_start_col - 1],"%06ld",&linenumber); */
+
+		num_calc = 0;
+		num_ptr = &buf[vse_num_start_col - 1];
+
+		for( idx=0; idx < 6; idx++)
+		{
+			if (isdigit(num_ptr[idx]))
+			{
+				/*
+				**	If a digit then convert it from a character to a number.
+				*/
+				the_digit = num_ptr[idx] - '0';
+			}
+			else
+			{
+				/*
+				**	INVALID number
+				*/
+				num_calc = -1;
+				break;
+			}
+
+			num_calc = (num_calc*10) + the_digit;
+		}
+
+		linenumber = num_calc;
+	}
+
+	/*
+	**	Extract the modecode
+	*/
+	if (vse_mod_width && len >= vse_mod_start_col)
+	{
+		mod_code = (char *) calloc( vse_mod_width+1, sizeof( char ) );
+		memcpy( mod_code, &buf[vse_mod_start_col-1], vse_mod_width );
+		mod_code[vse_mod_width] = (char)0;
+	}
+	else
+	{
+		mod_code = NULL;
+	}
+
+	/*
+	**	Truncate off trailing linenumbers and modcodes
+	*/
+	buf[vse_edit_start_col + vse_edit_width - 1] = (char)0;
+	trunc(buf);
+	len = strlen(buf);
+
+	/*
+	**	Create the new text line.
+	*/
+	if (len >= vse_edit_start_col)
+	{
+                *txtptr = new_text(&buf[vse_edit_start_col - 1]);
+	}
+	else
+	{
+		*txtptr = new_text("");
+	}
+	if(!*txtptr)
+	{
+		out_of_space();
+		return(-1);
+	}
+
+	/*
+	**	Assign the line number and modecode
+	*/
+	(*txtptr)->lineno = linenumber;
+	(*txtptr)->modfld = mod_code;
+
+	return(0);
+}
+
+/*
+**	Routine:	load_lines()
+**
+**	Function:	Loads the lines of the file into the text list.
+**
+**	Description:	Handles line numbers, modcodes, renumbering, split lines.
+**
+**	Arguments:
+**	ff		The open file pointer.
+**
+**	Globals:	Lots and lots of em.
+**
+**	Return:
+**	0		File is loaded
+**	1		File load aborted.
+**	-1		Error in loading.
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/15/94	Modified by GSL
+**
+*/
+static int load_lines(FILE *ff)
+{
+        TEXT 	*txt;
+	int	linecount;
+	int	needs_renumbering;
+	int	invalid_numbers;
+	int	rc;
+
+	linecount = 0;
         lastnum = 0;
+	needs_renumbering = 0;
+	invalid_numbers = 0;
+
         vse_lines = 0;
-        memset(buf,0,sizeof(buf));
 
-		/* Temporarily comment out this line, we want to get 80 chars no matter
-		   what. CIS: 07/23/93 AJA
-        while(myfgets(buf,vse_numbering?80:72,ff)) */
-		while( myfgets( buf, 80, ff ) )
+	for(;;)
         {
-                bptr = buf;
-                num = 0;
-                if(vse_numbering)
-                {
+		if (rc = load_txt_line(ff,&txt))
+		{
+			return rc;
+		}
+		if (!txt)
+		{
+			break;
+		}
 
-						/* Modified sscanf statement to take first 6 digits
-						   of the line and assign this as the line number.
-						   This prevents additional digits following the line
-						   number from being stored as part of line number.
-						   Modified by CIS: 08/25/93 AJA */
-                        sscanf(&buf[vse_num_col - 1]," %06ld",&num);
-                        if(vse_num_col == 1)
-                        {
-                                bptr = &buf[6];
-                        }
-                        else
-                        {
-                                buf[vse_num_col - 1] = 0;
-                        }
-                }
-		++vse_file_linecount;
+		linecount += 1;
 
-				/* Save mod code in mod_code, and clear it out of bptr.
-   		   	   	   Added by CIS: 07/23/93 AJA */
-				mod_code = (char *) calloc( 9, sizeof( char ) );
-				strncpy( mod_code, &(bptr[vse_text_width]), 8 );
-				if ( strlen( bptr ) > vse_text_width )
-					memset( &(bptr[vse_text_width]), 0x0, 8 );
-                txt =(TEXT*) new_text(bptr);
-                if(!txt)
-                {
-                        free_text();
+		/*
+		**	Assign the line number and check if renumbering is required.
+		*/
+		if (!vse_num_start_col)
+		{
+			/*
+			**	For un-numbered language types use relative numbering.
+			*/
+			txt->lineno = lastnum += 1;
+		}
+		else if (-1 == txt->lineno)
+		{
+			/*
+			**	An INVALID line number was found so replace in with
+			**	the lastnum incremented.
+			**
+			**	This is an attempt to avoid a full renumbering of the file.
+			*/
+			txt->lineno = lastnum += 1;
+			invalid_numbers = 1;
+		}
+		else if (needs_renumbering || txt->lineno <= lastnum)
+		{
+			txt->lineno = lastnum = 0;
+		}
+		else
+		{
+			lastnum = txt->lineno;
+		}
 
-						/* If BASIC, free up list of line numbers.
-						   Added by CIS, 07/13/93 AJA */
-						if ( !(strcmp( vse_gp_input_language, BASIC_LANGUAGE )) )
-							free_linenum();
-                        out_of_space();
-                        return(-1);
-                }
-                txt->lineno = next_lineno(num);
-                if(txt->lineno == -1)
-                {
-                        free_text();
+		if (lastnum < 1 || lastnum > 999999)
+		{
+			needs_renumbering = 1;
+		}
 
-						/* If BASIC, free up list of line numbers.
-						   Added by CIS, 07/13/93 AJA */
-						if ( !(strcmp( vse_gp_input_language, BASIC_LANGUAGE )) )
-							free_linenum();
-                        return(-1);
-                }
-
-				/* Set the modfld if everything is O.K.
-				   Added by CIS: 07/27/93 AJA */
-				if ( ( !(strcmp( vse_gp_input_language, COBOL_LANGUAGE )) ||
-					!(strcmp( vse_gp_input_language, BASIC_LANGUAGE)) ) &&
-					strlen( mod_code ) )
-				{
-					txt->modfld = (char *) calloc( 9, sizeof( char ) );
-					strncpy( txt->modfld, mod_code, strlen( mod_code ) );
-				}
-				else
-					txt->modfld = NULL;
-				free( mod_code );
+		/*
+		**	Append this line.
+		*/
                 append_text(txt);
 
-				/* If language is BASIC, look for embedded line number in
-			   	   line. Added by CIS, 07/12/93 AJA */
-				if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
-					find_linenum( txt );
-                memset(buf,0,sizeof(buf));
-        }
-	if (!vse_numbering || (vse_file_linecount>10000) )
-	{	
-		int inc=100, maxinc=100, diff=999990-100, num=vse_file_linecount;
-		
-		if  (vse_file_linecount>10000) 
+		if (lang_type() == LANG_BASIC)
 		{
-			inc= maxinc = diff / num;
-			if (inc >=100) inc=100;
-			else if (inc <100 && inc >=50) inc=50;
-			else if (inc <50 && inc >=10) inc=10;
-			else if (inc <10 && inc >=5) inc=5;
-			else if (inc <5 && inc >=2) inc=2;
-			else if (inc <2 ) inc=1;
+			find_linenum( txt );
 		}
-		text_first->lineno=100;
-		text_last->lineno=999999;
-		renumber_range(text_first,text_last,100,vse_file_linecount,inc);
+        }
+
+	if (0 == linecount)
+	{
+		return 0;
 	}
+
+	/*
+	**	The file is now loaded.
+	**	Check if renumbering is needed or warn if lines were split.
+	*/
+
+	if (was_line_too_long())
+	{
+		if (vse_longline_gp(vse_sysname))
+		{
+			return(1);
+		}
+		vse_file_changed = 1;
+	}
+
+	if (needs_renumbering)
+	{
+		char	number_field[7], incr_field[7];
+		int4	number, incr;
+		char	gp_error[80];
+
+		gp_error[0] = (char)0;
+		sprintf(number_field,"%-6d",vse_options_number);
+		sprintf(  incr_field,"%-6d",vse_options_incr);
+
+		while(needs_renumbering)
+		{
+			if (vse_badnums_gp(number_field, incr_field, gp_error))
+			{
+				return(1);
+			}
+
+			if (rc = validate_numincr(number_field, &number, incr_field, &incr))
+			{
+				strcpy(gp_error, vse_err(rc));
+			}
+			else
+			{
+				if ((number + (incr * (linecount - 1))) > 999999)
+				{
+					strcpy(gp_error, vse_err(RESP_NUMINCR));
+				}
+				else
+				{
+					do_renumber(text_first,text_last,number,incr);
+					needs_renumbering = 0;
+				}
+			}
+		}
+	}
+
         return(0);
 }
+
 /*----
 Returns the next line number
 The second condition (num <= lastnum) is actually an error in the input
@@ -352,20 +666,20 @@ the file should be numbered, or allowing a PFKey to respecify
 the input language. In this example, In this example vse_badnums() stub
 is set to return true so the renumber goes ahead.
 ------*/
-int4 next_lineno(num)
-int4 num;
+int4 next_lineno(int4 num)
 {
-        if(!vse_numbering)
-                {
+	if(!vse_num_start_col)
+	{
                 return(lastnum += vse_options_incr);
-                }
+        }
+
         if(num <= lastnum)
-                {
+        {
                 if(vse_badnums())
                         return(lastnum += vse_options_incr);
                 else
                         return(-1);
-                }
+        }
         return(lastnum = num);
 }
 /*----
@@ -373,124 +687,431 @@ This stub routine should return 1 if the user wants to proceed
 and let the loader renumber the file.
 or zero if the user wants to abort
 ------*/
-vse_badnums()
+static int vse_badnums(void)
 {
         return(1);
 }
 /*----
 Some sort of can't load message goes here
 ------*/
-out_of_space()
+void out_of_space(void)
 {
 }
-save_file()
+
+/*
+**	Routine:	save_file()
+**
+**	Function:	Save the edit buffer to a file.
+**
+**	Description:	{Full detailed description}...
+**
+**	Arguments:
+**	sysname		The native filepath (truncated)
+**	start		The starting line number to save.
+**	end		The ending line number to save.
+**
+**	Globals:	None
+**
+**	Return:
+**	0-n		The record count
+**	-1		Save failed
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/11/94	Modified by GSL
+**
+*/
+int4 save_file(char *sysname, int4 start, int4 end)
 {
-        FILE *ff;
-        int rc;
-        trunc(vse_sysname);
-        ff = fopen(vse_sysname,"w");
+        FILE 	*ff;
+        int4 	cnt;
+
+        ff = fopen(sysname,"w");
         if(!ff)
-                return(-1);
-        untrunc(vse_sysname,sizeof(vse_sysname)-1);
-        rc = save_lines(ff);
+	{
+		return(-1);
+	}
+        cnt = save_lines(ff,start,end);
         fclose(ff);
-        if(vse_new_file)
-                vse_new_file = 0;
-	vse_file_changed = 0;
-        return(rc);
+        return(cnt);
 }
-save_lines(ff)
-FILE *ff;
+
+static int4 save_lines(FILE *ff, int4 start, int4 end)
 {
-        TEXT *txt;
+	int4	cnt;
+        TEXT 	*txt;
+	char	outbuf[256];
+
+	cnt = 0;
         txt = text_first;
         while(txt)
-                {
-                if(vse_numbering)
-                {
-
-					/* If using BASIC, output the text with line number and mod
-					   field. Added by CIS: 08/06/93 AJA */
-					if (!(strcmp( vse_gp_input_language, BASIC_LANGUAGE )))
-						fprintf( ff, "%06ld%s%s\n", txt->lineno, txt->text, txt->modfld );
-                    else if(vse_num_col == 1)
-                    	fprintf(ff,"%06ld%s\n",txt->lineno,txt->text);
-					else
-						fprintf(ff,"%-74s%06ld",txt->text,txt->lineno);
-                }
-                else
-                        {
-                        fprintf(ff,"%s\n",txt->text);
-                        }
-                txt = txt->next;
-                }
-        return(1);
-}
-/*fprintf(ff,"%06ld%s\n",txt->lineno,txt->text); else fprintf(ff,"%-74s%06ld",txt->text,txt->lineno);>text,txt->lineno);*/
-myfgets(buf,size,file)
-FILE *file;
-int size;
-char buf[];
-{
-        static char linebuf[2000];
-        static int bytesleft=0, curpos=0;
-        static int warned_line_too_long=0;
-        int bytes;
-        --size;
-        while (1)
         {
-                if (bytesleft)
-                {
-                        if (bytesleft > size + 1)
-                          bytes = size-1;
-                        else
-                          bytes = bytesleft;
-                        strncpy(buf,linebuf+curpos,bytes);
-                        buf[bytes]=(char)0;
-                        bytesleft -= bytes;
-                        curpos += bytes;
-                        return 1;
-                }
-                if (fgets(linebuf,sizeof(linebuf),file)==0)
-                  return 0;
-                untabify(linebuf,sizeof(linebuf));
-                trunc(linebuf);
-		if (strlen(linebuf)==0)
+		if (txt->lineno > end)
 		{
-			strcpy(linebuf,"      ");
+			break;
 		}
-                bytesleft=strlen(linebuf);
-                if (bytesleft > size + 1)
-                {
-                        if (!warned_line_too_long)
-                        {
-                                ++warned_line_too_long;
-                                vre_window("Lines that are too long to be displayed have been split.");
-                        }
-                }
-                curpos=0;
-        }
-}
-numb(ff)
-FILE *ff;
-{
-	int i, numb, j;
-	char buf[256],*p;
-	
-	for(i=0, numb=1; i<10; ++i)
-	{
-		p=fgets(buf,sizeof(buf),ff);
-		if (!p)
-		  break;
-		for (j=0; j<6; ++j)
+
+		if (txt->lineno >= start)
 		{
-			if (!((buf[j] >='0' && buf[j]<='9') || (buf[j]==' ')))
+			cnt++;
+
+                	if(vse_num_start_col)
+                	{
+				if (lang_type()==LANG_BASIC || lang_type()==LANG_COBOL)
+				{
+					if (txt->modfld)
+					{
+						sprintf(outbuf, "%06ld%-66s%s", txt->lineno, txt->text, txt->modfld );
+					}
+					else
+					{
+						sprintf(outbuf, "%06ld%s", txt->lineno, txt->text );
+					}
+				}
+				else if (lang_type()==LANG_PROC)
+				{
+					char	*mod;
+
+					mod = txt->modfld;
+					if (!mod) mod = "   ";
+
+					sprintf(outbuf, "%-71s%-3s%06ld",txt->text, mod, txt->lineno);
+				}
+                	    	else if(vse_num_start_col == 1)
+                	    		sprintf(outbuf, "%06ld%s",txt->lineno,txt->text);
+				else
+					sprintf(outbuf, "%-74s%06ld",txt->text,txt->lineno);
+                	}
+                	else
+                	{
+                	        sprintf(outbuf,"%s",txt->text);
+                	}
+
+			if (nativecharmap)
 			{
-				numb=0;
-				break;
+				/*
+				**	Translate wang charset into ansi charset following a vwang read.
+				*/
+				vwang_wang2ansi((unsigned char *)outbuf, strlen(outbuf));
 			}
+
+			fprintf(ff,"%s\n",outbuf);
+
 		}
-	}
-	fseek(ff,0,0);
-	return numb;
+                txt = txt->next;
+        }
+
+        return(cnt);
 }
+
+static int myfgets_line_too_long = 0;
+
+int was_line_too_long(void)
+{
+	return myfgets_line_too_long;
+}
+
+/*
+**	Routine:	myfgets()
+**
+**	Function:	Get the next line from the file, handle spliting long lines.
+**
+**	Description:	This returns the next line from the file.
+**			The lines are untabified, with a max strlen of size.
+**			Trailing newlines are removed.
+**			Long lines are split and the flag mygets_line_too_long is set.
+**
+**			Call with a NULL file to reset statics when switching files.
+**
+**	Arguments:
+**	buf		The returned line.
+**	size		The max strlen of buf.
+**	file		The file pointer.
+**
+**	Globals:
+**	myfgets_line_too_long
+**
+**	Return:
+**	-1		EOF
+**	0		Got a line
+**
+**	Warnings:	None
+**
+**	History:	
+**	03/15/94	Modified by GSL
+**
+*/
+int myfgets(char *buf, int size, FILE *file)
+{
+        static char linebuf[256];
+        static int bytesleft=0, curpos=0;
+        int 	bytes;
+
+	if (!file)
+	{
+		myfgets_line_too_long = 0;
+		bytesleft = 0;
+		curpos = 0;
+		return 0;
+	}
+
+	if (bytesleft)
+	{
+		myfgets_line_too_long = 1;
+	}
+	else
+	{
+                if (NULL==fgets(linebuf,sizeof(linebuf),file))
+		{
+			return -1;
+		}
+
+                vse_untabify(linebuf,sizeof(linebuf));
+                trunc(linebuf); /* remove trailing spaces and newlines */
+
+                bytesleft=strlen(linebuf);
+                curpos=0;
+
+		if (nativecharmap)
+		{
+			/*
+			**	Translate ansi charset into wang charset in preparation of vwang call.
+			*/
+			vwang_ansi2wang((unsigned char *)linebuf, bytesleft);
+		}
+
+	}
+
+	if (bytesleft > size)
+		bytes = size;
+	else
+		bytes = bytesleft;
+
+	memcpy(buf,&linebuf[curpos],bytes);
+	buf[bytes]=(char)0;
+	bytesleft -= bytes;
+	curpos += bytes;
+	return 0;
+}
+
+static int	g_lang_type = -1;
+static char	g_lang_ext[20] = "";
+
+int init_lang(char *lang_string)
+{
+	int	rc = 0;
+	int	type;
+	char	ext[20];
+
+	if (rc = check_lang(lang_string, &type, ext))
+	{
+		return rc;
+	}
+
+	/*
+	**	The extension can change without the language changing.
+	*/
+	strcpy(g_lang_ext,ext);
+
+	if (g_lang_type != type)
+	{
+		/*
+		**	Only reset the OPTIONS and DEFAULTS if the language changes.
+		*/
+
+		g_lang_type = type;
+
+		strcpy(vse_tab_setting,DEFAULT_TAB_STRING);
+	        strcpy(vse_gp_defaults_tabs,TEXT_TAB_STRING);
+	        strcpy(vse_gp_defaults_showmods,"NO ");
+
+		strcpy(vse_gp_options_modcode,"        ");
+
+		switch(g_lang_type)
+		{
+		case LANG_COBOL:
+			init_cobol();
+			break;
+		case LANG_PROC:
+			init_proc();
+			break;
+		case LANG_SHELL:
+			init_shell();
+			break;
+		case LANG_BASIC:
+			init_basic();
+			break;
+		case LANG_C:
+			init_c();
+			break;
+		case LANG_NONE:
+		default:
+			init_text();
+			break;
+		}
+
+		convert_tabs();
+	}
+
+	return rc;
+}
+
+static int check_lang(char *lang_string, int *type, char *ext)
+{
+	int	rc = 0;
+	char	temp[20];
+	char 	the_lang_string[VSE_LANGUAGE_LEN+1];
+	int	the_lang_type = LANG_NONE;
+	char	*the_lang_ext;
+
+	strncpy(the_lang_string,lang_string,VSE_LANGUAGE_LEN);
+	the_lang_string[VSE_LANGUAGE_LEN] = (char)0;
+	upper_string(the_lang_string);
+	trunc(the_lang_string);
+
+	sprintf(temp,"%s!",the_lang_string);
+
+	/*		         1         2         3         4         5         6         7         8         9 */
+	/*             0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890 */
+	switch(strpos("!WCB!COB!CBL!COBOL!WPS!PROC!PROCEDURE!BAS!BASIC!SH!SHELL!C!CC!TEXT!NONE!COM!BAT!BATCH!",temp))
+	{
+		case 0: /* (blank) */
+			the_lang_type = LANG_NONE;
+			the_lang_ext = "";
+			break;
+		case 1:	/* WCB */
+			the_lang_type = LANG_COBOL;
+			the_lang_ext = "wcb";
+			break;
+		case 5:	/* COB */
+			the_lang_type = LANG_COBOL;
+			the_lang_ext = "cob";
+			break;
+		case 9: /* CBL */
+			the_lang_type = LANG_COBOL;
+			the_lang_ext = "cbl";
+			break;
+		case 13: /* COBOL */
+			the_lang_type = LANG_COBOL;
+			the_lang_ext = "wcb";
+			break;
+		case 19: /* WPS */
+		case 23: /* PROC */
+		case 28: /* PROCEDURE */
+			the_lang_type = LANG_PROC;
+			the_lang_ext = "wps";
+			break;
+		case 38: /* BAS */
+		case 42: /* BASIC */
+			the_lang_type = LANG_BASIC;
+			the_lang_ext = "bas";
+			break;
+		case 48: /* SH */
+		case 51: /* SHELL */
+			the_lang_type = LANG_SHELL;
+			the_lang_ext = "sh";
+			break;
+		case 57: /* C */
+		case 59: /* CC */
+			the_lang_type = LANG_C;
+			the_lang_ext = "c";
+			break;
+		case 62: /* TEXT */
+		case 67: /* NONE */
+			the_lang_type = LANG_NONE;
+			the_lang_ext = "";
+			break;
+		case 72: /* COM */
+			the_lang_type = LANG_NONE;
+			the_lang_ext = "com";
+			break;
+		case 76: /* BAT */
+		case 80: /* BAT */
+			the_lang_type = LANG_NONE;
+			the_lang_ext = "bat";
+			break;
+		default: /* UnKnown */
+			the_lang_type = LANG_NONE;
+			the_lang_ext = "";
+			rc = 1;
+			break;
+	}
+
+	if (type)
+	{
+		*type = the_lang_type;
+	}
+	if (ext)
+	{
+		strcpy(ext,the_lang_ext);
+	}
+
+	return rc;
+}
+
+int lang_type(void)
+{
+	return g_lang_type;
+}
+
+char *lang_ext(void)
+{
+	return g_lang_ext;
+}
+
+char *vse_err(int err_flag)
+{
+	switch(err_flag)
+	{			      /*1   234567   8901234567890123456789012345678901234567890123456789012345678901234567890 */
+	case 0:			return("");
+	case RESP_NUMBER:	return("\224SORRY\204- Invalid NUMBER. Please respecify.");
+	case RESP_INCR:		return("\224SORRY\204- Invalid INCR. Please respecify.");
+	case RESP_START:	return("\224SORRY\204- Invalid START. Please respecify.");
+	case RESP_END:		return("\224SORRY\204- Invalid END. Please respecify.");
+	case RESP_NUMINCR:	return("\224SORRY\204- Choose smaller NUMBER or INCR.");
+	case RESP_RANGE:	return("\224SORRY\204- Invalid START/END range. Please respecify.");
+	case RESP_EMPTY:	return("\224SORRY\204- START/END range is empty. Please respecify.");
+	case RESP_TARGET:	return("\224SORRY\204- Invalid TARGET. Please respecify.");
+	case RESP_TABS:		return("\224SORRY\204- Invalid TABS. Please respecify.");
+	case RESP_MODE:		return("\224SORRY\204- MODE must be UPPER or UPLOW. Please respecify.");
+	case RESP_CASE:		return("\224SORRY\204- CASE must be EXACT or ANY. Please respecify.");
+	case RESP_SHOWMODS:	return("\224SORRY\204- SHOWMODS must be YES or NO. Please respecify.");
+	case RESP_RENUMBER:	return("\224SORRY\204- RENUMBER must be YES or NO. Please respecify.");
+	case RESP_KEEPMC:	return("\224SORRY\204- MODCODE must be YES or NO. Please respecify.");
+	default:		return("\244ERROR");
+	}
+}
+
+static int g_wang_style = 1;
+
+int wang_style_work_file(void)
+{
+	return g_wang_style;
+}
+
+int set_wang_style(int style)
+{
+	return g_wang_style = style;
+}
+/*
+**	History:
+**	$Log: vsedit.c,v $
+**	Revision 1.15  1997-12-19 16:51:38-05  gsl
+**	fix warnings
+**
+**	Revision 1.14  1997-12-18 20:15:54-05  gsl
+**	Fix CHARMAP translation
+**
+**	Revision 1.13  1997-12-18 09:16:24-05  gsl
+**	add missing includes
+**
+**	Revision 1.12  1997-12-17 21:42:33-05  gsl
+**	Add support for NATIVECHARMAP option
+**
+**	Revision 1.11  1996-09-03 18:24:02-04  gsl
+**	drcs update
+**
+**
+**
+*/

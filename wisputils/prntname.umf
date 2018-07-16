@@ -4,7 +4,7 @@
 
 FILE=prntname
 
-DIR=/u/wisp/aix/src
+DIR=.
 LIBS=
 LIBA=
 
@@ -12,5 +12,6 @@ $(DIR)/$(FILE): $(FILE)
 	cp $(FILE).o $(DIR)
 
 $(FILE): $(FILE).c $(LIBA)
-	cc -c -o $(FILE) $(FILE).c $(LIBS)
+	cc -c -o $(FILE).o $(FILE).c $(LIBS)
+
 

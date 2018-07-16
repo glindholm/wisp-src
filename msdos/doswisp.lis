@@ -1,0 +1,838 @@
+	Copyright (c) 1994 by International Digital Scientific Incorporated.  
+	All Rights Reserved.
+	
+	====================================================================
+
+	Title:		MS-DOS Implementation of WISP with ACUCOBOL 386
+
+	Document:	DOSWISP.LIS
+	Last Updated:	12 DEC 94
+	Products:	WISP/DOS
+	Versions:	WISP 3.3x12 or higher
+			ACUCOBOL-85 for 80386 MS-DOS V2.3.0
+			MS-DOS V5.0 or higher
+
+	Summary:	Covers requirements to implement WISP on
+			a PC using MS-DOS.
+	====================================================================
+
+
+	TABLE OF CONTENTS:
+	==================
+
+	*	QUICK SETUP
+
+	*	HARDWARE AND SOFTWARE REQUIREMENTS
+
+	*	DEVELOPER NOTES
+
+	*	SUGGESTED READING
+
+	*	SETTING UP THE WISP RUNTIME SYSTEM
+
+	*	TERMINAL AND KEYBOARD
+
+	*	WISP TRANSLATOR
+
+	*	COLOR ATTRIBUTES TABLE
+
+	*	PRINTING ON MS-DOS
+
+	*	CONTENTS OF DISTRIBUTION KIT
+
+	*	FEATURES NOT IMPLEMENTED
+
+	*	APPENDIX A: DOS EXTENDERS AND EXTENDED MEMORY MANAGERS
+
+	*	APPENDIX B: DOS/4GW COMPATIBILITY WITH MEMORY MANAGERS
+
+	*	APPENDIX C: RUNNING APPLICATIONS UNDER WINDOWS
+
+
+	QUICK SETUP:
+	============
+
+	We presume that your WISP and Acucobol packages are already
+	installed.  In this example, WISP is located in C:\WISP and 
+	Acucobol in C:\ACUCOBOL.  
+
+	Below are sample config.sys and autoexec.bat files for a machine
+	with 8-MB memory.  Some of the parameters may already be 
+	incorporated in your pertinent files.  Make these changes to 
+	the pertinent files, reboot your system and run your programs.
+
+	Changes to config.sys:
+	----------------------
+	Add these changes to your config.sys file.  There is a sample
+	file, config.wsp in ..\WISP\ETC which can be used for 
+	cutting/pasting into your current config.
+
+				.
+				.
+
+		DEVICE=C:\DOS\HIMEM.SYS
+		BUFFERS=30,0
+		FILES=40
+		DOS=UMB
+		DEVICE=C:\DOS\EMM386.EXE 7092 RAM
+		SHELL=C:\DOS\COMMAND.COM C:\DOS /E:4096 /p
+				.
+				.
+
+	If you do not use EMM386, remove the line from this sample.
+
+
+	Changes to autoexec.bat:
+	------------------------
+
+	Add these changes to your autoexec.bat file.  There is a sample 
+	file, autoexec.wsp in ..\WISP\ETC which you can use to cut/paste
+	into your current file.
+
+				.
+				.
+	
+	PATH=C:\;C:\DOS;C:\WINDOWS;
+	SET TMP=C:\TMP
+	SET WISPDIR=C:\WISP
+	SET ACUDIR=C:\ACUCOBOL
+	PATH %PATH%;%ACUDIR%;%WISPDIR%\BIN
+	SET WISPCONFIG=%WISPDIR%\CONFIG
+	SET HOME=C:\[user's name]
+	SET USER=[user's name]
+	SET A_CONFIG=%WISPCONFIG%\ACUCOBOL.CFG
+	REM	*******************************************
+	REM 	NEXT VARIABLES ARE FOR DOS/4GW PROFESSIONAL
+	REM	*******************************************
+	SET DOS4G=quiet
+	SET DOS4GVM=swapname#c:\tmp\dos4gvm.swp virtualsize#8000 ...
+						...maxmem#1024 deleteswap
+				.
+				.
+
+	The file names and directory paths are samples and should be changed
+	accordingly.
+
+
+	HARDWARE AND SOFTWARE REQUIREMENTS:
+	===================================
+
+	Software:
+	---------
+	MS-DOS Version 5.0 or higher.
+
+	ACUCOBOL-85 for 80386 MS-DOS Version 2.3.0 (see DEVELOPER NOTES) 
+
+	WISP Version 3.3x12 or higher
+
+	Optional Software:
+	------------------
+	Systems requiring the use of EMM386, Quarterdeck's QEMM386, or
+	Microsoft Windows V3.1 in 386 enhanced mode, WISP is compatible with
+	these packages, also see APPENDICES A and B.
+	
+	Hardware:
+	---------
+	An Intel-based 386, 486 or Pentium computer, with 8 MB of memory, 
+	and 15 MB of disk space (plus applications). 
+
+	VGA video card/monitor
+
+	Hardware Notes:
+	---------------
+	While you can function using 4 MB of memory, we strongly recommend 
+	the machine is configured with at least 8 MB of RAM.  For example, 
+	if your machine is configured with 4 MB of memory, and your Cobol 
+	application spawns separate processes, you may run out of memory,
+	causing the program to abort, or the system to hang or reboot itself.
+
+
+	DEVELOPER NOTES:
+	================
+
+	Only ACUCOBOL-85 for 80386 MS-DOS is supported. This is an 
+	extended version of ACUCOBOL-85 and will not work with the regular
+	MS-DOS version.
+
+	DOS/4GW Professional V1.96 is used as the DOS Extender with WISP 
+	V3.3x12.  See APPENDIX A, DOS EXTENDERS AND EXTENDED MEMORY MANAGERS 
+	for more information. 
+
+	If you plan to add C subroutines to the wruncbl or wruncble run-time
+	files, you will need to use WATCOM C/C++ 32 compiler V9.5b.  Note 
+	that this package contains the DOS/4GW V1.5 DOS Extender.  This 
+	version is compatible with the DOS/4GW Professional V1.6 extender. 
+
+	Versions of WISP earlier than V3.3x4 use Codebuilder V1.0e and its
+	DOS Extender.  You MUST have the appropriate Acucobol version
+	to run with this package, see list above for compatibility.
+
+	
+	SUGGESTED READING:
+	==================
+	
+	If this is the first time you have installed WISP for DOS, you 
+	need to read the following documents:
+
+		This current document, DOSWISP.LIS.  Note that information
+		supplied in this supplement supercedes that supplied in
+		pertinent sections of the WISP manual.
+
+		WISP manual, APPENDICES A, B.
+		
+		ACUCOBOL-85 DOS 386 Supplement, which includes discussions 
+		of setting up DOS environment variables.
+
+
+	SETTING UP THE WISP RUNTIME SYSTEM:
+	===================================
+		
+	Environment variables
+	---------------------
+	These environment variables must be set. We suggest they be set in 
+	your autoexec.bat file:
+	
+		SET WISPCONFIG=[drive]:[user path]
+		SET HOME=[drive]:[user path]
+		SET USER=MyName
+		SET A_CONFIG=%WISPCONFIG%\ACUCOBOL.CFG
+
+	where:
+		[drive] = C:, D:, a network drive, etc.
+		[user path] = \MYAPPS, \, \CONFIG, etc.
+
+		(Optional variables)
+		SET TMP=C:\TMP
+		SET TTY=CON:
+		SET WISPTERM=MyTerm
+		SET VIDEOCAP=C:\VIDEOCAP
+		SET RUNCBL=MyRuntime
+		SET VCOLORS=colorhexcodes
+		SET WEDITOR=MyEditor
+
+	Included with this WISP package are samples of the autoexec.bat 
+	and config.sys files.  These files, named AUTOEXEC.WSP and 
+	CONFIG.WSP, are in the ..\WISP\ETC directory.  Note that the paths 
+	and environment variables in the samples will be different for 
+	individual machines. 
+
+	Environment Variables Notes:
+	----------------------------
+
+	WISPCONFIG must be set.
+
+	HOME will default to C:\ if not set.
+
+	USER will default to USER if not set. This is how you set a
+	userid.  If on a network the first 3 chars must be unique.
+
+	The file CBLCONFI that comes with ACUCOBOL-85 for 80386 MS-DOS
+	is renamed to ACUCOBOL.CFG, and is located in the configuration
+	directory that WISPCONFIG is set at.  Also reference WISP manual
+	p. B-13 for the equivalent ACUCONFIG file in the UNIX environment.
+
+	TTY is used to identify the device, and lookup the device 
+	number in WSYSCONF.CFG.  If not set it defaults to CON: 
+	(console).  If on a network, set this variable.
+
+	WISPTERM, VIDEOCAP, WISPDEBUG, RUNCBL behave the same as on
+	unix.
+
+	VCOLORS allows you to load the color attributes table (see 
+	below)
+
+	WEDITOR the editor to use from Manage Files/Libs (default 
+	is vsedit)
+
+	
+
+	The following is a list of Files and Directories that WISP 
+	uses at runtime.  The UNIX equivalent is shown as reference, 
+	also see WISP Manual, pp A-4, A-5 and A-10.
+
+	Files and Directories 			Unix equivalent
+						if different
+	-----------------------------------------------------------
+
+	  %WISPCONFIG%
+  	  %WISPCONFIG%\LGMAP
+	  %WISPCONFIG%\WISPMSG.DAT
+	  %WISPCONFIG%\WRUN.CFG			$WISPCONFIG/wrunconfig
+	  %WISPCONFIG%\ACUCOBOL.CFG		$WISPCONFIG/ACUCONFIG
+	  %WISPCONFIG%\OPTIONS
+	  %WISPCONFIG%\PRTMAP
+	  %WISPCONFIG%\DEFAULTS.SYS		$WISPCONFIG/PERSONALITY
+	  %WISPCONFIG%\WSYSCONF.CFG		$WISPCONFIG/wsysconfig
+	  %WISPCONFIG%\VIDEOCAP\MSDOS
+	  %WISPCONFIG%\VIDEOCAP\*
+
+	  %HOME%\DEFAULTS.USR			$HOME/PERSONALITY
+	  %HOME%\WISPERR.LOG
+
+	  C:\TMP\WPPARMS
+	  C:\TMP\RETCOD
+	  C:\TMP\WLIBLIST
+	  C:\TMP\DFTS-xxx.TMP			/usr/tmp/PERSONxxxxxxx
+
+	Files and Directories Notes:
+	----------------------------
+
+	DEFAULTS.SYS is the system Usage Constants file, while 
+	DEFAULTS.USR is the user's Usage Constants file.  Both files
+	in their specific directory locations have analogous functions
+	as the PERSONALITY file used on UNIX.  Reference pp. 7-21, and
+	B-10 in the WISP manual for further discussion.
+
+	The directory defined by environment variable %HOME% must 
+	exist.  If %HOME% is not defined, the default directory is
+	C:\.
+
+	Dir C:\TMP will be created by the runtime module if needed.
+
+	ACULINK is not used on MS-DOS
+
+	VIDEOCAP\MSDOS is the same as the internal defaults.
+
+	There is no wsysconf utility on MS-DOS that creates a 
+	WSYSCONF.CFG file.  A sample WSYSCONF.CFG is provided that 
+	can be modified.
+
+
+	TERMINAL AND KEYBOARD:
+	======================
+
+	MS-DOS does not require a Videocap file, it has internal defaults
+	that map the keyboard as follows:
+
+	F1 - F12		F1 - F12
+	Shift F1- F12		F11 - F22	(Shift  +10)
+	Ctrl F1 - F12		F21 - F32	(Ctrl	+20)
+	Alt F1,F2		F31, F32	(Alt	+30)
+	ESC			HELP
+	Home			HELP
+	End			PF16
+	Page-Up			BACKTAB
+	Page-Dn			NEWLINE
+	Ctrl-INSERT		Clear_After
+	Ctrl-DELETE		Clear_Field
+	Shift TAB		BACKTAB
+
+	Terminal and Keyboard Notes:
+	----------------------------
+
+	On MS-DOS the "Capabilities" section of the Videocap file is
+	not used.  Screen I/O is done by direct manipulation of
+	the video memory, not (as on unix) by sending escape codes 
+	to the device. The only "Capabilities" used are "pseudo_blanks"
+	and "graphstr".
+
+	The environment variables, TERM or WISPTERM, can be set to a 
+	different videocap file to change the keyboard mapping.
+
+
+	WISP TRANSLATOR:
+	================
+
+	Also review WISP Manual Ch. 2, 4 for a general overview. To translate 
+	your *.wcb files, you need to WISP the files as you would on UNIX.  
+	By default, the -VACU language flag is set.  
+
+	Options can be specified with either a "-" (unix style) or "/".
+
+		C:\> WISP -VACU /W words.def sample
+
+	For MS-DOS the directory path separator on the "-Idir" option
+	is a semicolon ';'.  (On unix it is a colon ':' but this
+	conflicts with the MS-DOS drive specifier.)
+
+		C:\> WISP -I c:\copy1;c:\copy2;d:\copybook sample
+
+	Use of @response Files With WISP:
+	---------------------------------
+	To overcome DOS's limitation of 128 characters on the command 
+	line, support has been added for an @response file.  Command 
+	line options will be read from the response file.  WISP will
+	accept options from both the command line and the response file.
+	For example:
+
+		C:\> WISP -I c:\copy1;c:\copy2 @my.rsp mycobapp
+
+	The full command with all options will be displayed after the
+	response file has been processed.
+
+	Besides WISP, the WPUTPARM utility also handles @response files 
+	in the same fashion as the WISP translator.
+
+	Considerations When Doing COBOL-to-COBOL CALL LINKs:
+	----------------------------------------------------
+
+	When doing COBOL-to-COBOL CALL LINKs, the linked-to program 
+	remains in the calling program's runtime environment.  If the 
+	program is reentered,  variables that were initialized the first 
+	time may not necessarily be initialized when it is reentered.
+
+	Thus, when translating programs with WISP that are normally started
+	with a CALL "LINK" you should use the "-D" options to cause
+	the "IS INITIAL" clause to be added to the PROGRAM-ID paragraph.
+	This ensures initial data values each time the called program
+	is entered.
+
+	You may need to include the #CHANGE_STOP_RUN option in the option_file
+	(pp. 4-7, 4-10, 4-11 in WISP manual). This makes WISP change STOP RUN 
+	into EXIT PROGRAM statements.  It is only needed if you have coded 
+	STOP RUN statements without EXIT PROGRAM statements. The STOP RUN 
+	statements will terminate the entire runtime, not just the link-level.
+
+	Wisp Translator Notes:
+	----------------------
+
+	LOGOFF does an exit.
+
+	Change STOP RUN to EXIT PROGRAM. (See #CHANGE_STOP_RUN option.)
+
+
+	COLOR ATTRIBUTES TABLE: (VCOLORS)
+	=================================
+
+	There is an internal video table which determines how 
+	display characteristics are mapped to colors. To change the 
+	default values you can set the environment variable called 
+	VCOLORS to a replacement hex string.  This string contains 
+	32 hex characters which represent the 16 supported display 
+	attributes in this order:
+
+		0	Normal
+		1	Bold
+		2	Underscore
+		3	Bold + Underscore
+		4	Blink
+		5	Blink + Bold
+		6	Blink + Underscore
+		7	Blink + Underscore + Bold
+		8	Reverse
+		9	Reverse + Bold
+		A	Reverse + Underscore
+		B	Reverse + Underscore + Bold
+		C	Reverse + Blink
+		D	Reverse + Blink + Bold
+		E	Reverse + Blink + Underscore
+		F	Reverse + Blink + Underscore + Bold
+
+	Each attribute (2 hex digits) specifies the background color, the
+	foreground color and the blink characteristic.
+
+		0.......	Normal character
+		1.......	Blinking character
+		.xxx....	Background color 0-7
+		....xxxx 	Foreground color 0-F
+
+	The colors map as follows:
+
+		0	BLACK		8	GRAY (dark gray)
+		1	BLUE		9	LIGHTBLUE
+		2	GREEN		A	LIGHTGREEN
+		3	CYAN		B	LIGHTCYAN
+		4	RED		C	LIGHTRED
+		5	MAGENTA		D	LIGHTMAGENTA (pink)
+		6	BROWN		E	YELLOW
+		7	WHITE (gray)	F	BRIGHTWHITE (white)
+
+	The default VCOLORS setting would be specified as:
+
+		SET VCOLORS=171F070F979F878F71793139F1F9B1B9
+
+	We provide some sample BAT files, located in ..\WISP\ETC, 
+	that set VCOLORS to different color schemes.
+
+		VCYAN.BAT	Cyan with black (& white,red,yellow) 
+		VBROWN.BAT	Brown with white (& black) characters
+		VWHITE.BAT	White with black (& cyan) characters
+		VGREEN.BAT	Green on black
+		VRED.BAT	Red on white
+		VYELLOW.BAT	Yellow on white
+		VPINK.BAT	Pink on white
+		VBLUE.BAT	Blue on white
+
+	Color Attributes Notes: 
+	-----------------------
+
+	-  The blink and background colors combine to form one hex digit.
+
+	-  The "bright" colors (values 8-F) are only available as foreground.
+
+	-  MS-DOS does NOT provide an UNDERSCORE attribute.
+
+
+	PRINTING ON MS-DOS:
+	===================
+
+	To use forms and classes you need to setup a PRTMAP file in 
+	your $WISPCONFIG directory.  The PRTMAP file supplies WISP with
+	the escape codes needed to setup the printer before printing
+	the file.
+
+	The following is the sample PRTMAP that comes with your WISP kit.
+	It contains some sample escape codes for an HP LASERJET printer.
+	You will need to modify this file based on the printers and forms
+	you are using.
+
+	#
+	#	PRTMAP		MS-DOS PRINTING MAP
+	#
+	#	PRINTER		Wang style printer number.
+	#	CLASS		Wang style print class.
+	#	FORM		Wang style form number.
+	#	SETUP		Printer setup string to use.
+	#	RESET		Printer reset string to use.
+	#
+	#	This table is searched sequentially for a matching
+	#	printer, class, and form number.  An '*' can be used
+	#	to wildcard printer, class, and form number.  When
+	#	a match is found corresponding setup, and reset will
+	#	be used.  The setup string will be sent to the printer 
+	#	before you file is printed, and reset string will be
+	#	sent after. A '-' can be used to indicate no setup
+	#	or reset string.  To include a space, tab or newline
+	#	in a string use the control character or octal number.
+	#	(Space = \040 Tab = ^I or \011 Newline = ^J or \012)
+	#
+	#	\E	Escape	\033
+	#	\ddd	Octal
+	#	\n	Newline
+	#	\\	'\'
+	#	\"	'"'
+	#	^x	Control x	x & 0x1F
+	#
+	#PRINTER CLASS FORM SETUP     		RESET	COMMENT
+	#0         A    000 "\EE\E&l0O" 	"\EE"
+	0	   *	000 "\EE\E&l0O" 	"\EE"	Portrait
+	0	   *	132 "\EE\E&l1O" 	"\EE"	Landscape
+	0	   *	133 "\EE\E&l1O\E&l8D"	"\EE" 	Landscape condensed
+	0	   *	088 "\EE\E&l8D" 	"\EE"	Portrait condensed
+	0	   *    044 "\EE\E&l4D"		"\EE"	Portrait 4 lpi
+	0	   *	*   "\EE"		"\EE"
+	1	   *	*   -			-
+	#*         *    *   -         		-	(Internal default)
+
+	Printer numbers are used as the MS-DOS printer numbers and must
+	be 0,1 or 2.  Any number outside 0-2 range is treated as 0.
+
+		0	LPT1 (PRN)
+		1	LPT2
+		2	LPT3
+
+	The Wang print mode PRNTMODE is treated as follows:
+
+		S	Print and delete
+		P	Print and don't delete
+		H	Don't print
+		K	Don't print
+		O	Not supported
+
+	Printing Notes:
+	---------------
+
+	-  Under WISP, the DOS print command is not used.  Print
+	   jobs are sent directly to the printer.  As such, we
+	   do not have a HOLD capability, or features one would
+	   expect when operating under a print queue.
+
+
+	CONTENTS OF WISP DISTRIBUTION KIT:
+	==================================
+
+		WISP\BIN\DISPLAY.EXE	
+		WISP\BIN\MAKEMSG.EXE
+		WISP\BIN\PROCTRAN.EXE
+		WISP\BIN\VSEDIT.EXE
+		WISP\BIN\VTEST.EXE
+		WISP\BIN\WCOPY.EXE
+		WISP\BIN\WDIAG.EXE
+		WISP\BIN\WISP.EXE
+		WISP\BIN\WLICENSE.EXE
+		WISP\BIN\WPUTPARM.EXE
+		WISP\BIN\WRUN.EXE
+		WISP\BIN\WRUNCBL.EXE
+		WISP\BIN\WSHELL.BAT
+		WISP\BIN\WSORT.EXE
+		WISP\BIN\WUSAGE.EXE
+
+		WISP\LIB\VIDEO.LIB
+		WISP\LIB\WISP.LIB
+
+		WISP\ETC\AUTOEXEC.WSP
+		WISP\ETC\CONFIG.WSP
+		WISP\ETC\DISPRINT.WCB
+		WISP\ETC\DISPRINT.MAK
+		WISP\ETC\RELNOTES
+		WISP\ETC\WORDS.DEF
+
+		WISP\ETC\VBLUE.BAT
+		WISP\ETC\VBROWN.BAT
+		WISP\ETC\VCYAN.BAT
+		WISP\ETC\VGREEN.BAT
+		WISP\ETC\VPINK.BAT
+		WISP\ETC\VRED.BAT
+		WISP\ETC\VWHITE.BAT
+		WISP\ETC\VYELLOW.BAT
+
+		WISP\CONFIG\LGMAP
+		WISP\CONFIG\OPTIONS
+		WISP\CONFIG\PRTMAP
+		WISP\CONFIG\WISPMSG.DAT
+		WISP\CONFIG\WISPMSG.TXT
+		WISP\CONFIG\WRUN.CFG
+		WISP\CONFIG\WSYSCONF.CFG
+
+		WISP\CONFIG\VIDEOCAP\MSDOS
+		WISP\CONFIG\VIDEOCAP\*
+
+		WISP\ACU\ACUDOS.RUL
+		WISP\ACU\ACUUSING.COB
+		WISP\ACU\SUB85.C
+		WISP\ACU\WRUNCBL.WAT
+		WISP\ACU\DOSMAKE.WAT
+
+	CONTENTS OF EDE DISTRIBUTION KIT:
+	==================================
+
+		EDE\EDE.LIB
+		EDE\GOOD.EXE
+		EDE\WRUNCBLE.EXE
+		EDE\DEMO\HELPMAP
+		EDE\DEMO\*.WCB
+		EDE\DEMO\*.HLP
+		EDE\DEMO\MENUDEMO.OPT
+		EDE\DEMO\MENUDEMO.MAK
+
+
+	FEATURES NOT IMPLEMENTED:
+	=========================
+
+	MESSAGE, SUBMIT, MOUNT, DISMOUNT,
+	Cancel-Exit on a LINK,
+	COBOL RETURN-CODE processing (wretcode),
+	vsx, vcapkeys, viewkeys
+
+	APPENDIX A:
+	DOS EXTENDERS AND EXTENDED MEMORY MANAGERS
+	===========================================
+
+	Because of the way the WISP runtime environment was designed, 
+	and the size of typical executable files, we cannot run this
+	program under the normal DOS environment.  To overcome the
+	inherent problems related to DOS's 16-bit design, a DOS Extender
+	is required.
+
+	What to Expect From a DOS Extender:
+	-----------------------------------
+
+	DOS Extenders allow applications to run outside of DOS's 640-KB
+	barrier and fully use the amount of memory available.  Applications 
+	execute under the i386/486 32-bit protected mode.  
+
+	Depending on the DOS Extender used, it allows you the capability of
+	Virtual Memory Management (VMM).  If the DOS Extender conforms to
+	the DOS Protected Mode Interface (DPMI) Specification Version 0.90, 
+	you should expect these features from it:
+
+		1)  The capabilities mentioned above.
+
+		2)  The ability to support DPMI services or at least a subset 
+		    of them when functioning as a host.  The ability to 
+		    function as a DPMI client when a host is already present.
+
+		3)  Compatibility with earlier specifications before DPMI,
+		    such as Virtual Control Program Interface (VCPI) or
+		    Expanded Memory Emulators.
+
+	One common example of a DPMI server is Windows V3.1 running in 386 
+	enhanced mode.  If DOS/4GW is run from a DOS Window, it will function 
+	as a DPMI client.  Virtual memory management is handled by Windows. 
+
+	For more information concerning DOS Extenders, please consult
+	the DPMI specifications Version 0.9 and 1.0.  These documents are 
+	available from Intel Corporation, Literature Distribution Center,
+	1000 E Business Center Drive, Mt. Prospect Il,  60056-6090.
+
+
+	DOS/4GW Virtual Memory Management:
+	----------------------------------
+
+	When no VMM is present, DOS/4GW Professional provides one.  It is 
+	activated by setting DOS4GVM=... in your autoexec.bat file.
+	For our test cases, the settings used when the VMM was activated were:
+
+	SET DOS4GVM=swapname#d:\tmp\dos4gvm.swp virtualsize#8000 ...
+						...maxmem#1024 deleteswap
+
+	These were optimum settings for an 8-MB machine spawning applications of 
+	approximately 1.5 MB executable size.  Also see Appendix B, Test Results
+	Notes.
+
+	The location of the swap file, dos4gvm.swp, does not have to be located 
+	as shown.  What is required is that 'deleteswap' is included in the 
+	setting.  The maxmem value of 1024 seemed to be the best value between 
+	amount of physical memory the application can use vs degradation in speed 
+	when forced to swap out.
+
+
+	APPENDIX B:
+	DOS/4GW COMPATIBILITY WITH MEMORY MANAGERS
+	==========================================
+	
+	We have tested the functionality of DOS/4GW Professional with other
+	memory managers such as HIMEM.SYS and EMM386.EXE that come with MS-DOS 
+	Versions 5.0 and 6.20, Quarterdeck's QEMM 386 Version 7.0, and
+	Windows 3.1 running in 386 enhanced mode.
+
+	Hardware Test Conditions:
+	-------------------------
+
+	a) 386 with 4 MB RAM, MS-DOS V5.0, and HIMEM.SYS
+	b) 386 with 8 MB RAM, MS-DOS V6.2, HIMEM.SYS and with/without EMM386,
+       	   QEMM
+	c) 486 with 8 MB RAM, MS-DOS V6.2, HIMEM.SYS and with/without EMM386.
+	d) 486 with 16 MB RAM, MS-DOS V5.0, and with/without EMM386, QEMM
+
+	Application size was about 1.5 MB.
+	
+	System Configuration:
+	---------------------
+
+	The configurations used in the config.sys files depend on how much
+	RAM is available.  If QEMM was installed, no changes were made to the
+	config.sys or autoexec.bat files after QEMM's optimize function was
+	run.
+
+	When EMM386 was activated, we used the simplest settings, for example,
+	on an 8-MB machine, the config.sys settings were:
+
+			.
+			.
+
+		DEVICE=C:\DOS\HIMEM.SYS
+		DEVICE=C:\DOS\EMM386.EXE 7092 RAM
+			.
+			.
+
+	Results:
+	--------
+
+	In general, there are no observed incompatibilities with the 
+	listed memory managers.  Optimum results are obtained only through 
+	some trial and error for specific machines, setups, etc.  It is up 
+	to the user to fine-tune the parameters. 
+
+	Test Results Notes:
+	-------------------
+
+	- Spawning external applications.  DOS/4GW does not swap out the
+	  calling application.  It remains in memory.  The spawned application
+	  will initiate its DOS Extender, which in turn will consume the amount
+	  of RAM allotted to it if the VMM option is set.  
+
+	  The extender will initiate its own swap space, and run.  When running 
+	  several link levels, you may end up consuming considerable amounts of 
+	  system resources in terms of memory and unused swap space.  This 
+	  situation is different when running under a DPMI Host environment such 
+	  as Windows V3.1.
+
+
+	APPENDIX C:
+	RUNNING APPLICATIONS UNDER WINDOWS:
+	===================================
+
+	There are advantages to running WISPed applications in a DOS Window(s).  
+	To some degree, you have the ability to run applications in the 
+	background.  If your system has enough resources, you can run more than 
+	one WISP application.  
+
+	To run applications in the Windows environment, there are two methods.
+	One is straightforward, requiring you to only open a DOS Window, and
+	run the application from it.  The second method requires knowledge of
+	setting up Windows PIF files and DOS applications to run under Windows.
+	It also gives you more advantages when tailoring the environment.
+
+	Method 1: Running from the MS-DOS Prompt window
+
+		Bring up the Main group window, double-click on the MS-DOS 
+		Prompt icon.
+
+		If the MS-DOS Prompt comes up in full-screen, press 
+		<ALT>-<SPACEBAR> simultaneously.  This will set your screen 
+		to a 'full' DOS window.
+
+		You are now running from the dos prompt.  Run your application.
+
+	NOTE:	At the full-screen, if you press <ALT>-<ENTER>, your DOS window
+		will be a 'small' DOS window (have horizontal and vertical 
+		scrollbars).  To expand the window to maximum size, click on 
+		the up-pointing arrowhead (upper-right corner of the window).
+
+	Method 2: Setting up the application with an associated icon:
+
+		Knowledge of the PIF files is required before you proceed.
+		Review the Windows manual.  In your windows directory, there
+		is a PIF file set up for the MS-DOS Prompt.  This can be 
+		viewed using the PIF editor (icon located in Main group 
+		window).
+
+		Make a COPY of the MS-DOS Prompt PIF file, call it MYAPP.PIF,
+		for example.  The original file is called DOSPRMPT.PIF, located
+		in your windows directory.
+
+		You need to run the PIF editor and edit MYAPP.PIF.  Open the 
+		editor, and click on File, then open.  Select MYAPP.PIF.
+
+		Change the Program Filename to where WRUN.EXE is located, 
+		for example:
+
+			C:\WISP\BIN\WRUN.EXE
+
+			or
+
+			C:\WISP\BIN\WRUNCBL.EXE
+		
+			or
+	
+			a batch file which may do some preliminary set up 
+			then run the app.
+
+		Change the Window Title to "MY TITLE or ANY TITLE"
+
+		Change Optional Parameters, place the name of your cobol 
+		application in that window (not needed if starting the app 
+		from a batch file). 
+
+		The Start-up Directory should be the path where your 
+		application resides, or where you will be working in.
+
+		If needed, the Memory Requirements can be adjusted.  
+		Consult the Windows Manual for more detail.
+
+		The Display Usage should be set to Windowed. 
+
+		Save the PIF file, and exit the editor.
+
+	Now that the PIF file is set up, you are ready to set up the 
+	application to execute from a Window icon.  
+
+		Go to the appropriate group window where you wish to set up
+		the application icon. Choose File, new, then Program Item.
+		The Program Item Properties window should pop up.
+
+		In that window, modify Description.  This will be the icon 
+		title (Ex. MYAPP, ANYAPP, etc.).  Modify Command Line to 
+		point to your PIF file (MYAPP.PIF).  Change your
+		Working Directory to where your application resides, or where
+		you wish to work in.
+
+		The default icon can also be changed if you wish.
+
+	Press OK to finish setting up the WISP application.  There should 
+	now be an icon displayed in your appropriate group window.  Double
+	Click on the icon to run your application.
+
+	=========================== END OF DOCUMENT ========================
+

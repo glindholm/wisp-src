@@ -1,0 +1,216 @@
+000001/*****************************************************************
+000001*                                                                *
+000001*                       IDENTIFICATION DIVISION                  *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001/*****************************************************************
+000001*     Application Management Utility (AMU)                       *
+000001*                                                                *
+000001*     This is the Function Key Maintenance subroutine (AMUFKM)   *
+000001******************************************************************
+000001
+000001 IDENTIFICATION DIVISION.
+000001 PROGRAM-ID.
+000001     AMUFKM.
+000001 AUTHOR.
+000001     Suzette Cass.
+000001 DATE-WRITTEN.
+000001     05/27/93.
+000001/*****************************************************************
+000001*                                                                *
+000001*                         ENVIRONMENT DIVISION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 ENVIRONMENT DIVISION.
+000001 CONFIGURATION SECTION.
+000001 SOURCE-COMPUTER.
+000001     WANG-VS.
+000001 OBJECT-COMPUTER.
+000001     WANG-VS.
+000001 FIGURATIVE-CONSTANTS.
+           A-0-BYTE    IS "00"
+           A-1-BYTE    IS "01"
+           A-10-BYTE   IS "10"
+           A-14-BYTE   IS "14"
+           A-16-BYTE   IS "16"
+           A-160-BYTE  IS "A0"
+000001     PROTECT-BIT IS "04"
+           SUB-5       IS "05"                     
+000001     DIM-BIT     IS "08"
+000001     LF          IS "0A"
+000001     BLINK-BIT   IS "10"
+           POSITION-CURSOR IS "20"
+           UNLOCK-KEYBOARD IS "80"
+           WSXIO-READ  IS "40"
+           WSXIO-WRITE IS "80"
+000001     BRITE       IS "84"
+000001     TAB-STOP    IS "86"
+           PLAIN-TEXT  IS "8C"
+           MENU-PICK   IS "8E"
+000001     BLINKING-DISPLAY IS "94"
+000001     NO-ECHO     IS "98"
+           BR-MOD-UCL  IS "A1"
+           UNDER-TEXT  IS "AC".
+000001                                                      
+000001/*****************************************************************
+000001*                                                                *
+000001*                         INPUT-OUTPUT SECTION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 INPUT-OUTPUT SECTION.
+000001 FILE-CONTROL.
+000001*
+000001     SELECT CRT
+000001         ASSIGN TO "CRT",      "DISPLAY",
+000001         ORGANIZATION    IS SEQUENTIAL
+000001         ACCESS MODE     IS RANDOM
+000001         RELATIVE KEY    IS LINENUM
+000001         PFKEY           IS PF-KEY
+000001         CURSOR POSITION IS CURSOR-POS
+000001         FILE STATUS     IS FILSTAT.
+000001
+000001/*****************************************************************
+000001*                                                                *
+000001*                      DATA DIVISION - FILE SECTION              *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 DATA DIVISION.
+000001 FILE SECTION.
+000001*
+123456*89012345678901234567890123456789012345678901234567890123456789012
+000001 FD  CRT
+000001     LABEL RECORDS ARE OMITTED.
+000001 01  CRTREC.
+           03  CRTREC-OA                  PIC X(4).
+            03  CRTREC-MAPPING-AREA       PIC X(1920).
+000001*
+000001/*****************************************************************
+000001*                                                                *
+000001*                         WORKING STORAGE                        *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 WORKING-STORAGE SECTION.
+000001
+       COPY VERSION.
+
+000001 01  FILSTAT.
+000001     03  ERR-FLAG                   PIC X(01).
+000001     03  PFK-BYTE                   PIC X(01).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  BELL-TIME.
+           03  FILLER                     BINARY VALUE 0.
+           03  BELL-TIME-2                BINARY VALUE 1.
+
+      ******************************************************************
+      *                  LINK PARAMETERS                               *
+      ******************************************************************
+       01  LINK-TO-FILE        PIC X(08) VALUE SPACES.
+       01  LINK-TO-LIB         PIC X(08) VALUE SPACES.
+       01  LINK-TO-VOL         PIC X(06) VALUE SPACES.
+
+       01  LINK-TYPE           PIC X(01) VALUE SPACES.
+       01  LINK-PARM-CNT.
+           03 LINK-PARM-CNT-1  BINARY  VALUE ZERO.
+           03 LINK-PARM-CNT-2  BINARY  VALUE ZERO.
+       01  LINK-CANCEL-FLAG    PIC X(01) VALUE SPACES.
+       01  LINK-MESSAGE        PIC X(27) VALUE SPACES.
+       01  LINK-MESS-LEN.
+           03 LINK-MESS-LEN-1  BINARY  VALUE ZERO.
+           03 LINK-MESS-LEN-2  BINARY  VALUE ZERO.
+       01  LINK-HELP           PIC X(01) VALUE SPACES.
+       01  LINK-COMP-CODE.
+           03 LINK-COMP-CODE-1 BINARY VALUE ZERO.
+           03 LINK-COMP-CODE-2 BINARY VALUE ZERO.
+       01  LINK-COMP-CODE-X PIC 9999  VALUE ZERO.     
+       01  LINK-RETURN.
+           03 LINK-RETURN-1    BINARY    VALUE ZERO.
+           03 LINK-RETURN-2    BINARY    VALUE ZERO.
+       01  LINK-RETURN-X    PIC S9999 VALUE ZERO.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+123456*89012345678901234567890123456789012345678901234567890123456789012
+       01  AMUEM000-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(32) ROW 1 COL 25 VALUE
+               "AMU Menu Environment Maintenance".
+           03  FILLER  PIC X(08) ROW 1 COL 72 VALUE
+               "AMUEM000".
+           03  FILLER  PIC X(08) ROW 2 COL 10 VALUE
+               "Version ".
+           03  FILLER  PIC X(08) ROW 2 COL 18
+               SOURCE AMU-VERSION.
+           03  FILLER  PIC X(50) ROW 2 COL 27 VALUE
+               "- (c) Copyright NeoMedia Technologies In.c 1993-97".
+           03  AMUEM000-4 PIC X(21) ROW 4 COL 30 VALUE
+               "Record Type Selection".
+           03  AMUEM000-6 PIC X(54) ROW 6 COL 13 VALUE
+               "Position Cursor to Desired Function and Press <RETURN>".
+           03  FILLER  PIC X(08) ROW 6 COL 72 VALUE
+               "To Exit:".
+           03  FILLER  PIC X(08) ROW 7 COL 72 VALUE
+               "PFKEY 16".
+           03  AMUEM000-MENU-1 PIC X(30) ROW 8 COL 25
+               SOURCE AMUEM000-ITEM-1.
+           03  AMUEM000-MENU-2 PIC X(30) ROW 9 COL 25
+               SOURCE AMUEM000-ITEM-2.
+           03  AMUEM000-MENU-3 PIC X(30) ROW 10 COL 25
+               SOURCE AMUEM000-ITEM-3.
+
+       01  AMUEM000-ITEM-1.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(27) VALUE
+               "Menu Definition Maintenance".
+
+       01  AMUEM000-ITEM-2.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(25) VALUE
+               "Function Keys Maintenance".
+
+       01  AMUEM000-ITEM-3.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(27) VALUE
+               "User Definition Maintenance".
+
+000001/*****************************************************************
+000001*                                                                *
+000001*                         PROCEDURE DIVISION                     *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 PROCEDURE DIVISION.
+       LOOP-DISPLAY.
+           DISPLAY "IN AMU Function Key Maintenance (AMUFKM)".
+
+000001 EXIT-PROGRAM.
+000001     EXIT PROGRAM.
+000001
+000001 STOP-RUN.
+000001     STOP RUN.

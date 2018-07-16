@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -14,22 +16,37 @@
 #include "idsistd.h"
 #include "wdefines.h"
 #include "wglobals.h"
+#include "idsisubs.h"
+#include "wperson.h"
+#include "wmalloc.h"
+#include "wispcfg.h"
 
-werrpath()
+const char* werrpath(void)
 {
-	static	int	first=1;
-	char	*path;
+	static char *the_path=NULL;
 
-	if (first)
+	if (!the_path)
 	{
-		first=0;
-#ifdef VMS
-		path = "sys$login:";
-#else /* !VMS */
-		path = (char *)getenv(WISP_HOME_ENV);
-#endif /* !VMS */
+		char buff[128];
 
-		buildfilepath( werrlog_path, path, WISP_ERROR_FILE );
+		buildfilepath( buff, wisphomedir(NULL), WISP_ERROR_FILE );
+		the_path = wstrdup(buff);
 	}
+	return the_path;
 }
 
+/*
+**	History:
+**	$Log: werrpath.c,v $
+**	Revision 1.11  1996-10-08 20:28:18-04  gsl
+**	Add include wispcfg.h
+**
+**	Revision 1.10  1996-08-23 14:06:19-07  gsl
+**	Changed to use wisphomedir()
+**
+**	Revision 1.9  1996-08-19 15:33:11-07  gsl
+**	drcs update
+**
+**
+**
+*/

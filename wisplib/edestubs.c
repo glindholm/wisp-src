@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
 			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
@@ -8,6 +10,10 @@
 /*					Stubs to make EDE modules defined in regular WISPLIB					*/
 
 #include "idsistd.h"
+#include "vwang.h"
+#include "werrlog.h"
+#include "wexit.h"
+
 static int edemissing();
 
 int  ws_bar_menu( curset, vr, vc, ak, ar, nm, dp )					/* Stub so doesn't try to put up a bar	*/
@@ -46,61 +52,72 @@ unsigned char  *terminate_list, *no_mod, *pfkey;
 */
 
 
-EDLOAD() 	{ edemissing(1); }							/* Enable the EDE environment.		*/
-EDEXIT() 	{ edemissing(1); }							/* Disable the EDE environment.		*/
+void EDLOAD() 	{ edemissing(1); }							/* Enable the EDE environment.		*/
+void EDEXIT() 	{ edemissing(1); }							/* Disable the EDE environment.		*/
 
-EDCLRSCR() 	{ edemissing(1); }							/* Erase the full screen.		*/
-EDDRKSCR() 	{ edemissing(1); }							/* Make the screen background dark.	*/
-EDLTESCR() 	{ edemissing(1); }							/* Make the screen background light.	*/
-EDWIDSCR() 	{ edemissing(1); }							/* Make the screen wide.		*/
-EDNARSCR() 	{ edemissing(1); }							/* Make the screen narrow.		*/
+void EDCLRSCR() 	{ edemissing(1); }							/* Erase the full screen.		*/
+void EDDRKSCR() 	{ edemissing(1); }							/* Make the screen background dark.	*/
+void EDLTESCR() 	{ edemissing(1); }							/* Make the screen background light.	*/
+void EDWIDSCR() 	{ edemissing(1); }							/* Make the screen wide.		*/
+void EDNARSCR() 	{ edemissing(1); }							/* Make the screen narrow.		*/
 
-TRACEGO()  	{ edemissing(1); }							/* Start a trace.			*/
-TRACEEND() 	{ edemissing(1); }							/* End a trace.				*/
-RETRACE()  	{ edemissing(1); }							/* Retrace what happened.		*/
+void TRACEGO()  	{ edemissing(1); }							/* Start a trace.			*/
+void TRACEEND() 	{ edemissing(1); }							/* End a trace.				*/
+void RETRACE()  	{ edemissing(1); }							/* Retrace what happened.		*/
 
-PFKEYSON() 	{ edemissing(1); }							/* Turn on the PF keys.			*/
-NOPFKEYS() 	{ edemissing(1); }							/* No PF keys.				*/
+void PFKEYSON() 	{ edemissing(1); }							/* Turn on the PF keys.			*/
+void NOPFKEYS() 	{ edemissing(1); }							/* No PF keys.				*/
 
 typedef	int4			*PL;							/* Pointer to Long.			*/
 typedef	char			*PC;							/* Pointer to Char.			*/
 typedef	unsigned char		*PUC, **HUC;						/* Pointer and Handle to Unsigned Char.	*/
 typedef struct	video_menu	*PSV;							/* Pointer to Structure Video_menu.	*/
 
-MENUSAVE(md) 		PSV md;			{ edemissing(1); }			/* Save the current menu choice path.	*/
-MENUREST()					{ edemissing(1); }			/* Start restoration.			*/
-MENULOAD(md,t,o,r,c,w) 	PSV md; PL t,o,r,c,w; 	{ edemissing(1); }			/* Get the menu data.			*/
-MENUITEM(md,t,v,p) 	PSV md; PUC t; PL v,p;	{ edemissing(1); }			/* Get the item data.			*/
-MENUGO(md,v) 		PSV md; PL v;		{ edemissing(1); }			/* Run the menu.			*/
-MENUCONT(md,v) 		PSV md; PL v;		{ edemissing(1); }			/* Continue the menu.			*/
+void MENUSAVE(PSV md)			{ edemissing(1); }			/* Save the current menu choice path.	*/
+void MENUREST()				{ edemissing(1); }			/* Start restoration.			*/
+void MENULOAD(md,t,o,r,c,w) 	PSV md; PL t,o,r,c,w; 	{ edemissing(1); }			/* Get the menu data.			*/
+void MENUITEM(md,t,v,p) 	PSV md; PUC t; PL v,p;	{ edemissing(1); }			/* Get the item data.			*/
+void MENUGO(md,v) 		PSV md; PL v;		{ edemissing(1); }			/* Run the menu.			*/
+void MENUCONT(md,v) 		PSV md; PL v;		{ edemissing(1); }			/* Continue the menu.			*/
 
-DYLINK(base,dyna)	PSV base,dyna;	{ edemissing(1); }				/* Link for dynamic operation.		*/
-DYUNLINK(md)		PSV md;		{ edemissing(1); }				/* Unlink a menu structure.		*/
+void DYLINK(base,dyna)	PSV base,dyna;	{ edemissing(1); }				/* Link for dynamic operation.		*/
+void DYUNLINK(md)		PSV md;		{ edemissing(1); }				/* Unlink a menu structure.		*/
 
-MENUKILL(md,how)	PSV md; PL how;	{ edemissing(1); }				/* Erase menus.				*/
-MENUEXIT(md)		PSV md;		{ edemissing(1); }				/* Erase all menus.			*/
-MENUMODE(mode)		PL mode;	{ edemissing(1); }				/* Menu mode.				*/
+void MENUKILL(md,how)	PSV md; PL how;	{ edemissing(1); }				/* Erase menus.				*/
+void MENUEXIT(md)		PSV md;		{ edemissing(1); }				/* Erase all menus.			*/
+void MENUMODE(mode)		PL mode;	{ edemissing(1); }				/* Menu mode.				*/
 
-VIDMODE(mode)		PL mode;		{ edemissing(1); }			/* Select a character mode		*/
-VIDMOVE(row,col)	PL row,col;		{ edemissing(1); }			/* Move to a position on the screen.	*/
-VIDLINE(type,length)	PL type,length;		{ edemissing(1); }			/* Draw a line.				*/
-VIDTEXT(text,length)	PC text; PL length;	{ edemissing(1); }			/* Output text.				*/
+void VIDMODE(mode)		PL mode;		{ edemissing(1); }			/* Select a character mode		*/
+void VIDMOVE(row,col)	PL row,col;		{ edemissing(1); }			/* Move to a position on the screen.	*/
+void VIDLINE(type,length)	PL type,length;		{ edemissing(1); }			/* Draw a line.				*/
+void VIDTEXT(text,length)	PC text; PL length;	{ edemissing(1); }			/* Output text.				*/
 
-PUSHSCRN(s)		HUC s;			{ edemissing(1); }			/* Push screen.				*/
-PUSHAREA(r,c,rs,cs,s)	PL r,c,rs,cs; HUC s;	{ edemissing(1); }			/* Push screen area.			*/
-POPAREA(s)		HUC s;			{ edemissing(1); }			/* Pop screen area.			*/
+void PUSHSCRN(s)		HUC s;			{ edemissing(1); }			/* Push screen.				*/
+void PUSHAREA(r,c,rs,cs,s)	PL r,c,rs,cs; HUC s;	{ edemissing(1); }			/* Push screen area.			*/
+void POPAREA(s)		HUC s;			{ edemissing(1); }			/* Pop screen area.			*/
 
-MENUINFO(mcb,level,item,link)	PSV mcb; PL level,item,link;	{ edemissing(1); }	/* Give menu information.		*/
+void MENUINFO(mcb,level,item,link)	PSV mcb; PL level,item,link;	{ edemissing(1); }	/* Give menu information.		*/
 
-GENVEC(program,inparms,outparms) PC program,inparms,outparms;	{ edemissing(1); }	/* General vectoring routine		*/
+void GENVEC(program,inparms,outparms) PC program,inparms,outparms;	{ edemissing(1); }	/* General vectoring routine		*/
 
 static int edemissing(doexit) int doexit;
 {
 #ifdef VMS
-	werrvre("%EDE-E-MISSING: EDE is not installed [Remove EDESTUBS from WISPLIB]");
+	werr_message_box("%EDE-E-MISSING: EDE is not installed [Remove EDESTUBS from WISPLIB]");
 #else
-	werrvre("%EDE-E-MISSING: EDE is not installed");
+	werr_message_box("%EDE-E-MISSING: EDE is not installed");
 #endif
 	if (doexit) wexit(0L);
+
+	return 0;
 }
 
+/*
+**	History:
+**	$Log: edestubs.c,v $
+**	Revision 1.12  1996-08-19 18:32:17-04  gsl
+**	drcs update
+**
+**
+**
+*/

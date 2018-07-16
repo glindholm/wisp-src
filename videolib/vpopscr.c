@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	     VIDEO - Video Interactive Development Environment		*/
@@ -12,20 +14,17 @@
 /*						Include standard header files.							*/
 
 #include <stdio.h>									/* Include standard I/O definitions.	*/
+#include <stdlib.h>
+#include <string.h>
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"									/* Include video internal definitions.	*/
+#include "vmodules.h"
+#include "vdata.h"
 
 vpopscr()										/* A function to restore the screen and	*/
 											/* associated variables.		*/
 {
-	extern char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference to external variable array.*/
-	extern char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];		/* Reference to external variable array.*/
-	extern int vcur_lin, vcur_col, vcur_atr, vchr_set;				/* Reference to external variables.	*/
-	extern int vcur_set[INT_SET_TABLE_SIZE];					/* Reference to external variables.	*/
-	extern int vlin_atr[MAX_LINES_PER_SCREEN];					/* Reference to external variables.	*/
-	extern int vscr_atr, vrol_top, vrol_bot, vmap_top;				/* Reference to external variables.	*/
 	extern struct save_screen *vscrn_stack;						/* Reference to external variable.	*/
-
 	struct save_screen *ss_ptr;							/* Local pointer to the save area.	*/
 	int x;										/* A working variable.			*/
                                                                                                                                   
@@ -48,10 +47,6 @@ vpopscr()										/* A function to restore the screen and	*/
 	memcpy(vcur_set, ss_ptr->xcur_set, x);						/* Copy the saved bytes.		*/
 	free(ss_ptr->xcur_set);								/* Free up the area.			*/
 
-	x = sizeof(vlin_atr);								/* Figure out the size of the area.	*/
-	memcpy(vlin_atr, ss_ptr->xlin_atr, x);						/* Copy the saved data.			*/
-	free(ss_ptr->xlin_atr);								/* Free up this area.			*/
-
 	vcur_lin = ss_ptr->xcur_lin;
 	vcur_col = ss_ptr->xcur_col;
 	vcur_atr = ss_ptr->xcur_atr;
@@ -65,4 +60,18 @@ vpopscr()										/* A function to restore the screen and	*/
 	free(ss_ptr);									/* Free up the allocated area.		*/
 
 	vrefresh(HARD_REFRESH);								/* Refresh the screen.			*/
+	return(0);
 }
+/*
+**	History:
+**	$Log: vpopscr.c,v $
+**	Revision 1.10  1997-07-09 11:49:25-04  gsl
+**	remove extern references.
+**	remove the line attribute stuff as not used
+**
+**	Revision 1.9  1996-10-11 18:16:15-04  gsl
+**	drcs update
+**
+**
+**
+*/

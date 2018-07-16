@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -84,3 +86,12 @@ badusage()
 
 #endif
 
+/*
+**	History:
+**	$Log: wrename.c,v $
+**	Revision 1.7  1996-07-23 14:13:11-04  gsl
+**	drcs update
+**
+**
+**
+*/

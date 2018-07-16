@@ -1,0 +1,169 @@
+000100 IDENTIFICATION DIVISION.
+000200 PROGRAM-ID. INQHLP.
+000300 AUTHOR. HLM.
+000400 DATE-WRITTEN.  01/27/90.
+000500 DATE-COMPILED.
+000600*----------------------------------------------------------------
+000700* HELP SCREENS FOR INQUIRY
+000800*----------------------------------------------------------------
+000900
+001000 ENVIRONMENT DIVISION.
+001100 CONFIGURATION SECTION.
+001200 FIGURATIVE-CONSTANTS.
+001300     COPY FIGS.
+001400
+001500 INPUT-OUTPUT SECTION.
+001600
+001700 FILE-CONTROL.
+001800     COPY SLCRT.
+001900
+002000 DATA DIVISION.
+002100 FILE SECTION.
+002200     COPY FDCRT.
+002300
+002400 WORKING-STORAGE SECTION.
+000000     COPY WSKTRACE.
+000000 01  SCCS-WHAT PIC X(50) VALUE
+000000     "@(#)inqhlp.wcb 1.4 9/11/94".
+002500     COPY WSINT.
+002600     COPY WSCRT.
+002700
+002800 01  HELP-1-SCREEN USAGE IS DISPLAY-WS.
+002900     05  FILLER-1
+000000         PIC X(52) ROW 1 COLUMN 2 VALUE
+003100         "                            INSTRUCTIONS FOR INQUIRY".
+003200     05  FILLER-2
+003300         PIC X(73) ROW 3 COLUMN 2 VALUE
+003400         "INQUIRY allows you to inquire into a file using English-
+003500-        "like syntax.  The".
+003600     05  FILLER-3
+003700         PIC X(75) ROW 4 COLUMN 2 VALUE
+003800         "program recognizes two sentence types:  LIST and RELATIO
+003900-        "N.  The purpose and".
+004000     05  FILLER-4
+004100         PIC X(34) ROW 5 COLUMN 2 VALUE
+004200         "syntax of each is explained below.".
+004300     05  FILLER-5
+004400         PIC X(41) ROW 7 COLUMN 2 VALUE
+004500         "                                     LIST".
+004600     05  FILLER-6
+004700         PIC X(74) ROW 8 COLUMN 2 VALUE
+004800         "The LIST sentence specifies the names of the fields whos
+004900-        "e values are to be".
+005000     05  FILLER-7
+005100         PIC X(75) ROW 9 COLUMN 2 VALUE
+005200         "displayed as a result of the query.  The structure of th
+005300-        "e LIST sentence is:".
+005400     05  FILLER-8
+005500         PIC X(62) ROW 11 COLUMN 2 VALUE
+005600         "                LIST-VERB followed by a number of FIELD
+005700-        "names.".
+005800     05  FILLER-9
+005900         PIC X(76) ROW 12 COLUMN 2 VALUE
+006000         "The LIST-VERBS include:  'LIST', 'DISPLAY', 'FIND', 'WRI
+006100-        "TE', 'PRINT', 'GIVE'".
+006200     05  FILLER-10
+006300         PIC X(76) ROW 13 COLUMN 2 VALUE
+006400         "(If you have chosen 'OPTION=EXTRACT' on the first screen
+006500-        ", the LIST verb     ".
+006600     05  FILLER-11
+006700         PIC X(54) ROW 14 COLUMN 2 VALUE
+006800         "is necessary but list items will be disregarded.)     ".
+006900     05  FILLER-12
+007000         PIC X(43) ROW 16 COLUMN 2 VALUE
+007100         "                                   RELATION".
+007200     05  FILLER-13
+007300         PIC X(74) ROW 17 COLUMN 2 VALUE
+007400         "The RELATION sentence defines the criteria for selecting
+007500-        " the records which".
+007600     05  FILLER-14
+007700         PIC X(69) ROW 18 COLUMN 2 VALUE
+007800         "you desire.  You must have a RELATION sentence.  The str
+007900-        "ucture of the".
+008000     05  FILLER-15
+008100         PIC X(21) ROW 19 COLUMN 2 VALUE
+008200         "RELATION sentence is:".
+008300     05  FILLER-16
+008400         PIC X(70) ROW 21 COLUMN 2 VALUE
+008500         "         FIELD-NAME RELATIONAL-OPERATOR FIELD-NAME/LITER
+008600-        "AL AND/OR etc.".
+008700     05  FILLER-17
+008800         PIC X(64) ROW 22 COLUMN 2 VALUE
+008900         "Relational operators are 'EQ', '=', 'LT', '<', 'NOT <',
+009000-        "etc.    ".
+009100     05  FILLER-18
+009200         PIC X(29) ROW 24 COLUMN 2 VALUE
+009300         "(ENTER) Continue to next page".
+009400
+009500 01  HELP-2-SCREEN USAGE IS DISPLAY-WS.
+009600     05  FILLER-19
+009700         PIC X(58) ROW 2 COLUMN 2 VALUE
+009800         "                     A typical query might look like thi
+009900-        "s:".
+010000     05  FILLER-20
+010100         PIC X(49) ROW 4 COLUMN 2 VALUE
+010200         "       SELECT FIELD02 FIELD04 FIELD05            ".
+010300     05  FILLER-21
+010400         PIC X(70) ROW 5 COLUMN 2 VALUE
+010500         "       WHEN FIELD01 <= 100 AND > 2000 or FIELD03 NOT EQ
+010600-        "'literal'     ".
+010700     05  FILLER-22
+010800         PIC X(70) ROW 7 COLUMN 2 VALUE
+010900         "The first line is the LIST sentence, the second the RELA
+011000-        "TION sentence.".
+011100     05  FILLER-23
+011200         PIC X(74) ROW 8 COLUMN 2 VALUE
+011300         "The fields to be displayed are the names FIELD02 FIELD04
+011400-        " and FIELD05      ".
+011500     05  FILLER-24
+011600         PIC X(73) ROW 9 COLUMN 2 VALUE
+011700         "plus the subjects of all the expressions in the RELATION
+011800-        " FIELD01 and     ".
+011900     05  FILLER-25
+012000         PIC X(11) ROW 10 COLUMN 2 VALUE
+012100         "FIELD03   .".
+012200     05  FILLER-26
+012300         PIC X(72) ROW 12 COLUMN 2 VALUE
+012400         "Any word that the utility cannot recognize, will cause a
+012500-        "an error.       ".
+012600     05  FILLER-27
+012700         PIC X(74) ROW 13 COLUMN 2 VALUE
+012800         "The utility therefore allows you to make your sentences 
+012900-        "as English-like as".
+013000     05  FILLER-28
+013100         PIC X(76) ROW 14 COLUMN 2 VALUE
+013200         "possible within certain limitations.
+013300-        "                    ".
+016200     05  FILLER-29
+016300         PIC X(34) ROW 24 COLUMN 2 VALUE
+016400         "(ENTER) Return to the query screen".
+016500
+016600 PROCEDURE DIVISION.
+016700
+016800 MAIN-LOGIC SECTION.
+016900 PROGRAM-BEGIN.
+000000     MOVE "INQHLP BEGIN" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+017000     PERFORM OPENING-PROCEDURE.
+017100     PERFORM MAIN-PROCESS.
+017200     PERFORM CLOSING-PROCEDURE.
+000000     MOVE "INQHLP EXIT" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+017300 MAIN-LOGIC-EXIT.
+017400     EXIT PROGRAM.
+017500 MAIN-LOGIC-STOP.
+017600     STOP RUN.
+017700 LEVEL-2 SECTION.
+017800 OPENING-PROCEDURE.
+017900     OPEN I-O  CRT-FILE.
+018000 CLOSING-PROCEDURE.
+018100     CLOSE CRT-FILE.
+018200
+018300 MAIN-PROCESS.
+018400
+018500     DISPLAY AND READ ALTERED HELP-1-SCREEN ON CRT-FILE.
+018600
+018700     DISPLAY AND READ ALTERED HELP-2-SCREEN ON CRT-FILE.
+018800
+018900
+000000     COPY PLKTRACE.

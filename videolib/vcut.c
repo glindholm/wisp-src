@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -12,12 +14,21 @@
 
 /*						Subroutine Entry Point								*/
 
-vcut(string) unsigned char *string;							/* Cut a string to the video.cut file.	*/
+int vcut(char* string)									/* Cut a string to the video.cut file.	*/
 {
 	FILE *fp, *vopenf();								/* File references.			*/
 
-	fp = vopenf("cut","w+");								/* Open the cut file.			*/
+	fp = vopenf("cut","w+");							/* Open the cut file.			*/
 	fprintf(fp,"%s\n",string);							/* Write to the file.			*/
 	fclose(fp);									/* Close the file (what else eh?)	*/
 	return(SUCCESS);								/* Lie, assume we're always successful.	*/
 }
+/*
+**	History:
+**	$Log: vcut.c,v $
+**	Revision 1.10  1996-10-11 18:16:02-04  gsl
+**	drcs update
+**
+**
+**
+*/

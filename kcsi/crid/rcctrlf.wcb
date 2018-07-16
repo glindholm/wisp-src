@@ -1,0 +1,137 @@
+
+000000*---------------------------------------------------------------
+000200* This particular oddity (see below CX-DATA redefines CF-DATA)
+000300* is brought about by a problem with WISP that does not allow
+000400* and IF test to be used with a qualified data name.
+000500* The redefines is an identical entry, but using different
+000600* prefixes. tHE SAME HAS BEE DONE IN RCCTRLT1 AND T2.
+000700*---------------------------------------------------------------
+000800        09  CF-DATA.
+000900         10  FILLER                        PIC XX.
+001000         10  CF-NAME               PIC X(8).
+001100         10  CF-TYPE               PIC X.
+001200             88  CF-IS-CHAR        VALUE "C".
+001300             88  CF-IS-UNSIGNED    VALUE "U".
+001400             88  CF-IS-PACKED      VALUE "P".
+001500             88  CF-IS-ZONED       VALUE "Z".
+001600             88  CF-IS-BINARY      VALUE "B".
+001700         10  CF-INT-LEN         PIC 999.
+001800         10  CF-START-POS          PIC 9999.
+001900         10  CF-OCCURRENCES        PIC 99.
+002000         10  CF-ZERO-SUPPRESS      PIC 9.
+002100             88  CF-IS-NO-ZERO-SUPPRESS VALUE 0.
+002200             88  CF-IS-ZERO-SUPPRESS    VALUE 1.
+002300             88  CF-IS-PROTECT          VALUE 2.
+002400         10  CF-DECIMAL-INSERT     PIC 9.
+002500         10  CF-SIGN-CONTROL       PIC 9.
+002600             88  CF-IS-NO-SIGN          VALUE 0.
+002700             88  CF-IS-TRAILING-MINUS   VALUE 1.
+002800             88  CF-IS-CR-ON-MINUS      VALUE 2.
+002900             88  CF-IS-DB-ON-MINUS      VALUE 3.
+003000         10  CF-DOLLAR-COMMA       PIC 9.
+003100             88  CF-IS-NO-DOLLAR-COMMA  VALUE 0.
+003200             88  CF-IS-COMMA            VALUE 1.
+003300             88  CF-IS-DOLLAR           VALUE 2.
+003400             88  CF-IS-DOLLAR-COMMA     VALUE 3.
+003500         10  CF-EXT-LEN         PIC 999.
+003600         10  CF-REPORT-CODE        PIC 9.
+003700         10  CF-UPDATE-CODE        PIC 9.
+003800         10  CF-DECIMAL-POS        PIC 9.
+003900         10  CF-BINARY-EDIT        PIC 9.
+004000         10  FILLER                        PIC X.
+004100         10  CF-UPDATE-SEQ    PIC 99.
+004200         10  CF-VALIDATION         PIC XX.
+004300             88  CF-IS-RANGE            VALUE "R ".
+004400             88  CF-IS-CUMMULATIVE      VALUE "CF".
+004500             88  CF-IS-TABLE            VALUE "T ".
+004600* THESE FIELDS CORRESPOND IN THIS ORDER WITH
+004700* DATE-STAMP TYPES 1 THRU 6
+004800             88  CF-IS-DATE-MMDDYY      VALUE "DF".
+004900             88  CF-IS-DATE-YYMMDD      VALUE "GD".
+005000             88  CF-IS-DATE-YYDDD       VALUE "DS".
+005100             88  CF-IS-TIME-HHMMSSDD    VALUE "TS".
+005200             88  CF-IS-CREATE-STAMP     VALUE "CS".
+005300             88  CF-IS-MOD-STAMP        VALUE "CM".
+005400         10  CF-TABLE-NAME         PIC X(6).
+005500         10  CF-LO-RANGE           PIC X(16).
+005600         10  CF-HI-RANGE           PIC X(16).
+005700         10  CF-PACKED-DIGITS      PIC 99.
+005800         10  CF-CUMMULATIVE-NAME   PIC X(8).
+005900         10  CF-ALIAS              PIC X(31).
+006000         10  CF-GROUP-FIELDS       PIC 9(5).
+006100         10  FILLER REDEFINES CF-GROUP-FIELDS.
+006200             15  CF-GROUP-COUNT        PIC 99.
+006300             15  CF-GROUP-SEQ          PIC 999.
+006400         10  FILLER REDEFINES CF-GROUP-FIELDS.
+006500             15  CF-ELEMENT-OCCURRENCE PIC 99.
+006600             15  CF-ELEMENT-LEN        PIC 999.
+006700         10  FILLER                        PIC X(4).
+006800         10  CF-DISPLAY-CODE       PIC 9.
+006900         10  CF-EDITED-LEN      PIC 999.
+007000         10  CF-DEFAULT-FAC        PIC X.
+007100         10  FILLER                        PIC X.
+007200        09  CX-DATA REDEFINES CF-DATA.
+007300         10  FILLER                        PIC XX.
+007400         10  CX-NAME               PIC X(8).
+007500         10  CX-TYPE               PIC X.
+007600             88  CX-IS-CHAR        VALUE "C".
+007700             88  CX-IS-UNSIGNED    VALUE "U".
+007800             88  CX-IS-PACKED      VALUE "P".
+007900             88  CX-IS-ZONED       VALUE "Z".
+008000             88  CX-IS-BINARY      VALUE "B".
+008100         10  CX-INT-LEN         PIC 999.
+008200         10  CX-START-POS          PIC 9999.
+008300         10  CX-OCCURRENCES        PIC 99.
+008400         10  CX-ZERO-SUPPRESS      PIC 9.
+008500             88  CX-IS-NO-ZERO-SUPPRESS VALUE 0.
+008600             88  CX-IS-ZERO-SUPPRESS    VALUE 1.
+008700             88  CX-IS-PROTECT          VALUE 2.
+008800         10  CX-DECIMAL-INSERT     PIC 9.
+008900         10  CX-SIGN-CONTROL       PIC 9.
+009000             88  CX-IS-NO-SIGN          VALUE 0.
+009100             88  CX-IS-TRAILING-MINUS   VALUE 1.
+009200             88  CX-IS-CR-ON-MINUS      VALUE 2.
+009300             88  CX-IS-DB-ON-MINUS      VALUE 3.
+009400         10  CX-DOLLAR-COMMA       PIC 9.
+009500             88  CX-IS-NO-DOLLAR-COMMA  VALUE 0.
+009600             88  CX-IS-COMMA            VALUE 1.
+009700             88  CX-IS-DOLLAR           VALUE 2.
+009800             88  CX-IS-DOLLAR-COMMA     VALUE 3.
+009900         10  CX-EXT-LEN         PIC 999.
+010000         10  CX-REPORT-CODE        PIC 9.
+010100         10  CX-UPDATE-CODE        PIC 9.
+010200         10  CX-DECIMAL-POS        PIC 9.
+010300         10  CX-BINARY-EDIT        PIC 9.
+010400         10  FILLER                        PIC X.
+010500         10  CX-UPDATE-SEQ    PIC 99.
+010600         10  CX-VALIDATION         PIC XX.
+010700             88  CX-IS-RANGE            VALUE "R ".
+010800             88  CX-IS-CUMMULATIVE      VALUE "CF".
+010900             88  CX-IS-TABLE            VALUE "T ".
+011000* THESE FIELDS CORRESPOND IN THIS ORDER WITH
+011100* DATE-STAMP TYPES 1 THRU 6
+011200             88  CX-IS-DATE-MMDDYY      VALUE "DF".
+011300             88  CX-IS-DATE-YYMMDD      VALUE "GD".
+011400             88  CX-IS-DATE-YYDDD       VALUE "DS".
+011500             88  CX-IS-TIME-HHMMSSDD    VALUE "TS".
+011600             88  CX-IS-CREATE-STAMP     VALUE "CS".
+011700             88  CX-IS-MOD-STAMP        VALUE "CM".
+011800         10  CX-TABLE-NAME         PIC X(6).
+011900         10  CX-LO-RANGE           PIC X(16).
+012000         10  CX-HI-RANGE           PIC X(16).
+012100         10  CX-PACKED-DIGITS      PIC 99.
+012200         10  CX-CUMMULATIVE-NAME   PIC X(8).
+012300         10  CX-ALIAS              PIC X(31).
+012400         10  CX-GROUP-FIELDS       PIC 9(5).
+012500         10  FILLER REDEFINES CX-GROUP-FIELDS.
+012600             15  CX-GROUP-COUNT        PIC 99.
+012700             15  CX-GROUP-SEQ          PIC 999.
+012800         10  FILLER REDEFINES CX-GROUP-FIELDS.
+012900             15  CX-ELEMENT-OCCURRENCE PIC 99.
+013000             15  CX-ELEMENT-LEN        PIC 999.
+013100         10  FILLER                        PIC X(4).
+013200         10  CX-DISPLAY-CODE       PIC 9.
+013300         10  CX-EDITED-LEN      PIC 999.
+013400         10  CX-DEFAULT-FAC        PIC X.
+013500         10  FILLER                        PIC X.
+013600

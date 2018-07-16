@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -32,6 +34,7 @@
 #include "keylist.h"
 #include "token.h"
 #include "node.h"
+#include "statment.h"
 
 static int g_curr_file_num = -1;							/* Remember file number.		*/
 
@@ -109,6 +112,14 @@ NODE	the_statement;
 	*/
 	the_statement = (NODE)linkage_section(the_statement);
 
+	/*
+	**	SCREEN SECTION (ACUCOBOL)
+	*/
+	if (acn_cobol)
+	{
+		gen_acn_screens();
+	}
+	
 	return(the_statement);
 }
 
@@ -135,14 +146,12 @@ NODE	the_statement;
 **	06/01/93	Written by GSL
 **
 */
-NODE file_section(the_statement)
-NODE the_statement;
+NODE file_section(NODE the_statement)
 {
 	static 	int 	crt_fd = 0;
 
 	NODE	next_statement;
 	NODE	curr_node, file_name_node;
-	TOKEN	*tokptr;
 	char 	the_file[40];
 	int	is_fd, is_sd, is_dd;
 
@@ -451,7 +460,6 @@ get_next_statement:
 	}
 	else if (is_fd && crt_fd) 						/* Found a FD for the crt			*/
 	{
-		char	dummy_rec[80];
 		/*
 		**	Handle CRT FILES.
 		*/
@@ -494,14 +502,14 @@ static struct
 	} record_list[MAX_RECORD_CNT];							/* List of every record name & it's fd	*/
 static int record_cnt = 0;								/* Count of records in record_list	*/
 
-add_to_record_list(recname)
-char	*recname;
+int add_to_record_list(char *recname)
 {
 	strcpy(record_list[record_cnt].name,recname);
 	record_list[record_cnt].fd = g_curr_file_num;
 	record_cnt += 1;
 	if ( record_cnt >= MAX_RECORD_CNT )
 		write_log("WISP",'F',"MAXRECCNT","MAX_RECORD_CNT exceeded.\n");
+	return 0;
 }
 
 int fd_record(recname)
@@ -842,3 +850,15 @@ NODE the_statement;
 		}
 	}
 }
+/*
+**	History:
+**	$Log: wt_datad.c,v $
+**	Revision 1.10  1997-08-28 17:46:23-04  gsl
+**	Add SCREEN SECTION
+**
+**	Revision 1.9  1996-08-30 21:56:14-04  gsl
+**	drcs update
+**
+**
+**
+*/

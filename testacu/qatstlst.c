@@ -32,7 +32,7 @@ struct available_keys {
 		};
 struct available_keys fn_keys[12];
 
-extern int memory_err();
+extern int vlist_memory_err();
 
 QATSTLST()
 {
@@ -213,38 +213,38 @@ int cnt;
 		strcpy(bday[11+(i * 12)],"Stefani, Tammy Rogers");
 	}
 	tstrl[0] = 53;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[0],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[0],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[0] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"                         List of Months and Birthdays");		/* Init the header string.		*/
 	tstrrnd[0] = CLEAR;
 	tstrl[1] = 1;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[1],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[1],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[1] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp," ");									/* Init the header string.		*/
 	tstrrnd[1] = CLEAR;
 	tstrl[2] = 69;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[2],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[2],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[2] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp," Num             Month           Days  Birthdays          Description");
 	tstrrnd[2] = UNDERSCORE;
 	numh = 3;									/* Init the footers.			*/
 	tstrl[4] = 42;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[4],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[4],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[4] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"     This is the first line of the footer!");
 	tstrrnd[4] = CLEAR;
 	tstrl[5] = 80;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[5],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[5],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[5] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"Available functions:  (1) Toggle Mark/Unmark item                       (16)Exit");
 	tstrrnd[5] = CLEAR;
 	tstrl[6] = 68;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[6],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[6],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[6] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"                      (2)Top   (3)Bottom   (4)Up page   (5)Down page");
 	tstrrnd[6] = CLEAR;
 	tstrl[7] = 78;									/* Init the array of lengths.		*/
-	if ((cp = calloc(8+tstrl[7],sizeof(char))) == 0) memory_err();			/* Get some memory for the string.	*/
+	if ((cp = calloc(8+tstrl[7],sizeof(char))) == 0) vlist_memory_err();		/* Get some memory for the string.	*/
 	tstr[7] = cp;									/* Init the pointer array to the string.*/
 	strcpy(cp,"                      (8)Left col  (9)Right col  (10)Left page  (11)Right page");
 	tstrrnd[7] = CLEAR;

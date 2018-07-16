@@ -1,3 +1,5 @@
+/* Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved. */
+/* $Id:$ */
 /* PGKEYW.H															*/
 /*		 Initialization of keyword arrays										*/
 
@@ -198,3 +200,15 @@ EXT char *vs_sys_util[];
 EXT char *trace_keywords[];
 
 #endif
+/*
+**	History:
+**	$Log: pgkeyw.h,v $
+**	Revision 1.8  1997-04-21 10:56:51-04  scass
+**	Corected copyright.
+**
+**	Revision 1.7  1996-09-12 19:22:42-04  gsl
+**	Add drcs headers
+**
+**
+**
+*/

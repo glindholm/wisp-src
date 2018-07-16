@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,8 +17,6 @@
 /*	$ WUSAGE SET INVOL="MYVOL"		! Will set the input volume to "MYVOL"						*/
 /*	$ WUSAGE SET OUTVOL=&THE_OUTPUT_VOLUME	! Sets OUTVOL to the value contained in the symbol THE_OUTPUT_VOLUME		*/
 /*	$ WUSAGE EXTRACT &MY_VOL=INVOL		! Sets the symbol MY_VOL to the value of INVOL					*/
-/*	$ WUSAGE DISPLAY			! Puts up the Wang like shell (HELP screen).					*/
-/*	$ WUSAGE SHELL				! Puts up the Wang like shell (HELP screen).					*/
 /*	$ WUSAGE READ				! Read the PERSONALITY file.							*/
 /*	$ WUSAGE WRITE				! Write the PERSONALITY file.							*/
 /*	$ WUSAGE FLAGS				! Allows setting of the HELP flags via a screen					*/
@@ -29,19 +29,30 @@
 
 #include <stdio.h>
 #include <setjmp.h>
+#include <string.h>
+#include <stdlib.h>
 
 #ifdef VMS
 #include <descrip.h>
 #include <ssdef.h>
 #endif
 
-#include <v/video.h>
+#ifdef _MSC_VER
+#include <io.h>
+#endif
+
 #include "idsistd.h"
 #include "werrlog.h"
 #include "scnfacs.h"
 #include "wcommon.h"
 #include "wperson.h"									/* Get the structure definitions.	*/
 #include "wdefines.h"
+#include "wanguid.h"
+#include "wispvers.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "vwang.h"
+#include "wispcfg.h"
 #include "wanguid.h"
 
 #ifndef VMS	/* unix or MSDOS */
@@ -54,7 +65,7 @@
 
 static char symstr[256];
 static char restr[256];
-static long tabtyp,symlen;
+static int4 tabtyp,symlen;
 static int  vol_flag;									/* Is this a lib or vol.		*/
 static int  lib_flag;									/* Is this a lib or vol.		*/
 extern char wisp_progname[9];
@@ -83,28 +94,43 @@ static $DESCRIPTOR(res,restr);
 
 char err_str[256];									/* Hold the string that has error.	*/
 static int helptext();
-
 static jmp_buf	env_buf;								/* Hold the environment for error procs	*/
 
-main(argc,argv)
-int argc;
-char *argv[];
+
+int us_parse(int argc, char* argv[]);
+int errmsg(int num);
+void set_upper(int argc,char* argv[]);					/* Convert all the args to upper case.	*/
+void us_flags();
+int us_equ(int argc, char* argv[], char* dst, char* src);		/* Parse an equation into it's parts.	*/
+int us_set(char* dst, char* src, int len);				/* Set a field to it's value.		*/
+int us_flagequ(int argc,char* argv[],char* dst, char* src);		/* Parse an equation into it's parts.	*/
+int us_flmask(int argc, char* argv[]);					/* Set the usage flags mask.		*/
+int us_ext(char* dst, char* src, int len);				/* Extract the value of a field.	*/
+int us_iset(int4* dst, char* src);					/* Set a field to it's value.		*/
+
+
+main(int argc, char* argv[])
 {
 #define		ROUTINE		65200
 
-	char tstr[80], *ptr;
 	int retcod,status;
+
+        /********* PATCH FOR ALPHA/VMS **********/
+        /* alpha returns argc of 2 if no  parms */
+        /* passed.  check if argc=2 and argv[1] */
+        /* is null, set argc to 1.              */
+        if (2 == argc && !argv[1])
+        {
+           argc = 1;
+        }
+        /****************************************/
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
 #ifndef VMS
-	if (!(ptr=(char *)getenv(WISP_CONFIG_ENV)))
+	if (0!=access(wispconfigdir(),00))
 	{
-		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning Environment Variable %s is not set.\n",WISP_CONFIG_ENV);
-	}
-	else if (0!=access(ptr,00))
-	{
-		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning %s=%s Directory not found.\n",WISP_CONFIG_ENV,ptr);
+		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning WISPCONFIG=%s Directory not found.\n",wispconfigdir());
 	}
 #endif /* VMS */
 
@@ -136,7 +162,7 @@ char *argv[];
 #endif
 
 #ifndef VMS	/* unix or MSDOS */
-	vexit();
+	vwang_shut();
 	if ( retcod == 1 )
 	{
 		exit(0);
@@ -150,18 +176,16 @@ char *argv[];
 		exit(retcod);
 	}
 #endif
+	return 0;
 }
 
-us_parse(argc,argv)									/* Parse the parms.			*/
-int argc;
-char *argv[];
+us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 {
-	int 	i,status,retcod, ival, ffl, len;
+	int 	i,status,retcod, ffl;
 	char 	src[80];
 	char 	dst[80];
-	char 	tmp[6];
 	char	buff[80];
-	long	tlong;
+	int4	tlong;
 
 #define P_SET		0								/* Note that values are determined by	*/
 #define P_EXTRACT	4								/* their position in the compare string	*/
@@ -386,7 +410,6 @@ static char item_str[256];
 				default:
 				{
 					return(INVALID_OBJECT_ERROR);
-					break;
 				}
 			}
 			save_defaults();						/* Save the defaults.			*/
@@ -538,7 +561,6 @@ static char item_str[256];
 				}
 				case S_LUSERID:						/* Will get the full userid.		*/
 				{
-					char *longuid();
 					char id[32];
 
 					strcpy(id,longuid());
@@ -561,14 +583,14 @@ static char item_str[256];
 				case S_FORM:
 				{
 					get_defs(DEFAULTS_FN,&tlong);
-					sprintf(buff,"%03ld",tlong);			/* Convert to a string.			*/
+					sprintf(buff,"%03ld",(long)tlong);		/* Convert to a string.			*/
 					us_ext(dst,buff,3);				/* Copy the value.			*/
 					break;
 				}
 				case S_PRINTER:
 				{
 					get_defs(DEFAULTS_PR,&tlong);
-					sprintf(buff,"%03ld",tlong);			/* Convert to a string.			*/
+					sprintf(buff,"%03ld",(long)tlong);		/* Convert to a string.			*/
 					us_ext(dst,buff,3);				/* Copy the value.			*/
 					break;
 				}
@@ -593,14 +615,13 @@ static char item_str[256];
 				case S_LINES:
 				{
 					get_defs(DEFAULTS_LI,&tlong);
-					sprintf(buff,"%03ld",tlong);			/* Convert to a string.			*/
+					sprintf(buff,"%03ld",(long)tlong);		/* Convert to a string.			*/
 					us_ext(dst,buff,3);				/* Copy the value.			*/
 					break;
 				}
 				default:
 				{
 					return(INVALID_SOURCE_ERROR);
-					break;
 				}
 			}
 			break;
@@ -609,9 +630,11 @@ static char item_str[256];
 		case P_DISPLAY:								/* Process a DISPLAY or SHELL command.	*/ 
 		case P_SHELL:
 		{
-			w_err_flag = 1+4+8;						/* Turn on error processing		*/
-			retcod = us_help();						/* Use help mode.			*/
-			vexit();
+			if ( 0 != wsystem("wshell") )
+			{
+				werrlog(104,"%WUSAGE-E-SHELL Program WSHELL Not Found",0,0,0,0,0,0,0);
+			}
+			
 			break;
 		}
 
@@ -640,7 +663,7 @@ static char item_str[256];
 			{
 				load_defaults();
 				us_flags();
-				vexit();
+				vwang_shut();
 			}
 			else retcod = us_flmask(argc,argv);				/* Change one flag or complete bit mask.*/
 			break;								/* from DCL prompt.			*/
@@ -655,7 +678,7 @@ static char item_str[256];
 		case P_VERSION:
 		{
 			printf("\n\n");
-			printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n\n",WISP_VERSION, LIBRARY_VERSION, SCREEN_VERSION);
+			printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n\n",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION);
 			break;
 		}
 
@@ -672,29 +695,12 @@ us_inter()										/* Read input lines and parse them.	*/
 	return(1);									/* Sucessfull.				*/
 }
 
-us_help()										/* Display the Wang like shell		*/
-{											/* (HELP screen).			*/
-	char selection[81];
-	char scrn[1924];
-	char function,lines,term[2],no_mod[2];
-
-	init_screen();
-	wsc_init(scrn,0,0);
-
-	function = 1;									/* Use WRITE_ALL.			*/
-	lines = 24;
-	vwang(&function,scrn,&lines,"0001X",term,no_mod);				/* Call Wang emulation to fill screen.	*/
-											/* So HELP will have a screen to push.	*/
-	wsh_help(0);									/* Do it.				*/
-	return(1);									/* Always a success.			*/
-}
-
-us_set(dst,src,len)									/* Set a field to it's value.		*/
-char *dst,*src;
-int len;
+int us_set(char* dst, char* src, int len)					/* Set a field to it's value.		*/
 {
 	register int i;
-	long status;
+#ifdef VMS
+	int4 status;
+#endif
 
 	memset(dst,' ',len);								/* Always fill the field with spaces.	*/
 	i = strlen(src);
@@ -727,18 +733,18 @@ int len;
 		}
 
 	}
+	return 0;
 }
 
-us_iset(dst,src)									/* Set a field to it's value.		*/
-char *dst,*src;
+int us_iset(int4* dst, char* src)					/* Set a field to it's value.		*/
 {
-	long status;
-	int ival;
+	int4 ival;
 
-	memset(dst,'0',4);							/* Always fill the field with zeroes.	*/
+	memset((char *)dst,(char)0,sizeof(int4));					/* Always fill the field with zeroes.	*/
 	if (src[0] == '&')
 	{
 #ifdef VMS
+		int4 status;
 		memset(symstr,' ',256);						/* Fill with spaces.			*/
 		symstr[255] = '\0';						/* Null terminate.			*/
 		memcpy(symstr,&src[1],strlen(&src[1]));				/* Copy the symbol name			*/
@@ -747,8 +753,8 @@ char *dst,*src;
 
 		if (status == SS$_NORMAL)
 		{
-			ival = atoi(restr);					/* Convert to an integer.		*/
-			memcpy(dst,&ival,sizeof(int));				/* Copy the data now.			*/
+			ival = (int4) atoi(restr);				/* Convert to an integer.		*/
+			memcpy(dst,&ival,sizeof(int4));				/* Copy the data now.			*/
 		}
 		else
 		{
@@ -758,21 +764,20 @@ char *dst,*src;
 	}
 	else
 	{
-		ival = atoi(src);							/* Convert to an integer.		*/
-		memcpy(dst,&ival,4);							/* Copy the data now.			*/
+		ival = (int4) atol(src);						/* Convert to an integer.		*/
+		memcpy((char *)dst,(char *)&ival,sizeof(int4));				/* Copy the data now.			*/
 	}
+	return 0;
 }
 
-us_ext(dst,src,len)									/* Extract the value of a field.	*/
-char *dst,*src;
-int len;
+int us_ext(char* dst, char* src, int len)				/* Extract the value of a field.	*/
 {
 #ifdef VMS
 	/*
 	**	This loads the value (src) into the symbol (dst)
 	*/
 	register int i,j,sl;
-	long status;
+	int4 status;
 
 	if (dst[0] == '&') j = 1; else j = 0;						/* if leading & then set offset		*/
 	memset(symstr,' ',256);								/* Fill symbol string with spaces.	*/
@@ -809,11 +814,12 @@ int len;
 	}
 	for( i=0; i<len; i++) putchar( out[i] );
 #endif
+	return 0;
 }
 
 /* 			Display a screen to allow the user to set up the flags for the help screen.				*/
 
-us_flags()
+void us_flags()
 {
 	char *field();									/* Field packing subroutine.		*/
 	char *screen;									/* Pointer to working screen routine.	*/
@@ -821,7 +827,7 @@ us_flags()
 	char yn[2];
 	int valid;
 	int	pos;									/* position on screen			*/
-	unsigned long	defs_flags;
+	uint4	defs_flags;
 	int	i;
 	int	xcol[32], xrow[32];
 
@@ -1133,19 +1139,16 @@ disp_flags:
 		else goto disp_flags;
 	}
 	free(screen);									/* Release the screen memory.		*/
-	return(SUCCESS);								/* All done.				*/
 }
 
-int us_flmask(argc, argv)								/* Set the usage flags mask.		*/
-int argc;
-char *argv[];
+int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 {
-	int i, j, status, retcod, setone, setfl, loopcnt;
+	int i, j, retcod, setone, setfl, loopcnt;
 	int flmsk[32];
 	char src[80];
 	char dst[80];
 	static char item_str[256];
-	unsigned long	defs_flags;
+	uint4 	defs_flags;
 
 #ifdef VMS
 	static $DESCRIPTOR(item_desc,item_str);						/* A descriptor for getting symbols.	*/
@@ -1432,7 +1435,6 @@ char *argv[];
 					default:
 					{
 						return(INVAL_FLAG_TYPE_ERROR);
-						break;
 					}
 				} /* end of switch */
 			} /* end of for */
@@ -1443,14 +1445,12 @@ char *argv[];
 		default:
 		{
 			return(INVAL_FLAGS_OBJ_ERROR);
-			break;
 		}
 	} /* end of switch */
 	return(1);
 }
 
-errmsg(num)
-int num;
+int errmsg(int num)
 {
 	switch(num)
 	{
@@ -1507,13 +1507,12 @@ int num;
 		}
 	}
 	fflush(stderr);
+	return 0;
 }
 
-set_upper(argc,argv)									/* Convert all the args to upper case.	*/
-int argc;
-char *argv[];
+void set_upper(int argc,char* argv[])					/* Convert all the args to upper case.	*/
 {
-	int i,j,len;
+	int i,j;
 
 	for (i = 1; i < argc; i++)
 	{
@@ -1527,10 +1526,7 @@ char *argv[];
 	}
 }
 
-int us_equ(argc,argv,dst,src)								/* Parse an equation into it's parts.	*/
-int argc;
-char *argv[];
-char *dst,*src;
+int us_equ(int argc, char* argv[], char* dst, char* src)			/* Parse an equation into it's parts.	*/
 {
 	int i,offset;
 
@@ -1581,10 +1577,7 @@ char *dst,*src;
 	return(0);
 }
 
-int us_flagequ(argc,argv,dst,src)							/* Parse an equation into it's parts.	*/
-int argc;
-char *argv[];
-char *dst,*src;
+int us_flagequ(int argc,char* argv[],char* dst, char* src)		/* Parse an equation into it's parts.	*/
 {
 	int i,offset;
 
@@ -1621,7 +1614,6 @@ static int helptext()
 	      /*         1         2         3         4         5         6         7         8*/
 	printf("\n");
 	printf("WUSAGE:    Allows setting and extracting of usage constants.\n");
-	printf("   wusage shell                        Command Processor Shell.\n");
 	printf("   wusage read [file]                  Load usage constants from PERSONALITY.\n");
 	printf("   wusage write [file]                 Save usage constants to PERSONALITY.\n");
 	printf("   wusage set <item>=<value>           Set a usage constant.\n");
@@ -1652,7 +1644,6 @@ static int helptext()
 	printf("\n");
 	printf("wusage:    Allows setting and extracting of usage constants.\n");
 	printf("\n");
-	printf("   wusage shell                        Enter full screen HELP mode.\n");
 	printf("   wusage read [file]                  Load usage constants from PERSONALITY.\n");
 	printf("   wusage write [file]                 Save usage constants to PERSONALITY.\n");
 	printf("   wusage set <item>=<value>           Set a usage constant.\n");
@@ -1673,3 +1664,29 @@ static int helptext()
 
 	return(1);
 }
+/*
+**	History:
+**	$Log: wusage.c,v $
+**	Revision 1.14  1997-06-10 15:28:33-04  scass
+**	Changed long to int4 for portability.
+**
+**	Revision 1.13  1996-11-05 13:32:01-05  gsl
+**	Fix warning by including wanguid.h
+**
+**	Revision 1.12  1996-10-08 17:49:57-07  gsl
+**	replace getenv() to wispconfigdir()
+**
+**	Revision 1.11  1996-07-24 13:03:14-07  gsl
+**	WUSAGE has been split into 2 pieces, WUSAGE and WSHELL.
+**	WSHELL is a new program which runs the command processor (was "wusage shell").
+**	WUSAGE contains only the usage constant maintainance functions.
+**	You can still run "wusage shell" to have wusage spawn a process to
+**	run wshell, this is for backwards compatibility but is more expensive
+**	then just running wshell directly.
+**
+**	Revision 1.10  1996-07-23 11:13:13-07  gsl
+**	drcs update
+**
+**
+**
+*/

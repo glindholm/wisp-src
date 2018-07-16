@@ -1,0 +1,124 @@
+      *	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+      * $Id:$
+      *
+      *	FILE:	TEST0000.WCB
+      *
+      * RCS:	$Source:$
+      *
+      * FUNCTION: Template for TEST0xxx.WCB files.
+      *
+      * DESCRIPTION:
+      *		THIS IS A TEMPLATE FILE FOR CREATING TEST0xxx.WCB FILES
+      *		FOR TESTING THE WISP TRANSLATOR.
+      *
+
+      /*****************************************************************
+      *                                                                *
+      *                       IDENTIFICATION DIVISION                  *
+      *                                                                *
+      ******************************************************************
+      *
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID.
+           TEST0xxx.
+       AUTHOR.
+           QA.
+      /*****************************************************************
+      *                                                                *
+      *                         ENVIRONMENT DIVISION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       SOURCE-COMPUTER.
+           WANG-VS.
+       OBJECT-COMPUTER.
+           WANG-VS.
+       FIGURATIVE-CONSTANTS.
+           BLINK-BIT IS "10"
+           PROTECT-BIT IS "04"
+           DIM-BIT IS "08"
+           TAB-STOP IS "86"
+           BLINKING-DISPLAY IS "94"
+           NO-ECHO IS "98".
+
+      /*****************************************************************
+      *                                                                *
+      *                         INPUT-OUTPUT SECTION                   *
+      *                                                                *
+      ******************************************************************
+      *
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+
+           SELECT CRT
+               ASSIGN TO "CRT",      "DISPLAY",
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS RANDOM
+               RELATIVE KEY    IS CRT-RELKEY
+               PFKEY           IS CRT-PFKEY
+               CURSOR POSITION IS CRT-CURSOR-POS
+               FILE STATUS     IS CRT-FILE-STATUS.
+
+
+      /*****************************************************************
+      *                                                                *
+      *                      DATA DIVISION - FILE SECTION              *
+      *                                                                *
+      ******************************************************************
+      *
+       DATA DIVISION.
+       FILE SECTION.
+
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRT-RECORD                         PIC X(1924).
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         WORKING STORAGE                        *
+      *                                                                *
+      ******************************************************************
+      *
+       WORKING-STORAGE SECTION.
+
+      *
+      *   CRT FILE VARIABLES
+      *
+       77  CRT-RELKEY  PIC 9(02) VALUE 1.
+       77  CRT-PFKEY   PIC X(02) VALUE ZERO.
+       01  CRT-CURSOR-POS.
+           03  CRT-CURSOR-POS-COL  BINARY.
+           03  CRT-CURSOR-POS-ROW  BINARY.
+       01  CRT-FILE-STATUS.
+           03  CRT-FILE-STATUS-ERR        PIC X(01).
+           03  CRT-FILE-STATUS-AID        PIC X(01).
+
+      ******************************************************************
+
+
+
+
+
+
+      /*****************************************************************
+      *                                                                *
+      *                         PROCEDURE DIVISION                     *
+      *                                                                *
+      ******************************************************************
+      *
+       PROCEDURE DIVISION.
+
+       0000-INITIALIZATION.
+
+      ******************************************************************
+      * ALL DONE.
+      ******************************************************************
+
+       EXIT-PROGRAM.
+           EXIT PROGRAM.
+
+       STOP-RUN.
+           STOP RUN.

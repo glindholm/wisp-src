@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -29,11 +31,12 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <io.h>
 #endif
 
 #include "idsistd.h"
+#include "wisplib.h"
 #include "fcopy.h"
 
 /*
@@ -65,8 +68,7 @@
 **	02/15/93	Written by GSL
 **
 */
-int fcopy(srcfile,dstfile)
-char	*srcfile, *dstfile;
+int fcopy(char* srcfile, char* dstfile)
 {
 	int	src,dst;
 	char	buff[1024];
@@ -74,7 +76,11 @@ char	*srcfile, *dstfile;
 	struct stat statbuf;
 	int	dstexists;
 
+#ifdef O_BINARY
+	src = open(srcfile, O_RDONLY | O_BINARY);				/* Open the source file				*/
+#else
 	src = open(srcfile, O_RDONLY);						/* Open the source file				*/
+#endif
 	if (src == -1)
 	{
 		return(errno);
@@ -82,7 +88,11 @@ char	*srcfile, *dstfile;
 
 	dstexists = fexists(dstfile);						/* Check if dstfile exists			*/
 
-	dst = creat(dstfile, 0666);						/* Open the destination file			*/
+#ifdef O_BINARY
+	dst = open(dstfile, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0666);	/* Open the destination file			*/
+#else
+	dst = open(dstfile, O_WRONLY | O_CREAT | O_TRUNC, 0666);		/* Open the destination file			*/
+#endif
 	if (dst == -1)
 	{
 		rc = errno;
@@ -149,3 +159,12 @@ char *argv[];
 	exit(0);
 }
 #endif /* MAIN */
+/*
+**	History:
+**	$Log: fcopy.c,v $
+**	Revision 1.7  1996-08-19 18:32:19-04  gsl
+**	drcs update
+**
+**
+**
+*/

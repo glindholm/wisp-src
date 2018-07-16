@@ -1,0 +1,42 @@
+#/************************************************************************/
+#/*                                                                      */
+#/*              Copyright (c) 1994, 1995, 1997                          */
+#/*              An unpublished work of NeoMedia Technologies Inc.       */
+#/*                         All rights reserved.                         */
+#/*                                                                      */
+#/************************************************************************/
+#
+#
+#       File:           amumf.umf
+#
+#       Function:       The UNIX makefile for AMU/Micro Focus
+#
+#       Desciption:     This makefile will build AMU for Micro Focus.
+#
+#                       make -f amumf.umf
+#
+#	Upon completion of make, copy uppercase *.int files to a directory
+#	on the COBPATH.
+#
+
+include $(WISP)/src/port/make.include
+
+include $(WISP)/src/mf/mf.rules
+
+#uncomment for debugging
+#COBFLAGS=-ag -C warning=2
+
+ALL=	amu.int amuroot.int amuedit.int amumdm.int amufkm.int amuudm.int camumenu.int
+
+
+all:	$(ALL)
+	@echo 
+	@echo 'AMU (int) is up-to-date'
+	@echo
+
+clean:
+	rm -f *.int
+	rm -f *.idy
+	rm -f *.cob
+	rm -f *.cpy
+

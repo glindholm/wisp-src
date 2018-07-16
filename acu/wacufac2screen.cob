@@ -1,0 +1,434 @@
+000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       wacufac2screen.cob
+000500**
+000600**   Project:    WISP for Acucobol with Native Screens
+000700**
+000800**   Purpose:    Convert Wang FAC into Color and Control values
+000900**
+001000**   Build:      ccbl -o WACUFAC2SCREEN wacufac2screen.cob
+001100**
+001200**
+001300/*****************************************************************
+001400*                                                                *
+001500*                       IDENTIFICATION DIVISION                  *
+001600*                                                                *
+001700******************************************************************
+001800*
+001900 IDENTIFICATION DIVISION.
+002000 PROGRAM-ID.
+002100     WACUFAC2SCREEN.
+002200 REMARKS.
+002300     This program will set the COLOR and CONTROL variables which
+002400     are the native ACUCOBOL screen control attributes using the
+002500     Field Attribute Character (FAC) from the Wang environment.
+002600     This program is part of the solution provided for conversion
+002700     to ACUCOBOL native screen.
+002800
+002900/*****************************************************************
+003000*                                                                *
+003100*                         DATA DIVISION                          *
+003200*                                                                *
+003300******************************************************************
+003400*
+003500 DATA DIVISION.
+003600
+003700*****************************************************************
+003800*                                                                *
+003900*                         WORKING STORAGE                        *
+004000*                                                                *
+004100******************************************************************
+004200*
+004300 WORKING-STORAGE SECTION.
+004400
+004500 78  COLOR-DIM              value 2048.
+004600 78  COLOR-BRIGHT           value 4096.
+004700 78  COLOR-BLANK            value 33.
+004800 78  COLOR-UNDERLINE        value 8192.
+004900 78  COLOR-BLINK            value 16384.
+005000 78  COLOR-PROTECT          value 32768.
+005100 78  COLOR-UNDLBRI          value 12288.
+005200 78  COLOR-UNDLBLI          value 24576.
+005300 78  COLOR-BLAPRO           value 32801.
+005400 78  COLOR-BRIPRO           value 36864.
+005500 78  COLOR-UNDLPRO          value 40960.
+005600 78  COLOR-UNDLBRIPRO       value 45056.
+005700 78  COLOR-BLIPRO           value 49152.
+005800 78  COLOR-UNDLBLIPRO       value 57344.
+005900
+006000 01  IDX                   PIC 99 VALUE 0.
+006100 01  WS-FAC-CHAR           PIC X.
+006200 01  WS-FAC-NUM REDEFINES WS-FAC-CHAR PIC X COMP-X.
+006300
+006400 01 COLOR-CONTROL-VALUES.
+006500
+006600*       (01)   NOLINE BRIGHT MODIFY  ALL
+006700
+006800    03  FILLER   PIC 9(5)  value COLOR-BRIGHT.
+006900    03  FILLER   PIC X(20) value "AUTO".
+007000
+007100*       (02)   NOLINE BRIGHT MODIFY  UPCASE
+007200
+007300    03  FILLER   PIC 9(5)  value COLOR-BRIGHT.
+007400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+007500
+007600*       (03)   NOLINE BRIGHT MODIFY  NUMERIC
+007700
+007800    03  FILLER   PIC 9(5)  value COLOR-BRIGHT.
+007900    03  FILLER   PIC X(20) value "AUTO".
+008000
+008100*       (04)   Reserved
+008200
+008300    03  FILLER   PIC 9(5)  value 0.
+008400    03  FILLER   PIC X(20) value SPACES.
+008500
+008600*       (05)   NOLINE BRIGHT PROTECT ALL
+008700
+008800    03  FILLER   PIC 9(5)  value COLOR-BRIPRO.
+008900    03  FILLER   PIC X(20) value "AUTO".
+009000
+009100*       (06)   NOLINE BRIGHT PROTECT UPCASE
+009200
+009300    03  FILLER   PIC 9(5)  value COLOR-BRIPRO.
+009400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+009500
+009600*       (07)   NOLINE BRIGHT PROTECT NUMERIC
+009700
+009800    03  FILLER   PIC 9(5)  value COLOR-BRIPRO.
+009900    03  FILLER   PIC X(20) value "AUTO".
+010000
+010100*       (08)   Reserved
+010200
+010300    03  FILLER   PIC 9(5)  value 0.
+010400    03  FILLER   PIC X(20) value SPACES.
+010500
+010600*       (09)   NOLINE DIM    MODIFY  ALL
+010700
+010800    03  FILLER   PIC 9(5)  value COLOR-DIM.
+010900    03  FILLER   PIC X(20) value "AUTO".
+011000
+011100*       (10)   NOLINE DIM    MODIFY  UPCASE
+011200
+011300    03  FILLER   PIC 9(5)  value COLOR-DIM.
+011400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+011500
+011600*       (11)   NOLINE DIM    MODIFY  NUMERIC
+011700
+011800    03  FILLER   PIC 9(5)  value COLOR-DIM.
+011900    03  FILLER   PIC X(20) value "AUTO".
+012000
+012100*       (12)   Reserved
+012200
+012300    03  FILLER   PIC 9(5)  value 0.
+012400    03  FILLER   PIC X(20) value SPACES.
+012500
+012600*       (13)   NOLINE DIM    PROTECT ALL
+012700
+012800    03  FILLER   PIC 9(5)  value COLOR-PROTECT.
+012900    03  FILLER   PIC X(20) value "AUTO".
+013000
+013100*       (14)   NOLINE DIM    PROTECT UPCASE
+013200
+013300    03  FILLER   PIC 9(5)  value COLOR-PROTECT.
+013400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+013500
+013600*       (15)   NOLINE DIM    PROTECT NUMERIC
+013700
+013800    03  FILLER   PIC 9(5)  value COLOR-PROTECT.
+013900    03  FILLER   PIC X(20) value "AUTO".
+014000
+014100*       (16)   Reserved
+014200
+014300    03  FILLER   PIC 9(5)  value 0.
+014400    03  FILLER   PIC X(20) value SPACES.
+014500
+014600*       (17)   NOLINE BLINK  MODIFY  ALL
+014700
+014800    03  FILLER   PIC 9(5)  value COLOR-BLINK.
+014900    03  FILLER   PIC X(20) value "AUTO".
+015000
+015100*       (18)   NOLINE BLINK  MODIFY  UPCASE
+015200
+015300    03  FILLER   PIC 9(5)  value COLOR-BLINK.
+015400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+015500
+015600*       (19)   NOLINE BLINK  MODIFY  NUMERIC
+015700
+015800    03  FILLER   PIC 9(5)  value COLOR-BLINK.
+015900    03  FILLER   PIC X(20) value "AUTO".
+016000
+016100*       (20)   Reserved
+016200
+016300    03  FILLER   PIC 9(5)  value 0.
+016400    03  FILLER   PIC X(20) value SPACES.
+016500
+016600*       (21)   NOLINE BLINK  PROTECT ALL
+016700
+016800    03  FILLER   PIC 9(5)  value COLOR-BLIPRO.
+016900    03  FILLER   PIC X(20) value "AUTO".
+017000
+017100*       (22)   NOLINE BLINK  PROTECT UPCASE
+017200
+017300    03  FILLER   PIC 9(5)  value COLOR-BLIPRO.
+017400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+017500
+017600*       (23)   NOLINE BLINK  PROTECT NUMERIC
+017700
+017800    03  FILLER   PIC 9(5)  value COLOR-BLIPRO.
+017900    03  FILLER   PIC X(20) value "AUTO".
+018000
+018100*       (24)   Reserved
+018200
+018300    03  FILLER   PIC 9(5)  value 0.
+018400    03  FILLER   PIC X(20) value SPACES.
+018500
+018600*       (25)   NOLINE BLANK  MODIFY  ALL
+018700
+018800    03  FILLER   PIC 9(5)  value COLOR-BLANK.
+018900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+019000
+019100*       (26)   NOLINE BLANK  MODIFY  UPCASE
+019200
+019300    03  FILLER   PIC 9(5)  value COLOR-BLANK.
+019400    03  FILLER   PIC X(20) value "SECURE,AUTO,UPPER".
+019500
+019600*       (27)   NOLINE BLANK  MODIFY  NUMERIC
+019700
+019800    03  FILLER   PIC 9(5)  value COLOR-BLANK.
+019900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+020000
+020100*       (28)   Reserved
+020200
+020300    03  FILLER   PIC 9(5)  value 0.
+020400    03  FILLER   PIC X(20) value SPACES.
+020500
+020600*       (29)   NOLINE BLANK  PROTECT ALL
+020700
+020800    03  FILLER   PIC 9(5)  value COLOR-BLAPRO.
+020900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+021000
+021100*       (30)   NOLINE BLANK  PROTECT UPCASE
+021200
+021300    03  FILLER   PIC 9(5)  value COLOR-BLAPRO.
+021400    03  FILLER   PIC X(20) value "SECURE,AUTO,UPPER".
+021500
+021600*       (31)   NOLINE BLANK  PROTECT NUMERIC
+021700
+021800    03  FILLER   PIC 9(5)  value COLOR-BLAPRO.
+021900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+022000
+022100*       (32)   Reserved
+022200
+022300    03  FILLER   PIC 9(5)  value 0.
+022400    03  FILLER   PIC X(20) value SPACES.
+022500
+022600*       (33)   LINE   BRIGHT MODIFY  ALL
+022700
+022800    03  FILLER   PIC 9(5)  value COLOR-UNDLBRI.
+022900    03  FILLER   PIC X(20) value "AUTO".
+023000
+023100*       (34)   LINE   BRIGHT MODIFY  UPCASE
+023200
+023300    03  FILLER   PIC 9(5)  value COLOR-UNDLBRI.
+023400    03  FILLER   PIC X(20) value "AUTO, UPPER".
+023500
+023600*       (35)   LINE   BRIGHT MODIFY  NUMERIC
+023700
+023800    03  FILLER   PIC 9(5)  value COLOR-UNDLBRI.
+023900    03  FILLER   PIC X(20) value "AUTO".
+024000
+024100*       (36)   Reserved
+024200
+024300    03  FILLER   PIC 9(5)  value 0.
+024400    03  FILLER   PIC X(20) value SPACES.
+024500
+024600*       (37)   LINE   BRIGHT PROTECT ALL
+024700
+024800    03  FILLER   PIC 9(5)  value COLOR-UNDLBRIPRO.
+024900    03  FILLER   PIC X(20) value "AUTO".
+025000
+025100*       (38)   LINE   BRIGHT PROTECT UPCASE
+025200
+025300    03  FILLER   PIC 9(5)  value COLOR-UNDLBRIPRO.
+025400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+025500
+025600*       (39)   LINE   BRIGHT PROTECT NUMERIC
+025700
+025800    03  FILLER   PIC 9(5)  value COLOR-UNDLBRIPRO.
+025900    03  FILLER   PIC X(20) value "AUTO".
+026000
+026100*       (40)   Reserved
+026200
+026300    03  FILLER   PIC 9(5)  value 0.
+026400    03  FILLER   PIC X(20) value SPACES.
+026500
+026600*       (41)   LINE   DIM    MODIFY  ALL
+026700
+026800    03  FILLER   PIC 9(5)  value COLOR-UNDERLINE.
+026900    03  FILLER   PIC X(20) value "AUTO".
+027000
+027100*       (42)   LINE   DIM    MODIFY  UPCASE
+027200
+027300    03  FILLER   PIC 9(5)  value COLOR-UNDERLINE.
+027400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+027500
+027600*       (43)   LINE   DIM    MODIFY  NUMERIC
+027700
+027800    03  FILLER   PIC 9(5)  value COLOR-UNDERLINE.
+027900    03  FILLER   PIC X(20) value "AUTO".
+028000
+028100*       (44)   Reserved
+028200
+028300    03  FILLER   PIC 9(5)  value 0.
+028400    03  FILLER   PIC X(20) value SPACES.
+028500
+028600*       (45)   LINE   DIM    PROTECT ALL
+028700
+028800    03  FILLER   PIC 9(5)  value COLOR-UNDLPRO.
+028900    03  FILLER   PIC X(20) value "AUTO".
+029000
+029100*       (46)   LINE   DIM    PROTECT UPCASE
+029200
+029300    03  FILLER   PIC 9(5)  value COLOR-UNDLPRO.
+029400    03  FILLER   PIC X(20) value "AUTO, UPPER".
+029500
+029600*       (47)   LINE   DIM    PROTECT NUMERIC
+029700
+029800    03  FILLER   PIC 9(5)  value COLOR-UNDLPRO.
+029900    03  FILLER   PIC X(20) value "AUTO".
+030000
+030100*       (48)   Reserved
+030200
+030300    03  FILLER   PIC 9(5)  value 0.
+030400    03  FILLER   PIC X(20) value SPACES.
+030500
+030600*       (49)   LINE   BLINK  MODIFY  ALL
+030700
+030800    03  FILLER   PIC 9(5)  value COLOR-UNDLBLI.
+030900    03  FILLER   PIC X(20) value "AUTO".
+031000
+031100*       (50)   LINE   BLINK  MODIFY  UPCASE
+031200
+031300    03  FILLER   PIC 9(5)  value COLOR-UNDLBLI.
+031400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+031500
+031600*       (51)   LINE   BLINK  MODIFY  NUMERIC
+031700
+031800    03  FILLER   PIC 9(5)  value COLOR-UNDLBLI.
+031900    03  FILLER   PIC X(20) value "AUTO".
+032000
+032100*       (52)   Reserved
+032200
+032300    03  FILLER   PIC 9(5)  value 0.
+032400    03  FILLER   PIC X(20) value SPACES.
+032500
+032600*       (53)   LINE   BLINK  PROTECT ALL
+032700
+032800    03  FILLER   PIC 9(5)  value COLOR-UNDLBLIPRO.
+032900    03  FILLER   PIC X(20) value "AUTO".
+033000
+033100*       (54)   LINE   BLINK  PROTECT UPCASE
+033200
+033300    03  FILLER   PIC 9(5)  value COLOR-UNDLBLIPRO.
+033400    03  FILLER   PIC X(20) value "AUTO,UPPER".
+033500
+033600*       (55)   LINE   BLINK  PROTECT NUMERIC
+033700
+033800    03  FILLER   PIC 9(5)  value COLOR-UNDLBLIPRO.
+033900    03  FILLER   PIC X(20) value "AUTO".
+034000
+034100*       (56)   Reserved
+034200
+034300    03  FILLER   PIC 9(5)  value 0.
+034400    03  FILLER   PIC X(20) value SPACES.
+034500
+034600*       (57)   LINE   BLANK  MODIFY  ALL
+034700
+034800    03  FILLER   PIC 9(5)  value COLOR-BLANK.
+034900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+035000
+035100*       (58)   LINE   BLANK  MODIFY  UPCASE
+035200
+035300    03  FILLER   PIC 9(5)  value COLOR-BLANK.
+035400    03  FILLER   PIC X(20) value "SECURE,AUTO,UPPER".
+035500
+035600*       (59)   LINE   BLANK  MODIFY  NUMERIC
+035700
+035800    03  FILLER   PIC 9(5)  value COLOR-BLANK.
+035900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+036000
+036100*       (60)   Reserved
+036200
+036300    03  FILLER   PIC 9(5)  value 0.
+036400    03  FILLER   PIC X(20) value SPACES.
+036500
+036600*       (61)   LINE   BLANK  PROTECT ALL
+036700
+036800    03  FILLER   PIC 9(5)  value COLOR-BLAPRO.
+036900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+037000
+037100*       (62)   LINE   BLANK  PROTECT UPCASE
+037200
+037300    03  FILLER   PIC 9(5)  value COLOR-BLAPRO.
+037400    03  FILLER   PIC X(20) value "SECURE,AUTO,UPPER".
+037500
+037600*       (63)   LINE   BLANK  PROTECT NUMERIC
+037700
+037800    03  FILLER   PIC 9(5)  value COLOR-BLAPRO.
+037900    03  FILLER   PIC X(20) value "SECURE,AUTO".
+038000
+038100*       (64)   Reserved
+038200
+038300    03  FILLER   PIC 9(5)  value 0.
+038400    03  FILLER   PIC X(20) value SPACES.
+038500 01 COLOR-CONTROL-TABLE REDEFINES COLOR-CONTROL-VALUES.
+038600    03  COLOR-CONTROL       OCCURS 64 TIMES.
+038700        05  COLOR-VALUE     PIC 9(5).
+038800        05  CONTROL-VALUE   PIC X(20).
+038900
+039000/*****************************************************************
+039100*                                                                *
+039200*                       LINKAGE SECTION                          *
+039300*                                                                *
+039400******************************************************************
+039500*
+039600 LINKAGE SECTION.
+039700 01  FAC-CHAR               PIC X(1).
+039800 01  COLOR-VAL              PIC 9(5).
+039900 01  CONTROL-STR            PIC X(20).
+040000
+040100/*****************************************************************
+040200*                                                                *
+040300*                         PROCEDURE DIVISION                     *
+040400*                                                                *
+040500******************************************************************
+040600*
+040700 PROCEDURE DIVISION USING FAC-CHAR,
+040800                          COLOR-VAL,
+040900                          CONTROL-STR.
+041000
+041100 0000-START.
+041200     PERFORM COMPUTE-INDEX.
+041300     MOVE COLOR-VALUE(IDX) TO COLOR-VAL.
+041400     MOVE CONTROL-VALUE(IDX) TO CONTROL-STR.
+041500
+041600 9999-EXIT.
+041700     EXIT PROGRAM.
+041800
+041900 9999-STOP.
+042000     STOP RUN.
+042100
+042200 COMPUTE-INDEX.
+042300     MOVE FAC-CHAR TO WS-FAC-CHAR.
+042400*  Remove FAC bit
+042500     SUBTRACT 128 FROM WS-FAC-NUM.
+042600*  Remove FAC MOD bit
+042700     IF WS-FAC-NUM >= 64 THEN
+042800         SUBTRACT 64 FROM WS-FAC-NUM.
+042900
+043000     MOVE WS-FAC-NUM TO IDX.
+043100     ADD 1 TO IDX.
+043200**
+043300**   End of wacufac2screen.cob
+043400**

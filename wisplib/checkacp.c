@@ -1,3 +1,6 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+
 #ifdef VMS
 /********************************************************************************************************************************
 *																*
@@ -72,11 +75,18 @@ va_dcl
 
 	*ret_code = 0;							/* Initialize the return value.				*/
 }
-#endif
-#ifndef VMS	/* unix and MSDOS */
-CHECKACP()
+#else
+void CHECKACP()
 {
-	return(0);
+	return;
 }
 #endif
-
+/*
+**	History:
+**	$Log: checkacp.c,v $
+**	Revision 1.10  1996-08-19 18:32:12-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,0 +1,50 @@
+procedure SCREEN.SRC to demonstrate overlapping windows
+declare &wn integer = 0  [window number]
+
+* Save the original screen and then paint a checkerboard pattern
+screen clear
+declare &i integer
+for &i = 1 to 24 by 2 loop
+   message erase=no, row &i
+      &copy("<>", 40);
+      &copy("[]", 40);
+end
+
+* Let the user display windows and then restore the original screen
+call window
+
+* This subroutine is called recursively to display windows.  It will
+* display up to 9 windows before prohibiting the user from creating
+* more by disabling the "Create window" option.
+*
+subroutine window
+   declare &key, &f1 integer
+   [ Save current screen contents and increment the window count ]
+   screen save
+   assign &wn += 1
+
+   [ Display (or redisplay) the same window until F2 is pressed ]
+   loop
+      [ Decide whether F1 should be enabled ]
+      if &wn < 9 then
+         assign &f1 = 1
+      else
+         assign &f1 = -1
+
+      [ Display the window, hiding F1 option if disabled ]
+      prompt pfkey=&key, enable=(&f1, 2), facs=no,
+             corner=(&wn*6, &wn*2), border=4, title=&wn,
+         "Select a function:";
+         blank when(&f1 = -1) "(1) Create window";
+         "(2) Remove window"
+
+      [ Either quit or call self recursively ]
+      if &key = 2 then
+         exit
+      else
+         call window
+   end
+   [ Restore screen to what it was before this subroutine was called ]
+   assign &wn -= 1
+   screen restore
+end

@@ -1,12 +1,7 @@
-#define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 
-/* PG_UTILS.C   Utility routines used by PROCTRAN.										*/
+#define EXT extern
 
 #include <stdio.h>
 #include <ctype.h>
@@ -19,13 +14,12 @@
 #include "pgeqtns.h"
 #include "pgcblsrc.h"
 
-static int adj_quotes();
-static int convert_to_dbl();
-static int adj_quotes();
-static int convert_to_dbl();
+static int tstkey(char* cptr,char* list[]);						/* Test if valid end for key position.	*/
+static void adj_quotes(char* lptr, int qcnt);						/* Change quotes within string to ".	*/
+static void convert_to_dbl(void);							/* Convert ' within string to ".	*/
 
-void go_upper(strp)									/* Converts a string to upper case.	*/
-char *strp;
+
+void go_upper(char *strp)								/* Converts a string to upper case.	*/
 {
 	char *tmp_add;
 
@@ -41,7 +35,6 @@ void write_log(facil,sever,rw,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)			/* write a l
 char *facil,sever,*mess, rw;								/* facility, severity, message, read/write*/
 char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for the text	*/
 {
-	char out[256];									/* scratch output line			*/
 
 	if (logging)
 	{
@@ -49,7 +42,7 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 		{
 			if (lncnt_type)							/* In reading in file.			*/
 			{								/* write facility, severity, message	*/
-				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_inlines);
+				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_lineins);
 			}
 			else	fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_outlines);
 		}
@@ -62,7 +55,7 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 		{
 			if (lncnt_type)							/* In reading in file.			*/
 			{								/* write facility, severity, message	*/
-				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_inlines);
+				fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_lineins);
 			}
 			else	fprintf(logfile,"%%%s-%c-%s (%c:%d) ",facil,sever,mess,rw,num_outlines);
 		}
@@ -71,8 +64,8 @@ char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for th
 	}
 }
 
-int strpos(src,srch)									/* search a string for the occurence of	*/
-char *src,*srch;					 				/* another string src is the string to	*/
+int strpos(char* src, char* srch)							/* search a string for the occurence of	*/
+						 				/* another string src is the string to	*/
 {											/* search, srch is the match		*/
 	int i;
 	char *tsrc,*tsrch;
@@ -96,8 +89,7 @@ char *src,*srch;					 				/* another string src is the string to	*/
 	return(-1);									/* didn't match				*/
 }
 
-int trim(string)									/* Trim a string of trailing blanks.	*/
-char *string;
+int trim(char* string)									/* Trim a string of trailing blanks.	*/
 {
 	register int i;									/* Working register storage.		*/
 
@@ -108,9 +100,8 @@ char *string;
 	return(i+1);									/* Return the string length.		*/
 }
 
-int strlast(string,srch)								/* determine if the srch char is the	*/
-char string[];										/* last non-whitespace			*/
-char srch;
+int strlast(char* string, char srch)							/* determine if the srch char is the	*/
+											/* last non-whitespace			*/
 {
 	register int i;									/* Working register storage.		*/
 	for 	(i = strlen(string)-1;
@@ -120,8 +111,7 @@ char srch;
 	else			return(0);						/* not found				*/
 }
 
-sp_trunc(text)										/* Truncate a string at the first space	*/
-char *text;
+void sp_trunc(char* text)								/* Truncate a string at the first space	*/
 {
 	int i;
 	i = strpos(text," ");								/* find the space			*/
@@ -129,7 +119,7 @@ char *text;
 
 }
 
-int nexttok()										/* Get psn of next token from inline,	*/
+int nexttok(void)										/* Get psn of next token from linein,	*/
 {											/*  and set the next ptr as well.	*/
 	if (captr == aptr) lcnt++;							/* Increment loop counter.		*/
 	captr = aptr;									/* Set the current position.		*/
@@ -139,7 +129,7 @@ int nexttok()										/* Get psn of next token from inline,	*/
 		exit(1);								/* Force exit.				*/
 	}
 
-	if (aptr - inline >= WPLMAX)							/* Test if past valid code.		*/
+	if (aptr - linein >= WPLMAX)							/* Test if past valid code.		*/
 	{
 		while (*aptr != LNFD) aptr++;						/* Step to the end of the line.		*/
 		return(FALSE);
@@ -160,36 +150,33 @@ int nexttok()										/* Get psn of next token from inline,	*/
 	{
 		next_ptr++;								/* Step over current token.		*/
 	}
-	if (*aptr == '\0' || *aptr == LNFD || (aptr - inline >= WPLMAX)) return(FALSE); /* No more tokens left to process.	*/ 
+	if (*aptr == '\0' || *aptr == LNFD || (aptr - linein >= WPLMAX)) return(FALSE); /* No more tokens left to process.	*/ 
 	else return(TRUE);
 }
 
-int tststrt(cptr)									/* Test if valid start for token pson.	*/
-char *cptr;
+int tststrt(char* cptr)									/* Test if valid start for token pson.	*/
 {
 	if (*cptr == ' '  || *cptr == ',' || *cptr == HT || *cptr == '\0' || *cptr == LNFD ||
-		(cptr - inline >= WPLMAX) )						/* In the mod code/comment area.	*/
+		(cptr - linein >= WPLMAX) )						/* In the mod code/comment area.	*/
 	{										
 		return FALSE;
 	}
 	else	return(TRUE);
 }
 
-static int tstkey(cptr,list)								/* Test if valid end for key position.	*/
-char *cptr, *list;
+static int tstkey(char* cptr,char* list[])						/* Test if valid end for key position.	*/
 {
 	if (*cptr == ' '  || *cptr == ',' || *cptr == '=' || *cptr == '(' || *cptr == '\'' ||
 	    *cptr == HT || *cptr == '\0' || *cptr == LNFD || 
 	    ( in_prompt && *cptr == '\'') ||
-	    ((list != (char *)built_in_funcs && list != (char *)search_equations) && *cptr == '&'))
+	    ((list != built_in_funcs && list != search_equations) && *cptr == '&'))
 	{                              
 		return FALSE;
 	}
 	else	return(TRUE);
 }
 
-int find_char(keyc,keylist)								/* Find the keychar in array.		*/
-char keyc, *keylist[];
+int find_char(char keyc, char* keylist[])						/* Find the keychar in array.		*/
 {
 	register int i;
 
@@ -202,8 +189,7 @@ char keyc, *keylist[];
 	return(-1);
 }
 
-int find_colin(cptr)									/* Look for : to define proc-heading.	*/
-char **cptr;
+int find_colin(char** cptr)								/* Look for : to define proc-heading.	*/
 {
 	while (tststrt(*cptr))
 	{
@@ -213,9 +199,8 @@ char **cptr;
 	return(FALSE);
 }
 
-int 
-find_keyword(keystr,keylist)							/* Find the keyword in the list.	*/
-char *keystr, *keylist[];								/* Return index in keylist.		*/
+int find_keyword(char *keystr, char *keylist[])						/* Find the keyword in the list.	*/
+											/* Return index in keylist.		*/
 {
 	char *tmp_add, *tptr;
 	char tmp_str[STRBUFF];
@@ -244,32 +229,28 @@ char *keystr, *keylist[];								/* Return index in keylist.		*/
 	return(-1);
 }
 
-int number(c)										/* Test if character is a number.	*/
-char c;
+int number(char c)									/* Test if character is a number.	*/
 {
 	if (c >= '0' && c <= '9') return(TRUE);
 	else return(FALSE);
 }
 
-int operand(c)										/* Test if character ia an operand.	*/
-char c;
+int operand(char c)									/* Test if character ia an operand.	*/
 {											/*          + , - . / *			*/
 	if (c >= '*' && c <= '/') return(TRUE);
 	else return(FALSE);
 }
 
-int letter(c)										/* Test if character is a letter.	*/
-char c;
+int letter(char c)									/* Test if character is a letter.	*/
 {
 	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return(TRUE);
 	else return(FALSE);
 }
 
-set_value(num_buf,num_asn,current_row)							/* Init the screen variable and get	*/
-char *num_buf;										/* the picture clause.			*/
-int *num_asn, current_row;
+void set_value(char* num_buf,int* num_asn,int current_row)				/* Init the screen variable and get	*/
+											/* the picture clause.			*/
 {
-	char literal_field[100], *cptr, lenstr[FLDLEN], *cstr;
+	char literal_field[100], *cptr, lenstr[FLDLEN];
 	char field_name[FLDLEN], pic_len[FLDLEN];
 	int tlen, cont;
 
@@ -282,7 +263,7 @@ int *num_asn, current_row;
 	while (cont)									/* Copy text into value.		*/
 	{										/* Copy test to temp var and get length.*/
 		convert_to_dbl();							/* Convert ' within string to ".	*/
-		while (*aptr != '\'' && *aptr != LNFD && *aptr != '\0' && (aptr - inline < WPLMAX))
+		while (*aptr != '\'' && *aptr != LNFD && *aptr != '\0' && (aptr - linein < WPLMAX))
 		{
 			if (*aptr == '"')
 			{
@@ -328,13 +309,13 @@ int *num_asn, current_row;
 	}
 }
 
-get_type_len(fld,rcvr,num_var,num_val,getop)						/* Search table for fld match.		*/
-char *fld, *rcvr, getop;								/* getop = 'T' return type in rcvr,	*/
-int *num_var, *num_val;									/* getop = 'L' return length in rcvr.	*/
+void get_type_len(char*fld, char* rcvr,int* num_var,int* num_val,char getop)		/* Search table for fld match.		*/
+											/* getop = 'T' return type in rcvr,	*/
+											/* getop = 'L' return length in rcvr.	*/
 {											/* getop = 'S' assign screen item len.	*/
 	int retfl;									/* getop = 'A' add field to link list	*/
 	char fielda[FLDLEN], fieldb[FLDLEN];						/*         if not already there.	*/
-	char *cstr, *slen;								/* getop = 'C' add to linked list for	*/
+	char *cstr;								/* getop = 'C' add to linked list for	*/
 	struct putparm_item *hld_pp;							/*         define of subscripted var.	*/
 
 	write_log(util,'I','R',"GET","Getting type/size of %s from variable list.",fld);
@@ -420,7 +401,7 @@ int *num_var, *num_val;									/* getop = 'L' return length in rcvr.	*/
 		if (getop == 'A')							/* Search putparms for var referenced.	*/
 		{
 			char *lptr, *fptr;
-			char label[FLDLEN], key[FLDLEN], slen[5];
+			char label[FLDLEN], key[FLDLEN];
 			int check_key;
 
 			lptr = label;
@@ -517,15 +498,11 @@ int *num_var, *num_val;									/* getop = 'L' return length in rcvr.	*/
 	}
 }
 
-makeint(equate1,name_buf,num_asn)
-char *equate1, *name_buf;
-int *num_asn;
+void makeint(char* equate1, char* name_buf, int* num_asn)
 {
-	char pic_name[FLDLEN];
-	char pic_sz[FLDLEN];
 	char field_name[FLDLEN];
 	char *str_val, *end_val;
-	int sz, l, mn, k;
+	int sz;
 
 	while (operand(*equate1) || number(*equate1)) equate1--;			/* Look back until no numeric or *+-/.,	*/
 	equate1++;									/* Go to the first variable.		*/
@@ -555,22 +532,22 @@ int *num_asn;
 	strcpy(cur_decl->type,"IL");							/* Load the current type.		*/
 }
 
-get_next_line()										/* Read the next line for input source.	*/
+void get_next_line(void)										/* Read the next line for input source.	*/
 {
 	char *cstr;
 
-	fgets(inline,STRBUFF,infile);
-	num_inlines++;
-	cstr = inline;
-	setup_line(cstr);								/* Put inline into expected format.	*/
-	aptr = inline;									/* Set the pointer to the current line.	*/
+	fgets(linein,STRBUFF,infile);
+	num_lineins++;
+	cstr = linein;
+	setup_line(cstr);								/* Put linein into expected format.	*/
+	aptr = linein;									/* Set the pointer to the current line.	*/
 	next_ptr = aptr;
 	lcnt = 0;									/* Init the looping field indicators.	*/
 	captr = (char *)0;
 }
 
-concat_var_prefix(type)									/* Concatenate the variable prefix for	*/
-char type;										/* the current variable to cobline.	*/
+void concat_var_prefix(char type)							/* Concatenate the variable prefix for	*/
+											/* the current variable to cobline.	*/
 {
 	if (type == 'E') strcat(cobline,"EG-");		 				/* Load the External Global indicator.	*/
 	else if (type == 'G') strcat(cobline,"PG-"); 					/* Load the Global indicator.		*/
@@ -582,8 +559,7 @@ char type;										/* the current variable to cobline.	*/
 	else strcat(cobline,"PL-");							/* Load the local indicator.		*/
 }
 
-int len_to_int(strlen)									/* Convert string length field to int.	*/
-char *strlen;
+int len_to_int(char *strlen)								/* Convert string length field to int.	*/
 {
 	char *cpos, slen[10];
 	int i, len;
@@ -597,8 +573,7 @@ char *strlen;
 	return(len);
 }
 
-setup_line(lptr)									/* Put inline into expectd format.	*/
-char *lptr;
+void setup_line(char* lptr)								/* Put linein into expectd format.	*/
 {
 	char *cstr;
 	int qcnt, concat;
@@ -665,9 +640,7 @@ char *lptr;
 	else if (qcnt > 2) adj_quotes(lptr,qcnt);					/* Check if quotes are within string.	*/
 }
 
-static adj_quotes(lptr,qcnt)								/* Change quotes within string to ".	*/
-char *lptr;
-int qcnt;
+static void adj_quotes(char* lptr, int qcnt)						/* Change quotes within string to ".	*/
 {
 	char *spos;
 	int cqcnt, match_sgl, match_dbl, ndx;
@@ -764,8 +737,7 @@ int qcnt;
 	} 
 }
 
-char *upper_string(str)									/* Convert a string to uppercase.	*/
-char *str;
+char *upper_string(char* str)									/* Convert a string to uppercase.	*/
 {
 	for (; *str; str++)
 	{
@@ -775,7 +747,7 @@ char *str;
 }
 
 
-static convert_to_dbl()									/* Convert ' within string to ".	*/
+static void convert_to_dbl(void)							/* Convert ' within string to ".	*/
 {
 	char *laptr;
 	int i, cnt;
@@ -820,7 +792,7 @@ static convert_to_dbl()									/* Convert ' within string to ".	*/
 	}
 }
 
-int is_backref()									/* Determine if field is backwards	*/
+int is_backref(void)									/* Determine if field is backwards	*/
 {											/*  referenced.				*/
 	char * l_aptr;
 
@@ -833,3 +805,15 @@ int is_backref()									/* Determine if field is backwards	*/
 	if (*l_aptr == '&' || number(*l_aptr)) return (FALSE);
 	else return(TRUE);
 }
+/*
+**	History:
+**	$Log: ptutils.c,v $
+**	Revision 1.6  1997-04-21 11:24:50-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.5  1996-09-12 19:18:23-04  gsl
+**	Fix prototypes
+**
+**
+**
+*/

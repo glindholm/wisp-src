@@ -1,6 +1,23 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988,1989,1990,1991,1992,1993,1994		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 #include <stdio.h>
+#include <string.h>
+
 #include "vseglb.h"
 #include "vsescr.h"
+#include "vsedit.h"
+#include "vsedscr.h"
+
+#include "vwang.h"
 
 static char std_scr[1924];
 static char std_pfs[]="01020304050607080910111213141516X";
@@ -10,7 +27,7 @@ static char std_pfcode[3];
 static char std_status[3];
 
 static VSESCR_FLDS(std_flds) = {
-{LEN(0)	ROW(1)	COL(2)	VALUE("Integrated Program Editor")},
+{LEN(0)	ROW(1)	COL(2)	VALUE(VSE_COPYRIGHT)},
 {LEN(0)	ROW(2)	COL(2)	FROM(vse_file_message)},
 {LEN(0)	ROW(3)	COL(2)	FROM(vse_lines_message)},
 {LEN(0)	ROW(5)	COL(2)
@@ -56,20 +73,26 @@ int vse_initial_keypress;
 static VSEFLD loading =
 {LEN(0)	ROW(4)	COL(2)	BRIGHT("Loading Editor work space")};
 
-vse_loading_menu()
+
+static void init_loading_menu(void);
+static void init_standard_menu(void);
+static void vse_standard_dispatch(void);
+
+
+void vse_loading_menu(void)
 {
 	init_standard_menu();
 	init_loading_menu();
 	vwang(std_func,std_scr,std_lines,std_pfs,std_pfcode,std_status);
 }
 
-init_loading_menu()
+static void init_loading_menu(void)
 {
 	vsefld(&loading,std_scr);
 	memcpy(std_scr,vse_locked_oa,sizeof(vse_locked_oa));
 }
 
-vse_standard_menu()
+void vse_standard_menu(void)
 {
 	init_standard_menu();
 	vwang(std_func,std_scr,std_lines,std_pfs,std_pfcode,std_status);
@@ -77,7 +100,7 @@ vse_standard_menu()
 	vse_standard_dispatch();
 }
 
-init_standard_menu()
+static void init_standard_menu(void)
 {
 	memcpy(std_scr,vse_default_oa,sizeof(vse_default_oa));
 	vse_top_messages();
@@ -85,31 +108,29 @@ init_standard_menu()
 	vsescr(std_flds,std_scr);
 }
 
-vse_top_messages()
+void vse_top_messages(void)
 {
 	sprintf(vse_lines_message,
 		"There are %6ld lines in the edited text.   %s",vse_lines,
 		vse_file_changed?"(The file has been modified.)":"");
 	if(vse_new_file)
-		{
+	{
 		sprintf(vse_file_message,"There is no current input file");
-		}
-	else
-	if(vse_native)
-		{
-		trunc(vse_sysname);
-		sprintf(vse_file_message,"Input file is %s",vse_sysname);
-		untrunc(vse_sysname,sizeof(vse_sysname) - 1);
-		}
-	else
-		{
+	}
+	else if (wang_style_work_file())
+	{
 		sprintf(vse_file_message,"Input file is %s in %s on %s",
-			vse_gp_input_file,vse_gp_input_library,
+			vse_gp_input_file,
+			vse_gp_input_library,
 			vse_gp_input_volume);
-		}
+	}
+	else
+	{
+		sprintf(vse_file_message,"Input file is %s",vse_sysname);
+	}
 }
 
-vse_standard_dispatch()
+static void vse_standard_dispatch(void)
 {
 	vse_initial_keypress = vse_edit_pick;
 	
@@ -131,7 +152,7 @@ vse_standard_dispatch()
 		case 15:
 		case 1:
 			vse_menu = SPECIAL_MENU;
-			vse_ed_scr();
+			vse_ed_scr(vse_edit_pick);
 			break;
 		case 16:
 			vse_menu = SPECIAL_MENU;
@@ -141,3 +162,12 @@ vse_standard_dispatch()
 		}
 }
 
+/*
+**	History:
+**	$Log: vsestmnu.c,v $
+**	Revision 1.10  1996-09-03 18:24:12-04  gsl
+**	drcs update
+**
+**
+**
+*/

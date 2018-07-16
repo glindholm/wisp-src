@@ -1,0 +1,9 @@
+SOURCE \\cyclone\d\projects\wisp\src
+VOLIN  \\cyclone\testacu\volin
+VOLOUT \\cyclone\testacu\volout
+VOLRUN \\cyclone\testacu\volrun
+VOLSPL \\cyclone\testacu\volspl
+VOLWRK \\cyclone\testacu\volwrk
+TEMP   \TEMP
+ROOT   C:\
+HOME   C:\HOME

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -13,24 +15,21 @@
 
 #include <ctype.h>
 #include <string.h>
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
 
 #include "idsistd.h"
 #include "cobrun.h"
+#include "cobpic.h"
+#include "wisp_pic.h"
 
-char *strchr();
-char *strrchr();
-char *strpbrk();
 extern char	char_decimal_point;							/* The decimal_point character		*/
 extern char	char_comma;								/* The comma character			*/
 
-static int cobpic_alphaedit();
-static int cobpic_numedit();
+static int cobpic_alphaedit( char *xobj, const char *source, const char *xpicture, int size );
+static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int p_size, int p_dp, 
+			  int blankdecimal, char suppchar, int suppidx, int floatidx, int psigned );
 static int picedit_insert();
 static int picfloatedit();
-static int piczeroedit();
+static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx, int blankdecimal, int value,int psize, int dp);
 
 #define PIC_NOEDIT	0
 #define PIC_ALPHAEDIT	1
@@ -40,7 +39,6 @@ static int piczeroedit();
 #define NUM_FAC		0x82
 #define PROT_FAC	0x8C
 
-void cobxpic_edit();
 
 /*
 	cobpic_edit:	COBOL PICTURE EDIT
@@ -58,9 +56,7 @@ void cobxpic_edit();
 			All numeric pictures are treated a numeric-edited.
 			If the picture is alphanumeric or the size is greater then 80 no editing is performed.
 */
-cobpic_edit( object, source, picture, errcode )
-char 	*picture, *source, *object;
-int 	*errcode;
+void cobpic_edit(char* object, const char* source, const char* picture,int* errcode )
 {
 	char	xpic[100], suppchar;
 	int	xflag, psize, pic_type, pic_dp, blankdecimal, suppidx, floatidx, psigned;
@@ -75,18 +71,19 @@ int 	*errcode;
 
 }
 
-void cobxpic_edit(object,source,xpicture,size,pic_type,pic_dp,blankdecimal,suppchar,suppidx,floatidx,psigned,errcode)
-char	*source, *object;		/* Input and Output areas */
-char	*xpicture;			/* The expanded picture (also adjusted picture for Numeric only) */
-int	size;				/* The number of character positions in pic */
-int	pic_type;			/* The type of picture 0=noedit 1=Alphaedit 2=Numeric */
-int	pic_dp;				/* Number of characters to the left of the decimal point 	(Numeric only)*/
-int	blankdecimal;			/* Does the decimal portion contains no '9's	 		(Numeric only)*/
-char	suppchar;			/* Zero suppression character 					(Numeric only)*/
-int	suppidx;			/* Zero suppression index; offset of first 'Z' or '*' in pic	(Numeric only)*/
-int	floatidx;			/* Floating character index; offset of start of float 		(Numeric only)*/
-int	psigned;			/* Is the picture signed			 		(Numeric only)*/
-int 	*errcode;			/* Error code 0=success */
+void cobxpic_edit(
+		  char	*object,		/* Input and Output areas */
+		  const char	*source, 
+		  const char	*xpicture,	/* The expanded picture (also adjusted picture for Numeric only) */
+		  int	size,			/* The number of character positions in pic */
+		  int	pic_type,		/* The type of picture 0=noedit 1=Alphaedit 2=Numeric */
+		  int	pic_dp,			/* Number of characters to the left of the decimal point 	(Numeric only)*/
+		  int	blankdecimal,		/* Does the decimal portion contains no '9's	 		(Numeric only)*/
+		  char	suppchar,		/* Zero suppression character 					(Numeric only)*/
+		  int	suppidx,		/* Zero suppression index; offset of first 'Z' or '*' in pic	(Numeric only)*/
+		  int	floatidx,		/* Floating character index; offset of start of float 		(Numeric only)*/
+		  int	psigned,		/* Is the picture signed			 		(Numeric only)*/
+		  int 	*errcode)		/* Error code 0=success */
 {
 	char	xobj[100];
 
@@ -97,7 +94,6 @@ int 	*errcode;			/* Error code 0=success */
 	case PIC_NOEDIT:
 		memcpy(object,source,size);
 		return;
-		break;
 
 	case PIC_ALPHAEDIT:
 		*errcode = cobpic_alphaedit( xobj, source, xpicture, size);
@@ -123,8 +119,7 @@ int 	*errcode;			/* Error code 0=success */
 			"X(10)"		->	"XXXXXXXXXX"
 			"Z(6).9(4)"	->	"ZZZZZZ.9999"
 */
-static cobpic_expand( picture, xpic )
-char	*picture, *xpic;
+static void cobpic_expand( const char* picture, char* xpic )
 {
 	int 	i;
 	char	*xchar;
@@ -163,11 +158,11 @@ char	*picture, *xpic;
 /*
 	cobpic_alphaedit:	Do Alphanumeric editing.
 */
-static int cobpic_alphaedit( xobj, source, xpicture, size )
-char *xpicture, *xobj, *source;
-int  size;
+static int cobpic_alphaedit( char *xobj, const char *source, const char *xpicture, int size )
 {
-	char	*pic, *obj, *src;
+	char	*obj;
+	const char *src;
+	const char *pic;
 
 	pic = xpicture;						/* Point to expanded picture.				*/
 	obj = xobj;						/* Point to temp object buffer.				*/
@@ -181,7 +176,6 @@ int  size;
 			if ( !isalpha(*src) && *src != ' ' )
 			{
 				return(1);
-				break;
 			}
 			*obj++ = *src++;
 			break;
@@ -189,7 +183,6 @@ int  size;
 			if ( !isdigit(*src) )
 			{
 				return(1);
-				break;
 			}
 			*obj++ = *src++;
 			break;
@@ -225,18 +218,15 @@ int  size;
 				Floating 			'--', '++', '$$'
 				Ignore				'S', 'V', 'P'
 */
-static int cobpic_numedit( xobj, source, xpic, p_size, p_dp, blankdecimal, suppchar, suppidx, floatidx, psigned )
-char	*xobj, *source, *xpic;
-int	p_size, p_dp, blankdecimal, suppidx, floatidx, psigned;
-char	suppchar;
+static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int p_size, int p_dp, 
+			  int blankdecimal, char suppchar, int suppidx, int floatidx, int psigned )
 {
-	char	*pic, *obj, *src, *ptr;
+	const char	*src;
 	int	e_size; 					/* Size of the element in source.				*/
 	int	e_start; 					/* Starting offset of element in source.			*/
 	int	e_end;						/* Ending offset of element in source (after last position)	*/
 	int	e_dp;						/* Number of characters to the left of decimal point.		*/
-	int	inc_pic, inc_src, inc_obj, o_idx, e_idx, p_idx;
-	int	i,j,k;
+	int	inc_src, e_idx, p_idx;
 	int	negative, signfound, value;
 
 	negative = 0;
@@ -328,8 +318,14 @@ char	suppchar;
 
 	if (negative && !psigned) return(1);
 
-	for(value=0, e_idx=e_start; e_idx<e_end; e_idx++) if ( isdigit(source[e_idx]) && source[e_idx] != '0' ) {value=1; break;}
-
+	for(value=0, e_idx=e_start; e_idx<e_end; e_idx++) 
+	{
+		if ( isdigit(source[e_idx]) && source[e_idx] != '0' ) 
+		{
+			value=1; 
+			break;
+		}
+	}
 	if (negative && !value) return(1);
 
 	/*
@@ -338,6 +334,13 @@ char	suppchar;
 
 	for(e_dp=0; e_start+e_dp<e_end && source[e_start+e_dp] != char_decimal_point; e_dp++);	
 
+	/*
+	**	If there is a decimal point in the source and no decimal in picture clause then error.
+	*/
+	if (source[e_start+e_dp] == char_decimal_point && p_dp >= p_size )
+	{
+		return(1);
+	}
 
 	/*
 	**	Load left digits and fixed characters
@@ -420,9 +423,7 @@ char	suppchar;
 			"-$$$$$$$$"	->	"-$#######"
 */
 
-static adjustpic(xpic,size)
-char *xpic;
-int size;
+static void adjustpic(char *xpic, int size)
 {
 	char	*ptr1, *ptr2;
 
@@ -461,9 +462,7 @@ int size;
 /*
 	picedit_insert:		Insert a single character into object from pic or src.
 */
-static int picedit_insert(pic,src,obj,negative,inc_src)
-char	*pic, *src, *obj;
-int	negative, *inc_src;
+static int picedit_insert(char* pic, char* src, char* obj, int negative, int* inc_src)
 {
 	*inc_src = 0;
 	switch(*pic)
@@ -525,11 +524,8 @@ int	negative, *inc_src;
 			out	"  -24"		"  $123.45"
 */
 
-static int picfloatedit(xpic,xobj,floatidx,blankdecimal)			/* Floating insertion editing.			*/
-char *xpic, *xobj;
-int  floatidx, blankdecimal;
+static int picfloatedit(char* xpic, char* xobj, int floatidx, int blankdecimal)	/* Floating insertion editing.			*/
 {
-	char 	*ptr;
 	int	idx, i, shift, decimal, done;
 
 	if (floatidx >= 0)
@@ -623,10 +619,7 @@ int  floatidx, blankdecimal;
 
 */
 
-static int piczeroedit(xpic,xobj,suppchar,suppidx,blankdecimal,value,psize,dp)	/* Zero suppression editing.			*/
-char *xpic, *xobj;
-char suppchar;
-int  suppidx, blankdecimal, value, psize, dp;
+static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx, int blankdecimal, int value,int psize, int dp)
 {
 	char	*ptr;
 	int	done, idx, decimal, suppress, i;
@@ -751,18 +744,17 @@ int  suppidx, blankdecimal, value, psize, dp;
 /*
 	parse_pic:	Parse the cobol picture and return all editing info.
 */
-parse_pic(picture, xpic, xflag, psize, pic_type, pic_dp, blankdecimal, suppchar, suppidx, floatidx, psigned)
-char	*picture;			/* The COBOL picture clause. */
-char	*xpic;				/* The expanded picture (also adjusted picture for Numeric only) */
-int	*xflag;				/* Flag if xpic was created. */
-int	*psize;				/* The number of character positions in pic */
-int	*pic_type;			/* The type of picture 0=noedit 1=Alphaedit 2=Numeric */
-int	*pic_dp;			/* Number of characters to the left of the decimal point 	(Numeric only)*/
-int	*blankdecimal;			/* Does the decimal portion contains no '9's	 		(Numeric only)*/
-char	*suppchar;			/* Zero suppression character 					(Numeric only)*/
-int	*suppidx;			/* Zero suppression index; offset of first 'Z' or '*' in pic	(Numeric only)*/
-int	*floatidx;			/* Floating character index; offset of start of float 		(Numeric only)*/
-int	*psigned;			/* Is the picture signed			 		(Numeric only)*/
+void parse_pic(const char *picture,	/* The COBOL picture clause. */
+	       char	*xpic,		/* The expanded picture (also adjusted picture for Numeric only) */
+	       int	*xflag,		/* Flag if xpic was created. */
+	       int	*psize,		/* The number of character positions in pic */
+	       int	*pic_type,	/* The type of picture 0=noedit 1=Alphaedit 2=Numeric */
+	       int	*pic_dp,	/* Number of characters to the left of the decimal point 	(Numeric only)*/
+	       int	*blankdecimal,	/* Does the decimal portion contains no '9's	 		(Numeric only)*/
+	       char	*suppchar,	/* Zero suppression character 					(Numeric only)*/
+	       int	*suppidx,	/* Zero suppression index; offset of first 'Z' or '*' in pic	(Numeric only)*/
+	       int	*floatidx,	/* Floating character index; offset of start of float 		(Numeric only)*/
+	       int	*psigned)	/* Is the picture signed			 		(Numeric only)*/
 {
 	int	alphabetic, alphanumeric, numeric, alphaedit, idx, done;
 	char	*ptr;
@@ -891,3 +883,18 @@ int	*psigned;			/* Is the picture signed			 		(Numeric only)*/
 }
 
 
+/*
+**	History:
+**	$Log: cobpic.c,v $
+**	Revision 1.14  1997-12-17 15:32:22-05  gsl
+**	fix prototypes for const
+**
+**	Revision 1.13  1997-02-17 10:22:25-05  gsl
+**	fix prototype
+**
+**	Revision 1.12  1996-08-19 18:32:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

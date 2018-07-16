@@ -1,0 +1,22 @@
+procedure qastart.wps
+
+declare &lib as string(8)
+declare &pf as integer
+
+extract &lib=proglib
+
+prompt center "QASTART Will start the QA";;;
+       center "Run SAMPLE in ", upper &lib, " on SOURCE"
+
+start:
+
+rc: run sample in &lib on source
+
+prompt pfkey = &pf
+	center "SAMPLE completed with RC = ", rc;;;
+       	center "Press (ENTER) to rerun SAMPLE";;
+	center "Press (16) to exit."
+
+if &pf = 0 then goto start
+
+return

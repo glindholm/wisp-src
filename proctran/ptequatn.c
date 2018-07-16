@@ -1,10 +1,5 @@
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 **	File:		ptequatn.c
 **
@@ -34,16 +29,21 @@
 #include "pgeqtns.h"
 #include "pgdefeqn.h"
 
-static int assign_label();
-static int assign_length();
-static int check_assign_types();
-static int test_assign_flds();
-static int process_back_ref();
+static void assign_label(int* num_asn);							/* See if is a label.			*/
+static void assign_length(int* num_var, int* num_val,assign_item *saptr);		/* Assign the length parameter for the	*/
+static void check_assign_types(int* num_var,int* num_val);				/* Make sure have correct types.	*/
+static void process_back_ref(int* num_asn,int* num_var,int* num_val);			/* Process the backwards ref. field.	*/
 
-p_assign(num_asn,num_var,filler_num,current_row,num_val,num_cmds)			/* Process the current assign equation.	*/
-int *num_asn, *num_var, *filler_num, *current_row, *num_val, *num_cmds;
+static int test_assign_flds();
+
+void p_assign(int* num_asn,
+	      int* num_var,
+	      int* filler_num,
+	      int* current_row,
+	      int* num_val,
+	      int* num_cmds)								/* Process the current assign equation.	*/
 {
-	int tndx, i, len, cont, subfl;
+	int tndx, cont, subfl;
 	char *cstr, name_buf[FLDLEN], *l_aptr;
 	assign_item *astrt;								/* Ptr to current assign item.		*/
 	int setp, nvar;									/* Flag if need to set ptr back one.	*/
@@ -84,8 +84,8 @@ int *num_asn, *num_var, *filler_num, *current_row, *num_val, *num_cmds;
 						get_next_line();			/* in same string.			*/
 						nexttok();
 						strcat(tmp_line,aptr);
-						strcpy(inline,tmp_line);
-						aptr = inline;
+						strcpy(linein,tmp_line);
+						aptr = linein;
 						cstr = aptr;				/* Set the current ptr.			*/
 						cstr++;					/* Step past open parenthesis.		*/
 					}
@@ -178,7 +178,7 @@ int *num_asn, *num_var, *filler_num, *current_row, *num_val, *num_cmds;
 						write_log(util,'I','R',"PROCESS","Processing ASSIGN literal for equation.");
 						init_assign(num_asn);
 						cstr = cur_assign->field1;
-						while(*aptr != '\0' && *aptr != LNFD && *aptr != ' ' && (aptr - inline < WPLMAX))
+						while(*aptr != '\0' && *aptr != LNFD && *aptr != ' ' && (aptr - linein < WPLMAX))
 						{
 							*cstr++ = *aptr++;
 						}
@@ -241,7 +241,6 @@ int *num_asn, *num_var, *filler_num, *current_row, *num_val, *num_cmds;
 			} 								/* End of conector signs.		*/
 			case OPNQUOTE:
 			{
-				int clit;						/* Create literal flag.			*/
 
 				write_log(util,'I','R',"PROCESS","Processing ASSIGN string for equation.");
 				if (test_assign_flds())					/* Assign if should create literal.	*/
@@ -276,7 +275,7 @@ int *num_asn, *num_var, *filler_num, *current_row, *num_val, *num_cmds;
 
 					while (cont)
 					{
-						while(*aptr != '\0' && *aptr != LNFD && *aptr != '\'' && (aptr - inline < WPLMAX))
+						while(*aptr != '\0' && *aptr != LNFD && *aptr != '\'' && (aptr - linein < WPLMAX))
 						{
 							if (*aptr == '"') *aptr = '\'';	/* Set quote withing string to single.	*/
 							*cstr++ = *aptr++;
@@ -323,8 +322,7 @@ int *num_asn, *num_var, *filler_num, *current_row, *num_val, *num_cmds;
 }
 
 
-static assign_label(num_asn)								/* See if is a label.			*/
-int *num_asn;
+static void assign_label(int* num_asn)							/* See if is a label.			*/
 {
 	int fndlbl, len;
 	char *lptr, *cstr;
@@ -367,9 +365,9 @@ int *num_asn;
 	}
 }
 
-static assign_length(num_var,num_val,saptr)						/* Assign the length parameter for the	*/
-int *num_var, *num_val;									/* current substring.			*/
-assign_item *saptr;									/* Start of curr. list of assign items.	*/
+static void assign_length(int* num_var, int* num_val,assign_item *saptr)		/* Assign the length parameter for the	*/
+											/* current substring.			*/
+											/* Start of curr. list of assign items.	*/
 {
 	char *cstr, *pcstr;
 
@@ -408,8 +406,7 @@ assign_item *saptr;									/* Start of curr. list of assign items.	*/
 	}
 }
 
-static check_assign_types(num_var,num_val)						/* Make sure have correct types.	*/
-int *num_var, *num_val;
+static void check_assign_types(int* num_var,int* num_val)				/* Make sure have correct types.	*/
 {
 	struct assign_item *prev;
 	char typ;
@@ -442,7 +439,7 @@ static int test_assign_flds()								/* Assign if should create literal.	*/
 											/* Have more items so will be STRING.	*/
 		if (*aptr != '[')
 		{
-			if (*aptr != '\0' && *aptr != LNFD && (aptr - inline <= WPLMAX)) tf_fl = FALSE;
+			if (*aptr != '\0' && *aptr != LNFD && (aptr - linein <= WPLMAX)) tf_fl = FALSE;
 		}
 		aptr = hld_aptr;							/* Set the pointer back.		*/
 		return(tf_fl);								/* Have sustring and no other fields.	*/
@@ -452,8 +449,7 @@ static int test_assign_flds()								/* Assign if should create literal.	*/
 	return(FALSE);									/* Is a quoted string field.		*/
 }
 
-static process_back_ref(num_asn,num_var,num_val)					/* Process the backwards ref. field.	*/
-int *num_asn, *num_var, *num_val;
+static void process_back_ref(int* num_asn,int* num_var,int* num_val)			/* Process the backwards ref. field.	*/
 {
 	char *cstr;
 
@@ -475,3 +471,15 @@ int *num_asn, *num_var, *num_val;
 	next_ptr = aptr;
 	if (*aptr == ' ') nexttok();
 }
+/*
+**	History:
+**	$Log: ptequatn.c,v $
+**	Revision 1.6  1997-04-21 11:07:59-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.5  1996-09-12 19:16:41-04  gsl
+**	fix prototypes
+**
+**
+**
+*/

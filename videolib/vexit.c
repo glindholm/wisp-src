@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -10,24 +12,26 @@
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"
 #include "vcap.h"
+#include "vintdef.h"
 #include "vdata.h"
+#include "vmodules.h"
 
 /*						Subroutine entry point.								*/
 
-int vexit()
+void vexit()
 {
 	extern int exit_options;							/* What are the exit options.		*/
-	register int i, op;
+	int op;
 
-	if (!video_inited) return(SUCCESS);						/* Don't need to do because not inited.	*/
+	if (!video_inited) return;							/* Don't need to do because not inited.	*/
 
 	op = exit_options;								/* Exit options selected.		*/
-	vdefer(RESTORE);								/* Restore from optimization.		*/
-	if (op & NORMALIZE) vstate(NORMAL);						/* Set terminal to a known state.	*/
-	if (op & WIDE) vscreen(WIDE);							/* Wide screen wanted?			*/
-	if (op & NARROW) vscreen(NARROW);						/* Narrow screen wanted?		*/
-	if (op & LIGHT) vscreen(LIGHT);							/* Light screen wanted?			*/
-	if (op & DARK) vscreen(DARK);							/* Dark screen wanted?			*/
+	vdefer_restore();								/* Restore from optimization.		*/
+	if (op & NORMALIZE) vstate(VSTATE_DEFAULT);					/* Set terminal to a known state.	*/
+	if (op & WIDE)   vscreen(VSCREEN_WIDE);						/* Wide screen wanted?			*/
+	if (op & NARROW) vscreen(VSCREEN_NARROW);					/* Narrow screen wanted?		*/
+	if (op & LIGHT)  vscreen(VSCREEN_LIGHT);					/* Light screen wanted?			*/
+	if (op & DARK)   vscreen(VSCREEN_DARK);						/* Dark screen wanted?			*/
 	if (op & CLEAR_SCREEN) verase(FULL_SCREEN);					/* Erase the screen?			*/
 	if (op & MOVE_AND_SCROLL)							/* Move and scroll?			*/
 	{
@@ -38,10 +42,25 @@ int vexit()
 	{
 		vmove(MAX_LINES_PER_SCREEN-1,0);					/* Set position to screen lower left.	*/
 	}
-	vdefer(RESTORE);								/* Restore again.			*/
-	vcontrol(vcapdef[RESET_TERMINAL]);
-	vcontrol(DUMP_OUTPUT);								/* Make sure all output goes out.	*/
+	vdefer_restore();								/* Restore again.			*/
+	vcap_reset_terminal();
+	vcontrol_flush();								/* Make sure all output goes out.	*/
 	vrawexit();									/* Call low level to flush buffers etc.	*/
 	synch_required = TRUE;								/* And now a synch is required.		*/
-	return(SUCCESS);								/* Don't really exit.			*/
+	return;										/* Don't really exit.			*/
 }
+/*
+**	History:
+**	$Log: vexit.c,v $
+**	Revision 1.12  1997-07-08 16:59:08-04  gsl
+**	Change to use new video.h defines and interfaces
+**
+**	Revision 1.11  1996-11-13 20:30:02-05  gsl
+**	Use vcontrol_flush()
+**
+**	Revision 1.10  1996-10-11 15:16:04-07  gsl
+**	drcs update
+**
+**
+**
+*/

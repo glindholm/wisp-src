@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -11,11 +13,12 @@
 **	wfileext.c
 */
 
+#include <string.h>
+
 #include "idsistd.h"
 #include "filext.h"
 
-setwispfilext(wispfilext)								/* Init the complet string (39 chars)	*/
-char	*wispfilext;
+void setwispfilext(char* wispfilext)							/* Init the complet string (39 chars)	*/
 {
 	int i, len;
 
@@ -26,14 +29,23 @@ char	*wispfilext;
 	memcpy(WISPFILEXT,wispfilext,len);
 	for (i = len; i < 39; i++) WISPFILEXT[i] = ' ';					/* Pad with spaces.			*/
 }
-getwfilext(ptr)
-char *ptr;
+
+void getwfilext(char* ptr)
 {
 	memcpy(ptr,WISPFILEXT,39);
 }
-setwfilext(ptr)
-char *ptr;
+
+void setwfilext(char* ptr)
 {
 	memcpy(WISPFILEXT,ptr,39);
 }
 
+/*
+**	History:
+**	$Log: wfileext.c,v $
+**	Revision 1.9  1996-08-19 18:33:15-04  gsl
+**	drcs update
+**
+**
+**
+*/

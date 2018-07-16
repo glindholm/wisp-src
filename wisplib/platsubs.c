@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -16,6 +18,7 @@
 **
 **	Routines:	valplat()	Validate platform.
 **			whatplat()	What platform is this?
+**			WISPPLAT()	Cobol version of whatplat()
 **			plat_num()	Get platform info by number.
 **			plat_code()	Get platform info by code.
 **			putplattab()	Print a formatted table of platform codes.
@@ -23,13 +26,16 @@
 **	History:
 **			05/20/92	Written GSL
 **			05/26/92	Move putplattab() from wauthorize.c to isolate platform_table GSL
+**			09/09/97	Add DG/UX Intel platform  SMC
 */
 
 #include <stdio.h>
+#include <string.h>
 
 
 #include "idsistd.h"
 #include "wplatdef.h"
+#include "platsubs.h"
 
 struct platform_struct
 {
@@ -47,9 +53,10 @@ static struct platform_struct	platform_table[] =
 	PLATFORM_HPUX,		"HP",	"HP/UX 9000 RISC",
 	PLATFORM_SUNOS,		"SU",	"SunOS (Sparc)",
 	PLATFORM_SUN_3,		"S3",	"Sun 3 (68020)",
-	PLATFORM_SOLARIS,       "SO",   "Sun Solaris",
-	PLATFORM_SOLARIS_PC,	"SI",	"Solaris (Intel)",
+	PLATFORM_SOLARIS,       "SO",   "Sun Solaris 2",
+	PLATFORM_SOLARIS_PC,	"SI",	"Solaris 2 (Intel)",
 	PLATFORM_DGUX,		"DG",	"DG/UX Aviion",
+	PLATFORM_DGUX_INTEL,	"DI",	"DG/UX Intel",
 	PLATFORM_SCO,		"SC",	"SCO UNIX 386/486",
 	PLATFORM_NCR486,	"NC",	"NCR 386/486",
 	PLATFORM_NCR32,		"NT",	"NCR Tower/32 68020",
@@ -112,8 +119,7 @@ static struct platform_struct	platform_table[] =
 **
 */
 
-int valplat(code)
-char	code[2];
+int valplat(char code[2])
 {
 	char	rcode[2];
 	int	num;
@@ -148,9 +154,7 @@ char	code[2];
 **
 */
 
-int	whatplat(name,code)
-char	*name;
-char	code[2];
+int	whatplat(char* name, char code[2])
 {
 	int	p;
 	char	*name_p, *code_p, buff[80];
@@ -174,6 +178,9 @@ char	code[2];
 #endif
 #ifdef DGUX
 	p = PLATFORM_DGUX;
+#endif
+#ifdef DGUX_INTEL
+	p = PLATFORM_DGUX_INTEL;
 #endif
 #ifdef SCO
 	p = PLATFORM_SCO;
@@ -294,7 +301,7 @@ char	code[2];
 #ifdef VMS_ALPHA
 	p = PLATFORM_VMS_ALPHA;
 #endif
-#ifdef WINDOWS_NT
+#ifdef WIN32
 	p = PLATFORM_WINDOWS_NT;
 #endif
 
@@ -306,6 +313,43 @@ char	code[2];
 	}
 
 	return(p);
+}
+
+/*
+**	ROUTINE:	WISPPLAT()
+**
+**	FUNCTION:	Get the platform name and code
+**
+**	DESCRIPTION:	This is a COBOL frontend to whatplat()
+**
+**	ARGUMENTS:	
+**	name		The returned platform name
+**	code		The returned platform code
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void WISPPLAT(char name[20], char code[2])
+{
+	static char the_name[20] = "";
+	static char the_code[2] = "";
+
+	if (!*the_name)
+	{
+		char	buff[80];
+
+		whatplat(buff, the_code);
+
+		memset(the_name,' ',sizeof(the_name));
+		buff[20] = '\0';
+		memcpy(the_name,buff,strlen(buff));
+	}
+	memcpy(name,the_name,20);
+	memcpy(code,the_code,2);
 }
 
 
@@ -330,10 +374,7 @@ char	code[2];
 **
 */
 
-int	plat_num(num,name,code)
-int	num;
-char	*name;
-char	code[2];
+int	plat_num(int num, char* name, char code[2])
 {
 	int	i;
 	char	*name_p, *code_p, buff[80];
@@ -375,10 +416,7 @@ char	code[2];
 **
 */
 
-int	plat_code(code,name,num)
-char	code[2];
-char	*name;
-int	*num;
+int	plat_code(char code[2], char* name, int* num)
 {
 	int	i;
 	int	*num_p, numbuff;
@@ -422,7 +460,7 @@ int	*num;
 **
 */
 
-putplattab()
+void putplattab(void)
 {
 	int	i,col;
 
@@ -439,3 +477,21 @@ putplattab()
 	}
 	printf("\n\n");
 }
+/*
+**	History:
+**	$Log: platsubs.c,v $
+**	Revision 1.11  1997-09-09 14:27:38-04  scass
+**	Added DG/UX Intel as a platform
+**
+**	Revision 1.10  1997-03-12 12:58:11-05  gsl
+**	Changed to use define WIN32
+**
+**	Revision 1.9  1996-11-05 18:07:41-05  gsl
+**	Add WISPPLAT() a cobol callable routine to retrieve the current platform
+**
+**	Revision 1.8  1996-08-19 15:32:39-07  gsl
+**	drcs update
+**
+**
+**
+*/

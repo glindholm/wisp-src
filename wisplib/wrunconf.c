@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -26,24 +28,26 @@
 	wrunconfig	Load $WISPCONFIG/wrunconfig into the structure cfg.
 */
 
-#ifdef MSDOS
-#include <stdlib.h>
-#endif
-
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "idsistd.h"
 #include "wrunconf.h"
 #include "wdefines.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "wmalloc.h"
+#include "wispcfg.h"
 
-int wrunconfig(cfg)
-struct wruncfg *cfg;
+int wrunconfig(struct wruncfg *cfg)
 {
 	static struct	wruncfg	CFG;							/* Static structure to save.		*/
 	static int	FIRST=1;
 	char	*ptr;
-	char	wrunpath[80];
+	char	wrunpath[256];
 	FILE	*the_file;
-	char	inlin[80], upline[80];
+	char	inlin[512], upline[512];
 	int	found_runcbl, found_cobtype;
 	int	rc;
 
@@ -60,13 +64,12 @@ struct wruncfg *cfg;
 		strcpy(CFG.wrun_runcbl,"runcbl");					/* Default to runcbl			*/
 		strcpy(CFG.wrun_cobtype,"ACU");						/* Default to ACUCOBOL			*/
 
-		if ( ptr = (char *)getenv( WISP_CONFIG_ENV ) )				/* Get $WISPCONFIG			*/
 		{
-			buildfilepath( wrunpath, ptr, WRUNCONFIG );			/* Build path to $WISPCONFIG/wrunconfig */
+			buildfilepath( wrunpath, wispconfigdir(), WRUNCONFIG );		/* Build path to $WISPCONFIG/wrunconfig */
 
 			if (the_file = fopen( wrunpath, "r" ))				/* Open wrunconfig			*/
 			{
-				while(fgets(inlin,132,the_file))			/* Read a line				*/
+				while(fgets(inlin,sizeof(inlin),the_file))		/* Read a line				*/
 				{
 					if ( strlen(inlin) > 0 )			
 					{
@@ -79,12 +82,22 @@ struct wruncfg *cfg;
 
 					if ( strncmp(upline,"OPTIONS=",8) == 0 )
 					{
-						strcpy(CFG.wrun_options,&inlin[8]);
+						ptr = &inlin[8];
+						if (strlen(ptr) >= sizeof(CFG.wrun_options))
+						{
+							ptr = "(WRUN_OPTIONS_TOO_LONG)";
+						}
+						strcpy(CFG.wrun_options, ptr);
 					}
 					else if ( strncmp(upline,"RUNCBL=",7) == 0 )
 					{
 						found_runcbl = 1;
-						sscanf(&inlin[7],"%s",CFG.wrun_runcbl);
+						ptr = &inlin[7];
+						if (strlen(ptr) >= sizeof(CFG.wrun_runcbl))
+						{
+							ptr = "(WRUN_RUNCBL_TOO_LONG)";
+						}
+						sscanf(ptr,"%s",CFG.wrun_runcbl);
 					}
 					else if ( strncmp(upline,"COBOL=ACU",9) == 0 )
 					{
@@ -104,7 +117,12 @@ struct wruncfg *cfg;
 					else if ( strncmp(upline,"COBOL=",6) == 0 )
 					{
 						found_cobtype = 1;
-						strcpy(CFG.wrun_cobtype,&inlin[6]);
+						ptr = &inlin[6];
+						if (strlen(ptr) >= sizeof(CFG.wrun_cobtype))
+						{
+							ptr = "(INVALID)";
+						}
+						strcpy(CFG.wrun_cobtype, ptr);
 					}
 				}
 				fclose(the_file);					/* Close the file			*/
@@ -114,18 +132,23 @@ struct wruncfg *cfg;
 				rc = 2;							/* Unable to read wrunconfig		*/
 			}
 		}
-		else
-		{
-			rc = 1;								/* No WISPCONFIG			*/
-		}
 
-		if ( ptr = (char *)getenv( "RUNCBL" ) )					/* Override runcbl with env variable	*/
+		if ( ptr = getenv( "RUNCBL" ) )						/* Override runcbl with env variable	*/
 		{
+			if (strlen(ptr) >= sizeof(CFG.wrun_runcbl))
+			{
+				ptr = "(WRUN_RUNCBL_ENV_TOO_LONG)";
+			}
 			strcpy(CFG.wrun_runcbl,ptr);
 		}
 
-		if ( ptr = (char *)getenv(WRUNOPTIONS_ENV) )
+		if ( ptr = getenv(WRUNOPTIONS_ENV) )
 		{
+			if (strlen(ptr) >= sizeof(CFG.wrun_options))
+			{
+				ptr = "(WRUN_OPTIONS_ENV_TOO_LONG)";
+			}
+			
 			strcpy(CFG.wrun_options,ptr);
 		}
 	}
@@ -140,3 +163,18 @@ struct wruncfg *cfg;
 #endif	/* !VMS */
 
 
+/*
+**	History:
+**	$Log: wrunconf.c,v $
+**	Revision 1.13  1997-02-25 09:51:18-05  gsl
+**	Add error checking to handle too long of fields
+**
+**	Revision 1.12  1996-10-08 20:31:55-04  gsl
+**	move wispconfigdir() to wispcfg.h
+**
+**	Revision 1.11  1996-08-19 15:33:21-07  gsl
+**	drcs update
+**
+**
+**
+*/

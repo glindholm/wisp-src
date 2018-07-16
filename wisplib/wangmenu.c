@@ -1,9 +1,12 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* MENU  interface for WANG vs programs to the VAX menu system									*/
 
 #include "idsistd.h"
-menu(name,rval)
-char *name;									/* The name of the menu file			*/
-char *rval;									/* The return value				*/
+#include "menu.h"
+
+void menu(char *name,	/* The name of the menu file			*/
+	  char *rval)	/* The return value				*/
 {
 	int i;
 	char lname[16],lval[6];
@@ -24,3 +27,12 @@ char *rval;									/* The return value				*/
 	rval[0] = lval[0];							/* copy the return value			*/
 	rval[1] = lval[1];
 }
+/*
+**	History:
+**	$Log: wangmenu.c,v $
+**	Revision 1.9  1996-08-19 18:33:07-04  gsl
+**	drcs update
+**
+**
+**
+*/

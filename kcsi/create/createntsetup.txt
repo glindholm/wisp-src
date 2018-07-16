@@ -1,0 +1,94 @@
+	Copyright (c) 1997 by NeoMedia Technologies Inc. All Rights Reserved.
+	
+	====================================================================
+	
+	Title:		CREATE for Acucobol NT/95 Setup
+	
+	Document:	createntsetup.txt
+	Last Updated:	4 April 1997
+	Products:	CREATE for Acucobol NT/95
+	Versions:	2.0 (AND LATER)
+	
+	Summary:	Quick setup steps for CREATE on NT/95.
+
+	====================================================================
+	
+
+	CREATE for Acucobol NT/95 Setup
+	===============================
+
+	This document describes the steps for installing and setting up
+	the CREATE utility for Acucobol on MicroSoft Windows NT/95.
+
+
+	Overview
+	--------
+
+	1) Ensure WISP is installed first.
+	2) Uninstall previous versions of CREATE.
+	3) Install CREATE for Acucobol.
+	4) How to rebuild CREATE.
+
+
+	The Steps
+	---------
+
+	1) Ensure WISP is installed first.
+
+	    WISP must be installed first before you can install CREATE.
+	    Ensure you have WISP installed and configured before
+	    continuing.
+
+	2) Uninstall previous versions of CREATE.
+
+ 	    If CREATE is already installed on this machine then first
+	    uninstall the previous verion.  Use "Add/Remove programs" from
+	    the Control Panel to remove the previous version.
+
+	3) Install CREATE for Acucobol.
+
+	    a) Insert Disk 1 into floppy drive A:
+	    b) Run A:SETUP
+
+	    IMPORTANT: Install CREATE into the same directory where WISP
+	    is installed.  This will default to "C:\WISP".
+
+	    The following instructions assume you have installed WISP in
+	    directory C:\WISP .  If you have installed WISP into a
+	    different location the adjust the instructions accordingly.
+
+	4) How to rebuild CREATE.
+
+	    If you upgrade to a newer version of Acucobol you may wish to
+	    rebuild CREATE using the new Acucobol.
+
+	    a) Ensure new version of ACUCOBOL is installed and the
+	       Acucobol BIN directory is on the PATH.
+
+	          PATH %PATH%;C:\ACUCBL3X\BIN
+
+	    b) Ensure MicroSoft Visual C++ 4 is installed.
+	    c) Create an MSDOS/COMMAND prompt window
+	    d) Run C:\Msdev\Bin\Vcvars32.bat from Visual C++ to enable you
+	       to build from the command prompt.
+	    e) Change to the CREATE directory: cd C:\WISP\CREATEACU.20
+	    f) Edit WWRUNCBL.MAK 
+
+	       Change ACUDIR to the location where Acucobol was installed.
+
+	           ACUDIR=C:\ACUCBL3X
+
+	       Change CREATEDIR to the location of the CREATE directory.
+
+		   CREATEDIR=C:\WISP\CREATEACU.20
+
+	    g) Issue the command to build the new CREATE.
+
+	           C:> nmake /f wwruncbl.mak create
+
+	    h) Copy the new create utility to the WISP\BIN directory.
+
+	           C:> copy create.exe C:\WISP\BIN
+
+
+	========================= END OF DOCUMENT ==========================

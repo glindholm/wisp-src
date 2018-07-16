@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -20,7 +22,7 @@
 
 #ifdef unix
 
-static char *_copyright = "(c)1990,1993 Int'l Digital Scientific, Inc.";
+static char *idsi_copyright = "(c)1990,1993 International Digital Scientific, Inc.";
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -95,23 +97,26 @@ char	*argv[];
 	verbose_printf("wsysinit: Begin %s\n",ctime(&clock));
 
 	/*
-	**	Removing the /usr/tmp/wisptmp/RC_* files.
+	**	Removing wisptmp files:
+	**		/usr/tmp/wisptmp/RC_*
+	**		/usr/tmp/wisptmp/WPROC*
 	*/
 
 	verbose_printf("Removing Return Code temporary files.\n");
-	if (0!=access(WISP_TEMP_DIR,00))
+	if (0!=access(wisptmpdir(NULL),00))
 	{
-		verbose_printf("%s file was not found.\n",WISP_TEMP_DIR);
+		verbose_printf("%s file was not found.\n",wisptmpdir(NULL));
 	}
 	else	/* RETCOD file was found */
 	{
 		context=0; 
-		while (filename=nextfile(WISP_TEMP_DIR,&context))
+		while (filename=nextfile(wisptmpdir(NULL),&context))
 		{
 			if (!strcmp(filename,".") || !strcmp(filename,"..")) continue;
-			if (0==memcmp(filename,"RC_",(size_t)3))
+			if (0==memcmp(filename,"RC_",3) ||
+			    0==memcmp(filename,"WPROC",5)  )
 			{
-				sprintf(fullpath,"%s/%s",WISP_TEMP_DIR,filename);
+				sprintf(fullpath,"%s/%s",wisptmpdir(NULL),filename);
 				verbose_printf("Deleting file %s.\n",fullpath);
 				unlink(fullpath);
 			}
@@ -122,12 +127,12 @@ char	*argv[];
 	verbose_printf("\nRemoving WISP Shared Memory & Message Queue Areas.\n");
 	
 	context=0; 
-	while (filename=nextfile(WISP_PRB_DIR,&context))
+	while (filename=nextfile(wispprbdir(NULL),&context))
 	{
 		if (!strcmp(filename,".") || !strcmp(filename,"..")) continue;
 
 		ok2delete = 0;
-		sprintf(fullpath,"%s/%s",WISP_PRB_DIR,filename);
+		sprintf(fullpath,"%s/%s",wispprbdir(NULL),filename);
 		verbose_printf("\nKey file is %s.\n",fullpath);
 
 		key = wftok(fullpath);
@@ -204,7 +209,7 @@ char	*argv[];
 	verbose_printf("%s\n",command);
 	system(command);
 
-	sprintf(command,"rm -f %s/* >/dev/null 2>&1",WISP_LINK_DIR);
+	sprintf(command,"rm -f %s/* >/dev/null 2>&1",wisplinkdir(NULL));
 	verbose_printf("%s\n",command);
 	system(command);
 
@@ -224,3 +229,15 @@ char	*a1, *a2, *a3, *a4, *a5, *a6, *a7, *a8;
 }
 
 #endif /* unix */
+/*
+**	History:
+**	$Log: wsysinit.c,v $
+**	Revision 1.10  1996-08-23 17:25:54-04  gsl
+**	Change to use wispxxxdir() routines
+**
+**	Revision 1.9  1996-07-23 11:13:13-07  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,64 +1,300 @@
-#/************************************************************************/
-#/*									 */
-#/*		 Copyright (c) 1988, 1989, 1990, 1991, 1992		 */
-#/*	 An unpublished work of International Digital Scientific Inc.	 */
-#/*			    All rights reserved.			 */
-#/*									 */
-#/************************************************************************/
+#	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+#	$Id:$
 #
 #
-#	File:		wrunmf.umf
+#	File:	wrunmf.umf
 #
-#	Function:	The UNIX makefile for building the Micro Focus
-#			COBOL/2  runtime systems that include the WISP 
-#			runtime routines.
+#	Function:
+#		The UNIX makefile for building the Micro Focus COBOL
+#		runtime systems that include the WISP runtime routines.
 #
-#	Description:	This makefile can generate the following versions
-#			of the runtime system.
+#	Description:
+#		This makefile can generate the following versions
+#		of the Micro Focus runtime system.
 #
-#			wrunmf		The standard runtime
+#		wrunmf		The standard runtime
 #
-#			wrunmfe		The EDE version of the runtime.
+#		wrunmfe		The EDE version of the runtime.
 #
-#	Instructions:	To create a runtime system follow the
-#			instructions in Appendix A of the WISP Manual
-#			"Building a Micro Focus COBOL/2 runtime system".
+#	Instructions:
+#		To create a Micro Focus runtime system position to 
+#		the wisp/mf directory and run the "make" utility 
+#		using this file as input.
 #
-#			To build wrunmf:
-#				$ make -f wrunmf.umf
+#		NOTE:	You do not need to move the wisp libraries
+#			to /usr/lib as specified in earlier 
+#			instructions.
 #
-#			To build wrunmfe:
-#				$ make -f wrunmf.umf wrunmfe
+#		This makefile requires instructions on how to find
+#		the WISP libraries and the Micro Focus files.
+#		This is done using the variables WISPDIR and COBDIR.
+#
+#			WISPDIR = The installed WISP directory
+#			COBDIR  = The Micro Focus directory
+#
+#		COBDIR must be set as an environment variable for
+#		the compiler to run.
+#
+#			$ COBDIR=/usr/local/cobol
+#			$ export COBDIR
+#
+#		There are two methods of specifying the WISPDIR.
+#
+#		Method A:
+#		---------
+#		Edit this file and change WISPDIR and COBDIR to 
+#		point to the correct location.
+#
+#			WISPDIR=/usr/local/wisp
+#			COBDIR=/usr/local/cobol
+#
+#		To build a standard runtime:
+#			$ cd $WISPDIR/mf
+#			$ make -f wrunmf.umf
+#
+#		To build a EDE runtime:
+#			$ cd $WISPDIR/mf
+#			$ make -f wrunmf.umf ede
 #
 #
-#	LIBPATH:	If your libraries reside in a directory other then
-#			/usr/lib then change LIBPATH to there correct
-#			location.
+#		Method B:
+#		---------
+#		Set WISPDIR as an environment variable then use 
+#		the "-e" flag with make. (The -e flag causes the environment
+#		variables to override the internal variables.)
+#
+#			$ WISPDIR=/usr/local/wisp
+#			$ export WISPDIR
+#
+#		To build a standard runtime:
+#			$ cd $WISPDIR/mf
+#			$ make -f wrunmf.umf -e
+#
+#		To build a EDE runtime:
+#			$ cd $WISPDIR/mf
+#			$ make -f wrunmf.umf -e ede
+#
+#
+#	NOTES:	On some systems the curses library is located in a different
+#		location, see LIBCURSES below.
+#			
+#
+#	Targets:
+#		When running the make utility you can specify what "targets"
+#		to create.  You specify a target by adding it to the end
+#		of the make command.
+#
+#		Usage:	make -f wrunmf.umf [-e] [targets...]
+#
+#		The following targets are recognized in this makefile.
+#		Each target that builds a runtime has a corresponding macro 
+#		which can be used to change the name of the runtime.
+#
+#		rts		The default WISP + Micro Focus runtime.
+#				Runtime = wrunmf
+#				Macro   = RTS
+#
+#		ede		The EDE runtime.
+#				Runtime = wrunmfe
+#				Macro   = RTSE
+#
+#		both		Create both rts and ede targets.
+#
+#		clean		This target is used to remove any files 
+#				created by this makefile.
+#
+#		Examples:
+#
+#		(1) Build the EDE runtime. (Method A)
+#
+#			$ cd $WISPDIR/mf
+#			$ make -f wrunmf.umf ede
+#
+#		(2) Build the runtime using the name "wrunmf32". (Method B) 
+#
+#			$ cd $WISPDIR/mf
+#			$ make -f wrunmf.umf -e RTS=wrunmf32 rts
+#
+#	
 #
 
-CFLAGS= -O
 
-#	wispmf.o	- Micro Focus specific WISP routines.
-#	wrunmf.c	- WISP routine list.
-SUBS=wrunmf.o wispmf.o
+#============================================================================
+#
+# **** CHANGE WISPDIR HERE ****
+#
+# These macros represent environment variables.
+#
+# WISPDIR	The installed WISP directory
+# COBDIR	The Micro Focus COBOL directory
+#
+WISPDIR=/usr/local/wisp
+COBDIR=/usr/local/cobol
 
+#============================================================================
+#
+# WISPLIBSDIR points to the directory of the WISP libraries.  This is built
+# based on WISPDIR, however it can be overridden if the libraries have been
+# moved out of the installed WISP directory tree.
+#
+WISPLIBSDIR=$(WISPDIR)/lib
+
+#============================================================================
+#
+# **** CHANGE LIBCURSES HERE ****
+#
+# LIBCURSES is normally set to use the standard curses library. However on
+# some systems the curses library is located or named differently. On these
+# system you must uncomment the appropriate definition of LIBCURSES.
+#
 LIBCURSES= -lcurses
-
-# Uncomment for Ultrix
+# Uncomment the following for Ultrix
 #LIBCURSES= -lcursesX
+# Uncomment the following for SunOS 4.1.3
+#LIBCURSES= /usr/5lib/libcurses.a
+# Uncomment the following for SunOS 5.5.1
+#LIBCURSES= /usr/ccs/lib/libcurses.a
+# Uncomment the following for HP-UX 10.20
+#LIBCURSES= -lcur_colr
 
-# Uncomment for SunOS
-#LIBCURSES= -L/usr/5lib -lcurses
+#============================================================================
+#
+# COBOL is the cobol compiler.
+#
+COBOL=cob
 
-LIBPATH=/usr/lib
-LIBPATHS=$(LIBPATH)/libwisp.a $(LIBPATH)/libvideo.a
-LIBS=-lwisp -lvideo -lm $(LIBCURSES)
+#============================================================================
+#
+# COBTEST is a test file used to determine if COBOL installed
+#
+COBTEST=$(COBDIR)/cobver
 
-all:	wrunmf
+#============================================================================
+#
+# Standard WISP libraries
+#
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+LIBWISP=lib$(L_WISP).a
+LIBVIDEO=lib$(L_VIDEO).a
+LIBEDE=lib$(L_EDE).a
 
-wrunmf: $(SUBS) $(LIBPATHS)
-	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) $(LIBS)
+WISP_LIB_PATH  		= $(WISPLIBSDIR)/$(LIBWISP)
+VIDEO_LIB_PATH 		= $(WISPLIBSDIR)/$(LIBVIDEO)
+EDE_LIB_PATH   		= $(WISPLIBSDIR)/$(LIBEDE)
 
-wrunmfe: $(SUBS) $(LIBPATHS) $(LIBPATH)/libede.a
-	cob -xe "" -o $@ $(SUBS) -L $(LIBPATH) -lede $(LIBS)
+WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
 
+OTHER_LINK		= -lm $(LIBCURSES)
+
+#============================================================================
+#
+#	wispmf.o	- Micro Focus specific WISP routines.
+#	wrunmf.o	- WISP routine list.
+WISPSUBS=wrunmf.o wispmf.o
+
+#============================================================================
+#
+# Default RTS names
+#
+RTS=wrunmf
+RTSE=wrunmfe
+
+#============================================================================
+#
+# Standard CC flags
+#
+CFLAGS=
+
+#============================================================================
+#
+# WISPFILES is a list of any files which could be found in the WISP
+# directory.  It is used ONLY for detecting and displaying an error
+# message if the file is not found.
+#
+WISPFILES=$(WISPLIBSDIR)/$(LIBWISP) \
+	$(WISPLIBSDIR)/$(LIBVIDEO) \
+	$(WISPLIBSDIR)/$(LIBEDE) \
+	$(WISPDIR)/mf/wispmf.c \
+	$(WISPDIR)/mf/wrunmf.c
+
+#============================================================================
+#
+#	TARGETS:
+#
+
+default: rts
+
+both:	rts ede
+
+rts:	$(RTS)
+
+ede:	$(RTSE)
+
+clean:	
+	rm -f $(RTS) $(RTSE) core $(WISPSUBS) *~
+
+header: $(WISPDIR) $(COBDIR) $(COBTEST)
+	@echo ">>>> BUILDING MICRO FOCUS RUNTIME"
+	@echo ">>>>"
+	@echo ">>>> WISPDIR = " $(WISPDIR)
+	@echo ">>>> COBDIR  = " $(COBDIR)
+	@echo ">>>>"
+
+$(WISPDIR):
+	@echo ">>>> ERROR: The WISP directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = " $(WISPDIR)
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting WISPDIR."
+	@echo ">>>>"
+	@exit 1
+
+$(COBDIR):
+	@echo ">>>> ERROR: The Micro Focus directory was not found!"
+	@echo ">>>>"
+	@echo ">>>> Using COBDIR = " $(COBDIR)
+	@echo ">>>>"
+	@echo ">>>> See the instructions at the beginning of this makefile"
+	@echo ">>>> for information on setting COBDIR."
+	@echo ">>>>"
+	@exit 1
+
+$(COBTEST):
+	@echo ">>>> ERROR: A Micro Focus configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The Micro Focus file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using COBDIR = " $(COBDIR)
+	@echo ">>>>"
+	@exit 1
+
+$(WISPFILES):
+	@echo ">>>> ERROR: A WISP configuration error was detected!"
+	@echo ">>>>"
+	@echo ">>>> The WISP file $@ was not found."
+	@echo ">>>>"
+	@echo ">>>> Using WISPDIR = $(WISPDIR)"
+	@echo ">>>>"
+	@exit 1
+
+$(RTS): header $(WISPSUBS) $(WISP_LIBS_PATHS)
+	$(COBOL) -xe "" -o $@ $(WISPSUBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+
+$(RTSE): header $(WISPSUBS) $(WISPEDE_LIBS_PATHS)
+	$(COBOL) -xe "" -o $@ $(WISPSUBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
+
+subsonly:	$(WISPSUBS)
+
+wrunmf.o: wrunmf.c
+
+wispmf.o: wispmf.c
+
+wrunmf.c: $(WISPDIR)/mf/wrunmf.c
+	cmp -s $(WISPDIR)/mf/$@ $@ || cp $(WISPDIR)/mf/$@ $@
+
+wispmf.c: $(WISPDIR)/mf/wispmf.c
+	cmp -s $(WISPDIR)/mf/$@ $@ || cp $(WISPDIR)/mf/$@ $@

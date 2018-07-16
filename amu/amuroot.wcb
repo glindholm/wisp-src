@@ -1,0 +1,2005 @@
+000001/*****************************************************************
+000001*                                                                *
+000001*                       IDENTIFICATION DIVISION                  *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001/*****************************************************************
+000001*                                                                *
+000001*     Application Management Utility (AMU)                       *
+000001*                                                                *
+000001******************************************************************
+000001
+000001 IDENTIFICATION DIVISION.
+000001 PROGRAM-ID.
+000001     AMUROOT.
+000001 AUTHOR.
+000001     Suzette Cass.
+000001 DATE-WRITTEN.
+000001     06/16/93.
+000001/*****************************************************************
+000001*                                                                *
+000001*                         ENVIRONMENT DIVISION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 ENVIRONMENT DIVISION.
+000001 CONFIGURATION SECTION.
+000001 SOURCE-COMPUTER.
+000001     WANG-VS.
+000001 OBJECT-COMPUTER.
+000001     WANG-VS.
+000001 FIGURATIVE-CONSTANTS.
+           A-0-BYTE  IS "00", A-1-BYTE  IS "01", A-2-BYTE  IS "02",
+           A-3-BYTE  IS "03", A-4-BYTE  IS "04", A-5-BYTE  IS "05",
+           A-6-BYTE  IS "06", A-7-BYTE  IS "07", A-8-BYTE  IS "08",
+           A-9-BYTE  IS "09", A-10-BYTE IS "0A", A-11-BYTE IS "0B",
+           A-12-BYTE IS "0C", A-13-BYTE IS "0D", A-14-BYTE IS "0E",
+           A-15-BYTE IS "0F", A-16-BYTE IS "10", A-17-BYTE IS "11",
+           A-18-BYTE IS "12", A-19-BYTE IS "13", A-20-BYTE IS "14",
+           A-21-BYTE IS "15", A-22-BYTE IS "16", A-23-BYTE IS "17",
+           A-24-BYTE IS "18", A-28-BYTE IS "1C", A-42-BYTE IS "2A",
+           A-54-BYTE IS "36",
+           A-160-BYTE IS "A0"
+           DELIMTR     IS "02"
+000001     PROTECT-BIT IS "04"
+           SUB-5       IS "05"                     
+000001     DIM-BIT     IS "08"
+000001     LF          IS "0A"
+000001     BLINK-BIT   IS "10"
+           POSITION-CURSOR IS "20"
+           UNLOCK-KEYBOARD IS "80"
+           WSXIO-READ  IS "40"
+           WSXIO-WRITE IS "80"
+           BR-MOD-UCNL IS "81"
+000001     BOLD-TEXT   IS "84"
+000001     TAB-STOP    IS "86"
+           PLAIN-TEXT  IS "8C"
+           MENU-PICK   IS "8E"
+000001     BLINK-TEXT  IS "94"
+000001     NO-ECHO     IS "98"
+           BL-MOD-UL   IS "B9"
+           BLANK-TEXT  IS "9C"
+           BR-MOD-UCL  IS "A1"
+           BOLD-UNDER-TEXT IS "A4"
+           UNDER-TEXT  IS "AC"
+           BLINK-UNDER-TEXT IS "B4"
+           BLANK-UNDER-TEXT IS "BC".
+000001                                                      
+000001/*****************************************************************
+000001*                                                                *
+000001*                         INPUT-OUTPUT SECTION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 INPUT-OUTPUT SECTION.
+000001 FILE-CONTROL.
+000001*
+000001     SELECT CRT
+000001         ASSIGN TO "CRT",      "DISPLAY",
+000001         ORGANIZATION    IS SEQUENTIAL
+000001         ACCESS MODE     IS RANDOM
+000001         RELATIVE KEY    IS LINENUM
+000001         PFKEY           IS PF-KEY
+000001         CURSOR POSITION IS CURSOR-POS
+000001         FILE STATUS     IS FILSTAT.
+
+            COPY AMUSEL.
+000001
+000001/*****************************************************************
+000001*                                                                *
+000001*                      DATA DIVISION - FILE SECTION              *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 DATA DIVISION.
+000001 FILE SECTION.
+000001*
+123456*89012345678901234567890123456789012345678901234567890123456789012
+000001 FD  CRT
+000001     LABEL RECORDS ARE OMITTED.
+000001 01  CRTREC.
+           03  CRTREC-OA                 PIC X(04).
+           03  CRTREC-MAPPING-AREA       PIC X(1920).
+000001*
+           COPY AMUFD.
+000001/*****************************************************************
+000001*                                                                *
+000001*                         WORKING STORAGE                        *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 WORKING-STORAGE SECTION.
+000001
+       COPY VERSION.
+
+000001 01  FILSTAT.
+000001     03  ERR-FLAG                   PIC X(01).
+000001     03  PFK-BYTE                   PIC X(01).
+
+028400 01  WSA-DATE-AREA.
+028500     03  WSA-NDATE                  PIC 9(06).
+028600     03  WSA-ADATE REDEFINES WSA-NDATE.
+               05  DATE-YY                PIC X(02).
+               05  DATE-MM                PIC X(02).
+               05  DATE-DD                PIC X(02).
+       01  FORMAT-DATE.
+           03  FORMAT-DATE-1              PIC X(02).
+           03  DATE-SEPARATOR-1           PIC X(01) VALUE "/".
+           03  FORMAT-DATE-2              PIC X(02).
+           03  DATE-SEPARATOR-2           PIC X(01) VALUE "/".
+           03  FORMAT-DATE-3              PIC X(02).
+
+       01  DATE-FUNC                      PIC X(02) VALUE "GD".
+       01  DAY-TEXT.
+           03  DAY-LEFT                   PIC X(09) VALUE SPACES.
+           03  DAY-RIGHT                  PIC X(09) VALUE SPACES.
+       01  DATE-RETURN-CODE.
+           03  FILLER                     BINARY  VALUE 0.
+           03  DATE-RC-2                  BINARY  VALUE 0.
+
+       01  WSA-TIME-AREA.
+           03  WSA-NTIME                 PIC 9(8).
+           03  WSA-ATIME REDEFINES WSA-NTIME.
+               05  TIME-HOUR             PIC X(02).
+               05  TIME-MIN              PIC X(02).
+               05  TIME-SEC              PIC X(02).
+               05  TIME-HUND-SEC         PIC X(02).
+       01  FORMAT-TIME.
+           05  FORMAT-TIME-1             PIC X(02).
+           05  TIME-SEPARATOR-1          PIC X(01) VALUE ":".
+           05  FORMAT-TIME-2             PIC X(02).
+           05  TIME-SEPARATOR-2          PIC X(01) VALUE " ".
+           05  FORMAT-TIME-3             PIC X(02).
+       01  TIME-ROW                      BINARY      VALUE 1.
+       01  TIME-COL                      BINARY      VALUE 1.
+       01  SYSTEM-NAME                    PIC X(16) VALUE SPACES.
+       01  SYSTEM-NAME-LEFT               PIC X(16) VALUE SPACES.
+       01  SYSTEM-NAME-RIGHT              PIC X(16) VALUE SPACES.
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  TEMP-OA.
+           03  TEMP-OA-START              PIC X(01) VALUE A-1-BYTE.
+           03  TEMP-OA-WCC                PIC X(01) VALUE A-160-BYTE.
+           03  TEMP-OA-COL                PIC X(01) VALUE A-0-BYTE.
+           03  TEMP-OA-ROW                PIC X(01) VALUE A-0-BYTE.
+
+       01  BELL-TIME.
+           03  FILLER                     BINARY VALUE 0.
+           03  BELL-TIME-2                BINARY VALUE 1.
+
+       01  SELECTION-MENU-TEXT            PIC X(20) VALUE SPACES.
+
+       01  COMMAND-BUFF                   PIC X(80) VALUE SPACES.
+
+           COPY AMUWS.
+           COPY AMUTOKEN.
+
+       01  CHOICE                PIC X(02)   VALUE SPACES.
+       01  SUB1                  BINARY      VALUE 0.
+       01  CNT1                  BINARY      VALUE 0.
+       01  CNT1-OFFSET           BINARY      VALUE 0.
+       01  CNT2                  BINARY      VALUE 0.
+       01  CNT3                  BINARY      VALUE 0.
+       01  IDX1                  BINARY      VALUE 0.
+       01  IDX2                  BINARY      VALUE 0.
+       01  ROWC                  BINARY      VALUE 0.
+       01  COLC                  BINARY      VALUE 0.
+       01  RTVC                  BINARY      VALUE 0.
+       01  RTV-TYPE              PIC X(03)   VALUE SPACES.
+       01  RTV-LABEL             PIC X(05)   VALUE SPACES.
+       01  RTV-FOUND-MATCH       PIC X(01).
+           88  RTV-FOUND         VALUE "Y".
+           88  RTV-NOT-FOUND     VALUE "N".
+       01  USAGE-CONSTANT-REF    PIC X(06)   VALUE SPACES.
+       01  HOLD-COLUMNS          PIC 9(02)   VALUE 0.
+       01  HOLD-POSN.
+           03  HOLD-POSN-1       PIC X(01)   VALUE SPACES.
+           03  HOLD-POSN-2       PIC 9(01)   VALUE ZEROES.
+       01  POSN-NUM              PIC 9(01)   VALUE ZEROES.
+       01  HOLD-FAC-STRT         PIC X(01)   VALUE SPACES.
+       01  HOLD-FAC-END          PIC X(01)   VALUE SPACES.
+       01  FOUND-MATCH           PIC X(01).
+           88  FOUND             VALUE "Y".
+           88  NOT-FOUND         VALUE "N".
+       01  HOLD-SC               PIC X(01) VALUE SPACES.
+       01  SC-MATCH              PIC X(01) VALUE "N".
+           88  VALID-SC          VALUE "Y".
+           88  NOTVALID-SC       VALUE "N".
+       01  SELECTION-MATCH       PIC X(01) VALUE "N".
+           88  VALID-SEL         VALUE "Y".
+           88  NOTVALID-SEL      VALUE "N".
+       01  HOLD-PFKEY            PIC X(04) VALUE SPACES.
+       01  ROW-CNT               BINARY      VALUE 0.
+       01  SCN-ROW-CNT           BINARY      VALUE 0.
+       01  SCN-ROW-OFFSET        BINARY      VALUE 0.
+       01  CUR-SCN-ROW           BINARY      VALUE 0.
+       01  MAX-CHAR-CNT          BINARY      VALUE 76.
+
+       01  EXT-FUNC-TYPE         PIC X(02)   VALUE SPACES.
+       01  EXT-USER-ID           PIC X(03)   VALUE SPACES.
+       01  WORKSTATION-NUM.
+           03  FILLER            BINARY      VALUE ZEROES.
+           03  WORKSTATION-NUM-2 BINARY      VALUE ZEROES.
+       01  WORK-STATION-STR      PIC 9(03)   VALUE ZEROES.
+       01  EXT-USER-NAME         PIC X(24)   VALUE SPACES.
+       01  DISP-MENU-FLAG        PIC X(01)   VALUE "Y".
+           88  DISP-MENU         VALUE "Y".
+           88  NODISP-MENU       VALUE "N".
+       01  MENU-TITLE-TEXT       PIC X(59)   VALUE SPACES.
+       01  MENU-TITLE-LENGTH     BINARY      VALUE 0.
+       01  WINDOW-DEFINED        PIC X(01)   VALUE SPACES.
+           88  NO-WINDOW                     VALUE "N".
+           88  HAVE-WINDOW                   VALUE "Y".
+       01  MENU-STACK-TABLE.
+           03  MENU-STACK-ITEM     OCCURS 16 TIMES.
+               05  STACK-MENU-ID PIC X(06) VALUE SPACES.
+               05  M-STACK-ROW   PIC X(01) VALUE A-0-BYTE.
+               05  M-STACK-COL   PIC X(01) VALUE A-0-BYTE.
+               05  STACK-MENU-FILE PIC X(08) VALUE SPACES.
+               05  STACK-MENU-LIB  PIC X(08) VALUE SPACES.
+               05  STACK-MENU-VOL  PIC X(06) VALUE SPACES.
+               05  M-STACK-PW      PIC X(08) VALUE SPACES.
+       01  MENU-RECORD           PIC 9(01) VALUE 0.
+       01  STACK-INDEX           BINARY    VALUE ZEROES.
+       01  STACK-IND1            BINARY    VALUE ZEROES.
+       01  TEST-CHAR             PIC X(01) VALUE SPACES.
+       01  HOLD-MENU-ID          PIC X(06) VALUE SPACES.
+       01  TEST-RECORD           PIC X(01) VALUE "N".
+           88  RECORD-EXISTS     VALUE "Y".
+           88  RECORD-NOTEXISTS  VALUE "N".
+       01  USER-REC-FLAG         PIC X(01) VALUE "N".
+           88  USE-USER-REC      VALUE "Y".
+           88  NO-USER-REC       VALUE "N".
+       01  SC-IDX                BINARY    VALUE ZEROES.
+
+       01  MENU-FLV-TABLE.
+           03  MENU-FLV-ITEM      OCCURS 72 TIMES.
+               05  M-FILE         PIC X(08) VALUE SPACES.
+               05  F-FILE-STR REDEFINES M-FILE.
+                   10  FILE-ID-CHAR     OCCURS 8 TIMES.
+                       15  FILE-CHAR    PIC X(01).
+               05  M-LIBRARY      PIC X(08) VALUE SPACES.
+               05  M-LIB-STR REDEFINES M-LIBRARY.
+                   10  LIB-ID-CHAR OCCURS 8 TIMES.
+                       15  LIB-CHAR     PIC X(01).
+               05  M-VOLUME       PIC X(6)  VALUE SPACES.
+               05  M-VOL-STR REDEFINES M-VOLUME.
+                   10  VOL-ID-CHAR OCCURS 6 TIMES.
+                       15  VOL-CHAR     PIC X(01).
+               05  M-PP-PAR-OPT         PIC X(16).
+               05  M-SEL-PASSWORD       PIC X(08).
+       01  FLV-IDX                BINARY    VALUE 0.
+
+       01  TEST-FILE         PIC X(08) VALUE SPACES.
+       01  TEST-LIB          PIC X(08) VALUE SPACES.
+       01  TEST-VOL          PIC X(06) VALUE SPACES.
+
+       01  RUNTIME-VAR-TABLE.
+           03  RT-VAR-ITEM      OCCURS 250 TIMES.
+               05  RT-LABEL     PIC X(05) VALUE SPACES.
+               05  RT-FILE      PIC X(08) VALUE SPACES.
+               05  RT-FILE-STR REDEFINES RT-FILE.
+                   10  RT-FILE-CHAR     OCCURS 8 TIMES.
+                       15  RTFILE-CHAR    PIC X(01).
+               05  RT-LIB       PIC X(08) VALUE SPACES.
+               05  RT-LIB-STR REDEFINES RT-LIB.
+                   10  RT-LIB-CHAR     OCCURS 8 TIMES.
+                       15  RTLIB-CHAR    PIC X(01).
+               05  RT-VOL       PIC X(06) VALUE SPACES.
+               05  RT-VOL-STR REDEFINES RT-VOL.
+                   10  RT-VOL-CHAR     OCCURS 6 TIMES.
+                       15  RTVOL-CHAR    PIC X(01).
+
+       01  PASSWORD-TYPE         PIC X(01) VALUE " ".
+           88  MENU-PW           VALUE "M".
+           88  MENU-SEL-PW       VALUE "S".
+       01  RUN-SEL-FLAG          PIC X(01)   VALUE "Y".
+           88  RUN-SEL           VALUE "Y".
+           88  NORUN-SEL         VALUE "N".
+ 
+035600******************************************************************
+035800* Call Set and Extract variables for Keywords.
+035891******************************************************************
+030301 01  FC                             PIC X(2) VALUE "FC".
+030302 01  FH                             PIC X(2) VALUE "FH".
+030302 01  FN                             PIC X(2) VALUE "FN".
+030303 01  ID                             PIC X(2) VALUE "ID".
+030304 01  IL                             PIC X(2) VALUE "IL".
+030305 01  IV                             PIC X(2) VALUE "IV".
+030306 01  JC                             PIC X(2) VALUE "JC".
+030307 01  JL                             PIC X(2) VALUE "JL".
+030308 01  JQ                             PIC X(2) VALUE "JQ".
+030308 01  JS                             PIC X(2) VALUE "JS".
+030309 01  LI                             PIC X(2) VALUE "LI".
+030310 01  NA                             PIC X(2) VALUE "NA".
+030311 01  OL                             PIC X(2) VALUE "OL".
+030312 01  OV                             PIC X(2) VALUE "OV".
+030313 01  PC                             PIC X(2) VALUE "PC".
+030314 01  PK                             PIC X(2) VALUE "PF".
+030314 01  PL                             PIC X(2) VALUE "PL".
+030315 01  PM                             PIC X(2) VALUE "PM".
+030316 01  PN                             PIC X(2) VALUE "P#".
+030317 01  PR                             PIC X(2) VALUE "PR".
+030318 01  PV                             PIC X(2) VALUE "PV".
+030319 01  RC                             PIC X(2) VALUE "RC".
+030320 01  RL                             PIC X(2) VALUE "RL".
+030321 01  RR                             PIC X(2) VALUE "RR".
+030321 01  RS                             PIC X(2) VALUE "RS".
+030321 01  RV                             PIC X(2) VALUE "RV".
+030322 01  SL                             PIC X(2) VALUE "SL".
+030323 01  SV                             PIC X(2) VALUE "SV".
+030323 01  XL                             PIC X(2) VALUE "XL".
+030323 01  XV                             PIC X(2) VALUE "XV".
+030324 01  TT                             PIC X(2) VALUE "TT".
+030325 01  WN                             PIC X(2) VALUE "W#".
+030326 01  WV                             PIC X(2) VALUE "WV".
+017000/*****************************************************************
+017100*                                                                *
+017200*                   STRING SUBROUTINE DEFINITIONS                *
+017300*                                                                *
+017400******************************************************************
+*23456*89012345678901234567890123456789012345678901234567890123456789012
+017600 01  STR-FUNC                       PIC X(2) VALUE "MI".
+017600 01  STR-INPUT-INDEX.
+017600     05  STR-IN-INDEX-R-1           BINARY VALUE 0.
+017600     05  STR-IN-INDEX-R-2           BINARY VALUE 0.
+017600 01  STR-INPUT-LENGTH.
+017600     05  STR-IN-LEN-R-1             BINARY VALUE 0.
+017600     05  STR-IN-LEN-R-2             BINARY VALUE 0.
+017600 01  STR-OUTPUT-INDEX.
+017600     05  STR-OUT-INDEX-R-1          BINARY VALUE 0.
+017600     05  STR-OUT-INDEX-R-2          BINARY VALUE 0.
+017600 01  STR-OUTPUT-LENGTH.
+017600     05  STR-OUT-LEN-R-1            BINARY VALUE 0.
+017600     05  STR-OUT-LEN-R-2            BINARY VALUE 0.
+       01  CUR-WORK-STRING.
+           03  FILLER                     PIC X(01) VALUE SPACES.
+           03  CUR-WS-STRING.
+               05  CUR-WS-STR-CHAR  OCCURS 79 TIMES.
+                   07  FILLER             PIC X(01) VALUE SPACES.
+       01  IN-STRING                      PIC X(80) VALUE SPACES.
+       01  OUT-STRING                     PIC X(24) VALUE SPACES.
+       01  LINK-OPTION                    PIC X(05) VALUE SPACES.
+
+      ******************************************************************
+      *                  LINK PARAMETERS                               *
+      ******************************************************************
+       01  LINK-TO-FILE        PIC X(08) VALUE SPACES.
+       01  LINK-FILE-STR REDEFINES LINK-TO-FILE.
+           10  LINK-FILE-ID-CHAR     OCCURS 8 TIMES.
+               15  LINK-FILE-CHAR    PIC X(01).
+       01  LINK-TO-LIB         PIC X(08) VALUE SPACES.
+       01  LINK-LIB-STR REDEFINES LINK-TO-LIB.
+           10  LINK-LIB-ID-CHAR     OCCURS 8 TIMES.
+               15  LINK-LIB-CHAR    PIC X(01).
+       01  LINK-TO-VOL         PIC X(06) VALUE SPACES.
+       01  LINK-VOL-STR REDEFINES LINK-TO-VOL.
+           10  LINK-VOL-ID-CHAR     OCCURS 8 TIMES.
+               15  LINK-VOL-CHAR    PIC X(01).
+       01  LINK-TYPE           PIC X(01) VALUE SPACES.
+       01  LINK-PARM-CNT.
+           03 LINK-PARM-CNT-1  BINARY  VALUE ZERO.
+           03 LINK-PARM-CNT-2  BINARY  VALUE ZERO.
+       01  LINK-PASS-AREA.
+           03  STEP-PARAMETER       PIC X(16) VALUE SPACES.
+           03  USER-PARAMETER       PIC X(48) VALUE SPACES.
+           03  NAME-OF-USER         PIC X(24) VALUE SPACES.
+           03  ITM-MESSAGE-PORT     PIC X(04) VALUE SPACES.
+           03  FILLER               PIC X(04) VALUE SPACES.
+           03  DATE-DISP-FORMAT     PIC X(01) VALUE SPACES.
+           03  TIME-DISP-FORMAT     PIC X(01) VALUE SPACES.
+           03  TIME-UPDATE-INTERVAL PIC X(02) VALUE SPACES.
+           03  INACTIVE-TIMEOUT     PIC 9(02) VALUE ZEROES.
+           03  FILLER               PIC X(154) VALUE SPACES.
+           03  FILLER               PIC X(1792) VALUE SPACES.
+       01  LINK-CANCEL-FLAG    PIC X(01) VALUE SPACES.
+       01  LINK-MESSAGE        PIC X(27) VALUE SPACES.
+       01  LINK-MESS-LEN.
+           03 LINK-MESS-LEN-1  BINARY  VALUE ZERO.
+           03 LINK-MESS-LEN-2  BINARY  VALUE ZERO.
+       01  LINK-HELP           PIC X(01) VALUE SPACES.
+       01  LINK-COMP-CODE.
+           03 LINK-COMP-CODE-1 BINARY VALUE ZERO.
+           03 LINK-COMP-CODE-2 BINARY VALUE ZERO.
+       01  LINK-COMP-CODE-X PIC 9999  VALUE ZERO.     
+       01  LINK-RETURN.
+           03 LINK-RETURN-1    BINARY    VALUE ZERO.
+           03 LINK-RETURN-2    BINARY    VALUE ZERO.
+       01  LINK-RETURN-X    PIC 9(04)    VALUE ZERO.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+123456*89012345678901234567890123456789012345678901234567890123456789012
+       01  MENU-SCREEN USAGE IS DISPLAY-WS.
+           03  SCN-ROW      OCCURS 24 TIMES ROW 1.
+               05  FILLER     PIC X(80)  ROW 01  COL 01
+                   SOURCE  SCN-ITEM  OBJECT SCN-ITEM.
+
+       01  SCN-DEF.
+           03  SCN-ITEM     OCCURS 24 TIMES.
+               05  SCN-VAL     PIC X(80) VALUE SPACES.
+
+       01  PROMPT-PASSWORD-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(32) ROW 1 COL 31 VALUE
+               "AMU Menu Processor".
+           03  PROMPT-1  PIC X(40) ROW 2 COL 20
+               SOURCE DEF-MO-TITLE.
+           03  PROMPT-2  PIC X(79) ROW 19 COL 2
+               SOURCE PROMPT-SCN-TEXT.
+           03  FILLER    PIC X(10) ROW 21 COL 32 VALUE
+               "PASSWORD =".
+           03  PROMPT-3  PIC X(08) ROW 21 COL 43
+               SOURCE ENTER-PASSWORD  OBJECT ENTER-PASSWORD.
+           03  FILLER    PIC X(53) ROW 23 COL 1 VALUE
+               "or Select: 1 - Cancel Request and Respecify Function".
+
+       01  PROMPT-SCN-TEXT PIC X(79) VALUE SPACES.
+       01  ENTER-PASSWORD  PIC X(08) VALUE SPACES.
+
+           COPY AMUSCN.
+
+       LINKAGE SECTION.
+
+       01  START-MENU             PIC X(06).
+       01  START-FILE             PIC X(08).
+       01  START-LIB              PIC X(08).
+       01  START-VOL              PIC X(06).
+       01  PRODUCT-TEXT           PIC X(24).
+       01  MESSAGE-NUM            PIC 9(02).
+       01  PROCESS-LIB            PIC X(08).
+       01  PROCESS-VOL            PIC X(06).
+
+000001/*****************************************************************
+000001*                                                                *
+000001*                         PROCEDURE DIVISION                     *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 PROCEDURE DIVISION USING START-MENU, START-FILE, START-LIB,
+                                START-VOL, PRODUCT-TEXT, MESSAGE-NUM,
+                                PROCESS-LIB, PROCESS-VOL.
+       MAIN-START.
+           PERFORM INITIALIZATION.
+           MOVE START-FILE TO FIL-FOR-MFILE.
+           MOVE START-LIB  TO LIB-FOR-MFILE.
+           MOVE START-VOL  TO VOL-FOR-MFILE.
+           OPEN SHARED MENU-FILE.
+           PERFORM GET-USER-DEF.
+           IF ENTRY-PROC-MENU-FILE  NOT = SPACES
+               MOVE "ENTRY" TO LINK-OPTION
+               PERFORM LINK-TO-PROG-PROC.
+           IF START-MENU = "&START"
+               IF USER-REC-REQUIRED = "Y" AND NO-USER-REC
+                   MOVE 1 TO MESSAGE-NUM
+                   GO TO EXIT-PROGRAM
+               END-IF
+               IF USER-START-MENU = SPACES
+                   MOVE 2 TO MESSAGE-NUM
+                   GO TO EXIT-PROGRAM
+               END-IF
+               MOVE USER-START-MENU TO START-MENU
+               MOVE START-MENU TO STACK-MENU-ID(STACK-INDEX)
+               IF PROCESS-LIB NOT = SPACES AND
+                  PROCESS-VOL NOT = SPACES
+                   MOVE LOW-VALUES TO MFILE-KEY
+                   MOVE "MD" TO RECORD-TYPE
+                   MOVE SPACES TO MREC-DEFINITION
+                   PERFORM LOAD-RUNTIME-TABLE
+                   MOVE "START" TO LINK-OPTION
+                   PERFORM LINK-TO-PROG-PROC
+                   GO TO EXIT-PROGRAM.
+          
+           PERFORM GET-MENU-SETUP.
+           IF STACK-INDEX > 0
+               PERFORM DISPLAY-MENU THRU EXIT-DISPLAY-MENU
+                   UNTIL STACK-INDEX = 0.
+           
+           CLOSE MENU-FILE.
+
+000001 EXIT-PROGRAM.
+000001     EXIT PROGRAM.
+000001
+000001 STOP-RUN.
+000001     STOP RUN.
+
+       INITIALIZATION.
+           ACCEPT WSA-NTIME FROM TIME. 
+           ACCEPT WSA-NDATE FROM DATE.
+           MOVE "ID" TO EXT-FUNC-TYPE.
+           CALL "EXTRACT" USING EXT-FUNC-TYPE, EXT-USER-ID.
+           MOVE "NA" TO EXT-FUNC-TYPE.
+           CALL "EXTRACT" USING EXT-FUNC-TYPE, EXT-USER-NAME.
+           MOVE "W#" TO EXT-FUNC-TYPE.
+           CALL "EXTRACT" USING EXT-FUNC-TYPE, WORKSTATION-NUM.
+           MOVE WORKSTATION-NUM-2 TO WORK-STATION-STR.
+           MOVE " Digital OpenVMS" TO SYSTEM-NAME.
+           MOVE "Digital OpenVMS " TO SYSTEM-NAME-LEFT.
+           MOVE " Digital OpenVMS" TO SYSTEM-NAME-RIGHT.
+           CALL "DATE" USING DATE-FUNC, WSA-NDATE, DAY-LEFT,
+                             DATE-RETURN-CODE.
+
+           MOVE TITLE-TOK-DEFINES TO TITLE-TOKEN-TABLE.
+           MOVE FAC-CHAR-DEFINES TO FAC-TABLE.
+           MOVE INSTRUCT-TOK-DEFINES TO INSTRUCT-TOKEN-TABLE.
+           MOVE 1 TO STACK-INDEX.
+           MOVE START-MENU TO STACK-MENU-ID(STACK-INDEX).
+           MOVE START-FILE TO STACK-MENU-FILE(STACK-INDEX).
+           MOVE START-LIB  TO STACK-MENU-LIB(STACK-INDEX).
+           MOVE START-VOL  TO STACK-MENU-VOL(STACK-INDEX).
+
+       DISPLAY-MENU.
+           DISPLAY AND READ MENU-SCREEN ON CRT
+               PFKEYS 16.
+
+           IF PF-KEY = "16" THEN
+               PERFORM BACKUP-ONE-MENU
+               GO TO EXIT-DISPLAY-MENU.
+
+           PERFORM COMPUTE-SELECTION-POSITION THRU
+               EXIT-COMPUTE-SEL-POSITION.
+
+           IF VALID-SEL THEN
+               PERFORM TAKE-ACTION-FROM-MENU
+               PERFORM PROCESS-MENU-OPTS-DEFINITION
+               PERFORM UPDATE-TIME-HEADER
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               GO TO DISPLAY-MENU.
+
+           GO TO DISPLAY-MENU.
+
+       EXIT-DISPLAY-MENU.
+           EXIT.
+
+       UPDATE-TIME-HEADER.
+           MOVE 0 TO STR-IN-INDEX-R-2.
+           MOVE 8 TO STR-IN-LEN-R-2.
+           MOVE TIME-COL TO STR-OUT-INDEX-R-2.
+           MOVE 8 TO STR-OUT-LEN-R-2.
+           CALL "STRING" USING STR-FUNC, FORMAT-TIME,
+                 STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                 SCN-ITEM(TIME-ROW), STR-OUTPUT-INDEX,
+                 STR-OUTPUT-LENGTH.
+
+       TAKE-ACTION-FROM-MENU.
+           PERFORM SAVE-OA-ROW-COL.
+           IF FILE-ID-CHAR(CNT1, 1) = "(" THEN
+               MOVE STACK-INDEX TO STACK-IND1
+               ADD 1 TO STACK-INDEX
+               PERFORM SET-MENU-ID
+               MOVE HOLD-MENU-ID TO STACK-MENU-ID(STACK-INDEX)
+               MOVE STACK-MENU-FILE(STACK-IND1) TO 
+                    STACK-MENU-FILE(STACK-INDEX)
+               MOVE STACK-MENU-LIB(STACK-IND1) TO 
+                    STACK-MENU-LIB(STACK-INDEX)
+               MOVE STACK-MENU-VOL(STACK-IND1) TO 
+                    STACK-MENU-VOL(STACK-INDEX)
+               PERFORM SETUP-MENU-DEFINITION
+           ELSE
+           IF FILE-ID-CHAR(CNT1, 1) = "%" THEN
+               MOVE M-FILE(CNT1) TO TEST-FILE
+               MOVE "FIL" TO RTV-TYPE
+               PERFORM MATCH-RUNTIME-VAR
+               PERFORM SET-AMU-PASS-AREA
+               MOVE SPACES TO LINK-OPTION
+               PERFORM LINK-TO-PROG-PROC
+           ELSE
+           IF FILE-ID-CHAR(CNT1, 1) = "<" THEN
+               PERFORM MSEL-PASSWORD-PROCESSING
+               IF RUN-SEL
+                   DISPLAY "EXIT-ACTION commands not implemented yet"
+               END-IF
+           ELSE
+           IF FILE-ID-CHAR(CNT1, 1) = "'" THEN
+               PERFORM MSEL-PASSWORD-PROCESSING
+               IF RUN-SEL
+                   DISPLAY "Application keywords not implemented yet"
+               END-IF
+           ELSE
+               PERFORM MSEL-PASSWORD-PROCESSING
+               IF RUN-SEL
+                   IF ENTRY-PROC-MENU-FILE  NOT = SPACES
+                       MOVE "ENTRY" TO LINK-OPTION
+                       PERFORM LINK-TO-PROG-PROC
+                   END-IF
+                   MOVE M-FILE(CNT1) TO LINK-TO-FILE
+                   IF LIB-ID-CHAR(CNT1, 1) = "%" THEN
+                       MOVE M-LIBRARY(CNT1) TO TEST-LIB
+                       MOVE "LIB" TO RTV-TYPE
+                       PERFORM MATCH-RUNTIME-VAR
+                   ELSE
+                       MOVE M-LIBRARY(CNT1)  TO LINK-TO-LIB
+                   END-IF
+                   IF VOL-ID-CHAR(CNT1, 1) = "%" THEN
+                       MOVE M-VOLUME(CNT1) TO TEST-VOL
+                       MOVE "VOL" TO RTV-TYPE
+                       PERFORM MATCH-RUNTIME-VAR
+                   ELSE
+                       MOVE M-VOLUME(CNT1)  TO LINK-TO-VOL
+                   END-IF
+                   PERFORM SET-AMU-PASS-AREA
+                   MOVE SPACES TO LINK-OPTION
+                   PERFORM LINK-TO-PROG-PROC
+                   IF EXIT-PROC-MENU-FILE  NOT = SPACES
+                       MOVE "EXIT" TO LINK-OPTION
+                       PERFORM LINK-TO-PROG-PROC
+                   END-IF
+                   MOVE M-STACK-ROW(STACK-INDEX) TO TEMP-OA-ROW
+                   MOVE M-STACK-COL(STACK-INDEX) TO TEMP-OA-COL
+                   MOVE TEMP-OA TO ORDER-AREA OF MENU-SCREEN
+               END-IF
+           END-IF.
+
+       INIT-NEW-MENU.
+           MOVE SPACES TO MENU-FLV-TABLE.
+           PERFORM INIT-SCREEN VARYING ROW-CNT FROM 1
+               BY 1 UNTIL ROW-CNT > 23.
+
+       INIT-SCREEN.
+           MOVE SPACES TO C1-ROW(ROW-CNT), P1-ROW(ROW-CNT).
+           MOVE ZEROES TO C1-TABLE(ROW-CNT),P1-TABLE(ROW-CNT).
+           MOVE SPACES TO C2-ROW(ROW-CNT), P2-ROW(ROW-CNT).
+           MOVE ZEROES TO C2-TABLE(ROW-CNT,1),P2-TABLE(ROW-CNT,1).
+           MOVE ZEROES TO C2-TABLE(ROW-CNT,2),P2-TABLE(ROW-CNT,2).
+           MOVE SPACES TO C3-ROW(ROW-CNT), P3-ROW(ROW-CNT).
+           MOVE ZEROES TO C3-TABLE(ROW-CNT,1),P3-TABLE(ROW-CNT,1).
+           MOVE ZEROES TO C3-TABLE(ROW-CNT,2),P3-TABLE(ROW-CNT,2).
+           MOVE ZEROES TO C3-TABLE(ROW-CNT,3),P3-TABLE(ROW-CNT,3).
+
+       MATCH-RUNTIME-VAR.
+           MOVE 1 TO STR-IN-INDEX-R-2.
+           MOVE 5 TO STR-IN-LEN-R-2.
+           MOVE 0 TO STR-OUT-INDEX-R-2.
+           MOVE 5 TO STR-OUT-LEN-R-2.
+           MOVE SPACES TO RTV-LABEL.
+           IF RTV-TYPE = "FIL"
+               CALL "STRING" USING STR-FUNC, TEST-FILE,
+                     STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                     RTV-LABEL, STR-OUTPUT-INDEX,
+                     STR-OUTPUT-LENGTH
+           ELSE 
+             IF RTV-TYPE = "LIB"
+               CALL "STRING" USING STR-FUNC, TEST-LIB,
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         RTV-LABEL, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH
+             ELSE
+               IF RTV-TYPE = "VOL"
+                   CALL "STRING" USING STR-FUNC, TEST-VOL,
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         RTV-LABEL, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH
+               ELSE
+                   DISPLAY "INVALID Runtime variable."
+               END-IF
+             END-IF
+           END-IF.
+           PERFORM FIND-RTV-INDEX.
+           IF RTV-FOUND
+             IF RTV-TYPE = "FIL"
+               IF RTFILE-CHAR(RTVC, 1) = "&"
+                   MOVE RT-FILE(RTVC) TO USAGE-CONSTANT-REF
+                   PERFORM SET-USAGE-CONSTANT-VALUE 
+               ELSE
+                   MOVE RT-FILE(RTVC) TO LINK-TO-FILE
+               END-IF
+             ELSE
+               IF RTV-TYPE = "LIB"
+                 IF RTLIB-CHAR(RTVC, 1) = "&"
+                     MOVE RT-LIB(RTVC) TO USAGE-CONSTANT-REF
+                     PERFORM SET-USAGE-CONSTANT-VALUE 
+                 ELSE
+                     MOVE RT-LIB(RTVC) TO LINK-TO-LIB
+                 END-IF
+               ELSE
+                 IF RTV-TYPE = "VOL"
+                   IF RTVOL-CHAR(RTVC, 1) = "&"
+                       MOVE RT-VOL(RTVC) TO USAGE-CONSTANT-REF
+                       PERFORM SET-USAGE-CONSTANT-VALUE 
+                   ELSE
+                       MOVE RT-VOL(RTVC) TO LINK-TO-VOL
+                   END-IF
+                 END-IF
+               END-IF
+             END-IF
+           END-IF.
+
+       SET-USAGE-CONSTANT-VALUE.
+           IF USAGE-CONSTANT-REF = "&IN   "
+               IF RTV-TYPE = "LIB"
+                 MOVE "IL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "IV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&OUT  "
+               IF RTV-TYPE = "LIB"
+                 MOVE "OL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "OV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&RUN  "
+               IF RTV-TYPE = "LIB"
+                 MOVE "RL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "RV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&WORK "
+               IF RTV-TYPE = "LIB"
+                 MOVE "WL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "WV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&SPOOL"
+               IF RTV-TYPE = "LIB"
+                 MOVE "SL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "SV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&CURR "
+               IF RTV-TYPE = "LIB"
+                 MOVE "CL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "CV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&PROG "
+               IF RTV-TYPE = "LIB"
+                 MOVE "PL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "PV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&SYS  "
+               IF RTV-TYPE = "LIB"
+                 MOVE "XL" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-LIB
+               ELSE
+                 MOVE "XV" TO EXT-FUNC-TYPE
+                 CALL "EXTRACT" USING EXT-FUNC-TYPE, LINK-TO-VOL.
+
+           IF USAGE-CONSTANT-REF = "&MENU "
+               IF RTV-TYPE = "FIL"
+                   MOVE STACK-MENU-FILE(STACK-INDEX) TO LINK-TO-FILE
+               ELSE
+                 IF RTV-TYPE = "LIB"
+                   MOVE STACK-MENU-LIB(STACK-INDEX) TO LINK-TO-LIB
+                 ELSE
+                   MOVE STACK-MENU-VOL(STACK-INDEX) TO LINK-TO-VOL.
+
+       LOAD-RUNTIME-TABLE.
+           MOVE "R0" TO MRECORD-DEF.
+           MOVE MREC-DEF-NUM TO MENU-RECORD.
+           MOVE 1 TO FLV-IDX
+           PERFORM GET-REST-RUNTIME VARYING MENU-RECORD FROM MENU-RECORD
+               BY 1 UNTIL RECORD-NOTEXISTS OR MENU-RECORD > 9.
+
+       GET-REST-RUNTIME.
+           MOVE MENU-RECORD TO MREC-DEF-NUM.
+           PERFORM READ-MENU-FILE-RECORD.
+           IF RECORD-EXISTS
+               MOVE MFILE-REST-OF-RECORD TO RUNTIME-VARS-RECORD
+               PERFORM SET-THE-RT-SELECTIONS.
+
+       SET-THE-RT-SELECTIONS.
+           PERFORM INIT-RT-FIELDS VARYING CNT1 FROM 1 BY 1
+               UNTIL RT-VAR-LABEL(CNT1) = SPACES OR CNT1 > 25.
+
+       INIT-RT-FIELDS.
+           MOVE RT-VAR-LABEL(CNT1) TO RT-LABEL(FLV-IDX).
+           MOVE RT-VAR-FILE(CNT1)  TO RT-FILE(FLV-IDX).
+           MOVE RT-VAR-LIB(CNT1)   TO RT-LIB(FLV-IDX).
+           MOVE RT-VAR-VOL(CNT1)   TO RT-VOL(FLV-IDX).
+           ADD 1 TO FLV-IDX.
+
+       FIND-RTV-INDEX.
+           MOVE "N" TO RTV-FOUND-MATCH.
+           PERFORM TEST-RTV-MATCH VARYING RTVC FROM 1 BY 1
+               UNTIL RTV-FOUND OR RT-LABEL(RTVC) = SPACES
+               OR RTVC > 250.
+           IF RTV-FOUND
+             SUBTRACT 1 FROM RTVC.
+
+       TEST-RTV-MATCH.
+            IF RT-LABEL(RTVC) = RTV-LABEL
+                 MOVE "Y" TO RTV-FOUND-MATCH.
+
+       READ-MENU-FILE-RECORD.
+           MOVE "Y" TO TEST-RECORD.
+           READ MENU-FILE RECORD
+               INVALID KEY
+                   MOVE "N" TO TEST-RECORD.
+
+       GET-MENU-SETUP.
+           MOVE LOW-VALUES TO MFILE-KEY.
+           MOVE "MD" TO RECORD-TYPE.
+           MOVE SPACES TO MREC-DEFINITION.
+           MOVE "FO" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+           MOVE MFILE-REST-OF-RECORD TO FILE-OPTIONS-RECORD.
+           PERFORM LOAD-RUNTIME-TABLE.
+           MOVE "WS" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+           MOVE MFILE-REST-OF-RECORD TO WINDOW-SPECS-WS-RECORD.
+           MOVE "WP" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+           MOVE MFILE-REST-OF-RECORD TO WINDOW-SPECS-WP-RECORD.
+           PERFORM SETUP-MENU-DEFINITION.
+
+       PROCESS-MENU-OPTS-DEFINITION.
+           ACCEPT WSA-NTIME FROM TIME.
+           ACCEPT WSA-NDATE FROM DATE.
+           IF DATE-FORMAT = "MDY" THEN
+               MOVE "-" TO DATE-SEPARATOR-1, DATE-SEPARATOR-2
+               MOVE DATE-MM TO FORMAT-DATE-1
+               MOVE DATE-DD TO FORMAT-DATE-2
+               MOVE DATE-YY TO FORMAT-DATE-3
+           ELSE
+           IF DATE-FORMAT = "DMY" THEN
+               MOVE "-" TO DATE-SEPARATOR-1, DATE-SEPARATOR-2
+               MOVE DATE-DD TO FORMAT-DATE-1
+               MOVE DATE-MM TO FORMAT-DATE-2
+               MOVE DATE-YY TO FORMAT-DATE-3
+           ELSE
+           IF DATE-FORMAT = "YMD" THEN
+               MOVE "-" TO DATE-SEPARATOR-1, DATE-SEPARATOR-2
+               MOVE DATE-YY TO FORMAT-DATE-1
+               MOVE DATE-MM TO FORMAT-DATE-2
+               MOVE DATE-DD TO FORMAT-DATE-3
+           ELSE
+               MOVE "/" TO DATE-SEPARATOR-1, DATE-SEPARATOR-2
+               MOVE DATE-MM TO FORMAT-DATE-1
+               MOVE DATE-DD TO FORMAT-DATE-2
+               MOVE DATE-YY TO FORMAT-DATE-3.
+
+           IF TIME-FORMAT = "T" THEN
+               MOVE TIME-HOUR TO FORMAT-TIME-1
+               MOVE ":" TO TIME-SEPARATOR-1
+               MOVE TIME-MIN  TO FORMAT-TIME-2
+               MOVE SPACES TO TIME-SEPARATOR-2, FORMAT-TIME-3
+           ELSE
+           IF TIME-FORMAT = "S" THEN
+               MOVE TIME-HOUR TO FORMAT-TIME-1
+               MOVE ":" TO TIME-SEPARATOR-1, TIME-SEPARATOR-2
+               MOVE TIME-MIN  TO FORMAT-TIME-2
+               MOVE TIME-SEC  TO FORMAT-TIME-3
+           ELSE
+               MOVE TIME-HOUR TO FORMAT-TIME-1
+               MOVE ":" TO TIME-SEPARATOR-1
+               MOVE TIME-MIN  TO FORMAT-TIME-2
+               MOVE SPACES TO TIME-SEPARATOR-2
+               IF WSA-NTIME < 12000000 THEN
+                   MOVE "AM" TO FORMAT-TIME-3
+               ELSE
+                   MOVE "PM" TO FORMAT-TIME-3
+               END-IF.
+
+       PROCESS-WS-DEFINITION.
+           MOVE 1 TO CNT1,
+                     SCN-ROW-CNT.
+           MOVE "N" TO WINDOW-DEFINED.
+           MOVE "TITLE" TO TOKEN-TYPE.
+           PERFORM CHECK-FOR-TOKENS VARYING ROW-CNT FROM 1 BY 1
+               UNTIL ROW-CNT > 8.
+           IF HAVE-WINDOW THEN
+               ADD 1 TO CUR-SCN-ROW.
+           MOVE CUR-SCN-ROW TO SCN-ROW-CNT.
+           MOVE 1 TO CNT1.
+           MOVE "N" TO WINDOW-DEFINED.
+           MOVE "INSTRUCT" TO TOKEN-TYPE.
+           PERFORM CHECK-FOR-TOKENS VARYING ROW-CNT FROM 1 BY 1
+               UNTIL ROW-CNT > 8
+           IF HAVE-WINDOW THEN
+               ADD 1 TO CUR-SCN-ROW.
+           MOVE CUR-SCN-ROW TO SCN-ROW-CNT.
+
+       CHECK-FOR-TOKENS.
+           IF TITLE-TYPE AND CNT1 = 1 THEN
+               MOVE SCN-TITLE(ROW-CNT) TO CUR-WS-STRING
+               PERFORM FIND-NEXT-TOKEN THRU EXIT-FIND-NEXT-TOKEN
+           ELSE
+           IF INSTRUCT-TYPE AND CNT1 = 1 THEN
+               IF MO-PF-CUR = "C" THEN
+                   MOVE CURSOR-INSTRUCT-1(ROW-CNT) TO CUR-WS-STRING
+               ELSE
+                   MOVE PFKEYS-INSTRUCT-1(ROW-CNT) TO CUR-WS-STRING
+               END-IF
+               PERFORM FIND-NEXT-TOKEN THRU EXIT-FIND-NEXT-TOKEN.
+
+           IF CUR-WS-STRING = RESERVE-MESSAGE THEN
+               COMPUTE CNT1 = MAX-CHAR-CNT + 1
+               MOVE SCN-ROW-CNT TO RESERVE-MESS-ROW
+               MOVE "Y" TO WINDOW-DEFINED
+           ELSE
+           IF CUR-WS-STRING NOT = SPACES
+               MOVE "Y" TO WINDOW-DEFINED
+               MOVE "N" TO FOUND-MATCH
+               IF TITLE-TYPE THEN
+                   PERFORM TEST-FOR-TOKEN VARYING TITLE-INDEX
+                     FROM 1 BY 1 UNTIL FOUND OR TITLE-INDEX > 18
+               ELSE
+                   IF INSTRUCT-TYPE THEN
+                       PERFORM TEST-FOR-TOKEN VARYING TITLE-INDEX
+                         FROM 1 BY 1 UNTIL FOUND OR INSTRUCT-INDEX > 3
+                   END-IF
+               END-IF
+
+               IF NOT-FOUND THEN
+                   ADD 1 TO CNT1
+               END-IF
+               PERFORM FIND-NEXT-TOKEN THRU EXIT-FIND-NEXT-TOKEN.
+
+           IF CNT1 <= MAX-CHAR-CNT THEN
+               GO TO CHECK-FOR-TOKENS
+           ELSE
+               MOVE 1 TO CNT1
+               PERFORM MOVE-LINE-TO-SCREEN
+           END-IF.
+
+       TEST-FOR-TOKEN.
+           IF TITLE-TYPE THEN
+               MOVE TITLE-TOKEN(TITLE-INDEX) TO CUR-TOKEN
+               PERFORM SET-TITLE-TOK-SIZE
+           ELSE
+           IF INSTRUCT-TYPE THEN
+               MOVE INSTRUCT-TOKEN(INSTRUCT-INDEX) TO CUR-TOKEN
+               IF INSTRUCT-INDEX = 1 OR INSTRUCT-INDEX = 2
+                   MOVE 8 TO CUR-TOKEN-SIZE
+               ELSE
+                   MOVE 6 TO CUR-TOKEN-SIZE
+               END-IF.
+
+           PERFORM TEST-TOKEN-MATCH.
+           IF FOUND AND TITLE-TYPE THEN
+               PERFORM CONCAT-TITLE-TOKEN-VALUE
+               COMPUTE CNT1 = CNT1 + CUR-TOKEN-SIZE
+           ELSE
+           IF FOUND AND INSTRUCT-TYPE THEN
+               PERFORM SET-INSTRUCT-TOKEN-FACS.
+
+       TEST-TOKEN-MATCH.
+           COMPUTE CNT1-OFFSET = CNT1 - 1.
+           MOVE CNT1-OFFSET TO STR-IN-INDEX-R-2.
+           MOVE CUR-TOKEN-SIZE TO STR-IN-LEN-R-2.
+           MOVE 0 TO STR-OUT-INDEX-R-2.
+           MOVE CUR-TOKEN-SIZE TO STR-OUT-LEN-R-2.
+           MOVE SPACES TO OUT-STRING.
+           CALL "STRING" USING STR-FUNC, CUR-WS-STRING,
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         OUT-STRING, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH.
+           IF OUT-STRING = CUR-TOKEN THEN
+               MOVE "Y" TO FOUND-MATCH                    
+           ELSE
+               MOVE "N" TO FOUND-MATCH.
+
+       CONCAT-TITLE-TOKEN-VALUE.
+           MOVE 0 TO STR-IN-INDEX-R-2.
+           MOVE CUR-TOKEN-SIZE TO STR-IN-LEN-R-2.
+           COMPUTE CNT1-OFFSET = CNT1 - 1.
+           MOVE CNT1-OFFSET TO STR-OUT-INDEX-R-2.
+           MOVE CUR-TOKEN-SIZE TO STR-OUT-LEN-R-2.
+           IF TITLE-INDEX = 1 THEN
+               MOVE FORMAT-DATE TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 2 OR TITLE-INDEX = 4 THEN
+               MOVE DAY-LEFT TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 3 OR TITLE-INDEX = 5 THEN
+               MOVE DAY-RIGHT TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 6 THEN                           
+               MOVE FORMAT-TIME TO IN-STRING
+               MOVE SCN-ROW-CNT TO TIME-ROW
+               COMPUTE TIME-COL = STR-OUT-INDEX-R-2 + 1
+           ELSE
+           IF TITLE-INDEX = 7 THEN
+               MOVE SYSTEM-NAME TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 8 THEN
+               MOVE SYSTEM-NAME-LEFT TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 9 THEN
+               MOVE SYSTEM-NAME-RIGHT TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 10 THEN
+               MOVE MENU-ID TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 11 THEN
+               STRING "(", MENU-ID,")" DELIMITED BY SIZE
+                 INTO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 12 OR TITLE-INDEX = 13
+             OR TITLE-INDEX = 14 THEN
+               PERFORM SETUP-MENU-TITLE
+               MOVE MENU-TITLE-LENGTH TO STR-IN-LEN-R-2
+               MOVE MENU-TITLE-LENGTH TO STR-OUT-LEN-R-2
+               MOVE MENU-TITLE-TEXT TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 15 THEN
+               STRING EXT-USER-ID, "  ", WORK-STATION-STR
+                 DELIMITED BY SIZE
+                 INTO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 16 THEN
+               MOVE EXT-USER-ID TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 17 THEN
+               MOVE WORK-STATION-STR TO IN-STRING
+           ELSE
+           IF TITLE-INDEX = 18 THEN
+               MOVE EXT-USER-NAME TO IN-STRING.
+           CALL "STRING" USING STR-FUNC, IN-STRING,
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         CUR-WS-STRING, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH.
+
+       MOVE-LINE-TO-SCREEN.
+           IF CUR-WS-STRING = RESERVE-MESSAGE THEN
+               MOVE SCN-ROW-CNT TO CUR-SCN-ROW
+               MOVE SPACES TO CUR-WS-STRING.
+
+           MOVE CUR-WORK-STRING TO SCN-ITEM(SCN-ROW-CNT)
+
+           ADD 1 TO SCN-ROW-CNT.
+           IF CUR-WS-STRING NOT = SPACES THEN
+               MOVE SCN-ROW-CNT TO CUR-SCN-ROW.
+
+       SET-INSTRUCT-TOKEN-FACS.
+           MOVE 0 TO STR-IN-INDEX-R-2.
+           MOVE 1 TO STR-IN-LEN-R-2.
+           COMPUTE CNT1-OFFSET = CNT1 - 1.
+           MOVE CNT1-OFFSET TO STR-OUT-INDEX-R-2.
+           MOVE 1 TO STR-OUT-LEN-R-2.
+           MOVE BR-MOD-UCNL TO IN-STRING.
+           CALL "STRING" USING STR-FUNC, IN-STRING,
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         CUR-WS-STRING, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH.
+           IF INSTRUCT-INDEX = 1 OR INSTRUCT-INDEX = 2 THEN
+               COMPUTE CNT1-OFFSET = CNT1-OFFSET + 9
+           ELSE
+               COMPUTE CNT1-OFFSET = CNT1-OFFSET + 7.
+
+           MOVE PLAIN-TEXT TO IN-STRING.
+           CALL "STRING" USING STR-FUNC, IN-STRING,
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         CUR-WS-STRING, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH.
+
+       SETUP-MENU-TITLE.
+           MOVE 0 TO IDX2.
+           PERFORM GET-TITLE-LENGTH VARYING IDX1 FROM 1 BY 1
+             UNTIL IDX1 > 40.
+
+           IF DEF-MO-VERSION NOT = SPACES THEN
+               COMPUTE IDX2 = MENU-TITLE-LENGTH + 19
+               STRING DEF-MO-TITLE DELIMITED BY DELIMTR,
+                      " - Version " DELIMITED BY SIZE,
+                      DEF-MO-VERSION DELIMITED BY SIZE
+                   INTO MENU-TITLE-TEXT
+           ELSE
+               STRING DEF-MO-TITLE DELIMITED BY DELIMTR
+                   INTO MENU-TITLE-TEXT.
+
+           IF TITLE-INDEX = 12 THEN
+               COMPUTE CNT1 = (CNT1 + 4) - (IDX2 / 2 )
+           ELSE
+           IF TITLE-INDEX = 14 AND DEF-MO-VERSION = SPACES THEN
+               COMPUTE CNT1 = CNT1 + 40 - IDX2.
+
+       GET-TITLE-LENGTH.
+           IF MTITLE-CHAR(IDX1) = " " THEN
+               IF IDX2 NOT = 0 THEN
+                   MOVE " " TO MTITLE-CHAR(IDX2)
+               END-IF
+               MOVE IDX1 TO IDX2
+               MOVE DELIMTR TO MTITLE-CHAR(IDX1)
+               IF IDX2 NOT = IDX1 - 1
+                   MOVE IDX2 TO MENU-TITLE-LENGTH
+               END-IF.
+
+       FIND-NEXT-TOKEN.
+           IF CUR-WS-STR-CHAR(CNT1) = "[" THEN
+               GO TO EXIT-FIND-NEXT-TOKEN.
+
+           ADD 1 TO CNT1.
+           IF CNT1 > MAX-CHAR-CNT THEN
+               GO TO EXIT-FIND-NEXT-TOKEN.
+
+           GO TO FIND-NEXT-TOKEN.
+ 
+       EXIT-FIND-NEXT-TOKEN.
+           EXIT.
+
+       SET-TITLE-TOK-SIZE.
+            IF TITLE-INDEX = 1 OR TITLE-INDEX = 6 OR TITLE-INDEX = 11
+                    OR TITLE-INDEX = 15
+                MOVE 8 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 2 OR TITLE-INDEX = 3 OR TITLE-INDEX = 12
+                MOVE 9 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 4 OR TITLE-INDEX = 5
+                MOVE 13 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 7 OR TITLE-INDEX = 8 OR TITLE-INDEX = 9  
+                MOVE 16 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 10
+                MOVE 6 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 13 OR TITLE-INDEX = 14
+                MOVE 11 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 16 OR TITLE-INDEX = 17
+                MOVE 3 TO CUR-TOKEN-SIZE
+            ELSE
+            IF TITLE-INDEX = 18
+                MOVE 24 TO CUR-TOKEN-SIZE.
+
+       PROCESS-MENU-SEL-DEF.
+           MOVE SCN-ROW-CNT TO CUR-SCN-ROW.
+      *%NEOM  Use 25 so current line is avaialable
+           COMPUTE SELECTION-SIZE = 25 - CUR-SCN-ROW.
+           MOVE MS-COLUMNS TO HOLD-COLUMNS.
+           COMPUTE MAX-SLOTS = SELECTION-SIZE * HOLD-COLUMNS.
+           MOVE 1 TO ROWC, COLC.
+           MOVE MS-POSN(1) TO HOLD-POSN.              
+           IF HOLD-POSN-1 = "+" THEN
+             MOVE HOLD-POSN-2 TO SCN-ROW-OFFSET.
+           MOVE 1 TO FLV-IDX.
+           PERFORM SET-THE-SELECTIONS.
+
+       SET-THE-SELECTIONS.
+           PERFORM INIT-COL-FIELDS VARYING CNT1 FROM 1 BY 1
+               UNTIL MS-POSN(CNT1) = SPACES OR CNT1 > MAX-SLOTS.
+
+       INIT-COL-FIELDS.
+           PERFORM COMPUTE-SLOT.
+           MOVE PLAIN-TEXT TO HOLD-FAC-STRT, HOLD-FAC-END.
+           IF MS-FUNC(CNT1) = "<DFTEXT>" THEN
+               PERFORM INIT-DFTEXT-LINE
+           ELSE
+           IF MS-FUNC(CNT1) = "<SETPOS>" THEN
+               PERFORM INIT-SETPOS-MENU-LINE
+           ELSE
+               PERFORM INIT-MENU-LINE.
+
+       INIT-MENU-LINE.
+           IF FUNC-MENU-ID-CHAR(CNT1, 1) = "(" THEN
+               PERFORM CHECK-SECURITY-CLASS VARYING CNT2 FROM 1 BY 1
+                   UNTIL VALID-SC OR CNT2 > 16
+           ELSE
+               PERFORM CHECK-SECURITY-CLASS.
+
+           IF VALID-SC THEN
+               PERFORM SET-MENU-SEL-TEXT.
+
+       CHECK-SECURITY-CLASS.
+           MOVE "N" TO SC-MATCH.
+           IF FUNC-MENU-ID-CHAR(CNT1, 1) = "(" THEN
+               MOVE MS-S-CLASSES(CNT1, CNT2) TO HOLD-SC
+           ELSE
+           IF FUNC-MENU-ID-CHAR(CNT1, 1) = "'" THEN
+               MOVE MS-EA-SC(CNT1) TO HOLD-SC
+           ELSE
+               MOVE MS-PP-SC(CNT1) TO HOLD-SC.
+           PERFORM TEST-USER-REC-SECURITY.
+            
+       SET-MENU-SEL-TEXT.
+           IF DEF-MO-FORMAT = "C1" THEN 
+               MOVE MENU-PICK     TO C1-PICK1(ROWC)
+               MOVE SUB-5         TO C1-PICK2(ROWC)
+               MOVE MS-DESC(CNT1) TO C1-DESC(ROWC)
+               MOVE FLV-IDX       TO C1-INDEX-VAL(ROWC)
+           ELSE
+           IF DEF-MO-FORMAT = "P1" THEN 
+               STRING "(", MS-PP-PFKEY(CNT1), ")" DELIMITED BY SIZE
+                 INTO P1-PFKEY(ROWC)
+               MOVE MS-DESC(CNT1) TO P1-DESC(ROWC)
+               MOVE FLV-IDX       TO P1-INDEX-VAL(ROWC)
+           ELSE
+           IF DEF-MO-FORMAT = "C2" THEN 
+               MOVE MENU-PICK     TO C2-PICK1(ROWC, COLC)
+               MOVE SUB-5         TO C2-PICK2(ROWC, COLC)
+               MOVE MS-DESC(CNT1) TO C2-DESC(ROWC, COLC)
+               MOVE FLV-IDX       TO C2-INDEX-VAL(ROWC, COLC)
+           ELSE
+           IF DEF-MO-FORMAT = "P2" THEN 
+               STRING "(", MS-PP-PFKEY(CNT1), ")" DELIMITED BY SIZE
+                 INTO P2-PFKEY(ROWC, COLC)
+               MOVE MS-DESC(CNT1) TO P2-DESC(ROWC, COLC)
+               MOVE FLV-IDX       TO P2-INDEX-VAL(ROWC, COLC)
+           ELSE
+           IF DEF-MO-FORMAT = "C3" THEN 
+               MOVE MENU-PICK     TO C3-PICK1(ROWC, COLC)
+               MOVE SUB-5         TO C3-PICK2(ROWC, COLC)
+               MOVE MS-DESC(CNT1) TO C3-DESC(ROWC, COLC)
+               MOVE FLV-IDX       TO C3-INDEX-VAL(ROWC, COLC)
+           ELSE
+           IF DEF-MO-FORMAT = "P3" THEN 
+               STRING "(", MS-PP-PFKEY(CNT1), ")" DELIMITED BY SIZE
+                 INTO P3-PFKEY(ROWC, COLC)
+               MOVE MS-DESC(CNT1) TO P3-DESC(ROWC, COLC)
+               MOVE FLV-IDX       TO P3-INDEX-VAL(ROWC, COLC).
+
+           MOVE MS-FUNC(CNT1)  TO M-FILE(FLV-IDX).
+           MOVE MS-LIB(CNT1)   TO M-LIBRARY(FLV-IDX).
+           MOVE MS-VOL(CNT1)   TO M-VOLUME(FLV-IDX).
+           MOVE MS-PP-PAR-OPT(CNT1) TO M-PP-PAR-OPT(FLV-IDX).
+           IF MS-FUNC(CNT1) = "<EXIT>  " OR 
+              FUNC-MENU-ID-CHAR(CNT1,1) = "'"
+               MOVE MS-EA-PW(CNT1) TO M-SEL-PASSWORD(FLV-IDX)
+           ELSE
+               IF FUNC-MENU-ID-CHAR(CNT1,1) NOT = "(" AND
+                  FUNC-MENU-ID-CHAR(CNT1,1) NOT = "<"
+                   MOVE MS-PP-PW(CNT1) TO M-SEL-PASSWORD(FLV-IDX)
+               ELSE
+                   MOVE SPACES TO M-SEL-PASSWORD(FLV-IDX)
+               END-IF
+           END-IF.
+           ADD 1 TO FLV-IDX.
+
+       COMPUTE-SLOT.
+           MOVE MS-POSN(CNT1) TO HOLD-POSN.
+           IF HOLD-POSN = "C1" THEN
+               COMPUTE ROWC = 1 + SCN-ROW-OFFSET
+               MOVE 1 TO COLC
+           ELSE
+           IF HOLD-POSN = "C2" THEN
+               COMPUTE ROWC = 1 + SCN-ROW-OFFSET
+               MOVE 2 TO COLC
+           ELSE
+           IF HOLD-POSN = "C3" THEN
+               COMPUTE ROWC = 1 + SCN-ROW-OFFSET
+               MOVE 3 TO COLC
+           ELSE
+           IF HOLD-POSN-1 = "+" THEN
+               COMPUTE ROWC = ROWC + HOLD-POSN-2
+               IF ROWC > SELECTION-SIZE THEN
+                   ADD 1 TO COLC
+                   COMPUTE ROWC = ROWC - SELECTION-SIZE
+               END-IF
+           ELSE
+               PERFORM COMPUTE-ABSOLUTE-SLOT.
+               
+       COMPUTE-ABSOLUTE-SLOT.
+           MOVE HOLD-POSN TO POSN-NUM.
+           IF POSN-NUM <= SELECTION-SIZE THEN
+               MOVE 1 TO COLC
+               MOVE POSN-NUM TO ROWC
+           ELSE
+           IF POSN-NUM <= MAX-SLOTS - SELECTION-SIZE THEN
+               MOVE 2 TO COLC
+               COMPUTE ROWC = POSN-NUM - SELECTION-SIZE
+           ELSE
+               MOVE 3 TO COLC
+               COMPUTE ROWC = POSN-NUM - (2 * SELECTION-SIZE).
+
+       COMPUTE-SELECTION-POSITION.
+           MOVE "N" TO SELECTION-MATCH.
+           MOVE 0 TO IDX1, IDX2.
+           IF MO-PF-CUR = "C" THEN
+               COMPUTE IDX1 = MOD-ROW - (24 - SELECTION-SIZE)
+               IF MOD-COL = 2 OR MOD-COL = 10 THEN
+                   MOVE 1 TO IDX2
+               ELSE
+               IF MOD-COL = 42 OR MOD-COL = 28 THEN 
+                   MOVE 2 TO IDX2
+               ELSE
+               IF MOD-COL = 54 THEN
+                   MOVE 3 TO IDX2
+               END-IF
+           ELSE
+               STRING "(", PF-KEY, ")" DELIMITED BY SIZE
+                 INTO HOLD-PFKEY
+               PERFORM FIND-PFKEY-MATCH.
+
+           IF IDX1 = 0 OR IDX2 = 0 THEN
+               GO TO EXIT-COMPUTE-SEL-POSITION.
+
+           IF DEF-MO-FORMAT = "C1" THEN
+               MOVE C1-INDEX-VAL(IDX1) TO CNT1
+           ELSE
+           IF DEF-MO-FORMAT = "P1" THEN
+               MOVE P1-INDEX-VAL(IDX1) TO CNT1
+           ELSE
+           IF DEF-MO-FORMAT = "C2" THEN 
+               MOVE C2-INDEX-VAL(IDX1, IDX2) TO CNT1
+           ELSE
+           IF DEF-MO-FORMAT = "P2" THEN 
+               MOVE P2-INDEX-VAL(IDX1, IDX2) TO CNT1
+           ELSE
+           IF DEF-MO-FORMAT = "C3" THEN 
+               MOVE C3-INDEX-VAL(IDX1, IDX2) TO CNT1
+           ELSE
+           IF DEF-MO-FORMAT = "P3" THEN 
+               MOVE P3-INDEX-VAL(IDX1, IDX2) TO CNT1.
+
+           IF CNT1 = 0
+               MOVE "N" TO SELECTION-MATCH
+           ELSE
+               MOVE "Y" TO SELECTION-MATCH.
+
+       EXIT-COMPUTE-SEL-POSITION.
+           EXIT.
+               
+       MOVE-TABLE-TO-SCREEN.
+           IF DEF-MO-FORMAT = "C1" THEN 
+               MOVE C1-ROW(ROWC) TO SCN-ITEM(SCN-ROW-CNT)
+           ELSE
+           IF DEF-MO-FORMAT = "P1" THEN 
+               MOVE P1-ROW(ROWC) TO SCN-ITEM(SCN-ROW-CNT)
+           ELSE
+           IF DEF-MO-FORMAT = "C2" THEN 
+               MOVE C2-ROW(ROWC) TO SCN-ITEM(SCN-ROW-CNT)
+           ELSE
+           IF DEF-MO-FORMAT = "P2" THEN 
+               MOVE P2-ROW(ROWC) TO SCN-ITEM(SCN-ROW-CNT)
+           ELSE
+           IF DEF-MO-FORMAT = "C3" THEN 
+               MOVE C3-ROW(ROWC) TO SCN-ITEM(SCN-ROW-CNT)
+           ELSE
+           IF DEF-MO-FORMAT = "P3" THEN 
+               MOVE P3-ROW(ROWC) TO SCN-ITEM(SCN-ROW-CNT).
+           ADD 1 TO ROWC.
+
+       INIT-DFTEXT-LINE.
+           IF DF-VIDEO(CNT1) = "D" AND DF-LINE(CNT1) = "N" THEN
+                 MOVE PLAIN-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "D" AND DF-LINE(CNT1) = "Y" THEN
+                 MOVE UNDER-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "B" AND DF-LINE(CNT1) = "N" THEN
+                 MOVE BOLD-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "B" AND DF-LINE(CNT1) = "Y" THEN
+                 MOVE BOLD-UNDER-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "M" AND DF-LINE(CNT1) = "N" THEN
+                 MOVE BLINK-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "M" AND DF-LINE(CNT1) = "Y" THEN
+                 MOVE BLINK-UNDER-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "H" AND DF-LINE(CNT1) = "N" THEN
+                 MOVE BLANK-TEXT TO HOLD-FAC-STRT
+           ELSE
+           IF DF-VIDEO(CNT1) = "H" AND DF-LINE(CNT1) = "Y" THEN
+                 MOVE BLANK-UNDER-TEXT TO HOLD-FAC-STRT.
+
+           PERFORM SET-FAC-POSITIONS.
+
+           IF DEF-MO-FORMAT = "C1" THEN 
+               MOVE HOLD-FAC-STRT   TO C1-CHAR(ROWC, CNT2)
+               MOVE MS-DESC(CNT1)   TO C1-DESC(ROWC)
+               MOVE HOLD-FAC-END    TO C1-CHAR(ROWC, CNT3)
+           ELSE
+           IF DEF-MO-FORMAT = "P1" THEN 
+               MOVE HOLD-FAC-STRT     TO P1-CHAR(ROWC, CNT2)
+               MOVE MS-PP-PFKEY(CNT1) TO P1-DESC(ROWC)
+               MOVE HOLD-FAC-END      TO P1-CHAR(ROWC, CNT3)
+           ELSE
+           IF DEF-MO-FORMAT = "C2" THEN
+               MOVE HOLD-FAC-STRT   TO C2-CHAR(ROWC, COLC, CNT2)
+               MOVE MS-DESC(CNT1)   TO C2-DESC(ROWC, COLC)
+               MOVE HOLD-FAC-END    TO C2-CHAR(ROWC, COLC, CNT3)
+           ELSE
+           IF DEF-MO-FORMAT = "P2" THEN
+               MOVE HOLD-FAC-STRT   TO P2-CHAR(ROWC, COLC, CNT2)
+               MOVE MS-DESC(CNT1)   TO P2-DESC(ROWC, COLC)
+               MOVE HOLD-FAC-END    TO P2-CHAR(ROWC, COLC, CNT3)
+           ELSE
+           IF DEF-MO-FORMAT = "C3" THEN 
+               MOVE HOLD-FAC-STRT   TO C3-CHAR(ROWC, COLC, CNT2)
+               MOVE MS-DESC(CNT1)   TO C3-DESC(ROWC, COLC)
+               MOVE HOLD-FAC-END    TO C3-CHAR(ROWC, COLC, CNT3)
+           ELSE
+           IF DEF-MO-FORMAT = "P3" THEN 
+               MOVE HOLD-FAC-STRT   TO P3-CHAR(ROWC, COLC, CNT2)
+               MOVE MS-DESC(CNT1)   TO P3-DESC(ROWC, COLC)
+               MOVE HOLD-FAC-END    TO P3-CHAR(ROWC, COLC, CNT3).
+
+       INIT-SETPOS-MENU-LINE.
+            DISPLAY "NEED TO ADD CODE FOR SETPOS".
+
+       FIND-PFKEY-MATCH.
+           DISPLAY "NEED TO ADD CODE FOR PFKEY MATCH".
+
+       SETUP-MENU-DEFINITION.
+           PERFORM INIT-NEW-MENU.
+           PERFORM PROCESS-MENU-OPTS-DEFINITION.
+           MOVE STACK-MENU-ID(STACK-INDEX) TO MENU-ID.
+           MOVE "M1" TO MRECORD-DEF.
+           MOVE MREC-DEF-NUM TO MENU-RECORD.
+           PERFORM READ-MENU-FILE-RECORD
+           IF RECORD-EXISTS
+               MOVE MFILE-REST-OF-RECORD TO MENU-OPTS-RECORD
+               PERFORM SET-MAX-COL-DISPLAY
+               IF PW-RUN-MENU NOT = SPACES AND
+                  M-STACK-PW(STACK-INDEX) NOT = PW-RUN-MENU
+                   MOVE "M" TO PASSWORD-TYPE
+                   PERFORM PROMPT-PASSWORD THRU EXIT-PROMPT-PASSWORD
+               ELSE
+                   MOVE "Y" TO DISP-MENU-FLAG
+               END-IF
+               IF DISP-MENU
+                   IF USER-REC-REQUIRED = "Y" AND NO-USER-REC
+                       MOVE 1 TO MESSAGE-NUM
+                       GO TO EXIT-PROGRAM
+                   END-IF
+                   IF USE-USER-REC
+                       PERFORM SET-OVERRIDE-FOR-USER
+                   END-IF
+                   PERFORM PROCESS-MENU-OPTS-DEFINITION
+                   PERFORM PROCESS-WS-DEFINITION
+                   PERFORM PROCESS-MENU-SEL-DEF
+               ELSE
+                   PERFORM BACKUP-ONE-MENU
+               END-IF
+           ELSE
+               MOVE 2 TO MESSAGE-NUM
+               GO TO EXIT-PROGRAM.
+
+           IF DISP-MENU
+               ADD 1 TO MENU-RECORD
+               PERFORM GET-REST-MENU VARYING MENU-RECORD FROM
+                   MENU-RECORD BY 1 UNTIL RECORD-NOTEXISTS OR
+                   MENU-RECORD > 6
+               MOVE 1 TO ROWC
+               PERFORM MOVE-TABLE-TO-SCREEN VARYING SCN-ROW-CNT
+                   FROM SCN-ROW-CNT BY 1 UNTIL SCN-ROW-CNT > 24
+
+               MOVE M-STACK-COL(STACK-INDEX) TO TEMP-OA-COL
+               MOVE M-STACK-ROW(STACK-INDEX) TO TEMP-OA-ROW
+               MOVE TEMP-OA TO ORDER-AREA OF MENU-SCREEN.
+
+       SET-MAX-COL-DISPLAY.
+           IF MO-PF-CUR = "P"
+               MOVE 57 TO MAX-SEL-LEN-1
+               MOVE 32 TO MAX-SEL-LEN-2
+               MOVE 18 TO MAX-SEL-LEN-3
+               IF MS-COLUMNS = 1
+                   MOVE 11 TO P1-SEL-STRT
+               END-IF
+               IF MS-COLUMNS = 2
+                   MOVE 1  TO P2-SEL-STRT-1
+                   MOVE 41 TO P2-SEL-STRT-2
+               END-IF
+               IF MS-COLUMNS = 3
+                   MOVE 1  TO P3-SEL-STRT-1
+                   MOVE 27 TO P3-SEL-STRT-2
+                   MOVE 53 TO P3-SEL-STRT-3
+               END-IF
+           ELSE
+               MOVE 60 TO MAX-SEL-LEN-1
+               MOVE 37 TO MAX-SEL-LEN-2
+               MOVE 23 TO MAX-SEL-LEN-3
+               IF MS-COLUMNS = 1
+                   MOVE 10 TO C1-SEL-STRT
+               END-IF
+               IF MS-COLUMNS = 2
+                   MOVE 1  TO C2-SEL-STRT-1
+                   MOVE 41 TO C2-SEL-STRT-2
+               END-IF
+               IF MS-COLUMNS = 3
+                   MOVE 1  TO C3-SEL-STRT-1
+                   MOVE 27 TO C3-SEL-STRT-2
+                   MOVE 53 TO C3-SEL-STRT-3
+               END-IF
+           END-IF.
+
+       GET-REST-MENU.
+           MOVE MENU-RECORD TO MREC-DEF-NUM.
+           PERFORM READ-MENU-FILE-RECORD.
+           IF RECORD-EXISTS
+               MOVE MFILE-REST-OF-RECORD TO MS-RECORD-DEFINITION
+               PERFORM SET-THE-SELECTIONS.
+
+       LINK-TO-PROG-PROC.
+           IF LINK-OPTION = "ENTRY"
+               MOVE ENTRY-PROC-MENU-FILE TO LINK-TO-FILE
+               MOVE ENTRY-PROC-MENU-LIB TO LINK-TO-LIB
+               MOVE ENTRY-PROC-MENU-VOL TO LINK-TO-VOL
+               MOVE ENTRY-PROC-MENU-PAR-OPT TO STEP-PARAMETER
+           ELSE
+             IF LINK-OPTION = "EXIT"
+                 MOVE EXIT-PROC-MENU-FILE TO LINK-TO-FILE
+                 MOVE EXIT-PROC-MENU-LIB TO LINK-TO-LIB
+                 MOVE EXIT-PROC-MENU-VOL TO LINK-TO-VOL
+                 MOVE EXIT-PROC-MENU-PAR-OPT TO STEP-PARAMETER
+             ELSE
+               IF LINK-OPTION = "START"
+                   MOVE START-MENU TO LINK-TO-FILE
+                   MOVE PROCESS-LIB TO LINK-TO-LIB
+                   MOVE PROCESS-VOL TO LINK-TO-VOL
+                   MOVE SPACES TO STEP-PARAMETER
+               END-IF
+             END-IF
+           END-IF.
+
+           IF LINK-FILE-ID-CHAR(1) = "%" THEN
+               MOVE LINK-TO-FILE TO TEST-FILE
+               MOVE "FIL" TO RTV-TYPE
+               PERFORM MATCH-RUNTIME-VAR.
+           IF LINK-LIB-ID-CHAR(1) = "%" THEN
+               MOVE LINK-TO-LIB TO TEST-LIB
+               MOVE "LIB" TO RTV-TYPE
+               PERFORM MATCH-RUNTIME-VAR.
+           IF LINK-VOL-ID-CHAR(1) = "%" THEN
+               MOVE LINK-TO-VOL TO TEST-VOL
+               MOVE "VOL" TO RTV-TYPE
+               PERFORM MATCH-RUNTIME-VAR.
+
+           IF LINK-TO-VOL = "WISPV"
+               MOVE 0 TO LINK-PARM-CNT-2
+           ELSE
+               MOVE 1 TO LINK-PARM-CNT-2.
+
+           IF RESERVE-MESS-ROW > 0
+               MOVE SPACES TO SCN-ITEM(RESERVE-MESS-ROW).
+           IF LINK-TO-LIB = SPACES AND LINK-TO-VOL = SPACES
+               MOVE " " TO LINK-TYPE
+           ELSE
+               MOVE "P" TO LINK-TYPE.
+
+           IF LINK-PARM-CNT-2 = 0
+               CALL "LINK" USING LINK-TO-FILE, LINK-TYPE, LINK-TO-LIB,
+                             LINK-TO-VOL, LINK-PARM-CNT,
+                             LINK-CANCEL-FLAG,
+                             LINK-MESSAGE, LINK-MESS-LEN,
+                             LINK-HELP, LINK-COMP-CODE, LINK-RETURN
+           ELSE
+               CALL "LINK" USING LINK-TO-FILE, LINK-TYPE, LINK-TO-LIB,
+                             LINK-TO-VOL, LINK-PARM-CNT, LINK-PASS-AREA,
+                             LINK-CANCEL-FLAG, LINK-MESSAGE,
+                             LINK-MESS-LEN,
+                             LINK-HELP, LINK-COMP-CODE, LINK-RETURN.
+
+           IF LINK-RETURN-2 NOT = ZEROES THEN
+               MOVE LINK-COMP-CODE-2   TO LINK-COMP-CODE-X
+               MOVE LINK-RETURN-2      TO LINK-RETURN-X
+               IF RESERVE-MESS-ROW > 0
+                   STRING " Linkage to ",LINK-TO-FILE," in ",
+                        LINK-TO-LIB," on ",LINK-TO-VOL,
+                        " failed, Please Call D.P." DELIMITED BY SIZE
+                        INTO SCN-ITEM(RESERVE-MESS-ROW).
+            MOVE SPACES TO LINK-TO-FILE,
+                           LINK-TO-LIB,
+                           LINK-TO-VOL.
+
+       SET-AMU-PASS-AREA.
+           MOVE SPACES TO LINK-PASS-AREA.
+           MOVE M-PP-PAR-OPT(CNT1) TO STEP-PARAMETER.
+           MOVE DATE-FORMAT        TO DATE-DISP-FORMAT.
+           MOVE TIME-FORMAT        TO TIME-DISP-FORMAT.
+           MOVE TIME-UPDATE        TO TIME-UPDATE-INTERVAL.
+           MOVE TIMEOUT-LIMIT      TO INACTIVE-TIMEOUT.
+
+       SET-MENU-ID.
+           MOVE SPACES TO HOLD-MENU-ID.
+           MOVE 1 TO STR-IN-INDEX-R-2.
+           MOVE 2 TO CNT2.
+           MOVE ")" TO TEST-CHAR.
+           PERFORM FIND-ID-END THRU EXIT-FIND-ID-END.
+           COMPUTE CNT2 = CNT2 - 2.
+           MOVE CNT2 TO STR-IN-LEN-R-2.
+           MOVE 0  TO STR-OUT-INDEX-R-2.
+           MOVE CNT2 TO STR-OUT-LEN-R-2.
+           CALL "STRING" USING STR-FUNC, M-FILE(CNT1),
+                         STR-INPUT-INDEX, STR-INPUT-LENGTH,
+                         HOLD-MENU-ID, STR-OUTPUT-INDEX,
+                         STR-OUTPUT-LENGTH.
+
+       FIND-ID-END.
+           IF FILE-ID-CHAR(CNT1, CNT2) = TEST-CHAR THEN
+               GO TO EXIT-FIND-ID-END.
+
+           ADD 1 TO CNT2.
+           IF CNT2 > 8 THEN
+               GO TO EXIT-FIND-ID-END.
+
+           GO TO FIND-ID-END.
+ 
+       EXIT-FIND-ID-END.
+           EXIT.
+
+       SAVE-OA-ROW-COL.
+           IF MOD-ROW = 1 THEN
+               MOVE A-1-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 2 THEN
+               MOVE A-2-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 3 THEN
+               MOVE A-3-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 4 THEN
+               MOVE A-4-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 5 THEN
+               MOVE A-5-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 6 THEN
+               MOVE A-6-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 7 THEN
+               MOVE A-7-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 8 THEN
+               MOVE A-8-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 9 THEN
+               MOVE A-9-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 10 THEN
+               MOVE A-10-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 11 THEN
+               MOVE A-11-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 12 THEN
+               MOVE A-12-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 13 THEN
+               MOVE A-13-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 14 THEN
+               MOVE A-14-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 15 THEN
+               MOVE A-15-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 16 THEN
+               MOVE A-16-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 17 THEN
+               MOVE A-17-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 18 THEN
+               MOVE A-18-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 19 THEN
+               MOVE A-19-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 20 THEN
+               MOVE A-20-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 21 THEN
+               MOVE A-21-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 22 THEN
+               MOVE A-22-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 23 THEN
+               MOVE A-23-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+           IF MOD-ROW = 24 THEN
+               MOVE A-24-BYTE TO M-STACK-ROW(STACK-INDEX)
+           ELSE
+               MOVE A-0-BYTE TO M-STACK-ROW(STACK-INDEX).
+
+           IF MOD-COL = 2 THEN
+               MOVE A-2-BYTE TO M-STACK-COL(STACK-INDEX)
+           ELSE
+           IF MOD-COL = 10 THEN
+               MOVE A-10-BYTE TO M-STACK-COL(STACK-INDEX)
+           ELSE
+           IF MOD-COL = 28 THEN
+               MOVE A-28-BYTE TO M-STACK-COL(STACK-INDEX)
+           ELSE
+           IF MOD-COL = 42 THEN
+               MOVE A-42-BYTE TO M-STACK-COL(STACK-INDEX)
+           ELSE
+           IF MOD-COL = 54 THEN
+               MOVE A-54-BYTE TO M-STACK-COL(STACK-INDEX)
+           ELSE
+               MOVE A-0-BYTE TO M-STACK-COL(STACK-INDEX).
+
+
+       SET-FAC-POSITIONS.
+           IF DEF-MO-FORMAT = "C1" THEN 
+               IF DF-WIDTH(CNT1) = "C" THEN
+                   MOVE 9 TO CNT2
+               ELSE
+                   MOVE 12 TO CNT2
+               END-IF
+
+               MOVE 62 TO CNT3
+           ELSE
+           IF DEF-MO-FORMAT = "P1" THEN 
+               IF DF-WIDTH(CNT1) = "C" THEN
+                   MOVE 10 TO CNT2
+               ELSE
+                   MOVE 15 TO CNT2
+               END-IF
+
+               MOVE 72 TO CNT3
+           ELSE
+           IF DEF-MO-FORMAT = "C2" THEN
+               IF DF-WIDTH(CNT1) = "C" THEN
+                   MOVE 2 TO CNT2
+               ELSE
+                   MOVE 4 TO CNT2
+               END-IF
+
+               MOVE 39 TO CNT3
+           ELSE
+           IF DEF-MO-FORMAT = "P2" THEN
+               IF DF-WIDTH(CNT1) = "C" THEN
+                   MOVE 4 TO CNT2
+               ELSE
+                   MOVE 9 TO CNT2
+               END-IF
+
+               MOVE 39 TO CNT3
+           ELSE
+           IF DEF-MO-FORMAT = "C3" THEN 
+               IF DF-WIDTH(CNT1) = "C" THEN
+                   MOVE 1 TO CNT2
+               ELSE
+                   MOVE 3 TO CNT2
+               END-IF
+
+               MOVE 27 TO CNT3
+           ELSE
+           IF DEF-MO-FORMAT = "P3" THEN 
+               IF DF-WIDTH(CNT1) = "C" THEN
+                   MOVE 3 TO CNT2
+               ELSE
+                   MOVE 8 TO CNT2
+               END-IF
+
+               MOVE 27 TO CNT3.
+
+       GET-USER-DEF.
+           MOVE SPACES TO MFILE-KEY.
+           MOVE "SF" TO RECORD-TYPE.
+           MOVE EXT-USER-ID TO USER-ID.
+           MOVE "SF" TO MRECORD-DEF.
+           PERFORM READ-MENU-FILE-RECORD.
+           IF RECORD-EXISTS
+               MOVE MFILE-REST-OF-RECORD TO SF-RECORD
+               MOVE "Y" TO USER-REC-FLAG
+           ELSE
+               MOVE "N" TO USER-REC-FLAG
+               MOVE SPACES TO SF-RECORD.
+           IF USE-USER-REC
+               IF DISABLE-HELP-KEY = "Y"
+                   MOVE "WUSAGE FLAGS SET HELP=N" TO COMMAND-BUFF
+                   CALL "SYSTEM" USING COMMAND-BUFF
+               END-IF
+               IF USER-NAME NOT = SPACES
+                   MOVE USER-NAME TO EXT-USER-NAME.
+
+       SET-OVERRIDE-FOR-USER.
+           MOVE USER-NAME TO NAME-OF-USER.
+           MOVE USER-PARAMETERS TO USER-PARAMETER.
+           MOVE USER-DATE-FORMAT TO DATE-FORMAT.
+           MOVE USER-TIME-FORMAT TO TIME-FORMAT.
+           MOVE USER-UPDATE-TIME TO TIME-UPDATE.
+           MOVE USER-TIMEOUT-LIMIT TO TIMEOUT-LIMIT.
+           MOVE USER-TIMEOUT-ACTION TO TIMEOUT-ACTION.
+
+       TEST-USER-REC-SECURITY.
+           IF HOLD-SC NOT = " "
+               IF HOLD-SC = "A"
+                   MOVE 1 TO SC-IDX
+                   MOVE 1 TO SUB1
+               ELSE
+               IF HOLD-SC = "B"
+                   MOVE 2 TO SC-IDX
+                   MOVE 1 TO SUB1
+               ELSE
+               IF HOLD-SC = "C"
+                   MOVE 3 TO SC-IDX
+                   MOVE 2 TO SUB1
+               ELSE
+               IF HOLD-SC = "D"
+                   MOVE 4 TO SC-IDX
+                   MOVE 2 TO SUB1
+               ELSE
+               IF HOLD-SC = "E"
+                   MOVE 5 TO SC-IDX
+                   MOVE 3 TO SUB1
+               ELSE
+               IF HOLD-SC = "F"
+                   MOVE 6 TO SC-IDX
+                   MOVE 3 TO SUB1
+               ELSE
+               IF HOLD-SC = "G"
+                   MOVE 7 TO SC-IDX
+                   MOVE 4 TO SUB1
+               ELSE
+               IF HOLD-SC = "H"
+                   MOVE 8 TO SC-IDX
+                   MOVE 4 TO SUB1
+               ELSE
+               IF HOLD-SC = "I"
+                   MOVE 9 TO SC-IDX
+                   MOVE 5 TO SUB1
+               ELSE
+               IF HOLD-SC = "J"
+                   MOVE 10 TO SC-IDX
+                   MOVE 5 TO SUB1
+               ELSE
+               IF HOLD-SC = "K"
+                   MOVE 11 TO SC-IDX
+                   MOVE 6 TO SUB1
+               ELSE
+               IF HOLD-SC = "L"
+                   MOVE 12 TO SC-IDX
+                   MOVE 6 TO SUB1
+               ELSE
+               IF HOLD-SC = "M"
+                   MOVE 13 TO SC-IDX
+                   MOVE 7 TO SUB1
+               ELSE
+               IF HOLD-SC = "N"
+                   MOVE 14 TO SC-IDX
+                   MOVE 7 TO SUB1
+               ELSE
+               IF HOLD-SC = "O"
+                   MOVE 15 TO SC-IDX
+                   MOVE 8 TO SUB1
+               ELSE
+               IF HOLD-SC = "P"
+                   MOVE 16 TO SC-IDX
+                   MOVE 8 TO SUB1
+               ELSE
+               IF HOLD-SC = "Q"
+                   MOVE 17 TO SC-IDX
+                   MOVE 9 TO SUB1
+               ELSE
+               IF HOLD-SC = "R"
+                   MOVE 18 TO SC-IDX
+                   MOVE 9 TO SUB1
+               ELSE
+               IF HOLD-SC = "S"
+                   MOVE 19 TO SC-IDX
+                   MOVE 10 TO SUB1
+               ELSE
+               IF HOLD-SC = "T"
+                   MOVE 20 TO SC-IDX
+                   MOVE 10 TO SUB1
+               ELSE
+               IF HOLD-SC = "U"
+                   MOVE 21 TO SC-IDX
+                   MOVE 11 TO SUB1
+               ELSE
+               IF HOLD-SC = "V"
+                   MOVE 22 TO SC-IDX
+                   MOVE 11 TO SUB1
+               ELSE
+               IF HOLD-SC = "W"
+                   MOVE 23 TO SC-IDX
+                   MOVE 12 TO SUB1
+               ELSE
+               IF HOLD-SC = "X"
+                   MOVE 24 TO SC-IDX
+                   MOVE 12 TO SUB1
+               ELSE
+               IF HOLD-SC = "Y"
+                   MOVE 25 TO SC-IDX
+                   MOVE 13 TO SUB1
+               ELSE
+               IF HOLD-SC = "Z"
+                   MOVE 26 TO SC-IDX
+                   MOVE 13 TO SUB1.
+
+           IF HOLD-SC = " "
+               MOVE "Y" TO SC-MATCH
+           ELSE
+           IF HOLD-SC = "#"
+                DISPLAY "Are you a VS Security Administrator?"
+           ELSE
+           IF (SC-IDX = 1 OR 3 OR 5 OR 7 OR 9 OR 11 OR 13 OR 15 OR 17
+                          OR 19 OR 21 OR 23 OR 25)
+               AND ACCESS-1(SUB1) = "Y" 
+                   MOVE "Y" TO SC-MATCH
+           ELSE
+           IF (SC-IDX = 2 OR 4 OR 6 OR 8 OR 10 OR 12 OR 14 OR 16 OR 18
+                          OR 20 OR 22 OR 24 OR 26)
+               AND ACCESS-2(SUB1) = "Y" 
+                   MOVE "Y" TO SC-MATCH.
+
+       PROMPT-PASSWORD.
+           IF MENU-SEL-PW
+               STRING "        Specify the Password to Run selection ",
+                      M-FILE(CNT1),
+                      " and Press (RETURN)"DELIMITED BY SIZE
+                   INTO PROMPT-SCN-TEXT
+           ELSE
+               STRING "          Specify the Password to Run ",MENU-ID,
+                      " and Press (RETURN)"DELIMITED BY SIZE
+                   INTO PROMPT-SCN-TEXT
+           END-IF.
+           MOVE UNDER-TEXT TO FAC OF PROMPT-1, PROMPT-2.
+           MOVE BL-MOD-UL  TO FAC OF PROMPT-3.
+
+           DISPLAY AND READ PROMPT-PASSWORD-SCREEN ON CRT
+               PFKEYS 1.
+
+           IF PF-KEY = "00"
+               IF MENU-SEL-PW
+                   IF ENTER-PASSWORD = M-SEL-PASSWORD(CNT1)
+                       MOVE "Y" TO RUN-SEL-FLAG
+                       GO TO EXIT-PROMPT-PASSWORD
+                   ELSE
+                       CALL "BELL" USING BELL-TIME
+                       MOVE "N" TO RUN-SEL-FLAG
+                   END-IF
+               ELSE
+                   IF ENTER-PASSWORD = PW-RUN-MENU
+                       MOVE ENTER-PASSWORD TO M-STACK-PW(STACK-INDEX)
+                       MOVE "Y" TO DISP-MENU-FLAG
+                       GO TO EXIT-PROMPT-PASSWORD
+                   ELSE
+                       CALL "BELL" USING BELL-TIME
+                       MOVE "N" TO DISP-MENU-FLAG
+                   END-IF
+               END-IF
+           ELSE
+           IF PF-KEY = "01"
+               IF MENU-SEL-PW
+                   MOVE "N" TO RUN-SEL-FLAG
+               ELSE
+                   MOVE "N" TO DISP-MENU-FLAG
+               END-IF
+               GO TO EXIT-PROMPT-PASSWORD
+           ELSE
+               CALL "BELL" USING BELL-TIME.
+
+           GO TO PROMPT-PASSWORD.
+
+       EXIT-PROMPT-PASSWORD.
+           EXIT.
+
+       BACKUP-ONE-MENU.
+           MOVE SPACES TO STACK-MENU-ID(STACK-INDEX)
+           MOVE A-0-BYTE TO M-STACK-ROW(STACK-INDEX),
+                            M-STACK-COL(STACK-INDEX)
+           MOVE SPACES TO STACK-MENU-FILE(STACK-INDEX)
+           MOVE SPACES TO STACK-MENU-LIB(STACK-INDEX)
+           MOVE SPACES TO STACK-MENU-VOL(STACK-INDEX)
+           MOVE SPACES TO M-STACK-PW(STACK-INDEX)
+           SUBTRACT 1 FROM STACK-INDEX
+           IF STACK-INDEX > 0 THEN
+               PERFORM SETUP-MENU-DEFINITION
+           END-IF.
+
+       MSEL-PASSWORD-PROCESSING.
+           MOVE "Y" TO RUN-SEL-FLAG.
+           IF M-SEL-PASSWORD(CNT1) NOT = SPACES
+               MOVE "S" TO PASSWORD-TYPE
+               PERFORM PROMPT-PASSWORD THRU EXIT-PROMPT-PASSWORD.

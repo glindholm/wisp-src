@@ -1,9 +1,16 @@
-			/************************************************************************/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*			Copyright (c) 1988, 1989, 1990			*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		wsfnm.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Emulation of NetronCAP system subroutine
+**
+**	Routines:	
+*/
 
 		/****************************************************************************************
 		*	WSFNM.C	- Emulation of NetronCAP system subroutine 				*
@@ -48,26 +55,46 @@
 		*                                                                    			*
 		****************************************************************************************/
 
+/*
+**	Includes
+*/
+
 #include <stdio.h>									/* Allow standard I/O.			*/
 #include <varargs.h>									/* Allow variable number of arguments	*/
-#include <v/video.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "idsistd.h"
 #include "vwang.h"
 #include "werrlog.h"
 #include "wglobals.h"
+#include "wisplib.h"
+#include "wsfns.h"
 
+/*
+**	Globals and Externals
+*/
 extern char NC_pfkey[3], NC_order_area[4];						/* Define global in WSFNS so accessible	*/
-
-static short screen_len, scrl_len;							/* Values for each screen setup.	*/
+extern int wsfns_toggle;								/* Define global in WSFNS so accessible */
+extern char cur_toggle_val;								/* Var to hold current toggle value.	*/
+void hfio();
 unsigned char *wsfnm_cscn;								/* Current pos in long screen pointer.	*/
+
+/*
+**	Static data
+*/
+static short screen_len, scrl_len;							/* Values for each screen setup.	*/
 static short st_scrl, end_scrl;
-static int hfio();
-static int do_erase();
-static int blank_msg_line();
+
+/*
+**	Static Function Prototypes
+*/
+static void do_erase();
+static void blank_msg_line();
 
 #define		ROUTINE		85500
 
-WSFNM(va_alist)
+int WSFNM(va_alist)
 va_dcl
 {
 	va_list		the_args;							/* A pointer to traverse the stack.	*/
@@ -83,8 +110,10 @@ va_dcl
 	int4		vcount;
 
 	werrlog(ERRORCODE(1),"?",0,0,0,0,0,0,0);					/* Say we are here.			*/
-	*wisp_progname = CHAR_NULL;							/* Set the progname name to spaces.	*/
-	*wisp_screen = CHAR_NULL;							/* Set the screen name to spaces.	*/
+
+	check_first_time_netroncap();							/* Check environment if first time in.	*/
+	*wisp_progname = (char)0;							/* Set the progname name to spaces.	*/
+	*wisp_screen = (char)0;								/* Set the screen name to spaces.	*/
 
 	va_start(the_args);								/* Set pointer to top of stack.		*/
 	arg_count = va_count(the_args);							/* How many args are there ?		*/
@@ -99,7 +128,7 @@ va_dcl
 	for (i = 0; i < 2; i++)  func_type[i] = *z1_fn++;				/* Copy function to variable.		*/
 	func_type[i] = '\0';								/* Null terminate the string.		*/
 	werrlog(ERRORCODE(1),func_type,0,0,0,0,0,0,0);					/* Say we are here.			*/
-	if (strcmp(func_type,"OM") == 0)						/* Is it function OM?			*/
+	if (memcmp(func_type,"OM",2) == 0)						/* Is it function OM?			*/
 	{
 		if (arg_count != 5)
 		{
@@ -114,7 +143,7 @@ va_dcl
 		end_scrl = *z1_slast;							/* Assign end of scroll region.		*/
 		scrl_len = 24 - ((st_scrl-1) + (screen_len - end_scrl));		/* Compute the # lines in scroll region.*/
 	}
-	else if (strcmp(func_type,"AM") == 0)						/* Is it function AM?			*/
+	else if (memcmp(func_type,"AM",2) == 0)						/* Is it function AM?			*/
 	{
 		if (arg_count != 4)
 		{
@@ -168,13 +197,13 @@ va_dcl
 			WSFNS(wsfns_func,wsfnm_cscn,&realline,z1_pos,z1_beepfl,&cur_scrl_len);
 			strcpy(wsfns_func,"AS");					/* Display and read screen.		*/
 			WSFNS(wsfns_func,wsfnm_cscn,&realline,z1_pos,z1_beepfl,&st_scrl,&cur_scrl_len);
-			if (strcmp(NC_pfkey,"02") == 0) 				/* Go to top of scroll region by PF2.	*/
+			if (memcmp(NC_pfkey,"02",2) == 0) 				/* Go to top of scroll region by PF2.	*/
 			{
 				snum = 1;						/* Set to first page.			*/
 				wsfnm_cscn = &z1_rec[(st_scrl-1)*80];			/* Set ptr to beginning of scroll reg.	*/
 				cur_scrl_len = scrl_len;				/* Set back to full scroll region.	*/
 			}
-			else if (strcmp(NC_pfkey,"00") != 0)				/* Return processing to COBOL program.	*/
+			else if (memcmp(NC_pfkey,"00",2) != 0)				/* Return processing to COBOL program.	*/
 			{								/* so far in screen.			*/
 				another_screen = 0;					/* No more screens to display or not a	*/
 			}
@@ -201,10 +230,14 @@ va_dcl
 				*z1_pos = 0;						/* Set so positions on 1st mod field.	*/
 				*z1_line = 0;
 			}
+			if (wsfns_toggle)
+			{
+				hfio((unsigned char)WRITE_ALL,z1_rec);			/* Display header and footer.		*/
+			}
 		}
 		hfio((unsigned char)READ_ALL,z1_rec);					/* Restore header and footer info.	*/
 	}
-	else if (strcmp(func_type,"PM") == 0)						/* Is it function PM?			*/
+	else if (memcmp(func_type,"PM",2) == 0)						/* Is it function PM?			*/
 	{										/* Return cursor position and PFkey.	*/
 		strcpy(wsfns_func,"PF");
 		z1_pf = va_arg(the_args, short *);					/* Get address of pfkey passed.		*/
@@ -213,14 +246,14 @@ va_dcl
 		vcount = 4;
 		wvaset( &vcount );
 		WSFNS(wsfns_func,z1_pf,z1_row,z1_col);					/* Make a call to WSFNS.		*/
-		return(SUCCESS);
+		return(0);
 	}
-	return(SUCCESS);
+	return(0);
 }
 
-static hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
-	unsigned char function;								/* Function to be performed.		*/
-	unsigned char *scn_ptr;								/* footer areas.			*/
+void hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
+unsigned char function;									/* Function to be performed.		*/
+unsigned char *scn_ptr;									/* footer areas.			*/
 {
 	unsigned char	*terminate_list;						/* Parameters for vwang			*/
 	unsigned char	*ldispa, l_numl;						/* Local pointers for vwang.		*/
@@ -241,6 +274,10 @@ static hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
 	for (i = 0; i < 4; i++) ldispa[i] = NC_order_area[i];				/* Concatenate order area with screen.	*/
 	l_numl = st_scrl - 1;								/* Set the number of lines to display.	*/
 
+	if (wsfns_toggle)
+	{
+		ldispa[4] = cur_toggle_val;						/* Move current toggle value into 	*/
+	}										/*  (1,1) header area of screen.	*/
 	terminate_list = (unsigned char *)"A";
 	vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);
 
@@ -256,8 +293,16 @@ static hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
 	for (i = 0; i < 4; i++) save_oa[i] = ldispa[i];					/* Save 4 bytes of program data area.	*/
 	for (i = 0; i < 4; i++) ldispa[i] = NC_order_area[i];				/* Concatenate order area with screen.	*/
 	l_numl = screen_len - end_scrl;							/* Set the number of lines to display.	*/
+	if (wsfns_toggle)
+	{
+		int temp;
 
-	gen_ncpfkey(0,&ldispa,l_numl*80,NULL,NULL);					/* Set up PFkey window if have EDE.	*/
+		temp = (l_numl * 80) + 3;						/* Calculate position in footer.	*/
+		ldispa[temp] = cur_toggle_val;						/*  Move current toggle val into (24,80)*/
+		set_toggle_value();
+	}
+
+	gen_ncpfkey(0,(char**)&ldispa,l_numl*80,NULL,NULL);				/* Set up PFkey window if have EDE.	*/
 											/* Don't need st_win and end_win because*/
 	vwang(&function, ldispa, &l_numl, terminate_list, NC_pfkey, vw_mod);		/* temp screen is just pfkey area.	*/
 
@@ -266,7 +311,7 @@ static hfio(function, scn_ptr)								/* Call VWANG to display header and	*/
 	for (i = 0; i < 4; i++) ldispa[i] = save_oa[i];					/* Restore program data area.		*/
 }
 
-static do_erase(num_scrl_lines)								/* Call VWANG to erase bottom of scroll	*/
+static void do_erase(num_scrl_lines)								/* Call VWANG to erase bottom of scroll	*/
 int num_scrl_lines;									/* region.				*/
 {
 	unsigned char	function;							/* Parameters for vwang			*/
@@ -276,14 +321,14 @@ int num_scrl_lines;									/* region.				*/
 	int		st_row;
 	char 		blscreen[1924];							/* Generate a blank screen to pass to	*/
 											/* VWANG.				*/
-	memset((char *)blscreen,' ',sizeof(blscreen));					/* Init the screen to all balnks.	*/
-	wcc = UNLOCK_KEYBOARD | POSITION_CURSOR;					/* Assign Write Control Character	*/
+	memset(blscreen,' ',sizeof(blscreen));						/* Init the screen to all balnks.	*/
+	wcc = (char)(UNLOCK_KEYBOARD | POSITION_CURSOR);				/* Assign Write Control Character	*/
 	st_row = st_scrl + num_scrl_lines;						/* Calculate the starting row.		*/
 
-	blscreen[ROW_NUMBER_BYTE]	= (unsigned char)st_row;	   		/* Starting screen line number for data.*/
+	blscreen[ROW_NUMBER_BYTE]	= (char)st_row;	   				/* Starting screen line number for data.*/
 	blscreen[WCC_BYTE]            = wcc;						/* Set the WCC byte.			*/
-	blscreen[CURSOR_COL_BYTE]     = (unsigned char)1;				/* Position cursor at column.		*/
-	blscreen[CURSOR_ROW_BYTE]     = (unsigned char)1;				/* Position cursor at row.		*/
+	blscreen[CURSOR_COL_BYTE]     = (char)1;					/* Position cursor at column.		*/
+	blscreen[CURSOR_ROW_BYTE]     = (char)1;					/* Position cursor at row.		*/
 
 	edispa = (unsigned char *)blscreen;						/* Point to display area plus 4 bytes.	*/
 	e_numl = scrl_len - num_scrl_lines;						/* Set the number of lines to display.	*/
@@ -293,21 +338,30 @@ int num_scrl_lines;									/* region.				*/
 	NC_pfkey[2] = '\0';								/* Null terminate the string.		*/
 }
 
-static blank_msg_line()									/* Call VWANG to erase message line.	*/
+static void blank_msg_line()									/* Call VWANG to erase message line.	*/
 {
 	unsigned char	function, terminate_list[2];					/* Parameters for vwang			*/
 	unsigned char	*edispa, e_numl;						/* Local pointers for vwang.		*/
 	char		wcc;								/* WANG order area for screen display	*/
 	char 		vw_mod[2];							/* Parameters for vwang PFkey pressed.	*/
 	int		st_row;
-	char		blank_msg[84+1];						/* Blank message line for VWANG.	*/
+	char		blank_msg[80+4+1];						/* Blank message line for VWANG.	*/
 	unsigned char	*cptr;
+	int		idx;
+
+	/*
+	**	NOTE:   I do not dig why we read the message line then
+	**		set it to blanks up to the first FAC (after column 1)
+	**		then rewrite it -- why not just set to blanks and write ???
+	*/
 
 	strcpy((char *)terminate_list,"A");
 	memset((char *)blank_msg,' ',sizeof(blank_msg));				/* Init the line to all blanks.		*/
 	blank_msg[sizeof(blank_msg)-1] = '\0';						/* Null terminate the string.		*/
 	wcc = POSITION_CURSOR;								/* Assign Write Control Character	*/
 	st_row = st_scrl + scrl_len;							/* Calculate the message starting row.	*/
+
+	if (st_row > 24) return;							/* No MESSAGE LINE so return.		*/
 
 	blank_msg[ROW_NUMBER_BYTE]	= (unsigned char)st_row;	   		/* Starting screen line number for data.*/
 	blank_msg[WCC_BYTE]            = wcc;						/* Set the WCC byte.			*/
@@ -322,9 +376,38 @@ static blank_msg_line()									/* Call VWANG to erase message line.	*/
 
 	cptr = edispa;									/* Point to message line.		*/
 	cptr += 4;									/* Step past order area.		*/
-	*cptr++ = ' ';									/* Set the FAC to space.		*/
-	while ((*cptr & FAC_CHARACTER) != FAC_CHARACTER) *cptr++ = ' ';			/* Set message line to blank.		*/
+	cptr[0] = ' ';									/* Set the FAC to space.		*/
+	for(idx=1; idx<80 && ((cptr[idx] & FAC_CHARACTER) != FAC_CHARACTER); idx++)
+	{
+		cptr[idx] = ' ';							/* Set message line to blank.		*/
+	}
 
 	function = WRITE_ALL;								/* Display blank message line.		*/
+	e_numl = 1;									/* Set the number of lines to read.	*/
 	vwang(&function, edispa, &e_numl, terminate_list, NC_pfkey, vw_mod);
 }
+
+/*
+**	History:
+**	$Log: wsfnm.c,v $
+**	Revision 1.15  1996-07-15 13:21:43-04  gsl
+**	Fix argument warning
+**
+**	Revision 1.14  1996-07-11 16:56:10-07  gsl
+**	fix includes and return values for NT
+**
+**	Revision 1.13  1995-08-22 06:58:23-07  gsl
+**	fix warnings
+**
+ * Revision 1.12  1995/08/14  09:50:16  scass
+ * Added test for message line > 24.  If is then doesn't
+ * try to display it.  Assumes there is no message line.
+ *
+ * Revision 1.11  1995/07/21  11:33:00  gsl
+ * Fixed bug in blank_msg_line() in a while() loop which was setting
+ * the line to blanks until a FAC was found -- if no fac found it
+ * would run off the end.
+ *
+**
+**
+*/

@@ -390,23 +390,23 @@
                "TRY THINGS:".
            03  FILLER  PIC X(15) ROW 1 COL 60 VALUE
                "PRINTING-SCREEN".
-           03  FILLER  PIC X(23) ROW 3 COL 20 VALUE
-               "1) CREATE A PRINT FILE.".
-           03  FILLER  PIC X(51) ROW 5 COL 20 VALUE
-               "2) CREATE TEMP PRINT FILE (ADVANCING & OVERSTRIKE).".
-           03  FILLER  PIC X(49) ROW 7 COL 20 VALUE
-               "3) CREATE A PRINT FILE WITH MULTIPLE OVERSTRIKES.".
-           03  FILLER  PIC X(29) ROW 9 COL 20 VALUE
-               "4) PRINT A CONTINUATION LINE.".
-           03  FILLER  PIC X(29) ROW 11 COL 20 VALUE
-               "5) ZERO LENGHT PRINT FILE.".
-           03  FILLER  PIC X(40) ROW 13 COL 20 VALUE
-               "6) NO NAME PRINT FILE.".
-           03  FILLER  PIC X(40) ROW 15 COL 20 VALUE
-               "7) LITERAL NAME PRINT FILE.".
+           03  FILLER  PIC X(24) ROW 3 COL 20 VALUE
+               "(1) CREATE A PRINT FILE.".
+           03  FILLER  PIC X(52) ROW 5 COL 20 VALUE
+               "(2) CREATE TEMP PRINT FILE (ADVANCING & OVERSTRIKE).".
+           03  FILLER  PIC X(50) ROW 7 COL 20 VALUE
+               "(3) CREATE A PRINT FILE WITH MULTIPLE OVERSTRIKES.".
+           03  FILLER  PIC X(30) ROW 9 COL 20 VALUE
+               "(4) PRINT A CONTINUATION LINE.".
+           03  FILLER  PIC X(30) ROW 11 COL 20 VALUE
+               "(5) ZERO LENGHT PRINT FILE.".
+           03  FILLER  PIC X(41) ROW 13 COL 20 VALUE
+               "(6) NO NAME PRINT FILE.".
+           03  FILLER  PIC X(41) ROW 15 COL 20 VALUE
+               "(7) LITERAL NAME PRINT FILE.".
 
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS PF (16) TO EXIT".
 
 
       /*****************************************************************

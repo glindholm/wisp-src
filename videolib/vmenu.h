@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /************************************************************************/
 /*	      VIDEO - Video Interactive Development Environment		*/
 /*		Copyright (c) 1988, 1989, 1990, 1991, 1992		*/
@@ -8,6 +12,9 @@
 #ifndef VMENU_INCLUDED
 #define VMENU_INCLUDED
 
+#include "vintdef.h"
+
+#define UNKNOWN_MENU		0	/* UNKNOWN			*/
 /* #define LOAD_FROM_FILE	1	   As per vloadchar.		*/
 #define NUMERIC_MENU		2	/* Numeric selection menu.	*/
 #define ALPHABETIC_MENU		3	/* Highlighted alphabetic.	*/
@@ -41,7 +48,7 @@ struct video_menu
 	int4 item;
 	int4 backitem;
 	int4 code[MAX_MENU_ITEMS];
-	unsigned char text[MAX_MENU_ITEMS][MAX_MENU_WIDTH];
+	char text[MAX_MENU_ITEMS][MAX_MENU_WIDTH];
 
         /*
          * everything after this point is lumped together  
@@ -73,6 +80,34 @@ struct video_menu
 #endif
 };
 
+int vlastlink(struct video_menu *md);							/* Get if the last selection links.	*/
+int4 vmenugo(struct video_menu *mdata);							/* Display a menu.			*/
+int4 vmenucont(struct video_menu *mdata);						/* Continue displaying menu's.		*/
+void vdynalink(struct video_menu *mdroot, struct video_menu *mdlink);			/* Dynamically continue processing.	*/
+void vdynaunlink(struct video_menu *md);						/* Unlink a dynamic linked structure.	*/
+int vmenuinit(struct video_menu *md, int t, int o, int r, int c, int w);		/* Get the menu data.			*/
+int vmenuitem(struct video_menu *md, char *s, int v, struct video_menu *nm);
+int vmenumode(int mode);								/* Change the menu mode.		*/
+int vdetpos(int scrpos, int *r, int *c, int rs, int cs);				/* Suggest a row and column.		*/
+int vmenu_pfkeys(int state);
+int vmenustatus(int *r1, int *r2);
+int vmenusave(struct video_menu *md);							/* Save a menu's choice path.		*/
+int vmenurestore(void);									/* Restore a choice path.		*/
+int vlastlevel(struct video_menu *md);							/* Return the current path level.	*/
+int4 vlastitem(struct video_menu *md);							/* Return the current path level.	*/
+
 #define DYNAMIC_LINK (struct video_menu *) -1	/* Dynamic link code.	*/
 #endif	/*  VMENU_INCLUDED	*/
 
+/*
+**	History:
+**	$Log: vmenu.h,v $
+**	Revision 1.12  1997-07-09 12:40:30-04  gsl
+**	Add include of vintdef.h
+**
+**	Revision 1.11  1996-10-11 18:16:12-04  gsl
+**	drcs update
+**
+**
+**
+*/

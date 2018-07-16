@@ -1,9 +1,20 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include "idsistd.h"
 #include "werrlog.h"
 
-CEXIT()
+void CEXIT(void)
 {
 #define		ROUTINE		7000
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 }
+/*
+**	History:
+**	$Log: cexit.c,v $
+**	Revision 1.9  1996-08-19 18:32:11-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -10,7 +10,8 @@
 /************************************************************************/
 
 #include <stdio.h>
-#include <v/video.h>
+#include <video.h>
+#include <vmodules.h>
 
 tests()
 {

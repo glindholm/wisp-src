@@ -1,17 +1,25 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+			/************************************************************************/
+			/*									*/
+			/*	        WISP - Wang Interchange Source Pre-processor		*/
+			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
+			/*	 An unpublished work of International Digital Scientific Inc.	*/
+			/*			    All rights reserved.			*/
+			/*									*/
+			/************************************************************************/
+
 /*
 	bit_x.c		A collection of bit handling routines.
 */
 
 #include <string.h>
-#ifndef VMS	/* unix or MSDOS */
-#include <memory.h>
-#endif
 
 #include "idsistd.h"
 #include "cobrun.h"
+#include "wisplib.h"
 
-wsetstat(smask,cmask,src)							/* Used to set/clear bits in a status field.	*/
-uint4 *smask,*cmask,*src;
+void wsetstat(uint4 *smask, uint4 *cmask, uint4 *src)							/* Used to set/clear bits in a status field.	*/
 {
 	*src = *src | *smask;							/* Set bits with smask.				*/
 	*src = *src & (~(*cmask));						/* Clear bits with cmask.			*/
@@ -19,13 +27,11 @@ uint4 *smask,*cmask,*src;
 
 										/* turn off the bits in src represented by mask	*/
 
-bit_off(mask,src)
-unsigned char *mask,*src;
+void bit_off(unsigned char *mask, unsigned char *src)
 {
 	*src = *src & (~(*mask));						/* complement the mask and AND it with the src	*/
 }
-lbit_off(mask,src)
-uint4 *mask,*src;
+void lbit_off(uint4 *mask, uint4 *src)
 {
 	*src = *src & (~(*mask));						/* complement the mask and AND it with the src	*/
 }
@@ -33,52 +39,60 @@ uint4 *mask,*src;
 
 										/* turn on the bits in src represented by mask	*/
 
-bit_on(mask,src)
+void bit_on(unsigned char *mask,unsigned char *src)
+{
+	*src = *src | *mask;							/* OR the mask with the src			*/
+}
+void lbit_on(uint4 *mask,uint4 *src)
+{
+	*src = *src | *mask;							/* OR the mask with the src			*/
+}
+
+
+/*
+**	Routine:	bit_test()
+**
+**	Function:	Test if bits in mask are all on in src.
+**
+**	Description:	Test if all the bits that are set on in mask are
+**			also on in src, if so set value to 'Y'.
+**
+**	Arguments:
+**	mask		The test bit mask.
+**	src		The field to test against mask.
+**	value		The return field
+**			'Y' = All the bits in mask are on
+**			'N' = The mask is not on
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	12/13/93	Fixed to work correct if multiple bits are set in mask. GSL
+**
+*/
+void bit_test(mask,src,value)
 unsigned char *mask,*src;
+char	*value;
 {
-	*src = *src | *mask;							/* OR the mask with the src			*/
-}
-lbit_on(mask,src)
-uint4 *mask,*src;
-{
-	*src = *src | *mask;							/* OR the mask with the src			*/
+	*value = ((*src & *mask) == *mask) ? 'Y':'N';
 }
 
-							/* test the bits in src with those in mask and give result of Y or N */
-
-bit_test(mask,src,value)
-unsigned char *mask,*src,*value;
+void lbit_test(mask,src,value)
+char 	*value;
+uint4 	*mask, *src;
 {
-	if (*src & *mask)				/* AND the mask with the src						*/
-	{
-		*value = 'Y';				/* bits did match							*/
-	}
-	else
-	{
-		*value = 'N';				/* bits did not match							*/
-	}
-}
-lbit_test(mask,src,value)
-unsigned char *value;
-uint4 *mask, *src;
-{
-	if (*src & *mask)				/* AND the mask with the src						*/
-	{
-		*value = 'Y';				/* bits did match							*/
-	}
-	else
-	{
-		*value = 'N';				/* bits did not match							*/
-	}
+	*value = ((*src & *mask) == *mask) ? 'Y':'N';
 }
 
 
 
 /* convert a PIC 9(2) to a PIC X(1)												*/
 
-xx2byte(src,dst)
-char *src;
-char *dst;
+void xx2byte(char *src,char *dst)
 {
 	*dst = (char)(10 * (src[0] - '0')) + (src[1] - '0');
 }
@@ -86,9 +100,7 @@ char *dst;
 
 /* convert a word with the a row and col in it to 2 words of row and col							*/
 
-w2rowcol(mybytes,mywords)
-unsigned char mybytes[];
-short    int  mywords[];
+void w2rowcol(unsigned char mybytes[],short int mywords[])
 {
 									/* This will work with any byte order.			*/
 									/* The max size of mybyte is 80 or 0x50 so we don't 	*/
@@ -102,14 +114,17 @@ short    int  mywords[];
 	}
 }
 
-wmemcpy(dst,src,len)							/* COBOL call able memcpy				*/
-char	*src, *dst;
-short	*len;
+void wmemcpy(char *dst,char *src,short *len)							/* COBOL call able memcpy				*/
 {
 	memcpy(dst,src,*len);
 }
 
-
-
-
-
+/*
+**	History:
+**	$Log: bit_x.c,v $
+**	Revision 1.10  1996-08-19 18:32:09-04  gsl
+**	drcs update
+**
+**
+**
+*/

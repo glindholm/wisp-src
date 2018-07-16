@@ -1,0 +1,25 @@
+procedure
+declare &infile, &outfile string(8)
+declare &library string(8)
+declare &volume  string(6)
+
+screen clear
+
+prompt restore=yes,
+	"Specify values below and press ENTER to run WSORT.";;
+   "The INPUT and OUTPUT screens will be displayed.";
+   "The KEYS screen will be suppressed.";
+   "The INPUT library and volume will be backward referenced ",
+   "and used for OUTPUT.";;
+   "Input file  =", upper &infile;
+   "Output file =", upper &outfile;
+   "Library     =", upper &library;
+   "Volume      =", upper &volume;;;
+   "Press ctrl-c to return to menu without running WSORT"
+
+run wsort
+input:  display input  file=&infile, library=&library, volume=&volume
+        enter   keys
+        display output file=&outfile, library=(input.library),
+                       volume=(input.volume)
+ 

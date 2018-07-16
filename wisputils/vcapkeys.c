@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /************************************************************************/
 /*									*/
 /*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -20,13 +22,17 @@
 #include <signal.h>
 
 
-#if defined(_AIX) || defined(SEQUENT)
+#if defined(_AIX)
 #include <sys/select.h>
 #include <time.h>
 #endif
+#if defined(SEQUENT)
+#include <sys/select.h>
+#include <sys/time.h>
+#endif
 
 
-#ifdef SCO						/* SCO unix only; this used to be i386, but conflicted with NCR.	*/
+#if defined(SCO) && !defined(__GNU_LIBRARY__)		/* SCO unix only; this used to be i386, but conflicted with NCR.	*/
 #include <sys/select.h>
 #include <sys/times.h>
 #define bzero(x,y) memset(x,0,y) 
@@ -456,7 +462,7 @@ int *len;
 	to.tv_usec = TOUSEC;
 	pos=0;
 	read(fd,string+(pos++),1);
-	while (cnt=select(20,&rfds,0,0,&to))
+	while (cnt=select(20,(int*)&rfds,NULL,NULL,&to))
 	{
 		read(fd,string+pos,1);
 		FD_ZERO(&rfds);
@@ -561,3 +567,15 @@ static init_table()
 	strcpy(et[GEN_CLEAR_FIELD].seq_dvalue, "\"\\E\\E[A\"");
 	strcpy(et[GEN_CLEAR_FIELD].seq_name, "generic_clear_field");
 }
+/*
+**	History:
+**	$Log: vcapkeys.c,v $
+**	Revision 1.10  1997-02-17 11:02:43-05  gsl
+**	Fixed warnings in call to select()
+**
+**	Revision 1.9  1996-07-23 14:13:01-04  gsl
+**	drcs update
+**
+**
+**
+*/

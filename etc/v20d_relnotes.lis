@@ -1,0 +1,460 @@
+							   v20d_relnotes.lis
+
+
+	RELEASE NOTES FOR WISP VERSION V2.0D
+	====================================
+
+	- UNIX: A new utility VSX (VS-EXCHANGE) has been added to read
+	  9-track cartridge tapes in Wang BACKUP format. This is very
+	  useful for transfering source and data from the Wang to your
+	  UNIX system.
+
+	- VMS: The RETURN-CODE was not being correctly set in the 
+	  symbol $W_RETURN_CODE this has been corrected.
+
+	- The usersub DATE was incorrectly treating the Julian date 90000
+	  as a valid date. This has been corrected to do proper input
+	  verification and set the return code to 8 when invalid.
+
+	- Entering a decimal point in a screen item of type "PIC ZZZ-"
+	  would cause the program to abort. This has been corrected.
+
+	- The usersub PUTPARM option to CLEAR the reference putparm
+	  is now working.
+
+	- Submitted programs that attempted to access the workstation
+	  were getting into endless loops. They now terminate correctly.
+
+	- Screen fields of type PIC ZZBZZZBZZZ were being edited 
+	  incorrectly, this has been fixed.
+
+	- UNIX: The usersub SCREEN on byte-normal machines was filling the
+	  file with garbage characters between the screen borders, this
+	  has been corrected.
+
+	- Thw WISPSUB WCHAIN now works for ACUCOBOL.
+
+	- UNIX: The usersub MESSAGE types B and K were giving sporadic
+	  problems, this has been fixed.
+
+	- UNIX: The WRITE USAGE CONSTANTS option from the help menu
+	  would include the spaces as part of the filename if a filename
+	  was specified. This has been corrected.
+
+	- VMS: The usersubs LINK and COBLINK now look for a ".EXE" file
+	  first and if not found look for a ".COM" file. Previously, they
+	  were looking for a ".COM" file only.
+
+	- The usersub SORT was crashing on a non-sort-in-place, this is
+	  now working.
+
+	- VMS: The usersub SUBMIT now returns a valid return code.
+
+	- VMS: The WISPSUB LINKPROC is now working.
+
+	- VMS: The usersub GETPARM was giving a sporadic error message
+	  saying the shared memory area was locked, this has been fixed.
+
+	- For ACUCOBOL the record lock tracking logic has been changed
+	  to use the UNLOCK ALL statement, this makes the lock logic much 
+	  simpler. 
+
+	- VMS: Added the WISP directive *$AUTOLOCKPRINT this can be 
+	  inserted before the first SELECT statement and it tells WISP
+	  to generate "Automatic record locking" for all "PRINTER" files.
+	  This may provide an increase in performance but it may only
+	  be done if your "PRINTER" files are SEQ/SEQ and only opened
+	  OUTPUT and the only I/O statement is WRITE.
+
+	- VMS: Added the WISP directive *$AUTOLOCKFILE this can be used
+	  to selectively tell WISP to use "Automatic record locking"
+	  on certain files. You insert *$AUTOLOCKFILE immediately before
+	  the SELECT statement for each file you want "Automatic record
+	  locking" used on. This can only be done to SEQ/SEQ files that
+	  are NOT opened SHARED, and do not perform READ WITH HOLD.
+	  This may provide a performance increase if the file is used
+	  primarily for writing.
+
+	- WISP was generating paragraph and section names in the 
+	  DECLARATIVES that were too long. It was prefixing file names
+	  with WDECL-, it now perfixes with WDCL- then it compresses the
+	  name to 30 characters.
+
+	- WISP was generating incorrect code for the RECORD CONTAINS
+	  clause of an FD if the optional keyword CONTAINS was missing,
+	  this has been corrected.
+
+	- WISP now generates correct code for a non-numeric literal that
+	  contains a double-double-quote <"">.
+
+	- Display and Read screen fields of type PIC ZZ that have a Range
+	  clause like "RANGE 1 TO 49" where not allowing the entry of
+	  single digit values such as "1 ". This has been fixed. The range
+	  comparison was being done against the screen field which is an 
+	  edited numeric and was failing. To correct this the screen field
+	  is moved to the OBJECT field and the comparison is done against
+	  the OBJECT field. This has the side effect that if the Display
+	  and Read is terminated by an ON PFKEY after a failed RANGE test
+	  the OBJECT clause will be modified and set to the low value of
+	  the RANGE.
+
+	- ACUCOBOL: The wsysinit utility has been improved to now delete
+	  any remaining files in the /usr/tmp/aculink directory.
+
+	- Added native support for VT420 terminals on the VAX.
+
+	- A DISPLAY-WS field that was missing a ROW clause would cause
+	  the data that immediately proceeded the workstation record
+	  in memory to be overwritten. This would overwrite the order-area
+	  and cause an invalid row error message. This has been
+	  corrected by treating a missing row as row 1.
+
+	- VMS: The WISP routine SETWISPFILEXT was not consistently padding
+	  the WISPFILEXT with spaces causing sporadic errors. This has
+	  been fixed.
+
+	- UNIX: The LINK usersub was failing when linking to non-ACUCOBOL
+	  and non-WISP programs. This was introduced in V2.0C and has
+	  now been corrected.
+
+	- The usersub SEARCH is now implemented.
+
+	- UNIX: A call to "EXTRACT" the "NA" will now return the comment
+	  field in the password file /etc/passwd.
+
+	- UNIX: A call to "EXTRACT" the "CF" will now correctly return
+	  the RUNNAME (name of first program entered at this link-level)
+	  instead of the program name.
+
+	- UNIX: WISP will now allow programs to run when LPMAP is not
+	  found. It used to give an error and stop.
+
+	- UNIX: Fixed an internal error that was causing program to error
+	  and stop if the users tty was not found in wsysconfig file.
+	  Programs will now behave correctly even if the tty is missing.
+	  Only on a call to "EXTRACT" the "W#" will WISP give an error
+	  if the tty is missing.
+
+	- WISP was incorrectly processing $VAX_CODE, $ACU_CODE etc 
+	  statements inside of a DISPLAY-WS screen definition, causing
+	  lines to be written out of sequence. This has been fixed.
+
+	- WISP now correctly handles the #NO_WS_BLANK_WHEN_ZERO option
+	  even when the COBOL is written as ZERO, ZEROS, or ZEROES.
+
+	- WISP was dropping the second paragraph name on a SORT THRU
+	  statement when it appeared on a separate line. This has been
+	  corrected.
+
+	- The #SORT_FILE option from the option file was on occasion
+	  generating incorrect code. This is now working correctly.
+
+	- A DISPLAY AND READ statement with the PFKEYS clause where the
+	  terminating period was on a separate line was generating invalid
+	  code. This has been fixed.
+
+	- WISP now puts common WISP generated code into copybooks.
+	  Currently WISP uses two copybooks "wc001000.cpy" for standard
+	  symbolics and "wc002x00.cpy" for standard working-storage.
+	  These two copybooks are generated by WISP in the current
+	  directory if they do not exist.
+
+	- Corrected the problem in START statements where starting on an
+	  alternate key that has a long name caused a line-too-long error.
+
+	- UNIX: The wputparm utility now checks to see if you are using
+	  the Bourne shell and reports an error stating that the Bourne
+	  shell is required for wputparm.
+
+	- UNIX: The wsysconf utility was not correctly recognizing the
+	  tapedrive on the DGUX Aviion system. This has been fixed.
+
+
+
+
+	RELEASE NOTES FOR WISP VERSION V2.0C
+	====================================
+
+	- **** The internal SCREEN VERSION number has been changed to 21.
+	  **** WISP will continue to support SCREEN VERSION number 20.
+
+	- The translated DISPLAY-WS screen record element
+	  DISP-ITEM-LENGTH was a two byte binary, it is now a "PIC X".
+	  This allows for better compression and uniformity in the
+	  record (it was the only binary value in the record).
+
+	- WISP now generates calls to "wfopen2" instead of "wfopen"
+	  the calling sequence has been changed to insert the
+	  WISP-APPLICATION-NAME as the sixth parameter. Perviously
+	  WISPed program will still work with the new library as 
+	  we will continue to support the "wfopen" routine.
+
+	- File GETPARMs now display the WISP-APPLICATION-NAME.
+
+	- Pseudo Blank handling for direct READ & REWRITE of the screen
+	  has been fixed so as to more exactly emulate the Wang.
+
+	- CURSOR POSITION clause bug that was introduced in 2.0B on
+	  byte swapped machines has been fixed.
+
+	- The "squished screens" problem where single spaces were being
+	  compressed out has been fixed.
+
+	- Multiple consecutive OCCURS at the same level within DISPLAY-WS 
+	  records were sometimes mistaken as being nested, this has
+	  been fixed.
+
+	- DISPLAY AND READ now properly updates the ORDER AREA with
+	  the CURSOR row and column.
+
+	- READ and REWRITE of the workstation with ROW oriented I/O
+	  now behaves correctly. (Except READ where the FD has 
+	  multiple 01 records of different sizes, in this case READ
+	  will always read the number of rows specified in the
+	  first 01.)
+
+	- UNIX: STOP RUN and EXIT PROGRAM statements within the
+	  DECLARATIVES are now handled correctly.
+
+	- Nulls in Videocap key definitions now work on all platforms.
+
+	- READ with TIMEOUT was not properly performing the imperative
+	  statement on a timeout or was setting a flag incorrectly
+	  resulting in the timeout imperative being performed after
+	  every read. This was introduced in 2.0B and is now corrected.
+
+	- COBLINK has now been implemented for UNIX. It is equivalent
+	  to a LINK of type "S" with no parameters.
+
+	- WISP would terminate in the DECLARATIVES on a USE statement 
+	  for a workstation file. This has been corrected, it now will
+	  generate the USE statement but it is important to understand
+	  that WISP does not treat the workstation as a "file" so
+	  DECLARATIVE code will never be executed.
+
+	- WISP now accepts $WANG-CODE, $WANG-END with dashes as well
+	  as $WANG_CODE, $WANG_END with underscores. These are treated
+	  identically for all the $xxx_CODE/ELSE/END directives.
+
+	- WISP now supports a $COPY-CODE $COPY-END that can be embedded
+	  as comments into your Wang source, just like $WANG-CODE, that
+	  will cause the surrounded lines to be copied without processing
+	  into the output file. These lines will have column 7 asterisks
+	  replaced by spaces.	
+
+	- Backtab previously behaved incorrectly if there was only one
+	  field on the screen, this has been fixed.
+
+	- Added a new (non-COBOL) calling interface for GETPARM that
+	  allows greater then 255 parameters on the VAX. Call GETPARM
+	  with 2 parameters, the first is a pointer to an array of
+	  pointers (the arguments) the second is a count of the number
+	  of arguments.
+
+	- On an open output file GETPARM where the file already exists
+	  the message for PF3 has been changed to "CONTINUE" instead of
+	  "DELETE" as the action taken differs depending on the platform.
+	  WISP will then allow the normal COBOL OPEN to occur. On VMS
+	  this will cause a new version of the file to be created. On UNIX
+	  the file is opened with all existing data deleted.
+	 	
+	- VMS: Now the .GBL files (shared memory) will only be created 
+	  when needed, i.e. only when a PUTPARM is issued will a file be
+	  created.  On exit, if the .GBL has zero putparms in it then the 
+	  file is deleted.  Otherwise it remains on disk until deleted 
+	  either by the SYLOGOUT.COM procedure or system manager.
+
+	- VMS: The naming of the shared memory file has also been changed.
+	  It used to be called WISP$SHR'MPID'.GBL.  We now use 
+	  W2$SH'MPID'.GBL for the naming convention.  If you have added 
+	  the deletion of these files to your SYLOGOUT.COM, be sure to 
+	  change the name portion.
+
+	- A COBOL callable routine "wmemcpy" has been added that does
+	  a call to the C routine "memcpy" it has the same parameters
+	  i.e.  CALL "wmemcpy" USING DESTINATION SOURCE LENGTH.
+	  The argument LENGTH must be a 2 byte binary.
+
+	- WISP has been ported to the Honeywell BULL, and Wang DX2000.
+	  (This is in addition to the VAX/VMS, Ultrix, IBM RS6000,
+	  AT&T 3B2, Data General Avion, HP 800, Motorala, 
+	  SCO UNIX on 386/486)
+
+	- VMS: COBLINK to a .EXE or a .COM is now implemented.
+
+	- On some non-DEC platforms, if the program contained multiple
+	  SELECT statements for the workstation all but the last
+	  workstation definition would not be included in the output
+	  file and files ending .scr would be left around. This
+	  has been fixed.
+
+	- WISP previously would terminate on the SPECIAL-NAMES
+	  paragraph, this has been fixed.
+
+	- UNIX: Added a utility called VIEWKEY that will display the
+	  escape sequence generated by a key on the keyboard. This
+	  is an aid for the writing of videocap files.
+
+	- ACUCOBOL: The utility "wrun" has been enhanced; if it is executed
+	  with no arguments it will display the runcbl and options that
+	  it is currently using.  If the option -? is added it will display
+	  the full command it would have executed. If the option -- is
+	  used then the runcbl will be executed with no options.
+
+	- Completed functionality PUTPARM as described in the Wang VSSUBS
+	  reference manual except for the link level funtionality.
+
+	- WPUTPARM is the DCL/shell utility for PUTPARM.  
+
+	- VMS: The internal structure generated by a PUTPARM has changed and
+	  is not compatable with earlier versions. All programs should be
+	  re-linked with the new library (does not require a re-WISP) as
+	  the earlier versions of GETPARM and PUTPARM will not interact
+	  with the current versions of GETPARM and PUTPARM. 
+
+	- The WISP menuing package described in Chapter 9 of the
+	  WISP manual is now available under UNIX.
+
+	- On occation nulls would erroneously get into the FILE, LIBRARY,
+	  or VOLUME fields this would cause file GETPARMS to have shortened
+	  input fields that would not allow you to enter the data. This
+	  has been corrected.
+
+	- GETPARM now displays the WISP VERSION number.
+
+	- VMS: SORTCALL was incorrectly thinking files were empty when
+	  they were not. Also was not sorting correctly on fields that
+	  were left-justified. The use of ## filenames in SORTCALL was not
+	  working. These have been corrected.
+	  The assumed max record size has been changed to 4096.
+
+	- The RENAME usersub now correctly returns 52 if the target file
+	  already exists, and does not perform the rename.
+
+	- VMS: _NV Devices are now supported.
+
+	- UNIX: The wsysinit utility was not cleaning up shared memory
+	  created by the MESSAGE usersub. This has been corrected.
+
+	- VMS: Now displays an error message if invalid queue name in LPMAP
+	  or PQMAP files then continues processing.
+
+	- VMS: Now gives an error if try to manipulate a job that is no 
+	  longer in the queue and forces an update of the queue.
+
+	- VMS: There are now two change form keys: PF9 to change the
+	   mounted form and PF10 to change the default form.
+
+	- EXTRACT usersub would give a fatal error when called to extract
+	  multiple values and the second (or later) keyword contained
+	  a numeric character i.e. "I8" or "D2". This has been corrected.
+
+	- UNIX: The usersub LOGOFF was performing a system call to a
+	  routine the didn't exist (purgeipc). This has been corrected.
+
+	- UNIX: The usersub SCRATCH was not removing the directory when
+	  a library scratch was requested, it was only deleting the files
+	  in the directory. This has been corrected.
+
+	- The usersub SCRATCH was returning incorrect return codes. 
+	  This has been corrected.
+
+	- UNIX: The usage screen for the wexists utility has been 
+	  coorected.
+
+	- UNIX: The utilities wcopy and wrename now allow the LIBRARY
+	  keyword to specified in lowercase.
+
+	- UNIX: The wrename utility would give an incorrect return code
+	  on byte-swapped machines. This has been corrected.
+
+	- VMS: The ability to create a shared WISP library is available.
+							   
+
+
+	RELEASE NOTES FOR WISP VERSION V2.0B
+	====================================
+
+	- ACUCOBOL: Added wispsub ACUNARGS, this will return
+	  the number of arguments passed across a LINK.
+
+	- ACUCOBOL: ACULINK has been updated to call ACUNARGS and call the
+	  linked to program with only the number of args passed,
+	  previously ACULINK always called with 16 args.
+
+	- VMS: Added usersub LINK return and completion codes.
+
+	- Added TRIGGER KEY to run user defined program.
+
+	- ACP routines for have been implemented for UNIX.
+
+	- On UNIX if USAGE CONSTANTS were changed at a lower
+	  link level they would not be reflected upon return
+	  until the program was restarted. This has been corrected.
+
+	- On UNIX, usersub LINK with a "link-type" of ' ' (blank)
+	  would use the RUNLIB & RUNVOL only. It will now also check
+	  in the current directory to find the program.
+
+	- The usersub SCREEN now correctly backfills the file, library
+	  and volume with the actual name used.
+
+	- SCREEN would give an invalid vwang function of 0 (zero) when
+	  printing the screen, this has been fixed.
+
+	- WISP record lock tracking now uses the filename instead of 
+	  an index number.
+
+	- VAX MANUAL RECORD LOCKING is implemented. All WISP converted
+	  programs that run on VMS now use full MANUAL RECORD LOCKING
+	  for all file I/O.
+
+	- The NOLOCK_PROCESSING switch is no longer supported in WISP.
+
+	- The TRAP_START_TIMEOUTS option is no longer supported.
+
+	- ACUCOBOL: The usersub LINK now allows 32 parameters (was 16).
+
+	- ACUCOBOL: Calls to "wvaset" before variable argument usersubs
+	  have been removed from the COBOL and are now done transparently
+	  by the sub85() routine.
+
+	- ACUCOBOL: comp-5 binary data type has been replaced by comp-4.
+	  This is the ACUCOBOL internal byte ordered binary. On byte
+	  swapped machines sub85() will now transparently change
+	  comp-4 data items into native bytes order on calls to 
+	  usersubs & WISP routines. This has the effect of making
+	  ACUCOBOL object code transportable across all machines.
+
+	- If there is no screen I/O then the screen will not be reset
+	  on program termination.
+
+	- ACUCOBOL: a call "LINK" to another ACUCOBOL program does
+	  not force a clear of the screen. The screen is still
+	  reset, just not cleared.
+
+	- ACUCOBOL: a program returning from a call "LINK" does
+	  not force a clear of the screen.
+
+	- NEWLINE key has been added.
+
+	- WISP would previously crash or generate uncompilable
+	  code if a large number of records (01 level) were 
+	  specified for a single FD (greater then approx 35 records).
+	  This has been fixed.
+
+	- When the COMP Key file option was used WISP would indent
+	  the entire line (including the line number) 2 spaces, this
+	  would cause uncompilable code. This has been fixed.
+
+	- VMS: The type ahead buffer has been re-installed.
+
+	- VMS: A "LINK" to an ".EXE" now works. (You still must
+	  call "setwispfilext" first.)
+
+	- The DISPLAY utility now displays control characters as 
+	  a space.
+
+	- VMS: The problem with WCHAIN causing a stack dump has been fixed.
+
+	- Videocap now supports the use of nulls in key definitions.

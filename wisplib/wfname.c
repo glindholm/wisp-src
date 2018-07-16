@@ -1,11 +1,5 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		wfname.c
@@ -20,10 +14,6 @@
 **			wlgtrans()	LGMAP logical volume translation. (MSDOS)
 **			logworklib()	Log the work librarys generated.
 **			matchnative()	Match native file spec to actual file.
-**
-**	History:
-**			OLD		Written by GSL
-**			07/22/92	Added matchnative() to better create the actual file spec. GSL
 **
 */
 
@@ -45,22 +35,19 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef VMS
 #include <ssdef.h>
 #endif
 
-#ifndef unix	/* VMS or MSDOS */
-#include <stdlib.h>
-#endif
-
 #ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #endif
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(_MSC_VER)
 #include <sys/stat.h>
 #include <io.h>
 #endif
@@ -71,8 +58,14 @@
 #include "wcommon.h"
 #include "werrlog.h"
 #include "cobrun.h"
+#include "wfname.h"
+#include "wdefines.h"
+#include "wisplib.h"
+#include "idsisubs.h"
+#include "paths.h"
+#include "filext.h"
+#include "wispcfg.h"
 
-extern char WISPFILEXT[39];								/* GLOBAL file extension value.		*/
 
 #ifdef VMS
 #define  PRINT_FILE_EXT 	".LIS"
@@ -82,30 +75,37 @@ extern char WISPFILEXT[39];								/* GLOBAL file extension value.		*/
 #ifdef unix
 #define  PRINT_FILE_EXT 	""
 #define  SUBMIT_FILE_EXT 	""
-#define  DEFAULT_FILE_EXT	""								/* Used to be DATA_FILE_EXT	*/
+#define  DEFAULT_FILE_EXT	""
 #endif	/* unix */
 #ifdef MSDOS
 #define  PRINT_FILE_EXT 	".LIS"
 #define  SUBMIT_FILE_EXT 	".BAT"
-#define  DEFAULT_FILE_EXT	".DAT"								/* Used to be DATA_FILE_EXT	*/
+#define  DEFAULT_FILE_EXT	".DAT"
 #endif	/* MSDOS */
+#ifdef WIN32
+#define  PRINT_FILE_EXT 	".LIS"
+#define  SUBMIT_FILE_EXT 	""
+#define  DEFAULT_FILE_EXT	""
+#endif	/* WIN32 */
 
-static int wtname();
-static int matchnative();
+static int wtname(char *wang_vol, char *wang_lib, char *wang_file, 
+		char *native_vol, char *native_lib, char *native_file, char *native_ext, 
+		int4 *mode);
 
-#define ROUTINE 77500
+extern int matchnative(int4 mode, char *native_vol, char *native_lib, char *native_file, char *native_ext, int nomodext );
 
-char *wfname(mode,p_vol,p_lib,p_file,native_path)					/* generate a local file name		*/
+#ifdef VMS
+static int vmsfilechars( char *instr, char *outstr, int inlen, int wildcard );
+#endif
+
+
+char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path)	/* generate a local file name		*/
 											/* returns ptr to next avail char pos	*/
-int4 *mode;										/* the mode flags			*/
-char *p_vol;										/* the wang volume name			*/
-char *p_lib;										/* the wang library name		*/
-char *p_file;										/* the wang file name			*/
-char *native_path;									/* the buffer for the local name	*/
 {
-	char wang_file[8], wang_lib[8], wang_vol[6];					/* Wang format copies of file/lib/vol.	*/
+#define ROUTINE 77500
+	char wang_file[SIZEOF_FILE], wang_lib[SIZEOF_LIB], wang_vol[SIZEOF_VOL];	/* Wang format copies of file/lib/vol.	*/
+	char work_lib[SIZEOF_LIB], work_vol[SIZEOF_VOL];				/* WORKLIB and WORKVOL			*/
 	char native_file[20], native_lib[20], native_vol[80], native_ext[40];		/* Native format of file/lib/vol/ext.	*/
-	char work_string[80], buff[256];
 	int i,len;
 	int	nomodext;								/* No modifcations of ext allowed	*/
 
@@ -117,24 +117,24 @@ char *native_path;									/* the buffer for the local name	*/
 
       	wpload();		 							/* load the usage constants		*/
 
-	memset(native_path, ' ', NAME_LENGTH);						/* Clear out the 80 character filename.	*/
+	memset(native_path, ' ', COB_FILEPATH_LEN);					/* Clear out the 80 character filename.	*/
 
 
 	/*
 	**	GET LOCAL AND SAVE COPIES
 	*/
 
-	memcpy(wang_vol,p_vol,6);							/* Grab local copies.			*/
-	memcpy(wang_lib,p_lib,8);
-	memcpy(wang_file,p_file,8);
+	memcpy(wang_vol,p_vol,SIZEOF_VOL);						/* Grab local copies.			*/
+	memcpy(wang_lib,p_lib,SIZEOF_LIB);
+	memcpy(wang_file,p_file,SIZEOF_FILE);
 
-	leftjust(wang_vol,6);								/* Left justify file/lib/vol.		*/
-	leftjust(wang_lib,8);
-	leftjust(wang_file,8);
+	leftjust(wang_vol,SIZEOF_VOL);							/* Left justify file/lib/vol.		*/
+	leftjust(wang_lib,SIZEOF_LIB);
+	leftjust(wang_file,SIZEOF_FILE);
 
 	if (*mode & IS_LIB)								/* If IS_LIB then blank filename	*/
 	{
-		memset(wang_file, ' ', 8 );
+		memset(wang_file, ' ', SIZEOF_FILE );
 	}
 
 	/*
@@ -159,7 +159,7 @@ char *native_path;									/* the buffer for the local name	*/
 		{
 			get_defs(DEFAULTS_IV,wang_vol);
 		}
-		leftjust(wang_vol,6);
+		leftjust(wang_vol,SIZEOF_VOL);
 	}
 
 	if ( wang_lib[0] == ' ' )							/* If library is blank get default.	*/
@@ -180,7 +180,7 @@ char *native_path;									/* the buffer for the local name	*/
 		{
 			get_defs(DEFAULTS_IL,wang_lib);
 		}
-		leftjust(wang_lib,8);
+		leftjust(wang_lib,SIZEOF_LIB);
 	}
       
 
@@ -230,8 +230,11 @@ char *native_path;									/* the buffer for the local name	*/
 	**	HANDLE WORKFILES
 	*/
 
-	get_defs(DEFAULTS_WL,buff);
-	if ( memcmp(wang_lib,buff,8) == 0 )
+	get_defs(DEFAULTS_WV,work_vol);
+	get_defs(DEFAULTS_WL,work_lib);
+
+	if ( memcmp(wang_lib,work_lib,SIZEOF_LIB) == 0 ||
+	     memcmp(wang_vol,work_vol,SIZEOF_VOL) == 0    )
 	{
 		*mode |= IS_WORK;
 	}
@@ -241,27 +244,23 @@ char *native_path;									/* the buffer for the local name	*/
 		if ( !(*mode & IS_PRINTFILE) )						/* and not printfile			*/
 		{
 			*mode |= IS_WORK;						/* Set the IS_WORK bit			*/
+
+			memcpy(wang_vol,work_vol,SIZEOF_VOL);				/* It is forced into work		*/
+			memcpy(wang_lib,work_lib,SIZEOF_LIB);
 		}
 	}
 
 	if (*mode & IS_WORK)
 	{
-		get_defs(DEFAULTS_WV,wang_vol);						/* It is forced into work		*/
-		get_defs(DEFAULTS_WL,wang_lib);
-
-		leftjust(wang_vol,6);                                            
-		leftjust(wang_lib,8);
-
 		*mode |= IS_SCRATCH;
 	}
-	
 
 	/*
 	**	CLEANUP VOL & LIB & FILE
 	*/
 
 
-#ifndef VMS	/* unix or MSDOS */
+#if defined(unix) || defined(MSFS)
 	if ( wang_vol[0] == ' ' )							/* If volume is blank ....		*/
 	{
 		wang_vol[0] = '.';							/* Replace with dot.			*/
@@ -271,7 +270,7 @@ char *native_path;									/* the buffer for the local name	*/
 	{
 		wang_lib[0] = '.';							/* Replace with dot.			*/
 	}
-#endif	/* unix or MSDOS */
+#endif	/* unix or MSFS */
 
 
 
@@ -282,7 +281,7 @@ char *native_path;									/* the buffer for the local name	*/
 
 #ifdef VMS
                                                                                                       
-	if ( vmsfilechars( wang_vol,  native_vol,  6, 0 ) )				/* Trans volume (No Wildcards)		*/
+	if ( vmsfilechars( wang_vol,  native_vol,  SIZEOF_VOL, 0 ) )			/* Trans volume (No Wildcards)		*/
 	{
 		werrlog(ERRORCODE(2), wang_vol,0,0,0,0,0,0,0);				/* Wildcard found.			*/
 		strcpy(native_vol, "");							/* Ignore volume.			*/
@@ -292,75 +291,41 @@ char *native_path;									/* the buffer for the local name	*/
 		strcat(native_vol, ":");
 	}
 
-	vmsfilechars( wang_lib,  work_string,  8, 1 );					/* Trans lib	(Wildcards allowed)	*/
+	{
+		char work_string[80];
+	
+		vmsfilechars( wang_lib,  work_string,  SIZEOF_LIB, 1 );			/* Trans lib	(Wildcards allowed)	*/
 
-	if (work_string[0])								/* If there is a library named...	*/
-		sprintf(native_lib,"[%s]",work_string);					/* Put it in brackets.			*/
-	else										/* Otherwise...				*/
-		native_lib[0] = '\0';							/* Make a null string.			*/
-
-	vmsfilechars( wang_file, native_file, 8, 1 );					/* Trans file	(Wildcards allowed)	*/
+		if (work_string[0])							/* If there is a library named...	*/
+			sprintf(native_lib,"[%s]",work_string);				/* Put it in brackets.			*/
+		else									/* Otherwise...				*/
+			native_lib[0] = '\0';						/* Make a null string.			*/
+	}
+	vmsfilechars( wang_file, native_file, SIZEOF_FILE, 1 );				/* Trans file	(Wildcards allowed)	*/
 
 #endif	/* VMS */
 
-#ifdef unix
+#if defined(unix) || defined(MSFS)
 	wlgtrans( wang_vol, native_vol );					       	/* Load vol with translation.		*/
-	strcat(native_vol,"/");
 
-	for( i=0; i<8 && wang_lib[i] != ' '; i++ )					/* Load lib into native_lib		*/
-	{
-		native_lib[i] = wang_lib[i];
-	}
-	native_lib[i] = '\0';
-	strcat(native_lib,"/");
+	unloadpad(native_lib,  wang_lib,  SIZEOF_LIB);
+	unloadpad(native_file, wang_file, SIZEOF_FILE);
 
-	for( i=0; i<8 && wang_file[i] != ' '; i++ )					/* Load file into native_file		*/
-	{
-		native_file[i] = wang_file[i];
-	}
-	native_file[i] = '\0';
+	strcat(native_vol, DIR_SEPARATOR_STR);
+	strcat(native_lib, DIR_SEPARATOR_STR);
 
+	if ( native_lib[0]  == '#' ) native_lib[0]  = '%';			       	/* Convert leading # -> %		*/
+	if ( native_file[0] == '#' ) native_file[0] = '%';				/* Convert leading # -> %		*/
 
+#endif  /* unix || MSFS */
+
+#ifdef unix
 	if ( ! (*mode & IS_CASE_SEN) )							/* Convert lib & file to lowercase	*/
 	{
 		lower_string(native_lib);
 		lower_string(native_file);
 	}
-
-	if ( native_lib[0] == '#' ) native_lib[0] = '%';			       	/* Convert leading # -> %		*/
-	if ( native_file[0] == '#' ) native_file[0] = '%';				/* Convert leading # -> %		*/
 #endif	/* unix */
-
-#ifdef MSDOS
-	wlgtrans( wang_vol, native_vol );					       	/* Load vol with translation.		*/
-	if( native_vol[0] == '\0' )							/* If no volume,			*/
-	{
-		strcpy(native_vol,".\\");						/* Start at the current directory	*/
-	}
-	else										/* If there is a volume,		*/
-	{
-		strcat(native_vol,"\\");						/* Set it for a subdirectory or file.	*/
-	}
-
-	for( i=0; i<8 && wang_lib[i] != ' '; i++ )					/* Load lib into native_lib		*/
-	{
-		native_lib[i] = wang_lib[i];
-	}
-	native_lib[i] = '\0';
-	if( native_lib[0] != '\0' )							/* If there is a library,		*/
-		strcat(native_lib,"\\");						/* Set it for a subfile.		*/
-
-	for( i=0; i<8 && wang_file[i] != ' '; i++ )					/* Load file into native_file		*/
-	{
-		native_file[i] = wang_file[i];
-	}
-	native_file[i] = '\0';
-
-	if ( native_lib[0] == '#' ) native_lib[0] = '%';			       	/* Convert leading # -> %		*/
-	if ( native_file[0] == '#' ) native_file[0] = '%';				/* Convert leading # -> %		*/
-
-#endif	/* MSDOS */
-
 	
 
 	/*
@@ -375,13 +340,19 @@ char *native_path;									/* the buffer for the local name	*/
 		*mode |= IS_SCRATCH;
 	}
 
-	get_defs(DEFAULTS_PM,buff);
-	if ((*mode & IS_PRINTFILE) && buff[0] == 'O')					/* Printfiles may need LP: prefix	*/
+	if (*mode & IS_PRINTFILE)							/* Printfiles may need LP: prefix	*/
 	{
-		int4	prtnum;
-		get_defs(DEFAULTS_PR,&prtnum);
-		sprintf(native_vol,"LP%d:",prtnum);					/* put LPxxx: into VOLUME		*/
-		strcpy(native_lib,"");							/* clear library			*/
+		char ext_pm[2];
+
+		get_defs(DEFAULTS_PM,ext_pm);
+		if (ext_pm[0] == 'O')							/* Printfiles may need LP: prefix	*/
+		{
+			int4	prtnum;
+			get_defs(DEFAULTS_PR,&prtnum);
+			sprintf(native_vol,"LP%d:",prtnum);				/* put LPxxx: into VOLUME		*/
+			strcpy(native_lib,"");						/* clear library			*/
+		}
+		
 	}
 #endif	                                                                                    
 
@@ -417,6 +388,9 @@ char *native_path;									/* the buffer for the local name	*/
 
 	sprintf(native_path,"%s%s%s%s", native_vol, native_lib, native_file, native_ext );
 
+
+	wtrace("WFNAME","RETURN", "Native_path=%s", native_path);
+
 	len = strlen(native_path);
 	native_path[len] = ' ';								/* Remove null-termination		*/
 	
@@ -428,11 +402,11 @@ char *native_path;									/* the buffer for the local name	*/
 	if ( (*mode & IS_WORK) && (*mode & IS_OUTPUT) )
 	{
 		char native_worklib[80];
-		static	char	work_vol[6] = {0};
+		static	char	work_vol[SIZEOF_VOL] = {0};
 
-		if ( memcmp(wang_vol, work_vol, 6) != 0 )
+		if ( memcmp(wang_vol, work_vol, SIZEOF_VOL) != 0 )
 		{
-			memcpy(work_vol, wang_vol, 6);
+			memcpy(work_vol, wang_vol, SIZEOF_VOL);
 			sprintf(native_worklib, "%s%s", native_vol, native_lib );
 
 			logworklib( native_worklib );
@@ -448,11 +422,10 @@ char *native_path;									/* the buffer for the local name	*/
 
 	if ( *mode & IS_BACKFILL )
 	{
-		memcpy(p_vol,wang_vol,6);						/* Backfill the file/lib/vol.		*/
-		memcpy(p_lib,wang_lib,8);
-		memcpy(p_file,wang_file,8);
+		memcpy(p_vol,wang_vol,SIZEOF_VOL);					/* Backfill the file/lib/vol.		*/
+		memcpy(p_lib,wang_lib,SIZEOF_LIB);
+		memcpy(p_file,wang_file,SIZEOF_FILE);
 	}
-
 
 	return(&native_path[len]);							/* return next available char pos	*/
 }
@@ -470,17 +443,16 @@ char *native_path;									/* the buffer for the local name	*/
 			- create a dummy file to hold the sequence number
 */
 
-static wtname(wang_vol, wang_lib, wang_file, native_vol, native_lib, native_file, native_ext, mode)
-char *wang_vol, *wang_lib, *wang_file;
-char *native_vol, *native_lib, *native_file, *native_ext;
-int4 *mode;
+static int wtname(char *wang_vol, char *wang_lib, char *wang_file, 
+		char *native_vol, char *native_lib, char *native_file, char *native_ext, 
+		int4 *mode)
 {
 	char	prefix[5];								/* The up to 4 char prefix.		*/
 	char	tempname[20];
 	char	path[80];
 	char	*ptr, *fptr;
 	int	i;
-	int4	argcnt=8, starter, counter, filecount;
+	int4	argcnt, starter, counter, filecount;
 	char	recv[22], rtype, template[8];
 	char	foundfile[8], foundseq[4];
 	int     tseq;									/* Tempfile sequence number.		*/
@@ -516,6 +488,8 @@ int4 *mode;
 	wswap(&counter);
 	wswap(&filecount);
 	rtype = 'A';
+
+	argcnt = 8;
 	wvaset( &argcnt );
 	FIND( template, wang_lib, wang_vol, &starter, &counter, recv, &filecount, &rtype );
 
@@ -585,12 +559,12 @@ int4 *mode;
 
 		sprintf( tempname, "%s%04d", prefix, tseq );				/* Build the tempfile name		*/
 
-		memset( wang_file, ' ', 8 );
+		memset( wang_file, ' ', SIZEOF_FILE );
 		memcpy( wang_file, tempname, strlen(tempname) );
 		strcpy( native_file, tempname );
 
 #ifdef VMS
-		vmsfilechars( tempname, native_file, 8, 1 );				/* Trans file	(Wildcards allowed)	*/
+		vmsfilechars( tempname, native_file, SIZEOF_FILE, 1 );			/* Trans file	(Wildcards allowed)	*/
 #endif
 #ifdef unix
 		if ( ! (*mode & IS_CASE_SEN) )						/* Convert lib & file to lowercase	*/
@@ -615,15 +589,11 @@ int4 *mode;
 		close( fdesc );
 	}
 
-
+	return 0;
 }
 
 #ifdef VMS
-static int vmsfilechars( instr, outstr, inlen, wildcard )				/* VMS file character translation	*/
-char	*instr;
-char	*outstr;
-int	inlen;
-int	wildcard;
+static int vmsfilechars( char *instr, char *outstr, int inlen, int wildcard )		/* VMS file character translation	*/
 {
 	int	i,j,rc;
 
@@ -685,23 +655,14 @@ int	wildcard;
 			- the logicals are case sensitive
 			- out_str will be null terminated
 */
-int	wlgtrans( in_str, out_str )
-char	*in_str;
-char	*out_str;
+int wlgtrans( char *in_str, char *out_str )
 {
-	int	i;
-	char	in_temp[6+1];
+	char	in_temp[SIZEOF_VOL+1];
 	logical_id	*logical_ptr;
 
 	logical_ptr = get_logical_list();
 
-	i=0;
-	while( i<6 && in_str[i] != ' ' && in_str[i] != '\0' )					/* Put vol into string.		*/
-	{
-		in_temp[i] = in_str[i];
-		i++;
-	}
-	in_temp[i] = '\0';
+	unloadpad(in_temp, in_str, SIZEOF_VOL);
 
 	upper_string(in_temp);									/* Make UPPERCASE.		*/
 
@@ -718,23 +679,20 @@ char	*out_str;
 			strcpy( out_str, logical_ptr->translate );				/* Use translation.		*/
 			return(1);
 		}
-		else
-		{
-			logical_ptr = (logical_id *)logical_ptr->next;				/* follow down the list.	*/
-		}
+
+		logical_ptr = (logical_id *)logical_ptr->next;				/* follow down the list.	*/
 	}
 }
 #endif	/* !VMS */
 
-logworklib( worklib )
-char	*worklib;
+void logworklib( char *worklib )
 {
-#ifdef unix
+#if defined(unix) || defined(MSFS)
 	int	fd;
-	char	*wf;
+	char	wf[128];
 
 	worklib[strlen(worklib)-1] = '\0';						/* remove trailing '/'			*/
-	wf = "/usr/tmp/WLIBLIST";
+	buildfilepath(wf, wisptmpbasedir(NULL), "WLIBLIST");
 	fd = open( wf, O_WRONLY | O_CREAT | O_APPEND, 0666 );
 	if ( fd == -1 )
 	{
@@ -745,202 +703,9 @@ char	*worklib;
 	write( fd, "\n", 1 );
 	close( fd );
 	chmod(wf,0666);
-#endif	/* unix */
-
-#ifdef MSDOS
-	int	fd;
-	char	*wf;
-
-	worklib[strlen(worklib)-1] = '\0';						/* remove trailing '\\'			*/
-	wf = "C:\\TMP\\WLIBLIST";							/* This should not be hard coded.	*/
-	makepath(wf);									/* Ensure parent dirs exist		*/
-	fd = open( wf, (O_WRONLY | O_CREAT | O_APPEND), (S_IREAD | S_IWRITE) );
-	if ( fd == -1 )
-	{
-		werrlog( ERRORCODE(4),wf, errno,0,0,0,0,0,0,0 );
-		return(0);
-	}
-	write( fd, worklib, strlen(worklib) );
-	write( fd, "\n", 1 );
-	close( fd );
-	chmod( wf, (S_IREAD | S_IWRITE) );
-#endif	/* MSDOS */
+#endif	/* unix || MSFS */
 }
 
-/*
-**	Routine:	matchnative()
-**
-**	Function:	To match the file spec components to the actual native file.
-**
-**	Description:	This routine attempts to find an existing file that matches the file specs
-**			that are supplied.  It does this by adjusting the case and file extention.
-**			This routine assumes that the file is supposed to already exist.
-**			If the file is not matched then none of the args will be altered.
-**
-**	Arguments:
-**		mode		(I)	The mode
-**		native_vol	(I)	The Volume component 
-**		native_lib	(I/O)	The Library component
-**		native_file	(I/O)	The File component
-**		native_ext	(I/O)	The Extension component
-**		nomodext	(I)	Flag - no modifications of extension allowed
-**
-**					VOLUME		LIBRARY		FILE		EXT
-**				VMS: 	"xxxxxx:"	"[xxxxxx]"	"xxxxxx"	".xxx"
-**				UNIX:	"xxxxxx/"	"xxxxxxx/"	"xxxxxx"	".xxx"
-**				DOS:	"xxxxxx\"	"xxxxxxx\"	"xxxxxx"	".xxx"
-**
-**	Return:
-**		1	A file match was made.
-**		0	File was not found.
-**
-**	Warnings:	VMS: 	The volume and library may be NULL.
-**			UNIX:	The ext will usually be NULL.
-**
-**			CISAM: 	Files don't return the ext portion as that is added by COBOL.
-**				Check first for ".idx" before ".dat"  and if found then DON'T return it.
-**				This means that READFDR, RENAME, SCRATCH, FILECOPY etc still have to deal with ".idx" extension.
-**
-**			Library, file, and ext must be large enough to hold any result.
-**
-**	History:	07/16/92	Written by GSL
-**			07/28/92	Added mode. GSL
-**
-*/
-#ifdef unix
-char	*g_exts[] = 
-	{ "",".idx",".dat",".lis",".txt",".doc",".gnt",".int",".sh", ".com",".exe",".wps",".wpr",".seq",".cob",".wcb",NULL };
-#endif
-#ifdef VMS
-char	*g_exts[] = 
-	{           ".DAT",".LIS",".TXT",".DOC",                     ".COM",".EXE",              ".SEQ",".COB",".WCB",NULL };
-#endif
-#ifdef MSDOS
-char	*g_exts[] = 
-	{ "",".IDX",".DAT",".LIS",".TXT",".DOC",".GNT",".INT",".BAT",".COM",".EXE",".WPS",".WPR",".SEQ",".COB",".WCB",NULL };
-#endif
-
-static int matchnative(mode,native_vol, native_lib, native_file, native_ext, nomodext )
-int4	mode;
-char	*native_vol;
-char	*native_lib;
-char	*native_file;
-char	*native_ext;
-int	nomodext;
-{
-	char	buff[256], cmd[256], upper_lib[20], upper_file[20];
-	int	i;
-
-	if (!(mode & IS_LIB))
-	{
-		sprintf(buff,"%s%s%s%s", native_vol, native_lib, native_file, native_ext );
-		if (fexists(buff)) return 1;
-	}
-
-#ifdef unix
-	/*
-	**	Match the CASE of the library.
-	*/
-	sprintf(buff,"%s%s",native_vol,native_lib);
-	if (!fexists(buff))
-	{
-		strcpy(upper_lib,native_lib);
-		upper_string(upper_lib);
-		sprintf(buff,"%s%s",native_vol,upper_lib);				/* Try uppercase library		*/
-		buff[strlen(buff)-1] = '\0';						/* Remove trailing '/'			*/
-		if (fexists(buff))
-		{
-			strcpy(native_lib,upper_lib);					/* Replace library with uppercase	*/
-		}
-		else
-		{
-			return 0;							/* Library not found			*/
-		}
-
-		sprintf(buff,"%s%s%s%s", native_vol, native_lib, native_file, native_ext );
-		if (fexists(buff)) return 1;
-	}
-
-	if (mode & IS_LIB) return 1;							/* If looking for a lib we've found it	*/
-
-	/*
-	**	Match the CASE of the file and extension
-	**		- try uppercase file with no extension
-	**		- if nomodext then only thing we can try is to uppercase the filename.
-	**		- try lowercase with extensions-list
-	**		- try uppercase with extensions-list
-	*/
-	strcpy(upper_file,native_file);
-	upper_string(upper_file);
-
-	sprintf(buff,"%s%s%s%s", native_vol, native_lib, upper_file, native_ext); 	/* Try uppercase			*/
-	if (fexists(buff))
-	{
-		strcpy(native_file,upper_file);						/* Use uppercase file			*/
-		return 1;
-	}
-
-	if (nomodext)									/* If no mods of ext allowed		*/
-	{
-		return 0;								/* not found				*/
-	}
-
-	for(i=0; g_exts[i] != NULL; i++)						/* Try each of the extensions		*/
-	{
-		sprintf(buff,"%s%s%s%s", native_vol, native_lib, native_file, g_exts[i] );
-		if (fexists(buff))							/* Try with lowercase name		*/
-		{
-			if (0 == strcmp(g_exts[i],".idx"))
-			{
-				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
-			}
-			else
-			{
-				strcpy(native_ext,g_exts[i]);
-			}
-			return 1;
-		}
-
-		sprintf(buff,"%s%s%s%s", native_vol, native_lib, upper_file,  g_exts[i] );
-		if (fexists(buff))							/* Try with uppercse name		*/
-		{
-			strcpy(native_file,upper_file);					/* Use the uppercase file name		*/
-			if (0 == strcmp(g_exts[i],".idx"))
-			{
-				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
-			}
-			else
-			{
-				strcpy(native_ext,g_exts[i]);
-			}
-			return 1;
-		}
-	}
-#else
-	if (nomodext)									/* If no mods of ext allowed		*/
-	{
-		return 0;								/* not found				*/
-	}
-
-	for(i=0; g_exts[i] != NULL; i++)						/* Try each of the extensions		*/
-	{
-		sprintf(buff,"%s%s%s%s", native_vol, native_lib, native_file, g_exts[i] );
-		if (fexists(buff))
-		{
-			if (0 == strcmp(g_exts[i],".IDX"))
-			{
-				native_ext[0] = '\0';					/* If ".idx" then return NULL		*/
-			}
-			else
-			{
-				strcpy(native_ext,g_exts[i]);
-			}
-			return 1;
-		}
-	}
-#endif
-	return 0;									/* not found				*/
-}
 
 /*
 **	Routine:	wfexists()
@@ -968,12 +733,11 @@ int	nomodext;
 **	03/03/93	Written by GSL
 **
 */
-int wfexists(file,lib,vol)
-char	*file, *lib, *vol;
+int wfexists(char *file, char *lib, char *vol)
 {
 	int4	mode;
 	char	*ptr;
-	char	filename[80];
+	char	filename[COB_FILEPATH_LEN];
 	int	outexists;
 
 	mode = 0;
@@ -985,7 +749,7 @@ char	*file, *lib, *vol;
 	{
 		outexists = 1;
 	}
-#if defined(unix) || defined(MSDOS)
+#if defined(unix) || defined(MSFS)
 	if (!outexists && !hasext(filename))					/* Check if CISAM				*/
 	{
 		strcat(filename,".idx");
@@ -997,3 +761,47 @@ char	*file, *lib, *vol;
 #endif
 	return outexists;
 }
+/*
+**	History:
+**	$Log: wfname.c,v $
+**	Revision 1.18  1998-01-13 10:13:19-05  gsl
+**	Change WIN32 default file extension to be "" (none), it was .DAT
+**	but is documented in WISP manual to be none.
+**
+**	Revision 1.17  1997-08-29 10:35:14-04  gsl
+**	Fix problem where re-opening a workfile was causing it to use
+**	the current WORKVOL. The problem is that the WORKVOL value
+**	may have changed since the file was first opened.
+**
+**	Revision 1.16  1997-04-15 23:12:04-04  gsl
+**	Update to use wtrace
+**
+**	Revision 1.15  1997-04-03 17:01:37-05  gsl
+**	Add info trace on native_path
+**
+**	Revision 1.14  1996-10-08 20:28:36-04  gsl
+**	Add wispcfg.h
+**	include
+**
+**	Revision 1.13  1996-09-16 14:43:19-07  gsl
+**	Move matchnative() to findexts.c
+**
+**	Revision 1.12  1996-08-23 14:07:11-07  gsl
+**	Combined the logworklib() logic for unix and MSFS and changed
+**	to use wisptmpbasedir()
+**
+**	Revision 1.11  1996-07-15 10:14:00-07  gsl
+**	fix use of filext.h
+**
+**	Revision 1.10  1996-07-10 17:10:41-07  gsl
+**	Fixed prototypes and includes for NT
+**	combined the msdos and unix logic together and reuse for NT
+**
+**	Revision 1.9  1996-01-03 06:44:22-08  gsl
+**	CHange hard-code numbers into defines
+**
+**
+**			OLD		Written by GSL
+**			07/22/92	Added matchnative() to better create the actual file spec. GSL
+**
+*/

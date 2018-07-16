@@ -1,0 +1,72 @@
+proc
+declare &fkey array(33) of integer = &false
+declare &key integer
+declare &field1 string(20) = "Mixed case text"
+declare &field2 string(30) = "UPPER CASE TEST"
+declare &field3 integer
+declare &tab string = "   "
+
+screen clear
+loop
+   prompt pfkey=&key, facs=no, erase=no,
+      "Press functions keys in any order.  Press ", 
+      reverse "ENTER", " to quit.";
+      "If every key pressed lights up, the PF key test passes.";;
+     
+      &tab, 
+      reverse when(&fkey( 1)) " F1", " ",   
+      reverse when(&fkey( 2)) " F2", " ",   
+      reverse when(&fkey( 3)) " F3", " ",   
+      reverse when(&fkey( 4)) " F4", " ",  
+      reverse when(&fkey( 5)) " F5", " ",   
+      reverse when(&fkey( 6)) " F6", " ",   
+      reverse when(&fkey( 7)) " F7", " ",   
+      reverse when(&fkey( 8)) " F8", " ",   
+      reverse when(&fkey( 9)) " F9", " ",   
+      reverse when(&fkey(10)) " F10", " ",   
+      reverse when(&fkey(11)) " F11", " ",   
+      reverse when(&fkey(12)) " F12", " ",   
+      reverse when(&fkey(13)) " F13", " ",   
+      reverse when(&fkey(14)) " F14", " ",   
+      reverse when(&fkey(15)) " F15", " ",   
+      reverse when(&fkey(16)) " F16", " ";;  
+      &tab, 
+      reverse when(&fkey(17)) "^F1", " ",   
+      reverse when(&fkey(18)) "^F2", " ",   
+      reverse when(&fkey(19)) "^F3", " ",   
+      reverse when(&fkey(20)) "^F4", " ",  
+      reverse when(&fkey(21)) "^F5", " ",   
+      reverse when(&fkey(22)) "^F6", " ",   
+      reverse when(&fkey(23)) "^F7", " ",   
+      reverse when(&fkey(24)) "^F8", " ",   
+      reverse when(&fkey(25)) "^F9", " ",   
+      reverse when(&fkey(26)) "^F10", " ",   
+      reverse when(&fkey(27)) "^F11", " ",   
+      reverse when(&fkey(28)) "^F12", " ",   
+      reverse when(&fkey(29)) "^F13", " ",   
+      reverse when(&fkey(30)) "^F14", " ",   
+      reverse when(&fkey(31)) "^F15", " ",   
+      reverse when(&fkey(32)) "^F16", " ";;;
+
+      "Try using INSERT (toggle), DELETE, and BACKSPACE to" !!
+      " modify the text below.";
+      "Use TAB, BACKTAB and the arrow keys " !!
+      " to move the cursor around.";;
+      &tab, "Mixed case text ", uplow &field1;
+      &tab, "Upper case text ", upper &field2;
+      &tab, "Numeric data ", numeric &field3;;
+      "Video Attributes";;
+      &tab, bright            "Bright", "                      ", 
+            blink bright      "Bright blink";
+      &tab, line              "Underline", "                   ", 
+            blink dim         "Dim blink";
+      &tab, bright line       "Bright underline", "            ", 
+            reverse           "Reverse";
+      &tab, blink line        "Blink underline", "             ", 
+            blink reverse     "Reverse blink";
+      &tab, bright blink line "Bright blink underline";
+
+   if &key = 0 exit
+   assign &fkey(&key) = not &fkey(&key)
+end
+screen clear

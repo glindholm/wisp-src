@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -7,36 +9,40 @@
 
 /*						Include standard header files.							*/
 
+#include <string.h>
+
 #include "video.h"									/* Include video definitions.		*/
 #include "vlocal.h"									/* Include local definitions.		*/
 #include "vdata.h"									/* Include keyboard control definitions.*/
 #include "vcap.h"
+#include "vmodules.h"
+#include "vraw.h"
+
+static int vcrlfx();
 
 /*						Subroutine entry point.								*/
 
-int vnewline(direction)									/* Generate a CR/LF.			*/
-	int direction;
+int vnewline(enum e_vlf direction)							/* Generate a CR/LF.			*/
 {
 	return(vcrlfx(direction,TRUE));							/* Call CR/LF execute routine.		*/
 }
 
 
-int vlinefeed(direction)								/* Generate a linefeed			*/
-	int direction;
+int vlinefeed(enum e_vlf direction)							/* Generate a linefeed			*/
 {
 	return(vcrlfx(direction,FALSE));						/* Call Video CR/LF eXecute routine.	*/
 }
 
 
-int vcrlfx(direction,do_cr)								/* Move up or down a line.		*/
-	int direction,do_cr;								/* Is it up or down? With a CR too?	*/
+static int vcrlfx(enum e_vlf direction,int do_cr)					/* Move up or down a line.		*/
+											/* Is it up or down? With a CR too?	*/
 {
-	register int ret, i;								/* Return status.			*/
+	register int i;									/* Return status.			*/
 	int save_pure;									/* Location to save CR/LF pure state.	*/
 
 	switch(direction)
 	{
-		case FORWARD:								/* Newline or LF in forward direction.	*/
+		case VLF_FORWARD:							/* Newline or LF in forward direction.	*/
 		{
 			save_pure = vb_pure;						/* Remember the I/O pure mode.		*/
 			if (do_cr)  vb_pure = FALSE;					/* Linefeeds generate new lines.	*/
@@ -46,43 +52,43 @@ int vcrlfx(direction,do_cr)								/* Move up or down a line.		*/
 			break;								/* We're all done.			*/
 		}
 
-		case REVERSE:								/* Newline or LF in reverse direction.	*/
+		case VLF_REVERSE:							/* Newline or LF in reverse direction.	*/
 		{
-			int noscroll_avail, svo, cmpos;
+			int noscroll_avail, cmpos;
+			enum e_vop svo;
 			char temp[MAX_COLUMNS_PER_LINE+1];
 
-			vbuffering(LOGICAL);						/* Logical buffering.			*/
-			vdefer(RESTORE);						/* Must restore from deferred mode.	*/
-#ifdef MSDOS
-			if ( (0 == vcur_lin) || (vrol_top == vcur_lin) )		/* Top of page or scroll region?	*/
+			vbuffering_start();						/* Logical buffering.			*/
+			vdefer_restore();						/* Must restore from deferred mode.	*/
+
+#ifdef DIRECTVID
+			if (vrawdirectio())
 			{
-				vrawmove(vcur_lin,vcur_col);				/* Set row and column.			*/
-				vrawscroll( -1 );					/* Scroll down.				*/
+				noscroll_avail = 1;
 			}
 			else
+#endif
 			{
-				vrawmove((vcur_lin - 1), vcur_col);			/* Set new row and column.		*/
-			}
-#else	/* VMS or unix */
-			if (!(noscroll_avail = vcapnull(rvrsidx_esc, "SCROLL_REVERSE",0))) /* test if defined.			*/
-			{								/* YES! it is defined.			*/
-				vcontrol(rvrsidx_esc);					/* Send out reverse index command.	*/
-				if (do_cr)						/* A newline format?			*/
-				{
-					vcontrol("\015");				/* Add a CR if needed.			*/
-					vcur_col = 0;					/* Record occurence of a CR		*/
+				if (!(noscroll_avail = vcapnull(rvrsidx_esc, "SCROLL_REVERSE",0))) /* test if defined.		*/
+				{							/* YES! it is defined.			*/
+					vcontrol(rvrsidx_esc);				/* Send out reverse index command.	*/
+					if (do_cr)					/* A newline format?			*/
+					{
+						vprint("\r");				/* Add a CR if needed.			*/
+						vcur_col = 0;				/* Record occurence of a CR		*/
+					}
 				}
 			}
-#endif	/* VMS or unix */
+
 			vcur_lin--;							/* up 1 line				*/
 			if (vcur_lin < 0)						/* Did we hit the top of screen?	*/
 			{
 				vcur_lin = 0;						/* Set current line = top of screen     */
-				vdefer(RESTORE);					/* Make sure screen is updated		*/
+				vdefer_restore();					/* Make sure screen is updated		*/
 				vmap(SCROLL_DOWN,0,0,MAX_LINES_PER_SCREEN-1,0);		/* Scroll whole screen			*/
 				if (noscroll_avail)
 				{
-					svo = voptimize(OFF);				/* Turn optimization OFF.		*/
+					svo = voptimize(VOP_TRACKING_ONLY);		/* Turn optimization down.		*/
 					cmpos = vmap_top;
 					for (i = MAX_LINES_PER_SCREEN-1; i >= 0 ; i--)
 					{
@@ -100,11 +106,11 @@ int vcrlfx(direction,do_cr)								/* Move up or down a line.		*/
 			else if (vcur_lin == (vrol_top - 1))				/* Did we hit the top of the scroll reg	*/
 			{
 				vcur_lin = vrol_top;					/* Set current line = top of scroll reg */
-				vdefer(RESTORE);					/* Make sure screen is updated		*/
+				vdefer_restore();					/* Make sure screen is updated		*/
 				vmap(SCROLL_DOWN,vrol_top,0,vrol_bot,0);		/* Scroll just the scrolling region	*/
 				if (noscroll_avail)
 				{
-					svo = voptimize(OFF);				/* Turn optimization OFF.		*/
+					svo = voptimize(VOP_TRACKING_ONLY);		/* Turn optimization down.		*/
 					for (i = vrol_bot; i >= vrol_top ; i--)
 					{
 						vmove(i,0);
@@ -116,7 +122,7 @@ int vcrlfx(direction,do_cr)								/* Move up or down a line.		*/
 					voptimize(svo);					/* Set back to what it was.		*/
 				}
 			}
-			vbuffering(AUTOMATIC);						/* Back to automatic buffering.		*/
+			vbuffering_end();						/* Back to automatic buffering.		*/
 			break;
 		}
 
@@ -128,3 +134,22 @@ int vcrlfx(direction,do_cr)								/* Move up or down a line.		*/
 	}
 	return(SUCCESS);
 }
+/*
+**	History:
+**	$Log: vnewline.c,v $
+**	Revision 1.14  1997-07-12 17:36:35-04  gsl
+**	Fix to handle reverse scroll with COSTAR on WIN32.
+**	Corrected optimization to not use VOP_OFF
+**
+**	Revision 1.13  1997-07-09 11:48:35-04  gsl
+**	change to use the new video.h interfaces
+**
+**	Revision 1.12  1997-01-09 19:32:17-05  gsl
+**	Corrected the reverse scrollomg logic for NT and MSDS
+**
+**	Revision 1.11  1996-10-11 15:16:13-07  gsl
+**	drcs update
+**
+**
+**
+*/

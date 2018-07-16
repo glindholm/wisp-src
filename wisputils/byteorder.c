@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include <stdio.h>
 main()
 {
@@ -11,3 +13,12 @@ main()
 		l, ptr[0], ptr[1], ptr[2], ptr[3] );
 }
 	
+/*
+**	History:
+**	$Log: byteorder.c,v $
+**	Revision 1.7  1996-07-23 14:12:50-04  gsl
+**	drcs update
+**
+**
+**
+*/

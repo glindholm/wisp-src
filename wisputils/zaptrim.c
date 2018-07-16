@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*						Include standard header files.							*/
 
 #include <ctype.h>										/* Get character type macros.	*/
@@ -12,7 +14,7 @@
 #define MAXBUF	82										/* Maximum length of buffer.	*/
 /*						Static data									*/
 
-FILE *fopen(), *in, *out;									/* Reference input and output.	*/
+FILE *in, *out;									/* Reference input and output.	*/
 /*						Entry point.									*/
 
 main(argc,argv)
@@ -91,3 +93,12 @@ int zap,trim;
 	strncpy(string,tmp_string,i);						/* put the contents in place.			*/
 	return;
 }
+/*
+**	History:
+**	$Log: zaptrim.c,v $
+**	Revision 1.8  1996-07-23 14:08:35-04  gsl
+**	Add standard Id and log
+**
+**
+**
+*/

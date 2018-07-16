@@ -8,7 +8,8 @@
 /*									*/
 /************************************************************************/
 
-#include <v/video.h>
+#include <video.h>
+#include <vmodules.h>
 
 testt()
 {

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -8,11 +10,13 @@
 			/************************************************************************/
 
 
-#ifndef MSDOS						/* MSDOS does not support versions before 22, which use this module.	*/
+#if defined(unix) || defined(VMS)	/* MSDOS and WINNT does not support versions before 22, which use this module.	*/
 
 #include <ctype.h>
 #include "idsistd.h"
 #include "werrlog.h"
+
+#define A_BIT 	((uint4)0x80000000)
 
 /* justify a numeric field around a Decimal point										*/
 
@@ -85,7 +89,7 @@ int *retval;						/* The field for the return value.					*/
 
 	neg = 0;									/* assume positive for now		*/
 
-	a_bit = 0x80000000;
+	a_bit = A_BIT;
 	for (idxd=0; idxd < fldlen; idxd++)
 	{										/* first fill destination with zero's	*/
 		if ((idxd == dppos) && !numeric)
@@ -197,7 +201,7 @@ int *retval;						/* The field for the return value.					*/
 	{										/* We need to copy with care.		*/
 		idxt2 = dptemp;								/* starting at the src decimal point.	*/
 		idxd = dppos;								/* And the dp in the destination.	*/
-		a_bit = 0x80000000;
+		a_bit = A_BIT;
 		a_bit = a_bit >> idxd;							/* Get ready to mask the next position.	*/
 		while (idxt2--)
 		{
@@ -323,3 +327,12 @@ int flag;
 }
 
 #endif		/* This entire module is ifndef MSDOS - NOT used for MSDOS port.	*/
+/*
+**	History:
+**	$Log: juster.c,v $
+**	Revision 1.10  1996-08-19 18:32:25-04  gsl
+**	drcs update
+**
+**
+**
+*/

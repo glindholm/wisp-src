@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -29,15 +31,13 @@
 #include <descrip.h>
 #endif
 
-#ifdef MSDOS
-#include <string.h>
-#endif
 
 #define EXT extern
 #include "wisp.h"
 #include "wispfile.h"
 #include "token.h"
 #include "lines.h"
+#include "input.h"
 
 char *context_infile_name();
 cob_file_context *get_curr_cob_context();
@@ -52,9 +52,6 @@ static int	period_found= 0;							/* Has period been found.		*/
 
 static int 	parm_num;								/* The current parm being scanned	*/
 
-
-static char mod_code[12];								/* The mod code if any.			*/
-
 static int twiddle_count = 0;								/* Count how many times line is re-used.*/
 
 static int oa_flag  = 0;								/* pending ORDER-AREA flag		*/
@@ -63,16 +60,16 @@ static int fac_flag = 0;								/* pending FAC flag			*/
 /*
 	hold_line:	Hold the current line for reuse by next get_line().
 */
-int hold_line()										/* flag the last input line as held	*/
+void hold_line()									/* flag the last input line as held	*/
 {
-	hold_this_line(inline);
+	hold_this_line(linein);
 
 	invalidate_parms();							/* Reset the get param buffer			*/
 	invalidate_token_cache();						/* Flush the token cache			*/
 
 	if (twiddle_count > 1000)							/* Have we re-used this line too much?!	*/
 	{
-		write_log("WISP",'F',"INTERR","Internal error processing line\n<%s>\nProbably not a COBOL program.\n",inline);
+		write_log("WISP",'F',"INTERR","Internal error processing line\n<%s>\nProbably not a COBOL program.\n",linein);
 		exit_wisp(EXIT_WITH_ERR);						/* Error exit.				*/
 	}
 	twiddle_count++;
@@ -85,11 +82,10 @@ int get_line()										/* Read a line and extract the parms	*/
 {
 	static int 	lstat = NORMAL_LINE;
 	static int 	copy_in_copy_code = 0;					/* COPY stmt inside $xxx_CODE			*/
-	static char 	brkline[256] = "";					/* The line to hold rest of inline after break.	*/
+	static char 	brkline[256] = "";					/* The line to hold rest of linein after break.	*/
 
 	int i,j,k,facpos,oapos,flen,fplen,pflag;
-	char save_char;
-	char *scn_ptr,*prm_ptr,*p, *ptr;
+	char *scn_ptr,*prm_ptr;
 	char tstr[132],outline[132],comstr[132];
 	char	*split_line;								/* Where to split the line.		*/
 	int	virgin_line;								/* Is this a new line or re-used.	*/
@@ -126,6 +122,13 @@ read_input:
 		skip_fac = 0;
 		skip_kw = 0;
 		else_flag = 0;								/* clear the else flag.			*/
+
+		/*
+		**	A side effect of the interchange between get_line() and get_statement() is that
+		**	isalit can be left set by a get_line() before a get_statement() and a following
+		**	get_line() will complain.  This fix should work in most cases.
+		*/
+		isalit = 0;
 	}
 	else
 	{
@@ -158,7 +161,7 @@ read_input:
 			*/
 			parms[0][0] = (char)0;						/* There are no parms			*/
 			parm_num = 0;							/* Reset parm number			*/
-			inline[0] = (char)0;						/* clear the inline			*/
+			linein[0] = (char)0;						/* clear the linein			*/
 
 			return(0);							/* Return with EOI flag			*/
 		}
@@ -185,7 +188,7 @@ read_input:
 		goto read_input;
 	}
 
-	if ( iscomment(inline) )							/* Is it a comment?			*/
+	if ( iscomment(linein) )							/* Is it a comment?			*/
 	{
 		if (copy_only)								/* just copy it.			*/
 		{
@@ -195,7 +198,7 @@ read_input:
 		{
 			if (comments)							/* not copying, are comments ok?	*/
 			{
-				tput_line("%s", inline);				/* Comments are just copies		*/
+				tput_line("%s", linein);				/* Comments are just copies		*/
 			}
 		}
 		goto read_input;
@@ -216,34 +219,41 @@ read_input:
 		goto read_input;
 	}
 
+	if (!linein[0] || '\n' == linein[0])
+	{
+		/*
+		**	If a blank line
+		*/
+
+		if (comments && virgin_line)
+		{
+			tput_blank();
+		}
+
+		goto read_input;
+	}
 
 /*	At this point, we scan the input line and extract all the parms from it, and also extract the area A data.		*/
 
-process_code:
-
-	memcpy(area_a,&inline[7],4);							/* Get the chars in area a (col 8-11)	*/
+	memcpy(area_a,&linein[7],4);							/* Get the chars in area a (col 8-11)	*/
 	area_a[4] = 0;
 	area_a_num = 0;
 	sscanf(area_a,"%d",&area_a_num);						/* And see if they are a number		*/
-	mod_code[0] = '\0';								/* No mod code yet.			*/
 
-	i = strlen(inline);
-	if (inline[i-1] == '\n')
+	i = strlen(linein);
+	if (linein[i-1] == '\n')
 	{
-		inline[i-1] = 0;
-		if (comments && i>72) strcpy(mod_code,&inline[72]);			/* Preserve the mod code		*/
-
-		inline[72] = 0;								/* Discard the notes collumn		*/
-		if (i > 72) trim(inline);						/* and trim the notes, if any		*/
-		strcat(inline,"\n");							/* then put the newline back		*/
+		linein[i-1] = 0;
+		linein[72] = 0;								/* Discard the notes collumn		*/
+		if (i > 72) trim(linein);						/* and trim the notes, if any		*/
+		strcat(linein,"\n");							/* then put the newline back		*/
 	}
 	else
 	{
-		if (comments && i>72) strcpy(mod_code,&inline[72]);			/* Preserve the mod code		*/
-		inline[72] = 0;
-		if (i > 72) trim(inline);
+		linein[72] = 0;
+		if (i > 72) trim(linein);
 	}
-	i = strlen(inline);
+	i = strlen(linein);
 
 
 	/*
@@ -257,10 +267,10 @@ scan_line:
 
 	if (isalit && virgin_line)							/* Was last line an open literal?	*/
 	{
-		if (inline[6] != '-')
+		if (linein[6] != '-')
 		{
 			write_log("WISP",'W',"NOCONT","No continuation for open literal in column 7, added by WISP.");
-			inline[6] = '-';
+			linein[6] = '-';
 		}
 	}
 
@@ -273,14 +283,14 @@ scan_line:
 
 	for (i=0; i<24; i++) parms[i][0] = 0;						/* Set parms to null string first	*/
 
-	if (strlen(inline) > 7)								/* anything to scan?			*/
+	if (strlen(linein) > 7)								/* anything to scan?			*/
 	{
 		i = 0;
 		j = 7;
 
-		if (inline[6] == '-') has_cont = 1;					/* Does it have a continuation character*/
+		if (linein[6] == '-') has_cont = 1;					/* Does it have a continuation character*/
 
-		scn_ptr = &inline[7];							/* Point to first char in margin A.	*/
+		scn_ptr = &linein[7];							/* Point to first char in margin A.	*/
 		if (*scn_ptr) do							/* scan the line and extract the parms	*/
 		{									/* This part of the 'if' is just used to*/
 											/* skip over spaces, commas, newlines	*/
@@ -343,7 +353,7 @@ scan_line:
 						while (k < 72)
 						{
 							*prm_ptr++ = ' ';		/* Pad the parm with extra spaces.	*/
-							*scn_ptr++ = ' ';		/* Pad inline, so stredt's will work too*/
+							*scn_ptr++ = ' ';		/* Pad linein, so stredt's will work too*/
 							k++;
 						}
 						*scn_ptr++ = '\n';			/* Add the newline.			*/
@@ -387,7 +397,7 @@ scan_line:
 			strcat(comstr,scn_ptr);						/* Add the %comment.			*/
 			tput_line("%s", comstr);					/* Now output it.			*/
 
-			*scn_ptr++ = '\n';						/* Remove it from INLINE		*/
+			*scn_ptr++ = '\n';						/* Remove it from LINEIN		*/
 			*scn_ptr = '\0';
 		}
 	} /* End-IF something on line to scan */
@@ -398,12 +408,12 @@ scan_line:
 	{										/* If blanks are kept, then just	*/
 		if (blanklines) 							/* write a blank line			*/
 		{
-			i = strlen(inline);
-			if (inline[i-1] == '\n')
+			i = strlen(linein);
+			if (linein[i-1] == '\n')
 			{
-				inline[i-1] = 0;					/* remove the ending newline (if any)	*/
+				linein[i-1] = 0;					/* remove the ending newline (if any)	*/
 			}
-			tput_line("%s", inline);					/* Blanks are treated as comments	*/
+			tput_line("%s", linein);					/* Blanks are treated as comments	*/
 		}
 		goto read_input;							/* Get another line			*/
 	}
@@ -436,13 +446,16 @@ scan_line:
 	}
 
 	if (	0==strcmp(parms[0],"MOVE") ||
-		0==strcmp(parms[0],"IF")    )
+		0==strcmp(parms[0],"SET")  ||
+		0==strcmp(parms[0],"IF")     )
 	{
 		/*
 		**	MOVE is going to use the get_verb_statement() logic which will
 		**	handle the FAC OF and ORDER-AREA OF stuff
 		*/
 		skip_fac = 1;
+		fac_flag = 0;
+		oa_flag = 0;
 	}
 
 
@@ -458,14 +471,14 @@ scan_line:
 			{
 				parms[0][0] = 0;
 				strcpy(templine,parms[1]);				/* get actual variable name		*/
-				stredt(inline," OF","");				/* remove the word			*/
+				stredt(linein," OF","");				/* remove the word			*/
 			}
 			stredt(templine,".","");					/* Remove period, if any from var name	*/
 
 			make_fac(outline,templine);					/* make a FAC variable			*/
 
-			stredt(inline,templine,outline);				/* and replace old var with new		*/
-			wsqueeze(inline,72);						/* keep the line less than 73 chars	*/
+			stredt(linein,templine,outline);				/* and replace old var with new		*/
+			wsqueeze(linein,72);						/* keep the line less than 73 chars	*/
 			goto scan_line;							/* go and re-parm the line		*/
 		}
 		else if (fac_flag == 2) fac_flag--;
@@ -479,13 +492,13 @@ scan_line:
 			{
 				parms[0][0] = 0;
 				strcpy(templine,parms[1]);				/* get actual variable name		*/
-				stredt(inline," OF","");				/* remove the word			*/
+				stredt(linein," OF","");				/* remove the word			*/
 			}
 			stredt(templine,".","");					/* Remove period, if any from var name	*/
 
 			make_oa(outline,templine);					/* make an ORDER-AREA variable		*/
-			stredt(inline,templine,outline);				/* and replace old var with new		*/
-			wsqueeze(inline,72);						/* keep the line less than 73 chars	*/
+			stredt(linein,templine,outline);				/* and replace old var with new		*/
+			wsqueeze(linein,72);						/* keep the line less than 73 chars	*/
 			goto scan_line;							/* go and re-parm the line		*/
 		}
 		else if (oa_flag == 2) oa_flag--;
@@ -503,12 +516,12 @@ scan_line:
 				if (parms[i][0] == '(')
 				{
 					pflag = 1;					/* Flag it.				*/
-					stredt(&inline[facpos],"(FAC","(");		/* Edit (FAC into spaces		*/
+					stredt(&linein[facpos],"(FAC","(");		/* Edit (FAC into spaces		*/
 					flen = 2;
 				}
 				else
 				{
-					stredt(&inline[facpos]," FAC","    ");		/* Edit FAC into spaces			*/
+					stredt(&linein[facpos]," FAC","    ");		/* Edit FAC into spaces			*/
 					flen = 4;
 					facpos += 3;					/* advance the pointer.			*/
 				}
@@ -520,9 +533,9 @@ scan_line:
 				if (!strcmp(parms[i],"OF"))				/* is it followed by OF verb		*/
 				{
 					flen = -1;					/* Remove 4 chars during shift.		*/
-					if (stredt(&inline[facpos]," OF ","") == -1)	/* Edit OF into null, leaving room for	*/
+					if (stredt(&linein[facpos]," OF ","") == -1)	/* Edit OF into null, leaving room for	*/
 					{						/* F-O-	to be appended			*/
-						stredt(&inline[facpos]," OF","");	/* it is at end of line			*/
+						stredt(&linein[facpos]," OF","");	/* it is at end of line			*/
 						flen = 0;
 					}
 					p_left(i,flen);					/* Shift parms left one position.	*/
@@ -546,7 +559,7 @@ scan_line:
 
 					flen = 2;
 
-					stredt(&inline[facpos],templine,outline);	/* And replace old var with new		*/
+					stredt(&linein[facpos],templine,outline);	/* And replace old var with new		*/
 
 				}
 				goto scan_line;						/* go and re-parm the line		*/
@@ -559,12 +572,12 @@ scan_line:
 
 				if (parms[i][0] == '(')
 				{
-					stredt(&inline[oapos],"(ORDER-AREA","(");	/* Edit (ORDER-AREA into spaces		*/
+					stredt(&linein[oapos],"(ORDER-AREA","(");	/* Edit (ORDER-AREA into spaces		*/
 					flen = 2;
 				}
 				else
 				{
-					stredt(&inline[oapos]," ORDER-AREA","           ");	/* Edit ORDER-AREA into spaces	*/
+					stredt(&linein[oapos]," ORDER-AREA","           ");	/* Edit ORDER-AREA into spaces	*/
 					flen = 11;
 					oapos +=10;
 				}
@@ -576,9 +589,9 @@ scan_line:
 				if (!strcmp(parms[i],"OF"))
 				{
 					flen = -1;
-					if (stredt(&inline[oapos]," OF ","") == -1)	/* Edit OF into null, leaving room for	*/
+					if (stredt(&linein[oapos]," OF ","") == -1)	/* Edit OF into null, leaving room for	*/
 					{						/* O-A-	to be appended			*/
-						stredt(&inline[oapos]," OF","");	/* it is at end of line			*/
+						stredt(&linein[oapos]," OF","");	/* it is at end of line			*/
 						flen = 0;
 					}
 					p_left(i,flen);					/* Shift parms left one position.	*/
@@ -598,7 +611,7 @@ scan_line:
 
 					make_oa(outline,templine);			/* make an ORDER-AREA variable		*/
 
-					stredt(&inline[oapos],templine,outline);	/* and replace old var with new		*/
+					stredt(&linein[oapos],templine,outline);	/* and replace old var with new		*/
 				}
 				goto scan_line;						/* go and re-parm the line		*/
 			}
@@ -621,8 +634,8 @@ scan_line:
 			else_flag = 0;							/* Always clear the ELSE flag.		*/
 			if (!strcmp(parms[0],"ELSE"))					/* Handle possible ELSE ELSE.		*/
 			{
-				strcpy(brkline,inline);					/* save the current line.		*/
-				strcpy(inline,"             CONTINUE\n");		/* Put a CONTINUE between the lines.	*/
+				strcpy(brkline,linein);					/* save the current line.		*/
+				strcpy(linein,"             CONTINUE\n");		/* Put a CONTINUE between the lines.	*/
 				goto scan_line;						/* Parm the CONTINUE line.		*/
 			}
 		}
@@ -640,9 +653,9 @@ scan_line:
 				write_log("WISP",'I',"REPLRESERVE","Reserved word %s renamed to W-%s.\n",tstr,tstr);
 				strcpy(templine,"W-");
 				strcat(templine,tstr);					/* build the new name for it.		*/
-				stredt(&inline[p_parms[i]],tstr,templine);		/* replace it in the input line		*/
+				stredt(&linein[p_parms[i]],tstr,templine);		/* replace it in the input line		*/
 
-				if (wsqueeze(inline,72)) goto scan_line;		/* If it needed a squeeze, reparm it.	*/
+				if (wsqueeze(linein,72)) goto scan_line;		/* If it needed a squeeze, reparm it.	*/
 
 				stredt(parms[i],tstr,templine);				/* and fix up the parm list too		*/
 				j += 2;							/* new offset ptr			*/
@@ -655,12 +668,12 @@ scan_line:
 				}
 				else							/* Otherwise, set up for fixes.		*/
 				{
-					write_log("WISP",'I',"ELSEBROK","Else statement broken apart. Old line is:\n%s\n",inline);
+					write_log("WISP",'I',"ELSEBROK","Else statement broken apart. Old line is:\n%s\n",linein);
 					memset(brkline,' ',p_parms[i]+4);		/* Fill with spaces first.		*/
 					brkline[p_parms[i]+4] = '\0';			/* Null terminate.			*/
-					strcat(brkline,&inline[p_parms[i] + 4]);	/* save the current line.		*/
-					inline[p_parms[i] + 4] = '\n';			/* Terminate the old line		*/
-					inline[p_parms[i] + 5] = '\0';			/* Terminate the old line		*/
+					strcat(brkline,&linein[p_parms[i] + 4]);	/* save the current line.		*/
+					linein[p_parms[i] + 4] = '\n';			/* Terminate the old line		*/
+					linein[p_parms[i] + 5] = '\0';			/* Terminate the old line		*/
 					parms[i+1][0] = '\0';				/* No more parms.			*/
 				}
 			}								/* After skipping first word,		*/
@@ -668,11 +681,11 @@ scan_line:
 			{
 				memset(brkline,' ',p_parms[i]);				/* Fill with spaces first.		*/
 				brkline[p_parms[i]] = '\0';				/* Null terminate.			*/
-				strcat(brkline,&inline[p_parms[i]]);			/* save the current line.		*/
-				inline[p_parms[i]] = '\n';				/* Terminate the old line		*/
-				inline[p_parms[i] + 1] = '\0';				/* Terminate the old line		*/
+				strcat(brkline,&linein[p_parms[i]]);			/* save the current line.		*/
+				linein[p_parms[i]] = '\n';				/* Terminate the old line		*/
+				linein[p_parms[i] + 1] = '\0';				/* Terminate the old line		*/
 				parms[i][0] = '\0';					/* No more parms.			*/
-				write_log("WISP",'I',"SECKEWD","Second keyword on line.\nOld: %sNew: %s",inline,brkline);
+				write_log("WISP",'I',"SECKEWD","Second keyword on line.\nOld: %sNew: %s",linein,brkline);
 				break;
 			}
 			i++;
@@ -696,6 +709,7 @@ int pnum,p_off;
 		p_parms[pnum] += p_off;							/* Update their positions.		*/
 		pnum++;
 	}
+	return 0;
 }
 
 p_left_1(pnum,p_off)									/* Shift all parms left in the list.	*/
@@ -708,10 +722,11 @@ int pnum,p_off;
 		p_parms[pnum] = p_parms[pnum+1] + p_off;				/* Shift their positions.		*/
 		pnum++;
 	}
+	return 0;
 }
 
 /*
-	extract_param	This routine will get the next parm and remove it from inline.
+	extract_param	This routine will get the next parm and remove it from linein.
 */
 int extract_param(the_parm)
 char 	the_parm[];
@@ -719,7 +734,7 @@ char 	the_parm[];
 	int	ptype;
 
 	ptype = get_param(the_parm);
-	stredt(&inline[7],the_parm,"");
+	stredt(&linein[7],the_parm,"");
 	return(ptype);
 }
 
@@ -727,6 +742,7 @@ int invalidate_parms()
 {
 	parm_num = 0;
 	parms[parm_num][0] = 0;
+	return 0;
 }
 
 int get_param(the_parm)									/* Scan input parms			*/
@@ -851,6 +867,7 @@ char *facil,sever,*mess;								/* facility, severity, message		*/
 char *lform,*p0,*p1,*p2,*p3,*p4,*p5,*p6,*p7;						/* The format and parms for the text	*/
 {
 	write_tlog(NULL,facil,sever,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7);
+	return 0;
 }
 
 write_tlog(tokptr,facil,sever,mess,lform,p0,p1,p2,p3,p4,p5,p6,p7)			/* write a log line to the current log	*/
@@ -936,3 +953,17 @@ char	*the_line;
 	return(0);
 }
 
+/*
+**	History:
+**	$Log: wt_io.c,v $
+**	Revision 1.12  1997-02-24 09:58:14-05  gsl
+**	Removed the mod_code[] processing. This was remnants of earlier
+**	logic which has been removed.  A mod code greater then 11 chars was
+**	overwritting memory onto twiddle_count and causing the "twiddle" error.
+**
+**	Revision 1.11  1996-08-30 21:56:21-04  gsl
+**	drcs update
+**
+**
+**
+*/

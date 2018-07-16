@@ -1,0 +1,10 @@
+000200 FD  PRINTER-FILE                                                         
+000300     LABEL RECORDS ARE   OMITTED,                                         
+000400     RECORD CONTAINS     132 CHARACTERS,                                  
+000500     VALUE OF                                                             
+000600         FILENAME IS     PRINTER-FILE-NAME                                
+000700         LIBRARY  IS     PRINTER-FILE-LIBRARY                             
+000800         VOLUME   IS     PRINTER-FILE-VOLUME                              
+000900         SPACE    IS     PRINTER-FILE-SPACE.                              
+001000
+001100 01  PRINTER-RECORD      PIC X(132).

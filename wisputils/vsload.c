@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* VSLOAD for unix ..  probably will require slight modification on machines other than 3b2					*/
 #ifdef unix
 #include <stdio.h>
@@ -222,3 +224,12 @@ char *p;
 	}
 }
 #endif
+/*
+**	History:
+**	$Log: vsload.c,v $
+**	Revision 1.7  1996-07-23 14:13:02-04  gsl
+**	drcs update
+**
+**
+**
+*/

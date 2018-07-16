@@ -1,0 +1,162 @@
+002600 IDENTIFICATION DIVISION.
+000200 PROGRAM-ID. RPTEDTH.
+000300 AUTHOR. HLM.
+000400 DATE-WRITTEN.  11/15/89.
+000500 DATE-COMPILED.
+000600*----------------------------------------------------------------
+000700* DATA EDIT OPTIONS HELP SCREENS ONE AND TWO
+000800*----------------------------------------------------------------
+000900
+001000 ENVIRONMENT DIVISION.
+001100 CONFIGURATION SECTION.
+001200 FIGURATIVE-CONSTANTS.
+001300     COPY FIGS.
+001400
+001500 INPUT-OUTPUT SECTION.
+001600
+001700 FILE-CONTROL.
+001800     COPY SLCRT.
+001900
+002000 DATA DIVISION.
+002100 FILE SECTION.
+002200     COPY FDCRT.
+002300
+002400 WORKING-STORAGE SECTION.
+000000     COPY WSKTRACE.
+000000 01  SCCS-WHAT PIC X(50) VALUE
+000000     "@(#)rptedth.wcb 1.4 9/11/94".
+002500     COPY WSINT.
+002600     COPY WSCRT.
+002700
+002800 01  DATA-EDIT-HELP-1-SCREEN USAGE IS DISPLAY-WS.
+002900     05  FILLER
+003000         PIC X(17) ROW 1 COLUMN 32 VALUE
+003100         "DATA EDIT OPTIONS".
+003200     05  FILLER
+003300         PIC X(18) ROW 5 COLUMN 2 VALUE
+003400         "   Suppress Zeroes".
+003500     05  FILLER
+003600         PIC X(74) ROW 6 COLUMN 2 VALUE
+003700         "       ZN - Zero suppress leading zeroes except for righ
+003800-        "tmost N positions.".
+003900     05  FILLER
+004000         PIC X(77) ROW 7 COLUMN 2 VALUE
+004100         "       *N - Asterisk protect leading zeroes except for r
+004200-        "ightmost N positions.".
+004300     05  FILLER
+004400         PIC X(31) ROW 8 COLUMN 2 VALUE
+004500         "    Blank - No zero suppression".
+004600     05  FILLER
+004700         PIC X(15) ROW 11 COLUMN 2 VALUE
+004800         "   Sign Control".
+004900     05  FILLER
+005000         PIC X(47) ROW 12 COLUMN 2 VALUE
+005100         "       CR - Print 'CR' if the field is negative".
+005200     05  FILLER
+005300         PIC X(47) ROW 13 COLUMN 2 VALUE
+005400         "       DB - Print 'DB' if the field is negative".
+005500     05  FILLER
+005600         PIC X(68) ROW 14 COLUMN 2 VALUE
+005700         "       9- - Print 1 blank if the field is positive, '-'
+005800-        "if negative.".
+005900     05  FILLER
+006000         PIC X(27) ROW 15 COLUMN 2 VALUE
+006100         "    Blank - Print no signs.".
+006200     05  FILLER
+006300         PIC X(16) ROW 18 COLUMN 2 VALUE
+006400         "   Decimal Carry".
+006500     05  FILLER
+006600         PIC X(69) ROW 19 COLUMN 2 VALUE
+006700         "       .N - Print out N characters to the right of the d
+006800-        "ecimal point.".
+006900     05  FILLER
+007000         PIC X(62) ROW 20 COLUMN 2 VALUE
+007100         "    Blank - Print all decimal positions, but no decimal
+007200-        "point.".
+007300     05  FILLER
+007400         PIC X(33) ROW 23 COLUMN 24 VALUE
+007500         "**  Press (ENTER) to Continue  **".
+007600
+007700 01  DATA-EDIT-HELP-2-SCREEN USAGE IS DISPLAY-WS.
+007800     05  FILLER
+007900         PIC X(31) ROW 2 COLUMN 2 VALUE
+008000         "   SPECIAL INSERTION CHARACTERS".
+008100     05  FILLER
+008200         PIC X(30) ROW 4 COLUMN 2 VALUE
+008300         "   (Notes:  N Cannot be zero. ".
+008400     05  FILLER
+008500         PIC X(68) ROW 5 COLUMN 2 VALUE
+008600         "            A leading dollar sign is not included in det
+008700-        "ermining N.)".
+008800     05  FILLER
+008900         PIC X(74) ROW 7 COLUMN 2 VALUE
+009000         "       N* - Insert an '*' to the right of the Nth charac
+009100-        "ter (leftmost = 1)".
+009200     05  FILLER
+009300         PIC X(59) ROW 8 COLUMN 2 VALUE
+009400         "       N- - Insert a '-' to the right of the Nth charact
+009500-        "er.".
+009600     05  FILLER
+009700         PIC X(59) ROW 9 COLUMN 2 VALUE
+009800         "       N- - Insert a ',' to the right of the Nth charact
+009900-        "er.".
+010000     05  FILLER
+010100         PIC X(59) ROW 10 COLUMN 2 VALUE
+010200         "       N- - Insert a '/' to the right of the Nth charact
+010300-        "er.".
+010400     05  FILLER
+010500         PIC X(59) ROW 11 COLUMN 2 VALUE
+010600         "       N- - Insert a '.' to the right of the Nth charact
+010700-        "er.".
+010800     05  FILLER
+010900         PIC X(61) ROW 12 COLUMN 2 VALUE
+011000         "       N- - Insert a space to the right of the Nth chara
+011100-        "cter.".
+011200     05  FILLER
+011300         PIC X(34) ROW 13 COLUMN 2 VALUE
+011400         "    Blank - No special characters.".
+011500     05  FILLER
+011600         PIC X(14) ROW 16 COLUMN 2 VALUE
+011700         "   Dollar Sign".
+011800     05  FILLER
+011900         PIC X(50) ROW 17 COLUMN 2 VALUE
+012000         "       $9 - Insert a '$' to the left of the field.".
+012100     05  FILLER
+012200         PIC X(34) ROW 18 COLUMN 2 VALUE
+012300         "       $$ - Float the dollar sign.".
+012400     05  FILLER
+012500         PIC X(27) ROW 19 COLUMN 2 VALUE
+012600         "    Blank - No dollar sign.".
+012700     05  FILLER
+012800         PIC X(33) ROW 22 COLUMN 24 VALUE
+012900         "**  Press (ENTER) to Continue  **".
+013000
+013100 PROCEDURE DIVISION.
+013200
+013300 MAIN-LOGIC SECTION.
+013400 PROGRAM-BEGIN.
+000000     MOVE "RPTEDTH BEGIN" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+013500     PERFORM OPENING-PROCEDURE.
+013600     PERFORM MAIN-PROCESS.
+013700     PERFORM CLOSING-PROCEDURE.
+000000     MOVE "RPTEDTH EXIT" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+013800 MAIN-LOGIC-EXIT.
+013900     EXIT PROGRAM.
+014000 MAIN-LOGIC-STOP.
+014100     STOP RUN.
+014200 LEVEL-2 SECTION.
+014300 OPENING-PROCEDURE.
+014400     OPEN I-O  CRT-FILE.
+014500 CLOSING-PROCEDURE.
+014600     CLOSE CRT-FILE.
+014700
+014800 MAIN-PROCESS.
+014900
+015000     DISPLAY AND READ ALTERED DATA-EDIT-HELP-1-SCREEN ON CRT-FILE.
+015100
+015200     DISPLAY AND READ ALTERED DATA-EDIT-HELP-2-SCREEN ON CRT-FILE.
+015300
+015400
+000000     COPY PLKTRACE.

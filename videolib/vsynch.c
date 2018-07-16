@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -5,25 +7,20 @@
 			/*			    All rights reserved.			*/
 			/************************************************************************/
 
+#include <string.h>
 #include "video.h"									/* Reference all video definitions.	*/
 #include "vlocal.h"									/* Reference all internal definition.	*/
+#include "vmodules.h"
+#include "vdata.h"
 
-vsynch()						/* Warn video et all that something has	gone on behind its back.	*/
+void vsynch()						/* Warn video et all that something has	gone on behind its back.	*/
 {
-	extern unsigned char vchr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];	/* Video character map.			*/
-	extern unsigned char vatr_map[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];
-	extern unsigned char vmap_cng[MAX_LINES_PER_SCREEN][MAX_COLUMNS_PER_LINE];
-	extern int synch_required, deferred, new_screen, vscr_wid;			/* Video data.				*/
-	extern int vpri_op, vmov_op, vmod_op, vchs_op, vrol_op, vscr_op, vera_op;
-	extern int vcur_lin, vcur_col, vcur_atr, vchr_set, vmap_top;
-
 	memset(vchr_map,' ',sizeof(vchr_map));						/* Clear video's maps.			*/
 	memset(vatr_map,0,sizeof(vatr_map));
 	memset(vmap_cng,0,sizeof(vmap_cng));
 
 	synch_required = TRUE;								/* Synchronize vwang next time.		*/
-	deferred = FALSE;								/* Actions are not deferred.		*/
-	new_screen = TRUE;								/* Next screen is new.			*/
+	vdefer(VDEFER_OFF);								/* Actions are not deferred.		*/
 	vscr_wid = 80;									/* Reset width.				*/
 	vmap_top = 0;									/* Reset top of screen.			*/
 
@@ -37,5 +34,17 @@ vsynch()						/* Warn video et all that something has	gone on behind its back.	*
 	vchs_op = OFF;									/* Character set optimization is off.	*/
 	vrol_op = OFF;									/* Scroll area optimization is off.	*/
 	vscr_op = OFF;									/* Screen width.			*/
-	vera_op = OFF;									/* Erase optimization is off.		*/
 }
+/*
+**	History:
+**	$Log: vsynch.c,v $
+**	Revision 1.11  1997-07-09 12:30:21-04  gsl
+**	Removed externs
+**	Removed obsolete items
+**
+**	Revision 1.10  1996-10-11 18:16:21-04  gsl
+**	drcs update
+**
+**
+**
+*/

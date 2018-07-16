@@ -1,0 +1,51 @@
+#/bin/sh
+#
+#	cpdir {srcdir} {destdir}
+#
+#	Copy srcdir into destdir.  srcdir and destdir must exist.
+#
+
+srcdir=$1
+destdir=$2
+
+if [ "$srcdir" = "" -o "$destdir" = "" ]
+then
+	echo "Usage: cpdir {srcdir} {destdir}"
+	exit 1
+fi
+
+if [ ! -d $srcdir ]
+then
+	echo "ERROR: $srcdir is not a directory"
+	exit 1
+fi
+
+if [ ! -d $destdir ]
+then
+	echo "ERROR: $destdir is not a directory"
+	exit 1
+fi
+
+if [ ! -w $destdir ]
+then
+	echo "ERROR: $destdir is not writable"
+	exit 1
+fi
+
+echo $srcdir|grep -q '/'
+if [ $? = 0 ]
+then
+	echo "ERROR: srcdir=$srcdir cannot contain a path '/' specifier"
+	exit 1
+fi
+
+echo "tar -cf - $srcdir|(cd $destdir;tar -xvpf -)"
+tar -cf - $srcdir|(cd $destdir;tar -xvpf -)
+if [ $? != 0 ]
+then
+	echo "ERROR: cpdir failed - directory may be partially copied"
+	exit 1
+fi
+echo "SUCCESS: Directory $srcdir copied to $destdir/$srcdir"
+exit 0
+

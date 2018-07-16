@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -10,23 +12,25 @@
 /*						Include necessary header files.							*/
 
 #include <stdio.h>
+#include <varargs.h>
+
 #include "idsistd.h"
 #include "wcommon.h"
 #include "wperson.h"
 #include "movebin.h"
 #include "werrlog.h"
-#include <varargs.h>
+#include "wfname.h"
+#include "wisplib.h"
+#include "filext.h"
 
-extern char WISPFILEXT[39];
-extern char werrlog_path[80];
 
 /* 				PRINT a file.											*/
 #define		ROUTINE		46000
-PRINT(va_alist)										/* Variable number of arguments.	*/
+void PRINT(va_alist)										/* Variable number of arguments.	*/
 va_dcl											/* Define the list structure.		*/
 {
 	va_list the_args;								/* Define a pointer to the list.	*/
-	int4	arg_count, x, i;							/* Number of arguments.			*/
+	int4	arg_count, x;							/* Number of arguments.			*/
 	int4	num_copies,form_num,return_code;
 	int4	l_val;									/* to move int to int4 value.		*/
 
@@ -35,16 +39,14 @@ va_dcl											/* Define the list structure.		*/
 	     *l_vol,									/* Address of the volume name.		*/
 	     *l_mode,									/* Address of the job print mode.	*/
 	     *l_disposition,								/* Address of the disposition action.	*/
-	     l_class,									/* print class				*/
-	      dummy_arg;								/* Used to burn off extra args.		*/
+	     l_class;									/* print class				*/
 
 	int4	*l_return_code,								/* Address of 4 byte return code value.	*/
 		l_copies,								/* Local number of copys.		*/
 		*long_ptr,
 		l_form;									/* Local form number.			*/
 
-	char sav_mode, name[132], *end_name;
-	char *wfname();									/* wfname returns a point to a string.	*/
+	char name[132], *end_name;
 	int4 mode;
 
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
@@ -155,7 +157,7 @@ va_dcl											/* Define the list structure.		*/
 		l_val = (int4) return_code;
 		wswap(&l_val);
 		PUTBIN(l_return_code,&l_val,4);	
-		return(0);
+		return;
 	}
 
 	if ((WISPFILEXT[0] == ' ') || !memcmp(WISPFILEXT,"LIS ",4))			/* If it's a listing file.		*/
@@ -175,3 +177,12 @@ va_dcl											/* Define the list structure.		*/
 	wswap(&l_val);
 	PUTBIN(l_return_code,&l_val,4);	
 }
+/*
+**	History:
+**	$Log: print.c,v $
+**	Revision 1.12  1996-08-19 18:32:39-04  gsl
+**	drcs update
+**
+**
+**
+*/

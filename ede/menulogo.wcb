@@ -1,4 +1,4 @@
-      * International Digital Scientific Incorporated.
+      * Devtech Migrations Inc.
       * Extended Development Environment.
       * Display a logo.
 
@@ -18,6 +18,7 @@
        01 TRUE-ROW    PIC S9(9) BINARY.
        01 TRUE-COL    PIC S9(9) BINARY.
        01 LINE-LENGTH PIC S9(9) BINARY.
+       01 LETTER-COL  PIC S9(9) BINARY.
 
        01 VERTICAL-LINE       PIC S9(9) BINARY VALUE 0.
        01 HORIZONTAL-LINE     PIC S9(9) BINARY VALUE 3.
@@ -38,7 +39,8 @@
        START-LOGO-PROCESSING.
 
            PERFORM INITIALIZE-THE-SCREEN.
-           PERFORM DISPLAY-THE-IDSI-LOGO.
+      *    PERFORM DISPLAY-THE-IDSI-LOGO.
+           PERFORM DISPLAY-THE-DTMI-LOGO.
            PERFORM DISPLAY-DEMO-INFORMATION.
            EXIT PROGRAM.
 
@@ -50,6 +52,173 @@
        DISPLAY-DEMO-INFORMATION.
 
            CONTINUE.
+
+       DISPLAY-THE-DTMI-LOGO.
+
+      *   0123456789 123456789 123456789 12345678
+      *   ***************************************0
+      *   **                                   **1
+      *   **        **   **              **    **2
+      *   **        **   **                    **3
+      *   **    ****** ****** ********** **    **4
+      *   **    **  **   **   **  **  ** **    **5
+      *   **    **  **   **   **  **  ** **    **6
+      *   **    **  **   **   **      ** **    **7
+      *   **    ******   **   **      ** **    **8
+      *   **                                   **9
+      *   ***************************************10
+
+           COMPUTE BASE-ROW = 10.
+           COMPUTE BASE-COL = 20.
+
+      ******** Draw the 'd' ********
+
+           COMPUTE LETTER-COL = BASE-COL + 6;
+
+      * Right vertical stroke of d.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 2.
+           COMPUTE TRUE-COL = LETTER-COL+ 4.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 7 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      * Middle horizontal stroke of d.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 6 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE,LINE-LENGTH.
+
+      * Left vertical stroke of d.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 5 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      * Bottom horizontal stroke of d.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 8.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 6 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE,LINE-LENGTH.
+
+      ******** Draw the 't' ********
+
+           COMPUTE LETTER-COL = BASE-COL + 13.
+
+
+      * vertical stroke of t.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 2.
+           COMPUTE TRUE-COL = LETTER-COL+ 2.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 7 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      *  horizontal stroke of t.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 6 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE,LINE-LENGTH.
+
+      ******** Draw the 'm' ********
+
+           COMPUTE LETTER-COL = BASE-COL + 20.
+
+      *  horizontal stroke of m.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 10 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE,LINE-LENGTH.
+
+      * Left vertical stroke of m.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 5 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      * Center vertical stroke of m.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL + 4.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 3 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      * Right vertical stroke of m.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL + 8.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 5 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      ******** Draw the 'i' ********
+
+           COMPUTE LETTER-COL = BASE-COL + 31.
+
+      * Dot on the i.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 2.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 2 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE, LINE-LENGTH.
+
+      * Stroke of the i.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 4.
+           COMPUTE TRUE-COL = LETTER-COL.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 5 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE,LINE-LENGTH.
+
+      * The box.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 0.
+           COMPUTE TRUE-COL = BASE-COL + 0.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 37 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE, LINE-LENGTH.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 11 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE, LINE-LENGTH.
+
+           COMPUTE TRUE-COL = BASE-COL + 37.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 11 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-VERTICAL-LINE, LINE-LENGTH.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 10.
+           COMPUTE TRUE-COL = BASE-COL + 0.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE 37 TO LINE-LENGTH.
+           CALL "VIDLINE" USING FAT-HORIZONTAL-LINE, LINE-LENGTH.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 12.
+           COMPUTE TRUE-COL = BASE-COL + 0.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE "  Copyright (c) 1991-1996 by DTMI" TO WORK-TEXT.
+           MOVE 35 TO WORK-LENGTH.
+           CALL "VIDTEXT" USING WORK-TEXT, WORK-LENGTH.
+
+           COMPUTE TRUE-ROW = BASE-ROW + 13.
+           CALL "VIDMOVE" USING TRUE-ROW, TRUE-COL.
+           MOVE "        All rights reserved." TO WORK-TEXT.
+           MOVE 28 TO WORK-LENGTH.
+           CALL "VIDTEXT" USING WORK-TEXT, WORK-LENGTH.
+
 
        DISPLAY-THE-IDSI-LOGO.
 
@@ -185,3 +354,4 @@
            MOVE "        All rights reserved." TO WORK-TEXT.
            MOVE 28 TO WORK-LENGTH.
            CALL "VIDTEXT" USING WORK-TEXT, WORK-LENGTH.
+

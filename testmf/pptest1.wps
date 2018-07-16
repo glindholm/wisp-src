@@ -1,0 +1,5 @@
+procedure pptest1                                                         000100
+                                                                          000200
+run sample                                                                000300
+GGG:     enter input FILE=ZZZ                                             000400
+         enter XX3 2, FILE=QQQ                                            000500

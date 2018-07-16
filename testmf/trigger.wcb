@@ -127,7 +127,7 @@
            03  FILLER  PIC X(60) ROW 15 COL 10 VALUE
                "arguments and all it does is display this screen.".
            03  FILLER  PIC X(23) ROW 24 COL 20 VALUE
-               "PRESS PF KEY 16 TO EXIT".
+               "PRESS (16) TO EXIT".
 
 
       ******************************************************************

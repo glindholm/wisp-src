@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 #ifdef OLD
 This is now included into vwang.c.
 GSL 12/17/92
@@ -21,3 +25,12 @@ struct wscrn_struct
 	struct  wscrn_struct *prev_wscrn_struct_ptr;
 };
 #endif /* OLD */
+/*
+**	History:
+**	$Log: wscrn.h,v $
+**	Revision 1.8  1996-08-19 18:33:23-04  gsl
+**	drcs update
+**
+**
+**
+*/

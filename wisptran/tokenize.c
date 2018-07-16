@@ -1,14 +1,11 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 **	File:		tokenize.c
+**
+**	Project:	wisp/tran
+**
+**	RCS:		$Source:$
 **
 **	Purpose:	To hold routines that tokenize the input lines.
 **
@@ -21,9 +18,11 @@
 **	got_token()		Recieve a token from tokenize().
 **	get_token()		Get the next token.
 **
-**	History:
-**	05/10/93	Written by GSL
 **
+*/
+
+/*
+**	Includes
 */
 
 #include <stdio.h>
@@ -33,16 +32,28 @@
 #include "wmalloc.h"
 #include "token.h"
 #include "lines.h"
+#include "tokenize.h"
+#include "ring.h"
+#include "input.h"
+#include "output.h"
+#include "keywords.h"
+#include "proto.h"
 
-static void init_token();
-static void a_init_token_cache();
-void clean_token();
-static int got_token();
-void *get_curr_cob_context();
-
-static char *token_cache;							/* The internal token cache.			*/
+/*
+**	Structures and Defines
+*/
 
 #define EQ(c,s) (0==memcmp(c,s,strlen(c)))
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+static char *token_cache;							/* The internal token cache.			*/
 
 static char is_alpha[256] = 
 {
@@ -84,6 +95,17 @@ static char is_digit[256] =
 };
 
 /*
+**	Static Function Prototypes
+*/
+
+static int got_token(char *the_cache, TOKEN *tokptr);
+static void a_init_token_cache(char *the_cache);
+static int a_token_cache_que(char *the_cache, TOKEN *tokptr);
+static int token_cache_que(TOKEN *tokptr);
+static void init_token(TOKEN *tokptr, int the_absline, int the_line, void *the_context);
+
+
+/*
 **	Routine:	tokenize()
 **
 **	Function:	To split a line of COBOL source into tokens.
@@ -106,9 +128,7 @@ static char is_digit[256] =
 **	05/25/93	Split apart from tokenize_cobol_line(). GSL
 **
 */
-int tokenize(input_line, linestatus)
-char	*input_line;
-int	linestatus;
+int tokenize(char *input_line, int linestatus)
 {
 	static	int	first = 1;
 	static	int	iddiv = 1;						/* Not yet finished IDENTIFICATION DIVISION	*/
@@ -194,18 +214,8 @@ int	linestatus;
 **	06/10/93	Added DECIMAL-POINT IS COMMA support. GSL
 **
 */
-int tokenize_cobol_line(the_cache, input_line, linestatus, iddiv, iddiv_mode, the_absline, the_line, the_context, 
-			dpcomma, do_reswords)
-char	*the_cache;
-char	*input_line;
-int	linestatus;
-int	*iddiv;
-int	*iddiv_mode;
-int	the_absline;
-int	the_line;
-void	*the_context;
-int	dpcomma;
-int	do_reswords;
+int tokenize_cobol_line(char *the_cache, char *input_line, int linestatus, int *iddiv, int *iddiv_mode, 
+			int the_absline, int the_line, void *the_context, int dpcomma, int do_reswords)
 {
 	static int	picture_mode = 0;
 	register char *ptr;
@@ -440,8 +450,90 @@ int	do_reswords;
 			ptr++;
 			col++;
 		}
-		else if ( is_alpha[(unsigned char)*ptr] || is_digit[(unsigned char)*ptr] || 
-			  '-' == *ptr || '+' == *ptr || decimal_point == *ptr )
+		else if ( '\"' == ptr[0] || '\'' == ptr[0] ||	       			/* QUOTED LITERAL			*/
+			( '\"' == ptr[1] && strchr("hHxX",ptr[0]) && col < 68 ) )	/* HEX LITERAL				*/
+		{
+			/*
+			**	NON-NUMERIC LITERAL
+			**		"...."		- literal
+			**		'....'
+			**		".......	- continued literal
+			**		".."".."	- embedded delimiter
+			**		'..''..'
+			**		H"00FF"		- hex literal
+			**		x"AC"
+			*/
+
+			char	delimiter;
+
+			start = ptr;
+
+			if ('\"' == ptr[0] || '\'' == ptr[0])
+			{
+				delimiter = *ptr;
+			}
+			else
+			{
+				/*
+				**	HEX literal: 
+				**		- delimiter is always a quote
+				**		- skip past the lead-in char.
+				*/
+				delimiter = '\"';
+				ptr++;
+				col++;
+			}
+
+			if ( 72 == col )
+			{
+				end = ptr;
+			}
+			else
+			{
+				ptr++;
+				col++;
+			}
+
+			while(!end)
+			{
+				if ( 72 == col )
+				{
+					end = ptr;
+				}
+				else if ( delimiter == ptr[0] && delimiter == ptr[1] )
+				{
+					ptr++;
+					col++;
+					if ( 72 == col )
+					{
+						end = ptr;
+					}
+					else
+					{
+						ptr++;
+						col++;
+					}
+				}
+				else if ( delimiter == ptr[0] && delimiter != ptr[1] )
+				{
+					end = ptr;
+				}
+				else
+				{
+					ptr++;
+					col++;
+				}
+			}
+
+			tmptoken.type = LITERAL;
+			tmptoken.column_fixed = ( delimiter == *end ) ? 0 : 1;
+
+			ptr++;
+			col++;
+
+		}
+		else if ( is_alpha[(unsigned char)*ptr] || '#' == *ptr || '@' == *ptr ||
+			  is_digit[(unsigned char)*ptr] || '-' == *ptr || '+' == *ptr || decimal_point == *ptr )
 		{
 			/*
 			**	NUMBER
@@ -458,12 +550,13 @@ int	do_reswords;
 			**		ABC
 			**		000-ABC_000
 			**		A-B-	(Wrong: dash or underscore can not be first or last character)
-			**		
+			**		#,@,$   These can be used in COPY filenames which are a special case.
+			**		$	Dollar sign can not be the first char of identifier.
 			*/
 			int	not_number;
 			int	found_decimal;
 
-			not_number = is_alpha[(unsigned char)*ptr];
+			not_number = (is_alpha[(unsigned char)*ptr] || '#' == *ptr || '@' == *ptr);
 			found_decimal = 0;
 
 			start = ptr;
@@ -509,7 +602,7 @@ int	do_reswords;
 					end = ptr;
 					tmptoken.type = (not_number) ? IDENTIFIER : NUMBER;
 				}
-				else if ( is_alpha[(unsigned)ptr[1]] )
+				else if ( is_alpha[(unsigned)ptr[1]] || '#' == ptr[1] || '@' == ptr[1] || '$' == ptr[1] )
 				{
 					not_number = 1;
 					ptr++;
@@ -551,65 +644,6 @@ int	do_reswords;
 					tmptoken.type = (not_number) ? IDENTIFIER : NUMBER;
 				}
 			}
-
-			ptr++;
-			col++;
-
-		}
-		else if ( '\"' == *ptr )					/* QUOTED LITERAL				*/
-		{
-			/*
-			**	LITERAL
-			**		"...."		- literal
-			**		".......	- continued literal
-			**		".."".."	- embedded "
-			*/
-
-			start = ptr;
-
-			if ( 72 == col )
-			{
-				end = ptr;
-			}
-			else
-			{
-				ptr++;
-				col++;
-			}
-
-			while(!end)
-			{
-				if ( 72 == col )
-				{
-					end = ptr;
-				}
-				else if ( '\"' == ptr[0] && '\"' == ptr[1] )
-				{
-					ptr++;
-					col++;
-					if ( 72 == col )
-					{
-						end = ptr;
-					}
-					else
-					{
-						ptr++;
-						col++;
-					}
-				}
-				else if ( '\"' == ptr[0] && '\"' != ptr[1] )
-				{
-					end = ptr;
-				}
-				else
-				{
-					ptr++;
-					col++;
-				}
-			}
-
-			tmptoken.type = LITERAL;
-			tmptoken.column_fixed = ( '\"' == *end ) ? 0 : 1;
 
 			ptr++;
 			col++;
@@ -873,11 +907,8 @@ int	do_reswords;
 **	05/12/92	Written by GSL
 **
 */
-static int got_token(the_cache,tokptr)
-char	*the_cache;
-TOKEN	*tokptr;
+static int got_token(char *the_cache, TOKEN *tokptr)
 {
-	int	rc;
 
 	if (tokptr->indata && !tokptr->data)
 	{
@@ -925,8 +956,7 @@ TOKEN	*tokptr;
 **	05/25/93	Change to pass in the_cache pointer. GSL
 **
 */
-static void a_init_token_cache(the_cache)
-char	*the_cache;
+static void a_init_token_cache(char *the_cache)
 {
 	TOKEN	tmptok;
 	int	count;
@@ -940,8 +970,7 @@ char	*the_cache;
 	}
 }
 
-int a_token_cache_count(the_cache)
-char	*the_cache;
+int a_token_cache_count(char *the_cache)
 {
 	int 	rc;
 	int	count;
@@ -960,18 +989,16 @@ char	*the_cache;
 	return count;
 }
 
-int token_cache_count()
+int token_cache_count(void)
 {
 	return(a_token_cache_count(token_cache));
 }
 
-int a_token_cache_unque(the_cache,tokptr)
-char	*the_cache;
-TOKEN	*tokptr;
+int a_token_cache_unque(char *the_cache, TOKEN *tokptr)
 {
 	int	rc;
 
-	rc = ring_unque(the_cache,tokptr);
+	rc = ring_unque((ring_struct *)the_cache,(char *)tokptr);
 	if (rc < 0)
 	{
 		write_log("WISP",'F',"RINGUNQUE","Unable to unque ring [a_token_cache] rc=%d [%s]",rc,ring_error(rc));
@@ -980,24 +1007,21 @@ TOKEN	*tokptr;
 	return rc;
 }
 
-int invalidate_token_cache()
+void invalidate_token_cache(void)
 {
 	a_init_token_cache(token_cache);
 }
 
-int token_cache_unque(tokptr)
-TOKEN	*tokptr;
+int token_cache_unque(TOKEN *tokptr)
 {
 	return(a_token_cache_unque(token_cache,tokptr));
 }
 
-int a_token_cache_que(the_cache,tokptr)
-char	*the_cache;
-TOKEN	*tokptr;
+static int a_token_cache_que(char *the_cache, TOKEN *tokptr)
 {
 	int	rc;
 
-	rc = ring_que(the_cache,tokptr);
+	rc = ring_que((ring_struct *)the_cache,(char*)tokptr);
 	if (rc < 0)
 	{
 		write_log("WISP",'F',"RINGQUE","Unable to queue ring [a_token_cache] rc=%d [%s]",rc,ring_error(rc));
@@ -1006,20 +1030,16 @@ TOKEN	*tokptr;
 	return rc;
 }
 
-int token_cache_que(tokptr)
-TOKEN	*tokptr;
+static int token_cache_que(TOKEN *tokptr)
 {
 	return(a_token_cache_que(token_cache,tokptr));
 }
 
-int a_token_cache_get(the_cache,num,tokptr)
-char	*the_cache;
-int	num;
-TOKEN	*tokptr;
+int a_token_cache_get(char *the_cache, int num, TOKEN *tokptr)
 {
 	int	rc;
 
-	rc = ring_get(the_cache, num, tokptr);
+	rc = ring_get((ring_struct *)the_cache, num, (char*)tokptr);
 	if (rc < 0)
 	{
 		write_log("WISP",'F',"RINGGET","Unable to get %d ring [a_token_cache] rc=%d [%s]",num,rc,ring_error(rc));
@@ -1028,9 +1048,7 @@ TOKEN	*tokptr;
 	return rc;
 }
 
-int token_cache_get(num,tokptr)
-int	num;
-TOKEN	*tokptr;
+int token_cache_get(int num, TOKEN *tokptr)
 {
 	return(a_token_cache_get(token_cache,num,tokptr));
 }
@@ -1057,9 +1075,8 @@ TOKEN	*tokptr;
 **	05/12/92	Written by GSL
 **
 */
-TOKEN	*get_token()
+TOKEN *get_token(void)
 {
-	int	rc;
 	int	count;
 	TOKEN	*tokptr;
 
@@ -1102,12 +1119,11 @@ TOKEN	*get_token()
 **	06/11/93	Written by GSL
 **
 */
-unget_token(tokptr)
-TOKEN *tokptr;
+int unget_token(TOKEN *tokptr)
 {
 	int	rc;
 
-	rc = ring_push(token_cache,tokptr);
+	rc = ring_push((ring_struct *)token_cache,(char*)tokptr);
 	if (rc < 0)
 	{
 		write_log("WISP",'F',"RINGUNQUE","Unable to push ring [a_token_cache] rc=%d [%s]",rc,ring_error(rc));
@@ -1116,7 +1132,7 @@ TOKEN *tokptr;
 	return rc;
 }
 
-hold_token_cache()
+int hold_token_cache(void)
 {
 	int	i;
 	int	count;
@@ -1151,6 +1167,7 @@ hold_token_cache()
 	
 	hold_this_line(the_line);
 	invalidate_parms();
+	return 0;
 }
 
 /*
@@ -1173,11 +1190,7 @@ hold_token_cache()
 **	05/12/93	Written by GSL
 **
 */
-static void init_token(tokptr, the_absline, the_line, the_context)
-TOKEN *tokptr;
-int	the_absline;
-int	the_line;
-void	*the_context;
+static void init_token(TOKEN *tokptr, int the_absline, int the_line, void *the_context)
 {
 	tokptr->type 		= UNKNOWN;
 	tokptr->context		= the_context;
@@ -1189,9 +1202,7 @@ void	*the_context;
 	tokptr->data 		= NULL;
 }
 
-TOKEN *make_token(the_type,the_data)
-int	the_type;
-char	*the_data;
+TOKEN *make_token(int the_type, char *the_data)
 {
 	TOKEN	*tokptr;
 
@@ -1226,8 +1237,7 @@ char	*the_data;
 **	05/12/93	Written by GSL
 **
 */
-void clean_token(tokptr)
-TOKEN *tokptr;
+void clean_token(TOKEN *tokptr)
 {
 	if (tokptr->indata) wfree(tokptr->indata);
 	if (tokptr->data)   wfree(tokptr->data);
@@ -1254,8 +1264,7 @@ TOKEN *tokptr;
 **	05/19/93	Written by GSL
 **
 */
-void free_token(tokptr)
-TOKEN *tokptr;
+void free_token(TOKEN *tokptr)
 {
 	if (tokptr)
 	{
@@ -1265,10 +1274,7 @@ TOKEN *tokptr;
 	}
 }
 
-int eq_token(tokptr, the_type, the_data)
-TOKEN	*tokptr;
-int	the_type;
-char	*the_data;
+int eq_token(TOKEN *tokptr, int the_type, char *the_data)
 {
 	if (!tokptr) return(0);
 
@@ -1277,9 +1283,7 @@ char	*the_data;
  	return( 0 == strcmp(tokptr->data, the_data) );
 }
 
-TOKEN *edit_token(tokptr, the_data)
-TOKEN *tokptr;
-char  *the_data;
+TOKEN *edit_token(TOKEN *tokptr, char *the_data)
 {
 	if (tokptr->data) wfree(tokptr->data);
 	tokptr->data = wmalloc(strlen(the_data)+1);
@@ -1291,8 +1295,7 @@ char  *the_data;
 	return(tokptr);
 }
 
-TOKEN *dup_token(tokptr)
-TOKEN *tokptr;
+TOKEN *dup_token(TOKEN *tokptr)
 {
 	TOKEN	*newtok;
 
@@ -1329,8 +1332,7 @@ TOKEN *tokptr;
 **	06/01/93	Removed IDCOMMENT from the fluff list. GSL
 **
 */
-int fluff_token(tokptr)
-TOKEN 	*tokptr;
+int fluff_token(TOKEN *tokptr)
 {
 	switch(tokptr->type)
 	{
@@ -1368,8 +1370,7 @@ TOKEN 	*tokptr;
 **	05/29/93	Written by GSL
 **
 */
-int lint_token(tokptr)
-TOKEN 	*tokptr;
+int lint_token(TOKEN *tokptr)
 {
 	switch(tokptr->type)
 	{
@@ -1381,16 +1382,14 @@ TOKEN 	*tokptr;
 	return(0);
 }
 
-char *token_data(tokptr)
-TOKEN *tokptr;
+char *token_data(TOKEN *tokptr)
 {
 	static char null_string[] = "";
 	if (tokptr && tokptr->data) return(tokptr->data);
 	return(null_string);
 }
 
-char *token_type_mess(tokptr)
-TOKEN *tokptr;
+char *token_type_mess(TOKEN *tokptr)
 {
 	char	*mess;
 
@@ -1420,3 +1419,19 @@ TOKEN *tokptr;
 	}
 	return(mess);
 }
+
+/*
+**	History:
+**	$Log: tokenize.c,v $
+**	Revision 1.7  1996-06-24 14:10:03-04  gsl
+**	fix warnings for NT
+**
+**	Revision 1.6  1995-06-14 03:21:35-07  gsl
+**	Fixed so could handle "#" "@" "$" in copy file names.
+**	These form a special case of IDENTIFIER.
+**
+**	Also added standard headers.
+**
+**
+**
+*/

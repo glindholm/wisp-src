@@ -1,0 +1,86 @@
+procedure
+
+declare &str array(40) string(8)
+declare &val array(40) string(16)
+declare &i integer
+declare &path string(200)
+
+assign &str(1) ="CLUSVOL ", &str(2) ="CURLIB  ", &str(3) ="CURVOL  ",
+       &str(4) ="DISKIO  ", &str(5) ="FILECLAS", &str(6) ="FORM#   ",
+       &str(7) ="INLIB   ", &str(8) ="INVOL   ", &str(9) ="JOBCLASS",
+       &str(10)="JOBLIMIT", &str(11)="JOBQUEUE", &str(12)="LINES   ",
+       &str(13)="OTIO    ", &str(14)="OUTLIB  ", &str(15)="OUTVOL  ",
+       &str(16)="PRINTER ", &str(17)="PRINTIO ", &str(18)="PRNTMODE",
+       &str(19)="PROGLIB ", &str(20)="PROGVOL ", &str(21)="PRTCLASS",
+       &str(22)="PRTFCLAS", &str(23)="RUNLIB  ", &str(24)="RUNVOL  ",
+       &str(25)="SPOOLLIB", &str(26)="SPOOLSYS", &str(27)="SPOOLVOL",
+       &str(28)="SYSLIB  ", &str(29)="SYSVOL  ", &str(30)="SYSWORK ",
+       &str(31)="TAPEIO  ", &str(32)="TASK#   ", &str(33)="TASKTYPE",
+       &str(34)="USERID  ", &str(35)="USERNAME", &str(36)="VERSION ",
+       &str(37)="WORKLIB ", &str(38)="WORKVOL ", &str(39)="WS      ",
+       &str(40)="WSIO    "
+
+screen clear
+write line "                             Usage Constants "
+write line ""
+
+extract &val(1)  = CLUSVOL , &val(2)  = CURLIB,   &val(3)  = CURVOL  ,
+        &val(4)  = DISKIO  , &val(5)  = FILECLAS, &val(6)  = FORM#   ,
+        &val(7)  = INLIB   , &val(8)  = INVOL   , &val(9)  = JOBCLASS,
+        &val(10) = JOBLIMIT, &val(11) = JOBQUEUE, &val(12) = LINES   ,
+        &val(13) = OTIO    , &val(14) = OUTLIB  , &val(15) = OUTVOL  ,
+        &val(16) = PRINTER , &val(17) = PRINTIO , &val(18) = PRNTMODE,
+        &val(19) = PROGLIB , &val(20) = PROGVOL , &val(21) = PRTCLASS,
+        &val(22) = PRTFCLAS, &val(23) = RUNLIB  , &val(24) = RUNVOL  ,
+        &val(25) = SPOOLLIB, &val(26) = SPOOLSYS, &val(27) = SPOOLVOL,
+        &val(28) = SYSLIB  , &val(29) = SYSVOL  , &val(30) = SYSWORK ,
+        &val(31) = TAPEIO  , &val(32) = TASK#   , &val(33) = TASKTYPE,
+        &val(34) = USERID  , &val(35) = USERNAME, &val(36) = VERSION ,
+        &val(37) = WORKLIB , &val(38) = WORKVOL , &val(39) = WS      ,
+        &val(40) = WSIO    
+
+for &i = 1 to 40 loop
+   write &str(&i) !! " = " !! &val(&i)
+   if &mod(&i, 3) = 0 then
+      write line ""
+end
+
+write line ""
+write line ""
+
+write line "The name of the currently running procedure is:" 
+write line ""
+write line "     " !! &proc_name
+
+write line ""
+write "Press any key to continue"
+call &get_key
+
+screen clear
+write line "                      Unix Environment Variables"
+write line ""
+write line "HOME       = " !! &extract("HOME") 
+write line "LOGNAME    = " !! &extract("LOGNAME")
+
+assign &path = &extract("PATH")
+write "PATH       = " 
+write &path(1,66)
+write line ""
+if &path(67) <> " " then
+   write line &path(67, 80)
+
+write line "TERM       = " !! &extract("TERM")
+write line "WISPCONFIG = " !! &extract("WISPCONFIG") 
+write line "WISPTERM   = " !! &extract("WISPTERM")
+
+write line ""
+write line "The first 5 directories on your path are:"
+
+for &i = 1 to 5 loop
+   write line "   " !! &parse(&path, &i, ':')
+end
+write line ""
+write "Press any key to continue"
+call &get_key
+
+screen clear

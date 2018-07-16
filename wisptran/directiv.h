@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -35,8 +39,19 @@ EXT int sortfile	INIT_FALSE;			/* $SORTFILE/$SORT_FILE		Next file is a SORT file
 EXT char selecttext[400];				/* $SELECTTEXT			Text to add to the SELECT		*/
 EXT int dbfile		INIT_FALSE;			/* $DBFILE [table]		Next file is a DATABASE file		*/
 EXT char dbfile_tabname[80];				/* 				The table name from $DBFILE		*/
+EXT int openioxfile	INIT_FALSE;			/* $OPENIOEXCLUSIVEFILE		Next file is openiox			*/
+EXT int openioxall	INIT_FALSE;			/* $OPENIOEXCLUSIVEALL		All files are openiox			*/
 
 EXT int linkmain	INIT_FALSE;			/* $LINKMAIN			Flag to add LINK frontend stuff		*/
 
 
 #endif /* DIRECTIV_H */
+/*
+**	History:
+**	$Log: directiv.h,v $
+**	Revision 1.6  1996-08-30 21:56:03-04  gsl
+**	drcs update
+**
+**
+**
+*/

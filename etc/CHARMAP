@@ -1,0 +1,104 @@
+##########################################################################
+#
+# CHARMAP - Character Map
+#
+# This file is used to map Wang 7-bit characters into Native and Terminal
+# 8-bit characters.
+#
+# The Wang workstation will only display characters with values in the 
+# range 1-127 (7-bit).  High value 128-255 (8-bit) are considered to be 
+# FAC characters not data.  On a Wang workstation non-ASCII characters 
+# are represented with values 1-31, and 123-127 which are "unused" by 
+# the ASCII character-set.
+#
+# On Unix and Windows, non-ASCII characters are usually represented
+# with values in the range 128-255.  These non-ASCII characters in the 
+# range 128-255 would be confused with FAC characters and would not be 
+# displayed by the WISP screen handler.  In order to display these
+# characters they need to be mapped into unused values of the Wang 
+# workstation character set. 
+#
+# The Wang 7-bit character set is used by the WISP screen handler to
+# emulate Wang workstion IO.  The Native character set is the character
+# set used natively by this computer, this is usually the ANSI
+# character set with "Latin 1" extensions.  The Terminal character
+# set is character set use by the terminal (this may be the same
+# as the native character set).
+#
+# Comment lines begin with a hash (#) character.
+#
+# Each mapping line contains three decimal numbers. The first number 
+# is the 7-bit Wang workstation character value.  The second number
+# is the corresponding 8-bit native character value (ANSI). The third
+# number is the corresponding 8-bit terminal character set value.
+#
+# The character value 0 can not be mapped.
+#
+# It is recommended that you restrict Wang character values to those
+# which are not used by the ASCII standard (1-31,127). You could 
+# additionally use values that are different between Wang and
+# ASCII (94-96,123-126).
+#
+# It is strongly recommended that you do not remap any of the standard
+# ASCII characters ('a'-'z', 'A'-'Z', '0'-'9', etc). You should also 
+# not use value 11 which is the pseudo-blank character and is handled 
+# with a special mechanism.  Additionally the values 8 - 13 are very
+# common ASCII control characters and if remapped may cause problems
+# when using the DISPLAY or VSEDIT utility.
+#
+# On most Unix systems the Native and the Terminal character values
+# will be the same.  On most Windows systems the Native character 
+# values are from the ANSI character set (Windows code page 1252), 
+# and the Terminal character values are from the OEM character set 
+# (Windows code page 437).
+#
+# The sample mapping provided is a close approximation to the default
+# Wang workstation character set.  The Native values used are
+# from the ISO 8859-1 Latin 1 character set which is also compatible
+# with the Windows Latin 1 character set (Microsoft calls this ANSI).
+#
+# Test any changes you make by re-running wshell and pressing PF28
+# from the main menu.
+#
+# Wang    Native  Terminal 	Description
+#(1-127)  (1-255) (1-255)
+#------------------------------------------
+#1	  1	  1		# (unused)
+#2	  2	  2		# (unused)
+#3	  3	  3		# (unused)
+#4	  4	  4		# (unused)
+#5	  5	  5		# (unused)
+#6	  6	  6		# (unused)
+#7	  7	  7		# (unused)
+#8	  8	  8		# (unused) Backspace
+#9	  9	  9		# (unused) Tab
+#10	 10	 10		# (unused) Linefeed
+#11	 11	 11		# (unused) Psuedo-blank
+#12	 12	 12		# (unused) Formfeed
+#13	 13	 13		# (unused) Carriage return 
+14	223	223		# Beta mark
+15	182	182		# Paragraph mark
+16	226	226		# a + circumflex
+17	234	234		# e + circumflex
+18	238	238		# i + circumflex
+19	244	244		# o + circumflex
+20	251	251		# u + circumflex
+21	228	228		# a + umlaut
+22	235	235		# e + umlaut
+23	239	239		# i + umlaut
+24	246	246		# o + umlaut
+25	252	252		# u + umlaut
+26	224	224		# a + grave accent
+27	232	232		# e + grave accent
+28	249	249		# u + grave accent
+29	196	196		# A + umlaut
+30	214	214		# O + umlaut
+31	220	220		# U + umlaut
+94	 94	 94		# Circumflex (unchanged)
+95	 95	 95		# Underscore (unchanged)
+96	176	176		# degrees symbol
+123	167     167		# Double S
+124	163     163		# British Pound sign
+125	233     233		# e + acute accent
+126	231     231		# c + cedilla
+127	162     162		# Cent sign

@@ -1,4 +1,6 @@
-#ifdef VMS
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+
 /********************************************************************************************************************************
 *																*
 *	breakacp.c	This program always returns 0 for success.  It is not necessary to send break sequences on		*
@@ -11,7 +13,8 @@
 #include "idsistd.h"
 #include "werrlog.h"
 
-breakacp(rel_line,ret_code)
+#ifdef VMS
+void BREAKACP(rel_line,ret_code)
 
 int4	*rel_line;							/* Index from 1 to 6 for later access to acp_term[].	*/
 int4	*ret_code;							/* WANG ACP return code.				*/
@@ -24,15 +27,19 @@ int4	*ret_code;							/* WANG ACP return code.				*/
 	*ret_code = 0;							/* Initialize the return value.				*/
 }
 #endif
-#ifdef unix
-BREAKACP()
+
+#if defined(unix)
+void BREAKACP(int4* rel_line,int4 *ret_code)
 {
 	return;
 }
 #endif
-#ifdef MSDOS
-BREAKACP()
-{
-	return(0);
-}
-#endif
+/*
+**	History:
+**	$Log: breakacp.c,v $
+**	Revision 1.10  1996-08-19 18:32:10-04  gsl
+**	drcs update
+**
+**
+**
+*/

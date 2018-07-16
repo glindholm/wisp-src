@@ -1,9 +1,28 @@
 /*
  * Copyright 1990 IDSI - All Rights Reserved 
  *
+ *
+ * $Log: bldscr.c,v $
+ * Revision 1.7  1995-04-25 05:57:59-04  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.6  1995/04/17  11:50:28  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.5  1995/02/06  15:11:22  gsl
+ * updated
+ *
+ * Revision 1.3  1992/01/21  17:15:14  jockc
+ * added semi to rcsid
+ *
+ * Revision 1.2  1991/04/18  23:10:30  jockc
+ * added log keyw
+ *
+ *
  */
 
-static char *ident="@(#)bldscr.c  1.0   (UNIX/VMS)  11/1/90   (c) IDSI 1990";
+static char *copyright="Copyright 1990 International Digital Scientific, Inc. All Rights Reserved.";
+static char rcsid[] = "$Id:$";
 
 #include <stdio.h>
 #include <errno.h>

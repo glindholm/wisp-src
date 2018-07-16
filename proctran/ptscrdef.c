@@ -1,12 +1,7 @@
-#define EXT extern
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1997 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 
-/* PG_STRTSCN.C	*/
+#define EXT extern
 
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +11,7 @@
 #include "pgstruct.h"
 #include "pgcblsrc.h"
 
-do_start_screen()
+void do_start_screen(void)
 {
 	char scrn_num[FLDLEN], row_num[FLDLEN], col_num[FLDLEN];
 	int i, current_col, prev_row, adj, ilen;
@@ -206,3 +201,15 @@ do_start_screen()
 		cur_scn = cur_scn->next_item;						/* Point to the next one.		*/
 	}
 }
+/*
+**	History:
+**	$Log: ptscrdef.c,v $
+**	Revision 1.5  1997-04-21 11:20:28-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.4  1996-09-12 19:17:53-04  gsl
+**	fix prototypes
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -21,14 +23,17 @@
 **			12/16/92	Written by SMC
 */
 
+#include <stdio.h>
+
 #define ACU	'A'
 #define VAX	'V'
 #define MF	'M'
 #define LPI	'L'
 #include "idsistd.h"
-static void do_conv_neg();
-static void do_conv_pos();
- 
+
+static void do_conv_neg(unsigned char *lang,unsigned char *cptr);		/* Do convertion of the negative char.	*/
+static void do_conv_pos(unsigned char *lang,unsigned char *cptr);		/* Do convertion of the positive char.	*/
+
 /*
 **      Routine:        FXZONE()
 **
@@ -55,16 +60,12 @@ static void do_conv_pos();
 **			12/29/92	Added other language specific changes.  SMC
 */
 
-int FXZONE(clang,fld,len)								/* Fix signed byte for Zoned numbers	*/
-unsigned char *clang, *fld;								/* Pass in ptr to COBOL language flag,	*/
-unsigned short *len;									/* num field to convert, & length in	*/
+void FXZONE(unsigned char *clang,unsigned char *fld,unsigned short *len)									/* num field to convert, & length in	*/
 {											/* bytes of num field.			*/
 	unsigned char *spos;								/* Ptr to byte position in num field.	*/
 	unsigned char *language;	
 	int l_len;
 	register int i;
-	void do_conv_neg();
-	void do_conv_pos();
 
 	l_len = *len;									/* Set the local length of the field.	*/
 	language = clang;
@@ -76,7 +77,8 @@ unsigned short *len;									/* num field to convert, & length in	*/
 		{
 			do_conv_neg(language,spos);
 		}
-		else if ( *spos >= 0xF0 && *spos <= 0xF9 )
+		else if (( *spos >= 0xF0 && *spos <= 0xF9 ) || 
+			 ( *spos >= 0xC0 && *spos <= 0xC9 ))
 		{
 			do_conv_pos(language,spos);
 		}
@@ -86,8 +88,7 @@ unsigned short *len;									/* num field to convert, & length in	*/
 
 }
 
-static void do_conv_neg(lang,cptr)							/* Do convertion of the negative char.	*/
-unsigned char *lang, *cptr;
+static void do_conv_neg(unsigned char *lang,unsigned char *cptr)			/* Do convertion of the negative char.	*/
 {
 	switch (lang[0])								/* Select the appropriate language.	*/
 	{
@@ -177,8 +178,7 @@ unsigned char *lang, *cptr;
 	}
 }
 
-static void do_conv_pos(lang,cptr)							/* Do convertion of the positive char.	*/
-unsigned char *lang, *cptr;
+static void do_conv_pos(unsigned char *lang,unsigned char *cptr)		/* Do convertion of the positive char.	*/
 {
 	switch (lang[0])								/* Select the appropriate language.	*/
 	{
@@ -187,33 +187,43 @@ unsigned char *lang, *cptr;
 			switch(*cptr)							/* Check if sign byte set to positive	*/
 			{								/* using Wang values.			*/
 				case 0xF0:
+				case 0xC0:
 					*cptr = '0';					/* Convert positive 0, 0xF0 to 0x30	*/
 					break;
 				case 0xF1:
+				case 0xC1:
 					*cptr = '1';					/* Convert positive 1, 0xF1 to 0x31	*/
 					break;
 				case 0xF2:
+				case 0xC2:
 					*cptr = '2';					/* Convert positive 2, 0xF2 to 0x32	*/
 					break;
 				case 0xF3:
+				case 0xC3:
 					*cptr = '3';					/* Convert positive 3, 0xF3 to 0x33	*/
 					break;
 				case 0xF4:
+				case 0xC4:
 					*cptr = '4';					/* Convert positive 4, 0xF4 to 0x34	*/
 					break;
 				case 0xF5:
+				case 0xC5:
 					*cptr = '5';					/* Convert positive 5, 0xF5 to 0x35	*/
 					break;
 				case 0xF6:
+				case 0xC6:
 					*cptr = '6';					/* Convert positive 6, 0xF6 to 0x36	*/
 					break;
 				case 0xF7:
+				case 0xC7:
 					*cptr = '7';					/* Convert positive 7, 0xF7 to 0x37	*/
 					break;
 				case 0xF8:
+				case 0xC8:
 					*cptr = '8';					/* Convert positive 8, 0xF8 to 0x38	*/
 					break;
 				case 0xF9:
+				case 0xC9:
 					*cptr = '9';					/* Convert positive 9, 0xF9 to 0x39	*/
 					break;
 				default:
@@ -227,3 +237,12 @@ unsigned char *lang, *cptr;
 			break;
 	}
 }
+/*
+**	History:
+**	$Log: fxzone.c,v $
+**	Revision 1.7  1996-08-19 18:32:22-04  gsl
+**	drcs update
+**
+**
+**
+*/

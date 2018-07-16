@@ -1,45 +1,83 @@
-			/************************************************************************/
-			/*									*/
-			/*		WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
-
+static char copyright[]="Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
-**	vdisplay.c
+**	File:		vdisplay.c
+**
+**	Project:	wisp/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Replacement for Wang DISPLAY untility
+**
+**	Routines:	
+**	vdisplay()		Setup processing of file.
+**	get_line()		Compose an input line
+**	display_buffer()	Display correct size of buffer
+**	eof_trailer()		Write the start of file header
+**	eop_indicator()		Write the page break indicator
+**	str_insert()		Insert a string in another string
+**	show_help()		Show the help screen
+**	rep_limit()		Report the limit of upward scroll
+**	clear_window()		Subroutine to clear the help area
+**	work_message()		Display the working message
+**	roll_up()		Scroll up one line
+**	roll_down()		Scroll down one line
+**	roll_left_right()	Scroll left or right
+**	set_scroll_buffer()	Set pointer to buffer to be at the current scroll column
+**	add_tab_cols()
+**	on_screen()		Is the text on the screen
+**	stx()			Get string index in another string
+**	in_file() 		Search for string text within file
+**	scr_refresh()		Refresh screen from line buffers
+**	adjust_buffers()	Adjust buffer address to reflect what is really on the screen
+**	full_screen_refresh()
+**	derror()		Error message reporting routine
+**	gets0()
+**	get_pos()		Get the position of a record
+**	mem_err()		Memory error - could not allocate
+**
 */
 
-/*					Include files and definitions.								*/
+/*
+**	Includes
+*/
 
 #include <stdio.h>
-#include <ctype.h>
-
-#ifndef unix	/* VMS or MSDOS */
 #include <stdlib.h>
-#endif
-#ifndef VMS	/* unix or MSDOS */
-#include <malloc.h>
+#include <ctype.h>
+#include <stdlib.h>
 #include <string.h>
-#include <memory.h>
-#endif
 
-#include <v/video.h>
-#include <v/vlocal.h>
-#include <v/vdata.h>
-#include <v/vcap.h>
+#include "video.h"
+#include "vlocal.h"
+#include "vdata.h"
+#include "vcap.h"
 
 #include "idsistd.h"
 #include "werrlog.h"
 #include "wperson.h"
 #include "scnfacs.h"
 #include "wanguid.h"
+#include "idsisubs.h"
+#include "costar.h"
+#include "osddefs.h"
+#include "wexit.h"
+#include "wisplib.h"
+#include "filext.h"
+#include "wispcfg.h"
+#include "vwang.h"
+#include "wsb.h"
 
 #ifdef INCLUDE_VDISPIDX
 # include "vdispidx.h"
 #endif
+
+/*
+**	Structures and Defines
+*/
+#define EDIT_VMODE		(VMODE_REVERSE|VMODE_UNDERSCORE)
+#define MESSAGE_VMODE		(VMODE_REVERSE)
+#define HIGH_MESSAGE_VMODE	(VMODE_REVERSE|VMODE_UNDERSCORE)
 
 #define CHAR_CTRL_U	'\025'
 #define CHAR_DEL	'\177'
@@ -54,7 +92,7 @@
 #define POSITION_TABLE_SIZE	1000							/* Number of lines for reverse scroll.	*/
 #define PAGE_SCROLL_LINES	18							/* Number of lines for a page scroll.	*/
 #define PAGE_SCROLL_COLS	20							/* Number of lines for a column scroll. */
-#define BUFFER_SIZE		255							/* Maximum buffer size.			*/
+#define BUFFER_SIZE		265							/* Maximum buffer size.			*/
 #define TAB_SPACE_COUNT		8							/* Number of spaces equal to tab char.	*/
 
 #define WINDOW_TOP	9								/* Top line of window area.		*/
@@ -69,15 +107,18 @@
 #define CHECK_INTERVAL	200								/* Number of lines between checking	*/
 #endif
 
-#ifdef MSDOS
-char *wanguid3();
-#endif
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
 
 #ifdef VMS
 static int first_char = TRUE;
 #endif
 
-extern char WISPFILEXT[39];
 static int errmsg_active = FALSE;							/* Error message is on the screen.	*/
 static int rvrs_scroll_avail = TRUE;							/* Set reverse scroll available.	*/
 static int frwd_scroll_avail = TRUE;							/* Set forward scroll available.	*/
@@ -85,61 +126,82 @@ static int ff_flag = FALSE;								/* Flag for FF found.			*/
 static int stream_active;								/* Flag for stream mode display.	*/
 static int status_active;								/* Status message is on the screen.     */
 static int frow, fcol;									/* Current row in file.			*/
-static char *ssave;									/* Save the status unerneath.		*/
+static unsigned char *ssave;								/* Save the status unerneath.		*/
 
 static char srch_ch_map[256];
 static int srch_len;
 static FILE *input_file;								/* File control pointers.		*/
 
-static int get_line();
-static int display_buffer();
-static int eof_trailer();
-static int show_help();
-static int rep_limit();
-static int clear_window();
-static int work_message();
-static int roll_up();
-static int roll_down();
-static int roll_left_right();
-static int set_scroll_buffer();
-static int stx();
-static int in_file();
-static int scr_refresh();
-static int full_screen_refresh();
-static int derror();
-static int gets0();
-static int mem_err();
-static int check_empty();
-static int display_stat();
-static int eop_indicator();
-static int str_insert();
-static int add_tab_cols();
-static int adjust_buffers();
-static int get_pos();
+static int use_costar_flag = 0;								/* Is COSTAR active?			*/
 
-vdisplay(file_name,record_size)								/* VIDEO file display subroutine.	*/
-char *file_name;
-int record_size;
+static int edit_vmode = EDIT_VMODE;
+static int message_vmode = MESSAGE_VMODE;
+static int high_message_vmode = HIGH_MESSAGE_VMODE;
+
+static int display_high_chars = 0;							/* Display 8-bit chars flag		*/
+static int nativecharmap = 0;		/* Do CHARMAP substitution (1=Native char set, 0=Wang char set)		*/
+
+/*
+**	Static Function Prototypes
+*/
+
+static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize,FILE *input_file);
+static void display_buffer(char *lb);							/* Display correct size of buffer.	*/
+static void eof_trailer(char *lb, const char *file_name, int bufsize);			/* Write the start of file header.	*/
+static void eop_indicator(char *lb, int bufsize);					/* Write the page break indicator.	*/
+static void str_insert(char *target, const char *source);				/* Insert a string in another string.	*/
+static void show_help(const char *file_name, int options12);				/* Show the help screen.		*/
+static void rep_limit(void);								/* Report the limit of upward scroll.	*/
+static void clear_window(char *lbuf[],int roll_cnt,int bufsize);			/* Subroutine to clear the help area.	*/
+static int work_message(int on);							/* Display the working message.		*/
+static int roll_up(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *pto,int bufsize,FILE *input_file,
+                   int *tx,int *lc,int send_out,int roll_cnt);
+static void roll_down(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *pto,int bufsize,FILE *input_file,
+                 int *tx,int *lc,int *eofile,int roll_cnt);
+static void roll_left_right(char *lbuf[], int4 fpos_tab[], int bufsize,FILE *input_file,int *eorec,int roll_cnt);
+static void set_scroll_buffer(int roll_cnt, char *lb, int bufsize);
+static int add_tab_cols(int col);
+static int on_screen(char *search_text, char *lbuf[], int4 fpos_tab[],int4 *pt, int bufsize,
+			FILE *input_file,int *tx,int *lc,int *eofile,int *eorec,int *roll_cnt);
+static int stx(char *string, char *mask);						/* Get string index in another string.	*/
+static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *pto,
+                   int bufsize,FILE *input_file,int *tx,int *lc,int *eofile,int *eorec,int *roll_cnt);
+static void scr_refresh(char *lbuf[],int4 fpos_tab[],int lines,int bufsize,int roll_cnt);
+static void adjust_buffers(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int direction);
+static void full_screen_refresh(char *lbuf[], int row,int col);
+static void derror(char *text);								/* Error message reporting routine	*/
+static int gets0(char *string, int count);
+static int4 get_pos(FILE *input_file);							/* Get the position of a record.	*/
+static void mem_err(void);								/* Memory error - could not allocate	*/
+static int check_empty(const char *file_name);						/* See if the file is empty.		*/
+static void display_stat(int dwidth);							/* Display cursor row, col and width.	*/
+
+
+
+int vdisplay(const char *file_name,int record_size)					/* VIDEO file display subroutine.	*/
 {
 #define		ROUTINE		66500
-	unsigned char *lb, *lbuf[MAX_LINES_PER_SCREEN];					/* Pointer to the line input buffer.	*/
+	char *lb, *lbuf[MAX_LINES_PER_SCREEN];						/* Pointer to the line input buffer.	*/
 	int bufsize;									/* Size of the line buffer.		*/
 	int eofile;									/* End of file flag.			*/
 	int eorec;									/* End of record flag.			*/
-	int op_save;									/* Save optimization level.		*/
+	enum e_vop op_save;								/* Save optimization level.		*/
 	int win_active;									/* Flag to track overlay window.	*/
+	int options12_active;								/* The pfkeys12() options window active	*/
 	int err_just_removed, win_just_removed;						/* Flags indicating just removed.	*/
 	int viewing;									/* Flag that viewing is takeing place.	*/
 	int restart_requested;								/* Flag that a restart is requested.	*/
 	int new_size_requested;								/* Flag that a new size is requested.	*/
 	int first_time;									/* First time help control flag.	*/
-	int4 fpos_tab[MAX_LINES_PER_SCREEN];						/* Position of each line in the file.	*/
+	int4 fpos_tab[MAX_LINES_PER_SCREEN];						/* Position of each line of the screen.	*/
+	int4 fpoff_tab[MAX_LINES_PER_SCREEN];						/* Posn offset of each line of screen.	*/
 	int4 postab[POSITION_TABLE_SIZE];						/* Allocate the position table.		*/
+	int4 pofftab[POSITION_TABLE_SIZE];						/* Allocate the position offset table.	*/
 	int tx;										/* Current table index.			*/
 	int lc;										/* Count of lines in position table.	*/
 	int text_defined;								/* Search text defined flag.		*/
 	int search_abort, term_status;							/* Search has been aborted		*/
-	unsigned char search_text[SEARCH_TEXT_SIZE+2];					/* Storage for the searc text.		*/
+	char search_text[SEARCH_TEXT_SIZE+2];						/* Storage for the searc text.		*/
 	char search_num[SEARCH_NUM_SIZE+2];						/* Storage for the number text.		*/
 	int scrl_col_cnt;								/* Scroll column index count.		*/
 	register int j,c;								/* Some working registers.		*/
@@ -147,40 +209,69 @@ int record_size;
 	int	check_time;
 	int4	def_bgchange, def_bgcolor;
 
-	int type;
-
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
 	stream_active = FALSE;								/* Set default mode.			*/
 	status_active = FALSE;
 	ssave = NULL;
 
+	vwang_set_videocap();
+	
+	/*
+	**	Note: Text data will either be in the "Native" character set
+	**	or in the "Wang" character set.
+	*/
+	vwang_load_charmap(0);
+	if (get_wisp_option("NATIVECHARMAP"))
+	{
+		nativecharmap = 1;
+	}
+	else
+	{
+		display_high_chars = wispdisplay8bit();
+	}
+	
+
+#ifdef COSTAR
+	use_costar_flag = use_costar();
+	if (use_costar_flag)
+	{
+		edit_vmode = VMODE_UNDERSCORE;
+		message_vmode = VMODE_BOLD;
+		high_message_vmode = VMODE_BOLD;
+	}
+#endif
+
 	if (check_empty(file_name))							/* Check to see if empty file.		*/
 	{
-		char *screen, function, lines, term[2], no_mod;
-		char templine[80];
-		int pos;
+		HWSB	hWsb;
+		int	pfkey, currow, curcol;
+		char 	templine[80];
+		char	*ptr;
 
-		if ((screen = malloc(1924+8)) == 0) mem_err();				/* Able to get memory?			*/
-		wsc_init(screen,0,0);							/* Initialize the screen layout.	*/
+		currow = 0;
+		curcol = 0;
+		hWsb = wsb_new();
 
-		wput(screen,2,26,PLAIN_TEXT,"Active Subprogram is DISPLAY");
-		wput(screen,3,21,UNDER_TEXT,"                                      ");
-		wput(screen,6,37,BLINK_TEXT,"SORRY");					/* Layout the screen.			*/
+		wsb_add_text(hWsb,2,26,"Active Subprogram is DISPLAY");
+		wsb_add_field(hWsb,3,21,UNDER_TEXT,ptr="                                      ",strlen(ptr));
+		wsb_add_field(hWsb,6,37,BLINK_TEXT,ptr="SORRY",strlen(ptr));
 		memset(templine,0,sizeof(templine));
 		sprintf(templine,"File:  %s",file_name);
-		wput(screen,9,20,PLAIN_TEXT,templine);
-		wput(screen,11,20,PLAIN_TEXT,"File specified contains zero records");
-		wput(screen,14,25,PLAIN_TEXT,"Press PF16 to end DISPLAY");
+		wsb_add_text(hWsb,9,20,templine);
+		wsb_add_text(hWsb,11,20,"File specified contains zero records");
+		wsb_add_text(hWsb,14,25,"Press (ENTER) to end DISPLAY");
 
-		function = 3;								/* Use display and read.		*/
-		lines = 24;
-		vwang(&function,screen,&lines,"A",term,&no_mod);			/* Call Wang emulation to fill screen.	*/
+		wsb_display_and_read(hWsb, "00X", &pfkey, &currow, &curcol);
 
-		free(screen);
+		wsb_delete(hWsb);
+		
 		return(SUCCESS);
 	}
+
 #ifdef INCLUDE_VDISPIDX
+	{
+	int type;
 	type = vdisp_file_type(file_name);
 	if (type == VD_ERR_OPEN || type == VD_ERR_READ)
 	{
@@ -190,15 +281,18 @@ int record_size;
 	if (type!=VD_TYPE_TEXT)
 	{
 		vdispidx(file_name,type);
-		return 0;
+		return SUCCESS;
+	}
 	}
 #endif
+
 	if ((record_size < 0) || (record_size > 512))					/* Is record size valid.		*/
 	{										/* Oops, invalid record size.		*/
 		werrlog(ERRORCODE(2),record_size,0,0,0,0,0,0,0);
 		vexit();								/* Unconditional exit.			*/
 		wexit(ERRORCODE(2));
 	}
+
 #ifdef VMS
 	if (record_size != 0 && record_size > BUFFER_SIZE) record_size = BUFFER_SIZE;	/* If an executable then use maximum.	*/
 #endif
@@ -211,30 +305,24 @@ int record_size;
 
 	vcapload();
 
-	if ( vcapdef[LINES] && *((int *)vcapdef[LINES]) == 25 )				/* is there a 25th line			*/
-	{
-		frwd_scroll_avail = FALSE;						/* Can't use forward scroll		*/
-	}
-	if (vcapnull(rvrsidx_esc, "SCROLL_REVERSE",0)) 
-	{
-		rvrs_scroll_avail = FALSE;						/* There is no reverse scroll		*/
-	}
+	frwd_scroll_avail = vscroll_frwd_avail();
+	rvrs_scroll_avail = vscroll_rvrs_avail();
 
 	wpload();
 
 	first_time = TRUE;								/* First time only true the 1st time.	*/
-	op_save = voptimize(DATA_CONTROLS_AND_MOTION);					/* Select deferred optimization.	*/
+	op_save = voptimize(VOP_DEFER_MOTION_ONLY);					/* Select deferred optimization.	*/
 
 newsize:
 	text_defined = FALSE;
 
 #ifdef VMS
-	if ((record_size > 0) && (record_size <= 80)) vscreen(NARROW);			/* Set the narrow parameters.		*/
-	else vscreen(WIDE);								/* Set the wide parameters.		*/
+	if ((record_size > 0) && (record_size <= 80)) vscreen(VSCREEN_NARROW);		/* Set the narrow parameters.		*/
+	else vscreen(VSCREEN_WIDE);							/* Set the wide parameters.		*/
 #else
-	vscreen(NARROW);								/* Select a narrow screen unless VMS.	*/
+	vscreen(VSCREEN_NARROW);							/* Select a narrow screen unless VMS.	*/
 #endif
-
+	
 	/*
 	**	NOTE:	On UNIX and MSDOS the record_size will ALWAYS come in as 0 because
 	**		there is no "record size".  This is to indicate a "stream" file
@@ -249,21 +337,18 @@ newsize:
 	if (def_bgchange)								/* Set the screen background if		*/
 	{										/* not done already.			*/
 		get_defs(DEFAULTS_BGCOLOR,(char*)&def_bgcolor);
-		if (def_bgcolor) vscreen(LIGHT);
-		else vscreen(DARK);
+		if (def_bgcolor) vscreen(VSCREEN_LIGHT);
+		else vscreen(VSCREEN_DARK);
 	}
+	verase(FULL_SCREEN);
 
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Allocate a screens worth of buffers. */
 	{
-		if ((lbuf[i] =(unsigned char*)malloc(bufsize+1+8)) == 0) mem_err();	/* Allocate a line buffer.		*/
+		if ((lbuf[i] = malloc(bufsize+1+8)) == 0) mem_err();			/* Allocate a line buffer.		*/
 	}
 
-#ifdef MSDOS
-	if ((input_file = fopen(file_name,"rb")) == NULL)				/* Did the file open?			*/
-#else /* !MSDOS */
-	if ((input_file = fopen(file_name,"r")) == NULL)				/* Did the file open?			*/
-#endif /* !MSDOS */
-	{
+	if ((input_file = fopen(file_name,FOPEN_READ_BINARY)) == NULL)		       	/* Did the file open?			*/
+	{                                                             
 		werrlog(ERRORCODE(6),file_name,0,0,0,0,0,0,0);
 		return(FAILURE);							/* It is fatal so return with error.	*/
 	}
@@ -288,18 +373,23 @@ again:
 		memset(lb,' ',bufsize);							/* Copy spaces to buffer.		*/
 		lb[bufsize] = CHAR_NULL;						/* Default a null at the end of line.	*/
 		fpos_tab[i] = 0;							/* Set all lines to start of file.	*/
+		fpoff_tab[i] = 0;
 	}
 
-	for (i = 0; i < POSITION_TABLE_SIZE; i++) postab[i] = 0;			/* Set it all to zero.			*/
+	for (i = 0; i < POSITION_TABLE_SIZE; i++)
+	{
+		postab[i] = 0;								/* Set it all to zero.			*/
+		pofftab[i] = 0;
+	}
 	tx = 0;										/* Set the table index to the start.	*/
 	lc = 0;										/* There are no lines in the table.	*/
 	scrl_col_cnt = 0;								/* Have not scrolled left or right yet. */
 
-	vbuffering(LOGICAL);								/* Logical buffering on.		*/
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vcharset(DEFAULT);								/* Default character set.		*/
+	vbuffering_start();		       						/* Logical buffering on.		*/
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vcharset(VCS_DEFAULT);								/* Default character set.		*/
 	vmove(0,0);									/* Home the cursor.			*/
-	vset(CURSOR,ON);								/* Turn it on.				*/
+	vset_cursor_on();								/* Turn it on.				*/
 
 	eofile = FALSE;									/* Not end of file yet.			*/
 	eorec = FALSE;									/* Assume not end of record yet.	*/
@@ -310,7 +400,21 @@ again:
 											/* Test first char to see what file type.*/
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Read in the first screen's worth.	*/
 	{
-		eofile = get_line(lbuf[i],&fpos_tab[i],bufsize,input_file);		/* Get the string.			*/
+		eofile = get_line(lbuf[i],&fpos_tab[i],&fpoff_tab[i],bufsize,input_file); /* Get the string.			*/
+#ifdef VMS
+		if (i > 0)
+		{
+			if (fpos_tab[i] == fpos_tab[i-1])				/* If ftell() returns same position.	*/
+			{
+				fpoff_tab[i] = fpoff_tab[i-1];
+				fpoff_tab[i-1] = 0;
+			}
+			else if (fpoff_tab[i] > 132)
+			{
+				fpoff_tab[i] = 0;
+			}
+		}
+#endif
 		if (eofile)
 		{
 			if (*lbuf[i] != '\0')
@@ -334,6 +438,7 @@ again:
 		if (i < MAX_LINES_PER_SCREEN)
 		{
 			fpos_tab[i] = -1;						/* Indicate end of file position.	*/
+			fpoff_tab[i] = 0;
 			eof_trailer(lb,file_name,bufsize);				/* Write out the eof banner		*/
 		}
 
@@ -350,6 +455,7 @@ again:
 		first_time = FALSE;							/* No longer the first time.		*/
 	}
 	win_active = FALSE;								/* No need to activate help.		*/
+	options12_active = FALSE;
 	win_just_removed = FALSE;							/* Window has not just been removed.	*/
 	err_just_removed = FALSE;							/* Error message not just removed.	*/
 
@@ -368,23 +474,63 @@ again:
 
 		c = vgetm();								/* Get a character.			*/
 
+		/*
+		**	Translate pfkeys when in pfkeys12() mode.
+		**	
+		**	12 -> 16	Exit key
+		**	11 -> 17	Options key (Toggle between HELP and OPTIONS window)
+		**
+		**	Options key mode
+		**	6  -> 11	Change width
+		**	7  -> 12	Toggle status
+		**	8  -> 13	Stream mode
+		**	9  -> 14	Print screen
+		**	10 -> 15	Print file
+		**	11 -> help	Toggle to HELP
+		*/
+		if (pfkeys12())
+		{
+			if (c == fn12_key)
+			{
+				c = fn16_key;
+			}
+			else if (options12_active)
+			{
+				switch(c)
+				{
+				case fn6_key:	c = fn11_key;	break;
+				case fn7_key:	c = fn12_key;	break;
+				case fn8_key:	c = fn13_key;	break;
+				case fn9_key:	c = fn14_key;	break;
+				case fn10_key:	c = fn15_key;	break;
+				case fn11_key:	c = help_key;	break;
+				}
+			}
+			else if (c == fn11_key)
+			{
+				c = fn17_key;
+			}
+		}
+		
+
 		if (win_active)								/* Is anything over written?		*/
 		{
 			clear_window(lbuf,scrl_col_cnt,bufsize);			/* Clear away the area.			*/
 			win_active = FALSE;						/* Help is no longer active.		*/
+			options12_active = FALSE;
 			win_just_removed = TRUE;					/* Window has just been removed.	*/
 		}
 
 		if (errmsg_active)							/* Is there an error message visible?	*/
 		{
 			j = MAX_LINES_PER_SCREEN-1;					/* Determine the text location.		*/
-			vstate(SAVE);							/* Save what is going on.		*/
-			vmode(CLEAR);							/* Clear the current mode.		*/
-			vcharset(DEFAULT);						/* Default character set.		*/
+			vstate(VSTATE_SAVE);						/* Save what is going on.		*/
+			vmode(VMODE_CLEAR);						/* Clear the current mode.		*/
+			vcharset(VCS_DEFAULT);						/* Default character set.		*/
 			vmove(MAX_LINES_PER_SCREEN-1, 0);				/* Move to error area.			*/
 			lb = lbuf[j];							/* Get pointer to buffer.		*/
 			set_scroll_buffer(scrl_col_cnt,lb,bufsize);			/* Set ptr and display buffer.		*/
-			vstate(RESTORE);						/* Restore where we were.		*/
+			vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
 			errmsg_active = FALSE;						/* Now no error on the screen.		*/
 			err_just_removed = TRUE;					/* Error message just removed.		*/
 		}
@@ -425,7 +571,8 @@ again:
 			}
 			else								/* No, so scroll a line.		*/
 			{
-				eofile = roll_up(lbuf,fpos_tab,postab,bufsize,input_file,&tx,&lc,1,scrl_col_cnt);
+				eofile = roll_up(lbuf,fpos_tab,fpoff_tab,postab,pofftab,
+                                                 bufsize,input_file,&tx,&lc,1,scrl_col_cnt);
 				if (eofile) derror("End of file encountered, no action performed.");
 				else if (!frwd_scroll_avail)				/* In no forward scroll then need to	*/
 				{							/* display manually.			*/
@@ -451,7 +598,8 @@ again:
 			}
 			else 
 			{
-				roll_down(lbuf,fpos_tab,postab,bufsize,input_file,&tx,&lc,&eofile,scrl_col_cnt);
+				roll_down(lbuf,fpos_tab,fpoff_tab,postab,pofftab,bufsize,
+                                          input_file,&tx,&lc,&eofile,scrl_col_cnt);
 				if (!rvrs_scroll_avail)					/* In no reverse scroll then need to	*/
 				{							/* display manually.			*/
 					full_screen_refresh(lbuf,0,vcur_col);		/* Move cursor to top of screen.	*/
@@ -515,7 +663,8 @@ again:
 				{
 					if (lc > 0)					/* If the lines in scroll buffer	*/
 					{
-						roll_down(lbuf,fpos_tab,postab,bufsize,input_file,&tx,&lc,&eofile,scrl_col_cnt);
+						roll_down(lbuf,fpos_tab,fpoff_tab,postab,pofftab,bufsize,
+                                                          input_file,&tx,&lc,&eofile,scrl_col_cnt);
 						frow--;
 					}
 				}
@@ -555,7 +704,8 @@ again:
 			{
 				for (i = 0; (i < PAGE_SCROLL_LINES) && !eofile; i++)	/* Scroll that many times.		*/
 				{
-					eofile = roll_up(lbuf,fpos_tab,postab,bufsize,input_file,&tx,&lc,1,scrl_col_cnt);
+					eofile = roll_up(lbuf,fpos_tab,fpoff_tab,postab,pofftab,
+                                                         bufsize,input_file,&tx,&lc,1,scrl_col_cnt);
 					if (!eofile)
 					{
 						frow++;
@@ -569,16 +719,16 @@ again:
 			}
 		}
 
-#ifndef MSDOS
+#if defined(unix) || defined(VMS)
 		else if (c == fn6_key)							/* Change width of screen.		*/
 		{
 			int cl;
 
 			cl = vcur_lin;
 			vmove(0,0);							/* Home before changing.		*/
-			vdefer(RESTORE);						/* Restore from deferred actions.	*/
-			if (vscr_wid == 132) vscreen(NARROW);				/* Set narrow?				*/
-			else vscreen(WIDE);						/* No, then set wide.			*/
+			vdefer_restore();						/* Restore from deferred actions.	*/
+			if (vscr_wid == 132) vscreen(VSCREEN_NARROW);			/* Set narrow?				*/
+			else vscreen(VSCREEN_WIDE);					/* No, then set wide.			*/
 #ifdef unix
 			sleep(1);							/* Delay to allow screen width change	*/
 #endif
@@ -595,10 +745,12 @@ again:
 
 			if (c == fn7_key)						/* Define search text?			*/
 			{
-				vstate(SAVE);						/* Save where we are in the text.	*/
+				vstate(VSTATE_SAVE);					/* Save where we are in the text.	*/
 				vmove(0,0);						/* Home.				*/
-				vmode(REVERSE);						/* Use the reverse rendition.		*/
-				vprint(" Search for:                                                                 ");
+				vmode(message_vmode);					/* Use the reverse rendition.		*/
+				vprint(" Search for: ");
+				vmode(edit_vmode);
+				vprint("                                                                ");
 				verase(TO_EOL);						/* Erase to the end of the line.	*/
 				vmove(0,13);						/* Move to the start of input area.	*/
 				i = gets0(search_text,SEARCH_TEXT_SIZE);		/* Get the string to search for.	*/
@@ -613,8 +765,8 @@ again:
 				if (errmsg_active)					/* Is there an error message visible?	*/
 				{
 					j = MAX_LINES_PER_SCREEN-1;			/* Determine the text location.		*/
-					vmode(CLEAR);					/* Clear the current mode.		*/
-					vcharset(DEFAULT);				/* Default character set.		*/
+					vmode(VMODE_CLEAR);				/* Clear the current mode.		*/
+					vcharset(VCS_DEFAULT);				/* Default character set.		*/
 					vmove(MAX_LINES_PER_SCREEN-1, 0);		/* Move to error area.			*/
 					lb = lbuf[j];					/* Get pointer to buffer.		*/
 					set_scroll_buffer(scrl_col_cnt,lb,bufsize);	/* Set ptr and display buffer.		*/
@@ -641,11 +793,11 @@ again:
 					}
 				}
 				vmove(0,0);						/* Return to the start of the line.	*/
-				vmode(CLEAR);						/* Reset the clear rendition.		*/
+				vmode(VMODE_CLEAR);					/* Reset the clear rendition.		*/
 				lb = lbuf[0];						/* Get pointer to buffer.		*/
 				set_scroll_buffer(scrl_col_cnt,lb,bufsize);		/* Set ptr and display buffer.		*/
-				vstate(RESTORE);					/* Restore where we were.		*/
-				vcontrol(DUMP_OUTPUT);					/* Show everything we've done.		*/
+				vstate(VSTATE_RESTORE);					/* Restore where we were.		*/
+				vcontrol_flush();					/* Show everything we've done.		*/
 			}
 
 			if (search_abort) { /* just fall through */ }
@@ -653,8 +805,8 @@ again:
 			else if (on_screen(search_text,lbuf,fpos_tab,postab,bufsize,	/* Is it on the current screen?		*/
 						input_file,&tx,&lc,&eofile,&eorec,&scrl_col_cnt));
 			else if (eofile) derror("Already at end of file, no action performed.");
-			else if (term_status = in_file(search_text,lbuf,fpos_tab,postab,bufsize,input_file,&tx,&lc,
-						&eofile,&eorec,&scrl_col_cnt))
+			else if (term_status = in_file(search_text,lbuf,fpos_tab,fpoff_tab,postab,pofftab,bufsize,input_file,
+                                                       &tx,&lc,&eofile,&eorec,&scrl_col_cnt))
 			{
 				if (term_status == 2) derror("Search aborted.");	/* Search function has been aborted.	*/
 			}
@@ -679,10 +831,11 @@ again:
 				aborted = FALSE;
 				on = 0;							/* Working counters.			*/
 				check_time = 0;
-				vset(CURSOR,OFF);					/* Don't need the cursor for a while.	*/
+				vset_cursor_off();					/* Don't need the cursor for a while.	*/
 				while (!eofile)						/* Loop to find the end of the file.	*/
 				{
-					eofile = roll_up(lbuf,fpos_tab,postab,bufsize,input_file,&tx,&lc,0,scrl_col_cnt);
+					eofile = roll_up(lbuf,fpos_tab,fpoff_tab,postab,pofftab,
+                                                         bufsize,input_file,&tx,&lc,0,scrl_col_cnt);
 					frow++;
 
 					if (check_time++ > CHECK_INTERVAL)		/* Time to update the message?		*/
@@ -698,12 +851,14 @@ again:
 					}
 				}
 
+				if (eofile) frow--;
+
 				ff_flag = FALSE; /* Temp fix to misc highlighting bug */
 
-				vstate(SAVE);						/* Save what we're doing.		*/
+				vstate(VSTATE_SAVE);					/* Save what we're doing.		*/
 				scr_refresh(lbuf,fpos_tab,MAX_LINES_PER_SCREEN,bufsize,scrl_col_cnt); /* Refresh screen.	*/
-				vstate(RESTORE);					/* Restore what we were doing.		*/
-				vset(CURSOR,ON);					/* Now restore the flashing cursor.	*/
+				vstate(VSTATE_RESTORE);					/* Restore what we were doing.		*/
+				vset_cursor_on();					/* Now restore the flashing cursor.	*/
 
 				if (aborted) derror("Move to bottom of file aborted.  Positioned at aborted screen.");
 			}
@@ -759,14 +914,17 @@ again:
 
 		else if (c == fn11_key)							/* Change current buffer size?		*/
 		{									/*  (record length)			*/
-			int tsize, cl;
+			int	cl;
+			int4	tsize;
 
 			cl = vcur_lin;
 			text_defined = FALSE;
-			vstate(SAVE);							/* Save where we are in the text.	*/
+			vstate(VSTATE_SAVE);						/* Save where we are in the text.	*/
 			vmove(0,0);							/* Home.				*/
-			vmode(REVERSE);							/* Use the reverse rendition.		*/
-			vprint(" Enter record length:                                                                 ");
+			vmode(message_vmode);						/* Use the reverse rendition.		*/
+			vprint(" Enter record length: ");
+			vmode(edit_vmode);
+			vprint("                                                                ");
 			verase(TO_EOL);							/* Erase to the end of the line.	*/
 			vmove(0,23);							/* Move to the start of input area.	*/
 			i = gets0(search_num,SEARCH_NUM_SIZE);				/* Get the record length.		*/
@@ -780,17 +938,15 @@ again:
 			if (search_num[0] == CHAR_NULL) text_defined = FALSE;		/* Not defined if nothing entered.	*/
 			if ( text_defined )
 			{
-				tsize = atoi(search_num);
-				if (tsize > BUFFER_SIZE || tsize < 0)			/* Zero is valid; means variable	*/
+				if (field2int4(search_num, strlen(search_num), &tsize))
+				{
+					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
+				}
+				else if (tsize > BUFFER_SIZE || tsize < 0)		/* Zero is valid; means variable	*/
 				{
 					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
 				}
 				else if (strlen(search_num) > SEARCH_NUM_SIZE)
-				{
-					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
-				}
-				else if (isalpha(search_num[0]) || isalpha(search_num[1]) ||
-					 isalpha(search_num[2]) || isalpha(search_num[3]) )
 				{
 					werrlog(ERRORCODE(14),search_num,0,0,0,0,0,0,0,0);
 				}
@@ -804,13 +960,13 @@ again:
 			}
 
 			vmove(0,0);							/* Return to the start of the line.	*/
-			vmode(CLEAR);							/* Reset the clear rendition.		*/
+			vmode(VMODE_CLEAR);						/* Reset the clear rendition.		*/
 			frow = frow - cl;				
 			fcol = 0;
 			lb = lbuf[0];							/* Get pointer to buffer.		*/
 			set_scroll_buffer(scrl_col_cnt,lb,bufsize);			/* Set ptr and display buffer.		*/
-			vstate(RESTORE);						/* Restore where we were.		*/
-			vcontrol(DUMP_OUTPUT);						/* Show everything we've done.		*/
+			vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
+			vcontrol_flush();						/* Show everything we've done.		*/
 		}
 
 		else if (c == fn12_key)							/* Toggle the display of the status line*/
@@ -836,11 +992,16 @@ again:
 			new_size_requested = TRUE;					/* Ask for a new record size.		*/
 			frow = 0;
 			fcol = 0;
+
+			if (stream_active && 0 == record_size)
+			{
+				record_size = 80;
+			}
 		}
 
 		else if (c == fn14_key)							/* Print current screen?		*/
 		{
-			unsigned char *text, *ttxt;
+			char *text, *ttxt;
 			char filelibvol[23];
 			int size;
 			char errstr[80], temp[5];
@@ -849,7 +1010,7 @@ again:
 			linesize = (vscr_wid < bufsize) ? vscr_wid : bufsize;
 
 			size = ((linesize+1+8) * MAX_LINES_PER_SCREEN);			/* Compute the size.			*/
-			if ((text = (unsigned char *)malloc(size)) == 0) mem_err();	/* Allocate a screen buffer.		*/
+			if ((text = malloc(size)) == 0) mem_err();			/* Allocate a screen buffer.		*/
 
 			ttxt = text;
 			for (i = 0; i < MAX_LINES_PER_SCREEN; i++)			/* Init screen buffer to print. */
@@ -868,10 +1029,10 @@ again:
 											/*  to the printer.			*/
 			memset(filelibvol,' ',22);
 			memset(filelibvol,'#',2);
-			memcpy(&filelibvol[2],(char *)wanguid3(),3);
+			memcpy(&filelibvol[2],wanguid3(),3);
 			memset(&filelibvol[5],' ',22-5); /* fix bug */
 			retcd = 0;
-			retcd = di_write_file((char*)text,size,linesize,filelibvol,filelibvol);
+			retcd = di_write_file(text,size,linesize,filelibvol,filelibvol);
 			if (!retcd)
 			{
 				strcpy(errstr,"Current screen has been spooled to printer.");
@@ -893,9 +1054,9 @@ again:
 			char	def_prt_mode, def_prt_class;
 			int4	def_prt_form;
 
-			get_defs(DEFAULTS_PM,(char*)&def_prt_mode);
-			get_defs(DEFAULTS_PC,(char*)&def_prt_class);
-			get_defs(DEFAULTS_FN,(char*)&def_prt_form);
+			get_defs(DEFAULTS_PM,&def_prt_mode);
+			get_defs(DEFAULTS_PC,&def_prt_class);
+			get_defs(DEFAULTS_FN,&def_prt_form);
 
 			retcd = 0;
 			wprint(file_name,def_prt_mode,"DS",1,def_prt_class,def_prt_form,&retcd);
@@ -916,9 +1077,16 @@ again:
 			derror(errstr);
 		}
 
-		else if ((c == help_key) && !win_just_removed)				/* Does he/she want help?		*/
+		else if (c == fn17_key && pfkeys12())					/* Option screen 			*/
 		{
-			show_help(file_name);						/* Yes, so show it.			*/
+			show_help(file_name,1);
+			win_active = TRUE;
+			options12_active = TRUE;
+		}
+		
+		else if (c == help_key)							/* Does he/she want help?		*/
+		{
+			show_help(file_name,0);						/* Yes, so show it.			*/
 			win_active = TRUE;						/* Now help is active.			*/
 		}
 
@@ -933,7 +1101,7 @@ again:
 		vrss(ssave);
 		ssave = NULL;
 	}
-	vbuffering(AUTOMATIC);								/* Dump all buffers.			*/
+	vbuffering_end();								/* Dump all buffers.			*/
 	if (restart_requested) goto again;						/* Start again if requested.		*/
 
 #ifdef NOT_YET
@@ -943,28 +1111,43 @@ again:
 
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++) free(lbuf[i]);			/* Loop through all screen lines.	*/
 	vmove(0,0);									/* Home before changing.		*/
-	vdefer(RESTORE);								/* Restore from deferred states.	*/
+	vdefer_restore();								/* Restore from deferred states.	*/
 	if (new_size_requested) goto newsize;						/* Start again with new record size.	*/
-	vscreen(NARROW);								/* Restore to a narrow screen.		*/
+	vscreen(VSCREEN_NARROW);							/* Restore to a narrow screen.		*/
 #ifdef unix
 	sleep(1);									/* Delay to allow screen width change	*/
 #endif
 	voptimize(op_save);								/* Restore optimization.		*/
-	vcontrol(DUMP_OUTPUT);								/* Dump the buffer.			*/
+	vcontrol_flush();								/* Dump the buffer.			*/
 	return(SUCCESS);								/* Return to the caller.		*/
 }
 
-static int get_line(lb,fpos_ptr,bufsize,input_file)					/* Compose an input line.		*/
-register unsigned char *lb;
-int4 *fpos_ptr;
-int bufsize;
-FILE *input_file;
+/*
+**	Routine:	get_line()
+**
+**	Function:	Compose an input line.
+**
+**	Description:	{Full detailed description}...
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by xxx
+**
+*/
+static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize,FILE *input_file)
 {
-	unsigned char *l_lb;
-	int4 get_pos();								       /* Get file postion routine.	       */
-	int	inpos, outpos, tcnt, num, err;
+	char 	*l_lb;
+	int	inpos, outpos, tcnt, num;
 	int	eoline, eofile;								/* End of line and file flags.		*/
-	register int c;
+	int	c, cnt_off, i=0;
+	unsigned char the_char;
 
 	eofile = FALSE;									/* Assume not end of file.		*/
 	eoline = FALSE;									/* Assume not end of line.		*/
@@ -973,9 +1156,17 @@ FILE *input_file;
 	outpos = 0;									/* Set the output position in buffer.	*/
 	*fpos_ptr = get_pos(input_file);						/* Get the position in the file.	*/
 #ifdef VMS
+	for (i = 0; i < *fpoff_ptr; i++)						/* Step to offset so will display	*/
+	{										/* record format correctly.		*/
+		if ((c = fgetc(input_file)) == EOF)
+		{
+			eofile = TRUE;							/* Get the next character.		*/
+			break;								/* Exit loop				*/
+		}
+	}
 	first_char = TRUE;
 #endif
-
+	cnt_off = 0;									/* Init to 0 for position offset in file*/
 	for (inpos = 0; outpos < bufsize; inpos++)					 /* Loop until full.			 */
 	{
 		if ((c = fgetc(input_file)) == EOF) 
@@ -986,35 +1177,50 @@ FILE *input_file;
 		else									/* There is data left to read.		*/
 		{
 #ifdef VMS
+			cnt_off++;
 			if (first_char && c == CHAR_CR)					/* Fix for BEFORE ADVANCING		*/ 
 			{								/*  (VFC record format)			*/
 				c = fgetc(input_file);					/* Read the next char.			*/
+				cnt_off++;
 				first_char = FALSE;
+                                if (c >= ' ' && c <= '~')				/* A displayable character?		*/
+				{
+					if (c != LNFD)
+					{
+						ungetc(c,input_file);			/* Put char back in file.		*/
+						cnt_off--;
+					}
+					c = CHAR_CR;					/* Set back to CR so displays correctly.*/
+				}
 			}
 #endif
-			if (c >= ' ' && c <= '~')					/* A displayable character?		*/
-			{
-				*(lb++) = c;
-				outpos++;						/* Increment out buffer position.	*/
-			}
-			else if (stream_active)
-			{
-				*(lb++) = '.';						/* Is a non-displayable character.	*/
-				outpos++;						/* Increment out buffer position.	*/
-			}
-			else if (c == LNFD || c == FF || c == CHAR_CR)
+
+			the_char = c;
+
+			/*
+			**	In STREAM MODE all control characters are displayed instead
+			**	of being acted on.
+			*/
+
+			if (!stream_active && (c == LNFD || c == FF || c == CHAR_CR))
 			{
 				eoline = TRUE;						/* Is newline character or page break?	*/
 				if (c == CHAR_CR)
 				{
 					c = fgetc(input_file);				/* Read the next char.			*/
-					if (c != LNFD) ungetc(c,input_file);		/* Put char back in file.		*/
+					cnt_off++;
+					if (c != LNFD)
+					{
+						ungetc(c,input_file);			/* Put char back in file.		*/
+						cnt_off--;
+					}
 				}
 				else if (c == FF)
 				{
 					if (inpos > 0)					/* If have stuff in buffer.		*/
 					{
 						ungetc(c,input_file);			/* Put char back in file.		*/
+						cnt_off--;
 					}
 					else
 					{
@@ -1022,13 +1228,19 @@ FILE *input_file;
 						eop_indicator(lb,bufsize);		/* Init form feed indicator.		*/
 						ff_flag = TRUE;
 						c = fgetc(input_file);			/* Read the next char.			*/
-						if (c != LNFD) ungetc(c,input_file);	/* Put char back in file.		*/
+						cnt_off++;
+						if (c != LNFD)
+						{
+							ungetc(c,input_file);		/* Put char back in file.		*/
+							cnt_off--;
+						}
+						*fpoff_ptr = cnt_off;			/* Set offset for current line in file.	*/
 						return(eofile);				/* Return the end of file status.	*/
 					}
 				}
 				break;							/* Exit the loop			*/
 			}
-			else if (c == '\t')						/* Is it a tab character?		*/
+			else if (!stream_active && c == '\t')				/* Is it a tab character?		*/
 			{
 				num = add_tab_cols(outpos);				/* Get number of chars for tab char.	*/
 				if (num + outpos >= bufsize)				/* Check if have room in buffer.	*/
@@ -1042,20 +1254,51 @@ FILE *input_file;
 					outpos++;					/* Increment out buffer position.	*/
 				}
 			}
-			else if (c == CHAR_DEL);					/* Ignore delete character.		*/
-			else if (c == '\b')
+			else if (!stream_active && c == '\b')
 			{
 				*(lb++) = c;						/* Insert back space characters.	*/
 				outpos++;						/* Increment out buffer position.	*/
 			}
-			else if (c == CHAR_BELL)
-			{
-				*(lb++) = c;						/* Insert bell characters.		*/
-				outpos++;						/* Increment out buffer position.	*/
-			}
 			else
 			{
-				*(lb++) = '.';						/* else is a non-displayable character. */
+				/*
+				**	If NATIVECHARMAP then sub from ansi thru wang to term.
+				**	This takes presidence over DISPLAY8BIT.
+				*/
+				if (nativecharmap)	/* Using Native character set */
+				{
+					vwang_ansi2wang(&the_char, 1);
+					vwang_wang2term(&the_char, 1);
+				}
+				else 			/* Using Wang character set */
+				{
+					if (the_char >= 128 && !display_high_chars)
+					{
+						/*
+						**	If an 8-bit char and we are not displaying them
+						**	then replace with a '.'.
+						*/
+						the_char = '.';
+					}
+					else
+					{
+						vwang_wang2term(&the_char, 1);
+					}
+				}
+
+				if (terminal_control_char(the_char))
+				{
+					/*
+					**	Control characters display as '.'
+					*/
+
+					*(lb++) = '.';
+				}
+				else
+				{
+					*(lb++) = the_char;
+				}
+
 				outpos++;						/* Increment out buffer position.	*/
 			}
 		}
@@ -1063,15 +1306,15 @@ FILE *input_file;
 
 	memset(lb,' ',bufsize - outpos);
 	l_lb[bufsize] = CHAR_NULL;
-
 	*lb = CHAR_NULL;								/* Default a null at the end of line.	*/
+
+	*fpoff_ptr = cnt_off;								/* Set offset for current line in file.	*/
 	return(eofile);									/* Return the end of file status.	*/
 }
 
-static display_buffer(lb)								/* Display correct size of buffer.	*/
-unsigned char *lb;									/* Stuff NULL into correct pos.		*/
+static void display_buffer(char *lb)							/* Display correct size of buffer.	*/
 {
-	unsigned char *clb;
+	char *clb;
 	char csave;									/* Variable to hold saved character.	*/
 	int pos, np, erasefl, md_save;
 
@@ -1092,7 +1335,7 @@ unsigned char *lb;									/* Stuff NULL into correct pos.		*/
 	md_save = vcur_atr;								/* Save the current mode.		*/
 	if (ff_flag)
 	{
-		vmode(BOLD);
+		vmode(VMODE_BOLD);
 		ff_flag = FALSE;
 	}
 	vprint("%s",lb);								/* Display the line.			*/
@@ -1101,37 +1344,35 @@ unsigned char *lb;									/* Stuff NULL into correct pos.		*/
 	vmode(md_save);									/* Put back to what it was.		*/
 }
 
-static eof_trailer(lb,file_name,bufsize)						/* Write the start of file header.	*/
-unsigned char *lb, *file_name;
-int bufsize;
+static void eof_trailer(char *lb, const char *file_name, int bufsize)			/* Write the start of file header.	*/
 {
+	int	pos;
+	
 	memset(lb,'-',bufsize);								/* Store spaces across the line.	*/
-	str_insert(&lb[20],"This is the end of ");					/* Insert header message.		*/
-	str_insert(&lb[39],file_name);							/* Insert the file name.		*/
-	vmode(CLEAR);									/* Clear the rendition flag.		*/
+	pos = (80 - (strlen(file_name) + 13))/2;
+	pos = (pos < 2) ? 2 : pos;
+	str_insert(&lb[pos],"End of file: ");						/* Insert header message.		*/
+	str_insert(&lb[pos+13],file_name);						/* Insert the file name.		*/
+	vmode(VMODE_CLEAR);								/* Clear the rendition flag.		*/
 	display_buffer(lb);								/* Display the line.			*/
 }
 
-static eop_indicator(lb,bufsize)							/* Write the page break indicator.	*/
-unsigned char *lb;
-int bufsize;
+static void eop_indicator(char *lb, int bufsize)					/* Write the page break indicator.	*/
 {
 	memset(lb,'-',bufsize);								/* Copy dashes to buffer.		*/
 	lb[bufsize-1] = '\0';								/* Null terminate the string.		*/
 }
 
-static str_insert(target,source)							/* Insert a string in another string.	*/
-unsigned char *target, *source;
+static void str_insert(char *target, const char *source)				/* Insert a string in another string.	*/
 {
 	while(*source != CHAR_NULL) *(target++) = *(source++);				/* Loop until end of string null.	*/
 }
 
-static show_help(file_name)								/* Show the help screen.		*/
-char *file_name;
+static void show_help(const char *file_name, int options12)				/* Show the help screen.		*/
 {
 	int lhs;									/* Define location of the help window.	*/
 	int columns;									/* Define size of the help window.	*/
-	unsigned char string[65];							/* Working string.			*/
+	char string[65];								/* Working string.			*/
 	char l_filen[256], *lptr;							/* Local copy of file_name.		*/
 	register int i;									/* Working counter.			*/
 	int len;
@@ -1141,15 +1382,15 @@ char *file_name;
 	columns = 62;									/* The help area is 62 columns wide.	*/
 	lhs = (vscr_wid - columns)/2;							/* Center the help screen.		*/
 
-	vstate(-1);									/* Save the current screen state.	*/
+	vstate(VSTATE_SAVE);								/* Save the current screen state.	*/
 	vmove(WINDOW_TOP-1,lhs-1);							/* Draw the outline box.		*/
-	vline(VERTICAL,WINDOW_ROWS+2);
+	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
 	vmove(WINDOW_TOP-1,lhs-1+columns);
-	vline(VERTICAL,WINDOW_ROWS+2);
+	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
 	vmove(WINDOW_TOP-1,lhs-1);
-	vline(HORIZONTAL,columns+1);
+	vline(VLINE_HORIZONTAL,columns+1);
 	vmove(WINDOW_TOP+WINDOW_ROWS,lhs-1);
-	vline(HORIZONTAL,columns+1);
+	vline(VLINE_HORIZONTAL,columns+1);
 
 	for (i = 0; i < 64; i++) string[i] = ' ';					/* Initialize the working string.	*/
 	str_insert(&string[2],"Displaying file");					/* Insert the file indicator.		*/
@@ -1163,46 +1404,77 @@ char *file_name;
 	string[61] = CHAR_NULL;								/* Store a trailing null.		*/
 
 	i = WINDOW_TOP;									/* Point the help area.			*/
-	vmode(REVERSE|UNDERSCORE);							/* Do it in reverse underscore,		*/
+
+	vmode(high_message_vmode);							/* Do it in reverse underscore,		*/
+
 	vmove(i++,lhs);
 	vprint("%s",string);								/* Print the file name.			*/
 
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vmode(REVERSE);									/* Do it in reverse.			*/
-	vmove(i++,lhs);
-	vprint("  Use the arrow keys to scroll up, down, left and right.     ");
-	vmove(i++,lhs);
-	vprint("   (1) - Home cursor   (2) - File top       (3) - Bottom     ");
-	vmove(i++,lhs);
-#ifdef MSDOS
-	vprint("   (4) - Prev screen   (5) - Next screen                     ");
-#else
-	if (vscr_wid == 132)	vprint("   (4) - Prev screen   (5) - Next screen    (6) - 80 col     ");
-	else			vprint("   (4) - Prev screen   (5) - Next screen    (6) - 132 col    ");
-#endif
-	vmove(i++,lhs);
-	vprint("   (7) - Find string   (8) - Find next                       ");
-	vmove(i++,lhs);
-	vprint("   (9) - Scroll left  (10) - Scroll right                    ");
-	vmove(i++,lhs);
-	if (stream_active)
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vmode(message_vmode);								/* Do it in reverse.			*/
+
+	vmove(i++,lhs);	vprint(				"  Use the arrow keys to scroll up, down, left and right.     ");
+
+	if (options12)
 	{
-		vprint("  (11) - Record size  (12) - Toggle status (13) - Record Mode");
+		vmove(i++,lhs);	vprint(			"   (1) - Home cursor   (2) - File top      (3) - Bottom      ");
+		vmove(i++,lhs);	vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
+		if (stream_active)
+		{
+			vmove(i++,lhs);	vprint(		"   (6) - Record size   (7) - Toggle status (8) - Record Mode ");
+		}
+		else
+		{
+			vmove(i++,lhs);	vprint(		"   (6) - Change width  (7) - Toggle status (8) - Stream Mode ");
+		}
+		vmove(i++,lhs);	vprint(			"   (9) - Print screen (10) - Print file                      ");
+		vmove(i++,lhs);	vprint(			"  (11) - Options      (12) - Exit                            ");
+		vmove(i++,lhs);	vprint(			"                                                             ");
 	}
 	else
 	{
-		vprint("  (11) - Change width (12) - Toggle status (13) - Stream Mode");
+		vmove(i++,lhs);	vprint(			"   (1) - Home cursor   (2) - File top       (3) - Bottom     ");
+#if defined(MSDOS) || defined(WIN32)
+		vmove(i++,lhs);	vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
+#else
+		if (vscr_wid == 132)
+		{
+			vmove(i++,lhs);	vprint(		"   (4) - Prev screen   (5) - Next screen    (6) - 80 col     ");
+		}
+		else 
+		{
+			vmove(i++,lhs);	vprint(		"   (4) - Prev screen   (5) - Next screen    (6) - 132 col    ");
+		}
+#endif
+		vmove(i++,lhs);	vprint(			"   (7) - Find string   (8) - Find next                       ");
+		vmove(i++,lhs);	vprint(			"   (9) - Scroll left  (10) - Scroll right                    ");
+
+		if (pfkeys12())
+		{
+			vmove(i++,lhs);	vprint(		"  (11) - Options      (12) - Exit                            ");
+			vmove(i++,lhs);	vprint(		"                                                             ");
+		}
+		else
+		{
+			if (stream_active)
+			{
+				vmove(i++,lhs);	vprint(	"  (11) - Record size  (12) - Toggle status (13) - Record Mode");
+			}
+			else
+			{
+				vmove(i++,lhs);	vprint(	"  (11) - Change width (12) - Toggle status (13) - Stream Mode");
+			}
+			vmove(i++,lhs);	vprint(		"  (14) - Print screen (15) - Print file    (16) - Exit       ");
+		}
 	}
-	vmove(i++,lhs);
-	vprint("  (14) - Print screen (15) - Print file    (16) - Exit       ");
-	vmove(i++,lhs);
-	vprint("  Depress any key to remove this window.                     ");
-	vmove(i++,lhs);
-	vprint("  Use the HELP key to bring this window back.                ");
-	vstate(1);									/* Reset rendition to normal.		*/
+	
+	vmove(i++,lhs);	vprint(				"  Depress any key to remove this window.                     ");
+	vmove(i++,lhs);	vprint(				"  Use the HELP key to bring this window back.                ");
+
+	vstate(VSTATE_RESTORE);								/* Reset rendition to normal.		*/
 }
 
-static rep_limit()									/* Report the limit of upward scroll.	*/
+static void rep_limit(void)								/* Report the limit of upward scroll.	*/
 {
 	int columns;									/* Define size of the help window.	*/
 	int lhs;									/* Define location of the help window.	*/
@@ -1214,23 +1486,23 @@ static rep_limit()									/* Report the limit of upward scroll.	*/
 
 	lhs = (vscr_wid - columns)/2;							/* Center the help screen.		*/
 
-	vstate(-1);									/* Save the current screen state.	*/
+	vstate(VSTATE_SAVE);								/* Save the current screen state.	*/
 	vmove(WINDOW_TOP-1,lhs-1);							/* Draw the outline box.		*/
-	vline(VERTICAL,WINDOW_ROWS+2);
+	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
 	vmove(WINDOW_TOP-1,lhs-1+columns);
-	vline(VERTICAL,WINDOW_ROWS+2);
+	vline(VLINE_VERTICAL,WINDOW_ROWS+2);
 	vmove(WINDOW_TOP-1,lhs-1);
-	vline(HORIZONTAL,columns+1);
+	vline(VLINE_HORIZONTAL,columns+1);
 	vmove(WINDOW_TOP+WINDOW_ROWS,lhs-1);
-	vline(HORIZONTAL,columns+1);
+	vline(VLINE_HORIZONTAL,columns+1);
 
 	i = WINDOW_TOP;									/* Point the help area.			*/
-	vmode(REVERSE|UNDERSCORE);							/* Do it in reverse underscore,		*/
+	vmode(high_message_vmode);							/* Do it in reverse underscore,		*/
 	vmove(i++,lhs);
 	vprint("                Reverse Scroll Limit Reached               ");		/* Print the message header.		*/
 
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vmode(REVERSE);									/* Do it in reverse.			*/
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vmode(message_vmode);								/* Do it in reverse.			*/
 	vmove(i++,lhs);
 	vprint("  It is not possible to scroll backwards beyond this point ");
 	vmove(i++,lhs);
@@ -1247,21 +1519,20 @@ static rep_limit()									/* Report the limit of upward scroll.	*/
 	vprint("                                                           ");
 	vmove(i++,lhs);
 	vprint("  Depress any key to remove this message...                ");
-	vstate(1);									/* Reset rendition to normal.		*/
+	vstate(VSTATE_RESTORE);								/* Reset rendition to normal.		*/
 }
 
-static clear_window(lbuf,roll_cnt,bufsize)						/* Subroutine to clear the help area.	*/
-unsigned char *lbuf[];									/* Pointer to the line input buffers.	*/
-int roll_cnt, bufsize;
+static void clear_window(char *lbuf[],int roll_cnt,int bufsize)				/* Subroutine to clear the help area.	*/
+											/* Pointer to the line input buffers.	*/
 {
 	register int i,j;								/* Working registers.			*/
-	unsigned char *lb;								/* Working pointer.			*/
+	char *lb;									/* Working pointer.			*/
 
 	if ((j = WINDOW_TOP - 1) >= MAX_LINES_PER_SCREEN) j = j - MAX_LINES_PER_SCREEN; /* Get the first line.			*/
 
-	vstate(-1);									/* Save all the event info.		*/
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vcharset(DEFAULT);								/* Clear the current character set.	*/
+	vstate(VSTATE_SAVE);								/* Save all the event info.		*/
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vcharset(VCS_DEFAULT);								/* Clear the current character set.	*/
 
 	for (i = WINDOW_TOP-1; i < WINDOW_TOP + WINDOW_ROWS + 1; i++)			/* Loop through the whole help area.	*/
 	{
@@ -1271,7 +1542,7 @@ int roll_cnt, bufsize;
 		j++;									/* Move to the next line.		*/
 		if (j >= MAX_LINES_PER_SCREEN) j = 0;					/* Did we wrap around?			*/
 	}
-	vstate(1);									/* Restore where we were.		*/
+	vstate(VSTATE_RESTORE);								/* Restore where we were.		*/
 }
 
 /*
@@ -1286,31 +1557,31 @@ int roll_cnt, bufsize;
 **
 **	Returns:	The next value of "on" to use.
 */
-static int work_message(on) int on;							/* Display the working message.		*/
+static int work_message(int on)								/* Display the working message.		*/
 {
 	int lhs;									/* Left hand side of display.		*/
 	register int i;									/* Working register.			*/
 
-	vstate(-1);									/* Save wher we are.			*/
+	vstate(VSTATE_SAVE);								/* Save wher we are.			*/
 
 	lhs = (vscr_wid - 16)/2;							/* center the message			*/
 
 	if (on == 0)									/* First time?				*/
 	{
 		vmove(WINDOW_TOP,lhs-2);						/* Draw the outline box.		*/
-		vline(VERTICAL,3);
+		vline(VLINE_VERTICAL,3);
 		vmove(WINDOW_TOP,lhs+13);
-		vline(VERTICAL,3);
+		vline(VLINE_VERTICAL,3);
 		vmove(WINDOW_TOP,lhs-2);
-		vline(HORIZONTAL,16);
+		vline(VLINE_HORIZONTAL,16);
 		vmove(WINDOW_TOP+2,lhs-2);
-		vline(HORIZONTAL,16);
+		vline(VLINE_HORIZONTAL,16);
 	}
 
 	if (on <= 0)
 	{
 		vmove(WINDOW_TOP+1,lhs-1);						/* Move to the clear area.		*/
-		vmode(CLEAR);								/* Clear it out.			*/
+		vmode(VMODE_CLEAR);							/* Clear it out.			*/
 		vprint("              ");						/* Output spaces.			*/
 		i = 1;									/* Turn on next time.			*/
 	}
@@ -1318,108 +1589,145 @@ static int work_message(on) int on;							/* Display the working message.		*/
 	if (on >= 0)									/* On or off?				*/
 	{
 		vmove(WINDOW_TOP+1,lhs);						/* Move to the info area.		*/
-		vmode(REVERSE);								/* Select something noticeable.		*/
+		vmode(message_vmode);							/* Select something noticeable.		*/
 		vprint(" Working... ");							/* Display the working message.		*/
 		i = -1;									/* Turn off the next time.		*/
 	}
 
-	vstate(1);									/* Restore where we were.		*/
-	vcontrol(DUMP_OUTPUT);								/* Show what is going on.		*/
+	vstate(VSTATE_RESTORE);								/* Restore where we were.		*/
+	vcontrol_flush();								/* Show what is going on.		*/
 	return(i);									/* Return the new state.		*/
 }
 
-static int roll_up(lbuf,fpos_tab,pt,bufsize,input_file,tx,lc,send_out,roll_cnt)		/* Scroll up one line.			*/
-unsigned char *lbuf[];
-int4 fpos_tab[], *pt;
-int bufsize, *tx, *lc, send_out, roll_cnt;
-FILE *input_file;
+/*
+**	Routine:	roll_up()
+**
+**	Function:	Scroll the display up one line.
+**
+**	Description:	
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by xxx
+**
+*/
+static int roll_up(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *pto,int bufsize,FILE *input_file,
+                   int *tx,int *lc,int send_out,int roll_cnt)
 {
-	unsigned char *nlb;								/* Temporary storage.			*/
-	int4 temp_position;
-	int i, eofile;									/* End of file flag.			*/
-	unsigned char temp_line[BUFFER_SIZE+8];
+	int4 temp_position, temp_pos_offset;
+	int eofile;									/* End of file flag.			*/
+	char temp_line[BUFFER_SIZE+8];
 				     
 	eofile = FALSE;									/* Assume not end of file.		*/
-
-	eofile = get_line(temp_line,&temp_position,bufsize,input_file);			/* Get another line.			*/
+	temp_pos_offset = 0;
+	
+	eofile = get_line(temp_line,&temp_position,&temp_pos_offset,bufsize,input_file); /* Get another line.			*/
 	if (!eofile || (eofile && *temp_line != '\0'))					/* Are we at the end of file?		*/
 	{
 		if (send_out)								/* Do they want output?			*/
 		{
-			vstate(SAVE);							/* Save where we are.			*/
+			vstate(VSTATE_SAVE);						/* Save where we are.			*/
 			if (frwd_scroll_avail)
 			{
 				vmove(MAX_LINES_PER_SCREEN-1,vcur_col);			/* Move to the bottom line.		*/
 				vprint("\n");						/* Scroll forward.			*/
 				set_scroll_buffer(roll_cnt,temp_line,bufsize);		/* Set ptr and display buffer.		*/
 			}
-			vstate(RESTORE);						/* Restore where we were.		*/
+			vstate(VSTATE_RESTORE);						/* Restore where we were.		*/
 		}
 
 		pt[*tx] = fpos_tab[0];							/* Remember position of line off top.	*/
+		pto[*tx] = fpoff_tab[0];
 		*tx = *tx + 1;								/* Increment the table index.		*/
 		if (*tx >= POSITION_TABLE_SIZE) *tx = 0;				/* Handle if it wrapped around.		*/
 		*lc = *lc + 1;								/* Increment the entry counter.		*/
 		if (*lc > POSITION_TABLE_SIZE) *lc = POSITION_TABLE_SIZE;		/* Don't let it overflow.		*/
 
-		adjust_buffers(lbuf,fpos_tab,1);					/* Adjust data buffers up one.		*/
+		adjust_buffers(lbuf,fpos_tab,fpoff_tab,1);				/* Adjust data buffers up one.		*/
 		memcpy(lbuf[MAX_LINES_PER_SCREEN-1],temp_line,bufsize);
 
-		fpos_tab[MAX_LINES_PER_SCREEN -1] = temp_position;			/* Remember the new position.		*/
+		fpos_tab[MAX_LINES_PER_SCREEN - 1] = temp_position;			/* Remember the new position.		*/
+		fpoff_tab[MAX_LINES_PER_SCREEN - 1] = temp_pos_offset;
+#ifdef VMS
+		if (fpos_tab[MAX_LINES_PER_SCREEN - 1] == fpos_tab[MAX_LINES_PER_SCREEN - 2]) 
+		{									/* If ftell() returns same position.	*/
+			fpoff_tab[MAX_LINES_PER_SCREEN - 1] = fpoff_tab[MAX_LINES_PER_SCREEN - 2];
+			fpoff_tab[MAX_LINES_PER_SCREEN - 2] = 0;
+		}
+		else if (fpoff_tab[MAX_LINES_PER_SCREEN - 1] > 132)
+		{
+			fpoff_tab[MAX_LINES_PER_SCREEN - 1] = 0;
+		}
+#endif
 	}
 	return(eofile);									/* Return the end of file indicator.	*/
 }
 
-static roll_down(lbuf,fpos_tab,pt,bufsize,input_file,tx,lc,eofile,roll_cnt)		/* Scroll down one line.		*/
-unsigned char *lbuf[];
-int4 fpos_tab[], *pt;
-int bufsize, *tx, *lc, *eofile, roll_cnt;
-FILE *input_file;
+static void roll_down(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *pto,int bufsize,FILE *input_file,
+                 int *tx,int *lc,int *eofile,int roll_cnt)
 {
-	unsigned char *nlb, *temp_line;							/* Temporary storage.			*/
-	int4 temp_position, temp_fp;
+	char *nlb, *temp_line;								/* Temporary storage.			*/
+	int4 temp_position, temp_pos_offset;
+	int4 temp_fp, temp_fpo;
 	register int e, i;
 
 	if (*lc != 0)									/* Can we still scroll backwards?	*/
 	{
-		vstate(SAVE);								/* Save where we were.			*/
+		vstate(VSTATE_SAVE);							/* Save where we were.			*/
 		if (rvrs_scroll_avail)
 		{
 			vmove(0,0);							/* Move to the top of the screen.	*/
-			vnewline(REVERSE);						/* Scroll backwards.			*/
+			vnewline(VLF_REVERSE);						/* Scroll backwards.			*/
 		}
 		*tx = *tx - 1;								/* Decrement the index.			*/
 		if (*tx < 0) *tx = POSITION_TABLE_SIZE-1;				/* Wrap around as appropriate.		*/
 		*lc = *lc - 1;								/* Decrement the backup line count.	*/
-		temp_fp = fpos_tab[MAX_LINES_PER_SCREEN -1];				/* Remember where the file was.		*/
+		temp_fp = fpos_tab[MAX_LINES_PER_SCREEN - 1];				/* Remember where the file was.		*/
+		temp_fpo = fpoff_tab[MAX_LINES_PER_SCREEN - 1];
 		e = fseek(input_file,pt[*tx],0);					/* Seek the previous record.		*/
+		temp_pos_offset = pto[*tx];						/* Set the current offset in record.	*/
 
 		if (!e)									/* If was a successful seek.		*/
 		{
-			if ((temp_line = (unsigned char*)malloc(bufsize+1+8)) == 0) mem_err(); /* Allocate a line buffer	*/
-			get_line(temp_line,&temp_position,bufsize,input_file);		/* Get another line.			*/
+			if ((temp_line = (char*)malloc(bufsize+1+8)) == 0) mem_err(); /* Allocate a line buffer	*/
+			get_line(temp_line,&temp_position,&temp_pos_offset,bufsize,input_file); /* Get another line.		*/
 			if (rvrs_scroll_avail) set_scroll_buffer(roll_cnt,temp_line,bufsize); /* Set ptr and display buffer.	*/
-			adjust_buffers(lbuf,fpos_tab,2);				/* Adjust data buffers down one.	*/
+			adjust_buffers(lbuf,fpos_tab,fpoff_tab,2);			/* Adjust data buffers down one.	*/
 			nlb = lbuf[0];							/* Get address of first buffer.		*/
 			for (i = 0; i < bufsize; i++) *nlb++ = temp_line[i];		/* Copy the string.			*/
 			fpos_tab[0] = temp_position;					/* Remember the new position.		*/
+#ifdef VMS			
+			if (fpos_tab[0] == fpos_tab[1])					/* If ftell() returns same position.	*/
+			{
+				fpoff_tab[1] = temp_pos_offset;
+				fpoff_tab[0] = 0;
+			}
+			else if (fpoff_tab[0] > 132)
+			{
+				fpoff_tab[0] = 0;
+			}
+#endif
 			free(temp_line);
 		}
-		vstate(RESTORE);							/* Restore where we were.		*/
+		vstate(VSTATE_RESTORE);							/* Restore where we were.		*/
 
 		e = fseek(input_file,temp_fp,0);					/* Reset to read bottom line again.	*/
 		*eofile = FALSE;							/* Cannot be at end of file anymore.	*/
 	}
 }
 
-static int roll_left_right(lbuf,fpos_tab,bufsize,input_file,eorec,roll_cnt)		/* Scroll left or right.		*/
-unsigned char *lbuf[];
-int4 fpos_tab[];
-int bufsize, *eorec, roll_cnt;
-FILE *input_file;
+static void roll_left_right(char *lbuf[], int4 fpos_tab[], int bufsize,FILE *input_file,int *eorec,int roll_cnt)
+											/* Scroll left or right.		*/
 {
-	unsigned char *lb;
-	register int i, j, c;
+	char *lb;
+	register int i, c;
 	int sc,sl;									/* Variable to save current cursor pos. */
 	int cont;									/* Continue flag.			*/
 
@@ -1430,7 +1738,7 @@ FILE *input_file;
 	cont = TRUE;
 	i = 0;										/* Set to current top of screen ptr.	*/
 	c = 0;
-	vbuffering(LOGICAL);
+	vbuffering_start();
 	while (cont)									/* Read in a new screen's worth.	*/
 	{
 		lb = lbuf[c];								/* Make a working copy.			*/
@@ -1441,15 +1749,14 @@ FILE *input_file;
 		if ((c >= MAX_LINES_PER_SCREEN) || (fpos_tab[i] == -1)) cont = FALSE;
 	}
 	vmove(sl,sc);									/* Put cursor in original position.	*/
-	vbuffering(AUTOMATIC);
+	vbuffering_end();
 	if (roll_cnt >= bufsize - vscr_wid) *eorec = TRUE;				/* Set end of buffer/record.		*/
 }
 
-static int set_scroll_buffer(roll_cnt,lb,bufsize)					/* Set pointer to buffer to be at the	*/
-unsigned char *lb;									/* current scroll column.		*/
-int roll_cnt, bufsize;
+static void set_scroll_buffer(int roll_cnt, char *lb, int bufsize)			/* Set pointer to buffer to be at the	*/
+											/* current scroll column.		*/
 {
-	int i, remdr, cnt;
+	int i;
 
 	for (i = 0; i < roll_cnt; i++) lb++;						/* Scroll the buffer according to data. */
 	display_buffer(lb);								/* Display the line.			*/
@@ -1477,19 +1784,16 @@ int roll_cnt, bufsize;
 **	09/23/93	Modified by GSL
 **
 */
-static int add_tab_cols(col)
-int col;
+static int add_tab_cols(int col)
 {
 	return(TAB_SPACE_COUNT - (col % TAB_SPACE_COUNT));
 }
 
-on_screen(search_text,lbuf,fpos_tab,pt,bufsize,input_file,tx,lc,eofile,eorec,roll_cnt)	/* Is the text on the screen.		*/
-unsigned char *search_text, *lbuf[];
-int4 fpos_tab[], *pt;
-int bufsize, *tx, *lc, *eofile, *eorec, *roll_cnt;
-FILE *input_file;
+static int on_screen(char *search_text, char *lbuf[], int4 fpos_tab[],int4 *pt, int bufsize,
+			FILE *input_file,int *tx,int *lc,int *eofile,int *eorec,int *roll_cnt)
+											/* Is the text on the screen.		*/
 {
-	unsigned char *lb, temp[BUFFER_SIZE+8];						/* Temporary storage.			*/
+	char *lb;									/* Temporary storage.			*/
 	register int i, j;								/* Working registers.			*/
 	int first_in;									/* Flag so will step past if first line.*/
 	int k;										/* Tab count so display cursor correctly*/
@@ -1533,6 +1837,9 @@ FILE *input_file;
 			}
 			if (clin > vscr_wid) clin = clin - *roll_cnt;			/* Set so is on current screen.		*/
 
+			frow += i - vcur_lin;
+			fcol = *roll_cnt + clin;
+
 			vmove(i,clin);							/* Move to where the string is.		*/
 			return(TRUE);							/* And we're all done.			*/
 		}
@@ -1542,27 +1849,15 @@ FILE *input_file;
 	return(FALSE);									/* The string is not on the screen.	*/
 }
 
-static int stb(out,in,j,cnt)								/* Build a string from the buffers.	*/
-unsigned char *out, *in;
-int j, cnt;
-{
-	while (j < cnt)									/* Loop to end of line.			*/
-	{
-		*(out++) = toupper(*(in++));						/* Copy and upcase the character.	*/
-		j++;									/* Count along eh.			*/
-	}
-	*(out++) = CHAR_NULL;								/* Store a trailing null.		*/
-}
 
-static int stx(string,mask)								/* Get string index in another string.	*/
-register unsigned char *mask, *string;
+static int stx(char *string, char *mask)						/* Get string index in another string.	*/
 {
 	register m_idx, s_idx, cmpval;
 	register int m_len, s_len;
 	int save;
 
 	m_len = srch_len - 1;
-	s_len = strlen((char *)string);
+	s_len = strlen(string);
 	save = s_idx = m_idx = m_len;
 	while (s_idx < s_len)
 	{
@@ -1587,7 +1882,7 @@ register unsigned char *mask, *string;
 }
 
 /*
-**	Routine:	in_file
+**	Routine:	in_file()
 **	
 **	Function:	To see if the search_text exists in the file.
 **
@@ -1598,13 +1893,10 @@ register unsigned char *mask, *string;
 **
 */
 											/* Is the text in the input file?	*/
-static int in_file(search_text,lbuf,fpos_tab,pt,bufsize,input_file,tx,lc,eofile,eorec,roll_cnt) 
-unsigned char *search_text, **lbuf;
-int4 fpos_tab[], *pt;
-int bufsize, *tx, *lc, *eofile, *eorec, *roll_cnt;
-FILE *input_file;
+static int in_file(char *search_text,char **lbuf,int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *pto,
+                   int bufsize,FILE *input_file,int *tx,int *lc,int *eofile,int *eorec,int *roll_cnt) 
 {
-	unsigned char lbuf_save[MAX_LINES_PER_SCREEN][BUFFER_SIZE+8];			/* Save the current screen.		*/
+	char lbuf_save[MAX_LINES_PER_SCREEN][BUFFER_SIZE+8];				/* Save the current screen.		*/
 	int4 fp_save[MAX_LINES_PER_SCREEN];						/* Save the current pointers.		*/
 	int4 pt_save[POSITION_TABLE_SIZE];						/* Save the position table.		*/
 	int tx_save, lc_save;								/* Save the index pointers.		*/
@@ -1612,8 +1904,7 @@ FILE *input_file;
 	int4 pos_save;									/* Save current file pointer.		*/
 	int found;									/* Flag to indicate text found.		*/
 	int lines_read;									/* Lines read in search.		*/
-	int4 get_pos();									/* Get position returns a int4.		*/
-	unsigned char *lb, temp[BUFFER_SIZE+8];						/* Temporary working buffer.		*/
+	char *lb;							/* Temporary working buffer.		*/
 	register int i,k;								/* Working registers.			*/
 	register int check_time;
 	int	on, l_eof;
@@ -1630,7 +1921,7 @@ FILE *input_file;
 	lin_save = vcur_lin;								/* Remember the cursor position.	*/
 	col_save = vcur_col;
 
-	vset(CURSOR,OFF);								/* Don't need the cursor for a while.	*/
+	vset_cursor_off();								/* Don't need the cursor for a while.	*/
 	on = 0;										/* Working counters.			*/
 	check_time = 0;
 	found = FALSE;									/* Haven't found the string yet.	*/
@@ -1639,7 +1930,8 @@ FILE *input_file;
 	l_eof = *eofile;
 	while (!l_eof && !found)							/* Loop to find the end of the file.	*/
 	{
-		l_eof = roll_up(lbuf,fpos_tab,pt,bufsize,input_file,tx,lc,0,*roll_cnt); /* Read a line.				*/
+		l_eof = roll_up(lbuf,fpos_tab,fpoff_tab,pt,pto,
+                                bufsize,input_file,tx,lc,0,*roll_cnt);			/* Read a line.				*/
 
 		ff_flag = FALSE; /* Temp fix to misc highlighting bug */
 
@@ -1653,6 +1945,9 @@ FILE *input_file;
 			{
 				int	lines_scrolled;
 				found = TRUE;						/* Found the string.			*/
+
+				frow += (MAX_LINES_PER_SCREEN - lin_save - 2) + lines_read;
+
 				lines_scrolled = 0;
 				if (lines_read > PAGE_SCROLL_LINES)			/* If we've read most of a page..	*/
 				{
@@ -1665,7 +1960,8 @@ FILE *input_file;
 						**	NOTE:	Use the real eofile instead of local since we are really moving
 						**		ahead in the file.
 						*/
-						*eofile = roll_up(lbuf,fpos_tab,pt,bufsize,input_file,tx,lc,0,*roll_cnt);
+						*eofile = roll_up(lbuf,fpos_tab,fpos_tab,pt,pto,
+                                                                  bufsize,input_file,tx,lc,0,*roll_cnt);
 						if (*eofile) break;
 						lines_read++;
 					}
@@ -1720,17 +2016,15 @@ FILE *input_file;
 	}
 
 	clear_window(lbuf,*roll_cnt,bufsize);						/* Clear away the area.			*/
-	vset(CURSOR,ON);								/* Now restore the flashing cursor.	*/
+	vset_cursor_on();								/* Now restore the flashing cursor.	*/
 	return(found);
 }
 
-static scr_refresh(lbuf,fpos_tab,lines,bufsize,roll_cnt)				/* Refresh screen from line buffers.	*/
-unsigned char *lbuf[];
-int4 fpos_tab[];
-int lines, bufsize, roll_cnt;
+static void scr_refresh(char *lbuf[],int4 fpos_tab[],int lines,int bufsize,int roll_cnt)
+											/* Refresh screen from line buffers.	*/
 {
 	register int i, j, k;								/* Working registers.			*/
-	unsigned char *lb;
+	char *lb;
 
 	j = 0;										/* Point j to the top of the screen.	*/
 	k = 0;										/* Assume start at top of screen.	*/
@@ -1754,13 +2048,29 @@ int lines, bufsize, roll_cnt;
 	vmove(MAX_LINES_PER_SCREEN-1,vscr_wid-1);					/* Move to the standard cursor pos.	*/
 }
 
-static adjust_buffers(lbuf,fpos_tab,direction)						/* Adjust buffer address to reflect what*/
-unsigned char *lbuf[];									/* is really on the screen.		*/
-int4 fpos_tab[];
-int direction;
+/*
+**	Routine:	adjust_buffers()
+**
+**	Function:	Adjust buffer address to reflect what is really on the screen.
+**
+**	Description:	
+**
+**	Arguments:	None
+**
+**	Globals:	None
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	
+**	mm/dd/yy	Written by xxx
+**
+*/
+static void adjust_buffers(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int direction)
 {
-	register int i, j;
-	unsigned char *tbufa;
+	register int i;
+	char *tbufa;
 
 	if (direction == 1)								/* Move buffers forward one.		*/
 	{
@@ -1769,6 +2079,7 @@ int direction;
 		{
 			lbuf[i] = lbuf[i+1];						/* Assign the new address.		*/
 			fpos_tab[i] = fpos_tab[i+1];					/* Assign the file position value.	*/
+			fpoff_tab[i] = fpoff_tab[i+1];
 		}
 		i--;									/* Set so is last buffer on screen.	*/
 	}
@@ -1779,14 +2090,15 @@ int direction;
 		{
 			lbuf[i] = lbuf[i-1];						/* Assign new address.			*/
 			fpos_tab[i] = fpos_tab[i-1];					/* Assign the file position value.	*/
+			fpoff_tab[i] = fpoff_tab[i-1];
 		}
 	}
 	lbuf[i] = tbufa;								/* last/first buffer pts to first/last. */
 	fpos_tab[i] = 0;								/* Set so no position.			*/
+	fpoff_tab[i] = 0;
 }
 
-static full_screen_refresh(lbuf,row,col)
-unsigned char *lbuf[MAX_LINES_PER_SCREEN];
+static void full_screen_refresh(char *lbuf[], int row,int col)
 {
 	int	i;
 	verase(FULL_SCREEN);
@@ -1798,9 +2110,8 @@ unsigned char *lbuf[MAX_LINES_PER_SCREEN];
 	vmove(row,col);									/* Reposition the cursor		*/
 }
 
-static derror(text) char *text;								/* Error message reporting routine	*/
+static void derror(char *text)								/* Error message reporting routine	*/
 {
-	register int i;									/* Working register.			*/
 	int col, lin, mod, set;								/* Save locations.			*/
 	
 	lin = vcur_lin;									/* Save what we're doing.		*/
@@ -1808,9 +2119,9 @@ static derror(text) char *text;								/* Error message reporting routine	*/
 	set = vchr_set;
 	mod = vcur_atr;
 
-	vmode(CLEAR);									/* Clear all renditions.		*/
-	vmode(REVERSE);									/* Select the reverse rendition.	*/
-	vcharset(DEFAULT);								/* Assume the default position.		*/
+	vmode(VMODE_CLEAR);								/* Clear all renditions.		*/
+	vmode(high_message_vmode);							/* Select the reverse rendition.	*/
+	vcharset(VCS_DEFAULT);								/* Assume the default position.		*/
 	vmove(MAX_LINES_PER_SCREEN-1,0);						/* Move to the error location.		*/
 	if (text[0] != ' ') vbell();							/* Ring the bells.			*/
 	vprint("%s",text);								/* Print the error message.		*/
@@ -1825,9 +2136,7 @@ static derror(text) char *text;								/* Error message reporting routine	*/
 	errmsg_active = TRUE;								/* Now we have an error message.	*/
 }
 
-static int gets0(string,count)
-char *string;
-int count;
+static int gets0(char *string, int count)
 {
 	int lin,col,set,mod;									/* Save locations.		*/
 	int i;											/* Working variables.		*/
@@ -1839,6 +2148,9 @@ int count;
 
 	if (count)										/* Does he want any chars?	*/
 	{
+		vmode(VMODE_CLEAR);
+		vmode(edit_vmode);
+
 		while ((i < count) && !term)							/* Repeat until term or full.	*/
 		{
 			c = vgetm();								/* Get the meta character.	*/
@@ -1850,10 +2162,10 @@ int count;
 				set = vchr_set;
 				mod = vcur_atr;
 				vmove(MAX_LINES_PER_SCREEN-1,0);				/* Erase the error message.	*/
-				vmode(CLEAR);
-				vcharset(DEFAULT);
+				vmode(VMODE_CLEAR);
+				vcharset(VCS_DEFAULT);
 				verase(TO_EOL);
-				vmode(mod);
+				vmode(edit_vmode);
 				vcharset(set);
 				vmove(lin,col);
 			}
@@ -1916,14 +2228,14 @@ int count;
 /*	and used to determine the positon of the next record). Provided this routine (get_pos()) functions correctly, vdisplay	*/
 /*	will be able to display virtually any file.										*/
 
-static int4 get_pos(input_file) FILE *input_file;					/* Get the position of a record.	*/
+static int4 get_pos(FILE *input_file)							/* Get the position of a record.	*/
 {
 	long ftell();									/* ftell returns a int4eger.	*/
 
 	return(ftell(input_file));							/* Return the record position.		*/
 }
 
-static int mem_err()									/* Memory error - could not allocate	*/
+static void mem_err(void)								/* Memory error - could not allocate	*/
 {											/* the needed memory.			*/
 	werrlog(ERRORCODE(8),0,0,0,0,0,0,0,0);
 	vexit();									/* Unconditional exit.			*/
@@ -1954,7 +2266,7 @@ static int	highest_byte=0;				/* The highest byte loaded */
 #define MAX_MEMBLOCKS	1000
 struct
 {
-	unsigned char	*blockptr;			/* Ptr to the block */
+	char	*blockptr;				/* Ptr to the block */
 	int4	highbyte;				/* The highest byte in this block */
 	int4	msize;					/* The malloc size */
 	int4	usize;					/* The used size */
@@ -2032,7 +2344,7 @@ static int4 xftell()
 static loadblock()
 {
 	int	c;
-	unsigned char *ptr;
+	char *ptr;
 	int4	cnt;
 	unsigned mallsize;
 
@@ -2053,7 +2365,7 @@ static loadblock()
 		mallsize = (256 * 1024) - 100;						/* Next use 256K			*/
 	}
 
-	if (ptr = (unsigned char *) malloc(mallsize))					/* Malloc a memory block		*/
+	if (ptr = malloc(mallsize))							/* Malloc a memory block		*/
 	{
 		memblock[blocks_loaded].blockptr = ptr;
 	}
@@ -2095,20 +2407,15 @@ static freeblocks()
 
 #endif	/*  NOT_YET	*/
 
-static int check_empty(file_name)							/* See if the file is empty.		*/
-char *file_name;
+static int check_empty(const char *file_name)						/* See if the file is empty.		*/
 {
 	int 	rc;
 	FILE	*fh;
 
-#ifdef MSDOS
-	if ((fh = fopen(file_name,"rb")) == NULL)					/* Did the file open?			*/
-#else /* !MSDOS */
-	if ((fh = fopen(file_name,"r")) == NULL)					/* Did the file open?			*/
-#endif /* !MSDOS */
+	if ((fh = fopen(file_name,FOPEN_READ_BINARY)) == NULL)				/* Did the file open?			*/
 	{
 		werrlog(ERRORCODE(6),file_name,0,0,0,0,0,0,0);
-		return(FAILURE);							/* It is fatal so return with error.	*/
+		return(1);								/* It is fatal so return with error.	*/
 	}
 	fgetc(fh);
 	rc = feof(fh);
@@ -2116,11 +2423,8 @@ char *file_name;
 	return(rc);
 }
 
-static display_stat(dwidth)								/* Display cursor row, col and width.	*/
-int dwidth;
+static void display_stat(int dwidth)							/* Display cursor row, col and width.	*/
 {
-	register int i;									/* Working register.			*/
-	char *vsss();
 	int dlen;
 	char tstr[30];
 
@@ -2131,11 +2435,113 @@ int dwidth;
 		ssave = vsss(MAX_LINES_PER_SCREEN-2, vscr_wid-dlen, 1, dlen);		/* Save what is on the screen.		*/
 	}
 
-	vstate(SAVE);
-	vmode(REVERSE);									/* Select the reverse rendition.	*/
-	vcharset(DEFAULT);								/* Assume the default position.		*/
+	vstate(VSTATE_SAVE);
+	vmode(message_vmode);								/* Select the reverse rendition.	*/
+	vcharset(VCS_DEFAULT);								/* Assume the default position.		*/
 	vmove(MAX_LINES_PER_SCREEN-2, vscr_wid - dlen);					/* Move to the status location.		*/
 	sprintf(tstr,"(%d,%d) %d",frow+1,fcol+1,dwidth);				/* Display as 1 based.			*/
 	vprint("%-14.14s",tstr);
-	vstate(RESTORE);
+	vstate(VSTATE_RESTORE);
 }
+
+/*
+**	History:
+**	$Log: vdisplay.c,v $
+**	Revision 1.38  1998-01-07 13:31:56-05  gsl
+**	Fix non-ascii support so if NATIVECHARMAP is not set then it
+**	will assume Wang character set encoding
+**
+**	Revision 1.37  1997-12-19 10:34:56-05  gsl
+**	Change to use terminal_control_char() routines
+**
+**	Revision 1.36  1997-12-18 21:00:06-05  gsl
+**	Replace the DISPLAYCHARMAP with NATIVECHARMAP processing.
+**
+**	Revision 1.35  1997-12-15 15:53:53-05  gsl
+**	Add support for CHARMAP substitution with the DISPLAYCHARMAP option.
+**
+**	Revision 1.34  1997-10-31 14:37:19-05  gsl
+**	Change "Empty" message to use WSB routines
+**
+**	Revision 1.33  1997-10-23 16:15:42-04  gsl
+**	Changed the file_name to "const"
+**
+**	Revision 1.32  1997-10-17 10:47:54-04  gsl
+**	Add support for pfkeys12
+**
+**	Revision 1.31  1997-07-16 21:22:00-04  gsl
+**	Fix the eof_trailer() to center the filename as long names were getting
+**	truncated off the right hand side
+**
+**	Revision 1.30  1997-07-14 08:26:32-04  gsl
+**	Change to use new video.h interfaces
+**
+**	Revision 1.29  1997-01-11 18:21:37-05  gsl
+**	Add a verase(FULL_SCREEN) after the vscreen() because it may not
+**	clear the screen.
+**
+**	Revision 1.28  1996-11-18 15:37:11-08  gsl
+**	Force scrolling off for WIN32 and MSDOS
+**
+**	Revision 1.27  1996-11-13 17:21:01-08  gsl
+**	changed to use vcontrol_flush()
+**
+**	Revision 1.26  1996-11-04 15:53:47-08  gsl
+**	Add a call to vwang_set_videocap()
+**
+**	Revision 1.25  1996-10-08 17:27:11-07  gsl
+**	replaced getenv() with wispdisplay8bit()
+**
+**	Revision 1.24  1996-09-10 08:47:43-07  gsl
+**	Fix uninitialized variable cnt_off
+**
+**	Revision 1.23  1996-07-18 16:32:16-07  gsl
+**	Enclose costar code in ifdef COSTAR
+**
+**	Revision 1.22  1996-07-17 15:06:50-07  gsl
+**	Fixed compiler warnings
+**
+**	Revision 1.21  1996-07-17 14:53:17-07  gsl
+**	Fix prototypes
+**
+**	Revision 1.20  1996-07-17 09:22:35-07  gsl
+**	fix compile warning
+**
+**	Revision 1.19  1996-07-15 10:10:43-07  gsl
+**	Fixed for NT
+**
+**	Revision 1.18  1996-07-11 16:22:15-07  gsl
+**	Fix to use FOPEN mode defines for NT
+**
+**	Revision 1.17  1995-11-06 13:50:58-08  gsl
+**	Add support to DISPLAY to display 8bit "foreign" characters.
+**	This is turned on with WISP_DISPLAY_8BIT=YES in the environment
+**
+ * Revision 1.16  1995/07/20  10:12:32  gsl
+ * minor cosmetic fix for W4W
+ *
+ * Revision 1.15  1995/04/28  07:08:04  scass
+ * Change MAX_BUFFER_SIZE from 255 to 265 to accomodate
+ * record length pf 256.
+ *
+ * Revision 1.14  1995/04/25  09:54:08  gsl
+ * drcs state V3_3_15
+ *
+ * Revision 1.13  1995/04/24  16:30:44  gsl
+ * fix PFKEY tag
+ *
+ * Revision 1.12  1995/04/17  11:47:17  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.11  1995/04/06  08:04:43  gsl
+ * change vmode() calls to work with costar
+ *
+ * Revision 1.10  1995/04/05  13:38:32  gsl
+ * change to use new video.h defines
+ *
+ * Revision 1.9  1995/04/05  13:14:44  gsl
+ * add standard headers
+ *
+**
+**
+*/

@@ -5,10 +5,10 @@
                                                                                 
                 1)   SAMPLE  ............... (SAMPLE)                           
                                                                               
-               16)   EXIT                                                       
+               16)   EXIT   
                                                                                 
-                                                                                
-     NOTE:  Under VMS this text file must be 80 character records.              
+                                                                             
+
                                                                                 
             Beaware that if running an executable then it must be in            
             the current directory or you need to create a script/DCL            

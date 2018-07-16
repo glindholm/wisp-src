@@ -1,12 +1,9 @@
 #include <stdio.h>
-#include <v/video.h>
+#include "video.h"
+#include "vdata.h"
 
 dump_map()
 {
-	extern int vscr_cng, vlin_cng[MAX_LINES_PER_SCREEN];
-	extern char vchr_map[24][MAX_COLUMNS_PER_LINE];
-	extern char vatr_map[24][MAX_COLUMNS_PER_LINE];
-	extern char vmap_cng[24][MAX_COLUMNS_PER_LINE];
 	register int i, j, k, p;
 	FILE *fopen(), *fid;
 
@@ -16,7 +13,7 @@ dump_map()
 	for (i = 0; i < 24; i++)
 	{
 		k = vml(i);
-		vchr_map[k][90] = NULL;
+		vchr_map[k][90] = '\0';
 		fprintf(fid,"\n%2d - %s\n",i,&vchr_map[k][0]);
 		for (j = 0; j < 90; j++)
 		{
@@ -39,8 +36,6 @@ dump_map()
 			else fprintf(fid,"OLD ");
 			if ((j == 29) || (j == 59)) fprintf(fid,"\n");
 		}
-
-		fprintf(fid,"vlin_cng[%d] = %d\n",i,vlin_cng[i]);
 
 		if (p++ == 3) {fprintf(fid,"\n\f"); p = 0;}
 		else fprintf(fid,"\n");

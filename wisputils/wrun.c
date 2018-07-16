@@ -1,11 +1,15 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		wrun.c
+**
+**	Project:	wisp/utils
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Frontend to COBOL runtime system
+**
+*/
 
 /*
 	wrun	Wrun is the frontend to ACUCOBOL, Micro Focus COBOL/2 and AIX VS COBOL runtime.
@@ -31,6 +35,7 @@
 		-E eee
 		+E eee
 		-I iii
+		-K kkk
 		-L
 		-O ooo
 		+O ooo
@@ -44,55 +49,90 @@
 */
 
 
-#ifdef MSDOS
-#include <stdlib.h>
-#include <process.h>
-#endif
+/*
+**	Includes
+*/
+
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
+#include <string.h>
+#include <stdarg.h>
+
+#if defined(MSDOS) || defined(WIN32)
+#include <process.h>
+#include <io.h>
+#endif
+
 #include "wrunconf.h"
 #include "wdefines.h"
 #include "link.h"
 #include "wcommon.h"
+#include "wispvers.h"
+#include "idsisubs.h"
+#include "wisplib.h"
+#include "wispcfg.h"
+
+/*
+**	Structures and Defines
+*/
 
 #define MAX_EXEC_PARMS	64
 
-main	(argc,argv)
-int	argc;
-char	*argv[];
+/*
+**	Globals and Externals
+*/
+void wrun_message_box(char *line1, char *line2);
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+void msgprintf(const char* format, ...);
+
+
+#ifdef WIN32
+wrunmain	(int argc, char *argv[])
+#endif
+#if defined(unix) || defined(VMS) || defined(MSDOS)
+main	(int argc, char *argv[])
+#endif
 {
-	char	options[80];
 	char	program[80];
-	int	i,j,k;
+	int	i;
 	int	arg;
 	int	addspace;
 	struct	wruncfg	cfg;
+	char	options[sizeof(cfg.wrun_options)];
 	int	parg;
 	int	parmcnt;
-	char	*optr, *ptr;
+	char	*optr;
 	char	*parm[MAX_EXEC_PARMS];
 	int	showit;
 	int	nooptions;
 	int	usingclause, parm_file_written;
 	char	argcount_string[20];
 	int	acu_cobol, aix_cobol, mf_cobol;
-	int	pid, rc;
+	int	rc;
+#ifdef unix
+	int	pid;
+#endif
 
-	struct 	{ char *the_parm[MAX_LINK_PARMS]; } parm_list;
-	struct 	{ long  the_len [MAX_LINK_PARMS]; }  len_list;
+	struct 	str_parm parm_list;
+	struct 	str_len len_list;
 	char	linkkey[80];								/* Key to link parm area		*/
 	char	buff[128];
 
-	if (!(ptr=(char *)getenv(WISP_CONFIG_ENV)))
+	if (0!=access(wispconfigdir(),00))
 	{
-		fprintf( stderr,"%%WRUN-W-WISPCONFIG Warning Environment Variable %s is not set.\n",WISP_CONFIG_ENV);
-	}
-	else if (0!=access(ptr,00))
-	{
-		fprintf( stderr,"%%WRUN-W-WISPCONFIG Warning %s=%s Directory not found.\n",WISP_CONFIG_ENV,ptr);
+		msgprintf( "%%WRUN-W-WISPCONFIG Warning WISPCONFIG=%s Directory not found.\n",wispconfigdir());
 	}
 
 
@@ -148,6 +188,7 @@ char	*argv[];
 				case 'A':
 				case 'C':
 				case 'E':
+				case 'K':
 				case 'I':
 				case 'O':
 				case 'R':
@@ -228,20 +269,20 @@ char	*argv[];
 		env_ptr = (char *)malloc( msize );
 		if ( ! env_ptr )
 		{
-			fprintf( stderr,"%%WRUN-F-MALLOC Malloc of %d bytes failed.\n",msize);
+			msgprintf( "%%WRUN-F-MALLOC Malloc of %d bytes failed.\n",msize);
 			exit(2);
 		}
 		strcpy(env_ptr,envstring);
 		if ( putenv(env_ptr) )
 		{
-			fprintf( stderr,"%%WRUN-F-PUTENV Unable to put environment varible %s.\n",WRUNOPTIONS_ENV );
+			msgprintf( "%%WRUN-F-PUTENV Unable to put environment varible %s.\n",WRUNOPTIONS_ENV );
 			exit(4);
 		}
 
 #ifdef TEST
 		{
 			char	*ptr;
-			ptr = (char *)getenv(WRUNOPTIONS_ENV);
+			ptr = getenv(WRUNOPTIONS_ENV);
 			printf("%s=<%s>\n",WRUNOPTIONS_ENV,ptr);
 		}
 #endif
@@ -326,7 +367,6 @@ char	*argv[];
 			parm[arg++] = argv[i];					/* Add args to command line			*/
 		}
 	}
-#ifdef unix
 	else if (aix_cobol || mf_cobol)
 	{
 		if (usingclause)
@@ -344,12 +384,11 @@ char	*argv[];
 			}
 		}
 	}
-#endif /* unix */
 	else
 	{
 		if (usingclause)
 		{
-			fprintf( stderr,"%%WRUN-F-COBOL Unknown COBOL type [%s]\n",cfg.wrun_cobtype);
+			msgprintf( "%%WRUN-F-COBOL Unknown COBOL type [%s]\n",cfg.wrun_cobtype);
 			exit(6);
 		}
 		else
@@ -364,14 +403,13 @@ char	*argv[];
 	}
 	parm[arg++] = '\0';
 
-#ifdef unix
 	if (!showit && usingclause && (aix_cobol || mf_cobol))
 	{
 
 		for(i=0; i<parmcnt; i++)
 		{
-			parm_list.the_parm[i] = argv[i+parg];
-			len_list.the_len[i] = strlen(parm_list.the_parm[i]);
+			parm_list.parm[i] = argv[i+parg];
+			len_list.len[i] = strlen(parm_list.parm[i]);
 		}
 		writeunixlink(program, parmcnt, &parm_list, &len_list, linkkey);
 
@@ -379,7 +417,6 @@ char	*argv[];
 		setenvstr(buff);
 		parm_file_written = 1;
 	}
-#endif /* unix */
 
 
 #ifdef TEST
@@ -409,12 +446,12 @@ char	*argv[];
 		{
 		case 0: /* Child */
 			execvp(parm[0],parm);
-			fprintf(stderr,"%%WRUN-F-EXEC Unable to exec [%s] errno=%d\n",parm[0],errno);
+			msgprintf("%%WRUN-F-EXEC Unable to exec [%s] errno=%d\n",parm[0],errno);
 			exit(errno);
 			break;
 
 		case -1: /* fork failed */
-			fprintf(stderr,"%%WRUN-F-FORK Unable to fork errno=%d\n",errno);
+			msgprintf("%%WRUN-F-FORK Unable to fork errno=%d\n",errno);
 			rc = errno;
 			break;
 
@@ -423,56 +460,127 @@ char	*argv[];
 			restoreterm();
 		}
 #endif /* unix */
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32)
 		rc = spawnvp(P_WAIT,(const char *)parm[0],(const char **)parm);
 		if (rc == -1)
 		{
 			switch(errno)
 			{
 			case ENOENT:
-				fprintf(stderr,"wrun: file not found [%s]\n",parm[0]);
+				msgprintf("wrun: file not found [%s]\n",parm[0]);
 				break;
 			case ENOEXEC:
-				fprintf(stderr,"wrun: file not executable [%s]\n",parm[0]);
+				msgprintf("wrun: file not executable [%s]\n",parm[0]);
 				break;
 			default:
-				fprintf(stderr,"wrun: spawn failed [errno=%d]\n",errno);
+				msgprintf("wrun: spawn failed [errno=%d]\n",errno);
 				break;
 			}
 			for(i=0; parm[i]; i++)
 			{
-				fprintf(stderr,"%s ",parm[i]);
+				msgprintf("%s ",parm[i]);
 			}
-			fprintf(stderr,"\n");
+			msgprintf("\n");
 		}
 
-#endif /* MSDOS */
+#endif /* MSDOS || WIN32 */
 	}
 	else
 	{
-		printf("wrun: Version=[%s]\n",WISP_VERSION);
+		char line2[1024], tmp[256];
+
+		sprintf(line2,"WRUN \t\t= WISP Version %s\n",wisp_version());
+
+		sprintf(tmp,"WISPCONFIG \t= %s\n", wispconfigdir());
+		strcat(line2, tmp);
+
+		sprintf(tmp,"COBOL \t\t= %s\n", cfg.wrun_cobtype);
+		strcat(line2, tmp);
+
+		if (acu_cobol)
+		{
+			char *ptr = getenv("A_CONFIG");
+			sprintf(tmp,"A_CONFIG \t= %s\n", ((ptr)?ptr:"NULL"));
+			strcat(line2,tmp);
+		}
+
+		sprintf(tmp,"RTS \t\t= %s\n", parm[0]);
+		strcat(line2, tmp);
+
+		strcat(line2, "OPTIONS \t= ");
+		for(i=1; parm[i]; i++)
+		{
+			sprintf(tmp,"%s ",parm[i]);
+			strcat(line2,tmp);
+		}
+		msgprintf("%s\n", line2);
+		
+#ifdef OLD
+		printf("wrun: Version=[%s]\n",wisp_version());
 		printf("[%s] ",cfg.wrun_cobtype);
 		for(i=0; parm[i]; i++)
 		{
 			printf("%s ",parm[i]);
 		}
 		printf("\n");
+#endif
 		rc = 0;
 	}
 
-#ifdef unix
 	if ( parm_file_written )							/* delete the temp file			*/ 
 	{
 		unlink(linkkey);
 	} 
-#endif /* unix */
 
-	exit(rc);
+	return rc;
 }
 
 #ifdef unix
 #include "saveterm.c"
 #endif /* unix */
 
+void msgprintf(const char* format, ...)
+{
+	va_list args;
+	char	buff[1024];
+
+	va_start(args,format);
+
+#ifdef WIN32
+	
+	vsprintf(buff,format,args);
+	wrun_message_box("WRUN",buff);
+#else
+	vprintf(format,args);
+#endif
+	
+}
+
+
 #include "wutils.h"
 
+/*
+**	History:
+**	$Log: wrun.c,v $
+**	Revision 1.14  1997-02-25 09:37:42-05  gsl
+**	Correct size of options
+**
+**	Revision 1.13  1997-02-20 16:05:17-05  gsl
+**	Add "-K kkk" as an acucobol flag
+**
+**	Revision 1.12  1997-01-20 20:28:08-05  gsl
+**	Changed the no-program message to display more useful information
+**
+**	Revision 1.11  1996-11-12 14:56:29-08  jockc
+**	added call to message box in case of no args
+**
+**	Revision 1.9  1996-10-08 17:47:03-07  gsl
+**	replace getenv() to wispconfigdir()
+**
+**	Revision 1.7  1995-06-15 03:10:17-07  gsl
+**	Change to use wisp_version().
+**	Add standard headers
+**
+**
+**
+*/

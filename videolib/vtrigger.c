@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	     VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1987-1991				*/
@@ -15,3 +17,12 @@ int vtrigger()
 {
 	return(FALSE);									/* This does not trigger.		*/
 }
+/*
+**	History:
+**	$Log: vtrigger.c,v $
+**	Revision 1.9  1996-10-11 18:16:22-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /*
  * File:	vrawunix.h
  *
@@ -27,68 +31,22 @@
 #ifndef _vrawunix_
 #define _vrawunix_
 
-extern char vrawinput();		/* Get a character, blocking. */
-extern char vrawcheck();		/* Get a character, non-blocking. */
-extern int vrawexit();			/* Perform vraw-layer rundown. */
-extern int vrawputc();			/* Raw output of a single character. */
-extern int vrawprint();			/* Raw output of a C-string buffer. */
-extern int vrawexit();			/* Cleanup from the raw layer. */
-extern int vrawsigset();		/* Set interrupt signal function. */
-extern int vrawerrno();			/* Get vraw layer error. */
-
-
-#define DOLLAR '$'
-#define OPENBR '<'
-#define CLOSBR '>'
-
-#define E_DOL  0
-#define E_OPEN 1
-#define E_CLOSE 2
-#define E_DIG 3
-#define E_ANY 4
-#define PEVENTCNT 5
-
-#ifdef VDBGPADST
-char *evstr[]=
-{
-	"DOLLAR $",
-	"OPEN   <",
-	"CLOSE  >",
-	"DIG  0-9",
-	"ANY     ",
-	NULL
-};
-#endif
-
-#define S_NORMAL 0
-#define S_GOTDOL 1
-#define S_GOTOP 2
-#define S_RNUMS 3
-#define S_EMIT 4
-#define S_ABORT 5
-#define PSTCNT 6
-
-#ifdef VDBGPADST
-char *ststr[]=
-{
-	"NORMAL",
-	"GOTDOL",
-	"GOTOP ",
-	"RNUMS ",
-	"EMIT  ",
-	"ABORT ",
-	NULL
-};
-#endif
-
-static int padstatetab[PEVENTCNT][PSTCNT] = 
-{        /* NORMAL    GOTDOL   GOTOP     RNUMS      EMIT       ABORT   */
-/*DOL*/ { S_GOTDOL,  S_ABORT, S_ABORT,   S_ABORT,   S_NORMAL,  S_NORMAL },  
-/*OP */ { S_NORMAL,  S_GOTOP, S_ABORT,   S_ABORT,   S_NORMAL,  S_NORMAL },  
-/*CLO*/ { S_NORMAL,  S_ABORT, S_ABORT,   S_EMIT,    S_NORMAL,  S_NORMAL },  
-/*DIG*/ { S_NORMAL,  S_ABORT, S_RNUMS,   S_RNUMS,   S_NORMAL,  S_NORMAL },  
-/*ANY*/ { S_NORMAL,  S_ABORT, S_ABORT,   S_ABORT,   S_NORMAL,  S_NORMAL }  
-};
+#include "vraw.h"
 
 #endif
 
+/*
+**	History:
+**	$Log: vrawunix.h,v $
+**	Revision 1.15  1997-06-24 10:55:33-04  gsl
+**	This routine has been replaced by a generic vraw.h
+**
+**	Revision 1.14  1996-11-13 20:43:39-05  gsl
+**	Added vrawflush() now external
+**
+**	Revision 1.13  1996-10-11 15:16:17-07  gsl
+**	drcs update
+**
+**
+**
+*/

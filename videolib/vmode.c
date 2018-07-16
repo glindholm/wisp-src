@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*	      VIDEO - Video Interactive Development Environment		*/
 			/*			Copyright (c) 1988, 1989, 1990			*/
@@ -7,37 +9,42 @@
 
 /*						Include required header files.							*/
 
+#include <string.h>
 #include "video.h"
 #include "vlocal.h"									/* Include local definitions.		*/
+#include "vmodules.h"
 #include "vdata.h"									/* Include keyboard control definitions.*/
 #include "vcap.h"
+#include "vraw.h"
+
+static int vmod_do();
 
 /*						Subroutine entry point.								*/
 
-int vmode(control) int control;								/* Select character rendition.		*/
+int vmode(int control)									/* Select character rendition.		*/
 {
 	register int ret;								/* Return control flag.			*/
 
 	ret = OPTIMIZED;								/* Assume we will optimize.		*/
 
-	if ((control < 0) || (control > BOLD+BLINK+REVERSE+UNDERSCORE))			/* Are the parameters ok?		*/
+	if ((control < 0) || (control > VMODE_BOLD+VMODE_BLINK+VMODE_REVERSE+VMODE_UNDERSCORE))	/* Are the parameters ok?	*/
 	{
 		ret = FAILURE;								/* No, so tag the failure.		*/
 		vre("vmode(%d)-Invalid parameter.",control);				/* Report the error.			*/
 	}
-
-	else if ((!vmod_op) || (optimization <= DATA_ONLY))				/* Op OFF, TRACKING_ONLY or DATA_ONLY?	*/
+	else if ((!vmod_op) || (voptlevel() <= VOP_DATA_ONLY))				/* Op OFF, TRACKING_ONLY or DATA_ONLY?	*/
 	{
 		ret = vmod_do(control);							/* Perform the action.			*/
 		vmod_op = TRUE;								/* Reset for next time.			*/
 	}
-
-	else if (optimization <= DATA_CONTROLS_AND_MOTION)				/* Check if data changing.		*/
+	else if (voptlevel() <= VOP_DEFER_MOTION_ONLY)					/* Check if data changing.		*/
 	{
 		if (control != vcur_atr) ret = vmod_do(control);			/* If changing, do the action.		*/
 	}
-
-	else if (vcur_atr != control) vdefer(SAVE);					/* We're in DEFER or BLOCK mode.	*/
+	else 
+	{
+		if (vcur_atr != control) vdefer_save();					/* We're in DEFER or BLOCK mode.	*/
+	}
 
 	vcur_atr = control;								/* Remember what current attribs are.	*/
 	return(ret);
@@ -45,23 +52,41 @@ int vmode(control) int control;								/* Select character rendition.		*/
 
 /*				Subroutine to actually set character attributes.						*/
 
-int vmod_do(control) int control;							/* Do the requested action.		*/
+static int vmod_do(int control)								/* Do the requested action.		*/
 {
 	char mode_string[MAX_ESC*5];							/* Working string.			*/
-	register int j, ret;								/* Working registers, and return flag.	*/
 
-	vdefer(RESTORE);								/* Going to do output so restore first.	*/
+	vdefer_restore();								/* Going to do output so restore first.	*/
 
-#ifdef MSDOS
-	vrawattribute( control );							/* Set attribute in vrawdos.c module.	*/
-#else	/* VMS or unix */
-	strcpy(mode_string,mdclr_esc);							/* Initialize for clear all renditions.	*/
-	if (control & BOLD) strcat(mode_string,mdbld_esc);				/* Do we want the bold rendition?	*/
-	if (control & UNDERSCORE) strcat(mode_string,mdundr_esc);			/* Do we want the underscore rendition.	*/
-	if (control & BLINK) strcat(mode_string,mdblk_esc);				/* Do we want the blinking rendition?	*/
-	if (control & REVERSE) strcat(mode_string,mdrvrs_esc);				/* Do we want reverse video rendition.	*/
+#ifdef DIRECTVID
+	if (vrawdirectio())
+	{
+		vrawattribute(control);							/* Set attribute 			*/
+	}
+	else
+#endif
+	{
+		strcpy(mode_string,mdclr_esc);						/* Initialize for clear all renditions.	*/
+		if (control & VMODE_BOLD) 	strcat(mode_string,mdbld_esc);		/* Do we want the bold rendition?	*/
+		if (control & VMODE_UNDERSCORE) strcat(mode_string,mdundr_esc);		/* Do we want the underscore rendition.	*/
+		if (control & VMODE_BLINK) 	strcat(mode_string,mdblk_esc);		/* Do we want the blinking rendition?	*/
+		if (control & VMODE_REVERSE) 	strcat(mode_string,mdrvrs_esc);		/* Do we want reverse video rendition.	*/
 
-	vcontrol(mode_string);								/* Turn on the rendition.		*/
-#endif	/* VMS or unix */
+		vcontrol(mode_string);							/* Turn on the rendition.		*/
+	}
+	
 	return(SUCCESS);								/* Report that we did it.		*/
 }
+/*
+**	History:
+**	$Log: vmode.c,v $
+**	Revision 1.12  1997-07-08 17:19:17-04  gsl
+**	Add COSTAR for WIN32 directio logic
+**	Change to use new video.h interfaces
+**
+**	Revision 1.11  1996-10-11 18:16:13-04  gsl
+**	drcs update
+**
+**
+**
+*/

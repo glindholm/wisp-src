@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #include "idsistd.h"
 
 #ifdef VMS
@@ -6,7 +8,7 @@
 #include <ssdef.h>
 #include <jbcmsgdef.h>
 #include "que_jobs.h"
-#include <v/video.h>
+#include "video.h"
 #include "werrlog.h"
 
 /* These are defined in SUBMIT, and must be declared the same.									*/
@@ -83,6 +85,15 @@ int  qflags;										/* Flags to control the job.		*/
 		curr_item->item.itemcode = SJC$_FORM_NUMBER;				/* This is the form number		*/
 		curr_item->item.bufadr = (char *)&formnum;				/* The buffer				*/
 		curr_item->item.retadr = (int *) 0;
+
+		if ((qflags & Q_DELETE_FILE) == Q_DELETE_FILE)				/* wants to delete the file after job	*/
+		{
+			curr_item++;
+			curr_item->item.buflen = 0;
+			curr_item->item.itemcode = SJC$_DELETE_FILE;			/* ask to delete			*/
+			curr_item->item.bufadr = (char *) 0;
+			curr_item->item.retadr = (int *) 0;
+		}
 	}
 
 
@@ -117,22 +128,13 @@ int  qflags;										/* Flags to control the job.		*/
 		}
 	}
 
-	if (qflags & Q_HOLD_JOB)							/* wants to hold the job		*/
+	if ((qflags & Q_HOLD_JOB) == Q_HOLD_JOB)					/* wants to hold the job		*/
 	{
 		curr_item++;
 		curr_item->item.buflen = 0;
 		curr_item->item.itemcode = SJC$_HOLD;					/* ask to hold				*/
 		curr_item->item.bufadr = (char *) 0;
 		curr_item->item.retadr = (int *) 0;                        
-	}
-
-	if (qflags & Q_DELETE_FILE)							/* wants to delete the file after job	*/
-	{
-		curr_item++;
-		curr_item->item.buflen = 0;
-		curr_item->item.itemcode = SJC$_DELETE_FILE;				/* ask to delete			*/
-		curr_item->item.bufadr = (char *) 0;
-		curr_item->item.retadr = (int *) 0;
 	}
 
 	if (*jname)									/* wants to Give it a job name.		*/
@@ -191,3 +193,12 @@ que_job()
 	werrlog(ERRORCODE(3),0,0,0,0,0,0,0,0);						/* Not implemented.			*/
 }
 #endif
+/*
+**	History:
+**	$Log: que_jobs.c,v $
+**	Revision 1.10  1996-08-19 18:32:41-04  gsl
+**	drcs update
+**
+**
+**
+*/

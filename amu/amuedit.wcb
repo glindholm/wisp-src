@@ -1,0 +1,498 @@
+000001/*****************************************************************
+000001*                                                                *
+000001*                       IDENTIFICATION DIVISION                  *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001/*****************************************************************
+000001*     Application Management Utility (AMU)                       *
+000001*                                                                *
+000001*     This is the Maintenance system (AMUEDIT)                   *
+000001******************************************************************
+000001
+000001 IDENTIFICATION DIVISION.
+000001 PROGRAM-ID.
+000001     AMUEDIT.
+000001 AUTHOR.
+000001     Suzette Cass.
+000001 DATE-WRITTEN.
+000001     05/20/93.
+000001/*****************************************************************
+000001*                                                                *
+000001*                         ENVIRONMENT DIVISION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 ENVIRONMENT DIVISION.
+000001 CONFIGURATION SECTION.
+000001 SOURCE-COMPUTER.
+000001     WANG-VS.
+000001 OBJECT-COMPUTER.
+000001     WANG-VS.
+000001 FIGURATIVE-CONSTANTS.
+           A-0-BYTE  IS "00", A-1-BYTE  IS "01", A-2-BYTE  IS "02",
+           A-3-BYTE  IS "03", A-4-BYTE  IS "04", A-5-BYTE  IS "05",
+           A-6-BYTE  IS "06", A-7-BYTE  IS "07", A-8-BYTE  IS "08",
+           A-9-BYTE  IS "09", A-10-BYTE IS "0A", A-11-BYTE IS "0B",
+           A-12-BYTE IS "0C", A-13-BYTE IS "0D", A-14-BYTE IS "0E",
+           A-15-BYTE IS "0F", A-16-BYTE IS "10", A-17-BYTE IS "11",
+           A-18-BYTE IS "12", A-19-BYTE IS "13", A-20-BYTE IS "14",
+           A-21-BYTE IS "15", A-22-BYTE IS "16", A-23-BYTE IS "17",
+           A-24-BYTE IS "18", A-25-BYTE IS "19", A-26-BYTE IS "1A",
+           A-28-BYTE IS "1C", A-42-BYTE IS "2A", A-54-BYTE IS "36",
+           A-160-BYTE  IS "A0"
+000001     PROTECT-BIT IS "04"
+           SUB-5       IS "05"                     
+000001     DIM-BIT     IS "08"
+000001     LF          IS "0A"
+000001     BLINK-BIT   IS "10"
+           POSITION-CURSOR IS "20"
+           UNLOCK-KEYBOARD IS "80"
+           WSXIO-READ  IS "40"
+           WSXIO-WRITE IS "80"
+000001     BRITE       IS "84"
+000001     TAB-STOP    IS "86"
+           PLAIN-TEXT  IS "8C"
+           MENU-PICK   IS "8E"
+000001     BLINKING-DISPLAY IS "94"
+000001     NO-ECHO     IS "98"
+           BR-MOD-UCL  IS "A1"
+           UNDER-TEXT  IS "AC".
+000001                                                      
+000001/*****************************************************************
+000001*                                                                *
+000001*                         INPUT-OUTPUT SECTION                   *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 INPUT-OUTPUT SECTION.
+000001 FILE-CONTROL.
+000001*
+000001     SELECT CRT
+000001         ASSIGN TO "CRT",      "DISPLAY",
+000001         ORGANIZATION    IS SEQUENTIAL
+000001         ACCESS MODE     IS RANDOM
+000001         RELATIVE KEY    IS LINENUM
+000001         PFKEY           IS PF-KEY
+000001         CURSOR POSITION IS CURSOR-POS
+000001         FILE STATUS     IS FILSTAT.
+000001
+000001/*****************************************************************
+000001*                                                                *
+000001*                      DATA DIVISION - FILE SECTION              *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 DATA DIVISION.
+000001 FILE SECTION.
+000001*
+123456*89012345678901234567890123456789012345678901234567890123456789012
+000001 FD  CRT
+000001     LABEL RECORDS ARE OMITTED.
+000001 01  CRTREC.
+           03  CRTREC-OA                  PIC X(4).
+            03  CRTREC-MAPPING-AREA       PIC X(1920).
+000001*
+000001/*****************************************************************
+000001*                                                                *
+000001*                         WORKING STORAGE                        *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 WORKING-STORAGE SECTION.
+000001
+       COPY VERSION.
+
+000001 01  FILSTAT.
+000001     03  ERR-FLAG                   PIC X(01).
+000001     03  PFK-BYTE                   PIC X(01).
+
+000001 01  MFILE-STAT                     PIC X(2).
+
+       77  LINENUM                        PIC 9(02) VALUE 1.
+       77  PF-KEY                         PIC X(02) VALUE ZERO.
+
+       01  CURSOR-POS.
+           03  MOD-COL                    BINARY.
+           03  MOD-ROW                    BINARY.
+
+       01  REDEF-CURS-POS                 REDEFINES CURSOR-POS.
+           03  FILLER                     PIC X(01).
+           03  CURS-COL                   PIC X(01).
+           03  FILLER                     PIC X(01).
+           03  CURS-ROW                   PIC X(01).
+
+       01  TEMP-OA.
+           03  TEMP-OA-START              PIC X(01) VALUE A-1-BYTE.
+           03  TEMP-OA-WCC                PIC X(01) VALUE A-160-BYTE.
+           03  TEMP-OA-COL                PIC X(01) VALUE A-0-BYTE.
+           03  TEMP-OA-ROW                PIC X(01) VALUE A-0-BYTE.
+
+       01  D-SCN-ROW                      PIC X(01) VALUE A-0-BYTE.
+       01  D-SCN-COL                      PIC X(01) VALUE A-0-BYTE.
+
+       01  BELL-TIME.
+           03  FILLER                     BINARY VALUE 0.
+           03  BELL-TIME-2                BINARY VALUE 1.
+
+       01  SELECTION-MENU-TEXT            PIC X(20) VALUE SPACES.
+
+       01  WSXIO-FUNCTION PIC X     VALUE SPACES.
+       01  WSXIO-UFB      PIC X(02) VALUE SPACES.
+       01  WSXIO-CMD      PIC X.
+       01  WSXIO-ORDER-AREA.
+           03  WSXIO-O-A-1 PIC X VALUE A-1-BYTE.
+           03  WSXIO-O-A-2 PIC X VALUE A-0-BYTE.
+           03  WSXIO-O-A-3 PIC X VALUE A-0-BYTE.
+           03  WSXIO-O-A-4 PIC X VALUE A-0-BYTE.
+       01  WSXIO-OA-SAVE PIC X(4).
+       01  WSXIO-O-A-LENGTH.
+           05  O-A-L1 BINARY VALUE 0.
+           05  O-A-L2 BINARY VALUE 4.
+       01  WSXIO-SCREEN-LENGTH.
+           05  S1-LEN BINARY VALUE 0.
+           05  S2-LEN BINARY VALUE 1920.
+       01  WSXIO-TIMEOUT-SEC.
+           05  WSXIO-TO1  BINARY VALUE 0.
+           05  WSXIO-TO2  BINARY VALUE 0.
+       01  WSXIO-TIMEOUT-HSEC.
+           05  WSXIO-TOH1  BINARY VALUE 0.
+           05  WSXIO-TOH2  BINARY VALUE 0.
+       01  WSXIO-IOSW    PIC X(08) VALUE SPACES.
+       01  WSXIO-AID     PIC X(01) VALUE SPACES.
+       01  WSXIO-SCREEN.
+           03  FILLER    PIC X(03) VALUE SPACES.
+           03  FILER     PIC X(01) VALUE UNDER-TEXT.
+           03  WSXIO-SCN-TXT-1 PIC X(75) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER        PIC X(14) VALUE "        FILE =".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  FIL-FOR-MFILE PIC X(08) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(09) VALUE "LIBRARY =".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  LIB-FOR-MFILE PIC X(08) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(08)  VALUE "VOLUME =".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  VOL-FOR-MFILE PIC X(06) VALUE SPACES.
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(08) VALUE "ACCESS =".
+           03  FILLER        PIC X(01) VALUE BR-MOD-UCL. 
+           03  MENU-ACCESS   PIC X(06) VALUE "UPDATE".
+               88  ACCESS-CREATE       VALUE "CREATE".
+               88  ACCESS-UPDATE       VALUE "UPDATE".
+               88  ACCESS-BROWSE       VALUE "BROWSE".
+           03  FILLER        PIC X(01) VALUE PLAIN-TEXT.
+           03  FILLER        PIC X(05) VALUE SPACES.
+
+           03  FILLER    PIC X(80) VALUE SPACES.
+
+           03  FILLER    PIC X(04) VALUE SPACES.
+           03  FILLER    PIC X(52) VALUE
+               "or Select: 1 - Cancel Request and Respecify Function".
+           03  FILLER    PIC X(24) VALUE SPACES.
+
+       01  CHOICE                PIC X(02)   VALUE SPACES.
+
+      ******************************************************************
+      *                  LINK PARAMETERS                               *
+      ******************************************************************
+       01  LINK-TO-FILE        PIC X(08) VALUE SPACES.
+       01  LINK-TO-LIB         PIC X(08) VALUE SPACES.
+       01  LINK-TO-VOL         PIC X(06) VALUE SPACES.
+
+       01  LINK-TYPE           PIC X(01) VALUE SPACES.
+       01  LINK-PARM-CNT.
+           03 LINK-PARM-CNT-1  BINARY  VALUE ZERO.
+           03 LINK-PARM-CNT-2  BINARY  VALUE ZERO.
+       01  LINK-CANCEL-FLAG    PIC X(01) VALUE SPACES.
+       01  LINK-MESSAGE        PIC X(27) VALUE SPACES.
+       01  LINK-MESS-LEN.
+           03 LINK-MESS-LEN-1  BINARY  VALUE ZERO.
+           03 LINK-MESS-LEN-2  BINARY  VALUE ZERO.
+       01  LINK-HELP           PIC X(01) VALUE SPACES.
+       01  LINK-COMP-CODE.
+           03 LINK-COMP-CODE-1 BINARY VALUE ZERO.
+           03 LINK-COMP-CODE-2 BINARY VALUE ZERO.
+       01  LINK-COMP-CODE-X PIC 9999  VALUE ZERO.     
+       01  LINK-RETURN.
+           03 LINK-RETURN-1    BINARY    VALUE ZERO.
+           03 LINK-RETURN-2    BINARY    VALUE ZERO.
+       01  LINK-RETURN-X    PIC 9(04)    VALUE ZERO.
+
+      ******************************************************************
+      *                DATA FOR READFDR                                *
+      ******************************************************************
+
+       01  FDR-MODE.
+           03  FDR-MODE-1        BINARY  VALUE 0.
+           03  FDR-MODE-2        BINARY  VALUE 0.
+       01  FDR-FUNCTION          PIC X(02) VALUE SPACES.
+       01  FDR-RECEIVER.
+           03  FILLER            BINARY.
+           03  FDR-RECORD-COUNT  BINARY.
+       01  FDR-RETURN-CODE.
+           03  FILLER            BINARY.
+           03  FDR-RETURN-2      BINARY.
+
+      /*****************************************************************
+      *                                                                *
+      *                   DISPLAY DEFINITIONS                          *
+      *                                                                *
+      ******************************************************************
+      *
+123456*89012345678901234567890123456789012345678901234567890123456789012
+       01  AMUEM000-SCREEN USAGE IS DISPLAY-WS.
+           03  FILLER  PIC X(32) ROW 1 COL 25 VALUE
+               "AMU Menu Environment Maintenance".
+           03  FILLER  PIC X(08) ROW 1 COL 72 VALUE
+               "AMUEM000".
+           03  FILLER  PIC X(08) ROW 2 COL 10 VALUE
+               "Version ".
+           03  FILLER  PIC X(08) ROW 2 COL 18
+               SOURCE AMU-VERSION.
+           03  FILLER  PIC X(50) ROW 2 COL 27 VALUE
+               "- (c) Copyright NeoMedia Technologies Inc. 1993-97".
+           03  AMUEM000-4 PIC X(21) ROW 4 COL 30 VALUE
+               "Record Type Selection".
+           03  AMUEM000-6 PIC X(54) ROW 6 COL 13 VALUE
+               "Position Cursor to Desired Function and Press <RETURN>".
+           03  FILLER  PIC X(08) ROW 6 COL 72 VALUE
+               "To Exit:".
+           03  FILLER  PIC X(08) ROW 7 COL 72 VALUE
+               "PFKEY 16".
+           03  AMUEM000-MENU-1 PIC X(30) ROW 8 COL 25
+               SOURCE AMUEM000-ITEM-1.
+           03  AMUEM000-MENU-2 PIC X(30) ROW 9 COL 25
+               SOURCE AMUEM000-ITEM-2.
+           03  AMUEM000-MENU-3 PIC X(30) ROW 10 COL 25
+               SOURCE AMUEM000-ITEM-3.
+
+       01  AMUEM000-ITEM-1.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(27) VALUE
+               "Menu Definition Maintenance".
+
+       01  AMUEM000-ITEM-2.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(25) VALUE
+               "Function Keys Maintenance".
+
+       01  AMUEM000-ITEM-3.
+           03  SUB-COL1  PIC X     VALUE MENU-PICK.
+           03  SUB-COL2  PIC X     VALUE SUB-5.
+           03  FILLER    PIC X     VALUE SPACES.
+           03  FILLER    PIC X(27) VALUE
+               "User Definition Maintenance".
+
+000001/*****************************************************************
+000001*                                                                *
+000001*                         PROCEDURE DIVISION                     *
+000001*                                                                *
+000001******************************************************************
+000001*
+000001 PROCEDURE DIVISION.
+       LOOP-DISPLAY.
+           MOVE UNDER-TEXT TO FAC OF AMUEM000-4.
+           MOVE UNDER-TEXT TO FAC OF AMUEM000-6.
+           MOVE D-SCN-COL TO TEMP-OA-COL.
+           MOVE D-SCN-ROW TO TEMP-OA-ROW.
+           MOVE TEMP-OA TO ORDER-AREA OF AMUEM000-SCREEN.
+           DISPLAY AND READ AMUEM000-SCREEN ON CRT
+           PFKEYS 16.
+
+           PERFORM SAVE-OA-ROW-COL.
+
+           IF PF-KEY = "16" THEN
+              GO TO EXIT-PROGRAM.
+
+           IF MOD-ROW = 8 THEN
+               MOVE "MD" TO CHOICE
+               MOVE "Menu Definition File" TO SELECTION-MENU-TEXT
+           ELSE
+           IF MOD-ROW = 9 THEN
+               MOVE "PK" TO CHOICE
+               MOVE "Function Keys File" TO SELECTION-MENU-TEXT
+           ELSE
+           IF MOD-ROW = 10 THEN
+               MOVE "SF" TO CHOICE
+               MOVE "User Definition File" TO SELECTION-MENU-TEXT
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               GO TO LOOP-DISPLAY.
+
+           PERFORM DO-SELECT-MENU-DEF THRU EXIT-SELECT-MENU-DEF.
+           GO TO LOOP-DISPLAY.
+
+       DO-SELECT-MENU-DEF.
+           MOVE SPACES TO FIL-FOR-MFILE, LIB-FOR-MFILE,
+                          VOL-FOR-MFILE.
+           MOVE "UPDATE" TO MENU-ACCESS.
+           STRING "Complete the Specifications for the ",
+                  SELECTION-MENU-TEXT,
+                  " and Press <RETURN>" DELIMITED BY SIZE
+              INTO WSXIO-SCN-TXT-1.
+           MOVE WSXIO-WRITE TO WSXIO-CMD.
+           MOVE A-20-BYTE   TO WSXIO-O-A-1.
+           MOVE A-160-BYTE  TO WSXIO-O-A-2.
+           MOVE A-16-BYTE   TO WSXIO-O-A-3.
+           MOVE A-22-BYTE   TO WSXIO-O-A-4.
+           MOVE 400 TO S2-LEN.
+           MOVE "X" To WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE WSXIO-READ TO WSXIO-CMD.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB,
+                              WSXIO-CMD, WSXIO-ORDER-AREA,
+                              WSXIO-O-A-LENGTH, WSXIO-SCREEN,
+                              WSXIO-SCREEN-LENGTH, WSXIO-TIMEOUT-SEC,
+                              WSXIO-TIMEOUT-HSEC, WSXIO-IOSW, WSXIO-AID.
+           MOVE "A" TO WSXIO-FUNCTION.
+           CALL "WSXIO" USING WSXIO-FUNCTION, WSXIO-UFB, WSXIO-AID.
+
+           IF WSXIO-AID = "A" THEN
+               GO TO EXIT-SELECT-MENU-DEF
+           ELSE
+           IF WSXIO-AID = "@" THEN
+               PERFORM DO-SELECTION THRU EXIT-DO-SELECTION
+           ELSE
+               CALL "BELL" USING BELL-TIME
+               GO TO DO-SELECT-MENU-DEF.
+
+       EXIT-SELECT-MENU-DEF.
+           EXIT.
+
+       DO-SELECTION.
+           IF FIL-FOR-MFILE = SPACES OR MENU-ACCESS = SPACES THEN
+               CALL "BELL" USING BELL-TIME
+               GO TO EXIT-DO-SELECTION.
+
+           PERFORM CHECK-MENU-EXISTS.
+
+           IF ACCESS-CREATE THEN
+               MOVE "UPDATE" TO MENU-ACCESS.
+
+           IF CHOICE = "MD" THEN
+               MOVE "AMUMDM  " TO LINK-TO-FILE
+           ELSE
+           IF CHOICE = "PK" THEN
+               MOVE "AMUFKM  " TO LINK-TO-FILE
+           ELSE
+           IF CHOICE = "SF" THEN
+               MOVE "AMUUDM  " TO LINK-TO-FILE
+           ELSE
+               MOVE SPACES TO LINK-TO-FILE.
+
+           MOVE 4 TO LINK-PARM-CNT-2.
+           CALL LINK-TO-FILE USING FIL-FOR-MFILE, LIB-FOR-MFILE,
+                             VOL-FOR-MFILE, MENU-ACCESS.
+
+       EXIT-DO-SELECTION.
+           EXIT.
+
+       SAVE-OA-ROW-COL.
+           IF MOD-ROW = 1 THEN
+               MOVE A-1-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 2 THEN
+               MOVE A-2-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 3 THEN
+               MOVE A-3-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 4 THEN
+               MOVE A-4-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 5 THEN
+               MOVE A-5-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 6 THEN
+               MOVE A-6-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 7 THEN
+               MOVE A-7-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 8 THEN
+               MOVE A-8-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 9 THEN
+               MOVE A-9-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 10 THEN
+               MOVE A-10-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 11 THEN
+               MOVE A-11-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 12 THEN
+               MOVE A-12-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 13 THEN
+               MOVE A-13-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 14 THEN
+               MOVE A-14-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 15 THEN
+               MOVE A-15-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 16 THEN
+               MOVE A-16-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 17 THEN
+               MOVE A-17-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 18 THEN
+               MOVE A-18-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 19 THEN
+               MOVE A-19-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 20 THEN
+               MOVE A-20-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 21 THEN
+               MOVE A-21-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 22 THEN
+               MOVE A-22-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 23 THEN
+               MOVE A-23-BYTE TO D-SCN-ROW
+           ELSE
+           IF MOD-ROW = 24 THEN
+               MOVE A-24-BYTE TO D-SCN-ROW
+           ELSE
+               MOVE A-0-BYTE TO D-SCN-ROW.
+
+           IF MOD-COL = 25 THEN
+               MOVE A-25-BYTE TO D-SCN-COL
+           ELSE
+               MOVE A-0-BYTE TO D-SCN-COL.
+
+000001 EXIT-PROGRAM.
+000001     EXIT PROGRAM.
+000001
+000001 STOP-RUN.
+000001     STOP RUN.
+
+       CHECK-MENU-EXISTS.
+           MOVE "CD" TO FDR-FUNCTION.
+           CALL "READFDR" USING FIL-FOR-MFILE, LIB-FOR-MFILE,
+                                VOL-FOR-MFILE,
+                                FDR-MODE, FDR-FUNCTION,
+                                FDR-RECEIVER, FDR-RETURN-CODE.
+           IF FDR-RETURN-2 NOT = 0
+               DISPLAY "Create NEW menu file NOT SUPPORTED YET."
+               GO TO EXIT-DO-SELECTION.

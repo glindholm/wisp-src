@@ -1,12 +1,5 @@
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 
 /*
 **	File:		wispsort.c
@@ -23,9 +16,6 @@
 **			delseqnum()		Remove the added sequence number
 **			copyfile()		Copy a file
 **
-**	History:
-**			mm/dd/yy	Written by GSL
-**			05/29/92	Added makepath(outfile) to generate intermmediate directories. GSL
 **
 */
 
@@ -131,59 +121,73 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(unix) || defined(WIN32)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
+#if defined(MSDOS) || defined(WIN32)
 #include <io.h>
+#include <process.h>
+#include "wispnt.h"
 #endif
 
 #include "idsistd.h"
 #include "wcommon.h"
 #include "sortseqf.h"
+#include "wfname.h"
 #include "movebin.h"
+#include "osddefs.h"
+#include "wisplib.h"
+#include "wmalloc.h"
+#include "vwang.h"
+#include "wispcfg.h"
+#include "assert.h"
+
 #include "werrlog.h"
 #define		ROUTINE		80500
 
-char *wfname();
 
-static int unloadacu();
-static int unloadcisam();
-static int unloadfhisam();
-static int isvision();
-static int addseqnum();
-static int delseqnum();
-static int copyfile();
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+#ifndef O_TEXT
+#define O_TEXT 0
+#endif
 
-WISPSORT(sortparms,filetype,recsize,sortcode,returncode)
-char	*sortparms;
-char	*filetype;
-int	*recsize;
-int	*sortcode;
-int	*returncode;
+
+void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
+void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode);
+
+static int unloadacu(char *inname, char *outname);
+static int unloadcisam(char *inname, char *outname, int4 recsize);
+static int unloadfhisam(char *inname, char *outname, int4 recsize);
+static int isvision(char *filename);
+static int addseqnum(char *infile, char *outfile, int recsize);
+static int delseqnum(char *infile, char *outfile, int recsize);
+static int copyfile(char *infile, char *outfile);
+
+
+
+void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode)
 {
 	wangsort(sortparms,filetype,recsize,0,sortcode,returncode);
 }
 
-
-wangsort(sortparms,filetype,recsize,dupinorder,sortcode,returncode)
-char	*sortparms;
-char	*filetype;
-int	*recsize;
-int	dupinorder;								/* Duplicates are perserved in order recieved	*/
-int	*sortcode;
-int	*returncode;
+void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode)
 {
 	int	l_sortcode, l_returncode, l_recsize;
 	char	l_filetype;
-	struct s_sortkeys sortkeys[8];
-	int	numkeys;
+	struct s_sortkeys sortkeys[SSF_MAX_NUMKEYS]; 
 	char	infile[80], outfile[80], unloadfile[80], inseqfile[80], outseqfile[80];
+	int	numkeys;
 	char	*ptr, *inptr, *outptr;
 	int4	mode;
 	char	errbuff[256];
 	char	messstr[80];
 	char	buff[80];
 	int	rc;
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
 	l_sortcode = 0;
 	l_returncode = 0;
@@ -194,6 +198,9 @@ int	*returncode;
 
 	GETBIN(&l_recsize,recsize,sizeof(int));
 	wswap(&l_recsize);
+
+	wtrace("WANGSORT", "ENTRY", "Infile=[%22s] Outfile=[%22s] Recsize=%d Filetype=%c", 
+	       &sortparms[0], &sortparms[22], l_recsize, *filetype);
 
 	/* 
 	**	Validate the filetype.
@@ -287,7 +294,7 @@ int	*returncode;
 				int	fh, i1;
 				unsigned char	magicnum[2];
 
-				fh = open( buff, O_RDONLY );			/* Open the file				*/
+				fh = open( buff, O_RDONLY | O_BINARY );		/* Open the file				*/
 
 				if ( fh == -1 )
 				{
@@ -310,7 +317,11 @@ int	*returncode;
 				}
 				else if ( i1 >= 2 && (magicnum[0] == 0x31 && magicnum[1] == 0xFE) )
 				{
-					v_filetype = '3';
+					v_filetype = '3'; /* This is the older MF-ISAM files */
+				}
+				else if ( i1 >= 2 && (magicnum[0] == 0x33 && magicnum[1] == 0xFE) )
+				{
+					v_filetype = '3'; /* This could actually be ID3 or ID4 */
 				}
 			} /* CISAM or FH-ISAM */
 		} /* type unknown */
@@ -338,6 +349,8 @@ int	*returncode;
 	**			C	Cisam
 	**			3	FH-Isam
 	*/
+
+	wtrace("WANGSORT","FILETYPE", "Filetype=%c", l_filetype);
 
 	/*
 	**	Unload ACUCOBOL indexed file
@@ -374,9 +387,6 @@ int	*returncode;
 
 	if ( l_filetype == 'C' || l_filetype == '3' )
 	{
-		strcpy(buff,infile);
-		strcat(buff,".idx");
-
 		rc = cisaminfo(infile,"RS",&l_recsize);
 		if ( rc )
 		{
@@ -598,8 +608,6 @@ int	*returncode;
 
 	if (0 == numkeys)							/* Special case: No keys then copy file		*/
 	{
-		int	rc;
-
 		if (copyfile(inptr,outptr))
 		{
 			l_sortcode = ERR_OPENOUTPUT;				/* this is the most likely reason for cp fail	*/
@@ -609,19 +617,12 @@ int	*returncode;
 	}
 	else
 	{
-		int	memsizek;
-		char	*memsize_buff;
-
-		memsizek = 0;
-		memsize_buff = (char *)getenv("WISPSORTMEM");
-		if (memsize_buff)
-		{
-			sscanf(memsize_buff,"%d",&memsizek);
-		}
-#ifdef DEBUG
+		int	memsizek = wispsortmemk();
+#ifdef TESTING
 printf("wispsort:memsizek = %d\n",memsizek);
 #endif
-		l_sortcode = sortseqf( inptr, outptr, 0, memsizek, l_filetype, l_recsize, 0, numkeys, sortkeys, 0, 0, errbuff);
+		l_sortcode = sortseqf( inptr, outptr, NULL, memsizek, l_filetype, l_recsize, NULL, 
+				      numkeys, sortkeys, 0, NULL, errbuff);
 	}
 
 	switch(l_sortcode)
@@ -713,6 +714,8 @@ return_label:
 		if (outseqfile[0]) unlink(outseqfile);
 	}
 
+	wtrace("WANGSORT","RETURN","Sortcode=%ld Returncode=%ld", (long)l_sortcode, (long)l_returncode);
+	
 	wswap(&l_sortcode);
 	wswap(&l_returncode);
 	PUTBIN(sortcode,&l_sortcode,sizeof(int));
@@ -720,28 +723,44 @@ return_label:
 }
 
 #ifdef unix
-static int unloadacu(inname,outname)					/* Unload the ACUCOBOL file to a tempfile		*/
-char	*inname, *outname;
+static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file to a tempfile		*/
 {
 	char	command[256];
 	int	rc;
 
-	sprintf(command,"vutil -unload %s %s >/dev/null 2>&1",inname, outname );
+	sprintf(command,"%s -unload %s %s >/dev/null 2>&1", acu_vutil_exe(), inname, outname );
 	rc = wsystem(command);
 
 	return( rc );
 }
 #endif /* unix */
 
+
+#ifdef WIN32
+#include "win32spn.h"
+
+static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file to a tempfile		*/
+{
+	char 	cmd[512];
+	int 	rc;
+
+	/*
+	**	Spawn "vutil32.exe -unload <inname> <outname>"
+	*/
+
+	sprintf(cmd, "%s -unload %s %s", acu_vutil_exe(), inname, outname);
+	ASSERT(strlen(cmd) < sizeof(cmd));
+	
+	rc = win32spawnlp(NULL, cmd, SPN_HIDE_CHILD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+
+	return( rc );
+}
+#endif /* WIN32 */
+
 #ifdef MSDOS
-#include <sys\types.h>
-#include <sys\stat.h>
-#include <process.h>
-static int unloadacu(inname,outname)					/* Unload the ACUCOBOL file to a tempfile		*/
-char	*inname, *outname;
+static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file to a tempfile		*/
 {
 	char	buff[256];
-	char	cmd[256];
 	int	rc;
 #define	STD_OUT	1
 	int	old_std_out, new_std_out;
@@ -752,11 +771,16 @@ char	*inname, *outname;
 	**	we don't want to see so we must redirect stdout to NUL.
 	*/
 
-	if ((old_std_out = dup(STD_OUT)) == -1)
-	{
-		sprintf(buff,"Error on dup() of std_out [errno=%d]",errno);
-		werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
-	}
+	/*
+	**	First shutdown vwang before munging with stdout
+	*/
+	vwang_shut();
+
+	/*
+	**	Re-direct stdout to the NUL device
+	*/
+	old_std_out = dup(STD_OUT);
+
 	if ((new_std_out = open("NUL", O_WRONLY | O_CREAT | O_TRUNC | O_TEXT, S_IWRITE)) == -1)
 	{
 		sprintf(buff,"Error on open() of new_std_out [errno=%d]",errno);
@@ -770,35 +794,52 @@ char	*inname, *outname;
 	}
 
 	/*
-	** "vutil -unload <inname> <outname>"
+	**	Spawn "vutil.exe -unload <inname> <outname>"
 	*/
 
-	rc = spawnlp(P_WAIT, "vutil", "vutil", "-unload", inname, outname, NULL);
+	rc = spawnlp(P_WAIT, acu_vutil_exe(), "vutil", "-unload", inname, outname, NULL);
 
+	/*
+	**	Restore stdout
+	*/
+	if ( -1 != old_std_out)
+	{
+		dup2(old_std_out,STD_OUT);
+		close(old_std_out);
+	}
+	else
+	{
+		dup2(handle_stdout(), STD_OUT);
+	}
+	close(new_std_out);
+
+	/*
+	**	Restore vwang
+	*/
+	vwang_synch();
+
+	/*
+	**	Check the results of the spawn of vutil
+	*/
 	if (rc == -1)
 	{
 		if (errno == ENOENT)
 		{
-			werrlog(ERRORCODE(2),"VUTIL not found",0,0,0,0,0,0,0);
+			sprintf(buff,"VUTIL not found (%s)",acu_vutil_exe());
+			werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
 		}
 		else
 		{
-			sprintf(buff,"Error on spawn of VUTIL [errno=%d]",errno);
+			sprintf(buff,"Error on spawn of %s [errno=%d]", acu_vutil_exe(), errno);
 			werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
 		}
 	}
-
-	dup2(old_std_out,STD_OUT);
-	close(new_std_out);
-	close(old_std_out);
 
 	return( rc );
 }
 #endif /* MSDOS */
 
-static int unloadcisam(inname,outname,recsize)
-char	*inname, *outname;
-int4	recsize;
+static int unloadcisam(char *inname, char *outname, int4 recsize)
 {
 	FILE	*fpin, *fpout;
 	unsigned char	*buff;
@@ -808,7 +849,7 @@ int4	recsize;
 	strcpy(t_inname,inname);
 	if (fexists(t_inname))
 	{
-		fpin = fopen(t_inname,"r");
+		fpin = fopen(t_inname,FOPEN_READ_BINARY);
 		if ( !fpin ) return(-1);
 	}
 	else
@@ -816,25 +857,20 @@ int4	recsize;
 		strcat(t_inname,".dat");
 		if (fexists(t_inname))
 		{
-			fpin = fopen(t_inname,"r");
+			fpin = fopen(t_inname,FOPEN_READ_BINARY);
 			if ( !fpin ) return(-1);
 		}
 		else return(-1);	 
 	}
 
-	fpout = fopen(outname,"w");
+	fpout = fopen(outname,FOPEN_WRITE_BINARY);
 	if ( !fpout ) 
 	{
 		fclose(fpin);
 		return(-1);
 	}
 
-	buff = (unsigned char *)malloc((size_t)recsize+2);
-	if ( !buff )
-	{
-		fclose(fpin);
-		fclose(fpout);
-	}
+	buff = (unsigned char *)wmalloc((size_t)recsize+2);
 		
 	for(;;)
 	{
@@ -874,10 +910,8 @@ int4	recsize;
 	return(0);
 }
 
-#ifdef MSDOS
-static int unloadfhisam(inname,outname,recsize)
-char	*inname, *outname;
-int4	recsize;
+#if defined(MSDOS) || defined(WIN32)
+static int unloadfhisam(char *inname, char *outname, int4 recsize)
 {
 	werrlog(102, "(unloadfhism) Not Implemented",0,0,0,0,0,0,0);
 	return 1;
@@ -885,31 +919,47 @@ int4	recsize;
 #endif /* MSDOS */
 
 #ifdef unix
-static int unloadfhisam(inname,outname,recsize)
-char	*inname, *outname;
-int4	recsize;
+static int unloadfhisam(char *inname, char *outname, int4 recsize)
 {
 	char	parms[512];
 	char	cmd[512];
 	char	buff[80];
+	int	fh, i1;
+	char	*filetype = "I3";		/* Default to ID3 files */
+
+	fh = open( inname, O_RDONLY | O_BINARY );
+	if ( fh != -1 )
+	{
+		unsigned char	fileheader[50];		/* Only need byte 44 (offset 43) by get extra */
+
+		memset(fileheader, '\0', sizeof(fileheader));
+		read( fh, (char *)fileheader, sizeof(fileheader) );
+		close(fh);
+		if (0x04 == fileheader[43])  	/* Check byte that tells 3 or 4 */
+		{
+			filetype = "I4";	/* If 4 then it is ID4 */
+		}
+	}
 
 	if (fexists(inname))
 	{
 		/*
 		**	No .dat extension
 		*/
-		sprintf(parms,"IN %s\nIE\nIT I3\nON %s\nOE\nOT S0\nOF %d\n",inname, outname, recsize);
+		sprintf(parms,"IN %s\nIE\nIT %s\nON %s\nOE\nOT S0\nOF %d\n",inname, filetype, outname, recsize);
 	}
 	else
 	{
-		sprintf(parms,"IN %s\nIT I3\nON %s\nOT S0\nOF %d\n",inname, outname, recsize);
+		sprintf(parms,"IN %s\nIT %s\nON %s\nOT S0\nOF %d\n",inname, filetype, outname, recsize);
 	}
 
 	sprintf(cmd,"echo \"%s\" | fhconvert -e -c - >/dev/null 2>&1",parms);
 
-	unlink(outname);
-	wsystem(cmd);
+	unlink(outname);		/* Delete old output file */
 
+	wsystem(cmd);			/* Issue the fhconvert command */
+
+	/* Delete temp .con files that fhconvert creates */
 	strcpy(buff,inname);
 	strcat(buff,".con");
 	unlink(buff);
@@ -929,19 +979,18 @@ int4	recsize;
 }
 #endif /* unix */
 
-static int isvision(filename)						/* Test if file is an ACUCOBOL Vision file.		*/
+static int isvision(char *filename)					/* Test if file is an ACUCOBOL Vision file.		*/
 									/* 	ReturnCode:	 0	Vision file		*/
 									/*			 1	Not Vision file		*/
 									/*			-4	Can't open		*/
 									/*			-8	Can't read		*/
-char	*filename;
 {
 	int	fh;
 	char	buff[20];
 	int4	lg;
 	int	rc;
 
-	fh = open(filename,O_RDONLY,0);
+	fh = open(filename,O_RDONLY|O_BINARY,0);
 	if ( fh == -1 )
 	{
 		rc = -4;
@@ -978,23 +1027,21 @@ char	*filename;
 	addseqnum	Copy records from infile to outfile adding a sequence number to the end of each record.
 			A non-zero return code indicates an error.
 */
-static int addseqnum(infile, outfile, recsize)
-char	*infile, *outfile;
-int	recsize;
+static int addseqnum(char *infile, char *outfile, int recsize)
 {
 	FILE	*i_fp, *o_fp;
 	char	*buff;
 	int4	seq;
 	char	messstr[80];
 
-	if (!(i_fp = fopen(infile,"r")))
+	if (!(i_fp = fopen(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
-	if (!(o_fp = fopen(outfile,"w")))
+	if (!(o_fp = fopen(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -1002,13 +1049,7 @@ int	recsize;
 		return(41);
 	}
 
-	if (!(buff = (char *) malloc(recsize+4+2)))
-	{
-		werrlog(ERRORCODE(2),"Malloc failed",0,0,0,0,0,0,0);
-		fclose(i_fp);
-		fclose(o_fp);
-		return(8);
-	}
+	buff = (char *) wmalloc(recsize+4+2);
 
 	seq = 0;
 	while( fread(buff, recsize, 1, i_fp) )
@@ -1038,22 +1079,20 @@ int	recsize;
 	delseqnum	Copy records from infile to outfile deleting the sequence number from the end of each record.
 			A non-zero return code indicates an error.
 */
-static int delseqnum(infile, outfile, recsize)
-char	*infile, *outfile;
-int	recsize;
+static int delseqnum(char *infile, char *outfile, int recsize)
 {
 	FILE	*i_fp, *o_fp;
 	char	*buff;
 	char	messstr[80];
 
-	if (!(i_fp = fopen(infile,"r")))
+	if (!(i_fp = fopen(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
-	if (!(o_fp = fopen(outfile,"w")))
+	if (!(o_fp = fopen(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -1061,13 +1100,7 @@ int	recsize;
 		return(41);
 	}
 
-	if (!(buff = (char *) malloc(recsize+4+2)))
-	{
-		werrlog(ERRORCODE(2),"Malloc failed",0,0,0,0,0,0,0);
-		fclose(i_fp);
-		fclose(o_fp);
-		return(8);
-	}
+	buff = (char *) wmalloc(recsize+4+2);
 
 	while( fread(buff, recsize+sizeof(int4), 1, i_fp) )
 	{
@@ -1094,21 +1127,20 @@ int	recsize;
 	copyfile	Copy infile to outfile.
 			A non-zero return code indicates an error.
 */
-static int copyfile(infile, outfile)
-char	*infile, *outfile;
+static int copyfile(char *infile, char *outfile)
 {
 	FILE	*i_fp, *o_fp;
 	int	c;
 	char	messstr[80];
 
-	if (!(i_fp = fopen(infile,"r")))
+	if (!(i_fp = fopen(infile,FOPEN_READ_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",infile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
 		return(41);
 	}
 
-	if (!(o_fp = fopen(outfile,"w")))
+	if (!(o_fp = fopen(outfile,FOPEN_WRITE_BINARY)))
 	{
 		sprintf(messstr,"Open failed file=%s [errno=%d]",outfile,errno);
 		werrlog(ERRORCODE(2),messstr,0,0,0,0,0,0,0);
@@ -1135,3 +1167,63 @@ char	*infile, *outfile;
 	return(0);
 }
 
+/*
+**	History:
+**	$Log: wispsort.c,v $
+**	Revision 1.25  1997-12-04 18:13:43-05  gsl
+**	changed to wispnt.h
+**
+**	Revision 1.24  1997-07-29 15:37:55-04  gsl
+**	Add support for ID3 and ID4 files for Micro Focus 3.2
+**
+**	Revision 1.23  1997-07-16 21:20:20-04  gsl
+**	Add SPN_NO_INHERIT to the spawn flags for VUTIL on WIN32.
+**	With COSTAR VUTIL was overwritting screen.
+**
+**	Revision 1.22  1997-05-09 15:12:47-04  gsl
+**	Split unloadacu() out for WIN32 and use win32spawnlp() to run vutil
+**
+**	Revision 1.21  1997-03-12 13:27:18-05  gsl
+**	changed to use WIN32 define
+**
+**	Revision 1.20  1996-12-11 19:57:00-05  gsl
+**	Changed hardcoded "vutil" into acu_vutil_exe() calls as the name can
+**	be "vutil", "vutil.exe", "vutil32.exe" or "vutilext.exe" depending on
+**	the release and the platform
+**
+**	Revision 1.19  1996-10-08 17:30:19-07  gsl
+**	replace getenv() with wispsortmemk()
+**
+**	Revision 1.18  1996-09-26 10:15:05-07  gsl
+**	Changed the sortkeys[] array size from 8 to SSF_MAK_KEYS (16).
+**	When STABLE sort was used an extra key was added so the max
+**	number of keys was 8+1=9 which overflowed the array.
+**
+**	Revision 1.17  1996-09-10 08:51:20-07  gsl
+**	ensure system includes are before wisp includes
+**	,
+**
+**	Revision 1.16  1996-08-22 11:28:17-07  gsl
+**	Fix unloadacu() to shutdown and restore vwang outside of the
+**	munging with stdout
+**
+**	Revision 1.15  1996-08-21 16:36:06-07  gsl
+**	Add missing include
+**
+**	Revision 1.14  1996-08-21 16:19:14-07  gsl
+**	Fix redirecting of stdout for NT
+**
+**	Revision 1.13  1996-07-17 14:55:00-07  gsl
+**	change to use wmalloc()
+**
+**	Revision 1.12  1996-07-10 17:18:40-07  gsl
+**	Reuse MSDOS code for NT
+**
+**	Revision 1.11  1996-01-02 07:38:39-08  gsl
+**	changed ifdef DEBUG --> TESTING
+**
+**
+**			mm/dd/yy	Written by GSL
+**			05/29/92	Added makepath(outfile) to generate intermmediate directories. GSL
+**
+*/

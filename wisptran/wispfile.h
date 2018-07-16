@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -22,14 +26,28 @@
 #ifndef WISPFILE_H
 #define WISPFILE_H
 
+#include <stdio.h>
+
 #ifndef EXT
 #define EXT extern
+#endif
+
+#ifdef unix
+#define DSS_CHAR	'/'							/* Directory String Seperator (char)		*/
+#define	DSS_STR		"/"							/* Directory String Seperator (string)		*/
+#define PSS_CHAR	':'							/* Path String Seperator (char)			*/
+#endif
+#ifdef MSFS
+#define DSS_CHAR	'\\'							/* Directory String Seperator (char)		*/
+#define	DSS_STR		"\\"							/* Directory String Seperator (string)		*/
+#define PSS_CHAR	';'							/* Path String Seperator (char)			*/
 #endif
 
 #define	USE_SPECIFIC_FILE		1
 #define	USE_GENERAL_FILE		2
 
 #define	MAX_FNAME	256
+#define MAX_PATH	1024
 
 struct A_file_struct
 {
@@ -78,7 +96,8 @@ EXT char read_fname[MAX_FNAME];							/* The name of the read temp file		*/
 
 EXT char cpy_lib[18],cpy_file[18];						/* Current copy lib, file.			*/
 
-EXT char cli_ildir[MAX_FNAME];							/* the Directory name for INLIB			*/
+EXT char cli_ildir[MAX_PATH];							/* the Directory name for INLIB			*/
+EXT char cli_prefixpath[MAX_PATH];						/* -P prefixpath, used to find "lib/file"	*/
 
 EXT struct rcpy_struct
 {
@@ -102,3 +121,13 @@ cob_file *open_cob_file();
 cob_file_context *open_cob_context();
 
 #endif /* WISPFILE_H */
+
+/*
+**	History:
+**	$Log: wispfile.h,v $
+**	Revision 1.6  1996-06-24 14:23:13-04  gsl
+**	fic MSDOS for MSDOS and WINNT
+**
+**
+**
+*/

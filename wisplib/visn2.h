@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /* vision2 - header information for version 2 vision */
 
 #ifdef	O_VMS
@@ -152,3 +156,12 @@ extern	int		s_close(), s_read(), s_write(), s_rewrite();
 /* */
 
 
+/*
+**	History:
+**	$Log: visn2.h,v $
+**	Revision 1.8  1996-08-19 18:33:04-04  gsl
+**	drcs update
+**
+**
+**
+*/

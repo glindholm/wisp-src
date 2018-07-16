@@ -1,0 +1,951 @@
+#------------------------------------------------------------
+# libcridwcb.umf
+#
+# Make a big COBOL front end library. Ask the user for assistance
+# unless the entry is a specific point
+#------------------------------------------------------------
+
+MFUL=libcridwcb.a
+MFXUL=libmfxcridwcb.a
+LPIUL=liblpicridwcb.a
+THE_LIB=$(MFUL)
+
+include $(WISP)/src/port/make.include
+include $(WISP)/src/mf/mf.rules
+include cridwcb.umf
+
+COBDEBUG=$(CDEBUG)
+LINKFLAGS=-C LINKCOUNT=5000
+KCSI_COBFLAGS=$(COBDEBUG) $(COBFLAGS) $(LINKFLAGS)
+
+.PRECIOUS:	$(MFUL) $(MFXUL) $(LPIUL)
+
+make:
+	@echo "Building CRID front end library. Specify COBOL?"
+	@echo " "
+	@echo " 1. Micro-Focus COBOL"
+	@echo " 2. Micro-Focus COBOL with EXTFH"
+	@echo " 3. LPI COBOL"
+	@echo " "
+	@echo " 0. Exit"
+	@read cobol ; \
+	case $$cobol in \
+		1) make -f libcridwcb.umf all ;; \
+		2) make -f libcridwcb.umf THE_LIB="$(MFXUL)" all ;; \
+		3) make -f libcridwcb.umf THE_LIB="$(LPIUL)" all ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac
+
+clean:
+	rm -f $(MFUL) $(MFXUL) $(LPIUL)
+	rm -f *.o core *~
+
+all:	$(THE_LIB)
+	@echo LIBRARY $(THE_LIB) is UP-TO-DATE
+
+$(THE_LIB): $(THE_LIB)(blnksc.o) \
+	$(THE_LIB)(cobextfh.o) \
+	$(THE_LIB)(ctrlary.o) \
+	$(THE_LIB)(ctrldepp.o) \
+	$(THE_LIB)(ctrldif.o) \
+	$(THE_LIB)(ctrldio.o) \
+	$(THE_LIB)(ctrlerr.o) \
+	$(THE_LIB)(ctrlext.o) \
+	$(THE_LIB)(ctrlfil.o) \
+	$(THE_LIB)(ctrlfld.o) \
+	$(THE_LIB)(ctrlgrp.o) \
+	$(THE_LIB)(ctrlhdi.o) \
+	$(THE_LIB)(ctrlhdl.o) \
+	$(THE_LIB)(ctrlhdr.o) \
+	$(THE_LIB)(ctrlio.o) \
+	$(THE_LIB)(ctrllst.o) \
+	$(THE_LIB)(ctrlmain.o) \
+	$(THE_LIB)(ctrlmap.o) \
+	$(THE_LIB)(ctrload.o) \
+	$(THE_LIB)(ctrlopt.o) \
+	$(THE_LIB)(ctrloptl.o) \
+	$(THE_LIB)(ctrlprt.o) \
+	$(THE_LIB)(ctrlrng.o) \
+	$(THE_LIB)(ctrlseq.o) \
+	$(THE_LIB)(ctrltbl.o) \
+	$(THE_LIB)(ctrlval.o) \
+	$(THE_LIB)(dtectl.o) \
+	$(THE_LIB)(dtefac.o) \
+	$(THE_LIB)(dteinqpp.o) \
+	$(THE_LIB)(dteload.o) \
+	$(THE_LIB)(dtemain.o) \
+	$(THE_LIB)(dtemnu.o) \
+	$(THE_LIB)(dteoop.o) \
+	$(THE_LIB)(dtespc.o) \
+	$(THE_LIB)(dteupd.o) \
+	$(THE_LIB)(dteuph.o) \
+	$(THE_LIB)(dtexst.o) \
+	$(THE_LIB)(inqctl.o) \
+	$(THE_LIB)(inqdat.o) \
+	$(THE_LIB)(inqent.o) \
+	$(THE_LIB)(inqget.o) \
+	$(THE_LIB)(inqhlp.o) \
+	$(THE_LIB)(inqmain.o) \
+	$(THE_LIB)(inqmak.o) \
+	$(THE_LIB)(inqnam.o) \
+	$(THE_LIB)(inqopt.o) \
+	$(THE_LIB)(inqrpt.o) \
+	$(THE_LIB)(inqxst.o) \
+	$(THE_LIB)(inqxtr.o) \
+	$(THE_LIB)(listmopt.o) \
+	$(THE_LIB)(plswait.o) \
+	$(THE_LIB)(rptaka.o) \
+	$(THE_LIB)(rptckfl.o) \
+	$(THE_LIB)(rptcld.o) \
+	$(THE_LIB)(rptcln.o) \
+	$(THE_LIB)(rptcol.o) \
+	$(THE_LIB)(rptcon.o) \
+	$(THE_LIB)(rptctl.o) \
+	$(THE_LIB)(rptctlh.o) \
+	$(THE_LIB)(rptctll.o) \
+	$(THE_LIB)(rptctlm.o) \
+	$(THE_LIB)(rptctlp.o) \
+	$(THE_LIB)(rptdef.o) \
+	$(THE_LIB)(rptdnw.o) \
+	$(THE_LIB)(rptdup.o) \
+	$(THE_LIB)(rptedo.o) \
+	$(THE_LIB)(rptedt.o) \
+	$(THE_LIB)(rptedth.o) \
+	$(THE_LIB)(rptfil.o) \
+	$(THE_LIB)(rptio.o) \
+	$(THE_LIB)(rptlim.o) \
+	$(THE_LIB)(rptlod.o) \
+	$(THE_LIB)(rptmak.o) \
+	$(THE_LIB)(rptmain.o) \
+	$(THE_LIB)(rptmdt.o) \
+	$(THE_LIB)(rptmnu.o) \
+	$(THE_LIB)(rptmod.o) \
+	$(THE_LIB)(rptmor.o) \
+	$(THE_LIB)(rptnew.o) \
+	$(THE_LIB)(rptnfl.o) \
+	$(THE_LIB)(rptopt.o) \
+	$(THE_LIB)(rptpdt.o) \
+	$(THE_LIB)(rptpfl.o) \
+	$(THE_LIB)(rptsdt.o) \
+	$(THE_LIB)(rptseq.o) \
+	$(THE_LIB)(rptsfl.o) \
+	$(THE_LIB)(rptsiz.o) \
+	$(THE_LIB)(rptsor.o) \
+	$(THE_LIB)(rptspc.o) \
+	$(THE_LIB)(rptsum.o) \
+	$(THE_LIB)(rpttit.o) \
+	$(THE_LIB)(rptwmain.o) \
+	$(THE_LIB)(rptwmn.o) \
+	$(THE_LIB)(rptxcl.o) \
+	$(THE_LIB)(rptxdt.o) \
+	$(THE_LIB)(rptxfl.o) \
+	$(THE_LIB)(rptxln.o) \
+	$(THE_LIB)(tableio.o)
+	ar ts $(THE_LIB)
+	@echo LIBRARY $(THE_LIB) is now UP-TO-DATE
+
+$(THE_LIB)(blnksc.o):    ./fdcrt.wcb  ./figs.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsktrace.wcb  blnksc.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) blnksc.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) blnksc.cob 
+	ar rv $(THE_LIB) blnksc.o
+	rm -f blnksc.o
+
+$(THE_LIB)(cobextfh.o):   ./figs.wcb  ./plktrace.wcb ./wsktrace.wcb\
+  cobextfh.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) cobextfh.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) cobextfh.cob 
+	ar rv $(THE_LIB) cobextfh.o
+	rm -f cobextfh.o
+
+$(THE_LIB)(ctrlary.o):    ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb\
+  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wsktrace.wcb  ctrlary.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlary.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlary.cob 
+	ar rv $(THE_LIB) ctrlary.o
+	rm -f ctrlary.o
+
+$(THE_LIB)(ctrldepp.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  ctrldepp.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrldepp.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrldepp.cob 
+	ar rv $(THE_LIB) ctrldepp.o
+	rm -f ctrldepp.o
+
+$(THE_LIB)(ctrldif.o):    ./fdcrt.wcb  ./figs.wcb  ./lkdio.wcb  ./plcrt.wcb\
+  ./plktrace.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsktrace.wcb  ctrldif.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrldif.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrldif.cob 
+	ar rv $(THE_LIB) ctrldif.o
+	rm -f ctrldif.o
+
+$(THE_LIB)(ctrldio.o):    ./ioctrl.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb\
+  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./wsctrl.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ctrldio.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrldio.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrldio.cob 
+	ar rv $(THE_LIB) ctrldio.o
+	rm -f ctrldio.o
+
+$(THE_LIB)(ctrlerr.o):	./fdcrt.wcb  ./figs.wcb  ./lkctrlar.wcb\
+  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./rcctrlf.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsktrace.wcb  ctrlerr.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlerr.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlerr.cob 
+	ar rv $(THE_LIB) ctrlerr.o
+	rm -f ctrlerr.o
+
+$(THE_LIB)(ctrlext.o):    ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plctrlh.wcb  ./plktrace.wcb  ./rcctrl.wcb\
+  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb\
+  ./wsctrl.wcb  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb\
+  ctrlext.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlext.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlext.cob 
+	ar rv $(THE_LIB) ctrlext.o
+	rm -f ctrlext.o
+
+$(THE_LIB)(ctrlfil.o):    ./fdcrt.wcb  ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb\
+  ./plcrt.wcb  ./plktrace.wcb  ./scgpem.wcb  ./slcrt.wcb  ./wscrt.wcb\
+  ./wsgpem.wcb  ./wsktrace.wcb  ctrlfil.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlfil.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlfil.cob 
+	ar rv $(THE_LIB) ctrlfil.o
+	rm -f ctrlfil.o
+
+$(THE_LIB)(ctrlfld.o):    ./fdcrt.wcb  ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./slcrt.wcb  ./wscrt.wcb\
+  ./wsktrace.wcb  ctrlfld.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlfld.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlfld.cob 
+	ar rv $(THE_LIB) ctrlfld.o
+	rm -f ctrlfld.o
+
+$(THE_LIB)(ctrlgrp.o):    ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb  ./rcctrl.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wsctrl.wcb\
+  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb  ctrlgrp.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlgrp.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlgrp.cob 
+	ar rv $(THE_LIB) ctrlgrp.o
+	rm -f ctrlgrp.o
+
+$(THE_LIB)(ctrlhdi.o):    ./plktrace.wcb  ./rcctrlh.wcb  ./wsctrl.wcb\
+  ./wsktrace.wcb  ctrlhdi.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlhdi.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlhdi.cob 
+	ar rv $(THE_LIB) ctrlhdi.o
+	rm -f ctrlhdi.o
+
+$(THE_LIB)(ctrlhdl.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./rcctrl.wcb  ./rcctrlh.wcb  ./wsctrl.wcb  ./wsfileio.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ctrlhdl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlhdl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlhdl.cob 
+	ar rv $(THE_LIB) ctrlhdl.o
+	rm -f ctrlhdl.o
+
+$(THE_LIB)(ctrlhdr.o):    ./fdcrt.wcb  ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./scgpem.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsgpem.wcb  ./wsktrace.wcb  ctrlhdr.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlhdr.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlhdr.cob 
+	ar rv $(THE_LIB) ctrlhdr.o
+	rm -f ctrlhdr.o
+
+$(THE_LIB)(ctrlio.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ctrlio.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlio.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlio.cob 
+	ar rv $(THE_LIB) ctrlio.o
+	rm -f ctrlio.o
+
+$(THE_LIB)(ctrllst.o):    ./fdcrt.wcb  ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./slcrt.wcb  ./wscrt.wcb\
+  ./wsfileio.wcb  ./wsktrace.wcb  ctrllst.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrllst.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrllst.cob 
+	ar rv $(THE_LIB) ctrllst.o
+	rm -f ctrllst.o
+
+$(THE_LIB)(ctrlmain.o):    ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb\
+  ./lkctrlar.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plctrlf.wcb  ./plctrlh.wcb\
+  ./plktrace.wcb  ./pllink.wcb  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wscrts.wcb\
+  ./wsctrl.wcb  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb\
+  ./wslink.wcb  ./wsusage.wcb  ctrlmain.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlmain.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlmain.cob 
+	ar rv $(THE_LIB) ctrlmain.o
+	rm -f ctrlmain.o
+
+$(THE_LIB)(ctrlmap.o):    ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb\
+  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wscrts.wcb  ./wsktrace.wcb\
+  ctrlmap.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlmap.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlmap.cob 
+	ar rv $(THE_LIB) ctrlmap.o
+	rm -f ctrlmap.o
+
+$(THE_LIB)(ctrload.o):    ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plctrlh.wcb  ./plktrace.wcb  ./rcctrl.wcb\
+  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb\
+  ./wscrts.wcb  ./wsctrl.wcb  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb\
+  ctrload.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrload.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrload.cob 
+	ar rv $(THE_LIB) ctrload.o
+	rm -f ctrload.o
+
+$(THE_LIB)(ctrlopt.o):    ./fdcrt.wcb  ./figs.wcb  ./lkprc.wcb  ./plcrt.wcb\
+  ./plktrace.wcb  ./scgpem.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsgpem.wcb\
+  ./wsktrace.wcb  ctrlopt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlopt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlopt.cob 
+	ar rv $(THE_LIB) ctrlopt.o
+	rm -f ctrlopt.o
+
+$(THE_LIB)(ctrloptl.o):    ./fdcrt.wcb  ./figs.wcb  ./lkprc.wcb  ./plcrt.wcb\
+  ./plktrace.wcb  ./scgpem.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsgpem.wcb\
+  ./wsktrace.wcb  ctrloptl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrloptl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrloptl.cob 
+	ar rv $(THE_LIB) ctrloptl.o
+	rm -f ctrloptl.o
+
+$(THE_LIB)(ctrlprt.o):    ./fdcrt.wcb  ./fdprt.wcb  ./figs.wcb  ./lkctrl.wcb\
+  ./lkctrlar.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb\
+  ./scgpem.wcb  ./slcrt.wcb  ./slprt.wcb  ./wscrt.wcb  ./wsfileio.wcb\
+  ./wsgp.wcb  ./wsgpem.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsprt.wcb\
+  ctrlprt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlprt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlprt.cob 
+	ar rv $(THE_LIB) ctrlprt.o
+	rm -f ctrlprt.o
+
+$(THE_LIB)(ctrlrng.o):    ./fdcrt.wcb  ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb\
+  ./lkctrlar.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./plscrtch.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb\
+  ./rcctrlt2.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsctrl.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ./wsscrtch.wcb  ctrlrng.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlrng.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlrng.cob 
+	ar rv $(THE_LIB) ctrlrng.o
+	rm -f ctrlrng.o
+
+$(THE_LIB)(ctrlseq.o):    ./fdcrt.wcb  ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb\
+  ./lkctrlar.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb  ./plusage.wcb\
+  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsctrl.wcb  ./wsfileio.wcb  ./wsint.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ./wsusage.wcb  ctrlseq.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlseq.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlseq.cob 
+	ar rv $(THE_LIB) ctrlseq.o
+	rm -f ctrlseq.o
+
+$(THE_LIB)(ctrltbl.o):    ./fdcrt.wcb  ./fdprt.wcb  ./figs.wcb  ./lkctrl.wcb\
+  ./lkctrlar.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./pldispk.wcb\
+  ./plkeep.wcb  ./plktrace.wcb  ./plscrtch.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./slcrt.wcb  ./slprt.wcb\
+  ./wscrt.wcb  ./wsdispk.wcb  ./wsfileio.wcb  ./wsint.wcb  ./wsiocode.wcb\
+  ./wskeep.wcb  ./wsktrace.wcb  ./wsprt.wcb  ./wsscrtch.wcb  ctrltbl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrltbl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrltbl.cob 
+	ar rv $(THE_LIB) ctrltbl.o
+	rm -f ctrltbl.o
+
+$(THE_LIB)(ctrlval.o):    ./lkctrl.wcb  ./lkctrlar.wcb  ./lkdio.wcb\
+  ./lkprc.wcb  ./plktrace.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb\
+  ./rcctrlt2.wcb  ./wsfileio.wcb  ./wsktrace.wcb  ctrlval.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) ctrlval.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) ctrlval.cob 
+	ar rv $(THE_LIB) ctrlval.o
+	rm -f ctrlval.o
+
+$(THE_LIB)(dtectl.o):    ./figs.wcb  ./iodata.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./lkufb.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb\
+  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsiocode.wcb  ./wsktrace.wcb\
+  dtectl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dtectl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dtectl.cob 
+	ar rv $(THE_LIB) dtectl.o
+	rm -f dtectl.o
+
+$(THE_LIB)(dtefac.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb  ./rcctrlh.wcb\
+  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb\
+  ./wsktrace.wcb  dtefac.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dtefac.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dtefac.cob 
+	ar rv $(THE_LIB) dtefac.o
+	rm -f dtefac.o
+
+$(THE_LIB)(dteinqpp.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  dteinqpp.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dteinqpp.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dteinqpp.cob 
+	ar rv $(THE_LIB) dteinqpp.o
+	rm -f dteinqpp.o
+
+$(THE_LIB)(dteload.o):    ./figs.wcb  ./ioctrl.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plctrlf.wcb  ./plctrlh.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb\
+  ./rcctrlt2.wcb  ./wscrt.wcb  ./wsctrl.wcb  ./wsfileio.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ./wsusage.wcb  dteload.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dteload.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dteload.cob 
+	ar rv $(THE_LIB) dteload.o
+	rm -f dteload.o
+
+$(THE_LIB)(dtemain.o):    ./fdcrt.wcb  ./figs.wcb  ./iodata.wcb  ./lkctrl.wcb\
+  ./lkctrlar.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./pllink.wcb  ./plusage.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb\
+  ./rcctrlt2.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsfileio.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ./wslink.wcb  ./wsusage.wcb  dtemain.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dtemain.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dtemain.cob 
+	ar rv $(THE_LIB) dtemain.o
+	rm -f dtemain.o
+
+$(THE_LIB)(dtemnu.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb  ./rcctrlh.wcb\
+  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb\
+  ./wsktrace.wcb  dtemnu.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dtemnu.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dtemnu.cob 
+	ar rv $(THE_LIB) dtemnu.o
+	rm -f dtemnu.o
+
+$(THE_LIB)(dteoop.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  dteoop.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dteoop.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dteoop.cob 
+	ar rv $(THE_LIB) dteoop.o
+	rm -f dteoop.o
+
+$(THE_LIB)(dtespc.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb  ./rcctrlh.wcb\
+  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb\
+  ./wsktrace.wcb  dtespc.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dtespc.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dtespc.cob 
+	ar rv $(THE_LIB) dtespc.o
+	rm -f dtespc.o
+
+$(THE_LIB)(dteupd.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb  ./wsctrl.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ./wsusage.wcb  dteupd.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dteupd.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dteupd.cob 
+	ar rv $(THE_LIB) dteupd.o
+	rm -f dteupd.o
+
+$(THE_LIB)(dteuph.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlh.wcb  ./wsctrl.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ./wsusage.wcb  dteuph.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dteuph.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dteuph.cob 
+	ar rv $(THE_LIB) dteuph.o
+	rm -f dteuph.o
+
+$(THE_LIB)(dtexst.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./lkvalnam.wcb\
+  ./plktrace.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  dtexst.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) dtexst.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) dtexst.cob 
+	ar rv $(THE_LIB) dtexst.o
+	rm -f dtexst.o
+
+$(THE_LIB)(inqctl.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./lkvalnam.wcb\
+  ./plktrace.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptrec.wcb  inqctl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqctl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqctl.cob 
+	ar rv $(THE_LIB) inqctl.o
+	rm -f inqctl.o
+
+$(THE_LIB)(inqdat.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./lkvalnam.wcb\
+  ./plktrace.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptrec.wcb  inqdat.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqdat.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqdat.cob 
+	ar rv $(THE_LIB) inqdat.o
+	rm -f inqdat.o
+
+$(THE_LIB)(inqent.o):    ./fdcrt.wcb  ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./rcctrlf.wcb\
+  ./rcctrlh.wcb  ./rcctrlt1.wcb  ./rcctrlt2.wcb  ./slcrt.wcb  ./wscrt.wcb\
+  ./wsint.wcb  ./wsktrace.wcb  ./wsrptrec.wcb  inqent.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqent.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqent.cob 
+	ar rv $(THE_LIB) inqent.o
+	rm -f inqent.o
+
+$(THE_LIB)(inqget.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  inqget.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqget.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqget.cob 
+	ar rv $(THE_LIB) inqget.o
+	rm -f inqget.o
+
+$(THE_LIB)(inqhlp.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  inqhlp.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqhlp.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqhlp.cob 
+	ar rv $(THE_LIB) inqhlp.o
+	rm -f inqhlp.o
+
+$(THE_LIB)(inqmain.o):    ./fdcrt.wcb  ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./lkprc.wcb  ./lkufb.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb\
+  ./rcctrlt2.wcb  ./rcrpt.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ./wsrpt.wcb  ./wsrptcfl.wcb\
+  ./wsrptopt.wcb  ./wsrptrec.wcb  ./wsusage.wcb  inqmain.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqmain.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqmain.cob 
+	ar rv $(THE_LIB) inqmain.o
+	rm -f inqmain.o
+
+$(THE_LIB)(inqmak.o):    ./figs.wcb  ./lkdio.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsusage.wcb  inqmak.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqmak.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqmak.cob 
+	ar rv $(THE_LIB) inqmak.o
+	rm -f inqmak.o
+
+$(THE_LIB)(inqnam.o):    ./fdcrt.wcb  ./figs.wcb  ./lkctrl.wcb  ./lkctrlar.wcb\
+  ./lkdio.wcb  ./plktrace.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./rcctrlt1.wcb\
+  ./rcctrlt2.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  inqnam.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqnam.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqnam.cob 
+	ar rv $(THE_LIB) inqnam.o
+	rm -f inqnam.o
+
+$(THE_LIB)(inqopt.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  inqopt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqopt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqopt.cob 
+	ar rv $(THE_LIB) inqopt.o
+	rm -f inqopt.o
+
+$(THE_LIB)(inqrpt.o):    ./figs.wcb  ./lkdio.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptrec.wcb  ./wsusage.wcb  inqrpt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqrpt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqrpt.cob 
+	ar rv $(THE_LIB) inqrpt.o
+	rm -f inqrpt.o
+
+$(THE_LIB)(inqxst.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./lkvalnam.wcb\
+  ./plktrace.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  inqxst.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqxst.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqxst.cob 
+	ar rv $(THE_LIB) inqxst.o
+	rm -f inqxst.o
+
+$(THE_LIB)(inqxtr.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./lkvalnam.wcb\
+  ./plktrace.wcb  ./plusage.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb\
+  ./wsktrace.wcb  ./wsrptrec.wcb  ./wsusage.wcb  inqxtr.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) inqxtr.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) inqxtr.cob 
+	ar rv $(THE_LIB) inqxtr.o
+	rm -f inqxtr.o
+
+$(THE_LIB)(listmopt.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  listmopt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) listmopt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) listmopt.cob 
+	ar rv $(THE_LIB) listmopt.o
+	rm -f listmopt.o
+
+$(THE_LIB)(plswait.o):    ./fdcrt.wcb  ./figs.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsktrace.wcb  plswait.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) plswait.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) plswait.cob 
+	ar rv $(THE_LIB) plswait.o
+	rm -f plswait.o
+
+$(THE_LIB)(rptaka.o):    ./fdcrt.wcb  ./figs.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  rptaka.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptaka.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptaka.cob 
+	ar rv $(THE_LIB) rptaka.o
+	rm -f rptaka.o
+
+$(THE_LIB)(rptckfl.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcrpt.wcb  ./wsctrl.wcb\
+  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  ./wsusage.wcb  rptckfl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptckfl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptckfl.cob 
+	ar rv $(THE_LIB) rptckfl.o
+	rm -f rptckfl.o
+
+$(THE_LIB)(rptcld.o):    ./ioctrl.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb\
+  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./wsctrl.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  ./wsrptrec.wcb  rptcld.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptcld.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptcld.cob 
+	ar rv $(THE_LIB) rptcld.o
+	rm -f rptcld.o
+
+$(THE_LIB)(rptcln.o):    ./figs.wcb  ./plktrace.wcb  ./wsktrace.wcb\
+  ./wsrptrec.wcb  rptcln.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptcln.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptcln.cob 
+	ar rv $(THE_LIB) rptcln.o
+	rm -f rptcln.o
+
+$(THE_LIB)(rptcol.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptcol.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptcol.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptcol.cob 
+	ar rv $(THE_LIB) rptcol.o
+	rm -f rptcol.o
+
+$(THE_LIB)(rptcon.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptcon.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptcon.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptcon.cob 
+	ar rv $(THE_LIB) rptcon.o
+	rm -f rptcon.o
+
+$(THE_LIB)(rptctl.o):    ./figs.wcb  ./lkprc.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptrec.wcb\
+  rptctl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptctl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptctl.cob 
+	ar rv $(THE_LIB) rptctl.o
+	rm -f rptctl.o
+
+$(THE_LIB)(rptctlh.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlh.wcb  ./rcrpt.wcb  ./wscrts.wcb\
+  ./wsctrl.wcb  ./wsfileio.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ./wsrptrec.wcb  ./wsusage.wcb  rptctlh.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptctlh.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptctlh.cob 
+	ar rv $(THE_LIB) rptctlh.o
+	rm -f rptctlh.o
+
+$(THE_LIB)(rptctll.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcrpt.wcb  ./wsctrl.wcb\
+  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  ./wsusage.wcb  rptctll.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptctll.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptctll.cob 
+	ar rv $(THE_LIB) rptctll.o
+	rm -f rptctll.o
+
+$(THE_LIB)(rptctlm.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcrpt.wcb  ./wscrts.wcb\
+  ./wsctrl.wcb  ./wsfileio.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb  ./wsusage.wcb\
+  rptctlm.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptctlm.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptctlm.cob 
+	ar rv $(THE_LIB) rptctlm.o
+	rm -f rptctlm.o
+
+$(THE_LIB)(rptctlp.o):    ./figs.wcb  ./ioctrl.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrl.wcb  ./rcctrlf.wcb  ./rcrpt.wcb  ./wsctrl.wcb\
+  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  ./wsusage.wcb  rptctlp.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptctlp.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptctlp.cob 
+	ar rv $(THE_LIB) rptctlp.o
+	rm -f rptctlp.o
+
+$(THE_LIB)(rptdef.o):    ./fdcrt.wcb  ./figs.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptrec.wcb\
+  rptdef.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptdef.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptdef.cob 
+	ar rv $(THE_LIB) rptdef.o
+	rm -f rptdef.o
+
+$(THE_LIB)(rptdnw.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptdnw.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptdnw.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptdnw.cob 
+	ar rv $(THE_LIB) rptdnw.o
+	rm -f rptdnw.o
+
+$(THE_LIB)(rptdup.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./lkvalnam.wcb\
+  ./plktrace.wcb  ./wscrts.wcb  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  rptdup.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptdup.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptdup.cob 
+	ar rv $(THE_LIB) rptdup.o
+	rm -f rptdup.o
+
+$(THE_LIB)(rptedo.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptedo.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptedo.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptedo.cob 
+	ar rv $(THE_LIB) rptedo.o
+	rm -f rptedo.o
+
+$(THE_LIB)(rptedt.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptedt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptedt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptedt.cob 
+	ar rv $(THE_LIB) rptedt.o
+	rm -f rptedt.o
+
+$(THE_LIB)(rptedth.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  rptedth.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptedth.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptedth.cob 
+	ar rv $(THE_LIB) rptedth.o
+	rm -f rptedth.o
+
+$(THE_LIB)(rptfil.o):    ./figs.wcb  ./lkprc.wcb  ./plktrace.wcb  ./wsgp.wcb\
+  ./wsint.wcb  ./wsktrace.wcb  rptfil.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptfil.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptfil.cob 
+	ar rv $(THE_LIB) rptfil.o
+	rm -f rptfil.o
+
+$(THE_LIB)(rptio.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb  ./wsfileio.wcb\
+  ./wsiocode.wcb  ./wsktrace.wcb  rptio.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptio.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptio.cob 
+	ar rv $(THE_LIB) rptio.o
+	rm -f rptio.o
+
+$(THE_LIB)(rptlim.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptlim.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptlim.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptlim.cob 
+	ar rv $(THE_LIB) rptlim.o
+	rm -f rptlim.o
+
+$(THE_LIB)(rptlod.o):    ./figs.wcb  ./iorpt.wcb  ./lkdio.wcb  ./lkprc.wcb\
+  ./plktrace.wcb  ./rcrpt.wcb  ./wsfileio.wcb  ./wsiocode.wcb\
+  ./wsktrace.wcb  ./wsrpt.wcb  ./wsrptrec.wcb  ./wsrptwrk.wcb\
+  rptlod.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptlod.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptlod.cob 
+	ar rv $(THE_LIB) rptlod.o
+	rm -f rptlod.o
+
+$(THE_LIB)(rptmak.o):    ./figs.wcb  ./iorpt.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./rcrpt.wcb  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb\
+  ./wsrpt.wcb  ./wsrptrec.wcb  ./wsrptwrk.wcb  rptmak.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptmak.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptmak.cob 
+	ar rv $(THE_LIB) rptmak.o
+	rm -f rptmak.o
+
+$(THE_LIB)(rptmain.o):    ./fdcrt.wcb  ./figs.wcb  ./lkdio.wcb\
+  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./plusage.wcb\
+  ./rcrpt.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsfileio.wcb  ./wsktrace.wcb\
+  ./wsrpt.wcb  ./wsrptcfl.wcb  ./wsrptopt.wcb  ./wsrptrec.wcb\
+  ./wsusage.wcb  rptmain.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptmain.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptmain.cob 
+	ar rv $(THE_LIB) rptmain.o
+	rm -f rptmain.o
+
+$(THE_LIB)(rptmdt.o):    ./fdcrt.wcb  ./figs.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  rptmdt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptmdt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptmdt.cob 
+	ar rv $(THE_LIB) rptmdt.o
+	rm -f rptmdt.o
+
+$(THE_LIB)(rptmnu.o):    ./fdcrt.wcb  ./figs.wcb  ./plcrt.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  rptmnu.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptmnu.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptmnu.cob 
+	ar rv $(THE_LIB) rptmnu.o
+	rm -f rptmnu.o
+
+$(THE_LIB)(rptmod.o):    ./fdcrt.wcb  ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb\
+  ./plktrace.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  rptmod.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptmod.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptmod.cob 
+	ar rv $(THE_LIB) rptmod.o
+	rm -f rptmod.o
+
+$(THE_LIB)(rptmor.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptrec.wcb  rptmor.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptmor.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptmor.cob 
+	ar rv $(THE_LIB) rptmor.o
+	rm -f rptmor.o
+
+$(THE_LIB)(rptnew.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  rptnew.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptnew.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptnew.cob 
+	ar rv $(THE_LIB) rptnew.o
+	rm -f rptnew.o
+
+$(THE_LIB)(rptnfl.o):    ./fdcrt.wcb  ./figs.wcb  ./lkvalnam.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb\
+  ./wsrptrec.wcb  rptnfl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptnfl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptnfl.cob 
+	ar rv $(THE_LIB) rptnfl.o
+	rm -f rptnfl.o
+
+$(THE_LIB)(rptopt.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  rptopt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptopt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptopt.cob 
+	ar rv $(THE_LIB) rptopt.o
+	rm -f rptopt.o
+
+$(THE_LIB)(rptpdt.o):    ./fdcrt.wcb  ./figs.wcb  ./lkvalnam.wcb  ./plcrt.wcb\
+  ./plktrace.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptrec.wcb  rptpdt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptpdt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptpdt.cob 
+	ar rv $(THE_LIB) rptpdt.o
+	rm -f rptpdt.o
+
+$(THE_LIB)(rptpfl.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptpfl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptpfl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptpfl.cob 
+	ar rv $(THE_LIB) rptpfl.o
+	rm -f rptpfl.o
+
+$(THE_LIB)(rptsdt.o):    ./fdcrt.wcb  ./figs.wcb  ./lkvalnam.wcb  ./plcrt.wcb\
+  ./plktrace.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptcfl.wcb  ./wsrptrec.wcb  rptsdt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptsdt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptsdt.cob 
+	ar rv $(THE_LIB) rptsdt.o
+	rm -f rptsdt.o
+
+$(THE_LIB)(rptseq.o):    ./fdcrt.wcb  ./figs.wcb  ./plbubble.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wsbubble.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptcfl.wcb  ./wsrptrec.wcb  rptseq.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptseq.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptseq.cob 
+	ar rv $(THE_LIB) rptseq.o
+	rm -f rptseq.o
+
+$(THE_LIB)(rptsfl.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptsfl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptsfl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptsfl.cob 
+	ar rv $(THE_LIB) rptsfl.o
+	rm -f rptsfl.o
+
+$(THE_LIB)(rptsiz.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptsiz.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptsiz.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptsiz.cob 
+	ar rv $(THE_LIB) rptsiz.o
+	rm -f rptsiz.o
+
+$(THE_LIB)(rptsor.o):    ./fdcrt.wcb  ./figs.wcb  ./plbubble.wcb  ./plktrace.wcb\
+  ./slcrt.wcb  ./wsbubble.wcb  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb\
+  ./wsrptcfl.wcb  ./wsrptrec.wcb  rptsor.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptsor.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptsor.cob 
+	ar rv $(THE_LIB) rptsor.o
+	rm -f rptsor.o
+
+$(THE_LIB)(rptspc.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptspc.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptspc.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptspc.cob 
+	ar rv $(THE_LIB) rptspc.o
+	rm -f rptspc.o
+
+$(THE_LIB)(rptsum.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rptsum.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptsum.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptsum.cob 
+	ar rv $(THE_LIB) rptsum.o
+	rm -f rptsum.o
+
+$(THE_LIB)(rpttit.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptcfl.wcb  ./wsrptrec.wcb\
+  rpttit.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rpttit.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rpttit.cob 
+	ar rv $(THE_LIB) rpttit.o
+	rm -f rpttit.o
+
+$(THE_LIB)(rptwmain.o):    ./fdcrt.wcb  ./figs.wcb  ./lkdio.wcb\
+  ./lkprc.wcb  ./plcrt.wcb  ./plktrace.wcb  ./plusage.wcb\
+  ./rcrpt.wcb  ./slcrt.wcb  ./wscrt.wcb  ./wsfileio.wcb  ./wsktrace.wcb\
+  ./wsrpt.wcb  ./wsrptcfl.wcb  ./wsrptopt.wcb  ./wsrptrec.wcb\
+  ./wsusage.wcb  rptwmain.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptwmain.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptwmain.cob 
+	ar rv $(THE_LIB) rptwmain.o
+	rm -f rptwmain.o
+
+$(THE_LIB)(rptwmn.o):    ./figs.wcb  ./lkdio.wcb  ./lkprc.wcb  ./plktrace.wcb\
+  ./plusage.wcb  ./rcctrlf.wcb  ./rcctrlh.wcb  ./wscrts.wcb  ./wsctrl.wcb\
+  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb  ./wsprt.wcb\
+  ./wsrptopt.wcb  ./wsrptrec.wcb  ./wsusage.wcb  rptwmn.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptwmn.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptwmn.cob 
+	ar rv $(THE_LIB) rptwmn.o
+	rm -f rptwmn.o
+
+$(THE_LIB)(rptxcl.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  rptxcl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptxcl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptxcl.cob 
+	ar rv $(THE_LIB) rptxcl.o
+	rm -f rptxcl
+
+$(THE_LIB)(rptxdt.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  rptxdt.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptxdt.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptxdt.cob 
+	ar rv $(THE_LIB) rptxdt.o
+	rm -f rptxdt.o
+
+$(THE_LIB)(rptxfl.o):    ./figs.wcb  ./plktrace.wcb  ./wscrts.wcb\
+  ./wsgp.wcb  ./wsint.wcb  ./wsktrace.wcb  rptxfl.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptxfl.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptxfl.cob 
+	ar rv $(THE_LIB) rptxfl.o
+	rm -f rptxfl.o
+
+$(THE_LIB)(rptxln.o):    ./fdcrt.wcb  ./figs.wcb  ./plktrace.wcb  ./slcrt.wcb\
+  ./wscrt.wcb  ./wsint.wcb  ./wsktrace.wcb  ./wsrptrec.wcb  rptxln.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) rptxln.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) rptxln.cob 
+	ar rv $(THE_LIB) rptxln.o
+	rm -f rptxln.o
+
+$(THE_LIB)(tableio.o):    ./figs.wcb  ./lkdio.wcb  ./plktrace.wcb\
+  ./wsfileio.wcb  ./wsiocode.wcb  ./wsktrace.wcb  tableio.wcb
+	$(WISPTRAN) $(LANG) $(WISPFLAGS) tableio.wcb 
+	$(COBOL) $(OBJ) $(KCSI_COBFLAGS) tableio.cob 
+	ar rv $(THE_LIB) tableio.o
+	rm -f tableio.o
+

@@ -1,0 +1,269 @@
+#-------------------------------------------------------------------
+# cridutil.umf
+# Make just about anything. Ask the user step by step, unless
+# the entry is a specific point
+#-------------------------------------------------------------------
+
+#============================================================================
+#
+# **** CHANGE LIBCURSES HERE ****
+#
+# LIBCURSES is normally set to use the standard curses library. However on
+# some systems the curses library is located or named differently. On these
+# system you must uncomment the appropriate definition of LIBCURSES.
+#
+CURSES_LINK = -lcurses
+# Uncomment the following for Ultrix
+#CURSES_LINK= -lcursesX
+# Uncomment the following for SunOS 4.1.3
+#CURSES_LINK= /usr/5lib/libcurses.a
+#-------------------------------------------------------------------
+
+#============================================================================
+# **** CHANGE WISPDIR HERE ****
+#-------------------------------------------------------------------
+# The path for the WISP libraries should be edited 
+# to reflect the correct path. Edit the value for 
+# WISP_LIBDIR as needed.
+
+WISPDIR=/usr/local/wisp
+WISP_LIBDIR=$(WISPDIR)/lib
+#-------------------------------------------------------------------
+
+CDEBUG=-g
+
+L_WISP=wisp
+L_VIDEO=video
+L_EDE=ede
+LIBWISP=lib$(L_WISP).a
+LIBVIDEO=lib$(L_VIDEO).a
+LIBEDE=lib$(L_EDE).a
+
+WISP_LIB_PATH  		= $(WISP_LIBDIR)/$(LIBWISP)
+VIDEO_LIB_PATH 		= $(WISP_LIBDIR)/$(LIBVIDEO)
+EDE_LIB_PATH   		= $(WISP_LIBDIR)/$(LIBEDE)
+
+WISP_LIBS_PATHS 	= $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+WISPEDE_LIBS_PATHS	= $(EDE_LIB_PATH) $(WISP_LIB_PATH) $(VIDEO_LIB_PATH)
+
+#  Remove -x because causing problems on Pyramid port 
+#MFLINK=cob -x $(CDEBUG)
+MFLINK=cob $(CDEBUG)
+LPILINK=ldcobol
+MFCRIDUA=libmfcridwcb.a
+MFXCRIDUA=libmfxcridwcb.a
+LPICRIDUA=liblpicridwcb.a
+MFCRIDA=libmfcrid.a
+MFXCRIDA=libmfxcrid.a
+LPICRIDA=liblpicrid.a
+#-------------------------------------------------------------------
+
+MFDEP=$(MFCRIDUA) $(MFCRIDA) $(WISPEDE_LIBS_PATHS)
+MFXDEP=$(MFXCRIDUA) $(MFXCRIDA) $(WISPEDE_LIBS_PATHS)
+LPIDEP=$(LPICRIDUA) $(LPICRIDA) $(WISPEDE_LIBS_PATHS)
+
+make:
+	@echo "Make which utility?"
+	@echo " 1. Control"
+	@echo " 2. Report"
+	@echo " 3. Inquiry"
+	@echo " 4. Datentry"
+	@echo " "
+	@echo " 0. Exit"
+	@read util ; \
+	case $$util in \
+		1) UTIL=control ;; \
+		2) UTIL=report ;; \
+		3) UTIL=inquiry ;; \
+		4) UTIL=datentry ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac ; \
+	echo "Making $$UTIL. Please specify COBOL compiler?" ; \
+	echo " " ; \
+	echo " 1. Micro-Focus COBOL" ; \
+	echo " 2. LPI COBOL" ; \
+	echo " 3. Micro-Focus COBOL with EXTFH" ; \
+	echo " " ; \
+	echo " 0. Exit" ; \
+	read cobol ; \
+	case $$cobol in \
+		1) COB=mf ;; \
+		2) COB=lpi ;; \
+		3) COB=mfx ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac ; \
+	echo "Please specify WISP extended terminal options?" ; \
+	echo " " ; \
+	echo " 1. Make $$UTIL for $$COB without EDE" ; \
+	echo " 2. Make $$UTIL for $$COB with EDE" ; \
+	echo " " ; \
+	echo " 0. Exit" ; \
+	read ede ; \
+	case $$ede in \
+		1) make -f cridutil.umf $$UTIL.$$COB ;; \
+		2) make -f cridutil.umf $$UTIL.$$COBe ;; \
+		0) echo "Exiting make" ; exit ;; \
+		*) echo "Exiting make" ; exit ;; \
+	esac
+
+#-----------------------------------------------------------------
+# Micro-Focus Cobol versions
+#-----------------------------------------------------------------
+
+control.mf: control.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=control" "WISPDIR=$(WISPDIR)" mf
+
+control.mfe: control.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=control" "WISPDIR=$(WISPDIR)"mfe
+
+report.mf: report.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=report" "WISPDIR=$(WISPDIR)" mf
+
+report.mfe: report.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=report" "WISPDIR=$(WISPDIR)" mfe
+
+inquiry.mf: inquiry.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=inquiry" "WISPDIR=$(WISPDIR)" mf
+
+inquiry.mfe: inquiry.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=inquiry" "WISPDIR=$(WISPDIR)" mfe
+
+datentry.mf: datentry.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=datentry" "WISPDIR=$(WISPDIR)" mf
+
+datentry.mfe: datentry.o $(MFDEP)
+	$(MAKE) -f cridutil.umf "UTIL=datentry" "WISPDIR=$(WISPDIR)" mfe
+
+control.mfx: control.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=control" "WISPDIR=$(WISPDIR)" mfx
+
+control.mfxe: control.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=control" "WISPDIR=$(WISPDIR)" mfxe
+
+report.mfx: report.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=report" "WISPDIR=$(WISPDIR)" mfx
+
+report.mfxe: report.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=report" "WISPDIR=$(WISPDIR)" mfxe
+
+inquiry.mfx: inquiry.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=inquiry" "WISPDIR=$(WISPDIR)" mfx
+
+inquiry.mfxe: inquiry.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=inquiry" "WISPDIR=$(WISPDIR)" mfxe
+
+datentry.mfx: datentry.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=datentry" "WISPDIR=$(WISPDIR)" mfx
+
+datentry.mfxe: datentry.o $(MFXDEP)
+	$(MAKE) -f cridutil.umf "UTIL=datentry" "WISPDIR=$(WISPDIR)" mfxe
+
+mf:
+	$(MAKE) -f cridutil.umf \
+		"UTIL=$(UTIL)" \
+		"EXE=mf" \
+		"COBLINK=$(MFLINK)" \
+		"COB=mf" \
+		"CL=mf" \
+		"LIBS=$(WISP_LIBS_PATHS)" \
+		"ISAMA=libmfisam.a" \
+		"WISPDIR=$(WISPDIR)" \
+		util
+
+mfe:
+	$(MAKE) -f cridutil.umf \
+		"UTIL=$(UTIL)" \
+		"EXE=mfe" \
+		"COBLINK=$(MFLINK)" \
+		"COB=mf" \
+		"CL=mf" \
+		"LIBS=$(WISPEDE_LIBS_PATHS)" \
+		"ISAMA=libmfisam.a" \
+		"WISPDIR=$(WISPDIR)" \
+		util
+
+mfx:
+	$(MAKE) -f cridutil.umf \
+		"UTIL=$(UTIL)" \
+		"EXE=mfx" \
+		"COBLINK=$(MFLINK)" \
+		"COB=mfx" \
+		"CL=mfx" \
+		"LIBS=$(WISP_LIBS_PATHS)" \
+		"ISAMA=" \
+		"WISPDIR=$(WISPDIR)" \
+		util
+
+mfxe:
+	$(MAKE) -f cridutil.umf \
+		"UTIL=$(UTIL)" \
+		"EXE=mfxe" \
+		"COBLINK=$(MFLINK)" \
+		"COB=mfx" \
+		"CL=mfx" \
+		"LIBS=$(WISPEDE_LIBS_PATHS)" \
+		"ISAMA=" \
+		"WISPDIR=$(WISPDIR)" \
+		util
+
+#-----------------------------------------------------------------
+# LPI Cobol versions
+#-----------------------------------------------------------------
+
+control.lpi: control.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=control" "WISPDIR=$(WISPDIR)" lpi
+
+control.lpie: control.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=control" "WISPDIR=$(WISPDIR)" lpie
+
+report.lpi: report.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=report" "WISPDIR=$(WISPDIR)" lpi
+
+report.lpie: report.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=report" WISPDIR=$(WISPDIR)" lpie
+
+inquiry.lpi: inquiry.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=inquiry" "WISPDIR=$(WISPDIR)" lpi
+
+inquiry.lpie: inquiry.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=inquiry" "WISPDIR=$(WISPDIR)" lpie
+
+datentry.lpi: datentry.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=datentry" "WISPDIR=$(WISPDIR)" lpi
+
+datentry.lpie: datentry.o $(LPIDEP)
+	$(MAKE) -f cridutil.umf "UTIL=datentry" "WISPDIR=$(WISPDIR)" lpie
+
+lpi:
+	$(MAKE) -f cridutil.umf \
+		"UTIL=$(UTIL)" \
+		"EXE=lpi" \
+		"COBLINK=$(LPILINK)" \
+		"COB=lpi" \
+		"CL=lpi" \
+		"LIBS=$(WISP_LIBS_PATHS)" \
+		"ISAMA=" \
+		"WISPDIR=$(WISPDIR) \
+		util
+
+lpie:
+	$(MAKE) -f cridutil.umf \
+		"UTIL=$(UTIL)" \
+		"EXE=lpie" \
+		"COBLINK=$(LPILINK)" \
+		"COB=lpi" \
+		"CL=lpi" \
+		"LIBS=$(WISPEDE_LIBS_PATHS)" \
+		"ISAMA=" \
+		"WISPDIR=$(WISPDIR) \
+		util
+
+util:
+	@echo "Making $(UTIL).$(EXE)"
+	$(COBLINK) -o $(UTIL).$(EXE) $(UTIL).o lib$(COB)cridwcb.a \
+		lib$(CL)crid.a lib$(COB)cridwcb.a \
+		$(ISAMA) $(LIBS) $(CURSES_LINK)
+
+

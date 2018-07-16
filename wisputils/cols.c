@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /**
  **     cols.c          cols [-c#] [-w#] [-l#] [-i infile] [-o outfile]
  **                             -c#             Number of columns per page, default 2
@@ -5,15 +7,32 @@
  **                             -l#             Lines per page, default 66
  **                             -i infile       name of input file, default stdin
  **                             -o outfile      name of output file, default stdout
+ **
+ **
+ ** $Log: cols.c,v $
+ ** Revision 1.7  1995-04-25 05:58:07-04  gsl
+ ** drcs state V3_3_15
+ **
+ * Revision 1.6  1995/04/17  11:50:34  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.5  1995/02/06  15:07:59  gsl
+ * fix for RCS
+ *
+ * Revision 1.2  1992/04/03  23:53:27  jockc
+ * strip out ^L's (formfeeds) which defeat the cols mechanism
+ *
+ * Revision 1.1  1991/04/18  23:09:11  jockc
+ * Initial revision
+ *
+ **
  **/
 
-static char *copyright="Copyright 1991 International Digital Scientific, Inc. All Rights Reserved.";
-static char *id="@(#)cols.c	1.1 (c)IDSI 3/13/91";
-#define SCCSVERS "1.1"
-#define SCCSDATE "3/13/91"
+#define RCSVERS "$Revision:$"
+#define RCSDATE "$Date:$"
 
-static char *vers=SCCSVERS;
-static char *date=SCCSDATE;
+static char *vers=RCSVERS;
+static char *date=RCSDATE;
 
 #define VER(x) x[0]=='%'?"0.0":x
 #define DAT(x) x[0]=='%'?"19xx":x
@@ -238,6 +257,10 @@ char *src,*dest;
 			}
 			while (i%8);
 			
+			++src;
+		}
+		if (*src=='\f')
+		{
 			++src;
 		}
 		else

@@ -1,11 +1,69 @@
+static char copyright[]="Copyright (c) 1995-1997 NeoMedia Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
+/*
+**	File:		hexunpk.c
+**
+**	Project:	WISPLIB
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	vssubs HEXPACK and HEXUNPK
+**
+**	Routines:	
+**	HEXUNPK()	Unpacks each character in a string into two hex chars
+**	HEXPACK()	Packs each pair of hex chars into a single char
+*/
+
+/*
+**	Includes
+*/
+
+#include <string.h>
+
 #include "idsistd.h"
 #include "movebin.h"
 #include "werrlog.h"
+#include "wisplib.h"
+#include "hexunpk.h"
 
-HEXUNPK( source, target, tlen )							/* WANG HEXUNPK routine.			*/
-char	*source;
-char	*target;
-int4	*tlen;
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+
+/*
+**	ROUTINE:	HEXUNPK()
+**
+**	FUNCTION:	Unpacks each character in a string into two hex chars
+**
+**	DESCRIPTION:	Each char is converted into 2 chars. 
+**			Example: "ABC" would become "414243".
+**
+**	ARGUMENTS:	
+**	source		The source string of characters to unpack.
+**	target		The resulting string of hex characters.
+**	tlen		The length of the source string.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	Target must be twice as long as source.
+**
+*/
+void HEXUNPK( char* source,  char* target, int4 *tlen )
 {
 #define		ROUTINE		23500
 
@@ -30,10 +88,29 @@ int4	*tlen;
 	}
 }
 
-HEXPACK( source, target, tlen )							/* WANG HEXPACK routine.			*/
-char	*source;
-char	*target;
-int4	*tlen;
+/*
+**	ROUTINE:	HEXPACK()
+**
+**	FUNCTION:	Packs each pair of hex chars into a single char.
+**
+**	DESCRIPTION:	Each two hex chars is converted into a single chars. 
+**			Example: "414243" would become "ABC".
+**
+**	ARGUMENTS:	
+**	source		The source string of pairs of hex characters to pack.
+**	target		The resulting string of packed characters.
+**	tlen		The length of the source string.
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	Target must be half as long as source.
+**			If source in odd length then the last char is ignored.
+**			An invalid char in source is treated as '0'.
+**
+*/
+void HEXPACK(  char* source,  char* target, int4* tlen )
 {
 #undef		ROUTINE
 #define		ROUTINE		23000
@@ -74,3 +151,15 @@ int4	*tlen;
 		len -= 2;
 	}
 }
+/*
+**	History:
+**	$Log: hexunpk.c,v $
+**	Revision 1.10  1997-02-20 09:39:20-05  gsl
+**	Document and add header file
+**
+**	Revision 1.9  1996-08-19 18:32:23-04  gsl
+**	drcs update
+**
+**
+**
+*/

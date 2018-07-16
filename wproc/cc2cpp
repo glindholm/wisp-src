@@ -1,0 +1,9 @@
+#
+#
+for cc in *.cc
+do
+	cpp=`echo $cc | sed "s/\.cc/\.cpp/"`
+	echo $cc '-->' $cpp
+	drcs rename $cc wisp/wproc $cpp
+	drcs borrow $cpp wisp/wproc
+done

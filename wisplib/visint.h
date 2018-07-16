@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /* visint - internal structures for Vision v2 */
 
 #define	VISION_INTERNALS
@@ -268,3 +272,12 @@ extern	int		v_errno, v_supl_err;
 
 /* */
 
+/*
+**	History:
+**	$Log: visint.h,v $
+**	Revision 1.8  1996-08-19 18:33:04-04  gsl
+**	drcs update
+**
+**
+**
+*/

@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -15,14 +17,14 @@ p_sort()
 {
 	char sortbuf[2048];
 	char file1[40], file2[40];
-	int i,fnum;
+	int fnum;
 
-	strcpy(sortbuf,inline);							/* Put the line into the sort buffer.		*/
+	strcpy(sortbuf,linein);							/* Put the line into the sort buffer.		*/
 
 	ptype = get_param(o_parms[0]);						/* get the SORT verb.				*/
 	ptype = get_param(file1);						/* Now the first files name.			*/
 
-	if (ptype == 1) strcat(sortbuf,inline);					/* if a new line, add it on.			*/
+	if (ptype == 1) strcat(sortbuf,linein);					/* if a new line, add it on.			*/
 
 	fnum = file_index(file1);
 
@@ -46,14 +48,14 @@ p_sort()
 			}
 			else
 			{
-				strcat(sortbuf,inline);				/* Add to the buffer.				*/
+				strcat(sortbuf,linein);				/* Add to the buffer.				*/
 			}
 		}
 
 		if (!strcmp(o_parms[0],"USING"))				/* Is it a USING word?				*/
 		{
 			ptype = get_param(file1);				/* Get the file name.				*/
-			if (ptype == 1) strcat(sortbuf,inline);
+			if (ptype == 1) strcat(sortbuf,linein);
 			fnum = file_index(file1);
 			if (fnum == -1) 
 			{
@@ -65,7 +67,7 @@ p_sort()
 		else if (!strcmp(o_parms[0],"GIVING"))				/* Is it a GIVING word?				*/
 		{
 			ptype = get_param(file2);				/* Get the file name.				*/
-			if (ptype == 1) strcat(sortbuf,inline);
+			if (ptype == 1) strcat(sortbuf,linein);
 			for (fnum=0; fnum<prog_cnt; fnum++)			/* look for the file spec			*/
 			{
 				if (!strcmp(prog_files[fnum],file2)) break;	/* found it					*/
@@ -82,6 +84,7 @@ p_sort()
 
 	tput_line("           MOVE \"SO\" TO WISP-DECLARATIVES-STATUS");
 	tput_block(sortbuf);
+	return 0;
 }
 
 
@@ -136,8 +139,18 @@ int fmode;
 	make_fld(o_parms[9],prog_files[fnum],"PR-");
 	tput_clause(16, "%s,",o_parms[9]);		/* And the prname.				*/
 	tput_clause(16, "%s", (fmode==1) ? "WFOPEN-SORT" : "WFOPEN-INPUT");
+	return 0;
 }
 
 
 
 
+/*
+**	History:
+**	$Log: wt_sort.c,v $
+**	Revision 1.10  1996-08-30 21:56:25-04  gsl
+**	drcs update
+**
+**
+**
+*/

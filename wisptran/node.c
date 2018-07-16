@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 			/************************************************************************/
 			/*									*/
 			/*	        WISP - Wang Interchange Source Pre-processor		*/
@@ -20,16 +22,13 @@
 **
 */
 
+#include "proto.h"
 #include "wmalloc.h"
 #include "token.h"
 #include "node.h"
 
 
-NODE makenode(type,down,next,token)
-int	type;
-NODE	down;
-NODE	next;
-TOKEN	*token;
+NODE makenode(enum Node_type type, NODE down, NODE next, TOKEN *token)
 {
 	NODE	new;
 
@@ -43,28 +42,28 @@ TOKEN	*token;
 	return(new);
 }
 
-NODE maketoknode(token)
-TOKEN *token;
+NODE maketoknode(TOKEN *token)
 {
 	return(makenode(NODE_TOKEN,NULL,NULL,token));
 }
 
-void free_token_from_node(the_node)
-NODE the_node;
+NODE free_token_from_node(NODE the_node)
 {
 	if (the_node && the_node->token)
 	{
 		free_token(the_node->token);
 		the_node->token = NULL;
 	}
+
+	return the_node;
 }
 
-NODE cleartoknode(curr)
-NODE curr;
+NODE cleartoknode(NODE curr)
 {
 	free_token_from_node(curr);
 	delete_tree(curr->down);
 	curr->down = NULL;
+	return(curr);
 }
 
 /*
@@ -86,9 +85,7 @@ NODE curr;
 **	mm/dd/yy	Written by xxx
 **
 */
-NODE tie_next(curr,new)
-NODE curr;
-NODE new;
+NODE tie_next(NODE curr, NODE new)
 {
 	new->next = curr->next;
 	curr->next = new;	
@@ -114,9 +111,7 @@ NODE new;
 **	mm/dd/yy	Written by xxx
 **
 */
-NODE tie_down(curr,new)
-NODE curr;
-NODE new;
+NODE tie_down(NODE curr, NODE new)
 {
 	new->down = curr->down;
 	curr->down = new;
@@ -142,9 +137,7 @@ NODE new;
 **	mm/dd/yy	Written by xxx
 **
 */
-NODE tie_end(curr,end)
-NODE curr;
-NODE end;
+NODE tie_end(NODE curr, NODE end)
 {
 	if (!curr) return(end);
 
@@ -159,9 +152,7 @@ NODE end;
 	return(curr);
 }
 
-NODE tie_bottom(curr,bottom)
-NODE curr;
-NODE bottom;
+NODE tie_bottom(NODE curr, NODE bottom)
 {
 	if (!curr) return(bottom);
 
@@ -176,35 +167,89 @@ NODE bottom;
 	return(curr);
 }
 
-NODE tie_end_many(count,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10)
-int	count;
-NODE	a1,a2,a3,a4,a5,a6,a7,a8,a9,a10;
+NODE tie_end_many(int count, NODE a1, NODE a2, NODE a3, NODE a4, NODE a5, NODE a6, NODE a7, NODE a8, NODE a9, NODE a10)
 {
-	switch(count)
+	if (1 == count)
 	{
-	case  1: return(a1);	break;
-	case  2: return(tie_end(a1,a2));	break;
-	case  3: return(tie_end(a1,tie_end_many(2,a2,a3)));	break;
-	case  4: return(tie_end(a1,tie_end_many(3,a2,a3,a4)));	break;
-	case  5: return(tie_end(a1,tie_end_many(4,a2,a3,a4,a5)));	break;
-	case  6: return(tie_end(a1,tie_end_many(5,a2,a3,a4,a5,a6)));	break;
-	case  7: return(tie_end(a1,tie_end_many(6,a2,a3,a4,a5,a6,a7)));	break;
-	case  8: return(tie_end(a1,tie_end_many(7,a2,a3,a4,a5,a6,a7,a8)));	break;
-	case  9: return(tie_end(a1,tie_end_many(8,a2,a3,a4,a5,a6,a7,a8,a9)));	break;
-	case 10: return(tie_end(a1,tie_end_many(9,a2,a3,a4,a5,a6,a7,a8,a9,a10)));	break;
+		return(a1);
 	}
-	return(NULL);
+	else if (2 == count)
+	{
+		return(tie_end(a1,a2));
+	}
+	else if ( count > 2 )
+	{
+		return(tie_end(a1,tie_end_many(count-1,a2,a3,a4,a5,a6,a7,a8,a9,a10,NULL)));
+	}
+	else
+	{
+		return(NULL);
+	}
 }
 
-delete_tree(tree)
-NODE tree;
+NODE delete_tree(NODE tree)
 {
-	if (!tree) return;
+	if (!tree) return NULL;
 
 	delete_tree(tree->down);
 	delete_tree(tree->next);
 
 	free_token(tree->token);
 	wfree(tree);
-	return;
+	return NULL;
 }
+
+/*
+**	Routine:	unhook_sub_tree()
+**
+**	Function:	Unhook a sub tree from a parent tree.
+**
+**	Description:	Parent_tree will have a node which points to sub_tree.
+**			Find that node an replace the pointer with NULL.
+**
+**	Arguments:
+**	parent_tree	The tree that contains sub_tree.
+**	sub_tree	The tree to unhook.
+**
+**	Globals:	None
+**
+**	Return:		The sub_tree of NULL if not found.
+**
+**	Warnings:	None
+**
+**	History:	
+**	07/22/94	Written by GSL
+**
+*/
+NODE unhook_sub_tree(NODE parent_tree, NODE sub_tree)
+{
+
+	if (!parent_tree) return NULL;
+
+	if (parent_tree->next == sub_tree)
+	{
+		parent_tree->next = NULL;
+		return sub_tree;
+	}
+	if (parent_tree->down == sub_tree)
+	{
+		parent_tree->down = NULL;
+		return sub_tree;
+	}
+
+	if (unhook_sub_tree(parent_tree->down,sub_tree))
+	{
+		return sub_tree;
+	}
+
+	return unhook_sub_tree(parent_tree->next,sub_tree);
+}
+/*
+**	History:
+**	$Log: node.c,v $
+**	Revision 1.7  1996-08-30 21:56:06-04  gsl
+**	drcs update
+**
+**
+**
+*/

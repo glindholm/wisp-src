@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /*
 
 regexpr.h
@@ -137,3 +141,12 @@ int re_exec();
 #endif /* REGEXPR_H */
 
 
+/*
+**	History:
+**	$Log: regexpr.h,v $
+**	Revision 1.6  1996-08-19 18:32:49-04  gsl
+**	drcs update
+**
+**
+**
+*/

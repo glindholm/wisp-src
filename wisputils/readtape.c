@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 #ifdef unix
 #include <stdio.h>
 #include <fcntl.h>
@@ -216,3 +218,12 @@ char *p;
 	}
 }
 #endif
+/*
+**	History:
+**	$Log: readtape.c,v $
+**	Revision 1.7  1996-07-23 14:12:58-04  gsl
+**	drcs update
+**
+**
+**
+*/

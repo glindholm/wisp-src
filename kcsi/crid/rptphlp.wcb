@@ -1,0 +1,195 @@
+000100 IDENTIFICATION DIVISION.
+000200 PROGRAM-ID. RPTPHLP.
+000300 AUTHOR. HLM.
+000400 DATE-WRITTEN.  01/19/90.
+000500 DATE-COMPILED.
+000600*----------------------------------------------------------------
+000700* HELP SCREENS FROM PRINT OPTION
+000800*----------------------------------------------------------------
+000900
+001000 ENVIRONMENT DIVISION.
+001100 CONFIGURATION SECTION.
+001200 FIGURATIVE-CONSTANTS.
+001300     COPY FIGS.
+001400
+001500 INPUT-OUTPUT SECTION.
+001600
+001700 FILE-CONTROL.
+001800     COPY SLCRT.
+001900
+002000 DATA DIVISION.
+002100 FILE SECTION.
+002200     COPY FDCRT.
+002300
+002400 WORKING-STORAGE SECTION.
+000000     COPY WSKTRACE.
+000000 01  SCCS-WHAT PIC X(50) VALUE
+000000     "@(#)rptphlp.wcb 1.6 9/11/94".
+002500     COPY WSINT.
+002600     COPY WSCRT.
+002700
+002800 01  PRINT-HELP-ONE-SCREEN USAGE IS DISPLAY-WS.
+002900     05  FILLER
+003000         PIC X(74) ROW 1 COLUMN 2 VALUE
+003100         "SUM ONLY OPTION
+003200-        "                  ".
+003300     05  FILLER
+003400         PIC X(74) ROW 3 COLUMN 2 VALUE
+003500         "Sum Only = YES - Only control break and total lines are
+003600-        "printed.          ".
+003700     05  FILLER
+003800         PIC X(74) ROW 4 COLUMN 2 VALUE
+003900         "Sum Only = NO  - All detail lines are printed.
+004000-        "                  ".
+004100     05  FILLER
+004200         PIC X(74) ROW 7 COLUMN 2 VALUE
+004300         "COUNT OPTION
+004400-        "                  ".
+004500     05  FILLER
+004600         PIC X(74) ROW 9 COLUMN 2 VALUE
+004700         "The Count Option can be used to perform one of two separ
+004800-        "ate functions.    ".
+004900     05  FILLER
+005000         PIC X(74) ROW 11 COLUMN 2 VALUE
+005100         "Count = YES  - The number of records selected for the re
+005200-        "port are printed  ".
+005300     05  FILLER
+005400         PIC X(74) ROW 12 COLUMN 2 VALUE
+005500         "         at the end of the report.
+005600-        "                  ".
+005700     05  FILLER
+005800         PIC X(74) ROW 13 COLUMN 2 VALUE
+005900         "Count = 001 to 999  - Printing is terminated after the s
+006000-        "pecified number   ".
+006100     05  FILLER
+006200         PIC X(74) ROW 14 COLUMN 2 VALUE
+006300         "            of lines have been printed. This can be used
+006400-        " for 'top ten'    ".
+006500     05  FILLER
+006600         PIC X(74) ROW 15 COLUMN 2 VALUE
+006700         "            reports, etc.
+006800-        "                  ".
+006900     05  FILLER
+007000         PIC X(74) ROW 16 COLUMN 2 VALUE
+007100         "Count = NO  - Neither of the above functions are perform
+007200-        "ed.               ".
+000000     05  FILLER
+000000         PIC X(74) ROW 17 COLUMN 2 VALUE
+000000         "PROGRESS = YES - A running count of records selected, so
+000000-        "rted and processed".
+007300     05  FILLER
+007400         PIC X(33) ROW 24 COLUMN 24 VALUE
+007500         "**  Press (ENTER) to Continue  **".
+007700
+007800 01  PRINT-HELP-TWO-SCREEN USAGE IS DISPLAY-WS.
+007900     05  FILLER
+008000         PIC X(18) ROW 1 COLUMN 2 VALUE
+008100         "CHANGE DATA FILES ".
+008200     05  FILLER
+008300         PIC X(73) ROW 3 COLUMN 2 VALUE
+008400         "This option allows the user to respecify the data files
+008500-        "to be reported on".
+008600     05  FILLER
+008700         PIC X(71) ROW 4 COLUMN 2 VALUE
+008800         "during the print option without having to change the Rep
+008900-        "ort Definition.".
+009000     05  FILLER
+009100         PIC X(77) ROW 5 COLUMN 2 VALUE
+009200         "Options:
+009300-        "                     ".
+009400     05  FILLER
+009500         PIC X(77) ROW 6 COLUMN 2 VALUE
+009600         "     YES - A screen will appear allowing a new data file
+009700-        " to be entered.      ".
+009800     05  FILLER
+009900         PIC X(77) ROW 7 COLUMN 2 VALUE
+010000         "     NO  -  The data file specified by the Report Defini
+010100-        "tion is used.        ".
+010200     05  FILLER
+010300         PIC X(77) ROW 9 COLUMN 2 VALUE
+010400         "SELECT LINES      and  PRINT LINE SPACING
+010500-        "                     ".
+010600     05  FILLER
+010700         PIC X(77) ROW 11 COLUMN 2 VALUE
+010800         "The Select Lines option is used to select which of the d
+010900-        "efined print lines   ".
+011000     05  FILLER
+011100         PIC X(77) ROW 12 COLUMN 2 VALUE
+011200         "are to be printed, and the Print Line Spacing option des
+011300-        "ignates the number of".
+011400     05  FILLER
+011500         PIC X(77) ROW 13 COLUMN 2 VALUE
+011600         "blank lines to follow the corresponding print line on th
+011700-        "e printed report. It ".
+011800     05  FILLER
+011900         PIC X(77) ROW 14 COLUMN 2 VALUE
+012000         "is not necessary to print all lines defined, but you mus
+012100-        "t print at least 1.  ".
+012200     05  FILLER
+012300         PIC X(77) ROW 15 COLUMN 2 VALUE
+012400         "Select Lines is used by entering up to 3 of the possible
+012500-        " report print line   ".
+012600     05  FILLER
+012700         PIC X(77) ROW 16 COLUMN 2 VALUE
+012800         "numbers (1 2 or 3) in the order they are to be printed.
+012900-        "Print Line Spacing is".
+013000     05  FILLER
+013100         PIC X(77) ROW 17 COLUMN 2 VALUE
+013200         "controlled by entering the number of blank lines to foll
+013300-        "ow the print line    ".
+013400     05  FILLER
+013500         PIC X(77) ROW 18 COLUMN 2 VALUE
+013600         "directly below its corresponding select lines entry.
+013700-        "                     ".
+013800     05  FILLER
+013900         PIC X(77) ROW 19 COLUMN 2 VALUE
+014000         "      Example:      Select Lines    = 31
+014100-        "                     ".
+014200     05  FILLER
+014300         PIC X(77) ROW 20 COLUMN 2 VALUE
+014400         "                Print Line Spacing  = 02
+014500-        "                     ".
+014600     05  FILLER
+014700         PIC X(77) ROW 21 COLUMN 2 VALUE
+014800         "will print a report with print line number 3 followed by
+014900-        " print line 1        ".
+015000     05  FILLER
+015100         PIC X(77) ROW 22 COLUMN 2 VALUE
+015200         "followed by 2 blank lines before the next print line num
+015300-        "ber 3.               ".
+015400     05  FILLER
+015500         PIC X(33) ROW 24 COLUMN 24 VALUE
+015600         "**  Press (ENTER) to Continue  **".
+015800
+015900 PROCEDURE DIVISION.
+016000
+016100 MAIN-LOGIC SECTION.
+016200 PROGRAM-BEGIN.
+000000     MOVE "RPTPHLP BEGIN" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+016300     PERFORM OPENING-PROCEDURE.
+016400     PERFORM MAIN-PROCESS.
+016500     PERFORM CLOSING-PROCEDURE.
+000000     MOVE "RPTPHLP EXIT" TO KTRACE-RECORD.
+000000     PERFORM CALL-KTRACE.
+016600 MAIN-LOGIC-EXIT.
+016700     EXIT PROGRAM.
+016800 MAIN-LOGIC-STOP.
+016900     STOP RUN.
+017000 LEVEL-2 SECTION.
+017100 OPENING-PROCEDURE.
+017200     OPEN I-O  CRT-FILE.
+017300 CLOSING-PROCEDURE.
+017400     CLOSE CRT-FILE.
+017500
+017600 MAIN-PROCESS.
+017700
+017800     DISPLAY AND READ ALTERED PRINT-HELP-ONE-SCREEN ON CRT-FILE.
+017900
+018000     DISPLAY AND READ ALTERED PRINT-HELP-TWO-SCREEN ON CRT-FILE.
+018100
+000000     CALL "BLNKSC".
+000000
+000000     COPY PLCRT.
+000000*     COPY PLCLRCRT.
+000000     COPY PLKTRACE.

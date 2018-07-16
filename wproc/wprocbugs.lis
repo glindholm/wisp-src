@@ -1,0 +1,210 @@
+								wprocbugs.lis
+
+0002	Key:	SPACING=000
+	Desc:	On RUN stmt ENTER clause the keyword=value for SPACING=000
+		the 000 gets treated as a numeric literal instead of a
+		character string.  When converted back to a character string
+		it results in SPACING=0 which is wrong.
+	Cust:	SILCORP
+
+0011	Key:	PERIODS IN FILE NAMES
+	Desc:	Miss interupts periods (.) in file names. Can't use . for
+		library and volume names.
+	Cust:	IDSI
+
+0012	Key:	LOCAL VARIABLE WITH SAME NAME AS GLOBAL
+	Desc:	A local variable is declared with the same name a global
+		variable at higher level, problem if the INITAL value
+		clause is used on the local variable.
+	Cust:	SILCORP
+
+0019	Key:	TRACE SHOW FULL STATEMENT
+	Desc:	TRACE only shows the first line of the statement.
+	Cust:	SILCORP
+
+0022	Key:	GLOBALS NOT FOUND
+	Desc:	Global variables are not found in the following sit:
+		Proc-B runs a COBOL-B program which run a proc-C that 
+		runs prog-D.
+		Globals declared at the first nesting_level (proc-C)
+		following a COBOL program are not found at (proc-D)
+		lower levels.		
+	Cust:	SILCORP
+
+0035	Key:
+	Desc:
+	Cust:
+
+
+======= Fixed in 1.03 ===================================================
+
+0033	Key:	SUBMIT USING 
+	Desc:	A procedure which was started with a SUBMIT USING was not
+		getting the arguments from the command line.
+	Cust:	JUNEAU
+
+0034	Key:	SUBMIT USING INTEGERS
+	Desc:	Integer parameters on a SUBMIT USING were not correctly
+		being passed.
+		Changed to convert integers into strings for passing.
+		This works correctly when submitting a procedure but
+		non-procedures will need to be modified to expect a string
+		instead of an integer.
+	Cust:	
+
+======= Fixed in 1.02 ===================================================
+
+0032	Key:	GLOBALS USED AS ARGS IN RUN USING NOT UPDATED
+	Desc:	Global variables passed as arguments in a RUN USING
+		statement to a COBOL program do not get updated with
+		the value from the COBOL program.
+
+		INTERNALLY: The wang_os_link() routine is updating
+		the variables (including globals) but the 
+		symbol_table::update_globals() is that restoring
+		the values from before.
+	Cust:	VBA (could be many)
+
+======= Fixed in 1.01 ===================================================
+
+0031	Key:	RENAME FILES ACROSS LIBRARIES
+	Desc:	Rename a file to a different LIBRARY was failing.
+
+======= Fixed in 0.99.02 ===================================================
+
+0027	Key:	BACKGROUND
+	Desc:	Need to ensure it functions correctly in background
+		including blocking of screen I/O.
+	Cust:
+
+0030	Key:	TOO MANY KEYWORDS ON A PUTPARM
+	Desc:	There was a hardcoded limit of 40 keywords
+	Cust:	Harte
+
+0029	Key:	SUBMIT USING
+	Desc:	SUBMIT with the USING clause was not passing the parameters.
+	Cust:	SILCORP, KENT, JENNIFER
+
+======= Fixed in 0.99 ======================================================
+	(Need libwisp.a 3.3x4 or later)
+
+0025	Key:	PROGRESS MESSAGE IN BACKGROUND
+	Desc:	Need to suppress the "PROCEDURE IN PROGRESS" message
+		when in background.
+	Cust:
+
+0026	Key:	RENAME LIBRARY
+	Desc:	The RENAME on a library doesn't work.
+	Cust:	KENT
+
+0014	Key:	CLEANUP NO WISPCONFIG ABORT
+	Desc:	If there is no $WISPCONFIG defined or no wproc.msg then
+		it terminates with terminal in raw state.
+		(Not able to reporduce)
+	Cust:	IDSI
+
+0005	Key:	STRING LITERAL SPANING LINES
+	Desc:	When string literal spans lines and the continued line
+		is trimmed the resulting string is corrupted.
+	Cust:	CIS
+
+0009	Key:	HELP KEY
+	Desc:	Add the HELP KEY processing
+	Cust:	ALL
+
+0007	Key:	VSSUBS
+	Desc:	The Wang allows procs to "run" VSSUBS.
+	Cust:	CIS, SILCORP, JJKELLER, KENT
+
+0028	Key:	DELETE TEMP FILES (WSYSINIT)
+	Desc:	The wsysinit utility needs to delete any WPROC temp files.
+	Cust:	SILCORP
+
+======= Fixed in 0.98 ======================================================
+
+0016	Key:	SYMBOLS661
+	Desc:	The above error would occur while restoring the globals
+		table after a RUN of a COBOL program.
+	Cust:	SILCORP
+
+0003	Key:	FORMAL PARM WITH SAME NAME AS GLOBAL
+	Desc:	A proc with a formal parameter &DBNAME that is the same
+		name as a GLOBAL was causing an assert on the SYMBOL
+		destructor because raw_data() was not found.  The parm is
+		a fetched_arg passed from COBOL.  On return to COBOL
+		the argument was garbbled.
+	Cust:	SILCORP
+
+0017	Key:	TRACE DIRECTORY MUST EXIST
+	Desc:	The TRACE logging fails unless the directory exists.
+	Cust:	SILCORP
+
+0023	Key:	100% CPU USTILIZATION
+	Desc:	When wproc waiting for input for terminal, 100% cpu was
+		utilized in a live-loop polling the keyboard.
+	Cust:	SILCORP, KENT
+
+0021	Key:	RUN DOESN'T FIND DISPLAY or COPY or SORT
+	Desc:	The RUN verb doesn't find DISPLAY unless the library
+		and volume are specified.
+	Cust:	KENT
+
+0018	Key:	TRACE SHOW RETURN CODES
+	Desc:	The TRACE logging should show the return codes.
+	Cust:	SILCORP
+
+0024	Key:	BLANK SCREEN WHILE RUNNING
+	Desc:	WPROC leaves the screen blank while running a proc that has
+		no screen I/O.  It should say "Procedure XXX in progress".
+	Cust:	KENT
+
+======= Fixed in 0.97 ======================================================
+
+0001	Key:	TRACE
+	Desc:	Enhance the TRACE verb to allow Wang style logging to a file.
+	Cust:	SILCORP
+
+======= Fixed in 0.96 ======================================================
+
+0015	Key:	STACK63 ABORT ON TRACE
+	Desc:	A Wang style TRACE statement is causing a STACK63 abort
+	Cust:	SILCORP
+
+======= Fixed in 0.95 ======================================================
+
+0000	Key:	PROCEDURE COMMENTS MODECODES - IGNORING PROC
+	Desc:	The whole procedure is being ignored when there is
+		comments following the PROCEDURE statement and modecodes
+	Cust:	SILCORP, KENT
+
+0004	Key:	&DATE
+	Desc:	The builtin function &DATE is returning date in wrong format.
+	Cust:	BDI/KENT
+
+0006	Key:	SET RECORDS
+	Desc:	The RECORDS keyword is not recognized and ignored in
+		the SET statement.
+	Cust:	BDI/KENT
+
+0008	Key:	SET SPOOLSCR
+	Desc:	The SPOOLSCR keyword is not recognized and ignored in
+		the SET statement. (Occurs 150 times)
+	Cust:	BDI/KENT
+
+0013	Key:	EXTRACT RECORDS USED BY FILE
+	Desc:	The EXTRACT RECORDS doesn't seem to be implemented.
+	Cust:	SILCORP
+
+======= CANCELLED ========================================================
+
+0010	Key:	UNABLE TO WRITE WORK FILE
+	Desc:	They get the above message (waiting for sample)
+		Concerns multiple declares of globals in same proc.
+		(Not verified)
+	Cust:	SILCORP
+
+0020	Key:	RERUNNING CANCELLED PROGRAMS
+	Desc:	If you cancel a COBOL program either thru HELP or from
+		a error getparm screen then WPROC reruns it.
+		(Not reproduced)
+	Cust:	SILCORP

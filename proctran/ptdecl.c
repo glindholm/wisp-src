@@ -1,25 +1,23 @@
-			/************************************************************************/
-			/*	   PROCTRAN - Wang Procedure Language to VS COBOL Translator	*/
-			/*			Copyright (c) 1990				*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/************************************************************************/
-
+static char copyright[]="Copyright (c) 1995-97 NeoMedia Technologies Inc., All rights reserved.";
+static char rcsid[]="$Id:$";
 /*
 **	File:		ptdecl.c
 **
+**	Project:	wisp/proctran
+**
+**	RCS:		$Source:$
+**
 **	Purpose:	To process the DECLARE statement.
 **
-**	Routines:	p_declare()	Initial processing of the DECLARE statement:
-**					STRING, INTEGER, INITIAL, GLOBAL keywords.
-**			save_declare_var()	Save the variable in declare_item.
-**
-**
-**	History:
-**			mm/dd/yy	Written by ...
-**
+**	Routines:	
+**	p_declare()		Initial processing of the DECLARE statement:
+**				STRING, INTEGER, INITIAL, GLOBAL keywords.
+**	save_declare_var()	Save the variable in declare_item.
 */
 
+/*
+**	Includes
+*/
 #define EXT extern
 
 #include <stdio.h>
@@ -29,8 +27,39 @@
 #include "pgglobal.h"
 #include "pgstruct.h"
 
-p_declare(tndx,num_val,num_var,num_asn)
-int tndx, *num_val, *num_var, *num_asn;
+/*
+**	Structures and Defines
+*/
+
+/*
+**	Globals and Externals
+*/
+
+/*
+**	Static data
+*/
+
+/*
+**	Static Function Prototypes
+*/
+
+/*
+**	ROUTINE:	p_declare()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void p_declare(int tndx,int *num_val,int *num_var,int *num_asn)
 {
 	register int i;
 	char *cstr, curlen[FLDLEN];
@@ -154,7 +183,7 @@ int tndx, *num_val, *num_var, *num_asn;
 					if (*aptr == '"') *aptr = '\'';			/* Set quotes to correct form.		*/
 					tval[i++] = *aptr++;
 					if (*cur_decl->type == 'S' &&
-					    (*aptr == '\0' || *aptr == LNFD || (aptr - inline >= WPLMAX)) )
+					    (*aptr == '\0' || *aptr == LNFD || (aptr - linein >= WPLMAX)) )
 					{						/* At end of line but might have more.	*/
 						if ((pos=strpos(cur_decl->field1,"KEY") >= 0)) break; /* If the PFKEY value.	*/
 						else	get_next_line();
@@ -191,8 +220,23 @@ int tndx, *num_val, *num_var, *num_asn;
 	}										/* End declare switch.			*/
 }
 
-save_declare_var(num_asn,num_var,num_val, num_cmds)					/* Save the variable in declare_item.	*/
-int *num_asn, *num_var, *num_val, *num_cmds;
+/*
+**	ROUTINE:	save_declare_var()
+**
+**	FUNCTION:	{One line statement of function}...
+**
+**	DESCRIPTION:	{Full detailed description}...
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		None
+**
+**	WARNINGS:	None
+**
+*/
+void save_declare_var(int *num_asn,int *num_var,int *num_val, int *num_cmds)		/* Save the variable in declare_item.	*/
 {
 	char *cstr;
 	char fielda[FLDLEN], fieldb[FLDLEN], type[3];
@@ -259,7 +303,7 @@ int *num_asn, *num_var, *num_val, *num_cmds;
 
 				while (cont)
 				{
-					while(*aptr != '\0' && *aptr != LNFD && *aptr != '\'' && (aptr - inline < WPLMAX))
+					while(*aptr != '\0' && *aptr != LNFD && *aptr != '\'' && (aptr - linein < WPLMAX))
 					{
 						if (*aptr == '"') *aptr = '\'';		/* Set quote withing string to single.	*/
 						*cstr++ = *aptr++;
@@ -286,3 +330,19 @@ int *num_asn, *num_var, *num_val, *num_cmds;
 		}
 	}
 }
+
+/*
+**	History:
+**	$Log: ptdecl.c,v $
+**	Revision 1.7  1997-04-21 11:05:19-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.6  1996-09-12 19:15:07-04  gsl
+**	fix return codes
+**
+**	Revision 1.5  1995-09-22 07:22:42-07  scass
+**	Added DTMI standard header stuff.
+**
+**
+**
+*/

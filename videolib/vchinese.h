@@ -1,3 +1,29 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
+
+/*
+**	File:		vchinese.h
+**
+**	Project:	video/lib
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Chinese character support.
+**
+*/
+
+#ifndef vchinese_H
+#define vchinese_H
+/*
+**	Includes
+*/
+
+/*
+**	Structures and Defines
+*/
+
 #define MAX_CODENAME_LEN 10
 #define MAX_FILENAME_LEN 128
 
@@ -69,7 +95,6 @@ unsigned char *tablebuf=NULL, *xlatbuf=NULL, *f1indbuf=NULL, *f2indbuf=NULL;
 unsigned char *f1tof2buf=NULL, *f2tof1buf=NULL;
 
 char errbuf[80];
-char *malloc();
 
 int chtab_init=0;
 
@@ -91,7 +116,7 @@ static char vlangfile[MAX_FILENAME_LEN];
 
 static int xlat_init_flag = -1;
 	
-#else
+#else /* ! __CHINESE__ */
 
 extern struct xlcontext *outctx, *inctx;
 extern char tablepath[];
@@ -106,16 +131,36 @@ extern char interxlatfile[];
 
 extern char xlatfile[];
 
+#ifdef unix
 extern int f1size, f2size;
+#endif
 
 extern unsigned char *tablebuf, *xlatbuf, *f1indbuf, *f2indbuf;
 extern unsigned char *f1tof2buf, *f2tof1buf;
 
 extern char errbuf[];
-/*char *malloc();*/
 
 extern int chtab_init;
 
-#endif
+#endif /* ! __CHINESE__ */
 
+/*
+**	Function Prototypes
+*/
 
+#endif /* vchinese_H */
+
+/*
+**	History:
+**	$Log: vchinese.h,v $
+**	Revision 1.6  1995-04-25 05:50:24-04  gsl
+**	drcs state V3_3_15
+**
+ * Revision 1.5  1995/04/17  11:44:02  gsl
+ * drcs state V3_3_14
+ *
+ * Revision 1.4  1995/04/10  09:10:02  gsl
+ * fixed compiler warnings and added headers
+ *
+**
+*/

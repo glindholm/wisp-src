@@ -1,3 +1,5 @@
+static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char rcsid[]="$Id:$";
 /* insert IDSI copyright notice here	*/
 
 /* pfkey.c : get a AT&T 605 function key F1-F16 */
@@ -74,3 +76,12 @@ fixup()
 	ioctl(0,TCSETA,&old);
 	exit();
 }
+/*
+**	History:
+**	$Log: pfkey.c,v $
+**	Revision 1.7  1996-07-23 14:12:56-04  gsl
+**	drcs update
+**
+**
+**
+*/

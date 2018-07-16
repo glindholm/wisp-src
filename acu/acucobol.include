@@ -1,0 +1,145 @@
+#	Copyright (c) 1988-1998 NeoMedia Technologies, Inc. All rights reserved.
+#	$Id:$
+#
+#
+#	File:		acucobol.include
+#
+#	Function:	Standard make include file when using ACUCOBOL.
+#
+#	Description:
+#			This file is included into all ACUCOBOL makefiles.
+#			It defines all version specific options.
+#			Uncomment the version defines for this system.
+#
+#============================================================================
+#
+# ACULIBS is the list of ACUCOBOL libraries
+# ACUSUBS is the list of ACUCOBOL subroutines
+# ACUTEST a test file used to determine version of ACUCOBOL
+# ACUOTHER is the list of unix libraries required for resolution of
+#	   ACUCOBOL undefines depending on version and platform. 
+#
+# Different versions of ACUCOBOL use different sets of
+# libraries and subroutines.
+#
+# 1	ACUCOBOL Version 1.5 and below
+# 2	ACUCOBOL Version 2.0 - 2.3.2
+# 3	ACUCOBOL Version 2.3.3
+# 4	ACUCOBOL Version 2.4 +
+# 5	ACUCOBOL Version 3.1 - 3.2
+#
+ACULIBS1=$(ACUDIR)/runcbl.a
+ACULIBS2=$(ACUDIR)/runcbl.a
+ACULIBS3=$(ACUDIR)/libruncbl.a \
+	$(ACUDIR)/libvision.a \
+	$(ACUDIR)/libacuterm.a
+ACULIBS4=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libacuterm.a
+ACULIBS5=$(ACU_LIBDIR)/libruncbl.a \
+	$(ACU_LIBDIR)/libfsi.a \
+	$(ACU_LIBDIR)/libacuterm.a \
+	$(ACU_LIBDIR)/libvision.a \
+	$(ACU_LIBDIR)/libclient.a \
+	$(ACU_LIBDIR)/libmessage.a \
+	$(ACU_LIBDIR)/libmemory.a \
+	$(ACU_LIBDIR)/libstdlib.a
+
+ACUSUBS1=sub.o
+ACUSUBS2=sub.o filetbl.o
+ACUSUBS3=sub.o filetbl.o $(ACUDIR)/clntstub.o
+ACUSUBS4=sub.o filetbl.o $(ACU_LIBDIR)/clntstub.o
+ACUSUBS5=sub.o filetbl.o 
+
+ACUTEST1=$(ACUDIR)/runcbl.a
+ACUTEST2=$(ACUDIR)/runcbl.a
+ACUTEST3=$(ACUDIR)/libruncbl.a
+ACUTEST4=$(ACU_LIBDIR)/libruncbl.a
+ACUTEST5=$(ACU_LIBDIR)/libstdlib.a
+
+COBOL1=$(ACUDIR)/ccbl
+COBOL2=$(ACUDIR)/ccbl
+COBOL3=$(ACUDIR)/ccbl
+COBOL4=$(ACUDIR)/bin/ccbl
+COBOL5=$(ACUDIR)/bin/ccbl
+
+CBLUTIL1=$(ACUDIR)/ccbl
+CBLUTIL2=$(ACUDIR)/ccbl
+CBLUTIL3=$(ACUDIR)/ccbl
+CBLUTIL4=$(ACUDIR)/bin/ccbl
+CBLUTIL5=$(ACUDIR)/bin/cblutil
+
+ACUOTHER=
+
+#============================================================================
+#
+# ****  CHANGE PLATFORM SETTINGS HERE ****
+#
+# The following lines are used to change the ACUCOBOL platform 
+# settings.  Uncomment the macro lines which match the
+# platform that you are porting.
+#
+#
+#	ACUCOBOL Version 3.1.1 on Solaris and DG-UX Intel
+#
+#ACUOTHER_SYS= -lnsl -lsocket
+#ACUOTHER=$(ACUOTHER_SYS)
+#
+#	ACUCOBOL Version 3.1.1 on SCO Unix
+#
+#ACUOTHER_SCO= -lsocket
+#ACUOTHER=$(ACUOTHER_SCO)
+
+#============================================================================
+#
+# ****  CHANGE VERSION SETTINGS HERE ****
+#
+# The following lines are used to change the ACUCOBOL version 
+# settings.  Uncomment the 5 macro lines which match the
+# version of ACUCOBOL you are using.
+#
+#	
+# 1	ACUCOBOL Version 1.5 and below
+#
+# ACULIBS=$(ACULIBS1)
+# ACUSUBS=$(ACUSUBS1)
+# ACUTEST=$(ACUTEST1)
+# ACUSRCDIR=$(ACUDIR)
+# COBOL=$(COBOL1)
+# CBLUTIL=$(CBLUTIL1)
+#
+# 2	ACUCOBOL Version 2.0 - 2.3.2
+#
+# ACULIBS=$(ACULIBS2)
+# ACUSUBS=$(ACUSUBS2)
+# ACUTEST=$(ACUTEST2)
+# ACUSRCDIR=$(ACUDIR)
+# COBOL=$(COBOL2)
+# CBLUTIL=$(CBLUTIL2)
+#
+# 3	ACUCOBOL Version 2.3.3
+#
+# ACULIBS=$(ACULIBS3)
+# ACUSUBS=$(ACUSUBS3)
+# ACUTEST=$(ACUTEST3)
+# ACUSRCDIR=$(ACUDIR)
+# COBOL=$(COBOL3)
+# CBLUTIL=$(CBLUTIL3)
+#
+# 4	ACUCOBOL Version 2.4 +
+#
+# ACULIBS=$(ACULIBS4)
+# ACUSUBS=$(ACUSUBS4)
+# ACUTEST=$(ACUTEST4)
+# ACUSRCDIR=$(ACU_LIBDIR)
+# COBOL=$(COBOL4)
+# CBLUTIL=$(CBLUTIL4)
+#
+# 5	ACUCOBOL Version 3.1 - 3.2
+#
+ACULIBS=$(ACULIBS5) $(ACUOTHER)
+ACUSUBS=$(ACUSUBS5)
+ACUTEST=$(ACUTEST5)
+ACUSRCDIR=$(ACU_LIBDIR)
+COBOL=$(COBOL5)
+CBLUTIL=$(CBLUTIL5)

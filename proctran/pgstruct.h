@@ -1,5 +1,28 @@
-/* PGSTRUCT.H															*/
-/*		 Common structure deinitions											*/
+/* 
+	Copyright (c) 1995-1997 NeoMedia Technologies Inc., All rights reserved.
+	$Id:$
+*/
+
+/*
+**	File:		pgstruct.h
+**
+**	Project:	proctran
+**
+**	RCS:		$Source:$
+**
+**	Purpose:	Common structure deinitions
+**
+*/
+
+#ifndef pgstruct_H
+#define pgstruct_H
+/*
+**	Includes
+*/
+
+/*
+**	Structures and Defines
+*/
 
 typedef struct assign_item {
 		int	sub_flag;							/* Subscript field flag.		*/
@@ -262,3 +285,22 @@ EXT putparm_item *cur_pp;								/* Allocate putparm instructions.	*/
 EXT pp_keywords *cur_pp_key;								/* Allocate putparm keyword values.	*/
 EXT readfdr_item *cur_rfdr;								/* Allocate readfdr information.	*/
 EXT return_item *cur_rtrn;								/* Allocate return code information.	*/
+
+/*
+**	Function Prototypes
+*/
+
+#endif /* pgstruct_H */
+
+/*
+**	History:
+**	$Log: pgstruct.h,v $
+**	Revision 1.8  1997-04-21 10:58:05-04  scass
+**	Corrected copyright.
+**
+**	Revision 1.7  1996-09-12 19:14:01-04  gsl
+**	Add standard headers to allow multiple includes
+**
+**
+**
+*/

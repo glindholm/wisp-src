@@ -1,0 +1,163 @@
+* Copyright (c) 1992 Lexical Software
+procedure DR.SRC views the contents of directories
+
+screen clear
+declare &path as string(40) = &current_dir !! "/"
+declare &file as string
+
+BEGIN:
+declare &name_count as integer = &dir_entries (&path) + 1 [ for .. ]
+declare &name_size  as integer = &max (&name_count + 2, 10)
+declare &names      as array (&name_size) of string(32)
+declare &i          as integer
+declare &heightS    as integer = 2   [ Start ]
+declare &heightL    as integer = 10  [ List ]
+declare &width      as integer = 40
+declare &pf         as integer
+declare &currow     as integer = 2
+declare &curcol     as integer = 1
+declare &file1      as string (12)
+declare &exit_now   as integer = &false
+declare &true_path  as string
+declare &pattern    as string
+
+assign &true_path = &file_dir(&path)
+
+if &true_path = "" then
+   begin
+      assign &true_path = "/"
+      assign &pattern = &path(1,*)
+   end
+else
+   assign &pattern = "."
+
+screen cursor off
+message corner = (0, 4), border=3, screencolor=(black,white),
+   "Reading directory"
+screen cursor on
+call &read_dir (&path, &names)
+assign &names(&name_count) = ".."
+
+[ Sort entries.  Blank entries are set to byte(127) so they appear
+  at the end of the sorted list ]
+for &i = &name_count+1 to &name_size loop
+   assign &names(&i) = &byte(127)
+end
+call &sort (&names)
+for &i = &name_count+1 to &name_size loop
+   assign &names(&i) = ""
+end
+
+for &i = 1 to &name_count loop
+   if &names(&i)(1,*) <> ".." then
+      if &dir_exists (&true_path !! &names(&i)) then
+         assign &names(&i) = &names(&i)(1,*) !! "/"
+end
+
+declare &top      as integer = 1
+declare &bottom   as integer = &max(&name_count - &heightL + 1,1)
+declare &high_row as integer = &heightS
+declare &low_row  as integer = &heightS + &min(&name_count,&heightL)-1
+
+declare &location string(32) = "Path: " !! &true_path
+declare &entries_msg = " " !! &name_count !! " files "
+
+loop
+   prompt 
+      restrict=yes,
+      erase = no,
+      facs = no,
+      pfkey = &pf,
+      cursor = (&curcol, &currow),
+      currow = &currow,
+      curcol = &curcol,
+      title = &entries_msg,
+      corner = (0, 2),
+      border = 3,
+      restore = no,
+      &location;
+      tab when (&names(&top)<>"")   " " !! &names(&top);
+      tab when (&names(&top+1)<>"") " " !! &names(&top+1);
+      tab when (&names(&top+2)<>"") " " !! &names(&top+2);
+      tab when (&names(&top+3)<>"") " " !! &names(&top+3);
+      tab when (&names(&top+4)<>"") " " !! &names(&top+4);
+      tab when (&names(&top+5)<>"") " " !! &names(&top+5);
+      tab when (&names(&top+6)<>"") " " !! &names(&top+6);
+      tab when (&names(&top+7)<>"") " " !! &names(&top+7);
+      tab when (&names(&top+8)<>"") " " !! &names(&top+8);
+      tab when (&names(&top+9)<>"") " " !! &names(&top+9);;
+      "(ENTER) View file/directory";
+      "    (2) Scroll up 1 line";
+      "    (3) Scroll down 1 line";
+      "    (4) Prev/Top";
+      "    (5) Next/Bottom";
+      "   (10) Quit"
+    
+   case &pf
+      when 2
+         assign &top = &top - 1
+      when 3
+         assign &top = &top + 1
+      when 4 
+         assign &top = &top - &heightL
+      when 5
+         assign &top = &top + &heightL
+      when 10
+         goto fini
+      when 20
+         assign &top = 1
+         assign &currow = &high_row
+         assign &curcol = 1
+      when 21
+         assign &top = &bottom
+         assign &currow = &low_row
+         assign &curcol = 1
+   end
+
+   if &top < 1 then
+      assign &top = 1
+   else
+      if &top > &bottom then
+         assign &top = &bottom
+
+   assign &file = &names (&currow + &top - &heightS)
+
+   if &pf = 0 then
+      begin
+         if &length(&file) = 0 then
+            goto BEGIN
+
+         if &file(1,*) = ".." then
+            begin
+               [ Move up one directory level ]
+               for &i = &length(&true_path)-1 to 1 by -1 loop
+                  if &true_path(&i,1)="/" then exit
+               end
+               if &i = 0 then
+                  assign &path = "/" !! &pattern
+               else
+                  assign &path = &true_path(1,&i) !! &pattern
+
+               [prompt "new path is ", &path]
+               goto BEGIN
+            end
+      
+         [ Remove the slash from file, if present ]
+         if &file(&length(&file(1,*)),1) = "/" then
+            assign &file= &file(1,&length(&file(1,*))-1)
+
+         if &dir_exists(&true_path !! &file) then
+            begin
+               assign &path = &true_path !! &file !! "/" !! &pattern
+               goto BEGIN
+            end
+         else
+            system "vi -R " !! &true_path !! &file
+      end
+
+   if &exit_now then
+      exit
+end [loop]
+
+fini:
+screen clear

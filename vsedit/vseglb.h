@@ -1,7 +1,13 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 #ifndef	_VSEGLB_H
 #define	_VSEGLB_H
 #include "vsegp.h"
-#include "idsistd.h"
+#include "intdef.h"
+
+#define VSE_COPYRIGHT	vse_copyright_message
 
 /*----
 Language defaults
@@ -16,46 +22,25 @@ Language defaults
 #define	TEXT_LANGUAGE		"TEXT     "
 #define	SHELL_LANGUAGE		"SHELL    "
 #define BASIC_LANGUAGE		"BASIC    "
+#define PROC_LANGUAGE		"PROCEDURE"
 
-#define	SHELL_TAB_STRING	"09 17 25 33 41 49 57 65 73 79"
-#define	COBOL_TAB_STRING	"08 12 16 20 24 28 32 44 48 72"
-#define	TEXT_TAB_STRING		"06 10 14 18 22 26 30 34 38 42"
-#define DEFAULT_COB_TAB_STRING  "         X   X   X   X   X   X   X   X                                   X      "
-#define DEFAULT_C_TAB_STRING    "            X   X   X   X   X   X   X   X   X                                   "
-#define DEFAULT_BASIC_TAB_STRING  "         X   X   X   X   X   X   X   X                                   X      "
-#define	C_TAB_STRING		TEXT_TAB_STRING
-#define BASIC_TAB_STRING	COBOL_TAB_STRING
+#define LANG_NONE	0
+#define LANG_COBOL	1
+#define LANG_BASIC	2
+#define LANG_PROC	3
+#define LANG_SHELL	4
+#define LANG_C		5
 
-#define TAB_TO_FIELD 0
-#define TAB_NORMAL 1
-
-/* Added COBOL_MOD_COL_STRING, C_MOD_COL_STRING, and BASIC_MOD_COL_STRING
-   to show mod fields when specified. Added by CIS: 07/22/93 AJA */
-
-#define	COBOL_COL_STRING	"07 72"
-#define	COBOL_MOD_COL_STRING	"07 69"
-#define	TEXT_COL_STRING		"01 72"
-#define	TEXT_MOD_COL_STRING	"01 69"
-#define	C_COL_STRING		TEXT_COL_STRING
-#define C_MOD_COL_STRING	TEXT_MOD_COL_STRING	
-#define	SHELL_COL_STRING	TEXT_COL_STRING
-#define SHELL_MOD_COL_STRING	TEXT_MOD_COL_STRING
-#define BASIC_COL_STRING	COBOL_COL_STRING
-#define BASIC_MOD_COL_STRING	COBOL_MOD_COL_STRING
-
-#define	COBOL_CASE_MODE		"UPPER"
-#define	C_CASE_MODE		"UPLOW"
-#define	TEXT_CASE_MODE		"UPLOW"
-#define	SHELL_CASE_MODE		"UPLOW"
-#define BASIC_CASE_MODE		"UPPER"
-
-#define	COBOL_MATCH_MODE	"EXACT"
-#define	C_MATCH_MODE		"EXACT"
-#define	TEXT_MATCH_MODE		"ANY  "
-#define	SHELL_MATCH_MODE	"EXACT"
-#define BASIC_MATCH_MODE	"EXACT"
+#define TAB_TO_FIELD 	0
+#define TAB_NORMAL 	1
 
 #define	ALL_PFS			"000102030405060708091011121314151617181920212223242526272829303132X"
+
+#define OA_NUM	0
+#define OA_WCC	1
+#define OA_COL	2
+#define OA_CURSOR_ROW	3
+
 /*----
 Setup so that these are defined in vseglb.c but declared everywhere
 else
@@ -74,7 +59,6 @@ else
 #define	INIT_8_SPACES	="        "
 #define	INIT_6_SPACES	="      "
 #define	INIT_16_SPACES	="                "
-#define	INIT_39_SPACES	="                                       "
 #define	INIT_80_SPACES	="                                                                                "
 #define	INIT_100_STRING	="100   "
 #define	INIT_ALL_STRING	="ALL             "
@@ -105,6 +89,9 @@ else
 #define INIT_MINUS_ONE
 #endif	/*_VSEGLB_C */
 
+
+EXTERN_DEF	char	vse_copyright_message[81];				/* The global copyright message 		*/
+
 /*----
 Globals for vse. Includes default parameters etc.
 Eventually some of these will be modifiable by getparms or
@@ -125,13 +112,11 @@ Does not use output options
 #define	VSE_FILENAME_LEN	8
 #define	VSE_LIBNAME_LEN		8
 #define	VSE_VOLNAME_LEN		6
-#define	VSE_EXT_LEN		3
 
 EXTERN_DEF 	char vse_gp_input_language[VSE_LANGUAGE_LEN+1];
 EXTERN_DEF	char vse_gp_input_file[VSE_FILENAME_LEN+1]	INIT_8_SPACES;
 EXTERN_DEF	char vse_gp_input_library[VSE_LIBNAME_LEN+1]	INIT_8_SPACES;
 EXTERN_DEF	char vse_gp_input_volume[VSE_VOLNAME_LEN+1]	INIT_6_SPACES;
-EXTERN_DEF	char vse_gp_input_ext[VSE_EXT_LEN+1]		INIT_3_SPACES;
 
 /*----
 The actual resulting system name
@@ -140,7 +125,6 @@ The actual resulting system name
 #define	VSE_SYSNAME_LEN	81	
 
 EXTERN_DEF	char vse_sysname[VSE_SYSNAME_LEN+1]	INIT_80_SPACES;
-
 
 /*----
 RENUMBER GETPARM
@@ -184,9 +168,7 @@ EXTERN_DEF	char vse_gp_defaults_tabs[TABS_LEN+1];
 EXTERN_DEF	char vse_gp_defaults_mode[MODE_LEN+1];
 EXTERN_DEF	char vse_gp_defaults_case[CASE_LEN+1];
 EXTERN_DEF	char vse_gp_defaults_columns[COLS_LEN+1];
-EXTERN_DEF	char vse_gp_defaults_showmod[]	INIT_NO;
-
-EXTERN_DEF	char vse_defaults_modcol[COLS_LEN+1];
+EXTERN_DEF	char vse_gp_defaults_showmods[4] INIT_NO;
 
 /*----
 C versions of the numerics
@@ -200,42 +182,47 @@ EXTERN_DEF	int4 vse_renumber_end		INIT_ZERO;
 EXTERN_DEF	int4 vse_tab[NO_OF_TABS];
 
 EXTERN_DEF	int4 vse_column[2];
-EXTERN_DEF	int4 vse_text_width;
 
-/* Added vse_mod_text_width for the width of text when mod codes are displayed.
-   Added by CIS: 07/23/93 AJA */
-EXTERN_DEF	int4 vse_mod_text_width;
 EXTERN_DEF	int4 vse_append;
 
 EXTERN_DEF	int4 vse_options_number		INIT_100;
 EXTERN_DEF	int4 vse_options_incr		INIT_100;
 
 /*----
-Some WISP LIB required globals
-------*/
-EXTERN_DEF	char WISPFILEXT[]		INIT_39_SPACES;
-
-/*----
 Some switches that control program behaviour
 ------*/
 EXTERN_DEF	int4 vse_native			INIT_ZERO;
 EXTERN_DEF	int4 vse_new_file		INIT_ZERO;
-EXTERN_DEF	int4 vse_numbering		INIT_1;
-EXTERN_DEF	int4 vse_text_col;
-EXTERN_DEF	int4 vse_num_col;
 EXTERN_DEF	int4 vse_page_size		INIT_15;
 
-/* Use vse_show_mod to specify if mode codes are displayed.
-   Added by CIS: 07/22/93 AJA */
-EXTERN_DEF	int4 vse_show_mod		INIT_ZERO;
+#define VSE_FIRST_SCREEN_COL	9
+#define VSE_FIRST_SCREEN_ROW	5
+
+#define VSE_BOTTOM_ROWS		5
+#define VSE_EDIT_ROWS		20
+#define VSE_SCREEN_WIDTH	80
+
+#define VSE_NUM_WIDTH		6
+
+EXTERN_DEF	int4 vse_line_width;		/* Total expected line width		*/
+
+EXTERN_DEF	int4 vse_edit_start_col;	/* The first modifiable column 		*/
+EXTERN_DEF	int4 vse_edit_end_col;		/* The last modifiable column		*/
+EXTERN_DEF	int4 vse_edit_width;		/* The number of modifiable columns	*/
+
+EXTERN_DEF	int4 vse_mod_start_col;		/* The first modcode column 		*/
+EXTERN_DEF	int4 vse_mod_end_col;		/* The last modcode column		*/
+EXTERN_DEF	int4 vse_mod_width;		/* The number of modcodes columns	*/
+
+EXTERN_DEF	int4 vse_num_start_col;		/* The first number column		*/
 
 /*----
 Globals used in getparms
 ------*/
 
 EXTERN_DEF int4 GPINT[255];
-EXTERN_DEF GPARG gparg;
 EXTERN_DEF int4 gpcnt;
+EXTERN_DEF GPARG gparg;
 EXTERN_DEF int4 gppfkeys;
 EXTERN_DEF int4 gppfkey;
 EXTERN_DEF char gppfrcvr[1];
@@ -245,7 +232,6 @@ The result codes of each getparm
 ------*/
 
 EXTERN_DEF	int4	vse_input_pick;
-EXTERN_DEF	int4	vse_create_pick;
 EXTERN_DEF	int4	vse_edit_pick;
 EXTERN_DEF	int4	vse_special_pick;
 EXTERN_DEF	int4	vse_set_command_pick;
@@ -271,6 +257,7 @@ Pointer structure used to keep track of embedded line numbers in BASIC
 */
 typedef struct _line_num
 {
+	struct _line_num *last;
 	TEXT *line;
 	char start_state;
 	int start_pos;
@@ -280,22 +267,32 @@ typedef struct _line_num
 	struct _line_num *next;
 } line_num;
 
-EXTERN_DEF line_num *head_linenum;
-
 /*---
 Some shorthand
 ------*/
 
-#define	CLEAR_GLOBAL(x)	(memset(x,' ',sizeof(x)-1))
-#define	CLEAR_FIELD(x)	(memset(x,' ',sizeof(x)-1))
+#define	CLEAR_FIELD(x)	{memset(x,' ',sizeof(x));}
+#define	CLEAR_STRING(x)	{memset(x,' ',sizeof(x)); x[sizeof(x)-1]=(char)0;}
+#define	NULL_FIELD(x)	{memset(x,(char)0,sizeof(x));}
 
 /*----
 More bloody globals
 ------*/
 
-#define RESP_STARTNUM 1
-#define RESP_INCR 2
-#define RESP_RANGE 3
+#define RESP_NUMBER 	1
+#define RESP_INCR 	2
+#define RESP_START 	3
+#define RESP_END 	4
+#define RESP_NUMINCR	5
+#define RESP_RANGE	6
+#define RESP_EMPTY	7
+#define RESP_TARGET	8
+#define RESP_TABS	9
+#define RESP_MODE	10
+#define RESP_CASE	11
+#define RESP_SHOWMODS	12
+#define RESP_RENUMBER	13
+#define RESP_KEEPMC	14
 
 #define RENUM_INVAL_INCR -1
 #define RENUM_BAD_RANGE -2
@@ -303,11 +300,8 @@ More bloody globals
 #define	EDIT_MENU	0L
 #define	SPECIAL_MENU	1L
 
-EXTERN_DEF int4 vse_renum_range_hi;
-EXTERN_DEF int4 vse_renum_range_low;
-
 EXTERN_DEF	int4 vse_menu;
-EXTERN_DEF	char vse_default_oa[4]	INIT_DEF_OA;
+EXTERN_DEF	unsigned char vse_default_oa[4]	INIT_DEF_OA;
 EXTERN_DEF	char vse_locked_oa[4]	INIT_LOCKED_OA;
 EXTERN_DEF	int4 vse_lines;
 EXTERN_DEF	char vse_lines_message[81];
@@ -316,8 +310,6 @@ EXTERN_DEF	char vse_file_message[81];
 EXTERN_DEF char vse_stat_message[81] INIT_80_SPACES;
 
 EXTERN_DEF      char vse_tab_setting[81];
-
-EXTERN_DEF int4 vse_file_linecount INIT_ZERO;
 
 EXTERN_DEF int4 vse_save_row INIT_MINUS_ONE;
 EXTERN_DEF int4 vse_save_col INIT_MINUS_ONE;
@@ -329,3 +321,12 @@ EXTERN_DEF int4 vse_file_changed INIT_ZERO;
 #endif	/*_VSEGLB_H */
 
 
+/*
+**	History:
+**	$Log: vseglb.h,v $
+**	Revision 1.11  1996-09-03 18:24:05-04  gsl
+**	drcs update
+**
+**
+**
+*/

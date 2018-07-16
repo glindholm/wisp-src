@@ -1,3 +1,7 @@
+/* 
+	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	$Id:$
+*/
 /* WANG_DECIMALS.H ...	This is a special include file used when interfacing with routines designed to be called by WISP'd,	*/
 /*			WANG programs.  These WANG programs store their numerical values in reverse order.  We have to do	*/
 /*			the same here.  In binary representation, 65536 is 00000000 00000001 00000000 00000000, yielding	*/
@@ -211,3 +215,12 @@
 #define wang_dec_99  	99
 #define wang_dec_100	100 
 #endif
+/*
+**	History:
+**	$Log: wngdcmls.h,v $
+**	Revision 1.8  1996-08-19 18:33:19-04  gsl
+**	drcs update
+**
+**
+**
+*/
