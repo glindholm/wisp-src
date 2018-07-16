@@ -531,10 +531,8 @@ token *scanner::scan_token()
    last_position.column = column + text_index - 1;
    last_position.kind = kind;
 
-#if DEBUG
    if (user_options.debug_trace_scanner())
       t->dump();
-#endif
 
    return t;
 }
@@ -555,6 +553,9 @@ void scanner::ignore_rest_of_line()
 //
 //	History:
 //	$Log: scanner.cpp,v $
+//	Revision 1.7.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.7  1998/08/31 19:14:13  gsl
 //	drcs update
 //	

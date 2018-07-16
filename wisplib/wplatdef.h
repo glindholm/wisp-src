@@ -1,24 +1,33 @@
-/* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
-	$Id:$
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
 */
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991, 1992	*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
-
 
 /*
 **	File:		wplatdef.h
 **
 **	Function:	Provide defines for platform types.
 **
-**	History:
-**			05/19/92	Written GSL
 **
 */
 
@@ -71,6 +80,9 @@
 #define		PLATFORM_UNIXWARE	1039
 #define		PLATFORM_DGUX_INTEL	1040
 #define		PLATFORM_LINUX		1041
+#define		PLATFORM_AIX_64		1042
+#define		PLATFORM_HPUX_64	1043
+#define         PLATFORM_SOLARIS_64     1044
 
 /*
 **	Non-UNIX
@@ -86,7 +98,16 @@
 /*
 **	History:
 **	$Log: wplatdef.h,v $
-**	Revision 1.7.2.1  2002/09/05 18:38:00  gsl
+**	Revision 1.7.2.2  2003/02/07 18:19:55  gsl
+**	sync with head
+**	
+**	Revision 1.10  2003/02/07 17:55:21  gsl
+**	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
+**	
+**	Revision 1.9  2003/01/31 19:18:00  gsl
+**	Fix copyright header  and -Wall warnings
+**	
+**	Revision 1.8  2002/08/28 01:32:01  gsl
 **	LINUX
 **	
 **	Revision 1.7  1997/09/09 18:28:03  scass

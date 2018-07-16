@@ -1,14 +1,11 @@
 #/***********************************************************************/
 #/*									*/
-#/*	        WISP - Wang Interchange Source Pre-processor		*/
-#/*	    			and OPEN3K with 			*/
-#/*		CAST - Cobol Automated Software Translation		*/
-#/*	     Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993,		*/
-#/*			   1994, 1995, 1996, 1997, 1998, 1999		*/
-#/*	 	An unpublished work of NeoMedia Technologies, Inc.	*/
-#/*			    All rights reserved.			*/
+#/*	        WISP - Wang Interchange Source Processor		*/
 #/*									*/
 #/***********************************************************************/
+#
+#	Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+#	$Id:$
 #
 #
 #	File		make.include	
@@ -20,7 +17,7 @@
 #			Uncomment the SYSTEM defines for this system.
 #			Also ensure no other SYSTEM defines are uncommented.
 #
-#	Input:		$(WISPSRC)		points to WISP base directory
+#	Input:		$(WISPSRC)	points to WISP source directory
 #			$(OPEN3K)	points to OPEN3K base directory
 #			$(L_WISP)	the wisp library base name (usually "wisp")
 #			$(L_VIDEO)	the video library base name (usually "video")
@@ -157,7 +154,7 @@ YACC=yacc
 SYSDEF = "Error SYSDEF not defined"
 
 #==================================================================
-#	IBM AIX RS/6000
+#	IBM AIX RS/6000 (32-bit)
 #
 #	AIX 4.3.3
 #
@@ -192,12 +189,28 @@ SYSDEF = "Error SYSDEF not defined"
 #
 
 #==================================================================
+#	IBM AIX RS/6000  (64-bit)
+#
+#	AIX 5.2
+#
+#SYSDEF = -DAIX -DAIX_64 -DWISP_64BIT
+#OBJECT_MODE=64
+#
+# IBM XLC Compilers
+#CC_STD  = xlc
+#CC_ANSI = xlc
+#CC_SYS_FLAGS = -q64 -qarch=com -qlanglvl=ansi
+#
+#CCC = xlC
+#CCC_SYS_FLAGS = -Q -q64 -qarch=com -qchars=signed -DBOOL_TYPE
+
+#==================================================================
 #       DEC ALPHA OSF/1 -- Compaq Tru64 UNIX
 #
 #  NOTE:  Use GNU MAKE (gmake)!!!
 #         Both /usr/bin/make and /usr/bin/posix/make are broken.
 #
-#SYSDEF = -DOSF1_ALPHA -D_USE_OLD_TTY
+#SYSDEF = -DOSF1_ALPHA -DWISP_64BIT -D_USE_OLD_TTY
 #CC_STD  = c89
 #CC_ANSI = c89
 #CC_SYS_FLAGS = -non_shared
@@ -207,7 +220,7 @@ SYSDEF = "Error SYSDEF not defined"
 #
 # GNU C++
 #CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char -Wall -mno-cix -mno-max -mno-bwx
 #CCC_SYS_LINK =  /usr/local/cygnus/tru64-010710/H-alphaev56-dec-osf5.1/lib/libstdc++.a
 
 #==================================================================
@@ -279,7 +292,7 @@ SYSDEF = "Error SYSDEF not defined"
 #CC_ANSI = gcc
 #CC_SYS_FLAGS = 
 #CCC = gcc
-#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char 
 #CCC_SYS_LINK = 
 #
 # 	Solaris 2.5.1 (SunOS 5.5.1)

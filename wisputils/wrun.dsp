@@ -113,6 +113,10 @@ SOURCE=..\wisplib\makepath.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\wisplib\platsubs.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\wisplib\setenvst.c
 # End Source File
 # Begin Source File

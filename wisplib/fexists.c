@@ -38,8 +38,7 @@ static char rcsid[]="$Id:$";
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
-
-#if defined(WIN32)
+#ifndef O_LARGEFILE
 #define O_LARGEFILE 0
 #endif
 
@@ -481,6 +480,9 @@ int WL_fcanread(const char* name)
 /*
 **	History:
 **	$Log: fexists.c,v $
+**	Revision 1.11.2.2  2002/11/19 16:24:07  gsl
+**	Define O_LARGEFILE for ALPHA and SCO
+**	
 **	Revision 1.11.2.1  2002/10/09 19:20:29  gsl
 **	Update fexists.c to match HEAD
 **	Rename routines WL_xxx for uniqueness

@@ -514,7 +514,6 @@ int_32 wang_os_putparm(
       trace_ss(general, "ref label: ", ref_label);
    trace_ss(general, "prname   : ", prname);
    trace_ss(general, "pfkey    : ", aid);
-#if DEBUG
    for (i = 0; i < keylist.dimension(); i += 2) {
       trace_ss(general, "keyword  : ", keylist[i].contents_address());
       const char *kval = keylist[i+1].contents_address();
@@ -523,7 +522,6 @@ int_32 wang_os_putparm(
       else
          trace_ss(general, "keyvalue : ", kval);
    }
-#endif
 
    const int fixed_args   = 9;
    const int triplets     = 80;		/* <<<<<<<<< HARDCODED LIMIT OF 80 KEYWORDS <<<<<<<<< */
@@ -992,6 +990,12 @@ void wang_os_first_procedure_name(char *a_name) {
 /*
 **	History:
 **	$Log: wang_os.cpp,v $
+**	Revision 1.27.2.2  2003/02/11 19:12:59  gsl
+**	fix duplicate history
+**	
+**	Revision 1.27.2.1  2003/02/11 18:52:00  gsl
+**	Removed unneeded #ifdef code for AIX and DEBUG
+**	
 **	Revision 1.27  2001/08/22 20:42:14  gsl
 **	fix gnu errors
 **	
@@ -1045,6 +1049,10 @@ void wang_os_first_procedure_name(char *a_name) {
 **	moved declaration of for loop index from for loop to function
 **	auto decl area
 **
+**
+**
+*/
+
 // Revision 1.11  1995/10/19  10:47:33  gsl
 // In a SUBMIT, if DISP=REQUEUE then don't destroy the generated procedure
 //
@@ -1060,111 +1068,6 @@ void wang_os_first_procedure_name(char *a_name) {
 // On a SUBMIT, pass thru the Disposition, Abort_action, and Limit_flag
 // to the VSSUB SUBMIT for handling
 //
-**
-**
-*/
-
-//
-//	History:
-//	$Log: wang_os.cpp,v $
-//	Revision 1.27  2001/08/22 20:42:14  gsl
-//	fix gnu errors
-//	
-//	Revision 1.26  1999-08-29 13:21:10-04  gsl
-//	Move the vwang_title() call to driver.cpp so it doesn't get called
-//	if just checking the version.
-//
-//	Revision 1.25  1999-01-19 11:16:31-05  gsl
-//	fix typo in last fix
-//
-//	Revision 1.24  1999-01-19 11:08:41-05  gsl
-//	Fix warning
-//
-//	Revision 1.23  1999-01-04 15:27:10-05  gsl
-//	Fix SCRATCH to default to OUTLIB and OUTVOL if not specfied
-//
-//	Revision 1.22  1998-08-31 15:50:40-04  gsl
-//	drcs update
-//
-//	Revision 1.21  1998-08-31 15:14:27-04  gsl
-//	drcs update
-//
-//
-
-//	
-//	RCS file: /disk1/neomedia/RCS/wisp/wproc/wang_os.cpp,v
-//	Working file: wang_os.cpp
-//	head: 1.20
-//	branch:
-//	locks: strict
-//	access list:
-//		gsl
-//		scass
-//		ljn
-//		jockc
-//		jlima
-//	symbolic names:
-//	keyword substitution: kv
-//	total revisions: 20;	selected revisions: 20
-//	description:
-//	----------------------------
-//	revision 1.20
-//	date: 1998-02-11 14:21:44-05;  author: gsl;  state: V4_3_00;  lines: +44 -15
-//	Fix bug is LINK, args 16-18 were repeated.
-//	----------------------------
-//	revision 1.19
-//	date: 1997-10-01 18:15:48-04;  author: gsl;  state: V4_2_00;  lines: +4 -2
-//	fix warnings
-//	----------------------------
-//	revision 1.18
-//	date: 1997-06-10 10:45:10-04;  author: scass;  state: V4_1_02;  lines: +5 -2
-//	Final for portability.
-//	----------------------------
-//	revision 1.17
-//	date: 1997-06-10 01:09:13-04;  author: scass;  state: Exp;  lines: +8 -2
-//	change int_32 to long
-//	----------------------------
-//	revision 1.16
-//	date: 1997-06-09 15:49:41-04;  author: scass;  state: Exp;  lines: +57 -48
-//	Changed type of length parameter from void * to
-//	int_32 because more correct and was causing problems on Alpha
-//	port.  Now has two arrays for ptr and len pair instead
-//	of one large array.
-//	----------------------------
-//	revision 1.15
-//	date: 1997-01-14 20:12:03-05;  author: gsl;  state: V3_3_93;  lines: +5 -1
-//	Add a call to vwang_title()
-//	----------------------------
-//	revision 1.14
-//	date: 1996-07-25 19:48:35-04;  author: gsl;  state: Exp;  lines: +4 -4
-//	NT
-//	----------------------------
-//	revision 1.13
-//	date: 1996-07-25 14:16:39-04;  author: gsl;  state: Exp;  lines: +6 -2
-//	Renamed from wang_os.cc to wang_os.cpp
-//	----------------------------
-//	revision 1.12
-//	date: 1996-04-18 13:01:11-04;  author: jockc;  state: Exp;  lines: +10 -5
-//	moved declaration of for loop index from for loop to function
-//	auto decl area
-//	----------------------------
-//	revision 1.11
-//	date: 1995-10-19 06:47:33-04;  author: gsl;  state: V3_3_19;  lines: +19 -2
-//	In a SUBMIT, if DISP=REQUEUE then don't destroy the generated procedure
-//	----------------------------
-//	revision 1.10
-//	date: 1995-10-18 13:16:05-04;  author: gsl;  state: Exp;  lines: +237 -69
-//	Extensive mods to the submit logic to add support for GLOBALS=YES
-//	and ENVIRONMENT=YES.
-//	If these are specified or args are passed with the USING clause
-//	then wproc will generate a new temp proc which will setup the
-//	globals or environment and then run the program.  This generated
-//	proc is then submitted.
-//	----------------------------
-//	revision 1.9
-//	date: 1995-10-16 10:06:55-04;  author: gsl;  state: Exp;  lines: +28 -7
-//	On a SUBMIT, pass thru the Disposition, Abort_action, and Limit_flag
-//	to the VSSUB SUBMIT for handling
 //	----------------------------
 //	revision 1.8
 //	date: 1995-07-17 10:02:46-04;  author: gsl;  state: V3_3_18;  lines: +1 -1

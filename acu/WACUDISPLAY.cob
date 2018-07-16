@@ -1,13 +1,13 @@
-000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000100**   Copyright (c) 1997-2002 NeoMedia Technologies, All rights reserved.
 000200**   $Id:$
 000300**
-000400**   File:       wacudisplay.cob
+000400**   File:       WACUDISPLAY.cob
 000500**
 000600**   Project:    WISP for Acucobol with Native Screens
 000700**
 000800**   Purpose:    Support the DISPLAY statement.
 000900**
-001000**   Build:      ccbl -o WACUDISPLAY wacudisplay.cob
+001000**   Build:      ccbl -Da4 -o WACUDISPLAY.acu WACUDISPLAY.cob
 001100**
 001200**
 001300

@@ -27,9 +27,7 @@ char *dup_string(const char *a_string);
 
 void delete_string(char *&a_string);
 
-#if DEBUG
 void show_memory(char *kind, void* ptr, size_t size);
-#endif
 
 #endif
 
@@ -37,6 +35,9 @@ void show_memory(char *kind, void* ptr, size_t size);
 //
 //	History:
 //	$Log: memory.hpp,v $
+//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.5  1998/08/31 19:13:56  gsl
 //	drcs update
 //	

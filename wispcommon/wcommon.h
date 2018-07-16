@@ -32,15 +32,18 @@
 	- acu/wruncbl.umf
 	- acu/wwruncbl.mak
 	- acu/wrun32wisp_XXX.mak
+	- acu/wacu.mak
 */
-#define WISP_VERSION "V4.4.06"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.4.07"			 					/* WISPTRAN version (char[20])		*/
 
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
 
 /* CHANGE-COPYRIGHT-DATE */
-#define WISP_COPYRIGHT_YEAR_STR	"2002"
-#define WISP_COPYRIGHT_YEAR_INT	2002
+#define WISP_COPYRIGHT_YEAR_STR	"2003"
+#define WISP_COPYRIGHT_YEAR_INT	2003
+#define WISP_PHONE_NUMBER "(239) 337-3434"
+#define WISP_EMAIL "support@neom.com"
 
 
 /* 
@@ -90,6 +93,15 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.44.2.2.2.6  2003/02/14 18:13:55  gsl
+**	update release version
+**	
+**	Revision 1.44.2.2.2.5  2003/02/10 16:14:20  gsl
+**	Add PHONE and EMAIL from $HEAD
+**	
+**	Revision 1.44.2.2.2.4  2003/01/13 19:45:32  gsl
+**	2003, update version list
+**	
 **	Revision 1.44.2.2.2.3  2002/11/12 16:00:18  gsl
 **	Applied global unique changes to be compatible with combined KCSI
 **	

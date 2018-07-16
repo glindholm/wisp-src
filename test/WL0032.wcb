@@ -1,0 +1,732 @@
+000100**   Copyright (c) 2003 NeoMedia Technologies, All rights reserved.
+000200**   $Id:$
+000300**
+000400**   File:       WL0032.wcb
+000500**
+000600**   Project:    WISP/TEST
+000700**
+000800**   Purpose:    Test RENAME routine 
+000900**
+001000**   Example:
+001100**
+006500**
+001100 Identification Division.
+001200 Program-Id.     WL0032.
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+       FILE-CONTROL.
+           SELECT CRT
+               ASSIGN TO "CRT",  "DISPLAY".
+
+           SELECT BASE-FILE-UFB
+               ASSIGN TO "BASEFILE", "DISK",  NODISPLAY
+               ORGANIZATION    IS INDEXED
+	       RECORD KEY IS BASE-FIL-KEY.
+
+001300 Data Division.
+       FILE SECTION.
+       FD  CRT
+           LABEL RECORDS ARE OMITTED.
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
+
+       FD  BASE-FILE-UFB
+           VALUE OF FILENAME IS BASE-FIL,
+                    LIBRARY  IS BASE-LIB,
+                    VOLUME   IS BASE-VOL.
+
+       01  BASE-FIL-RECORD.
+	   05 BASE-FIL-KEY     PIC X(10).
+	   05 BASE-FIL-DATA    PIC X(70).
+       
+
+
+001400 Working-Storage Section.
+001500
+       01  QASUB	   PIC X(8) VALUE "RENAME".
+       01  QAPROG	   PIC X(8) VALUE "WL0032".
+       
+       01  failed-cnt	   pic 99 value 0.
+
+       01  base-fil	   PIC X(8) VALUE "WL0032".
+       01  base-lib	   pic x(8) VALUE "WL0032".
+       01  base-vol	   pic x(6).
+
+       01  RENAME-TYPE                  PIC X(1) VALUE SPACES.
+       01  RENAME-FILE                  PIC X(8) VALUE SPACES.
+       01  RENAME-LIB                   PIC X(8) VALUE SPACES.
+       01  RENAME-VOL                   PIC X(6) VALUE SPACES.
+       01  RENAME-NEW-FILE              PIC X(8) VALUE SPACES.
+       01  RENAME-NEW-LIB               PIC X(8) VALUE SPACES.
+       01  RENAME-BYPASS                PIC X(1) VALUE SPACES.
+       01  RENAME-ACCESS                PIC X(1) VALUE SPACES.
+       01  RENAME-OPEN                  PIC X(1) VALUE SPACES.
+
+       01  tst-fil	   PIC X(8).
+       01  tst-lib	   pic x(8).
+       01  tst-vol	   pic x(6).
+
+       01  rc-int4.
+           03 rc-high     BINARY  VALUE 0.
+           03 rc-bin      BINARY  value 0.
+       01  rc-num	   pic 999.
+
+       01  expected-error  pic 999.
+       
+       01  IL	   PIC X(2) VALUE "IL".
+       01  IV	   PIC X(2) VALUE "IV".
+       01  INLIB   PIC X(8).
+       01  INVOL   PIC X(6).
+       
+       01  TEST-NAME PIC X(8).
+
+       01  READFDR4-MODE.
+	   03 FILLER BINARY VALUE 0.
+	   03 FILLER BINARY VALUE 0.
+
+       01  CD-keyword PIC XX VALUE "CD".
+       01  CREATE-DATE PIC 9(8).
+       01  L-TYPE PIC X VALUE "L".
+       01  F-TYPE PIC X VALUE "F".
+
+       01  spaces-fil   pic x(8) values spaces.
+       01  find-start-cnt-int4.
+	   05  find-start-cnt-high binary value 0.
+	   05  find-start-cnt-bin  binary value 0.
+       01  find-cnt-int4.
+	   05  find-cnt-high binary value 0.
+	   05  find-cnt-bin  binary value 0.
+       01  find-receiver   pic x(22).	   
+	   
+001600 Procedure Division.
+       
+      *============================================================	  
+       0000-init.
+	   move 0 to failed-cnt.
+
+	   CALL "EXTRACT" USING
+	       IL, INLIB,
+	       IV, INVOL.
+
+      * Ensure Usage constants are set.	       
+	   if INLIB = " " or INVOL = " " then
+	       DISPLAY "INLIB and INVOL must be set to run test"
+	       go to 9999-exit.
+
+	   MOVE INVOL    TO BASE-VOL.
+
+      * Remove the lib from previous runs.
+	   perform cleanup-files.
+
+      *============================================================	  
+      * CALL "RENAME" USING 'F', FILE, LIBRARY, VOLUME, NEWFILE [,BYPASS [,ACCESS [,OPEN]]]  RETCODE
+      *============================================================	  
+      * TEST: Rename file within a lib
+       test001.
+	   MOVE "TEST001" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "TEST001A" TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+
+      * TEST: rename missing file - expect error
+       test002.
+	   MOVE "TEST002" TO TEST-NAME.
+	   
+	   move "MISSING"  to RENAME-FILE.
+	   move QAPROG     to RENAME-LIB.
+	   move INVOL	   to RENAME-VOL.
+	   move TEST-NAME  TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   move 20 to expected-error.
+	   PERFORM CHECK-FAILURE.
+
+      * TEST: Rename file within a lib (9 args)
+       test003.
+	   MOVE "TEST003" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "TEST003A" TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-9ARGS.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+
+      * TEST: rename blank file - expect error
+       test004.
+	   MOVE "TEST004" TO TEST-NAME.
+	   
+	   move SPACES	   to RENAME-FILE.
+	   move QAPROG     to RENAME-LIB.
+	   move INVOL	   to RENAME-VOL.
+	   move TEST-NAME  TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   move 20 to expected-error.
+	   PERFORM CHECK-FAILURE.
+	   
+      * TEST: Rename blank vol uses INVOL
+       test005.
+	   MOVE "TEST005" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move spaces     to RENAME-VOL.
+	   move "TEST005A" TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   MOVE INVOL TO RENAME-VOL.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+	   
+      * TEST: Rename new file blank - expect error
+       test006.
+	   MOVE "TEST006" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move SPACES     TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   move 56 to expected-error.
+	   PERFORM CHECK-FAILURE.
+	   
+      * TEST: Rename invalid new name - expect error
+       test007.
+	   MOVE "TEST007" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "#ERROR"   TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   move 56 to expected-error.
+	   PERFORM CHECK-FAILURE.
+	   
+      * TEST: Rename new name same as old - expect error
+       test008.
+	   MOVE "TEST008" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move RENAME-FILE TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   move 52 to expected-error.
+	   PERFORM CHECK-FAILURE.
+	   
+      * TEST: Rename new name already exists - expect error
+       test009.
+	   MOVE "TEST009" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   	   
+	   move "TEST009A" TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-F-6ARGS.
+	   move 52 to expected-error.
+	   PERFORM CHECK-FAILURE.
+	   
+      *============================================================	  
+      * CALL "RENAME" USING 'L', xxxx, LIBRARY, VOLUME, NEWLIB [,BYPASS [,ACCESS [,OPEN]]]  RETCODE
+      *============================================================	  
+
+      * TEST: Rename lib within a vol (6 args)
+       test010.
+	   MOVE "TEST010" TO TEST-NAME.
+	   
+	   move "WL0032B"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move TEST-NAME  TO base-fil.
+	   move "WL0032A"  TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "WL0032B"  TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-L-6ARGS.
+	   PERFORM CHECK-RENAME-LIB-SUCCESS.
+
+      * TEST: Rename missing lib - expect error
+       test011.
+	   MOVE "TEST011" TO TEST-NAME.
+	   	   
+	   move "WL0032B"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move "MISSING"  to RENAME-LIB.
+	   move INVOL	   to RENAME-VOL.
+	   move "WL0032B"  TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-L-9ARGS.
+	   move 16 to expected-error.
+	   PERFORM CHECK-FAILURE.
+
+      * TEST: Rename old and new lib the same - expect error
+       test011.
+	   MOVE "TEST011" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move QAPROG     to RENAME-LIB.
+	   move INVOL	   to RENAME-VOL.
+	   move QAPROG     TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-L-9ARGS.
+	   move 52 to expected-error.
+	   PERFORM CHECK-FAILURE.
+
+      * TEST: Rename blank new  - expect error
+       test012.
+	   MOVE "TEST012" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move QAPROG     to RENAME-LIB.
+	   move INVOL	   to RENAME-VOL.
+	   move spaces     TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-L-9ARGS.
+	   move 44 to expected-error.
+	   PERFORM CHECK-FAILURE.
+
+      *============================================================	  
+      * CALL "RENAME" USING 'G', FILE, LIBRARY, VOLUME, NEWFILE [,NEWLIB [,BYPASS [,ACCESS [,OPEN]]]] RETCODE
+      *============================================================	  
+
+      * TEST: Rename file within a lib (6 args)
+       test013.
+	   MOVE "TEST013" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "TEST013A" TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-G-6ARGS.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+
+      * TEST: Rename file within a lib (10 args)
+       test014.
+	   MOVE "TEST014" TO TEST-NAME.
+	   
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "TEST014A" TO RENAME-NEW-FILE
+	   move RENAME-LIB TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-G-10ARGS.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+
+      * TEST: Rename file to a new lib (7 args)
+       test015.
+	   MOVE "TEST015" TO TEST-NAME.
+	   
+	   move "WL0032A"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move RENAME-FILE TO RENAME-NEW-FILE
+	   move "WL0032A" TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-G-7ARGS.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+
+      * TEST: Rename file and new lib (7 args)
+       test016.
+	   MOVE "TEST016" TO TEST-NAME.
+	   
+	   move "WL0032A"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move TEST-NAME  TO base-fil.
+	   move QAPROG     TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move "TEST016A" TO RENAME-NEW-FILE
+	   move "WL0032A" TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-G-7ARGS.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+
+      * TEST: Rename lib (7 args)
+       test017.
+	   MOVE "TEST017" TO TEST-NAME.
+	   
+	   move "WL0032A"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+	   move "WL0032B"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move TEST-NAME  TO base-fil.
+	   move "WL0032A"  TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move spaces     to RENAME-FILE.
+	   move base-lib   to RENAME-LIB.
+	   move base-vol   to RENAME-VOL.
+	   move spaces     TO RENAME-NEW-FILE
+	   move "WL0032B"  TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-G-7ARGS.
+	   PERFORM CHECK-RENAME-LIB-SUCCESS.
+
+      * TEST: Blank lib and vol us INLIB INVOL (7 args)
+       test018.
+	   MOVE "TEST018" TO TEST-NAME.
+	   
+	   move "WL0032A"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move QAPROG	   TO base-fil.
+	   move INLIB	   TO base-lib.
+	   move INVOL	   TO base-vol.
+	   perform create-base-file.
+
+	   move base-fil   to RENAME-FILE.
+	   move spaces	   to RENAME-LIB.
+	   move spaces	   to RENAME-VOL.
+	   move TEST-NAME  TO RENAME-NEW-FILE
+	   move QAPROG	   TO RENAME-NEW-LIB
+	   
+	   PERFORM CALL-RENAME-G-7ARGS.
+	   move INLIB	   to RENAME-LIB.
+	   move INVOL	   to RENAME-VOL.
+	   PERFORM CHECK-RENAME-FILE-SUCCESS.
+      
+      *============================================================	  
+       9999-done.
+           IF failed-cnt = 0   THEN
+                DISPLAY QASUB " completion successful."
+           ELSE 
+                DISPLAY QASUB " failed "
+	   END-IF.
+	   
+       9999-exit.
+            EXIT PROGRAM.
+       9999-stop.
+            STOP RUN.
+
+      *============================================================
+       CLEANUP-FILES.
+	   move QAPROG     TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move "WL0032A"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+
+	   move "WL0032B"  TO base-lib.
+	   PERFORM SCRATCH-BASE-LIB.
+       
+      *============================================================
+       SCRATCH-BASE-LIB.
+	   move spaces	   TO base-fil.
+	   move INVOL	   TO base-vol.
+	   CALL "SCRATCH" USING 
+	       L-TYPE, BASE-FIL, BASE-LIB, BASE-VOL, RC-int4.
+	       
+      *============================================================
+       CHECK-RENAME-FILE-SUCCESS.
+	   if rc-bin NOT = 0 THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME,
+		   " RC=", RC-NUM
+	   ELSE
+	       MOVE RENAME-FILE	       TO TST-FIL
+	       MOVE RENAME-LIB	       TO TST-LIB
+	       MOVE RENAME-VOL	       TO TST-VOL	   
+	       perform test-file-missing
+
+	       MOVE RENAME-NEW-FILE    TO TST-FIL
+	       MOVE RENAME-NEW-LIB     TO TST-LIB
+	       MOVE RENAME-VOL	       TO TST-VOL	   
+	       perform test-file-exists
+	   END-IF.
+       
+      *============================================================
+       CHECK-RENAME-LIB-SUCCESS.
+	   if rc-bin NOT = 0 THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME,
+		   " RC=", RC-NUM
+	   ELSE
+	       MOVE RENAME-LIB	       TO TST-LIB
+	       MOVE RENAME-VOL	       TO TST-VOL	   
+	       perform test-lib-missing
+
+	       MOVE RENAME-NEW-LIB     TO TST-LIB
+	       MOVE RENAME-VOL	       TO TST-VOL	   
+	       perform test-lib-exists
+	   END-IF.
+	       
+      *============================================================
+       CHECK-FAILURE.	        	   
+	   if rc-num NOT = expected-error THEN
+	       add 1 to failed-cnt
+	       display QASUB " FAILED ", TEST-NAME,
+		   " Expecting RC=", expected-error,
+		   " Got RC=", rc-num.
+		   
+      *============================================================
+
+      * CALL "RENAME" USING 'F', FILE, LIBRARY, VOLUME, NEWFILE          [,BYPASS [,ACCESS [,OPEN]]]  RETCODE
+      * CALL "RENAME" USING 'L', xxxx, LIBRARY, VOLUME,           NEWLIB [,BYPASS [,ACCESS [,OPEN]]]  RETCODE
+      * CALL "RENAME" USING 'G', FILE, LIBRARY, VOLUME, NEWFILE [,NEWLIB [,BYPASS [,ACCESS [,OPEN]]]] RETCODE
+
+      *============================================================
+       CALL-RENAME-F-6ARGS.
+
+           MOVE "F" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE,
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-RENAME-F-9ARGS.
+
+           MOVE "F" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE,RENAME-BYPASS,
+                               RENAME-ACCESS, RENAME-OPEN,
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-RENAME-L-6ARGS.
+
+           MOVE "L" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-LIB,
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-RENAME-L-9ARGS.
+
+           MOVE "L" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-LIB,RENAME-BYPASS,
+                               RENAME-ACCESS, RENAME-OPEN,
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-RENAME-G-6ARGS.
+
+           MOVE "G" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE, 
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-RENAME-G-7ARGS.
+
+           MOVE "G" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE, RENAME-NEW-LIB,
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================
+       CALL-RENAME-G-10ARGS.
+
+           MOVE "G" TO RENAME-TYPE.
+           CALL "RENAME" USING RENAME-TYPE, RENAME-FILE,
+                               RENAME-LIB, RENAME-VOL,
+                               RENAME-NEW-FILE, RENAME-NEW-LIB,
+                               RENAME-BYPASS, RENAME-ACCESS,
+                               RENAME-OPEN, 
+			       rc-int4.
+	   move rc-bin to rc-num.
+
+      *============================================================	  
+       TEST-FILE-EXISTS.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-EXISTS FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-FILE-MISSING.
+	   CALL "READFDR4" USING
+	       tst-fil, tst-lib, tst-vol,
+	       readfdr4-mode, cd-keyword, create-date,
+	       rc-int4.
+	   move rc-bin to rc-num.
+	   if rc-bin NOT = 20  AND rc-bin NOT = 16 then
+	       add 1 to failed-cnt
+	       display "TEST-FILE-MISSING FAILED ",
+		   TEST-NAME,
+		   " RC=", rc-num,
+		   " FIL=", tst-fil,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-MISSING.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, tst-lib, tst-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 0  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-MISSING FAILED ",
+		   TEST-NAME,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+       
+      *============================================================	  
+       TEST-LIB-EXISTS.
+	   move spaces to spaces-fil.
+	   move 0 to find-start-cnt-high.
+	   move 1 to find-start-cnt-bin.
+	   move 0 to find-cnt-high.
+	   move 1 to find-cnt-bin.
+	   CALL "FIND" USING
+	       spaces-fil, tst-lib, tst-vol,
+	       find-start-cnt-int4, find-cnt-int4,
+	       find-receiver.
+	   if find-cnt-bin NOT = 1  then
+	       add 1 to failed-cnt
+	       display "TEST-LIB-EXISTS FAILED ",
+		   TEST-NAME,
+		   " LIB=", tst-lib,
+		   " VOL=", tst-vol.
+	       
+      *============================================================
+       CREATE-BASE-FILE.
+      * Create a file to copy.
+	   OPEN OUTPUT BASE-FILE-UFB.
+	   WRITE BASE-FIL-RECORD.
+	   CLOSE BASE-FILE-UFB.
+
+      * Ensure file exists.
+	   move base-fil to tst-fil.
+	   move base-lib to tst-lib.
+	   move base-vol to tst-vol.
+	   perform TEST-FILE-EXISTS.
+	   if rc-bin NOT = 0 THEN GO TO 9999-exit.
+  
+006600**   End of WL0032.wcb 

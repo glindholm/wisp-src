@@ -1,13 +1,25 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
-static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 #ifdef unix
 
@@ -20,10 +32,6 @@ static char rcsid[]="$Id:$";
 **	wftok()		Wisp File TO Key: Create the key from the file inode.
 **	myftok()	Local ftok()
 **
-**
-**	History:
-**	mm/dd/yy	Written by ...
-**
 */
 
 #include <sys/types.h>
@@ -32,34 +40,23 @@ static char rcsid[]="$Id:$";
 #include <sys/shm.h>
 #include "idsistd.h"
 
-#ifdef AIX
-static key_t myftok(char *file, char x);
-#endif
-
-/*
-	wftok()		Wisp File TO Key: Create the key from the file inode.
-*/
-key_t wftok(file)									/* WISP ftok				*/
-char *file;
-{
-#ifdef AIX
-	return( myftok(file,0xd5) );
-#else
-#ifdef SCO
-	return( ftok(file,(char)0xd5) );
-#else
-	return( ftok(file,(int)0xd5) );
-#endif
-#endif
-}
-
-#ifdef AIX
+#ifdef USE_MYFTOK
 /*
 	myftok()	Local ftok()
+
+	This was originally written for AIX 3 because according to Jock it was broken.
+
+	*** NOTE ***
+	Current unix systems use a combination of the prefix, the device and inode
+	to create the key of 8 hex digits.
+
+	Solaris 8:	PP+DDD+III
+	SCO 5.0.2:	PP+DD+IIII
+	HP-UX 11:	PP+DD+IIII  - Device id is munged
+	AIX 4.3.3:	PP+00+IIII  - no device
+	LINUX:		PP+DD+IIII
 */
-static key_t myftok(char *file,char x)							/* For IBM - generate unique numbers.	*/
-											/* Replaces FTOK (system one doesn't	*/
-											/*  work properly for IBM.)		*/
+static key_t myftok(char *file, char x)
 {
 	struct stat buf;
 	int	rc;
@@ -69,14 +66,30 @@ static key_t myftok(char *file,char x)							/* For IBM - generate unique number
 	{
 		return( (key_t) -1 );
 	}
-	if (buf.st_ino&0xff000000) printf("warning %08x\n",buf.st_ino);
 	return (key_t)(((key_t)x<<24)|(buf.st_ino&0x00ffffff));
 }
-#endif /* AIX */
+#endif /* USE_MYFTOK */
+
+#define WISP_FTOK_PREFIX 0xd5
+/*
+	wftok()		Wisp File TO Key: Create the key from the file inode.
+*/
+key_t wftok(char* file)
+{
+#ifdef USE_MYFTOK
+	return( myftok(file,(char)WISP_FTOK_PREFIX) );
+#else
+	return( ftok(file,(int)WISP_FTOK_PREFIX) );
+#endif
+}
+
 #endif /* unix */
 /*
 **	History:
 **	$Log: wftok.c,v $
+**	Revision 1.8.2.1  2003/02/06 19:08:23  gsl
+**	Remove AIX and SCO stuff, document
+**	
 **	Revision 1.8  1999/01/19 16:13:37  gsl
 **	fix last fix
 **	

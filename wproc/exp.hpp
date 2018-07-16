@@ -112,7 +112,7 @@ class expression : public object {
          int   error_number,
          char *value_kind);
 
-      void expression::validate_integer(
+      void validate_integer(
          int_32 first,
          int_32 last,
          int    error_number,
@@ -189,6 +189,10 @@ class expression_array : public object {
 //
 //	History:
 //	$Log: exp.hpp,v $
+//	Revision 1.6.2.1  2003/02/06 18:11:40  gsl
+//	Fix qualified name warning on
+//	 expression::validate_integer()
+//	
 //	Revision 1.6  1998/08/31 19:13:48  gsl
 //	drcs update
 //	

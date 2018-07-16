@@ -86,6 +86,7 @@ static char rcsid[]="$Id:$";
 #include "wispnt.h"
 #include "wglobals.h"
 #include "wfiledis.h"
+#include "platsubs.h"
 
 #ifndef false
 #define false 0;
@@ -275,7 +276,7 @@ int main(int argc, char* argv[], char* envp[])
 	printf("*                    System Environment Diagnostic                   *\n");
 	printf("*                  NeoMedia Technologies Incorporated                *\n");
 	printf("*                        All rights reserved.                        *\n");
-	printf("*                          Version %s                           *\n", wisp_version());
+	printf("*                  Version %7s %-20.20s              *\n", wisp_version(), WL_platform_name());
 	printf("**********************************************************************\n");
 
 	now = time(NULL);
@@ -297,7 +298,15 @@ int main(int argc, char* argv[], char* envp[])
 	printf("WISP Environment\n");
 	printf("================\n");
 
-	print_access("WISPCONFIG", 	wispconfigdir(), 	ACC_RX, &errsw);
+	if (0 == strcmp(wispconfigdir(),WISPCONFIG_UNSET_VALUE))
+	{
+		print_pair_err_mess("WISPCONFIG","(not set)","ERROR","NOT SET");
+	}
+	else
+	{
+		print_access("WISPCONFIG", 	wispconfigdir(), 	ACC_RX, &errsw);
+	}
+
 	print_access("WISPDIR", 	wispdir(), 		ACC_RX, &errsw);
 
 	/*
@@ -315,7 +324,7 @@ int main(int argc, char* argv[], char* envp[])
 	print_access("wisptmpbase",  wisptmpbasedir(NULL),   ACC_FULL, &errsw);
 	print_access("wtmpdir",      wtmpdir(NULL),          ACC_FULL, &errsw);
 
-	cptr = license_filepath(NULL);
+	cptr = license_filepath();
 	if (print_access("licensefile", cptr, ACC_READ, &errsw) == 0)
 	{
 		cat_file(cptr);
@@ -1476,6 +1485,15 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.29.2.5  2003/02/14 18:14:43  gsl
+**	fix proto warning
+**	
+**	Revision 1.29.2.4  2003/02/14 16:55:25  gsl
+**	Add check to ensure $WISPCONFIG is set
+**	
+**	Revision 1.29.2.3  2003/02/07 21:18:48  gsl
+**	Add platform to version
+**	
 **	Revision 1.29.2.2  2002/11/08 18:19:31  gsl
 **	Enlarge temp vars to prevent overflow
 **	

@@ -1,4 +1,4 @@
-Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
+Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
 All Rights Reserved.
 
 ====================================================================
@@ -8,7 +8,7 @@ Title:          WISP EDE for Windows (WIN32) Setup
 Document:       edentsetup.txt
 Last Updated:   $Date:$
 Products:       WISP EDE for WIN32
-Versions:       4.4.06 (AND LATER)
+Versions:       4.4.07 (AND LATER)
 
 Summary:        Quick setup steps for WISP EDE on Windows.
 

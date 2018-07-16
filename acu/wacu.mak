@@ -1,4 +1,4 @@
-#	Copyright (c) 2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 2002-2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -40,13 +40,27 @@
 #
 #
 ACUDIR=C:\Acucorp\ACUCBL520\ACUGT
-WISPDIR=C:\WISP4402
+WISPDIR=C:\WISP4407
 
 COBOL=$(ACUDIR)\bin\ccbl32.exe
 COBFLAGS = -da4 -zd -te 800 -C32 -Z32
 
 WISPTRAN=$(WISPDIR)\bin\wisp.exe
 WISPFLAGS=-VACU
+
+
+.wcb.cob:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+
+.wcb.acu:
+	$(WISPTRAN) $(WISPFLAGS) $*.wcb
+	$(COBOL) $(COBFLAGS) -o $*.acu $*.cob
+
+.cob.acu:
+	$(COBOL) $(COBFLAGS) -o $*.acu $*.cob
+
+.SUFFIXES: .acu .cob .wcb
+
 
 #============================================================================
 
@@ -107,13 +121,13 @@ ACUUSING: ACUUSING.cob
 #	$ nmake -f wwruncbl.mak acn
 #
 
-ACN_BLD = 	WACUERROR \
-		WACUDISPLAY \
-		WACUFAC2SCREEN \
-		WACUGETPARM \
-		WACUGETPFKEY \
-		WACUHELP \
-		WACUWSB
+ACN_BLD = 	WACUERROR.acu \
+		WACUDISPLAY.acu \
+		WACUFAC2SCREEN.acu \
+		WACUGETPARM.acu \
+		WACUGETPFKEY.acu \
+		WACUHELP.acu \
+		WACUWSB.acu
 
 acn: acn_header $(ACN_BLD)
 	@echo "Native Screens programs:"
@@ -125,27 +139,6 @@ acn_header: $(COBOL)
 	@echo " "
 	@echo "COBOL  =  $(COBOL)"
 	@echo ""
-
-WACUERROR: wacuerror.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
-
-WACUDISPLAY: wacudisplay.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacudisplay.cob
-
-WACUFAC2SCREEN: wacufac2screen.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
-
-WACUGETPARM: wacugetparm.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
-
-WACUGETPFKEY: wacugetpfkey.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
-
-WACUHELP: wacuhelp.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuhelp.cob
-
-WACUWSB: wacuwsb.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
 
 #============================================================================
 #

@@ -1,13 +1,13 @@
 000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
 000200**   $Id:$
 000300**
-000400**   File:       wacuhelp.cob
+000400**   File:       WACUHELP.cob
 000500**
 000600**   Project:    WISP for Acucobol with Native Screens
 000700**
 000800**   Purpose:    Process Wang style HELP key
 000900**
-001000**   Build:      ccbl -o WACUHELP wacuhelp.cob
+001000**   Build:      ccbl -Da4 -o WACUHELP.acu WACUHELP.cob
 001100**
 001200**
 001300

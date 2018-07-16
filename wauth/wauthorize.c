@@ -97,6 +97,16 @@ static void logtabfile(const char* r_type,		/* "VALCODE" or "LICKEY" */
 		       const char* f_valcode);
 static void clean_text(char *text);
 
+static int	mklickey(
+		int4	custnum,
+		char	platform[2],
+		int	lictype,
+		char	licdate[8],
+		char	expdate[8],
+		char	lickey[LICENSE_KEY_SIZE]);
+
+static void mkvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3]);
+
 static int isCgi(void);
 static int cgi_main(void);
 
@@ -1077,6 +1087,140 @@ static const char *operatorId()
 }
 
 
+
+/*
+**	Routine:	mklickey()		Make License Key
+**
+**	Function:	To create the license key from it's parts.
+**
+**	Description:	The parts of the key are first encoded one byte at a time with entran() to make a 15 byte key
+**			then a checksum is added to make the 16th byte.
+**			
+**			lickey		6	custnum	
+**					2	platform
+**					1	license type
+**					3	license date
+**					3	expriration date
+**					1	checksum
+**
+**	Input:		custnum			The customer number
+**			platform		The platform type (two character A-Z1-9)
+**			lictype			The license type
+**			licdate			The license date YYYYMMDD
+**			expdate			The expiration date YYYYMMDD (No expiration == 00000000)
+**
+**	Output:		lickey			The license key
+**
+**	Return:		0 = Success
+**			1 = Invalid key component
+**
+**	Warnings:	None
+**
+**	History:	5/19/92		Written by GSL
+**			5/20/92 	changed platform to be 2 char encoded value.
+**
+*/
+
+static int	mklickey(
+		int4	custnum,
+		char	platform[2],
+		int	lictype,
+		char	licdate[8],
+		char	expdate[8],
+		char	lickey[LICENSE_KEY_SIZE])
+{
+	char	buff[20];
+	int	i, idx;
+	int	rc;
+	int	checksum;
+
+	sprintf(buff,"%06d",custnum);
+	for(i=0,idx=0;i<6;i++,idx++)
+	{
+		lickey[idx] = buff[i] - '0';
+	}
+
+	/*
+	**	the platform is already in the format of A-Z1-9
+	*/
+	lickey[idx++] = detran((char)toupper(platform[0]));				/* Detran the platfrom code, it will be		*/
+	lickey[idx++] = detran((char)toupper(platform[1]));				/* validated later.				*/
+
+	lickey[idx++] = lictype;
+
+	if (rc = packdate(licdate,&lickey[idx])) return(rc);
+	idx += 3;
+
+	if (0 == memcmp(expdate,"00000000",8))					/* No expiration date				*/
+	{
+		memset(&lickey[idx],'\0',3);
+	}
+	else
+	{
+		if (rc = packdate(expdate,&lickey[idx])) return(rc);
+	}
+
+	checksum = checksummem(lickey,LICENSE_KEY_SIZE-1,WLIC_MAXTRAN);
+	lickey[LICENSE_KEY_SIZE-1] = checksum;
+
+	/*
+	**	Do a rolling-up with offset encryption.  (Don't do the checksum)
+	*/
+	for(i=0;i<LICENSE_KEY_SIZE-1;i++)
+	{
+		if (lickey[i] < 0 || lickey[i] > WLIC_MAXTRAN) return(1);
+		lickey[i] = (lickey[i] + i + checksum) % WLIC_MAXTRAN;
+	}
+
+	/*
+	**	Use entran to convert each of the bytes in the key
+	*/
+	for(i=0;i<LICENSE_KEY_SIZE;i++)
+	{
+		lickey[i] = entran((int)lickey[i]);
+	}
+
+		
+	return(0);
+}
+
+
+/*
+**	Routine:	mkvalcode()
+**
+**	Function:	To generate a VALIDATION CODE
+**
+**	Description:	This routine accepts a LICENSE KEY and MACHINE ID and generates a VALIDATION CODE
+**			by checksumming.
+**			The VALIDATION CODE is a 3 digit code
+**				1	Checksum of LICENSE KEY 	(mod 34 encoded)
+**				2	Checksum of MACHINE ID 		(mod 34 encoded)
+**				3	Checksum of digits 1 & 2	(mod 34 encoded)
+**
+**	Input:		lickey		the LICENSE KEY
+**			machineid	the MACHINE ID
+**			
+**
+**	Output:		valcode		the VALIDATION CODE   
+**			
+**
+**	Return:		None
+**
+**	Warnings:	None
+**
+**	History:	05/22/92	Written by GSL
+**
+*/
+
+static void mkvalcode(char lickey[LICENSE_KEY_SIZE],char* machineid,char valcode[3])
+{
+	valcode[0] = entran(checksummem(lickey,LICENSE_KEY_SIZE,WLIC_MAXTRAN));
+	valcode[1] = entran(checksummem(machineid,strlen(machineid),WLIC_MAXTRAN));
+	valcode[2] = entran(checksummem(valcode,2,WLIC_MAXTRAN));
+}
+
+
+
 static const char* tabfilepath()
 {
 	static int first=1;
@@ -1975,6 +2119,9 @@ static int cgi_main(void)
 /*
 **	History:
 **	$Log: wauthorize.c,v $
+**	Revision 1.13.2.4  2003/01/03 15:09:00  gsl
+**	Move the license gen stuff out of runtime into wauthorize.c
+**	
 **	Revision 1.13.2.3  2002/11/14 15:23:36  gsl
 **	Change wexit() to WL_wexit()
 **	

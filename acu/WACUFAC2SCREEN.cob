@@ -1,13 +1,13 @@
-000100**   Copyright (c) 1997 NeoMedia Technologies, All rights reserved.
+000100**   Copyright (c) 1997-2002 NeoMedia Technologies, All rights reserved.
 000200**   $Id:$
 000300**
-000400**   File:       wacufac2screen.cob
+000400**   File:       WACUFAC2SCREEN.cob
 000500**
 000600**   Project:    WISP for Acucobol with Native Screens
 000700**
 000800**   Purpose:    Convert Wang FAC into Color and Control values
 000900**
-001000**   Build:      ccbl -o WACUFAC2SCREEN wacufac2screen.cob
+001000**   Build:      ccbl -Da4 -o WACUFAC2SCREEN.acu WACUFAC2SCREEN.cob
 001100**
 001200**
 001300/*****************************************************************

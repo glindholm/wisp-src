@@ -35,6 +35,7 @@ static char rcsid[]="$Id:$";
 #include "level.h"
 #include "vwang.h"
 #include "wispvers.h"
+#include "platsubs.h"
 
 /*
 **	Structures and Defines
@@ -65,8 +66,8 @@ int initglbs(char *wisprunname)								/* Init GLOBALS				*/
 	newlevel();									/* Increment the link-level		*/
 	wgetpgrp();									/* Call to Set the Process Group ID.	*/
 
-	wtrace("INITGLBS","ENTRY","RUNNAME=[%8.8s] VERSION=[%s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
-	       wisprunname, wisp_version(), linklevel(), wgetpgrp(), wgetpgrp());
+	wtrace("INITGLBS","ENTRY","RUNNAME=[%8.8s] VERSION=[%s] PLATFORM=[%s] LINKLEVEL=[%d] GID=[%d][0x%08X]",
+	       wisprunname, wisp_version(), WL_platform_name(), linklevel(), wgetpgrp(), wgetpgrp());
 
 	memcpy(WISPRUNNAME,wisprunname,8);
 	setprogid(wisprunname);
@@ -217,6 +218,9 @@ void wisp_signal_handler(void)
 /*
 **	History:
 **	$Log: initglbs.c,v $
+**	Revision 1.21.2.4  2003/02/10 14:48:52  gsl
+**	Add platform to trace
+**	
 **	Revision 1.21.2.3  2002/11/14 21:12:22  gsl
 **	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
 **	

@@ -185,7 +185,8 @@ const char* wispconfigdir(void)
 			**	This will cause an error when a config file is trying to open, but if not
 			**	used then no error message needed.
 			*/
-			wispconfig_dir = "$WISPCONFIG";
+			wispconfig_dir = WISPCONFIG_UNSET_VALUE;
+			wtrace("WISPCONFIG","NOTSET","$WISPCONFIG is not set");
 		}
 	}
 	ASSERT(wispconfig_dir);
@@ -1668,6 +1669,9 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
+**	Revision 1.24.2.1  2003/02/14 16:55:25  gsl
+**	Add check to ensure $WISPCONFIG is set
+**	
 **	Revision 1.24  2001/11/27 22:05:03  gsl
 **	Change to use longuid()
 **	

@@ -98,6 +98,10 @@ SOURCE=.\wacu.mak
 # End Source File
 # Begin Source File
 
+SOURCE=.\wacu.umf
+# End Source File
+# Begin Source File
+
 SOURCE=.\wrun32wisp_acu51.mak
 # End Source File
 # Begin Source File

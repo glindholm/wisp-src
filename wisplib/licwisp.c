@@ -23,6 +23,8 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wlicense.h"
 #include "wispcfg.h"
+#include "wmalloc.h"
+#include "machid.h"
 
 
 /*
@@ -44,7 +46,7 @@ static char rcsid[]="$Id:$";
 **	09/13/93	Written by GSL
 **
 */
-char *product_name(void)
+const char *product_name(void)
 {
 	static	char	name[] = {"WISP"};
 
@@ -56,7 +58,11 @@ char *product_name(void)
 **
 **	Function:	Return the filepath to the license file.
 **
-**	Description:	Returns a pointer to a static data area that contains the license filepath.
+**	Description:	Returns a pointer to a static data area that contains 
+**			the license filepath.
+**
+**			UNIX (OLD):	/lib/wisp.license
+**			UNIX (NEW):	$WISPCONFIG/{machineid}.wisp.license
 **
 **	Arguments:	None
 **
@@ -66,19 +72,32 @@ char *product_name(void)
 **
 **	Warnings:	None
 **
-**	History:	
-**	09/13/93	Written by GSL
-**
 */
-char *license_filepath(void)
-{
 #ifdef unix
-	static	char	path[] = {"/lib/wisp.license"};
-#endif
-#ifdef MSDOS
-	static	char	path[] = {"C:\\WISP.LIC"};
-#endif
+const char *license_filepath(void)
+{
+	static	char*	path = NULL;
+	
+	if (!path)
+	{
+		char	buff[256];
+		char	machineid[MAX_MACHINEID_LENGTH+1];
+
+		if (0 != getmachineid(machineid))
+		{
+			strcpy(machineid,"(UNKNOWN)");
+		}
+
+		sprintf(buff,"%s/wisp.%s.license", wispconfigdir(), machineid);
+		path = wisp_strdup(buff);
+	}
+
+	return(path);
+}
+#endif /* unix */
 #ifdef WIN32
+const char *license_filepath(void)
+{
 	static	char*	path = NULL;
 	
 	if (!path)
@@ -94,66 +113,13 @@ char *license_filepath(void)
 			sprintf(buff,"%s\\LICENSE.TXT", wispdir());
 		}
 
-		path = malloc(strlen(buff)+1);
-		strcpy(path,buff);
+		path = wisp_strdup(buff);
 	}
-#endif
 
 	return(path);
 }
+#endif /* WIN32 */
 
-/*
-**	Routine:	x_license_filepath()
-**
-**	Function:	Return the filepath to the hidden temporary license file.
-**
-**	Description:	Returns a pointer to a static data area that contains the filepath
-**			for the hidden temporary file.  This is used to keep the inode
-**			on systems that don't have a machine id.
-**
-**	Arguments:	None
-**
-**	Globals:	None
-**
-**	Return:		Pointer to hidden temporary license filepath.
-**
-**	Warnings:	None
-**
-**	History:	
-**	09/13/93	Written by GSL
-**
-*/
-char *x_license_filepath(void)
-{
-#ifdef unix
-	static	char	path[] = {"/lib/.wisp.license"};
-#endif
-#ifdef MSDOS
-	static	char	path[] = {"C:\\WISP.LIX"};
-#endif
-#ifdef WIN32
-	static	char*	path = NULL;
-	
-	if (!path)
-	{
-		char	buff[256];
-
-		if (0 != strcmp(wispserver(), DEF_WISPSERVER))
-		{
-			sprintf(buff,"\\\\%s\\WISP\\LICENSEX.TXT", wispserver());
-		}
-		else
-		{
-			sprintf(buff,"%s\\LICENSEX.TXT", wispdir());
-		}
-
-		path = malloc(strlen(buff)+1);
-		strcpy(path,buff);
-	}
-#endif
-
-	return(path);
-}
 
 /*
 **	Routine:	lic_trantable()
@@ -178,7 +144,7 @@ char *x_license_filepath(void)
 **	09/13/93	Written by GSL
 **
 */
-char *lic_trantable(void)
+const char *lic_trantable(void)
 {
 	static	char	tt_tran[] = {"QAZ9CX1EU2GR3IO4YL5MJN6PH7SFT8VDWKB"};	/* WISP */
 
@@ -204,7 +170,7 @@ char *lic_trantable(void)
 **	09/13/93	Written by GSL
 **
 */
-char *authlogfile(void)
+const char *authlogfile(void)
 {
 	static	char	name[] = {"wauthorize.log"};
 
@@ -214,6 +180,10 @@ char *authlogfile(void)
 /*
 **	History:
 **	$Log: licwisp.c,v $
+**	Revision 1.8.2.1  2003/02/14 18:21:43  gsl
+**	On unix change the license file from /lib/wisp.license to
+**	$WISPCONFIG/wisp.{machineid}.license
+**	
 **	Revision 1.8  1997/03/21 15:24:58  gsl
 **	Changed the license_filepath() for WIN32 to point to the share name WISP
 **	on the SERVER.

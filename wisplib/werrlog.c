@@ -41,6 +41,8 @@ static char rcsid[]="$Id:$";
 #include "idsisubs.h"
 #include "wispcfg.h"
 #include "wanguid.h"
+#include "wispvers.h"
+#include "platsubs.h"
 
 #define INIT_ERR
 #include "werrlog.h"
@@ -75,32 +77,23 @@ void werrlog(uint4 id, ...)
 	va_list ap;
 	
 	static	int	in_use = 0;
-	int log_it;
 
 	wglobals();									/* Pull in wglobals for VMS		*/
 
-	log_it = 0;
+	w_err_code = id;								/* Save the error code.			*/
 
-	if (id % 100 == 1)								/* It's a Routine entry log.		*/
+	if (0 == (w_err_flag & ENABLE_LOGGING)) return;					/* Logging is off.			*/
+
+	if (w_err_code % 100 == 1)							/* It's a Routine entry log.		*/
 	{
-		if (w_err_flag & LOG_SUBROUTINE_ENTRY) log_it = 1;			/* Are we logging them?			*/
-		else return;								/* if not, just go.			*/
+		if (0 == (w_err_flag & LOG_SUBROUTINE_ENTRY)) return;			/* Are we logging them?			*/
 	}
 
-	w_err_code = id;								/* Copy the error code.			*/
-
-	if (!(w_err_flag & ENABLE_LOGGING)) return;					/* Logging is off.			*/
 
 	if (w_err_flag & LOG_EXCEPTIONS_ONLY)
 	{
-	    if (!(w_err_code & 1)) log_it = 1;						/* Only exceptions & this is one.	*/
+	    if (w_err_code & 1)	return;							/* Don't log warnings (odd numbers)	*/
 	}
-	else
-	{
-	    log_it = 1;									/* Otherwise log any error.		*/
-	}
-
-	if (!log_it) return;
 
 	if (in_use)
 	{
@@ -131,7 +124,7 @@ void werrlog(uint4 id, ...)
 
 		if (w_err_flag & LOG_LOGFILE) write_err();				/* Write error to log file.		*/
 
-		if (w_err_flag & LOG_SCREEN) print_err();				/* Print error to stdout.		*/
+		if (w_err_code % 2 == 0) print_err();		/* Display even errors 	*/
 
 		in_use = 0;
 	}
@@ -172,7 +165,8 @@ static int write_err(void)								/* Write error to log file.		*/
 	if (!(w_err_code & 1)) 								/* If exceptions then identify.		*/
 	{
 		clock = time(0);
-		sprintf(buff,"\n%sWISPRUNNAME(%8.8s)\n",ctime(&clock),WISPRUNNAME);
+		sprintf(buff,"\n%sWISPRUNNAME(%8.8s) WISP_VERSION=[%s] PLATFORM=[%s]\n",
+			ctime(&clock),WISPRUNNAME, wisp_version(), WL_platform_name());
 	}                                                           
 	sprintf(&buff[strlen(buff)],"(%6ld) %s\n",w_err_code, emsg);			/* Pretty easy.				*/
 	werr_write(buff);
@@ -494,6 +488,13 @@ const char* WL_strerror(int errnum)
 /*
 **	History:
 **	$Log: werrlog.c,v $
+**	Revision 1.18.2.4  2003/02/13 17:03:30  gsl
+**	Add WISP version and platform to errors
+**	
+**	Revision 1.18.2.3  2003/02/13 16:46:34  gsl
+**	Clean up error mode logic that determines if logging errors
+**	Fix so all errors (even codes) are displayed on screen when tracing
+**	
 **	Revision 1.18.2.2  2002/11/12 16:00:22  gsl
 **	Applied global unique changes to be compatible with combined KCSI
 **	

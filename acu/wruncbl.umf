@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-2002 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2003 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -142,7 +142,7 @@ ACU_LIBDIR=$(ACUDIR)/lib
 # EDEDIR	The EDE lib directory
 # KCSIDIR	The KCSI directory
 # 
-EDEDIR=$(WISPDIR)/ede_4406
+EDEDIR=$(WISPDIR)/ede_4407
 KCSIDIR=$(WISPDIR)/kcsi_acu_4000
 
 #============================================================================
@@ -479,26 +479,26 @@ acn_header: $(ACUDIR)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
 	@echo ">>>>"
 
-WACUERROR: wacuerror.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuerror.cob
+WACUERROR: WACUERROR.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUERROR.cob
 
-WACUDISPLAY: wacudisplay.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacudisplay.cob
+WACUDISPLAY: WACUDISPLAY.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUDISPLAY.cob
 
-WACUFAC2SCREEN: wacufac2screen.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacufac2screen.cob
+WACUFAC2SCREEN: WACUFAC2SCREEN.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUFAC2SCREEN.cob
 
-WACUGETPARM: wacugetparm.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetparm.cob
+WACUGETPARM: WACUGETPARM.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUGETPARM.cob
 
-WACUGETPFKEY: wacugetpfkey.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacugetpfkey.cob
+WACUGETPFKEY: WACUGETPFKEY.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUGETPFKEY.cob
 
-WACUHELP: wacuhelp.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuhelp.cob
+WACUHELP: WACUHELP.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUHELP.cob
 
-WACUWSB: wacuwsb.cob
-	$(COBOL) $(COBFLAGS) -o $@ wacuwsb.cob
+WACUWSB: WACUWSB.cob
+	$(COBOL) $(COBFLAGS) -o $@ WACUWSB.cob
 
 
 #============================================================================

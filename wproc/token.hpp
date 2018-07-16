@@ -82,9 +82,7 @@ class token : public object {
 #if WANG
       void       shift_to_upper_case() {upper_case(the_lexeme);}
 #endif
-#if DEBUG
       void       dump() const;
-#endif
    private:
       token_kind the_kind;
       int        the_lexeme_size;
@@ -100,6 +98,9 @@ class token : public object {
 //
 //	History:
 //	$Log: token.hpp,v $
+//	Revision 1.5.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.5  1998/08/31 19:14:23  gsl
 //	drcs update
 //	

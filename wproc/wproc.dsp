@@ -308,10 +308,6 @@ SOURCE=.\intdef.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\isspace.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\keyboard.hpp
 # End Source File
 # Begin Source File

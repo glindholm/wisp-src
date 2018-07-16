@@ -1,5 +1,25 @@
-static char copyright[]="Copyright (c) 1995- 1998 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+*/
 
 /*
 **	File:		rename.c
@@ -10,19 +30,10 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	
 **		wrename()		The emulation of vssub RENAME (translation done by WISP).
-**		check_existence()	VMS: See if a file exists.
-**		create_dir()		VMS: Creates a directory.
 **
 **
 */
 
-
-#ifdef VMS
-#include <rmsdef.h>
-#include <descrip.h>
-#include <ssdef.h>
-#include <fab.h>
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -76,14 +87,6 @@ va_dcl
 	char *ptr;
 	int	lib_rename;
 
-#ifdef VMS
-#include "rename1.d"
-	struct FAB fab1; 							/* Structure point to File ATT Block.		*/
-	int rms_status;
-	int existence_status, x, i;
-	int4 flags;
-	char null_str[1];
-#endif
 
 	rename_status = 0;
 	lib_rename = 0;
@@ -161,6 +164,12 @@ va_dcl
 			}
 		}
 		else if (!strncmp(new_file,"        ",8)) new_file = file;		/* If the new file is not specified.	*/
+
+		if ('#' == new_file[0])
+		{
+				nvalid = 3;
+				rename_status = 56;					/* New file is invalid.			*/
+		}
 	}
 	else	new_file = file;							/* Use old file.			*/
 
@@ -230,10 +239,10 @@ va_dcl
 
 	if (nvalid)
 	{
-		if (nvalid == 1) werrlog(ERRORCODE(2),*rtype,file,lib,vol,0,0,0,0);	/* Invalid arguments.			*/
-		else if (nvalid == 2) werrlog(ERRORCODE(4),*rtype,new_file,new_lib,0,0,0,0,0);
-
-		if (!rename_status) rename_status = 44;
+		if (0 == rename_status) 
+		{
+			rename_status = 44;
+		}
 		goto rename_return;
 	}
 
@@ -251,35 +260,11 @@ va_dcl
 	name_end = wfname(&mode, vol, lib, file, old_filename);        			/* Construct the native filename.	*/
 	*name_end = (char)0;
 
-#ifndef VMS
-	if (mode & IS_LIB)								/* wfname leaves the trailing '/' on	*/
+	if (lib_rename)								/* wfname leaves the trailing '/' on	*/
 	{
 		old_filename[strlen(old_filename)-1] = (char)0;				/* Remove trailing separator		*/
 	}
-#endif /* !VMS */
 
-	
-#ifdef VMS
-	if (lib_rename)
-	{
-		/*
-		**	Change  "USER$DISK:[MYLIB]"   into  "USER$DISK:[000000]MYLIB.DIR "
-		*/
-		char *pos, *fp, tfile[9];
-
-		pos = strrchr(old_filename,'[');					/* Find the [ symbol.			*/
-		pos++;									/* Move past [ symbol.			*/
-		fp = pos;
-		i = 0;
-		while (*fp != ']') tfile[i++] = *fp++;					/* Copy file name to temp var.		*/
-		tfile[i] = '\0';
-		*pos = '\0';
-		strcat(old_filename,"000000]");
-		strcat(old_filename,tfile);
-		strcat(old_filename,".DIR ");						/* Concat the file indicator.		*/
-	}
-	o_desc.dsc$w_length = strlen(old_filename);
-#endif
 
 	mode = IS_OUTPUT;
 	if (lib_rename) mode |= IS_LIB;
@@ -295,79 +280,7 @@ va_dcl
 	name_end = wfname(&mode, vol, new_lib, new_file, new_filename);			/* Construct the new native filename.	*/
 	*name_end = (char)0;
 
-#ifdef VMS
-	if (lib_rename)
-	{										/* Blank filename is rename directory.	*/
-		/*
-		**	Change  "USER$DISK:[MYLIB]"   into  "USER$DISK:[000000]MYLIB.DIR "
-		*/
-		char *pos, *fp, tfile[9];
-
-		pos = strrchr(new_filename,'[');					/* Find the [ symbol.			*/
-		pos++;									/* Move past [ symbol.			*/
-		fp = pos;
-		i = 0;
-		while (*fp != ']') tfile[i++] = *fp++;					/* Copy file name to temp var.		*/
-		tfile[i] = '\0';
-		*pos = '\0';
-		strcat(new_filename,"000000]");
-		strcat(new_filename,tfile);
-		strcat(new_filename,".DIR ");						/* Concat the file indicator.		*/
-	}
-
-	fab1 = cc$rms_fab;							/* Initialize fab to rms file.			*/
-	fab1.fab$b_fac = FAB$M_PUT;						/* File to be output.				*/
-
-	fab1.fab$l_fna = old_filename;						/* Name of file.				*/
-	fab1.fab$b_fns = sizeof(old_filename) -1;				/* Size of file name.				*/
-	fab1.fab$l_fop = 0;							/* Set file option to create.			*/
-	fab1.fab$b_shr = FAB$M_NIL;						/* Set file to no share.			*/
-										/* Open output file with name from wfanme.	*/
-	rms_status = sys$open(&fab1);
-	if (rms_status == RMS$_FLK || rms_status == RMS$_ACT || rms_status == RMS$_BUSY) /* Is the file in use?			*/
-	{
-		rename_status=32;						/* Do not rename the file and return		*/
-		sys$close(&fab1);						/* a status of 32.  Close the file.		*/
-		goto rename_return;
-	}
-	sys$close(&fab1);							/* Close the file.				*/
-	n_desc.dsc$w_length = strlen(new_filename);
-	null_str[0] = (char)0;
-	null_desc.dsc$w_length = 0;
-	flags = 1;
-											 /* Call the lib function to rename it.	*/
- 	rename_status = LIB$RENAME_FILE(&o_desc, &n_desc, &null_desc, &null_desc, &flags);
-
-	if (rename_status == RMS$_FEX || rename_status == RMS$_ENT) rename_status = 52;
-	else if (rename_status == RMS$_DEV) rename_status = 4;
-	else if (rename_status == RMS$_RMV) rename_status = 24;
-	else if (rename_status == RMS$_DNF) 
-	{
-		existence_status = 0;							/* Couldn't rename it to the new dir.	*/
-		existence_status = check_existence(old_filename);			/* See if the old dir exists.		*/
-		if (existence_status)							/* Now create the new directory.	*/
-		{
-			create_dir(new_lib, vol);
-			rename_status = LIB$RENAME_FILE(&o_desc, &n_desc);		/* And then rename all the files.	*/
-			if (rename_status == RMS$_DNF) rename_status = 16;
-			else if (rename_status == RMS$_RMV) rename_status = 24;
-		}
-		else
-		{
-			rename_status = 16;
-		}
-	}
-
-	if (rename_status == RMS$_FNF)
-	{
-		if (lib_rename) rename_status = 16;
-		else rename_status = 20;
-	}
-	else if (rename_status == 1) rename_status = 0;					/* VAX 1 is WANG 0			*/
-
-#else /* !VMS */
-
-	if (mode & IS_LIB)								/* wfname leaves the trailing '/' on	*/
+	if (lib_rename)								/* wfname leaves the trailing '/' on	*/
 	{
 		new_filename[strlen(new_filename)-1] = (char)0;				/* Remove trailing separator		*/
 	}
@@ -409,15 +322,15 @@ va_dcl
 	strcpy(new_filename_idx, new_filename);
 	if (has_ext)
 	{
-		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
-		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+		if ((ptr = strrchr(old_filename_idx,'.'))) *ptr = '\0';		/* cut off the extension			*/
+		if ((ptr = strrchr(new_filename_idx,'.'))) *ptr = '\0';
 	}
 	strcat(old_filename_idx,".idx");
 	strcat(new_filename_idx,".idx");
 	if (!fexists(old_filename_idx))						/* See if there is a .idx index portion		*/
 	{
-		if (ptr = strrchr(old_filename_idx,'.')) *ptr = '\0';		/* cut off the extension			*/
-		if (ptr = strrchr(new_filename_idx,'.')) *ptr = '\0';
+		if ((ptr = strrchr(old_filename_idx,'.'))) *ptr = '\0';		/* cut off the extension			*/
+		if ((ptr = strrchr(new_filename_idx,'.'))) *ptr = '\0';
 
 		strcat(old_filename_idx,".vix");
 		strcat(new_filename_idx,".vix");
@@ -451,10 +364,14 @@ va_dcl
 		
 		if (!fexists(old_filename))
 		{
-			/*
-			**	File doesn't exist
-			*/
-			rename_status=20;
+			if (lib_rename)
+			{
+				rename_status=16;	/* Lib does not exist */
+			}
+			else
+			{
+				rename_status=20;	/* file does not exist */
+			}
 			goto rename_return;
 		}
 	}
@@ -502,72 +419,6 @@ va_dcl
 	
 	dat_done = 0;
 
-#ifdef OLD	
-	if (fexists(old_filename))						/* file exist in this form			*/
-	{
-		if (fexists(new_filename))					/* New file already exists.			*/
-		{
-			rename_status = 52;
-			goto rename_return;
-		}
-
-		if (file_rename(old_filename,new_filename))
-		{
-			rename_status=24;
-			goto rename_return;
-		}
-		dat_done = 1;
-	}
-	else if (has_ext)
-	{
-		rename_status=20;						/* yes, so return file not found		*/
-		goto rename_return;
-	}
-
-
-	if (!has_ext)								/* May be CISAM files				*/
-	{
-		strcat(old_filename,".idx");					/* else try it with a .dat extension		*/
-		strcat(new_filename,".idx");
-		if (!fexists(old_filename))					/* still not found				*/
-		{
-			if (dat_done) rename_status = 0;			/* It was just a seq file.			*/
-			else	      rename_status = 20;			/* Really not found.				*/
-			goto rename_return;
-		}
-
-		if (fexists(new_filename))					/* Does new file already exists?		*/
-		{
-			rename_status = 52;
-			goto rename_return;
-		}
-
-		if (file_rename(old_filename,new_filename))
-		{
-			rename_status=24;
-			goto rename_return;
-		}
-
-		if (!dat_done)							/* May be CISAM with .dat			*/
-		{
-			strcpy(strrchr(old_filename,'.'),".dat");		/* replace the '.dat' with a '.idx'		*/
-			strcpy(strrchr(new_filename,'.'),".dat");
-			if (file_rename(old_filename,new_filename))
-			{
-				rename_status=48;				/* Serious error if only half worked.		*/
-				goto rename_return;
-			}
-			dat_done = 1;
-		}
-	}
-
-	if ( !dat_done )
-	{
-		rename_status=20;						/* yes, so return file not found		*/
-		goto rename_return;
-	}
-#endif /* OLD */
-#endif /* !VMS */
                                
 rename_return:
 	wtrace("RENAME", "RETURN", "Return code = %ld errno=[%d]", (long)rename_status, errno);
@@ -586,60 +437,29 @@ static int unix_shell_move(const char* old_filename, const char* new_filename)
 }
 #endif /* unix */
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 int file_rename(char* old_filename, char* new_filename)
 {
-#if defined(unix) && defined(NORENAME)
-	return unix_shell_move(old_filename,new_filename);
-#else	
+	int rc = 0;
+	int save_errno = 0;
 	errno = 0;
-	return rename(old_filename,new_filename);
+#if defined(unix) && defined(NORENAME)
+	rc = unix_shell_move(old_filename,new_filename);
+#else	
+	rc = rename(old_filename,new_filename);
 #endif
-}
-#endif /* unix || MSDOS || WIN32 */
-
-#ifdef VMS
-check_existence(filename)								/* Check to see if a file exists.	*/
-char *filename;
-{
-                            
-	char l_filename[132], result[132], *context, *statval;
-	int status;
-#include "rename2.d"
-
-	memset(l_filename,' ', sizeof(l_filename));
-	strcpy(l_filename, filename);
-	t_desc.dsc$w_length = strlen(l_filename);					/* Set the length of the descriptor.	*/
-	memset(result,' ', sizeof(result));
-
-	context = 0;
-	statval = 0;
-	status = LIB$FIND_FILE(&t_desc, &r_desc, &context, 0, 0, &statval, 0);
-	lib$find_file_end(&context);							/* End the FIND_FILE context		*/
-	if (status == RMS$_NORMAL || status == SS$_NORMAL) return(1);
-                            
-	return(0);
+	save_errno = errno;
+	wtrace("rename","return","Old=[%s] New=[%s] rc=[%d] errno=[%d]",
+		old_filename, new_filename, rc, save_errno);
+	errno = save_errno;
+	return rc;
 }
 
-create_dir(nlib, vol)									/* Create a new directory.		*/
-char *nlib, *vol;
-{
-	char dir_spec[132], file[9];
-	int4 wfname_mode;
-	int mkdir_status;
-#include "rename3.d"
-
-	wfname_mode = 0;
-	wfname_mode |= IS_LIB;								/* Set the mode for libraries.		*/
-	strcpy(file,"        ");							/* No file name for directory.		*/
-	memset(dir_spec, '\0', sizeof(dir_spec));
-	wfname(&wfname_mode, vol, nlib, file, dir_spec);				/* Make the name.			*/
- 	mkdir_status = LIB$CREATE_DIR(&d_desc);
-}
-#endif
 /*
 **	History:
 **	$Log: rename.c,v $
+**	Revision 1.18.2.1.2.2  2003/02/10 19:14:29  gsl
+**	Removed VMS code and applied a number of the changes from $HEAD
+**	
 **	Revision 1.18.2.1.2.1  2002/11/14 21:12:25  gsl
 **	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
 **	

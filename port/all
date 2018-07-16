@@ -1,0 +1,20 @@
+#!/bin/sh
+# which cmd:   which cmd in PATH is executed
+
+opath=$PATH
+PATH=/bin:/usr/bin
+
+case $# in
+0)	echo 'Usage: all command' 1>&2; exit 1
+esac
+for i in `echo $opath | sed 's/^:/.:/
+			     s/::/:.:/g
+			     s/:$/:./
+			     s/:/ /g'`
+do
+	if test -f $i/$1
+	then
+		ls -li $i/$1
+	fi
+done
+exit 0

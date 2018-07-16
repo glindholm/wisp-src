@@ -79,6 +79,10 @@ CFG=all - Win32 Debug
 
 # Begin Source File
 
+SOURCE=.\make.include
+# End Source File
+# Begin Source File
+
 SOURCE=..\doc\portwin32.txt
 # End Source File
 # End Target

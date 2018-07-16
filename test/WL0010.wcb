@@ -1,4 +1,4 @@
-000100**   Copyright (c) 1996 DevTech Migrations, All rights reserved.
+000100**   Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
 000200**   $Id:$
 000300**
 000400**   File:       wl0010.wcb
@@ -19,12 +19,18 @@
 001900
 002000     IF WISPPLAT-AIX THEN
 002100         DISPLAY "Running on AIX".
+002110     IF WISPPLAT-AIX-64 THEN
+002120         DISPLAY "Running on AIX (64-bit)".
 002200     IF WISPPLAT-HPUX THEN
-002300         DISPLAY "Running on HP/UX".
+002300         DISPLAY "Running on HP-UX".
+002301     IF WISPPLAT-HPUX-64 THEN
+002302         DISPLAY "Running on HP-UX (64-bit)".
 002310     IF WISPPLAT-LINUX THEN
 002320         DISPLAY "Running on LINUX".
 002400     IF WISPPLAT-SOLARIS THEN
 002500         DISPLAY "Running on Solaris 2".
+002510     IF WISPPLAT-SOLARIS-64 THEN
+002520         DISPLAY "Running on Solaris 2 (64-bit)".
 002600     IF WISPPLAT-SCO THEN
 002700         DISPLAY "Running on SCO".
 002800     IF WISPPLAT-MSDOS THEN

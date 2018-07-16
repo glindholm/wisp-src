@@ -33,24 +33,16 @@ void* object::operator new(size_t size) {
       restore_video_state();
       exit(0);
    }
-#if DEBUG
    if (user_options.debug_trace_memory())
       show_memory("alloc object ", allocated, size);
-#endif
    return allocated;
 }
 
 
-#if DEBUG
 void object::operator delete(void* p, size_t size) {
-#else
-void object::operator delete(void* p) {
-#endif
-#if DEBUG
    assert(valid_ptr(p));
    if (user_options.debug_trace_memory())
       show_memory("free object  ", p, size);
-#endif
    delete (void*) p;
 }
 #endif
@@ -59,6 +51,9 @@ void object::operator delete(void* p) {
 //
 //	History:
 //	$Log: object.cpp,v $
+//	Revision 1.6.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.6  1998/08/31 19:13:58  gsl
 //	drcs update
 //	

@@ -67,10 +67,8 @@ opcode machine::execute() {
          the_opcode = halt_op;
       }
 
-      #if DEBUG
       if (user_options.debug_trace_machine())
          trace_ss(machine, the_pcode_reader->pc_image(), opcode_name(the_opcode));
-      #endif
 
       switch (the_opcode) {
          case add_op :
@@ -177,7 +175,6 @@ opcode machine::execute() {
             call_stack[call_depth].return_offset = return_offset;
             call_stack[call_depth].for_loop_depth = for_loop_depth;
 
-#if DEBUG
       	    if (user_options.debug_trace_machine())
 	    {
 		char mess[120], target_s[20], offset_s[20];
@@ -189,7 +186,6 @@ opcode machine::execute() {
 			target_s, offset_s, for_loop_depth, call_depth);
 	        trace_ss(machine, "call ", mess);
            }
-#endif
 
             call_depth += 1;
 
@@ -203,7 +199,6 @@ opcode machine::execute() {
             if (call_depth > 0) {
                call_depth -= 1;
 
-#if DEBUG
       	       if (user_options.debug_trace_machine())
 	       {
 		  char mess[120], offset_s[20];
@@ -217,7 +212,6 @@ opcode machine::execute() {
 			for_loop_depth);
 	          trace_ss(machine, "call_return ", mess);
                }
-#endif
 
                the_pcode_reader->reset_pc_to
                   (call_stack[call_depth].return_offset);
@@ -755,6 +749,9 @@ opcode machine::execute() {
 //
 //	History:
 //	$Log: execute.cpp,v $
+//	Revision 1.11.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.11  1998/09/08 18:08:30  gsl
 //	For call_exp_op had to save the current offset then calculate the
 //	return offset.

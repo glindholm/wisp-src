@@ -46,13 +46,8 @@ typedef unsigned short usign_16;
 typedef          short int_16;
 #endif
 
-#if OSF1_ALPHA
 typedef unsigned int  usign_32;
 typedef          int  int_32;
-#else
-typedef unsigned long  usign_32;
-typedef          long  int_32;
-#endif
 
 #define INT_32_STRING_SIZE 12  // 10 digits + sign + '\0'
 #define INT_16_STRING_SIZE  7  //  5 digits + sign + '\0'
@@ -88,6 +83,9 @@ typedef          long  int_32;
 //
 //	History:
 //	$Log: environ.hpp,v $
+//	Revision 1.10.2.1  2003/02/07 21:11:11  gsl
+//	fix int32 sizes
+//	
 //	Revision 1.10  1998/08/31 19:13:46  gsl
 //	drcs update
 //	

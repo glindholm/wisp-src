@@ -139,6 +139,10 @@ SOURCE=.\kcsi_acu_install.txt
 # End Source File
 # Begin Source File
 
+SOURCE=.\kcsi_mf.umf
+# End Source File
+# Begin Source File
+
 SOURCE=.\kcsi_mf_install.txt
 # End Source File
 # Begin Source File

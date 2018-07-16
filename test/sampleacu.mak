@@ -99,6 +99,11 @@ SAMPLE_COBOL_OBJS= \
 	WL0025.acu \
 	WL0026.acu \
 	WL0027.acu \
+	WL0028.acu \
+	WL0029.acu \
+	WL0030.acu \
+	WL0031.acu \
+	WL0032.acu \
 	XLINK.acu \
 	XLINK1.acu
 
@@ -239,6 +244,9 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
+#	Revision 1.13.2.3  2003/02/10 14:59:02  gsl
+#	Add autotests from $HEAD
+#	
 #	Revision 1.13.2.2  2002/11/12 20:21:35  gsl
 #	Use -del
 #	

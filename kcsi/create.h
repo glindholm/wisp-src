@@ -67,10 +67,8 @@ void WL_wswap(void *lword);			/* swap the order of the words in a longword item 
 void GETPARM();
 void SCRATCH();
 void WL_wpload(void);
-void EXTRACT();
 void WFCLOSE(const char* fname);								/* This routine is called after COBOL*/
 int  WL_link_display(const char *file_name);
-void FIND();
 void SET();
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
 
@@ -79,6 +77,9 @@ void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, in
 /*
 **	History:
 **	$Log: create.h,v $
+**	Revision 1.4.2.3  2003/02/06 18:12:41  gsl
+**	fix prototype mismatch warnings for EXTRACT and FIND
+**	
 **	Revision 1.4.2.2  2002/11/13 22:48:55  gsl
 **	Remove protos of static functions
 **	

@@ -15,11 +15,6 @@
 #include "memory.hpp"
 
 // Classes
-#if DEBUG
-#if DOS || DOS_HOST
-#include <iostream.h>
-#endif
-#endif
 #include "options.hpp"
 
 // Definitions and subprograms
@@ -34,10 +29,8 @@
 
 char *new_string(size_t size) {
    char *the_string = (char *) malloc(size);
-#if DEBUG
    if (user_options.debug_trace_memory())
       show_memory("alloc string ", the_string, size);
-#endif
    if (size && the_string == NULL) {
       puts("\nMemory exhausted allocating a string\n");
       restore_video_state();
@@ -59,18 +52,15 @@ char *dup_string(const char *a_string) {
 
 void delete_string(char *&a_string) {
    if (a_string) {
-#if DEBUG
       assert(valid_ptr(a_string));
       show_memory("free string  ", a_string, strlen(a_string) + 1);
       trace(memory, a_string);
-#endif
       free(a_string);
       a_string = NULL;
    }
 }
 
 
-#if DEBUG
 void show_memory(char *kind, void* ptr, size_t size) {
    char mess[80];
       
@@ -78,7 +68,6 @@ void show_memory(char *kind, void* ptr, size_t size) {
    debug_trace((Boolean) user_options.debug_trace_memory(), mess, kind);
 
 }
-#endif
 
 
 
@@ -86,6 +75,9 @@ void show_memory(char *kind, void* ptr, size_t size) {
 //
 //	History:
 //	$Log: memory.cpp,v $
+//	Revision 1.9.2.1  2003/02/11 18:52:00  gsl
+//	Removed unneeded #ifdef code for AIX and DEBUG
+//	
 //	Revision 1.9  1998/09/02 21:27:35  gsl
 //	Changed to use debug_trace instead of printf()
 //	

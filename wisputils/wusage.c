@@ -1,5 +1,28 @@
-static char copyright[]="Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.";
-static char rcsid[]="$Id:$";
+/*
+******************************************************************************
+** Copyright (c) 1994-2003, NeoMedia Technologies, Inc. All Rights Reserved.
+**
+** WISP - Wang Interchange Source Processor
+**
+** $Id:$
+**
+** NOTICE:
+** Confidential, unpublished property of NeoMedia Technologies, Inc.
+** Use and distribution limited solely to authorized personnel.
+** 
+** The use, disclosure, reproduction, modification, transfer, or
+** transmittal of this work for any purpose in any form or by
+** any means without the written permission of NeoMedia 
+** Technologies, Inc. is strictly prohibited.
+** 
+** CVS
+** $Source:$
+** $Author: gsl $
+** $Date:$
+** $Revision:$
+******************************************************************************
+*/
+
 
 
 /* The WUSAGE utility. Makes it possible to set/extract WANG USAGE CONSTANTS from the users profile.				*/
@@ -22,8 +45,13 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
-#ifdef _MSC_VER
+#ifdef unix
+#include <unistd.h>
+#endif
+
+#ifdef WIN32
 #include <io.h>
 #endif
 
@@ -40,6 +68,7 @@ static char rcsid[]="$Id:$";
 #include "vwang.h"
 #include "wispcfg.h"
 #include "wanguid.h"
+#include "platsubs.h"
 
 #define EXT_FILEXT
 #include "filext.h"
@@ -67,6 +96,7 @@ extern int  noprogscrn;
 #define INVAL_FLAG_TYPE_ERROR	-9
 #define INVAL_FLAG_LOG_ERROR	-10
 #define CANNOT_ACCESS_TEMP_ERROR	-11
+#define WSHELL_ERROR -12
 
 static int us_parse(int argc, char* argv[]);
 static int errmsg(int num);
@@ -609,7 +639,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 		{
 			if ( 0 != wsystem("wshell") )
 			{
-				werrlog(104,"%WUSAGE-E-SHELL Program WSHELL Not Found",0,0,0,0,0,0,0);
+				return WSHELL_ERROR;
 			}
 			
 			break;
@@ -673,8 +703,7 @@ static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 		case P_VERSION:
 		{
 			printf("\n\n");
-			/* printf("WISP: Version=[%s] Library=[%d] Screen=[%d]\n\n",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION); */
-			printf("WISP: Version=[%s]\n\n",wisp_version());
+			printf("WUSAGE: Version=[%s] Platform=[%s]\n",wisp_version(), WL_platform_name());
 			break;
 		}
 
@@ -1384,12 +1413,6 @@ static int errmsg(int num)
 {
 	switch(num)
 	{
-		case GENERAL_ERROR:
-		           default:
-		{
-			werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
-			break;
-		}
 		case MISSING_SOURCE_ERROR:
 		{
 			werrlog(ERRORCODE(4),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
@@ -1445,7 +1468,21 @@ static int errmsg(int num)
 			werrlog(104,"%%WUSAGE-F-ACCESS UNABLE TO ACCESS TEMPORARY USAGE CONSTANTS",0,0,0,0,0,0,0);				/* Report the situation.		*/
 			break;
 		}
+		case WSHELL_ERROR:
+		{
+			werrlog(104,"%WUSAGE-E-SHELL Program WSHELL Not Found",0,0,0,0,0,0,0);
+			break;
+		}
+		case GENERAL_ERROR:
+		default:
+		{
+			werrlog(ERRORCODE(2),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
+			break;
+		}
 	}
+
+	vwang_shut();
+
 	fflush(stderr);
 	return num;
 }
@@ -1470,32 +1507,45 @@ static int us_equ(int argc, char* argv[], char* dst, char* src)			/* Parse an eq
 {
 	int i,offset;
 
+	/* 0	  1   2       3    4	*/
+	/* wusage set dst=src		*/
+	/* wusage set dst=    src	*/
+	/* wusage set dst     =src	*/
+	/* wusage set dst     =    src	*/
+
 	if (argc < 3) return(MISSING_OBJECT_ERROR);					/* Error, no parms to parse.		*/
 	offset = 0;
 
 	if ((i=strpos(argv[2],"=")) != -1)						/* The "=" is in the parm.		*/
 	{
+		/* wusage set dst=src */
+		/* wusage set dst= src */
 		memcpy(dst,argv[2],i);							/* Copy what we need from the parm	*/
 		dst[i] = '\0';								/* Null terminate.			*/
 
 		if (argv[2][i+1])							/* There is more after the "="		*/
 		{
+			/* wusage set dst=src */
 			strcpy(src,&argv[2][i+1]);					/* Copy into source string.		*/
 		}
 		else									/* The parm has to be in the next ptr.	*/
 		{
+			/* wusage set dst= src */
 			if (argc < 4) return(MISSING_SOURCE_ERROR);			/* There is no next pointer.		*/
 			strcpy(src,argv[3]);						/* There is, copy the parm.		*/
 		}
 	}
 	else										/* No "=" in the parm, scan for more.	*/
 	{
+		/* wusage set dst =src */
+		/* wusage set dst = src */
 		strcpy(dst,argv[2]);							/* Get the Destination.			*/
 
-		if (argv[3][0] == '=')							/* This parm has the equals in it.	*/
+		if (argc>3 && argv[3][0] == '=')					/* This parm has the equals in it.	*/
 		{
 			if (argv[3][1])							/* Followed by the source string.	*/
 			{
+				/* wusage set dst =src */
 				strcpy(src,&argv[3][1]);				/* Save the string.			*/
 			}
 			else if (argc < 5)						/* If it's not in the next string.	*/
@@ -1504,13 +1554,13 @@ static int us_equ(int argc, char* argv[], char* dst, char* src)			/* Parse an eq
 			}
 			else
 			{
+				/* wusage set dst = src */
 				strcpy(src,argv[4]);					/* Otherwise return the next arg.	*/
 			}
 		}
 		else
 		{
-			if (argc < 5) return(MISSING_SOURCE_ERROR);			/* Get the value after the equals.	*/
-			strcpy(src,argv[4]);
+			return(MISSING_SOURCE_ERROR);
 		}
 	}
 
@@ -1553,7 +1603,8 @@ static void helptext()
               /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
 	      /*         1         2         3         4         5         6         7         8*/
 	printf("\n");
-	printf("WUSAGE:    Allows setting and extracting of usage constants.\n");
+	printf("WUSAGE: Version=[%s] Platform=[%s]\n",wisp_version(), WL_platform_name());
+	printf("   Allows setting and extracting of usage constants.\n");
 	printf("   wusage read [file]                  Load usage constants from PERSONALITY.\n");
 	printf("   wusage write [file]                 Save usage constants to PERSONALITY.\n");
 	printf("   wusage set <item>=<value>           Set a usage constant.\n");
@@ -1581,6 +1632,16 @@ static void helptext()
 /*
 **	History:
 **	$Log: wusage.c,v $
+**	Revision 1.20.2.3  2003/02/12 19:57:10  gsl
+**	fix memory error in us_equ() was using an argv[] without checking argc to see
+**	if it is available
+**	
+**	Revision 1.20.2.2  2003/02/12 18:27:09  gsl
+**	restore the screen after displaying an error
+**	
+**	Revision 1.20.2.1  2003/02/10 20:08:44  gsl
+**	Add platform to version
+**	
 **	Revision 1.20  2002/04/03 22:03:03  gsl
 **	Remove the Library and Screen versions
 **	

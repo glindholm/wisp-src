@@ -1,4 +1,4 @@
-Copyright (c) 1997-2002 by NeoMedia Technologies Inc. 
+Copyright (c) 1997-2003 by NeoMedia Technologies Inc. 
 All Rights Reserved.
 
 ====================================================================
@@ -36,9 +36,9 @@ Overview
 The Steps
 ---------
 
-1) Ensure WISP 4.4.06 is installed first.
+1) Ensure WISP 4.4.07 is installed first.
 
-    WISP 4.4.06 must be installed first before you can install KCSI.
+    WISP 4.4.07 must be installed first before you can install KCSI.
     Ensure you have WISP installed and configured before
     continuing.
 

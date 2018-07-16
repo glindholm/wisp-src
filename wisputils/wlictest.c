@@ -58,22 +58,20 @@ static char rcsid[]="$Id:$";
 #include "machid.h"
 #include "wispcfg.h"
 
-#define MAXTRAN		34
-
-static int get_license_info(char* flickey, char* valcode);
+static int WT_get_license_info(char* flickey, char* valcode);
 
 static void print_ckvalcode(char lickey[LICENSE_KEY_SIZE], char* machineid, char valcode[3])
 {
 	char	lvalcode[4];
 	int	rc;
 	
-	lvalcode[0] = entran(rc = checksummem(lickey,LICENSE_KEY_SIZE,MAXTRAN));
+	lvalcode[0] = entran(rc = checksummem(lickey,LICENSE_KEY_SIZE,WLIC_MAXTRAN));
 	printf("lickey    => [%2d] => [%c] == [%c]\n", rc, lvalcode[0], valcode[0]);
 	
-	lvalcode[1] = entran(rc = checksummem(machineid,strlen(machineid),MAXTRAN));
+	lvalcode[1] = entran(rc = checksummem(machineid,strlen(machineid),WLIC_MAXTRAN));
 	printf("machineid => [%2d] => [%c] == [%c]\n", rc, lvalcode[1], valcode[1]);
 	
-	lvalcode[2] = entran(rc = checksummem(valcode,2,MAXTRAN));
+	lvalcode[2] = entran(rc = checksummem(valcode,2,WLIC_MAXTRAN));
 	printf("valcode   => [%2d] => [%c] == [%c]\n", rc, lvalcode[2], valcode[2]);
 }
 
@@ -116,14 +114,13 @@ static int debug_validate_license(void)
 
 	char	flickey[80];
 	int	rc;
-	char the_plat_name[80], the_plat_code[3];
 
 
 	/*
 	**	Get the LICENSE KEY and VALIDATION CODE
 	*/
-	rc = get_license_info(flickey, valcode);
-	printf("get_license_info() = [%d]\n", rc);
+	rc = WT_get_license_info(flickey, valcode);
+	printf("WT_get_license_info() = [%d]\n", rc);
 	if (rc)
 	{
 		return rc;
@@ -158,9 +155,7 @@ static int debug_validate_license(void)
 	*/
 
 	
-	rc = whatplat(the_plat_name, the_plat_code);
-	
-	printf("whatplat() = [%d] [%s] [%2.2s]\n", rc, the_plat_name, the_plat_code);
+	printf("PLATFORM = [%d] [%s] [%2.2s]\n", WL_platform_number(), WL_platform_name(), WL_platform_code());
 	
 	if (rc = valplat(platform))
 	{
@@ -343,7 +338,7 @@ static int debug_validate_license(void)
 }
 
 /*
-**	ROUTINE:	get_license_info()
+**	ROUTINE:	WT_get_license_info()
 **
 **	FUNCTION:	Get the stored license information.
 **
@@ -363,7 +358,7 @@ static int debug_validate_license(void)
 **	WARNINGS:	None
 **
 */
-static int get_license_info(char* flickey, char* valcode)
+static int WT_get_license_info(char* flickey, char* valcode)
 {
 	FILE	*fp;
 	char	buff[256];
@@ -476,6 +471,15 @@ int main(int argc, char *argv[])
 /*
 **	History:
 **	$Log: wlictest.c,v $
+**	Revision 1.1.2.3  2003/02/14 18:47:57  gsl
+**	fix name confict get_license_info
+**	
+**	Revision 1.1.2.2  2003/02/07 18:40:22  gsl
+**	Rework the platform routines and add AIX HPUX SOLARIS 64-bit
+**	
+**	Revision 1.1.2.1  2003/01/03 15:09:00  gsl
+**	Move the license gen stuff out of runtime into wauthorize.c
+**	
 **	Revision 1.1  1997/10/14 14:34:55  gsl
 **	Initial revision
 **	
