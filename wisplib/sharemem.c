@@ -37,15 +37,6 @@ static char rcsid[]="$Id:$";
 /*
 	OVERVIEW OF SHARED MEMORY
 
-	On VMS shared memory is done by creating a special file that's the size of memory needed then mapping that file
-	into memory.
-		sys$create	- Create/open file (get I/O channel)
-		sys$crmpsc	- Create & map section: Map section of address space to section of a file
-		sys$updsecw	- Update section: Write modified sections to disk
-		sys$deltva	- Delete virtual address space
-		sys$dassgn	- Deassign I/O channel
-		sys$erase	- Erase the file
-
 	On UNIX you create a share memory area directly but you need a key to identify it, the key is obtained by creating
 	a dummy "key" file and using it's inode as the key (ftok).  The memory is identified by the key and can be attached
 	detached or deleted.
@@ -54,7 +45,7 @@ static char rcsid[]="$Id:$";
 		shmdt()		- detach (unmap) segment from memory
 		shmctl(IPC_RMID)- remove (delete) shared memory segment
 
-	On MSDOS we dummy it up by mallocing regular memory then copying it back and forth to a file after every change.
+	On WIN32 we dummy it up by mallocing regular memory then copying it back and forth to a file after every change.
 */
 
 /*
@@ -102,7 +93,7 @@ static	osd_map_seg()		Map the shared memory segment into the programs address sp
 static	osd_unmap_seg()		Unmap the segment
 static	osd_exists_seg()	Check if the shared memory segment exists
 static	osd_sync_seg()		Synchronize the external segment to match the internal segment
-static	ctlfile()		Generate control file name.
+	wisp_sm_ctlfile()	Generate control file name.
 
 */
 
@@ -115,7 +106,7 @@ static	ctlfile()		Generate control file name.
 #include <errno.h>
 #include <string.h>
 
-#if defined(MSDOS) || defined(_MSC_VER)
+#if defined(_MSC_VER)
 #include <direct.h>
 #include <io.h>
 #endif
@@ -168,13 +159,8 @@ static	ctlfile()		Generate control file name.
 */
 
 #define W_PAGE_SIZE	512
-#ifdef MSDOS
-#define DEF_MAX_PARMS	64
-#define DEF_MAX_PAGES	20
-#else
 #define DEF_MAX_PARMS	128
 #define DEF_MAX_PAGES	40
-#endif
 
 #define PRNAME_SIZE	8
 #define LABEL_SIZE	8
@@ -258,7 +244,6 @@ static char 	*osd_map_seg(void);
 static int 	osd_unmap_seg(void);
 static int 	osd_exists_seg(void);
 static int 	osd_sync_seg(void);
-static char 	*ctlfile(void);
 
 
 
@@ -906,6 +891,7 @@ int dump_parm_area(char *filename)
 		return(0);
 	}
 
+	makepath(filename);
 	fp = fopen(filename,FOPEN_WRITE_BINARY);
 	if (!fp)
 	{
@@ -1846,7 +1832,6 @@ int ppunlink(int level)
 static	int 	osd_shmid = -1;							/* The shared memory segment identifier		*/
 static	char	*osd_shmaddr = NULL;						/* The shared memory mapped address		*/
 
-static	char	*ctlfile();
 
 /*
 **	Routine:	osd_open_seg()		UNIX
@@ -1877,26 +1862,42 @@ static int osd_open_seg(int *new)
 	FILE 	*shrtmpfile;
 	key_t shmkey, wftok();
 	char	buff[256];
-	char	*shr_file;
+	const char *shr_file;
+	int	created_ctlfile;
+	int	retry_cnt;
+	int	save_errno = 0;	
 
 	*new = 0;								/* Flag it as an old file.			*/
 	if (osd_shmid != -1) return(0);						/* If already exists then just return		*/
 
-	if (!fexists(wispprbdir(NULL)))						/* Ensure the directory exists			*/
-	{
-		if (0 != mkdir(wispprbdir(NULL),0777))				/* Create the directory				*/
-		{
-			werrlog(ERRORCODE(28),wispprbdir(NULL),errno,0,0,0,0,0,0);
-			wexit(ERRORCODE(28));
-		}
-		if (0 != chmod(wispprbdir(NULL),0777))				/* Set protections on directory			*/
-		{
-			werrlog(ERRORCODE(30),wispprbdir(NULL),errno,0,0,0,0,0,0);
-			wexit(ERRORCODE(30));
-		}
-	}
+	/*
+	 *	It is very important to keep the ctlfile and the shared memory segment
+	 *	in sync.
+	 *
+	 *	If the ctlfile doesn't exist then the shared memory segment MUST not exist,
+	 *	if it does exist then we are out of sync.
+	 *
+	 *	If we get out of sync we can fix it by renaming the ctlfile (this will
+	 *	preserve the inode/shmkey) then create a new ctlfile (new inode).
+	 *
+	 *	Likewise if the ctlfile exists then so must the segment or we are out of sync.
+	 *	In this case attempt to delete the ctlfile.
+	 */
 
-	shr_file = ctlfile();							/* Get pointer to key file name			*/
+	shr_file = wisp_sm_ctlfile();						/* Get pointer to key file name			*/
+
+	retry_cnt = 5;	
+  retry_create:
+	if (0 >= retry_cnt--)
+	{
+		/* Give up */
+		werrlog(ERRORCODE(32),shr_file,save_errno,0,0,0,0,0,0);
+		werrlog(104,"%SHAREMEM-F-RETRY Giving up after 5 retries.",0,0,0,0,0,0,0);
+		wexit(ERRORCODE(32));
+	}	
+	
+	*new = 0;
+	created_ctlfile = 0;
 
 	if (!osd_exists_seg())							/* If key file doesn't exist then create it.	*/
 	{
@@ -1909,6 +1910,7 @@ static int osd_open_seg(int *new)
 		fclose(shrtmpfile);						/* Need to keep around so doesn't use		*/
 										/* same inode.					*/
 		*new = 1;							/* Mark as new.					*/
+		created_ctlfile = 1;
 	}
 
 	shmkey = wftok(shr_file);						/* Generate the shared memory key		*/
@@ -1917,28 +1919,80 @@ static int osd_open_seg(int *new)
 	{
 		sprintf(buff,"errno %d/shr_file=%s\n\015",errno,shr_file);	/* should *Never* happen			*/
 		werr_message_box(buff);
-	}
-	osd_shmid = shmget(shmkey,max_pages()*W_PAGE_SIZE,IPC_CREAT|IPC_EXCL|0600);/* Get a shared memory segment.		*/
-	if (osd_shmid == -1)
-	{
-		if (errno == EEXIST)						/* Shared memory segment exists already		*/
+
+		if (0 == rename(shr_file, tempnam(wispprbdir(NULL),"TMP_")))
 		{
-			osd_shmid  = shmget(shmkey,0,0);			/* Get the id associated with key.		*/
-			if (osd_shmid == -1)					/* Error getting segment.			*/
-			{
-				werrlog(ERRORCODE(34),shmkey,errno,0,0,0,0,0,0);
-				unlink(shr_file);
-				wexit(ERRORCODE(34));
-			}
+			goto retry_create;
 		}
-		else
+
+		unlink(shr_file);
+		werrlog(104,"%SHAREMEM-F-FTOK Unable to create key from file.",0,0,0,0,0,0,0);
+		wexit(ERRORCODE(32));		
+	}
+
+	if (created_ctlfile)
+	{
+		osd_shmid = shmget(shmkey,max_pages()*W_PAGE_SIZE,IPC_CREAT|IPC_EXCL|0600);/* Get a shared memory segment.	*/
+		if (osd_shmid == -1)
 		{
-			werrlog(ERRORCODE(34),shmkey,errno,0,0,0,0,0,0);	/* Unhandled error from shmget.			*/
+			save_errno = errno;
+			werrlog(ERRORCODE(34),shmkey,save_errno,0,0,0,0,0,0);
+
+			if (save_errno == EEXIST)				/* Shared memory segment exists already		*/
+			{
+				/*
+				 *	Ctlfile was created but segment already existed.
+				 *	Rename and try again.
+				 */
+				if (0 == rename(shr_file, tempnam(wispprbdir(NULL),"TMP_")))
+				{
+					goto retry_create;
+				}
+			}
+
+			/* Give up */
 			unlink(shr_file);
 			wexit(ERRORCODE(34));
 		}
 	}
-	else *new = 1;								/* Flag it as a new file.			*/
+	else 
+	{
+		/* 
+		 * 	ctlfile already existed so the segment must exist
+		 */
+		osd_shmid  = shmget(shmkey,0,0);			/* Get the id associated with key.		*/
+		if (osd_shmid == -1)					/* Error getting segment.			*/
+		{
+			save_errno = errno;
+			werrlog(ERRORCODE(34),shmkey,save_errno,0,0,0,0,0,0);
+
+			if (0 == unlink(shr_file))
+			{
+				goto retry_create;
+			}
+
+			/* Give up */
+			unlink(shr_file);
+			wexit(ERRORCODE(34));
+		}
+	}
+
+	/*
+	 *	Go ahead and do the osd_map_seg() logic so we can do the retry.
+	 */
+	osd_shmaddr = (char *)shmat(osd_shmid,(char *)0,0);
+	if ( (int4)osd_shmaddr == -1 )
+	{
+		save_errno = errno;
+		werrlog(ERRORCODE(36),osd_shmid,errno,0,0,0,0,0,0);
+
+		osd_shmaddr = NULL;
+
+		if (0 == rename(shr_file, tempnam(wispprbdir(NULL),"TMP_")))
+		{
+			goto retry_create;
+		}
+	}
 
 	return(0);
 }
@@ -1971,6 +2025,7 @@ static int osd_open_seg(int *new)
 static int osd_delete_seg(void)
 {
 	int	new;
+	char	errmsg[256];
 
 	if (osd_exists_seg())
 	{
@@ -1986,15 +2041,29 @@ static int osd_delete_seg(void)
 #endif
 		if (osd_shmaddr != NULL) 					/* if not mapped			*/
 		{
-			shmdt(osd_shmaddr);					/* Detach the segment			*/
+			if (0 != shmdt(osd_shmaddr))				/* Detach the segment			*/
+			{
+				sprintf(errmsg,"%%SHAREMEM-F-SHMDT Unable to detach shared memory. errno=%d",errno);
+				werrlog(104,errmsg,0,0,0,0,0,0,0);
+			}
 		}
 				
-		shmctl(osd_shmid,IPC_RMID,0);					/* Remove the shared memory			*/
-
-		if (unlink(ctlfile()))						/* Delete the key file.				*/
+		if (0 != shmctl(osd_shmid,IPC_RMID,0))				/* Remove the shared memory			*/
 		{
-			werrlog(ERRORCODE(16),ctlfile(),errno,0,0,0,0,0,0);	/* Error when deleting key file.		*/
-			wexit(ERRORCODE(16));
+			sprintf(errmsg,"%%SHAREMEM-F-SHMCTL Unable to remove shared memory. shmid=%d errno=%d", osd_shmid, errno);
+			werrlog(104,errmsg,0,0,0,0,0,0,0);
+
+			if ( 0 != rename(wisp_sm_ctlfile(), tempnam(wispprbdir(NULL),"TMP_")))
+			{
+				werrlog(ERRORCODE(16),wisp_sm_ctlfile(),errno,0,0,0,0,0,0);
+			}
+		}
+		else
+		{
+			if (0 != unlink(wisp_sm_ctlfile()))			/* Delete the key file.				*/
+			{
+				werrlog(ERRORCODE(16),wisp_sm_ctlfile(),errno,0,0,0,0,0,0);
+			}
 		}
 	}
 	osd_shmid = -1;
@@ -2033,7 +2102,10 @@ static char *osd_map_seg(void)
 		osd_shmaddr = (char *)shmat(osd_shmid,(char *)0,0);			/* Get the address of requested id.	*/
 		if ( (int4)osd_shmaddr == -1 )
 		{
-			werrlog(ERRORCODE(36),osd_shmid,errno,0,0,0,0,0,0);		/* Some error getting address.		*/
+			osd_shmaddr = NULL;
+			osd_shmid = -1;
+			
+			werrlog(ERRORCODE(36),osd_shmid,errno,0,0,0,0,0,0);
 			wexit(ERRORCODE(36));
 		}
 	}
@@ -2070,7 +2142,13 @@ static int osd_unmap_seg(void)
 {
 	if (osd_shmaddr != NULL) 							/* if not mapped			*/
 	{
-		shmdt(osd_shmaddr);							/* Detach the segment			*/
+		if ( 0 != shmdt(osd_shmaddr))						/* Detach the segment			*/
+		{
+			char errmsg[256];
+			
+			sprintf(errmsg,"%%SHAREMEM-F-SHMDT Unable to detach shared memory. errno=%d",errno);
+			werrlog(104,errmsg,0,0,0,0,0,0,0);
+		}
 	}
 	osd_shmaddr = NULL;
 	osd_shmid = -1;
@@ -2103,7 +2181,7 @@ static int osd_unmap_seg(void)
 
 static int osd_exists_seg(void)
 {
-	return(fexists(ctlfile()));
+	return(fexists(wisp_sm_ctlfile()));
 }
 
 /*
@@ -2133,27 +2211,35 @@ static int osd_sync_seg(void)
 }
 
 /*
-	ctlfile()	Generate control file name.	UNIX
+	wisp_sm_ctlfile()	Generate control file name.	UNIX
 */
-static char *ctlfile(void)								/* Generate a temp file name for the	*/
+const char *wisp_sm_ctlfile(void)
 {
 static	char	buff[256];
 static	int	first = 1;
 	if (first)
 	{
-		int	gid;
 		first = 0;
-		gid = wgetpgrp();
-		sprintf(buff,"%s/w2$sh%04X",wispprbdir(NULL),gid);			/* Construct filepath to use.		*/
+
+		if (get_wisp_option("SHAREDMEMORYV1"))
+		{
+			sprintf(buff,"%s/w2$sh%04X",wispprbdir(NULL), wgetpgrp());	/* Construct V1 style filepath to use. 	*/
+		}
+		else
+		{
+			sprintf(buff,"%s/shmemkey_%s_%u.shm",wispprbdir(NULL), longuid(), (unsigned)wgetpgrp());
+		}
+		
 		wtrace("SHAREMEM","CTLFILE", "Control file=[%s]", buff);
+		makepath(buff);							/* Ensure the directory exists			*/
 	}
 	return(buff);
 }
 
 #endif	/* #ifdef unix	*/								/* End of UNIX specific memory code.	*/
 
-/********************* Begin MSDOS||WIN32 specific shared memory routines *******************************************************/
-#if defined(MSDOS) || defined(WIN32)
+/********************* Begin WIN32 specific shared memory routines *******************************************************/
+#if defined(WIN32)
 
 static	char	*osd_shmaddr = NULL;
 
@@ -2183,23 +2269,12 @@ static	char	*osd_shmaddr = NULL;
 static int osd_open_seg(int *new)
 {
 	FILE 	*shrtmpfile;
-	char	*shr_file;
+	const char *shr_file;
 
 	*new = 0;								/* Flag it as an old file.			*/
 	if (osd_shmaddr) return(0);						/* If already exists then just return		*/
 
-	if (!fexists(wispprbdir(NULL)))						/* Ensure the directory exists			*/
-	{
-		makepath(wispprbdir(NULL));					/* Ensure parent dirs are there	(C:\TMP)	*/
-
-		if (0 != _mkdir(wispprbdir(NULL)))				/* Create the directory				*/
-		{
-			werrlog(ERRORCODE(28),wispprbdir(NULL),errno,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(28));
-		}
-	}
-
-	shr_file = ctlfile();							/* Get pointer to key file name			*/
+	shr_file = wisp_sm_ctlfile();						/* Get pointer to key file name			*/
 
 	if ( !osd_exists_seg() )						/* If segment file doesn't exist then create.	*/
 	{
@@ -2244,9 +2319,9 @@ static int osd_delete_seg(void)
 	{
 		osd_unmap_seg();						/* Ensure it is unmapped			*/
 
-		if (unlink(ctlfile()))						/* Delete the key file.				*/
+		if (unlink(wisp_sm_ctlfile()))					/* Delete the key file.				*/
 		{
-			werrlog(ERRORCODE(16),ctlfile(),errno,0,0,0,0,0,0);	/* Error when deleting key file.		*/
+			werrlog(ERRORCODE(16),wisp_sm_ctlfile(),errno,0,0,0,0,0,0);	/* Error when deleting key file.	*/
 			wexit(ERRORCODE(16));
 		}
 	}
@@ -2279,11 +2354,11 @@ static int osd_delete_seg(void)
 static char *osd_map_seg(void)
 {
 	FILE 	*shrtmpfile;
-	char	*shr_file;
+	const char *shr_file;
 
 	if (osd_shmaddr == NULL) 						/* if not mapped				*/
 	{
-		shr_file = ctlfile();						/* Get the file name				*/
+		shr_file = wisp_sm_ctlfile();					/* Get the file name				*/
 		osd_shmaddr = wmalloc( max_pages() * W_PAGE_SIZE );		/* Malloc the space				*/
 
 		if ((shrtmpfile = fopen(shr_file,FOPEN_READ_BINARY)) == NULL)	/* Open file for reading			*/
@@ -2354,7 +2429,7 @@ static int osd_unmap_seg(void)
 
 static int osd_exists_seg(void)
 {
-	return(fexists(ctlfile()));
+	return(fexists(wisp_sm_ctlfile()));
 }
 
 /*
@@ -2382,9 +2457,9 @@ static int osd_exists_seg(void)
 static int osd_sync_seg(void)
 {
 	FILE 	*shrtmpfile; 
-	char	*shr_file;
+	const char *shr_file;
 
-	shr_file = ctlfile();
+	shr_file = wisp_sm_ctlfile();
 	if ((shrtmpfile = fopen(shr_file,FOPEN_WRITE_BINARY)) == NULL)
 	{
 		werrlog(ERRORCODE(32),shr_file,errno,0,0,0,0,0,0);
@@ -2397,9 +2472,9 @@ static int osd_sync_seg(void)
 }
 
 /*
-	ctlfile()	Generate control file name.	WIN32
+	wisp_sm_ctlfile()	Generate control file name.	WIN32
 */
-static char *ctlfile(void)								/* Generate a temp file name for the	*/
+const char *wisp_sm_ctlfile(void)
 {
 static	char	*the_name = NULL;
 
@@ -2407,457 +2482,53 @@ static	char	*the_name = NULL;
 	{
 		char buff[256];
 
-#ifdef MSDOS
-		sprintf(buff, "%s\\W3SM-%.3s.gbl", wispprbdir(NULL), wanguid3() );	/* Construct MSDOS filepath to use.	*/
-#else /* WIN32 */
-		sprintf(buff, "%s\\W%04X.shm", wispprbdir(NULL), wgetpgrp());		/* Construct WIN32 filepath to use.	*/
-#endif
+		/* Construct WIN32 filepath to use.	*/
+		if (get_wisp_option("SHAREDMEMORYV1"))
+		{
+			sprintf(buff, "%s\\W%04X.shm", wispprbdir(NULL), wgetpgrp());		
+		}
+		else
+		{
+			sprintf(buff, "%s\\shmemkey_%s_%u.shm",wispprbdir(NULL), longuid(), (unsigned)wgetpgrp());
+		}
+
 		the_name = wstrdup(buff);
 
 		wtrace("SHAREMEM","CTLFILE", "Control file=[%s]", the_name);
+		makepath(the_name);
 	}
 	return(the_name);
 }
 
-#endif	/*  MSDOS || WIN32 */								/* End of MSDOS specific memory code.	*/
+#endif	/*  WIN32 */
 
-/********************* Begin VAX specific shared memory routines ****************************************************************/
-#ifdef VMS
-
-#include <psldef.h>
-#include <secdef.h>
-#include <rms.h>
-#include <ssdef.h>
-#include <jpidef.h>
-#include <descrip.h>
-
-static	char	*osd_shmaddr = NULL;						/* Shared memory segment address pointer	*/
-static	int2	osd_shrchan = 0;						/* I/O channel to shared memory file		*/
-static	char	osd_secname[128];						/* Shared memory section name			*/
-static	char 	osd_filename[128];						/* The shared memory file name			*/
-static struct FAB osd_sharefab;							/* The shared memory file FAB struct		*/
-static	char 	*osd_addr_range[2];						/* The actual address range used		*/
-
-
-/*
-**	Routine:	osd_open_seg()		VMS
-**
-**	Function:	To create/open the shared memory segment.
-**
-**	Description:	This routine will ensure that a shared memory segment exists.
-**			A file is used for the segment that is then mapped into memory.
-**
-**	Arguments:
-**	new		Flag if new segment was created. (Segment needs to be initialized.)
-**
-**	Globals:
-**	osd_shrchan	The shared memory I/O channel.
-**	osd_sharefab	The shared memory file FAB.
-**	osd_filename	The shared memory file name.
-**
-**	Return:		0	Shared memory segment now exists.
-**			-1	Failure  (No return - wexit called)
-**
-**	Warnings:	None
-**
-**	History:	
-**	08/21/92	Written by GSL
-**
-*/
-
-static int osd_open_seg(int *new)
-{
-	uint4	status;
-
-	werrlog(ERRORCODE(1),"osd_open_seg",0,0,0,0,0,0,0);
-
-	*new = 0;								/* Flag it as an old file.			*/
-	if (osd_shrchan != 0) return(0);					/* If already open then just return		*/
-
-	strcpy(osd_filename,ctlfile());						/* Get pointer to key file name			*/
-
-	/*
-	**	Set up the FAB struct - it is used by other routines
-	*/
-	osd_sharefab = cc$rms_fab;						/* Intialize the FAB structure.			*/
-	osd_sharefab.fab$l_dna = 0;						/* No default name.				*/
-	osd_sharefab.fab$b_dns = 0;						/* No size either.				*/
-	osd_sharefab.fab$l_fna = osd_filename;					/* Set address of filename string.		*/
-	osd_sharefab.fab$b_fns = strlen(osd_filename);				/* Set the size of the filename string. 	*/
-	osd_sharefab.fab$l_fop = FAB$M_UFO | FAB$M_CIF | FAB$M_CBT;		/* User mode, create, contig best try.		*/
-	osd_sharefab.fab$b_rtv = -1;						/* Map file pointer to mem.			*/
-	osd_sharefab.fab$l_alq = max_pages();					/* Allocate some blocks.			*/
-	osd_sharefab.fab$l_nam = 0;						/* Address of the NAM structure block.		*/
-	osd_sharefab.fab$b_shr = FAB$M_SHRPUT+FAB$M_UPI;			/* Set access.					*/
-
-	status = sys$create(&osd_sharefab);					/* Attempt to open/create the file.		*/
-
-	if (status == RMS$_NORMAL || status == RMS$_CREATED)			/* RMS services open was successful.		*/
-	{
-		*new = (status == RMS$_CREATED)	? 1:0;				/* Flag it as a new file.			*/
-		osd_shrchan = osd_sharefab.fab$l_stv;				/* Save channel id.				*/
-	}
-	else
-	{
-		werrlog(ERRORCODE(40),status,0,0,0,0,0,0,0);			/* Unsuccessful open of shared mem area.	*/
-		wexit(ERRORCODE(40));
-	}
-
-	return(0);
-}
-
-/*
-**	Routine:	osd_delete_seg()	VMS
-**
-**	Function:	To delete the shared memory segment.
-**
-**	Description:	This routine deletes the shared memory segment.
-**			It first unmaps the segment then removes it then deletes the key file.
-**			It ensures the osd globals are maintained.
-**
-**	Arguments:	None
-**
-**	Globals:	
-**	osd_shrchan	The shared memory I/O channel.
-**	osd_shmaddr	The shared memory segment mapped address.
-**	osd_sharefab	The shared memory file FAB.
-**
-**	Return:
-**	0		Success
-**
-**	Warnings:	None
-**
-**	History:	
-**	08/21/92	Written by GSL
-**
-*/
-static int osd_delete_seg(void)
-{
-	int	new;
-	uint4	status;
-
-	werrlog(ERRORCODE(1),"osd_delete_seg",0,0,0,0,0,0,0);
-
-	if (osd_exists_seg())
-	{
-		if (osd_shrchan == 0)
-		{
-			osd_open_seg(&new);					/* Get the osd_shrchan & fab set		*/
-		}
-
-		osd_unmap_seg();						/* Ensure it is unmapped			*/
-
-		sleep(1);	/* This is a kludge to allow the unmap to complete otherwise the erase fails */
-
-		status = sys$erase(&osd_sharefab);				/* Erase the file.				*/
-		if (status != RMS$_FLK	&&					/* File currently locked by another user	*/
-		    status != RMS$_NORMAL && status != SS$_NORMAL)
-		{
-			werrlog(ERRORCODE(18),status,0,0,0,0,0,0,0);		/* Error when deleteing memory area.		*/
-			wexit(ERRORCODE(18));
-		}
-	}
-	osd_shmaddr = NULL;
-	osd_shrchan = 0;
-	return(0);
-}
-
-/*
-**	Routine:	osd_map_seg()		VMS
-**
-**	Function:	To map the shared memory segment into program address space.
-**
-**	Description:	This routine maps the shared memory segment into then address space.
-**			It uses the sys$crmpsc() routine to do this.
-**
-**	Arguments:	None
-**
-**	Globals:	
-**	osd_shmaddr	The shared memory segment mapped address.
-**	osd_shrchan	The shared memory I/O channel.
-**	osd_secname	The name of the shared memory section.
-**	osd_addr_range	The shared memory address range.
-**	
-**	Return:		Success:	The address of the mapped segment.  
-**			Failure:	NULL 	(No return, wexit called)
-**
-**	Warnings:	The shared memory I/O channel must be valid for this to work.
-**
-**	History:	
-**	08/24/92	Written by GSL
-**
-*/
-
-static char *osd_map_seg(void)
-{
-#include "sharemem1.d"
-	uint4 status;
-	unsigned long map_range[2];						/* Map to the end of the P0 region.		*/
-
-	werrlog(ERRORCODE(1),"osd_map_seg",0,0,0,0,0,0,0);
-
-	map_range[0] = 0x0200;
-	map_range[1] = 0x0200;
-	if (osd_shmaddr == NULL) 						/* if not mapped				*/
-	{
-		gsdnam.dsc$w_length = strlen(osd_secname);			/* Set the gsdnam descriptor.			*/
-
-		status = sys$crmpsc(	map_range,				/* Range to map to. (use end of p0)		*/
-					osd_addr_range,				/* Range actually mapped to.			*/
-					PSL$C_USER,				/* Access mode (USER mode).			*/
-					SEC$M_GBL | SEC$M_EXPREG | SEC$M_WRT,	/* It's GLOBAL, end of P0, WRITEable.		*/
-					&gsdnam,				/* The name of the global section.		*/
-					(long) 0,				/* Ident/version is 0.				*/
-					(long) 0,				/* Relative page is 0.				*/
-					osd_shrchan,				/* The I/O channel to use. From $CREATE 	*/
-					max_pages(),				/* Number of pages to map.			*/
-					(long) 0,				/* Virtual block number is 0.			*/
-					(long) 0x0330,				/* File protection, allow g:rw, o:rw.		*/
-					(long) 3	);			/* Page fault cluster is 3.			*/
-
-		if (status != SS$_NORMAL  && 
-		    status != RMS$_NORMAL && 
-		    status != SS$_CREATED    )
-		{
-			werrlog(ERRORCODE(10),status,0,0,0,0,0,0,0);		/* Some kind of error.				*/
-			wexit(ERRORCODE(10));
-		}
-
-		osd_shmaddr = osd_addr_range[0];				/* Set the start of shared memory section	*/
-	}
-
-	return(osd_shmaddr);
-}
-
-/*
-**	Routine:	osd_unmap_seg()		VMS
-**
-**	Function:	To unmap the shared memory segment from program address space.
-**
-**	Description:	This routine unmaps the shared memory segment.
-**			It uses the sys$deltva() routine to do this.
-**			Is osd_shmaddr is not set then already unmapped.
-**
-**	Arguments:	None
-**
-**	Globals:
-**	osd_shmaddr	The shared memory segment mapped address.
-**	osd_addr_range	The shared memory address range.
-**	osd_shrchan	The shared memory I/O channel.
-**	
-**	Return:
-**	0		Success
-**			Failure - no return wexit() called.
-**
-**	Warnings:	The osd_shmaddr variable must be maintained for all to work correctly.
-**			In most cases you want do do an osd_sync_seg() before the unmap.
-**			It sets osd_shrchan=0 to force the next access to look it up.
-**
-**	History:	
-**	08/24/92	Written by GSL
-**	03/02/93	Added setting osd_shrchan=0. GSL
-**      05/27/93	Moved sys$dassgn() from osd_delete_seg because unmap setting osd_shrchan to 0
-**                      and causing deassign to fail with invalid I/O channel.  SMC
-**
-*/
-
-static int osd_unmap_seg(void)
-{
-	uint4	status;
-
-	werrlog(ERRORCODE(1),"osd_unmap_seg",0,0,0,0,0,0,0);
-
-	if (osd_shmaddr != NULL) 							/* if not mapped			*/
-	{
-		status = sys$deltva(osd_addr_range,(long) 0, PSL$C_USER);		/* Delete the virtual addresses.	*/
-
-		if (status != SS$_NORMAL)
-		{
-			werrlog(ERRORCODE(24),status,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(24));						/* Error!!				*/
-		}
-	}
-
-	if (osd_shrchan)								/* If the channel still exists.		*/
-	{
-		status = sys$dassgn(osd_shrchan);					/* Deassign it.				*/
-		if (status != RMS$_NORMAL && status != SS$_NORMAL)
-		{
-			werrlog(ERRORCODE(14),status,0,0,0,0,0,0,0);			/* Die on error.			*/
-			wexit(ERRORCODE(14));
-		}
-	}
-
-	osd_shmaddr = NULL;
-	osd_addr_range[0] = NULL;
-	osd_addr_range[1] = NULL;
-	osd_shrchan = 0;
-	return(0);
-}
-
-/*
-**	Routine:	osd_exists_seg()	VMS
-**
-**	Function:	To check if the shared memory segment exists.
-**
-**	Description:	This checks if the shared memory segment file exists.
-**			
-**	Arguments:	None
-**
-**	Globals:	
-**	
-**	Return:
-**	1		Shared memory segment exists
-**	0		Doesn't exist.
-**
-**	Warnings:	None
-**
-**	History:	
-**	08/21/92	Written by GSL
-**
-*/
-
-static int osd_exists_seg(void)
-{
-	uint4	status;
-	char 	*context;
-	char	fnam[128];							/* filename returned by system			*/
-	char	filename[128];
-#include "sharemem2.d"
-
-	strcpy(filename,ctlfile());						/* Load the file name.				*/
-	p_desc.dsc$w_length = strlen(filename);					/* Set the length in descriptor.		*/
-
-	context=0;
-	status = LIB$FIND_FILE(&p_desc,&f_desc,&context,0,0,0,0);		/* Get system file name.			*/
-	LIB$FIND_FILE_END(&context);						/* free the file context			*/
-
-	return (status == RMS$_NORMAL) ? 1:0;
-}
-
-/*
-**	Routine:	osd_sync_seg()		VMS
-**
-**	Function:	To synchronize the external shared memory area with the internal area.
-**
-**	Description:	This routine ensures that the external area is updated to match the internal area.
-**			Write the contents of the memory area to the file.
-**
-**	Arguments:	None
-**
-**	Globals:
-**	osd_shmaddr	The shared memory segment mapped address.
-**	osd_addr_range	The shared memory address range.
-**	
-**	Return:		Success
-**			Failure	- no return - wexit() called.
-**
-**	Warnings:	None.
-**
-**	History:	
-**	08/24/92	Written by GSL
-**
-*/
-
-static int osd_sync_seg(void)
-{
-	uint4	status;
-	struct
-	{
-		unsigned short c1;
-		unsigned short c2;
-		unsigned long vaddr;
-	} my_iosb;
-
-	werrlog(ERRORCODE(1),"osd_sync_seg",0,0,0,0,0,0,0);
-
-	if (osd_shmaddr)
-	{
-		status = sys$updsecw(osd_addr_range,(long) 0,(long) 0,(long) 0,(long) 0,&my_iosb,(long) 0,(long) 0);
-
-		if (status != SS$_NORMAL && status != RMS$_NORMAL && status != SS$_NOTMODIFIED)
-		{
-			werrlog(ERRORCODE(20),status,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(20));
-		}
-		if (my_iosb.c1 != SS$_NORMAL && my_iosb.c1 != SS$_NOTMODIFIED)
-		{
-			werrlog(ERRORCODE(22),my_iosb.c1,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(22));
-		}
-	}
-	return 0;
-}
-
-/*
-**	Routine:	ctlfile()		VMS
-**
-**	Function:	Generate the shared memory file name.
-**
-**	Description:	This routine generate the file name based on the process number and SYS$LOGIN.
-**
-**	Arguments:	None
-**
-**	Globals:
-**	osd_secname	The name of the shared memory section.
-**
-**	Return:		Pointer to file name.
-**
-**	Warnings:	None
-**
-**	History:	
-**	08/21/92	Written by GSL
-**
-*/
-
-static char *ctlfile(void)
-{
-static	char	buff[256];
-static	int	first = 1;
-	struct	{
-		short unsigned int	buflen;						/* the length of the buffer		*/
-		short unsigned int	item_code;					/* the code for the request to GETDVI	*/
-		char			*bufptr;					/* a pointer to the buffer		*/
-		short unsigned int	*retlen;					/* the return length of the buffer	*/
-		long		endbuf;						/* the end of the buffer		*/
-	} mybuf;
-	unsigned short retlen;
-	uint4 master_pid;							/* The PID of the master process.	*/
-	uint4	status;
-
-	if (first)
-	{
-		first = 0;
-
-		mybuf.buflen = 4;							/* Now get the process ID of the master */
-		mybuf.item_code = JPI$_MASTER_PID;					/* or parent process in the process tree*/
-		mybuf.retlen = &retlen;
-		mybuf.bufptr = (char *) &master_pid;
-		mybuf.endbuf = 0;
-
-		status = sys$getjpi((long) 0,(long) 0,(long) 0, &mybuf,(long) 0,(long) 0,(long) 0);	/* Get the ID.		*/
-
-		if (status != SS$_NORMAL && status != RMS$_NORMAL)
-		{
-			werrlog(ERRORCODE(38),status,0,0,0,0,0,0,0);
-			wexit(ERRORCODE(38));						/* Some error.				*/
-		}
-		sprintf(osd_secname,"W2$SH%08x",master_pid);				/* Create section name.			*/
-
-		sprintf(buff,"SYS$LOGIN:%s.GBL",osd_secname);				/* Section files go into SYS$LOGIN, and */
-											/* Are named W2$SHPPPPPPPP.GBL, where*/
-											/* PPPPPPPP is the HEX PID of the master*/
-	}
-	return(buff);
-}
-
-#endif	/* #ifdef VMS	*/								/* End of VMS specific memory code.	*/
-
-/********************* END VAX specific shared memory routines ******************************************************************/
 
 /*
 **	History:
 **	$Log: sharemem.c,v $
+**	Revision 1.26  2001-10-31 15:42:49-05  gsl
+**	Rename ctlfile() to wisp_sm_ctlfile() and make global.
+**	replace mkdir() with makepath()
+**
+**	Revision 1.25  2001-10-10 15:45:15-04  gsl
+**	Change the sharemem key file to include both userid and pgid
+**
+**	Revision 1.24  2001-10-10 15:06:23-04  gsl
+**	Remove VMS & MSDOS
+**
+**	Revision 1.23  2000-06-19 11:49:00-04  gsl
+**	ALways report a problem even if going to retry.
+**	Add SHAREDMEMORYV1 for compatibility.
+**
+**	Revision 1.22  2000-06-16 19:23:43-04  gsl
+**	For UNIX, add error detection and correction and retry logic for creating
+**	and attaching to shared memory.
+**	For the ctlfile and the segment to be in sync.
+**	If the ctlfile needed to be created then the segment must not already exist.
+**	If an out-of-sync condition is detected then rename the ctlfile and
+**	retry the operation, this will create a new shared memory key (if we just
+**	deleted the file the inode code be reused).
+**
 **	Revision 1.21  1998-08-03 17:12:58-04  jlima
 **	Support Logical Volume Translation to long file names containing eventual embedded blanks.
 **

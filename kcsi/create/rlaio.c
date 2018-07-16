@@ -26,6 +26,11 @@ deleted records will be nulled out.
 #include <fcntl.h>
 #include <errno.h>
 #include "kcsio.h"
+#include "kcsifunc.h"
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 static char sccsid[]="@(#)rlaio.c	1.5 3/19/94";
 
@@ -34,24 +39,33 @@ static char sccsid[]="@(#)rlaio.c	1.5 3/19/94";
 
 
 static void do_open(KCSIO_BLOCK *kfb, int mode);
-static int isrec(char* rec,int len);
+static int isrec(const char* rec,int len);
 static void rel_key_seek(KCSIO_BLOCK *kfb);
 static int rel_key_not_ok(KCSIO_BLOCK *kfb);
+static void rel_commit(int fh);
 
 
 /*----
 Extract the root file data and move in the space.
 ------*/
-rel_file_space(kfb)
-KCSIO_BLOCK *kfb;
+int rel_file_space(KCSIO_BLOCK *kfb)
 {
 	struct stat st;
-	long records;
 
-	stat(kfb->_sys_name,&st);
-	records = st.st_size/ACTUAL_LEN;
-	kfb->_space = records;
-	return((int) st.st_size % ACTUAL_LEN);
+	if (0 != kfb->_status)
+	{
+		return 0;
+	}
+
+	if (-1 == stat(kfb->_sys_name,&st))
+	{
+		return 0;
+	}
+	else
+	{
+		kfb->_space = st.st_size/ACTUAL_LEN;
+		return((int) st.st_size % ACTUAL_LEN);
+	}
 }
 
 /*----
@@ -63,65 +77,71 @@ with COBOL require that the file be set up at the first record.
 A COBOL open sets things up for the first record. A c-isam open
 does not.
 ------*/
-rel_open_shared(kfb)
-KCSIO_BLOCK *kfb;
+void rel_open_shared(KCSIO_BLOCK *kfb)
 {
 	rel_open_io(kfb);
 }
-rel_open_input(kfb)
-KCSIO_BLOCK *kfb;
+void rel_open_input(KCSIO_BLOCK *kfb)
 {
-	do_open(kfb,O_RDONLY);
+	do_open(kfb,O_RDONLY | O_BINARY);
 }
-rel_open_io(kfb)
-KCSIO_BLOCK *kfb;
+void rel_open_io(KCSIO_BLOCK *kfb)
 {
-	do_open(kfb,O_RDWR);
+	do_open(kfb,O_RDWR | O_BINARY);
 }
 /*----
 Doopen should not be used for open output
 ------*/
 static void do_open(KCSIO_BLOCK *kfb, int mode)
 {
-	errno = 0;
 	kfb->_io_channel = open(kfb->_sys_name,mode);
-	kfb->_status = e_trans(errno);
+	if (-1 == kfb->_io_channel)
+	{
+		kfb->_status = EBADF;
+	}
+	else
+	{
+		kfb->_status = 0;
+	}
 	kfb->_last_io_key = 0;
 	kfb->_open_status = 1;
-	kfb->_pos = lseek(kfb->_io_channel,0L,0);
+	kfb->_pos = lseek(kfb->_io_channel,0L,SEEK_SET);
 	kfb->_rel_key = 0;
 	rel_file_info(kfb);
 }
 /*----
 A relative open output.
 ------*/
-rel_open_output(kfb)
-KCSIO_BLOCK *kfb;
+void rel_open_output(KCSIO_BLOCK *kfb)
 {
-	errno = 0;
 	kfb->_io_channel = open(kfb->_sys_name,
-			        O_WRONLY|O_CREAT|O_TRUNC,
+			        O_WRONLY|O_CREAT|O_TRUNC|O_BINARY,
 				0666);
 	kfb->_space = 0;
-	kfb->_status = e_trans(errno);
-	if(errno)
+	if (-1 == kfb->_io_channel)
+	{
+		kfb->_status = EBADF;
 		return;
+	}
+	kfb->_status = 0;
+
 	kfb->_last_io_key = 0;
 	kfb->_open_status = 1;
-	kfb->_pos = lseek(kfb->_io_channel,0L,0);
+	kfb->_pos = lseek(kfb->_io_channel,0L,SEEK_SET);
 	kfb->_rel_key = 0;
 	rel_file_info(kfb);
 }
 
-rel_close(kfb)
-KCSIO_BLOCK *kfb;
+void rel_close(KCSIO_BLOCK *kfb)
 {
-
-	kfb->_status = errno = 0;
+	kfb->_status  = 0;
 	if(kfb->_open_status == 0)
 		return;
-	close(kfb->_io_channel);
-	kfb->_status = e_trans(errno);
+
+	if (-1 == close(kfb->_io_channel))
+	{
+		kfb->_status = EBADF;
+	}
 	kfb->_open_status = 0;
 	rel_file_space(kfb);
 }
@@ -131,15 +151,13 @@ KCSIO_BLOCK *kfb;
 /*----
 A read record request assumes the primary key.
 ------*/
-rel_read(kfb)
-KCSIO_BLOCK *kfb;
+void rel_read(KCSIO_BLOCK *kfb)
 {
 	kfb->_io_key = 0;
 	rel_read_keyed(kfb);
 }
 
-rel_hold(kfb)
-KCSIO_BLOCK *kfb;
+void rel_hold(KCSIO_BLOCK *kfb)
 {
 	kfb->_io_key = 0;
 	rel_hold_keyed(kfb);
@@ -148,17 +166,15 @@ KCSIO_BLOCK *kfb;
 /*----
 Skips null records. null record is all null for record length
 ------*/
-rel_read_next(kfb)
-KCSIO_BLOCK *kfb;
+void rel_read_next(KCSIO_BLOCK *kfb)
 {
 	int rc;
 	char rlen[1];
 
-	errno = 0;
 	rc = kfb->_record_len;
 	while(rc > 0)
 		{
-		kfb->_pos = lseek(kfb->_io_channel,0L,1);
+		kfb->_pos = lseek(kfb->_io_channel,0L,SEEK_CUR);
 		rc = read(kfb->_io_channel,kfb->_record,RECORD_LEN);
 		rc = read(kfb->_io_channel,rlen,1);
 		kfb->_rel_key = (kfb->_pos / ACTUAL_LEN) + 1;
@@ -167,15 +183,12 @@ KCSIO_BLOCK *kfb;
 		}
 	if(rc == 0)
 		kfb->_status = EENDFILE;
-	else
-		kfb->_status = e_trans(errno);
+	else /* rc == -1 */
+		kfb->_status = EBADF;
 }
-rel_read_previous(kfb)
-KCSIO_BLOCK *kfb;
-{
-	int rc;
 
-	errno = 0;
+void rel_read_previous(KCSIO_BLOCK *kfb)
+{
 	if(kfb->_rel_key < 2)
 		kfb->_status = EENDFILE;
 	else
@@ -183,14 +196,12 @@ KCSIO_BLOCK *kfb;
 		--kfb->_rel_key;
 		rel_read_keyed(kfb);
 		}
-		
-	
 }
 
 /*----
 Returns true if memory is not nulls for the specified length.
 ------*/
-static int isrec(char* rec,int len)
+static int isrec(const char* rec,int len)
 {
 	while(len--)
 		{
@@ -204,9 +215,7 @@ static int isrec(char* rec,int len)
 /*----
 And its complement.
 ------*/
-static isnull(rec,len)
-char *rec;
-int len;
+static int isnull(const char *rec, int len)
 {
 	return(!(isrec(rec,len)));
 }
@@ -214,28 +223,27 @@ int len;
 /*----
 No holding logic for relative files.
 ------*/
-rel_hold_next(kfb)
-KCSIO_BLOCK *kfb;
+void rel_hold_next(KCSIO_BLOCK *kfb)
 {
 	rel_read_next(kfb);
 }
 
 
-rel_read_keyed(kfb)
-KCSIO_BLOCK *kfb;
+void rel_read_keyed(KCSIO_BLOCK *kfb)
 {
 	char rlen[2];
 
 	if( rel_key_not_ok(kfb) )
 		return;
-	errno = 0;
+
 	rel_key_seek(kfb);
-	read(kfb->_io_channel,kfb->_record,RECORD_LEN);
-	read(kfb->_io_channel,rlen,1);
-	if(isnull(rlen,1))
+	if (-1 == read(kfb->_io_channel,kfb->_record,RECORD_LEN) ||
+	    -1 == read(kfb->_io_channel,rlen,1))
+		kfb->_status = EBADF;
+	else if(isnull(rlen,1))
 		kfb->_status = ENOREC;
 	else
-		kfb->_status = e_trans(errno);
+		kfb->_status = 0;
 }
 
 /*----
@@ -246,15 +254,14 @@ static void rel_key_seek(KCSIO_BLOCK *kfb)
 	long seekto;
 
 	seekto = ( kfb->_rel_key - 1 ) * ACTUAL_LEN;
-	kfb->_pos = lseek(kfb->_io_channel,seekto,0);
+	kfb->_pos = lseek(kfb->_io_channel,seekto,SEEK_SET);
 }
 
 
 /*----
 Returns true if the relative key lies within the existing file.
 ------*/
-static rel_key_ok(kfb)
-KCSIO_BLOCK *kfb;
+static int rel_key_ok(KCSIO_BLOCK *kfb)
 {
 	rel_file_space(kfb);
 	if( (kfb->_rel_key < 1) ||
@@ -279,8 +286,7 @@ static int rel_key_not_ok(KCSIO_BLOCK *kfb)
 /*----
 No holding logic for relative files.
 ------*/
-rel_hold_keyed(kfb)
-KCSIO_BLOCK *kfb;
+void rel_hold_keyed(KCSIO_BLOCK *kfb)
 {
 	rel_read_keyed(kfb);
 }
@@ -291,43 +297,37 @@ KCSIO_BLOCK *kfb;
 /*----
 Starts are illegal on relative files.
 ------*/
-rel_start_eq(kfb)
-KCSIO_BLOCK *kfb;
+void rel_start_eq(KCSIO_BLOCK *kfb)
 {
 	kfb->_status = EBADARG;
 }
 
-rel_start_nlt(kfb)
-KCSIO_BLOCK *kfb;
+void rel_start_nlt(KCSIO_BLOCK *kfb)
 {
 	kfb->_status = EBADARG;
 }
 
-rel_start_gt(kfb)
-KCSIO_BLOCK *kfb;
-{
-	kfb->_status = EBADARG;
-}
-rel_start_eq_keyed(kfb)
-KCSIO_BLOCK *kfb;
+void rel_start_gt(KCSIO_BLOCK *kfb)
 {
 	kfb->_status = EBADARG;
 }
 
-rel_start_nlt_keyed(kfb)
-KCSIO_BLOCK *kfb;
+void rel_start_eq_keyed(KCSIO_BLOCK *kfb)
 {
 	kfb->_status = EBADARG;
 }
 
-rel_start_gt_keyed(kfb)
-KCSIO_BLOCK *kfb;
+void rel_start_nlt_keyed(KCSIO_BLOCK *kfb)
 {
 	kfb->_status = EBADARG;
 }
 
-rel_start_last(kfb)
-KCSIO_BLOCK *kfb;
+void rel_start_gt_keyed(KCSIO_BLOCK *kfb)
+{
+	kfb->_status = EBADARG;
+}
+
+void rel_start_last(KCSIO_BLOCK *kfb)
 {
 	rel_file_space(kfb);
 	kfb->_rel_key = kfb->_space + 1;
@@ -336,9 +336,7 @@ KCSIO_BLOCK *kfb;
 /*----
 Executes a start and sets up a new _last_io_key.
 ------*/
-static do_start(kfb,mode)
-KCSIO_BLOCK *kfb;
-int mode;
+static void do_start(KCSIO_BLOCK *kfb,int mode)
 {
 	kfb->_status = EBADARG;
 }
@@ -354,8 +352,8 @@ Write, rewrite and delete.
 3.	Deletes only work on existing records.
 ------*/
 static char trex[2048];
-rel_write(kfb)
-KCSIO_BLOCK *kfb;
+
+void rel_write(KCSIO_BLOCK *kfb)
 {
 	long newsize;
 	char rlen[2];
@@ -366,88 +364,111 @@ KCSIO_BLOCK *kfb;
  * hit out spot.
 */
 	if(rel_key_ok(kfb))
-		{
+	{
 		rel_key_seek(kfb);
 		read(kfb->_io_channel,trex,RECORD_LEN);
 		read(kfb->_io_channel,rlen,1);
 		rel_key_seek(kfb);
 		if(isrec(rlen,1))
-			{
+		{
 			kfb->_status = EDUPL;
 			return;
-			}
 		}
-	else
+	}
 /* If we only want the next one, then this will work too */
-	if(kfb->_rel_key == (kfb->_space + 1) )
-		{
+	else if(kfb->_rel_key == (kfb->_space + 1) )
+	{
 		rel_key_seek(kfb);
-		}
+	}
 	else
-		{
-		memset(trex,0,2048);
-		memset(rlen,0,1);
+	{
+		memset(trex,'\0',2048);
+		memset(rlen,'\0',1);
 		newsize = kfb->_space + 1;
 		while(newsize < kfb->_rel_key)
+		{
+			if (-1 == write(kfb->_io_channel,trex,RECORD_LEN) ||
+			    -1 == write(kfb->_io_channel,rlen,1))
 			{
-			write(kfb->_io_channel,trex,RECORD_LEN);
-			write(kfb->_io_channel,rlen,1);
-			++newsize;
+				kfb->_status = EBADF;
+				return;
 			}
+
+			++newsize;
+		}
+		rel_commit(kfb->_io_channel);
 		rel_file_space(kfb);
 		rel_key_seek(kfb);
-		}
-	errno = 0;
+	}
+
 	rlen[0] = 0x0a;
-	write(kfb->_io_channel,kfb->_record,RECORD_LEN);
-	write(kfb->_io_channel,rlen,1);
-	kfb->_status = e_trans(errno);
+	if (-1 == write(kfb->_io_channel,kfb->_record,RECORD_LEN) ||
+	    -1 == write(kfb->_io_channel,rlen,1))
+	{
+		kfb->_status = EBADF;
+		return;
+	}
+	kfb->_status = 0;
+
+	rel_commit(kfb->_io_channel);
 	rel_file_space(kfb);
 }
 
-rel_rewrite(kfb)
-KCSIO_BLOCK *kfb;
+void rel_rewrite(KCSIO_BLOCK *kfb)
 {
 	char rlen[2];
 
 	if(rel_key_not_ok(kfb))
 		return;
-	errno = 0;
+
 	rel_key_seek(kfb);
 	rlen[0] = 0x0a;
-	write(kfb->_io_channel, kfb->_record, RECORD_LEN);
-	write(kfb->_io_channel, rlen, 1);
-	kfb->_status = e_trans(errno);
+	if (-1 == write(kfb->_io_channel,kfb->_record,RECORD_LEN) ||
+	    -1 == write(kfb->_io_channel,rlen,1))
+	{
+		kfb->_status = EBADF;
+		return;
+	}
+	kfb->_status = 0;
+
+	rel_commit(kfb->_io_channel);
 	rel_file_space(kfb);
 }
 
-rel_delete(kfb)
-KCSIO_BLOCK *kfb;
+void rel_delete(KCSIO_BLOCK *kfb)
 {
 	char rlen[2];
 
 	if(rel_key_not_ok(kfb))
 		return;
-	errno = 0;
+
 	rel_key_seek(kfb);
 	memset(kfb->_record,0,RECORD_LEN);
 	rlen[0] = 0;
-	write(kfb->_io_channel, kfb->_record, RECORD_LEN);
-	/* write(rlen, rlen, 1);  - this is clearly incorrect, assume the following was what was meant. */
-	write(kfb->_io_channel, rlen, 1);	/* Write a trailing NULL to indicate a deleted record. (I think.) */ 
-/*
- * Re-seek to where we were
- */
-	lseek(kfb->_io_channel,kfb->_pos,0);
-	kfb->_status = e_trans(errno);
+	/*
+	 * Write then Re-seek to where we were
+	 */	
+	if (-1 == write(kfb->_io_channel,kfb->_record,RECORD_LEN) ||
+	    -1 == write(kfb->_io_channel,rlen,1))
+	{
+		kfb->_status = EBADF;
+		return;
+	}
+	rel_commit(kfb->_io_channel);
+	if (-1 == lseek(kfb->_io_channel,kfb->_pos,SEEK_SET) )
+	{
+		kfb->_status = EBADF;
+		return;
+	}
+	kfb->_status = 0;
+
 	rel_file_space(kfb);
 }
 
 /*----
 No unlocking needed.
 ------*/
-rel_unlock(kfb)
-KCSIO_BLOCK *kfb;
+void rel_unlock(KCSIO_BLOCK *kfb)
 {
 /*	kfb->_status = 0; */
 }
@@ -456,42 +477,50 @@ KCSIO_BLOCK *kfb;
 The rel_file_info() routine pulls the data on an open file and
 sets up the c structure.
 ------*/
-rel_file_info(kfb)
-KCSIO_BLOCK *kfb;
+void rel_file_info(KCSIO_BLOCK *kfb)
 {
-
 	kfb->_altkey_count = 0;
 
 	clear_keys(kfb);
 
 	if(!(kfb->_record_len))
 		kfb->_record_len = 1;
-/*
- * rel_file_space returns 0 if byte size of file is evenly divisible by
- * record_length.
- * Compare record length for even divisibility
- * into the actual file length
- * If the division didn't work force record len to 1 .
- */
+	/*
+	 * rel_file_space returns 0 if byte size of file is evenly divisible by
+	 * record_length.
+	 * Compare record length for even divisibility
+	 * into the actual file length
+	 * If the division didn't work force record len to 1 .
+	 */
 
 	if(rel_file_space(kfb))
 		kfb->_record_len = 1;
 }
 
-/*
-e_trans(code)
-int code;
+/*----
+Call commit following a write() to ensure it has actually been written to
+disk before calling stat() to get a size.
+------*/
+static void rel_commit(int fh)
 {
-	if(code == 0)
-		return(0);
-	return(EBADF);
+#ifdef WIN32
+	_commit(fh);
+#endif	
 }
-*/
-
 
 /*
 **	History:
 **	$Log: rlaio.c,v $
+**	Revision 1.9  2001-11-20 12:23:16-05  gsl
+**	fix prototype
+**
+**	Revision 1.8  2001-11-20 12:20:29-05  gsl
+**	Add header
+**
+**	Revision 1.7  2001-11-15 19:18:57-05  gsl
+**	Error check stat()
+**	Add commit() after write() for WIN32
+**
 **	Revision 1.5  1998-10-13 15:15:41-04  gsl
 **	Fix logic that deletes a releative record.
 **

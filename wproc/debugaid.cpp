@@ -105,8 +105,8 @@ Boolean valid_ptr(void *p) {
 }
 
 
-static trace_level = 0;
-static saved_trace_level = 0;
+static int trace_level = 0;
+static int saved_trace_level = 0;
 
 void print_trace_id(const char *trace_kind) {
    dprintf("%d %8s: ",the_process->nesting_level, trace_kind);
@@ -197,6 +197,9 @@ void debug_trace_level_restore() {
 //
 //	History:
 //	$Log: debugaid.cpp,v $
+//	Revision 1.11  2001-08-22 16:17:50-04  gsl
+//	fix missing type
+//
 //	Revision 1.10  1999-09-13 15:46:39-04  gsl
 //	remove odd debug if statement
 //

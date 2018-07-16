@@ -47,25 +47,18 @@ char *product_copyright() {
 
 #if DOS
    strcat(notice, " v2.0x Copyright (c) 1991-1992 Lexical Software. All Rights Reserved.");
-#if NETWORK
-   strcat(notice, "\nPortions Copyright (c) 1983-1990 Novel, Inc. All Rights Reserved.");
-#endif
 #else
    char wproc_version[80];
    sprintf(wproc_version," version %s    (WL=%s)\n", product_version_str(), wisp_version());
    strcat(notice, wproc_version);
    strcat(notice, "Copyright (c) 1991-1993 Lexical Software. All rights reserved.\n");
-   strcat(notice, "Copyright (c) 1994-2000 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
+   strcat(notice, "Copyright (c) 1994-2001 NeoMedia Technologies, Inc.\nAll Rights Reserved.\n");
 #endif
    return notice;
 }
 
 usign_16 product_version() {
-#if DOS
-   return 0x0200;
-#else
    return WPROC_VERSION;
-#endif
 }
 
 char *product_version_str(void)
@@ -77,7 +70,9 @@ char *product_version_str(void)
 	{
 		first = 0;
 	
-		sprintf(version,"v%d.%02d",(int)(WPROC_VERSION / 100), (int)(WPROC_VERSION % 100));
+		char buf[10];
+		sprintf(buf,"%04d", (int)(WPROC_VERSION));
+		sprintf(version,"v%c.%c.%c%c",buf[0],buf[1],buf[2],buf[3]);
 	}
 	
 	return version;
@@ -102,6 +97,9 @@ char *demo_notice() {
 //
 //	History:
 //	$Log: product.cpp,v $
+//	Revision 1.16  2001-09-13 16:20:24-04  gsl
+//	Change version to 3 part 4 digits 9.9.99 format
+//
 //	Revision 1.15  2000-03-16 10:33:18-05  gsl
 //	2000
 //

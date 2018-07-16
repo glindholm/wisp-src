@@ -1,4 +1,4 @@
-Copyright (c) 2000 by NeoMedia Technologies Inc. All Rights Reserved.
+Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
 
 ====================================================================
 
@@ -7,7 +7,7 @@ Title:          RELEASE NOTES FOR WISP VERSION 4.3
 Document:       v43_relnotes.lis (RELNOTES)
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       4.3.06
+Versions:       4.3.07
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
@@ -23,6 +23,65 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         Web   www.neom.com
         Email support@neom.com
         Ftp   ftp://support.neom.com/public/wisp
+
+
+
+CHANGES FROM 4.3.06 TO 4.3.07
+=============================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit from release 4.3.06 to release 4.3.07.
+
+The version numbers of utilities that are released with this version
+or WISP are:
+
+    WPROC  v1.16
+    CRID   v2.9.91
+    CREATE v3.5.00
+
+This release supports Acucobol-GT 5.1.
+
+Occasionaly on some UNIX systems users would get the WISP runtime
+error: 
+
+   "( 59836) %SHAREMEM-F-SHMAT Error getting PUTPARM shared memory 
+   address, shmid=xxxx, errno=13"
+
+This problem indicates shared memory (ipcs -m) is out of sync with the
+shared memory control files (ls /usr/tmp/wpparms/*).  This can be
+caused by programs being aborted or by not running "wsysinit"
+regularly. 
+
+The "shmid=xxxxx" represents the shared memory identifier. To correct
+this problem you can remove the shared memory segment by running
+"ipcrm -m xxxxx" as root.  Logging off and back on will also often
+correct the problem.
+
+The WISP runtime has been enhanced to better detect and automatically
+correct this problem.
+
+A new OPTIONS file option "SHAREDMEMORYV1" causes shared memory
+control files to be named so they are compatiable with earlier
+versions of the runtime.  Use this option if you need to run earlier
+versions of the runtime or utilities simultaneously with new runtimes
+or utilties.
+
+The "wusage flags" facility now supports flags BATCHQ, ERRLOG, and
+SUBMIT for controlling Command Processor menu options for 
+"Manage BATCH QUEUE", "SHOW Error Log", and "SUBMIT procedure".
+
+The WISP translator for Micro Focus now translates the statement 
+"ACCEPT xxx FROM DATE4" into "ACCEPT xxx FROM DATE YYYYMMDD".
+
+A new flag (-X) has been added to the WISP translator that causes a
+cross reference table file (named xxx.tab where xxx is the root source
+file name) to be created.  Each line in the .tab file contains the tab
+separated fields: PROGRAM-ID, FILENAME, LINENUM, TYPE, VALUES. The
+TYPE of references are "CALL", "COPY", "OPEN", and "PROGRAM-ID".  The
+VALUES field contains the name of the program called, copybook file,
+file opened, and program id respectively. The .tab files from all the
+programs in a system can be concatenated and loaded into a
+spread-sheet or database to create a cross reference of the entire
+system. 
 
 
 
@@ -2004,6 +2063,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE
     ------------      ------------
+        4.3.07          ??/??/??        
         4.3.06          03/16/00        WIN32 Acucobol 4.3 support
         4.3.05          09/15/99        4.3 patch 5
         4.3.04          03/03/99        NT Telnet Support

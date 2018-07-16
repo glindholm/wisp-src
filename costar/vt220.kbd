@@ -1,4 +1,4 @@
-;VT220.KBD -- VT Emulation -- This file uses the 7-bit DEC type
+;VT220.KBD -- VT Emulation -- This file uses the 8-bit DEC type
 ;                             keyboard mapping
 
 [Configuration]
@@ -13,32 +13,32 @@
 
 
 
-k1=x1B,x4F,x50                  :PF1
-k2=x1B,x4F,x51                  :PF2
-k3=x1B,x4F,x52                  :PF3
-k4=x1B,x4F,x53                  :PF4
-;k5=x1B,x5B,x36,x7E              :F5  (^[[6~ Same as PgDn)
-k5=^F05:                         F5
-k6=x1B,x5B,x31,x37,x7E          :F6
-k7=x1B,x5B,x31,x38,x7E          :F7
-k8=x1B,x5B,x31,x39,x7E          :F8
-k9=x1B,x5B,x32,x30,x7E          :F9
-k10=x1B,x5B,x32,x31,x7E         :F10
-k11=^[[23~:                      F11
-k12=^[[24~:                      F12
+k1=x8F,x50                  :PF1
+k2=x8F,x51                  :PF2
+k3=x8F,x52                  :PF3
+k4=x8F,x53                  :PF4
+k5=x9B,x36,x7E              :F5
+k6=x9B,x31,x37,x7E          :F6
+k7=x9B,x31,x38,x7E          :F7
+k8=x9B,x31,x39,x7E          :F8
+k9=x9B,x32,x30,x7E          :F9
+k10=x9B,x32,x31,x7E         :F10
+k11=x9B,x32,x33,x7E         :F11
+k12=x9B,x32,x34,x7E         :F12
 
 
 
-S_k1=x1B,x5B,x32,x33,x7E        :F11 or Shift F1
-S_k2=x1B,x5B,x32,x34,x7E        :F12 or Shift F2
-S_k3=x1B,x5B,x32,x35,x7E        :F13 or Shift F3
-S_k4=x1B,x5B,x32,x36,x7E        :F14 or Shift F4
-S_k5=x1B,x5B,x32,x38,x7E        :F15 or Shift F5
-S_k6=x1B,x5B,x32,x39,x7E        :F16 or Shift F6
-S_k7=x1B,x5B,x33,x31,x7E        :F17 or Shift F7
-S_k8=x1B,x5B,x33,x32,x7E        :F18 or Shift F8
-S_k9=x1B,x5B,x33,x33,x7E        :F19 or Shift F9
-S_k10=x1B,x5B,x33,x34,x7E       :F20 or Shift F10
+S_k1=x9B,x32,x33,x7E        :F11 or Shift F1
+S_k2=x9B,x32,x34,x7E        :F12 or Shift F2
+S_k3=x9B,x32,x35,x7E        :F13 or Shift F3
+S_k4=x9B,x32,x36,x7E        :F14 or Shift F4
+S_k5=x9B,x32,x38,x7E        :F15 or Shift F5
+S_k6=x9B,x32,x39,x7E        :F16 or Shift F6
+S_k7=x9B,x33,x31,x7E        :F17 or Shift F7
+S_k8=x9B,x33,x32,x7E        :F18 or Shift F8
+S_k9=x9B,x33,x33,x7E        :F19 or Shift F9
+S_k10=x9B,x33,x34,x7E       :F20 or Shift F10
+
 
 : Extended keys for use with WISP
 S_k11=^F21:			 Shift F11 = F21
@@ -58,59 +58,62 @@ C_k12=^F32:			 Ctrl F12  = F32
 
 
 ;VT220 Numeric Keypad Application Mode Only
-v0=x1B,x4f,x70:              insert key
-v1=x1B,x4F,x71:
-v2=x1B,x4F,x72:
-v3=x1B,x4F,x73:
-v4=x1B,x4F,x74:
-v5=x1B,x4F,x75:
-v6=x1B,x4F,x76:
-v7=x1B,x4F,x77:
-v8=x1B,x4F,x78:
-v9=x1B,x4F,x79:
-v-=x1B,x4F,x6D:    minus key
-v*=x1B,x4F,x6C:    mult key(translates to VT comma ',')
-v.=x1B,x4F,x6E:    period key
-v+=x1B,x4F,x4D:    plus key(used for numeric enter key)
+v0=x8f,x70:              insert key
+v1=x8F,x71:
+v2=x8F,x72:
+v3=x8F,x73:
+v4=x8F,x74:
+v5=x8F,x75:
+v6=x8F,x76:
+v7=x8F,x77:
+v8=x8F,x78:
+v9=x8F,x79:
+v-=x8F,x6D:    minus key
+v*=x8F,x6C:    mult key(translates to VT comma ',')
+v.=x8F,x6E:    period key
+v+=x8F,x4D:    plus key(used for numeric enter key)
 
 ; VT220 Arrow Keys
-kd=x1b,x5b,x42:                 Sent by down arrow key
-kl=x1b,x5b,x44:                 Sent by left arrow key
-kr=x1b,x5b,x43:                 Sent by right arrow key
-ku=x1b,x5b,x41:                 Sent by up arrow key
+kd=x9b,x42:                 Sent by down arrow key
+kl=x9b,x44:                 Sent by left arrow key
+kr=x9b,x43:                 Sent by right arrow key
+ku=x9b,x41:                 Sent by up arrow key
 
-S_kd=x1b,x4f,x42:               Sent by down arrow key ( VT Application Mode )
-S_kl=x1b,x4f,x44:               Sent by left arrow key ( VT Application Mode )
-S_kr=x1b,x4f,x43:               Sent by right arrow key ( VT Application Mode )
-S_ku=x1b,x4f,x41:               Sent by up arrow key ( VT Application Mode )
+C_kd=x8f,x42:               Sent by CTRL down arrow key
+C_kl=x8f,x44:               Sent by CTRL left arrow key
+C_kr=x8f,x43:               Sent by CTRL right arrow key
+C_ku=x8f,x41:               Sent by CTRL up arrow key
 
+s_kd=x8f,x42:               Sent by SHIFT down arrow key
+s_kl=x8f,x44:               Sent by SHIFT left arrow key
+s_kr=x8f,x43:               Sent by SHIFT right arrow key
+s_ku=x8f,x41:               Sent by SHIFT up arrow key
 
+in=›2~:                       PC Insert Key -- VT220 Insert Here
+S_in=›L:                      PC Shift Insert -- VT220 Insert Line
+de=›3~:                       PC Del Key -- VT220 Remove
+S_de=›M:                      PC Shift Del Key -- VT220 Delete Line
 
+UP=›5~:                       PC Pageup Key
+DN=›6~:                       PC Pagedn Key
 
-in=^[[2~:                       PC Insert Key -- VT220 Insert Here
-S_in=^[[L:                      PC Shift Insert -- VT220 Insert Line
-de=^[[3~:                       PC Del Key -- VT220 Remove
-S_de=^[[M:                      PC Shift Del Key -- VT220 Delete Line
+S_UP=›1~:                     PC Shift PgUp -- VT220 Find
+S_DN=›4~:                     PC Shift PgDn -- VT220 Select
 
-UP=^[[5~:                       PC Pageup Key
-DN=^[[6~:                       PC Pagedn Key
+en=›4~:                       PC End Key
+S_en=›K:                      PC Shift End -- VT220 Erase End of Line
 
-S_UP=^[[1~:                     PC Shift PgUp -- VT220 Find
-S_DN=^[[4~:                     PC Shift PgDn -- VT220 Select
-
-en=x1B,x4F,x71:                 PC End Key
-S_en=^[[K:                      PC Shift End -- VT220 Erase End of Line
-
-ho=x1b,x5b,x48:                 Home key
-cr=^J:                          CR
-nw=^M:                          Newline
-; kb=x08:			Backspace (Costar uses ^H)
-kb=x7f:				Backspace (VT keyboards use DEL)
-
+S_ho=›H:                      Shift Home
+ho=›1~:                       Home key
+cr=^J:                        CR
+nw=^M:                        Newline
+:kb=x7f:
+Protect_Char=N
+   
 DA=x3f,x36,x32,x3b,x32:               Primary Device Attributes
 S_DA=x3e,x31,x3b,x31,x30,x3b,x30:     Secondary Device Attributes
 TERMTYPE=vt220                :for networked connections IAC processing
-Protect_Char=N
 
+S_tb=^F^I:           	Shift Tab
 
 

@@ -78,10 +78,10 @@ void pcode::restore_state() {
 
 
 void pcode::resize_code_buffer() {
-   const int_32 large_model_limit = 0xFFFFL;
+   const usign_32 large_model_limit = 0xFFFFL;
    const usign_16 increment = 1024;
 
-   usign_16 new_size = the_buffer_size + increment;
+   usign_32 new_size = the_buffer_size + increment;
 
    if (new_size <= large_model_limit) {
       usign_8 *new_buffer = new usign_8[new_size];
@@ -93,7 +93,7 @@ void pcode::resize_code_buffer() {
 #endif
          delete code_buffer;
          code_buffer = new_buffer;
-         the_buffer_size = new_size;
+         the_buffer_size = (usign_16)new_size;
          trace_si(object, "resized pcode buffer to ", the_buffer_size);
          return;
       }
@@ -376,6 +376,9 @@ void pcode_emitter::resume_emission() {
 //
 //	History:
 //	$Log: pcode.cpp,v $
+//	Revision 1.10  2000-08-28 10:12:47-04  gsl
+//	Fix test is pcode::resize_code_buffer() for 64K limit on code size.
+//
 //	Revision 1.9  1998-08-31 15:50:35-04  gsl
 //	drcs update
 //

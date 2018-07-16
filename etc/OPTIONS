@@ -1,5 +1,5 @@
 #######################################################################
-# Copyright (c) 1999 by NeoMedia Technologies Inc. All Rights Reserved.
+# Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
 #######################################################################
 #
 # OPTIONS:	The WISP runtime options file.
@@ -243,9 +243,9 @@
 #MOUSENONMOD
 
 # The UTILSWINDOWS option instructs the runtime to run utilities 
-# (e.g. DISPLAY, VSEDIT, etc.) in separate windows.  This option is 
-# currently only meaningful on Windows NT/95 and will be ignored on
-# other systems.
+# (e.g. DISPLAY, Print Queue Manager, etc.) in separate windows.  
+# This option is currently only meaningful on Windows and will be 
+# ignored on other systems.
 #
 UTILSWINDOWS
 
@@ -317,3 +317,31 @@ UTILSWINDOWS
 #
 #VUTIL /usr/local/acucobol/bin/vutil
 #VUTIL \\server\share\acucobol\bin\vutil32.exe
+
+# The SHAREDMEMORYV1 option causes shared memory control files to
+# be named so they are compatiable with 4.3.06 and earlier versions 
+# of the runtime.  Use this option if you need to run earlier versions
+# of the runtime or utilities simultaneously with new runtimes of
+# utilties.
+#
+#SHAREDMEMORYV1
+
+# The READFDRV1 option causes READFDR/READFDR4 to behave as it did
+# pre-release 4.4 regarding Sequential and Relative files without
+# known headers that describe the structure.  Specifically:
+#   "FT" returns "C"
+#   "RC" returns 0 or 1
+#   "RS" returns 256
+#   "RT" returnS "V"
+#
+#READFDRV1
+
+# The UNLOADREBUILD option causes the WISP file sort facility to use
+# the "rebuild" utility to unload Micro Focus indexed files.  This 
+# option should only be used if you are using Server Express and you
+# also have an earlier version of "fhconvert" on the $PATH.
+# Do not use this option with Micro Focus Object Cobol 4.1 as that
+# version of the "rebuild" utility does not allow you to convert an 
+# indexed file into a sequential file.
+#
+#UNLOADREBUILD

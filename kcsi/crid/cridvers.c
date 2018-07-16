@@ -2303,7 +2303,7 @@ static char rcsid[]="$Id:$";
 **
 **	FUNCTION:	Return the crid version string
 **
-**	DESCRIPTION:	Form a version string from CRID_VERSION of the form v9.99 and return it.
+**	DESCRIPTION:	Form a version string from CRID_VERSION of the form v9.9.99 and return it.
 **
 **	ARGUMENTS:	?
 **
@@ -2316,12 +2316,14 @@ static char rcsid[]="$Id:$";
 */
 const char *crid_version(void)
 {
-	static char the_version[20];
+	static char the_version[20]; /* Big enough to hold "v9.9.99 (DEBUG)" */
 	static int first = 1;
 
 	if (first)
 	{
-		sprintf(the_version,"v%d.%02d%s",(int)(CRID_VERSION / 100), (int)(CRID_VERSION % 100),DEBUG_STR);
+		char buf[10];
+		sprintf(buf,"%04d", (int)(CRID_VERSION));
+		sprintf(the_version,"v%c.%c.%c%c%s",buf[0],buf[1],buf[2],buf[3],DEBUG_STR);
 		first = 0;
 	}
 
@@ -2361,7 +2363,7 @@ static char compiler[]=
 
 
 static char logoformat[]=
-"     %-9s %s.%s%s - (c) 1989-98 KCSI/NEOM";
+"     %-9s %s.%s%s - (c) 1989-2001 KCSI/NEOM";
 
 static char logo[80];
 
@@ -2432,6 +2434,12 @@ void init_report_style(char *style)
 /*
 **	History:
 **	$Log: cridvers.c,v $
+**	Revision 2.90  2001-09-04 16:47:40-04  gsl
+**	Change to 9.9.99 style version number
+**
+**	Revision 2.89  2000-06-13 18:40:49-04  gsl
+**	Copyright 2000
+**
 **	Revision 2.88  1998-03-25 14:00:36-05  gsl
 **	change copyright date
 **

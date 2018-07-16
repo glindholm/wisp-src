@@ -22,14 +22,6 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <errno.h>
 
-#ifdef VMS
-#include <descrip.h>
-#include <lnmdef.h>
-#include <psldef.h>
-#include <ttdef.h>
-#include <ssdef.h>
-#endif /* VMS */
-
 #ifdef unix
 #include <signal.h>
 #include <curses.h>
@@ -37,8 +29,11 @@ static char rcsid[]="$Id:$";
 #include <term.h>
 #endif
 
-#ifdef MSDOS
-#include <malloc.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#ifdef WIN32
+#include <io.h>
 #endif
 
 #include "video.h"
@@ -52,12 +47,8 @@ static char rcsid[]="$Id:$";
 **	Structures and Defines
 */
 
-#if defined(VMS) || defined(unix)
+#ifdef unix
 #define DEFTERM "vt100"
-#endif
-
-#ifdef MSDOS
-#define DEFTERM "MSDOS"
 #endif
 
 #ifdef WIN32
@@ -73,6 +64,7 @@ extern void vbldfilepath();
 void vc_add_stddefs();
 void build_vc_meta();
 void vcloadsetup();
+int vexists(const char* name);
 
 static void vcloadvideocap(char* vcpath, char* wterm_t);
 
@@ -413,7 +405,6 @@ static vc_load vc_load_defs[] =
 	The enteries are POSITION DEPENDENT based on the define.
 */
 
-#if defined(unix) || defined(VMS) || defined(WIN32)
 /*
 **	The default CAPABLITIES are VT100/VT220
 */
@@ -512,100 +503,7 @@ static char *vcapdef[VC_CAP_COUNT+1] =
 	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_8  */
 	"0123456789ABCDEFFEDCBA9876543210"			     /* COLOR_LOOKUP_TABLE_9  */
 };
-#endif /* unix || VMS || WIN32 */
 
-#if defined(MSDOS)
-/*
-**	The default CAPABLITIES are MS-DOS PC.
-*/
-static char *vcapdef[VC_CAP_COUNT+1] = 
-{
-	"",
-	"",							     /* BACKSPACE             */
-	"",							     /* AUTO_MARGINS          */
-	"",							     /* HAS_HW_TABS           */
-	"",							     /* NL_IGN_AFTER_WRAP     */
-	"",							     /* MOVE_STANDOUT_MODE    */
-	"",							     /* INIT_FILE             */
-	"",							     /* RESET_TERMINAL        */
-	"",							     /* ENTER_KP_XMIT         */
-	"",							     /* EXIT_KP_XMIT          */ 
-	"\011",							     /* TAB                   */
-	"",							     /* VIRTUAL_TERM_NUM      */
-	"",							     /* SAVE_CURSOR           */
-	"",							     /* RESTORE_CURSOR        */
-	"\007",							     /* BELL                  */
-	"",							     /* BACK_TAB              */
-	"\015",							     /* CARRIAGE_RETURN       */
-	"",							     /* CHANGE_SCROLL_REGION  */
-	"",							     /* CLEAR_ALL_TABS        */
-	"",							     /* CLR_SCREEN            */
-	"",							     /* CLEAR_BOL             */
-	"",							     /* CLEAR_EOL             */
-	"",							     /* CLEAR_EOS             */
-	"",							     /* CURSOR_ADDRESS        */
-	"",							     /* CURSOR_DOWN           */
-	"",							     /* CURSOR_HOME           */
-	"",							     /* CURSOR_INVISIBLE      */
-	"",							     /* CURSOR_VISIBLE        */
-	"",							     /* CURSOR_LEFT           */
-	"",							     /* CURSOR_NORMAL         */
-	"",							     /* CURSOR_RIGHT          */
-	"",							     /* CURSOR_UP             */
-	"",							     /* DELETE_CHAR           */
-	"",							     /* DELETE_LINE           */
-	"",							     /* ENTER_ALT_CHARSET     */
-	"",							     /* ENTER_AM_MODE         */
-	"",							     /* ENTER_BLINK_MODE      */
-	"",							     /* ENTER_BOLD_MODE       */
-	"",							     /* ENTER_DELETE_MODE     */
-	"",							     /* ENTER_DIM_MODE        */
-	"",							     /* ENTER_INSERT_MODE     */
-	"",							     /* ENTER_PROTECTED_MODE  */
-	"",							     /* ENTER_REVERSE_MODE    */
-	"",							     /* ENTER_SECURE_MODE     */
-	"",							     /* ENTER_STANDOUT_MODE   */
-	"",							     /* ENTER_UNDERLINE_MODE  */
-	"",							     /* EXIT_ALT_CHARSET      */
-	"",							     /* EXIT_AM_MODE          */
-	"",							     /* EXIT_ATTRIBUTE_MODE   */
-	"",							     /* EXIT_DELETE_MODE      */
-	"",							     /* EXIT_INSERT_MODE      */
-	"",							     /* EXIT_STANDOUT_MODE    */
-	"",							     /* EXIT_UNDERLINE_MODE   */
-	"",							     /* INIT_TERMINAL         */
-	"",							     /* INSERT_CHAR           */
-	"",							     /* INSERT_LINE           */
-	"",							     /* OTHER_KEYS            */
-	"",							     /* NEWLINE               */
-	"",							     /* SCROLL_REVERSE        */
-	"",							     /* COLUMNS               */
-	"\000\000\000\000",					     /* LINES (default 0=24)  */
-	"",							     /* SO_BLANKS             */
-	"",							     /* US_BLANKS             */
-	"\263\304\332\277\300\331\302\301\303\264\305\021\020",	     /* GRAPHSTR              */
-	"",							     /* ENTER_GRAPHICS_MODE   */
-	"",							     /* EXIT_GRAPHICS_MODE    */
-	"",							     /* PAD                   */
-	"\004\370\026\260",					     /* PSEUDO_BLANKS         */
-	"",							     /* INDEX                 */
-	"",							     /* REVERSE_INDEX         */
-        "",							     /* WIDE_MODE	      */
-	"",							     /* NARROW_MODE           */
-	"",							     /* SCREEN_NORMAL_MODE    */
-	"",							     /* SCREEN_REVERSE_MODE   */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_0  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_1  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_2  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_3  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_4  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_5  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_6  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_7  */
-	"0123456789ABCDEFFEDCBA9876543210",			     /* COLOR_LOOKUP_TABLE_8  */
-	"0123456789ABCDEFFEDCBA9876543210"			     /* COLOR_LOOKUP_TABLE_9  */
-};
-#endif /* MSDOS */
 
 struct keylist
 {
@@ -971,260 +869,8 @@ static VKEY vt220def[] =
 	"\033[5~",         NULL,                        GENERIC_BACKTAB, SRC_EMPTY
 };
 
-#ifdef VMS
-static VKEY vt100def[] =
-{
-	"", NULL, 0,0,		/* element 0 in array not used */
-	"", NULL, 0,0,		/* PF0 not used */
-	"\033OP",          &vkeydef[GENERIC_PF1 ],	GENERIC_PF1, /* VKEY_F1   */ SRC_EMPTY,
-	"\033OQ",          &vkeydef[GENERIC_PF2 ],	GENERIC_PF2, /* VKEY_F2   */ SRC_EMPTY,
-	"\033OR",          &vkeydef[GENERIC_PF3 ],	GENERIC_PF3, /* VKEY_F3   */ SRC_EMPTY,
-	"\033OS",          &vkeydef[GENERIC_PF4 ],      GENERIC_PF4, /* VKEY_F4   */ SRC_EMPTY,
-	"\033Ow",          &vkeydef[GENERIC_PF5 ],	GENERIC_PF5, /* VKEY_F5   */ SRC_EMPTY,
-	"\033Ox",          &vkeydef[GENERIC_PF6 ],	GENERIC_PF6, /* VKEY_F6   */ SRC_EMPTY,
-	"\033Oy",          &vkeydef[GENERIC_PF7 ],	GENERIC_PF7, /* VKEY_F7   */ SRC_EMPTY,
-	"\033Om",          &vkeydef[GENERIC_PF8 ],	GENERIC_PF8, /* VKEY_F8   */ SRC_EMPTY,
-	"\033Ot",          &vkeydef[GENERIC_PF9 ],	GENERIC_PF9, /* VKEY_F9   */ SRC_EMPTY,
-	"\033Ou",          &vkeydef[GENERIC_PF10],	GENERIC_PF10, /* VKEY_F10  */ SRC_EMPTY,
-	"\033Ov",          &vkeydef[GENERIC_PF11],	GENERIC_PF11, /* VKEY_F11  */ SRC_EMPTY,
-	"\033Ol",          &vkeydef[GENERIC_PF12],	GENERIC_PF12, /* VKEY_F12  */ SRC_EMPTY,
-	"\033Oq",          &vkeydef[GENERIC_PF13],	GENERIC_PF13, /* VKEY_F13  */ SRC_EMPTY,
-	"\033Or",          &vkeydef[GENERIC_PF14],	GENERIC_PF14, /* VKEY_F14  */ SRC_EMPTY,
-	"\033Os",          &vkeydef[GENERIC_PF15],	GENERIC_PF15, /* VKEY_F15  */ SRC_EMPTY,
-	"\033On",          &vkeydef[GENERIC_PF16],	GENERIC_PF16, /* VKEY_F16  */ SRC_EMPTY,
-	"\033Op\033OP",    &vkeydef[GENERIC_PF17],	GENERIC_PF17, /* VKEY_F17  */ SRC_EMPTY,
-	"\033Op\033OQ",    &vkeydef[GENERIC_PF18],	GENERIC_PF18, /* VKEY_F18  */ SRC_EMPTY,
-	"\033Op\033OR",    &vkeydef[GENERIC_PF19],	GENERIC_PF19, /* VKEY_F19  */ SRC_EMPTY,
-	"\033Op\033OS",    &vkeydef[GENERIC_PF20],	GENERIC_PF20, /* VKEY_F20  */ SRC_EMPTY,
-	"\033Op\033Ow",    &vkeydef[GENERIC_PF21],	GENERIC_PF21, /* VKEY_F21  */ SRC_EMPTY,
-	"\033Op\033Ox",    &vkeydef[GENERIC_PF22],	GENERIC_PF22, /* VKEY_F22  */ SRC_EMPTY,
-	"\033Op\033Oy",    &vkeydef[GENERIC_PF23],	GENERIC_PF23, /* VKEY_F23  */ SRC_EMPTY,
-	"\033Op\033Om",    &vkeydef[GENERIC_PF24],	GENERIC_PF24, /* VKEY_F24  */ SRC_EMPTY,
-	"\033Op\033Ot",    &vkeydef[GENERIC_PF25],	GENERIC_PF25, /* VKEY_F25  */ SRC_EMPTY,
-	"\033Op\033Ou",    &vkeydef[GENERIC_PF26],	GENERIC_PF26, /* VKEY_F26  */ SRC_EMPTY,
-	"\033Op\033Ov",    &vkeydef[GENERIC_PF27],	GENERIC_PF27, /* VKEY_F27  */ SRC_EMPTY,
-	"\033Op\033Ol",    &vkeydef[GENERIC_PF28],	GENERIC_PF28, /* VKEY_F28  */ SRC_EMPTY,
-	"\033Op\033Oq",    &vkeydef[GENERIC_PF29],	GENERIC_PF29, /* VKEY_F29  */ SRC_EMPTY,
-	"\033Op\033Or",    &vkeydef[GENERIC_PF30],	GENERIC_PF30, /* VKEY_F30  */ SRC_EMPTY,
-	"\033Op\033Os",    &vkeydef[GENERIC_PF31],	GENERIC_PF31, /* VKEY_F31  */ SRC_EMPTY,
-	"\033Op\033On",    &vkeydef[GENERIC_PF32],      GENERIC_PF32, /* VKEY_F32  */ SRC_EMPTY,
-	"",                NULL,	       		VKEY_HOME,      /* VKEY_HOME         */ SRC_EMPTY,
-	"\177",		   &vkeydef[GENERIC_DELETE],	VKEY_BACKSPACE, /* VKEY_BACKSPACE    */ SRC_EMPTY,
-	"\033[B",          &vkeydef[GENERIC_DOWN ],	GENERIC_DOWN, /* VKEY_DOWN_ARROW   */ SRC_EMPTY,
-	"\033[D",	   &vkeydef[GENERIC_LEFT ],     GENERIC_LEFT, /* VKEY_LEFT_ARROW   */ SRC_EMPTY,
-	"\033[C",	   &vkeydef[GENERIC_RIGHT],     GENERIC_RIGHT, /*VKEY_RIGHT_ARROW   */ SRC_EMPTY,
-	"\033[A",	   &vkeydef[GENERIC_UP   ],     GENERIC_UP,   /* VKEY_UP_ARROW     */ SRC_EMPTY,
-	"\00601",          NULL,                        GENERIC_PF1,  SRC_EMPTY,
-	"\00602",          NULL,                        GENERIC_PF2,  SRC_EMPTY,
-	"\00603",          NULL,                        GENERIC_PF3,  SRC_EMPTY,
-	"\00604",          NULL,                        GENERIC_PF4,  SRC_EMPTY,
-	"\00605",          NULL,                        GENERIC_PF5,  SRC_EMPTY,
-	"\00606",          NULL,                        GENERIC_PF6,  SRC_EMPTY,
-	"\00607",          NULL,                        GENERIC_PF7,  SRC_EMPTY,
-	"\00608",          NULL,                        GENERIC_PF8,  SRC_EMPTY,
-	"\00609",          NULL,                        GENERIC_PF9,  SRC_EMPTY,
-	"\00610",          NULL,                        GENERIC_PF10, SRC_EMPTY,
-	"\00611",          NULL,                        GENERIC_PF11, SRC_EMPTY,
-	"\00612",          NULL,                        GENERIC_PF12, SRC_EMPTY,
-	"\00613",          NULL,                        GENERIC_PF13, SRC_EMPTY,
-	"\00614",          NULL,                        GENERIC_PF14, SRC_EMPTY,
-	"\00615",          NULL,                        GENERIC_PF15, SRC_EMPTY,
-	"\00616",          NULL,                        GENERIC_PF16, SRC_EMPTY,
-	"\00617",          NULL,                        GENERIC_PF17, SRC_EMPTY,
-	"\00618",          NULL,                        GENERIC_PF18, SRC_EMPTY,
-	"\00619",          NULL,                        GENERIC_PF19, SRC_EMPTY,
-	"\00620",          NULL,                        GENERIC_PF20, SRC_EMPTY,
-	"\00621",          NULL,                        GENERIC_PF21, SRC_EMPTY,
-	"\00622",          NULL,                        GENERIC_PF22, SRC_EMPTY,
-	"\00623",          NULL,                        GENERIC_PF23, SRC_EMPTY,
-	"\00624",          NULL,                        GENERIC_PF24, SRC_EMPTY,
-	"\00625",          NULL,                        GENERIC_PF25, SRC_EMPTY,
-	"\00626",          NULL,                        GENERIC_PF26, SRC_EMPTY,
-	"\00627",          NULL,                        GENERIC_PF27, SRC_EMPTY,
-	"\00628",          NULL,                        GENERIC_PF28, SRC_EMPTY,
-	"\00629",          NULL,                        GENERIC_PF29, SRC_EMPTY,
-	"\00630",          NULL,                        GENERIC_PF30, SRC_EMPTY,
-	"\00631",          NULL,                        GENERIC_PF31, SRC_EMPTY,
-	"\00632",          NULL,                        GENERIC_PF32, SRC_EMPTY,
-	"\006H",           NULL,                        GENERIC_HOME, SRC_EMPTY,
-	"\006?",	   NULL,    			GENERIC_HELP, SRC_EMPTY,
-	"\006U",	   NULL,     			GENERIC_UP, SRC_EMPTY,
-	"\006D",	   NULL,     			GENERIC_DOWN, SRC_EMPTY,
-        "\006L",	   NULL,     			GENERIC_LEFT, SRC_EMPTY,
-        "\006R",	   NULL,     			GENERIC_RIGHT, SRC_EMPTY,
-        "",	  	   NULL,     			GENERIC_TAB, SRC_EMPTY,
-        "\006X",	   NULL,     			GENERIC_DELETE, SRC_EMPTY,
-	"\006I",	   NULL,     			GENERIC_INSERT, SRC_EMPTY,
-	"\006\016",	   NULL,     			GENERIC_NEXT_SCR, SRC_EMPTY,
-	"\006\020",        NULL,                        GENERIC_PREV_SCR, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_REMOVE],	VKEY_DELETE, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_INSERT],	VKEY_INSERT, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_NEXT_SCR], 	VKEY_NEXT_SCR, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_PREV_SCR],	VKEY_PREV_SCR, SRC_EMPTY,
-	"",		   &vkeydef[GENERIC_SELECT],	VKEY_SELECT, SRC_EMPTY,
-	"\006\011", 	   NULL,     			GENERIC_BACKTAB, SRC_EMPTY,
-	"",		   NULL,     			GENERIC_REMOVE, SRC_EMPTY,
-	"\006S",	   NULL,     			GENERIC_SELECT, SRC_EMPTY,
-	"\006\003",	   NULL,		        GENERIC_CANCEL, SRC_EMPTY,
-	"\015",		   NULL,     			GENERIC_RETURN, SRC_EMPTY,
-        "\012",            NULL,                        GENERIC_ENTER, SRC_EMPTY,
-	"\030",		   NULL,     			GENERIC_REFRESH, SRC_EMPTY,
-	"\011",		   &vkeydef[GENERIC_TAB],	VKEY_TAB, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_HELP],	VKEY_HELP, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_PF16],	VKEY_DO, SRC_EMPTY,
-	"",	   	   &vkeydef[GENERIC_HOME],	VKEY_FIND, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER1, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER2, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER3, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER4, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER5, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER6, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER7, SRC_EMPTY,
-	"",		   NULL,			VKEY_USER8, SRC_EMPTY,
-	"",  		   NULL,			GENERIC_CLEAR_FIELD,  SRC_EMPTY,
-	"",  		   NULL,			GENERIC_CLEAR_AFTER,  SRC_EMPTY,
-	"",		   NULL,      			GENERIC_CLEAR_BEFORE, SRC_EMPTY,
-	"",		   NULL,      			GENERIC_NULL, SRC_EMPTY,
-	"\016",		   NULL,			TRIGGER1, SRC_EMPTY,
-	"",		   NULL,			TRIGGER2, SRC_EMPTY,
-	"",		   NULL,			TRIGGER3, SRC_EMPTY,
-	"",		   NULL,			TRIGGER4, SRC_EMPTY,
-	"",		   NULL,			TRIGGER5, SRC_EMPTY,
-	"",		   NULL,			TRIGGER6, SRC_EMPTY,
-	"",		   NULL,			TRIGGER7, SRC_EMPTY,
-	"",		   NULL,			TRIGGER8, SRC_EMPTY,
-	"",		   NULL,			VKEY_F33, SRC_EMPTY,
-	"",		   NULL,			VKEY_F34, SRC_EMPTY,
-	"",		   NULL,			VKEY_F35, SRC_EMPTY,
-	"",		   NULL,			VKEY_F36, SRC_EMPTY,
-	"",		   NULL,			VKEY_F37 , SRC_EMPTY,
-	"",		   NULL,			VKEY_F38, SRC_EMPTY,
-	"",		   NULL,			VKEY_F39, SRC_EMPTY,
-	"",		   NULL,			VKEY_F40, SRC_EMPTY,
-	"",		   NULL,			VKEY_F41 , SRC_EMPTY,
-	"",		   NULL,			VKEY_F42 , SRC_EMPTY,
-	"",		   NULL,			VKEY_F43, SRC_EMPTY,
-	"",		   NULL,			VKEY_F44, SRC_EMPTY,
-	"",		   NULL,			VKEY_F45, SRC_EMPTY,
-	"",		   NULL,			VKEY_F46, SRC_EMPTY,
-	"",		   NULL,			VKEY_F47, SRC_EMPTY,
-	"",		   NULL,			VKEY_F48, SRC_EMPTY,
-	"",		   NULL,			VKEY_F49, SRC_EMPTY,
-	"",		   NULL,			VKEY_F50 , SRC_EMPTY,
-	"",		   NULL,			VKEY_F51, SRC_EMPTY,
-	"",		   NULL,			VKEY_F52, SRC_EMPTY,
-	"",		   NULL,			VKEY_F53 , SRC_EMPTY,
-	"",		   NULL,			VKEY_F54, SRC_EMPTY,
-	"",		   NULL,			VKEY_F55, SRC_EMPTY,
-	"",		   NULL,			VKEY_F56, SRC_EMPTY,
-	"",		   NULL,			VKEY_F57, SRC_EMPTY,
-	"",		   NULL,			VKEY_F58, SRC_EMPTY,
-	"",		   NULL,			VKEY_F59, SRC_EMPTY,
-	"",		   NULL,			VKEY_F60, SRC_EMPTY,
-	"",		   NULL,			VKEY_F61, SRC_EMPTY,
-	"",		   NULL,			VKEY_F62, SRC_EMPTY,
-	"",		   NULL,			VKEY_F63, SRC_EMPTY,
-	"",		   NULL,			VKEY_F64, SRC_EMPTY,
-	"\00633",	   NULL,			GENERIC_PF33, SRC_EMPTY,
-	"\00634",	   NULL,			GENERIC_PF34, SRC_EMPTY,
-	"\00635",	   NULL,			GENERIC_PF35, SRC_EMPTY,
-	"\00636",	   NULL,			GENERIC_PF36, SRC_EMPTY,
-	"\00637",	   NULL,			GENERIC_PF37, SRC_EMPTY,
-	"\00638",	   NULL,			GENERIC_PF38, SRC_EMPTY,
-	"\00639",	   NULL,			GENERIC_PF39, SRC_EMPTY,
-	"\00640",	   NULL,			GENERIC_PF40, SRC_EMPTY,
-	"\00641",	   NULL,			GENERIC_PF41, SRC_EMPTY,
-	"\00642",	   NULL,			GENERIC_PF42, SRC_EMPTY,
-	"\00643",	   NULL,			GENERIC_PF43, SRC_EMPTY,
-	"\00644",	   NULL,			GENERIC_PF44, SRC_EMPTY,
-	"\00645",	   NULL,			GENERIC_PF45, SRC_EMPTY,
-	"\00646",	   NULL,			GENERIC_PF46, SRC_EMPTY,
-	"\00647",	   NULL,			GENERIC_PF47, SRC_EMPTY,
-	"\00648",	   NULL,			GENERIC_PF48, SRC_EMPTY,
-	"\00649",	   NULL,			GENERIC_PF49, SRC_EMPTY,
-	"\00650",	   NULL,			GENERIC_PF50, SRC_EMPTY,
-	"\00651",	   NULL,			GENERIC_PF51, SRC_EMPTY,
-	"\00652",	   NULL,			GENERIC_PF52, SRC_EMPTY,
-	"\00653",	   NULL,			GENERIC_PF53, SRC_EMPTY,
-	"\00654",	   NULL,			GENERIC_PF54, SRC_EMPTY,
-	"\00655",	   NULL,			GENERIC_PF55, SRC_EMPTY,
-	"\00656",	   NULL,			GENERIC_PF56, SRC_EMPTY,
-	"\00657",	   NULL,			GENERIC_PF57, SRC_EMPTY,
-	"\00658",	   NULL,			GENERIC_PF58, SRC_EMPTY,
-	"\00659",	   NULL,			GENERIC_PF59, SRC_EMPTY,
-	"\00660",	   NULL,			GENERIC_PF60, SRC_EMPTY,
-	"\00661",	   NULL,			GENERIC_PF61, SRC_EMPTY,
-	"\00662",	   NULL,			GENERIC_PF62, SRC_EMPTY,
-	"\00663",	   NULL,			GENERIC_PF63, SRC_EMPTY,
-	"\00664",	   NULL,			GENERIC_PF64, SRC_EMPTY,
-	"\006N",           NULL,                        GENERIC_NEWLINE, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F1, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F2, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F3, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F4, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F5, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F6, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F7, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F8, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F9, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F10, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F11, SRC_EMPTY,
-	"",		   NULL,			SHIFT_F12, SRC_EMPTY,
-	"",		   NULL,			CTRL_F1, SRC_EMPTY,
-	"",		   NULL,			CTRL_F2, SRC_EMPTY,
-	"",		   NULL,			CTRL_F3, SRC_EMPTY,
-	"",		   NULL,			CTRL_F4, SRC_EMPTY,
-	"",		   NULL,			CTRL_F5, SRC_EMPTY,
-	"",		   NULL,			CTRL_F6, SRC_EMPTY,
-	"",		   NULL,			CTRL_F7, SRC_EMPTY,
-	"",		   NULL,			CTRL_F8, SRC_EMPTY,
-	"",		   NULL,			CTRL_F9, SRC_EMPTY,
-	"",		   NULL,			CTRL_F10, SRC_EMPTY,
-	"",		   NULL,			CTRL_F11, SRC_EMPTY,
-	"",		   NULL,			CTRL_F12, SRC_EMPTY,
-	"",		   NULL,			ALT_F1, SRC_EMPTY,
-	"",		   NULL,			ALT_F2, SRC_EMPTY,
-	"",		   NULL,			ALT_F3, SRC_EMPTY,
-	"",		   NULL,			ALT_F4, SRC_EMPTY,
-	"",		   NULL,			ALT_F5, SRC_EMPTY,
-	"",		   NULL,			ALT_F6, SRC_EMPTY,
-	"",		   NULL,			ALT_F7, SRC_EMPTY,
-	"",		   NULL,			ALT_F8, SRC_EMPTY,
-	"",		   NULL,			ALT_F9, SRC_EMPTY,
-	"",		   NULL,			ALT_F10, SRC_EMPTY,
-	"",		   NULL,			ALT_F11, SRC_EMPTY,
-	"",		   NULL,			ALT_F12, SRC_EMPTY,
-	"\006z",           NULL,                        GENERIC_CUT, SRC_EMPTY,
-	"\006v",           NULL,                        GENERIC_PASTE, SRC_EMPTY,
-	"\006c",           NULL,                        GENERIC_COPY, SRC_EMPTY,
-	"\006 ",           NULL,                        GENERIC_MARK, SRC_EMPTY,
-	DEF_GENERIC_MOUSE, NULL,                        GENERIC_MOUSE, SRC_EMPTY,
 
-/* End of defined list; following are extras.				*/
-	"\006h",           NULL,                        GENERIC_HOME, SRC_EMPTY,
-	"\006u",	   NULL,      			GENERIC_UP, SRC_EMPTY,
-	"\006d",	   NULL,     		 	GENERIC_DOWN, SRC_EMPTY,
-        "\006l",	   NULL,     			GENERIC_LEFT, SRC_EMPTY,
-        "\006r",	   NULL,     			GENERIC_RIGHT, SRC_EMPTY,
-        "\006x",	   NULL,     			GENERIC_DELETE, SRC_EMPTY,
-	"\006i",	   NULL,     			GENERIC_INSERT, SRC_EMPTY,
-	"\006\013",	   NULL,     			GENERIC_UP, SRC_EMPTY,
-	"\006\012",	   NULL,     			GENERIC_DOWN, SRC_EMPTY,
-        "\006\010",	   NULL,     			GENERIC_LEFT, SRC_EMPTY,
-        "\006\014",	   NULL,     			GENERIC_RIGHT, SRC_EMPTY,
-	"\006s",	   NULL,     			GENERIC_SELECT, SRC_EMPTY,
-	"\005", 	   NULL,    			GENERIC_HELP, SRC_EMPTY,
-	"\001",            NULL,                        GENERIC_HOME, SRC_EMPTY,
-	"\022",		   NULL,     			GENERIC_REFRESH, SRC_EMPTY,
-	"\010",		   NULL,			GENERIC_BACKTAB, SRC_EMPTY,
-	"\033OM", 	   NULL, 			GENERIC_RETURN, SRC_EMPTY,
-	"\006n",           NULL,                        GENERIC_NEWLINE, SRC_EMPTY,
-	"\033[6~",         NULL,                        GENERIC_NEWLINE, SRC_EMPTY,
-	"\033[5~",         NULL,                        GENERIC_BACKTAB, SRC_EMPTY
-};		
-#endif /* VMS */
-
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 static VKEY pckbddef[] =
 {
 	"", NULL, 0,0,		/* element 0 in array not used */
@@ -1239,14 +885,8 @@ static VKEY pckbddef[] =
 	"\035\102",	&vkeydef[GENERIC_PF8 ],		VKEY_F8, SRC_EMPTY,
 	"\035\103",	&vkeydef[GENERIC_PF9 ],		VKEY_F9, SRC_EMPTY,
 	"\035\104",	&vkeydef[GENERIC_PF10],		VKEY_F10, SRC_EMPTY,
-#if defined(MSDOS)
-	"\035\005",	&vkeydef[GENERIC_PF11],		VKEY_F11, SRC_EMPTY,
-	"\035\006",	&vkeydef[GENERIC_PF12],		VKEY_F12, SRC_EMPTY,
-#endif
-#if defined(WIN32)
 	"\035\127",	&vkeydef[GENERIC_PF11],		VKEY_F11, SRC_EMPTY,
 	"\035\130",	&vkeydef[GENERIC_PF12],		VKEY_F12, SRC_EMPTY,
-#endif
 	"",		NULL,				VKEY_F13, SRC_EMPTY,
 	"",		NULL,				VKEY_F14, SRC_EMPTY,
 	"",		NULL,				VKEY_F15, SRC_EMPTY,
@@ -1422,21 +1062,7 @@ static VKEY pckbddef[] =
 	"\00663",	   NULL,			GENERIC_PF63, SRC_EMPTY,
 	"\00664",	   NULL,			GENERIC_PF64, SRC_EMPTY,
         "\006N",           NULL,                        GENERIC_NEWLINE, SRC_EMPTY,
-#if defined(MSDOS)
-	"\035\124",	&vkeydef[GENERIC_PF11],		SHIFT_F1, SRC_EMPTY,
-	"\035\125",	&vkeydef[GENERIC_PF12],		SHIFT_F2, SRC_EMPTY,
-	"\035\126",	&vkeydef[GENERIC_PF13],		SHIFT_F3, SRC_EMPTY,
-	"\035\127",	&vkeydef[GENERIC_PF14],		SHIFT_F4, SRC_EMPTY,
-	"\035\130",	&vkeydef[GENERIC_PF15],		SHIFT_F5, SRC_EMPTY,
-	"\035\131",	&vkeydef[GENERIC_PF16],		SHIFT_F6, SRC_EMPTY,
-	"\035\132",	&vkeydef[GENERIC_PF17],		SHIFT_F7, SRC_EMPTY,
-	"\035\133",	&vkeydef[GENERIC_PF18],		SHIFT_F8, SRC_EMPTY,
-	"\035\134",	&vkeydef[GENERIC_PF19],		SHIFT_F9, SRC_EMPTY,
-	"\035\135",	&vkeydef[GENERIC_PF20],		SHIFT_F10, SRC_EMPTY,
-	"\035\007",	&vkeydef[GENERIC_PF21],		SHIFT_F11, SRC_EMPTY,
-	"\035\010",	&vkeydef[GENERIC_PF22],		SHIFT_F12, SRC_EMPTY,
-#endif
-#if defined(WIN32)
+
 	"\035\052\073",	&vkeydef[GENERIC_PF11],		SHIFT_F1, SRC_EMPTY,
 	"\035\052\074",	&vkeydef[GENERIC_PF12],		SHIFT_F2, SRC_EMPTY,
 	"\035\052\075",	&vkeydef[GENERIC_PF13],		SHIFT_F3, SRC_EMPTY,
@@ -1449,23 +1075,7 @@ static VKEY pckbddef[] =
 	"\035\052\104",	&vkeydef[GENERIC_PF20],		SHIFT_F10, SRC_EMPTY,
 	"\035\052\127",	&vkeydef[GENERIC_PF21],		SHIFT_F11, SRC_EMPTY,
 	"\035\052\130",	&vkeydef[GENERIC_PF22],		SHIFT_F12, SRC_EMPTY,
-#endif
 
-#if defined(MSDOS)
-	"\035\136",	&vkeydef[GENERIC_PF21],		CTRL_F1, SRC_EMPTY,
-	"\035\137",	&vkeydef[GENERIC_PF22],		CTRL_F2, SRC_EMPTY,
-	"\035\140",	&vkeydef[GENERIC_PF23],		CTRL_F3, SRC_EMPTY,
-	"\035\141",	&vkeydef[GENERIC_PF24],		CTRL_F4, SRC_EMPTY,
-	"\035\142",	&vkeydef[GENERIC_PF25],		CTRL_F5, SRC_EMPTY,
-	"\035\143",	&vkeydef[GENERIC_PF26],		CTRL_F6, SRC_EMPTY,
-	"\035\144",	&vkeydef[GENERIC_PF27],		CTRL_F7, SRC_EMPTY,
-	"\035\145",	&vkeydef[GENERIC_PF28],		CTRL_F8, SRC_EMPTY,
-	"\035\146",	&vkeydef[GENERIC_PF29],		CTRL_F9, SRC_EMPTY,
-	"\035\147",	&vkeydef[GENERIC_PF30],		CTRL_F10, SRC_EMPTY,
-	"\035\011",	&vkeydef[GENERIC_PF31],		CTRL_F11, SRC_EMPTY,
-	"\035\012",	&vkeydef[GENERIC_PF32],		CTRL_F12, SRC_EMPTY,
-#endif
-#if defined(WIN32)
 	"\035\035\073",	&vkeydef[GENERIC_PF21],		CTRL_F1, SRC_EMPTY,
 	"\035\035\074",	&vkeydef[GENERIC_PF22],		CTRL_F2, SRC_EMPTY,
 	"\035\035\075",	&vkeydef[GENERIC_PF23],		CTRL_F3, SRC_EMPTY,
@@ -1478,7 +1088,6 @@ static VKEY pckbddef[] =
 	"\035\035\104",	&vkeydef[GENERIC_PF30],		CTRL_F10, SRC_EMPTY,
 	"\035\035\127",	&vkeydef[GENERIC_PF31],		CTRL_F11, SRC_EMPTY,
 	"\035\035\130",	&vkeydef[GENERIC_PF32],		CTRL_F12, SRC_EMPTY,
-#endif
 
 	"\035\070\073",	&vkeydef[GENERIC_PF31],		ALT_F1, SRC_EMPTY,
 	"\035\070\074",	&vkeydef[GENERIC_PF32],		ALT_F2, SRC_EMPTY,
@@ -1515,7 +1124,7 @@ static VKEY pckbddef[] =
 	"\033[6~",         NULL,                        GENERIC_NEWLINE, SRC_EMPTY,
 	"\033[5~",         NULL,                        GENERIC_BACKTAB, SRC_EMPTY
 };
-#endif /* MSDOS || WIN32 */
+#endif /* WIN32 */
 					
 static VKEY *vkp;						
 
@@ -1618,22 +1227,9 @@ static char *vcap_termtype = NULL;
 #define regex(x,y) re_exec(y)
 char *re_comp();
 int re_exec();
-#endif
-
-#ifdef ultrix
-#undef regcmp
-#define regcmp(x,y) re_comp(x)
-#undef regex
-#define regex(x,y) re_exec(y)
-char *re_comp();
-int re_exec();
-#endif
-
-#ifndef ultrix
-#ifndef AIX
+#else
 char *regex();
 char *regcmp();
-#endif
 #endif
 
 static int pop(void);
@@ -1647,13 +1243,9 @@ static void fix_seq();
 static void doload(FILE *vcfile, char* vcpath);
 static void set_terminfo_key(char *id, int index, char *value);
 
-#ifdef MSDOS
-static int vcsort(const void *,const void *);
-static int vcm_sort_node(const void *,const void *);
-#else
 static int vcsort();
 static int vcm_sort_node();
-#endif
+
 static	char *vcstrdup();
 
 #ifdef unix
@@ -1835,49 +1427,6 @@ int vcapload(void)									/* load up the vcap file 		*/
 	else
 	{
 		char *term_t;
-#ifdef VMS
-		/*
-		**	Find the terminal type.
-		**	wterm_t		Terminal type
-		**	vcpath		Full path to videocap file
-		*/
-		switch (osd_ttype())
-		{
-		case TT$_VT100:
-			term_t = "vt100";
-			break;
-		case TT$_VT200_SERIES:
-			term_t = "vt220";
-			break;
-		case TT$_VT300_SERIES:
-			term_t = "vt320";
-			break;
-#ifdef VMS_5_5
-		case TT$_VT400_SERIES:
-#endif
-		case 113:	/* TT$_VT400_SERIES */
-			term_t = "vt420";
-			break;
-               	case TT$_VT52:
-			term_t = "vt52";
-			break;
-		case TT$_VT125:
-			term_t = "vt125";
-			break;
-                case TT$_VT132:
-			term_t = "vt132";
-			break;
-		default:
-			term_t = "unknown";
-			break;
-		}
-		get_log("WISP$TERM",wterm_t,sizeof(wterm_t));
-		if (0==strlen(wterm_t))
-		{
-			strcpy(wterm_t,term_t);
-		}
-
-#else /* !VMS */
 
 		/*
 		**	This is a remnant of the old way.
@@ -1892,8 +1441,7 @@ int vcapload(void)									/* load up the vcap file 		*/
 #ifdef unix
 					if (! (vcloadbehavior & VCAP_NOWARN_RETSTAT) )
 					{
-						fprintf(stderr,
-						"\n\rVIDEO-E-NOTERM $TERM environment variable not defined\n\r");
+						vre("VIDEO-E-NOTERM $TERM environment variable not defined");
 					}
 					ret |= VCAP_WARN_NOWCONFIG;
 #endif
@@ -1902,7 +1450,7 @@ int vcapload(void)									/* load up the vcap file 		*/
 			}
 		}
 		strcpy(wterm_t,term_t);
-#endif /* !VMS */
+
 	}
 
 	/*
@@ -1914,9 +1462,6 @@ int vcapload(void)									/* load up the vcap file 		*/
 	}
 	else
 	{
-#ifdef VMS
-		sprintf(vcpath,"WISP$CONFIG:%s.VCAP",wterm_t);
-#else
 		char vcdir[PATHSIZE];
 		char *wc;
 
@@ -1942,7 +1487,20 @@ int vcapload(void)									/* load up the vcap file 		*/
 		}
 	
 		vbldfilepath(vcpath,vcdir,wterm_t);
-#endif /* !VMS */
+
+		/* Try first with .vcap then without */
+		strcat(vcpath,".vcap");
+		if (!vexists(vcpath))
+		{
+			/* Check without ext */
+			vcpath[strlen(vcpath) - 5] = '\0';
+			if (!vexists(vcpath))
+			{
+				/* Didn't find it so put ext back on */
+				strcat(vcpath, ".vcap");
+			}				
+		}
+		
 	}
 
 #ifdef unix
@@ -2080,41 +1638,16 @@ static void vcloadvideocap(char* vcpath, char* wterm_t)
 #ifdef unix
 		if (!(vcloadbehavior & VCAP_NOWARN_RETSTAT))
 		{
-			fprintf(stderr,"\n\rVIDEOCAP-E-OPEN Error %d opening videocap file %s\n\r",errno,vcpath);
-			vwait(4,0);
+			vre("VIDEOCAP-E-OPEN Error %d opening videocap file %s",errno,vcpath);
 		}
 		memcpy(vkeydef,vt220def,sizeof(vt220def));
 		strcpy(vcaptermvalue, "vt220");
-#endif
-#ifdef MSDOS
-		if (0!=strcmp(wterm_t,DEFTERM))
-		{
-			fprintf(stderr,"\n\rVIDEOCAP-E-OPEN Error %d opening videocap file %s\n\r",errno,vcpath);
-			vwait(4,0);
-		}
-		memcpy(vkeydef,pckbddef,sizeof(pckbddef));
-		strcpy(vcaptermvalue, DEFTERM);
 #endif
 #ifdef WIN32
 		if (vrawdirectio())
 		{
 			memcpy(vkeydef,pckbddef,sizeof(pckbddef));
 			strcpy(vcaptermvalue, DEFTERM);
-		}
-		else
-		{
-			memcpy(vkeydef,vt220def,sizeof(vt220def));
-			strcpy(vcaptermvalue, "vt220");
-		}
-#endif
-#ifdef VMS
-		if (0==strcmp(wterm_t,"vt100") ||
-		    0==strcmp(wterm_t,"vt52")  ||
-		    0==strcmp(wterm_t,"vt125") ||        
-		    0==strcmp(wterm_t,"vt132")   )
-		{
-			memcpy(vkeydef,vt100def,sizeof(vt100def));
-			strcpy(vcaptermvalue, "vt100");
 		}
 		else
 		{
@@ -2136,11 +1669,8 @@ void vbldfilepath(char* path, char* dir, char* file)
 #ifdef unix
 	sprintf(path,"%s/%s",dir,file);
 #endif
-#ifdef MSFS
+#ifdef WIN32
 	sprintf(path,"%s\\%s",dir,file);
-#endif
-#ifdef VMS
-	sprintf(path,"%s%s",dir,file);
 #endif
 }
 
@@ -2268,7 +1798,7 @@ static void doload(FILE *vcfile, char* vcpath)
 		cap=matchcap(name);							/* match our vc_load_defs array */
 		if (cap<0)								/* capability unknown */
 		{
-			fprintf(stderr,"\n\rVIDEO-C-BADCAP bad key name (lvalue) [%s line %d]\n\r",vcpath,vcline);
+			vre("VIDEO-C-BADCAP bad key name (lvalue) [%s line %d]",vcpath,vcline);
 			continue;
 		}
 		switch (vc_load_defs[cap].type)						/* check type key/cap/bool/num */
@@ -2286,7 +1816,7 @@ static void doload(FILE *vcfile, char* vcpath)
 					eval=matchcap(subval);				/* find struct for symbol specified */
 					if (eval<0)					/* bad */
 					{
-						fprintf(stderr,"\n\rVIDEO-C-BADCAP bad key name (rvalue) [%s line %d]\n\r",
+						vre("VIDEO-C-BADCAP bad key name (rvalue) [%s line %d]",
 							vcpath,vcline);
 						break;
 					}
@@ -2386,7 +1916,7 @@ static int rvalue(sub,val,type) unsigned char *sub,*val; int *type;
 		case S_ESC:							/* is it 'E'? if so, pass ESC */
 			switch (ch)
 			{
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 			case 'X': case 'x':
 				*sub++ = EXT_PREFIX;
 				break;
@@ -2865,20 +2395,32 @@ static int push(int ch)
 static int nextfield(FILE *fp, char* name, char* cap)
 {
 	char inbuf[256];
-	int npos,cpos,part;
+	int npos,cpos,part,len;
 	char *status,*p;
 	
 	memset(inbuf,0,sizeof(inbuf));							/* zed field buffer */
 	do 
 	{
 		if ((status=fgets(inbuf,sizeof(inbuf)-1,fp))==0) 
+		{
 			return 0;
-		p=strchr(inbuf,'\n');
-		if (p) 
-			*p=(char)0;
+		}
 		++vcline;
 		
-	} while (inbuf[0]=='#'||inbuf[0]=='\n');					/* get records, skipping comments */
+		/* Remove # comment lines */
+		if ('#' == inbuf[0] )
+		{
+			inbuf[0] = '\0';
+		}
+		
+		/* Remove trailing whitespace */
+		len = strlen(inbuf);
+		while(len > 0 && (' '==inbuf[len-1] || '\t'==inbuf[len-1] || '\n'==inbuf[len-1]))
+		{
+			inbuf[--len] = '\0';
+		}
+		
+	} while (len <= 0);								/* skipping comments and empty records */
 
 	for (p=inbuf,npos=cpos=part=0; *p;)
 	{
@@ -2904,10 +2446,6 @@ static int nextfield(FILE *fp, char* name, char* cap)
 	--npos;
 	while ( cap[cpos]==' '||  cap[cpos]=='\t')  cap[cpos--]=(char)0;	/* remove trailing whitespace			*/
 	while (name[npos]==' '|| name[npos]=='\t') name[npos--]=(char)0;
-#ifdef OLD
-	p=strchr(name,' ');
-	if (p) *p=(char)0;
-#endif /* OLD */
 
 	return TRUE;	
 }
@@ -2929,7 +2467,7 @@ static char *vcstrdup(char *str)
 		cur=mem=(char *)calloc(VCMEMSIZE,sizeof(char));
 		if (!mem) 
 		{
-			fprintf(stderr,"VIDEO-C-VCNOMEM vcap can't calloc %d bytes\n\r",VCMEMSIZE);
+			vre("VIDEO-C-VCNOMEM vcap can't calloc %d bytes",VCMEMSIZE);
 			exit(0);
 		}
 	}
@@ -2945,7 +2483,7 @@ static char *vcstrdup(char *str)
 	cur += len;
 	if (cur > mem+VCMEMSIZE)
 	{
-		fprintf(stderr,"VIDEO-C-MEMUSED vcap used %d bytes. increase VCMEMSIZE\n\r",VCMEMSIZE);
+		vre("VIDEO-C-MEMUSED vcap used %d bytes. increase VCMEMSIZE",VCMEMSIZE);
 		exit(0);
 	}
 	strcpy(ret,str);
@@ -2959,29 +2497,11 @@ static char *gmem(int size)
 	ret=(char *)calloc(size,sizeof(char));
 	if (!ret) 
 	{
-		fprintf(stderr,"VIDEO-C-VCNOMEM vcap can't calloc %d bytes\n\r",size);
+		vre("VIDEO-C-VCNOMEM vcap can't calloc %d bytes",size);
 		exit(0);
 	}
 	return ret;
 }
-/*
-rvalue_type(char* p)
-{
-	static char *symb="^[a-z0-9_][a-z0-9_]*$";
-	static char *lit="^\".*\"$";
-        char *c_symb,*c_lit;
-	
-	c_symb=regcmp(symb,(char *)NULL);
-	if (regex(c_symb,p)) return TYPE_SYM;
-	c_lit=regcmp(lit,(char *)NULL);
-	if (regex(c_lit,p)) return TYPE_LIT;
-
-	if (strchr(p,'|')) return TYPE_MLT;
-
-	fprintf(stderr,"error rvalue type. field = %s\n\r",p);
-	exit(0);
-}
-*/
 
 static int matchcap(name)
 unsigned char *name;
@@ -3002,7 +2522,7 @@ unsigned char *name;
 	}
 	else 
 	{
-		fprintf(stderr,"\n\rVIDEO-E-BADCAPNAME undefined field name [%s] at line %d\n\r",name,vcline);
+		vre("VIDEO-E-BADCAPNAME undefined field name [%s] at line %d",name,vcline);
 		return -1;
 	}
 }
@@ -3502,155 +3022,49 @@ int dispfl;
 	else return(0);
 }
 
-#ifdef VMS
-get_log(name,value,maxl)
-char *name;
-char *value;
-int maxl;
+
+/*
+**	Routine:	vexists()
+**
+**	Function:	To test if a file or directory exists
+**
+**	Description:	Routine stat() is used to check if the file exists.
+**			This will use the effective UID not the real UID.
+**
+**	Arguments:
+**	name		The file name.
+**
+**	Return:
+**	1		The file exists
+**	0		The file does not exist
+**
+**
+*/
+int vexists(const char* name)
 {
-	long attr;
-	long stat_ss;
-	char acc;
-	static char logbuf[256];
-	static char tab_name[32];
-	struct itemlst {
-		short buf_len;
-		short i_code;
-		char *buf_addr;
-		long *len;
-		int end;
-	};
-	struct itemlst items[2];
-	char result[255];
-	long act_item_len;
+	struct stat buf;
 
-#include "inc:vcap.d"
-
-	strcpy(tab_name,"LNM$PROCESS_TABLE");
-	tab_desc.dsc$w_length = strlen(tab_name);
-	strcpy(logbuf,name);
-  	log_desc.dsc$w_length = strlen(logbuf);
-
-	memset(result,'\0',sizeof(result));					/* Init result to nulls				*/
-	act_item_len = 0;							/* Init the actual length			*/
-
-	attr = LNM$M_CASE_BLIND;						/* setup attribute value -- ign case 		*/
-	acc = PSL$C_USER;							/* set priv level 				*/
-	items[0].buf_len = sizeof(result);					/* build the items list 			*/
-	items[0].i_code = LNM$_STRING;						/* LNM$_STRING = return string value of logical */
-	items[0].buf_addr = result;						/* Return value of logical.			*/
-	items[0].len = &act_item_len;						/* Return actual length of string.		*/
-	items[1].buf_len = 0;							/* Terminate item descriptors with longword 0.	*/
-	items[1].i_code = 0;
-
-	stat_ss = SYS$TRNLNM(&attr,&tab_desc,&log_desc,&acc,&items);
-	if ( stat_ss == SS$_NORMAL )
-	{ 
-		strncpy(value,result,*items[0].len > maxl-1 ? maxl-1 : *items[0].len);
-		value[*items[0].len > maxl-1 ? maxl-1 : *items[0].len ]=(char)0;
-	}
+	return((0==stat(name,&buf)) ? 1:0);
 }
 
-#endif
 
-#ifdef TEST
-main()
-{
-	char foo[10];
-	int ch;
-#ifdef unix
-	struct termio save,new;
-#endif
-	
-	vcapload();
-	build_vc_meta();
-
-#ifdef unix
-	ioctl(0,TCGETA,&save);
-	ioctl(0,TCGETA,&new);
-	new.c_cc[VMIN]=1;
-	new.c_cc[VTIME]=0;
-	new.c_lflag &= ~(ICANON|ECHO);
-
-	ioctl(0,TCSETA,&new);
-#endif
-
-	while ((ch=vgetm())!='Q') 
-	{
-		if (ch<128) 
-		{  
-			if (ch>=' '&& ch<='~') printf("%c\n",ch); 
-			else printf("%d\n",ch);
-		}
-		else
-		switch (ch-128)
-		{
-		case GENERIC_PF1:
-			printf("pf1\n");
-			break;
-		case GENERIC_PF2:
-			printf("pf2\n");
-			break;
-		case GENERIC_PF3:
-			printf("pf3\n");
-			break;
-		case GENERIC_PF4:
-			printf("pf4\n");
-			break;
-		case GENERIC_PF5:
-			printf("pf5\n");
-			break;
-		case GENERIC_PF6:
-			printf("pf6\n");
-			break;
-		case GENERIC_PF7:
-			printf("pf7\n");
-			break;
-		case GENERIC_PF8:
-			printf("pf8\n");
-			break;
-		case GENERIC_PF16:
-			printf("pf16\n");
-			break;
-		case GENERIC_HELP:
-			printf("help\n");
-			break;
-		case GENERIC_UP:
-			printf("up\n");
-			break;
-		case GENERIC_DOWN:
-			printf("down\n");
-			break;
-		case GENERIC_LEFT:
-			printf("left\n");
-			break;
-		case GENERIC_RIGHT:
-			printf("right\n");
-			break;
-		default:
-			printf("<%d>\n",ch-128);
-			break;
-			
-		      
-		}
-		
-	}
-#ifdef unix
-	ioctl(0,TCSETA,&save);
-#endif		
-}
-getch()
-{
-	static int i=0;
-	static char foo[]="\033[28~\033[33~QQQQQQ";
-	
-	return(foo[i++]);
-}
-#endif /*TEST*/
 
 /*
 **	History:
 **	$Log: vcap.c,v $
+**	Revision 1.40  2001-10-12 16:08:03-04  gsl
+**	Change writeing errors to stderr into calls to vre() that now get logged.
+**
+**	Revision 1.39  2001-10-12 14:50:56-04  gsl
+**	Fix nextfield() to properly handle (ignore) blank lines.
+**	Remove OLD code
+**
+**	Revision 1.38  2001-10-11 13:38:13-04  gsl
+**	Add support for .vcap extension
+**
+**	Revision 1.37  2001-10-11 11:22:06-04  gsl
+**	Remove VMS & MSDOS
+**
 **	Revision 1.36  1999-02-17 15:56:36-05  gsl
 **	make vgetmeta() a static routine.
 **

@@ -497,7 +497,7 @@ static void putheader()
 	printf("\n");
 	printf("\n");
 	printf("                   **** %s LICENSE INSTALLATION TOOL ****\n",product_name());
-	printf("         Copyright (c) 1992-2000 by NeoMedia Technologies Incorporated\n");
+	printf("         Copyright (c) 1992-2001 by NeoMedia Technologies Incorporated\n");
 	printf("                             (941) 337-3434\n");
 	printf("\n");
 	printf("\n");
@@ -570,6 +570,9 @@ void wtrace()
 /*
 **	History:
 **	$Log: wlicense.c,v $
+**	Revision 1.20  2001-09-05 14:46:10-04  gsl
+**	change copyright date
+**
 **	Revision 1.19  2000-03-16 10:28:52-05  gsl
 **	2000
 **

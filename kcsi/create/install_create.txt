@@ -1,0 +1,126 @@
+        Copyright (c) 2001 by NeoMedia Technologies Inc. All Rights Reserved.
+        
+        ====================================================================
+        
+        Title:          Installation of CREATE on UNIX
+        
+        Document:       install_create.txt
+        Last Updated:   $Date:$
+        Products:       CREATE/MF, CREATE/ACU
+        Versions:       3.5.00 (AND LATER)
+        
+        Summary:        Installation instructins for the CREATE tool for unix
+                        with Micro Focus COBOL or ACUCOBOL.
+
+        ==================================================================== 
+ 
+
+        INSTALLATION
+        ============
+
+        First install WISP and setup the WISP runtime environment.  This
+        must be in place before create can be used.
+
+        CREATE will normally be distributed on diskette or tape as a
+        compressed tar file.
+
+                Micro Focus:    createmfx.XXXX.tar.Z
+                ACUCOBOL:       createacu.XXXX.tar.Z
+
+        It is recommended that you install CREATE in your WISP directory
+        ($WISPDIR).  Unload this file from the distribution media as
+        follows: 
+
+                $ cd $WISPDIR 
+                $ tar -xvf /dev/rfd0
+
+        Extract the distribution files from the compressed tar file using
+        the following command:
+
+        Micro Focus:
+                $ uncompress -c createmfx.XXXX.tar.Z|tar -xvpf -
+        ACUCOBOL:
+                $ uncompress -c createacu.XXXX.tar.Z|tar -xvpf -
+
+        This will create a directory "createmfx.XXXX" ("createacu.XXXX" for
+        ACUCOBOL) where XXXX is a version number.  Refer to packlist.txt
+        in the distribution for a listing of expected files.
+
+ 
+        Configuration
+        -------------
+ 
+        Copy the create executable to a program directory or a directory
+        on your path.
+
+        Test your installation by running the utilites:
+
+                $ create
+ 
+        NOTE:  If there is any problem running create, proceed to
+               the steps for MAKING THE UTILITY below.
+
+        ====================================================================
+
+           *********************************************************
+                The following instructions are only needed if
+                you could not run the distribution executable 
+                or if you need to relink the executable.
+           *********************************************************
+
+        RELINKING THE UTILITIES
+        -----------------------
+
+        1. Copy the distribution into a directory on the user's path.
+ 
+        2. Ensure that the COBOL compiler will run in this directory.
+ 
+        3. Once this is complete, you may build the create utility.
+
+           a.  Edit the make file create.umf.  The make file contains
+               instructions for building the utility. This make file
+               needs to be edited to correctly reflect the location of
+               the wisp libraries.
+
+           b.  Locate the WISP libraries and edit the value for:
+ 
+                WISPDIR=/usr/local/wisp
+
+           c.  Verify and uncomment the correct curses library location.
+
+                CURSES_LINK = -lcurses
+
+           d.  ACUCOBOL:  Confirm the versin of ACUCOBOL that you are
+                          using and correclty comment and uncomment the
+                          ACULIBS, ACUSUBS, and ACUTEST variables.
+
+                # 2     ACUCOBOL Version 2.0 - 2.3.2
+                #
+                ACULIBS=$(ACULIBS2)
+                ACUSUBS=$(ACUSUBS2)
+                ACUTEST=$(ACUTEST2)
+                #
+ 
+        4. Now the utility may be built:
+
+           Micro Focus COBOL:
+
+                        $ make -f create.umf mfxcreate
+ 
+           ACUCOBOL:
+
+                        $ make -f create.umf
+ 
+                   or if you are creating an EDE version type
+ 
+                        $ make -f create.umf acucreatee
+ 
+        5. Once the make process is complete, the create executable
+           will exist in the working directory, and may be moved to any
+           suitable directory on the path and renamed create.
+
+           NOTE: create is a full executable, and does not require
+                 any run time.
+
+       ========================= END OF DOCUMENT ==========================
+

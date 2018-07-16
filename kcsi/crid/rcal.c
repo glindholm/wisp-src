@@ -7,6 +7,7 @@ of REPORT.
 This module initializes internal structures from the passed COBOL information.
 ------*/
 #include <stdio.h>
+#include <stdarg.h>
 
 /*
 #define	PROFILE
@@ -36,6 +37,8 @@ static WORD profile_buf[PROFILE_BUFSIZE];
 
 static KCSIO_BLOCK kfb1;
 static KCSIO_BLOCK kfb2;
+
+void debug_report_def(void);
 
 /*----
 Within a nf op, lits are translated differently from
@@ -518,15 +521,390 @@ char 	*cob_rpt_opt,
 	rpt_def._kfb1 = &kfb1;
 	rpt_def._kfb2 = &kfb2;
 	rpt_caller = caller;
-	rptbld(&rpt_def);
+
+    if (getenv("CRID_DEBUG_REPORT_DEF"))
+    {
+        debug_report_def();
+    }
+
+    rptbld();
 #ifdef PROFILE
 	monitor((int(*)())0,0,0,0,0);
 #endif
 }
+#define NN(s) ((s)? (s):("(NULL)"))
+
+void crid_debug_print(const char* format, ...)
+{
+	va_list ap;
+    FILE *logfile = fopen("crid_debug_print.log","a");
+
+	va_start(ap, format);
+	vfprintf(logfile, format, ap);
+    va_end(ap);
+
+    fclose(logfile);
+}
+
+void crid_debug_print_DTYPE(const char* name, DTYPE* dtype)
+{
+    if (dtype != NULL)
+    {
+        crid_debug_print(
+            "%s->_pos =%d\n",  name, dtype->_pos);
+        crid_debug_print(
+            "%s->_len =%d\n",  name, dtype->_len);
+        crid_debug_print(
+            "%s->_type =%d\n", name, dtype->_type);
+        crid_debug_print(
+            "%s->_dec =%d\n",  name, dtype->_dec);
+        crid_debug_print(
+            "%s->_base =[%*.*s]\n",  name, dtype->_len, dtype->_len, dtype->_base);
+    }
+    else
+    {
+        crid_debug_print(
+            "%s = (NULL)\n",  name);
+    }
+}
+
+void crid_debug_print_ELEMENT(const char* name, ELEMENT* e)
+{
+    if (NULL == e)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    crid_debug_print(
+        "%s->_name       =[%.20s]\n",  name, NN(e->_name));
+    crid_debug_print(
+        "%s->_occurrence =%d\n",  name, e->_occurrence);
+    crid_debug_print(
+        "%s->_origin     =%d\n",  name, e->_origin);
+}
+
+void crid_debug_print_RPT_RFL(const char* name, RPT_RFL* rfl)
+{
+    char subname[100];
+
+    crid_debug_print("RPT_RFL - Report Field\n");
+    if (NULL == rfl)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &rfl->_e);
+    crid_debug_print(
+        "%s->_line         =%d\n",  name, rfl->_line);
+    crid_debug_print(
+        "%s->_col_head     =[%.26s]\n",  name, NN(rfl->_col_head));
+    crid_debug_print(
+        "%s->_col_sub_head =[%.26s]\n",  name, NN(rfl->_col_sub_head));
+    crid_debug_print(
+        "%s->_ext_size     =%d\n",  name, rfl->_ext_size);
+    crid_debug_print(
+        "%s->_col          =%d\n",  name, rfl->_col);
+}
+
+void crid_debug_print_RPT_SRT(const char* name, RPT_SRT* srt)
+{
+    char subname[100];
+
+    crid_debug_print("RPT_SRT - Report Sorts\n");
+    if (NULL == srt)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &srt->_e);
+    crid_debug_print(
+        "%s->_order          =%d\n",  name, srt->_order);
+}
+
+void crid_debug_print_RPT_NFO(const char* name, RPT_NFO* sp)
+{
+    char subname[100];
+
+    crid_debug_print("RPT_NFO - Report New Field Operands\n");
+    if (NULL == sp)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &sp->_e);
+    crid_debug_print(
+        "%s->_code          =%d\n",  name, sp->_code);
+    crid_debug_print(
+        "%s->_not_lit       =%d\n",  name, sp->_not_lit);
+    sprintf(subname,"%s->_lit_op",name);
+    crid_debug_print_DTYPE(subname, &sp->_lit_op);
+
+}
+
+void crid_debug_print_RPT_NF(const char* name, RPT_NF* sp)
+{
+    char subname[100];
+    int i;
+
+    crid_debug_print("RPT_NF - Report New Fields\n");
+    if (NULL == sp)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &sp->_e);
+
+    for(i=0; i< NF_OP_ENTRY_COUNT; i++)
+    {
+        sprintf(subname,"%s->_o[%d]",name, i);
+        crid_debug_print_RPT_NFO(name, &sp->_o[i]);
+
+        if ('\0' == sp->_o[i]._e._name[0])
+        {
+            break;
+        }
+    }
+
+    sprintf(subname,"%s->_fld",name);
+    crid_debug_print_DTYPE(subname, &sp->_fld);
+}
+
+void crid_debug_print_RPT_DLO(const char* name, RPT_DLO* sp)
+{
+    char subname[100];
+
+    crid_debug_print("RPT_DLO - Report Data Limit Object\n");
+    if (NULL == sp)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &sp->_e);
+    crid_debug_print(
+        "%s->_code       =[%.3s]\n",  name, NN(sp->_code));
+    crid_debug_print(
+        "%s->_connector  =%d\n",  name, sp->_connector);
+    crid_debug_print(
+        "%s->_not_lit    =%d\n",  name, sp->_not_lit);
+    if (NULL == sp->_pnew)
+    {
+        crid_debug_print(
+            "%s->_pnew  = (NULL)\n",  name);
+    }
+    else
+    {
+        sprintf(subname,"%s->_pnew",name);
+        crid_debug_print_DTYPE(subname, *sp->_pnew);
+    }
+    sprintf(subname,"%s->_lit_op",name);
+    crid_debug_print_DTYPE(subname, &sp->_lit_op);
+}
+
+void crid_debug_print_RPT_DL(const char* name, RPT_DL* sp)
+{
+    char subname[100];
+    int i;
+
+    crid_debug_print("RPT_DL - Report Data Limits\n");
+    if (NULL == sp)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &sp->_e);
+    if (NULL == sp->_pnew)
+    {
+        crid_debug_print(
+            "%s->_pnew  = (NULL)\n",  name);
+    }
+    else
+    {
+        sprintf(subname,"%s->_pnew",name);
+        crid_debug_print_DTYPE(subname, *sp->_pnew);
+    }
+
+    for(i=0; i< DL_OP_ENTRY_COUNT; i++)
+    {
+        sprintf(subname,"%s->_o[%d]",name, i);
+        crid_debug_print_RPT_DLO(subname, &sp->_o[i]);
+
+        if ('\0' == sp->_o[i]._e._name[0])
+        {
+            break;
+        }
+    }
+    crid_debug_print(
+        "%s->_set_connector  =%d\n",  name, sp->_set_connector);
+}
+
+
+void crid_debug_print_RPT_RCB(const char* name, RPT_RCB* rcb)
+{
+    char subname[100];
+
+    crid_debug_print("RPT_RCB - Report Control breaks\n");
+    if (NULL == rcb)
+    {
+        crid_debug_print("%s = (NULL)\n", name);
+        return;
+    }
+
+    sprintf(subname,"%s->_e",name);
+    crid_debug_print_ELEMENT(subname, &rcb->_e);
+
+    crid_debug_print(
+        "%s->_action_code =%d\n",  name, rcb->_action_code);
+    crid_debug_print(
+        "%s->_repeat_code =%d\n",  name, rcb->_repeat_code);
+    crid_debug_print(
+        "%s->_break       =[%.41s]\n",  name, NN(rcb->_break));
+    crid_debug_print(
+        "%s->_col         =%d\n",  name, rcb->_col);
+    crid_debug_print(
+        "%s->_rec_count   =%ld\n",  name, rcb->_rec_count);
+    crid_debug_print(
+        "%s->_brk_val     =[%.133s]\n",  name, NN(rcb->_brk_val));
+    crid_debug_print(
+        "%s->_is_breaking =%d\n",  name, rcb->_is_breaking);
+
+    sprintf(subname,"%s->_rfl",name);
+    crid_debug_print_RPT_RFL(subname, rcb->_rfl);
+}
+
+void debug_report_def(void)
+{
+    char name[100];
+    int i;
+
+    crid_debug_print("---------------------\n");
+
+    crid_debug_print("RPT_OPT - Report Options\n");
+    crid_debug_print(
+        "rpt_def._opt->_id        =[%.9s]\n",  rpt_def._opt->_id);
+    crid_debug_print(
+        "rpt_def._opt->_date      =[%.9s]\n",  rpt_def._opt->_date);
+    crid_debug_print(
+        "rpt_def._opt->_device    =%d\n",   rpt_def._opt->_device);
+    crid_debug_print(
+        "rpt_def._opt->_option    =%d\n",   rpt_def._opt->_option);
+    crid_debug_print(
+        "rpt_def._opt->_only      =%d\n",   rpt_def._opt->_only);
+    crid_debug_print(
+        "rpt_def._opt->_page      =%d\n",   rpt_def._opt->_page);
+    crid_debug_print(
+        "rpt_def._opt->_line[0]   =%d\n",   rpt_def._opt->_line[0]);
+    crid_debug_print(
+        "rpt_def._opt->_line[1]   =%d\n",   rpt_def._opt->_line[1]);
+    crid_debug_print(
+        "rpt_def._opt->_line[2]   =%d\n",   rpt_def._opt->_line[2]);
+    crid_debug_print(
+        "rpt_def._opt->_spacing[0]=%d\n",   rpt_def._opt->_spacing[0]);
+    crid_debug_print(
+        "rpt_def._opt->_spacing[1]=%d\n",   rpt_def._opt->_spacing[1]);
+    crid_debug_print(
+        "rpt_def._opt->_spacing[2]=%d\n",   rpt_def._opt->_spacing[2]);
+    crid_debug_print(
+        "rpt_def._opt->_ext_sort  =%d\n",   rpt_def._opt->_ext_sort);
+
+    crid_debug_print("RPT_RDH - Report Header\n");
+    crid_debug_print(
+        "rpt_def._rhd->_sec_file  =%d\n",  rpt_def._rhd->_sec_file);
+    crid_debug_print(
+        "rpt_def._rhd->_sort      =%d\n",  rpt_def._rhd->_sort);
+    crid_debug_print(
+        "rpt_def._rhd->_data_limit=%d\n",  rpt_def._rhd->_data_limit);
+    crid_debug_print(
+        "rpt_def._rhd->_control_fields=%d\n",  rpt_def._rhd->_control_fields);
+    crid_debug_print(
+        "rpt_def._rhd->_column_subs   =%d\n",  rpt_def._rhd->_column_subs);
+    crid_debug_print(
+        "rpt_def._rhd->_key_to_sec    =[%.9s]\n",  rpt_def._rhd->_key_to_sec);
+    crid_debug_print(
+        "rpt_def._rhd->_occurrence    =%d\n",  rpt_def._rhd->_occurrence);
+    crid_debug_print_DTYPE("rpt_def._rhd->_old_key1",rpt_def._rhd->_old_key1);
+    crid_debug_print_DTYPE("rpt_def._rhd->_old_key2",rpt_def._rhd->_old_key2);
+
+    for(i=0; i < 5 ; i++)
+    {
+        sprintf(name,"rpt_def._rcb[%d]",i);
+        crid_debug_print_RPT_RCB(name,&rpt_def._rcb[i]);
+
+        if ('\0' == rpt_def._rcb[i]._e._name[0])
+        {
+            break;
+        }
+    }
+
+    /* Fields in the report */
+    for(i=0; i<RFL_ENTRY_COUNT; i++)
+    {
+        sprintf(name,"rpt_def._rfl[%d]",i);
+        crid_debug_print_RPT_RFL(name, &rpt_def._rfl[i]);
+
+        if ('\0' == rpt_def._rfl[i]._e._name[0])
+        {
+            break;
+        }
+    }
+
+    /* Sort critria */
+    for(i=0; i < 8 ; i++)
+    {
+        sprintf(name,"rpt_def._srt[%d]",i);
+        crid_debug_print_RPT_SRT(name,&rpt_def._srt[i]);
+
+        if ('\0' == rpt_def._srt[i]._e._name[0])
+        {
+            break;
+        }
+    }
+
+    /* Data Limits */
+    for(i=0; i < LMG_DL_ENTRY_COUNT ; i++)
+    {
+        sprintf(name,"rpt_def._dl[%d]",i);
+        crid_debug_print_RPT_DL(name,&rpt_def._dl[i]);
+
+        if ('\0' == rpt_def._dl[i]._e._name[0] &&
+            0    == rpt_def._dl[i]._e._occurrence )
+        {
+            break;
+        }
+    }
+
+    /* New Fields */
+    for(i=0; i < 10 ; i++)
+    {
+        sprintf(name,"rpt_def._nf[%d]",i);
+        crid_debug_print_RPT_NF(name,&rpt_def._nf[i]);
+
+        if ('\0' == rpt_def._nf[i]._e._name[0])
+        {
+            break;
+        }
+    }
+
+}
+
 
 /*
 **	History:
 **	$Log: rcal.c,v $
+**	Revision 1.3  2000-06-13 18:02:23-04  gsl
+**	add debug logging of the report definition.
+**
 **	Revision 1.2  1996-09-17 19:45:43-04  gsl
 **	drcs update
 **

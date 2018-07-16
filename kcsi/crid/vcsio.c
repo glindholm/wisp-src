@@ -345,6 +345,7 @@ static void cinit_for_open(KFB *kfb)
 	kfb->_io_vector = NULL;
 }
 
+#ifdef OLD
 /*----
 Extract the root file data and move in the space.
 ------*/
@@ -371,6 +372,7 @@ static void get_file_space(KFB *kfb)
 			break;
 		}
 }
+#endif /* OLD */
 
 void wargs(int4 count)
 {
@@ -1156,6 +1158,9 @@ int e_trans(int code)
 /*
 **	History:
 **	$Log: vcsio.c,v $
+**	Revision 1.12  2001-11-15 19:16:21-05  gsl
+**	Ifdef out old routine
+**
 **	Revision 1.11  1997-08-06 14:10:13-04  scass
 **	Change 17 to WANG_MAX_KEYS
 **

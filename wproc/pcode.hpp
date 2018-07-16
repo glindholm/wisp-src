@@ -35,10 +35,10 @@ typedef usign_16 offset;
 
 class pcode : public state_object {
    public:
-      friend pcode_reader;
+      friend class pcode_reader;
 #if RUNTIME
 #else
-      friend pcode_emitter;
+      friend class pcode_emitter;
 #endif
       pcode();
       virtual ~pcode();
@@ -123,6 +123,9 @@ class pcode_emitter : public pcode_access {
 //
 //	History:
 //	$Log: pcode.hpp,v $
+//	Revision 1.6  2001-08-22 16:14:20-04  gsl
+//	add friend class keyword
+//
 //	Revision 1.5  1998-08-31 15:14:07-04  gsl
 //	drcs update
 //

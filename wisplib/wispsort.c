@@ -8,9 +8,6 @@ static char rcsid[]="$Id:$";
 **
 **	Routines:	WISPSORT()		The SORTCALL replacement
 **			wangsort()		The underlining wang style sort interface (with stable sort option)
-**			unloadacu()		Unload a Acucobol VISION file to a flat file.
-**			unloadcisam()		Unload a CISAM file to a flatfile
-**			unloadfhisam()		Unload a Micro Focus FHISAM file to a flatfile
 **			addseqnum()		Add a sequence number to each record in a file
 **			delseqnum()		Remove the added sequence number
 **			copyfile()		Copy a file
@@ -121,13 +118,11 @@ static char rcsid[]="$Id:$";
 #include <stdio.h>
 #include <fcntl.h>
 
-#if defined(MSDOS) || defined(unix) || defined(WIN32)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#endif
 
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 #include <io.h>
 #include <process.h>
 #include "wispnt.h"
@@ -143,6 +138,7 @@ static char rcsid[]="$Id:$";
 #include "wmalloc.h"
 #include "vwang.h"
 #include "wispcfg.h"
+#include "wfcisam.h"
 #include "wfvision.h"
 #include "assert.h"
 
@@ -150,20 +146,10 @@ static char rcsid[]="$Id:$";
 #define		ROUTINE		80500
 
 
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
-#ifndef O_TEXT
-#define O_TEXT 0
-#endif
-
 
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
 void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, int4 *sortcode, int4 *returncode);
 
-static int unloadacu(char *inname, char *outname);
-static int unloadcisam(char *inname, char *outname, int4 recsize);
-static int unloadfhisam(char *inname, char *outname, int4 recsize);
 static int addseqnum(char *infile, char *outfile, int recsize);
 static int delseqnum(char *infile, char *outfile, int recsize);
 static int copyfile(char *infile, char *outfile);
@@ -186,7 +172,6 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	int4	mode;
 	char	errbuff[256];
 	char	messstr[80];
-	char	buff[80];
 	int	rc;
 
 	l_sortcode = 0;
@@ -271,62 +256,28 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	}
 	else
 	{
-		char	v_filetype;
-
-		v_filetype = '?';						/* Validated file type unknown			*/
-
+		char	ixtype;
+		
 		/*
 		**	For all Indexed files test against the actual file for the type.
 		*/
 
-		if ( visionversion(infile) > 0 )
+		if (0 == visioninfo(infile,"IX",&ixtype) && 'V' == ixtype)
 		{
-			v_filetype = 'A';
+			/*
+			 *	V = Vision
+			 */
+			l_filetype = 'A';
 		}
-
-		if (v_filetype == '?')
+		else if (0 == cisaminfo(infile,"IX",&ixtype) && ('C'==ixtype || 'M'==ixtype))
 		{
-			strcpy(buff,infile);
-			strcat(buff,".idx");
-
-			if (fexists(buff))					/* CISAM or FH-ISAM				*/
-			{
-				int	fh, i1;
-				unsigned char	magicnum[2];
-
-				fh = open( buff, O_RDONLY | O_BINARY );		/* Open the file				*/
-
-				if ( fh == -1 )
-				{
-					l_returncode = 41;
-					goto return_label;
-				}
-
-				i1 = read( fh, (char *)magicnum, 2 );		/* read the magic number			*/
-				close(fh);
-
-				if ( i1 == -1 )
-				{
-					l_returncode = 41;
-					goto return_label;
-				}
-
-				if      ( i1 >= 2 && (magicnum[0] == 0xFE && magicnum[1] == 0x53) )
-				{
-					v_filetype = 'C';
-				}
-				else if ( i1 >= 2 && (magicnum[0] == 0x31 && magicnum[1] == 0xFE) )
-				{
-					v_filetype = '3'; /* This is the older MF-ISAM files */
-				}
-				else if ( i1 >= 2 && (magicnum[0] == 0x33 && magicnum[1] == 0xFE) )
-				{
-					v_filetype = '3'; /* This could actually be ID3 or ID4 */
-				}
-			} /* CISAM or FH-ISAM */
-		} /* type unknown */
-
-		if (v_filetype == '?')
+			/*
+			 *	C = C-ISAM
+			 *	M = Micro Focus FHISAM
+			 */
+			l_filetype = ixtype;
+		}
+		else
 		{
 			switch(l_filetype)
 			{
@@ -337,8 +288,6 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 			}
 			goto return_label;
 		}
-
-		l_filetype = v_filetype;
 	} /* indexed file */
 
 	/*
@@ -347,7 +296,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	**			N	Newline
 	**			A	Acucobol
 	**			C	Cisam
-	**			3	FH-Isam
+	**			M	Micro Focus FHISAM
 	*/
 
 	wtrace("WANGSORT","FILETYPE", "Filetype=%c", l_filetype);
@@ -359,7 +308,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	if ( l_filetype == 'A' )
 	{
 
-		rc = acuvision(infile,"RS",&l_recsize);
+		rc = visioninfo(infile,"RS",&l_recsize);
 		if ( rc )
 		{
 			l_returncode = 43;
@@ -370,7 +319,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 		ptr = wfname(&mode, "      ", "        ", "##SORT  ", unloadfile);
 		*ptr = '\0';
 
-		rc = unloadacu(infile,unloadfile);
+		rc = unloadvision(infile,unloadfile);
 		if ( rc )
 		{
 			l_returncode = 44;
@@ -385,7 +334,7 @@ void wangsort(char *sortparms, char *filetype, int4 *recsize, int dupinorder, in
 	**	Unload CISAM or FH-ISAM indexed file
 	*/
 
-	if ( l_filetype == 'C' || l_filetype == '3' )
+	if ( l_filetype == 'C' || l_filetype == 'M' )
 	{
 		rc = cisaminfo(infile,"RS",&l_recsize);
 		if ( rc )
@@ -735,263 +684,6 @@ return_label:
 	PUTBIN(returncode,&l_returncode,sizeof(int));
 }
 
-#ifdef unix
-static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file to a tempfile		*/
-{
-	char	command[256];
-	int	rc;
-
-	sprintf(command,"%s -unload %s %s >/dev/null 2>&1", acu_vutil_exe(), inname, outname );
-	rc = wsystem(command);
-
-	return( rc );
-}
-#endif /* unix */
-
-
-#ifdef WIN32
-#include "win32spn.h"
-
-static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file to a tempfile		*/
-{
-	char 	cmd[512];
-	int 	rc;
-
-	/*
-	**	Spawn "vutil32.exe -unload <inname> <outname>"
-	*/
-
-	sprintf(cmd, "%s -unload %s %s", acu_vutil_exe(), inname, outname);
-	ASSERT(strlen(cmd) < sizeof(cmd));
-	
-	rc = win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
-
-	return( rc );
-}
-#endif /* WIN32 */
-
-#ifdef MSDOS
-static int unloadacu(char *inname, char *outname)			/* Unload the ACUCOBOL file to a tempfile		*/
-{
-	char	buff[256];
-	int	rc;
-#define	STD_OUT	1
-	int	old_std_out, new_std_out;
-
-	/*
-	**	To unload the acucobol file we spawn a VUTIL to do it.
-	**	However VUTIL writes some informational messages to stdout that
-	**	we don't want to see so we must redirect stdout to NUL.
-	*/
-
-	/*
-	**	First shutdown vwang before munging with stdout
-	*/
-	vwang_shut();
-
-	/*
-	**	Re-direct stdout to the NUL device
-	*/
-	old_std_out = dup(STD_OUT);
-
-	if ((new_std_out = open("NUL", O_WRONLY | O_CREAT | O_TRUNC | O_TEXT, S_IWRITE)) == -1)
-	{
-		sprintf(buff,"Error on open() of new_std_out [errno=%d]",errno);
-		werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
-	}
-
-	if (dup2(new_std_out, STD_OUT) == -1)
-	{
-		sprintf(buff,"Error on dup2() of new_std_out [errno=%d]",errno);
-		werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
-	}
-
-	/*
-	**	Spawn "vutil.exe -unload <inname> <outname>"
-	*/
-
-	rc = spawnlp(P_WAIT, acu_vutil_exe(), "vutil", "-unload", inname, outname, NULL);
-
-	/*
-	**	Restore stdout
-	*/
-	if ( -1 != old_std_out)
-	{
-		dup2(old_std_out,STD_OUT);
-		close(old_std_out);
-	}
-	else
-	{
-		dup2(handle_stdout(), STD_OUT);
-	}
-	close(new_std_out);
-
-	/*
-	**	Restore vwang
-	*/
-	vwang_synch();
-
-	/*
-	**	Check the results of the spawn of vutil
-	*/
-	if (rc == -1)
-	{
-		if (errno == ENOENT)
-		{
-			sprintf(buff,"VUTIL not found (%s)",acu_vutil_exe());
-			werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
-		}
-		else
-		{
-			sprintf(buff,"Error on spawn of %s [errno=%d]", acu_vutil_exe(), errno);
-			werrlog(ERRORCODE(2),buff,0,0,0,0,0,0,0);
-		}
-	}
-
-	return( rc );
-}
-#endif /* MSDOS */
-
-static int unloadcisam(char *inname, char *outname, int4 recsize)
-{
-	FILE	*fpin, *fpout;
-	unsigned char	*buff;
-	int	rc;
-	char	t_inname[132];
-
-	strcpy(t_inname,inname);
-	if (fexists(t_inname))
-	{
-		fpin = fopen(t_inname,FOPEN_READ_BINARY);
-		if ( !fpin ) return(-1);
-	}
-	else
-	{
-		strcat(t_inname,".dat");
-		if (fexists(t_inname))
-		{
-			fpin = fopen(t_inname,FOPEN_READ_BINARY);
-			if ( !fpin ) return(-1);
-		}
-		else return(-1);	 
-	}
-
-	fpout = fopen(outname,FOPEN_WRITE_BINARY);
-	if ( !fpout ) 
-	{
-		fclose(fpin);
-		return(-1);
-	}
-
-	buff = (unsigned char *)wmalloc((size_t)recsize+2);
-		
-	for(;;)
-	{
-		rc = fread(buff,(size_t)recsize+1,1,fpin);
-		if ( rc != 1 )
-		{
-			if (feof(fpin)) break;
-			fclose(fpin);
-			fclose(fpout);
-			free(buff);
-			return(-1);
-		}
-
-		if ( buff[recsize] == 0x0A )
-		{
-			rc = fwrite(buff, (size_t)recsize, 1, fpout);
-			if ( rc != 1 )
-			{
-				fclose(fpin);
-				fclose(fpout);
-				free(buff);
-				return(-1);
-			}
-		}
-		else if ( buff[recsize] )
-		{
-			fclose(fpin);
-			fclose(fpout);
-			free(buff);
-			return(-1);
-		}
-	}
-
-	fclose(fpin);
-	fclose(fpout);
-	free(buff);
-	return(0);
-}
-
-#if defined(MSDOS) || defined(WIN32)
-static int unloadfhisam(char *inname, char *outname, int4 recsize)
-{
-	werrlog(102, "(unloadfhism) Not Implemented",0,0,0,0,0,0,0);
-	return 1;
-}
-#endif /* MSDOS */
-
-#ifdef unix
-static int unloadfhisam(char *inname, char *outname, int4 recsize)
-{
-	char	parms[512];
-	char	cmd[512];
-	char	buff[80];
-	int	fh, i1;
-	char	*filetype = "I3";		/* Default to ID3 files */
-
-	fh = open( inname, O_RDONLY | O_BINARY );
-	if ( fh != -1 )
-	{
-		unsigned char	fileheader[50];		/* Only need byte 44 (offset 43) by get extra */
-
-		memset(fileheader, '\0', sizeof(fileheader));
-		read( fh, (char *)fileheader, sizeof(fileheader) );
-		close(fh);
-		if (0x04 == fileheader[43])  	/* Check byte that tells 3 or 4 */
-		{
-			filetype = "I4";	/* If 4 then it is ID4 */
-		}
-	}
-
-	if (fexists(inname))
-	{
-		/*
-		**	No .dat extension
-		*/
-		sprintf(parms,"IN %s\nIE\nIT %s\nON %s\nOE\nOT S0\nOF %d\n",inname, filetype, outname, recsize);
-	}
-	else
-	{
-		sprintf(parms,"IN %s\nIT %s\nON %s\nOT S0\nOF %d\n",inname, filetype, outname, recsize);
-	}
-
-	sprintf(cmd,"echo \"%s\" | fhconvert -e -c - >/dev/null 2>&1",parms);
-
-	unlink(outname);		/* Delete old output file */
-
-	wsystem(cmd);			/* Issue the fhconvert command */
-
-	/* Delete temp .con files that fhconvert creates */
-	strcpy(buff,inname);
-	strcat(buff,".con");
-	unlink(buff);
-
-	strcpy(buff,outname);
-	strcat(buff,".con");
-	unlink(buff);
-
-	if (fexists(outname))
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}
-#endif /* unix */
-
 /*
 	addseqnum	Copy records from infile to outfile adding a sequence number to the end of each record.
 			A non-zero return code indicates an error.
@@ -1139,6 +831,20 @@ static int copyfile(char *infile, char *outfile)
 /*
 **	History:
 **	$Log: wispsort.c,v $
+**	Revision 1.34  2001-11-08 13:09:33-05  gsl
+**	remove unused var
+**
+**	Revision 1.33  2001-10-30 15:22:14-05  gsl
+**	versionvesrion() replaced by visioninfo()
+**	unloadvision() moved to wfvision.c
+**
+**	Revision 1.32  2001-10-26 15:40:10-04  gsl
+**	Move unloadcisam ans unloadfhisam to wfcisam.c
+**
+**	Revision 1.31  2001-10-22 17:05:27-04  gsl
+**	Removed MSDOS.
+**	Call cisaminfo IX to determine if CISAM vs MF FHISAM file.
+**
 **	Revision 1.30  1998-09-09 15:49:53-04  gsl
 **	Add trace of keys
 **

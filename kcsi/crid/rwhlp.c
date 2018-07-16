@@ -32,7 +32,7 @@ static char *text1[]={
 "  Count = NO  - Neither of the above functions are performed.",
 " ",
 " ",
-"                          **  Press ENTER to Continue  **",
+"                         **  Press (ENTER) to Continue  **",
 " "
 };
 
@@ -66,7 +66,7 @@ static char *text2[]={
 " ",
 " ",
 " ",
-"                          **  Press ENTER to Continue  **",
+"                         **  Press (ENTER) to Continue  **",
 " "
 };
 
@@ -85,7 +85,7 @@ static char *text3[]={
 "will print a report with print line number 3 followed by print line 1",
 "followed by 2 blank lines before the next print line number 3.",
 " ",
-"                          **  Press ENTER to Continue  **",
+"                         **  Press (ENTER) to Continue  **",
 " "
 };
 
@@ -119,6 +119,9 @@ void rptphlp()
 /*
 **	History:
 **	$Log: rwhlp.c,v $
+**	Revision 1.3  2001-11-05 14:46:01-05  gsl
+**	change ENTER to (ENTER)
+**
 **	Revision 1.2  1996-09-17 19:45:51-04  gsl
 **	drcs update
 **

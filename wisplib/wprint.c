@@ -468,17 +468,16 @@ static int unique_print( const char *file, int copies, int formnum, char lpclass
 		strcpy(exe,"ulp -q");
 	}
 
-	sprintf( cmd, "%s %s %s %s %s %s %s >>%s 2>&1", 
+	sprintf( cmd, "%s %s %s %s %s %s %s", 
 		exe,
 		modestr,
 		l_class,
 		l_form,
 		l_copies,
 		l_printer,
-		file, 
-		werrpath() );
+		file );
 
-	rc = wsystem( cmd );
+	rc = run_unixcommand_silent( cmd );
 	if ( rc != 0 )
 	{
 		werrlog(ERRORCODE(4),exe,file,rc,errno,0,0,0,0,0); 
@@ -624,17 +623,16 @@ static int lp_print( const char *file, int copies, int formnum, char lpclass,
 		}
 
 
-		sprintf( cmd, "%s %s %s %s %s %s %s>>%s 2>&1", 
+		sprintf( cmd, "%s %s %s %s %s %s %s", 
 				base_command,
 				suppress_flag, 
 				wforms(formnum), 
 				wlpclass(lpclass), 
 				getprmap(printer),
 				xcopies, 
-				file, 
-				werrpath() );
+				file);
 
-		rc = wsystem( cmd );
+		rc = run_unixcommand_silent( cmd );
 		if ( rc != 0 )
 		{
 			werrlog(ERRORCODE(2),file,rc,errno,0,0,0,0,0); 
@@ -1013,13 +1011,7 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 	subvar(cmd, "%XNA%", xna);
 	
 #ifdef unix
-	/*
-	**	Redirect the output to wisperr.log file.
-	*/
-	strcat(cmd,">>");
-	strcat(cmd,werrpath());
-	strcat(cmd," 2>&1");
-	rc = wsystem( cmd );
+	rc = run_unixcommand_silent( cmd );
 #endif
 #ifdef WIN32
 	if (wtracing())
@@ -1060,6 +1052,9 @@ static int generic_print( const char *file, int copies, int formnum, char lpclas
 /*
 **	History:
 **	$Log: wprint.c,v $
+**	Revision 1.17  2001-11-01 10:49:22-05  gsl
+**	Replace wsystem() with run_unixcommand_silent() for unix
+**
 **	Revision 1.16  1998-10-23 11:10:32-04  gsl
 **	Implement the PQCMD generic print queue interface.
 **

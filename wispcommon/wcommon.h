@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1988-2000 NeoMedia Technologies, All rights reserved.
+	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 
@@ -21,7 +21,7 @@
 	WCOMMON.H		Define common defines for WISP and WISPLIB
 */
 
-#define WISP_VERSION "V4.3.06"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.4.00"			 					/* WISPTRAN version (char[20])		*/
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
 
@@ -72,6 +72,9 @@
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.41  2001-09-13 15:47:02-04  gsl
+**	4.4.00
+**
 **	Revision 1.40  2000-03-16 10:22:17-05  gsl
 **	4.3.06
 **

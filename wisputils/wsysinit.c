@@ -201,11 +201,7 @@ char	*argv[];
 
 	verbose_printf("\nDeleting WISP temporary files.\n");
 
-	sprintf(command,"rm -f /usr/tmp/%s* >/dev/null 2>&1",WISP_TEMP_PERSON_PREFIX);
-	verbose_printf("%s\n",command);
-	system(command);
-
-	sprintf(command,"rm -f /usr/tmp/%s* >/dev/null 2>&1",WISP_TEMP_PERSUB_PREFIX);
+	sprintf(command,"rm -f %s/* >/dev/null 2>&1",wisptmpdir(NULL));
 	verbose_printf("%s\n",command);
 	system(command);
 
@@ -232,6 +228,11 @@ char	*a1, *a2, *a3, *a4, *a5, *a6, *a7, *a8;
 /*
 **	History:
 **	$Log: wsysinit.c,v $
+**	Revision 1.11  2001-10-31 15:28:48-05  gsl
+**	Removed the deleting temp person files
+**	Added rm -f wisptmpdir()
+**	/usr/tmp/wisptmp/*
+**
 **	Revision 1.10  1996-08-23 17:25:54-04  gsl
 **	Change to use wispxxxdir() routines
 **

@@ -58,7 +58,7 @@ CFG=createacu - Win32 Release
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir ".\createac"
 # PROP Intermediate_Dir ".\createac"
-# PROP Cmd_Line "NMAKE /f ..\..\acu\wwruncbl.mak WISPDIR=..\.. CREATEDIR=. L_WISP=wispd L_VIDEO=videod EXTRA_LINK=msvcrtd.lib create"
+# PROP Cmd_Line "NMAKE /f ..\..\acu\wwruncbl.mak WISPDIR=..\.. CREATEDIR=. L_WISP=wispd L_VIDEO=videod L_CREATE=createacud EXTRA_LINK=msvcrtd.lib create"
 # PROP Rebuild_Opt "/a"
 # PROP Target_File "create.exe"
 # PROP Bsc_Name "createacu\createacu.bsc"
@@ -77,6 +77,10 @@ CFG=createacu - Win32 Release
 
 !ENDIF 
 
+# Begin Source File
+
+SOURCE=.\vscrmain.c
+# End Source File
 # Begin Source File
 
 SOURCE=..\..\acu\wwruncbl.mak

@@ -19,6 +19,9 @@ else
 	WISPDIR=`pwd`
 	cd $QA
 fi
+cd ../..
+WISP=`pwd`
+cd $QA
 WISPCONFIG=$QA/config
 COBSW=-F
 COBPATH=:$QA
@@ -26,6 +29,7 @@ PATH=$WISPDIR/bin:$WISPDIR/cridmfx:$WISPDIR/createmfx:$QA/volrun/onpath:$PATH
 export QA WISPCONFIG COBSW COBPATH PATH
 echo
 echo '**** SETTING UP FOR MICRO FOCUS ****'
+echo "WISP       = $WISP"
 echo "WISPDIR    = $WISPDIR"
 echo "PATH       = $PATH"
 echo "QA         = $QA"
@@ -33,5 +37,11 @@ echo "WISPCONFIG = $WISPCONFIG"
 echo "COBDIR     = $COBDIR"
 echo "COBPATH    = $COBPATH"
 echo "COBSW      = $COBSW"
-cat $COBDIR/cobver
+
+COBVER=$COBDIR/etc/cobver
+if [ ! -f $COBVER ]
+then
+COBVER=$COBDIR/cobver
+fi
+cat $COBVER
 wisp|grep Version

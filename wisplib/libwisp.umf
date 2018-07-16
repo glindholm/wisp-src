@@ -63,7 +63,6 @@ $(THE_LIB): $(THE_LIB)(acpmap.o) \
 	$(THE_LIB)(day.o) \
 	$(THE_LIB)(dbfile.o) \
 	$(THE_LIB)(delete.o) \
-	$(THE_LIB)(dosprint.o) \
 	$(THE_LIB)(edestubs.o) \
 	$(THE_LIB)(errgparm.o) \
 	$(THE_LIB)(extract.o) \
@@ -106,7 +105,6 @@ $(THE_LIB): $(THE_LIB)(acpmap.o) \
 	$(THE_LIB)(mfstubs.o) \
 	$(THE_LIB)(mngfile.o) \
 	$(THE_LIB)(mount.o) \
-	$(THE_LIB)(msdosfns.o) \
 	$(THE_LIB)(msname.o) \
 	$(THE_LIB)(mstime.o) \
 	$(THE_LIB)(msvalue.o) \
@@ -150,7 +148,6 @@ $(THE_LIB): $(THE_LIB)(acpmap.o) \
 	$(THE_LIB)(sharemem.o) \
 	$(THE_LIB)(shellvar.o) \
 	$(THE_LIB)(shutexit.o) \
-	$(THE_LIB)(sleepdos.o) \
 	$(THE_LIB)(sort.o) \
 	$(THE_LIB)(sortcall.o) \
 	$(THE_LIB)(sortlink.o) \
@@ -291,7 +288,6 @@ $(THE_LIB)(dbfile.o): dbfile.c $(WC)/idsistd.h
 $(THE_LIB)(dbfile.o): $(WC)/intdef.h $(WC)/wcommon.h
 $(THE_LIB)(delete.o): delete.c $(WC)/idsistd.h
 $(THE_LIB)(delete.o): $(WC)/intdef.h
-$(THE_LIB)(dosprint.o): dosprint.c
 $(THE_LIB)(edestubs.o): edestubs.c $(WC)/idsistd.h
 $(THE_LIB)(edestubs.o): $(WC)/intdef.h $(WC)/vwang.h
 $(THE_LIB)(edestubs.o): $(WC)/werrlog.h $(WC)/wexit.h
@@ -495,7 +491,6 @@ $(THE_LIB)(mngfile.o): $(WC)/idsisubs.h $(WC)/paths.h
 $(THE_LIB)(mngfile.o): $(WC)/wispcfg.h
 $(THE_LIB)(mount.o): mount.c $(WC)/werrlog.h
 $(THE_LIB)(mount.o): $(WC)/idsistd.h $(WC)/intdef.h
-$(THE_LIB)(msdosfns.o): msdosfns.c
 $(THE_LIB)(msname.o): msname.c $(WC)/idsistd.h
 $(THE_LIB)(msname.o): $(WC)/intdef.h $(WC)/werrlog.h
 $(THE_LIB)(mstime.o): mstime.c $(WC)/idsistd.h
@@ -554,7 +549,7 @@ $(THE_LIB)(readfdr.o): $(WC)/intdef.h $(WC)/wcommon.h
 $(THE_LIB)(readfdr.o): movebin.h cobrun.h $(WC)/werrlog.h
 $(THE_LIB)(readfdr.o): $(WC)/wisplib.h $(WC)/setenvst.h
 $(THE_LIB)(readfdr.o): $(WC)/wfname.h $(WC)/idsisubs.h
-$(THE_LIB)(readfdr.o): $(WC)/filext.h
+$(THE_LIB)(readfdr.o): $(WC)/filext.h wfcisam.h wfvision.h
 $(THE_LIB)(readvtoc.o): readvtoc.c $(WC)/idsistd.h
 $(THE_LIB)(readvtoc.o): $(WC)/intdef.h $(WC)/werrlog.h
 $(THE_LIB)(readvtoc.o): movebin.h $(WC)/wfname.h
@@ -792,7 +787,7 @@ $(THE_LIB)(wfaccess.o): $(WC)/wcommon.h wfaccess.h cobrun.h
 $(THE_LIB)(wfaccess.o): $(WC)/idsisubs.h
 $(THE_LIB)(wfaccess.o): $(WC)/wisplib.h
 $(THE_LIB)(wfaccess.o): $(WC)/setenvst.h
-$(THE_LIB)(wfcisam.o): wfcisam.c $(WC)/idsistd.h
+$(THE_LIB)(wfcisam.o): wfcisam.c wfcisam.h $(WC)/idsistd.h
 $(THE_LIB)(wfcisam.o): $(WC)/intdef.h $(WC)/wisplib.h
 $(THE_LIB)(wfcisam.o): $(WC)/setenvst.h osddefs.h
 $(THE_LIB)(wfclose.o): wfclose.c $(WC)/idsistd.h
@@ -874,7 +869,7 @@ $(THE_LIB)(wispsort.o): $(WC)/sortseqf.h $(WC)/wfname.h
 $(THE_LIB)(wispsort.o): movebin.h osddefs.h $(WC)/wisplib.h
 $(THE_LIB)(wispsort.o): $(WC)/setenvst.h
 $(THE_LIB)(wispsort.o): $(WC)/wmalloc.h $(WC)/vwang.h
-$(THE_LIB)(wispsort.o): $(WC)/wispcfg.h $(WC)/werrlog.h
+$(THE_LIB)(wispsort.o): $(WC)/wispcfg.h $(WC)/werrlog.h wfcisam.h
 $(THE_LIB)(wispsync.o): wispsync.c $(WC)/idsistd.h
 $(THE_LIB)(wispsync.o): $(WC)/intdef.h $(WC)/vwang.h
 $(THE_LIB)(wispvers.o): wispvers.c $(WC)/wcommon.h
@@ -982,11 +977,6 @@ $(THE_LIB)(ring.o): $(WC)/ring.c $(WC)/ring.h
 	ar rv $@ $%
 	rm -f $%
 
-$(THE_LIB)(sleepdos.o): $(WC)/sleepdos.c
-	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
-	ar rv $@ $%
-	rm -f $%
-
 $(THE_LIB)(wisp_pic.o): $(WC)/wisp_pic.c $(WC)/idsistd.h $(WC)/intdef.h $(WC)/wisp_pic.h
 	$(CC) -c $(CFLAGS) $(WC)/$(%:.o=.c)
 	ar rv $@ $%
@@ -1014,6 +1004,15 @@ $(VALLIST): $(THE_LIB)
 
 #	History:
 #	$Log: libwisp.umf,v $
+#	Revision 1.39  2001-10-22 11:11:37-04  gsl
+#	Add wfcisam.h
+#
+#	Revision 1.38  2001-09-27 10:58:20-04  gsl
+#	remove msdosfns ans sleepdos
+#
+#	Revision 1.37  2001-09-27 10:53:52-04  gsl
+#	remove dosprint
+#
 #	Revision 1.36  1998-12-14 11:32:52-05  gsl
 #	add mfstubs
 #

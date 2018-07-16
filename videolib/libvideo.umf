@@ -205,6 +205,6 @@ $(THE_LIB)(vtrigger.o): vtrigger.c video.h
 $(THE_LIB)(vtrim.o): vtrim.c video.h vmodules.h vintdef.h
 $(THE_LIB)(vuserex.o): vuserex.c video.h vlocal.h
 $(THE_LIB)(vutil.o): vutil.c video.h vlocal.h vdata.h vmodules.h
-$(THE_LIB)(vutil.o): vintdef.h
+$(THE_LIB)(vutil.o): vintdef.h vutil.h
 $(THE_LIB)(vwait.o): vwait.c video.h
 $(THE_LIB)(version.o): version.c

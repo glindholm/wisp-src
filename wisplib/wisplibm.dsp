@@ -63,8 +63,8 @@ LIB32=link.exe -lib
 # PROP Output_Dir "wisplibm___Win32_Debug"
 # PROP Intermediate_Dir "wisplibm___Win32_Debug"
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ  /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\wispcommon" /I "..\videolib" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "WINNT" /D "MSFS" /YX /FD /GZ  /c
+# ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\wispcommon" /I "..\videolib" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "WINNT" /D "MSFS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -174,10 +174,6 @@ SOURCE=.\dbfile.c
 # Begin Source File
 
 SOURCE=.\delete.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\dosprint.c
 # End Source File
 # Begin Source File
 
@@ -342,10 +338,6 @@ SOURCE=.\mngfile.c
 # Begin Source File
 
 SOURCE=.\mount.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\msdosfns.c
 # End Source File
 # Begin Source File
 
@@ -1018,10 +1010,6 @@ SOURCE=..\wispcommon\getopt.c
 # Begin Source File
 
 SOURCE=..\wispcommon\ring.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\wispcommon\sleepdos.c
 # End Source File
 # Begin Source File
 

@@ -22,29 +22,31 @@ static char rcsid[]="$Id:$";
 */
 
 
-#ifdef VMS
-#include <descrip.h>
+#ifdef unix
+#include <unistd.h>
 void vwait(int seconds, int hundredths)
 {
-	long int binary_time[2];							/* Binary value for VMS timed waits.	*/
-	int hsec, ticks;								/* Integer hundredth's of a second.	*/
+	unsigned sleep_secs;
+	
+	sleep_secs = seconds + hundredths/100;
+	hundredths = hundredths % 100;
 
-	hsec = hundredths/100;								/* Convert large hundredths.		*/
-	ticks = hundredths - (hsec*100);						/* Get the remainder.			*/
-
-	if (seconds+hsec) sleep(seconds+hsec);						/* Sleep away the seconds.		*/
-
-	if (ticks)									/* Any fractions to sleep?		*/
+	while(sleep_secs > 0)
 	{
-		binary_time[0] = ticks * (-100000);		 			/* Multiply by 1/100 to get total wait.	*/
-		binary_time[1] = 0xffffffff;						/* Fill in the high order bits.		*/
-		sys$schdwk(0,0,binary_time,0);						/* Schedule a wakeup.			*/
-		sys$hiber();								/* Hibernate if we will wake up.	*/
+		sleep_secs = sleep(sleep_secs);
 	}
-}
-#endif /* VMS */
 
-#if defined(unix) || defined(MSDOS)
+	if (hundredths > 0)
+	{
+		/*
+		 *	Sleep for remaining microseconds (1/1000000).
+		 */
+		usleep((unsigned int)hundredths * 10000U);
+	}	
+}
+#endif
+
+#ifdef OLD_UNIX
 extern unsigned sleep(unsigned secs);
 
 void vwait(int seconds, int hundredths)
@@ -58,7 +60,8 @@ void vwait(int seconds, int hundredths)
 		sleep_secs = sleep(sleep_secs);
 	}
 }
-#endif /* unix || MSDOS */
+#endif
+
 
 #ifdef WIN32
 #include <windows.h>
@@ -73,6 +76,13 @@ void vwait(int seconds, int hundredths)
 /*
 **	History:
 **	$Log: vwait.c,v $
+**	Revision 1.12  2001-10-03 14:59:12-04  gsl
+**	Solaris 2.5.1 doesn't define useconds_t so cast to unsigned
+**
+**	Revision 1.11  2001-09-27 15:43:47-04  gsl
+**	Remove VMS code
+**	Rework unix code to use usleep() for 1/100th second sleeping
+**
 **	Revision 1.10  1997-07-09 12:39:12-04  gsl
 **	CHange interface to use only two args (secs, hundredths)
 **	Rewrite for WIN32 so accurate.

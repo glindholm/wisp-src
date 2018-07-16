@@ -175,6 +175,8 @@
                "PRESS (16) TO EXIT".
 
        01  CONDITIONAL-SCREEN USAGE IS DISPLAY-WS.
+	   05  FILLER PIC X(40) ROW 1 COL 20 VALUE
+	       "***  CONDITION CODE TEST ***".
            05  SOURCE COND-LINE-1   PIC X(40) ROW 5   COL 20.
            05  SOURCE COND-LINE-2   PIC X(40) ROW 6   COL 20.
            05  SOURCE COND-LINE-3   PIC X(40) ROW 7   COL 20.
@@ -186,6 +188,8 @@
            05  SOURCE COND-LINE-9   PIC X(40) ROW 13  COL 20.
            05  SOURCE COND-LINE-10  PIC X(40) ROW 14  COL 20.
            05  SOURCE COND-LINE-11  PIC X(40) ROW 15  COL 20.
+	   05  FILLER PIC X(40) ROW 24 COL 20 VALUE
+	       "Press (ENTER) to continue".
 
        01  filler.	   
            05  COND-LINE-1   PIC X(40).
@@ -375,9 +379,9 @@
               GO TO COBOL-TESTS
            ELSE IF PF-KEY = "05" THEN
               ACCEPT COMPANY YEARCODE ACCESSCODE
-              DISPLAY "COMPANY=" COMPANY
-              DISPLAY "YEARCODE=" YEARCODE
-              DISPLAY "ACCESSCODE=" ACCESSCODE
+              DISPLAY "COMPANY=[" COMPANY "]"
+              DISPLAY "YEARCODE=[" YEARCODE "]"
+              DISPLAY "ACCESSCODE=[" ACCESSCODE "]"
               GO TO COBOL-TESTS
            ELSE IF PF-KEY = "06" THEN
               STOP "TEST OF STOP VERB"

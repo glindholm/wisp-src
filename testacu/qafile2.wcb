@@ -33,7 +33,9 @@
            BLINKING-DISPLAY IS "94"
            BRITE IS "84"
            LF IS "0A"
-           NO-ECHO IS "98".
+           NO-ECHO IS "98"
+003800     HEX-00 IS "00", HEX-01 IS "01", HEX-20 IS "20",
+003900     HEX-40 IS "40", HEX-80 IS "80", HEX-A0 IS "A0".
 
       /*****************************************************************
       *                                                                *
@@ -69,29 +71,130 @@
 005300         ACCESS MODE     IS SEQUENTIAL
 005400         FILE STATUS     IS FSTAT.
 
-           SELECT FILE-C
-               ASSIGN TO "CFILE",    "DISK",     NODISPLAY,
-               ORGANIZATION    IS SEQUENTIAL
-               ACCESS MODE     IS SEQUENTIAL
-               FILE STATUS     IS FILE-C-STAT.
-
-           SELECT FILE-D
-               ASSIGN TO "DFILE",    "DISK",     NODISPLAY,
-               ORGANIZATION    IS INDEXED
-               ACCESS MODE     IS DYNAMIC
-               RECORD KEY      IS FILE-D-KEY1
-               FILE STATUS     IS FILE-D-STAT.
-
-           SELECT CMPFILE
-               ASSIGN TO "CMPFILE",  "PRINTER"
-               ORGANIZATION    IS SEQUENTIAL
-               ACCESS MODE     IS SEQUENTIAL
-               FILE STATUS     IS FILE-CMP-FSTAT.
-
            SELECT LARGE-FILE
                ASSIGN TO "LARGE", "DISK",  NODISPLAY,
                FILE STATUS     IS FILSTAT.
 
+      ******************************************************************
+      ******************************************************************
+
+           SELECT FILE-SF
+               ASSIGN TO "SEQFIX",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS FILE-SF-STAT.
+
+           SELECT FILE-SV
+               ASSIGN TO "SEQVAR",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS SEQUENTIAL
+               ACCESS MODE     IS SEQUENTIAL
+               FILE STATUS     IS FILE-SV-STAT.
+
+           SELECT FILE-IF
+               ASSIGN TO "IDXFIX",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS INDEXED
+               ACCESS MODE     IS DYNAMIC
+               RECORD KEY      IS IF-R1-KEY
+               FILE STATUS     IS FILE-IF-STAT.
+
+      *$COMPRESSFILE
+           SELECT FILE-IFC
+               ASSIGN TO "IDXFIXC",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS INDEXED
+               ACCESS MODE     IS DYNAMIC
+               RECORD KEY      IS IFC-R1-KEY
+               FILE STATUS     IS FILE-IFC-STAT.
+
+           SELECT FILE-IV
+               ASSIGN TO "IDXVAR",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS INDEXED
+               ACCESS MODE     IS DYNAMIC
+               RECORD KEY      IS IV-R1-KEY
+               FILE STATUS     IS FILE-IV-STAT.
+
+           SELECT FILE-RF
+               ASSIGN TO "RELFIX",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS RELATIVE
+               ACCESS MODE     IS DYNAMIC
+                  RELATIVE KEY IS RF-WS-KEY
+               FILE STATUS     IS FILE-RF-STAT.
+
+           SELECT FILE-RV
+               ASSIGN TO "RELVAR",    "DISK",     NODISPLAY,
+               ORGANIZATION    IS RELATIVE
+               ACCESS MODE     IS DYNAMIC
+                  RELATIVE KEY IS RV-WS-KEY
+               FILE STATUS     IS FILE-RV-STAT.
+
+           SELECT FILE-AF
+               ASSIGN TO "ALTFIX",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AF-R1-KEY
+               ALTERNATE RECORD KEY IS AF-R1-ALT1
+                                    IS AF-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AF-STAT.
+
+           SELECT FILE-AV
+               ASSIGN TO "ALTVAR",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV-R1-KEY
+               ALTERNATE RECORD KEY IS AV-R1-ALT1
+                                    IS AV-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV-STAT.
+
+      *	   VISION 3	       
+           SELECT FILE-AV3
+               ASSIGN TO "ALTVARV3",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV3-R1-KEY
+               ALTERNATE RECORD KEY IS AV3-R1-ALT1
+                                    IS AV3-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV3-STAT.
+
+      *	   VISION 2	       
+           SELECT FILE-AV2
+               ASSIGN TO "ALTVARV2",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV2-R1-KEY
+               ALTERNATE RECORD KEY IS AV2-R1-ALT1
+                                    IS AV2-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV2-STAT.
+
+      *$MF_CODE PROCESS
+      $SET IDXFORMAT"4"
+      *$MF_END
+
+           SELECT FILE-AV4
+               ASSIGN TO "ALTVAR4",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV4-R1-KEY
+               ALTERNATE RECORD KEY IS AV4-R1-ALT1
+                                    IS AV4-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV4-STAT.
+	       
+      *$MF_CODE PROCESS
+      $SET IDXFORMAT"8"
+      *$MF_END
+
+           SELECT FILE-AV8
+               ASSIGN TO "ALTVAR8",    "DISK",     NODISPLAY,
+               ORGANIZATION         IS INDEXED
+               ACCESS MODE          IS DYNAMIC
+               RECORD KEY           IS AV8-R1-KEY
+               ALTERNATE RECORD KEY IS AV8-R1-ALT1
+                                    IS AV8-R1-ALT2 DUPLICATES
+               FILE STATUS          IS FILE-AV8-STAT.
+
+      *$MF_CODE PROCESS
+      $SET IDXFORMAT"0"
+      *$MF_END
+      
+	       
       /*****************************************************************
       *                                                                *
       *                      DATA DIVISION - FILE SECTION              *
@@ -103,7 +206,15 @@
       *
        FD  CRT
            LABEL RECORDS ARE OMITTED.
-       01  CRTREC                         PIC X(1924).
+       01  CRTREC.
+           03  CRTREC-OA.
+               05  CRTREC-OA-1             PIC X.
+               05  CRTREC-OA-2             PIC X.
+               05  CRTREC-OA-3             PIC X.
+               05  CRTREC-OA-4             PIC X.
+           03  CRTREC-MAPPING-AREA.
+               05  CRTREC-ROW  OCCURS 24 TIMES.
+                   10 CRTREC-X OCCURS 80 TIMES PIC X.
 
        FD  LOG-FILE
            VALUE OF FILENAME IS LOG-FIL,
@@ -132,50 +243,210 @@
 008500 01  PRINT-LINE.
 008600     05  FILLER                  PIC X(090).
 
-       FD  FILE-C
-           RECORD CONTAINS 41 TO 81 COMPRESSED CHARACTERS
-           VALUE OF FILENAME IS FIL-FOR-FILE-C
-                    LIBRARY  IS LIB-FOR-FILE-C
-                    VOLUME   IS VOL-FOR-FILE-C.
-
-       01  FILE-C-REC41.
-           03  TYPE-C-REC1                   PIC X(1).
-           03  C-VALUE-1                     PIC X(40).
-       01  FILE-C-REC81.
-           03  TYPE-C-REC2                   PIC X(1).
-           03  C-TEXT-1                      PIC X(40).
-           03  C-TEXT-2                      PIC X(40).
-
-       FD  FILE-D
-           RECORD CONTAINS 41 TO 81 COMPRESSED CHARACTERS
-           VALUE OF FILENAME IS FIL-FOR-FILE-D
-                    LIBRARY  IS LIB-FOR-FILE-D
-                    VOLUME   IS VOL-FOR-FILE-D.
-
-       01  FILE-D-REC41.
-           03  FILE-D-KEY1                   PIC X(1).
-           03  D-VALUE-1                     PIC X(40).
-       01  FILE-D-REC81.
-           03  FILE-D-KEY2                   PIC X(1).
-           03  D-TEXT-1                      PIC X(40).
-           03  D-TEXT-2                      PIC X(40).
-
-       FD  CMPFILE
-      *    RECORD CONTAINS 500 COMPRESSED CHARACTERS
-           LABEL RECORDS OMITTED
-           VALUE OF FILENAME IS CMP-FILE-NAME
-                    LIBRARY  IS CMP-LIBRARY
-                    VOLUME   IS CMP-VOLUME.
-
-       01  CMP-PRINT-LINE.
-           05  FILLER                  PIC X(200).
-
        FD  LARGE-FILE
            VALUE OF FILENAME IS "LARGE".
 
        01  LARGE-RECORD.
            05  LARGE-CNT      PIC 999999.
            05  LARGE-DATA     PIC X(74).
+
+      ******************************************************************
+      ******************************************************************
+
+      ************
+       FD  FILE-SF
+           VALUE OF FILENAME IS FIL-FOR-FILE-SF
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  SF-R1.
+           03  SF-R1-KEY                      PIC 9(10).
+           03  SF-R1-F1                       PIC X(35).
+
+      ************
+       FD  FILE-SV
+           RECORD VARYING FROM 45 TO 80 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-SV
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  SV-R1.
+           03  SV-R1-KEY                      PIC 9(10).
+           03  SV-R1-F1                       PIC X(35).
+       01  SV-R2.
+           03  SV-R2-KEY                      PIC 9(10).
+           03  SV-R2-F1                       PIC X(35).
+           03  SV-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-IF
+           VALUE OF FILENAME IS FIL-FOR-FILE-IF
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  IF-R1.
+           03  IF-R1-KEY                      PIC 9(10).
+           03  IF-R1-F1                       PIC X(35).
+
+      ************
+       FD  FILE-IFC
+           VALUE OF FILENAME IS FIL-FOR-FILE-IFC
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  IFC-R1.
+           03  IFC-R1-KEY                      PIC 9(10).
+           03  IFC-R1-F1                       PIC X(35).
+
+      ************
+       FD  FILE-IV
+           RECORD VARYING FROM 45 TO 80 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-IV
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  IV-R1.
+           03  IV-R1-KEY                      PIC 9(10).
+           03  IV-R1-F1                       PIC X(35).
+       01  IV-R2.
+           03  IV-R2-KEY                      PIC 9(10).
+           03  IV-R2-F1                       PIC X(35).
+           03  IV-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-RF
+           VALUE OF FILENAME IS FIL-FOR-FILE-RF
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  RF-R1.
+           03  RF-R1-KEY                      PIC 9(10).
+           03  RF-R1-F1                       PIC X(35).
+
+      ************
+       FD  FILE-RV
+           RECORD VARYING FROM 45 TO 80 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-RV
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  RV-R1.
+           03  RV-R1-KEY                      PIC 9(10).
+           03  RV-R1-F1                       PIC X(35).
+
+       01  RV-R2.
+           03  RV-R2-KEY                      PIC 9(10).
+           03  RV-R2-F1                       PIC X(35).
+           03  RV-R2-F2                       PIC X(35).
+
+
+      ************
+       FD  FILE-AF
+           VALUE OF FILENAME IS FIL-FOR-FILE-AF
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AF-R1.
+           03  AF-R1-KEY                      PIC 9(10).
+           03  AF-R1-ALT1                     PIC 9(5).
+           03  AF-R1-ALT2                     PIC 9(5).
+           03  AF-R1-F1                       PIC X(35).
+
+      ************
+       FD  FILE-AV
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV-R1.
+           03  AV-R1-KEY                      PIC 9(10).
+           03  AV-R1-ALT1                     PIC 9(5).
+           03  AV-R1-ALT2                     PIC 9(5).
+           03  AV-R1-F1                       PIC X(35).
+       01  AV-R2.
+           03  AV-R2-KEY                      PIC 9(10).
+           03  AV-R2-ALT1                     PIC 9(5).
+           03  AV-R2-ALT2                     PIC 9(5).
+           03  AV-R2-F1                       PIC X(35).
+           03  AV-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-AV2
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV2
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV2-R1.
+           03  AV2-R1-KEY                      PIC 9(10).
+           03  AV2-R1-ALT1                     PIC 9(5).
+           03  AV2-R1-ALT2                     PIC 9(5).
+           03  AV2-R1-F1                       PIC X(35).
+       01  AV2-R2.
+           03  AV2-R2-KEY                      PIC 9(10).
+           03  AV2-R2-ALT1                     PIC 9(5).
+           03  AV2-R2-ALT2                     PIC 9(5).
+           03  AV2-R2-F1                       PIC X(35).
+           03  AV2-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-AV3
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV3
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV3-R1.
+           03  AV3-R1-KEY                      PIC 9(10).
+           03  AV3-R1-ALT1                     PIC 9(5).
+           03  AV3-R1-ALT2                     PIC 9(5).
+           03  AV3-R1-F1                       PIC X(35).
+       01  AV3-R2.
+           03  AV3-R2-KEY                      PIC 9(10).
+           03  AV3-R2-ALT1                     PIC 9(5).
+           03  AV3-R2-ALT2                     PIC 9(5).
+           03  AV3-R2-F1                       PIC X(35).
+           03  AV3-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-AV4
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV4
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV4-R1.
+           03  AV4-R1-KEY                      PIC 9(10).
+           03  AV4-R1-ALT1                     PIC 9(5).
+           03  AV4-R1-ALT2                     PIC 9(5).
+           03  AV4-R1-F1                       PIC X(35).
+       01  AV4-R2.
+           03  AV4-R2-KEY                      PIC 9(10).
+           03  AV4-R2-ALT1                     PIC 9(5).
+           03  AV4-R2-ALT2                     PIC 9(5).
+           03  AV4-R2-F1                       PIC X(35).
+           03  AV4-R2-F2                       PIC X(35).
+
+      ************
+       FD  FILE-AV8
+           RECORD VARYING FROM 55 TO 90 CHARACTERS
+           VALUE OF FILENAME IS FIL-FOR-FILE-AV8
+                    LIBRARY  IS SAMPLE-LIB
+                    VOLUME   IS SAMPLE-VOL.
+
+       01  AV8-R1.
+           03  AV8-R1-KEY                      PIC 9(10).
+           03  AV8-R1-ALT1                     PIC 9(5).
+           03  AV8-R1-ALT2                     PIC 9(5).
+           03  AV8-R1-F1                       PIC X(35).
+       01  AV8-R2.
+           03  AV8-R2-KEY                      PIC 9(10).
+           03  AV8-R2-ALT1                     PIC 9(5).
+           03  AV8-R2-ALT2                     PIC 9(5).
+           03  AV8-R2-F1                       PIC X(35).
+           03  AV8-R2-F2                       PIC X(35).
+
 
       /*****************************************************************
       *                                                                *
@@ -186,31 +457,148 @@
        WORKING-STORAGE SECTION.
 
        01  INDEX-COUNTER                  PIC 9(5).
+       01  RECORD-CNT                     PIC 9(5).
        01  FILSTAT.
            03  ERR-FLAG                   PIC X(01).
            03  PFK-BYTE                   PIC X(01).
 
-       01  FILE-C-STAT                    PIC X(2).
-       01  FILE-D-STAT                    PIC X(2).
        01  FILE-PRT-STAT                  PIC X(2).
-       01  FILE-CMP-FSTAT                 PIC X(2).
+
+       01  RET-CODE.
+           05  RET-CODE-1          BINARY VALUE 0.
+           05  RET-CODE-2	   BINARY VALUE 0.
+       01  RNUM   PIC 9(10).
+
+       01  SCRATCH-TYPE-LIBRARY		   PIC X VALUE "L".
+
+       01  CRT-ROW-NUM			  PIC 99 VALUE 1.
+       01  NEXT-CRT-ROW		          PIC X(80) VALUE SPACES.
+
+      ******************************************************************
+      ******************************************************************
+
+       01  FILE-SF-STAT                    PIC X(2).
+       01  FILE-SV-STAT                    PIC X(2).
+
+       01  FILE-IF-STAT                    PIC X(2).
+       01  FILE-IFC-STAT                   PIC X(2).
+       01  FILE-IV-STAT                    PIC X(2).
+
+       01  FILE-RF-STAT                    PIC X(2).
+       01  FILE-RV-STAT                    PIC X(2).
+
+       01  FILE-AF-STAT                    PIC X(2).
+       01  FILE-AV-STAT                    PIC X(2).
+
+       01  FILE-AV2-STAT                    PIC X(2).
+       01  FILE-AV3-STAT                    PIC X(2).
+
+       01  FILE-AV4-STAT                    PIC X(2).
+       01  FILE-AV8-STAT                    PIC X(2).
+       
+      ******************************************************************
+
+       01  SAMPLE-FIL                      PIC X(8) VALUE SPACES.
+       01  SAMPLE-LIB                      PIC X(8) VALUE "LIBSAM".
+       01  SAMPLE-VOL                      PIC X(6) VALUE "VOLOUT".
+
+       01  FIL-FOR-FILE-SF                 PIC X(8) VALUE "SEQFIX".
+       01  FIL-FOR-FILE-SV                 PIC X(8) VALUE "SEQVAR".
+
+       01  FIL-FOR-FILE-IF                 PIC X(8) VALUE "IDXFIX".
+       01  FIL-FOR-FILE-IFC                PIC X(8) VALUE "IDXFIXC".
+       01  FIL-FOR-FILE-IV                 PIC X(8) VALUE "IDXVAR".
+
+       01  FIL-FOR-FILE-RF                 PIC X(8) VALUE "RELFIX".
+       01  FIL-FOR-FILE-RV                 PIC X(8) VALUE "RELVAR".
+
+       01  FIL-FOR-FILE-AF                 PIC X(8) VALUE "ALTFIX".
+       01  FIL-FOR-FILE-AV                 PIC X(8) VALUE "ALTVAR".
+
+       01  FIL-FOR-FILE-AV2                PIC X(8) VALUE "ALTVARV2".
+       01  FIL-FOR-FILE-AV3                PIC X(8) VALUE "ALTVARV3".
+
+       01  FIL-FOR-FILE-AV4                PIC X(8) VALUE "ALTVAR4".
+       01  FIL-FOR-FILE-AV8                PIC X(8) VALUE "ALTVAR8".
 
       ******************************************************************
 
-       01  RETCOD.
-           05  B4          BINARY VALUE 0.
-           05  RET-CODE BINARY VALUE 0.
-       01  RNUM   PIC 9(10).
+       01  MAX-LOAD-CNT			   PIC 9(5) VALUE 2000.
 
-       01  FIL-FOR-FILE-C                 PIC X(8) VALUE "CFILE".
-       01  LIB-FOR-FILE-C                 PIC X(8) VALUE SPACES.
-       01  VOL-FOR-FILE-C                 PIC X(6) VALUE SPACES.
-       01  C-SCREEN-TITLE                 PIC X(40) VALUE SPACES.
+       01  SF-WS-DATA.
+           03  SF-WS-KEY                   PIC 9(10).
+           03  SF-WS-F1                    PIC X(35).
 
-       01  FIL-FOR-FILE-D                 PIC X(8) VALUE "DFILE".
-       01  LIB-FOR-FILE-D                 PIC X(8) VALUE SPACES.
-       01  VOL-FOR-FILE-D                 PIC X(6) VALUE SPACES.
-       01  D-SCREEN-TITLE                 PIC X(40) VALUE SPACES.
+       01  SV-WS-DATA.
+           03  SV-WS-KEY                   PIC 9(10).
+           03  SV-WS-F1                    PIC X(35).
+           03  SV-WS-F2                    PIC X(35).
+
+       01  IF-WS-DATA.
+           03  IF-WS-KEY                   PIC 9(10).
+           03  IF-WS-F1                    PIC X(35).
+
+       01  IFC-WS-DATA.
+           03  IFC-WS-KEY                  PIC 9(10).
+           03  IFC-WS-F1                   PIC X(35).
+
+       01  IV-WS-DATA.
+           03  IV-WS-KEY                   PIC 9(10).
+           03  IV-WS-F1                    PIC X(35).
+           03  IV-WS-F2                    PIC X(35).
+
+       01  RF-WS-DATA.
+           03  RF-WS-KEY                   PIC 9(10).
+           03  RF-WS-F1                    PIC X(35).
+
+       01  RV-WS-DATA.
+           03  RV-WS-KEY                   PIC 9(10).
+           03  RV-WS-F1                    PIC X(35).
+           03  RV-WS-F2                    PIC X(35).
+
+       01  AF-WS-DATA.
+           03  AF-WS-KEY                   PIC 9(10).
+           03  AF-WS-ALT1                  PIC 9(5).
+           03  AF-WS-ALT2                  PIC 9(5).
+           03  AF-WS-F1                    PIC X(35).
+
+       01  AV-WS-DATA.
+           03  AV-WS-KEY                   PIC 9(10).
+           03  AV-WS-ALT1                  PIC 9(5).
+           03  AV-WS-ALT2                  PIC 9(5).
+           03  AV-WS-F1                    PIC X(35).
+           03  AV-WS-F2                    PIC X(35).
+
+       01  AV2-WS-DATA.
+           03  AV2-WS-KEY                   PIC 9(10).
+           03  AV2-WS-ALT1                  PIC 9(5).
+           03  AV2-WS-ALT2                  PIC 9(5).
+           03  AV2-WS-F1                    PIC X(35).
+           03  AV2-WS-F2                    PIC X(35).
+
+       01  AV3-WS-DATA.
+           03  AV3-WS-KEY                   PIC 9(10).
+           03  AV3-WS-ALT1                  PIC 9(5).
+           03  AV3-WS-ALT2                  PIC 9(5).
+           03  AV3-WS-F1                    PIC X(35).
+           03  AV3-WS-F2                    PIC X(35).
+
+       01  AV4-WS-DATA.
+           03  AV4-WS-KEY                   PIC 9(10).
+           03  AV4-WS-ALT1                  PIC 9(5).
+           03  AV4-WS-ALT2                  PIC 9(5).
+           03  AV4-WS-F1                    PIC X(35).
+           03  AV4-WS-F2                    PIC X(35).
+
+       01  AV8-WS-DATA.
+           03  AV8-WS-KEY                   PIC 9(10).
+           03  AV8-WS-ALT1                  PIC 9(5).
+           03  AV8-WS-ALT2                  PIC 9(5).
+           03  AV8-WS-F1                    PIC X(35).
+           03  AV8-WS-F2                    PIC X(35).
+
+      ******************************************************************
+      ******************************************************************
 
        01  FLV-TITLE                      PIC X(40) VALUE SPACES.
        01  FLV-FOOTER                     PIC X(40) VALUE SPACES.
@@ -222,10 +610,6 @@
        01  PRT-LIBRARY                    PIC X(8) VALUE SPACES.
        01  PRT-VOLUME                     PIC X(6) VALUE SPACES.
 
-       01  CMP-FILE-NAME                  PIC X(8) VALUE "CMPFILE".
-       01  CMP-LIBRARY                    PIC X(8) VALUE SPACES.
-       01  CMP-VOLUME                     PIC X(6) VALUE SPACES.
-       01  CMP-SCREEN-TITLE               PIC X(40) VALUE SPACES.
 
        01  REC-FLAG                       PIC X.
            88  NO-MORE-RECORDS            VALUE "N".
@@ -262,14 +646,6 @@
        01  MY-INDEX                       PIC 9(5).
        01  ACCEPT-FIELD                   PIC X(6).
        01  START-VAL                      PIC X(4) VALUE "0000".
-
-       01  FILE-C-RECORD.
-           03  FILE-C-LINE1               PIC X(40).
-           03  FILE-C-LINE2               PIC X(40).
-
-       01  FILE-D-RECORD.
-           03  FILE-D-LINE1               PIC X(40).
-           03  FILE-D-LINE2               PIC X(40).
 
       ******************************************************************
 
@@ -380,67 +756,51 @@
            03  FILLER PIC X(40) ROW 24 COL 40 SOURCE FLV-FOOTER.
 
 
-       01  FILE-C-SCREEN USAGE IS DISPLAY-WS.
+       01  FILE-SV-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 1 COL 20 VALUE
-               "* * * FILE-C-SCREEN * * *".
+               "* * * WRITE SEQVAR FILE * * *".
 
-           03  FILLER PIC X(40) ROW 3 COL 20
-               SOURCE C-SCREEN-TITLE.
+           03  FILLER PIC X(14) ROW  7 COL  5 VALUE "RECORD-KEY".
+           03  FILLER PIC 9(10) ROW  7 COL 20 
+               SOURCE SV-WS-KEY OBJECT SV-WS-KEY.
 
-           03  FILLER PIC X(14) ROW  9 COL  5 VALUE "C-RECORD-LINE1".
-           03  FILLER PIC X(40) ROW  9 COL 20 
-               SOURCE FILE-C-LINE1 OBJECT FILE-C-LINE1.
+           03  FILLER PIC X(14) ROW  9 COL  5 VALUE "RECORD-LINE1".
+           03  FILLER PIC X(35) ROW  9 COL 20 
+               SOURCE SV-WS-F1 OBJECT SV-WS-F1.
 
-           03  FILLER PIC X(14) ROW 11 COL  5 VALUE "C-RECORD-LINE2".
-           03  FILLER PIC X(40) ROW 11 COL 20 
-               SOURCE FILE-C-LINE2 OBJECT FILE-C-LINE2.
+           03  FILLER PIC X(14) ROW 11 COL  5 VALUE "RECORD-LINE2".
+           03  FILLER PIC X(35) ROW 11 COL 20 
+               SOURCE SV-WS-F2 OBJECT SV-WS-F2.
 
-           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "FILE-C-STAT".
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "FILE STATUS".
            03  FILLER PIC X(02) ROW 22 COL 47
-               SOURCE FILE-C-STAT OBJECT FILE-C-STAT.
+               SOURCE FILE-SV-STAT.
 
-           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
-               "PRESS (ENTER) TO CONTINUE.".
+           03  FILLER PIC X(50) ROW 24 COL 15 VALUE
+               "(1) Write Rec-1   (2) Write Rec-2   (16) Exit".
 
-       01  FILE-D-SCREEN USAGE IS DISPLAY-WS.
+       01  FILE-IV-SCREEN USAGE IS DISPLAY-WS.
            03  FILLER PIC X(40) ROW 1 COL 20 VALUE
-               "* * * FILE-D-SCREEN * * *".
+               "* * * WRITE IDXVAR FILE * * *".
 
-           03  FILLER PIC X(40) ROW 3 COL 20
-               SOURCE D-SCREEN-TITLE.
+           03  FILLER PIC X(14) ROW  7 COL  5 VALUE "RECORD-KEY".
+           03  FILLER PIC 9(10) ROW  7 COL 20 
+               SOURCE IV-WS-KEY OBJECT IV-WS-KEY.
 
-           03  FILLER PIC X(14) ROW  9 COL  5 VALUE "D-RECORD-LINE1".
-           03  FILLER PIC X(40) ROW  9 COL 20 
-               SOURCE FILE-D-LINE1 OBJECT FILE-D-LINE1.
+           03  FILLER PIC X(14) ROW  9 COL  5 VALUE "RECORD-LINE1".
+           03  FILLER PIC X(35) ROW  9 COL 20 
+               SOURCE IV-WS-F1 OBJECT IV-WS-F1.
 
-           03  FILLER PIC X(14) ROW 11 COL  5 VALUE "D-RECORD-LINE2".
-           03  FILLER PIC X(40) ROW 11 COL 20 
-               SOURCE FILE-D-LINE2 OBJECT FILE-D-LINE2.
+           03  FILLER PIC X(14) ROW 11 COL  5 VALUE "RECORD-LINE2".
+           03  FILLER PIC X(35) ROW 11 COL 20 
+               SOURCE IV-WS-F2 OBJECT IV-WS-F2.
 
-           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "FILE-D-STAT".
+           03  FILLER PIC X(11) ROW 22 COL 35 VALUE "FILE STATUS".
            03  FILLER PIC X(02) ROW 22 COL 47
-               SOURCE FILE-D-STAT OBJECT FILE-D-STAT.
+               SOURCE FILE-IV-STAT.
 
-           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
-               "PRESS (ENTER) TO CONTINUE.".
-
-       01  CMP-RECORD-SCREEN USAGE IS DISPLAY-WS.
-           03  FILLER PIC X(40) ROW 1 COL 20 VALUE
-               "* * * CMPFILE SCREEN * * *".
-
-           03  FILLER PIC X(40) ROW 3 COL 20
-               SOURCE CMP-SCREEN-TITLE.
-
-           03  FILLER PIC X(15) ROW  9 COL  5 VALUE "CMPFILE-RECORD:".
-           03  FILLER PIC X(200) ROW 10 COL  1 
-               SOURCE CMP-PRINT-LINE.
-
-           03  FILLER PIC X(14) ROW 22 COL 35 VALUE "FILE-CMP-FSTAT".
-           03  FILLER PIC X(02) ROW 22 COL 47
-               SOURCE FILE-CMP-FSTAT.
-
-           03  FILLER PIC X(26) ROW 24 COL 30 VALUE
-               "PRESS (ENTER) TO CONTINUE.".
+           03  FILLER PIC X(50) ROW 24 COL 15 VALUE
+               "(1) Write Rec-1   (2) Write Rec-2   (16) Exit".
 
        01  FILE-SCREEN-2 USAGE IS DISPLAY-WS.
            03  FILLER  PIC X(11) ROW  1 COL 20 VALUE
@@ -462,46 +822,54 @@
            03  FILLER  PIC X(35) ROW  9 COL  2 VALUE
                "(7) SUBS SCREEN/PRINT EXTEND".
            03  FILLER  PIC X(33) ROW 10 COL  2 VALUE
-               "(8) CREATE FILE-C (SEQ VARIABLE).".
+               "(8) CREATE FILE SEQVAR".
            03  FILLER  PIC X(38) ROW 11 COL  2 VALUE
-               "(9) CREATE FILE-D (INDEXED VARIABLE).".
+               "(9) CREATE FILE IDXVAR".
            03  FILLER  PIC X(35) ROW 12 COL  2 VALUE
-               "(10) CREATE COMPRESSED PRINT FILE".
+               "(10)".
            03  FILLER  PIC X(35) ROW 13 COL  2 VALUE
-               "(11) READ COMPRESSED PRINT FILE".
+               "(11)".
            03  FILLER  PIC X(35) ROW 14 COL  2 VALUE
-               "(12) WRITE COMPRESSED PRINT RCORD".
+               "(12)".
            03  FILLER  PIC X(35) ROW 15 COL  2 VALUE
                "(13) CREATE A LARGE FILE".
            03  FILLER  PIC X(35) ROW 16 COL  2 VALUE
-               "(14) ".
+               "(14) Create EMTPY Files".
            03  FILLER  PIC X(35) ROW 17 COL  2 VALUE
-               "(15) ".
+               "(15) Create LIBSAM Files".
            03  FILLER  PIC X(35) ROW 20 COL  2 VALUE
                "(16) EXIT".
 
            03  FILLER  PIC X(35) ROW  3 COL 40 VALUE
-               "(17) ".
+               "(17) LOAD SEQFIX".
            03  FILLER  PIC X(35) ROW  4 COL 40 VALUE
-               "(18) ".
+               "(18) LOAD SEQVAR".
            03  FILLER  PIC X(35) ROW  5 COL 40 VALUE
-               "(19) ".
+               "(19) LOAD IDXFIX".
            03  FILLER  PIC X(35) ROW  6 COL 40 VALUE
-               "(20) ".
+               "(20) LOAD IDXVAR".
            03  FILLER  PIC X(35) ROW  7 COL 40 VALUE
-               "(21) ".
+               "(21) LOAD RELFIX".
            03  FILLER  PIC X(35) ROW  8 COL 40 VALUE
-               "(22) ".
+               "(22) LOAD RELVAR".
            03  FILLER  PIC X(35) ROW  9 COL 40 VALUE
-               "(23) ".
+               "(23) LOAD ALTFIX".
            03  FILLER  PIC X(35) ROW 10 COL 40 VALUE
-               "(24) ".
-           03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
-               "(25) ".
-           03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
-               "(26) ".
+               "(24) LOAD ALTVAR".
+      *$MF_CODE PROCESS	       
+      *    03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+      *        "(25) LOAD ALTVAR4 (IDX4)".
+      *    03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+      *        "(26) LOAD ALTVAR8 (IDX8)".
+      *$MF_END
+      *$ACU_CODE PROCESS
+      *    03  FILLER  PIC X(35) ROW 11 COL 40 VALUE
+      *        "(25) LOAD ALTVARV2 (VISION 2)".
+      *    03  FILLER  PIC X(35) ROW 12 COL 40 VALUE
+      *        "(26) LOAD ALTVARV3 (VISION 3)".
+      *$ACU_END	       
            03  FILLER  PIC X(35) ROW 13 COL 40 VALUE
-               "(27) ".
+               "(27) LOAD IDXFIXC (Compressed)".
            03  FILLER  PIC X(35) ROW 14 COL 40 VALUE
                "(28) ".
            03  FILLER  PIC X(35) ROW 15 COL 40 VALUE
@@ -559,48 +927,90 @@
               PERFORM A-START-PROGRAM THRU A-START-PROGRAM-EXIT
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "08" THEN
-              PERFORM CREATE-FILE-C
+              PERFORM CREATE-FILE-SV
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "09" THEN
-              PERFORM CREATE-FILE-D
+              PERFORM CREATE-FILE-IV
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "10" THEN
-              PERFORM CREATE-COMPRESSED-PRINT
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "11" THEN
-              PERFORM READ-COMPRESSED-PRINT
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "12" THEN
-              PERFORM WRITE-COMPRESSED-PRINT
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "13" THEN
               PERFORM CREATE-LARGE-FILE
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "14" THEN
+              PERFORM LOAD-EMPTY-FILES
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "15" THEN
+              PERFORM LOAD-SAMPLE-FILES
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "17" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-SF
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "18" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-SV
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "19" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-IF
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "20" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-IV
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "21" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-RF
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "22" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-RV
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "23" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-AF
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "24" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-AV
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "25" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+      *$MF_CODE PROCESS	       
+      *       PERFORM LOAD-FILE-AV4
+      *$MF_END
+      *$ACU_CODE PROCESS	       
+      *       PERFORM LOAD-FILE-AV2
+      *$ACU_END
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "26" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+      *$MF_CODE PROCESS	       
+      *       PERFORM LOAD-FILE-AV8
+      *$MF_END
+      *$ACU_CODE PROCESS	       
+      *       PERFORM LOAD-FILE-AV3
+      *$ACU_END
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "27" THEN
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-START
+              PERFORM LOAD-FILE-IFC
+	      PERFORM LOAD-SAMPLE-FILES-SCREEN-END
               GO TO FILE-TESTS-2
            ELSE IF PF-KEY = "28" THEN
               GO TO FILE-TESTS-2
@@ -625,15 +1035,21 @@
 
        SEQ-DYN-LOGGING.
            MOVE "SEQ/DYN FILE LOGGING" TO FLV-TITLE.
-           MOVE "(16) EXIT" TO FLV-FOOTER.
+           MOVE "(1) DISPLAY (16) EXIT" TO FLV-FOOTER.
            MOVE LOG-FIL  TO FLV-FILE.
            MOVE LOG-LIB  TO FLV-LIB.
            MOVE LOG-VOL  TO FLV-VOL.
 
-           DISPLAY AND READ FILE-LIB-VOL ON CRT PFKEY 16.
+           DISPLAY AND READ FILE-LIB-VOL ON CRT 
+	       PFKEY 1 16.
            MOVE SPACES TO FLV-FOOTER.
-           IF PF-KEY = 16 THEN GO TO SEQ-DYN-LOGGING-EXIT.
-	       
+           IF PF-KEY = "16" THEN GO TO SEQ-DYN-LOGGING-EXIT.
+	   IF PF-KEY = "01" THEN
+	       CALL "DISPFILE" USING
+		   LOG-FIL, LOG-LIB, LOG-VOL
+	       GO TO SEQ-DYN-LOGGING
+	   END-IF.
+               
 
            MOVE FLV-FILE TO LOG-FIL.
            MOVE FLV-LIB  TO LOG-LIB.
@@ -659,15 +1075,15 @@
 
        OPEN-OUTPUT-PRINT.
            OPEN OUTPUT PRINT-FILE.
-	   DISPLAY "PRINT-FILE OPENED OUTPUT".
+           DISPLAY "PRINT-FILE OPENED OUTPUT".
 
        OPEN-EXTEND-PRINT.
            OPEN EXTEND PRINT-FILE.
-	   DISPLAY "PRINT-FILE OPENED EXTEND".
+           DISPLAY "PRINT-FILE OPENED EXTEND".
 
        CLOSE-PRINT.
            CLOSE PRINT-FILE.
-	   DISPLAY "PRINT-FILE CLOSED".
+           DISPLAY "PRINT-FILE CLOSED".
 
        WRITE-EXTEND-PRINT.
            OPEN EXTEND PRINT-FILE.
@@ -687,7 +1103,7 @@
            WRITE PRT-RECORD.
 
            CLOSE PRINT-FILE.
-	   DISPLAY "PRINT-FILE OPENED, WRITTEN, CLOSED".
+           DISPLAY "PRINT-FILE OPENED, WRITTEN, CLOSED".
 
        DO-PRINT-FILE.
 
@@ -722,9 +1138,15 @@
            MOVE PRT-FILE-NAME             TO FLV-FILE.
            MOVE PRT-LIBRARY               TO FLV-LIB.
            MOVE PRT-VOLUME                TO FLV-VOL.
+           MOVE "(1) DISPLAY " TO FLV-FOOTER.
 
            DISPLAY AND READ FILE-LIB-VOL ON CRT
-           PFKEY 16.
+           PFKEY 1 16.
+
+	   IF PF-KEY = "01" THEN
+	       CALL "DISPFILE" USING
+		   FLV-FILE, FLV-LIB, FLV-VOL
+	   END-IF.
 
       ******************************************************************
 
@@ -768,162 +1190,1353 @@
 010600      CALL "SET" USING W003-PM,
 010700                       W003-PMH.
 
-       	    DISPLAY "SCREEN, EXTEND, CLOSE, PRINT - DONE".			   
+            DISPLAY "SCREEN, EXTEND, CLOSE, PRINT - DONE".                         
 
        A-START-PROGRAM-EXIT.
 
       ******************************************************************
-
-       CREATE-FILE-C.
-           OPEN OUTPUT FILE-C.
-
-           MOVE SPACES TO FILE-C-LINE1.
-           MOVE SPACES TO FILE-C-LINE2.
-           MOVE "OPEN OUTPUT - WRITE RECORD 1, LENGTH 41"
-                TO C-SCREEN-TITLE.
-
-           DISPLAY AND READ FILE-C-SCREEN ON CRT.
-
-           MOVE "4" TO TYPE-C-REC1.
-           MOVE FILE-C-LINE1 TO C-VALUE-1.
-           WRITE FILE-C-REC41.
-
-           MOVE SPACES TO FILE-C-LINE1.
-           MOVE SPACES TO FILE-C-LINE2.
-           MOVE "OPEN OUTPUT - WRITE RECORD 2, LENGTH 81"
-                TO C-SCREEN-TITLE.
-
-           DISPLAY AND READ FILE-C-SCREEN ON CRT.
-
-           MOVE "8" TO TYPE-C-REC2.
-           MOVE FILE-C-LINE1 TO C-TEXT-1.
-           MOVE FILE-C-LINE2 TO C-TEXT-2.
-           WRITE FILE-C-REC81.
-
-           CLOSE FILE-C.
-
       ******************************************************************
+       LOAD-SAMPLE-FILES-SCREEN-START.
+	   PERFORM CLEAR-SCREEN.
+	   MOVE " --- LOADING SAMPLE FILES ---" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+	   ADD 2 TO CRT-ROW-NUM.
 
-       CREATE-FILE-D.
-           OPEN OUTPUT FILE-D.
+       LOAD-SAMPLE-FILES-SCREEN-END.
+	   ADD 1 TO CRT-ROW-NUM.
+	   MOVE " Press (ENTER) to continue" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+	   PERFORM UNLOCK-AND-READ-SCREEN.	   
 
-           MOVE SPACES TO FILE-D-LINE1.
-           MOVE SPACES TO FILE-D-LINE2.
-           MOVE "OPEN OUTPUT - WRITE RECORD 1, LENGTH 41"
-                TO D-SCREEN-TITLE.
+       LOAD-SAMPLE-FILES.
+	   PERFORM LOAD-SAMPLE-FILES-SCREEN-START.
+       
+           MOVE "LIBSAM" TO SAMPLE-LIB.
+           MOVE "VOLOUT" TO SAMPLE-VOL.
 
-           DISPLAY AND READ FILE-D-SCREEN ON CRT.
+      *	   Scratch the library first
+	   CALL "SCRATCH" USING
+		   SCRATCH-TYPE-LIBRARY,
+		   SAMPLE-FIL,
+		   SAMPLE-LIB,
+		   SAMPLE-VOL,
+		   RET-CODE.
+           
+           PERFORM LOAD-FILE-SF.
+           PERFORM LOAD-FILE-SV.
+           PERFORM LOAD-FILE-IF.
+           PERFORM LOAD-FILE-IFC.
+           PERFORM LOAD-FILE-IV.
+           PERFORM LOAD-FILE-RF.
+           PERFORM LOAD-FILE-RV.
+           PERFORM LOAD-FILE-AF.
+           PERFORM LOAD-FILE-AV.
+	   
+      *$ACU_CODE PROCESS	       
+      *    PERFORM LOAD-FILE-AV2.
+      *    PERFORM LOAD-FILE-AV3.
+      *$ACU_END
+      *$MF_CODE PROCESS	       
+      *    PERFORM LOAD-FILE-AV4.
+      *$MF_END
 
-           MOVE "4" TO FILE-D-KEY1.
-           MOVE FILE-D-LINE1 TO D-VALUE-1.
-           WRITE FILE-D-REC41
-             INVALID KEY
-             MOVE "*** INVALID KEY ***" TO D-SCREEN-TITLE.
+	   PERFORM LOAD-SAMPLE-FILES-SCREEN-END.
 
-           MOVE SPACES TO FILE-D-LINE1.
-           MOVE SPACES TO FILE-D-LINE2.
-           MOVE "OPEN OUTPUT - WRITE RECORD 2, LENGTH 81"
-                TO D-SCREEN-TITLE.
+	   DISPLAY "ALL LIBSAM FILES LOADED".
+	   
+       LOAD-EMPTY-FILES.
+           MOVE "EMPTY"  TO SAMPLE-LIB.
+           MOVE "VOLOUT" TO SAMPLE-VOL.
+           
+      *	   Scratch the library first
+	   CALL "SCRATCH" USING
+		   SCRATCH-TYPE-LIBRARY,
+		   SAMPLE-FIL,
+		   SAMPLE-LIB,
+		   SAMPLE-VOL,
+		   RET-CODE.
 
-           DISPLAY AND READ FILE-D-SCREEN ON CRT.
+           OPEN OUTPUT FILE-SF.
+           CLOSE       FILE-SF.
+           
+           OPEN OUTPUT FILE-SV.
+           CLOSE       FILE-SV.
+           
+           OPEN OUTPUT FILE-IF.
+           CLOSE       FILE-IF.
+           
+           OPEN OUTPUT FILE-IFC.
+           CLOSE       FILE-IFC.
+           
+           OPEN OUTPUT FILE-IV.
+           CLOSE       FILE-IV.
+           
+           OPEN OUTPUT FILE-RF.
+           CLOSE       FILE-RF.
+           
+           OPEN OUTPUT FILE-RV.
+           CLOSE       FILE-RV.
+           
+           OPEN OUTPUT FILE-AF.
+           CLOSE       FILE-AF.
+           
+           OPEN OUTPUT FILE-AV.
+           CLOSE       FILE-AV.
 
-           MOVE "8" TO FILE-D-KEY2.
-           MOVE FILE-D-LINE1 TO D-TEXT-1.
-           MOVE FILE-D-LINE2 TO D-TEXT-2.
-           WRITE FILE-D-REC81
-             INVALID KEY
-             MOVE "*** INVALID KEY ***" TO D-SCREEN-TITLE.
-
-           CLOSE FILE-D.
-
-      ******************************************************************
-
-       CREATE-COMPRESSED-PRINT.
-           MOVE "PRINT COMPRESSED FILE TO OPEN" TO FLV-TITLE.
-           MOVE CMP-FILE-NAME             TO FLV-FILE.
-           MOVE CMP-LIBRARY               TO FLV-LIB.
-           MOVE CMP-VOLUME                TO FLV-VOL.
-
-           DISPLAY AND READ FILE-LIB-VOL ON CRT
-           PFKEY 16.
-
-           MOVE FLV-FILE  TO CMP-FILE-NAME.
-           MOVE FLV-LIB   TO CMP-LIBRARY.
-           MOVE FLV-VOL   TO CMP-VOLUME.
-
-           OPEN OUTPUT CMPFILE.
-
-           MOVE "     THIS IS A TEST COMPRESSED PRINT FILE RECORD 1"
-                TO CMP-PRINT-LINE.
-           WRITE CMP-PRINT-LINE.
-           MOVE "OK SO THIS IS THE SECOND LINE OF THE PRINT FILE - RECOR
-      -    "D 2" TO CMP-PRINT-LINE.
-           WRITE CMP-PRINT-LINE.
-           MOVE " " TO CMP-PRINT-LINE.
-           WRITE CMP-PRINT-LINE.
-           MOVE "AND THIS IS THE THIRD.   RECORD 4" TO CMP-PRINT-LINE.
-           WRITE CMP-PRINT-LINE.
-
-           CLOSE CMPFILE.
-
-           MOVE "COMPRESSED PRINT FILE CREATED." TO FLV-TITLE.
-           MOVE CMP-FILE-NAME             TO FLV-FILE.
-           MOVE CMP-LIBRARY               TO FLV-LIB.
-           MOVE CMP-VOLUME                TO FLV-VOL.
-
-           DISPLAY AND READ FILE-LIB-VOL ON CRT
-           PFKEY 16.
-
-      ******************************************************************
-
-       READ-COMPRESSED-PRINT.
-           MOVE "READ COMPRESSED FILE RECORD" TO FLV-TITLE.
-           MOVE CMP-FILE-NAME             TO FLV-FILE.
-           MOVE CMP-LIBRARY               TO FLV-LIB.
-           MOVE CMP-VOLUME                TO FLV-VOL.
-
-           DISPLAY AND READ FILE-LIB-VOL ON CRT
-           PFKEY 16.
-
-           MOVE FLV-FILE  TO CMP-FILE-NAME.
-           MOVE FLV-LIB   TO CMP-LIBRARY.
-           MOVE FLV-VOL   TO CMP-VOLUME.
-
-           OPEN I-O CMPFILE.
-
-           MOVE "Y" TO REC-FLAG.
-           PERFORM READ-CMP-RECORD UNTIL NO-MORE-RECORDS.
-           CLOSE CMPFILE.
-
-       READ-CMP-RECORD.
-           READ CMPFILE NEXT AT END MOVE "N" TO REC-FLAG.
-
-           DISPLAY AND READ CMP-RECORD-SCREEN ON CRT
-           PFKEY 16.
-
-      ******************************************************************
+      *$ACU_CODE PROCESS	       
+      *    OPEN OUTPUT FILE-AV2.
+      *    CLOSE       FILE-AV2.
+      *
+      *    OPEN OUTPUT FILE-AV3.
+      *    CLOSE       FILE-AV3.
+      *$ACU_END
       
-       WRITE-COMPRESSED-PRINT.
-           MOVE "WRITE COMPRESSED FILE RECORD" TO FLV-TITLE.
-           MOVE CMP-FILE-NAME             TO FLV-FILE.
-           MOVE CMP-LIBRARY               TO FLV-LIB.
-           MOVE CMP-VOLUME                TO FLV-VOL.
+      *$MF_CODE PROCESS	       
+      *    OPEN OUTPUT FILE-AV4.
+      *    CLOSE       FILE-AV4.
+      *$MF_END
 
-           DISPLAY AND READ FILE-LIB-VOL ON CRT
-           PFKEY 16.
+           DISPLAY "EMPTY FILES CREATED".
 
-           MOVE FLV-FILE  TO CMP-FILE-NAME.
-           MOVE FLV-LIB   TO CMP-LIBRARY.
-           MOVE FLV-VOL   TO CMP-VOLUME.
-
-           OPEN EXTEND CMPFILE.
-
-           MOVE "AND THIS IS THE NEXT.   RECORD 5" TO CMP-PRINT-LINE.
-           WRITE CMP-PRINT-LINE.
-
-           CLOSE CMPFILE.
+           MOVE "LIBSAM" TO SAMPLE-LIB.
+           MOVE "VOLOUT" TO SAMPLE-VOL.
 
       ******************************************************************
+      *    SEQFIX (SEQUENTIAL FIXED) FILE-SF
+      ******************************************************************
+
+       WRITE-SF-R1.
+
+           MOVE SPACES     TO SF-R1.
+           MOVE SF-WS-KEY   TO SF-R1-KEY.
+           MOVE SF-WS-F1    TO SF-R1-F1.
+           WRITE SF-R1.
+
+123456 LOAD-FILE-SF.       
+	   MOVE " LOADING SEQFIX" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+	   
+      *    Create an empty file
+           OPEN OUTPUT FILE-SF.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING SF-WS-KEY FROM 1 BY 2 
+               UNTIL SF-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO SF-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   SF-WS-KEY DELIMITED BY SIZE
+                   INTO SF-WS-F1
+
+               PERFORM WRITE-SF-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING SF-WS-KEY FROM 2 BY 2 
+               UNTIL SF-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO SF-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   SF-WS-KEY DELIMITED BY SIZE
+                   INTO SF-WS-F1
+
+               PERFORM WRITE-SF-R1
+           END-PERFORM.
+
+           CLOSE FILE-SF.
+
+      *    Count the records
+           OPEN INPUT FILE-SF.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-SF-STAT NOT = "00" 
+               READ FILE-SF NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-SF.
+
+	   STRING " LOADED  SEQFIX   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    SEQVAR (SEQUENTIAL VARYING) FILE-SV
+      ******************************************************************
+
+       CREATE-FILE-SV.
+           OPEN OUTPUT FILE-SV.
+
+           MOVE 1      TO SV-WS-KEY.
+           MOVE SPACES TO SV-WS-F1.
+           MOVE SPACES TO SV-WS-F2.
+
+           PERFORM WITH TEST AFTER UNTIL PF-KEY = "16"
+               DISPLAY AND READ FILE-SV-SCREEN ON CRT 
+                   ONLY PFKEYS 1, 2, 16
+
+               IF PF-KEY = "01" THEN 
+                   PERFORM WRITE-SV-R1
+               END-IF
+               IF PF-KEY = "02" THEN 
+                   PERFORM WRITE-SV-R2
+               END-IF
+
+               IF FILE-SV-STAT = "00" THEN
+                   ADD 1 TO SV-WS-KEY
+               END-IF
+           END-PERFORM.
+
+           CLOSE FILE-SV.
+
+       WRITE-SV-R1.
+
+           MOVE SPACES     TO SV-R1.
+           MOVE SV-WS-KEY   TO SV-R1-KEY.
+           MOVE SV-WS-F1    TO SV-R1-F1.
+           WRITE SV-R1.
+
+       WRITE-SV-R2.
+
+           MOVE SPACES     TO SV-R2.
+           MOVE SV-WS-KEY   TO SV-R2-KEY.
+           MOVE SV-WS-F1    TO SV-R2-F1.
+           MOVE SV-WS-F2    TO SV-R2-F2.
+           WRITE SV-R2.
+
+123456 LOAD-FILE-SV.       
+	   MOVE " LOADING SEQVAR" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-SV.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING SV-WS-KEY FROM 1 BY 2 
+               UNTIL SV-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO SV-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   SV-WS-KEY DELIMITED BY SIZE
+                   INTO SV-WS-F1
+
+               PERFORM WRITE-SV-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING SV-WS-KEY FROM 2 BY 2 
+               UNTIL SV-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO SV-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   SV-WS-KEY DELIMITED BY SIZE
+                   INTO SV-WS-F1
+
+               MOVE SPACES TO SV-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   SV-WS-KEY DELIMITED BY SIZE
+                   INTO SV-WS-F2
+
+               PERFORM WRITE-SV-R2
+           END-PERFORM.
+
+           CLOSE FILE-SV.
+
+      *    Count the records
+           OPEN INPUT FILE-SV.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-SV-STAT NOT = "00" 
+               READ FILE-SV NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-SV.
+
+	   STRING " LOADED  SEQVAR   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+
+      ******************************************************************
+      *    IDXFIX (INDEXED FIXED) FILE-IF
+      ******************************************************************
+
+       WRITE-IF-R1.
+
+           MOVE SPACES     TO IF-R1.
+           MOVE IF-WS-KEY   TO IF-R1-KEY.
+           MOVE IF-WS-F1    TO IF-R1-F1.
+           WRITE IF-R1
+             INVALID KEY 
+             DISPLAY "WRITE IDXFIX REC-1 INVALID KEY " IF-WS-KEY.
+
+123456 LOAD-FILE-IF.       
+	   MOVE " LOADING IDXFIX" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-IF.
+           CLOSE FILE-IF.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-IF.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING IF-WS-KEY FROM 1 BY 2 
+               UNTIL IF-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO IF-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   IF-WS-KEY DELIMITED BY SIZE
+                   INTO IF-WS-F1
+
+               PERFORM WRITE-IF-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING IF-WS-KEY FROM 2 BY 2 
+               UNTIL IF-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO IF-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   IF-WS-KEY DELIMITED BY SIZE
+                   INTO IF-WS-F1
+
+               PERFORM WRITE-IF-R1
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING IF-WS-KEY FROM 3 BY 3 
+               UNTIL IF-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE IF-WS-KEY TO IF-R1-KEY
+               DELETE FILE-IF RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE IDXFIX INVALID KEY ", 
+                           IF-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO IF-R1-KEY.
+           START FILE-IF KEY EQUAL IF-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-IF-STAT NOT = "00" 
+               READ FILE-IF NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-IF.
+
+	   STRING " LOADED  IDXFIX   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    IDXFIXC (INDEXED FIXED COMPRESSED) FILE-IFC
+      ******************************************************************
+
+       WRITE-IFC-R1.
+
+           MOVE SPACES     TO IFC-R1.
+           MOVE IFC-WS-KEY   TO IFC-R1-KEY.
+           MOVE IFC-WS-F1    TO IFC-R1-F1.
+           WRITE IFC-R1
+             INVALID KEY 
+             DISPLAY "WRITE IDXFIXC REC-1 INVALID KEY " IFC-WS-KEY.
+
+123456 LOAD-FILE-IFC.       
+	   MOVE " LOADING IDXFIXC" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-IFC.
+           CLOSE FILE-IFC.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-IFC.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING IFC-WS-KEY FROM 1 BY 2 
+               UNTIL IFC-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO IFC-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   IFC-WS-KEY DELIMITED BY SIZE
+                   INTO IFC-WS-F1
+
+               PERFORM WRITE-IFC-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING IFC-WS-KEY FROM 2 BY 2 
+               UNTIL IFC-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO IFC-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   IFC-WS-KEY DELIMITED BY SIZE
+                   INTO IFC-WS-F1
+
+               PERFORM WRITE-IFC-R1
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING IFC-WS-KEY FROM 3 BY 3 
+               UNTIL IFC-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE IFC-WS-KEY TO IFC-R1-KEY
+               DELETE FILE-IFC RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE IDXFIXC INVALID KEY ", 
+                           IFC-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO IFC-R1-KEY.
+           START FILE-IFC KEY EQUAL IFC-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-IFC-STAT NOT = "00" 
+               READ FILE-IFC NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-IFC.
+
+	   STRING " LOADED  IDXFIXC  WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    IDXVAR (INDEXED VARYING) FILE-IV
+      ******************************************************************
+
+       CREATE-FILE-IV.
+           OPEN OUTPUT FILE-IV.
+
+           MOVE 1 TO IV-WS-KEY.
+           MOVE SPACES TO IV-WS-F1.
+           MOVE SPACES TO IV-WS-F2.
+
+           PERFORM WITH TEST AFTER UNTIL PF-KEY = "16"
+               DISPLAY AND READ FILE-IV-SCREEN ON CRT 
+                   ONLY PFKEYS 1, 2, 16
+
+               IF PF-KEY = "01" THEN 
+                   PERFORM WRITE-IV-R1
+               END-IF
+               IF PF-KEY = "02" THEN 
+                   PERFORM WRITE-IV-R2
+               END-IF
+
+               IF FILE-IV-STAT = "00" THEN
+                   ADD 1 TO IV-WS-KEY
+               END-IF
+           END-PERFORM.
+
+           CLOSE FILE-IV.
+
+       WRITE-IV-R1.
+
+           MOVE SPACES     TO IV-R1.
+           MOVE IV-WS-KEY   TO IV-R1-KEY.
+           MOVE IV-WS-F1    TO IV-R1-F1.
+           WRITE IV-R1
+             INVALID KEY 
+             DISPLAY "WRITE IDXVAR REC-1 INVALID KEY " IV-WS-KEY.
+
+       WRITE-IV-R2.
+
+           MOVE SPACES     TO IV-R2.
+           MOVE IV-WS-KEY   TO IV-R2-KEY.
+           MOVE IV-WS-F1    TO IV-R2-F1.
+           MOVE IV-WS-F2    TO IV-R2-F2.
+           WRITE IV-R2
+             INVALID KEY 
+             DISPLAY "WRITE IDXVAR REC-2 INVALID KEY " IV-WS-KEY.
+
+123456 LOAD-FILE-IV.       
+	   MOVE " LOADING IDXVAR" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-IV.
+           CLOSE FILE-IV.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-IV.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING IV-WS-KEY FROM 1 BY 2 
+               UNTIL IV-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO IV-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   IV-WS-KEY DELIMITED BY SIZE
+                   INTO IV-WS-F1
+
+               PERFORM WRITE-IV-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING IV-WS-KEY FROM 2 BY 2 
+               UNTIL IV-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO IV-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   IV-WS-KEY DELIMITED BY SIZE
+                   INTO IV-WS-F1
+
+               MOVE SPACES TO IV-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   IV-WS-KEY DELIMITED BY SIZE
+                   INTO IV-WS-F2
+
+               PERFORM WRITE-IV-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING IV-WS-KEY FROM 3 BY 3 
+               UNTIL IV-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE IV-WS-KEY TO IV-R1-KEY
+               DELETE FILE-IV RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE IDXVAR INVALID KEY ", 
+                           IV-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO IV-R1-KEY.
+           START FILE-IV KEY EQUAL IV-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-IV-STAT NOT = "00" 
+               READ FILE-IV NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-IV.
+
+	   STRING " LOADED  IDXVAR   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+
+      ******************************************************************
+      *    RELFIX (RELATIVE FIXED) FILE-RF
+      ******************************************************************
+
+       WRITE-RF-R1.
+
+           MOVE SPACES     TO RF-R1.
+           MOVE RF-WS-KEY   TO RF-R1-KEY.
+           MOVE RF-WS-F1    TO RF-R1-F1.
+           WRITE RF-R1
+             INVALID KEY 
+             DISPLAY "WRITE RELFIX REC-1 INVALID KEY " RF-WS-KEY.
+
+
+123456 LOAD-FILE-RF.       
+	   MOVE " LOADING RELFIX" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-RF.
+           CLOSE FILE-RF.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-RF.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING RF-WS-KEY FROM 1 BY 2 
+               UNTIL RF-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO RF-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   RF-WS-KEY DELIMITED BY SIZE
+                   INTO RF-WS-F1
+
+               PERFORM WRITE-RF-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING RF-WS-KEY FROM 2 BY 2 
+               UNTIL RF-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO RF-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   RF-WS-KEY DELIMITED BY SIZE
+                   INTO RF-WS-F1
+
+               PERFORM WRITE-RF-R1
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING RF-WS-KEY FROM 3 BY 3 
+               UNTIL RF-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE RF-WS-KEY TO RF-R1-KEY
+               DELETE FILE-RF RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE RELFIX INVALID KEY ", 
+                           RF-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO RF-WS-KEY.
+           START FILE-RF KEY EQUAL RF-WS-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-RF-STAT NOT = "00" 
+               READ FILE-RF NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-RF.
+
+	   STRING " LOADED  RELFIX   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    RELVAR (RELATIVE VARYING) FILE-RV
+      ******************************************************************
+
+       WRITE-RV-R1.
+
+           MOVE SPACES     TO RV-R1.
+           MOVE RV-WS-KEY   TO RV-R1-KEY.
+           MOVE RV-WS-F1    TO RV-R1-F1.
+           WRITE RV-R1
+             INVALID KEY 
+             DISPLAY "WRITE RELVAR REC-1 INVALID KEY " RV-WS-KEY.
+
+       WRITE-RV-R2.
+
+           MOVE SPACES     TO RV-R2.
+           MOVE RV-WS-KEY   TO RV-R2-KEY.
+           MOVE RV-WS-F1    TO RV-R2-F1.
+           MOVE RV-WS-F2    TO RV-R2-F2.
+           WRITE RV-R2
+             INVALID KEY 
+             DISPLAY "WRITE RELVAR REC-2 INVALID KEY " RV-WS-KEY.
+
+123456 LOAD-FILE-RV.       
+	   MOVE " LOADING RELVAR" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-RV.
+           CLOSE FILE-RV.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-RV.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING RV-WS-KEY FROM 1 BY 2 
+               UNTIL RV-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO RV-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   RV-WS-KEY DELIMITED BY SIZE
+                   INTO RV-WS-F1
+
+               PERFORM WRITE-RV-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING RV-WS-KEY FROM 2 BY 2 
+               UNTIL RV-WS-KEY > MAX-LOAD-CNT
+
+               MOVE SPACES TO RV-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   RV-WS-KEY DELIMITED BY SIZE
+                   INTO RV-WS-F1
+
+               MOVE SPACES TO RV-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   RV-WS-KEY DELIMITED BY SIZE
+                   INTO RV-WS-F2
+
+               PERFORM WRITE-RV-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING RV-WS-KEY FROM 3 BY 3 
+               UNTIL RV-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE RV-WS-KEY TO RV-R1-KEY
+               DELETE FILE-RV RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE RELVAR INVALID KEY ", 
+                           RV-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO RV-WS-KEY.
+           START FILE-RV KEY EQUAL RV-WS-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-RV-STAT NOT = "00" 
+               READ FILE-RV NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-RV.
+
+	   STRING " LOADED  RELVAR   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    ALTFIX (ALTERNATE INDEXED FIXED) FILE-AF
+      ******************************************************************
+
+       WRITE-AF-R1.
+
+           MOVE SPACES      TO AF-R1.
+           MOVE AF-WS-KEY   TO AF-R1-KEY.
+           MOVE AF-WS-ALT1  TO AF-R1-ALT1.
+           MOVE AF-WS-ALT2  TO AF-R1-ALT2.
+           MOVE AF-WS-F1    TO AF-R1-F1.
+           WRITE AF-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTFIX REC-1 INVALID KEY " AF-WS-KEY.
+
+123456 LOAD-FILE-AF.       
+	   MOVE " LOADING ALTFIX" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AF.
+           CLOSE FILE-AF.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AF.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING AF-WS-KEY FROM 1 BY 2 
+               UNTIL AF-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AF-WS-ALT1 = 1000 + AF-WS-KEY 
+               COMPUTE AF-WS-ALT2 = 1000 + AF-WS-KEY / 10
+               
+               MOVE SPACES TO AF-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AF-WS-KEY DELIMITED BY SIZE
+                   INTO AF-WS-F1
+
+               PERFORM WRITE-AF-R1
+           END-PERFORM.
+
+      *    Write all the even records
+           PERFORM VARYING AF-WS-KEY FROM 2 BY 2 
+               UNTIL AF-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AF-WS-ALT1 = 2000 + AF-WS-KEY 
+               COMPUTE AF-WS-ALT2 = 2000 + AF-WS-KEY / 10
+               
+               MOVE SPACES TO AF-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AF-WS-KEY DELIMITED BY SIZE
+                   INTO AF-WS-F1
+
+               PERFORM WRITE-AF-R1
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AF-WS-KEY FROM 3 BY 3 
+               UNTIL AF-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AF-WS-KEY TO AF-R1-KEY
+               DELETE FILE-AF RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTFIX INVALID KEY ", 
+                           AF-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AF-R1-KEY.
+           START FILE-AF KEY EQUAL AF-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AF-STAT NOT = "00" 
+               READ FILE-AF NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AF.
+
+	   STRING " LOADED  ALTFIX   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    ALTVAR (ALTERNATE INDEXED VARYING) FILE-AV
+      ******************************************************************
+
+       WRITE-AV-R1.
+
+           MOVE SPACES     TO AV-R1.
+           MOVE AV-WS-KEY   TO AV-R1-KEY.
+           MOVE AV-WS-ALT1  TO AV-R1-ALT1.
+           MOVE AV-WS-ALT2  TO AV-R1-ALT2.
+           MOVE AV-WS-F1    TO AV-R1-F1.
+           WRITE AV-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVAR REC-1 INVALID KEY " AV-WS-KEY.
+
+       WRITE-AV-R2.
+
+           MOVE SPACES     TO AV-R2.
+           MOVE AV-WS-KEY   TO AV-R2-KEY.
+           MOVE AV-WS-ALT1  TO AV-R2-ALT1.
+           MOVE AV-WS-ALT2  TO AV-R2-ALT2.
+           MOVE AV-WS-F1    TO AV-R2-F1.
+           MOVE AV-WS-F2    TO AV-R2-F2.
+           WRITE AV-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVAR REC-2 INVALID KEY " AV-WS-KEY.
+
+123456 LOAD-FILE-AV.       
+	   MOVE " LOADING ALTVAR" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV.
+           CLOSE FILE-AV.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING AV-WS-KEY FROM 1 BY 2 
+               UNTIL AV-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV-WS-ALT1 = 1000 + AV-WS-KEY 
+               COMPUTE AV-WS-ALT2 = 1000 + AV-WS-KEY / 10
+               
+               MOVE SPACES TO AV-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV-WS-KEY DELIMITED BY SIZE
+                   INTO AV-WS-F1
+
+               PERFORM WRITE-AV-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING AV-WS-KEY FROM 2 BY 2 
+               UNTIL AV-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV-WS-ALT1 = 2000 + AV-WS-KEY 
+               COMPUTE AV-WS-ALT2 = 2000 + AV-WS-KEY / 10 
+
+               MOVE SPACES TO AV-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV-WS-KEY DELIMITED BY SIZE
+                   INTO AV-WS-F1
+
+               MOVE SPACES TO AV-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV-WS-KEY DELIMITED BY SIZE
+                   INTO AV-WS-F2
+
+               PERFORM WRITE-AV-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV-WS-KEY FROM 3 BY 3 
+               UNTIL AV-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV-WS-KEY TO AV-R1-KEY
+               DELETE FILE-AV RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVAR INVALID KEY ", 
+                           AV-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV-R1-KEY.
+           START FILE-AV KEY EQUAL AV-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV-STAT NOT = "00" 
+               READ FILE-AV NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV.
+
+	   STRING " LOADED  ALTVAR   WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      * ALTVARV2 (ALTERNATE INDEXED VARYING VISION ) FILE-AV2
+      ******************************************************************
+
+       WRITE-AV2-R1.
+
+           MOVE SPACES     TO AV2-R1.
+           MOVE AV2-WS-KEY   TO AV2-R1-KEY.
+           MOVE AV2-WS-ALT1  TO AV2-R1-ALT1.
+           MOVE AV2-WS-ALT2  TO AV2-R1-ALT2.
+           MOVE AV2-WS-F1    TO AV2-R1-F1.
+           WRITE AV2-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV2 REC-1 INVALID KEY " AV2-WS-KEY.
+
+       WRITE-AV2-R2.
+
+           MOVE SPACES     TO AV2-R2.
+           MOVE AV2-WS-KEY   TO AV2-R2-KEY.
+           MOVE AV2-WS-ALT1  TO AV2-R2-ALT1.
+           MOVE AV2-WS-ALT2  TO AV2-R2-ALT2.
+           MOVE AV2-WS-F1    TO AV2-R2-F1.
+           MOVE AV2-WS-F2    TO AV2-R2-F2.
+           WRITE AV2-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV2 REC-2 INVALID KEY " AV2-WS-KEY.
+
+       LOAD-FILE-AV2.       
+	   MOVE " LOADING ALTVARV2" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV2.
+           CLOSE FILE-AV2.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV2.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING AV2-WS-KEY FROM 1 BY 2 
+               UNTIL AV2-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV2-WS-ALT1 = 1000 + AV2-WS-KEY 
+               COMPUTE AV2-WS-ALT2 = 1000 + AV2-WS-KEY / 10
+               
+               MOVE SPACES TO AV2-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV2-WS-KEY DELIMITED BY SIZE
+                   INTO AV2-WS-F1
+
+               PERFORM WRITE-AV2-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING AV2-WS-KEY FROM 2 BY 2 
+               UNTIL AV2-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV2-WS-ALT1 = 2000 + AV2-WS-KEY 
+               COMPUTE AV2-WS-ALT2 = 2000 + AV2-WS-KEY / 10 
+
+               MOVE SPACES TO AV2-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV2-WS-KEY DELIMITED BY SIZE
+                   INTO AV2-WS-F1
+
+               MOVE SPACES TO AV2-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV2-WS-KEY DELIMITED BY SIZE
+                   INTO AV2-WS-F2
+
+               PERFORM WRITE-AV2-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV2-WS-KEY FROM 3 BY 3 
+               UNTIL AV2-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV2-WS-KEY TO AV2-R1-KEY
+               DELETE FILE-AV2 RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVARV2 INVALID KEY ", 
+                           AV2-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV2-R1-KEY.
+           START FILE-AV2 KEY EQUAL AV2-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV2-STAT NOT = "00" 
+               READ FILE-AV2 NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV2.
+
+	   STRING " LOADED  ALTVARV2 WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      * ALTVARV3 (ALTERNATE INDEXED VARYING VISION ) FILE-AV3
+      ******************************************************************
+
+       WRITE-AV3-R1.
+
+           MOVE SPACES     TO AV3-R1.
+           MOVE AV3-WS-KEY   TO AV3-R1-KEY.
+           MOVE AV3-WS-ALT1  TO AV3-R1-ALT1.
+           MOVE AV3-WS-ALT2  TO AV3-R1-ALT2.
+           MOVE AV3-WS-F1    TO AV3-R1-F1.
+           WRITE AV3-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV3 REC-1 INVALID KEY " AV3-WS-KEY.
+
+       WRITE-AV3-R2.
+
+           MOVE SPACES     TO AV3-R2.
+           MOVE AV3-WS-KEY   TO AV3-R2-KEY.
+           MOVE AV3-WS-ALT1  TO AV3-R2-ALT1.
+           MOVE AV3-WS-ALT2  TO AV3-R2-ALT2.
+           MOVE AV3-WS-F1    TO AV3-R2-F1.
+           MOVE AV3-WS-F2    TO AV3-R2-F2.
+           WRITE AV3-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVARV3 REC-2 INVALID KEY " AV3-WS-KEY.
+
+       LOAD-FILE-AV3.       
+	   MOVE " LOADING ALTVARV3" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV3.
+           CLOSE FILE-AV3.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV3.
+
+      *    Write all the odd numbers records 
+           PERFORM VARYING AV3-WS-KEY FROM 1 BY 2 
+               UNTIL AV3-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV3-WS-ALT1 = 1000 + AV3-WS-KEY 
+               COMPUTE AV3-WS-ALT2 = 1000 + AV3-WS-KEY / 10
+               
+               MOVE SPACES TO AV3-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV3-WS-KEY DELIMITED BY SIZE
+                   INTO AV3-WS-F1
+
+               PERFORM WRITE-AV3-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING AV3-WS-KEY FROM 2 BY 2 
+               UNTIL AV3-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV3-WS-ALT1 = 2000 + AV3-WS-KEY 
+               COMPUTE AV3-WS-ALT2 = 2000 + AV3-WS-KEY / 10 
+
+               MOVE SPACES TO AV3-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV3-WS-KEY DELIMITED BY SIZE
+                   INTO AV3-WS-F1
+
+               MOVE SPACES TO AV3-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV3-WS-KEY DELIMITED BY SIZE
+                   INTO AV3-WS-F2
+
+               PERFORM WRITE-AV3-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV3-WS-KEY FROM 3 BY 3 
+               UNTIL AV3-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV3-WS-KEY TO AV3-R1-KEY
+               DELETE FILE-AV3 RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVARV3 INVALID KEY ", 
+                           AV3-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV3-R1-KEY.
+           START FILE-AV3 KEY EQUAL AV3-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV3-STAT NOT = "00" 
+               READ FILE-AV3 NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV3.
+
+	   STRING " LOADED  ALTVARV3 WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+      *    ALTVAR4 (ALTERNATE INDEXED VARYING IDX4) FILE-AV4
+      ******************************************************************
+
+       WRITE-AV4-R1.
+
+           MOVE SPACES     TO AV4-R1.
+           MOVE AV4-WS-KEY   TO AV4-R1-KEY.
+           MOVE AV4-WS-ALT1  TO AV4-R1-ALT1.
+           MOVE AV4-WS-ALT2  TO AV4-R1-ALT2.
+           MOVE AV4-WS-F1    TO AV4-R1-F1.
+           WRITE AV4-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVAR4 REC-1 INVALID KEY " AV4-WS-KEY.
+
+       WRITE-AV4-R2.
+
+           MOVE SPACES     TO AV4-R2.
+           MOVE AV4-WS-KEY   TO AV4-R2-KEY.
+           MOVE AV4-WS-ALT1  TO AV4-R2-ALT1.
+           MOVE AV4-WS-ALT2  TO AV4-R2-ALT2.
+           MOVE AV4-WS-F1    TO AV4-R2-F1.
+           MOVE AV4-WS-F2    TO AV4-R2-F2.
+           WRITE AV4-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVAR4 REC-2 INVALID KEY " AV4-WS-KEY.
+
+       LOAD-FILE-AV4.       
+	   MOVE " LOADING ALTVAR4" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV4.
+           CLOSE FILE-AV4.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV4.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING AV4-WS-KEY FROM 1 BY 2 
+               UNTIL AV4-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV4-WS-ALT1 = 1000 + AV4-WS-KEY 
+               COMPUTE AV4-WS-ALT2 = 1000 + AV4-WS-KEY / 10
+               
+               MOVE SPACES TO AV4-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV4-WS-KEY DELIMITED BY SIZE
+                   INTO AV4-WS-F1
+
+               PERFORM WRITE-AV4-R1
+           END-PERFORM.
+
+      *    Write all the even records 
+           PERFORM VARYING AV4-WS-KEY FROM 2 BY 2 
+               UNTIL AV4-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV4-WS-ALT1 = 2000 + AV4-WS-KEY 
+               COMPUTE AV4-WS-ALT2 = 2000 + AV4-WS-KEY / 10 
+
+               MOVE SPACES TO AV4-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV4-WS-KEY DELIMITED BY SIZE
+                   INTO AV4-WS-F1
+
+               MOVE SPACES TO AV4-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV4-WS-KEY DELIMITED BY SIZE
+                   INTO AV4-WS-F2
+
+               PERFORM WRITE-AV4-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV4-WS-KEY FROM 3 BY 3 
+               UNTIL AV4-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV4-WS-KEY TO AV4-R1-KEY
+               DELETE FILE-AV4 RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVAR4 INVALID KEY ", 
+                           AV4-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV4-R1-KEY.
+           START FILE-AV4 KEY EQUAL AV4-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV4-STAT NOT = "00" 
+               READ FILE-AV4 NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV4.
+
+	   STRING " LOADED  ALTVAR4  WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+
+      ******************************************************************
+      *    ALTVAR8 (ALTERNATE INDEXED VARYING IDX8) FILE-AV8
+      ******************************************************************
+
+       WRITE-AV8-R1.
+
+           MOVE SPACES     TO AV8-R1.
+           MOVE AV8-WS-KEY   TO AV8-R1-KEY.
+           MOVE AV8-WS-ALT1  TO AV8-R1-ALT1.
+           MOVE AV8-WS-ALT2  TO AV8-R1-ALT2.
+           MOVE AV8-WS-F1    TO AV8-R1-F1.
+           WRITE AV8-R1
+             INVALID KEY 
+             DISPLAY "WRITE ALTVAR8 REC-1 INVALID KEY " AV8-WS-KEY.
+
+       WRITE-AV8-R2.
+
+           MOVE SPACES     TO AV8-R2.
+           MOVE AV8-WS-KEY   TO AV8-R2-KEY.
+           MOVE AV8-WS-ALT1  TO AV8-R2-ALT1.
+           MOVE AV8-WS-ALT2  TO AV8-R2-ALT2.
+           MOVE AV8-WS-F1    TO AV8-R2-F1.
+           MOVE AV8-WS-F2    TO AV8-R2-F2.
+           WRITE AV8-R2
+             INVALID KEY 
+             DISPLAY "WRITE ALTVAR8 REC-2 INVALID KEY " AV8-WS-KEY.
+
+123456 LOAD-FILE-AV8.       
+	   MOVE " LOADING ALTVAR8" TO NEXT-CRT-ROW.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      *    Create an empty file
+           OPEN OUTPUT FILE-AV8.
+           CLOSE FILE-AV8.
+
+      *    Now open the empty file for updates.
+           OPEN I-O FILE-AV8.
+
+      *    Write all the odd numbers records
+           PERFORM VARYING AV8-WS-KEY FROM 1 BY 2 
+               UNTIL AV8-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV8-WS-ALT1 = 1000 + AV8-WS-KEY 
+               COMPUTE AV8-WS-ALT2 = 1000 + AV8-WS-KEY / 10
+               
+               MOVE SPACES TO AV8-WS-F1
+               STRING "Field 1 ODD RECORD " DELIMITED BY SIZE
+                   AV8-WS-KEY DELIMITED BY SIZE
+                   INTO AV8-WS-F1
+
+               PERFORM WRITE-AV8-R1
+           END-PERFORM.
+
+      *    Write all the even records
+           PERFORM VARYING AV8-WS-KEY FROM 2 BY 2 
+               UNTIL AV8-WS-KEY > MAX-LOAD-CNT
+
+               COMPUTE AV8-WS-ALT1 = 2000 + AV8-WS-KEY 
+               COMPUTE AV8-WS-ALT2 = 2000 + AV8-WS-KEY / 10 
+
+               MOVE SPACES TO AV8-WS-F1
+               STRING "Field 1 EVEN RECORD " DELIMITED BY SIZE
+                   AV8-WS-KEY DELIMITED BY SIZE
+                   INTO AV8-WS-F1
+
+               MOVE SPACES TO AV8-WS-F2
+               STRING "Field 2 EVEN RECORD " DELIMITED BY SIZE
+                   AV8-WS-KEY DELIMITED BY SIZE
+                   INTO AV8-WS-F2
+
+               PERFORM WRITE-AV8-R2
+           END-PERFORM.
+
+      *    Delete ever 3rd record
+           PERFORM VARYING AV8-WS-KEY FROM 3 BY 3 
+               UNTIL AV8-WS-KEY > MAX-LOAD-CNT
+               
+               MOVE AV8-WS-KEY TO AV8-R1-KEY
+               DELETE FILE-AV8 RECORD
+                   INVALID KEY
+                   DISPLAY "DELETE ALTVAR8 INVALID KEY ", 
+                           AV8-R1-KEY
+               END-DELETE
+
+           END-PERFORM.
+
+      *    Count the records
+           MOVE 1 TO AV8-R1-KEY.
+           START FILE-AV8 KEY EQUAL AV8-R1-KEY.
+           MOVE 0 TO RECORD-CNT.
+
+           PERFORM WITH TEST AFTER UNTIL FILE-AV8-STAT NOT = "00" 
+               READ FILE-AV8 NEXT RECORD
+                   AT END CONTINUE
+                   NOT AT END ADD 1 TO RECORD-CNT
+               END-READ
+           END-PERFORM
+
+           CLOSE FILE-AV8.
+
+	   STRING " LOADED  ALTVAR8  WITH ", RECORD-CNT, " RECORDS" 
+	       DELIMITED BY SIZE INTO NEXT-CRT-ROW.
+	   SUBTRACT 1 FROM CRT-ROW-NUM.
+	   PERFORM WRITE-NEXT-CRT-ROW.
+
+      ******************************************************************
+
        CREATE-LARGE-FILE.
 
            MOVE SPACES TO LARGE-MESSAGE.
@@ -945,6 +2558,40 @@
        WRITE-LARGE.
 
            WRITE LARGE-RECORD.
+
+      ******************************************************************
+
+       CLEAR-SCREEN.
+
+           MOVE HEX-01 TO CRTREC-OA-1
+           MOVE HEX-20 TO CRTREC-OA-2
+           MOVE HEX-01 TO CRTREC-OA-3
+           MOVE HEX-01 TO CRTREC-OA-4
+	   MOVE SPACES TO CRTREC-MAPPING-AREA.
+	   REWRITE CRTREC.
+
+	   MOVE 1 TO CRT-ROW-NUM.
+
+       WRITE-NEXT-CRT-ROW.
+
+           MOVE NEXT-CRT-ROW TO CRTREC-ROW (CRT-ROW-NUM).
+
+           MOVE HEX-01 TO CRTREC-OA-1
+           MOVE HEX-20 TO CRTREC-OA-2
+           MOVE HEX-01 TO CRTREC-OA-3
+           MOVE HEX-01 TO CRTREC-OA-4
+	   REWRITE CRTREC.
+	   
+	   ADD 1 TO CRT-ROW-NUM.
+	   MOVE SPACES TO NEXT-CRT-ROW.
+
+       UNLOCK-AND-READ-SCREEN.
+           MOVE HEX-01 TO CRTREC-OA-1
+           MOVE HEX-80 TO CRTREC-OA-2
+           MOVE HEX-01 TO CRTREC-OA-3
+           MOVE HEX-01 TO CRTREC-OA-4
+	   REWRITE CRTREC.
+	   READ CRT.
 
       ******************************************************************
       * ALL DONE.

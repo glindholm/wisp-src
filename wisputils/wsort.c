@@ -1,7 +1,7 @@
 static char copyright[]="Copyright (c) 1988-1998 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 static char rcs_revision[]="$Revision:$";
-static char rcs_state[]="$State: V4_3_06 $";
+static char rcs_state[]="$State: V4_4_00 $";
 
 static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 
@@ -25,17 +25,6 @@ static	char 	*SORT_VERSION = "WISP SORT Program - Version 3.01.00";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef VMS
-#include <unixio.h>
-#include <file.h>
-#endif
-
-#ifdef WATCOM
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#endif
 
 #include "idsistd.h"
 
@@ -152,10 +141,6 @@ main(argc,argv)
 int	argc;
 char	*argv[];
 {
-#ifdef WATCOM
-	_fmode = O_BINARY;
-#endif
-
 	if ( argc > 1 )
 	{
 		if (0 == strcmp(argv[1],"-v"))
@@ -402,38 +387,6 @@ static int wsort(void)
 			}
 		}
 
-#ifdef VMS
-		if (lowspace_flag)
-		{
-			if (0 != memcmp(last_ovol,ovol,6))
-			{
-				/*
-				**	Check if there is enough space on the output volume, if not then give
-				**	the user a chance to make space or abort.
-				*/
-				int4	blocks_needed;
-				uint4	blocks_available;
-				char	testvol[7];
-
-				memcpy(last_ovol,ovol,6);
-
-				unloadpad(testvol, ovol, 6);
-				blocks_available = osd_freeblocks(testvol);
-
-				blocks_needed = (total_input_size / OSD_BLOCK_SIZE);
-
-				if (blocks_available < blocks_needed)
-				{
-					out_err = 1;
-					strcpy(errmess1, "\224WARNING\204- OUTPUT VOLUME IS LOW ON DISK SPACE");
-					strcpy(errmess2, 
-						"\204INSURE THAT THERE IS SUFFICIENT DISK SPACE FOR OUTPUT AND WORK FILES.");
-					continue;
-				}
-			}
-		}
-#endif
-
 		/*
 		**	PERFORM THE SORT
 		*/
@@ -464,17 +417,6 @@ static int wsort(void)
 
 		if (0==errcode) 
 		{
-#ifdef VMS
-			free_locks();
-			if (replace_flag)
-			{
-				/*
-				**	REPLACE=YES, delete the previous version. (PURGE)
-				*/
-				strcat(outfilename,";-1");
-				delete(outfilename);
-			}
-#endif
 			return retcode;
 		}
 
@@ -597,39 +539,26 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 
 		GPCTEXT("Is this a SHARED file ?",14,2);
 		GPKW(x_shared,"SHARED  ",shared_field,3,14,47,"A");
-#ifdef VMS
- 		GPCTEXT("(YES or NO)",14,65);
-#else
  		GPCTEXT("(NOT USED)",14,65);
-#endif
 
 		if (!more_input)
 		{
 			GPCTEXT("Do you want to select input records ?",15,2);
 			GPKW(x_select,"SELECT  ",select_field,3,15,47,"A");
-#ifdef VMS
-	 		GPCTEXT("(YES or NO)",15,65);
-#else
 	 		GPCTEXT("(NO)",15,65);
-#endif
 
 			GPCTEXT("Do you have more input files ?",16,2);
 			GPKW(x_morefile,"MOREFILE",morefile_field,3,16,47,"A");
-#ifdef VMS
-	 		GPCTEXT("(YES or NO)",16,65);
-#else
 	 		GPCTEXT("(NO)",16,65);
-#endif
 		}
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 		GPCTEXT("Is file type Indexed, Fixed, or Newline ?",18,2);
 		GPKW(x_filetype,"FILETYPE",filetype_field,1,18,47,"A");
  		GPCTEXT("(I,F,N)",18,65);
 
 		GPCTEXT("For FILETYPE=F, what is the record size ?",19,2);
 		GPKW(x_recsize,"RECSIZE ",recsize_field,5,19,47,"N");
-#endif
+
 		GPCTEXT(terminate_text,22,26);
 
 		GPENTER();
@@ -689,7 +618,6 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			char	recvr[22];
 			char	buff[80];
 
-#if defined(unix) || defined(MSFS)
 			if (0==wlgtrans(ivol,buff))
 			{
 				messid = "ER28";
@@ -697,7 +625,7 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 				x_volume = "R";
 				continue;
 			}
-#endif
+
 			start = 1;
 			wswap(&start);
 			count = 1;
@@ -711,14 +639,8 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			if (count == 0)
 			{
 				messid = "R014";
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 				mess1 = "\224SORRY\204- The input LIBRARY was not found, please respecify.";
 				x_library = "R";
-#else
-				mess1 = "\224SORRY\204- The input LIBRARY or VOLUME was not found, please respecify.";
-				x_library = "R";
-				x_volume = "R";
-#endif
 				continue;
 			}
 		}
@@ -753,12 +675,6 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 		else if (!strncmp(shared_field,"YES",3))
 		{
 			shared_flag=1;
-#ifdef OLD
-			x_shared="R";
-			messid="ER20";
-			mess1 = "\224SORRY\204- SHARED option not supported, please respecify.";
-			continue;
-#endif
 		}
 		else
 		{
@@ -776,14 +692,10 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			}
 			else if (!strncmp(select_field,"YES",3))
 			{
-#ifdef VMS
-				*select_flag=TRUE;
-#else
 				x_select="R";
 				messid="ER20";
 				mess1 = "\224SORRY\204- SELECT option not supported, please respecify.";
 				continue;
-#endif
 			}
 			else
 			{
@@ -799,14 +711,10 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			}
 			else if (!strncmp(morefile_field,"YES",3))
 			{
-#ifdef VMS
-				*morefile_flag = TRUE;
-#else
 				x_morefile ="R";
 				messid="ER19";
 				mess1 = "\224SORRY\204- MOREFILE option not supported, please respecify.";
 				continue;
-#endif
 			}
 			else 
 			{
@@ -814,7 +722,6 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			}
 		}
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 
 		/*
 		**	Handle the FILETYPE and RECSIZE fields which are only used
@@ -861,6 +768,11 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 				continue;
 			}
 
+			if ('A' == fdr_filetype)	/* Alternate Indexed is Indexed */
+			{
+				fdr_filetype = 'I';
+			}
+
 			if ( ('I' == fdr_filetype && 'I' != filetype_field[0]) ||
 			     ('I' != fdr_filetype && 'I' == filetype_field[0])   )
 			{
@@ -894,12 +806,9 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 		{
 			*recsize = 0;
 		}
-#endif
 
 		/*
 		**	Call READFDR to get the record lenght.
-		**
-		**	NOTE: On VMS filetype is always set to 'I' so this code will be used.
 		*/
 		if ('I' == *filetype)
 		{
@@ -928,31 +837,6 @@ static int get_input(char *ifile, char *ilib, char *ivol, char *infilename,
 			*recsize = fdr_recsize;
 		}
 
-#ifdef VMS
-		if (shared_flag)
-		{
-			int	rc;
-			int	fh;
-			int	openflags;
-
-			rc = get_lock();
-
-			if (16 == rc) return 16;
-			if ( 1 == rc)
-			{
-				openflags = O_RDWR;
-				fh = open(infilename,openflags,0,"shr=get");
-				if ( -1 == fh )
-				{
-					messid = "LOCK";
-					mess1 = "\224SORRY\204- Unable to lock input file, please respecify.";
-					x_file = "R";
-					continue;
-				}
-				record_lock(fh);
-			}
-		}
-#endif
 
 		return 0;
 	}
@@ -1072,12 +956,6 @@ static int get_options(int *stable_flag, int *lowspace_flag)
 		GPCTEXT("Type of ALTERNATE collating sequence ?",row,2);
 		GPKW(x_altseq,"ALTSEQ  ",altseq_field,6,row,46,"A");
 		GPCTEXT("(NONE)",row,65);
-#ifdef VMS
-		row += 1;
-		GPCTEXT("Check for low disk space before sort ?",row,2);
-		GPKW(x_lowspace,"LOWSPACE",lowspace_field,3,row,46,"A");
-		GPCTEXT("(YES or NO)",row,65);
-#endif
 
 		GPCTEXT(terminate_text,23,26);
 
@@ -1236,12 +1114,10 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 	x_file = x_library = x_volume = x_replace = x_recsize = x_fileorg = x_rectype = "K";
 	mess1 = mess2 = mess3 = mess4 = mess5 = blank;
 
-#ifndef VMS
 	/*
 	**	RECSIZE is not support so set to 0 to check if it gets changed later.
 	*/
 	*maxrec = 0;
-#endif
 
 	sprintf(tmpstr,"%05ld",(long)*maxrec);
 	memcpy(recsize_field,tmpstr,5);
@@ -1322,28 +1198,16 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			GPCTEXT("(YES or NO)",15,68);
 		}
 
-#ifdef VMS
-		GPCTEXT("Fileorg - Consecutive, Relative or Indexed?",16,2);
-		GPKW(x_fileorg,"FILEORG ",fileorg_field,1,16,50,"A");
-		GPCTEXT("(C, R or I)",16,68);
-#else
 		GPCTEXT("Fileorg - Consecutive?",16,2);
 		GPKW(x_fileorg,"FILEORG ",fileorg_field,1,16,50,"A");
 		GPCTEXT("(C)",16,68);
-#endif
 
 		GPCTEXT("(Maximum) Record Size:",19,2);
 		GPKW(x_recsize,"RECSIZE ",recsize_field,5,19,50,"N");
 
-#ifdef VMS
-		GPCTEXT("Fixed or Variable length records?",20,2);
-		GPKW(x_rectype,"RECTYPE ",rectype_field,1,20,50,"A");
-		GPCTEXT("(F or V)",20,68);
-#else
 		GPCTEXT("Fixed length records?",20,2);
 		GPKW(x_rectype,"RECTYPE ",rectype_field,1,20,50,"A");
 		GPCTEXT("(F)",20,68);
-#endif
 
 		if (termmsg1)
 		{
@@ -1393,7 +1257,6 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			continue;
 		}
 
-#if defined(unix) || defined(MSFS)
 		/*
 		**	Check if volume exists
 		*/
@@ -1404,7 +1267,6 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			x_volume = "R";
 			continue;
 		}
-#endif
 
 		if (allow_replace)
 		{
@@ -1425,15 +1287,6 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			}
 		}
 		
-#ifdef VMS
-		if (!strchr("CRI",fileorg_field[0]))
-		{
-			messid="ER60";
-			mess1="\224SORRY\204- FILEORG must be C, R or I, please respecify.";
-			x_fileorg="R";
-			continue;
-		}
-#else
 		if ('C' != fileorg_field[0])
 		{
 			messid="ER60";
@@ -1441,17 +1294,8 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			x_fileorg="R";
 			continue;
 		}
-#endif
+
 		*fileorg = fileorg_field[0];
-#ifdef VMS
-		if (rectype_field[0]!='F' && rectype_field[0]!='V')
-		{
-			messid="ER78";
-			mess1="\224SORRY\204- The RECTYPE must be F or V, please respecify.";
-			x_rectype="R";
-			continue;
-		}
-#else
 		if ('F' != rectype_field[0])
 		{
 			messid="ER78";
@@ -1459,7 +1303,7 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			x_rectype="R";
 			continue;
 		}
-#endif
+
 		*outrectype = rectype_field[0];
 
 		if (field2int4(recsize_field,5,maxrec))
@@ -1470,7 +1314,6 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			continue;
 		}
 
-#ifndef VMS
 		if (0 != *maxrec)
 		{
 			/*
@@ -1481,7 +1324,6 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 			x_recsize="R";
 			continue;
 		}
-#endif
 
 		/*
 		**	If the output file exists then prompt to scratch.
@@ -1527,9 +1369,6 @@ static int get_output(char *ofile, char *olib, char *ovol, char *outfilename,
 		ptr = wfname(&mode,ovol,olib,ofile,outfilename);
 		*ptr = (char)0;
 		makepath(outfilename);
-#ifdef VMS
-		wdellock(&mode,outfilename);
-#endif
 
 		use_last_prb();
 		gptype = "RD";
@@ -1815,19 +1654,6 @@ static int get_select(struct select_criteria selinfo[], int *selcnt)
 					goto sel_respec;
 				}
 
-#ifdef VMS
-/*
-**	NEEDS TO BE VALIDATED
-*/
-				if (tmpval[stvalidx]=='\'') 
-				{
-					tmpval[stvalidx]='"';
-				}
-				if (tmpval[endvalidx]=='\'')
-				{
-					tmpval[endvalidx]='"';
-				}
-#endif
 				
 			}
 			else
@@ -1839,17 +1665,6 @@ static int get_select(struct select_criteria selinfo[], int *selcnt)
 					x_value[chkidx]="R";
 					goto sel_respec;
 				}
-#ifdef VMS
-/*
-**	NEEDS TO BE VALIDATED
-*/
-				{
-					sprintf(errmsg,"\224ERROR\204- VALUE%-2d MUST BE CONTAINED IN QUOTES",chkidx+base_idx+1);
-					mess1 = errmsg;
-					x_value[chkidx]="R";
-					goto sel_respec;
-				}
-#endif
 			}
 			memset(selinfo[chkidx+base_idx].value,' ',18);
 			memcpy(selinfo[chkidx+base_idx].value,&tmpval[stvalidx],endvalidx-stvalidx+1);
@@ -2082,15 +1897,6 @@ static int get_keys(struct key_info keyinfo[], int *keycnt)
 			/*
 			**	Validate TYPEx fields
 			*/
-#ifdef VMS
-			if (!strchr("CPZ",k[chkidx].type_field[0]))
-			{
-				sprintf(errmsg,"\224SORRY\204- TYPE%d Only C, P, or Z are supported.",chkidx+1);
-				mess1 = errmsg;
-				x_type[chkidx]="R";
-				goto key_respec;
-			}
-#else
 			if (!strchr("BCDFLPZN2TOUY",k[chkidx].type_field[0]))
 			{
 				sprintf(errmsg,"\224SORRY\204- TYPE%d MUST BE ONE OF B,C,D,F,L,P,Z,N,2,T,O,U,Y.",chkidx+1);
@@ -2098,7 +1904,6 @@ static int get_keys(struct key_info keyinfo[], int *keycnt)
 				x_type[chkidx]="R";
 				goto key_respec;
 			}
-#endif
 			keyinfo[chkidx].type = k[chkidx].type_field[0];
 
 			/*
@@ -2144,16 +1949,6 @@ static void record_lock(int fh)
 	fh_list[fh_list_cnt] = fh;
 	fh_list_cnt++;
 }
-#ifdef VMS
-static void free_locks(void)
-{
-	while(fh_list_cnt > 0)
-	{
-		fh_list_cnt--;
-		close(fh_list[fh_list_cnt]);
-	}
-}
-#endif /* VMS */
 
 static int get_lock(void)
 {
@@ -2268,6 +2063,12 @@ static int get_lock(void)
 /*
 **	History:
 **	$Log: wsort.c,v $
+**	Revision 1.24  2001-10-26 15:41:07-04  gsl
+**	READFDR FT now returns A for alt-indexed so accept 'A' as being Indexed.
+**
+**	Revision 1.23  2001-10-26 14:56:06-04  gsl
+**	Remove VMS code
+**
 **	Revision 1.22  1998-09-09 16:20:28-04  gsl
 **	Update version
 **

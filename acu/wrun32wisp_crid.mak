@@ -5,14 +5,14 @@
 #
 #################################################################
 #
-# Creating an Acucobol 4.3 runtime requires WISP 4.3.06.
+# Creating an Acucobol 5.1 runtime requires WISP 4.4.00 and CRID 3.0.00.
 #
 # Follow these instructions carefully to build a custom Acucobol 
-# runtime that includes the WISP and CRID runtime routines.  You are going
-# to build the runtime from a temporary folder, that is a copy
+# runtime that includes the WISP and CRID runtime routines.  You are 
+# going to build the runtime from a temporary folder, that is a copy
 # of the Acucobol lib folder $(ACUDIR)\acugt\lib.  The Acucobol 
-# runtime consists of two file, an  exe and a dll. The custom WISP
-# version is named wrun32wispc.exe  and wrun32wispc.dll.
+# runtime consists of two file, an exe and a dll. The custom WISP
+# version is named wrun32wispc.exe and wrun32wispc.dll.
 #
 # 1) Create the temporary folder $(ACUDIR)\acugt\bldwispc by copying
 #    and renaming the folder $(ACUDIR)\acugt\lib.  You can use
@@ -34,10 +34,10 @@
 # 3) Edit this file $(ACUDIR)\acugt\bldwispc\wrun32wisp_crid.mak and set 
 #    WISPDIR and CRIDDIR to the correct directory.
 #
-#       WISPDIR=C:\WISP4306
-#       CRIDDIR=C:\CRIDACU298
+#       WISPDIR=C:\WISP4400
+#       CRIDDIR=C:\CRIDACU3000
 #
-# 4) From a DOS window issue the NMAKE command.
+# 4) From a COMMAND/MSDOS window issue the NMAKE command.
 #       $ cd $(ACUDIR)\acugt\bldwispc
 #       $ NMAKE /f wrun32wisp_crid.mak
 #
@@ -46,12 +46,7 @@
 #       Copy $(ACUDIR)\acugt\bldwispc\wrun32wispc.exe
 #            $(ACUDIR)\acugt\bldwispc\wrun32wispc.dll 
 #
-#       to   \\server\wisp\bin
-#
-# 6) Copy and rename the Acucobol license file to the run location.
-#       Copy $(ACUDIR)\acugt\bin\wrun32.alc 
-#
-#       to   \\server\wisp\bin\wrun32wispc.alc
+#       to   $(ACUDIR)\acugt\bin
 #
 #################################################################
 #
@@ -64,15 +59,19 @@
 #   For AcuServer clients add : CLIENT=
 # Make sure your path for wsock32.lib is set to the correct location
 
-# Distributed with ACUCOBOL-GT version 4.3.0
-# PMK: WinNTS, WinWKS, Win9x
+# Distributed with ACUCOBOL-GT version 5.1.0.2
+# PMK: 0, 1
+#################################################################
 
-#  Set the runtime name here. (Do not include a file extension.)
-WRUN32WISP=wrun32wispc
+# Set the Acucobol directory here
+ACUDIR=C:\acucorp\acucbl510
 
 # Set the installed WISP and CRID directory here.
-WISPDIR=C:\WISP4306
-CRIDDIR=C:\CRIDACU298
+WISPDIR=C:\WISP4400
+CRIDDIR=C:\CRIDACU3000
+
+#  Set the runtime name here. (Do not include a file extension.)
+WRUN32=wrun32wispc
 
 ## WISP and CRID libraries
 WISP_LIBS=     $(CRIDDIR)\cridacum.lib \
@@ -81,9 +80,11 @@ WISP_LIBS=     $(CRIDDIR)\cridacum.lib \
 
 WISP_CFLAGS= /DCRID 
 
+#################################################################
+
 !include <ntwin32.mak>
 
-!ifdef  DEBUG
+!ifdef	DEBUG
 DEBUG_CFLAGS=/MDd /D_WINDLL /D_USRDLL /D "_AFXDLL" 
 DEBUG_LFLAGS=/debug
 !else
@@ -103,8 +104,6 @@ DLLRESFILE=wrundll.res
 DLLRBJFILE=wrundll.rbj
 DLLRCFILE=wrundll.rc
 
-RPCDIR=c:\pctcp32\sdk\netmsc
-
 EXTRA_CFLAGS=-DNO_CLIENT=1
 
 CLIENT_LIBS=
@@ -112,31 +111,28 @@ CLIENT_LIBS=
 !ifdef  CLIENT
 # AcuServer client version
 EXTRA_CFLAGS=-DNO_CLIENT=0 
-CLIENT_LIBS=wclnt32.lib $(RPCDIR)\rpc4w32.lib $(CLIENT_LIBS)
+CLIENT_LIBS=wclnt32.lib $(CLIENT_LIBS)
 !endif  # CLIENT #
 
 ACUCONNECT_C = conc32.lib
 ACUCONNECT_S = cons32.lib
 
 SUBS=   \
-        filetbl.obj \
-        mswinsub.obj
+	filetbl.obj \
+	mswinsub.obj
 
 LIBS=   \
-        $(CLIENT_LIBS) \
-        wrun32.lib \
-        wcpp32.lib \
-        wfsi32.lib \
-        wvis32.lib \
-        wmsg32.lib \
-        wmem32.lib \
-        wlib32.lib \
-        wstd32.lib \
-        plugin32.lib
+	$(CLIENT_LIBS) \
+	wrun32.lib \
+	wcpp32.lib \
+	wfsi32.lib \
+	wvis32.lib \
+	acme.lib \
+	plugin32.lib
 
 #  For building the Web Browser Plug-in
-PLUGINSUBS=     \
-        npwin.obj
+PLUGINSUBS=	\
+	npwin.obj
 
 PLUGINLIBS=wcpp32.lib
 PLUGINRESFILE=plugin32.res
@@ -149,81 +145,97 @@ WSUBS=sub.obj $(SUBS)
 WLIBS=wterm32.lib $(LIBS) $(WISP_LIBS)
 
 # MFC application class
-MFCAPP =        \
-        wcpp32.lib \
-        wrunapp.obj
-MFCDLL =        \
-        wcpp32.lib \
-        wdllapp.obj
-MFCNPDLL =      \
-        wcpp32.lib \
-        wnpapp.obj
+MFCAPP =	\
+	wcpp32.lib \
+	wrunapp.obj
+MFCDLL =	\
+	wcpp32.lib \
+	wdllapp.obj
+MFCNPDLL =	\
+	wcpp32.lib \
+	wnpapp.obj
 MFCSTAT = \
-        wcpp32.lib \
-        wstatapp.obj
+	wcpp32.lib \
+	wstatapp.obj
 
 ## Added WISP CFLAGS
 CLFLAGS=$(cflags) $(cvars) $(DEBUG_CFLAGS) -nologo -D_WINDOWS -DWINNT \
-                $(EXTRA_CFLAGS) $(WISP_CFLAGS)
+		$(EXTRA_CFLAGS) $(WISP_CFLAGS)
 
 .c.obj:
-        $(cc) $(CLFLAGS) $<
+	$(cc) $(CLFLAGS) $<
+
+## Change wrun32 to $(WRUN32).
+## Change wrundll.lib to $(WRUNDLL_LIB)
+## Change wrundll.exp to $(WRUNDLL_EXP)
+
+WRUNDLL_LIB=$(WRUN32)_import.lib
+WRUNDLL_EXP=$(WRUN32)_import.exp
 
 ## Add default target to build both runtime files.
 
-default: $(WRUN32WISP).exe $(WRUN32WISP).dll
+default: $(WRUN32).exe $(WRUN32).dll
 
-## Change to $(WRUN32WISP) from wrun32.
-
-$(WRUN32WISP).dll: $(MFCDLL) $(WSUBS) $(DLLRBJFILE) $(WLIBS) $(ACUCONNECT_C)
-        $(link) $(LDFLAGS) /dll /out:$@ /def:wrundll.def \
-                /implib:$(WRUN32WISP)_import.lib \
-                $(MFCDLL) $(WLIBS) $(WSUBS) $(ACUCONNECT_C) $(DLLRBJFILE)
+$(WRUN32).dll: $(MFCDLL) $(WSUBS) $(DLLRBJFILE) $(WLIBS) $(ACUCONNECT_C)
+	$(link) $(LDFLAGS) /dll /out:$@ /def:wrundll.def \
+		/implib:$(WRUNDLL_LIB) \
+		$(MFCDLL) $(WLIBS) $(WSUBS) $(ACUCONNECT_C) $(DLLRBJFILE)
 
 
-$(WRUN32WISP).exe: $(MFCAPP) $(WRUN32WISP).dll wcpp32.lib $(RBJFILE)
-        $(link) $(LDFLAGS) /out:$@ $(MFCAPP) wcpp32.lib \
-                $(WRUN32WISP)_import.lib $(RBJFILE)
+$(WRUN32).exe: $(MFCAPP) $(WRUN32).dll wcpp32.lib $(RBJFILE)
+	$(link) $(LDFLAGS) /out:$@ $(MFCAPP) wcpp32.lib \
+		$(WRUNDLL_LIB) $(RBJFILE)
 
 acuthread.exe: $(MFCSTAT) $(WSUBS) $(RBJFILE) $(WLIBS)
-        $(link) $(LDFLAGS) -out:$@ -implib:wrunexe.lib $(MFCSTAT) $(WSUBS) \
-                $(RBJFILE) $(WLIBS) $(ACUCONNECT_S) wsock32.lib
+	$(cc) $(CLFLAGS) -DACUCONNECT_SRV sub.c
+	$(link) $(LDFLAGS) -out:$@ -implib:wrunexe.lib $(MFCSTAT) $(WSUBS) \
+		$(RBJFILE) $(WLIBS) $(ACUCONNECT_S) $(ACUCONNECT_C) wsock32.lib
 
 $(DLLRBJFILE): $(DLLRESFILE)
-        cvtres -$(CPU) $(DLLRESFILE) -o $@
+	cvtres -$(CPU) $(DLLRESFILE) -o $@
 
 $(DLLRESFILE): $(DLLRCFILE)
-        $(rc) $(DLLRCFLAGS) $(DLLRCFILE)
+	$(rc) $(DLLRCFLAGS) $(DLLRCFILE)
 
 $(RBJFILE): $(RESFILE)
-        cvtres -$(CPU) $(RESFILE) -o $@
+	cvtres -$(CPU) $(RESFILE) -o $@
 
 $(RESFILE): $(RCFILE)
-        $(rc) $(RCFLAGS) $(RCFILE)
+	$(rc) $(RCFLAGS) $(RCFILE)
 
-NPacu32.dll: $(MFCNPDLL) $(PLUGINSUBS) $(PLUGINLIBS) $(WRUN32WISP).dll \
-        $(PLUGINRBJFILE)
-        $(link) $(LDFLAGS) /dll /out:$@ /def:plugin32.def \
-                /implib:NPacudll.lib \
-                $(MFCNPDLL) $(PLUGINSUBS) $(PLUGINLIBS) $(WRUN32WISP)_import.lib \
-                $(PLUGINRBJFILE)
+NPacu32.dll: $(MFCNPDLL) $(PLUGINSUBS) $(PLUGINLIBS) $(WRUN32).dll \
+	$(PLUGINRBJFILE)
+	$(link) $(LDFLAGS) /dll /out:$@ /def:plugin32.def \
+		/implib:NPacudll.lib \
+		$(MFCNPDLL) $(PLUGINSUBS) $(PLUGINLIBS) $(WRUNDLL_LIB) \
+		$(PLUGINRBJFILE)
 
 $(PLUGINRBJFILE): $(PLUGINRESFILE)
-        cvtres -$(CPU) $(PLUGINRESFILE) -o $@
+	cvtres -$(CPU) $(PLUGINRESFILE) -o $@
 
 $(PLUGINRESFILE): $(PLUGINRCFILE)
-        $(rc) $(PLUGINRCFLAGS) $(PLUGINRCFILE)
+	$(rc) $(PLUGINRCFLAGS) $(PLUGINRCFILE)
 
 sub.obj: sub.c sub85.c config85.c direct.c
 
 tsub.obj: sub.c sub85.c config85.c direct.c
-        $(cc) $(CLFLAGS) /Fo$@ -DACU_ALWAYS_INIT sub.c
+	$(cc) $(CLFLAGS) /Fo$@ -DACU_ALWAYS_INIT sub.c
 
 clean:
-        -del $(WRUN32WISP).dll
-        -del $(WRUN32WISP).exe
-        -del acuthread.exe 
-        -del NPacu32.dll
-        -del sub.obj 
-        -del filetbl.obj 
-        -del mswinsub.obj
+	-del $(WRUN32).dll
+	-del $(WRUN32).exe
+	-del acuthread.exe 
+	-del NPacu32.dll
+	-del sub.obj 
+	-del filetbl.obj 
+	-del mswinsub.obj
+	-del $(RESFILE)
+	-del $(RBJFILE)
+	-del $(DLLRESFILE)
+	-del $(DLLRBJFILE)
+	-del $(WRUNDLL_LIB)
+	-del $(WRUNDLL_EXP)
+	-del $(PLUGINRESFILE)
+	-del $(PLUGINRBJFILE)
+	-del NPacudll.lib
+	-del NPacudll.exp

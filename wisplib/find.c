@@ -23,15 +23,13 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <errno.h>
 
-#if defined(MSDOS) || defined(_MSC_VER)
+#ifdef WIN32
 #include <io.h>
 #endif
 
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <ctype.h>
-#endif /* unix || MSDOS || WIN32 */
 
 #include "idsistd.h"
 #include "wfiles.h"
@@ -43,6 +41,8 @@ static char rcsid[]="$Id:$";
 #include "wexit.h"
 #include "wisplib.h"
 #include "filext.h"
+#include "wperson.h"
+#include "paths.h"
 
 /*
 **	Structures and Defines
@@ -153,274 +153,10 @@ void FIND(char* the_file, char* the_lib, char* the_vol, int4 *starter, int4 *cou
 }
 
 
-#ifdef VMS
 
-#include <descrip.h>
-#include <rmsdef.h>
-#include <fscndef.h>
-#include <ssdef.h>
-#include <lnmdef.h>
-
-static osd_find( the_file, the_lib, the_vol, l_starter, l_counter_p, receiver, l_file_count_p )
-char	*the_file;
-char	*the_lib;
-char	*the_vol;
-int	l_starter;
-int	*l_counter_p;
-char	*receiver;
-int	*l_file_count_p;
-{
-
-	char	l_file[9], l_lib[9], l_vol[7];
-	char	f_file[9], f_lib[9];
-	char	lastfile[9], lastlib[9];
-	char 	*l_buf,*lib_buf;
-	uint4  	status,status2;
-	int  	i,j;
-	int 	cnt, pos;
-	char 	*end_name;
-	int4 	mode;
-	int	lib_search;
-	unsigned short reslen;
-	char	buff[80];
-	char template[80],result[256],*context;
-
-	struct itemlist
-	{
-		short	clen;
-		short	code;
-		char	*ptr;
-	}	items[3];
-
-	struct
-	{
-		short	clen;
-		short	code;
-		char	*bufr;
-		char	*retaddr;
-	}	logitem[3];
-
-
-#include "find.d"
-
-	l_buf = receiver;
-
-	memcpy( l_file, the_file, 8);
-	memcpy( l_lib,  the_lib,  8);
-	memcpy( l_vol,  the_vol,  6);
-
-	/*
-	**	If a volume search then return just the volume, no widecard matching is done.
-	*/
-	if (l_lib[0] == ' ' && l_file[0] == ' ')					/* Volume search not supported		*/
-	{
-		memset(l_buf,' ',22);							/* Blank of one entry			*/
-
-		if ( l_starter == 1 )
-		{
-			memcpy(l_buf,l_vol,6);						/* for each file, use the same volume	*/
-			*l_counter_p = 1;						/* Set the return count.		*/
-		}
-		else
-		{
-			*l_counter_p = 0;						/* Set the return count.		*/
-		}
-
-		if ( *l_file_count_p == 0 )
-		{
-			*l_file_count_p = 1;						/* If the pointer is set, return value.	*/
-		}
-		return;
-	}	
-
-	/*
-	**	If FILE and VOLUME with no library use [000000] as the library.
-	*/
-	if (l_lib[0] == ' ')								/* VOLUME:FILE -> VOLUME:[000000]FILE	*/
-	{
-		if (l_vol[0] != ' ') /*** This will always be TRUE ***/			/* If there is a volume provided...	*/
-		{
-			reslen = sizeof(result);					/* Set up to get it's logical name.	*/
-			logitem[0].clen = sizeof(result);				/* Then we can determine if it is a	*/
-			logitem[0].code = LNM$_STRING;					/* device or a path. If it's a device,	*/
-			logitem[0].bufr = result;					/* like DUA0, use [000000] to get to the*/
-			logitem[0].retaddr = (char *)&reslen;				/* root directory. If a path, use it to	*/
-			logitem[1].clen = 0;						/* Access the end of the path. If it's a*/
-			logitem[1].code = 0;						/* Path with no unresolved part, leave	*/
-											/* The library alone.			*/
-			while (l_vol[l_desc.dsc$w_length-1] == ' ') l_desc.dsc$w_length--; /* Reduce length by spaces.		*/
-
-			status = sys$trnlnm(0,&lnm_file,&l_desc,0,logitem);		/* Look in LNM$FILE_DEV.		*/
-											/* If not a logical, or it translates to*/
-											/* a path with a ".]" on end, then use	*/
-											/* "000000" as the lib path.		*/
-			if (status != SS$_NORMAL || (status == SS$_NORMAL && result[reslen-2] == '.'))
-			{
-				strcpy( l_lib, "000000  ");
-			}
-		}
-	}
-
-	mode = 0;
-
-	if (l_file[0] == ' ')								/* If file is blank then lib search.	*/
-	{
-		setwispfilext("DIR");							/* Build lib template as ...		*/
-		end_name = wfname(&mode, l_vol, "000000  ", l_lib, template);		/* VOLUME:[000000]LIB.DIR		*/
-		*end_name = (char)0;							/* Null terminate string.		*/
-		lib_search = 1;
-	}
-	else										/* If file search then			*/
-	{
-		if ( WISPFILEXT[0] == ' ' || WISPFILEXT[0] == '\0' )
-			setwispfilext("*");						/* Build template as ....		*/
-		end_name = wfname(&mode, l_vol, l_lib, l_file, template);		/* VOLUME:[LIB]FILE.*			*/
-		*end_name = (char)0;							/* Null terminate string.		*/
-		lib_search = 0;
-	}
-                                                         
-	context = 0;
-
-	pos = 1;								/* Position in list of files found.		*/
-	cnt = 0;								/* Count of files loaded into receiver.		*/
-
-	lastfile[0] = (char)0;
-	lastlib[0] = (char)0;
-
-	/*
-	**	Loop using FIND_FILE to find all the files in this directory.
-	**	For each file found test if valid, if not skip to next file.
-	**	If file is valid and in the START/COUNT range add it to the reciever.
-	*/
-	for(;;)
-	{
-		t_desc.dsc$w_length = strlen(template);				/* Set the length in descriptor.		*/
-		status = LIB$FIND_FILE(&t_desc,&r_desc,&context,0,0,0,0);	/* look for a file				*/
-		if (status != RMS$_NORMAL) 
-		{
-			if (status == RMS$_PRV)
-			{
-				continue;					/* Try next file				*/
-			}
-			else
-			{
-				break;						/* Exit the loop				*/
-			}
-		}
-
-		/*
-		**	Test if a valid file name.
-		*/
-		items[0].code = FSCN$_DIRECTORY;				/* Extract the directory			*/
-		items[0].clen = 0;
-		items[0].ptr  = 0;
-		items[1].code = FSCN$_NAME;					/* Extract the file name			*/
-		items[1].clen = 0;
-		items[1].ptr  = 0;
-		items[2].code = 0;
-		items[2].clen = 0;
-		items[2].ptr  = 0;
-
-		status2 = SYS$FILESCAN( &r_desc,items,0 );			/* Parse up the filespec			*/
-		if ( status2 != SS$_NORMAL )					/* if FILESCAN failed				*/
-		{
-			werrlog(ERRORCODE(8),result,status2,0,0,0,0,0,0);
-			continue;						/* Skip this file and try next one		*/
-		}
-		memset(f_file,' ',8);
-		memset(f_lib,' ',8);
-
-		if ( ! lib_search )
-		{
-			/*
-			**	The library is going to come back as
-			**		[MYLIB] or <MYLIB>
-			*/
-			if (items[0].clen > 2)
-			{
-				memcpy(buff, items[0].ptr + 1, items[0].clen - 2);
-				buff[items[0].clen-2] = (char)0;
-			
-				if (strlen(buff) > 8)
-				{
-					continue;				/* LIBRARY Too big, skip to next file		*/
-				}
-				memcpy(f_lib, buff, strlen(buff));
-			}
-
-			if (items[1].clen > 8)
-			{
-				continue;					/* FILE Too big, skip to next file		*/
-			}
-			memcpy(f_file, items[1].ptr, items[1].clen);
-
-			if (0==memcmp(lastfile,f_file,8) && 0==memcmp(lastlib,f_lib,8))
-			{
-				continue;					/* Same as last file/lib, skip to next file	*/
-			}
-			memcpy(lastfile,f_file,8);
-			memcpy(lastlib,f_lib,8);
-		}
-		else /* LIBRARY FIND */
-		{
-			/* NOTE: The library is returned in the file position because we are searching	*/
-			/*       for  [000000]?lib?.DIR							*/
-
-			if (items[1].clen > 8)
-			{
-				continue;					/* FILE Too big, skip to next file		*/
-			}
-			memcpy(f_file, items[1].ptr, items[1].clen);
-		}
-
-		/*
-		**	A valid file has been found.
-		**	If in return range then load into return buffer.
-		*/
-		if ((pos >= l_starter) && (cnt < *l_counter_p))			/* if in return range				*/
-		{ 
-			cnt++;							/* Add 1 to the returned entry count.		*/
-
-			memcpy(l_buf,l_vol,6);					/* for each file, use the same volume		*/
-			l_buf += 6;						/* Point to the library				*/
-			memcpy(l_buf,f_lib,8);
-			l_buf += 8;
-			memcpy(l_buf,f_file,8);
-			l_buf += 8;
-
-			if (cnt == *l_counter_p)				/* If we have filled the reciever		*/
-			{
-				if (*l_file_count_p != 0)			/* and we don't need a total count		*/
-				{
-					break;					/* Exit the loop				*/
-				}
-			}
-		}
-		pos++;
-	}
-
-	*l_counter_p = cnt;							/* Set the return count.			*/
-
-	if ( *l_file_count_p == 0 )
-	{
-		*l_file_count_p = pos - 1;					/* If the pointer is set, return value.		*/
-	}
- 		
-	status = LIB$FIND_FILE_END(&context);					/* free the file context			*/
-}
-#endif	/* VMS */
-
-
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
 /*
-**	The same osd_find() routines are used for unix and MSDOS
+**	The osd_find() routines are used for unix and WIN32
 */
-
-#include "wperson.h"
-#include "wdefines.h"
-#include "paths.h"
-
-char *nextfile();
 
 static char *rec_ptr;									/* Ptr to reciever area			*/
 static char find_ext[39];								/* FIND copy of WISPFILEXT		*/
@@ -675,26 +411,11 @@ static void build_file_list( char* vol, char* vol_path, char* lib, char* fspec)
 		ptr = osd_ext(file_noext);						/* Point to the ext (after the dot (.))	*/
 		if ( ptr ) 
 		{
-#ifdef OLD
 			/*
-			 *	Don't need this anymore as we are removing duplicates
-			 *	once the extension has been removed.
+			 *	Remove the extension.
+			 *	Later will remove duplicates.
 			 */
-			if (strcmp(ptr,"idx")==0 && find_ext[0] == NULL_CHAR)
-			{
-				continue;						/* Don't find .idx files (for cisam)	*/
-			}
-			if (strcmp(ptr,"vix")==0 && find_ext[0] == NULL_CHAR)
-			{
-				continue;						/* Don't find .vix files (for Vision4)	*/
-			}
-#ifdef WIN32
-			if (strcmp(ptr,"VIX")==0 && find_ext[0] == NULL_CHAR)
-			{
-				continue;						/* Don't find .vix files (for Vision4)	*/
-			}
-#endif /* WIN32 */
-#endif /* OLD */
+
 			*(--ptr) = NULL_CHAR;
 		}
 
@@ -758,8 +479,6 @@ struct receiver_struct {
 	}
 }
 
-#endif /* unix || MSDOS || WIN32 */
-
 
 static int haswc(char* p)
 {
@@ -767,7 +486,7 @@ static int haswc(char* p)
 	else return(0);
 }
 
-#ifdef unix
+#ifdef OLD_unix
 /*
 	find a set of files in a directory.
 */
@@ -852,6 +571,10 @@ int4	*total;										/* Total number of wildcard matches.	*/
 /*
 **	History:
 **	$Log: find.c,v $
+**	Revision 1.18  2001-11-07 16:30:31-05  gsl
+**	Remove VMS * MSDOS code
+**	ifdef'ed obsolete findlong()
+**
 **	Revision 1.17  1999-08-20 12:37:33-04  gsl
 **	Removed the logic that was ignoring .idx and .vix files. This was done
 **	in a attempt to stop duplicate file names from being returned. However

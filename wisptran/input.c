@@ -222,6 +222,8 @@ int get_next_cobol_line(char *the_line, int linesize)
 	static	char	wcb_copybook[80], lib_copybook[80], libopen_copybook[80];
 	static	int	parse_step = 1;						/* COPY statement parsing step			*/
 
+	static	int	copy_line_num = 0;					/* The line number of the COPY token		*/
+
 	int		line_status;
 	int		got_a_line;
 	int		is_a_comment;
@@ -241,6 +243,12 @@ int get_next_cobol_line(char *the_line, int linesize)
 		sprintf(split_saveline, "      *COPY \"%s\".\n", wcb_copybook);
 		split_line_status = SPECIAL_COMMENT;
 		open_the_copybook = 2;
+
+		if (do_xtab)
+		{
+			xtab_log(context_infile_name(curr_cob_context), 
+				copy_line_num, "COPY", wcb_copybook);
+		}
 	}
 	else if ( 2==open_the_copybook && copylib )
 	{
@@ -450,6 +458,7 @@ int get_next_cobol_line(char *the_line, int linesize)
 			if (eq_token(&tmptok,VERB,"COPY"))
 			{
 				found_copy = 1;
+				copy_line_num = tmptok.line;
 				break;
 			}
 	
@@ -1019,16 +1028,21 @@ int get_conditional_cobol_line(char *the_line, int linesize, A_file *the_file, i
 
 
 	/*
+	**	If this is a regular comment then uncomment it. 
+	**	If not a regular comment then don't change anything -- assume what it's correct as it.
+	**
 	**	To allow comments and continuation inside of $xxx_CODE you put the '*', '-', or '/'
 	**	into column 8 and WISP will move it into column 7 after it removes the '*'.
 	*/
-
-	the_line[6] = ' ';							/* remove the comment character			*/
-
-	if ('*'==the_line[7] || '-'==the_line[7] || '/'==the_line[7])
+        if ('*' == the_line[6])
 	{
-		the_line[6] = the_line[7];					/* Shift the '*', '-', or '/' to col 7		*/
-		the_line[7] = ' ';						/* blank out column 8.				*/
+	         the_line[6] = ' ';						/* remove the comment character			*/
+
+		 if ('*'==the_line[7] || '-'==the_line[7] || '/'==the_line[7])
+		 {
+		        the_line[6] = the_line[7];				/* Shift the '*', '-', or '/' to col 7		*/
+			the_line[7] = ' ';					/* blank out column 8.				*/
+		 }
 	}
 
 	return( (MODE_PROCESS==conditional_mode) ? PROCESS_LINE : NOPROCESS_LINE );
@@ -1084,17 +1098,10 @@ extern	char	*sys_errlist[];
 			return EOF;						/* Return EOF					*/
 		}
 
-#if defined(unix) || defined(MSDOS) || defined(WINNT)
 		if (errno > sys_nerr)						/* Error occured, report it			*/
 		{
 			ptr = sys_errlist[errno];
 		}
-#endif
-#ifdef VMS
-		if (ptr = strerror(errno))
-		{
-		}
-#endif
 		else
 		{
 			ptr = "UNKNOWN error";
@@ -1174,86 +1181,6 @@ static void gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char
 	return;
 }
 
-#ifdef VMS
-#include <rmsdef.h>
-#include <descrip.h>
-static char 	template[256];
-static char 	result[256];
-$DESCRIPTOR(t_desc,template);
-$DESCRIPTOR(r_desc,result);
-
-static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol)
-{
-	static  char *context;
-
-	/*
-	**	Generate the WCB copybook name.
-	*/
-
-	wcb[0] = (char)0;
-
-	if (lib[0])								/* If LIBRARY supplied use it.			*/
-	{
-		strcpy(wcb, lib);
-	}
-	else if (cli_ildir[0])							/* Use the default LIBRARY			*/
-	{
-		strcpy(wcb, cli_ildir);
-	}
-
-	if (wcb[0])
-	{
-		/* 
-		**	If library has no ":" or "[", it is a logical name,
-		**	so we should add a ":" as a separator.
-		*/
-		if ((strpos(wcb,":") == -1) && (strpos(wcb,"[") == -1))	
-		{
-			strcat(wcb,":");
-		}
-	}
-
-	strcat(wcb,file);							/* Add on the filename and extension		*/
-	strcat(wcb,".WCB");
-
-	uppercase(wcb);								/* Make uppercase				*/
-
-	/*
-	**	Generate the COB (.lib) copybook name
-	*/
-
-	strcpy(template,wcb);							/* Template has the lib:file.wcb name		*/
-	if (trans_lib)								/* Should we translate the lib.			*/
-	{									/* Before we open the output file.		*/
-		unsigned int status;
-
-		t_desc.dsc$w_length = strlen(template);
-		status = LIB$FIND_FILE(&t_desc,&r_desc,&context,0,0,0,0);   	/* look for a file				*/
-		if (status == RMS$_NORMAL)					/* got one...					*/
-		{
-			result[strpos(result,";")] = '\0';			/* Null terminate it.				*/
-		}
-		else
-		{
-			strcpy(result,template);  	 			/* Set up for failure.				*/
-		}
-		status = LIB$FIND_FILE_END(&context);				/* free the file context			*/
-	}
-	else
-	{
-		strcpy(result,template);
-	}
-
-	stredt(template,".WCB",".LIB");						/* Change .WCB to .LIB				*/
-	stredt(result,".WCB",".LIB");						/* Change .WCB to .LIB				*/
-	strcpy(copy_cob,template);
-	strcpy(open_cob,result);
-
-	return;
-}
-
-#else
-
 static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, char *file, char *lib, char *vol)
 {
 	char	file_wcb[80], file_lib[80];
@@ -1271,14 +1198,8 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 		sprintf(file_lib,"%s.lib",file);
 	}		
 
-#ifdef unix
 	lowercase(file_wcb);
 	lowercase(file_lib);
-#endif
-#ifdef MSFS
-	uppercase(file_wcb);
-	uppercase(file_lib);
-#endif
 
 	/*
 	**	Generate the WCB copybook name.
@@ -1369,7 +1290,7 @@ static void osd_gen_native_copybooks(char *wcb, char *copy_cob, char *open_cob, 
 
 	return;
 }
-#endif
+
 
 /*
 **	Routine:	handle_directives()
@@ -1676,6 +1597,15 @@ int set_end_of_input(void)
 /*
 **	History:
 **	$Log: input.c,v $
+**	Revision 1.11  2001-10-18 11:11:00-04  gsl
+**	Changed conditional code uncomment logic so it only modifies regular comment
+**	lines that have a '*' in col 7. If no comment in col 7 then it is passed thru
+**	unchanged.
+**
+**	Revision 1.10  2001-09-13 10:13:03-04  gsl
+**	Remove VMS ifdefs
+**	Add xtab_log() of COPY statments
+**
 **	Revision 1.9  1998-05-07 16:37:40-04  gsl
 **	Add $ACN_CODE $ACN_ELSE $ACN_END conditional support
 **

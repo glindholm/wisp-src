@@ -13,21 +13,11 @@ static char rcsid[]="$Id:$";
 
 #include <stdio.h>
 
-#ifdef VMS
-#include <descrip.h>
-#include <file.h>
-#else
 #include <sys/types.h>
 #include <fcntl.h>
-#endif
 
-#ifdef VMS
-#define WISP_OPTION_FILE	"WISP.OPT"
-#define WISP_KEY_FILE		"WISP.KEY"
-#else
 #define WISP_OPTION_FILE	"wisp.opt"
 #define WISP_KEY_FILE		"wisp.key"
-#endif
 
 ring_struct	*using_ufb_ring = 0;
 struct	using_ufb_struct
@@ -50,55 +40,23 @@ open_io()									/* Parse and open the i/o files			*/
 {
 	FILE *par_file;								/* The file to hold paragraph names.		*/
 	int	i;
-#ifdef VMS
-	char inp_file[256];
-	char s_inp_file[256];
-
-	int f_context;
-
-	$DESCRIPTOR(i_file,inp_file);
-	$DESCRIPTOR(si_file,s_inp_file);
-	$DESCRIPTOR(d_file,"*.wcb");
-
-	strcpy(inp_file,in_fname);						/* Copy the name gotten from the cli.		*/
-
-	for (i = strlen(inp_file); i<256; i++)					/* Pad with spaces.				*/
-		inp_file[i] = ' ';
-
-	f_context = 0;
-
-	lib$find_file(&i_file,&si_file,&f_context,&d_file,0,0,0);		/* Look for the file.				*/
-
-	s_inp_file[strpos(s_inp_file," ")] = '\0';				/* Null terminate the name.			*/
-
-	write_log("WISP",'I',"FILENAME","parsed file is %s",s_inp_file);
-
-	strcpy(in_fname,s_inp_file);						/* Copy the name back to the global.		*/
-
-	i = strpos(in_fname,"]");						/* Get the NAME portion.			*/
-	if (i == -1)								/* Name didn't translate			*/
-#else
 	if ( strpos( in_fname, "." ) == -1 )					/* If no extension then add .wcb		*/
 	{
 		strcat( in_fname, ".wcb" );
 	}
 	if ( access( in_fname, 0 ) == -1 )					/* If file doesn't exist.			*/
-#endif
 	{
 		out_fname[0] = '\0';
 	}
 	else
 	{
-#ifdef VMS
-		strcpy(out_fname,&in_fname[i+1]);				/* Assemble the output file name.		*/
-#else
 		strcpy(out_fname,in_fname);					/* Assemble the output file name.		*/
-#endif
 		out_fname[strpos(out_fname,".")] = '\0';
 		strcpy(par_fname,out_fname);					/* and the paragraph file name.			*/
 		strcpy(dcl_fname,out_fname);					/* and the paragraph lib name.			*/
 		strcpy(dtp_fname,out_fname);					/* The declaratives lib file name.		*/
 		strcpy(xref_fname,out_fname);					/* The cross ref file.				*/
+		strcpy(xtab_fname,out_fname);					/* The cross ref file.				*/
 		strcpy(work_fname,out_fname);					/* The work file.				*/
 		strcpy(crt_fname,out_fname);
 		strcpy(read_fname,out_fname);
@@ -109,26 +67,13 @@ open_io()									/* Parse and open the i/o files			*/
 		if (do_optfile == USE_GENERAL_FILE)
 			strcpy(opt_fname,out_fname);				/* The options file.				*/
 
-#ifdef OLD_VMS
-		if (copy_only)  strcat(out_fname,".TXT;");			/* Create .TXT if only copying.			*/
-		else		strcat(out_fname,".COB;");			/* or .COB if really translating.		*/
-		strcat(par_fname,".PAR;");
-		strcat(dcl_fname,".DCL;");
-		strcat(dtp_fname,".DTP;");
-		strcat(xref_fname,".XRF;");
-		strcat(work_fname,".WRK;");
-
-		if (do_keyfile == USE_GENERAL_FILE)
-			strcat(key_fname,".KEY;");
-		if (do_optfile == USE_GENERAL_FILE)
-			strcat(opt_fname,".OPT;");
-#endif
 		if (copy_only)  	strcat(out_fname,".txt");		/* Create .TXT if only copying.			*/
 		else if (data_conv)	strcat(out_fname,".wdc");		/* od .WDC data conversion routine.		*/
 		else			strcat(out_fname,".cob");		/* or .COB if really translating.		*/
 		strcat(par_fname,".par");
 		strcat(dcl_fname,".dcl");					/* Declaratives copybook of non-decl		*/
 		strcat(xref_fname,".xrf");
+		strcat(xtab_fname,".tab");
 		strcat(work_fname,".wrk");
 		strcat(dtp_fname,".dtp");					/* Decl temp file.				*/
 		strcat(crt_fname,".ctp");
@@ -835,16 +780,6 @@ char	*filename;
 	char	buff[100];
 	int	pos;
 
-#ifdef VMS
-	for ( pos = strlen(filename) - 1; pos >= 0; pos-- )
-	{
-		if ( filename[pos] == ']' || filename[pos] == ':' ) break;
-	}
-	strcpy(buff,&filename[pos+1]);
-	for ( pos=0; buff[pos] && buff[pos] != ';'; pos++ );
-	buff[pos] = '\0';
-#endif
-
 #ifdef unix
 	for ( pos = strlen(filename) - 1; pos >= 0; pos-- )
 	{
@@ -1075,6 +1010,10 @@ char	*select_name;
 /*
 **	History:
 **	$Log: wt_files.c,v $
+**	Revision 1.13  2001-09-13 10:06:02-04  gsl
+**	Remove VSM ifdefs
+**	add xtab file
+**
 **	Revision 1.12  1999-09-07 10:40:39-04  gsl
 **	Make local routines static and fix prototypes
 **

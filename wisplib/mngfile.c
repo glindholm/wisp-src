@@ -34,12 +34,16 @@ extern char *sys_errlist[];
 extern int   sys_nerr;
 #endif
 
-#ifdef MSDOS
-#include <dos.h>
-#endif
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <direct.h>
 #include <io.h>
+#endif
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+#ifndef O_TEXT
+#define O_TEXT 0
 #endif
 
 #include "idsistd.h"
@@ -59,7 +63,8 @@ extern int   sys_nerr;
 #include "screen.h"
 #include "wsb.h"
 #include "wfiledis.h"
-
+#include "wfvision.h"
+#include "wfcisam.h"
 #include "assert.h"
 
 /*
@@ -412,7 +417,7 @@ static int mng_file_screen(void)
 	return(0);
 }
 
-#define VOLNUMCOLS	2
+#define VOLNUMCOLS	1
 #define VOLCOLWIDTH	(WSB_COLS / VOLNUMCOLS)
 #define VOLSTARTROW	11
 #define VOLNUMROWS	10
@@ -849,7 +854,7 @@ static int dir_screen(void)
 		native_path[i-1] = '\0';
 	}
 #endif
-#ifdef MSFS
+#ifdef WIN32
 	if (((i>3 && native_path[1]==':') || (i>1 && native_path[1] != ':')) &&
 		native_path[i-1] == DDS_CHAR)						/* Remove trailing '\' character	*/
 	{
@@ -1557,9 +1562,7 @@ static int scratch_file(const char *file)
 		{
 		case ENOENT:	putmessage("File not found");		break;
 		case EACCES:	putmessage("Access Denied");		break;
-#ifndef WATCOM									/* Watcom does not support this error code */
 		case EBUSY:	putmessage("File is busy");		break;
-#endif
 		default:	
 			sprintf(buff,"Unable to SCRATCH file [errno=%d]",errno);
 			putmessage(buff);
@@ -1613,9 +1616,7 @@ static int scratch_dir(const char* file)
 		case EEXIST:	putmessage("Directory is not empty");			break;
 		case ENOENT:	putmessage("Directory not found");			break;
 		case EACCES:	putmessage("Access Denied");				break;
-#ifndef WATCOM									/* Watcom does not support this error code */
-		case EBUSY:	putmessage("Directory is busy");		break;
-#endif
+		case EBUSY:	putmessage("Directory is busy");			break;
 		default:
 			if (errno < sys_nerr)
 			{
@@ -1976,7 +1977,7 @@ static int select_rename(int file_type)
 					return(0);
 				}
 #endif /* unix */
-#if defined(MSDOS)|| defined(WIN32)
+#ifdef WIN32
 				switch(pfkey)
 				{
 				case PF_ENTER:
@@ -2009,7 +2010,7 @@ static int select_rename(int file_type)
 					putmessage(buff);
 					break;
 				}
-#endif /* MSDOS || WIN32 */
+#endif /* WIN32 */
 			}
 		}
 	}
@@ -2036,7 +2037,7 @@ static int build_rename_screen(HWSB hWsb,
 #ifdef unix
 	wsb_add_text(hWsb,1,0,"***  Rename/Copy File  ***");
 #endif
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 	wsb_add_text(hWsb,1,0,"***  Rename File  ***");
 #endif
 	wsb_screen_message(hWsb);
@@ -2463,14 +2464,6 @@ static int build_file_screen(HWSB hWsb, char* pf_list, int protect, int filetype
 	wsb_add_text(hWsb, 8,2,"File type is");
 	wsb_add_field(hWsb,8,20,FAC_PROT_BOLD, type, strlen(type));
 
-#ifdef MSDOS
-	/*
-	**	There is a bug the stat() routine in Intel C Code Builder version 1.0e.
-	**	If you try to stat() a directory on C: or B: it attempts to read the wrong drive.
-	**	To work around this don't do a stat() on a directory until fixed.
-	*/
-	if (filetype != TYPE_DIR)
-#endif
 	{
 		if (stat(native_path,&filestat))
 		{
@@ -2730,7 +2723,7 @@ static int load_vol_ring(void)
 #ifdef unix
 	strcpy(vol_item.path,DDS_STR);
 #endif
-#ifdef MSFS
+#ifdef WIN32
 	strcpy(vol_item.path,"C:\\");
 #endif
 	if (rc = vol_add()) return(rc);
@@ -2793,7 +2786,7 @@ static int load_dir_ring(int force_load)
 	char	*context;
 	int	cnt;
 
-#if defined(unix)
+#ifdef unix
 	/*
 	**	This code only works on unix because only there is stat() fully implemented.
 	**	Also stat.st_ino is not reliable on WIN32 or DOS for a directory.
@@ -2968,7 +2961,6 @@ static void libpath(char vol[SIZEOF_VOL], char lib[SIZEOF_LIB], char path[COB_FI
 */
 static int stattype(const char* path)
 {
-#if defined(unix) || defined(WIN32)
 	int	rc;
 	struct stat buf;
 
@@ -2993,34 +2985,12 @@ static int stattype(const char* path)
 	else if (S_ISREG (buf.st_mode))  rc = TYPE_REG;
 	else if (S_ISFIFO(buf.st_mode))  rc = TYPE_FIFO;
 	else if (S_ISCHR (buf.st_mode))  rc = TYPE_CHR;
-#ifndef _MSC_VER
+#ifdef unix
 	else if (S_ISBLK (buf.st_mode))  rc = TYPE_BLK;
 #endif
 	else			  	 rc = TYPE_UNKNOWN;
 
 	return(rc);
-#endif /* unix */
-#if defined(MSDOS) 
-	int	rc;
-	unsigned attrib;
-
-	if (0==_dos_getfileattr(path,&attrib))
-	{
-		if      (attrib & _A_SUBDIR) 	rc = TYPE_DIR;
-		else if (attrib & _A_RDONLY) 	rc = TYPE_REG;
-		else if (attrib & _A_VOLID)  	rc = TYPE_SPECIAL;
-		else if (attrib & _A_HIDDEN) 	rc = TYPE_HIDDEN;
-		else if (attrib & _A_SYSTEM) 	rc = TYPE_SPECIAL;
-		else if (attrib & _A_ARCH) 	rc = TYPE_REG;
-		else if (attrib == _A_NORMAL) 	rc = TYPE_REG;		/* Normal is 0x00 */
-		else				rc = TYPE_UNKNOWN;
-	}
-	else
-	{
-		rc = TYPE_NOTFOUND;
-	}
-	return(rc);
-#endif /* MSDOS  */
 }
 
 /*
@@ -3029,54 +2999,59 @@ static int stattype(const char* path)
 static int typefile(const char* file)
 {
 	int	fh;
-	unsigned char	buff[20];
-	int	rc;
+	unsigned char	header[256];
+	int	header_len;
 	int	i;
 
-	fh = open(file,O_RDONLY,0);
+	fh = open(file,O_RDONLY|O_BINARY,0);
 	if ( fh == -1 )
 	{
 		return(FILE_UNKNOWN);
 	}
-	rc = read(fh,(char *)buff,6);
+	header_len = read(fh,(char *)header,sizeof(header));
 	close(fh);
-	if (rc != 6)
+	if (header_len < VISION_MAGIC_LEN)
 	{
 		return(FILE_UNKNOWN);
 	}
 
-	if ( (buff[0] == 0x10 && buff[1] == 0x12 && buff[2] == 0x14 && buff[3] == 0x16) ||
-	     (buff[3] == 0x10 && buff[2] == 0x12 && buff[1] == 0x14 && buff[0] == 0x16)    )
+	if (0==memcmp(header, VISION2BE_MAGIC, VISION_MAGIC_LEN) ||
+	    0==memcmp(header, VISION2LE_MAGIC, VISION_MAGIC_LEN)   )
 	{
-		if (buff[5] == 0x03) return(FILE_VISION3);
-		else		     return(FILE_VISION2);
+		return FILE_VISION2;
 	}
 
-	if (0==memcmp(buff,"\x10\x12\x14\x18\x00\x04",6))
+	if (0==memcmp(header, VISION3_MAGIC, VISION_MAGIC_LEN))
+	{
+		return FILE_VISION3;
+	}
+
+	if (0==memcmp(header, VISION4I_MAGIC, VISION_MAGIC_LEN))
 	{
 		return FILE_VISION4I;
 	}
-	if (0==memcmp(buff,"\x10\x12\x14\x19\x00\x04",6))
+
+	if (0==memcmp(header, VISION4D_MAGIC, VISION_MAGIC_LEN))
 	{
 		return FILE_VISION4D;
 	}
 
-	if ( buff[0] == 0xFE && buff[1] == 0x53 )
+	if ( header[0] == 0xFE && header[1] == 0x53 )
 	{
 		return(FILE_CISAM);
 	}
 
-	if ( buff[0] == 0x31 && buff[1] == 0xFE )
+	if ( header[0] == 0x31 && header[1] == 0xFE )
 	{
 		return(FILE_FHISAMI);
 	}
 
-	if ( buff[0] == 0x33 && buff[1] == 0xFE )
+	if ( header[0] == 0x33 && header[1] == 0xFE )
 	{
 		return(FILE_FHISAMI);
 	}
 
-	if ( buff[0] == 0x30 && buff[1] == 0x7E )
+	if ( header[0] == 0x30 && header[1] == 0x7E )
 	{
 		return(FILE_FHISAMD);
 	}
@@ -3084,7 +3059,7 @@ static int typefile(const char* file)
 	switch(runtype(file))
 	{
 	case RUN_EXEC:		return(FILE_EXEC);
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 	case RUN_SHELL:		return(FILE_BATCH);
 #endif
 #ifdef unix
@@ -3097,27 +3072,19 @@ static int typefile(const char* file)
 	case RUN_PROCOBJ:	return(FILE_PROCOBJ);
 	}
 
-	fh = open(file,O_RDONLY,0);
-	if ( fh == -1 )
+	/*
+	 *	Search for non-text characters in header
+	 */
+	for(i=0;i<header_len;i++)
 	{
-		return(FILE_UNKNOWN);
-	}
-
-	for(i=0;i<255;i++)
-	{
-		rc = read(fh,(char *)buff,1);
-		if (rc != 1) break;
-
-		if (buff[0] >= ' ' && buff[0] <= '~') continue;
-		if (buff[0] == 0x0a ||
-		    buff[0] == 0x0c ||
-		    buff[0] == 0x0d ||
-		    buff[0] == 0x09   ) continue;
-		close(fh);
+		if (header[i] >= ' ' && header[i] <= '~') continue;
+		if (header[i] == 0x0a ||
+		    header[i] == 0x0c ||
+		    header[i] == 0x0d ||
+		    header[i] == 0x09   ) continue;
 		return(FILE_DATA);
 	}
 
-	close(fh);
 	return(FILE_TEXT);
 }
 
@@ -3148,7 +3115,7 @@ static int uppath(char* path)
 		strcpy(path,DDS_STR);
 	}
 #endif /* unix */
-#ifdef MSFS
+#ifdef WIN32
 	else if ( i == 0 )			/*  "\xxx"	==>	"C:\"	*/
 	{
 		getcwd(path,COB_FILEPATH_LEN);
@@ -3364,12 +3331,7 @@ static void wsb_build_filespec(HWSB hWsb,
 
 	if (STYLE_PATH == style)
 	{
-#ifdef unix
-		wsb_add_text (hWsb,startrow,2,"UNIX File Specification:");
-#endif
-#ifdef MSFS
-		wsb_add_text (hWsb,startrow,2,"MS File Specification:");
-#endif
+		wsb_add_text (hWsb,startrow,2,"File Specification:");
 	}
 
 	if (STYLE_VOL  == style ||
@@ -3418,6 +3380,20 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.35  2001-11-12 17:43:44-05  gsl
+**	Open in O_BINARY (WIN32)
+**
+**	Revision 1.34  2001-11-12 16:27:39-05  gsl
+**	VISION2 has 2 magic numbers (Big Endian & Little Endian)
+**
+**	Revision 1.33  2001-10-30 15:32:23-05  gsl
+**	Changed to used defines for VISION magic numbers
+**
+**	Revision 1.32  2001-10-16 17:36:58-04  gsl
+**	Changed the VOLUME display to be a single column instead of 2 so longer
+**	volume mappings can be displayed.
+**	Remove MSDOS
+**
 **	Revision 1.31  2000-01-07 11:07:38-05  gsl
 **	Fixed load_dir_ring() and native_path to allow filenames longer the 80.
 **	It was aborting previously.

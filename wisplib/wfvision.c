@@ -9,17 +9,8 @@ static char rcsid[]="$Id:$";
 			/*									*/
 			/************************************************************************/
 
-/*
-**	ACUCOBOL is defined for unix and MSDOS (when DACU defined).
-*/
-
-#if defined(unix) || defined(MSDOS) || defined(WIN32)
-#define ACUCOBOL
-#endif
 
 #include "idsistd.h"
-
-#ifdef ACUCOBOL
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -27,7 +18,7 @@ static char rcsid[]="$Id:$";
 #include <sys/types.h>
 #include <string.h>
 
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 #include <io.h>
 #include <process.h>
 #endif
@@ -42,6 +33,8 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "wfvision.h"
 #include "werrlog.h"
+#include "wispcfg.h"
+#include "assert.h"
 
 #ifdef SCO
 /*	XENIX_386  is used by ACUCOBOL for SC0 386 machines */
@@ -49,8 +42,6 @@ static char rcsid[]="$Id:$";
 #endif /* SCO */
 
 #include "visint.h"
-
-#define ACUMAGIC_LEN	6	/* magic + version */
 
 struct vision3_struct
 {
@@ -104,13 +95,17 @@ struct vision3_struct
 **	char	max_key[1];				123	1	124
 **
 */
+
+#define VISION_HEADER_SIZE	512
+
 #define V4_REC_COUNT_OFF	52
 #define V4_MAX_REC_OFF		116
 #define V4_MIN_REC_OFF		118
+#define V4_NUM_KEYS_B		120
 #define V4_COMPRESS_OFF		121
 
 /*
-**	ROUTINE:	acuvision()
+**	ROUTINE:	visioninfo()
 **
 **	FUNCTION:	Get info about a vision file.
 **
@@ -138,18 +133,48 @@ struct vision3_struct
 **	WARNINGS:	?
 **
 */
-int acuvision( const char* path, const char* code, void* raw_field )	/* ACUCOBOL Vision file system interface		*/
+int visioninfo( const char* path, const char* code, void* raw_field )
 {
-	struct	_phys_hdr phdr;						/* Struct for first header record.			*/
-	struct	_log_hdr  lhdr;						/* Struct for second header record.			*/
-	struct	vision3_struct v3;					/* Vision3 struct					*/
-	char	v4[512];
+	char	header[VISION_HEADER_SIZE];
+	int	header_len;
 	int	f;							/* File handle						*/
-	int	i0, i1, i2;
+
+	f = open( path, O_RDONLY|O_BINARY );				/* Open the file					*/
+
+	if ( f == -1 )
+	{
+		return READFDR_RC_44_IO_ERROR;
+	}
+
+	header_len = read( f, header, sizeof(header));
+	if (header_len == -1)
+	{
+		close(f);
+		return READFDR_RC_44_IO_ERROR;
+	}
+
+	close(f);
+	f = -1;
+
+	return visioninfo_header(path, code, raw_field, header, header_len);
+}
+
+int visioninfo_header( const char* path, const char* code, void* raw_field, const char* raw_header, int header_len )
+{
+	union
+	{
+		struct
+		{
+			struct	_phys_hdr phdr;				/* Vision 2 Struct for first header record.		*/
+			struct	_log_hdr  lhdr;				/* Vision 2 Struct for second header record.	       	*/
+		} v2;
+		struct	vision3_struct v3;				/* Vision 3 struct					*/
+		char	v4[VISION_HEADER_SIZE];				/* Vision 4 header					*/
+	} header;
+
 	int4	*size;
 	char	*field;
 	int	vision;
-	char	buff[256];
 	short	tshort;
 
 	vision = 0;
@@ -157,78 +182,93 @@ int acuvision( const char* path, const char* code, void* raw_field )	/* ACUCOBOL
 	size = (int4 *) raw_field;
 	field = (char*) raw_field;
 
-	f = open( path, O_RDONLY );					/* Open the file					*/
-
-	if ( f == -1 )
+	if (header_len < VISION_HEADER_SIZE)
 	{
-		return( 44 );
+		wtrace("VISIONINFO","NOHEADER","File=%s header_len=%d (less then VISION_HEADER_SIZE=%d)",  
+		       path, header_len, VISION_HEADER_SIZE);		
+
+		return READFDR_RC_24_NO_FILE_HEADER;
 	}
 
-	i0 = read( f, buff, ACUMAGIC_LEN);				/* Read the magic number plus version			*/
-	if (i0 == -1)
+	memcpy((char*)&header, raw_header, VISION_HEADER_SIZE);
+
+	if (0==memcmp(raw_header, VISION4D_MAGIC, VISION_MAGIC_LEN)) /* We are looking at the data file vs the ".vix" index */
 	{
-		close(f);
-		return(44);
+		vision = 4;
+	}
+	else if (0==memcmp(raw_header, VISION3_MAGIC, VISION_MAGIC_LEN))
+	{
+		vision = 3;
+	}
+	else if (0==memcmp(raw_header, VISION2BE_MAGIC, VISION_MAGIC_LEN) ||
+		 0==memcmp(raw_header, VISION2LE_MAGIC, VISION_MAGIC_LEN)   )
+	{
+		vision = 2;
+	}
+	else
+	{
+		wtrace("VISIONINFO","UNKNOWN","File=%s header_len=%d raw_header=0x%6.6X",  
+		       path, header_len, raw_header);		
+
+		return READFDR_RC_68_UNKNOWN_FILE_FORMAT;
 	}
 
-	if (ACUMAGIC_LEN == i0)
+	if ( memcmp( code, "IX", 2 ) == 0 )				/* File Index Type */
 	{
-		if (0==memcmp(buff,"\x10\x12\x14\x19\x00\x04", ACUMAGIC_LEN))
-		{
-			vision = 4;
-
-			/* read the rest of the header		*/
-			i1 = read( f, &v4[ACUMAGIC_LEN], sizeof(v4)-ACUMAGIC_LEN );
-		}
-		else if (0==memcmp(buff,"\x10\x12\x14\x16\x00\x03", ACUMAGIC_LEN))
-		{
-			vision = 3;
-
-			/* read the rest of the header		*/
-			i1 = read( f, &((char *) &v3)[ACUMAGIC_LEN], sizeof(v3)-ACUMAGIC_LEN );
-		}
-		else
-		{
-			memcpy((char *)&phdr,buff,ACUMAGIC_LEN);
-			if ( phdr.magic == 0x10121416 || phdr.magic == 0x16141210 ) 
-			{
-				vision = 2;
-				/* read the rest of the header		*/
-				i1 = read( f, &((char *) &phdr)[ACUMAGIC_LEN], sizeof(phdr)-ACUMAGIC_LEN );
-
-				i2 = read( f, (char *) &lhdr, sizeof( lhdr ) );		/* read the second header		*/
-
-			}
-		}
+		*field = 'V';	/* VISION */
+		return( READFDR_RC_0_SUCCESS );
 	}
 
-	close(f);
-	f = -1;
-
+	if ( memcmp( code, "IV", 2 ) == 0 )				/* File Index Type Version */
+	{
+		/*
+		**	V2	Vision 2
+		**	V3	Vision 3
+		**	V4	Vision 4
+		*/
+		if ( 2 == vision )
+		{
+			field[0] = 'V';
+			field[1] = '2';
+			return( READFDR_RC_0_SUCCESS );
+		}
+		if ( 3 == vision )
+		{
+			field[0] = 'V';
+			field[1] = '3';
+			return( READFDR_RC_0_SUCCESS );
+		}
+		if ( 4 == vision )
+		{
+			field[0] = 'V';
+			field[1] = '4';
+			return( READFDR_RC_0_SUCCESS );
+		}
+	}
+	
 	if ( memcmp( code, "RC", 2 ) == 0 )				/* If looking for record count				*/
 	{
 		if ( 4 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(&v4[V4_REC_COUNT_OFF],4);
-			memcpy(size,&v4[V4_REC_COUNT_OFF],4);
+			if ( !bytenormal() ) reversebytes(&header.v4[V4_REC_COUNT_OFF],4);
+			memcpy(size,&header.v4[V4_REC_COUNT_OFF],4);
 		}
 		else if ( 3 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(v3.rec_count,4);
-			memcpy(size,v3.rec_count,4);
+			if ( !bytenormal() ) reversebytes(header.v3.rec_count,4);
+			memcpy(size, header.v3.rec_count, 4);
 		}
 		else if ( 2 == vision )
 		{
-			*size = phdr.total_records;
+			*size = header.v2.phdr.total_records;
 		}
 		else
 		{
-			*size = (i0 >= 1) ? 1 : 0;	/* return 1 or 0					*/
+			return READFDR_RC_68_UNKNOWN_FILE_FORMAT;
 		}
 		
-		wtrace("ACUVISION","RC","VISION(%d) File=%s RecordCount=%d", vision, path, *size);
-		
-		return( 0 );
+		wtrace("VISIONINFO","RC","VISION(%d) File=%s RecordCount=%d", vision, path, *size);		
+		return( READFDR_RC_0_SUCCESS );
 	}
 
 	if ( memcmp( code, "RS", 2 ) == 0 ||				/* If looking for record size/lenght			*/
@@ -236,165 +276,177 @@ int acuvision( const char* path, const char* code, void* raw_field )	/* ACUCOBOL
 	{
 		if ( 4 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(&v4[V4_MAX_REC_OFF],2);
-			memcpy(&tshort,&v4[V4_MAX_REC_OFF],2);
+			if ( !bytenormal() ) reversebytes(&header.v4[V4_MAX_REC_OFF],2);
+			memcpy(&tshort,&header.v4[V4_MAX_REC_OFF],2);
 			*size = tshort;
 		}
 		else if ( 3 == vision )
 		{
-			if ( !bytenormal() ) reversebytes(v3.max_rec,2);
-			memcpy(&tshort,v3.max_rec,2);
+			if ( !bytenormal() ) reversebytes(header.v3.max_rec,2);
+			memcpy(&tshort,header.v3.max_rec,2);
 			*size = tshort;
 		}
 		else if ( 2 == vision ) 
 		{
-			*size = lhdr.max_rec_size;
+			*size = header.v2.lhdr.max_rec_size;
 		}
 		else
 		{
-			*size = 256;
+			return READFDR_RC_68_UNKNOWN_FILE_FORMAT;
 		}
 		
-		wtrace("ACUVISION","RS","VISION(%d) File=%s RecordSize=%d", vision, path, *size);
-		return( 0 );
+		wtrace("VISIONINFO","RS","VISION(%d) File=%s RecordSize=%d", vision, path, *size);
+		return( READFDR_RC_0_SUCCESS );
 	}
 
 	if ( memcmp( code, "FT", 2 ) == 0 )				/* If looking for file type				*/
 	{
-		if ( vision > 0 )
+		int num_keys = 1;
+		
+		if ( 4 == vision )
 		{
-			*field = 'I';
+			num_keys = header.v4[V4_NUM_KEYS_B];
+		}
+		else if ( 3 == vision )
+		{
+			num_keys = header.v3.num_keys[0];
+			
+		}
+		else if ( 2 == vision ) 
+		{
+			num_keys = header.v2.lhdr.num_keys;
 		}
 		else
 		{
-			*field = 'C';
+			return READFDR_RC_68_UNKNOWN_FILE_FORMAT;
 		}
 
-		wtrace("ACUVISION","FT","VISION(%d) File=%s FileType=%c", vision, path, *field);
-		return( 0 );
+		if (num_keys > 1)
+		{
+			*field = 'A';
+		}
+		else
+		{
+			*field = 'I';
+		}
+		
+		wtrace("VISIONINFO","FT","VISION(%d) File=%s FileType=%c", vision, path, *field);
+		return( READFDR_RC_0_SUCCESS );
 	}
 
 	if ( memcmp( code, "RT", 2 ) == 0 )				/* If looking for record type				*/
 	{
 		if (4 == vision)
 		{
-			if ( memcmp(&v4[V4_MAX_REC_OFF],&v4[V4_MIN_REC_OFF],2) == 0 ) *field = 'F';
-			else					    *field = 'V';
+			if ( memcmp(&header.v4[V4_MAX_REC_OFF],&header.v4[V4_MIN_REC_OFF],2) == 0 ) 
+				*field = 'F';
+			else
+			    	*field = 'V';
 
-			if ( v4[V4_COMPRESS_OFF] ) *field = 'C';
+			if ( header.v4[V4_COMPRESS_OFF] ) 
+				*field = 'C';
 		}
 		else if (3 == vision)
 		{
-			if ( memcmp(v3.max_rec,v3.min_rec,2) == 0 ) *field = 'F';
-			else					    *field = 'V';
+			if ( memcmp(header.v3.max_rec,header.v3.min_rec,2) == 0 ) 
+				*field = 'F';
+			else					    
+				*field = 'V';
 
-			if ( v3.compress[0] ) *field = 'C';
+			if ( header.v3.compress[0] ) 
+				*field = 'C';
 		}
 		else if ( 2 == vision ) 
 		{
-			if ( lhdr.var_recsize ) *field = 'V';
-			else			*field = 'F';
+			if ( header.v2.lhdr.var_recsize ) 
+				*field = 'V';
+			else			
+				*field = 'F';
 
-			if ( lhdr.compressed ) 	*field = 'C';
+			if ( header.v2.lhdr.compressed ) 	
+				*field = 'C';
 		}
 		else
 		{
-			*field = 'V';
+			return READFDR_RC_68_UNKNOWN_FILE_FORMAT;
 		}
 		
-		wtrace("ACUVISION","RT","VISION(%d) File=%s RecordType=%c", vision, path, *field);
-		return( 0 );
+		wtrace("VISIONINFO","RT","VISION(%d) File=%s RecordType=%c", vision, path, *field);
+		return( READFDR_RC_0_SUCCESS );
 	}
 
-	return( 40 );
+	return( READFDR_RC_40_INVALID_INPUT_PARAM );
 }
 
-/*
-**	ROUTINE:	visionversion()
-**
-**	FUNCTION:	Returns the Vision version for this file
-**
-**	DESCRIPTION:	Opens the file and reads the magic number.
-**
-**	ARGUMENTS:	
-**	filename	the vision file
-**
-**	GLOBALS:	None
-**
-**	RETURN:		
-**	-1		Unable to open or read the file
-**	0		Not a vision file
-**	1		Seems to be a vision file but unknow version.
-**	2		Vision 2
-**	3		Vision 3
-**	4		Vision 4
-**
-**	WARNINGS:	None
-**
-*/
-int visionversion(const char *filename)
+#ifdef unix
+int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBOL file to a tempfile		*/
 {
-	int	fh;
-	char	buff[20];
-	int	rc;
+	char	command[256];
 
-	fh = open(filename,O_RDONLY|O_BINARY,0);
-	if ( fh == -1 )
-	{
-		return -1;
-	}
-	rc = read(fh,buff,ACUMAGIC_LEN);
-	close(fh);
-	if (rc != ACUMAGIC_LEN)
-	{
-		return -1;
-	}
+	sprintf(command,"%s -unload %s %s ", acu_vutil_exe(), inname, outname );
 
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x18\x00\x04", ACUMAGIC_LEN))
-	{
-		return 4;
-	}
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x19\x00\x04", ACUMAGIC_LEN))
-	{
-		return 4;
-	}
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x16\x00\x03", ACUMAGIC_LEN))
-	{
-		return 3;
-	}
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x16\x00\x02", ACUMAGIC_LEN))
-	{
-		return 2;
-	}
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x16", 4))
-	{
-		return 1;
-	}
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x18", 4))
-	{
-		return 1;
-	}
-	if ( 0 == memcmp(buff, "\x10\x12\x14\x19", 4))
-	{
-		return 1;
-	}
-
-	return 0;
+	return 	run_unixcommand_silent(command);
 }
+#endif /* unix */
 
-#else /* !ACUCOBOL */
-int visionversion(const char *filename)
+
+#ifdef WIN32
+#include "win32spn.h"
+
+int unloadvision(const char *inname, const char *outname)		/* Unload the ACUCOBOL file to a tempfile		*/
 {
-	werrlog(102,"visionversion() not implemented",0,0,0,0,0,0,0);
-	return -1;
+	char 	cmd[512];
+	int 	rc;
+
+	/*
+	**	Spawn "vutil32.exe -unload <inname> <outname>"
+	*/
+
+	sprintf(cmd, "%s -unload %s %s", acu_vutil_exe(), inname, outname);
+	ASSERT(strlen(cmd) < sizeof(cmd));
+	
+	rc = win32spawnlp(NULL, cmd, SPN_HIDDEN_CMD|SPN_WAIT_FOR_CHILD|SPN_NO_INHERIT);
+
+	return( rc );
 }
-#endif /* !ACUCOBOL */
-
-
+#endif /* WIN32 */
 
 /*
 **	History:
 **	$Log: wfvision.c,v $
+**	Revision 1.21  2001-11-12 17:56:17-05  gsl
+**	Open in O_BINARY (WIN32)
+**
+**	Revision 1.20  2001-11-12 16:49:34-05  gsl
+**	Add trace info
+**
+**	Revision 1.19  2001-11-12 16:27:20-05  gsl
+**	VISION2 has 2 magic numbers (Big Endian & Little Endian)
+**
+**	Revision 1.18  2001-11-08 12:08:35-05  gsl
+**	Add missing include
+**
+**	Revision 1.17  2001-11-08 12:06:50-05  gsl
+**	add missing include
+**
+**	Revision 1.16  2001-10-30 15:27:24-05  gsl
+**	Moved unloadvision() from wispsort.c
+**	Removed visonversion() (unused)
+**	Renamed acuvision() to visioninfo()
+**	Changed logic to read whole header into union for v2,v3,v4 header
+**
+**	Revision 1.15  2001-10-29 10:46:02-05  gsl
+**	Add IV index version
+**
+**	Revision 1.14  2001-10-24 15:32:03-04  gsl
+**	Get num_keys for vision 2
+**
+**	Revision 1.13  2001-10-23 19:16:03-04  gsl
+**	Rework with new return codes.
+**	Add 'IX' function
+**	Remove non-vision file support.
+**	Add 'FT' support for 'A' alternate indexed files
+**
 **	Revision 1.12  1998-05-18 10:15:28-04  gsl
 **	Add support for vision 4 files
 **

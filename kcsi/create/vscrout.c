@@ -46,7 +46,7 @@ AKEY	blank_akey = { "     ", "   ", " "};
 /*
 **	Static data
 */
-static char app[]="CREATE Utility - Version %s.%s (c) 1993-98 KCSI/NEOM";
+static char app[]="CREATE Utility - Version %s.%s (c) 1993-2001 KCSI/NEOM";
 static char logo[81], message_field[81], m1_field[31], m2_field[31];
 static char recsize[5], errlist[4], output_org[2], output_format[2];
 static int screen_error;
@@ -241,7 +241,7 @@ static int name_and_type_screen(void)
 	GPCTEXT("3 = Format used by system, 4 = IDXFORMAT\"4\"",19,35);
 	GPKW("FORMAT  ",output_format,1,18,15,"N");
 #endif
-#ifdef KCSI_ACU
+#ifdef KCSI_ACU_OLD
 	GPCTEXT("Format:",18,2);
 	GPCTEXT("Vision Version '2', '3', or '4',",18,35);
 	GPCTEXT("Default = '0'",19,35);
@@ -262,7 +262,9 @@ static void val_name_and_type(void)
 	if(! screen_error) val_name();
 	if(! screen_error) val_type();
 	if(! screen_error) val_recsize();
+#ifdef KCSI_MF
 	if(! screen_error) val_format();
+#endif
 }
 
 
@@ -337,7 +339,7 @@ static void val_format(void)
 		return;
 	}
 #endif
-#ifdef KCSI_ACU
+#ifdef KCSI_ACU_OLD
 	if ( format == '2' )		cr_out.ofile._format = '2';
 	else if ( format == '3' )	cr_out.ofile._format = '3';
 	else if ( format == '4' )	cr_out.ofile._format = '4';
@@ -1024,6 +1026,9 @@ static int isblank(char *str, int len)
 /*
 **	History:
 **	$Log: vscrout.c,v $
+**	Revision 1.11  2001-09-06 11:41:13-04  gsl
+**	Remove the FORMAT output field for Acucobol
+**
 **	Revision 1.10  1998-05-19 10:17:20-04  gsl
 **	Fix text that was overlayed
 **

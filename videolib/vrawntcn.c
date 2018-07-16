@@ -165,7 +165,7 @@ static WORD attributes[NUMATTR]=		/* Map attributes to colors */
 };
 
 static int vraw_init_flag = 0;					/* Flag if vrawinit() has been called - reset by vrawexit() */
-static char *vraw_contitle_def = "WISP for Windows NT/9x";	/* Default console title - used if vraw_contitle not set. */
+static char *vraw_contitle_def = "WISP for Windows";		/* Default console title - used if vraw_contitle not set. */
 static char vraw_contitle[80] = "";				/* Console title set by vrawtitle() */
 
 static int vread_timed_out_flag = FALSE;			/* Flag if last read timed out */
@@ -306,9 +306,6 @@ static int vrawinit(void)
 	//the rest is handled by Co*STAR, Telnet, or whatever at task level
 	if( bStreamIO )
 	{
-		hConsole     = GetStdHandle(STD_OUTPUT_HANDLE);
-		hConsoleSave = GetStdHandle(STD_OUTPUT_HANDLE); 
-		hConsoleIn   = GetStdHandle(STD_INPUT_HANDLE);
 		
 		//Disable buffered output
 		setvbuf( stdout, NULL, _IONBF, 0 );
@@ -316,6 +313,10 @@ static int vrawinit(void)
 		// Set for character at a time input
 		// CoStar sets this up OK but it is needed for Telnet
 		setvbuf( stdin, NULL, _IONBF, 0 );
+
+		hConsole     = GetStdHandle(STD_OUTPUT_HANDLE);
+		hConsoleIn   = GetStdHandle(STD_INPUT_HANDLE);
+
 		bSuccess = SetConsoleMode(hConsoleIn,0);  // Do not process input.
 
 		/*
@@ -1136,16 +1137,41 @@ static char readStreamConsole(void)
 
 	_ASSERT(bStreamIO);
 	
-	bSuccess = ReadFile( hConsoleIn, &the_char, 1, &dwInputEvents, NULL );
-	PERR(bSuccess,"ReadFile");
-
-	if (dwInputEvents > 0)
+	if (bTelnet)
 	{
-		return the_char;
+		DWORD dw;
+		INPUT_RECORD ir;
+
+		for (;;)
+		{
+			bSuccess = ReadConsoleInput(hConsoleIn, &ir, 1, &dw);
+			PERR(bSuccess,"ReadConsoleInput");
+
+			if (ir.EventType != KEY_EVENT) {
+				continue;	// Only interested in KEY events
+			}
+			if (!ir.Event.KeyEvent.bKeyDown) {
+				continue;	// Only interested in key down events
+			}
+			if (ir.Event.KeyEvent.uChar.AsciiChar == '\0') {
+				continue;	// Discard char 0 that preceeds control chars
+			}
+			return ir.Event.KeyEvent.uChar.AsciiChar;
+		}
 	}
 	else
 	{
-		return '\0';
+		bSuccess = ReadFile( hConsoleIn, &the_char, 1, &dwInputEvents, NULL );
+		PERR(bSuccess,"ReadFile");
+
+		if (dwInputEvents > 0)
+		{
+			return the_char;
+		}
+		else
+		{
+			return '\0';
+		}
 	}
 }
 
@@ -1358,7 +1384,7 @@ static BOOL check_event(void)
 				/*
 				 *	If there was a keyboard event but not a key-down
 				 *	then read it and discard it because not intrested 
-				 *	in key-up events. Go back and ppe again.
+				 *	in key-up events. Go back and peek again.
 				 *	Note: Mouse, menu, focus, and window events have not been enabled
 				 *		so the only events we should get are KEY_EVENT's.
 				 */
@@ -2067,6 +2093,9 @@ static void perr(PCHAR szFileName, int line, PCHAR szApiName, DWORD dwError)
 	{
 		strcat(szTemp, msgBuf);
 	}
+
+	vre_write_logfile(szTemp);
+	
 	
 	strcat(szTemp, "\n\nContinue execution?");
 	MessageBeep(MB_ICONEXCLAMATION);
@@ -2429,6 +2458,17 @@ static void writelog(char *fmt,...)
 /*
 **	History:
 **	$Log: vrawntcn.c,v $
+**	Revision 1.64  2001-11-19 15:21:09-05  gsl
+**	FIx readStreamConsole() for telnet to use ReadConsoleInput().
+**	Previously used ReadFile() which was filtering out Escape chars on Win 2000
+**	and filtering out Newline chars 0x0a on all systems.
+**
+**	Revision 1.63  2001-11-12 15:13:03-05  gsl
+**	Change default title
+**
+**	Revision 1.62  2001-10-15 11:18:13-04  gsl
+**	Log perr() messages
+**
 **	Revision 1.61  2000-03-16 12:23:53-05  gsl
 **	Finished color fix
 **

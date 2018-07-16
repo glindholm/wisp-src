@@ -369,7 +369,7 @@ void license_warning(void)
 
 	/* CHANGE-COPYRIGHT-DATE */
 	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
-	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-2000 NeoMedia Technologies Inc.");
+	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-2001 NeoMedia Technologies Inc.");
 	wsb_add_text(hWsb,4,0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (941) 337-3434");
 
 	switch (code)
@@ -540,6 +540,9 @@ static int license_checked(int set)
 /*
 **	History:
 **	$Log: initwisp.c,v $
+**	Revision 1.29  2001-09-05 14:43:09-04  gsl
+**	Change copyright date
+**
 **	Revision 1.28  2000-03-16 10:25:36-05  gsl
 **	2000
 **

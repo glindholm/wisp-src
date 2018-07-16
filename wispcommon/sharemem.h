@@ -106,11 +106,16 @@ extern int 	ppunlink(int level);
 extern int2 	a_int2(void *ptr);
 extern int4 	a_int4(void *ptr);
 
+const char 	*wisp_sm_ctlfile(void);
+
 
 #endif /* SHAREMEM_H */
 /*
 **	History:
 **	$Log: sharemem.h,v $
+**	Revision 1.8  2001-10-31 15:26:46-05  gsl
+**	Add wisp_sm_ctlfile()
+**
 **	Revision 1.7  1996-07-23 14:17:51-04  gsl
 **	drcs update
 **

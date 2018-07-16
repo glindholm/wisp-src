@@ -49,24 +49,6 @@
 
 /* Operating System Specific Filename definitions. */
 
-#ifdef VMS
-#define		WISP_TAPE_FILE			"WISP$CONFIG:MTMAP.DAT"
-#endif	/* VMS */
-
-#if defined(unix)
-#define		WISP_TEMP_PERSON_PREFIX		"PERSON"
-#define		WISP_TEMP_PERSUB_PREFIX		"PERSUB"
-#endif	/* unix */
-
-#if defined(WIN32)
-#define		WISP_TEMP_PERSON_PREFIX		"WPS_"
-#define		WISP_TEMP_PERSUB_PREFIX		"WPB_"
-#endif	/* WIN32 */
-
-#if defined(MSDOS)
-#define		WISP_TEMP_PERSON_PREFIX		"DFTS-"
-#endif	/* MSDOS */
-
 #define		WISP_TTY_ENV			"WISPTTY"
 #define		WISP_PID_ENV			"WISPPID"
 #define		WISP_GID_ENV			"WISPGID"
@@ -112,6 +94,10 @@
 /*
 **	History:
 **	$Log: wdefines.h,v $
+**	Revision 1.20  2001-10-31 15:24:41-05  gsl
+**	Remove VMS and MSDOS
+**	Remove the WISP_TEMP_PERSON_PREFIX
+**
 **	Revision 1.19  1998-10-14 14:01:30-04  gsl
 **	Move isexec() defines to runtype.h
 **

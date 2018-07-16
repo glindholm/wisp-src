@@ -111,7 +111,7 @@ void PRINT(
    int_32 *retcode);
 
 void PUTPARM(
-   void *function,
+   const void *function,
    ...);
 /*
    void *usagecnt,
@@ -165,7 +165,7 @@ void PUTPARM(
 */
 
 void wrename(
-   char *type,
+   const char *type,
    char *file,
    char *library,
    char *volume,
@@ -174,7 +174,7 @@ void wrename(
    int_32 *retcode);
 
 void SCRATCH(
-   char *type,
+   const char *type,
    char *file,
    char *library,
    char *volume,
@@ -244,6 +244,9 @@ void wispexit_cleanup(void);
 /*
 **	History:
 **	$Log: wisp_rts.h,v $
+**	Revision 1.14  2001-08-22 16:42:47-04  gsl
+**	fix gnu errors
+**
 **	Revision 1.13  1998-08-31 15:50:42-04  gsl
 **	drcs update
 **

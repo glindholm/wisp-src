@@ -1,4 +1,4 @@
-#	Copyright (c) 1988-2000 NeoMedia Technologies, All rights reserved.
+#	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
 #	$Id:$
 #
 #
@@ -10,7 +10,7 @@
 #
 #		For ACUCOBOL-GT 2.4 through 4.2.
 #
-#		NOTE: Use wrun32wisp.mak for ACUCOBOL-GT 4.3.
+#		NOTE: Use wrun32wisp.mak for ACUCOBOL-GT 4.3 & 5.x
 #
 #	Description:
 #		This makefile can generate the following versions
@@ -47,10 +47,10 @@
 #		Edit this file and change WISPDIR and ACUDIR to 
 #		point to the correct locations.
 #
-#			WISPDIR=C:\WISP4305
+#			WISPDIR=C:\WISP4400
 #			ACUDIR=C:\ACUCBL42\ACUGT
-#			EDEDIR=C:\EDE4305
-#			CRIDDIR=C:\CRIDACU297
+#			EDEDIR=C:\EDE4400
+#			CRIDDIR=C:\CRIDACU3000
 #
 #		To build a standard runtime:
 #			C:\WISP\ACU> nmake /f wwruncbl.mak
@@ -108,6 +108,8 @@
 #
 #		both		Create both rts and ede targets.
 #
+#		acu		Build the ACULINK and ACUUSING objects.
+#
 #		clean		This target is used to remove any files 
 #				created by this makefile.
 #
@@ -139,25 +141,23 @@
 # WISPDIR	The installed WISP directory
 # EDEDIR	The installed EDE directory
 # CRIDDIR	The CRID directory
-# CREATEDIR	The CREATE directory
 #
 # OUTDIR	The output directory where the rts is created
 #
-#ACUDIR=D:\ACUCBL40\ACUGT
-#ACUDIR=D:\ACUCBL41
-#ACUDIR=C:\ACUCBL42\ACUGT
-ACUDIR=C:\ACUCBL43\ACUGT
+#ACUDIR=C:\ACUCBL40\ACUGT
+ACUDIR=C:\Acucorp\ACUCBL41
+#ACUDIR=C:\Acucorp\ACUCBL42\ACUGT
+#ACUDIR=C:\Acucorp\ACUCBL510\ACUGT
+
+
 ACURPCDIR=C:\ACUFTP
 
 # Uncomment for Acuserver client enabled runtime.
 #CLIENT=1
 
-#WISPDIR=C:\WISP4306
-WISPDIR=..
-
-EDEDIR=C:\EDE4306
-CRIDDIR=C:\CRIDACU297
-CREATEDIR=C:\CREATEACU34
+WISPDIR=C:\WISP4400
+EDEDIR=C:\EDE4400
+CRIDDIR=C:\CRIDACU3000
 
 OUTDIR=.
 
@@ -217,8 +217,6 @@ RTSET	=$(OUTDIR)\run32we.exe
 RTSKT	=$(OUTDIR)\run32wk.exe
 RTSKET	=$(OUTDIR)\run32wke.exe
 
-CREATE	=$(OUTDIR)\create.exe
-
 #============================================================================
 #
 # Standard CC flags
@@ -248,6 +246,7 @@ RCFLAGS=
 # 7	ACUCOBOL Version 3.2.2
 # 8	ACUCOBOL Version 4.0.0 - 4.2.0
 #
+#####################################################
 ## 4
 ACULIBS4=$(ACULIBSDIR)\wruncbl.lib $(ACULIBSDIR)\wacuterm.lib $(ACULIBSDIR)\wvision.lib
 ACUSUBS4=filetbl.obj mswinsub.obj
@@ -255,6 +254,7 @@ ACUVISN4=$(ACUDIR)\lib\wvision.lib $(ACUDIR)\lib\wruncbl.lib
 ACUTEST4=$(ACULIBSDIR)\wruncbl.lib
 ACUBLD4 = $(guilibs) netapi32.lib
 
+#####################################################
 ## 5
 !ifdef CLIENT
 ACULIBS5=$(ACULIBSDIR)\wterm32.lib \
@@ -289,6 +289,7 @@ ACUVISN5=$(ACULIBSDIR)\wfsi32.lib \
 ACUTEST5=$(ACULIBSDIR)\wrun32.lib
 ACUBLD5 = $(guilibs) netapi32.lib
 
+#####################################################
 ## 6
 !ifdef CLIENT
 ACULIBS6=$(ACULIBSDIR)\wterm32.lib \
@@ -326,6 +327,7 @@ ACUVISN6=$(ACULIBSDIR)\wfsi32.lib \
 ACUTEST6=$(ACULIBSDIR)\wrun32.lib
 ACUBLD6 = $(guilibs) netapi32.lib comctl32.lib winmm.lib
 
+#####################################################
 ## 7
 !ifdef CLIENT
 ACULIBS7=$(ACULIBSDIR)\wterm32.lib \
@@ -369,6 +371,7 @@ ACUVISN7=$(ACULIBSDIR)\wfsi32.lib \
 ACUTEST7=$(ACULIBSDIR)\conc32.lib
 ACUBLD7 = $(guilibs) netapi32.lib comctl32.lib winmm.lib
 
+#####################################################
 ## 8
 ACUSUBS8=filetbl.obj \
 	mswinsub.obj
@@ -403,6 +406,41 @@ ACUVISN8=$(ACULIBSDIR)\wfsi32.lib \
 
 ACUTEST8=$(ACULIBSDIR)\wlib32.lib
 ACUBLD8 = $(guilibs) wsock32.lib netapi32.lib comctl32.lib winmm.lib
+
+#####################################################
+## 510 Acucobol 5.1.0 (Not Working)
+ACUSUBS510= \
+	filetbl.obj \
+	mswinsub.obj
+
+!ifdef CLIENT
+ACUCLIENT_LIBS510= \
+	$(ACULIBSDIR)\wclnt32.lib
+ACUCFLAGS510=-DNO_CLIENT=0
+!else
+ACUCLIENT_LIBS510=
+ACUCFLAGS510=-DNO_CLIENT=1
+!endif
+
+ACULIBS510= \
+	$(ACUCLIENT_LIBS510) \
+	$(ACULIBSDIR)\wrun32.lib \
+	$(ACULIBSDIR)\wcpp32.lib \
+	$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib \
+	$(ACULIBSDIR)\acme.lib \
+	$(ACULIBSDIR)\plugin32.lib
+
+ACUWLIBS510= $(ACULIBSDIR)\wterm32.lib
+ACUTLIBS510= $(ACULIBSDIR)\term32.lib
+
+ACUVISN510= \
+	$(ACULIBSDIR)\wrun32.lib \
+	$(ACULIBSDIR)\wfsi32.lib \
+	$(ACULIBSDIR)\wvis32.lib
+
+ACUTEST510=$(ACULIBSDIR)\wcpp32.lib
+ACUBLD510 = $(guilibs) wsock32.lib netapi32.lib comctl32.lib winmm.lib
 
 
 #============================================================================
@@ -463,15 +501,30 @@ ACUSUBS=$(ACUSUBS8)
 ACUTEST=$(ACUTEST8)
 ACUVISN=$(ACUVISN8)
 ACUBLD=$(ACUBLD8)
-ACUCFLAGS=$(ACUCFLAGS8)
+ACUCFLAGS=$(ACUCFLAGS8)  -DACUCANCEL42=1
 ACUSRCDIR=$(ACUDIR)\lib
 ACURESFILEDEP=acucobol.ico acudebug.ico arrows.bmp acudbg.bmp help.cur go.cur divider.cur
 
+#
+#  ACUSRCDIRLIST	Source files that get copied from ACUSRCDIR
+#
+ACUSRCDIRLIST = \
+	sub.c \
+	filetbl.c \
+	mswinsub.c \
+	config85.c \
+	direct.c \
+	wruncbl.rc \
+	$(ACURESFILEDEP)
 
-ACUSRCSUBLIST = sub.c filetbl.c mswinsub.c config85.c direct.c
-ACUSRCDIRLIST = $(ACUSRCSUBLIST) wruncbl.rc $(ACURESFILEDEP)
-
-ACU_SUB_DEP = sub.c sub85.c config85.c direct.c
+#
+# ACU_SUB_DEP		Source file dependencies of sub.obj 
+#
+ACU_SUB_DEP = \
+	sub.c \
+	sub85.c \
+	config85.c \
+	direct.c
 
 #============================================================================
 #
@@ -526,7 +579,14 @@ CRIDFILES=$(CRIDDIR)\crid.h \
 
 CRID_DEP = crid.h crid85.c cridtbl.c
 
-CREATEACUSUB=$(CREATEDIR)\vscracu.obj
+
+#============================================================================
+#
+# Used to relink the CREATE utility (with Acucobol 4.1)
+#
+CREATE	=$(OUTDIR)\create.exe
+CREATEDIR=C:\CREATEACU3500
+CREATEACUSUB=$(CREATEDIR)\vscrmain.obj
 CREATESUBS=$(CREATEACUSUB) filetbl.obj
 CREATELIBS=$(ACUVISN) $(CREATEDIR)\createacu.lib $(WISP_LIBS_PATHS)
 
@@ -535,7 +595,9 @@ CREATELIBS=$(ACUVISN) $(CREATEDIR)\createacu.lib $(WISP_LIBS_PATHS)
 # CLEANUP is a list of files that are created by this
 # makefile and can be deleted.
 #
-CLEANUP=$(RTS) $(RTSE) sub.obj sub_wisp.obj sub_crid.obj \
+CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) \
+	$(RTST) $(RTSET) $(RTSKT) $(RTSKET) \
+	sub.obj sub_wisp.obj sub_crid.obj \
 	tsub_wisp.obj tsub_crid.obj filetbl.obj mswinsub.obj
 
 #============================================================================
@@ -543,7 +605,7 @@ CLEANUP=$(RTS) $(RTSE) sub.obj sub_wisp.obj sub_crid.obj \
 # TARGETS:
 #
 
-default: rts
+default: rts acu
 
 header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
 	@echo ">>>> BUILDING ACUCOBOL RUNTIME"
@@ -669,22 +731,22 @@ $(CRIDFILES):
 	@echo ">>>>"
 	@exit_with_error
 
-rts:	header $(RTS) $(RTS:.exe=.alc) acu
+rts:	header $(RTS) $(RTS:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTS) is up to date.
 	@echo ">>>>"
 
-ede:	header headerede $(RTSE) $(RTSE:.exe=.alc) acu
+ede:	header headerede $(RTSE) $(RTSE:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSE) is up to date.
 	@echo ">>>>"
 
-rtst:	header $(RTST) $(RTST:.exe=.alc) acu
+rtst:	header $(RTST) $(RTST:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTST) is up to date.
 	@echo ">>>>"
 
-edet:	header headerede $(RTSET) $(RTSET:.exe=.alc) acu
+edet:	header headerede $(RTSET) $(RTSET:.exe=.alc)
 	@echo ">>>>"
 	@echo ">>>> RTS     = " $(RTSET) is up to date.
 	@echo ">>>>"
@@ -717,7 +779,7 @@ create:	header headercreate $(CREATE)
 	@echo ">>>>"
 
 clean:	
-	del $(CLEANUP) core
+	del /Q $(CLEANUP) core *.exp *.map
 
 #
 #	Resource macros
@@ -758,27 +820,27 @@ $(RTSKE): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $
 		$(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
 #
-#	RTS (alternate terminal) targets - Required at least Acucobol-GT 4.0.0 
+#	RTS (alternate terminal) targets - Requires Acucobol-GT 4.0 - 4.2
 #
 
 $(RTST): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) tsub_wisp.obj
 	@echo ">>>> Linking RTS = " $@
 	$(link) $(LDFLAGS) $(conflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACUTLIBS) \
-		$(WISP_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK)
+		$(WISP_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK) 
 
 $(RTSET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(ACU_SUB_DEP) tsub_wisp.obj
 	@echo ">>>> Linking RTS = " $@
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACULIBS) \
+	$(link) $(LDFLAGS) $(conflags) -out:$@ tsub_wisp.obj $(RTSLINKOBJS) $(ACUTLIBS) \
 		$(WISPEDE_LIBS_PATHS) $(ACUBLD) $(OTHER_LINK) 
 
 $(RTSKT): $(WISP_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $(CRID_DEP) tsub_crid.obj
 	@echo ">>>> Linking RTS = " $@
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
-		$(WISP_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
+	$(link) $(LDFLAGS) $(conflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACUTLIBS) \
+		$(WISP_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK) 
 
 $(RTSKET): $(WISPEDE_LIBS_PATHS) $(RTSLINKOBJS) $(CRID_LIB_PATH) $(ACU_SUB_DEP) $(CRID_DEP) tsub_crid.obj
 	@echo ">>>> Linking RTS = " $@
-	$(link) $(LDFLAGS) $(guiflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACULIBS) \
+	$(link) $(LDFLAGS) $(conflags) -out:$@ tsub_crid.obj $(RTSLINKOBJS) $(ACUTLIBS) \
 		$(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH) $(ACUBLD) $(OTHER_LINK)
 
 #
@@ -847,6 +909,10 @@ $(RTST:.exe=.alc) $(RTSET:.exe=.alc) $(RTSKT:.exe=.alc) $(RTSKET:.exe=.alc): $(R
 
 $(CRID_DEP): $(CRIDDIR)\$(@F)
 	copy $(CRIDDIR)\$@ $@
+
+#
+#	CREATE targets
+#
 
 $(CREATEACUSUB):
 	$(cc) $(CLFLAGS) /Fo$@ $*.c

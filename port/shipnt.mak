@@ -6,196 +6,195 @@ COPY=copy
 
 BASEDIR=..
 
-KITDIR=		$(BASEDIR)\KIT
+KITDIR=		$(BASEDIR)\kit
 
-WISPKIT=	$(KITDIR)\WISP
-EDEKIT=		$(KITDIR)\EDE
-CRIDACUKIT=	$(KITDIR)\CRIDACU
-CREATEACUKIT=	$(KITDIR)\CREATEACU
-RTSKIT=		$(KITDIR)\RTS
-VHEADKIT=	$(KITDIR)\V
+WISPKIT=	$(KITDIR)\wisp
+EDEKIT=		$(KITDIR)\ede
+CRIDACUKIT=	$(KITDIR)\cridacu
+CREATEACUKIT=	$(KITDIR)\createacu
+RTSKIT=		$(KITDIR)\rts
+VHEADKIT=	$(KITDIR)\v
 
-WISP_DIST_LIST=	$(WISPKIT)\BIN\DISPLAY.EXE	\
-		$(WISPKIT)\BIN\HEXED.EXE	\
-		$(WISPKIT)\BIN\MAKEMSG.EXE 	\
-		$(WISPKIT)\BIN\PROCTRAN.EXE 	\
-		$(WISPKIT)\BIN\REXEC.EXE 	\
-		$(WISPKIT)\BIN\VSEDIT.EXE	\
-		$(WISPKIT)\BIN\VTEST.EXE	\
-		$(WISPKIT)\BIN\WCONFIG.EXE	\
-		$(WISPKIT)\BIN\WCOPY.EXE	\
-		$(WISPKIT)\BIN\WDIAG.BAT	\
-		$(WISPKIT)\BIN\WDIAG.EXE	\
-		$(WISPKIT)\BIN\WISP.EXE		\
-		$(WISPKIT)\BIN\WISPTRAN.EXE	\
-		$(WISPKIT)\BIN\WLICENSE.EXE	\
-		$(WISPKIT)\BIN\WPROC.EXE	\
-		$(WISPKIT)\BIN\WRUN.EXE		\
-		$(WISPKIT)\BIN\WRUNT.EXE	\
-		$(WISPKIT)\BIN\WSHELL.EXE	\
-		$(WISPKIT)\BIN\WSORT.EXE	\
-		$(WISPKIT)\BIN\WUSAGE.EXE	\
-		$(WISPKIT)\LIB\VIDEO.LIB	\
-		$(WISPKIT)\LIB\VIDEOM.LIB	\
-		$(WISPKIT)\LIB\WISP.LIB		\
-		$(WISPKIT)\LIB\WISPM.LIB	\
-		$(WISPKIT)\ETC\WORDS.DEF	\
-		$(WISPKIT)\ETC\DISPRINT.WCB	\
-		$(WISPKIT)\ETC\DISPRINT.MAK	\
-		$(WISPKIT)\ETC\WISPPLAT.WCB	\
-		$(WISPKIT)\ETC\SOFTLINK.WCB	\
-		$(WISPKIT)\ETC\WPROC.TXT	\
-		$(WISPKIT)\ETC\RELNOTES.TXT	\
-		$(WISPKIT)\ETC\AQMWISP.TXT	\
-		$(WISPKIT)\ETC\NONASCII.TXT	\
-		$(WISPKIT)\ETC\VCOLORS.TXT	\
-		$(WISPKIT)\ETC\NTTELNET.TXT	\
-		$(WISPKIT)\CONFIG\ACUCONFIG	\
-		$(WISPKIT)\CONFIG\CHARMAP	\
-		$(WISPKIT)\CONFIG\CQMAP		\
-		$(WISPKIT)\CONFIG\FORMS		\
-		$(WISPKIT)\CONFIG\LGMAP		\
-		$(WISPKIT)\CONFIG\LPMAP		\
-		$(WISPKIT)\CONFIG\OPTIONS	\
-		$(WISPKIT)\CONFIG\PRMAP		\
-		$(WISPKIT)\CONFIG\W4WMAP	\
-		$(WISPKIT)\CONFIG\WISPMSG.DAT	\
-		$(WISPKIT)\CONFIG\WISPMSG.TXT	\
-		$(WISPKIT)\CONFIG\WPROC.MSG	\
-		$(WISPKIT)\CONFIG\WRUN.CFG	\
-		$(WISPKIT)\CONFIG\WSYSCONF.CFG 	\
-		$(WISPKIT)\CONFIG\VIDEOCAP\WINCON 	\
-		$(WISPKIT)\CONFIG\VIDEOCAP\XTERM 	\
-		$(WISPKIT)\CONFIG\VIDEOCAP\ANSI 	\
-		$(WISPKIT)\ACU\ACULINK.WCB	\
-		$(WISPKIT)\ACU\ACULINK		\
-		$(WISPKIT)\ACU\ACUUSING.COB	\
-		$(WISPKIT)\ACU\ACUUSING		\
-		$(WISPKIT)\ACU\SUB85.C		\
-		$(WISPKIT)\ACU\WWRUNCBL.MAK	\
-		$(WISPKIT)\ACU\WRUN32WISP.MAK	\
-		$(WISPKIT)\ACU\WACUERROR.COB		\
-		$(WISPKIT)\ACU\WACUDISPLAY.COB		\
-		$(WISPKIT)\ACU\WACUFAC2SCREEN.COB	\
-		$(WISPKIT)\ACU\WACUGETPARM.COB		\
-		$(WISPKIT)\ACU\WACUGETPFKEY.COB		\
-		$(WISPKIT)\ACU\WACUHELP.COB		\
-		$(WISPKIT)\ACU\WACUWSB.COB		\
-		$(WISPKIT)\ACU\WISPACN.TXT		\
-		$(WISPKIT)\ACU\WISPICON.ICO		\
-		$(WISPKIT)\ACU\WISPRTS.RC		\
-		$(WISPKIT)\DEMO\CURSOR.WPS	\
-		$(WISPKIT)\DEMO\DEMO.WPS	\
-		$(WISPKIT)\DEMO\DR.WPS		\
-		$(WISPKIT)\DEMO\ED.WPS		\
-		$(WISPKIT)\DEMO\ENVIRON.WPS	\
-		$(WISPKIT)\DEMO\PUTPARM.WPS	\
-		$(WISPKIT)\DEMO\QABCKGRD.WCB	\
-		$(WISPKIT)\DEMO\SCREEN.WPS	\
-		$(WISPKIT)\DEMO\TEST.WPS	\
-		$(WISPKIT)\DEMO\VIDEO.WPS	\
-		$(WISPKIT)\WISPNTDOC.TXT	\
-		$(WISPKIT)\WISPNTSETUP.TXT
+wisp_dist_list=	$(WISPKIT)\bin\display.exe	\
+		$(WISPKIT)\bin\hexed.exe	\
+		$(WISPKIT)\bin\makemsg.exe 	\
+		$(WISPKIT)\bin\proctran.exe 	\
+		$(WISPKIT)\bin\rexec.exe 	\
+		$(WISPKIT)\bin\vsedit.exe	\
+		$(WISPKIT)\bin\vtest.exe	\
+		$(WISPKIT)\bin\wconfig.exe	\
+		$(WISPKIT)\bin\wcopy.exe	\
+		$(WISPKIT)\bin\wdiag.bat	\
+		$(WISPKIT)\bin\wdiag.exe	\
+		$(WISPKIT)\bin\wisp.exe		\
+		$(WISPKIT)\bin\wisptran.exe	\
+		$(WISPKIT)\bin\wlicense.exe	\
+		$(WISPKIT)\bin\wproc.exe	\
+		$(WISPKIT)\bin\wrun.exe		\
+		$(WISPKIT)\bin\wrunt.exe	\
+		$(WISPKIT)\bin\wshell.exe	\
+		$(WISPKIT)\bin\wsort.exe	\
+		$(WISPKIT)\bin\wusage.exe	\
+		$(WISPKIT)\lib\video.lib	\
+		$(WISPKIT)\lib\videom.lib	\
+		$(WISPKIT)\lib\wisp.lib		\
+		$(WISPKIT)\lib\wispm.lib	\
+		$(WISPKIT)\etc\words.def	\
+		$(WISPKIT)\etc\disprint.wcb	\
+		$(WISPKIT)\etc\disprint.mak	\
+		$(WISPKIT)\etc\wispplat.wcb	\
+		$(WISPKIT)\etc\softlink.wcb	\
+		$(WISPKIT)\etc\wproc.txt	\
+		$(WISPKIT)\etc\relnotes.txt	\
+		$(WISPKIT)\etc\aqmwisp.txt	\
+		$(WISPKIT)\etc\nonascii.txt	\
+		$(WISPKIT)\etc\vcolors.txt	\
+		$(WISPKIT)\etc\nttelnet.txt	\
+		$(WISPKIT)\config\ACUCONFIG	\
+		$(WISPKIT)\config\CHARMAP	\
+		$(WISPKIT)\config\CQMAP		\
+		$(WISPKIT)\config\FORMS		\
+		$(WISPKIT)\config\LGMAP		\
+		$(WISPKIT)\config\LPMAP		\
+		$(WISPKIT)\config\OPTIONS	\
+		$(WISPKIT)\config\PRMAP		\
+		$(WISPKIT)\config\W4WMAP	\
+		$(WISPKIT)\config\wispmsg.dat	\
+		$(WISPKIT)\config\wispmsg.txt	\
+		$(WISPKIT)\config\wproc.msg	\
+		$(WISPKIT)\config\wrun.cfg	\
+		$(WISPKIT)\config\wsysconf.cfg 	\
+		$(WISPKIT)\config\videocap\wincon.vcap 	\
+		$(WISPKIT)\config\videocap\xterm.vcap 	\
+		$(WISPKIT)\config\videocap\ansi.vcap 	\
+		$(WISPKIT)\acu\aculink.wcb	\
+		$(WISPKIT)\acu\ACULINK		\
+		$(WISPKIT)\acu\acuusing.cob	\
+		$(WISPKIT)\acu\ACUUSING		\
+		$(WISPKIT)\acu\sub85.c		\
+		$(WISPKIT)\acu\wwruncbl.mak	\
+		$(WISPKIT)\acu\wrun32wisp.mak	\
+		$(WISPKIT)\acu\wacuerror.cob		\
+		$(WISPKIT)\acu\wacudisplay.cob		\
+		$(WISPKIT)\acu\wacufac2screen.cob	\
+		$(WISPKIT)\acu\wacugetparm.cob		\
+		$(WISPKIT)\acu\wacugetpfkey.cob		\
+		$(WISPKIT)\acu\wacuhelp.cob		\
+		$(WISPKIT)\acu\wacuwsb.cob		\
+		$(WISPKIT)\acu\wispacn.txt		\
+		$(WISPKIT)\acu\wispicon.ico		\
+		$(WISPKIT)\acu\wisprts.rc		\
+		$(WISPKIT)\demo\cursor.wps	\
+		$(WISPKIT)\demo\demo.wps	\
+		$(WISPKIT)\demo\dr.wps		\
+		$(WISPKIT)\demo\ed.wps		\
+		$(WISPKIT)\demo\environ.wps	\
+		$(WISPKIT)\demo\putparm.wps	\
+		$(WISPKIT)\demo\qabckgrd.wcb	\
+		$(WISPKIT)\demo\screen.wps	\
+		$(WISPKIT)\demo\test.wps	\
+		$(WISPKIT)\demo\video.wps	\
+		$(WISPKIT)\wispntdoc.txt	\
+		$(WISPKIT)\wispntsetup.txt
 
-EDE_DIST_LIST=	$(EDEKIT)\GOOD.EXE		\
-		$(EDEKIT)\EDE.LIB		\
-		$(EDEKIT)\EDEM.LIB		\
-		$(EDEKIT)\EDENTSETUP.TXT	\
-		$(EDEKIT)\WWRUNCBL.MAK		\
-		$(EDEKIT)\WRUN32WISP_EDE.MAK	\
-		$(EDEKIT)\DEMO\HELPMAP.DAT	\
-		$(EDEKIT)\DEMO\MCBBLD.WCB	\
-		$(EDEKIT)\DEMO\MCBCPY1.WCB	\
-		$(EDEKIT)\DEMO\MCBCPY2.WCB	\
-		$(EDEKIT)\DEMO\MCBCPY3.WCB	\
-		$(EDEKIT)\DEMO\MCBEDIT.WCB	\
-		$(EDEKIT)\DEMO\MENUDEFS.WCB	\
-		$(EDEKIT)\DEMO\MENUDEMO.WCB	\
-		$(EDEKIT)\DEMO\MENUDISP.WCB	\
-		$(EDEKIT)\DEMO\MENULOGO.WCB	\
-		$(EDEKIT)\DEMO\MENUMCBS.WCB	\
-		$(EDEKIT)\DEMO\MENUVECT.WCB	\
-		$(EDEKIT)\DEMO\MCBCODE.HLP	\
-		$(EDEKIT)\DEMO\MCBCOL.HLP	\
-		$(EDEKIT)\DEMO\MCBDISP.HLP	\
-		$(EDEKIT)\DEMO\MCBEDIT.HLP	\
-		$(EDEKIT)\DEMO\MCBICNT.HLP	\
-		$(EDEKIT)\DEMO\MCBNAME.HLP	\
-		$(EDEKIT)\DEMO\MCBOPTS.HLP	\
-		$(EDEKIT)\DEMO\MCBROW.HLP	\
-		$(EDEKIT)\DEMO\MCBTEXT.HLP	\
-		$(EDEKIT)\DEMO\MCBTYPE.HLP	\
-		$(EDEKIT)\DEMO\MCBVALUE.HLP	\
-		$(EDEKIT)\DEMO\MCBWIDTH.HLP	\
-		$(EDEKIT)\DEMO\MENUDEMO.OPT	\
-		$(EDEKIT)\DEMO\MENUDEMO.MAK
+ede_dist_list=	$(EDEKIT)\good.exe		\
+		$(EDEKIT)\ede.lib		\
+		$(EDEKIT)\edem.lib		\
+		$(EDEKIT)\edentsetup.txt	\
+		$(EDEKIT)\wwruncbl.mak		\
+		$(EDEKIT)\wrun32wisp_ede.mak	\
+		$(EDEKIT)\demo\helpmap.dat	\
+		$(EDEKIT)\demo\mcbbld.wcb	\
+		$(EDEKIT)\demo\mcbcpy1.wcb	\
+		$(EDEKIT)\demo\mcbcpy2.wcb	\
+		$(EDEKIT)\demo\mcbcpy3.wcb	\
+		$(EDEKIT)\demo\mcbedit.wcb	\
+		$(EDEKIT)\demo\menudefs.wcb	\
+		$(EDEKIT)\demo\menudemo.wcb	\
+		$(EDEKIT)\demo\menudisp.wcb	\
+		$(EDEKIT)\demo\menulogo.wcb	\
+		$(EDEKIT)\demo\menumcbs.wcb	\
+		$(EDEKIT)\demo\menuvect.wcb	\
+		$(EDEKIT)\demo\mcbcode.hlp	\
+		$(EDEKIT)\demo\mcbcol.hlp	\
+		$(EDEKIT)\demo\mcbdisp.hlp	\
+		$(EDEKIT)\demo\mcbedit.hlp	\
+		$(EDEKIT)\demo\mcbicnt.hlp	\
+		$(EDEKIT)\demo\mcbname.hlp	\
+		$(EDEKIT)\demo\mcbopts.hlp	\
+		$(EDEKIT)\demo\mcbrow.hlp	\
+		$(EDEKIT)\demo\mcbtext.hlp	\
+		$(EDEKIT)\demo\mcbtype.hlp	\
+		$(EDEKIT)\demo\mcbvalue.hlp	\
+		$(EDEKIT)\demo\mcbwidth.hlp	\
+		$(EDEKIT)\demo\menudemo.opt	\
+		$(EDEKIT)\demo\menudemo.mak
 
-CRIDACU_DIST_LIST= \
+cridacu_dist_list= \
 		$(CRIDACUKIT)\CONTROL		\
 		$(CRIDACUKIT)\DATENTRY		\
 		$(CRIDACUKIT)\INQUIRY		\
 		$(CRIDACUKIT)\REPORT		\
-		$(CRIDACUKIT)\CRIDACU.LIB	\
-		$(CRIDACUKIT)\CRIDACUM.LIB	\
-		$(CRIDACUKIT)\CRID.H		\
-		$(CRIDACUKIT)\CRID85.C		\
-		$(CRIDACUKIT)\CRIDTBL.C		\
-		$(CRIDACUKIT)\CTLCNVRT.WCB	\
-		$(CRIDACUKIT)\RPTCNVRT.WCB	\
-		$(CRIDACUKIT)\WWRUNCBL.MAK	\
-		$(CRIDACUKIT)\WRUN32WISP_CRID.MAK	\
-		$(CRIDACUKIT)\RELEASE.TXT	\
-		$(CRIDACUKIT)\PACKLIST.LIS	\
-		$(CRIDACUKIT)\CRIDNTSETUP.TXT	
+		$(CRIDACUKIT)\cridacu.lib	\
+		$(CRIDACUKIT)\cridacum.lib	\
+		$(CRIDACUKIT)\crid.h		\
+		$(CRIDACUKIT)\crid85.c		\
+		$(CRIDACUKIT)\cridtbl.c		\
+		$(CRIDACUKIT)\ctlcnvrt.wcb	\
+		$(CRIDACUKIT)\rptcnvrt.wcb	\
+		$(CRIDACUKIT)\wwruncbl.mak	\
+		$(CRIDACUKIT)\wrun32wisp_crid.mak	\
+		$(CRIDACUKIT)\release.txt	\
+		$(CRIDACUKIT)\packlist.txt	\
+		$(CRIDACUKIT)\cridntsetup.txt	
 
-CREATEACU_DIST_LIST= \
-		$(CREATEACUKIT)\CREATE.EXE	\
-		$(CREATEACUKIT)\CREATEACU.LIB	\
-		$(CREATEACUKIT)\VSCRACU.OBJ	\
-		$(CREATEACUKIT)\WWRUNCBL.MAK	\
-		$(CREATEACUKIT)\RELEASE.TXT	\
-		$(CREATEACUKIT)\CREATENTSETUP.TXT	
+createacu_dist_list= \
+		$(CREATEACUKIT)\create.exe	\
+		$(CREATEACUKIT)\createacu.lib	\
+		$(CREATEACUKIT)\vscrmain.obj	\
+		$(CREATEACUKIT)\wwruncbl.mak	\
+		$(CREATEACUKIT)\release.txt	\
+		$(CREATEACUKIT)\packlist.txt	\
+		$(CREATEACUKIT)\createntsetup.txt	
 
-RTS_DIST_LIST= \
-		$(RTSKIT)\WWRUNCBL.EXE		\
-		$(RTSKIT)\WWRUNCBLE.EXE		\
-		$(RTSKIT)\WWRUNCBLK.EXE		\
-		$(RTSKIT)\WWRUNCBLKE.EXE
+rts_dist_list= \
+		$(RTSKIT)\wwruncbl.exe		\
+		$(RTSKIT)\wwruncble.exe		\
+		$(RTSKIT)\wwruncblk.exe		\
+		$(RTSKIT)\wwruncblke.exe
 
 #
-#	TARGETS
+#	targets
 #
-default: 	allshipkits
+default: 	wispshipkit edeshipkit cridacushipkit createacushipkit
 
-allshipkits: 	wispshipkit \
-		edeshipkit \
-		cridacushipkit \
-		rtsshipkit \
-		vheadshipkit
+wispshipkit:	header wispkitdirs configdirs $(wisp_dist_list)
 
-wispshipkit:	wispkitdirs configdirs $(WISP_DIST_LIST)
+edeshipkit:	header edekitdirs $(ede_dist_list)
 
-edeshipkit:	edekitdirs $(EDE_DIST_LIST)
+cridacushipkit:	header cridacukitdirs $(cridacu_dist_list)
 
-cridacushipkit:	cridacukitdirs $(CRIDACU_DIST_LIST)
+createacushipkit: header createacukitdirs $(createacu_dist_list)
 
-createacushipkit: createacukitdirs $(CREATEACU_DIST_LIST)
-
-rtsshipkit:	rtskitdirs $(RTS_DIST_LIST)
+rtsshipkit:	rtskitdirs $(rts_dist_list)
 
 vheadshipkit:	$(VHEADKIT)
-		copy $(BASEDIR)\VIDEOLIB\*.h $(VHEADKIT)
+		copy $(BASEDIR)\videolib\*.h $(VHEADKIT)
 
+header: 
+	@echo ">>>> CD        = " 
+	@CD
+	@echo ">>>>"
 
 
 #
-#	Internal targets
+#	internal targets
 #
 
 $(KITDIR):
 	mkdir $(KITDIR)
 
-WISPKIT_DIR_LIST= \
+wispkit_dir_list= \
 	$(WISPKIT)			\
 	$(WISPKIT)\acu			\
 	$(WISPKIT)\bin			\
@@ -205,16 +204,16 @@ WISPKIT_DIR_LIST= \
 	$(WISPKIT)\etc			\
 	$(WISPKIT)\lib			
 
-wispkitdirs: $(KITDIR) $(WISPKIT_DIR_LIST)
+wispkitdirs: $(KITDIR) $(wispkit_dir_list)
 
-$(WISPKIT_DIR_LIST):
+$(wispkit_dir_list):
 	mkdir $@
 
-EDEKIT_DIR_LIST= $(EDEKIT) $(EDEKIT)\demo
+edekit_dir_list= $(EDEKIT) $(EDEKIT)\demo
 
-edekitdirs: $(KITDIR) $(EDEKIT_DIR_LIST)
+edekitdirs: $(KITDIR) $(edekit_dir_list)
 
-$(EDEKIT_DIR_LIST):
+$(edekit_dir_list):
 	mkdir $@
 
 cridacukitdirs: $(KITDIR) $(CRIDACUKIT)
@@ -227,14 +226,14 @@ createacukitdirs: $(KITDIR) $(CREATEACUKIT)
 $(CREATEACUKIT):
 	mkdir $@
 
-CONFIG_DIR_LIST = \
+config_dir_list = \
 	$(BASEDIR)\config \
 	$(BASEDIR)\config\videocap
 
-$(CONFIG_DIR_LIST):
+$(config_dir_list):
 	mkdir $@
 
-configdirs: $(CONFIG_DIR_LIST)
+configdirs: $(config_dir_list)
 
 $(RTSKIT):
 	mkdir $@
@@ -248,507 +247,510 @@ $(VHEADKIT):
 #
 #	WISPKIT components
 #
-$(WISPKIT)\BIN\DISPLAY.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\display.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\HEXED.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\hexed.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\MAKEMSG.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\makemsg.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\PROCTRAN.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\proctran.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\REXEC.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\rexec.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\VSEDIT.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\vsedit.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\VTEST.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\vtest.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WCONFIG.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wconfig.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WCOPY.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wcopy.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WDIAG.BAT:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wdiag.bat:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\BIN\WDIAG.BAT:	$(BASEDIR)\WISPUTILS\$(@F)
+$(BASEDIR)\bin\wdiag.bat:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WDIAG.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wdiag.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WISP.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wisp.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WISPTRAN.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wisptran.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WLICENSE.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wlicense.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WPROC.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wproc.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WRUN.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wrun.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WRUNT.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wrunt.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WSHELL.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wshell.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WSORT.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wsort.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WUSAGE.EXE:	$(BASEDIR)\BIN\$(@F)
+$(WISPKIT)\bin\wusage.exe:	$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\BIN\WWRUNCBL.EXE:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\bin\wwruncbl.exe:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\LIB\VIDEO.LIB:	$(BASEDIR)\LIB\$(@F)
+$(WISPKIT)\lib\video.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\LIB\VIDEOM.LIB:	$(BASEDIR)\LIB\$(@F)
+$(WISPKIT)\lib\videom.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\LIB\WISP.LIB:	$(BASEDIR)\LIB\$(@F)
+$(WISPKIT)\lib\wisp.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\LIB\WISPM.LIB:	$(BASEDIR)\LIB\$(@F)
+$(WISPKIT)\lib\wispm.lib:	$(BASEDIR)\lib\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\WORDS.DEF:	$(BASEDIR)\WISPTRAN\$(@F)
+$(WISPKIT)\etc\words.def:	$(BASEDIR)\wisptran\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\DISPRINT.WCB:	$(BASEDIR)\WISPUTILS\$(@F)
+$(WISPKIT)\etc\disprint.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\DISPRINT.MAK:	$(BASEDIR)\WISPUTILS\$(@F)
+$(WISPKIT)\etc\disprint.mak:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\WISPPLAT.WCB:	$(BASEDIR)\WISPUTILS\$(@F)
+$(WISPKIT)\etc\wispplat.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\SOFTLINK.WCB:	$(BASEDIR)\WISPUTILS\$(@F)
+$(WISPKIT)\etc\softlink.wcb:	$(BASEDIR)\wisputils\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\WPROC.TXT:	$(BASEDIR)\WPROC\WPROC.LIS
+$(WISPKIT)\etc\wproc.txt:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\RELNOTES.TXT:	$(BASEDIR)\ETC\v43_RELNOTES.lis
+$(WISPKIT)\etc\relnotes.txt:	$(BASEDIR)\etc\v44_relnotes.lis
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\AQMWISP.TXT:	$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\etc\aqmwisp.txt:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\NONASCII.TXT:	$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\etc\nonascii.txt:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\VCOLORS.TXT:	$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\etc\vcolors.txt:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ETC\NTTELNET.TXT:	$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\etc\nttelnet.txt:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\ACUCONFIG:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\ACUCONFIG:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\CHARMAP:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\CHARMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\CQMAP:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\CQMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\FORMS:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\FORMS:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\LGMAP:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\LGMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\LPMAP:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\LPMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\OPTIONS:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\OPTIONS:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\PRMAP:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\PRMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\W4WMAP:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\W4WMAP:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\WISPMSG.DAT:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\wispmsg.dat:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\WISPMSG.TXT:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\wispmsg.txt:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\WPROC.MSG:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\wproc.msg:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\WRUN.CFG:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\wrun.cfg:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\WSYSCONF.CFG:	$(BASEDIR)\CONFIG\$(@F)
+$(WISPKIT)\config\wsysconf.cfg:	$(BASEDIR)\config\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\VIDEOCAP\WINCON: $(BASEDIR)\CONFIG\VIDEOCAP\$(@F)
+$(WISPKIT)\config\videocap\wincon.vcap: $(BASEDIR)\config\videocap\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\VIDEOCAP\XTERM: $(BASEDIR)\CONFIG\VIDEOCAP\$(@F)
+$(WISPKIT)\config\videocap\xterm.vcap: $(BASEDIR)\config\videocap\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\CONFIG\VIDEOCAP\ANSI: $(BASEDIR)\CONFIG\VIDEOCAP\$(@F)
+$(WISPKIT)\config\videocap\ansi.vcap: $(BASEDIR)\config\videocap\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\ACULINK.WCB:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\aculink.wcb:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\ACULINK:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\ACULINK:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\ACUUSING.COB:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\acuusing.cob:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\ACUUSING:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\ACUUSING:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\SUB85.C:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\sub85.c:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\WWRUNCBL.MAK:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\WRUN32WISP.MAK:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wrun32wisp.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacuerror.cob:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacuerror.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacudisplay.cob:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacudisplay.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacufac2screen.cob:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacufac2screen.cob:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacugetparm.cob:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacugetparm.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacugetpfkey.cob:	$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacugetpfkey.cob:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacuhelp.cob:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacuhelp.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wacuwsb.cob:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wacuwsb.cob:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wispacn.txt:		$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\acu\wispacn.txt:		$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wispicon.ico:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wispicon.ico:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\ACU\wisprts.rc:		$(BASEDIR)\ACU\$(@F)
+$(WISPKIT)\acu\wisprts.rc:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\CURSOR.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\cursor.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\DEMO.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\demo.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\DR.WPS:		$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\dr.wps:		$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\ED.WPR:		$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\ed.wpr:		$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\ED.WPS:		$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\ed.wps:		$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\ENVIRON.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\environ.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\PUTPARM.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\putparm.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\SCREEN.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\screen.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\TEST.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\test.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\VIDEO.WPS:	$(BASEDIR)\WPROC\$(@F)
+$(WISPKIT)\demo\video.wps:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\DEMO\QABCKGRD.WCB:	$(BASEDIR)\TESTACU\$(@F)
+$(WISPKIT)\demo\qabckgrd.wcb:	$(BASEDIR)\testacu\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\WISPNTDOC.TXT:	$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\wispntdoc.txt:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(WISPKIT)\WISPNTSETUP.TXT:	$(BASEDIR)\ETC\$(@F)
+$(WISPKIT)\wispntsetup.txt:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
 #
-#	EDE
+#	ede
 #
 
-$(EDEKIT)\GOOD.EXE:		$(BASEDIR)\BIN\$(@F)
+$(EDEKIT)\good.exe:		$(BASEDIR)\bin\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\EDE.LIB:		$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\ede.lib:		$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\EDEM.LIB:		$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\edem.lib:		$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\EDENTSETUP.TXT:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\edentsetup.txt:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\WWRUNCBL.MAK:		$(BASEDIR)\ACU\$(@F)
+$(EDEKIT)\wwruncbl.mak:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\WRUN32WISP_EDE.MAK:	$(BASEDIR)\ACU\$(@F)
+$(EDEKIT)\wrun32wisp_ede.mak:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\HELPMAP.DAT:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\helpmap.dat:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBBLD.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbbld.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBCPY1.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbcpy1.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBCPY2.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbcpy2.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBCPY3.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbcpy3.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBEDIT.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbedit.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUDEFS.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menudefs.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUDEMO.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menudemo.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUDISP.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menudisp.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENULOGO.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menulogo.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUMCBS.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menumcbs.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUVECT.WCB:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menuvect.wcb:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBCODE.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbcode.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBCOL.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbcol.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBDISP.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbdisp.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBEDIT.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbedit.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBICNT.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbicnt.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBNAME.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbname.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBOPTS.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbopts.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBROW.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbrow.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBTEXT.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbtext.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBTYPE.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbtype.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBVALUE.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbvalue.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MCBWIDTH.HLP:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\mcbwidth.hlp:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUDEMO.OPT:	$(BASEDIR)\EDE\$(@F)
+$(EDEKIT)\demo\menudemo.opt:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
-$(EDEKIT)\DEMO\MENUDEMO.MAK:	$(BASEDIR)\EDE\$(@F)
-	$(COPY) $** $@
-
-
-#
-#	CRIDACU
-#
-
-$(CRIDACUKIT)\CONTROL:		$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\DATENTRY:		$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\INQUIRY:		$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\REPORT:		$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CRIDACU.LIB:	$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CRIDACUM.LIB:	$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CRID.H:		$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CRID85.C:		$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CRIDTBL.C:	$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CTLCNVRT.WCB:	$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\RPTCNVRT.WCB:	$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\WWRUNCBL.MAK:	$(BASEDIR)\ACU\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\WRUN32WISP_CRID.MAK:	$(BASEDIR)\ACU\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\CRIDNTSETUP.TXT:	$(BASEDIR)\KCSI\CRID\$(@F)
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\RELEASE.TXT:	$(BASEDIR)\KCSI\CRID\RELEASE.LIS
-	$(COPY) $** $@
-
-$(CRIDACUKIT)\PACKLIST.LIS:	$(BASEDIR)\KCSI\CRID\$(@F)
+$(EDEKIT)\demo\menudemo.mak:	$(BASEDIR)\ede\$(@F)
 	$(COPY) $** $@
 
 
 #
-#	CREATEACU
+#	cridacu
 #
 
-$(CREATEACUKIT)\CREATE.EXE:	$(BASEDIR)\KCSI\CREATE\$(@F)
+$(CRIDACUKIT)\CONTROL:		$(BASEDIR)\kcsi\crid\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\CREATEACU.LIB:	$(BASEDIR)\KCSI\CREATE\$(@F)
+$(CRIDACUKIT)\DATENTRY:		$(BASEDIR)\kcsi\crid\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\VSCRACU.OBJ:	$(BASEDIR)\KCSI\CREATE\$(@F)
+$(CRIDACUKIT)\INQUIRY:		$(BASEDIR)\kcsi\crid\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\WWRUNCBL.MAK:	$(BASEDIR)\ACU\$(@F)
+$(CRIDACUKIT)\REPORT:		$(BASEDIR)\kcsi\crid\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\RELEASE.TXT:	$(BASEDIR)\KCSI\CREATE\RELEASE.LIS
+$(CRIDACUKIT)\cridacu.lib:	$(BASEDIR)\kcsi\crid\$(@F)
 	$(COPY) $** $@
 
-$(CREATEACUKIT)\CREATENTSETUP.TXT:	$(BASEDIR)\KCSI\CREATE\$(@F)
+$(CRIDACUKIT)\cridacum.lib:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\crid.h:		$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\crid85.c:		$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\cridtbl.c:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\ctlcnvrt.wcb:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\rptcnvrt.wcb:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\wrun32wisp_crid.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\cridntsetup.txt:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\release.txt:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+$(CRIDACUKIT)\packlist.txt:	$(BASEDIR)\kcsi\crid\$(@F)
+	$(COPY) $** $@
+
+
+#
+#	createacu
+#
+
+$(CREATEACUKIT)\create.exe:	$(BASEDIR)\kcsi\create\$(@F)
+	$(COPY) $** $@
+
+$(CREATEACUKIT)\createacu.lib:	$(BASEDIR)\kcsi\create\$(@F)
+	$(COPY) $** $@
+
+$(CREATEACUKIT)\vscrmain.obj:	$(BASEDIR)\kcsi\create\$(@F)
+	$(COPY) $** $@
+
+$(CREATEACUKIT)\wwruncbl.mak:	$(BASEDIR)\acu\$(@F)
+	$(COPY) $** $@
+
+$(CREATEACUKIT)\release.txt:	$(BASEDIR)\kcsi\create\$(@F)
+	$(COPY) $** $@
+
+$(CREATEACUKIT)\createntsetup.txt:	$(BASEDIR)\kcsi\create\$(@F)
+	$(COPY) $** $@
+
+$(CREATEACUKIT)\packlist.txt:	$(BASEDIR)\kcsi\create\$(@F)
 	$(COPY) $** $@
 
 #
 #	WISPKIT components
 #
-$(RTSKIT)\WWRUNCBL.EXE:		$(BASEDIR)\ACU\$(@F)
+$(RTSKIT)\wwruncbl.exe:		$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(RTSKIT)\WWRUNCBLE.EXE:	$(BASEDIR)\ACU\$(@F)
+$(RTSKIT)\wwruncble.exe:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(RTSKIT)\WWRUNCBLK.EXE:	$(BASEDIR)\ACU\$(@F)
+$(RTSKIT)\wwruncblk.exe:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
-$(RTSKIT)\WWRUNCBLKE.EXE:	$(BASEDIR)\ACU\$(@F)
+$(RTSKIT)\wwruncblke.exe:	$(BASEDIR)\acu\$(@F)
 	$(COPY) $** $@
 
 #
-#	SAMPLE CONFIG COMPONENTS
+#	sample config components
 #
-$(BASEDIR)\CONFIG\WISPMSG.DAT:	$(BASEDIR)\CONFIG\WISPMSG.TXT
-	$(COPY) $(BASEDIR)\CONFIG\WISPMSG.TXT
+$(BASEDIR)\config\wispmsg.dat:	$(BASEDIR)\config\wispmsg.txt
+	$(COPY) $(BASEDIR)\config\wispmsg.txt
 	$(BASEDIR)\bin\makemsg
-	$(COPY) WISPMSG.DAT $@
+	$(COPY) wispmsg.dat $@
 
-$(BASEDIR)\CONFIG\WISPMSG.TXT: $(BASEDIR)\ETC\$(@F)
+$(BASEDIR)\config\wispmsg.txt: $(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\OPTIONS:	$(BASEDIR)\ETC\$(@F)
+$(BASEDIR)\config\options:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\W4WMAP:	$(BASEDIR)\ETC\$(@F)
+$(BASEDIR)\config\w4wmap:	$(BASEDIR)\etc\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\ACUCONFIG:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\acuconfig:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\CHARMAP:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\charmap:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\CQMAP:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\cqmap:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\FORMS:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\forms:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\LGMAP:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\lgmap:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\LPMAP:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\lpmap:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\PRMAP:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\prmap:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\WRUN.CFG:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\wrun.cfg:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\WSYSCONF.CFG:	$(BASEDIR)\NT\$(@F)
+$(BASEDIR)\config\wsysconf.cfg:	$(BASEDIR)\nt\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\WPROC.MSG:	$(BASEDIR)\WPROC\$(@F)
+$(BASEDIR)\config\wproc.msg:	$(BASEDIR)\wproc\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\VIDEOCAP\WINCON: $(BASEDIR)\VIDEOCAP\$(@F).vcap
+$(BASEDIR)\config\videocap\wincon.vcap: $(BASEDIR)\videocap\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\VIDEOCAP\XTERM: $(BASEDIR)\VIDEOCAP\$(@F).vcap
+$(BASEDIR)\config\videocap\xterm.vcap: $(BASEDIR)\videocap\$(@F)
 	$(COPY) $** $@
 
-$(BASEDIR)\CONFIG\VIDEOCAP\ANSI: $(BASEDIR)\VIDEOCAP\$(@F).vcap
+$(BASEDIR)\config\videocap\ansi.vcap: $(BASEDIR)\videocap\$(@F)
 	$(COPY) $** $@
 
 #
-#	MISC COMPONENTS
+#	misc components
 #
-# $(BASEDIR)\WPROC\ED.WPR: $(BASEDIR)\WPROC\ED.WPS $(BASEDIR)\BIN\WPROC.EXE
-#	$(BASEDIR)\BIN\WPROC.EXE -c $(BASEDIR)\WPROC\ED.WPS
+# $(BASEDIR)\wproc\ed.wpr: $(BASEDIR)\wproc\ed.wps $(BASEDIR)\bin\wproc.exe
+#	$(BASEDIR)\bin\wproc.exe -c $(BASEDIR)\wproc\ed.wps

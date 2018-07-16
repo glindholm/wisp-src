@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 			/************************************************************************/
@@ -86,6 +86,7 @@ EXT char in_fname[MAX_FNAME];							/* the name of the primary input file		*/
 EXT char out_fname[MAX_FNAME];							/* the name of the primary output file		*/
 EXT char key_fname[MAX_FNAME];							/* The file with key info.			*/
 EXT char xref_fname[MAX_FNAME];							/* The file to receive cross ref information.	*/
+EXT char xtab_fname[MAX_FNAME];							/* The file to receive cross ref tab file.	*/
 EXT char dtp_fname[MAX_FNAME];							/* The file to hold DECLARATIVES copied paras.	*/
 EXT char dcl_fname[MAX_FNAME];							/* The name of the file to hold copied paras.	*/
 EXT char par_fname[MAX_FNAME];							/* The name of the file that has the para list.	*/
@@ -125,6 +126,9 @@ cob_file_context *open_cob_context();
 /*
 **	History:
 **	$Log: wispfile.h,v $
+**	Revision 1.7  2001-09-13 10:00:37-04  gsl
+**	Add support for xtab -X file
+**
 **	Revision 1.6  1996-06-24 14:23:13-04  gsl
 **	fic MSDOS for MSDOS and WINNT
 **

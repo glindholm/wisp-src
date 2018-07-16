@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1988-1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 
@@ -79,17 +79,17 @@
 #define		HELP_SETPSB			0x00000100				/* Allow pseudo blank char changing.	*/
 #define		HELP_DISPLAY	 		0x00000200				/* Allow ability to use DISPLAY util.	*/
 #define		HELP_USAGE_WRITE		0x00000400				/* Allow write usage constants.		*/
-#define		HELP_QUEUE_MNGMNT		0x00000800				/* Allow queue management.		*/
+#define		HELP_PRINT_QUEUE		0x00000800				/* Allow PRINT queue management.       	*/
 
-#define		HELP_SBATCH_ENABLED		0x00001000				/* Allow ability to see batch queues.	*/
-#define		HELP_SGENERIC_ENABLED		0x00002000				/* Allow ability to see generic queues.	*/
-#define		HELP_SOUTPUT_ENABLED		0x00004000				/* Allow ability to see output queues.	*/
-#define		HELP_RESTRJOBS_DISABLED		0x00008000				/* Disable listing only jobs with the 	*/
-											/*  callers user name.			*/
+#define		HELP_SBATCH_ENABLED		0x00001000				/* UNUSED.	*/
+#define		HELP_SGENERIC_ENABLED		0x00002000				/* UNUSED.	*/
+#define		HELP_SOUTPUT_ENABLED		0x00004000				/* UNUSED.	*/
+#define		HELP_RESTRJOBS_DISABLED		0x00008000				/* UNUSED 	*/
+
 #define		HELP_SETCURCHAR			0x00010000				/* Allow cursor characteristic changing.*/
-#define		HELP_GENERAL_UTILS_X 		0x00020000			/* NO LONGER USED			*/
+#define		HELP_ERROR_LOG 			0x00020000				/* ERROR LOG				*/
 #define		HELP_SCREEN			0x00040000				/* Allow setting of screen character	*/
-#define		HELP_GOODIES_UTILS_X		0x00080000			/* NO LONGER USED			*/
+#define		HELP_BATCH_QUEUE		0x00080000				/* BATCH QUEUE				*/
 
 #define		HELP_MANAGE_SYSTEM		0x00100000				/* Allow ability to manage system.	*/
 #define		HELP_MANAGE_FILES_LIBS		0x00200000				/* Allow ability to manage files/libs.	*/
@@ -98,39 +98,13 @@
 
 #define		HELP_EDIT			0x01000000				/* Allow EDIT utility			*/
 #define		HELP_CRID			0x02000000				/* Allow CRID utilies			*/
-#define		HELP_SUBMIT			0x04000000				/* Allow CRID utilies			*/
+#define		HELP_SUBMIT			0x04000000				/* Allow SUBMIT utilies			*/
 
-#ifdef VMS
-typedef struct	{
-			char 	termname[12];						/* the terminal name			*/
-			int  	termnum;						/* it's number				*/
-			int	flags;							/* the flags				*/
-			struct term_id	 *next;						/* pointer to the next one		*/
-		} term_id;
-
-typedef struct	{
-			char 	latname[36];						/* the LAT name				*/
-			int  	termnum;						/* it's number				*/
-			int	flags;							/* the flags				*/
-			struct lat_id	 *next;						/* pointer to the next one		*/
-		} lat_id;
-
-typedef struct	{
-			char	class;							/* The procedure class 			*/
-			char	qname[80];						/* The queue name			*/
-			struct pq_id *next;						/* pointer to the next one		*/
-		} pq_id;
-#endif /* VMS */
 
 typedef struct	{
 			struct prt_id *next;						/* pointer to the next one		*/
 			char	class;							/* The printer class 			*/
-#ifdef VMS
-			int	prtnum;							/* The printer number			*/
-			char	qname[80];						/* The queue name			*/
-#else
 			char	prt_string[80];						/* Printer control string		*/
-#endif
 		} prt_id;
 
 #define MAX_TRANSLATE 60
@@ -152,14 +126,11 @@ int write_defaults_to_file(char *file);
 int read_defaults_from_file(char *file);
 void delete_defaults_temp(void);
 
-#if defined(unix) || defined(WIN32)
 char *wforms(int num);
 char *getprmap(int num);
 char *wlpclass(char lpclass);
 int getscmapnice(char jobclass, int *nice_value);
 int getcqmap(char jobclass, char *queue_value);
-
-#endif
 
 int ttyid5(char *tty);
 void build_wisp_config_path(char *file, char *path);
@@ -175,12 +146,6 @@ int setprogdefs(char *progvol, char *proglib);
 int saveprogdefs(void);
 int restoreprogdefs(void);
 
-#ifdef VMS
-term_id *get_term_list(void);
-lat_id *get_lat_list(void);
-pq_id *get_pq_list(void);
-#endif
-
 prt_id *get_prt_list(void);
 
 logical_id *get_logical_list(void);
@@ -192,6 +157,7 @@ const char *wisplinkdir(char *dir);
 const char *wisptmpdir(char *dir);
 const char *wispdefdir(char *dir);
 const char *wisp_defaults_path(char *path);
+const char *wisp_temp_defaults_path(char *path);
 
 void USESOFTLINK(char *laststate);
 void USEHARDLINK(char *laststate);
@@ -206,6 +172,13 @@ const char *get_wisp_option(const char *keyword);
 /*
 **	History:
 **	$Log: wperson.h,v $
+**	Revision 1.24  2001-10-31 15:26:05-05  gsl
+**	Add wisp_temp_defaults_path()
+**
+**	Revision 1.23  2001-09-07 15:29:51-04  gsl
+**	Removed VMS code
+**	Added HELP_ERROR_LOG and HELP_BATCH_QUEUE
+**
 **	Revision 1.22  1997-10-23 15:22:15-04  gsl
 **	Add get_wisp_option()
 **

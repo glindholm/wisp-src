@@ -32,6 +32,7 @@ static char rcsid[]="$Id:$";
 #include "werrlog.h"
 #include "wdefines.h"
 #include "wisplib.h"
+#include "wispcfg.h"
 #include "paths.h"
 #include "filext.h"
 #include "wperson.h"
@@ -53,13 +54,9 @@ static char rcsid[]="$Id:$";
 /*
 **	Static Function Prototypes
 */
-#if defined(unix) || defined(WIN32) || defined(MSDOS)
-static char* rcfilepath(void);
-#endif
 
 #define		ROUTINE		54000
 
-#if defined(unix) || defined(WIN32) || defined(MSDOS)
 void RETCODE(char code[3])
 {
 	int	rc;
@@ -69,7 +66,7 @@ void RETCODE(char code[3])
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
 
 	strcpy(rcbuff,"000");
-	if (fh = fopen(rcfilepath(),FOPEN_READ_TEXT))
+	if (fh = fopen(wisprcfilepath(),FOPEN_READ_TEXT))
 	{
 		if (1==fscanf(fh,"%d",&rc))
 		{
@@ -79,38 +76,7 @@ void RETCODE(char code[3])
 	}
 	memcpy(code,rcbuff,3);
 }
-#endif /* unix || WIN32 || MSDOS */
 
-#ifdef VMS
-
-#define LIB$K_CLI_GLOBAL_SYM	2
-#define RETCODE_SYMBOL	"$W_RETURN_CODE"
-
-void RETCODE(char code[3])
-{
-	char	buff[80];
-	int4	len;
-
-	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);
-
-	memcpy(code,"000",3);							/* Assume OK					*/
-
-	if ( 0 == getsymb(RETCODE_SYMBOL,buff,&len) )
-	{
-		switch(len)
-		{
-		case 0:	break;
-		case 1:	code[2] = buff[0];
-			break;
-		case 2:	code[1] = buff[0];
-			code[2] = buff[1];
-			break;
-		default:
-			memcpy(code,buff,3);
-		}
-	}
-}
-#endif
 
 /*
 **	NAME:	setretcode.c
@@ -123,7 +89,6 @@ void RETCODE(char code[3])
 #undef ROUTINE
 #define		ROUTINE		59000
 
-#if defined(unix) || defined(WIN32) || defined(MSDOS)
 void setretcode(char* code)
 {
 	extern int4 LINKRETCODE;
@@ -150,87 +115,18 @@ void setretcode(char* code)
 		return;
 	}
 
-	if (!fexists(wisptmpdir(NULL)))						/* Ensure wisptmpdir(NULL) exists		*/
-	{
-		if (mkdir ( wisptmpdir(NULL), 0777))
-		{
-			werrlog(ERRORCODE(4),wisptmpdir(NULL), errno,0,0,0,0,0,0);
-			return;
-		}
-		chmod ( wisptmpdir(NULL),0777);
-	}
-
-	if (fh = fopen(rcfilepath(),FOPEN_WRITE_TEXT))
+	if (fh = fopen(wisprcfilepath(),FOPEN_WRITE_TEXT))
 	{
 		fprintf(fh,"%03d\n",rc);
 		fclose(fh);
 	}
 	else
 	{
-		werrlog(ERRORCODE(4),rcfilepath(), errno,0,0,0,0,0,0);
+		werrlog(ERRORCODE(4),wisprcfilepath(), errno,0,0,0,0,0,0);
 	}
 
 }
-#endif /* unix || WIN32 || MSDOS */
 
-#ifdef VMS
-void setretcode(char* rc)
-{
-	int4	size;
-
-	werrlog(ERRORCODE(1),rc,0,0,0,0,0,0,0);
-
-	size=3;
-	if (*rc == '0')								/* Remove leading zeros				*/
-	{
-		rc++;
-		size--;
-	}
-	if (*rc == '0')
-	{
-		rc++;
-		size--;
-	}
-
-	setsymb(RETCODE_SYMBOL,rc,size,LIB$K_CLI_GLOBAL_SYM);
-}
-#endif
-
-
-#if defined(unix) || defined(WIN32) || defined(MSDOS)
-/*
-**	ROUTINE:	rcfilepath()
-**
-**	FUNCTION:	Get path to ReturnCode file
-**
-**	DESCRIPTION:	The file is in the wisptmpdir and is named RC_<gid>
-**
-**	ARGUMENTS:	None
-**
-**	GLOBALS:	None
-**
-**	RETURN:		The filepath
-**
-**	WARNINGS:	None
-**
-*/
-static char* rcfilepath(void)
-{
-	static char *rcfilename = NULL;
-
-	if (!rcfilename)
-	{
-		char	file[40];
-		char	path[128];
-		
-		sprintf(file, "RC_%04X", wgetpgrp());
-		buildfilepath(path, wisptmpdir(NULL), file);
-
-		rcfilename = wstrdup(path);
-	}
-	
-	return rcfilename;
-}
 
 /*
 **	ROUTINE:	delete_retcode()
@@ -250,14 +146,22 @@ static char* rcfilepath(void)
 */
 void delete_retcode(void)
 {
-	unlink(rcfilepath());
+	unlink(wisprcfilepath());
 }
 
-#endif /* unix || WIN32 || MSDOS*/
 
 /*
 **	History:
 **	$Log: retcode.c,v $
+**	Revision 1.18  2001-10-31 15:30:44-05  gsl
+**	moved wisprcfilepath() to wispcfg.c
+**
+**	Revision 1.17  2001-10-10 15:00:00-04  gsl
+**	Changed wisprcfilepath() to be RC_userid_pgid
+**
+**	Revision 1.16  2001-10-10 14:30:30-04  gsl
+**	Remove VMS
+**
 **	Revision 1.15  1998-12-09 09:39:02-05  gsl
 **	Use FOPEN mode defines
 **

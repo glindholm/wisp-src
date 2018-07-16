@@ -170,10 +170,6 @@ SOURCE=.\scrn.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\wispcommon\sleepdos.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\statment.c
 # End Source File
 # Begin Source File

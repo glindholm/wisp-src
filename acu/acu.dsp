@@ -98,6 +98,14 @@ SOURCE=.\wrun32wisp.mak
 # End Source File
 # Begin Source File
 
+SOURCE=.\wrun32wisp_crid.mak
+# End Source File
+# Begin Source File
+
+SOURCE=.\wrun32wisp_ede.mak
+# End Source File
+# Begin Source File
+
 SOURCE=.\wwruncbl.mak
 # End Source File
 # End Group

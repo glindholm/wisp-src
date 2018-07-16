@@ -32,7 +32,7 @@ error_text,
 " ",
 " ",
 "        **  Press (14) for an explanation of the Print Options  **",
-"              **  Press ENTER to Continue or (16) to Exit **"
+"             **  Press (ENTER) to Continue or (16) to Exit **"
 };
 
 static void call_options_getparm();
@@ -270,6 +270,9 @@ void RPTWOP(char *RC,char *RPT_OPTIONS,char *MESSAGE)
 /*
 **	History:
 **	$Log: rwop.c,v $
+**	Revision 1.4  2001-11-05 14:44:33-05  gsl
+**	Change ENTER to (ENTER)
+**
 **	Revision 1.3  1999-03-17 13:46:20-05  gsl
 **	Fix screen tag PF14 --> (14)
 **

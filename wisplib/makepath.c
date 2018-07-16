@@ -16,7 +16,7 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <errno.h>
 
-#ifdef MSFS
+#ifdef WIN32
 #include <io.h>
 #include <direct.h>
 #endif
@@ -25,69 +25,15 @@ static char rcsid[]="$Id:$";
 #include "paths.h"
 #include "wisplib.h"
 
-
-#if defined(unix) || defined(MSFS)
 #include "idsisubs.h"
 #include "wdefines.h"
 #include "assert.h"
-#endif
 
 
-#ifdef VMS
-
-/*
-	makepath	Makes the path upto but not including the filename.
-			Makepath is passed a full path and makes all the intermediate directories.
-			Makepath returns	0       if the path now exists.
-						errno   if it was not able to make the path.
-*/
-
-int	makepath(const char* fullpath )
-{
-	char 	buff[81];
-	int	i,rc;
-
-	memcpy( buff, fullpath, 80 );						/* Get a local copy.				*/
-	for( i=0; i < 80; i++ )
-	{
-		if ( buff[i] == ' ' )
-		{
-			buff[i] = '\0';
-			break;
-		}
-		if ( buff[i] == '\0' ) break;
-	}
-
-										/* First try the simple case.			*/
-										/* Strip the filename form the path and then	*/
-										/* see if the dir-path exists.			*/
- 
-	for( i=strlen(buff); i > 1; i-- )					/* Scan backwards for the begining of filename.	*/
-	{
-		if ( fullpath[i] == ']' || fullpath[i] == ':' )
-		{
-			buff[i+1] = '\0';					/* Null-Term the dir-path.			*/
-			rc = mkdir( buff, 0 );					/* Check if dir-path exists.			*/
-			if ( rc  == 0 )
-			{
-				return(0);					/* Dir-path exists, all is fine.		*/
-			}
-			else if ( fexists(buff))				/* got -1 so see if have access because was	*/
-			{							/*  already there.				*/
-				return(0);					/* Dir-path exists, all is fine.		*/
-			}
-			else	return( errno );
-		}
-	}
-	return(0);
-}
-#endif	/* VMS */
-
-#if defined(unix) || defined(MSFS)
 
 #define DS DIR_SEPARATOR			/* Directory Separator	*/
 
-#ifdef MSFS
+#ifdef WIN32
 #define PS 3					/* Path Start (Skip this many chars in front of path to bypass root "E:\path")	*/
 
 #else	/* unix */
@@ -201,6 +147,8 @@ int	makepath(const char* fullpath )
 				{
 					return( errno );			/* Give up.					*/
 				}
+
+				chmod( buff, 0777);
 			}
 			*ptr = DS;						/* Reset directory separator for next loop	*/
 			i = ptr - buff;
@@ -212,12 +160,16 @@ int	makepath(const char* fullpath )
 	}
 	return( 0 );								/* The path now exists.				*/
 }
-#endif	/* unix  and MSFS */
+
 
 /*	End of makepath.c source code.	*/
 /*
 **	History:
 **	$Log: makepath.c,v $
+**	Revision 1.16  2001-10-31 15:37:44-05  gsl
+**	Removed VMS
+**	Added chmod(0777) after a mkdir()
+**
 **	Revision 1.15  1998-08-03 16:54:58-04  jlima
 **	Support Logical Volume Translations to long file names containing eventual embedded blanks.
 **

@@ -98,14 +98,7 @@ static char rcsid[]="$Id:$";
 #define WINDOW_TOP	9								/* Top line of window area.		*/
 #define WINDOW_ROWS	10								/* Number of lines in window area.	*/
 
-#ifdef unix
 #define CHECK_INTERVAL	500								/* Number of lines between checking	*/
-#else
-	/*
-	**	VMS & MSDOS are SLOW compared to most of the UNIX boxes. 
-	*/
-#define CHECK_INTERVAL	200								/* Number of lines between checking	*/
-#endif
 
 /*
 **	Globals and Externals
@@ -114,10 +107,6 @@ static char rcsid[]="$Id:$";
 /*
 **	Static data
 */
-
-#ifdef VMS
-static int first_char = TRUE;
-#endif
 
 static int errmsg_active = FALSE;							/* Error message is on the screen.	*/
 static int rvrs_scroll_avail = TRUE;							/* Set reverse scroll available.	*/
@@ -216,7 +205,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 	status_active = FALSE;
 	ssave = NULL;
 
-	vwang_set_videocap();
+	vwang_init_video();
 	
 	/*
 	**	Note: Text data will either be in the "Native" character set
@@ -232,8 +221,6 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 		display_high_chars = wispdisplay8bit();
 	}
 	
-
-#ifdef COSTAR
 	use_costar_flag = use_costar();
 	if (use_costar_flag)
 	{
@@ -241,7 +228,6 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 		message_vmode = costar_message_vmode();
 		high_message_vmode = costar_high_message_vmode();
 	}
-#endif
 
 	/*
 	**	Check if the file exists and is a regular file.
@@ -311,9 +297,6 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 		wexit(ERRORCODE(2));
 	}
 
-#ifdef VMS
-	if (record_size != 0 && record_size > BUFFER_SIZE) record_size = BUFFER_SIZE;	/* If an executable then use maximum.	*/
-#endif
 	if (record_size > BUFFER_SIZE)							/* Is record size greater than buffer.	*/
 	{										/* Invalid buffer size.			*/
 		werrlog(ERRORCODE(4),BUFFER_SIZE,record_size,0,0,0,0,0,0,0);
@@ -334,12 +317,7 @@ int vdisplay(const char *file_name,int record_size)					/* VIDEO file display su
 newsize:
 	text_defined = FALSE;
 
-#ifdef VMS
-	if ((record_size > 0) && (record_size <= 80)) vscreen(VSCREEN_NARROW);		/* Set the narrow parameters.		*/
-	else vscreen(VSCREEN_WIDE);							/* Set the wide parameters.		*/
-#else
 	vscreen(VSCREEN_NARROW);							/* Select a narrow screen unless VMS.	*/
-#endif
 	
 	/*
 	**	NOTE:	On UNIX and MSDOS the record_size will ALWAYS come in as 0 because
@@ -419,20 +397,7 @@ again:
 	for (i = 0; i < MAX_LINES_PER_SCREEN; i++)					/* Read in the first screen's worth.	*/
 	{
 		eofile = get_line(lbuf[i],&fpos_tab[i],&fpoff_tab[i],bufsize,input_file); /* Get the string.			*/
-#ifdef VMS
-		if (i > 0)
-		{
-			if (fpos_tab[i] == fpos_tab[i-1])				/* If ftell() returns same position.	*/
-			{
-				fpoff_tab[i] = fpoff_tab[i-1];
-				fpoff_tab[i-1] = 0;
-			}
-			else if (fpoff_tab[i] > 132)
-			{
-				fpoff_tab[i] = 0;
-			}
-		}
-#endif
+
 		if (eofile)
 		{
 			if (*lbuf[i] != '\0')
@@ -737,7 +702,7 @@ again:
 			}
 		}
 
-#if defined(unix) || defined(VMS)
+#if defined(unix)
 		else if (c == fn6_key)							/* Change width of screen.		*/
 		{
 			int cl;
@@ -747,9 +712,9 @@ again:
 			vdefer_restore();						/* Restore from deferred actions.	*/
 			if (vscr_wid == 132) vscreen(VSCREEN_NARROW);			/* Set narrow?				*/
 			else vscreen(VSCREEN_WIDE);					/* No, then set wide.			*/
-#ifdef unix
+
 			sleep(1);							/* Delay to allow screen width change	*/
-#endif
+
 			scr_refresh(lbuf,fpos_tab,MAX_LINES_PER_SCREEN,bufsize,scrl_col_cnt); /* Refresh the screen.	*/
 			vmove(0,0);							/* Home for consistency.		*/
 			frow = frow - cl;
@@ -1173,17 +1138,7 @@ static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize
 	l_lb = lb;									/* Set ptr to beginning of line.	*/
 	outpos = 0;									/* Set the output position in buffer.	*/
 	*fpos_ptr = get_pos(input_file);						/* Get the position in the file.	*/
-#ifdef VMS
-	for (i = 0; i < *fpoff_ptr; i++)						/* Step to offset so will display	*/
-	{										/* record format correctly.		*/
-		if ((c = fgetc(input_file)) == EOF)
-		{
-			eofile = TRUE;							/* Get the next character.		*/
-			break;								/* Exit loop				*/
-		}
-	}
-	first_char = TRUE;
-#endif
+
 	cnt_off = 0;									/* Init to 0 for position offset in file*/
 	for (inpos = 0; outpos < bufsize; inpos++)					 /* Loop until full.			 */
 	{
@@ -1194,25 +1149,6 @@ static int get_line(register char *lb,int4 *fpos_ptr,int4 *fpoff_ptr,int bufsize
 		}
 		else									/* There is data left to read.		*/
 		{
-#ifdef VMS
-			cnt_off++;
-			if (first_char && c == CHAR_CR)					/* Fix for BEFORE ADVANCING		*/ 
-			{								/*  (VFC record format)			*/
-				c = fgetc(input_file);					/* Read the next char.			*/
-				cnt_off++;
-				first_char = FALSE;
-                                if (c >= ' ' && c <= '~')				/* A displayable character?		*/
-				{
-					if (c != LNFD)
-					{
-						ungetc(c,input_file);			/* Put char back in file.		*/
-						cnt_off--;
-					}
-					c = CHAR_CR;					/* Set back to CR so displays correctly.*/
-				}
-			}
-#endif
-
 			the_char = c;
 
 			/*
@@ -1467,7 +1403,7 @@ static void show_help(const char *file_name, int options12)				/* Show the help 
 	else
 	{
 		vmove(i++,lhs);	vprint(			"   (1) - Home cursor   (2) - File top       (3) - Bottom     ");
-#if defined(MSDOS) || defined(WIN32)
+#if defined(WIN32)
 		vmove(i++,lhs);	vprint(			"   (4) - Prev screen   (5) - Next screen                     ");
 #else
 		if (vscr_wid == 132)
@@ -1688,17 +1624,7 @@ static int roll_up(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int4 *
 
 		fpos_tab[MAX_LINES_PER_SCREEN - 1] = temp_position;			/* Remember the new position.		*/
 		fpoff_tab[MAX_LINES_PER_SCREEN - 1] = temp_pos_offset;
-#ifdef VMS
-		if (fpos_tab[MAX_LINES_PER_SCREEN - 1] == fpos_tab[MAX_LINES_PER_SCREEN - 2]) 
-		{									/* If ftell() returns same position.	*/
-			fpoff_tab[MAX_LINES_PER_SCREEN - 1] = fpoff_tab[MAX_LINES_PER_SCREEN - 2];
-			fpoff_tab[MAX_LINES_PER_SCREEN - 2] = 0;
-		}
-		else if (fpoff_tab[MAX_LINES_PER_SCREEN - 1] > 132)
-		{
-			fpoff_tab[MAX_LINES_PER_SCREEN - 1] = 0;
-		}
-#endif
+
 	}
 	return(eofile);									/* Return the end of file indicator.	*/
 }
@@ -1736,17 +1662,6 @@ static void roll_down(char *lbuf[],int4 fpos_tab[],int4 fpoff_tab[],int4 *pt,int
 			nlb = lbuf[0];							/* Get address of first buffer.		*/
 			for (i = 0; i < bufsize; i++) *nlb++ = temp_line[i];		/* Copy the string.			*/
 			fpos_tab[0] = temp_position;					/* Remember the new position.		*/
-#ifdef VMS			
-			if (fpos_tab[0] == fpos_tab[1])					/* If ftell() returns same position.	*/
-			{
-				fpoff_tab[1] = temp_pos_offset;
-				fpoff_tab[0] = 0;
-			}
-			else if (fpoff_tab[0] > 132)
-			{
-				fpoff_tab[0] = 0;
-			}
-#endif
 			free(temp_line);
 		}
 		vstate(VSTATE_RESTORE);							/* Restore where we were.		*/
@@ -2479,6 +2394,12 @@ static void display_stat(int dwidth)							/* Display cursor row, col and width.
 /*
 **	History:
 **	$Log: vdisplay.c,v $
+**	Revision 1.45  2001-10-15 09:55:17-04  gsl
+**	change vwang_set_videocap() to vwang_init_video()
+**
+**	Revision 1.44  2001-09-25 12:19:25-04  gsl
+**	Remove unneeded ifdefs
+**
 **	Revision 1.43  1998-10-15 11:11:10-04  gsl
 **	The eof_trailer() was signal 11'ing when the filename was longer then the
 **	current record size.  It has been fixed to use the screen size instead of

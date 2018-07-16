@@ -77,5 +77,9 @@ CFG=all - Win32 Debug
 
 !ENDIF 
 
+# Begin Source File
+
+SOURCE=..\etc\portwin32.txt
+# End Source File
 # End Target
 # End Project

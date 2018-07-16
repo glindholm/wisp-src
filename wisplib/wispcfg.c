@@ -28,6 +28,7 @@ static char rcsid[]="$Id:$";
 #include "wisplib.h"
 #include "wperson.h"
 #include "werrlog.h"
+#include "wanguid.h"
 
 /*
 **	Structures and Defines
@@ -66,9 +67,8 @@ static char rcsid[]="$Id:$";
 **
 **	FUNCTION:	Get the users "HOME" directory path.
 **
-**	DESCRIPTION:	On VMS return "SYS$LOGIN:"
-**			On UNIX ,MSDOS use envronment variable $HOME
-**			On MSDOS default to "C:" if not set.
+**	DESCRIPTION:	
+**			On UNIX use envronment variable $HOME
 **			On WIN32 <usersdir>\<userid>\WISP
 **
 **	ARGUMENTS:	
@@ -87,10 +87,7 @@ const char* wisphomedir(char *dir)
 	
 	if (!the_dir)
 	{
-#ifdef VMS
-		the_dir = "SYS$LOGIN:";
-#endif
-#if defined(unix) || defined(MSDOS)
+#ifdef unix
 		char	*ptr;
 		ptr = getenv("HOME");
 		if (ptr && *ptr)
@@ -101,16 +98,10 @@ const char* wisphomedir(char *dir)
 		{
 			/*
 			**	HOME was not set so on unix use a dummy value. 
-			**	On MSDOS then defaults to "C:".
 			*/
-#ifdef unix
 			the_dir = "$HOME";
-#endif
-#ifdef MSFS
-			the_dir = wstrdup(wispdefdrive());
-#endif
 		}
-#endif /* unix || MSDOS */
+#endif /* unix */
 
 #ifdef WIN32
 		char 	*ptr;
@@ -155,7 +146,7 @@ const char* wisphomedir(char *dir)
 **
 **	FUNCTION:	Get path to WISP configuration directory
 **
-**	DESCRIPTION:	On VMS return "WISP$CONFIG:"
+**	DESCRIPTION:	
 **			On others return environment variable $WISPCONFIG
 **			If WISPCONFIG is not set it returns the string "$WISPCONFIG"
 **
@@ -170,18 +161,15 @@ const char* wisphomedir(char *dir)
 */
 const char* wispconfigdir(void)
 {
-#ifdef VMS
-	return "WISP$CONFIG:";
-#else
 	static char *wispconfig_dir = NULL;
 
 	if (!wispconfig_dir)
 	{
 		char 	*ptr;
 
-#if defined(unix) || defined(MSDOS)
+#ifdef unix
 		ptr = getenv( "WISPCONFIG" );
-#endif /* unix || MSDOS */
+#endif /* unix */
 #ifdef WIN32
 		ptr = wgetreg(REG_WISP, "WISPCONFIG");
 #endif /* WIN32 */
@@ -203,7 +191,6 @@ const char* wispconfigdir(void)
 	ASSERT(wispconfig_dir);
 	
 	return wispconfig_dir;
-#endif /* !VMS */
 }
 
 /*
@@ -338,35 +325,12 @@ const char* wisplinkpath(void)
 }
 
 /*
-**	ROUTINE:	wispdefdrive()
-**
-**	FUNCTION:	Get the default drive to use.
-**
-**	DESCRIPTION:	Currently hardcoded to return "C:"
-**
-**	ARGUMENTS:	none
-**
-**	GLOBALS:	none
-**
-**	RETURN:		The default drive letter
-**
-**	WARNINGS:	None
-**
-*/
-#if defined(MSFS)
-const char* wispdefdrive(void)
-{
-	return "C:";
-}
-#endif
-
-/*
 **	ROUTINE:	wisptmpbasedir()
 **
 **	FUNCTION:	Get the base directory for WISP temporary files and directories.
 **
 **	DESCRIPTION:	On unix this is "/usr/tmp"
-**			On MSDOS and WIN32 this is "C:\TMP"
+**			On WIN32 this is "C:\TMP"
 **
 **	ARGUMENTS:	
 **	dir		The returned base directory or NULL
@@ -378,7 +342,6 @@ const char* wispdefdrive(void)
 **	WARNINGS:	None
 **
 */
-#if defined(unix) || defined(WIN32) || defined(MSDOS)
 const char* wisptmpbasedir(char *dir)
 {
 	static char *the_dir = NULL;
@@ -387,9 +350,6 @@ const char* wisptmpbasedir(char *dir)
 	{
 #ifdef unix
 		the_dir = "/usr/tmp";
-#endif
-#ifdef MSDOS
-		the_dir = "C:\\TMP";
 #endif
 #ifdef WIN32
 		char *ptr;
@@ -416,7 +376,6 @@ const char* wisptmpbasedir(char *dir)
 		return the_dir;
 	}
 }
-#endif /* unix || WIN32 || MSDOS */
 
 /*
 **	ROUTINE:	wtmpdir()
@@ -425,7 +384,7 @@ const char* wisptmpbasedir(char *dir)
 **
 **	DESCRIPTION:	Uses envvar $TMPDIR if set.
 **			On UNIX default to "/tmp"
-**			On MSDOS and WIN32 default to "C:\TMP"
+**			On WIN32 default to "C:\TMP"
 **
 **	ARGUMENTS:	
 **	dir		The returned tmp directory or NULL
@@ -458,7 +417,7 @@ const char* wtmpdir(char *dir)
 #ifdef unix
 			the_dir = "/tmp";
 #endif
-#if defined(WIN32) || defined(MSDOS)
+#if defined(WIN32)
 			the_dir = "C:\\TMP";
 #endif
 		}
@@ -482,7 +441,7 @@ const char* wtmpdir(char *dir)
 **	FUNCTION:	Get the memory size in K to use for file sorts.
 **
 **	DESCRIPTION:	If envvar $WISPSORTMEM is set then read it's value
-**			otherwise default to 512K (256K for MSDOS).
+**			otherwise default to 512K.
 **
 **	ARGUMENTS:	None
 **
@@ -514,11 +473,7 @@ int wispsortmemk(void)
 
 		if (memsizek <= 0)
 		{
-#ifdef MSDOS
-			memsizek = 256;
-#else
 			memsizek = 512;
-#endif
 		}
 		
 	}
@@ -1008,8 +963,8 @@ const char* wispmenudir(void)
 **
 **	FUNCTION:	Get the WISP terminal type
 **
-**	DESCRIPTION:	On VMS, if WISP$TERM is set use it otherwise return "" and let video figure it out.
-**			On non-VMS, Use $WISPTERM, $TERM, default value in that order.
+**	DESCRIPTION:	
+**			Use $WISPTERM, $TERM, default value in that order.
 **
 **	ARGUMENTS:	
 **	the_term	The returned terminal type or an empty string if not set.
@@ -1027,19 +982,6 @@ const char *wispterm(char *the_term)
 	
 	if (!term)
 	{
-#ifdef VMS
-		char	temp[80];
-		
-		get_log("WISP$TERM",temp,sizeof(temp));
-		if (strlen(temp) > 0)
-		{
-			term = wstrdup(temp);
-		}
-		else
-		{
-			term = "";
-		}
-#else
 		char *ptr;
 
 #ifdef WIN32
@@ -1070,13 +1012,10 @@ const char *wispterm(char *the_term)
 		{
 #if defined(WIN32)
 			term = "WINCON";
-#elif defined(MSDOS)
-			term = "MSDOS";
 #else
 			term = "vt100";
 #endif
 		}
-#endif
 	}
 	ASSERT(term);
 	
@@ -1092,7 +1031,7 @@ const char *wispterm(char *the_term)
 **
 **	FUNCTION:	Get the directory for terminal definition (videocap) files.
 **
-**	DESCRIPTION:	On VMS, this is always "WISP$CONFIG:",
+**	DESCRIPTION:	
 **			On other, if $VIDEOCAP is set use it, otherwise use $WISPCONFIG/videocap.
 **
 **	ARGUMENTS:	
@@ -1111,9 +1050,6 @@ const char *wisptermdir(char *the_dir)
 	
 	if (!dir)
 	{
-#ifdef VMS
-		dir = "WISP$CONFIG:";
-#else
 		char *ptr;
 
 #ifdef WIN32
@@ -1132,7 +1068,6 @@ const char *wisptermdir(char *the_dir)
 			buildfilepath( buff, wispconfigdir(), "videocap" );
 			dir = wstrdup(buff);
 		}
-#endif
 	}
 	ASSERT(dir);
 	
@@ -1174,9 +1109,22 @@ const char* wisptermfilepath(char *the_path)
 			char	buff[256];
 
 			buildfilepath(buff, wisptermdir(NULL), ptr);
-#ifdef VMS
-			strcat(buff,".VCAP");
-#endif
+
+			/*
+			 * Check if the videocap file exists with then without ".vcap" ext.
+			 */
+			strcat(buff, ".vcap");
+			if (!fexists(buff))
+			{
+				/* Check without ext */
+				buff[strlen(buff) - 5] = '\0';
+				if (!fexists(buff))
+				{
+					/* Didn't find it so put ext back on */
+					strcat(buff, ".vcap");
+				}				
+			}
+			
 			path = wstrdup(buff);
 		}
 		else
@@ -1299,12 +1247,6 @@ const char* acu_vutil_exe(void)
 #ifdef unix
 			exe = "vutil";
 #endif
-#ifdef MSDOS
-			exe = "vutilext.exe";
-#endif
-#ifdef VMS
-			exe = "vutil.exe";
-#endif
 #ifdef WIN32
 			exe = "vutil32.exe";
 #endif
@@ -1323,7 +1265,7 @@ const char* acu_vutil_exe(void)
 **
 **	FUNCTION:	Get path to WISP installation directory
 **
-**	DESCRIPTION:	On VMS return "WISP$DIR:"
+**	DESCRIPTION:	
 **			On Unix return environment variable $WISPDIR
 **			On WIN32 return registry entry
 **
@@ -1351,9 +1293,6 @@ const char* wispdir(void)
 #endif
 #ifdef WIN32
 		ptr = wgetreg(REG_WISP, "WISPDIR");
-#endif
-#ifdef VMS
-		ptr = "WISP$DIR:";
 #endif
 
 		if (ptr && *ptr)
@@ -1442,11 +1381,7 @@ const char *wisptmpdir(char *dir)
 
 const char *wispdefdir(char *dir)
 {
-#ifdef WIN32
 	return wisptmpdir(dir);
-#else
-	return wisptmpbasedir(dir);
-#endif
 }
 
 /*
@@ -1589,6 +1524,43 @@ int wisptelnet(void)
 #endif /* WIN32 */
 }
 
+/*
+**	ROUTINE:	wisprcfilepath()
+**
+**	FUNCTION:	Get path to ReturnCode file
+**
+**	DESCRIPTION:	The file is in the wisptmpdir and is named RC_<userid>_<gid>
+**
+**	ARGUMENTS:	None
+**
+**	GLOBALS:	None
+**
+**	RETURN:		The filepath
+**
+**	WARNINGS:	None
+**
+*/
+const char* wisprcfilepath(void)
+{
+	static char *rcfilename = NULL;
+
+	if (!rcfilename)
+	{
+		char	file[40];
+		char	path[128];
+		
+		sprintf(file, "RC_%s_%u", longuid(), (unsigned)wgetpgrp());
+		buildfilepath(path, wisptmpdir(NULL), file);
+
+		rcfilename = wstrdup(path);
+
+		makepath(rcfilename);
+	}
+	
+	return rcfilename;
+}
+
+
 #if defined(DEBUG) && defined(MAIN)
 #define EXT_FILEXT
 #include "filext.h"
@@ -1614,17 +1586,7 @@ static void validate_wispcfg(void)
 	char	*ptr;
 	char	buff[256];
 	
-#ifdef VMS
-	ASSERT(0==strcmp(wisphomedir(buff),"SYS$LOGIN:"));
-	ASSERT(0==strcmp(buff,"SYS$LOGIN:"));
-
-	ASSERT(0==strcmp(wispconfigdir(),"WISP$CONFIG:"));
-
-	ASSERT(0==strcmp(wisptermdir(buff),"WISP$CONFIG:"));
-	ASSERT(0==strcmp(buff,"WISP$CONFIG:"));
-#endif
-
-#if defined(unix) || defined(MSDOS) 
+#if defined(unix)
 	setenvstr("HOME=/home/user");
 	ASSERT(0==strcmp(wisphomedir(buff),"/home/user"));
 	ASSERT(0==strcmp(buff,"/home/user"));
@@ -1635,10 +1597,8 @@ static void validate_wispcfg(void)
 	setenvstr("PATH=path");
 	ASSERT(0==strcmp(wispenvpath(),"path"));
 
-#ifdef unix
 	ASSERT(0==strcmp(wisptmpbasedir(buff),"/usr/tmp"));
 	ASSERT(0==strcmp(buff,"/usr/tmp"));
-#endif /* unix */
 
 	setenvstr("TMPDIR=tmpdir");
 	ASSERT(0==strcmp(wtmpdir(buff),"tmpdir"));
@@ -1655,16 +1615,10 @@ static void validate_wispcfg(void)
 	ASSERT(0==strcmp(wisptermdir(buff),"videocap"));
 	ASSERT(0==strcmp(buff,"videocap"));
 
-#ifdef unix
 	ASSERT(0==strcmp(wisptermfilepath(buff),"videocap/wispterm"));
 	ASSERT(0==strcmp(buff,"videocap/wispterm"));
-#endif
-#ifdef MSFS
-	ASSERT(0==strcmp(wisptermfilepath(buff),"videocap\\wispterm"));
-	ASSERT(0==strcmp(buff,"videocap\\wispterm"));
-#endif
 
-#endif /* unix || MSDOS */
+#endif /* unix */
 
 #ifndef WIN32
 	setenvstr("WISPCPU=12");
@@ -1714,6 +1668,20 @@ main()
 /*
 **	History:
 **	$Log: wispcfg.c,v $
+**	Revision 1.23  2001-11-08 11:47:58-05  gsl
+**	add missing include
+**
+**	Revision 1.22  2001-10-31 15:34:55-05  gsl
+**	moved wisprcfilepath() from retcode.c
+**	Change wispdefdir() for unix to be the same as WIN32 and return wisptmpdir()
+**	This is used by the temp PERSON files (now DEFS_)
+**
+**	Revision 1.21  2001-10-11 11:11:29-04  gsl
+**	change wisptermfilepath() to first check for .vcap extension
+**
+**	Revision 1.20  2001-10-11 10:52:19-04  gsl
+**	Remove VMS & MSDOS
+**
 **	Revision 1.19  1999-08-24 09:29:35-04  gsl
 **	Fixed acu_vutil_exe() to get the VUTIL path out of the OPTIONS file.
 **	On WIN32 it was looking in the registry, however, the registry never was

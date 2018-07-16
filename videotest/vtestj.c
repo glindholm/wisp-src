@@ -21,7 +21,8 @@ testj()
 	verase(FULL_SCREEN);
 	vmove(0,0);
 	retcount = 0;
-vprint("Enter any character and its sequence will be echoed back.\n\n");
+	vprint("Enter any character and its sequence will be echoed back.\n");
+	vprint("   (Press ENTER twice to exit.)\n\n");
 
 again:	c = vgetc();
 	if (c == '\15')
@@ -34,11 +35,15 @@ again:	c = vgetc();
 	uc = (unsigned char)c;
 	if (isprint(c) && isascii(c))
 	{
-		vprint("Character is \'%c\' = %o octal = %u decimal.\n",c,(int)uc,(int)uc);
+		vprint("Character is \'%c\' = 0x%02x hex, %3u dec, %04o oct\n",c,(int)uc,(int)uc,(int)uc);
+	}
+	else if (uc <= 27) /* Print as control char */
+	{
+		vprint("Character is ^%c  = 0x%02x hex, %3u dec, %04o oct\n",c+'@',(int)uc,(int)uc,(int)uc);
 	}
 	else 
 	{
-		vprint("Character is     = %o octal, %u decimal.\n",(int)uc,(int)uc);
+		vprint("Character is     = 0x%02x hex, %3u dec, %04o oct\n",(int)uc,(int)uc,(int)uc);
 	}
 	goto again;
 }

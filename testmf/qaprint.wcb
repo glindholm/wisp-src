@@ -345,6 +345,8 @@
            03  FILLER PIC X(6) ROW 12 COL 48 VALUE "VOLUME".
            03  FILLER PIC X(6) ROW 12 COL 55 
                SOURCE FLV-VOL OBJECT FLV-VOL.
+	   03  FILLER PIC X(40) ROW 24 COL 20 VALUE
+	       "Press (ENTER) to continue".
 
        01  TPRINT-FILE-SCREEN1 USAGE IS DISPLAY-WS.
            03  FILLER PIC X(42) ROW 5 COL 20
@@ -411,6 +413,8 @@
                "(6) NO NAME PRINT FILE.".
            03  FILLER  PIC X(41) ROW 15 COL 20 VALUE
                "(7) LITERAL NAME PRINT FILE.".
+           03  FILLER  PIC X(41) ROW 21 COL 20 VALUE
+               "(12) CALL DISPRINT".
 
            03  FILLER  PIC X(23) ROW 24 COL 10 VALUE
                "PRESS PF (16) TO EXIT".
@@ -427,7 +431,7 @@
        PRINTING-TESTS.
 
            DISPLAY AND READ PRINTING-SCREEN ON CRT
-           PFKEYS 1, 2, 3, 4, 5, 6, 7, 16.
+           PFKEYS 1, 2, 3, 4, 5, 6, 7, 12, 16.
 
            IF PF-KEY = "01" THEN
               PERFORM DO-PRINT-FILE
@@ -450,6 +454,9 @@
            ELSE IF PF-KEY = "07" THEN
               PERFORM DO-LITERAL-PRINT
               GO TO PRINTING-TESTS
+           ELSE IF PF-KEY = "12" THEN
+              CALL "DISPRINT"
+              GO TO PRINTING-TESTS
            ELSE IF PF-KEY = "16" THEN
               GO TO EXIT-PROGRAM.
 
@@ -457,6 +464,8 @@
 
 
        DO-ZERO-PRINT.
+
+	   MOVE "##ZERO" TO ZERO-FILE-NAME.
 
            MOVE ZERO-FILE-NAME TO FLV-FILE.
            MOVE ZERO-LIBRARY   TO FLV-LIB.
@@ -472,6 +481,11 @@
            OPEN OUTPUT ZERO-FILE.
            CLOSE ZERO-FILE.
 
+	   DISPLAY "Created [" ZERO-FILE-NAME
+		   "] in [" ZERO-LIBRARY
+		   "] on [" ZERO-VOLUME
+		   "]".
+
        DO-NONAME-PRINT.
            OPEN OUTPUT NONAME-FILE.
            MOVE "THIS IS A TEST OF NO NAME" TO NONAME-RECORD.
@@ -481,6 +495,8 @@
            WRITE NONAME-RECORD AFTER ADVANCING 2.
            CLOSE NONAME-FILE.
 
+	   DISPLAY "Created NONAME-FILE".
+
        DO-LITERAL-PRINT.
            OPEN OUTPUT LITERAL-FILE.
            MOVE "THIS IS A TEST OF LITERAL NAME" TO LITERAL-RECORD.
@@ -489,6 +505,8 @@
            WRITE LITERAL-RECORD AFTER ADVANCING 2.
            WRITE LITERAL-RECORD AFTER ADVANCING 2.
            CLOSE LITERAL-FILE.
+
+	   DISPLAY "Created LITERAL-FILE".
 
        DO-PRINT-FILE.
 
@@ -507,10 +525,12 @@
            WRITE PRINT-RECORD FROM PRINT-RECORD-SHORT
                AFTER ADVANCING 2.
 
-           DISPLAY AND READ PRINT-FILE-SCREEN ON CRT
-           PFKEY 16.
-
            CLOSE PRINT-FILE.
+
+	   DISPLAY "Created [" PRINT-FILE-NAME
+		   "] in [" PRINT-LIBRARY
+		   "] on [" PRINT-VOLUME
+		   "]".
 
 
        DO-PRINT-CONTINUATION.
@@ -587,14 +607,18 @@
            WRITE PRINT-RECORD AFTER 1.
            WRITE PRINT-RECORD FROM X132 AFTER 1.
 
-           DISPLAY AND READ PRINT-FILE-SCREEN ON CRT
-           PFKEY 16.
-
            CLOSE PRINT-FILE.
+
+	   DISPLAY "Created [" PRINT-FILE-NAME
+		   "] in [" PRINT-LIBRARY
+		   "] on [" PRINT-VOLUME
+		   "]".
 
 
        DO-TEMP-PRINT-FILE.
 
+	   MOVE "##TST" TO TPRINT-FILE-NAME.
+	   
            DISPLAY AND READ TPRINT-FILE-SCREEN1 ON CRT
            PFKEY 16.
 
@@ -627,10 +651,12 @@
 	   ADD 1 TO TPRINT-SEQ.
            WRITE TPRINT-RECORD.
 
-           DISPLAY AND READ TPRINT-FILE-SCREEN2 ON CRT
-           PFKEY 16.
-
            CLOSE TEMP-PRINT-FILE.
+
+	   DISPLAY "Created [" TPRINT-FILE-NAME
+		   "] in [" TPRINT-LIBRARY
+		   "] on [" TPRINT-VOLUME
+		   "]".
 
        DO-BIG-OVERSTRIKE.
 
@@ -680,8 +706,13 @@
            WRITE OS-RECORD AFTER ADVANCING 0 LINES.
            WRITE OS-RECORD AFTER ADVANCING 0 LINES.
            WRITE OS-RECORD AFTER ADVANCING 0 LINES.
-
+	   
            CLOSE OVERSTRIKE-FILE.
+
+	   DISPLAY "Created [" OS-FILE-NAME
+		   "] in [" OS-LIBRARY
+		   "] on [" OS-VOLUME
+		   "]".
 
 
        EXIT-PROGRAM.

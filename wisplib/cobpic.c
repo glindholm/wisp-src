@@ -31,10 +31,6 @@ static int picedit_insert();
 static int picfloatedit();
 static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx, int blankdecimal, int value,int psize, int dp);
 
-#define PIC_NOEDIT	0
-#define PIC_ALPHAEDIT	1
-#define PIC_NUMERIC	2
-
 #define	ALPHA_FAC	0x81
 #define NUM_FAC		0x82
 #define PROT_FAC	0x8C
@@ -237,8 +233,11 @@ static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int 
 	**	Calculate e_start (element start)
 	*/
 
+
+	/* Skip over leading spaces */
 	for (e_start=0; e_start<p_size && source[e_start] == ' '; e_start++);
 
+	/* Get the leading sign and skip over leading spaces and zero suppression characters */
 	if (e_start<p_size)
 	{
 		if (source[e_start] == '-') 					/* Strip leading '-' or '+' sign.		*/
@@ -296,8 +295,8 @@ static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int 
 		}
 		else if ( e_size > 1 )						/* Strip trailing "CR" or "DB"			*/
 		{
-			if ( ( psigned == 2 && source[e_end-2] == 'C' && source[e_end-1] == 'R' ) ||
-			     ( psigned == 3 && source[e_end-2] == 'D' && source[e_end-1] == 'B' )    )
+			if ( ( psigned == PIC_CR_SIGNED && source[e_end-2] == 'C' && source[e_end-1] == 'R' ) ||
+			     ( psigned == PIC_DB_SIGNED && source[e_end-2] == 'D' && source[e_end-1] == 'B' )    )
 			{
 				if (signfound) return(1);
 				negative = 1;
@@ -316,8 +315,9 @@ static int cobpic_numedit(char* xobj, const char* source, const char* xpic, int 
 		}
 	}
 
-	if (negative && !psigned) return(1);
+	if (negative && psigned == PIC_UNSIGNED) return(1);
 
+	/* Check if we have digits that make up a value */
 	for(value=0, e_idx=e_start; e_idx<e_end; e_idx++) 
 	{
 		if ( isdigit(source[e_idx]) && source[e_idx] != '0' ) 
@@ -471,7 +471,8 @@ static int picedit_insert(char* pic, char* src, char* obj, int negative, int* in
 	case 'Z':
 	case '*':
 	case '#':
-		if ( isdigit(*src) )
+		if ( isdigit(*src) || 
+		     ('*' == *pic && '*' == *src) )	/* Zero suppression */
 		{
 			*obj = *src;
 			*inc_src = 1;
@@ -614,14 +615,10 @@ static int picfloatedit(char* xpic, char* xobj, int floatidx, int blankdecimal)	
 			out	"$     12.23 CR"	"$******123.45-"
 
 
-			LPI:	For 'Z' when zero don't suppress $ or '+'.
-				For '*' when non-zero don't suppress 'B' and do suppress '-' when blank.
-
 */
 
 static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx, int blankdecimal, int value,int psize, int dp)
 {
-	char	*ptr;
 	int	done, idx, decimal, suppress, i;
 
 	if (suppidx >= 0)
@@ -632,18 +629,6 @@ static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx,
 			if ( dp < psize && suppchar == '*' )
 			{
 				xobj[dp] = char_decimal_point;
-			}
-
-			if ( lpi_cobol && suppchar == ' ' )
-			{
-				if (ptr=strchr(xpic,'$') )
-				{
-					xobj[ptr-xpic] = '$';
-				}
-				if (ptr=strchr(xpic,'+') )
-				{
-					xobj[ptr-xpic] = '+';
-				}
 			}
 
 			return(0);
@@ -697,10 +682,7 @@ static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx,
 				break;
 
 			case 'b':
- 				if (!lpi_cobol)
-				{
-					suppress = 1;
-				}
+				suppress = 1;
 				break;
 
 			case 'C':
@@ -714,10 +696,6 @@ static int piczeroedit(const char* xpic, char* xobj, char suppchar, int suppidx,
 				break;
 
 			case '-':
- 				if (lpi_cobol && xobj[idx] == ' ')
-				{
-					suppress = 1;
-				}
 				break;
 
 			case '+':
@@ -767,7 +745,7 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 	*suppchar	= ' ';				/* No suppress character */
 	*suppidx	= -1;				/* None */
 	*floatidx	= -1;				/* None */
-	*psigned	= 0;				/* Unsigned */
+	*psigned	= PIC_UNSIGNED;			/* Unsigned */
 
 	if (*psize > 80)
 	{
@@ -849,7 +827,6 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 				}
 			}
 
-			if (lpi_cobol) *suppidx = 0;
 		}
 
 		if (ptr = strchr(xpic,'#'))
@@ -868,17 +845,30 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 			switch(*ptr)
 			{
 			case 'C':
-				*psigned = 2;
+				*psigned = PIC_CR_SIGNED;
 				break;
 			case 'D':
-				*psigned = 3;
+				*psigned = PIC_DB_SIGNED;
 				break;
 			default:
-				*psigned = 1;
+				*psigned = PIC_SIGNED;
 				break;
 			}
 		}
 	}
+	else /* Not NUMERIC */
+	{
+		/*
+		 *	These fields only apply to numeric pictures so set to "unset"
+		 */
+		*pic_dp 	= -1;
+		*blankdecimal  	= -1;
+		*suppchar	= ' ';
+		*suppidx	= -1;
+		*floatidx	= -1;
+		*psigned	= -1;
+	}
+	
 
 }
 
@@ -886,6 +876,17 @@ void parse_pic(const char *picture,	/* The COBOL picture clause. */
 /*
 **	History:
 **	$Log: cobpic.c,v $
+**	Revision 1.17  2001-11-08 11:37:28-05  gsl
+**	Remove unused ptr.
+**
+**	Revision 1.16  2001-09-26 15:20:29-04  gsl
+**	Fix '*' zero suppression to the right of the decimal.
+**	IN parse_pic() for non-NUMERIC pictures set the numeric only fields to -1
+**
+**	Revision 1.15  2001-09-25 16:38:48-04  gsl
+**	Replace constants with defines
+**	Remove LPI cobol code
+**
 **	Revision 1.14  1997-12-17 15:32:22-05  gsl
 **	fix prototypes for const
 **

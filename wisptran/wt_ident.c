@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1995 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1995-2001 Neomedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*		       Copyright (c) 1988, 1989, 1990, 1991		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 #define EXT extern
 #include "wisp.h"
@@ -50,10 +42,6 @@ static int figcon1_compare(struct figcon1_struct *p1, struct figcon1_struct *p2)
 **	Return:		The next statement that is not part of this division.
 **
 **	Warnings:	None
-**
-**	History:	
-**	06/01/93	Written by GSL
-**
 */
 NODE identification_division(NODE the_statement)
 {
@@ -101,6 +89,11 @@ NODE identification_division(NODE the_statement)
 			curr_node = the_statement->next;
 			strcpy(prog_id,token_data(curr_node->token));
 			write_tlog(curr_node->token, "WISP",'I',"PROGRAMID", "Found PROGRAM-ID %s.",prog_id);
+			if (do_xtab)
+			{
+				xtab_log(context_infile_name(curr_node->token->context), 
+					 curr_node->token->line, "PROGRAM-ID", prog_id);
+			}			
 			if (strlen(prog_id) > 8)
 			{
 				write_tlog(curr_node->token, "WISP",'W',"PROGRAMID", 
@@ -723,6 +716,12 @@ void finish_figcons(void)
 /*
 **	History:
 **	$Log: wt_ident.c,v $
+**	Revision 1.18  2001-09-13 14:12:23-04  gsl
+**	2001
+**
+**	Revision 1.17  2001-09-13 10:37:52-04  gsl
+**	Add xtab_log of the PROGRAMID
+**
 **	Revision 1.16  1998-03-27 13:29:27-05  gsl
 **	Fix bug with generated FIGCON copybook
 **

@@ -298,6 +298,7 @@
        01  FDR-BS               PIC X(2) VALUE "BS".
        01  FDR-MD               PIC X(2) VALUE "MD".
        01  FDR-DATE.
+           05  FDR-CC           PIC X(2).
            05  FDR-YY           PIC X(2).
            05  FDR-MM           PIC X(2).
            05  FDR-DD           PIC X(2).
@@ -447,7 +448,7 @@
                MOVE 0                     TO FDR-RTN-NUM
                MOVE SPACES                TO FDR-DATE
       
-               CALL "READFDR" USING FDR-FILE, FDR-LIB, FDR-VOL,
+               CALL "READFDR4" USING FDR-FILE, FDR-LIB, FDR-VOL,
                     FDR-FUNCTION, FDR-MD, FDR-DATE,
                     FDR-BS, FDR-BYTE-SIZE, FDR-RTN.
       

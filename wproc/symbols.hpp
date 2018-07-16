@@ -54,7 +54,7 @@ class symbol_table;
 
 class symbol : public state_object {
    public:
-      friend symbol_table;
+      friend class symbol_table;
 
       symbol();
 
@@ -166,6 +166,9 @@ class symbol_table : public state_object {
 /*
 **	History:
 **	$Log: symbols.hpp,v $
+**	Revision 1.9  2001-08-22 16:14:01-04  gsl
+**	Add Friend class keyword
+**
 **	Revision 1.8  1998-08-31 15:50:38-04  gsl
 **	drcs update
 **
@@ -185,6 +188,9 @@ class symbol_table : public state_object {
 //
 //	History:
 //	$Log: symbols.hpp,v $
+//	Revision 1.9  2001-08-22 16:14:01-04  gsl
+//	Add Friend class keyword
+//
 //	Revision 1.8  1998-08-31 15:50:38-04  gsl
 //	drcs update
 //

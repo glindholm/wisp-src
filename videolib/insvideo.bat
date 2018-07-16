@@ -1,5 +1,0 @@
-COPY *.H D:\MSVC\INCLUDE\V\*.*
-
-rem COPY VIDEODOS.LIB D:\MSVC\LIB\*.*
-
-

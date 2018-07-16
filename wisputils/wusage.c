@@ -1,13 +1,5 @@
-static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
+static char copyright[]="Copyright (c) 1988-2001 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
-			/************************************************************************/
-			/*									*/
-			/*	        WISP - Wang Interchange Source Pre-processor		*/
-			/*	      Copyright (c) 1988, 1989, 1990, 1991, 1992, 1993		*/
-			/*	 An unpublished work of International Digital Scientific Inc.	*/
-			/*			    All rights reserved.			*/
-			/*									*/
-			/************************************************************************/
 
 
 /* The WUSAGE utility. Makes it possible to set/extract WANG USAGE CONSTANTS from the users profile.				*/
@@ -28,14 +20,8 @@ static char rcsid[]="$Id:$";
 /*      $ WUSAGE VERSION 			! Print the WISP VERSION number							*/
 
 #include <stdio.h>
-#include <setjmp.h>
 #include <string.h>
 #include <stdlib.h>
-
-#ifdef VMS
-#include <descrip.h>
-#include <ssdef.h>
-#endif
 
 #ifdef _MSC_VER
 #include <io.h>
@@ -55,29 +41,18 @@ static char rcsid[]="$Id:$";
 #include "wispcfg.h"
 #include "wanguid.h"
 
-#ifndef VMS	/* unix or MSDOS */
 #define EXT_FILEXT
 #include "filext.h"
-#endif
 
 
 #define YESNO(x,y)  (x & y ? "Y" : "N")
 
-static char symstr[256];
-static char restr[256];
-static int4 tabtyp,symlen;
-static int  vol_flag;									/* Is this a lib or vol.		*/
-static int  lib_flag;									/* Is this a lib or vol.		*/
+static int  vol_flag = 0;								/* Is this a lib or vol.		*/
+static int  lib_flag = 0;								/* Is this a lib or vol.		*/
+
 extern char wisp_progname[9];
 extern char wisp_screen[33];
 extern int  noprogscrn;
-
-#ifdef VMS
-#define LIB$K_CLI_GLOBAL_SYM	2
-static $DESCRIPTOR(sym,symstr);
-static $DESCRIPTOR(res,restr);
-#endif
-
 
 /* Define the error codes for this program.											*/
 
@@ -91,29 +66,27 @@ static $DESCRIPTOR(res,restr);
 #define INVAL_FLAGS_OBJ_ERROR	-8
 #define INVAL_FLAG_TYPE_ERROR	-9
 #define INVAL_FLAG_LOG_ERROR	-10
+#define CANNOT_ACCESS_TEMP_ERROR	-11
 
-char err_str[256];									/* Hold the string that has error.	*/
-static int helptext();
-static jmp_buf	env_buf;								/* Hold the environment for error procs	*/
+static int us_parse(int argc, char* argv[]);
+static int errmsg(int num);
+static void set_upper(int argc,char* argv[]);					/* Convert all the args to upper case.	*/
+static void us_flags();
+static int us_equ(int argc, char* argv[], char* dst, char* src);		/* Parse an equation into it's parts.	*/
+static int us_set(char* dst, char* src, int len);				/* Set a field to it's value.		*/
+static int us_flagequ(int argc,char* argv[],char* dst, char* src);		/* Parse an equation into it's parts.	*/
+static int us_flmask(int argc, char* argv[]);					/* Set the usage flags mask.		*/
+static int us_ext(char* dst, char* src, int len);				/* Extract the value of a field.	*/
+static int us_iset(int4* dst, char* src);					/* Set a field to it's value.		*/
+static void helptext();
 
+static int can_access_temp_personality = 1;
 
-int us_parse(int argc, char* argv[]);
-int errmsg(int num);
-void set_upper(int argc,char* argv[]);					/* Convert all the args to upper case.	*/
-void us_flags();
-int us_equ(int argc, char* argv[], char* dst, char* src);		/* Parse an equation into it's parts.	*/
-int us_set(char* dst, char* src, int len);				/* Set a field to it's value.		*/
-int us_flagequ(int argc,char* argv[],char* dst, char* src);		/* Parse an equation into it's parts.	*/
-int us_flmask(int argc, char* argv[]);					/* Set the usage flags mask.		*/
-int us_ext(char* dst, char* src, int len);				/* Extract the value of a field.	*/
-int us_iset(int4* dst, char* src);					/* Set a field to it's value.		*/
-
-
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
 #define		ROUTINE		65200
 
-	int retcod,status;
+	int retcod;
 
         /********* PATCH FOR ALPHA/VMS **********/
         /* alpha returns argc of 2 if no  parms */
@@ -125,63 +98,61 @@ main(int argc, char* argv[])
         }
         /****************************************/
 
+#ifdef WIN32
+	/*
+	 *	On WIN32 $WISPGID must be set in order to access 
+	 *	the temp personality file. If not set then this 
+	 *	process will set it and when it ends the temp
+	 *	file will be dangling.
+	 */
+	{
+		char *ptr;
+		int  gid = -1;
+	
+		can_access_temp_personality = 0; /* Assume Cannot Access */	
+	
+		if (ptr = getenv(WISP_GID_ENV))
+		{
+			if ((1 == sscanf(ptr,"%d",&gid)) && gid != -1)
+			{
+				can_access_temp_personality = 1; /* Access OK */	
+			}
+		}
+	}	
+#endif /* WIN32 */
+
 	werrlog(ERRORCODE(1),0,0,0,0,0,0,0,0);						/* Say we are here.			*/
 
-#ifndef VMS
 	if (0!=access(wispconfigdir(),00))
 	{
 		fprintf( stderr,"%%WUSAGE-W-WISPCONFIG Warning WISPCONFIG=%s Directory not found.\n",wispconfigdir());
 	}
-#endif /* VMS */
 
 	initglbs("WUSAGE  ");
-	retcod = 1;
 	noprogscrn=1;									/* No program screen to print.		*/
 	strcpy(wisp_progname,"WUSAGE");
 	strcpy(wisp_screen,"DISPLAY-SCREEN");
-	if (!(status = setjmp(env_buf)))						/* Set up to return here.		*/
-	{
-		if (argc == 1)
-		{
-			retcod = helptext();						/* Display help text.			*/
-		}
-		else
-		{
-			retcod = us_parse(argc,argv);					/* Or just parse it.			*/
-		}
-	}
-	else
-	{
-		errmsg(status);
-		retcod = 0;								/* bad retcode				*/
-	}
-	if (retcod != 1) errmsg(retcod);
 
-#ifdef VMS
-	exit(retcod);
-#endif
+	if (argc == 1)
+	{
+		helptext();								/* Display help text.			*/
+		return 0;
+	}
 
-#ifndef VMS	/* unix or MSDOS */
-	vwang_shut();
-	if ( retcod == 1 )
+	retcod = us_parse(argc,argv);
+
+	if (retcod != 0) 
 	{
-		exit(0);
+		errmsg(retcod);
 	}
-	else if ( retcod == 0 )
-	{
-		exit(1);
-	}
-	else
-	{
-		exit(retcod);
-	}
-#endif
-	return 0;
+
+	return retcod;
 }
 
-us_parse(int argc, char* argv[])				/* Parse the parms.			*/
+static int us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 {
-	int 	i,status,retcod, ffl;
+	int	cmd_idx;
+	int     retcod, ffl;
 	char 	src[80];
 	char 	dst[80];
 	char	buff[80];
@@ -226,52 +197,57 @@ us_parse(int argc, char* argv[])				/* Parse the parms.			*/
 #define S_PROGVOL	199
 #define S_PROGLIB	207
 
-static char item_str[256];
-
-#ifdef VMS
-	static $DESCRIPTOR(item_desc,item_str);						/* A descriptor for getting symbols.	*/
-#endif
+	static char item_str[256];
 
 	upper_string(argv[1]);
 
-	retcod = 1;
-/*		    012345678901234567890123456789012345678901234567890123456789						*/
-	i = strpos("SET EXTRACT DISPLAY READ WRITE FLAGS HELP VERSION SHELL",argv[1]);	/* Look for a keyword.			*/
-	switch(i)
+	retcod = 0;
+	cmd_idx = strpos(
+/*		 012345678901234567890123456789012345678901234567890123456789						*/
+		"SET EXTRACT DISPLAY READ WRITE FLAGS HELP VERSION SHELL",argv[1]);
+	switch(cmd_idx)
 	{
 		case P_SET:								/* Process a SET command		*/
 		{
+			int item_idx = -1;
+			int status = 0;
+
+			if (!can_access_temp_personality) 
+			{
+				return CANNOT_ACCESS_TEMP_ERROR;
+			}
+
 			vol_flag = 0;
 			lib_flag = 0;
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
 			load_defaults();						/* First load in the constants.		*/
 			status = us_equ(argc,argv,dst,src);				/* Parse out the equation.		*/
 
-			if (status) longjmp(env_buf,status);				/* If error, say so.			*/
+			if (status) return(status);					/* If error, say so.			*/
 
 			item_str[0] = ' ';
 			item_str[1] = '\0';						/* Start with a leading space.		*/
 
 			strcat(item_str,dst);
 			strcat(item_str," ");						/* Add the item name and a space.	*/
-			i = strpos(" INLIB INDIR INVOL OUTLIB OUTDIR OUTVOL RUNLIB RUNDIR RUNVOL ",item_str);
-			if (i == -1)
+			item_idx = strpos(" INLIB INDIR INVOL OUTLIB OUTDIR OUTVOL RUNLIB RUNDIR RUNVOL ",item_str);
+			if (item_idx == -1)
 			{
-				i = strpos(" SPOOLIB SPOOLDIR SPOOLVOL WORKLIB WORKDIR WORKVOL USERID ",item_str);
-				if (i != -1) i += 60;
+				item_idx = strpos(" SPOOLIB SPOOLDIR SPOOLVOL WORKLIB WORKDIR WORKVOL USERID ",item_str);
+				if (item_idx != -1) item_idx += 60;
 			}
-			if (i == -1)
+			if (item_idx == -1)
 			{
-				i=strpos(" PRNTMODE PRTCLASS FORM_NUM FORM# PRINTER JOBQUEUE JOBCLASS JOBLIMIT LUSERID ",item_str);
-				if (i != -1) i += 117;
+				item_idx=strpos(" PRNTMODE PRTCLASS FORM_NUM FORM# PRINTER JOBQUEUE JOBCLASS JOBLIMIT LUSERID ",item_str);
+				if (item_idx != -1) item_idx += 117;
 			}
-			if (i == -1)
+			if (item_idx == -1)
 			{
-				i = strpos(" LINES PROGVOL PROGLIB ",item_str);
-				if (i != -1) i += 193;
+				item_idx = strpos(" LINES PROGVOL PROGLIB ",item_str);
+				if (item_idx != -1) item_idx += 193;
 			}
 
-			switch (i)
+			switch (item_idx)
 			{
 				case S_INLIB:
 				case S_INDIR:
@@ -418,48 +394,49 @@ static char item_str[256];
 
 		case P_EXTRACT:								/* Process an EXTRACT command.		*/
 		{
+			int item_idx;
+
+			if (!can_access_temp_personality) 
+			{
+				return CANNOT_ACCESS_TEMP_ERROR;
+			}
+
 			lib_flag = 0;
 			vol_flag = 0;
 			set_upper(argc,argv);						/* Make sure all upper case.		*/
 			load_defaults();						/* First load in the constants.		*/
-#ifdef VMS
-			status = us_equ(argc,argv,dst,src);				/* Parse out the equation.		*/
-#endif
-#ifndef VMS	/* unix or MSDOS */
-			if ( argc < 3 ) status = MISSING_SOURCE_ERROR;			/* Error, no parms to parse.		*/
-			if ( argc > 3 ) status = EXTRA_ARGS_ERROR;
+
+			if ( argc < 3 ) return MISSING_SOURCE_ERROR;			/* Error, no parms to parse.		*/
+			if ( argc > 3 ) return EXTRA_ARGS_ERROR;
 			if ( argc == 3 )
 			{
 				strcpy( src, argv[2] );
 				*dst = 0;
-				status = 0;
 			}
-#endif
-			if (status) longjmp(env_buf,status);				/* If error, say so.			*/
 
 			item_str[0] = ' ';
 			item_str[1] = '\0';						/* Start with a leading space.		*/
 
 			strcat(item_str,src);
 			strcat(item_str," ");						/* Add the item name and a space.	*/
-			i = strpos(" INLIB INDIR INVOL OUTLIB OUTDIR OUTVOL RUNLIB RUNDIR RUNVOL ",item_str);
-			if (i == -1)
+			item_idx = strpos(" INLIB INDIR INVOL OUTLIB OUTDIR OUTVOL RUNLIB RUNDIR RUNVOL ",item_str);
+			if (item_idx == -1)
 			{
-				i = strpos(" SPOOLIB SPOOLDIR SPOOLVOL WORKLIB WORKDIR WORKVOL USERID ",item_str);
-				if (i != -1) i += 60;
+				item_idx = strpos(" SPOOLIB SPOOLDIR SPOOLVOL WORKLIB WORKDIR WORKVOL USERID ",item_str);
+				if (item_idx != -1) item_idx += 60;
 			}
-			if (i == -1)
+			if (item_idx == -1)
 			{
-				i=strpos(" PRNTMODE PRTCLASS FORM_NUM FORM# PRINTER JOBQUEUE JOBCLASS JOBLIMIT LUSERID ",item_str);
-				if (i != -1) i += 117;
+				item_idx=strpos(" PRNTMODE PRTCLASS FORM_NUM FORM# PRINTER JOBQUEUE JOBCLASS JOBLIMIT LUSERID ",item_str);
+				if (item_idx != -1) item_idx += 117;
 			}
-			if (i == -1)
+			if (item_idx == -1)
 			{
-				i = strpos(" LINES PROGVOL PROGLIB ",item_str);
-				if (i != -1) i += 193;
+				item_idx = strpos(" LINES PROGVOL PROGLIB ",item_str);
+				if (item_idx != -1) item_idx += 193;
 			}
 
-			switch (i)
+			switch (item_idx)
 			{
 				case S_INLIB:
 				case S_INDIR:
@@ -640,6 +617,11 @@ static char item_str[256];
 
 		case P_READ:								/* Process a READ command.		*/
 		{
+			if (!can_access_temp_personality) 
+			{
+				return CANNOT_ACCESS_TEMP_ERROR;
+			}
+
 			if (argc > 2) strcpy(src,argv[2]);				/* See if they provided a file name.	*/
 			else	      src[0] = '\0';					/* Or set to null			*/
 			ffl = read_defaults_from_file(src);				/* Always load in the file.		*/
@@ -650,6 +632,11 @@ static char item_str[256];
 
 		case P_WRITE:								/* Process a WRITE command.		*/
 		{
+			if (!can_access_temp_personality) 
+			{
+				return CANNOT_ACCESS_TEMP_ERROR;
+			}
+
 			if (argc > 2) strcpy(dst,argv[2]);				/* See if they provided a file name.	*/
 			else	      dst[0] = '\0';					/* Or set to null			*/
 			load_defaults();						/* Be sure they exist.			*/
@@ -659,13 +646,21 @@ static char item_str[256];
 
 		case P_FLAGS:								/* Set the flags.			*/
 		{
+			if (!can_access_temp_personality) 
+			{
+				return CANNOT_ACCESS_TEMP_ERROR;
+			}
+
 			if (argc == 2)							/* Change flags via menu options.	*/
 			{
 				load_defaults();
 				us_flags();
 				vwang_shut();
 			}
-			else retcod = us_flmask(argc,argv);				/* Change one flag or complete bit mask.*/
+			else 
+			{
+				retcod = us_flmask(argc,argv);				/* Change one flag or complete bit mask.*/
+			}
 			break;								/* from DCL prompt.			*/
 		}
 
@@ -684,23 +679,15 @@ static char item_str[256];
 
 		default:								/* Some kind of error.			*/
 		{
-			return(-1);
+			return(GENERAL_ERROR);
 		}
 	}
 	return(retcod);									/* Success.				*/
 }
 
-us_inter()										/* Read input lines and parse them.	*/
-{
-	return(1);									/* Sucessfull.				*/
-}
-
-int us_set(char* dst, char* src, int len)					/* Set a field to it's value.		*/
+static int us_set(char* dst, char* src, int len)					/* Set a field to it's value.		*/
 {
 	register int i;
-#ifdef VMS
-	int4 status;
-#endif
 
 	memset(dst,' ',len);								/* Always fill the field with spaces.	*/
 	i = strlen(src);
@@ -709,23 +696,7 @@ int us_set(char* dst, char* src, int len)					/* Set a field to it's value.		*/
 	{
 		if (src[0] == '&')
 		{
-#ifdef VMS
-			memset(symstr,' ',256);						/* Fill with spaces.			*/
-			symstr[255] = '\0';						/* Null terminate.			*/
-			memcpy(symstr,&src[1],strlen(&src[1]));				/* Copy the symbol name			*/
-			status = lib$get_symbol(&sym,&res,&symlen,&tabtyp);	  	/* Get it's contents.			*/
-			restr[symlen] = '\0';						/* Null terminate.			*/
-
-			if (status == SS$_NORMAL)
-			{
-				upper(restr,&symlen);					/* Convert to upper case for COBOL.	*/
-				strcpy(dst,restr);					/* Now store it.			*/
-			}
-			else
-			{
-				exit(status);						/* An error.				*/
-			}
-#endif
+			/* VMS code */
 		}
 		else
 		{
@@ -736,31 +707,14 @@ int us_set(char* dst, char* src, int len)					/* Set a field to it's value.		*/
 	return 0;
 }
 
-int us_iset(int4* dst, char* src)					/* Set a field to it's value.		*/
+static int us_iset(int4* dst, char* src)					/* Set a field to it's value.		*/
 {
 	int4 ival;
 
 	memset((char *)dst,(char)0,sizeof(int4));					/* Always fill the field with zeroes.	*/
 	if (src[0] == '&')
 	{
-#ifdef VMS
-		int4 status;
-		memset(symstr,' ',256);						/* Fill with spaces.			*/
-		symstr[255] = '\0';						/* Null terminate.			*/
-		memcpy(symstr,&src[1],strlen(&src[1]));				/* Copy the symbol name			*/
-		status = lib$get_symbol(&sym,&res,&symlen,&tabtyp);	  	/* Get it's contents.			*/
-		restr[symlen] = '\0';						/* Null terminate.			*/
-
-		if (status == SS$_NORMAL)
-		{
-			ival = (int4) atoi(restr);				/* Convert to an integer.		*/
-			memcpy(dst,&ival,sizeof(int4));				/* Copy the data now.			*/
-		}
-		else
-		{
-			exit(status);						/* An error.				*/
-		}
-#endif
+		/* VMS Code */
 	}
 	else
 	{
@@ -770,35 +724,8 @@ int us_iset(int4* dst, char* src)					/* Set a field to it's value.		*/
 	return 0;
 }
 
-int us_ext(char* dst, char* src, int len)				/* Extract the value of a field.	*/
+static int us_ext(char* dst, char* src, int len)				/* Extract the value of a field.	*/
 {
-#ifdef VMS
-	/*
-	**	This loads the value (src) into the symbol (dst)
-	*/
-	register int i,j,sl;
-	int4 status;
-
-	if (dst[0] == '&') j = 1; else j = 0;						/* if leading & then set offset		*/
-	memset(symstr,' ',256);								/* Fill symbol string with spaces.	*/
-	symstr[255] = '\0';								/* Null terminate.			*/
-	sl = strlen(&dst[j]);
-	memcpy(symstr,&dst[j],sl);							/* Copy the symbol name			*/
-	sym.dsc$w_length = sl;								/* Set the length in the descriptor.	*/
-
-	memset(restr,' ',len);								/* Set to spaces (src may be < len)	*/
-	res.dsc$w_length = len;								/* Set the length in the descriptor.	*/
-	for(i=0; i<len && src[i]; i++) {}						/* Calc actual length			*/
-	memcpy(restr,src,i);								/* Copy the value to set it to.		*/
-	status = lib$set_symbol(&sym,&res,0);						/* Set it's contents.			*/
-
-	if (status != SS$_NORMAL)
-	{
-		exit(status);								/* An error.				*/
-	}
-#endif	/* #ifdef VMS */
-
-#ifndef VMS	/* unix or MSDOS */                                                               
 	int	i;
 	char	out[80];
 
@@ -813,13 +740,13 @@ int us_ext(char* dst, char* src, int len)				/* Extract the value of a field.	*/
 		if ( memcmp(out,"      ",6)   == 0 ) strcpy(out,".     ");
 	}
 	for( i=0; i<len; i++) putchar( out[i] );
-#endif
+
 	return 0;
 }
 
 /* 			Display a screen to allow the user to set up the flags for the help screen.				*/
 
-void us_flags()
+static void us_flags()
 {
 	char *field();									/* Field packing subroutine.		*/
 	char *screen;									/* Pointer to working screen routine.	*/
@@ -856,55 +783,58 @@ void us_flags()
 	wsc_init(screen,0,0);								/* Initialize the screen layout.	*/
 	wput(screen, 1,20,PLAIN_TEXT,"*** Set General Usage Flags ***");		/* Layout the screen.			*/
 
+	/* (1) */
 	pos = 0;
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Help Screen");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ENABLED));
 	pos += 1;
 
+	/* (2) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET File Usage Constants");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_FILES));
 	pos += 1;
 
+	/* (3) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Print Mode Defaults");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PRINTER));
 	pos += 1;
 
+	/* (4) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SET Submit Procedure Defaults");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SET_PROC));
 	pos += 1;
 
-#ifdef unix
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage PRINT QUEUE");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_QUEUE_MNGMNT));
-	pos += 1;
-#endif
-
-#ifdef VMS
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage QUEUES");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_QUEUE_MNGMNT));
+	/* (5) */
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_FILES_LIBS));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Search of Batch Queues");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SBATCH_ENABLED));
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES (Modify)");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CHANGE_FILES_LIBS));
 	pos += 1;
 
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Search of Generic Queues");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SGENERIC_ENABLED));
-	pos += 1;
-
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Search of Output Queues");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SOUTPUT_ENABLED));
-	pos += 1;
-
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"display of queue entries other than user's");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_RESTRJOBS_DISABLED));
-	pos += 1;
-#endif
-
+	/* (6) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage SYSTEM");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_SYSTEM));
 	pos += 1;
 
+	/* (7) */
+#ifdef unix
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage PRINT QUEUE");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_QUEUE));
+	pos += 1;
+
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage BATCH QUEUE");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_BATCH_QUEUE));
+	pos += 1;
+#endif
+
+	/* (8) */
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Show ERROR LOG");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_ERROR_LOG));
+	pos += 1;
+
+	/* (9) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Use UTILITIES (DISPLAY)");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_DISPLAY));
 	pos += 1;
@@ -921,6 +851,7 @@ void us_flags()
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CRID));
 	pos += 1;
 
+	/* (10) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Configure TERMINAL");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_TERMINAL));
 	pos += 1;
@@ -937,33 +868,32 @@ void us_flags()
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SCREEN));
 	pos += 1;
 
+	/* (11) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Enter COMMANDS");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_COMMANDS));
 	pos += 1;
 
+	/* (12) */
+	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SUBMIT Procedure");
+	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_SUBMIT));
+	pos += 1;
+
+	/* (13) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"SAVE environment");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_USAGE_WRITE));
 	pos += 1;
 
+	/* (14) & (15) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"PRINT Screens");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_PRINT_SCREEN));
 	pos += 1;
 
+	/* (16) */
 	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"CANCEL Processing");
 	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CANCEL));
 	pos += 1;
 
-#ifndef VMS
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_MANAGE_FILES_LIBS));
-	pos += 1;
-
-	wput(screen,xrow[pos],xcol[pos]+2,PLAIN_TEXT,"Manage FILES/LIBRARIES (Modify)");
-	wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD,YESNO(defs_flags,HELP_CHANGE_FILES_LIBS));
-	pos += 1;
-#endif
-
-	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (RETURN), (1) to exit.");
+	wput(screen,24,2,PLAIN_TEXT,"Change the information as appropriate and depress (ENTER), (1) to exit.");
 
 disp_flags:
 
@@ -977,76 +907,77 @@ disp_flags:
 
 		pos = 0;
 
+		/* (1) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_ENABLED;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_ENABLED);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (2) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_FILES;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_FILES);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (3) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_PRINTER;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_PRINTER);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (4) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_SET_PROC;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_SET_PROC);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-#ifdef unix
+		/* (5) */
 		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_QUEUE_MNGMNT;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_QUEUE_MNGMNT);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;
-#endif
-
-#ifdef VMS
-		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_QUEUE_MNGMNT;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_QUEUE_MNGMNT);
+		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_FILES_LIBS;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_FILES_LIBS);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
 		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_SBATCH_ENABLED;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_SBATCH_ENABLED);
+		if (yn[0] == 'Y') defs_flags |= HELP_CHANGE_FILES_LIBS;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_CHANGE_FILES_LIBS);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
-		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_SGENERIC_ENABLED;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_SGENERIC_ENABLED);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;
-
-		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_SOUTPUT_ENABLED;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_SOUTPUT_ENABLED);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;
-
-		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_RESTRJOBS_DISABLED;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_RESTRJOBS_DISABLED);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;
-#endif
-
+		/* (6) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_SYSTEM;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_SYSTEM);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (7) */
+#ifdef unix
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_PRINT_QUEUE;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_PRINT_QUEUE);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
+
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_BATCH_QUEUE;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_BATCH_QUEUE);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
+#endif
+
+		/* (8) */
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_ERROR_LOG;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_ERROR_LOG);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
+
+		/* (9) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_DISPLAY;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_DISPLAY);
@@ -1071,6 +1002,7 @@ disp_flags:
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (10) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_TERMINAL;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_TERMINAL);
@@ -1095,43 +1027,40 @@ disp_flags:
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (11) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_COMMANDS;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_COMMANDS);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (12) */
+		wget(screen,xrow[pos],xcol[pos],yn);
+		if (yn[0] == 'Y') defs_flags |= HELP_SUBMIT;
+		else if (yn[0] == 'N') defs_flags &= (~ HELP_SUBMIT);
+		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
+		pos += 1;
+
+		/* (13) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_USAGE_WRITE;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_USAGE_WRITE);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (14) & (15) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_PRINT_SCREEN;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_PRINT_SCREEN);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
 
+		/* (16) */
 		wget(screen,xrow[pos],xcol[pos],yn);
 		if (yn[0] == 'Y') defs_flags |= HELP_CANCEL;
 		else if (yn[0] == 'N') defs_flags &= (~ HELP_CANCEL);
 		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
 		pos += 1;
-
-#ifndef VMS
-		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_MANAGE_FILES_LIBS;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_MANAGE_FILES_LIBS);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;
-
-		wget(screen,xrow[pos],xcol[pos],yn);
-		if (yn[0] == 'Y') defs_flags |= HELP_CHANGE_FILES_LIBS;
-		else if (yn[0] == 'N') defs_flags &= (~ HELP_CHANGE_FILES_LIBS);
-		else { valid = 0; wput(screen,xrow[pos],xcol[pos],UPCASE_FIELD | BLINK_FAC,yn);}
-		pos += 1;
-#endif
 
 		set_defs(DEFAULTS_FLAGS,&defs_flags);					/* Set the defaults flags		*/
 
@@ -1141,21 +1070,18 @@ disp_flags:
 	free(screen);									/* Release the screen memory.		*/
 }
 
-int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
+static int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 {
-	int i, j, retcod, setone, setfl, loopcnt;
+	int i, j, setone, setfl, loopcnt;
 	int flmsk[32];
 	char src[80];
 	char dst[80];
 	static char item_str[256];
 	uint4 	defs_flags;
 
-#ifdef VMS
-	static $DESCRIPTOR(item_desc,item_str);						/* A descriptor for getting symbols.	*/
-#endif
 
 #define F_HELP		0								/* Define usage flags options.		*/
-#define F_VOLDIR	5								/* Note the values are defined by the	*/
+#define F_ERRLOG	5								/* Note the values are defined by the	*/
 #define F_PRNTC		12								/* position of the flag in the compare	*/
 #define F_PQUEC		18								/* string below (leading space before).	*/
 #define F_PRNTPS	24
@@ -1167,10 +1093,8 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 #define F_CURCHAR	60
 
 #define F_DCLCMDS	68
-#define F_QMNGMNT	76
-#define F_SBQ		84
-#define F_SGQ		88
-#define F_SOQ		92
+#define F_BATCHQ	76
+#define F_SUBMIT	84
 #define F_SALLJ		100
 
 #define F_SHELLCMDS	106
@@ -1199,7 +1123,7 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 #define F_KSCI		279
 
 	upper_string(argv[2]);
-	retcod = 1;
+
 /*		    01234567890123456789012345678901234567890									*/
 	i = strpos("SET  ",argv[2]);							/* Look for a keyword.			*/
 	switch(i)
@@ -1226,11 +1150,11 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 
 
 	/* (0)      0    5    |   15    |   25    |   35    |   45    |   55    |   65    |   75    |   85    |   95    |	*/
-	i = strpos(" HELP VOLDIR PRNTC PQUEC PRNTPS TERMC KEYBM PSBO DISPF WUSEC CURCHAR DCLCMDS QMNGMNT SBQ SGQ SOQ ",item_str);
+	i = strpos(" HELP ERRLOG PRNTC PQUEC PRNTPS TERMC KEYBM PSBO DISPF WUSEC CURCHAR         BATCHQ  SUBMIT      ",item_str);
 				if (i == -1)
 				{
 	/* (100)    0    5    |   15    |   25    |   35    |   45    |   55    |   65    |   75    |   85    |   95    |	*/
-	i = strpos(" SALLJ SHELLCMDS PRTQUE       SETFILE SETPRINT SETSUB QUEUES SYSTEM UTILS TERMINAL COMMANDS SAVE ",item_str);
+	i = strpos("       SHELLCMDS PRTQUE       SETFILE SETPRINT SETSUB QUEUES SYSTEM UTILS TERMINAL COMMANDS SAVE ",item_str);
 					if (i != -1) i += 100;
 					else
 					{
@@ -1262,10 +1186,15 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 						break;
 					}
 					case F_SETFILE:
-					case F_VOLDIR:
 					{
 						if (!setfl) 	defs_flags &= (~ HELP_SET_FILES);
 						else 		defs_flags |=    HELP_SET_FILES;
+						break;
+					}
+					case F_ERRLOG:
+					{
+						if (!setfl) 	defs_flags &= (~ HELP_ERROR_LOG);
+						else 		defs_flags |=    HELP_ERROR_LOG;
 						break;
 					}
 					case F_SETPRINT:
@@ -1334,7 +1263,6 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 					}
 
 					case F_COMMANDS:
-					case F_DCLCMDS:
 					case F_SHELLCMDS:
 					{
 						if (!setfl) 	defs_flags &= (~ HELP_COMMANDS);
@@ -1342,36 +1270,24 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 						break;
 					}
 
-					case F_QUEUES:
 					case F_PRTQUE:
-					case F_QMNGMNT:
 					{
-						if (!setfl) 	defs_flags &= (~ HELP_QUEUE_MNGMNT);
-						else 		defs_flags |=    HELP_QUEUE_MNGMNT;
+						if (!setfl) 	defs_flags &= (~ HELP_PRINT_QUEUE);
+						else 		defs_flags |=    HELP_PRINT_QUEUE;
 						break;
 					}
-					case F_SBQ:
+
+					case F_BATCHQ:
 					{
-						if (!setfl)  	defs_flags &= (~ HELP_SBATCH_ENABLED);
-						else 		defs_flags |=    HELP_SBATCH_ENABLED;
+						if (!setfl) 	defs_flags &= (~ HELP_BATCH_QUEUE);
+						else 		defs_flags |=    HELP_BATCH_QUEUE;
 						break;
 					}
-					case F_SGQ:
+
+					case F_SUBMIT:
 					{
-						if (!setfl) 	defs_flags &= (~ HELP_SGENERIC_ENABLED);
-						else 		defs_flags |=    HELP_SGENERIC_ENABLED;
-						break;
-					}
-					case F_SOQ:
-					{
-						if (!setfl) 	defs_flags &= (~ HELP_SOUTPUT_ENABLED);
-						else 		defs_flags |=    HELP_SOUTPUT_ENABLED;
-						break;
-					}
-					case F_SALLJ:
-					{
-						if (!setfl) 	defs_flags &= (~ HELP_RESTRJOBS_DISABLED);
-						else 		defs_flags |=    HELP_RESTRJOBS_DISABLED;
+						if (!setfl)  	defs_flags &= (~ HELP_SUBMIT);
+						else 		defs_flags |=    HELP_SUBMIT;
 						break;
 					}
 
@@ -1447,10 +1363,23 @@ int us_flmask(int argc, char* argv[])					/* Set the usage flags mask.		*/
 			return(INVAL_FLAGS_OBJ_ERROR);
 		}
 	} /* end of switch */
-	return(1);
-}
 
-int errmsg(int num)
+	return 0;
+}
+/*
+65201	%%WUSAGE-I-ENTRY Entry into WUSAGE
+65202	%%WUSAGE-E-ERROR Error parsing command
+65204	%%WUSAGE-E-MISSRC Missing Source item
+65206	%%WUSAGE-E-MISOBJ Missing Object
+65208	%%WUSAGE-E-INVSRC Invalid Source item
+65210	%%WUSAGE-E-INVOBJ Invalid Object item
+65212	%%WUSAGE-E-EXARGS Extra Arguments
+65214	%%WUSAGE-E-FILENOTFOUND Specified file not found - Used defaults
+65216	%%WUSAGE-E-INVFLAGOBJ Invalid flag object item 
+65218	%%WUSAGE-E-INVFLAG Invalid flag item
+65220	%%WUSAGE-E-INVFLAGLOG Invalid flag logical item
+ */
+static int errmsg(int num)
 {
 	switch(num)
 	{
@@ -1505,12 +1434,22 @@ int errmsg(int num)
 			werrlog(ERRORCODE(20),0,0,0,0,0,0,0,0);				/* Report the situation.		*/
 			break;
 		}
+		case CANNOT_ACCESS_TEMP_ERROR:
+		{
+			/*		 12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
+			fprintf(stderr, "WUSAGE: *** ERROR - UNABLE TO ACCESS TEMPORARY USAGE CONSTANTS *** \n");
+			fprintf(stderr, "        Wusage is not able to access the temporary usage constants when run \n");
+			fprintf(stderr, "        as the top level program. It is recommended you code wusage statments \n");
+			fprintf(stderr, "        within a BAT file then run the BAT file from a procedure.\n\n");
+			werrlog(104,"%%WUSAGE-F-ACCESS UNABLE TO ACCESS TEMPORARY USAGE CONSTANTS",0,0,0,0,0,0,0);				/* Report the situation.		*/
+			break;
+		}
 	}
 	fflush(stderr);
-	return 0;
+	return num;
 }
 
-void set_upper(int argc,char* argv[])					/* Convert all the args to upper case.	*/
+static void set_upper(int argc,char* argv[])					/* Convert all the args to upper case.	*/
 {
 	int i,j;
 
@@ -1526,7 +1465,7 @@ void set_upper(int argc,char* argv[])					/* Convert all the args to upper case.
 	}
 }
 
-int us_equ(int argc, char* argv[], char* dst, char* src)			/* Parse an equation into it's parts.	*/
+static int us_equ(int argc, char* argv[], char* dst, char* src)			/* Parse an equation into it's parts.	*/
 {
 	int i,offset;
 
@@ -1577,7 +1516,7 @@ int us_equ(int argc, char* argv[], char* dst, char* src)			/* Parse an equation 
 	return(0);
 }
 
-int us_flagequ(int argc,char* argv[],char* dst, char* src)		/* Parse an equation into it's parts.	*/
+static int us_flagequ(int argc,char* argv[],char* dst, char* src)		/* Parse an equation into it's parts.	*/
 {
 	int i,offset;
 
@@ -1607,9 +1546,9 @@ int us_flagequ(int argc,char* argv[],char* dst, char* src)		/* Parse an equation
 	}
 }
 
-static int helptext()
+
+static void helptext()
 {
-#ifndef VMS	/* unix or MSDOS */
               /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
 	      /*         1         2         3         4         5         6         7         8*/
 	printf("\n");
@@ -1625,9 +1564,9 @@ static int helptext()
 	printf("   <item> = INLIB,INVOL,OUTLIB,OUTVOL,RUNLIB,RUNVOL,SPOOLIB,SPOOLVOL,\n");
 	printf("            WORKLIB,WORKVOL,PROGLIB,PROGVOL,PRNTMODE,PRTCLASS,FORM#,PRINTER,\n");
 	printf("            JOBQUEUE,JOBCLASS,JOBLIMIT,FLAGS,USERID,LUSERID,LINES\n");
-	printf("   <flag> = HELP,SETFILE,SETPRINT,SETSUB,PRTQUE,SYSTEM,UTILS,DISPLAY,EDIT,\n");
-	printf("            DISPRINT,KCSI,TERMINAL,PSEUDO,CURSOR,SCREEN,COMMANDS,SAVE,PRINTSCR,\n");
-	printf("            CANCEL,FILES,MODFILES\n");
+	printf("   <flag> = HELP,SETFILE,SETPRINT,SETSUB,FILES,MODFILES,SYSTEM,PRTQUE,BATCHQ,\n");
+	printf("            ERRLOG,UTILS,DISPLAY,EDIT,DISPRINT,KCSI,TERMINAL,PSEUDO,CURSOR,\n");
+	printf("            SCREEN,COMMANDS,SUBMIT,SAVE,PRINTSCR,CANCEL\n");
 	printf("   <logical> = Y, N, T, F\n");
 	printf("\n");
 #ifdef unix
@@ -1636,37 +1575,26 @@ static int helptext()
 	printf("   shvar=`wusage extract runvol`       EXTRACT RUNVOL into shell variable.\n");
 	printf("\n");
 #endif /* unix */
-#endif /* !VMS */
 
-#ifdef VMS
-              /*12345678901234567890123456789012345678901234567890123456789012345678901234567890*/
-	      /*         1         2         3         4         5         6         7         8*/
-	printf("\n");
-	printf("wusage:    Allows setting and extracting of usage constants.\n");
-	printf("\n");
-	printf("   wusage read [file]                  Load usage constants from PERSONALITY.\n");
-	printf("   wusage write [file]                 Save usage constants to PERSONALITY.\n");
-	printf("   wusage set <item>=<value>           Set a usage constant.\n");
-	printf("   wusage extract <value>=<item>       Extract a usage constant.\n");
-	printf("   wusage flags                        Enter full screen flag setting mode.\n");
-	printf("   wusage flags set <flag>=<logical>   Set one flag in the bit mask.\n");
-	printf("   wusage version                      Print the WISP VERSION info.\n");
-	printf("\n");
-	printf("   <item> = INLIB,INVOL,OUTLIB,OUTVOL,RUNLIB,RUNVOL,SPOOLIB,SPOOLVOL,\n");
-	printf("            WORKLIB,WORKVOL,PROGLIB,PROGVOL,PRNTMODE,PRTCLASS,FORM#,PRINTER,\n");
-	printf("            JOBQUEUE,JOBCLASS,JOBLIMIT,FLAGS,USERID,LUSERID,LINES\n");
-	printf("   <flag> = HELP,SETFILE,SETPRINT,SETSUB,QUEUES,SBQ,SGQ,SOQ,SALLJ,SYSTEM,\n");
-	printf("            UTILS,DISPLAY,EDIT,DISPRINT,KCSI,TERMINAL,PSEUDO,CURSOR,SCREEN,\n");
-	printf("            COMMANDS,SAVE,PRINTSCR,CANCEL\n");
-	printf("<logical> = Y, N, T, F\n");
-	printf("\n"); 
-#endif
-
-	return(1);
 }
 /*
 **	History:
 **	$Log: wusage.c,v $
+**	Revision 1.19  2001-11-16 16:01:56-05  gsl
+**	fix can_access logic for WIN32
+**
+**	Revision 1.18  2001-11-16 15:37:25-05  gsl
+**	On WIN32 can not access temp usage constants from the top level
+**
+**	Revision 1.17  2001-11-02 17:25:56-05  gsl
+**	Change (RETURN) to (ENTER)
+**
+**	Revision 1.16  2001-09-07 15:59:06-04  gsl
+**	Add flags ERRLOG, SUBMIT and BATCHQ
+**
+**	Revision 1.15  2001-09-07 09:25:41-04  gsl
+**	remove VMS ifdefs
+**
 **	Revision 1.14  1997-06-10 15:28:33-04  scass
 **	Changed long to int4 for portability.
 **

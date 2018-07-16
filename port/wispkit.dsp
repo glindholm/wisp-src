@@ -94,7 +94,7 @@ SOURCE=..\etc\nttelnet.txt
 # End Source File
 # Begin Source File
 
-SOURCE=..\etc\v43_relnotes.lis
+SOURCE=..\etc\v44_relnotes.lis
 # End Source File
 # Begin Source File
 

@@ -1,4 +1,4 @@
-static char copyright[]="Copyright (c) 1998 NeoMedia Technologies, All rights reserved.";
+static char copyright[]="Copyright (c) 2001 NeoMedia Technologies, All rights reserved.";
 static char rcsid[]="$Id:$";
 /*
 **	File:		wisp.c
@@ -17,10 +17,6 @@ static char rcsid[]="$Id:$";
 
 
 #include <stdio.h>
-
-#ifdef VMS
-#include <descrip.h>
-#endif
 
 #ifdef _MSC_VER
 #include <time.h>
@@ -67,6 +63,7 @@ static int cpu_time;									/* Initial CPU time.			*/
 static char *sargv[50];									/* Save the argv			*/
 static char *targv[50];									/* argv after response file processing	*/
 static int targc;									/* argc to match targv			*/
+static FILE *xtab_file = NULL;									/* The cross ref tab file.		*/
 
 /*
 **	Static Function Prototypes
@@ -82,11 +79,6 @@ static void wisp_exit_code(const char *prefix);
 
 int main(int argc, char *argv[])
 {
-
-#ifdef DEMO
-	if (!demovalidate()) demoexit();
-#endif
-
 	initialize1(argc,argv);
 
 	get_cli(targc,targv);								/* parse the CLI switches		*/
@@ -95,9 +87,10 @@ int main(int argc, char *argv[])
 
 	open_io();									/* open the WCB and COB files		*/
 
-#ifdef DEMO
-	demo_message();
-#endif
+	if (do_xtab)								/* Generate cross reference file.	*/
+	{
+		xtab_file = fopen(xtab_fname,"w");
+	}
 
 	if (copy_only)
 	{
@@ -233,18 +226,6 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 		gen_unlocks();								/* Since there were files, write UNLOCKs*/
 	}
 
-#ifdef OLD
-	if (read_file_ptr)								/* was a file for read's created?	*/
-	{
-		close_cob_file(read_file_ptr);						/* close the file with READ's in it	*/
-		if (!err)								/* if no error exit then		*/
-		{
-			copy_file(read_fname);						/* copy it into the WISP SECTION	*/
-		}
-		delete(read_fname);							/* and delete it...			*/
-	}
-#endif /* OLD */
-
 	if (dcl_file_ptr) 
 	{
 		close_cob_file(dcl_file_ptr);						/* close the paragraph file.		*/
@@ -267,6 +248,12 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 		tput_flush();								/* Flush the put_token() buffers	*/
 	}
 	close_all_cob_files();								/* Close all the cob files		*/
+
+	if (xtab_file != NULL)
+	{
+		fclose(xtab_file);
+		xtab_file = NULL;
+	}
 
 
 	if (EXIT_WITH_ERR != err)
@@ -338,7 +325,7 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 	cpu_time = clock() - cpu_time;							/* Get the number of CPU "ticks".	*/
 	j = cpu_time / CLK_TCK;								/* Convert "ticks" to integer seconds.	*/
 	k = ((( cpu_time * 100 )) / CLK_TCK ) - ( j * 100 );				/* Get remainder 100ths of seconds.	*/
-#else		/* unix and VMS */
+#else		/* unix  */
 	times(&time_now);								/* Get the current CPU value.		*/
 	cpu_time = time_now.cpu - cpu_time;						/* Save it.				*/
 
@@ -377,13 +364,8 @@ int exit_wisp(int err)									/* exit WISP, clean up 			*/
 
 exit_fast:
 
-#ifdef VMS
-	if (err == EXIT_OK) exit(1);
-	exit(0);
-#else
 	if (err == EXIT_OK) exit(0);
         exit(1);
-#endif
 	return 0;
 }
 
@@ -452,25 +434,11 @@ void d_wisp_exit_para(void)
 }
 
 static char the_com[256];
-#ifdef VMS
-static $DESCRIPTOR(com_desc,the_com);
-#endif
 
 static int run_wisp(void)								/* Execute the WISP command again	*/
 {
 	int i;
 
-#ifdef VMS
-	memcpy(the_com,"WISP ",5);							/* Start with the command		*/
-
-	com_desc.dsc$a_pointer += 5;							/* Set pointer 5 chars over.		*/
-	com_desc.dsc$w_length -= 5;							/* Decrease length by 5.		*/
-
-	i = lib$get_foreign(&com_desc);							/* Now get the rest of the command line	*/
-
-	com_desc.dsc$a_pointer -= 5;							/* Set pointer back 5 chars.		*/
-	com_desc.dsc$w_length += 5;							/* Increase length by 5.		*/
-#else
 	the_com[0] = 0;
 	for( i=0; sargv[i]; i++ )
 	{
@@ -478,7 +446,6 @@ static int run_wisp(void)								/* Execute the WISP command again	*/
 			strcat( the_com, " " );
 		strcat( the_com, sargv[i] );
 	}
-#endif
 	printf("\nBeginning New execution of [%s]\n",the_com);
 	if (need_to_rerun_reason)
 	{
@@ -494,11 +461,7 @@ static int run_wisp(void)								/* Execute the WISP command again	*/
 #ifdef NOEXEC
 	special_noexec_exec(the_com);
 #else
-#ifdef VMS
-	lib$do_command(&com_desc);
-#else
 	execvp( sargv[0], sargv );
-#endif
 #endif
 
 	printf("\n%%WISP-F-NOEXEC Fatal error; EXEC failed.\n");
@@ -576,12 +539,10 @@ int special_noexec_exec(char* command)
 }
 #endif
 
-#ifndef VMS
 int delete(const char* path )
 {
 	return( unlink( path ) );
 }
-#endif
 
 static int initialize1(int argc, char* argv[])						/* Perform all generic initialization 	*/
 {
@@ -589,7 +550,7 @@ static int initialize1(int argc, char* argv[])						/* Perform all generic initi
 
 #ifdef _MSC_VER
 	cpu_time = clock();								/* Get the number of CPU "ticks".	*/
-#else		/* unix and VMS */
+#else		/* unix */
 	times(&time_now);								/* Get the current CPU value.		*/
 	cpu_time = time_now.cpu;							/* Save it.				*/
 #endif
@@ -761,68 +722,38 @@ static int response_file(int argc, char* argv[])
 	return 0;
 }
 
-#ifdef DEMO
-static demo_message()
+/*
+**	Routine:	xtab_log()
+**
+**	Function:	Log a cross reference item in a tab file
+**
+**	Arguments:
+**	fileName	The file name
+**	lineNum		The line number with in the file
+**	xtype		The cross reference type ("CALL", "COPY", "OPEN", etc)
+**	tabData		Data string with individual elements tab separated.
+**
+**	Return:		None
+**
+*/
+void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *tabData)
 {
-		/*      123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 */
-		printf("**** WISP Version %s  EVALUATION COPY ****\n\n",WISP_VERSION);
-		printf("The software converted by this copy of WISP is for evaluation purposes only\n");
-		printf("and must be destroyed upon the end of the evaluation period.\n\n");
-		printf("This program contains proprietary information that is the legal property of\n");
-		printf("NeoMedia Migrations Inc.\n\n");
-		printf("WISP is a trademark of NeoMedia Migrations Incorporated,\n");
-		printf("Fort Myers Florida USA.\n\n");
-		printf("For assistance contact:\n\n");
-		printf("                        NeoMedia Migrations Incorporated\n");
-		printf("                          2201 2nd Street Suite 600,\n");
-		printf("                              Fort Myers FL 33901\n");
-		printf("                            Phone: (941) 337-3434\n");
-		printf("                            Fax:   (941) 337-3668\n\n");
-
-
-		tput_scomment("*  *****  WISP Version %s  EVALUATION COPY ***** \n",WISP_VERSION);
-		tput_scomment("* \n");
-		tput_scomment("*  This program contains proprietary information that is the\n");
-		tput_scomment("*  legal property of NeoMedia Migrations Inc.\n");
-		tput_scomment("*\n");
-		tput_scomment("*  This program was translated by an evaluation copy of WISP.\n");
-		tput_scomment("*  The purpose of this evaluation software is to allow the\n");
-		tput_scomment("*  prospective purchaser of WISP to preview the product so as to\n");
-		tput_scomment("*  evaluate its capabilities.  This is the only permitted use of\n");
-		tput_scomment("*  this software.  This converted software may not be used in a \n");
-		tput_scomment("*  production environment, it may not be sold or distributed in\n");
-		tput_scomment("*  any manner, it may not be included or embedded within other\n");
-		tput_scomment("*  software.  The possessor of this software has no rights to this\n");
-		tput_scomment("*  software.\n");
-		tput_scomment("*  \n");
-		tput_scomment("*  This converted software must be DESTROYED upon the end of\n");
-		tput_scomment("*  the evaluation period.\n");
-		tput_scomment("*\n");
-		tput_scomment("*  WISP is a trademark of NeoMedia Migrations Inc.,\n");
-		tput_scomment("*  Fort Myers Florida USA.\n");
-		tput_scomment("*\n");
-		tput_scomment("*  COPYRIGHT (c) 1987-1995 by NeoMedia Migrations Incorporated, \n");
-		tput_scomment("*  All rights reserved.\n");
-		tput_scomment("*\n");
-		tput_scomment("*  For assistance contact:\n");
-		tput_scomment("*\n");
-		tput_scomment("*                  NeoMedia Migrations Incorporated\n");
-		tput_scomment("*                     2201 2nd Street Suite 600,\n");
-		tput_scomment("*                        Fort Myers FL 33901\n");
-		tput_scomment("*                      Phone: (941) 337-3434\n");
-		tput_scomment("*                      Fax:   (941) 337-3668\n");
-		tput_scomment("*\n");
-
+	if (do_xtab && xtab_file != NULL)
+	{
+		/* PROGRAM, FILE, LINE, XTYPE, Data... */
+		fprintf(xtab_file, "%s\t%s\t%d\t%s\t%s\n", 
+			prog_id, fileName, lineNum, xtype, tabData);
+	}
 }
-
-#include "demovali.h"
-#endif
-
 
 
 /*
 **	History:
 **	$Log: wisp.c,v $
+**	Revision 1.21  2001-09-13 10:07:24-04  gsl
+**	Remove VMS and DEMO ifdefs
+**	Add xtab_log() support
+**
 **	Revision 1.20  1998-06-09 10:09:10-04  gsl
 **	fixed prototypes and added new header
 **

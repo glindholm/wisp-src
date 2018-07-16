@@ -33,16 +33,17 @@ include mf.rules
 ## Uncomment next line for HP-COBOL
 #LANG=-VMF0
 WISPFLAGS= -I ../wisputils
+COBFLAGS= -a
 
-TEST_DIRS= volrun volin
+TEST_DIRS= volrun volin volout volspl volwrk
 
-all:	int prtargs $(TEST_DIRS)
+all:	int prtargs $(TEST_DIRS) DISPRINT.int
 
 int: 	sample.int qafileio.int qafile2.int qanetcap.int qaprint.int \
 	qascreen.int qascrn2.int qasubs.int qawsubs.int \
 	qawsfnm.int qawsfns.int qasy000m.int qasys99.int \
 	sub1.int sub3.int xlink.int xlink1.int trigger.int \
-	qabckgrd.int qadpcoma.int qawsxio.int mflink.int \
+	qabckgrd.int qadpcoma.int qawsxio.int mflink.int dispfile.int \
 	wl0000.int wl0010.int wl0011.int wl0012.int wl0013.int wl0014.int \
 	wl0015.int wl0016.int wl0017.int wl0018.int wl0018a.int wl0018b.int wl0019.int wl0020.int \
 	wl0021.int wl0022.int wl0023.int wl0024.int wl0025.int wl0026.int wl0027.int
@@ -89,7 +90,25 @@ volin:
 	mkdir volin
 	mkdir volin/libin
 
+volout:
+	mkdir volout
+
+volspl:
+	mkdir volspl
+
+volwrk:
+	mkdir volwrk
+
+DISPRINT_SRC=disprint.wcb disprint.umf
+
+DISPRINT.int: $(DISPRINT_SRC)
+	$(MAKE) -f disprint.umf mf
+
+$(DISPRINT_SRC):
+	rm -f $@
+	cp $(WISPDIR)/etc/$@ $@ 
+
 clean:
-	rm -f *.int *.gnt *.o sample $(EXES) prtargs
+	rm -f *.int *.gnt *.o *.idy sample $(EXES) prtargs $(DISPRINT_SRC)
 	rm -fr $(TEST_DIRS)
-	rm -f *.cob
+	rm -f *.cob wc*.cpy *~ core *.log *.err

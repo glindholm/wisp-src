@@ -17,15 +17,13 @@
 #			nmake -f sampleacu.mak
 #			
 #
-WISPDIR=c:\WISP4306
+WISPDIR=c:\wisp4400
 WISPTRAN=$(WISPDIR)\bin\wisp
 WISPFLAGS= -I..\wisputils -M
-COBOL=c:\acucbl43\acugt\bin\ccbl32.exe
+COBOL=c:\acucorp\acucbl510\acugt\bin\ccbl32.exe
 COBFLAGS=-Zd -Da4
 LANG=-VACU
 CFLAGS=-DWIN32 -DMSFS
-
-OS=win32
 
 .wcb.cob:
 	$(WISPTRAN)  $(LANG) $(WISPFLAGS) $*
@@ -41,16 +39,17 @@ OS=win32
 
 ALL= 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
-	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING $(OS)_stuff
+	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING \
+	DISPFILE
 
 AUTOQA=	WL0000.cbx WL0010.cbx WL0011.cbx WL0012.cbx WL0013.cbx \
 	WL0014.cbx WL0015.cbx WL0016.cbx WL0017.cbx \
 	WL0018.cbx WL0018A.cbx WL0018B.cbx WL0019.cbx WL0020.cbx WL0021.cbx \
 	WL0022.cbx WL0023.cbx WL0024.cbx WL0025.cbx WL0026.cbx WL0027.cbx
 
-TEST_DIRS= volrun volin
+TEST_DIRS= volrun volin volout volspl volwrk
 
-all:	$(ALL) $(TEST_DIRS) $(AUTOQA)
+all:	$(ALL) $(AUTOQA) testdirs prtargs.exe
 	@echo
 	@echo SAMPLE is up-to-date
 	@echo
@@ -123,6 +122,9 @@ QADPCOMA: qadpcoma.cob
 QAWSXIO: qawsxio.cob
 	$(COBOL) $(COBFLAGS) -o $@ qawsxio.cob
 
+DISPFILE: dispfile.cob
+	$(COBOL) $(COBFLAGS) -o $@ dispfile.cob
+
 ACULINK: aculink.cob
 	$(COBOL) $(COBFLAGS) -o $@ aculink.cob
 
@@ -139,18 +141,34 @@ sample.cob: sample.wcb
 acuusing.cob: ..\acu\acuusing.cob
 	cp "..\acu\acuusing.cob" .
 
+#
+#==============================================================
+#
+
+testdirs: $(TEST_DIRS)
 
 volrun:
 	mkdir volrun
 	mkdir volrun\librun
 	mkdir volrun\libexe
+	mkdir volrun\onpath
+
 volin:
 	mkdir volin
 	mkdir volin\libin
 
-unix_stuff:	prtargs
+volout:
+	mkdir volout
 
-win32_stuff:	prtargs.exe
+volspl:
+	mkdir volspl
+
+volwrk:
+	mkdir volwrk
+
+#
+#==============================================================
+#
 
 WC=config
 VC=$(WC)\videocap
@@ -168,7 +186,7 @@ WISPCONFIGFILES= $(WC)\ACUCONFIG \
 	$(WC)\wrun.cfg \
 	$(WC)\wsysconf.cfg
 
-VIDEOCAPFILES= $(VC)\wincon $(VC)\ansi $(VC)\xterm
+VIDEOCAPFILES= $(VC)\wincon.vcap $(VC)\ansi.vcap $(VC)\xterm.vcap
 
 wispconfigsetup: $(WC) $(WISPCONFIGFILES) $(VC) $(VIDEOCAPFILES)
 
@@ -176,7 +194,7 @@ $(WC) $(VC):
 	mkdir $@
 COPY=copy
 
-$(WC)\ACUCONFIG:		$(WISPDIR)\config\$(@F)
+$(WC)\ACUCONFIG:		.\ACUCONFIG.NT
 	$(COPY) $** $@
 
 $(WC)\CHARMAP:			$(WISPDIR)\config\$(@F)
@@ -218,6 +236,15 @@ $(VIDEOCAPFILES):		$(WISPDIR)\config\videocap\$(@F)
 #
 #	History:
 #	$Log: sampleacu.mak,v $
+#	Revision 1.12  2001-11-26 11:24:49-05  gsl
+#	Add target for testdirs
+#
+#	Revision 1.11  2001-11-13 11:01:36-05  gsl
+#	Use ACUCONFIG.NT
+#
+#	Revision 1.10  2001-11-12 18:07:44-05  gsl
+#	update
+#
 #	Revision 1.9  2000-04-24 20:59:17-04  gsl
 #	wisp 4.3.06
 #

@@ -114,11 +114,27 @@ SOURCE=..\wisputils\prompt.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\wisplib\setenvst.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisplib\wanguid.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\wisplib\wassert.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\wisplib\wauthsub.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisplib\wgetpgrp.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\wisplib\wglobals.c
 # End Source File
 # Begin Source File
 

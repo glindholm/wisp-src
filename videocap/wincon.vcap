@@ -203,8 +203,8 @@ generic_backtab        =key_prev_scr|"\X\035\017"
 #
 generic_clear_field    ="\X\035\110"
 generic_clear_after    ="\X\035\115"
-#
-#  vt220 function keys
+#-----------------------------
+#  vt220 function keys (7 bit)
 #
 generic_enter       ="^M"
 generic_pf1         ="\EOP"
@@ -250,6 +250,39 @@ generic_remove      ="\E[3~"
 generic_insert      ="\E[2~"
 generic_clear_after ="\E\E[C"
 generic_clear_field ="\E\E[A"
+#-----------------------------
+#  vt220 function keys (8 bit)
+#
+generic_pf1         ="\217P"
+generic_pf2         ="\217Q"
+generic_pf3         ="\217R"
+generic_pf4         ="\217S"
+generic_pf5         ="\2336~"
+generic_pf6         ="\23317~"
+generic_pf7         ="\23318~"
+generic_pf8         ="\23319~"
+generic_pf9         ="\23320~"
+generic_pf10        ="\23321~"
+generic_pf11        ="\23323~"
+generic_pf12        ="\23324~"
+generic_pf13        ="\23325~"
+generic_pf14        ="\23326~"
+generic_pf15        ="\23328~"
+generic_pf16        ="\23329~"|"\2334~"
+generic_pf17        ="\23331~"
+generic_pf18        ="\23332~"
+generic_pf19        ="\23333~"
+generic_pf20        ="\23334~"
+generic_up          ="\233A"
+generic_down        ="\233B"
+generic_right       ="\233C"
+generic_left        ="\233D"
+generic_help        ="\2331~"
+generic_delete      ="^H"
+generic_remove      ="\2333~"
+generic_insert      ="\2332~"
+generic_clear_after ="\217C"
+generic_clear_field ="\217A"
 #
 # End of WINCON video cap file.
 #

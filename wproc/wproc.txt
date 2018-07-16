@@ -1,0 +1,639 @@
+        Copyright (c) 1995-2001 by NeoMedia Technologies Inc. 
+        All Rights Reserved.
+        
+        ====================================================================
+        
+        Title:          WPROC - WISP PROCEDURE INTERPRETER
+        
+        Document:       wproc.txt
+        Last Updated:   $Date:$
+        Products:       WPROC
+        Versions:       2.0.00
+        
+        Summary:        Usage notes for wproc.
+                        Known limitations.
+                        Revision summary.
+
+        ====================================================================
+        
+
+        WPROC - WISP PROCEDURE INTERPRETER
+        ==================================
+
+        The WISP Procedure Interpreter allows you to run your Wang VS
+        procedures in a WISP environment.
+
+        WPROC is based on a product by Lexical Software named RUN.  The
+        programmers at Lexical Software were also the original authors
+        of the Wang VS Procedure language.  To create WPROC, RUN was ported
+        to UNIX and enhanced to support Wang specific syntax and was
+        interfaced to the WISP environment.
+
+
+        Distribution & Installation
+        ---------------------------
+
+        WPROC is now part of the WISP distribution kit. No special
+        installation or setup steps are required.
+
+        The following files from the WISP distribution kit are associated
+        with WPROC.
+
+                bin/wproc               - procedure interpreter
+                config/wproc.msg        - message database
+                etc/wproc.txt           - this document
+                demo/*.wps              - demonstration procedures
+
+        You can test WPROC using the demonstration procedures.
+
+                $ cd demo
+                $ wproc demo
+
+
+        WPROC Usage
+        -----------
+
+        The following shows the usage of WPROC:
+
+                $ wproc
+
+                Usage: wproc [option] file [parameters]
+
+                Options:
+                   -s = Syntax check
+                   -c = Compile
+                   -t = Trace execution
+                   -v = Show version numbers only
+                   -da = Debug log wprocdebug.log
+
+
+        Using WPROC with Wang VS Procedures
+        -----------------------------------
+
+        WPROC and WISP recognize the following file extensions as being
+        Wang VS Procedures:
+
+                xxx.wps         Wang Procedure Source
+                xxx.wpr         Wang Procedure Run (compiled)
+
+        Your Wang Procedure Source (WPS) files must have an extension
+        of ".wps" for WPROC to recognize them.  WPS file can be compiled
+        into WPR files by WPROC.  Compiled procedures offer security as they 
+        can not be edited by the user, there is also a slight performance
+        improvement.
+
+        To run a procedure from the UNIX shell, enter "wproc" followed by
+        the procedure name.  If the procedure is not in the current directory
+        you must include the path.  If you do not include a file extension
+        it will lookup first for a ".wps" extension and if not found it will
+        look for a ".wpr" extension.
+
+        E.g.    $ wproc demo
+                $ wproc project/demo.wpr
+
+        To run a procedure from COBOL or from the WISP Command Processor
+        no special actions are required, simply CALL "LINK" or RUN them
+        as you would any other program.
+
+        NOTE:   Do not put procedures with the same file names as COBOL
+                programs into the same directories, even if they have
+                different extensions and cases.
+
+                Consider the following:
+
+                        RUN DEMO IN RUNLIB ON VOL100
+
+                If the directory contains the files:
+
+                        DEMO            - COBOL program
+                        demo.wps        - Procedure
+                        demo.sh         - Shell script
+
+                WISP or WPROC does not know which file you are trying to 
+                execute.  UNIX allows the above but the Wang would not as
+                file names are case insensitive without extensions. 
+                The WISP enviroment does not support the above.
+
+
+        Environment Variables
+        ---------------------
+
+        The following environment variables are used by LINK VSSUB when
+        linking to a procedure.
+
+                $WPROC          The name of the procedure interpreter
+                                to invoke.  This defaults to "wproc"
+                                but can be changed with this variable.
+
+                $WPROCDEBUG     This variable is used to pass flags
+                                to the wproc.  By using this flag it
+                                will also cause standard output (STDOUT)
+                                to be redirected to the file "wprocdebug.log"
+                                in the current working directory.
+                                The flag -da will turn on all debug
+                                tracing. 
+
+                $WPROCDEBUGLOG  The name of the debug log file. The
+                                default name is wprocdebug.log.
+
+
+        Current Limitations
+        -------------------
+
+        This section describes current known limitations of WPROC, there 
+        may be other limitations that have not yet been documented.
+
+        There are a number of features of Wang VS Procedure language that
+        are not appropriate outside of the Wang VS environment.  These
+        elements are "recognized and ignored" by WPROC.  This allows Wang
+        VS procedures to be used with minimal changes.
+
+        DECACL statement        - recognized and ignored
+        DISMOUNT statement      - recognized and ignored
+        EXTRACL statement       - recognized and ignored
+        MOUNT statement         - recognized and ignored
+        OPERATOR statement      - recognized and ignored
+        OPTIONS statement       - recognized and ignored
+        PROTECT statement       - recognized and ignored
+
+        Variables appearing in the source before they are declared
+        are not supported.
+
+        The TRACE statement will show only the first line of the statement
+        not the complete statement.
+
+        When global variables are passed on a USING clause to a COBOL
+        (or other) program and that program updates their value, the
+        updated value is not available to other procedures until the
+        program completes.  If the COBOL program updates the value of a
+        global then does a CALL "LINK" to another procedure the linked
+        procedure will NOT get the updated value for the global variable.
+        We strongly recommend that you do not allow COBOL programs to
+        update global variables. 
+
+
+        Syntax Check
+        ------------
+
+        WPROC has a syntax check option (-s) which will report warnings if
+        a procedure is using any "recognized and ignored" features.  These
+        features do not cause any warning messages to be reported when they
+        are run.  You should syntax check all your Wang VS Procedures before 
+        using them to identify unsupported features.  You can then evaluate
+        if the unsupported feature is critical and code changes are needed
+        or if it is harmless and can be safely ignored.
+
+                $ wproc -s demo.wps
+
+
+        REVISION SUMMARY
+        ================
+
+        This section describes the changes that have occurred with each 
+        release plus any reported outstanding issues.
+
+        Outstanding Issues
+        ------------------
+
+        The following issues have been reported and are waiting correction
+        or verification.
+
+0002    Key:    SPACING=000
+        Desc:   On RUN stmt ENTER clause the keyword=value for SPACING=000
+                the 000 gets treated as a numeric literal instead of a
+                character string.  When converted back to a character string
+                it results in SPACING=0 which is wrong.
+        Fix:    Make the numeric into a string by enclosing in quotes,
+                SPACING="000".
+
+0011    Key:    PERIODS IN FILE NAMES
+        Desc:   Miss interupts periods (.) in file names. Can't use . for
+                library and volume names.
+        Fix:    None - use only Wang style names.
+
+
+
+        Release 2.0.00
+        --------------
+
+        The following items where fixed or added for release 2.0.00
+
+        Key:    Reporting 64K intermediate code limit.
+        Desc:   There is a limit of 64K of intermediate code; the test
+                to see if a proc would exceed this limit was failing
+                so WPROC would abort instead of report the problem. 
+
+        Key:    GLOBALS datafile name
+        Desc:   The GLOBALS datafile name now includes the user name
+                as well as the process group id. This is to prevent
+                problems if the file is not automatically deleted
+                do to a program aborting.
+
+
+        Release 1.16
+        ------------
+
+        The following items where fixed or added for release 1.16
+
+        Key:    Correct WORKLIB handling.
+        Desc:   Correct the WORKLIB handling as described in the WISP
+                release notes.
+
+
+        Release 1.15
+        ------------
+
+        The following items where fixed or added for release 1.15
+
+        Key:    SCRATCH statement default library and volume.
+        Desc:   The SCRATCH statement has been correct to use OUTLIB
+                and OUTVOL as default values if the library or volume
+                are not specified.  This now matches the behaviour
+                specified in the Wang Procedure Language Reference
+                manual.
+
+
+        Release 1.14
+        ------------
+
+        The following items where fixed or added for release 1.14
+
+        Key:    Co*STAR and Windows Mouse support.
+        Desc:   Support has been added for Co*STAR W4WMAP and mouse
+                support. 
+
+
+        Release 1.13
+        ------------
+
+        The following items where fixed or added for release 1.13
+
+        Key:    Unable to redirect syntax check errors to a file.
+        Desc:   Syntax check and compile errors and warnings were being
+                written to the screen handler instead of to stdout.  This
+                meant that you were not able to redirect the messages to a
+                file. 
+        Fix:    This has been corrected.
+
+
+        Release 1.12
+        ------------
+
+        The following items where fixed or added for release 1.12
+
+        Key:    END following a CALL <expression> failing
+        Desc:   A CALL statement where the label being called was an
+                expression, instead of a literal, was failing to properly
+                setup the return address for the END statement. When the
+                END statement was executed the logic would branch to an
+                invalid location in the procedure that would then abort.
+        Fix:    This has been corrected.
+
+
+        Release 1.11
+        ------------
+
+        The following items where fixed or added for release 1.11
+
+        Key:    Debug logging
+        Desc:   The debug logging was going to stdout which was
+                interfering with screen io.  
+        Fix:    Debug logging now goes to file wprocdebug.log. The log
+                file can be changed by setting $WPROCDEBUGLOG to the
+                desired file name.
+
+        Release 1.10
+        ------------
+
+        The following items where fixed or added for release 1.10
+
+        Key:    Errorcode SCREEN394 or coredump
+        Desc:   Typing outside the last field on a prompt screen would
+                cause the above error.
+        Fix:    Has been corrected.
+
+        Key:    Choppy slow screen I/O
+        Desc:   Screens were being repainted character by character, very
+                slow on a dial-up line.
+        Fix:    Error in the Video screen I/O optimization was corrected.
+
+
+        Release 1.09
+        ------------
+
+        The following items where fixed or added for release 1.09
+
+0022    Key:    GLOBALS NOT FOUND
+        Desc:   Global variables are not found in the following sit:
+                Proc-A runs a COBOL-B program which run a proc-C that 
+                runs proc-D.
+                Globals declared at the first nesting_level (proc-C)
+                following a COBOL program are not found at (proc-D)
+                lower levels.
+        Fix:    Declare all needed global variables in the highest level
+                procedure. 
+
+0012    Key:    LOCAL VARIABLE WITH SAME NAME AS GLOBAL
+        Desc:   A local variable is declared with the same name a global
+                variable at higher level, problem if the INITAL value
+                clause is used on the local variable.
+        Fix:    Rename either the local or the global variable so that you
+                do not use the same name.  Or, replace the INITIAL clause
+                on the local variable with an ASSIGN statement.
+
+0046    Key:    RE-DECLARED LOCAL VARIABLE WITH SAME NAME AS GLOBAL
+        Desc:   A local variable is re-declared in a loop with the same
+                name a global variable at higher level was causing an
+                abort error.
+
+0047    Key:    19th argument in a RUN statement corrupt.
+        Desc:   Arguments 16-18 were being repeated as 19-21.
+
+
+        Release 1.08
+        ------------
+
+        The following items where fixed or added for release 1.08
+
+        key:    CHARMAP non-ASCII character support
+        Desc:   Support was added for the WISP CHARMAP translation table
+                for non-ASCII characters.
+
+        Release 1.07
+        ------------
+
+        The following items where fixed or added for release 1.07
+
+0045    Key:    MESSAGE fails in background
+        Desc:   The MESSAGE verb was attempting screen I/O when in
+                background.
+
+
+        Release 1.06
+        ------------
+
+        The following items where fixed or added for release 1.06
+
+0044    Key:    MAX SUBMIT PARAMETERS INCREASED TO 32
+        Desc:   The maximum number of parameters to a submitted procedure
+                has been increased from 8 to 32.  The 8 parameter limit
+                was due to the earlier mechanism used for submitting with
+                parameters. 
+
+0043    Key:    DESTROY PROCS SUBMITED WITH REQUEUE
+        Desc:   If a proc is submitted with REQUEUE then don't DESTROY the
+                temp proc as it will be needed again.
+
+0042    Key:    WPROC ABORT ON HP/UX
+        Desc:   WPROC was aborting on HP/UX due to a change in the GCC
+                compilers handling of automatic FOR loop variables.
+
+0041    Key:    WPROC COMBINED INTO WISP KIT
+        Desc:   WPROC is now distributed as part of the WISP kit starting
+                with WISP v3.9.91.  Previously WPROC was distributed as a
+                separate product that needed to be installed separately.
+
+0040    Key:    CRASH ON EXIT
+        Desc:   WPROC would sometimes abort or crash on exit in the
+                following situation: Program COBOL-A would run proc-B that
+                runs proc-C with parameters.  When proc-C exits there
+                would be a memory overwrite which would sometimes cause
+                WPROC to crash or would sometimes cause proc-B to abort or
+                experience misc. errors.
+
+
+        Release 1.05
+        ------------
+
+        The following items where fixed or added for release 1.05
+
+0038    Key:    SUBMIT GLOBALS=YES
+        Desc:   Support has been added for the GLOBALS=YES and the
+                ENVIRONMENT=YES options of the SUBMIT command.  If either
+                of these options are requested as part of the SUBMIT
+                command then WPROC will generate a temporary procedure
+                that will setup the globals or environment then run the
+                program.  This temporary procedure will then be submitted.
+                This is the same mechanisam that the Wang uses.  The
+                temporary procedure will be created in "@SUBMIT@" on the
+                user's WORKVOL and will be deleted automatically unless
+                REQUEUE was specified.
+
+0037    Key:    MISSING TEMP GLOBAL FILE
+        Desc:   Under certain circumstanses a submitted proc may
+                incorrectly load and delete the temporary globals file
+                that belongs to the parent process chain that submitted
+                it.  This could result in the submitted process loading an
+                invalid global symbol table.  Additionally the parent
+                process chain which did the submit and had it's temporary
+                globals file incorrectly deleted may experience some
+                unpredictable behaviour.  Specifically the next highest
+                procedure on the chain will believe the lower procedure
+                aborted and any global variables which were updated will
+                have incorrect values.
+
+0039    Key:    SUBMIT USING INTEGER ARGUMENTS
+        Desc:   A SUBMIT that was passing arguments of type INTEGER in the
+                USING clause was having the arguments converted to type
+                STRING.  If it was a procedure that was submitted, it
+                would correctly convert the strings back into integers. If
+                it was a COBOL program that was submitted you would have
+                had to change the LINKAGE SECTION to expect strings.
+
+
+        Release 1.04
+        ------------
+
+        The following items where fixed or added for release 1.04
+
+0035    Key:    SCREEN NOT CLEARED
+        Desc:   The screen was not being cleared when returning to a
+                procedure after a run of a COBOL program.  This would
+                occur when the procedure contains no screen I/O.
+
+0036    Key:    UNABLE TO READ WORK FILE
+        Desc:   A procedure that redeclared globals at a lower link level
+                would get an "Unable to read work file" error.
+
+
+        Release 1.03
+        ------------
+
+        The following items where fixed or added for release 1.03
+
+0033    Key:    SUBMIT USING 
+        Desc:   A procedure which was started with a SUBMIT USING was not
+                getting the arguments into the USING statement declared
+                variables (which were passed on the command line.)
+
+0034    Key:    SUBMIT USING INTEGERS
+        Desc:   Integer parameters on a SUBMIT USING were not correctly
+                being passed.
+                Changed to convert integers into strings for passing.
+                This works correctly when submitting a procedure but
+                non-procedures will need to be modified to expect a string
+                instead of an integer.
+
+        Release 1.02
+        ------------
+
+        The following items where fixed or added for release 1.02
+
+0032    Key:    GLOBALS USED AS ARGS IN RUN USING NOT UPDATED
+        Desc:   Global variables passed as arguments in a RUN USING
+                statement to a COBOL program do not get updated with
+                the value from the COBOL program.
+
+
+        Release 1.01
+        ------------
+
+        The following items where fixed or added for release 1.01
+
+0031    Key:    RENAME FILES ACROSS LIBRARIES
+        Desc:   Rename a file to a different LIBRARY was failing.
+
+
+        Release 1.00
+        ------------
+
+        The following items where fixed or added for release 1.00
+
+        Release 0.99.02 was renamed to be release 1.00.
+
+        
+        Release 0.99.02
+        ---------------
+
+        The following items where fixed or added for release 0.99.02.
+
+0027    Key:    BACKGROUND
+        Desc:   Need to ensure it functions correctly in background
+                including blocking of screen I/O.
+
+0030    Key:    TOO MANY KEYWORDS ON A PUTPARM
+        Desc:   There was a hardcoded limit of 40 keywords
+
+0029    Key:    SUBMIT USING
+        Desc:   SUBMIT with the USING clause was not passing the parameters.
+
+
+        Release 0.99
+        ------------
+
+        The following items where fixed or added for release 0.99.
+
+0025    Key:    PROGRESS MESSAGE IN BACKGROUND
+        Desc:   Need to suppress the "PROCEDURE IN PROGRESS" message
+                when in background.
+
+0026    Key:    RENAME LIBRARY
+        Desc:   The RENAME on a library doesn't work.
+
+0014    Key:    CLEANUP NO WISPCONFIG ABORT
+        Desc:   If there is no $WISPCONFIG defined or no wproc.msg then
+                it terminates with terminal in raw state.
+                (Not able to reproduce)
+
+0005    Key:    STRING LITERAL SPANING LINES
+        Desc:   When string literal spans lines and the continued line
+                is trimmed the resulting string is corrupted.
+
+0009    Key:    HELP KEY
+        Desc:   Add the HELP KEY processing
+
+0007    Key:    VSSUBS
+        Desc:   The Wang allows procs to "run" VSSUBS.
+
+0028    Key:    DELETE TEMP FILES (WSYSINIT)
+        Desc:   The wsysinit utility needs to delete any WPROC temp files.
+                (Requires WISP 3.3x8 or later.)
+
+0030    Key:    LITTLE-ENDIAN MACHINES
+        Desc:   Need to a wswap() calls for support on little-endian
+                machines (like SCO).
+
+0027    Key:    BACKGROUND
+        Desc:   Need to ensure it functions correctly in background
+                including blocking of screen I/O and logging errors
+                to $HOME/wisperr.log.
+
+
+        Release 0.98
+        ------------
+
+        The following items where fixed or added for release 0.98.
+
+0016    Key:    SYMBOLS661
+        Desc:   The above error would occur while restoring the globals
+                table after a RUN of a COBOL program.
+
+0003    Key:    FORMAL PARM WITH SAME NAME AS GLOBAL
+        Desc:   A proc with a formal parameter &DBNAME that is the same
+                name as a GLOBAL was causing an assert on the SYMBOL
+                destructor because raw_data() was not found.  The parm is
+                a fetched_arg passed from COBOL.  On return to COBOL
+                the argument was garbbled.
+
+0017    Key:    TRACE DIRECTORY MUST EXIST
+        Desc:   The TRACE logging fails unless the directory exists.
+
+0023    Key:    100% CPU USTILIZATION
+        Desc:   When wproc waiting for input for terminal, 100% cpu was
+                utilized in a live-loop polling the keyboard.
+
+0021    Key:    RUN DOESN'T FIND DISPLAY or COPY or SORT
+        Desc:   The RUN verb doesn't find DISPLAY unless the library
+                and volume are specified.
+
+0018    Key:    TRACE SHOW RETURN CODES
+        Desc:   The TRACE logging should show the return codes.
+
+0024    Key:    BLANK SCREEN WHILE RUNNING
+        Desc:   WPROC leaves the screen blank while running a proc that has
+                no screen I/O.  It should say "Procedure XXX in progress".
+
+
+        Release 0.97
+        ------------
+
+        The following items where fixed or added for release 0.97.
+
+0001    Key:    TRACE
+        Desc:   Enhance the TRACE verb to allow Wang style logging to a file.
+
+
+        Release 0.96
+        ------------
+
+        The following items where fixed or added for release 0.96.
+
+0015    Key:    STACK63 ABORT ON TRACE
+        Desc:   A Wang style TRACE statement is causing a STACK63 abort
+
+
+        Release 0.95
+        ------------
+
+        The following items where fixed or added for release 0.95.
+
+0000    Key:    PROCEDURE COMMENTS MODECODES - IGNORING PROC
+        Desc:   The whole procedure is being ignored when there is
+                comments following the PROCEDURE statement and modecodes
+
+0004    Key:    &DATE
+        Desc:   The builtin function &DATE is returning date in wrong format.
+
+0006    Key:    SET RECORDS
+        Desc:   The RECORDS keyword is not recognized and ignored in
+                the SET statement.
+
+0008    Key:    SET SPOOLSCR
+        Desc:   The SPOOLSCR keyword is not recognized and ignored in
+                the SET statement.
+
+0013    Key:    EXTRACT RECORDS USED BY FILE
+        Desc:   The EXTRACT RECORDS doesn't seem to be implemented.
+
+
+        ========================= END OF DOCUMENT ==========================

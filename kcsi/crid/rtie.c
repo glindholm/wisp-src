@@ -262,14 +262,14 @@ RPT_NF *n;
 			{
 			if( nfo->_e._name[0] <= ' ')
 				{
-				nf->_pnew = NULL;
+				/* nf->_pnew == NULL; */
 				break;
 				}
 			}
 /* Illegal operand (location not known)*/
 		if ((nfo->_e._name[0] > ' ') && (nfo->_pnew == NULL))
 			{
-			nf->_pnew = NULL;
+			/* nf->_pnew == NULL; */
 			break;
 			}
 /* If op code is not okay for this type of combine */
@@ -354,16 +354,16 @@ RPT_DL *dl;
 			{
 			if(dlo->_e._name[0] < ' ')
 				{
-				dl->_pnew = NULL;
-				dl->_e._name[0] = 0;
+				/* dl->_pnew == NULL; */
+				/* dl->_e._name[0] == 0; */
 				break;
 				}
 			}
 /* Illegal operand (location not known)*/
 		if ((dlo->_e._name[0] > ' ') && (dlo->_pnew == NULL))
 			{
-			dl->_pnew = NULL;
-			dl->_e._name[0] = 0;
+			/* dl->_pnew == NULL; */
+			/* dl->_e._name[0] == 0; */
 			break;
 			}
 		}
@@ -835,6 +835,12 @@ void tie_rpt()
 /*
 **	History:
 **	$Log: rtie.c,v $
+**	Revision 1.4  2000-06-13 18:14:35-04  gsl
+**	Restore back to revision 1.2.
+**	The changes caused a bug 1.3 (2.97 and 2.98)
+**	The dl (Data Limits) structure was being corrupted so the limits (A EQ 'X')
+**	were being removed, thus you always get all the records.
+**
 **	Revision 1.3  1999-09-13 15:52:48-04  gsl
 **	fix "==" vs "="
 **

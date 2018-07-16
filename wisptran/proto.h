@@ -1,5 +1,5 @@
 /* 
-	Copyright (c) 1995 DevTech Migrations, All rights reserved.
+	Copyright (c) 1995-2001 NeoMedia Technologies, All rights reserved.
 	$Id:$
 */
 /*
@@ -7,10 +7,6 @@
 **
 **	Purpose:	This file is a HACK to quickly prototype WISP.
 **			Do not add to this file, remove stuff from it as it gets done properly.
-**
-**
-**	History:
-**	mm/dd/yy	Written by ...
 **
 */
 
@@ -33,6 +29,7 @@ extern int wisp_exit_para(void);
 extern void d_wisp_exit_para(void);
 extern int delete(const char *path);
 extern char *packed_decimal(void);
+void xtab_log(const char* fileName, int lineNum, const char* xtype, const char *tabData);
 
 /* wisp_pic.c */
 extern int pic_size(char *the_pic);
@@ -176,6 +173,9 @@ extern void gen_data_conv(void);
 /*
 **	History:
 **	$Log: proto.h,v $
+**	Revision 1.14  2001-09-13 09:57:20-04  gsl
+**	xtab_log()
+**
 **	Revision 1.13  1999-09-07 10:33:17-04  gsl
 **	Remove unneeded prototypes and fix.
 **

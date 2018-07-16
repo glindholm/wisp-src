@@ -22,9 +22,7 @@ WISPTRAN=wisp
 VLANG=-VACU
 WISPFLAGS= $(VLANG) -I$(WISPDIR)/etc -M
 COBOL=ccbl
-COBFLAGS=-Zd -Da4 -Te 800
-
-OS=unix
+COBFLAGS=-Gd -Zd -Da4 -Te 800
 
 .SUFFIXES: .cob .wcb
 
@@ -38,25 +36,36 @@ OS=unix
 .cob:
 	$(COBOL) $(COBFLAGS) -o `echo $*|tr '[a-z]' '[A-Z]'` $*.cob
 
-ALL= 	SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
+ACU_COBOL_OBJS= SAMPLE QAFILEIO QAFILE2 QANETCAP QAPRINT QASCREEN QASCRN2 QASUBS \
 	QASY000M QASYS99 QAWSFNM QAWSFNS QAWSUBS QABCKGRD SUB1 SUB3 \
-	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING $(OS)_stuff
-
-AUTOQA=	WL0000 WL0010 WL0011 WL0012 WL0013 WL0014 WL0015 WL0016 WL0017 \
+	TRIGGER XLINK XLINK1 QADPCOMA QAWSXIO ACULINK ACUUSING \
+	DISPFILE DISPRINT \
+	WL0000 WL0010 WL0011 WL0012 WL0013 WL0014 WL0015 WL0016 WL0017 \
 	WL0018 WL0019 WL0020 WL0021 WL0022 WL0023 WL0024 WL0025 WL0026 \
 	WL0027 WL0018A WL0018B
 
-TEST_DIRS= volrun volin
+TEST_DIRS= volrun volin volout volspl volwrk
 
-all:	$(ALL) $(TEST_DIRS) $(AUTOQA)
+DISPRINT_SRC=disprint.wcb disprint.umf
+
+all:	acu_cobol_objs test_dirs prtargs
 	@echo
 	@echo SAMPLE is up-to-date
 	@echo
 
 clean:
-	rm -f $(ALL) $(AUTOQA)
+	rm -f $(ACU_COBOL_OBJS)
 	rm -rf $(TEST_DIRS)
-	rm -f *.cob
+	rm -f *.cob prtargs wc*.cpy *~ core *.log *.err $(DISPRINT_SRC)
+
+acu_cobol_objs: $(ACU_COBOL_OBJS)
+
+test_dirs: $(TEST_DIRS)
+
+acuqa:	acuqa.tar.Z
+
+acuqa.tar.Z: $(ACU_COBOL_OBJS)
+	tar -cvf - $(ACU_COBOL_OBJS) | compress > $@
 
 SAMPLE: sample.cob
 	$(COBOL) $(COBFLAGS) -o $@ sample.cob
@@ -120,6 +129,9 @@ QADPCOMA: qadpcoma.cob
 
 QAWSXIO: qawsxio.cob
 	$(COBOL) $(COBFLAGS) -o $@ qawsxio.cob
+
+DISPFILE: dispfile.cob
+	$(COBOL) $(COBFLAGS) -o $@ dispfile.cob
 
 ACULINK: aculink.cob
 	$(COBOL) $(COBFLAGS) -o $@ aculink.cob
@@ -228,13 +240,51 @@ volin:
 	mkdir volin
 	mkdir volin/libin
 
+volout:
+	mkdir volout
+
+volspl:
+	mkdir volspl
+
+volwrk:
+	mkdir volwrk
+
 unix_stuff:	prtargs
 
 win32_stuff:	prtargs.exe
 
+
+DISPRINT: $(DISPRINT_SRC)
+	$(MAKE) -f disprint.umf acu
+
+$(DISPRINT_SRC):
+	rm -f $@
+	cp $(WISPDIR)/etc/$@ $@ 
+
 #
 #	History:
 #	$Log: sampleacu.umf,v $
+#	Revision 1.26  2001-11-05 15:40:38-05  gsl
+#	Tweak to run without Acucobol compiler
+#
+#	Revision 1.25  2001-11-05 15:32:37-05  gsl
+#	Add acuqa target to tar.Z up all the ACU object files
+#
+#	Revision 1.24  2001-11-02 11:01:50-05  gsl
+#	add DISPFILE
+#
+#	Revision 1.23  2001-11-02 09:06:42-05  gsl
+#	Add build DISPRINT
+#
+#	Revision 1.22  2001-10-23 16:40:01-04  gsl
+#	Compile with debugger info -Gd
+#
+#	Revision 1.21  2001-10-19 11:21:18-04  gsl
+#	make and clean volumes
+#
+#	Revision 1.20  2001-10-19 10:55:44-04  gsl
+#	Add more to clean
+#
 #	Revision 1.19  1999-08-20 09:55:08-04  gsl
 #	Change the LANG macro to VLANG as it conflicted with the LANG environment
 #	variable when the -e option was used

@@ -11,16 +11,8 @@ static char rcsid[]="$Id:$";
 
 /* READFDR.C ... This routine simulates some of the Wang-VS READFDR subroutine operation.					*/
 
-#ifdef VMS
-#include <rms.h>
-#include <ssdef.h>
-#include <stat.h>
-#endif
-
-#ifndef VMS
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
 
 #include <stdio.h>
 #include <ctype.h>
@@ -35,14 +27,10 @@ static char rcsid[]="$Id:$";
 #include "wfname.h"
 #include "idsisubs.h"
 #include "filext.h"
+#include "wfcisam.h"
 #include "wfvision.h"
 #include "wdefines.h"
-
-#ifdef VMS
-#define	FILE_TYPE	001
-#define	RECORD_COUNT	002
-#define	RECORD_SIZE	003
-#endif
+#include "wperson.h"
 
 
 #define		ROUTINE		51000
@@ -51,6 +39,8 @@ static int bFromReadfdr4 = 0;
 static char *pReadfdr;
 
 static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, const int4* mode, va_list the_args);
+static int4 fileinfo(const char* path, const char* code, void* field);
+static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_field);
 
 
 /*
@@ -95,14 +85,13 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 	int4	l_long, access_code, l_mode;
 	char 	*end_name, *temp_ptr;
 	char 	*l_field;
-	char 	filespec[132], filespec_idx[132], filespec_noext[132];
+	char 	filespec[132];
 	int4 	wfname_mode;
 	int	rc;
 	struct stat sbuf;
 	struct tm *tm_ptr;
 	char 	tmp[20];
 	char 	tmp_bs[19];
-	int	is_cisam;
 
 	wtrace(pReadfdr, "ENTRY", "File=[%8.8s] Lib=[%8.8s] Vol=[%6.6s]", cpFile, cpLib, cpVol);
 
@@ -123,53 +112,15 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 	arg_count -= 4;
 	wfname_mode = 0;
 
-#ifdef VMS
-	if (!memcmp(WISPFILEXT,"LIS ",4)) wfname_mode = IS_PRINTFILE;			/* Special case for printfiles.		*/
-#endif
-
-	end_name = wfname(&wfname_mode,l_vol,l_lib,l_file,filespec);			/* generate a VMS file name		*/
+	end_name = wfname(&wfname_mode,l_vol,l_lib,l_file,filespec);			/* generate a file name			*/
 	*end_name = '\0';								/* Null terminate			*/
 
-	/*
-	**	filespec	- the full filespec  (CISAM - data file)
-	**	filespec_idx	- (CISAM - index file)
-	**	filespec_noext	- the filespec with any extension stripped off (CISAM - generic name)
-	*/
-
-	access_code = 20;								/* Assume not found			*/
-	is_cisam = 0;									/* Assume not CISAM			*/
+	access_code = READFDR_RC_20_FILE_NOT_FOUND;					/* Assume not found			*/
 
 	if (fexists(filespec))
 	{
-		access_code = 0;							/* File was found			*/
+		access_code = READFDR_RC_0_SUCCESS;					/* File was found			*/
 	}
-
-#if defined(unix) || defined(MSFS)
-	if ( !hasext(filespec) )							/* If no extension (maybe CISAM)	*/
-	{
-		strcpy(filespec_noext,filespec);
-		strcpy(filespec_idx,filespec);
-		strcat(filespec_idx, ".idx");					
-
-		if (fexists(filespec_idx))						/* Found index file			*/
-		{
-			if (0 == access_code)						/* Data portion already found		*/
-			{
-				access_code = 0;					/* Found data & index			*/
-				is_cisam = 1;						/* This is a CISAM file(s)		*/
-			}
-			else								/* Data file has not yet been found	*/
-			{
-				strcat(filespec, ".dat");
-				if (fexists(filespec))					/* Try .dat file extension.		*/
-				{
-					access_code = 0;				/* Found data & index			*/
-					is_cisam = 1;					/* This is a CISAM file(s)		*/
-				}
-			}
-		}
-	}
-#endif /* unix || MSFS */
 
 	while ( arg_count > 1 )
 	{
@@ -177,7 +128,7 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		temp_ptr = va_arg(the_args, char*);					/* Get the receiver.			*/
 		arg_count -= 2;
 
-		if (access_code != 0 ) 
+		if (access_code != READFDR_RC_0_SUCCESS ) 
 		{
 			wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Unable to access file.", l_field);
 			continue;
@@ -188,9 +139,9 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		{
 			rc=stat(filespec,&sbuf);
 
-			if ( rc )
+			if ( rc != 0 )
 			{
-				access_code = rc;
+				access_code = READFDR_RC_32_STAT_ERROR;
 			}
 			else
 			{
@@ -204,22 +155,11 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		else if (0==memcmp(l_field,"CD",2) ||			/* Creation date.	    YYMMDD	*/
 			 0==memcmp(l_field,"CX",2)   )			/* Creation date extended.  YYYYMMDD	*/
 		{
-#ifdef VMS
-			strcat(filespec,";-0");				/* we want the earliest version		*/
-#endif
+			rc=stat(filespec,&sbuf);
 
-			if (is_cisam)
+			if ( rc != 0 )
 			{
-				rc=stat(filespec_idx,&sbuf);
-			}
-			else
-			{
-				rc=stat(filespec,&sbuf);
-			}
-
-			if ( rc < 0 )
-			{
-				access_code = 32;
+				access_code = READFDR_RC_32_STAT_ERROR;
 			}
 			else
 			{
@@ -276,24 +216,9 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		}
 		else if (0==memcmp(l_field,"FT",2))			/* File Type Alpha(1)			*/
 		{
-#ifdef VMS
-			read_fab(&l_long, filespec, FILE_TYPE);	    	/* Get the file organization.		*/
-			*temp_ptr=l_long;			    	/* FILE_TYPE returns a character.	*/
-			if (wfname_mode == IS_PRINTFILE) *temp_ptr='P';	/* Redundancy, just in case.		*/
-#else /* !VMS */
-			if (is_cisam)
-			{
-				rc = cisaminfo( filespec_noext, "FT", temp_ptr );
-				access_code = rc;
-			}
-			else
-			{
+			access_code = fileinfo( filespec, "FT", temp_ptr );
 
-				rc = acuvision( filespec, "FT", temp_ptr );
-				access_code = rc;
-			}
-#endif /* !VMS */
-			if (0==access_code)
+			if (READFDR_RC_0_SUCCESS == access_code)
 			{
 				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
 			}
@@ -301,21 +226,11 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		else if (0==memcmp(l_field,"MD",2) ||			/* Mod date YYMMDD 			*/
 			 0==memcmp(l_field,"MX",2))			/* Mod date YYYYMMDD 			*/
 		{
-#ifdef VMS
-			strcat(filespec,";");				/* we want the latest version		*/
-#endif
+			rc=stat(filespec,&sbuf);
 
-			if (is_cisam)
+			if ( rc != 0 )
 			{
-				rc=stat(filespec_idx,&sbuf);
-			}
-			else
-			{
-				rc=stat(filespec,&sbuf);
-			}
-			if ( rc < 0 )
-			{
-				access_code = 32;
+				access_code = READFDR_RC_32_STAT_ERROR;
 			}
 			else
 			{
@@ -345,92 +260,74 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 		}
 		else if (0==memcmp(l_field,"RC",2))			/* Record count Int(4) 			*/
 		{
-#ifdef VMS
-			read_fab(&l_long, filespec, RECORD_COUNT);      /* Get the record count.		*/
-			wswap(&l_long);				    	/* swap the words			*/
-			PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-#else
-			if (is_cisam)
-			{
-				rc = cisaminfo( filespec_noext, "RC", (char*)&l_long );
-			}
-			else
-			{
-				rc = acuvision( filespec, "RC", (char*) &l_long );
-			}
+			access_code = fileinfo( filespec, "RC", &l_long );
 
-			if ( rc )
-			{
-				access_code = rc;
-			}
-			else
+			if (READFDR_RC_0_SUCCESS == access_code)
 			{
 				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
 				wswap(&l_long);				/* swap the words			*/
 				PUTBIN(temp_ptr, &l_long, sizeof(l_long));
 			}
-			
-#endif
 		}
 		else if (0==memcmp(l_field,"RL",2) ||			/* Record Len/Size Int(4)		*/
 			 0==memcmp(l_field,"RS",2))
 		{
-#ifdef VMS
-			read_fab(&l_long, filespec, RECORD_SIZE);	/* Get the record size.			*/
-			wswap(&l_long);					/* swap the words			*/
-			PUTBIN(temp_ptr, &l_long, sizeof(l_long));
-#else
-			if (is_cisam)
-			{
-				rc = cisaminfo( filespec_noext, "RS", (char*)&l_long );
-			}
-			else
-			{
-				rc = acuvision( filespec, "RS", (char*)&l_long );
-			}
+			access_code = fileinfo( filespec, "RS", &l_long );
 
-			if ( rc )
-			{
-				access_code = rc;
-			}
-			else
+			if (READFDR_RC_0_SUCCESS == access_code)
 			{
 				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%ld]", l_field, l_long);
 				wswap(&l_long);				/* swap the words			*/
 				PUTBIN(temp_ptr, &l_long, sizeof(l_long));
 			}
-#endif
 		}
-#ifndef VMS
 		else if (0==memcmp(l_field,"RT",2))			/* Record type Alpha(1) 		*/
 		{
-			if (is_cisam)
-			{
-				rc = cisaminfo( filespec_noext, "RT", temp_ptr );
-			}
-			else
-			{
-				rc = acuvision( filespec, "RT", temp_ptr );
-			}
+			access_code = fileinfo( filespec, "RT", temp_ptr );
 
-			if ( rc )
-			{
-				access_code = rc;
-			}
-			else
+			if (READFDR_RC_0_SUCCESS == access_code)
 			{
 				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
 			}
 			
 		}
-#endif
+		else if (0==memcmp(l_field,"IX",2))			/* ISAM Type Alpha(1) 		*/
+		{
+			access_code = fileinfo( filespec, "IX", temp_ptr );
+
+			if (READFDR_RC_0_SUCCESS == access_code)
+			{
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%1.1s]", l_field, temp_ptr);
+			}
+		}
+		else if (0==memcmp(l_field,"IV",2))			/* ISAM Version Alpha(2) 		*/
+		{
+			/*
+			**	C0	CISAM Indexed
+			**	R0	FHISAM Relative
+			**	S0	FHISAM Sequential
+			**	I3	FHISAM Indexed 3
+			**	I4	FHISAM Indexed 4
+			**	I8	FHISAM Indexed 8
+			**	V2	Vision 2
+			**	V3	Vision 3
+			**	V4	Vision 4
+			**	U0	Unknown
+			*/
+			access_code = fileinfo( filespec, "IV", temp_ptr );
+
+			if (READFDR_RC_0_SUCCESS == access_code)
+			{
+				wtrace(pReadfdr, "FIELD", "Field=[%2.2s] Result=[%2.2s]", l_field, temp_ptr);
+			}
+		}
 		else
 		{
 			werrlog(ERRORCODE(4),l_field,0,0,0,0,0,0,0);
-			access_code = 40;
+			access_code = READFDR_RC_40_INVALID_INPUT_PARAM;
 		}
 
-		if (0 != access_code)
+		if (READFDR_RC_0_SUCCESS != access_code)
 		{
 			wtrace(pReadfdr, "FIELD", "Field=[%2.2s] failed with access_code=[%ld]", l_field, access_code);
 		}
@@ -445,108 +342,197 @@ static void READFDRX(const char* cpFile, const char* cpLib, const char* cpVol, c
 	}
 /*	va_end(the_args); */
 }
-                                                                                       
-#ifdef VMS
-static int read_fab(recvr, file_name, action)
 
-char *file_name;
-int *recvr;
-short action;
+/*
+**	ROUTINE:	fileinfo()
+**
+**	FUNCTION:	Front-end to MF and ACU file info routines
+**
+**	DESCRIPTION:	First call cisaminfo() and if not a cisam file call 
+**			visioninfo() which also handles non-index files.
+**
+**	ARGUMENTS:	
+**	path		The path to the file
+**	code		The code requested FT, RC, RS, RT, IX
+**	raw_field	The return field
+**
+**	GLOBALS:	None
+**
+**	RETURN:		READFDR return code
+**
+**
+*/
 
+static int4 fileinfo(const char* path, const char* code, void* raw_field)
 {
-	struct FAB file_block;
-        struct RAB record_block;
+	int4 rc;
 
-	int rms_status;
-        char *byte_buffer;
+	rc = cisaminfo( path, code, raw_field );
 
-	file_block = cc$rms_fab;
-	file_block.fab$l_fna = file_name;
-	file_block.fab$b_bks = 4;
-	file_block.fab$l_dna = ".DAT";
-	file_block.fab$b_dns = 4;
-	file_block.fab$b_fac = FAB$M_GET;
-	file_block.fab$b_fns = 80;                                                     
-	file_block.fab$l_fop = FAB$M_CIF;
-	file_block.fab$b_shr = FAB$V_SHRPUT | FAB$V_SHRGET | FAB$V_SHRDEL | FAB$V_SHRUPD;
-	record_block = cc$rms_rab;
-	record_block.rab$l_fab = &file_block;
-	
-	rms_status = sys$open(&file_block);
-	if (rms_status != RMS$_NORMAL) return;
-
-	switch(action)
+	if (READFDR_RC_24_NO_FILE_HEADER == rc ||
+	    READFDR_RC_68_UNKNOWN_FILE_FORMAT == rc)
 	{
-	    case FILE_TYPE:
-	    {
-		switch(file_block.fab$b_org)
-		{
-		    case FAB$C_SEQ:							/* File organization is sequential.	*/
-		    {
-			    *recvr='C';							/* 'C' for Consecutive.			*/
-			    break;
-		    }
-		    case FAB$C_REL:							/* File organization is relative.	*/
-		    {
-			    *recvr='R';
-			    break;
-		    }
-		    case FAB$C_IDX:							/* File organization is indexed.	*/
-		    {
-			    *recvr='I';
-			    break;
-		    }
-		    case FAB$C_HSH:							/* File organization is hashed.		*/
-		    {
-			    *recvr='U';							/* 'U' for Unknown to the WANG.		*/
-			    break;
-		    }
-		    default:								/* VAX doesn't give any others.		*/
-		    {
-			    *recvr='U';
-			    break;
-		    }
-		}
-		break;
-	    }
-	    case RECORD_COUNT:
-	    {
-	    	byte_buffer = malloc(file_block.fab$w_mrs);
-	    	record_block.rab$l_ubf = byte_buffer;
-	    	record_block.rab$w_usz = file_block.fab$w_mrs;
-	    	record_block.rab$l_rop = RAB$V_NLK;
-
-	    	rms_status = sys$connect(&record_block);
-	    	rms_status = sys$get(&record_block);
-
-	    	if (rms_status == RMS$_NORMAL ||				/* Just verify successful retrieval of RAB info.*/
-		    rms_status == RMS$_OK_RLK ||				/* Record was locked but we read it.		*/
-		    rms_status == RMS$_RLK ||					/* Record was locked, so it must exist.		*/
-		    rms_status == RMS$_OK_RRL)
-	    	{
-	    		*recvr = 1;						/* Return 1 record if records exist.		*/
-	    	}
-	    	else
-	    	{
-	    		*recvr = 0;						/* Return 0 records, if not.			*/
-	    	}
-		break;
-	    }
-	    case RECORD_SIZE:
-	    {
-		*recvr = file_block.fab$w_mrs;					/* Return the maximum record size.		*/
-		break;
-	    }
-	    default:	break;
+		rc = visioninfo( path, code, raw_field );
 	}
-	rms_status = sys$close(&file_block);
+
+	if (READFDR_RC_24_NO_FILE_HEADER == rc ||
+	    READFDR_RC_68_UNKNOWN_FILE_FORMAT == rc)
+	{
+		rc = unstructured_fileinfo( path, code, raw_field );
+	}
+
+	return rc;
+}
+
+
+/*
+**	ROUTINE:	unstructured_fileinfo()
+**
+**	FUNCTION:       File info for an unstructured file.
+**
+**	DESCRIPTION:	
+**
+**	ARGUMENTS:	
+**	path		The path to the file
+**	code		The code requested FT, RC, RS, RT, IX
+**	raw_field	The return field
+**
+**	GLOBALS:	None
+**
+**	RETURN:		READFDR return code
+**
+**
+*/
+static int4 unstructured_fileinfo(const char* path, const char* code, void* raw_field)
+{
+	static int style = -1;
+
+	char	*field;
+	int4	*size;
+
+	field = (char*) raw_field;
+	size = (int4 *) raw_field;
+
+	if (-1 == style)	/* First time set the style */
+	{
+		if (get_wisp_option("READFDRV1"))
+		{
+			style = 1;
+		}
+		else
+		{
+			style = 0;
+		}
+		
+	}
+	
+	if ( memcmp( code, "IX", 2 ) == 0 )				/* File Index Type */
+	{
+		*field = 'U';	/* Unknown */
+		return READFDR_RC_0_SUCCESS;
+	}
+
+	if ( memcmp( code, "IV", 2 ) == 0 )				/* File Index Version */
+	{
+		field[0] = 'U';	/* Unknown */
+		field[1] = '0';	
+		return READFDR_RC_0_SUCCESS;
+	}
+
+	if ( memcmp( code, "RC", 2 ) == 0 )				/* If looking for record count				*/
+	{
+		if (1==style)
+		{
+			struct stat sbuf;
+
+			if ( 0 != stat(path,&sbuf) )
+			{
+				return READFDR_RC_32_STAT_ERROR;
+			}
+			else
+			{
+				*size = (sbuf.st_size >= 1) ? 1 : 0;	/* return 1 or 0					*/
+				return READFDR_RC_0_SUCCESS;
+			}
+			
+		}
+		else
+		{
+			return READFDR_RC_24_NO_FILE_HEADER;
+		}
+	}
+
+	if ( memcmp( code, "RS", 2 ) == 0 ||				/* If looking for record size/lenght			*/
+	     memcmp( code, "RL", 2 ) == 0    )
+	{
+		if (1==style)
+		{
+			*size = 256;
+			return READFDR_RC_0_SUCCESS;
+		}
+		else
+		{
+			return READFDR_RC_24_NO_FILE_HEADER;
+		}
+	}
+
+	if ( memcmp( code, "FT", 2 ) == 0 )				/* If looking for file type				*/
+	{
+		if (1==style)
+		{
+			*field = 'C';	/* Consecutive */
+			return READFDR_RC_0_SUCCESS;
+		}
+		else
+		{
+			return READFDR_RC_24_NO_FILE_HEADER;
+		}
+	}
+
+	if ( memcmp( code, "RT", 2 ) == 0 )				/* If looking for record type				*/
+	{
+		if (1==style)
+		{
+			*field = 'V';	/* Variable */
+			return READFDR_RC_0_SUCCESS;
+		}
+		else
+		{
+			return READFDR_RC_24_NO_FILE_HEADER;
+		}
+	}
+
+	return( READFDR_RC_40_INVALID_INPUT_PARAM );
 
 }
-#endif	/* #ifdef VMS	*/
 
+                                                                                       
 /*
 **	History:
 **	$Log: readfdr.c,v $
+**	Revision 1.22  2001-11-08 11:53:20-05  gsl
+**	fix warnings
+**
+**	Revision 1.21  2001-10-30 15:26:16-05  gsl
+**	change acuvision() to visioninfo()
+**
+**	Revision 1.20  2001-10-29 10:46:32-05  gsl
+**	Add function IV Index Version
+**
+**	Revision 1.19  2001-10-23 19:21:18-04  gsl
+**	Move all the unstructured_fileinfo() to routine.
+**	Add support for 'IX'
+**
+**	Revision 1.18  2001-10-22 17:03:55-04  gsl
+**	Rework for MF FHISAM files.
+**	Add fileinfo() which checks both cisam/fhisam and vision
+**
+**	Revision 1.17  2001-09-20 14:39:39-04  gsl
+**	fix ifdesf
+**
+**	Revision 1.16  2001-09-20 13:50:27-04  gsl
+**	Remove VMS ifdefs
+**
 **	Revision 1.15  1999-09-13 15:52:05-04  gsl
 **	removed unused local vars
 **

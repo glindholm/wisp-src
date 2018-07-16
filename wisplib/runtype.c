@@ -187,7 +187,7 @@ int runtype(const char* filespec)
 	**	Last chance: Read the file to see if it is an ACUCOBOL program.
 	*/
 
-	fh = open(filespec,O_RDONLY,0);
+	fh = open(filespec,O_RDONLY|O_BINARY,0);
 	if ( fh == -1 )
 	{
 		return(RUN_UNKNOWN);
@@ -207,6 +207,9 @@ int runtype(const char* filespec)
 /*
 **	History:
 **	$Log: runtype.c,v $
+**	Revision 1.13  2001-11-12 17:43:08-05  gsl
+**	Open in O_BINARY (WIN32)
+**
 **	Revision 1.12  1998-10-14 12:00:16-04  gsl
 **	Enhanced runtype() to check the filemode to see if the 'X' execute bit
 **	was set. If set then default to executable if other type not determined.

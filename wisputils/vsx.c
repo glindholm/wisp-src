@@ -537,7 +537,7 @@ static void load3480(char *tapedev, int cartridge);
 **
 */
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
         char *p,*e;
 	void handler(int sig);
@@ -3250,6 +3250,9 @@ static void load3480(char *tapedev, int cartridge)
 #endif
 /*
  * $Log: vsx.c,v $
+ * Revision 1.96  2001-11-07 14:54:24-05  gsl
+ * main() returns int
+ *
  * Revision 1.95  2000-03-13 14:16:03-05  gsl
  * fix WIN32 warning
  *

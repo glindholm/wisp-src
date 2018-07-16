@@ -25,15 +25,10 @@ static char rcsid[]="$Id:$";
 */
 
 #include <stdio.h>
-
-#ifdef VMS
-#include <stat.h>
-#else /* !VMS */
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif /* !VMS */
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <io.h>
 #endif
 
@@ -66,16 +61,23 @@ static char rcsid[]="$Id:$";
 **
 **	Warnings:	None
 **
-**	History:	
-**	04/26/93	Written by GSL
-**
 */
 
 int fexists(const char* name)
 {
+#ifdef unix
 	struct stat buf;
 
 	return((0==stat(name,&buf)) ? 1:0);
+#endif
+
+#ifdef WIN32
+	/*
+	 *	Use access() because stat() fails on a share name like "\\machine\share".
+	 */
+
+	return (0==access(name,000)) ? 1 : 0;
+#endif
 }
 
 /*
@@ -184,7 +186,7 @@ int isadir(const char* name)
 
 int fcanread(const char* name)
 {
-#if defined(unix) || defined(VMS)
+#ifdef unix
 	FILE 	*fh;
 	int	rc;
 
@@ -194,15 +196,18 @@ int fcanread(const char* name)
 		return 1;
 	}
 	return 0;
-#endif /* unix || VMS */
+#endif /* unix */
 
-#if defined(MSDOS) || defined(WIN32)
+#ifdef WIN32
 	return (0==access(name,004)) ? 1 : 0;
-#endif /* MSDOS */
+#endif
 }
 /*
 **	History:
 **	$Log: fexists.c,v $
+**	Revision 1.11  2001-11-13 15:46:30-05  gsl
+**	On WIN32 use access() instead of stat()
+**
 **	Revision 1.10  1996-12-11 16:31:10-05  gsl
 **	Added isafile() and isadir()
 **

@@ -24,17 +24,10 @@ static char rcsid[]="$Id:$";
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-
-#ifdef VMS
-#include <ssdef.h>
-#endif
-
-#ifndef VMS	/* unix or MSDOS */
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif
 
-#if defined(MSDOS) || defined(_MSC_VER)
+#ifdef WIN32
 #include <io.h>
 #endif
 
@@ -312,19 +305,6 @@ translate_name:
 	**	This is used with ACUServer and FileShare2.
 	*/
 	remote_flag = remote_volume(l_name, remote_filepath);
-
-#ifdef VMS
-	if (*mode & IS_PRINTFILE)							/* VAX ON-LINE printing			*/
-	{
-		char	printmode;
-		get_defs(DEFAULTS_PM,&printmode);
-		if ('O' == printmode)							/* If VAX ON-LINE printing assume OK	*/
-		{
-			goto wfopen_return;
-		}
-	}
-#endif /* VMS */
-
                                                                                         
 /* check_access: */
 	/*
@@ -333,12 +313,10 @@ translate_name:
 
 	access_status = ACC_UNKNOWN;	     						/* Initialize the status.		*/
 
-#ifndef VMS
 	if ( !opt_createvolumeon && !native_mode && !wlgtrans(l_vol, temp) )		/* Check if there is volume translation */
 	{
 		access_status = ACC_BADVOL;
 	}
-#endif
 
 	if (*mode & IS_DBFILE)
 	{
@@ -608,7 +586,7 @@ static void acc_message(int access_status, char* msgbuf)
 		strcpy(msgbuf,"VOLUME NOT FOUND.");
 		break;
 	case ACC_OUTEXISTS:
-		strcpy(msgbuf,"FILE EXISTS, RENAME OR PRESS PF3 TO CONTINUE.");
+		strcpy(msgbuf,"FILE EXISTS, RENAME AND PRESS (ENTER) OR PRESS (3) TO CONTINUE.");
 		break;
 	case ACC_ERROPEN:
 		strcpy(msgbuf,"OPEN FAILED WITH FILE STATUS ");
@@ -666,6 +644,10 @@ static void acc_message(int access_status, char* msgbuf)
 /*
 **	History:
 **	$Log: wfopen.c,v $
+**	Revision 1.23  2001-11-02 10:09:20-05  gsl
+**	Tweak PF3 message
+**	Remove VMS code
+**
 **	Revision 1.22  1999-01-05 10:08:11-05  gsl
 **	Fix sig11 bug.
 **	The msg1 and msg2 fields were uninitialized the second time in because

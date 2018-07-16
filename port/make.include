@@ -195,9 +195,21 @@ SYSDEF = "Error SYSDEF not defined"
 #CCC_SYS_FLAGS = -ms
 
 #==================================================================
-#	HP/UX
+#	HP-UX
+#
+#	HP-UX 11.00
 #
 #SYSDEF = -DHPUX
+#
+#CC_STD  = c89
+#CC_ANSI = c89
+#CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -lcurses
+#CCC = gcc
+#CCC_SYS_FLAGS = -DBOOL_TYPE -fsigned-char
+#CCC_SYS_LINK =  /usr/local/lib/libstdc++.a
+#
+#	HP-UX 10.20 & 10.10
+#
 #CC_STD  = c89
 #CC_ANSI = c89
 #CC_SYS_FLAGS = +z -D_HPUX_SOURCE +DAportable -Wl,-a,archive

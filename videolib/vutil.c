@@ -15,6 +15,16 @@ static char rcsid[]="$Id:$";
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#ifdef WIN32
+#include <io.h>
+#endif
+
+#include <errno.h>
+#include <time.h>
+
 #include "vutil.h"
 #include "video.h"
 #include "vlocal.h"
@@ -26,9 +36,66 @@ static char rcsid[]="$Id:$";
 
 #define DISPLAY_LINE 2
 
+static char vre_logfile[128] = "videoerr.log"; 	/* Log ver() errors to this file. */
+/*
+ *	Set the log file
+ */
+void vre_set_logfile(const char* filepath)
+{
+	if (NULL == filepath)
+	{
+		vre_logfile[0] = '\0';
+	}
+	else
+	{
+		strcpy(vre_logfile, filepath);
+	}
+}
+
+/*
+ *	Write to the log file
+ */
+void vre_write_logfile(const char* buff)						/* Write out a buffer to the error log.	*/
+{
+	int created_log = 0;
+	FILE *efile;									/* Pointer to error log file.		*/
+	time_t clock;
+	char	timestamp[40];
+
+	if ('\0' == vre_logfile[0])							/* If no log file just return		*/
+	{
+		return;
+	}
+	
+	efile = fopen(vre_logfile,"a");							/* First try to append.			*/
+	if (!efile) 
+	{
+		efile = fopen(vre_logfile,"w");						/* Doesn't exist, create it.		*/
+		created_log = 1;
+	}
+
+	if (!efile)									/* If can't open then use stderr	*/
+	{
+		fprintf(stderr,"%s\n",buff);
+		return;
+	}
+
+	clock = time(0);								/* Format timestamp	*/
+	strcpy(timestamp, ctime(&clock));
+	timestamp[strlen(timestamp) - 1] = '\0';					/* Remove the trailing newline 		*/
+
+	fprintf(efile,"%s %s\n",timestamp, buff);					/* Write buff to file with timestamp	*/
+
+	fclose(efile);									/* All done!				*/
+
+	if ( created_log )
+	{
+		chmod(vre_logfile, 0666);						/* Allow all to write.			*/
+	}
+}
+
 
 /*					Report internal errors if verbose.							*/
-
 int vre(char *text, ...)
 {
 	static int already_in_vre = 0;
@@ -52,8 +119,11 @@ int vre(char *text, ...)
 
 	if (verbose)									/* Don't report unless verbose.		*/
 	{
-		vsprintf(string, text,args);						/* Display the text.			*/
-		vrawerror(string);
+		vsprintf(string, text,args);						/* Format the message.			*/
+
+		vre_write_logfile(string);						/* Log the message			*/
+		
+		vrawerror(string);							/* Display message			*/
 	}
 
 	already_in_vre = 0;
@@ -306,6 +376,9 @@ void vtitle(const char *titlestr)
 /*
 **	History:
 **	$Log: vutil.c,v $
+**	Revision 1.15  2001-10-12 16:06:53-04  gsl
+**	Add logging of vre() messages
+**
 **	Revision 1.14  1997-07-09 12:37:52-04  gsl
 **	Change to use new interface
 **	Remove obsolete routines.
