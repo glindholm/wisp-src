@@ -152,7 +152,7 @@ static void wsh_queue_print(void) 	{ wsh_uqueue(1); }
 static void wsh_queue_batch(void) 	{ wsh_uqueue(0); }
 #endif
 
-static void wsh_display_errlog(void) 	{ link_display(werrpath()); }
+static void wsh_display_errlog(void) 	{ WL_link_display(werrpath()); }
 
 static void wsh_print_prog_screen(void) { wsh_progprnt(1); }
 static void wsh_print_cmd_screen(void)  { /* wsh_progprnt(0); */ screen_print(); }
@@ -1518,8 +1518,8 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 {
 	HWSB	hWsb;
 	int	pfkey, currow, curcol;
-	char 	buff[80];
-	char	temp[80];
+	char 	buff[256];
+	char	temp[256];
 	char	platname[80], platcode[2];
 
 	currow = 0;
@@ -1529,7 +1529,7 @@ static void wsh_copyright(void)								/* Display the copyright screen.	*/
 	wsb_add_text(hWsb, 1, 0,"*** Copyright Information ***");
 	wsb_add_text(hWsb, 4, 0,"The WISP runtime library");
 	wsb_add_text(hWsb, 5, 0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR "  NeoMedia Technologies Incorporated");
-	wsb_add_text(hWsb, 6, 0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (239) 337-3434");
+	wsb_add_text(hWsb, 6, 0,"2201 Second Street Suite 402, Fort Myers FL 33901 (239) 337-3434");
 	wsb_add_text(hWsb, 7, 0,"Web: www.neom.com   Email: support@neom.com");
 
 /*	sprintf(buff,"Version=[%s] Library=[%d] Screen=[%d]",wisp_version(), LIBRARY_VERSION, SCREEN_VERSION); */
@@ -3792,6 +3792,15 @@ int wsystem_interactive(const char *cmd)
 /*
 **	History:
 **	$Log: wshelp.c,v $
+**	Revision 1.79.2.4  2002/11/12 16:00:27  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
+**	Revision 1.79.2.3  2002/11/08 18:19:32  gsl
+**	Enlarge temp vars to prevent overflow
+**	
+**	Revision 1.79.2.2  2002/11/06 21:25:32  gsl
+**	Change address to Suite 402
+**	
 **	Revision 1.79.2.1  2002/09/06 16:18:33  gsl
 **	Fix phone numbers
 **	

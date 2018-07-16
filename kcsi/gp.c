@@ -15,30 +15,28 @@ static int4 gppf_tran(int gppf);
 /*----
 Initialize 4 byte integers 0-255 for getparm processing
 ------*/
-void init_gpint()
+void GP_init_gpint()
 {
 	int idx;
 
-	if(GPINT[1])
+	if(GP_INT[1])
 		return;
 
 	for(idx = 0; idx < 255; ++idx)
 		{
-		GPINT[idx] = idx;
-		wswap(&GPINT[idx]);
+		GP_INT[idx] = idx;
+		WL_wswap(&GP_INT[idx]);
 		}
 }
 
 /*----
 Display and read a getparm, and return the translated PF code
 ------*/
-int4 display_and_read_gp()
+int4 GP_display_and_read()
 {
-	static int4 two = 2;
-
-	wvaset(&two);
-	GETPARM(&gparg,&gpcnt);
-	return(gppfkey = gppf_tran(gppfrcvr[0]));
+	WL_set_va_count(2);
+	GETPARM(&GP_arg,&GP_cnt);
+	return(GP_pfkey = gppf_tran(GP_pfrcvr[0]));
 }
 
 /*----
@@ -57,6 +55,15 @@ static int4 gppf_tran(int gppf)
 /*
 **	History:
 **	$Log: gp.c,v $
+**	Revision 1.8.2.1  2002/11/12 15:56:24  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.10  2002/10/24 14:20:39  gsl
+**	Make globals unique
+**	
+**	Revision 1.9  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.8  1996/09/17 23:34:08  gsl
 **	drcs update
 **	

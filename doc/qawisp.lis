@@ -1,12 +1,11 @@
-	Copyright (c) 1989-2001 by NeoMedia Technologies Inc. 
+	Copyright (c) 1989-2002 by NeoMedia Technologies Inc. 
 	All Rights Reserved.
 	
 	====================================================================
 	
 	Title:		WISP QA Checklist
 	
-	Document:	qawisp.lis
-	Last Updated:	$Date:$
+	Document:	$Id:$
 	Products:	WISP
 	
 	====================================================================
@@ -97,11 +96,17 @@
 			$ export ACUDIR=/disk1/acucobol
 			$ export COBDIR=/disk1/mfcobol
 
+	___	Copy the "test" directory  based on the COBOL you are using.
+
+			$ cd ${WISPSRC}
+		ACU	$ cp -r test testacu
+		MF	$ cd -r test testmf
+
 	___	Change directory to your "test" dir based on the COBOL you
 		are using.
 
-		ACU	$ cd $WISP/src/testacu
-		MF	$ cd $WISP/src/testmf
+		ACU	$ cd ${WISPSRC}/testacu
+		MF	$ cd ${WISPSRC}/testmf
 
 	___	Run the "startup" file to setup environment variables.  
 		This will set your $WISPCONFIG plus COBOL specific variables.
@@ -121,20 +126,6 @@
 		$WISPDIR/bin/wlicense
 
 
-+	SETUP $WISPCONFIG DIRECTORY
-
-	___	Run the config setup script.
-
-		ACU	$ configacu.sh
-
-		MF	$ configmf.sh
-
-	___	Check your setup with WDIAG. Some LGMAP directories have
-		not yet been created.  Ensure that everything else is OK. 
-
-			$ wdiag
-
-
 +	BUILD SAMPLE
 
 
@@ -144,11 +135,16 @@
 		MF	$ make -f sample.umf MF
 		MFSE	$ make -f sample.umf MFSE
 
+	___	Check your setup with WDIAG. Some LGMAP directories have
+		not yet been created.  Ensure that everything else is OK. 
+
+			$ wdiag
+
 	WISP TRANSLATOR TESTS
 
 	___	Run the WISP translator against the t_xxx.wcb test files.
 
-		$ cd $WISP/src/wisptran
+		$ cd ${WISPSRC}/wisptran
 		$ make -f wisp.umf testacu  2>&1 |more
 		$ make -f wisp.umf testmf   2>&1 |more
 		$ make -f wisp.umf testmfse 2>&1 |more
@@ -186,19 +182,17 @@
 
 		___  Install WISP
 		___  Install EDE
-		___  Install CRID
-		___  Install CREATE
+		___  Install KCSI
 
 		___  Build a COBOL Runtime system with WISP
-		     ___  Follow wrun32wisp.mak instructions.
+		     ___  Follow wrun32wisp_acu52.mak instructions.
 		___  Build a COBOL Runtime system with WISP & EDE
-		     ___  Follow wrun32wisp_ede.mak instructions.
-		___  Build a COBOL Runtime system with WISP & CRID
-		     ___  Follow wrun32wisp_crid.mak instructions.
+		     ___  Follow wrun32wisp_ede_acu52.mak instructions.
+		___  Build a COBOL Runtime system with WISP & KCSI
+		     ___  Follow wrun32wisp_kcsi_acu52.mak instructions.
 
 		___  Share C:\WISPxxxx as share name "WISP"
-		___  Share C:\CRIDxxx as share name "CRID"
-		___  Share C:\CREATExxx as share name "CREATE"
+		___  Share C:\KCSIxxxx as share name "KCSI"
 
 		___  Run WCONFIG.EXE
 		     ___  (RESET) if already configured
@@ -207,17 +201,17 @@
 
 		___  Run WLICENSE.EXE
 
-+	SETUP $WISPCONFIG DIRECTORY
++	SETUP ${WISPCONFIG} DIRECTORY
 
 	___	Share these directories: 
 		C:\DEV\WISP\SRC\TESTACU      as TESTACU
 		C:\DEV\WISP	             as WISPDEV
-                C:\Acucorp\Acucbl510\AcuGT   as ACUCOBOL
+                C:\Acucorp\Acucbl520\AcuGT   as ACUCOBOL
 
 	___   	Edit ...\TESTACU\SAMPLEACU.MAK
 
 		___ Set WISPDIR=C:\WISP44xx
-		___ Set COBOL=C:\Acucorp\Acucbl510\Acugt\BIN\CCBL32.EXE
+		___ Set COBOL=C:\Acucorp\Acucbl520\Acugt\BIN\CCBL32.EXE
 
 	Copy the config files.
 	___	Run CONFIGACU.BAT
@@ -236,13 +230,13 @@
 
 		    CODE-PREFIX . \\SERVER\TESTACU 
 				  \\SERVER\WISP\ACU
-				  \\SERVER\CRID
+				  \\SERVER\KCSI
 
 	___	WRUN.CFG: Edit CONFIG\WRUN.CFG and correct the locations
-		of ACUCONFIG and WRUN32WISPC.EXE (CRID Version).
+		of ACUCONFIG and WRUN32WISPK.EXE (KCSI Version).
 
 		    option=-b +e \\SERVER\TESTACU\acuerr.log -c \\SERVER\TESTACU\CONFIG\ACUCONFIG
-		    runcbl=\\SERVER\ACUCOBOL\BIN\WRUN32WISPC.EXE
+		    runcbl=\\SERVER\ACUCOBOL\BIN\WRUN32WISPK.EXE
 
 	___	WSYSCONF.CFG: Edit CONFIG\WSYSCONF.CFG and add the machine
 		name as workstation 100.
@@ -256,8 +250,7 @@
 		       \\SERVER\WISP\ACU;
 		       \\SERVER\TESTACU;
 		       \\SERVER\TESTACU\VOLRUN\ONPATH;
-		       \\SERVER\CRID;
-		       \\SERVER\CREATE;
+		       \\SERVER\KCSI;
 		       C:\WIN
 
 		- MESSAGE (TAB)
@@ -1249,7 +1242,6 @@
 		(16) exit
 
 	___	(9) DATENTRY
-
 	
 	___	Data file: FILE= I1  LIBRARY= DATA VOLUME=VOLIN	
 		(2) Create data file 
@@ -1270,6 +1262,10 @@
 		(16) exit
 
 	___	(9) INQUIRY
+		Data file:    FILE= I1  LIBRARY= DATA    VOLUME=VOLIN	
+		(ENTER)
+
+		Control file: FILE= I1  LIBRARY= CONTROL VOLUME=VOLIN
 		(ENTER)
 
 		LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
@@ -1277,12 +1273,17 @@
 
 		(ENTER)
 	___	(16) Continue query
+		
+		    DISPLAY shows 2 records AAA, and BBB.
+		    (16) Exit DISPLAY
 
 	___	(2) Save Query 
-		    FILE=Q1  LIBRARY=INQUIRY VOLUME=VOLOUT
+		    FILE=I1  LIBRARY=INQUIRY VOLUME=VOLOUT
+		    (ENTER)
 
 	___	(3) Create REPORT definition 
-		    FILE=R1  LIBRARY=REPORT VOLUME=VOLOUT
+		    FILE=I1  LIBRARY=REPORT VOLUME=VOLOUT
+		    (ENTER)
 
 	___	(16) Exit INQUIRY
 
@@ -1308,13 +1309,19 @@
 		DEVICE=DISPLAY
 		(ENTER)
 
+		   DISPLAY shows 3 records AAA, BBB, AA2 (unordered)
+		   (16) Exit DISPLAY
+
 	___	(3) Modify a report
-		    FILE=R1  LIBRARY=REPORT VOLUME=VOLOUT
+		    FILE=I1  LIBRARY=REPORT VOLUME=VOLOUT
 		(ENTER)
 		(9) Sort Fields
 		    Field ID: AKEY1
                     Level:    1
 		    Asc/Dsc:  D
+		(ENTER)
+		(16)
+		(16)
 
 	___	(4) Print a report
 
@@ -1322,6 +1329,8 @@
 		(ENTER)
 		*** Check AKEY1 is descending ***
 
+		   DISPLAY shows 3 records BBB, AAA, AA2
+		   (16) Exit DISPLAY
 
 	___	(16) Exit REPORT
 
@@ -1329,9 +1338,127 @@
 
 	___	wshell	  Run saved Query
 
-		(1) RUN FILE=Q1  LIBRARY=INQUIRY VOLUME=VOLOUT
+		(1) RUN FILE=I1  LIBRARY=INQUIRY VOLUME=VOLOUT
 
-		(16) EXIT
+		(16) Continue Query
+		
+		    DISPLAY shows 2 records AAA, and BBB.
+		    (16) Exit DISPLAY
+
+		(16) EXIT INQUIRY
+
+
+		-------------------------------------------------
+	___	(1) RUN  - CONTROL (RELATIVE FILE)
+
+	___	FILE= R1        LIBRARY= CONTROL   VOLUME= VOLIN
+		(2) Create a new file
+
+	___	RECLEN   = 80
+		FILEORG  = R
+		(ENTER)
+
+	___	Name    Start  Format  IntLen Decimal
+		PKEY	1      C       10     
+		AKEY1	11     C       10     
+		AKEY2	21     C       10     
+		ZONE	31     Z       10     4
+		USIGN	41     U       10     4
+		PACK	51     P        8     2
+		BIN	59     B	4          Bin Edit = 1
+		X	63     C        3          Occurs   = 6
+		(ENTER)(ENTER) after each line
+		(16) exit
+
+	___	(9) DATENTRY
+	
+	___	Data file: FILE= R1  LIBRARY= DATA VOLUME=VOLIN	
+		(2) Create data file 
+
+	___	(3) Add Records
+		RECORD PKEY AKEY1 AKEY2 ZONE USIGN PACK BIN X1  X2
+		3      CCC  CCC   CCC	300  300   300  300 300 300
+		2      BBB  BBB   BBB	200  200   200  200 200 200
+		5      EEE  EEE   EEE   500  500   500  500 500 500  
+
+	___	(9) Exit to Modify
+		(2) First record
+		    (5) Next, (5) Next
+		(16) exit
+
+	___	(9) INQUIRY
+		Data file:    FILE= R1  LIBRARY= DATA    VOLUME=VOLIN	
+		(ENTER)
+
+		Control file: FILE= R1  LIBRARY= CONTROL VOLUME=VOLIN
+		(ENTER)
+
+
+		LIST PKEY AKEY1 AKEY2 ZONE PACK BIN USIGN
+                WHEN PKEY < 'CCA'
+
+		(ENTER)
+	___	(16) Continue query
+		
+		    DISPLAY shows 1 record BBB.
+		    (16) Exit DISPLAY
+
+
+	___	(16) Exit INQUIRY
+
+	___	(32) Exit DATENTRY
+
+	___	(10) Run REPORT
+
+	___	(2) Create a Report
+
+		Report ID = R1
+		(ENTER)
+		Data     FILE= R1     LIBRARY= DATA    VOLUME= VOLIN
+		(ENTER)
+		Control  FILE= R1     LIBRARY= CONTROL VOLUME= VOLIN
+		(ENTER)
+		Place a 'X' on AKEY1, AKEY2, BIN, PACK, X(01), ZONE
+		(ENTER)
+		(ENTER)
+		(16) Exit report definition phase
+
+	___	(4) Print a report
+
+		DEVICE=DISPLAY
+		(ENTER)
+
+		   DISPLAY shows 3 records BBB, CCC, EEE
+		   (16) Exit DISPLAY
+
+	___	(3) Modify a report
+
+		Report ID = R1
+		(ENTER)
+
+		(ENTER)
+		(9) Sort Fields
+		    Field ID: AKEY1
+                    Level:    1
+		    Asc/Dsc:  D
+		(ENTER)
+		(16)
+		(16)
+
+	___	(4) Print a report
+
+		DEVICE=DISPLAY
+		(ENTER)
+		*** Check AKEY1 is descending ***
+
+		   DISPLAY shows 3 records EEE, CCC, BBB
+		   (16) Exit DISPLAY
+
+
+	___	(16) Exit REPORT
+
+	___	(32) Exit CONTROL
+
 
 
 	KCSI CREATE

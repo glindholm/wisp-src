@@ -18,16 +18,16 @@ fi
 export TERM
 echo TERM=$TERM
 
-echo $n "WISPTERM [$WISPTERM] : $c"
+echo $n "WISPTERM [${WISPTERM}] : $c"
 read X
 if [ "$X" ]
 then
 WISPTERM=$X
 fi
 export WISPTERM
-echo WISPTERM=$WISPTERM
+echo WISPTERM=${WISPTERM}
 
-X=`echo $WISPTERM| grep 'vt[01-9]*' `
+X=`echo ${WISPTERM}| grep 'vt[01-9]*' `
 if [ "$X" ]
 then
 echo 'stty erase "^?"' 

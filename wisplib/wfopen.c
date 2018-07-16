@@ -64,8 +64,6 @@ static char rcsid[]="$Id:$";
 */
 extern void lastacufilestat(char *buff);
 
-extern void wfopen2();
-extern void wfopen3(int4 *mode, char *vol, char *lib, char *file, char *name, char *appl, char *prname, int4 *openmode);
 
 /*
 **	Static data
@@ -84,9 +82,15 @@ char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
 char *name;										/* The resultant name			*/
-char *prname;										/* The PRNAME (optional).		*/
+const char *prname;									/* The PRNAME (optional).		*/
 {
-	wfopen2(mode,vol,lib,file,name,WISPRUNNAME,prname);
+	const char *l_prname;
+	if (*mode & IS_PRNAME)								/* If PRNAME is passed then		*/
+		l_prname = prname;							/* Use the passed PRNAME		*/
+	else
+		l_prname = "        ";							/* Else use blank			*/
+
+	wfopen2(mode,vol,lib,file,name,WISPRUNNAME,l_prname);
 }
 
 /********************************************************************************************************************************/
@@ -101,9 +105,9 @@ void wfopen3(										/* WISP 3.0 and later			*/
 	     char *lib,									/* The WANG library name (8 chars)	*/
 	     char *file,								/* The file name	(8 chars)	*/
 	     char *name,								/* The resultant name			*/
-	     char *appl,								/* The COBOL program id (8 chars)	*/
-	     char *prname,								/* The PRNAME (optional).		*/
-	     int4 *openmode)								/* The open mode			*/
+	     const char *appl,								/* The COBOL program id (8 chars)	*/
+	     const char *prname,							/* The PRNAME (optional).		*/
+	     const int4 *openmode)							/* The open mode			*/
 {
 	uint4	set,clear;
 	int4	the_openmode;
@@ -124,37 +128,37 @@ void wfopen3(										/* WISP 3.0 and later			*/
 		SORT			1		0		1		0		1
 	*/
 
-	if (the_openmode == OPEN_SHARED && 				/* If OPEN SHARED for a  SEQ file change to EXTEND.	*/
+	if (the_openmode == WFOPEN_SHARED && 				/* If OPEN SHARED for a  SEQ file change to EXTEND.	*/
 	    ((*mode & IS_SEQDYN) || (*mode & IS_SEQSEQ)))
-		the_openmode = OPEN_EXTEND;
+		the_openmode = WFOPEN_EXTEND;
 
 	switch(the_openmode)
 	{
-	case OPEN_INPUT:
+	case WFOPEN_INPUT:
 		set   = IS_NOWRITE;
 		clear = IS_EXTEND | IS_OUTPUT | IS_IO | IS_SORT;
 		break;
-	case OPEN_SHARED:
+	case WFOPEN_SHARED:
 		set   = IS_IO;
 		clear = IS_EXTEND | IS_OUTPUT | IS_NOWRITE | IS_SORT;
 		break;
-	case OPEN_OUTPUT:
+	case WFOPEN_OUTPUT:
 		set   = IS_OUTPUT | IS_NOWRITE;
 		clear = IS_EXTEND | IS_IO | IS_SORT;
 		break;
-	case OPEN_EXTEND:
+	case WFOPEN_EXTEND:
 		set   = IS_EXTEND | IS_OUTPUT | IS_NOWRITE;
 		clear = IS_IO | IS_SORT;
 		break;
-	case OPEN_SPECIAL_INPUT:
+	case WFOPEN_SPECIAL_INPUT:
 		set   = 0;
 		clear = IS_EXTEND | IS_OUTPUT | IS_NOWRITE | IS_IO | IS_SORT;
 		break;
-	case OPEN_I_O:
+	case WFOPEN_I_O:
 		set   = IS_NOWRITE | IS_IO;
 		clear = IS_EXTEND | IS_OUTPUT | IS_SORT;
 		break;
-	case OPEN_SORT:
+	case WFOPEN_SORT:
 		set   = IS_SORT | IS_OUTPUT | IS_NOWRITE;
 		clear = IS_EXTEND | IS_IO;
 		break;
@@ -173,12 +177,13 @@ char *vol;										/* the WANG volume name	(6 chars)	*/
 char *lib;										/* The WANG library name (8 chars)	*/
 char *file;										/* The file name	(8 chars)	*/
 char *cob_name;										/* The resultant name			*/
-char *appl;										/* The COBOL program id (8 chars)	*/
-char *prname;										/* The PRNAME (optional).		*/
+const char *appl;									/* The COBOL program id (8 chars)	*/
+const char *prname;									/* The PRNAME (optional).		*/
 {
 											/* These are static so they will be set */
 											/* on an IS_ERROR repeat.		*/
-	static	char *l_vol,*l_lib,*l_file,*l_name,*l_prname;				/* local vars cause the vax protects	*/
+	static	char *l_vol,*l_lib,*l_file,*l_name;					/* local vars cause the vax protects	*/
+	static  const char *l_prname;
 	static	int4 native_mode;							/* Set to 1 if in VAX/VMS native mode.	*/
 	static	char getparm_type[3];
 	static	char	prtclass[1];
@@ -188,6 +193,7 @@ char *prname;										/* The PRNAME (optional).		*/
 
 	static	char	remote_filepath[COB_FILEPATH_LEN];				/* The remote filepath via RVMAP	*/
 	static	int	remote_flag = 0;						/* Flag if this is a remote file	*/
+	static  char	saveExt[WISP_FILE_EXT_SIZE];
 
 	char temp[132];
 	int i,access_status;
@@ -226,10 +232,7 @@ char *prname;										/* The PRNAME (optional).		*/
 	l_name = cob_name;
 	memset(l_name, ' ', COB_FILEPATH_LEN);						/* Clear out the 80 character filename.	*/
 
-	if (*mode & IS_PRNAME)								/* If PRNAME is passed then		*/
-		l_prname = prname;							/* Use the passed PRNAME		*/
-	else
-		l_prname = "        ";							/* Else use blank			*/
+	l_prname = prname;								/* Use the passed PRNAME		*/
 
 	memcpy(orig_file,l_prname,SIZEOF_FILE);						/* Save original file name passed in.	*/
 
@@ -294,7 +297,7 @@ translate_name:
 		*mode &= ~IS_SCRATCH;							/* Clear the scratch flag.		*/
 											/* In case it was set by a previous call*/
 		*mode |= IS_BACKFILL;							/* Backfill the file/lib/vol.		*/
-		SAVE_WISPFILEXT;							/* Save the special file extension.	*/
+		WGETFILEXT(saveExt);							/* Save the special file extension.	*/
 
 		wfname(mode,l_vol,l_lib,l_file,l_name);					/* generate a native file name		*/
 
@@ -442,7 +445,7 @@ respecify:
 		{
 			if (!native_mode)						/* What name entry mode are we in ?	*/
 			{								
-				RESTORE_WISPFILEXT;					/* Restore the special extension.	*/
+				WSETFILEXT(saveExt);					/* Restore the special extension.	*/
 			}
 			goto translate_name;  						/* re-translate the name etc.		*/
 		}
@@ -644,6 +647,15 @@ static void acc_message(int access_status, char* msgbuf)
 /*
 **	History:
 **	$Log: wfopen.c,v $
+**	Revision 1.23.2.3  2002/11/15 20:34:12  gsl
+**	Move the optional prname login from wfopen2() to wfopen() where belongs
+**	
+**	Revision 1.23.2.2  2002/11/14 21:12:28  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
+**	Revision 1.23.2.1  2002/11/12 16:00:24  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.23  2001/11/02 15:09:20  gsl
 **	Tweak PF3 message
 **	Remove VMS code

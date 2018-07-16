@@ -71,33 +71,37 @@ typedef struct _dtype{
 	int _dec;
 	}DTYPE;
 
-int comp_zero(DTYPE *lop);
-int comp_space(DTYPE *lop);
-void rcvt_pair(DTYPE *dest,DTYPE *src);
+int KCSI_comp_zero(DTYPE *lop);
+int KCSI_comp_space(DTYPE *lop);
 void cvt_list(DTYPE *dest,DTYPE *src);
 void cvt_record(DTYPE *dest,DTYPE *src,char *record);
 void cvt_to_record(DTYPE *d,DTYPE *src,char *record);
 void cvt_data(DTYPE *dest,DTYPE *src);
-void dbltob(char *dest,double dbl,int len,int type);
-void nltoza(char *dest,char *src,int dlen,int ddec);
-void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
-void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
-void zatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
-void uatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
-void zatoz(char *dest,char *src,int dlen,int slen,int sign_code);
-void zatou(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
-void btoeh(char *dest,char *src,int dlen,int slen,int type);
-void eutob(char *dest,char *src,int dlen,int slen,int sdec,int type);
 char *cvt_type(DTYPE *dt);
-int rptcmb(DTYPE *lop,int op,DTYPE *rop);
+int KCSI_rptcmb(DTYPE *lop,int op,DTYPE *rop);
 void cvt_one_rfl(DTYPE *d,DTYPE *s,char *record);
-int comp_rec_num(long num,DTYPE *lop,DTYPE *rop);
-int rptcmp(DTYPE *lop,char *op,DTYPE *rop);
+int KCSI_comp_rec_num(long num,DTYPE *lop,DTYPE *rop);
+int KCSI_rptcmp(DTYPE *lop,char *op,DTYPE *rop);
 
 #endif
 /*
 **	History:
 **	$Log: dtype.h,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:24  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/10/24 14:20:39  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/23 20:39:08  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/10/22 21:10:20  gsl
+**	Unique global sysmbols
+**	
+**	Revision 1.5  2002/07/25 15:20:28  gsl
+**	Globals
+**	
 **	Revision 1.4  1997/06/05 17:01:58  scass
 **	Corrected prototype for dtob so is named dbltob
 **	

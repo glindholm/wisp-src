@@ -95,11 +95,12 @@ static int kcsi_reportff=1;
 Non-int functions
 ------*/
 
-char	*cpsize(),*format_numeric(),*cpxsize(),
-	*zero_suppress(),*format_a_field();
-double	get_real_value();
+char	*KCSI_cpsize(),*format_numeric(),*cpxsize(),
+	*zero_suppress();
 
 static RPT_RFL *next_rfl(int line, int* seq);
+static double get_real_value(char* address, int dec, int ddec);
+
 
 /*----
 Shorthand
@@ -137,7 +138,7 @@ char *code;
 char *record;
 {
 	TRACE_IN("io_to_rptpln");
-	rptpln(code,record,rpt_PRT_FILE,rpt_PRT_LIB,rpt_PRT_VOL);
+	KCSI_rptpln(code,record,rpt_PRT_FILE,rpt_PRT_LIB,rpt_PRT_VOL);
 	TRACE_OUT("io_to_rptpln");
 
 }
@@ -166,7 +167,7 @@ static void print_a_line(s)
 char *s;
 {
 	TRACE_IN("print_a_line");
-	strfil(s);
+	KCSI_strfil(s);
 	if(*rpt_caller > '9')
 		io_to_rptpln(PRINT_LINE,s);
 	else
@@ -292,10 +293,10 @@ int seq;
                    (trecs == 1))
 			{
 			if(*rpt_caller > '9')
-				format_a_field(rfl,d + rfl->_col,0);
+				rpt_format_a_field(rfl,d + rfl->_col,0);
 			else
 				{
-				format_a_field(rfl,d,0);
+				rpt_format_a_field(rfl,d,0);
 				io_to_lmg(WRITE_FIELD,d);
 				}
 			}
@@ -343,7 +344,7 @@ static void format_lines()
 	for(i=0;i<3;++i)
 		{
 		format_one_line(detail[i],i);
-		strunc(detail[i]);
+		KCSI_strunc(detail[i]);
 		}
 	TRACE_OUT("format_lines");
 }
@@ -383,9 +384,7 @@ static void set_rfl_values()
 /*----
 Modified to adjust for edited decimals
 ------*/
-double get_real_value(address,dec,ddec)
-char *address;
-int dec,ddec;
+static double get_real_value(char* address, int dec, int ddec)
 {
 	double fl;
 	char format[101];
@@ -476,7 +475,7 @@ int idx;
 		wrfl._new = &dtp;
 		wrfl._new->_base = rcb->_brk_val;
 		wrfl._new->_pos = 0;
-		format_a_field(&wrfl,&break_line[rfl->_line - 1][rfl->_col],0);
+		rpt_format_a_field(&wrfl,&break_line[rfl->_line - 1][rfl->_col],0);
 		}
 }
 
@@ -536,7 +535,7 @@ int level;
 	while(dec--)
 		value *= 10;	
 	sprintf(wrk_f,"%+016.0f",value);
-	format_a_field(&wrfl,&break_line[rfl->_line - 1][wrfl._col],0);
+	rpt_format_a_field(&wrfl,&break_line[rfl->_line - 1][wrfl._col],0);
 	if(code == 1)
 		earlier_breaks(level);
 	TRACE_OUT("build_a_break");
@@ -556,7 +555,7 @@ RPT_RCB *rcb;
 		rcb->_rec_count = 0;
 		if(rcb->_e._name[0])
 			memcpy(rcb->_brk_val,
-				&inp_rec[(*rcb->_pnew)->_pos],
+				&rpt_inp_rec[(*rcb->_pnew)->_pos],
 				(*rcb->_pnew)->_len);
 		++rcb;
 		}
@@ -641,8 +640,8 @@ int i;
  * Now copy in the header and sub header
  */
 
-		cpsize(hptr + column,rfl->_col_head,w1);
-		cpsize(sptr + column,rfl->_col_sub_head,w2);
+		KCSI_cpsize(hptr + column,rfl->_col_head,w1);
+		KCSI_cpsize(sptr + column,rfl->_col_sub_head,w2);
 /*
  * If the column width is 2 or more wider than the size of the data (header or
  * sub header is wider than the data, then we do a little centering
@@ -678,8 +677,8 @@ static void bld_legends()
 	for(i=0;i<3;++i)
 		{
 		bld_one_legend(hdr[i],sub[i],i);
-		strunc(hdr[i]);
-		strunc(sub[i]);
+		KCSI_strunc(hdr[i]);
+		KCSI_strunc(sub[i]);
 		}
 
 	if(report_width > 80)
@@ -1028,7 +1027,7 @@ static void display_prt_file()
 }
 
 
-void set_lmg_output_func(void (*func)(char*,char*))
+void KCSI_set_lmg_output_func(void (*func)(char*,char*))
 {
 	if(func)
 		lmg_output = func;
@@ -1041,14 +1040,14 @@ static void lmg_dummy_count(long count)
 
 static void (*lmg_log_count)(long) = lmg_dummy_count;
 
-void set_lmg_count_func(func)
+void KCSI_set_lmg_count_func(func)
 void (*func)(long);
 {
 	if(func)
 		lmg_log_count = func;
 }
 
-void call_lmg_log_count(long count)
+void KCSI_call_lmg_log_count(long count)
 {
 	(*lmg_log_count)(count);
 }
@@ -1107,7 +1106,7 @@ int code,idx;
 			line = rpt_opt._line[jdx] - 1;
 			if((line > -1) && (line < 3))
 				{
-				strunc(break_line[line]);
+				KCSI_strunc(break_line[line]);
 				print_one_line_if(break_line[line]);
 				}
 			}
@@ -1210,7 +1209,7 @@ Max Min and Avg only appear for the report grand totals
 			line = rpt_opt._line[jdx] - 1;
 			if((line > -1) && (line < 3))
 				{
-				strunc(break_line[line]);
+				KCSI_strunc(break_line[line]);
 				print_one_line_if(break_line[line]);
 				}
 			}
@@ -1222,7 +1221,7 @@ Max Min and Avg only appear for the report grand totals
 		line = rpt_opt._line[jdx] - 1;
 		if((line > -1) && (line < 3))
 			{
-			strunc(break_line[line]);
+			KCSI_strunc(break_line[line]);
 			print_one_line_if(break_line[line]);
 			}
 		}
@@ -1343,7 +1342,7 @@ void rpt_write(int code)
 		if((rpt_opt._option > 0) && 
 			(rpt_record_count >= rpt_opt._option))
 			break;
-	}while(read_next_rpt_record() == 0 );
+	}while(rpt_read_next_rpt_record() == 0 );
 
 	last_record = 1;
 
@@ -1358,7 +1357,7 @@ void rpt_write(int code)
 	else
 		close_prt_file();
 	if(*rpt_caller < 'A')
-		call_lmg_log_count(rpt_record_count);
+		KCSI_call_lmg_log_count(rpt_record_count);
 	TRACE_OUT("rpt_write");
 
 }
@@ -1367,6 +1366,21 @@ void rpt_write(int code)
 /*
 **	History:
 **	$Log: rwrt.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:37  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 15:48:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/24 14:20:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/23 20:39:05  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/07/25 15:20:24  gsl
+**	Globals
+**	
 **	Revision 1.5  2002/04/22 15:53:10  gsl
 **	Change crid_error_trace() toe kcsitrace()
 **	

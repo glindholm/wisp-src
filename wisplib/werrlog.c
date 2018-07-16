@@ -137,7 +137,7 @@ void werrlog(uint4 id, ...)
 	}
 }
 
-void werr_write(char* buff)								/* Write out a buffer to the error log.	*/
+void werr_write(const char* buff)								/* Write out a buffer to the error log.	*/
 {
 	static int first = 1;
 	FILE *efile;									/* Pointer to error log file.		*/
@@ -494,6 +494,9 @@ const char* WL_strerror(int errnum)
 /*
 **	History:
 **	$Log: werrlog.c,v $
+**	Revision 1.18.2.2  2002/11/12 16:00:22  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.18.2.1  2002/10/09 19:48:08  gsl
 **	Added WL_strerror()
 **	

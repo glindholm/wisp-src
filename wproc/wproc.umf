@@ -17,7 +17,7 @@ L_VIDEO=video
 WC=../wispcommon
 VC=../videolib
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 WPROC_EXE=wproc
 
@@ -68,7 +68,7 @@ header:
 	@echo
 	@echo ">>> Making WPROC $(WPROC_VERSION)"
 	@echo ">>>"
-	@echo ">>> WISP     = $(WISP)"
+	@echo ">>> WISPSRC     = $(WISPSRC)"
 	@echo ">>>"
 	@echo
 

@@ -174,7 +174,7 @@ va_dcl
 
 	ptr = splitext(old_filename);
 	if (*ptr == '.') ptr++;								/* Point past the '.'			*/
-	loadpad(WISPFILEXT,ptr,sizeof(WISPFILEXT));					/* Reset EXT for new_filename		*/
+	WSETFILEXT(ptr);								/* Reset EXT for new_filename		*/
 
 	if (*new_file == '#')
 	{
@@ -412,6 +412,9 @@ filecopy_return:
 /*
 **	History:
 **	$Log: filecopy.c,v $
+**	Revision 1.13.2.2  2002/11/14 21:12:21  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.13.2.1  2002/10/09 21:03:00  gsl
 **	Huge file support
 **	

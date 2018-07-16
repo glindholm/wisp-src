@@ -47,6 +47,8 @@ static int locate_this_nf(RPT_RFL *r,RPT_NF *n,int d);
 static int locate_one_rfl(RPT_RFL *r,int d);
 static int val_for_cmb(int op,int type);
 static int val_for_cmp(char *op);
+static int same_element(ELEMENT *e1,ELEMENT *e2);
+static int count_lit_dec(char *str);
 
 
 
@@ -84,7 +86,7 @@ RPT_RFL *r;
 	TRACE_OUT("locate_one_nfo");
 }
 
-static locate_rfls()
+static int locate_rfls()
 {
 	int d;
 
@@ -145,11 +147,11 @@ static int locate_one_rfl(RPT_RFL *r,int d)
 	o->_pos += (o->_len * (r->_e._occurrence - 1));	
 
 	if(r->_e._origin == 2)
-		o->_base = inp_rec2;
+		o->_base = rpt_inp_rec2;
 	else
-		o->_base = inp_rec1;
+		o->_base = rpt_inp_rec1;
 
-	n->_base = inp_rec;
+	n->_base = rpt_inp_rec;
 	n->_pos = d;
 	switch(o->_type)
 		{
@@ -180,7 +182,7 @@ Determine the new position for a manufactured field.
 	_fld is provided to point at this new area.
 2.	
 ------*/
-static locate_nfs(d)
+static int locate_nfs(d)
 int d;
 {
 	TRACE_IN("locate_nfs");
@@ -191,7 +193,7 @@ int d;
 /* added to skip excess initialization */
 		if(nf->_e._name[0] < ' ' )
 			continue;
-		nf->_fld._base = nf_bld_fld;
+		nf->_fld._base = rpt_bld_fld;
 		nf->_fld._pos  = 0;
 		for(rflidx =0,rfl = &rpt_rfl[0];
 			(rfl->_new)&&(rflidx < RFL_ENTRY_COUNT);
@@ -234,7 +236,7 @@ static int locate_this_nf(RPT_RFL *r,RPT_NF *n,int d)
 	r->_new->_len = len;
 	r->_new->_type = n->_fld._type;
 	r->_new->_dec = n->_fld._dec;
-	r->_new->_base = inp_rec;
+	r->_new->_base = rpt_inp_rec;
 	TRACE_OUT("locate_this_nf");
 	return(d + len);
 
@@ -584,7 +586,7 @@ static void tie_up_rhd()
 
 	TRACE_IN("tie_up_rhd");
 	if(rpt_rhd._key_to_sec[0] < '!')
-		goto exit;
+		goto the_exit;
 /*
 	ELEMENT *e;
 	for(rflidx = 0,rfl = &rpt_rfl[0];
@@ -614,7 +616,7 @@ static void tie_up_rhd()
 		rfl = &rpt_rfl[rpt_key_to_sec_idx];
 		rpt_rhd._old_key2 = rfl->_old;
 		}
-exit:
+the_exit:
 	TRACE_OUT("tie_up_rhd");
 }
 
@@ -727,7 +729,7 @@ static void tie_up_dlo_lits()
 		}
 	TRACE_OUT("tie_up_dlo_lits");
 }
-int count_lit_dec(char *str)
+static int count_lit_dec(char *str)
 {
 	int dec;
 
@@ -755,7 +757,7 @@ int count_lit_dec(char *str)
 /*----
 Elements are the same when all parts match.
 ------*/
-int same_element(ELEMENT *e1,ELEMENT *e2)
+static int same_element(ELEMENT *e1,ELEMENT *e2)
 {
 	int rc;
 	
@@ -777,11 +779,11 @@ the other structures.
 Do whatever tieing up is necessary to ensure that pointers and codes
 match.
 ------*/
-void tie_rpt()
+void rpt_tie()
 {
 	int d;
 
-	TRACE_IN("tie_rpt");
+	TRACE_IN("rpt_tie");
 /*
  * Clear the special processing flags. Although these are supposed
  * to be set up on entry. This routine fills them in based on the
@@ -801,13 +803,13 @@ void tie_rpt()
 /*
  * Clear the request to the sort routine.
  */
-	sort_clear(rpt_sort);
+	rpt_sort_clear(rpt_sort);
 /*
  * Locate real and manufacutured fields.
  */
 	d = locate_rfls();
 	d = locate_nfs(d);
-	inp_rec_len = d;
+	rpt_inp_rec_len = d;
 
 	tie_up_nfo_lits();
 /*
@@ -829,12 +831,27 @@ void tie_rpt()
 	tie_up_srts();
 	tie_up_rcbs();
 	tie_up_rhd();
-	TRACE_OUT("tie_rpt");
+	TRACE_OUT("rpt_tie");
 }	
 
 /*
 **	History:
 **	$Log: rtie.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:36  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/10/24 15:48:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/24 14:20:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.6  2002/10/23 21:07:25  gsl
+**	make global name unique
+**	
+**	Revision 1.5  2002/10/17 21:22:43  gsl
+**	cleanup
+**	
 **	Revision 1.4  2000/06/13 22:14:35  gsl
 **	Restore back to revision 1.2.
 **	The changes caused a bug 1.3 (2.97 and 2.98)

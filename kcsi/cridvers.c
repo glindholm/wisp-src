@@ -3,11 +3,6 @@
 #include <stdlib.h>
 #include "kcsifunc.h"
 
-#if defined(KCSI_MF) || defined(KCSI_MFX)
-char WISPFILEXT[39];
-char WISPRETURNCODE[3];
-#endif
-
 
 /*----
 Fill in a passed 79 byte field with logo and version   
@@ -1077,7 +1072,7 @@ iprs.c		1.3
 dglb.c		1.4
 dbsc.c		1.5
 
-Modified KDISP to build print file name as a WISP_PRINTFILE
+Modified KDISP to build print file name as a IS_PRINTFILE
 as it was not finding the file to display on the VAX
 kdisp.c		1.2
 
@@ -2291,30 +2286,28 @@ EndRNotes
 #endif
 
 /*
-# To change the version for CRID, change CRID_VERSION here. 
+# To change the version for KCSI, change KCSI_VERSION here. 
 #	wisp/src/kcsi/cridvers.c
-#	wisp/src/kcsi/cridmake.umf
-#	wisp/src/kcsi/cridmake.mak
-#	wisp/src/kcsi/crid_relnotes.txt
-#	wisp/src/kcsi/cridntsetup.txt
-#	wisp/src/kcsi/crid_acu_install.txt
-#	wisp/src/kcsi/crid_mf_install.txt
-#	wisp/src/kcsi/crid_packlist.txt
+#	wisp/src/kcsi/version.c
+#	wisp/src/kcsi/kcsilibs.umf
+#	wisp/src/kcsi/kcsicob.mak
+#	wisp/src/kcsi/kcsi_relnotes.txt
+#	wisp/src/kcsi/kcsintsetup.txt
+#	wisp/src/kcsi/kcsi_acu_install.txt
+#	wisp/src/kcsi/kcsi_mf_install.txt
+#	wisp/src/kcsi/kcsi_packlist.txt
 #	wisp/src/doc/wisp_relnotes.lis
 #	wisp/src/acu/wruncbl.umf
-#	wisp/src/acu/wrun32wisp_crid_acu51.mak
-#	wisp/src/acu/wrun32wisp_crid_acu52.mak
+#	wisp/src/acu/wrun32wisp_kcsi_acu52.mak
 */
-#ifdef WIN32
-#define CRID_VERSION	3004
-#endif
+#define KCSI_VERSION	4000
 
 /*
 **	Static data
 */
-static char ident[] = "@(#)CRID, NeoMedia Technologies, Inc. Version v" STRING_VERSION(CRID_VERSION) DEBUG_STR;
+static char ident[] = "@(#)CRID, NeoMedia Technologies, Inc. Version v" STRING_VERSION(KCSI_VERSION) DEBUG_STR;
 
-static char sccsid[]="@(#)cridvers.c  Version v" STRING_VERSION(CRID_VERSION) DEBUG_STR "$Date:$";
+static char sccsid[]="@(#)cridvers.c  Version v" STRING_VERSION(KCSI_VERSION) DEBUG_STR "$Date:$";
 static char rcsid[]="$Id:$";
 
 /*
@@ -2322,7 +2315,7 @@ static char rcsid[]="$Id:$";
 **
 **	FUNCTION:	Return the crid version string
 **
-**	DESCRIPTION:	Form a version string from CRID_VERSION of the form v9.9.99 and return it.
+**	DESCRIPTION:	Form a version string from KCSI_VERSION of the form v9.9.99 and return it.
 **
 **	ARGUMENTS:	?
 **
@@ -2341,7 +2334,7 @@ const char *crid_version(void)
 	if (first)
 	{
 		char buf[10];
-		sprintf(buf,"%04d", (int)(CRID_VERSION));
+		sprintf(buf,"%04d", (int)(KCSI_VERSION));
 		sprintf(the_version,"v%c.%c.%c%c%s",buf[0],buf[1],buf[2],buf[3],DEBUG_STR);
 		first = 0;
 	}
@@ -2353,31 +2346,16 @@ static char machine[]=
 #ifdef KCSI_UNIX
 "u";
 #endif
-#ifdef KCSI_DOS
-"d";
-#endif
 #ifdef KCSI_WIN32
 "w";
 #endif
-#ifdef KCSI_VAX
-"v";
-#endif
 
 static char compiler[]=
-#ifdef KCSI_MF
-"m";
-#endif
 #ifdef KCSI_MFX
-"x";
+"m";
 #endif
 #ifdef KCSI_ACU
 "a";
-#endif
-#ifdef KCSI_LPI
-"l";
-#endif
-#ifdef KCSI_VAXCOBOL
-"x";
 #endif
 
 /* CHANGE-COPYRIGHT-DATE */
@@ -2406,7 +2384,7 @@ void RPTVERS(char *wvers,char *bin,char *style)
 	memcpy(wvers,logo,strlen(logo));
 	init_crid_debug();
 	init_bin_test(bin);
-	init_report_style(style);
+	KCSI_init_report_style(style);
 }
 
 void INQVERS(char *wvers,char *bin)
@@ -2434,12 +2412,12 @@ static void init_bin_test(char *bin)
 	save_bin[0] = bin[1];
 }
 
-int use_binary()
+int KCSI_use_binary()
 {
 	return(save_bin[0]);
 }
 
-void init_report_style(char *style)
+void KCSI_init_report_style(char *style)
 {
 	char *ptr;
 
@@ -2454,8 +2432,42 @@ void init_report_style(char *style)
 /*
 **	History:
 **	$Log: cridvers.c,v $
-**	Revision 2.91.2.1  2002/10/08 23:56:55  gsl
-**	Fixed after update from HEAD
+**	Revision 2.91.2.2  2002/11/12 15:56:20  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 2.102  2002/10/22 17:59:01  gsl
+**	Combined KCSI
+**	
+**	Revision 2.101  2002/10/22 16:00:32  gsl
+**	Combine CRID_VERSION and CREATE_VERSION into KCSI_VERSION
+**	
+**	Revision 2.100  2002/10/21 14:06:09  gsl
+**	CRID_VERSION is now set in cridvers.c for unix
+**	
+**	Revision 2.99  2002/10/17 21:22:40  gsl
+**	cleanup
+**	
+**	Revision 2.98  2002/10/17 17:17:15  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 2.97  2002/09/04 13:13:36  gsl
+**	CRID 3.0.05
+**	
+**	Revision 2.96  2002/08/29 21:07:05  gsl
+**	Move the CRID version define into cridvers.c and document places to change
+**	
+**	Revision 2.95  2002/07/25 15:20:30  gsl
+**	Globals
+**	
+**	Revision 2.94  2002/06/25 18:18:33  gsl
+**	Remove WISPRETURNCODE as a global, now must go thru set/get routines
+**	
+**	Revision 2.93  2002/06/25 17:46:03  gsl
+**	Remove WISPFILEXT as a global, now must go thru set/get routines
+**	
+**	Revision 2.92  2002/06/21 20:48:16  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
 **	
 **	Revision 2.91  2002/03/19 18:28:39  gsl
 **	Change copyright date

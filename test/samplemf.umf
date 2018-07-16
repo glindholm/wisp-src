@@ -14,7 +14,7 @@
 CDEBUG=-g
 
 # Need make.include to build executable "prtargs"
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 
 WISPTRAN=wisp

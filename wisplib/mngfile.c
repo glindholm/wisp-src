@@ -1484,7 +1484,7 @@ static void select_display(const char* file)
 	}
 	else
 	{
-		link_display(file);							/* Display the file			*/
+		WL_link_display(file);							/* Display the file			*/
 	}
 }
 
@@ -3342,6 +3342,9 @@ main()
 /*
 **	History:
 **	$Log: mngfile.c,v $
+**	Revision 1.35.2.2.2.4  2002/11/12 16:00:20  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.35.2.2.2.3  2002/10/09 21:03:01  gsl
 **	Huge file support
 **	

@@ -7,14 +7,14 @@ Title:          RELEASE NOTES FOR WISP VERSION 4.4
 Document:       wisp_relnotes.txt (RELNOTES)
 Last Updated:   $Date:$
 Products:       WISP for UNIX, WISP for Windows (WIN32)
-Versions:       4.4.05
+Versions:       4.4.06
 
 Summary:        Release notes for changes to WISP since version 3.3c.
 
 ====================================================================
 
         NeoMedia Technologies Inc.
-        2201 Second Street Suite 600
+        2201 Second Street Suite 402
         Fort Myers FL, 33901
         USA
 
@@ -25,6 +25,19 @@ Summary:        Release notes for changes to WISP since version 3.3c.
         FAQ   http://www.neom.com/support/wispfaq.htm
         Ftp   ftp://support.neom.com/public/wisp
 
+
+
+CHANGES FROM 4.4.05 TO 4.4.06
+=============================
+The following items describe corrections and improvements that have
+been made to the WISP toolkit from release 4.4.05 to release 4.4.06.
+
+The previously separate releases of CRID and CREATE utilities have 
+been combiled into a single KCSI release.  This release of WISP
+adds support for the KCSI v4.0.00 release.
+
+The WLICENSE utility will now display the current license info and 
+machine id if available before beginning the licensing process.
 
 
 CHANGES FROM 4.4.04 TO 4.4.05
@@ -2349,6 +2362,7 @@ three part version number.
 
     WISP VERSION      CUTOVER DATE 
     ------------      ------------
+        4.4.06          11/12/02        KCSI v4.0.00
         4.4.05          10/09/02        Huge file support
         4.4.04          08/20/02        Micro Focus Shared Objects
         4.4.03          07/24/02        4.4 Patch 3

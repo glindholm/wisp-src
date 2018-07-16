@@ -45,9 +45,6 @@ static char rcsid[]="$Id:$";
 **	Globals and Externals
 */
 
-char WISPFILEXT[39];
-char WISPRETURNCODE[3];
-
 int fexists(const char *path);
 const char *wisptmpdir(char *dir);
 int wgetpgrp(void);
@@ -163,6 +160,9 @@ void tempproc(char *file, char *lib, char *vol, char *filepath)
 /*
 **	History:
 **	$Log: miscsubs.c,v $
+**	Revision 1.19.2.1  2002/11/14 21:12:30  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.19  2001/10/10 18:25:11  gsl
 **	Change globaldata() file name to WPROC_userid_pgid
 **	

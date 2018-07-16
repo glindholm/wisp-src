@@ -190,9 +190,6 @@ va_dcl
 		goto scratch_return;
 	}
 
-#ifdef VMS
-	if (0==memcmp(WISPFILEXT,"LIS",3)) mode |= IS_PRINTFILE;
-#endif
 
 	ptr = wfname( &mode, l_vol, l_lib, l_file, the_file );					/* create native filename	*/
 	*ptr = (char)0;
@@ -616,6 +613,9 @@ static int del_dir(char* file_spec)						/* Attempt to delete the directory.		*/
 /*
 **	History:
 **	$Log: scratch.c,v $
+**	Revision 1.17.2.1  2002/11/14 21:12:26  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.17  1999/08/20 17:05:58  gsl
 **	Found and fixed the real problem with SCRATCH. It was failing to delete the
 **	idx file portion if the filepath contained '.' characters. It was mistaking

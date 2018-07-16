@@ -73,14 +73,15 @@ DTYPE *dest,*src;
 	print_one(dest);
 }
 
-void rcvt_pair(DTYPE *dest,DTYPE *src)
-{
-	print_pair(dest,src);
-}
-
 /*
 **	History:
 **	$Log: rcvp.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:32  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.5  2002/10/24 14:20:35  gsl
+**	Make globals unique
+**	
 **	Revision 1.4  2002/04/22 18:26:34  gsl
 **	Use kcsitrace
 **	

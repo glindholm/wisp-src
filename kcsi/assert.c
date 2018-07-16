@@ -59,12 +59,18 @@ static char rcsid[]="$Id:$";
 void kcsi_assert(char *cond, char *file, int line)
 {
 	kcsitrace(4,"KCSI","ASSERT","ASSERT(%s) failed File=%s Line=%d",cond, file, line);
-	exit(1);
+	kcsi_exit(1);
 }
 
 /*
 **	History:
 **	$Log: assert.c,v $
+**	Revision 1.1.2.1  2002/11/12 15:56:18  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.2  2002/10/17 21:22:40  gsl
+**	cleanup
+**	
 **	Revision 1.1  1997/08/01 15:54:24  scass
 **	Initial revision
 **	

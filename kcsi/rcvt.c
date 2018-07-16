@@ -30,17 +30,8 @@ Three different zoned sign schemes
 #ifdef	KCSI_ACU
 #define	make_zoned_ascii	make_zoned_acu
 #endif
-#ifdef	KCSI_MF
+#ifdef KCSI_MFX
 #define	make_zoned_ascii	make_zoned_mf
-#endif
-#ifdef	KCSI_MFX
-#define	make_zoned_ascii	make_zoned_mf
-#endif
-#ifdef	KCSI_LPI
-#define	make_zoned_ascii	make_zoned_lpi
-#endif
-#ifdef	KCSI_VAXCOBOL
-#define	make_zoned_ascii	make_zoned_lpi
 #endif
 
 /*----
@@ -195,7 +186,17 @@ static int make_zoned_sign(int digit,int sign,char *dest);
 static int get_zoned_l_digit(int ch);
 
 static void make_zoned_ascii(int digit, int sign, char *dest);
+static void btoeh(char *dest,char *src,int dlen,int slen,int type);
 
+static void eutob(char *dest,char *src,int dlen,int slen,int sdec,int type);
+static void zatou(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
+static void zatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
+static void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
+static void zatoz(char *dest,char *src,int dlen,int slen,int sign_code);
+static void dbltob(char *dest,double dbl,int len,int type);
+static void nltoza(char *dest,char *src,int dlen,int ddec);
+static void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
+static void uatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec);
 
 
 void cvt_list(DTYPE *dest,DTYPE *src)
@@ -580,7 +581,7 @@ static void str_to_char(DTYPE *dest,DTYPE *src)
 	len = strlen(SRC_ADDRESS);
 	++len;
 	memcpy(DEST_ADDRESS,SRC_ADDRESS,(min(len,dest->_len)));
-	unstrunc(DEST_ADDRESS,dest->_len);
+	KCSI_unstrunc(DEST_ADDRESS,dest->_len);
 }
 
 static void char_to_trunc(DTYPE *dest,DTYPE *src)
@@ -591,13 +592,13 @@ static void char_to_trunc(DTYPE *dest,DTYPE *src)
 }
 static void trunc(DTYPE *dest)
 {
-	strunc(DEST_ADDRESS);
+	KCSI_strunc(DEST_ADDRESS);
 	dest->_len = strlen(DEST_ADDRESS);
 }
 
 static void char_to_int(DTYPE *dest,DTYPE *src)
 {
-	DEST_INT = atoilen(SRC_ADDRESS,src->_len);
+	DEST_INT = kcsi_atoilen(SRC_ADDRESS,src->_len);
 	dest->_len = sizeof(int);
 }
 
@@ -861,15 +862,9 @@ static void control_type_to_dtype(DTYPE *dest,DTYPE *src)
 		case 'B':
 /* Default for most conversions */
 			r = ABIN;
-#ifdef	KCSI_MF
+#ifdef KCSI_MFX
 			r = ABMN;
-#endif /* KCSI_MF */
-#ifdef	KCSI_MFX
-			r = ABMN;
-#endif /* KCSI_MFX */
-#ifdef	KCSI_VAXCOBOL
-			r = ABLH;
-#endif	/* KCSI_VAXCOBOL */
+#endif 
 			break;
 		case 'U':
 			r = AUNS; break;
@@ -1256,7 +1251,7 @@ static int machine_order()
 /*----
 This has to set up a binary in the correct order
 ------*/
-void dbltob(char *dest,double dbl,int len,int type)
+static void dbltob(char *dest,double dbl,int len,int type)
 {
 	int destinc;
 	long hex;
@@ -1874,7 +1869,7 @@ static void zatop(char *dest,char *src,int dlen,int slen,int sign_code)
 /*----
 Converted numeric lit to zoned ASCII
 -------*/
-void nltoza(char *dest,char *src,int dlen,int ddec)
+static void nltoza(char *dest,char *src,int dlen,int ddec)
 {
 	int sign;
 	double result;
@@ -1932,7 +1927,7 @@ Convert zoned ASCII to zoned ASCII. (Should also work for unsigned to zoned).
 Do an unsigned conversion and then add the sign. These conversions
 assume that decimal places do not match.
 ------*/
-void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
+static void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 	int sign;
 
@@ -1951,7 +1946,7 @@ void zatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 		}
 
 }
-void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
+static void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 
 	if(!isdigit(*src))
@@ -1964,7 +1959,7 @@ void uatoza(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 		*dest = '+';
 
 }
-void zatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
+static void zatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 
 	if(!isdigit(*src))
@@ -1985,7 +1980,7 @@ The pointer is allowed  to move before the beginning or after the end
 of src. Data is pulled from src by testing where the pointer is.
 ------*/
 
-void uatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
+static void uatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 	char *start,*end;
 
@@ -2035,7 +2030,7 @@ void uatoua(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 Convert zoned ASCII to zoned. (Should also work for unsigned to zoned).
 Do an unsigned conversion and then add the sign.
 ------*/
-void zatoz(char *dest,char *src,int dlen,int slen,int sign_code)
+static void zatoz(char *dest,char *src,int dlen,int slen,int sign_code)
 {
 	int sign;
 
@@ -2066,7 +2061,7 @@ void zatoz(char *dest,char *src,int dlen,int slen,int sign_code)
 Zoned ascii to unsigned
 Skip any initial sign.
 ------*/
-void zatou(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
+static void zatou(char *dest,char *src,int dlen,int slen,int ddec,int sdec)
 {
 	if(!(isdigit(*src)))
 		{
@@ -2459,7 +2454,7 @@ static void ehtob(char *dest,char *src,int dlen,int slen,int type)
 		}
 }
 
-void btoeh(char *dest,char *src,int dlen,int slen,int type)
+static void btoeh(char *dest,char *src,int dlen,int slen,int type)
 {
 	long result;
 	char format[21];
@@ -2469,7 +2464,7 @@ void btoeh(char *dest,char *src,int dlen,int slen,int type)
 
 	sprintf(format,"%%0%dlx",dlen);
 	sprintf(work,format,result);
-	kstrupr(work);
+	kcsi_strupr(work);
 	while((int)strlen(work) > dlen)
 		{
 		strcpy(work,&work[1]);
@@ -2481,7 +2476,7 @@ void btoeh(char *dest,char *src,int dlen,int slen,int type)
 Convert an unformatted input field to a binary. The input may have the
 sign anywhere in it.
 ------*/
-void eutob(char *dest,char *src,int dlen,int slen,int sdec,int type)
+static void eutob(char *dest,char *src,int dlen,int slen,int sdec,int type)
 {
 
 	long lw;
@@ -2909,6 +2904,24 @@ static int get_zoned_sign(int ch)
 /*
 **	History:
 **	$Log: rcvt.c,v $
+**	Revision 1.9.2.1  2002/11/12 15:56:32  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.14  2002/10/23 20:39:07  gsl
+**	make global name unique
+**	
+**	Revision 1.13  2002/10/22 21:10:20  gsl
+**	Unique global sysmbols
+**	
+**	Revision 1.12  2002/10/17 21:22:42  gsl
+**	cleanup
+**	
+**	Revision 1.11  2002/10/17 17:17:21  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.10  2002/07/25 15:20:25  gsl
+**	Globals
+**	
 **	Revision 1.9  2002/04/22 15:36:02  gsl
 **	replace crid_error_trace() with kcsitrace()
 **	

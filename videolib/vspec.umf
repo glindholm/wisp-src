@@ -13,7 +13,7 @@
 CDEBUG = -g
 #CDEBUG = -O
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 OBJS = 	vspec.o vfcon.o vview.o
 

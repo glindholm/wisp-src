@@ -43,20 +43,29 @@ typedef	struct _sort_file{
 	int _key_len;
 	}SORT_FILE;
 
-void sort_clear(SORT *sr);
-int sort_init(SORT *sr,int rl);
-void sort_squeeze(SORT *srt);
-void sort_release(char *r);
-int sort_return(char *rec);
+void rpt_sort_clear(SORT *sr);
+int  rpt_sort_init(SORT *sr,int rl);
+void rpt_sort_squeeze(SORT *srt);
+void rpt_sort_release(char *r);
+int  rpt_sort_return(char *rec);
 
-void call_ext_sort(SORT *sr,KCSIO_BLOCK *kfb);
-void ext_sort_close(KCSIO_BLOCK *kfb);
+void KCSI_call_ext_sort(SORT *sr,KCSIO_BLOCK *kfb);
+void KCSI_ext_sort_close(KCSIO_BLOCK *kfb);
 
 #endif /* rptsrt_H */
 
 /*
 **	History:
 **	$Log: rptsrt.h,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:35  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/24 15:48:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.5  2002/10/23 20:39:06  gsl
+**	make global name unique
+**	
 **	Revision 1.4  1996/09/17 23:34:18  gsl
 **	drcs update
 **	

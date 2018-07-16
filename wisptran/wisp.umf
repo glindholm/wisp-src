@@ -13,7 +13,7 @@ CDEBUG_D = -g -DDEBUG
 
 WC=../wispcommon
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 CFLAGS  = $(CFLAGS0) -I $(WC)
 
@@ -359,6 +359,9 @@ testmfse:
 
 #
 #	$Log: wisp.umf,v $
+#	Revision 1.17.2.1  2002/11/07 22:53:55  gsl
+#	change to use WISPSRC variable
+#	
 #	Revision 1.17  2002/03/21 23:28:14  gsl
 #	Add testmfse
 #	

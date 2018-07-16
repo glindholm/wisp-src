@@ -19,9 +19,9 @@
 #	on the COBPATH.
 #
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
-include $(WISP)/src/mf/mf.rules
+include $(WISPSRC)/mf/mf.rules
 
 #uncomment for debugging
 #COBFLAGS=-ag -C warning=2

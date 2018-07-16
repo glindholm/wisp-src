@@ -24,7 +24,7 @@ CDEBUG=-DNODEBUG
 COBDEBUG=
 LINKFLAGS=-C LINKCOUNT=5000
 KCSI_COBFLAGS=$(COBDEBUG) $(COBFLAGS) $(LINKFLAGS)
-WISPTRAN=$(WISP)/src/wisptran/wisp
+WISPTRAN=$(WISPSRC)/wisptran/wisp
 
 .SUFFIXES:	.a
 
@@ -34,7 +34,7 @@ WISPTRAN=$(WISP)/src/wisptran/wisp
 	rm -f $*.o
 
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 CFLAGS=$(CFLAGS0) -DCREATE_VERSION=$(CREATE_VERSION) -I ../wispcommon
 CFLAGSX=$(CFLAGS0) -DCREATE_VERSION=$(CREATE_VERSION) -I ../wispcommon

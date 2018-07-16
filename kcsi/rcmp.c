@@ -69,7 +69,7 @@ char *argv[];
 		lop->_dec = atoi(argv[4]);
 	if(argc > 5)
 		rop->_dec = atoi(argv[5]);
-	rc = rptcmp(lop,op,rop);
+	rc = KCSI_rptcmp(lop,op,rop);
 	printf(" = %s\n",rc?"TRUE":"FALSE");
 
 }
@@ -109,7 +109,7 @@ char *argv[];
 	rop->_type = lop->_type;
 	if(rop->_type & IS_NUM)
 		rop->_type = NLIT;
-	rptcmb(lop,op,rop);
+	KCSI_rptcmb(lop,op,rop);
 	printf(" = %s\n",LOP_ADDRESS);
 
 }
@@ -117,7 +117,7 @@ char *argv[];
 /*----
 Compare two operands
 ------*/
-int rptcmp(DTYPE *lop,char *op,DTYPE *rop)
+int KCSI_rptcmp(DTYPE *lop,char *op,DTYPE *rop)
 {
 
 	if(Streq(op,"EQ"))
@@ -178,12 +178,12 @@ Specialized compares to check for blank, zeroes or space
 static int comp_blank(DTYPE *lop)
 {
 	if(lop->_type & IS_NUM)
-		return(comp_zero(lop));
+		return(KCSI_comp_zero(lop));
 	else
-		return(comp_space(lop));
+		return(KCSI_comp_space(lop));
 }
 
-int comp_zero(DTYPE *lop)
+int KCSI_comp_zero(DTYPE *lop)
 {
 	double left, doubleit();
 	left = doubleit(lop);
@@ -192,7 +192,7 @@ int comp_zero(DTYPE *lop)
 	return 0;
 }
 
-int comp_space(DTYPE *lop)
+int KCSI_comp_space(DTYPE *lop)
 {
 	int len;
 	char *mem;
@@ -206,7 +206,7 @@ int comp_space(DTYPE *lop)
 	return(1);
 }
 
-int comp_rec_num(long num,DTYPE *lop,DTYPE *rop)
+int KCSI_comp_rec_num(long num,DTYPE *lop,DTYPE *rop)
 {
 	long temp,lo,hi;
 
@@ -267,7 +267,7 @@ static int comp_gt(DTYPE *lop,DTYPE *rop)
 	return(comp_lt(rop,lop));
 }
 
-int rptcmb(DTYPE *lop,int op,DTYPE *rop)
+int KCSI_rptcmb(DTYPE *lop,int op,DTYPE *rop)
 {
 	int rc;
 /*
@@ -396,6 +396,15 @@ static mc(char* mem1,char* mem2,int len)
 /*
 **	History:
 **	$Log: rcmp.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:32  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.7  2002/10/24 14:20:35  gsl
+**	Make globals unique
+**	
+**	Revision 1.6  2002/10/23 20:39:07  gsl
+**	make global name unique
+**	
 **	Revision 1.5  1999/09/13 19:51:35  gsl
 **	fix missing return codes
 **	

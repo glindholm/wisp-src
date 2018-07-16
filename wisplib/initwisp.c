@@ -231,8 +231,8 @@ void initwisp2(	char	wisp_tran_version[20],						/* The TRANSLATOR version		*/
 		memcpy(softlock,"99",2);
 	}
 
-	memset(WISPFILEXT,' ',39);							/* Set file extension to spaces.	*/
-	memset(WISPRETURNCODE,'0',3);							/* Set RETURN-CODE to zero.		*/
+	WSETFILEXT(" ");								/* Set file extension to spaces.	*/
+	WL_set_internal_retcode(0);							/* Set RETURN-CODE to zero.		*/
 	wisp_progname[0] = '\0';
 	wisp_screen[0] = '\0';
 
@@ -319,7 +319,7 @@ void license_warning(void)
 
 	wsb_add_text(hWsb,1,0,"****  WISP License Information  ****");
 	wsb_add_text(hWsb,3,0,"Copyright (c) 1989-" WISP_COPYRIGHT_YEAR_STR " NeoMedia Technologies Inc.");
-	wsb_add_text(hWsb,4,0,"2201 2nd Street Suite 600, Fort Myers FL 33901 (239) 337-3434");
+	wsb_add_text(hWsb,4,0,"2201 Second Street Suite 402, Fort Myers FL 33901 (239) 337-3434");
 
 	switch (code)
 	{
@@ -471,6 +471,12 @@ static int license_checked(int set)
 /*
 **	History:
 **	$Log: initwisp.c,v $
+**	Revision 1.31.2.3  2002/11/14 21:12:23  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
+**	Revision 1.31.2.2  2002/11/06 21:25:31  gsl
+**	Change address to Suite 402
+**	
 **	Revision 1.31.2.1  2002/09/06 16:18:33  gsl
 **	Fix phone numbers
 **	

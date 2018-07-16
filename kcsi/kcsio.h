@@ -4,7 +4,6 @@
 #ifndef	_KCSIO_H
 #define	_KCSIO_H
 
-#include "kplatfrm.h"
 #include "intdef.h"
 
 /*----
@@ -120,6 +119,12 @@ typedef struct _kcsio_block{
 /*
 **	History:
 **	$Log: kcsio.h,v $
+**	Revision 1.9.2.1  2002/11/12 15:56:28  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.10  2002/10/17 21:22:42  gsl
+**	cleanup
+**	
 **	Revision 1.9  1997/10/30 19:32:18  scass
 **	Added mfkblock pointer to KCSIO_BLOCK structure.
 **	

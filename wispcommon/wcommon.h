@@ -33,7 +33,7 @@
 	- acu/wwruncbl.mak
 	- acu/wrun32wisp_XXX.mak
 */
-#define WISP_VERSION "V4.4.05"			 					/* WISPTRAN version (char[20])		*/
+#define WISP_VERSION "V4.4.06"			 					/* WISPTRAN version (char[20])		*/
 
 #define LIBRARY_VERSION	30								/* WISPLIB version number.		*/
 #define SCREEN_VERSION  22								/* SCREEN version number.		*/
@@ -77,19 +77,25 @@
 #define IS_NOEXTENSION	0x00400000							/* A file without an extension.		*/
 #define IS_DBFILE	0x00800000							/* A DATABASE file			*/
 
-#define		OPEN_INPUT		1
-#define		OPEN_SHARED		2
-#define		OPEN_OUTPUT		3
-#define		OPEN_EXTEND		4
-#define		OPEN_SPECIAL_INPUT	5
-#define		OPEN_I_O		6
-#define		OPEN_SORT		7
+#define		WFOPEN_INPUT		1
+#define		WFOPEN_SHARED		2
+#define		WFOPEN_OUTPUT		3
+#define		WFOPEN_EXTEND		4
+#define		WFOPEN_SPECIAL_INPUT	5
+#define		WFOPEN_I_O		6
+#define		WFOPEN_SORT		7
 
 #endif	/* WCOMMON_INCLUDED */
 
 /*
 **	History:
 **	$Log: wcommon.h,v $
+**	Revision 1.44.2.2.2.3  2002/11/12 16:00:18  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
+**	Revision 1.44.2.2.2.2  2002/11/11 15:00:35  gsl
+**	4.4.06 to support KCSI
+**	
 **	Revision 1.44.2.2.2.1  2002/10/09 18:17:00  gsl
 **	WISP 4.4.05
 **	

@@ -12,9 +12,6 @@ extern int cobfunc();
 extern int cobtidy();
 extern void exit();
 
-char	WISPFILEXT[39];		/* Define the file extension variable.	*/
-char	WISPRETURNCODE[3];	/* Define the return code field.	*/
-
 int wispmf()
 {
 	return 0;

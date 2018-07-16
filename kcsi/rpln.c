@@ -8,13 +8,8 @@ RUN TIME.
 ------*/
 
 #include <stdio.h>
-#ifdef 	KCSI_VAX
-#include <types.h>
-#include <stat.h>
-#else
 #include <sys/types.h>
 #include <sys/stat.h>
-#endif /* KCSI_VAX */
 #include <errno.h>
 
 #include "kwisp.h"
@@ -45,13 +40,10 @@ static void open_printer_file(char *p_file,char *p_lib,char *p_vol)
 
 	memset(p_lib,' ',8);
 	memset(p_vol,' ',6);
-	mode = WISP_OUTPUT + WISP_PRINTFILE + WISP_PRNAME;
+	mode = IS_OUTPUT + IS_PRINTFILE;
 	strcpy(p_file,"##REPO  ");
-	wfopen(&mode,p_vol,p_lib,p_file,tpname,"PRINT   ");
-#ifdef KCSI_VAX
-	wdellock(&mode, tpname);
-#endif
-	strunc(tpname);
+	wfopen2(&mode,p_vol,p_lib,p_file,tpname,"REPORT  ","PRINT   ");
+	KCSI_strunc(tpname);
 	tpf = fopen(tpname,"w");
 	printer_file_is_open = 1;
 
@@ -62,7 +54,7 @@ static void form_feed()
 }
 static void print_a_line(char *rec)
 {
-	strunc(rec);
+	KCSI_strunc(rec);
 	fprintf(tpf,"%s\n",rec);
 }
 static void close_printer_file(p_file,p_lib,p_vol,mode)
@@ -75,11 +67,11 @@ char *p_file,*p_lib,*p_vol,*mode;
 	fclose(tpf);
 	if(*mode)
 		{
-		wargs(2L);
+		WL_set_va_count(2);
 		EXTRACT("PM",user_mode);	/* Save current PM */
 		SET("PM",mode);			/* Change PM */
 		}
-	wfclose(tpname);
+	WFCLOSE(tpname);
 	if(*mode)
 		SET("PM",user_mode);		/* Restore PM */
 	
@@ -89,12 +81,12 @@ char *p_file,*p_lib,*p_vol;
 {
 	close_printer_file(p_file,p_lib,p_vol,"K");
 }
-void display_file()
+static void display_file()
 {
-	link_display(tpname);
+	WL_link_display(tpname);
 }
 
-void rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol)
+void KCSI_rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol)
 {
 
 	switch(*p_io) 
@@ -123,6 +115,41 @@ void rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol)
 /*
 **	History:
 **	$Log: rpln.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:35  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.15  2002/10/24 14:20:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.14  2002/10/23 20:39:06  gsl
+**	make global name unique
+**	
+**	Revision 1.13  2002/10/17 17:17:22  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.12  2002/07/29 14:47:21  gsl
+**	wfopen2 ->WFOPEN2
+**	wfopen3 ->WFOPEN3
+**	
+**	Revision 1.11  2002/07/25 15:20:25  gsl
+**	Globals
+**	
+**	Revision 1.10  2002/07/23 20:49:51  gsl
+**	globals
+**	
+**	Revision 1.9  2002/07/23 02:57:52  gsl
+**	wfclose -> WFCLOSE
+**	
+**	Revision 1.8  2002/07/10 21:06:25  gsl
+**	Fix globals WL_ to make unique
+**	
+**	Revision 1.7  2002/06/21 20:48:15  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
+**	Revision 1.6  2002/06/21 03:48:40  gsl
+**	Remove VAX
+**	
 **	Revision 1.5  2002/03/28 17:16:37  gsl
 **	FIx the logic for closing a print file in KEEP mode
 **	

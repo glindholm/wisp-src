@@ -14,17 +14,11 @@
 #
 #		wruncbl		The standard runtime for ACUCOBOL.
 #
-#		wruncblk	The CRID version of the runtime.
+#		wruncblk	The KCSI version of the runtime.
 #
 #		wruncble	The EDE version of the runtime.
 #
-#		wruncblke	The CRID + EDE version of the runtime.
-#
-#		wruncbl_oracle7	The ACUCOBOL runtime with Acu4GL
-#				for Oracle 7.
-#
-#		wruncbl_informix The ACUCOBOL runtime with Acu4GL
-#				for Informix.
+#		wruncblke	The KCSI + EDE version of the runtime.
 #
 #		acn		The ACUCOBOL Native Screens programs
 #
@@ -61,9 +55,9 @@
 #			$ cd $WISPDIR/acu
 #			$ make -f wruncbl.umf
 #
-#		To build a CRID runtime:
+#		To build a KCSI runtime:
 #			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf crid
+#			$ make -f wruncbl.umf kcsi
 #
 #
 #		Method B:
@@ -80,9 +74,9 @@
 #			$ cd $WISPDIR/acu
 #			$ make -f wruncbl.umf -e
 #
-#		To build a CRID runtime:
+#		To build a KCSI runtime:
 #			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf -e crid
+#			$ make -f wruncbl.umf -e kcsi
 #
 #	Targets:
 #		When running the make utility you can specify what "targets"
@@ -99,7 +93,7 @@
 #				Runtime = wruncbl
 #				Macro   = RTS
 #
-#		crid		The CRID runtime.
+#		kcsi		The KCSI runtime.
 #				Runtime = wruncblk
 #				Macro   = RTSK
 #
@@ -107,39 +101,19 @@
 #				Runtime = wruncble
 #				Macro   = RTSE
 #
-#		cride		The CRID + EDE runtime.
+#		kcsi_ede	The KCSI + EDE runtime.
 #				Runtime = wruncblke
 #				Macro   = RTSKE
-#
-#		oracle7		The Acu4GL for ORACLE runtime.
-#				The environment variable $ORACLE_HOME must
-#				be set to use this target.
-#				(NOTE: The macro ORA7OBJS may need to be
-#				adjusted based on your configuration.)
-#				Also need to confirm setting of MILI
-#				depending on environment - see below
-#				Runtime = wruncbl_oracle7
-#				Macro   = RTSORA7
-#
-#		informix	The Acu4GL for INFORMIX runtime.
-#				Runtime = wruncbl_informix
-#				Macro   = RTSINFORMIX
 #
 #		clean		This target is used to remove any files 
 #				created by this makefile.
 #
 #		Examples:
 #
-#		(1) Build the ORACLE runtime. (Method A)
+#		(1) Build the KCSI runtime using the name "wrunkcsi". (Method B)
 #
 #			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf oracle7
-#
-#		(2) Build the CRID runtime using the name "wruncrid". (Method B)
-#
-#			$ cd $WISPDIR/acu
-#			$ make -f wruncbl.umf -e RTSE=wruncrid crid
-#
+#			$ make -f wruncbl.umf -e RTSE=wrunkcsi kcsi
 #
 #	NOTE:	This makefile supports different versions of ACUCOBOL.
 #		Depending on the version of ACUCOBOL you are using you
@@ -159,21 +133,17 @@
 # WISPDIR	The installed WISP directory
 # ACUDIR	The ACUCOBOL directory
 # ACU_LIBDIR	The ACOCOBOL lib directory
-# ACU4GLDIR	The Acu4GL directory (optional)
-# ORACLE_HOME	The ORACLE home directory (optional)
 #
 WISPDIR=/usr/local/wisp
 ACUDIR=/usr/local/acucobol
 ACU_LIBDIR=$(ACUDIR)/lib
-ACU4GLDIR=/usr/local/acu4gl
-ORACLE_HOME=/usr/local/ORACLE
 
 #
 # EDEDIR	The EDE lib directory
-# CRIDDIR	The CRID directory
+# KCSIDIR	The KCSI directory
 # 
-EDEDIR=$(WISPDIR)/ede_4405
-CRIDDIR=$(WISPDIR)/crid_acu_3004
+EDEDIR=$(WISPDIR)/ede_4406
+KCSIDIR=$(WISPDIR)/kcsi_acu_4000
 
 #============================================================================
 #
@@ -196,8 +166,6 @@ LIBCURSES= -lcurses
 # Uncomment the following for HP-UX 10.10 and 10.20 
 #LIBCURSES= -lcur_colr
 #
-# You may need to uncomment the following for Solaris 2.6
-#LIBCURSES= /usr/ccs/lib/libcurses.a
 
 #============================================================================
 #
@@ -209,7 +177,7 @@ CFLAGS= -g -Dunix
 #
 # **** CHANGE CC HERE ****
 #
-#	SOLARIS 2 requires an ANSI C compiler, if CC is not ansi then you
+#	Some systems require an ANSI C compiler, if CC is not ansi then you
 #	may need to uncomment CC=c89.
 #CC=c89
 #
@@ -278,77 +246,19 @@ WISPFILES=$(WISP_LIBDIR)/$(LIBWISP) \
 	$(WISP_LIBDIR)/$(LIBEDE) \
 	$(WISPDIR)/acu/sub85.c 
 
-#============================================================================
-#
-# CRIDFILES is a list of CRID files used in building the runtime.
-#
-CRID_LIB_PATH=$(CRIDDIR)/libcrid.a
-CRIDFILES=$(CRIDDIR)/crid.h \
-	$(CRIDDIR)/cridtbl.c \
-	$(CRIDDIR)/crid85.c \
-	$(CRID_LIB_PATH) \
-	$(CRIDDIR)
-
-CRID_DEP = crid.h crid85.c cridtbl.c
-
-CRID_CFLAGS=-DCRID -I$(CRIDDIR)
-
-# **** CHANGE CRID_CFLAGS HERE ****
-# 
-# If you get an undefined "v_make_vers" then uncomment this.
-#
-#CRID_CFLAGS=-DCRID -I$(CRIDDIR) -DCRID_V_MAKE_VERS
 
 #============================================================================
 #
-# ACU4GL for ORACLE
+# KCSIFILES is a list of KCSI files used in building the runtime.
 #
-#	RTSORA7		The name of the RTS
-#	ORA7ACUSUBS	Acu4GL subs for ORACLE
-#	ORA7LIBS	ORACLE libs
-#	ORA7_LINK	ORACLE link flags
-#	MILI		Shared library entry points for AIX
-#
-RTSORA7=wruncbl_oracle7
+KCSI_LIB_PATH=$(KCSIDIR)/libkcsiacu.a
+KCSIFILES=$(KCSIDIR)/kcsi_sub85_inc.c \
+	$(KCSI_LIB_PATH) \
+	$(KCSIDIR)
 
-ORA7ACUSUBS=$(ACU4GLDIR)/lib/oracle.o $(ACU4GLDIR)/lib/cur.o
+KCSI_DEP = kcsi_sub85_inc.c
 
-ORA7LIBS=$(ORACLE_HOME)/lib/libsql.a \
-	$(ORACLE_HOME)/lib/osntab.o \
-	$(ORACLE_HOME)/lib/libsqlnet.a \
-	$(ORACLE_HOME)/lib/libora.a \
-	$(ORACLE_HOME)/lib/libnetv2.a \
-	$(ORACLE_HOME)/lib/libnetwork.a \
-	$(ORACLE_HOME)/lib/libcv6.a \
-	$(ORACLE_HOME)/lib/libnlsrtl.a \
-	$(ORACLE_HOME)/lib/libcore.a
-
-ORA7_LINK= -lld
-
-#============================================================================
-#
-#  NOTE:
-#	Will need to uncomment MILI if running under AIX
-#	and using the Acu4GL interface.
-#	Will pull in the shared library routines.
-
-#MILI=$(ORACLE_HOME)/lib/mili.exp
-MILI=
-
-#============================================================================
-#
-# ACU4GL for INFORMIX
-#
-#	RTSINFORMIX		The name of the RTS
-#	INFORMIXACUSUBS		Acu4GL subs for INFORMIX
-#	INFORMIXLIBS		INFORMIX libs
-#	INFORMIX_LINK		INFORMIX link flags
-#
-RTSINFORMIX=wruncbl_informix
-
-INFORMIXACUSUBS=$(ACU4GLDIR)/informix.o
-INFORMIXLIBS=$(ACU4GLDIR)/libsql.a
-INFORMIX_LINK=
+KCSI_CFLAGS=-DKCSI -I$(KCSIDIR)
 
 #============================================================================
 #
@@ -367,11 +277,11 @@ header: $(WISPDIR) $(ACUDIR) $(ACUTEST)
 	@echo ">>>> CFLAGS  = " $(CFLAGS)
 	@echo ">>>>"
 
-header_crid: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(CRIDDIR)
-	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+CRID"
+header_kcsi: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(KCSIDIR)
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+KCSI"
 	@echo ">>>>"
 	@echo ">>>> WISPDIR = " $(WISPDIR)
-	@echo ">>>> CRIDDIR = " $(CRIDDIR)
+	@echo ">>>> KCSIDIR = " $(KCSIDIR)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
 	@echo ">>>> PWD     = " `pwd`
 	@echo ">>>> CC      = " `which $(CC)`
@@ -389,12 +299,12 @@ header_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(EDE_LIB_PATH)
 	@echo ">>>> CFLAGS  = " $(CFLAGS)
 	@echo ">>>>"
 
-header_crid_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(CRIDDIR) $(EDEDIR)
-	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+CRID+EDE"
+header_kcsi_ede: $(WISPDIR) $(ACUDIR) $(ACUTEST) $(KCSIDIR) $(EDE_LIB_PATH)
+	@echo ">>>> BUILDING ACUCOBOL RUNTIME WITH WISP+KCSI+EDE"
 	@echo ">>>>"
 	@echo ">>>> WISPDIR = " $(WISPDIR)
-	@echo ">>>> CRIDDIR = " $(CRIDDIR)
-	@echo ">>>> EDEDIR  = " $(EDEDIR)
+	@echo ">>>> KCSIDIR = " $(KCSIDIR)
+	@echo ">>>> EDELIB  = " $(EDE_LIB_PATH)
 	@echo ">>>> ACUDIR  = " $(ACUDIR)
 	@echo ">>>> PWD     = " `pwd`
 	@echo ">>>> CC      = " `which $(CC)`
@@ -466,34 +376,12 @@ $(WISPFILES):
 	@echo ">>>>"
 	@exit 1
 
-$(CRIDFILES):
-	@echo ">>>> ERROR: A CRID configuration error was detected!"
+$(KCSIFILES):
+	@echo ">>>> ERROR: A KCSI configuration error was detected!"
 	@echo ">>>>"
-	@echo ">>>> The CRID file $@ was not found."
+	@echo ">>>> The KCSI file $@ was not found."
 	@echo ">>>>"
-	@echo ">>>> Using CRIDDIR = $(CRIDDIR)"
-	@echo ">>>>"
-	@exit 1
-
-$(ORA7LIBS):
-	@echo ">>>> ERROR: An ORACLE configuration error was detected!"
-	@echo ">>>>"
-	@echo ">>>> The ORACLE file $@ was not found."
-	@echo ">>>>"
-	@echo ">>>> Using ORACLE_HOME = $(ORACLE_HOME)"
-	@echo ">>>>"
-	@echo ">>>> Check your ORACLE configuration, if it appears to be"
-	@echo ">>>> configured properly you may need to edit this makefile"
-	@echo ">>>> and remove the above file from the ORA7OBJS marco."
-	@echo ">>>>"
-	@exit 1
-
-$(ORA7ACUSUBS) $(INFORMIXACUSUBS):
-	@echo ">>>> ERROR: An ACU4GL configuration error was detected!"
-	@echo ">>>>"
-	@echo ">>>> The ACU4GL file $@ was not found."
-	@echo ">>>>"
-	@echo ">>>> Using ACU4GLDIR = $(ACU4GLDIR)"
+	@echo ">>>> Using KCSIDIR = $(KCSIDIR)"
 	@echo ">>>>"
 	@exit 1
 
@@ -507,23 +395,19 @@ ede:	header_ede $(RTSE) $(RTSE).alc
 	@echo ">>>> The WISP + EDE runtime RTSE=" $(RTSE) is up to date.
 	@echo
 
-rtsk:	header_crid $(RTSK) $(RTSK).alc
+rtsk:	header_kcsi $(RTSK) $(RTSK).alc
 	@echo
-	@echo ">>>> The WISP + CRID runtime RTSK=" $(RTSK) is up to date.
-	@echo
-
-rtske:	header_crid_ede $(RTSKE) $(RTSKE).alc
-	@echo
-	@echo ">>>> The WISP + CRID + EDE runtime RTSKE=" $(RTSKE) is up to date.
+	@echo ">>>> The WISP + KCSI runtime RTSK=" $(RTSK) is up to date.
 	@echo
 
-crid:	rtsk
+rtske:	header_kcsi_ede $(RTSKE) $(RTSKE).alc
+	@echo
+	@echo ">>>> The WISP + KCSI + EDE runtime RTSKE=" $(RTSKE) is up to date.
+	@echo
 
-cride:	rtske
+kcsi:	rtsk
 
-oracle7:  $(RTSORA7) $(RTSORA7).alc
-
-informix: $(RTSINFORMIX) $(RTSINFORMIX).alc
+kcsi_ede:	rtske
 
 $(RTS): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS)
 	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
@@ -535,26 +419,14 @@ $(RTSE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS)
 		$(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSK): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS) $(CRID_LIB_PATH)
-	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
-		$(CRID_LIB_PATH) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
+$(RTSK): $(ACUSUBS:.o=.c) sub85.c $(WISP_LIBS_PATHS) $(KCSI_LIB_PATH)
+	$(CC) $(CFLAGS) $(KCSI_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
+		$(KCSI_LIB_PATH) $(ACULIBS) $(WISP_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
-$(RTSKE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS) $(CRID_LIB_PATH)
-	$(CC) $(CFLAGS) $(CRID_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
-		$(CRID_LIB_PATH) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
-	@echo ">>>> RTS     = " $@ has been built.
-
-$(RTSORA7): header $(ACUSUBS:.o=.c) sub85.c $(ORA7ACUSUBS) $(WISP_LIBS_PATHS) $(ORA7LIBS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) $(ORA7ACUSUBS) \
-		$(ACULIBS) $(ORA7LIBS) \
-		$(WISP_LIBS_PATHS) $(OTHER_LINK) $(ORA7_LINK) $(MILI)
-	@echo ">>>> RTS     = " $@ has been built.
-
-$(RTSINFORMIX): header $(ACUSUBS:.o=.c) sub85.c $(INFORMIXACUSUBS) $(WISP_LIBS_PATHS) $(INFORMIXLIBS)
-	$(CC) $(CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) $(INFORMIXACUSUBS) \
-		$(ACULIBS) $(INFORMIXLIBS) \
-		$(WISP_LIBS_PATHS) $(OTHER_LINK) $(INFORMIX_LINK)
+$(RTSKE): $(ACUSUBS:.o=.c) sub85.c $(WISPEDE_LIBS_PATHS) $(KCSI_LIB_PATH)
+	$(CC) $(CFLAGS) $(KCSI_CFLAGS) $(RTS_CFLAGS) -o $@ $(ACUMAIN) $(ACUSUBS:.o=.c) \
+		$(KCSI_LIB_PATH) $(ACULIBS) $(WISPEDE_LIBS_PATHS) $(OTHER_LINK)
 	@echo ">>>> RTS     = " $@ has been built.
 
 CP=cp -f
@@ -571,7 +443,7 @@ sub85.c: $(WISPDIR)/acu/sub85.c
 $(RTSALC):
 	@echo WARNING $(RTSALC) NOT FOUND
 
-$(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc $(RTSORA7).alc $(RTSINFORMIX).alc: $(RTSALC)
+$(RTS).alc $(RTSE).alc $(RTSK).alc $(RTSKE).alc : $(RTSALC)
 	@if [ -f $(RTSALC) ] ; then \
 		cmp -s $(RTSALC) $@ || $(CP) $(RTSALC) $@ ; \
 	else \
@@ -638,7 +510,7 @@ WACUWSB: wacuwsb.cob
 # CLEANUP is a list of files that are created by this
 # makefile and can be deleted.
 #
-CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) $(RTSORA7) $(RTSINFORMIX) \
+CLEANUP=$(RTS) $(RTSE) $(RTSK) $(RTSKE) \
 	$(ACN_OBJS) *.alc \
 	sub.o sub.c filetbl.o filetbl.c
 

@@ -4,9 +4,9 @@
 #	Usage: version.sh {version}
 #
 
-if [ ! -d ${WISP} ]
+if [ ! -d ${WISPSRC} ]
 then
-	echo 'Directory ${WISP} not found'
+	echo 'Directory ${WISPSRC} not found'
 	exit
 fi
 
@@ -22,13 +22,13 @@ VER=$ANS
 echo
 echo Using Version=[${VER}]
 
-F=${WISP}/src/port/Versions_${VER}.txt
+F=${WISPSRC}/port/Versions_${VER}.txt
 
 rm -f ${F}
 
 echo "# Versions for WISP ${VER} on `date`" >${F}
 
-cd ${WISP}/src
+cd ${WISPSRC}
 cvs status \
  | grep "Repository revision:" \
  | sed "s/Repository revision://" \

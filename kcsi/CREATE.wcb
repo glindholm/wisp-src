@@ -1,0 +1,10 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CREATE.
+       PROCEDURE DIVISION.
+       MAIN-PARA.
+	   CALL "kcsi_create_main".
+       EXIT-PARA.
+	   EXIT PROGRAM.
+       STOP-PARA.
+           STOP RUN.
+	   

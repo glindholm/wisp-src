@@ -361,8 +361,7 @@ int translate_name(char *wang_file, char *wang_lib, char *wang_vol, char *native
 		return 1;
 	}
 
-	memset(WISPFILEXT,' ',sizeof(WISPFILEXT));
-	memcpy(WISPFILEXT,lang_ext(),strlen(lang_ext()));
+	WSETFILEXT(lang_ext());
 
 	wfname(&mode,wang_vol,wang_lib,wang_file,native_name);
 	native_name[VSE_SYSNAME_LEN] = 0;
@@ -488,6 +487,9 @@ int is_read_only(void)
 /*
 **	History:
 **	$Log: vsemain.c,v $
+**	Revision 1.25.2.1  2002/11/14 21:12:33  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.25  2002/03/28 15:17:33  gsl
 **	used define for copyright year
 **	

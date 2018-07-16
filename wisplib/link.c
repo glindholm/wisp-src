@@ -1221,7 +1221,7 @@ ARGEND:	/* END OF ARGUMENTS */
 			**	The RC is not reliable, it always seems to return 1
 			*/
 			wang_compcode = 0;
-			wang_retcode  = atol ( WISPRETURNCODE );
+			wang_retcode  = WL_get_internal_retcode();
 		}
 
 		setlevel(savelevel);
@@ -2152,7 +2152,7 @@ void call_acucobol_error(int rc, int4 *wang_retcode, int4 *wang_compcode, char *
 	{
 	case 0:	/* SUCCESS */
 		*wang_compcode = 0;
-		*wang_retcode  = atol ( WISPRETURNCODE );
+		*wang_retcode  = WL_get_internal_retcode();
 		break;
 
 	case 1:	/* Program file missing or inaccessible */
@@ -2445,6 +2445,9 @@ int firstproc(char* filepath)
 /*
 **	History:
 **	$Log: link.c,v $
+**	Revision 1.61.2.2.2.2  2002/11/14 21:12:23  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.61.2.2.2.1  2002/10/09 19:20:30  gsl
 **	Update fexists.c to match HEAD
 **	Rename routines WL_xxx for uniqueness

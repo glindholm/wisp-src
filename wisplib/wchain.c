@@ -19,45 +19,7 @@ static char rcsid[]="$Id:$";
 #endif
 
 
-#ifdef VMS
-#define WCHAIN_DEFINED
 
-void WCHAIN( volname, libname, filename )						/* Chain to new program; NO RETURN.	*/
-char	*volname, *libname, *filename;
-{
-#define		ROUTINE		70000
-	char	*end_name;
-	int4	mode;
-	int	savelevel;
-	char	path[80];
-#include "wchain.d"
-
-	werrlog(ERRORCODE(1),volname, libname, filename,0,0,0,0,0);
-
-	if (WISPFILEXT[0] == ' ' || WISPFILEXT[0] == '\0')
-	{
-		setwispfilext("EXE");
-	}
-	mode = IS_SUBMIT;	
-	end_name = wfname( &mode, volname, libname, filename, path );	
-	*end_name = '\0';
-
-	path_desc.dsc$w_length = strlen(path);
-	vwang_shut();
-	savelevel = linklevel();						/* Save the link-level in case RUN fails	*/
-	zerolevel();								/* Set link-level to zero.			*/
-	LIB$RUN_PROGRAM( &path_desc );
-
-	/*
-	**	If we get to this point then the whain() has failed.
-	*/
-	setlevel(savelevel);							/* Restore link-level.				*/
-	vwang_synch();								/* ReSync Video.				*/
-
-	werrlog(ERRORCODE(3),path,errno,0,0,0,0,0,0);
-	return;
-}
-#endif	/* VMS */
 
 #ifdef unix
 #define WCHAIN_DEFINED
@@ -173,6 +135,9 @@ char	*volname, *libname, *filename;
 /*
 **	History:
 **	$Log: wchain.c,v $
+**	Revision 1.15.2.2  2002/11/14 21:12:26  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.15.2.1  2002/10/09 19:20:35  gsl
 **	Update fexists.c to match HEAD
 **	Rename routines WL_xxx for uniqueness

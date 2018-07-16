@@ -1,0 +1,88 @@
+Copyright (c) 2002 by NeoMedia Technologies Inc. All Rights Reserved.
+
+====================================================================
+
+Title:          Installation of KCSI for ACUCOBOL on UNIX
+
+Document:       kcsi_acu_install.txt
+Last Updated:   $Date:$
+Products:       KCSI Utilities
+Versions:       4.0.00
+
+Summary:        Installation instructions for the KCSI Utilities
+                using the ACUCOBOL compiler.
+
+====================================================================
+
+
+INSTALLATION
+============
+
+First install WISP and setup the WISP runtime environment.  This
+must be in place before KCSI can be used.  Create a standard 
+ACUCOBOL WISP runtime by following the instructions supplied
+with your WISP distribution. This will ensure that all current
+pieces are up to date for WISP.
+
+KCSI will normally be distributed on CDROM as a tar file named
+"kcsi_acu_XXXX.tar".  It is recommended that you install KCSI in your 
+WISP directory ($WISPDIR). 
+
+Extract the distribution files from "kcsi_acu_XXXX.tar" using the
+following command:
+
+        $ cd $WISPDIR
+        $ tar -xvpf kcsi_acu_XXXX.tar
+
+This will create a directory "kcsi_acu_XXXX" where XXXX is a version
+number.  Refer to kcsi_packlist.txt in the distribution for a listing 
+of expected files.
+
+
+Configuration
+-------------
+
+1. Build an extended wisp runtime for the KCSI utilities:
+
+   Read the wruncbl.umf file to determine the method for building
+   the needed runtime.  The resulting output will be a file named
+   wruncblk or wruncblke for an EDE version of the runtime.
+
+        $ make -f wruncbl.umf kcsi
+   or
+        $ make -f wruncbl.umf kcsi_ede
+
+2. Point to the new runtime by editing $WISPCONFIG/wrunconfig and
+   setting "runcbl" to the location of the wruncblk.
+
+   Edit $WISPCONFIG/wrunconfig to read:
+
+        runcbl=/usr/local/wisp_XXXX/kcsi_acu_XXXX/wruncblk
+
+   Use the file path to wruncblk that is correct for your
+   installation. 
+
+3. The files CONTROL/REPORT/INQUIRY/DATENTRY/CREATE should be on 
+   your $PATH and on the Acucobol CODE-PREFIX. 
+
+   Add the KCSI installaton directory to your $PATH:
+
+       $ PATH=$PATH:/usr/local/wisp_XXXX/kcsi_acu_XXXX
+
+   Add the KCSI installation directory to the Acucobol CODE-PREFIX in
+   the Acucobol config file $A_CONFIG (usually $WISPCONFIG/ACUCONFIG).
+
+   E.g. Edit $WISPCONFIG/ACUCONFIG:
+
+       CODE-PREFIX /usr/local/wisp_XXXX/kcsi_acu_XXXX ...
+
+
+Test your installation by running the utilites:
+
+        $ wrun CONTROL
+        $ wrun REPORT
+        $ wrun INQUIRY
+        $ wrun DATENTRY
+        $ wrun CREATE
+
+========================= END OF DOCUMENT ==========================

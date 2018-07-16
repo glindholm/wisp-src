@@ -1,0 +1,92 @@
+#-----------------------------------------------------------------------
+#	Copyright (c) 2002 NeoMedia Technologies, All rights reserved.
+#	$Id:$
+#
+#	File:		kcsi_mf.umf
+#
+#	Project:	KCSI for MICRO FOCUS COBOL
+#
+#	RCS:		$Source:$
+#
+#	Purpose:	To re-build the KCSI executables.
+#
+#	Description:	The KCSI utilities are shipped pre-built as
+#			part of the KCSI shipping kit.  They were built
+#			with the latest version of Micro Focus COBOL
+#			that NeoMedia had at the time.  If you upgrade
+#			to a later version of Micro Focus COBOL you
+#			may wish to re-build the executables using this
+#			makefile.
+#
+#-----------------------------------------------------------------------
+#
+#	Targets:	
+#
+#	default		kcsi (default)
+#	kcsi		control, report, inquiry, datentry, create
+#
+#-----------------------------------------------------------------------
+#
+#	Usage:
+#
+#	$ make -e -f kcsi_mf.umf {target}
+#
+#-----------------------------------------------------------------------
+
+MAKEFILE=kcsi_mf.umf
+
+#-----------------------------------------------------------------------
+
+WISPDIR=/usr/local/wisp
+
+CDEBUG= -g
+
+L_WISP=wisp
+L_VIDEO=video
+
+MAKE_INCLUDE=$(WISPDIR)/etc/make.include
+include $(MAKE_INCLUDE)
+
+MF_COBOL=cob
+
+#-----------------------------------------------------------------------
+#
+#	Targets
+#
+default:	kcsi
+
+kcsi:	header required control report inquiry datentry create
+	@echo $@ is up to date.
+
+KCSISYMBS = -I KCSEXTFH
+MFXLIBS= libkcsimfwcb.a libkcsimf.a 
+
+header:
+	@echo "=="
+	@echo "== Building KCSI for MICRO FOCUS COBOL"
+	@echo "== WISPDIR=$(WISPDIR)"
+	@echo "== COBDIR=$(COBDIR)"
+	@echo "== PWD=`pwd`"
+	@echo "=="
+
+KCSI_O = control.o report.o inquiry.o datentry.o create.o
+
+REQUIRED=$(WISP_LIBS_PATHS) $(MFXLIBS) $(KCSI_O)
+
+required: $(REQUIRED)
+
+create \
+control \
+report \
+inquiry \
+datentry: $(KCSI_O) $(MFXLIBS) $(WISP_LIBS_PATHS)
+	@echo "=="
+	@echo "== Building $@"
+	@echo "=="
+	$(MF_COBOL) $(CDEBUG) -o $@ $(@).o $(KCSISYMBS) $(MFXLIBS) $(WISP_LIBS_PATHS) $(CURSES_LINK)
+	@echo "== $@ has been built"
+
+
+#-----------------------------------------------------------------------
+# 	End
+#-----------------------------------------------------------------------

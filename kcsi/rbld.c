@@ -67,7 +67,7 @@ to 3090 characters. The new fields can consist of 10 fields of length
 or 7180 characters.
 ------*/
 
-void rptbld()
+void KCSI_rptbld()
 {
 	int rc;
 
@@ -131,10 +131,10 @@ static int read_first_record_int()
 {
 	if(THERE_IS_A_SORT)
 		{
-		sort_init(rpt_sort,inp_rec_len);
+		rpt_sort_init(rpt_sort,rpt_inp_rec_len);
 		while(read_and_select() == 0)
 			{
-			sort_release(inp_rec);
+			rpt_sort_release(rpt_inp_rec);
 			++rpt_sorted_records;
 /*
 			if(rpt_opt._progress)
@@ -142,7 +142,7 @@ static int read_first_record_int()
 					rpt_record_count,rpt_sorted_records);
 */
 			}
-		return(sort_return(inp_rec));
+		return(rpt_sort_return(rpt_inp_rec));
 		}
 	else
 		return(read_and_select());
@@ -157,14 +157,14 @@ static int read_first_record_ext()
 	if(THERE_IS_A_SORT)
 		{
 		strcpy(rpt_def._kfb1->_io,CLOSE_FILE);
-		ccsio(rpt_def._kfb1,rpt_def._kfb1->_record);
+		KCSI_ccsio(rpt_def._kfb1,rpt_def._kfb1->_record);
 		memcpy(&skfb,rpt_def._kfb1,sizeof(skfb));
 		save_kfb = rpt_def._kfb1;
 		rpt_def._kfb1 = &skfb;
-		call_ext_sort(rpt_sort,rpt_def._kfb1);
+		KCSI_call_ext_sort(rpt_sort,rpt_def._kfb1);
 		kcsio_wfopen(0L,rpt_def._kfb1);
 		strcpy(rpt_def._kfb1->_io,OPEN_INPUT);
-		ccsio(rpt_def._kfb1,rpt_def._kfb1->_record);
+		KCSI_ccsio(rpt_def._kfb1,rpt_def._kfb1->_record);
 		}
 	return(read_next_rpt_record_ext());
 }
@@ -172,7 +172,7 @@ static int read_first_record_ext()
 /*----
 Return the next record from the data file, or the sort file.
 ------*/
-int read_next_rpt_record()
+int rpt_read_next_rpt_record()
 {
 	if(rpt_opt._ext_sort)
 		return(read_next_rpt_record_ext());
@@ -184,7 +184,7 @@ static int read_next_rpt_record_int()
 	if(THERE_IS_A_SORT)
 		{
 		rpt_total_records = rpt_record_count;
-		return(sort_return(inp_rec));
+		return(rpt_sort_return(rpt_inp_rec));
 		}
 	else
 		return(read_and_select());
@@ -199,10 +199,10 @@ static int read_next_rpt_record_ext()
 	rc = read_and_select();
 	if( (rc) && (THERE_IS_A_SORT) )
 		{
-		ext_sort_close(rpt_def._kfb1);
+		KCSI_ext_sort_close(rpt_def._kfb1);
 		rpt_def._kfb1 = save_kfb;
 		strcpy(rpt_def._kfb1->_io,OPEN_INPUT);
-		ccsio(rpt_def._kfb1,rpt_def._kfb1->_record);
+		KCSI_ccsio(rpt_def._kfb1,rpt_def._kfb1->_record);
 		}
 	return(rc);
 }
@@ -218,7 +218,7 @@ static int read_and_select()
 		{
 		if(read_and_build_record())
 			return(1);
-		if(rptsel())
+		if(KCSI_rptsel())
 			return(0);
 		}
 }
@@ -242,9 +242,9 @@ Return -1 if the primary is at end.
 static int read_rpt_record()
 {
 	strcpy(rpt_def._kfb1->_io,READ_NEXT_RECORD);
-	memset(inp_rec1,0,2040);
-	memset(inp_rec2,0,2040);
-	ccsio(rpt_def._kfb1,inp_rec1);
+	memset(rpt_inp_rec1,0,2040);
+	memset(rpt_inp_rec2,0,2040);
+	KCSI_ccsio(rpt_def._kfb1,rpt_inp_rec1);
 	if(rpt_def._kfb1->_status != 0)
 		return(-1);
 	++rpt_total_records;
@@ -256,9 +256,9 @@ static int read_rpt_record()
 		{
 		cvt_data(rpt_def._rhd->_old_key2,rpt_def._rhd->_old_key1);
 		strcpy(rpt_def._kfb2->_io,READ_RECORD);
-		ccsio(rpt_def._kfb2,inp_rec2);
+		KCSI_ccsio(rpt_def._kfb2,rpt_inp_rec2);
 	        if(rpt_def._kfb2->_status != 0)
-			memset(inp_rec2,0,2040);
+			memset(rpt_inp_rec2,0,2040);
 		}
 	return(0);
 }
@@ -269,7 +269,7 @@ and adding in the constructed fields.
 ------*/
 static void build_record()
 {
-	cvt_list(_new,_old);
+	cvt_list(rpt_new,rpt_old);
 	add_new_fields();
 }
 
@@ -324,7 +324,7 @@ static void build_new_field(RPT_NF *nf)
 
 	cvt_data(lop,rop);
 	if(!nfo->_not_lit)
-		lop->_len = strlen(nf_bld_fld);
+		lop->_len = strlen(rpt_bld_fld);
 	if(! (lop->_type & IS_NUM))
 		lop->_len = rop->_len;
 	lop->_pos = 0;
@@ -342,7 +342,7 @@ static void build_new_field(RPT_NF *nf)
 				swapsign(rop);
 */
 			}
-		rptcmb(lop,op,rop);
+		KCSI_rptcmb(lop,op,rop);
 		}
 	rop = *(nf->_pnew);
 	cvt_data(rop,lop);
@@ -365,13 +365,31 @@ DTYPE *operand;
 	if((ch == '+') || (ch == '-'))
 		{
 		*end = 0;
-		inschar(start,ch);
+		KCSI_inschar(start,ch);
 		}
 }
 ------*/
 /*
 **	History:
 **	$Log: rbld.c,v $
+**	Revision 1.2.2.1  2002/11/12 15:56:31  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.7  2002/10/24 15:48:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.6  2002/10/24 14:20:37  gsl
+**	Make globals unique
+**	
+**	Revision 1.5  2002/10/23 21:07:26  gsl
+**	make global name unique
+**	
+**	Revision 1.4  2002/10/23 20:39:07  gsl
+**	make global name unique
+**	
+**	Revision 1.3  2002/07/25 15:20:26  gsl
+**	Globals
+**	
 **	Revision 1.2  1996/09/17 23:45:43  gsl
 **	drcs update
 **	

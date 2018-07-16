@@ -160,15 +160,7 @@ va_dcl											/* Define the list structure.		*/
 		return;
 	}
 
-	if ((WISPFILEXT[0] == ' ') || !memcmp(WISPFILEXT,"LIS ",4))			/* If it's a listing file.		*/
-	{
-		mode = IS_PRINTFILE;							/* Set the 4th bit.			*/
-	}
-	else
-	{
-		mode = 0;
-	}
-
+	mode = IS_PRINTFILE;
 	end_name = wfname(&mode,l_vol,l_lib,l_file,name);				/* now make a name for ourselves...	*/
 	*end_name = 0;
 
@@ -180,6 +172,9 @@ va_dcl											/* Define the list structure.		*/
 /*
 **	History:
 **	$Log: print.c,v $
+**	Revision 1.12.2.1  2002/11/14 21:12:25  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.12  1996/08/19 22:32:39  gsl
 **	drcs update
 **	

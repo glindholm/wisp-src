@@ -17,21 +17,15 @@ static char valid_flv_char[] = "@#$";
 static char valid_fnm_char[] = "@#$-";
 
 static void valit(char *name,char *rc,int len,char *valchar);
+static int validch(int ch, char *valch);
+static int valnam_filled(char *name);
+static int valvol_filled(char *name);
+static int val_nam(char *name);
+static int val_vol(char *name);
 
 
-int valspec(char *name, char *lib, char *vol)
-{
-	int rc;
-	rc = 0;
-	rc = 	val_nam(name) +
-		val_nam(lib) +
-		val_vol(vol);
-	if(rc == 3)
-		return(1);
-	return(0);
-}
 
-int valspec_filled(char *name, char *lib, char *vol)
+int KCSI_valspec_filled(char *name, char *lib, char *vol)
 {
 	int rc;
 	rc = 0;
@@ -43,7 +37,7 @@ int valspec_filled(char *name, char *lib, char *vol)
 	return(0);
 }
 
-int valnam_filled(char *name)
+static int valnam_filled(char *name)
 {
 	if(!val_nam(name))
 		return(0);
@@ -51,7 +45,7 @@ int valnam_filled(char *name)
 		return(0);
 	return(1);
 }
-int valvol_filled(char *name)
+static int valvol_filled(char *name)
 {
 	if(!val_vol(name))
 		return(0);
@@ -59,7 +53,7 @@ int valvol_filled(char *name)
 		return(0);
 	return(1);
 }
-int val_nam(char *name)
+static int val_nam(char *name)
 {
 	char rc[3];
 
@@ -72,7 +66,7 @@ int val_nam(char *name)
 }
 
 
-int val_vol(char *name)
+static int val_vol(char *name)
 {
 	char rc[3];
 
@@ -137,7 +131,7 @@ static void valit(char *name,char *rc,int len,char *valchar)
 /*----
 Return true if ch appears in valch
 ------*/
-int validch(int ch, char *valch)
+static int validch(int ch, char *valch)
 {
 	for( ; *valch; ++valch)
 		{
@@ -150,6 +144,15 @@ int validch(int ch, char *valch)
 /*
 **	History:
 **	$Log: valflv.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:38  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.7  2002/10/24 15:48:30  gsl
+**	Make globals unique
+**	
+**	Revision 1.6  2002/10/23 20:39:05  gsl
+**	make global name unique
+**	
 **	Revision 1.5  1996/09/17 23:34:20  gsl
 **	drcs update
 **	

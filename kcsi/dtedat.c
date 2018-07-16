@@ -1,11 +1,7 @@
 static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
 
-#ifdef	KCSI_VAX
-#include <types.h>
-#else
 #include <sys/types.h>
-#endif	/* KCSI_VAX */
 #include <time.h>
 #include "kcsifunc.h"
 
@@ -35,6 +31,12 @@ void DTEDAT(char *ymd,char *mdy,char *tim,char *jul)
 /*
 **	History:
 **	$Log: dtedat.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:24  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.5  2002/10/17 17:17:17  gsl
+**	Removed VAX VMS code
+**	
 **	Revision 1.4  1997/10/03 17:30:55  gsl
 **	YEAR2000 fix to mod 100 the year
 **	

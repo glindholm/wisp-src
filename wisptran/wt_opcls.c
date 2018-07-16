@@ -129,27 +129,27 @@ NODE parse_open(NODE the_statement)
 			
 			if (eq_token(curr_node->token, KEYWORD,"SHARED"))
 			{
-				open_mode = OPEN_SHARED;
+				open_mode = WFOPEN_SHARED;
 			}
 			else if (eq_token(curr_node->token, KEYWORD,"SPECIAL-INPUT"))
 			{
-				open_mode = OPEN_SPECIAL_INPUT;
+				open_mode = WFOPEN_SPECIAL_INPUT;
 			}
 			else if (eq_token(curr_node->token, KEYWORD,"I-O"))
 			{
-				open_mode = OPEN_I_O;
+				open_mode = WFOPEN_I_O;
 			}
 			else if (eq_token(curr_node->token, KEYWORD,"INPUT"))
 			{
-				open_mode = OPEN_INPUT;
+				open_mode = WFOPEN_INPUT;
 			}
 			else if (eq_token(curr_node->token, KEYWORD,"OUTPUT"))
 			{
-				open_mode = OPEN_OUTPUT;
+				open_mode = WFOPEN_OUTPUT;
 			}
 			else if (eq_token(curr_node->token, KEYWORD,"EXTEND"))
 			{
-				open_mode = OPEN_EXTEND;
+				open_mode = WFOPEN_EXTEND;
 			}
 			else
 			{
@@ -248,7 +248,7 @@ NODE parse_open(NODE the_statement)
 			
 			switch(open_mode)
 			{
-			case OPEN_SHARED:
+			case WFOPEN_SHARED:
 				if (prog_ftypes[fnum] & (SEQ_DYN + SEQ_FILE))
 				{
 					/*
@@ -286,7 +286,7 @@ NODE parse_open(NODE the_statement)
 				}
 				break;
 				
-			case OPEN_SPECIAL_INPUT:
+			case WFOPEN_SPECIAL_INPUT:
 				open_access = "INPUT";
 
 				if (lpi_cobol||mf_cobol)
@@ -303,7 +303,7 @@ NODE parse_open(NODE the_statement)
 				}
 				break;
 				
-			case OPEN_I_O:
+			case WFOPEN_I_O:
 				open_access = "I-O";
 
 				if (lpi_cobol||mf_cobol)
@@ -317,7 +317,7 @@ NODE parse_open(NODE the_statement)
 										/* Vax needs readers - READFDR	*/
 				break;
 				
-			case OPEN_INPUT:
+			case WFOPEN_INPUT:
 				open_access = "INPUT";
 
 				if (vax_cobol && (prog_ftypes[fnum] & AUTOLOCK))
@@ -326,7 +326,7 @@ NODE parse_open(NODE the_statement)
 					open_lock = "ALLOWING READERS";
 				break;
 				
-			case OPEN_OUTPUT:
+			case WFOPEN_OUTPUT:
 				open_access = "OUTPUT";
 
 				if (lpi_cobol||mf_cobol)
@@ -346,7 +346,7 @@ NODE parse_open(NODE the_statement)
 #endif
 				break;
 				
-			case OPEN_EXTEND:
+			case WFOPEN_EXTEND:
 				open_access = "EXTEND";
 
 				if (lpi_cobol||mf_cobol)
@@ -723,6 +723,9 @@ NODE parse_close(NODE the_statement)
 /*
 **	History:
 **	$Log: wt_opcls.c,v $
+**	Revision 1.24.2.1  2002/11/12 16:00:31  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.24  2002/03/21 23:26:40  gsl
 **	FIx format
 **	

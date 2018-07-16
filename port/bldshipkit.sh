@@ -16,26 +16,17 @@
 #			and moved out of the "src" directory to become
 #			the real shipping kit.
 #
-#	Input:		${WISP}		The WISP base directory.
-#			${WISP}/src/...	The ported WISP.
+#	Input:		${WISPSRC}/...	The WISP source directory.
 #
-#	Output:		${WISP}/src/wisp_XXXX.ship/...
+#	Output:		${WISPSRC}/wisp_XXXX.ship/...
 #					The temporary ship kit.
 #
 #
 
-if [ x${WISP} = x ]
+if [ ! -d ${WISPSRC} ]
 then
 	echo
-	echo Variable \${WISP} is not set!
-	echo bldshipkit.sh ABORTING!
-	exit
-fi
-
-if [ ! -d ${WISP}/src ]
-then
-	echo
-	echo Directory \${WISP}/src does not exist!
+	echo Directory \${WISPSRC} does not exist!
 	echo bldshipkit.sh ABORTING!
 	exit
 fi
@@ -57,23 +48,23 @@ echo Using Version=[${VER}]
 #
 WISP_VER=wisp_${VER}
 EDE_VER=ede_${VER}
-SHIP=${WISP}/src/${WISP_VER}.ship
+SHIP=${WISPSRC}/${WISP_VER}.ship
 SHIPWISP=${SHIP}/${WISP_VER}
 SHIPEDE=${SHIP}/${EDE_VER}
-WU=${WISP}/src/wisputils
-PT=${WISP}/src/proctran
-VT=${WISP}/src/videotest
-VC=${WISP}/src/videocap
-WT=${WISP}/src/wisptran
-WL=${WISP}/src/wisplib
-VL=${WISP}/src/videolib
-DOC=${WISP}/src/doc
-ETC=${WISP}/src/etc
-PORT=${WISP}/src/port
-WACU=${WISP}/src/acu
-WMF=${WISP}/src/mf
-EDE=${WISP}/src/ede
-WPROC=${WISP}/src/wproc
+WU=${WISPSRC}/wisputils
+PT=${WISPSRC}/proctran
+VT=${WISPSRC}/videotest
+VC=${WISPSRC}/videocap
+WT=${WISPSRC}/wisptran
+WL=${WISPSRC}/wisplib
+VL=${WISPSRC}/videolib
+DOC=${WISPSRC}/doc
+ETC=${WISPSRC}/etc
+PORT=${WISPSRC}/port
+WACU=${WISPSRC}/acu
+WMF=${WISPSRC}/mf
+EDE=${WISPSRC}/ede
+WPROC=${WISPSRC}/wproc
 
 #
 #	Create all the SHIP KIT directories
@@ -92,7 +83,7 @@ then
 	fi
 fi
 
-echo Creating ${WISP}/src/ship
+echo Creating ${WISPSRC}/ship
 mkdir ${SHIP}
 mkdir ${SHIPWISP}
 mkdir ${SHIPWISP}/bin
@@ -119,8 +110,8 @@ cp ${PT}/proctran		${SHIPWISP}/bin
 cp ${WU}/selectpg		${SHIPWISP}/bin
 cp ${WU}/vcapkeys		${SHIPWISP}/bin
 cp ${WU}/viewkey		${SHIPWISP}/bin
-cp ${WISP}/src/vsedit/vsedit 	${SHIPWISP}/bin
-cp ${WISP}/src/vsedit/wac.sh 	${SHIPWISP}/bin
+cp ${WISPSRC}/vsedit/vsedit 	${SHIPWISP}/bin
+cp ${WISPSRC}/vsedit/wac.sh 	${SHIPWISP}/bin
 cp ${WU}/vsx			${SHIPWISP}/bin
 cp ${VT}/vtest			${SHIPWISP}/bin
 cp ${WU}/wcopy			${SHIPWISP}/bin
@@ -227,7 +218,7 @@ cp ${EDE}/demo/menudemo.umf	${SHIPEDE}/demo
 cp ${EDE}/demo/menudemomf.umf	${SHIPEDE}/demo
 
 #echo Loading ${SHIP}/ivs
-#cp ${WISP}/src/ivslib/libivs.a	${SHIP}/ivs
+#cp ${WISPSRC}/ivslib/libivs.a	${SHIP}/ivs
 
 INFO=${SHIPWISP}/Info
 echo Building Info file ${INFO}
@@ -277,6 +268,9 @@ echo
 
 #	History:
 #	$Log: bldshipkit.sh,v $
+#	Revision 1.31.2.2  2002/11/07 22:53:44  gsl
+#	change to use WISPSRC variable
+#	
 #	Revision 1.31.2.1  2002/10/08 18:06:54  gsl
 #	Updated from HEAD
 #	

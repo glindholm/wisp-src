@@ -15,7 +15,7 @@ L_VIDEO=video
 
 WC=../wispcommon
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 CFLAGS  = $(CFLAGS0) -I $(WC)
 

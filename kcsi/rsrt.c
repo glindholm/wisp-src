@@ -25,7 +25,7 @@ the sort struct must be declared within the user program as
 SORT sort[MAX_SORTS]; and should not be dereferenced until the
 sort is completed.
 
-1.	sort_clear()
+1.	rpt_sort_clear()
 
 2.	Initialize sort structs
         _sort[x]._pos   		0 based off set
@@ -33,15 +33,14 @@ sort is completed.
 	_sort[x]._order			D for descending A for ascending sort
 	_sort[x]._numeric		1 for numeric field
 
-3.	sort_init(sort,record_length)
+3.	rpt_sort_init(sort,record_length)
 
-4.	sort_release(record) until at-end
+4.	rpt_sort_release(record) until at-end
 
-5.	sort_return(record) until non zero return code
+5.	rpt_sort_return(record) until non zero return code
 
 ------*/
 
-#include "kplatfrm.h"
 #include <stdio.h>
 #include <ctype.h>
 #include "kcsio.h"
@@ -80,7 +79,7 @@ static char *bld_key(SORT* srt, char* dest, char* rec);
 /*----
 May be used to quickly clear out a sort struct array
 ------*/
-void sort_clear(SORT *sr)
+void rpt_sort_clear(SORT *sr)
 {
 	int idx;
 	for(idx = 0 ; idx < MAX_SORTS ; ++idx, ++sr)
@@ -96,11 +95,7 @@ KCSIO_BLOCK *sf;
 	strcpy(sf->_library,"        ");
 	strcpy(sf->_volume,"      ");
 	strcpy(sf->_prname,"SORT    ");
-	mode = WISP_OUTPUT + 
-		WISP_INDEXED + 
-		WISP_PRNAME + 
-		WISP_WORK + 
-		WISP_SCRATCH;
+	mode = IS_OUTPUT + IS_INDEXED; 
 	kcsio_wfopen(mode,sf);
 }
 
@@ -127,21 +122,21 @@ struct keydesc *ky;
 	strcpy(sf->_org,"I");
 
 	strcpy(sf->_io, OPEN_OUTPUT);
-	ccsio(sf,work_rec);
+	KCSI_ccsio(sf,work_rec);
 	if (sf->_status != 0)
 	{
 		return(sf->_status);
 	}
 
 	strcpy(sf->_io, CLOSE_FILE);
-	ccsio(sf,work_rec);
+	KCSI_ccsio(sf,work_rec);
 	if (sf->_status != 0)
 	{
 		return(sf->_status);
 	}
 
 	strcpy(sf->_io, OPEN_IO);
-	ccsio(sf,work_rec);
+	KCSI_ccsio(sf,work_rec);
 	if (sf->_status != 0)
 	{
 		return(sf->_status);
@@ -154,9 +149,9 @@ struct keydesc *ky;
 /*----
 Clean up loose ends in the sort specification and create sort file.
 ------*/
-int sort_init(SORT *sr,int rl)
+int rpt_sort_init(SORT *sr,int rl)
 {
-	sort_squeeze(sr);
+	rpt_sort_squeeze(sr);
 	sort_key_init(sr,&sort_file._key[0]);
 	sort_file_init(&sort_file,rl);
 	sort_file_create(&sort_file,&sort_file._key[0]);
@@ -169,7 +164,7 @@ int sort_init(SORT *sr,int rl)
 Squeeze the sort defintion where the length is set to zero
 as this is an illegal length for a sort.
 ------*/
-void sort_squeeze(SORT *srt)
+void rpt_sort_squeeze(SORT *srt)
 {
 	int idx;
 	SORT *tsrt;
@@ -241,7 +236,7 @@ char *r;
 	memcpy(bld_key(s,work_rec,r),r,(sf->_record_len - temp));
 
 	strcpy(sf->_io,WRITE_RECORD);
-	ccsio(sf,work_rec);
+	KCSI_ccsio(sf,work_rec);
 
 	if (sf->_status == 0)
 	{
@@ -270,7 +265,7 @@ char *r;
 	add_unique(++unique,&work_rec[temp]);
 
 	strcpy(sf->_io,WRITE_RECORD);
-	ccsio(sf,work_rec);
+	KCSI_ccsio(sf,work_rec);
 
 	return(sf->_status);
 }
@@ -278,7 +273,7 @@ char *r;
 /*----
 Writes a record to the sort file.
 ------*/
-void sort_release(char *r)
+void rpt_sort_release(char *r)
 {
 	sort_rel(&sort_file,sort,r);
 }
@@ -342,7 +337,7 @@ Return a record from the sort-file.
 If the file is still open in output mode, then close and reopen in input
 mode first.
 ------*/
-int sort_return(char *rec)
+int rpt_sort_return(char *rec)
 {
 	return(sort_ret(&sort_file,rec));
 }
@@ -355,19 +350,19 @@ static int sort_ret(KCSIO_BLOCK *sf,char *rec)
 	if(sf->_open_status == 1)
 		{
 		strcpy(sf->_io,CLOSE_FILE);
-		ccsio(sf,work_rec);
+		KCSI_ccsio(sf,work_rec);
 		strcpy(sf->_io,OPEN_INPUT);
-		ccsio(sf,work_rec);
+		KCSI_ccsio(sf,work_rec);
 		if(sf->_status)
 			return(sf->_status);
 		sf->_open_status = 2;
 		}
 	strcpy(sf->_io,READ_NEXT_RECORD);
-	ccsio(sf,work_rec);
+	KCSI_ccsio(sf,work_rec);
 	if(rc = sf->_status)
 		{
 		strcpy(sf->_io,CLOSE_FILE);
-		ccsio(sf,work_rec);
+		KCSI_ccsio(sf,work_rec);
 		clean_up(sf);
 		}
 	else
@@ -384,13 +379,35 @@ static void clean_up(KCSIO_BLOCK *sf)
 {
 	char rc[4];
 
-	wargs(5L);
+	WL_set_va_count(5);
 	SCRATCH("F",sf->_name,sf->_library,sf->_volume,rc);
 }
 
 /*
 **	History:
 **	$Log: rsrt.c,v $
+**	Revision 1.5.2.1  2002/11/12 15:56:36  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.11  2002/10/24 15:48:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.10  2002/10/23 20:39:06  gsl
+**	make global name unique
+**	
+**	Revision 1.9  2002/10/17 21:22:43  gsl
+**	cleanup
+**	
+**	Revision 1.8  2002/07/25 15:20:24  gsl
+**	Globals
+**	
+**	Revision 1.7  2002/06/27 04:12:43  gsl
+**	Clean up status/mode bits
+**	
+**	Revision 1.6  2002/06/21 20:48:15  gsl
+**	Rework the IS_xxx bit flags and now include from wcommon.h instead of duplicate
+**	definitions.
+**	
 **	Revision 1.5  2002/03/18 22:53:27  gsl
 **	fix REPORT SORT problem with Micro Focus Server Express.
 **	in sort_file_create() OPEN_OUTPUT to create then CLOSE_FILE then OPEN_IO

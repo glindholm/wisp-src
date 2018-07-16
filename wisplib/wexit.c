@@ -25,6 +25,7 @@ static char rcsid[]="$Id:$";
 #include "vwang.h"
 #include "wisplib.h"
 #include "level.h"
+#include "wexit.h"
 
 #define		ROUTINE		65400
 
@@ -55,7 +56,7 @@ extern int shutexitcobol(int exit_code);
 **	WARNINGS:	None
 **
 */
-void wexit(int4 num)
+void WL_wexit(int4 num)
 {
 	int	exit_code;
 
@@ -112,6 +113,9 @@ void wexit(int4 num)
 /*
 **	History:
 **	$Log: wexit.c,v $
+**	Revision 1.15.2.1  2002/11/14 15:23:38  gsl
+**	Change wexit() to WL_wexit()
+**	
 **	Revision 1.15  1998/05/12 14:53:36  gsl
 **	Added wtrace_timestamp()
 **	

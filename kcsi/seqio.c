@@ -272,7 +272,7 @@ void seq_file_info(KCSIO_BLOCK *kfb)
 
 	kfb->_altkey_count = 0;
 
-	clear_keys(kfb);
+	KCSI_clear_keys(kfb);
 
 	if(!(kfb->_record_len))
 		kfb->_record_len = 1;
@@ -300,6 +300,12 @@ void seq_open_shared(KCSIO_BLOCK *kfb)
 /*
 **	History:
 **	$Log: seqio.c,v $
+**	Revision 1.7.2.1  2002/11/12 15:56:38  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/10/24 14:20:33  gsl
+**	Make globals unique
+**	
 **	Revision 1.7  2001/11/15 20:10:14  gsl
 **	Replace the errno checking with testing the return codes.
 **	

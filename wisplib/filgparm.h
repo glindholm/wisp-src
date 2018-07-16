@@ -28,7 +28,7 @@
 /*
 **	Function Prototypes
 */
-void file_getparm2(int4 f_mode, char *file, char *lib, char *vol, char *prname, 
+void file_getparm2(int4 f_mode, char *file, char *lib, char *vol, const char *prname, 
 		char *issuer, int4 *entry_mode, char *getparm_type, char *native_path,
 		char *msg1, char *msg2, char *pfkey_rcvr, char intv_type,	
 		char *orig_file, char *prtclass, int4 *form, int4* copies);
@@ -41,6 +41,9 @@ int password_getparm(int initial, char* uservalue, int userlen, char* passvalue,
 /*
 **	History:
 **	$Log: filgparm.h,v $
+**	Revision 1.2.2.1  2002/11/12 16:00:20  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.2  1997/08/22 21:39:24  gsl
 **	Finished PASSWORD getparm
 **	

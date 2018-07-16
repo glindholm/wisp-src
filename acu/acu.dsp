@@ -122,6 +122,10 @@ SOURCE=.\wrun32wisp_ede_acu52.mak
 # End Source File
 # Begin Source File
 
+SOURCE=.\wrun32wisp_kcsi_acu52.mak
+# End Source File
+# Begin Source File
+
 SOURCE=.\wwruncbl.mak
 # End Source File
 # End Group

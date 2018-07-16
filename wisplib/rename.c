@@ -245,9 +245,6 @@ va_dcl
 	mode = 0;
 	if (lib_rename) mode |= IS_LIB;							/* Doing a library rename.		*/
 
-#ifdef VMS
-	if (0 == memcmp(WISPFILEXT,"LIS",3)) mode |= IS_PRINTFILE;			/* Special if print file		*/
-#endif
 
 	/* SAVE_WISPFILEXT;  don't save it -- we will use the ext of old_filename for new_filename */
 
@@ -287,15 +284,12 @@ va_dcl
 	mode = IS_OUTPUT;
 	if (lib_rename) mode |= IS_LIB;
 
-#ifdef VMS
-	if (0 == memcmp(WISPFILEXT,"LIS",3)) mode |= IS_PRINTFILE;			/* Special if print file		*/
-#endif
 
 	if(!lib_rename)									/* If not a library			*/
 	{
 		ptr = splitext(old_filename);
 		if (*ptr == '.') ptr++;							/* Point past the '.'			*/
-		cstr2cobx(WISPFILEXT,ptr,sizeof(WISPFILEXT));				/* Reset EXT for new_filename		*/
+		WSETFILEXT(ptr);							/* Reset EXT for new_filename		*/
 	}
 
 	name_end = wfname(&mode, vol, new_lib, new_file, new_filename);			/* Construct the new native filename.	*/
@@ -646,6 +640,9 @@ char *nlib, *vol;
 /*
 **	History:
 **	$Log: rename.c,v $
+**	Revision 1.18.2.1.2.1  2002/11/14 21:12:25  gsl
+**	Replace WISPFILEXT and WISPRETURNCODE with set/get calls
+**	
 **	Revision 1.18.2.1  2002/08/19 15:31:04  gsl
 **	4403a
 **	

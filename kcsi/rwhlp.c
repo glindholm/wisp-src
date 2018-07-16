@@ -7,7 +7,7 @@ static char rcsid[]="$Id:$";
 static char sccs_id[] = "@(#)rwhlp.c	1.5 3/31/93";
 
 
-void full_gp_text(char *text[])
+void rpt_full_gp_text(char *text[])
 {
 	int idx;
 
@@ -36,14 +36,14 @@ static char *text1[]={
 " "
 };
 
-void help1()
+static void help1()
 {
-	wpload();
+	WL_wpload();
 	GPSETUP();
 	GPSTD("HELP1   ","REPORT");
-	full_gp_text(text1);
+	rpt_full_gp_text(text1);
 	GPENTER();
-	display_and_read_gp();
+	GP_display_and_read();
 }
 
 static char *text2[]={
@@ -89,27 +89,27 @@ static char *text3[]={
 " "
 };
 
-void help2()
+static void help2()
 {
-	wpload();
+	WL_wpload();
 	GPSETUP();
 	GPSTD("HELP2   ","REPORT");
-	full_gp_text(text2);
+	rpt_full_gp_text(text2);
 	GPENTER();
-	display_and_read_gp();
+	GP_display_and_read();
 }
 
-void help3()
+static void help3()
 {
-	wpload();
+	WL_wpload();
 	GPSETUP();
 	GPSTD("HELP3   ","REPORT");
-	full_gp_text(text3);
+	rpt_full_gp_text(text3);
 	GPENTER();
-	display_and_read_gp();
+	GP_display_and_read();
 }
 
-void rptphlp()
+void KCSI_rptphlp()
 {
 	help1();
 	help2();
@@ -119,6 +119,21 @@ void rptphlp()
 /*
 **	History:
 **	$Log: rwhlp.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:36  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.7  2002/10/24 14:20:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.6  2002/10/23 20:39:06  gsl
+**	make global name unique
+**	
+**	Revision 1.5  2002/07/25 15:20:24  gsl
+**	Globals
+**	
+**	Revision 1.4  2002/07/10 21:06:26  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.3  2001/11/05 19:46:01  gsl
 **	change ENTER to (ENTER)
 **	

@@ -140,6 +140,25 @@ void wscreen(
 	unsigned char *pfkey_ret,							/* Place to return key in.		*/
 	unsigned char *file_stat)							/* place to return file status.		*/
 {
+	WSCREEN(screen,								/* Pointer to the screen structure.	*/
+		function,							/* Function to execute (for vwang)	*/
+		block,								/* Screen structure block.		*/
+		lines,								/* Number of lines to write.		*/
+		pfkeys,								/* Termination PF key string.		*/
+		on_pfkeys,							/* pfkeys used in ON PFKEY		*/
+		pfkey_ret,							/* Place to return key in.		*/
+		file_stat);							/* place to return file status.		*/
+}
+void WSCREEN(
+	unsigned char *screen,								/* Pointer to the screen structure.	*/
+	unsigned char *function,							/* Function to execute (for vwang)	*/
+	struct	screen_block *block,							/* Screen structure block.		*/
+	unsigned char *lines,								/* Number of lines to write.		*/
+	unsigned char *pfkeys,								/* Termination PF key string.		*/
+	unsigned char *on_pfkeys,							/* pfkeys used in ON PFKEY		*/
+	unsigned char *pfkey_ret,							/* Place to return key in.		*/
+	unsigned char *file_stat)							/* place to return file status.		*/
+{
 	static char *costar_screenname_api = NULL;
 	static int use_costar_flag = 0;
 	static int first = 1;
@@ -1257,6 +1276,9 @@ static void close_open_occurs( int this_level, struct v_struct *v1, struct v_str
 /*
 **	History:
 **	$Log: wscreen.c,v $
+**	Revision 1.21.2.1  2002/11/12 16:00:27  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.21  2001/09/25 15:01:59  gsl
 **	Remove unnneded ifdefs
 **	

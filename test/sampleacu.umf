@@ -18,7 +18,7 @@
 #			
 #
 
-WISPDIR=$(WISP)/QA/wisp
+WISPDIR=$(WISPSRC)/QA/wisp
 WISPTRAN=wisp
 WISPLANG=ACU
 WISPFLAGS= -V $(WISPLANG) -I$(WISPDIR)/etc -M
@@ -186,6 +186,9 @@ $(WISPDIR)/acu:
 #
 #	History:
 #	$Log: sampleacu.umf,v $
+#	Revision 1.28.2.3  2002/11/07 22:53:47  gsl
+#	change to use WISPSRC variable
+#	
 #	Revision 1.28.2.2  2002/10/09 17:27:56  gsl
 #	Fix ACULINK.wcb and ACUUSING.cob
 #	

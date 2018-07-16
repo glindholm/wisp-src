@@ -23,9 +23,9 @@ VER=1
 REL=1
 PATCH=0
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
-include $(WISP)/src/acu/acu.rules
+include $(WISPSRC)/acu/acu.rules
 
 ACUDIST=   AMU AMUROOT AMUEDIT AMUMDM AMUFKM AMUUDM CAMUMENU
 MFDIST=    AMU.int AMUROOT.int AMUEDIT.int AMUMDM.int AMUFKM.int AMUUDM.int CAMUMENU.int

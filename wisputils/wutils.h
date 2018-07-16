@@ -52,22 +52,10 @@ void vwang_init_video()
 	return;
 }
 
-
-#ifdef VMS
-void wexit(int num)
-{
-	int	rc;
-
-	if ( num == 0 ) rc = 1;
-	else		rc = 0;
-	exit(rc);
-}
-#else /* !VMS */
-void wexit(int num)
+void WL_wexit(int num)
 {
 	exit(num);
 }
-#endif /* !VMS */
 
 void set_vsharedscreen_true(void)
 {
@@ -80,6 +68,9 @@ void set_vsharedscreen_true(void)
 /*
 **	History:
 **	$Log: wutils.h,v $
+**	Revision 1.12.2.1  2002/11/14 15:23:37  gsl
+**	Change wexit() to WL_wexit()
+**	
 **	Revision 1.12  2001/10/15 14:21:16  gsl
 **	Change vwang_set_videocap() to vwang_init_video()
 **	

@@ -70,7 +70,7 @@ void werr_message_box(char *instr);
 void werrlog(uint4 id, ...);
 void werrset(void);
 
-void werr_write(char* buff);								/* Write out a buffer to the error log.	*/
+void werr_write(const char* buff);								/* Write out a buffer to the error log.	*/
 
 void wtrace(const char* routine, const char* code, const char* format, ... /* args */);
 int wtracing(void);
@@ -81,6 +81,9 @@ const char* WL_strerror(int errnum);
 /*
 **	History:
 **	$Log: werrlog.h,v $
+**	Revision 1.14.2.2  2002/11/12 16:00:18  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.14.2.1  2002/10/09 19:48:08  gsl
 **	Added WL_strerror()
 **	

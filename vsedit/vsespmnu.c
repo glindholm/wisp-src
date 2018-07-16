@@ -1097,11 +1097,14 @@ static int vse_listing(void)
 static int vse_display(char *filename)
 {
 	/*	LINK to the DISPLAY utility to display the file */
-	return link_display(filename);
+	return WL_link_display(filename);
 }
 /*
 **	History:
 **	$Log: vsespmnu.c,v $
+**	Revision 1.16.2.1  2002/11/12 16:00:17  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.16  1998/10/15 14:07:44  gsl
 **	fix warning
 **	

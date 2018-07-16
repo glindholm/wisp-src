@@ -143,13 +143,13 @@ int ws_init(void)
 		tput_line		("       01  WISPX4                 %s PIC S9(9).",bin4_type);
 		tput_line		("       01  WISP-BIT-SET           %s PIC S9(9).",bin4_type);
 		tput_line		("       01  WISP-BIT-CLEAR         %s PIC S9(9).",bin4_type);
-		tput_line		("       01  WFOPEN-INPUT         %s PIC 9(9) VALUE %d.",bin4_type,OPEN_INPUT);
-		tput_line		("       01  WFOPEN-SHARED        %s PIC 9(9) VALUE %d.",bin4_type,OPEN_SHARED);
-		tput_line		("       01  WFOPEN-OUTPUT        %s PIC 9(9) VALUE %d.",bin4_type,OPEN_OUTPUT);
-		tput_line		("       01  WFOPEN-EXTEND        %s PIC 9(9) VALUE %d.",bin4_type,OPEN_EXTEND);
-		tput_line		("       01  WFOPEN-SPECIAL-INPUT %s PIC 9(9) VALUE %d.",bin4_type,OPEN_SPECIAL_INPUT);
-		tput_line		("       01  WFOPEN-I-O           %s PIC 9(9) VALUE %d.",bin4_type,OPEN_I_O);
-		tput_line		("       01  WFOPEN-SORT          %s PIC 9(9) VALUE %d.",bin4_type,OPEN_SORT);
+		tput_line		("       01  WFOPEN-INPUT         %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_INPUT);
+		tput_line		("       01  WFOPEN-SHARED        %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_SHARED);
+		tput_line		("       01  WFOPEN-OUTPUT        %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_OUTPUT);
+		tput_line		("       01  WFOPEN-EXTEND        %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_EXTEND);
+		tput_line		("       01  WFOPEN-SPECIAL-INPUT %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_SPECIAL_INPUT);
+		tput_line		("       01  WFOPEN-I-O           %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_I_O);
+		tput_line		("       01  WFOPEN-SORT          %s PIC 9(9) VALUE %d.",bin4_type,WFOPEN_SORT);
 		tput_line		("       01  WISP-OUTPUT  %s PIC 9(9) VALUE %ld.",bin4_type,IS_OUTPUT);
 		tput_line		("       01  WISP-PRINT   %s PIC 9(9) VALUE %ld.",bin4_type,IS_PRINTFILE);
 		tput_line		("       01  WISPSCRTCH   %s PIC 9(9) VALUE %ld.",bin4_type,IS_SCRATCH);
@@ -559,6 +559,9 @@ int ws_init(void)
 /*
 **	History:
 **	$Log: wt_wsdat.c,v $
+**	Revision 1.17.2.1  2002/11/12 16:00:32  gsl
+**	Applied global unique changes to be compatible with combined KCSI
+**	
 **	Revision 1.17  1998/04/03 19:17:48  gsl
 **	Add Id info to copybook
 **	

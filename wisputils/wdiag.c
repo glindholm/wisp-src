@@ -631,7 +631,7 @@ int define_os(char* ut)
 #endif
 
 	char	buff[256];
-	char	temp[80];
+	char	temp[256];
 	
 	char	*ptr;
 
@@ -1476,6 +1476,9 @@ static void test_int_sizes(void)
 /*
 **	History:
 **	$Log: wdiag.c,v $
+**	Revision 1.29.2.2  2002/11/08 18:19:31  gsl
+**	Enlarge temp vars to prevent overflow
+**	
 **	Revision 1.29.2.1  2002/10/10 12:56:47  gsl
 **	Huge file support
 **	

@@ -1969,22 +1969,15 @@ static int cgi_main(void)
 /*
 **	DUMMY routines to prevent the whole WISPLIB from being included
 */
-#ifdef OLD
-wexit(int code)
-{
-	exit(code);
-    return 0;
-}
-werrlog()
-{
-    return 0;
-}
-#endif
+
 #include "wutils.h"
 
 /*
 **	History:
 **	$Log: wauthorize.c,v $
+**	Revision 1.13.2.3  2002/11/14 15:23:36  gsl
+**	Change wexit() to WL_wexit()
+**	
 **	Revision 1.13.2.2  2002/09/06 16:18:36  gsl
 **	Fix phone numbers
 **	

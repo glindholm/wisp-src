@@ -4,7 +4,7 @@
 
 RUNDIR    = /usr/bin/wispbin
 
-WISP      = wisp
+WISPTRAN  = wisp
 WISPFLAGS = -I//u/wisp/utils/src -z -1 
 COBOL     = cob
 COBFLAGS  = -i -C warning=2  
@@ -19,7 +19,7 @@ all:	$(RUNDIR)/eztomnu$(ext)
 
 $(RUNDIR)/extomnu$(ext): eztomnu$(wext)
 	echo '****** Processing eztomnu.wcb' >>error.log 2>&1 
-	$(WISP) $(WISPFLAGS) $(LANG) extomnu$(wext) >>error.log 2>&1 
+	$(WISPTRAN) $(WISPFLAGS) $(LANG) extomnu$(wext) >>error.log 2>&1 
 	$(COBOL) $(COBFLAGS) eztomnu$(cext)  >>error.log 2>&1 
 
 cleanup:

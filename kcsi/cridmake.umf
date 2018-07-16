@@ -26,7 +26,7 @@
 #
 #	Usage:
 #
-#	$ make -f cridmake.umf WISP=xxx WISPDIR=xxx {target}
+#	$ make -f cridmake.umf WISPDIR=xxx {target}
 #	or
 #	$ make -e -f cridmake.umf {target}
 #
@@ -59,7 +59,6 @@ CRID_VERSION=3004
 # Standard WISP stuff
 #
 WISPDIR=..
-WISP=../..
 
 CDEBUG= -DNDEBUG
 #CDEBUG= -g -DDEBUG
@@ -68,17 +67,17 @@ L_WISP=wisp
 L_VIDEO=video
 L_EDE=ede
 
-MAKE_INCLUDE=$(WISP)/src/port/make.include
+MAKE_INCLUDE=$(WISPSRC)/port/make.include
 include $(MAKE_INCLUDE)
 
-WISPTRAN=$(WISP)/src/wisptran/wisp
+WISPTRAN=$(WISPSRC)/wisptran/wisp
 WISPFLAGS =
 
 #-----------------------------------------------------------------------
 #
 # 	ACUCOBOL
 #
-include $(WISP)/src/acu/acucobol.include
+include $(WISPSRC)/acu/acucobol.include
 
 ACU_COBOL = ccbl
 ACU_FLAGS = -Da4 -C32 -Z32 -Za
@@ -254,7 +253,7 @@ header_acu:
 	@echo "=="
 	@echo "== Building CRID $(CRID_VERSION) for ACUCOBOL"
 	@echo "== PWD=`pwd`"
-	@echo "== WISP=$(WISP)"
+	@echo "== WISPSRC=$(WISPSRC)"
 	@echo "== WISPDIR=$(WISPDIR)"
 	@echo "== ACUDIR=$(ACUDIR)"
 	@echo "== COBOL=$(ACU_COBOL) $(ACU_FLAGS)"
@@ -264,7 +263,7 @@ header_mf:
 	@echo "=="
 	@echo "== Building CRID $(CRID_VERSION) for MICRO FOCUS"
 	@echo "== PWD=`pwd`"
-	@echo "== WISP=$(WISP)"
+	@echo "== WISPSRC=$(WISPSRC)"
 	@echo "== WISPDIR=$(WISPDIR)"
 	@echo "== COBDIR=$(COBDIR)"
 	@echo "== COBOL=$(MF_COBOL) $(MF_FLAGS)"
@@ -273,11 +272,11 @@ header_mf:
 crid_mfx \
 crid_mf: 
 	$(MAKE) -f $(MAKEFILE) CFLAGS="$(CFLAGS_CRID) -DKCSI_MFX" LIBC_ALL_A=$(LIBC_MFX_A) \
-		WISP=$(WISP) WISPDIR=$(WISPDIR) crid_mf_go
+		WISPSRC=$(WISPSRC) WISPDIR=$(WISPDIR) crid_mf_go
 
 crid_acu:
 	$(MAKE) -f $(MAKEFILE) CFLAGS="$(CFLAGS_CRID) -DKCSI_ACU" LIBC_ALL_A=$(LIBC_ACU_A) \
-		WISP=$(WISP) WISPDIR=$(WISPDIR) crid_acu_go
+		WISPSRC=$(WISPSRC) WISPDIR=$(WISPDIR) crid_acu_go
 
 crid_mf_go: header_mf required crid_mfx_shipkit 
 	@echo CRID $(CRID_VERSION) for MICRO FOCUS is UP-TO-DATE.
@@ -401,8 +400,8 @@ $(LIBC_ACU_A): $(LIBC_ALL_O) $(LIBC_ACU_ONLY_O)
 wruncblk_rts: $(LIBC_ACU_A) wruncbl.umf
 	$(MAKE) -f wruncbl.umf WISPDIR=$(WISPDIR) ACUDIR=$(ACUDIR) CRIDDIR=. crid
 
-wruncbl.umf: $(WISP)/src/acu/wruncbl.umf
-	cp -f $(WISP)/src/acu/wruncbl.umf $@
+wruncbl.umf: $(WISPSRC)/acu/wruncbl.umf
+	cp -f $(WISPSRC)/acu/wruncbl.umf $@
 
 #-----------------------------------------------------------------------
 #

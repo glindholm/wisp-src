@@ -54,11 +54,47 @@ static int cr_get_count(void);
 static int val_cr_get_count(char *count);
 static void cr_free_a_fld(CR_FLD *fld);
 static void cr_free_a_blk(CR_BLK *blk);
-static void cr_alloc_init(void);
 static void cr_add_blk(CR_BLK *blk);
 static void cr_add_fld(CR_BLK *blk, CR_FLD *fld);
 static void cr_no_mem_exit(char *type);
+static CR_FLD *cr_new_fld(void);
+static KCSIO_BLOCK *cr_new_kcsio(void);
+static int cr_get_field_type(void);
+static void cr_blk_and_fld(int row, int col);
+static CR_BLK *cr_new_blk(void);
 
+/*============================================================================*/
+
+#define CR_MEM_ALLOC_TYPE( t )		((t*)cr_mem_alloc( sizeof( t ), #t ))
+#define CR_MEM_ALLOC_STR( s, x )	((char *)cr_mem_alloc( s, x ))
+#define CR_MEM_FREE( p, x )		{ cr_mem_free( p, x ); p = NULL;}
+
+
+static int cr_mem_alloc_cnt = 0;
+static void *cr_mem_alloc(size_t size, const char *text)
+{
+	void *ptr;
+	ptr = calloc(1,size);
+
+	cr_mem_alloc_cnt++;
+	kcsitrace(2,"CREATE","MEM_ALLOC","%s cnt=%d size=%u ptr=0x%08X",
+		text, cr_mem_alloc_cnt, size, ptr);
+	return ptr;
+}
+
+static void cr_mem_free(void *ptr, const char *text)
+{
+	if (cr_mem_alloc_cnt == 0)
+	{
+		kcsitrace(4,"CREATE",
+			"MEM_FREE","Attempting to FREE more memory then was allocated");
+	}
+	kcsitrace(2,"CREATE","MEM_FREE","%s cnt=%d ptr=0x%08X",
+		text, cr_mem_alloc_cnt, ptr);
+	cr_mem_alloc_cnt--;
+	free(ptr);
+}
+/*============================================================================*/
 
 /*----
 Work area for each field before it is created
@@ -155,9 +191,9 @@ static int cr_show_unfilled(void)
 		return(16);
 
 /* Otherwise we give em a GETPARM */
-	wpload();
-	gppfkeys = GP_PF_01|GP_PF_16;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys = GP_PF_01|GP_PF_16;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("GAP     ","CREATE");
 	GPCTEXT(
@@ -178,8 +214,8 @@ static int cr_show_unfilled(void)
 	GPCTEXT("Press (ENTER) or (1) to return to field selection.",22,2);
 	GPCTEXT("or (16) to End this block.",23,2);
 
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
 	rc = pf;
 	return(rc);
 }
@@ -250,7 +286,7 @@ static int cr_get_field(void)
 	return(save_pf);
 }
 
-int cr_get_field_type(void)
+static int cr_get_field_type(void)
 {
 	init_cr_get_field();
 	return(enter_cr_get_field());
@@ -258,12 +294,12 @@ int cr_get_field_type(void)
 
 static void init_cr_get_field(void)
 {
-	memset(&wkfb,0,sizeof(wkfb));
-	memset(&wfld,0,sizeof(wfld));
-	strcpy(wkfb._name,"        ");
-	strcpy(wkfb._library,"        ");
-	strcpy(wkfb._volume,"      ");
-	wfld.kfb = &wkfb;
+	memset(&CR_wkfb,0,sizeof(CR_wkfb));
+	memset(&CR_wfld,0,sizeof(CR_wfld));
+	strcpy(CR_wkfb._name,"        ");
+	strcpy(CR_wkfb._library,"        ");
+	strcpy(CR_wkfb._volume,"      ");
+	CR_wfld.kfb = &CR_wkfb;
 }
 
 static int enter_cr_get_field(void)
@@ -273,26 +309,26 @@ static int enter_cr_get_field(void)
 	char rec_len[5];
 
 
-	strcpy(wkfb._org,"I");	
+	strcpy(CR_wkfb._org,"I");	
 	strcpy(rec_len,"    ");
-	memcpy(wkfb._library,create_inlib,8);
-	memcpy(wkfb._volume,create_invol,6);
+	memcpy(CR_wkfb._library,create_inlib,8);
+	memcpy(CR_wkfb._volume,create_invol,6);
 	while(1)
 		{
-		wpload();
-		gppfkeys=GP_PF_01|GP_PF_02|GP_PF_03|GP_PF_04|GP_PF_16;
-		wswap(&gppfkeys);
+		WL_wpload();
+		GP_pfkeys=GP_PF_01|GP_PF_02|GP_PF_03|GP_PF_04|GP_PF_16;
+		WL_wswap(&GP_pfkeys);
 		GPSETUP();
 		GPSTD("INPUT   ","CREATE");
 		cr_blk_and_fld(10,29);
 		GPCTEXT("Select PFKey for the appropriate field type:",11,2);
 		GPCTEXT("(ENTER) to specify fields from a file.",12,2);
-		GPFLVUC(wkfb._name,
-			wkfb._library,
-			wkfb._volume,
+		GPFLVUC(CR_wkfb._name,
+			CR_wkfb._library,
+			CR_wkfb._volume,
 			14,2);
 		GPCTEXT("File",15,2);
-		GPKW("TYPE    ",wkfb._org,1,15,7,"U");
+		GPKW("TYPE    ",CR_wkfb._org,1,15,7,"U");
 		GPCTEXT("(I/R/C/B)",15,20);
 		GPKW("RECLEN  ",rec_len,4,15,32,"N");
 		GPCTEXT("(for Rel/Bin files only)",15,50);
@@ -306,8 +342,8 @@ static int enter_cr_get_field(void)
 			}
 		GPCTEXT("(16)   - End definitions for this block.",22,2);
 		GPCTEXT(msg_fld,24,2);
-		GPPFS(&gppfkeys);
-		pf = display_and_read_gp();
+		GPPFS(&GP_pfkeys);
+		pf = GP_display_and_read();
 		strcpy(msg_fld,"");
 		rc = pf;
 		if(rc == 0)
@@ -338,9 +374,9 @@ static int val_get_field(char *rec_len)
 
 static void val_file_name(void)
 {
-	if(! valspec_filled(wkfb._name,
-			   wkfb._library,
-			   wkfb._volume))
+	if(! KCSI_valspec_filled(CR_wkfb._name,
+			   CR_wkfb._library,
+			   CR_wkfb._volume))
 		{
 		strcpy(msg_fld,
 		"File Specification must be filled in correctly.");
@@ -350,10 +386,10 @@ static void val_file_name(void)
 
 static void val_file_type(void)
 {
-	if( (wkfb._org[0] != 'I') &&
-	    (wkfb._org[0] != 'C') &&
-	    (wkfb._org[0] != 'B') &&
-	    (wkfb._org[0] != 'R')  )
+	if( (CR_wkfb._org[0] != 'I') &&
+	    (CR_wkfb._org[0] != 'C') &&
+	    (CR_wkfb._org[0] != 'B') &&
+	    (CR_wkfb._org[0] != 'R')  )
 		{
 		strcpy(msg_fld,"Must be Indexed, Rel, Consec or Binary.");
 		return;
@@ -366,8 +402,8 @@ static void val_record_len(char *rec_len)
 
 	value = atoi(rec_len);
 
-	if( (wkfb._org[0] == 'R') ||
-	    (wkfb._org[0] == 'B') )
+	if( (CR_wkfb._org[0] == 'R') ||
+	    (CR_wkfb._org[0] == 'B') )
 		{
 		if(value < 1)
 			{
@@ -376,37 +412,39 @@ static void val_record_len(char *rec_len)
 			return;
 			}
 		}
-	if(wkfb._org[0] == 'C')
+	if(CR_wkfb._org[0] == 'C')
 		value = 2048;
-	if(wkfb._org[0] == 'I')
+	if(CR_wkfb._org[0] == 'I')
 		value = 0;
-	wkfb._record_len = value;
+	CR_wkfb._record_len = value;
 }
 
 static void val_file_exists(void)
 {
-	wkfb._record = wrecord;
-	if(!ckexists(wkfb._name,wkfb._library,wkfb._volume))
+	static 	char wrecord[2049];
+
+	CR_wkfb._record = wrecord;
+	if(!KCSI_ckexists(CR_wkfb._name,CR_wkfb._library,CR_wkfb._volume))
 		{
 		strcpy(msg_fld,"File Not Found");
 		return;
 		}
-	strcpy(wkfb._prname,"INFILE  ");
+	strcpy(CR_wkfb._prname,"INFILE  ");
 
-	cr_fileio(&wkfb, OPEN_INPUT);
-	if(wkfb._status != 0)
+	cr_fileio(&CR_wkfb, OPEN_INPUT);
+	if(CR_wkfb._status != 0)
 		{
 		strcpy(msg_fld,"File not Found or specified incorrectly");
 		return;
 		}
-	cr_fileio(&wkfb, FILE_INFO);
-	cr_fileio(&wkfb, CLOSE_FILE);
+	cr_fileio(&CR_wkfb, FILE_INFO);
+	cr_fileio(&CR_wkfb, CLOSE_FILE);
 }
 
 
 static char blk_and_fld_work[81];
 
-void cr_blk_and_fld(int row, int col)
+static void cr_blk_and_fld(int row, int col)
 {
 	sprintf(blk_and_fld_work,"Block %3d. Field %3d.",blk_no+1,fld_no+1);
 	GPCTEXT(blk_and_fld_work,row,col);
@@ -417,24 +455,23 @@ static int cr_get_lit_field(void)
 	char pos[6],len[3];
 	int rc;
 	long pf;
-	CR_FLD *save_cr_fld();
 
 /* init the fields */
-	memset(wfld.string,' ',64);
+	memset(CR_wfld.string,' ',64);
 	strcpy(pos,"     ");
 	strcpy(len,"  ");
 /* enter_the_fields */
 	while(1)
 		{
-		wpload();
-		gppfkeys = GP_PF_01;
-		wswap(&gppfkeys);
+		WL_wpload();
+		GP_pfkeys = GP_PF_01;
+		WL_wswap(&GP_pfkeys);
 		GPSETUP();
 		GPSTD("LITERAL ","CREATE");
 		cr_blk_and_fld(10,2);
 		GPCTEXT("Please Supply the literal specifications and press (ENTER).",12,2);
 		GPCTEXT("Literal String:",14,2);
-		GPKW("STRING  ",wfld.string,64,15,2,"C");
+		GPKW("STRING  ",CR_wfld.string,64,15,2,"C");
 		GPCTEXT("Starting position in the record.",17,2);
 		GPKW("POSITION",pos,5,17,45,"N");
 		GPCTEXT("Length of string (if not non-blank length).",19,2);
@@ -442,8 +479,8 @@ static int cr_get_lit_field(void)
 		GPCTEXT("Or Select:",22,2);
 		GPCTEXT("(1) Return to field selection menu:",23,2);
 		GPCTEXT(msg_fld,24,2);
-		GPPFS(&gppfkeys);
-		pf = display_and_read_gp();
+		GPPFS(&GP_pfkeys);
+		pf = GP_display_and_read();
 		strcpy(msg_fld,"");
 		rc = pf;
 		if(rc == 1)
@@ -453,7 +490,7 @@ static int cr_get_lit_field(void)
 			break;
 			}
 		}
-	wfld.type = CFIELD_STRING;
+	CR_wfld.type = CFIELD_STRING;
 	save_cr_fld();
 	return(rc);
 }
@@ -485,7 +522,7 @@ static void val_cr_lit_pos(char *pos)
 		strcpy(msg_fld, "Position not within output record.");
 		return;
 		}
-	wfld.outpos = value;
+	CR_wfld.outpos = value;
 }
 
 static void val_cr_lit_len(char *len)
@@ -497,12 +534,12 @@ static void val_cr_lit_len(char *len)
 		{
 		for(idx = 63; idx >= 0; --idx)
 			{
-			if(wfld.string[idx] != ' ')
+			if(CR_wfld.string[idx] != ' ')
 				break;
 			}
 		value = idx + 1;
 		}
-	if( (wfld.outpos + value) > cr_out.ofile._record_len)
+	if( (CR_wfld.outpos + value) > cr_out.ofile._record_len)
 		{
 		strcpy(msg_fld,"LENGTH extends beyond end of record.");
 		return;
@@ -512,27 +549,26 @@ static void val_cr_lit_len(char *len)
 		strcpy(msg_fld,"Field has no length.");
 		return;
 		}
-	wfld.len = value;
+	CR_wfld.len = value;
 
 }
 
-void save_cr_in_file(void)
+void cr_save_in_file(void)
 {
-	CR_FLD *fld, *save_cr_fld();
-	KCSIO_BLOCK *cr_new_kcsio(void);
+	CR_FLD *fld;
 
 	fld = save_cr_fld();
 	fld->kfb = cr_new_kcsio();
 /*
-	wkfb._record = cr_in_rec;
+	CR_wkfb._record = cr_in_rec;
 */
-	memcpy(fld->kfb,&wkfb,sizeof(wkfb));
+	memcpy(fld->kfb,&CR_wkfb,sizeof(CR_wkfb));
 }
 
 static CR_FLD *save_cr_fld(void)
 {
 	CR_BLK *blk;
-	CR_FLD *fld, *cr_new_fld(void);
+	CR_FLD *fld;
 
 	save_cr_blk();
 
@@ -542,13 +578,13 @@ static CR_FLD *save_cr_fld(void)
 	fld = cr_new_fld();
 	cr_add_fld(blk,fld);
 /* Copy what we have saved so far */
-	memcpy(fld,&wfld,sizeof(wfld));
+	memcpy(fld,&CR_wfld,sizeof(CR_wfld));
 	return(fld);
 }
 
 static void save_cr_blk(void)
 {
-	CR_BLK *blk, *cr_new_blk(void);
+	CR_BLK *blk;
 /* if this is the first field, we need a new block */
 	if(fld_no == 0)
 		{
@@ -568,7 +604,7 @@ static int cr_get_pad_field(void)
 	long pf;
 
 /* init the fields */
-	memset(wfld.string,' ',64);
+	memset(CR_wfld.string,' ',64);
 	strcpy(pos,"     ");
 	strcpy(len,"     ");
 	strcpy(pad,"  ");
@@ -576,9 +612,9 @@ static int cr_get_pad_field(void)
 /* enter_the_fields */
 	while(1)
 		{
-		wpload();
-		gppfkeys = GP_PF_01|GP_PF_02;
-		wswap(&gppfkeys);
+		WL_wpload();
+		GP_pfkeys = GP_PF_01|GP_PF_02;
+		WL_wswap(&GP_pfkeys);
 		GPSETUP();
 		GPSTD("PAD     ","CREATE");
 		cr_blk_and_fld(10,2);
@@ -607,8 +643,8 @@ static int cr_get_pad_field(void)
 			GPCTEXT("(2) Switch to HEX Mode",23,40);
 			}
 		GPCTEXT(msg_fld,24,2);
-		GPPFS(&gppfkeys);
-		pf = display_and_read_gp();
+		GPPFS(&GP_pfkeys);
+		pf = GP_display_and_read();
 		strcpy(msg_fld,"");
 		rc = pf;
 		if(rc == 2)
@@ -624,7 +660,7 @@ static int cr_get_pad_field(void)
 			break;
 			}
 		}
-	wfld.type = CFIELD_PAD;
+	CR_wfld.type = CFIELD_PAD;
 	save_cr_fld();
 	return(rc);
 }
@@ -649,7 +685,7 @@ static void val_cr_pad_pad(char *pad)
 /* In ASCII mode anything goes */
 	if(!pad_hex)
 		{
-		wfld.string[0] = *pad;
+		CR_wfld.string[0] = *pad;
 		return;
 		}
 /* In hex mode they must be hex digits */
@@ -676,7 +712,7 @@ static void val_cr_pad_pad(char *pad)
 
 	value = 0;
 	sscanf(pad,"%x",&value);
-	wfld.string[0] = value;
+	CR_wfld.string[0] = value;
 }
 
 
@@ -696,7 +732,7 @@ static void val_cr_pos(char *pos)
 		strcpy(msg_fld, "Position not within output record.");
 		return;
 		}
-	wfld.outpos = value;
+	CR_wfld.outpos = value;
 }
 
 static void val_cr_len(char *len)
@@ -709,12 +745,12 @@ static void val_cr_len(char *len)
 		strcpy(msg_fld, "LENGTH must be entered.");
 		return;
 		}
-	if( (wfld.outpos + value) > cr_out.ofile._record_len)
+	if( (CR_wfld.outpos + value) > cr_out.ofile._record_len)
 		{
 		strcpy(msg_fld,"LENGTH extends beyond end of record.");
 		return;
 		}
-	wfld.len = value;
+	CR_wfld.len = value;
 
 }
 
@@ -723,7 +759,6 @@ static int cr_get_num_field(void)
 	char pos[6],len[3],begval[11],endval[11],incr[11],rpt[4];
 	int rc;
 	long pf;
-	CR_FLD *save_cr_fld();
 
 /* init the fields */
 	strcpy(pos,"     ");
@@ -735,9 +770,9 @@ static int cr_get_num_field(void)
 /* enter_the_fields */
 	while(1)
 		{
-		wpload();
-		gppfkeys = GP_PF_01;
-		wswap(&gppfkeys);
+		WL_wpload();
+		GP_pfkeys = GP_PF_01;
+		WL_wswap(&GP_pfkeys);
 		GPSETUP();
 		GPSTD("ASCII   ","CREATE");
 		cr_blk_and_fld(10,2);
@@ -758,8 +793,8 @@ static int cr_get_num_field(void)
 		GPCTEXT("Or Select:",22,2);
 		GPCTEXT("(1) Return to field selection menu:",23,2);
 		GPCTEXT(msg_fld,24,2);
-		GPPFS(&gppfkeys);
-		pf = display_and_read_gp();
+		GPPFS(&GP_pfkeys);
+		pf = GP_display_and_read();
 		strcpy(msg_fld,"");
 		rc = pf;
 		if(rc == 1)
@@ -769,7 +804,7 @@ static int cr_get_num_field(void)
 			break;
 			}
 		}
-	wfld.type = CFIELD_SEQUENCE;
+	CR_wfld.type = CFIELD_SEQUENCE;
 	save_cr_fld();
 	return(rc);
 }
@@ -798,8 +833,8 @@ static void val_cr_num_beg(char *begval)
 	long value;
 
 	value = atol(begval);
-	wfld.begval = value;
-	wfld.curval = -1;
+	CR_wfld.begval = value;
+	CR_wfld.curval = -1;
 }
 
 static void val_cr_num_end(char *endval)
@@ -807,12 +842,12 @@ static void val_cr_num_end(char *endval)
 	long value;
 
 	value = atol(endval);
-	if(value < wfld.begval)
+	if(value < CR_wfld.begval)
 		{
 		strcpy(msg_fld, "Start value must be less than end value.");
 		return;
 		}
-	wfld.endval = value;
+	CR_wfld.endval = value;
 }
 
 static void val_cr_num_incr(char *incr)
@@ -825,7 +860,7 @@ static void val_cr_num_incr(char *incr)
 		strcpy(msg_fld,"Increment must be at least 1.");
 		return;
 		}
-	wfld.increment = value;
+	CR_wfld.increment = value;
 }
 
 static void val_cr_num_rpt(char *rpt)
@@ -835,9 +870,9 @@ static void val_cr_num_rpt(char *rpt)
 		strcpy(msg_fld,"Repeat must be YES or NO.");
 		return;
 		}
-	wfld.repeat = 0;
+	CR_wfld.repeat = 0;
 	if(!(strcmp("YES",rpt)))
-		wfld.repeat = 1;
+		CR_wfld.repeat = 1;
 }
 
 static int cr_must_count(void)
@@ -900,9 +935,9 @@ static int cr_get_count(void)
 /* enter_the_fields */
 	while(1)
 		{
-		wpload();
-		gppfkeys = GP_PF_01;
-		wswap(&gppfkeys);
+		WL_wpload();
+		GP_pfkeys = GP_PF_01;
+		WL_wswap(&GP_pfkeys);
 		GPSETUP();
 		GPSTD("COUNT   ","CREATE");
 		GPCTEXT("Enter the maximum number of records to create and press (ENTER)",9,2);
@@ -911,8 +946,8 @@ static int cr_get_count(void)
 		GPKW("RECORDS ",count,7,11,50,"N");
 		GPCTEXT("(1) Return to field selection menu:",23,2);
 		GPCTEXT(msg_fld,24,2);
-		GPPFS(&gppfkeys);
-		pf = display_and_read_gp();
+		GPPFS(&GP_pfkeys);
+		pf = GP_display_and_read();
 		strcpy(msg_fld,"");
 		rc = pf;
 		if(rc == 1)
@@ -986,18 +1021,32 @@ CR_FLD *fld;
 static void cr_free_a_fld(CR_FLD *fld)
 {
 	if(fld->kfb)
-		{
+	{
 		if(fld->kfb->_record)
-			free(fld->kfb->_record);
-		free(fld->kfb);
+		{
+			CR_MEM_FREE(fld->kfb->_record, "KCSIO_BLOCK->_record");
 		}
-	free(fld);
+
+		if (fld->kfb != &CR_wkfb) /* HACK - temp variable */
+		{
+			/*
+			**	CR_wkfb this seems to be a global temp variable
+			**	that init_cr_get_field() sets kfb to point to.
+			*/
+			CR_MEM_FREE(fld->kfb, "KCSIO_BLOCK");
+		}
+	}
+
+	if (fld != &CR_wfld)  /* HACK - temp variable */
+	{
+		CR_MEM_FREE(fld, "CR_FLD");
+	}
 }
 
 static void cr_free_a_blk(CR_BLK *blk)
 {
 	ll_all(blk->fld,cr_free_a_fld);
-	free(blk);
+	CR_MEM_FREE(blk, "CR_BLK");
 }
 
 void cr_free_blks(void)
@@ -1006,23 +1055,11 @@ void cr_free_blks(void)
 	cr_blk = NULL;
 }
 
-
-static void cr_alloc_init(void)
-{
-	static initted = 0;
-
-	if(initted)
-		return;
-	atexit(cr_free_blks);
-	initted = 1;
-}
-
-CR_BLK *cr_new_blk(void)
+static CR_BLK *cr_new_blk(void)
 {
 	CR_BLK *blk;
 
-	cr_alloc_init();
-	blk = (CR_BLK*) calloc(1,sizeof(CR_BLK));
+	blk = CR_MEM_ALLOC_TYPE(CR_BLK);
 	if(blk == NULL)
 		{
 		cr_no_mem_exit("BLOCK");
@@ -1030,24 +1067,22 @@ CR_BLK *cr_new_blk(void)
 	return(blk);
 }
 
-CR_FLD *cr_new_fld(void)
+static CR_FLD *cr_new_fld(void)
 {
 	CR_FLD *fld;
-	cr_alloc_init();
-	fld = (CR_FLD*) calloc(1,sizeof(CR_FLD));
+	fld = CR_MEM_ALLOC_TYPE(CR_FLD);
 	if(fld == NULL)
 		cr_no_mem_exit("FIELD");
 	return(fld);
 }
 
-KCSIO_BLOCK *cr_new_kcsio(void)
+static KCSIO_BLOCK *cr_new_kcsio(void)
 {
 	KCSIO_BLOCK *kfb;
-	cr_alloc_init();
-	kfb = (KCSIO_BLOCK*) calloc(1,sizeof(KCSIO_BLOCK));
+	kfb = CR_MEM_ALLOC_TYPE(KCSIO_BLOCK);
 	if(kfb == NULL)
 		cr_no_mem_exit("INPUT");
-	kfb->_record = (char*) calloc(1,2049);
+	kfb->_record = CR_MEM_ALLOC_STR(2049, "KCSIO_BLOCK->_record");
 	if(kfb->_record == NULL)
 		cr_no_mem_exit("RECORD");
 	return(kfb);
@@ -1058,23 +1093,56 @@ static void cr_no_mem_exit(char *type)
 {
 	long pf;
 
-	wpload();
-	gppfkeys=0;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys=0;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("MEMORY  ","CREATE");
 	GPCTEXT("Unable to acquire memory for a new",10,26);
 	GPCTEXT(type,12,32);
 	GPCTEXT("definition.",12,38);
 	GPCTEXT("Press (ENTER) to exit the program.",23,2);
-	GPPFS(&gppfkeys);
-	pf = display_and_read_gp();
-	cr_exit(0);
+	GPPFS(&GP_pfkeys);
+	pf = GP_display_and_read();
+	kcsi_exit(0);
 }
 
 /*
 **	History:
 **	$Log: vscrblk.c,v $
+**	Revision 1.6.2.3  2002/11/13 23:01:07  gsl
+**	Fix memory problem, attempting to free() non-alloc-ed memory
+**	
+**	Revision 1.6.2.2  2002/11/13 16:45:11  gsl
+**	Remove atexit() processing - not needed
+**	
+**	Revision 1.6.2.1  2002/11/12 15:56:40  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.14  2002/10/24 15:48:30  gsl
+**	Make globals unique
+**	
+**	Revision 1.13  2002/10/24 14:20:32  gsl
+**	Make globals unique
+**	
+**	Revision 1.12  2002/10/23 21:07:25  gsl
+**	make global name unique
+**	
+**	Revision 1.11  2002/10/21 18:29:20  gsl
+**	cleanup
+**	
+**	Revision 1.10  2002/10/17 21:22:44  gsl
+**	cleanup
+**	
+**	Revision 1.9  2002/07/25 15:20:23  gsl
+**	Globals
+**	
+**	Revision 1.8  2002/07/12 17:17:02  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.7  2002/07/10 21:06:26  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.6  1999/09/13 19:54:49  gsl
 **	fix missing return code
 **	

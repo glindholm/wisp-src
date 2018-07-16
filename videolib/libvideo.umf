@@ -27,7 +27,7 @@ L_VIDEO=video
 
 THE_LIB   = lib$(L_VIDEO).a
 
-include $(WISP)/src/port/make.include
+include $(WISPSRC)/port/make.include
 
 .PRECIOUS:	$(THE_LIB) 
 

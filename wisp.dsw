@@ -3,21 +3,6 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "CRID"=.\kcsi\crid.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name wisptran
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "acn"=.\acu\acn.dsp - Package Owner=<4>
 
 Package=<5>
@@ -63,24 +48,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "acurts_crid"=.\acurts_crid\acurts_crid.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name shipkitcridacu
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name shipkitwisp
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "acurts_ede"=.\acurts_ede\acurts_ede.dsp - Package Owner=<4>
 
 Package=<5>
@@ -91,6 +58,24 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name shipkitede
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name shipkitwisp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "acurts_kcsi"=.\acurts_kcsi\acurts_kcsi.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name shipkitkcsiacu
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name shipkitwisp
@@ -111,89 +96,11 @@ Package=<4>
     Project_Dep_Name ede
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name kcsi
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name wispkit
     End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "createacu"=.\kcsi\createacu.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
     Begin Project Dependency
-    Project_Dep_Name createlibacu
+    Project_Dep_Name kcsi_acu
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name videolib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wisplib
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "createlibacu"=.\kcsi\createlibacu.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "cridacu"=.\kcsi\cridacu.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name cridlib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name CRID
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name cridlibm
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "cridlib"=.\kcsi\cridlib.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "cridlibm"=.\kcsi\cridlibm.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
 }}}
 
 ###############################################################################
@@ -294,7 +201,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "kcsi"=.\kcsi\kcsi.dsp - Package Owner=<4>
+Project: "kcsi_acu"=.\kcsi\kcsi_acu.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -303,11 +210,38 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name createacu
+    Project_Dep_Name kcsi_acu_cob
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name cridacu
+    Project_Dep_Name kcsi_acu_lib
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "kcsi_acu_cob"=.\kcsi\kcsi_acu_cob.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name wisptran
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "kcsi_acu_lib"=.\kcsi\kcsi_acu_lib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
@@ -417,36 +351,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "shipkitcreateacu"=.\port\shipkitcreateacu.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name createacu
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "shipkitcridacu"=.\PORT\shipkitcridacu.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name cridacu
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "shipkitede"=.\PORT\shipkitede.dsp - Package Owner=<4>
 
 Package=<5>
@@ -457,6 +361,21 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name ede
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "shipkitkcsiacu"=.\port\shipkitkcsiacu.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name kcsi_acu
     End Project Dependency
 }}}
 
@@ -486,13 +405,16 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name acurts
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name wispkit
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name wisptran_test
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name acurts_kcsi
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name shipkitkcsiacu
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name shipkitwisp
     End Project Dependency
 }}}
 

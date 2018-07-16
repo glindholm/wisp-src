@@ -40,21 +40,9 @@ typedef  unsigned int   uint4;
 
 #endif /*ALPHA*/
 
-/* MSDOS Codebuilder has the following sizes: short:2, int:4, long:4 */
-#if defined(MSDOS)
-
-typedef short int2; 
-typedef long  int4;
-
-typedef  unsigned short  uint2;  
-typedef  unsigned long   uint4;
-
-#define ATOI4(x) atol((x))
-
-#endif /*MSDOS*/
 
 /* everyone else seems to have:  short:2, int:4, long:4 */
-#if !defined(OSF1_ALPHA) && !defined(MSDOS)
+#if !defined(OSF1_ALPHA)
 
 typedef short int2; 
 typedef int   int4;
@@ -70,6 +58,12 @@ typedef  unsigned int      uint4;
 /*
 **	History:
 **	$Log: intdef.h,v $
+**	Revision 1.2.2.1  2002/11/12 15:56:26  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.3  2002/07/18 21:04:26  gsl
+**	Remove MSDOS code
+**	
 **	Revision 1.2  1996/09/17 23:34:09  gsl
 **	drcs update
 **	

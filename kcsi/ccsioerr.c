@@ -92,12 +92,6 @@ static char *io_lit[]={
 static int ccsioerr(int status,char *io,char *name);
 static void add_mf_error(KFB *kfb);
 
-/*
-main()
-{
-	ccsioerr(112,READ_NEXT_RECORD,"datafile");
-}
-*/
 /*----
 Some statuses are legal such as at end on a read next or a start
 duplicate key on a write etc.
@@ -109,14 +103,11 @@ static int ccsioerr(int status,char *io,char *name)
 	char *err_msg,*io_msg;
 	int io_idx;
 	static char unknown_lit[]="Unknown";
-	static char vax_err_lit[]="File Error";
 
-#ifndef KCSI_VAX
 #ifndef LINUX
 	extern int sys_nerr;
 	extern char *sys_errlist[];
 #endif
-#endif /* not KCSI_VAX */
 
 	if((Streq(io,READ_RECORD)) && (status == ENOREC))
 		return(0);
@@ -159,16 +150,12 @@ static int ccsioerr(int status,char *io,char *name)
 		err_msg = unknown_lit;
 	else
 	if( status < 100)
-#ifdef KCSI_VAX
-		err_msg = vax_err_lit;
-#else
 		{
 		if(status > sys_nerr)
 			err_msg = unknown_lit;
 		else
 			err_msg = sys_errlist[status];
 		}
-#endif
 	else
 		err_msg = err_lit[status - 100];
 
@@ -178,7 +165,7 @@ static int ccsioerr(int status,char *io,char *name)
 	return(1);
 }
 
-void kfberr(KFB *kfb)
+void KCSI_kfberr(KFB *kfb)
 {
 	if(ccsioerr(kfb->_status, kfb->_io, kfb->_sys_name))
 		add_mf_error(kfb);
@@ -253,7 +240,19 @@ static void add_mf_error(KFB *kfb)
 /*
 **	History:
 **	$Log: ccsioerr.c,v $
-**	Revision 1.8.2.1  2002/09/05 19:22:28  gsl
+**	Revision 1.8.2.2  2002/11/12 15:56:19  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.12  2002/10/24 14:20:41  gsl
+**	Make globals unique
+**	
+**	Revision 1.11  2002/10/17 17:17:15  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.10  2002/10/17 16:35:17  gsl
+**	comments
+**	
+**	Revision 1.9  2002/09/04 18:09:49  gsl
 **	LINUX
 **	
 **	Revision 1.8  2002/04/23 19:56:25  gsl

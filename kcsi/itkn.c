@@ -14,6 +14,9 @@ Modified to allow NOT operators.
 
 static char sccsid[]="@(#)itkn.c	1.4 8/3/93";
 
+static int sidx = 0;
+static int sline_idx = 0;
+static int inq_token_idx = 0;
 
 static int which_tkn(char *str);
 static int not_inq_token();
@@ -134,7 +137,7 @@ int next_inq_tkn()
 
 /* Now we try to identify it */
 	if (! isinquotes)
-		kstrupr(inq_tokens);
+		kcsi_strupr(inq_tokens);
 	inq_token = which_tkn(inq_tokens);
 /* If we got a NOT then we must pull the next token */
 	if(inq_token == NOT_TKN)
@@ -213,12 +216,12 @@ static int not_inq_token()
 This is a list of legal tokens. The order for equality operators is
 important. When the output is generated the token value is used to 
 search this list for the first matching string which is used in the output.
-In other words lookup_strtkn_str for NEQ_TKN will return "NE"
+In other words KCSI_lookup_strtkn_str for NEQ_TKN will return "NE"
 GE_TKN will return "GE" as these are the first entries for those
 respective tokens.
 ------*/
 
-STRTKN op[]={
+static STRTKN op[]={
 	{"LIST",LIST_TKN},
 	{"PRINT",LIST_TKN},
 	{"SHOW",LIST_TKN},
@@ -284,11 +287,11 @@ STRTKN op[]={
 
 static int which_tkn(char *str)
 {
-	return(lookup_strtkn_tkn(&op[0],str));
+	return(KCSI_lookup_strtkn_tkn(&op[0],str));
 }
 char *get_inq_tkn_str(int tkn)
 {
-	return(lookup_strtkn_str(&op[0],tkn));
+	return(KCSI_lookup_strtkn_str(&op[0],tkn));
 }
 
 /*----
@@ -377,7 +380,7 @@ static int isoccurs(char *str)
 	return(1);
 }
 
-char* kstrupr(char* str)
+char* kcsi_strupr(char* str)
 {
 	char *rc;
 	rc = str;
@@ -393,6 +396,24 @@ char* kstrupr(char* str)
 /*
 **	History:
 **	$Log: itkn.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:26  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.8  2002/10/24 15:48:32  gsl
+**	Make globals unique
+**	
+**	Revision 1.7  2002/10/23 21:07:26  gsl
+**	make global name unique
+**	
+**	Revision 1.6  2002/10/22 21:10:20  gsl
+**	Unique global sysmbols
+**	
+**	Revision 1.5  2002/07/25 15:48:42  gsl
+**	Globals
+**	
+**	Revision 1.4  2002/07/25 15:20:27  gsl
+**	Globals
+**	
 **	Revision 1.3  2000/03/13 19:14:33  gsl
 **	Change strupr() to kstrupr()
 **	

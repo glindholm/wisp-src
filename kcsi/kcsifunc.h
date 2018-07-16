@@ -96,8 +96,8 @@ void rel_unlock(KCSIO_BLOCK *kfb);
 void rel_file_info(KCSIO_BLOCK *kfb);
 
 
-void bub_sort(char *base,int nel,int len,int (*comp)(),int (*swap)());
-void kfberr(KFB *kfb);
+void KCSI_bub_sort(char *base,int nel,int len,int (*comp)(),int (*swap)());
+void KCSI_kfberr(KFB *kfb);
 void init_crid_debug(void);
 void KTRACE(char *str);
 void crid_func_trace_in(char *func);
@@ -106,104 +106,67 @@ void CTRLVERS(char *wvers,char *bin);
 void RPTVERS(char *wvers,char *bin,char *style);
 void INQVERS(char *wvers,char *bin);
 void DATVERS(char *wvers,char *bin);
-int use_binary();
-void init_report_style(char *style);
-int add_records();
-void init_add_fields();
-void clear_all_fields();
-void clear_one_field(FIELD *fld);
+int  KCSI_use_binary();
+void KCSI_init_report_style(char *style);
+int  dte_add_records();
+void KCSI_init_add_fields();
+void KCSI_clear_all_fields();
+void KCSI_clear_one_field(FIELD *fld);
 
-void get_date_stamps();
-void field_error(FIELD *fld,char *msg);
-void make_error_message(char *msg);
-void error_on(FIELD *fld);
-void space_out(char *mem,int len);
-void move_to_record();
-void move_one_to_record(FIELD *fld);
-void move_to_screen();
-void init_dte_record();
-void init_message_field();
-int key_from_idx(char *idx);
-void unprotect_all_fields();
-void protect_all_fields();
-void hide_all_fields();
-void protect_nomod_fields();
-void protect_key_fields();
-void unprotect_idx_fields(char *idx);
-int is_this_key(FIELD *fld,int key);
-void fac_all_fields(int code);
-void unprotect_rel_field();
-void protect_rel_field();
-void fac_one_field(FIELD *fld,int code);
-void hide_all_prompts();
-void display_all_prompts();
-void display_idx_prompts(char *idx);
-void fac_all_prompts(int code);
-void hide_rel_prompt();
-void display_rel_prompt();
-void fac_one_prompt(FIELD *fld,int code);
+void KCSI_get_date_stamps();
+void KCSI_field_error(FIELD *fld,char *msg);
+void KCSI_make_error_message(char *msg);
+void dte_space_out(char *mem,int len);
+void dte_move_to_record();
+void dte_move_one_to_record(FIELD *fld);
+void dte_move_to_screen();
+void dte_init_record();
+void dte_init_message_field();
+int  dte_key_from_idx(char *idx);
+void dte_unprotect_all_fields();
+void dte_protect_all_fields();
+void dte_hide_all_fields();
+void dte_protect_nomod_fields();
+void dte_protect_key_fields();
+void dte_unprotect_idx_fields(char *idx);
+int  dte_is_this_key(FIELD *fld,int key);
+void dte_unprotect_rel_field();
+void dte_protect_rel_field();
+void dte_hide_all_prompts();
+void dte_display_all_prompts();
+void dte_display_idx_prompts(char *idx);
+void dte_hide_rel_prompt();
+void dte_display_rel_prompt();
 void DBSC(char *cf_hdrs,char *cf_t1,char *cf_t2,char *io_block,char *dio_block,char *ret_code);
-int dbscl(char *hdrs,char *t1,char *t2);
-void bsc_load(char *hdr,char *t1,char *t2);
-void bsc_bld_scr(char *hdr,FIELD *fld);
-void bsc_fld_set(char *hdr,char *t1,char *t2,FIELD *fld);
-void bsc_key_set(char *hdr,FIELD *fld);
-void bsc_accum_set(FIELD *fld);
-int set_a_key_element(FIELD *element,FIELD *key);
-void bsc_fld_load(char *hdr,FIELD *fld);
-int do_update(FIELD *fld);
-int do_group(FIELD *fld,int *gnflds);
-void bld_fld(FIELD *fld);
-void get_edit_len(FIELD *fld);
-void cvt_fld(char *t1,char *t2);
-int set_a_key(char *hdr,FIELD *fld);
-int insert_fld(FIELD *dest,FIELD *src);
-void cpy_fld(FIELD *f1,FIELD *f2);
-int make_fld_hole(FIELD *fld);
-int kill_fld_hole(FIELD *fld);
-int is_within(FIELD *outer,FIELD *inner);
-int change_records(char *idx,char *mode);
-int delete_records(char *idx,char *mode);
-void vax_dte_globals();
-int enter_the_key(char *idx,char *mode);
-void read_rel_key_record();
-void rel_rec_num_to_fld();
-void load_first_record(char *idx);
-void load_next_record(char *idx);
-void load_previous_record(char *idx);
+int  KCSI_dbscl(char *hdrs,char *t1,char *t2);
+int  dte_change_records(char *idx,char *mode);
+int  dte_delete_records(char *idx,char *mode);
+int  dte_enter_the_key(char *idx,char *mode);
+void dte_read_rel_key_record();
+void dte_rel_rec_num_to_fld();
+void dte_load_first_record(char *idx);
+void dte_load_next_record(char *idx);
+void dte_load_previous_record(char *idx);
 void DMNT(char *hdrs,char *t1,char *t2,char *cblock,char *dblock,char *mode,char *idx);
-void start_up_code();
-void exit_code();
-void close_crt();
-void dmntl(char *mode,char *idx);
-void load_footer(char *prompt);
-void add_text_prompt(int row,int col,char *prompt);
-void end_main_screen();
-void add_dte_scr_header();
-void add_dte_logo();
-void add_fld(FIELD *fld);
-void add_fld_pic(FIELD *fld);
-void add_prompt(int row,int col,char *prompt,char **fld,char **pfac);
+void dte_load_footer(char *prompt);
 void DTEDAT(char *ymd,char *mdy,char *tim,char *jul);
 void DTEKEY(char *mode,char *idx);
-void set_up_extra_pfs();
-void set_gp_pf(uint4 *mask,int pf,int onoff);
-void val_all_fields();
-void init_gpint();
+void dte_val_all_fields();
+void GP_init_gpint();
 void GENINQ(char *gio,char *display,char *endrun,char *dio,char *change,char *option,char *cio,char *qtitle,char *qlines,char *eio);
-int isnblank(char *mem,int len);
-void vax_inq_globals();
+int  KCSI_isnblank(char *mem,int len);
 void INIDIO(char *blk);
 void PARSEINQ(char *rpt_rfl,char *rpt_dl,char *res_flds,char *scr_flds,char *msg,char *ret_code);
-char *kstrupr(char* str);
+char *kcsi_strupr(char* str);
 int first_inq_tkn();
 int next_inq_tkn();
 char *get_inq_tkn_str(int tkn);
-char *nullpad(),*wfname();
+char *wfname(int4 *mode, char *p_vol, char *p_lib, char *p_file, char *native_path);
 void KMATCH(char *rc,char *g1,char *g2);
 void KCSIO(char *kio,char *ufb,char *recarea);
 void KDISP(char* fspec,char* type, char* rc);
 void KEXISTS(char *rc, char *name, char *lib, char *vol);
+void ksam_init();
 void ksam_file_space(KCSIO_BLOCK *kfb);
 void ksam_open_shared(KCSIO_BLOCK *kfb);
 void ksam_open_input(KCSIO_BLOCK *kfb);
@@ -230,54 +193,43 @@ void ksam_delete(KCSIO_BLOCK *kfb);
 void ksam_unlock(KCSIO_BLOCK *kfb);
 void ksam_table_info(KCSIO_BLOCK *kfb);
 void ksam_file_info(KCSIO_BLOCK *kfb);
-int get_pic_len(char* dest,int type,int len,int dec,int bin);
-void rptbld();
-int read_next_rpt_record();
-void strunc(char* dest);
-void unstrunc(char* str,int len);
-int atoilen(char* src, int len);
-char	*cpsize(),*format_a_field();
-
-int myisblank(char *str);
-void vax_rpt_globals();
-void rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol);
-int valspec(char *name, char *lib, char *vol);
-int valspec_filled(char *name, char *lib, char *vol);
-int valnam_filled(char *name);
-int valvol_filled(char *name);
-int val_nam(char *name);
-int val_vol(char *name);
+int  KCSI_get_pic_len(char* dest,int type,int len,int dec,int bin);
+void KCSI_rptbld();
+int  rpt_read_next_rpt_record();
+void KCSI_strunc(char* dest);
+void KCSI_unstrunc(char* str,int len);
+int  kcsi_atoilen(char* src, int len);
+char *KCSI_cpsize();
+void rpt_globals();
+void KCSI_rptpln(char *p_io,char *p_record,char *p_file,char *p_lib,char *p_vol);
+int KCSI_valspec_filled(char *name, char *lib, char *vol);
 void VALNAM(char *name, char *rc);
 void VALVOL(char *name, char *rc);
 void VALFNM(char *name, char *rc);
-int validch(int ch, char *valch);
 
-int e_trans(int code);
-void clear_keys(KFB *kfb);
-int file_is_relative();
-void call_lmg_log_count(long count);
+int  KCSI_e_trans(int code);
+void KCSI_clear_keys(KFB *kfb);
+int  dte_file_is_relative();
+void KCSI_call_lmg_log_count(long count);
 void inq_write();
 void set_inq_scratch(int code);
 void kcsio_wfopen(int4 mode,KFB *kfb);
-void ccsio(KFB *kfb,char *recarea);
+void KCSI_ccsio(KFB *kfb,char *recarea);
 void set_inq_org(int org);
 void KFILTYP(char* typ);
-void init_a_key(struct keydesc *k,int pos,int len,int dups);
 void rpt_write(int code);
-int rptsel();
-int charat(char *record,char *base,int pos,int len,int type,int dec);
-int fieldeq(char *record,char *base,int pos,int len,int type,int dec,char* m1);
-int atoifield(char *record,char *base,int pos,int len,int type,int dec);
-void tie_rpt();
-void inschar(char* d, int c);
+int KCSI_rptsel();
+int KCSI_charat(char *record,char *base,int pos,int len,int type,int dec);
+int KCSI_fieldeq(char *record,char *base,int pos,int len,int type,int dec,char* m1);
+int KCSI_atoifield(char *record,char *base,int pos,int len,int type,int dec);
+void rpt_tie();
+void KCSI_inschar(char* d, int c);
 void KFORMAT(char* dec,char* rcvr,char* rflrec);
-int count_lit_dec(char *str);
-void rptphlp();
-void full_gp_text(char *text[]);
-void strfil(char* s);
+void KCSI_rptphlp();
+void rpt_full_gp_text(char *text[]);
+void KCSI_strfil(char* s);
+void KCSI_init_a_key(struct keydesc *k,int pos,int len,int dups);
 
-void wargs(int4 count);
-void clear_one_key(struct keydesc *k);
 
 void seq_file_info(KCSIO_BLOCK *kfb);
 int seq_file_space(KCSIO_BLOCK *kfb);
@@ -305,37 +257,29 @@ void seq_start_nlt_keyed(KCSIO_BLOCK *kfb);
 void seq_start_gt_keyed(KCSIO_BLOCK *kfb);
 void seq_write(KCSIO_BLOCK *kfb);
 
-void gpwcsio(KFB *kfb,char *recarea);
+void KCSI_gpwcsio(KFB *kfb,char *recarea);
 void cr_fileio(KCSIO_BLOCK *kfb, char *io);
-int ckexists(char *file, char *lib, char *vol);
+int  KCSI_ckexists(char *file, char *lib, char *vol);
 
 
 /*
 **	WISPLIB
 */
-void wvaset(int4 *x);
-void wscreen();
-void wswap(void *lword);			/* swap the order of the words in a longword item (for WANG routines to use)	*/
+
+#include "wfname.h"
+#include "wisplib.h"
+
+void WL_wswap(void *lword);			/* swap the order of the words in a longword item (for WANG routines to use)	*/
 void GETPARM();
 void SCRATCH();
-void wfopen(
-	int4 *mode,		/* the mode of opening			*/
-	char *vol,		/* the WANG volume name	(6 chars)	*/
-	char *lib,		/* The WANG library name (8 chars)	*/
-	char *file,		/* The file name	(8 chars)	*/
-	char *name,		/* The resultant name			*/
-	char *prname);		/* The PRNAME (optional).		*/
-void wpload(void);
-void setretcode(char* code);
+void WL_wpload(void);
 void EXTRACT();
-void wfclose(char* fname);								/* This routine is called after COBOL*/
-int link_display(const char *file_name);
+void WFCLOSE(const char* fname);								/* This routine is called after COBOL*/
+int  WL_link_display(const char *file_name);
 void FIND();
 void SET();
 void WISPSORT(char *sortparms, char *filetype, int4 *recsize, int4 *sortcode, int4 *returncode);
-void vwang_shut(void);
 int getopt( int argc, char *const argv[], const char *flags);
-int initglbs(char *wisprunname);							/* Init GLOBALS				*/
 void setwispfilext(char* wispfilext);
 
 #endif /* kcsifunc_H */
@@ -343,6 +287,67 @@ void setwispfilext(char* wispfilext);
 /*
 **	History:
 **	$Log: kcsifunc.h,v $
+**	Revision 1.14.2.1  2002/11/12 15:56:27  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.33  2002/10/24 15:48:32  gsl
+**	Make globals unique
+**	
+**	Revision 1.32  2002/10/24 14:20:38  gsl
+**	Make globals unique
+**	
+**	Revision 1.31  2002/10/23 21:07:26  gsl
+**	make global name unique
+**	
+**	Revision 1.30  2002/10/23 20:39:08  gsl
+**	make global name unique
+**	
+**	Revision 1.29  2002/10/22 21:10:20  gsl
+**	Unique global sysmbols
+**	
+**	Revision 1.28  2002/10/21 16:07:05  gsl
+**	Add ksam_init
+**	
+**	Revision 1.27  2002/10/17 21:22:41  gsl
+**	cleanup
+**	
+**	Revision 1.26  2002/10/17 17:17:19  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.25  2002/07/30 19:12:43  gsl
+**	SETRETCODE
+**	
+**	Revision 1.24  2002/07/29 21:13:29  gsl
+**	
+**	Revision 1.23  2002/07/29 15:46:54  gsl
+**	getwfilext -> WGETFILEXT
+**	setwfilext -> WSETFILEXT
+**	setwispfilext -> WSETFILEXT
+**	
+**	Revision 1.22  2002/07/26 18:19:18  gsl
+**	wscreen -> WSCREEN
+**	
+**	Revision 1.21  2002/07/25 15:48:42  gsl
+**	Globals
+**	
+**	Revision 1.20  2002/07/25 15:20:27  gsl
+**	Globals
+**	
+**	Revision 1.19  2002/07/23 20:49:51  gsl
+**	globals
+**	
+**	Revision 1.18  2002/07/23 02:57:52  gsl
+**	wfclose -> WFCLOSE
+**	
+**	Revision 1.17  2002/07/12 19:10:24  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.16  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.15  2002/07/10 21:06:25  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.14  2002/05/14 21:39:53  gsl
 **	include kcsit.h
 **	

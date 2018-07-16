@@ -64,7 +64,7 @@ main_process:
 	strcpy(error_text,"");
 	if( pf == 14 )
 		{
-		rptphlp();
+		KCSI_rptphlp();
 		goto main_process;
 		}
 	else
@@ -108,7 +108,7 @@ static void val_numeric_option()
 {
 	int opt;
 
-	opt = atoilen(rpt_option,3);
+	opt = kcsi_atoilen(rpt_option,3);
 	if( ( opt == 0) )
 		{
 		screen_error_status = entry_error;
@@ -145,7 +145,7 @@ static void val_ext_sort()
 static void val_page()
 {
 	int page;
-	page = atoilen(rpt_page,2);
+	page = kcsi_atoilen(rpt_page,2);
 	if( ( page < 5 ) || (page > 99))
 		{
 		screen_error_status = entry_error;
@@ -189,12 +189,12 @@ static void call_options_getparm()
 {
 	long lpf;
 
-	wpload();
-	gppfkeys=GP_PF_14|GP_PF_16;
-	wswap(&gppfkeys);
+	WL_wpload();
+	GP_pfkeys=GP_PF_14|GP_PF_16;
+	WL_wswap(&GP_pfkeys);
 	GPSETUP();
 	GPSTD("OPTIONS ","REPORT");
-	full_gp_text(text);
+	rpt_full_gp_text(text);
 	GPKW("ID      ",rpt_id,8,12,20,"A");
 	GPKW("DATE    ",rpt_date,8,13,20,"A");
 	GPKW("DEVICE  ",rpt_device,7,14,20,"A");
@@ -208,8 +208,8 @@ static void call_options_getparm()
 	GPKW("WISPSORT",rpt_ext_sort,3,21,20,"A");
 */
 	GPENTER();
-	GPPFS(&gppfkeys);
-	lpf = display_and_read_gp();
+	GPPFS(&GP_pfkeys);
+	lpf = GP_display_and_read();
 	pf = lpf;
 }
 static void val_options()
@@ -270,6 +270,24 @@ void RPTWOP(char *RC,char *RPT_OPTIONS,char *MESSAGE)
 /*
 **	History:
 **	$Log: rwop.c,v $
+**	Revision 1.4.2.1  2002/11/12 15:56:37  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.9  2002/10/24 14:20:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.8  2002/10/23 20:39:06  gsl
+**	make global name unique
+**	
+**	Revision 1.7  2002/07/25 15:20:24  gsl
+**	Globals
+**	
+**	Revision 1.6  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
+**	Revision 1.5  2002/07/10 21:06:26  gsl
+**	Fix globals WL_ to make unique
+**	
 **	Revision 1.4  2001/11/05 19:44:33  gsl
 **	Change ENTER to (ENTER)
 **	

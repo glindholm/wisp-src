@@ -85,7 +85,7 @@ KCSIO_BLOCK *kfb;
 {
 	int idx;
 
-	sort_squeeze(sr);
+	rpt_sort_squeeze(sr);
 	memset(&sortdata,' ',sizeof(sortdata));
 	recsize = 0;
 	sortcode = 0;
@@ -103,25 +103,14 @@ KCSIO_BLOCK *kfb;
 		++sr;
 		}
 	recsize = kfb->_record_len;
-	wswap(&recsize);
+	WL_wswap(&recsize);
 	switch(kfb->_org[0])
 		{
 		case 'R':
 			file_type[0] = 'F';
 			break;
 		case 'I':
-#ifdef	KCSI_ACU
-			file_type[0] = 'A';
-#endif
-#ifdef	KCSI_LPI
-			file_type[0] = 'C';
-#endif
-#ifdef	KCSI_MF
-			file_type[0] = 'C';
-#endif
-#ifdef	KCSI_MFX
-			file_type[0] = 'C';
-#endif
+			file_type[0] = 'I';
 			break;
 		case 'C':
 			file_type[0] = 'N';
@@ -130,30 +119,49 @@ KCSIO_BLOCK *kfb;
 
 }
 
-void call_ext_sort(SORT *sr,KCSIO_BLOCK *kfb)
+void KCSI_call_ext_sort(SORT *sr,KCSIO_BLOCK *kfb)
 {
 	ext_sort_setup(sr,kfb);
-#ifdef KCSI_VAX
-	wargs(2L);
-	SORTCALL(&sortdata,&retcode);
-#else
-	wargs(5L);
+	WL_set_va_count(5);
 	WISPSORT((char*)&sortdata,file_type,&recsize,&sortcode,&retcode);
-#endif	/* KCSI_VAX */
 
 	ext_sort_newfile(kfb);
 }
 
 
-void ext_sort_close(KCSIO_BLOCK *kfb)
+void KCSI_ext_sort_close(KCSIO_BLOCK *kfb)
 {
 	strcpy(kfb->_io,CLOSE_FILE);
-	ccsio(kfb,kfb->_record);
+	KCSI_ccsio(kfb,kfb->_record);
 }
 
 /*
 **	History:
 **	$Log: rwsrt.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:37  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.10  2002/10/24 15:48:31  gsl
+**	Make globals unique
+**	
+**	Revision 1.9  2002/10/23 20:39:05  gsl
+**	make global name unique
+**	
+**	Revision 1.8  2002/10/21 15:26:41  gsl
+**	Cleanup file types for WISPSORT
+**	
+**	Revision 1.7  2002/10/17 21:22:43  gsl
+**	cleanup
+**	
+**	Revision 1.6  2002/10/17 17:17:22  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.5  2002/07/25 15:20:24  gsl
+**	Globals
+**	
+**	Revision 1.4  2002/07/12 17:17:01  gsl
+**	Global unique WL_ changes
+**	
 **	Revision 1.3  1996/09/25 01:00:03  gsl
 **	Change longs -> int4
 **	

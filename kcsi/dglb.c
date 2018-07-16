@@ -1,6 +1,5 @@
 static char copyright[]="Copyright (c) 1988-1996 DevTech Migrations, All rights reserved.";
 static char rcsid[]="$Id:$";
-#include "kplatfrm.h"
 #include <stdio.h>
 #include "datcob.h"
 #include "dbsc.h"
@@ -15,84 +14,17 @@ static char sccsid[]="@(#)dglb.c	1.4 1/27/93";
 Globals used by datentry
 ------*/
 
-void vax_dte_globals()
-{
-	/* Dummy for the vax linker */
-}
 
-
-int	d_new_screen;
-int	d_new_key;
+int	dte_new_screen;
+int	dte_new_key;
 
 FIELD dtefld[MAX_FIELDS];
-FIELD *keys[MAX_DISPLAY_FIELDS];
-FIELD wrk_field;
+/* FIELD *keys[MAX_DISPLAY_FIELDS]; */
+FIELD dte_wrk_field;
 
-int field_count;
-int next_row;
-int next_col;
-int datentry_spacing = 1;
+int KD_field_count;
 
 
-DTYPE	cf_t1_src[]={
-	{T1_INT_LEN},
-	/* {T1_EXT_LEN}, */
-	{T1_START_POS},
-	{T1_OCCURRENCES},
-	{T1_ZERO_SUPPRESS},
-	{T1_SIGN},
-	{T1_DOLLAR_COMMA},
-	{T1_UPDATE},
-	{T1_DEC},
-	{T1_BIN},
-	{T1_SEQ},
-	{T1_DISPLAY},
-	{NULL,0,0,0,0}};
-
-DTYPE	cf_t1_dest[]={
-	{(char*)&wrk_field.len,0,0,CINT,0},
-	/* {(char*)&wrk_field.ext_len,0,0,CINT,0}, */
-	{(char*)&wrk_field.pos,0,0,CINT,0},
-	{(char*)&wrk_field.occurrences,0,0,BONE,0},
-	{(char*)&wrk_field.supp,0,0,CINT,0},
-	{(char*)&wrk_field.sign,0,0,CINT,0},
-	{(char*)&wrk_field.dollar,0,0,CINT,0},
-	{(char*)&wrk_field.noupdate,0,0,CINT,0},
-	{(char*)&wrk_field.dec,0,0,CINT,0},
-	{(char*)&wrk_field.bin,0,0,CINT,0},
-	{(char*)&wrk_field.seq,0,0,CINT,0},
-	{(char*)&wrk_field.display,0,0,CINT,0},
-	{NULL,0,0,0,0}};
-
-DTYPE	cf_t2_src[]={
-	{T2_NAME},
-	{T2_TYPE},
-	{T2_VALIDATION},
-	{T2_DEFAULT_FAC},
-	{T2_TABLE_NAME},
-	{T2_LO_RANGE},
-	{T2_HI_RANGE},
-	{T2_CUMMULATIVE_NAME},
-	{NULL,0,0,0,0}};
-
-DTYPE	cf_t2_dest[]={
-	{wrk_field.name,0,0,CSTR,0},
-	{(char*)&wrk_field.type,0,0,CCHR,0},
-	{wrk_field.val,0,0,CSTR,0},
-	{(char*)&wrk_field.fac,0,0,CCHR,0},
-	{(char*)wrk_field.table,0,0,CSTR,0},
-	{wrk_field.lo,0,0,CSTR,0},
-	{wrk_field.hi,0,0,CSTR,0},
-	{wrk_field.cumm_name,0,0,CSTR,0},
-	{NULL,0,0,0,0}};
-
-DTYPE	ch_src[]={
-	{CH_SPACING},
-	{NULL,0,0,0,0}};
-
-DTYPE	ch_dest[]={
-	{(char*)&datentry_spacing,0,0,CINT,0},
-	{NULL,0,0,0,0}};
 
 /*----
 This start up area of the screen is the first thing copied to 
@@ -113,11 +45,12 @@ plus the header bytes (start_scr see below) plus overhead bytes for
 can use maximum.
 ------*/
 
-char main_scr[SCR_DEF_SIZE], key_scr[SCR_DEF_SIZE];
+unsigned char dte_main_scr[SCR_DEF_SIZE];
+char dte_key_scr[SCR_DEF_SIZE];
 
 char dte_record[2040];
 
-char dum_fld[]={0,0,1,0,24,80,0,0,2,0,0,0,0,(char)140,0,0,0,0};
+static char dum_fld[]={0,0,1,0,24,80,0,0,2,0,0,0,0,(char)140,0,0,0,0};
 char *dte_scr,*dte_trailer,*dte_key_trailer,*dte_message,*dte_key_message;
 int dte_screen_error;
 
@@ -125,12 +58,12 @@ char dte_on_pfkeys[67]= "X";
 
 char dte_pfkeys[67];
 char dte_pfkey_code[2];
-char dte_crt_file_status[2];
-char dte_crt_record[1924];
-char dte_order_area[]={1,(char)161,0,0};
-char dte_dnr_altered[]={7};
-char dte_full_screen[]={24};
-char dte_close_ws[]={4};
+unsigned char dte_crt_file_status[2];
+unsigned char dte_crt_record[1924];
+unsigned char dte_order_area[]={1,(char)161,0,0};
+unsigned char dte_dnr_altered[]={7};
+unsigned char dte_full_screen[]={24};
+unsigned char dte_close_ws[]={4};
 long dte_a_longword;
 char dte_app_name[]="DATENTRY";
 /*----
@@ -152,7 +85,7 @@ char *dte_cio_block,*dte_dio_block,*dte_cf_t1,*dte_cf_t2,*dte_cf_hdrs;
 This global is used to build a screen field for relative files.
 ------*/
 
-FIELD relative_record = {
+FIELD dte_relative_record = {
 	"RECORD", 1, REL_KEY_LEN, 
 	REL_KEY_LEN, /*Name occur len edit_len */
 	1, 1,			/* Position (not used)and zero suppres */
@@ -161,13 +94,40 @@ FIELD relative_record = {
 	};			/* Pos isn't really used */
 				/* All else default to zero */
 
-char rel_rec_num[REL_KEY_LEN + 1];
+char dte_rel_rec_num[REL_KEY_LEN + 1];
 
 
 
 /*
 **	History:
 **	$Log: dglb.c,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:23  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.11  2002/10/24 15:48:33  gsl
+**	Make globals unique
+**	
+**	Revision 1.10  2002/10/24 14:20:40  gsl
+**	Make globals unique
+**	
+**	Revision 1.9  2002/10/23 21:07:27  gsl
+**	make global name unique
+**	
+**	Revision 1.8  2002/10/23 20:39:09  gsl
+**	make global name unique
+**	
+**	Revision 1.7  2002/10/17 21:22:41  gsl
+**	cleanup
+**	
+**	Revision 1.6  2002/10/17 17:17:17  gsl
+**	Removed VAX VMS code
+**	
+**	Revision 1.5  2002/08/01 15:41:24  gsl
+**	type warnings
+**	
+**	Revision 1.4  2002/07/25 15:20:29  gsl
+**	Globals
+**	
 **	Revision 1.3  1996/09/17 23:45:34  gsl
 **	drcs update
 **	

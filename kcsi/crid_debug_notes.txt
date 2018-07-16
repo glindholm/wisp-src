@@ -1,6 +1,12 @@
 crid_debug_notes.txt
 ====================
 
+KCSI 4.0.00
+===========
+- Enable tracing with OPTIONS file option
+  KCSITRACE 1
+
+- CREATE dump will print to a ##CDBG file
 
 NEW KCSI TRACING
 ================

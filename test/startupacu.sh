@@ -9,35 +9,44 @@
 #			using ACUCOBOL.
 #
 QA=`pwd`
-WISPDIR=../../QA/wisp
-if [ ! -d $WISPDIR ]
+WISPDIR=../QA/wisp
+if [ ! -d ${WISPDIR} ]
 then
-	echo "**** WISPDIR=$WISPDIR NOT FOUND"
+	echo "**** WISPDIR=${WISPDIR} NOT FOUND"
 	WISPDIR=/usr/local/wisp
-	echo "**** USING WISPDIR=$WISPDIR"
+	echo "**** USING WISPDIR=${WISPDIR}"
 else
-	cd $WISPDIR
+	cd ${WISPDIR}
 	WISPDIR=`pwd`
-	cd $QA
 fi
-cd ../..
-WISP=`pwd`
-cd $QA
-WISPCONFIG=$QA/config
-A_CONFIG=$WISPCONFIG/ACUCONFIG
-PATH=$WISPDIR/bin:$WISPDIR/cridacu:$WISPDIR/createacu:$QA/volrun/onpath:$ACUDIR/bin:$PATH
-export QA WISPCONFIG A_CONFIG PATH WISPDIR
+cd ${QA}
+cd ..
+WISPSRC=`pwd`
+cd ${QA}
+WISPCONFIG=${QA}/config
+A_CONFIG=${WISPCONFIG}/ACUCONFIG
+PATH=${WISPDIR}/bin:${WISPDIR}/kcsiacu:${QA}/volrun/onpath:${ACUDIR}/bin:${PATH}
+export QA WISPCONFIG A_CONFIG PATH WISPDIR WISPSRC
 echo
 echo "**** SETTING UP FOR ACUCOBOL ****"
-echo "WISP         = $WISP"
-echo "WISPDIR      = $WISPDIR"
-echo "QA           = $QA"
-echo "WISPCONFIG   = $WISPCONFIG"
-echo "A_CONFIG     = $A_CONFIG"
-echo "SHELL        = $SHELL"
-echo "PATH         = $PATH"
+echo "WISPDIR      = ${WISPDIR}"
+echo "WISPSRC      = ${WISPSRC}"
+echo "QA           = ${QA}"
+echo "WISPCONFIG   = ${WISPCONFIG}"
+echo "A_CONFIG     = ${A_CONFIG}"
+echo "SHELL        = ${SHELL}"
+echo "PATH         = ${PATH}"
 ccbl -v
 wisp|grep Version
+
+# If needed create ${WISPCONFIG} dir 
+if [ ! -d ${WISPCONFIG} ]
+then
+	configacu.sh
+fi
+wusage set PROGVOL=SOURCE
+wusage set PROGLIB=TESTACU
+
 echo
 echo Switching to new shell for WISP QA
 echo

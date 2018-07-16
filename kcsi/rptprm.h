@@ -20,11 +20,7 @@
  * This actually for LPI, but tested under ACUCOBOL since I haven't got
  *  LPI
 */
-#ifdef KCSI_LPI
-#define	LMG_DL_ENTRY_COUNT	10
-#else
 #define	LMG_DL_ENTRY_COUNT	100
-#endif
 
 #define	SRT_ENTRY_COUNT		8
 /*----
@@ -236,13 +232,27 @@ typedef	struct	_rpt_def{
 	char	*_input;
 	}RPT_DEF;
 
-int same_element(ELEMENT *e1,ELEMENT *e2);
+
+char *rpt_format_a_field(RPT_RFL *rfl, char *d, int code);
+
 
 #endif
 
 /*
 **	History:
 **	$Log: rptprm.h,v $
+**	Revision 1.3.2.1  2002/11/12 15:56:35  gsl
+**	Sync with $HEAD Combined KCSI 4.0.00
+**	
+**	Revision 1.6  2002/10/24 14:20:34  gsl
+**	Make globals unique
+**	
+**	Revision 1.5  2002/10/23 21:07:25  gsl
+**	make global name unique
+**	
+**	Revision 1.4  2002/10/17 17:17:22  gsl
+**	Removed VAX VMS code
+**	
 **	Revision 1.3  1996/09/17 23:34:18  gsl
 **	drcs update
 **	

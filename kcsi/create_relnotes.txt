@@ -17,7 +17,7 @@ Summary:        Release notes for changes to KCSI - CREATE utility
 
 
         NeoMedia Technologies Inc.
-        2201 2nd Street Suite 600
+        2201 Second Street Suite 402
         Fort Myers FL, 33901
         USA
 
